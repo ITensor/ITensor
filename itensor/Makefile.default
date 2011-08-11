@@ -1,0 +1,79 @@
+#
+# Makefile for ITensor library
+#
+################################
+
+PREFIX=..
+
+####################################
+
+HEADERS=tensor.h mps.h algorithm.h iq.h hams.h
+
+OBJECTS=tensor.o mps.o algorithm.o iq.o
+
+SOURCES=tensor.cc mps.cc algorithm.cc iq.cc
+
+####################################
+
+INCLUDEDIR=$(PREFIX)/include -I$(HOME)/boost
+INCLUDETARGET=$(PREFIX)/include
+
+LIBDIR=$(PREFIX)/lib
+DESTLIBDIR=$(PREFIX)/lib
+
+CCCOM=g++ -m64
+CCFLAGS= -I$(INCLUDEDIR) -O2 -DNDEBUG -DBOOST_DISABLE_ASSERTS
+CCGFLAGS= -I$(INCLUDEDIR) -ansi -g -O0 -DBOUNDS -DITENSOR_USE_AT
+
+GOBJECTS= $(patsubst %,.debug_objs/%, $(OBJECTS))
+
+.SUFFIXES: .cc $(SUFFIXES)
+
+%.o: %.cc
+	$(CCCOM) -c $(CCFLAGS) -o $@ $<
+
+.debug_objs/%.o: %.cc
+	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
+
+install: headerscopy installo installg
+
+libitensor.a: $(OBJECTS) $(HEADERS)
+	ar rv libitensor.a $(OBJECTS)
+	ranlib libitensor.a
+
+libitensor-g.a: mkdebugdir $(GOBJECTS) $(HEADERS)
+	ar rv libitensor-g.a $(GOBJECTS)
+	ranlib libitensor-g.a
+
+headerscopy:	
+	cp $(HEADERS) $(INCLUDETARGET)
+
+libs: libitensor.a 
+	cp libitensor.a $(LIBDIR)
+
+installo: libitensor.a
+	cp libitensor.a $(LIBDIR)
+	ranlib $(DESTLIBDIR)/libitensor.a
+
+installg: libitensor-g.a
+	cp libitensor-g.a $(LIBDIR)
+	ranlib $(DESTLIBDIR)/libitensor-g.a
+
+mkdebugdir:
+	mkdir -p .debug_objs
+
+tensor.o: tensor.h
+mps.o: tensor.h iq.h mps.h
+iq.o: tensor.h iq.h
+algorithm.o: tensor.h iq.h mps.h algorithm.h
+
+.debug_objs/tensor.o: tensor.h
+.debug_objs/mps.o: tensor.h iq.h mps.h
+.debug_objs/iq.o: tensor.h iq.h
+.debug_objs/iqmps.o: tensor.h iq.h mps.h
+.debug_objs/algorithm.o: tensor.h iq.h mps.h algorithm.h 
+
+clean:	
+	rm -fr *.o *.og libitensor.a .debug_objs libitensor-g.a
+
+#dependencies

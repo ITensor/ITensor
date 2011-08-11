@@ -1,0 +1,49 @@
+PREFIX=..
+
+CCCOM=g++ -m64
+
+################################################################
+#Options --------------
+
+TENSOR_HEADERS=tensor.h mps.h algorithm.h iq.h hams.h
+
+LIBNAMES=matrix utilities itensor
+
+#################################################################
+
+#Define Dirs -----------
+LOCAL_LIBDIR=$(PREFIX)/lib
+INCLUDEDIR=$(PREFIX)/include
+INCLUDEFLAGS=. -I$(INCLUDEDIR) -I$(HOME)/boost
+LIBDIR=$(LOCAL_LIBDIR)
+
+#Mappings --------------
+LOCAL_LIBFLAGS=$(patsubst %,-l%, $(LIBNAMES))
+#LOCAL_LIBFLAGS=$(patsubst %,-l%-g, $(LIBNAMES))
+LOCAL_LIBS=$(patsubst %,$(LOCAL_LIBDIR)/lib%.a, $(LIBNAMES))
+#LOCAL_LIBS=$(patsubst %,$(LOCAL_LIBDIR)/lib%-g.a, $(LIBNAMES))
+REL_TENSOR_HEADERS=$(patsubst %,$(INCLUDEDIR)/%, $(TENSOR_HEADERS))
+
+#Define Flags ----------
+CCFLAGS=$(CPPFLAGS) -I$(INCLUDEFLAGS) -O2  -DNDEBUG -DBOOST_DISABLE_ASSERTS
+#CCFLAGS= -I$(INCLUDEFLAGS) -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall -ansi
+LIBFLAGS=-L$(LIBDIR) $(LOCAL_LIBFLAGS) -framework Accelerate
+
+#Rules ------------------
+
+%.o: %.cc $(REL_TENSOR_HEADERS)
+	$(CCCOM) -c $(CCFLAGS) -o $@ $<
+
+#Targets -----------------
+
+all: dmrg iqdmrg
+
+dmrg: dmrg.o $(LOCAL_LIBS)
+	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
+
+iqdmrg: iqdmrg.o $(LOCAL_LIBS)
+	$(CCCOM) $(CCFLAGS) iqdmrg.o -o iqdmrg $(LIBFLAGS)
+
+clean:
+	rm -f *.o dmrg iqdmrg
+
