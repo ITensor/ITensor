@@ -35,7 +35,7 @@ GOBJECTS= $(patsubst %,.debug_objs/%, $(OBJECTS))
 .debug_objs/%.o: %.cc
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
-install: headerscopy installo installg
+install: installo installg
 
 libitensor.a: $(OBJECTS) $(HEADERS)
 	ar rv libitensor.a $(OBJECTS)
@@ -51,11 +51,11 @@ headerscopy:
 libs: libitensor.a 
 	cp libitensor.a $(LIBDIR)
 
-installo: libitensor.a
+installo: headerscopy libitensor.a
 	cp libitensor.a $(LIBDIR)
 	ranlib $(DESTLIBDIR)/libitensor.a
 
-installg: libitensor-g.a
+installg: headerscopy libitensor-g.a
 	cp libitensor-g.a $(LIBDIR)
 	ranlib $(DESTLIBDIR)/libitensor-g.a
 
