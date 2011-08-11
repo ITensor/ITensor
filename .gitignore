@@ -1,0 +1,11 @@
+*.[oa]
+*~
+include/*.h
+include/*.ih
+*.swp
+utilities/Makefile
+sandbox/Makefile
+sample/Makefile
+matrix/macos/Makefile
+matrix/intel/Makefile
+itensor/Makefile
