@@ -858,7 +858,7 @@ public:
 private:
     int collapseCols(const Vector& Diag, Matrix& M) const
     {
-        int nr = Diag.Length(), nc = Diag.sumels();
+        int nr = Diag.Length(), nc = int(Diag.sumels());
         assert(nr != 0);
         if(nc == 0) return nc;
         M = Matrix(nr,nc); M = 0;
