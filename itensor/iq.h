@@ -296,6 +296,8 @@ public:
         return IQIndex(primeBoth,*this,inc);
 	}
 
+    friend ostream& operator <<(ostream &o, const IQIndex &I);
+
     void print(string name = "") const
     { cerr << "\n" << name << " =\n" << *this << "\n"; }
 
@@ -317,14 +319,15 @@ struct IQIndexVal
     Index index() const { return iqind.index(i); }
     QN qn() const { return iqind.qn(i); }
     inline friend ostream& operator<<(ostream& s, const IQIndexVal& iv)
-    { return s << "IQIndexVal: i = " << iv.i << ", ind = " << iv.iqind << "\n"; }
+    { return s << "IQIndexVal: i = " << iv.i << ", iqind = " << iv.iqind << "\n"; }
     IQIndexVal primed() const { return IQIndexVal(iqind.primed(),i); }
     operator IndexVal() const { Index res = iqind; return res(i); }
+    void conj() { iqind.conj(); }
+    void print(string name = "") const
+    { cerr << "\n" << name << " =\n" << *this << "\n"; }
 };
 extern IQIndexVal IQIVNull;
 
-
-ostream & operator <<(ostream &o, const IQIndex &I);
 
 //So IQTensors can print themselves if needed (for Error messages).
 class IQTensor; ostream & operator <<(ostream &o, const IQTensor &t);
@@ -1087,7 +1090,7 @@ class SiteOp
     void make_iqt() const
     {
         if(made_iqt) return;
-        iqt = IQTensor(si,si.primed());
+        iqt = IQTensor(conj(si),si.primed());
         foreach(const valmap_vt& x, valmap)
         { iqt(civmap(x.first).first,civmap(x.first).second) = x.second; }
         made_iqt = true;
@@ -1095,7 +1098,7 @@ class SiteOp
     void make_t() const
     {
         if(made_t) return;
-        t = ITensor(si,si.primed());
+        t = ITensor(conj(si),si.primed());
         foreach(const valmap_vt& x, valmap)
         { t(civmap(x.first).first,civmap(x.first).second) = x.second; }
         made_t = true;
