@@ -1920,7 +1920,7 @@ Index IndReIm(makeReIm);
 Index IndReImP(makeReImP);
 Index IndReImPP(makeReImPP);
 Index IndEmptyV(makeEmptyV);
-IndexVal IVNull(IndNull,0);
+IndexVal IVNull(IndNull,1);
 ITensor Complex_1(makeComplex_1), Complex_i(makeComplex_i), ConjTensor(makeConjTensor);
 Vector lastd(1);
 int newtotalsize = 0;
