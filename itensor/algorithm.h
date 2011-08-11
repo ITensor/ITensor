@@ -363,6 +363,18 @@ Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
     return dmrg(psi,H,sweeps,opts);
 }
 
+// Given Tensors which represent operators (e.g. A(site-1',site-1), B(site-1',site-1), 
+// Multiply them, fixing primes C(site-1',site-1)
+template<class Tensor>
+inline Tensor multSiteOps(Tensor a, Tensor b) // a * b  (a above b in diagram, unprimed = right index of matrix)
+{
+    a.mapprime(1,2,primeSite);
+    a.mapprime(0,1,primeSite);
+    Tensor res = a * b;
+    res.mapprime(2,1,primeSite);
+    return res;
+}
+
 
 Real dmrg(MPS& psi, const MPO& H, const Sweeps& sweeps, const vector<MPS>& other, DMRGOpts& opts);
 Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts);
