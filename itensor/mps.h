@@ -808,18 +808,6 @@ public:
 
     void getCenter(int j, Direction dir, Tensor& lambda, bool do_signfix = false)
     {
-        /*
-        Tensor Ajc = AA(j);
-        list<IndexT> keep_inds;
-        keep_inds.push_back(Ajc.findtype(Site));
-        if(dir == Fromleft && j > 1)  keep_inds.push_back(index_in_common(Ajc,AA(j-1),Link));
-        if(dir == Fromright && j < N) keep_inds.push_back(index_in_common(Ajc,AA(j+1),Link));
-        const bool do_allocate = false;
-        IndexT centerlink("c",1); keep_inds.push_back(centerlink);
-        AAnc(j) = Tensor(keep_inds,do_allocate); lambda = Tensor(centerlink);
-        do_denmat_Real(Ajc,AAnc(j),lambda,cutoff,minm,maxm,dir);
-        */
-
         getCenterMatrix(AAnc(j),(dir == Fromleft ? RightLinkInd(j) : LeftLinkInd(j)),cutoff,minm,maxm,lambda,nameint("c",j));
 
         if(dir == Fromleft) if(left_orth_lim == j-1 || j == 1) left_orth_lim = j;
