@@ -15,7 +15,7 @@ SOURCES=tensor.cc mps.cc algorithm.cc iq.cc
 
 ####################################
 
-INCLUDEDIR=$(PREFIX)/include -I$(HOME)/boost
+INCLUDEDIR=$(PREFIX)/include -I../../boost
 INCLUDETARGET=$(PREFIX)/include
 
 LIBDIR=$(PREFIX)/lib

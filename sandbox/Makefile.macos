@@ -15,7 +15,7 @@ LIBNAMES=matrix utilities itensor
 #Define Dirs -----------
 LOCAL_LIBDIR=$(PREFIX)/lib
 INCLUDEDIR=$(PREFIX)/include
-INCLUDEFLAGS=. -I$(INCLUDEDIR) -I$(HOME)/boost
+INCLUDEFLAGS=. -I$(INCLUDEDIR) -I../../boost
 LIBDIR=$(LOCAL_LIBDIR)
 
 #Mappings --------------
