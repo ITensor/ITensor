@@ -68,7 +68,11 @@ struct inqn
 {
     Index index;
     QN qn;
+    inqn() { }
     inqn(const Index& i, QN q) : index(i), qn(q) { }
+
+    void write(ostream& s) const { index.write(s); qn.write(s); }
+    void read(istream& s) { index.read(s); qn.read(s); }
 };
 
 class IQIndex;
@@ -196,7 +200,27 @@ public:
         iq_.push_back(inqn(i,QN()));
 	}
 
+    IQIndex(istream& s) { read(s); }
+
     IQIndexVal operator()(int n) const;
+
+    void write(ostream& s) const
+    {
+        Index::write(s);
+        s.write((char*)&_dir,sizeof(_dir));
+        unsigned int size = iq_.size();
+        s.write((char*)&size,sizeof(size));
+        foreach(const inqn& x,iq_) x.write(s);
+    }
+
+    void read(istream& s)
+    {
+        Index::read(s);
+        s.read((char*)&_dir,sizeof(_dir));
+        unsigned int size; s.read((char*)&size,sizeof(size));
+        iq_.resize(size);
+        foreach(inqn& x,iq_) x.read(s);
+    }
 
     //------------------------------------------
     //IQIndex: methods for querying m's
