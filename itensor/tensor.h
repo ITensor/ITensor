@@ -365,20 +365,8 @@ public:
     Index(string name, int mm = 1, IndexType it=Link, int plev = 0) 
 	: p(new Internal::IndexDat(name,mm,it)), primelevel(plev) { }
 
-    Index(istream& s)
-    {
-        s.read((char*) &primelevel,sizeof(primelevel));
-        int t; s.read((char*) &t,sizeof(t));
-        //int ind; s.read((char*) &ind,sizeof(ind));
-        boost::uuids::uuid ind;
-        for(int i = 0; i < int(ind.size()); ++i) 
-        { char c; s.read(&c,sizeof(c)); ind.data[i] = '0'+c; }
-        int mm; s.read((char*) &mm,sizeof(mm));
-        int nlength; s.read((char*) &nlength,sizeof(nlength));
-        char* newname = new char[nlength+1]; s.read(newname,nlength+1);
-        string ss(newname); delete newname;
-        p = new Internal::IndexDat(ss,mm,IntToIndexType(t),ind);
-    }
+    Index(istream& s) { read(s); }
+
 
     Index(Imaker im)
 	{
@@ -460,6 +448,21 @@ public:
         const int nlength = p->sname.length();
         s.write((char*) &nlength,sizeof(nlength));
         s.write(p->sname.data(),nlength+1);
+    }
+
+    void read(istream& s)
+    {
+        s.read((char*) &primelevel,sizeof(primelevel));
+        int t; s.read((char*) &t,sizeof(t));
+        //int ind; s.read((char*) &ind,sizeof(ind));
+        boost::uuids::uuid ind;
+        for(int i = 0; i < int(ind.size()); ++i) 
+        { char c; s.read(&c,sizeof(c)); ind.data[i] = '0'+c; }
+        int mm; s.read((char*) &mm,sizeof(mm));
+        int nlength; s.read((char*) &nlength,sizeof(nlength));
+        char* newname = new char[nlength+1]; s.read(newname,nlength+1);
+        string ss(newname); delete newname;
+        p = new Internal::IndexDat(ss,mm,IntToIndexType(t),ind);
     }
 
     void print(string name = "") const
