@@ -1,10 +1,7 @@
 #include "iq.h"
 
 ostream& operator<<(ostream &o, const QN& q)
-{ 
-    if(q.mixed) o << "mixed QN: ";
-    return o<< format("sz = %d, Nf = %d, fp = %s") % q.sz() % q.Nf() % (q.fp() < 0 ? "-" : "+"); 
-}
+{ return o<< format("sz = %d, Nf = %d, fp = %s") % q.sz() % q.Nf() % (q.fp() < 0 ? "-" : "+"); }
 
 ostream& operator<<(ostream & s, const IQIndex& I)
 {

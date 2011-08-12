@@ -9,10 +9,11 @@ class QN
 {
     int _sz, _Nf, _Nfp; //_Nfp stands for fermion number parity, and tracks whether Nf is even or odd
 public:
-    bool mixed;
-    QN(int sz=0,int Nf=0) : _sz(sz), _Nf(Nf), _Nfp(abs(Nf%2)), mixed(false) { }
-    QN(int sz,int Nf,int Nfp) : _sz(sz), _Nf(Nf), _Nfp(abs(Nfp%2)), mixed(false) 
+    QN(int sz=0,int Nf=0) : _sz(sz), _Nf(Nf), _Nfp(abs(Nf%2)) { }
+    QN(int sz,int Nf,int Nfp) : _sz(sz), _Nf(Nf), _Nfp(abs(Nfp%2))
     { assert(_Nf==0 || abs(_Nf%2) == _Nfp); }
+    QN(istream& s) { read(s); }
+
     int sz() const { return _sz; }
     int Nf() const { return _Nf; }
     int Nfp() const { assert(_Nfp == 0 || _Nfp == 1); return _Nfp; }
@@ -20,6 +21,10 @@ public:
     int& sz() { return _sz; }
     int& Nf() { return _Nf; }
     int& Nfp() { assert(_Nfp == 0 || _Nfp == 1); return _Nfp; }
+
+    void write(ostream& s) const { s.write((char*)this,sizeof(this)); }
+    void read(istream& s) { s.read((char*)this,sizeof(this)); }
+
     QN operator+(const QN &other) const
 	{ QN res(*this); res+=other; return res; }
     QN operator-(const QN &other) const
