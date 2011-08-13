@@ -5,7 +5,7 @@
 
 PREFIX=../..
 
-MKLLIBDIR=/sopt/intel/mkl/10.1.0.015/lib/em64t
+MKLLIBDIR=/sopt/intel/mkl/10.1.0.015/lib/
 MKLINCLUDEDIR=/sopt/intel/mkl/10.1.0.015/include
 MKLFLAGS=-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lgfortran -lpthread
 
