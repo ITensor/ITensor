@@ -1,10 +1,12 @@
 #
 # Makefile for utilities library
 #
-# Notes: for Cray, CCCOM = CC, no ranlib, -F instead of -pg
-#	 for alpha, use cxx, no ranlib
+#########################################
 
-PREFIX=..
+include ../this_dir.mk
+include ../options.mk
+
+#########################################
 
 HEADERS=array2.h intarray2.h hash.h indent.h cputime.h tarray1.h input.h error.h minmax.h
 
@@ -14,10 +16,6 @@ OBJECTS= intarray2.o error.o ran1.o\
 SOURCES= array2.cc error.cc ran1.cc indexx.cc hash.cc\
 	cputime.cc tarray1.cc testarray.cc intarray2.cc input.cc
 
-INCLUDEDIR=$(PREFIX)/include
-LIBDIR=$(PREFIX)/lib
-
-CCCOM=g++ -m64
 CCFLAGS= -I$(INCLUDEDIR) -O2
 CCGFLAGS= -I$(INCLUDEDIR) -g -DBOUNDS
 CCPGFLAGS= -I$(INCLUDEDIR) -pg -O

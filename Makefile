@@ -5,20 +5,19 @@
 
 include options.mk
 
-build: configure link_Makefiles
+build: configure 
 	cd utilities && make
 	cd matrix/$(PLATFORM) && make
-	cd itensor && make install
+	cd itensor && make
 
 configure:
-	@echo THIS_DIR=`pwd` |cat - options.mk > .tmp && mv .tmp options.mk
+	@echo THIS_DIR=`pwd` > this_dir.mk
+	#@echo THIS_DIR=`pwd` > .tmp1
+	#@tail -n +2 options.mk > .tmp2
+	#@cat .tmp1 .tmp2 > options.mk
+	#@rm .tmp1 .tmp2
 
-link_Makefiles:
-	cd utilities && ln -f -s Makefile.default Makefile
-	cd matrix/$(PLATFORM) && ln -f -s Makefile.default Makefile
-	cd itensor && ln -f -s Makefile.default Makefile
-
-clean: link_Makefiles
+clean:
 	cd utilities && make clean
 	cd matrix/$(PLATFORM) && make clean
 	cd itensor && make clean
@@ -26,10 +25,3 @@ clean: link_Makefiles
 	cd sandbox && make clean
 	rm -f include/*
 	rm -f lib/*
-
-distclean: clean
-	cd utilities && rm -f Makefile
-	cd matrix/$(PLATFORM) && rm -f Makefile
-	cd itensor && rm -f Makefile
-	cd sample && rm -f Makefile
-	cd sandbox && rm -f Makefile
