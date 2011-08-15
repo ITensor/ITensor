@@ -12,3 +12,4 @@ sandbox/iqdmrg
 sample/dmrg
 sample/iqdmrg
 this_dir.mk
+options.mk
