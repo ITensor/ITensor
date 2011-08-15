@@ -1,36 +1,27 @@
-PREFIX=..
-
-CCCOM=g++ -m64
-MKLLIBDIR=/sopt/intel/mkl/10.1.0.015/lib/em64t
-MKLINCLUDEDIR=/sopt/intel/mkl/10.1.0.015/include
-LAPACK_FLAGS=-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lgfortran -lpthread
-
+include ../this_dir.mk
+include ../options.mk
 ################################################################
-#Options --------------
 
 TENSOR_HEADERS=tensor.h mps.h algorithm.h iq.h hams.h
-
 LIBNAMES=matrix utilities itensor
 
 #################################################################
 
 #Define Dirs -----------
-LOCAL_LIBDIR=$(PREFIX)/lib
 INCLUDEDIR=$(PREFIX)/include
-INCLUDEFLAGS=. -I$(INCLUDEDIR) -I../../boost -I$(MKLINCLUDEDIR)
-LIBDIR=$(LOCAL_LIBDIR) -L$(MKLLIBDIR)
+INCLUDEFLAGS=. -I$(INCLUDEDIR) -I$(BOOST_DIR) $(BLAS_LAPACK_INCLUDEFLAGS)
 
 #Mappings --------------
 LOCAL_LIBFLAGS=$(patsubst %,-l%, $(LIBNAMES))
 #LOCAL_LIBFLAGS=$(patsubst %,-l%-g, $(LIBNAMES))
-LOCAL_LIBS=$(patsubst %,$(LOCAL_LIBDIR)/lib%.a, $(LIBNAMES))
-#LOCAL_LIBS=$(patsubst %,$(LOCAL_LIBDIR)/lib%-g.a, $(LIBNAMES))
+LIBFILES=$(patsubst %,$(LIBDIR)/lib%.a, $(LIBNAMES))
+#LIBFILES=$(patsubst %,$(LIBDIR)/lib%-g.a, $(LIBNAMES))
 REL_TENSOR_HEADERS=$(patsubst %,$(INCLUDEDIR)/%, $(TENSOR_HEADERS))
 
 #Define Flags ----------
 CCFLAGS=$(CPPFLAGS) -I$(INCLUDEFLAGS) -O2  -DNDEBUG -DBOOST_DISABLE_ASSERTS
 #CCFLAGS= -I$(INCLUDEFLAGS) -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall -ansi
-LIBFLAGS=-L$(LIBDIR) $(LOCAL_LIBFLAGS) $(LAPACK_FLAGS)
+LIBFLAGS=-L$(LIBDIR) $(LOCAL_LIBFLAGS) $(BLAS_LAPACK_LIBFLAGS)
 
 #Rules ------------------
 
@@ -41,10 +32,10 @@ LIBFLAGS=-L$(LIBDIR) $(LOCAL_LIBFLAGS) $(LAPACK_FLAGS)
 
 all: dmrg iqdmrg
 
-dmrg: dmrg.o $(LOCAL_LIBS)
+dmrg: dmrg.o $(LIBFILES)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
 
-iqdmrg: iqdmrg.o $(LOCAL_LIBS)
+iqdmrg: iqdmrg.o $(LIBFILES)
 	$(CCCOM) $(CCFLAGS) iqdmrg.o -o iqdmrg $(LIBFLAGS)
 
 clean:

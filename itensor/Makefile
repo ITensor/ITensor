@@ -3,7 +3,8 @@
 #
 ################################
 
-PREFIX=..
+include ../this_dir.mk
+include ../options.mk
 
 ####################################
 
@@ -15,15 +16,10 @@ SOURCES=tensor.cc mps.cc algorithm.cc iq.cc
 
 ####################################
 
-INCLUDEDIR=$(PREFIX)/include -I../../boost
-INCLUDETARGET=$(PREFIX)/include
+INCLUDEFLAGS=-I$(INCLUDEDIR) -I$(BOOST_DIR)
 
-LIBDIR=$(PREFIX)/lib
-DESTLIBDIR=$(PREFIX)/lib
-
-CCCOM=g++ -m64
-CCFLAGS= -I$(INCLUDEDIR) -O2 -DNDEBUG -DBOOST_DISABLE_ASSERTS
-CCGFLAGS= -I$(INCLUDEDIR) -ansi -g -O0 -DBOUNDS -DITENSOR_USE_AT
+CCFLAGS= $(INCLUDEFLAGS) -O2 -DNDEBUG -DBOOST_DISABLE_ASSERTS
+CCGFLAGS= $(INCLUDEFLAGS) -ansi -g -O0 -DBOUNDS -DITENSOR_USE_AT
 
 GOBJECTS= $(patsubst %,.debug_objs/%, $(OBJECTS))
 
@@ -46,18 +42,18 @@ libitensor-g.a: mkdebugdir $(GOBJECTS) $(HEADERS)
 	ranlib libitensor-g.a
 
 headerscopy:	
-	cp $(HEADERS) $(INCLUDETARGET)
+	cp $(HEADERS) $(INCLUDEDIR)
 
 libs: libitensor.a 
 	cp libitensor.a $(LIBDIR)
 
 installo: headerscopy libitensor.a
 	cp libitensor.a $(LIBDIR)
-	ranlib $(DESTLIBDIR)/libitensor.a
+	ranlib $(LIBDIR)/libitensor.a
 
 installg: headerscopy libitensor-g.a
 	cp libitensor-g.a $(LIBDIR)
-	ranlib $(DESTLIBDIR)/libitensor-g.a
+	ranlib $(LIBDIR)/libitensor-g.a
 
 mkdebugdir:
 	mkdir -p .debug_objs

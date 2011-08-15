@@ -3,22 +3,17 @@
 #
 ####################################
 
-PLATFORM=macos
-#PLATFORM=intel
+include options.mk
 
-build: link_Makefiles
+build: configure 
 	cd utilities && make
 	cd matrix/$(PLATFORM) && make
-	cd itensor && make install
+	cd itensor && make
 
-link_Makefiles:
-	cd utilities && ln -f -s Makefile.default Makefile
-	cd matrix/$(PLATFORM) && ln -f -s Makefile.default Makefile
-	cd itensor && ln -f -s Makefile.default Makefile
-	cd sample && ln -f -s Makefile.$(PLATFORM) Makefile
-	cd sandbox && ln -f -s Makefile.$(PLATFORM) Makefile
+configure:
+	@echo THIS_DIR=`pwd` > this_dir.mk
 
-clean: link_Makefiles
+clean:
 	cd utilities && make clean
 	cd matrix/$(PLATFORM) && make clean
 	cd itensor && make clean
@@ -26,10 +21,4 @@ clean: link_Makefiles
 	cd sandbox && make clean
 	rm -f include/*
 	rm -f lib/*
-
-distclean: clean
-	cd utilities && rm -f Makefile
-	cd matrix/$(PLATFORM) && rm -f Makefile
-	cd itensor && rm -f Makefile
-	cd sample && rm -f Makefile
-	cd sandbox && rm -f Makefile
+	rm -f this_dir.mk
