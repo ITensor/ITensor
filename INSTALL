@@ -5,11 +5,9 @@ Installation Instructions
 1. Download the boost library (http://www.boost.org). This is a free, high quality, open source C++ library used extensively by ITensor and
    potentially helpful for your own application development.
 
-2. The ITensor library expects boost to be in a folder called "boost" located in the same directory as the ITensor library itself (one directory above this file). After unpacking the boost download, either move the "boost_#_##" folder to this location and rename it to "boost", or create a symlink using the command "ln -s location/of/boost_#_## boost".
+2. Edit the user configurable options. Start by making a copy of the sample options file: "cp options.mk.sample options.mk". Now edit the options.mk file in your favorite text editor. At a minimum, you must make sure that BOOST_DIR points to the location of your unpacked boost libraries folder (the default is a folder called 'boost' one directory above this file). Also, if you are using a system other than a recent Mac, edit the PLATFORM, BLAS_LAPACK_INCLUDEFLAGS and BLAS_LAPACK_LIBFLAGS to reflect the type and location of BLAS/LAPACK libraries.
 
-[At this point, if you are installing onto a recent version of Mac OSX with the appropriate developer tools (such as XCode), simply type 'make' in the toplevel library directory to build. If you are on another platform, read on...]
-
-3. Edit the toplevel Makefile in the same directory as this file. For instance, if you are using the Intel MKL library for your BLAS/LAPACK, uncomment the line "PLATFORM=intel", then edit the matrix/intel/Makefile.default file to reflect the location of MKL on your own system. 
+3. Finally, at the toplevel directory of the library (same location as this file), type "make". If all goes well, the built library files should appear in the LIBDIR folder specified in options.mk.
 
 
 ### Linking your own applications to the libraries
