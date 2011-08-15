@@ -3,11 +3,8 @@
 #
 #################################
 
-PREFIX=../..
-
-MKLLIBDIR=/sopt/intel/mkl/10.1.0.015/lib/em64t
-MKLINCLUDEDIR=/sopt/intel/mkl/10.1.0.015/include
-MKLFLAGS=-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lgfortran -lpthread
+include ../../this_dir.mk
+include ../../options.mk
 
 ####################################################################
 
@@ -18,18 +15,6 @@ OBJECTS=  matrix.o  utility.o  sparse.o  david.o sparseref.o\
 	hpsortir.o  daxpy.o matrixref.o  storelink.o conjugate_gradient.o\
 	 dgemm.o 
 
-#OOBJECTS=  matrix.o-o  utility.o-o  sparse.o-o  david.o-o sparseref.o-o\
-#	daxpy.o-o hpsortir.o-o conjugate_gradient.o-o  matrixref.o-o  storelink.o-o \
-#	dgemm.o-o
-
-#GOBJECTS=  matrix.o-g  utility.o-g  sparse.o-g  david.o-g sparseref.o-g\
-#	daxpy.o-g hpsortir.o-g  conjugate_gradient.o-g matrixref.o-g  storelink.o-g \
-#	dgemm.o-g
-
-#PGOBJECTS= matrix.o-pg utility.o-pg sparse.o-pg david.o-pg sparseref.o-pg\
-#	daxpy.o-pg hpsortir.o-pg conjugate_gradient.o-pg matrixref.o-pg storelink.o-pg \
-#	dgemm.o-pg
-
 SOURCES= matrix.cc utility.cc sparse.cc david.cc hpsortir.cc \
 	matrixref.cc storelink.cc hpsortir.cc \
 	conjugate_gradient.cc sparseref.cc\
@@ -38,17 +23,13 @@ SOURCES= matrix.cc utility.cc sparse.cc david.cc hpsortir.cc \
 GOBJECTS= $(patsubst %,.g_objs/%, $(OBJECTS))
 PGOBJECTS= $(patsubst %,.pg_objs/%, $(OBJECTS))
 
-CCCOM= g++ -m64 
-LIBDIR=$(PREFIX)/lib
-
-INCLUDETARGET=$(PREFIX)/include
-INCLUDEFLAGS=. -I$(INCLUDETARGET) -I$(MKLINCLUDEDIR)
+INCLUDEFLAGS=. -I$(INCLUDEDIR) -I$(BLAS_LAPACK_INCLUDEDIR)
 CCFLAGS= -I$(INCLUDEFLAGS) -O2 -DNDEBUG
 CCGFLAGS= -I$(INCLUDEFLAGS) -DMATRIXBOUNDS -DBOUNDS -g -O0
 CCPGFLAGS= -I$(INCLUDEFLAGS) -pg -O
 
-LIBFLAGS= -L$(LIBDIR) -L$(MKLLIBDIR) -lmatrix -lutilities $(MKLFLAGS)
-LIBGFLAGS= -L$(LIBDIR) -L$(MKLLIBDIR) -lmatrix-g -lutilities-g $(MKLFLAGS)
+LIBFLAGS= -L$(LIBDIR) -L$(BLAS_LAPACK_LIBDIR) -lmatrix -lutilities $(BLAS_LAPACK_FLAGS)
+LIBGFLAGS= -L$(LIBDIR) -L$(BLAS_LAPACK_LIBDIR) -lmatrix-g -lutilities-g $(BLAS_LAPACK_FLAGS)
 
 LIBFILE=libmatrix.a
 LIBGFILE=libmatrix-g.a
@@ -76,7 +57,7 @@ install: libmatrix-g.a libmatrix.a
 	cp libmatrix-g.a $(LIBDIR)
 	ranlib $(LIBDIR)/libmatrix-g.a
 	ranlib ./libmatrix-g.a
-	cp *.h *.ih $(INCLUDETARGET)
+	cp *.h *.ih $(INCLUDEDIR)
 
 libmatrix.a: $(OBJECTS) $(HEADERS)
 	ar rv libmatrix.a $(OBJECTS)
@@ -298,7 +279,7 @@ matrix.tar.gz: matrix.tar
 	gzip -f matrix.tar
 
 include.tar: *.h Makefile
-	tar cvf ../include.tar -C $(INCLUDETARGET) .
+	tar cvf ../include.tar -C $(INCLUDEDIR) .
 	mv ../include.tar .
 
 include.tar.gz: include.tar
