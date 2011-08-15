@@ -609,8 +609,8 @@ public:
         if(i >= right_orth_lim) right_orth_lim = i+1;
         return GET(A,i); 
     }
-    bool is_null() const { return A[1].is_null(); }
-    bool is_not_null() const { return A[1].is_not_null(); }
+    bool is_null() const { return (sst_==0); }
+    bool is_not_null() const { return (sst_!=0); }
 
     //Useful for iterating over A's in a foreach loop
     //Do foreach(const I[Q]Tensor& A, psi.all_As()) { ... }
