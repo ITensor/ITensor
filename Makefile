@@ -12,10 +12,6 @@ build: configure
 
 configure:
 	@echo THIS_DIR=`pwd` > this_dir.mk
-	#@echo THIS_DIR=`pwd` > .tmp1
-	#@tail -n +2 options.mk > .tmp2
-	#@cat .tmp1 .tmp2 > options.mk
-	#@rm .tmp1 .tmp2
 
 clean:
 	cd utilities && make clean
