@@ -3,20 +3,20 @@
 #
 ####################################
 
-PLATFORM=macos
-#PLATFORM=intel
+include options.mk
 
-build: link_Makefiles
+build: configure link_Makefiles
 	cd utilities && make
 	cd matrix/$(PLATFORM) && make
 	cd itensor && make install
+
+configure:
+	@echo THIS_DIR=`pwd` |cat - options.mk > .tmp && mv .tmp options.mk
 
 link_Makefiles:
 	cd utilities && ln -f -s Makefile.default Makefile
 	cd matrix/$(PLATFORM) && ln -f -s Makefile.default Makefile
 	cd itensor && ln -f -s Makefile.default Makefile
-	cd sample && ln -f -s Makefile.$(PLATFORM) Makefile
-	cd sandbox && ln -f -s Makefile.$(PLATFORM) Makefile
 
 clean: link_Makefiles
 	cd utilities && make clean

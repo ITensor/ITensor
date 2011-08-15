@@ -15,14 +15,12 @@ SOURCES= array2.cc error.cc ran1.cc indexx.cc hash.cc\
 	cputime.cc tarray1.cc testarray.cc intarray2.cc input.cc
 
 INCLUDEDIR=$(PREFIX)/include
-INCLUDETARGET=$(PREFIX)/include
-
 LIBDIR=$(PREFIX)/lib
 
-CCCOM= g++
-CCFLAGS= -I$(INCLUDEDIR) -O2 -m64
-CCGFLAGS= -I$(INCLUDEDIR) -g -DBOUNDS -m64
-CCPGFLAGS= -I$(INCLUDEDIR) -pg -O -m64
+CCCOM=g++ -m64
+CCFLAGS= -I$(INCLUDEDIR) -O2
+CCGFLAGS= -I$(INCLUDEDIR) -g -DBOUNDS
+CCPGFLAGS= -I$(INCLUDEDIR) -pg -O
 
 .SUFFIXES: .cc $(SUFFIXES)
 
@@ -63,54 +61,8 @@ libutilities-pg.a: $(SOURCES) $(HEADERS)
 	ar rv libutilities-pg.a $(OBJECTS)
 	ranlib libutilities-pg.a
 
-intarray2.o: array2.cc array2.h
-	$(CCCOM) $(CCFLAGS) -c intarray2.cc
-
-testinput: testinput.cc input.h input.cc
-	$(CCCOM) $(CCGFLAGS) testinput.cc input.cc -o testinput -L. -lutilities
-
-testarray: testarray.cc tarray1.h error.o tarray1.o intarray2.o
-	$(CCCOM) $(CCGFLAGS) -c testarray.cc
-	$(CCCOM) $(CCGFLAGS) -c tarray1.cc
-	$(CCCOM) $(CCGFLAGS) -c intarray2.cc
-	$(CCCOM) $(CCGFLAGS) -c error.cc
-	$(CCCOM) $(CCGFLAGS) testarray.o error.o intarray2.o tarray1.o -o testarray
-
 headerscopy:	
-	cp $(HEADERS) $(INCLUDETARGET)
-
-libs: libutilities.a libutilities-g.a libutilities-pg.a 
-	cp libutilities.a libutilities-g.a libutilities-pg.a $(LIBDIR)
-#	ranlib $(LIBDIR)/libutilities.a
-#	ranlib $(LIBDIR)/libutilities-g.a
-#	ranlib $(LIBDIR)/libutilities-pg.a
-
-
-c90:	tar
-	put_c90 utilities.tar
-
-tar:	utilities.tar
-
-tar.gz:	utilities.tar.gz
-
-utilities.tar.gz: utilities.tar
-	gzip -f utilities.tar
-
-utilities.tar: $(HEADERS) $(SOURCES)
-	cp Makefile Makefile.new
-	tar cf utilities.tar $(SOURCES) $(HEADERS) Makefile.new
-
-sdsc: utilities.tar
-	putc90 utilities.tar utilities/utilities.tar
+	cp $(HEADERS) $(INCLUDEDIR)
 
 clean:	
 	rm -f *.o libutilities.a libutilities-g.a libutilities-pg.a 
-	rm -f *.tar *temp.cc
-
-cputest:	cputime.o cputest.o
-	$(CCCOM) $(CCGFLAGS) cputime.o cputest.o -o cputest
-	
-	
-
-#dependencies
-
