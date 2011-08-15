@@ -21,3 +21,4 @@ clean:
 	cd sandbox && make clean
 	rm -f include/*
 	rm -f lib/*
+	rm -f this_dir.mk
