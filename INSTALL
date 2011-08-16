@@ -2,17 +2,26 @@
 
 ### Building the Libraries
 
-1. Download the boost library (http://www.boost.org). This is a free, high quality, open source C++ library used extensively by ITensor and
-   potentially helpful for your own application development.
+1. Download the boost library (http://www.boost.org). This is a free, high quality, open source C++ library 
+   used extensively by ITensor and potentially helpful for your own application development.
 
-2. Edit the user configurable options. Start by making a copy of the sample options file: "cp options.mk.sample options.mk". Now edit the options.mk file in your favorite text editor. At a minimum, you must make sure that BOOST_DIR points to the location of your unpacked boost libraries folder (the default is a folder called 'boost' one directory above this file). Also, if you are using a system other than a recent Mac, edit the PLATFORM, BLAS_LAPACK_INCLUDEFLAGS and BLAS_LAPACK_LIBFLAGS to reflect the type and location of BLAS/LAPACK libraries.
+2. Edit the user configurable options. Start by making a copy of the sample options file: 
+   'cp options.mk.sample options.mk'. Then edit options.mk in your favorite text editor. 
 
-3. Finally, at the toplevel directory of the library (same location as this file), type "make". If all goes well, the built library files should appear in the LIBDIR folder specified in options.mk.
+   At a minimum, you must make sure that BOOST_DIR points to the location of your unpacked boost libraries 
+   folder (the default is a folder called 'boost' located one directory above this file). Also, if you are 
+   using a system other than a recent Mac, edit PLATFORM, BLAS_LAPACK_INCLUDEFLAGS and 
+   BLAS_LAPACK_LIBFLAGS to reflect the type and location of your BLAS/LAPACK libraries.
+
+3. Finally, at the top level of the library (same directory as this file), type "make". 
+   If all goes well, the built library files should appear in the LIBDIR folder specified in options.mk.
 
 ### Building the sample and sandbox apps
 
-We have provided sample applications under the 'sample' directory. Also, we have provided a 'sandbox' folder with some apps for you to modify in order to experiment with the library's features.
+We have provided sample applications under the 'sample' directory. Also, we have provided a 'sandbox' folder 
+with some apps for you to modify to experiment with the library's features.
 
-To build the apps in these folders, simply 'cd' into each folder and type 'make'.
+To build these apps, simply 'cd' into each folder and type 'make'. Or, to build an individual app
+type 'make <appname>'.
 
 ### Linking your own applications to the libraries
