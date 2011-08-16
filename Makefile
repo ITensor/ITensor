@@ -1,16 +1,35 @@
 #
-# Makefile for ITensor library
+# Makefile for ITensor libraries
 #
 ####################################
 
 include options.mk
 
-build: configure 
+build: utilities matrix itensor 
+
+utilities: configure
+	@echo
+	@echo Building Utilities library
+	@echo
 	cd utilities && make
+
+matrix: configure
+	@echo
+	@echo Building MatrixRef library
+	@echo
 	cd matrix/$(PLATFORM) && make
+
+itensor: configure
+	@echo
+	@echo Building ITensor library
+	@echo
 	cd itensor && make
 
-configure:
+configure: this_dir.mk
+
+this_dir.mk:
+	@echo
+	@echo Configure: Writing current dir to this_dir.mk
 	@echo THIS_DIR=`pwd` > this_dir.mk
 
 clean:
