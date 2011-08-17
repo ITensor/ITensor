@@ -158,6 +158,25 @@ template<class T> vector<T>& operator*=(vector<T>& v1, const vector<T>& v2)
 template<class T> vector<T> operator*(const vector<T>& v1, const vector<T>& v2) 
 { vector<T> res(v1); res *= v2; return res; }
 
+template<class T> vector<T>& operator*=(vector<T>& v1, const vector<T*>& v2) 
+{
+    const unsigned int sz = v1.size();
+    assert(v2.size() == sz);
+    for(unsigned int n = 0; n < sz; ++n) v1[n] *= *(v2[n]);
+    return v1;
+}
+template<class T> vector<T> operator*(const vector<T>& v1, const vector<T*>& v2) 
+{ vector<T> res(v1); res *= v2; return res; }
+
+template<class T> vector<T> operator*(const vector<const T*>& v1, const vector<const T*>& v2) 
+{ 
+    const unsigned int sz = v1.size();
+    assert(v2.size() == sz);
+    vector<T> res(sz); 
+    for(unsigned int n = 0; n < sz; ++n) res[n] = *(v1[n]) * *(v2[n]);
+    return res; 
+}
+
 template<class T>
 ostream& operator<<(ostream& s, const vector<T>& v)
 { 
@@ -165,6 +184,11 @@ ostream& operator<<(ostream& s, const vector<T>& v)
     for(unsigned int n = 0; n < v.size(); ++n) { s << n << ": " << v[n] << "\n"; } 
     return s; 
 }
+
+template<class T> T& operator*=(T& t1, const T* pt2) 
+{ t1 *= *(pt2); return t1; }
+template<class T> T operator*(const T& t1, const T* pt2) 
+{ T res(t1); res *= *(pt2); return res; }
 
 
 class ApproxReal

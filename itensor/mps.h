@@ -839,15 +839,16 @@ public:
         return En;
     }
 
-    template<class TensorSet>
-    void projectOp(int j, Direction dir, const TensorSet& P, const TensorSet& Op, TensorSet& res) const
+    template<class TensorSet, class OpTensorSet>
+    void projectOp(int j, Direction dir, const TensorSet& P, const OpTensorSet& Op, TensorSet& res) const
     {
         if(res.size() != Op.size()) res.resize(Op.size());
         const TensorSet& nP = (P.size() == Op.size() ? P : TensorSet(Op.size()));
         for(unsigned int n = 0; n < Op.size(); ++n) projectOp(j,dir,GET(nP,n),Op[n],GET(res,n));
     }
 
-    void projectOp(int j, Direction dir, const Tensor& P, const Tensor& Op, Tensor& res) const
+    template<class OpTensor>
+    void projectOp(int j, Direction dir, const Tensor& P, const OpTensor& Op, Tensor& res) const
     {
         if(dir==Fromleft)
         {
@@ -1341,7 +1342,8 @@ class MPOSet
 {
     int N;
     unsigned int size;
-    vector<vector<Tensor> > A;
+    typedef vector<const Tensor*> storage_type;
+    vector<storage_type> A;
 public:
     typedef vector<Tensor> TensorT;
 
@@ -1350,14 +1352,14 @@ public:
     void include(const MPS<Tensor>& Op)
     {
         if(N < 0) { N = Op.NN(); A.resize(N+1); }
-        for(int n = 1; n <= N; ++n) GET(A,n).push_back(Op.AA(n)); 
+        for(int n = 1; n <= N; ++n) GET(A,n).push_back(&(Op.AA(n))); 
     }
 
     int NN() const { return N; }
-    const vector<Tensor>& AA(int j) const { return A.at(j); }
+    const storage_type& AA(int j) const { return A.at(j); }
     const vector<Tensor> bondTensor(int b) const
     {
-        vector<Tensor> res = GET(A,b) * GET(A,b+1);
+        vector<Tensor> res = A[b] * A[b+1];
         return res;
     }
 
