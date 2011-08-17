@@ -127,7 +127,45 @@ extern int copycount;
 class Prodstats; extern Prodstats prodstats;
 #endif
 
+enum Direction { Fromright, Fromleft, Both, None };
+
+enum Printdat { ShowData, HideData };
+
+#define Print(X) { printdat = false; cerr << "\n" << #X << " =\n" << X << "\n"; }
+#define PrintDat(X) { printdat = true; cerr << "\n" << #X << " =\n" << X << "\n"; printdat = false; }
+
+//Enum defining directions for arrows
+enum Arrow { In = -1, Out = 1 };
+
+inline Arrow operator*(const Arrow& a, const Arrow& b)
+{ return (int(a)*int(b) == In) ? In : Out; }
+
+const Arrow Switch = In*Out;
+
+inline ostream& operator<<(ostream& s, const Arrow& D)
+{ if(D == In) s << "In"; else s << "Out"; return s; }
+
+
 template<class T, class Op> void for_all(T& a, Op f) { for_each(a.begin(),a.end(),f); }
+
+template<class T> vector<T>& operator*=(vector<T>& v1, const vector<T>& v2) 
+{
+    const unsigned int sz = v1.size();
+    assert(v2.size() == sz);
+    for(unsigned int n = 0; n < sz; ++n) v1[n] *= v2[n];
+    return v1;
+}
+template<class T> vector<T> operator*(const vector<T>& v1, const vector<T>& v2) 
+{ vector<T> res(v1); res *= v2; return res; }
+
+template<class T>
+ostream& operator<<(ostream& s, const vector<T>& v)
+{ 
+    if(v.size() == 0) s << "(Empty vector)\n";
+    for(unsigned int n = 0; n < v.size(); ++n) { s << n << ": " << v[n] << "\n"; } 
+    return s; 
+}
+
 
 class ApproxReal
 {
@@ -141,20 +179,6 @@ public:
     { return b.r-a.r > 1.0e-12; }
 };
 
-enum Direction { Fromright, Fromleft, Both, None };
-
-enum Printdat { ShowData, HideData };
-
-//Enum defining directions for arrows
-enum Arrow { In = -1, Out = 1 };
-
-inline Arrow operator*(const Arrow& a, const Arrow& b)
-{ return (int(a)*int(b) == In) ? In : Out; }
-
-const Arrow Switch = In*Out;
-
-inline ostream& operator<<(ostream& s, const Arrow& D)
-{ if(D == In) s << "In"; else s << "Out"; return s; }
 
 enum IndexType { Link, Site, ReIm, Virtual };
 static const char * indextypename[] = { "Link","Site","ReIm","Virtual" };

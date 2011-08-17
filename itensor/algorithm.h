@@ -34,10 +34,12 @@ class LocalHam : public BaseLocalHam<Tensor>
     typedef BaseLocalHam<Tensor> Parent;
 public:
     const TensorSet &LeftTerm, &RightTerm, &MPOTerm;
-    bool useleft, useright;
+    const bool useleft, useright;
 
     LocalHam(const TensorSet& le, const TensorSet& ri, const TensorSet& mpo, Tensor& psi_) 
-	: Parent(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), useleft(le[0].is_not_null()), useright(ri[0].is_not_null())
+	: Parent(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), 
+    useleft(le.size() == 0 ? false : le[0].is_not_null()),
+    useright(ri.size() == 0 ? false : ri[0].is_not_null())
     { }
 
     void product(const VectorRef& A, VectorRef& B) const
@@ -146,8 +148,8 @@ void putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const Ten
         phip += phi; //evolve by (1-tau*H)
         int phisize = phi.vec_size();
         phi = phip;
-        if(cnt > 10) cerr << "Warning: large number of time evolution steps in doDavidson." << endl;
-        if(phisize == 0) { if(cnt > 9) Error("phi has zero size in doDavidson."); else continue; }
+        if(cnt > 10) cerr << "Warning: large number of time evolution steps in putInQNs." << endl;
+        if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
         else if(phip.vec_size() == phisize) break;
     }
 }
@@ -166,8 +168,8 @@ void putInQNs(IQTensor& phi, const IQTensor& mpoh, const IQTensor& LH, const IQT
         phip += phi; //evolve by (1-tau*H)
         int phisize = phi.vec_size();
         phi = phip;
-        if(cnt > 10) cerr << "Warning: large number of time evolution steps in doDavidson." << endl;
-        if(phisize == 0) { if(cnt > 9) Error("phi has zero size in doDavidson."); else continue; }
+        if(cnt > 10) cerr << "Warning: large number of time evolution steps in putInQNs." << endl;
+        if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
         else if(phip.vec_size() == phisize) break;
     }
 }
@@ -299,50 +301,34 @@ template <class MPSType, class MPOType, class DMRGOptions>
 Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptions& opts)
 {
     typedef typename MPSType::TensorT Tensor;
+    typedef typename MPOType::TensorT MPOTensor;
     const Real orig_cutoff = psi.cutoff; const int orig_minm = psi.minm, orig_maxm = psi.maxm;
     int debuglevel = (opts.quiet ? 0 : 1);
     int N = psi.NN();
     Real energy;
 
-    psi.position(1);
+    //psi.position(1);
     //if(H.is_complex()) psi.AAnc(1) *= Complex_1;
 
-    vector<Tensor> PH(N+1);
-    PH[N-1] = psi.AA(N) * H.AA(N) * conj(primed(psi.AA(N)));
-    for(int l = N-2; l >= 2; l--)
-    {
-        PH[l] = PH[l+1]; 
-        PH[l] *= psi.AA(l+1); PH[l] *= H.AA(l+1); PH[l] *= conj(primed(psi.AA(l+1)));
-    }
+    vector<MPOTensor> PH(N+1);
+    for(int l = N-1; l >= 2; --l) psi.projectOp(l+1,Fromright,PH[l+1],H.AA(l+1),PH[l]);
 
-    for(int sw = 1; sw <= sweeps.nsweep(); sw++)
+    for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
     {
         psi.cutoff = sweeps.cutoff(sw); psi.minm = sweeps.minm(sw); psi.maxm = sweeps.maxm(sw);
         for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
         {
             if(!opts.quiet) cout << format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % b % (b+1);
 
-            Tensor mpoh = H.AA(b) * H.AA(b+1);
-            Tensor phi = psi.AA(b) * psi.AA(b+1);
-
-            energy = psi.bondDavidson(b,(ha==1?Fromleft:Fromright),mpoh,PH[b],PH[b+1],sweeps.niter(sw),debuglevel);
+            energy = psi.bondDavidson(b,H.bondTensor(b),PH[b],PH[b+1],sweeps.niter(sw),debuglevel,(ha==1?Fromleft:Fromright));
 
             if(!opts.quiet) { cout << format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
                                       % sweeps.cutoff(sw) % sweeps.maxm(sw) % psi.LinkInd(b).showm(); }
 
             opts.measure(sw,ha,b,psi,energy);
 
-            if(ha == 1 && b != N-1)
-            {
-                PH[b+1] = (b == 1? psi.AA(b) : PH[b] * psi.AA(b)); 
-                PH[b+1] *= H.AA(b); PH[b+1] *= conj(primed(psi.AA(b)));
-            }
-            if(ha == 2 && b != 1)
-            {
-                PH[b] = (b == N-1 ? psi.AA(b+1) : PH[b+1] * psi.AA(b+1));
-                PH[b] *= H.AA(b+1); PH[b] *= conj(primed(psi.AA(b+1)));
-            }
-
+            if(ha == 1 && b != N-1) psi.projectOp(b,Fromleft,PH[b],H.AA(b),PH[b+1]);
+            if(ha == 2 && b != 1)   psi.projectOp(b+1,Fromright,PH[b+1],H.AA(b+1),PH[b]);
         } //for loop over b
 
         if(opts.checkDone(sw,psi,energy))

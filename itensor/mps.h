@@ -46,6 +46,8 @@ public:
         s.write((char*) &N,sizeof(N));
         for(int j = 1; j <= N; ++j) site.at(j).write(s);
     }
+
+    virtual SiteOp id(int i) const { Error("SiteSet::id(int i) must be overridden by derived class."); return SiteOp(si(i)); }
 };
 } //namespace Internal
 typedef Internal::SiteSet<IQIndex> SiteSet;
@@ -103,7 +105,7 @@ public:
     IQIndexVal Z0P(int i) const { return siP(i)(2); }
     IQIndexVal DnP(int i) const { return siP(i)(3); }
 
-    SiteOp id(int i) const
+    virtual SiteOp id(int i) const
     {
         SiteOp res(si(i));
         res(Up(i),UpP(i)) = 1; res(Z0(i),Z0P(i)) = 1; res(Dn(i),DnP(i)) = 1;
@@ -211,7 +213,7 @@ public:
     IQIndexVal UpP(int i) const { return siP(i)(1); }
     IQIndexVal DnP(int i) const { return siP(i)(2); }
 
-    SiteOp id(int i) const
+    virtual SiteOp id(int i) const
     {
         SiteOp res(si(i));
         res(Up(i),UpP(i)) = 1; res(Dn(i),DnP(i)) = 1;
@@ -344,7 +346,7 @@ public:
     IQIndexVal EmpP(int i) const { return siP(i)(1); }
     IQIndexVal OccP(int i) const { return siP(i)(2); }
 
-    SiteOp id(int i) const
+    virtual SiteOp id(int i) const
     {
         SiteOp res(si(i));
         res(Emp(i),EmpP(i)) = 1; res(Occ(i),OccP(i)) = 1;
@@ -422,7 +424,7 @@ public:
     IQIndexVal DnStateP(int i) const { return siP(i)(3); }
     IQIndexVal UpDnStateP(int i) const { return siP(i)(4); }
 
-    SiteOp id(int i) const
+    virtual SiteOp id(int i) const
 	{
 	SiteOp res(si(i));
 	res(Emp(i),EmpP(i)) = 1; res(UpState(i),UpStateP(i)) = 1;
@@ -611,6 +613,8 @@ public:
     }
     bool is_null() const { return (sst_==0); }
     bool is_not_null() const { return (sst_!=0); }
+
+    Tensor bondTensor(int b) const { Tensor res = A.at(b) * A.at(b+1); return res; }
 
     //Useful for iterating over A's in a foreach loop
     //Do foreach(const I[Q]Tensor& A, psi.all_As()) { ... }
@@ -816,7 +820,49 @@ public:
         if(do_signfix) Error("MPS::getCenter: do_signfix not implemented.");
     }
 
-    Real bondDavidson(int b, Direction dir, const Tensor& mpoh, const Tensor& LH, const Tensor& RH, int niter, int debuglevel, Real errgoal=1E-4);
+    template<class TensorSet>
+    Real bondDavidson(int b, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Direction dir, Real errgoal=1E-4)
+    {
+        if(b-1 > left_orth_lim)
+        {
+            cerr << format("MPS::bondDavidson: b=%d, Lb=%d\n")%b%left_orth_lim;
+            Error("MPS::bondDavidson: b > left_orth_lim");
+        }
+        if(b+2 < right_orth_lim)
+        {
+            cerr << format("MPS::bondDavidson: b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
+            Error("MPS::bondDavidson: b+1 < right_orth_lim");
+        }
+        Tensor phi = GET(A,b); phi *= GET(A,b+1);
+        Real En = doDavidson(phi,mpoh,LH,RH,niter,debuglevel,errgoal);
+        doSVD(b,phi,dir);
+        return En;
+    }
+
+    template<class TensorSet>
+    void projectOp(int j, Direction dir, const TensorSet& P, const TensorSet& Op, TensorSet& res) const
+    {
+        if(res.size() != Op.size()) res.resize(Op.size());
+        const TensorSet& nP = (P.size() == Op.size() ? P : TensorSet(Op.size()));
+        for(unsigned int n = 0; n < Op.size(); ++n) projectOp(j,dir,GET(nP,n),Op[n],GET(res,n));
+    }
+
+    void projectOp(int j, Direction dir, const Tensor& P, const Tensor& Op, Tensor& res) const
+    {
+        if(dir==Fromleft)
+        {
+            if(j > left_orth_lim) cerr << format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim, Error("");
+            res = (j == 1 ? AA(j) : P * AA(j));
+            res *= Op; res *= conj(primed(AA(j)));
+        }
+        else
+        {
+            if(j < right_orth_lim) cerr << format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim, Error("");
+            res = (j == N ? AA(j) : P * AA(j));
+            res *= Op; res *= conj(primed(AA(j)));
+        }
+    }
+
 
     void applygate(Tensor gate)
 	{
@@ -1066,24 +1112,6 @@ MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
 }
 
 
-template <class Tensor>
-Real MPS<Tensor>::bondDavidson(int b, Direction dir, const Tensor& mpoh, const Tensor& LH, const Tensor& RH, int niter, int debuglevel, Real errgoal)
-{
-    if(b-1 > left_orth_lim)
-    {
-        cerr << format("MPS::bondDavidson: b=%d, Lb=%d\n")%b%left_orth_lim;
-        Error("MPS::bondDavidson: b > left_orth_lim");
-    }
-    if(b+2 < right_orth_lim)
-    {
-        cerr << format("MPS::bondDavidson: b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
-        Error("MPS::bondDavidson: b+1 < right_orth_lim");
-    }
-    Tensor phi = GET(A,b); phi *= GET(A,b+1);
-    Real En = doDavidson(phi,mpoh,LH,RH,niter,debuglevel,errgoal);
-    doSVD(b,phi,dir);
-    return En;
-}
 
 
 } //namespace Internal
@@ -1251,6 +1279,7 @@ public:
         //recalculate_QNs();
         //assert(check_QNs());
 	}
+
 };
 
 class MPO : public MPS
@@ -1304,6 +1333,39 @@ public:
 	}
 
 };
+
+namespace Internal {
+
+template<class Tensor>
+class MPOSet
+{
+    int N;
+    unsigned int size;
+    vector<vector<Tensor> > A;
+public:
+    typedef vector<Tensor> TensorT;
+
+    MPOSet() : N(-1), size(0) { }
+
+    void include(const MPS<Tensor>& Op)
+    {
+        if(N < 0) { N = Op.NN(); A.resize(N+1); }
+        for(int n = 1; n <= N; ++n) GET(A,n).push_back(Op.AA(n)); 
+    }
+
+    int NN() const { return N; }
+    const vector<Tensor>& AA(int j) const { return A.at(j); }
+    const vector<Tensor> bondTensor(int b) const
+    {
+        vector<Tensor> res = GET(A,b) * GET(A,b+1);
+        return res;
+    }
+
+}; //class Internal::MPOSet
+
+} //namespace Internal
+typedef Internal::MPOSet<ITensor> MPOSet;
+typedef Internal::MPOSet<IQTensor> IQMPOSet;
 
 
 namespace Internal {
