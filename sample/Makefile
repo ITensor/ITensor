@@ -13,30 +13,45 @@ INCLUDEFLAGS=. -I$(INCLUDEDIR) -I$(BOOST_DIR) $(BLAS_LAPACK_INCLUDEFLAGS)
 
 #Mappings --------------
 LOCAL_LIBFLAGS=$(patsubst %,-l%, $(LIBNAMES))
-#LOCAL_LIBFLAGS=$(patsubst %,-l%-g, $(LIBNAMES))
+LOCAL_LIBGFLAGS=$(patsubst %,-l%-g, $(LIBNAMES))
 LIBFILES=$(patsubst %,$(LIBDIR)/lib%.a, $(LIBNAMES))
-#LIBFILES=$(patsubst %,$(LIBDIR)/lib%-g.a, $(LIBNAMES))
+LIBGFILES=$(patsubst %,$(LIBDIR)/lib%-g.a, $(LIBNAMES))
 REL_TENSOR_HEADERS=$(patsubst %,$(INCLUDEDIR)/%, $(TENSOR_HEADERS))
 
 #Define Flags ----------
 CCFLAGS=$(CPPFLAGS) -I$(INCLUDEFLAGS) -O2  -DNDEBUG -DBOOST_DISABLE_ASSERTS
-#CCFLAGS= -I$(INCLUDEFLAGS) -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall -ansi
+CCGFLAGS= -I$(INCLUDEFLAGS) -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall -ansi
 LIBFLAGS=-L$(LIBDIR) $(LOCAL_LIBFLAGS) $(BLAS_LAPACK_LIBFLAGS)
+LIBGFLAGS=-L$(LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS)
 
 #Rules ------------------
 
 %.o: %.cc $(REL_TENSOR_HEADERS)
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
+.debug_objs/%.o: %.cc
+	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
+
 #Targets -----------------
 
-all: dmrg iqdmrg
+build: dmrg iqdmrg
 
-dmrg: dmrg.o $(LIBFILES)
+debug: dmrg-g iqdmrg-g
+
+dmrg: dmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
 
-iqdmrg: iqdmrg.o $(LIBFILES)
+dmrg-g: mkdebugdir .debug_objs/dmrg.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/dmrg.o -o dmrg-g $(LIBGFLAGS)
+
+iqdmrg: iqdmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) iqdmrg.o -o iqdmrg $(LIBFLAGS)
 
+iqdmrg-g: mkdebugdir .debug_objs/iqdmrg.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/iqdmrg.o -o iqdmrg-g $(LIBGFLAGS)
+
+mkdebugdir:
+	mkdir -p .debug_objs
+
 clean:
-	rm -f *.o dmrg iqdmrg
+	rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g
