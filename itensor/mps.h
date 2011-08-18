@@ -1112,9 +1112,6 @@ MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
     return *this;
 }
 
-
-
-
 } //namespace Internal
 typedef Internal::MPS<ITensor> MPS;
 typedef Internal::MPS<IQTensor> IQMPS;
@@ -1340,10 +1337,8 @@ namespace Internal {
 template<class Tensor>
 class MPOSet
 {
-    int N;
-    unsigned int size;
-    typedef vector<const Tensor*> storage_type;
-    vector<storage_type> A;
+    int N, size;
+    vector<vector<const Tensor*> > A;
 public:
     typedef vector<Tensor> TensorT;
 
@@ -1353,15 +1348,14 @@ public:
     {
         if(N < 0) { N = Op.NN(); A.resize(N+1); }
         for(int n = 1; n <= N; ++n) GET(A,n).push_back(&(Op.AA(n))); 
+        ++size;
     }
 
     int NN() const { return N; }
-    const storage_type& AA(int j) const { return A.at(j); }
+    int size() const { return size; }
+    const storage_type& AA(int j) const { return GET(A,j); }
     const vector<Tensor> bondTensor(int b) const
-    {
-        vector<Tensor> res = A[b] * A[b+1];
-        return res;
-    }
+    { vector<Tensor> res = A[b] * A[b+1]; return res; }
 
 }; //class Internal::MPOSet
 
