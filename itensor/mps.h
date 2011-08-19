@@ -1337,23 +1337,23 @@ namespace Internal {
 template<class Tensor>
 class MPOSet
 {
-    int N, size;
+    int N, size_;
     vector<vector<const Tensor*> > A;
 public:
     typedef vector<Tensor> TensorT;
 
-    MPOSet() : N(-1), size(0) { }
+    MPOSet() : N(-1), size_(0) { }
 
     void include(const MPS<Tensor>& Op)
     {
         if(N < 0) { N = Op.NN(); A.resize(N+1); }
         for(int n = 1; n <= N; ++n) GET(A,n).push_back(&(Op.AA(n))); 
-        ++size;
+        ++size_;
     }
 
     int NN() const { return N; }
-    int size() const { return size; }
-    const storage_type& AA(int j) const { return GET(A,j); }
+    int size() const { return size_; }
+    const vector<Tensor>& AA(int j) const { return GET(A,j); }
     const vector<Tensor> bondTensor(int b) const
     { vector<Tensor> res = A[b] * A[b+1]; return res; }
 
