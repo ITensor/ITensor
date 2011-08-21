@@ -1344,6 +1344,28 @@ public:
 
     MPOSet() : N(-1), size_(0) { }
 
+    MPOSet(const MPS<Tensor>& Op1) 
+    : N(-1), size_(0) 
+    { include(Op1); }
+
+    MPOSet(const MPS<Tensor>& Op1, 
+           const MPS<Tensor>& Op2) 
+    : N(-1), size_(0) 
+    { include(Op1); include(Op2); }
+
+    MPOSet(const MPS<Tensor>& Op1, 
+           const MPS<Tensor>& Op2,
+           const MPS<Tensor>& Op3) 
+    : N(-1), size_(0) 
+    { include(Op1); include(Op2); include(Op3); }
+
+    MPOSet(const MPS<Tensor>& Op1, 
+           const MPS<Tensor>& Op2,
+           const MPS<Tensor>& Op3, 
+           const MPS<Tensor>& Op4) 
+    : N(-1), size_(0) 
+    { include(Op1); include(Op2); include(Op3); include(Op4); }
+
     void include(const MPS<Tensor>& Op)
     {
         if(N < 0) { N = Op.NN(); A.resize(N+1); }
@@ -1353,7 +1375,7 @@ public:
 
     int NN() const { return N; }
     int size() const { return size_; }
-    const vector<Tensor>& AA(int j) const { return GET(A,j); }
+    const vector<const Tensor*>& AA(int j) const { return GET(A,j); }
     const vector<Tensor> bondTensor(int b) const
     { vector<Tensor> res = A[b] * A[b+1]; return res; }
 
