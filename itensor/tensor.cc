@@ -472,8 +472,8 @@ ITensor& ITensor::operator*=(const ITensor& other)
         //Compute symmetric difference
         sort(_index1.begin(),_index1.end());
         sort(other._index1.begin(),other._index1.end());
-        list<Index> symdiff(_index1.size()+other._index1.size());
-        list<Index>::iterator it =
+        vector<Index> symdiff(_index1.size()+other._index1.size());
+        vector<Index>::iterator it =
         set_symmetric_difference(_index1.begin(),_index1.end(),
         other._index1.begin(),other._index1.end(),symdiff.begin());
         _index1.assign(symdiff.begin(),it);
@@ -741,7 +741,25 @@ ITensor& ITensor::operator+=(const ITensor& other)
     {
         cerr << "*this = " << *this << "\n";
         cerr << "other = " << other << "\n";
-        Error("ITensor::operator+=: mismatched number of Indices.");
+        Error("ITensor::operator+=: mismatched number of m!=1 Indices.");
+    }
+
+    //Check that m==1 indices are the same
+    if(!other._index1.empty() && !_index1.empty())
+    {
+        sort(_index1.begin(),_index1.end());
+        sort(other._index1.begin(),other._index1.end());
+        vector<Index> diff(_index1.size()+other._index1.size());
+        vector<Index>::iterator it =
+        set_difference(_index1.begin(),_index1.end(),
+                       other._index1.begin(),other._index1.end(),
+                       diff.begin());
+        if(int(it - diff.begin()) != 0) 
+        {
+        cerr << "*this = " << *this << "\n";
+        cerr << "other = " << other << "\n";
+        Error("ITensor::operator+=: mismatched m==1 Indices.");
+        }
     }
 
     bool same_ind_order = true;
