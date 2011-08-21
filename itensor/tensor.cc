@@ -717,6 +717,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
     int sign = (other._neg ? -1 : 1);
 
     Vector& thisdat = p->v;
+    assert(other.p != 0);
     const Vector& othrdat = other.p->v;
 
     if(this == &other)

@@ -1250,6 +1250,7 @@ public:
     { 
         bool null_ = is_null();
         s.write((char*) &null_,sizeof(null_));
+        if(null_) return;
         s.write((char*) &rn,sizeof(rn));
         s.write((char*) &_logfac,sizeof(_logfac));
         s.write((char*) &_neg,sizeof(_neg));
