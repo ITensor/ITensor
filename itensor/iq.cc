@@ -265,7 +265,7 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
 	}
 
     return (*this = res);
-} //IQTensor IQTensor::operator*=(const IQTensor& other) const
+} //IQTensor& IQTensor::operator*=(const IQTensor& other) const
 
 //Extracts the real and imaginary parts of the 
 //component of a rank 0 tensor (scalar)

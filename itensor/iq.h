@@ -633,6 +633,19 @@ public:
         jj->mapprime(plevold,plevnew,pt);
     } //end IQTensor::mapprime
 
+    void primeind(const IQIndex& I)
+    {
+        foreach(IQIndex& J, iqindex)
+        { if(J == I) J = J.primed(); }
+        if(viqindex == I) viqindex = viqindex.primed();
+
+        foreach(ITensor& t, itensor)
+        foreach(const inqn& x, I.iq())
+        { t.primeind(x.index); }
+    }
+    friend inline IQTensor primeind(IQTensor A, const IQIndex& I)
+    { A.primeind(I); return A; }
+
     friend inline IQTensor primed(IQTensor A)
     { A.doprime(primeBoth); return A; }
 
@@ -641,13 +654,6 @@ public:
 
     friend inline IQTensor primelink(const IQTensor& A)
     { IQTensor res(A); res.doprime(primeLink); return res; }
-
-    friend inline IQTensor primeind(IQTensor A, const IQIndex& I)
-    { 
-        foreach(IQIndex& J, A.iqindex)
-        { if(J == I) J = J.primed(); }
-        return A;
-    }
 
     friend inline IQTensor deprimed(IQTensor A)
     { A.noprime(); return A; }

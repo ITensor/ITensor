@@ -839,15 +839,16 @@ public:
         return En;
     }
 
-    template<class TensorSet>
-    void projectOp(int j, Direction dir, const TensorSet& P, const TensorSet& Op, TensorSet& res) const
+    template<class TensorSet, class OpTensorSet>
+    void projectOp(int j, Direction dir, const TensorSet& P, const OpTensorSet& Op, TensorSet& res) const
     {
         if(res.size() != Op.size()) res.resize(Op.size());
         const TensorSet& nP = (P.size() == Op.size() ? P : TensorSet(Op.size()));
         for(unsigned int n = 0; n < Op.size(); ++n) projectOp(j,dir,GET(nP,n),Op[n],GET(res,n));
     }
 
-    void projectOp(int j, Direction dir, const Tensor& P, const Tensor& Op, Tensor& res) const
+    template<class OpTensor>
+    void projectOp(int j, Direction dir, const Tensor& P, const OpTensor& Op, Tensor& res) const
     {
         if(dir==Fromleft)
         {
@@ -1111,9 +1112,6 @@ MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
     return *this;
 }
 
-
-
-
 } //namespace Internal
 typedef Internal::MPS<ITensor> MPS;
 typedef Internal::MPS<IQTensor> IQMPS;
@@ -1339,27 +1337,47 @@ namespace Internal {
 template<class Tensor>
 class MPOSet
 {
-    int N;
-    unsigned int size;
-    vector<vector<Tensor> > A;
+    int N, size_;
+    vector<vector<const Tensor*> > A;
 public:
     typedef vector<Tensor> TensorT;
 
-    MPOSet() : N(-1), size(0) { }
+    MPOSet() : N(-1), size_(0) { }
+
+    MPOSet(const MPS<Tensor>& Op1) 
+    : N(-1), size_(0) 
+    { include(Op1); }
+
+    MPOSet(const MPS<Tensor>& Op1, 
+           const MPS<Tensor>& Op2) 
+    : N(-1), size_(0) 
+    { include(Op1); include(Op2); }
+
+    MPOSet(const MPS<Tensor>& Op1, 
+           const MPS<Tensor>& Op2,
+           const MPS<Tensor>& Op3) 
+    : N(-1), size_(0) 
+    { include(Op1); include(Op2); include(Op3); }
+
+    MPOSet(const MPS<Tensor>& Op1, 
+           const MPS<Tensor>& Op2,
+           const MPS<Tensor>& Op3, 
+           const MPS<Tensor>& Op4) 
+    : N(-1), size_(0) 
+    { include(Op1); include(Op2); include(Op3); include(Op4); }
 
     void include(const MPS<Tensor>& Op)
     {
         if(N < 0) { N = Op.NN(); A.resize(N+1); }
-        for(int n = 1; n <= N; ++n) GET(A,n).push_back(Op.AA(n)); 
+        for(int n = 1; n <= N; ++n) GET(A,n).push_back(&(Op.AA(n))); 
+        ++size_;
     }
 
     int NN() const { return N; }
-    const vector<Tensor>& AA(int j) const { return A.at(j); }
+    int size() const { return size_; }
+    const vector<const Tensor*>& AA(int j) const { return GET(A,j); }
     const vector<Tensor> bondTensor(int b) const
-    {
-        vector<Tensor> res = GET(A,b) * GET(A,b+1);
-        return res;
-    }
+    { vector<Tensor> res = A[b] * A[b+1]; return res; }
 
 }; //class Internal::MPOSet
 

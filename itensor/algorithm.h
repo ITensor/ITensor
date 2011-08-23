@@ -4,6 +4,35 @@
 #include "sparse.h"
 #include "davidson.h"
 
+template<class Tensor,class TensorSet, class OpTensorSet>
+void applyProjOp(const Tensor& phi, const TensorSet& L, const TensorSet& R, const OpTensorSet& H, Tensor& Hphi)
+{
+    bool useL(L.size() == 0 ? false : L[0].is_not_null()),
+         useR(R.size() == 0 ? false : R[0].is_not_null());
+    Hphi = (useL ? L[0]*phi : phi); 
+    Hphi *= H[0];
+    if(useR) Hphi *= R[0];
+    for(unsigned int j = 1; j < H.size(); ++j)
+    {
+        Tensor phij = (useL ? L[j]*phi : phi);
+        phij *= H[j];
+        if(useR) phij *= R[j];
+        Hphi += phij;
+    }
+    Hphi.mapprime(1,0);
+}
+
+template<class Tensor, class OpTensor>
+void applyProjOp(const Tensor& phi, const Tensor& L, const Tensor& R, const OpTensor& H, Tensor& Hphi)
+{
+    bool useL = L.is_not_null(),
+         useR = R.is_not_null();
+    Hphi = (useL ? L*phi : phi); 
+    Hphi *= H;
+    if(useR) Hphi *= R;
+    Hphi.mapprime(1,0);
+}
+
 template<class Tensor>
 class BaseLocalHam : public BigMatrix // to do DMRG using an MPO
 {
@@ -34,61 +63,21 @@ class LocalHam : public BaseLocalHam<Tensor>
     typedef BaseLocalHam<Tensor> Parent;
 public:
     const TensorSet &LeftTerm, &RightTerm, &MPOTerm;
-    const bool useleft, useright;
 
     LocalHam(const TensorSet& le, const TensorSet& ri, const TensorSet& mpo, Tensor& psi_) 
-	: Parent(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), 
-    useleft(le.size() == 0 ? false : le[0].is_not_null()),
-    useright(ri.size() == 0 ? false : ri[0].is_not_null())
+	: Parent(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo)
     { }
 
     void product(const VectorRef& A, VectorRef& B) const
 	{
         Tensor& psi_ = this->psi;
-
         psi_.AssignFromVec(A);
-        Tensor psip = (useleft ? LeftTerm[0]*psi_ : psi_); 
-        psip *= MPOTerm[0];
-        if(useright) psip *= RightTerm[0];
-        for(unsigned int j = 1; j < MPOTerm.size(); ++j)
-        {
-            Tensor psij = (useleft ? LeftTerm[j]*psi_ : psi_);
-            psij *= MPOTerm[j];
-            if(useright) psij *= RightTerm[j];
-            psip += psij;
-        }
-        psip.mapprime(1,0);
+        Tensor psip; 
+        applyProjOp(psi_,LeftTerm,RightTerm,MPOTerm,psip);
         psi_.Assign(psip);
         psi_.AssignToVec(B);
 	}
 };
-
-template<class Tensor>
-class LocalHam<Tensor,Tensor> : public BaseLocalHam<Tensor>
-{
-    typedef BaseLocalHam<Tensor> Parent;
-public:
-    const Tensor &LeftTerm, &RightTerm, &MPOTerm;
-    bool useleft, useright;
-
-    LocalHam(const Tensor& le, const Tensor& ri, const Tensor& mpo, Tensor& psi_) 
-	: Parent(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), useleft(le.is_not_null()), useright(ri.is_not_null())
-    { }
-
-    void product(const VectorRef &A , VectorRef & B) const
-	{
-        Tensor& psi_ = this->psi;
-
-        psi_.AssignFromVec(A);
-        Tensor psip = (useleft ? LeftTerm * psi_ : psi_);
-        psip *= MPOTerm;
-        if(useright) psip *= RightTerm;
-        psip.mapprime(1,0);
-        psi_.Assign(psip);
-        psi_.AssignToVec(B);
-	}
-};
-
 
 template<class Tensor>
 class LocalHamOrth : public BaseLocalHam<Tensor> // to do DMRG using an MPO, ortho to other vecs
@@ -109,10 +98,8 @@ public:
 	{
         Tensor& psi_ = this->psi;
         psi_.AssignFromVec(A);
-        Tensor psip = (useleft ? LeftTerm * psi_ : psi_);
-        psip *= MPOTerm;
-        if(useright) psip *= RightTerm;
-        psip.mapprime(1,0);
+        Tensor psip;
+        applyProjOp(psi_,LeftTerm,RightTerm,MPOTerm,psip);
         foreach(const ITensor& phi, other)
         {
             Real re,im; Dot(phi,psi_,re,im);
@@ -130,20 +117,9 @@ template<class Tensor, class TensorSet>
 void putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH)
 {
     IQTensor phip;
-    bool useleft = LH[0].is_not_null(), useright = RH[0].is_not_null();
     for(int cnt = 1; cnt <= 1E5; ++cnt)
     {
-        phip = (useleft ? LH[0]*phi : phi);
-        phip *= mpoh[0];
-        if(useright) phip *= RH[0];
-        for(unsigned int j = 1; j < mpoh.size(); ++j)
-        {
-            Tensor phij = (useleft ? LH[j]*phi : phi);
-            phij *= mpoh[j];
-            if(useright) phij *= RH[j];
-            phip += phij;
-        }
-        phip.mapprime(1,0);
+        applyProjOp(phi,LH,RH,mpoh,phip);
         phip *= -0.00232341; //arbitrary small number
         phip += phi; //evolve by (1-tau*H)
         int phisize = phi.vec_size();
@@ -153,27 +129,6 @@ void putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const Ten
         else if(phip.vec_size() == phisize) break;
     }
 }
-
-void putInQNs(IQTensor& phi, const IQTensor& mpoh, const IQTensor& LH, const IQTensor& RH)
-{
-    IQTensor phip;
-    bool useleft = LH.is_not_null(), useright = RH.is_not_null();
-    for(int cnt = 1; cnt <= 1E5; ++cnt)
-    {
-        phip = (useleft ? LH*phi : phi);
-        phip *= mpoh;
-        if(useright) phip *= RH;
-        phip.mapprime(1,0);
-        phip *= -0.00232341; //arbitrary small number
-        phip += phi; //evolve by (1-tau*H)
-        int phisize = phi.vec_size();
-        phi = phip;
-        if(cnt > 10) cerr << "Warning: large number of time evolution steps in putInQNs." << endl;
-        if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
-        else if(phip.vec_size() == phisize) break;
-    }
-}
-
 template<class TensorSet>
 void putInQNs(ITensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH) { }
 
