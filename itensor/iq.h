@@ -314,11 +314,11 @@ public:
         Index::mapprime(plevold,plevnew,pt);
         for_each(iq_.begin(),iq_.end(),MapPrimer(plevold,plevnew,pt));
 	}
-    void noprime()
+    void noprime(PrimeType pt = primeBoth)
 	{
         Index::noprime();
         for(int j = 0; j < (int)iq_.size(); ++j)
-            iq_[j].index.noprime();
+            iq_[j].index.noprime(pt);
 	}
     IQIndex primed(int inc = 1) const
 	{
@@ -593,26 +593,24 @@ public:
         }
     } //end IQTensor::ind_inc_prime
 
-    void noprime()
+    void noprime(PrimeType pt = primeBoth)
     {
         own_rmap = false;
         foreach(IQIndex& J, iqindex)
-        J.noprime();
+	    J.noprime(pt);
 
-        Index I;
         for(iten_it jj = iten_begin(); jj != iten_end(); ++jj)
-        foreach(ITensor& t, itensors()) t.noprime();
+	    foreach(ITensor& t, itensors()) t.noprime(pt);
     } //end IQTensor::noprime
 
     void noprimelink()
     {
         own_rmap = false;
         foreach(IQIndex& J, iqindex)
-        if(J.type() == Link) J.noprime();
+	    if(J.type() == Link) J.noprime();
 
-        Index I;
         for(iten_it jj = iten_begin(); jj != iten_end(); ++jj)
-        foreach(ITensor& t, itensors()) t.noprime(primeLink);
+	    foreach(ITensor& t, itensors()) t.noprime(primeLink);
     } //end IQTensor::noprimelink
 
     void doprime(PrimeType pt)
