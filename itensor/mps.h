@@ -443,8 +443,8 @@ public:
     SiteOp Cdagup(int i) const
 	{
 	SiteOp res(si(i));
-	res(UpStateP(i),Emp(i)) = 1;
-	res(UpDnStateP(i),DnState(i)) = -1;
+	res(Emp(i),UpStateP(i)) = 1;
+	res(DnState(i),UpDnStateP(i)) = -1;
 	return res;
 	}
 
@@ -459,8 +459,8 @@ public:
     SiteOp Cdagdn(int i) const
 	{
 	SiteOp res(si(i));
-	res(DnStateP(i),Emp(i)) = 1;
-	res(UpDnStateP(i),UpState(i)) = 1;
+	res(Emp(i),DnStateP(i)) = 1;
+	res(UpState(i),UpDnStateP(i)) = 1;
 	return res;
 	}
 
