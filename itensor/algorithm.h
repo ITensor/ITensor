@@ -262,7 +262,7 @@ Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptions& opt
     int N = psi.NN();
     Real energy;
 
-    //psi.position(1);
+    psi.position(1);
     //if(H.is_complex()) psi.AAnc(1) *= Complex_1;
 
     vector<MPOTensor> PH(N+1);

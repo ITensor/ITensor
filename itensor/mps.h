@@ -853,18 +853,13 @@ public:
     template<class OpTensor>
     void projectOp(int j, Direction dir, const Tensor& P, const OpTensor& Op, Tensor& res) const
     {
-        if(dir==Fromleft)
-        {
-            if(j > left_orth_lim) cerr << format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim, Error("");
-            res = (j == 1 ? AA(j) : P * AA(j));
-            res *= Op; res *= conj(primed(AA(j)));
-        }
-        else
-        {
-            if(j < right_orth_lim) cerr << format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim, Error("");
-            res = (j == N ? AA(j) : P * AA(j));
-            res *= Op; res *= conj(primed(AA(j)));
-        }
+        if(dir==Fromleft && j > left_orth_lim) 
+        { cerr << format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim, Error(""); }
+        if(dir==Fromright && j < right_orth_lim) 
+        { cerr << format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim, Error(""); }
+
+        res = (P.is_null() ? AA(j) : P * AA(j));
+        res *= Op; res *= conj(primed(AA(j)));
     }
 
 
