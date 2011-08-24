@@ -18,45 +18,26 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
 
 extern Real truncerror, svdtruncerr;
 
-namespace Internal {
-template <class IndexT>
-class SiteSet
+class BaseModel
 {
-protected:
-    int N;
-    vector<IndexT> site;
-    virtual void initSites(vector<IndexT>& site) = 0;
 public:
-    virtual int NN() const { return N; }
-    virtual IndexT si(int i) const { return site.at(i); }
-    virtual IndexT siP(int i) const { return site.at(i).primed(); }
-    virtual ~SiteSet() { }
-    SiteSet() : N(-1) { }
-    SiteSet(int nsite) : N(nsite), site(nsite+1) { }
-    SiteSet(istream& s) { read(s); }
+    virtual int NN() const = 0;
+    virtual IQIndex si(int i) const = 0;
+    virtual IQIndex siP(int i) const = 0;
 
-    virtual void read(istream& s)
-    {
-        s.read((char*) &N,sizeof(N));
-        site.resize(N+1);
-        for(int j = 1; j <= N; ++j) site.at(j) = IndexT(s);
-    }
-    virtual void write(ostream& s) const
-    {
-        s.write((char*) &N,sizeof(N));
-        for(int j = 1; j <= N; ++j) site.at(j).write(s);
-    }
+    virtual void read(istream& s) = 0;
+    virtual void write(ostream& s) const = 0;
 
-    virtual SiteOp id(int i) const { Error("SiteSet::id(int i) must be overridden by derived class."); return SiteOp(si(i)); }
+    virtual SiteOp id(int i) const = 0;
+protected:
+    virtual ~BaseModel() { }
 };
-} //namespace Internal
-typedef Internal::SiteSet<IQIndex> SiteSet;
+typedef BaseModel SiteSet;
 
-template <class IndexT>
-ostream& operator<<(ostream& s, const Internal::SiteSet<IndexT>& st)
+inline ostream& operator<<(ostream& s, const BaseModel& b)
 {
-    s << "SiteSet:\n";
-    for(int j = 1; j <= st.NN(); ++j) s << format("si(%d) = ")%j << st.si(j) << "\n";
+    s << "Model:\n";
+    for(int j = 1; j <= b.NN(); ++j) s << format("si(%d) = ")%j << b.si(j) << "\n";
     return s;
 }
 
@@ -68,34 +49,41 @@ namespace SpinOne {
 
 const int Dim = 3;
 
-class Model : public SiteSet
+class Model : public BaseModel
 {
-    typedef SiteSet Parent;
+    typedef BaseModel Parent;
 
-    //void initSites(vector<Index>& site)
-    //{
-    //    for(int i = 1; i <= this->N; ++i) site.at(i) = Index(nameint("S=1, site=",i),Dim,Site);
-    //}
-
-    void initSites(vector<IQIndex>& site)
-    {
-        for(int i = 1; i <= this->N; ++i)
+    int N;
+    vector<IQIndex> site;
+public:
+    Model() : N(-1) { }
+    Model(int N_) : N(N_), site(N_+1) 
+    { 
+        for(int i = 1; i <= N; ++i)
         {
-            site.at(i) = IQIndex(nameint("S=1, site=",i),
-            Index(nameint("Up for site",i),1,Site),QN(+2,0),
-            Index(nameint("Z0 for site",i),1,Site),QN( 0,0),
-            Index(nameint("Dn for site",i),1,Site),QN(-2,0));
+        site.at(i) = IQIndex(nameint("S=1, site=",i),
+        Index(nameint("Up for site",i),1,Site),QN(+2,0),
+        Index(nameint("Z0 for site",i),1,Site),QN( 0,0),
+        Index(nameint("Dn for site",i),1,Site),QN(-2,0));
         }
     }
+    Model(istream& s) { read(s); }
 
-public:
-    Model() : Parent() { }
-    Model(int nsite) : Parent(nsite) { initSites(this->site); }
-    Model(istream& s) : Parent(s) { }
-    virtual ~Model() { }
+    void read(istream& s)
+    {
+        s.read((char*) &N,sizeof(N));
+        site.resize(N+1);
+        for(int j = 1; j <= N; ++j) site.at(j).read(s);
+    }
+    void write(ostream& s) const
+    {
+        s.write((char*) &N,sizeof(N));
+        for(int j = 1; j <= N; ++j) site.at(j).write(s);
+    }
 
-    IQIndex si(int i) const { return Parent::si(i); }
-    IQIndex siP(int i) const { return Parent::siP(i); }
+    inline int NN() const { return N; }
+    inline IQIndex si(int i) const { return site.at(i); }
+    inline IQIndex siP(int i) const { return site.at(i).primed(); }
 
     IQIndexVal Up(int i) const { return si(i)(1); }
     IQIndexVal Z0(int i) const { return si(i)(2); }
@@ -182,30 +170,40 @@ namespace SpinHalf {
 
 const int Dim = 2;
 
-class Model : public SiteSet
+class Model : public BaseModel
 {
-    typedef SiteSet Parent;
-
-    //void initSites(vector<Index>& site)
-    //{ for(int i = 1; i <= this->N; ++i) site.at(i) = Index(nameint("S=1/2, site=",i),Dim,Site); }
-
-    void initSites(vector<IQIndex>& site)
-    {
-        for(int i = 1; i <= this->N; ++i)
-        {
-            site.at(i) = IQIndex(nameint("S=1/2, site=",i),
-            Index(nameint("Up for site",i),1,Site),QN(+1,0),
-            Index(nameint("Dn for site",i),1,Site),QN(-1,0));
-        }
-    }
+    typedef BaseModel Parent;
+    
+    int N;
+    vector<IQIndex> site;
 public:
     Model() : Parent() { }
-    Model(int nsite) : Parent(nsite) { initSites(this->site); }
-    Model(istream& s) : Parent(s) { }
-    virtual ~Model() { }
+    Model(int N_) : N(N_), site(N_+1) 
+    {
+        for(int i = 1; i <= N; ++i)
+        {
+        site.at(i) = IQIndex(nameint("S=1/2, site=",i),
+        Index(nameint("Up for site",i),1,Site),QN(+1,0),
+        Index(nameint("Dn for site",i),1,Site),QN(-1,0));
+        }
+    }
+    Model(istream& s) { read(s); }
 
-    IQIndex si(int i) const { return Parent::si(i); }
-    IQIndex siP(int i) const { return Parent::siP(i); }
+    void read(istream& s)
+    {
+        s.read((char*) &N,sizeof(N));
+        site.resize(N+1);
+        for(int j = 1; j <= N; ++j) site.at(j).read(s);
+    }
+    void write(ostream& s) const
+    {
+        s.write((char*) &N,sizeof(N));
+        for(int j = 1; j <= N; ++j) site.at(j).write(s);
+    }
+
+    int NN() const { return N; }
+    IQIndex si(int i) const { return site.at(i); }
+    IQIndex siP(int i) const { return site.at(i).primed(); }
 
     IQIndexVal Up(int i) const { return si(i)(1); }
     IQIndexVal Dn(int i) const { return si(i)(2); }
@@ -261,50 +259,36 @@ public:
 
 } //end namespace SpinHalf
 
-namespace Fermion {
+namespace Spinless {
 
 const int Dim = 2;
 
-class Model : public SiteSet
+class Model : public BaseModel
 {
 public:
     bool odd_even_up_down,conserve_Nf;
 private:
-    typedef SiteSet Parent;
+    typedef BaseModel Parent;
 
-    //void initSites(vector<Index>& site)
-    //{
-    //    if(odd_even_up_down)
-    //    {
-    //    for(int i = 1; i <= this->N; ++i) 
-    //    {
-    //        if(i%2==1) site.at(i) = Index(nameint("Fermion, Up site=",i),Dim,Site);
-    //        else site.at(i) = Index(nameint("Fermion, Dn site=",i),Dim,Site);
-    //    }
-    //    }
-    //    else
-    //    { for(int i = 1; i <= this->N; ++i) site.at(i) = Index(nameint("Fermion, site=",i),Dim,Site); }
-    //}
+    int N;
+    vector<IQIndex> site;
 
-    void initSites(vector<IQIndex>& site)
+    void initSites()
     {
         int occ = (conserve_Nf ? 1 : 0);
         if(odd_even_up_down)
         {
-        for(int i = 1; i <= this->N; ++i)
+        for(int i = 1; i <= N; ++i)
         {
             if(i%2==1)
             {
-                //site.at(i) = IQIndex(nameint("Fermion, Up site=",i),Site);
-                //site.at(i).insert(Index(nameint("Emp for Up site",i),1,Site),QN(0,0,0));
-                //site.at(i).insert(Index(nameint("Occ for Up site",i),1,Site),QN(+1,occ,1));
-                site.at(i) = IQIndex(nameint("Fermion, Up site=",i),
+                site.at(i) = IQIndex(nameint("Spinless, Up site=",i),
                 Index(nameint("Emp for Up site",i),1,Site),QN(0,0,0),
                 Index(nameint("Occ for Up site",i),1,Site),QN(+1,occ,1));
             }
             else
             {
-                site.at(i) = IQIndex(nameint("Fermion, Dn site=",i),
+                site.at(i) = IQIndex(nameint("Spinless, Dn site=",i),
                 Index(nameint("Emp for Dn site",i),1,Site),QN(0,0,0),
                 Index(nameint("Occ for Dn site",i),1,Site),QN(-1,occ,1));
             }
@@ -312,33 +296,40 @@ private:
         }
         else
         {
-        for(int i = 1; i <= this->N; ++i)
+        for(int i = 1; i <= N; ++i)
         {
-            site.at(i) = IQIndex(nameint("Fermion, site=",i),
+            site.at(i) = IQIndex(nameint("Spinless, site=",i),
             Index(nameint("Emp for site",i),1,Site),QN(0,0,0),
             Index(nameint("Occ for site",i),1,Site),QN(0,occ,1));
         }
         }
     }
 public:
-    Model() : odd_even_up_down(false),conserve_Nf(true) { }
-    Model(int nsite, bool odd_even_up_down_ = false, bool conserve_Nf_ = true) 
-    : Parent(nsite), odd_even_up_down(odd_even_up_down_), conserve_Nf(conserve_Nf_) { initSites(this->site); }
-    virtual ~Model() { }
-    Model(istream& s) : Parent(s) 
+    Model() : odd_even_up_down(false),conserve_Nf(true), N(-1) { }
+    Model(int N_, bool odd_even_up_down_ = false, bool conserve_Nf_ = true) 
+    : odd_even_up_down(odd_even_up_down_), conserve_Nf(conserve_Nf_), N(N_), site(N_+1)
+    { initSites(); }
+    Model(istream& s) { read(s); }
+
+    void read(istream& s)
     { 
         s.read((char*) &odd_even_up_down,sizeof(odd_even_up_down));
         s.read((char*) &conserve_Nf,sizeof(conserve_Nf));
+        s.read((char*) &N,sizeof(N));
+        site.resize(N+1);
+        for(int j = 1; j <= N; ++j) site.at(j).read(s);
     }
     void write(ostream& s) const
     {
-        Parent::write(s);
         s.write((char*) &odd_even_up_down,sizeof(odd_even_up_down));
         s.write((char*) &conserve_Nf,sizeof(conserve_Nf));
+        s.write((char*) &N,sizeof(N));
+        for(int j = 1; j <= N; ++j) site.at(j).write(s);
     }
 
-    IQIndex si(int i) const { return Parent::si(i); }
-    IQIndex siP(int i) const { return Parent::siP(i); }
+    int NN() const { return N; }
+    IQIndex si(int i) const { return GET(site,i); }
+    IQIndex siP(int i) const { return GET(site,i).primed(); }
 
     IQIndexVal Emp(int i) const { return si(i)(1); }
     IQIndexVal Occ(int i) const { return si(i)(2); }
@@ -389,14 +380,18 @@ namespace Hubbard {	// Full Hubbard sites, srw 8/10/11
 
 const int Dim = 4;
 
-class Model : public SiteSet
+class Model : public BaseModel
 {
 private:
-    typedef SiteSet Parent;
+    typedef BaseModel Parent;
 
-    void initSites(vector<IQIndex>& site)
-	{
-        for(int i = 1; i <= this->N; ++i)
+    int N;
+    vector<IQIndex> site;
+public:
+    Model() : N(-1) { }
+    Model(int N_) : N(N_), site(N_+1)
+    {
+        for(int i = 1; i <= N; ++i)
 	    {
 	    site.at(i) = IQIndex(nameint("Hubbard, site=",i),
 		    Index(nameint("Emp for site ",i),1,Site),  QN( 0,0,0),
@@ -404,15 +399,24 @@ private:
 		    Index(nameint("Dn for site ",i),1,Site),   QN(-1,1,1),
 		    Index(nameint("Up-Dn for site ",i),1,Site),QN( 0,2,0));
 	    }
-	}
-public:
-    Model() { }
-    Model(int nsite) 
-    : Parent(nsite)  { initSites(this->site); }
-    virtual ~Model() { }
+    }
+    Model(istream& s) { read(s); }
 
-    IQIndex si(int i) const { return Parent::si(i); }
-    IQIndex siP(int i) const { return Parent::siP(i); }
+    void read(istream& s)
+    {
+        s.read((char*) &N,sizeof(N));
+        site.resize(N+1);
+        for(int j = 1; j <= N; ++j) site.at(j).read(s);
+    }
+    void write(ostream& s) const
+    {
+        s.write((char*) &N,sizeof(N));
+        for(int j = 1; j <= N; ++j) site.at(j).write(s);
+    }
+
+    int NN() const { return N; }
+    IQIndex si(int i) const { return GET(site,i); }
+    IQIndex siP(int i) const { return GET(site,i).primed(); }
 
     IQIndexVal Emp(int i) const { return si(i)(1); }
     IQIndexVal UpState(int i) const { return si(i)(2); }
@@ -538,12 +542,12 @@ public:
     typedef Tensor TensorT;
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::IndexValT IndexValT;
-    typedef Internal::SiteSet<IQIndex> SiteSetT;
+    typedef BaseModel ModelT;
 protected:
     int N;
     vector<Tensor> A;
     int left_orth_lim,right_orth_lim;
-
+    const ModelT* model_;
 
     void new_tensors(vector<ITensor>& A_)
     {
@@ -592,27 +596,26 @@ protected:
 
     typedef pair<typename vector<Tensor>::const_iterator,typename vector<Tensor>::const_iterator> const_range_type;
 public:
-    const SiteSetT* sst_;
     int minm,maxm;
     Real cutoff;
 
     //Accessor Methods ------------------------------
 
     int NN() const { return N;}
-    IQIndex si(int i) const { return sst_->si(i); }
-    IQIndex siP(int i) const { return sst_->siP(i); }
+    IQIndex si(int i) const { return model_->si(i); }
+    IQIndex siP(int i) const { return model_->siP(i); }
     typedef typename vector<Tensor>::const_iterator AA_it;
     const pair<AA_it,AA_it> AA() const { return make_pair(A.begin()+1,A.end()); }
     const Tensor& AA(int i) const { return GET(A,i); }
-    const SiteSetT& sst() const { return *sst_; }
+    const ModelT& model() const { return *model_; }
     Tensor& AAnc(int i) //nc means 'non const'
     { 
         if(i <= left_orth_lim) left_orth_lim = i-1;
         if(i >= right_orth_lim) right_orth_lim = i+1;
         return GET(A,i); 
     }
-    bool is_null() const { return (sst_==0); }
-    bool is_not_null() const { return (sst_!=0); }
+    bool is_null() const { return (model_==0); }
+    bool is_not_null() const { return (model_!=0); }
 
     Tensor bondTensor(int b) const { Tensor res = A.at(b) * A.at(b+1); return res; }
 
@@ -622,19 +625,19 @@ public:
 
     //MPS: Constructors --------------------------------------------
 
-    MPS() : sst_(0), minm(1), maxm(MAX_M), cutoff(MAX_CUT) {}
+    MPS() : model_(0), minm(1), maxm(MAX_M), cutoff(MAX_CUT) {}
 
-    MPS(const SiteSetT& model,int maxmm = MAX_M, Real cut = MAX_CUT) 
-		: N(model.NN()),A(model.NN()+1),left_orth_lim(0),right_orth_lim(model.NN()),
-        sst_(&model), minm(1), maxm(maxmm), cutoff(cut)
+    MPS(const ModelT& mod_,int maxmm = MAX_M, Real cut = MAX_CUT) 
+		: N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
+        model_(&mod_), minm(1), maxm(maxmm), cutoff(cut)
 	{ random_tensors(A); }
 
-    MPS(const SiteSetT& model,const InitState& initState,int maxmm = MAX_M, Real cut = MAX_CUT) 
-		: N(model.NN()),A(model.NN()+1),left_orth_lim(0),right_orth_lim(2),
-        sst_(&model), minm(1), maxm(maxmm), cutoff(cut)
-	{ init_tensors(A,initState);}
+    MPS(const ModelT& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MAX_CUT) 
+		: N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(2),
+        model_(&mod_), minm(1), maxm(maxmm), cutoff(cut)
+	{ init_tensors(A,initState); }
 
-    MPS(const SiteSetT& model, istream& s) : N(model.NN()), A(model.NN()+1), sst_(&model)
+    MPS(const ModelT& mod_, istream& s) : N(mod_.NN()), A(mod_.NN()+1), model_(&mod_)
     { read(s); }
 
     void read(istream& s)
@@ -850,18 +853,13 @@ public:
     template<class OpTensor>
     void projectOp(int j, Direction dir, const Tensor& P, const OpTensor& Op, Tensor& res) const
     {
-        if(dir==Fromleft)
-        {
-            if(j > left_orth_lim) cerr << format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim, Error("");
-            res = (j == 1 ? AA(j) : P * AA(j));
-            res *= Op; res *= conj(primed(AA(j)));
-        }
-        else
-        {
-            if(j < right_orth_lim) cerr << format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim, Error("");
-            res = (j == N ? AA(j) : P * AA(j));
-            res *= Op; res *= conj(primed(AA(j)));
-        }
+        if(dir==Fromleft && j > left_orth_lim) 
+        { cerr << format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim, Error(""); }
+        if(dir==Fromright && j < right_orth_lim) 
+        { cerr << format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim, Error(""); }
+
+        res = (P.is_null() ? AA(j) : P * AA(j));
+        res *= Op; res *= conj(primed(AA(j)));
     }
 
 
@@ -919,8 +917,8 @@ public:
     void convertToIQ(IQMPSType& iqpsi) const
     {
         const Real cut = 1E-12;
-        assert(sst_ != 0);
-        const SiteSetT& sst = *sst_;
+        assert(model_ != 0);
+        const ModelT& sst = *model_;
 
         iqpsi = IQMPSType(sst,maxm,cutoff);
 
@@ -1204,7 +1202,7 @@ public:
         do_relative_cutoff = false;
 	}
     IQMPO() : lref(1.3e-14) { do_relative_cutoff = false; }
-    IQMPO(const SiteSet& iss, int maxmm = MAX_M, Real cut = MAX_CUT, Real _lref = -1.0e-17) 
+    IQMPO(const BaseModel& iss, int maxmm = MAX_M, Real cut = MAX_CUT, Real _lref = -1.0e-17) 
 		: IQMPS(iss,maxmm,cut)
 	{ 
         if(_lref == 0.0) Error("creating lref to zero");
@@ -1286,7 +1284,7 @@ public:
 
     MPO() : MPS() {}
 
-    MPO(const SiteSet& iss, int maxmm = MAX_M, Real cut = MAX_CUT)
+    MPO(const BaseModel& iss, int maxmm = MAX_M, Real cut = MAX_CUT)
     : MPS(iss,maxmm,cut)
     {
         maxm = maxmm;
@@ -1299,7 +1297,7 @@ public:
             A[i] = ITensor(hind[i-1],si(i),si(i).primed(),hind[i]);
     }
 
-    MPO(SiteSet& iss, istream& s) : MPS(iss,s) { }
+    MPO(BaseModel& iss, istream& s) : MPS(iss,s) { }
 
     operator IQMPO() const { IQMPO res; convertToIQ(res); return res; }
 
@@ -1394,7 +1392,7 @@ class HamBuilder
 public:
     typedef Tensor TensorT;
     typedef typename Tensor::IndexT IndexT;
-    typedef SiteSet<IQIndex> SiteSetT;
+    typedef BaseModel SiteSetT;
 private:
     const SiteSetT& iss;
     const int N;

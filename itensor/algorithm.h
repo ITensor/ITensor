@@ -37,45 +37,37 @@ template<class Tensor>
 class BaseLocalHam : public BigMatrix // to do DMRG using an MPO
 {
 public:
-    Tensor& psi;
-    Vector diag;
-
-    BaseLocalHam(Tensor& psi_) : psi(psi_)
-	{ diag.ReDimension(psi.vec_size()); diag = 1.0; }
-
-    inline int Size() const { return psi.vec_size(); }
-
-    VectorRef DiagRef() const { return diag; }
-
-    Vector operator*(const VectorRef &A) const
-	{
-        Vector res(Size());
-        product(A,res);
-        return res;
-	}
-
-    void product(const VectorRef &A , VectorRef & B) const { Error("BaseLocalHam::product must be overridden by derived class."); }
+    virtual int Size() const = 0;
+    virtual VectorRef DiagRef() const = 0;
+    virtual Vector operator*(const VectorRef &A) const = 0;
+    void product(const VectorRef &A , VectorRef & B) const = 0;
 };
 
 template<class Tensor, class TensorSet>
 class LocalHam : public BaseLocalHam<Tensor>
 {
     typedef BaseLocalHam<Tensor> Parent;
-public:
+    Tensor& psi;
+    Vector diag;
     const TensorSet &LeftTerm, &RightTerm, &MPOTerm;
-
+public:
     LocalHam(const TensorSet& le, const TensorSet& ri, const TensorSet& mpo, Tensor& psi_) 
-	: Parent(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo)
-    { }
+	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo)
+    { diag.ReDimension(psi.vec_size()); diag = 1; }
+
+    int Size() const { return psi.vec_size(); }
+    VectorRef DiagRef() const { return diag; }
+
+    Vector operator*(const VectorRef &A) const
+	{ Vector res(Size()); product(A,res); return res; }
 
     void product(const VectorRef& A, VectorRef& B) const
 	{
-        Tensor& psi_ = this->psi;
-        psi_.AssignFromVec(A);
+        psi.AssignFromVec(A);
         Tensor psip; 
-        applyProjOp(psi_,LeftTerm,RightTerm,MPOTerm,psip);
-        psi_.Assign(psip);
-        psi_.AssignToVec(B);
+        applyProjOp(psi,LeftTerm,RightTerm,MPOTerm,psip);
+        psi.Assign(psip);
+        psi.AssignToVec(B);
 	}
 };
 
@@ -83,33 +75,41 @@ template<class Tensor>
 class LocalHamOrth : public BaseLocalHam<Tensor> // to do DMRG using an MPO, ortho to other vecs
 {
     typedef BaseLocalHam<Tensor> Parent;
-public:
+
+    Tensor& psi;
+    Vector diag;
     const Tensor &LeftTerm, &RightTerm, &MPOTerm;
     bool useleft, useright;
     Real weight;
+public:
     vector<Tensor> other;
 
     LocalHamOrth(const Tensor& le, const Tensor& ri, const Tensor& mpo, Tensor& psi_, Real weight_) 
-	: Parent(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), 
+	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), 
       useleft(le.is_not_null()), useright(ri.is_not_null()), weight(weight_)
-    { }
+    { diag.ReDimension(psi.vec_size()); diag = 1; }
+
+    int Size() const { return psi.vec_size(); }
+    VectorRef DiagRef() const { return diag; }
+
+    Vector operator*(const VectorRef &A) const
+	{ Vector res(Size()); product(A,res); return res; }
 
     void product(const VectorRef &A , VectorRef & B) const
 	{
-        Tensor& psi_ = this->psi;
-        psi_.AssignFromVec(A);
+        psi.AssignFromVec(A);
         Tensor psip;
-        applyProjOp(psi_,LeftTerm,RightTerm,MPOTerm,psip);
+        applyProjOp(psi,LeftTerm,RightTerm,MPOTerm,psip);
         foreach(const ITensor& phi, other)
         {
-            Real re,im; Dot(phi,psi_,re,im);
+            Real re,im; Dot(phi,psi,re,im);
             if(fabs(im) < 1E-10)
             { psip += (weight*re) * phi;}
             else
             { psip += weight*(re*Complex_1 + im*Complex_i) * phi; }
         }
-        psi_.Assign(psip);
-        psi_.AssignToVec(B);
+        psi.Assign(psip);
+        psi.AssignToVec(B);
 	}
 };
 
@@ -262,7 +262,7 @@ Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptions& opt
     int N = psi.NN();
     Real energy;
 
-    //psi.position(1);
+    psi.position(1);
     //if(H.is_complex()) psi.AAnc(1) *= Complex_1;
 
     vector<MPOTensor> PH(N+1);
