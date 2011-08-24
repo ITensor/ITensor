@@ -81,8 +81,9 @@ class LocalHamOrth : public BaseLocalHam<Tensor> // to do DMRG using an MPO, ort
     const Tensor &LeftTerm, &RightTerm, &MPOTerm;
     bool useleft, useright;
     Real weight;
-    vector<Tensor> other;
 public:
+    vector<Tensor> other;
+
     LocalHamOrth(const Tensor& le, const Tensor& ri, const Tensor& mpo, Tensor& psi_, Real weight_) 
 	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), 
       useleft(le.is_not_null()), useright(ri.is_not_null()), weight(weight_)
