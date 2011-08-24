@@ -542,12 +542,12 @@ public:
     typedef Tensor TensorT;
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::IndexValT IndexValT;
-    typedef BaseModel SiteSetT;
+    typedef BaseModel ModelT;
 protected:
     int N;
     vector<Tensor> A;
     int left_orth_lim,right_orth_lim;
-
+    const ModelT* model_;
 
     void new_tensors(vector<ITensor>& A_)
     {
@@ -596,27 +596,26 @@ protected:
 
     typedef pair<typename vector<Tensor>::const_iterator,typename vector<Tensor>::const_iterator> const_range_type;
 public:
-    const SiteSetT* sst_;
     int minm,maxm;
     Real cutoff;
 
     //Accessor Methods ------------------------------
 
     int NN() const { return N;}
-    IQIndex si(int i) const { return sst_->si(i); }
-    IQIndex siP(int i) const { return sst_->siP(i); }
+    IQIndex si(int i) const { return model_->si(i); }
+    IQIndex siP(int i) const { return model_->siP(i); }
     typedef typename vector<Tensor>::const_iterator AA_it;
     const pair<AA_it,AA_it> AA() const { return make_pair(A.begin()+1,A.end()); }
     const Tensor& AA(int i) const { return GET(A,i); }
-    const SiteSetT& sst() const { return *sst_; }
+    const ModelT& model() const { return *model_; }
     Tensor& AAnc(int i) //nc means 'non const'
     { 
         if(i <= left_orth_lim) left_orth_lim = i-1;
         if(i >= right_orth_lim) right_orth_lim = i+1;
         return GET(A,i); 
     }
-    bool is_null() const { return (sst_==0); }
-    bool is_not_null() const { return (sst_!=0); }
+    bool is_null() const { return (model_==0); }
+    bool is_not_null() const { return (model_!=0); }
 
     Tensor bondTensor(int b) const { Tensor res = A.at(b) * A.at(b+1); return res; }
 
@@ -626,19 +625,19 @@ public:
 
     //MPS: Constructors --------------------------------------------
 
-    MPS() : sst_(0), minm(1), maxm(MAX_M), cutoff(MAX_CUT) {}
+    MPS() : model_(0), minm(1), maxm(MAX_M), cutoff(MAX_CUT) {}
 
-    MPS(const SiteSetT& model,int maxmm = MAX_M, Real cut = MAX_CUT) 
-		: N(model.NN()),A(model.NN()+1),left_orth_lim(0),right_orth_lim(model.NN()),
-        sst_(&model), minm(1), maxm(maxmm), cutoff(cut)
+    MPS(const ModelT& mod_,int maxmm = MAX_M, Real cut = MAX_CUT) 
+		: N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
+        model_(&mod_), minm(1), maxm(maxmm), cutoff(cut)
 	{ random_tensors(A); }
 
-    MPS(const SiteSetT& model,const InitState& initState,int maxmm = MAX_M, Real cut = MAX_CUT) 
-		: N(model.NN()),A(model.NN()+1),left_orth_lim(0),right_orth_lim(2),
-        sst_(&model), minm(1), maxm(maxmm), cutoff(cut)
-	{ init_tensors(A,initState);}
+    MPS(const ModelT& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MAX_CUT) 
+		: N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(2),
+        model_(&mod_), minm(1), maxm(maxmm), cutoff(cut)
+	{ init_tensors(A,initState); }
 
-    MPS(const SiteSetT& model, istream& s) : N(model.NN()), A(model.NN()+1), sst_(&model)
+    MPS(const ModelT& mod_, istream& s) : N(mod_.NN()), A(mod_.NN()+1), model_(&mod_)
     { read(s); }
 
     void read(istream& s)
@@ -923,8 +922,8 @@ public:
     void convertToIQ(IQMPSType& iqpsi) const
     {
         const Real cut = 1E-12;
-        assert(sst_ != 0);
-        const SiteSetT& sst = *sst_;
+        assert(model_ != 0);
+        const ModelT& sst = *model_;
 
         iqpsi = IQMPSType(sst,maxm,cutoff);
 
