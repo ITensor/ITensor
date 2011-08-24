@@ -34,7 +34,7 @@ protected:
 };
 typedef BaseModel SiteSet;
 
-ostream& operator<<(ostream& s, const BaseModel& b)
+inline ostream& operator<<(ostream& s, const BaseModel& b)
 {
     s << "Model:\n";
     for(int j = 1; j <= b.NN(); ++j) s << format("si(%d) = ")%j << b.si(j) << "\n";
