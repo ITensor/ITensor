@@ -969,6 +969,17 @@ public:
 	} //void QCounter::getVecInd
 };
 
+/*
+   Combine several indices into one index without loss of states.
+   If the IQCombiner C is created from indices of IQTensor T, then
+   an identity is   T * C * conj(C).  This looks like (for example)
+
+        ___ __          __
+       /      \        /
+   ---T---- ---C-- --cC---
+   where cC is conj(C).  Use of IQCombiners is efficient, whereas
+   use of IQTensors for this purpose would not be.
+*/
 class IQCombiner
 {
 public:
