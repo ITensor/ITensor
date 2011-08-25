@@ -492,6 +492,21 @@ public:
         return *this;
     }
 
+    operator ITensor() const
+    {
+        vector<Index> indices;
+        foreach(const IQIndex& I, iqindex)
+        {
+            if(I.type() != Site) 
+            { Error("IQTensor to ITensor conversion requires all IQIndex's of type Site."); }
+            indices.push_back(I);
+        }
+        const bool do_allocate = true;
+        ITensor res(indices,do_allocate);
+        match_order();
+        return res;
+    }
+
     //----------------------------------------------------
     //IQTensor quantum number methods
     void set_qn(Index i, QN q)
@@ -683,7 +698,7 @@ public:
     bool uses_ind(const Index& i) const
     {
         foreach(const ITensor& it, itensor)
-        if(it.findindex(i) != 0) { return true; }
+        if(it.hasindex(i)) { return true; }
         return false;
     }
 
@@ -735,7 +750,6 @@ public:
     //----------------------------------------------------
     //IQTensor miscellaneous methods
 
-    void match_order() const;
     Real unique_Real() const
     {
         Real ur = 0.0;
@@ -838,7 +852,7 @@ public:
         }
         else *(rmap[r]) += t;
         return *this;
-    } //end IQTensor::operator+=
+    } //end IQTensor::operator+=(ITensor)
 
     Real& operator()(const IQIndexVal& iv1, const IQIndexVal& iv2 = IQIVNull, const IQIndexVal& iv3 = IQIVNull,
                      const IQIndexVal& iv4 = IQIVNull, const IQIndexVal& iv5 = IQIVNull, const IQIndexVal& iv6 = IQIVNull,
@@ -898,6 +912,31 @@ public:
             return r * IQComplex_1 + IQComplex_i * i;
         }
     }
+
+private:
+    void match_order() const
+    {
+        const int s = iqindex.size();
+        foreach(ITensor& t, itensor)
+        {
+            if(t.r() != s)
+            {
+                Print(*this); Print(t);
+                Error("match_order: ds not same");
+            }
+            Permutation P;
+            for(int j = 1; j <= t.r(); ++j)
+            {
+                bool gotone = false;
+                for(int k = 0; k < s; ++k)
+                if(iqindex[k].hasindex(t.index(j)))
+                { P.from_to(j,k+1); gotone = true; break; }
+                if(!gotone) Error("match_order: !gotone");
+            }
+            t.Reshape(P);
+        }
+    }
+
 }; //class IQTensor
 
 IQIndex index_in_common(const IQTensor& A, const IQTensor& B, IndexType t);
@@ -1127,9 +1166,7 @@ IQTensor operator*(const IQTensor& t, const Condenser& c);
 ostream & operator << (ostream & s, const Condenser & c);
 
 inline IQTensor operator*(const Condenser& c, const IQTensor& t)
-    {
-    return t * c;
-    }
+{ return t * c; }
 
 template<class T> class Printit
 {
