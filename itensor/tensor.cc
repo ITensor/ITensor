@@ -40,21 +40,12 @@ ostream& operator<<(ostream & s, const ITensor & t)
     return s;
 }
 
-void ITensor::ReshapeDat(const Permutation& p, Vector& rdat) const
+void ITensor::ReshapeDat(const Permutation& P, Vector& rdat) const
 {
-    assert(this->p != 0);
-    const Vector& thisdat = this->p->v;
+    assert(p != 0);
+    const Vector& thisdat = p->v;
 
-    int firstdif = -1;
-    for(int j = 1; j <= rn; ++j)
-	if(p.ind[j] != j)
-    {
-	    firstdif = j;
-	    break;
-    }
-
-    //Permutation is trivial
-    if(firstdif == -1)
+    if(P.is_trivial())
 	{
         DO_IF_PS(++prodstats.c2;)
         rdat = thisdat;
@@ -65,10 +56,12 @@ void ITensor::ReshapeDat(const Permutation& p, Vector& rdat) const
 
     rdat.ReDimension(thisdat.Length());
 
+    const Permutation::int9& ind = P.ind();
+
     //Make a counter for thisdat
     Counter c(*this);
     array<int,NMAX+1> n;
-    for(int j = 1; j <= rn; ++j) n[p.ind[j]] = c.n[j];
+    for(int j = 1; j <= rn; ++j) n[ind[j]] = c.n[j];
 
     //Special case loops
 #define Loop6(q,z,w,k,y,s) {for(int i1 = 1; i1 <= n[1]; ++i1) for(int i2 = 1; i2 <= n[2]; ++i2)\
@@ -88,15 +81,15 @@ void ITensor::ReshapeDat(const Permutation& p, Vector& rdat) const
 #define Loop3(q,z,w) {for(int i1 = 1; i1 <= n[1]; ++i1)  for(int i2 = 1; i2 <= n[2]; ++i2)\
 	for(int i3 = 1; i3 <= n[3]; ++i3) rdat( ((i3-1)*n[2]+i2-1)*n[1]+i1 ) = thisdat( ((w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
 
-#define Bif3(a,b,c) if(p.ind[1] == a && p.ind[2] == b && p.ind[3] == c)
+#define Bif3(a,b,c) if(ind[1] == a && ind[2] == b && ind[3] == c)
 
-#define Bif4(a,b,c,d) if(p.ind[1] == a && p.ind[2] == b && p.ind[3] == c && p.ind[4] == d)
+#define Bif4(a,b,c,d) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4] == d)
 
-#define Bif5(a,b,c,d,e) if(p.ind[1] == a && p.ind[2] == b && p.ind[3] == c && p.ind[4]==d && p.ind[5] == e)
+#define Bif5(a,b,c,d,e) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e)
 
-#define Bif6(a,b,c,d,e,g) if(p.ind[1] == a && p.ind[2] == b && p.ind[3] == c && p.ind[4]==d && p.ind[5] == e && p.ind[6] == g)
+#define Bif6(a,b,c,d,e,g) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e && ind[6] == g)
 
-    if(rn == 2 && p.ind[1] == 2 && p.ind[2] == 1)
+    if(rn == 2 && ind[1] == 2 && ind[2] == 1)
 	{
         MatrixRef xref; thisdat.TreatAsMatrix(xref,c.n[2],c.n[1]);
         rdat = Matrix(xref.t()).TreatAsVector();
@@ -104,7 +97,7 @@ void ITensor::ReshapeDat(const Permutation& p, Vector& rdat) const
 	}
     else if(rn == 3)
 	{
-        DO_IF_PS(int idx = ((p.ind[1]-1)*3+p.ind[2]-1)*3+p.ind[3]; prodstats.perms_of_3[idx] += 1; )
+        DO_IF_PS(int idx = ((ind[1]-1)*3+ind[2]-1)*3+ind[3]; prodstats.perms_of_3[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif3(2,1,3) Loop3(i2,i1,i3)
         Bif3(2,3,1) Loop3(i2,i3,i1) //cyclic
@@ -114,7 +107,7 @@ void ITensor::ReshapeDat(const Permutation& p, Vector& rdat) const
 	}
     else if(rn == 4)
 	{
-        DO_IF_PS(int idx = (((p.ind[1]-1)*4+p.ind[2]-1)*4+p.ind[3]-1)*4+p.ind[4]; prodstats.perms_of_4[idx] += 1; )
+        DO_IF_PS(int idx = (((ind[1]-1)*4+ind[2]-1)*4+ind[3]-1)*4+ind[4]; prodstats.perms_of_4[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif4(1,2,4,3) Loop4(i1,i2,i4,i3)
         Bif4(1,3,2,4) Loop4(i1,i3,i2,i4)
@@ -127,7 +120,7 @@ void ITensor::ReshapeDat(const Permutation& p, Vector& rdat) const
 	}
     else if(rn == 5)
 	{
-        DO_IF_PS(int idx = ((((p.ind[1]-1)*5+p.ind[2]-1)*5+p.ind[3]-1)*5+p.ind[4]-1)*5+p.ind[5]; prodstats.perms_of_5[idx] += 1; )
+        DO_IF_PS(int idx = ((((ind[1]-1)*5+ind[2]-1)*5+ind[3]-1)*5+ind[4]-1)*5+ind[5]; prodstats.perms_of_5[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
         Bif5(1,4,2,5,3) Loop5(i1,i4,i2,i5,i3)
@@ -147,7 +140,7 @@ void ITensor::ReshapeDat(const Permutation& p, Vector& rdat) const
 	}
     else if(rn == 6)
 	{
-        DO_IF_PS(int idx = (((((p.ind[1]-1)*6+p.ind[2]-1)*6+p.ind[3]-1)*6+p.ind[4]-1)*6+p.ind[5]-1)*6+p.ind[6]; prodstats.perms_of_6[idx] += 1; )
+        DO_IF_PS(int idx = (((((ind[1]-1)*6+ind[2]-1)*6+ind[3]-1)*6+ind[4]-1)*6+ind[5]-1)*6+ind[6]; prodstats.perms_of_6[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif6(2,4,1,3,5,6) Loop6(i2,i4,i1,i3,i5,i6)
         Bif6(1,4,2,3,5,6) Loop6(i1,i4,i2,i3,i5,i6)
@@ -160,7 +153,7 @@ void ITensor::ReshapeDat(const Permutation& p, Vector& rdat) const
     //The j's are pointers to the i's of xdat's Counter,
     //but reordered in a way appropriate for rdat
     array<int*,NMAX+1> j;
-    for(int k = 1; k <= NMAX; ++k) { j[p.ind[k]] = &(c.i[k]); }
+    for(int k = 1; k <= NMAX; ++k) { j[ind[k]] = &(c.i[k]); }
 
     //Catch-all loop that works for any tensor
     for( ; c != Counter::done ; ++c)
@@ -200,8 +193,8 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         contractedL[j] = contractedR[k] = true;
 
         ++q;
-        pl.ind[j] = q;
-        pr.ind[k] = q;
+        pl.from_to(j,q);
+        pr.from_to(k,q);
 
         cdim *= L._indexn[j].m();
     }
@@ -237,7 +230,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         {
             bool front_matrix=true;
             for(int j = 1; j <= nsamen; ++j)
-            if(!GET(contractedL,Alt.I.ind[j]))
+            if(!GET(contractedL,Alt.I.dest(j)))
             { front_matrix = false; break; }
 
             if(front_matrix) 
@@ -251,7 +244,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
 
             bool back_matrix=true;
             for(int j = L.rn; j > (L.rn-nsamen); --j)
-            if(!GET(contractedL,Alt.I.ind[j]))
+            if(!GET(contractedL,Alt.I.dest(j)))
             { back_matrix = false; break; }
 
             if(back_matrix)
@@ -269,7 +262,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         {
             q = nsamen;
             for(int j = 1; j <= L.rn; ++j)
-            if(!contractedL[j]) pl.ind[j] = ++q;
+            if(!contractedL[j]) pl.from_to(j,++q);
             if(L_is_matrix) Error("Calling ReshapeDat although L is matrix.");
 #ifdef DO_ALT
             L.newAltDat(pl);
@@ -299,7 +292,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         {
             bool front_matrix=true;
             for(int j = 1; j <= nsamen; ++j)
-            if(!GET(contractedR,Alt.I.ind[j]))
+            if(!GET(contractedR,Alt.I.dest(j)))
             { front_matrix = false; break; }
 
             if(front_matrix) 
@@ -313,7 +306,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
 
             bool back_matrix=true;
             for(int j = R.rn; j > (R.rn-nsamen); --j)
-            if(!GET(contractedR,Alt.I.ind[j]))
+            if(!GET(contractedR,Alt.I.dest(j)))
             { back_matrix = false; break; }
 
             if(back_matrix)
@@ -331,7 +324,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         {
             q = nsamen;
             for(int j = 1; j <= R.rn; ++j)
-            if(!contractedR[j]) pr.ind[j] = ++q;
+            if(!contractedR[j]) pr.from_to(j,++q);
             if(R_is_matrix) Error("Calling reshape even though R is matrix.");
 #ifdef DO_ALT
             R.newAltDat(pr);
@@ -517,17 +510,25 @@ ITensor& ITensor::operator*=(const ITensor& other)
 
 } //ITensor::operator*=(ITensor)
 
-void ITensor::Reshape(const Permutation& p, ITensor& res) const
+void ITensor::Reshape(const Permutation& P, ITensor& res) const
 {
     res.rn = rn;
     res._logfac = _logfac; res._neg = _neg;
-    for(int k = 1; k <= rn; ++k) res._indexn[p.ind[k]] = _indexn[k];
+    for(int k = 1; k <= rn; ++k) res._indexn[P.dest(k)] = _indexn[k];
     res._index1.assign(_index1.begin(),_index1.end());
     res.set_unique_Real();
 #ifdef DO_ALT
     res.p->alt.clear();
 #endif
-    this->ReshapeDat(p,res.ncdat());
+    this->ReshapeDat(P,res.ncdat());
+}
+
+void ITensor::Reshape(const Permutation& P)
+{
+    if(P.is_trivial()) return;
+    Vector newdat;
+    this->ReshapeDat(P,newdat);
+    set_dat(newdat);
 }
 
 void ITensor::getperm(const ITensor& other, Permutation& P) const
@@ -546,7 +547,7 @@ void ITensor::getperm(const ITensor& other, Permutation& P) const
         for(int k = 1; k <= rn; ++k)
         if(other._indexn[j] == _indexn[k])
         {
-            P.ind[j] = k;
+            P.from_to(j,k);
             got_one = true;
             break;
         }
@@ -805,7 +806,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
     Permutation P; getperm(other,P);
     int *j[NMAX+1];
     Counter c(other);
-    for(int m = 1; m <= NMAX; ++m) j[P.ind[m]] = &(c.i[m]);
+    for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
     assert(other.p != 0);
     if(dlogfac < 0.0)	
 	{
@@ -907,23 +908,22 @@ ITensor operator*(const ITensor& t, const Combiner& c)
     vector<Index> nindices; nindices.reserve(t.r_n()-c.rln()+1);
     Permutation P;
     for(int i = 1; i <= c.rln(); ++i)
-	if((j = t.findindexn(c.leftn(i))) == 0)
     {
-	    cerr << "t = " << t << "\n";
-	    cerr << "c = " << c << "\n";
-        cerr << "Couldn't find 'left' Index " << c.leftn(i) << " in ITensor t." << endl;
-	    Error("operator*(ITensor,Combiner): bad Combiner ITensor product");
-    }
-	else
-    {
-	    P.ind[j] = t.r_n() - c.rln() + i;
+        if((j = t.findindexn(c.leftn(i))) == 0)
+        {
+            cerr << "t = " << t << "\n";
+            cerr << "c = " << c << "\n";
+            cerr << "Couldn't find 'left' Index " << c.leftn(i) << " in ITensor t." << endl;
+            Error("operator*(ITensor,Combiner): bad Combiner ITensor product");
+        }
+	    P.from_to(j,t.r_n()-c.rln()+i);
     }
 
     int k = 1;
     for(int i = 1; i <= t.r_n(); ++i)
 	if(c.findindexn(t.indexn(i)) == 0) 
     {
-        P.ind[i] = k++;
+        P.from_to(i,k++);
         nindices.push_back(t.indexn(i));
     }
 
