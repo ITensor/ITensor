@@ -602,6 +602,8 @@ public:
         for(iten_it jj = iten_begin(); jj != iten_end(); ++jj)
 	    foreach(ITensor& t, itensors()) t.noprime(pt);
     } //end IQTensor::noprime
+    friend inline IQTensor deprimed(IQTensor A)
+    { A.noprime(); return A; }
 
     void noprimelink()
     {
@@ -639,7 +641,7 @@ public:
 
         foreach(ITensor& t, itensor)
         foreach(const inqn& x, I.iq())
-        { t.primeind(x.index); }
+        { if(t.hasindex(x.index)) t.primeind(x.index); }
     }
     friend inline IQTensor primeind(IQTensor A, const IQIndex& I)
     { A.primeind(I); return A; }
@@ -647,14 +649,14 @@ public:
     friend inline IQTensor primed(IQTensor A)
     { A.doprime(primeBoth); return A; }
 
+    void primesite() { doprime(primeSite); }
     friend inline IQTensor primesite(IQTensor A)
     { A.doprime(primeSite); return A; }
 
+    void primelink() { doprime(primeLink); }
     friend inline IQTensor primelink(const IQTensor& A)
     { IQTensor res(A); res.doprime(primeLink); return res; }
 
-    friend inline IQTensor deprimed(IQTensor A)
-    { A.noprime(); return A; }
 
     //----------------------------------------------------
     //IQTensor index methods

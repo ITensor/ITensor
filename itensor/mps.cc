@@ -116,16 +116,13 @@ void diag_denmat(IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, V
         maxlogfac = 2.0*lognormref;
 	}
 
-    //printdat = true; cerr << "rho = " << endl << rho << endl; printdat = false; //DEBUG
-
     int itenind = 0;
-    for(IQTensor::iten_it i = rho.iten_begin(); i != rho.iten_end(); ++i)
+    foreach(ITensor& t, rho.itensors())
 	{
-        i->normlogto(maxlogfac); //Changes the logfac but preserves tensor
+        t.normlogto(maxlogfac); //Changes the logfac but preserves tensor
 
         //Check that all ITensors in rho have indices
         //identical up to their primelevel
-        //if(0)
         //if(!i->has_symmetric_indices()) //i->index(1).noprime_equals(i->index(2)))
         //{
         //    cout << "rho is " << rho << endl;
@@ -135,39 +132,28 @@ void diag_denmat(IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, V
         //assert(i->has_symmetric_indices());
 
         //Diag ITensors within rho
-        int n = i->index(1).m();
-        Matrix M(n,n), U;
-        Vector d;
-        i->toMatrix11(i->index(2),i->index(1),M);
-        if(i->index(2).m() != i->index(1).m())
+        if(t.index(2).m() != t.index(1).m())
         {
             cout << "rho is " << rho << endl;
-            cout << "*i is " << *i << endl << endl;
-            cerr << "i->index(2) = " << i->index(2) << "\n"; 
-            cerr << "i->index(1) = " << i->index(1) << "\n"; 
+            cout << "t is " << t << endl << endl;
+            cerr << "t.index(2) = " << t.index(2) << "\n"; 
+            cerr << "t.index(1) = " << t.index(1) << "\n"; 
             Error("diag_denmat: density matrix not square.");
         }
-    
-#ifndef NDEBUG
-        //double debug_norm = Norm(Matrix(Matrix(M)-Matrix(M.t())).TreatAsVector());
-        //if(debug_norm >= 1E-4)
-        //{
-            //cerr << "rho = " << endl << rho << endl;   
-            //printdat = true;
-            //cerr << "i = " << endl << *i << endl;
-            //printdat = false;
-        //}
-#endif
+        int n = t.index(1).m();
+        Matrix M(n,n), U;
+        Vector d;
+        t.toMatrix11(t.index(2),t.index(1),M);
 
         M *= -1.0;
         EigenValues(M,d,U);
         d *= -1.0;
 
-        for(int j = 1; j <= n; j++) 
+        for(int j = 1; j <= n; ++j) 
         { alleig.push_back(d(j)); }
         mmatrix[itenind] = U;
         mvector[itenind] = d;
-        itenind++;
+        ++itenind;
 	}
 
     //Sort all eigenvalues from smallest to largest
@@ -181,7 +167,6 @@ void diag_denmat(IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, V
     for(; m < (int)alleig.size(); m++, mkeep--)
     {
         if(((su += alleig[m]/e1) > cutoff && mkeep <= maxm) || mkeep <= minm)
-        //if(((su += alleig[m]/e1) > cutoff && mkeep <= maxm))
         { 
             docut = (m > 0 ?  (alleig[m-1] + alleig[m]) * 0.5 : 0.0); 
             su -= alleig[m]/e1;
@@ -196,19 +181,16 @@ void diag_denmat(IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, V
         Error("bad m, too big");
     }
     if(m > 20000) Error("bad m, > 20000");
-    //if(0 && mkeep == 0) cout << "mkeep = 0" << endl;
-    //if(showeigs) { cout << "m, maxm, mkeep, docut, cutoff, e1  are " << m SP maxm SP mkeep SP docut SP cutoff SP e1 << endl; }
-
 
     //Construct ITensors for orthogonalized IQTensor (i.e. nU)
     list<ITensor> terms;
     itenind = 0;
     int totkept = 0;
     vector<inqn> iq;
-    for(IQTensor::iten_it i = rho.iten_begin(); i != rho.iten_end(); ++i)
+    foreach(ITensor& t, rho.itensors())
 	{
         int j = 1;
-        for( ; j <= mvector[itenind].Length(); j++)
+        for( ; j <= mvector[itenind].Length(); ++j)
         { if(mvector[itenind](j) < docut) break; }
 
         if(mkeep == 0 && mvector[itenind].Length() >= 1)	// zero mps, just keep one arb state
@@ -219,10 +201,10 @@ void diag_denmat(IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, V
         }
         j -= 1;
         totkept += j;
-        if(j == 0) { itenind++; continue; }
+        if(j == 0) { ++itenind; continue; }
 
         Index nm("qlink",j);
-        Index act = i->index(1).deprimed();
+        Index act = t.index(1).deprimed();
         iq.push_back(inqn(nm,active.qn(act)));
 
         Matrix UU = mmatrix[itenind].Columns(1,j);

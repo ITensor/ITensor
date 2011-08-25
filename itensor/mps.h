@@ -1042,7 +1042,7 @@ public:
                             foreach(const ITensor& t, blks) 
                             t.print((format("t%02d")%(++count)).str(),ShowData);
                         }
-                        string qname = (format("ql%d (%+d:%d)")%s%q.sz()%q.Nf()).str();
+                        string qname = (format("ql%d (%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 1 ? "+" : "-")).str();
                         Index qbond(qname,mm);
                         ITensor compressor(bond,qbond,M);
                         foreach(const ITensor& t, blks) nblock.push_back(t * compressor);

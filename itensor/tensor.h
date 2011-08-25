@@ -718,7 +718,7 @@ private:
         vector<Index>::iterator i1pos = find(_index1.begin(),_index1.end(),i1);
         if(i1pos == _index1.end()) 
         {
-            cerr << "For ITensor = " << *this << "\n";
+            cerr << "\nFor ITensor = " << *this << "\n";
             cerr << "Missing index i1 = " << i1 << "\n";
             Error("ITensor::mapindex(i1,i2): ITensor does not have index i1");
         }
@@ -1092,7 +1092,8 @@ public:
             set_unique_Real();
             return;
         }
-        cerr << "I = " << I << "\n";
+        Print(*this);
+        Print(I);
         Error("ITensor::mapprimeind: index not found.");
 	}
 
