@@ -527,10 +527,16 @@ class InitState
 {
     int N;
     vector<IQIndexVal> state;
+    typedef IQIndexVal (*SetFuncPtr)(int);
 public:
     int NN() const { return N; }
 
-    InitState(int nsite) : N(nsite), state(nsite+1) { }
+    InitState(int nsite) : N(nsite), state(N+1) { }
+    InitState(int nsite,SetFuncPtr setter) : N(nsite), state(N+1) 
+    { set_all(setter); }
+
+    void set_all(SetFuncPtr setter)
+    { for(int j = 1; j <= N; ++j) GET(state,j-1) = (*setter)(j); }
 
     IQIndexVal& operator()(int i) { return GET(state,i-1); }
     const IQIndexVal& operator()(int i) const { return GET(state,i-1); }
