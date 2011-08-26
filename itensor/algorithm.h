@@ -176,6 +176,10 @@ public:
     bool quiet;             //Show/don't show info after every step
 
     DMRGOpts() : 
+    largest_m(-1),
+    max_eigs_bond(-1),
+    max_eigs(1),
+    center_eigs(1),
     bulk_entanglement_gap(-1),
     bulk_ent_errgoal(-1),
     energy_errgoal(-1), 
@@ -191,17 +195,17 @@ public:
         if(printeigs)
         {
             Index bi = psi.LinkInd(b);
-            static int curr_sw = 0;
-            if(sw != curr_sw)
+            if(b == 1 && ha == 1)
             {
                 largest_m = -1;
                 max_eigs_bond = -1;
                 max_eigs = Vector(1); max_eigs = 2;
                 center_eigs = Vector(1); center_eigs = 2;
-                curr_sw = sw;
             }
 
             largest_m = max(largest_m,bi.m());
+            assert(lastd.Length() > 0);
+            assert(max_eigs.Length() > 0);
             if(lastd(1) < max_eigs(1) && b != 1 && b != (psi.NN()-1)) { max_eigs = lastd; max_eigs_bond = b; }
             if(b == psi.NN()/2) 
             {

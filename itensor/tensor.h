@@ -768,6 +768,13 @@ public:
 
     ITensor(istream& s) { read(s); }
 
+    ITensor(Real val) : rn(0), _logfac(0), _neg(false)
+	{ 
+        allocate(1);
+        p->v = val;
+        set_unique_Real();
+    }
+
     ITensor(const Index& i1) : rn(0), _logfac(0), _neg(false)
 	{ 
         if(i1.m()==1) _index1.push_back(i1); else { _indexn[1] = i1; ++rn; }
@@ -805,7 +812,8 @@ public:
     ITensor(Index i1,Index i2,const MatrixRef& M) : rn(0), _logfac(0), _neg(false)
     {
         _construct2(i1,i2);
-        if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) Error("Mismatch of Index sizes and matrix.");
+        if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
+        { Error("ITensor(Index,Index,Matrix): Mismatch of Index sizes and matrix."); }
         MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
         dref = M.t();
     }
@@ -1963,7 +1971,7 @@ Real ran1(int);
 
 //int Internal::IndexDat::indcount = 0;
 UniqueID Internal::IndexDat::lastID; 
-bool printdat = true;
+bool printdat = false;
 bool writeops = false;
 ofstream big_op_file;
 Internal::IndexDat IndexDatNull(makeNull);

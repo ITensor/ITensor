@@ -172,7 +172,7 @@ public:
     }
 
     IQIndex(const string& name, const vector<inqn>& ind_qn, Arrow dir = Out) 
-    : Index(name,0,ind_qn[0].index.type()), _dir(dir), iq_(ind_qn)
+    : Index(name,0,ind_qn.back().index.type()), _dir(dir), iq_(ind_qn)
     { 
         int* pm = const_cast<int*>(&(p->m_));
         foreach(const inqn& x, iq_) *pm += x.index.m();
@@ -345,15 +345,21 @@ struct IQIndexVal
         assert(i <= iqind.m());
         if(iqindex.type() != Site) Error("IQIndexVals only defined for type Site");
     }
+
     Index index() const { return iqind.index(i); }
     QN qn() const { return iqind.qn(i); }
-    inline friend ostream& operator<<(ostream& s, const IQIndexVal& iv)
-    { return s << "IQIndexVal: i = " << iv.i << ", iqind = " << iv.iqind << "\n"; }
     IQIndexVal primed() const { return IQIndexVal(iqind.primed(),i); }
-    operator IndexVal() const { Index res = iqind; return res(i); }
     void conj() { iqind.conj(); }
+
+    operator IndexVal() const { return IndexVal(iqind,i); }
+    ITensor operator*(const IndexVal& iv) const { IndexVal iv_this = *this; return (iv_this * iv); }
+    ITensor operator*(Real fac) const { IndexVal iv_this = *this; return iv_this.operator*(fac); }
+    friend inline ITensor operator*(Real fac, const IndexVal& iv) { return iv.operator*(fac); }
+
     void print(string name = "") const
     { cerr << "\n" << name << " =\n" << *this << "\n"; }
+    inline friend ostream& operator<<(ostream& s, const IQIndexVal& iv)
+    { return s << "IQIndexVal: i = " << iv.i << ", iqind = " << iv.iqind << "\n"; }
 };
 extern IQIndexVal IQIVNull;
 
