@@ -95,7 +95,7 @@ Vector do_denmat_Real(const ITensor& AA, ITensor& A, ITensor& B, Real cutoff,int
     return D;
 }
 
-void diag_denmat(IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept, bool do_relative_cutoff)
+void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept, bool do_relative_cutoff)
 {
     IQIndex active = rho.finddir(Out);
     assert(active.primelevel == 0);
@@ -105,44 +105,31 @@ void diag_denmat(IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, V
     vector<Real> alleig;
 
     Real maxlogfac = -1.0e20;
-    for(IQTensor::const_iten_it i = rho.const_iten_begin(); i != rho.const_iten_end(); ++i)
+    if(do_relative_cutoff)
     {
-        maxlogfac = max(maxlogfac,i->logfac());
+        foreach(const ITensor& t, rho.itensors())
+        { maxlogfac = max(maxlogfac,t.logfac()); }
     }
-
-    if(!do_relative_cutoff) 
+    else
 	{
         const Real lognormref = 1.3e-14;
         maxlogfac = 2.0*lognormref;
 	}
 
+    //1. Diagonalize each ITensor within rho
     int itenind = 0;
-    foreach(ITensor& t, rho.itensors())
+    foreach(const ITensor& t, rho.itensors())
 	{
+        assert(t.index(1).noprime_equals(t.index(2)));
+
         t.normlogto(maxlogfac); //Changes the logfac but preserves tensor
 
-        //Check that all ITensors in rho have indices
-        //identical up to their primelevel
-        //if(!i->has_symmetric_indices()) //i->index(1).noprime_equals(i->index(2)))
-        //{
-        //    cout << "rho is " << rho << endl;
-        //    cout << "*i is " << *i << endl << endl;
-        //    Error("ITensor failed to have symmetric indices. Perhaps quantum numbers weren't conserved?");
-        //}
-        //assert(i->has_symmetric_indices());
+        Matrix &U = mmatrix[itenind];
+        Vector &d = mvector[itenind];
 
         //Diag ITensors within rho
-        if(t.index(2).m() != t.index(1).m())
-        {
-            cout << "rho is " << rho << endl;
-            cout << "t is " << t << endl << endl;
-            cerr << "t.index(2) = " << t.index(2) << "\n"; 
-            cerr << "t.index(1) = " << t.index(1) << "\n"; 
-            Error("diag_denmat: density matrix not square.");
-        }
         int n = t.index(1).m();
-        Matrix M(n,n), U;
-        Vector d;
+        Matrix M(n,n);
         t.toMatrix11(t.index(2),t.index(1),M);
 
         M *= -1.0;
@@ -151,76 +138,64 @@ void diag_denmat(IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, V
 
         for(int j = 1; j <= n; ++j) 
         { alleig.push_back(d(j)); }
-        mmatrix[itenind] = U;
-        mvector[itenind] = d;
         ++itenind;
 	}
+
+    //2. Truncate eigenvalues
 
     //Sort all eigenvalues from smallest to largest
     //irrespective of quantum numbers
     sort(alleig.begin(),alleig.end());
 
-    //Truncate eigenvalues
-    Real e1 = max(alleig.back(),1.0e-60), su = 0.0, docut = 0.0;
+    //Truncate
+    Real e1 = max(alleig.back(),1.0e-60), docut = 0;
+    svdtruncerr = 0;
     int m = 0, mkeep = (int)alleig.size();
     if(mkeep > minm)
     for(; m < (int)alleig.size(); m++, mkeep--)
-    {
-        if(((su += alleig[m]/e1) > cutoff && mkeep <= maxm) || mkeep <= minm)
-        { 
-            docut = (m > 0 ?  (alleig[m-1] + alleig[m]) * 0.5 : 0.0); 
-            su -= alleig[m]/e1;
-            break; 
-        }
+    if(((svdtruncerr += alleig[m]/e1) > cutoff && mkeep <= maxm) || mkeep <= minm)
+    { 
+        docut = (m > 0 ?  (alleig[m-1] + alleig[m]) * 0.5 : 0);
+        svdtruncerr -= alleig[m]/e1;
+        break; 
     }
+    //cerr << "\nDiscarded " << m << " states in diag_denmat\n";
     m = (int)alleig.size()-m;
 
-    if(m > maxm) 
-    {
-        cerr << format("minm = %d, maxm = %d\n") % minm % maxm;
-        Error("bad m, too big");
-    }
-    if(m > 20000) Error("bad m, > 20000");
+    assert(m <= maxm); 
+    assert(m < 20000);
 
-    //Construct ITensors for orthogonalized IQTensor (i.e. nU)
-    list<ITensor> terms;
+    //3. Construct orthogonalized IQTensor nU
+    vector<ITensor> terms; terms.reserve(rho.iten_size());
+    vector<inqn> iq; iq.reserve(rho.iten_size());
     itenind = 0;
-    int totkept = 0;
-    vector<inqn> iq;
-    foreach(ITensor& t, rho.itensors())
+    foreach(const ITensor& t, rho.itensors())
 	{
-        int j = 1;
-        for( ; j <= mvector[itenind].Length(); ++j)
-        { if(mvector[itenind](j) < docut) break; }
+        const Vector& thisD = mvector[itenind];
+        int this_m = 1;
+        for(; this_m <= thisD.Length(); ++this_m)
+        if(thisD(this_m) < docut) { break; }
+        --this_m; //since for loop overshoots by 1
 
-        if(mkeep == 0 && mvector[itenind].Length() >= 1)	// zero mps, just keep one arb state
-        {
-            j = 2;
-            mkeep = 1;
-            docut = 1.0;
-        }
-        j -= 1;
-        totkept += j;
-        if(j == 0) { ++itenind; continue; }
+        if(this_m == 0) { ++itenind; continue; }
 
-        Index nm("qlink",j);
+        if(mkeep == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
+        { this_m = 2; mkeep = 1; docut = 1; }
+
+        Index nm("qlink",this_m);
         Index act = t.index(1).deprimed();
         iq.push_back(inqn(nm,active.qn(act)));
 
-        Matrix UU = mmatrix[itenind].Columns(1,j);
+        Matrix UU = mmatrix[itenind].Columns(1,this_m);
 
         assert(act.primelevel == 0);
         assert(active.hasindex(act));
         assert(act.m() == UU.Nrows());
 
-        ITensor tU(act,nm);
-        tU.fromMatrix11(act,nm,UU);
-        terms.push_back(tU);
+        terms.push_back(ITensor(act,nm,UU));
         ++itenind;
 	}
-
     IQIndex newmid("qlink",iq,In);
-
     nU = IQTensor(active,newmid);
     foreach(const ITensor& t, terms) nU += t;
 
@@ -274,21 +249,6 @@ Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B,
     //Init combiner
     IQIndex c("Combined");
     comb.init(c);
-
-    /*
-#ifndef NDEBUG
-    //do_denmat_Real should always be used to 
-    //orthogonalize toward the orthogonality center
-    foreach(IQIndex I,comb.left)
-    {
-        if(I.type() == Link && I.dir() != In)
-        {
-            cerr << "I = " << I << endl;
-            Error("do_denmat_Real direction was not toward orthogonality center.");
-        }
-    }
-#endif
-    */
 
     //Apply combiner
     IQTensor nnA;
@@ -375,11 +335,11 @@ Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTen
     //Combine
     IQIndex c("Combined");
     comb.init(c);
-    list<IQTensor> nnA;
+    vector<IQTensor> nnA; nnA.reserve(nA.size());
     foreach(const IQTensor& iqt, nA) nnA.push_back(iqt * comb);
 
     //Condense
-    list<IQTensor> ncA;
+    vector<IQTensor> ncA; ncA.reserve(nnA.size());
     IQIndex active("Condensed");
     Condenser cond(c,active,nnA.front());
     foreach(const IQTensor& iqt, nnA) ncA.push_back(iqt * cond);

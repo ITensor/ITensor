@@ -397,7 +397,6 @@ public:
 
     int m() const { return p->m_; }
     inline string showm() const { return (format("m=%d")%(p->m_)).str(); }
-    //int Ind() const { return p->ind; }
     boost::uuids::uuid Ind() const { return p->ind; }
     IndexType type() const { return p->_type; }
     void settype(IndexType t) { p->_type = t; }
@@ -440,7 +439,7 @@ public:
 
     // rel_ops defines the other comparisons based on == and <
     bool operator==(const Index& other) const 
-	{ return (unique_Real() == other.unique_Real()); }
+	{ return (p == other.p && primelevel == other.primelevel); }
 
     bool operator<(const Index& other) const 
 	{ return (unique_Real() < other.unique_Real()); }
@@ -448,7 +447,7 @@ public:
     IndexVal operator()(int i) const;
 
     bool noprime_equals(const Index& other) const
-	{ return (p->_type == other.p->_type && p->ind == other.p->ind); }
+	{ return (p == other.p); }
 
     void mapprime(int plevold, int plevnew, PrimeType pr = primeBoth)
 	{
