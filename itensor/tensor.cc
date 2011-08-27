@@ -367,8 +367,8 @@ ITensor& ITensor::operator/=(const ITensor& other)
         //Compute set union
         sort(_index1.begin(),_index1.end());
         sort(other._index1.begin(),other._index1.end());
-        list<Index> symdiff(_index1.size()+other._index1.size());
-        list<Index>::iterator it =
+        vector<Index> symdiff(_index1.size()+other._index1.size());
+        vector<Index>::iterator it =
         set_union(_index1.begin(),_index1.end(),
         other._index1.begin(),other._index1.end(),symdiff.begin());
         _index1.assign(symdiff.begin(),it);

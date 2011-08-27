@@ -603,7 +603,7 @@ private:
 public:
     Vector v;
 #ifdef DO_ALT
-    list<PDat> alt;
+    vector<PDat> alt;
 #endif
 
     ITDat(int size) : numref(0), v(size)
@@ -1466,7 +1466,7 @@ Combine several indices into one, use * to convert tensors efficiently
 class Combiner
 {
     array<Index,NMAX+1> _leftn; // max dim is 8
-    list<Index> _left1;
+    vector<Index> _left1;
     Index _right;
     int _rln; //Number of m>1 'left' indices (indices to be combined into one)
 public:
@@ -1480,7 +1480,7 @@ public:
 
     typedef array<Index,NMAX+1>::const_iterator leftn_it;
     const pair<leftn_it,leftn_it> leftn() const { return make_pair(_leftn.begin()+1,_leftn.begin()+_rln+1); }
-    const list<Index>& left1() const { return _left1; }
+    const vector<Index>& left1() const { return _left1; }
 
     //Constructors --------------------------------------------------
 

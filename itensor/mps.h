@@ -713,7 +713,7 @@ public:
             const int i2 = (dir == Fromleft ? i-1 : i+2);
             const int boundary = (dir == Fromleft ? 1 : NN()-1);
 
-            list<IndexT> keep_indices;
+            vector<IndexT> keep_indices;
             IndexT site = A.at(i1).findtype(Site); site.noprime();
             keep_indices.push_back(site);
 
