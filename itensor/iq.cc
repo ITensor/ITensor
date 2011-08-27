@@ -29,7 +29,7 @@ void IQTensor::SplitReIm(IQTensor& re, IQTensor& im) const
 	}
 }
 
-void IQTensor::product(const IQTensor& other, IQTensor& res) const
+IQTensor& IQTensor::operator*=(const IQTensor& other)
 {
     if(hasindex(IQIndReIm) && other.hasindex(IQIndReIm) && !other.hasindex(IQIndReImP)
 	    && !other.hasindex(IQIndReImPP))
@@ -53,20 +53,17 @@ void IQTensor::product(const IQTensor& other, IQTensor& res) const
             iqprimerP += primerP;
             iqprod += prod;
         }
-        res = (*this * iqprimer) * iqprod * (other * iqprimerP);
+        return *this = (*this * iqprimer) * iqprod * (other * iqprimerP);
 	}
 
     //Handle virtual index
     if(other.viqindex != IQEmptyV)
-    if(viqindex == IQEmptyV) res.viqindex = other.viqindex;
+    if(viqindex == IQEmptyV) viqindex = other.viqindex;
     else
     {
-        res.viqindex = viqindex;
-        QN newq = 
-        (viqindex.dir()*(viqindex.dir()*viqindex.qn(1)+other.viqindex.dir()*other.viqindex.qn(1)));
-        res.viqindex.set_qn(1,newq);
+        viqindex.set_qn(1,
+        viqindex.dir()*(viqindex.dir()*viqindex.qn(1)+other.viqindex.dir()*other.viqindex.qn(1)) );
     }
-    
     
     //Load res.iqindex_ with those IQIndex's *not* common to *this and other
     static vector<IQIndex> riqind_holder(1000);
@@ -103,15 +100,17 @@ void IQTensor::product(const IQTensor& other, IQTensor& res) const
     { riqind_holder.push_back(I); }
 
     if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator* riqind_holder had to reallocate.\n\n";
-    res.iqindex_.swap(riqind_holder);
+    iqindex_.swap(riqind_holder);
 
     static vector<ApproxReal> keys(3000);
     keys.resize(0);
 
+    list<ITensor> old_itensor; itensor.swap(old_itensor);
+
     //com_this maps the unique_Real of a set of Index's to be contracted over together
     //to those ITensors in *this.itensor having all Index's in that set
     multimap<ApproxReal,const_iten_it> com_this;
-    for(const_iten_it tt = const_iten_begin(); tt != const_iten_end(); ++tt)
+    for(const_iten_it tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
 	{
         Real r = 0.0;
         for(int a = 1; a <= tt->r(); ++a)
@@ -164,11 +163,11 @@ void IQTensor::product(const IQTensor& other, IQTensor& res) const
         {
             //Multiply the ITensors and add into res
             tt = *(ll->second); tt *= *(rr->second);
-            res += tt;
+            operator+=(tt);
         }
 	}
 
-} //void IQTensor::product(const IQTensor& other, IQTensor& res) const
+} //IQTensor& IQTensor::operator*=(const IQTensor& other)
 
 //Extracts the real and imaginary parts of the 
 //component of a rank 0 tensor (scalar)

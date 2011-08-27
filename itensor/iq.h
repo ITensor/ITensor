@@ -411,9 +411,6 @@ public:
 
     IQTensor() : own_rmap(false), viqindex(IQEmptyV) {}
 
-    IQTensor(const IQTensor& other)
-    : own_rmap(false), itensor(other.itensor), iqindex_(other.iqindex_), viqindex(other.viqindex)  
-    { }
 
     explicit IQTensor(const IQIndex& i1) :  own_rmap(false), viqindex(IQEmptyV)
     { iqindex_.push_back(i1); }
@@ -450,8 +447,10 @@ public:
     : own_rmap(false), itensor(other.itensor), iqindex_(other.iqindex_), viqindex(other.viqindex)
     { doprime(pt); }
 
-    //----------------------------------------------------
-    //IQTensor operators
+    IQTensor(const IQTensor& other)
+    : own_rmap(false), itensor(other.itensor), iqindex_(other.iqindex_), viqindex(other.viqindex)  
+    { }
+
     IQTensor& operator=(const IQTensor& other)
     {
         if(this == &other) return *this;
@@ -462,6 +461,12 @@ public:
         own_rmap = false;
         return *this;
     }
+
+    //----------------------------------------------------
+    //IQTensor operators
+
+    IQTensor operator*(IQTensor other) const { other *= *this; return other; }
+    IQTensor& operator*=(const IQTensor& other);
 
     IQTensor& operator+=(const IQTensor& o);
     IQTensor operator+(const IQTensor& o) const { IQTensor res(*this); res += o; return res; }
@@ -476,14 +481,7 @@ public:
     }
     IQTensor operator*(Real fac) { IQTensor res(*this); res *= fac; return res; }
 
-    void product(const IQTensor& other, IQTensor& res) const;
-
-    IQTensor operator*(IQTensor other) const { other *= *this; return other; }
-    //This version ought to work and avoid an extra copy, but currently broken:
-    //IQTensor operator*(const IQTensor& other) const { IQTensor res; product(other,res); return res; }
-
-    IQTensor& operator*=(const IQTensor& other) { IQTensor res; product(other,res); return (*this = res); }
-
+    /*
     operator ITensor() const
     {
         vector<Index> indices;
@@ -498,6 +496,7 @@ public:
         match_order();
         return res;
     }
+    */
 
     void insert(const ITensor& t) 
     { 
