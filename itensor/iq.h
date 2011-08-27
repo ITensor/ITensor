@@ -754,6 +754,14 @@ public:
         if(I.type() == t) ++count;
         return count;
     }
+
+    Real norm() const
+    {
+        Real res;
+        foreach(const ITensor& t, itensor) res += sqrt(t.norm());
+        return sqrt(res);
+    }
+
     int vec_size() const
     {
         int s = 0;
