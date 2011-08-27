@@ -459,8 +459,13 @@ public:
     }
     IQTensor operator*(Real fac) { IQTensor res(*this); res *= fac; return res; }
 
-    IQTensor& operator*=(const IQTensor& other);
+    void product(const IQTensor& other, IQTensor& res) const;
+
     IQTensor operator*(IQTensor other) const { other *= *this; return other; }
+    //This version ought to work and avoid an extra copy, but currently broken:
+    //IQTensor operator*(const IQTensor& other) const { IQTensor res; product(other,res); return res; }
+
+    IQTensor& operator*=(const IQTensor& other) { IQTensor res; product(other,res); return (*this = res); }
 
     IQTensor& operator*=(IQIndex I)
     {

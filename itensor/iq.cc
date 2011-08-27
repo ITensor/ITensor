@@ -79,7 +79,7 @@ void IQTensor::SplitReIm(IQTensor& re, IQTensor& im) const
 	}
 }
 
-IQTensor& IQTensor::operator*=(const IQTensor& other)
+void IQTensor::product(const IQTensor& other, IQTensor& res) const
 {
     if(hasindex(IQIndReIm) && other.hasindex(IQIndReIm) && !other.hasindex(IQIndReImP)
 	    && !other.hasindex(IQIndReImPP))
@@ -103,110 +103,64 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
             iqprimerP += primerP;
             iqprod += prod;
         }
-        return *this = (*this * iqprimer) * iqprod * (other * iqprimerP);
+        res = (*this * iqprimer) * iqprod * (other * iqprimerP);
 	}
 
-        /*
-        if(0)
-        {
-        int numsame = 0;
-        order_iqindex_for_product(*this,other,numsame);
-        if(0)
-            {
-            for(vector<IQIndex>::const_iterator i = iqindex.begin(); i != iqindex.end(); ++i)
-            cout << i->unique_Real() << " ";
-            cout << " | ";
-            for(vector<IQIndex>::const_iterator i = other.iqindex.begin(); i != other.iqindex.end(); ++i)
-            cout << i->unique_Real() << " ";
-            cout << endl;
-            }
-        match_order();
-        other.match_order();
-        }
-        */
-
-    IQTensor res;
-
-    //Combine virtual indices
-    if(viqindex == IQEmptyV)
+    //Handle virtual index
+    if(other.viqindex != IQEmptyV)
+    if(viqindex == IQEmptyV) res.viqindex = other.viqindex;
+    else
     {
-        if(other.viqindex == IQEmptyV)
-            res.viqindex = IQEmptyV;
-        else
-            res.viqindex = other.viqindex;
-    }
-    else 
-    {
-        if(other.viqindex == IQEmptyV)
-            res.viqindex = viqindex;
-        else
-        {
-            //Add virtual IQIndex's
-            res.viqindex = viqindex; //Inherits its dir from *this
-            QN newq = 
-                res.viqindex.dir()*(viqindex.dir()*viqindex.qn(1)+other.viqindex.dir()*other.viqindex.qn(1));
-            res.viqindex.set_qn(1,newq);
-        }
+        res.viqindex = viqindex;
+        QN newq = 
+        (viqindex.dir()*(viqindex.dir()*viqindex.qn(1)+other.viqindex.dir()*other.viqindex.qn(1)));
+        res.viqindex.set_qn(1,newq);
     }
     
     
     //Load res.iqindex with those IQIndex's *not* common to *this and other
     static vector<IQIndex> riqind_holder(1000);
     riqind_holder.resize(0);
-    foreach(const IQIndex& I, iqindex)
-    {   
-        if(!has_element<IQIndex,vector<IQIndex> >(I,other.iqindex))
-            riqind_holder.push_back(I);
-    }                
-    foreach(const IQIndex& I, other.iqindex)
-    {   
-        if(!has_element<IQIndex,vector<IQIndex> >(I,iqindex))
-            riqind_holder.push_back(I);
-    }
-    if(riqind_holder.size() > 1000) cerr << endl << "WARNING: in IQTensor::operator* riqind_holder had to reallocate." << endl << endl;
-    res.iqindex = riqind_holder;
-
-
-    //Fill common_inds with IQIndex's common to both
-    vector<IQIndex> common_inds;
-    for(vector<IQIndex>::const_iterator i = iqindex.begin(); i != iqindex.end(); ++i)
-    {
-        vector<IQIndex>::const_iterator f = find(other.iqindex.begin(),other.iqindex.end(),*i);
-        if(f != other.iqindex.end()) //*i is an element of other.iqindex
-        {
-            common_inds.push_back(*i);
-            //Check that arrow directions are compatible
-            if(f->dir() == i->dir() && f->type() != ReIm && i->type() != ReIm)
-            {
-                cerr << "*this = " << *this << endl;
-                cerr << "other = " << other << endl;
-                cerr << "IQIndex from *this = " << *i << endl;
-                cerr << "IQIndex from other = " << *f << endl;
-                Error("Incompatible arrow directions in IQTensor::operator*.");
-            }
-        }
-    }
 
     //is_common returns true for the unique_Real of an Index 
     //if it is part of a common IQIndex
     map<ApproxReal,bool> is_common;
-    foreach(const IQIndex& i, iqindex)
-	{
-        bool iscom = has_element(i,common_inds);
-        foreach(const inqn& x, i.iq()) is_common[ApproxReal(x.index.unique_Real())] = iscom;
-	}
-    foreach(const IQIndex& i, other.iqindex)
-	{
-        bool iscom = has_element(i,common_inds);
-        foreach(const inqn& x, i.iq()) is_common[ApproxReal(x.index.unique_Real())] = iscom;
-	}
 
-    multimap<ApproxReal,const_iten_it> com_this;
+    bool is_com = false;
+    foreach(const IQIndex& I, iqindex)
+    {
+        is_com = false;
+        vector<IQIndex>::const_iterator f = find(other.iqindex.begin(),other.iqindex.end(),I);
+        if(f != other.iqindex.end()) //I is an element of other.iqindex
+        {
+            //Check that arrow directions are compatible
+            if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
+            {
+                cerr << "*this = " << *this << endl;
+                cerr << "other = " << other << endl;
+                cerr << "IQIndex from *this = " << I << endl;
+                cerr << "IQIndex from other = " << *f << endl;
+                Error("Incompatible arrow directions in IQTensor::operator*.");
+            }
+            is_com = true;
+        }
+        else { riqind_holder.push_back(I); }
+        foreach(const inqn& x, I.iq()) is_common[ApproxReal(x.index.unique_Real())] = is_com;
+    }
+
+    foreach(const IQIndex& I, other.iqindex)
+    if(!has_element<IQIndex,vector<IQIndex> >(I,iqindex))
+    { riqind_holder.push_back(I); }
+
+    if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator* riqind_holder had to reallocate.\n\n";
+    res.iqindex = riqind_holder;
+
     static vector<ApproxReal> keys(3000);
     keys.resize(0);
 
     //com_this maps the unique_Real of a set of Index's to be contracted over together
     //to those ITensors in *this.itensor having all Index's in that set
+    multimap<ApproxReal,const_iten_it> com_this;
     for(const_iten_it tt = const_iten_begin(); tt != const_iten_end(); ++tt)
 	{
         Real r = 0.0;
@@ -264,8 +218,7 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
         }
 	}
 
-    return (*this = res);
-} //IQTensor& IQTensor::operator*=(const IQTensor& other) const
+} //void IQTensor::product(const IQTensor& other, IQTensor& res) const
 
 //Extracts the real and imaginary parts of the 
 //component of a rank 0 tensor (scalar)
