@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
     Real cutoff = 1E-5;
 
     SpinOne::Model model(N);
-
+    
     IQMPO H = SpinOne::Heisenberg(model)();
 
     InitState initState(N);

@@ -2,6 +2,7 @@
 #define __MPS_H
 #include "tensor.h"
 #include "iq.h"
+#include "iqcombiner.h"
 
 Vector do_denmat_Real(const ITensor& nA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir);
 Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir);
@@ -1126,7 +1127,7 @@ public:
         } //for loop over s
 
         IQIndex Center("Center",Index("center",1,Virtual),totalq,In);
-        iqpsi.AAnc(1).viqindex = Center;
+        iqpsi.AAnc(1).addindex1(Center);
 
     } //void convertToIQ(IQMPSType& iqpsi) const
 
@@ -1231,8 +1232,8 @@ inline bool check_QNs(const IQMPS& psi)
 
 inline QN total_QN(const IQMPS& psi)
 {
-    assert(psi.AA(psi.ortho_center()).viqindex != IQEmptyV);
-    return psi.AA(psi.ortho_center()).viqindex.qn(1); 
+    assert(psi.AA(psi.ortho_center()).has_virtual());
+    return psi.AA(psi.ortho_center()).virtualQN();
 }
 
 class IQMPO : public IQMPS

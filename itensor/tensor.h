@@ -476,7 +476,7 @@ public:
 
     void noprime(PrimeType p = primeBoth) { doprime(p,-primelevel); }
 
-    friend inline ostream & operator << (ostream & s, const Index & t)
+    friend inline ostream & operator<<(ostream & s, const Index & t)
     {
         if(t.name() != "" && t.name() != " ") s << t.name() << "/";
         return s << nameindex(t.type(),t.primelevel) << "-" << t.Ind() << ":" << t.m();
@@ -787,7 +787,7 @@ public:
         set_unique_Real();
     }
 
-    ITensor(const Index& i1) : rn(0), _logfac(0), _neg(false)
+    explicit ITensor(const Index& i1) : rn(0), _logfac(0), _neg(false)
 	{ 
         if(i1.m()==1) _index1.push_back(i1); else { _indexn[1] = i1; ++rn; }
         allocate(i1.m());
@@ -846,7 +846,7 @@ public:
         set_unique_Real();
     }
 
-    ITensor(const IndexVal& iv, Real fac = 1) : rn(0), _logfac(0), _neg(false)
+    explicit ITensor(const IndexVal& iv, Real fac = 1) : rn(0), _logfac(0), _neg(false)
     { 
         if(iv.ind.m()==1) _index1.push_back(iv.ind); else { _indexn[++rn] = iv.ind; } 
         allocate(iv.ind.m());  
@@ -1317,7 +1317,7 @@ public:
     void print(string name = "",Printdat pdat = HideData) const 
     { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
 
-    friend ostream & operator << (ostream & s, const ITensor & t);
+    friend ostream & operator<<(ostream & s, const ITensor & t);
 
     bool checkDim() const
     {
@@ -1556,7 +1556,7 @@ public:
 
     void toITensor(ITensor& res);
 
-    friend inline ostream & operator << (ostream & s, const Combiner & c)
+    friend inline ostream & operator<<(ostream & s, const Combiner & c)
     {
         s << "\nRight index: " << c.right() << "\n";
         s << "Left indices:\n";

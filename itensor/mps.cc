@@ -216,7 +216,7 @@ Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B,
     int unique_link = 0;
     //Create combiner
     IQCombiner comb;
-    foreach(const IQIndex& i, to_orth.iqindex)
+    foreach(const IQIndex& i, to_orth.iqinds())
     if(!(newoc.hasindex(i) || i == IQIndReIm || i.type() == Virtual))
     { 
         //if(i.type() == Link) { ++unique_link; cerr << "found unique link = " << i << "\n"; }
@@ -304,7 +304,7 @@ Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTen
     int unique_link = 0;
     //Create combiner
     IQCombiner comb;
-    foreach(const IQIndex& i, to_orth.iqindex)
+    foreach(const IQIndex& i, to_orth.iqinds())
     if(!(newoc.hasindex(i) || i == IQIndReIm || i.type() == Virtual))
     { 
         if(i.type() == Link) ++unique_link;
