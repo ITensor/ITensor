@@ -726,7 +726,7 @@ private:
         set_unique_Real();
 	}
 
-    void getperm(const ITensor& other, Permutation& P);
+    void getperm(const ITensor& other, Permutation& P) const;
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
                              array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR, 

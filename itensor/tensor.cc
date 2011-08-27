@@ -523,21 +523,22 @@ void ITensor::Reshape(const Permutation& p, ITensor& res) const
     res._logfac = _logfac; res._neg = _neg;
     for(int k = 1; k <= rn; ++k) res._indexn[p.ind[k]] = _indexn[k];
     res._index1.assign(_index1.begin(),_index1.end());
-    //res.set_unique_Real();
+    res.set_unique_Real();
 #ifdef DO_ALT
     res.p->alt.clear();
 #endif
     this->ReshapeDat(p,res.ncdat());
 }
 
-void ITensor::getperm(const ITensor& other, Permutation& P)
+void ITensor::getperm(const ITensor& other, Permutation& P) const
 {
-    if(other.rn != rn)
+    //if(other.rn != rn)
+    if(fabs(other.ur - ur) > 1E-12)
 	{
-        cerr << format("this rn = %d, other rn = %d\n")%rn%other.rn;
+        //cerr << format("this rn = %d, other rn = %d\n")%rn%other.rn;
         this->print("this");
         other.print("other");
-        Error("getperm: rn not the same");
+        Error("getperm: unique Real not the same"); 
 	}
     for(int j = 1; j <= rn; ++j)
 	{
@@ -720,8 +721,9 @@ ITensor& ITensor::operator+=(const ITensor& other)
     assert(other.p != 0);
     const Vector& othrdat = other.p->v;
 
-    if(ur != other.ur)
+    if(fabs(ur - other.ur) > 1E-12)
     {
+        cerr << format("this ur = %.10f, other.ur = %.10f\n")%ur%other.ur;
         Print(*this);
         Print(other);
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
