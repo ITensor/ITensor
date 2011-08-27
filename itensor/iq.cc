@@ -103,7 +103,7 @@ void IQTensor::product(const IQTensor& other, IQTensor& res) const
     { riqind_holder.push_back(I); }
 
     if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator* riqind_holder had to reallocate.\n\n";
-    res.iqindex_ = riqind_holder;
+    res.iqindex_.swap(riqind_holder);
 
     static vector<ApproxReal> keys(3000);
     keys.resize(0);

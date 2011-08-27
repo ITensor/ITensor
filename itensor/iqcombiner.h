@@ -337,11 +337,11 @@ public:
         foreach(const inqn& x, bigind.iq()) qns.push_back(x.qn);
         sort(qns.begin(),qns.end());
         vector<QN>::iterator ue = unique(qns.begin(),qns.end());
-        qns.resize(ue-qns.begin());
 
         vector<inqn> iq;
-        foreach(QN& q, qns)
+        for(vector<QN>::iterator qi = qns.begin(); qi != ue; ++qi)
         {
+            QN& q = *qi;
             int totm = 0;
             foreach(const inqn& x, bigind.iq())
             if(x.qn == q) totm += x.index.m();

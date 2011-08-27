@@ -407,7 +407,7 @@ public:
     pair<const_iqind_it,const_iqind_it> iqinds() const { return make_pair(iqindex_.begin(),iqindex_.end()); }
 
     //----------------------------------------------------
-    //IQTensor: constructors
+    //IQTensor: Constructors
 
     IQTensor() : own_rmap(false), viqindex(IQEmptyV) {}
 
@@ -415,7 +415,7 @@ public:
     : own_rmap(false), itensor(other.itensor), iqindex_(other.iqindex_), viqindex(other.viqindex)  
     { }
 
-    IQTensor(const IQIndex& i1) :  own_rmap(false), viqindex(IQEmptyV)
+    explicit IQTensor(const IQIndex& i1) :  own_rmap(false), viqindex(IQEmptyV)
     { iqindex_.push_back(i1); }
     IQTensor(const IQIndex& i1,const IQIndex& i2) : own_rmap(false), viqindex(IQEmptyV)
     { iqindex_.push_back(i1); iqindex_.push_back(i2); }
@@ -424,7 +424,7 @@ public:
     IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,const IQIndex& i4) : own_rmap(false), viqindex(IQEmptyV)
     { iqindex_.push_back(i1); iqindex_.push_back(i2); iqindex_.push_back(i3); iqindex_.push_back(i4); }
 
-    IQTensor(const vector<IQIndex>& iqinds_) : own_rmap(false), viqindex(IQEmptyV)
+    explicit IQTensor(const vector<IQIndex>& iqinds_) : own_rmap(false), viqindex(IQEmptyV)
     { iqindex_ = iqinds_; }
 
     IQTensor(ITmaker itm) : own_rmap(false), viqindex(IQEmptyV)
@@ -979,12 +979,6 @@ inline void Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool d
 
 inline IQTensor operator*(Real fac, IQTensor T)
     { T *= fac; return T; }
-
-inline IQTensor operator*(const IQIndex& I, IQTensor T)
-    { T *= I; return T; }
-
-inline IQTensor operator*(IQTensor T, const IQIndex& I)
-    { T *= I; return T; }
 
 template<class T, class C>
 bool has_element(const T& t, const C& c)
