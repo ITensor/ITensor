@@ -641,8 +641,9 @@ private:
     int rn;
     mutable array<Index,NMAX+1> _indexn; //Indices having m!=1, maximum of 8 (_indexn[0] not used), mutable to allow reordering
     mutable vector<Index>       _index1; //Indices having m==1
-    Real _logfac, ur;
-    bool _neg; //true if overall sign is -1
+    mutable Real _logfac; //mutable since e.g. normlogto is logically const
+    Real ur;
+    mutable bool _neg; //true if overall sign is -1, mutable since e.g. solo_dosign logically const
 
     void allocate(int dim) { p = new Internal::ITDat(dim); }
 
@@ -655,7 +656,7 @@ private:
     //Disattach self from current ITDat and create own copy instead.
     //Necessary because ITensors logically represent distinct
     //objects even though they may share data in reality.
-    void solo_dosign()
+    void solo_dosign() const
 	{
         assert(p != 0);
         if(p->count() != 1) 
@@ -1292,12 +1293,13 @@ public:
         if(f != 0) { ncdat() *= 1.0/f; _logfac += log(f); }
 	}
 
-    void normlogto(Real newlogfac)
+    void normlogto(Real newlogfac) const
 	{
         Real dellogfac = newlogfac - _logfac;
+        assert(p != 0); solo_dosign();
+        if(dellogfac > 100.) p->v = 0;
+        else                 p->v *= exp(-dellogfac);
         _logfac = newlogfac;
-        if(dellogfac > 100.) ncdat() = 0;
-        else                 ncdat() *= exp(-dellogfac);
 	}
 
     void print(string name = "",Printdat pdat = HideData) const 
