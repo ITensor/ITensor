@@ -1006,6 +1006,19 @@ public:
         }
         return true;
     }
+
+    bool has_common_index(const ITensor& other) const
+    {
+        for(int j = 1; j <= rn; ++j)
+        for(int k = 1; k <= other.rn; ++k)
+        if(_indexn[j] == other._indexn[k]) return true;
+
+        for(size_t j = 0; j < _index1.size(); ++j)
+        for(size_t k = 0; k < other._index1.size(); ++k)
+        if(_index1[j] == other._index1[k]) return true;
+
+        return false;
+    }
     
     bool hasindex(const Index& I) const
 	{
@@ -1017,7 +1030,7 @@ public:
     bool hasindexn(const Index& I) const
 	{
         for(int j = 1; j <= rn; ++j)
-        if(GET(_indexn,j) == I) return true;
+        if(_indexn[j] == I) return true;
         return false;
 	}
 

@@ -64,46 +64,44 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
         viqindex.set_qn(1,
         viqindex.dir()*(viqindex.dir()*viqindex.qn(1)+other.viqindex.dir()*other.viqindex.qn(1)) );
     }
+
+    set<ApproxReal> common_inds;
     
-    //Load res.iqindex_ with those IQIndex's *not* common to *this and other
+    //Load iqindex_ with those IQIndex's *not* common to *this and other
     static vector<IQIndex> riqind_holder(1000);
     riqind_holder.resize(0);
 
-    //is_common returns true for the unique_Real of an Index 
-    //if it is part of a common IQIndex
-    map<ApproxReal,bool> is_common;
-
-    bool is_com = false;
-    foreach(const IQIndex& I, iqindex_)
+    for(size_t i = 0; i < iqindex_.size(); ++i)
     {
-        is_com = false;
+        const IQIndex& I = iqindex_[i];
         vector<IQIndex>::const_iterator f = find(other.iqindex_.begin(),other.iqindex_.end(),I);
         if(f != other.iqindex_.end()) //I is an element of other.iqindex_
         {
             //Check that arrow directions are compatible
             if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
             {
-                cerr << "*this = " << *this << endl;
-                cerr << "other = " << other << endl;
+                Print(*this);
+                Print(other);
                 cerr << "IQIndex from *this = " << I << endl;
                 cerr << "IQIndex from other = " << *f << endl;
                 Error("Incompatible arrow directions in IQTensor::operator*.");
             }
-            is_com = true;
+            for(size_t n = 0; n < I.iq().size(); ++n) 
+            { common_inds.insert(ApproxReal(I.iq()[n].index.unique_Real())); }
+
+            common_inds.insert(ApproxReal(I.unique_Real()));
         }
         else { riqind_holder.push_back(I); }
-        foreach(const inqn& x, I.iq()) is_common[ApproxReal(x.index.unique_Real())] = is_com;
     }
 
-    foreach(const IQIndex& I, other.iqindex_)
-    if(!has_element<IQIndex,vector<IQIndex> >(I,iqindex_))
-    { riqind_holder.push_back(I); }
+    for(size_t i = 0; i < other.iqindex_.size(); ++i)
+    if(!common_inds.count(ApproxReal(other.iqindex_[i].unique_Real())))
+    { riqind_holder.push_back(other.iqindex_[i]); }
 
-    if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator* riqind_holder had to reallocate.\n\n";
+    //if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator* riqind_holder had to reallocate.\n\n";
     iqindex_.swap(riqind_holder);
 
-    static vector<ApproxReal> keys(3000);
-    keys.resize(0);
+    set<ApproxReal> keys;
 
     list<ITensor> old_itensor; itensor.swap(old_itensor);
 
@@ -115,13 +113,11 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
         Real r = 0.0;
         for(int a = 1; a <= tt->r(); ++a)
         {
-            if(is_common[ApproxReal(tt->index(a).unique_Real())])
-            {
-                r += tt->index(a).unique_Real();
-            }
+            if(common_inds.count(ApproxReal(tt->index(a).unique_Real())))
+            { r += tt->index(a).unique_Real(); }
         }
         com_this.insert(make_pair(ApproxReal(r),tt));
-        keys.push_back(ApproxReal(r));
+        keys.insert(ApproxReal(r));
 	}
 
     //com_other is the same as com_this but for other
@@ -131,25 +127,17 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
         Real r = 0.0;
         for(int b = 1; b <= ot->r(); ++b)
         {
-            if(is_common[ApproxReal(ot->index(b).unique_Real())])
-            {
-                r += ot->index(b).unique_Real();
-            }
+            if(common_inds.count(ApproxReal(ot->index(b).unique_Real())))
+            { r += ot->index(b).unique_Real(); }
         }
         com_other.insert(make_pair(ApproxReal(r),ot));
-        keys.push_back(ApproxReal(r));
+        keys.insert(ApproxReal(r));
 	}
-    if(keys.size() > 3000) cerr << endl << format("WARNING: in IQTensor::operator* keys had to reallocate (new size = %d).")%keys.size() << endl << endl;
 
-    //Remove redundant keys and return an iterator pointing to the 
-    //new end of the sequence
-    sort(keys.begin(),keys.end());
-    vector<ApproxReal>::iterator kend = unique(keys.begin(),keys.end());
     typedef multimap<ApproxReal,const_iten_it>::iterator mit;
-
     pair<mit,mit> lrange,rrange;
     ITensor tt;
-    for(vector<ApproxReal>::iterator k = keys.begin(); k != kend; ++k)
+    for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
 	{
         //Equal range returns the begin and end iterators for the sequence
         //corresponding to multimap[key] as a pair
