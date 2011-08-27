@@ -720,6 +720,13 @@ ITensor& ITensor::operator+=(const ITensor& other)
     assert(other.p != 0);
     const Vector& othrdat = other.p->v;
 
+    if(ur != other.ur)
+    {
+        Print(*this);
+        Print(other);
+        Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
+    }
+
     if(this == &other)
     {
         _logfac += log(2); //multiply by 2, without touching p->v
@@ -738,6 +745,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
     p->alt.clear();
 #endif
 
+    /*
     if(rn != other.rn) 
     {
         cerr << "*this = " << *this << "\n";
@@ -762,6 +770,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
         Error("ITensor::operator+=: mismatched m==1 Indices.");
         }
     }
+    */
 
     bool same_ind_order = true;
     for(int j = 1; j <= rn; j++)
