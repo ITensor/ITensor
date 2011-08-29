@@ -128,9 +128,9 @@ public:
 
     IQIndex() : _dir(Out) {}
 
-    IQIndex(const Index& other, Arrow dir = Out) : Index(other), _dir(dir) {}
+    explicit IQIndex(const Index& other, Arrow dir = Out) : Index(other), _dir(dir) {}
 
-    IQIndex(const string& name,IndexType it = Link, Arrow dir = Out) : Index(name,1,it), _dir(dir) {}
+    explicit IQIndex(const string& name,IndexType it = Link, Arrow dir = Out) : Index(name,1,it), _dir(dir) {}
 
     IQIndex(const string& name, 
             const Index& i1, const QN& q1, 
@@ -138,6 +138,7 @@ public:
     : Index(name,i1.m(),i1.type()), _dir(dir)
     {
         iq_.push_back(inqn(i1,q1));
+        setPrimeLevel(i1.primelevel);
     }
 
     IQIndex(const string& name, 
@@ -148,6 +149,7 @@ public:
     {
         iq_.push_back(inqn(i1,q1));
         iq_.push_back(inqn(i2,q2));
+        setPrimeLevel(i1.primelevel);
     }
 
     IQIndex(const string& name, 
@@ -160,6 +162,7 @@ public:
         iq_.push_back(inqn(i1,q1));
         iq_.push_back(inqn(i2,q2));
         iq_.push_back(inqn(i3,q3));
+        setPrimeLevel(i1.primelevel);
     }
 
     IQIndex(const string& name, 
@@ -174,6 +177,7 @@ public:
         iq_.push_back(inqn(i2,q2));
         iq_.push_back(inqn(i3,q3));
         iq_.push_back(inqn(i4,q4));
+        setPrimeLevel(i1.primelevel);
     }
 
     IQIndex(const string& name, const vector<inqn>& ind_qn, Arrow dir = Out) 
@@ -181,6 +185,7 @@ public:
     { 
         int* pm = const_cast<int*>(&(p->m_));
         foreach(const inqn& x, iq_) *pm += x.index.m();
+        setPrimeLevel(ind_qn.back().index.primelevel);
     }
 
     IQIndex(const IQIndex& other, const vector<inqn>& ind_qn)
@@ -188,6 +193,7 @@ public:
     { 
         int* pm = const_cast<int*>(&(p->m_));
         foreach(const inqn& x, iq_) *pm += x.index.m();
+        setPrimeLevel(ind_qn.back().index.primelevel);
     }
 
     IQIndex(PrimeType pt, const IQIndex& other, int inc = 1) 

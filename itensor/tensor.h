@@ -406,6 +406,7 @@ public:
     void setname(string newname) { p->sname = newname; }
     bool is_null() const { return (p == &IndexDatNull); }
     int count() const { return p->count(); }
+    void setPrimeLevel(int plev) { primelevel = plev; }
 
     Index() : p(&IndexDatNull), primelevel(0) { }
 

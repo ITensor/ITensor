@@ -121,6 +121,8 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor&
     foreach(const ITensor& t, rho.itensors())
 	{
         assert(t.index(1).noprime_equals(t.index(2)));
+        //if(!t.index(1).noprime_equals(t.index(2)))
+        //{ Print(t); Error("Non-symmetric ITensor in density matrix"); }
 
         t.normlogto(maxlogfac); //Changes the logfac but preserves tensor
 
