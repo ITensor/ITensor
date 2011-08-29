@@ -61,8 +61,8 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
     if(viqindex == IQEmptyV) viqindex = other.viqindex;
     else
     {
-        viqindex.set_qn(1,
-        viqindex.dir()*(viqindex.dir()*viqindex.qn(1)+other.viqindex.dir()*other.viqindex.qn(1)) );
+        QN newq = viqindex.dir()*(viqindex.dir()*viqindex.qn(1)+other.viqindex.dir()*other.viqindex.qn(1));
+        viqindex = IQIndex((Index) viqindex,viqindex.index(1),newq);
     }
 
     set<ApproxReal> common_inds;

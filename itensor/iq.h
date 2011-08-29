@@ -111,33 +111,94 @@ public:
     bool operator()(const inqn &j) const { return i == j.index; }
 };
 
+class IQIndexDat : public noncopyable
+{
+    mutable unsigned int numref;
+public:
+    vector<inqn> iq_;
+
+    IQIndexDat() : numref(0) { }
+
+    IQIndexDat(const Index& i1, const QN& q1)
+    : numref(0)
+    {
+        iq_.push_back(inqn(i1,q1));
+    }
+
+    IQIndexDat(const Index& i1, const QN& q1,
+               const Index& i2, const QN& q2)
+    : numref(0)
+    {
+        iq_.push_back(inqn(i1,q1));
+        iq_.push_back(inqn(i2,q2));
+    }
+
+    IQIndexDat(const Index& i1, const QN& q1,
+               const Index& i2, const QN& q2,
+               const Index& i3, const QN& q3)
+    : numref(0)
+    {
+        iq_.push_back(inqn(i1,q1));
+        iq_.push_back(inqn(i2,q2));
+        iq_.push_back(inqn(i3,q3));
+    }
+
+    IQIndexDat(const Index& i1, const QN& q1,
+               const Index& i2, const QN& q2,
+               const Index& i3, const QN& q3,
+               const Index& i4, const QN& q4)
+    : numref(0)
+    {
+        iq_.push_back(inqn(i1,q1));
+        iq_.push_back(inqn(i2,q2));
+        iq_.push_back(inqn(i3,q3));
+        iq_.push_back(inqn(i4,q4));
+    }
+
+    IQIndexDat(vector<inqn>& ind_qn)
+    : numref(0)
+    { iq_.swap(ind_qn); }
+
+    friend inline void intrusive_ptr_add_ref(IQIndexDat* p) { ++(p->numref); }
+    friend inline void intrusive_ptr_release(IQIndexDat* p) { if(--(p->numref) == 0){ delete p; } }
+    inline int count() const { return numref; }
+};
+
 struct IQIndexVal;
 
 class IQIndex : public Index
 {
-private:
-    Arrow _dir; //Arrow direction. -1 for in, +1 for out. 
-    vector<inqn> iq_;
+    Arrow _dir;
+    intrusive_ptr<IQIndexDat> pd;
+    void solo()
+    {
+        assert(p != 0);
+        if(p->count() != 1)
+        {
+            intrusive_ptr<IQIndexDat> new_pd(new IQIndexDat());
+            new_pd->iq_ = pd->iq_;
+            pd.swap(new_pd);
+        }
+    }
 public:
-    const vector<inqn>& iq() const { return iq_; }
-    const Index& index(int i) const { return GET(iq_,i-1).index; }
-    const QN& qn(int i) const { return GET(iq_,i-1).qn; }
+    const vector<inqn>& iq() const { assert(p != 0); return pd->iq_; }
+    const Index& index(int i) const { assert(p != 0); return GET(pd->iq_,i-1).index; }
+    const QN& qn(int i) const { assert(p != 0); return GET(pd->iq_,i-1).qn; }
 
     //------------------------------------------
     //IQIndex: Constructors
 
-    IQIndex() : _dir(Out) {}
+    IQIndex() : _dir(Out), pd(0) {}
 
-    explicit IQIndex(const Index& other, Arrow dir = Out) : Index(other), _dir(dir) {}
+    explicit IQIndex(const Index& other, Arrow dir = Out) : Index(other), _dir(dir), pd(0) {}
 
-    explicit IQIndex(const string& name,IndexType it = Link, Arrow dir = Out, int plev = 0) : Index(name,1,it,plev), _dir(dir) {}
+    explicit IQIndex(const string& name,IndexType it = Link, Arrow dir = Out, int plev = 0) : Index(name,1,it,plev), _dir(dir), pd(0) {}
 
     IQIndex(const string& name, 
             const Index& i1, const QN& q1, 
             Arrow dir = Out) 
-    : Index(name,i1.m(),i1.type()), _dir(dir)
+    : Index(name,i1.m(),i1.type()), _dir(dir), pd(new IQIndexDat(i1,q1))
     {
-        iq_.push_back(inqn(i1,q1));
         setPrimeLevel(i1.primelevel);
     }
 
@@ -145,10 +206,9 @@ public:
             const Index& i1, const QN& q1, 
             const Index& i2, const QN& q2,
             Arrow dir = Out) 
-    : Index(name,i1.m()+i2.m(),i1.type()), _dir(dir)
+    : Index(name,i1.m()+i2.m(),i1.type()), _dir(dir), 
+    pd(new IQIndexDat(i1,q1,i2,q2))
     {
-        iq_.push_back(inqn(i1,q1));
-        iq_.push_back(inqn(i2,q2));
         setPrimeLevel(i1.primelevel);
     }
 
@@ -157,11 +217,9 @@ public:
             const Index& i2, const QN& q2,
             const Index& i3, const QN& q3,
             Arrow dir = Out) 
-    : Index(name,i1.m()+i2.m()+i3.m(),i1.type()), _dir(dir)
+    : Index(name,i1.m()+i2.m()+i3.m(),i1.type()), _dir(dir),
+    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3))
     {
-        iq_.push_back(inqn(i1,q1));
-        iq_.push_back(inqn(i2,q2));
-        iq_.push_back(inqn(i3,q3));
         setPrimeLevel(i1.primelevel);
     }
 
@@ -171,47 +229,40 @@ public:
             const Index& i3, const QN& q3,
             const Index& i4, const QN& q4,
             Arrow dir = Out) 
-    : Index(name,i1.m()+i2.m()+i3.m()+i4.m(),i1.type()), _dir(dir)
+    : Index(name,i1.m()+i2.m()+i3.m()+i4.m(),i1.type()), _dir(dir),
+    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4))
     {
-        iq_.push_back(inqn(i1,q1));
-        iq_.push_back(inqn(i2,q2));
-        iq_.push_back(inqn(i3,q3));
-        iq_.push_back(inqn(i4,q4));
         setPrimeLevel(i1.primelevel);
     }
 
     IQIndex(const string& name, vector<inqn>& ind_qn, Arrow dir = Out, int plev = 0) 
-    : Index(name,0,ind_qn.back().index.type(),plev), _dir(dir)
+    : Index(name,0,ind_qn.back().index.type(),plev), _dir(dir),
+    pd(new IQIndexDat(ind_qn))
     { 
-        iq_.swap(ind_qn);
         int* pm = const_cast<int*>(&(p->m_));
-        foreach(const inqn& x, iq_) *pm += x.index.m();
-        setPrimeLevel(iq_.back().index.primelevel);
+        foreach(const inqn& x, pd->iq_) *pm += x.index.m();
+        setPrimeLevel(pd->iq_.back().index.primelevel);
     }
 
     IQIndex(const IQIndex& other, vector<inqn>& ind_qn)
-    : Index(other.name(),0,other.type()), _dir(other._dir)
+    : Index(other.name(),0,other.type()), _dir(other._dir),
+    pd(new IQIndexDat(ind_qn))
     { 
-        iq_.swap(ind_qn);
         int* pm = const_cast<int*>(&(p->m_));
-        foreach(const inqn& x, iq_) *pm += x.index.m();
-        setPrimeLevel(iq_.back().index.primelevel);
+        foreach(const inqn& x, pd->iq_) *pm += x.index.m();
+        setPrimeLevel(pd->iq_.back().index.primelevel);
+    }
+
+    IQIndex(const Index& other, 
+            const Index& i1, const QN& q1, 
+            Arrow dir = Out) 
+    : Index(other), _dir(dir), pd(new IQIndexDat(i1,q1))
+    {
+        setPrimeLevel(i1.primelevel);
     }
 
     IQIndex(PrimeType pt, const IQIndex& other, int inc = 1) 
-	: Index(other), _dir(other._dir), iq_(other.iq_)  { doprime(pt,inc); }
-
-    IQIndex(Imaker im) : _dir(In)
-	{
-        Index i;
-        if(im == makeNull)        { i = IndNull; }
-        else if(im == makeReIm)   { i = IndReIm; }
-        else if(im == makeReImP)  { i = IndReImP; }
-        else if(im == makeReImPP) { i = IndReImPP; }
-        else if(im == makeEmptyV) { i = IndEmptyV; }
-        Index::operator=(i); 
-        iq_.push_back(inqn(i,QN()));
-	}
+	: Index(other), _dir(other._dir), pd(other.pd)  { doprime(pt,inc); }
 
     IQIndex(istream& s) { read(s); }
 
@@ -221,9 +272,9 @@ public:
     {
         Index::write(s);
         s.write((char*)&_dir,sizeof(_dir));
-        unsigned int size = iq_.size();
+        unsigned int size = pd->iq_.size();
         s.write((char*)&size,sizeof(size));
-        foreach(const inqn& x,iq_) x.write(s);
+        foreach(const inqn& x,pd->iq_) x.write(s);
     }
 
     void read(istream& s)
@@ -231,8 +282,9 @@ public:
         Index::read(s);
         s.read((char*)&_dir,sizeof(_dir));
         unsigned int size; s.read((char*)&size,sizeof(size));
-        iq_.resize(size);
-        foreach(inqn& x,iq_) x.read(s);
+        vector<inqn> iq(size);
+        foreach(inqn& x,iq) x.read(s);
+        pd = new IQIndexDat(iq);
     }
 
     //------------------------------------------
@@ -241,14 +293,14 @@ public:
     int biggestm() const
 	{
         int mm = 0;
-        foreach(const inqn& x, iq_) mm = max(mm,x.index.m());
+        foreach(const inqn& x, pd->iq_) mm = max(mm,x.index.m());
         return mm;
 	}
     string showm() const
 	{
         string res = " ";
         ostringstream oh; 
-        foreach(const inqn& x, iq_)
+        foreach(const inqn& x, pd->iq_)
         {
             QN q = x.qn;
             oh << format("[%d,%d,%s]:%d ") % q.sz() % q.Nf() % (q.fp()==1?"+":"-") % x.index.m(); 
@@ -259,57 +311,47 @@ public:
     //------------------------------------------
     //IQIndex: quantum number methods
 
-    void negate() // negate Quantum numbers
-	{ foreach(inqn& x, iq_) x.qn = -x.qn; }
-
-    friend inline IQIndex negate(IQIndex I) // Quantum numbers negated
-    { foreach(inqn& x, I.iq_) { x.qn = -x.qn; } return I; }
+    friend inline IQIndex negate(const IQIndex& I) // Quantum numbers negated
+    { 
+        vector<inqn> iq(I.pd->iq_.size());
+        for(size_t j = 0; j < iq.size(); ++j)
+        { iq[j] = inqn(I.pd->iq_[j].index,-I.pd->iq_[j].qn); } 
+        return IQIndex(I,iq); 
+    }
      
     QN qn(const Index& i) const
 	{ 
-        foreach(const inqn& x, iq_) if(x.index == i) return x.qn;
+        foreach(const inqn& x, pd->iq_) if(x.index == i) return x.qn;
         cerr << *this << "\n";
         cerr << "i = " << i << "\n";
         Error("IQIndex::qn(Index): IQIndex does not contain given index.");
         return QN();
 	}
 
-    void set_qn(const Index& i, QN q)
-	{
-        foreach(inqn& x, iq_) if(x.index == i) { x.qn = q; return; }
-        cerr << *this << "\n";
-        cerr << "i = " << i << "\n";
-        Error("IQIndex::qn(Index): IQIndex does not contain given index.");
-	}
-    void set_qn(int i, QN q)
-	{ GET(iq_,i-1).qn = q; }
-
     const Arrow dir() const { return _dir; }
-    Arrow& dir() { return _dir; }
     void conj() { _dir = _dir*Switch; }
 
     //------------------------------------------
     //IQIndex: index container methods
 
-    int nindex() const { return (int) iq_.size(); }
-
+    int nindex() const { return (int) pd->iq_.size(); }
 
     const Index& findbyqn(QN q) const
 	{ 
-        for(int i = 0; i < (int)iq_.size(); ++i)
-            if(iq_[i].qn == q) return iq_[i].index;
+        for(size_t i = 0; i < pd->iq_.size(); ++i)
+            if(pd->iq_[i].qn == q) return pd->iq_[i].index;
         Error("IQIndex::findbyqn: no Index had a matching QN.");
-        return iq_[0].index;
+        return pd->iq_[0].index;
 	}
 
     bool hasindex(const Index& i) const
 	{ 
-        foreach(const inqn& x, iq_) if(x.index == i) return true;
+        foreach(const inqn& x, pd->iq_) if(x.index == i) return true;
         return false;
 	}
     bool hasindex_noprime(const Index& i) const
 	{ 
-        foreach(const inqn& x, iq_) if(x.index.noprime_equals(i)) return true;
+        foreach(const inqn& x, pd->iq_) if(x.index.noprime_equals(i)) return true;
         return false;
 	}
 
@@ -318,20 +360,23 @@ public:
 
     void doprime(PrimeType pt, int inc = 1)
 	{
+        solo();
         Index::doprime(pt,inc);
         DoPrimer dp(pt,inc);
-        for_each(iq_.begin(),iq_.end(),dp);
+        for_each(pd->iq_.begin(),pd->iq_.end(),dp);
 	}
     void mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)
 	{
+        solo();
         Index::mapprime(plevold,plevnew,pt);
-        for_each(iq_.begin(),iq_.end(),MapPrimer(plevold,plevnew,pt));
+        for_each(pd->iq_.begin(),pd->iq_.end(),MapPrimer(plevold,plevnew,pt));
 	}
     void noprime(PrimeType pt = primeBoth)
 	{
+        solo();
         Index::noprime(pt);
-        for(int j = 0; j < (int)iq_.size(); ++j)
-            iq_[j].index.noprime(pt);
+        for(size_t j = 0; j < pd->iq_.size(); ++j)
+        { pd->iq_[j].index.noprime(pt); }
 	}
     IQIndex primed(int inc = 1) const
 	{
@@ -584,6 +629,7 @@ public:
 
     //----------------------------------------------------
     //IQTensor quantum number methods
+    /*
     void set_qn(Index i, QN q)
     {
         int iqq = find_iqind(i)-1;
@@ -591,6 +637,7 @@ public:
             Error("set_qn: cant find index");
         iqindex_[iqq].set_qn(i,q);
     } //end IQTensor::set_qn
+    */
 
     QN net_QN() const // only works on tensors without the Link indices put in
     {
@@ -621,7 +668,7 @@ public:
         return iqindex_[iqq].qn(in);
     } //end IQTensor::qn
 
-    void negate_qn() { foreach(IQIndex& I, iqindex_) I.negate(); }
+    //void negate_qn() { foreach(IQIndex& I, iqindex_) I.negate(); }
 
     Arrow dir(const Index& in) const
     {
@@ -811,22 +858,23 @@ public:
     QN virtualQN() const { return viqindex.qn(1); }
     const IQIndex& virtual_ind() const { return viqindex; }
 
-    void addindex1(IQIndex I)
+    void addindex1(const IQIndex& I)
     {
         if(I.m() != 1) Error("IQTensor::operator*=(IQIndex): IQIndex must have m == 1.");    
         if(I.type() == Virtual) 
         {
+            Arrow dir = I.dir();
+            QN newq = I.qn(1);
             if(viqindex != IQEmptyV) //Add quantum numbers (with arrows)
             {
-                QN newq = I.dir()*(viqindex.dir()*viqindex.qn(1)+I.dir()*I.qn(1));
+                newq = I.dir()*(viqindex.dir()*viqindex.qn(1)+I.dir()*I.qn(1));
                 if(newq.Nf() < 0) //prefer to have Nf >= 0
                 {
                     newq *= -1;
-                    I.conj();
+                    dir = dir*Switch;
                 }
-                I.set_qn(1,newq);
             }
-            viqindex = I;
+            viqindex = IQIndex(I.name(),Index(I.index(1)),newq,dir);
             return;
         }
         foreach(ITensor& t, itensor) t.addindex1(I.index(1));
@@ -1055,14 +1103,16 @@ public:
 };
 
 #ifdef THIS_IS_MAIN
-IQIndex IQIndNull(makeNull);
-IQIndex IQIndReIm(makeReIm);
-IQIndex IQIndReImP(makeReImP);
-IQIndex IQIndReImPP(makeReImPP);
-IQIndex IQEmptyV(makeEmptyV);
+IQIndex IQIndNull(IndNull,IndNull,QN(),In);
+IQIndex IQIndReIm(IndReIm,IndReIm,QN(),In);
+IQIndex IQIndReImP(IndReImP,IndReImP,QN(),In);
+IQIndex IQIndReImPP(IndReImPP,IndReImPP,QN(),In);
+IQIndex IQEmptyV(IndEmptyV,IndEmptyV,QN(),In);
+
+IQIndexVal IQIVNull(IQIndNull,0);
+
 IQTensor IQTSing(makeSing);
 IQTensor IQComplex_1(makeComplex_1), IQComplex_i(makeComplex_i);
 const IQIndex& IQTensor::ReImIndex = IQIndReIm;
-IQIndexVal IQIVNull(IQIndNull,0);
 #endif
 #endif
