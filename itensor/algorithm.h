@@ -324,5 +324,6 @@ inline Tensor multSiteOps(Tensor a, Tensor b) // a * b  (a above b in diagram, u
 Real dmrg(MPS& psi, const MPO& H, const Sweeps& sweeps, const vector<MPS>& other, DMRGOpts& opts);
 Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts);
 Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweeps& sweeps, DMRGOpts& opts, bool preserve_edgelink=true);
+void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm);
 
 #endif
