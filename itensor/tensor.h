@@ -404,7 +404,8 @@ public:
     Real unique_Real() const { assert(p!=0); return p->ur*(1+primelevel); }
     string name() const  { return putprimes(rawname(),primelevel); }
     void setname(string newname) { p->sname = newname; }
-    bool is_null() const { return (p == &IndexDatNull); }
+    inline bool is_null() const { return (p == &IndexDatNull); }
+    inline bool is_not_null() const { return (p != &IndexDatNull); }
     int count() const { return p->count(); }
     void setPrimeLevel(int plev) { primelevel = plev; }
 
@@ -646,6 +647,8 @@ private:
 
 } //namespace Internal
 
+class Combiner;
+
 class ITensor //Index Tensor
 {
 private:
@@ -747,6 +750,8 @@ private:
 public:
     typedef Index IndexT;
     typedef IndexVal IndexValT;
+    typedef Combiner CombinerT;
+    static const Index& ReImIndex;
 
     //Accessor Methods ----------------------------------------------
 
@@ -1037,8 +1042,8 @@ public:
 
     bool hasindex1(const Index& I) const
 	{
-        foreach(const Index& J,_index1)
-        if(J == I) return true;
+        for(size_t j = 0; j < _index1.size(); ++j)
+        if(_index1[j] == I) return true;
         return false;
 	}
 
@@ -1493,14 +1498,21 @@ class Combiner
 {
     array<Index,NMAX+1> _leftn; // max dim is 8
     vector<Index> _left1;
-    Index _right;
+    mutable Index _right;
     int _rln; //Number of m>1 'left' indices (indices to be combined into one)
-public:
+    mutable bool initted;
     static Index spec; //Special placeholder index
+public:
 
     //Accessor Methods ----------------------------------------------
 
-    Index right() const { return _right; }
+    void doCondense(bool val) { } //For interface compatibility with IQCombiner
+
+    const Index& right() const 
+    { 
+        if(!initted) Error("Combiner: right ind requested prior to init");
+        return _right; 
+    }
     int rln() const { return _rln; }
     const Index& leftn(int j) const { return _leftn[j]; }
 
@@ -1510,9 +1522,8 @@ public:
 
     //Constructors --------------------------------------------------
 
-    Combiner() : _rln(0) {}
-    Combiner(Index& r, 
-	    Index l1 = spec, Index l2 = spec, Index l3 = spec, Index l4 = spec, 
+    Combiner() : _rln(0), initted(false) {}
+    Combiner(Index l1 , Index l2 = spec, Index l3 = spec, Index l4 = spec, 
 	    Index l5 = spec, Index l6 = spec, Index l7 = spec, Index l8 = spec )
 	{
         _leftn[0] = spec;
@@ -1527,27 +1538,33 @@ public:
         if(l6 != spec) { if(l6.m() == 1) _left1.push_back(l6); else _leftn[++_rln] = l6; }
         if(l7 != spec) { if(l7.m() == 1) _left1.push_back(l7); else _leftn[++_rln] = l7; }
         if(l8 != spec) { if(l8.m() == 1) _left1.push_back(l8); else _leftn[++_rln] = l8; }
-
-        //Set up right index
-        int m = 1; foreach(const Index& L, leftn()) m *= L.m();
-        r = Index(r.name(),m,r.type(),r.primelevel);
-        _right = r;
 	}
     
     //Operators -----------------------------------------------------
 
-    friend ITensor operator*(const ITensor& t, const Combiner& c);
-    friend inline ITensor operator*(const Combiner& c, const ITensor& t) { return t * c; }
+    void product(const ITensor& t, ITensor& res) const;
+    ITensor operator*(const ITensor& t) const { ITensor res; product(t,res); return res; }
+    friend inline ITensor operator*(const ITensor& t, const Combiner& c) { return c.operator*(t); }
 
     //Index Methods -------------------------------------------------
 
-    void addleft(Index& r, Index l) 	// Include another left index
+    inline bool check_init() const { return initted; }
+
+    void addleft(const Index& l)// Include another left index
 	{ 
+        initted = false;
         if(l.m() == 1) { _left1.push_back(l); return; } else _leftn[++_rln] = l; 
-        int m = 1; foreach(const Index& L, leftn()) m *= L.m();
-        r = Index(r.name(),m,r.type(),r.primelevel);
-        _right = r;
 	}
+
+    //Initialize after all lefts are added and before being used
+    void init(string rname = "combined", IndexType type = Link, int primelevel = 0) const
+	{
+        if(initted) return;
+        int m = 1; for(int i = 1; i <= _rln; ++i) { m *= _leftn[i].m(); }
+        _right = Index(rname,m,type,primelevel); 
+        initted = true;
+    }
+
     int findindexn(Index i) const
 	{
         for(int j = 1; j <= _rln; ++j)
@@ -1568,7 +1585,19 @@ public:
 
     //Other Methods -------------------------------------------------
 
-    void toITensor(ITensor& res);
+    operator ITensor() const
+    {
+        if(_right.m() > 16) 
+        { 
+            Print(*this);
+            Error(""); }
+        //{ cerr << "\n\n" << "WARNING: too large of an m in Combiner::operator ITensor(). May be inefficient!\n\n"; }
+
+        //Use a kronecker delta tensor to convert this Combiner into an Tensor
+        ITensor res = operator*(ITensor(_right,_right.primed(),1));
+        res.noprimeind(_right.primed());
+        return res;
+    }
 
     friend inline ostream & operator<<(ostream & s, const Combiner & c)
     {
@@ -1578,6 +1607,8 @@ public:
         foreach(const Index& l, c.left1()) s << "	" << l << "\n";
         return s;
     }
+
+    void conj() { }
 
 }; //class Combiner
 
@@ -2015,6 +2046,7 @@ Index IndReImPP(makeReImPP);
 Index IndEmptyV(makeEmptyV);
 IndexVal IVNull(IndNull,1);
 ITensor Complex_1(makeComplex_1), Complex_i(makeComplex_i), ConjTensor(makeConjTensor);
+const Index& ITensor::ReImIndex = IndReIm;
 Vector lastd(1);
 int newtotalsize = 0;
 

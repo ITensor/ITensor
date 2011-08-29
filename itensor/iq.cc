@@ -191,7 +191,7 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
     { re = 0.0; }
     else
 	{
-        if(tre.iten_begin()->dat().Length() != 1) 
+        if(tre.itensor.begin()->dat().Length() != 1) 
         {
             cout << "tre is\n" << tre << endl;
             Error("bad tre dat size");

@@ -4,6 +4,8 @@
 #include "iq.h"
 #include "iqcombiner.h"
 
+void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D);
+void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& D);
 Vector do_denmat_Real(const ITensor& nA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir);
 Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir);
 Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTensor& B, IQTensor& U,
@@ -733,7 +735,7 @@ public:
         //otherwise the MPS will retain the same index structure
         */
 
-        do_denmat_Real(AA,A[i],A[i+1],cutoff,minm,maxm,dir);
+        truncateBond(AA,A[i],A[i+1],cutoff,minm,maxm,dir);
         truncerror = svdtruncerr;
 
         if(dir == Fromleft)
@@ -1166,6 +1168,69 @@ MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
 typedef Internal::MPS<ITensor> MPS;
 typedef Internal::MPS<IQTensor> IQMPS;
 
+template<class Tensor>
+Vector truncateBond(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir)
+{
+    typedef typename Tensor::IndexT IndexT;
+    typedef typename Tensor::CombinerT CombinerT;
+
+    IndexT mid = index_in_common(A,B,Link);
+    if(mid.is_null()) mid = IndexT("mid");
+
+    Tensor& to_orth = (dir==Fromleft ? A : B);
+    Tensor& newoc   = (dir==Fromleft ? B : A);
+
+    CombinerT comb;
+
+    int unique_link = 0; //number of Links unique to to_orth
+    for(int j = 1; j <= to_orth.r(); ++j)
+    { 
+    const IndexT& I = to_orth.index(j);
+    if(!(newoc.hasindex(I) || I == Tensor::ReImIndex || I.type() == Virtual))
+    {
+        if(I.type() == Link) ++unique_link;
+        comb.addleft(I);
+    }}
+
+    //Check if we're at the edge
+    if(unique_link == 0)
+    {
+        comb.doCondense(false);
+        comb.init(mid.rawname());
+        comb.product(AA,newoc);
+        to_orth = comb; to_orth.conj();
+        Vector eigs_kept(comb.right().m()); eigs_kept = 1.0/comb.right().m();
+        return eigs_kept; 
+    }
+
+    //Apply combiner
+    comb.init(mid.rawname());
+    Tensor AAc; comb.product(AA,AAc);
+
+    const IndexT& active = comb.right();
+
+    Tensor rho;
+    if(AAc.is_complex())
+    {
+        Tensor re,im;
+        AAc.SplitReIm(re,im);
+        rho = re; rho.conj(); rho.primeind(active);
+        rho *= re;
+        im *= conj(primeind(im,active));
+        rho += im;
+    }
+    else { Tensor AAcc = conj(AAc); AAcc.primeind(active); rho = AAc*AAcc; }
+    assert(rho.r() == 2);
+
+    Tensor U; Vector eigs_kept;
+    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept);
+
+    to_orth = U * conj(comb);
+    newoc   = conj(U) * AAc;
+
+    return eigs_kept;
+}
+
 inline bool check_QNs(const IQMPS& psi)
 {
     const int N = psi.NN();
@@ -1365,6 +1430,7 @@ public:
     inline MPO operator+(MPO res) const { res += *this; return res; }
     inline MPO operator-(MPO res) const { res *= -1; res += *this; return res; }
 
+    /*
     void newindices()
 	{
         vector<Combiner> na(N+1);
@@ -1379,6 +1445,7 @@ public:
 	    { A[i] = na[i-1] * A[i] * na[i]; }
         A[N] = na[N-1] * A[N];
 	}
+    */
 
 };
 
@@ -1612,7 +1679,6 @@ Real psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi
     return re;
 }
 
-void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, Matrix& U, Vector& D);
 void psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi, Real& re, Real& im);
 Real psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi); //Re[<psi|H|phi>]
 

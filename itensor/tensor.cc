@@ -705,8 +705,6 @@ Index index_in_common(const ITensor& A, const ITensor& B, IndexType t)
     foreach(const Index& I, A.index1())
 	if(I.type() == t) if(B.hasindex1(I)) return I;
 
-    //cerr << "\n"; A.print(false,"A"); B.print(false,"B");
-    //Error("index_in_common: no common Index found");
     return Index();
 }
 
@@ -874,69 +872,69 @@ void ITensor::conj()
     operator/=(ConjTensor);
 }
 
-ITensor operator*(const ITensor& t, const Combiner& c)
+void Combiner::product(const ITensor& t, ITensor& res) const
 {
-    int j;
-    ITensor res;
+    init();
 
-    if((j = t.findindex1(c.right())) != 0)
+    int j;
+
+    if((j = t.findindex1(_right)) != 0)
     {
         res = t;
         res.removeindex1(j);
         //All of c's left indices must be m==1, so add them all
-        foreach(const Index& I, c.left1()) res.addindex1(I);
-        return res;
+        foreach(const Index& I, _left1) res.addindex1(I);
+        return;
     }
-    else if((j = t.findindexn(c.right())) != 0)
+    else if((j = t.findindexn(_right)) != 0)
 	{
-        vector<Index> nindices; nindices.reserve(t.r_n()+c.rln()-1);
+        vector<Index> nindices; nindices.reserve(t.r_n()+_rln-1);
         for(int i = 1; i < j; ++i)
             nindices.push_back(t.indexn(i));
-        foreach(const Index& I, c.leftn())
-            nindices.push_back(I);
+        for(size_t i = 1; i <= _rln; ++i)
+            nindices.push_back(_leftn[i]);
         for(int i = j+1; i <= t.r_n(); ++i)
             nindices.push_back(t.indexn(i));
-        foreach(const Index& I, c.left1()) nindices.push_back(I);
+        foreach(const Index& I, _left1) nindices.push_back(I);
         foreach(const Index& I, t.index1()) nindices.push_back(I);
         const bool do_allocate = false;
         res = ITensor(nindices,do_allocate);
         res.ncdat() = t.dat();
         res.setlogfac(t.logfac());
-        return res;
+        return;
 	}
 
-    vector<Index> nindices; nindices.reserve(t.r_n()-c.rln()+1);
+    vector<Index> nindices; nindices.reserve(t.r_n()-_rln+1);
     Permutation P;
-    for(int i = 1; i <= c.rln(); ++i)
+    for(int i = 1; i <= _rln; ++i)
     {
-        if((j = t.findindexn(c.leftn(i))) == 0)
+        if((j = t.findindexn(_leftn[i])) == 0)
         {
-            cerr << "t = " << t << "\n";
-            cerr << "c = " << c << "\n";
-            cerr << "Couldn't find 'left' Index " << c.leftn(i) << " in ITensor t." << endl;
+            Print(t); Print(*this);
+            cerr << "Couldn't find 'left' Index " << _leftn[i] << " in ITensor t.\n";
             Error("operator*(ITensor,Combiner): bad Combiner ITensor product");
         }
-	    P.from_to(j,t.r_n()-c.rln()+i);
+	    P.from_to(j,t.r_n()-_rln+i);
     }
 
     int k = 1;
     for(int i = 1; i <= t.r_n(); ++i)
-	if(c.findindexn(t.indexn(i)) == 0) 
+	if(findindexn(t.indexn(i)) == 0) 
     {
         P.from_to(i,k++);
         nindices.push_back(t.indexn(i));
     }
 
-    nindices.push_back(c.right());
+    nindices.push_back(_right);
 
     vector<Index> res_index1 = t.index1();
-    foreach(const Index& L, c.left1())
+    foreach(const Index& L, _left1)
     {
         vector<Index>::iterator it = find(res_index1.begin(),res_index1.end(),L);
         if(it == res_index1.end())
         {
-            cout << "t = " << t << "\n"; cout << "c = " << c << "\n";
-            cout << "Couldn't find 'left' Index " << L << " in ITensor t." << endl;
+            Print(t); Print(*this);
+            cout << "Couldn't find 'left' Index " << L << " in ITensor t.\n";
             Error("operator*(ITensor,Combiner): bad Combiner ITensor product");
         }
         res_index1.erase(it);
@@ -948,18 +946,4 @@ ITensor operator*(const ITensor& t, const Combiner& c)
     res.addindex1(res_index1);
     res.setlogfac(t.logfac()); res *= (t.neg() ? -1 : 1);
 
-    return res;
 }
-
-void Combiner::toITensor(ITensor& res) 
-{
-    if(right().m() > 16) 
-    { cerr << "\n\n" << "WARNING: too large of an m in IQCombiner::toIQTensor(). May be inefficient!\n\n"; }
-
-    ITensor Delta(right(),right().primed(),1);
-
-    //Use the delta tensor to convert this IQCombiner into an IQTensor
-    res = (*this) * Delta;
-    res.noprimeind(right().primed());
-}
-
