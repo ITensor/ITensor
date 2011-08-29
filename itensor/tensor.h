@@ -131,8 +131,8 @@ enum Direction { Fromright, Fromleft, Both, None };
 
 enum Printdat { ShowData, HideData };
 
-#define Print(X) { printdat = false; cerr << "\n" << #X << " =\n" << X << "\n"; }
-#define PrintDat(X) { printdat = true; cerr << "\n" << #X << " =\n" << X << "\n"; printdat = false; }
+#define Print(X) { printdat = false; cerr << "\n" << #X << " =\n" << X << "\n\n"; }
+#define PrintDat(X) { printdat = true; cerr << "\n" << #X << " =\n" << X << "\n\n"; printdat = false; }
 
 //Enum defining directions for arrows
 enum Arrow { In = -1, Out = 1 };

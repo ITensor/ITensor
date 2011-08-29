@@ -2,7 +2,175 @@
 #define __IQCOMBINER_H
 #include "iq.h"
 
-namespace { //Blank namespace means don't expose outside of this header
+class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
+{
+    IQIndex bigind, smallind;		// uncondensed, condensed
+    mutable map<Index, pair<Index,int> > big_to_small;
+    mutable map<pair<Index,int>,Index > small_to_big;
+public:
+
+    // Use connections in t to create groupings; big = uncondensed, small = cond
+
+    Condenser() { }
+
+    Condenser(const IQIndex& _bigind, IQIndex& _smallind)
+        : bigind(_bigind) //Use connections in bigind to create groupings
+    {
+        /* May not be appropriate when orthogonalizing MPOs
+        if(_bigind.dir() != _smallind.dir())
+        {
+            cerr << "_bigind = " << _bigind << endl;
+            cerr << "_smallind = " << _smallind << endl;
+            Error("Arrow dirs not the same in Condenser.");
+        }
+        */
+        static vector<QN> qns(1000);
+        qns.resize(0);
+        foreach(const inqn& x, bigind.iq()) qns.push_back(x.qn);
+        sort(qns.begin(),qns.end());
+        vector<QN>::iterator ue = unique(qns.begin(),qns.end());
+
+        vector<inqn> iq;
+        for(vector<QN>::iterator qi = qns.begin(); qi != ue; ++qi)
+        {
+            QN& q = *qi;
+            int totm = 0;
+            foreach(const inqn& x, bigind.iq())
+            if(x.qn == q) totm += x.index.m();
+
+            Index small_qind("condensed",totm);
+            int start = 0;
+            foreach(const inqn& x, bigind.iq())
+            if(x.qn == q)
+            {
+                const Index &bj(x.index);
+                small_to_big[make_pair(small_qind,start)] = bj;
+                big_to_small[bj] = make_pair(small_qind,start);
+                start += bj.m();
+            }
+            iq.push_back(inqn(small_qind,q));
+        }
+        smallind = IQIndex(_smallind.name(),iq,_bigind.dir(),_bigind.primelevel);
+        _smallind = smallind;
+    }
+
+    IQTensor operator*(const IQTensor& t) { IQTensor res; product(t,res); return res; }
+    friend inline IQTensor operator*(const IQTensor& t, const Condenser& c) { IQTensor res; c.product(t,res); return res; }
+
+    void product(const IQTensor& t, IQTensor& res) const
+    {
+        assert(&t != &res);
+        assert(smallind.is_not_null());
+        assert(bigind.is_not_null());
+        vector<IQIndex> iqinds; iqinds.reserve(t.r());
+        int smallind_pos = -2;
+        int bigind_pos   = -2;
+        for(int j = 1; j <= t.r(); ++j)
+        {
+            iqinds.push_back(t.index(j));
+            if(iqinds.back() == smallind) smallind_pos = (j-1);
+            else if(iqinds.back() == bigind) bigind_pos = (j-1);
+        }
+
+        if(smallind_pos != -2) //expand condensed form into uncondensed
+        {
+            iqinds[smallind_pos] = bigind;
+            res = IQTensor(iqinds);
+            for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
+            {
+                int k;
+                for(k = 1; k <= i->r(); k++)
+                if(smallind.hasindex(i->index(k))) break;
+
+                Index sind = i->index(k);
+                for(int start = 0; start < sind.m(); )
+                {
+                    Index bind = small_to_big[make_pair(sind,start)];
+                    ITensor converter(sind,bind);
+                    for(int kk = 1; kk <= bind.m(); ++kk) { converter(start+kk,kk) = 1.0; }
+                    converter *= (*i);
+                    res += converter;
+                    start += bind.m();
+                }
+            }
+        }
+        else //contract regular form into condensed
+        {
+            if(bigind_pos == -2)
+            {
+                Print(t); Print(*this);
+                Error("Condenser::product: couldn't find bigind");
+            }
+            GET(iqinds,bigind_pos) = smallind;
+            res = IQTensor(iqinds);
+            ITensor tt;
+            foreach(const ITensor& it, t.itensors())
+            {
+                bool gotit = false;
+                for(int k = 1; k <= it.r(); ++k)
+                if(bigind.hasindex(it.index(k)))
+                {
+                    pair<Index,int> pp = big_to_small[it.index(k)];
+                    doconvert(it,pp.first,it.index(k),pp.second,tt);
+                    res += tt;
+                    gotit = true;
+                    break;
+                }
+                if(!gotit)
+                {
+                    Print(*this);
+                    Print(it);
+                    Error("Combiner::product: Can't find common Index");
+                }
+            }
+        }
+        res.addindex1(t.virtual_ind());
+    }
+
+    void doconvert(const ITensor& t, const Index& cond, const Index& uncond, int start, ITensor& res) const
+    {
+        vector<Index> indices; indices.reserve(t.r());
+        for(int j = 1; j <= t.r(); ++j)
+        {
+        if(t.index(j) == uncond) { indices.push_back(cond); }
+        else indices.push_back(t.index(j));
+        }
+        const bool do_allocate = true;
+        res = ITensor(indices,do_allocate);
+
+        int inc[NMAX+1];
+        for(int j = 0; j <= NMAX; ++j) { inc[j] = 0; }
+
+        const int i = res.findindex(cond);
+        inc[i] = start;
+
+        Counter c(t);
+        const Vector& thisdat = t.dat();
+        for( ; c != Counter::done ; ++c)
+        {
+        res(c.i[1]+inc[1],c.i[2]+inc[2],c.i[3]+inc[3],c.i[4]+inc[4],
+            c.i[5]+inc[5],c.i[6]+inc[6],c.i[7]+inc[7],c.i[8]+inc[8]) 
+            = thisdat(c.ind);
+        }
+    }
+
+    inline friend ostream& operator<<(ostream & s, const Condenser & c)
+    {
+        s << "bigind is " << c.bigind << endl;
+        s << "smallind is " << c.smallind << endl;
+        s << "big_to_small is " << endl;
+        for(map<Index, pair<Index,int> >::const_iterator kk = c.big_to_small.begin();
+            kk != c.big_to_small.end(); ++kk)
+        s << kk->first SP kk->second.first SP kk->second.second << endl;
+        s << "small_to_big is " << endl;
+        for(map<pair<Index,int>,Index>::const_iterator kk = c.small_to_big.begin();
+            kk != c.small_to_big.end(); ++kk)
+        s << kk->first.first SP kk->first.second SP kk->second << endl;
+        return s << endl;
+    }
+}; //class Condenser
+
+namespace { //Anonymous namespace means don't expose outside of this header
 
 class QCounter
 {
@@ -62,172 +230,6 @@ public:
 
 }
 
-class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
-{
-    IQIndex bigind, smallind;		// uncondensed, condensed
-    mutable map<Index, pair<Index,int> > big_to_small;
-    mutable map<pair<Index,int>,Index > small_to_big;
-public:
-
-    // Use connections in t to create groupings; big = uncondensed, small = cond
-
-    Condenser() { }
-
-    Condenser(const IQIndex& _bigind, IQIndex& _smallind)
-        : bigind(_bigind) //Use connections in bigind to create groupings
-    {
-        /*
-        if(_bigind.dir() != _smallind.dir())
-        {
-            cerr << "_bigind = " << _bigind << endl;
-            cerr << "_smallind = " << _smallind << endl;
-            Error("Arrow dirs not the same in Condenser.");
-        }
-        */
-        static vector<QN> qns(1000);
-        qns.resize(0);
-        foreach(const inqn& x, bigind.iq()) qns.push_back(x.qn);
-        sort(qns.begin(),qns.end());
-        vector<QN>::iterator ue = unique(qns.begin(),qns.end());
-
-        vector<inqn> iq;
-        for(vector<QN>::iterator qi = qns.begin(); qi != ue; ++qi)
-        {
-            QN& q = *qi;
-            int totm = 0;
-            foreach(const inqn& x, bigind.iq())
-            if(x.qn == q) totm += x.index.m();
-
-            Index small_qind("condensed",totm);
-            int start = 0;
-            foreach(const inqn& x, bigind.iq())
-            if(x.qn == q)
-            {
-                const Index &bj(x.index);
-                small_to_big[make_pair(small_qind,start)] = bj;
-                big_to_small[bj] = make_pair(small_qind,start);
-                start += bj.m();
-            }
-            iq.push_back(inqn(small_qind,q));
-        }
-        smallind = IQIndex(_smallind.name(),iq,_smallind.dir());
-        _smallind = smallind;
-    }
-
-    IQTensor operator*(const IQTensor& t) { IQTensor res; product(t,res); return res; }
-    friend inline IQTensor operator*(const IQTensor& t, const Condenser& c) { IQTensor res; c.product(t,res); return res; }
-
-    void product(const IQTensor& t, IQTensor& res) const
-    {
-        assert(&t != &res);
-        assert(smallind.is_not_null());
-        assert(bigind.is_not_null());
-        vector<IQIndex> iqinds; iqinds.reserve(t.r());
-        int smallind_pos = -2;
-        int bigind_pos   = -2;
-        for(int j = 1; j <= t.r(); ++j)
-        {
-            iqinds.push_back(t.index(j));
-            if(iqinds.back() == smallind) smallind_pos = (j-1);
-            else if(iqinds.back() == bigind) bigind_pos = (j-1);
-        }
-
-        if(smallind_pos != -2) //expand condensed form into uncondensed
-        {
-            iqinds[smallind_pos] = bigind;
-            res = IQTensor(iqinds);
-            for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
-            {
-                int k;
-                for(k = 1; k <= i->r(); k++)
-                if(smallind.hasindex(i->index(k))) break;
-
-                Index sind = i->index(k);
-                for(int start = 0; start < sind.m(); )
-                {
-                    Index bind = small_to_big[make_pair(sind,start)];
-                    ITensor converter(sind,bind);
-                    for(int kk = 1; kk <= bind.m(); ++kk) { converter(start+kk,kk) = 1.0; }
-                    converter *= (*i);
-                    res += converter;
-                    start += bind.m();
-                }
-            }
-        }
-        else //contract regular form into condensed
-        {
-            if(bigind_pos == -2)
-            {
-                Print(t); Print(*this);
-                Error("Condenser::product: couldn't find bigind");
-            }
-            GET(iqinds,bigind_pos) = smallind;
-            res = IQTensor(iqinds);
-            foreach(const ITensor& i, t.itensors())
-            {
-                bool gotit = false;
-                for(int k = 1; k <= i.r(); ++k)
-                if(bigind.hasindex(i.index(k)))
-                {
-                    pair<Index,int> pp = big_to_small[i.index(k)];
-                    ITensor tt;
-                    doconvert(i,pp.first,i.index(k),pp.second,tt);
-                    res += tt;
-                    gotit = true;
-                    break;
-                }
-                if(!gotit)
-                {
-                    Print(*this);
-                    cout << "i = " << i << endl;
-                    Error("cant find index");
-                }
-            }
-        }
-
-        res.addindex1(t.virtual_ind());
-    }
-
-    void doconvert(const ITensor& t, const Index& cond, const Index& uncond, int start, ITensor& res) const
-    {
-        vector<Index> indices; indices.reserve(t.r());
-        for(int j = 1; j <= t.r(); ++j)
-        {
-        if(t.index(j) == uncond) { indices.push_back(cond); }
-        else indices.push_back(t.index(j));
-        }
-        const bool do_allocate = true;
-        res = ITensor(indices,do_allocate);
-
-        int i = res.findindexn(cond);
-
-        Counter c(t);
-        int inc[NMAX+1];
-        for(int j = 0; j <= NMAX; j++) inc[j] = 0;
-        inc[i] = start;
-        for( ; c != Counter::done ; ++c)
-        {
-        res(c.i[1]+inc[1],c.i[2]+inc[2],c.i[3]+inc[3],c.i[4]+inc[4],
-            c.i[5]+inc[5],c.i[6]+inc[6],c.i[7]+inc[7],c.i[8]+inc[8]) 
-            = t.dat()(c.ind);
-        }
-    }
-
-    inline friend ostream& operator<<(ostream & s, const Condenser & c)
-    {
-        s << "bigind is " << c.bigind << endl;
-        s << "smallind is " << c.smallind << endl;
-        s << "big_to_small is " << endl;
-        for(map<Index, pair<Index,int> >::const_iterator kk = c.big_to_small.begin();
-            kk != c.big_to_small.end(); ++kk)
-        s << kk->first SP kk->second.first SP kk->second.second << endl;
-        s << "small_to_big is " << endl;
-        for(map<pair<Index,int>,Index>::const_iterator kk = c.small_to_big.begin();
-            kk != c.small_to_big.end(); ++kk)
-        s << kk->first.first SP kk->first.second SP kk->second << endl;
-        return s << endl;
-    }
-}; //class Condenser
 
 /*
    Combine several indices into one index without loss of states.
@@ -284,9 +286,22 @@ public:
     inline bool check_init() const { return initted; }
 
     // Initialize after all lefts are there and before being used
-    void init(string rname = "combined", IndexType = Link, int primelevel = 0) const 
+    void init(string rname = "combined", IndexType = Link, int primelevel = -1) const 
 	{
-        const Arrow rdir = Switch*left.front().dir();
+        Arrow rdir = Switch*left.back().dir();
+        int plev = 0;
+        if(primelevel == -1) { plev = left.back().primelevel; }
+        else                 { plev = primelevel; }
+
+        //Prefer to derive right Arrow, primelevel from Link indices
+        for(size_t j = 0; j < left.size(); ++j)
+        if(left[j].type() == Link) 
+        { 
+            rdir = Switch*left[j].dir(); 
+            if(primelevel == -1) { plev = left[j].primelevel; }
+            break;
+        }
+
         if(initted) return;
         setcomb.clear();
         rightcomb.clear();
@@ -312,10 +327,10 @@ public:
         }
         if(do_condense) 
         {
-            cindex = IQIndex(rname,iq,rdir);
+            cindex = IQIndex(rname,iq,rdir,plev);
             cond = Condenser(cindex,_right);
         }
-        else _right = IQIndex(rname,iq,rdir);
+        else _right = IQIndex(rname,iq,rdir,plev);
 
         initted = true;
 	}
@@ -336,7 +351,7 @@ public:
 
         //Combiners should always have the 
         //structure of zero divergence IQTensors
-        assert(res.checkDivZero());
+        assert(check_QNs(res));
 
         return res;
     }
@@ -385,11 +400,6 @@ public:
     void product(const IQTensor& t, IQTensor& res) const
     {
         init();
-        //cerr << "IQTensor*IQCombiner, multiplying\n";
-        //t.print("t"); cerr << "c = " << c << "\n";
-
-        //Ensure that Virtual IQIndex gets copied
-
         vector<IQIndex> iqinds;
 
         int j;
