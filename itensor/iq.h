@@ -316,7 +316,7 @@ public:
 	}
     void noprime(PrimeType pt = primeBoth)
 	{
-        Index::noprime();
+        Index::noprime(pt);
         for(int j = 0; j < (int)iq_.size(); ++j)
             iq_[j].index.noprime(pt);
 	}
