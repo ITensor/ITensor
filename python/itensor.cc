@@ -1,4 +1,5 @@
 #define THIS_IS_MAIN
+#include "algorithm.h"
 #include "hams.h"
 #include <boost/python.hpp>
 using namespace boost::python;
@@ -98,8 +99,9 @@ public:
 class MPSWrapper
 {
     const BaseModel& model;
-    MPS mps;
 public:
+    MPS mps;
+
     MPSWrapper(const SpinOneModel& s1m) : model(s1m.model()),mps(model) { }
     MPSWrapper(const SpinOneModel& s1m, const InitState& initState) : model(s1m.model()),mps(model,initState) { }
 
@@ -120,8 +122,9 @@ public:
 class MPOWrapper
 {
     const BaseModel& model;
-    MPO mpo;
 public:
+    MPO mpo;
+
     MPOWrapper(const MPO& mpo_) : model(mpo_.model()),mpo(mpo_) { }
     MPOWrapper(const SpinOneModel& s1m) : model(s1m.model()),mpo(model) { }
 
@@ -132,6 +135,12 @@ public:
 };
 
 MPOWrapper SpinOneHeisenberg(const SpinOneModel& s1m) { MPO H = SpinOne::Heisenberg(s1m.model())(); MPOWrapper res(H); return res; }
+
+Real dmrg_wrapper(int nsweep, MPSWrapper& psi, const MPOWrapper& H)
+{
+    Sweeps sweeps(ramp_m,nsweep,1,100,1E-5);
+    return dmrg(psi.mps,H.mpo,sweeps);
+}
 
 
 BOOST_PYTHON_MODULE(itensor)
@@ -208,4 +217,5 @@ BOOST_PYTHON_MODULE(itensor)
     ;
 
     def("SpinOneHeisenberg",&SpinOneHeisenberg);
+    def("dmrg",&dmrg_wrapper);
 }

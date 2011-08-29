@@ -162,6 +162,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
     return energy;
 }
 
+/* Deprecated, use MPOSet to work with a set of MPOs
 Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts)
 {
     int debuglevel = 1;
@@ -302,6 +303,7 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts)
 
     return energy;
 }
+*/
 
 Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweeps& sweeps, DMRGOpts& opts, bool preserve_edgelink)
 {
@@ -460,4 +462,53 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
     return energy;
 }
 
+void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
+{
+    if(Aorig.NN() != Borig.NN()) Error("nmultMPO(IQMPO): Mismatched N");
+    int N = Borig.NN();
+    IQMPO A(Aorig), B(Borig);
 
+    A.position(1);
+    B.position(1);
+    B.primeall();
+
+    res=A;
+    res.primelinks(0,4);
+    res.mapprime(1,2,primeSite);
+
+    IQTensor clust,nfork;
+    vector<int> midsize(N);
+    static int cnt = 0;
+    ++cnt;
+    for(int i = 1; i < N; ++i)
+	{
+        if(i == 1) { clust = A.AA(i) * B.AA(i); }
+        else       { clust = nfork * A.AA(i) * B.AA(i); }
+        if(i == N-1) break;
+
+        IQIndex oldmid = res.RightLinkInd(i);
+        nfork = IQTensor(A.RightLinkInd(i),B.RightLinkInd(i),oldmid);
+        if(clust.iten_size() == 0)	// this product gives 0 !!
+        { cerr << format("WARNING: clust.iten_size()==0 in nmultMPO (i=%d).\n")%i; res = IQMPO(); return; }
+        tensorSVD(clust, res.AAnc(i), nfork,cut,1,maxm,Fromleft);
+        IQIndex mid = index_in_common(res.AA(i),nfork,Link);
+        assert(mid.dir() == In);
+        mid.conj();
+        midsize[i] = mid.m();
+        assert(res.RightLinkInd(i+1).dir() == Out);
+        assert(res.si(i+1).dir() == Out);
+        res.AAnc(i+1) = IQTensor(mid,conj(res.si(i+1)),res.si(i+1).primed().primed(),res.RightLinkInd(i+1));
+	}
+
+    nfork = clust * A.AA(N) * B.AA(N);
+    if(nfork.iten_size() == 0)	// this product gives 0 !!
+    { cerr << "WARNING: nfork.iten_size()==0 in nmultMPO\n"; res = IQMPO(); return; }
+
+    res.doSVD(N-1,nfork,Fromright,false);
+    res.noprimelink();
+    res.mapprime(2,1,primeSite);
+    res.cutoff = cut;
+    res.position(N);
+    res.position(1);
+
+}//void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
