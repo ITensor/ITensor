@@ -1,8 +1,10 @@
 #ifndef __MPS_H
 #define __MPS_H
-#include "tensor.h"
-#include "iq.h"
+#include "combiner.h"
+#include "iqcombiner.h"
 
+void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D);
+void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& D);
 Vector do_denmat_Real(const ITensor& nA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir);
 Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir);
 Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTensor& B, IQTensor& U,
@@ -525,9 +527,19 @@ public:
 
 class InitState
 {
+    int N;
     vector<IQIndexVal> state;
+    typedef IQIndexVal (*SetFuncPtr)(int);
 public:
-    InitState(int nsite) : state(nsite+1) { }
+    int NN() const { return N; }
+
+    InitState(int nsite) : N(nsite), state(N+1) { }
+    InitState(int nsite,SetFuncPtr setter) : N(nsite), state(N+1) 
+    { set_all(setter); }
+
+    void set_all(SetFuncPtr setter)
+    { for(int j = 1; j <= N; ++j) GET(state,j-1) = (*setter)(j); }
+
     IQIndexVal& operator()(int i) { return GET(state,i-1); }
     const IQIndexVal& operator()(int i) const { return GET(state,i-1); }
     operator vector<IQIndexVal>() const { return state; }
@@ -703,7 +715,7 @@ public:
             const int i2 = (dir == Fromleft ? i-1 : i+2);
             const int boundary = (dir == Fromleft ? 1 : NN()-1);
 
-            list<IndexT> keep_indices;
+            vector<IndexT> keep_indices;
             IndexT site = A.at(i1).findtype(Site); site.noprime();
             keep_indices.push_back(site);
 
@@ -722,7 +734,7 @@ public:
         //otherwise the MPS will retain the same index structure
         */
 
-        do_denmat_Real(AA,A[i],A[i+1],cutoff,minm,maxm,dir);
+        tensorSVD(AA,A[i],A[i+1],cutoff,minm,maxm,dir);
         truncerror = svdtruncerr;
 
         if(dir == Fromleft)
@@ -914,9 +926,8 @@ private:
     }
 public:
     template <class IQMPSType> 
-    void convertToIQ(IQMPSType& iqpsi) const
+    void convertToIQ(IQMPSType& iqpsi, QN totalq = QN(), Real cut = 1E-12) const
     {
-        const Real cut = 1E-12;
         assert(model_ != 0);
         const ModelT& sst = *model_;
 
@@ -941,7 +952,8 @@ public:
 
         QN q;
 
-        qC[QN()] = ITensor(); //So that A[1] case executes
+        qC[totalq] = ITensor(); //Represents Virtual index
+        //First value of prev_q below set to totalq
 
         const int show_s = 0;
 
@@ -952,6 +964,11 @@ public:
             if(s > 1) prev_bond = LinkInd(s-1); 
             if(s < N) bond = LinkInd(s);
 
+            if(s == show_s) 
+            {
+                PrintDat(A[s]);
+            }
+
             foreach(const qC_vt& x, qC) {
             const QN& prev_q = x.first; const ITensor& comp = x.second; 
             for(int n = 1; n <= Dim;  ++n)
@@ -959,25 +976,44 @@ public:
             {
                 q = (is_mpo ? prev_q+si(s).qn(n)-si(s).qn(u) : prev_q-si(s).qn(n));
 
-                block = (s == 1 ? A[s] : conj(comp) * A[s]);
+                //For the last site, only keep blocks 
+                //compatible with specified totalq i.e. q=0 here
+                if(s == N && q != QN()) continue;
+
+                //Set Site indices of A[s] and its previous Link Index
+                block = A[s];
+                if(s != 1) block *= conj(comp);
                 block *= si(s)(n);
                 if(is_mpo) block *= siP(s)(u);
 
+                //Initialize D Vector (D records which values of
+                //the right Link Index to keep for the current QN q)
                 int count = qD.count(q);
                 Vector& D = qD[q];
                 if(count == 0) { D.ReDimension(bond.m()); D = 0; }
 
+                if(s == show_s)
+                {
+                    cerr << format("For n = %d\n")%n;
+                    cerr << format("Got a block with norm %.10f\n")%block.norm();
+                    cerr << format("bond.m() = %d\n")%bond.m();
+                    PrintDat(block);
+                    if(s != 1) PrintDat(comp);
+                }
+
                 bool keep_block = false;
-                if(s == N) keep_block = (block.norm() != 0);
+                if(s == N) keep_block = true;
                 else
                 {
-                    if(bond.m() == 1) D = 1;
+                    if(bond.m() == 1 && block.norm() != 0) { D = 1; keep_block = true; }
                     else
                     {
                         ITensor summed_block;
                         if(s==1) summed_block = block;
                         else
                         {
+                            //Here we sum over the previous link index
+                            //which is already ok, analyze the one to the right
                             assert(comp.r()==2);
                             Index new_ind = (comp.index(1)==prev_bond ? comp.index(2) : comp.index(1));
                             summed_block = ITensor(new_ind,1) * block;
@@ -989,14 +1025,18 @@ public:
                         for(int j = 1; j <= bond.m(); ++j)
                         { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
                         assert(rel_cut >= 0);
+                        //Real rel_cut = summed_block.norm()/summed_block.vec_size();
                         rel_cut *= cut;
+                        //cerr << "rel_cut == " << rel_cut << "\n";
 
                         if(rel_cut > 0)
                         for(int j = 1; j <= bond.m(); ++j)
                         if(fabs(summed_block.val1(j)) > rel_cut) 
                         { D(j) = 1; keep_block = true; }
                     }
-                } //if(s != N)
+                } //else (s != N)
+
+                //if(!keep_block && q == totalq) { D(1) = 1; keep_block = true; }
 
                 if(keep_block)
                 {
@@ -1042,7 +1082,8 @@ public:
                             foreach(const ITensor& t, blks) 
                             t.print((format("t%02d")%(++count)).str(),ShowData);
                         }
-                        string qname = (format("ql%d (%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 1 ? "+" : "-")).str();
+                        //string qname = (format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
+                        string qname = (format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
                         Index qbond(qname,mm);
                         ITensor compressor(bond,qbond,M);
                         foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
@@ -1052,7 +1093,15 @@ public:
                 }
             }
 
-            if(s != N) { linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); }
+            if(s != N) 
+            { 
+                if(iq.empty()) 
+                {
+                    cerr << "At site " << s << "\n";
+                    Error("convertToIQ: no compatible QNs to put into Link.");
+                }
+                linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
+            }
             if(s == 1)
                 iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
             else if(s == N)
@@ -1064,6 +1113,12 @@ public:
 
             foreach(const ITensor& nb, nblock) { iqpsi.AAnc(s) += nb; } nblock.clear();
 
+            //if(s < 5)
+            //{
+            //    Print(iqpsi.AA(s));
+            //}
+            //else Error("Stopping.");
+
             if(s==show_s)
             {
             iqpsi.AA(s).print((format("qA[%d]")%s).str(),ShowData);
@@ -1072,12 +1127,12 @@ public:
 
         } //for loop over s
 
-        IQIndex Center("Center",Index("center",1,Virtual),q,In);
-        iqpsi.AAnc(1).viqindex = Center;
+        IQIndex Center("Center",Index("center",1,Virtual),totalq,In);
+        iqpsi.AAnc(1).addindex1(Center);
+
+        assert(check_QNs(iqpsi));
 
     } //void convertToIQ(IQMPSType& iqpsi) const
-
-    operator MPS<IQTensor>() const { MPS<IQTensor> res; convertToIQ(res); return res; }
 
 };
 
@@ -1113,6 +1168,68 @@ MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
 } //namespace Internal
 typedef Internal::MPS<ITensor> MPS;
 typedef Internal::MPS<IQTensor> IQMPS;
+
+template<class Tensor>
+Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir)
+{
+    typedef typename Tensor::IndexT IndexT;
+    typedef typename Tensor::CombinerT CombinerT;
+
+    IndexT mid = index_in_common(A,B,Link);
+    if(mid.is_null()) mid = IndexT("mid");
+
+    Tensor& to_orth = (dir==Fromleft ? A : B);
+    Tensor& newoc   = (dir==Fromleft ? B : A);
+
+    CombinerT comb;
+
+    int unique_link = 0; //number of Links unique to to_orth
+    for(int j = 1; j <= to_orth.r(); ++j) { 
+    const IndexT& I = to_orth.index(j);
+    if(!(newoc.hasindex(I) || I == Tensor::ReImIndex || I.type() == Virtual))
+    {
+        if(I.type() == Link) ++unique_link;
+        comb.addleft(I);
+    }}
+
+    //Check if we're at the edge
+    if(unique_link == 0)
+    {
+        comb.doCondense(false);
+        comb.init(mid.rawname());
+        comb.product(AA,newoc);
+        to_orth = comb; to_orth.conj();
+        Vector eigs_kept(comb.right().m()); eigs_kept = 1.0/comb.right().m();
+        return eigs_kept; 
+    }
+
+    //Apply combiner
+    comb.init(mid.rawname());
+    Tensor AAc; comb.product(AA,AAc);
+
+    const IndexT& active = comb.right();
+
+    Tensor rho;
+    if(AAc.is_complex())
+    {
+        Tensor re,im;
+        AAc.SplitReIm(re,im);
+        rho = re; rho.conj(); rho.primeind(active);
+        rho *= re;
+        im *= conj(primeind(im,active));
+        rho += im;
+    }
+    else { Tensor AAcc = conj(AAc); AAcc.primeind(active); rho = AAc*AAcc; }
+    assert(rho.r() == 2);
+
+    Tensor U; Vector eigs_kept;
+    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept);
+
+    to_orth = U * conj(comb);
+    newoc   = conj(U) * AAc;
+
+    return eigs_kept;
+}
 
 inline bool check_QNs(const IQMPS& psi)
 {
@@ -1166,12 +1283,12 @@ inline bool check_QNs(const IQMPS& psi)
     }
     //Done checking arrows
 
-    //Check divergence
+    //Check IQTensors
     for(int i = 1; i <= N; ++i)
     {
-        if(!psi.AA(i).checkDivZero())
+        if(!check_QNs(psi.AA(i)))
         {
-            cerr << "check_QNs: IQTensor AA(" << i << ") had non-zero divergence." << endl;
+            cerr << "check_QNs: IQTensor AA(" << i << ") had non-zero divergence.\n";
             return false;
         }
     }
@@ -1180,8 +1297,8 @@ inline bool check_QNs(const IQMPS& psi)
 
 inline QN total_QN(const IQMPS& psi)
 {
-    assert(psi.AA(psi.ortho_center()).viqindex != IQEmptyV);
-    return psi.AA(psi.ortho_center()).viqindex.qn(1); 
+    assert(psi.AA(psi.ortho_center()).has_virtual());
+    return psi.AA(psi.ortho_center()).virtualQN();
 }
 
 class IQMPO : public IQMPS
@@ -1313,6 +1430,7 @@ public:
     inline MPO operator+(MPO res) const { res += *this; return res; }
     inline MPO operator-(MPO res) const { res *= -1; res += *this; return res; }
 
+    /*
     void newindices()
 	{
         vector<Combiner> na(N+1);
@@ -1327,6 +1445,7 @@ public:
 	    { A[i] = na[i-1] * A[i] * na[i]; }
         A[N] = na[N-1] * A[N];
 	}
+    */
 
 };
 
@@ -1560,7 +1679,6 @@ Real psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi
     return re;
 }
 
-void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, Matrix& U, Vector& D);
 void psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi, Real& re, Real& im);
 Real psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi); //Re[<psi|H|phi>]
 

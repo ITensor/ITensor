@@ -131,8 +131,8 @@ enum Direction { Fromright, Fromleft, Both, None };
 
 enum Printdat { ShowData, HideData };
 
-#define Print(X) { printdat = false; cerr << "\n" << #X << " =\n" << X << "\n"; }
-#define PrintDat(X) { printdat = true; cerr << "\n" << #X << " =\n" << X << "\n"; printdat = false; }
+#define Print(X) { printdat = false; cerr << "\n" << #X << " =\n" << X << "\n\n"; }
+#define PrintDat(X) { printdat = true; cerr << "\n" << #X << " =\n" << X << "\n\n"; printdat = false; }
 
 //Enum defining directions for arrows
 enum Arrow { In = -1, Out = 1 };
@@ -397,7 +397,6 @@ public:
 
     int m() const { return p->m_; }
     inline string showm() const { return (format("m=%d")%(p->m_)).str(); }
-    //int Ind() const { return p->ind; }
     boost::uuids::uuid Ind() const { return p->ind; }
     IndexType type() const { return p->_type; }
     void settype(IndexType t) { p->_type = t; }
@@ -405,8 +404,13 @@ public:
     Real unique_Real() const { assert(p!=0); return p->ur*(1+primelevel); }
     string name() const  { return putprimes(rawname(),primelevel); }
     void setname(string newname) { p->sname = newname; }
-    bool is_null() const { return (p == &IndexDatNull); }
+    inline bool is_null() const { return (p == &IndexDatNull); }
+    inline bool is_not_null() const { return (p != &IndexDatNull); }
     int count() const { return p->count(); }
+    void setPrimeLevel(int plev) { primelevel = plev; }
+
+    //-----------------------------------------------
+    //Index: Constructors
 
     Index() : p(&IndexDatNull), primelevel(0) { }
 
@@ -414,7 +418,6 @@ public:
 	: p(new Internal::IndexDat(name,mm,it)), primelevel(plev) { }
 
     Index(istream& s) { read(s); }
-
 
     Index(Imaker im)
 	{
@@ -438,9 +441,12 @@ public:
         for(int i = 1; i <= primeinc; ++i) doprime(pt);
 	}
 
+    //-----------------------------------------------
+    //Index: Operators
+
     // rel_ops defines the other comparisons based on == and <
     bool operator==(const Index& other) const 
-	{ return (unique_Real() == other.unique_Real()); }
+	{ return (p == other.p && primelevel == other.primelevel); }
 
     bool operator<(const Index& other) const 
 	{ return (unique_Real() < other.unique_Real()); }
@@ -448,7 +454,10 @@ public:
     IndexVal operator()(int i) const;
 
     bool noprime_equals(const Index& other) const
-	{ return (p->_type == other.p->_type && p->ind == other.p->ind); }
+	{ return (p == other.p); }
+
+    //-----------------------------------------------
+    //Index: Prime methods
 
     void mapprime(int plevold, int plevnew, PrimeType pr = primeBoth)
 	{
@@ -477,11 +486,14 @@ public:
 
     void noprime(PrimeType p = primeBoth) { doprime(p,-primelevel); }
 
-    friend inline ostream & operator << (ostream & s, const Index & t)
+    friend inline ostream & operator<<(ostream & s, const Index & t)
     {
         if(t.name() != "" && t.name() != " ") s << t.name() << "/";
         return s << nameindex(t.type(),t.primelevel) << "-" << t.Ind() << ":" << t.m();
     }
+
+    //-----------------------------------------------
+    //Index: Other methods
 
     void write(ostream& s) const 
     { 
@@ -543,40 +555,52 @@ extern IndexVal IVNull;
 
 class Permutation // Tell where each index will go, p(2,1,3) says 1 -> 2, 2 -> 1, 3 -> 3
 {
+public:
     typedef array<int,NMAX+1> int9;
+private:
     void set8(int9 *n, int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8)
     {
         (*n)[1] = i1; (*n)[2] = i2; (*n)[3] = i3; (*n)[4] = i4;
         (*n)[5] = i5; (*n)[6] = i6; (*n)[7] = i7; (*n)[8] = i8;
     }
+    int9 ind_;
+    bool trivial;
 public:
-    array<int,NMAX+1> ind;
-    Permutation(int i1 = 1, int i2 = 2, int i3 = 3, int i4 = 4, int i5 = 5, int i6 = 6,
+    const int9& ind() const { return ind_; }
+    bool is_trivial() const { return trivial; }
+
+    Permutation() : trivial(true) { set8(&ind_,1,2,3,4,5,6,7,8); }
+    Permutation(int i1, int i2 = 2, int i3 = 3, int i4 = 4, int i5 = 5, int i6 = 6,
 	    int i7 = 7,  int i8 = 8)
-	{ set8(&ind,i1,i2,i3,i4,i5,i6,i7,i8); }
+    : trivial(i1==1 && i2==2 && i3==3 && i4==4 && i5==5 && i6==6 && i7==7 && i8==8)
+	{ set8(&ind_,i1,i2,i3,i4,i5,i6,i7,i8); }
+
+    void from_to(int j, int k) { if(j!=k) { trivial = false; } GET(ind_,j) = k; }
+    inline int dest(int j) const { return GET(ind_,j); }
+
     void check(int d)
 	{
         for(int i = 1; i <= d; i++)
-        if(ind[i] > d || ind[i] < 1) Error("bad Permutation level 1");
+        if(ind_[i] > d || ind_[i] < 1) Error("bad Permutation level 1");
 
         for(int i = 1; i <= d; i++)
         for(int j = 1; j <= d; j++)
-        if(ind[i] == ind[j] && i != j) Error("bad Permutation level 2");
+        if(ind_[i] == ind_[j] && i != j) Error("bad Permutation level 2");
 	}
-
-    Permutation inverse() const
-    {
-        Permutation inv;
-        for(int n = 1; n <= NMAX; ++n) inv.ind[ind[n]] = n; 
-        return inv;
-    }
 
     friend inline ostream& operator<<(ostream& s, const Permutation& p)
     {
-        for(int i = 1; i <= NMAX; i++) s << format("(%d,%d) ") % i % p.ind[i];
+        for(int i = 1; i <= NMAX; i++) s << format("(%d,%d) ") % i % p.ind_[i];
         return s;
     }
 };
+
+inline Permutation inverse(const Permutation& P)
+{
+    Permutation inv;
+    for(int n = 1; n <= NMAX; ++n) inv.from_to(P.dest(n),n);
+    return inv;
+}
 
 
 enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
@@ -603,7 +627,7 @@ private:
 public:
     Vector v;
 #ifdef DO_ALT
-    list<PDat> alt;
+    vector<PDat> alt;
 #endif
 
     ITDat(int size) : numref(0), v(size)
@@ -634,6 +658,9 @@ private:
 
 } //namespace Internal
 
+class ITensor; extern ITensor Complex_1, Complex_i, ConjTensor;
+class Combiner;
+
 class ITensor //Index Tensor
 {
 private:
@@ -641,8 +668,9 @@ private:
     int rn;
     mutable array<Index,NMAX+1> _indexn; //Indices having m!=1, maximum of 8 (_indexn[0] not used), mutable to allow reordering
     mutable vector<Index>       _index1; //Indices having m==1
-    Real _logfac, ur;
-    bool _neg; //true if overall sign is -1
+    mutable Real _logfac; //mutable since e.g. normlogto is logically const
+    Real ur;
+    mutable bool _neg; //true if overall sign is -1, mutable since e.g. solo_dosign logically const
 
     void allocate(int dim) { p = new Internal::ITDat(dim); }
 
@@ -655,7 +683,7 @@ private:
     //Disattach self from current ITDat and create own copy instead.
     //Necessary because ITensors logically represent distinct
     //objects even though they may share data in reality.
-    void solo_dosign()
+    void solo_dosign() const
 	{
         assert(p != 0);
         if(p->count() != 1) 
@@ -726,7 +754,7 @@ private:
         set_unique_Real();
 	}
 
-    void getperm(const ITensor& other, Permutation& P);
+    void getperm(const ITensor& other, Permutation& P) const;
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
                              array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR, 
@@ -734,6 +762,8 @@ private:
 public:
     typedef Index IndexT;
     typedef IndexVal IndexValT;
+    typedef Combiner CombinerT;
+    static const Index& ReImIndex;
 
     //Accessor Methods ----------------------------------------------
 
@@ -768,7 +798,14 @@ public:
 
     ITensor(istream& s) { read(s); }
 
-    ITensor(const Index& i1) : rn(0), _logfac(0), _neg(false)
+    ITensor(Real val) : rn(0), _logfac(0), _neg(false)
+	{ 
+        allocate(1);
+        p->v = val;
+        set_unique_Real();
+    }
+
+    explicit ITensor(const Index& i1) : rn(0), _logfac(0), _neg(false)
 	{ 
         if(i1.m()==1) _index1.push_back(i1); else { _indexn[1] = i1; ++rn; }
         allocate(i1.m());
@@ -805,7 +842,8 @@ public:
     ITensor(Index i1,Index i2,const MatrixRef& M) : rn(0), _logfac(0), _neg(false)
     {
         _construct2(i1,i2);
-        if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) Error("Mismatch of Index sizes and matrix.");
+        if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
+        { Error("ITensor(Index,Index,Matrix): Mismatch of Index sizes and matrix."); }
         MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
         dref = M.t();
     }
@@ -826,7 +864,7 @@ public:
         set_unique_Real();
     }
 
-    ITensor(const IndexVal& iv, Real fac = 1) : rn(0), _logfac(0), _neg(false)
+    explicit ITensor(const IndexVal& iv, Real fac = 1) : rn(0), _logfac(0), _neg(false)
     { 
         if(iv.ind.m()==1) _index1.push_back(iv.ind); else { _indexn[++rn] = iv.ind; } 
         allocate(iv.ind.m());  
@@ -986,6 +1024,19 @@ public:
         }
         return true;
     }
+
+    bool has_common_index(const ITensor& other) const
+    {
+        for(int j = 1; j <= rn; ++j)
+        for(int k = 1; k <= other.rn; ++k)
+        if(_indexn[j] == other._indexn[k]) return true;
+
+        for(size_t j = 0; j < _index1.size(); ++j)
+        for(size_t k = 0; k < other._index1.size(); ++k)
+        if(_index1[j] == other._index1[k]) return true;
+
+        return false;
+    }
     
     bool hasindex(const Index& I) const
 	{
@@ -997,14 +1048,14 @@ public:
     bool hasindexn(const Index& I) const
 	{
         for(int j = 1; j <= rn; ++j)
-        if(GET(_indexn,j) == I) return true;
+        if(_indexn[j] == I) return true;
         return false;
 	}
 
     bool hasindex1(const Index& I) const
 	{
-        foreach(const Index& J,_index1)
-        if(J == I) return true;
+        for(size_t j = 0; j < _index1.size(); ++j)
+        if(_index1[j] == I) return true;
         return false;
 	}
 
@@ -1230,6 +1281,7 @@ public:
 	}
     void ReshapeDat(const Permutation& p, Vector& rdat) const;
     void Reshape(const Permutation& p, ITensor& res) const;
+    void Reshape(const Permutation& p);
 
     void read(istream& s)
     { 
@@ -1267,7 +1319,7 @@ public:
     void Randomize() { ncdat().Randomize(); }
 
     void SplitReIm(ITensor& re, ITensor& im) const;
-    void conj();
+    inline void conj() { if(!is_complex()) return; operator/=(ConjTensor); }
     //friend inline ITensor conj(ITensor A) { A.conj(); return A; }
 
     inline bool is_zero() const { return (norm() < 1E-20); } 
@@ -1284,18 +1336,19 @@ public:
         if(f != 0) { ncdat() *= 1.0/f; _logfac += log(f); }
 	}
 
-    void normlogto(Real newlogfac)
+    void normlogto(Real newlogfac) const
 	{
         Real dellogfac = newlogfac - _logfac;
+        assert(p != 0); solo_dosign();
+        if(dellogfac > 100.) p->v = 0;
+        else                 p->v *= exp(-dellogfac);
         _logfac = newlogfac;
-        if(dellogfac > 100.) ncdat() = 0;
-        else                 ncdat() *= exp(-dellogfac);
 	}
 
     void print(string name = "",Printdat pdat = HideData) const 
     { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
 
-    friend ostream & operator << (ostream & s, const ITensor & t);
+    friend ostream & operator<<(ostream & s, const ITensor & t);
 
     bool checkDim() const
     {
@@ -1316,7 +1369,6 @@ public:
 
 }; //ITensor
 
-extern ITensor Complex_1, Complex_i, ConjTensor;
 
 inline Real Dot(const ITensor& x, const ITensor& y, bool doconj = true)
 {
@@ -1443,108 +1495,6 @@ public:
 const Counter* Counter::pend = new Counter;
 const Counter& Counter::done(*pend);
 #endif                                  
-
-/*
-Combine several indices into one, use * to convert tensors efficiently
-   \
-    \
-  ---C====
-    /
-   /
-
-*/
-class Combiner
-{
-    array<Index,NMAX+1> _leftn; // max dim is 8
-    list<Index> _left1;
-    Index _right;
-    int _rln; //Number of m>1 'left' indices (indices to be combined into one)
-public:
-    static Index spec; //Special placeholder index
-
-    //Accessor Methods ----------------------------------------------
-
-    Index right() const { return _right; }
-    int rln() const { return _rln; }
-    const Index& leftn(int j) const { return _leftn[j]; }
-
-    typedef array<Index,NMAX+1>::const_iterator leftn_it;
-    const pair<leftn_it,leftn_it> leftn() const { return make_pair(_leftn.begin()+1,_leftn.begin()+_rln+1); }
-    const list<Index>& left1() const { return _left1; }
-
-    //Constructors --------------------------------------------------
-
-    Combiner() : _rln(0) {}
-    Combiner(Index& r, 
-	    Index l1 = spec, Index l2 = spec, Index l3 = spec, Index l4 = spec, 
-	    Index l5 = spec, Index l6 = spec, Index l7 = spec, Index l8 = spec )
-	{
-        _leftn[0] = spec;
-
-        //Split given left indices into m==1 and m>1
-        _rln = 0;
-        if(l1 != spec) { if(l1.m() == 1) _left1.push_back(l1); else _leftn[++_rln] = l1; }
-        if(l2 != spec) { if(l2.m() == 1) _left1.push_back(l2); else _leftn[++_rln] = l2; }
-        if(l3 != spec) { if(l3.m() == 1) _left1.push_back(l3); else _leftn[++_rln] = l3; }
-        if(l4 != spec) { if(l4.m() == 1) _left1.push_back(l4); else _leftn[++_rln] = l4; }
-        if(l5 != spec) { if(l5.m() == 1) _left1.push_back(l5); else _leftn[++_rln] = l5; }
-        if(l6 != spec) { if(l6.m() == 1) _left1.push_back(l6); else _leftn[++_rln] = l6; }
-        if(l7 != spec) { if(l7.m() == 1) _left1.push_back(l7); else _leftn[++_rln] = l7; }
-        if(l8 != spec) { if(l8.m() == 1) _left1.push_back(l8); else _leftn[++_rln] = l8; }
-
-        //Set up right index
-        int m = 1; foreach(const Index& L, leftn()) m *= L.m();
-        r = Index(r.name(),m,r.type(),r.primelevel);
-        _right = r;
-	}
-    
-    //Operators -----------------------------------------------------
-
-    friend ITensor operator*(const ITensor& t, const Combiner& c);
-    friend inline ITensor operator*(const Combiner& c, const ITensor& t) { return t * c; }
-
-    //Index Methods -------------------------------------------------
-
-    void addleft(Index& r, Index l) 	// Include another left index
-	{ 
-        if(l.m() == 1) { _left1.push_back(l); return; } else _leftn[++_rln] = l; 
-        int m = 1; foreach(const Index& L, leftn()) m *= L.m();
-        r = Index(r.name(),m,r.type(),r.primelevel);
-        _right = r;
-	}
-    int findindexn(Index i) const
-	{
-        for(int j = 1; j <= _rln; ++j)
-            if(_leftn[j] == i) return j;
-        return 0;
-	}
-    bool hasindex(Index i) const
-	{
-        if(i.m() == 1)
-        {
-            foreach(const Index& L, _left1)
-            if(i == L) return true;
-            return false;
-        }
-        for(int j = 1; j <= _rln; ++j) if(_leftn[j] == i) return true;
-        return false;
-	}
-
-    //Other Methods -------------------------------------------------
-
-    void toITensor(ITensor& res);
-
-    friend inline ostream & operator << (ostream & s, const Combiner & c)
-    {
-        s << "\nRight index: " << c.right() << "\n";
-        s << "Left indices:\n";
-        foreach(const Index& l, c.leftn()) s << "	" << l << "\n";
-        foreach(const Index& l, c.left1()) s << "	" << l << "\n";
-        return s;
-    }
-
-}; //class Combiner
-
 
 enum SweepScheme {ramp_m, fixed_m, fixed_cutoff};
 
@@ -1953,17 +1903,13 @@ inline void writedata(const string str, const Matrix& dat, bool do_plot_self=fal
 inline void writedata(const stringstream& s,const Matrix& dat, bool do_plot_self=false) { writedata(s.str(),dat,do_plot_self); }
 inline void writedata(const format fmt, const Matrix& dat, bool do_plot_self=false) { writedata(fmt.str(),dat,do_plot_self); }
 
-
-
-
 #ifdef THIS_IS_MAIN
 void reportnew() {}
-//Real ran1();
 Real ran1(int);
 
 //int Internal::IndexDat::indcount = 0;
 UniqueID Internal::IndexDat::lastID; 
-bool printdat = true;
+bool printdat = false;
 bool writeops = false;
 ofstream big_op_file;
 Internal::IndexDat IndexDatNull(makeNull);
@@ -1971,7 +1917,6 @@ Internal::IndexDat IndReDat(makeReIm);
 Internal::IndexDat IndReDatP(makeReImP);
 Internal::IndexDat IndReDatPP(makeReImPP);
 Internal::IndexDat IndEmptyVDat(makeEmptyV);
-Index Combiner::spec = Index("spec",2);
 Index IndNull(makeNull);
 Index IndReIm(makeReIm);
 Index IndReImP(makeReImP);
@@ -1979,6 +1924,7 @@ Index IndReImPP(makeReImPP);
 Index IndEmptyV(makeEmptyV);
 IndexVal IVNull(IndNull,1);
 ITensor Complex_1(makeComplex_1), Complex_i(makeComplex_i), ConjTensor(makeConjTensor);
+const Index& ITensor::ReImIndex = IndReIm;
 Vector lastd(1);
 int newtotalsize = 0;
 
