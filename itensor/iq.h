@@ -186,7 +186,7 @@ public:
         iq_.swap(ind_qn);
         int* pm = const_cast<int*>(&(p->m_));
         foreach(const inqn& x, iq_) *pm += x.index.m();
-        setPrimeLevel(ind_qn.back().index.primelevel);
+        setPrimeLevel(iq_.back().index.primelevel);
     }
 
     IQIndex(const IQIndex& other, vector<inqn>& ind_qn)
@@ -195,7 +195,7 @@ public:
         iq_.swap(ind_qn);
         int* pm = const_cast<int*>(&(p->m_));
         foreach(const inqn& x, iq_) *pm += x.index.m();
-        setPrimeLevel(ind_qn.back().index.primelevel);
+        setPrimeLevel(iq_.back().index.primelevel);
     }
 
     IQIndex(PrimeType pt, const IQIndex& other, int inc = 1) 

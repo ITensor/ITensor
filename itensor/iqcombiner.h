@@ -242,7 +242,7 @@ public:
 */
 class IQCombiner
 {
-    mutable vector<IQIndex> left;
+    vector<IQIndex> left;
     mutable IQIndex _right;
     mutable map<ApproxReal, Combiner> setcomb;
     mutable map<Index, Combiner> rightcomb;
@@ -327,9 +327,9 @@ public:
         if(_right.m() > 16) 
         { cerr << endl << endl << "WARNING: too large of an m in IQCombiner::operator IQTensor(). May be inefficient!" << endl << endl; }
 
-        left.push_back((do_condense ? cindex : _right));
-        IQTensor res(left);
-        left.pop_back();
+        vector<IQIndex> iqinds(left);
+        iqinds.push_back((do_condense ? cindex : _right));
+        IQTensor res(iqinds);
         for(map<ApproxReal,Combiner>::const_iterator it = setcomb.begin();
             it != setcomb.end(); ++it)
         { res.insert(it->second); }
