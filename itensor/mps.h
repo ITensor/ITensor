@@ -734,7 +734,7 @@ public:
         //otherwise the MPS will retain the same index structure
         */
 
-        truncateBond(AA,A[i],A[i+1],cutoff,minm,maxm,dir);
+        tensorSVD(AA,A[i],A[i+1],cutoff,minm,maxm,dir);
         truncerror = svdtruncerr;
 
         if(dir == Fromleft)
@@ -1130,6 +1130,8 @@ public:
         IQIndex Center("Center",Index("center",1,Virtual),totalq,In);
         iqpsi.AAnc(1).addindex1(Center);
 
+        assert(check_QNs(iqpsi));
+
     } //void convertToIQ(IQMPSType& iqpsi) const
 
 };
@@ -1168,7 +1170,7 @@ typedef Internal::MPS<ITensor> MPS;
 typedef Internal::MPS<IQTensor> IQMPS;
 
 template<class Tensor>
-Vector truncateBond(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir)
+Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir)
 {
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::CombinerT CombinerT;
@@ -1281,12 +1283,12 @@ inline bool check_QNs(const IQMPS& psi)
     }
     //Done checking arrows
 
-    //Check divergence
+    //Check IQTensors
     for(int i = 1; i <= N; ++i)
     {
-        if(!psi.AA(i).checkDivZero())
+        if(!check_QNs(psi.AA(i)))
         {
-            cerr << "check_QNs: IQTensor AA(" << i << ") had non-zero divergence." << endl;
+            cerr << "check_QNs: IQTensor AA(" << i << ") had non-zero divergence.\n";
             return false;
         }
     }

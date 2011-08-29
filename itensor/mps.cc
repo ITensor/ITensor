@@ -20,93 +20,15 @@ void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& n
     nU = ITensor(active,newmid,U.Columns(1,mp));
 }
 
-Vector do_denmat_Real(const ITensor& AA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir)
-{
-    Index mid = index_in_common(A,B,Link);
-    if(mid.is_null()) mid = Index("mid");
-
-    ITensor& to_orth = (dir==Fromleft ? A : B);
-    ITensor& newoc   = (dir==Fromleft ? B : A);
-
-    //Create combiner
-    Combiner comb;
-
-    int unique_link = 0;
-    foreach(const Index& i, to_orth.indexn())
-    if(!(newoc.hasindex(i) || i == IndReIm || i.type() == Virtual))
-    { 
-        if(i.type() == Link) ++unique_link; 
-        comb.addleft(i); 
-    }
-    foreach(const Index& i, to_orth.index1())
-    if(!(newoc.hasindex(i) || i == IndReIm || i.type() == Virtual))
-    { 
-        if(i.type() == Link) ++unique_link; 
-        comb.addleft(i); 
-    }
-
-    //Init combiner
-    //Index active(mid.rawname());
-    //comb.init(active);
-    comb.init(mid.rawname());
-    Index active = comb.right();
-
-    //Print(AA);
-    //Print(to_orth);
-    //Print(newoc);
-    //Print(unique_link);
-
-    //Check if we're at the edge
-    if(unique_link == 0)
-    {
-        //Handle the right-edge/Fromright and left-edge/Fromleft
-        //cases by simply turning the appropriate Combiner into
-        //an ITensor and using it as the new edge tensor
-
-        newoc = comb * AA;
-        //comb.toITensor(to_orth); to_orth = conj(to_orth);
-        to_orth = comb; to_orth.conj();
-
-        Vector eigs_kept(active.m()); eigs_kept = 1.0/active.m();
-        return eigs_kept; 
-    }
-
-    //Apply combiner....
-    ITensor AAc = AA * comb;
-
-    ITensor rho;
-    if(AAc.is_complex())
-    {
-        ITensor re,im;
-        AAc.SplitReIm(re,im);
-        ITensor rec = conj(re), imc = conj(im);
-        rec.primeind(active);
-        rho = re * rec;
-        imc.primeind(active);
-        rho += im * imc;
-    }
-    else
-    {
-        ITensor AAcconj = AAc;
-        AAcconj.primeind(active);
-        rho = AAc * AAcconj;
-    }
-    assert(rho.r() == 2);
-
-    //Diagonalize the density matrix
-    //and form unitary ITensor nU
-    ITensor U; Vector D;
-    diag_denmat(rho,cutoff,minm,maxm,U,D);
-
-    to_orth = U * comb; //should be conj(comb) with arrows
-    newoc   = AAc * conj(U);
-
-    return D;
-}
-
 void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept)
 {
     IQIndex active = rho.finddir(Out);
+    if(active.primelevel != 0)
+    {
+        Print(rho.index(1));
+        Print(rho.index(2));
+        Print(active);
+    }
     assert(active.primelevel == 0);
 
     vector<Matrix> mmatrix(rho.iten_size());
@@ -215,6 +137,91 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor&
     for(int i = 1; i <= m; ++i) eigs_kept(i) = alleig[alleig.size()-i];
     lastd = eigs_kept;
 } //void diag_denmat
+
+Vector do_denmat_Real(const ITensor& AA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir)
+{
+    Index mid = index_in_common(A,B,Link);
+    if(mid.is_null()) mid = Index("mid");
+
+    ITensor& to_orth = (dir==Fromleft ? A : B);
+    ITensor& newoc   = (dir==Fromleft ? B : A);
+
+    //Create combiner
+    Combiner comb;
+
+    int unique_link = 0;
+    foreach(const Index& i, to_orth.indexn())
+    if(!(newoc.hasindex(i) || i == IndReIm || i.type() == Virtual))
+    { 
+        if(i.type() == Link) ++unique_link; 
+        comb.addleft(i); 
+    }
+    foreach(const Index& i, to_orth.index1())
+    if(!(newoc.hasindex(i) || i == IndReIm || i.type() == Virtual))
+    { 
+        if(i.type() == Link) ++unique_link; 
+        comb.addleft(i); 
+    }
+
+    //Init combiner
+    //Index active(mid.rawname());
+    //comb.init(active);
+    comb.init(mid.rawname());
+    Index active = comb.right();
+
+    //Print(AA);
+    //Print(to_orth);
+    //Print(newoc);
+    //Print(unique_link);
+
+    //Check if we're at the edge
+    if(unique_link == 0)
+    {
+        //Handle the right-edge/Fromright and left-edge/Fromleft
+        //cases by simply turning the appropriate Combiner into
+        //an ITensor and using it as the new edge tensor
+
+        newoc = comb * AA;
+        //comb.toITensor(to_orth); to_orth = conj(to_orth);
+        to_orth = comb; to_orth.conj();
+
+        Vector eigs_kept(active.m()); eigs_kept = 1.0/active.m();
+        return eigs_kept; 
+    }
+
+    //Apply combiner....
+    ITensor AAc = AA * comb;
+
+    ITensor rho;
+    if(AAc.is_complex())
+    {
+        ITensor re,im;
+        AAc.SplitReIm(re,im);
+        ITensor rec = conj(re), imc = conj(im);
+        rec.primeind(active);
+        rho = re * rec;
+        imc.primeind(active);
+        rho += im * imc;
+    }
+    else
+    {
+        ITensor AAcconj = AAc;
+        AAcconj.primeind(active);
+        rho = AAc * AAcconj;
+    }
+    assert(rho.r() == 2);
+
+    //Diagonalize the density matrix
+    //and form unitary ITensor nU
+    ITensor U; Vector D;
+    diag_denmat(rho,cutoff,minm,maxm,U,D);
+
+    to_orth = U * comb; //should be conj(comb) with arrows
+    newoc   = AAc * conj(U);
+
+    return D;
+}
+
 
 Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir)
 {
