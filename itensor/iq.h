@@ -180,17 +180,19 @@ public:
         setPrimeLevel(i1.primelevel);
     }
 
-    IQIndex(const string& name, const vector<inqn>& ind_qn, Arrow dir = Out, int plev = 0) 
-    : Index(name,0,ind_qn.back().index.type(),plev), _dir(dir), iq_(ind_qn)
+    IQIndex(const string& name, vector<inqn>& ind_qn, Arrow dir = Out, int plev = 0) 
+    : Index(name,0,ind_qn.back().index.type(),plev), _dir(dir)
     { 
+        iq_.swap(ind_qn);
         int* pm = const_cast<int*>(&(p->m_));
         foreach(const inqn& x, iq_) *pm += x.index.m();
         setPrimeLevel(ind_qn.back().index.primelevel);
     }
 
-    IQIndex(const IQIndex& other, const vector<inqn>& ind_qn)
-    : Index(other.name(),0,other.type()), _dir(other._dir), iq_(ind_qn)
+    IQIndex(const IQIndex& other, vector<inqn>& ind_qn)
+    : Index(other.name(),0,other.type()), _dir(other._dir)
     { 
+        iq_.swap(ind_qn);
         int* pm = const_cast<int*>(&(p->m_));
         foreach(const inqn& x, iq_) *pm += x.index.m();
         setPrimeLevel(ind_qn.back().index.primelevel);
@@ -431,8 +433,8 @@ public:
     IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,const IQIndex& i4) : own_rmap(false), viqindex(IQEmptyV)
     { iqindex_.push_back(i1); iqindex_.push_back(i2); iqindex_.push_back(i3); iqindex_.push_back(i4); }
 
-    explicit IQTensor(const vector<IQIndex>& iqinds_) : own_rmap(false), viqindex(IQEmptyV)
-    { iqindex_ = iqinds_; }
+    explicit IQTensor(vector<IQIndex>& iqinds_) : own_rmap(false), viqindex(IQEmptyV)
+    { iqindex_.swap(iqinds_); }
 
     IQTensor(ITmaker itm) : own_rmap(false), viqindex(IQEmptyV)
     {

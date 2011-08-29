@@ -8,7 +8,7 @@ include ../options.mk
 
 ####################################
 
-HEADERS=tensor.h mps.h algorithm.h iq.h iqcombiner.h hams.h
+HEADERS=tensor.h combiner.h iq.h iqcombiner.h mps.h algorithm.h hams.h
 
 OBJECTS=tensor.o mps.o algorithm.o iq.o
 

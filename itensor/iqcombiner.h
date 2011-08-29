@@ -76,12 +76,14 @@ public:
     Condenser(const IQIndex& _bigind, IQIndex& _smallind)
         : bigind(_bigind) //Use connections in bigind to create groupings
     {
+        /*
         if(_bigind.dir() != _smallind.dir())
         {
             cerr << "_bigind = " << _bigind << endl;
             cerr << "_smallind = " << _smallind << endl;
             Error("Arrow dirs not the same in Condenser.");
         }
+        */
         static vector<QN> qns(1000);
         qns.resize(0);
         foreach(const inqn& x, bigind.iq()) qns.push_back(x.qn);
@@ -275,7 +277,7 @@ public:
         //Flip arrows to make combiner compatible with
         //the IQTensor from which it got its left indices
         left.back().conj();
-        assert(l.dir() != left.front().dir());
+        //assert(l.dir() != left.front().dir());
         initted = false;
 	}
 
@@ -310,10 +312,10 @@ public:
         }
         if(do_condense) 
         {
-            cindex = IQIndex(rname,iq,Switch*left.front().dir()); 
+            cindex = IQIndex(rname,iq,rdir);
             cond = Condenser(cindex,_right);
         }
-        else _right = IQIndex(rname,iq,Switch*left.front().dir());
+        else _right = IQIndex(rname,iq,rdir);
 
         initted = true;
 	}

@@ -1,7 +1,6 @@
 #ifndef __MPS_H
 #define __MPS_H
-#include "tensor.h"
-#include "iq.h"
+#include "combiner.h"
 #include "iqcombiner.h"
 
 void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D);
@@ -1183,8 +1182,7 @@ Vector truncateBond(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int min
     CombinerT comb;
 
     int unique_link = 0; //number of Links unique to to_orth
-    for(int j = 1; j <= to_orth.r(); ++j)
-    { 
+    for(int j = 1; j <= to_orth.r(); ++j) { 
     const IndexT& I = to_orth.index(j);
     if(!(newoc.hasindex(I) || I == Tensor::ReImIndex || I.type() == Virtual))
     {
