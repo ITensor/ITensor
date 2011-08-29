@@ -537,6 +537,7 @@ public:
         return *this; 
     }
     IQTensor operator*(Real fac) { IQTensor res(*this); res *= fac; return res; }
+    friend inline IQTensor operator*(Real fac, IQTensor T) { T *= fac; return T; }
 
     /*
     operator ITensor() const
@@ -682,26 +683,6 @@ public:
         return iqindex_[iqq].dir();
     } //end IQTensor::dir
 
-    //Checks if the divergence of this IQTensor is zero
-    bool checkDivZero() const
-    {
-        foreach(const ITensor& it, itensor)
-        {
-            QN qtot;
-            for(int j = 1; j <= it.r(); ++j) 
-            { qtot += qn(it.index(j))*dir(it.index(j)); }
-            qtot += viqindex.qn(1)*viqindex.dir();
-            if(qtot != QN()) 
-            {
-                cerr << "checkDivZero: IQTensor failed to have zero divergence." << endl;
-                cerr << "qtot = " << qtot << "\n";
-                printdat = true; cerr << "Offending ITensor = " << it << "\n"; printdat = false;
-                cerr << "*this = "; print();
-                return false;
-            }
-        }
-        return true;
-    }
 
     //----------------------------------------------------
     //IQTensor: prime methods
@@ -1026,8 +1007,29 @@ inline void Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool d
     res.GetSingComplex(re,im);
 }
 
-inline IQTensor operator*(Real fac, IQTensor T)
-    { T *= fac; return T; }
+//Checks if the divergence of this IQTensor is zero
+inline bool check_QNs(const ITensor& t) { return true; }
+inline bool check_QNs(const IQTensor& T)
+{
+    foreach(const ITensor& it, T.itensors())
+    {
+        QN qtot;
+        for(int j = 1; j <= it.r(); ++j) 
+        { qtot += T.qn(it.index(j))*T.dir(it.index(j)); }
+        qtot += T.virtual_ind().qn(1)*T.virtual_ind().dir();
+        if(qtot != QN()) 
+        {
+            cerr << "check_QNs: IQTensor failed to have zero divergence.\n";
+            cerr << "\nqtot = " << qtot << "\n\n";
+            printdat = false; cerr << "Offending ITensor = " << it << "\n\n";
+            cerr << "IQIndices = \n";
+            foreach(const IQIndex& I, T.iqinds())
+            { cerr << "\n" << I << "\n"; }
+            return false;
+        }
+    }
+    return true;
+}
 
 template<class T, class C>
 bool has_element(const T& t, const C& c)
