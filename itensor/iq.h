@@ -5,6 +5,22 @@
 using std::multimap;
 using std::set;
 
+/*
+Conventions regarding arrows:
+* Arrows point In or Out, never right/left/up/down.
+* The Site indices of a ket point out.
+* Conjugation switches arrow directions.
+* All arrows flow out from the ortho center of an MPS (ket - in if it's a bra).
+* IQMPOs are created with the same arrow structure as if they are orthogonalized
+to site 1, but this is just a default since they aren't actually
+ortho. If position
+is called on an IQMPO it follows the same convention as for an MPS except
+Site indices point In and Site' indices point Out.
+* The Virtual IQIndex moves with the orthogonality center. If two IQTensors are
+multiplied, the QNs of their Virtual indices are added together if
+they both have one.
+*/
+
 class QN
 {
     int _sz, _Nf, _Nfp; //_Nfp stands for fermion number parity, and tracks whether Nf is even or odd
