@@ -474,7 +474,7 @@ public:
     typedef vector<IQIndex>::const_iterator const_iqind_it;
     static const IQIndex& ReImIndex;
 private:
-    bool own_rmap;
+    bool rmap_init;
     mutable list<ITensor> itensor; // This is mutable to allow reordering
     vector<IQIndex> iqindex_;
     IQIndex viqindex; //virtual IQIndex
@@ -499,22 +499,22 @@ public:
     //----------------------------------------------------
     //IQTensor: Constructors
 
-    IQTensor() : own_rmap(false), viqindex(IQEmptyV) {}
+    IQTensor() : rmap_init(false), viqindex(IQEmptyV) {}
 
 
-    explicit IQTensor(const IQIndex& i1) :  own_rmap(false), viqindex(IQEmptyV)
+    explicit IQTensor(const IQIndex& i1) :  rmap_init(false), viqindex(IQEmptyV)
     { iqindex_.push_back(i1); }
-    IQTensor(const IQIndex& i1,const IQIndex& i2) : own_rmap(false), viqindex(IQEmptyV)
+    IQTensor(const IQIndex& i1,const IQIndex& i2) : rmap_init(false), viqindex(IQEmptyV)
     { iqindex_.push_back(i1); iqindex_.push_back(i2); }
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3) : own_rmap(false), viqindex(IQEmptyV)
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3) : rmap_init(false), viqindex(IQEmptyV)
     { iqindex_.push_back(i1); iqindex_.push_back(i2); iqindex_.push_back(i3); }
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,const IQIndex& i4) : own_rmap(false), viqindex(IQEmptyV)
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,const IQIndex& i4) : rmap_init(false), viqindex(IQEmptyV)
     { iqindex_.push_back(i1); iqindex_.push_back(i2); iqindex_.push_back(i3); iqindex_.push_back(i4); }
 
-    explicit IQTensor(vector<IQIndex>& iqinds_) : own_rmap(false), viqindex(IQEmptyV)
+    explicit IQTensor(vector<IQIndex>& iqinds_) : rmap_init(false), viqindex(IQEmptyV)
     { iqindex_.swap(iqinds_); }
 
-    IQTensor(ITmaker itm) : own_rmap(false), viqindex(IQEmptyV)
+    IQTensor(ITmaker itm) : rmap_init(false), viqindex(IQEmptyV)
     {
         iqindex_.push_back(IQIndReIm);
         if(itm == makeComplex_1) 
@@ -523,7 +523,7 @@ public:
             operator+=(Complex_i);
     }
 
-    IQTensor(IQmaker i) : own_rmap(false), viqindex(IQEmptyV)
+    IQTensor(IQmaker i) : rmap_init(false), viqindex(IQEmptyV)
     {
         Index s("sing");
         IQIndex single("single",s,QN());
@@ -533,11 +533,11 @@ public:
     }
 
     IQTensor(PrimeType pt,const IQTensor& other) 
-    : own_rmap(false), itensor(other.itensor), iqindex_(other.iqindex_), viqindex(other.viqindex)
+    : rmap_init(false), itensor(other.itensor), iqindex_(other.iqindex_), viqindex(other.viqindex)
     { doprime(pt); }
 
     IQTensor(const IQTensor& other)
-    : own_rmap(false), itensor(other.itensor), iqindex_(other.iqindex_), viqindex(other.viqindex)  
+    : rmap_init(false), itensor(other.itensor), iqindex_(other.iqindex_), viqindex(other.viqindex)  
     { }
 
     IQTensor& operator=(const IQTensor& other)
@@ -547,7 +547,7 @@ public:
         viqindex = other.viqindex;
         itensor = other.itensor;
         rmap.clear();
-        own_rmap = false;
+        rmap_init = false;
         return *this;
     }
 
@@ -564,7 +564,7 @@ public:
 
     IQTensor& operator*=(Real fac) 
     { 
-        if(fac == 0.0) { itensor.clear(); own_rmap = false;  return *this; }
+        if(fac == 0.0) { itensor.clear(); rmap_init = false;  return *this; }
         foreach(ITensor& t, itensor) { t *= fac; }
         return *this; 
     }
@@ -590,12 +590,12 @@ public:
 
     void insert(const ITensor& t) 
     { 
-        if(!own_rmap)
+        if(!rmap_init)
         {
             rmap.clear();
             for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
-                rmap.insert(make_pair(ApproxReal(jj->unique_Real()),jj));
-            own_rmap = true;
+            { rmap.insert(make_pair(ApproxReal(jj->unique_Real()),jj)); }
+            rmap_init = true;
         }
         ApproxReal r(t.unique_Real());
         if(rmap.count(r) == 0)
@@ -612,12 +612,12 @@ public:
 
     IQTensor& operator+=(const ITensor& t) 
     { 
-        if(!own_rmap)
+        if(!rmap_init)
         {
             rmap.clear();
             for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
             { rmap.insert(make_pair(ApproxReal(jj->unique_Real()),jj)); }
-            own_rmap = true;
+            rmap_init = true;
         }
         ApproxReal r(t.unique_Real());
         if(rmap.count(r) == 0)
@@ -721,7 +721,7 @@ public:
 
     void ind_inc_prime(const IQIndex& i,int inc)
     {
-        own_rmap = false;
+        rmap_init = false;
         bool gotit = false;
         foreach(IQIndex& jj, iqindex_)
         if(jj.noprime_equals(i))
@@ -748,7 +748,7 @@ public:
 
     void noprime(PrimeType pt = primeBoth)
     {
-        own_rmap = false;
+        rmap_init = false;
         foreach(IQIndex& J, iqindex_)
 	    J.noprime(pt);
 
@@ -760,7 +760,7 @@ public:
 
     void noprimelink()
     {
-        own_rmap = false;
+        rmap_init = false;
         foreach(IQIndex& J, iqindex_)
 	    if(J.type() == Link) J.noprime();
 
@@ -770,7 +770,7 @@ public:
 
     void doprime(PrimeType pt)
     {
-        own_rmap = false;
+        rmap_init = false;
         DoPrimer prim(pt);
         for_each(iqindex_.begin(), iqindex_.end(),prim);
         for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
@@ -779,7 +779,7 @@ public:
 
     void mapprime(int plevold, int plevnew, PrimeType pt = primeBoth) // no need to keep prime level small
     {
-        own_rmap = false;
+        rmap_init = false;
         MapPrimer prim(plevold,plevnew,pt);
         for_each(iqindex_.begin(), iqindex_.end(),prim);
         for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)

@@ -25,7 +25,7 @@ ostream& operator<<(ostream & s, const ITensor & t)
         s << format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
         if(printdat)
         {
-            const int sign = (_neg ? -1 : 1);
+            const int sign = (t.neg() ? -1 : 1);
             Counter c(t);
             for(; c != Counter::done; ++c)
             {
@@ -431,20 +431,6 @@ ITensor& ITensor::operator/=(const ITensor& other)
 
 ITensor& ITensor::operator*=(const ITensor& other)
 {
-    /* This code is buggy!
-    if(ur == other.ur) //Perform a trace
-    {
-        Real res = p->v*p->v;
-        if(p->count() != 1) { p = new ITDat(0); }
-        p->v.ReDimension(1);
-        p->v(1) = res;
-        rn = 0; _index1.clear();
-        _logfac += other._logfac; _neg = (_neg^other._neg);
-        set_unique_Real();
-        return *this;
-    }
-    */
-
     //Complex types are treated as just another index, of type ReIm
     //Multiplication is handled automatically with these simple tensor helpers
     if(findindexn(IndReIm) && other.findindexn(IndReIm) && !other.findindexn(IndReImP)
@@ -483,6 +469,18 @@ ITensor& ITensor::operator*=(const ITensor& other)
         other._index1.begin(),other._index1.end(),symdiff.begin());
         _index1.assign(symdiff.begin(),it);
     } }
+
+    if(p == other.p) //Perform a trace
+    {
+        const Real res = p->v*p->v;
+        if(p->count() != 1) { p = new Internal::ITDat(0); }
+        p->v.ReDimension(1);
+        p->v = res;
+        rn = 0;
+        _logfac += other._logfac; _neg = (_neg^other._neg);
+        set_unique_Real();
+        return *this;
+    }
 
     if(other.rn == 0)
     {
