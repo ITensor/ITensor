@@ -269,11 +269,11 @@ public:
         do_condense = val;
     }
 
-    IQCombiner() : initted(false), do_condense(true) { }
+    IQCombiner() : initted(false), do_condense(false) { }
     IQCombiner(
 	    const IQIndex& l1, const IQIndex& l2 = IQIndNull, const IQIndex& l3 = IQIndNull, const IQIndex& l4 = IQIndNull, 
 	    const IQIndex& l5 = IQIndNull, const IQIndex& l6 = IQIndNull )
-        : initted(false), do_condense(true)
+        : initted(false), do_condense(false)
 	{
         if(l1 != IQIndNull) left.push_back(l1); 
         if(l2 != IQIndNull) left.push_back(l2);

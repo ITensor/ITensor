@@ -42,6 +42,7 @@ public:
     Combiner() : _rln(0), initted(false) {}
     Combiner(const Index& l1 , const Index& l2 = IndNull, const Index& l3 = IndNull, const Index& l4 = IndNull, 
 	    const Index& l5 = IndNull, const Index& l6 = IndNull, const Index& l7 = IndNull, const Index& l8 = IndNull )
+    : initted(false)
 	{
         _leftn[0] = IndNull;
 
@@ -55,6 +56,7 @@ public:
         if(l6 != IndNull) { if(l6.m() == 1) _left1.push_back(l6); else _leftn[++_rln] = l6; }
         if(l7 != IndNull) { if(l7.m() == 1) _left1.push_back(l7); else _leftn[++_rln] = l7; }
         if(l8 != IndNull) { if(l8.m() == 1) _left1.push_back(l8); else _leftn[++_rln] = l8; }
+        init();
 	}
     
     //Operators -----------------------------------------------------
@@ -131,7 +133,6 @@ public:
         init();
 
         int j;
-
         if((j = t.findindex1(_right)) != 0)
         {
             res = t;
@@ -200,7 +201,6 @@ public:
         t.ReshapeDat(P,res.ncdat());
         res.addindex1(res_index1);
         res.setlogfac(t.logfac()); res *= (t.neg() ? -1 : 1);
-
     }
 
 }; //class Combiner

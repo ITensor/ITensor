@@ -614,6 +614,8 @@ public:
     //Accessor Methods ------------------------------
 
     int NN() const { return N;}
+    int right_lim() const { return right_orth_lim; }
+    int left_lim() const { return left_orth_lim; }
     IQIndex si(int i) const { return model_->si(i); }
     IQIndex siP(int i) const { return model_->siP(i); }
     typedef typename vector<Tensor>::const_iterator AA_it;
@@ -1195,7 +1197,6 @@ Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, 
     //Check if we're at the edge
     if(unique_link == 0)
     {
-        comb.doCondense(false);
         comb.init(mid.rawname());
         assert(comb.check_init());
         comb.product(AA,newoc);
@@ -1205,6 +1206,7 @@ Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, 
     }
 
     //Apply combiner
+    comb.doCondense(true);
     comb.init(mid.rawname());
     Tensor AAc; comb.product(AA,AAc);
 
@@ -1666,7 +1668,7 @@ void psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re,
     if(psi.NN() != phi.NN() || psi.NN() != N) Error("psiHphi: mismatched N");
 
     Tensor L = phi.AA(1) * H.AA(1) * conj(primed(psi.AA(1)));
-    for(int i = 2; i < N; ++i) L = L * phi.AA(i) * H.AA(i) * conj(primed(psi.AA(i)));
+    for(int i = 2; i < N; ++i) { L = L * phi.AA(i) * H.AA(i) * conj(primed(psi.AA(i))); }
     L = L * phi.AA(N) * H.AA(N);
 
     Dot(primed(psi.AA(N)),L,re,im);
