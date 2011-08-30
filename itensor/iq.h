@@ -144,7 +144,7 @@ public:
     bool operator()(const inqn &j) const { return i == j.index; }
 };
 
-class IQIndexDat : public noncopyable
+class IQIndexDat
 {
     mutable unsigned int numref;
 public:
@@ -192,9 +192,15 @@ public:
     : numref(0)
     { iq_.swap(ind_qn); }
 
+    explicit IQIndexDat(const IQIndexDat& other) : numref(0), iq_(other.iq_)
+    { }
+
     friend inline void intrusive_ptr_add_ref(IQIndexDat* p) { ++(p->numref); }
     friend inline void intrusive_ptr_release(IQIndexDat* p) { if(--(p->numref) == 0){ delete p; } }
     inline int count() const { return numref; }
+private:
+    void operator=(const IQIndexDat&);
+    ~IQIndexDat() { } //must be dynamically allocated
 };
 
 struct IQIndexVal;
@@ -208,8 +214,8 @@ class IQIndex : public Index
         assert(pd != 0);
         if(pd->count() != 1)
         {
-            intrusive_ptr<IQIndexDat> new_pd(new IQIndexDat());
-            new_pd->iq_ = pd->iq_;
+            intrusive_ptr<IQIndexDat> new_pd(new IQIndexDat(*pd));
+            //new_pd->iq_ = pd->iq_;
             pd.swap(new_pd);
         }
     }
@@ -505,6 +511,7 @@ public:
     friend inline void intrusive_ptr_release(IQTDat* p) { if(--(p->numref) == 0){ delete p; } }
     inline int count() const { return numref; }
 private:
+    ~IQTDat() { } //must be dynamically allocated
     void operator=(const IQTDat&);
 };
 
@@ -535,7 +542,6 @@ private:
         }
     }
 public:
-
     int r() const { return p->iqindex_.size(); }
     inline const IQIndex& index(int j) const { return GET(p->iqindex_,j-1); }
     inline int iten_size() const { return p->itensor.size(); }

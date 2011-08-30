@@ -14,7 +14,6 @@
 #include "boost/foreach.hpp"
 #include "boost/format.hpp"
 #include "boost/intrusive_ptr.hpp"
-#include "boost/noncopyable.hpp"
 //#include <tr1/array>
 #include "boost/array.hpp"
 #include "boost/uuid/uuid.hpp"
@@ -620,7 +619,7 @@ struct PDat
 #endif
 
 //Storage for ITensors
-class ITDat : noncopyable
+class ITDat
 {
 private:
     mutable unsigned int numref;
@@ -630,10 +629,27 @@ public:
     vector<PDat> alt;
 #endif
 
-    ITDat(int size) : numref(0), v(size)
-	{ if(size > 0) v = 0; }
+    ITDat() : numref(0), v(0) { }
 
-    ITDat(istream& s) : numref(0)
+    explicit ITDat(int size) 
+    : numref(0), v(size)
+	{ assert(size > 0); v = 0; }
+
+    explicit ITDat(const Vector& v_) 
+    : numref(0), v(v_)
+    { }
+
+    explicit ITDat(Real r) 
+    : numref(0), v(1)
+    { v = r; }
+
+    explicit ITDat(istream& s) : numref(0) { read(s); }
+
+    explicit ITDat(const ITDat& other) 
+    : numref(0), v(other.v)
+    { }
+
+    void read(istream& s)
 	{ 
         int size = 0;
         s.read((char*) &size,sizeof(size));
@@ -653,6 +669,7 @@ public:
     friend class ITensor;
     ENABLE_INTRUSIVE_PTR(ITDat)
 private:
+    void operator=(const ITDat&);
     ~ITDat() { } //must be dynamically allocated
 };
 
@@ -688,8 +705,7 @@ private:
         assert(p != 0);
         if(p->count() != 1) 
         {
-            intrusive_ptr<Internal::ITDat> new_p = new Internal::ITDat(0);
-            new_p->v = p->v;
+            intrusive_ptr<Internal::ITDat> new_p(new Internal::ITDat(*p));
             p.swap(new_p);
             IF_COUNT_COPIES(++copycount;)
         }
@@ -710,11 +726,19 @@ private:
     void set_dat(const Vector& newv)
 	{
         assert(p != 0);
-        if(p->count() != 1) { intrusive_ptr<Internal::ITDat> new_p = new Internal::ITDat(0); p.swap(new_p); }
-        p->v = newv;
+        if(p->count() != 1) 
+        { 
+            //intrusive_ptr<Internal::ITDat> new_p = new Internal::ITDat(newv); 
+            //p.swap(new_p); 
+            p = new Internal::ITDat(newv);
+        }
+        else
+        {
+            p->v = newv;
 #ifdef DO_ALT
-        p->alt.clear();
+            p->alt.clear();
 #endif
+        }
 	}
     
     void set_unique_Real()
