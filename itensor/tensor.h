@@ -79,7 +79,7 @@ Real ran1();
 
 //----------------------------------
 
-#ifndef DNDEBUG
+#ifndef NDEBUG
 #define DO_IF_DEBUG(x) { x }
 #else
 #define DO_IF_DEBUG(x) { }
@@ -690,6 +690,7 @@ private:
     mutable bool _neg; //true if overall sign is -1, mutable since e.g. dosign() logically const
 
     void allocate(int dim) { p = new Internal::ITDat(dim); }
+    void allocate() { p = new Internal::ITDat(); }
 
 #ifdef DO_ALT
     void newAltDat(const Permutation& P) const
@@ -801,7 +802,7 @@ public:
     int r() const { return rn + _index1.size(); }
     int r_n() const { return rn; }
     int r_1() const { return _index1.size(); }
-    int m(int j) const { return (j > rn ? 1 : _indexn[j].m()); }
+    inline int m(int j) const { return (j > rn ? 1 : _indexn[j].m()); }
 
     bool is_null() const { return (p == 0); }
     bool is_not_null() const { return (p != 0); }
@@ -847,11 +848,10 @@ public:
         set_unique_Real();
     }
 
-    ITensor(const Index& i1, const Vector& V) : rn(0), _logfac(0), _neg(false)
+    ITensor(const Index& i1, const Vector& V) : p(new Internal::ITDat(V)), rn(0), _logfac(0), _neg(false)
 	{ 
         if(i1.m() != V.Length()) Error("Mismatch of Index and Vector sizes.");
         if(i1.m()==1) _index1.push_back(i1); else { GET(_indexn,1) = i1; ++rn; }
-        allocate(0); p->v = V; 
         set_unique_Real();
     }
 
@@ -919,12 +919,12 @@ public:
         set_unique_Real();
     }
 
-    template <typename IndexContainer>
-    ITensor(const IndexContainer& I, bool do_allocate) : rn(0), _logfac(0), _neg(false)
+    explicit ITensor(const vector<Index>& I) : rn(0), _logfac(0), _neg(false)
     {
         int alloc_size = 1;
-        foreach(const Index& i, I)
+        for(size_t n = 0; n < I.size(); ++n)
         {
+            const Index& i = I[n];
             if(i == IndNull) Error("ITensor: null Index in constructor.");
             if(i.m()==1) _index1.push_back(i); 
             else 
@@ -934,9 +934,30 @@ public:
                 alloc_size *= i.m(); 
             }
         }
-        if(do_allocate) allocate(alloc_size);
-        else allocate(0);
+        allocate(alloc_size);
+        set_unique_Real();
+    }
 
+    ITensor(const vector<Index>& I, const Vector& V) : p(new Internal::ITDat(V)), rn(0), _logfac(0), _neg(false)
+    {
+#ifndef NDEBUG
+        int size = 1;
+#endif
+        for(size_t n = 0; n < I.size(); ++n)
+        {
+            const Index& i = I[n];
+            if(i == IndNull) Error("ITensor: null Index in constructor.");
+            if(i.m()==1) _index1.push_back(i); 
+            else 
+            { 
+                if(rn == NMAX) Error("ITensor(const vector<Index>& I): too many indices with m > 1");
+                GET(_indexn,++rn) = i; 
+#ifndef NDEBUG
+                size *= i.m(); 
+#endif
+            }
+        }
+        assert(size == V.Length());
         set_unique_Real();
     }
 

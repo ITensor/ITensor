@@ -633,8 +633,7 @@ public:
             { Error("IQTensor to ITensor conversion requires all IQIndex's of type Site."); }
             indices.push_back(I);
         }
-        const bool do_allocate = true;
-        ITensor res(indices,do_allocate);
+        ITensor res(indices);
         match_order();
         return res;
     }

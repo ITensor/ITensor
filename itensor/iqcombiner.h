@@ -142,8 +142,7 @@ public:
         if(t.index(j) == uncond) { indices.push_back(cond); }
         else indices.push_back(t.index(j));
         }
-        const bool do_allocate = true;
-        res = ITensor(indices,do_allocate);
+        res = ITensor(indices);
 
         int inc[NMAX+1];
         for(int j = 0; j <= NMAX; ++j) { inc[j] = 0; }

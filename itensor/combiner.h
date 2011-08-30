@@ -152,9 +152,7 @@ public:
                 nindices.push_back(t.indexn(i));
             foreach(const Index& I, _left1) nindices.push_back(I);
             foreach(const Index& I, t.index1()) nindices.push_back(I);
-            const bool do_allocate = false;
-            res = ITensor(nindices,do_allocate);
-            res.ncdat() = t.dat();
+            res = ITensor(nindices,t.dat());
             res.setlogfac(t.logfac());
             res *= (t.neg() ? -1 : 1);
             return;
@@ -196,8 +194,7 @@ public:
             res_index1.erase(it);
         }
 
-        const bool do_allocate = false;
-        res = ITensor(nindices,do_allocate);
+        res = ITensor(nindices);
         t.ReshapeDat(P,res.ncdat());
         res.addindex1(res_index1);
         res.setlogfac(t.logfac()); res *= (t.neg() ? -1 : 1);
