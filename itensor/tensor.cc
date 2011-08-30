@@ -25,13 +25,14 @@ ostream& operator<<(ostream & s, const ITensor & t)
         s << format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
         if(printdat)
         {
+            const int sign = (_neg ? -1 : 1);
             Counter c(t);
             for(; c != Counter::done; ++c)
             {
                 assert(c.ind > 0);
                 assert(c.ind <= t.Length());
                 if(fabs(t.dat()(c.ind)) > 1E-10)
-                { s << c << " " << t.dat()(c.ind)*exp(t.logfac()) << "\n"; }
+                { s << c << " " << t.dat()(c.ind)*sign*exp(t.logfac()) << "\n"; }
             }
         }
         else s << "\n";
@@ -373,6 +374,16 @@ ITensor& ITensor::operator/=(const ITensor& other)
         set_unique_Real();
         return operator*=(other.p->v(1));
     }
+    else if(rn == 0)
+    {
+        const Real curr_dat = p->v(1);
+        _indexn = other._indexn;
+        rn = other.rn;
+        _logfac += other._logfac; _neg = (_neg^other._neg);
+        p = other.p;
+        set_unique_Real();
+        return operator*=(curr_dat);
+    }
 
     array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
     toMatrixProd(*this,other,contractedL,contractedR,lref,rref);
@@ -458,6 +469,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
 	}
 
     //Handle m==1 Indices
+    //printdat = false; cerr << "Doing m==1 for" << *this << "\n";
     if(!other._index1.empty()) {
     if(_index1.empty()) _index1 = other._index1;
     else
@@ -477,6 +489,16 @@ ITensor& ITensor::operator*=(const ITensor& other)
         _logfac += other._logfac; _neg = (_neg^other._neg);
         set_unique_Real();
         return operator*=(other.p->v(1));
+    }
+    else if(rn == 0)
+    {
+        const Real curr_dat = p->v(1);
+        _indexn = other._indexn;
+        rn = other.rn;
+        _logfac += other._logfac; _neg = (_neg^other._neg);
+        p = other.p;
+        set_unique_Real();
+        return operator*=(curr_dat);
     }
 
     array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
@@ -710,16 +732,6 @@ Index index_in_common(const ITensor& A, const ITensor& B, IndexType t)
 
 ITensor& ITensor::operator+=(const ITensor& other)
 {
-    Real dlogfac = other._logfac - _logfac;
-    if(dlogfac < -200.0) return *this; // no effect from other
-
-    dosign();
-    int sign = (other._neg ? -1 : 1);
-
-    Vector& thisdat = p->v;
-    assert(other.p != 0);
-    const Vector& othrdat = other.p->v;
-
     if(fabs(ur - other.ur) > 1E-12)
     {
         cerr << format("this ur = %.10f, other.ur = %.10f\n")%ur%other.ur;
@@ -741,6 +753,16 @@ ITensor& ITensor::operator+=(const ITensor& other)
         return (*this = (*this * Complex_1) + other);
     }
     if(complex_this && !complex_other) return operator+=(other * Complex_1);
+
+    Real dlogfac = other._logfac - _logfac;
+    if(dlogfac < -200.0) return *this; // no effect from other
+
+    dosign();
+    const int sign = (other._neg ? -1 : 1);
+
+    Vector& thisdat = p->v;
+    assert(other.p != 0);
+    const Vector& othrdat = other.p->v;
 
 #ifdef DO_ALT
     p->alt.clear();
