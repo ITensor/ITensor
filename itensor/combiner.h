@@ -155,6 +155,7 @@ public:
             res = ITensor(nindices,do_allocate);
             res.ncdat() = t.dat();
             res.setlogfac(t.logfac());
+            res *= (t.neg() ? -1 : 1);
             return;
         }
 

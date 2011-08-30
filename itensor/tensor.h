@@ -670,7 +670,7 @@ private:
     mutable vector<Index>       _index1; //Indices having m==1
     mutable Real _logfac; //mutable since e.g. normlogto is logically const
     Real ur;
-    mutable bool _neg; //true if overall sign is -1, mutable since e.g. solo_dosign logically const
+    mutable bool _neg; //true if overall sign is -1, mutable since e.g. dosign() logically const
 
     void allocate(int dim) { p = new Internal::ITDat(dim); }
 
@@ -683,7 +683,7 @@ private:
     //Disattach self from current ITDat and create own copy instead.
     //Necessary because ITensors logically represent distinct
     //objects even though they may share data in reality.
-    void solo_dosign() const
+    void solo() const
 	{
         assert(p != 0);
         if(p->count() != 1) 
@@ -693,6 +693,10 @@ private:
             p.swap(new_p);
             IF_COUNT_COPIES(++copycount;)
         }
+	}
+    inline void dosign() const
+    {
+        solo();
         if(_neg) 
         { 
             p->v *= -1; 
@@ -701,7 +705,7 @@ private:
 #endif
             _neg = false; 
         }
-	}
+    }
 
     void set_dat(const Vector& newv)
 	{
@@ -735,10 +739,10 @@ private:
     void mapindex(const Index& i1, const Index& i2)
 	{
         assert(i1.m() == i2.m());
-        solo_dosign();
         for(int j = 1; j <= rn; ++j) 
         if(GET(_indexn,j) == i1) 
         {
+            solo();
             GET(_indexn,j) = i2;
             set_unique_Real();
             return;
@@ -779,8 +783,8 @@ public:
     bool is_not_null() const { return (p != 0); }
     bool is_complex() const { return findindexn(IndReIm) > 0; }
     bool is_not_complex() const { return (findindexn(IndReIm) == 0); }
-    Vector& ncdat() { assert(p != 0); solo_dosign(); return p->v; } //Can we get dat & ncdat to do the right thing automatically?
-    const VectorRef dat() const { assert(p != 0); return p->v*(_neg ? -1 : 1); }
+    Vector& ncdat() { assert(p != 0); dosign(); return p->v; } //Can we get dat & ncdat to do the right thing automatically?
+    const Vector& dat() const { assert(p != 0); dosign(); return p->v; }
     int Length() const { return dat().Length(); }
     Real logfac() const { return _logfac; }
     bool neg() const { return _neg; }
@@ -1187,36 +1191,36 @@ public:
 
     Real& operator()(int i1 = 1,int i2 = 1,int i3 = 1,int i4 = 1,int i5 = 1,
 	    int i6 = 1,int i7 = 1, int i8 = 1) 
-	{ assert(p != 0); solo_dosign(); return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(p != 0); dosign(); return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
 
     /*
     Real& val7(int i1,int i2,int i3,int i4,int i5,int i6,int i7)
-	{ assert(rn==7); assert(p != 0); solo_dosign(); return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(rn==7); assert(p != 0); dosign(); return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
 
     Real& val6(int i1,int i2,int i3,int i4,int i5,int i6)
-	{ assert(rn==6); assert(p != 0); solo_dosign(); return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(rn==6); assert(p != 0); dosign(); return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
 
     Real& val5(int i1,int i2,int i3,int i4,int i5)
-	{ assert(rn==5); assert(p != 0); solo_dosign(); return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(rn==5); assert(p != 0); dosign(); return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
 
     Real& val4(int i1,int i2,int i3,int i4)
-	{ assert(rn==4); assert(p != 0); solo_dosign(); return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(rn==4); assert(p != 0); dosign(); return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
 
     Real& val3(int i1,int i2,int i3)
-	{ assert(rn==3); assert(p != 0); solo_dosign(); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(rn==3); assert(p != 0); dosign(); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1); }
     */
 
     Real& val0()
-	{ assert(rn==0); assert(p != 0); solo_dosign(); return p->v(1); }
+	{ assert(rn==0); assert(p != 0); dosign(); return p->v(1); }
 
     Real& val1(int i1)
-	{ assert(rn==1); assert(p != 0); solo_dosign(); return p->v(i1); }
+	{ assert(rn==1); assert(p != 0); dosign(); return p->v(i1); }
 
     Real val1(int i1) const
 	{ assert(rn==1); assert(p != 0); return p->v(i1); }
 
     Real& val2(int i1,int i2)
-	{ assert(rn==2); assert(p != 0); solo_dosign(); return p->v((i2-1)*m(1)+i1); }
+	{ assert(rn==2); assert(p != 0); dosign(); return p->v((i2-1)*m(1)+i1); }
 
     Real& operator()(const IndexVal& iv1, const IndexVal& iv2 = IVNull, const IndexVal& iv3 = IVNull,
                      const IndexVal& iv4 = IVNull, const IndexVal& iv5 = IVNull, const IndexVal& iv6 = IVNull,
@@ -1236,7 +1240,8 @@ public:
             cerr << format("numgot = %d, rn = %d\n")%numgot%rn;
             Error("ITensor::operator(): Not enough indices");
         }
-	    assert(p != 0); solo_dosign(); 
+	    assert(p != 0); 
+        dosign(); 
         normlogto(0);
         return p->v((((((((ja[8]-1)*m(7)+ja[7]-1)*m(6)+ja[6]-1)*m(5)+ja[5]-1)*m(4)+ja[4]-1)*m(3)+ja[3]-1)*m(2)+ja[2]-1)*m(1)+ja[1]);
 	}
@@ -1333,13 +1338,15 @@ public:
     void donormlog()
 	{
         Real f = Norm(dat());
-        if(f != 0) { ncdat() *= 1.0/f; _logfac += log(f); }
+        solo();
+        if(f != 0) { p->v *= 1.0/f; _logfac += log(f); }
 	}
 
     void normlogto(Real newlogfac) const
 	{
         Real dellogfac = newlogfac - _logfac;
-        assert(p != 0); solo_dosign();
+        assert(p != 0); 
+        solo();
         if(dellogfac > 100.) p->v = 0;
         else                 p->v *= exp(-dellogfac);
         _logfac = newlogfac;

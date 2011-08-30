@@ -59,14 +59,15 @@ mkdebugdir:
 	mkdir -p .debug_objs
 
 tensor.o: tensor.h
-iq.o: tensor.h iqcombiner.h iq.h
-mps.o: tensor.h iqcombiner.h iq.h mps.h
-algorithm.o: tensor.h iqcombiner.h iq.h mps.h algorithm.h 
+iq.o: tensor.h combiner.h iqcombiner.h iq.h
+mps.o: tensor.h combiner.h iqcombiner.h iq.h mps.h
+algorithm.o: tensor.h combiner.h iqcombiner.h iq.h mps.h algorithm.h 
 
 .debug_objs/tensor.o: tensor.h
-.debug_objs/iq.o: tensor.h iqcombiner.h iq.h
-.debug_objs/mps.o: tensor.h iqcombiner.h iq.h mps.h
-.debug_objs/algorithm.o: tensor.h iqcombiner.h iq.h mps.h algorithm.h 
+.debug_objs/iq.o: tensor.h combiner.h iqcombiner.h iq.h
+.debug_objs/mps.o: tensor.h combiner.h iqcombiner.h iq.h mps.h
+.debug_objs/algorithm.o: tensor.h combiner.h iqcombiner.h iq.h mps.h algorithm.h 
+
 
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a

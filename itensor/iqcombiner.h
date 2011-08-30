@@ -159,6 +159,8 @@ public:
             c.i[5]+inc[5],c.i[6]+inc[6],c.i[7]+inc[7],c.i[8]+inc[8]) 
             = thisdat(c.ind);
         }
+        res.setlogfac(t.logfac());
+        res *= (t.neg() ? -1 : 1);
     }
 
     inline friend ostream& operator<<(ostream & s, const Condenser & c)

@@ -713,7 +713,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
     Real dlogfac = other._logfac - _logfac;
     if(dlogfac < -200.0) return *this; // no effect from other
 
-    solo_dosign();
+    dosign();
     int sign = (other._neg ? -1 : 1);
 
     Vector& thisdat = p->v;
@@ -745,33 +745,6 @@ ITensor& ITensor::operator+=(const ITensor& other)
 #ifdef DO_ALT
     p->alt.clear();
 #endif
-
-    /*
-    if(rn != other.rn) 
-    {
-        cerr << "*this = " << *this << "\n";
-        cerr << "other = " << other << "\n";
-        Error("ITensor::operator+=: mismatched number of m!=1 Indices.");
-    }
-
-    //Check that m==1 indices are the same
-    if(!other._index1.empty() && !_index1.empty())
-    {
-        sort(_index1.begin(),_index1.end());
-        sort(other._index1.begin(),other._index1.end());
-        vector<Index> diff(_index1.size()+other._index1.size());
-        vector<Index>::iterator it =
-        set_difference(_index1.begin(),_index1.end(),
-                       other._index1.begin(),other._index1.end(),
-                       diff.begin());
-        if(int(it - diff.begin()) != 0) 
-        {
-        cerr << "*this = " << *this << "\n";
-        cerr << "other = " << other << "\n";
-        Error("ITensor::operator+=: mismatched m==1 Indices.");
-        }
-    }
-    */
 
     bool same_ind_order = true;
     for(int j = 1; j <= rn; j++)
