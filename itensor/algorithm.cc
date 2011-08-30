@@ -512,3 +512,37 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
     res.position(1);
 
 }//void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
+
+void psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real& re, Real& im) //<psi|H K|phi>
+{
+    if(psi.NN() != phi.NN() || psi.NN() != H.NN() || psi.NN() != K.NN()) Error("Mismatched N in psiHKphi");
+    int N = psi.NN();
+    IQMPS psiconj(psi);
+    for(int i = 1; i <= N; i++)
+	{
+        psiconj.AAnc(i) = conj(psi.AA(i));
+        psiconj.AAnc(i).mapprime(0,2);
+	}
+    IQMPO Kp(K);
+    Kp.mapprime(1,2);
+    Kp.mapprime(0,1);
+
+    //scales as m^2 k^2 d
+    IQTensor L = (((phi.AA(1) * H.AA(1)) * Kp.AA(1)) * psiconj.AA(1));
+    for(int i = 2; i < N; i++)
+    {
+        //scales as m^3 k^2 d + m^2 k^3 d^2
+        L = ((((L * phi.AA(i)) * H.AA(i)) * Kp.AA(i)) * psiconj.AA(i));
+    }
+    //scales as m^2 k^2 d
+    L = ((((L * phi.AA(N)) * H.AA(N)) * Kp.AA(N)) * psiconj.AA(N)) * IQTSing;
+    //cout << "in psiHpsi, L is " << L;
+    L.GetSingComplex(re,im);
+}
+Real psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi) //<psi|H K|phi>
+{
+    Real re,im;
+    psiHKphi(psi,H,K,phi,re,im);
+    if(fabs(im) > 1E-12) Error("Non-zero imaginary part in psiHKphi");
+    return re;
+}

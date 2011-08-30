@@ -691,7 +691,7 @@ public:
 
     //MPS: index methods --------------------------------------------------
 
-    void mapprime(int oldp, int newp, PrimeType pt)
+    void mapprime(int oldp, int newp, PrimeType pt = primeBoth)
 	{ for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,pt); }
 
     void primelinks(int oldp, int newp)
@@ -1197,6 +1197,7 @@ Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, 
     {
         comb.doCondense(false);
         comb.init(mid.rawname());
+        assert(comb.check_init());
         comb.product(AA,newoc);
         to_orth = comb; to_orth.conj();
         Vector eigs_kept(comb.right().m()); eigs_kept = 1.0/comb.right().m();
