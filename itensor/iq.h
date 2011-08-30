@@ -73,6 +73,18 @@ public:
     QN operator*(int i) const { QN res(*this); res*=i; return res; }
     QN operator/(int i) const { QN res(*this); res*=i; return res; }
 
+    /*
+    inline string toString() const
+    { 
+        stringstream ss; 
+        ss << (_sz > 0 ? "(+" : "(") << _sz << ":" << _Nf << (_Nfp==1 ? ":-)" : ":+)"); 
+        return ss.str();
+    }
+    */
+
+    inline string toString() const
+    {  return (format("(%+d:%d:%s)")%_sz%_Nf%(_Nfp==1 ? "-" : "+")).str(); }
+
     inline friend ostream& operator<<(ostream &o, const QN &q)
     { return o<< format("sz = %d, Nf = %d, fp = %s") % q.sz() % q.Nf() % (q.fp() < 0 ? "-" : "+"); }
 

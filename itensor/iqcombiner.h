@@ -4,17 +4,12 @@
 
 class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
 {
-    IQIndex bigind, smallind;		// uncondensed, condensed
+    IQIndex bigind_, smallind_;		// uncondensed, condensed
     mutable map<Index, pair<Index,int> > big_to_small;
     mutable map<pair<Index,int>,Index > small_to_big;
-public:
 
     // Use connections in t to create groupings; big = uncondensed, small = cond
-
-    Condenser() { }
-
-    Condenser(const IQIndex& _bigind, IQIndex& _smallind)
-        : bigind(_bigind) //Use connections in bigind to create groupings
+    void init(const IQIndex& _bigind, const string& smallind_name)
     {
         /* May not be appropriate when orthogonalizing MPOs
         if(_bigind.dir() != _smallind.dir())
@@ -26,7 +21,7 @@ public:
         */
         static vector<QN> qns(1000);
         qns.resize(0);
-        foreach(const inqn& x, bigind.iq()) qns.push_back(x.qn);
+        foreach(const inqn& x, bigind_.iq()) qns.push_back(x.qn);
         sort(qns.begin(),qns.end());
         vector<QN>::iterator ue = unique(qns.begin(),qns.end());
 
@@ -35,12 +30,12 @@ public:
         {
             QN& q = *qi;
             int totm = 0;
-            foreach(const inqn& x, bigind.iq())
+            foreach(const inqn& x, bigind_.iq())
             if(x.qn == q) totm += x.index.m();
 
             Index small_qind("condensed",totm);
             int start = 0;
-            foreach(const inqn& x, bigind.iq())
+            foreach(const inqn& x, bigind_.iq())
             if(x.qn == q)
             {
                 const Index &bj(x.index);
@@ -50,9 +45,21 @@ public:
             }
             iq.push_back(inqn(small_qind,q));
         }
-        smallind = IQIndex(_smallind.name(),iq,_bigind.dir(),_bigind.primelevel);
-        _smallind = smallind;
+        smallind_ = IQIndex(smallind_name,iq,_bigind.dir(),_bigind.primelevel);
     }
+public:
+    const IQIndex& bigind() const   { return bigind_; }
+    const IQIndex& smallind() const { return smallind_; }
+    
+    Condenser() { }
+
+    Condenser(const IQIndex& _bigind, IQIndex& _smallind)
+        : bigind_(_bigind) //Use connections in bigind to create groupings
+    { init(_bigind,_smallind.name()); _smallind = smallind_; }
+
+    Condenser(const IQIndex& _bigind, const string& smallind_name)
+    : bigind_(_bigind)
+    { init(_bigind,smallind_name); }
 
     IQTensor operator*(const IQTensor& t) { IQTensor res; product(t,res); return res; }
     friend inline IQTensor operator*(const IQTensor& t, const Condenser& c) { IQTensor res; c.product(t,res); return res; }
@@ -60,27 +67,27 @@ public:
     void product(const IQTensor& t, IQTensor& res) const
     {
         assert(&t != &res);
-        assert(smallind.is_not_null());
-        assert(bigind.is_not_null());
+        assert(smallind_.is_not_null());
+        assert(bigind_.is_not_null());
         vector<IQIndex> iqinds; iqinds.reserve(t.r());
         int smallind_pos = -2;
         int bigind_pos   = -2;
         for(int j = 1; j <= t.r(); ++j)
         {
             iqinds.push_back(t.index(j));
-            if(iqinds.back() == smallind) smallind_pos = (j-1);
-            else if(iqinds.back() == bigind) bigind_pos = (j-1);
+            if(iqinds.back() == smallind_) smallind_pos = (j-1);
+            else if(iqinds.back() == bigind_) bigind_pos = (j-1);
         }
 
         if(smallind_pos != -2) //expand condensed form into uncondensed
         {
-            iqinds[smallind_pos] = bigind;
+            iqinds[smallind_pos] = bigind_;
             res = IQTensor(iqinds);
             for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
             {
                 int k;
                 for(k = 1; k <= i->r(); k++)
-                if(smallind.hasindex(i->index(k))) break;
+                if(smallind_.hasindex(i->index(k))) break;
 
                 Index sind = i->index(k);
                 for(int start = 0; start < sind.m(); )
@@ -101,14 +108,14 @@ public:
                 Print(t); Print(*this);
                 Error("Condenser::product: couldn't find bigind");
             }
-            GET(iqinds,bigind_pos) = smallind;
+            GET(iqinds,bigind_pos) = smallind_;
             res = IQTensor(iqinds);
             ITensor tt;
             foreach(const ITensor& it, t.itensors())
             {
                 bool gotit = false;
                 for(int k = 1; k <= it.r(); ++k)
-                if(bigind.hasindex(it.index(k)))
+                if(bigind_.hasindex(it.index(k)))
                 {
                     pair<Index,int> pp = big_to_small[it.index(k)];
                     doconvert(it,pp.first,it.index(k),pp.second,tt);
@@ -156,8 +163,8 @@ public:
 
     inline friend ostream& operator<<(ostream & s, const Condenser & c)
     {
-        s << "bigind is " << c.bigind << endl;
-        s << "smallind is " << c.smallind << endl;
+        s << "bigind_ is " << c.bigind_ << endl;
+        s << "smallind_ is " << c.smallind_ << endl;
         s << "big_to_small is " << endl;
         for(map<Index, pair<Index,int> >::const_iterator kk = c.big_to_small.begin();
             kk != c.big_to_small.end(); ++kk)
@@ -319,7 +326,7 @@ public:
             Combiner co; Real rss = 0.0;
             foreach(const Index& i, vind)
             { co.addleft(i); rss += i.unique_Real(); }
-            co.init("combined");
+            co.init(rname+q.toString());
 
             iq.push_back(inqn(co.right(),q));
             setcomb[ApproxReal(rss)] = co;
@@ -328,7 +335,9 @@ public:
         if(do_condense) 
         {
             cindex = IQIndex(rname,iq,rdir,plev);
-            cond = Condenser(cindex,_right);
+            string cname = "cond::" + rname;
+            cond = Condenser(cindex,cname);
+            _right = cond.smallind();
         }
         else _right = IQIndex(rname,iq,rdir,plev);
 
