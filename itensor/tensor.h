@@ -783,8 +783,8 @@ public:
     bool is_not_null() const { return (p != 0); }
     bool is_complex() const { return findindexn(IndReIm) > 0; }
     bool is_not_complex() const { return (findindexn(IndReIm) == 0); }
-    Vector& ncdat() { assert(p != 0); dosign(); return p->v; } //Can we get dat & ncdat to do the right thing automatically?
-    const Vector& dat() const { assert(p != 0); dosign(); return p->v; }
+    Vector& ncdat() { assert(p != 0); solo(); return p->v; } //Can we get dat & ncdat to do the right thing automatically?
+    const Vector& dat() const { assert(p != 0); return p->v; }
     int Length() const { return dat().Length(); }
     Real logfac() const { return _logfac; }
     bool neg() const { return _neg; }

@@ -528,8 +528,7 @@ public:
         Index s("sing");
         IQIndex single("single",s,QN());
         iqindex_.push_back(single);
-        ITensor st(s);
-        st.ncdat() = 1.0;
+        ITensor st(s,1);
         operator+=(st);
     }
 
