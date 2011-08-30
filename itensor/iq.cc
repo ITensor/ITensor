@@ -17,11 +17,11 @@ void IQTensor::SplitReIm(IQTensor& re, IQTensor& im) const
 	return;
 	}
     re = IQTensor();
-    remove_copy_if(iqindex_.begin(),iqindex_.end(),std::back_inserter(re.iqindex_),
+    remove_copy_if(p->iqindex_.begin(),p->iqindex_.end(),std::back_inserter(re.p->iqindex_),
 		    bind2nd(std::equal_to<IQIndex>(),IQIndReIm));
     im = re;
     ITensor a,b;
-    for(const_iten_it i = itensor.begin(); i != itensor.end(); ++i)
+    for(const_iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
 	{
 	i->SplitReIm(a,b);
 	re.insert(a);
@@ -65,17 +65,20 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
         viqindex = IQIndex((Index) viqindex,viqindex.index(1),newq);
     }
 
+    solo();
+    p->uninit_rmap();
+
     set<ApproxReal> common_inds;
     
     //Load iqindex_ with those IQIndex's *not* common to *this and other
     static vector<IQIndex> riqind_holder(1000);
     riqind_holder.resize(0);
 
-    for(size_t i = 0; i < iqindex_.size(); ++i)
+    for(size_t i = 0; i < p->iqindex_.size(); ++i)
     {
-        const IQIndex& I = iqindex_[i];
-        vector<IQIndex>::const_iterator f = find(other.iqindex_.begin(),other.iqindex_.end(),I);
-        if(f != other.iqindex_.end()) //I is an element of other.iqindex_
+        const IQIndex& I = p->iqindex_[i];
+        vector<IQIndex>::const_iterator f = find(other.p->iqindex_.begin(),other.p->iqindex_.end(),I);
+        if(f != other.p->iqindex_.end()) //I is an element of other.iqindex_
         {
             //Check that arrow directions are compatible
             if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
@@ -94,16 +97,16 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
         else { riqind_holder.push_back(I); }
     }
 
-    for(size_t i = 0; i < other.iqindex_.size(); ++i)
-    if(!common_inds.count(ApproxReal(other.iqindex_[i].unique_Real())))
-    { riqind_holder.push_back(other.iqindex_[i]); }
+    for(size_t i = 0; i < other.p->iqindex_.size(); ++i)
+    if(!common_inds.count(ApproxReal(other.p->iqindex_[i].unique_Real())))
+    { riqind_holder.push_back(other.p->iqindex_[i]); }
 
-    //if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator* riqind_holder had to reallocate.\n\n";
-    iqindex_.swap(riqind_holder);
+    if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator* riqind_holder had to reallocate.\n\n";
+    p->iqindex_.swap(riqind_holder);
 
     set<ApproxReal> keys;
 
-    list<ITensor> old_itensor; itensor.swap(old_itensor);
+    list<ITensor> old_itensor; p->itensor.swap(old_itensor);
 
     //com_this maps the unique_Real of a set of Index's to be contracted over together
     //to those ITensors in *this.itensor having all Index's in that set
@@ -166,86 +169,54 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
 
     //Only IQIndex should be IQIndReIm
     /*
-    if(tre.iqindex_.size() != 1)
+    if(tre.p->iqindex_.size() != 1)
 	{
         cout << *this;
         cout << tre;
         Error("bad tre size");
 	}
-    if(tim.iqindex_.size() != 1) Error("bad tim size");
+    if(tim.p->iqindex_.size() != 1) Error("bad tim size");
     */
-    foreach(const IQIndex& I, tre.iqindex_)
+    foreach(const IQIndex& I, tre.p->iqindex_)
     {
-        if(I.type() != Virtual && I != IQTSing.iqindex_[0])
+        if(I.type() != Virtual && I != IQTSing.p->iqindex_[0])
         {
             cout << *this;
             cout << tre;
             Error("bad tre size");
         }
     }
-    foreach(const IQIndex& I, tim.iqindex_)
-    if(I.type() != Virtual && I != IQTSing.iqindex_[0])
+    foreach(const IQIndex& I, tim.p->iqindex_)
+    if(I.type() != Virtual && I != IQTSing.p->iqindex_[0])
     { Error("bad tim size"); }
 
     if(tre.iten_size() == 0)
     { re = 0.0; }
     else
 	{
-        if(tre.itensor.begin()->dat().Length() != 1) 
+        if(tre.p->itensor.begin()->dat().Length() != 1) 
         {
             cout << "tre is\n" << tre << endl;
             Error("bad tre dat size");
         }
-        re = tre.itensor.begin()->val0() * exp(tre.itensor.begin()->logfac());
+        re = tre.p->itensor.begin()->val0() * exp(tre.p->itensor.begin()->logfac());
 	}
     if(tim.iten_size() == 0)
 	{ im = 0.0; }
     else
 	{
-        if(tim.itensor.begin()->dat().Length() != 1) Error("bad tim dat size");
-        im = tim.itensor.begin()->val0() * exp(tim.itensor.begin()->logfac());
-	}
-}
-
-void IQTensor::Assign(const IQTensor& other)
-{
-    //other.print("other");
-    //Permutation P = getpermBtoA(*this,other);
-    //Reshape(other,P,*this);
-    if(0) //catch this later for a specific ITensor
-    if(iten_size() < other.iten_size())
-	{
-        cout << "iten sizes: " << iten_size() SP other.iten_size() << endl;
-        cout << *this;
-        cout << other;
-        Error("bad Assign sizes");
-	}
-    //map<set<Index>,list<ITensor>::iterator> semap;
-    map<ApproxReal,list<ITensor>::iterator> semap;
-    for(iten_it i = itensor.begin(); i != itensor.end(); ++i)
-	{
-        semap[ApproxReal(i->unique_Real())] = i;
-	}
-    for(const_iten_it i = other.itensor.begin(); i != other.itensor.end(); ++i)
-	{
-        ApproxReal se = ApproxReal(i->unique_Real());
-        if(semap.count(se) == 0)
-        {
-            cout << "warning Assign semap.count is 0" << endl;
-            cerr << "offending ITensor is " << *i << "\n";
-            Error("bad Assign count se");
-        }
-        else
-            semap[se]->Assign(*i);
+        if(tim.p->itensor.begin()->dat().Length() != 1) Error("bad tim dat size");
+        im = tim.p->itensor.begin()->val0() * exp(tim.p->itensor.begin()->logfac());
 	}
 }
 
 IQTensor& IQTensor::operator+=(const IQTensor& other)
 {
+    solo(); p->uninit_rmap();
     if(this == &other)
-    foreach(ITensor& t, itensor) { t *= 2; return *this; }
+    foreach(ITensor& t, p->itensor) { t *= 2; return *this; }
 
-    if(iqindex_.size() == 0)		// Automatic initializing a summed IQTensor in a loop
+    if(p->iqindex_.size() == 0)		// Automatic initializing a summed IQTensor in a loop
     { return (*this = other); }
     bool complex_this = hasindex(IQIndReIm); 
     bool complex_other = other.hasindex(IQIndReIm); 
@@ -260,7 +231,7 @@ IQTensor& IQTensor::operator+=(const IQTensor& other)
         cout << "other is " << other;
         Error("bad match unique real in IQTensor::operator+=");
 	}
-    foreach(const ITensor& t, other.itensor) operator+=(t);
+    foreach(const ITensor& t, other.p->itensor) operator+=(t);
     return *this;
 }
 

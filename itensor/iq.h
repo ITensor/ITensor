@@ -205,8 +205,8 @@ class IQIndex : public Index
     intrusive_ptr<IQIndexDat> pd;
     void solo()
     {
-        assert(p != 0);
-        if(p->count() != 1)
+        assert(pd != 0);
+        if(pd->count() != 1)
         {
             intrusive_ptr<IQIndexDat> new_pd(new IQIndexDat());
             new_pd->iq_ = pd->iq_;
@@ -459,6 +459,54 @@ struct IQIndexVal
 };
 extern IQIndexVal IQIVNull;
 
+class IQTDat
+{
+    typedef list<ITensor>::iterator       iten_it;
+    typedef list<ITensor>::const_iterator const_iten_it;
+private:
+    mutable unsigned int numref;
+    mutable bool rmap_init;
+public:
+    mutable list<ITensor> itensor; // This is mutable to allow reordering
+    vector<IQIndex> iqindex_;
+    mutable map<ApproxReal,iten_it> rmap; //mutable so that const IQTensor methods can use rmap
+
+    IQTDat() : numref(0), rmap_init(false) { }
+
+    explicit IQTDat(const IQIndex& i1): numref(0), rmap_init(false), iqindex_(1)
+    { iqindex_[0] = i1; }
+
+    IQTDat(const IQIndex& i1, const IQIndex& i2): numref(0), rmap_init(false), iqindex_(2)
+    { iqindex_[0] = i1; iqindex_[1] = i2; }
+
+    IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3): numref(0), rmap_init(false), iqindex_(3)
+    { iqindex_[0] = i1; iqindex_[1] = i2; iqindex_[2] = i3; }
+
+    IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3, const IQIndex& i4): numref(0), rmap_init(false), iqindex_(4)
+    { iqindex_[0] = i1; iqindex_[1] = i2; iqindex_[2] = i3; iqindex_[3] = i4; }
+
+    explicit IQTDat(vector<IQIndex>& iqinds_) : numref(0), rmap_init(false) { iqindex_.swap(iqinds_); }
+
+    explicit IQTDat(const IQTDat& other) 
+    : numref(0), rmap_init(false), itensor(other.itensor), iqindex_(other.iqindex_)
+    { }
+
+    void init_rmap() const
+    {
+        if(rmap_init) return;
+        for(iten_it it = itensor.begin(); it != itensor.end(); ++it)
+        { rmap[ApproxReal(it->unique_Real())] = it; }
+        rmap_init = true;
+    }
+
+    void uninit_rmap() const { assert(numref == 1); rmap_init = false; }
+
+    friend inline void intrusive_ptr_add_ref(IQTDat* p) { ++(p->numref); }
+    friend inline void intrusive_ptr_release(IQTDat* p) { if(--(p->numref) == 0){ delete p; } }
+    inline int count() const { return numref; }
+private:
+    void operator=(const IQTDat&);
+};
 
 class IQTensor; extern IQTensor IQTSing, IQComplex_1, IQComplex_i;
 
@@ -474,82 +522,79 @@ public:
     typedef vector<IQIndex>::const_iterator const_iqind_it;
     static const IQIndex& ReImIndex;
 private:
-    bool rmap_init;
-    mutable list<ITensor> itensor; // This is mutable to allow reordering
-    vector<IQIndex> iqindex_;
+    intrusive_ptr<IQTDat> p;
     IQIndex viqindex; //virtual IQIndex
-    map<ApproxReal,iten_it> rmap;
+
+    void solo()
+    {
+        assert(p != 0);
+        if(p->count() != 1)
+        {
+            intrusive_ptr<IQTDat> new_p(new IQTDat(*p));
+            p.swap(new_p);
+        }
+    }
 public:
 
-    int r() const { return iqindex_.size(); }
-    inline const IQIndex& index(int j) const { return GET(iqindex_,j-1); }
-    //Deprecated to bring interface more in line with ITensor:
-    //inline const IQIndex& iqindex(int j) const { return iqindex_[j]; }
+    int r() const { return p->iqindex_.size(); }
+    inline const IQIndex& index(int j) const { return GET(p->iqindex_,j-1); }
+    inline int iten_size() const { return p->itensor.size(); }
+    inline bool is_null() const { return p == 0; }
+    inline bool is_not_null() const { return p != 0; }
+    inline int num_index() const { return p->iqindex_.size(); }
     
     //----------------------------------------------------
     //IQTensor: iterators 
-    const_iten_it const_iten_begin() const { return itensor.begin(); }
-    const_iten_it const_iten_end() const { return itensor.end(); }
-    pair<const_iten_it,const_iten_it> itensors() const { return make_pair(itensor.begin(),itensor.end()); }
+    const_iten_it const_iten_begin() const { return p->itensor.begin(); }
+    const_iten_it const_iten_end() const { return p->itensor.end(); }
+    pair<const_iten_it,const_iten_it> itensors() const { return make_pair(p->itensor.begin(),p->itensor.end()); }
 
-    const_iqind_it const_iqind_begin() const { return iqindex_.begin(); }
-    const_iqind_it const_iqind_end()   const { return iqindex_.end(); }
-    pair<const_iqind_it,const_iqind_it> iqinds() const { return make_pair(iqindex_.begin(),iqindex_.end()); }
+    const_iqind_it const_iqind_begin() const { return p->iqindex_.begin(); }
+    const_iqind_it const_iqind_end()   const { return p->iqindex_.end(); }
+    pair<const_iqind_it,const_iqind_it> iqinds() const { return make_pair(p->iqindex_.begin(),p->iqindex_.end()); }
 
     //----------------------------------------------------
     //IQTensor: Constructors
 
-    IQTensor() : rmap_init(false), viqindex(IQEmptyV) {}
+    IQTensor() : p(0), viqindex(IQEmptyV) {}
 
+    explicit IQTensor(const IQIndex& i1) 
+    : p(new IQTDat(i1)), viqindex(IQEmptyV)
+    { }
 
-    explicit IQTensor(const IQIndex& i1) :  rmap_init(false), viqindex(IQEmptyV)
-    { iqindex_.push_back(i1); }
-    IQTensor(const IQIndex& i1,const IQIndex& i2) : rmap_init(false), viqindex(IQEmptyV)
-    { iqindex_.push_back(i1); iqindex_.push_back(i2); }
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3) : rmap_init(false), viqindex(IQEmptyV)
-    { iqindex_.push_back(i1); iqindex_.push_back(i2); iqindex_.push_back(i3); }
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,const IQIndex& i4) : rmap_init(false), viqindex(IQEmptyV)
-    { iqindex_.push_back(i1); iqindex_.push_back(i2); iqindex_.push_back(i3); iqindex_.push_back(i4); }
+    IQTensor(const IQIndex& i1,const IQIndex& i2) 
+    : p(new IQTDat(i1,i2)), viqindex(IQEmptyV)
+    { }
 
-    explicit IQTensor(vector<IQIndex>& iqinds_) : rmap_init(false), viqindex(IQEmptyV)
-    { iqindex_.swap(iqinds_); }
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3) 
+    : p(new IQTDat(i1,i2,i3)), viqindex(IQEmptyV)
+    { }
 
-    IQTensor(ITmaker itm) : rmap_init(false), viqindex(IQEmptyV)
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,const IQIndex& i4) 
+    : p(new IQTDat(i1,i2,i3,i4)), viqindex(IQEmptyV)
+    { }
+
+    explicit IQTensor(vector<IQIndex>& iqinds_) 
+    : p(new IQTDat(iqinds_)), viqindex(IQEmptyV)
+    { }
+
+    IQTensor(ITmaker itm) : p(new IQTDat(IQIndReIm)), viqindex(IQEmptyV)
     {
-        iqindex_.push_back(IQIndReIm);
-        if(itm == makeComplex_1) 
-            operator+=(Complex_1);
-        if(itm == makeComplex_i) 
-            operator+=(Complex_i);
+        if(itm == makeComplex_1)      operator+=(Complex_1);
+        else if(itm == makeComplex_i) operator+=(Complex_i);
     }
 
-    IQTensor(IQmaker i) : rmap_init(false), viqindex(IQEmptyV)
+    IQTensor(IQmaker i) : p(new IQTDat()), viqindex(IQEmptyV)
     {
         Index s("sing");
         IQIndex single("single",s,QN());
-        iqindex_.push_back(single);
+        p->iqindex_.push_back(single);
         ITensor st(s,1);
         operator+=(st);
     }
 
-    IQTensor(PrimeType pt,const IQTensor& other) 
-    : rmap_init(false), itensor(other.itensor), iqindex_(other.iqindex_), viqindex(other.viqindex)
+    IQTensor(PrimeType pt,const IQTensor& other) : p(other.p), viqindex(other.viqindex)
     { doprime(pt); }
-
-    IQTensor(const IQTensor& other)
-    : rmap_init(false), itensor(other.itensor), iqindex_(other.iqindex_), viqindex(other.viqindex)  
-    { }
-
-    IQTensor& operator=(const IQTensor& other)
-    {
-        if(this == &other) return *this;
-        iqindex_ = other.iqindex_;
-        viqindex = other.viqindex;
-        itensor = other.itensor;
-        rmap.clear();
-        rmap_init = false;
-        return *this;
-    }
 
     //----------------------------------------------------
     //IQTensor operators
@@ -560,12 +605,13 @@ public:
     IQTensor& operator+=(const IQTensor& o);
     IQTensor operator+(const IQTensor& o) const { IQTensor res(*this); res += o; return res; }
     IQTensor operator-(const IQTensor& o) const 
-    { IQTensor res(o); res *= -1.0; res += *this; return res; }
+    { IQTensor res(o); res *= -1; res += *this; return res; }
 
     IQTensor& operator*=(Real fac) 
     { 
-        if(fac == 0.0) { itensor.clear(); rmap_init = false;  return *this; }
-        foreach(ITensor& t, itensor) { t *= fac; }
+        solo();
+        if(fac == 0) { p->itensor.clear(); p->uninit_rmap(); return *this; }
+        foreach(ITensor& t, p->itensor) { t *= fac; }
         return *this; 
     }
     IQTensor operator*(Real fac) { IQTensor res(*this); res *= fac; return res; }
@@ -575,7 +621,7 @@ public:
     operator ITensor() const
     {
         vector<Index> indices;
-        foreach(const IQIndex& I, iqindex_)
+        foreach(const IQIndex& I, p->iqindex_)
         {
             if(I.type() != Site) 
             { Error("IQTensor to ITensor conversion requires all IQIndex's of type Site."); }
@@ -590,42 +636,32 @@ public:
 
     void insert(const ITensor& t) 
     { 
-        if(!rmap_init)
-        {
-            rmap.clear();
-            for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
-            { rmap.insert(make_pair(ApproxReal(jj->unique_Real()),jj)); }
-            rmap_init = true;
-        }
+        solo();
+        p->init_rmap();
         ApproxReal r(t.unique_Real());
-        if(rmap.count(r) == 0)
+        if(p->rmap.count(r) == 0)
         {
-            itensor.push_front(t);
-            rmap.insert(pair<ApproxReal,iten_it>(r,itensor.begin()));
+            p->itensor.push_front(t);
+            p->rmap.insert(pair<ApproxReal,iten_it>(r,p->itensor.begin()));
         }
         else
         {
-            cerr << "t is " << t << endl;
+            Print(t);
             Error("Can't insert ITensor with identical structure twice.");
         }
     } //end IQTensor::insert(const ITensor& t)
 
     IQTensor& operator+=(const ITensor& t) 
     { 
-        if(!rmap_init)
-        {
-            rmap.clear();
-            for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
-            { rmap.insert(make_pair(ApproxReal(jj->unique_Real()),jj)); }
-            rmap_init = true;
-        }
+        solo();
+        p->init_rmap();
         ApproxReal r(t.unique_Real());
-        if(rmap.count(r) == 0)
+        if(p->rmap.count(r) == 0)
         {
-            itensor.push_front(t);
-            rmap.insert(pair<ApproxReal,iten_it>(r,itensor.begin()));
+            p->itensor.push_front(t);
+            p->rmap[r] = p->itensor.begin();
         }
-        else *(rmap[r]) += t;
+        else *(p->rmap[r]) += t;
         return *this;
     } //end IQTensor::operator+=(ITensor)
 
@@ -633,16 +669,17 @@ public:
                      const IQIndexVal& iv4 = IQIVNull, const IQIndexVal& iv5 = IQIVNull, const IQIndexVal& iv6 = IQIVNull,
                      const IQIndexVal& iv7 = IQIVNull, const IQIndexVal& iv8 = IQIVNull)
 	{
+        solo(); p->init_rmap();
         array<IQIndexVal,NMAX+1> iv = {{ IQIVNull, iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
         Real ur = 0; int nn = 0; 
         while(iv[nn+1].iqind != IQIVNull.iqind) 
         { ++nn; ur += GET(iv,nn).index().unique_Real(); }
         ApproxReal r(ur);
 
-        if(rmap.count(r) == 0)
+        if(p->rmap.count(r) == 0)
         {
             vector<Index> indices; indices.reserve(nn);
-            foreach(const IQIndex& I, iqindex_)
+            foreach(const IQIndex& I, p->iqindex_)
             {
                 if(I.type() == Site) continue;
                 if(I.m() == 1 && I.nindex() == 1) indices.push_back(I.index(1));
@@ -654,10 +691,10 @@ public:
                 indices.push_back(iv[j].index());
             }
             ITensor t(indices,true);
-            itensor.push_front(t);
-            rmap.insert(pair<ApproxReal,iten_it>(r,itensor.begin()));
+            p->itensor.push_front(t);
+            p->rmap[r] = p->itensor.begin();
         }
-        return (rmap[r])->operator()(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8);
+        return (p->rmap[r])->operator()(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8);
     }
 
     //----------------------------------------------------
@@ -668,7 +705,7 @@ public:
         int iqq = find_iqind(i)-1;
         if(iqq == -1)
             Error("set_qn: cant find index");
-        iqindex_[iqq].set_qn(i,q);
+        p->iqindex_[iqq].set_qn(i,q);
     } //end IQTensor::set_qn
     */
 
@@ -698,10 +735,10 @@ public:
     {
         int iqq = find_iqind(in)-1;
         if(iqq == -1) Error("qn: cant find index");
-        return iqindex_[iqq].qn(in);
+        return p->iqindex_[iqq].qn(in);
     } //end IQTensor::qn
 
-    //void negate_qn() { foreach(IQIndex& I, iqindex_) I.negate(); }
+    //void negate_qn() { foreach(IQIndex& I, p->iqindex_) I.negate(); }
 
     Arrow dir(const Index& in) const
     {
@@ -712,7 +749,7 @@ public:
             in.print("in"); 
             Error("IQTensor::dir(Index&): cant find Index in IQIndices");
         }
-        return iqindex_[iqq].dir();
+        return p->iqindex_[iqq].dir();
     } //end IQTensor::dir
 
 
@@ -721,9 +758,12 @@ public:
 
     void ind_inc_prime(const IQIndex& i,int inc)
     {
-        rmap_init = false;
+        if(viqindex == i) { int p = viqindex.primelevel; viqindex.mapprime(p,p+inc); return; }
+
+        solo();
+        p->uninit_rmap();
         bool gotit = false;
-        foreach(IQIndex& jj, iqindex_)
+        foreach(IQIndex& jj, p->iqindex_)
         if(jj.noprime_equals(i))
         {
             gotit = true;
@@ -737,7 +777,7 @@ public:
             Error("ind_inc_prime: couldn't find IQIndex");
         }
 
-        for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
+        for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
         for(int ii = 1; ii <= jj->r(); ++ii)
         if(i.hasindex_noprime(jj->index(ii)))
         {
@@ -748,51 +788,60 @@ public:
 
     void noprime(PrimeType pt = primeBoth)
     {
-        rmap_init = false;
-        foreach(IQIndex& J, iqindex_)
+        solo();
+        p->uninit_rmap();
+        foreach(IQIndex& J, p->iqindex_)
 	    J.noprime(pt);
 
-        for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
-	    foreach(ITensor& t, itensor) t.noprime(pt);
+        for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
+	    foreach(ITensor& t, p->itensor) t.noprime(pt);
     } //end IQTensor::noprime
     friend inline IQTensor deprimed(IQTensor A)
     { A.noprime(); return A; }
 
     void noprimelink()
     {
-        rmap_init = false;
-        foreach(IQIndex& J, iqindex_)
+        solo();
+        p->uninit_rmap();
+        foreach(IQIndex& J, p->iqindex_)
 	    if(J.type() == Link) J.noprime();
 
-        for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
-	    foreach(ITensor& t, itensor) t.noprime(primeLink);
+        for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
+	    foreach(ITensor& t, p->itensor) t.noprime(primeLink);
     } //end IQTensor::noprimelink
 
     void doprime(PrimeType pt)
     {
-        rmap_init = false;
+        solo();
+        p->uninit_rmap();
         DoPrimer prim(pt);
-        for_each(iqindex_.begin(), iqindex_.end(),prim);
-        for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
-        jj->doprime(pt);
+        for_each(p->iqindex_.begin(), p->iqindex_.end(),prim);
+        for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
+        { jj->doprime(pt); }
+        viqindex.doprime(pt);
     } //end IQTensor::doprime
 
     void mapprime(int plevold, int plevnew, PrimeType pt = primeBoth) // no need to keep prime level small
     {
-        rmap_init = false;
+        solo();
+        p->uninit_rmap();
         MapPrimer prim(plevold,plevnew,pt);
-        for_each(iqindex_.begin(), iqindex_.end(),prim);
-        for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
+        for_each(p->iqindex_.begin(), p->iqindex_.end(),prim);
+        for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
         jj->mapprime(plevold,plevnew,pt);
+        viqindex.mapprime(plevold,plevnew,pt);
     } //end IQTensor::mapprime
 
     void primeind(const IQIndex& I)
     {
-        foreach(IQIndex& J, iqindex_)
-        { if(J == I) J = J.primed(); }
-        if(viqindex == I) viqindex = viqindex.primed();
+        if(viqindex == I) { viqindex = viqindex.primed(); return; }
 
-        foreach(ITensor& t, itensor)
+        solo();
+        p->uninit_rmap();
+        foreach(IQIndex& J, p->iqindex_)
+        { if(J == I) J = J.primed(); }
+
+        foreach(ITensor& t, p->itensor)
         foreach(const inqn& x, I.iq())
         { if(t.hasindex(x.index)) t.primeind(x.index); }
     }
@@ -816,30 +865,30 @@ public:
 
     int find_iqind(const Index& I) const
     {
-        for(unsigned int j = 0; j < iqindex_.size(); ++j)
-        if(iqindex_[j].hasindex(I)) { return j+1; }
+        for(unsigned int j = 0; j < p->iqindex_.size(); ++j)
+        if(p->iqindex_[j].hasindex(I)) { return j+1; }
         return 0;
     }
 
     //Return true if one of the ITensors uses this Index
     bool uses_ind(const Index& i) const
     {
-        foreach(const ITensor& it, itensor)
+        foreach(const ITensor& it, p->itensor)
         if(it.hasindex(i)) { return true; }
         return false;
     }
 
     int findindex(const IQIndex& i) const
     {
-        vector<IQIndex>::const_iterator f = find(iqindex_.begin(),iqindex_.end(),i);
-        if(f == iqindex_.end()) return 0;
-        else return (f - iqindex_.begin())+1;
+        vector<IQIndex>::const_iterator f = find(p->iqindex_.begin(),p->iqindex_.end(),i);
+        if(f == p->iqindex_.end()) return 0;
+        else return (f - p->iqindex_.begin())+1;
     }
 
     bool hastype(IndexType t) const
     {
         if(t == Virtual) return (viqindex != IQEmptyV);
-        foreach(const IQIndex& I, iqindex_)
+        foreach(const IQIndex& I, p->iqindex_)
         if(I.type() == t) { return true; }
         return false;
     }
@@ -851,7 +900,7 @@ public:
             if(viqindex != IQEmptyV) return viqindex;
             else Error("IQTensor::findtype: couldn't find an IQIndex of type Virtual.");
         }
-        foreach(const IQIndex& I, iqindex_)
+        foreach(const IQIndex& I, p->iqindex_)
         if(I.type() == t) { return I; }
         Error("IQTensor::findtype: couldn't find type");
         return viqindex;
@@ -859,7 +908,7 @@ public:
 
     const IQIndex& finddir(Arrow dir) const
     {
-        foreach(const IQIndex& I, iqindex_)
+        foreach(const IQIndex& I, p->iqindex_)
         if(I.dir() == dir) { return I; }
         Error("IQTensor::finddir: couldn't find dir");
         return viqindex;
@@ -890,8 +939,9 @@ public:
             viqindex = IQIndex(I.name(),Index(I.index(1)),newq,dir);
             return;
         }
-        foreach(ITensor& t, itensor) t.addindex1(I.index(1));
-        iqindex_.push_back(I);
+        solo(); p->uninit_rmap();
+        foreach(ITensor& t, p->itensor) t.addindex1(I.index(1));
+        p->iqindex_.push_back(I);
     }
 
     //----------------------------------------------------
@@ -900,17 +950,13 @@ public:
     Real unique_Real() const
     {
         Real ur = 0.0;
-        foreach(const IQIndex& I, iqindex_) ur += I.unique_Real();
+        foreach(const IQIndex& I, p->iqindex_) ur += I.unique_Real();
         return ur;
     }
-    inline int iten_size() const { return itensor.size(); }
-    inline bool is_null() const { return iten_size() == 0; }
-    inline bool is_not_null() const { return iten_size() != 0; }
-    inline int num_index() const { return iqindex_.size(); }
     int num_index(IndexType t) const 
     { 
         int count = 0;
-        foreach(const IQIndex& I, iqindex_)
+        foreach(const IQIndex& I, p->iqindex_)
         if(I.type() == t) ++count;
         return count;
     }
@@ -918,7 +964,7 @@ public:
     Real norm() const
     {
         Real res;
-        foreach(const ITensor& t, itensor) res += sqrt(t.norm());
+        foreach(const ITensor& t, p->itensor) res += sqrt(t.norm());
         return sqrt(res);
     }
 
@@ -943,10 +989,11 @@ public:
     }
     void AssignFromVec(VectorRef v)
     {
+        solo();
         if(vec_size() != v.Length())
             Error("bad size");
         int off = 1;
-        for(iten_it jj = itensor.begin(); jj != itensor.end(); ++jj)
+        for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
             {
             int d = jj->dat().Length();
             jj->AssignFromVec(v.SubVector(off,off+d-1));
@@ -956,25 +1003,42 @@ public:
     void GetSingComplex(Real& re, Real& im) const;
 
     
-    void Randomize() { foreach(ITensor& t, itensor) t.Randomize(); }
+    void Randomize() { solo(); foreach(ITensor& t, p->itensor) t.Randomize(); }
 
     void print(string name = "",Printdat pdat = HideData) const 
     { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
 
-    void Assign(const IQTensor& other);
+    void Assign(const IQTensor& other) const
+    {
+        map<ApproxReal,iten_it> semap;
+        for(iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
+        { semap[ApproxReal(i->unique_Real())] = i; }
+        for(const_iten_it i = other.p->itensor.begin(); i != other.p->itensor.end(); ++i)
+        {
+            ApproxReal se = ApproxReal(i->unique_Real());
+            if(semap.count(se) == 0)
+            {
+                cout << "warning Assign semap.count is 0" << endl;
+                cerr << "offending ITensor is " << *i << "\n";
+                Error("bad Assign count se");
+            }
+            else { semap[se]->Assign(*i); }
+        }
+    }
 
     void SplitReIm(IQTensor& re, IQTensor& im) const;
 
     void conj()
     {
+        solo();
         if(!is_complex())
-        { foreach(IQIndex& I,iqindex_) I.conj(); }
+        { foreach(IQIndex& I,p->iqindex_) I.conj(); }
         else
         {
             IQTensor r,i;
             SplitReIm(r,i);
-            foreach(IQIndex& I,r.iqindex_) I.conj();
-            foreach(IQIndex& I,i.iqindex_) I.conj();
+            foreach(IQIndex& I,r.p->iqindex_) I.conj();
+            foreach(IQIndex& I,i.p->iqindex_) I.conj();
             i *= -1.0;
             *this = r * IQComplex_1 + IQComplex_i * i;
         }
@@ -983,8 +1047,8 @@ public:
 private:
     void match_order() const
     {
-        const int s = iqindex_.size();
-        foreach(ITensor& t, itensor)
+        const int s = p->iqindex_.size();
+        foreach(ITensor& t, p->itensor)
         {
             if(t.r() != s)
             {
@@ -996,7 +1060,7 @@ private:
             {
                 bool gotone = false;
                 for(int k = 0; k < s; ++k)
-                if(iqindex_[k].hasindex(t.index(j)))
+                if(p->iqindex_[k].hasindex(t.index(j)))
                 { P.from_to(j,k+1); gotone = true; break; }
                 if(!gotone) Error("match_order: !gotone");
             }
