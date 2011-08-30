@@ -478,8 +478,6 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
 
     IQTensor clust,nfork;
     vector<int> midsize(N);
-    static int cnt = 0;
-    ++cnt;
     for(int i = 1; i < N; ++i)
 	{
         if(i == 1) { clust = A.AA(i) * B.AA(i); }
@@ -536,7 +534,7 @@ void psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi,
     }
     //scales as m^2 k^2 d
     L = ((((L * phi.AA(N)) * H.AA(N)) * Kp.AA(N)) * psiconj.AA(N)) * IQTSing;
-    //cout << "in psiHpsi, L is " << L;
+    //cout << "in psiHKpsi, L is "; PrintDat(L);
     L.GetSingComplex(re,im);
 }
 Real psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi) //<psi|H K|phi>
@@ -545,4 +543,121 @@ Real psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi)
     psiHKphi(psi,H,K,phi,re,im);
     if(fabs(im) > 1E-12) Error("Non-zero imaginary part in psiHKphi");
     return re;
+}
+
+void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm)
+{
+    if(cutoff < 0) cutoff = x.cutoff;
+    if(maxm < 0) maxm = x.maxm;
+    int N = x.NN();
+    if(K.NN() != N) Error("Mismatched N in napplyMPO");
+    if(x.right_lim() > 3)
+    {
+        cerr << "x is " << endl << x << endl;
+        Error("bad right_lim for x");
+    }
+    if(K.right_lim() > 3)
+    {
+        //cerr << "K is " << endl << K << endl;
+        Error("bad right_lim for K");
+    }
+
+    res = x; res.maxm = maxm; res.cutoff = cutoff;
+    res.primelinks(0,4);
+    res.mapprime(0,1,primeSite);
+
+    IQTensor clust,nfork;
+    vector<int> midsize(N);
+    int maxdim = 1;
+    for(int i = 1; i < N; i++)
+	{
+        if(i == 1) { clust = x.AA(i) * K.AA(i); }
+        else { clust = nfork * (x.AA(i) * K.AA(i)); }
+        if(i == N-1) break; //No need to SVD for i == N-1
+
+        IQIndex oldmid = res.RightLinkInd(i); assert(oldmid.dir() == Out);
+        nfork = IQTensor(x.RightLinkInd(i),K.RightLinkInd(i),oldmid);
+        if(clust.iten_size() == 0)	// this product gives 0 !!
+        { res = IQMPS(); return; }
+        tensorSVD(clust, res.AAnc(i), nfork,cutoff,1,maxm,Fromleft);
+        IQIndex mid = index_in_common(res.AA(i),nfork,Link);
+        assert(mid.dir() == In);
+        mid.conj();
+        midsize[i] = mid.m();
+        maxdim = max(midsize[i],maxdim);
+        assert(res.RightLinkInd(i+1).dir() == Out);
+        res.AAnc(i+1) = IQTensor(mid,res.si(i+1).primed(),res.RightLinkInd(i+1));
+	}
+    nfork = clust * x.AA(N) * K.AA(N);
+    if(nfork.iten_size() == 0)	// this product gives 0 !!
+	{ res = IQMPS(); return; }
+
+    res.doSVD(N-1,nfork,Fromright,false);
+    res.noprimelink();
+    res.mapprime(1,0,primeSite);
+    res.position(1);
+    res.maxm = x.maxm; res.cutoff = x.cutoff;
+
+} //void napplyMPO
+
+//Expensive: scales as m^3 k^3!
+void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
+{
+    int N = x.NN();
+    if(K.NN() != N) Error("Mismatched N in exact_applyMPO");
+
+    res = x;
+    res.position(1);
+
+    res.AAnc(1) = x.AA(1) * K.AA(1);
+    for(int j = 1; j < N; ++j)
+	{
+        //cerr << format("exact_applyMPO: step %d\n") % j;
+        //Compute product of MPS tensor and MPO tensor
+        res.AAnc(j+1) = x.AA(j+1) * K.AA(j+1); //m^2 k^2 d^2
+
+        //Add common IQIndices to IQCombiner
+        IQCombiner comb; comb.doCondense(false);
+        foreach(const IQIndex& I, res.AA(j).iqinds())
+        if(res.AA(j+1).hasindex(I) && I != IQIndReIm && I.type() != Virtual)
+        { assert(I.dir() == Out); comb.addleft(I);}
+        comb.init(nameint("a",j));
+
+        //Apply combiner to product tensors
+        res.AAnc(j) = res.AA(j) * comb; //m^3 k^3 d
+        res.AAnc(j+1) = conj(comb) * res.AA(j+1); //m^3 k^3 d
+	}
+    res.mapprime(1,0,primeSite);
+    //res.position(1);
+} //void exact_applyMPO
+
+//Computes an MPS which has the same overlap with psi_basis as psi_to_fit,
+//but which differs from psi_basis only on the first site, and has same index
+//structure as psi_basis. Result is stored to psi_to_fit on return.
+void fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
+{
+    if(!psi_basis.is_ortho()) Error("fitWF: psi_basis must be orthogonolized.");
+    if(psi_basis.ortho_center() != 1) Error("fitWF: psi_basis must be orthogonolized to site 1.");
+    psi_to_fit.position(1);
+
+    const IQMPS& psib = psi_basis;
+    IQMPS& psif = psi_to_fit;
+    IQMPS res = psib;
+
+    int N = psib.NN();
+    if(psif.NN() != N) Error("fitWF: sizes of wavefunctions must match.");
+
+    IQTensor A = psif.AA(N) * conj(psib.AA(N));
+    for(int n = N-1; n > 1; --n)
+    {
+        A = conj(psib.AA(n)) * A;
+        A = psif.AA(n) * A;
+    }
+    A = psif.AA(1) * A;
+
+    res.AAnc(1) = A;
+
+    assert(check_QNs(res));
+
+    psi_to_fit = res;
 }

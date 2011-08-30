@@ -327,5 +327,8 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
 void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm);
 void psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real& re, Real& im); //<psi|H K|phi>
 Real psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi); //<psi|H K|phi>
+void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm);
+void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
+void fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit);
 
 #endif
