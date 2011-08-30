@@ -470,18 +470,6 @@ ITensor& ITensor::operator*=(const ITensor& other)
         _index1.assign(symdiff.begin(),it);
     } }
 
-    if(p == other.p) //Perform a trace
-    {
-        const Real res = p->v*p->v;
-        if(p->count() != 1) { p = new Internal::ITDat(0); }
-        p->v.ReDimension(1);
-        p->v = res;
-        rn = 0;
-        _logfac += other._logfac; _neg = (_neg^other._neg);
-        set_unique_Real();
-        return *this;
-    }
-
     if(other.rn == 0)
     {
         _logfac += other._logfac; _neg = (_neg^other._neg);
