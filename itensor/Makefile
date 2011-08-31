@@ -10,9 +10,9 @@ include ../options.mk
 
 HEADERS=types.h permutation.h index.h tensor.h combiner.h iq.h iqcombiner.h model.h mps.h mpo.h hams.h dmrg.h 
 
-OBJECTS=tensor.o mps.o iq.o
+OBJECTS=tensor.o iq.o
 
-SOURCES=tensor.cc mps.cc iq.cc
+SOURCES=tensor.cc iq.cc
 
 ####################################
 
@@ -60,13 +60,9 @@ mkdebugdir:
 
 tensor.o: types.h permutation.h index.h tensor.h
 iq.o: types.h permutation.h index.h tensor.h combiner.h iqcombiner.h iq.h
-mps.o: types.h index.h tensor.h combiner.h iqcombiner.h iq.h model.h mps.h
-algorithm.o: types.h index.h tensor.h combiner.h iqcombiner.h iq.h model.h mps.h mpo.h algorithm.h 
 
 .debug_objs/tensor.o: types.h permutation.h index.h tensor.h
 .debug_objs/iq.o: types.h permutation.h index.h tensor.h combiner.h iqcombiner.h iq.h
-.debug_objs/mps.o: types.h index.h tensor.h combiner.h iqcombiner.h iq.h model.h mps.h
-.debug_objs/algorithm.o: types.h index.h tensor.h combiner.h iqcombiner.h iq.h model.h mps.h mpo.h algorithm.h 
 
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
