@@ -235,11 +235,4 @@ IQTensor& IQTensor::operator+=(const IQTensor& other)
     return *this;
 }
 
-IQIndex index_in_common(const IQTensor& A, const IQTensor& B, IndexType t)
-{
-    foreach(const IQIndex& I, A.iqinds())
-    if(I.type() == t) if(B.hasindex(I)) return I;
-
-    return IQIndex();
-}
 

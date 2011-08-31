@@ -104,9 +104,9 @@ public:
     void noprimelink()
 	{ for(int i = 1; i <= N; ++i) A[i].noprime(primeLink); }
 
-    IndexT LinkInd(int i) const { return index_in_common(A[i],A[i+1],Link); }
-    IndexT RightLinkInd(int i) const { assert(i<NN()); return index_in_common(AA(i),AA(i+1),Link); }
-    IndexT LeftLinkInd(int i)  const { assert(i>1); return index_in_common(AA(i),AA(i-1),Link); }
+    IndexT LinkInd(int i) const { IndexT res; index_in_common(A[i],A[i+1],Link,res); return res; }
+    IndexT RightLinkInd(int i) const { assert(i<NN()); IndexT res; index_in_common(AA(i),AA(i+1),Link,res); return res; }
+    IndexT LeftLinkInd(int i)  const { assert(i>1); IndexT res; index_in_common(AA(i),AA(i-1),Link,res); return res; }
 
     void primeall()	// sites i,i' -> i',i'';  link:  l -> l'
 	{
@@ -241,12 +241,19 @@ void psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re,
 {
     typedef typename MPSType::TensorT Tensor;
     const int N = H.NN();
-
-    if(psi.NN() != phi.NN() || psi.NN() != N) Error("psiHphi: mismatched N");
+    if(phi.NN() != N || psi.NN() != N) Error("psiHphi: mismatched N");
 
     Tensor L = phi.AA(1) * H.AA(1) * conj(primed(psi.AA(1)));
-    for(int i = 2; i < N; ++i) { L = L * phi.AA(i) * H.AA(i) * conj(primed(psi.AA(i))); }
+    if(debug1) Print(L.norm());
+    for(int i = 2; i < N; ++i) { 
+    L = L * phi.AA(i) * H.AA(i) * conj(primed(psi.AA(i))); 
+        if(debug1) 
+        {
+        Print(L.norm());
+        }
+    }
     L = L * phi.AA(N) * H.AA(N);
+    if(debug1) { Print(L.norm()); exit(0); }
 
     Dot(primed(psi.AA(N)),L,re,im);
 }
@@ -352,7 +359,7 @@ inline void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut
         if(clust.iten_size() == 0)	// this product gives 0 !!
         { cerr << format("WARNING: clust.iten_size()==0 in nmultMPO (i=%d).\n")%i; res = IQMPO(); return; }
         tensorSVD(clust, res.AAnc(i), nfork,cut,1,maxm,Fromleft);
-        IQIndex mid = index_in_common(res.AA(i),nfork,Link);
+        IQIndex mid; index_in_common(res.AA(i),nfork,Link,mid);
         assert(mid.dir() == In);
         mid.conj();
         midsize[i] = mid.m();
@@ -409,7 +416,7 @@ inline void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, i
         if(clust.iten_size() == 0)	// this product gives 0 !!
         { res = IQMPS(); return; }
         tensorSVD(clust, res.AAnc(i), nfork,cutoff,1,maxm,Fromleft);
-        IQIndex mid = index_in_common(res.AA(i),nfork,Link);
+        IQIndex mid; index_in_common(res.AA(i),nfork,Link,mid);
         assert(mid.dir() == In);
         mid.conj();
         midsize[i] = mid.m();

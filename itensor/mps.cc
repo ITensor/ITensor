@@ -2,7 +2,7 @@
 
 Vector do_denmat_Real(const ITensor& AA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir)
 {
-    Index mid = index_in_common(A,B,Link);
+    Index mid; index_in_common(A,B,Link,mid);
     if(mid.is_null()) mid = Index("mid");
 
     ITensor& to_orth = (dir==Fromleft ? A : B);
@@ -87,7 +87,7 @@ Vector do_denmat_Real(const ITensor& AA, ITensor& A, ITensor& B, Real cutoff,int
 
 Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir)
 {
-    IQIndex mid = index_in_common(A,B,Link);
+    IQIndex mid; index_in_common(A,B,Link,mid);
     if(mid.is_null()) mid = IQIndex("mid");
 
     if(nA.iten_size() == 0) Error("zero size in do_denmat_Real(IQTensor)");
@@ -174,7 +174,7 @@ Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTen
 	Real cutoff, int minm,int maxm, Direction dir, bool donormalize, bool do_relative_cutoff)
 {
     // Make a density matrix that is summed over the nA
-    IQIndex mid = index_in_common(A,B,Link);
+    IQIndex mid; index_in_common(A,B,Link,mid);
     if(mid.is_null()) mid = IQIndex("mid");
 
     int num_states = nA.size();

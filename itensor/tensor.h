@@ -1026,8 +1026,6 @@ inline void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, bool doc
     im = 0;
 }
 
-Index index_in_common(const ITensor& A, const ITensor& B, IndexType t);
-
 inline ITensor operator*(const IndexVal& iv1, const IndexVal& iv2) { ITensor t(iv1); return (t *= iv2); }
 inline ITensor operator*(const IndexVal& iv1, Real fac) { return ITensor(iv1,fac); }
 inline ITensor operator*(Real fac, const IndexVal& iv) { return ITensor(iv,fac); }

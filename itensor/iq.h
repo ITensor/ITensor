@@ -1092,8 +1092,6 @@ public:
 
 }; //class IQTensor
 
-IQIndex index_in_common(const IQTensor& A, const IQTensor& B, IndexType t);
-
 inline Real ReSingVal(const IQTensor& x)
 {
     Real re, im;

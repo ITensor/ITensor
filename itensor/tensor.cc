@@ -689,16 +689,6 @@ void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, co
     Assign(Q);
 }
 
-Index index_in_common(const ITensor& A, const ITensor& B, IndexType t)
-{
-    foreach(const Index& I, A.indexn())
-	if(I.type() == t) if(B.hasindexn(I)) return I;
-
-    foreach(const Index& I, A.index1())
-	if(I.type() == t) if(B.hasindex1(I)) return I;
-
-    return Index();
-}
 
 ITensor& ITensor::operator+=(const ITensor& other)
 {
