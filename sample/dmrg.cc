@@ -1,5 +1,5 @@
 #define THIS_IS_MAIN
-#include "algorithm.h"
+#include "dmrg.h"
 #include "hams.h"
 
 int main(int argc, char* argv[])

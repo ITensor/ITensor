@@ -37,4 +37,9 @@ public:
     { return b.r-a.r > 1.0e-12; }
 };
 
+extern bool debug1, debug2, debug3, debug4;
+#ifdef THIS_IS_MAIN
+bool debug1 = false, debug2 = false, debug3 = false, debug4 = false;
+#endif
+
 #endif

@@ -4,8 +4,6 @@
 void DoPrimer::operator()(IQIndex &iqi) const { iqi.doprime(pt,inc); }
 void MapPrimer::operator()(IQIndex &iqi) const { iqi.mapprime(plevold,plevnew,pt); }
 
-IQIndexVal IQIndex::operator()(int n) const { return IQIndexVal(*this,n); }
-
 void IQTensor::SplitReIm(IQTensor& re, IQTensor& im) const
 {
     if(!hasindex(IQIndReIm))

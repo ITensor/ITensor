@@ -468,6 +468,8 @@ struct IQIndexVal
 };
 extern IQIndexVal IQIVNull;
 
+inline IQIndexVal IQIndex::operator()(int n) const { return IQIndexVal(*this,n); }
+
 class IQTDat
 {
     typedef list<ITensor>::iterator       iten_it;

@@ -2,7 +2,7 @@ include ../this_dir.mk
 include ../options.mk
 ################################################################
 
-TENSOR_HEADERS=tensor.h mps.h algorithm.h iq.h hams.h
+TENSOR_HEADERS=dmrg.h hams.h
 LIBNAMES=matrix utilities itensor
 
 #################################################################
@@ -26,10 +26,10 @@ LIBGFLAGS=-L$(LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS)
 
 #Rules ------------------
 
-%.o: %.cc $(REL_TENSOR_HEADERS)
+%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-.debug_objs/%.o: %.cc
+.debug_objs/%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 #Targets -----------------

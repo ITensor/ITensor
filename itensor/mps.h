@@ -1217,7 +1217,6 @@ void sum(const vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, int max
 #ifdef THIS_IS_MAIN
 Real truncerror = 0.0;
 Real svdtruncerr = 0.0;
-int specialdebug1 = 0, specialdebug2 = 0;
 #endif
 
 #endif
