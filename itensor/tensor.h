@@ -97,8 +97,8 @@ class Prodstats; extern Prodstats prodstats;
 
 enum Printdat { ShowData, HideData };
 
-#define Print(X) { printdat = false; cerr << "\n" << #X << " =\n" << X << "\n\n"; }
-#define PrintDat(X) { printdat = true; cerr << "\n" << #X << " =\n" << X << "\n\n"; printdat = false; }
+#define Print(X) { printdat = false; cerr << "\n" << #X << " =\n" << X << "\n"; }
+#define PrintDat(X) { printdat = true; cerr << "\n" << #X << " =\n" << X << "\n"; printdat = false; }
 
 template<class T, class Op> void for_all(T& a, Op f) { for_each(a.begin(),a.end(),f); }
 

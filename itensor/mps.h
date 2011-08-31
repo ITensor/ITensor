@@ -11,9 +11,6 @@ Vector do_denmat_Real(const ITensor& nA, ITensor& A, ITensor& B, Real cutoff,int
 Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir);
 Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTensor& B, IQTensor& U,
 	Real cutoff,Real lognormfac,int minm,int maxm, Direction dir, bool donormalize, bool do_relative_cutoff);
-void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm, int maxm, ITensor& Lambda, string newbondname = "");
-void plussers(const Index& l1, const Index& l2, Index& sumind, ITensor& first, ITensor& second);
-void plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind, IQTensor& first, IQTensor& second);
 
 template<class Tensor, class TensorSet>
 Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal);
@@ -828,6 +825,53 @@ public:
 
 }; //class MPS<Tensor>
 
+namespace {
+void plussers(const Index& l1, const Index& l2, Index& sumind, ITensor& first, ITensor& second)
+{
+    sumind = Index(sumind.rawname(),l1.m()+l2.m(),sumind.type());
+    first = ITensor(l1,sumind,1);
+    second = ITensor(l2,sumind);
+    for(int i = 1; i <= l2.m(); ++i) second(l2(i),sumind(l1.m()+i)) = 1;
+}
+
+void plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind, IQTensor& first, IQTensor& second)
+{
+    map<Index,Index> l1map, l2map;
+    vector<inqn> iq;
+    foreach(const inqn& x, l1.iq())
+	{
+        Index ii = x.index;
+        Index jj(ii.name(),ii.m(),ii.type());
+        l1map[ii] = jj;
+        iq.push_back(inqn(jj,x.qn));
+	}
+    foreach(const inqn& x, l2.iq())
+	{
+        Index ii = x.index;
+        Index jj(ii.name(),ii.m(),ii.type());
+        l2map[ii] = jj;
+        iq.push_back(inqn(jj,x.qn));
+	}
+    sumind = IQIndex(sumind,iq);
+    first = IQTensor(l1,sumind);
+    foreach(const inqn& x, l1.iq())
+	{
+        Index il1 = x.index;
+        Index s1 = l1map[il1];
+        ITensor t(il1,s1,1.0);
+        first += t;
+	}
+    second = IQTensor(l2,sumind);
+    foreach(const inqn& x, l2.iq())
+	{
+        Index il2 = x.index;
+        Index s2 = l2map[il2];
+        ITensor t(il2,s2,1.0);
+        second += t;
+	}
+}
+} //anonymous namespace
+
 template <class Tensor>
 MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
 {
@@ -1060,6 +1104,171 @@ Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, 
     newoc   = conj(U) * AAc;
 
     return eigs_kept;
+}
+
+/*
+Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTensor& B, IQTensor& U,
+	Real cutoff, int minm,int maxm, Direction dir, bool donormalize, bool do_relative_cutoff)
+{
+    // Make a density matrix that is summed over the nA
+    IQIndex mid; index_in_common(A,B,Link,mid);
+    if(mid.is_null()) mid = IQIndex("mid");
+
+    int num_states = nA.size();
+    if(num_states == 0) Error("zero size in do_denmat_Real(vector<IQTensor>)");
+
+    const IQTensor& to_orth = (dir==Fromleft ? A : B);
+    const IQTensor& newoc   = (dir==Fromleft ? B : A);
+
+    int unique_link = 0;
+    //Create combiner
+    IQCombiner comb;
+    foreach(const IQIndex& i, to_orth.iqinds())
+    if(!(newoc.hasindex(i) || i == IQIndReIm || i.type() == Virtual))
+    { 
+        if(i.type() == Link) ++unique_link;
+        comb.addleft(i); 
+    }
+
+    //Check if we're at the edge
+    //bool edge_case = (to_orth.num_index(Link) <= 1 ? true : false);
+    bool edge_case = (unique_link == 0 ? true : false);
+
+    if(edge_case)
+    {
+        //Handle the right-edge/Fromright and left-edge/Fromleft
+        //cases by simply turning the appropriate IQCombiner into
+        //an IQTensor and using it as the new edge tensor
+
+        //IQIndex newmid(mid.rawname(),Link,Out);
+
+        comb.init(mid.rawname());
+
+        U = comb; U.conj(); 
+
+        Vector eigs_kept(comb.right().m()); eigs_kept = 1.0/comb.right().m();
+        return eigs_kept; 
+    }
+
+    //Combine
+    //IQIndex c(mid.rawname());
+    //comb.init(c);
+    comb.doCondense(false);
+    comb.init(mid.rawname());
+    IQIndex c = comb.right();
+    vector<IQTensor> nnA; nnA.reserve(nA.size());
+    foreach(const IQTensor& iqt, nA) nnA.push_back(iqt * comb);
+
+    //Condense
+    vector<IQTensor> ncA; ncA.reserve(nnA.size());
+    IQIndex active("Condensed");
+    Condenser cond(c,active);
+    foreach(const IQTensor& iqt, nnA) ncA.push_back(iqt * cond);
+
+    IQIndex activep(primeBoth,active,4);
+    IQTensor rho;
+    if(ncA.front().hasindex(IQIndReIm))
+    {
+        //Error("not doing complex 873249827");
+        foreach(const IQTensor& iqt, ncA)
+        {
+            IQTensor iqtre,iqtim;
+            iqt.SplitReIm(iqtre,iqtim);
+            IQTensor iqtreconj = conj(iqtre), iqtimconj = conj(iqtim);
+            iqtreconj.ind_inc_prime(active,4);
+            //cout << "k = " << k << endl;
+            //cout << "ncA[k] is " << ncA[k] << endl;
+            //cout << "ncAconj is " << ncAconj << endl;
+            IQTensor r = iqtre * iqtreconj;
+            iqtimconj.ind_inc_prime(active,4);
+            r += iqtim * iqtimconj;
+            //cout << "r is " << r << endl;
+            if(num_states == 1) rho = r;
+            else                rho += r;
+            //cout << "now rho is " << rho << endl;
+        }
+    }
+    else
+    {
+        foreach(const IQTensor& iqt, ncA)
+        {
+            IQTensor iqtconj = conj(iqt);
+            iqtconj.ind_inc_prime(active,4);
+            IQTensor r = iqt * iqtconj;
+            if(num_states == 1) rho = r;
+            else                rho += r;
+        }
+    }
+    if(rho.iten_size() == 0)
+	{
+        Error("rho iten_size is 0!!!");
+	}
+
+    rho *= 1.0/num_states;
+
+    IQTensor nU; Vector eigs_kept;
+    diag_denmat(rho,cutoff,minm,maxm,nU,eigs_kept);
+
+    U = nU * cond * conj(comb);
+
+    return eigs_kept;
+
+} //void do_denmat_Real(const vector<IQTensor>& nA, ... )
+*/
+
+/* getCenterMatrix:
+ * 
+ *                    s                   s
+ *                    |                   |
+ * Decomposes A = -<--A-->- bond into -<--U-<-- -<--Lambda-->- bond
+ *
+ * A is replaced with the unitary U and Lambda is diagonal.
+ * If A is the OC of an MPS, Lambda will contain the Schmidt weights. 
+ *
+ */
+inline void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm, int maxm, ITensor& Lambda, string newbondname = "")
+{
+    //Create combiner
+    Combiner comb;
+    foreach(const Index& i, A.indexn())
+    if(!(i == bond || i == IndReIm || i.type() == Virtual))
+    { 
+        comb.addleft(i); 
+    }
+    foreach(const Index& i, A.index1())
+    if(!(i == bond || i == IndReIm || i.type() == Virtual))
+    { 
+        comb.addleft(i); 
+    }
+    comb.init("combined");
+    Index active = comb.right();
+
+    //Apply combiner....
+    //comb.init(active);
+    ITensor Ac = comb * A;
+
+    ITensor rho;
+    if(Ac.is_complex())
+    {
+        ITensor re,im;
+        Ac.SplitReIm(re,im);
+        ITensor rec = conj(re), imc = conj(im);
+        rec.primeind(active);
+        rho = re * rec;
+        imc.primeind(active);
+        rho += im * imc;
+    }
+    else rho = Ac * primeind(Ac,active);
+    assert(rho.r() == 2);
+
+    //Diagonalize & truncate the density matrix
+    ITensor Uc; Vector D; diag_denmat(rho,cutoff,minm,maxm,Uc,D);
+
+    Lambda = conj(Uc) * Ac;
+    A = Uc * comb; //should be conj(comb) with arrows
+
+    assert(A.checkDim());
+    assert(Lambda.checkDim());
 }
 
 inline bool check_QNs(const MPS& psi) { return true; }

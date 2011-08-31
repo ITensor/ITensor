@@ -1133,13 +1133,6 @@ inline bool check_QNs(const IQTensor& T)
     return true;
 }
 
-template<class T, class C>
-bool has_element(const T& t, const C& c)
-{
-    return find(c.begin(),c.end(),t) != c.end();
-}
-
-
 template<class T> class Printit
 {
 public:
