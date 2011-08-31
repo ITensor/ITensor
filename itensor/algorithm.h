@@ -1,6 +1,6 @@
 #ifndef ALGORITHM_H
 #define ALGORITHM_H
-#include "mps.h"
+#include "mpo.h"
 #include "sparse.h"
 #include "davidson.h"
 

@@ -1,6 +1,138 @@
 #ifndef __HAMS_H
 #define __HAMS_H
-#include "mps.h"
+#include "mpo.h"
+
+namespace Internal {
+
+template <class Tensor>
+class HamBuilder
+{
+public:
+    typedef Tensor TensorT;
+    typedef typename Tensor::IndexT IndexT;
+    typedef BaseModel SiteSetT;
+private:
+    const SiteSetT& iss;
+    const int N;
+    vector<IndexT> currentlinks;
+public:
+
+    int NN() const { return N; }
+    IndexT si(int i) const { return iss.si(i); }
+
+    HamBuilder(const SiteSetT& iss_) : iss(iss_), N(iss.NN()), currentlinks(N) { }
+
+    void newlinks(vector<Index>& currentlinks)
+	{
+        currentlinks.resize(N);
+        static int ver = 0; ++ver;
+        for(int i = 1; i < N; i++)
+        {
+            stringstream ss;
+            ss << "h" << ver << "-" << i;
+            currentlinks[i] = IndexT(ss.str(),1);
+        }
+	}
+
+    void newlinks(vector<IQIndex>& currentlinks)
+	{
+        currentlinks.resize(N);
+        static int ver = 0; ++ver;
+        for(int i = 1; i < N; i++)
+        {
+            stringstream ss;
+            ss << "h" << ver << "-" << i;
+            currentlinks[i] = IndexT(ss.str());
+        }
+	}
+
+    Tensor unit(int i) const { return Tensor(si(i),si(i).primed(),1); }
+
+    void getidentity(Real factor, MPO<ITensor>& res)
+	{
+        newlinks(currentlinks);
+        res = MPO<ITensor>(iss,res.maxm,res.cutoff);
+        res.AAnc(1) = unit(1); res.AAnc(1).addindex1(GET(currentlinks,1));
+        res.AAnc(1) *= factor;
+        res.AAnc(N) = unit(N); res.AAnc(N).addindex1(GET(currentlinks,N-1));
+        for(int i = 2; i < N; ++i)
+        {
+            res.AAnc(i) = unit(i); 
+            res.AAnc(i).addindex1(GET(currentlinks,i-1));
+            res.AAnc(i).addindex1(GET(currentlinks,i));
+        }
+	}
+
+    void getMPO(Real factor, int i, Tensor op, MPO<ITensor>& res)
+	{
+        getidentity(1,res);
+        res.AAnc(i) = op;
+        if(i > 1) res.AAnc(i).addindex1(GET(currentlinks,i-1));
+        if(i < N) res.AAnc(i).addindex1(GET(currentlinks,i));
+        res *= factor;
+	}
+
+    void getMPO(Real factor, int i1, Tensor op1, int i2, Tensor op2, MPO<ITensor>& res)
+	{
+        if(i1 == i2) Error("HamBuilder::getMPO: i1 cannot equal i2.");
+        getMPO(1,i2,op2,res);
+        res.AAnc(i1) = op1;
+        if(i1 > 1) res.AAnc(i1).addindex1(GET(currentlinks,i1-1));
+        if(i1 < N) res.AAnc(i1).addindex1(GET(currentlinks,i1));
+        res *= factor;
+	}
+
+    template <typename Iterable1, typename Iterable2>
+    void getMPO(Real factor, Iterable1 sites, Iterable2 ops, MPO<ITensor>& res)
+	{
+        for(int i = 0; i < (int) sites.size(); ++i)
+        for(int j = 0; j < (int) sites.size(); ++j)
+        {
+            if(i == j) continue;
+            if(sites[i] == sites[j]) Error("HamBuilder::getMPO: all sites should be unique.");
+        }
+
+        if(sites.size() != ops.size()) Error("HamBuilder::getMPO: need same number of sites as ops.");
+
+        getidentity(1,res);
+        for(int i = 0; i < (int) sites.size(); ++i)
+        {
+            const int s = sites[i];
+            res.AAnc(s) = GET(ops,i);
+            assert(GET(ops,i).hasindex(si(sites[i])));
+            if(s > 1) res.AAnc(s).addindex1(GET(currentlinks,s-1));
+            if(s < N) res.AAnc(s).addindex1(GET(currentlinks,s));
+        }
+        res *= factor;
+	}
+
+};
+
+} //namespace Internal
+typedef Internal::HamBuilder<ITensor> HamBuilder;
+//typedef Internal::HamBuilder<IQTensor> IQHamBuilder;
+
+class MPOBuilder
+{
+protected:
+    const SiteSet& sst;
+    const int Ns;
+public:
+
+    MPOBuilder(const SiteSet& sst_) : sst(sst_), Ns(sst_.NN()) { }
+
+    ITensor makeLedge(const Index& L) const
+    {
+        ITensor res(L); res(L(L.m())) = 1;
+        return res;
+    }
+
+    ITensor makeRedge(const Index& R) const
+    {
+        ITensor res(R); res(R(1)) = 1;
+        return res;
+    }
+};
 
 namespace SpinHalf 
 {
