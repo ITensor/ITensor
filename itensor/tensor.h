@@ -180,7 +180,7 @@ template<class T>
 ostream& operator<<(ostream& s, const vector<T>& v)
 { 
     if(v.size() == 0) s << "(Empty vector)\n";
-    for(unsigned int n = 0; n < v.size(); ++n) { s << n << ": " << v[n] << "\n"; } 
+    for(size_t n = 0; n < v.size(); ++n) { s << n << ": " << GET(v,n) << "\n"; } 
     return s; 
 }
 
