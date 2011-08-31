@@ -368,7 +368,7 @@ struct IndexVal
 };
 extern IndexVal IVNull;
 
-IndexVal Index::operator()(int i) const 
+inline IndexVal Index::operator()(int i) const 
 { return IndexVal(*this,i); }
 
 #ifdef THIS_IS_MAIN
