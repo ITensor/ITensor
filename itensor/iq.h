@@ -71,15 +71,6 @@ public:
     QN operator*(int i) const { QN res(*this); res*=i; return res; }
     QN operator/(int i) const { QN res(*this); res*=i; return res; }
 
-    /*
-    inline string toString() const
-    { 
-        stringstream ss; 
-        ss << (_sz > 0 ? "(+" : "(") << _sz << ":" << _Nf << (_Nfp==1 ? ":-)" : ":+)"); 
-        return ss.str();
-    }
-    */
-
     inline string toString() const
     {  return (format("(%+d:%d:%s)")%_sz%_Nf%(_Nfp==1 ? "-" : "+")).str(); }
 
@@ -195,6 +186,22 @@ public:
     explicit IQIndexDat(const IQIndexDat& other) : numref(0), iq_(other.iq_)
     { }
 
+    explicit IQIndexDat(istream& s) : numref(0) { read(s); }
+
+    void write(ostream& s) const
+    {
+        size_t size = iq_.size();
+        s.write((char*)&size,sizeof(size));
+        foreach(const inqn& x,iq_) x.write(s);
+    }
+
+    void read(istream& s)
+    {
+        size_t size; s.read((char*)&size,sizeof(size));
+        iq_.resize(size);
+        foreach(inqn& x,iq_) x.read(s);
+    }
+
     ENABLE_INTRUSIVE_PTR(IQIndexDat)
 private:
     ~IQIndexDat() { } //must be dynamically allocated
@@ -307,28 +314,23 @@ public:
     IQIndex(PrimeType pt, const IQIndex& other, int inc = 1) 
 	: Index(other), _dir(other._dir), pd(other.pd)  { doprime(pt,inc); }
 
-    IQIndex(istream& s) { read(s); }
-
-    IQIndexVal operator()(int n) const;
+    explicit IQIndex(istream& s) { read(s); }
 
     void write(ostream& s) const
     {
         Index::write(s);
         s.write((char*)&_dir,sizeof(_dir));
-        unsigned int size = pd->iq_.size();
-        s.write((char*)&size,sizeof(size));
-        foreach(const inqn& x,pd->iq_) x.write(s);
+        pd->write(s);
     }
 
     void read(istream& s)
     {
         Index::read(s);
         s.read((char*)&_dir,sizeof(_dir));
-        unsigned int size; s.read((char*)&size,sizeof(size));
-        vector<inqn> iq(size);
-        foreach(inqn& x,iq) x.read(s);
-        pd = new IQIndexDat(iq);
+        pd = new IQIndexDat(s);
     }
+
+    IQIndexVal operator()(int n) const;
 
     //------------------------------------------
     //IQIndex: methods for querying m's
@@ -502,6 +504,32 @@ public:
     : numref(0), rmap_init(false), itensor(other.itensor), iqindex_(other.iqindex_)
     { }
 
+    explicit IQTDat(istream& s) : numref(0) { read(s); }
+
+    void read(istream& s)
+    {
+        rmap_init = false;
+        size_t size;
+        s.read((char*) &size,sizeof(size));
+        itensor.resize(size);
+        foreach(ITensor& t, itensor) t.read(s);
+
+        s.read((char*) &size,sizeof(size));
+        iqindex_.resize(size);
+        foreach(IQIndex& I, iqindex_) I.read(s);
+    }
+
+    void write(ostream& s) const
+    {
+        size_t size = itensor.size();
+        s.write((char*) &size,sizeof(size));
+        foreach(const ITensor& t, itensor) t.write(s);
+
+        size = iqindex_.size();
+        s.write((char*) &size,sizeof(size));
+        foreach(const IQIndex& I, iqindex_) I.write(s);
+    }
+
     void init_rmap() const
     {
         if(rmap_init) return;
@@ -605,6 +633,27 @@ public:
     IQTensor(PrimeType pt,const IQTensor& other) : p(other.p), viqindex(other.viqindex)
     { doprime(pt); }
 
+    explicit IQTensor(istream& s) { read(s); }
+
+    void read(istream& s)
+    {
+        bool null_;
+        s.read((char*) &null_,sizeof(null_));
+        if(null_) { *this = IQTensor(); return; }
+        p = new IQTDat(s);
+        viqindex.read(s);
+    }
+
+    void write(ostream& s) const
+    {
+        bool null_ = is_null();
+        s.write((char*) &null_,sizeof(null_));
+        if(null_) return;
+        p->write(s);
+        viqindex.write(s);
+    }
+
+
     //----------------------------------------------------
     //IQTensor operators
 
@@ -651,13 +700,11 @@ public:
         {
             p->itensor.push_front(t);
             p->rmap.insert(pair<ApproxReal,iten_it>(r,p->itensor.begin()));
+            return;
         }
-        else
-        {
-            Print(t);
-            Error("Can't insert ITensor with identical structure twice.");
-        }
-    } //end IQTensor::insert(const ITensor& t)
+        Print(*(p->rmap[r])); Print(t);
+        Error("IQTensor:: Can't insert ITensor with identical structure twice, use operator+=.");
+    } //IQTensor::insert(const ITensor& t)
 
     IQTensor& operator+=(const ITensor& t) 
     { 
@@ -671,7 +718,7 @@ public:
         }
         else *(p->rmap[r]) += t;
         return *this;
-    } //end IQTensor::operator+=(ITensor)
+    } //IQTensor::operator+=(ITensor)
 
     Real& operator()(const IQIndexVal& iv1, const IQIndexVal& iv2 = IQIVNull, const IQIndexVal& iv3 = IQIVNull,
                      const IQIndexVal& iv4 = IQIVNull, const IQIndexVal& iv5 = IQIVNull, const IQIndexVal& iv6 = IQIVNull,

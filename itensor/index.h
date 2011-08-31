@@ -1,5 +1,7 @@
 #ifndef __INDEX_H
 #define __INDEX_H
+#include "matrix.h"
+#include <error.h> //utilities
 #include <string>
 #include <iostream>
 #include <fstream>

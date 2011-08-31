@@ -25,16 +25,16 @@ inline Real sqr(Real x) { return x*x; }
 #endif
 //----------------------------------
 
-class ApproxReal
+struct ApproxReal
 {
-public:
     Real r;
-    ApproxReal(Real _r = 0.0) : r(_r) {}
+    ApproxReal() : r(0) {}
+    ApproxReal(Real _r) : r(_r) {}
 
     friend inline bool operator==(const ApproxReal &a,const ApproxReal &b)
-    { return fabs(a.r-b.r) < 1.0e-12; }
+    { return fabs(a.r-b.r) < 1E-12; }
     friend inline bool operator<(const ApproxReal &a,const ApproxReal &b)
-    { return b.r-a.r > 1.0e-12; }
+    { return b.r-a.r > 1E-12; }
 };
 
 extern bool debug1, debug2, debug3, debug4;
