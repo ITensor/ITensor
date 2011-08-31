@@ -1171,138 +1171,6 @@ MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
 typedef Internal::MPS<ITensor> MPS;
 typedef Internal::MPS<IQTensor> IQMPS;
 
-template<class Tensor>
-Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir)
-{
-    typedef typename Tensor::IndexT IndexT;
-    typedef typename Tensor::CombinerT CombinerT;
-
-    IndexT mid = index_in_common(A,B,Link);
-    if(mid.is_null()) mid = IndexT("mid");
-
-    Tensor& to_orth = (dir==Fromleft ? A : B);
-    Tensor& newoc   = (dir==Fromleft ? B : A);
-
-    CombinerT comb;
-
-    int unique_link = 0; //number of Links unique to to_orth
-    for(int j = 1; j <= to_orth.r(); ++j) { 
-    const IndexT& I = to_orth.index(j);
-    if(!(newoc.hasindex(I) || I == Tensor::ReImIndex || I.type() == Virtual))
-    {
-        if(I.type() == Link) ++unique_link;
-        comb.addleft(I);
-    }}
-
-    //Check if we're at the edge
-    if(unique_link == 0)
-    {
-        comb.init(mid.rawname());
-        assert(comb.check_init());
-        comb.product(AA,newoc);
-        to_orth = comb; to_orth.conj();
-        Vector eigs_kept(comb.right().m()); eigs_kept = 1.0/comb.right().m();
-        return eigs_kept; 
-    }
-
-    //Apply combiner
-    comb.doCondense(true);
-    comb.init(mid.rawname());
-    Tensor AAc; comb.product(AA,AAc);
-
-    const IndexT& active = comb.right();
-
-    Tensor rho;
-    if(AAc.is_complex())
-    {
-        Tensor re,im;
-        AAc.SplitReIm(re,im);
-        rho = re; rho.conj(); rho.primeind(active);
-        rho *= re;
-        im *= conj(primeind(im,active));
-        rho += im;
-    }
-    else { Tensor AAcc = conj(AAc); AAcc.primeind(active); rho = AAc*AAcc; }
-    assert(rho.r() == 2);
-
-    Tensor U; Vector eigs_kept;
-    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept);
-
-    to_orth = U * conj(comb);
-    newoc   = conj(U) * AAc;
-
-    return eigs_kept;
-}
-
-inline bool check_QNs(const IQMPS& psi)
-{
-    const int N = psi.NN();
-    //Check Link arrows
-
-    //Get the orthogonality center (based on location of Virtual IQIndex)
-    int center = -1;
-    for(int i = 1; i <= N; ++i) 
-    {
-        if(psi.AA(i).hastype(Virtual)) { center = i; break; } 
-        //else if(i == N) { cerr << "check_QNs: couldn't find a Virtual IQIndex.\n"; return false; }
-    }
-
-    if(center > 0)
-    {
-        //Check arrows from left edge
-        for(int i = 1; i < center; ++i)
-        {
-            if(psi.RightLinkInd(i).dir() != In) 
-            {
-                cerr << "check_QNs: Right side Link not pointing In to left of orthog. center at site " << i << endl;
-                cerr << "AA(" << i << ") = " << psi.AA(i) << endl;
-                return false;
-            }
-            if(i > 1)
-            {
-                if(psi.LeftLinkInd(i).dir() != Out) 
-                {
-                    cerr << "check_QNs: Left side Link not pointing Out to left of orthog. center at site " << i << endl;
-                    return false;
-                }
-            }
-        }
-
-        //Check arrows from right edge
-        for(int i = N; i > center; --i)
-        {
-            if(i < N)
-            if(psi.RightLinkInd(i).dir() != Out) 
-            {
-                cerr << "check_QNs: Right side Link not pointing Out on right side of orthog. center at site " << i << endl;
-                return false;
-            }
-            if(psi.LeftLinkInd(i).dir() != In) 
-            {
-                cerr << "check_QNs: Left side Link not pointing In on right side of orthog. center at site " << i << endl;
-                return false;
-            }
-        }
-    }
-    //Done checking arrows
-
-    //Check IQTensors
-    for(int i = 1; i <= N; ++i)
-    {
-        if(!check_QNs(psi.AA(i)))
-        {
-            cerr << "check_QNs: IQTensor AA(" << i << ") had non-zero divergence.\n";
-            return false;
-        }
-    }
-    return true;
-}
-
-inline QN total_QN(const IQMPS& psi)
-{
-    assert(psi.AA(psi.ortho_center()).has_virtual());
-    return psi.AA(psi.ortho_center()).virtualQN();
-}
 
 class IQMPO : public IQMPS
 {
@@ -1637,6 +1505,280 @@ public:
         return res;
     }
 };
+
+inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D)
+{
+    assert(rho.r() == 2);
+    Index active = rho.index(1); active.noprime();
+
+    //Do the diagonalization
+    Index ri = rho.index(1); ri.noprime();
+    Matrix R,U; rho.toMatrix11(ri,ri.primed(),R);
+    R *= -1.0; EigenValues(R,D,U); D *= -1.0;
+
+    //Truncate
+    Real err = 0.0;
+    int mp = D.Length();
+    while(mp > maxm || (err+D(mp) < cutoff*D(1) && mp > minm)) err += D(mp--);
+    svdtruncerr = (D(1) == 0 ? 0.0 : err/D(1));
+    D.ReduceDimension(mp); lastd = D;
+    Index newmid(active.rawname(),mp,active.type());
+    nU = ITensor(active,newmid,U.Columns(1,mp));
+}
+
+inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept)
+{
+    IQIndex active = rho.finddir(Out);
+    if(active.primelevel != 0)
+    {
+        Print(rho.index(1));
+        Print(rho.index(2));
+        Print(active);
+    }
+    assert(active.primelevel == 0);
+
+    vector<Matrix> mmatrix(rho.iten_size());
+    vector<Vector> mvector(rho.iten_size());
+    vector<Real> alleig;
+
+    Real maxlogfac = -1.0e20;
+    const bool do_relative_cutoff = true;
+    if(do_relative_cutoff)
+    {
+        foreach(const ITensor& t, rho.itensors())
+        { maxlogfac = max(maxlogfac,t.logfac()); }
+    }
+    else
+	{
+        const Real lognormref = 1.3e-14;
+        maxlogfac = 2.0*lognormref;
+	}
+
+    //1. Diagonalize each ITensor within rho
+    int itenind = 0;
+    foreach(const ITensor& t, rho.itensors())
+	{
+        //assert(t.index(1).noprime_equals(t.index(2)));
+        if(!t.index(1).noprime_equals(t.index(2)))
+        { Print(rho); Print(t); Error("Non-symmetric ITensor in density matrix"); }
+
+        t.normlogto(maxlogfac); //Changes the logfac but preserves tensor
+
+        Matrix &U = mmatrix[itenind];
+        Vector &d = mvector[itenind];
+
+        //Diag ITensors within rho
+        int n = t.index(1).m();
+        Matrix M(n,n);
+        t.toMatrix11(t.index(2),t.index(1),M);
+
+        M *= -1.0;
+        EigenValues(M,d,U);
+        d *= -1.0;
+
+        for(int j = 1; j <= n; ++j) 
+        { alleig.push_back(d(j)); }
+        ++itenind;
+	}
+
+    //2. Truncate eigenvalues
+
+    //Sort all eigenvalues from smallest to largest
+    //irrespective of quantum numbers
+    sort(alleig.begin(),alleig.end());
+
+    //Truncate
+    Real e1 = max(alleig.back(),1.0e-60), docut = 0;
+    svdtruncerr = 0;
+    int m = 0, mkeep = (int)alleig.size();
+    if(mkeep > minm)
+    for(; m < (int)alleig.size(); m++, mkeep--)
+    if(((svdtruncerr += alleig[m]/e1) > cutoff && mkeep <= maxm) || mkeep <= minm)
+    { 
+        docut = (m > 0 ?  (alleig[m-1] + alleig[m]) * 0.5 : 0);
+        svdtruncerr -= alleig[m]/e1;
+        break; 
+    }
+    //cerr << "\nDiscarded " << m << " states in diag_denmat\n";
+    m = (int)alleig.size()-m;
+
+    assert(m <= maxm); 
+    assert(m < 20000);
+
+    //3. Construct orthogonalized IQTensor nU
+    vector<ITensor> terms; terms.reserve(rho.iten_size());
+    vector<inqn> iq; iq.reserve(rho.iten_size());
+    itenind = 0;
+    foreach(const ITensor& t, rho.itensors())
+	{
+        const Vector& thisD = mvector[itenind];
+        int this_m = 1;
+        for(; this_m <= thisD.Length(); ++this_m)
+        if(thisD(this_m) < docut) { break; }
+        --this_m; //since for loop overshoots by 1
+
+        if(this_m == 0) { ++itenind; continue; }
+
+        if(mkeep == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
+        { this_m = 2; mkeep = 1; docut = 1; }
+
+        Index nm("qlink",this_m);
+        Index act = t.index(1).deprimed();
+        iq.push_back(inqn(nm,active.qn(act)));
+
+        Matrix UU = mmatrix[itenind].Columns(1,this_m);
+
+        assert(act.primelevel == 0);
+        assert(active.hasindex(act));
+        assert(act.m() == UU.Nrows());
+
+        terms.push_back(ITensor(act,nm,UU));
+        ++itenind;
+	}
+    //Print(iq.size());
+    //Print(iq);
+    //cerr << "Got here\n";
+    IQIndex newmid("qlink",iq,In);
+    nU = IQTensor(active,newmid);
+    foreach(const ITensor& t, terms) nU += t;
+
+    eigs_kept.ReDimension(m);
+    for(int i = 1; i <= m; ++i) eigs_kept(i) = alleig[alleig.size()-i];
+    lastd = eigs_kept;
+} //void diag_denmat
+
+template<class Tensor>
+Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir)
+{
+    typedef typename Tensor::IndexT IndexT;
+    typedef typename Tensor::CombinerT CombinerT;
+
+    IndexT mid = index_in_common(A,B,Link);
+    if(mid.is_null()) mid = IndexT("mid");
+
+    Tensor& to_orth = (dir==Fromleft ? A : B);
+    Tensor& newoc   = (dir==Fromleft ? B : A);
+
+    CombinerT comb;
+
+    int unique_link = 0; //number of Links unique to to_orth
+    for(int j = 1; j <= to_orth.r(); ++j) { 
+    const IndexT& I = to_orth.index(j);
+    if(!(newoc.hasindex(I) || I == Tensor::ReImIndex || I.type() == Virtual))
+    {
+        if(I.type() == Link) ++unique_link;
+        comb.addleft(I);
+    }}
+
+    //Check if we're at the edge
+    if(unique_link == 0)
+    {
+        comb.init(mid.rawname());
+        assert(comb.check_init());
+        comb.product(AA,newoc);
+        to_orth = comb; to_orth.conj();
+        Vector eigs_kept(comb.right().m()); eigs_kept = 1.0/comb.right().m();
+        return eigs_kept; 
+    }
+
+    //Apply combiner
+    comb.doCondense(true);
+    comb.init(mid.rawname());
+    Tensor AAc; comb.product(AA,AAc);
+
+    const IndexT& active = comb.right();
+
+    Tensor rho;
+    if(AAc.is_complex())
+    {
+        Tensor re,im;
+        AAc.SplitReIm(re,im);
+        rho = re; rho.conj(); rho.primeind(active);
+        rho *= re;
+        im *= conj(primeind(im,active));
+        rho += im;
+    }
+    else { Tensor AAcc = conj(AAc); AAcc.primeind(active); rho = AAc*AAcc; }
+    assert(rho.r() == 2);
+
+    Tensor U; Vector eigs_kept;
+    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept);
+
+    to_orth = U * conj(comb);
+    newoc   = conj(U) * AAc;
+
+    return eigs_kept;
+}
+
+inline bool check_QNs(const IQMPS& psi)
+{
+    const int N = psi.NN();
+    //Check Link arrows
+
+    //Get the orthogonality center (based on location of Virtual IQIndex)
+    int center = -1;
+    for(int i = 1; i <= N; ++i) 
+    {
+        if(psi.AA(i).hastype(Virtual)) { center = i; break; } 
+        //else if(i == N) { cerr << "check_QNs: couldn't find a Virtual IQIndex.\n"; return false; }
+    }
+
+    if(center > 0)
+    {
+        //Check arrows from left edge
+        for(int i = 1; i < center; ++i)
+        {
+            if(psi.RightLinkInd(i).dir() != In) 
+            {
+                cerr << "check_QNs: Right side Link not pointing In to left of orthog. center at site " << i << endl;
+                cerr << "AA(" << i << ") = " << psi.AA(i) << endl;
+                return false;
+            }
+            if(i > 1)
+            {
+                if(psi.LeftLinkInd(i).dir() != Out) 
+                {
+                    cerr << "check_QNs: Left side Link not pointing Out to left of orthog. center at site " << i << endl;
+                    return false;
+                }
+            }
+        }
+
+        //Check arrows from right edge
+        for(int i = N; i > center; --i)
+        {
+            if(i < N)
+            if(psi.RightLinkInd(i).dir() != Out) 
+            {
+                cerr << "check_QNs: Right side Link not pointing Out on right side of orthog. center at site " << i << endl;
+                return false;
+            }
+            if(psi.LeftLinkInd(i).dir() != In) 
+            {
+                cerr << "check_QNs: Left side Link not pointing In on right side of orthog. center at site " << i << endl;
+                return false;
+            }
+        }
+    }
+    //Done checking arrows
+
+    //Check IQTensors
+    for(int i = 1; i <= N; ++i)
+    {
+        if(!check_QNs(psi.AA(i)))
+        {
+            cerr << "check_QNs: IQTensor AA(" << i << ") had non-zero divergence.\n";
+            return false;
+        }
+    }
+    return true;
+}
+
+inline QN total_QN(const IQMPS& psi)
+{
+    assert(psi.AA(psi.ortho_center()).has_virtual());
+    return psi.AA(psi.ortho_center()).virtualQN();
+}
 
 template <class MPSType>
 void psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)  // <psi | phi>
