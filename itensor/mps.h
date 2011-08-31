@@ -3,8 +3,8 @@
 #include "combiner.h"
 #include "iqcombiner.h"
 
-void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D);
-void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& D);
+enum Direction { Fromright, Fromleft, Both, None };
+
 Vector do_denmat_Real(const ITensor& nA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir);
 Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir);
 Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTensor& B, IQTensor& U,
@@ -15,8 +15,6 @@ void plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind, IQTensor& f
 
 template<class Tensor, class TensorSet>
 Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal);
-
-//class MPS; void psiphi(const MPS& psi, const MPS& phi, Real& re, Real& im); //Allows class MPS to call this later
 
 extern Real truncerror, svdtruncerr;
 
@@ -1506,7 +1504,7 @@ public:
     }
 };
 
-inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D)
+inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D, Real lognormref = -1)
 {
     assert(rho.r() == 2);
     Index active = rho.index(1); active.noprime();
@@ -1526,7 +1524,7 @@ inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITe
     nU = ITensor(active,newmid,U.Columns(1,mp));
 }
 
-inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept)
+inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept, Real lognormref = -1)
 {
     IQIndex active = rho.finddir(Out);
     if(active.primelevel != 0)
@@ -1648,7 +1646,7 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
 } //void diag_denmat
 
 template<class Tensor>
-Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir)
+Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir, Real lognormref = -1)
 {
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::CombinerT CombinerT;
@@ -1702,7 +1700,7 @@ Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, 
     assert(rho.r() == 2);
 
     Tensor U; Vector eigs_kept;
-    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept);
+    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept,lognormref);
 
     to_orth = U * conj(comb);
     newoc   = conj(U) * AAc;
