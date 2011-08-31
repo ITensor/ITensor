@@ -766,7 +766,8 @@ private:
         set_unique_Real();
 	}
 
-    void getperm(const ITensor& other, Permutation& P) const;
+    //void getperm(const ITensor& other, Permutation& P) const;
+    void getperm(const array<Index,NMAX+1>& other, Permutation& P) const;
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
                              array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR, 
@@ -791,7 +792,7 @@ public:
     bool is_not_null() const { return (p != 0); }
     bool is_complex() const { return findindexn(IndReIm) > 0; }
     bool is_not_complex() const { return (findindexn(IndReIm) == 0); }
-    Vector& ncdat() { assert(p != 0); solo(); return p->v; } //Can we get dat & ncdat to do the right thing automatically?
+    Vector& ncdat() { assert(p != 0); solo(); return p->v; }
     const Vector& dat() const { assert(p != 0); return p->v; }
     int Length() const { return dat().Length(); }
     Real logfac() const { return _logfac; }
@@ -1218,6 +1219,7 @@ public:
         assert(p != 0); 
         return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
     }
+    */
 
     Real& operator()(int i1 = 1,int i2 = 1,int i3 = 1,int i4 = 1,int i5 = 1,
 	    int i6 = 1,int i7 = 1, int i8 = 1) 
@@ -1226,7 +1228,6 @@ public:
         solo(); 
         return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
     }
-    */
 
     void set_dat(const Vector& newv)
 	{
@@ -1320,23 +1321,19 @@ public:
     		// Copy other into *this, without changing the order of indices in either
     		// operator= would put the order of other into *this
 
-    void toMatrix11(const Index& i1, const Index& i2, Matrix& res, Real& logfac) const; //doesn't put in logfac
-    void toMatrix11(const Index& i1, const Index& i2, Matrix& res) const; //puts in logfac
+    void toMatrix11(const Index& i1, const Index& i2, Matrix& res) const;
     void fromMatrix11(const Index& i1, const Index& i2, const Matrix& res);
 
     // group i1,i2; i3,i4
-    void toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res, Real& logfac) const; //doesn't put in logfac
-    void toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const; //puts in logfac
+    void toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const;
     void fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,const Matrix& res);
 
     // group i1,i2; i3
-    void toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matrix& res, Real& logfac) const; //doesn't put in logfac
-    void toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const; //puts in logfac
+    void toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const;
     void fromMatrix21(const Index& i1, const Index& i2, const Index& i3, const Matrix& res);
 
     // group i1; i2,i3
-    void toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matrix& res, Real& logfac) const; //doesn't put in logfac
-    void toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const; //puts in logfac
+    void toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const;
     void fromMatrix12(const Index& i1, const Index& i2, const Index& i3, const Matrix& res);
 
     int vec_size() const { return Length(); }

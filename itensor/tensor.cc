@@ -539,21 +539,13 @@ void ITensor::Reshape(const Permutation& P)
     set_dat(newdat);
 }
 
-void ITensor::getperm(const ITensor& other, Permutation& P) const
+void ITensor::getperm(const array<Index,NMAX+1>& oth_indexn, Permutation& P) const
 {
-    //if(other.rn != rn)
-    if(fabs(other.ur - ur) > 1E-12)
-	{
-        //cerr << format("this rn = %d, other rn = %d\n")%rn%other.rn;
-        this->print("this");
-        other.print("other");
-        Error("getperm: unique Real not the same"); 
-	}
     for(int j = 1; j <= rn; ++j)
 	{
         bool got_one = false;
         for(int k = 1; k <= rn; ++k)
-        if(other._indexn[j] == _indexn[k])
+        if(oth_indexn[j] == _indexn[k])
         {
             P.from_to(j,k);
             got_one = true;
@@ -563,7 +555,7 @@ void ITensor::getperm(const ITensor& other, Permutation& P) const
         {
             cerr << "j = " << j << "\n";
             cerr << "this = " << *this << "\n";
-            cerr << "other = " << other << "\n";
+            foreach(const Index& I, oth_indexn) { cerr << I << "\n"; }
             Error("getpermBtoA: no matching index");
         }
 	}
@@ -572,7 +564,12 @@ void ITensor::getperm(const ITensor& other, Permutation& P) const
 void ITensor::Assign(const ITensor& other)
 {
     if(this == &other) return;
-    Permutation P; getperm(other,P);
+    if(fabs(other.ur - ur) > 1E-12)
+	{
+        Print(*this); Print(other);
+        Error("Assign: unique Real not the same"); 
+	}
+    Permutation P; getperm(other._indexn,P);
     _logfac = other._logfac; _neg = other._neg;
     //_index1.assign(other._index1.begin(),other._index1.end());
     if(p->count() != 1) { p = new Internal::ITDat(); }
@@ -583,7 +580,7 @@ void ITensor::Assign(const ITensor& other)
 }
 
 // group i1,i2; i3,i4
-void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res, Real& lfac) const	// doesn't put in logfac
+void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
 {
     if(r() != 4) Error("toMatrix22: incorrect rank");
     assert(hasindex(i1));
@@ -593,16 +590,15 @@ void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, cons
     int nrow = i1.m() * i2.m(), ncol = i3.m() * i4.m();
     if(nrow != res.Nrows()) Error("toMatrix22: wrong number of rows");
     if(ncol != res.Ncols()) Error("toMatrix22: wrong number of cols");
-    ITensor Q(i3,i4,i1,i2);
-    Q.Assign(*this);
     res.ReDimension(nrow,ncol);
-    res.TreatAsVector() = Q.dat();
-    lfac = _logfac;
+    const array<Index,NMAX+1> reshuf = {{ IndNull, i3, i4, i1, i2, IndNull, IndNull, IndNull, IndNull }};
+    Permutation P; getperm(reshuf,P);
+    Vector V; ReshapeDat(P,V);
+    res.TreatAsVector() = V;
+    res *= (_neg ? -1 : 1)*exp(_logfac);
 }
-void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const	// puts in logfac
-{ Real lfac; toMatrix22(i1,i2,i3,i4,res,lfac); res *= exp(lfac); }
 
-void ITensor::fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,const Matrix& res)	// doesn't put in logfac
+void ITensor::fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,const Matrix& res)
 {
     if(r() != 4) Error("fromMatrix22: incorrect rank");
     assert(hasindex(i1));
@@ -616,7 +612,7 @@ void ITensor::fromMatrix22(const Index& i1, const Index& i2, const Index& i3, co
     Assign(Q);
 }
 
-void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res, Real& lfac) const	// doesn't put in logfac
+void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
 {
     if(r() != 2) Error("toMatrix11: incorrect rank");
     assert(hasindex(i1));
@@ -626,16 +622,15 @@ void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res, Real& lf
     { res.TreatAsVector() = dat(); } 
     else
 	{
-        ITensor Q(i2,i1);
-        Q.Assign(*this);
-        res.TreatAsVector() = Q.dat();
+        const array<Index,NMAX+1> reshuf = {{ IndNull, i2, i1, IndNull, IndNull, IndNull, IndNull, IndNull, IndNull }};
+        Permutation P; getperm(reshuf,P);
+        Vector V; ReshapeDat(P,V);
+        res.TreatAsVector() = V;
 	}
-    lfac = _logfac;
+    res *= (_neg ? -1 : 1)*exp(_logfac);
 }
-void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const	// puts in logfac
-{ Real lfac; toMatrix11(i1,i2,res,lfac); res *= exp(lfac); }
 
-void ITensor::fromMatrix11(const Index& i1, const Index& i2, const Matrix& res)	// doesn't put in logfac
+void ITensor::fromMatrix11(const Index& i1, const Index& i2, const Matrix& res)
 {
     if(r() != 2) Error("fromMatrix11: incorrect rank");
     assert(hasindex(i1));
@@ -652,34 +647,32 @@ void ITensor::fromMatrix11(const Index& i1, const Index& i2, const Matrix& res)	
 	}
 }
 
-void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matrix& res, Real& lfac) const // doesn't put in logfac
+void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const
 {
     if(r() != 3) Error("toMatrix21: incorrect rank");
     assert(hasindex(i1));
     assert(hasindex(i2));
-    ITensor Q(i3,i1,i2);
-    Q.Assign(*this);
     res.ReDimension(i1.m()*i2.m(),i3.m());
-    res.TreatAsVector() = Q.dat();
-    lfac = _logfac;
+    const array<Index,NMAX+1> reshuf = {{ IndNull, i3, i1, i2, IndNull, IndNull, IndNull, IndNull, IndNull }};
+    Permutation P; getperm(reshuf,P);
+    Vector V; ReshapeDat(P,V);
+    res.TreatAsVector() = V;
+    res *= (_neg ? -1 : 1)*exp(_logfac);
 }
-void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const	// puts in logfac
-{ Real lfac; toMatrix21(i1,i2,i3,res,lfac); res *= exp(lfac); }
 
-void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matrix& res, Real& lfac) const	// doesn't put in logfac
+void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const
 {
     if(r() != 3) Error("toMatrix12: incorrect rank");
     assert(hasindex(i1));
     assert(hasindex(i2));
     assert(hasindex(i3));
-    ITensor Q(i2,i3,i1);
-    Q.Assign(*this);
     res.ReDimension(i1.m(),i2.m()*i3.m());
-    res.TreatAsVector() = Q.dat();
-    lfac = _logfac;
+    const array<Index,NMAX+1> reshuf = {{ IndNull, i2, i3, i1, IndNull, IndNull, IndNull, IndNull, IndNull }};
+    Permutation P; getperm(reshuf,P);
+    Vector V; ReshapeDat(P,V);
+    res.TreatAsVector() = V;
+    res *= (_neg ? -1 : 1)*exp(_logfac);
 }
-void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const	// puts in logfac
-{ Real lfac; toMatrix12(i1,i2,i3,res,lfac); res *= exp(lfac); }
 
 void ITensor::fromMatrix21(const Index& i1, const Index& i2, const Index& i3, const Matrix& res)
 {
@@ -782,7 +775,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
         return *this;
     }
 
-    Permutation P; getperm(other,P);
+    Permutation P; getperm(other._indexn,P);
     int *j[NMAX+1];
     Counter c(other);
     for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
