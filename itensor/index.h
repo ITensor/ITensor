@@ -116,7 +116,6 @@ inline int prime_number(int n)
     return plist.at(n);
 }
 }
-
 //Storage for Index's
 class IndexDat
 {
