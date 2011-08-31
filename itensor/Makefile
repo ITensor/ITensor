@@ -8,11 +8,11 @@ include ../options.mk
 
 ####################################
 
-HEADERS=types.h permutation.h index.h tensor.h combiner.h iq.h iqcombiner.h model.h mps.h mpo.h algorithm.h hams.h
+HEADERS=types.h permutation.h index.h tensor.h combiner.h iq.h iqcombiner.h model.h mps.h mpo.h hams.h dmrg.h 
 
-OBJECTS=tensor.o mps.o algorithm.o iq.o
+OBJECTS=tensor.o mps.o iq.o
 
-SOURCES=tensor.cc mps.cc algorithm.cc iq.cc
+SOURCES=tensor.cc mps.cc iq.cc
 
 ####################################
 

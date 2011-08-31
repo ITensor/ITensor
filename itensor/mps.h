@@ -1145,6 +1145,36 @@ Real psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
     return re;
 }
 
+//Computes an MPS which has the same overlap with psi_basis as psi_to_fit,
+//but which differs from psi_basis only on the first site, and has same index
+//structure as psi_basis. Result is stored to psi_to_fit on return.
+inline void fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
+{
+    if(!psi_basis.is_ortho()) Error("fitWF: psi_basis must be orthogonolized.");
+    if(psi_basis.ortho_center() != 1) Error("fitWF: psi_basis must be orthogonolized to site 1.");
+    psi_to_fit.position(1);
+
+    const IQMPS& psib = psi_basis;
+    IQMPS& psif = psi_to_fit;
+    IQMPS res = psib;
+
+    int N = psib.NN();
+    if(psif.NN() != N) Error("fitWF: sizes of wavefunctions must match.");
+
+    IQTensor A = psif.AA(N) * conj(psib.AA(N));
+    for(int n = N-1; n > 1; --n)
+    {
+        A = conj(psib.AA(n)) * A;
+        A = psif.AA(n) * A;
+    }
+    A = psif.AA(1) * A;
+
+    res.AAnc(1) = A;
+
+    assert(check_QNs(res));
+
+    psi_to_fit = res;
+}
 
 //Template method for efficiently summing a set of MPS's or MPO's (or any class supporting operator+=)
 template <typename MPSType>

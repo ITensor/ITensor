@@ -1032,6 +1032,18 @@ inline ITensor operator*(const IndexVal& iv1, const IndexVal& iv2) { ITensor t(i
 inline ITensor operator*(const IndexVal& iv1, Real fac) { return ITensor(iv1,fac); }
 inline ITensor operator*(Real fac, const IndexVal& iv) { return ITensor(iv,fac); }
 
+// Given Tensors which represent operators (e.g. A(site-1',site-1), B(site-1',site-1), 
+// Multiply them, fixing primes C(site-1',site-1)
+template<class Tensor>
+inline Tensor multSiteOps(Tensor a, Tensor b) // a * b  (a above b in diagram, unprimed = right index of matrix)
+{
+    a.mapprime(1,2,primeSite);
+    a.mapprime(0,1,primeSite);
+    Tensor res = a * b;
+    res.mapprime(2,1,primeSite);
+    return res;
+}
+
 class Counter
 {
 private:
