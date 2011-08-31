@@ -1,6 +1,8 @@
 #ifndef __TENSOR_H
 #define __TENSOR_H
 #include "matrix.h"
+#include "permutation.h"
+#include "index.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -14,11 +16,7 @@
 #include "boost/foreach.hpp"
 #include "boost/format.hpp"
 #include "boost/intrusive_ptr.hpp"
-//#include <tr1/array>
 #include "boost/array.hpp"
-#include "boost/uuid/uuid.hpp"
-#include "boost/uuid/random_generator.hpp"
-#include "boost/uuid/string_generator.hpp"
 #include "boost/static_assert.hpp"
 //#include "boost/phoenix/core.hpp"
 //#include "boost/phoenix/operator.hpp"
@@ -31,22 +29,16 @@ using std::ofstream;
 using std::ifstream;
 using std::string;
 using std::stringstream;
-using std::ostringstream;
 using std::setprecision;
 using std::pair;
 using std::make_pair;
 using std::map;
 using std::vector;
 using std::list;
-using boost::noncopyable;
-using boost::intrusive_ptr;
 using boost::format;
-//using std::tr1::array;
 using boost::array;
+using boost::intrusive_ptr;
 using namespace std::rel_ops;
-using boost::uuids::uuid;
-using boost::uuids::random_generator;
-using boost::uuids::string_generator;
 //using boost::phoenix::arg_names::arg1;
 //using boost::phoenix::arg_names::arg2;
 //using boost::phoenix::arg_names::arg3;
@@ -59,23 +51,11 @@ using boost::uuids::string_generator;
 //using boost::phoenix::arg_names::arg10;
 //using boost::phoenix::ref;
 
-static const Real MAX_CUT = 1E-15;
-static const int MAX_M = 5000;
-
 Real ran1();
 
 //#define COUNT_COPIES
 //#define COLLECT_PRODSTATS
 
-//----------------------------------
-//For bounds checking - can remove once implementation is tested
-//#define ITENSOR_USE_AT
-
-#ifdef  ITENSOR_USE_AT
-#define GET(container,j) (container.at(j))
-#else
-#define GET(container,j) (container[j])
-#endif
 
 //----------------------------------
 
@@ -105,20 +85,9 @@ friend inline void intrusive_ptr_release(ClassName* p) { if(--(p->numref) == 0){
 int count() const { return numref; }
 //---------------------------------------
 
-const Real Pi = M_PI;
-const Real Sqrt2 = sqrt(2);
-const Real ISqrt2 = 1.0/sqrt(2);
-const Real Sqrt3 = sqrt(3);
-const Real ISqrt3 = 1.0/sqrt(3);
-
-inline Real sqr(Real x) { return x*x; }
-
-#define NMAX 8
-
 extern bool printdat;
 extern Vector lastd;
 struct DMRGOpts; extern const DMRGOpts DefaultDMRGOpts;
-extern bool catch_debug;
 #ifdef COUNT_COPIES
 extern int copycount;
 #endif
@@ -126,24 +95,10 @@ extern int copycount;
 class Prodstats; extern Prodstats prodstats;
 #endif
 
-enum Direction { Fromright, Fromleft, Both, None };
-
 enum Printdat { ShowData, HideData };
 
 #define Print(X) { printdat = false; cerr << "\n" << #X << " =\n" << X << "\n\n"; }
 #define PrintDat(X) { printdat = true; cerr << "\n" << #X << " =\n" << X << "\n\n"; printdat = false; }
-
-//Enum defining directions for arrows
-enum Arrow { In = -1, Out = 1 };
-
-inline Arrow operator*(const Arrow& a, const Arrow& b)
-{ return (int(a)*int(b) == In) ? In : Out; }
-
-const Arrow Switch = In*Out;
-
-inline ostream& operator<<(ostream& s, const Arrow& D)
-{ if(D == In) s << "In"; else s << "Out"; return s; }
-
 
 template<class T, class Op> void for_all(T& a, Op f) { for_each(a.begin(),a.end(),f); }
 
@@ -189,420 +144,9 @@ template<class T> T& operator*=(T& t1, const T* pt2)
 template<class T> T operator*(const T& t1, const T* pt2) 
 { T res(t1); res *= *(pt2); return res; }
 
-
-class ApproxReal
-{
-public:
-    Real r;
-    ApproxReal(Real _r = 0.0) : r(_r) {}
-
-    friend inline bool operator==(const ApproxReal &a,const ApproxReal &b)
-    { return fabs(a.r-b.r) < 1.0e-12; }
-    friend inline bool operator<(const ApproxReal &a,const ApproxReal &b)
-    { return b.r-a.r > 1.0e-12; }
-};
-
-
-enum IndexType { Link, Site, ReIm, Virtual };
-static const char * indextypename[] = { "Link","Site","ReIm","Virtual" };
-enum PrimeType { primeLink, primeSite, primeBoth, primeNone };
-
-inline ostream& operator<<(ostream& s, const IndexType& it)
-{ 
-    if(it == Link) s << "Link"; 
-    else if(it == Site) s << "Site"; 
-    else if(it == ReIm) s << "ReIm"; 
-    else if(it == Virtual) s << "Virtual"; 
-    return s; 
-}
-
-inline int IndexTypeToInt(IndexType it)
-{
-    if(it == Link) return 1;
-    if(it == Site) return 2;
-    if(it == ReIm) return 3;
-    if(it == Virtual) return 4;
-    Error("No integer value defined for IndexType.");
-    return -1;
-}
-inline IndexType IntToIndexType(int i)
-{
-    if(i == 1) return Link;
-    if(i == 2) return Site;
-    if(i == 3) return ReIm;
-    if(i == 4) return Virtual;
-    cerr << format("No IndexType value defined for i=%d\n")%i,Error("");
-    return Virtual;
-}
-
-inline string putprimes(string s, int plev = 0)
-{ for(int i = 1; i <= plev; ++i) s += "\'"; return s;}
-
-inline string nameindex(IndexType it, int plev = 0)
-{ return putprimes(string(indextypename[(int)it]),plev); }
-
-inline string nameint(string f,int ix)
-{ stringstream ss; ss << f << ix; return ss.str(); }
-
-enum Imaker {makeReIm,makeReImP,makeReImPP,makeEmptyV,makeNull};
-
-#define UID_NUM_PRINT 2
-inline ostream& operator<<(ostream& s, const uuid& id)
-{ 
-    s.width(2);
-    for(uuid::size_type i = id.size()-UID_NUM_PRINT; i < id.size(); ++i) 
-    {
-        s << static_cast<unsigned int>(id.data[i]);
-    }
-    s.width(0);
-    return s; 
-}
-
-struct UniqueID
-{
-    uuid id;
-
-    UniqueID() : id(random_generator()()) { }
-
-    UniqueID& operator++()
-    {
-        int i = id.size(); 
-        while(--i >= 0)
-        { 
-            if(++id.data[i] == 0) continue; 
-            break;
-        }
-        return *this;
-    }
-
-    operator uuid() const { return id; }
-
-    friend inline ostream& operator<<(ostream& s, const UniqueID& uid) { s << uid.id; return s; }
-};
-
-inline int prime_number(int n)
-{
-    static const array<int,54> plist = { { 
-    2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 
-    37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 
-    79, 83, 89, 97, 101, 103, 107, 109, 113, 
-    127, 131, 137, 139, 149, 151, 157, 163, 
-    167, 173, 179, 181, 191, 193, 197, 199, 
-    211, 223, 227, 229, 233, 239, 241, 251 
-    } };
-    return plist.at(n);
-}
-
-
-namespace Internal {
-
-//Storage for Index's
-class IndexDat : public noncopyable
-{
-    mutable unsigned int numref;
-    const bool is_static_;
-public:
-    //static int indcount; //Global ID for IndexDats
-    static UniqueID lastID;
-
-    IndexType _type;
-    //const int ind; 
-    uuid ind;
-    const int m_;
-    Real ur;
-    string sname;
-
-    void set_unique_Real()
-	{
-        //ur = sin(ind * sqrt(1.0/7.0) + ((int)_type - (int)Site) * sqrt(1.0 / 13.0));
-        Real arg = 0;
-        int pn = 1;
-        for(int i = int(ind.size()); i >= 0; --i)
-        { arg += ind.data[i]*sqrt(1.0/(prime_number(++pn)*1.0)); }
-        arg *= sqrt(1.0/(prime_number(++pn)*1.0));
-        arg += ((int)_type - (int)Site) * sqrt(1.0/(prime_number(++pn)*1.0));
-        ur = sin(arg);
-        //cerr << format("Set a unique real of %.25f, hash_value(ind) = %d\n")%ur%hash_value(ind);
-	}
-
-    IndexDat(string name="", int mm = 1,IndexType it=Link) :
-    numref(0), is_static_(false),
-    _type(it), 
-    //ind(++indcount), 
-    ind(++lastID),
-    m_(mm), 
-    sname(name)
-	{ 
-        if(it == ReIm) Error("bad call to create IndexDat with type ReIm");
-        assert((it==Virtual ? (mm==1) : true)); //If type is Virtual, m must be 1
-        set_unique_Real();
-	}
-
-    //For use with read/write functionality of Index class
-    IndexDat(string ss, int mm, IndexType it, uuid ind_) :
-    numref(0), is_static_(false), _type(it), ind(ind_), m_(mm), sname(ss)
-	{ 
-        if(it == ReIm) Error("bad call to create IndexDat with type ReIm");
-        assert((it==Virtual ? (mm==1) : true)); //If type is Virtual, m must be 1
-        set_unique_Real();
-	}
-
-    //Don't actually use random uuid generator for these static IndexDats
-    IndexDat(Imaker im) : 
-    numref(1000000000), is_static_(true),
-    _type(ReIm), 
-    //ind((im==makeNull || im==makeEmptyV) ? 0 : 1), 
-    m_( (im==makeNull || im==makeEmptyV) ? 1 : 2)
-	{ 
-        string_generator gen;
-        if(im==makeNull || im==makeEmptyV) 
-        { ind = gen("{00000000-0000-0000-0000-000000000000}"); }
-        else                               
-        { ind = gen("{10000000-0000-0000-0000-000000000000}"); }
-
-        if(im == makeNull)
-        {
-            _type = Site;
-            ur = 0.0;
-            return;
-        }
-        else if(im == makeReIm) sname = "ReIm";
-        else if(im == makeReImP) sname = "ReImP";
-        else if(im == makeReImPP) sname = "ReImPP";
-        else if(im == makeEmptyV) 
-        {
-            _type = Virtual;
-            sname = "EmptyVirtual";
-        }
-        set_unique_Real(); 
-	}
-
-    friend inline void intrusive_ptr_add_ref(IndexDat* p) { ++(p->numref); }
-    friend inline void intrusive_ptr_release(IndexDat* p) { if(!p->is_static_ && --(p->numref) == 0){ delete p; } }
-    int count() const { return numref; }
-};
-} // namespace Internal
-
-extern Internal::IndexDat IndexDatNull, IndReDat, IndReDatP, IndReDatPP, IndEmptyVDat;
-
-struct IndexVal;
-
-class Index
-{
-protected:
-    intrusive_ptr<Internal::IndexDat> p;
-public:
-    int primelevel; 
-
-    int m() const { return p->m_; }
-    inline string showm() const { return (format("m=%d")%(p->m_)).str(); }
-    boost::uuids::uuid Ind() const { return p->ind; }
-    IndexType type() const { return p->_type; }
-    void settype(IndexType t) { p->_type = t; }
-    string rawname() const { return p->sname; }
-    Real unique_Real() const { assert(p!=0); return p->ur*(1+primelevel); }
-    string name() const  { return putprimes(rawname(),primelevel); }
-    void setname(string newname) { p->sname = newname; }
-    inline bool is_null() const { return (p == &IndexDatNull); }
-    inline bool is_not_null() const { return (p != &IndexDatNull); }
-    int count() const { return p->count(); }
-    void setPrimeLevel(int plev) { primelevel = plev; }
-
-    //-----------------------------------------------
-    //Index: Constructors
-
-    Index() : p(&IndexDatNull), primelevel(0) { }
-
-    Index(string name, int mm = 1, IndexType it=Link, int plev = 0) 
-	: p(new Internal::IndexDat(name,mm,it)), primelevel(plev) { }
-
-    Index(istream& s) { read(s); }
-
-    Index(Imaker im)
-	{
-        if(im == makeNull)
-            p = &IndexDatNull, primelevel = 0;
-        else if(im == makeReIm)
-            p = &IndReDat, primelevel = 0;
-        else if(im == makeReImP)
-            p = &IndReDatP,  primelevel = 1;
-        else if(im == makeReImPP)
-            p = &IndReDatPP,  primelevel = 2;
-        else if(im == makeEmptyV)
-            p = &IndEmptyVDat, primelevel = 0;
-        else Error("Unrecognized Imaker type.");
-	}
-
-    Index(PrimeType pt,const Index& other, int primeinc = 1) 
-	: p(other.p), primelevel(other.primelevel)
-	{
-        primelevel = other.primelevel;
-        for(int i = 1; i <= primeinc; ++i) doprime(pt);
-	}
-
-    //-----------------------------------------------
-    //Index: Operators
-
-    // rel_ops defines the other comparisons based on == and <
-    bool operator==(const Index& other) const 
-	{ return (p == other.p && primelevel == other.primelevel); }
-
-    bool operator<(const Index& other) const 
-	{ return (unique_Real() < other.unique_Real()); }
-
-    IndexVal operator()(int i) const;
-
-    bool noprime_equals(const Index& other) const
-	{ return (p == other.p); }
-
-    //-----------------------------------------------
-    //Index: Prime methods
-
-    void mapprime(int plevold, int plevnew, PrimeType pr = primeBoth)
-	{
-        if(type() == ReIm) return;
-        if(primelevel != plevold) return;
-        else if( (pr == primeBoth && type() != Virtual)
-        || (type() == Site && pr == primeSite) 
-        || (type() == Link && pr == primeLink) )
-        {
-            primelevel = plevnew;
-        }
-	}
-    void doprime(PrimeType pr, int inc = 1)
-	{
-        if(type() == ReIm) return;
-        if( (pr == primeBoth && type() != Virtual)
-        || (type() == Site && pr == primeSite) 
-        || (type() == Link && pr == primeLink) )
-        {
-            primelevel += inc;
-        }
-	}
-    Index primed(int inc = 1) const { return Index(primeBoth,*this,inc); }
-
-    Index deprimed() const { Index cp(*this); cp.primelevel = 0; return cp; }
-
-    void noprime(PrimeType p = primeBoth) { doprime(p,-primelevel); }
-
-    friend inline ostream & operator<<(ostream & s, const Index & t)
-    {
-        if(t.name() != "" && t.name() != " ") s << t.name() << "/";
-        return s << nameindex(t.type(),t.primelevel) << "-" << t.Ind() << ":" << t.m();
-    }
-
-    //-----------------------------------------------
-    //Index: Other methods
-
-    void write(ostream& s) const 
-    { 
-        if(is_null()) Error("Index::write: Index is null");
-        s.write((char*) &primelevel,sizeof(primelevel));
-        const int t = IndexTypeToInt(p->_type);
-        s.write((char*) &t,sizeof(t));
-        //s.write((char*) &(p->ind),sizeof(p->ind));
-        for(int i = 0; i < int(p->ind.size()); ++i) 
-        { const char c = p->ind.data[i] - '0'; s.write(&c,sizeof(c)); }
-        s.write((char*) &(p->m_),sizeof(p->m_));
-        const int nlength = p->sname.length();
-        s.write((char*) &nlength,sizeof(nlength));
-        s.write(p->sname.data(),nlength+1);
-    }
-
-    void read(istream& s)
-    {
-        s.read((char*) &primelevel,sizeof(primelevel));
-        int t; s.read((char*) &t,sizeof(t));
-        //int ind; s.read((char*) &ind,sizeof(ind));
-        boost::uuids::uuid ind;
-        for(int i = 0; i < int(ind.size()); ++i) 
-        { char c; s.read(&c,sizeof(c)); ind.data[i] = '0'+c; }
-        int mm; s.read((char*) &mm,sizeof(mm));
-        int nlength; s.read((char*) &nlength,sizeof(nlength));
-        char* newname = new char[nlength+1]; s.read(newname,nlength+1);
-        string ss(newname); delete newname;
-        p = new Internal::IndexDat(ss,mm,IntToIndexType(t),ind);
-    }
-
-    void print(string name = "") const
-    { cerr << "\n" << name << " =\n" << *this << "\n"; }
-
-    void conj() { } //for forward compatibility with arrows
-
-}; //class Index
-extern Index IndNull, IndReIm, IndReImP, IndReImPP, IndEmptyV;
-
-template <class T> 
-T conj(T res) { res.conj(); return res; }
-
-class ITensor;
-
-struct IndexVal
-{
-    Index ind; 
-    int i;
-    IndexVal() : ind(IndNull),i(0) { }
-    IndexVal(const Index& index, int i_) : ind(index),i(i_) { assert(i <= ind.m()); }
-    inline friend ostream& operator<<(ostream& s, const IndexVal& iv)
-    { return s << "IndexVal: i = " << iv.i << ", ind = " << iv.ind << "\n"; }
-    ITensor operator*(const IndexVal& oth) const;
-    ITensor operator*(Real fac) const;
-    friend inline ITensor operator*(Real fac, const IndexVal& iv);
-    IndexVal primed() const { return IndexVal(ind.primed(),i); }
-};
-extern IndexVal IVNull;
-
-class Permutation // Tell where each index will go, p(2,1,3) says 1 -> 2, 2 -> 1, 3 -> 3
-{
-public:
-    typedef array<int,NMAX+1> int9;
-private:
-    void set8(int9 *n, int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8)
-    {
-        (*n)[1] = i1; (*n)[2] = i2; (*n)[3] = i3; (*n)[4] = i4;
-        (*n)[5] = i5; (*n)[6] = i6; (*n)[7] = i7; (*n)[8] = i8;
-    }
-    int9 ind_;
-    bool trivial;
-public:
-    const int9& ind() const { return ind_; }
-    bool is_trivial() const { return trivial; }
-
-    Permutation() : trivial(true) { set8(&ind_,1,2,3,4,5,6,7,8); }
-    Permutation(int i1, int i2 = 2, int i3 = 3, int i4 = 4, int i5 = 5, int i6 = 6,
-	    int i7 = 7,  int i8 = 8)
-    : trivial(i1==1 && i2==2 && i3==3 && i4==4 && i5==5 && i6==6 && i7==7 && i8==8)
-	{ set8(&ind_,i1,i2,i3,i4,i5,i6,i7,i8); }
-
-    void from_to(int j, int k) { if(j!=k) { trivial = false; } GET(ind_,j) = k; }
-    inline int dest(int j) const { return GET(ind_,j); }
-
-    void check(int d)
-	{
-        for(int i = 1; i <= d; i++)
-        if(ind_[i] > d || ind_[i] < 1) Error("bad Permutation level 1");
-
-        for(int i = 1; i <= d; i++)
-        for(int j = 1; j <= d; j++)
-        if(ind_[i] == ind_[j] && i != j) Error("bad Permutation level 2");
-	}
-
-    friend inline ostream& operator<<(ostream& s, const Permutation& p)
-    {
-        for(int i = 1; i <= NMAX; i++) s << format("(%d,%d) ") % i % p.ind_[i];
-        return s;
-    }
-};
-
-inline Permutation inverse(const Permutation& P)
-{
-    Permutation inv;
-    for(int n = 1; n <= NMAX; ++n) inv.from_to(P.dest(n),n);
-    return inv;
-}
-
-
 enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
+
+class Permutation;
 
 namespace Internal {
 
@@ -678,8 +222,14 @@ private:
 class ITensor; extern ITensor Complex_1, Complex_i, ConjTensor;
 class Combiner;
 
-class ITensor //Index Tensor
+class ITensor
 {
+public:
+    typedef Index IndexT;
+    typedef IndexVal IndexValT;
+    typedef Combiner CombinerT;
+    typedef array<Index,NMAX+1>::const_iterator indexn_it;
+    static const Index& ReImIndex;
 private:
     mutable intrusive_ptr<Internal::ITDat> p; //mutable: const methods may want to reshape data
     int rn;
@@ -711,7 +261,7 @@ private:
             IF_COUNT_COPIES(++copycount;)
         }
 	}
-    inline void dosign() const
+    void dosign() const
     {
         solo();
         if(_neg) 
@@ -766,17 +316,12 @@ private:
         set_unique_Real();
 	}
 
-    //void getperm(const ITensor& other, Permutation& P) const;
     void getperm(const array<Index,NMAX+1>& other, Permutation& P) const;
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
                              array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR, 
                              MatrixRefNoLink& lref, MatrixRefNoLink& rref);
 public:
-    typedef Index IndexT;
-    typedef IndexVal IndexValT;
-    typedef Combiner CombinerT;
-    static const Index& ReImIndex;
 
     //Accessor Methods ----------------------------------------------
 
@@ -801,7 +346,6 @@ public:
 
     //These methods can be used for const iteration over Indices in a foreach loop
     //e.g. foreach(const Index& I, t.indexn() ) { ... }
-    typedef array<Index,NMAX+1>::const_iterator indexn_it;
     const pair<indexn_it,indexn_it> indexn() const { return make_pair(_indexn.begin()+1,_indexn.begin()+rn+1); }
     const vector<Index>&            index1() const { return _index1; }
 
@@ -1211,24 +755,6 @@ public:
 
     //Element Access Methods ----------------------------------------
 
-    //Doesn't put in logfac or sign (i.e. _neg)
-    /*
-    Real operator()(int i1 = 1,int i2 = 1,int i3 = 1,int i4 = 1,int i5 = 1,
-	    int i6 = 1,int i7 = 1, int i8 = 1) const
-	{ 
-        assert(p != 0); 
-        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
-    }
-    */
-
-    Real& operator()(int i1 = 1,int i2 = 1,int i3 = 1,int i4 = 1,int i5 = 1,
-	    int i6 = 1,int i7 = 1, int i8 = 1) 
-	{ 
-        assert(p != 0); 
-        solo(); 
-        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
-    }
-
     void set_dat(const Vector& newv)
 	{
         assert(p != 0);
@@ -1246,36 +772,7 @@ public:
         }
 	}
 
-    Real val8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) const
-	{ 
-        assert(p != 0); 
-        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
-    }
-
-    Real& ncval8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) 
-	{ 
-        assert(p != 0); 
-        solo(); 
-        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
-    }
-
-    /*
-    Real& val7(int i1,int i2,int i3,int i4,int i5,int i6,int i7)
-	{ assert(rn==7); assert(p != 0); solo(); return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
-
-    Real& val6(int i1,int i2,int i3,int i4,int i5,int i6)
-	{ assert(rn==6); assert(p != 0); solo(); return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
-
-    Real& val5(int i1,int i2,int i3,int i4,int i5)
-	{ assert(rn==5); assert(p != 0); solo(); return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
-
-    Real& val4(int i1,int i2,int i3,int i4)
-	{ assert(rn==4); assert(p != 0); solo(); return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
-
-    Real& val3(int i1,int i2,int i3)
-	{ assert(rn==3); assert(p != 0); solo(); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1); }
-    */
-
+    //Doesn't put in logfac or sign (i.e. _neg)
     Real& val0() const 
 	{ assert(p != 0); return p->v(1); }
     Real& ncval0()
@@ -1290,6 +787,36 @@ public:
 	{ assert(p != 0); return p->v((i2-1)*m(1)+i1); }
     Real& ncval2(int i1,int i2)
 	{ assert(p != 0); solo(); return p->v((i2-1)*m(1)+i1); }
+
+    Real val8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) const
+	{ 
+        assert(p != 0); 
+        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
+    }
+    Real& ncval8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) 
+	{ 
+        assert(p != 0); 
+        solo(); 
+        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
+    }
+
+    /*
+    Real val7(int i1,int i2,int i3,int i4,int i5,int i6,int i7) const
+	{ assert(p != 0); solo(); return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+
+    Real val6(int i1,int i2,int i3,int i4,int i5,int i6) const
+	{ assert(p != 0); solo(); return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+
+    Real val5(int i1,int i2,int i3,int i4,int i5) const
+	{ assert(p != 0); solo(); return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+
+    Real val4(int i1,int i2,int i3,int i4) const
+	{ assert(p != 0); solo(); return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+
+    Real val3(int i1,int i2,int i3) const
+	{ assert(p != 0); solo(); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1); }
+    */
+
 
     Real& operator()(const IndexVal& iv1, const IndexVal& iv2 = IVNull, const IndexVal& iv3 = IVNull,
                      const IndexVal& iv4 = IVNull, const IndexVal& iv5 = IVNull, const IndexVal& iv6 = IVNull,
@@ -1390,7 +917,6 @@ public:
 
     void SplitReIm(ITensor& re, ITensor& im) const;
     inline void conj() { if(!is_complex()) return; operator/=(ConjTensor); }
-    //friend inline ITensor conj(ITensor A) { A.conj(); return A; }
 
     inline bool is_zero() const { return (norm() < 1E-20); } 
 
@@ -1501,6 +1027,10 @@ inline void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, bool doc
 }
 
 Index index_in_common(const ITensor& A, const ITensor& B, IndexType t);
+
+inline ITensor operator*(const IndexVal& iv1, const IndexVal& iv2) { ITensor t(iv1); return (t *= iv2); }
+inline ITensor operator*(const IndexVal& iv1, Real fac) { return ITensor(iv1,fac); }
+inline ITensor operator*(Real fac, const IndexVal& iv) { return ITensor(iv,fac); }
 
 class Counter
 {
@@ -1981,29 +1511,15 @@ inline void writedata(const format fmt, const Matrix& dat, bool do_plot_self=fal
 void reportnew() {}
 Real ran1(int);
 
-//int Internal::IndexDat::indcount = 0;
-UniqueID Internal::IndexDat::lastID; 
 bool printdat = false;
 bool writeops = false;
 ofstream big_op_file;
-Internal::IndexDat IndexDatNull(makeNull);
-Internal::IndexDat IndReDat(makeReIm);
-Internal::IndexDat IndReDatP(makeReImP);
-Internal::IndexDat IndReDatPP(makeReImPP);
-Internal::IndexDat IndEmptyVDat(makeEmptyV);
-Index IndNull(makeNull);
-Index IndReIm(makeReIm);
-Index IndReImP(makeReImP);
-Index IndReImPP(makeReImPP);
-Index IndEmptyV(makeEmptyV);
-IndexVal IVNull(IndNull,1);
 ITensor Complex_1(makeComplex_1), Complex_i(makeComplex_i), ConjTensor(makeConjTensor);
 const Index& ITensor::ReImIndex = IndReIm;
 Vector lastd(1);
 int newtotalsize = 0;
 
 //Debugging and profiling stuff:
-bool catch_debug = false;
 #ifdef COLLECT_PRODSTATS
 Prodstats prodstats;
 #endif

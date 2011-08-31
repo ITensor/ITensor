@@ -2,8 +2,6 @@
 #define __IQ_H
 #include "tensor.h"
 #include <set>
-using std::multimap;
-using std::set;
 
 /*
 * Conventions regarding arrows:
@@ -197,12 +195,10 @@ public:
     explicit IQIndexDat(const IQIndexDat& other) : numref(0), iq_(other.iq_)
     { }
 
-    friend inline void intrusive_ptr_add_ref(IQIndexDat* p) { ++(p->numref); }
-    friend inline void intrusive_ptr_release(IQIndexDat* p) { if(--(p->numref) == 0){ delete p; } }
-    inline int count() const { return numref; }
+    ENABLE_INTRUSIVE_PTR(IQIndexDat)
 private:
-    void operator=(const IQIndexDat&);
     ~IQIndexDat() { } //must be dynamically allocated
+    void operator=(const IQIndexDat&);
 };
 
 struct IQIndexVal;
@@ -222,9 +218,9 @@ class IQIndex : public Index
         }
     }
 public:
-    const vector<inqn>& iq() const { assert(p != 0); return pd->iq_; }
-    const Index& index(int i) const { assert(p != 0); return GET(pd->iq_,i-1).index; }
-    const QN& qn(int i) const { assert(p != 0); return GET(pd->iq_,i-1).qn; }
+    const vector<inqn>& iq() const { assert(pd != 0); return pd->iq_; }
+    const Index& index(int i) const { assert(pd != 0); return GET(pd->iq_,i-1).index; }
+    const QN& qn(int i) const { assert(pd != 0); return GET(pd->iq_,i-1).qn; }
 
     //------------------------------------------
     //IQIndex: Constructors
@@ -280,8 +276,11 @@ public:
     : Index(name,0,ind_qn.back().index.type(),plev), _dir(dir),
     pd(new IQIndexDat(ind_qn))
     { 
-        int* pm = const_cast<int*>(&(p->m_));
-        foreach(const inqn& x, pd->iq_) *pm += x.index.m();
+        //int* pm = const_cast<int*>(&(p->m_));
+        //foreach(const inqn& x, pd->iq_) *pm += x.index.m();
+        int mm = 0;
+        foreach(const inqn& x, pd->iq_) mm += x.index.m();
+        set_m(mm);
         setPrimeLevel(pd->iq_.back().index.primelevel);
     }
 
@@ -289,8 +288,11 @@ public:
     : Index(other.name(),0,other.type()), _dir(other._dir),
     pd(new IQIndexDat(ind_qn))
     { 
-        int* pm = const_cast<int*>(&(p->m_));
-        foreach(const inqn& x, pd->iq_) *pm += x.index.m();
+        //int* pm = const_cast<int*>(&(p->m_));
+        //foreach(const inqn& x, pd->iq_) *pm += x.index.m();
+        int mm = 0;
+        foreach(const inqn& x, pd->iq_) mm += x.index.m();
+        set_m(mm);
         setPrimeLevel(pd->iq_.back().index.primelevel);
     }
 
@@ -340,7 +342,7 @@ public:
     string showm() const
 	{
         string res = " ";
-        ostringstream oh; 
+        std::ostringstream oh; 
         foreach(const inqn& x, pd->iq_)
         {
             QN q = x.qn;
@@ -457,8 +459,7 @@ struct IQIndexVal
 
     operator IndexVal() const { return IndexVal(iqind,i); }
     ITensor operator*(const IndexVal& iv) const { IndexVal iv_this = *this; return (iv_this * iv); }
-    ITensor operator*(Real fac) const { IndexVal iv_this = *this; return iv_this.operator*(fac); }
-    friend inline ITensor operator*(Real fac, const IndexVal& iv) { return iv.operator*(fac); }
+    ITensor operator*(Real fac) const { IndexVal iv_this = *this; return iv_this * fac; }
 
     void print(string name = "") const
     { cerr << "\n" << name << " =\n" << *this << "\n"; }
@@ -509,9 +510,7 @@ public:
 
     void uninit_rmap() const { assert(numref == 1); rmap_init = false; }
 
-    friend inline void intrusive_ptr_add_ref(IQTDat* p) { ++(p->numref); }
-    friend inline void intrusive_ptr_release(IQTDat* p) { if(--(p->numref) == 0){ delete p; } }
-    inline int count() const { return numref; }
+    ENABLE_INTRUSIVE_PTR(IQTDat)
 private:
     ~IQTDat() { } //must be dynamically allocated
     void operator=(const IQTDat&);

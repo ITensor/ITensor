@@ -2,7 +2,7 @@ include ../this_dir.mk
 include ../options.mk
 ################################################################
 
-TENSOR_HEADERS=tensor.h mps.h algorithm.h iq.h hams.h
+TENSOR_HEADERS=hams.h
 LIBNAMES=matrix utilities itensor
 
 #################################################################

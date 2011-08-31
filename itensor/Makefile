@@ -8,7 +8,7 @@ include ../options.mk
 
 ####################################
 
-HEADERS=tensor.h combiner.h iq.h iqcombiner.h mps.h algorithm.h hams.h
+HEADERS=types.h permutation.h index.h tensor.h combiner.h iq.h iqcombiner.h mps.h algorithm.h hams.h
 
 OBJECTS=tensor.o mps.o algorithm.o iq.o
 
@@ -58,16 +58,15 @@ installg: headerscopy libitensor-g.a
 mkdebugdir:
 	mkdir -p .debug_objs
 
-tensor.o: tensor.h
-iq.o: tensor.h combiner.h iqcombiner.h iq.h
-mps.o: tensor.h combiner.h iqcombiner.h iq.h mps.h
-algorithm.o: tensor.h combiner.h iqcombiner.h iq.h mps.h algorithm.h 
+tensor.o: types.h permutation.h index.h tensor.h
+iq.o: types.h permutation.h index.h tensor.h combiner.h iqcombiner.h iq.h
+mps.o: types.h index.h tensor.h combiner.h iqcombiner.h iq.h mps.h
+algorithm.o: types.h index.h tensor.h combiner.h iqcombiner.h iq.h mps.h algorithm.h 
 
-.debug_objs/tensor.o: tensor.h
-.debug_objs/iq.o: tensor.h combiner.h iqcombiner.h iq.h
-.debug_objs/mps.o: tensor.h combiner.h iqcombiner.h iq.h mps.h
-.debug_objs/algorithm.o: tensor.h combiner.h iqcombiner.h iq.h mps.h algorithm.h 
-
+.debug_objs/tensor.o: types.h permutation.h index.h tensor.h
+.debug_objs/iq.o: types.h permutation.h index.h tensor.h combiner.h iqcombiner.h iq.h
+.debug_objs/mps.o: types.h index.h tensor.h combiner.h iqcombiner.h iq.h mps.h
+.debug_objs/algorithm.o: types.h index.h tensor.h combiner.h iqcombiner.h iq.h mps.h algorithm.h 
 
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a

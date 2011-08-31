@@ -2,6 +2,7 @@
 #define __COMBINER_H
 
 #include "tensor.h"
+//#include "permutation.h"
 
 /*
 Combine several indices into one, use * to convert tensors efficiently

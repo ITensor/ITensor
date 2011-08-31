@@ -4,15 +4,6 @@
 
 Real ran1();
 
-IndexVal Index::operator()(int i) const 
-{ return IndexVal(*this,i); }
-
-ITensor IndexVal::operator*(const IndexVal& oth) const { ITensor t(*this); return (t *= oth); }
-
-ITensor IndexVal::operator*(Real fac) const { return ITensor(*this,fac); }
-
-inline ITensor operator*(Real fac, const IndexVal& iv) { return ITensor(iv,fac); }
-
 ostream& operator<<(ostream & s, const ITensor & t)
 {
     s << "logfac(incl in elems) = " << t.logfac() << ", r = " << t.r() << ": ";

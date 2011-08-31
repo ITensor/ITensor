@@ -68,7 +68,7 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
     solo();
     p->uninit_rmap();
 
-    set<ApproxReal> common_inds;
+    std::set<ApproxReal> common_inds;
     
     //Load iqindex_ with those IQIndex's *not* common to *this and other
     static vector<IQIndex> riqind_holder(1000);
@@ -104,13 +104,13 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
     if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator* riqind_holder had to reallocate.\n\n";
     p->iqindex_.swap(riqind_holder);
 
-    set<ApproxReal> keys;
+    std::set<ApproxReal> keys;
 
     list<ITensor> old_itensor; p->itensor.swap(old_itensor);
 
     //com_this maps the unique_Real of a set of Index's to be contracted over together
     //to those ITensors in *this.itensor having all Index's in that set
-    multimap<ApproxReal,const_iten_it> com_this;
+    std::multimap<ApproxReal,const_iten_it> com_this;
     for(const_iten_it tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
 	{
         Real r = 0.0;
@@ -124,7 +124,7 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
 	}
 
     //com_other is the same as com_this but for other
-    multimap<ApproxReal,const_iten_it> com_other;
+    std::multimap<ApproxReal,const_iten_it> com_other;
     for(const_iten_it ot = other.const_iten_begin(); ot != other.const_iten_end(); ++ot)
 	{
         Real r = 0.0;
@@ -137,10 +137,10 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
         keys.insert(ApproxReal(r));
 	}
 
-    typedef multimap<ApproxReal,const_iten_it>::iterator mit;
+    typedef std::multimap<ApproxReal,const_iten_it>::iterator mit;
     pair<mit,mit> lrange,rrange;
     ITensor tt;
-    for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
+    for(std::set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
 	{
         //Equal range returns the begin and end iterators for the sequence
         //corresponding to multimap[key] as a pair
