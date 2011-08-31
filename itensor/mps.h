@@ -2,8 +2,11 @@
 #define __MPS_H
 #include "combiner.h"
 #include "iqcombiner.h"
+#include "model.h"
 
 enum Direction { Fromright, Fromleft, Both, None };
+
+static const Real DefaultLogRef = 1.3E-14;
 
 Vector do_denmat_Real(const ITensor& nA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir);
 Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir);
@@ -18,510 +21,19 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
 
 extern Real truncerror, svdtruncerr;
 
-class BaseModel
+namespace {
+int collapseCols(const Vector& Diag, Matrix& M)
 {
-public:
-    virtual int NN() const = 0;
-    virtual IQIndex si(int i) const = 0;
-    virtual IQIndex siP(int i) const = 0;
-
-    virtual void read(istream& s) = 0;
-    virtual void write(ostream& s) const = 0;
-
-    virtual SiteOp id(int i) const = 0;
-protected:
-    virtual ~BaseModel() { }
-};
-typedef BaseModel SiteSet;
-
-inline ostream& operator<<(ostream& s, const BaseModel& b)
-{
-    s << "Model:\n";
-    for(int j = 1; j <= b.NN(); ++j) s << format("si(%d) = ")%j << b.si(j) << "\n";
-    return s;
+    int nr = Diag.Length(), nc = int(Diag.sumels());
+    assert(nr != 0);
+    if(nc == 0) return nc;
+    M = Matrix(nr,nc); M = 0;
+    int c = 0;
+    for(int r = 1; r <= nr; ++r)
+    if(Diag(r) == 1) { M(r,++c) = 1; }
+    return nc;
 }
-
-//---------------------------------------------------------
-//Definition of Model Types
-//---------------------------------------------------------
-
-namespace SpinOne {
-
-const int Dim = 3;
-
-class Model : public BaseModel
-{
-    typedef BaseModel Parent;
-
-    int N;
-    vector<IQIndex> site;
-public:
-    Model() : N(-1) { }
-    Model(int N_) : N(N_), site(N_+1) 
-    { 
-        for(int i = 1; i <= N; ++i)
-        {
-        site.at(i) = IQIndex(nameint("S=1, site=",i),
-        Index(nameint("Up for site",i),1,Site),QN(+2,0),
-        Index(nameint("Z0 for site",i),1,Site),QN( 0,0),
-        Index(nameint("Dn for site",i),1,Site),QN(-2,0));
-        }
-    }
-    Model(istream& s) { read(s); }
-
-    void read(istream& s)
-    {
-        s.read((char*) &N,sizeof(N));
-        site.resize(N+1);
-        for(int j = 1; j <= N; ++j) site.at(j).read(s);
-    }
-    void write(ostream& s) const
-    {
-        s.write((char*) &N,sizeof(N));
-        for(int j = 1; j <= N; ++j) site.at(j).write(s);
-    }
-
-    inline int NN() const { return N; }
-    inline IQIndex si(int i) const { return site.at(i); }
-    inline IQIndex siP(int i) const { return site.at(i).primed(); }
-
-    IQIndexVal Up(int i) const { return si(i)(1); }
-    IQIndexVal Z0(int i) const { return si(i)(2); }
-    IQIndexVal Dn(int i) const { return si(i)(3); }
-
-    IQIndexVal UpP(int i) const { return siP(i)(1); }
-    IQIndexVal Z0P(int i) const { return siP(i)(2); }
-    IQIndexVal DnP(int i) const { return siP(i)(3); }
-
-    virtual SiteOp id(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),UpP(i)) = 1; res(Z0(i),Z0P(i)) = 1; res(Dn(i),DnP(i)) = 1;
-        return res;
-    }
-
-    SiteOp sz(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),UpP(i)) = 1; res(Dn(i),DnP(i)) = -1;
-        return res;
-    }
-
-    SiteOp sx(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),Z0P(i)) = ISqrt2; res(Z0(i),UpP(i)) = ISqrt2;
-        res(Z0(i),DnP(i)) = ISqrt2; res(Dn(i),Z0P(i)) = ISqrt2;
-        return res;
-    }
-
-    SiteOp isy(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),Z0P(i)) = +ISqrt2; res(Z0(i),UpP(i)) = -ISqrt2;
-        res(Z0(i),DnP(i)) = +ISqrt2; res(Dn(i),Z0P(i)) = -ISqrt2;
-        return res;
-    }
-
-    SiteOp sp(int i) const
-    {
-        SiteOp res(si(i));
-        res(Dn(i),Z0P(i)) = Sqrt2; res(Z0(i),UpP(i)) = Sqrt2;
-        return res;
-    }
-
-    SiteOp sm(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),Z0P(i)) = Sqrt2; res(Z0(i),DnP(i)) = Sqrt2;
-        return res;
-    }
-
-    SiteOp sz2(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),UpP(i)) = 1; res(Dn(i),DnP(i)) = 1;
-        return res;
-    }
-
-    SiteOp sx2(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),UpP(i)) = 0.5; res(Up(i),DnP(i)) = 0.5;
-        res(Z0(i),Z0P(i)) = 1;
-        res(Dn(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = 0.5;
-        return res;
-    }
-
-    SiteOp sy2(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),UpP(i)) = 0.5; res(Up(i),DnP(i)) = -0.5;
-        res(Z0(i),Z0P(i)) = 1;
-        res(Dn(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = -0.5;
-        return res;
-    }
-
-};
-
-} //end namespace SpinOne
-
-namespace SpinHalf {
-
-const int Dim = 2;
-
-class Model : public BaseModel
-{
-    typedef BaseModel Parent;
-    
-    int N;
-    vector<IQIndex> site;
-public:
-    Model() : Parent() { }
-    Model(int N_) : N(N_), site(N_+1) 
-    {
-        for(int i = 1; i <= N; ++i)
-        {
-        site.at(i) = IQIndex(nameint("S=1/2, site=",i),
-        Index(nameint("Up for site",i),1,Site),QN(+1,0),
-        Index(nameint("Dn for site",i),1,Site),QN(-1,0));
-        }
-    }
-    Model(istream& s) { read(s); }
-
-    void read(istream& s)
-    {
-        s.read((char*) &N,sizeof(N));
-        site.resize(N+1);
-        for(int j = 1; j <= N; ++j) site.at(j).read(s);
-    }
-    void write(ostream& s) const
-    {
-        s.write((char*) &N,sizeof(N));
-        for(int j = 1; j <= N; ++j) site.at(j).write(s);
-    }
-
-    int NN() const { return N; }
-    IQIndex si(int i) const { return site.at(i); }
-    IQIndex siP(int i) const { return site.at(i).primed(); }
-
-    IQIndexVal Up(int i) const { return si(i)(1); }
-    IQIndexVal Dn(int i) const { return si(i)(2); }
-
-    IQIndexVal UpP(int i) const { return siP(i)(1); }
-    IQIndexVal DnP(int i) const { return siP(i)(2); }
-
-    virtual SiteOp id(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),UpP(i)) = 1; res(Dn(i),DnP(i)) = 1;
-        return res;
-    }
-
-    SiteOp sz(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),UpP(i)) = 0.5; res(Dn(i),DnP(i)) = -0.5;
-        return res;
-    }
-
-    SiteOp sx(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = 0.5;
-        return res;
-    }
-
-    SiteOp isy(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = -0.5;
-        return res;
-    }
-
-    //S^+
-    SiteOp sp(int i) const
-    {
-        SiteOp res(si(i));
-        res(Dn(i),UpP(i)) = 1;
-        return res;
-    }
-
-    //S^-
-    SiteOp sm(int i) const
-    {
-        SiteOp res(si(i));
-        res(Up(i),DnP(i)) = 1;
-        return res;
-    }
-
-};
-
-} //end namespace SpinHalf
-
-namespace Spinless {
-
-const int Dim = 2;
-
-class Model : public BaseModel
-{
-public:
-    bool odd_even_up_down,conserve_Nf;
-private:
-    typedef BaseModel Parent;
-
-    int N;
-    vector<IQIndex> site;
-
-    void initSites()
-    {
-        int occ = (conserve_Nf ? 1 : 0);
-        if(odd_even_up_down)
-        {
-        for(int i = 1; i <= N; ++i)
-        {
-            if(i%2==1)
-            {
-                site.at(i) = IQIndex(nameint("Spinless, Up site=",i),
-                Index(nameint("Emp for Up site",i),1,Site),QN(0,0,0),
-                Index(nameint("Occ for Up site",i),1,Site),QN(+1,occ,1));
-            }
-            else
-            {
-                site.at(i) = IQIndex(nameint("Spinless, Dn site=",i),
-                Index(nameint("Emp for Dn site",i),1,Site),QN(0,0,0),
-                Index(nameint("Occ for Dn site",i),1,Site),QN(-1,occ,1));
-            }
-        }
-        }
-        else
-        {
-        for(int i = 1; i <= N; ++i)
-        {
-            site.at(i) = IQIndex(nameint("Spinless, site=",i),
-            Index(nameint("Emp for site",i),1,Site),QN(0,0,0),
-            Index(nameint("Occ for site",i),1,Site),QN(0,occ,1));
-        }
-        }
-    }
-public:
-    Model() : odd_even_up_down(false),conserve_Nf(true), N(-1) { }
-    Model(int N_, bool odd_even_up_down_ = false, bool conserve_Nf_ = true) 
-    : odd_even_up_down(odd_even_up_down_), conserve_Nf(conserve_Nf_), N(N_), site(N_+1)
-    { initSites(); }
-    Model(istream& s) { read(s); }
-
-    void read(istream& s)
-    { 
-        s.read((char*) &odd_even_up_down,sizeof(odd_even_up_down));
-        s.read((char*) &conserve_Nf,sizeof(conserve_Nf));
-        s.read((char*) &N,sizeof(N));
-        site.resize(N+1);
-        for(int j = 1; j <= N; ++j) site.at(j).read(s);
-    }
-    void write(ostream& s) const
-    {
-        s.write((char*) &odd_even_up_down,sizeof(odd_even_up_down));
-        s.write((char*) &conserve_Nf,sizeof(conserve_Nf));
-        s.write((char*) &N,sizeof(N));
-        for(int j = 1; j <= N; ++j) site.at(j).write(s);
-    }
-
-    int NN() const { return N; }
-    IQIndex si(int i) const { return GET(site,i); }
-    IQIndex siP(int i) const { return GET(site,i).primed(); }
-
-    IQIndexVal Emp(int i) const { return si(i)(1); }
-    IQIndexVal Occ(int i) const { return si(i)(2); }
-
-    IQIndexVal EmpP(int i) const { return siP(i)(1); }
-    IQIndexVal OccP(int i) const { return siP(i)(2); }
-
-    virtual SiteOp id(int i) const
-    {
-        SiteOp res(si(i));
-        res(Emp(i),EmpP(i)) = 1; res(Occ(i),OccP(i)) = 1;
-        return res;
-    }
-
-    SiteOp C(int i) const
-    {
-        SiteOp res(si(i));
-        res(Occ(i),EmpP(i)) = 1;
-        return res;
-    }
-
-    SiteOp Cdag(int i) const
-    {
-        SiteOp res(si(i));
-        res(Emp(i),OccP(i)) = 1;
-        return res;
-    }
-
-    SiteOp n(int i) const
-    {
-        SiteOp res(si(i));
-        res(Occ(i),OccP(i)) = 1;
-        return res;
-    }
-
-    //String operator F_i = (-1)^{n_i} = (1-2*n_i)
-    SiteOp FermiPhase(int i) const
-    {
-        SiteOp res(si(i));
-        res(Emp(i),EmpP(i)) = 1; res(Occ(i),OccP(i)) = -1;
-        return res;
-    }
-};
-
-} //end namespace Spinless
-
-namespace Hubbard {	// Full Hubbard sites, srw 8/10/11
-
-const int Dim = 4;
-
-class Model : public BaseModel
-{
-private:
-    typedef BaseModel Parent;
-
-    int N;
-    vector<IQIndex> site;
-public:
-    Model() : N(-1) { }
-    Model(int N_) : N(N_), site(N_+1)
-    {
-        for(int i = 1; i <= N; ++i)
-	    {
-	    site.at(i) = IQIndex(nameint("Hubbard, site=",i),
-		    Index(nameint("Emp for site ",i),1,Site),  QN( 0,0,0),
-		    Index(nameint("Up for site ",i),1,Site),   QN(+1,1,1),
-		    Index(nameint("Dn for site ",i),1,Site),   QN(-1,1,1),
-		    Index(nameint("Up-Dn for site ",i),1,Site),QN( 0,2,0));
-	    }
-    }
-    Model(istream& s) { read(s); }
-
-    void read(istream& s)
-    {
-        s.read((char*) &N,sizeof(N));
-        site.resize(N+1);
-        for(int j = 1; j <= N; ++j) site.at(j).read(s);
-    }
-    void write(ostream& s) const
-    {
-        s.write((char*) &N,sizeof(N));
-        for(int j = 1; j <= N; ++j) site.at(j).write(s);
-    }
-
-    int NN() const { return N; }
-    IQIndex si(int i) const { return GET(site,i); }
-    IQIndex siP(int i) const { return GET(site,i).primed(); }
-
-    IQIndexVal Emp(int i) const { return si(i)(1); }
-    IQIndexVal UpState(int i) const { return si(i)(2); }
-    IQIndexVal DnState(int i) const { return si(i)(3); }
-    IQIndexVal UpDnState(int i) const { return si(i)(4); } // cdag_dn cdag_up | vac >
-
-    IQIndexVal EmpP(int i) const { return siP(i)(1); }
-    IQIndexVal UpStateP(int i) const { return siP(i)(2); }
-    IQIndexVal DnStateP(int i) const { return siP(i)(3); }
-    IQIndexVal UpDnStateP(int i) const { return siP(i)(4); }
-
-    virtual SiteOp id(int i) const
-	{
-	SiteOp res(si(i));
-	res(Emp(i),EmpP(i)) = 1; res(UpState(i),UpStateP(i)) = 1;
-	res(DnState(i),DnStateP(i)) = 1; res(UpDnState(i),UpDnStateP(i)) = 1;
-	return res;
-	}
-
-    SiteOp Cup(int i) const
-	{
-	SiteOp res(si(i));
-	res(UpState(i),EmpP(i)) = 1;
-	res(UpDnState(i),DnStateP(i)) = -1;
-	return res;
-	}
-
-    SiteOp Cdagup(int i) const
-	{
-	SiteOp res(si(i));
-	res(Emp(i),UpStateP(i)) = 1;
-	res(DnState(i),UpDnStateP(i)) = -1;
-	return res;
-	}
-
-    SiteOp Cdn(int i) const
-	{
-	SiteOp res(si(i));
-	res(DnState(i),EmpP(i)) = 1;
-	res(UpDnState(i),UpStateP(i)) = 1;
-	return res;
-	}
-
-    SiteOp Cdagdn(int i) const
-	{
-	SiteOp res(si(i));
-	res(Emp(i),DnStateP(i)) = 1;
-	res(UpState(i),UpDnStateP(i)) = 1;
-	return res;
-	}
-
-    SiteOp Nup(int i) const
-	{
-	SiteOp res(si(i));
-	res(UpState(i),UpStateP(i)) = 1;
-	res(UpDnState(i),UpDnStateP(i)) = 1;
-	return res;
-	}
-
-    SiteOp Ndn(int i) const
-	{
-	SiteOp res(si(i));
-	res(DnState(i),DnStateP(i)) = 1;
-	res(UpDnState(i),UpDnStateP(i)) = 1;
-	return res;
-	}
-
-    SiteOp Ntot(int i) const
-	{
-	SiteOp res(si(i));
-	res(Emp(i),EmpP(i)) = 0; res(UpState(i),UpStateP(i)) = 1;
-	res(DnState(i),DnStateP(i)) = 1; res(UpDnState(i),UpDnStateP(i)) = 2;
-	return res;
-	}
-
-    SiteOp NupNdn(int i) const
-	{
-	SiteOp res(si(i));
-	res(UpDnState(i),UpDnStateP(i)) = 1;
-	return res;
-	}
-
-    SiteOp Sz(int i) const
-	{
-	SiteOp res(si(i));
-	res(UpState(i),UpStateP(i)) = 0.5;
-	res(DnState(i),DnStateP(i)) = -0.5;
-	return res;
-	}
-
-    //String operator F_i = (-1)^{n_i} = (1-2*n_i)
-    SiteOp FermiPhase(int i) const
-	{
-	SiteOp res(si(i));
-	res(Emp(i),EmpP(i)) = 1; res(UpState(i),UpStateP(i)) = -1;
-	res(DnState(i),DnStateP(i)) = -1; res(UpDnState(i),UpDnStateP(i)) = 1;
-	return res;
-	}
-};
-
-} //end namespace Hubbard
-
-//---------------------------------------------------------
-//---------------------------------------------------------
-//---------------------------------------------------------
+}
 
 class InitState
 {
@@ -637,10 +149,10 @@ public:
 
     //MPS: Constructors --------------------------------------------
 
-    MPS() : model_(0), minm(1), maxm(MAX_M), cutoff(MAX_CUT) {}
+    MPS() : N(0), model_(0), minm(1), maxm(MAX_M), cutoff(MAX_CUT) {}
 
     MPS(const ModelT& mod_,int maxmm = MAX_M, Real cut = MAX_CUT) 
-		: N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
+		: N(mod_.NN()), A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
         model_(&mod_), minm(1), maxm(maxmm), cutoff(cut)
 	{ random_tensors(A); }
 
@@ -650,11 +162,8 @@ public:
 	{ init_tensors(A,initState); }
 
     MPS(const ModelT& mod_, istream& s) : N(mod_.NN()), A(mod_.NN()+1), model_(&mod_)
-    { read(s); }
-
-    void read(istream& s)
     {
-        for(int j = 1; j <= N; ++j) A[j] = Tensor(s);
+        for(int j = 1; j <= N; ++j) A[j].read(s);
         s.read((char*) &left_orth_lim,sizeof(left_orth_lim));
         s.read((char*) &right_orth_lim,sizeof(right_orth_lim));
         s.read((char*) &minm,sizeof(minm));
@@ -892,11 +401,7 @@ public:
     }
 
     bool is_complex() const
-    {
-        foreach(const Tensor& AA, A)
-        if(AA.is_complex()) return true;
-        return false;
-    }
+    { return A[left_orth_lim+1].is_complex(); }
 
     friend inline ostream& operator<<(ostream& s, const MPS& M)
     {
@@ -911,20 +416,6 @@ public:
     //-----------------------------------------------------------------
     //IQMPS specific methods
 
-
-private:
-    int collapseCols(const Vector& Diag, Matrix& M) const
-    {
-        int nr = Diag.Length(), nc = int(Diag.sumels());
-        assert(nr != 0);
-        if(nc == 0) return nc;
-        M = Matrix(nr,nc); M = 0;
-        int c = 0;
-        for(int r = 1; r <= nr; ++r)
-        if(Diag(r) == 1) { M(r,++c) = 1; }
-        return nc;
-    }
-public:
     template <class IQMPSType> 
     void convertToIQ(IQMPSType& iqpsi, QN totalq = QN(), Real cut = 1E-12) const
     {
@@ -1134,7 +625,7 @@ public:
 
     } //void convertToIQ(IQMPSType& iqpsi) const
 
-};
+}; //class MPS<Tensor>
 
 template <class Tensor>
 MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
@@ -1165,158 +656,379 @@ MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
     return *this;
 }
 
+
 } //namespace Internal
 typedef Internal::MPS<ITensor> MPS;
 typedef Internal::MPS<IQTensor> IQMPS;
 
-
-class IQMPO : public IQMPS
+void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12)
 {
-    Real lref;
+    const int N = A.size()-1;
+    qA.resize(A.size());
+    const bool is_mpo = A[1].hasindex(model.si(1).primed());
+    const int Dim = model.dim();
+    const int PDim = (is_mpo ? Dim : 1);
+
+    vector<IQIndex> linkind(N);
+
+    typedef map<QN,Vector>::value_type qD_vt;
+    map<QN,Vector> qD; //Diags of compressor matrices by QN
+    typedef map<QN,vector<ITensor> >::value_type qt_vt;
+    map<QN,vector<ITensor> > qt; //ITensor blocks by QN
+    typedef map<QN,ITensor>::value_type qC_vt;
+    map<QN,ITensor> qC; //Compressor ITensors by QN
+    ITensor block;
+    vector<ITensor> nblock;
+    vector<inqn> iq;
+
+    QN q;
+
+    qC[totalq] = ITensor(); //Represents Virtual index
+    //First value of prev_q below set to totalq
+
+    const int show_s = 0;
+
+    Index bond, prev_bond;
+    for(int s = 1; s <= N; ++s)
+    {
+        qD.clear(); qt.clear();
+        if(s > 1) prev_bond = index_in_common(A[s-1],A[s],Link);
+        if(s < N) bond = index_in_common(A[s],A[s+1],Link);
+
+        if(s == show_s) { PrintDat(A[s]); }
+
+        foreach(const qC_vt& x, qC) {
+        const QN& prev_q = x.first; const ITensor& comp = x.second; 
+        for(int n = 1; n <= Dim;  ++n)
+        for(int u = 1; u <= PDim; ++u)
+        {
+            q = (is_mpo ? prev_q+model.si(s).qn(n)-model.si(s).qn(u) : prev_q-model.si(s).qn(n));
+
+            //For the last site, only keep blocks 
+            //compatible with specified totalq i.e. q=0 here
+            if(s == N && q != QN()) continue;
+
+            //Set Site indices of A[s] and its previous Link Index
+            block = A[s];
+            if(s != 1) block *= conj(comp);
+            block *= model.si(s)(n);
+            if(is_mpo) block *= model.siP(s)(u);
+
+            //Initialize D Vector (D records which values of
+            //the right Link Index to keep for the current QN q)
+            int count = qD.count(q);
+            Vector& D = qD[q];
+            if(count == 0) { D.ReDimension(bond.m()); D = 0; }
+
+            if(s == show_s)
+            {
+                cerr << format("For n = %d\n")%n;
+                cerr << format("Got a block with norm %.10f\n")%block.norm();
+                cerr << format("bond.m() = %d\n")%bond.m();
+                PrintDat(block);
+                if(s != 1) PrintDat(comp);
+            }
+
+            bool keep_block = false;
+            if(s == N) keep_block = true;
+            else
+            {
+                if(bond.m() == 1 && block.norm() != 0) { D = 1; keep_block = true; }
+                else
+                {
+                    ITensor summed_block;
+                    if(s==1) summed_block = block;
+                    else
+                    {
+                        //Here we sum over the previous link index
+                        //which is already ok, analyze the one to the right
+                        assert(comp.r()==2);
+                        Index new_ind = (comp.index(1)==prev_bond ? comp.index(2) : comp.index(1));
+                        summed_block = ITensor(new_ind,1) * block;
+                    }
+                    //cerr << format("s = %d, bond=")%s << bond << "\n";
+                    //summed_block.print("summed_block");
+
+                    Real rel_cut = -1;
+                    for(int j = 1; j <= bond.m(); ++j)
+                    { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
+                    assert(rel_cut >= 0);
+                    //Real rel_cut = summed_block.norm()/summed_block.vec_size();
+                    rel_cut *= cut;
+                    //cerr << "rel_cut == " << rel_cut << "\n";
+
+                    if(rel_cut > 0)
+                    for(int j = 1; j <= bond.m(); ++j)
+                    if(fabs(summed_block.val1(j)) > rel_cut) 
+                    { D(j) = 1; keep_block = true; }
+                }
+            } //else (s != N)
+
+            //if(!keep_block && q == totalq) { D(1) = 1; keep_block = true; }
+
+            if(keep_block)
+            {
+                qD[q] = D;
+
+                if(is_mpo) 
+                {
+                block.addindex1(conj(model.si(s)(n).index()));
+                block.addindex1(model.siP(s)(u).index());
+                }
+                else { block.addindex1(model.si(s)(n).index()); }
+
+                qt[q].push_back(block);
+
+                if(s==show_s)
+                {
+                block.print("Kept block",ShowData);
+                cerr << "D = " << D << "\n";
+                }
+            }
+        }}
+
+        qC.clear();
+
+        foreach(const qt_vt& x, qt)
+        {
+            const vector<ITensor>& blks = x.second;
+            if(blks.size() != 0)
+            {
+                q = x.first; 
+                if(s == N) 
+                { foreach(const ITensor& t, blks) nblock.push_back(t); }
+                else
+                {
+                    Matrix M; int mm = collapseCols(qD[q],M);
+                    if(s==show_s)
+                    {
+                        cerr << format("Adding block, mm = %d\n")%mm;
+                        q.print("q");
+                        cerr << "qD[q] = " << qD[q] << "\n";
+                        cerr << "M = \n" << M << "\n";
+                        int count = 0;
+                        foreach(const ITensor& t, blks) 
+                        t.print((format("t%02d")%(++count)).str(),ShowData);
+                    }
+                    //string qname = (format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
+                    string qname = (format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
+                    Index qbond(qname,mm);
+                    ITensor compressor(bond,qbond,M);
+                    foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
+                    iq.push_back(inqn(qbond,q));
+                    qC[q] = compressor;
+                }
+            }
+        }
+
+        if(s != N) 
+        { 
+            if(iq.empty()) 
+            {
+                cerr << "At site " << s << "\n";
+                Error("convertToIQ: no compatible QNs to put into Link.");
+            }
+            linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
+        }
+        if(s == 1)
+            qA[s] = (is_mpo ? IQTensor(conj(model.si(s)),model.siP(s),linkind[s]) : IQTensor(model.si(s),linkind[s]));
+        else if(s == N)
+            qA[s] = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(model.si(s)),model.siP(s)) 
+                                    : IQTensor(conj(linkind[s-1]),model.si(s)));
+        else
+            qA[s] = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(model.si(s)),model.siP(s),linkind[s]) 
+                                    : IQTensor(conj(linkind[s-1]),model.si(s),linkind[s]));
+
+        foreach(const ITensor& nb, nblock) { qA[s] += nb; } nblock.clear();
+
+        if(s==show_s)
+        {
+        qA[s].print((format("qA[%d]")%s).str(),ShowData);
+        Error("Stopping");
+        }
+
+    } //for loop over s
+
+    IQIndex Center("Center",Index("center",1,Virtual),totalq,In);
+    qA[1].addindex1(Center);
+}
+
+namespace Internal {
+
+template<class Tensor>
+class MPO
+{
 public:
-    bool do_relative_cutoff;
+    typedef Tensor TensorT;
+    typedef typename Tensor::IndexT IndexT;
+    typedef typename Tensor::IndexValT IndexValT;
+    typedef typename Tensor::CombinerT CombinerT;
+private:
+    int N;
+    vector<Tensor> A;
+    int Lb,Rb;
+    const BaseModel* model_;
+    Real lref_;
+public:
+    int minm,maxm;
+    Real cutoff;
+
+    operator MPO<IQTensor>()
+    { 
+        MPO<IQTensor> res(*model_,maxm,cutoff,lref_); 
+        res.minm = minm;
+        convertToIQ(*model_,A,res.A);
+        return res; 
+    }
+
+    //Accessor Methods ------------------------------
+
+    int NN() const { return N;}
     // Norm of psi^2 = 1 = norm = sum of denmat evals. 
     // This translates to Tr{Adag A} = norm.  
     // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
-    Real LogReferenceNorm() const { return lref; }
-    void setlref(Real _lref) 
+    Real lref() const { return lref_; }
+    void lref(Real val) 
+	{  if(val == 0) { Error("bad lref"); } lref_ = val; }
+
+    const BaseModel& model() const { return *model_; }
+    IQIndex si(int i) const { return model_->si(i); }
+    IQIndex siP(int i) const { return model_->siP(i); }
+
+    int right_lim() const { return Rb; }
+    int left_lim() const { return Lb; }
+
+    const Tensor& AA(int i) const { return GET(A,i); }
+    Tensor& AAnc(int i) //nc means 'non const'
+    { 
+        if(i <= Lb) Lb = i-1;
+        if(i >= Rb) Rb = i+1;
+        return GET(A,i); 
+    }
+    bool is_null() const { return (model_==0); }
+    bool is_not_null() const { return (model_!=0); }
+
+    Tensor bondTensor(int b) const { Tensor res = A.at(b) * A.at(b+1); return res; }
+
+    MPO() : N(0), lref_(DefaultLogRef) { }
+    MPO(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, Real _lref = DefaultLogRef) 
+    : N(model.NN()), A(N+1), Lb(0), Rb(N), model_(&model), lref_(_lref), minm(1), maxm(maxm_), cutoff(cutoff_)
 	{ 
-        //cout << "setting lref to " << setprecision(15) << _lref << endl;
-        if(_lref == 0.0)
-            Error("bad lref");
-        lref = _lref; 
-        do_relative_cutoff = false;
+        if(_lref == 0) Error("MPO<Tensor>: Setting lref_ to zero");
+        if(_lref == DefaultLogRef) lref_ = model.NN() * log(2.0); 
 	}
-    IQMPO() : lref(1.3e-14) { do_relative_cutoff = false; }
-    IQMPO(const BaseModel& iss, int maxmm = MAX_M, Real cut = MAX_CUT, Real _lref = -1.0e-17) 
-		: IQMPS(iss,maxmm,cut)
-	{ 
-        if(_lref == 0.0) Error("creating lref to zero");
-        if(_lref == -1.0e-17) 
-            lref = NN() * log(2.0); 
-        else
-            lref = _lref;
-        do_relative_cutoff = false;
-	}
-    IQMPO& operator*=(Real a) 
-	{
-        IQTensor& OC = A[ortho_center()];
-        if(!OC.is_null()) OC *= a;
-        return *this;
-	}
+
+    MPO(BaseModel& model, istream& s) : N(model.NN()), A(N+1), model_(&model)
+    {
+        for(int j = 1; j <= N; ++j) A[j].read(s);
+        s.read((char*) &Lb,sizeof(Lb));
+        s.read((char*) &Rb,sizeof(Rb));
+        s.read((char*) &lref_,sizeof(lref_));
+        s.read((char*) &minm,sizeof(minm));
+        s.read((char*) &maxm,sizeof(maxm));
+        s.read((char*) &cutoff,sizeof(cutoff));
+    }
+
+    void write(ostream& s) const
+    {
+        for(int j = 1; j <= N; ++j) A[j].write(s);
+        s.write((char*) &Lb,sizeof(Lb));
+        s.write((char*) &Rb,sizeof(Rb));
+        s.write((char*) &lref_,sizeof(lref_));
+        s.write((char*) &minm,sizeof(minm));
+        s.write((char*) &maxm,sizeof(maxm));
+        s.write((char*) &cutoff,sizeof(cutoff));
+    }
+
+    //MPO: index methods --------------------------------------------------
+
+    void mapprime(int oldp, int newp, PrimeType pt = primeBoth)
+	{ for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,pt); }
+
+    void primelinks(int oldp, int newp)
+	{ for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,primeLink); }
+
+    void noprimelink()
+	{ for(int i = 1; i <= N; ++i) A[i].noprime(primeLink); }
+
+    IndexT LinkInd(int i) const { return index_in_common(A[i],A[i+1],Link); }
+    IndexT RightLinkInd(int i) const { assert(i<NN()); return index_in_common(AA(i),AA(i+1),Link); }
+    IndexT LeftLinkInd(int i)  const { assert(i>1); return index_in_common(AA(i),AA(i-1),Link); }
+
     void primeall()	// sites i,i' -> i',i'';  link:  l -> l'
 	{
-        for(int i = 1; i <= NN(); i++)
+        for(int i = 1; i <= this->NN(); i++)
         {
             AAnc(i).mapprime(0,1,primeLink);
             AAnc(i).mapprime(1,2,primeSite);
             AAnc(i).mapprime(0,1,primeSite);
         }
 	}
-    /*
-    bool recalculate_QNs()
+
+    void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
 	{
-        bool did_not_change = true;
-        for(int i = 1; i < NN(); i++)
+        tensorSVD(AA,A[i],A[i+1],cutoff,minm,maxm,dir,lref_);
+        truncerror = svdtruncerr;
+
+        if(dir == Fromleft)
         {
-            IQTensor& a(AA(i));
-            IQIndex link_prev, linknext(LinkInd(i)); 
-            if(i > 1) link_prev = LinkInd(i-1);
-            for(IQTensor::iten_it k = a.iten_begin(); k != a.iten_end(); ++k)
-            {
-                QuantumNumber q;
-                Index ilink;
-                for(int j = 1; j <= k->d; j++)
-                {
-                    Index jj(k->index(j));
-                    QuantumNumber del = a.qn(jj);
-                    if(link_prev.contains(jj))
-                    q += del;
-                    else if(jj.type() == Site && jj.primelevel == 1)
-                    q += del;
-                    else if(jj.type() == Site && jj.primelevel == 0)
-                    q += -del;
-                    else if(jj.type() == Site)
-                    Error("bad primelevel on a site");
-                    if(linknext.contains(jj))
-                    ilink = jj;
-                }
-                if(q != a.qn(ilink)) 
-                {
-                    did_not_change = false;
-                    a.set_qn(ilink,q);
-                    AA(i+1).set_qn(ilink,q);
-                }
-            }
+            if(Lb == i-1 || i == 1) Lb = i;
+            if(Rb < i+2) Rb = i+2;
         }
-        return did_not_change;
+        else
+        {
+            if(Lb > i-1) Lb = i-1;
+            if(Rb == i+2 || i == N-1) Rb = i+1;
+        }
 	}
-    */
-    void transpose()
+
+    //Move the orthogonality center to site i (left_orth_lim = i-1, right_orth_lim = i+1)
+    void position(int i, bool preserve_shape = false)
 	{
-        if(A[1].is_null()) return;
-        mapprime(1,2,primeSite);
-        mapprime(0,1,primeSite);
-        mapprime(2,0,primeSite);
-        //recalculate_QNs();
-        //assert(check_QNs());
+        if(is_null()) Error("position: MPS is null");
+        while(Lb < i-1)
+        {
+            if(Lb < 0) Lb = 0;
+            Tensor WF = AA(Lb+1) * AA(Lb+2);
+            doSVD(Lb+1,WF,Fromleft,preserve_shape);
+        }
+        while(Rb > i+1)
+        {
+            if(Rb > N+1) Rb = N+1;
+            Tensor WF = AA(Rb-2) * AA(Rb-1);
+            doSVD(Rb-2,WF,Fromright,preserve_shape);
+        }
 	}
 
-};
+    bool is_ortho() const { return (Lb + 1 == Rb - 1); }
 
-class MPO : public MPS
-{
-public:
-
-    MPO() : MPS() {}
-
-    MPO(const BaseModel& iss, int maxmm = MAX_M, Real cut = MAX_CUT)
-    : MPS(iss,maxmm,cut)
-    {
-        maxm = maxmm;
-        cutoff = cut;
-        vector<Index> hind(N+1);
-        for(int i = 1; i <= N; i++) hind[i] = Index(nameint("Hind",i),1);
-        A[1] = ITensor(si(1),si(1).primed(),hind[1]);
-        A[N] = ITensor(si(N),si(N).primed(),hind[N-1]);
-        for(int i = 2; i < N; i++)
-            A[i] = ITensor(hind[i-1],si(i),si(i).primed(),hind[i]);
+    int ortho_center() const 
+    { 
+        if(!is_ortho()) Error("MPS: orthogonality center not well defined.");
+        return (Lb + 1);
     }
 
-    MPO(BaseModel& iss, istream& s) : MPS(iss,s) { }
+    bool is_complex() const
+    { return A[Lb+1].is_complex(); }
 
-    operator IQMPO() const { IQMPO res; convertToIQ(res); return res; }
-
-    MPO& operator*=(Real a)
+    friend inline ostream& operator<<(ostream& s, const MPO& M)
     {
-        A[left_orth_lim+1] *= a;
-        return *this;
+        s << "\n";
+        for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
+        return s;
     }
-    inline MPO operator*(Real r) const { MPO res(*this); res *= r; return res; }
-    friend inline MPO operator*(Real r, MPO res) { res *= r; return res; }
 
-    //MPO& operator+=(const MPO& oth);
-    inline MPO operator+(MPO res) const { res += *this; return res; }
-    inline MPO operator-(MPO res) const { res *= -1; res += *this; return res; }
+    void print(string name = "",Printdat pdat = HideData) const 
+    { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
 
-    /*
-    void newindices()
-	{
-        vector<Combiner> na(N+1);
-        for(int i = 1; i < N; i++)
-        {
-            Index I = LinkInd(i);
-            Index nI(nameint("a",i),I.m());
-            na[i] = Combiner(nI,I);
-        }
-        A[1] = A[1] * na[1];
-        for(int i = 2; i < N; i++)
-	    { A[i] = na[i-1] * A[i] * na[i]; }
-        A[N] = na[N-1] * A[N];
-	}
-    */
+private:
+    friend class MPO<ITensor>;
+    friend class MPO<IQTensor>;
+}; //class MPO<Tensor>
+} //namespace Internal
+typedef Internal::MPO<ITensor> MPO;
+typedef Internal::MPO<IQTensor> IQMPO;
 
-};
 
 namespace Internal {
 
@@ -1418,10 +1130,10 @@ public:
 
     Tensor unit(int i) const { return Tensor(si(i),si(i).primed(),1); }
 
-    void getidentity(Real factor, MPO& res)
+    void getidentity(Real factor, MPO<ITensor>& res)
 	{
         newlinks(currentlinks);
-        res = MPO(iss,res.maxm,res.cutoff);
+        res = MPO<ITensor>(iss,res.maxm,res.cutoff);
         res.AAnc(1) = unit(1); res.AAnc(1).addindex1(GET(currentlinks,1));
         res.AAnc(1) *= factor;
         res.AAnc(N) = unit(N); res.AAnc(N).addindex1(GET(currentlinks,N-1));
@@ -1433,7 +1145,7 @@ public:
         }
 	}
 
-    void getMPO(Real factor, int i, Tensor op, MPO& res)
+    void getMPO(Real factor, int i, Tensor op, MPO<ITensor>& res)
 	{
         getidentity(1,res);
         res.AAnc(i) = op;
@@ -1442,7 +1154,7 @@ public:
         res *= factor;
 	}
 
-    void getMPO(Real factor, int i1, Tensor op1, int i2, Tensor op2, MPO& res)
+    void getMPO(Real factor, int i1, Tensor op1, int i2, Tensor op2, MPO<ITensor>& res)
 	{
         if(i1 == i2) Error("HamBuilder::getMPO: i1 cannot equal i2.");
         getMPO(1,i2,op2,res);
@@ -1453,7 +1165,7 @@ public:
 	}
 
     template <typename Iterable1, typename Iterable2>
-    void getMPO(Real factor, Iterable1 sites, Iterable2 ops, MPO& res)
+    void getMPO(Real factor, Iterable1 sites, Iterable2 ops, MPO<ITensor>& res)
 	{
         for(int i = 0; i < (int) sites.size(); ++i)
         for(int j = 0; j < (int) sites.size(); ++j)
@@ -1504,10 +1216,12 @@ public:
     }
 };
 
-inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D, Real lognormref = -1)
+inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D, Real logrefnorm = DefaultLogRef)
 {
     assert(rho.r() == 2);
     Index active = rho.index(1); active.noprime();
+
+    if(logrefnorm != DefaultLogRef) rho.normlogto(logrefnorm);
 
     //Do the diagonalization
     Index ri = rho.index(1); ri.noprime();
@@ -1524,7 +1238,7 @@ inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITe
     nU = ITensor(active,newmid,U.Columns(1,mp));
 }
 
-inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept, Real lognormref = -1)
+inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept, Real logrefnorm = DefaultLogRef)
 {
     IQIndex active = rho.finddir(Out);
     if(active.primelevel != 0)
@@ -1539,18 +1253,13 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
     vector<Vector> mvector(rho.iten_size());
     vector<Real> alleig;
 
-    Real maxlogfac = -1.0e20;
-    const bool do_relative_cutoff = true;
-    if(do_relative_cutoff)
+    Real maxlogfac = -1E20;
+    if(logrefnorm == DefaultLogRef) 
     {
         foreach(const ITensor& t, rho.itensors())
         { maxlogfac = max(maxlogfac,t.logfac()); }
     }
-    else
-	{
-        const Real lognormref = 1.3e-14;
-        maxlogfac = 2.0*lognormref;
-	}
+    else { maxlogfac = 2.0*logrefnorm; }
 
     //1. Diagonalize each ITensor within rho
     int itenind = 0;
@@ -1560,7 +1269,7 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
         if(!t.index(1).noprime_equals(t.index(2)))
         { Print(rho); Print(t); Error("Non-symmetric ITensor in density matrix"); }
 
-        t.normlogto(maxlogfac); //Changes the logfac but preserves tensor
+        t.normlogto(maxlogfac);
 
         Matrix &U = mmatrix[itenind];
         Vector &d = mvector[itenind];
@@ -1646,7 +1355,7 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
 } //void diag_denmat
 
 template<class Tensor>
-Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir, Real lognormref = -1)
+Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir, Real logrefnorm = DefaultLogRef)
 {
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::CombinerT CombinerT;
@@ -1700,7 +1409,7 @@ Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, 
     assert(rho.r() == 2);
 
     Tensor U; Vector eigs_kept;
-    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept,lognormref);
+    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept,logrefnorm);
 
     to_orth = U * conj(comb);
     newoc   = conj(U) * AAc;
