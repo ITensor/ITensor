@@ -111,6 +111,8 @@ struct inqn
 
     void write(ostream& s) const { index.write(s); qn.write(s); }
     void read(istream& s) { index.read(s); qn.read(s); }
+    inline friend ostream& operator<<(ostream &o, const inqn& x)
+    { o << "inqn: " << x.index << " (" << x.qn << ")\n"; return o; }
 };
 
 class IQIndex;
