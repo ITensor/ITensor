@@ -486,13 +486,14 @@ void psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB,
     if(L.is_complex())
     {
         if(L.Length() != 1) Error("Non-scalar result in psiHphi.");
-        re = L(1) * exp(L.logfac());
-        im = L(2) * exp(L.logfac());
+        const int sign = (L.neg() ? -1 : 1);
+        re = sign * L(IndReIm(1)) * exp(L.logfac());
+        im = sign * L(IndReIm(2)) * exp(L.logfac());
     }
     else 
     {
         if(L.Length() != 1) Error("Non-scalar result in psiHphi.");
-        re = L.norm();
+        re = L.val0()*(L.neg() ? -1 : 1)*exp(L.logfac());
         im = 0;
     }
 }

@@ -194,19 +194,21 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
     { re = 0.0; }
     else
 	{
-        if(tre.p->itensor.begin()->dat().Length() != 1) 
+        const ITensor& t = tre.p->itensor.front();
+        if(t.vec_size() != 1) 
         {
             cout << "tre is\n" << tre << endl;
             Error("bad tre dat size");
         }
-        re = tre.p->itensor.begin()->val0() * exp(tre.p->itensor.begin()->logfac());
+        re = (t.neg() ? -1 : 1) * t.val0() * exp(t.logfac());
 	}
     if(tim.iten_size() == 0)
 	{ im = 0.0; }
     else
 	{
-        if(tim.p->itensor.begin()->dat().Length() != 1) Error("bad tim dat size");
-        im = tim.p->itensor.begin()->val0() * exp(tim.p->itensor.begin()->logfac());
+        const ITensor& t = tim.p->itensor.front();
+        if(t.vec_size() != 1) Error("bad tim dat size");
+        im = (t.neg() ? -1 : 1) * t.val0() * exp(t.logfac());
 	}
 }
 

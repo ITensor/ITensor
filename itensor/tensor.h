@@ -724,23 +724,6 @@ private:
         }
     }
 
-    void set_dat(const Vector& newv)
-	{
-        assert(p != 0);
-        if(p->count() != 1) 
-        { 
-            //intrusive_ptr<Internal::ITDat> new_p = new Internal::ITDat(newv); 
-            //p.swap(new_p); 
-            p = new Internal::ITDat(newv);
-        }
-        else
-        {
-            p->v = newv;
-#ifdef DO_ALT
-            p->alt.clear();
-#endif
-        }
-	}
     
     void set_unique_Real()
 	{
@@ -913,9 +896,7 @@ public:
             if(iv[n].ind.m()==1) _index1.push_back(iv[n].ind); else { dim *= iv[n].ind.m(); _indexn[++rn] = iv[n].ind; } 
         }
         allocate(dim);
-        //p->v((((((((iv8.i-1)*m(7)+iv7.i-1)*m(6)+iv6.i-1)*m(5)+iv5.i-1)*m(4)+iv4.i-1)*m(3)+iv3.i-1)*m(2)+iv2.i-1)*m(1)+iv1.i)
-        //= 1;
-        operator()(iv1.i,iv2.i,iv3.i,iv4.i,iv5.i,iv6.i,iv7.i,iv8.i) = 1;
+        ncval8(iv1.i,iv2.i,iv3.i,iv4.i,iv5.i,iv6.i,iv7.i,iv8.i) = 1;
         set_unique_Real();
     }
 
@@ -1230,42 +1211,84 @@ public:
     //Element Access Methods ----------------------------------------
 
     //Doesn't put in logfac or sign (i.e. _neg)
+    /*
     Real operator()(int i1 = 1,int i2 = 1,int i3 = 1,int i4 = 1,int i5 = 1,
 	    int i6 = 1,int i7 = 1, int i8 = 1) const
-	{ assert(p != 0); return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ 
+        assert(p != 0); 
+        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
+    }
 
     Real& operator()(int i1 = 1,int i2 = 1,int i3 = 1,int i4 = 1,int i5 = 1,
 	    int i6 = 1,int i7 = 1, int i8 = 1) 
-	{ assert(p != 0); dosign(); return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ 
+        assert(p != 0); 
+        solo(); 
+        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
+    }
+    */
+
+    void set_dat(const Vector& newv)
+	{
+        assert(p != 0);
+        if(p->count() != 1) 
+        { 
+            intrusive_ptr<Internal::ITDat> new_p(new Internal::ITDat(newv)); 
+            p.swap(new_p); 
+        }
+        else
+        {
+            p->v = newv;
+#ifdef DO_ALT
+            p->alt.clear();
+#endif
+        }
+	}
+
+    Real val8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) const
+	{ 
+        assert(p != 0); 
+        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
+    }
+
+    Real& ncval8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) 
+	{ 
+        assert(p != 0); 
+        solo(); 
+        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
+    }
 
     /*
     Real& val7(int i1,int i2,int i3,int i4,int i5,int i6,int i7)
-	{ assert(rn==7); assert(p != 0); dosign(); return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(rn==7); assert(p != 0); solo(); return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
 
     Real& val6(int i1,int i2,int i3,int i4,int i5,int i6)
-	{ assert(rn==6); assert(p != 0); dosign(); return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(rn==6); assert(p != 0); solo(); return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
 
     Real& val5(int i1,int i2,int i3,int i4,int i5)
-	{ assert(rn==5); assert(p != 0); dosign(); return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(rn==5); assert(p != 0); solo(); return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
 
     Real& val4(int i1,int i2,int i3,int i4)
-	{ assert(rn==4); assert(p != 0); dosign(); return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(rn==4); assert(p != 0); solo(); return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); }
 
     Real& val3(int i1,int i2,int i3)
-	{ assert(rn==3); assert(p != 0); dosign(); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1); }
+	{ assert(rn==3); assert(p != 0); solo(); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1); }
     */
 
-    Real& val0()
-	{ assert(rn==0); assert(p != 0); dosign(); return p->v(1); }
-
-    Real& val1(int i1)
-	{ assert(rn==1); assert(p != 0); dosign(); return p->v(i1); }
+    Real& val0() const 
+	{ assert(p != 0); return p->v(1); }
+    Real& ncval0()
+	{ assert(p != 0); solo(); return p->v(1); }
 
     Real val1(int i1) const
-	{ assert(rn==1); assert(p != 0); return p->v(i1); }
+	{ assert(p != 0); return p->v(i1); }
+    Real& ncval1(int i1)
+	{ assert(p != 0); solo(); return p->v(i1); }
 
-    Real& val2(int i1,int i2)
-	{ assert(rn==2); assert(p != 0); dosign(); return p->v((i2-1)*m(1)+i1); }
+    Real& val2(int i1,int i2) const
+	{ assert(p != 0); return p->v((i2-1)*m(1)+i1); }
+    Real& ncval2(int i1,int i2)
+	{ assert(p != 0); solo(); return p->v((i2-1)*m(1)+i1); }
 
     Real& operator()(const IndexVal& iv1, const IndexVal& iv2 = IVNull, const IndexVal& iv3 = IVNull,
                      const IndexVal& iv4 = IVNull, const IndexVal& iv5 = IVNull, const IndexVal& iv6 = IVNull,
@@ -1428,19 +1451,19 @@ inline Real Dot(const ITensor& x, const ITensor& y, bool doconj = true)
 	{
         ITensor res = (doconj ? conj(x) : x); res *= y;
         if(res.r() != 1) Error("Bad Dot 234234");
-        return res(1)*exp(res.logfac());
+        return res.val0()*(res.neg() ? -1 : 1)*exp(res.logfac());
 	}
     else if(y.is_complex())
 	{
         ITensor res = x; res *= y;
         if(res.r() != 1) Error("Bad Dot 37298789");
-        return res(1)*exp(res.logfac());
+        return res.val0()*(res.neg() ? -1 : 1)*exp(res.logfac());
 	}
 
     ITensor res = x; res *= y;
     if(res.r() != 0) 
 	{ x.print("x"); y.print("y"); Error("bad Dot"); }
-    return res(1)*exp(res.logfac());
+    return res.val0()*(res.neg() ? -1 : 1)*exp(res.logfac());
 }
 
 inline void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, bool doconj = true)
@@ -1449,16 +1472,18 @@ inline void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, bool doc
 	{
         ITensor res = (doconj ? conj(x) : x); res *= y;
         if(res.r() != 1) error("Bad Dot 334234");
-        re = res(IndReIm(1)) * exp(res.logfac());
-        im = res(IndReIm(2)) * exp(res.logfac());
+        const int sign = (res.neg() ? -1 : 1);
+        re = sign * res(IndReIm(1)) * exp(res.logfac());
+        im = sign * res(IndReIm(2)) * exp(res.logfac());
         return;
 	}
     else if(y.is_complex())
 	{
         ITensor res = x; res *= y;
         if(res.r() != 1) error("Bad Dot 47298789");
-        re = res(IndReIm(1)) * exp(res.logfac());
-        im = res(IndReIm(2)) * exp(res.logfac());
+        const int sign = (res.neg() ? -1 : 1);
+        re = sign * res(IndReIm(1)) * exp(res.logfac());
+        im = sign * res(IndReIm(2)) * exp(res.logfac());
         return;
 	}
     if(x.r() != y.r()) 
@@ -1474,7 +1499,7 @@ inline void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, bool doc
         cerr << "y = " << y << "\n";
         Error("bad Dot 20234");
 	}
-    re = res(1)*exp(res.logfac());
+    re = res.val0()*(res.neg() ? -1 : 1)*exp(res.logfac());
     im = 0;
 }
 
