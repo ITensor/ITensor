@@ -34,18 +34,29 @@ public:
     QN(int sz=0,int Nf=0) : _sz(sz), _Nf(Nf), _Nfp(abs(Nf%2)) { }
     QN(int sz,int Nf,int Nfp) : _sz(sz), _Nf(Nf), _Nfp(abs(Nfp%2))
     { assert(_Nf==0 || abs(_Nf%2) == _Nfp); }
+
     QN(istream& s) { read(s); }
 
     int sz() const { return _sz; }
     int Nf() const { return _Nf; }
     int Nfp() const { assert(_Nfp == 0 || _Nfp == 1); return _Nfp; }
     int fp() const { return (_Nfp == 0 ? +1 : -1); }
-    int& sz() { return _sz; }
-    int& Nf() { return _Nf; }
-    int& Nfp() { assert(_Nfp == 0 || _Nfp == 1); return _Nfp; }
+    //int& sz() { return _sz; }
+    //int& Nf() { return _Nf; }
+    //int& Nfp() { assert(_Nfp == 0 || _Nfp == 1); return _Nfp; }
 
-    void write(ostream& s) const { s.write((char*)this,sizeof(this)); }
-    void read(istream& s) { s.read((char*)this,sizeof(this)); }
+    void write(ostream& s) const 
+    { 
+        s.write((char*)&_sz,sizeof(_sz)); 
+        s.write((char*)&_Nf,sizeof(_Nf)); 
+        s.write((char*)&_Nfp,sizeof(_Nfp)); 
+    }
+    void read(istream& s) 
+    { 
+        s.read((char*)&_sz,sizeof(_sz)); 
+        s.read((char*)&_Nf,sizeof(_Nf)); 
+        s.read((char*)&_Nfp,sizeof(_Nfp)); 
+    }
 
     QN operator+(const QN &other) const
 	{ QN res(*this); res+=other; return res; }
@@ -138,20 +149,21 @@ public:
 class IQIndexDat
 {
     mutable unsigned int numref;
+    const bool is_static_;
 public:
     vector<inqn> iq_;
 
-    IQIndexDat() : numref(0) { }
+    IQIndexDat() : numref(0), is_static_(false) { }
 
     IQIndexDat(const Index& i1, const QN& q1)
-    : numref(0)
+    : numref(0), is_static_(false)
     {
         iq_.push_back(inqn(i1,q1));
     }
 
     IQIndexDat(const Index& i1, const QN& q1,
                const Index& i2, const QN& q2)
-    : numref(0)
+    : numref(0), is_static_(false)
     {
         iq_.push_back(inqn(i1,q1));
         iq_.push_back(inqn(i2,q2));
@@ -160,7 +172,7 @@ public:
     IQIndexDat(const Index& i1, const QN& q1,
                const Index& i2, const QN& q2,
                const Index& i3, const QN& q3)
-    : numref(0)
+    : numref(0), is_static_(false)
     {
         iq_.push_back(inqn(i1,q1));
         iq_.push_back(inqn(i2,q2));
@@ -171,7 +183,7 @@ public:
                const Index& i2, const QN& q2,
                const Index& i3, const QN& q3,
                const Index& i4, const QN& q4)
-    : numref(0)
+    : numref(0), is_static_(false)
     {
         iq_.push_back(inqn(i1,q1));
         iq_.push_back(inqn(i2,q2));
@@ -180,13 +192,13 @@ public:
     }
 
     IQIndexDat(vector<inqn>& ind_qn)
-    : numref(0)
+    : numref(0), is_static_(false)
     { iq_.swap(ind_qn); }
 
-    explicit IQIndexDat(const IQIndexDat& other) : numref(0), iq_(other.iq_)
+    explicit IQIndexDat(const IQIndexDat& other) : numref(0), is_static_(false), iq_(other.iq_)
     { }
 
-    explicit IQIndexDat(istream& s) : numref(0) { read(s); }
+    explicit IQIndexDat(istream& s) : numref(0), is_static_(false) { read(s); }
 
     void write(ostream& s) const
     {
@@ -202,11 +214,20 @@ public:
         foreach(inqn& x,iq_) x.read(s);
     }
 
-    ENABLE_INTRUSIVE_PTR(IQIndexDat)
+    explicit IQIndexDat(Imaker im)
+    : numref(0), is_static_(true)
+    { 
+        iq_.push_back(inqn(Index(im),QN())); 
+    }
+
+    friend inline void intrusive_ptr_add_ref(IQIndexDat* p) { ++(p->numref); }
+    friend inline void intrusive_ptr_release(IQIndexDat* p) { if(!p->is_static_ && --(p->numref) == 0){ delete p; } }
+    int count() const { return numref; }
 private:
-    ~IQIndexDat() { } //must be dynamically allocated
     void operator=(const IQIndexDat&);
 };
+
+extern IQIndexDat IQIndexDatNull, IQIndReDat, IQIndReDatP, IQIndReDatPP, IQIndEmptyVDat;
 
 struct IQIndexVal;
 
@@ -329,6 +350,22 @@ public:
         s.read((char*)&_dir,sizeof(_dir));
         pd = new IQIndexDat(s);
     }
+
+    IQIndex(Imaker im)
+    : Index(im), _dir(In)
+	{
+        if(im == makeNull)
+        { pd = &IQIndexDatNull; }
+        else if(im == makeReIm)
+        { pd = &IQIndReDat; }
+        else if(im == makeReImP)
+        { pd = &IQIndReDatP; }
+        else if(im == makeReImPP)
+        { pd = &IQIndReDatPP;}
+        else if(im == makeEmptyV)
+        { pd = &IQIndEmptyVDat; }
+        else Error("IQIndex: Unrecognized Imaker type.");
+	}
 
     IQIndexVal operator()(int n) const;
 
@@ -647,7 +684,7 @@ public:
     IQTensor(PrimeType pt,const IQTensor& other) : p(other.p), viqindex(other.viqindex)
     { doprime(pt); }
 
-    explicit IQTensor(istream& s) { read(s); }
+    explicit IQTensor(istream& s) : p(0), viqindex(IQEmptyV) { read(s); }
 
     void read(istream& s)
     {
@@ -655,7 +692,9 @@ public:
         s.read((char*) &null_,sizeof(null_));
         if(null_) { *this = IQTensor(); return; }
         p = new IQTDat(s);
-        viqindex.read(s);
+        bool has_v;
+        s.read((char*) &has_v,sizeof(has_v));
+        if(has_v) viqindex.read(s);
     }
 
     void write(ostream& s) const
@@ -664,7 +703,9 @@ public:
         s.write((char*) &null_,sizeof(null_));
         if(null_) return;
         p->write(s);
-        viqindex.write(s);
+        bool has_v = has_virtual();
+        s.write((char*) &has_v,sizeof(has_v));
+        if(has_v) viqindex.write(s);
     }
 
 
@@ -985,7 +1026,7 @@ public:
 
     bool hasindex(const IQIndex& i) const { return findindex(i) != 0; }
     bool is_complex() const { return findindex(IQIndReIm) != 0; }
-    bool has_virtual() const { return viqindex != IQEmptyV; }
+    bool has_virtual() const { return viqindex.index(1) != IQEmptyV.index(1); }
     QN virtualQN() const { return viqindex.qn(1); }
     const IQIndex& virtual_ind() const { return viqindex; }
 
@@ -1076,6 +1117,15 @@ public:
 
     void print(string name = "",Printdat pdat = HideData) const 
     { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
+
+    void printIQInds(string name = "") const
+    { 
+        cerr << "\nIQTensor ------------------\n";
+        for(size_t j = 0; j < p->iqindex_.size(); ++j)
+        { cerr << p->iqindex_[j] << "\n\n"; }
+        if(has_virtual()) cerr << "Virtual = " << viqindex << "\n\n";
+        cerr << "---------------------------\n\n";
+    }
 
     void Assign(const IQTensor& other) const
     {
@@ -1261,11 +1311,17 @@ public:
 };
 
 #ifdef THIS_IS_MAIN
-IQIndex IQIndNull(IndNull,IndNull,QN(),In);
-IQIndex IQIndReIm(IndReIm,IndReIm,QN(),In);
-IQIndex IQIndReImP(IndReImP,IndReImP,QN(),In);
-IQIndex IQIndReImPP(IndReImPP,IndReImPP,QN(),In);
-IQIndex IQEmptyV(IndEmptyV,IndEmptyV,QN(),In);
+IQIndexDat IQIndexDatNull(makeNull);
+IQIndexDat IQIndReDat(makeReIm);
+IQIndexDat IQIndReDatP(makeReImP);
+IQIndexDat IQIndReDatPP(makeReImPP);
+IQIndexDat IQIndEmptyVDat(makeEmptyV);
+
+IQIndex IQIndNull(makeNull);
+IQIndex IQIndReIm(makeReIm);
+IQIndex IQIndReImP(makeReImP);
+IQIndex IQIndReImPP(makeReImPP);
+IQIndex IQEmptyV(makeEmptyV);
 
 IQIndexVal IQIVNull(IQIndNull,0);
 
