@@ -156,6 +156,8 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
         }
 	}
 
+    return *this;
+
 } //IQTensor& IQTensor::operator*=(const IQTensor& other)
 
 //Extracts the real and imaginary parts of the 
