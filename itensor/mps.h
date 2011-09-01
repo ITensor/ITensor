@@ -336,6 +336,20 @@ public:
         if(i >= right_orth_lim) right_orth_lim = i+1;
         return GET(A,i); 
     }
+    Tensor& setU(int i, Direction dir) //set unitary
+    {
+        if(dir == Fromleft)
+        {
+        if(i == left_orth_lim+1) left_orth_lim = i;
+        else Error("MPS::setU: left_orth_lim not at i-1");
+        }
+        else if(dir == Fromright)
+        {
+        if(i == right_orth_lim-1) right_orth_lim = i;
+        else Error("MPS::setU: right_orth_lim not at i-1");
+        }
+        return GET(A,i);
+    }
     bool is_null() const { return (model_==0); }
     bool is_not_null() const { return (model_!=0); }
 
@@ -441,7 +455,7 @@ public:
         //otherwise the MPS will retain the same index structure
         */
 
-        tensorSVD(AA,GET(A,i),GET(A,i+1),cutoff,minm,maxm,dir);
+        tensorSVD(AA,GET(A,i),GET(A,i+1),cutoff,minm,maxm,dir,0);
         truncerror = svdtruncerr;
 
         if(dir == Fromleft)
@@ -794,27 +808,30 @@ public:
                 linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
             }
             if(s == 1)
+            {
                 iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
+                IQIndex Center("Center",Index("center",1,Virtual),totalq,In);
+                iqpsi.AAnc(1).addindex1(Center);
+            }
             else if(s == N)
+            {
                 iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s)) 
                                         : IQTensor(conj(linkind[s-1]),si(s)));
+            }
             else
+            {
                 iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s),linkind[s]) 
                                         : IQTensor(conj(linkind[s-1]),si(s),linkind[s]));
+            }
 
+            foreach(const ITensor& nb, nblock) { iqpsi.AAnc(s) += nb; } nblock.clear();
+
+            if(0) //try to get this working ideally
             if(!is_mpo && s > 1) 
             {
                 IQTensor AA = iqpsi.bondTensor(s-1);
                 iqpsi.doSVD(s-1,AA,Fromleft);
             }
-
-            foreach(const ITensor& nb, nblock) { iqpsi.AAnc(s) += nb; } nblock.clear();
-
-            //if(s < 5)
-            //{
-            //    Print(iqpsi.AA(s));
-            //}
-            //else Error("Stopping.");
 
             if(s==show_s)
             {
@@ -823,9 +840,6 @@ public:
             }
 
         } //for loop over s
-
-        IQIndex Center("Center",Index("center",1,Virtual),totalq,In);
-        iqpsi.AAnc(1).addindex1(Center);
 
         assert(check_QNs(iqpsi));
 
@@ -1293,15 +1307,14 @@ inline bool check_QNs(const IQMPS& psi)
         {
             if(psi.RightLinkInd(i).dir() != In) 
             {
-                cerr << "check_QNs: Right side Link not pointing In to left of orthog. center at site " << i << endl;
-                cerr << "AA(" << i << ") = " << psi.AA(i) << endl;
+                cerr << format("check_QNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
                 return false;
             }
             if(i > 1)
             {
                 if(psi.LeftLinkInd(i).dir() != Out) 
                 {
-                    cerr << "check_QNs: Left side Link not pointing Out to left of orthog. center at site " << i << endl;
+                    cerr << format("check_QNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
                     return false;
                 }
             }
@@ -1313,12 +1326,12 @@ inline bool check_QNs(const IQMPS& psi)
             if(i < N)
             if(psi.RightLinkInd(i).dir() != Out) 
             {
-                cerr << "check_QNs: Right side Link not pointing Out on right side of orthog. center at site " << i << endl;
+                cerr << format("check_QNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
                 return false;
             }
             if(psi.LeftLinkInd(i).dir() != In) 
             {
-                cerr << "check_QNs: Left side Link not pointing In on right side of orthog. center at site " << i << endl;
+                cerr << format("check_QNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
                 return false;
             }
         }
