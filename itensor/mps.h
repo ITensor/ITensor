@@ -861,7 +861,7 @@ void plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind, IQTensor& f
         iq.push_back(inqn(jj,x.qn));
 	}
     sumind = IQIndex(sumind,iq);
-    first = IQTensor(l1,sumind);
+    first = IQTensor(conj(l1),sumind);
     foreach(const inqn& x, l1.iq())
 	{
         Index il1 = x.index;
@@ -869,7 +869,7 @@ void plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind, IQTensor& f
         ITensor t(il1,s1,1.0);
         first += t;
 	}
-    second = IQTensor(l2,sumind);
+    second = IQTensor(conj(l2),sumind);
     foreach(const inqn& x, l2.iq())
 	{
         Index il2 = x.index;
@@ -897,9 +897,9 @@ MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
     AAnc(1) = AA(1) * first[1] + other.AA(1) * second[1];
     for(int i = 2; i < N; ++i)
     {
-        AAnc(i) = first[i-1] * AA(i) * first[i] + second[i-1] * other.AA(i) * second[i];
+        AAnc(i) = conj(first[i-1]) * AA(i) * first[i] + conj(second[i-1]) * other.AA(i) * second[i];
     }
-    AAnc(N) = first[N-1] * AA(N) + second[N-1] * other.AA(N);
+    AAnc(N) = conj(first[N-1]) * AA(N) + conj(second[N-1]) * other.AA(N);
 
     noprimelink();
 
@@ -1046,6 +1046,8 @@ Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, 
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::CombinerT CombinerT;
 
+    if(AA.vec_size() == 0) Error("tensorSVD(Tensor): input tensor had zero size.");
+
     IndexT mid; index_in_common(A,B,Link,mid);
     if(mid.is_null()) mid = IndexT("mid");
 
@@ -1097,8 +1099,9 @@ Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, 
     Tensor U; Vector eigs_kept;
     diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept,logrefnorm);
 
-    to_orth = U * conj(comb);
-    newoc   = conj(U) * AAc;
+    comb.conj();
+    comb.product(U,to_orth);
+    newoc = conj(U) * AAc;
 
     return eigs_kept;
 }
