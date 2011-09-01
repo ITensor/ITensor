@@ -305,7 +305,7 @@ protected:
         vector<IQIndex> a(N+1);
         for(int i = 1; i <= N; ++i)
         { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
-        A_[1] = IQTensor(si(1),a[1],Center); A_[1](initState(1))=1;
+        A_[1] = IQTensor(si(1),a[1]); A_[1].addindex1(Center); A_[1](initState(1))=1;
         for(int i = 2; i < N; ++i)
         { 
         A_[i] = IQTensor(conj(a[i-1]),si(i),a[i]); 

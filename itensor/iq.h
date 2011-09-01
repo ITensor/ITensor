@@ -487,16 +487,30 @@ public:
     IQTDat() : numref(0), rmap_init(false) { }
 
     explicit IQTDat(const IQIndex& i1): numref(0), rmap_init(false), iqindex_(1)
-    { iqindex_[0] = i1; }
+    { 
+        assert(i1.type() != Virtual); iqindex_[0] = i1; 
+    }
 
     IQTDat(const IQIndex& i1, const IQIndex& i2): numref(0), rmap_init(false), iqindex_(2)
-    { iqindex_[0] = i1; iqindex_[1] = i2; }
+    { 
+        assert(i1.type() != Virtual); iqindex_[0] = i1; 
+        assert(i2.type() != Virtual); iqindex_[1] = i2; 
+    }
 
     IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3): numref(0), rmap_init(false), iqindex_(3)
-    { iqindex_[0] = i1; iqindex_[1] = i2; iqindex_[2] = i3; }
+    { 
+        assert(i1.type() != Virtual); iqindex_[0] = i1; 
+        assert(i2.type() != Virtual); iqindex_[1] = i2; 
+        assert(i3.type() != Virtual); iqindex_[2] = i3; 
+    }
 
     IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3, const IQIndex& i4): numref(0), rmap_init(false), iqindex_(4)
-    { iqindex_[0] = i1; iqindex_[1] = i2; iqindex_[2] = i3; iqindex_[3] = i4; }
+    { 
+        assert(i1.type() != Virtual); iqindex_[0] = i1; 
+        assert(i2.type() != Virtual); iqindex_[1] = i2; 
+        assert(i3.type() != Virtual); iqindex_[2] = i3; 
+        assert(i4.type() != Virtual); iqindex_[3] = i4; 
+    }
 
     explicit IQTDat(vector<IQIndex>& iqinds_) : numref(0), rmap_init(false) { iqindex_.swap(iqinds_); }
 

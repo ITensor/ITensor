@@ -2,7 +2,6 @@
 #define __COMBINER_H
 
 #include "tensor.h"
-//#include "permutation.h"
 
 /*
 Combine several indices into one, use * to convert tensors efficiently
@@ -198,7 +197,8 @@ public:
         res = ITensor(nindices);
         t.ReshapeDat(P,res.ncdat());
         res.addindex1(res_index1);
-        res.setlogfac(t.logfac()); res *= (t.neg() ? -1 : 1);
+        res.setlogfac(t.logfac()); 
+        res *= (t.neg() ? -1 : 1);
     }
 
 }; //class Combiner
