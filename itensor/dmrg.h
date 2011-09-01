@@ -116,7 +116,7 @@ public:
 template<class Tensor, class TensorSet>
 void putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH)
 {
-    IQTensor phip;
+    Tensor phip;
     for(int cnt = 1; cnt <= 1E5; ++cnt)
     {
         applyProjOp(phi,LH,RH,mpoh,phip);
@@ -127,6 +127,30 @@ void putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const Ten
         if(cnt > 10) cerr << "Warning: large number of time evolution steps in putInQNs." << endl;
         if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
         else if(phip.vec_size() == phisize) break;
+    }
+}
+template<class Tensor, class TensorSet>
+void putInQNs(vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH)
+{
+    for(size_t n = 0; n < phi.size(); ++n)
+    {
+        Tensor phip;
+        if(phi[n].is_null() || phi[n].vec_size() == 0)
+        {
+            Print(n); Print(phi[n]);
+            Error("Null or zero size tensor in putInQNs.");
+        }
+        for(int cnt = 1; cnt <= 1E5; ++cnt)
+        {
+            applyProjOp(phi[n],LH,RH,mpoh,phip);
+            phip *= -0.00232341; //arbitrary small number
+            phip += phi[n]; //evolve by (1-tau*H)
+            int phisize = phi[n].vec_size();
+            phi[n] = phip;
+            if(cnt > 10) cerr << "Warning: large number of time evolution steps in putInQNs." << endl;
+            if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
+            else if(phip.vec_size() == phisize) break;
+        }
     }
 }
 template<class TensorSet>
@@ -158,6 +182,31 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
         return evals(1); //energy
     }
     return 1000;
+}
+
+template<class Tensor, class TensorSet>
+Vector doDavidson(vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal)
+{
+    const int ntarget = phi.size();
+    assert(ntarget != 0);
+
+    putInQNs(phi,mpoh,LH,RH);
+    LocalHam<Tensor,TensorSet> lham(LH,RH,mpoh,phi[0]);
+
+    Matrix evecs(max(ntarget,niter),phi[0].vec_size()); Vector evals;
+    for(int n = 0; n < ntarget; ++n)
+    { 
+        phi[n].AssignToVec(evecs.Row(1+n)); 
+        evecs.Row(1+n) /= Norm(evecs.Row(1+n));
+    }
+    David(lham,1,errgoal,evals,evecs,1,1,debuglevel);
+    Vector energies(ntarget);
+    for(int n = 0; n < ntarget; ++n)
+    { 
+        phi[n].AssignFromVec(evecs.Row(1+n));
+        energies(1+n) = evals(1+n);
+    }
+    return energies;
 }
 
 //Struct of options for fine-tuning DMRG algorithms
