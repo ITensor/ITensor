@@ -1,5 +1,6 @@
 #ifndef __TYPES_H
 #define __TYPES_H
+#include <cmath>
 
 //#define NMAX 8
 static const int NMAX = 8;
