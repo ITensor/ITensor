@@ -1324,13 +1324,13 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
       _merror("EigenValues: Input Matrix must be square");
 
 #ifndef NDEBUG
-    double debug_norm = Norm(Matrix(Matrix(A)-Matrix(A.t())).TreatAsVector());
-    if(debug_norm >= 1E-4) 
-    {
-        cerr << endl << "WARNING: In EigenValues, Norm of A-A.t() was " << debug_norm << endl << endl;
+    //double debug_norm = Norm(Matrix(Matrix(A)-Matrix(A.t())).TreatAsVector());
+    //if(debug_norm >= 1E-4) 
+    //{
+        //cerr << endl << "WARNING: In EigenValues, Norm of A-A.t() was " << debug_norm << endl << endl;
         //cerr << "A-A.t() = " << endl << Matrix(A)-Matrix(A.t()) << endl;
         //cerr << "A = " << endl << A << endl;
-    }
+    //}
     //assert(Norm(Matrix(Matrix(A)-Matrix(A.t())).TreatAsVector()) < 1E-4);
     //assert(debug_norm < 1E-4);
 #endif
