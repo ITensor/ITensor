@@ -31,7 +31,7 @@ public:
         return _right; 
     }
     int rln() const { return _rln; }
-    const Index& leftn(int j) const { return _leftn[j]; }
+    const Index& leftn(int j) const { return GET(_leftn,j); }
 
     typedef array<Index,NMAX+1>::const_iterator leftn_it;
     const pair<leftn_it,leftn_it> leftn() const { return make_pair(_leftn.begin()+1,_leftn.begin()+_rln+1); }
@@ -71,14 +71,15 @@ public:
     void addleft(const Index& l)// Include another left index
 	{ 
         initted = false;
-        if(l.m() == 1) { _left1.push_back(l); return; } else _leftn[++_rln] = l; 
+        if(_rln == NMAX) Error("Combiner: already reached max number of left indices.");
+        if(l.m() == 1) { _left1.push_back(l); return; } else GET(_leftn,++_rln) = l; 
 	}
 
     //Initialize after all lefts are added and before being used
     void init(string rname = "combined", IndexType type = Link, int primelevel = 0) const
 	{
         if(initted) return;
-        int m = 1; for(int i = 1; i <= _rln; ++i) { m *= _leftn[i].m(); }
+        int m = 1; for(int i = 1; i <= _rln; ++i) { m *= GET(_leftn,i).m(); }
         _right = Index(rname,m,type,primelevel); 
         initted = true;
     }
@@ -86,7 +87,7 @@ public:
     int findindexn(Index i) const
 	{
         for(int j = 1; j <= _rln; ++j)
-            if(_leftn[j] == i) return j;
+            if(GET(_leftn,j) == i) return j;
         return 0;
 	}
     bool hasindex(Index i) const
@@ -97,7 +98,7 @@ public:
             if(i == L) return true;
             return false;
         }
-        for(int j = 1; j <= _rln; ++j) if(_leftn[j] == i) return true;
+        for(int j = 1; j <= _rln; ++j) if(GET(_leftn,j) == i) return true;
         return false;
 	}
 
@@ -147,7 +148,7 @@ public:
             for(int i = 1; i < j; ++i)
                 nindices.push_back(t.indexn(i));
             for(int i = 1; i <= _rln; ++i)
-                nindices.push_back(_leftn[i]);
+                nindices.push_back(GET(_leftn,i));
             for(int i = j+1; i <= t.r_n(); ++i)
                 nindices.push_back(t.indexn(i));
             foreach(const Index& I, _left1) nindices.push_back(I);
@@ -162,10 +163,10 @@ public:
         Permutation P;
         for(int i = 1; i <= _rln; ++i)
         {
-            if((j = t.findindexn(_leftn[i])) == 0)
+            if((j = t.findindexn(GET(_leftn,i))) == 0)
             {
                 Print(t); Print(*this);
-                cerr << "Couldn't find 'left' Index " << _leftn[i] << " in ITensor t.\n";
+                cerr << "Couldn't find 'left' Index " << GET(_leftn,i) << " in ITensor t.\n";
                 Error("operator*(ITensor,Combiner): bad Combiner ITensor product");
             }
             P.from_to(j,t.r_n()-_rln+i);

@@ -782,7 +782,7 @@ public:
         solo(); p->init_rmap();
         array<IQIndexVal,NMAX+1> iv = {{ IQIVNull, iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
         Real ur = 0; int nn = 0; 
-        while(iv[nn+1].iqind != IQIVNull.iqind) 
+        while(GET(iv,nn+1).iqind != IQIVNull.iqind) 
         { ++nn; ur += GET(iv,nn).index().unique_Real(); }
         ApproxReal r(ur);
 
@@ -975,7 +975,7 @@ public:
 
     int find_iqind(const Index& I) const
     {
-        for(unsigned int j = 0; j < p->iqindex_.size(); ++j)
+        for(size_t j = 0; j < p->iqindex_.size(); ++j)
         if(p->iqindex_[j].hasindex(I)) { return j+1; }
         return 0;
     }

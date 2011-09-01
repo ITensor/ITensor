@@ -124,10 +124,10 @@ template<class T> vector<T> operator*(const vector<T>& v1, const vector<T*>& v2)
 
 template<class T> vector<T> operator*(const vector<const T*>& v1, const vector<const T*>& v2) 
 { 
-    const unsigned int sz = v1.size();
+    const size_t sz = v1.size();
     assert(v2.size() == sz);
     vector<T> res(sz); 
-    for(unsigned int n = 0; n < sz; ++n) res[n] = *(v1[n]) * *(v2[n]);
+    for(size_t n = 0; n < sz; ++n) res[n] = *(v1[n]) * *(v2[n]);
     return res; 
 }
 
@@ -331,17 +331,21 @@ public:
     int r() const { return rn + _index1.size(); }
     int r_n() const { return rn; }
     int r_1() const { return _index1.size(); }
-    inline int m(int j) const { return (j > rn ? 1 : _indexn[j].m()); }
+    inline int m(int j) const { return (j > rn ? 1 : GET(_indexn,j).m()); }
 
     bool is_null() const { return (p == 0); }
     bool is_not_null() const { return (p != 0); }
     bool is_complex() const { return findindexn(IndReIm) > 0; }
     bool is_not_complex() const { return (findindexn(IndReIm) == 0); }
+
+    void debug_dosign() const { dosign(); }
     Vector& ncdat() { assert(p != 0); solo(); return p->v; }
     const Vector& dat() const { assert(p != 0); return p->v; }
+
     int Length() const { return dat().Length(); }
     Real logfac() const { return _logfac; }
     bool neg() const { return _neg; }
+    int sign() const { return (_neg ? -1 : 1); }
     void setlogfac(Real newlogfac) { _logfac = newlogfac; }
 
     //These methods can be used for const iteration over Indices in a foreach loop
@@ -581,7 +585,7 @@ public:
     int findindex1(const Index& I) const
 	{
         if(I.m() != 1) return 0;
-        for(unsigned int j = 0; j < _index1.size(); ++j)
+        for(size_t j = 0; j < _index1.size(); ++j)
         if(_index1[j] == I) return j+rn+1;
         return 0;
 	}
@@ -772,21 +776,49 @@ public:
         }
 	}
 
-    //Doesn't put in logfac or sign (i.e. _neg)
-    Real& val0() const 
+    Real val0() const 
 	{ assert(p != 0); return p->v(1); }
     Real& ncval0()
-	{ assert(p != 0); solo(); return p->v(1); }
+	{ 
+        assert(p != 0); 
+        assert(!_neg);
+        assert(_logfac==0);
+        solo(); 
+        return p->v(1); 
+    }
 
     Real val1(int i1) const
 	{ assert(p != 0); return p->v(i1); }
     Real& ncval1(int i1)
-	{ assert(p != 0); solo(); return p->v(i1); }
+	{ 
+        assert(p != 0); 
+        assert(!_neg);
+        assert(_logfac==0);
+        solo(); 
+        return p->v(i1); 
+    }
 
-    Real& val2(int i1,int i2) const
+    Real val2(int i1,int i2) const
 	{ assert(p != 0); return p->v((i2-1)*m(1)+i1); }
     Real& ncval2(int i1,int i2)
-	{ assert(p != 0); solo(); return p->v((i2-1)*m(1)+i1); }
+	{ 
+        assert(p != 0); 
+        assert(!_neg);
+        assert(_logfac==0);
+        solo(); 
+        return p->v((i2-1)*m(1)+i1); 
+    }
+
+    Real val3(int i1,int i2,int i3) const
+	{ assert(p != 0); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1); }
+    Real& ncval3(int i1,int i2,int i3)
+    { 
+        assert(p != 0); 
+        assert(!_neg);
+        assert(_logfac==0);
+        solo(); 
+        return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1); 
+    }
 
     Real val8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) const
 	{ 
@@ -796,6 +828,8 @@ public:
     Real& ncval8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) 
 	{ 
         assert(p != 0); 
+        assert(!_neg);
+        assert(_logfac==0);
         solo(); 
         return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1); 
     }
@@ -946,8 +980,6 @@ public:
     void print(string name = "",Printdat pdat = HideData) const 
     { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
 
-    friend ostream & operator<<(ostream & s, const ITensor & t);
-
     bool checkDim() const
     {
         int dim = 1;
@@ -964,6 +996,8 @@ public:
         }
         return true;
     }
+
+    friend ostream& operator<<(ostream & s, const ITensor & t);
 
 }; //ITensor
 
@@ -1109,6 +1143,33 @@ public:
 const Counter* Counter::pend = new Counter;
 const Counter& Counter::done(*pend);
 #endif                                  
+
+inline ostream& operator<<(ostream & s, const ITensor & t)
+{
+    s << "logfac(incl in elems) = " << t.logfac() << ", r = " << t.r() << ": ";
+    int i = 0;
+    for(i = 1; i <= t.r_n(); ++i) { s << t.indexn(i) << (i != t.r_n() ? ", " : "; "); }
+    foreach(const Index& I, t.index1()) { s << I << (i != t.r() ? ", " : ""); ++i; }
+    if(t.is_null()) s << " (dat is null)\n";
+    else 
+    {
+        s << format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
+        if(printdat)
+        {
+            const int sign = (t.neg() ? -1 : 1);
+            Counter c(t);
+            for(; c != Counter::done; ++c)
+            {
+                assert(c.ind > 0);
+                assert(c.ind <= t.Length());
+                if(fabs(t.dat()(c.ind)) > 1E-10)
+                { s << c << " " << t.dat()(c.ind)*sign*exp(t.logfac()) << "\n"; }
+            }
+        }
+        else s << "\n";
+    }
+    return s;
+}
 
 enum SweepScheme {ramp_m, fixed_m, fixed_cutoff};
 

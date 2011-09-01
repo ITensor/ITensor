@@ -4,34 +4,6 @@
 
 Real ran1();
 
-ostream& operator<<(ostream & s, const ITensor & t)
-{
-    s << "logfac(incl in elems) = " << t.logfac() << ", r = " << t.r() << ": ";
-    int i = 0;
-    for(i = 1; i <= t.r_n(); ++i) { s << t.indexn(i) << (i != t.r_n() ? ", " : "; "); }
-    foreach(const Index& I, t.index1()) { s << I << (i != t.r() ? ", " : ""); ++i; }
-    if(t.is_null()) s << " (dat is null)\n";
-    else 
-    {
-        s << format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
-        if(printdat)
-        {
-            const int sign = (t.neg() ? -1 : 1);
-            Counter c(t);
-            for(; c != Counter::done; ++c)
-            {
-                assert(c.ind > 0);
-                assert(c.ind <= t.Length());
-                if(fabs(t.dat()(c.ind)) > 1E-10)
-                { s << c << " " << t.dat()(c.ind)*sign*exp(t.logfac()) << "\n"; }
-            }
-        }
-        else s << "\n";
-    }
-
-    return s;
-}
-
 void ITensor::ReshapeDat(const Permutation& P, Vector& rdat) const
 {
     assert(p != 0);
@@ -718,7 +690,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
     if(dlogfac < -200.0) return *this; // no effect from other
 
     dosign();
-    const int sign = (other._neg ? -1 : 1);
+    const int sign = other.sign();
 
     Vector& thisdat = p->v;
     assert(other.p != 0);
@@ -760,7 +732,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
     int *j[NMAX+1];
     Counter c(other);
     for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
-    assert(other.p != 0);
+
     if(dlogfac < 0.0)	
 	{
         Real f = sign * exp(dlogfac);
@@ -798,6 +770,33 @@ ITensor& ITensor::operator+=(const ITensor& other)
 	}
     _logfac = other._logfac;
     return *this;
+
+    //Simplified version for debugging:
+    /*
+    assert(p != 0);
+    Vector& thisdat = p->v;
+    assert(other.p != 0);
+    const Vector& othrdat = other.p->v;
+
+    dosign();
+    const int other_sign = other.sign();
+    Permutation P; getperm(other._indexn,P);
+    int *j[NMAX+1];
+    Counter c(other);
+    for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
+
+    this->normlogto(0);
+    other.normlogto(0);
+
+    for( ; c != Counter::done ; ++c)
+        thisdat((((((((*j[8]-1)*this->m(7)+*j[7]-1)*this->m(6)+*j[6]-1)*this->m(5)
+        +*j[5]-1)*this->m(4)+*j[4]-1)*this->m(3)+*j[3]-1)*this->m(2)+*j[2]-1)*this->m(1)+*j[1])
+        += other_sign * othrdat(c.ind);
+
+    return *this;
+    */
+    //-----------------
+
 } 
 
 void ITensor::SplitReIm(ITensor& re, ITensor& im) const

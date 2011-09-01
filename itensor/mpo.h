@@ -243,17 +243,10 @@ void psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re,
     const int N = H.NN();
     if(phi.NN() != N || psi.NN() != N) Error("psiHphi: mismatched N");
 
-    Tensor L = phi.AA(1) * H.AA(1) * conj(primed(psi.AA(1)));
-    if(debug1) Print(L.norm());
-    for(int i = 2; i < N; ++i) { 
-    L = L * phi.AA(i) * H.AA(i) * conj(primed(psi.AA(i))); 
-        if(debug1) 
-        {
-        Print(L.norm());
-        }
-    }
-    L = L * phi.AA(N) * H.AA(N);
-    if(debug1) { Print(L.norm()); exit(0); }
+    Tensor L = phi.AA(1); L *= H.AA(1); L *= conj(primed(psi.AA(1)));
+    for(int i = 2; i < N; ++i) 
+    { L *= phi.AA(i); L *= H.AA(i); L *= conj(primed(psi.AA(i))); }
+    L *= phi.AA(N); L *= H.AA(N);
 
     Dot(primed(psi.AA(N)),L,re,im);
 }

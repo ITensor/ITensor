@@ -131,7 +131,7 @@ inline void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector
 
                     Real rel_cut = -1;
                     for(int j = 1; j <= bond.m(); ++j)
-                    { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
+                    { rel_cut = max(fabs(summed_block.val1(j)*exp(summed_block.logfac())),rel_cut); }
                     assert(rel_cut >= 0);
                     //Real rel_cut = summed_block.norm()/summed_block.vec_size();
                     rel_cut *= cut;
@@ -139,7 +139,7 @@ inline void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector
 
                     if(rel_cut > 0)
                     for(int j = 1; j <= bond.m(); ++j)
-                    if(fabs(summed_block.val1(j)) > rel_cut) 
+                    if(fabs(summed_block.val1(j)*exp(summed_block.logfac())) > rel_cut) 
                     { D(j) = 1; keep_block = true; }
                 }
             } //else (s != N)
@@ -441,7 +441,7 @@ public:
         //otherwise the MPS will retain the same index structure
         */
 
-        tensorSVD(AA,A[i],A[i+1],cutoff,minm,maxm,dir);
+        tensorSVD(AA,GET(A,i),GET(A,i+1),cutoff,minm,maxm,dir);
         truncerror = svdtruncerr;
 
         if(dir == Fromleft)
@@ -649,6 +649,8 @@ public:
         Index bond, prev_bond;
         for(int s = 1; s <= N; ++s)
         {
+            if(debug3) cerr << "s = " << s << "\n";
+
             qD.clear(); qt.clear();
             if(s > 1) prev_bond = LinkInd(s-1); 
             if(s < N) bond = LinkInd(s);
@@ -712,7 +714,7 @@ public:
 
                         Real rel_cut = -1;
                         for(int j = 1; j <= bond.m(); ++j)
-                        { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
+                        { rel_cut = max(fabs(summed_block.val1(j)*exp(summed_block.logfac())),rel_cut); }
                         assert(rel_cut >= 0);
                         //Real rel_cut = summed_block.norm()/summed_block.vec_size();
                         rel_cut *= cut;
@@ -720,7 +722,7 @@ public:
 
                         if(rel_cut > 0)
                         for(int j = 1; j <= bond.m(); ++j)
-                        if(fabs(summed_block.val1(j)) > rel_cut) 
+                        if(fabs(summed_block.val1(j)*exp(summed_block.logfac())) > rel_cut) 
                         { D(j) = 1; keep_block = true; }
                     }
                 } //else (s != N)
@@ -799,6 +801,12 @@ public:
             else
                 iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s),linkind[s]) 
                                         : IQTensor(conj(linkind[s-1]),si(s),linkind[s]));
+
+            if(!is_mpo && s > 1) 
+            {
+                IQTensor AA = iqpsi.bondTensor(s-1);
+                iqpsi.doSVD(s-1,AA,Fromleft);
+            }
 
             foreach(const ITensor& nb, nblock) { iqpsi.AAnc(s) += nb; } nblock.clear();
 
@@ -930,12 +938,6 @@ inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITe
 inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept, Real logrefnorm = DefaultLogRef)
 {
     IQIndex active = rho.finddir(Out);
-    if(active.primelevel != 0)
-    {
-        Print(rho.index(1));
-        Print(rho.index(2));
-        Print(active);
-    }
     assert(active.primelevel == 0);
 
     vector<Matrix> mmatrix(rho.iten_size());
@@ -954,14 +956,14 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
     int itenind = 0;
     foreach(const ITensor& t, rho.itensors())
 	{
-        //assert(t.index(1).noprime_equals(t.index(2)));
-        if(!t.index(1).noprime_equals(t.index(2)))
-        { Print(rho); Print(t); Error("Non-symmetric ITensor in density matrix"); }
+        assert(t.index(1).noprime_equals(t.index(2)));
+        //if(!t.index(1).noprime_equals(t.index(2)))
+        //{ Print(rho); Print(t); Error("Non-symmetric ITensor in density matrix"); }
 
         t.normlogto(maxlogfac);
 
-        Matrix &U = mmatrix[itenind];
-        Vector &d = mvector[itenind];
+        Matrix &U = GET(mmatrix,itenind);
+        Vector &d = GET(mvector,itenind);
 
         //Diag ITensors within rho
         int n = t.index(1).m();
@@ -989,10 +991,10 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
     int m = 0, mkeep = (int)alleig.size();
     if(mkeep > minm)
     for(; m < (int)alleig.size(); m++, mkeep--)
-    if(((svdtruncerr += alleig[m]/e1) > cutoff && mkeep <= maxm) || mkeep <= minm)
+    if(((svdtruncerr += GET(alleig,m)/e1) > cutoff && mkeep <= maxm) || mkeep <= minm)
     { 
-        docut = (m > 0 ?  (alleig[m-1] + alleig[m]) * 0.5 : 0);
-        svdtruncerr -= alleig[m]/e1;
+        docut = (m > 0 ?  (GET(alleig,m-1) + GET(alleig,m))/2 : 0);
+        svdtruncerr -= GET(alleig,m)/e1;
         break; 
     }
     //cerr << "\nDiscarded " << m << " states in diag_denmat\n";
@@ -1007,7 +1009,7 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
     itenind = 0;
     foreach(const ITensor& t, rho.itensors())
 	{
-        const Vector& thisD = mvector[itenind];
+        const Vector& thisD = GET(mvector,itenind);
         int this_m = 1;
         for(; this_m <= thisD.Length(); ++this_m)
         if(thisD(this_m) < docut) { break; }
@@ -1022,24 +1024,17 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
         Index act = t.index(1).deprimed();
         iq.push_back(inqn(nm,active.qn(act)));
 
-        Matrix UU = mmatrix[itenind].Columns(1,this_m);
+        Matrix UU = GET(mmatrix,itenind).Columns(1,this_m);
 
-        assert(act.primelevel == 0);
-        assert(active.hasindex(act));
-        assert(act.m() == UU.Nrows());
-
-        terms.push_back(ITensor(act,nm,UU));
+        ITensor term(act,nm); term.fromMatrix11(act,nm,UU); terms.push_back(term);
         ++itenind;
 	}
-    //Print(iq.size());
-    //Print(iq);
-    //cerr << "Got here\n";
     IQIndex newmid("qlink",iq,In);
     nU = IQTensor(active,newmid);
     foreach(const ITensor& t, terms) nU += t;
 
     eigs_kept.ReDimension(m);
-    for(int i = 1; i <= m; ++i) eigs_kept(i) = alleig[alleig.size()-i];
+    for(int i = 1; i <= m; ++i) eigs_kept(i) = GET(alleig,alleig.size()-i);
     lastd = eigs_kept;
 } //void diag_denmat
 

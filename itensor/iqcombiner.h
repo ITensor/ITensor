@@ -82,7 +82,7 @@ public:
 
         if(smallind_pos != -2) //expand condensed form into uncondensed
         {
-            iqinds[smallind_pos] = bigind_;
+            GET(iqinds,smallind_pos) = bigind_;
             res = IQTensor(iqinds);
             for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
             {
@@ -145,11 +145,11 @@ public:
         }
         res = ITensor(indices);
 
-        int inc[NMAX+1];
+        array<int,NMAX+1> inc;
         for(int j = 0; j <= NMAX; ++j) { inc[j] = 0; }
 
         const int i = res.findindex(cond);
-        inc[i] = start;
+        GET(inc,i) = start;
 
         Counter c(t);
         const Vector& thisdat = t.dat();
@@ -169,8 +169,9 @@ public:
         }
         res.set_dat(newdat);
         */
-        res.setlogfac(t.logfac());
-        res *= (t.neg() ? -1 : 1);
+        //res.setlogfac(t.logfac());
+        //res *= t.sign();
+        res *= t.sign()*exp(t.logfac());
     }
 
     inline friend ostream& operator<<(ostream & s, const Condenser & c)
@@ -235,7 +236,7 @@ public:
         for(unsigned int i = 0; i < ind.size(); ++i)
         {
             const int j = ind[i]+1;
-            if(v.at(i).nindex() < j)
+            if(GET(v,i).nindex() < j)
             {
                 for(unsigned int k = 0; k < n.size(); ++k) cerr << format("n[%d] = %d\n")%k%n[k];
                 cout << format("i=%d, j=%d, v[i].nindex()=%d\n")%i%j%v[i].nindex();
@@ -385,8 +386,8 @@ public:
 
     int findindex(const IQIndex& i) const
 	{
-        for(int j = 0; j < (int)left.size(); j++)
-            if(left[j] == i) return j;
+        for(size_t j = 0; j < left.size(); ++j)
+        if(left[j] == i) return j;
         return -1;
 	}
     bool hasindex(const IQIndex& i) const
@@ -395,7 +396,7 @@ public:
 	}
     bool in_left(Index i) const
 	{
-        for(int j = 0; j < (int)left.size(); j++)
+        for(size_t j = 0; j < left.size(); ++j)
             if(left[j].hasindex(i)) return true;
         return false;
 	}
@@ -474,7 +475,10 @@ public:
             {
                 if((j = t.findindex(*I)) == 0)
                 {
-                    Print(t); Print(*this);
+                    t.printIQInds("t");
+                    for(size_t j = 0; j < left.size(); ++j)
+                    { cerr << j SP left[j] << "\n"; }
+                    
                     Error("bad IQCombiner IQTensor product");
                 }
                 else //IQIndex is in left
