@@ -944,13 +944,15 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
     vector<Vector> mvector(rho.iten_size());
     vector<Real> alleig;
 
-    Real maxlogfac = -1E20;
+    Real maxlogfac = 0;
     if(logrefnorm == DefaultLogRef) 
     {
         foreach(const ITensor& t, rho.itensors())
         { maxlogfac = max(maxlogfac,t.logfac()); }
     }
-    else { maxlogfac = 2.0*logrefnorm; }
+    else { maxlogfac = logrefnorm; }
+
+    assert(maxlogfac < 100);
 
     //1. Diagonalize each ITensor within rho
     int itenind = 0;
@@ -1013,12 +1015,12 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
         int this_m = 1;
         for(; this_m <= thisD.Length(); ++this_m)
         if(thisD(this_m) < docut) { break; }
-        --this_m; //since for loop overshoots by 1
-
-        if(this_m == 0) { ++itenind; continue; }
 
         if(mkeep == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
         { this_m = 2; mkeep = 1; docut = 1; }
+        --this_m; //since for loop overshoots by 1
+
+        if(this_m == 0) { ++itenind; continue; }
 
         Index nm("qlink",this_m);
         Index act = t.index(1).deprimed();

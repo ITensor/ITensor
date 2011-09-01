@@ -351,7 +351,7 @@ inline void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut
         nfork = IQTensor(A.RightLinkInd(i),B.RightLinkInd(i),oldmid);
         if(clust.iten_size() == 0)	// this product gives 0 !!
         { cerr << format("WARNING: clust.iten_size()==0 in nmultMPO (i=%d).\n")%i; res = IQMPO(); return; }
-        tensorSVD(clust, res.AAnc(i), nfork,cut,1,maxm,Fromleft);
+        tensorSVD(clust, res.AAnc(i), nfork,cut,1,maxm,Fromleft,A.lref());
         IQIndex mid; index_in_common(res.AA(i),nfork,Link,mid);
         assert(mid.dir() == In);
         mid.conj();
