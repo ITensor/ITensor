@@ -882,7 +882,8 @@ public:
     		// Copy other into *this, without changing the order of indices in either
     		// operator= would put the order of other into *this
 
-    void toMatrix11(const Index& i1, const Index& i2, Matrix& res) const;
+    void toMatrix11(const Index& i1, const Index& i2, Matrix& res, Real& lfac) const;
+    void toMatrix11(const Index& i1, const Index& i2, Matrix& res) const; //puts in lfac
     void fromMatrix11(const Index& i1, const Index& i2, const Matrix& res);
 
     // group i1,i2; i3,i4

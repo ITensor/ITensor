@@ -575,7 +575,7 @@ void ITensor::fromMatrix22(const Index& i1, const Index& i2, const Index& i3, co
     Assign(Q);
 }
 
-void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
+void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res, Real& lfac) const
 {
     if(r() != 2) Error("toMatrix11: incorrect rank");
     assert(hasindex(i1));
@@ -589,9 +589,17 @@ void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
         Permutation P; getperm(reshuf,P);
         Vector V; ReshapeDat(P,V);
         res.TreatAsVector() = V;
+
+        //ITensor Q(i2,i1);
+        //Q.Assign(*this);
+        //res.TreatAsVector() = Q.dat();
+
 	}
-    res *= (_neg ? -1 : 1)*exp(_logfac);
+    res *= (_neg ? -1 : 1);
+    lfac = _logfac;
 }
+void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
+{ Real lfac; toMatrix11(i1,i2,res,lfac); res *= exp(lfac); }
 
 void ITensor::fromMatrix11(const Index& i1, const Index& i2, const Matrix& res)
 {

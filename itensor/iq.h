@@ -1081,7 +1081,7 @@ public:
     int vec_size() const
     {
         int s = 0;
-        for(const_iten_it jj = const_iten_begin(); jj != const_iten_end(); ++jj)
+        for(const_iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
             s += jj->Length();
         return s;
     }
