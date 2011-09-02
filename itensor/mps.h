@@ -977,8 +977,9 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
 
     //1. Diagonalize each ITensor within rho
     int itenind = 0;
-    foreach(const ITensor& t, rho.itensors())
+    for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
 	{
+        const ITensor& t = *it;
         assert(t.index(1).noprime_equals(t.index(2)));
         //if(!t.index(1).noprime_equals(t.index(2)))
         //{ Print(rho); Print(t); Error("Non-symmetric ITensor in density matrix"); }
@@ -1014,13 +1015,13 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
     svdtruncerr = 0;
     int m = 0, mkeep = (int)alleig.size();
     if(mkeep > minm)
-    for(; m < (int)alleig.size(); m++, mkeep--)
+    for(; m < (int)alleig.size(); m++, mkeep--){
     if(((svdtruncerr += GET(alleig,m)/e1) > cutoff && mkeep <= maxm) || mkeep <= minm)
     { 
-        docut = (m > 0 ?  (GET(alleig,m-1) + GET(alleig,m))/2 : 0);
+        docut = (m > 0 ?  (GET(alleig,m-1) + GET(alleig,m))*0.5 : 0);
         svdtruncerr -= GET(alleig,m)/e1;
         break; 
-    }
+    }}
     //cerr << "\nDiscarded " << m << " states in diag_denmat\n";
     m = (int)alleig.size()-m;
 
@@ -1031,8 +1032,9 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
     vector<ITensor> terms; terms.reserve(rho.iten_size());
     vector<inqn> iq; iq.reserve(rho.iten_size());
     itenind = 0;
-    foreach(const ITensor& t, rho.itensors())
+    for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
 	{
+        const ITensor& t = *it;
         const Vector& thisD = GET(mvector,itenind);
         int this_m = 1;
         for(; this_m <= thisD.Length(); ++this_m)
