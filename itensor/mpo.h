@@ -5,18 +5,15 @@
 namespace Internal {
 
 template<class Tensor>
-class MPO
+class MPO : private MPS<Tensor>
 {
+    typedef MPS<Tensor> Parent;
 public:
     typedef Tensor TensorT;
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::IndexValT IndexValT;
     typedef typename Tensor::CombinerT CombinerT;
 private:
-    int N;
-    vector<Tensor> A;
-    int Lb,Rb;
-    const BaseModel* model_;
     Real lref_;
 public:
     int minm,maxm;
@@ -24,15 +21,29 @@ public:
 
     operator MPO<IQTensor>()
     { 
-        MPO<IQTensor> res(*model_,maxm,cutoff,lref_); 
+        MPO<IQTensor> res(*(this->model_),maxm,cutoff,lref_); 
         res.minm = minm;
-        convertToIQ(*model_,A,res.A);
+        convertToIQ(*(this->model_),this->A,res.A);
         return res; 
     }
 
     //Accessor Methods ------------------------------
 
-    int NN() const { return N;}
+    using Parent::NN;
+
+    using Parent::model;
+    using Parent::is_null;
+    using Parent::is_not_null;
+
+    using Parent::si;
+    using Parent::siP;
+
+    using Parent::right_lim;
+    using Parent::left_lim;
+
+    using Parent::AA;
+    using Parent::AAnc;
+    using Parent::bondTensor;
 
     // Norm of psi^2 = 1 = norm = sum of denmat evals. 
     // This translates to Tr{Adag A} = norm.  
@@ -41,72 +52,50 @@ public:
     void lref(Real val) 
 	{  if(val == 0) { Error("bad lref"); } lref_ = val; }
 
-    const BaseModel& model() const { return *model_; }
-    bool is_null() const { return (model_==0); }
-    bool is_not_null() const { return (model_!=0); }
-
-    IQIndex si(int i) const { return model_->si(i); }
-    IQIndex siP(int i) const { return model_->siP(i); }
-
-    int right_lim() const { return Rb; }
-    int left_lim() const { return Lb; }
-
-    const Tensor& AA(int i) const { return GET(A,i); }
-    Tensor& AAnc(int i) //nc means 'non const'
-    { 
-        if(i <= Lb) Lb = i-1;
-        if(i >= Rb) Rb = i+1;
-        return GET(A,i); 
-    }
-    Tensor bondTensor(int b) const { Tensor res = A.at(b) * A.at(b+1); return res; }
-
     //MPO: Constructors -----------------------------------------
 
-    MPO() : N(0), lref_(DefaultLogRef) { }
+    MPO() : Parent(), lref_(DefaultLogRef) { }
 
     MPO(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, Real _lref = DefaultLogRef) 
-    : N(model.NN()), A(N+1), Lb(0), Rb(N), model_(&model), lref_(_lref), minm(1), maxm(maxm_), cutoff(cutoff_)
+    : Parent(model,maxm_,cutoff), lref_(_lref)
 	{ 
         if(_lref == 0) Error("MPO<Tensor>: Setting lref_ to zero");
         if(_lref == DefaultLogRef) lref_ = model.NN() * log(2.0); 
 	}
 
-    MPO(BaseModel& model, istream& s) : N(model.NN()), A(N+1), model_(&model)
+    MPO(BaseModel& model, istream& s) { read(model,s); }
+
+    void read(const BaseModel& model, istream& s)
     {
-        for(int j = 1; j <= N; ++j) A[j].read(s);
-        s.read((char*) &Lb,sizeof(Lb));
-        s.read((char*) &Rb,sizeof(Rb));
+        Parent::read(model,s);
         s.read((char*) &lref_,sizeof(lref_));
-        s.read((char*) &minm,sizeof(minm));
-        s.read((char*) &maxm,sizeof(maxm));
-        s.read((char*) &cutoff,sizeof(cutoff));
     }
 
     void write(ostream& s) const
     {
-        for(int j = 1; j <= N; ++j) A[j].write(s);
-        s.write((char*) &Lb,sizeof(Lb));
-        s.write((char*) &Rb,sizeof(Rb));
+        Parent::write(s);
         s.write((char*) &lref_,sizeof(lref_));
-        s.write((char*) &minm,sizeof(minm));
-        s.write((char*) &maxm,sizeof(maxm));
-        s.write((char*) &cutoff,sizeof(cutoff));
     }
+
+    //MPO: operators ------------------------------------------------------
+
+    MPO& operator*=(Real a) { Parent::operator*=(a); return *this; }
+    inline MPO operator*(Real r) const { MPO res(*this); res *= r; return res; }
+    friend inline MPO operator*(Real r, MPO res) { res *= r; return res; }
+
+    MPO& operator+=(const MPO& oth) { Parent::operator+=(oth); return *this; }
+    inline MPO operator+(MPO res) const { res += *this; return res; }
+    inline MPO operator-(MPO res) const { res *= -1; res += *this; return res; }
 
     //MPO: index methods --------------------------------------------------
 
-    void mapprime(int oldp, int newp, PrimeType pt = primeBoth)
-	{ for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,pt); }
+    using Parent::mapprime;
+    using Parent::primelinks;
+    using Parent::noprimelink;
 
-    void primelinks(int oldp, int newp)
-	{ for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,primeLink); }
-
-    void noprimelink()
-	{ for(int i = 1; i <= N; ++i) A[i].noprime(primeLink); }
-
-    IndexT LinkInd(int i) const { IndexT res; index_in_common(A[i],A[i+1],Link,res); return res; }
-    IndexT RightLinkInd(int i) const { assert(i<NN()); IndexT res; index_in_common(AA(i),AA(i+1),Link,res); return res; }
-    IndexT LeftLinkInd(int i)  const { assert(i>1); IndexT res; index_in_common(AA(i),AA(i-1),Link,res); return res; }
+    using Parent::LinkInd;
+    using Parent::RightLinkInd;
+    using Parent::LeftLinkInd;
 
     void primeall()	// sites i,i' -> i',i'';  link:  l -> l'
 	{
@@ -120,59 +109,64 @@ public:
 
     void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
 	{
-        tensorSVD(AA,A[i],A[i+1],cutoff,minm,maxm,dir,lref_);
+        tensorSVD(AA,AAnc(i),AAnc(i+1),Parent::cutoff,Parent::minm,Parent::maxm,dir,lref_);
         truncerror = svdtruncerr;
 
+        int& left_orth_lim = this->left_orth_lim;
+        int& right_orth_lim = this->right_orth_lim;
         if(dir == Fromleft)
         {
-            if(Lb == i-1 || i == 1) Lb = i;
-            if(Rb < i+2) Rb = i+2;
+            if(left_orth_lim == i-1 || i == 1) left_orth_lim = i;
+            if(right_orth_lim < i+2) right_orth_lim = i+2;
         }
         else
         {
-            if(Lb > i-1) Lb = i-1;
-            if(Rb == i+2 || i == N-1) Rb = i+1;
+            if(left_orth_lim > i-1) left_orth_lim = i-1;
+            if(right_orth_lim == i+2 || i == NN()-1) right_orth_lim = i+1;
         }
 	}
 
     //Move the orthogonality center to site i (left_orth_lim = i-1, right_orth_lim = i+1)
     void position(int i, bool preserve_shape = false)
 	{
-        if(is_null()) Error("position: MPS is null");
-        while(Lb < i-1)
+        if(is_null()) Error("position: MPO is null");
+        int& left_orth_lim = this->left_orth_lim;
+        int& right_orth_lim = this->right_orth_lim;
+        while(left_orth_lim < i-1)
         {
-            if(Lb < 0) Lb = 0;
-            Tensor WF = AA(Lb+1) * AA(Lb+2);
-            doSVD(Lb+1,WF,Fromleft,preserve_shape);
+            if(left_orth_lim < 0) left_orth_lim = 0;
+            Tensor WF = AA(left_orth_lim+1) * AA(left_orth_lim+2);
+            doSVD(left_orth_lim+1,WF,Fromleft,preserve_shape);
         }
-        while(Rb > i+1)
+        while(right_orth_lim > i+1)
         {
-            if(Rb > N+1) Rb = N+1;
-            Tensor WF = AA(Rb-2) * AA(Rb-1);
-            doSVD(Rb-2,WF,Fromright,preserve_shape);
+            if(right_orth_lim > NN()+1) right_orth_lim = NN()+1;
+            Tensor WF = AA(right_orth_lim-2) * AA(right_orth_lim-1);
+            doSVD(right_orth_lim-2,WF,Fromright,preserve_shape);
         }
 	}
 
-    bool is_ortho() const { return (Lb + 1 == Rb - 1); }
+    using Parent::is_ortho;
+    using Parent::ortho_center;
+    using Parent::is_complex;
 
-    int ortho_center() const 
-    { 
-        if(!is_ortho()) Error("MPS: orthogonality center not well defined.");
-        return (Lb + 1);
-    }
+    void applygate(const Tensor& gate)
+	{
+        Tensor AA = AA(left_lim()+1) * AA(left_lim()+2) * gate;
+        AA.noprime();
+        doSVD(left_lim()+1,AA,Fromleft);
+	}
 
-    bool is_complex() const
-    { return A[Lb+1].is_complex(); }
-
+    /*
     friend inline ostream& operator<<(ostream& s, const MPO& M)
     {
         s << "\n";
         for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
         return s;
     }
+    */
 
-    void print(string name = "",Printdat pdat = HideData) const 
-    { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
+    using Parent::print;
 
 private:
     friend class MPO<ITensor>;

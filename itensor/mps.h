@@ -355,10 +355,6 @@ public:
 
     Tensor bondTensor(int b) const { Tensor res = A.at(b) * A.at(b+1); return res; }
 
-    //Useful for iterating over A's in a foreach loop
-    //Do foreach(const I[Q]Tensor& A, psi.all_As()) { ... }
-    const_range_type all_As() const { return make_pair(A.begin(),A.end()-1); }
-
     //MPS: Constructors --------------------------------------------
 
     MPS() : N(0), model_(0), minm(1), maxm(MAX_M), cutoff(MAX_CUT) {}
@@ -373,8 +369,13 @@ public:
         model_(&mod_), minm(1), maxm(maxmm), cutoff(cut)
 	{ init_tensors(A,initState); }
 
-    MPS(const ModelT& mod_, istream& s) : N(mod_.NN()), A(mod_.NN()+1), model_(&mod_)
+    MPS(const ModelT& model, istream& s) { read(model,s); }
+
+    void read(const ModelT& model, istream& s)
     {
+        model_ = &model;
+        N = model_->NN();
+        A.resize(N);
         for(int j = 1; j <= N; ++j) A[j].read(s);
         s.read((char*) &left_orth_lim,sizeof(left_orth_lim));
         s.read((char*) &right_orth_lim,sizeof(right_orth_lim));
@@ -385,7 +386,6 @@ public:
 
     void write(ostream& s) const
     {
-        //s.write((char*) &N,sizeof(N));
         for(int j = 1; j <= N; ++j) A[j].write(s);
         s.write((char*) &left_orth_lim,sizeof(left_orth_lim));
         s.write((char*) &right_orth_lim,sizeof(right_orth_lim));
@@ -399,7 +399,7 @@ public:
 
     MPS& operator*=(Real a)
     {
-        A[left_orth_lim+1] *= a;
+        AAnc(left_orth_lim+1) *= a;
         return *this;
     }
     inline MPS operator*(Real r) const { MPS res(*this); res *= r; return res; }
@@ -596,7 +596,7 @@ public:
     }
 
 
-    void applygate(Tensor gate)
+    void applygate(const Tensor& gate)
 	{
         Tensor AA = A[left_orth_lim+1] * A[left_orth_lim+2] * gate;
         AA.noprime();
@@ -984,11 +984,12 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
         //Diag ITensors within rho
         int n = t.index(1).m();
         Matrix M(n,n);
+        //Real lfac; t.toMatrix11(t.index(2),t.index(1),M,lfac);
         t.toMatrix11(t.index(2),t.index(1),M);
 
-        M *= -1.0;
+        M *= -1;
         EigenValues(M,d,U);
-        d *= -1.0;
+        d *= -1;
 
         for(int j = 1; j <= n; ++j) 
         { alleig.push_back(d(j)); }
@@ -1042,7 +1043,10 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
 
         Matrix UU = GET(mmatrix,itenind).Columns(1,this_m);
 
-        ITensor term(act,nm); term.fromMatrix11(act,nm,UU); terms.push_back(term);
+        ITensor term(act,nm); term.fromMatrix11(act,nm,UU); 
+        //term.setlogfac(maxlogfac);
+        terms.push_back(term);
+
         ++itenind;
 	}
     IQIndex newmid("qlink",iq,In);
