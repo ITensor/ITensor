@@ -121,6 +121,8 @@ public:
 
     MPOBuilder(const SiteSet& sst_) : sst(sst_), Ns(sst_.NN()) { }
 
+    virtual ~MPOBuilder() { }
+
     ITensor makeLedge(const Index& L) const
     {
         ITensor res(L); res(L(L.m())) = 1;

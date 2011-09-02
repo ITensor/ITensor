@@ -18,17 +18,18 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
 extern Real truncerror, svdtruncerr;
 
 template<class Tensor, class IndexT>
-const IndexT& index_in_common(const Tensor& A, const Tensor& B, IndexType t)
+IndexT index_in_common(const Tensor& A, const Tensor& B, IndexType t)
 {
     for(int j = 1; j <= A.r(); ++j)
     {
         const IndexT& I = A.index(j);
         if(I.type() == t && B.hasindex(I)) { return I; }
     }
+    return IndexT();
 }
-inline const Index& index_in_common(const ITensor& A, const ITensor& B, IndexType t)
+inline Index index_in_common(const ITensor& A, const ITensor& B, IndexType t)
 { return index_in_common<ITensor,Index>(A,B,t); }
-inline const IQIndex& index_in_common(const IQTensor& A, const IQTensor& B, IndexType t)
+inline IQIndex index_in_common(const IQTensor& A, const IQTensor& B, IndexType t)
 { return index_in_common<IQTensor,IQIndex>(A,B,t); }
 
 namespace {
@@ -375,6 +376,8 @@ public:
 
     MPS(const ModelT& model, istream& s) { read(model,s); }
 
+    virtual ~MPS() { }
+
     void read(const ModelT& model, istream& s)
     {
         model_ = &model;
@@ -431,7 +434,7 @@ public:
 
     //MPS: orthogonalization methods -------------------------------------
 
-    void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
+    virtual void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
 	{
         /*
         if(!preserve_shape) 

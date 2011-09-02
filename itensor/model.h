@@ -55,6 +55,8 @@ public:
     }
     Model(std::istream& s) { read(s); }
 
+    virtual ~Model() { }
+
     void read(std::istream& s)
     {
         s.read((char*) &N,sizeof(N));
@@ -175,6 +177,8 @@ public:
         }
     }
     Model(std::istream& s) { read(s); }
+
+    virtual ~Model() { }
 
     void read(std::istream& s)
     {
@@ -299,6 +303,8 @@ public:
     { initSites(); }
     Model(std::istream& s) { read(s); }
 
+    virtual ~Model() { }
+
     void read(std::istream& s)
     { 
         s.read((char*) &odd_even_up_down,sizeof(odd_even_up_down));
@@ -390,6 +396,8 @@ public:
 	    }
     }
     Model(std::istream& s) { read(s); }
+
+    virtual ~Model() { }
 
     void read(std::istream& s)
     {

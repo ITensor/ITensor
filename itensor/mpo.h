@@ -7,23 +7,32 @@ namespace Internal {
 template<class Tensor>
 class MPO : private MPS<Tensor>
 {
-    typedef MPS<Tensor> Parent;
 public:
     typedef Tensor TensorT;
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::IndexValT IndexValT;
     typedef typename Tensor::CombinerT CombinerT;
 private:
+    typedef MPS<Tensor> Parent;
+    using Parent::N;
+    using Parent::A;
+    using Parent::left_orth_lim;
+    using Parent::right_orth_lim;
+    using Parent::model_;
     Real lref_;
 public:
-    int minm,maxm;
-    Real cutoff;
+    using Parent::cutoff;
+    using Parent::minm;
+    using Parent::maxm;
 
     operator MPO<IQTensor>()
     { 
-        MPO<IQTensor> res(*(this->model_),maxm,cutoff,lref_); 
+        //MPO<IQTensor> res(*(this->model_),this->maxm,this->cutoff,lref_); 
+        //res.minm = this->minm;
+        //convertToIQ(*(this->model_),this->A,res.A);
+        MPO<IQTensor> res(*model_,maxm,cutoff,lref_); 
         res.minm = minm;
-        convertToIQ(*(this->model_),this->A,res.A);
+        convertToIQ(*model_,A,res.A);
         return res; 
     }
 
@@ -57,13 +66,15 @@ public:
     MPO() : Parent(), lref_(DefaultLogRef) { }
 
     MPO(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, Real _lref = DefaultLogRef) 
-    : Parent(model,maxm_,cutoff), lref_(_lref)
+    : Parent(model,maxm_,cutoff_), lref_(_lref)
 	{ 
         if(_lref == 0) Error("MPO<Tensor>: Setting lref_ to zero");
         if(_lref == DefaultLogRef) lref_ = model.NN() * log(2.0); 
 	}
 
     MPO(BaseModel& model, istream& s) { read(model,s); }
+
+    virtual ~MPO() { }
 
     void read(const BaseModel& model, istream& s)
     {
@@ -107,13 +118,13 @@ public:
         }
 	}
 
-    void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
+    using Parent::position;
+
+    virtual void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
 	{
-        tensorSVD(AA,AAnc(i),AAnc(i+1),Parent::cutoff,Parent::minm,Parent::maxm,dir,lref_);
+        tensorSVD(AA,AAnc(i),AAnc(i+1),cutoff,minm,maxm,dir,lref_);
         truncerror = svdtruncerr;
 
-        int& left_orth_lim = this->left_orth_lim;
-        int& right_orth_lim = this->right_orth_lim;
         if(dir == Fromleft)
         {
             if(left_orth_lim == i-1 || i == 1) left_orth_lim = i;
@@ -126,45 +137,18 @@ public:
         }
 	}
 
-    //Move the orthogonality center to site i (left_orth_lim = i-1, right_orth_lim = i+1)
-    void position(int i, bool preserve_shape = false)
-	{
-        if(is_null()) Error("position: MPO is null");
-        int& left_orth_lim = this->left_orth_lim;
-        int& right_orth_lim = this->right_orth_lim;
-        while(left_orth_lim < i-1)
-        {
-            if(left_orth_lim < 0) left_orth_lim = 0;
-            Tensor WF = AA(left_orth_lim+1) * AA(left_orth_lim+2);
-            doSVD(left_orth_lim+1,WF,Fromleft,preserve_shape);
-        }
-        while(right_orth_lim > i+1)
-        {
-            if(right_orth_lim > NN()+1) right_orth_lim = NN()+1;
-            Tensor WF = AA(right_orth_lim-2) * AA(right_orth_lim-1);
-            doSVD(right_orth_lim-2,WF,Fromright,preserve_shape);
-        }
-	}
-
     using Parent::is_ortho;
     using Parent::ortho_center;
     using Parent::is_complex;
 
-    void applygate(const Tensor& gate)
-	{
-        Tensor AA = AA(left_lim()+1) * AA(left_lim()+2) * gate;
-        AA.noprime();
-        doSVD(left_lim()+1,AA,Fromleft);
-	}
+    using Parent::applygate;
 
-    /*
     friend inline ostream& operator<<(ostream& s, const MPO& M)
     {
         s << "\n";
         for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
         return s;
     }
-    */
 
     using Parent::print;
 

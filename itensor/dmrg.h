@@ -37,6 +37,7 @@ template<class Tensor>
 class BaseLocalHam : public BigMatrix // to do DMRG using an MPO
 {
 public:
+    virtual ~BaseLocalHam() { }
     virtual int Size() const = 0;
     virtual VectorRef DiagRef() const = 0;
     virtual Vector operator*(const VectorRef &A) const = 0;
