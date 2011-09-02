@@ -36,19 +36,19 @@ LIBGFLAGS=-L$(THIS_LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS) $(BOOST_UN
 
 #Targets -----------------
 
-build: hello
+build: test
 
-debug: hello-g
+debug: test-g
 
-hello: hello.o $(LIBFILES) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) hello.o -o hello $(LIBFLAGS)
+test: test.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) test.o -o test $(LIBFLAGS)
 
-hello-g: mkdebugdir .debug_objs/hello.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/hello.o -o hello-g $(LIBGFLAGS)
+test-g: mkdebugdir .debug_objs/test.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/test.o -o test-g $(LIBGFLAGS)
 
 
 mkdebugdir:
 	mkdir -p .debug_objs
 
 clean:
-	rm -fr *.o .debug_objs 
+	rm -fr *.o .debug_objs test test-g
