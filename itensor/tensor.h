@@ -508,8 +508,6 @@ public:
         set_unique_Real();
 	}
 
-    //ITensor(const ITensor& other) - needed? See 'rule of two' article
-
     //Operators -------------------------------------------------------
 
     ITensor& operator*=(const ITensor& other);
@@ -536,8 +534,6 @@ public:
         ncdat() *= -1; operator+=(o); p->v *= -1; return *this; 
     }
     ITensor operator-(const ITensor& o) const { ITensor res(*this); res -= o; return res; }
-
-    //ITensor& operator=(const ITensor& other) - needed? See 'rule of two' article
 
     //Index Methods ---------------------------------------------------
 
@@ -954,6 +950,8 @@ public:
     inline void conj() { if(!is_complex()) return; operator/=(ConjTensor); }
 
     inline bool is_zero() const { return (norm() < 1E-20); } 
+
+    Real sumels() const { return dat().sumels() * exp(_logfac); }
 
     Real norm() const { return Norm(dat()) * exp(_logfac); }
 

@@ -3,6 +3,10 @@ include ../options.mk
 include unittest_options.mk
 ################################################################
 
+REPORT_LEVEL=confirm
+#REPORT_LEVEL=detailed
+
+HEADERS=index_test.h itensor_test.h
 TENSOR_HEADERS=dmrg.h hams.h
 LIBNAMES=matrix utilities itensor
 
@@ -28,22 +32,37 @@ LIBGFLAGS=-L$(THIS_LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS) $(BOOST_UN
 
 #Rules ------------------
 
-%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS)
+%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS) $(HEADERS)
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-.debug_objs/%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS)
+.debug_objs/%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS) $(HEADERS)
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 #Targets -----------------
+
+run: test-g
+	@echo 
+	@echo Running all tests...
+	@echo 
+	@echo Suite IndexTest
+	@echo 
+	@./test-g --run_test=IndexTest --report_level=$(REPORT_LEVEL)
+	@echo 
+	@echo Suite ITensorTest
+	@echo 
+	@./test-g --run_test=ITensorTest --report_level=$(REPORT_LEVEL)
+
+growl:
+	@make run && growlnotify -m "Tests Passed" || growlnotify -m "Test Failed"
 
 build: test
 
 debug: test-g
 
-test: test.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+test: test.o $(LIBFILES) $(REL_TENSOR_HEADERS) $(HEADERS)
 	$(CCCOM) $(CCFLAGS) test.o -o test $(LIBFLAGS)
 
-test-g: mkdebugdir .debug_objs/test.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
+test-g: mkdebugdir .debug_objs/test.o $(LIBGFILES) $(REL_TENSOR_HEADERS) $(HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/test.o -o test-g $(LIBGFLAGS)
 
 
