@@ -42,15 +42,18 @@ BOOST_FIXTURE_TEST_SUITE(ITensorTest,ITensorDefaults)
 BOOST_AUTO_TEST_CASE(Null)
 {
     ITensor t1;
+
     BOOST_CHECK(t1.is_null());
 
     ITensor t2(s1);
+
     BOOST_CHECK(t2.is_not_null());
 }
 
 BOOST_AUTO_TEST_CASE(Constructors)
 {
     ITensor t1(l1);
+
     BOOST_CHECK_EQUAL(t1.r(),1);
     BOOST_CHECK_EQUAL(t1.r_n(),1);
     BOOST_CHECK_EQUAL(t1.r_1(),0);
@@ -58,6 +61,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
     BOOST_CHECK_CLOSE(t1.norm(),0,1E-10);
 
     ITensor t2(l1,l2);
+
     BOOST_CHECK_EQUAL(t2.r(),2);
     BOOST_CHECK_EQUAL(t2.r_n(),2);
     BOOST_CHECK_EQUAL(t2.r_1(),0);
@@ -66,6 +70,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
     BOOST_CHECK_CLOSE(t2.norm(),0,1E-10);
 
     ITensor t3(l1,l2,l3);
+
     BOOST_CHECK_EQUAL(t3.r(),3);
     BOOST_CHECK_EQUAL(t3.r_n(),3);
     BOOST_CHECK_EQUAL(t3.r_1(),0);
@@ -75,6 +80,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
     BOOST_CHECK_CLOSE(t3.norm(),0,1E-10);
 
     ITensor t4(a1,l1);
+
     BOOST_CHECK_EQUAL(t4.r(),2);
     BOOST_CHECK_EQUAL(t4.r_n(),1);
     BOOST_CHECK_EQUAL(t4.r_1(),1);
@@ -83,6 +89,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
     BOOST_CHECK_CLOSE(t4.norm(),0,1E-10);
 
     ITensor t5(l1,a1,l2);
+
     BOOST_CHECK_EQUAL(t5.r(),3);
     BOOST_CHECK_EQUAL(t5.r_n(),2);
     BOOST_CHECK_EQUAL(t5.r_1(),1);
@@ -92,6 +99,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
     BOOST_CHECK_CLOSE(t5.norm(),0,1E-10);
 
     ITensor t6(l1,a1,l2,a2);
+
     BOOST_CHECK_EQUAL(t6.r(),4);
     BOOST_CHECK_EQUAL(t6.r_n(),2);
     BOOST_CHECK_EQUAL(t6.r_1(),2);
@@ -103,6 +111,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
 
     Real a = ran1();
     ITensor t7(l1,l2,a);
+
     BOOST_CHECK_EQUAL(t7.r(),2);
     BOOST_CHECK_EQUAL(t7.r_n(),2);
     BOOST_CHECK_EQUAL(t7.r_1(),0);
@@ -118,6 +127,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
     M(1,1) = ran1(); M(1,2) = ran1();
     M(2,1) = ran1(); M(2,2) = ran1();
     ITensor t8(l1,l2,M);
+
     BOOST_CHECK_EQUAL(t8.r(),2);
     BOOST_CHECK_EQUAL(t8.r_n(),2);
     BOOST_CHECK_EQUAL(t8.r_1(),0);
@@ -132,12 +142,14 @@ BOOST_AUTO_TEST_CASE(Constructors)
 
     Real b = ran1();
     ITensor t9(b);
+
     BOOST_CHECK_CLOSE(t9.sumels(),b,1E-10);
     BOOST_CHECK_CLOSE(t9.norm(),fabs(b),1E-10);
 
     Index linkind("linkind",10);
     Vector V(linkind.m()); V.Randomize();
     ITensor t10(linkind,V);
+
     BOOST_CHECK_EQUAL(t10.r(),1);
     BOOST_CHECK_EQUAL(t10.r_n(),1);
     BOOST_CHECK_EQUAL(t10.r_1(),0);
@@ -149,6 +161,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
 BOOST_AUTO_TEST_CASE(IndexValConstructors)
 {
     ITensor t1(l1(2));
+
     BOOST_CHECK_EQUAL(t1.r(),1);
     BOOST_CHECK_EQUAL(t1.r_n(),1);
     BOOST_CHECK_EQUAL(t1.r_1(),0);
@@ -159,6 +172,7 @@ BOOST_AUTO_TEST_CASE(IndexValConstructors)
     BOOST_CHECK_CLOSE(t1.norm(),1,1E-10);
 
     ITensor t2(l1(2),l2(1));
+
     BOOST_CHECK_EQUAL(t2.r(),2);
     BOOST_CHECK_EQUAL(t2.r_n(),2);
     BOOST_CHECK_EQUAL(t2.r_1(),0);
@@ -181,6 +195,7 @@ BOOST_AUTO_TEST_CASE(IndexVectorConstructors)
     indices[3] = a4;
 
     ITensor t1(indices);
+
     BOOST_CHECK_EQUAL(t1.r(),4);
     BOOST_CHECK_EQUAL(t1.r_n(),2);
     BOOST_CHECK_EQUAL(t1.r_1(),2);
@@ -194,6 +209,7 @@ BOOST_AUTO_TEST_CASE(IndexVectorConstructors)
     V.Randomize();
 
     ITensor t2(indices,V);
+
     BOOST_CHECK_EQUAL(t2.r(),4);
     BOOST_CHECK_EQUAL(t2.r_n(),2);
     BOOST_CHECK_EQUAL(t2.r_1(),2);
@@ -217,6 +233,7 @@ BOOST_AUTO_TEST_CASE(Copy)
     V.Randomize();
 
     ITensor t1(indices,V);
+
     BOOST_CHECK_EQUAL(t1.r(),4);
     BOOST_CHECK_EQUAL(t1.r_n(),2);
     BOOST_CHECK_EQUAL(t1.r_1(),2);
