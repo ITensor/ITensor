@@ -25,3 +25,8 @@ To build these apps, simply 'cd' into each folder and type 'make'. Or, to build 
 type 'make <appname>'.
 
 ### Linking your own applications to the libraries
+
+### Troubleshooting
+
+Sometimes the library has issues compiling if the make "-j" flag is used (this flag enables parallel 
+compilation on multi-core machines). Try disabling it if you have compilation errors.

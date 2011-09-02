@@ -1,8 +1,4 @@
-#include "tensor.h"
-#include <iomanip>
-#include "cputime.h"
-
-Real ran1();
+#include "itensor.h"
 
 void ITensor::ReshapeDat(const Permutation& P, Vector& rdat) const
 {
@@ -351,7 +347,7 @@ ITensor& ITensor::operator/=(const ITensor& other)
     array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
     toMatrixProd(*this,other,contractedL,contractedR,lref,rref);
 
-    if(p->count() != 1) { p = new Internal::ITDat(); }
+    if(p->count() != 1) { p = new ITDat(); }
 #ifdef DO_ALT
     else { p->alt.clear(); }
 #endif
@@ -454,7 +450,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
     toMatrixProd(*this,other,contractedL,contractedR,lref,rref);
 
     //Do the matrix multiplication
-    if(p->count() != 1) { p = new Internal::ITDat(); } 
+    if(p->count() != 1) { p = new ITDat(); } 
 #ifdef DO_ALT
     else { p->alt.clear(); }
 #endif
@@ -535,7 +531,7 @@ void ITensor::Assign(const ITensor& other)
     Permutation P; getperm(other._indexn,P);
     _logfac = other._logfac; _neg = other._neg;
     //_index1.assign(other._index1.begin(),other._index1.end());
-    if(p->count() != 1) { p = new Internal::ITDat(); }
+    if(p->count() != 1) { p = new ITDat(); }
 #ifdef DO_ALT
     else { p->alt.clear(); }
 #endif

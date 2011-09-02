@@ -1,6 +1,5 @@
-#ifndef __INDEX_H
-#define __INDEX_H
-#include "matrix.h"
+#ifndef __ITENSOR_INDEX_H
+#define __ITENSOR_INDEX_H
 #include <error.h> //utilities
 #include <string>
 #include <iostream>

@@ -210,6 +210,52 @@ Vector doDavidson(vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& L
     return energies;
 }
 
+enum SweepScheme {ramp_m, fixed_m, fixed_cutoff};
+
+inline void sweepnext(int &l, int &ha, int N, int min_l = 1)
+{
+    if(ha == 1)
+	{
+        if(++l == N) 
+            l = N-1, ha = 2;
+        return;
+	}
+    if(l-- == min_l) ha = 3;
+}
+
+class Sweeps
+{
+public:
+    SweepScheme scheme;
+    int Minm;
+    vector<int>  Maxm, Niter;
+    vector<Real> Cutoff;
+    int Nsweep;
+    int num_site_center;		// May not be implemented in some cases
+    Sweeps(SweepScheme sch, int nsw, int _minm, int _maxm, Real _cut)
+	    : scheme(sch), Minm(_minm), Maxm(nsw+1), Niter(nsw+1,4), Cutoff(nsw+1), Nsweep(nsw), num_site_center(2)
+	{
+        if(scheme == ramp_m)
+        {
+            for(int s = 1; s <= Nsweep; s++)
+            { Cutoff.at(s) = _cut; Maxm.at(s) = (int)(_minm + (s-1.0)/nsw * (_maxm - _minm)); }
+        }
+        else if(scheme == fixed_m || scheme == fixed_cutoff)
+        {
+            for(int s = 1; s <= Nsweep; s++)
+            { Cutoff.at(s) = _cut; Maxm.at(s) = _maxm; }
+        }
+
+        for(int s = 1; s <= min(Nsweep,4); s++)
+        { Niter.at(s) = 10 - s; }
+	}
+    Real cutoff(int sw) const { return Cutoff.at(sw); }
+    int minm(int sw) const { return Minm; }
+    int maxm(int sw) const { return Maxm.at(sw); }
+    int nsweep() const { return Nsweep; }
+    int niter(int sw) const { return Niter.at(sw); }
+};
+
 //Struct of options for fine-tuning DMRG algorithms
 struct DMRGOpts
 {

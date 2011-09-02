@@ -1,7 +1,11 @@
 #ifndef __IQ_H
 #define __IQ_H
-#include "tensor.h"
+#include "itensor.h"
 #include <set>
+#include <list>
+#include <map>
+using std::list;
+using std::map;
 
 /*
 * Conventions regarding arrows:

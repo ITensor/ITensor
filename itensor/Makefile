@@ -8,11 +8,9 @@ include ../options.mk
 
 ####################################
 
-HEADERS=core.h types.h permutation.h index.h tensor.h combiner.h iq.h iqcombiner.h model.h mps.h mpo.h hams.h dmrg.h 
+OBJECTS=itensor.o iq.o
 
-OBJECTS=tensor.o iq.o
-
-SOURCES=tensor.cc iq.cc
+SOURCES=itensor.cc iq.cc
 
 ####################################
 
@@ -33,16 +31,16 @@ GOBJECTS= $(patsubst %,.debug_objs/%, $(OBJECTS))
 
 install: installo installg
 
-libitensor.a: $(OBJECTS) $(HEADERS)
+libitensor.a: $(OBJECTS)
 	ar rv libitensor.a $(OBJECTS)
 	ranlib libitensor.a
 
-libitensor-g.a: mkdebugdir $(GOBJECTS) $(HEADERS)
+libitensor-g.a: mkdebugdir $(GOBJECTS)
 	ar rv libitensor-g.a $(GOBJECTS)
 	ranlib libitensor-g.a
 
 headerscopy:	
-	cp $(HEADERS) $(INCLUDEDIR)
+	cp -r *.h .profiling $(INCLUDEDIR)
 
 libs: libitensor.a 
 	cp libitensor.a $(LIBDIR)
@@ -59,10 +57,10 @@ mkdebugdir:
 	mkdir -p .debug_objs
 
 tensor.o: types.h permutation.h index.h tensor.h
-iq.o: types.h permutation.h index.h tensor.h combiner.h iqcombiner.h iq.h
+iq.o: types.h permutation.h index.h itensor.h combiner.h iqcombiner.h iq.h
 
-.debug_objs/tensor.o: types.h permutation.h index.h tensor.h
-.debug_objs/iq.o: types.h permutation.h index.h tensor.h combiner.h iqcombiner.h iq.h
+.debug_objs/tensor.o: types.h permutation.h index.h itensor.h
+.debug_objs/iq.o: types.h permutation.h index.h itensor.h combiner.h iqcombiner.h iq.h
 
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a

@@ -1,26 +1,11 @@
-#ifndef __TENSOR_H
-#define __TENSOR_H
-#include "matrix.h"
-#include "permutation.h"
+#ifndef __ITENSOR_ITENSOR_H
+#define __ITENSOR_ITENSOR_H
+#include "types.h"
+#include "real.h"
 #include "index.h"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <map>
-#include <assert.h>
-#include <error.h> //utilities
-#include <math.h>
-#include <cstdlib>
-#include <vector>
-#include <list>
-#include "boost/foreach.hpp"
-#include "boost/format.hpp"
-#include "boost/intrusive_ptr.hpp"
-#include "boost/array.hpp"
-#include "boost/static_assert.hpp"
-//#include "boost/phoenix/core.hpp"
-//#include "boost/phoenix/operator.hpp"
-//#include "boost/phoenix/core/reference.hpp"
+#include "permutation.h"
+#include ".profiling/prodstats.h"
+#include ".profiling/count_copies.h"
 
 using std::cout;
 using std::cerr;
@@ -29,129 +14,18 @@ using std::ofstream;
 using std::ifstream;
 using std::string;
 using std::stringstream;
-using std::setprecision;
 using std::pair;
 using std::make_pair;
-using std::map;
 using std::vector;
-using std::list;
 using boost::format;
 using boost::array;
-using boost::intrusive_ptr;
 using namespace std::rel_ops;
-//using boost::phoenix::arg_names::arg1;
-//using boost::phoenix::arg_names::arg2;
-//using boost::phoenix::arg_names::arg3;
-//using boost::phoenix::arg_names::arg4;
-//using boost::phoenix::arg_names::arg5;
-//using boost::phoenix::arg_names::arg6;
-//using boost::phoenix::arg_names::arg7;
-//using boost::phoenix::arg_names::arg8;
-//using boost::phoenix::arg_names::arg9;
-//using boost::phoenix::arg_names::arg10;
-//using boost::phoenix::ref;
-
-Real ran1();
-
-//#define COUNT_COPIES
-//#define COLLECT_PRODSTATS
-
-
-//----------------------------------
-
-#ifndef NDEBUG
-#define DO_IF_DEBUG(x) { x }
-#else
-#define DO_IF_DEBUG(x) { }
-#endif
-
-#ifdef COUNT_COPIES
-#define IF_COUNT_COPIES(x) { x }
-#else
-#define IF_COUNT_COPIES(x) { }
-#endif
-
-
-#ifdef COLLECT_PRODSTATS
-#include <cputime.h>
-#endif
-
-#define foreach BOOST_FOREACH
-
-//---------------------------------------
-#define ENABLE_INTRUSIVE_PTR(ClassName) \
-friend inline void intrusive_ptr_add_ref(ClassName* p) { ++(p->numref); } \
-friend inline void intrusive_ptr_release(ClassName* p) { if(--(p->numref) == 0){ delete p; } } \
-int count() const { return numref; }
-//---------------------------------------
-
-extern bool printdat;
-extern Vector lastd;
-struct DMRGOpts; extern const DMRGOpts DefaultDMRGOpts;
-#ifdef COUNT_COPIES
-extern int copycount;
-#endif
-#ifdef COLLECT_PRODSTATS
-class Prodstats; extern Prodstats prodstats;
-#endif
-
-enum Printdat { ShowData, HideData };
-
-#define Print(X) { printdat = false; cerr << "\n" << #X << " =\n" << X << "\n"; }
-#define PrintDat(X) { printdat = true; cerr << "\n" << #X << " =\n" << X << "\n"; printdat = false; }
-
-template<class T, class Op> void for_all(T& a, Op f) { for_each(a.begin(),a.end(),f); }
-
-template<class T> vector<T>& operator*=(vector<T>& v1, const vector<T>& v2) 
-{
-    const unsigned int sz = v1.size();
-    assert(v2.size() == sz);
-    for(unsigned int n = 0; n < sz; ++n) v1[n] *= v2[n];
-    return v1;
-}
-template<class T> vector<T> operator*(const vector<T>& v1, const vector<T>& v2) 
-{ vector<T> res(v1); res *= v2; return res; }
-
-template<class T> vector<T>& operator*=(vector<T>& v1, const vector<T*>& v2) 
-{
-    const unsigned int sz = v1.size();
-    assert(v2.size() == sz);
-    for(unsigned int n = 0; n < sz; ++n) v1[n] *= *(v2[n]);
-    return v1;
-}
-template<class T> vector<T> operator*(const vector<T>& v1, const vector<T*>& v2) 
-{ vector<T> res(v1); res *= v2; return res; }
-
-template<class T> vector<T> operator*(const vector<const T*>& v1, const vector<const T*>& v2) 
-{ 
-    const size_t sz = v1.size();
-    assert(v2.size() == sz);
-    vector<T> res(sz); 
-    for(size_t n = 0; n < sz; ++n) res[n] = *(v1[n]) * *(v2[n]);
-    return res; 
-}
-
-template<class T>
-ostream& operator<<(ostream& s, const vector<T>& v)
-{ 
-    if(v.size() == 0) s << "(Empty vector)\n";
-    for(size_t n = 0; n < v.size(); ++n) { s << n << ": " << GET(v,n) << "\n"; } 
-    return s; 
-}
-
-template<class T> T& operator*=(T& t1, const T* pt2) 
-{ t1 *= *(pt2); return t1; }
-template<class T> T operator*(const T& t1, const T* pt2) 
-{ T res(t1); res *= *(pt2); return res; }
 
 enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
 
 class Permutation;
 
-namespace Internal {
-
 //#define DO_ALT
-
 #ifdef DO_ALT
 struct PDat
 {
@@ -217,8 +91,6 @@ private:
     ~ITDat() { } //must be dynamically allocated
 };
 
-} //namespace Internal
-
 class ITensor; extern ITensor Complex_1, Complex_i, ConjTensor;
 class Combiner;
 
@@ -231,7 +103,7 @@ public:
     typedef array<Index,NMAX+1>::const_iterator indexn_it;
     static const Index& ReImIndex;
 private:
-    mutable intrusive_ptr<Internal::ITDat> p; //mutable: const methods may want to reshape data
+    mutable intrusive_ptr<ITDat> p; //mutable: const methods may want to reshape data
     int rn;
     mutable array<Index,NMAX+1> _indexn; //Indices having m!=1, maximum of 8 (_indexn[0] not used), mutable to allow reordering
     mutable vector<Index>       _index1; //Indices having m==1
@@ -239,8 +111,8 @@ private:
     Real ur;
     mutable bool _neg; //true if overall sign is -1, mutable since e.g. dosign() logically const
 
-    void allocate(int dim) { p = new Internal::ITDat(dim); }
-    void allocate() { p = new Internal::ITDat(); }
+    void allocate(int dim) { p = new ITDat(dim); }
+    void allocate() { p = new ITDat(); }
 
 #ifdef DO_ALT
     void newAltDat(const Permutation& P) const
@@ -256,7 +128,7 @@ private:
         assert(p != 0);
         if(p->count() != 1) 
         {
-            intrusive_ptr<Internal::ITDat> new_p(new Internal::ITDat(*p));
+            intrusive_ptr<ITDat> new_p(new ITDat(*p));
             p.swap(new_p);
             IF_COUNT_COPIES(++copycount;)
         }
@@ -380,7 +252,7 @@ public:
         set_unique_Real();
     }
 
-    ITensor(const Index& i1, const Vector& V) : p(new Internal::ITDat(V)), rn(0), _logfac(0), _neg(false)
+    ITensor(const Index& i1, const Vector& V) : p(new ITDat(V)), rn(0), _logfac(0), _neg(false)
 	{ 
         if(i1.m() != V.Length()) Error("Mismatch of Index and Vector sizes.");
         if(i1.m()==1) _index1.push_back(i1); else { GET(_indexn,1) = i1; ++rn; }
@@ -468,7 +340,7 @@ public:
         set_unique_Real();
     }
 
-    ITensor(const vector<Index>& I, const Vector& V) : p(new Internal::ITDat(V)), rn(0), _logfac(0), _neg(false)
+    ITensor(const vector<Index>& I, const Vector& V) : p(new ITDat(V)), rn(0), _logfac(0), _neg(false)
     {
 #ifndef NDEBUG
         int size = 1;
@@ -760,7 +632,7 @@ public:
         assert(p != 0);
         if(p->count() != 1) 
         { 
-            intrusive_ptr<Internal::ITDat> new_p(new Internal::ITDat(newv)); 
+            intrusive_ptr<ITDat> new_p(new ITDat(newv)); 
             p.swap(new_p); 
         }
         else
@@ -921,7 +793,7 @@ public:
         s.read((char*) &_neg,sizeof(_neg));
         size_t i1size = 0;
         s.read((char*) &i1size,sizeof(i1size));
-        p = new Internal::ITDat(s);
+        p = new ITDat(s);
         for(int j = 1; j <= rn; ++j) _indexn[j] = Index(s);
         _index1.reserve(i1size); for(size_t i = 1; i <= i1size; ++i) _index1.push_back(Index(s));
         set_unique_Real();
@@ -1170,433 +1042,10 @@ inline ostream& operator<<(ostream & s, const ITensor & t)
     return s;
 }
 
-enum SweepScheme {ramp_m, fixed_m, fixed_cutoff};
-
-inline void sweepnext(int &l, int &ha, int N, int min_l = 1)
-{
-    if(ha == 1)
-	{
-        if(++l == N) 
-            l = N-1, ha = 2;
-        return;
-	}
-    if(l-- == min_l) ha = 3;
-}
-
-class Sweeps
-{
-public:
-    SweepScheme scheme;
-    int Minm;
-    vector<int>  Maxm, Niter;
-    vector<Real> Cutoff;
-    int Nsweep;
-    int num_site_center;		// May not be implemented in some cases
-    Sweeps(SweepScheme sch, int nsw, int _minm, int _maxm, Real _cut)
-	    : scheme(sch), Minm(_minm), Maxm(nsw+1), Niter(nsw+1,4), Cutoff(nsw+1), Nsweep(nsw), num_site_center(2)
-	{
-        if(scheme == ramp_m)
-        {
-            for(int s = 1; s <= Nsweep; s++)
-            { Cutoff.at(s) = _cut; Maxm.at(s) = (int)(_minm + (s-1.0)/nsw * (_maxm - _minm)); }
-        }
-        else if(scheme == fixed_m || scheme == fixed_cutoff)
-        {
-            for(int s = 1; s <= Nsweep; s++)
-            { Cutoff.at(s) = _cut; Maxm.at(s) = _maxm; }
-        }
-
-        for(int s = 1; s <= min(Nsweep,4); s++)
-        { Niter.at(s) = 10 - s; }
-	}
-    Real cutoff(int sw) const { return Cutoff.at(sw); }
-    int minm(int sw) const { return Minm; }
-    int maxm(int sw) const { return Maxm.at(sw); }
-    int nsweep() const { return Nsweep; }
-    int niter(int sw) const { return Niter.at(sw); }
-};
-
-#ifdef COLLECT_PRODSTATS
-#define NTIMERS 70
-class Prodstats
-{
-    vector<Real> time;
-    vector<int>  tcount;
-    vector<cpu_time> cpu;
-    vector<bool> timer_running;
-public:
-    typedef pair<pair<int,int>,int> gitertype;
-    map<std::pair<int,int>,int> global;
-    map<std::pair<int,int>,int> ps32;
-    vector<int> perms_of_3;
-    vector<int> perms_of_4;
-    vector<int> perms_of_5;
-    vector<int> perms_of_6;
-    int total, did_matrix;
-    int c1,c2,c3,c4;
-
-    Prodstats()
-    {
-        //for(int i = 0; i <= 20; ++i)
-        //for(int j = i; j <= 20; ++j)
-            //global[make_pair(j,i)] = 0;
-        total = 0;
-        did_matrix = 0;
-        c1 = c2 = c3 = c4 = 0;
-        perms_of_3 = vector<int>(81,0);
-        perms_of_4 = vector<int>(256,0);
-        perms_of_5 = vector<int>(3125,0);
-        perms_of_6 = vector<int>(46656,0);
-
-        time = vector<Real>(NTIMERS,0);
-        tcount = vector<int>(NTIMERS,0);
-        timer_running = vector<bool>(NTIMERS,false);
-        cpu = vector<cpu_time>(NTIMERS);
-    }
-
-    void start_section(int j) 
-    { 
-        if(timer_running.at(j)) Error("Timer already running.");
-        timer_running.at(j) = true;
-        cpu.at(j) = cpu_time();
-    }
-
-    void finish_section(int j)
-    {
-        if(!timer_running.at(j)) Error("No timer running.");
-        timer_running.at(j) = false; 
-        cpu_time since(cpu.at(j).sincemark());
-        time.at(j) += since.time; 
-        tcount.at(j) += 1; 
-    }
-
-    void print() const
-    {
-        cerr << "\n-------- Product Statistics ----------\n";
-        cerr << "Global Count: " << endl;
-        foreach(gitertype pp, global) cerr << format("(%d,%d) = %d\n")%pp.first.first%pp.first.second%pp.second;
-        cerr << "Total = " << total << endl;
-        cerr << format("# Matrices = %d (%.2f%%)\n") % did_matrix % (100.0*(1.*did_matrix/(2*total)));
-
-        cerr << "# Case 1 = " << c1 << endl;
-        cerr << "# Case 2 = " << c2 << endl;
-        cerr << "# Case 3 = " << c3 << endl;
-        cerr << "# Case 4 = " << c4 << endl;
-
-        cerr << "Permutations of 3 Count: " << endl;
-        for(int j = 0; j < (int) perms_of_3.size(); ++j)
-        {
-            if(perms_of_3[j] == 0) continue;
-            int c = j;
-            int i3 = (c%3 == 0 ? 3 : c%3);
-            c = (c-i3)/3+1;
-            int i2 = (c%3 == 0 ? 3 : c%3);
-            c = (c-i2)/3+1;
-            int i1 = (c%3 == 0 ? 3 : c%3);
-            int idx = ((i1-1)*3+i2-1)*3+i3;
-            if(idx != j) cerr << "Incorrect idx val (perms of 3)." << endl;
-            cerr << format("(%02d) %d, %d, %d = %d\n") % j % i1 % i2 % i3 % perms_of_3[j];
-        }
-
-        cerr << "Permutations of 4 Count: " << endl;
-        for(int j = 0; j < (int) perms_of_4.size(); ++j)
-        {
-            if(perms_of_4[j] == 0) continue;
-            int c = j;
-            int i4 = (c%4 == 0 ? 4 : c%4);
-            c = (c-i4)/4+1;
-            int i3 = (c%4 == 0 ? 4 : c%4);
-            c = (c-i3)/4+1;
-            int i2 = (c%4 == 0 ? 4 : c%4);
-            c = (c-i2)/4+1;
-            int i1 = (c%4 == 0 ? 4 : c%4);
-            int idx = (((i1-1)*4+i2-1)*4+i3-1)*4+i4;
-            if(idx != j) cerr << "Incorrect idx val (perms of 4)." << endl;
-            cerr << format("(%02d) %d, %d, %d, %d = %d\n") % j % i1 % i2 % i3 % i4 % perms_of_4[j];
-        }
-
-        cerr << "Permutations of 5 Count: " << endl;
-        for(int j = 0; j < (int) perms_of_5.size(); ++j)
-        {
-            if(perms_of_5[j] == 0) continue;
-            int c = j;
-            int i5 = (c%5 == 0 ? 5 : c%5);
-            c = (c-i5)/5+1;
-            int i4 = (c%5 == 0 ? 5 : c%5);
-            c = (c-i4)/5+1;
-            int i3 = (c%5 == 0 ? 5 : c%5);
-            c = (c-i3)/5+1;
-            int i2 = (c%5 == 0 ? 5 : c%5);
-            c = (c-i2)/5+1;
-            int i1 = (c%5 == 0 ? 5 : c%5);
-            int idx = ((((i1-1)*5+i2-1)*5+i3-1)*5+i4-1)*5+i5;
-            if(idx != j) cerr << "Incorrect idx val (perms of 5)." << endl;
-            cerr << format("(%02d) %d, %d, %d, %d, %d = %d\n") % j % i1 % i2 % i3 % i4 % i5 % perms_of_5[j];
-        }
-
-        cerr << "Permutations of 6 Count: " << endl;
-        for(int j = 0; j < (int) perms_of_6.size(); ++j)
-        {
-            //cerr << format("po6[%d] = %d\n") % j % perms_of_6[j];
-            if(perms_of_6[j] == 0) continue;
-            int c = j;
-            int i6 = (c%6 == 0 ? 6 : c%6);
-            c = (c-i6)/6+1;
-            int i5 = (c%6 == 0 ? 6 : c%6);
-            c = (c-i5)/6+1;
-            int i4 = (c%6 == 0 ? 6 : c%6);
-            c = (c-i4)/6+1;
-            int i3 = (c%6 == 0 ? 6 : c%6);
-            c = (c-i3)/6+1;
-            int i2 = (c%6 == 0 ? 6 : c%6);
-            c = (c-i2)/6+1;
-            int i1 = (c%6 == 0 ? 6 : c%6);
-            int idx = (((((i1-1)*6+i2-1)*6+i3-1)*6+i4-1)*6+i5-1)*6+i6;
-            if(idx != j) cerr << "Incorrect idx val (perms of 6)." << endl;
-            cerr << format("(%02d) %d, %d, %d, %d, %d, %d = %d\n") % j % i1 % i2 % i3 % i4 % i5 % i6 % perms_of_6[j];
-        }
-
-        for(int j = 0; j < (int) time.size(); ++j)
-        {
-            Real count = tcount.at(j);
-            if(time.at(j) > 0) cerr << format("Section %d, Average CPU Time = %.2E\n") % j % (time.at(j)/count);
-        }
-
-        for(int j = 0; j < (int) time.size(); ++j)
-        {
-            if(time.at(j) > 0) cerr << format("Section %d, Total CPU Time = %f\n") % j % time.at(j);
-        }
-    }
-};
-#endif
-#ifdef COLLECT_PRODSTATS
-#define DO_IF_PS(x) { x }
-#else
-#define DO_IF_PS(x) { }
-#endif
-#ifdef COLLECT_PRODSTATS
-#define START_TIMER(x) { prodstats.start_section(x); }
-#else
-#define START_TIMER(x) { }
-#endif
-#ifdef COLLECT_PRODSTATS
-#define STOP_TIMER(x) { prodstats.finish_section(x); }
-#else
-#define STOP_TIMER(x) { }
-#endif
-
-class Measure
-{
-public:
-    vector<Real> dat;
-    Measure() { dat.reserve(100); }
-
-    void putin(Real x) { dat.push_back(x); }
-
-    Real ave() const
-	{
-        if(dat.empty()) return 0;
-        Real s = 0;
-        foreach(Real d, dat) s += d;
-        return s/dat.size();
-	}
-
-    Real sigma() const
-	{
-        if(dat.size() < 2) return 0;
-        Real av = ave(), s = 0;
-        foreach(Real d, dat) s += sqr(d - av);
-        return sqrt(s/dat.size());
-	}
-    Real err() const
-	{
-        Real n = dat.size();
-        if(n > 1) return sigma()/sqrt(n-1);
-        else return sigma()/sqrt(n);
-	}
-    Real binerr(int bs) const
-	{
-        int n = dat.size();
-        if(n < bs) return 0;
-        int nbin = n / bs;
-        Vector bin(nbin);
-        bin = 0.0;
-        for(int i = 0; i < n; i++)
-        {
-            if(i/bs > (nbin-1)) break;
-            bin.el(i/bs) += GET(dat,i);
-        }
-        bin *= 1.0/bs;
-        Measure bmeas;
-        for(int i = 1; i <= nbin; ++i) bmeas.putin(bin(i));
-        return bmeas.err();
-	}
-    Real bootstrap(int nresamples = 1000)
-    { //Uses the bootstrap procedure to estimate the std deviation
-        Measure boot;
-        int n = dat.size();
-        if(n < 2) return 0.0;
-        for(int sample = 1; sample <= nresamples; ++sample)
-        {
-            Real avg = 0.0;
-            for(int i = 1; i <= n; ++i)
-            {
-                int which = int(ran1()*n);
-                avg += dat.at(which);
-            }
-            avg /= n;
-            boot.putin(avg);
-        }
-        return boot.sigma();
-    }
-
-    Real bootstrap_2c(Real prefactor,Measure firstc, bool correlated = true, int nresamples = 1000)
-    { //Uses the bootstrap procedure to estimate the second cumulant error
-        Measure boot2c;
-        Real n = dat.size();
-        if(n < 2) return 0.0;
-        if(firstc.dat.size() != n) error("Measurements don't have the same size data sets.");
-        for(int sample = 1; sample <= nresamples; ++sample)
-        {
-            Real avg2 = 0.0;
-            Real avg = 0.0;
-            int which;
-            for(int i = 1; i <= n; ++i)
-            { //Sample with replacement (replacement means 'which' can take the same value more than once)
-                which = int(ran1()*n);
-                avg2 += dat[which];
-                if(!correlated) which = int(ran1()*n); //use <H^2> and <H> from the same METTS
-                avg += firstc.dat[which];
-            }
-            avg2 /= n; avg /= n;
-            boot2c.putin(prefactor*(avg2-avg*avg));
-        }
-        return boot2c.sigma();
-    }
-
-};
-
-
-inline void System(const char* cstr) { int res = system(cstr); res++; }
-inline void System(const string str) { System(str.c_str()); }
-inline void System(const stringstream& s) { System(s.str()); }
-inline void System(const format fmt) { System(fmt.str()); }
-
-//Vector data types; x, y and error data
-inline void writedata(const char* cstr, const Vector& xdat,const Vector& ydat, const Vector& edat, bool do_plot_self = false)
-{
-    ofstream f(cstr);
-    if(xdat.Length() != ydat.Length()) Error("xdat and ydat Lengths don't match.");
-    for(int j = 1; j <= xdat.Length(); ++j) f << format("%.10f %.15f %.15f\n") % xdat(j) % ydat(j) % edat(j);
-    f.close();
-    //if(do_plot_self) System(format("$HOME/tools/plot_self %s") % cstr);
-    if(do_plot_self) System(format("plot_self %s") % cstr);
-}
-inline void writedata(const string str, const Vector& xdat, const Vector& ydat, const Vector& edat, bool do_plot_self = false) { writedata(str.c_str(),xdat,ydat,edat,do_plot_self); }
-inline void writedata(const stringstream& s,const Vector& xdat, const Vector& ydat, const Vector& edat, bool do_plot_self=false) { writedata(s.str(),xdat,ydat,edat,do_plot_self); }
-inline void writedata(const format fmt, const Vector& xdat, const Vector& ydat, const Vector& edat, bool do_plot_self=false) { writedata(fmt.str(),xdat,ydat,edat,do_plot_self); }
-
-//Vector data types; x, y data
-inline void writedata(const char* cstr, const Vector& xdat,const Vector& ydat, bool do_plot_self = false)
-{
-    Vector edat = ydat; edat = 0;
-    writedata(cstr,xdat,ydat,edat,do_plot_self);
-}
-inline void writedata(const string str, const Vector& xdat, const Vector& ydat, bool do_plot_self = false) { writedata(str.c_str(),xdat,ydat,do_plot_self); }
-inline void writedata(const stringstream& s,const Vector& xdat, const Vector& ydat, bool do_plot_self=false) { writedata(s.str(),xdat,ydat,do_plot_self); }
-inline void writedata(const format fmt, const Vector& xdat, const Vector& ydat, bool do_plot_self=false) { writedata(fmt.str(),xdat,ydat,do_plot_self); }
-
-//std vector data types; x, y and error data
-template<typename T>
-void writedata(const char* cstr, const vector<T>& xdat,const vector<T>& ydat, const vector<T>& edat, bool do_plot_self = false)
-{
-    Vector X((int) xdat.size()); for(int n = 1; n <= X.Length(); ++n) X(n) = xdat.at(n-1);
-    Vector Y((int) ydat.size()); for(int n = 1; n <= Y.Length(); ++n) Y(n) = ydat.at(n-1);
-    Vector E((int) edat.size()); for(int n = 1; n <= E.Length(); ++n) E(n) = edat.at(n-1);
-    writedata(cstr,X,Y,E,do_plot_self);
-}
-template<typename T>
-inline void writedata(const string str, const vector<T>& xdat, const vector<T>& ydat, const vector<T>& edat, bool do_plot_self = false) { writedata(str.c_str(),xdat,ydat,edat,do_plot_self); }
-template<typename T>
-inline void writedata(const stringstream& s,const vector<T>& xdat, const vector<T>& ydat, const vector<T>& edat, bool do_plot_self=false) { writedata(s.str(),xdat,ydat,edat,do_plot_self); }
-template<typename T>
-inline void writedata(const format fmt, const vector<T>& xdat, const vector<T>& ydat, const vector<T>& edat, bool do_plot_self=false) { writedata(fmt.str(),xdat,ydat,edat,do_plot_self); }
-
-//std vector data types; x, y and error data
-template<typename T>
-void writedata(const char* cstr, const vector<T>& xdat,const vector<T>& ydat, bool do_plot_self = false)
-{
-    Vector X((int) xdat.size()); for(int n = 1; n <= X.Length(); ++n) X(n) = xdat.at(n-1);
-    Vector Y((int) ydat.size()); for(int n = 1; n <= Y.Length(); ++n) Y(n) = ydat.at(n-1);
-    writedata(cstr,X,Y,do_plot_self);
-}
-template<typename T>
-inline void writedata(const string str, const vector<T>& xdat, const vector<T>& ydat, bool do_plot_self = false) { writedata(str.c_str(),xdat,ydat,do_plot_self); }
-template<typename T>
-inline void writedata(const stringstream& s,const vector<T>& xdat, const vector<T>& ydat, bool do_plot_self=false) { writedata(s.str(),xdat,ydat,do_plot_self); }
-template<typename T>
-inline void writedata(const format fmt, const vector<T>& xdat, const vector<T>& ydat, bool do_plot_self=false) { writedata(fmt.str(),xdat,ydat,do_plot_self); }
-
-template<typename T>
-void writedata(const char* cstr,const vector<T>& ydat, bool do_plot_self = false)
-{
-    Vector X((int) ydat.size()); for(int n = 1; n <= X.Length(); ++n) X(n) = n-1;
-    Vector Y((int) ydat.size()); for(int n = 1; n <= Y.Length(); ++n) Y(n) = ydat.at(n-1);
-    writedata(cstr,X,Y,do_plot_self);
-}
-template<typename T>
-inline void writedata(const string str, const vector<T>& ydat, bool do_plot_self = false) { writedata(str.c_str(),ydat,do_plot_self); }
-template<typename T>
-inline void writedata(const stringstream& s, const vector<T>& ydat, bool do_plot_self=false) { writedata(s.str(),ydat,do_plot_self); }
-template<typename T>
-inline void writedata(const format fmt, const vector<T>& ydat, bool do_plot_self=false) { writedata(fmt.str(),ydat,do_plot_self); }
-
-inline void writedata(const char* cstr, const Vector& dat, Real Delta = 1, bool do_plot_self = false)
-{
-    ofstream f(cstr);
-    for(int j = 1; j <= dat.Length(); ++j) f << format("%.10f %.10f\n") % (Delta*j) % dat(j);
-    f.close();
-    //if(do_plot_self) System(format("$HOME/tools/plot_self %s") % cstr);
-    if(do_plot_self) System(format("plot_self %s") % cstr);
-}
-inline void writedata(const string str, const Vector& dat, Real Delta = 1, bool do_plot_self = false) { writedata(str.c_str(),dat,Delta,do_plot_self); }
-inline void writedata(const stringstream& s,const Vector& dat, Real Delta = 1, bool do_plot_self=false) { writedata(s.str(),dat,Delta,do_plot_self); }
-inline void writedata(const format fmt, const Vector& dat, Real Delta = 1, bool do_plot_self=false) { writedata(fmt.str(),dat,Delta,do_plot_self); }
-
-inline void writedata(const char* cstr, const Matrix& dat, bool do_plot_self = false)
-{           
-    ofstream f(cstr);
-    for(int r = 1; r <= dat.Nrows(); ++r)
-    for(int c = 1; c <= dat.Ncols(); ++c) 
-        f << r SP c SP dat(r,c) << "\n";
-    f.close();
-    //if(do_plot_self) System(format("$HOME/tools/plot_self %s") % cstr);
-    if(do_plot_self) System(format("plot_self %s") % cstr);
-}           
-inline void writedata(const string str, const Matrix& dat, bool do_plot_self=false) { writedata(str.c_str(),dat,do_plot_self); }
-inline void writedata(const stringstream& s,const Matrix& dat, bool do_plot_self=false) { writedata(s.str(),dat,do_plot_self); }
-inline void writedata(const format fmt, const Matrix& dat, bool do_plot_self=false) { writedata(fmt.str(),dat,do_plot_self); }
 
 #ifdef THIS_IS_MAIN
-void reportnew() {}
-Real ran1(int);
-
-bool printdat = false;
-bool writeops = false;
-ofstream big_op_file;
 ITensor Complex_1(makeComplex_1), Complex_i(makeComplex_i), ConjTensor(makeConjTensor);
 const Index& ITensor::ReImIndex = IndReIm;
-Vector lastd(1);
-int newtotalsize = 0;
-
-//Debugging and profiling stuff:
-#ifdef COLLECT_PRODSTATS
-Prodstats prodstats;
 #endif
-#ifdef COUNT_COPIES
-int copycount = 0;
-#endif
-
-#endif //end ifdef THIS_IS_MAIN
 
 #endif

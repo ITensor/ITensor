@@ -1,7 +1,7 @@
 #ifndef __COMBINER_H
 #define __COMBINER_H
 
-#include "tensor.h"
+#include "itensor.h"
 
 /*
 Combine several indices into one, use * to convert tensors efficiently
