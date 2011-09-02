@@ -18,14 +18,18 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
 extern Real truncerror, svdtruncerr;
 
 template<class Tensor, class IndexT>
-void index_in_common(const Tensor& A, const Tensor& B, IndexType t, IndexT& cind)
+const IndexT& index_in_common(const Tensor& A, const Tensor& B, IndexType t)
 {
     for(int j = 1; j <= A.r(); ++j)
     {
         const IndexT& I = A.index(j);
-        if(I.type() == t && B.hasindex(I)) { cind = I; return; }
+        if(I.type() == t && B.hasindex(I)) { return I; }
     }
 }
+inline const Index& index_in_common(const ITensor& A, const ITensor& B, IndexType t)
+{ return index_in_common<ITensor,Index>(A,B,t); }
+inline const IQIndex& index_in_common(const IQTensor& A, const IQTensor& B, IndexType t)
+{ return index_in_common<IQTensor,IQIndex>(A,B,t); }
 
 namespace {
 int collapseCols(const Vector& Diag, Matrix& M)
@@ -72,8 +76,8 @@ inline void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector
     for(int s = 1; s <= N; ++s)
     {
         qD.clear(); qt.clear();
-        if(s > 1) index_in_common(A[s-1],A[s],Link,prev_bond);
-        if(s < N) index_in_common(A[s],A[s+1],Link,bond);
+        if(s > 1) prev_bond = index_in_common(A[s-1],A[s],Link);
+        if(s < N) bond = index_in_common(A[s],A[s+1],Link);
 
         if(s == show_s) { PrintDat(A[s]); }
 
@@ -421,9 +425,9 @@ public:
     void noprimelink()
 	{ for(int i = 1; i <= N; ++i) A[i].noprime(primeLink); }
 
-    IndexT LinkInd(int i) const { IndexT res; index_in_common(A[i],A[i+1],Link,res); return res; }
-    IndexT RightLinkInd(int i) const { assert(i<NN()); IndexT res; index_in_common(AA(i),AA(i+1),Link,res); return res; }
-    IndexT LeftLinkInd(int i)  const { assert(i>1); IndexT res; index_in_common(AA(i),AA(i-1),Link,res); return res; }
+    IndexT LinkInd(int i) const { return index_in_common(A[i],A[i+1],Link); }
+    IndexT RightLinkInd(int i) const { assert(i<NN()); return index_in_common(AA(i),AA(i+1),Link); }
+    IndexT LeftLinkInd(int i)  const { assert(i>1); return index_in_common(AA(i),AA(i-1),Link); }
 
     //MPS: orthogonalization methods -------------------------------------
 
@@ -1066,7 +1070,7 @@ Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, 
 
     if(AA.vec_size() == 0) Error("tensorSVD(Tensor): input tensor had zero size.");
 
-    IndexT mid; index_in_common(A,B,Link,mid);
+    IndexT mid = index_in_common(A,B,Link);
     if(mid.is_null()) mid = IndexT("mid");
 
     Tensor& to_orth = (dir==Fromleft ? A : B);
@@ -1129,7 +1133,7 @@ Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTen
 	Real cutoff, int minm,int maxm, Direction dir, bool donormalize, bool do_relative_cutoff)
 {
     // Make a density matrix that is summed over the nA
-    IQIndex mid; index_in_common(A,B,Link,mid);
+    IQIndex mid = index_in_common(A,B,Link);
     if(mid.is_null()) mid = IQIndex("mid");
 
     int num_states = nA.size();

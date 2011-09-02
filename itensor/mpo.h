@@ -346,7 +346,7 @@ inline void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut
         if(clust.iten_size() == 0)	// this product gives 0 !!
         { cerr << format("WARNING: clust.iten_size()==0 in nmultMPO (i=%d).\n")%i; res = IQMPO(); return; }
         tensorSVD(clust, res.AAnc(i), nfork,cut,1,maxm,Fromleft,A.lref());
-        IQIndex mid; index_in_common(res.AA(i),nfork,Link,mid);
+        IQIndex mid = index_in_common(res.AA(i),nfork,Link);
         assert(mid.dir() == In);
         mid.conj();
         midsize[i] = mid.m();
@@ -403,7 +403,7 @@ inline void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, i
         if(clust.iten_size() == 0)	// this product gives 0 !!
         { res = IQMPS(); return; }
         tensorSVD(clust, res.AAnc(i), nfork,cutoff,1,maxm,Fromleft);
-        IQIndex mid; index_in_common(res.AA(i),nfork,Link,mid);
+        IQIndex mid = index_in_common(res.AA(i),nfork,Link);
         assert(mid.dir() == In);
         mid.conj();
         midsize[i] = mid.m();
