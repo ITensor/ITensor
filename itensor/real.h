@@ -39,6 +39,7 @@ public:
     int sign() const { return sign_; }
     inline bool isRealZero() const
 	{ return (sign_ == 0 || lognum_ < -maxlogdouble); }
+    inline bool isOne() const { return (lognum_ == 0 && sign_ == 1); }
 
     //Default is Real(LogNum()) == 1
     LogNumber() : lognum_(0), sign_(1) { }
@@ -53,6 +54,8 @@ public:
         { sign_ = -1; lognum_ = log(-r); }
 	}
 
+    LogNumber(Real lognum, int sign) : lognum_(lognum), sign_(sign) { } 
+
     inline void read(std::istream& s) { s.read((char*)this,sizeof(this)); }
     inline void write(std::ostream& s) const { s.write((char*)this,sizeof(this)); }
 
@@ -61,9 +64,15 @@ public:
         if(sign_ == 0) return 0;
 #ifndef DNDEBUG
         if(lognum_ > maxlogdouble)
-        { Error("LogNumber too big to convert to Real"); }
+        { 
+        Print(lognum_);
+        Error("LogNumber too big to convert to Real"); 
+        }
         if(lognum_ < -maxlogdouble)
-        { Error("LogNumber too small to convert to Real"); }
+        { 
+        Print(lognum_);
+        Error("LogNumber too small to convert to Real"); 
+        }
 #endif
         return sign_ * exp(lognum_);
 	}
@@ -121,6 +130,7 @@ public:
         if(other.sign_ == 0) return false;
         return lognum_ < other.lognum_;
 	}
+
 };
 
 #endif
