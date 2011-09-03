@@ -19,7 +19,6 @@ using std::make_pair;
 using std::vector;
 using boost::format;
 using boost::array;
-using namespace std::rel_ops;
 
 enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
 

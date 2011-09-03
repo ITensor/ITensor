@@ -56,11 +56,11 @@ installg: headerscopy libitensor-g.a
 mkdebugdir:
 	mkdir -p .debug_objs
 
-tensor.o: types.h permutation.h index.h tensor.h
-iq.o: types.h permutation.h index.h itensor.h combiner.h iqcombiner.h iq.h
+tensor.o: types.h real.h permutation.h index.h tensor.h
+iq.o: types.h real.h permutation.h index.h itensor.h combiner.h iqcombiner.h iq.h
 
-.debug_objs/tensor.o: types.h permutation.h index.h itensor.h
-.debug_objs/iq.o: types.h permutation.h index.h itensor.h combiner.h iqcombiner.h iq.h
+.debug_objs/tensor.o: types.h real.h permutation.h index.h itensor.h
+.debug_objs/iq.o: types.h real.h permutation.h index.h itensor.h combiner.h iqcombiner.h iq.h
 
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a

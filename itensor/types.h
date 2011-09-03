@@ -3,10 +3,12 @@
 #include <cmath>
 #include <cstdlib>
 #include "matrix.h"
+#include <error.h> //utilities
 #include <vector>
 #include "assert.h"
 #include "boost/foreach.hpp"
 #define foreach BOOST_FOREACH
+using namespace std::rel_ops;
 
 //#define NMAX 8
 static const int NMAX = 8;
