@@ -94,8 +94,9 @@ public:
                 for(int start = 0; start < sind.m(); )
                 {
                     Index bind = small_to_big[make_pair(sind,start)];
-                    ITensor converter(sind,bind);
-                    for(int kk = 1; kk <= bind.m(); ++kk) { converter.ncval2(start+kk,kk) = 1; }
+                    Matrix C(sind.m(),bind.m()); C = 0;
+                    for(int kk = 1; kk <= bind.m(); ++kk) { C(start+kk,kk) = 1; }
+                    ITensor converter(sind,bind,C);
                     converter *= (*i);
                     res += converter;
                     start += bind.m();
@@ -151,27 +152,26 @@ public:
         const int i = res.findindex(cond);
         GET(inc,i) = start;
 
-        Counter c(t);
-        const Vector& thisdat = t.dat();
+        Counter c; t.initCounter(c);
+        Vector thisdat(t.vec_size()); t.assignToVec(thisdat);
+        /*
         for( ; c != Counter::done ; ++c)
         {
         res.ncval8(c.i[1]+inc[1],c.i[2]+inc[2],c.i[3]+inc[3],c.i[4]+inc[4],
             c.i[5]+inc[5],c.i[6]+inc[6],c.i[7]+inc[7],c.i[8]+inc[8]) 
             = thisdat(c.ind);
         }
-        /*
-        //const int inc1 = inc[1], inc2 = inc[2], inc3 = inc[3], inc4 = inc[4], inc5 = inc[5], inc6 = inc[6], inc7 = inc[7],inc8 = inc[8];
-        Vector newdat(res.vec_size());
+        */
+        const int inc1 = inc[1], inc2 = inc[2], inc3 = inc[3], inc4 = inc[4], inc5 = inc[5], inc6 = inc[6], inc7 = inc[7],inc8 = inc[8];
+        Vector newdat(res.vec_size()); newdat = 0;
         for( ; c != Counter::done ; ++c)
         {
-        newdat(((((((c.i[8]+inc[8]-1)*c.n[7]+c.i[7]+inc[7]-1)*c.n[6]+c.i[6]+inc[6]-1)*c.n[5]+(c.i[5]+inc[5]-1)*c.n[4]+c.i[4]+inc[4]-1)*c.n[3]+c.i[3]+inc[3]-1)*c.n[2]+c.i[2]+inc[2]-1)*c.n[1]+c.i[1]+inc[1])
-            = thisdat(c.ind);
+        newdat((((((((c.i[8]+inc8-1)*c.n[7]+c.i[7]+inc7-1)*c.n[6]+c.i[6]+inc6-1)*c.n[5]+
+                      c.i[5]+inc5-1)*c.n[4]+c.i[4]+inc4-1)*c.n[3]+c.i[3]+inc3-1)*c.n[2]
+                      +c.i[2]+inc2-1)*c.n[1]+c.i[1]+inc1)
+                      = thisdat(c.ind);
         }
-        res.set_dat(newdat);
-        */
-        //res.setlogfac(t.logfac());
-        //res *= t.sign();
-        res *= t.sign()*exp(t.logfac());
+        res.assignFromVec(newdat);
     }
 
     inline friend ostream& operator<<(ostream & s, const Condenser & c)

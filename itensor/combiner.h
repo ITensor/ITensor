@@ -153,9 +153,9 @@ public:
                 nindices.push_back(t.indexn(i));
             foreach(const Index& I, _left1) nindices.push_back(I);
             foreach(const Index& I, t.index1()) nindices.push_back(I);
-            res = ITensor(nindices,t.dat());
-            res.setlogfac(t.logfac());
-            res *= (t.neg() ? -1 : 1);
+            res = ITensor(nindices,t);
+            //res.setlogfac(t.logfac());
+            //res *= (t.neg() ? -1 : 1);
             return;
         }
 
@@ -195,11 +195,8 @@ public:
             res_index1.erase(it);
         }
 
-        res = ITensor(nindices);
-        t.ReshapeDat(P,res.ncdat());
+        res = ITensor(nindices,t,P);
         res.addindex1(res_index1);
-        res.setlogfac(t.logfac()); 
-        res *= (t.neg() ? -1 : 1);
     }
 
 }; //class Combiner

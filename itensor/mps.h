@@ -5,7 +5,7 @@
 
 enum Direction { Fromright, Fromleft, Both, None };
 
-static const Real DefaultLogRef = 1.3E-14;
+static const LogNumber DefaultRefScale(7.58273202392352185);
 
 Vector do_denmat_Real(const ITensor& nA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir);
 Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir);
@@ -136,7 +136,7 @@ inline void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector
 
                     Real rel_cut = -1;
                     for(int j = 1; j <= bond.m(); ++j)
-                    { rel_cut = max(fabs(summed_block.val1(j)*exp(summed_block.logfac())),rel_cut); }
+                    { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
                     assert(rel_cut >= 0);
                     //Real rel_cut = summed_block.norm()/summed_block.vec_size();
                     rel_cut *= cut;
@@ -144,7 +144,7 @@ inline void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector
 
                     if(rel_cut > 0)
                     for(int j = 1; j <= bond.m(); ++j)
-                    if(fabs(summed_block.val1(j)*exp(summed_block.logfac())) > rel_cut) 
+                    if(fabs(summed_block.val1(j)) > rel_cut) 
                     { D(j) = 1; keep_block = true; }
                 }
             } //else (s != N)
@@ -462,7 +462,7 @@ public:
         //otherwise the MPS will retain the same index structure
         */
 
-        tensorSVD(AA,GET(A,i),GET(A,i+1),cutoff,minm,maxm,dir,0);
+        tensorSVD(AA,GET(A,i),GET(A,i+1),cutoff,minm,maxm,dir,1);
         truncerror = svdtruncerr;
 
         if(dir == Fromleft)
@@ -735,7 +735,7 @@ public:
 
                         Real rel_cut = -1;
                         for(int j = 1; j <= bond.m(); ++j)
-                        { rel_cut = max(fabs(summed_block.val1(j)*exp(summed_block.logfac())),rel_cut); }
+                        { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
                         assert(rel_cut >= 0);
                         //Real rel_cut = summed_block.norm()/summed_block.vec_size();
                         rel_cut *= cut;
@@ -743,7 +743,7 @@ public:
 
                         if(rel_cut > 0)
                         for(int j = 1; j <= bond.m(); ++j)
-                        if(fabs(summed_block.val1(j)*exp(summed_block.logfac())) > rel_cut) 
+                        if(fabs(summed_block.val1(j)) > rel_cut) 
                         { D(j) = 1; keep_block = true; }
                     }
                 } //else (s != N)
@@ -934,12 +934,12 @@ MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
 typedef Internal::MPS<ITensor> MPS;
 typedef Internal::MPS<IQTensor> IQMPS;
 
-inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D, Real logrefnorm = DefaultLogRef)
+inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D, Real refScale = DefaultRefScale)
 {
     assert(rho.r() == 2);
     Index active = rho.index(1); active.noprime();
 
-    if(logrefnorm != DefaultLogRef) rho.normlogto(logrefnorm);
+    //if(refScale != DefaultRefScale) rho.setScale(refScale);
 
     //Do the diagonalization
     Index ri = rho.index(1); ri.noprime();
@@ -956,7 +956,7 @@ inline void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITe
     nU = ITensor(active,newmid,U.Columns(1,mp));
 }
 
-inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept, Real logrefnorm = DefaultLogRef)
+inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept, LogNumber refScale = DefaultRefScale)
 {
     IQIndex active = rho.finddir(Out);
     assert(active.primelevel == 0);
@@ -965,15 +965,19 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
     vector<Vector> mvector(rho.iten_size());
     vector<Real> alleig;
 
-    Real maxlogfac = 0;
-    if(logrefnorm == DefaultLogRef) 
+    if(refScale == DefaultRefScale) 
     {
+        Real maxLogNum = -50;
         foreach(const ITensor& t, rho.itensors())
-        { maxlogfac = max(maxlogfac,t.logfac()); }
+        { maxLogNum = max(maxLogNum,t.scale().logNum()); }
+        assert(maxLogNum > -50);
+        assert(maxLogNum <  50);
+        refScale = LogNumber(maxLogNum,1);
     }
-    else { maxlogfac = logrefnorm; }
 
-    assert(maxlogfac < 100);
+    cerr << format("refScale = %.1E (lognum = %f, sign = %d)\n")%Real(refScale)%refScale.logNum()%refScale.sign();
+
+#define USE_REFSCALE
 
     //1. Diagonalize each ITensor within rho
     int itenind = 0;
@@ -984,7 +988,7 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
         //if(!t.index(1).noprime_equals(t.index(2)))
         //{ Print(rho); Print(t); Error("Non-symmetric ITensor in density matrix"); }
 
-        t.normlogto(maxlogfac);
+        t.setScale(refScale);
 
         Matrix &U = GET(mmatrix,itenind);
         Vector &d = GET(mvector,itenind);
@@ -992,8 +996,11 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
         //Diag ITensors within rho
         int n = t.index(1).m();
         Matrix M(n,n);
-        //Real lfac; t.toMatrix11(t.index(2),t.index(1),M,lfac);
+#ifdef USE_REFSCALE
+        t.toMatrix11NoScale(t.index(2),t.index(1),M);
+#else
         t.toMatrix11(t.index(2),t.index(1),M);
+#endif
 
         M *= -1;
         EigenValues(M,d,U);
@@ -1053,7 +1060,9 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
         Matrix UU = GET(mmatrix,itenind).Columns(1,this_m);
 
         ITensor term(act,nm); term.fromMatrix11(act,nm,UU); 
-        //term.setlogfac(maxlogfac);
+#ifdef USE_REFSCALE
+        term *= refScale;
+#endif
         terms.push_back(term);
 
         ++itenind;
@@ -1068,7 +1077,7 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
 } //void diag_denmat
 
 template<class Tensor>
-Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir, Real logrefnorm = DefaultLogRef)
+Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale = DefaultRefScale)
 {
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::CombinerT CombinerT;
@@ -1124,7 +1133,7 @@ Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, Real cutoff, int minm, 
     assert(rho.r() == 2);
 
     Tensor U; Vector eigs_kept;
-    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept,logrefnorm);
+    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept,refScale);
 
     comb.conj();
     comb.product(U,to_orth);
@@ -1294,8 +1303,6 @@ inline void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm,
     Lambda = conj(Uc) * Ac;
     A = Uc * comb; //should be conj(comb) with arrows
 
-    assert(A.checkDim());
-    assert(Lambda.checkDim());
 }
 
 inline bool check_QNs(const MPS& psi) { return true; }

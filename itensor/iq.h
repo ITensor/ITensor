@@ -804,7 +804,7 @@ public:
                 if(!hasindex(iv[j].iqind)) Error("IQTensor::operator(): IQIndex not found.");
                 indices.push_back(iv[j].index());
             }
-            ITensor t(indices,true);
+            ITensor t(indices);
             p->itensor.push_front(t);
             p->rmap[r] = p->itensor.begin();
         }
@@ -1086,33 +1086,33 @@ public:
     {
         int s = 0;
         for(const_iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-            s += jj->Length();
+            s += jj->vec_size();
         return s;
     }
-    void AssignToVec(VectorRef v) const
+    void assignToVec(VectorRef v) const
     {
         if(vec_size() != v.Length())
-            Error("Mismatched sizes in IQTensor::AssignToVec(VectorRef v).");
+            Error("Mismatched sizes in IQTensor::assignToVec(VectorRef v).");
         int off = 1;
         for(const_iten_it jj = const_iten_begin(); jj != const_iten_end(); ++jj)
-            {
-            int d = jj->Length();
-            jj->AssignToVec(v.SubVector(off,off+d-1));
+        {
+            int d = jj->vec_size();
+            jj->assignToVec(v.SubVector(off,off+d-1));
             off += d;
-            }
+        }
     }
-    void AssignFromVec(VectorRef v)
+    void assignFromVec(VectorRef v)
     {
         solo();
         if(vec_size() != v.Length())
             Error("bad size");
         int off = 1;
         for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-            {
-            int d = jj->dat().Length();
-            jj->AssignFromVec(v.SubVector(off,off+d-1));
+        {
+            int d = jj->vec_size();
+            jj->assignFromVec(v.SubVector(off,off+d-1));
             off += d;
-            }
+        }
     }
     void GetSingComplex(Real& re, Real& im) const;
 
@@ -1131,7 +1131,7 @@ public:
         cerr << "---------------------------\n\n";
     }
 
-    void Assign(const IQTensor& other) const
+    void assignFrom(const IQTensor& other) const
     {
         map<ApproxReal,iten_it> semap;
         for(iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
@@ -1141,11 +1141,11 @@ public:
             ApproxReal se = ApproxReal(i->unique_Real());
             if(semap.count(se) == 0)
             {
-                cout << "warning Assign semap.count is 0" << endl;
+                cout << "warning assignFrom semap.count is 0" << endl;
                 cerr << "offending ITensor is " << *i << "\n";
-                Error("bad Assign count se");
+                Error("bad assignFrom count se");
             }
-            else { semap[se]->Assign(*i); }
+            else { semap[se]->assignFrom(*i); }
         }
     }
 
@@ -1187,7 +1187,7 @@ private:
                 { P.from_to(j,k+1); gotone = true; break; }
                 if(!gotone) Error("match_order: !gotone");
             }
-            t.Reshape(P);
+            t.reshape(P);
         }
     }
 
