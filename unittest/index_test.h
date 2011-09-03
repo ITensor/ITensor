@@ -1,6 +1,7 @@
 #ifndef __INDEX_TEST_H
 #define __INDEX_TEST_H
 #include "test.h"
+#include "index.h"
 
 BOOST_AUTO_TEST_SUITE(IndexTest)
 

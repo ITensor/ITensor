@@ -519,6 +519,8 @@ public:
     ITensor operator*(const IndexVal& iv) const { ITensor res(*this); res *= iv; return res; }
     friend inline ITensor operator*(const IndexVal& iv, ITensor t) { return (t *= iv); }
 
+    ITensor& operator-() { scale_::operator-(); return *this; }
+
     ITensor& operator*=(Real fac) { scale_ *= fac; return *this; }
     ITensor operator*(Real fac) const { ITensor res(*this); res *= fac; return res; }
     friend inline ITensor operator*(Real fac, ITensor t) { return (t *= fac); }
