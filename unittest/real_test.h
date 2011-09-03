@@ -1,6 +1,7 @@
 #ifndef __REAL_TEST_H
 #define __REAL_TEST_H
 #include "test.h"
+#include "real.h"
 
 BOOST_AUTO_TEST_SUITE(LogNumberTest)
 
@@ -129,6 +130,19 @@ BOOST_AUTO_TEST_CASE(Comparison)
     zero *= -1;
 
     BOOST_CHECK(zero.approxEquals(0));
+}
+
+BOOST_AUTO_TEST_CASE(ReadWrite)
+{
+    Real a = ran1();
+    LogNumber la(a); 
+
+    writeToFile(".read_write/LogNumber",la);
+
+    LogNumber laR;
+    readFromFile(".read_write/LogNumber",laR);
+
+    BOOST_CHECK(laR == la);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

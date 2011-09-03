@@ -2,12 +2,13 @@
 #define __ITENSOR_REAL_H
 #include "matrix.h"
 #include <limits>
+#include "types.h"
 
-const Real Pi = M_PI;
-const Real Sqrt2 = sqrt(2);
-const Real ISqrt2 = 1.0/sqrt(2);
-const Real Sqrt3 = sqrt(3);
-const Real ISqrt3 = 1.0/sqrt(3);
+static const Real Pi = M_PI;
+static const Real Sqrt2 = sqrt(2);
+static const Real ISqrt2 = 1.0/sqrt(2);
+static const Real Sqrt3 = sqrt(3);
+static const Real ISqrt3 = 1.0/sqrt(3);
 
 inline Real sqr(Real x) { return x*x; }
 
@@ -51,6 +52,9 @@ public:
         else
         { sign_ = -1; lognum_ = log(-r); }
 	}
+
+    inline void read(std::istream& s) { s.read((char*)this,sizeof(this)); }
+    inline void write(std::ostream& s) const { s.write((char*)this,sizeof(this)); }
 
     operator Real() const
 	{

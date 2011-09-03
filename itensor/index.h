@@ -1,8 +1,7 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include <string>
-#include <iostream>
-#include <fstream>
+#include "types.h"
 #include "boost/array.hpp"
 #include "boost/format.hpp"
 #include "boost/intrusive_ptr.hpp"

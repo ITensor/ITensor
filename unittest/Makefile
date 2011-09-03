@@ -44,17 +44,7 @@ run: test-g
 	@echo 
 	@echo Running all tests...
 	@echo 
-	@echo Suite IndexTest
-	@echo 
-	@./test-g --run_test=IndexTest --report_level=$(REPORT_LEVEL)
-	@echo 
-	@echo Suite LogNumberTest
-	@echo 
-	@./test-g --run_test=LogNumberTest --report_level=$(REPORT_LEVEL)
-	@echo 
-	@echo Suite ITensorTest
-	@echo 
-	@./test-g --run_test=ITensorTest --report_level=$(REPORT_LEVEL)
+	@./test-g --report_level=$(REPORT_LEVEL)
 
 growl:
 	@make run && growlnotify -m "Tests Passed" || growlnotify -m "Test Failed"

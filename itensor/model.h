@@ -1,6 +1,5 @@
 #ifndef __MODEL_H
 #define __MODEL_H
-#include <iostream>
 #include "iq.h"
 
 class BaseModel
