@@ -261,7 +261,7 @@ private:
                 cerr << "j = " << j << "\n";
                 Print(*this);
                 foreach(const Index& I, oth_indexn) { cerr << I << "\n"; }
-                Error("getpermBtoA: no matching index");
+                Error("ITensor::getperm: no matching index");
             }
         }
     }
@@ -518,8 +518,6 @@ public:
     ITensor& operator*=(const IndexVal& iv) { ITensor oth(iv); return operator*=(oth); } 
     ITensor operator*(const IndexVal& iv) const { ITensor res(*this); res *= iv; return res; }
     friend inline ITensor operator*(const IndexVal& iv, ITensor t) { return (t *= iv); }
-
-    ITensor& operator-() { scale_::operator-(); return *this; }
 
     ITensor& operator*=(Real fac) { scale_ *= fac; return *this; }
     ITensor operator*(Real fac) const { ITensor res(*this); res *= fac; return res; }

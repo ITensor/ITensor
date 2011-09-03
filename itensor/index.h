@@ -176,6 +176,7 @@ public:
 
         if(im == makeNull)
         {
+            sname = "Null";
             _type = Site;
             ur = 0.0;
             return;
