@@ -22,7 +22,7 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
     //Make a counter for thisdat
     Counter c; initCounter(c);
     array<int,NMAX+1> n;
-    for(int j = 1; j <= rn; ++j) n[ind[j]] = c.n[j];
+    for(int j = 1; j <= rn_; ++j) n[ind[j]] = c.n[j];
 
     //Special case loops
 #define Loop6(q,z,w,k,y,s) {for(int i1 = 1; i1 <= n[1]; ++i1) for(int i2 = 1; i2 <= n[2]; ++i2)\
@@ -50,13 +50,13 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 
 #define Bif6(a,b,c,d,e,g) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e && ind[6] == g)
 
-    if(rn == 2 && ind[1] == 2 && ind[2] == 1)
+    if(rn_ == 2 && ind[1] == 2 && ind[2] == 1)
 	{
         MatrixRef xref; thisdat.TreatAsMatrix(xref,c.n[2],c.n[1]);
         rdat = Matrix(xref.t()).TreatAsVector();
         return; 
 	}
-    else if(rn == 3)
+    else if(rn_ == 3)
 	{
         DO_IF_PS(int idx = ((ind[1]-1)*3+ind[2]-1)*3+ind[3]; prodstats.perms_of_3[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
@@ -66,7 +66,7 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
         //Bif3(1,3,2) Loop3(i1,i3,i2)
         //Bif3(3,2,1) Loop3(i3,i2,i1)
 	}
-    else if(rn == 4)
+    else if(rn_ == 4)
 	{
         DO_IF_PS(int idx = (((ind[1]-1)*4+ind[2]-1)*4+ind[3]-1)*4+ind[4]; prodstats.perms_of_4[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
@@ -79,7 +79,7 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
         Bif4(2,1,4,3) Loop4(i2,i1,i4,i3)
         Bif4(3,4,1,2) Loop4(i3,i4,i1,i2)
 	}
-    else if(rn == 5)
+    else if(rn_ == 5)
 	{
         DO_IF_PS(int idx = ((((ind[1]-1)*5+ind[2]-1)*5+ind[3]-1)*5+ind[4]-1)*5+ind[5]; prodstats.perms_of_5[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
@@ -99,7 +99,7 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
         Bif5(3,4,1,5,2) Loop5(i3,i4,i1,i5,i2)
         Bif5(5,1,4,2,3) Loop5(i5,i1,i4,i2,i3)
 	}
-    else if(rn == 6)
+    else if(rn_ == 6)
 	{
         DO_IF_PS(int idx = (((((ind[1]-1)*6+ind[2]-1)*6+ind[3]-1)*6+ind[4]-1)*6+ind[5]-1)*6+ind[6]; prodstats.perms_of_6[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
@@ -142,9 +142,9 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
 
     int q = 0; 
     int lcstart = -1, rcstart = -1;
-    for(int j = 1; j <= L.rn; ++j)
-    for(int k = 1; k <= R.rn; ++k)
-    if(L._indexn[j] == R._indexn[k])
+    for(int j = 1; j <= L.rn_; ++j)
+    for(int k = 1; k <= R.rn_; ++k)
+    if(L.index_[j] == R.index_[k])
     {
         if(lcstart < 0) lcstart = j;
         if(rcstart < 0) rcstart = k;
@@ -157,7 +157,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         pl.from_to(j,q);
         pr.from_to(k,q);
 
-        cdim *= L._indexn[j].m();
+        cdim *= L.index_[j].m();
     }
     const int odimL = Ldat.Length()/cdim;
     const int odimR = Rdat.Length()/cdim;
@@ -172,8 +172,8 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
             if(!contractedR[rcstart+i]) R_is_matrix = false;
         }
         //Check that contracted inds are all at beginning or end of _indexn
-        if(!(contractedL[1] || contractedL[L.rn])) L_is_matrix = false; 
-        if(!(contractedR[1] || contractedR[R.rn])) R_is_matrix = false;
+        if(!(contractedL[1] || contractedL[L.rn_])) L_is_matrix = false; 
+        if(!(contractedR[1] || contractedR[R.rn_])) R_is_matrix = false;
     }
 
     if(L_is_matrix)  
@@ -204,7 +204,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
             }
 
             bool back_matrix=true;
-            for(int j = L.rn; j > (L.rn-nsamen); --j)
+            for(int j = L.rn_; j > (L.rn_-nsamen); --j)
             if(!GET(contractedL,Alt.I.dest(j)))
             { back_matrix = false; break; }
 
@@ -222,7 +222,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         if(!done_with_L)
         {
             q = nsamen;
-            for(int j = 1; j <= L.rn; ++j)
+            for(int j = 1; j <= L.rn_; ++j)
             if(!contractedL[j]) pl.from_to(j,++q);
             if(L_is_matrix) Error("Calling reshapeDat although L is matrix.");
 #ifdef DO_ALT
@@ -266,7 +266,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
             }
 
             bool back_matrix=true;
-            for(int j = R.rn; j > (R.rn-nsamen); --j)
+            for(int j = R.rn_; j > (R.rn_-nsamen); --j)
             if(!GET(contractedR,Alt.I.dest(j)))
             { back_matrix = false; break; }
 
@@ -284,7 +284,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         if(!done_with_R)
         {
             q = nsamen;
-            for(int j = 1; j <= R.rn; ++j)
+            for(int j = 1; j <= R.rn_; ++j)
             if(!contractedR[j]) pr.from_to(j,++q);
             if(R_is_matrix) Error("Calling reshape even though R is matrix.");
 #ifdef DO_ALT
@@ -300,8 +300,8 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
     }
 
 #ifdef COLLECT_PRODSTATS
-    if(L.rn > R.rn) ++prodstats.global[make_pair(L.rn,R.rn)];
-    else ++prodstats.global[make_pair(R.rn,L.rn)];
+    if(L.rn_ > R.rn_) ++prodstats.global[make_pair(L.rn_,R.rn_)];
+    else ++prodstats.global[make_pair(R.rn_,L.rn_)];
     ++prodstats.total;
     if(L_is_matrix) ++prodstats.did_matrix;
     if(R_is_matrix) ++prodstats.did_matrix;
@@ -312,37 +312,50 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
 //Non-contracting product: Cikj = Aij Bkj (no sum over j)
 ITensor& ITensor::operator/=(const ITensor& other)
 {
-    //------------------------------------------------------------------
-    //Handle m==1 Indices
-    if(!other._index1.empty()) {
-    if(_index1.empty()) _index1 = other._index1;
-    else
-    {
-        //Compute set union
-        sort(_index1.begin(),_index1.end());
-        sort(other._index1.begin(),other._index1.end());
-        vector<Index> symdiff(_index1.size()+other._index1.size());
-        vector<Index>::iterator it =
-        set_union(_index1.begin(),_index1.end(),
-        other._index1.begin(),other._index1.end(),symdiff.begin());
-        _index1.assign(symdiff.begin(),it);
-    } }
+    int nrn_ = 0, nr1_ = 0;
+    //These hold the indices from other 
+    //that will be added to this->index_
+    static array<const Index*,NMAX+1> extra_indexn_;
+    static array<const Index*,NMAX+1> extra_index1_;
 
-    if(other.rn == 0)
+    //------------------------------------------------------------------
+    //Handle m==1 Indices: set union
+    for(int j = other.rn_+1; j <= other.r_; ++j)
     {
-        scale_ *= other.scale_;
-        set_unique_Real();
-        return operator*=(other.p->v(1));
+        const Index& J = other.index_[j];
+        bool this_has_index = false;
+        for(int k = this->rn_+1; k <= this->r_; ++k)
+        { if(index_[k] == J) { this_has_index = true; break; } }
+
+        if(!this_has_index) extra_index1_[++nr1_] = &J;
     }
-    else if(rn == 0)
+
+    if(other.rn_ == 0)
     {
-        const Real curr_dat = p->v(1);
-        _indexn = other._indexn;
-        rn = other.rn;
         scale_ *= other.scale_;
-        p = other.p;
+        scale_ *= other.p->v(1);
+        assert(r_+nr1_ <= NMAX);
+        for(int j = 0; j < nr1_; ++j) index_[r_+1+j] = *(extra_index1_[j]);
+        r_ += nr1_;
         set_unique_Real();
-        return operator*=(curr_dat);
+        return *this;
+    }
+    else if(rn_ == 0)
+    {
+        scale_ *= other.scale_;
+        scale_ *= p->v(1);
+        p = other.p;
+        rn_ = other.rn_;
+        //Move current m==1 indices past rn_
+        for(int j = 1; j <= r_; ++j)  index_[rn_+j] = index_[j];
+        //Copy other's m!=1 indices
+        for(int j = 1; j <= rn_; ++j) index_[j] = other.index_[j];
+        r_ += rn_;
+        //Get the extra m==1 indices from other
+        for(int j = 0; j < nr1_; ++j) index_[r_+1+j] = *(extra_index1_[j]);
+        r_ += nr1_;
+        set_unique_Real();
+        return *this;
     }
 
     array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
@@ -358,31 +371,29 @@ ITensor& ITensor::operator/=(const ITensor& other)
     Matrix L(lref), R(rref);
     thisdat.ReDimension(ni*nj*nk);
     
-    //cerr << format("L is %d x %d\n")%L.Nrows()%L.Ncols();
-
     for(int j = 1; j <= nj; ++j) for(int k = 1; k <= nk; ++k) for(int i = 1; i <= ni; ++i)
     { thisdat(((j-1)*nk+k-1)*ni+i) =  R(k,j) * L(j,i); }
 
-    array<Index,NMAX+1> _new_indexn;
-    int new_rn = 0;
+    //Handle m!=1 indices
+    for(int j = 1; j <= other.rn_; ++j)
+    { if(!contractedR[j]) extra_indexn_[++nrn_] = &(other.index_[j]); }
 
-    int nsamen = 0;
-    for(int j = 1; j <= rn; ++j)
-    if(!contractedL[j]) { _new_indexn[++new_rn] = _indexn[j]; }
-    else { ++nsamen; } 
+    if((r_ + nrn_ + nr1_) > NMAX) Error("ITensor::operator/=: r() too big in product.");
 
-    if((rn + other.rn - nsamen) > NMAX) Error("ITensor::operator/=: rn too big in product.");
-
-    for(int j = 1; j <= other.rn; ++j)
-    if(!contractedR[j]) { _new_indexn[++new_rn] = other._indexn[j]; }
-
-    for(int j = 1; j <= rn; ++j)
-    if(contractedL[j]) { _new_indexn[++new_rn] = _indexn[j]; }
-
-    _indexn = _new_indexn;
-    rn = new_rn;
+    //Move current m==1 indices to the right
+    for(int j = rn_+1; j <= r_; ++j)  index_[nrn_+j] = index_[j];
+    //Fill in new m!=1 indices
+    for(int j = 0; j < nrn_; ++j) index_[rn_+1+j] = *(extra_indexn_[j]);
+    rn_ += nrn_;
+    r_ += nrn_;
+    //Fill in new m==1 indices
+    for(int j = 0; j < nr1_; ++j) index_[r_+1+j] = *(extra_index1_[j]);
+    r_ += nr1_;
     
     scale_ *= other.scale_;
+
+    doNormLog();
+
     set_unique_Real();
 
     return *this;
@@ -414,37 +425,55 @@ ITensor& ITensor::operator*=(const ITensor& other)
         return *this;
 	}
 
-    //Handle m==1 Indices
-    //printdat = false; cerr << "Doing m==1 for" << *this << "\n";
-    if(!other._index1.empty()) {
-    if(_index1.empty()) _index1 = other._index1;
-    else
-    {
-        //Compute symmetric difference
-        sort(_index1.begin(),_index1.end());
-        sort(other._index1.begin(),other._index1.end());
-        vector<Index> symdiff(_index1.size()+other._index1.size());
-        vector<Index>::iterator it =
-        set_symmetric_difference(_index1.begin(),_index1.end(),
-        other._index1.begin(),other._index1.end(),symdiff.begin());
-        _index1.assign(symdiff.begin(),it);
-    } }
+    int nr1_ = 0;
+    //This holds the m==1 indices that
+    //will appear in the result
+    static array<const Index*,NMAX+1> new_index1_;
 
-    if(other.rn == 0)
+    //Handle m==1 Indices
+    for(int k = rn_+1; k <= r_; ++k)
     {
-        scale_ *= other.scale_;
-        set_unique_Real();
-        return operator*=(other.p->v(1));
+        const Index& K = index_[k];
+        bool other_has_index = false;
+        for(int j = other.rn_+1; j <= other.r_; ++j)
+        { if(other.index_[j] == K) { other_has_index = true; break; } }
+
+        if(!other_has_index) new_index1_[++nr1_] = &K;
     }
-    else if(rn == 0)
+    for(int j = other.rn_+1; j <= other.r_; ++j)
     {
-        const Real curr_dat = p->v(1);
-        _indexn = other._indexn;
-        rn = other.rn;
+        const Index& J = other.index_[j];
+        bool this_has_index = false;
+        for(int k = this->rn_+1; k <= this->r_; ++k)
+        { if(index_[k] == J) { this_has_index = true; break; } }
+
+        if(!this_has_index) new_index1_[++nr1_] = &J;
+    }
+
+    if(other.rn_ == 0)
+    {
         scale_ *= other.scale_;
-        p = other.p;
+        scale_ *= other.p->v(1);
+        r_ = rn_ + nr1_;
+        assert(r_ <= NMAX);
+        for(int j = 0; j < nr1_; ++j) index_[rn_+1+j] = *(new_index1_[j]);
         set_unique_Real();
-        return operator*=(curr_dat);
+        return *this;
+    }
+    else if(rn_ == 0)
+    {
+        scale_ *= other.scale_;
+        scale_ *= p->v(1);
+        p = other.p;
+        rn_ = other.rn_;
+        r_ = rn_ + nr1_;
+        assert(r_ <= NMAX);
+        //Put in new m==1 Indices (backwards since using pointers)
+        for(int j = nr1_; j > 0; --j) index_[rn_+j] = *(new_index1_[j-1]);
+        //Fill in other's m!=1 Indices
+        for(int j = 1; j <= rn_; ++j) index_[j] = other.index_[j];
+        set_unique_Real();
+        return *this;
     }
 
     array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
@@ -459,19 +488,29 @@ ITensor& ITensor::operator*=(const ITensor& other)
     MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
     nref = rref*lref;
 
-    //Create new _indexn
-    int new_rn = 0;
-    for(int j = 1; j <= this->rn; ++j)
-    if(!contractedL[j])  _indexn[++new_rn] = _indexn[j];
-    for(int j = 1; j <= other.rn; ++j)
-    if(!contractedR[j]) _indexn[++new_rn] = other._indexn[j];
+    //Create new index_
+    static array<Index,NMAX+1> new_index_;
 
-    DO_IF_DEBUG(if(new_rn > NMAX) Error("rn too large in product");)
+    r_ = 0;
 
-    rn = new_rn;
+    //Handle m!=1 indices
+    for(int j = 1; j <= this->rn_; ++j)
+    if(!contractedL[j]) new_index_[++r_] = index_[j];
+    for(int j = 1; j <= other.rn_; ++j)
+    if(!contractedR[j]) new_index_[++r_] = other.index_[j];
+
+    rn_ = r_;
+
+    DO_IF_DEBUG(if(rn_+nr1_ > NMAX) Error("rank too large in product");)
+
+    //Put in m==1 indices
+    for(int j = 0; j < nr1_; ++j) new_index_[++r_] = *(new_index1_[j]);
+
+    index_.swap(new_index_);
 
     scale_ *= other.scale_;
     doNormLog();
+
     set_unique_Real();
 
     return *this;
@@ -480,19 +519,86 @@ ITensor& ITensor::operator*=(const ITensor& other)
 
 void ITensor::reshapeTo(const Permutation& P, ITensor& res) const
 {
-    res.rn = rn;
+    res.rn_ = rn_;
+    res.r_ = r_;
     res.scale_ = scale_;
-    for(int k = 1; k <= rn; ++k) res._indexn[P.dest(k)] = _indexn[k];
-    res._index1.assign(_index1.begin(),_index1.end());
-    res.set_unique_Real();
-#ifdef DO_ALT
+    for(int k = 1; k <= r_; ++k) res.index_[P.dest(k)] = index_[k];
+    res.ur = ur;
+    res.solo();
+#ifdef DO_ALT //add a flag to solo to let it know not to even copy alt
     res.p->alt.clear();
 #endif
-    res.solo();
     this->reshapeDat(P,res.p->v);
 }
 
+ITensor& ITensor::operator+=(const ITensor& other)
+{
+    if(this == &other) { scale_ *= 2; return *this; }
 
+    bool complex_this = is_complex();
+    bool complex_other = other.is_complex();
+    if(!complex_this && complex_other)
+    {
+        return (*this = (*this * Complex_1) + other);
+    }
+    if(complex_this && !complex_other) return operator+=(other * Complex_1);
+
+    if(fabs(ur - other.ur) > 1E-12)
+    {
+        cerr << format("this ur = %.10f, other.ur = %.10f\n")%ur%other.ur;
+        Print(*this);
+        Print(other);
+        Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
+    }
+
+    intrusive_ptr<ITDat> curr_p = p;
+    const Vector* othrdat = 0;
+
+    if(scale_.magnitudeLessThan(other.scale_)) 
+    { 
+        this->setScale(other.scale_); 
+        solo();
+        othrdat = &(other.p->v);
+    }
+    else
+    { 
+        //Would be simpler to call other.setScale(this->scale_)
+        //but the following prevents other from having to call solo()
+        if(p->count() != 1) {  p = new ITDat(other.p->v); }
+        else                { p->v = other.p->v; }
+        p->v *= (other.scale_/this->scale_);
+        othrdat = &(curr_p->v);
+    }
+
+    Vector& thisdat = p->v;
+
+#ifdef DO_ALT
+    p->alt.clear();
+#endif
+
+    bool same_ind_order = true;
+    for(int j = 1; j <= rn_; ++j)
+    if(index_[j] != other.index_[j])
+    { same_ind_order = false; break; }
+
+    if(same_ind_order) { thisdat += *othrdat; return *this; }
+
+    Permutation P; getperm(other.index_,P);
+    int *j[NMAX+1];
+    Counter c; other.initCounter(c);
+    for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
+
+    for(; c != Counter::done ; ++c)
+    {
+        thisdat((((((((*j[8]-1)*c.n[7]+*j[7]-1)*c.n[6]+*j[6]-1)*c.n[5]
+        +*j[5]-1)*c.n[4]+*j[4]-1)*c.n[3]+*j[3]-1)*c.n[2]+*j[2]-1)*c.n[1]+*j[1])
+        += (*othrdat)(c.ind);
+    }
+
+    return *this;
+} 
+
+/*
 // group i1,i2; i3,i4
 void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
 {
@@ -618,71 +724,6 @@ void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, co
     Q.p->v = M.TreatAsVector();
     assignFrom(Q);
 }
+*/
 
 
-ITensor& ITensor::operator+=(const ITensor& other)
-{
-    if(this == &other) { scale_ *= 2; return *this; }
-
-    bool complex_this = is_complex();
-    bool complex_other = other.is_complex();
-    if(!complex_this && complex_other)
-    {
-        return (*this = (*this * Complex_1) + other);
-    }
-    if(complex_this && !complex_other) return operator+=(other * Complex_1);
-
-    if(fabs(ur - other.ur) > 1E-12)
-    {
-        cerr << format("this ur = %.10f, other.ur = %.10f\n")%ur%other.ur;
-        Print(*this);
-        Print(other);
-        Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
-    }
-
-    intrusive_ptr<ITDat> curr_p = p;
-    const Vector* othrdat = 0;
-
-    if(scale_.magnitudeLessThan(other.scale_)) 
-    { 
-        this->setScale(other.scale_); 
-        solo();
-        othrdat = &(other.p->v);
-    }
-    else
-    { 
-        //Would be simpler to call other.setScale(this->scale_)
-        //but the following prevents other from having to call solo()
-        if(p->count() != 1) {  p = new ITDat(other.p->v); }
-        else                { p->v = other.p->v; }
-        p->v *= (other.scale_/this->scale_);
-        othrdat = &(curr_p->v);
-    }
-
-    Vector& thisdat = p->v;
-
-#ifdef DO_ALT
-    p->alt.clear();
-#endif
-
-    bool same_ind_order = true;
-    for(int j = 1; j <= rn_; ++j)
-    if(index_[j] != other.index_[j])
-    { same_ind_order = false; break; }
-
-    if(same_ind_order) { thisdat += *othrdat; return *this; }
-
-    Permutation P; getperm(other.index_,P);
-    int *j[NMAX+1];
-    Counter c; other.initCounter(c);
-    for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
-
-    for(; c != Counter::done ; ++c)
-    {
-        thisdat((((((((*j[8]-1)*m(7)+*j[7]-1)*m(6)+*j[6]-1)*m(5)
-        +*j[5]-1)*m(4)+*j[4]-1)*m(3)+*j[3]-1)*m(2)+*j[2]-1)*m(1)+*j[1])
-        += (*othrdat)(c.ind);
-    }
-
-    return *this;
-} 

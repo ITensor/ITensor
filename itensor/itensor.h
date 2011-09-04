@@ -174,7 +174,7 @@ public:
     typedef Index IndexT;
     typedef IndexVal IndexValT;
     typedef Combiner CombinerT;
-    typedef array<Index,NMAX+1>::const_iterator indexn_it;
+    typedef array<Index,NMAX+1>::const_iterator index_it;
     static const Index& ReImIndex;
 private:
     mutable intrusive_ptr<ITDat> p; //mutable: const methods may want to reshape data
@@ -245,16 +245,16 @@ private:
         assert(r_ <= NMAX);
         assert(rn_ == 0);
         int r1_ = 0;
-        array<Index*,NMAX+1> index1_;
+        array<const Index*,NMAX+1> index1_;
         int alloc_size = 1;
-        for(size_t n = 0; n < r_; ++n)
+        for(int n = 0; n < r_; ++n)
         {
             const Index& i = I[n];
             DO_IF_DEBUG(if(i == IndNull) Error("ITensor: null Index in constructor.");)
             if(i.m()==1) { GET(index1_,++r1_) = &i; }
             else         { GET(index_, ++rn_) = i; alloc_size *= i.m(); }
         }
-        for(size_t l = 1; l <= r1_; ++l) index_[rn_+l] = *index1_[l];
+        for(int l = 1; l <= r1_; ++l) index_[rn_+l] = *(index1_[l]);
         set_unique_Real();
         return alloc_size;
     }
@@ -320,7 +320,7 @@ public:
     inline const pair<index_it,index_it> indexn() const { return make_pair(index_.begin()+1,index_.begin()+rn_+1); }
     inline const pair<index_it,index_it> index() const  { return make_pair(index_.begin()+1,index_.begin()+r_ +1); }
 
-    void initCounter(Counter& C) const { C.init(index_,rn,r()); }
+    void initCounter(Counter& C) const { C.init(index_,rn_,r_); }
 
     //Constructors --------------------------------------------------
 
@@ -383,13 +383,13 @@ public:
         allocate(alloc_size);
     }
 
-    explicit ITensor(const IndexVal& iv, Real fac = 1) : rn(0)
+    explicit ITensor(const IndexVal& iv, Real fac = 1) : r_(1), rn_(0)
     { 
         _construct1(iv.ind);
         p->v(iv.i) = fac; 
     }
 
-    ITensor(const IndexVal& iv1, const IndexVal& iv2) : rn(0)
+    ITensor(const IndexVal& iv1, const IndexVal& iv2) : r_(2), rn_(0)
     { 
         _construct2(iv1.ind,iv2.ind);
         p->v((iv2.i-1)*iv1.ind.m()+iv1.i) = 1; 
@@ -402,10 +402,12 @@ public:
 	{
         array<Index,NMAX+1> ii = {{ iv1.ind, iv2.ind, iv3.ind, iv4.ind, iv5.ind, iv6.ind, iv7.ind, iv8.ind }};
         int size = 3;
-        while(ii[size] != IVNull) ++size;
+        while(size < NMAX && ii[size+1] != IVNull.ind) ++size;
         int alloc_size = fillFromIndices(ii,size);
         allocate(alloc_size);
-        p->v((((((((iv8.i-1)*m(7)+iv7.i-1)*m(6)+iv6.i-1)*m(5)+iv5.i-1)*m(4)+iv4.i-1)*m(3)+iv3.i-1)*m(2)+iv2.i-1)*m(1)+iv1.i) = 1; 
+        p->v((((((((iv8.i-1)*iv7.ind.m()+iv7.i-1)*iv6.ind.m()+iv6.i-1)*iv5.ind.m()+iv5.i-1)
+                    *iv4.ind.m()+iv4.i-1)*iv3.ind.m()+iv3.i-1)*iv2.ind.m()+iv2.i-1)*iv1.ind.m()+iv1.i) 
+                    = 1; 
     }
 
     explicit ITensor(const vector<Index>& I) : rn_(0)
@@ -423,14 +425,14 @@ public:
 
     ITensor(const vector<Index>& I, const ITensor& other) : p(other.p), rn_(0), scale_(other.scale_)
     {
-        int alloc_size = fillFromIndices(I);
+        int alloc_size = fillFromIndices(I,I.size());
         if(alloc_size != other.vec_size()) 
         { Error("ITensor(vector<Index>,ITensor): incompatible Index and ITensor sizes"); }
     }
 
     ITensor(const vector<Index>& I, const ITensor& other, Permutation P) : p(0), rn_(0), scale_(other.scale_)
     {
-        int alloc_size = fillFromIndices(I);
+        int alloc_size = fillFromIndices(I,I.size());
         if(alloc_size != other.vec_size()) 
         { Error("ITensor(vector<Index>,ITensor,Permutation): incompatible Index and ITensor sizes"); }
         if(P.is_trivial()) { p = other.p; }
@@ -612,7 +614,7 @@ public:
     { 
         assert(j <= r_);
         assert(j > rn_);
-        for(int k = pos; k < r_; ++k) index_[k] = index_[k+1];
+        for(int k = j; k < r_; ++k) index_[k] = index_[k+1];
         --r_;
         set_unique_Real();
     }
@@ -647,7 +649,7 @@ public:
 
     void mapprimeind(const Index& I, int plevold, int plevnew, PrimeType pt = primeBoth)
 	{
-        for(int j = (I.m() == 1 : rn_+1 : 1); j <= r_; ++j) 
+        for(int j = (I.m() == 1 ? rn_+1 : 1); j <= r_; ++j) 
         if(index_[j] == I)
         {
             index_[j].mapprime(plevold,plevnew,pt);
@@ -690,64 +692,64 @@ public:
     //Element Access Methods ----------------------------------------
 
     Real val0() const 
-	{ assert(p != 0); assert(rn == 0); return p->v(1)*scale_; }
+	{ assert(p != 0); assert(rn_ == 0); return p->v(1)*scale_; }
     /*
     Real& ncval0()
 	{ 
         assert(p != 0); 
-        assert(rn == 0);
+        assert(rn_ == 0);
         solo(); 
         return p->v(1); 
     }
     */
 
     Real val1(int i1) const
-	{ assert(p != 0); assert(rn == 1); return p->v(i1)*scale_; }
+	{ assert(p != 0); assert(rn_ == 1); return p->v(i1)*scale_; }
     /*
     Real& ncval1(int i1)
 	{ 
         assert(p != 0); 
-        assert(rn == 1);
+        assert(rn_ == 1);
         solo(); 
         return p->v(i1); 
     }
     */
 
     Real val2(int i1,int i2) const
-	{ assert(p != 0); assert(rn == 2); return p->v((i2-1)*m(1)+i1)*scale_; }
+	{ assert(p != 0); assert(rn_ == 2); return p->v((i2-1)*m(1)+i1)*scale_; }
     /*
     Real& ncval2(int i1,int i2)
 	{ 
         assert(p != 0); 
-        assert(rn == 2);
+        assert(rn_ == 2);
         solo(); 
         return p->v((i2-1)*m(1)+i1); 
     }
     */
 
     Real val3(int i1,int i2,int i3) const
-	{ assert(p != 0); assert(rn == 3); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
+	{ assert(p != 0); assert(rn_ == 3); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
     /*
     Real& ncval3(int i1,int i2,int i3)
     { 
         assert(p != 0); 
-        assert(rn == 3);
+        assert(rn_ == 3);
         solo(); 
         return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1); 
     }
     */
 
     Real val4(int i1,int i2,int i3,int i4) const
-	{ assert(p != 0); assert(rn == 4); return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
+	{ assert(p != 0); assert(rn_ == 4); return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
 
     Real val5(int i1,int i2,int i3,int i4,int i5) const
-	{ assert(p != 0); assert(rn == 5); return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
+	{ assert(p != 0); assert(rn_ == 5); return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
 
     Real val6(int i1,int i2,int i3,int i4,int i5,int i6) const
-	{ assert(p != 0); assert(rn == 6); return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
+	{ assert(p != 0); assert(rn_ == 6); return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
 
     Real val7(int i1,int i2,int i3,int i4,int i5,int i6,int i7) const
-	{ assert(p != 0); assert(rn == 7); return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
+	{ assert(p != 0); assert(rn_ == 7); return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
 
     Real val8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) const
 	{ 
@@ -765,13 +767,48 @@ public:
     }
     */
 
-    Real& operator()(const IndexVal& iv1, const IndexVal& iv2 = IVNull, const IndexVal& iv3 = IVNull,
+    Real& operator()(const IndexVal& iv1)
+	{
+        assert(r_ >= 1);
+        if(rn_ > 1) 
+        {
+            cerr << format("# given = 1, rn_ = %d\n")%rn_;
+            Error("ITensor::operator(): Not enough indices (requires all having m!=1)");
+        }
+	    assert(p != 0); 
+        solo(); 
+        setScale(1);
+        return p->v(iv1.i);
+	}
+
+    Real& operator()(const IndexVal& iv1, const IndexVal& iv2) 
+	{
+        assert(r_ >= 2);
+        array<int,2+1> ja; ja.assign(1);
+        if(rn_ > 2) 
+        {
+            cerr << format("# given = 2, rn_ = %d\n")%rn_;
+            Error("ITensor::operator(): Not enough indices (requires all having m!=1)");
+        }
+        for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
+        {
+            if(index_[k] == iv1.ind)      { ja[k] = iv1.i; }
+            else if(index_[k] == iv2.ind) { ja[k] = iv2.i; }
+        }
+	    assert(p != 0); 
+        solo(); 
+        setScale(1);
+        return p->v((ja[2]-1)*iv1.ind.m()+ja[1]);
+	}
+
+    Real& operator()(const IndexVal& iv1, const IndexVal& iv2, const IndexVal& iv3,
                      const IndexVal& iv4 = IVNull, const IndexVal& iv5 = IVNull, const IndexVal& iv6 = IVNull,
                      const IndexVal& iv7 = IVNull, const IndexVal& iv8 = IVNull)
 	{
-        array<IndexVal,NMAX+1> iv = {{ IVNull, iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
+        array<const IndexVal*,NMAX+1> iv = {{ 0, &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
         array<int,NMAX+1> ja; ja.assign(1);
-        int ngot = 1; while(iv[ngot+1] != IVNull) { ++ngot; }
+        int ngot = 3; while(ngot < NMAX && iv[ngot+1]->ind != IVNull.ind) { ++ngot; }
+        assert(r_ >= ngot);
         if(ngot < rn_) 
         {
             cerr << format("# given = %d, rn_ = %d\n")%ngot%rn_;
@@ -780,13 +817,14 @@ public:
         for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
         {
             for(int j = 1; j <= ngot; ++j)  // loop over the given indices
-            if(index_[k] == iv[j].ind) 
-            { ja[k] = iv[j].i; break; }
+            if(index_[k] == iv[j]->ind) 
+            { ja[k] = iv[j]->i; break; }
         }
 	    assert(p != 0); 
         solo(); 
         setScale(1);
-        return p->v((((((((ja[8]-1)*m(7)+ja[7]-1)*m(6)+ja[6]-1)*m(5)+ja[5]-1)*m(4)+ja[4]-1)*m(3)+ja[3]-1)*m(2)+ja[2]-1)*m(1)+ja[1]);
+        return p->v((((((((ja[8]-1)*iv7.ind.m()+ja[7]-1)*iv6.ind.m()+ja[6]-1)*iv5.ind.m()+ja[5]-1)
+                           *iv4.ind.m()+ja[4]-1)*iv3.ind.m()+ja[3]-1)*iv2.ind.m()+ja[2]-1)*iv1.ind.m()+ja[1]);
 	}
 
     //Methods for Mapping to Other Objects --------------------------------------
@@ -802,7 +840,7 @@ public:
             Print(*this); Print(other);
             Error("assignFrom: unique Real not the same"); 
         }
-        Permutation P; getperm(other._indexn,P);
+        Permutation P; getperm(other.index_,P);
         scale_ = other.scale_;
         if(p->count() != 1) { p = new ITDat(); }
 #ifdef DO_ALT
@@ -811,6 +849,7 @@ public:
         other.reshapeDat(P,p->v);
     }
 
+    /*
     void toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const;
     void toMatrix11(const Index& i1, const Index& i2, Matrix& res) const; //puts in lfac
     void fromMatrix11(const Index& i1, const Index& i2, const Matrix& res);
@@ -826,6 +865,7 @@ public:
     // group i1; i2,i3
     void toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const;
     void fromMatrix12(const Index& i1, const Index& i2, const Index& i3, const Matrix& res);
+    */
 
     int vec_size() const { return p->v.Length(); }
     void assignToVec(VectorRef v) const
@@ -865,19 +905,17 @@ public:
         assignFromVec(newdat);
     }
 
-
     //Other Methods -------------------------------------------------
 
     void Randomize() { solo(); p->v.Randomize(); }
 
     void SplitReIm(ITensor& re, ITensor& im) const
     {
-        re = *this;
-        im = *this;
+        re = *this; im = *this;
         if(!is_complex()) { im *= 0; return; }
-        re *= IndReIm(1);
-        im *= IndReIm(2);
+        re *= IndReIm(1); im *= IndReIm(2);
     }
+
     inline void conj() { if(!is_complex()) return; operator/=(ConjTensor); }
 
     inline bool is_zero() const { return (norm() < 1E-20); } 

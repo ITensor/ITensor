@@ -362,6 +362,7 @@ struct IndexVal
     int i;
     IndexVal() : ind(IndNull),i(0) { }
     IndexVal(const Index& index, int i_) : ind(index),i(i_) { assert(i <= ind.m()); }
+    bool operator==(const IndexVal& other) const { return (ind == other.ind && i == other.i); }
     inline friend std::ostream& operator<<(std::ostream& s, const IndexVal& iv)
     { return s << "IndexVal: i = " << iv.i << ", ind = " << iv.ind << "\n"; }
     IndexVal primed() const { return IndexVal(ind.primed(),i); }
