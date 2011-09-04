@@ -622,7 +622,7 @@ void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, co
 
 ITensor& ITensor::operator+=(const ITensor& other)
 {
-    if(this == &other) return operator*=(2);
+    if(this == &other) { scale_ *= 2; return *this; }
 
     bool complex_this = is_complex();
     bool complex_other = other.is_complex();
@@ -640,37 +640,48 @@ ITensor& ITensor::operator+=(const ITensor& other)
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
     }
 
-    solo();
+    intrusive_ptr<ITDat> curr_p = p;
+    const Vector* othrdat = 0;
 
     if(scale_.magnitudeLessThan(other.scale_)) 
-    { this->setScale(other.scale_); }
+    { 
+        this->setScale(other.scale_); 
+        solo();
+        othrdat = &(other.p->v);
+    }
     else
-    { other.setScale(this->scale_); }
+    { 
+        //Would be simpler to call other.setScale(this->scale_)
+        //but the following prevents other from having to call solo()
+        if(p->count() != 1) {  p = new ITDat(other.p->v); }
+        else                { p->v = other.p->v; }
+        p->v *= (other.scale_/this->scale_);
+        othrdat = &(curr_p->v);
+    }
 
     Vector& thisdat = p->v;
-    const Vector& othrdat = other.p->v;
 
 #ifdef DO_ALT
     p->alt.clear();
 #endif
 
     bool same_ind_order = true;
-    for(int j = 1; j <= rn; j++)
-    if(_indexn[j] != other._indexn[j])
+    for(int j = 1; j <= rn_; ++j)
+    if(index_[j] != other.index_[j])
     { same_ind_order = false; break; }
 
-    if(same_ind_order) { thisdat += othrdat; return *this; }
+    if(same_ind_order) { thisdat += *othrdat; return *this; }
 
-    Permutation P; getperm(other._indexn,P);
+    Permutation P; getperm(other.index_,P);
     int *j[NMAX+1];
     Counter c; other.initCounter(c);
     for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
 
-    for( ; c != Counter::done ; ++c)
+    for(; c != Counter::done ; ++c)
     {
-        thisdat((((((((*j[8]-1)*this->m(7)+*j[7]-1)*this->m(6)+*j[6]-1)*this->m(5)
-        +*j[5]-1)*this->m(4)+*j[4]-1)*this->m(3)+*j[3]-1)*this->m(2)+*j[2]-1)*this->m(1)+*j[1])
-        += othrdat(c.ind);
+        thisdat((((((((*j[8]-1)*m(7)+*j[7]-1)*m(6)+*j[6]-1)*m(5)
+        +*j[5]-1)*m(4)+*j[4]-1)*m(3)+*j[3]-1)*m(2)+*j[2]-1)*m(1)+*j[1])
+        += (*othrdat)(c.ind);
     }
 
     return *this;

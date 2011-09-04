@@ -178,9 +178,8 @@ public:
     static const Index& ReImIndex;
 private:
     mutable intrusive_ptr<ITDat> p; //mutable: const methods may want to reshape data
-    int rn;
-    mutable array<Index,NMAX+1> _indexn; //Indices having m!=1, maximum of 8 (_indexn[0] not used), mutable to allow reordering
-    mutable vector<Index>       _index1; //Indices having m==1
+    int r_,rn_;
+    mutable array<Index,NMAX+1> index_; //Indices, maximum of 8 (index_[0] not used), mutable to allow reordering
     Real ur;
     mutable LogNumber scale_; //mutable since e.g. normlogto is logically const
 
@@ -203,64 +202,92 @@ private:
         {
             intrusive_ptr<ITDat> new_p(new ITDat(*p));
             p.swap(new_p);
+            //or just p = new ITDat(*p); ?
             IF_COUNT_COPIES(++copycount;)
         }
 	}
     
     void set_unique_Real()
 	{
-        ur = 0.0;
-        for(int j = 1; j <= rn; ++j)
-        { ur += GET(_indexn,j).unique_Real(); }
-        foreach(const Index& I, _index1)
-        { ur += I.unique_Real(); }
+        ur = 0;
+        for(int j = 1; j <= r_; ++j)
+        { ur += GET(index_,j).unique_Real(); }
 	}
+
+    void _construct1(const Index& i1)
+    {
+        assert(r_ == 1);
+        if(i1.m() != 1) rn_ = 1; 
+        index_[1] = i1;
+        allocate(i1.m());
+        set_unique_Real();
+    }
 
     void _construct2(const Index& i1, const Index& i2)
     {
-        if(i1.m()==1) _index1.push_back(i1); else { GET(_indexn,++rn) = i1; }
-        if(i2.m()==1) _index1.push_back(i2); else { GET(_indexn,++rn) = i2; }
+        assert(r_ == 2);
+        if(i2.m()==1) 
+        {
+            index_[1] = i1; index_[2] = i2; rn_ = (i1.m() == 1 ? 1 : 0);
+        }
+        else 
+        { 
+            index_[1] = i2; index_[2] = i1; rn_ = (i1.m() == 1 ? 1 : 2); 
+        }
         allocate(i1.m()*i2.m()); 
         set_unique_Real();
     }
 
+    template<class IndexContainer>
+    int fillFromIndices(const IndexContainer& I, int size)
+    {
+        r_ = size;
+        assert(r_ <= NMAX);
+        assert(rn_ == 0);
+        int r1_ = 0;
+        array<Index*,NMAX+1> index1_;
+        int alloc_size = 1;
+        for(size_t n = 0; n < r_; ++n)
+        {
+            const Index& i = I[n];
+            DO_IF_DEBUG(if(i == IndNull) Error("ITensor: null Index in constructor.");)
+            if(i.m()==1) { GET(index1_,++r1_) = &i; }
+            else         { GET(index_, ++rn_) = i; alloc_size *= i.m(); }
+        }
+        for(size_t l = 1; l <= r1_; ++l) index_[rn_+l] = *index1_[l];
+        set_unique_Real();
+        return alloc_size;
+    }
+
     //Prefer to map via a Combiner
-    //'mapindex' is useful and efficient if used in a safe way, however.
+    //Though 'mapindex' is useful for tested, internal calls
     void mapindex(const Index& i1, const Index& i2)
 	{
         assert(i1.m() == i2.m());
-        for(int j = 1; j <= rn; ++j) 
-        if(GET(_indexn,j) == i1) 
+        for(int j = 1; j <= r_; ++j) 
+        if(GET(index_,j) == i1) 
         {
-            solo();
-            GET(_indexn,j) = i2;
+            GET(index_,j) = i2;
             set_unique_Real();
             return;
         }
-        vector<Index>::iterator i1pos = find(_index1.begin(),_index1.end(),i1);
-        if(i1pos == _index1.end()) 
-        {
-            cerr << "\nFor ITensor = " << *this << "\n";
-            cerr << "Missing index i1 = " << i1 << "\n";
-            Error("ITensor::mapindex(i1,i2): ITensor does not have index i1");
-        }
-        *i1pos = i2;
-        set_unique_Real();
+        Print(i1);
+        Error("ITensor::mapindex: couldn't find i1.");
 	}
 
-    void getperm(const array<Index,NMAX+1>& oth_indexn, Permutation& P) const
+    void getperm(const array<Index,NMAX+1>& oth_index_, Permutation& P) const
     {
-        for(int j = 1; j <= rn; ++j)
+        for(int j = 1; j <= r_; ++j)
         {
             bool got_one = false;
-            for(int k = 1; k <= rn; ++k)
-            if(oth_indexn[j] == _indexn[k])
+            for(int k = 1; k <= r_; ++k)
+            if(oth_index_[j] == index_[k])
             { P.from_to(j,k); got_one = true; break; }
             if(!got_one)
             {
                 cerr << "j = " << j << "\n";
-                Print(*this);
-                foreach(const Index& I, oth_indexn) { cerr << I << "\n"; }
+                Print(*this); cerr << "oth_index_ = \n";
+                foreach(const Index& I, oth_index_) { cerr << I << "\n"; }
                 Error("ITensor::getperm: no matching index");
             }
         }
@@ -270,97 +297,72 @@ private:
                              array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR, 
                              MatrixRefNoLink& lref, MatrixRefNoLink& rref);
 
-    int fillFromIndices(const vector<Index>& I)
-    {
-        assert(rn == 0);
-        assert(_index1.empty());
-        int alloc_size = 1;
-        for(size_t n = 0; n < I.size(); ++n)
-        {
-            const Index& i = I[n];
-            if(i == IndNull) Error("ITensor: null Index in constructor.");
-            if(i.m()==1) _index1.push_back(i); 
-            else 
-            { 
-                DO_IF_DEBUG(if(rn == NMAX) Error("ITensor(const vector<Index>& I): too many indices with m > 1");)
-                GET(_indexn,++rn) = i; 
-                alloc_size *= i.m(); 
-            }
-        }
-        return alloc_size;
-    }
 
 public:
 
     //Accessor Methods ----------------------------------------------
 
-    Real unique_Real() const { return ur; }	// depends on indices only, unordered
-    const Index& index(int j) const { return (j > rn ? GET(_index1,j-(rn+1)) : GET(_indexn,j)); }
-    const Index& indexn(int j) const { return GET(_indexn,j); }
-    int r() const { return rn + _index1.size(); }
-    int r_n() const { return rn; }
-    int r_1() const { return _index1.size(); }
-    inline int m(int j) const { return (j > rn ? 1 : GET(_indexn,j).m()); }
+    inline Real unique_Real() const { return ur; } // depends on indices only, unordered
+    inline const Index& index(int j) const { assert(j <= r_); return GET(index_,j); }
+    inline int r() const { return r_; }
+    inline int rn() const { return rn_; }
+    inline int m(int j) const { assert(j <= r_); return GET(index_,j).m(); }
 
-    bool is_null() const { return (p == 0); }
-    bool is_not_null() const { return (p != 0); }
-    bool is_complex() const { return findindexn(IndReIm) > 0; }
-    bool is_not_complex() const { return (findindexn(IndReIm) == 0); }
+    inline bool is_null() const { return (p == 0); }
+    inline bool is_not_null() const { return (p != 0); }
+    inline bool is_complex() const { return hasindexn(IndReIm); }
+    inline bool is_not_complex() const { return !hasindexn(IndReIm); }
 
-    LogNumber scale() const { return scale_; }
+    inline LogNumber scale() const { return scale_; }
 
     //These methods can be used for const iteration over Indices in a foreach loop
-    //e.g. foreach(const Index& I, t.indexn() ) { ... }
-    const pair<indexn_it,indexn_it> indexn() const { return make_pair(_indexn.begin()+1,_indexn.begin()+rn+1); }
-    const vector<Index>&            index1() const { return _index1; }
+    //e.g. foreach(const Index& I, t.index() ) { ... }
+    inline const pair<index_it,index_it> indexn() const { return make_pair(index_.begin()+1,index_.begin()+rn_+1); }
+    inline const pair<index_it,index_it> index() const  { return make_pair(index_.begin()+1,index_.begin()+r_ +1); }
 
-    void initCounter(Counter& C) const { C.init(_indexn,rn,r()); }
+    void initCounter(Counter& C) const { C.init(index_,rn,r()); }
 
     //Constructors --------------------------------------------------
 
-    ITensor() : p(0), rn(0), ur(0)  { }
+    ITensor() : p(0), r_(0), rn_(0), ur(0)  { }
 
-    ITensor(Real val) : rn(0)
+    ITensor(Real val) : r_(0), rn_(0)
 	{ 
         allocate(1);
         p->v = val;
         set_unique_Real();
     }
 
-    explicit ITensor(const Index& i1) : rn(0)
-	{ 
-        if(i1.m()==1) _index1.push_back(i1); else { _indexn[1] = i1; ++rn; }
-        allocate(i1.m());
-        set_unique_Real();
-    }
+    explicit ITensor(const Index& i1) : r_(1), rn_(0)
+	{ _construct1(i1); }
 
-    ITensor(const Index& i1, Real val) : rn(0)
-	{ 
-        if(i1.m()==1) _index1.push_back(i1); else { _indexn[1] = i1; ++rn; }
-        allocate(i1.m()); p->v = val; 
-        set_unique_Real();
-    }
+    ITensor(const Index& i1, Real val) : r_(1), rn_(0)
+	{ _construct1(i1); p->v = val; }
 
-    ITensor(const Index& i1, const Vector& V) : p(new ITDat(V)), rn(0)
+    ITensor(const Index& i1, const Vector& V) : p(new ITDat(V)), r_(1), rn_(0)
 	{ 
         if(i1.m() != V.Length()) Error("Mismatch of Index and Vector sizes.");
-        if(i1.m()==1) _index1.push_back(i1); else { GET(_indexn,1) = i1; ++rn; }
+        if(i1.m() != 1) rn_ = 1;
+        index_[1] = i1;
         set_unique_Real();
     }
 
-    ITensor(Index i1,Index i2) : rn(0)
+    ITensor(Index i1,Index i2) : r_(2), rn_(0)
 	{ _construct2(i1,i2); }
 
     //Create an ITensor as a matrix with 'a' on the diagonal
-    ITensor(Index i1,Index i2,Real a) : rn(0)
+    ITensor(Index i1,Index i2,Real a) : r_(2), rn_(0)
     {
         _construct2(i1,i2);
-        int nn = min(i1.m(),i2.m());
-        if(rn == 2) for(int i = 1; i <= nn; ++i) p->v((i-1)*i1.m()+i) = a;
-        else p->v(1) = a;
+        if(rn_ == 2) //then index order is i1, i2
+        {
+        const int nn = min(i1.m(),i2.m());
+        for(int i = 1; i <= nn; ++i) p->v((i-1)*i1.m()+i) = a;
+        }
+        else { p->v(1) = a; }
     }
 
-    ITensor(Index i1,Index i2,const MatrixRef& M) : rn(0)
+    ITensor(Index i1,Index i2,const MatrixRef& M) : r_(2), rn_(0)
     {
         _construct2(i1,i2);
         if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
@@ -372,89 +374,61 @@ public:
     ITensor(Index i1, Index i2, Index i3,
             Index i4 = IndNull, Index i5 = IndNull, Index i6 = IndNull,
             Index i7 = IndNull, Index i8 = IndNull)
-            : rn(0)
+            : rn_(0)
     {
-        array<Index,NMAX+1> ii = {{ IndNull, i1, i2, i3, i4, i5, i6, i7, i8 }};
-        int dim = 1;
-        for(int n = 1; n <= NMAX; ++n)
-        { 
-            if(ii[n] == IndNull) break;
-            if(ii[n].m()==1) _index1.push_back(ii[n]); else { dim *= ii[n].m(); _indexn[++rn] = ii[n]; } 
-        }
-        allocate(dim);
-        set_unique_Real();
+        array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
+        int size = 3;
+        while(ii[size] != IndNull) ++size;
+        int alloc_size = fillFromIndices(ii,size);
+        allocate(alloc_size);
     }
 
     explicit ITensor(const IndexVal& iv, Real fac = 1) : rn(0)
     { 
-        if(iv.ind.m()==1) _index1.push_back(iv.ind); else { _indexn[++rn] = iv.ind; } 
-        allocate(iv.ind.m());  
+        _construct1(iv.ind);
         p->v(iv.i) = fac; 
-        set_unique_Real(); 
     }
 
     ITensor(const IndexVal& iv1, const IndexVal& iv2) : rn(0)
     { 
-        if(iv1.ind.m()==1) _index1.push_back(iv1.ind); else { _indexn[++rn] = iv1.ind; } 
-        if(iv2.ind.m()==1) _index1.push_back(iv2.ind); else { _indexn[++rn] = iv2.ind; } 
-        allocate(iv1.ind.m()*iv2.ind.m());  
+        _construct2(iv1.ind,iv2.ind);
         p->v((iv2.i-1)*iv1.ind.m()+iv1.i) = 1; 
-        set_unique_Real(); 
     }
 
-    ITensor(IndexVal iv1, IndexVal iv2, IndexVal iv3,
-            IndexVal iv4 = IVNull, IndexVal iv5 = IVNull, IndexVal iv6 = IVNull,
-            IndexVal iv7 = IVNull, IndexVal iv8 = IVNull)
-            : rn(0)
+    ITensor(const IndexVal& iv1, const IndexVal& iv2, const IndexVal& iv3,
+            const IndexVal& iv4 = IVNull, const IndexVal& iv5 = IVNull, const IndexVal& iv6 = IVNull,
+            const IndexVal& iv7 = IVNull, const IndexVal& iv8 = IVNull)
+            : rn_(0)
 	{
-        array<IndexVal,NMAX+1> iv = {{ IVNull, iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
-        int dim = 1;
-        for(int n = 1; n <= NMAX; ++n)
-        { 
-            if(iv[n].ind == IndNull) break;
-            if(iv[n].ind.m()==1) _index1.push_back(iv[n].ind); else { dim *= iv[n].ind.m(); _indexn[++rn] = iv[n].ind; } 
-        }
-        allocate(dim);
-        p->v((((((((iv8.i-1)*m(7)+iv7.i-1)*m(6)+iv6.i-1)*m(5)+iv5.i-1)*m(4)+iv4.i-1)*m(3)+iv3.i-1)*m(2)+iv2.i-1)*m(1)+iv1.i) = 1; 
-        set_unique_Real();
-    }
-
-    explicit ITensor(const vector<Index>& I) : rn(0)
-    {
-        int alloc_size = 1;
-        for(size_t n = 0; n < I.size(); ++n)
-        {
-            const Index& i = I[n];
-            if(i == IndNull) Error("ITensor: null Index in constructor.");
-            if(i.m()==1) _index1.push_back(i); 
-            else 
-            { 
-                if(rn == NMAX) Error("ITensor(const vector<Index>& I): too many indices with m > 1");
-                GET(_indexn,++rn) = i; 
-                alloc_size *= i.m(); 
-            }
-        }
+        array<Index,NMAX+1> ii = {{ iv1.ind, iv2.ind, iv3.ind, iv4.ind, iv5.ind, iv6.ind, iv7.ind, iv8.ind }};
+        int size = 3;
+        while(ii[size] != IVNull) ++size;
+        int alloc_size = fillFromIndices(ii,size);
         allocate(alloc_size);
-        set_unique_Real();
+        p->v((((((((iv8.i-1)*m(7)+iv7.i-1)*m(6)+iv6.i-1)*m(5)+iv5.i-1)*m(4)+iv4.i-1)*m(3)+iv3.i-1)*m(2)+iv2.i-1)*m(1)+iv1.i) = 1; 
     }
 
-    ITensor(const vector<Index>& I, const Vector& V) : p(new ITDat(V)), rn(0)
+    explicit ITensor(const vector<Index>& I) : rn_(0)
     {
-        int alloc_size = fillFromIndices(I);
+        int alloc_size = fillFromIndices(I,I.size());
+        allocate(alloc_size);
+    }
+
+    ITensor(const vector<Index>& I, const Vector& V) : p(new ITDat(V)), rn_(0)
+    {
+        int alloc_size = fillFromIndices(I,I.size());
         if(alloc_size != V.Length()) 
         { Error("ITensor(vector<Index>,Vector): incompatible Index and Vector sizes"); }
-        set_unique_Real();
     }
 
-    ITensor(const vector<Index>& I, const ITensor& other) : p(other.p), rn(0), scale_(other.scale_)
+    ITensor(const vector<Index>& I, const ITensor& other) : p(other.p), rn_(0), scale_(other.scale_)
     {
         int alloc_size = fillFromIndices(I);
         if(alloc_size != other.vec_size()) 
         { Error("ITensor(vector<Index>,ITensor): incompatible Index and ITensor sizes"); }
-        set_unique_Real();
     }
 
-    ITensor(const vector<Index>& I, const ITensor& other, Permutation P) : p(0), rn(0), scale_(other.scale_)
+    ITensor(const vector<Index>& I, const ITensor& other, Permutation P) : p(0), rn_(0), scale_(other.scale_)
     {
         int alloc_size = fillFromIndices(I);
         if(alloc_size != other.vec_size()) 
@@ -465,12 +439,11 @@ public:
             allocate(); 
             other.reshapeDat(P,p->v); 
         }
-        set_unique_Real();
     }
 
-    ITensor(ITmaker itm) : rn(1)
+    ITensor(ITmaker itm) : r_(1), rn_(1)
 	{
-        GET(_indexn,1) = IndReIm; allocate(2);
+        GET(index_,1) = IndReIm; allocate(2);
         if(itm == makeComplex_1)  { p->v(1) = 1; }
         if(itm == makeComplex_i)  { p->v(2) = 1; }
         if(itm == makeConjTensor) { p->v(1) = 1; p->v(2) = -1; }
@@ -486,13 +459,11 @@ public:
         bool null_;
         s.read((char*) &null_,sizeof(null_));
         if(null_) { *this = ITensor(); return; }
-        s.read((char*) &rn,sizeof(rn));
+        s.read((char*) &r_,sizeof(r_));
+        s.read((char*) &rn_,sizeof(rn_));
+        for(int j = 1; j <= r_; ++j) index_[j].read(s);
         scale_.read(s);
-        size_t i1size = 0;
-        s.read((char*) &i1size,sizeof(i1size));
         p = new ITDat(s);
-        for(int j = 1; j <= rn; ++j) _indexn[j] = Index(s);
-        _index1.reserve(i1size); for(size_t i = 1; i <= i1size; ++i) _index1.push_back(Index(s));
         set_unique_Real();
     }
 
@@ -501,13 +472,11 @@ public:
         bool null_ = is_null();
         s.write((char*) &null_,sizeof(null_));
         if(null_) return;
-        s.write((char*) &rn,sizeof(rn));
+        s.write((char*) &r_,sizeof(r_));
+        s.write((char*) &rn_,sizeof(rn_));
+        for(int j = 1; j <= r_; ++j) index_[j].write(s);
         scale_.write(s);
-        const size_t i1size = _index1.size();
-        s.write((char*) &i1size,sizeof(i1size));
         p->write(s);
-        for(int j = 1; j <= rn; ++j) _indexn[j].write(s);
-        foreach(const Index& I, _index1) I.write(s);
     }
 
     //Operators -------------------------------------------------------
@@ -545,25 +514,17 @@ public:
 
     Index findtype(IndexType t) const
 	{
-        for(int j = 1; j <= rn; ++j)
-        if(GET(_indexn,j).type() == t) return GET(_indexn,j);
-        foreach(const Index& I,_index1)
-        if(I.type() == t) return I;
+        for(int j = 1; j <= rn_; ++j)
+        if(index_[j].type() == t) return index_[j];
         Error("ITensor::findtype failed."); return Index();
 	}
 
-    bool findtype(IndexType t,Index& I) const
+    bool findtype(IndexType t, Index& I) const
 	{
-        for(int j = 1; j <= rn; ++j)
-        if(GET(_indexn,j).type() == t)
+        for(int j = 1; j <= r_; ++j)
+        if(index_[j].type() == t)
         {
-            I = GET(_indexn,j);
-            return true;
-        }
-        foreach(const Index& J,_index1)
-        if(J.type() == t)
-        {
-            I = J;
+            I = index_[j];
             return true;
         }
         return false;
@@ -578,43 +539,25 @@ public:
 
     int findindexn(const Index& I) const
 	{
-        if(I.m() == 1) return 0;
-        for(int j = 1; j <= rn; ++j)
-        if(GET(_indexn,j) == I) return j;
+        assert(I.m() != 1);
+        for(int j = 1; j <= rn_; ++j)
+        if(index_[j] == I) return j;
         return 0;
 	}
 
     int findindex1(const Index& I) const
 	{
-        if(I.m() != 1) return 0;
-        for(size_t j = 0; j < _index1.size(); ++j)
-        if(_index1[j] == I) return j+rn+1;
+        assert(I.m() == 1);
+        for(int j = rn_+1; j <= r_; ++j)
+        if(index_[j] == I) return j;
         return 0;
 	}
 
-    //Checks that if this has an Index I, then it
-    //also has I' (I' can have any primelevel)
-    bool has_symmetric_nindices() const
-    {
-        for(int i = 1; i <= rn; ++i)
-        for(int j = 1; j <= rn; ++j)
-        {
-            if(j == i) continue;
-            if(GET(_indexn,i).noprime_equals(GET(_indexn,j))) break;
-            if(j == rn) return false;
-        }
-        return true;
-    }
-
     bool has_common_index(const ITensor& other) const
     {
-        for(int j = 1; j <= rn; ++j)
-        for(int k = 1; k <= other.rn; ++k)
-        if(_indexn[j] == other._indexn[k]) return true;
-
-        for(size_t j = 0; j < _index1.size(); ++j)
-        for(size_t k = 0; k < other._index1.size(); ++k)
-        if(_index1[j] == other._index1[k]) return true;
+        for(int j = 1; j <= r_; ++j)
+        for(int k = 1; k <= other.r_; ++k)
+        if(index_[j] == other.index_[k]) return true;
 
         return false;
     }
@@ -628,72 +571,67 @@ public:
 
     bool hasindexn(const Index& I) const
 	{
-        for(int j = 1; j <= rn; ++j)
-        if(_indexn[j] == I) return true;
+        for(int j = 1; j <= rn_; ++j)
+        if(index_[j] == I) return true;
         return false;
 	}
 
     bool hasindex1(const Index& I) const
 	{
-        for(size_t j = 0; j < _index1.size(); ++j)
-        if(_index1[j] == I) return true;
+        for(int j = rn_+1; j <= r_; ++j)
+        if(index_[j] == I) return true;
         return false;
 	}
 
-    bool notin(const Index& I) const { return !(hasindexn(I) || hasindex1(I)); }
+    bool notin(const Index& I) const { return !hasindex(I); }
 
     template <class Iterable>
     void addindex1(const Iterable& indices) 
     { 
-        if(_index1.empty()) { _index1.insert(_index1.begin(),indices.begin(),indices.end()); }
-        else
-        {
-            _index1.insert(_index1.begin(),indices.begin(),indices.end());
-            sort(_index1.begin(),_index1.end());
-            vector<Index>::iterator it = unique(_index1.begin(),_index1.end());
-            _index1.resize(it-_index1.begin());
+        assert((r_+(int)indices.size()) <= NMAX);
+        for(size_t j = 0; j < indices.size(); ++j)
+        { 
+            assert(indices[j].m() == 1);
+            assert(!hasindex1(indices[j]));
+            index_[++r_] = indices[j]; 
         }
         set_unique_Real();
     }
 
     void addindex1(const Index& I) 
     { 
-        if(I.m() != 1) { cerr << "I = " << I << "\n"; Error("ITensor::addindex1: m != 1"); }
+        assert(I.m() == 1);
+        assert(r_ < NMAX);
         if(hasindex1(I)) return;
-        _index1.push_back(I); 
-        set_unique_Real();
-    }
-
-    void removeindex1(const Index& I) 
-    { 
-        vector<Index>::iterator it = find(_index1.begin(),_index1.end(),I);
-        if(it == _index1.end()) Error("Couldn't find m == 1 Index to remove.");
-        _index1.erase(it);
+        index_[++r_] = I;
         set_unique_Real();
     }
 
     //Removes the jth index as found by findindex
     void removeindex1(int j) 
     { 
-        vector<Index>::iterator it = _index1.begin()+(j-(rn+1));
-        _index1.erase(it);
+        assert(j <= r_);
+        assert(j > rn_);
+        for(int k = pos; k < r_; ++k) index_[k] = index_[k+1];
+        --r_;
         set_unique_Real();
     }
+
+    inline void removeindex1(const Index& I) { removeindex1(findindex1(I)); }
+
 
 
     //Primelevel Methods ------------------------------------
 
     void noprime(PrimeType p = primeBoth)
 	{
-        for(int j = 1; j <= rn; ++j) _indexn[j].noprime(p);
-        foreach(Index& I, _index1) I.noprime(p);
+        for(int j = 1; j <= r_; ++j) index_[j].noprime(p);
         set_unique_Real();
 	}
 
     void doprime(PrimeType pt, int inc = 1)
 	{
-        for(int j = 1; j <= rn; ++j) _indexn[j].doprime(pt,inc);
-        foreach(Index& I, _index1) I.doprime(pt,inc);
+        for(int j = 1; j <= r_; ++j) index_[j].doprime(pt,inc);
         set_unique_Real();
 	}
 
@@ -703,24 +641,16 @@ public:
 
     void mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)
 	{
-        for(int j = 1; j <= rn; ++j) GET(_indexn,j).mapprime(plevold,plevnew,pt);
-        foreach(Index& I, _index1) I.mapprime(plevold,plevnew,pt);
+        for(int j = 1; j <= r_; ++j) index_[j].mapprime(plevold,plevnew,pt);
         set_unique_Real();
 	}
 
     void mapprimeind(const Index& I, int plevold, int plevnew, PrimeType pt = primeBoth)
 	{
-        for(int j = 1; j <= rn; ++j) 
-        if(I == _indexn[j])
+        for(int j = (I.m() == 1 : rn_+1 : 1); j <= r_; ++j) 
+        if(index_[j] == I)
         {
-            _indexn[j].mapprime(plevold,plevnew,pt);
-            set_unique_Real();
-            return;
-        }
-        foreach(Index& J, _index1) 
-        if(I == J)
-        {
-            J.mapprime(plevold,plevnew,pt);
+            index_[j].mapprime(plevold,plevnew,pt);
             set_unique_Real();
             return;
         }
@@ -758,7 +688,6 @@ public:
     { A.noprime(); return A; }
 
     //Element Access Methods ----------------------------------------
-
 
     Real val0() const 
 	{ assert(p != 0); assert(rn == 0); return p->v(1)*scale_; }
@@ -841,18 +770,18 @@ public:
                      const IndexVal& iv7 = IVNull, const IndexVal& iv8 = IVNull)
 	{
         array<IndexVal,NMAX+1> iv = {{ IVNull, iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
-        vector<int> ja(NMAX+1,1);
-        int numgot = 0;
-        for(int k = 1; k <= rn; ++k) //loop over indices of this ITensor
+        array<int,NMAX+1> ja; ja.assign(1);
+        int ngot = 1; while(iv[ngot+1] != IVNull) { ++ngot; }
+        if(ngot < rn_) 
         {
-            for(int j = 1; j <= NMAX; ++j)  // loop over the given indices
-            if(_indexn[k] == iv[j].ind) 
-            { ++numgot; ja[k] = iv[j].i; break; }
+            cerr << format("# given = %d, rn_ = %d\n")%ngot%rn_;
+            Error("ITensor::operator(): Not enough indices (requires all having m!=1)");
         }
-        if(numgot != rn) 
+        for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
         {
-            cerr << format("numgot = %d, rn = %d\n")%numgot%rn;
-            Error("ITensor::operator(): Not enough indices");
+            for(int j = 1; j <= ngot; ++j)  // loop over the given indices
+            if(index_[k] == iv[j].ind) 
+            { ja[k] = iv[j].i; break; }
         }
 	    assert(p != 0); 
         solo(); 
@@ -981,10 +910,8 @@ public:
 
     friend inline ostream& operator<<(ostream & s, const ITensor & t)
     {
-        s << "logscale(incl in elems) = " << t.scale().logNum() << ", r = " << t.r() << ": ";
-        int i = 0;
-        for(i = 1; i <= t.r_n(); ++i) { s << t.indexn(i) << (i != t.r_n() ? ", " : "; "); }
-        foreach(const Index& I, t.index1()) { s << I << (i != t.r() ? ", " : ""); ++i; }
+        s << "log(scale)[incl in elems] = " << t.scale().logNum() << ", r = " << t.r() << ": ";
+        int i = 1; for(; i < t.r(); ++i) { s << t.index(i) << ", "; } s << t.index(i);
         if(t.is_null()) s << " (dat is null)\n";
         else 
         {
@@ -1001,7 +928,7 @@ public:
                     { s << c << " " << val << "\n"; }
                 }
             }
-            else s << "\n";
+            else { s << "\n"; }
         }
         return s;
     }
