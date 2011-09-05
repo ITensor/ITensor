@@ -226,13 +226,13 @@ private:
     void _construct2(const Index& i1, const Index& i2)
     {
         assert(r_ == 2);
-        if(i2.m()==1) 
+        if(i1.m()==1) 
         {
-            index_[1] = i1; index_[2] = i2; rn_ = (i1.m() == 1 ? 0 : 1);
+            index_[1] = i2; index_[2] = i1; rn_ = (i2.m() == 1 ? 0 : 1);
         }
         else 
         { 
-            index_[1] = i2; index_[2] = i1; rn_ = (i1.m() == 1 ? 1 : 2); 
+            index_[1] = i1; index_[2] = i2; rn_ = (i2.m() == 1 ? 1 : 2); 
         }
         allocate(i1.m()*i2.m()); 
         set_unique_Real();
@@ -293,10 +293,50 @@ private:
         }
     }
 
-    friend void toMatrixProd(const ITensor& L, const ITensor& R, 
+    friend void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim,
                              array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR, 
                              MatrixRefNoLink& lref, MatrixRefNoLink& rref);
 
+    inline Real& _val(int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8)
+    {
+        assert(p != 0);
+        switch(rn_)
+        {
+        case 0:
+            return p->v(1);
+            break;
+        case 1:
+            return p->v(i1);
+            break;
+        case 2:
+            return p->v((i2-1)*m(1)+i1);
+            break;
+        case 3:
+            return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1);
+            break;
+        case 4:
+            return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+            break;
+        case 5:
+            return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)
+                            *m(1)+i1);
+            break;
+        case 6:
+            return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)
+                            *m(2)+i2-1)*m(1)+i1);
+            break;
+        case 7:
+            return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)
+                            *m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+            break;
+        case 8:
+            return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)
+                            *m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+            break;
+        } //switch(rn_)
+        Error("ITensor::_val: Failed switch case");
+        return p->v(1);
+    }
 
 public:
 
@@ -405,9 +445,8 @@ public:
         while(size < NMAX && ii[size+1] != IVNull.ind) ++size;
         int alloc_size = fillFromIndices(ii,size);
         allocate(alloc_size);
-        p->v((((((((iv8.i-1)*iv7.ind.m()+iv7.i-1)*iv6.ind.m()+iv6.i-1)*iv5.ind.m()+iv5.i-1)
-                    *iv4.ind.m()+iv4.i-1)*iv3.ind.m()+iv3.i-1)*iv2.ind.m()+iv2.i-1)*iv1.ind.m()+iv1.i) 
-                    = 1; 
+        cerr << "At itensor.h line " << __LINE__ << "\nThis constructor probably doesn't work when m==1's aren't at back in arg list\n\n";
+        _val(iv1.i,iv2.i,iv3.i,iv4.i,iv5.i,iv6.i,iv7.i,iv8.i) = 1;
     }
 
     explicit ITensor(const vector<Index>& I) : rn_(0)
@@ -541,7 +580,6 @@ public:
 
     int findindexn(const Index& I) const
 	{
-        assert(I.m() != 1);
         for(int j = 1; j <= rn_; ++j)
         if(index_[j] == I) return j;
         return 0;
@@ -549,7 +587,6 @@ public:
 
     int findindex1(const Index& I) const
 	{
-        assert(I.m() == 1);
         for(int j = rn_+1; j <= r_; ++j)
         if(index_[j] == I) return j;
         return 0;
@@ -704,7 +741,7 @@ public:
     */
 
     Real val1(int i1) const
-	{ assert(p != 0); assert(rn_ == 1); return p->v(i1)*scale_; }
+	{ assert(p != 0); assert(rn_ <= 1); return p->v(i1)*scale_; }
     /*
     Real& ncval1(int i1)
 	{ 
@@ -716,7 +753,7 @@ public:
     */
 
     Real val2(int i1,int i2) const
-	{ assert(p != 0); assert(rn_ == 2); return p->v((i2-1)*m(1)+i1)*scale_; }
+	{ assert(p != 0); assert(rn_ <= 2); return p->v((i2-1)*m(1)+i1)*scale_; }
     /*
     Real& ncval2(int i1,int i2)
 	{ 
@@ -798,7 +835,7 @@ public:
 	    assert(p != 0); 
         solo(); 
         setScale(1);
-        return p->v((ja[2]-1)*iv1.ind.m()+ja[1]);
+        return p->v((ja[2]-1)*m(1)+ja[1]);
 	}
 
     Real& operator()(const IndexVal& iv1, const IndexVal& iv2, const IndexVal& iv3,
@@ -823,9 +860,9 @@ public:
 	    assert(p != 0); 
         solo(); 
         setScale(1);
-        return p->v((((((((ja[8]-1)*iv7.ind.m()+ja[7]-1)*iv6.ind.m()+ja[6]-1)*iv5.ind.m()+ja[5]-1)
-                           *iv4.ind.m()+ja[4]-1)*iv3.ind.m()+ja[3]-1)*iv2.ind.m()+ja[2]-1)*iv1.ind.m()+ja[1]);
+        return _val(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]);
 	}
+
 
     //Methods for Mapping to Other Objects --------------------------------------
 
@@ -949,7 +986,7 @@ public:
     friend inline ostream& operator<<(ostream & s, const ITensor & t)
     {
         s << "log(scale)[incl in elems] = " << t.scale().logNum() << ", r = " << t.r() << ": ";
-        int i = 1; for(; i < t.r(); ++i) { s << t.index(i) << ", "; } s << t.index(i);
+        int i = 1; for(; i < t.r(); ++i) { s << t.index(i) << ", "; } if(t.r() != 0) { s << t.index(i); }
         if(t.is_null()) s << " (dat is null)\n";
         else 
         {

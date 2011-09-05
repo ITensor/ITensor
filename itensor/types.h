@@ -29,9 +29,9 @@ static const int MAX_M = 5000;
 //----------------------------------
 
 #ifndef NDEBUG
-#define DO_IF_DEBUG(x) { x }
+#define DO_IF_DEBUG(X) X
 #else
-#define DO_IF_DEBUG(x) { }
+#define DO_IF_DEBUG(X)
 #endif
 
 //---------------------------------------

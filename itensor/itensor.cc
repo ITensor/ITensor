@@ -126,7 +126,7 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 
 //Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref
 //contractedL/R[j] == true if L/R.indexn(j) contracted
-void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR,
+void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR,
                            MatrixRefNoLink& lref, MatrixRefNoLink& rref)
 {
     assert(L.p != 0);
@@ -135,8 +135,8 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
 
     for(int j = 1; j <= NMAX; ++j) { contractedL[j] = contractedR[j] = false; }
 
-    int nsamen = 0, //How many m!=1 Indices this and other share
-          cdim = 1;   //dimension of contracted inds
+    nsamen = 0; //How many m!=1 Indices this and other share
+    cdim = 1;   //dimension of contracted inds
 
     Permutation pl, pr;
 
@@ -146,8 +146,8 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
     for(int k = 1; k <= R.rn_; ++k)
     if(L.index_[j] == R.index_[k])
     {
-        if(lcstart < 0) lcstart = j;
-        if(rcstart < 0) rcstart = k;
+        if(lcstart == -1) lcstart = j;
+        if(rcstart == -1) rcstart = k;
 
         ++nsamen;
 
@@ -358,8 +358,9 @@ ITensor& ITensor::operator/=(const ITensor& other)
         return *this;
     }
 
+    int nsamen, cdim;
     array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
-    toMatrixProd(*this,other,contractedL,contractedR,lref,rref);
+    toMatrixProd(*this,other,nsamen,cdim,contractedL,contractedR,lref,rref);
 
     if(p->count() != 1) { p = new ITDat(); }
 #ifdef DO_ALT
@@ -378,7 +379,7 @@ ITensor& ITensor::operator/=(const ITensor& other)
     for(int j = 1; j <= other.rn_; ++j)
     { if(!contractedR[j]) extra_indexn_[++nrn_] = &(other.index_[j]); }
 
-    if((r_ + nrn_ + nr1_) > NMAX) Error("ITensor::operator/=: r() too big in product.");
+    if((r_ + nrn_ + nr1_) > NMAX) Error("ITensor::operator/=: too many indices in product.");
 
     //Move current m==1 indices to the right
     for(int j = rn_+1; j <= r_; ++j)  index_[nrn_+j] = index_[j];
@@ -425,13 +426,33 @@ ITensor& ITensor::operator*=(const ITensor& other)
         return *this;
 	}
 
+    //This holds the m==1 indices that appear in the result
     int nr1_ = 0;
-    //This holds the m==1 indices that
-    //will appear in the result
     static array<const Index*,NMAX+1> new_index1_;
 
     //Handle m==1 Indices
-    for(int k = rn_+1; k <= r_; ++k)
+
+#define USE_GOTO //profile to see which is faster, if any difference
+
+#ifdef USE_GOTO
+    for(int k = rn_+1; k <= this->r_; ++k)
+    {
+        const Index& K = index_[k];
+        for(int j = other.rn_+1; j <= other.r_; ++j)
+        { if(other.index_[j] == K) { goto skip_this; } }
+        new_index1_[++nr1_] = &K;
+        skip_this:;
+    }
+    for(int j = other.rn_+1; j <= other.r_; ++j)
+    {
+        const Index& J = other.index_[j];
+        for(int k = this->rn_+1; k <= this->r_; ++k)
+        { if(index_[k] == J) { goto skip_other; } }
+        new_index1_[++nr1_] = &J;
+        skip_other:;
+    }
+#else
+    for(int k = rn_+1; k <= this->r_; ++k)
     {
         const Index& K = index_[k];
         bool other_has_index = false;
@@ -449,6 +470,8 @@ ITensor& ITensor::operator*=(const ITensor& other)
 
         if(!this_has_index) new_index1_[++nr1_] = &J;
     }
+#endif
+
 
     if(other.rn_ == 0)
     {
@@ -476,8 +499,9 @@ ITensor& ITensor::operator*=(const ITensor& other)
         return *this;
     }
 
+    int nsamen,cdim;
     array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
-    toMatrixProd(*this,other,contractedL,contractedR,lref,rref);
+    toMatrixProd(*this,other,nsamen,cdim,contractedL,contractedR,lref,rref);
 
     //Do the matrix multiplication
     if(p->count() != 1) { p = new ITDat(); } 
@@ -491,20 +515,29 @@ ITensor& ITensor::operator*=(const ITensor& other)
     //Create new index_
     static array<Index,NMAX+1> new_index_;
 
-    r_ = 0;
+#ifndef NDEBUG
+    if((rn_ + other.rn_ - 2*nsamen + nr1_) > NMAX) 
+    {
+        Print(*this);
+        Print(other);
+        Print(nsamen);
+        cerr << "new m==1 indices\n";
+        for(int j = 1; j <= nr1_; ++j) cerr << *(new_index1_.at(j)) << "\n";
+        Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
+    }
+#endif
 
     //Handle m!=1 indices
+    int new_rn_ = 0;
     for(int j = 1; j <= this->rn_; ++j)
-    if(!contractedL[j]) new_index_[++r_] = index_[j];
+    { if(!contractedL[j]) new_index_[++new_rn_] = index_[j]; }
     for(int j = 1; j <= other.rn_; ++j)
-    if(!contractedR[j]) new_index_[++r_] = other.index_[j];
-
-    rn_ = r_;
-
-    DO_IF_DEBUG(if(rn_+nr1_ > NMAX) Error("rank too large in product");)
+    { if(!contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
+    rn_ = new_rn_;
 
     //Put in m==1 indices
-    for(int j = 0; j < nr1_; ++j) new_index_[++r_] = *(new_index1_[j]);
+    r_ = rn_;
+    for(int j = 1; j <= nr1_; ++j) new_index_[++r_] = *(new_index1_.at(j));
 
     index_.swap(new_index_);
 
@@ -625,25 +658,9 @@ void ITensor::toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) c
 
     MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
     if(rn_ == 2)
-    { res = dref.t(i1==index(2)); }
+    { res = dref.t(i1==index(1)); }
     else
     { res = dref.t(); }
-
-    /*
-    if(i1 == index(1))
-    { res.TreatAsVector() = p->v; } 
-    else
-	{
-        const array<Index,NMAX+1> reshuf = {{ IndNull, i2, i1, IndNull, IndNull, IndNull, IndNull, IndNull, IndNull }};
-        Permutation P; getperm(reshuf,P);
-        Vector V; reshapeDat(P,V);
-        res.TreatAsVector() = V;
-
-        //ITensor Q(i2,i1);
-        //Q.assignFrom(*this);
-        //res.TreatAsVector() = Q.dat();
-	}
-    */
 }
 void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
 { toMatrix11NoScale(i1,i2,res); res *= scale_; }
