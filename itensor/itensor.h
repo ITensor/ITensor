@@ -181,7 +181,7 @@ private:
     int r_,rn_;
     mutable array<Index,NMAX+1> index_; //Indices, maximum of 8 (index_[0] not used), mutable to allow reordering
     Real ur;
-    mutable LogNumber scale_; //mutable since e.g. normlogto is logically const
+    mutable LogNumber scale_; //mutable since e.g. setScale is logically const
 
     void allocate(int dim) { p = new ITDat(dim); }
     void allocate() { p = new ITDat(); }
@@ -228,7 +228,7 @@ private:
         assert(r_ == 2);
         if(i2.m()==1) 
         {
-            index_[1] = i1; index_[2] = i2; rn_ = (i1.m() == 1 ? 1 : 0);
+            index_[1] = i1; index_[2] = i2; rn_ = (i1.m() == 1 ? 0 : 1);
         }
         else 
         { 
@@ -318,7 +318,8 @@ public:
     //These methods can be used for const iteration over Indices in a foreach loop
     //e.g. foreach(const Index& I, t.index() ) { ... }
     inline const pair<index_it,index_it> indexn() const { return make_pair(index_.begin()+1,index_.begin()+rn_+1); }
-    inline const pair<index_it,index_it> index() const  { return make_pair(index_.begin()+1,index_.begin()+r_ +1); }
+    inline const pair<index_it,index_it> index1() const { return make_pair(index_.begin()+rn_+1,index_.begin()+r_+1); }
+    inline const pair<index_it,index_it> index() const  { return make_pair(index_.begin()+1,index_.begin()+r_+1); }
 
     void initCounter(Counter& C) const { C.init(index_,rn_,r_); }
 
@@ -367,8 +368,7 @@ public:
         _construct2(i1,i2);
         if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
         { Error("ITensor(Index,Index,Matrix): Mismatch of Index sizes and matrix."); }
-        MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
-        dref = M.t();
+        MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m()); dref = M.t();
     }
 
     ITensor(Index i1, Index i2, Index i3,
@@ -604,7 +604,7 @@ public:
     { 
         assert(I.m() == 1);
         assert(r_ < NMAX);
-        if(hasindex1(I)) return;
+        DO_IF_DEBUG(if(hasindex1(I)) Error("ITensor::addindex1: index already present.");)
         index_[++r_] = I;
         set_unique_Real();
     }
@@ -849,11 +849,11 @@ public:
         other.reshapeDat(P,p->v);
     }
 
-    /*
-    void toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const;
-    void toMatrix11(const Index& i1, const Index& i2, Matrix& res) const; //puts in lfac
     void fromMatrix11(const Index& i1, const Index& i2, const Matrix& res);
+    void toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const;
+    void toMatrix11(const Index& i1, const Index& i2, Matrix& res) const;
 
+    /*
     // group i1,i2; i3,i4
     void toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const;
     void fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,const Matrix& res);

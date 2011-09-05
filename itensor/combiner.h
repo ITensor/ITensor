@@ -144,22 +144,20 @@ public:
         }
         else if((j = t.findindexn(_right)) != 0)
         {
-            vector<Index> nindices; nindices.reserve(t.r_n()+_rln-1);
+            vector<Index> nindices; nindices.reserve(t.rn()+_rln-1);
             for(int i = 1; i < j; ++i)
-                nindices.push_back(t.indexn(i));
+                nindices.push_back(t.index(i));
             for(int i = 1; i <= _rln; ++i)
                 nindices.push_back(GET(_leftn,i));
-            for(int i = j+1; i <= t.r_n(); ++i)
-                nindices.push_back(t.indexn(i));
-            foreach(const Index& I, _left1) nindices.push_back(I);
+            for(int i = j+1; i <= t.rn(); ++i)
+                nindices.push_back(t.index(i));
+            foreach(const Index& I, _left1)     nindices.push_back(I);
             foreach(const Index& I, t.index1()) nindices.push_back(I);
             res = ITensor(nindices,t);
-            //res.setlogfac(t.logfac());
-            //res *= (t.neg() ? -1 : 1);
             return;
         }
 
-        vector<Index> nindices; nindices.reserve(t.r_n()-_rln+1);
+        vector<Index> nindices; nindices.reserve(t.rn()-_rln+1);
         Permutation P;
         for(int i = 1; i <= _rln; ++i)
         {
@@ -169,34 +167,33 @@ public:
                 cerr << "Couldn't find 'left' Index " << GET(_leftn,i) << " in ITensor t.\n";
                 Error("operator*(ITensor,Combiner): bad Combiner ITensor product");
             }
-            P.from_to(j,t.r_n()-_rln+i);
+            P.from_to(j,t.rn()-_rln+i);
         }
 
         int k = 1;
-        for(int i = 1; i <= t.r_n(); ++i)
-        if(findindexn(t.indexn(i)) == 0) 
+        for(int i = 1; i <= t.rn(); ++i)
+        if(findindexn(t.index(i)) == 0) 
         {
             P.from_to(i,k++);
-            nindices.push_back(t.indexn(i));
+            nindices.push_back(t.index(i));
         }
 
         nindices.push_back(_right);
 
-        vector<Index> res_index1 = t.index1();
         foreach(const Index& L, _left1)
         {
-            vector<Index>::iterator it = find(res_index1.begin(),res_index1.end(),L);
-            if(it == res_index1.end())
+#ifdef NDEBUG
+            if(!t.hasindex1(L))
             {
                 Print(t); Print(*this);
                 cout << "Couldn't find 'left' Index " << L << " in ITensor t.\n";
                 Error("operator*(ITensor,Combiner): bad Combiner ITensor product");
             }
-            res_index1.erase(it);
+#endif
+            nindices.push_back(L);
         }
 
         res = ITensor(nindices,t,P);
-        res.addindex1(res_index1);
     }
 
 }; //class Combiner

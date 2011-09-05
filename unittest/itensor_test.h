@@ -474,7 +474,56 @@ BOOST_AUTO_TEST_CASE(SumDifference)
 
 }
 
-/*
+BOOST_AUTO_TEST_CASE(fromMatrix11)
+{
+    Matrix M22(s1.m(),s2.m());
+
+    M22(1,1) = -0.3; M22(1,2) = 110;
+    M22(2,1) = -1.7; M22(1,2) = 5;
+
+    ITensor T(s1,s2);
+    //T should be overwritten so check
+    //that scalar mult has no effect
+    T *= -5; 
+
+    T.fromMatrix11(s1,s2,M22);
+
+    CHECK_CLOSE(T(s1(1),s2(1)),M22(1,1),1E-10);
+    CHECK_CLOSE(T(s1(1),s2(2)),M22(1,2),1E-10);
+    CHECK_CLOSE(T(s1(2),s2(1)),M22(2,1),1E-10);
+    CHECK_CLOSE(T(s1(2),s2(2)),M22(2,2),1E-10);
+
+    ITensor U(T);
+
+    U.fromMatrix11(s2,s1,M22);
+
+    CHECK_CLOSE(T(s1(1),s2(1)),M22(1,1),1E-10);
+    CHECK_CLOSE(T(s1(1),s2(2)),M22(1,2),1E-10);
+    CHECK_CLOSE(T(s1(2),s2(1)),M22(2,1),1E-10);
+    CHECK_CLOSE(T(s1(2),s2(2)),M22(2,2),1E-10);
+
+    CHECK_CLOSE(U(s2(1),s1(1)),M22(1,1),1E-10);
+    CHECK_CLOSE(U(s2(1),s1(2)),M22(1,2),1E-10);
+    CHECK_CLOSE(U(s2(2),s1(1)),M22(2,1),1E-10);
+    CHECK_CLOSE(U(s2(2),s1(2)),M22(2,2),1E-10);
+
+    Matrix M12(a1.m(),s2.m());
+    M12(1,1) = 37; M12(1,2) = -2;
+
+    ITensor P(a1,s2);
+    P *= -4;
+
+    P.fromMatrix11(a1,s2,M12);
+
+    CHECK_CLOSE(P(a1(1),s2(1)),M12(1,1),1E-10);
+    CHECK_CLOSE(P(a1(1),s2(2)),M12(1,2),1E-10);
+
+    P.fromMatrix11(s2,a1,M12.t());
+
+    CHECK_CLOSE(P(s2(1),a1(1)),M12(1,1),1E-10);
+    CHECK_CLOSE(P(s2(2),a1(1)),M12(1,2),1E-10);
+}
+
 BOOST_AUTO_TEST_CASE(toMatrix11)
 {
     Matrix M(s1.m(),s2.m());    
@@ -483,18 +532,18 @@ BOOST_AUTO_TEST_CASE(toMatrix11)
 
     A *= f;
 
-    A.toMatrix11(s1,s2,M);
-
-    CHECK_CLOSE(M(1,1),11*f,1E-10);
-    CHECK_CLOSE(M(1,2),12*f,1E-10);
-    CHECK_CLOSE(M(2,1),21*f,1E-10);
-    CHECK_CLOSE(M(2,2),22*f,1E-10);
-
     A.toMatrix11(s2,s1,M);
 
     CHECK_CLOSE(M(1,1),11*f,1E-10);
     CHECK_CLOSE(M(2,1),12*f,1E-10);
     CHECK_CLOSE(M(1,2),21*f,1E-10);
+    CHECK_CLOSE(M(2,2),22*f,1E-10);
+
+    A.toMatrix11(s1,s2,M);
+
+    CHECK_CLOSE(M(1,1),11*f,1E-10);
+    CHECK_CLOSE(M(1,2),12*f,1E-10);
+    CHECK_CLOSE(M(2,1),21*f,1E-10);
     CHECK_CLOSE(M(2,2),22*f,1E-10);
 
     A.toMatrix11NoScale(s2,s1,M);
@@ -515,8 +564,19 @@ BOOST_AUTO_TEST_CASE(toMatrix11)
     
     T.toMatrix11(link,a1,M41);
 
+    CHECK_CLOSE(M41(1,1),V(1),1E-10);
+    CHECK_CLOSE(M41(2,1),V(2),1E-10);
+    CHECK_CLOSE(M41(3,1),V(3),1E-10);
+    CHECK_CLOSE(M41(4,1),V(4),1E-10);
+     
+    T.toMatrix11(a1,link,M14);
+
+    CHECK_CLOSE(M14(1,1),V(1),1E-10);
+    CHECK_CLOSE(M14(1,2),V(2),1E-10);
+    CHECK_CLOSE(M14(1,3),V(3),1E-10);
+    CHECK_CLOSE(M14(1,4),V(4),1E-10);
+
 }
-*/
 
 
 BOOST_AUTO_TEST_SUITE_END()

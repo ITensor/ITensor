@@ -598,6 +598,56 @@ ITensor& ITensor::operator+=(const ITensor& other)
     return *this;
 } 
 
+void ITensor::fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
+{
+    if(r() != 2) Error("fromMatrix11: incorrect rank");
+    assert(hasindex(i1));
+    assert(hasindex(i2));
+    DO_IF_DEBUG(if(i1.m() != M.Nrows()) Error("fromMatrix11: wrong number of rows");)
+    DO_IF_DEBUG(if(i2.m() != M.Ncols()) Error("fromMatrix11: wrong number of cols");)
+
+    solo();
+    scale_ = 1;
+
+    MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
+    if(rn_ == 2)
+    { dref = M.t(i1==index(1)); }
+    else
+    { dref = M.t(); }
+}
+
+void ITensor::toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
+{
+    if(r() != 2) Error("toMatrix11: incorrect rank");
+    assert(hasindex(i1));
+    assert(hasindex(i2));
+    res.ReDimension(i1.m(),i2.m());
+
+    MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
+    if(rn_ == 2)
+    { res = dref.t(i1==index(2)); }
+    else
+    { res = dref.t(); }
+
+    /*
+    if(i1 == index(1))
+    { res.TreatAsVector() = p->v; } 
+    else
+	{
+        const array<Index,NMAX+1> reshuf = {{ IndNull, i2, i1, IndNull, IndNull, IndNull, IndNull, IndNull, IndNull }};
+        Permutation P; getperm(reshuf,P);
+        Vector V; reshapeDat(P,V);
+        res.TreatAsVector() = V;
+
+        //ITensor Q(i2,i1);
+        //Q.assignFrom(*this);
+        //res.TreatAsVector() = Q.dat();
+	}
+    */
+}
+void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
+{ toMatrix11NoScale(i1,i2,res); res *= scale_; }
+
 /*
 // group i1,i2; i3,i4
 void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
@@ -632,47 +682,7 @@ void ITensor::fromMatrix22(const Index& i1, const Index& i2, const Index& i3, co
     assignFrom(Q);
 }
 
-void ITensor::toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
-{
-    if(r() != 2) Error("toMatrix11: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
-    res.ReDimension(i1.m(),i2.m());
-    if(i1 == index(2))
-    { res.TreatAsVector() = p->v; } 
-    else
-	{
-        const array<Index,NMAX+1> reshuf = {{ IndNull, i2, i1, IndNull, IndNull, IndNull, IndNull, IndNull, IndNull }};
-        Permutation P; getperm(reshuf,P);
-        Vector V; reshapeDat(P,V);
-        res.TreatAsVector() = V;
 
-        //ITensor Q(i2,i1);
-        //Q.assignFrom(*this);
-        //res.TreatAsVector() = Q.dat();
-	}
-}
-void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
-{ toMatrix11NoScale(i1,i2,res); res *= scale_; }
-
-void ITensor::fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
-{
-    if(r() != 2) Error("fromMatrix11: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
-    if(i1.m() != M.Nrows()) Error("fromMatrix11: wrong number of rows");
-    if(i2.m() != M.Ncols()) Error("fromMatrix11: wrong number of cols");
-    if(i1 == index(1))
-    { 
-        MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
-        dref = M.t();
-    }
-    else
-	{
-        ITensor Q(i2,i1,M);
-        assignFrom(Q);
-	}
-}
 
 void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const
 {
