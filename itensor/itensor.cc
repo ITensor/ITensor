@@ -479,7 +479,8 @@ ITensor& ITensor::operator*=(const ITensor& other)
         scale_ *= other.p->v(1);
         r_ = rn_ + nr1_;
         assert(r_ <= NMAX);
-        for(int j = 0; j < nr1_; ++j) index_[rn_+1+j] = *(new_index1_[j]);
+        //Keep current m!=1 indices, overwrite m==1 indices
+        for(int j = 1; j <= nr1_; ++j) index_[rn_+j] = *(new_index1_[j]);
         set_unique_Real();
         return *this;
     }
@@ -492,7 +493,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
         r_ = rn_ + nr1_;
         assert(r_ <= NMAX);
         //Put in new m==1 Indices (backwards since using pointers)
-        for(int j = nr1_; j > 0; --j) index_[rn_+j] = *(new_index1_[j-1]);
+        for(int j = nr1_; j > 0; --j) index_[rn_+j] = *(new_index1_[j]);
         //Fill in other's m!=1 Indices
         for(int j = 1; j <= rn_; ++j) index_[j] = other.index_[j];
         set_unique_Real();
