@@ -440,13 +440,21 @@ public:
             const IndexVal& iv7 = IVNull, const IndexVal& iv8 = IVNull)
             : rn_(0)
 	{
+        //Construct ITensor
         array<Index,NMAX+1> ii = {{ iv1.ind, iv2.ind, iv3.ind, iv4.ind, iv5.ind, iv6.ind, iv7.ind, iv8.ind }};
-        int size = 3;
-        while(size < NMAX && ii[size+1] != IVNull.ind) ++size;
+        int size = 3; while(size < NMAX && ii[size+1] != IVNull.ind) ++size;
         int alloc_size = fillFromIndices(ii,size);
         allocate(alloc_size);
-        cerr << "At itensor.h line " << __LINE__ << "\nThis constructor probably doesn't work when m==1's aren't at back in arg list\n\n";
-        _val(iv1.i,iv2.i,iv3.i,iv4.i,iv5.i,iv6.i,iv7.i,iv8.i) = 1;
+
+        //Assign specified element to 1
+        array<int,NMAX+1> iv = {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i }};
+        array<int,NMAX+1> ja; ja.assign(1);
+        for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
+        {
+            for(int j = 0; j < size; ++j)  // loop over the given indices
+            { if(index_[k] == ii[j]) { ja[k] = iv[j]; break; } }
+        }
+        _val(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]) = 1;
     }
 
     explicit ITensor(const vector<Index>& I) : rn_(0)
@@ -752,8 +760,8 @@ public:
     }
     */
 
-    Real val2(int i1,int i2) const
-	{ assert(p != 0); assert(rn_ <= 2); return p->v((i2-1)*m(1)+i1)*scale_; }
+    //Real val2(int i1,int i2) const
+	//{ assert(p != 0); assert(rn_ <= 2); return p->v((i2-1)*m(1)+i1)*scale_; }
     /*
     Real& ncval2(int i1,int i2)
 	{ 
@@ -764,8 +772,8 @@ public:
     }
     */
 
-    Real val3(int i1,int i2,int i3) const
-	{ assert(p != 0); assert(rn_ == 3); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
+    //Real val3(int i1,int i2,int i3) const
+	//{ assert(p != 0); assert(rn_ == 3); return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
     /*
     Real& ncval3(int i1,int i2,int i3)
     { 
@@ -776,23 +784,23 @@ public:
     }
     */
 
-    Real val4(int i1,int i2,int i3,int i4) const
-	{ assert(p != 0); assert(rn_ == 4); return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
+    //Real val4(int i1,int i2,int i3,int i4) const
+	//{ assert(p != 0); assert(rn_ == 4); return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
 
-    Real val5(int i1,int i2,int i3,int i4,int i5) const
-	{ assert(p != 0); assert(rn_ == 5); return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
+    //Real val5(int i1,int i2,int i3,int i4,int i5) const
+	//{ assert(p != 0); assert(rn_ == 5); return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
 
-    Real val6(int i1,int i2,int i3,int i4,int i5,int i6) const
-	{ assert(p != 0); assert(rn_ == 6); return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
+    //Real val6(int i1,int i2,int i3,int i4,int i5,int i6) const
+	//{ assert(p != 0); assert(rn_ == 6); return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
 
-    Real val7(int i1,int i2,int i3,int i4,int i5,int i6,int i7) const
-	{ assert(p != 0); assert(rn_ == 7); return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
+    //Real val7(int i1,int i2,int i3,int i4,int i5,int i6,int i7) const
+	//{ assert(p != 0); assert(rn_ == 7); return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; }
 
-    Real val8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) const
-	{ 
-        assert(p != 0); 
-        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; 
-    }
+    //Real val8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) const
+	//{ 
+    //    assert(p != 0); 
+    //    return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1)*scale_; 
+    //}
     /*
     Real& ncval8(int i1,int i2,int i3,int i4,int i5,int i6,int i7, int i8) 
 	{ 
