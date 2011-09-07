@@ -38,8 +38,12 @@ public:
     Real logNum() const { return lognum_; }
     int sign() const { return sign_; }
     inline bool isRealZero() const
-	{ return (sign_ == 0 || lognum_ < -maxlogdouble); }
+        { return (sign_ == 0 || lognum_ < -maxlogdouble); }
     inline bool isOne() const { return (lognum_ == 0 && sign_ == 1); }
+    inline bool isFinite() const 
+        { return (lognum_ < maxlogdouble && lognum_ > -maxlogdouble); }
+    inline bool isNan() const 
+        { return lognum_ != lognum_; }
 
     //Default is Real(LogNum()) == 1
     LogNumber() : lognum_(0), sign_(1) { }
@@ -47,17 +51,19 @@ public:
     LogNumber(Real r)
 	{
         if(r == 0)
-        { sign_ = 0;  lognum_ = 0; }
+            { sign_ = 0;  lognum_ = 0; }
         else if(r > 0)
-        { sign_ = 1;  lognum_ = log(r); }
+            { sign_ = 1;  lognum_ = log(r); }
         else
-        { sign_ = -1; lognum_ = log(-r); }
+            { sign_ = -1; lognum_ = log(-r); }
 	}
 
     LogNumber(Real lognum, int sign) : lognum_(lognum), sign_(sign) { } 
 
-    inline void read(std::istream& s) { s.read((char*)this,sizeof(this)); }
-    inline void write(std::ostream& s) const { s.write((char*)this,sizeof(this)); }
+    inline void read(std::istream& s) 
+        { s.read((char*)this,sizeof(this)); }
+    inline void write(std::ostream& s) const 
+        { s.write((char*)this,sizeof(this)); }
 
     operator Real() const
 	{
@@ -65,13 +71,13 @@ public:
 #ifndef DNDEBUG
         if(lognum_ > maxlogdouble)
         { 
-        Print(lognum_);
-        Error("LogNumber too big to convert to Real"); 
+            Print(lognum_);
+            Error("LogNumber too big to convert to Real"); 
         }
         if(lognum_ < -maxlogdouble)
         { 
-        Print(lognum_);
-        Error("LogNumber too small to convert to Real"); 
+            Print(lognum_);
+            Error("LogNumber too small to convert to Real"); 
         }
 #endif
         return sign_ * exp(lognum_);
@@ -105,6 +111,8 @@ public:
         DO_IF_DEBUG(if(other.sign_ == 0) Error("divide by zero in LogNumber");)
         sign_ *= other.sign_;
         lognum_ -= other.lognum_;
+        assert(lognum_ < maxlogdouble);
+        assert(lognum_ > -maxlogdouble);
         return *this;
 	}
 
@@ -113,11 +121,11 @@ public:
     bool operator<(const LogNumber& other) const
 	{
         if(sign_ != other.sign_)
-        { return sign_ < other.sign_; }
+            { return sign_ < other.sign_; }
         else if(sign_ == 0)
-        { return false; }
+            { return false; }
         else if(sign_ > 0)
-        { return lognum_ < other.lognum_; }
+            { return lognum_ < other.lognum_; }
         return lognum_ > other.lognum_;
 	}
 
@@ -127,6 +135,14 @@ public:
         if(other.sign_ == 0) return false;
         return lognum_ < other.lognum_;
 	}
+
+    friend inline ostream& operator<<(ostream& s, const LogNumber& N)
+    {
+        s << "LogNumber(" << N.logNum() << ",";
+        if(N.sign() == 0) s << "0)";
+        else           s << (N.sign() > 0 ? "+)" : "-)");
+        return s;
+    }
 
 };
 
