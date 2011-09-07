@@ -94,6 +94,61 @@ void ITensor::groupIndices(const array<Index,NMAX+1>& indices, int nind,
     else        res = ITensor(nindices,*this,P); 
 }
 
+void ITensor::expandIndex(const Index& small, const Index& big, 
+                          int start, ITensor& res) const
+{
+    assert(small.m() <= big.m());
+    assert(start < big.m());
+
+    vector<Index> indices; indices.reserve(r_);
+    int w = -1;
+    for(int j = 1; j <= r_; ++j)
+    {
+        if(index_[j] == small) 
+        { 
+            w = j;
+            indices.push_back(big); 
+        }
+        else indices.push_back(index_[j]);
+    }
+    
+    if(w == -1)
+    {
+        Print(*this);
+        Print(small);
+        Error("couldn't find index");
+    }
+
+    res = ITensor(indices);
+
+    array<int,NMAX+1> inc; inc.assign(0);
+    inc.at(w) = start;
+
+    Counter c; initCounter(c);
+
+    const int inc1 = inc[1], inc2 = inc[2], 
+              inc3 = inc[3], inc4 = inc[4], 
+              inc5 = inc[5], inc6 = inc[6], 
+              inc7 = inc[7],inc8 = inc[8];
+
+    const Vector& thisdat = p->v;
+    Vector& resdat = res.p->v;
+    for(; c != Counter::done ; ++c)
+    {
+        resdat((((((((
+        c.i[8]+inc8-1)*c.n[7]+
+        c.i[7]+inc7-1)*c.n[6]+
+        c.i[6]+inc6-1)*c.n[5]+
+        c.i[5]+inc5-1)*c.n[4]+
+        c.i[4]+inc4-1)*c.n[3]+
+        c.i[3]+inc3-1)*c.n[2]+
+        c.i[2]+inc2-1)*c.n[1]+
+        c.i[1]+inc1)
+        = thisdat(c.ind);
+    }
+    res.scale_ = scale_;
+}
+
 Real& ITensor::_val(int i1, int i2, int i3, int i4, 
                     int i5, int i6, int i7, int i8)
 {
@@ -682,7 +737,6 @@ ITensor& ITensor::operator*=(const ITensor& other)
 
     scale_ *= other.scale_;
     doNormLog();
-
 
     set_unique_Real();
 

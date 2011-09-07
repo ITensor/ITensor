@@ -824,6 +824,9 @@ public:
     void groupIndices(const array<Index,NMAX+1>& indices, int nind, 
                       const Index& grouped, ITensor& res) const;
 
+    void expandIndex(const Index& small, const Index& big, 
+                     int start, ITensor& res) const;
+
     void fromMatrix11(const Index& i1, const Index& i2, const Matrix& res);
     void toMatrix11NoScale(const Index& i1, const Index& i2, 
                            Matrix& res) const;
