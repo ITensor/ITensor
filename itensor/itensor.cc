@@ -724,8 +724,17 @@ ITensor& ITensor::operator+=(const ITensor& other)
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
     }
 
+    if(this->scale_.isRealZero())
+    {
+        scale_ = other.scale_;
+        p = other.p;
+        return *this;
+    }
+    if(other.scale_.isRealZero()) { return *this; }
+
     intrusive_ptr<ITDat> curr_p = p;
     const Vector* othrdat = 0;
+
 
     if(scale_.magnitudeLessThan(other.scale_)) 
     { 
