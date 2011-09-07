@@ -1077,8 +1077,9 @@ public:
 
     Real norm() const
     {
-        Real res;
-        foreach(const ITensor& t, p->itensor) res += sqr(t.norm());
+        Real res = 0;
+        foreach(const ITensor& t, p->itensor) 
+            res += sqr(t.norm());
         return sqrt(res);
     }
 
