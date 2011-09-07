@@ -1,5 +1,99 @@
 #include "itensor.h"
 
+ostream& operator<<(ostream & s, const ITensor & t)
+{
+    s << "log(scale)[incl in elems] = " << t.scale().logNum() 
+      << ", r = " << t.r() << ": ";
+
+    int i = 1; 
+    for(; i < t.r(); ++i) { s << t.index(i) << ", "; } 
+    if(t.r() != 0) { s << t.index(i); }
+
+    if(t.is_null()) s << " (dat is null)\n";
+    else 
+    {
+        s << format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
+        if(printdat)
+        {
+            const Real scale = t.scale_;
+            const Vector& v = t.p->v;
+            Counter c; t.initCounter(c);
+            for(; c != Counter::done; ++c)
+            {
+                Real val = v(c.ind)*scale;
+                if(fabs(val) > 1E-10)
+                { s << c << " " << val << "\n"; }
+            }
+        }
+        else { s << "\n"; }
+    }
+    return s;
+}
+
+void ITensor::groupIndices(const array<Index,NMAX+1>& indices, int nind, 
+                           const Index& grouped, ITensor& res) const
+{
+    array<bool,NMAX+1> isReplaced; isReplaced.assign(false);
+
+    int tot_m = 1;
+    int nn = 0; //number of m != 1 indices
+    for(int j = 1; j <= nind; ++j) 
+    {
+        const Index& J = indices[j];
+        if(J.m() != 1) ++nn;
+        tot_m *= J.m();
+
+        bool foundit = false;
+        for(int k = 1; k <= r_; ++k) 
+        { 
+            if(index_[k] == J) 
+            {
+                isReplaced[k] = true; 
+                foundit = true; 
+                break; 
+            }
+        }
+
+        if(!foundit)
+        {
+            Print(*this);
+            cerr << "Couldn't find Index " << J << " in ITensor.\n";
+            Error("bad request for Index to replace");
+        }
+    }
+    if(tot_m != grouped.m()) Error("ITensor::groupAndReplace: \
+                                    mismatched index sizes.");
+
+    //Compute rn_ of res
+    const int res_rn_ = (nn == 0 ? rn_-nn : rn_-nn+1);
+
+    vector<Index> nindices; nindices.reserve(r_-nind+1);
+    Permutation P;
+    int kk = 0, kr = 0;
+    for(int j = 1; j <= rn_; ++j)
+    {
+        if(isReplaced[j])
+        { 
+            P.from_to(j,res_rn_+kr);
+            kr += 1;
+        }
+        else 
+        { 
+            P.from_to(j,++kk);
+            nindices.push_back(index_[j]); 
+        }
+
+    }
+
+    nindices.push_back(grouped);
+
+    for(int j = rn_+1; j <= r_; ++j) 
+        if(!isReplaced[j]) nindices.push_back(index_[j]);
+
+    if(nn == 0) res = ITensor(nindices,*this);
+    else        res = ITensor(nindices,*this,P); 
+}
+
 void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 {
     assert(p != 0);

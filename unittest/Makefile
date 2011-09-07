@@ -6,7 +6,7 @@ include unittest_options.mk
 REPORT_LEVEL=confirm
 #REPORT_LEVEL=detailed
 
-HEADERS=index_test.h real_test.h itensor_test.h
+HEADERS=index_test.h real_test.h itensor_test.h combiner_test.h
 TENSOR_HEADERS=dmrg.h hams.h
 LIBNAMES=matrix utilities itensor
 

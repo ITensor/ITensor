@@ -1262,6 +1262,7 @@ Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTen
  * If A is the OC of an MPS, Lambda will contain the Schmidt weights. 
  *
  */
+ /*
 inline void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm, int maxm, ITensor& Lambda, string newbondname = "")
 {
     //Create combiner
@@ -1304,6 +1305,7 @@ inline void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm,
     A = Uc * comb; //should be conj(comb) with arrows
 
 }
+*/
 
 inline bool check_QNs(const MPS& psi) { return true; }
 
