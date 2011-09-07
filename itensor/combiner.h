@@ -53,8 +53,6 @@ public:
 
         assert(rl_ == NMAX || left_[rl_+1] == IndNull);
         assert(left_[rl_] != IndNull);
-
-        init();
 	}
     
     //Operators -----------------------------------------------------

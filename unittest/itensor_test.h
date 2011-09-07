@@ -612,6 +612,20 @@ BOOST_AUTO_TEST_CASE(ContractingProduct)
         Real val = Q(a1(1),b4(j4),a2(1),b2(j2))*fQ * P(a2(1),a3(1),a1(1))*fP;
         CHECK_CLOSE(res4(b4(j4),b2(j2)),val,1E-10);
     }
+
+
+    ITensor psi(a1,a2,a3), mpoh(l2,a1,a1.primed(),a2,a2.primed());
+    psi.Randomize(); mpoh.Randomize();
+
+    ITensor Hpsi = mpoh * psi;
+
+    CHECK_EQUAL(Hpsi.r(),4);
+    CHECK(Hpsi.hasindex(l2));
+    CHECK(Hpsi.hasindex(a1.primed()));
+    CHECK(Hpsi.hasindex(a2.primed()));
+    CHECK(Hpsi.hasindex(a3));
+    CHECK(!Hpsi.hasindex(a1));
+    CHECK(!Hpsi.hasindex(a2));
 }
 
 BOOST_AUTO_TEST_CASE(fromMatrix11)

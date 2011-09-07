@@ -94,6 +94,48 @@ void ITensor::groupIndices(const array<Index,NMAX+1>& indices, int nind,
     else        res = ITensor(nindices,*this,P); 
 }
 
+Real& ITensor::_val(int i1, int i2, int i3, int i4, 
+                    int i5, int i6, int i7, int i8)
+{
+    assert(p != 0);
+    switch(rn_)
+    {
+    case 0:
+        return p->v(1);
+        break;
+    case 1:
+        return p->v(i1);
+        break;
+    case 2:
+        return p->v((i2-1)*m(1)+i1);
+        break;
+    case 3:
+        return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1);
+        break;
+    case 4:
+        return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+        break;
+    case 5:
+        return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)
+                        *m(1)+i1);
+        break;
+    case 6:
+        return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)
+                        *m(2)+i2-1)*m(1)+i1);
+        break;
+    case 7:
+        return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)
+                        *m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+        break;
+    case 8:
+        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)
+                        *m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+        break;
+    } //switch(rn_)
+    Error("ITensor::_val: Failed switch case");
+    return p->v(1);
+}
+
 void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 {
     assert(p != 0);
@@ -520,13 +562,15 @@ ITensor& ITensor::operator*=(const ITensor& other)
         return *this;
 	}
 
+    static array<Index,NMAX+1> new_index_;
+
     //This holds the m==1 indices that appear in the result
     int nr1_ = 0;
     static array<const Index*,NMAX+1> new_index1_;
 
     //Handle m==1 Indices
 
-#define USE_GOTO //profile to see which is faster, if any difference
+//#define USE_GOTO //profile to see which is faster, if any difference
 
 #ifdef USE_GOTO
     for(int k = rn_+1; k <= this->r_; ++k)
@@ -566,7 +610,6 @@ ITensor& ITensor::operator*=(const ITensor& other)
     }
 #endif
 
-
     if(other.rn_ == 0)
     {
         scale_ *= other.scale_;
@@ -574,7 +617,8 @@ ITensor& ITensor::operator*=(const ITensor& other)
         r_ = rn_ + nr1_;
         assert(r_ <= NMAX);
         //Keep current m!=1 indices, overwrite m==1 indices
-        for(int j = 1; j <= nr1_; ++j) index_[rn_+j] = *(new_index1_[j]);
+        for(int j = 1; j <= nr1_; ++j) 
+            { index_[rn_+j] = *(new_index1_[j]); }
         set_unique_Real();
         return *this;
     }
@@ -586,10 +630,11 @@ ITensor& ITensor::operator*=(const ITensor& other)
         rn_ = other.rn_;
         r_ = rn_ + nr1_;
         assert(r_ <= NMAX);
-        //Put in new m==1 Indices (backwards since using pointers)
-        for(int j = nr1_; j > 0; --j) index_[rn_+j] = *(new_index1_[j]);
-        //Fill in other's m!=1 Indices
-        for(int j = 1; j <= rn_; ++j) index_[j] = other.index_[j];
+        for(int j = 1; j <= rn_; ++j) 
+            { new_index_[j] = other.index_[j]; }
+        for(int j = 1; j <= nr1_; ++j) 
+            { new_index_[rn_+j] = *(new_index1_[j]); }
+        index_.swap(new_index_);
         set_unique_Real();
         return *this;
     }
@@ -607,8 +652,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
     MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
     nref = rref*lref;
 
-    //Create new index_
-    static array<Index,NMAX+1> new_index_;
+    //Fill in new_index_
 
 #ifndef NDEBUG
     if((rn_ + other.rn_ - 2*nsamen + nr1_) > NMAX) 
@@ -638,6 +682,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
 
     scale_ *= other.scale_;
     doNormLog();
+
 
     set_unique_Real();
 
@@ -848,4 +893,59 @@ void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, co
 }
 */
 
+Real Dot(const ITensor& x, const ITensor& y, bool doconj)
+{
+    if(x.is_complex())
+	{
+        ITensor res = (doconj ? conj(x) : x); res *= y;
+        if(res.r() != 1) Error("Bad Dot 234234");
+        return res.val0();
+	}
+    else if(y.is_complex())
+	{
+        ITensor res = x; res *= y;
+        if(res.r() != 1) Error("Bad Dot 37298789");
+        return res.val0();
+	}
 
+    ITensor res = x; res *= y;
+    if(res.r() != 0) 
+	{ x.print("x"); y.print("y"); Error("bad Dot"); }
+    return res.val0();
+}
+
+void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, 
+                bool doconj)
+{
+    if(x.is_complex())
+	{
+        ITensor res = (doconj ? conj(x) : x); res *= y;
+        if(res.r() != 1) error("Bad Dot 334234");
+        re = res(IndReIm(1));
+        im = res(IndReIm(2));
+        return;
+	}
+    else if(y.is_complex())
+	{
+        ITensor res = x; res *= y;
+        if(res.r() != 1) error("Bad Dot 47298789");
+        re = res(IndReIm(1));
+        im = res(IndReIm(2));
+        return;
+	}
+    if(x.r() != y.r()) 
+	{
+        cerr << "x = " << x << "\n";
+        cerr << "y = " << y << "\n";
+        Error("bad Dot 122414");
+	}
+    ITensor res = x; res *= y;
+    if(res.r() != 0) 
+	{
+        cerr << "x = " << x << "\n";
+        cerr << "y = " << y << "\n";
+        Error("bad Dot 20234");
+	}
+    re = res.val0();
+    im = 0;
+}

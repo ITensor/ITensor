@@ -269,6 +269,7 @@ class IQCombiner
     mutable map<ApproxReal, Combiner> setcomb;
     mutable map<Index, Combiner> rightcomb;
     mutable bool initted;
+
     mutable Condenser cond;
     mutable IQIndex cindex;
     bool do_condense;
@@ -276,13 +277,15 @@ public:
 
     void doCondense(bool val) 
     {
-        if(initted) Error("IQCombiner: can't set doCondense after already initted.");
+        if(initted) 
+            Error("IQCombiner: can't set doCondense after already initted.");
         do_condense = val;
     }
 
     IQCombiner() : initted(false), do_condense(false) { }
     IQCombiner(
-	    const IQIndex& l1, const IQIndex& l2 = IQIndNull, const IQIndex& l3 = IQIndNull, const IQIndex& l4 = IQIndNull, 
+	    const IQIndex& l1, const IQIndex& l2 = IQIndNull, 
+        const IQIndex& l3 = IQIndNull, const IQIndex& l4 = IQIndNull, 
 	    const IQIndex& l5 = IQIndNull, const IQIndex& l6 = IQIndNull )
         : initted(false), do_condense(false)
 	{
@@ -306,8 +309,11 @@ public:
     inline bool check_init() const { return initted; }
 
     // Initialize after all lefts are there and before being used
-    void init(string rname = "combined", IndexType = Link, int primelevel = -1) const 
+    void init(string rname = "combined", IndexType = Link, 
+              int primelevel = -1) const 
 	{
+        if(initted) return;
+
         Arrow rdir = Switch*left.back().dir();
         int plev = 0;
         if(primelevel == -1) { plev = left.back().primelevel; }
@@ -322,7 +328,6 @@ public:
             break;
         }
 
-        if(initted) return;
         setcomb.clear();
         rightcomb.clear();
 
@@ -338,7 +343,10 @@ public:
 
             Combiner co; Real rss = 0.0;
             foreach(const Index& i, vind)
-            { co.addleft(i); rss += i.unique_Real(); }
+            { 
+                co.addleft(i); 
+                rss += i.unique_Real(); 
+            }
             co.init(rname+q.toString());
 
             iq.push_back(inqn(co.right(),q));
@@ -390,11 +398,13 @@ public:
         if(left[j] == i) return j;
         return -1;
 	}
-    bool hasindex(const IQIndex& i) const
+    bool hasindex(const IQIndex& I) const
 	{
-        return findindex(i) != -1;
+        for(size_t j = 0; j < left.size(); ++j)
+            if(left[j] == I) return true;
+        return false;
 	}
-    bool in_left(Index i) const
+    bool hasindex(const Index& i) const
 	{
         for(size_t j = 0; j < left.size(); ++j)
             if(left[j].hasindex(i)) return true;
@@ -494,28 +504,28 @@ public:
 
             for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
             {
-                Real rse = 0.0;
+                Real rse = 0;
                 for(int k = 1; k <= i->r(); ++k)
-                if(in_left(i->index(k))) { rse += i->index(k).unique_Real(); }
+                {
+                if(hasindex(i->index(k))) 
+                { rse += i->index(k).unique_Real(); }
+                }
 
                 if(setcomb.count(rse) == 0)
                 {
-                    Printit<Index> pr(cout," ");
-                    cout << "left[0] is " << left[0];
-                    //cout << "se is " << endl;
-                    //for_all(se,pr); cout << endl;
-                    //for(map<set<Index>, Combiner>::const_iterator uu = setcomb.begin();
+                    Print(*i);
+                    cerr << "\nleft indices \n";
+                    for(size_t j = 0; j < left.size(); ++j)
+                        { cerr << j << " " << left[j] << "\n"; }
+                    cerr << "\n\n";
                     for(map<ApproxReal, Combiner>::const_iterator uu = setcomb.begin();
                         uu != setcomb.end(); ++uu)
                     {
-                        //cout << "set members: " << endl;
-                        //for_all(uu->first,pr); 
                         cout << "Combiner: " << endl;
                         cout << uu->second << endl;
                     }
-                    Error("no setcomb for se in IQCombiner prod");
+                    Error("no setcomb for rse in IQCombiner prod");
                 }
-                //cout << "setcomb[se] is " << setcomb[se] << endl;
                 res += (*i * setcomb[rse]);
             }
             res.addindex1(t.virtual_ind());

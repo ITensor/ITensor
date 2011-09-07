@@ -53,6 +53,8 @@ BOOST_AUTO_TEST_CASE(Constructors)
 
     Combiner c2(l1,a1,l2);
 
+    c2.init();
+
     CHECK(c2.check_init());
     CHECK(c2.hasindex(l1));
     CHECK(c2.hasindex(a1));

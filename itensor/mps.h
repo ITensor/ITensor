@@ -975,7 +975,8 @@ inline void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQ
         refScale = LogNumber(maxLogNum,1);
     }
 
-    cerr << format("refScale = %.1E (lognum = %f, sign = %d)\n")%Real(refScale)%refScale.logNum()%refScale.sign();
+    //cerr << format("refScale = %.1E (lognum = %f, sign = %d)\n")
+    //%Real(refScale)%refScale.logNum()%refScale.sign();
 
 #define USE_REFSCALE
 
