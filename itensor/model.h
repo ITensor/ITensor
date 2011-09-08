@@ -1,6 +1,6 @@
 #ifndef __MODEL_H
 #define __MODEL_H
-#include "iq.h"
+#include "iqtensor.h"
 
 class BaseModel
 {

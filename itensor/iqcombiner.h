@@ -1,7 +1,7 @@
 #ifndef __IQCOMBINER_H
 #define __IQCOMBINER_H
 #include "combiner.h"
-#include "iq.h"
+#include "iqtensor.h"
 
 class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
 {
