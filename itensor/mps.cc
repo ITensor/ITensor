@@ -151,7 +151,13 @@ Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale)
     typedef typename Tensor::CombinerT CombinerT;
 
     if(AA.vec_size() == 0) 
-        Error("tensorSVD(Tensor): input tensor had zero size.");
+    {
+        A *= 0;
+        B *= 0;
+        Vector eigs(1); eigs = 1;
+        return eigs;
+        //Error("tensorSVD(Tensor): input tensor had zero size.");
+    }
 
     IndexT mid = index_in_common(A,B,Link);
     if(mid.is_null()) mid = IndexT("mid");

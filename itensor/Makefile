@@ -8,9 +8,9 @@ include ../options.mk
 
 ####################################
 
-OBJECTS=itensor.o iqtensor.o mps.o
+OBJECTS=itensor.o iqtensor.o mps.o mpo.o
 
-SOURCES=itensor.cc iqtensor.cc mps.cc
+SOURCES=itensor.cc iqtensor.cc mps.cc mpo.cc
 
 ####################################
 
@@ -61,12 +61,18 @@ iqtensor.o: types.h real.h permutation.h index.h itensor.h \
 combiner.h iqindex.h iqcombiner.h iqtensor.h
 mps.o: types.h real.h permutation.h index.h itensor.h \
 combiner.h iqindex.h iqcombiner.h iqtensor.h model.h mps.h
+mpo.o: types.h real.h permutation.h index.h itensor.h \
+combiner.h iqindex.h iqcombiner.h iqtensor.h model.h \
+mps.h mpo.h
 
 .debug_objs/itensor.o: types.h real.h permutation.h index.h itensor.h
 .debug_objs/iq.o: types.h real.h permutation.h index.h \
 itensor.h combiner.h iqindex.h iqcombiner.h iqtensor.h 
 .debug_objs/mps.o: types.h real.h permutation.h index.h \
 itensor.h combiner.h iqindex.h iqcombiner.h iqtensor.h model.h mps.h
+.debug_objs/mpo.o: types.h real.h permutation.h index.h itensor.h \
+combiner.h iqindex.h iqcombiner.h iqtensor.h model.h \
+mps.h mpo.h
 
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
