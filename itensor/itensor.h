@@ -737,6 +737,19 @@ public:
     Real val1(int i1) const
 	{ assert(p != 0); assert(rn_ <= 1); return p->v(i1)*scale_; }
 
+    Real& operator()()
+	{ 
+        if(rn_ != 0)
+        {
+            cerr << format("# given = 0, rn_ = %d\n")%rn_;
+            Error("Not enough indices (requires all having m!=1)");
+        }
+        assert(p != 0); 
+        solo(); 
+        setScale(1);
+        return p->v(1);
+    }
+
     Real& operator()(const IndexVal& iv1)
 	{
         assert(r_ >= 1);
@@ -928,7 +941,8 @@ public:
         //LogNumber vscale = (scale_/newscale);
         //cerr << format("vscale = %.3E (logNum = %f, sign = %d)\n")
         //%Real(vscale)%vscale.logNum()%vscale.sign();
-        p->v *= (scale_/newscale);
+        if(newscale.isRealZero()) { p->v = 0; }
+        else { p->v *= (scale_/newscale); }
         scale_ = newscale;
 	}
 

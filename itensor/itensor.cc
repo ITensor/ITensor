@@ -53,7 +53,6 @@ void ITensor::groupIndices(const array<Index,NMAX+1>& indices, int nind,
                 break; 
             }
         }
-
         if(!foundit)
         {
             Print(*this);
@@ -82,7 +81,6 @@ void ITensor::groupIndices(const array<Index,NMAX+1>& indices, int nind,
             P.from_to(j,++kk);
             nindices.push_back(index_[j]); 
         }
-
     }
 
     nindices.push_back(grouped);
@@ -120,15 +118,16 @@ void ITensor::expandIndex(const Index& small, const Index& big,
     }
 
     res = ITensor(indices);
+    res.scale_ = scale_;
 
     array<int,NMAX+1> inc; inc.assign(0);
     inc.at(w) = start;
 
     Counter c; initCounter(c);
 
-    const int inc1 = inc[1], inc2 = inc[2], 
-              inc3 = inc[3], inc4 = inc[4], 
-              inc5 = inc[5], inc6 = inc[6], 
+    const int inc1 = inc[1],inc2 = inc[2], 
+              inc3 = inc[3],inc4 = inc[4], 
+              inc5 = inc[5],inc6 = inc[6], 
               inc7 = inc[7],inc8 = inc[8];
 
     const Vector& thisdat = p->v;
@@ -145,8 +144,15 @@ void ITensor::expandIndex(const Index& small, const Index& big,
         c.i[2]+inc2-1)*c.n[1]+
         c.i[1]+inc1)
         = thisdat(c.ind);
+    /*
+        res._val(
+        c.i[1]+inc1,c.i[2]+inc2,
+        c.i[3]+inc3,c.i[4]+inc4,
+        c.i[5]+inc5,c.i[6]+inc6,
+        c.i[7]+inc7,c.i[8]+inc8)
+        = thisdat(c.ind);
+    */
     }
-    res.scale_ = scale_;
 }
 
 Real& ITensor::_val(int i1, int i2, int i3, int i4, 
@@ -503,10 +509,9 @@ void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, ar
 //Non-contracting product: Cikj = Aij Bkj (no sum over j)
 ITensor& ITensor::operator/=(const ITensor& other)
 {
-    int nrn_ = 0, nr1_ = 0;
     //These hold the indices from other 
     //that will be added to this->index_
-    static array<const Index*,NMAX+1> extra_indexn_;
+    int nr1_ = 0;
     static array<const Index*,NMAX+1> extra_index1_;
 
     //------------------------------------------------------------------
@@ -521,12 +526,15 @@ ITensor& ITensor::operator/=(const ITensor& other)
         if(!this_has_index) extra_index1_[++nr1_] = &J;
     }
 
+    static array<Index,NMAX+1> new_index_;
+
     if(other.rn_ == 0)
     {
         scale_ *= other.scale_;
         scale_ *= other.p->v(1);
         assert(r_+nr1_ <= NMAX);
-        for(int j = 0; j < nr1_; ++j) index_[r_+1+j] = *(extra_index1_[j]);
+        for(int j = 1; j <= nr1_; ++j) 
+            { index_[r_+j] = *(extra_index1_[j]); }
         r_ += nr1_;
         set_unique_Real();
         return *this;
@@ -537,14 +545,15 @@ ITensor& ITensor::operator/=(const ITensor& other)
         scale_ *= p->v(1);
         p = other.p;
         rn_ = other.rn_;
-        //Move current m==1 indices past rn_
-        for(int j = 1; j <= r_; ++j)  index_[rn_+j] = index_[j];
         //Copy other's m!=1 indices
-        for(int j = 1; j <= rn_; ++j) index_[j] = other.index_[j];
+        for(int j = 1; j <= rn_; ++j) new_index_[j] = other.index_[j];
+        //Move current m==1 indices past rn_
+        for(int j = 1; j <= r_; ++j)  new_index_[rn_+j] = index_[j];
         r_ += rn_;
         //Get the extra m==1 indices from other
-        for(int j = 0; j < nr1_; ++j) index_[r_+1+j] = *(extra_index1_[j]);
+        for(int j = 1; j <= nr1_; ++j) index_[r_+j] = *(extra_index1_[j]);
         r_ += nr1_;
+        index_.swap(new_index_);
         set_unique_Real();
         return *this;
     }
@@ -563,24 +572,31 @@ ITensor& ITensor::operator/=(const ITensor& other)
     Matrix L(lref), R(rref);
     thisdat.ReDimension(ni*nj*nk);
     
-    for(int j = 1; j <= nj; ++j) for(int k = 1; k <= nk; ++k) for(int i = 1; i <= ni; ++i)
-    { thisdat(((j-1)*nk+k-1)*ni+i) =  R(k,j) * L(j,i); }
+    for(int j = 1; j <= nj; ++j) 
+    for(int k = 1; k <= nk; ++k) 
+    for(int i = 1; i <= ni; ++i)
+        { thisdat(((j-1)*nk+k-1)*ni+i) =  R(k,j) * L(j,i); }
+
+    if((r_ + other.rn_ - nsamen + nr1_) > NMAX) 
+        Error("ITensor::operator/=: too many indices in product.");
 
     //Handle m!=1 indices
+    int nrn_ = 0;
+    for(int j = 1; j <= rn_; ++j)
+        { if(!contractedL[j]) new_index_[++nrn_] = this->index_[j]; }
     for(int j = 1; j <= other.rn_; ++j)
-    { if(!contractedR[j]) extra_indexn_[++nrn_] = &(other.index_[j]); }
+        { if(!contractedR[j]) new_index_[++nrn_] = other.index_[j]; }
+    for(int j = 1; j <= rn_; ++j)
+        { if(contractedL[j])  new_index_[++nrn_] = this->index_[j]; }
 
-    if((r_ + nrn_ + nr1_) > NMAX) Error("ITensor::operator/=: too many indices in product.");
-
-    //Move current m==1 indices to the right
-    for(int j = rn_+1; j <= r_; ++j)  index_[nrn_+j] = index_[j];
-    //Fill in new m!=1 indices
-    for(int j = 0; j < nrn_; ++j) index_[rn_+1+j] = *(extra_indexn_[j]);
-    rn_ += nrn_;
-    r_ += nrn_;
-    //Fill in new m==1 indices
-    for(int j = 0; j < nr1_; ++j) index_[r_+1+j] = *(extra_index1_[j]);
+    for(int j = rn_+1; j <= r_; ++j) new_index_[nrn_+j-rn_] = index_[j];
+    r_ = (r_-rn_) + nrn_;
+    for(int j = 1; j <= nr1_; ++j) new_index_[r_+j] = *(extra_index1_[j]);
     r_ += nr1_;
+
+    rn_ = nrn_;
+
+    index_.swap(new_index_);
     
     scale_ *= other.scale_;
 

@@ -628,6 +628,116 @@ BOOST_AUTO_TEST_CASE(ContractingProduct)
     CHECK(!Hpsi.hasindex(a2));
 }
 
+BOOST_AUTO_TEST_CASE(NonContractingProduct)
+{
+    ITensor L(b2,a1,b3,b4), R(a1,b3,a2,b5,b4);
+
+    L.Randomize(); R.Randomize();
+
+    Real fL = ran1(), fR = ran1();
+    ITensor Lf = L * fL;
+    ITensor Rf = R * fR;
+
+    ITensor res1 = Lf / Rf;
+
+    CHECK(res1.hasindex(b2));
+    CHECK(res1.hasindex(a2));
+    CHECK(res1.hasindex(b5));
+    CHECK(res1.hasindex(a1));
+    CHECK(res1.hasindex(b3));
+    CHECK(res1.hasindex(b4));
+
+    CHECK_EQUAL(res1.r(),6);
+
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int j3 = 1; j3 <= 3; ++j3)
+    for(int j4 = 1; j4 <= 4; ++j4)
+    for(int j5 = 1; j5 <= 5; ++j5)
+    {
+        Real val = L(b2(j2),b3(j3),b4(j4))*fL * R(b3(j3),b5(j5),b4(j4))*fR;
+        CHECK_CLOSE(res1(b2(j2),b3(j3),b4(j4),b5(j5)),val,1E-10);
+    }
+
+    ITensor res2 = R/L;
+
+    CHECK(res2.hasindex(b2));
+    CHECK(res2.hasindex(a2));
+    CHECK(res2.hasindex(b5));
+    CHECK(res2.hasindex(a1));
+    CHECK(res2.hasindex(b3));
+    CHECK(res2.hasindex(b4));
+
+    CHECK_EQUAL(res2.r(),6);
+
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int j3 = 1; j3 <= 3; ++j3)
+    for(int j4 = 1; j4 <= 4; ++j4)
+    for(int j5 = 1; j5 <= 5; ++j5)
+    {
+        Real val = L(b2(j2),a1(1),b3(j3),b4(j4)) * R(a1(1),b3(j3),a2(1),b5(j5),b4(j4));
+        CHECK_CLOSE(res2(b2(j2),b3(j3),b4(j4),b5(j5)),val,1E-10);
+    }
+
+    ITensor Q(a1,b4,a2,b2), P(a2,a3,a1);
+
+    Q.Randomize(); P.Randomize();
+
+    Real fQ = ran1(), fP = ran1();
+    ITensor Qf = Q * fQ;
+    ITensor Pf = P * fP;
+
+    ITensor res3 = Qf/Pf;
+
+    CHECK(res3.hasindex(b4));
+    CHECK(res3.hasindex(b2));
+    CHECK(res3.hasindex(a3));
+    CHECK(res3.hasindex(a1));
+    CHECK(res3.hasindex(a2));
+
+    CHECK_EQUAL(res3.r(),5);
+
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int j4 = 1; j4 <= 4; ++j4)
+    {
+        Real val = Q(a1(1),b4(j4),a2(1),b2(j2))*fQ * P(a2(1),a3(1),a1(1))*fP;
+        CHECK_CLOSE(res3(b4(j4),b2(j2)),val,1E-10);
+    }
+
+    ITensor res4 = Pf/Qf;
+
+    CHECK(res4.hasindex(b4));
+    CHECK(res4.hasindex(b2));
+    CHECK(res4.hasindex(a3));
+    CHECK(res4.hasindex(a1));
+    CHECK(res4.hasindex(a2));
+
+    CHECK_EQUAL(res4.r(),5);
+
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int j4 = 1; j4 <= 4; ++j4)
+    {
+        Real val = Q(a1(1),b4(j4),a2(1),b2(j2))*fQ * P(a2(1),a3(1),a1(1))*fP;
+        CHECK_CLOSE(res4(b4(j4),b2(j2)),val,1E-10);
+    }
+
+
+    ITensor psi(a1,a2,a3), mpoh(l2,a1,a1.primed(),a2,a2.primed());
+    psi.Randomize(); mpoh.Randomize();
+
+    ITensor Hpsi = mpoh / psi;
+
+    CHECK_EQUAL(Hpsi.r(),6);
+    CHECK(Hpsi.hasindex(l2));
+    CHECK(Hpsi.hasindex(a1));
+    CHECK(Hpsi.hasindex(a2));
+    CHECK(Hpsi.hasindex(a1.primed()));
+    CHECK(Hpsi.hasindex(a2.primed()));
+    CHECK(Hpsi.hasindex(a3));
+
+    for(int j2 = 1; j2 <= 2; ++j2)
+    { CHECK_CLOSE(Hpsi(l2(j2)),psi()*mpoh(l2(j2)),1E-10); }
+}
+
 BOOST_AUTO_TEST_CASE(fromMatrix11)
 {
     Matrix M22(s1.m(),s2.m());
