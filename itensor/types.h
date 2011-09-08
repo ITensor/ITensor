@@ -3,10 +3,14 @@
 #include <cmath>
 #include <cstdlib>
 #include "matrix.h"
+#include <error.h> //utilities
 #include <vector>
+#include <iostream>
+#include <fstream>
 #include "assert.h"
 #include "boost/foreach.hpp"
 #define foreach BOOST_FOREACH
+using namespace std::rel_ops;
 
 //#define NMAX 8
 static const int NMAX = 8;
@@ -25,9 +29,9 @@ static const int MAX_M = 5000;
 //----------------------------------
 
 #ifndef NDEBUG
-#define DO_IF_DEBUG(x) { x }
+#define DO_IF_DEBUG(X) X
 #else
-#define DO_IF_DEBUG(x) { }
+#define DO_IF_DEBUG(X)
 #endif
 
 //---------------------------------------
@@ -87,6 +91,13 @@ template<class T> T& operator*=(T& t1, const T* pt2)
 template<class T> T operator*(const T& t1, const T* pt2) 
 { T res(t1); res *= *(pt2); return res; }
 
+template<class T>
+inline void readFromFile(const char* fname, T& t) 
+    { std::ifstream s(fname); t.read(s); s.close(); }
+
+template<class T>
+inline void writeToFile(const char* fname, const T& t) 
+    { std::ofstream s(fname); t.write(s); s.close(); }
 
 
 extern bool printdat;

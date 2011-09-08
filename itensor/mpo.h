@@ -19,7 +19,7 @@ private:
     using Parent::left_orth_lim;
     using Parent::right_orth_lim;
     using Parent::model_;
-    Real lref_;
+    Real refScale_;
 public:
     using Parent::cutoff;
     using Parent::minm;
@@ -27,10 +27,10 @@ public:
 
     operator MPO<IQTensor>()
     { 
-        //MPO<IQTensor> res(*(this->model_),this->maxm,this->cutoff,lref_); 
+        //MPO<IQTensor> res(*(this->model_),this->maxm,this->cutoff,refScale_); 
         //res.minm = this->minm;
         //convertToIQ(*(this->model_),this->A,res.A);
-        MPO<IQTensor> res(*model_,maxm,cutoff,lref_); 
+        MPO<IQTensor> res(*model_,maxm,cutoff,refScale_); 
         res.minm = minm;
         convertToIQ(*model_,A,res.A);
         return res; 
@@ -57,19 +57,19 @@ public:
     // Norm of psi^2 = 1 = norm = sum of denmat evals. 
     // This translates to Tr{Adag A} = norm.  
     // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
-    Real lref() const { return lref_; }
+    Real lref() const { return refScale_; }
     void lref(Real val) 
-	{  if(val == 0) { Error("bad lref"); } lref_ = val; }
+	{  if(val == 0) { Error("bad lref"); } refScale_ = val; }
 
     //MPO: Constructors -----------------------------------------
 
-    MPO() : Parent(), lref_(DefaultLogRef) { }
+    MPO() : Parent(), refScale_(DefaultRefScale) { }
 
-    MPO(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, Real _lref = DefaultLogRef) 
-    : Parent(model,maxm_,cutoff_), lref_(_lref)
+    MPO(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, Real refScale = DefaultRefScale) 
+    : Parent(model,maxm_,cutoff_), refScale_(refScale)
 	{ 
-        if(_lref == 0) Error("MPO<Tensor>: Setting lref_ to zero");
-        if(_lref == DefaultLogRef) lref_ = model.NN() * log(2.0); 
+        if(refScale == 0) Error("MPO<Tensor>: Setting refScale_ to zero");
+        if(refScale == DefaultRefScale) refScale_ = exp(model.NN());
 	}
 
     MPO(BaseModel& model, istream& s) { read(model,s); }
@@ -79,13 +79,13 @@ public:
     void read(const BaseModel& model, istream& s)
     {
         Parent::read(model,s);
-        s.read((char*) &lref_,sizeof(lref_));
+        s.read((char*) &refScale_,sizeof(refScale_));
     }
 
     void write(ostream& s) const
     {
         Parent::write(s);
-        s.write((char*) &lref_,sizeof(lref_));
+        s.write((char*) &refScale_,sizeof(refScale_));
     }
 
     //MPO: operators ------------------------------------------------------
@@ -122,7 +122,7 @@ public:
 
     virtual void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
 	{
-        tensorSVD(AA,AAnc(i),AAnc(i+1),cutoff,minm,maxm,dir,lref_);
+        tensorSVD(AA,AAnc(i),AAnc(i+1),cutoff,minm,maxm,dir,refScale_);
         truncerror = svdtruncerr;
 
         if(dir == Fromleft)
@@ -250,15 +250,14 @@ inline void psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITens
     if(!RB.is_null()) L *= RB;
     if(L.is_complex())
     {
-        if(L.Length() != 1) Error("Non-scalar result in psiHphi.");
-        const int sign = (L.neg() ? -1 : 1);
-        re = sign * L(IndReIm(1)) * exp(L.logfac());
-        im = sign * L(IndReIm(2)) * exp(L.logfac());
+        if(L.vec_size() != 2) Error("Non-scalar result in psiHphi.");
+        re = L(IndReIm(1));
+        im = L(IndReIm(2));
     }
     else 
     {
-        if(L.Length() != 1) Error("Non-scalar result in psiHphi.");
-        re = L.val0()*(L.neg() ? -1 : 1)*exp(L.logfac());
+        if(L.vec_size() != 1) Error("Non-scalar result in psiHphi.");
+        re = L.val0();
         im = 0;
     }
 }

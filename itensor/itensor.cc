@@ -1,6 +1,203 @@
 #include "itensor.h"
 
-void ITensor::ReshapeDat(const Permutation& P, Vector& rdat) const
+ostream& operator<<(ostream & s, const ITensor & t)
+{
+    s << "log(scale)[incl in elems] = " << t.scale().logNum() 
+      << ", r = " << t.r() << ": ";
+
+    int i = 1; 
+    for(; i < t.r(); ++i) { s << t.index(i) << ", "; } 
+    if(t.r() != 0) { s << t.index(i); }
+
+    if(t.is_null()) s << " (dat is null)\n";
+    else 
+    {
+        s << format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
+        if(printdat)
+        {
+            const Real scale = t.scale_;
+            const Vector& v = t.p->v;
+            Counter c; t.initCounter(c);
+            for(; c != Counter::done; ++c)
+            {
+                Real val = v(c.ind)*scale;
+                if(fabs(val) > 1E-10)
+                { s << c << " " << val << "\n"; }
+            }
+        }
+        else { s << "\n"; }
+    }
+    return s;
+}
+
+void ITensor::groupIndices(const array<Index,NMAX+1>& indices, int nind, 
+                           const Index& grouped, ITensor& res) const
+{
+    array<bool,NMAX+1> isReplaced; isReplaced.assign(false);
+
+    int tot_m = 1;
+    int nn = 0; //number of m != 1 indices
+    for(int j = 1; j <= nind; ++j) 
+    {
+        const Index& J = indices[j];
+        if(J.m() != 1) ++nn;
+        tot_m *= J.m();
+
+        bool foundit = false;
+        for(int k = 1; k <= r_; ++k) 
+        { 
+            if(index_[k] == J) 
+            {
+                isReplaced[k] = true; 
+                foundit = true; 
+                break; 
+            }
+        }
+        if(!foundit)
+        {
+            Print(*this);
+            cerr << "Couldn't find Index " << J << " in ITensor.\n";
+            Error("bad request for Index to replace");
+        }
+    }
+    if(tot_m != grouped.m()) Error("ITensor::groupAndReplace: \
+                                    mismatched index sizes.");
+
+    //Compute rn_ of res
+    const int res_rn_ = (nn == 0 ? rn_-nn : rn_-nn+1);
+
+    vector<Index> nindices; nindices.reserve(r_-nind+1);
+    Permutation P;
+    int kk = 0, kr = 0;
+    for(int j = 1; j <= rn_; ++j)
+    {
+        if(isReplaced[j])
+        { 
+            P.from_to(j,res_rn_+kr);
+            kr += 1;
+        }
+        else 
+        { 
+            P.from_to(j,++kk);
+            nindices.push_back(index_[j]); 
+        }
+    }
+
+    nindices.push_back(grouped);
+
+    for(int j = rn_+1; j <= r_; ++j) 
+        if(!isReplaced[j]) nindices.push_back(index_[j]);
+
+    if(nn == 0) res = ITensor(nindices,*this);
+    else        res = ITensor(nindices,*this,P); 
+}
+
+void ITensor::expandIndex(const Index& small, const Index& big, 
+                          int start, ITensor& res) const
+{
+    assert(small.m() <= big.m());
+    assert(start < big.m());
+
+    vector<Index> indices; indices.reserve(r_);
+    int w = -1;
+    for(int j = 1; j <= r_; ++j)
+    {
+        if(index_[j] == small) 
+        { 
+            w = j;
+            indices.push_back(big); 
+        }
+        else indices.push_back(index_[j]);
+    }
+    
+    if(w == -1)
+    {
+        Print(*this);
+        Print(small);
+        Error("couldn't find index");
+    }
+
+    res = ITensor(indices);
+    res.scale_ = scale_;
+
+    array<int,NMAX+1> inc; inc.assign(0);
+    inc.at(w) = start;
+
+    Counter c; initCounter(c);
+
+    const int inc1 = inc[1],inc2 = inc[2], 
+              inc3 = inc[3],inc4 = inc[4], 
+              inc5 = inc[5],inc6 = inc[6], 
+              inc7 = inc[7],inc8 = inc[8];
+
+    const Vector& thisdat = p->v;
+    Vector& resdat = res.p->v;
+    for(; c != Counter::done ; ++c)
+    {
+        resdat((((((((
+        c.i[8]+inc8-1)*c.n[7]+
+        c.i[7]+inc7-1)*c.n[6]+
+        c.i[6]+inc6-1)*c.n[5]+
+        c.i[5]+inc5-1)*c.n[4]+
+        c.i[4]+inc4-1)*c.n[3]+
+        c.i[3]+inc3-1)*c.n[2]+
+        c.i[2]+inc2-1)*c.n[1]+
+        c.i[1]+inc1)
+        = thisdat(c.ind);
+    /*
+        res._val(
+        c.i[1]+inc1,c.i[2]+inc2,
+        c.i[3]+inc3,c.i[4]+inc4,
+        c.i[5]+inc5,c.i[6]+inc6,
+        c.i[7]+inc7,c.i[8]+inc8)
+        = thisdat(c.ind);
+    */
+    }
+}
+
+Real& ITensor::_val(int i1, int i2, int i3, int i4, 
+                    int i5, int i6, int i7, int i8)
+{
+    assert(p != 0);
+    switch(rn_)
+    {
+    case 0:
+        return p->v(1);
+        break;
+    case 1:
+        return p->v(i1);
+        break;
+    case 2:
+        return p->v((i2-1)*m(1)+i1);
+        break;
+    case 3:
+        return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1);
+        break;
+    case 4:
+        return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+        break;
+    case 5:
+        return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)
+                        *m(1)+i1);
+        break;
+    case 6:
+        return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)
+                        *m(2)+i2-1)*m(1)+i1);
+        break;
+    case 7:
+        return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)
+                        *m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+        break;
+    case 8:
+        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)
+                        *m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+        break;
+    } //switch(rn_)
+    Error("ITensor::_val: Failed switch case");
+    return p->v(1);
+}
+
+void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 {
     assert(p != 0);
     const Vector& thisdat = p->v;
@@ -15,13 +212,14 @@ void ITensor::ReshapeDat(const Permutation& P, Vector& rdat) const
     DO_IF_PS(++prodstats.c1;)
 
     rdat.ReDimension(thisdat.Length());
+    rdat = 0;
 
     const Permutation::int9& ind = P.ind();
 
     //Make a counter for thisdat
-    Counter c(*this);
+    Counter c; initCounter(c);
     array<int,NMAX+1> n;
-    for(int j = 1; j <= rn; ++j) n[ind[j]] = c.n[j];
+    for(int j = 1; j <= rn_; ++j) n[ind[j]] = c.n[j];
 
     //Special case loops
 #define Loop6(q,z,w,k,y,s) {for(int i1 = 1; i1 <= n[1]; ++i1) for(int i2 = 1; i2 <= n[2]; ++i2)\
@@ -49,13 +247,13 @@ void ITensor::ReshapeDat(const Permutation& P, Vector& rdat) const
 
 #define Bif6(a,b,c,d,e,g) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e && ind[6] == g)
 
-    if(rn == 2 && ind[1] == 2 && ind[2] == 1)
+    if(rn_ == 2 && ind[1] == 2 && ind[2] == 1)
 	{
         MatrixRef xref; thisdat.TreatAsMatrix(xref,c.n[2],c.n[1]);
         rdat = Matrix(xref.t()).TreatAsVector();
         return; 
 	}
-    else if(rn == 3)
+    else if(rn_ == 3)
 	{
         DO_IF_PS(int idx = ((ind[1]-1)*3+ind[2]-1)*3+ind[3]; prodstats.perms_of_3[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
@@ -65,7 +263,7 @@ void ITensor::ReshapeDat(const Permutation& P, Vector& rdat) const
         //Bif3(1,3,2) Loop3(i1,i3,i2)
         //Bif3(3,2,1) Loop3(i3,i2,i1)
 	}
-    else if(rn == 4)
+    else if(rn_ == 4)
 	{
         DO_IF_PS(int idx = (((ind[1]-1)*4+ind[2]-1)*4+ind[3]-1)*4+ind[4]; prodstats.perms_of_4[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
@@ -78,7 +276,7 @@ void ITensor::ReshapeDat(const Permutation& P, Vector& rdat) const
         Bif4(2,1,4,3) Loop4(i2,i1,i4,i3)
         Bif4(3,4,1,2) Loop4(i3,i4,i1,i2)
 	}
-    else if(rn == 5)
+    else if(rn_ == 5)
 	{
         DO_IF_PS(int idx = ((((ind[1]-1)*5+ind[2]-1)*5+ind[3]-1)*5+ind[4]-1)*5+ind[5]; prodstats.perms_of_5[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
@@ -98,7 +296,7 @@ void ITensor::ReshapeDat(const Permutation& P, Vector& rdat) const
         Bif5(3,4,1,5,2) Loop5(i3,i4,i1,i5,i2)
         Bif5(5,1,4,2,3) Loop5(i5,i1,i4,i2,i3)
 	}
-    else if(rn == 6)
+    else if(rn_ == 6)
 	{
         DO_IF_PS(int idx = (((((ind[1]-1)*6+ind[2]-1)*6+ind[3]-1)*6+ind[4]-1)*6+ind[5]-1)*6+ind[6]; prodstats.perms_of_6[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
@@ -125,28 +323,28 @@ void ITensor::ReshapeDat(const Permutation& P, Vector& rdat) const
 
 //Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref
 //contractedL/R[j] == true if L/R.indexn(j) contracted
-void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR,
+void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR,
                            MatrixRefNoLink& lref, MatrixRefNoLink& rref)
 {
     assert(L.p != 0);
     assert(R.p != 0);
-    const Vector &Ldat = L.dat(), &Rdat = R.dat();
+    const Vector &Ldat = L.p->v, &Rdat = R.p->v;
 
     for(int j = 1; j <= NMAX; ++j) { contractedL[j] = contractedR[j] = false; }
 
-    int nsamen = 0, //How many m!=1 Indices this and other share
-          cdim = 1;   //dimension of contracted inds
+    nsamen = 0; //How many m!=1 Indices this and other share
+    cdim = 1;   //dimension of contracted inds
 
     Permutation pl, pr;
 
     int q = 0; 
     int lcstart = -1, rcstart = -1;
-    for(int j = 1; j <= L.rn; ++j)
-    for(int k = 1; k <= R.rn; ++k)
-    if(L._indexn[j] == R._indexn[k])
+    for(int j = 1; j <= L.rn_; ++j)
+    for(int k = 1; k <= R.rn_; ++k)
+    if(L.index_[j] == R.index_[k])
     {
-        if(lcstart < 0) lcstart = j;
-        if(rcstart < 0) rcstart = k;
+        if(lcstart == -1) lcstart = j;
+        if(rcstart == -1) rcstart = k;
 
         ++nsamen;
 
@@ -156,7 +354,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         pl.from_to(j,q);
         pr.from_to(k,q);
 
-        cdim *= L._indexn[j].m();
+        cdim *= L.index_[j].m();
     }
     const int odimL = Ldat.Length()/cdim;
     const int odimR = Rdat.Length()/cdim;
@@ -171,8 +369,8 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
             if(!contractedR[rcstart+i]) R_is_matrix = false;
         }
         //Check that contracted inds are all at beginning or end of _indexn
-        if(!(contractedL[1] || contractedL[L.rn])) L_is_matrix = false; 
-        if(!(contractedR[1] || contractedR[R.rn])) R_is_matrix = false;
+        if(!(contractedL[1] || contractedL[L.rn_])) L_is_matrix = false; 
+        if(!(contractedR[1] || contractedR[R.rn_])) R_is_matrix = false;
     }
 
     if(L_is_matrix)  
@@ -203,7 +401,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
             }
 
             bool back_matrix=true;
-            for(int j = L.rn; j > (L.rn-nsamen); --j)
+            for(int j = L.rn_; j > (L.rn_-nsamen); --j)
             if(!GET(contractedL,Alt.I.dest(j)))
             { back_matrix = false; break; }
 
@@ -221,15 +419,15 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         if(!done_with_L)
         {
             q = nsamen;
-            for(int j = 1; j <= L.rn; ++j)
+            for(int j = 1; j <= L.rn_; ++j)
             if(!contractedL[j]) pl.from_to(j,++q);
-            if(L_is_matrix) Error("Calling ReshapeDat although L is matrix.");
+            if(L_is_matrix) Error("Calling reshapeDat although L is matrix.");
 #ifdef DO_ALT
             L.newAltDat(pl);
-            L.ReshapeDat(pl,L.lastAlt().v);
+            L.reshapeDat(pl,L.lastAlt().v);
             L.lastAlt().v.TreatAsMatrix(lref,odimL,cdim); lref.ApplyTrans();
 #else
-            Vector lv; L.ReshapeDat(pl,lv);
+            Vector lv; L.reshapeDat(pl,lv);
             lv.TreatAsMatrix(lref,odimL,cdim); lref.ApplyTrans();
 #endif
             done_with_L = true;
@@ -265,7 +463,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
             }
 
             bool back_matrix=true;
-            for(int j = R.rn; j > (R.rn-nsamen); --j)
+            for(int j = R.rn_; j > (R.rn_-nsamen); --j)
             if(!GET(contractedR,Alt.I.dest(j)))
             { back_matrix = false; break; }
 
@@ -283,15 +481,15 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
         if(!done_with_R)
         {
             q = nsamen;
-            for(int j = 1; j <= R.rn; ++j)
+            for(int j = 1; j <= R.rn_; ++j)
             if(!contractedR[j]) pr.from_to(j,++q);
             if(R_is_matrix) Error("Calling reshape even though R is matrix.");
 #ifdef DO_ALT
             R.newAltDat(pr);
-            R.ReshapeDat(pr,R.lastAlt().v);
+            R.reshapeDat(pr,R.lastAlt().v);
             R.lastAlt().v.TreatAsMatrix(rref,odimR,cdim);
 #else
-            Vector rv; R.ReshapeDat(pr,rv);
+            Vector rv; R.reshapeDat(pr,rv);
             rv.TreatAsMatrix(rref,odimR,cdim);
 #endif
             done_with_R = true;
@@ -299,8 +497,8 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
     }
 
 #ifdef COLLECT_PRODSTATS
-    if(L.rn > R.rn) ++prodstats.global[make_pair(L.rn,R.rn)];
-    else ++prodstats.global[make_pair(R.rn,L.rn)];
+    if(L.rn_ > R.rn_) ++prodstats.global[make_pair(L.rn_,R.rn_)];
+    else ++prodstats.global[make_pair(R.rn_,L.rn_)];
     ++prodstats.total;
     if(L_is_matrix) ++prodstats.did_matrix;
     if(R_is_matrix) ++prodstats.did_matrix;
@@ -311,41 +509,58 @@ void toMatrixProd(const ITensor& L, const ITensor& R, array<bool,NMAX+1>& contra
 //Non-contracting product: Cikj = Aij Bkj (no sum over j)
 ITensor& ITensor::operator/=(const ITensor& other)
 {
+    //These hold the indices from other 
+    //that will be added to this->index_
+    int nr1_ = 0;
+    static array<const Index*,NMAX+1> extra_index1_;
+
     //------------------------------------------------------------------
-    //Handle m==1 Indices
-    if(!other._index1.empty()) {
-    if(_index1.empty()) _index1 = other._index1;
-    else
+    //Handle m==1 Indices: set union
+    for(int j = other.rn_+1; j <= other.r_; ++j)
     {
-        //Compute set union
-        sort(_index1.begin(),_index1.end());
-        sort(other._index1.begin(),other._index1.end());
-        vector<Index> symdiff(_index1.size()+other._index1.size());
-        vector<Index>::iterator it =
-        set_union(_index1.begin(),_index1.end(),
-        other._index1.begin(),other._index1.end(),symdiff.begin());
-        _index1.assign(symdiff.begin(),it);
-    } }
+        const Index& J = other.index_[j];
+        bool this_has_index = false;
+        for(int k = this->rn_+1; k <= this->r_; ++k)
+        { if(index_[k] == J) { this_has_index = true; break; } }
 
-    if(other.rn == 0)
-    {
-        _logfac += other._logfac; _neg = (_neg^other._neg);
-        set_unique_Real();
-        return operator*=(other.p->v(1));
+        if(!this_has_index) extra_index1_[++nr1_] = &J;
     }
-    else if(rn == 0)
+
+    static array<Index,NMAX+1> new_index_;
+
+    if(other.rn_ == 0)
     {
-        const Real curr_dat = p->v(1);
-        _indexn = other._indexn;
-        rn = other.rn;
-        _logfac += other._logfac; _neg = (_neg^other._neg);
+        scale_ *= other.scale_;
+        scale_ *= other.p->v(1);
+        assert(r_+nr1_ <= NMAX);
+        for(int j = 1; j <= nr1_; ++j) 
+            { index_[r_+j] = *(extra_index1_[j]); }
+        r_ += nr1_;
+        set_unique_Real();
+        return *this;
+    }
+    else if(rn_ == 0)
+    {
+        scale_ *= other.scale_;
+        scale_ *= p->v(1);
         p = other.p;
+        rn_ = other.rn_;
+        //Copy other's m!=1 indices
+        for(int j = 1; j <= rn_; ++j) new_index_[j] = other.index_[j];
+        //Move current m==1 indices past rn_
+        for(int j = 1; j <= r_; ++j)  new_index_[rn_+j] = index_[j];
+        r_ += rn_;
+        //Get the extra m==1 indices from other
+        for(int j = 1; j <= nr1_; ++j) index_[r_+j] = *(extra_index1_[j]);
+        r_ += nr1_;
+        index_.swap(new_index_);
         set_unique_Real();
-        return operator*=(curr_dat);
+        return *this;
     }
 
+    int nsamen, cdim;
     array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
-    toMatrixProd(*this,other,contractedL,contractedR,lref,rref);
+    toMatrixProd(*this,other,nsamen,cdim,contractedL,contractedR,lref,rref);
 
     if(p->count() != 1) { p = new ITDat(); }
 #ifdef DO_ALT
@@ -357,31 +572,36 @@ ITensor& ITensor::operator/=(const ITensor& other)
     Matrix L(lref), R(rref);
     thisdat.ReDimension(ni*nj*nk);
     
-    //cerr << format("L is %d x %d\n")%L.Nrows()%L.Ncols();
+    for(int j = 1; j <= nj; ++j) 
+    for(int k = 1; k <= nk; ++k) 
+    for(int i = 1; i <= ni; ++i)
+        { thisdat(((j-1)*nk+k-1)*ni+i) =  R(k,j) * L(j,i); }
 
-    for(int j = 1; j <= nj; ++j) for(int k = 1; k <= nk; ++k) for(int i = 1; i <= ni; ++i)
-    { thisdat(((j-1)*nk+k-1)*ni+i) =  R(k,j) * L(j,i); }
+    if((r_ + other.rn_ - nsamen + nr1_) > NMAX) 
+        Error("ITensor::operator/=: too many indices in product.");
 
-    array<Index,NMAX+1> _new_indexn;
-    int new_rn = 0;
+    //Handle m!=1 indices
+    int nrn_ = 0;
+    for(int j = 1; j <= rn_; ++j)
+        { if(!contractedL[j]) new_index_[++nrn_] = this->index_[j]; }
+    for(int j = 1; j <= other.rn_; ++j)
+        { if(!contractedR[j]) new_index_[++nrn_] = other.index_[j]; }
+    for(int j = 1; j <= rn_; ++j)
+        { if(contractedL[j])  new_index_[++nrn_] = this->index_[j]; }
 
-    int nsamen = 0;
-    for(int j = 1; j <= rn; ++j)
-    if(!contractedL[j]) { _new_indexn[++new_rn] = _indexn[j]; }
-    else { ++nsamen; } 
+    for(int j = rn_+1; j <= r_; ++j) new_index_[nrn_+j-rn_] = index_[j];
+    r_ = (r_-rn_) + nrn_;
+    for(int j = 1; j <= nr1_; ++j) new_index_[r_+j] = *(extra_index1_[j]);
+    r_ += nr1_;
 
-    if((rn + other.rn - nsamen) > NMAX) Error("ITensor::operator/=: rn too big in product.");
+    rn_ = nrn_;
 
-    for(int j = 1; j <= other.rn; ++j)
-    if(!contractedR[j]) { _new_indexn[++new_rn] = other._indexn[j]; }
-
-    for(int j = 1; j <= rn; ++j)
-    if(contractedL[j]) { _new_indexn[++new_rn] = _indexn[j]; }
-
-    _indexn = _new_indexn;
-    rn = new_rn;
+    index_.swap(new_index_);
     
-    _logfac += other._logfac; _neg = (_neg^other._neg);
+    scale_ *= other.scale_;
+
+    doNormLog();
+
     set_unique_Real();
 
     return *this;
@@ -413,41 +633,86 @@ ITensor& ITensor::operator*=(const ITensor& other)
         return *this;
 	}
 
+    static array<Index,NMAX+1> new_index_;
+
+    //This holds the m==1 indices that appear in the result
+    int nr1_ = 0;
+    static array<const Index*,NMAX+1> new_index1_;
+
     //Handle m==1 Indices
-    //printdat = false; cerr << "Doing m==1 for" << *this << "\n";
-    if(!other._index1.empty()) {
-    if(_index1.empty()) _index1 = other._index1;
-    else
-    {
-        //Compute symmetric difference
-        sort(_index1.begin(),_index1.end());
-        sort(other._index1.begin(),other._index1.end());
-        vector<Index> symdiff(_index1.size()+other._index1.size());
-        vector<Index>::iterator it =
-        set_symmetric_difference(_index1.begin(),_index1.end(),
-        other._index1.begin(),other._index1.end(),symdiff.begin());
-        _index1.assign(symdiff.begin(),it);
-    } }
 
-    if(other.rn == 0)
+//#define USE_GOTO //profile to see which is faster, if any difference
+
+#ifdef USE_GOTO
+    for(int k = rn_+1; k <= this->r_; ++k)
     {
-        _logfac += other._logfac; _neg = (_neg^other._neg);
-        set_unique_Real();
-        return operator*=(other.p->v(1));
+        const Index& K = index_[k];
+        for(int j = other.rn_+1; j <= other.r_; ++j)
+        { if(other.index_[j] == K) { goto skip_this; } }
+        new_index1_[++nr1_] = &K;
+        skip_this:;
     }
-    else if(rn == 0)
+    for(int j = other.rn_+1; j <= other.r_; ++j)
     {
-        const Real curr_dat = p->v(1);
-        _indexn = other._indexn;
-        rn = other.rn;
-        _logfac += other._logfac; _neg = (_neg^other._neg);
+        const Index& J = other.index_[j];
+        for(int k = this->rn_+1; k <= this->r_; ++k)
+        { if(index_[k] == J) { goto skip_other; } }
+        new_index1_[++nr1_] = &J;
+        skip_other:;
+    }
+#else
+    for(int k = rn_+1; k <= this->r_; ++k)
+    {
+        const Index& K = index_[k];
+        bool other_has_index = false;
+        for(int j = other.rn_+1; j <= other.r_; ++j)
+        { if(other.index_[j] == K) { other_has_index = true; break; } }
+
+        if(!other_has_index) new_index1_[++nr1_] = &K;
+    }
+    for(int j = other.rn_+1; j <= other.r_; ++j)
+    {
+        const Index& J = other.index_[j];
+        bool this_has_index = false;
+        for(int k = this->rn_+1; k <= this->r_; ++k)
+        { if(index_[k] == J) { this_has_index = true; break; } }
+
+        if(!this_has_index) new_index1_[++nr1_] = &J;
+    }
+#endif
+
+    if(other.rn_ == 0)
+    {
+        scale_ *= other.scale_;
+        scale_ *= other.p->v(1);
+        r_ = rn_ + nr1_;
+        assert(r_ <= NMAX);
+        //Keep current m!=1 indices, overwrite m==1 indices
+        for(int j = 1; j <= nr1_; ++j) 
+            { index_[rn_+j] = *(new_index1_[j]); }
+        set_unique_Real();
+        return *this;
+    }
+    else if(rn_ == 0)
+    {
+        scale_ *= other.scale_;
+        scale_ *= p->v(1);
         p = other.p;
+        rn_ = other.rn_;
+        r_ = rn_ + nr1_;
+        assert(r_ <= NMAX);
+        for(int j = 1; j <= rn_; ++j) 
+            { new_index_[j] = other.index_[j]; }
+        for(int j = 1; j <= nr1_; ++j) 
+            { new_index_[rn_+j] = *(new_index1_[j]); }
+        index_.swap(new_index_);
         set_unique_Real();
-        return operator*=(curr_dat);
+        return *this;
     }
 
+    int nsamen,cdim;
     array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
-    toMatrixProd(*this,other,contractedL,contractedR,lref,rref);
+    toMatrixProd(*this,other,nsamen,cdim,contractedL,contractedR,lref,rref);
 
     //Do the matrix multiplication
     if(p->count() != 1) { p = new ITDat(); } 
@@ -458,86 +723,168 @@ ITensor& ITensor::operator*=(const ITensor& other)
     MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
     nref = rref*lref;
 
-    //Create new _indexn
-    int new_rn = 0;
-    for(int j = 1; j <= this->rn; ++j)
-    if(!contractedL[j])  _indexn[++new_rn] = _indexn[j];
-    for(int j = 1; j <= other.rn; ++j)
-    if(!contractedR[j]) _indexn[++new_rn] = other._indexn[j];
+    //Fill in new_index_
 
-    DO_IF_DEBUG(if(new_rn > NMAX) Error("rn too large in product");)
+#ifndef NDEBUG
+    if((rn_ + other.rn_ - 2*nsamen + nr1_) > NMAX) 
+    {
+        Print(*this);
+        Print(other);
+        Print(nsamen);
+        cerr << "new m==1 indices\n";
+        for(int j = 1; j <= nr1_; ++j) cerr << *(new_index1_.at(j)) << "\n";
+        Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
+    }
+#endif
 
-    rn = new_rn;
+    //Handle m!=1 indices
+    int new_rn_ = 0;
+    for(int j = 1; j <= this->rn_; ++j)
+    { if(!contractedL[j]) new_index_[++new_rn_] = index_[j]; }
+    for(int j = 1; j <= other.rn_; ++j)
+    { if(!contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
+    rn_ = new_rn_;
 
-    _logfac += other._logfac; _neg = (_neg^other._neg);
-    donormlog();
+    //Put in m==1 indices
+    r_ = rn_;
+    for(int j = 1; j <= nr1_; ++j) new_index_[++r_] = *(new_index1_.at(j));
+
+    index_.swap(new_index_);
+
+    scale_ *= other.scale_;
+    doNormLog();
+
     set_unique_Real();
 
     return *this;
 
 } //ITensor::operator*=(ITensor)
 
-void ITensor::Reshape(const Permutation& P, ITensor& res) const
+void ITensor::reshapeTo(const Permutation& P, ITensor& res) const
 {
-    res.rn = rn;
-    res._logfac = _logfac; res._neg = _neg;
-    for(int k = 1; k <= rn; ++k) res._indexn[P.dest(k)] = _indexn[k];
-    res._index1.assign(_index1.begin(),_index1.end());
-    res.set_unique_Real();
-#ifdef DO_ALT
+    res.rn_ = rn_;
+    res.r_ = r_;
+    res.scale_ = scale_;
+    for(int k = 1; k <= r_; ++k) res.index_[P.dest(k)] = index_[k];
+    res.ur = ur;
+    res.solo();
+#ifdef DO_ALT //add a flag to solo to let it know not to even copy alt
     res.p->alt.clear();
 #endif
-    this->ReshapeDat(P,res.ncdat());
+    this->reshapeDat(P,res.p->v);
 }
 
-void ITensor::Reshape(const Permutation& P)
+ITensor& ITensor::operator+=(const ITensor& other)
 {
-    if(P.is_trivial()) return;
-    Vector newdat;
-    this->ReshapeDat(P,newdat);
-    set_dat(newdat);
-}
+    if(this == &other) { scale_ *= 2; return *this; }
 
-void ITensor::getperm(const array<Index,NMAX+1>& oth_indexn, Permutation& P) const
-{
-    for(int j = 1; j <= rn; ++j)
-	{
-        bool got_one = false;
-        for(int k = 1; k <= rn; ++k)
-        if(oth_indexn[j] == _indexn[k])
-        {
-            P.from_to(j,k);
-            got_one = true;
-            break;
-        }
-        if(!got_one)
-        {
-            cerr << "j = " << j << "\n";
-            cerr << "this = " << *this << "\n";
-            foreach(const Index& I, oth_indexn) { cerr << I << "\n"; }
-            Error("getpermBtoA: no matching index");
-        }
-	}
-}
+    bool complex_this = is_complex();
+    bool complex_other = other.is_complex();
+    if(!complex_this && complex_other)
+    {
+        return (*this = (*this * Complex_1) + other);
+    }
+    if(complex_this && !complex_other) return operator+=(other * Complex_1);
 
-void ITensor::Assign(const ITensor& other)
-{
-    if(this == &other) return;
-    if(fabs(other.ur - ur) > 1E-12)
-	{
-        Print(*this); Print(other);
-        Error("Assign: unique Real not the same"); 
-	}
-    Permutation P; getperm(other._indexn,P);
-    _logfac = other._logfac; _neg = other._neg;
-    //_index1.assign(other._index1.begin(),other._index1.end());
-    if(p->count() != 1) { p = new ITDat(); }
+    if(fabs(ur - other.ur) > 1E-12)
+    {
+        cerr << format("this ur = %.10f, other.ur = %.10f\n")%ur%other.ur;
+        Print(*this);
+        Print(other);
+        Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
+    }
+
+    if(this->scale_.isRealZero())
+    {
+        scale_ = other.scale_;
+        p = other.p;
+        return *this;
+    }
+    if(other.scale_.isRealZero()) { return *this; }
+
+    intrusive_ptr<ITDat> curr_p = p;
+    const Vector* othrdat = 0;
+
+
+    if(scale_.magnitudeLessThan(other.scale_)) 
+    { 
+        this->setScale(other.scale_); 
+        solo();
+        othrdat = &(other.p->v);
+    }
+    else
+    { 
+        //Would be simpler to call other.setScale(this->scale_)
+        //but the following prevents other from having to call solo()
+        if(p->count() != 1) {  p = new ITDat(other.p->v); }
+        else                { p->v = other.p->v; }
+        p->v *= (other.scale_/this->scale_);
+        othrdat = &(curr_p->v);
+    }
+
+    Vector& thisdat = p->v;
+
 #ifdef DO_ALT
-    else { p->alt.clear(); }
+    p->alt.clear();
 #endif
-    other.ReshapeDat(P,p->v);
+
+    bool same_ind_order = true;
+    for(int j = 1; j <= rn_; ++j)
+    if(index_[j] != other.index_[j])
+    { same_ind_order = false; break; }
+
+    if(same_ind_order) { thisdat += *othrdat; return *this; }
+
+    Permutation P; getperm(other.index_,P);
+    int *j[NMAX+1];
+    Counter c; other.initCounter(c);
+    for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
+
+    for(; c != Counter::done ; ++c)
+    {
+        thisdat((((((((*j[8]-1)*c.n[7]+*j[7]-1)*c.n[6]+*j[6]-1)*c.n[5]
+        +*j[5]-1)*c.n[4]+*j[4]-1)*c.n[3]+*j[3]-1)*c.n[2]+*j[2]-1)*c.n[1]+*j[1])
+        += (*othrdat)(c.ind);
+    }
+
+    return *this;
+} 
+
+void ITensor::fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
+{
+    if(r() != 2) Error("fromMatrix11: incorrect rank");
+    assert(hasindex(i1));
+    assert(hasindex(i2));
+    DO_IF_DEBUG(if(i1.m() != M.Nrows()) Error("fromMatrix11: wrong number of rows");)
+    DO_IF_DEBUG(if(i2.m() != M.Ncols()) Error("fromMatrix11: wrong number of cols");)
+
+    solo();
+    scale_ = 1;
+
+    MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
+    if(rn_ == 2)
+    { dref = M.t(i1==index(1)); }
+    else
+    { dref = M.t(); }
 }
 
+void ITensor::toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
+{
+    if(r() != 2) Error("toMatrix11: incorrect rank");
+    assert(hasindex(i1));
+    assert(hasindex(i2));
+    res.ReDimension(i1.m(),i2.m());
+
+    MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
+    if(rn_ == 2)
+    { res = dref.t(i1==index(1)); }
+    else
+    { res = dref.t(); }
+}
+void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
+{ toMatrix11NoScale(i1,i2,res); res *= scale_; }
+
+/*
 // group i1,i2; i3,i4
 void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
 {
@@ -552,67 +899,26 @@ void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, cons
     res.ReDimension(nrow,ncol);
     const array<Index,NMAX+1> reshuf = {{ IndNull, i3, i4, i1, i2, IndNull, IndNull, IndNull, IndNull }};
     Permutation P; getperm(reshuf,P);
-    Vector V; ReshapeDat(P,V);
+    Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
-    res *= (_neg ? -1 : 1)*exp(_logfac);
+    res *= scale_;
 }
 
-void ITensor::fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,const Matrix& res)
+void ITensor::fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,const Matrix& M)
 {
     if(r() != 4) Error("fromMatrix22: incorrect rank");
     assert(hasindex(i1));
     assert(hasindex(i2));
     assert(hasindex(i3));
     assert(hasindex(i4));
-    if(i3.m()*i4.m() != res.Ncols()) Error("fromMatrix22: wrong number of cols");
-    if(i1.m()*i2.m() != res.Nrows()) Error("fromMatrix22: wrong number of rows");
+    if(i3.m()*i4.m() != M.Ncols()) Error("fromMatrix22: wrong number of cols");
+    if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix22: wrong number of rows");
     ITensor Q(i3,i4,i1,i2);
-    Q.ncdat() = res.TreatAsVector();
-    Assign(Q);
+    Q.p->v = M.TreatAsVector();
+    assignFrom(Q);
 }
 
-void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res, Real& lfac) const
-{
-    if(r() != 2) Error("toMatrix11: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
-    res.ReDimension(i1.m(),i2.m());
-    if(i1 == indexn(2))
-    { res.TreatAsVector() = dat(); } 
-    else
-	{
-        const array<Index,NMAX+1> reshuf = {{ IndNull, i2, i1, IndNull, IndNull, IndNull, IndNull, IndNull, IndNull }};
-        Permutation P; getperm(reshuf,P);
-        Vector V; ReshapeDat(P,V);
-        res.TreatAsVector() = V;
 
-        //ITensor Q(i2,i1);
-        //Q.Assign(*this);
-        //res.TreatAsVector() = Q.dat();
-
-	}
-    res *= (_neg ? -1 : 1);
-    lfac = _logfac;
-}
-void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
-{ Real lfac; toMatrix11(i1,i2,res,lfac); res *= exp(lfac); }
-
-void ITensor::fromMatrix11(const Index& i1, const Index& i2, const Matrix& res)
-{
-    if(r() != 2) Error("fromMatrix11: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
-    if(i1.m() != res.Nrows()) Error("fromMatrix11: wrong number of rows");
-    if(i2.m() != res.Ncols()) Error("fromMatrix11: wrong number of cols");
-    if(i1 == indexn(2))
-    { ncdat() = res.TreatAsVector(); }
-    else
-	{
-        ITensor Q(i2,i1);
-        Q.ncdat() = res.TreatAsVector();
-        Assign(Q);
-	}
-}
 
 void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const
 {
@@ -622,9 +928,9 @@ void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matr
     res.ReDimension(i1.m()*i2.m(),i3.m());
     const array<Index,NMAX+1> reshuf = {{ IndNull, i3, i1, i2, IndNull, IndNull, IndNull, IndNull, IndNull }};
     Permutation P; getperm(reshuf,P);
-    Vector V; ReshapeDat(P,V);
+    Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
-    res *= (_neg ? -1 : 1)*exp(_logfac);
+    res *= scale_;
 }
 
 void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const
@@ -636,191 +942,89 @@ void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matr
     res.ReDimension(i1.m(),i2.m()*i3.m());
     const array<Index,NMAX+1> reshuf = {{ IndNull, i2, i3, i1, IndNull, IndNull, IndNull, IndNull, IndNull }};
     Permutation P; getperm(reshuf,P);
-    Vector V; ReshapeDat(P,V);
+    Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
-    res *= (_neg ? -1 : 1)*exp(_logfac);
+    res *= scale_;
 }
 
-void ITensor::fromMatrix21(const Index& i1, const Index& i2, const Index& i3, const Matrix& res)
+void ITensor::fromMatrix21(const Index& i1, const Index& i2, const Index& i3, const Matrix& M)
 {
     if(r() != 3) Error("fromMatrix21: incorrect rank");
     assert(hasindex(i1));
     assert(hasindex(i2));
     assert(hasindex(i3));
-    if(i1.m()*i2.m() != res.Nrows()) Error("fromMatrix21: wrong number of rows");
-    if(i3.m() != res.Ncols()) Error("fromMatrix21: wrong number of cols");
+    if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix21: wrong number of rows");
+    if(i3.m() != M.Ncols()) Error("fromMatrix21: wrong number of cols");
     ITensor Q(i3,i1,i2);
-    Q.ncdat() = res.TreatAsVector();
-    Assign(Q);
+    Q.p->v = M.TreatAsVector();
+    assignFrom(Q);
 }
 
-void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, const Matrix& res)
+void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, const Matrix& M)
 {
     if(r() != 3) Error("fromMatrix12: incorrect rank");
     assert(hasindex(i1) && hasindex(i2) && hasindex(i3));
-    if(i1.m() != res.Nrows()) Error("fromMatrix12: wrong number of rows");
-    if(i3.m()*i2.m() != res.Ncols()) Error("fromMatrix12: wrong number of cols");
+    if(i1.m() != M.Nrows()) Error("fromMatrix12: wrong number of rows");
+    if(i3.m()*i2.m() != M.Ncols()) Error("fromMatrix12: wrong number of cols");
     ITensor Q(i2,i3,i1);
-    Q.ncdat() = res.TreatAsVector();
-    Assign(Q);
+    Q.p->v = M.TreatAsVector();
+    assignFrom(Q);
+}
+*/
+
+Real Dot(const ITensor& x, const ITensor& y, bool doconj)
+{
+    if(x.is_complex())
+	{
+        ITensor res = (doconj ? conj(x) : x); res *= y;
+        if(res.r() != 1) Error("Bad Dot 234234");
+        return res.val0();
+	}
+    else if(y.is_complex())
+	{
+        ITensor res = x; res *= y;
+        if(res.r() != 1) Error("Bad Dot 37298789");
+        return res.val0();
+	}
+
+    ITensor res = x; res *= y;
+    if(res.r() != 0) 
+	{ x.print("x"); y.print("y"); Error("bad Dot"); }
+    return res.val0();
 }
 
-
-ITensor& ITensor::operator+=(const ITensor& other)
+void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, 
+                bool doconj)
 {
-    if(fabs(ur - other.ur) > 1E-12)
-    {
-        cerr << format("this ur = %.10f, other.ur = %.10f\n")%ur%other.ur;
-        Print(*this);
-        Print(other);
-        Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
-    }
-
-    if(this == &other)
-    {
-        _logfac += log(2); //multiply by 2, without touching p->v
-        return *this;
-    }
-
-    bool complex_this = is_complex();
-    bool complex_other = other.is_complex();
-    if(!complex_this && complex_other)
-    {
-        return (*this = (*this * Complex_1) + other);
-    }
-    if(complex_this && !complex_other) return operator+=(other * Complex_1);
-
-    Real dlogfac = other._logfac - _logfac;
-    if(dlogfac < -200.0) return *this; // no effect from other
-
-    dosign();
-    const int sign = other.sign();
-
-    Vector& thisdat = p->v;
-    assert(other.p != 0);
-    const Vector& othrdat = other.p->v;
-
-#ifdef DO_ALT
-    p->alt.clear();
-#endif
-
-    bool same_ind_order = true;
-    for(int j = 1; j <= rn; j++)
-    if(_indexn[j] != other._indexn[j])
-    {
-        same_ind_order = false;
-        break;
-    }
-    if(same_ind_order)
-    {
-        if(dlogfac < 0.0)	
-        {
-            thisdat += sign * exp(dlogfac) * othrdat;
-            return *this;
-        }
-        if(dlogfac > 200.0)
-        {
-            thisdat = othrdat;
-            this->_neg = other._neg;
-        }
-        else
-        {
-            thisdat *= exp(-dlogfac);
-            thisdat += sign * othrdat;
-        }
-        _logfac = other._logfac;
-        return *this;
-    }
-
-    Permutation P; getperm(other._indexn,P);
-    int *j[NMAX+1];
-    Counter c(other);
-    for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
-
-    if(dlogfac < 0.0)	
+    if(x.is_complex())
 	{
-        Real f = sign * exp(dlogfac);
-        for( ; c != Counter::done ; ++c)
-            thisdat((((((((*j[8]-1)*this->m(7)+*j[7]-1)*this->m(6)+*j[6]-1)*this->m(5)
-            +*j[5]-1)*this->m(4)+*j[4]-1)*this->m(3)+*j[3]-1)*this->m(2)+*j[2]-1)*this->m(1)+*j[1])
-            += f * othrdat(c.ind);
-        return *this;
-	}
-    if(dlogfac > 200.0)
-    {
-        for( ; c != Counter::done ; ++c)
-            thisdat((((((((*j[8]-1)*this->m(7)+*j[7]-1)*this->m(6)+*j[6]-1)*this->m(5)
-            +*j[5]-1)*this->m(4)+*j[4]-1)*this->m(3)+*j[3]-1)*this->m(2)+*j[2]-1)*this->m(1)+*j[1])
-            = othrdat(c.ind);
-        this->_neg = other._neg;
-    }
-    else
-	{
-        thisdat *= exp(-dlogfac);
-        if(other._neg)
-        {
-        for( ; c != Counter::done ; ++c)
-            thisdat((((((((*j[8]-1)*this->m(7)+*j[7]-1)*this->m(6)+*j[6]-1)*this->m(5)
-            +*j[5]-1)*this->m(4)+*j[4]-1)*this->m(3)+*j[3]-1)*this->m(2)+*j[2]-1)*this->m(1)+*j[1])
-            -= othrdat(c.ind);
-        }
-        else
-        {
-        for( ; c != Counter::done ; ++c)
-            thisdat((((((((*j[8]-1)*this->m(7)+*j[7]-1)*this->m(6)+*j[6]-1)*this->m(5)
-            +*j[5]-1)*this->m(4)+*j[4]-1)*this->m(3)+*j[3]-1)*this->m(2)+*j[2]-1)*this->m(1)+*j[1])
-            += othrdat(c.ind);
-        }
-	}
-    _logfac = other._logfac;
-    return *this;
-
-    //Simplified version for debugging:
-    /*
-    assert(p != 0);
-    Vector& thisdat = p->v;
-    assert(other.p != 0);
-    const Vector& othrdat = other.p->v;
-
-    dosign();
-    const int other_sign = other.sign();
-    Permutation P; getperm(other._indexn,P);
-    int *j[NMAX+1];
-    Counter c(other);
-    for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
-
-    this->normlogto(0);
-    other.normlogto(0);
-
-    for( ; c != Counter::done ; ++c)
-        thisdat((((((((*j[8]-1)*this->m(7)+*j[7]-1)*this->m(6)+*j[6]-1)*this->m(5)
-        +*j[5]-1)*this->m(4)+*j[4]-1)*this->m(3)+*j[3]-1)*this->m(2)+*j[2]-1)*this->m(1)+*j[1])
-        += other_sign * othrdat(c.ind);
-
-    return *this;
-    */
-    //-----------------
-
-} 
-
-void ITensor::SplitReIm(ITensor& re, ITensor& im) const
-{
-    ITensor cop(*this);
-    if(!is_complex())
-	{
-        re = cop;
-        im = cop; im *= 0;
+        ITensor res = (doconj ? conj(x) : x); res *= y;
+        if(res.r() != 1) error("Bad Dot 334234");
+        re = res(IndReIm(1));
+        im = res(IndReIm(2));
         return;
 	}
-    cop._logfac = 0;
-    ITensor repart(IndReIm), impart(IndReIm);  
-    repart.p->v(1) = 1;
-    impart.p->v(2) = 1;
-    re = cop; re /= repart;
-    im = cop; im /= impart;
-    assert(fabs(re._logfac) < 1E-10);
-    assert(fabs(im._logfac) < 1E-10);
-    re._logfac = _logfac; re._neg = _neg;
-    im._logfac = _logfac; im._neg = _neg;
+    else if(y.is_complex())
+	{
+        ITensor res = x; res *= y;
+        if(res.r() != 1) error("Bad Dot 47298789");
+        re = res(IndReIm(1));
+        im = res(IndReIm(2));
+        return;
+	}
+    if(x.r() != y.r()) 
+	{
+        cerr << "x = " << x << "\n";
+        cerr << "y = " << y << "\n";
+        Error("bad Dot 122414");
+	}
+    ITensor res = x; res *= y;
+    if(res.r() != 0) 
+	{
+        cerr << "x = " << x << "\n";
+        cerr << "y = " << y << "\n";
+        Error("bad Dot 20234");
+	}
+    re = res.val0();
+    im = 0;
 }
-

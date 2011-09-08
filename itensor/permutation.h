@@ -29,14 +29,26 @@ public:
     void from_to(int j, int k) { if(j!=k) { trivial = false; } GET(ind_,j) = k; }
     inline int dest(int j) const { return GET(ind_,j); }
 
-    void check(int d)
+    bool check(int d)
 	{
         for(int i = 1; i <= d; i++)
-        if(ind_[i] > d || ind_[i] < 1) Error("bad Permutation level 1");
+        if(ind_[i] > d || ind_[i] < 1) 
+        {
+        cerr << "\nbad Permutation level 1\n\n";
+        return false;
+        }
 
         for(int i = 1; i <= d; i++)
         for(int j = 1; j <= d; j++)
-        if(ind_[i] == ind_[j] && i != j) Error("bad Permutation level 2");
+        {
+            if(i == j) continue;
+            if(ind_[i] == ind_[j]) 
+            {
+                cerr << "\nbad Permutation level 2\n\n";
+                return false;
+            }
+        }
+        return true;
 	}
 
     friend inline ostream& operator<<(ostream& s, const Permutation& p)

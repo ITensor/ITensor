@@ -1,9 +1,7 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
-#include <error.h> //utilities
 #include <string>
-#include <iostream>
-#include <fstream>
+#include "types.h"
 #include "boost/array.hpp"
 #include "boost/format.hpp"
 #include "boost/intrusive_ptr.hpp"
@@ -178,6 +176,7 @@ public:
 
         if(im == makeNull)
         {
+            sname = "Null";
             _type = Site;
             ur = 0.0;
             return;
@@ -267,7 +266,7 @@ public:
 
     // rel_ops defines the other comparisons based on == and <
     bool operator==(const Index& other) const 
-	{ return (p == other.p && primelevel == other.primelevel); }
+	{ return unique_Real() == other.unique_Real(); }
 
     bool operator<(const Index& other) const 
 	{ return (unique_Real() < other.unique_Real()); }
@@ -363,6 +362,7 @@ struct IndexVal
     int i;
     IndexVal() : ind(IndNull),i(0) { }
     IndexVal(const Index& index, int i_) : ind(index),i(i_) { assert(i <= ind.m()); }
+    bool operator==(const IndexVal& other) const { return (ind == other.ind && i == other.i); }
     inline friend std::ostream& operator<<(std::ostream& s, const IndexVal& iv)
     { return s << "IndexVal: i = " << iv.i << ", ind = " << iv.ind << "\n"; }
     IndexVal primed() const { return IndexVal(ind.primed(),i); }

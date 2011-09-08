@@ -1,4 +1,4 @@
-#include "iq.h"
+#include "iqtensor.h"
 
 
 void DoPrimer::operator()(IQIndex &iqi) const { iqi.doprime(pt,inc); }
@@ -200,7 +200,7 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
             cout << "tre is\n" << tre << endl;
             Error("bad tre dat size");
         }
-        re = t.sign()*t.val0()*exp(t.logfac());
+        re = t.val0();
 	}
     if(tim.iten_size() == 0)
 	{ im = 0.0; }
@@ -208,7 +208,7 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
 	{
         const ITensor& t = tim.p->itensor.front();
         if(t.vec_size() != 1) Error("bad tim dat size");
-        im = t.sign()*t.val0()*exp(t.logfac());
+        im = t.val0();
 	}
 }
 
