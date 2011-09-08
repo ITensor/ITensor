@@ -64,11 +64,11 @@ public:
 
     void product(const VectorRef& A, VectorRef& B) const
 	{
-        psi.AssignFromVec(A);
+        psi.assignFromVec(A);
         Tensor psip; 
         applyProjOp(psi,LeftTerm,RightTerm,MPOTerm,psip);
-        psi.Assign(psip);
-        psi.AssignToVec(B);
+        psi.assignFrom(psip);
+        psi.assignToVec(B);
 	}
 };
 
@@ -98,7 +98,7 @@ public:
 
     void product(const VectorRef &A , VectorRef & B) const
 	{
-        psi.AssignFromVec(A);
+        psi.assignFromVec(A);
         Tensor psip;
         applyProjOp(psi,LeftTerm,RightTerm,MPOTerm,psip);
         foreach(const ITensor& phi, other)
@@ -109,8 +109,8 @@ public:
             else
             { psip += weight*(re*Complex_1 + im*Complex_i) * phi; }
         }
-        psi.Assign(psip);
-        psi.AssignToVec(B);
+        psi.assignFrom(psip);
+        psi.assignToVec(B);
 	}
 };
 
@@ -166,20 +166,20 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
     {
         //Just return the current energy (no optimization via Davidson)
         Vector Phi(phi.vec_size()),HPhi(phi.vec_size()); 
-        phi.AssignToVec(Phi);
+        phi.assignToVec(Phi);
         Phi /= Norm(Phi);
         lham.product(Phi,HPhi);
-        Tensor Hphi(phi); Hphi.AssignFromVec(HPhi);
-        phi.AssignFromVec(Phi);
+        Tensor Hphi(phi); Hphi.assignFromVec(HPhi);
+        phi.assignFromVec(Phi);
         return Dot(phi,Hphi);
     }
     else
     {
         Matrix evecs(niter,phi.vec_size()); Vector evals;
-        phi.AssignToVec(evecs.Row(1));
+        phi.assignToVec(evecs.Row(1));
         evecs.Row(1) /= Norm(evecs.Row(1));
         David(lham,1,errgoal,evals,evecs,1,1,debuglevel);
-        phi.AssignFromVec(evecs.Row(1));
+        phi.assignFromVec(evecs.Row(1));
         return evals(1); //energy
     }
     return 1000;
@@ -197,14 +197,14 @@ Vector doDavidson(vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& L
     Matrix evecs(max(ntarget,niter),phi[0].vec_size()); Vector evals;
     for(int n = 0; n < ntarget; ++n)
     { 
-        phi[n].AssignToVec(evecs.Row(1+n)); 
+        phi[n].assignToVec(evecs.Row(1+n)); 
         evecs.Row(1+n) /= Norm(evecs.Row(1+n));
     }
     David(lham,1,errgoal,evals,evecs,1,1,debuglevel);
     Vector energies(ntarget);
     for(int n = 0; n < ntarget; ++n)
     { 
-        phi[n].AssignFromVec(evecs.Row(1+n));
+        phi[n].assignFromVec(evecs.Row(1+n));
         energies(1+n) = evals(1+n);
     }
     return energies;
@@ -457,10 +457,10 @@ inline Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vect
 
             ITensor phi = psi.AA(l) * psi.AA(l+1);
 
-            int dim = phi.dat().Length();
+            int dim = phi.vec_size();
             Matrix evecs(sweeps.niter(sw),dim);
             Vector evals;
-            phi.AssignToVec(evecs.Row(1));
+            phi.assignToVec(evecs.Row(1));
             evecs.Row(1) *= 1.0 / Norm(evecs.Row(1));
 
             //printdat = false; cerr << "Multiple state phi = " << phi << "\n"; 
@@ -485,7 +485,7 @@ inline Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vect
             David(lham,1,1e-4,evals,evecs,1,1,debuglevel);
 
             energy = evals(1);
-            phi.AssignFromVec(evecs.Row(1));
+            phi.assignFromVec(evecs.Row(1));
 
             do_denmat_Real(phi,psi.AAnc(l),psi.AAnc(l+1),sweeps.cutoff(sw),sweeps.minm(sw),sweeps.maxm(sw),(ha==1 ? Fromleft : Fromright));
 

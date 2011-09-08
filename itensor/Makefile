@@ -8,16 +8,16 @@ include ../options.mk
 
 ####################################
 
-OBJECTS=itensor.o iq.o
+OBJECTS=itensor.o iqtensor.o mps.o
 
-SOURCES=itensor.cc iq.cc
+SOURCES=itensor.cc iqtensor.cc mps.cc
 
 ####################################
 
 INCLUDEFLAGS=-I$(INCLUDEDIR) -I$(BOOST_DIR)
 
 CCFLAGS= $(INCLUDEFLAGS) -O2 -DNDEBUG -DBOOST_DISABLE_ASSERTS
-CCGFLAGS= $(INCLUDEFLAGS) -ansi -Wall -pedantic -g -O0 -DBOUNDS -DITENSOR_USE_AT -Wno-long-long
+CCGFLAGS= $(INCLUDEFLAGS) -ansi -Wall -pedantic -g -O0 -DBOUNDS -DITENSOR_USE_AT -Wno-long-long -DMATRIXBOUNDS
 
 GOBJECTS= $(patsubst %,.debug_objs/%, $(OBJECTS))
 
@@ -56,11 +56,17 @@ installg: headerscopy libitensor-g.a
 mkdebugdir:
 	mkdir -p .debug_objs
 
-tensor.o: types.h permutation.h index.h tensor.h
-iq.o: types.h permutation.h index.h itensor.h combiner.h iqcombiner.h iq.h
+itensor.o: types.h real.h permutation.h index.h itensor.h
+iqtensor.o: types.h real.h permutation.h index.h itensor.h \
+combiner.h iqindex.h iqcombiner.h iqtensor.h
+mps.o: types.h real.h permutation.h index.h itensor.h \
+combiner.h iqindex.h iqcombiner.h iqtensor.h model.h mps.h
 
-.debug_objs/tensor.o: types.h permutation.h index.h itensor.h
-.debug_objs/iq.o: types.h permutation.h index.h itensor.h combiner.h iqcombiner.h iq.h
+.debug_objs/itensor.o: types.h real.h permutation.h index.h itensor.h
+.debug_objs/iq.o: types.h real.h permutation.h index.h \
+itensor.h combiner.h iqindex.h iqcombiner.h iqtensor.h 
+.debug_objs/mps.o: types.h real.h permutation.h index.h \
+itensor.h combiner.h iqindex.h iqcombiner.h iqtensor.h model.h mps.h
 
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a

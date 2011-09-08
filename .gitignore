@@ -2,6 +2,7 @@
 *~
 include/*.h
 include/*.ih
+include/.profiling
 *.swp
 utilities/Makefile
 matrix/macos/Makefile

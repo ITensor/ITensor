@@ -1,7 +1,7 @@
 #ifndef __IQCOMBINER_H
 #define __IQCOMBINER_H
 #include "combiner.h"
-#include "iq.h"
+#include "iqtensor.h"
 
 class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
 {
@@ -13,6 +13,7 @@ class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
     void init(const IQIndex& _bigind, const string& smallind_name)
     {
         /* May not be appropriate when orthogonalizing MPOs
+           Could be a hint that there is a better way...
         if(_bigind.dir() != _smallind.dir())
         {
             cerr << "_bigind = " << _bigind << endl;
@@ -29,7 +30,7 @@ class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
         vector<inqn> iq;
         for(vector<QN>::iterator qi = qns.begin(); qi != ue; ++qi)
         {
-            QN& q = *qi;
+            const QN& q = *qi;
             int totm = 0;
             foreach(const inqn& x, bigind_.iq())
             if(x.qn == q) totm += x.index.m();
@@ -39,10 +40,10 @@ class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
             foreach(const inqn& x, bigind_.iq())
             if(x.qn == q)
             {
-                const Index &bj(x.index);
-                small_to_big[make_pair(small_qind,start)] = bj;
-                big_to_small[bj] = make_pair(small_qind,start);
-                start += bj.m();
+                const Index &xi = x.index;
+                small_to_big[make_pair(small_qind,start)] = xi;
+                big_to_small[xi] = make_pair(small_qind,start);
+                start += xi.m();
             }
             iq.push_back(inqn(small_qind,q));
         }
@@ -94,8 +95,9 @@ public:
                 for(int start = 0; start < sind.m(); )
                 {
                     Index bind = small_to_big[make_pair(sind,start)];
-                    ITensor converter(sind,bind);
-                    for(int kk = 1; kk <= bind.m(); ++kk) { converter.ncval2(start+kk,kk) = 1; }
+                    Matrix C(sind.m(),bind.m()); C = 0;
+                    for(int kk = 1; kk <= bind.m(); ++kk) { C(start+kk,kk) = 1; }
+                    ITensor converter(sind,bind,C);
                     converter *= (*i);
                     res += converter;
                     start += bind.m();
@@ -118,8 +120,9 @@ public:
                 for(int k = 1; k <= it.r(); ++k)
                 if(bigind_.hasindex(it.index(k)))
                 {
-                    pair<Index,int> pp = big_to_small[it.index(k)];
-                    doconvert(it,pp.first,it.index(k),pp.second,tt);
+                    pair<Index,int> Ii = big_to_small[it.index(k)];
+                    //doconvert(it,pp.first,it.index(k),pp.second,tt);
+                    it.expandIndex(it.index(k),Ii.first,Ii.second,tt);
                     res += tt;
                     gotit = true;
                     break;
@@ -135,57 +138,18 @@ public:
         res.addindex1(t.virtual_ind());
     }
 
-    void doconvert(const ITensor& t, const Index& cond, const Index& uncond, int start, ITensor& res) const
-    {
-        vector<Index> indices; indices.reserve(t.r());
-        for(int j = 1; j <= t.r(); ++j)
-        {
-        if(t.index(j) == uncond) { indices.push_back(cond); }
-        else indices.push_back(t.index(j));
-        }
-        res = ITensor(indices);
-
-        array<int,NMAX+1> inc;
-        for(int j = 0; j <= NMAX; ++j) { inc[j] = 0; }
-
-        const int i = res.findindex(cond);
-        GET(inc,i) = start;
-
-        Counter c(t);
-        const Vector& thisdat = t.dat();
-        for( ; c != Counter::done ; ++c)
-        {
-        res.ncval8(c.i[1]+inc[1],c.i[2]+inc[2],c.i[3]+inc[3],c.i[4]+inc[4],
-            c.i[5]+inc[5],c.i[6]+inc[6],c.i[7]+inc[7],c.i[8]+inc[8]) 
-            = thisdat(c.ind);
-        }
-        /*
-        //const int inc1 = inc[1], inc2 = inc[2], inc3 = inc[3], inc4 = inc[4], inc5 = inc[5], inc6 = inc[6], inc7 = inc[7],inc8 = inc[8];
-        Vector newdat(res.vec_size());
-        for( ; c != Counter::done ; ++c)
-        {
-        newdat(((((((c.i[8]+inc[8]-1)*c.n[7]+c.i[7]+inc[7]-1)*c.n[6]+c.i[6]+inc[6]-1)*c.n[5]+(c.i[5]+inc[5]-1)*c.n[4]+c.i[4]+inc[4]-1)*c.n[3]+c.i[3]+inc[3]-1)*c.n[2]+c.i[2]+inc[2]-1)*c.n[1]+c.i[1]+inc[1])
-            = thisdat(c.ind);
-        }
-        res.set_dat(newdat);
-        */
-        //res.setlogfac(t.logfac());
-        //res *= t.sign();
-        res *= t.sign()*exp(t.logfac());
-    }
-
     inline friend ostream& operator<<(ostream & s, const Condenser & c)
     {
-        s << "bigind_ is " << c.bigind_ << endl;
-        s << "smallind_ is " << c.smallind_ << endl;
-        s << "big_to_small is " << endl;
+        s << "bigind_ is " << c.bigind_ << "\n";
+        s << "smallind_ is " << c.smallind_ << "\n";
+        s << "big_to_small is " << "\n";
         for(map<Index, pair<Index,int> >::const_iterator kk = c.big_to_small.begin();
             kk != c.big_to_small.end(); ++kk)
-        s << kk->first SP kk->second.first SP kk->second.second << endl;
+            { s << kk->first SP kk->second.first SP kk->second.second << "\n"; }
         s << "small_to_big is " << endl;
         for(map<pair<Index,int>,Index>::const_iterator kk = c.small_to_big.begin();
             kk != c.small_to_big.end(); ++kk)
-        s << kk->first.first SP kk->first.second SP kk->second << endl;
+            { s << kk->first.first SP kk->first.second SP kk->second << "\n"; }
         return s << endl;
     }
 }; //class Condenser
@@ -269,6 +233,7 @@ class IQCombiner
     mutable map<ApproxReal, Combiner> setcomb;
     mutable map<Index, Combiner> rightcomb;
     mutable bool initted;
+
     mutable Condenser cond;
     mutable IQIndex cindex;
     bool do_condense;
@@ -276,13 +241,15 @@ public:
 
     void doCondense(bool val) 
     {
-        if(initted) Error("IQCombiner: can't set doCondense after already initted.");
+        if(initted) 
+            Error("IQCombiner: can't set doCondense after already initted.");
         do_condense = val;
     }
 
     IQCombiner() : initted(false), do_condense(false) { }
     IQCombiner(
-	    const IQIndex& l1, const IQIndex& l2 = IQIndNull, const IQIndex& l3 = IQIndNull, const IQIndex& l4 = IQIndNull, 
+	    const IQIndex& l1, const IQIndex& l2 = IQIndNull, 
+        const IQIndex& l3 = IQIndNull, const IQIndex& l4 = IQIndNull, 
 	    const IQIndex& l5 = IQIndNull, const IQIndex& l6 = IQIndNull )
         : initted(false), do_condense(false)
 	{
@@ -306,8 +273,13 @@ public:
     inline bool check_init() const { return initted; }
 
     // Initialize after all lefts are there and before being used
-    void init(string rname = "combined", IndexType = Link, int primelevel = -1) const 
+    void init(string rname = "combined", IndexType = Link, 
+              int primelevel = -1) const 
 	{
+        if(initted) return;
+        if(left.size() == 0)
+            Error("No left indices in IQCombiner.");
+
         Arrow rdir = Switch*left.back().dir();
         int plev = 0;
         if(primelevel == -1) { plev = left.back().primelevel; }
@@ -322,7 +294,6 @@ public:
             break;
         }
 
-        if(initted) return;
         setcomb.clear();
         rightcomb.clear();
 
@@ -338,7 +309,10 @@ public:
 
             Combiner co; Real rss = 0.0;
             foreach(const Index& i, vind)
-            { co.addleft(i); rss += i.unique_Real(); }
+            { 
+                co.addleft(i); 
+                rss += i.unique_Real(); 
+            }
             co.init(rname+q.toString());
 
             iq.push_back(inqn(co.right(),q));
@@ -390,11 +364,13 @@ public:
         if(left[j] == i) return j;
         return -1;
 	}
-    bool hasindex(const IQIndex& i) const
+    bool hasindex(const IQIndex& I) const
 	{
-        return findindex(i) != -1;
+        for(size_t j = 0; j < left.size(); ++j)
+            if(left[j] == I) return true;
+        return false;
 	}
-    bool in_left(Index i) const
+    bool hasindex(const Index& i) const
 	{
         for(size_t j = 0; j < left.size(); ++j)
             if(left[j].hasindex(i)) return true;
@@ -476,6 +452,7 @@ public:
                 if((j = t.findindex(*I)) == 0)
                 {
                     t.printIQInds("t");
+                    cerr << "Left indices\n";
                     for(size_t j = 0; j < left.size(); ++j)
                     { cerr << j SP left[j] << "\n"; }
                     
@@ -494,28 +471,28 @@ public:
 
             for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
             {
-                Real rse = 0.0;
+                Real rse = 0;
                 for(int k = 1; k <= i->r(); ++k)
-                if(in_left(i->index(k))) { rse += i->index(k).unique_Real(); }
+                {
+                if(hasindex(i->index(k))) 
+                { rse += i->index(k).unique_Real(); }
+                }
 
                 if(setcomb.count(rse) == 0)
                 {
-                    Printit<Index> pr(cout," ");
-                    cout << "left[0] is " << left[0];
-                    //cout << "se is " << endl;
-                    //for_all(se,pr); cout << endl;
-                    //for(map<set<Index>, Combiner>::const_iterator uu = setcomb.begin();
+                    Print(*i);
+                    cerr << "\nleft indices \n";
+                    for(size_t j = 0; j < left.size(); ++j)
+                        { cerr << j << " " << left[j] << "\n"; }
+                    cerr << "\n\n";
                     for(map<ApproxReal, Combiner>::const_iterator uu = setcomb.begin();
                         uu != setcomb.end(); ++uu)
                     {
-                        //cout << "set members: " << endl;
-                        //for_all(uu->first,pr); 
                         cout << "Combiner: " << endl;
                         cout << uu->second << endl;
                     }
-                    Error("no setcomb for se in IQCombiner prod");
+                    Error("no setcomb for rse in IQCombiner prod");
                 }
-                //cout << "setcomb[se] is " << setcomb[se] << endl;
                 res += (*i * setcomb[rse]);
             }
             res.addindex1(t.virtual_ind());

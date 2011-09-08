@@ -432,12 +432,14 @@ public:
 
     bool hasindex(const Index& i) const
 	{ 
-        foreach(const inqn& x, pd->iq_) if(x.index == i) return true;
+        foreach(const inqn& x, pd->iq_) 
+            { if(x.index == i) return true; }
         return false;
 	}
     bool hasindex_noprime(const Index& i) const
 	{ 
-        foreach(const inqn& x, pd->iq_) if(x.index.noprime_equals(i)) return true;
+        foreach(const inqn& x, pd->iq_) 
+            { if(x.index.noprime_equals(i)) return true; }
         return false;
 	}
 
@@ -804,7 +806,7 @@ public:
                 if(!hasindex(iv[j].iqind)) Error("IQTensor::operator(): IQIndex not found.");
                 indices.push_back(iv[j].index());
             }
-            ITensor t(indices,true);
+            ITensor t(indices);
             p->itensor.push_front(t);
             p->rmap[r] = p->itensor.begin();
         }
@@ -1028,7 +1030,13 @@ public:
         return viqindex;
     }
 
-    bool hasindex(const IQIndex& i) const { return findindex(i) != 0; }
+    bool hasindex(const IQIndex& i) const 
+    { 
+        for(size_t j = 0; j < p->iqindex_.size(); ++j)
+            { if(i == p->iqindex_[j]) return true; }
+        return false;
+    }
+
     bool is_complex() const { return findindex(IQIndReIm) != 0; }
     bool has_virtual() const { return viqindex.index(1) != IQEmptyV.index(1); }
     QN virtualQN() const { return viqindex.qn(1); }
@@ -1077,42 +1085,51 @@ public:
 
     Real norm() const
     {
-        Real res;
-        foreach(const ITensor& t, p->itensor) res += sqr(t.norm());
+        Real res = 0;
+        foreach(const ITensor& t, p->itensor) 
+            res += sqr(t.norm());
         return sqrt(res);
+    }
+
+    Real sumels() const
+    {
+        Real res = 0;
+        foreach(const ITensor& t, p->itensor)
+            res += t.sumels();
+        return res;
     }
 
     int vec_size() const
     {
         int s = 0;
         for(const_iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-            s += jj->Length();
+            s += jj->vec_size();
         return s;
     }
-    void AssignToVec(VectorRef v) const
+    void assignToVec(VectorRef v) const
     {
         if(vec_size() != v.Length())
-            Error("Mismatched sizes in IQTensor::AssignToVec(VectorRef v).");
+            Error("Mismatched sizes in IQTensor::assignToVec(VectorRef v).");
         int off = 1;
         for(const_iten_it jj = const_iten_begin(); jj != const_iten_end(); ++jj)
-            {
-            int d = jj->Length();
-            jj->AssignToVec(v.SubVector(off,off+d-1));
+        {
+            int d = jj->vec_size();
+            jj->assignToVec(v.SubVector(off,off+d-1));
             off += d;
-            }
+        }
     }
-    void AssignFromVec(VectorRef v)
+    void assignFromVec(VectorRef v)
     {
         solo();
         if(vec_size() != v.Length())
             Error("bad size");
         int off = 1;
         for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-            {
-            int d = jj->dat().Length();
-            jj->AssignFromVec(v.SubVector(off,off+d-1));
+        {
+            int d = jj->vec_size();
+            jj->assignFromVec(v.SubVector(off,off+d-1));
             off += d;
-            }
+        }
     }
     void GetSingComplex(Real& re, Real& im) const;
 
@@ -1124,14 +1141,14 @@ public:
 
     void printIQInds(string name = "") const
     { 
-        cerr << "\nIQTensor ------------------\n";
+        cerr << "\n" << name << " (IQIndices only) = \n";
         for(size_t j = 0; j < p->iqindex_.size(); ++j)
         { cerr << p->iqindex_[j] << "\n\n"; }
         if(has_virtual()) cerr << "Virtual = " << viqindex << "\n\n";
         cerr << "---------------------------\n\n";
     }
 
-    void Assign(const IQTensor& other) const
+    void assignFrom(const IQTensor& other) const
     {
         map<ApproxReal,iten_it> semap;
         for(iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
@@ -1141,11 +1158,11 @@ public:
             ApproxReal se = ApproxReal(i->unique_Real());
             if(semap.count(se) == 0)
             {
-                cout << "warning Assign semap.count is 0" << endl;
+                cout << "warning assignFrom semap.count is 0" << endl;
                 cerr << "offending ITensor is " << *i << "\n";
-                Error("bad Assign count se");
+                Error("bad assignFrom count se");
             }
-            else { semap[se]->Assign(*i); }
+            else { semap[se]->assignFrom(*i); }
         }
     }
 
@@ -1187,7 +1204,7 @@ private:
                 { P.from_to(j,k+1); gotone = true; break; }
                 if(!gotone) Error("match_order: !gotone");
             }
-            t.Reshape(P);
+            t.reshape(P);
         }
     }
 

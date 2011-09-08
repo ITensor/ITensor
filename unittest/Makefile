@@ -6,7 +6,7 @@ include unittest_options.mk
 REPORT_LEVEL=confirm
 #REPORT_LEVEL=detailed
 
-HEADERS=index_test.h itensor_test.h
+HEADERS=index_test.h real_test.h itensor_test.h combiner_test.h
 TENSOR_HEADERS=dmrg.h hams.h
 LIBNAMES=matrix utilities itensor
 
@@ -44,13 +44,7 @@ run: test-g
 	@echo 
 	@echo Running all tests...
 	@echo 
-	@echo Suite IndexTest
-	@echo 
-	@./test-g --run_test=IndexTest --report_level=$(REPORT_LEVEL)
-	@echo 
-	@echo Suite ITensorTest
-	@echo 
-	@./test-g --run_test=ITensorTest --report_level=$(REPORT_LEVEL)
+	@./test-g --report_level=$(REPORT_LEVEL)
 
 growl:
 	@make run && growlnotify -m "Tests Passed" || growlnotify -m "Test Failed"
