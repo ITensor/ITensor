@@ -8,9 +8,9 @@ include ../options.mk
 
 ####################################
 
-OBJECTS=itensor.o iq.o
+OBJECTS=itensor.o iq.o mps.o
 
-SOURCES=itensor.cc iq.cc
+SOURCES=itensor.cc iq.cc mps.cc
 
 ####################################
 
@@ -57,10 +57,16 @@ mkdebugdir:
 	mkdir -p .debug_objs
 
 itensor.o: types.h real.h permutation.h index.h itensor.h
-iq.o: types.h real.h permutation.h index.h itensor.h combiner.h iqcombiner.h iq.h
+iq.o: types.h real.h permutation.h index.h itensor.h \
+      combiner.h iqcombiner.h iq.h
+mps.o: types.h real.h permutation.h index.h itensor.h \
+       combiner.h iqcombiner.h iq.h model.h mps.h
 
 .debug_objs/itensor.o: types.h real.h permutation.h index.h itensor.h
-.debug_objs/iq.o: types.h real.h permutation.h index.h itensor.h combiner.h iqcombiner.h iq.h
+.debug_objs/iq.o: types.h real.h permutation.h index.h \
+                  itensor.h combiner.h iqcombiner.h iq.h 
+.debug_objs/mps.o: types.h real.h permutation.h index.h \
+        itensor.h combiner.h iqcombiner.h iq.h model.h mps.h
 
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a

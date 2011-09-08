@@ -92,10 +92,12 @@ template<class T> T operator*(const T& t1, const T* pt2)
 { T res(t1); res *= *(pt2); return res; }
 
 template<class T>
-inline void readFromFile(const char* fname, T& t) { std::ifstream s(fname); t.read(s); s.close(); }
+inline void readFromFile(const char* fname, T& t) 
+    { std::ifstream s(fname); t.read(s); s.close(); }
 
 template<class T>
-inline void writeToFile(const char* fname, const T& t) { std::ofstream s(fname); t.write(s); s.close(); }
+inline void writeToFile(const char* fname, const T& t) 
+    { std::ofstream s(fname); t.write(s); s.close(); }
 
 
 extern bool printdat;
