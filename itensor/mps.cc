@@ -193,7 +193,6 @@ Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale)
 
     /*
     cerr << "WARNING: checking norms -- slow\n";
-    */
 
     if(fabs(AA.norm()-AAc.norm())/AA.norm() > 1E-5)
     {
@@ -210,6 +209,7 @@ Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale)
         cerr << format("rel diff = %.3E\n")%(fabs(AA.sumels()-AAc.sumels())/fabs(AA.sumels()));
         Error("Incorrect total for condensed tensor.");
     }
+    */
 
     assert(LogNumber(AAc.norm()).isFinite());
 
