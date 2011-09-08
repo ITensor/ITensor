@@ -1,4 +1,4 @@
-#include "iq.h"
+#include "iqtensor.h"
 
 
 void DoPrimer::operator()(IQIndex &iqi) const { iqi.doprime(pt,inc); }
