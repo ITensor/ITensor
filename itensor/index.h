@@ -266,7 +266,7 @@ public:
 
     // rel_ops defines the other comparisons based on == and <
     bool operator==(const Index& other) const 
-	{ return (p == other.p && primelevel == other.primelevel); }
+	{ return unique_Real() == other.unique_Real(); }
 
     bool operator<(const Index& other) const 
 	{ return (unique_Real() < other.unique_Real()); }
