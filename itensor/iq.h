@@ -432,12 +432,14 @@ public:
 
     bool hasindex(const Index& i) const
 	{ 
-        foreach(const inqn& x, pd->iq_) if(x.index == i) return true;
+        foreach(const inqn& x, pd->iq_) 
+            { if(x.index == i) return true; }
         return false;
 	}
     bool hasindex_noprime(const Index& i) const
 	{ 
-        foreach(const inqn& x, pd->iq_) if(x.index.noprime_equals(i)) return true;
+        foreach(const inqn& x, pd->iq_) 
+            { if(x.index.noprime_equals(i)) return true; }
         return false;
 	}
 
@@ -1028,7 +1030,13 @@ public:
         return viqindex;
     }
 
-    bool hasindex(const IQIndex& i) const { return findindex(i) != 0; }
+    bool hasindex(const IQIndex& i) const 
+    { 
+        for(size_t j = 0; j < p->iqindex_.size(); ++j)
+            { if(i == p->iqindex_[j]) return true; }
+        return false;
+    }
+
     bool is_complex() const { return findindex(IQIndReIm) != 0; }
     bool has_virtual() const { return viqindex.index(1) != IQEmptyV.index(1); }
     QN virtualQN() const { return viqindex.qn(1); }
@@ -1083,6 +1091,14 @@ public:
         return sqrt(res);
     }
 
+    Real sumels() const
+    {
+        Real res = 0;
+        foreach(const ITensor& t, p->itensor)
+            res += t.sumels();
+        return res;
+    }
+
     int vec_size() const
     {
         int s = 0;
@@ -1125,7 +1141,7 @@ public:
 
     void printIQInds(string name = "") const
     { 
-        cerr << "\nIQTensor ------------------\n";
+        cerr << "\n" << name << " (IQIndices only) = \n";
         for(size_t j = 0; j < p->iqindex_.size(); ++j)
         { cerr << p->iqindex_[j] << "\n\n"; }
         if(has_virtual()) cerr << "Virtual = " << viqindex << "\n\n";
