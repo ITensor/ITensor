@@ -187,7 +187,7 @@ private:
     //Indices, maximum of 8 (index_[0] not used), mutable to allow reordering
     mutable array<Index,NMAX+1> index_; 
     Real ur;
-    //mutable since e.g. setScale is logically const
+    //mutable since e.g. scaleTo is logically const
     mutable LogNumber scale_; 
 
     void allocate(int dim) { p = new ITDat(dim); }
@@ -746,7 +746,7 @@ public:
         }
         assert(p != 0); 
         solo(); 
-        setScale(1);
+        scaleTo(1);
         return p->v(1);
     }
 
@@ -760,7 +760,7 @@ public:
         }
 	    assert(p != 0); 
         solo(); 
-        setScale(1);
+        scaleTo(1);
         return p->v(iv1.i);
 	}
 
@@ -780,7 +780,7 @@ public:
         }
 	    assert(p != 0); 
         solo(); 
-        setScale(1);
+        scaleTo(1);
         return p->v((ja[2]-1)*m(1)+ja[1]);
 	}
 
@@ -807,7 +807,7 @@ public:
         }
 	    assert(p != 0); 
         solo(); 
-        setScale(1);
+        scaleTo(1);
         return _val(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]);
 	}
 
@@ -924,7 +924,7 @@ public:
 
     Real norm() const { return Norm(p->v) * scale_; }
 
-    void doNormLog()
+    void scaleOutNorm() const
 	{
         Real f = Norm(p->v);
         if(fabs(f-1) < 1E-12) return;
@@ -932,7 +932,7 @@ public:
         if(f != 0) { p->v *= 1.0/f; scale_ *= f; }
 	}
 
-    void setScale(LogNumber newscale) const
+    void scaleTo(LogNumber newscale) const
 	{
         if(scale_ == newscale) return;
         solo();
@@ -941,7 +941,9 @@ public:
         //LogNumber vscale = (scale_/newscale);
         //cerr << format("vscale = %.3E (logNum = %f, sign = %d)\n")
         //%Real(vscale)%vscale.logNum()%vscale.sign();
-        if(newscale.isRealZero()) { p->v = 0; }
+        if(newscale.isRealZero()) { 
+        //DO_IF_DEBUG(cerr << "\nnewscale was zero\n\n";)
+        p->v = 0; }
         else { p->v *= (scale_/newscale); }
         scale_ = newscale;
 	}

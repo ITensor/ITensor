@@ -600,7 +600,7 @@ ITensor& ITensor::operator/=(const ITensor& other)
     
     scale_ *= other.scale_;
 
-    doNormLog();
+    scaleOutNorm();
 
     set_unique_Real();
 
@@ -752,7 +752,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
     index_.swap(new_index_);
 
     scale_ *= other.scale_;
-    doNormLog();
+    scaleOutNorm();
 
     set_unique_Real();
 
@@ -808,13 +808,13 @@ ITensor& ITensor::operator+=(const ITensor& other)
 
     if(scale_.magnitudeLessThan(other.scale_)) 
     { 
-        this->setScale(other.scale_); 
+        this->scaleTo(other.scale_); 
         solo();
         othrdat = &(other.p->v);
     }
     else
     { 
-        //Would be simpler to call other.setScale(this->scale_)
+        //Would be simpler to call other.scaleTo(this->scale_)
         //but the following prevents other from having to call solo()
         if(p->count() != 1) {  p = new ITDat(other.p->v); }
         else                { p->v = other.p->v; }

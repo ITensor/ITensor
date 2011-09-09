@@ -5,7 +5,7 @@ void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& n
     assert(rho.r() == 2);
     Index active = rho.index(1); active.noprime();
 
-    //if(refScale != DefaultRefScale) rho.setScale(refScale);
+    //if(refScale != DefaultRefScale) rho.scaleTo(refScale);
 
     //Do the diagonalization
     Index ri = rho.index(1); ri.noprime();
@@ -55,7 +55,7 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor&
         //if(!t.index(1).noprime_equals(t.index(2)))
         //{ Print(rho); Print(t); Error("Non-symmetric ITensor in density matrix"); }
 
-        t.setScale(refScale);
+        t.scaleTo(refNorm);
 
         Matrix &U = GET(mmatrix,itenind);
         Vector &d = GET(mvector,itenind);
