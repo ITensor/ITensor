@@ -352,11 +352,9 @@ public:
     }
 };
 
-template <class MPSType, class MPOType, class DMRGOptions>
-Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptions& opts)
+template <class Tensor, class DMRGOptions>
+Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOptions& opts)
 {
-    typedef typename MPSType::TensorT Tensor;
-    typedef typename MPOType::TensorT MPOTensor;
     const Real orig_cutoff = psi.cutoff; const int orig_minm = psi.minm, orig_maxm = psi.maxm;
     int debuglevel = (opts.quiet ? 0 : 1);
     int N = psi.NN();
@@ -365,7 +363,7 @@ Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptions& opt
     psi.position(1);
     //if(H.is_complex()) psi.AAnc(1) *= Complex_1;
 
-    vector<MPOTensor> PH(N+1);
+    vector<Tensor> PH(N+1);
     for(int l = N-1; l >= 2; --l) psi.projectOp(l+1,Fromright,PH[l+1],H.AA(l+1),PH[l]);
 
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)

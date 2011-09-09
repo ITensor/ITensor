@@ -1,5 +1,34 @@
 #include "mps.h"
 
+template <class Tensor>
+MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
+{
+    primelinks(0,4);
+
+    vector<Tensor> first(N), second(N);
+    for(int i = 1; i < N; ++i)
+    {
+        IndexT l1 = this->RightLinkInd(i);
+        IndexT l2 = other.RightLinkInd(i);
+        IndexT r(l1.rawname());
+        plussers(l1,l2,r,first[i],second[i]);
+    }
+
+    AAnc(1) = AA(1) * first[1] + other.AA(1) * second[1];
+    for(int i = 2; i < N; ++i)
+    {
+        AAnc(i) = conj(first[i-1]) * AA(i) * first[i] + conj(second[i-1]) * other.AA(i) * second[i];
+    }
+    AAnc(N) = conj(first[N-1]) * AA(N) + conj(second[N-1]) * other.AA(N);
+
+    noprimelink();
+
+    position(N);
+    position(1);
+
+    return *this;
+}
+
 void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, 
 ITensor& nU, Vector& D, 
 bool doRelCutoff = false, Real refNorm = 1)

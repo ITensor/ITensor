@@ -25,7 +25,11 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
         IQIndex oldmid = res.RightLinkInd(i);
         nfork = IQTensor(A.RightLinkInd(i),B.RightLinkInd(i),oldmid);
         if(clust.iten_size() == 0)	// this product gives 0 !!
-        { cerr << format("WARNING: clust.iten_size()==0 in nmultMPO (i=%d).\n")%i; res = IQMPO(); return; }
+        { 
+            cerr << format("WARNING: clust.iten_size()==0 in nmultMPO (i=%d).\n")%i; 
+            res *= 0;
+            return; 
+        }
         tensorSVD(clust, res.AAnc(i), nfork,cut,1,maxm,Fromleft,A.doRelCutoff(),A.refNorm());
         IQIndex mid = index_in_common(res.AA(i),nfork,Link);
         assert(mid.dir() == In);
@@ -38,7 +42,11 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
 
     nfork = clust * A.AA(N) * B.AA(N);
     if(nfork.iten_size() == 0)	// this product gives 0 !!
-    { cerr << "WARNING: nfork.iten_size()==0 in nmultMPO\n"; res = IQMPO(); return; }
+    { 
+        cerr << "WARNING: nfork.iten_size()==0 in nmultMPO\n"; 
+        res *= 0;
+        return; 
+    }
 
     res.doSVD(N-1,nfork,Fromright,false);
     res.noprimelink();

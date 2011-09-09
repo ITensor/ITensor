@@ -258,10 +258,8 @@ public:
     operator vector<IQIndexVal>() const { return state; }
 };
 
-namespace Internal {
-
 template <class Tensor>
-class MPS
+class MPSt //the lowercase t stands for "type" or "template"
 {
 public:
     typedef Tensor TensorT;
@@ -348,12 +346,12 @@ public:
         if(dir == Fromleft)
         {
         if(i == left_orth_lim+1) left_orth_lim = i;
-        else Error("MPS::setU: left_orth_lim not at i-1");
+        else Error("left_orth_lim not at i-1");
         }
         else if(dir == Fromright)
         {
         if(i == right_orth_lim-1) right_orth_lim = i;
-        else Error("MPS::setU: right_orth_lim not at i-1");
+        else Error("right_orth_lim not at i-1");
         }
         return GET(A,i);
     }
@@ -370,28 +368,28 @@ public:
     Tensor bondTensor(int b) const 
         { Tensor res = A.at(b) * A.at(b+1); return res; }
 
-    //MPS: Constructors --------------------------------------------
+    //MPSt: Constructors --------------------------------------------
 
-    MPS() 
+    MPSt() 
     : N(0), model_(0), doRelCutoff_(false), refNorm_(1), 
     minm(1), maxm(MAX_M), cutoff(MAX_CUT)
     { }
 
-    MPS(const ModelT& mod_,int maxmm = MAX_M, Real cut = MAX_CUT) 
+    MPSt(const ModelT& mod_,int maxmm = MAX_M, Real cut = MAX_CUT) 
     : N(mod_.NN()), A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
     model_(&mod_), doRelCutoff_(false), refNorm_(1), 
     minm(1), maxm(maxmm), cutoff(cut)
 	{ random_tensors(A); }
 
-    MPS(const ModelT& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MAX_CUT) 
+    MPSt(const ModelT& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MAX_CUT) 
     : N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(2),
     model_(&mod_), doRelCutoff_(false), refNorm_(1), 
     minm(1), maxm(maxmm), cutoff(cut)
 	{ init_tensors(A,initState); }
 
-    MPS(const ModelT& model, istream& s) { read(model,s); }
+    MPSt(const ModelT& model, istream& s) { read(model,s); }
 
-    virtual ~MPS() { }
+    virtual ~MPSt() { }
 
     void read(const ModelT& model, istream& s)
     {
@@ -421,22 +419,22 @@ public:
     }
 
 
-    //MPS: operators ------------------------------------------------------
+    //MPSt: operators ------------------------------------------------------
 
-    MPS& operator*=(Real a)
+    MPSt& operator*=(Real a)
     {
         AAnc(left_orth_lim+1) *= a;
         return *this;
     }
-    inline MPS operator*(Real r) const { MPS res(*this); res *= r; return res; }
-    friend inline MPS operator*(Real r, MPS res) { res *= r; return res; }
+    inline MPSt operator*(Real r) const { MPSt res(*this); res *= r; return res; }
+    friend inline MPSt operator*(Real r, MPSt res) { res *= r; return res; }
 
-    MPS& operator+=(const MPS& oth);
-    inline MPS operator+(MPS res) const { res += *this; return res; }
-    //friend inline MPS operator+(MPS A, const MPS& B) { A += B; return A; }
-    inline MPS operator-(MPS res) const { res *= -1; res += *this; return res; }
+    MPSt& operator+=(const MPSt& oth);
+    inline MPSt operator+(MPSt res) const { res += *this; return res; }
+    //friend inline MPSt operator+(MPSt A, const MPSt& B) { A += B; return A; }
+    inline MPSt operator-(MPSt res) const { res *= -1; res += *this; return res; }
 
-    //MPS: index methods --------------------------------------------------
+    //MPSt: index methods --------------------------------------------------
 
     void mapprime(int oldp, int newp, PrimeType pt = primeBoth)
 	{ for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,pt); }
@@ -451,7 +449,7 @@ public:
     IndexT RightLinkInd(int i) const { assert(i<NN()); return index_in_common(AA(i),AA(i+1),Link); }
     IndexT LeftLinkInd(int i)  const { assert(i>1); return index_in_common(AA(i),AA(i-1),Link); }
 
-    //MPS: orthogonalization methods -------------------------------------
+    //MPSt: orthogonalization methods -------------------------------------
 
     virtual void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
 	{
@@ -521,7 +519,7 @@ public:
 
     int ortho_center() const 
     { 
-        if(!is_ortho()) Error("MPS: orthogonality center not well defined.");
+        if(!is_ortho()) Error("orthogonality center not well defined.");
         return (left_orth_lim + 1);
     }
 
@@ -581,21 +579,22 @@ public:
         if(dir == Fromleft) if(left_orth_lim == j-1 || j == 1) left_orth_lim = j;
         else if(right_orth_lim == j+1 || j == N) right_orth_lim = j;
 
-        if(do_signfix) Error("MPS::getCenter: do_signfix not implemented.");
+        if(do_signfix) Error("do_signfix not implemented.");
     }
 
     template<class TensorSet>
-    Real bondDavidson(int b, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Direction dir, Real errgoal=1E-4)
+    Real bondDavidson(int b, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, 
+    int niter, int debuglevel, Direction dir, Real errgoal=1E-4)
     {
         if(b-1 > left_orth_lim)
         {
-            cerr << format("MPS::bondDavidson: b=%d, Lb=%d\n")%b%left_orth_lim;
-            Error("MPS::bondDavidson: b > left_orth_lim");
+            cerr << format("b=%d, Lb=%d\n")%b%left_orth_lim;
+            Error("b > left_orth_lim");
         }
         if(b+2 < right_orth_lim)
         {
-            cerr << format("MPS::bondDavidson: b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
-            Error("MPS::bondDavidson: b+1 < right_orth_lim");
+            cerr << format("b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
+            Error("b+1 < right_orth_lim");
         }
         Tensor phi = GET(A,b); phi *= GET(A,b+1);
         Real En = doDavidson(phi,mpoh,LH,RH,niter,debuglevel,errgoal);
@@ -643,7 +642,7 @@ public:
     bool is_complex() const
     { return A[left_orth_lim+1].is_complex(); }
 
-    friend inline ostream& operator<<(ostream& s, const MPS& M)
+    friend inline ostream& operator<<(ostream& s, const MPSt& M)
     {
         s << "\n";
         for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
@@ -873,7 +872,7 @@ public:
 
     } //void convertToIQ(IQMPSType& iqpsi) const
 
-}; //class MPS<Tensor>
+}; //class MPSt<Tensor>
 
 namespace {
 void plussers(const Index& l1, const Index& l2, Index& sumind, ITensor& first, ITensor& second)
@@ -922,38 +921,9 @@ void plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind, IQTensor& f
 }
 } //anonymous namespace
 
-template <class Tensor>
-MPS<Tensor>& MPS<Tensor>::operator+=(const MPS<Tensor>& other)
-{
-    primelinks(0,4);
 
-    vector<Tensor> first(N), second(N);
-    for(int i = 1; i < N; ++i)
-    {
-        IndexT l1 = this->RightLinkInd(i);
-        IndexT l2 = other.RightLinkInd(i);
-        IndexT r(l1.rawname());
-        plussers(l1,l2,r,first[i],second[i]);
-    }
-
-    AAnc(1) = AA(1) * first[1] + other.AA(1) * second[1];
-    for(int i = 2; i < N; ++i)
-    {
-        AAnc(i) = conj(first[i-1]) * AA(i) * first[i] + conj(second[i-1]) * other.AA(i) * second[i];
-    }
-    AAnc(N) = conj(first[N-1]) * AA(N) + conj(second[N-1]) * other.AA(N);
-
-    noprimelink();
-
-    position(N);
-    position(1);
-
-    return *this;
-}
-
-} //namespace Internal
-typedef Internal::MPS<ITensor> MPS;
-typedef Internal::MPS<IQTensor> IQMPS;
+typedef MPSt<ITensor> MPS;
+typedef MPSt<IQTensor> IQMPS;
 
 template<class Tensor>
 extern Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, 

@@ -48,10 +48,10 @@ public:
 
     Tensor unit(int i) const { return Tensor(si(i),si(i).primed(),1); }
 
-    void getidentity(Real factor, MPO<ITensor>& res)
+    void getidentity(Real factor, MPOt<ITensor>& res)
 	{
         newlinks(currentlinks);
-        res = MPO<ITensor>(iss,res.maxm,res.cutoff);
+        res = MPOt<ITensor>(iss,res.maxm,res.cutoff);
         res.AAnc(1) = unit(1); res.AAnc(1).addindex1(GET(currentlinks,1));
         res.AAnc(1) *= factor;
         res.AAnc(N) = unit(N); res.AAnc(N).addindex1(GET(currentlinks,N-1));
@@ -63,7 +63,7 @@ public:
         }
 	}
 
-    void getMPO(Real factor, int i, Tensor op, MPO<ITensor>& res)
+    void getMPO(Real factor, int i, Tensor op, MPOt<ITensor>& res)
 	{
         getidentity(1,res);
         res.AAnc(i) = op;
@@ -72,7 +72,7 @@ public:
         res *= factor;
 	}
 
-    void getMPO(Real factor, int i1, Tensor op1, int i2, Tensor op2, MPO<ITensor>& res)
+    void getMPO(Real factor, int i1, Tensor op1, int i2, Tensor op2, MPOt<ITensor>& res)
 	{
         if(i1 == i2) Error("HamBuilder::getMPO: i1 cannot equal i2.");
         getMPO(1,i2,op2,res);
@@ -83,7 +83,7 @@ public:
 	}
 
     template <typename Iterable1, typename Iterable2>
-    void getMPO(Real factor, Iterable1 sites, Iterable2 ops, MPO<ITensor>& res)
+    void getMPO(Real factor, Iterable1 sites, Iterable2 ops, MPOt<ITensor>& res)
 	{
         for(int i = 0; i < (int) sites.size(); ++i)
         for(int j = 0; j < (int) sites.size(); ++j)

@@ -2,10 +2,9 @@
 #define __MPO_H
 #include "mps.h"
 
-namespace Internal {
 
 template<class Tensor>
-class MPO : private MPS<Tensor>
+class MPOt : private MPSt<Tensor>
 {
 public:
     typedef Tensor TensorT;
@@ -13,7 +12,7 @@ public:
     typedef typename Tensor::IndexValT IndexValT;
     typedef typename Tensor::CombinerT CombinerT;
 private:
-    typedef MPS<Tensor> Parent;
+    typedef MPSt<Tensor> Parent;
     using Parent::N;
     using Parent::A;
     using Parent::left_orth_lim;
@@ -26,9 +25,9 @@ public:
     using Parent::minm;
     using Parent::maxm;
 
-    operator MPO<IQTensor>()
+    operator MPOt<IQTensor>()
     { 
-        MPO<IQTensor> res(*model_,maxm,cutoff,doRelCutoff_,refNorm_); 
+        MPOt<IQTensor> res(*model_,maxm,cutoff,doRelCutoff_,refNorm_); 
         res.minm = minm;
         convertToIQ(*model_,A,res.A);
         return res; 
@@ -55,41 +54,41 @@ public:
     using Parent::doRelCutoff;
     using Parent::refNorm;
 
-    //MPO: Constructors -----------------------------------------
+    //MPOt: Constructors -----------------------------------------
 
-    MPO() : Parent() { }
+    MPOt() : Parent() { doRelCutoff_ = true; }
 
-    MPO(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, 
+    MPOt(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, 
     bool doRelCutoff = true, Real refNorm = DefaultRefScale) 
     : Parent(model,maxm_,cutoff_)
 	{ 
         doRelCutoff_ = doRelCutoff;
         refNorm_ = refNorm;
-        if(refNorm_ == 0) Error("MPO<Tensor>: Setting refNorm_ to zero");
+        if(refNorm_ == 0) Error("MPOt<Tensor>: Setting refNorm_ to zero");
         // Norm of psi^2 = 1 = norm = sum of denmat evals. 
         // This translates to Tr{Adag A} = norm.  
         // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
         if(refNorm_ == DefaultRefScale) refNorm_ = exp(model.NN());
 	}
 
-    MPO(BaseModel& model, istream& s) { read(model,s); }
+    MPOt(BaseModel& model, istream& s) { read(model,s); }
 
-    virtual ~MPO() { }
+    virtual ~MPOt() { }
 
     using Parent::read;
     using Parent::write;
 
-    //MPO: operators ------------------------------------------------------
+    //MPOt: operators ------------------------------------------------------
 
-    MPO& operator*=(Real a) { Parent::operator*=(a); return *this; }
-    inline MPO operator*(Real r) const { MPO res(*this); res *= r; return res; }
-    friend inline MPO operator*(Real r, MPO res) { res *= r; return res; }
+    MPOt& operator*=(Real a) { Parent::operator*=(a); return *this; }
+    inline MPOt operator*(Real r) const { MPOt res(*this); res *= r; return res; }
+    friend inline MPOt operator*(Real r, MPOt res) { res *= r; return res; }
 
-    MPO& operator+=(const MPO& oth) { Parent::operator+=(oth); return *this; }
-    inline MPO operator+(MPO res) const { res += *this; return res; }
-    inline MPO operator-(MPO res) const { res *= -1; res += *this; return res; }
+    MPOt& operator+=(const MPOt& oth) { Parent::operator+=(oth); return *this; }
+    inline MPOt operator+(MPOt res) const { res += *this; return res; }
+    inline MPOt operator-(MPOt res) const { res *= -1; res += *this; return res; }
 
-    //MPO: index methods --------------------------------------------------
+    //MPOt: index methods --------------------------------------------------
 
     using Parent::mapprime;
     using Parent::primelinks;
@@ -135,7 +134,7 @@ public:
 
     using Parent::applygate;
 
-    friend inline ostream& operator<<(ostream& s, const MPO& M)
+    friend inline ostream& operator<<(ostream& s, const MPOt& M)
     {
         s << "\n";
         for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
@@ -145,12 +144,11 @@ public:
     using Parent::print;
 
 private:
-    friend class MPO<ITensor>;
-    friend class MPO<IQTensor>;
-}; //class MPO<Tensor>
-} //namespace Internal
-typedef Internal::MPO<ITensor> MPO;
-typedef Internal::MPO<IQTensor> IQMPO;
+    friend class MPOt<ITensor>;
+    friend class MPOt<IQTensor>;
+}; //class MPOt<Tensor>
+typedef MPOt<ITensor> MPO;
+typedef MPOt<IQTensor> IQMPO;
 
 
 namespace Internal {
@@ -165,29 +163,29 @@ public:
 
     MPOSet() : N(-1), size_(0) { }
 
-    MPOSet(const MPS<Tensor>& Op1) 
+    MPOSet(const MPOt<Tensor>& Op1) 
     : N(-1), size_(0) 
     { include(Op1); }
 
-    MPOSet(const MPS<Tensor>& Op1, 
-           const MPS<Tensor>& Op2) 
+    MPOSet(const MPOt<Tensor>& Op1, 
+           const MPOt<Tensor>& Op2) 
     : N(-1), size_(0) 
     { include(Op1); include(Op2); }
 
-    MPOSet(const MPS<Tensor>& Op1, 
-           const MPS<Tensor>& Op2,
-           const MPS<Tensor>& Op3) 
+    MPOSet(const MPOt<Tensor>& Op1, 
+           const MPOt<Tensor>& Op2,
+           const MPOt<Tensor>& Op3) 
     : N(-1), size_(0) 
     { include(Op1); include(Op2); include(Op3); }
 
-    MPOSet(const MPS<Tensor>& Op1, 
-           const MPS<Tensor>& Op2,
-           const MPS<Tensor>& Op3, 
-           const MPS<Tensor>& Op4) 
+    MPOSet(const MPOt<Tensor>& Op1, 
+           const MPOt<Tensor>& Op2,
+           const MPOt<Tensor>& Op3, 
+           const MPOt<Tensor>& Op4) 
     : N(-1), size_(0) 
     { include(Op1); include(Op2); include(Op3); include(Op4); }
 
-    void include(const MPS<Tensor>& Op)
+    void include(const MPOt<Tensor>& Op)
     {
         if(N < 0) { N = Op.NN(); A.resize(N+1); }
         for(int n = 1; n <= N; ++n) GET(A,n).push_back(&(Op.AA(n))); 
