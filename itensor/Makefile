@@ -16,8 +16,9 @@ SOURCES=itensor.cc iqtensor.cc mps.cc mpo.cc
 
 INCLUDEFLAGS=-I$(INCLUDEDIR) -I$(BOOST_DIR)
 
-CCFLAGS= $(INCLUDEFLAGS) -O2 -DNDEBUG -DBOOST_DISABLE_ASSERTS
-CCGFLAGS= $(INCLUDEFLAGS) -ansi -Wall -pedantic -g -O0 -DBOUNDS -DITENSOR_USE_AT -Wno-long-long -DMATRIXBOUNDS
+CCFLAGS= $(INCLUDEFLAGS) -O2
+CCGFLAGS= $(INCLUDEFLAGS) -ansi -Wall -pedantic -Wno-long-long -g -O0\
+ -DDEBUG -DBOUNDS -DMATRIXBOUNDS
 
 GOBJECTS= $(patsubst %,.debug_objs/%, $(OBJECTS))
 

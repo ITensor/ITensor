@@ -6,6 +6,7 @@
 enum Direction { Fromright, Fromleft, Both, None };
 
 static const LogNumber DefaultRefScale(7.58273202392352185);
+extern bool showeigs;
 
 Vector do_denmat_Real(const ITensor& nA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir);
 Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir);
@@ -1096,6 +1097,7 @@ void sum(const vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, int max
 #ifdef THIS_IS_MAIN
 Real truncerror = 0.0;
 Real svdtruncerr = 0.0;
+bool showeigs = false;
 #endif
 
 #endif

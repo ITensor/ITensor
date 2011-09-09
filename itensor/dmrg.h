@@ -373,7 +373,8 @@ Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOp
         {
             if(!opts.quiet) cout << format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % b % (b+1);
 
-            energy = psi.bondDavidson(b,H.bondTensor(b),PH[b],PH[b+1],sweeps.niter(sw),debuglevel,(ha==1?Fromleft:Fromright));
+            energy = psi.bondDavidson(b,H.bondTensor(b),PH[b],PH[b+1],
+                     sweeps.niter(sw),debuglevel,(ha==1?Fromleft:Fromright));
 
             if(!opts.quiet) { cout << format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
                                       % sweeps.cutoff(sw) % sweeps.maxm(sw) % psi.LinkInd(b).showm(); }

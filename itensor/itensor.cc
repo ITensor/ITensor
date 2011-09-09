@@ -725,7 +725,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
 
     //Fill in new_index_
 
-#ifndef NDEBUG
+#ifdef DEBUG
     if((rn_ + other.rn_ - 2*nsamen + nr1_) > NMAX) 
     {
         Print(*this);

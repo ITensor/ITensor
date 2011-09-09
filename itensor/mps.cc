@@ -28,6 +28,10 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
 
     return *this;
 }
+template
+MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
+template
+MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
 
 void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, 
 ITensor& nU, Vector& D, 
@@ -48,6 +52,19 @@ bool doRelCutoff = false, Real refNorm = 1)
     int mp = D.Length();
     while(mp > maxm || (err+D(mp) < cutoff*D(1) && mp > minm)) err += D(mp--);
     svdtruncerr = (D(1) == 0 ? 0.0 : err/D(1));
+    if(showeigs)
+    {
+        cout << format("\nKept %d states in diag_denmat\n")% mp;
+        cout << format("svdtruncerr = %.2E\n")%svdtruncerr;
+        int stop = min(D.Length(),10);
+        cout << "Eigs: ";
+        for(int j = 1; j <= stop; ++j)
+        {
+            cout << format(D(j) > 1E-3 ? ("%.3f") : ("%.3E")) % D(j);
+            cout << ((j != stop) ? ", " : "\n");
+        }
+    }
+
     D.ReduceDimension(mp); lastd = D;
     Index newmid(active.rawname(),mp,active.type());
     nU = ITensor(active,newmid,U.Columns(1,mp));
@@ -124,18 +141,33 @@ bool doRelCutoff = false, LogNumber refNorm = 1)
     int mdisc = 0, m = (int)alleig.size();
     if(m > minm)
     for(; mdisc < (int)alleig.size(); mdisc++, m--){
-    if(((svdtruncerr += GET(alleig,mdisc)/e1) > cutoff && m <= maxm) || m <= minm)
+    if(((svdtruncerr += GET(alleig,mdisc)/e1) > cutoff && m <= maxm) 
+       || m <= minm)
     { 
-        docut = (mdisc > 0
-                    ? (GET(alleig,mdisc-1) + GET(alleig,mdisc))*0.5 
-                    : 0);
+        if(mdisc > 0)
+             { docut = (GET(alleig,mdisc-1) + GET(alleig,mdisc))*0.5; }
+        else { docut = 0; }
+
+        //Overshot by one, correct truncerr
         svdtruncerr -= GET(alleig,mdisc)/e1;
+
         break; 
     }}
-    //cerr << format("\nDiscarded %d, kept %d states in diag_denmat\n")
-    //                % mdisc % m;
-    //cerr << format("svdtruncerr = %.2E\n")%svdtruncerr;
-    //cerr << format("docut = %.2E\n")%docut;
+    if(showeigs)
+    {
+        cout << format("\nKept %d, discarded %d states in diag_denmat\n")
+                        % m % mdisc;
+        cout << format("svdtruncerr = %.2E\n")%svdtruncerr;
+        cout << format("docut = %.2E\n")%docut;
+        int s = alleig.size();
+        int stop = s-min(s,10);
+        cout << "Eigs: ";
+        for(int j = s-1; j >= stop; --j)
+        {
+            cout << format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) % alleig[j];
+            cout << ((j != stop) ? ", " : "\n");
+        }
+    }
 
     assert(m <= maxm); 
     assert(m < 20000);

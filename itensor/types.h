@@ -21,17 +21,23 @@ static const int MAX_M = 5000;
 //For bounds checking - can remove once implementation is tested
 //#define ITENSOR_USE_AT
 
-#ifdef  ITENSOR_USE_AT
-#define GET(container,j) (container.at(j))
-#else
-#define GET(container,j) (container[j])
-#endif
 //----------------------------------
 
-#ifndef NDEBUG
+#ifndef DEBUG
+#define NDEBUG //turn off asserts
+#define BOOST_DISABLE_ASSERTS //turn off asserts
+#endif
+
+#ifdef DEBUG
 #define DO_IF_DEBUG(X) X
 #else
 #define DO_IF_DEBUG(X)
+#endif
+
+#ifdef DEBUG
+#define GET(container,j) (container.at(j))
+#else
+#define GET(container,j) (container[j])
 #endif
 
 //---------------------------------------
