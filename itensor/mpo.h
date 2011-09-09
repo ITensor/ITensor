@@ -19,7 +19,8 @@ private:
     using Parent::left_orth_lim;
     using Parent::right_orth_lim;
     using Parent::model_;
-    Real refScale_;
+    using Parent::doRelCutoff_;
+    using Parent::refNorm_;
 public:
     using Parent::cutoff;
     using Parent::minm;
@@ -27,10 +28,7 @@ public:
 
     operator MPO<IQTensor>()
     { 
-        //MPO<IQTensor> res(*(this->model_),this->maxm,this->cutoff,refScale_); 
-        //res.minm = this->minm;
-        //convertToIQ(*(this->model_),this->A,res.A);
-        MPO<IQTensor> res(*model_,maxm,cutoff,refScale_); 
+        MPO<IQTensor> res(*model_,maxm,cutoff,doRelCutoff_,refNorm_); 
         res.minm = minm;
         convertToIQ(*model_,A,res.A);
         return res; 
@@ -54,39 +52,32 @@ public:
     using Parent::AAnc;
     using Parent::bondTensor;
 
-    // Norm of psi^2 = 1 = norm = sum of denmat evals. 
-    // This translates to Tr{Adag A} = norm.  
-    // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
-    Real lref() const { return refScale_; }
-    void lref(Real val) 
-	{  if(val == 0) { Error("bad lref"); } refScale_ = val; }
+    using Parent::doRelCutoff;
+    using Parent::refNorm;
 
     //MPO: Constructors -----------------------------------------
 
-    MPO() : Parent(), refScale_(DefaultRefScale) { }
+    MPO() : Parent() { }
 
-    MPO(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, Real refScale = DefaultRefScale) 
-    : Parent(model,maxm_,cutoff_), refScale_(refScale)
+    MPO(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, 
+    bool doRelCutoff = true, Real refNorm = DefaultRefScale) 
+    : Parent(model,maxm_,cutoff_)
 	{ 
-        if(refScale == 0) Error("MPO<Tensor>: Setting refScale_ to zero");
-        if(refScale == DefaultRefScale) refScale_ = exp(model.NN());
+        doRelCutoff_ = doRelCutoff;
+        refNorm_ = refNorm;
+        if(refNorm_ == 0) Error("MPO<Tensor>: Setting refNorm_ to zero");
+        // Norm of psi^2 = 1 = norm = sum of denmat evals. 
+        // This translates to Tr{Adag A} = norm.  
+        // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
+        if(refNorm_ == DefaultRefScale) refNorm_ = exp(model.NN());
 	}
 
     MPO(BaseModel& model, istream& s) { read(model,s); }
 
     virtual ~MPO() { }
 
-    void read(const BaseModel& model, istream& s)
-    {
-        Parent::read(model,s);
-        s.read((char*) &refScale_,sizeof(refScale_));
-    }
-
-    void write(ostream& s) const
-    {
-        Parent::write(s);
-        s.write((char*) &refScale_,sizeof(refScale_));
-    }
+    using Parent::read;
+    using Parent::write;
 
     //MPO: operators ------------------------------------------------------
 
@@ -122,7 +113,8 @@ public:
 
     virtual void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
 	{
-        tensorSVD(AA,AAnc(i),AAnc(i+1),cutoff,minm,maxm,dir,refScale_);
+        tensorSVD(AA,AAnc(i),AAnc(i+1),cutoff,minm,maxm,dir,
+                  doRelCutoff_,refNorm_);
         truncerror = svdtruncerr;
 
         if(dir == Fromleft)

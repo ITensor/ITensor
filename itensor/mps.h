@@ -273,6 +273,8 @@ protected:
     vector<Tensor> A;
     int left_orth_lim,right_orth_lim;
     const ModelT* model_;
+    bool doRelCutoff_;
+    Real refNorm_;
 
     void new_tensors(vector<ITensor>& A_)
     {
@@ -358,20 +360,33 @@ public:
     bool is_null() const { return (model_==0); }
     bool is_not_null() const { return (model_!=0); }
 
-    Tensor bondTensor(int b) const { Tensor res = A.at(b) * A.at(b+1); return res; }
+    bool doRelCutoff() const { return doRelCutoff_; }
+    void doRelCutoff(bool val) 
+        { doRelCutoff_ = val; }
+    Real refNorm() const { return refNorm_; }
+    void refNorm(Real val) 
+        { if(val == 0) { Error("zero refNorm"); } refNorm_ = val; }
+
+    Tensor bondTensor(int b) const 
+        { Tensor res = A.at(b) * A.at(b+1); return res; }
 
     //MPS: Constructors --------------------------------------------
 
-    MPS() : N(0), model_(0), minm(1), maxm(MAX_M), cutoff(MAX_CUT) {}
+    MPS() 
+    : N(0), model_(0), doRelCutoff_(false), refNorm_(1), 
+    minm(1), maxm(MAX_M), cutoff(MAX_CUT)
+    { }
 
     MPS(const ModelT& mod_,int maxmm = MAX_M, Real cut = MAX_CUT) 
-		: N(mod_.NN()), A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
-        model_(&mod_), minm(1), maxm(maxmm), cutoff(cut)
+    : N(mod_.NN()), A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
+    model_(&mod_), doRelCutoff_(false), refNorm_(1), 
+    minm(1), maxm(maxmm), cutoff(cut)
 	{ random_tensors(A); }
 
     MPS(const ModelT& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MAX_CUT) 
-		: N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(2),
-        model_(&mod_), minm(1), maxm(maxmm), cutoff(cut)
+    : N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(2),
+    model_(&mod_), doRelCutoff_(false), refNorm_(1), 
+    minm(1), maxm(maxmm), cutoff(cut)
 	{ init_tensors(A,initState); }
 
     MPS(const ModelT& model, istream& s) { read(model,s); }
@@ -389,6 +404,8 @@ public:
         s.read((char*) &minm,sizeof(minm));
         s.read((char*) &maxm,sizeof(maxm));
         s.read((char*) &cutoff,sizeof(cutoff));
+        s.read((char*) &doRelCutoff_,sizeof(doRelCutoff_));
+        s.read((char*) &refNorm_,sizeof(refNorm_));
     }
 
     void write(ostream& s) const
@@ -399,6 +416,8 @@ public:
         s.write((char*) &minm,sizeof(minm));
         s.write((char*) &maxm,sizeof(maxm));
         s.write((char*) &cutoff,sizeof(cutoff));
+        s.write((char*) &doRelCutoff_,sizeof(doRelCutoff_));
+        s.write((char*) &refNorm_,sizeof(refNorm_));
     }
 
 
@@ -939,8 +958,8 @@ typedef Internal::MPS<IQTensor> IQMPS;
 template<class Tensor>
 extern Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, 
                         Real cutoff, int minm, int maxm, 
-                        Direction dir, 
-                        LogNumber refScale = DefaultRefScale);
+                        Direction dir, bool doRelCutoff = false,
+                        LogNumber refNorm = 1);
 
 inline bool check_QNs(const MPS& psi) { return true; }
 

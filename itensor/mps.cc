@@ -1,11 +1,13 @@
 #include "mps.h"
 
-void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& nU, Vector& D, Real refScale = DefaultRefScale)
+void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, 
+ITensor& nU, Vector& D, 
+bool doRelCutoff = false, Real refNorm = 1)
 {
     assert(rho.r() == 2);
     Index active = rho.index(1); active.noprime();
 
-    //if(refScale != DefaultRefScale) rho.scaleTo(refScale);
+    if(!doRelCutoff) rho.scaleTo(refNorm);
 
     //Do the diagonalization
     Index ri = rho.index(1); ri.noprime();
@@ -22,7 +24,9 @@ void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, ITensor& n
     nU = ITensor(active,newmid,U.Columns(1,mp));
 }
 
-void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor& nU, Vector& eigs_kept, LogNumber refScale = DefaultRefScale)
+void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, 
+IQTensor& nU, Vector& eigs_kept, 
+bool doRelCutoff = false, LogNumber refNorm = 1)
 {
     IQIndex active = rho.finddir(Out);
     assert(active.primelevel == 0);
@@ -31,20 +35,21 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor&
     vector<Vector> mvector(rho.iten_size());
     vector<Real> alleig;
 
-    if(refScale == DefaultRefScale) 
+    if(doRelCutoff)
     {
-        Real maxLogNum = -50;
+        DO_IF_DEBUG(cerr << "\n\nDoing relative cutoff\n\n\n";)
+
+        Real maxLogNum = -200;
         foreach(const ITensor& t, rho.itensors())
         { maxLogNum = max(maxLogNum,t.scale().logNum()); }
-        assert(maxLogNum > -50);
-        assert(maxLogNum <  50);
-        refScale = LogNumber(maxLogNum,1);
+        assert(maxLogNum > -200);
+        assert(maxLogNum <  200);
+        refNorm = LogNumber(maxLogNum,1);
     }
 
-    //cerr << format("refScale = %.1E (lognum = %f, sign = %d)\n")
-    //%Real(refScale)%refScale.logNum()%refScale.sign();
+    //cerr << format("refNorm = %.1E (lognum = %f, sign = %d)\n\n")
+    //%Real(refNorm)%refNorm.logNum()%refNorm.sign();
 
-//#define USE_REFSCALE
 
     //1. Diagonalize each ITensor within rho
     int itenind = 0;
@@ -63,18 +68,17 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor&
         //Diag ITensors within rho
         int n = t.index(1).m();
         Matrix M(n,n);
-#ifdef USE_REFSCALE
-        t.toMatrix11NoScale(t.index(2),t.index(1),M);
-#else
-        t.toMatrix11(t.index(2),t.index(1),M);
-#endif
+        t.toMatrix11NoScale(t.index(1),t.index(2),M);
 
         M *= -1;
         EigenValues(M,d,U);
         d *= -1;
 
+        //if(itenind == 1) Print(U.t()*U);
+        //Print(d);
+
         for(int j = 1; j <= n; ++j) 
-        { alleig.push_back(d(j)); }
+            { alleig.push_back(d(j)); }
         ++itenind;
 	}
 
@@ -86,18 +90,23 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor&
 
     //Truncate
     Real e1 = max(alleig.back(),1.0e-60), docut = 0;
+    //cerr << format("e1 = %.10f\n")%e1;
     svdtruncerr = 0;
-    int m = 0, mkeep = (int)alleig.size();
-    if(mkeep > minm)
-    for(; m < (int)alleig.size(); m++, mkeep--){
-    if(((svdtruncerr += GET(alleig,m)/e1) > cutoff && mkeep <= maxm) || mkeep <= minm)
+    int mdisc = 0, m = (int)alleig.size();
+    if(m > minm)
+    for(; mdisc < (int)alleig.size(); mdisc++, m--){
+    if(((svdtruncerr += GET(alleig,mdisc)/e1) > cutoff && m <= maxm) || m <= minm)
     { 
-        docut = (m > 0 ?  (GET(alleig,m-1) + GET(alleig,m))*0.5 : 0);
-        svdtruncerr -= GET(alleig,m)/e1;
+        docut = (mdisc > 0
+                    ? (GET(alleig,mdisc-1) + GET(alleig,mdisc))*0.5 
+                    : 0);
+        svdtruncerr -= GET(alleig,mdisc)/e1;
         break; 
     }}
-    //cerr << "\nDiscarded " << m << " states in diag_denmat\n";
-    m = (int)alleig.size()-m;
+    //cerr << format("\nDiscarded %d, kept %d states in diag_denmat\n")
+    //                % mdisc % m;
+    //cerr << format("svdtruncerr = %.2E\n")%svdtruncerr;
+    //cerr << format("docut = %.2E\n")%docut;
 
     assert(m <= maxm); 
     assert(m < 20000);
@@ -109,16 +118,26 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor&
     for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
 	{
         const ITensor& t = *it;
+        //PrintDat(t);
         const Vector& thisD = GET(mvector,itenind);
+
+        //cerr << "thisD = "; 
+        //for(int j = 1; j <= thisD.Length(); ++j)
+        //    cerr << format("%.2E ")%thisD(j);
+        //cerr << "\n";
+        //Print(thisD.Length());
+
         int this_m = 1;
         for(; this_m <= thisD.Length(); ++this_m)
-        if(thisD(this_m) < docut) { break; }
-
-        if(mkeep == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
-        { this_m = 2; mkeep = 1; docut = 1; }
+            if(thisD(this_m) < docut) { break; }
         --this_m; //since for loop overshoots by 1
 
+        if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
+            { this_m = 1; m = 1; docut = 1; }
+
         if(this_m == 0) { ++itenind; continue; }
+
+        //Print(this_m);
 
         Index nm("qlink",this_m);
         Index act = t.index(1).deprimed();
@@ -126,10 +145,11 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor&
 
         Matrix UU = GET(mmatrix,itenind).Columns(1,this_m);
 
+        //if(itenind == 1)
+        //    Print(UU.t()*UU);
+
         ITensor term(act,nm); term.fromMatrix11(act,nm,UU); 
-#ifdef USE_REFSCALE
-        term *= refScale;
-#endif
+        //PrintDat(term);
         terms.push_back(term);
 
         ++itenind;
@@ -145,7 +165,8 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, IQTensor&
 
 template<class Tensor>
 Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, 
-Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale)
+Real cutoff, int minm, int maxm, Direction dir, 
+bool doRelCutoff, LogNumber refNorm)
 {
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::CombinerT CombinerT;
@@ -172,7 +193,8 @@ Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale)
     { 
         const IndexT& I = to_orth.index(j);
         //if(I.type() == Link) debug2 = true;
-        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex || I.type() == Virtual))
+        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex 
+             || I.type() == Virtual))
         {
             if(I.type() == Link) ++unique_link;
             //cerr << "Adding left index " << I << "\n";
@@ -188,7 +210,8 @@ Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale)
         assert(comb.check_init());
         comb.product(AA,newoc);
         to_orth = comb; to_orth.conj();
-        Vector eigs_kept(comb.right().m()); eigs_kept = 1.0/comb.right().m();
+        Vector eigs_kept(comb.right().m()); 
+        eigs_kept = 1.0/comb.right().m();
         return eigs_kept; 
     }
 
@@ -196,26 +219,6 @@ Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale)
     comb.doCondense(true);
     comb.init(mid.rawname());
     Tensor AAc; comb.product(AA,AAc);
-
-    /*
-    cerr << "WARNING: checking norms -- slow\n";
-
-    if(fabs(AA.norm()-AAc.norm())/AA.norm() > 1E-5)
-    {
-        cerr << format("AA.norm() = %.10f\n")%AA.norm();
-        cerr << format("AAc.norm() = %.10f\n")%AAc.norm();
-        cerr << format("rel diff = %.10f\n")%(fabs(AA.norm()-AAc.norm())/AA.norm());
-        Error("Incorrect norm for combined tensor.");
-    }
-
-    if(fabs(AA.sumels()-AAc.sumels())/fabs(AA.sumels()) > 1E-5)
-    {
-        Print(AA.sumels());
-        Print(AAc.sumels());
-        cerr << format("rel diff = %.3E\n")%(fabs(AA.sumels()-AAc.sumels())/fabs(AA.sumels()));
-        Error("Incorrect total for condensed tensor.");
-    }
-    */
 
     assert(LogNumber(AAc.norm()).isFinite());
 
@@ -248,7 +251,8 @@ Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale)
     assert(rho.r() == 2);
 
     Tensor U; Vector eigs_kept;
-    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept,refScale);
+    diag_denmat(rho,cutoff,minm,maxm,U,
+                eigs_kept,doRelCutoff,refNorm);
 
     comb.conj();
     comb.product(U,to_orth);
@@ -256,9 +260,14 @@ Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale)
 
     return eigs_kept;
 }
-template Vector tensorSVD<ITensor>(const ITensor& AA, ITensor& A, ITensor& B, Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale);
-template Vector tensorSVD<IQTensor>(const IQTensor& AA, IQTensor& A, IQTensor& B, Real cutoff, int minm, int maxm, Direction dir, LogNumber refScale);
-
+template Vector 
+tensorSVD<ITensor>(const ITensor& AA, ITensor& A, ITensor& B, 
+                   Real cutoff, int minm, int maxm, Direction dir, 
+                   bool doRelCutoff, LogNumber refScale);
+template Vector 
+tensorSVD<IQTensor>(const IQTensor& AA, IQTensor& A, IQTensor& B, 
+                   Real cutoff, int minm, int maxm, Direction dir, 
+                   bool doRelCutoff, LogNumber refScale);
 
 /*
 Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTensor& B, IQTensor& U,

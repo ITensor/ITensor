@@ -243,6 +243,7 @@ class IQIndex : public Index
     }
 public:
     const vector<inqn>& iq() const { assert(pd != 0); return pd->iq_; }
+    int nindex() const { return (int) pd->iq_.size(); }
     const Index& index(int i) const { assert(pd != 0); return GET(pd->iq_,i-1).index; }
     const QN& qn(int i) const { assert(pd != 0); return GET(pd->iq_,i-1).qn; }
 
@@ -412,7 +413,6 @@ public:
     //------------------------------------------
     //IQIndex: index container methods
 
-    int nindex() const { return (int) pd->iq_.size(); }
 
     const Index& findbyqn(QN q) const
 	{ 
