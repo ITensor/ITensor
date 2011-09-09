@@ -594,6 +594,19 @@ public:
         return res;
     }
 
+    void scaleOutNorm() const
+    {
+        Real f = norm();
+        foreach(const ITensor& t, p->itensor)
+            { t.scaleTo(f); }
+    }
+
+    void scaleTo(LogNumber newscale) const
+    {
+        foreach(const ITensor& t, p->itensor)
+            { t.scaleTo(newscale); }
+    }
+
     int vec_size() const
     {
         int s = 0;
