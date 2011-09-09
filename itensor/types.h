@@ -93,11 +93,21 @@ template<class T> T operator*(const T& t1, const T* pt2)
 
 template<class T>
 inline void readFromFile(const char* fname, T& t) 
-    { std::ifstream s(fname); t.read(s); s.close(); }
+{ 
+    std::ifstream s(fname); 
+    if(!s.good()) Error("Couldn't open file for reading");
+    t.read(s); 
+    s.close(); 
+}
 
 template<class T>
 inline void writeToFile(const char* fname, const T& t) 
-    { std::ofstream s(fname); t.write(s); s.close(); }
+{ 
+    std::ofstream s(fname); 
+    if(!s.good()) Error("Couldn't open file for writing");
+    t.write(s); 
+    s.close(); 
+}
 
 
 extern bool printdat;
