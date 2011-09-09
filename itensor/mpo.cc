@@ -91,7 +91,8 @@ void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm
         nfork = IQTensor(x.RightLinkInd(i),K.RightLinkInd(i),oldmid);
         if(clust.iten_size() == 0)	// this product gives 0 !!
         { res *= 0; return; }
-        tensorSVD(clust, res.AAnc(i), nfork,cutoff,1,maxm,Fromleft);
+        tensorSVD(clust, res.AAnc(i), nfork,
+                  cutoff,1,maxm,Fromleft,res.doRelCutoff(),res.refNorm());
         IQIndex mid = index_in_common(res.AA(i),nfork,Link);
         assert(mid.dir() == In);
         mid.conj();

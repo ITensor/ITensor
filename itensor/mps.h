@@ -481,7 +481,8 @@ public:
         //otherwise the MPS will retain the same index structure
         */
 
-        tensorSVD(AA,GET(A,i),GET(A,i+1),cutoff,minm,maxm,dir,1);
+        tensorSVD(AA,GET(A,i),GET(A,i+1),
+                  cutoff,minm,maxm,dir,doRelCutoff_,refNorm_);
         truncerror = svdtruncerr;
 
         if(dir == Fromleft)
@@ -928,8 +929,8 @@ typedef MPSt<IQTensor> IQMPS;
 template<class Tensor>
 extern Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, 
                         Real cutoff, int minm, int maxm, 
-                        Direction dir, bool doRelCutoff = false,
-                        LogNumber refNorm = 1);
+                        Direction dir, bool doRelCutoff,
+                        LogNumber refNorm);
 
 inline bool check_QNs(const MPS& psi) { return true; }
 
