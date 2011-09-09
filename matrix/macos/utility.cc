@@ -1335,7 +1335,7 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
     //assert(debug_norm < 1E-4);
 #endif
 
-    static __CLPK_integer iwork[100000];
+    //static __CLPK_integer iwork[100000];
     const char *jobz = "V";
     const char *uplo = "U";
     __CLPK_integer lda = A.Ncols();
@@ -1343,7 +1343,7 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
     __CLPK_integer info;
     D = A.Column(1);
     __CLPK_integer lwork = max(1, 1+6*n+2*n*n);
-    __CLPK_integer liwork = 3 + 5*n;
+    //__CLPK_integer liwork = 3 + 5*n;
     Vector Work(lwork);
     
 
@@ -1356,8 +1356,10 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
     //cerr << "3) Z = " << endl << Z << endl;
 
 
-    dsyevd_((char *)jobz, (char *)uplo, &n, Z.Store(), &lda, D.Store(), Work.Store(),
-          &lwork, iwork, &liwork, &info);
+    //mark
+    //dsyevd_((char *)jobz, (char *)uplo, &n, Z.Store(), &lda, D.Store(), Work.Store(),
+          //&lwork, iwork, &liwork, &info);
+    dsyev_((char*)jobz,(char*)uplo,&n,Z.Store(),&lda,D.Store(),Work.Store(),&lwork,&info);
     if(info != 0)
 	{
 	cerr << "info is " << info << endl;
