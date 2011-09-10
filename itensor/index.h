@@ -208,56 +208,57 @@ class Index
 {
 private:
     intrusive_ptr<IndexDat> p;
+    int primelevel_; 
 protected:
     void set_m(int newm) { p->m_ = newm; }
 public:
-    int primelevel; 
 
     inline int m() const { return p->m_; }
     uuid Ind() const { return p->ind; }
     inline IndexType type() const { return p->_type; }
 
-    std::string name() const  { return putprimes(rawname(),primelevel); }
+    std::string name() const  { return putprimes(rawname(),primelevel_); }
     std::string rawname() const { return p->sname; }
     void setname(std::string newname) { p->sname = newname; }
 
     inline std::string showm() const { return (boost::format("m=%d")%(p->m_)).str(); }
-    Real unique_Real() const { assert(p!=0); return p->ur*(1+primelevel); }
+    Real unique_Real() const { return p->ur*(1+primelevel_); }
     inline bool is_null() const { return (p == &IndexDatNull); }
     inline bool is_not_null() const { return (p != &IndexDatNull); }
     int count() const { return p->count(); }
 
-    void setPrimeLevel(int plev) { primelevel = plev; }
+    inline int primeLevel() const { return primelevel_; }
+    inline void primeLevel(int plev) { primelevel_ = plev; }
 
     //-----------------------------------------------
     //Index: Constructors
 
-    Index() : p(&IndexDatNull), primelevel(0) { }
+    Index() : p(&IndexDatNull), primelevel_(0) { }
 
     Index(std::string name, int mm = 1, IndexType it=Link, int plev = 0) 
-	: p(new IndexDat(name,mm,it)), primelevel(plev) { }
+	: p(new IndexDat(name,mm,it)), primelevel_(plev) { }
 
     Index(std::istream& s) { read(s); }
 
     Index(Imaker im)
 	{
         if(im == makeNull)
-            p = &IndexDatNull, primelevel = 0;
+            p = &IndexDatNull, primelevel_ = 0;
         else if(im == makeReIm)
-            p = &IndReDat, primelevel = 0;
+            p = &IndReDat, primelevel_ = 0;
         else if(im == makeReImP)
-            p = &IndReDatP,  primelevel = 1;
+            p = &IndReDatP,  primelevel_ = 1;
         else if(im == makeReImPP)
-            p = &IndReDatPP,  primelevel = 2;
+            p = &IndReDatPP,  primelevel_ = 2;
         else if(im == makeEmptyV)
-            p = &IndEmptyVDat, primelevel = 0;
+            p = &IndEmptyVDat, primelevel_ = 0;
         else Error("Unrecognized Imaker type.");
 	}
 
     Index(PrimeType pt,const Index& other, int primeinc = 1) 
-	: p(other.p), primelevel(other.primelevel)
+	: p(other.p), primelevel_(other.primelevel_)
 	{
-        primelevel = other.primelevel;
+        primelevel_ = other.primelevel_;
         for(int i = 1; i <= primeinc; ++i) doprime(pt);
 	}
 
@@ -266,15 +267,16 @@ public:
 
     // rel_ops defines the other comparisons based on == and <
     bool operator==(const Index& other) const 
-	{ return unique_Real() == other.unique_Real(); }
+    { return (p->ur == other.p->ur && primelevel_ == other.primelevel_); }
+
+    bool noprime_equals(const Index& other) const
+	{ return (p->ur == other.p->ur); }
 
     bool operator<(const Index& other) const 
 	{ return (unique_Real() < other.unique_Real()); }
 
     IndexVal operator()(int i) const;
 
-    bool noprime_equals(const Index& other) const
-	{ return (p->ur == other.p->ur); }
 
     //-----------------------------------------------
     //Index: Prime methods
@@ -282,12 +284,12 @@ public:
     void mapprime(int plevold, int plevnew, PrimeType pr = primeBoth)
 	{
         if(type() == ReIm) return;
-        if(primelevel != plevold) return;
+        if(primelevel_ != plevold) return;
         else if( (pr == primeBoth && type() != Virtual)
         || (type() == Site && pr == primeSite) 
         || (type() == Link && pr == primeLink) )
         {
-            primelevel = plevnew;
+            primelevel_ = plevnew;
         }
 	}
     void doprime(PrimeType pr, int inc = 1)
@@ -297,19 +299,19 @@ public:
         || (type() == Site && pr == primeSite) 
         || (type() == Link && pr == primeLink) )
         {
-            primelevel += inc;
+            primelevel_ += inc;
         }
 	}
     Index primed(int inc = 1) const { return Index(primeBoth,*this,inc); }
 
-    Index deprimed() const { Index cp(*this); cp.primelevel = 0; return cp; }
+    Index deprimed() const { Index cp(*this); cp.primelevel_ = 0; return cp; }
 
-    void noprime(PrimeType p = primeBoth) { doprime(p,-primelevel); }
+    void noprime(PrimeType p = primeBoth) { doprime(p,-primelevel_); }
 
     friend inline std::ostream & operator<<(std::ostream & s, const Index & t)
     {
         if(t.name() != "" && t.name() != " ") s << t.name() << "/";
-        return s << nameindex(t.type(),t.primelevel) << "-" << t.Ind() << ":" << t.m();
+        return s << nameindex(t.type(),t.primelevel_) << "-" << t.Ind() << ":" << t.m();
     }
 
     //-----------------------------------------------
@@ -318,7 +320,7 @@ public:
     void write(std::ostream& s) const 
     { 
         if(is_null()) Error("Index::write: Index is null");
-        s.write((char*) &primelevel,sizeof(primelevel));
+        s.write((char*) &primelevel_,sizeof(primelevel_));
         const int t = IndexTypeToInt(p->_type);
         s.write((char*) &t,sizeof(t));
         //s.write((char*) &(p->ind),sizeof(p->ind));
@@ -332,7 +334,7 @@ public:
 
     void read(std::istream& s)
     {
-        s.read((char*) &primelevel,sizeof(primelevel));
+        s.read((char*) &primelevel_,sizeof(primelevel_));
         int t; s.read((char*) &t,sizeof(t));
         //int ind; s.read((char*) &ind,sizeof(ind));
         boost::uuids::uuid ind;

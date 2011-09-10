@@ -369,7 +369,7 @@ public:
 
     void ind_inc_prime(const IQIndex& i,int inc)
     {
-        if(viqindex == i) { int p = viqindex.primelevel; viqindex.mapprime(p,p+inc); return; }
+        if(viqindex == i) { int p = viqindex.primeLevel(); viqindex.mapprime(p,p+inc); return; }
 
         solo();
         p->uninit_rmap();
@@ -378,7 +378,7 @@ public:
         if(jj.noprime_equals(i))
         {
             gotit = true;
-            int p = jj.primelevel;
+            int p = jj.primeLevel();
             jj.mapprime(p,p+inc);
         }
 
@@ -392,7 +392,7 @@ public:
         for(int ii = 1; ii <= jj->r(); ++ii)
         if(i.hasindex_noprime(jj->index(ii)))
         {
-            int p = jj->index(ii).primelevel;
+            int p = jj->index(ii).primeLevel();
             jj->mapprimeind(jj->index(ii),p,p+inc);
         }
     } //end IQTensor::ind_inc_prime
@@ -818,8 +818,8 @@ public:
 
     Real& operator()(const IQIndexVal& iv, const IQIndexVal& ivp)
     {
-        if(iv.iqind.primelevel != 0) Error("SiteOp::operator(): first IndexVal must be unprimed.");
-        if(ivp.iqind.primelevel != 1) Error("SiteOp::operator(): second IndexVal must be primed.");
+        if(iv.iqind.primeLevel() != 0) Error("SiteOp::operator(): first IndexVal must be unprimed.");
+        if(ivp.iqind.primeLevel() != 1) Error("SiteOp::operator(): second IndexVal must be primed.");
         Real r = iv.iqind.unique_Real() + ivp.iqind.unique_Real() + iv.i + 1000*ivp.i;
         ivmap[ApproxReal(r)] = make_pair(iv,ivp);
         return valmap[ApproxReal(r)];

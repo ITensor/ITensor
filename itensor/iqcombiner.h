@@ -47,7 +47,7 @@ class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
             }
             iq.push_back(inqn(small_qind,q));
         }
-        smallind_ = IQIndex(smallind_name,iq,_bigind.dir(),_bigind.primelevel);
+        smallind_ = IQIndex(smallind_name,iq,_bigind.dir(),_bigind.primeLevel());
     }
 public:
     const IQIndex& bigind() const   { return bigind_; }
@@ -282,7 +282,7 @@ public:
 
         Arrow rdir = Switch*left.back().dir();
         int plev = 0;
-        if(primelevel == -1) { plev = left.back().primelevel; }
+        if(primelevel == -1) { plev = left.back().primeLevel(); }
         else                 { plev = primelevel; }
 
         //Prefer to derive right Arrow, primelevel from Link indices
@@ -290,7 +290,7 @@ public:
         if(left[j].type() == Link) 
         { 
             rdir = Switch*left[j].dir(); 
-            if(primelevel == -1) { plev = left[j].primelevel; }
+            if(primelevel == -1) { plev = left[j].primeLevel(); }
             break;
         }
 
