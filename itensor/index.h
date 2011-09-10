@@ -140,7 +140,7 @@ public:
         ur = sin(arg);
 	}
 
-    IndexDat(std::string name="", int mm = 1,IndexType it=Link) :
+    IndexDat(const std::string& name="", int mm = 1,IndexType it=Link) :
     numref(0), is_static_(false),
     _type(it), 
     ind(++lastID),
@@ -153,7 +153,7 @@ public:
 	}
 
     //For use with read/write functionality of Index class
-    IndexDat(std::string ss, int mm, IndexType it, uuid ind_) :
+    IndexDat(const std::string& ss, int mm, IndexType it, const uuid& ind_) :
     numref(0), is_static_(false), _type(it), ind(ind_), m_(mm), sname(ss)
 	{ 
         if(it == ReIm) Error("bad call to create IndexDat with type ReIm");
@@ -234,7 +234,7 @@ public:
 
     Index() : p(&IndexDatNull), primelevel_(0) { }
 
-    Index(std::string name, int mm = 1, IndexType it=Link, int plev = 0) 
+    Index(const std::string& name, int mm = 1, IndexType it=Link, int plev = 0) 
 	: p(new IndexDat(name,mm,it)), primelevel_(plev) { }
 
     Index(std::istream& s) { read(s); }
@@ -305,7 +305,7 @@ public:
 
     Index deprimed() const { Index cp(*this); cp.primelevel_ = 0; return cp; }
 
-    void noprime(PrimeType p = primeBoth) { doprime(p,-primelevel_); }
+    void noprime(PrimeType pt = primeBoth) { doprime(pt,-primelevel_); }
 
     friend inline std::ostream & operator<<(std::ostream & s, const Index & t)
     {

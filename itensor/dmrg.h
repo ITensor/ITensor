@@ -853,7 +853,7 @@ inline Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H,
             Real dE = fabs(energy-last_energy);
             if(dE < opts.energy_errgoal)
             {
-                cout << format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
+                cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
                 return energy;
             }
         }
