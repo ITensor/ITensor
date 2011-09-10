@@ -501,7 +501,6 @@ public:
     //Move the orthogonality center to site i (left_orth_lim = i-1, right_orth_lim = i+1)
     void position(int i, bool preserve_shape = false)
 	{
-        //if(is_null()) { left_orth_lim = i-1; right_orth_lim = i+1; return; }
         if(is_null()) Error("position: MPS is null");
         while(left_orth_lim < i-1)
         {
