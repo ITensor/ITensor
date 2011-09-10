@@ -153,11 +153,11 @@ public:
         s.write((char*) &size, sizeof(size));
         s.write((char*) v.Store(), sizeof(Real)*size); 
     }
-
+    
     void print() const { cout << "ITDat: v = " << v; }
 
     inline void* operator new(size_t size) throw(std::bad_alloc)
-        { return allocator.alloc(size); }
+        { return allocator.alloc(); }
 
     inline void operator delete(void* p) throw()
         { return allocator.dealloc(p); }
@@ -165,7 +165,7 @@ public:
     friend class ITensor;
     ENABLE_INTRUSIVE_PTR(ITDat)
 private:
-    static DatAllocator allocator;
+    static DatAllocator<ITDat> allocator;
     void operator=(const ITDat&);
     ~ITDat() { } //must be dynamically allocated
 };
@@ -209,9 +209,7 @@ private:
         assert(p != 0);
         if(p->count() != 1) 
         {
-            intrusive_ptr<ITDat> new_p(new ITDat(*p));
-            p.swap(new_p);
-            //or just p = new ITDat(*p); ?
+            p = new ITDat(*p);
             IF_COUNT_COPIES(++copycount;)
         }
 	}

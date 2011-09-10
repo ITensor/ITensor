@@ -1,9 +1,10 @@
 #ifndef __ITENSOR_ALLOCATOR_H
 #define __ITENSOR_ALLOCATOR_H
 
+template <class T>
 class DatAllocator
 {
-    static const int Size = 50000;
+    static const size_t Size = 50000;
 private:
     boost::array<void*,Size> pf_;
     size_t nf_;
@@ -15,10 +16,10 @@ private:
             free(pf_[j]);
     }
 
-    void* alloc(size_t sz_)
+    void* alloc()
     {
-        if(nf_ != 0) { return (void*) pf_[--nf_]; }
-        void* p = malloc(sz_);
+        if(nf_ != 0) { return pf_[--nf_]; }
+        void* p = malloc(sizeof(T));
         if(p == 0) throw std::bad_alloc();
         return p;
     }

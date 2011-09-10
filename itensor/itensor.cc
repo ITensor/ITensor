@@ -1,6 +1,6 @@
 #include "itensor.h"
 
-DatAllocator ITDat::allocator;
+DatAllocator<ITDat> ITDat::allocator;
 
 ostream& operator<<(ostream & s, const ITensor & t)
 {
@@ -643,9 +643,6 @@ ITensor& ITensor::operator*=(const ITensor& other)
 
     //Handle m==1 Indices
 
-//#define USE_GOTO //profile to see which is faster, if any difference
-
-#ifdef USE_GOTO
     for(int k = rn_+1; k <= this->r_; ++k)
     {
         const Index& K = index_[k];
@@ -662,26 +659,6 @@ ITensor& ITensor::operator*=(const ITensor& other)
         new_index1_[++nr1_] = &J;
         skip_other:;
     }
-#else
-    for(int k = rn_+1; k <= this->r_; ++k)
-    {
-        const Index& K = index_[k];
-        bool other_has_index = false;
-        for(int j = other.rn_+1; j <= other.r_; ++j)
-        { if(other.index_[j] == K) { other_has_index = true; break; } }
-
-        if(!other_has_index) new_index1_[++nr1_] = &K;
-    }
-    for(int j = other.rn_+1; j <= other.r_; ++j)
-    {
-        const Index& J = other.index_[j];
-        bool this_has_index = false;
-        for(int k = this->rn_+1; k <= this->r_; ++k)
-        { if(index_[k] == J) { this_has_index = true; break; } }
-
-        if(!this_has_index) new_index1_[++nr1_] = &J;
-    }
-#endif
 
     if(other.rn_ == 0)
     {
