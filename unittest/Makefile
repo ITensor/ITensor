@@ -6,7 +6,7 @@ include unittest_options.mk
 REPORT_LEVEL=confirm
 #REPORT_LEVEL=detailed
 
-HEADERS=index_test.h real_test.h itensor_test.h combiner_test.h
+HEADERS=test.h
 SOURCES=test.cc matrix_test.cc real_test.cc index_test.cc itensor_test.cc\
 combiner_test.cc
 
