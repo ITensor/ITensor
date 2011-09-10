@@ -4,9 +4,10 @@
 template <class T>
 class DatAllocator
 {
-    static const size_t Size = 50000;
+    static const size_t stackSize = 50000;
+    static const size_t allocSize = sizeof(T);
 private:
-    boost::array<void*,Size> pf_;
+    void* pf_[stackSize];
     size_t nf_;
 
     DatAllocator() : nf_(0) { }
@@ -19,15 +20,15 @@ private:
     void* alloc()
     {
         if(nf_ != 0) { return pf_[--nf_]; }
-        void* p = malloc(sizeof(T));
+        void* p = malloc(allocSize);
         if(p == 0) throw std::bad_alloc();
         return p;
     }
 
     void dealloc(void* p) throw()
     {
-        if(nf_ == Size) free(p);
-        pf_[nf_++] = p;
+        if(nf_ == stackSize) free(p);
+        else pf_[nf_++] = p;
     }
 
     friend class IndexDat;
