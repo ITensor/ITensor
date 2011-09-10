@@ -7,6 +7,9 @@ REPORT_LEVEL=confirm
 #REPORT_LEVEL=detailed
 
 HEADERS=index_test.h real_test.h itensor_test.h combiner_test.h
+SOURCES=test.cc matrix_test.cc real_test.cc index_test.cc itensor_test.cc\
+combiner_test.cc
+
 TENSOR_HEADERS=dmrg.h hams.h
 LIBNAMES=matrix utilities itensor
 
@@ -23,10 +26,12 @@ LOCAL_LIBGFLAGS=$(patsubst %,-l%-g, $(LIBNAMES))
 LIBFILES=$(patsubst %,$(LIBDIR)/lib%.a, $(LIBNAMES))
 LIBGFILES=$(patsubst %,$(LIBDIR)/lib%-g.a, $(LIBNAMES))
 REL_TENSOR_HEADERS=$(patsubst %,$(INCLUDEDIR)/%, $(TENSOR_HEADERS))
+OBJECTS=$(patsubst %.cc,%.o, $(SOURCES))
+GOBJECTS=$(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 
 #Define Flags ----------
-CCFLAGS=$(CPPFLAGS) -I$(INCLUDEFLAGS) -O2  -DNDEBUG -DBOOST_DISABLE_ASSERTS
-CCGFLAGS= -I$(INCLUDEFLAGS) -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall -ansi
+CCFLAGS=$(CPPFLAGS) -I$(INCLUDEFLAGS) -O2 
+CCGFLAGS= -I$(INCLUDEFLAGS) -DDEBUG -DMATRIXBOUNDS -DBOUNDS -g -Wall -ansi
 LIBFLAGS=-L$(THIS_LIBDIR) $(LOCAL_LIBFLAGS) $(BLAS_LAPACK_LIBFLAGS) $(BOOST_UNITTEST_LIBFLAGS)
 LIBGFLAGS=-L$(THIS_LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS) $(BOOST_UNITTEST_LIBFLAGS)
 
@@ -53,11 +58,11 @@ build: test
 
 debug: test-g
 
-test: test.o $(LIBFILES) $(REL_TENSOR_HEADERS) $(HEADERS)
-	$(CCCOM) $(CCFLAGS) test.o -o test $(LIBFLAGS)
+test: test.o $(LIBFILES) $(REL_TENSOR_HEADERS) $(HEADERS) $(OBJECTS)
+	$(CCCOM) $(CCFLAGS) $(OBJECTS) -o test $(LIBFLAGS)
 
-test-g: mkdebugdir .debug_objs/test.o $(LIBGFILES) $(REL_TENSOR_HEADERS) $(HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/test.o -o test-g $(LIBGFLAGS)
+test-g: mkdebugdir .debug_objs/test.o $(LIBGFILES) $(REL_TENSOR_HEADERS) $(HEADERS) $(GOBJECTS)
+	$(CCCOM) $(CCGFLAGS) $(GOBJECTS) -o test-g $(LIBGFLAGS)
 
 
 mkdebugdir:
