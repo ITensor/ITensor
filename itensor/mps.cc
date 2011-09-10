@@ -54,13 +54,13 @@ bool doRelCutoff = false, Real refNorm = 1)
     svdtruncerr = (D(1) == 0 ? 0.0 : err/D(1));
     if(showeigs)
     {
-        cout << format("\nKept %d states in diag_denmat\n")% mp;
-        cout << format("svdtruncerr = %.2E\n")%svdtruncerr;
+        cout << boost::format("\nKept %d states in diag_denmat\n")% mp;
+        cout << boost::format("svdtruncerr = %.2E\n")%svdtruncerr;
         int stop = min(D.Length(),10);
         cout << "Eigs: ";
         for(int j = 1; j <= stop; ++j)
         {
-            cout << format(D(j) > 1E-3 ? ("%.3f") : ("%.3E")) % D(j);
+            cout << boost::format(D(j) > 1E-3 ? ("%.3f") : ("%.3E")) % D(j);
             cout << ((j != stop) ? ", " : "\n");
         }
     }
@@ -93,7 +93,7 @@ bool doRelCutoff = false, LogNumber refNorm = 1)
         refNorm = LogNumber(maxLogNum,1);
     }
 
-    //cerr << format("refNorm = %.1E (lognum = %f, sign = %d)\n\n")
+    //cerr << boost::format("refNorm = %.1E (lognum = %f, sign = %d)\n\n")
     //%Real(refNorm)%refNorm.logNum()%refNorm.sign();
 
 
@@ -136,7 +136,7 @@ bool doRelCutoff = false, LogNumber refNorm = 1)
 
     //Truncate
     Real e1 = max(alleig.back(),1.0e-60), docut = 0;
-    //cerr << format("e1 = %.10f\n")%e1;
+    //cerr << boost::format("e1 = %.10f\n")%e1;
     svdtruncerr = 0;
     int mdisc = 0, m = (int)alleig.size();
     if(m > minm)
@@ -155,16 +155,16 @@ bool doRelCutoff = false, LogNumber refNorm = 1)
     }}
     if(showeigs)
     {
-        cout << format("\nKept %d, discarded %d states in diag_denmat\n")
+        cout << boost::format("\nKept %d, discarded %d states in diag_denmat\n")
                         % m % mdisc;
-        cout << format("svdtruncerr = %.2E\n")%svdtruncerr;
-        cout << format("docut = %.2E\n")%docut;
+        cout << boost::format("svdtruncerr = %.2E\n")%svdtruncerr;
+        cout << boost::format("docut = %.2E\n")%docut;
         int s = alleig.size();
         int stop = s-min(s,10);
         cout << "Eigs: ";
         for(int j = s-1; j >= stop; --j)
         {
-            cout << format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) % alleig[j];
+            cout << boost::format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) % alleig[j];
             cout << ((j != stop) ? ", " : "\n");
         }
     }
@@ -184,7 +184,7 @@ bool doRelCutoff = false, LogNumber refNorm = 1)
 
         //cerr << "thisD = "; 
         //for(int j = 1; j <= thisD.Length(); ++j)
-        //    cerr << format("%.2E ")%thisD(j);
+        //    cerr << boost::format("%.2E ")%thisD(j);
         //cerr << "\n";
         //Print(thisD.Length());
 

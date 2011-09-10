@@ -108,9 +108,9 @@ inline void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector
 
             if(s == show_s)
             {
-                cerr << format("For n = %d\n")%n;
-                cerr << format("Got a block with norm %.10f\n")%block.norm();
-                cerr << format("bond.m() = %d\n")%bond.m();
+                cerr << boost::format("For n = %d\n")%n;
+                cerr << boost::format("Got a block with norm %.10f\n")%block.norm();
+                cerr << boost::format("bond.m() = %d\n")%bond.m();
                 PrintDat(block);
                 if(s != 1) PrintDat(comp);
             }
@@ -132,7 +132,7 @@ inline void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector
                         Index new_ind = (comp.index(1)==prev_bond ? comp.index(2) : comp.index(1));
                         summed_block = ITensor(new_ind,1) * block;
                     }
-                    //cerr << format("s = %d, bond=")%s << bond << "\n";
+                    //cerr << boost::format("s = %d, bond=")%s << bond << "\n";
                     //summed_block.print("summed_block");
 
                     Real rel_cut = -1;
@@ -188,16 +188,16 @@ inline void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector
                     Matrix M; int mm = collapseCols(qD[q],M);
                     if(s==show_s)
                     {
-                        cerr << format("Adding block, mm = %d\n")%mm;
+                        cerr << boost::format("Adding block, mm = %d\n")%mm;
                         q.print("q");
                         cerr << "qD[q] = " << qD[q] << "\n";
                         cerr << "M = \n" << M << "\n";
                         int count = 0;
                         foreach(const ITensor& t, blks) 
-                        t.print((format("t%02d")%(++count)).str(),ShowData);
+                        t.print((boost::format("t%02d")%(++count)).str(),ShowData);
                     }
-                    //string qname = (format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
-                    string qname = (format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
+                    //string qname = (boost::format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
+                    string qname = (boost::format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
                     Index qbond(qname,mm);
                     ITensor compressor(bond,qbond,M);
                     foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
@@ -229,7 +229,7 @@ inline void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector
 
         if(s==show_s)
         {
-        qA[s].print((format("qA[%d]")%s).str(),ShowData);
+        qA[s].print((boost::format("qA[%d]")%s).str(),ShowData);
         Error("Stopping");
         }
 
@@ -589,12 +589,12 @@ public:
     {
         if(b-1 > left_orth_lim)
         {
-            cerr << format("b=%d, Lb=%d\n")%b%left_orth_lim;
+            cerr << boost::format("b=%d, Lb=%d\n")%b%left_orth_lim;
             Error("b > left_orth_lim");
         }
         if(b+2 < right_orth_lim)
         {
-            cerr << format("b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
+            cerr << boost::format("b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
             Error("b+1 < right_orth_lim");
         }
         Tensor phi = GET(A,b); phi *= GET(A,b+1);
@@ -615,9 +615,9 @@ public:
     void projectOp(int j, Direction dir, const Tensor& P, const OpTensor& Op, Tensor& res) const
     {
         if(dir==Fromleft && j > left_orth_lim) 
-        { cerr << format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim, Error(""); }
+        { cerr << boost::format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim, Error(""); }
         if(dir==Fromright && j < right_orth_lim) 
-        { cerr << format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim, Error(""); }
+        { cerr << boost::format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim, Error(""); }
 
         res = (P.is_null() ? AA(j) : P * AA(j));
         res *= Op; res *= conj(primed(AA(j)));
@@ -727,9 +727,9 @@ public:
 
                 if(s == show_s)
                 {
-                    cerr << format("For n = %d\n")%n;
-                    cerr << format("Got a block with norm %.10f\n")%block.norm();
-                    cerr << format("bond.m() = %d\n")%bond.m();
+                    cerr << boost::format("For n = %d\n")%n;
+                    cerr << boost::format("Got a block with norm %.10f\n")%block.norm();
+                    cerr << boost::format("bond.m() = %d\n")%bond.m();
                     PrintDat(block);
                     if(s != 1) PrintDat(comp);
                 }
@@ -751,7 +751,7 @@ public:
                             Index new_ind = (comp.index(1)==prev_bond ? comp.index(2) : comp.index(1));
                             summed_block = ITensor(new_ind,1) * block;
                         }
-                        //cerr << format("s = %d, bond=")%s << bond << "\n";
+                        //cerr << boost::format("s = %d, bond=")%s << bond << "\n";
                         //summed_block.print("summed_block");
 
                         Real rel_cut = -1;
@@ -807,16 +807,16 @@ public:
                         Matrix M; int mm = collapseCols(qD[q],M);
                         if(s==show_s)
                         {
-                            cerr << format("Adding block, mm = %d\n")%mm;
+                            cerr << boost::format("Adding block, mm = %d\n")%mm;
                             q.print("q");
                             cerr << "qD[q] = " << qD[q] << "\n";
                             cerr << "M = \n" << M << "\n";
                             int count = 0;
                             foreach(const ITensor& t, blks) 
-                            t.print((format("t%02d")%(++count)).str(),ShowData);
+                            t.print((boost::format("t%02d")%(++count)).str(),ShowData);
                         }
-                        //string qname = (format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
-                        string qname = (format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
+                        //string qname = (boost::format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
+                        string qname = (boost::format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
                         Index qbond(qname,mm);
                         ITensor compressor(bond,qbond,M);
                         foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
@@ -863,7 +863,7 @@ public:
 
             if(s==show_s)
             {
-            iqpsi.AA(s).print((format("qA[%d]")%s).str(),ShowData);
+            iqpsi.AA(s).print((boost::format("qA[%d]")%s).str(),ShowData);
             Error("Stopping");
             }
 
@@ -954,14 +954,14 @@ inline bool check_QNs(const IQMPS& psi)
         {
             if(psi.RightLinkInd(i).dir() != In) 
             {
-                cerr << format("check_QNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+                cerr << boost::format("check_QNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
                 return false;
             }
             if(i > 1)
             {
                 if(psi.LeftLinkInd(i).dir() != Out) 
                 {
-                    cerr << format("check_QNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                    cerr << boost::format("check_QNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
                     return false;
                 }
             }
@@ -973,12 +973,12 @@ inline bool check_QNs(const IQMPS& psi)
             if(i < N)
             if(psi.RightLinkInd(i).dir() != Out) 
             {
-                cerr << format("check_QNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+                cerr << boost::format("check_QNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
                 return false;
             }
             if(psi.LeftLinkInd(i).dir() != In) 
             {
-                cerr << format("check_QNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+                cerr << boost::format("check_QNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
                 return false;
             }
         }
@@ -1070,7 +1070,7 @@ void sum(const vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, int max
 	{ 
         res = terms[0];
         res.cutoff = cut; res.maxm = maxm;
-        //cerr << format("Before +=, cutoff = %.1E, maxm = %d\n")%(res.cutoff)%(res.maxm);
+        //cerr << boost::format("Before +=, cutoff = %.1E, maxm = %d\n")%(res.cutoff)%(res.maxm);
         res += terms[1];
         return;
     }

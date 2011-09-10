@@ -14,7 +14,7 @@ ostream& operator<<(ostream & s, const ITensor & t)
     if(t.is_null()) s << " (dat is null)\n";
     else 
     {
-        s << format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
+        s << boost::format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
         if(printdat)
         {
             const Real scale = t.scale_;
@@ -32,10 +32,10 @@ ostream& operator<<(ostream & s, const ITensor & t)
     return s;
 }
 
-void ITensor::groupIndices(const array<Index,NMAX+1>& indices, int nind, 
+void ITensor::groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
                            const Index& grouped, ITensor& res) const
 {
-    array<bool,NMAX+1> isReplaced; isReplaced.assign(false);
+    boost::array<bool,NMAX+1> isReplaced; isReplaced.assign(false);
 
     int tot_m = 1;
     int nn = 0; //number of m != 1 indices
@@ -122,7 +122,7 @@ void ITensor::expandIndex(const Index& small, const Index& big,
     res = ITensor(indices);
     res.scale_ = scale_;
 
-    array<int,NMAX+1> inc; inc.assign(0);
+    boost::array<int,NMAX+1> inc; inc.assign(0);
     inc.at(w) = start;
 
     Counter c; initCounter(c);
@@ -220,7 +220,7 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 
     //Make a counter for thisdat
     Counter c; initCounter(c);
-    array<int,NMAX+1> n;
+    boost::array<int,NMAX+1> n;
     for(int j = 1; j <= rn_; ++j) n[ind[j]] = c.n[j];
 
     //Special case loops
@@ -312,7 +312,7 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 
     //The j's are pointers to the i's of xdat's Counter,
     //but reordered in a way appropriate for rdat
-    array<int*,NMAX+1> j;
+    boost::array<int*,NMAX+1> j;
     for(int k = 1; k <= NMAX; ++k) { j[ind[k]] = &(c.i[k]); }
 
     //Catch-all loop that works for any tensor
@@ -325,7 +325,7 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 
 //Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref
 //contractedL/R[j] == true if L/R.indexn(j) contracted
-void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, array<bool,NMAX+1>& contractedL, array<bool,NMAX+1>& contractedR,
+void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, boost::array<bool,NMAX+1>& contractedL, boost::array<bool,NMAX+1>& contractedR,
                            MatrixRefNoLink& lref, MatrixRefNoLink& rref)
 {
     assert(L.p != 0);
@@ -514,7 +514,7 @@ ITensor& ITensor::operator/=(const ITensor& other)
     //These hold the indices from other 
     //that will be added to this->index_
     int nr1_ = 0;
-    static array<const Index*,NMAX+1> extra_index1_;
+    static boost::array<const Index*,NMAX+1> extra_index1_;
 
     //------------------------------------------------------------------
     //Handle m==1 Indices: set union
@@ -528,7 +528,7 @@ ITensor& ITensor::operator/=(const ITensor& other)
         if(!this_has_index) extra_index1_[++nr1_] = &J;
     }
 
-    static array<Index,NMAX+1> new_index_;
+    static boost::array<Index,NMAX+1> new_index_;
 
     if(other.rn_ == 0)
     {
@@ -561,7 +561,7 @@ ITensor& ITensor::operator/=(const ITensor& other)
     }
 
     int nsamen, cdim;
-    array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
+    boost::array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
     toMatrixProd(*this,other,nsamen,cdim,contractedL,contractedR,lref,rref);
 
     if(p->count() != 1) { p = new ITDat(); }
@@ -635,11 +635,11 @@ ITensor& ITensor::operator*=(const ITensor& other)
         return *this;
 	}
 
-    static array<Index,NMAX+1> new_index_;
+    static boost::array<Index,NMAX+1> new_index_;
 
     //This holds the m==1 indices that appear in the result
     int nr1_ = 0;
-    static array<const Index*,NMAX+1> new_index1_;
+    static boost::array<const Index*,NMAX+1> new_index1_;
 
     //Handle m==1 Indices
 
@@ -690,7 +690,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
     }
 
     int nsamen,cdim;
-    array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
+    boost::array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
     toMatrixProd(*this,other,nsamen,cdim,contractedL,contractedR,lref,rref);
 
     //Do the matrix multiplication
@@ -767,7 +767,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
 
     if(fabs(ur - other.ur) > 1E-12)
     {
-        cerr << format("this ur = %.10f, other.ur = %.10f\n")%ur%other.ur;
+        cerr << boost::format("this ur = %.10f, other.ur = %.10f\n")%ur%other.ur;
         Print(*this);
         Print(other);
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
@@ -876,7 +876,7 @@ void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, cons
     if(nrow != res.Nrows()) Error("toMatrix22: wrong number of rows");
     if(ncol != res.Ncols()) Error("toMatrix22: wrong number of cols");
     res.ReDimension(nrow,ncol);
-    const array<Index,NMAX+1> reshuf = {{ IndNull, i3, i4, i1, i2, IndNull, IndNull, IndNull, IndNull }};
+    const boost::array<Index,NMAX+1> reshuf = {{ IndNull, i3, i4, i1, i2, IndNull, IndNull, IndNull, IndNull }};
     Permutation P; getperm(reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
@@ -905,7 +905,7 @@ void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matr
     assert(hasindex(i1));
     assert(hasindex(i2));
     res.ReDimension(i1.m()*i2.m(),i3.m());
-    const array<Index,NMAX+1> reshuf = {{ IndNull, i3, i1, i2, IndNull, IndNull, IndNull, IndNull, IndNull }};
+    const boost::array<Index,NMAX+1> reshuf = {{ IndNull, i3, i1, i2, IndNull, IndNull, IndNull, IndNull, IndNull }};
     Permutation P; getperm(reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
@@ -919,7 +919,7 @@ void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matr
     assert(hasindex(i2));
     assert(hasindex(i3));
     res.ReDimension(i1.m(),i2.m()*i3.m());
-    const array<Index,NMAX+1> reshuf = {{ IndNull, i2, i3, i1, IndNull, IndNull, IndNull, IndNull, IndNull }};
+    const boost::array<Index,NMAX+1> reshuf = {{ IndNull, i2, i3, i1, IndNull, IndNull, IndNull, IndNull, IndNull }};
     Permutation P; getperm(reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;

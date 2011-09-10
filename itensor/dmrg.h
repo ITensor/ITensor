@@ -312,21 +312,21 @@ public:
             if(b == 1 && ha == 2) 
             {
                 cout << "\n    Largest m during sweep " << sw << " was " << largest_m << "\n";
-                cout << format("    Eigs at bond %d: ") % max_eigs_bond;
+                cout << boost::format("    Eigs at bond %d: ") % max_eigs_bond;
                 for(int j = 1; j <= min(max_eigs.Length(),10); ++j) 
                 {
-                    cout << format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
+                    cout << boost::format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
                     cout << ((j != min(max_eigs.Length(),10)) ? ", " : "\n");
                 }
                 cout << "    Eigs at center bond: ";
                 for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                 {
-                    cout << format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
+                    cout << boost::format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
                     cout << ((j != min(center_eigs.Length(),10)) ? ", " : "\n");
                 }
-                cout << format("    Bulk entanglement gap = %f\n") % bulk_entanglement_gap;
+                cout << boost::format("    Bulk entanglement gap = %f\n") % bulk_entanglement_gap;
 
-                cout << format("    Energy after sweep %d is %f\n") % sw % energy;
+                cout << boost::format("    Energy after sweep %d is %f\n") % sw % energy;
             }
         }
     }
@@ -342,7 +342,7 @@ public:
             Real dE = fabs(energy-last_energy);
             if(dE < energy_errgoal)
             {
-                cout << format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
+                cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
                 return true;
             }
         }
@@ -371,12 +371,12 @@ Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOp
         psi.cutoff = sweeps.cutoff(sw); psi.minm = sweeps.minm(sw); psi.maxm = sweeps.maxm(sw);
         for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
         {
-            if(!opts.quiet) cout << format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % b % (b+1);
+            if(!opts.quiet) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % b % (b+1);
 
             energy = psi.bondDavidson(b,H.bondTensor(b),PH[b],PH[b+1],
                      sweeps.niter(sw),debuglevel,(ha==1?Fromleft:Fromright));
 
-            if(!opts.quiet) { cout << format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
+            if(!opts.quiet) { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
                                       % sweeps.cutoff(sw) % sweeps.maxm(sw) % psi.LinkInd(b).showm(); }
 
             opts.measure(sw,ha,b,psi,energy);
@@ -450,7 +450,7 @@ inline Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vect
         Vector max_eigs(1); max_eigs = 2; //max in the sense of slowly decaying
         for(int l = 1, ha = 1; ha != 3; sweepnext(l,ha,N))
         {
-            if(!opts.quiet) cout << format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
+            if(!opts.quiet) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
 
             ITensor mpoh = finalham.AA(l) * finalham.AA(l+1);
 
@@ -493,7 +493,7 @@ inline Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vect
 
             Index ll = psi.LinkInd(l);
             if(!opts.quiet) 
-            { cout << format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
+            { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
 
             //Keep track of the largest_m, slowest decaying denmat eigs
             if(opts.printeigs)
@@ -505,14 +505,14 @@ inline Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vect
                 if(l == 1 && ha == 2) 
                 {
                     cout << "\n    Largest m during sweep " << sw << " was " << largest_m << "\n";
-                    cout << format("    Eigs at bond %d: ") % max_eigs_bond;
+                    cout << boost::format("    Eigs at bond %d: ") % max_eigs_bond;
                     for(int j = 1; j <= min(max_eigs.Length(),10); ++j) 
                     {
-                        cout << format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
+                        cout << boost::format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
                         cout << ((j != min(max_eigs.Length(),10)) ? ", " : "\n");
                     }
 
-                    cout << format("    Energy after sweep %d is %f\n") % sw % energy;
+                    cout << boost::format("    Energy after sweep %d is %f\n") % sw % energy;
                 }
             }
 
@@ -555,7 +555,7 @@ inline Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vect
             Real dE = fabs(energy-last_energy);
             if(dE < opts.energy_errgoal)
             {
-                cout << format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
+                cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
                 return energy;
             }
         }
@@ -609,7 +609,7 @@ inline Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts&
         Vector center_eigs(1); center_eigs = 2;
         for(int l = 1, ha = 1; ha != 3; sweepnext(l,ha,N))
         {
-            if(!opts.quiet) cout << format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
+            if(!opts.quiet) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
 
             for(int n = 0; n < NH; ++n) 
             {
@@ -627,7 +627,7 @@ inline Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts&
 
             Index ll = psi.LinkInd(l);
             if(!opts.quiet) 
-            { cout << format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
+            { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
 
             //Keep track of the largest_m, slowest decaying denmat eigs
             if(opts.printeigs)
@@ -643,25 +643,25 @@ inline Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts&
                 if(l == 1 && ha == 2) 
                 {
                     cout << "\n    Largest m during sweep " << sw << " was " << largest_m << "\n";
-                    cout << format("    Eigs at bond %d: ") % max_eigs_bond;
+                    cout << boost::format("    Eigs at bond %d: ") % max_eigs_bond;
                     for(int j = 1; j <= min(max_eigs.Length(),10); ++j) 
                     {
-                        cout << format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
+                        cout << boost::format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
                         cout << ((j != min(max_eigs.Length(),10)) ? ", " : "\n");
                     }
                     cout << "    Eigs at center bond: ";
                     for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                     {
-                        cout << format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
+                        cout << boost::format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
                         cout << ((j != min(center_eigs.Length(),10)) ? ", " : "\n");
                     }
-                    cout << format("    Bulk entanglement gap = %f\n") % opts.bulk_entanglement_gap;
+                    cout << boost::format("    Bulk entanglement gap = %f\n") % opts.bulk_entanglement_gap;
 
-                    cout << format("    Energy after sweep %d is %f\n") % sw % energy;
+                    cout << boost::format("    Energy after sweep %d is %f\n") % sw % energy;
                     for(int n = 1; n < NH; ++n)
                     {
                       Real re,im; psiHphi(psi,H[n],psi,re,im);
-                      cout << format("    Expectation value of Op %d = %f\n") % n % re;
+                      cout << boost::format("    Expectation value of Op %d = %f\n") % n % re;
                     }
                 }
             }
@@ -695,7 +695,7 @@ inline Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts&
             Real dE = fabs(energy-last_energy);
             if(dE < opts.energy_errgoal)
             {
-                cout << format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
+                cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
                 return energy;
             }
         }
@@ -751,7 +751,7 @@ inline Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H,
         Vector center_eigs(1); center_eigs = 2;
         for(int l = 1, ha = 1; ha != 3; sweepnext(l,ha,N))
         {
-            if(!opts.quiet) cout << format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
+            if(!opts.quiet) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
 
             ITensor mpoh = H.AA(l) * H.AA(l+1);
 
@@ -776,7 +776,7 @@ inline Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H,
 
             Index ll = psi.LinkInd(l);
             if(!opts.quiet) 
-            { cout << format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
+            { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
 
             //Keep track of the largest_m, slowest decaying denmat eigs
             if(opts.printeigs)
@@ -792,21 +792,21 @@ inline Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H,
                 if(l == 1 && ha == 2) 
                 {
                     cout << "\n    Largest m during sweep " << sw << " was " << largest_m << "\n";
-                    cout << format("    Eigs at bond %d: ") % max_eigs_bond;
+                    cout << boost::format("    Eigs at bond %d: ") % max_eigs_bond;
                     for(int j = 1; j <= min(max_eigs.Length(),10); ++j) 
                     {
-                        cout << format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
+                        cout << boost::format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
                         cout << ((j != min(max_eigs.Length(),10)) ? ", " : "\n");
                     }
                     cout << "    Eigs at center bond: ";
                     for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                     {
-                        cout << format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
+                        cout << boost::format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
                         cout << ((j != min(center_eigs.Length(),10)) ? ", " : "\n");
                     }
-                    cout << format("    Bulk entanglement gap = %f\n") % opts.bulk_entanglement_gap;
+                    cout << boost::format("    Bulk entanglement gap = %f\n") % opts.bulk_entanglement_gap;
 
-                    cout << format("    Energy after sweep %d is %f\n") % sw % energy;
+                    cout << boost::format("    Energy after sweep %d is %f\n") % sw % energy;
                 }
             }
 

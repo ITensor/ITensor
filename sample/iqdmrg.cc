@@ -1,6 +1,7 @@
 #define THIS_IS_MAIN
 #include "core.h"
 #include "hams.h"
+using boost::format;
 
 int main(int argc, char* argv[])
 {

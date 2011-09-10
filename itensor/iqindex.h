@@ -79,10 +79,10 @@ public:
     QN operator/(int i) const { QN res(*this); res*=i; return res; }
 
     inline string toString() const
-    {  return (format("(%+d:%d:%s)")%_sz%_Nf%(_Nfp==1 ? "-" : "+")).str(); }
+    {  return (boost::format("(%+d:%d:%s)")%_sz%_Nf%(_Nfp==1 ? "-" : "+")).str(); }
 
     inline friend ostream& operator<<(ostream &o, const QN &q)
-    { return o<< format("sz = %d, Nf = %d, fp = %s") % q.sz() % q.Nf() % (q.fp() < 0 ? "-" : "+"); }
+    { return o<< boost::format("sz = %d, Nf = %d, fp = %s") % q.sz() % q.Nf() % (q.fp() < 0 ? "-" : "+"); }
 
     void print(string name = "") const
     { cerr << "\n" << name << " =\n" << *this << "\n"; }
@@ -382,7 +382,7 @@ public:
         foreach(const inqn& x, pd->iq_)
         {
             QN q = x.qn;
-            oh << format("[%d,%d,%s]:%d ") % q.sz() % q.Nf() % (q.fp()==1?"+":"-") % x.index.m(); 
+            oh << boost::format("[%d,%d,%s]:%d ") % q.sz() % q.Nf() % (q.fp()==1?"+":"-") % x.index.m(); 
         }
         return oh.str();
 	}

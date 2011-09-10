@@ -14,7 +14,7 @@ Combine several indices into one, use * to convert tensors efficiently
 */
 class Combiner
 {
-    array<Index,NMAX+1> left_; // max dim is 8
+    boost::array<Index,NMAX+1> left_; // max dim is 8
     mutable Index right_;
     int rl_; //Number of m>1 'left' indices (indices to be combined into one)
     mutable bool initted;
@@ -30,7 +30,7 @@ public:
     int rl() const { return rl_; }
     const Index& left(int j) const { return GET(left_,j); }
 
-    typedef array<Index,NMAX+1>::const_iterator left_it;
+    typedef boost::array<Index,NMAX+1>::const_iterator left_it;
     const pair<left_it,left_it> left() const 
     { 
         return make_pair(left_.begin()+1,left_.begin()+rl_+1); 
@@ -45,7 +45,7 @@ public:
     const Index& l7 = IndNull, const Index& l8 = IndNull )
     : rl_(0), initted(false)
 	{
-        array<const Index*,NMAX+1> ll 
+        boost::array<const Index*,NMAX+1> ll 
         = {{ &IndNull, &l1, &l2, &l3, &l4, &l5, &l6, &l7, &l8 }};
 
         do { ++rl_; left_[rl_] = *ll[rl_]; } 

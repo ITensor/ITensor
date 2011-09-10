@@ -18,8 +18,6 @@ using std::stringstream;
 using std::pair;
 using std::make_pair;
 using std::vector;
-using boost::format;
-using boost::array;
 
 enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
 
@@ -35,8 +33,8 @@ private:
 	}
     int rn_,r_;
 public:
-    array<int,NMAX+1> n;
-    array<int,NMAX+1> i;
+    boost::array<int,NMAX+1> n;
+    boost::array<int,NMAX+1> i;
     int ind;
 
     Counter() : rn_(0)
@@ -45,9 +43,9 @@ public:
         reset(0);
 	}
 
-    Counter(const array<Index,NMAX+1>& ii,int rn,int r) { init(ii,rn,r); }
+    Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r) { init(ii,rn,r); }
 
-    void init(const array<Index,NMAX+1>& ii, int rn, int r)
+    void init(const boost::array<Index,NMAX+1>& ii, int rn, int r)
     {
         rn_ = rn;
         r_ = r;
@@ -180,14 +178,14 @@ public:
     typedef Index IndexT;
     typedef IndexVal IndexValT;
     typedef Combiner CombinerT;
-    typedef array<Index,NMAX+1>::const_iterator index_it;
+    typedef boost::array<Index,NMAX+1>::const_iterator index_it;
     static const Index& ReImIndex;
 private:
     //mutable: const methods may want to reshape data
     mutable intrusive_ptr<ITDat> p; 
     int r_,rn_;
     //Indices, maximum of 8 (index_[0] not used), mutable to allow reordering
-    mutable array<Index,NMAX+1> index_; 
+    mutable boost::array<Index,NMAX+1> index_; 
     Real ur;
     //mutable since e.g. scaleTo is logically const
     mutable LogNumber scale_; 
@@ -254,7 +252,7 @@ private:
         assert(r_ <= NMAX);
         assert(rn_ == 0);
         int r1_ = 0;
-        array<const Index*,NMAX+1> index1_;
+        boost::array<const Index*,NMAX+1> index1_;
         int alloc_size = 1;
         for(int n = 0; n < r_; ++n)
         {
@@ -285,7 +283,7 @@ private:
         Error("ITensor::mapindex: couldn't find i1.");
 	}
 
-    void getperm(const array<Index,NMAX+1>& oth_index_, Permutation& P) const
+    void getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const
     {
         for(int j = 1; j <= r_; ++j)
         {
@@ -305,8 +303,8 @@ private:
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
                              int& nsamen, int& cdim,
-                             array<bool,NMAX+1>& contractedL, 
-                             array<bool,NMAX+1>& contractedR, 
+                             boost::array<bool,NMAX+1>& contractedL, 
+                             boost::array<bool,NMAX+1>& contractedR, 
                              MatrixRefNoLink& lref, MatrixRefNoLink& rref);
 
     Real& _val(int i1, int i2, int i3, int i4, 
@@ -395,7 +393,7 @@ public:
             Index i7 = IndNull, Index i8 = IndNull)
             : rn_(0)
     {
-        array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
+        boost::array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
         int size = 3;
         while(ii[size] != IndNull) ++size;
         int alloc_size = fillFromIndices(ii,size);
@@ -421,7 +419,7 @@ public:
             : rn_(0)
 	{
         //Construct ITensor
-        array<Index,NMAX+1> ii = 
+        boost::array<Index,NMAX+1> ii = 
             {{ iv1.ind, iv2.ind, iv3.ind, iv4.ind, iv5.ind, 
                iv6.ind, iv7.ind, iv8.ind }};
         int size = 3; while(size < NMAX && ii[size+1] != IVNull.ind) ++size;
@@ -429,9 +427,9 @@ public:
         allocate(alloc_size);
 
         //Assign specified element to 1
-        array<int,NMAX+1> iv = 
+        boost::array<int,NMAX+1> iv = 
             {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i }};
-        array<int,NMAX+1> ja; ja.assign(1);
+        boost::array<int,NMAX+1> ja; ja.assign(1);
         for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
         {
             for(int j = 0; j < size; ++j)  // loop over the given indices
@@ -741,7 +739,7 @@ public:
 	{ 
         if(rn_ != 0)
         {
-            cerr << format("# given = 0, rn_ = %d\n")%rn_;
+            cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
             Error("Not enough indices (requires all having m!=1)");
         }
         assert(p != 0); 
@@ -755,7 +753,7 @@ public:
         assert(r_ >= 1);
         if(rn_ > 1) 
         {
-            cerr << format("# given = 1, rn_ = %d\n")%rn_;
+            cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
             Error("Not enough indices (requires all having m!=1)");
         }
 	    assert(p != 0); 
@@ -767,10 +765,10 @@ public:
     Real& operator()(const IndexVal& iv1, const IndexVal& iv2) 
 	{
         assert(r_ >= 2);
-        array<int,2+1> ja; ja.assign(1);
+        boost::array<int,2+1> ja; ja.assign(1);
         if(rn_ > 2) 
         {
-            cerr << format("# given = 2, rn_ = %d\n")%rn_;
+            cerr << boost::format("# given = 2, rn_ = %d\n")%rn_;
             Error("Not enough indices (requires all having m!=1)");
         }
         for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
@@ -789,9 +787,9 @@ public:
                     const IndexVal& iv5 = IVNull,const IndexVal& iv6 = IVNull,
                     const IndexVal& iv7 = IVNull,const IndexVal& iv8 = IVNull)
 	{
-        array<const IndexVal*,NMAX+1> iv = 
+        boost::array<const IndexVal*,NMAX+1> iv = 
             {{ 0, &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
-        array<int,NMAX+1> ja; ja.assign(1);
+        boost::array<int,NMAX+1> ja; ja.assign(1);
         for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
         {
             bool gotit = false;
@@ -834,7 +832,7 @@ public:
         other.reshapeDat(P,p->v);
     }
 
-    void groupIndices(const array<Index,NMAX+1>& indices, int nind, 
+    void groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
                       const Index& grouped, ITensor& res) const;
 
     void expandIndex(const Index& small, const Index& big, 
@@ -936,14 +934,7 @@ public:
 	{
         if(scale_ == newscale) return;
         solo();
-        //cerr << format("newscale = %.3E (logNum = %f, sign = %d)\n")
-        //%Real(newscale)%newscale.logNum()%newscale.sign();
-        //LogNumber vscale = (scale_/newscale);
-        //cerr << format("vscale = %.3E (logNum = %f, sign = %d)\n")
-        //%Real(vscale)%vscale.logNum()%vscale.sign();
-        if(newscale.isRealZero()) { 
-        //DO_IF_DEBUG(cerr << "\nnewscale was zero\n\n";)
-        p->v = 0; }
+        if(newscale.isRealZero()) { p->v = 0; }
         else { p->v *= (scale_/newscale); }
         scale_ = newscale;
 	}

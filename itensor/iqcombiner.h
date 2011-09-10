@@ -202,8 +202,8 @@ public:
             const int j = ind[i]+1;
             if(GET(v,i).nindex() < j)
             {
-                for(unsigned int k = 0; k < n.size(); ++k) cerr << format("n[%d] = %d\n")%k%n[k];
-                cout << format("i=%d, j=%d, v[i].nindex()=%d\n")%i%j%v[i].nindex();
+                for(unsigned int k = 0; k < n.size(); ++k) cerr << boost::format("n[%d] = %d\n")%k%n[k];
+                cout << boost::format("i=%d, j=%d, v[i].nindex()=%d\n")%i%j%v[i].nindex();
                 Error("bad v[i].iq in getVecInd");
             }
             vind.push_back(v[i].index(j));

@@ -223,7 +223,7 @@ Real psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi
 {
     Real re, im;
     psiHphi(psi,H,phi,re,im);
-    if(im != 0) cerr << format("\nReal psiHphi: WARNING, dropping non-zero (im = %.5f) imaginary part of expectation value.\n")%im;
+    if(im != 0) cerr << boost::format("\nReal psiHphi: WARNING, dropping non-zero (im = %.5f) imaginary part of expectation value.\n")%im;
     return re;
 }
 

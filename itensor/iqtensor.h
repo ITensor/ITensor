@@ -288,7 +288,8 @@ public:
                      const IQIndexVal& iv7 = IQIVNull, const IQIndexVal& iv8 = IQIVNull)
 	{
         solo(); p->init_rmap();
-        array<IQIndexVal,NMAX+1> iv = {{ IQIVNull, iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
+        boost::array<IQIndexVal,NMAX+1> iv 
+            = {{ IQIVNull, iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
         Real ur = 0; int nn = 0; 
         while(GET(iv,nn+1).iqind != IQIVNull.iqind) 
         { ++nn; ur += GET(iv,nn).index().unique_Real(); }

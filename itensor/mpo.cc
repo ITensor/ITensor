@@ -26,7 +26,7 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
         nfork = IQTensor(A.RightLinkInd(i),B.RightLinkInd(i),oldmid);
         if(clust.iten_size() == 0)	// this product gives 0 !!
         { 
-            cerr << format("WARNING: clust.iten_size()==0 in nmultMPO (i=%d).\n")%i; 
+            cerr << boost::format("WARNING: clust.iten_size()==0 in nmultMPO (i=%d).\n")%i; 
             res *= 0;
             return; 
         }
@@ -125,7 +125,7 @@ void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
     res.AAnc(1) = x.AA(1) * K.AA(1);
     for(int j = 1; j < N; ++j)
 	{
-        //cerr << format("exact_applyMPO: step %d\n") % j;
+        //cerr << boost::format("exact_applyMPO: step %d\n") % j;
         //Compute product of MPS tensor and MPO tensor
         res.AAnc(j+1) = x.AA(j+1) * K.AA(j+1); //m^2 k^2 d^2
 
