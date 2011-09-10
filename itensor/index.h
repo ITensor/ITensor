@@ -274,7 +274,7 @@ public:
     IndexVal operator()(int i) const;
 
     bool noprime_equals(const Index& other) const
-	{ return (p == other.p); }
+	{ return (p->ur == other.p->ur); }
 
     //-----------------------------------------------
     //Index: Prime methods
