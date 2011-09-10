@@ -57,21 +57,21 @@ installg: headerscopy libitensor-g.a
 mkdebugdir:
 	mkdir -p .debug_objs
 
-itensor.o: types.h real.h permutation.h index.h itensor.h
-iqtensor.o: types.h real.h permutation.h index.h itensor.h \
+itensor.o: types.h allocator.h real.h permutation.h index.h itensor.h
+iqtensor.o: types.h allocator.h real.h permutation.h index.h itensor.h \
 combiner.h iqindex.h iqcombiner.h iqtensor.h
-mps.o: types.h real.h permutation.h index.h itensor.h \
+mps.o: types.h allocator.h real.h permutation.h index.h itensor.h \
 combiner.h iqindex.h iqcombiner.h iqtensor.h model.h mps.h
-mpo.o: types.h real.h permutation.h index.h itensor.h \
+mpo.o: types.h allocator.h real.h permutation.h index.h itensor.h \
 combiner.h iqindex.h iqcombiner.h iqtensor.h model.h \
 mps.h mpo.h
 
-.debug_objs/itensor.o: types.h real.h permutation.h index.h itensor.h
-.debug_objs/iq.o: types.h real.h permutation.h index.h \
+.debug_objs/itensor.o: types.h allocator.h real.h permutation.h index.h itensor.h
+.debug_objs/iq.o: types.h allocator.h real.h permutation.h index.h \
 itensor.h combiner.h iqindex.h iqcombiner.h iqtensor.h 
-.debug_objs/mps.o: types.h real.h permutation.h index.h \
+.debug_objs/mps.o: types.h allocator.h real.h permutation.h index.h \
 itensor.h combiner.h iqindex.h iqcombiner.h iqtensor.h model.h mps.h
-.debug_objs/mpo.o: types.h real.h permutation.h index.h itensor.h \
+.debug_objs/mpo.o: types.h allocator.h real.h permutation.h index.h itensor.h \
 combiner.h iqindex.h iqcombiner.h iqtensor.h model.h \
 mps.h mpo.h
 

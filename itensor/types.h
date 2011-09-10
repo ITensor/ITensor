@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include "assert.h"
+#include "boost/array.hpp"
 #include "boost/foreach.hpp"
 #define foreach BOOST_FOREACH
 using namespace std::rel_ops;

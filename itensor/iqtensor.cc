@@ -1,5 +1,6 @@
 #include "iqtensor.h"
 
+DatAllocator IQTDat::allocator;
 
 void DoPrimer::operator()(IQIndex &iqi) const { iqi.doprime(pt,inc); }
 void MapPrimer::operator()(IQIndex &iqi) const { iqi.mapprime(plevold,plevnew,pt); }

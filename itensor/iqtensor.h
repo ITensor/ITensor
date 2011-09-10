@@ -90,8 +90,15 @@ public:
 
     void uninit_rmap() const { assert(numref == 1); rmap_init = false; }
 
+    inline void* operator new(size_t size) throw(std::bad_alloc)
+        { return allocator.alloc(size); }
+
+    inline void operator delete(void* p) throw()
+        { return allocator.dealloc(p); }
+
     ENABLE_INTRUSIVE_PTR(IQTDat)
 private:
+    static DatAllocator allocator;
     ~IQTDat() { } //must be dynamically allocated
     void operator=(const IQTDat&);
 };

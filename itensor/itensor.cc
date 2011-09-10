@@ -1,5 +1,7 @@
 #include "itensor.h"
 
+DatAllocator ITDat::allocator;
+
 ostream& operator<<(ostream & s, const ITensor & t)
 {
     s << "log(scale)[incl in elems] = " << t.scale().logNum() 

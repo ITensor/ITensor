@@ -2,7 +2,6 @@
 #define __ITENSOR_INDEX_H
 #include <string>
 #include "types.h"
-#include "boost/array.hpp"
 #include "boost/format.hpp"
 #include "boost/intrusive_ptr.hpp"
 #include "boost/uuid/uuid.hpp"

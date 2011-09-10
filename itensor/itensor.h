@@ -2,6 +2,7 @@
 #define __ITENSOR_ITENSOR_H
 #include "types.h"
 #include "real.h"
+#include "allocator.h"
 #include "index.h"
 #include "permutation.h"
 #include ".profiling/prodstats.h"
@@ -155,41 +156,19 @@ public:
 
     void print() const { cout << "ITDat: v = " << v; }
 
-    void* operator new(size_t size) throw(std::bad_alloc)
-    {
-        if(nf_ != 0)
-        {
-            //if(ran1() < 0.005) cerr << "\nnf_ = " << nf_ << "\n\n";
-            return (void*) pf_[--nf_];
-        }
-        void* p = malloc(size);
-        if(p == 0) throw std::bad_alloc();
-        return p;
-    }
+    inline void* operator new(size_t size) throw(std::bad_alloc)
+        { return allocator.alloc(size); }
 
-    void operator delete(void* p) throw()
-    {
-        if(nf_ != pf_.size())
-        {
-            pf_[nf_++] = (ITDat*) p;
-            return;
-        }
-        free(p);
-        cerr << "\nDid an ITDat free\n\n";
-    }
+    inline void operator delete(void* p) throw()
+        { return allocator.dealloc(p); }
 
     friend class ITensor;
     ENABLE_INTRUSIVE_PTR(ITDat)
 private:
-    static array<ITDat*,5000> pf_;
-    static size_t nf_;
+    static DatAllocator allocator;
     void operator=(const ITDat&);
     ~ITDat() { } //must be dynamically allocated
 };
-#ifdef THIS_IS_MAIN
-array<ITDat*,5000> ITDat::pf_;
-size_t ITDat::nf_ = 0;
-#endif
 
 class Combiner;
 
