@@ -18,7 +18,7 @@ ostream& operator<<(ostream & s, const ITensor & t)
             const Real scale = t.scale_;
             const Vector& v = t.p->v;
             Counter c; t.initCounter(c);
-            for(; c != Counter::done; ++c)
+            for(; c.notDone(); ++c)
             {
                 Real val = v(c.ind)*scale;
                 if(fabs(val) > 1E-10)
@@ -132,7 +132,7 @@ void ITensor::expandIndex(const Index& small, const Index& big,
 
     const Vector& thisdat = p->v;
     Vector& resdat = res.p->v;
-    for(; c != Counter::done ; ++c)
+    for(; c.notDone(); ++c)
     {
         resdat((((((((
         c.i[8]+inc8-1)*c.n[7]+
@@ -314,7 +314,7 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
     for(int k = 1; k <= NMAX; ++k) { j[ind[k]] = &(c.i[k]); }
 
     //Catch-all loop that works for any tensor
-    for( ; c != Counter::done ; ++c)
+    for(; c.notDone(); ++c)
     {
         rdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
             = thisdat(c.ind);
@@ -831,7 +831,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
     bool same_ind_order = true;
     for(int j = 1; j <= rn_; ++j)
     if(index_[j] != other.index_[j])
-    { same_ind_order = false; break; }
+        { same_ind_order = false; break; }
 
     if(same_ind_order) { thisdat += *othrdat; return *this; }
 
@@ -840,7 +840,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
     Counter c; other.initCounter(c);
     for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
 
-    for(; c != Counter::done ; ++c)
+    for(; c.notDone(); ++c)
     {
         thisdat((((((((*j[8]-1)*c.n[7]+*j[7]-1)*c.n[6]+*j[6]-1)*c.n[5]
         +*j[5]-1)*c.n[4]+*j[4]-1)*c.n[3]+*j[3]-1)*c.n[2]+*j[2]-1)*c.n[1]+*j[1])

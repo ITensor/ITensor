@@ -69,7 +69,8 @@ public:
             ++i[j];
             if(i[j] <= n[j]) break;
         }
-        if(i[rn_] > n[rn_]) reset(0); //set 'done' condition
+        //set 'done' condition
+        if(i[rn_] > n[rn_]) reset(0);
         return *this;
 	}
 
@@ -82,9 +83,7 @@ public:
     bool operator==(const Counter& other) const
 	{ return !(*this != other); }
 
-    //static const Counter *pend;
-    //static const Counter& done;
-    static const Counter done;
+    inline bool notDone() const { return i[1] != 0; }
 
     friend inline ostream& operator<<(ostream& s, const Counter& c)
     {
@@ -95,11 +94,6 @@ public:
         return s;
     }
 };
-#ifdef THIS_IS_MAIN
-//const Counter* Counter::pend = new Counter;
-//const Counter& Counter::done = *pend;
-const Counter Counter::done;
-#endif                                  
 
 //#define DO_ALT
 #ifdef DO_ALT
