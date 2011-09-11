@@ -881,5 +881,48 @@ BOOST_AUTO_TEST_CASE(toMatrix11)
 
 }
 
+BOOST_AUTO_TEST_CASE(CommaAssignment)
+{
+    ITensor ZZ(s1,s2);
+    ZZ << 1, 0, 0, -1;
+    CHECK_EQUAL(ZZ(s1(1),s2(1)),1);
+    CHECK_EQUAL(ZZ(s1(2),s2(1)),0);
+    CHECK_EQUAL(ZZ(s1(1),s2(2)),0);
+    CHECK_EQUAL(ZZ(s1(2),s2(2)),-1);
+
+    ITensor XX(s1,s2);
+    XX(s1(2),s2(1)) = 5;
+    XX *= 3;
+    XX << 0, 1, 1, 0;
+    CHECK_EQUAL(XX(s1(1),s2(1)),0);
+    CHECK_EQUAL(XX(s1(2),s2(1)),1);
+    CHECK_EQUAL(XX(s1(1),s2(2)),1);
+    CHECK_EQUAL(XX(s1(2),s2(2)),0);
+
+    ITensor AA(s1,s2);
+    AA.Randomize();
+    AA *= -ran1();
+    AA << 11, 21, 12, 22;
+    CHECK_EQUAL(AA(s1(1),s2(1)),11);
+    CHECK_EQUAL(AA(s1(2),s2(1)),21);
+    CHECK_EQUAL(AA(s1(1),s2(2)),12);
+    CHECK_EQUAL(AA(s1(2),s2(2)),22);
+}
+
+BOOST_AUTO_TEST_CASE(Website)
+{
+
+    Index a("a",2), b("b",2), c("c",2);
+    ITensor Z(a,b), X(b,c);
+    Z << 1, 0, 0, -1;
+    X << 0, 1, 1, 0;
+    ITensor R = Z * X;
+
+    CHECK_CLOSE(R(a(1),c(1)),0,1E-10);
+    CHECK_CLOSE(R(a(1),c(2)),+1,1E-10);
+    CHECK_CLOSE(R(a(2),c(1)),-1,1E-10);
+    CHECK_CLOSE(R(a(2),c(2)),0,1E-10);
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()
