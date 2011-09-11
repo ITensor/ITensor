@@ -10,7 +10,6 @@ HEADERS=test.h
 SOURCES=test.cc matrix_test.cc real_test.cc index_test.cc itensor_test.cc\
 combiner_test.cc iqtensor_test.cc mps_test.cc
 
-TENSOR_HEADERS=dmrg.h hams.h
 LIBNAMES=matrix utilities itensor
 
 #################################################################
@@ -25,7 +24,6 @@ LOCAL_LIBFLAGS=$(patsubst %,-l%, $(LIBNAMES))
 LOCAL_LIBGFLAGS=$(patsubst %,-l%-g, $(LIBNAMES))
 LIBFILES=$(patsubst %,$(LIBDIR)/lib%.a, $(LIBNAMES))
 LIBGFILES=$(patsubst %,$(LIBDIR)/lib%-g.a, $(LIBNAMES))
-REL_TENSOR_HEADERS=$(patsubst %,$(INCLUDEDIR)/%, $(TENSOR_HEADERS))
 OBJECTS=$(patsubst %.cc,%.o, $(SOURCES))
 GOBJECTS=$(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 
@@ -37,10 +35,10 @@ LIBGFLAGS=-L$(THIS_LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS) $(BOOST_UN
 
 #Rules ------------------
 
-%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS) $(HEADERS)
+%.o: %.cc $(LIBFILES) $(HEADERS)
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-.debug_objs/%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS) $(HEADERS)
+.debug_objs/%.o: %.cc $(LIBFILES) $(HEADERS)
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 #Targets -----------------
@@ -70,3 +68,9 @@ mkdebugdir:
 
 clean:
 	rm -fr *.o .debug_objs test test-g
+
+real_test.o: $(INCLUDEDIR)/real.h
+index_test.o: $(INCLUDEDIR)/index.h
+itensor_test.o: $(INCLUDEDIR)/index.h $(INCLUDEDIR)/itensor.h
+combiner_test.o: $(INCLUDEDIR)/index.h $(INCLUDEDIR)/itensor.h \
+$(INCLUDEDIR)/combiner.h

@@ -964,6 +964,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream & s, const ITensor & t);
 
+    friend class ITAssigner;
 }; //ITensor
 
 
@@ -992,6 +993,33 @@ inline Tensor multSiteOps(Tensor a, Tensor b)
     res.mapprime(2,1,primeSite);
     return res;
 }
+
+class ITAssigner
+{
+    ITensor& T;
+    Counter c; 
+
+    ITAssigner(ITensor& T_, Real r)
+    : T(T_)
+    { 
+        if(T.is_null()) Error("Can't assign to null ITensor");
+        T.solo();
+        T.scaleTo(1);
+        T.initCounter(c);
+        operator,(r);
+    }
+
+public:
+    ITAssigner& operator,(Real r)
+    {
+        if(c.notDone()) { T.p->v(c.ind) = r; ++c; }
+        else { Error("Comma assignment list too long.\n"); }
+        return *this;
+    }
+
+    friend ITAssigner operator<<(ITensor& T, Real r);
+};
+inline ITAssigner operator<<(ITensor& T, Real r) { return ITAssigner(T,r); }
 
 
 
