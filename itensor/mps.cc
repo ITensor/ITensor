@@ -75,7 +75,7 @@ IQTensor& nU, Vector& eigs_kept,
 bool doRelCutoff = false, LogNumber refNorm = 1)
 {
     IQIndex active = rho.finddir(Out);
-    assert(active.primelevel == 0);
+    assert(active.primeLevel() == 0);
 
     vector<Matrix> mmatrix(rho.iten_size());
     vector<Vector> mvector(rho.iten_size());
