@@ -273,7 +273,7 @@ protected:
     int left_orth_lim,right_orth_lim;
     const ModelT* model_;
     bool doRelCutoff_;
-    Real refNorm_;
+    LogNumber refNorm_;
 
     void new_tensors(vector<ITensor>& A_)
     {
@@ -362,8 +362,8 @@ public:
     bool doRelCutoff() const { return doRelCutoff_; }
     void doRelCutoff(bool val) 
         { doRelCutoff_ = val; }
-    Real refNorm() const { return refNorm_; }
-    void refNorm(Real val) 
+    LogNumber refNorm() const { return refNorm_; }
+    void refNorm(LogNumber val) 
         { if(val == 0) { Error("zero refNorm"); } refNorm_ = val; }
 
     Tensor bondTensor(int b) const 

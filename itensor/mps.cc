@@ -55,8 +55,8 @@ void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm,
 	{
 	//cout << "doRelCutoff is " << doRelCutoff << endl;
 	//cout << "refNorm is " << refNorm << endl;
-        cout << format("\nKept %d states in diag_denmat\n")% mp;
-        cout << format("svdtruncerr = %.2E\n")%svdtruncerr;
+        cout << boost::format("\nKept %d states in diag_denmat\n")% mp;
+        cout << boost::format("svdtruncerr = %.2E\n")%svdtruncerr;
         int stop = min(D.Length(),10);
         cout << "Eigs: ";
         for(int j = 1; j <= stop; ++j)
