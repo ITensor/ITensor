@@ -34,7 +34,7 @@ template
 MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
 
 void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, 
-	    ITensor& nU, Vector& D, bool doRelCutoff, LogNumber refNorm)
+                 ITensor& nU, Vector& D, bool doRelCutoff, LogNumber refNorm)
 {
     assert(rho.r() == 2);
     Index active = rho.index(1); active.noprime();
@@ -72,8 +72,8 @@ void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm,
 }
 
 void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, 
-IQTensor& nU, Vector& eigs_kept, 
-bool doRelCutoff = false, LogNumber refNorm = 1)
+                 IQTensor& nU, Vector& eigs_kept, 
+                 bool doRelCutoff, LogNumber refNorm)
 {
     IQIndex active = rho.finddir(Out);
     assert(active.primeLevel() == 0);

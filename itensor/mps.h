@@ -932,6 +932,13 @@ extern Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B,
                         Direction dir, bool doRelCutoff,
                         LogNumber refNorm);
 
+void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, 
+                 ITensor& nU, Vector& D, bool doRelCutoff, LogNumber refNorm);
+
+void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, 
+                 IQTensor& nU, Vector& eigs_kept, 
+                 bool doRelCutoff, LogNumber refNorm);
+
 inline bool check_QNs(const MPS& psi) { return true; }
 
 inline bool check_QNs(const IQMPS& psi)
