@@ -475,6 +475,24 @@ BOOST_AUTO_TEST_CASE(assignToVec)
 
 }
 
+BOOST_AUTO_TEST_CASE(reshape)
+{
+    Permutation P;
+    P.from_to(1,2);
+    P.from_to(2,1);
+
+    Real f = -5;
+    A *= f;
+
+    A.reshape(P);
+
+    CHECK_CLOSE(A(s1(1),s2(1)),11*f,1E-10);
+    CHECK_CLOSE(A(s1(1),s2(2)),21*f,1E-10);
+    CHECK_CLOSE(A(s1(2),s2(1)),12*f,1E-10);
+    CHECK_CLOSE(A(s1(2),s2(2)),22*f,1E-10);
+
+}
+
 BOOST_AUTO_TEST_CASE(findindex)
 {
     ITensor T(mixed_indices);

@@ -897,10 +897,10 @@ public:
     void reshape(const Permutation& P)
     {
         if(P.is_trivial()) return;
+        solo();
         Vector newdat;
         this->reshapeDat(P,newdat);
-        // newdat *= scale_;		?????   Why was this ever here?
-        assignFromVec(newdat);
+        p->v = newdat;
     }
 
     //Other Methods -------------------------------------------------
