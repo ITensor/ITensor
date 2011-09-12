@@ -1,8 +1,6 @@
 #ifndef __PERMUTATION_H
 #define __PERMUTATION_H
 #include "types.h"
-#include <error.h> //utilities
-#include "boost/array.hpp"
 
 class Permutation // Tell where each index will go, p(2,1,3) says 1 -> 2, 2 -> 1, 3 -> 3
 {
