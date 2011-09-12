@@ -15,7 +15,7 @@ ostream& operator<<(ostream & s, const ITensor & t)
         s << format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
         if(printdat)
         {
-            const Real scale = t.scale_;
+            const Real scale = t.scale_.real();
             const Vector& v = t.p->v;
             Counter c; t.initCounter(c);
             for(; c != Counter::done; ++c)
@@ -818,7 +818,7 @@ ITensor& ITensor::operator+=(const ITensor& other)
         //but the following prevents other from having to call solo()
         if(p->count() != 1) {  p = new ITDat(other.p->v); }
         else                { p->v = other.p->v; }
-        p->v *= (other.scale_/this->scale_);
+        p->v *= (other.scale_/this->scale_).real();
         othrdat = &(curr_p->v);
     }
 
@@ -882,7 +882,7 @@ void ITensor::toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) c
     { res = dref.t(); }
 }
 void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
-{ toMatrix11NoScale(i1,i2,res); res *= scale_; }
+{ toMatrix11NoScale(i1,i2,res); res *= scale_.real(); }
 
 /*
 // group i1,i2; i3,i4

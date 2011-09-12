@@ -34,8 +34,7 @@ template
 MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
 
 void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, 
-ITensor& nU, Vector& D, 
-bool doRelCutoff = false, Real refNorm = 1)
+	    ITensor& nU, Vector& D, bool doRelCutoff, LogNumber refNorm)
 {
     assert(rho.r() == 2);
     Index active = rho.index(1); active.noprime();
@@ -53,7 +52,9 @@ bool doRelCutoff = false, Real refNorm = 1)
     while(mp > maxm || (err+D(mp) < cutoff*D(1) && mp > minm)) err += D(mp--);
     svdtruncerr = (D(1) == 0 ? 0.0 : err/D(1));
     if(showeigs)
-    {
+	{
+	cout << "doRelCutoff is " << doRelCutoff << endl;
+	cout << "refNorm is " << refNorm << endl;
         cout << format("\nKept %d states in diag_denmat\n")% mp;
         cout << format("svdtruncerr = %.2E\n")%svdtruncerr;
         int stop = min(D.Length(),10);
@@ -82,16 +83,19 @@ bool doRelCutoff = false, LogNumber refNorm = 1)
     vector<Real> alleig;
 
     if(doRelCutoff)
-    {
-        DO_IF_DEBUG(cerr << "\n\nDoing relative cutoff\n\n\n";)
+	{
+        DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
 
         Real maxLogNum = -200;
         foreach(const ITensor& t, rho.itensors())
-        { maxLogNum = max(maxLogNum,t.scale().logNum()); }
+	    maxLogNum = max(maxLogNum,t.scale().logNum());
         assert(maxLogNum > -200);
         assert(maxLogNum <  200);
         refNorm = LogNumber(maxLogNum,1);
-    }
+        DO_IF_DEBUG(cout << "refNorm = " << refNorm << endl; )
+	}
+    else
+        DO_IF_DEBUG(cout << "Not doing relative cutoff\n";);
 
     //cerr << format("refNorm = %.1E (lognum = %f, sign = %d)\n\n")
     //%Real(refNorm)%refNorm.logNum()%refNorm.sign();
@@ -312,8 +316,7 @@ bool doRelCutoff, LogNumber refNorm)
     assert(rho.r() == 2);
 
     Tensor U; Vector eigs_kept;
-    diag_denmat(rho,cutoff,minm,maxm,U,
-                eigs_kept,doRelCutoff,refNorm);
+    diag_denmat(rho,cutoff,minm,maxm,U,eigs_kept,doRelCutoff,refNorm);
 
     comb.conj();
     comb.product(U,to_orth);

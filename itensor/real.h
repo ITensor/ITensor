@@ -65,7 +65,8 @@ public:
     inline void write(std::ostream& s) const 
         { s.write((char*)this,sizeof(this)); }
 
-    operator Real() const
+    //operator Real() const	too easy to misuse accidentally
+    Real real() const
 	{
         if(sign_ == 0) return 0;
 #ifndef DNDEBUG
@@ -117,6 +118,11 @@ public:
 	}
 
     LogNumber& operator/=(Real other) { return *this /= LogNumber(other); }
+
+    LogNumber operator/(const LogNumber& other)
+	{ LogNumber res(*this); res /= other; return res; }
+    LogNumber operator*(const LogNumber& other)
+	{ LogNumber res(*this); res *= other; return res; }
 
     bool operator<(const LogNumber& other) const
 	{
