@@ -90,6 +90,18 @@ public:
 
     void uninit_rmap() const { assert(numref == 1); rmap_init = false; }
 
+    bool has_itensor(const ApproxReal& r) const
+    { 
+        init_rmap();
+        return rmap.count(r) == 1; 
+    }
+
+    void insert_itensor(const ApproxReal& r, const ITensor& t)
+    {
+        itensor.push_front(t);
+        rmap[r] = itensor.begin();
+    }
+
     inline void* operator new(size_t size) throw(std::bad_alloc)
         { return allocator.alloc(); }
 
@@ -257,29 +269,21 @@ public:
     void insert(const ITensor& t) 
     { 
         solo();
-        p->init_rmap();
         ApproxReal r(t.unique_Real());
-        if(p->rmap.count(r) == 0)
+        if(p->has_itensor(r))
         {
-            p->itensor.push_front(t);
-            p->rmap.insert(pair<ApproxReal,iten_it>(r,p->itensor.begin()));
-            return;
+            Print(*(p->rmap[r])); Print(t);
+            Error("Can't insert ITensor with identical structure twice, use operator+=.");
         }
-        Print(*(p->rmap[r])); Print(t);
-        Error("IQTensor:: Can't insert ITensor with identical structure twice, use operator+=.");
+        p->insert_itensor(r,t);
     } //IQTensor::insert(const ITensor& t)
 
     IQTensor& operator+=(const ITensor& t) 
     { 
         solo();
-        p->init_rmap();
         ApproxReal r(t.unique_Real());
-        if(p->rmap.count(r) == 0)
-        {
-            p->itensor.push_front(t);
-            p->rmap[r] = p->itensor.begin();
-        }
-        else *(p->rmap[r]) += t;
+        if(!p->has_itensor(r)) { p->insert_itensor(r,t); }
+        else { *(p->rmap[r]) += t; }
         return *this;
     } //IQTensor::operator+=(ITensor)
 
@@ -287,7 +291,7 @@ public:
                      const IQIndexVal& iv4 = IQIVNull, const IQIndexVal& iv5 = IQIVNull, const IQIndexVal& iv6 = IQIVNull,
                      const IQIndexVal& iv7 = IQIVNull, const IQIndexVal& iv8 = IQIVNull)
 	{
-        solo(); p->init_rmap();
+        solo();
         boost::array<IQIndexVal,NMAX+1> iv 
             = {{ IQIVNull, iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
         Real ur = 0; int nn = 0; 
@@ -295,7 +299,7 @@ public:
         { ++nn; ur += GET(iv,nn).index().unique_Real(); }
         ApproxReal r(ur);
 
-        if(p->rmap.count(r) == 0)
+        if(!p->has_itensor(r))
         {
             vector<Index> indices; indices.reserve(nn);
             foreach(const IQIndex& I, p->iqindex_)
@@ -310,8 +314,7 @@ public:
                 indices.push_back(iv[j].index());
             }
             ITensor t(indices);
-            p->itensor.push_front(t);
-            p->rmap[r] = p->itensor.begin();
+            p->insert_itensor(r,t);
         }
         return (p->rmap[r])->operator()(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8);
     }
@@ -433,10 +436,12 @@ public:
     {
         solo();
         p->uninit_rmap();
+
         DoPrimer prim(pt);
         for_each(p->iqindex_.begin(), p->iqindex_.end(),prim);
+
         for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-        { jj->doprime(pt); }
+            { jj->doprime(pt); }
         viqindex.doprime(pt);
     } //end IQTensor::doprime
 
@@ -444,10 +449,12 @@ public:
     {
         solo();
         p->uninit_rmap();
+
         MapPrimer prim(plevold,plevnew,pt);
         for_each(p->iqindex_.begin(), p->iqindex_.end(),prim);
+
         for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-        jj->mapprime(plevold,plevnew,pt);
+            { jj->mapprime(plevold,plevnew,pt); }
         viqindex.mapprime(plevold,plevnew,pt);
     } //end IQTensor::mapprime
 
