@@ -730,10 +730,10 @@ public:
     //Element Access Methods ----------------------------------------
 
     Real val0() const 
-	{ assert(p != 0); assert(rn_ == 0); return p->v(1)*scale_; }
+	{ assert(p != 0); assert(rn_ == 0); return p->v(1)*scale_.real(); }
 
     Real val1(int i1) const
-	{ assert(p != 0); assert(rn_ <= 1); return p->v(i1)*scale_; }
+	{ assert(p != 0); assert(rn_ <= 1); return p->v(i1)*scale_.real(); }
 
     Real& operator()()
 	{ 
@@ -869,7 +869,7 @@ public:
         if(p->v.Length() != v.Length()) 
             Error("ITensor::assignToVec bad size");
         v = p->v;
-        v *= scale_;
+        v *= scale_.real();
 	}
     void assignFromVec(const VectorRef& v)
 	{
@@ -899,7 +899,7 @@ public:
         if(P.is_trivial()) return;
         Vector newdat;
         this->reshapeDat(P,newdat);
-        newdat *= scale_;
+        // newdat *= scale_;		?????   Why was this ever here?
         assignFromVec(newdat);
     }
 
@@ -918,9 +918,9 @@ public:
 
     inline bool is_zero() const { return (norm() < 1E-20); } 
 
-    Real sumels() const { return p->v.sumels() * scale_; }
+    Real sumels() const { return p->v.sumels() * scale_.real(); }
 
-    Real norm() const { return Norm(p->v) * scale_; }
+    Real norm() const { return Norm(p->v) * scale_.real(); }
 
     void scaleOutNorm() const
 	{
@@ -935,7 +935,11 @@ public:
         if(scale_ == newscale) return;
         solo();
         if(newscale.isRealZero()) { p->v = 0; }
-        else { p->v *= (scale_/newscale); }
+        else 
+	    {
+            scale_ /= newscale;
+            p->v *= scale_.real();
+	    }
         scale_ = newscale;
 	}
 
