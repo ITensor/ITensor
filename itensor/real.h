@@ -119,10 +119,13 @@ public:
 
     LogNumber& operator/=(Real other) { return *this /= LogNumber(other); }
 
-    LogNumber operator/(const LogNumber& other)
-	{ LogNumber res(*this); res /= other; return res; }
-    LogNumber operator*(const LogNumber& other)
-	{ LogNumber res(*this); res *= other; return res; }
+    LogNumber operator-() const 
+        { LogNumber res(*this); res.sign_ *= -1; return res; }
+
+    LogNumber operator/(const LogNumber& other) const
+        { LogNumber res(*this); res /= other; return res; }
+    LogNumber operator*(const LogNumber& other) const
+        { LogNumber res(*this); res *= other; return res; }
 
     bool operator<(const LogNumber& other) const
 	{
