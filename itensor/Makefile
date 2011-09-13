@@ -56,17 +56,21 @@ installg: headerscopy libitensor-g.a
 mkdebugdir:
 	mkdir -p .debug_objs
 
-itensor.o: types.h allocator.h real.h permutation.h index.h itensor.h
-iqtensor.o: itensor.o iqindex.h iqtensor.h
-mps.o: iqtensor.o mps.h
-mpo.o: mps.o mpo.h
-dmrg.o: mpo.o dmrg.h
-
-.debug_objs/itensor.o: types.h allocator.h real.h permutation.h index.h itensor.h
-.debug_objs/iqtensor.o: .debug_objs/itensor.o iqindex.h iqtensor.h
-.debug_objs/mps.o: .debug_objs/iqtensor.o mps.h
-.debug_objs/mpo.o: .debug_objs/mps.o mpo.h
-.debug_objs/dmrg.o: .debug_objs/mpo.o dmrg.h
+HEADERS=types.h allocator.h real.h permutation.h index.h itensor.h
+itensor.o: $(HEADERS)
+.debug_objs/itensor.o: $(HEADERS)
+HEADERS+= iqindex.h iqtensor.h
+iqtensor.o: $(HEADERS)
+.debug_objs/iqtensor.o: $(HEADERS)
+HEADERS+= mps.h
+mps.o: $(HEADERS)
+.debug_objs/mps.o: $(HEADERS)
+HEADERS+= mpo.h
+mpo.o: $(HEADERS)
+.debug_objs/mpo.o: $(HEADERS)
+HEADERS+= dmrg.h
+dmrg.o: $(HEADERS)
+.debug_objs/dmrg.o: $(HEADERS)
 
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a

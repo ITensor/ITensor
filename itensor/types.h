@@ -50,8 +50,8 @@ int count() const { return numref; }
 
 enum Printdat { ShowData, HideData };
 
-#define Print(X) { printdat = false; cerr << "\n" << #X << " =\n" << X << "\n"; }
-#define PrintDat(X) { printdat = true; cerr << "\n" << #X << " =\n" << X << "\n"; printdat = false; }
+#define Print(X) { printdat = false; cout << "\n" << #X << " =\n" << X << endl; }
+#define PrintDat(X) { printdat = true; cout << "\n" << #X << " =\n" << X << endl; printdat = false; }
 
 
 template<class T, class Op> void for_all(T& a, Op f) { for_each(a.begin(),a.end(),f); }
