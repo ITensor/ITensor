@@ -8,10 +8,7 @@ enum Direction { Fromright, Fromleft, Both, None };
 static const LogNumber DefaultRefScale(7.58273202392352185);
 extern bool showeigs;
 
-Vector do_denmat_Real(const ITensor& nA, ITensor& A, ITensor& B, Real cutoff,int minm, int maxm, Direction dir);
-Vector do_denmat_Real(const IQTensor& nA, IQTensor& A, IQTensor& B, Real cutoff, int minm,int maxm, Direction dir);
-Vector do_denmat_Real(const vector<IQTensor>& nA, const IQTensor& A, const IQTensor& B, IQTensor& U,
-	Real cutoff,Real lognormfac,int minm,int maxm, Direction dir, bool donormalize, bool do_relative_cutoff);
+void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
 template<class Tensor, class TensorSet>
 Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal);
@@ -47,197 +44,6 @@ int collapseCols(const Vector& Diag, Matrix& M)
 }
 }
 
-inline void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12)
-{
-    const int N = A.size()-1;
-    qA.resize(A.size());
-    const bool is_mpo = A[1].hasindex(model.si(1).primed());
-    const int Dim = model.dim();
-    const int PDim = (is_mpo ? Dim : 1);
-
-    vector<IQIndex> linkind(N);
-
-    typedef map<QN,Vector>::value_type qD_vt;
-    map<QN,Vector> qD; //Diags of compressor matrices by QN
-    typedef map<QN,vector<ITensor> >::value_type qt_vt;
-    map<QN,vector<ITensor> > qt; //ITensor blocks by QN
-    typedef map<QN,ITensor>::value_type qC_vt;
-    map<QN,ITensor> qC; //Compressor ITensors by QN
-    ITensor block;
-    vector<ITensor> nblock;
-    vector<inqn> iq;
-
-    QN q;
-
-    qC[totalq] = ITensor(); //Represents Virtual index
-    //First value of prev_q below set to totalq
-
-    const int show_s = 0;
-
-    Index bond, prev_bond;
-    for(int s = 1; s <= N; ++s)
-    {
-        qD.clear(); qt.clear();
-        if(s > 1) prev_bond = index_in_common(A[s-1],A[s],Link);
-        if(s < N) bond = index_in_common(A[s],A[s+1],Link);
-
-        if(s == show_s) { PrintDat(A[s]); }
-
-        foreach(const qC_vt& x, qC) {
-        const QN& prev_q = x.first; const ITensor& comp = x.second; 
-        for(int n = 1; n <= Dim;  ++n)
-        for(int u = 1; u <= PDim; ++u)
-        {
-            q = (is_mpo ? prev_q+model.si(s).qn(n)-model.si(s).qn(u) : prev_q-model.si(s).qn(n));
-
-            //For the last site, only keep blocks 
-            //compatible with specified totalq i.e. q=0 here
-            if(s == N && q != QN()) continue;
-
-            //Set Site indices of A[s] and its previous Link Index
-            block = A[s];
-            if(s != 1) block *= conj(comp);
-            block *= model.si(s)(n);
-            if(is_mpo) block *= model.siP(s)(u);
-
-            //Initialize D Vector (D records which values of
-            //the right Link Index to keep for the current QN q)
-            int count = qD.count(q);
-            Vector& D = qD[q];
-            if(count == 0) { D.ReDimension(bond.m()); D = 0; }
-
-            if(s == show_s)
-            {
-                cerr << boost::format("For n = %d\n")%n;
-                cerr << boost::format("Got a block with norm %.10f\n")%block.norm();
-                cerr << boost::format("bond.m() = %d\n")%bond.m();
-                PrintDat(block);
-                if(s != 1) PrintDat(comp);
-            }
-
-            bool keep_block = false;
-            if(s == N) keep_block = true;
-            else
-            {
-                if(bond.m() == 1 && block.norm() != 0) { D = 1; keep_block = true; }
-                else
-                {
-                    ITensor summed_block;
-                    if(s==1) summed_block = block;
-                    else
-                    {
-                        //Here we sum over the previous link index
-                        //which is already ok, analyze the one to the right
-                        assert(comp.r()==2);
-                        Index new_ind = (comp.index(1)==prev_bond ? comp.index(2) : comp.index(1));
-                        summed_block = ITensor(new_ind,1) * block;
-                    }
-                    //cerr << boost::format("s = %d, bond=")%s << bond << "\n";
-                    //summed_block.print("summed_block");
-
-                    Real rel_cut = -1;
-                    for(int j = 1; j <= bond.m(); ++j)
-                    { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
-                    assert(rel_cut >= 0);
-                    //Real rel_cut = summed_block.norm()/summed_block.vec_size();
-                    rel_cut *= cut;
-                    //cerr << "rel_cut == " << rel_cut << "\n";
-
-                    if(rel_cut > 0)
-                    for(int j = 1; j <= bond.m(); ++j)
-                    if(fabs(summed_block.val1(j)) > rel_cut) 
-                    { D(j) = 1; keep_block = true; }
-                }
-            } //else (s != N)
-
-            //if(!keep_block && q == totalq) { D(1) = 1; keep_block = true; }
-
-            if(keep_block)
-            {
-                qD[q] = D;
-
-                if(is_mpo) 
-                {
-                block.addindex1(conj(model.si(s)(n).index()));
-                block.addindex1(model.siP(s)(u).index());
-                }
-                else { block.addindex1(model.si(s)(n).index()); }
-
-                qt[q].push_back(block);
-
-                if(s==show_s)
-                {
-                block.print("Kept block",ShowData);
-                cerr << "D = " << D << "\n";
-                }
-            }
-        }}
-
-        qC.clear();
-
-        foreach(const qt_vt& x, qt)
-        {
-            const vector<ITensor>& blks = x.second;
-            if(blks.size() != 0)
-            {
-                q = x.first; 
-                if(s == N) 
-                { foreach(const ITensor& t, blks) nblock.push_back(t); }
-                else
-                {
-                    Matrix M; int mm = collapseCols(qD[q],M);
-                    if(s==show_s)
-                    {
-                        cerr << boost::format("Adding block, mm = %d\n")%mm;
-                        q.print("q");
-                        cerr << "qD[q] = " << qD[q] << "\n";
-                        cerr << "M = \n" << M << "\n";
-                        int count = 0;
-                        foreach(const ITensor& t, blks) 
-                        t.print((boost::format("t%02d")%(++count)).str(),ShowData);
-                    }
-                    //string qname = (boost::format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
-                    string qname = (boost::format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
-                    Index qbond(qname,mm);
-                    ITensor compressor(bond,qbond,M);
-                    foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
-                    iq.push_back(inqn(qbond,q));
-                    qC[q] = compressor;
-                }
-            }
-        }
-
-        if(s != N) 
-        { 
-            if(iq.empty()) 
-            {
-                cerr << "At site " << s << "\n";
-                Error("convertToIQ: no compatible QNs to put into Link.");
-            }
-            linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
-        }
-        if(s == 1)
-            qA[s] = (is_mpo ? IQTensor(conj(model.si(s)),model.siP(s),linkind[s]) : IQTensor(model.si(s),linkind[s]));
-        else if(s == N)
-            qA[s] = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(model.si(s)),model.siP(s)) 
-                                    : IQTensor(conj(linkind[s-1]),model.si(s)));
-        else
-            qA[s] = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(model.si(s)),model.siP(s),linkind[s]) 
-                                    : IQTensor(conj(linkind[s-1]),model.si(s),linkind[s]));
-
-        foreach(const ITensor& nb, nblock) { qA[s] += nb; } nblock.clear();
-
-        if(s==show_s)
-        {
-        qA[s].print((boost::format("qA[%d]")%s).str(),ShowData);
-        Error("Stopping");
-        }
-
-    } //for loop over s
-
-    IQIndex Center("Center",Index("center",1,Virtual),totalq,In);
-    qA[1].addindex1(Center);
-}
 
 class InitState
 {
@@ -452,49 +258,37 @@ public:
 
     //MPSt: orthogonalization methods -------------------------------------
 
-    virtual void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
+    virtual void doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false)
 	{
-        assert(i > 0);
-        assert(i <= N);
-        /*
-        if(!preserve_shape) 
+        assert(b > 0);
+        assert(b < N);
+
+        if(dir == Fromleft && b-1 > left_orth_lim)
         {
-            const int i1 = (dir == Fromleft ? i : i+1);
-            const int i2 = (dir == Fromleft ? i-1 : i+2);
-            const int boundary = (dir == Fromleft ? 1 : NN()-1);
-
-            vector<IndexT> keep_indices;
-            IndexT site = A.at(i1).findtype(Site); site.noprime();
-            keep_indices.push_back(site);
-
-            int j = A.at(i1).findindexn(site.primed());
-            if(j > -1) //part of an MPO
-            { keep_indices.push_back(site.primed()); }
-
-            if(i != boundary) 
-            {
-            foreach(const IndexT& I, AA.indexn())
-            if(A.at(i2).hasindexn(I)) keep_indices.push_back(I);
-            foreach(const IndexT& I, AA.index1())
-            if(A.at(i2).hasindex1(I)) keep_indices.push_back(I);
-            }
+            cerr << boost::format("b=%d, left_orth_lim=%d\n")%b%left_orth_lim;
+            Error("b-1 > left_orth_lim");
         }
-        //otherwise the MPS will retain the same index structure
-        */
+        if(dir == Fromright && b+2 < right_orth_lim)
+        {
+            cerr << boost::format("b=%d, right_orth_lim=%d\n")%b%right_orth_lim;
+            Error("b+2 < right_orth_lim");
+        }
 
-        tensorSVD(AA,GET(A,i),GET(A,i+1),
+        tensorSVD(AA,GET(A,b),GET(A,b+1),
                   cutoff,minm,maxm,dir,doRelCutoff_,refNorm_);
         truncerror = svdtruncerr;
 
         if(dir == Fromleft)
         {
-            if(left_orth_lim == i-1 || i == 1) left_orth_lim = i;
-            if(right_orth_lim < i+2) right_orth_lim = i+2;
+            //if(left_orth_lim >= b-1 || b == 1) 
+            left_orth_lim = b;
+            if(right_orth_lim < b+2) right_orth_lim = b+2;
         }
-        else
+        else //dir == Fromright
         {
-            if(left_orth_lim > i-1) left_orth_lim = i-1;
-            if(right_orth_lim == i+2 || i == N-1) right_orth_lim = i+1;
+            if(left_orth_lim > b-1) left_orth_lim = b-1;
+            //if(right_orth_lim <= b+2 || b == N-1) 
+            right_orth_lim = b+1;
         }
 	}
 
@@ -590,7 +384,7 @@ public:
         if(b-1 > left_orth_lim)
         {
             cerr << boost::format("b=%d, Lb=%d\n")%b%left_orth_lim;
-            Error("b > left_orth_lim");
+            Error("b-1 > left_orth_lim");
         }
         if(b+2 < right_orth_lim)
         {
@@ -631,13 +425,14 @@ public:
         doSVD(left_orth_lim+1,AA,Fromleft);
 	}
 
+    Real norm() const { return sqrt(psiphi(*this,*this)); }
+
     Real normalize()
     {
-        Real norm2,im;
-        psiphi(*this,*this,norm2,im);
-        Real norm = sqrt(norm2);
-        *this *= 1.0/norm;
-        return norm;
+        Real norm_ = norm();
+        if(fabs(norm_) < 1E-20) Error("Zero norm");
+        *this *= 1.0/norm_;
+        return norm_;
     }
 
     bool is_complex() const
@@ -657,271 +452,9 @@ public:
     //IQMPS specific methods
 
     template <class IQMPSType> 
-    void convertToIQ(IQMPSType& iqpsi, QN totalq = QN(), Real cut = 1E-12) const
-    {
-        assert(model_ != 0);
-        const ModelT& sst = *model_;
-
-        iqpsi = IQMPSType(sst,maxm,cutoff);
-
-        if(!A[1].hasindex(si(1))) Error("convertToIQ: incorrect primelevel for conversion");
-        bool is_mpo = A[1].hasindex(si(1).primed());
-        const int Dim = si(1).m();
-        const int PDim = (is_mpo ? Dim : 1);
-
-        vector<IQIndex> linkind(N);
-
-        typedef map<QN,Vector>::value_type qD_vt;
-        map<QN,Vector> qD; //Diags of compressor matrices by QN
-        typedef map<QN,vector<ITensor> >::value_type qt_vt;
-        map<QN,vector<ITensor> > qt; //ITensor blocks by QN
-        typedef map<QN,ITensor>::value_type qC_vt;
-        map<QN,ITensor> qC; //Compressor ITensors by QN
-        ITensor block;
-        vector<ITensor> nblock;
-        vector<inqn> iq;
-
-        QN q;
-
-        qC[totalq] = ITensor(); //Represents Virtual index
-        //First value of prev_q below set to totalq
-
-        const int show_s = 0;
-
-        Index bond, prev_bond;
-        for(int s = 1; s <= N; ++s)
-        {
-            if(debug3) cerr << "s = " << s << "\n";
-
-            qD.clear(); qt.clear();
-            if(s > 1) prev_bond = LinkInd(s-1); 
-            if(s < N) bond = LinkInd(s);
-
-            if(s == show_s) 
-            {
-                PrintDat(A[s]);
-            }
-
-            foreach(const qC_vt& x, qC) {
-            const QN& prev_q = x.first; const ITensor& comp = x.second; 
-            for(int n = 1; n <= Dim;  ++n)
-            for(int u = 1; u <= PDim; ++u)
-            {
-                q = (is_mpo ? prev_q+si(s).qn(n)-si(s).qn(u) : prev_q-si(s).qn(n));
-
-                //For the last site, only keep blocks 
-                //compatible with specified totalq i.e. q=0 here
-                if(s == N && q != QN()) continue;
-
-                //Set Site indices of A[s] and its previous Link Index
-                block = A[s];
-                if(s != 1) block *= conj(comp);
-                block *= si(s)(n);
-                if(is_mpo) block *= siP(s)(u);
-
-                //Initialize D Vector (D records which values of
-                //the right Link Index to keep for the current QN q)
-                int count = qD.count(q);
-                Vector& D = qD[q];
-                if(count == 0) { D.ReDimension(bond.m()); D = 0; }
-
-                if(s == show_s)
-                {
-                    cerr << boost::format("For n = %d\n")%n;
-                    cerr << boost::format("Got a block with norm %.10f\n")%block.norm();
-                    cerr << boost::format("bond.m() = %d\n")%bond.m();
-                    PrintDat(block);
-                    if(s != 1) PrintDat(comp);
-                }
-
-                bool keep_block = false;
-                if(s == N) keep_block = true;
-                else
-                {
-                    if(bond.m() == 1 && block.norm() != 0) { D = 1; keep_block = true; }
-                    else
-                    {
-                        ITensor summed_block;
-                        if(s==1) summed_block = block;
-                        else
-                        {
-                            //Here we sum over the previous link index
-                            //which is already ok, analyze the one to the right
-                            assert(comp.r()==2);
-                            Index new_ind = (comp.index(1)==prev_bond ? comp.index(2) : comp.index(1));
-                            summed_block = ITensor(new_ind,1) * block;
-                        }
-                        //cerr << boost::format("s = %d, bond=")%s << bond << "\n";
-                        //summed_block.print("summed_block");
-
-                        Real rel_cut = -1;
-                        for(int j = 1; j <= bond.m(); ++j)
-                        { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
-                        assert(rel_cut >= 0);
-                        //Real rel_cut = summed_block.norm()/summed_block.vec_size();
-                        rel_cut *= cut;
-                        //cerr << "rel_cut == " << rel_cut << "\n";
-
-                        if(rel_cut > 0)
-                        for(int j = 1; j <= bond.m(); ++j)
-                        if(fabs(summed_block.val1(j)) > rel_cut) 
-                        { D(j) = 1; keep_block = true; }
-                    }
-                } //else (s != N)
-
-                //if(!keep_block && q == totalq) { D(1) = 1; keep_block = true; }
-
-                if(keep_block)
-                {
-                    qD[q] = D;
-
-                    if(is_mpo) 
-                    {
-                    block.addindex1(conj(si(s)(n).index()));
-                    block.addindex1(siP(s)(u).index());
-                    }
-                    else { block.addindex1(si(s)(n).index()); }
-
-                    qt[q].push_back(block);
-
-                    if(s==show_s)
-                    {
-                    block.print("Kept block",ShowData);
-                    cerr << "D = " << D << "\n";
-                    }
-                }
-            }}
-
-            qC.clear();
-
-            foreach(const qt_vt& x, qt)
-            {
-                const vector<ITensor>& blks = x.second;
-                if(blks.size() != 0)
-                {
-                    q = x.first; 
-                    if(s == N) 
-                    { foreach(const ITensor& t, blks) nblock.push_back(t); }
-                    else
-                    {
-                        Matrix M; int mm = collapseCols(qD[q],M);
-                        if(s==show_s)
-                        {
-                            cerr << boost::format("Adding block, mm = %d\n")%mm;
-                            q.print("q");
-                            cerr << "qD[q] = " << qD[q] << "\n";
-                            cerr << "M = \n" << M << "\n";
-                            int count = 0;
-                            foreach(const ITensor& t, blks) 
-                            t.print((boost::format("t%02d")%(++count)).str(),ShowData);
-                        }
-                        //string qname = (boost::format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
-                        string qname = (boost::format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
-                        Index qbond(qname,mm);
-                        ITensor compressor(bond,qbond,M);
-                        foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
-                        iq.push_back(inqn(qbond,q));
-                        qC[q] = compressor;
-                    }
-                }
-            }
-
-            if(s != N) 
-            { 
-                if(iq.empty()) 
-                {
-                    cerr << "At site " << s << "\n";
-                    Error("convertToIQ: no compatible QNs to put into Link.");
-                }
-                linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
-            }
-            if(s == 1)
-            {
-                iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
-                IQIndex Center("Center",Index("center",1,Virtual),totalq,In);
-                iqpsi.AAnc(1).addindex1(Center);
-            }
-            else if(s == N)
-            {
-                iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s)) 
-                                        : IQTensor(conj(linkind[s-1]),si(s)));
-            }
-            else
-            {
-                iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s),linkind[s]) 
-                                        : IQTensor(conj(linkind[s-1]),si(s),linkind[s]));
-            }
-
-            foreach(const ITensor& nb, nblock) { iqpsi.AAnc(s) += nb; } nblock.clear();
-
-            if(0) //try to get this working ideally
-            if(!is_mpo && s > 1) 
-            {
-                IQTensor AA = iqpsi.bondTensor(s-1);
-                iqpsi.doSVD(s-1,AA,Fromleft);
-            }
-
-            if(s==show_s)
-            {
-            iqpsi.AA(s).print((boost::format("qA[%d]")%s).str(),ShowData);
-            Error("Stopping");
-            }
-
-        } //for loop over s
-
-        assert(check_QNs(iqpsi));
-
-    } //void convertToIQ(IQMPSType& iqpsi) const
+    void convertToIQ(IQMPSType& iqpsi, QN totalq = QN(), Real cut = 1E-12) const;
 
 }; //class MPSt<Tensor>
-
-namespace {
-void plussers(const Index& l1, const Index& l2, Index& sumind, ITensor& first, ITensor& second)
-{
-    sumind = Index(sumind.rawname(),l1.m()+l2.m(),sumind.type());
-    first = ITensor(l1,sumind,1);
-    second = ITensor(l2,sumind);
-    for(int i = 1; i <= l2.m(); ++i) second(l2(i),sumind(l1.m()+i)) = 1;
-}
-
-void plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind, IQTensor& first, IQTensor& second)
-{
-    map<Index,Index> l1map, l2map;
-    vector<inqn> iq;
-    foreach(const inqn& x, l1.iq())
-	{
-        Index ii = x.index;
-        Index jj(ii.name(),ii.m(),ii.type());
-        l1map[ii] = jj;
-        iq.push_back(inqn(jj,x.qn));
-	}
-    foreach(const inqn& x, l2.iq())
-	{
-        Index ii = x.index;
-        Index jj(ii.name(),ii.m(),ii.type());
-        l2map[ii] = jj;
-        iq.push_back(inqn(jj,x.qn));
-	}
-    sumind = IQIndex(sumind,iq);
-    first = IQTensor(conj(l1),sumind);
-    foreach(const inqn& x, l1.iq())
-	{
-        Index il1 = x.index;
-        Index s1 = l1map[il1];
-        ITensor t(il1,s1,1.0);
-        first += t;
-	}
-    second = IQTensor(conj(l2),sumind);
-    foreach(const inqn& x, l2.iq())
-	{
-        Index il2 = x.index;
-        Index s2 = l2map[il2];
-        ITensor t(il2,s2,1.0);
-        second += t;
-	}
-}
-} //anonymous namespace
-
 
 typedef MPSt<ITensor> MPS;
 typedef MPSt<IQTensor> IQMPS;
@@ -1017,7 +550,8 @@ void psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)  // <psi
     if(N != phi.NN()) Error("psiphi: mismatched N");
 
     typename MPSType::TensorT L = phi.AA(1) * conj(primeind(psi.AA(1),psi.LinkInd(1))); 
-    for(int i = 2; i < psi.NN(); ++i) L = L * phi.AA(i) * conj(primelink(psi.AA(i)));
+    for(int i = 2; i < psi.NN(); ++i) 
+        { L = L * phi.AA(i) * conj(primelink(psi.AA(i))); }
     L = L * phi.AA(N);
 
     Dot(primeind(psi.AA(N),psi.LinkInd(N-1)),L,re,im);
