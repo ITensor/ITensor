@@ -112,8 +112,8 @@ public:
         DO_IF_DEBUG(if(other.sign_ == 0) Error("divide by zero in LogNumber");)
         sign_ *= other.sign_;
         lognum_ -= other.lognum_;
-        assert(lognum_ < maxlogdouble);
-        assert(lognum_ > -maxlogdouble);
+        //assert(lognum_ < maxlogdouble);
+        //assert(lognum_ > -maxlogdouble);
         return *this;
 	}
 
