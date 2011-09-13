@@ -13,9 +13,9 @@ struct ITensorDefaults
 
     ITensor A,B,X,Z;
 
-    std::vector<Index> mixed_indices;
+    std::vector<Index> mixed_inds, reordered_mixed_inds;
 
-    int mixed_indices_dim;
+    int mixed_inds_dim;
 
     ITensorDefaults() :
     s1(Index("s1",2,Site)),
@@ -42,8 +42,9 @@ struct ITensorDefaults
     b3(Index("b3",3)),
     b4(Index("b4",4)),
     b5(Index("b5",5)),
-    mixed_indices(6),
-    mixed_indices_dim(1)
+    mixed_inds(6),
+    reordered_mixed_inds(6),
+    mixed_inds_dim(1)
     {
         {
         Matrix M(s1.m(),s2.m());
@@ -73,15 +74,22 @@ struct ITensorDefaults
         Z = ITensor(s1,s2,M);
         }
 
-        mixed_indices[0] = a2;
-        mixed_indices[1] = l3;
-        mixed_indices[2] = l1;
-        mixed_indices[3] = l2;
-        mixed_indices[4] = a4;
-        mixed_indices[5] = l4;
+        mixed_inds[0] = a2;
+        mixed_inds[1] = b3;
+        mixed_inds[2] = l1;
+        mixed_inds[3] = l2;
+        mixed_inds[4] = a4;
+        mixed_inds[5] = l4;
 
-        foreach(const Index& I, mixed_indices)
-        { mixed_indices_dim *= I.m(); }
+        foreach(const Index& I, mixed_inds)
+        { mixed_inds_dim *= I.m(); }
+
+        reordered_mixed_inds[0] = a2;
+        reordered_mixed_inds[1] = l1;
+        reordered_mixed_inds[2] = b3;
+        reordered_mixed_inds[3] = a4;
+        reordered_mixed_inds[4] = l4;
+        reordered_mixed_inds[5] = l2;
     }
 
     ~ITensorDefaults() { }
@@ -495,41 +503,55 @@ BOOST_AUTO_TEST_CASE(reshape)
 
 BOOST_AUTO_TEST_CASE(findindex)
 {
-    ITensor T(mixed_indices);
+    ITensor T(mixed_inds);
 
     boost::array<int,6> arb_order = {{ 3, 4, 1, 0, 2, 5 }};
 
     foreach(int i, arb_order)
     {
-        int j = T.findindex(mixed_indices.at(i));
-        CHECK_EQUAL(T.index(j),mixed_indices.at(i));
+        int j = T.findindex(mixed_inds.at(i));
+        CHECK_EQUAL(T.index(j),mixed_inds.at(i));
     }
 
 }
 
 BOOST_AUTO_TEST_CASE(SumDifference)
 {
-    Vector V(mixed_indices_dim),W(mixed_indices_dim);
+    Vector V(mixed_inds_dim),W(mixed_inds_dim);
     V.Randomize();
     W.Randomize();
 
-    ITensor v(mixed_indices,V), w(mixed_indices,W);
+    ITensor v(mixed_inds,V), w(mixed_inds,W);
 
-    Real f1 = -ran1(), f2 = ran1();
+    Real f1 = -ran1(), f2 = 0.1*f1;
 
     ITensor r = f1*v + w/f2; 
     Vector R(r.vec_size()); r.assignToVec(R);
     for(int j = 1; j < R.Length(); ++j)
     { CHECK_CLOSE(R(j),f1*V(j)+W(j)/f2,1E-10); }
 
-    CHECK_CLOSE(r(l3(1),l1(1),l2(1),l4(1)),f1*V(1)+W(1)/f2,1E-10);
-    CHECK_CLOSE(r(l3(2),l1(1),l2(1),l4(1)),f1*V(2)+W(2)/f2,1E-10);
-    CHECK_CLOSE(r(l3(1),l1(2),l2(1),l4(1)),f1*V(3)+W(3)/f2,1E-10);
-
     ITensor d(v); d -= w;
     Vector D(d.vec_size()); d.assignToVec(D);
     for(int j = 1; j < D.Length(); ++j)
     { CHECK_CLOSE(D(j),V(j)-W(j),1E-10); }
+
+    Vector YY(mixed_inds_dim),ZZ(mixed_inds_dim);
+    YY.Randomize();
+    ZZ.Randomize();
+
+    f1 = 1; f2 = 1;
+    ITensor yy(mixed_inds,YY), zz(reordered_mixed_inds,ZZ);
+    r = f1*yy + f2*zz;
+    for(int j1 = 1; j1 <= 2; ++j1)
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int k3 = 1; k3 <= 3; ++k3)
+    for(int j4 = 1; j4 <= 2; ++j4)
+    { 
+        CHECK_CLOSE(r(l1(j1),l2(j2),b3(k3),l4(j4)),
+                    f1*yy(l1(j1),l2(j2),b3(k3),l4(j4))
+                   +f2*zz(l1(j1),l2(j2),b3(k3),l4(j4))
+                   ,1E-10); 
+    }
 
 }
 

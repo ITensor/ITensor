@@ -775,33 +775,25 @@ ITensor& ITensor::operator+=(const ITensor& other)
 
     if(this->scale_.isRealZero())
     {
-        scale_ = other.scale_;
-        p = other.p;
+        *this = other;
         return *this;
     }
     if(other.scale_.isRealZero()) { return *this; }
 
-    intrusive_ptr<ITDat> curr_p = p;
-    const Vector* othrdat = 0;
-
-
-    if(scale_.magnitudeLessThan(other.scale_)) 
-    { 
-        this->scaleTo(other.scale_); 
-        solo();
-        othrdat = &(other.p->v);
-    }
-    else
-    { 
-        //Would be simpler to call other.scaleTo(this->scale_)
-        //but the following prevents other from having to call solo()
-        if(p->count() != 1) {  p = new ITDat(other.p->v); }
-        else                { p->v = other.p->v; }
-        p->v *= (other.scale_/this->scale_).real();
-        othrdat = &(curr_p->v);
-    }
+    solo();
 
     Vector& thisdat = p->v;
+    const Vector& othrdat = other.p->v;
+
+    Real scalefac = 1;
+    if(scale_.magnitudeLessThan(other.scale_)) 
+    {
+        this->scaleTo(other.scale_); 
+    }
+    else
+    {
+        scalefac = (other.scale_/scale_).real();
+    }
 
 #ifdef DO_ALT
     p->alt.clear();
@@ -812,18 +804,45 @@ ITensor& ITensor::operator+=(const ITensor& other)
     if(index_[j] != other.index_[j])
         { same_ind_order = false; break; }
 
-    if(same_ind_order) { thisdat += *othrdat; return *this; }
+    if(same_ind_order) 
+    { 
+        if(scalefac == 1)
+            thisdat += othrdat; 
+        else
+            thisdat += scalefac*othrdat;
+        return *this; 
+    }
 
     Permutation P; getperm(other.index_,P);
-    int *j[NMAX+1];
     Counter c; other.initCounter(c);
-    for(int m = 1; m <= NMAX; ++m) j[P.dest(m)] = &(c.i[m]);
-
-    for(; c.notDone(); ++c)
+    int *j[NMAX+1];
+    for(int k = 1; k <= NMAX; ++k) j[P.dest(k)] = &(c.i[k]);
+    static int n[NMAX+1];
+    for(int k = 1; k <= NMAX; ++k) 
     {
-        thisdat((((((((*j[8]-1)*c.n[7]+*j[7]-1)*c.n[6]+*j[6]-1)*c.n[5]
-        +*j[5]-1)*c.n[4]+*j[4]-1)*c.n[3]+*j[3]-1)*c.n[2]+*j[2]-1)*c.n[1]+*j[1])
-        += (*othrdat)(c.ind);
+        n[P.dest(k)] = c.n[k];
+        //n[k] = index_[k].m();
+    }
+
+    if(scalefac == 1)
+    {
+        for(; c.notDone(); ++c)
+        {
+            thisdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]
+            +*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]
+            +*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+            += othrdat(c.ind);
+        }
+    }
+    else
+    {
+        for(; c.notDone(); ++c)
+        {
+            thisdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]
+            +*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]
+            +*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+            += scalefac * othrdat(c.ind);
+        }
     }
 
     return *this;
