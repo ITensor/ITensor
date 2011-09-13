@@ -64,14 +64,14 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
     AAnc(1) = AA(1) * first[1] + other.AA(1) * second[1];
     for(int i = 2; i < N; ++i)
     {
-        AAnc(i) = conj(first[i-1]) * AA(i) * first[i] + conj(second[i-1]) * other.AA(i) * second[i];
+        AAnc(i) = conj(first[i-1]) * AA(i) * first[i] 
+                  + conj(second[i-1]) * other.AA(i) * second[i];
     }
     AAnc(N) = conj(first[N-1]) * AA(N) + conj(second[N-1]) * other.AA(N);
 
     noprimelink();
 
-    position(N);
-    position(1);
+    orthogonalize();
 
     return *this;
 }

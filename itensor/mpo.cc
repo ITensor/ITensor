@@ -52,8 +52,7 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
     res.noprimelink();
     res.mapprime(2,1,primeSite);
     res.cutoff = cut;
-    res.position(N);
-    res.position(1);
+    res.orthogonalize();
 
 }//void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
 

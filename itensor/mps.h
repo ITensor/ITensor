@@ -252,29 +252,35 @@ public:
     void noprimelink()
 	{ for(int i = 1; i <= N; ++i) A[i].noprime(primeLink); }
 
-    IndexT LinkInd(int i) const { return index_in_common(A[i],A[i+1],Link); }
-    IndexT RightLinkInd(int i) const { assert(i<NN()); return index_in_common(AA(i),AA(i+1),Link); }
-    IndexT LeftLinkInd(int i)  const { assert(i>1); return index_in_common(AA(i),AA(i-1),Link); }
+    IndexT LinkInd(int b) const 
+        { return index_in_common(AA(b),AA(b+1),Link); }
+    IndexT RightLinkInd(int i) const 
+        { assert(i < N); return index_in_common(AA(i),AA(i+1),Link); }
+    IndexT LeftLinkInd(int i)  const 
+        { assert(i > 1); return index_in_common(AA(i),AA(i-1),Link); }
 
     //MPSt: orthogonalization methods -------------------------------------
 
-    virtual void doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false)
+    virtual void doSVD(int b, const Tensor& AA, Direction dir, 
+                       bool preserve_shape = false)
 	{
         assert(b > 0);
         assert(b < N);
 
         if(dir == Fromleft && b-1 > left_orth_lim)
         {
-            cerr << boost::format("b=%d, left_orth_lim=%d\n")%b%left_orth_lim;
+            cerr << boost::format("b=%d, left_orth_lim=%d\n")
+                    %b%left_orth_lim;
             Error("b-1 > left_orth_lim");
         }
         if(dir == Fromright && b+2 < right_orth_lim)
         {
-            cerr << boost::format("b=%d, right_orth_lim=%d\n")%b%right_orth_lim;
+            cerr << boost::format("b=%d, right_orth_lim=%d\n")
+                    %b%right_orth_lim;
             Error("b+2 < right_orth_lim");
         }
 
-        tensorSVD(AA,GET(A,b),GET(A,b+1),
+        tensorSVD(AA,A[b],A[b+1],
                   cutoff,minm,maxm,dir,doRelCutoff_,refNorm_);
         truncerror = svdtruncerr;
 
@@ -316,6 +322,25 @@ public:
     { 
         if(!is_ortho()) Error("orthogonality center not well defined.");
         return (left_orth_lim + 1);
+    }
+
+    void orthogonalize()
+    {
+        //Do a half-sweep to the right, orthogonalizing each bond
+        //but do not truncate since the basis to the right might not
+        //be ortho (i.e. use the current m).
+        for(int b = 1; b < N; ++b)
+        {
+            int m_to_use = LinkInd(b).m();
+            Tensor bond = A[b]*A[b+1];
+            tensorSVD(bond,A[b],A[b+1],
+                      0,m_to_use,m_to_use,Fromleft,
+                      doRelCutoff_,refNorm_);
+        }
+        left_orth_lim = N-1;
+        right_orth_lim = N+1;
+        //Now basis is ortho, ok to truncate
+        position(1);
     }
 
     //Checks if A[i] is left (left == true) or right (left == false) orthogonalized

@@ -130,6 +130,8 @@ public:
 
     using Parent::is_ortho;
     using Parent::ortho_center;
+    using Parent::orthogonalize;
+
     using Parent::is_complex;
 
     using Parent::applygate;
