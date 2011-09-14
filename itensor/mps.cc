@@ -105,10 +105,12 @@ Real SVDWorker::diag_denmat(const ITensor& rho, Vector& D, ITensor& U)
     }
     if(showeigs_)
 	{
+        cout << endl;
+        cout << boost::format("truncate_ = %s")%(truncate_?"true":"false")<<endl;
+        cout << boost::format("Kept %d states in diag_denmat\n")% mp;
+        cout << boost::format("svdtruncerr = %.2E\n")%svdtruncerr;
         //cout << "doRelCutoff is " << doRelCutoff_ << endl;
         //cout << "refNorm is " << refNorm_ << endl;
-        cout << boost::format("\nKept %d states in diag_denmat\n")% mp;
-        cout << boost::format("svdtruncerr = %.2E\n")%svdtruncerr;
         int stop = min(D.Length(),10);
         cout << "Eigs: ";
         for(int j = 1; j <= stop; ++j)
@@ -228,10 +230,10 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     //Truncate
     Real docut = -1;
     Real svdtruncerr = 0;
+    Real e1 = max(alleig.back(),1.0e-60);
     int mdisc = 0, m = (int)alleig.size();
     if(truncate_)
     {
-        Real e1 = max(alleig.back(),1.0e-60);
         if(m > minm_)
         for(; mdisc < (int)alleig.size(); mdisc++, m--){
         if(((svdtruncerr += GET(alleig,mdisc)/e1) > cutoff_ && m <= maxm_) 
@@ -247,9 +249,26 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
             break; 
         }}
     }
+    else //!truncate_
+    {
+        //Just truncate any eigenvalues < 1E-30
+        if(m > minm_)
+        for(; mdisc < (int)alleig.size(); mdisc++, m--)
+        if(svdtruncerr += alleig[mdisc]/e1 >= 1E-30 || m <= minm_)
+        {
+            if(mdisc > 0)
+                 { docut = (alleig.at(mdisc-1) + alleig[mdisc])*0.5; }
+            else { docut = -1; }
+            //Overshot by one, correct truncerr
+            svdtruncerr -= alleig[mdisc]/e1;
+            break;
+        }
+    }
     if(showeigs_)
     {
-        cout << boost::format("\nKept %d, discarded %d states in diag_denmat")
+        cout << endl;
+        cout << boost::format("truncate_ = %s")%(truncate_?"true":"false")<<endl;
+        cout << boost::format("Kept %d, discarded %d states in diag_denmat")
                                      % m % mdisc << endl;
         cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
         cout << boost::format("docut = %.2E")%docut << endl;
@@ -315,96 +334,10 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
         { D(i) = GET(alleig,alleig.size()-i); }
     lastd = D;
     return svdtruncerr;
-} //void diag_denmat
-
-template<class Tensor>
-void SVDWorker::operator()(int b, const Tensor& AA, 
-                          Tensor& A, Tensor& B, Direction dir) 
-{
-    typedef typename Tensor::IndexT IndexT;
-    typedef typename Tensor::CombinerT CombinerT;
-
-    if(AA.vec_size() == 0) 
-    {
-        A *= 0;
-        B *= 0;
-        eigs_kept_.at(b).ReDimension(1);
-        eigs_kept_.at(b) = 1;
-        return;
-    }
-
-    IndexT mid = index_in_common(A,B,Link);
-    if(mid.is_null()) mid = IndexT("mid");
-
-    Tensor& to_orth = (dir==Fromleft ? A : B);
-    Tensor& newoc   = (dir==Fromleft ? B : A);
-
-    CombinerT comb;
-
-    int unique_link = 0; //number of Links unique to to_orth
-    for(int j = 1; j <= to_orth.r(); ++j) 
-    { 
-        const IndexT& I = to_orth.index(j);
-        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex 
-             || I.type() == Virtual))
-        {
-            if(I.type() == Link) ++unique_link;
-            comb.addleft(I);
-        }
-    }
-
-    //Check if we're at the edge
-    if(unique_link == 0)
-    {
-        comb.init(mid.rawname());
-        assert(comb.check_init());
-        comb.product(AA,newoc);
-        to_orth = comb; to_orth.conj();
-        eigs_kept_.at(b)(comb.right().m()); 
-        eigs_kept_.at(b) = 1.0/comb.right().m();
-        return;
-    }
-
-    //Apply combiner
-    comb.doCondense(true);
-    comb.init(mid.rawname());
-    Tensor AAc; comb.product(AA,AAc);
-
-    const IndexT& active = comb.right();
-
-    Tensor rho;
-    if(AAc.is_complex())
-    {
-        Tensor re,im;
-        AAc.SplitReIm(re,im);
-        rho = re; rho.conj(); rho.primeind(active);
-        rho *= re;
-        im *= conj(primeind(im,active));
-        rho += im;
-    }
-    else 
-    { 
-        Tensor AAcc = conj(AAc); 
-        AAcc.primeind(active); 
-        rho = AAc*AAcc; 
-    }
-    assert(rho.r() == 2);
-
-    Tensor U;
-    truncerr_.at(b) = diag_denmat(rho,eigs_kept_.at(b),U);
-
-    comb.conj();
-    comb.product(U,to_orth);
-    newoc = conj(U) * AAc;
-}
-template 
-void SVDWorker::operator()<ITensor>(int b, const ITensor& AA, 
-                                    ITensor& A, ITensor& B, Direction dir);
-template 
-void SVDWorker::operator()<IQTensor>(int b, const IQTensor& AA, 
-                                    IQTensor& A, IQTensor& B, Direction dir);
+} //Real SVDWorker::diag_denmat
 
 
+/*
 void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, 
                  ITensor& nU, Vector& D, bool doRelCutoff, LogNumber refNorm)
 {
@@ -488,17 +421,54 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm,
         Matrix M(n,n);
         t.toMatrix11NoScale(t.index(1),t.index(2),M);
 
+#ifdef STRONG_DEBUG
+        for(int r = 1; r <= n; ++r)
+        for(int c = r+1; c <= n; ++c)
+        {
+            if(fabs(M(r,c)-M(c,r)) > 1E-15)
+            {
+                Print(M);
+                Error("M not symmetric in diag_denmat");
+            }
+        }
+#endif //STRONG_DEBUG
+
         M *= -1;
         EigenValues(M,d,U);
         d *= -1;
 
 #ifdef STRONG_DEBUG
-        Matrix Id1 = U.t()*U;
-        Matrix Id2(U.Nrows(),U.Nrows()); Id2 = 1;
-        Matrix Diff = Id1-Id2;
-        if(Norm(Diff.TreatAsVector()) > 1E-10)
+        Matrix Id(U.Nrows(),U.Nrows()); Id = 1;
+        Matrix Diff = Id-(U.t()*U);
+        if(Norm(Diff.TreatAsVector()) > 1E-12)
+        {
+            cerr << boost::format("\ndiff=%.2E\n")%Norm(Diff.TreatAsVector());
+            Print(U.t()*U);
             Error("U not unitary in diag_denmat");
+        }
+        
+        if(fabs(d.sumels() + Trace(M)) > 1E-12)
+        {
+            cerr << boost::format("d.sumels() = %.10f, Trace(M) = %.10f\n")
+                                 % d.sumels()        % Trace(M);
+            Error("Total eigs != trace");
+        }
+
+        Matrix D(n,n); D.TreatAsVector() = 0;
+        for(int j = 1; j <= n; ++j) D(j,j) = -d(j);
+        Matrix nM = U*D*U.t();
+        for(int r = 1; r <= n; ++r)
+        for(int c = r+1; c <= n; ++c)
+        {
+            if(fabs(nM(r,c)-M(r,c)) > 1E-12)
+            {
+                Print(M);
+                Print(nM);
+                Error("Inaccurate diag");
+            }
+        }
 #endif //STRONG_DEBUG
+
 
         for(int j = 1; j <= n; ++j) 
             { alleig.push_back(d(j)); }
@@ -752,6 +722,18 @@ void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm, int ma
 
 }
 */
+
+int collapseCols(const Vector& Diag, Matrix& M)
+{
+    int nr = Diag.Length(), nc = int(Diag.sumels());
+    assert(nr != 0);
+    if(nc == 0) return nc;
+    M = Matrix(nr,nc); M = 0;
+    int c = 0;
+    for(int r = 1; r <= nr; ++r)
+    if(Diag(r) == 1) { M(r,++c) = 1; }
+    return nc;
+}
 
 void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq, Real cut)
 {

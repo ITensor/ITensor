@@ -3,6 +3,8 @@
 //Orthogonalizing DMRG. Puts in an energy penalty if psi has an overlap with any MPS in 'other'.
 Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>& other, DMRGOpts& opts)
 {
+    const Real orig_cutoff = psi.cutoff(); 
+    const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
     int debuglevel = 1;
     if(opts.quiet) debuglevel = 0;
 
@@ -42,6 +44,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
     for(int sw = 1; sw <= sweeps.nsweep(); sw++)
     {
+        psi.cutoff(sweeps.cutoff(sw)); psi.minm(sweeps.minm(sw)); psi.maxm(sweeps.maxm(sw));
         int largest_m = -1;
         int max_eigs_bond = -1;
         Vector max_eigs(1); max_eigs = 2; //max in the sense of slowly decaying
@@ -83,9 +86,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             energy = evals(1);
             phi.assignFromVec(evecs.Row(1));
 
-            tensorSVD(phi,psi.AAnc(l),psi.AAnc(l+1),sweeps.cutoff(sw),
-                      sweeps.minm(sw),sweeps.maxm(sw),(ha==1 ? Fromleft : Fromright),
-                      psi.doRelCutoff(),psi.refNorm());
+            psi.doSVD(l,phi,(ha==1 ? Fromleft : Fromright));
 
             psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).doprime(primeBoth);
             psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).doprime(primeBoth);
@@ -155,11 +156,19 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             if(dE < opts.energy_errgoal)
             {
                 cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
+                psi.cutoff(orig_cutoff); 
+                psi.minm(orig_minm); 
+                psi.maxm(orig_maxm);
                 return energy;
             }
         }
         last_energy = energy;
     }
+
+    psi.cutoff(orig_cutoff); 
+    psi.minm(orig_minm); 
+    psi.maxm(orig_maxm);
+
     return energy;
 }
 
@@ -311,6 +320,9 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
     const bool useleft = (LB.r() != 0);
     const bool useright = (RB.r() != 0);
 
+    const Real orig_cutoff = psi.cutoff(); 
+    const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
+
     int debuglevel = 1;
     if(opts.quiet) debuglevel = 0;
     Real energy, last_energy = -10000;
@@ -344,6 +356,7 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
 
     for(int sw = 1; sw <= sweeps.nsweep(); sw++)
     {
+        psi.cutoff(sweeps.cutoff(sw)); psi.minm(sweeps.minm(sw)); psi.maxm(sweeps.maxm(sw));
         int largest_m = -1;
         int max_eigs_bond = -1;
         Vector max_eigs(1); max_eigs = 2; //max in the sense of slowly decaying
@@ -368,10 +381,7 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
             }
             */
 
-            tensorSVD(phi,psi.AAnc(l),psi.AAnc(l+1),
-                      sweeps.cutoff(sw),sweeps.minm(sw),sweeps.maxm(sw),
-                      (ha==1 ? Fromleft : Fromright),
-                      psi.doRelCutoff(),psi.refNorm());
+            psi.doSVD(l,phi,(ha==1 ? Fromleft : Fromright));
 
             psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).doprime(primeBoth);
             psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).doprime(primeBoth);
@@ -456,12 +466,19 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
             if(dE < opts.energy_errgoal)
             {
                 cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
+                psi.cutoff(orig_cutoff); 
+                psi.minm(orig_minm); 
+                psi.maxm(orig_maxm);
                 return energy;
             }
         }
         last_energy = energy;
 
     } //for loop over sw
+
+    psi.cutoff(orig_cutoff); 
+    psi.minm(orig_minm); 
+    psi.maxm(orig_maxm);
 
     return energy;
 }

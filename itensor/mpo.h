@@ -18,17 +18,13 @@ private:
     using Parent::left_orth_lim;
     using Parent::right_orth_lim;
     using Parent::model_;
-    using Parent::doRelCutoff_;
-    using Parent::refNorm_;
+    using Parent::svd_;
 public:
-    using Parent::cutoff;
-    using Parent::minm;
-    using Parent::maxm;
 
     operator MPOt<IQTensor>()
     { 
-        MPOt<IQTensor> res(*model_,maxm,cutoff,doRelCutoff_,refNorm_); 
-        res.minm = minm;
+        MPOt<IQTensor> res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm()); 
+        res.svd_ = svd_;
         convertToIQ(*model_,A,res.A);
         return res; 
     }
@@ -53,22 +49,28 @@ public:
 
     using Parent::doRelCutoff;
     using Parent::refNorm;
+    using Parent::cutoff;
+    using Parent::minm;
+    using Parent::maxm;
+    using Parent::truncerr;
+    using Parent::eigs_kept;
+    using Parent::showeigs;
+    using Parent::svd;
 
     //MPOt: Constructors -----------------------------------------
 
-    MPOt() : Parent() { doRelCutoff_ = true; }
+    MPOt() : Parent() { doRelCutoff(true); }
 
     MPOt(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, 
-    bool doRelCutoff = true, LogNumber refNorm = DefaultRefScale) 
+    bool _doRelCutoff = true, LogNumber _refNorm = DefaultRefScale) 
     : Parent(model,maxm_,cutoff_)
 	{ 
-        doRelCutoff_ = doRelCutoff;
-        refNorm_ = refNorm;
-        if(refNorm_ == 0) Error("MPOt<Tensor>: Setting refNorm_ to zero");
+        doRelCutoff(_doRelCutoff);
+        refNorm(_refNorm);
         // Norm of psi^2 = 1 = norm = sum of denmat evals. 
         // This translates to Tr{Adag A} = norm.  
         // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
-        if(refNorm_ == DefaultRefScale) refNorm_ = exp(model.NN());
+        if(_refNorm == DefaultRefScale) refNorm(exp(model.NN()));
 	}
 
     MPOt(BaseModel& model, istream& s) { read(model,s); }
@@ -108,25 +110,8 @@ public:
         }
 	}
 
+    using Parent::doSVD;
     using Parent::position;
-
-    virtual void doSVD(int i, const Tensor& AA, Direction dir, bool preserve_shape = false)
-	{
-        tensorSVD(AA,AAnc(i),AAnc(i+1),cutoff,minm,maxm,dir,
-                  doRelCutoff_,refNorm_);
-        truncerror = svdtruncerr;
-
-        if(dir == Fromleft)
-        {
-            if(left_orth_lim == i-1 || i == 1) left_orth_lim = i;
-            if(right_orth_lim < i+2) right_orth_lim = i+2;
-        }
-        else
-        {
-            if(left_orth_lim > i-1) left_orth_lim = i-1;
-            if(right_orth_lim == i+2 || i == NN()-1) right_orth_lim = i+1;
-        }
-	}
 
     using Parent::is_ortho;
     using Parent::ortho_center;
@@ -294,7 +279,8 @@ inline Real psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMP
     return re;
 }
 
-void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm);
+template <class MPOType>
+void nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm);
 void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm);
 void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
 

@@ -1,10 +1,17 @@
 #include "mpo.h"
 
-void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
+template <class MPOType>
+void nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm)
 {
-    if(Aorig.NN() != Borig.NN()) Error("nmultMPO(IQMPO): Mismatched N");
+    typedef typename MPOType::TensorT Tensor;
+    typedef typename MPOType::IndexT IndexT;
+    if(Aorig.NN() != Borig.NN()) Error("nmultMPO(MPOType): Mismatched N");
     int N = Borig.NN();
-    IQMPO A(Aorig), B(Borig);
+    MPOType A(Aorig), B(Borig);
+
+    SVDWorker svd = A.svd();
+    svd.cutoff(cut);
+    svd.maxm(maxm);
 
     A.position(1);
     B.position(1);
@@ -14,7 +21,7 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
     res.primelinks(0,4);
     res.mapprime(1,2,primeSite);
 
-    IQTensor clust,nfork;
+    Tensor clust,nfork;
     vector<int> midsize(N);
     for(int i = 1; i < N; ++i)
 	{
@@ -22,44 +29,45 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
         else       { clust = nfork * A.AA(i) * B.AA(i); }
         if(i == N-1) break;
 
-        IQIndex oldmid = res.RightLinkInd(i);
-        nfork = IQTensor(A.RightLinkInd(i),B.RightLinkInd(i),oldmid);
-        if(clust.iten_size() == 0)	// this product gives 0 !!
+        IndexT oldmid = res.RightLinkInd(i);
+        nfork = Tensor(A.RightLinkInd(i),B.RightLinkInd(i),oldmid);
+        if(clust.norm() == 0) // this product gives 0 !!
         { 
-            cerr << boost::format("WARNING: clust.iten_size()==0 in nmultMPO (i=%d).\n")%i; 
+            cerr << boost::format("WARNING: clust.norm()==0 in nmultMPO (i=%d).\n")%i; 
             res *= 0;
             return; 
         }
-        tensorSVD(clust, res.AAnc(i), nfork,cut,1,maxm,Fromleft,A.doRelCutoff(),A.refNorm());
-        IQIndex mid = index_in_common(res.AA(i),nfork,Link);
-        assert(mid.dir() == In);
+        svd(i,clust, res.AAnc(i), nfork,Fromleft);
+        IndexT mid = index_in_common(res.AA(i),nfork,Link);
         mid.conj();
         midsize[i] = mid.m();
-        assert(res.RightLinkInd(i+1).dir() == Out);
-        assert(res.si(i+1).dir() == Out);
-        res.AAnc(i+1) = IQTensor(mid,conj(res.si(i+1)),res.si(i+1).primed().primed(),res.RightLinkInd(i+1));
+        res.AAnc(i+1) = Tensor(mid,conj(res.si(i+1)),res.si(i+1).primed().primed(),res.RightLinkInd(i+1));
 	}
 
     nfork = clust * A.AA(N) * B.AA(N);
-    if(nfork.iten_size() == 0)	// this product gives 0 !!
+    if(nfork.norm() == 0) // this product gives 0 !!
     { 
-        cerr << "WARNING: nfork.iten_size()==0 in nmultMPO\n"; 
+        cerr << "WARNING: nfork.norm()==0 in nmultMPO\n"; 
         res *= 0;
         return; 
     }
 
-    res.doSVD(N-1,nfork,Fromright,false);
+    res.doSVD(N-1,nfork,Fromright);
     res.noprimelink();
     res.mapprime(2,1,primeSite);
-    res.cutoff = cut;
+    res.cutoff(cut);
     res.orthogonalize();
 
-}//void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
+}//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
+template
+void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res,Real cut, int maxm);
+template
+void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm);
 
 void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm)
 {
-    if(cutoff < 0) cutoff = x.cutoff;
-    if(maxm < 0) maxm = x.maxm;
+    if(cutoff < 0) cutoff = x.cutoff();
+    if(maxm < 0) maxm = x.maxm();
     int N = x.NN();
     if(K.NN() != N) Error("Mismatched N in napplyMPO");
     if(x.right_lim() > 3)
@@ -73,7 +81,13 @@ void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm
         Error("bad right_lim for K");
     }
 
-    res = x; res.maxm = maxm; res.cutoff = cutoff;
+    SVDWorker svd = K.svd();
+    svd.cutoff(cutoff);
+    svd.maxm(maxm);
+
+    res = x; 
+    res.maxm(maxm); 
+    res.cutoff(cutoff);
     res.primelinks(0,4);
     res.mapprime(0,1,primeSite);
 
@@ -90,8 +104,7 @@ void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm
         nfork = IQTensor(x.RightLinkInd(i),K.RightLinkInd(i),oldmid);
         if(clust.iten_size() == 0)	// this product gives 0 !!
         { res *= 0; return; }
-        tensorSVD(clust, res.AAnc(i), nfork,
-                  cutoff,1,maxm,Fromleft,K.doRelCutoff(),K.refNorm());
+        svd(i,clust, res.AAnc(i), nfork,Fromleft);
         IQIndex mid = index_in_common(res.AA(i),nfork,Link);
         assert(mid.dir() == In);
         mid.conj();
@@ -108,7 +121,8 @@ void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm
     res.noprimelink();
     res.mapprime(1,0,primeSite);
     res.position(1);
-    res.maxm = x.maxm; res.cutoff = x.cutoff;
+    res.maxm(x.maxm()); 
+    res.cutoff(x.cutoff());
 
 } //void napplyMPO
 
@@ -140,5 +154,5 @@ void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
         res.AAnc(j+1) = conj(comb) * res.AA(j+1); //m^3 k^3 d
 	}
     res.mapprime(1,0,primeSite);
-    //res.position(1);
+    //res.orthogonalize();
 } //void exact_applyMPO
