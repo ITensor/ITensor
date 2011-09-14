@@ -403,6 +403,93 @@ Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
     return dmrg(psi,H,sweeps,opts);
 }
 
+void onesite_sweepnext(int &l, int &ha, int N)
+{
+    if(ha == 1)
+    {
+        if(++l == N) ha = 2;
+        return;
+    }
+    if(--l == 1) ha = 3;
+}
+
+
+template <class MPSType, class MPOType, class DMRGOptions>
+Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptions& opts)
+{
+    typedef typename MPSType::TensorT Tensor;
+    typedef typename MPOType::TensorT MPOTensor;
+    const Real orig_cutoff = psi.cutoff; const int orig_minm = psi.minm, orig_maxm = psi.maxm;
+    int debuglevel = (opts.quiet ? 0 : 1);
+    int N = psi.NN();
+    Real energy;
+
+    psi.position(1);
+    //if(H.is_complex()) psi.AAnc(1) *= Complex_1;
+
+    vector<MPOTensor> LH(N+1);
+    vector<MPOTensor> RH(N+1);
+    for(int l = N-1; l >= 1; --l) psi.projectOp(l+1,Fromright,RH.at(l+1),H.AA(l+1),RH.at(l));
+
+    for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
+    {
+    psi.cutoff = sweeps.cutoff(sw); psi.minm = sweeps.minm(sw); psi.maxm = sweeps.maxm(sw);
+    for(int b = 1, ha = 1; ha != 3; onesite_sweepnext(b,ha,N))
+    {
+        if(!opts.quiet) 
+        {
+            cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") 
+                                % sw   % ha     % b % (b+1);
+        }
+
+	    Direction dir = (ha==1?Fromleft:Fromright);
+	    Tensor phi = psi.AA(b);
+
+	    const Real errgoal = 1E-4;
+	    
+	    energy = doDavidson(phi, H.AA(b), LH.at(b), RH.at(b), sweeps.niter(sw), debuglevel, errgoal);
+
+        if(ha == 1)
+        {
+            phi *= psi.AA(b+1);
+            psi.doSVD(b,phi,dir);
+        }
+        else
+        {
+            phi *= psi.AA(b-1);
+            psi.doSVD(b-1,phi,dir);
+        }
+
+
+        if(!opts.quiet) { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
+                                  % sweeps.cutoff(sw) % sweeps.maxm(sw) 
+                                  % (ha == 1 ? psi.LinkInd(b) : psi.LinkInd(b-1)).showm(); }
+
+        opts.measure(sw,ha,(ha==1 ? b : b-1),psi,energy);
+
+        if(ha == 1 && b != N) psi.projectOp(b,Fromleft,LH.at(b),H.AA(b),LH.at(b+1));
+        if(ha == 2 && b >= 1)   psi.projectOp(b,Fromright,RH.at(b),H.AA(b),RH.at(b-1));
+    } //for loop over b
+
+        if(opts.checkDone(sw,psi,energy))
+        {
+            psi.cutoff = orig_cutoff; psi.minm = orig_minm; psi.maxm = orig_maxm;
+            return energy;
+        }
+
+    } //for loop over sw
+
+    psi.cutoff = orig_cutoff; psi.minm = orig_minm; psi.maxm = orig_maxm;
+    return energy;
+}
+
+template <class MPSType, class MPOType>
+Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
+{
+    DMRGOpts opts; 
+    return onesitedmrg(psi,H,sweeps,opts);
+}
+
 //Orthogonalizing DMRG. Puts in an energy penalty if psi has an overlap with any MPS in 'other'.
 Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, 
           const vector<MPS>& other, DMRGOpts& opts);
