@@ -96,13 +96,10 @@ Real SVDWorker::diag_denmat(const ITensor& rho, Vector& D, ITensor& U)
     //Truncate
     Real svdtruncerr = 0.0;
     int mp = D.Length();
-    if(truncate_)
-    {
-        while(mp > maxm_ || (svdtruncerr+D(mp) < cutoff_*D(1) && mp > minm_)) 
-            { svdtruncerr += D(mp--); }
-        svdtruncerr = (D(1) == 0 ? 0 : svdtruncerr/D(1));
-        D.ReduceDimension(mp); 
-    }
+    while(mp > maxm_ || (svdtruncerr+D(mp) < cutoff_*D(1) && mp > minm_)) 
+        { svdtruncerr += D(mp--); }
+    svdtruncerr = (D(1) == 0 ? 0 : svdtruncerr/D(1));
+    D.ReduceDimension(mp); 
     if(showeigs_)
 	{
         cout << endl;
@@ -237,38 +234,20 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     Real svdtruncerr = 0;
     Real e1 = max(alleig.back(),1.0e-60);
     int mdisc = 0, m = (int)alleig.size();
-    if(truncate_)
-    {
-        if(m > minm_)
-        for(; mdisc < (int)alleig.size(); mdisc++, m--){
-        if(((svdtruncerr += GET(alleig,mdisc)/e1) > cutoff_ && m <= maxm_) 
-           || m <= minm_)
-        { 
-            if(mdisc > 0)
-                 { docut = (alleig.at(mdisc-1) + alleig[mdisc])*0.5; }
-            else { docut = -1; }
+    if(m > minm_)
+    for(; mdisc < (int)alleig.size(); mdisc++, m--){
+    if(((svdtruncerr += GET(alleig,mdisc)/e1) > cutoff_ && m <= maxm_) 
+       || m <= minm_)
+    { 
+        if(mdisc > 0)
+             { docut = (alleig.at(mdisc-1) + alleig[mdisc])*0.5; }
+        else { docut = -1; }
 
-            //Overshot by one, correct truncerr
-            svdtruncerr -= alleig[mdisc]/e1;
+        //Overshot by one, correct truncerr
+        svdtruncerr -= alleig[mdisc]/e1;
 
-            break; 
-        }}
-    }
-    else //!truncate_
-    {
-        //Just truncate any eigenvalues < 1E-30
-        if(m > minm_)
-        for(; mdisc < (int)alleig.size(); mdisc++, m--)
-        if(svdtruncerr += alleig[mdisc]/e1 >= 1E-30 || m <= minm_)
-        {
-            if(mdisc > 0)
-                 { docut = (alleig.at(mdisc-1) + alleig[mdisc])*0.5; }
-            else { docut = -1; }
-            //Overshot by one, correct truncerr
-            svdtruncerr -= alleig[mdisc]/e1;
-            break;
-        }
-    }
+        break; 
+    }}
     if(showeigs_)
     {
         cout << endl;
@@ -305,13 +284,9 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
         const Vector& thisD = GET(mvector,itenind);
 
         int this_m = 1;
-        if(truncate_)
-        {
-            for(; this_m <= thisD.Length(); ++this_m)
-                if(thisD(this_m) < docut) { break; }
-            --this_m; //since for loop overshoots by 1
-        }
-        else { this_m = thisD.Length(); }
+        for(; this_m <= thisD.Length(); ++this_m)
+            if(thisD(this_m) < docut) { break; }
+        --this_m; //since for loop overshoots by 1
 
         if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
             { this_m = 1; m = 1; docut = 1; }

@@ -242,8 +242,22 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     }
     assert(rho.r() == 2);
 
+    Real saved_cutoff = cutoff_; 
+    int saved_minm = minm_; 
+    int saved_maxm = maxm_; 
+    if(!truncate_)
+    {
+        cutoff_ = -1;
+        minm_ = mid.m();
+        maxm_ = mid.m();
+    }
+
     Tensor U;
     truncerr_.at(b) = diag_denmat(rho,eigs_kept_.at(b),U);
+
+    cutoff_ = saved_cutoff; 
+    minm_ = saved_minm; 
+    maxm_ = saved_maxm; 
 
     comb.conj();
     comb.product(U,to_orth);
@@ -514,28 +528,11 @@ public:
         //Do a half-sweep to the right, orthogonalizing each bond
         //but do not truncate since the basis to the right might not
         //be ortho (i.e. use the current m).
-
-        //svd_.showeigs(true);
-        //svd_.truncate(false);
-        //position(N);
-        Real cutoff_ = svd_.cutoff();
-        int minm_ = svd_.minm();
-        int maxm_ = svd_.maxm();
-        for(int b = 1; b < N; ++b)
-        {
-            int m_to_use = LinkInd(b).m();
-            svd_.minm(m_to_use);
-            svd_.maxm(m_to_use);
-            svd_.cutoff(-1);
-            doSVD(b,bondTensor(b),Fromleft);
-        }
-        svd_.cutoff(cutoff_);
-        svd_.minm(minm_);
-        svd_.maxm(maxm_);
+        svd_.truncate(false);
+        position(N);
         //Now basis is ortho, ok to truncate
         svd_.truncate(true);
         position(1);
-        //svd_.showeigs(false);
     }
 
     //Checks if A[i] is left (left == true) or right (left == false) orthogonalized
