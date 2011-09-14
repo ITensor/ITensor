@@ -675,24 +675,8 @@ public:
     void convertToIQ(IQMPSType& iqpsi, QN totalq = QN(), Real cut = 1E-12) const;
 
 }; //class MPSt<Tensor>
-
 typedef MPSt<ITensor> MPS;
 typedef MPSt<IQTensor> IQMPS;
-
-/*
-template<class Tensor>
-extern Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, 
-                        Real cutoff, int minm, int maxm, 
-                        Direction dir, bool doRelCutoff,
-                        LogNumber refNorm);
-
-void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, 
-                 ITensor& nU, Vector& eigs_kept, bool doRelCutoff, LogNumber refNorm);
-
-void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, 
-                 IQTensor& nU, Vector& eigs_kept, 
-                 bool doRelCutoff, LogNumber refNorm);
-*/
 
 inline bool check_QNs(const MPS& psi) { return true; }
 
