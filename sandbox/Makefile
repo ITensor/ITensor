@@ -34,9 +34,9 @@ LIBGFLAGS=-L$(LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS)
 
 #Targets -----------------
 
-build: dmrg iqdmrg
+build: dmrg iqdmrg onesiteopt iqonesiteopt
 
-debug: dmrg-g iqdmrg-g
+debug: dmrg-g iqdmrg-g onesiteopt-g iqonesiteopt
 
 dmrg: dmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
@@ -50,8 +50,21 @@ iqdmrg: iqdmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 iqdmrg-g: mkdebugdir .debug_objs/iqdmrg.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/iqdmrg.o -o iqdmrg-g $(LIBGFLAGS)
 
+onesiteopt: onesiteopt.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) onesiteopt.o -o onesiteopt $(LIBFLAGS)
+
+onesiteopt-g: mkdebugdir .debug_objs/onesiteopt.o $(LIBGFILES) $(REL_TENSOR_HEADERS) 
+	$(CCCOM) $(CCGFLAGS) .debug_objs/onesiteopt.o -o onesiteopt-g $(LIBGFLAGS)
+
+iqonesiteopt: iqonesiteopt.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) iqonesiteopt.o -o iqonesiteopt $(LIBFLAGS)
+
+iqonesiteopt-g: mkdebugdir .debug_objs/iqonesiteopt.o $(LIBGFILES) $(REL_TENSOR_HEADERS) 
+	$(CCCOM) $(CCGFLAGS) .debug_objs/iqonesiteopt.o -o iqonesiteopt-g $(LIBGFLAGS)
+
+
 mkdebugdir:
 	mkdir -p .debug_objs
 
 clean:
-	rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g
+	rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g onesiteopt onesiteopt-g iqonesiteopt iqonesiteopt-g
