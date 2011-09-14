@@ -171,7 +171,6 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm,
         Matrix Id1 = U.t()*U;
         Matrix Id2(U.Nrows(),U.Nrows()); Id2 = 1;
         Matrix Diff = Id1-Id2;
-        cerr << boost::format("Norm of diff = %.2E\n") % Norm(Diff.TreatAsVector());
         if(Norm(Diff.TreatAsVector()) > 1E-10)
             Error("U not unitary in diag_denmat");
 #endif //STRONG_DEBUG
