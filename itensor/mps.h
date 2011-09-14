@@ -30,21 +30,6 @@ inline Index index_in_common(const ITensor& A, const ITensor& B, IndexType t)
 inline IQIndex index_in_common(const IQTensor& A, const IQTensor& B, IndexType t)
 { return index_in_common<IQTensor,IQIndex>(A,B,t); }
 
-namespace {
-int collapseCols(const Vector& Diag, Matrix& M)
-{
-    int nr = Diag.Length(), nc = int(Diag.sumels());
-    assert(nr != 0);
-    if(nc == 0) return nc;
-    M = Matrix(nr,nc); M = 0;
-    int c = 0;
-    for(int r = 1; r <= nr; ++r)
-    if(Diag(r) == 1) { M(r,++c) = 1; }
-    return nc;
-}
-}
-
-
 class InitState
 {
     int N;
@@ -65,6 +50,220 @@ public:
     operator vector<IQIndexVal>() const { return state; }
 };
 
+class SVDWorker
+{
+    int N;
+    vector<Real> truncerr_;
+    Real cutoff_;
+    int minm_;
+    int maxm_;
+    bool truncate_; 
+    bool showeigs_;
+    bool doRelCutoff_;
+    /*
+      If doRelCutoff_ is false,
+      refNorm_ defines an overall scale factored
+      out of the denmat before truncating.
+      If doRelCutoff_ is true, refNorm_
+      is determined automatically.
+    */
+    LogNumber refNorm_;
+    vector<Vector> eigs_kept_;
+public:
+    //SVDWorker Accessors ---------------
+
+    int NN() const { return N; }
+
+    Real cutoff() const { return cutoff_; }
+    void cutoff(Real val) { cutoff_ = val; }
+
+    Real truncerr(int b = 1) const { return truncerr_.at(b); }
+
+    int minm() const { return minm_; }
+    void minm(int val) { minm_ = val; }
+
+    int maxm() const { return maxm_; }
+    void maxm(int val) { maxm_ = val; }
+
+    bool truncate() const { return truncate_; }
+    void truncate(bool val) { truncate_ = val; }
+
+    bool showeigs() const { return showeigs_; }
+    void showeigs(bool val) { showeigs_ = val; }
+
+    bool doRelCutoff() const { return doRelCutoff_; }
+    void doRelCutoff(bool val) { doRelCutoff_ = val; }
+
+    LogNumber refNorm() const { return refNorm_; }
+    void refNorm(const LogNumber& val) 
+    { 
+        if(val.sign() == 0) Error("zero refNorm");
+        refNorm_ = val; 
+    }
+
+    const Vector& eigs_kept(int b = 1) const { return eigs_kept_.at(b); }
+
+    //SVDWorker Constructors ---------------
+    SVDWorker() :
+    N(1), truncerr_(N+1), cutoff_(MAX_CUT), minm_(1), maxm_(MAX_M),
+    truncate_(true), showeigs_(false), doRelCutoff_(false),
+    refNorm_(1), eigs_kept_(N+1)
+    { }
+
+    SVDWorker(int N_) :
+    N(N_), truncerr_(N+1), cutoff_(MAX_CUT), minm_(1), maxm_(MAX_M),
+    truncate_(true), showeigs_(false), doRelCutoff_(false),
+    refNorm_(1), eigs_kept_(N+1)
+    { }
+
+    SVDWorker(int N_, Real cutoff, int minm, int maxm, 
+              bool doRelCutoff, const LogNumber& refNorm) :
+    N(N_), truncerr_(N+1), cutoff_(cutoff), minm_(minm), maxm_(maxm),
+    truncate_(true), showeigs_(false), doRelCutoff_(doRelCutoff),
+    refNorm_(refNorm), eigs_kept_(N+1)
+    { }
+
+    SVDWorker(std::istream& s) { read(s); }
+
+    void read(std::istream& s)
+    {
+        s.read((char*) &N,sizeof(N));
+        truncerr_.resize(N+1);
+        for(int j = 1; j <= N; ++j)
+            s.read((char*)&truncerr_[j],sizeof(truncerr_[j]));
+        s.read((char*)&cutoff_,sizeof(cutoff_));
+        s.read((char*)&minm_,sizeof(minm_));
+        s.read((char*)&maxm_,sizeof(maxm_));
+        s.read((char*)&truncate_,sizeof(truncate_));
+        s.read((char*)&showeigs_,sizeof(showeigs_));
+        s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
+        s.read((char*)&refNorm_,sizeof(refNorm_));
+        for(int j = 1; j <= N; ++j)
+            readVec(s,eigs_kept_[j]);
+    }
+
+    void write(std::ostream& s) const
+    {
+        s.write((char*) &N,sizeof(N));
+        for(int j = 1; j <= N; ++j)
+            s.write((char*)&truncerr_[j],sizeof(truncerr_[j]));
+        s.write((char*)&cutoff_,sizeof(cutoff_));
+        s.write((char*)&minm_,sizeof(minm_));
+        s.write((char*)&maxm_,sizeof(maxm_));
+        s.write((char*)&truncate_,sizeof(truncate_));
+        s.write((char*)&showeigs_,sizeof(showeigs_));
+        s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
+        s.write((char*)&refNorm_,sizeof(refNorm_));
+        for(int j = 1; j <= N; ++j)
+            writeVec(s,eigs_kept_[j]);
+    }
+
+    Real diag_denmat(const ITensor& rho, Vector& D, ITensor& U);
+    Real diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U);
+
+    template <class Tensor>
+    void operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
+
+    template <class Tensor>
+    inline void operator()(const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
+        { operator()<Tensor>(1,AA,A,B,dir); }
+}; //class SVDWorker
+
+template<class Tensor>
+void SVDWorker::operator()(int b, const Tensor& AA, 
+                          Tensor& A, Tensor& B, Direction dir) 
+{
+    typedef typename Tensor::IndexT IndexT;
+    typedef typename Tensor::CombinerT CombinerT;
+
+    if(AA.vec_size() == 0) 
+    {
+        A *= 0;
+        B *= 0;
+        eigs_kept_.at(b).ReDimension(1);
+        eigs_kept_.at(b) = 1;
+        return;
+    }
+
+    IndexT mid = index_in_common(A,B,Link);
+    if(mid.is_null()) mid = IndexT("mid");
+
+    Tensor& to_orth = (dir==Fromleft ? A : B);
+    Tensor& newoc   = (dir==Fromleft ? B : A);
+
+    CombinerT comb;
+
+    int unique_link = 0; //number of Links unique to to_orth
+    for(int j = 1; j <= to_orth.r(); ++j) 
+    { 
+        const IndexT& I = to_orth.index(j);
+        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex 
+             || I.type() == Virtual))
+        {
+            if(I.type() == Link) ++unique_link;
+            comb.addleft(I);
+        }
+    }
+
+    //Check if we're at the edge
+    if(unique_link == 0)
+    {
+        comb.init(mid.rawname());
+        assert(comb.check_init());
+        comb.product(AA,newoc);
+        to_orth = comb; to_orth.conj();
+        eigs_kept_.at(b) = Vector(comb.right().m()); 
+        eigs_kept_.at(b) = 1.0/comb.right().m();
+        return;
+    }
+
+    //Apply combiner
+    comb.doCondense(true);
+    comb.init(mid.rawname());
+    Tensor AAc; comb.product(AA,AAc);
+
+    const IndexT& active = comb.right();
+
+    Tensor rho;
+    if(AAc.is_complex())
+    {
+        Tensor re,im;
+        AAc.SplitReIm(re,im);
+        rho = re; rho.conj(); rho.primeind(active);
+        rho *= re;
+        im *= conj(primeind(im,active));
+        rho += im;
+    }
+    else 
+    { 
+        Tensor AAcc = conj(AAc); 
+        AAcc.primeind(active); 
+        rho = AAc*AAcc; 
+    }
+    assert(rho.r() == 2);
+
+    Real saved_cutoff = cutoff_; 
+    int saved_minm = minm_; 
+    int saved_maxm = maxm_; 
+    if(!truncate_)
+    {
+        cutoff_ = -1;
+        minm_ = mid.m();
+        maxm_ = mid.m();
+    }
+
+    Tensor U;
+    truncerr_.at(b) = diag_denmat(rho,eigs_kept_.at(b),U);
+
+    cutoff_ = saved_cutoff; 
+    minm_ = saved_minm; 
+    maxm_ = saved_maxm; 
+
+    comb.conj();
+    comb.product(U,to_orth);
+    newoc = conj(U) * AAc;
+} //void SVDWorker::operator()
+
 template <class Tensor>
 class MPSt //the lowercase t stands for "type" or "template"
 {
@@ -78,8 +277,7 @@ protected:
     vector<Tensor> A;
     int left_orth_lim,right_orth_lim;
     const ModelT* model_;
-    bool doRelCutoff_;
-    LogNumber refNorm_;
+    SVDWorker svd_;
 
     void new_tensors(vector<ITensor>& A_)
     {
@@ -128,8 +326,6 @@ protected:
 
     typedef pair<typename vector<Tensor>::const_iterator,typename vector<Tensor>::const_iterator> const_range_type;
 public:
-    int minm,maxm;
-    Real cutoff;
 
     //Accessor Methods ------------------------------
 
@@ -142,6 +338,7 @@ public:
     const pair<AA_it,AA_it> AA() const { return make_pair(A.begin()+1,A.end()); }
     const Tensor& AA(int i) const { return GET(A,i); }
     const ModelT& model() const { return *model_; }
+    const SVDWorker& svd() const { return svd_; }
     Tensor& AAnc(int i) //nc means 'non const'
     { 
         if(i <= left_orth_lim) left_orth_lim = i-1;
@@ -165,12 +362,27 @@ public:
     bool is_null() const { return (model_==0); }
     bool is_not_null() const { return (model_!=0); }
 
-    bool doRelCutoff() const { return doRelCutoff_; }
-    void doRelCutoff(bool val) 
-        { doRelCutoff_ = val; }
-    LogNumber refNorm() const { return refNorm_; }
-    void refNorm(LogNumber val) 
-        { if(val == 0) { Error("zero refNorm"); } refNorm_ = val; }
+    bool doRelCutoff() const { return svd_.doRelCutoff(); }
+    void doRelCutoff(bool val) { svd_.doRelCutoff(val); }
+
+    LogNumber refNorm() const { return svd_.refNorm(); }
+    void refNorm(LogNumber val) { svd_.refNorm(val); }
+
+    Real cutoff() const { return svd_.cutoff(); }
+    void cutoff(Real val) { svd_.cutoff(val); }
+
+    int minm() const { return svd_.minm(); }
+    void minm(int val) { svd_.minm(val); }
+
+    int maxm() const { return svd_.maxm(); }
+    void maxm(int val) { svd_.maxm(val); }
+
+    Real truncerr(int b) const { return svd_.truncerr(b); }
+
+    Vector eigs_kept(int b) const { return svd_.eigs_kept(b); }
+
+    bool showeigs() const { return svd_.showeigs(); }
+    void showeigs(bool val) { svd_.showeigs(val); }
 
     Tensor bondTensor(int b) const 
         { Tensor res = A.at(b) * A.at(b+1); return res; }
@@ -178,20 +390,17 @@ public:
     //MPSt: Constructors --------------------------------------------
 
     MPSt() 
-    : N(0), model_(0), doRelCutoff_(false), refNorm_(1), 
-    minm(1), maxm(MAX_M), cutoff(MAX_CUT)
+    : N(0), model_(0)
     { }
 
     MPSt(const ModelT& mod_,int maxmm = MAX_M, Real cut = MAX_CUT) 
     : N(mod_.NN()), A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
-    model_(&mod_), doRelCutoff_(false), refNorm_(1), 
-    minm(1), maxm(maxmm), cutoff(cut)
+    model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
 	{ random_tensors(A); }
 
     MPSt(const ModelT& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MAX_CUT) 
     : N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(2),
-    model_(&mod_), doRelCutoff_(false), refNorm_(1), 
-    minm(1), maxm(maxmm), cutoff(cut)
+    model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
 	{ init_tensors(A,initState); }
 
     MPSt(const ModelT& model, istream& s) { read(model,s); }
@@ -206,11 +415,7 @@ public:
         for(int j = 1; j <= N; ++j) A[j].read(s);
         s.read((char*) &left_orth_lim,sizeof(left_orth_lim));
         s.read((char*) &right_orth_lim,sizeof(right_orth_lim));
-        s.read((char*) &minm,sizeof(minm));
-        s.read((char*) &maxm,sizeof(maxm));
-        s.read((char*) &cutoff,sizeof(cutoff));
-        s.read((char*) &doRelCutoff_,sizeof(doRelCutoff_));
-        s.read((char*) &refNorm_,sizeof(refNorm_));
+        svd_.read(s);
     }
 
     void write(ostream& s) const
@@ -218,11 +423,7 @@ public:
         for(int j = 1; j <= N; ++j) A[j].write(s);
         s.write((char*) &left_orth_lim,sizeof(left_orth_lim));
         s.write((char*) &right_orth_lim,sizeof(right_orth_lim));
-        s.write((char*) &minm,sizeof(minm));
-        s.write((char*) &maxm,sizeof(maxm));
-        s.write((char*) &cutoff,sizeof(cutoff));
-        s.write((char*) &doRelCutoff_,sizeof(doRelCutoff_));
-        s.write((char*) &refNorm_,sizeof(refNorm_));
+        svd_.write(s);
     }
 
 
@@ -261,8 +462,8 @@ public:
 
     //MPSt: orthogonalization methods -------------------------------------
 
-    virtual void doSVD(int b, const Tensor& AA, Direction dir, 
-                       bool preserve_shape = false)
+    void doSVD(int b, const Tensor& AA, Direction dir, 
+               bool preserve_shape = false)
 	{
         assert(b > 0);
         assert(b < N);
@@ -280,10 +481,8 @@ public:
             Error("b+2 < right_orth_lim");
         }
 
-        tensorSVD(AA,A[b],A[b+1],
-                  cutoff,minm,maxm,dir,doRelCutoff_,refNorm_);
-        truncerror = svdtruncerr;
-
+        svd_(b,AA,A[b],A[b+1],dir);
+                 
         if(dir == Fromleft)
         {
             //if(left_orth_lim >= b-1 || b == 1) 
@@ -329,17 +528,10 @@ public:
         //Do a half-sweep to the right, orthogonalizing each bond
         //but do not truncate since the basis to the right might not
         //be ortho (i.e. use the current m).
-        for(int b = 1; b < N; ++b)
-        {
-            int m_to_use = LinkInd(b).m();
-            Tensor bond = A[b]*A[b+1];
-            tensorSVD(bond,A[b],A[b+1],
-                      0,m_to_use,m_to_use,Fromleft,
-                      doRelCutoff_,refNorm_);
-        }
-        left_orth_lim = N-1;
-        right_orth_lim = N+1;
+        svd_.truncate(false);
+        position(N);
         //Now basis is ortho, ok to truncate
+        svd_.truncate(true);
         position(1);
     }
 
@@ -480,22 +672,8 @@ public:
     void convertToIQ(IQMPSType& iqpsi, QN totalq = QN(), Real cut = 1E-12) const;
 
 }; //class MPSt<Tensor>
-
 typedef MPSt<ITensor> MPS;
 typedef MPSt<IQTensor> IQMPS;
-
-template<class Tensor>
-extern Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B, 
-                        Real cutoff, int minm, int maxm, 
-                        Direction dir, bool doRelCutoff,
-                        LogNumber refNorm);
-
-void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, 
-                 ITensor& nU, Vector& D, bool doRelCutoff, LogNumber refNorm);
-
-void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, 
-                 IQTensor& nU, Vector& eigs_kept, 
-                 bool doRelCutoff, LogNumber refNorm);
 
 inline bool check_QNs(const MPS& psi) { return true; }
 
@@ -629,13 +807,13 @@ void sum(const vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, int max
     if(Nt == 1) 
     {
         res = terms[0];
-        res.cutoff = cut; res.maxm = maxm;
+        res.cutoff(cut); res.maxm(maxm);
         return;
     }
     else if(Nt == 2)
 	{ 
         res = terms[0];
-        res.cutoff = cut; res.maxm = maxm;
+        res.cutoff(cut); res.maxm(maxm);
         //cerr << boost::format("Before +=, cutoff = %.1E, maxm = %d\n")%(res.cutoff)%(res.maxm);
         res += terms[1];
         return;

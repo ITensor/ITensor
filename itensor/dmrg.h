@@ -355,7 +355,8 @@ public:
 template <class Tensor, class DMRGOptions>
 Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOptions& opts)
 {
-    const Real orig_cutoff = psi.cutoff; const int orig_minm = psi.minm, orig_maxm = psi.maxm;
+    const Real orig_cutoff = psi.cutoff(); 
+    const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
     int debuglevel = (opts.quiet ? 0 : 1);
     int N = psi.NN();
     Real energy;
@@ -368,7 +369,7 @@ Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOp
 
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
     {
-        psi.cutoff = sweeps.cutoff(sw); psi.minm = sweeps.minm(sw); psi.maxm = sweeps.maxm(sw);
+        psi.cutoff(sweeps.cutoff(sw)); psi.minm(sweeps.minm(sw)); psi.maxm(sweeps.maxm(sw));
         for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
         {
             if(!opts.quiet) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % b % (b+1);
@@ -387,13 +388,17 @@ Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOp
 
         if(opts.checkDone(sw,psi,energy))
         {
-            psi.cutoff = orig_cutoff; psi.minm = orig_minm; psi.maxm = orig_maxm;
+            psi.cutoff(orig_cutoff); 
+            psi.minm(orig_minm); 
+            psi.maxm(orig_maxm);
             return energy;
         }
 
     } //for loop over sw
 
-    psi.cutoff = orig_cutoff; psi.minm = orig_minm; psi.maxm = orig_maxm;
+    psi.cutoff(orig_cutoff); 
+    psi.minm(orig_minm); 
+    psi.maxm(orig_maxm);
     return energy;
 }
 template <class MPSType, class MPOType>
@@ -419,7 +424,8 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
 {
     typedef typename MPSType::TensorT Tensor;
     typedef typename MPOType::TensorT MPOTensor;
-    const Real orig_cutoff = psi.cutoff; const int orig_minm = psi.minm, orig_maxm = psi.maxm;
+    const Real orig_cutoff = psi.cutoff(); 
+    const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
     int debuglevel = (opts.quiet ? 0 : 1);
     int N = psi.NN();
     Real energy;
@@ -433,7 +439,7 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
 
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
     {
-    psi.cutoff = sweeps.cutoff(sw); psi.minm = sweeps.minm(sw); psi.maxm = sweeps.maxm(sw);
+    psi.cutoff(sweeps.cutoff(sw)); psi.minm(sweeps.minm(sw)); psi.maxm(sweeps.maxm(sw));
     for(int b = 1, ha = 1; ha != 3; onesite_sweepnext(b,ha,N))
     {
         if(!opts.quiet) 
@@ -479,7 +485,9 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
 
     } //for loop over sw
 
-    psi.cutoff = orig_cutoff; psi.minm = orig_minm; psi.maxm = orig_maxm;
+    psi.cutoff(orig_cutoff); 
+    psi.minm(orig_minm); 
+    psi.maxm(orig_maxm);
     return energy;
 }
 

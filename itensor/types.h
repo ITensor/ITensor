@@ -116,6 +116,31 @@ inline void writeToFile(const char* fname, const T& t)
     s.close(); 
 }
 
+inline void writeVec(std::ostream& s, const Vector& V)
+{
+    int m = V.Length();
+    s.write((char*)&m,sizeof(m));
+    Real val;
+    for(int k = 1; k <= m; ++k)
+    {
+        val = V(k);
+        s.write((char*)&val,sizeof(val));
+    }
+}
+
+inline void readVec(std::istream& s, Vector& V)
+{
+    int m = 1;
+    s.read((char*)&m,sizeof(m));
+    V.ReDimension(m);
+    Real val;
+    for(int k = 1; k <= m; ++k)
+    {
+        s.read((char*)&val,sizeof(val));
+        V(k) = val;
+    }
+}
+
 
 extern bool printdat;
 extern bool debug1, debug2, debug3, debug4;
