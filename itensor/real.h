@@ -154,7 +154,7 @@ public:
 
 };
 
-LogNumber sqrt(const LogNumber& L)
+inline LogNumber sqrt(const LogNumber& L)
 {
     if(L.sign() < 0) 
         Error("Negative LogNumber in sqrt");
