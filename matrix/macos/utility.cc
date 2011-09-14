@@ -1247,9 +1247,6 @@ void Sort(Vector& V, IntArray1& ind)
     }
 
 /*
-#ifdef __alpha
-// extern "C" int dfft_(char*,char*,char*,Real*,Real*,int*,int*);
-// extern "C" int dfft_(char*,char*,char*,Real*,Real*,Real*,Real*,int*,int*);
 
 int FFT(const VectorRef& in, Vector& outre, Vector& outim)
     {
@@ -1286,94 +1283,42 @@ Matrix Exp(const MatrixRef& M)
     return y * Transpose(evec);
     }
 
-#ifdef CHANGE
-#ifdef __alpha
-   //Use DEC's LAPACK
 
-/*
 void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 {
-    if (A.Ncols() != A.Nrows() || A.Nrows() < 1)
+    __CLPK_integer N = A.Ncols();
+    if (N != A.Nrows() || A.Nrows() < 1)
       _merror("EigenValues: Input Matrix must be square");
 
-    char jobz[] = "V";
-    char uplo[] = "U";
-    int lda = A.Ncols();
-    int n = A.Ncols();
-    int info;
-    D = A.Column(1);
-    int lwork = max(1, 3*n-1);
-    Vector Work(lwork);
-    Z = A;
-    dsyev_(&jobz, &uplo, &n, Z.Store(), &lda, D.Store(), Work.Store(),
-          &lwork, &info);
-    Z = Z.t();
-}
-*/
-
-#else      // __alpha
-#define NEWEIGS 1
-#ifdef NEWEIGS
-/*
-extern "C" void dsyevd_(char* jobz, char* uplo, long int* n, Real* a, long int* lda,
-	  Real* w, Real* work, long int* lwork, long int *iwork, long int* liwork,long int* info);
-	  */
-void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
-{
-    if (A.Ncols() != A.Nrows() || A.Nrows() < 1)
-      _merror("EigenValues: Input Matrix must be square");
-
-#ifndef NDEBUG
-    //double debug_norm = Norm(Matrix(Matrix(A)-Matrix(A.t())).TreatAsVector());
-    //if(debug_norm >= 1E-4) 
-    //{
-        //cerr << endl << "WARNING: In EigenValues, Norm of A-A.t() was " << debug_norm << endl << endl;
-        //cerr << "A-A.t() = " << endl << Matrix(A)-Matrix(A.t()) << endl;
-        //cerr << "A = " << endl << A << endl;
-    //}
-    //assert(Norm(Matrix(Matrix(A)-Matrix(A.t())).TreatAsVector()) < 1E-4);
-    //assert(debug_norm < 1E-4);
-#endif
-
-    //static __CLPK_integer iwork[100000];
-    const char *jobz = "V";
-    const char *uplo = "U";
-    __CLPK_integer lda = A.Ncols();
-    __CLPK_integer n = A.Ncols();
+    char jobz = 'V';
+    char uplo = 'U';
+    __CLPK_integer lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
+    __CLPK_doublereal work[lwork];
     __CLPK_integer info;
-    D = A.Column(1);
-    __CLPK_integer lwork = max(1, 1+6*n+2*n*n);
-    //__CLPK_integer liwork = 3 + 5*n;
-    Vector Work(lwork);
     
-
+    D.ReDimension(N);
     Z = A;
-    //cerr << "A = " << endl << A << endl;
-    //cerr << "1) Z = " << endl << Z << endl;
-    //Z += A.t();
-    //cerr << "2) Z = " << endl << Z << endl;
-    //Z *= 0.5;
-    //cerr << "3) Z = " << endl << Z << endl;
 
+    dsyev_(&jobz,&uplo,&N,Z.Store(),&N,D.Store(),work,&lwork,&info);
 
-    //mark
-    //dsyevd_((char *)jobz, (char *)uplo, &n, Z.Store(), &lda, D.Store(), Work.Store(),
-          //&lwork, iwork, &liwork, &info);
-    dsyev_((char*)jobz,(char*)uplo,&n,Z.Store(),&lda,D.Store(),Work.Store(),&lwork,&info);
     if(info != 0)
 	{
-	cerr << "info is " << info << endl;
-	cout << "info is " << info << endl;
-	cout << "redoing EigenValues " << endl;
-	cerr << "redoing EigenValues " << endl;
-	Matrix AA(A);
-	for(int i = 1; i <= n; i++)
-	    for(int j = i+1; j <= n; j++)
-		if(AA(i,j) != AA(j,i))
-		    cout << "Asym: " << i SP j SP AA(i,j) SP AA(j,i) << endl;
-	BackupEigenValues(A,D,Z);
-	return;
+        cerr << "info is " << info << endl;
+        cout << "info is " << info << endl;
+        cout << "redoing EigenValues " << endl;
+        cerr << "redoing EigenValues " << endl;
+        Matrix AA(A);
+        for(int i = 1; i <= N; i++)
+        for(int j = i+1; j <= N; j++)
+        {
+            if(AA(i,j) != AA(j,i))
+                cout << "Asym: " << i SP j SP AA(i,j) SP AA(j,i) << endl;
+        }
+        BackupEigenValues(A,D,Z);
+        return;
 	}
+
+    //Transpose Z before return
     Z = Z.t();
 }
 
@@ -1415,25 +1360,6 @@ void GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
         _merror("Error condition in dsyev_.");
     }
 }
-
-#else
-#ifndef _CRAY
-
-
-/*
-void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
-{
-    if (A.Ncols() != A.Nrows() || A.Nrows() < 1)
-      _merror("EigenValues: Input Matrix must be square");
-    Vector E; tred2(A, D, E, Z); tql2(D, E, Z);
-}
-*/
-
-#endif         // CRAY EigenValues() stuff
-#endif         // __alpha for EigenValues() stuff
-#endif		// new eigs stuff
-
-#endif
 
 void rotate22(double *zki,double *zki1,double c,double s,int n)
     {

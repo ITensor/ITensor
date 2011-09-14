@@ -51,7 +51,7 @@ public:
     void getidentity(Real factor, MPOt<ITensor>& res)
 	{
         newlinks(currentlinks);
-        res = MPOt<ITensor>(iss,res.maxm,res.cutoff);
+        res = MPOt<ITensor>(iss,res.maxm(),res.cutoff());
         res.AAnc(1) = unit(1); res.AAnc(1).addindex1(GET(currentlinks,1));
         res.AAnc(1) *= factor;
         res.AAnc(N) = unit(N); res.AAnc(N).addindex1(GET(currentlinks,N-1));
