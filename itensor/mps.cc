@@ -71,7 +71,8 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
 
     noprimelink();
 
-    orthogonalize();
+    cerr << "WARNING: skipping orthogonalize in operator+=\n";
+    //orthogonalize();
 
     return *this;
 }
