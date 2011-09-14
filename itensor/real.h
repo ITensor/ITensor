@@ -10,7 +10,8 @@ static const Real ISqrt2 = 1.0/sqrt(2);
 static const Real Sqrt3 = sqrt(3);
 static const Real ISqrt3 = 1.0/sqrt(3);
 
-inline Real sqr(Real x) { return x*x; }
+template <typename T>
+T sqr(T x) { return x*x; }
 
 struct ApproxReal
 {
@@ -40,7 +41,7 @@ public:
     inline bool isRealZero() const
         { return (sign_ == 0 || lognum_ < -maxlogdouble); }
     inline bool isOne() const { return (lognum_ == 0 && sign_ == 1); }
-    inline bool isFinite() const 
+    inline bool isFiniteReal() const 
         { return (lognum_ < maxlogdouble && lognum_ > -maxlogdouble); }
     inline bool isNan() const 
         { return lognum_ != lognum_; }
@@ -112,8 +113,6 @@ public:
         DO_IF_DEBUG(if(other.sign_ == 0) Error("divide by zero in LogNumber");)
         sign_ *= other.sign_;
         lognum_ -= other.lognum_;
-        //assert(lognum_ < maxlogdouble);
-        //assert(lognum_ > -maxlogdouble);
         return *this;
 	}
 
@@ -154,5 +153,12 @@ public:
     }
 
 };
+
+LogNumber sqrt(const LogNumber& L)
+{
+    if(L.sign() < 0) 
+        Error("Negative LogNumber in sqrt");
+    return LogNumber(L.logNum()/2,L.sign());
+}
 
 #endif

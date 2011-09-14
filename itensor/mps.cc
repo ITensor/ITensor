@@ -171,8 +171,14 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm,
         EigenValues(M,d,U);
         d *= -1;
 
-        //if(itenind == 1) Print(U.t()*U);
-        //Print(d);
+#ifdef STRONG_DEBUG
+        Matrix Id1 = U.t()*U;
+        Matrix Id2(U.Nrows(),U.Nrows()); Id2 = 1;
+        Matrix Diff = Id1-Id2;
+        cerr << boost::format("Norm of diff = %.2E\n") % Norm(Diff.TreatAsVector());
+        if(Norm(Diff.TreatAsVector()) > 1E-10)
+            Error("U not unitary in diag_denmat");
+#endif //STRONG_DEBUG
 
         for(int j = 1; j <= n; ++j) 
             { alleig.push_back(d(j)); }
@@ -206,10 +212,12 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm,
     }}
     if(showeigs)
     {
-        cout << boost::format("\nKept %d, discarded %d states in diag_denmat\n")
-                        % m % mdisc;
-        cout << boost::format("svdtruncerr = %.2E\n")%svdtruncerr;
-        cout << boost::format("docut = %.2E\n")%docut;
+        cout << boost::format("\nKept %d, discarded %d states in diag_denmat")
+                        % m % mdisc << endl;
+        cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
+        cout << boost::format("docut = %.2E")%docut << endl;
+        cout << "doRelCutoff is " << doRelCutoff << endl;
+        cout << "refNorm is " << refNorm << endl;
         int s = alleig.size();
         int stop = s-min(s,10);
         cout << "Eigs: ";
@@ -331,16 +339,6 @@ bool doRelCutoff, LogNumber refNorm)
     comb.doCondense(true);
     comb.init(mid.rawname());
     Tensor AAc; comb.product(AA,AAc);
-
-    assert(LogNumber(AAc.norm()).isFinite());
-
-    if(LogNumber(AAc.norm()).isNan())
-    {
-        Print(LogNumber(AAc.norm()));
-        Print(AAc.norm());
-        PrintDat(AAc);
-        Error("Norm was nan");
-    }
 
     const IndexT& active = comb.right();
 
