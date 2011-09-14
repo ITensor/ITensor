@@ -514,13 +514,28 @@ public:
         //Do a half-sweep to the right, orthogonalizing each bond
         //but do not truncate since the basis to the right might not
         //be ortho (i.e. use the current m).
-        svd_.showeigs(true);
-        svd_.truncate(false);
-        position(N);
+
+        //svd_.showeigs(true);
+        //svd_.truncate(false);
+        //position(N);
+        Real cutoff_ = svd_.cutoff();
+        int minm_ = svd_.minm();
+        int maxm_ = svd_.maxm();
+        for(int b = 1; b < N; ++b)
+        {
+            int m_to_use = LinkInd(b).m();
+            svd_.minm(m_to_use);
+            svd_.maxm(m_to_use);
+            svd_.cutoff(-1);
+            doSVD(b,bondTensor(b),Fromleft);
+        }
+        svd_.cutoff(cutoff_);
+        svd_.minm(minm_);
+        svd_.maxm(maxm_);
         //Now basis is ortho, ok to truncate
         svd_.truncate(true);
         position(1);
-        svd_.showeigs(false);
+        //svd_.showeigs(false);
     }
 
     //Checks if A[i] is left (left == true) or right (left == false) orthogonalized

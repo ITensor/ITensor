@@ -71,8 +71,8 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
 
     noprimelink();
 
-    cerr << "WARNING: skipping orthogonalize in operator+=\n";
-    //orthogonalize();
+    //cerr << "WARNING: skipping orthogonalize in operator+=\n";
+    orthogonalize();
 
     return *this;
 }
@@ -194,26 +194,31 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
             Error("UU not unitary in diag_denmat");
         }
         
-        if(fabs(d.sumels() + Trace(M)) > 1E-12)
+        if(fabs(d.sumels() + Trace(M))/(fabs(d.sumels())+fabs(Trace(M))) > 1E-5)
         {
             cerr << boost::format("d.sumels() = %.10f, Trace(M) = %.10f\n")
                                  % d.sumels()        % Trace(M);
             Error("Total eigs != trace");
         }
 
+        /*
         Matrix DD(n,n); DD.TreatAsVector() = 0;
         for(int j = 1; j <= n; ++j) DD(j,j) = -d(j);
         Matrix nM = UU*DD*UU.t();
         for(int r = 1; r <= n; ++r)
         for(int c = r+1; c <= n; ++c)
         {
-            if(fabs(nM(r,c)-M(r,c)) > 1E-12)
+            if(fabs(M(r,c)) < 1E-16) continue;
+            if(fabs(nM(r,c)-M(r,c))/(fabs(nM(r,c))+fabs(M(r,c))) > 1E-3)
             {
                 Print(M);
                 Print(nM);
+                cerr << boost::format("nM(r,c)=%.2E\n")%nM(r,c);
+                cerr << boost::format(" M(r,c)=%.2E\n")%M(r,c);
                 Error("Inaccurate diag");
             }
         }
+        */
 #endif //STRONG_DEBUG
 
         for(int j = 1; j <= n; ++j) 
@@ -313,7 +318,7 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
 
         if(this_m == 0) { ++itenind; continue; }
 
-        Index nm(active.name(),this_m);
+        Index nm("qlink",this_m);
         Index act = t.index(1).deprimed();
         iq.push_back(inqn(nm,active.qn(act)));
 
@@ -325,7 +330,7 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
 
         ++itenind;
 	}
-    IQIndex newmid(active.name(),iq,In);
+    IQIndex newmid("qlink",iq,In);
     U = IQTensor(active,newmid);
     foreach(const ITensor& t, terms) U += t;
 
