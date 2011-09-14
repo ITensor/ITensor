@@ -491,11 +491,84 @@ extern Vector tensorSVD(const Tensor& AA, Tensor& A, Tensor& B,
                         LogNumber refNorm);
 
 void diag_denmat(const ITensor& rho, Real cutoff, int minm, int maxm, 
-                 ITensor& nU, Vector& D, bool doRelCutoff, LogNumber refNorm);
+                 ITensor& nU, Vector& eigs_kept, bool doRelCutoff, LogNumber refNorm);
 
 void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm, 
                  IQTensor& nU, Vector& eigs_kept, 
                  bool doRelCutoff, LogNumber refNorm);
+
+class SVDWorker
+{
+    int N;
+    vector<Real> truncerr_;
+    Real cutoff_;
+    int minm_;
+    int maxm_;
+    bool truncate_; 
+    bool showeigs_;
+    bool doRelCutoff_;
+    /*
+      If doRelCutoff_ is false,
+      refNorm_ defines an overall scale factored
+      out of the denmat before truncating.
+      If doRelCutoff_ is true, refNorm_
+      is determined automatically.
+    */
+    LogNumber refNorm_;
+    vector<Vector> eigs_kept_;
+public:
+    //SVDWorker Accessors ---------------
+
+    int NN() const { return N; }
+
+    Real cutoff() const { return cutoff_; }
+    void cutoff(Real val) { cutoff_ = val; }
+
+    Real truncerr(int b = 1) const { return truncerr_.at(b); }
+
+    int minm() const { return minm_; }
+    void minm(int val) { minm_ = val; }
+
+    int maxm() const { return maxm_; }
+    void maxm(int val) { maxm_ = val; }
+
+    bool truncate() const { return truncate_; }
+    void truncate(bool val) { truncate_ = val; }
+
+    bool showeigs() const { return showeigs_; }
+    void showeigs(bool val) { showeigs_ = val; }
+
+    bool doRelCutoff() const { return doRelCutoff_; }
+    void doRelCutoff(bool val) { doRelCutoff_ = val; }
+
+    LogNumber refNorm() const { return refNorm_; }
+    void refNorm(const LogNumber& val) { refNorm_ = val; }
+
+    const Vector& eigs_kept(int b = 1) const { return eigs_kept_.at(b); }
+
+    //SVDWorker Constructors ---------------
+    SVDWorker() :
+    N(1), truncerr_(N+1), cutoff_(MAX_CUT), minm_(1), maxm_(MAX_M),
+    truncate_(true), showeigs_(false), doRelCutoff_(false),
+    refNorm_(1), eigs_kept_(N+1)
+    { }
+
+    SVDWorker(int N_) :
+    N(N_), truncerr_(N+1), cutoff_(MAX_CUT), minm_(1), maxm_(MAX_M),
+    truncate_(true), showeigs_(false), doRelCutoff_(false),
+    refNorm_(1), eigs_kept_(N+1)
+    { }
+
+    Real diag_denmat(const ITensor& rho, Vector& D, ITensor& U);
+    Real diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U);
+
+    template <class Tensor>
+    void operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
+
+    template <class Tensor>
+    inline void operator()(const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
+        { operator()<Tensor>(1,AA,A,B,dir); }
+}; //class SVDWorker
 
 inline bool check_QNs(const MPS& psi) { return true; }
 
