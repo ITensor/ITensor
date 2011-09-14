@@ -131,18 +131,14 @@ void diag_denmat(const IQTensor& rho, Real cutoff, int minm, int maxm,
 
     if(doRelCutoff)
 	{
-        DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
-
+        //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
         Real maxLogNum = -200;
         foreach(const ITensor& t, rho.itensors())
 	    maxLogNum = max(maxLogNum,t.scale().logNum());
-        assert(maxLogNum > -200);
-        assert(maxLogNum <  200);
         refNorm = LogNumber(maxLogNum,1);
-        DO_IF_DEBUG(cout << "refNorm = " << refNorm << endl; )
+        //DO_IF_DEBUG(cout << "refNorm = " << refNorm << endl; )
 	}
-    else
-        DO_IF_DEBUG(cout << "Not doing relative cutoff\n";);
+    //else DO_IF_DEBUG(cout << "Not doing relative cutoff\n";);
 
     //cerr << boost::format("refNorm = %.1E (lognum = %f, sign = %d)\n\n")
     //%Real(refNorm)%refNorm.logNum()%refNorm.sign();
