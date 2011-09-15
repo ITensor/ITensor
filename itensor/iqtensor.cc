@@ -56,15 +56,6 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
         return *this = (*this * iqprimer) * iqprod * (other * iqprimerP);
 	}
 
-    //Handle virtual index
-    if(other.viqindex != IQEmptyV)
-    if(viqindex == IQEmptyV) viqindex = other.viqindex;
-    else
-    {
-        QN newq = viqindex.dir()*(viqindex.dir()*viqindex.qn(1)+other.viqindex.dir()*other.viqindex.qn(1));
-        viqindex = IQIndex((Index) viqindex,viqindex.index(1),newq);
-    }
-
     solo();
     p->uninit_rmap();
 
@@ -181,7 +172,7 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
     */
     foreach(const IQIndex& I, tre.p->iqindex_)
     {
-        if(I.type() != Virtual && I != IQTSing.p->iqindex_[0])
+        if(I != IQTSing.p->iqindex_[0])
         {
             cout << *this;
             cout << tre;
@@ -189,7 +180,7 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
         }
     }
     foreach(const IQIndex& I, tim.p->iqindex_)
-    if(I.type() != Virtual && I != IQTSing.p->iqindex_[0])
+    if(I != IQTSing.p->iqindex_[0])
     { Error("bad tim size"); }
 
     if(tre.iten_size() == 0)

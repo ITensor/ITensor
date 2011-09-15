@@ -197,8 +197,7 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     for(int j = 1; j <= to_orth.r(); ++j) 
     { 
         const IndexT& I = to_orth.index(j);
-        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex 
-             || I.type() == Virtual))
+        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex ))
         {
             if(I.type() == Link) ++unique_link;
             comb.addleft(I);
@@ -302,7 +301,6 @@ protected:
     {
         vector<QN> qa(N+1); //qn[i] = qn on i^th bond
         for(int i = 1; i <= N; ++i) { qa[0] -= initState(i).qn()*In; }
-        IQIndex Center("Center",Index("center",1,Virtual),qa[0],In);
 
         //Taking OC to be at the leftmost site,
         //compute the QuantumNumbers of all the Links.
@@ -315,7 +313,7 @@ protected:
         vector<IQIndex> a(N+1);
         for(int i = 1; i <= N; ++i)
         { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
-        A_[1] = IQTensor(si(1),a[1]); A_[1].addindex1(Center); A_[1](initState(1))=1;
+        A_[1] = IQTensor(si(1),a[1]); A_[1](initState(1))=1;
         for(int i = 2; i < N; ++i)
         { 
         A_[i] = IQTensor(conj(a[i-1]),si(i),a[i]); 
@@ -683,6 +681,7 @@ inline bool check_QNs(const MPS& psi) { return true; }
 
 inline bool check_QNs(const IQMPS& psi)
 {
+    /*
     const int N = psi.NN();
     //Check Link arrows
 
@@ -741,13 +740,17 @@ inline bool check_QNs(const IQMPS& psi)
             return false;
         }
     }
+    */
+    cerr << "WARNING: check_QNs currently broken\n";
     return true;
 }
 
 inline QN total_QN(const IQMPS& psi)
 {
-    assert(psi.AA(psi.ortho_center()).has_virtual());
-    return psi.AA(psi.ortho_center()).virtualQN();
+    //assert(psi.AA(psi.ortho_center()).has_virtual());
+    //return psi.AA(psi.ortho_center()).virtualQN();
+    cerr << "WARNING: total_QN currently broken\n";
+    return QN();
 }
 
 template <class MPSType>

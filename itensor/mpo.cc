@@ -145,7 +145,7 @@ void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
         //Add common IQIndices to IQCombiner
         IQCombiner comb; comb.doCondense(false);
         foreach(const IQIndex& I, res.AA(j).iqinds())
-        if(res.AA(j+1).hasindex(I) && I != IQIndReIm && I.type() != Virtual)
+        if(res.AA(j+1).hasindex(I) && I != IQIndReIm)
         { assert(I.dir() == Out); comb.addleft(I);}
         comb.init(nameint("a",j));
 

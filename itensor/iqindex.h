@@ -18,9 +18,6 @@
 *   is called on an IQMPO it follows the same convention as for an MPS except Site 
 *   indices point In and Site' indices point Out.
 *
-* * The Virtual IQIndex moves with the orthogonality center. If two IQTensors are
-*   multiplied, the QNs of their Virtual indices are added together if they both have one.
-*
 */
 
 class QN
@@ -223,7 +220,7 @@ private:
     void operator=(const IQIndexDat&);
 };
 
-extern IQIndexDat IQIndexDatNull, IQIndReDat, IQIndReDatP, IQIndReDatPP, IQIndEmptyVDat;
+extern IQIndexDat IQIndexDatNull, IQIndReDat, IQIndReDatP, IQIndReDatPP;
 
 struct IQIndexVal;
 
@@ -359,8 +356,6 @@ public:
         { pd = &IQIndReDatP; }
         else if(im == makeReImPP)
         { pd = &IQIndReDatPP;}
-        else if(im == makeEmptyV)
-        { pd = &IQIndEmptyVDat; }
         else Error("IQIndex: Unrecognized Imaker type.");
 	}
 
@@ -475,7 +470,7 @@ public:
 
 };
 
-extern IQIndex IQIndNull, IQIndReIm, IQIndReImP, IQIndReImPP, IQEmptyV;
+extern IQIndex IQIndNull, IQIndReIm, IQIndReImP, IQIndReImPP;
 enum IQmaker {makeSing};
 
 struct IQIndexVal
@@ -512,13 +507,11 @@ IQIndexDat IQIndexDatNull(makeNull);
 IQIndexDat IQIndReDat(makeReIm);
 IQIndexDat IQIndReDatP(makeReImP);
 IQIndexDat IQIndReDatPP(makeReImPP);
-IQIndexDat IQIndEmptyVDat(makeEmptyV);
 
 IQIndex IQIndNull(makeNull);
 IQIndex IQIndReIm(makeReIm);
 IQIndex IQIndReImP(makeReImP);
 IQIndex IQIndReImPP(makeReImPP);
-IQIndex IQEmptyV(makeEmptyV);
 
 IQIndexVal IQIVNull(IQIndNull,0);
 #endif //THIS_IS_MAIN

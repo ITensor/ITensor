@@ -22,8 +22,8 @@ const Arrow Switch = In*Out;
 inline std::ostream& operator<<(std::ostream& s, const Arrow& D)
 { if(D == In) s << "In"; else s << "Out"; return s; }
 
-enum IndexType { Link, Site, ReIm, Virtual };
-static const char * indextypename[] = { "Link","Site","ReIm","Virtual" };
+enum IndexType { Link, Site, ReIm };
+static const char * indextypename[] = { "Link","Site","ReIm" };
 
 enum PrimeType { primeLink, primeSite, primeBoth, primeNone };
 
@@ -32,7 +32,6 @@ inline std::ostream& operator<<(std::ostream& s, const IndexType& it)
     if(it == Link) s << "Link"; 
     else if(it == Site) s << "Site"; 
     else if(it == ReIm) s << "ReIm"; 
-    else if(it == Virtual) s << "Virtual"; 
     return s; 
 }
 
@@ -41,7 +40,6 @@ inline int IndexTypeToInt(IndexType it)
     if(it == Link) return 1;
     if(it == Site) return 2;
     if(it == ReIm) return 3;
-    if(it == Virtual) return 4;
     Error("No integer value defined for IndexType.");
     return -1;
 }
@@ -50,9 +48,8 @@ inline IndexType IntToIndexType(int i)
     if(i == 1) return Link;
     if(i == 2) return Site;
     if(i == 3) return ReIm;
-    if(i == 4) return Virtual;
     cerr << boost::format("No IndexType value defined for i=%d\n")%i,Error("");
-    return Virtual;
+    return Link;
 }
 
 inline std::string putprimes(std::string s, int plev = 0)
@@ -64,7 +61,7 @@ inline std::string nameindex(IndexType it, int plev = 0)
 inline std::string nameint(std::string f,int ix)
 { std::stringstream ss; ss << f << ix; return ss.str(); }
 
-enum Imaker {makeReIm,makeReImP,makeReImPP,makeEmptyV,makeNull};
+enum Imaker {makeReIm,makeReImP,makeReImPP,makeNull};
 
 #define UID_NUM_PRINT 2
 inline std::ostream& operator<<(std::ostream& s, const uuid& id)
@@ -148,7 +145,6 @@ public:
     sname(name)
 	{ 
         if(it == ReIm) Error("bad call to create IndexDat with type ReIm");
-        assert((it==Virtual ? (mm==1) : true)); //If type is Virtual, m must be 1
         set_unique_Real();
 	}
 
@@ -157,7 +153,6 @@ public:
     numref(0), is_static_(false), _type(it), ind(ind_), m_(mm), sname(ss)
 	{ 
         if(it == ReIm) Error("bad call to create IndexDat with type ReIm");
-        assert((it==Virtual ? (mm==1) : true)); //If type is Virtual, m must be 1
         set_unique_Real();
 	}
 
@@ -165,10 +160,10 @@ public:
     IndexDat(Imaker im) : 
     numref(1000000000), is_static_(true),
     _type(ReIm), 
-    m_( (im==makeNull || im==makeEmptyV) ? 1 : 2)
+    m_( (im==makeNull) ? 1 : 2)
 	{ 
         string_generator gen;
-        if(im==makeNull || im==makeEmptyV) 
+        if(im==makeNull)
         { ind = gen("{00000000-0000-0000-0000-000000000000}"); }
         else                               
         { ind = gen("{10000000-0000-0000-0000-000000000000}"); }
@@ -183,11 +178,6 @@ public:
         else if(im == makeReIm) sname = "ReIm";
         else if(im == makeReImP) sname = "ReImP";
         else if(im == makeReImPP) sname = "ReImPP";
-        else if(im == makeEmptyV) 
-        {
-            _type = Virtual;
-            sname = "EmptyVirtual";
-        }
         set_unique_Real(); 
 	}
 
@@ -199,7 +189,7 @@ private:
     void operator=(const IndexDat&);
 };
 
-extern IndexDat IndexDatNull, IndReDat, IndReDatP, IndReDatPP, IndEmptyVDat;
+extern IndexDat IndexDatNull, IndReDat, IndReDatP, IndReDatPP;
 
 struct IndexVal;
 
@@ -249,8 +239,6 @@ public:
             p = &IndReDatP,  primelevel_ = 1;
         else if(im == makeReImPP)
             p = &IndReDatPP,  primelevel_ = 2;
-        else if(im == makeEmptyV)
-            p = &IndEmptyVDat, primelevel_ = 0;
         else Error("Unrecognized Imaker type.");
 	}
 
@@ -284,7 +272,7 @@ public:
 	{
         if(type() == ReIm) return;
         if(primelevel_ != plevold) return;
-        else if( (pr == primeBoth && type() != Virtual)
+        else if( pr == primeBoth
         || (type() == Site && pr == primeSite) 
         || (type() == Link && pr == primeLink) )
         {
@@ -294,7 +282,7 @@ public:
     void doprime(PrimeType pr, int inc = 1)
 	{
         if(type() == ReIm) return;
-        if( (pr == primeBoth && type() != Virtual)
+        if( pr == primeBoth
         || (type() == Site && pr == primeSite) 
         || (type() == Link && pr == primeLink) )
         {
@@ -352,7 +340,7 @@ public:
     void conj() { } //for forward compatibility with arrows
 
 }; //class Index
-extern Index IndNull, IndReIm, IndReImP, IndReImPP, IndEmptyV;
+extern Index IndNull, IndReIm, IndReImP, IndReImPP;
 
 template <class T> 
 T conj(T res) { res.conj(); return res; }
@@ -379,12 +367,10 @@ IndexDat IndexDatNull(makeNull);
 IndexDat IndReDat(makeReIm);
 IndexDat IndReDatP(makeReImP);
 IndexDat IndReDatPP(makeReImPP);
-IndexDat IndEmptyVDat(makeEmptyV);
 Index IndNull(makeNull);
 Index IndReIm(makeReIm);
 Index IndReImP(makeReImP);
 Index IndReImPP(makeReImPP);
-Index IndEmptyV(makeEmptyV);
 IndexVal IVNull(IndNull,1);
 #endif //THIS_IS_MAIN
 

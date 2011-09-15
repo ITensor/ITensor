@@ -334,12 +334,12 @@ void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm, int ma
     //Create combiner
     Combiner comb;
     foreach(const Index& i, A.indexn())
-    if(!(i == bond || i == IndReIm || i.type() == Virtual))
+    if(!(i == bond || i == IndReIm))
     { 
         comb.addleft(i); 
     }
     foreach(const Index& i, A.index1())
-    if(!(i == bond || i == IndReIm || i.type() == Virtual))
+    if(!(i == bond || i == IndReIm ))
     { 
         comb.addleft(i); 
     }
@@ -572,9 +572,6 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
         }
 
     } //for loop over s
-
-    IQIndex Center("Center",Index("center",1,Virtual),totalq,In);
-    qA[1].addindex1(Center);
 }
 
 /*
@@ -761,8 +758,6 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
         if(s == 1)
         {
             iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
-            IQIndex Center("Center",Index("center",1,Virtual),totalq,In);
-            iqpsi.AAnc(1).addindex1(Center);
         }
         else if(s == N)
         {

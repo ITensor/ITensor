@@ -24,28 +24,28 @@ public:
 
     explicit IQTDat(const IQIndex& i1): numref(0), rmap_init(false), iqindex_(1)
     { 
-        assert(i1.type() != Virtual); iqindex_[0] = i1; 
+        iqindex_[0] = i1; 
     }
 
     IQTDat(const IQIndex& i1, const IQIndex& i2): numref(0), rmap_init(false), iqindex_(2)
     { 
-        assert(i1.type() != Virtual); iqindex_[0] = i1; 
-        assert(i2.type() != Virtual); iqindex_[1] = i2; 
+        iqindex_[0] = i1; 
+        iqindex_[1] = i2; 
     }
 
     IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3): numref(0), rmap_init(false), iqindex_(3)
     { 
-        assert(i1.type() != Virtual); iqindex_[0] = i1; 
-        assert(i2.type() != Virtual); iqindex_[1] = i2; 
-        assert(i3.type() != Virtual); iqindex_[2] = i3; 
+        iqindex_[0] = i1; 
+        iqindex_[1] = i2; 
+        iqindex_[2] = i3; 
     }
 
     IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3, const IQIndex& i4): numref(0), rmap_init(false), iqindex_(4)
     { 
-        assert(i1.type() != Virtual); iqindex_[0] = i1; 
-        assert(i2.type() != Virtual); iqindex_[1] = i2; 
-        assert(i3.type() != Virtual); iqindex_[2] = i3; 
-        assert(i4.type() != Virtual); iqindex_[3] = i4; 
+        iqindex_[0] = i1; 
+        iqindex_[1] = i2; 
+        iqindex_[2] = i3; 
+        iqindex_[3] = i4; 
     }
 
     explicit IQTDat(vector<IQIndex>& iqinds_) : numref(0), rmap_init(false) { iqindex_.swap(iqinds_); }
@@ -132,7 +132,6 @@ public:
     static const IQIndex& ReImIndex;
 private:
     intrusive_ptr<IQTDat> p;
-    IQIndex viqindex; //virtual IQIndex
 
     void solo()
     {
@@ -164,35 +163,35 @@ public:
     //----------------------------------------------------
     //IQTensor: Constructors
 
-    IQTensor() : p(0), viqindex(IQEmptyV) {}
+    IQTensor() : p(0) {}
 
     explicit IQTensor(const IQIndex& i1) 
-    : p(new IQTDat(i1)), viqindex(IQEmptyV)
+    : p(new IQTDat(i1))
     { }
 
     IQTensor(const IQIndex& i1,const IQIndex& i2) 
-    : p(new IQTDat(i1,i2)), viqindex(IQEmptyV)
+    : p(new IQTDat(i1,i2))
     { }
 
     IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3) 
-    : p(new IQTDat(i1,i2,i3)), viqindex(IQEmptyV)
+    : p(new IQTDat(i1,i2,i3))
     { }
 
     IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,const IQIndex& i4) 
-    : p(new IQTDat(i1,i2,i3,i4)), viqindex(IQEmptyV)
+    : p(new IQTDat(i1,i2,i3,i4))
     { }
 
     explicit IQTensor(vector<IQIndex>& iqinds_) 
-    : p(new IQTDat(iqinds_)), viqindex(IQEmptyV)
+    : p(new IQTDat(iqinds_))
     { }
 
-    IQTensor(ITmaker itm) : p(new IQTDat(IQIndReIm)), viqindex(IQEmptyV)
+    IQTensor(ITmaker itm) : p(new IQTDat(IQIndReIm))
     {
         if(itm == makeComplex_1)      operator+=(Complex_1);
         else if(itm == makeComplex_i) operator+=(Complex_i);
     }
 
-    IQTensor(IQmaker i) : p(new IQTDat()), viqindex(IQEmptyV)
+    IQTensor(IQmaker i) : p(new IQTDat())
     {
         Index s("sing");
         IQIndex single("single",s,QN());
@@ -201,10 +200,10 @@ public:
         operator+=(st);
     }
 
-    IQTensor(PrimeType pt,const IQTensor& other) : p(other.p), viqindex(other.viqindex)
+    IQTensor(PrimeType pt,const IQTensor& other) : p(other.p)
     { doprime(pt); }
 
-    explicit IQTensor(istream& s) : p(0), viqindex(IQEmptyV) { read(s); }
+    explicit IQTensor(istream& s) : p(0) { read(s); }
 
     void read(istream& s)
     {
@@ -212,9 +211,6 @@ public:
         s.read((char*) &null_,sizeof(null_));
         if(null_) { *this = IQTensor(); return; }
         p = new IQTDat(s);
-        bool has_v;
-        s.read((char*) &has_v,sizeof(has_v));
-        if(has_v) viqindex.read(s);
     }
 
     void write(ostream& s) const
@@ -223,9 +219,6 @@ public:
         s.write((char*) &null_,sizeof(null_));
         if(null_) return;
         p->write(s);
-        bool has_v = has_virtual();
-        s.write((char*) &has_v,sizeof(has_v));
-        if(has_v) viqindex.write(s);
     }
 
 
@@ -380,8 +373,6 @@ public:
 
     void ind_inc_prime(const IQIndex& i,int inc)
     {
-        if(viqindex == i) { int p = viqindex.primeLevel(); viqindex.mapprime(p,p+inc); return; }
-
         solo();
         p->uninit_rmap();
         bool gotit = false;
@@ -442,7 +433,6 @@ public:
 
         for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
             { jj->doprime(pt); }
-        viqindex.doprime(pt);
     } //end IQTensor::doprime
 
     void mapprime(int plevold, int plevnew, PrimeType pt = primeBoth) // no need to keep prime level small
@@ -455,13 +445,10 @@ public:
 
         for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
             { jj->mapprime(plevold,plevnew,pt); }
-        viqindex.mapprime(plevold,plevnew,pt);
     } //end IQTensor::mapprime
 
     void primeind(const IQIndex& I)
     {
-        if(viqindex == I) { viqindex = viqindex.primed(); return; }
-
         solo();
         p->uninit_rmap();
         foreach(IQIndex& J, p->iqindex_)
@@ -513,7 +500,6 @@ public:
 
     bool hastype(IndexType t) const
     {
-        if(t == Virtual) return (viqindex != IQEmptyV);
         foreach(const IQIndex& I, p->iqindex_)
         if(I.type() == t) { return true; }
         return false;
@@ -521,15 +507,10 @@ public:
 
     const IQIndex& findtype(IndexType t) const
     {
-        if(t == Virtual)
-        {
-            if(viqindex != IQEmptyV) return viqindex;
-            else Error("IQTensor::findtype: couldn't find an IQIndex of type Virtual.");
-        }
         foreach(const IQIndex& I, p->iqindex_)
         if(I.type() == t) { return I; }
         Error("IQTensor::findtype: couldn't find type");
-        return viqindex;
+        return IQIndNull;
     }
 
     const IQIndex& finddir(Arrow dir) const
@@ -537,7 +518,7 @@ public:
         foreach(const IQIndex& I, p->iqindex_)
         if(I.dir() == dir) { return I; }
         Error("IQTensor::finddir: couldn't find dir");
-        return viqindex;
+        return IQIndNull;
     }
 
     bool hasindex(const IQIndex& i) const 
@@ -548,29 +529,10 @@ public:
     }
 
     bool is_complex() const { return findindex(IQIndReIm) != 0; }
-    bool has_virtual() const { return viqindex.index(1) != IQEmptyV.index(1); }
-    QN virtualQN() const { return viqindex.qn(1); }
-    const IQIndex& virtual_ind() const { return viqindex; }
 
     void addindex1(const IQIndex& I)
     {
         if(I.m() != 1) Error("IQTensor::operator*=(IQIndex): IQIndex must have m == 1.");    
-        if(I.type() == Virtual) 
-        {
-            Arrow dir = I.dir();
-            QN newq = I.qn(1);
-            if(viqindex != IQEmptyV) //Add quantum numbers (with arrows)
-            {
-                newq = I.dir()*(viqindex.dir()*viqindex.qn(1)+I.dir()*I.qn(1));
-                if(newq.Nf() < 0) //prefer to have Nf >= 0
-                {
-                    newq *= -1;
-                    dir = dir*Switch;
-                }
-            }
-            viqindex = IQIndex(I.name(),Index(I.index(1)),newq,dir);
-            return;
-        }
         solo(); p->uninit_rmap();
         foreach(ITensor& t, p->itensor) t.addindex1(I.index(1));
         p->iqindex_.push_back(I);
@@ -667,7 +629,6 @@ public:
         cerr << "\n" << name << " (IQIndices only) = \n";
         for(size_t j = 0; j < p->iqindex_.size(); ++j)
         { cerr << p->iqindex_[j] << "\n\n"; }
-        if(has_virtual()) cerr << "Virtual = " << viqindex << "\n\n";
         cerr << "---------------------------\n\n";
     }
 
@@ -737,7 +698,6 @@ public:
     {
         s << "\n----- IQTensor -----\nIQIndices: " << endl;
         foreach(const IQIndex& I, t.iqinds()) s << "  " << I << endl;
-        if(t.has_virtual()) s << "  " << t.virtual_ind() << endl;
         s << "ITensors: \n";
         foreach(const ITensor& i, t.itensors())
         s <<"	" << i << "\n";
@@ -768,6 +728,7 @@ inline void Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool d
 inline bool check_QNs(const ITensor& t) { return true; }
 inline bool check_QNs(const IQTensor& T)
 {
+    /*
     foreach(const ITensor& it, T.itensors())
     {
         QN qtot;
@@ -785,6 +746,8 @@ inline bool check_QNs(const IQTensor& T)
             return false;
         }
     }
+    */
+    cerr << "WARNING: check_QNs currently broken\n";
     return true;
 }
 

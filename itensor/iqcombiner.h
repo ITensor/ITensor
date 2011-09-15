@@ -135,7 +135,6 @@ public:
                 }
             }
         }
-        res.addindex1(t.virtual_ind());
     }
 
     inline friend ostream& operator<<(ostream & s, const Condenser & c)
@@ -432,7 +431,6 @@ public:
             if(r.hasindex(it.index(k)))
             { res += (it * rightcomb[it.index(k)]); }
 
-            res.addindex1(t_.virtual_ind());
         }
         else
         {
@@ -495,7 +493,6 @@ public:
                 }
                 res += (*i * setcomb[rse]);
             }
-            res.addindex1(t.virtual_ind());
             if(do_condense) { IQTensor rcopy(res); cond.product(rcopy,res); }
         }
     } //void product(const IQTensor& t, IQTensor& res) const
