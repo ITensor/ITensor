@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     Real En = dmrg(psi,H,sweeps);
 
     cout << format("\nGround State Energy = %.10f\n")%En;
-    cout << "\nTotal QN of Ground State = " << total_QN(psi) << "\n";
+    cout << "\nTotal QN of Ground State = " << totalQN(psi) << "\n";
 
     return 0;
 }

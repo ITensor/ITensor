@@ -146,6 +146,7 @@ public:
     int r() const { return p->iqindex_.size(); }
     inline const IQIndex& index(int j) const { return GET(p->iqindex_,j-1); }
     inline int iten_size() const { return p->itensor.size(); }
+    inline bool iten_empty() const { return p->itensor.empty(); }
     inline bool is_null() const { return p == 0; }
     inline bool is_not_null() const { return p != 0; }
     inline int num_index() const { return p->iqindex_.size(); }
@@ -314,37 +315,21 @@ public:
 
     //----------------------------------------------------
     //IQTensor quantum number methods
-    /*
-    void set_qn(Index i, QN q)
-    {
-        int iqq = find_iqind(i)-1;
-        if(iqq == -1)
-            Error("set_qn: cant find index");
-        p->iqindex_[iqq].set_qn(i,q);
-    } //end IQTensor::set_qn
-    */
 
-    QN net_QN() const // only works on tensors without the Link indices put in
+    QN div() const
     {
-        assert(!hastype(Link));
-        QN res;
-        for(const_iten_it t = const_iten_begin(); t != const_iten_end(); t++)
-        {
-            QN q;
-            for(int j = 1; j <= t->r(); j++)
-            { q += qn(t->index(j))*dir(t->index(j)); }
-            
-            if(t == const_iten_begin()) res = q;
-            else if(q != res)
-            {
-                printdat = true; cerr << "*this = " << *this << endl; printdat = false;
-                cerr << "res = " << res << endl;
-                cerr << "q = " << q << endl;
-                error("net_QN() should only be used on an IQTensor with well defined QN.");
-            }
+        QN div_;
+        assert(p != 0);
+        if(p->itensor.empty())
+        {   
+            this->printIQInds("this");
+            Error("IQTensor has no blocks");
         }
-        return res;
-    } //end IQTensor::net_QN
+        const ITensor& t = p->itensor.front();
+        for(int j = 1; j <= t.r(); ++j)
+        { div_ += qn(t.index(j))*dir(t.index(j)); }
+        return div_;
+    }
 
     QN qn(const Index& in) const
     {
@@ -724,30 +709,26 @@ inline void Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool d
     res.GetSingComplex(re,im);
 }
 
-//Checks if the divergence of this IQTensor is zero
-inline bool check_QNs(const ITensor& t) { return true; }
-inline bool check_QNs(const IQTensor& T)
+inline bool checkQNs(const ITensor& t) { return true; }
+//Checks if all IQTensor blocks have the same divergence
+inline bool checkQNs(const IQTensor& T)
 {
-    /*
+    QN qtot = T.div();
     foreach(const ITensor& it, T.itensors())
     {
-        QN qtot;
+        QN q;
         for(int j = 1; j <= it.r(); ++j) 
-        { qtot += T.qn(it.index(j))*T.dir(it.index(j)); }
-        qtot += T.virtual_ind().qn(1)*T.virtual_ind().dir();
-        if(qtot != QN()) 
+            { q += T.qn(it.index(j))*T.dir(it.index(j)); }
+
+        if(q != qtot) 
         {
-            cerr << "check_QNs: IQTensor failed to have zero divergence.\n";
+            cerr << "checkQNs: inconsistent QN.\n";
             cerr << "\nqtot = " << qtot << "\n\n";
-            printdat = false; cerr << "Offending ITensor = " << it << "\n\n";
-            cerr << "IQIndices = \n";
-            foreach(const IQIndex& I, T.iqinds())
-            { cerr << "\n" << I << "\n"; }
+            cerr << "Offending ITensor = " << it << "\n\n";
+            T.printIQInds("T");
             return false;
         }
     }
-    */
-    cerr << "WARNING: check_QNs currently broken\n";
     return true;
 }
 

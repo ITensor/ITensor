@@ -8,7 +8,7 @@ REPORT_LEVEL=confirm
 
 HEADERS=test.h
 SOURCES=test.cc matrix_test.cc real_test.cc index_test.cc itensor_test.cc\
-combiner_test.cc
+combiner_test.cc iqtensor_test.cc mps_test.cc
 
 TENSOR_HEADERS=dmrg.h hams.h
 LIBNAMES=matrix utilities itensor

@@ -677,80 +677,105 @@ private:
 typedef MPSt<ITensor> MPS;
 typedef MPSt<IQTensor> IQMPS;
 
-inline bool check_QNs(const MPS& psi) { return true; }
-
-inline bool check_QNs(const IQMPS& psi)
+inline int findCenter(const IQMPS& psi)
 {
-    /*
-    const int N = psi.NN();
-    //Check Link arrows
+    for(int j = 1; j <= psi.NN(); ++j) 
+    {
+        const IQTensor& A = psi.AA(j);
+        if(A.r() == 0) Error("Zero rank tensor in MPS");
+        bool allSameDir = true;
+        Arrow dir = A.index(1).dir();
+        for(int i = 2; i <= A.r(); ++i)
+            if(A.index(i).dir() != dir)
+            {
+                allSameDir = false;
+                break;
+            }
 
-    //Get the orthogonality center (based on location of Virtual IQIndex)
-    int center = -1;
+        //Found the ortho. center
+        if(allSameDir) return j;
+    }
+    return -1;
+}
+
+inline bool checkQNs(const MPS& psi) { return true; }
+
+inline bool checkQNs(const IQMPS& psi)
+{
+    const int N = psi.NN();
+
+    QN zero;
+
+    int center = findCenter(psi);
+    if(center == -1)
+    {
+        cerr << "Did not find an ortho. center\n";
+        return false;
+    }
+
+    //Check that all IQTensors have zero div
+    //except possibly the ortho. center
     for(int i = 1; i <= N; ++i) 
     {
-        if(psi.AA(i).hastype(Virtual)) { center = i; break; } 
-        //else if(i == N) { cerr << "check_QNs: couldn't find a Virtual IQIndex.\n"; return false; }
-    }
-
-    if(center > 0)
-    {
-        //Check arrows from left edge
-        for(int i = 1; i < center; ++i)
+        if(i == center) continue;
+        if(psi.AA(i).is_null())
         {
-            if(psi.RightLinkInd(i).dir() != In) 
-            {
-                cerr << boost::format("check_QNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
-                return false;
-            }
-            if(i > 1)
-            {
-                if(psi.LeftLinkInd(i).dir() != Out) 
-                {
-                    cerr << boost::format("check_QNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
-                    return false;
-                }
-            }
+            cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
+            return false;
         }
-
-        //Check arrows from right edge
-        for(int i = N; i > center; --i)
+        if(psi.AA(i).div() != zero)
         {
-            if(i < N)
-            if(psi.RightLinkInd(i).dir() != Out) 
-            {
-                cerr << boost::format("check_QNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
-                return false;
-            }
-            if(psi.LeftLinkInd(i).dir() != In) 
-            {
-                cerr << boost::format("check_QNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
-                return false;
-            }
-        }
-    }
-    //Done checking arrows
-
-    //Check IQTensors
-    for(int i = 1; i <= N; ++i)
-    {
-        if(!check_QNs(psi.AA(i)))
-        {
-            cerr << "check_QNs: IQTensor AA(" << i << ") had non-zero divergence.\n";
+            cerr << "At i = " << i << "\n";
+            Print(psi.AA(i));
+            cerr << "Multiple non-zero div IQTensors in MPS\n";
             return false;
         }
     }
-    */
-    cerr << "WARNING: check_QNs currently broken\n";
+
+    //Check arrows from left edge
+    for(int i = 1; i < center; ++i)
+    {
+        if(psi.RightLinkInd(i).dir() != In) 
+        {
+            cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            return false;
+        }
+        if(i > 1)
+        {
+            if(psi.LeftLinkInd(i).dir() != Out) 
+            {
+                cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                return false;
+            }
+        }
+    }
+
+    //Check arrows from right edge
+    for(int i = N; i > center; --i)
+    {
+        if(i < N)
+        if(psi.RightLinkInd(i).dir() != Out) 
+        {
+            cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            return false;
+        }
+        if(psi.LeftLinkInd(i).dir() != In) 
+        {
+            cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            return false;
+        }
+    }
+
+    //Done checking arrows
     return true;
 }
 
-inline QN total_QN(const IQMPS& psi)
+inline QN totalQN(const IQMPS& psi)
 {
-    //assert(psi.AA(psi.ortho_center()).has_virtual());
-    //return psi.AA(psi.ortho_center()).virtualQN();
-    cerr << "WARNING: total_QN currently broken\n";
-    return QN();
+    int center = findCenter(psi);
+    if(center == -1)
+        Error("Could not find ortho. center");
+    return psi.AA(center).div();
 }
 
 template <class MPSType>
@@ -801,7 +826,7 @@ inline void fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
 
     res.AAnc(1) = A;
 
-    assert(check_QNs(res));
+    assert(checkQNs(res));
 
     psi_to_fit = res;
 }

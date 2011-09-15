@@ -346,7 +346,7 @@ public:
 
         //Combiners should always have the 
         //structure of zero divergence IQTensors
-        assert(check_QNs(res));
+        assert(checkQNs(res));
 
         return res;
     }

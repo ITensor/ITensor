@@ -787,7 +787,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
     } //for loop over s
 
-    assert(check_QNs(iqpsi));
+    assert(checkQNs(iqpsi));
 
 } //void convertToIQ(IQMPSType& iqpsi) const
 */
