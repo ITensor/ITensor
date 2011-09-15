@@ -577,6 +577,7 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
     qA[1].addindex1(Center);
 }
 
+/*
 template <class Tensor> 
 template <class IQMPSType> 
 void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
@@ -794,4 +795,5 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
     assert(check_QNs(iqpsi));
 
 } //void convertToIQ(IQMPSType& iqpsi) const
+*/
 

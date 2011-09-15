@@ -665,12 +665,16 @@ public:
     void print(string name = "",Printdat pdat = HideData) const 
     { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
 
-    //-----------------------------------------------------------------
-    //IQMPS specific methods
+    void toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
+    {
+        iqpsi = MPSt<IQTensor>(*model_,maxm(),cutoff());
+        iqpsi.svd_ = svd_;
+        convertToIQ(*model_,A,iqpsi.A,totalq,cut);
+    }
 
-    template <class IQMPSType> 
-    void convertToIQ(IQMPSType& iqpsi, QN totalq = QN(), Real cut = 1E-12) const;
-
+private:
+    friend class MPSt<ITensor>;
+    friend class MPSt<IQTensor>;
 }; //class MPSt<Tensor>
 typedef MPSt<ITensor> MPS;
 typedef MPSt<IQTensor> IQMPS;
