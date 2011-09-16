@@ -908,11 +908,16 @@ public:
     void Randomize() { solo(); p->v.Randomize(); }
 
     void SplitReIm(ITensor& re, ITensor& im) const
-    {
-        re = *this; im = *this;
-        if(!is_complex()) { im *= 0; return; }
-        re *= IndReIm(1); im *= IndReIm(2);
-    }
+	{
+	re = *this; im = *this;
+	if(!is_complex()) { im *= 0; return; }
+	//re *= IndReIm(1); im *= IndReIm(2);
+
+	re.mapindex(IndReIm,IndReImP);
+	im.mapindex(IndReIm,IndReImP);
+	re *= IndReImP(1);
+	im *= IndReImP(2);
+	}
 
     inline void conj() { if(!is_complex()) return; operator/=(ConjTensor); }
 

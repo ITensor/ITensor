@@ -15,9 +15,10 @@ void IQTensor::SplitReIm(IQTensor& re, IQTensor& im) const
 	im *= 0.0;
 	return;
 	}
-    re = IQTensor();
-    remove_copy_if(p->iqindex_.begin(),p->iqindex_.end(),std::back_inserter(re.p->iqindex_),
+    vector<IQIndex> newreinds;
+    remove_copy_if(p->iqindex_.begin(),p->iqindex_.end(),std::back_inserter(newreinds),
 		    bind2nd(std::equal_to<IQIndex>(),IQIndReIm));
+    re = IQTensor(newreinds);
     im = re;
     ITensor a,b;
     for(const_iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
