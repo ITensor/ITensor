@@ -31,7 +31,7 @@ void IQTensor::SplitReIm(IQTensor& re, IQTensor& im) const
 IQTensor& IQTensor::operator*=(const IQTensor& other)
 {
     if(hasindex(IQIndReIm) && other.hasindex(IQIndReIm) && !other.hasindex(IQIndReImP)
-	    && !other.hasindex(IQIndReImPP))
+	    && !other.hasindex(IQIndReImPP) && !hasindex(IQIndReImP) && !hasindex(IQIndReImPP))
 	{
         static ITensor primer(IndReIm,IndReImP,1.0);
         static ITensor primerP(IndReIm,IndReImPP,1.0);

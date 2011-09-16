@@ -615,7 +615,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
     //Complex types are treated as just another index, of type ReIm
     //Multiplication is handled automatically with these simple tensor helpers
     if(findindexn(IndReIm) && other.findindexn(IndReIm) && !other.findindexn(IndReImP)
-	   && !other.findindexn(IndReImPP))
+	    && !other.hasindex(IndReImPP) && !hasindex(IndReImP) && !hasindex(IndReImPP))
 	{
         static ITensor primer(IndReIm,IndReImP,1.0);
         static ITensor primerP(IndReIm,IndReImPP,1.0);
