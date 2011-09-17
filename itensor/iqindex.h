@@ -269,6 +269,8 @@ public:
     pd(new IQIndexDat(i1,q1,i2,q2))
     {
         primeLevel(i1.primeLevel());
+        if(i2.type() != i1.type())
+            Error("Indices must have the same type");
     }
 
     IQIndex(const string& name, 
@@ -280,6 +282,9 @@ public:
     pd(new IQIndexDat(i1,q1,i2,q2,i3,q3))
     {
         primeLevel(i1.primeLevel());
+        if(i2.type() != i1.type() 
+        || i3.type() != i1.type())
+            Error("Indices must have the same type");
     }
 
     IQIndex(const string& name, 
@@ -292,6 +297,10 @@ public:
     pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4))
     {
         primeLevel(i1.primeLevel());
+        if(i2.type() != i1.type() 
+        || i3.type() != i1.type()
+        || i4.type() != i1.type())
+            Error("Indices must have the same type");
     }
 
     IQIndex(const string& name, vector<inqn>& ind_qn, Arrow dir = Out, int plev = 0) 
@@ -301,7 +310,12 @@ public:
         //int* pm = const_cast<int*>(&(p->m_));
         //foreach(const inqn& x, pd->iq_) *pm += x.index.m();
         int mm = 0;
-        foreach(const inqn& x, pd->iq_) mm += x.index.m();
+        foreach(const inqn& x, pd->iq_) 
+        {
+            mm += x.index.m();
+            if(x.index.type() != this->type())
+                Error("Indices must have the same type");
+        }
         set_m(mm);
         primeLevel(pd->iq_.back().index.primeLevel());
     }
@@ -313,7 +327,12 @@ public:
         //int* pm = const_cast<int*>(&(p->m_));
         //foreach(const inqn& x, pd->iq_) *pm += x.index.m();
         int mm = 0;
-        foreach(const inqn& x, pd->iq_) mm += x.index.m();
+        foreach(const inqn& x, pd->iq_) 
+        {
+            mm += x.index.m();
+            if(x.index.type() != this->type())
+                Error("Indices must have the same type");
+        }
         set_m(mm);
         primeLevel(pd->iq_.back().index.primeLevel());
     }
@@ -468,7 +487,7 @@ public:
     void print(string name = "") const
     { cerr << "\n" << name << " =\n" << *this << "\n"; }
 
-};
+}; //class IQIndex
 
 extern IQIndex IQIndNull, IQIndReIm, IQIndReImP, IQIndReImPP;
 enum IQmaker {makeSing};

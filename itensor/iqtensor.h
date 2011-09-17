@@ -331,6 +331,29 @@ public:
         return div_;
     }
 
+    bool checkDiv(QN expected) const
+    {
+        assert(p != 0);
+        if(p->itensor.empty())
+        {   
+            this->printIQInds("this");
+            Error("IQTensor has no blocks");
+        }
+        foreach(const ITensor& t, p->itensor)
+        {
+            QN div_;
+            for(int j = 1; j <= t.r(); ++j)
+                { div_ += qn(t.index(j))*dir(t.index(j)); }
+            if(div_ != expected)
+            {
+                cerr << "Block didn't match expected div\n";
+                Print(t);
+                return false;
+            }
+        }
+        return true;
+    }
+
     QN qn(const Index& in) const
     {
         int iqq = find_iqind(in)-1;

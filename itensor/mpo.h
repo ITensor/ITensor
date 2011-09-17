@@ -137,6 +137,108 @@ private:
 typedef MPOt<ITensor> MPO;
 typedef MPOt<IQTensor> IQMPO;
 
+inline int findCenter(const IQMPO& psi)
+{
+    for(int j = 1; j <= psi.NN(); ++j) 
+    {
+        const IQTensor& A = psi.AA(j);
+        if(A.r() == 0) Error("Zero rank tensor in IQMPO");
+        bool allSameDir = true;
+        Arrow dir = Switch;
+        for(int i = 2; i <= A.r(); ++i)
+        {
+            //Only look at Link IQIndices
+            if(A.index(i).type() != Link) continue;
+            //First Link ind, grab its dir and continue
+            if(dir == Switch)
+            {
+                dir = A.index(i).dir();
+                continue;
+            }
+            //Other Link ind, check if dir matches
+            if(A.index(i).dir() != dir)
+            {
+                allSameDir = false;
+                break;
+            }
+        }
+
+        //Found the ortho. center
+        if(allSameDir) return j;
+    }
+    return -1;
+}
+
+inline bool checkQNs(const MPO& psi) { return true; }
+
+inline bool checkQNs(const IQMPO& psi)
+{
+    const int N = psi.NN();
+
+    QN zero;
+
+    int center = findCenter(psi);
+    if(center == -1)
+    {
+        cerr << "Did not find an ortho. center\n";
+        return false;
+    }
+
+    //Check that all IQTensors have zero div
+    //including the ortho. center
+    for(int i = 1; i <= N; ++i) 
+    {
+        if(psi.AA(i).is_null())
+        {
+            cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
+            return false;
+        }
+        if(psi.AA(i).div() != zero)
+        {
+            cerr << "At i = " << i << "\n";
+            Print(psi.AA(i));
+            cerr << "Non-zero div IQTensor in MPO\n";
+            return false;
+        }
+    }
+
+    //Check arrows from left edge
+    for(int i = 1; i < center; ++i)
+    {
+        if(psi.RightLinkInd(i).dir() != In) 
+        {
+            cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            return false;
+        }
+        if(i > 1)
+        {
+            if(psi.LeftLinkInd(i).dir() != Out) 
+            {
+                cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                return false;
+            }
+        }
+    }
+
+    //Check arrows from right edge
+    for(int i = N; i > center; --i)
+    {
+        if(i < N)
+        if(psi.RightLinkInd(i).dir() != Out) 
+        {
+            cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            return false;
+        }
+        if(psi.LeftLinkInd(i).dir() != In) 
+        {
+            cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            return false;
+        }
+    }
+
+    //Done checking arrows
+    return true;
+}
 
 namespace Internal {
 
