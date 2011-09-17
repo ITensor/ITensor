@@ -152,9 +152,12 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
 	{
         const ITensor& t = *it;
-        //assert(t.index(1).noprime_equals(t.index(2)));
         if(!t.index(1).noprime_equals(t.index(2)))
-        { Print(rho); Print(t); Error("Non-symmetric ITensor in density matrix"); }
+        { 
+            Print(rho); 
+            Print(t); 
+            Error("Non-symmetric ITensor in density matrix, perhaps QNs not conserved?");
+        }
 
         t.scaleTo(refNorm_);
 
