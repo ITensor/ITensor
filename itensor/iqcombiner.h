@@ -258,6 +258,7 @@ public:
         if(l4 != IQIndNull) left.push_back(l4);
         if(l5 != IQIndNull) left.push_back(l5); 
         if(l6 != IQIndNull) left.push_back(l6);
+        foreach(IQIndex& L, left) L.conj();
 	}
     void addleft(const IQIndex& l) 	// Include another left index
 	{ 
@@ -334,8 +335,8 @@ public:
     {
         if(!initted) Error("IQCombiner::operator IQTensor(): IQCombiner not initialized.");
 
-        if(_right.m() > 16) 
-        { cerr << endl << endl << "WARNING: too large of an m in IQCombiner::operator IQTensor(). May be inefficient!" << endl << endl; }
+        //if(_right.m() > 16) 
+        //{ cerr << endl << endl << "WARNING: too large of an m in IQCombiner::operator IQTensor(). May be inefficient!" << endl << endl; }
 
         vector<IQIndex> iqinds(left);
         iqinds.push_back((do_condense ? cindex : _right));
@@ -386,6 +387,7 @@ public:
 
     inline friend ostream& operator<<(ostream & s, const IQCombiner & c)
     {
+        c.init();
         s << endl << "right is " << c.right() << endl;
         s << "lefts are " << endl;
         foreach(const IQIndex& I, c.left) s << I << endl;
