@@ -1,6 +1,9 @@
 // error.cc -- Print out an error message and abort for debugging
 
 #include "error.h"
+using std::cout;
+using std::cerr;
+using std::endl;
 
 void error(const char* s)
 {
@@ -19,6 +22,6 @@ void error(const char* s, int line, const char* file = 0)
     cerr << endl << s << endl;
     cout << endl << s << endl;
     cout.flush();
-    abort();
+    throw ITError(s);
 }
 
