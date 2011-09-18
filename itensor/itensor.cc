@@ -147,57 +147,92 @@ void ITensor::expandIndex(const Index& small, const Index& big,
         c.i[2]+inc2-1)*c.n[1]+
         c.i[1]+inc1)
         = thisdat(c.ind);
-    /*
-        res._val(
-        c.i[1]+inc1,c.i[2]+inc2,
-        c.i[3]+inc3,c.i[4]+inc4,
-        c.i[5]+inc5,c.i[6]+inc6,
-        c.i[7]+inc7,c.i[8]+inc8)
-        = thisdat(c.ind);
-    */
     }
 }
 
-Real& ITensor::_val(int i1, int i2, int i3, int i4, 
-                    int i5, int i6, int i7, int i8)
+int ITensor::_ind(int i1, int i2, int i3, int i4, 
+                  int i5, int i6, int i7, int i8)
+const
 {
     assert(p != 0);
     switch(rn_)
     {
     case 0:
-        return p->v(1);
+        return (1);
         break;
     case 1:
-        return p->v(i1);
+        return (i1);
         break;
     case 2:
-        return p->v((i2-1)*m(1)+i1);
+        return ((i2-1)*m(1)+i1);
         break;
     case 3:
-        return p->v(((i3-1)*m(2)+i2-1)*m(1)+i1);
+        return (((i3-1)*m(2)+i2-1)*m(1)+i1);
         break;
     case 4:
-        return p->v((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+        return ((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
         break;
     case 5:
-        return p->v(((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)
+        return (((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)
                         *m(1)+i1);
         break;
     case 6:
-        return p->v((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)
+        return ((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)
                         *m(2)+i2-1)*m(1)+i1);
         break;
     case 7:
-        return p->v(((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)
+        return (((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)
                         *m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
         break;
     case 8:
-        return p->v((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)
+        return ((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)
                         *m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
         break;
     } //switch(rn_)
-    Error("ITensor::_val: Failed switch case");
-    return p->v(1);
+    Error("ITensor::_ind: Failed switch case");
+    return 1;
+}
+
+int ITensor::_ind2(const IndexVal& iv1, const IndexVal& iv2) const
+{
+    assert(r_ >= 2);
+    boost::array<int,2+1> ja; ja.assign(1);
+    if(rn_ > 2) 
+    {
+        cerr << boost::format("# given = 2, rn_ = %d\n")%rn_;
+        Error("Not enough indices (requires all having m!=1)");
+    }
+    for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
+    {
+        if(index_[k] == iv1.ind)      { ja[k] = iv1.i; }
+        else if(index_[k] == iv2.ind) { ja[k] = iv2.i; }
+    }
+    return ((ja[2]-1)*m(1)+ja[1]);
+}
+
+int ITensor::_ind8(const IndexVal& iv1, const IndexVal& iv2, 
+          const IndexVal& iv3, const IndexVal& iv4,
+          const IndexVal& iv5,const IndexVal& iv6,
+          const IndexVal& iv7,const IndexVal& iv8)
+const
+{
+    boost::array<const IndexVal*,NMAX+1> iv = 
+        {{ 0, &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
+    boost::array<int,NMAX+1> ja; ja.assign(1);
+    for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
+    {
+        bool gotit = false;
+        for(int j = 1; j <= NMAX; ++j)  // loop over the given indices
+        if(index_[k] == iv[j]->ind) 
+        { ja[k] = iv[j]->i; gotit = true; break; }
+        if(!gotit)
+        {
+            Print(*this);
+            Print(index_[k]);
+            Error("Missing m!=1 Index in arg list");
+        }
+    }
+    return _ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]);
 }
 
 void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const

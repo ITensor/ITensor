@@ -305,8 +305,16 @@ private:
                              boost::array<bool,NMAX+1>& contractedR, 
                              MatrixRefNoLink& lref, MatrixRefNoLink& rref);
 
-    Real& _val(int i1, int i2, int i3, int i4, 
-               int i5, int i6, int i7, int i8);
+    int _ind(int i1, int i2, int i3, int i4, 
+             int i5, int i6, int i7, int i8) const;
+
+    int _ind2(const IndexVal& iv1, const IndexVal& iv2) const;
+
+    int _ind8(const IndexVal& iv1, const IndexVal& iv2, 
+              const IndexVal& iv3, const IndexVal& iv4 = IVNull, 
+              const IndexVal& iv5 = IVNull,const IndexVal& iv6 = IVNull,
+              const IndexVal& iv7 = IVNull,const IndexVal& iv8 = IVNull)
+    const;
 
 public:
 
@@ -433,7 +441,7 @@ public:
             for(int j = 0; j < size; ++j)  // loop over the given indices
             { if(index_[k] == ii[j]) { ja[k] = iv[j]; break; } }
         }
-        _val(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]) = 1;
+        p->v(_ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])) = 1;
     }
 
     explicit ITensor(const std::vector<Index>& I) : rn_(0)
@@ -746,6 +754,17 @@ public:
         return p->v(1);
     }
 
+    const Real operator()() const
+	{ 
+        if(rn_ != 0)
+        {
+            cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
+            Error("Not enough indices (requires all having m!=1)");
+        }
+        assert(p != 0); 
+        return scale_.real()*p->v(1);
+    }
+
     Real& operator()(const IndexVal& iv1)
 	{
         assert(r_ >= 1);
@@ -760,53 +779,52 @@ public:
         return p->v(iv1.i);
 	}
 
-    Real& operator()(const IndexVal& iv1, const IndexVal& iv2) 
+    const Real operator()(const IndexVal& iv1) const
 	{
-        assert(r_ >= 2);
-        boost::array<int,2+1> ja; ja.assign(1);
-        if(rn_ > 2) 
+        assert(r_ >= 1);
+        if(rn_ > 1) 
         {
-            cerr << boost::format("# given = 2, rn_ = %d\n")%rn_;
+            cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
             Error("Not enough indices (requires all having m!=1)");
         }
-        for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
-        {
-            if(index_[k] == iv1.ind)      { ja[k] = iv1.i; }
-            else if(index_[k] == iv2.ind) { ja[k] = iv2.i; }
-        }
+	    assert(p != 0); 
+        return scale_.real()*p->v(iv1.i);
+	}
+
+    inline Real& operator()(const IndexVal& iv1, const IndexVal& iv2) 
+    {
 	    assert(p != 0); 
         solo(); 
         scaleTo(1);
-        return p->v((ja[2]-1)*m(1)+ja[1]);
-	}
+        return p->v(_ind2(iv1,iv2));
+    }
 
-    Real& operator()(const IndexVal& iv1, const IndexVal& iv2, 
+    inline const Real operator()(const IndexVal& iv1, 
+                                 const IndexVal& iv2) const
+	{
+	    assert(p != 0); 
+        return scale_.real()*p->v(_ind2(iv1,iv2));
+    }
+
+    inline Real& operator()(const IndexVal& iv1, const IndexVal& iv2, 
                     const IndexVal& iv3, const IndexVal& iv4 = IVNull, 
                     const IndexVal& iv5 = IVNull,const IndexVal& iv6 = IVNull,
                     const IndexVal& iv7 = IVNull,const IndexVal& iv8 = IVNull)
-	{
-        boost::array<const IndexVal*,NMAX+1> iv = 
-            {{ 0, &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
-        boost::array<int,NMAX+1> ja; ja.assign(1);
-        for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
-        {
-            bool gotit = false;
-            for(int j = 1; j <= NMAX; ++j)  // loop over the given indices
-            if(index_[k] == iv[j]->ind) 
-            { ja[k] = iv[j]->i; gotit = true; break; }
-            if(!gotit)
-            {
-                Print(*this);
-                Print(index_[k]);
-                Error("Missing m!=1 Index in arg list");
-            }
-        }
+    {
 	    assert(p != 0); 
         solo(); 
         scaleTo(1);
-        return _val(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]);
-	}
+        return p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
+    }
 
+    inline const Real operator()(const IndexVal& iv1, const IndexVal& iv2, 
+                    const IndexVal& iv3, const IndexVal& iv4 = IVNull, 
+                    const IndexVal& iv5 = IVNull,const IndexVal& iv6 = IVNull,
+                    const IndexVal& iv7 = IVNull,const IndexVal& iv8 = IVNull) const
+	{
+	    assert(p != 0); 
+        return scale_.real()*p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
+    }
 
     //Methods for Mapping to Other Objects ----------------------------------
 

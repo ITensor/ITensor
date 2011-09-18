@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(assignToVec)
     V.Randomize();
     Real f = -ran1();
 
-    vector<Index> indices; indices.reserve(3);
+    std::vector<Index> indices; indices.reserve(3);
     indices.push_back(l1);
     indices.push_back(l2);
     indices.push_back(l3);
