@@ -1,4 +1,6 @@
 #include "dmrg.h"
+using std::cout;
+using std::vector;
 
 //Orthogonalizing DMRG. Puts in an energy penalty if psi has an overlap with any MPS in 'other'.
 Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>& other, DMRGOpts& opts)

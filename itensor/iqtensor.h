@@ -17,7 +17,7 @@ private:
     mutable bool rmap_init;
 public:
     mutable list<ITensor> itensor; // This is mutable to allow reordering
-    vector<IQIndex> iqindex_;
+    std::vector<IQIndex> iqindex_;
     mutable map<ApproxReal,iten_it> rmap; //mutable so that const IQTensor methods can use rmap
 
     IQTDat() : numref(0), rmap_init(false) { }
@@ -48,7 +48,7 @@ public:
         iqindex_[3] = i4; 
     }
 
-    explicit IQTDat(vector<IQIndex>& iqinds_) : numref(0), rmap_init(false) { iqindex_.swap(iqinds_); }
+    explicit IQTDat(std::vector<IQIndex>& iqinds_) : numref(0), rmap_init(false) { iqindex_.swap(iqinds_); }
 
     explicit IQTDat(const IQTDat& other) 
     : numref(0), rmap_init(false), itensor(other.itensor), iqindex_(other.iqindex_)
@@ -127,8 +127,8 @@ public:
     typedef IQCombiner CombinerT;
     typedef list<ITensor>::iterator iten_it;
     typedef list<ITensor>::const_iterator const_iten_it;
-    typedef vector<IQIndex>::iterator iqind_it;
-    typedef vector<IQIndex>::const_iterator const_iqind_it;
+    typedef std::vector<IQIndex>::iterator iqind_it;
+    typedef std::vector<IQIndex>::const_iterator const_iqind_it;
     static const IQIndex& ReImIndex;
 private:
     intrusive_ptr<IQTDat> p;
@@ -182,7 +182,7 @@ public:
     : p(new IQTDat(i1,i2,i3,i4))
     { }
 
-    explicit IQTensor(vector<IQIndex>& iqinds_) 
+    explicit IQTensor(std::vector<IQIndex>& iqinds_) 
     : p(new IQTDat(iqinds_))
     { }
 
@@ -247,7 +247,7 @@ public:
     /*
     operator ITensor() const
     {
-        vector<Index> indices;
+        std::vector<Index> indices;
         foreach(const IQIndex& I, p->iqindex_)
         {
             if(I.type() != Site) 
@@ -295,7 +295,7 @@ public:
 
         if(!p->has_itensor(r))
         {
-            vector<Index> indices; indices.reserve(nn);
+            std::vector<Index> indices; indices.reserve(nn);
             foreach(const IQIndex& I, p->iqindex_)
             {
                 if(I.type() == Site) continue;
@@ -501,7 +501,7 @@ public:
 
     int findindex(const IQIndex& i) const
     {
-        vector<IQIndex>::const_iterator f = find(p->iqindex_.begin(),p->iqindex_.end(),i);
+        std::vector<IQIndex>::const_iterator f = find(p->iqindex_.begin(),p->iqindex_.end(),i);
         if(f == p->iqindex_.end()) return 0;
         else return (f - p->iqindex_.begin())+1;
     }
@@ -650,7 +650,7 @@ public:
             ApproxReal se = ApproxReal(i->unique_Real());
             if(semap.count(se) == 0)
             {
-                cout << "warning assignFrom semap.count is 0" << endl;
+                std::cout << "warning assignFrom semap.count is 0" << endl;
                 cerr << "offending ITensor is " << *i << "\n";
                 Error("bad assignFrom count se");
             }

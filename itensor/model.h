@@ -39,7 +39,7 @@ class Model : public BaseModel
     typedef BaseModel Parent;
 
     int N;
-    vector<IQIndex> site;
+    std::vector<IQIndex> site;
 public:
     Model() : N(-1) { }
     Model(int N_) : N(N_), site(N_+1) 
@@ -163,7 +163,7 @@ class Model : public BaseModel
     typedef BaseModel Parent;
     
     int N;
-    vector<IQIndex> site;
+    std::vector<IQIndex> site;
 public:
     Model() : Parent() { }
     Model(int N_) : N(N_), site(N_+1) 
@@ -262,7 +262,7 @@ private:
     typedef BaseModel Parent;
 
     int N;
-    vector<IQIndex> site;
+    std::vector<IQIndex> site;
 
     void initSites()
     {
@@ -380,7 +380,7 @@ private:
     typedef BaseModel Parent;
 
     int N;
-    vector<IQIndex> site;
+    std::vector<IQIndex> site;
 public:
     Model() : N(-1) { }
     Model(int N_) : N(N_), site(N_+1)

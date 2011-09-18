@@ -129,7 +129,7 @@ public:
         int j;
         if((j = t.findindex(right_)) != 0)
         {
-            vector<Index> nindices; 
+            std::vector<Index> nindices; 
             nindices.reserve(t.r()+rl_-1);
             for(int i = 1; i < j; ++i)
                 nindices.push_back(t.index(i));

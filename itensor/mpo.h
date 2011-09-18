@@ -246,9 +246,9 @@ template<class Tensor>
 class MPOSet
 {
     int N, size_;
-    vector<vector<const Tensor*> > A;
+    std::vector<std::vector<const Tensor*> > A;
 public:
-    typedef vector<Tensor> TensorT;
+    typedef std::vector<Tensor> TensorT;
 
     MPOSet() : N(-1), size_(0) { }
 
@@ -283,9 +283,9 @@ public:
 
     int NN() const { return N; }
     int size() const { return size_; }
-    const vector<const Tensor*>& AA(int j) const { return GET(A,j); }
-    const vector<Tensor> bondTensor(int b) const
-    { vector<Tensor> res = A[b] * A[b+1]; return res; }
+    const std::vector<const Tensor*>& AA(int j) const { return GET(A,j); }
+    const std::vector<Tensor> bondTensor(int b) const
+    { std::vector<Tensor> res = A[b] * A[b+1]; return res; }
 
 }; //class Internal::MPOSet
 

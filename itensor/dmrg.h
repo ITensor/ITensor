@@ -83,7 +83,7 @@ class LocalHamOrth : public BaseLocalHam<Tensor> // to do DMRG using an MPO, ort
     bool useleft, useright;
     Real weight;
 public:
-    vector<Tensor> other;
+    std::vector<Tensor> other;
 
     LocalHamOrth(const Tensor& le, const Tensor& ri, const Tensor& mpo, Tensor& psi_, Real weight_) 
 	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), 
@@ -131,7 +131,7 @@ void putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const Ten
     }
 }
 template<class Tensor, class TensorSet>
-void putInQNs(vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH)
+void putInQNs(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH)
 {
     for(size_t n = 0; n < phi.size(); ++n)
     {
@@ -186,7 +186,7 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
 }
 
 template<class Tensor, class TensorSet>
-Vector doDavidson(vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal)
+Vector doDavidson(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal)
 {
     const int ntarget = phi.size();
     assert(ntarget != 0);
@@ -228,8 +228,8 @@ class Sweeps
 public:
     SweepScheme scheme;
     int Minm;
-    vector<int>  Maxm, Niter;
-    vector<Real> Cutoff;
+    std::vector<int>  Maxm, Niter;
+    std::vector<Real> Cutoff;
     int Nsweep;
     int num_site_center;		// May not be implemented in some cases
     Sweeps(SweepScheme sch, int nsw, int _minm, int _maxm, Real _cut)
@@ -311,22 +311,22 @@ public:
 
             if(b == 1 && ha == 2) 
             {
-                cout << "\n    Largest m during sweep " << sw << " was " << largest_m << "\n";
-                cout << boost::format("    Eigs at bond %d: ") % max_eigs_bond;
+                std::cout << "\n    Largest m during sweep " << sw << " was " << largest_m << "\n";
+                std::cout << boost::format("    Eigs at bond %d: ") % max_eigs_bond;
                 for(int j = 1; j <= min(max_eigs.Length(),10); ++j) 
                 {
-                    cout << boost::format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
-                    cout << ((j != min(max_eigs.Length(),10)) ? ", " : "\n");
+                    std::cout << boost::format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
+                    std::cout << ((j != min(max_eigs.Length(),10)) ? ", " : "\n");
                 }
-                cout << "    Eigs at center bond: ";
+                std::cout << "    Eigs at center bond: ";
                 for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                 {
-                    cout << boost::format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
-                    cout << ((j != min(center_eigs.Length(),10)) ? ", " : "\n");
+                    std::cout << boost::format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
+                    std::cout << ((j != min(center_eigs.Length(),10)) ? ", " : "\n");
                 }
-                cout << boost::format("    Bulk entanglement gap = %f\n") % bulk_entanglement_gap;
+                std::cout << boost::format("    Bulk entanglement gap = %f\n") % bulk_entanglement_gap;
 
-                cout << boost::format("    Energy after sweep %d is %f\n") % sw % energy;
+                std::cout << boost::format("    Energy after sweep %d is %f\n") % sw % energy;
             }
         }
     }
@@ -342,7 +342,7 @@ public:
             Real dE = fabs(energy-last_energy);
             if(dE < energy_errgoal)
             {
-                cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
+                std::cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
                 return true;
             }
         }
@@ -364,7 +364,7 @@ Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOp
     psi.position(1);
     //if(H.is_complex()) psi.AAnc(1) *= Complex_1;
 
-    vector<Tensor> PH(N+1);
+    std::vector<Tensor> PH(N+1);
     for(int l = N-1; l >= 2; --l) psi.projectOp(l+1,Fromright,PH[l+1],H.AA(l+1),PH[l]);
 
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
@@ -372,12 +372,12 @@ Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOp
         psi.cutoff(sweeps.cutoff(sw)); psi.minm(sweeps.minm(sw)); psi.maxm(sweeps.maxm(sw));
         for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
         {
-            if(!opts.quiet) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % b % (b+1);
+            if(!opts.quiet) std::cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % b % (b+1);
 
             energy = psi.bondDavidson(b,H.bondTensor(b),PH[b],PH[b+1],
                      sweeps.niter(sw),debuglevel,(ha==1?Fromleft:Fromright));
 
-            if(!opts.quiet) { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
+            if(!opts.quiet) { std::cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
                                       % sweeps.cutoff(sw) % sweeps.maxm(sw) % psi.LinkInd(b).showm(); }
 
             opts.measure(sw,ha,b,psi,energy);
@@ -433,8 +433,8 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
     psi.position(1);
     //if(H.is_complex()) psi.AAnc(1) *= Complex_1;
 
-    vector<MPOTensor> LH(N+1);
-    vector<MPOTensor> RH(N+1);
+    std::vector<MPOTensor> LH(N+1);
+    std::vector<MPOTensor> RH(N+1);
     for(int l = N-1; l >= 1; --l) psi.projectOp(l+1,Fromright,RH.at(l+1),H.AA(l+1),RH.at(l));
 
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
@@ -444,7 +444,7 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
     {
         if(!opts.quiet) 
         {
-            cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") 
+            std::cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") 
                                 % sw   % ha     % b % (b+1);
         }
 
@@ -467,7 +467,7 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
         }
 
 
-        if(!opts.quiet) { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
+        if(!opts.quiet) { std::cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
                                   % sweeps.cutoff(sw) % sweeps.maxm(sw) 
                                   % (ha == 1 ? psi.LinkInd(b) : psi.LinkInd(b-1)).showm(); }
 
@@ -500,10 +500,10 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
 
 //Orthogonalizing DMRG. Puts in an energy penalty if psi has an overlap with any MPS in 'other'.
 Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, 
-          const vector<MPS>& other, DMRGOpts& opts);
+          const std::vector<MPS>& other, DMRGOpts& opts);
 
 // Deprecated, use MPOSet to work with a set of MPOs
-//Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts);
+//Real dmrg(MPS& psi, const std::vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts);
 
 Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, 
             const Sweeps& sweeps, DMRGOpts& opts, bool preserve_edgelink);

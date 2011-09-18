@@ -8,7 +8,6 @@
 #include ".profiling/prodstats.h"
 #include ".profiling/count_copies.h"
 
-using std::cout;
 using std::cerr;
 using std::endl;
 using std::ofstream;
@@ -17,7 +16,6 @@ using std::string;
 using std::stringstream;
 using std::pair;
 using std::make_pair;
-using std::vector;
 
 enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
 
@@ -114,7 +112,7 @@ private:
 public:
     Vector v;
 #ifdef DO_ALT
-    vector<PDat> alt;
+    std::vector<PDat> alt;
 #endif
 
     ITDat() : numref(0), v(0) { }
@@ -152,7 +150,7 @@ public:
         s.write((char*) v.Store(), sizeof(Real)*size); 
     }
     
-    void print() const { cout << "ITDat: v = " << v; }
+    void print() const { std::cout << "ITDat: v = " << v; }
 
     inline void* operator new(size_t size) throw(std::bad_alloc)
         { return allocator.alloc(); }
@@ -438,13 +436,13 @@ public:
         _val(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]) = 1;
     }
 
-    explicit ITensor(const vector<Index>& I) : rn_(0)
+    explicit ITensor(const std::vector<Index>& I) : rn_(0)
     {
         int alloc_size = fillFromIndices(I,I.size());
         allocate(alloc_size);
     }
 
-    ITensor(const vector<Index>& I, const Vector& V) 
+    ITensor(const std::vector<Index>& I, const Vector& V) 
     : p(new ITDat(V)), rn_(0)
     {
         int alloc_size = fillFromIndices(I,I.size());
@@ -452,7 +450,7 @@ public:
             { Error("incompatible Index and Vector sizes"); }
     }
 
-    ITensor(const vector<Index>& I, const ITensor& other) 
+    ITensor(const std::vector<Index>& I, const ITensor& other) 
     : p(other.p), rn_(0), scale_(other.scale_)
     {
         int alloc_size = fillFromIndices(I,I.size());
@@ -460,7 +458,7 @@ public:
             { Error("incompatible Index and ITensor sizes"); }
     }
 
-    ITensor(const vector<Index>& I, const ITensor& other, Permutation P) 
+    ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P) 
     : p(0), rn_(0), scale_(other.scale_)
     {
         int alloc_size = fillFromIndices(I,I.size());

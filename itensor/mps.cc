@@ -1,4 +1,5 @@
 #include "mps.h"
+using std::vector;
 
 void plussers(const Index& l1, const Index& l2, Index& sumind, 
               ITensor& first, ITensor& second)

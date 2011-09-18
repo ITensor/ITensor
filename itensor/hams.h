@@ -14,7 +14,7 @@ public:
 private:
     const SiteSetT& iss;
     const int N;
-    vector<IndexT> currentlinks;
+    std::vector<IndexT> currentlinks;
 public:
 
     int NN() const { return N; }
@@ -22,7 +22,7 @@ public:
 
     HamBuilder(const SiteSetT& iss_) : iss(iss_), N(iss.NN()), currentlinks(N) { }
 
-    void newlinks(vector<Index>& currentlinks)
+    void newlinks(std::vector<Index>& currentlinks)
 	{
         currentlinks.resize(N);
         static int ver = 0; ++ver;
@@ -34,7 +34,7 @@ public:
         }
 	}
 
-    void newlinks(vector<IQIndex>& currentlinks)
+    void newlinks(std::vector<IQIndex>& currentlinks)
 	{
         currentlinks.resize(N);
         static int ver = 0; ++ver;
@@ -161,7 +161,7 @@ public:
         const int nop = 3;
         const int k = 2+nop*ny;
 
-        vector<Index> links(Ns+1);
+        std::vector<Index> links(Ns+1);
         for(int l = 0; l <= Ns; ++l) links[l] = Index(nameint("hl",l),k);
 
         for(int n = 1; n <= Ns; ++n)
@@ -257,7 +257,7 @@ public:
 
         const int k = 5;
 
-        vector<Index> links(Ns+1);
+        std::vector<Index> links(Ns+1);
         for(int l = 0; l <= Ns; ++l) links[l] = Index(nameint("hl",l),k);
 
         ITensor W;
@@ -320,7 +320,7 @@ public:
 
         const int k = 11;
 
-        vector<Index> links(Ns+1);
+        std::vector<Index> links(Ns+1);
         for(int l = 0; l <= Ns; ++l) links[l] = Index(nameint("hl",l),k);
 
         ITensor W;
@@ -390,7 +390,7 @@ public:
 
         const int k = 7;
 
-        vector<Index> links(Nsp+1);
+        std::vector<Index> links(Nsp+1);
         for(int l = 0; l <= Nsp; ++l) links[l] = Index(nameint("hl",l),k);
 
         const int Emp = 1, Occ = 2;

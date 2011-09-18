@@ -144,7 +144,7 @@ class IQIndexDat
     mutable unsigned int numref;
     const bool is_static_;
 public:
-    vector<inqn> iq_;
+    std::vector<inqn> iq_;
 
     IQIndexDat() : numref(0), is_static_(false) { }
 
@@ -184,7 +184,7 @@ public:
         iq_.push_back(inqn(i4,q4));
     }
 
-    IQIndexDat(vector<inqn>& ind_qn)
+    IQIndexDat(std::vector<inqn>& ind_qn)
     : numref(0), is_static_(false)
     { iq_.swap(ind_qn); }
 
@@ -239,7 +239,7 @@ class IQIndex : public Index
         }
     }
 public:
-    const vector<inqn>& iq() const { assert(pd != 0); return pd->iq_; }
+    const std::vector<inqn>& iq() const { assert(pd != 0); return pd->iq_; }
     int nindex() const { return (int) pd->iq_.size(); }
     const Index& index(int i) const { assert(pd != 0); return GET(pd->iq_,i-1).index; }
     const QN& qn(int i) const { assert(pd != 0); return GET(pd->iq_,i-1).qn; }
@@ -303,7 +303,7 @@ public:
             Error("Indices must have the same type");
     }
 
-    IQIndex(const string& name, vector<inqn>& ind_qn, Arrow dir = Out, int plev = 0) 
+    IQIndex(const string& name, std::vector<inqn>& ind_qn, Arrow dir = Out, int plev = 0) 
     : Index(name,0,ind_qn.back().index.type(),plev), _dir(dir),
     pd(new IQIndexDat(ind_qn))
     { 
@@ -320,7 +320,7 @@ public:
         primeLevel(pd->iq_.back().index.primeLevel());
     }
 
-    IQIndex(const IQIndex& other, vector<inqn>& ind_qn)
+    IQIndex(const IQIndex& other, std::vector<inqn>& ind_qn)
     : Index(other.name(),0,other.type()), _dir(other._dir),
     pd(new IQIndexDat(ind_qn))
     { 
@@ -406,7 +406,7 @@ public:
 
     friend inline IQIndex negate(const IQIndex& I) // Quantum numbers negated
     { 
-        vector<inqn> iq(I.pd->iq_.size());
+        std::vector<inqn> iq(I.pd->iq_.size());
         for(size_t j = 0; j < iq.size(); ++j)
         { iq[j] = inqn(I.pd->iq_[j].index,-I.pd->iq_[j].qn); } 
         return IQIndex(I,iq); 

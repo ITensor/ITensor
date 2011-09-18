@@ -1,4 +1,5 @@
 #include "itensor.h"
+using std::vector;
 
 DatAllocator<ITDat> ITDat::allocator;
 

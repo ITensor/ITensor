@@ -1,4 +1,6 @@
 #include "iqtensor.h"
+using std::cout;
+using std::vector;
 
 DatAllocator<IQTDat> IQTDat::allocator;
 

@@ -21,14 +21,14 @@ class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
             Error("Arrow dirs not the same in Condenser.");
         }
         */
-        static vector<QN> qns(1000);
+        static std::vector<QN> qns(1000);
         qns.resize(0);
         foreach(const inqn& x, bigind_.iq()) qns.push_back(x.qn);
         sort(qns.begin(),qns.end());
-        vector<QN>::iterator ue = unique(qns.begin(),qns.end());
+        std::vector<QN>::iterator ue = unique(qns.begin(),qns.end());
 
-        vector<inqn> iq;
-        for(vector<QN>::iterator qi = qns.begin(); qi != ue; ++qi)
+        std::vector<inqn> iq;
+        for(std::vector<QN>::iterator qi = qns.begin(); qi != ue; ++qi)
         {
             const QN& q = *qi;
             int totm = 0;
@@ -71,7 +71,7 @@ public:
         assert(&t != &res);
         assert(smallind_.is_not_null());
         assert(bigind_.is_not_null());
-        vector<IQIndex> iqinds; iqinds.reserve(t.r());
+        std::vector<IQIndex> iqinds; iqinds.reserve(t.r());
         int smallind_pos = -2;
         int bigind_pos   = -2;
         for(int j = 1; j <= t.r(); ++j)
@@ -158,10 +158,10 @@ namespace { //Anonymous namespace means don't expose outside of this header
 class QCounter
 {
 public:
-    vector<int> n;
-    vector<int> ind;
+    std::vector<int> n;
+    std::vector<int> ind;
     bool don;
-    QCounter(const vector<IQIndex>& v)
+    QCounter(const std::vector<IQIndex>& v)
 	{
         foreach(const IQIndex& I,v)
         {
@@ -186,14 +186,14 @@ public:
         }
         if(ind[nn-1] >= n[nn-1])
         {
-            ind = vector<int>(nn,0);
+            ind = std::vector<int>(nn,0);
             don = true;
         }
 
         return *this;
 	}
 
-    void getVecInd(const vector<IQIndex>& v, vector<Index>& vind, QN& q) const
+    void getVecInd(const std::vector<IQIndex>& v, std::vector<Index>& vind, QN& q) const
 	{
         q = QN(); vind.clear();
         for(unsigned int i = 0; i < ind.size(); ++i)
@@ -202,7 +202,7 @@ public:
             if(GET(v,i).nindex() < j)
             {
                 for(unsigned int k = 0; k < n.size(); ++k) cerr << boost::format("n[%d] = %d\n")%k%n[k];
-                cout << boost::format("i=%d, j=%d, v[i].nindex()=%d\n")%i%j%v[i].nindex();
+                std::cout << boost::format("i=%d, j=%d, v[i].nindex()=%d\n")%i%j%v[i].nindex();
                 Error("bad v[i].iq in getVecInd");
             }
             vind.push_back(v[i].index(j));
@@ -227,7 +227,7 @@ public:
 */
 class IQCombiner
 {
-    vector<IQIndex> left;
+    std::vector<IQIndex> left;
     mutable IQIndex _right;
     mutable map<ApproxReal, Combiner> setcomb;
     mutable map<Index, Combiner> rightcomb;
@@ -299,10 +299,10 @@ public:
 
         //Construct individual Combiners
         QCounter c(left);
-        vector<inqn> iq;
+        std::vector<inqn> iq;
         for( ; c.notdone(); ++c)
         {
-            vector<Index> vind;
+            std::vector<Index> vind;
             QN q;
             c.getVecInd(left, vind, q);		// updates vind and q
             q *= -rdir;
@@ -338,7 +338,7 @@ public:
         //if(_right.m() > 16) 
         //{ cerr << endl << endl << "WARNING: too large of an m in IQCombiner::operator IQTensor(). May be inefficient!" << endl << endl; }
 
-        vector<IQIndex> iqinds(left);
+        std::vector<IQIndex> iqinds(left);
         iqinds.push_back((do_condense ? cindex : _right));
         IQTensor res(iqinds);
         for(map<ApproxReal,Combiner>::const_iterator it = setcomb.begin();
@@ -399,7 +399,7 @@ public:
     void product(const IQTensor& t, IQTensor& res) const
     {
         init();
-        vector<IQIndex> iqinds;
+        std::vector<IQIndex> iqinds;
 
         int j;
         //t has right IQIndex, expand it
@@ -447,7 +447,7 @@ public:
 
             res = IQTensor(iqinds);
 
-            for(vector<IQIndex>::const_iterator I = left.begin(); I != left.end(); ++I)
+            for(std::vector<IQIndex>::const_iterator I = left.begin(); I != left.end(); ++I)
             {
                 if((j = t.findindex(*I)) == 0)
                 {
@@ -488,8 +488,8 @@ public:
                     for(map<ApproxReal, Combiner>::const_iterator uu = setcomb.begin();
                         uu != setcomb.end(); ++uu)
                     {
-                        cout << "Combiner: " << endl;
-                        cout << uu->second << endl;
+                        std::cout << "Combiner: " << endl;
+                        std::cout << uu->second << endl;
                     }
                     Error("no setcomb for rse in IQCombiner prod");
                 }

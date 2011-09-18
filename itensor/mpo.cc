@@ -1,4 +1,5 @@
 #include "mpo.h"
+using std::vector;
 
 template <class MPOType>
 void nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm)

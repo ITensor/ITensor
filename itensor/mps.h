@@ -8,7 +8,7 @@ enum Direction { Fromright, Fromleft, Both, None };
 static const LogNumber DefaultRefScale(7.58273202392352185);
 extern bool showeigs;
 
-void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
+void convertToIQ(const BaseModel& model, const std::vector<ITensor>& A, std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
 template<class Tensor, class TensorSet>
 Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal);
@@ -33,7 +33,7 @@ inline IQIndex index_in_common(const IQTensor& A, const IQTensor& B, IndexType t
 class InitState
 {
     int N;
-    vector<IQIndexVal> state;
+    std::vector<IQIndexVal> state;
     typedef IQIndexVal (*SetFuncPtr)(int);
 public:
     int NN() const { return N; }
@@ -47,13 +47,13 @@ public:
 
     IQIndexVal& operator()(int i) { return GET(state,i-1); }
     const IQIndexVal& operator()(int i) const { return GET(state,i-1); }
-    operator vector<IQIndexVal>() const { return state; }
+    operator std::vector<IQIndexVal>() const { return state; }
 };
 
 class SVDWorker
 {
     int N;
-    vector<Real> truncerr_;
+    std::vector<Real> truncerr_;
     Real cutoff_;
     int minm_;
     int maxm_;
@@ -68,7 +68,7 @@ class SVDWorker
       is determined automatically.
     */
     LogNumber refNorm_;
-    vector<Vector> eigs_kept_;
+    std::vector<Vector> eigs_kept_;
 public:
     //SVDWorker Accessors ---------------
 
@@ -273,14 +273,14 @@ public:
     typedef BaseModel ModelT;
 protected:
     int N;
-    vector<Tensor> A;
+    std::vector<Tensor> A;
     int left_orth_lim,right_orth_lim;
     const ModelT* model_;
     SVDWorker svd_;
 
-    void new_tensors(vector<ITensor>& A_)
+    void new_tensors(std::vector<ITensor>& A_)
     {
-        vector<Index> a(N+1);
+        std::vector<Index> a(N+1);
         for(int i = 1; i <= N; ++i)
         { a[i] = Index(nameint("a",i)); }
         A_[1] = ITensor(si(1),a[1]);
@@ -289,17 +289,17 @@ protected:
         A_[N] = ITensor(conj(a[N-1]),si(N));
     }
 
-    void random_tensors(vector<ITensor>& A_)
+    void random_tensors(std::vector<ITensor>& A_)
     { new_tensors(A_); for(int i = 1; i <= N; ++i) A_[i].Randomize(); }
 
-    void random_tensors(vector<IQTensor>& A_) { }
+    void random_tensors(std::vector<IQTensor>& A_) { }
 
-    void init_tensors(vector<ITensor>& A_, const InitState& initState)
+    void init_tensors(std::vector<ITensor>& A_, const InitState& initState)
     { new_tensors(A_); for(int i = 1; i <= N; ++i) A_[i](initState(i))=1; }
 
-    void init_tensors(vector<IQTensor>& A_, const InitState& initState)
+    void init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
     {
-        vector<QN> qa(N+1); //qn[i] = qn on i^th bond
+        std::vector<QN> qa(N+1); //qn[i] = qn on i^th bond
         for(int i = 1; i <= N; ++i) { qa[0] -= initState(i).qn()*In; }
 
         //Taking OC to be at the leftmost site,
@@ -310,7 +310,7 @@ protected:
             qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
         }
 
-        vector<IQIndex> a(N+1);
+        std::vector<IQIndex> a(N+1);
         for(int i = 1; i <= N; ++i)
         { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
         A_[1] = IQTensor(si(1),a[1]); A_[1](initState(1))=1;
@@ -322,7 +322,7 @@ protected:
         A_[N] = IQTensor(conj(a[N-1]),si(N)); A_[N](initState(N))=1;
     }
 
-    typedef pair<typename vector<Tensor>::const_iterator,typename vector<Tensor>::const_iterator> const_range_type;
+    typedef pair<typename std::vector<Tensor>::const_iterator,typename std::vector<Tensor>::const_iterator> const_range_type;
 public:
 
     //Accessor Methods ------------------------------
@@ -332,7 +332,7 @@ public:
     int left_lim() const { return left_orth_lim; }
     IQIndex si(int i) const { return model_->si(i); }
     IQIndex siP(int i) const { return model_->siP(i); }
-    typedef typename vector<Tensor>::const_iterator AA_it;
+    typedef typename std::vector<Tensor>::const_iterator AA_it;
     const pair<AA_it,AA_it> AA() const { return make_pair(A.begin()+1,A.end()); }
     const Tensor& AA(int i) const { return GET(A,i); }
     const ModelT& model() const { return *model_; }
@@ -833,7 +833,7 @@ inline void fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
 
 //Template method for efficiently summing a set of MPS's or MPO's (or any class supporting operator+=)
 template <typename MPSType>
-void sum(const vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, int maxm = MAX_M)
+void sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, int maxm = MAX_M)
 {
     int Nt = terms.size();
     if(Nt == 1) 
@@ -853,7 +853,7 @@ void sum(const vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, int max
     else if(Nt > 2)
 	{
         //Add all MPS's in pairs
-        vector<MPSType> terms2(2), nterms; nterms.reserve(Nt/2);
+        std::vector<MPSType> terms2(2), nterms; nterms.reserve(Nt/2);
         for(int n = 0; n < Nt-1; n += 2)
         {
             terms2[0] = terms[n]; terms2[1] = terms[n+1];
@@ -866,7 +866,7 @@ void sum(const vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, int max
         return;
 	}
     return;
-} // void sum(const vector<MPSType>& terms, Real cut, int maxm, MPSType& res)
+} // void sum(const std::vector<MPSType>& terms, Real cut, int maxm, MPSType& res)
 
 
 #ifdef THIS_IS_MAIN
