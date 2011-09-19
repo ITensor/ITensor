@@ -28,7 +28,7 @@ public:
     QN(int sz,int Nf,int Nfp) : _sz(sz), _Nf(Nf), _Nfp(abs(Nfp%2))
     { assert(_Nf==0 || abs(_Nf%2) == _Nfp); }
 
-    QN(istream& s) { read(s); }
+    QN(std::istream& s) { read(s); }
 
     int sz() const { return _sz; }
     int Nf() const { return _Nf; }
@@ -38,13 +38,13 @@ public:
     //int& Nf() { return _Nf; }
     //int& Nfp() { assert(_Nfp == 0 || _Nfp == 1); return _Nfp; }
 
-    void write(ostream& s) const 
+    void write(std::ostream& s) const 
     { 
         s.write((char*)&_sz,sizeof(_sz)); 
         s.write((char*)&_Nf,sizeof(_Nf)); 
         s.write((char*)&_Nfp,sizeof(_Nfp)); 
     }
-    void read(istream& s) 
+    void read(std::istream& s) 
     { 
         s.read((char*)&_sz,sizeof(_sz)); 
         s.read((char*)&_Nf,sizeof(_Nf)); 
@@ -75,14 +75,14 @@ public:
     QN operator*(int i) const { QN res(*this); res*=i; return res; }
     QN operator/(int i) const { QN res(*this); res*=i; return res; }
 
-    inline string toString() const
+    inline std::string toString() const
     {  return (boost::format("(%+d:%d:%s)")%_sz%_Nf%(_Nfp==1 ? "-" : "+")).str(); }
 
-    inline friend ostream& operator<<(ostream &o, const QN &q)
+    inline friend std::ostream& operator<<(std::ostream &o, const QN &q)
     { return o<< boost::format("sz = %d, Nf = %d, fp = %s") % q.sz() % q.Nf() % (q.fp() < 0 ? "-" : "+"); }
 
-    void print(string name = "") const
-    { cerr << "\n" << name << " =\n" << *this << "\n"; }
+    void print(std::string name = "") const
+    { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
 };
 inline bool operator==(const QN &a,const QN &b)
     { return a.sz() == b.sz() && a.Nf() == b.Nf() && a.Nfp() == b.Nfp(); }
@@ -102,9 +102,9 @@ struct inqn
     inqn() { }
     inqn(const Index& i, QN q) : index(i), qn(q) { }
 
-    void write(ostream& s) const { index.write(s); qn.write(s); }
-    void read(istream& s) { index.read(s); qn.read(s); }
-    inline friend ostream& operator<<(ostream &o, const inqn& x)
+    void write(std::ostream& s) const { index.write(s); qn.write(s); }
+    void read(std::istream& s) { index.read(s); qn.read(s); }
+    inline friend std::ostream& operator<<(std::ostream &o, const inqn& x)
     { o << "inqn: " << x.index << " (" << x.qn << ")\n"; return o; }
 };
 
@@ -138,6 +138,13 @@ public:
     IndEq(Index _i) : i(_i) {}
     bool operator()(const inqn &j) const { return i == j.index; }
 };
+
+class IQIndexDat;
+namespace boost
+{
+    inline void intrusive_ptr_add_ref(IQIndexDat* p);
+    inline void intrusive_ptr_release(IQIndexDat* p);
+}
 
 class IQIndexDat
 {
@@ -191,16 +198,16 @@ public:
     explicit IQIndexDat(const IQIndexDat& other) : numref(0), is_static_(false), iq_(other.iq_)
     { }
 
-    explicit IQIndexDat(istream& s) : numref(0), is_static_(false) { read(s); }
+    explicit IQIndexDat(std::istream& s) : numref(0), is_static_(false) { read(s); }
 
-    void write(ostream& s) const
+    void write(std::ostream& s) const
     {
         size_t size = iq_.size();
         s.write((char*)&size,sizeof(size));
         foreach(const inqn& x,iq_) x.write(s);
     }
 
-    void read(istream& s)
+    void read(std::istream& s)
     {
         size_t size; s.read((char*)&size,sizeof(size));
         iq_.resize(size);
@@ -213,12 +220,18 @@ public:
         iq_.push_back(inqn(Index(im),QN())); 
     }
 
-    friend inline void intrusive_ptr_add_ref(IQIndexDat* p) { ++(p->numref); }
-    friend inline void intrusive_ptr_release(IQIndexDat* p) { if(!p->is_static_ && --(p->numref) == 0){ delete p; } }
+    friend inline void boost::intrusive_ptr_add_ref(IQIndexDat* p);
+    friend inline void boost::intrusive_ptr_release(IQIndexDat* p);
     int count() const { return numref; }
 private:
     void operator=(const IQIndexDat&);
 };
+
+namespace boost
+{
+    inline void intrusive_ptr_add_ref(IQIndexDat* p) { ++(p->numref); }
+    inline void intrusive_ptr_release(IQIndexDat* p) { if(!p->is_static_ && --(p->numref) == 0){ delete p; } }
+}
 
 extern IQIndexDat IQIndexDatNull, IQIndReDat, IQIndReDatP, IQIndReDatPP;
 
@@ -227,13 +240,13 @@ struct IQIndexVal;
 class IQIndex : public Index
 {
     Arrow _dir;
-    intrusive_ptr<IQIndexDat> pd;
+    boost::intrusive_ptr<IQIndexDat> pd;
     void solo()
     {
         assert(pd != 0);
         if(pd->count() != 1)
         {
-            intrusive_ptr<IQIndexDat> new_pd(new IQIndexDat(*pd));
+            boost::intrusive_ptr<IQIndexDat> new_pd(new IQIndexDat(*pd));
             //new_pd->iq_ = pd->iq_;
             pd.swap(new_pd);
         }
@@ -251,9 +264,9 @@ public:
 
     explicit IQIndex(const Index& other, Arrow dir = Out) : Index(other), _dir(dir), pd(0) {}
 
-    explicit IQIndex(const string& name,IndexType it = Link, Arrow dir = Out, int plev = 0) : Index(name,1,it,plev), _dir(dir), pd(0) {}
+    explicit IQIndex(const std::string& name,IndexType it = Link, Arrow dir = Out, int plev = 0) : Index(name,1,it,plev), _dir(dir), pd(0) {}
 
-    IQIndex(const string& name, 
+    IQIndex(const std::string& name, 
             const Index& i1, const QN& q1, 
             Arrow dir = Out) 
     : Index(name,i1.m(),i1.type()), _dir(dir), pd(new IQIndexDat(i1,q1))
@@ -261,7 +274,7 @@ public:
         primeLevel(i1.primeLevel());
     }
 
-    IQIndex(const string& name, 
+    IQIndex(const std::string& name, 
             const Index& i1, const QN& q1, 
             const Index& i2, const QN& q2,
             Arrow dir = Out) 
@@ -273,7 +286,7 @@ public:
             Error("Indices must have the same type");
     }
 
-    IQIndex(const string& name, 
+    IQIndex(const std::string& name, 
             const Index& i1, const QN& q1, 
             const Index& i2, const QN& q2,
             const Index& i3, const QN& q3,
@@ -287,7 +300,7 @@ public:
             Error("Indices must have the same type");
     }
 
-    IQIndex(const string& name, 
+    IQIndex(const std::string& name, 
             const Index& i1, const QN& q1, 
             const Index& i2, const QN& q2,
             const Index& i3, const QN& q3,
@@ -303,7 +316,7 @@ public:
             Error("Indices must have the same type");
     }
 
-    IQIndex(const string& name, std::vector<inqn>& ind_qn, Arrow dir = Out, int plev = 0) 
+    IQIndex(const std::string& name, std::vector<inqn>& ind_qn, Arrow dir = Out, int plev = 0) 
     : Index(name,0,ind_qn.back().index.type(),plev), _dir(dir),
     pd(new IQIndexDat(ind_qn))
     { 
@@ -348,16 +361,16 @@ public:
     IQIndex(PrimeType pt, const IQIndex& other, int inc = 1) 
 	: Index(other), _dir(other._dir), pd(other.pd)  { doprime(pt,inc); }
 
-    explicit IQIndex(istream& s) { read(s); }
+    explicit IQIndex(std::istream& s) { read(s); }
 
-    void write(ostream& s) const
+    void write(std::ostream& s) const
     {
         Index::write(s);
         s.write((char*)&_dir,sizeof(_dir));
         pd->write(s);
     }
 
-    void read(istream& s)
+    void read(std::istream& s)
     {
         Index::read(s);
         s.read((char*)&_dir,sizeof(_dir));
@@ -389,9 +402,9 @@ public:
         foreach(const inqn& x, pd->iq_) mm = max(mm,x.index.m());
         return mm;
 	}
-    string showm() const
+    std::string showm() const
 	{
-        string res = " ";
+        std::string res = " ";
         std::ostringstream oh; 
         foreach(const inqn& x, pd->iq_)
         {
@@ -415,8 +428,8 @@ public:
     QN qn(const Index& i) const
 	{ 
         foreach(const inqn& x, pd->iq_) if(x.index == i) return x.qn;
-        cerr << *this << "\n";
-        cerr << "i = " << i << "\n";
+        std::cerr << *this << "\n";
+        std::cerr << "i = " << i << "\n";
         Error("IQIndex::qn(Index): IQIndex does not contain given index.");
         return QN();
 	}
@@ -477,15 +490,15 @@ public:
         return IQIndex(primeBoth,*this,inc);
 	}
 
-    inline friend ostream& operator<<(ostream &o, const IQIndex &I)
+    inline friend std::ostream& operator<<(std::ostream &o, const IQIndex &I)
     {
-        o << "IQIndex: " << (const Index&) I << " <" << I.dir() << ">" << endl;
+        o << "IQIndex: " << (const Index&) I << " <" << I.dir() << ">" << std::endl;
         for(int j = 1; j <= I.nindex(); ++j) o << " " << I.index(j) SP I.qn(j) << "\n";
         return o;
     }
 
-    void print(string name = "") const
-    { cerr << "\n" << name << " =\n" << *this << "\n"; }
+    void print(std::string name = "") const
+    { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
 
 }; //class IQIndex
 
@@ -512,9 +525,9 @@ struct IQIndexVal
     ITensor operator*(const IndexVal& iv) const { IndexVal iv_this = *this; return (iv_this * iv); }
     ITensor operator*(Real fac) const { IndexVal iv_this = *this; return iv_this * fac; }
 
-    void print(string name = "") const
-    { cerr << "\n" << name << " =\n" << *this << "\n"; }
-    inline friend ostream& operator<<(ostream& s, const IQIndexVal& iv)
+    void print(std::string name = "") const
+    { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
+    inline friend std::ostream& operator<<(std::ostream& s, const IQIndexVal& iv)
     { return s << "IQIndexVal: i = " << iv.i << ", iqind = " << iv.iqind << "\n"; }
 };
 extern IQIndexVal IQIVNull;

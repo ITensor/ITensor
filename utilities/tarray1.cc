@@ -21,7 +21,7 @@ void Array1_base::checkindex(int i)
     {
     if (i < offset || i > offset + size - 1)
 	{
-	cout << "i, offset, size are " << i SP offset SP size << endl;
+	std::cout << "i, offset, size are " << i SP offset SP size << std::endl;
 	error("Array1rep<T>: Index out of bounds");
 	}
     }
@@ -200,7 +200,7 @@ void ArrayDo::ReduceDimension(int off,int limit)
     inuse--;
     }
 
-ostream& ArrayDo::outputarray(ostream& s)
+std::ostream& ArrayDo::outputarray(std::ostream& s)
     {
     //long f = s.flags();
     fp->outputarray(s,(*prep)->store,(*prep)->size,(*prep)->offset);

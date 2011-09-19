@@ -98,7 +98,7 @@ void resetev(MatrixRef &);
 int FFT(const VectorRef& in, Vector& outre, Vector& outim);
 #endif
 
-ostream & operator << (ostream &, const Matrix &);	// Overload for I/O 
+std::ostream & operator << (std::ostream &, const Matrix &);	// Overload for I/O 
 
 class Vector : public VectorRef
     {
@@ -154,7 +154,7 @@ protected:
 void Sort(Vector &);
 void Sort(Vector &, IntArray1 &);
 
-ostream & operator << (ostream &, const Vector &);
+std::ostream & operator << (std::ostream &, const Vector &);
 
 #include "matrix.ih"
 

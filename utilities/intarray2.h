@@ -41,7 +41,7 @@ class IntArray2
     
     int& operator()(int,int);	// Access an element
     int operator()(int,int) const;
-    friend ostream& operator<<(ostream&, const IntArray2&);
+    friend std::ostream& operator<<(std::ostream&, const IntArray2&);
 };
 
 // Access an element

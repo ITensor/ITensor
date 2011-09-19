@@ -15,7 +15,7 @@ typedef void copyarrayfun( void *, const void *, int);
 typedef void copyvaluefun( void *, const void *, int);
 typedef void* donewfun(int); 
 typedef void dodeletefun(void *);
-typedef void outputfun(ostream&,void *,int,int);
+typedef void outputfun(std::ostream&,void *,int,int);
 
 class FunPoint
     {
@@ -71,7 +71,7 @@ public:
     void SetSize(int s);	// Reduce size without ReDimensioning
     void ReduceDimension(int off,int limit = SPECIAL);
 
-    ostream& outputarray(ostream& s);
+    std::ostream& outputarray(std::ostream& s);
 
     void make(int off,int length);
     void deleterep();
@@ -153,7 +153,7 @@ public:
 	(*this)->deleterep();
 	}
 
-    inline friend ostream& operator<<(ostream& s, const Array1<T>& V)
+    inline friend std::ostream& operator<<(std::ostream& s, const Array1<T>& V)
 	{ return V->outputarray(s); }
     };
 
@@ -179,7 +179,7 @@ void * T##donew(int len)\
     { return new T[len]; }\
 void T##dodelete(void * vA)\
     { delete [] ((T *)vA); }\
-void T##outputarray( ostream& s, void * vA, int n, int offset)\
+void T##outputarray( std::ostream& s, void * vA, int n, int offset)\
     {\
     T *A = (T *) vA;\
     for (int i = 0; i < n; i++)\
@@ -200,10 +200,10 @@ public:\
     T() {a = 0; }\
     ARRAY1H_DEFS(T)\
     };\
-istream & operator >> (istream &s, T & x);
+std::istream & operator >> (std::istream &s, T & x);
 
 #define ARRAYTYPECC(T) \
-istream & operator >> (istream &s, T & x)\
+std::istream & operator >> (std::istream &s, T & x)\
     { return s >> x.a; }
 
 

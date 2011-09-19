@@ -1,5 +1,11 @@
 #include "input.h"
 #include <algorithm>
+using std::ostream;
+using std::istream;
+using std::string;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 
 void InputFile::open()

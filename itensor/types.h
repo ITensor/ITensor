@@ -50,8 +50,8 @@ int count() const { return numref; }
 
 enum Printdat { ShowData, HideData };
 
-#define Print(X) { printdat = false; cout << "\n" << #X << " =\n" << X << endl; }
-#define PrintDat(X) { printdat = true; cout << "\n" << #X << " =\n" << X << endl; printdat = false; }
+#define Print(X) { printdat = false; std::cout << "\n" << #X << " =\n" << X << std::endl; }
+#define PrintDat(X) { printdat = true; std::cout << "\n" << #X << " =\n" << X << std::endl; printdat = false; }
 
 
 template<class T, class Op> void for_all(T& a, Op f) { for_each(a.begin(),a.end(),f); }
@@ -86,7 +86,7 @@ template<class T> std::vector<T> operator*(const std::vector<const T*>& v1, cons
 }
 
 template<class T>
-ostream& operator<<(ostream& s, const std::vector<T>& v)
+std::ostream& operator<<(std::ostream& s, const std::vector<T>& v)
 { 
     if(v.size() == 0) s << "(Empty vector)\n";
     for(size_t n = 0; n < v.size(); ++n) { s << n << ": " << GET(v,n) << "\n"; } 

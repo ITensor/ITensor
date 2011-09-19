@@ -144,7 +144,7 @@ public:
         return lognum_ < other.lognum_;
 	}
 
-    friend inline ostream& operator<<(ostream& s, const LogNumber& N)
+    friend inline std::ostream& operator<<(std::ostream& s, const LogNumber& N)
     {
         s << "LogNumber(" << N.logNum() << ",";
         if(N.sign() == 0) s << "0)";

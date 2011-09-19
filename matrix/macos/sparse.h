@@ -82,9 +82,9 @@ public:
     friend void sparsesaxpy(Vector &V, Real alpha, const SparseVector & S);
 	// V += alpha * S
 
-    void read(istream & s);	// Read and write in binary to a stream 
+    void read(std::istream & s);	// Read and write in binary to a stream 
 
-    void write(ostream & s);	// read dims new storage, write does not 
+    void write(std::ostream & s);	// read dims new storage, write does not 
     // delete old storage 
 
     void SetMinRowSize(int s)	// Set it 
@@ -283,16 +283,16 @@ public:
 
     int memory() const;		// Return amount of memory used in bytes 
 
-    void PrintMemory(ostream &) const;	// Print a summary of memory usage 
+    void PrintMemory(std::ostream &) const;	// Print a summary of memory usage 
 
-    void read(istream & s);	// Read and write in binary to a stream 
-    void write(ostream & s);	// read dims new storage, write does not 
+    void read(std::istream & s);	// Read and write in binary to a stream 
+    void write(std::ostream & s);	// read dims new storage, write does not 
     // delete old storage 
 
     // Output a sparse matrix 
-    friend ostream & operator << (ostream &, const SparseMatrix &);
+    friend std::ostream & operator << (std::ostream &, const SparseMatrix &);
 
-    void PrintSymmetric(ostream &);// Print in an efficient way, assuming the 
+    void PrintSymmetric(std::ostream &);// Print in an efficient way, assuming the 
     // matrix is symmetric.  Prints lower half. 
 
     friend MatrixRef &
@@ -302,7 +302,7 @@ public:
     };
 
 #ifdef THIS_IS_MAIN
-ostream & operator << (ostream &s, const SparseVector &a) {return s; }
+std::ostream & operator << (std::ostream &s, const SparseVector &a) {return s; }
 
 int  SparseVector::minrsize = default_minrsize;
 Real SparseVector::efactor = default_efactor;

@@ -11,6 +11,10 @@
 #define VECTOR
 #endif
 
+using std::istream;
+using std::ostream;
+using std::endl;
+
 void SparseVector::AddElement(int i, Real value) 
 // SparseMatrix must make sure the storage is big enough.
     {

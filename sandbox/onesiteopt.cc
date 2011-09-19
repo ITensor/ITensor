@@ -2,8 +2,10 @@
 #include "core.h"
 #include "hams.h"
 #include "dmrg.h"
-
-
+using boost::format;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 int main(int argc, char* argv[])
 {

@@ -6,6 +6,13 @@
 #include <iomanip>
 #include <memory>
 #include "indent.h"
+
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::ostream;
+using std::istream;
+
 #if defined(i386) || defined(__x86_64)
 extern "C" void dcopy_(int*,Real*,int*,Real*,int*);
 extern "C" void dscal_(int*,Real*,Real*,int*);

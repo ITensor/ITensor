@@ -8,15 +8,6 @@
 #include ".profiling/prodstats.h"
 #include ".profiling/count_copies.h"
 
-using std::cerr;
-using std::endl;
-using std::ofstream;
-using std::ifstream;
-using std::string;
-using std::stringstream;
-using std::pair;
-using std::make_pair;
-
 enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
 
 class Permutation;
@@ -82,7 +73,7 @@ public:
 
     inline bool notDone() const { return i[1] != 0; }
 
-    friend inline ostream& operator<<(ostream& s, const Counter& c)
+    friend inline std::ostream& operator<<(std::ostream& s, const Counter& c)
     {
         s << "("; 
         for(int i = 1; i < c.r_; ++i)
@@ -129,13 +120,13 @@ public:
     : numref(0), v(1)
     { v = r; }
 
-    explicit ITDat(istream& s) : numref(0) { read(s); }
+    explicit ITDat(std::istream& s) : numref(0) { read(s); }
 
     explicit ITDat(const ITDat& other) 
     : numref(0), v(other.v)
     { }
 
-    void read(istream& s)
+    void read(std::istream& s)
 	{ 
         int size = 0;
         s.read((char*) &size,sizeof(size));
@@ -143,7 +134,7 @@ public:
         s.read((char*) v.Store(), sizeof(Real)*size);
     }
 
-    void write(ostream& s) const 
+    void write(std::ostream& s) const 
     { 
         const int size = v.Length();
         s.write((char*) &size, sizeof(size));
@@ -180,7 +171,7 @@ public:
     static const Index& ReImIndex;
 private:
     //mutable: const methods may want to reshape data
-    mutable intrusive_ptr<ITDat> p; 
+    mutable boost::intrusive_ptr<ITDat> p; 
     int r_,rn_;
     //Indices, maximum of 8 (index_[0] not used), mutable to allow reordering
     mutable boost::array<Index,NMAX+1> index_; 
@@ -291,9 +282,9 @@ private:
             { P.from_to(j,k); got_one = true; break; }
             if(!got_one)
             {
-                cerr << "j = " << j << "\n";
-                Print(*this); cerr << "oth_index_ = \n";
-                foreach(const Index& I, oth_index_) { cerr << I << "\n"; }
+                std::cerr << "j = " << j << "\n";
+                Print(*this); std::cerr << "oth_index_ = \n";
+                foreach(const Index& I, oth_index_) { std::cerr << I << "\n"; }
                 Error("ITensor::getperm: no matching index");
             }
         }
@@ -336,8 +327,8 @@ public:
 
     //Can be used for iteration over Indices in a foreach loop
     //e.g. foreach(const Index& I, t.index() ) { ... }
-    inline const pair<index_it,index_it> index() const  
-        { return make_pair(index_.begin()+1,index_.begin()+r_+1); }
+    inline const std::pair<index_it,index_it> index() const  
+        { return std::make_pair(index_.begin()+1,index_.begin()+r_+1); }
 
     void initCounter(Counter& C) const { C.init(index_,rn_,r_); }
 
@@ -485,11 +476,11 @@ public:
         set_unique_Real();
 	}
 
-    ITensor(istream& s) { read(s); }
+    ITensor(std::istream& s) { read(s); }
 
     //ITensor: Read/Write ---------------------------------------------------
 
-    void read(istream& s)
+    void read(std::istream& s)
     { 
         bool null_;
         s.read((char*) &null_,sizeof(null_));
@@ -502,7 +493,7 @@ public:
         set_unique_Real();
     }
 
-    void write(ostream& s) const 
+    void write(std::ostream& s) const 
     { 
         bool null_ = is_null();
         s.write((char*) &null_,sizeof(null_));
@@ -745,7 +736,7 @@ public:
 	{ 
         if(rn_ != 0)
         {
-            cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
+            std::cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
             Error("Not enough indices (requires all having m!=1)");
         }
         assert(p != 0); 
@@ -758,7 +749,7 @@ public:
 	{ 
         if(rn_ != 0)
         {
-            cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
+            std::cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
             Error("Not enough indices (requires all having m!=1)");
         }
         assert(p != 0); 
@@ -770,7 +761,7 @@ public:
         assert(r_ >= 1);
         if(rn_ > 1) 
         {
-            cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
+            std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
             Error("Not enough indices (requires all having m!=1)");
         }
 	    assert(p != 0); 
@@ -784,7 +775,7 @@ public:
         assert(r_ >= 1);
         if(rn_ > 1) 
         {
-            cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
+            std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
             Error("Not enough indices (requires all having m!=1)");
         }
 	    assert(p != 0); 
@@ -895,7 +886,7 @@ public:
         assert(p != 0);
         if(p->count() != 1) 
         { 
-            intrusive_ptr<ITDat> new_p(new ITDat(v)); 
+            boost::intrusive_ptr<ITDat> new_p(new ITDat(v)); 
             p.swap(new_p); 
         }
         else
@@ -964,14 +955,14 @@ public:
         scale_ = newscale;
 	}
 
-    void print(string name = "",Printdat pdat = HideData) const 
+    void print(std::string name = "",Printdat pdat = HideData) const 
     { 
         printdat = (pdat==ShowData); 
-        cerr << "\n" << name << " =\n" << *this << "\n"; 
+        std::cerr << "\n" << name << " =\n" << *this << "\n"; 
         printdat = false; 
     }
 
-    friend ostream& operator<<(ostream & s, const ITensor & t);
+    friend std::ostream& operator<<(std::ostream & s, const ITensor & t);
 
 }; //ITensor
 

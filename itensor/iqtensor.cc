@@ -1,6 +1,9 @@
 #include "iqtensor.h"
 using std::cout;
+using std::cerr;
+using std::endl;
 using std::vector;
+using std::list;
 
 DatAllocator<IQTDat> IQTDat::allocator;
 
@@ -112,7 +115,7 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
             if(common_inds.count(ApproxReal(tt->index(a).unique_Real())))
             { r += tt->index(a).unique_Real(); }
         }
-        com_this.insert(make_pair(ApproxReal(r),tt));
+        com_this.insert(std::make_pair(ApproxReal(r),tt));
         keys.insert(ApproxReal(r));
 	}
 
@@ -126,12 +129,12 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
             if(common_inds.count(ApproxReal(ot->index(b).unique_Real())))
             { r += ot->index(b).unique_Real(); }
         }
-        com_other.insert(make_pair(ApproxReal(r),ot));
+        com_other.insert(std::make_pair(ApproxReal(r),ot));
         keys.insert(ApproxReal(r));
 	}
 
     typedef std::multimap<ApproxReal,const_iten_it>::iterator mit;
-    pair<mit,mit> lrange,rrange;
+    std::pair<mit,mit> lrange,rrange;
     ITensor tt;
     for(std::set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
 	{

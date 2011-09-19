@@ -102,8 +102,8 @@ public:
 		      MatrixRef &,ClearFlag cf = NoClear);
     friend void mult(const MatrixRef &, const SparseRef &,
 		      MatrixRef &,ClearFlag cf = NoClear);
-    void write(ostream& s) const;
-    void read(istream& s);
+    void write(std::ostream& s) const;
+    void read(std::istream& s);
     void  RemoveElement(int row,int i)
 	{
 	OwnCopy();
@@ -112,7 +112,7 @@ public:
     void ClearZeroes();
     int memory() const;
     };
-inline ostream & operator << (ostream &s, const SparseRef &a) {return s; }
+inline std::ostream & operator << (std::ostream &s, const SparseRef &a) {return s; }
 
 inline SparseRef operator * (Real a, const SparseRef& sp)
     {

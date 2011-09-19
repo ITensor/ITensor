@@ -59,7 +59,7 @@ void IntArray2::operator=(int value)
 
 // Output an array
 
-ostream& operator<<(ostream& s, const IntArray2& V)
+std::ostream& operator<<(std::ostream& s, const IntArray2& V)
     {
     //long f = s.flags();
 
@@ -72,7 +72,7 @@ ostream& operator<<(ostream& s, const IntArray2& V)
 	s << "\n";
 	}
 
-    s << endl;
+    s << std::endl;
     //s.flags(f);
     return s;
     }

@@ -28,7 +28,7 @@ public:
         static int ver = 0; ++ver;
         for(int i = 1; i < N; i++)
         {
-            stringstream ss;
+            std::stringstream ss;
             ss << "h" << ver << "-" << i;
             currentlinks[i] = IndexT(ss.str(),1);
         }
@@ -40,7 +40,7 @@ public:
         static int ver = 0; ++ver;
         for(int i = 1; i < N; i++)
         {
-            stringstream ss;
+            std::stringstream ss;
             ss << "h" << ver << "-" << i;
             currentlinks[i] = IndexT(ss.str());
         }

@@ -322,7 +322,7 @@ protected:
         A_[N] = IQTensor(conj(a[N-1]),si(N)); A_[N](initState(N))=1;
     }
 
-    typedef pair<typename std::vector<Tensor>::const_iterator,typename std::vector<Tensor>::const_iterator> const_range_type;
+    typedef std::pair<typename std::vector<Tensor>::const_iterator,typename std::vector<Tensor>::const_iterator> const_range_type;
 public:
 
     //Accessor Methods ------------------------------
@@ -333,7 +333,7 @@ public:
     IQIndex si(int i) const { return model_->si(i); }
     IQIndex siP(int i) const { return model_->siP(i); }
     typedef typename std::vector<Tensor>::const_iterator AA_it;
-    const pair<AA_it,AA_it> AA() const { return make_pair(A.begin()+1,A.end()); }
+    const std::pair<AA_it,AA_it> AA() const { return std::make_pair(A.begin()+1,A.end()); }
     const Tensor& AA(int i) const { return GET(A,i); }
     const ModelT& model() const { return *model_; }
     const SVDWorker& svd() const { return svd_; }
@@ -401,11 +401,11 @@ public:
     model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
 	{ init_tensors(A,initState); }
 
-    MPSt(const ModelT& model, istream& s) { read(model,s); }
+    MPSt(const ModelT& model, std::istream& s) { read(model,s); }
 
     virtual ~MPSt() { }
 
-    void read(const ModelT& model, istream& s)
+    void read(const ModelT& model, std::istream& s)
     {
         model_ = &model;
         N = model_->NN();
@@ -416,7 +416,7 @@ public:
         svd_.read(s);
     }
 
-    void write(ostream& s) const
+    void write(std::ostream& s) const
     {
         for(int j = 1; j <= N; ++j) A[j].write(s);
         s.write((char*) &left_orth_lim,sizeof(left_orth_lim));
@@ -468,13 +468,13 @@ public:
 
         if(dir == Fromleft && b-1 > left_orth_lim)
         {
-            cerr << boost::format("b=%d, left_orth_lim=%d\n")
+            std::cerr << boost::format("b=%d, left_orth_lim=%d\n")
                     %b%left_orth_lim;
             Error("b-1 > left_orth_lim");
         }
         if(dir == Fromright && b+2 < right_orth_lim)
         {
-            cerr << boost::format("b=%d, right_orth_lim=%d\n")
+            std::cerr << boost::format("b=%d, right_orth_lim=%d\n")
                     %b%right_orth_lim;
             Error("b+2 < right_orth_lim");
         }
@@ -553,10 +553,10 @@ public:
         if(Norm(diff) < threshold) return true;
 
         //Print any helpful debugging info here:
-        cerr << "checkOrtho: on line " << __LINE__ << " of mps.h," << endl;
-        cerr << "checkOrtho: Tensor at position " << i << " failed to be " << (left ? "left" : "right") << " ortho." << endl;
-        cerr << "checkOrtho: Norm(diff) = " << boost::format("%E") % Norm(diff) << endl;
-        cerr << "checkOrtho: Error threshold set to " << boost::format("%E") % threshold << endl;
+        std::cerr << "checkOrtho: on line " << __LINE__ << " of mps.h," << std::endl;
+        std::cerr << "checkOrtho: Tensor at position " << i << " failed to be " << (left ? "left" : "right") << " ortho." << std::endl;
+        std::cerr << "checkOrtho: Norm(diff) = " << boost::format("%E") % Norm(diff) << std::endl;
+        std::cerr << "checkOrtho: Error threshold set to " << boost::format("%E") % threshold << std::endl;
         //-----------------------------
 
         return false;
@@ -569,14 +569,14 @@ public:
         for(int i = 1; i <= left_orth_lim; ++i)
         if(!checkLeftOrtho(i))
         {
-            cerr << "checkOrtho: A[i] not left orthogonal at site i=" << i << endl;
+            std::cerr << "checkOrtho: A[i] not left orthogonal at site i=" << i << std::endl;
             return false;
         }
 
         for(int i = NN(); i >= right_orth_lim; --i)
         if(!checkRightOrtho(i))
         {
-            cerr << "checkOrtho: A[i] not right orthogonal at site i=" << i << endl;
+            std::cerr << "checkOrtho: A[i] not right orthogonal at site i=" << i << std::endl;
             return false;
         }
         return true;
@@ -598,12 +598,12 @@ public:
     {
         if(b-1 > left_orth_lim)
         {
-            cerr << boost::format("b=%d, Lb=%d\n")%b%left_orth_lim;
+            std::cerr << boost::format("b=%d, Lb=%d\n")%b%left_orth_lim;
             Error("b-1 > left_orth_lim");
         }
         if(b+2 < right_orth_lim)
         {
-            cerr << boost::format("b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
+            std::cerr << boost::format("b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
             Error("b+1 < right_orth_lim");
         }
         Tensor phi = GET(A,b); phi *= GET(A,b+1);
@@ -624,9 +624,9 @@ public:
     void projectOp(int j, Direction dir, const Tensor& P, const OpTensor& Op, Tensor& res) const
     {
         if(dir==Fromleft && j > left_orth_lim) 
-        { cerr << boost::format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim, Error(""); }
+        { std::cerr << boost::format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim, Error(""); }
         if(dir==Fromright && j < right_orth_lim) 
-        { cerr << boost::format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim, Error(""); }
+        { std::cerr << boost::format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim, Error(""); }
 
         res = (P.is_null() ? AA(j) : P * AA(j));
         res *= Op; res *= conj(primed(AA(j)));
@@ -653,15 +653,15 @@ public:
     bool is_complex() const
     { return A[left_orth_lim+1].is_complex(); }
 
-    friend inline ostream& operator<<(ostream& s, const MPSt& M)
+    friend inline std::ostream& operator<<(std::ostream& s, const MPSt& M)
     {
         s << "\n";
         for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
         return s;
     }
 
-    void print(string name = "",Printdat pdat = HideData) const 
-    { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
+    void print(std::string name = "",Printdat pdat = HideData) const 
+    { printdat = (pdat==ShowData); std::cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
 
     void toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
     {
@@ -709,7 +709,7 @@ inline bool checkQNs(const IQMPS& psi)
     int center = findCenter(psi);
     if(center == -1)
     {
-        cerr << "Did not find an ortho. center\n";
+        std::cerr << "Did not find an ortho. center\n";
         return false;
     }
 
@@ -720,14 +720,14 @@ inline bool checkQNs(const IQMPS& psi)
         if(i == center) continue;
         if(psi.AA(i).is_null())
         {
-            cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
+            std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
             return false;
         }
         if(psi.AA(i).div() != zero)
         {
-            cerr << "At i = " << i << "\n";
+            std::cerr << "At i = " << i << "\n";
             Print(psi.AA(i));
-            cerr << "Multiple non-zero div IQTensors in MPS\n";
+            std::cerr << "Multiple non-zero div IQTensors in MPS\n";
             return false;
         }
     }
@@ -737,14 +737,14 @@ inline bool checkQNs(const IQMPS& psi)
     {
         if(psi.RightLinkInd(i).dir() != In) 
         {
-            cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
             return false;
         }
         if(i > 1)
         {
             if(psi.LeftLinkInd(i).dir() != Out) 
             {
-                cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
                 return false;
             }
         }
@@ -756,12 +756,12 @@ inline bool checkQNs(const IQMPS& psi)
         if(i < N)
         if(psi.RightLinkInd(i).dir() != Out) 
         {
-            cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
             return false;
         }
         if(psi.LeftLinkInd(i).dir() != In) 
         {
-            cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
             return false;
         }
     }
@@ -796,7 +796,7 @@ Real psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
 {
     Real re, im;
     psiphi(psi,phi,re,im);
-    if(im != 0) cerr << "Real psiphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
+    if(im != 0) std::cerr << "Real psiphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
     return re;
 }
 
@@ -846,7 +846,7 @@ void sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, in
 	{ 
         res = terms[0];
         res.cutoff(cut); res.maxm(maxm);
-        //cerr << boost::format("Before +=, cutoff = %.1E, maxm = %d\n")%(res.cutoff)%(res.maxm);
+        //std::cerr << boost::format("Before +=, cutoff = %.1E, maxm = %d\n")%(res.cutoff)%(res.maxm);
         res += terms[1];
         return;
     }

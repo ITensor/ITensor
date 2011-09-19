@@ -31,9 +31,9 @@ public:
     const Index& left(int j) const { return GET(left_,j); }
 
     typedef boost::array<Index,NMAX+1>::const_iterator left_it;
-    const pair<left_it,left_it> left() const 
+    const std::pair<left_it,left_it> left() const 
     { 
-        return make_pair(left_.begin()+1,left_.begin()+rl_+1); 
+        return std::make_pair(left_.begin()+1,left_.begin()+rl_+1); 
     }
 
     //Constructors --------------------------------------------------
@@ -75,7 +75,7 @@ public:
 	}
 
     //Initialize after all lefts are added and before being used
-    void init(string rname = "combined", IndexType type = Link, 
+    void init(std::string rname = "combined", IndexType type = Link, 
     int primelevel = 0) const
 	{
         if(initted) return;
@@ -102,7 +102,7 @@ public:
     {
         if(right_.m() > 16) 
         { 
-            cerr << "\n\n" 
+            std::cerr << "\n\n" 
             << "WARNING: too large of an m in Combiner to ITensor!\n\n"; 
         }
 
@@ -112,7 +112,7 @@ public:
         return res;
     }
 
-    friend inline ostream & operator<<(ostream & s, const Combiner & c)
+    friend inline std::ostream & operator<<(std::ostream & s, const Combiner & c)
     {
         s << "\nRight index: " << c.right() << "\n";
         s << "Left indices:\n";

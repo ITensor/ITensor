@@ -7,6 +7,10 @@
 #define CHANGE      0
 #include <fstream>
 
+using std::cout;
+using std::cerr;
+using std::endl;
+
 void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M to num cols
     {
     const Real tolerance = 1e-10;

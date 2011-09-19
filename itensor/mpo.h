@@ -73,7 +73,7 @@ public:
         if(_refNorm == DefaultRefScale) refNorm(exp(model.NN()));
 	}
 
-    MPOt(BaseModel& model, istream& s) { read(model,s); }
+    MPOt(BaseModel& model, std::istream& s) { read(model,s); }
 
     virtual ~MPOt() { }
 
@@ -121,7 +121,7 @@ public:
 
     using Parent::applygate;
 
-    friend inline ostream& operator<<(ostream& s, const MPOt& M)
+    friend inline std::ostream& operator<<(std::ostream& s, const MPOt& M)
     {
         s << "\n";
         for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
@@ -180,7 +180,7 @@ inline bool checkQNs(const IQMPO& psi)
     int center = findCenter(psi);
     if(center == -1)
     {
-        cerr << "Did not find an ortho. center\n";
+        std::cerr << "Did not find an ortho. center\n";
         return false;
     }
 
@@ -190,14 +190,14 @@ inline bool checkQNs(const IQMPO& psi)
     {
         if(psi.AA(i).is_null())
         {
-            cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
+            std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
             return false;
         }
         if(psi.AA(i).div() != zero)
         {
-            cerr << "At i = " << i << "\n";
+            std::cerr << "At i = " << i << "\n";
             Print(psi.AA(i));
-            cerr << "Non-zero div IQTensor in MPO\n";
+            std::cerr << "Non-zero div IQTensor in MPO\n";
             return false;
         }
     }
@@ -207,14 +207,14 @@ inline bool checkQNs(const IQMPO& psi)
     {
         if(psi.RightLinkInd(i).dir() != In) 
         {
-            cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
             return false;
         }
         if(i > 1)
         {
             if(psi.LeftLinkInd(i).dir() != Out) 
             {
-                cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
                 return false;
             }
         }
@@ -226,12 +226,12 @@ inline bool checkQNs(const IQMPO& psi)
         if(i < N)
         if(psi.RightLinkInd(i).dir() != Out) 
         {
-            cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
             return false;
         }
         if(psi.LeftLinkInd(i).dir() != In) 
         {
-            cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
             return false;
         }
     }
@@ -312,7 +312,7 @@ Real psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi
 {
     Real re, im;
     psiHphi(psi,H,phi,re,im);
-    if(im != 0) cerr << boost::format("\nReal psiHphi: WARNING, dropping non-zero (im = %.5f) imaginary part of expectation value.\n")%im;
+    if(im != 0) std::cerr << boost::format("\nReal psiHphi: WARNING, dropping non-zero (im = %.5f) imaginary part of expectation value.\n")%im;
     return re;
 }
 
@@ -343,7 +343,7 @@ inline void psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITens
 inline Real psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi) //Re[<psi|H|phi>]
 {
     Real re,im; psiHphi(psi,H,LB,RB,phi,re,im);
-    if(im != 0) cerr << "Real psiHphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
+    if(im != 0) std::cerr << "Real psiHphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
     return re;
 }
 

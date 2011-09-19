@@ -452,10 +452,10 @@ public:
 	{ return VectorRef::operator=(other); }
     };
 
-ostream & operator << (ostream &s, const MatrixRef &a);
-ostream & operator << (ostream &s, const VectorRef &a);
-ostream & operator << (ostream &s, const MatrixMatrixRes &a);
-ostream & operator << (ostream &s, const MatrixVectorRes &a);
+std::ostream & operator << (std::ostream &s, const MatrixRef &a);
+std::ostream & operator << (std::ostream &s, const VectorRef &a);
+std::ostream & operator << (std::ostream &s, const MatrixMatrixRes &a);
+std::ostream & operator << (std::ostream &s, const MatrixVectorRes &a);
 
 #include "matrixref.ih"
 

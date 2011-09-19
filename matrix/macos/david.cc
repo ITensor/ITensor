@@ -8,6 +8,11 @@
 #include "indent.h"
 #include <math.h>
 #include <malloc/malloc.h>
+
+using std::cout;
+using std::cerr;
+using std::endl;
+
 void reportnew();
 
 // David -- Block Davidson Diagonalization.

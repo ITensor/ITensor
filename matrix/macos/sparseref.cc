@@ -1,5 +1,7 @@
 #include "sparseref.h"
 #include <math.h>
+using std::ostream;
+using std::istream;
 
 SparseRef::SparseRef(const MatrixRef& M)
     : base(new SparseMatBase(M.Nrows(),M.Ncols())), scale(1.0), transpose(0)

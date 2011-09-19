@@ -12,27 +12,17 @@
 typedef double Real;
 void error(const char* s);
 
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::ostream;
-using std::ostringstream;
-using std::setprecision;
-using std::string;
-using std::istream;
-using std::ifstream;
-
 class InputFile
     {
 public:
-    string filename;
-    ifstream file;
+    std::string filename;
+    std::ifstream file;
     int opened;
-    InputFile(string fname) : filename(fname), opened(0) {}
+    InputFile(std::string fname) : filename(fname), opened(0) {}
     void open();
     void close();
     };
-ostream & operator << (ostream &s, InputFile &a);
+std::ostream & operator << (std::ostream &s, InputFile &a);
 
 typedef long int lint;
 
@@ -41,40 +31,40 @@ class InputGroup
 public:
     InputFile & infile;
     InputGroup * parent;
-    string name;
+    std::string name;
     bool quiet;
-    InputGroup(InputFile& inf, string nam,const char* c = 0)
+    InputGroup(InputFile& inf, std::string nam,const char* c = 0)
 		: infile(inf), parent(0), name(nam), quiet(false)
 	{
-	cout << "Making input group " << name;
-	if(c) cout << ": " << c;
-	cout << endl;
+	std::cout << "Making input group " << name;
+	if(c) std::cout << ": " << c;
+	std::cout << std::endl;
 	}
-    InputGroup(InputGroup& par, string nam,const char* c = 0)
+    InputGroup(InputGroup& par, std::string nam,const char* c = 0)
 		: infile(par.infile), parent(&par), name(nam), quiet(false)
 	{
-	cout << "Making input group " << parent->name << "." << name;
-	if(c) cout << ": " << c;
-	cout << endl;
+	std::cout << "Making input group " << parent->name << "." << name;
+	if(c) std::cout << ": " << c;
+	std::cout << std::endl;
 	}
 
     int GotoGroup();		// Goes to group, then eats "{" + whitespace
-    int GotoToken(string s);	// Goes to Token, then eats "=" + whitespace
+    int GotoToken(std::string s);	// Goes to Token, then eats "=" + whitespace
 
 // The following go to s, and read into i,r,t, or yes, printing c.
 
-    int GetInt(string s, int& i,const char* c = 0);
-    int GetLong(string s,lint& i,const char* c = 0);
-    int GetReal(string s, Real& r,const char* c = 0);	
-    int GetString(string s, string& t,const char* c = 0);
-    int GetYesNo(string s, int& yes,const char* c = 0);	 // understands yes/no
+    int GetInt(std::string s, int& i,const char* c = 0);
+    int GetLong(std::string s,lint& i,const char* c = 0);
+    int GetReal(std::string s, Real& r,const char* c = 0);	
+    int GetString(std::string s, std::string& t,const char* c = 0);
+    int GetYesNo(std::string s, int& yes,const char* c = 0);	 // understands yes/no
 
 // The following are mandatory versions; if they doesn't get it, we quit
-    void GetIntM(string s, int& i,const char* c = 0);	
-    void GetLongM(string s, lint& i,const char* c = 0);	
-    void GetRealM(string s, Real& r,const char* c = 0);
-    void GetStringM(string s, string& t,const char* c = 0);
-    void GetYesNoM(string s, int& yes,const char* c = 0);
+    void GetIntM(std::string s, int& i,const char* c = 0);	
+    void GetLongM(std::string s, lint& i,const char* c = 0);	
+    void GetRealM(std::string s, Real& r,const char* c = 0);
+    void GetStringM(std::string s, std::string& t,const char* c = 0);
+    void GetYesNoM(std::string s, int& yes,const char* c = 0);
 
     void SkipLine();
     };
@@ -83,9 +73,9 @@ public:
 InputGroup(InputFile& inf, String nam,const char* c)
 	    : infile(inf), name(nam), parent(0) 
     {
-    cout << "Making input group " << name;
-    if(c) cout << ", " << c;
-    cout << endl;
+    std::cout << "Making input group " << name;
+    if(c) std::cout << ", " << c;
+    std::cout << std::endl;
     }
     */
 
@@ -113,6 +103,6 @@ Then in program:
 	}
 */
 
-int gettoken(istream& is, string& s);
+int gettoken(std::istream& is, std::string& s);
 
 #endif

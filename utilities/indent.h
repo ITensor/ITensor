@@ -1,12 +1,6 @@
 #include <iostream>
 #include <sstream>
 
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::istream;
-using std::ostream;
-
 #ifndef _indent_h
 #define _indent_h 1
 
@@ -23,11 +17,11 @@ public:
 	    {indentlev--; if(indentlev < 0)indentlev = 0;}
     };
 
-// ostream io manipulator to do newline and indent
+// std::ostream io manipulator to do newline and indent
 
-inline ostream&	iendl(ostream &s)
+inline std::ostream&	iendl(std::ostream &s)
     {
-    s << endl;
+    s << std::endl;
     int i;
     for(i=0; i < Indent::indentlevel()-1; i += 2)
 	    s << "	";
@@ -36,9 +30,9 @@ inline ostream&	iendl(ostream &s)
     return s;
     }
 
-// istream io manipulator to ignore rest of line
+// std::istream io manipulator to ignore rest of line
 
-inline istream& nextline(istream &is)
+inline std::istream& nextline(std::istream &is)
     {
     char c;
     while(is.get(c) && c != '\n') ;

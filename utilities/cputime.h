@@ -3,13 +3,6 @@
 #include <iostream>
 #include <iomanip>
 
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::ostream;
-using std::ostringstream;
-using std::setprecision;
-
 double mytime();
 
 class init_time
@@ -24,7 +17,7 @@ class cpu_time
     {
 public:
     double time;		// in seconds
-    friend ostream & operator << (ostream & s, const cpu_time & t);
+    friend std::ostream & operator << (std::ostream & s, const cpu_time & t);
     cpu_time()
 	{ time = mytime(); }
     void mark() 

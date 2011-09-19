@@ -15,6 +15,12 @@
 
 // Real resize/constructor
 
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::ostream;
+
+
 void 
 Matrix::makematrix(int s1, int s2)
     {

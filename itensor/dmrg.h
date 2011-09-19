@@ -125,7 +125,7 @@ void putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const Ten
         phip += phi; //evolve by (1-tau*H)
         int phisize = phi.vec_size();
         phi = phip;
-        if(cnt > 10) cerr << "Warning: large number of time evolution steps in putInQNs." << endl;
+        if(cnt > 10) std::cerr << "Warning: large number of time evolution steps in putInQNs." << std::endl;
         if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
         else if(phip.vec_size() == phisize) break;
     }
@@ -148,7 +148,7 @@ void putInQNs(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& 
             phip += phi[n]; //evolve by (1-tau*H)
             int phisize = phi[n].vec_size();
             phi[n] = phip;
-            if(cnt > 10) cerr << "Warning: large number of time evolution steps in putInQNs." << endl;
+            if(cnt > 10) std::cerr << "Warning: large number of time evolution steps in putInQNs." << std::endl;
             if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
             else if(phip.vec_size() == phisize) break;
         }
@@ -479,7 +479,9 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
 
         if(opts.checkDone(sw,psi,energy))
         {
-            psi.cutoff = orig_cutoff; psi.minm = orig_minm; psi.maxm = orig_maxm;
+            psi.cutoff(orig_cutoff); 
+            psi.minm(orig_minm); 
+            psi.maxm(orig_maxm);
             return energy;
         }
 

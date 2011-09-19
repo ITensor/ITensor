@@ -5,20 +5,18 @@
 #include <set>
 #include <list>
 #include <map>
-using std::list;
-using std::map;
 
 class IQTDat
 {
-    typedef list<ITensor>::iterator       iten_it;
-    typedef list<ITensor>::const_iterator const_iten_it;
+    typedef std::list<ITensor>::iterator       iten_it;
+    typedef std::list<ITensor>::const_iterator const_iten_it;
 private:
     mutable unsigned int numref;
     mutable bool rmap_init;
 public:
-    mutable list<ITensor> itensor; // This is mutable to allow reordering
+    mutable std::list<ITensor> itensor; // This is mutable to allow reordering
     std::vector<IQIndex> iqindex_;
-    mutable map<ApproxReal,iten_it> rmap; //mutable so that const IQTensor methods can use rmap
+    mutable std::map<ApproxReal,iten_it> rmap; //mutable so that const IQTensor methods can use rmap
 
     IQTDat() : numref(0), rmap_init(false) { }
 
@@ -54,9 +52,9 @@ public:
     : numref(0), rmap_init(false), itensor(other.itensor), iqindex_(other.iqindex_)
     { }
 
-    explicit IQTDat(istream& s) : numref(0) { read(s); }
+    explicit IQTDat(std::istream& s) : numref(0) { read(s); }
 
-    void read(istream& s)
+    void read(std::istream& s)
     {
         rmap_init = false;
         size_t size;
@@ -69,7 +67,7 @@ public:
         foreach(IQIndex& I, iqindex_) I.read(s);
     }
 
-    void write(ostream& s) const
+    void write(std::ostream& s) const
     {
         size_t size = itensor.size();
         s.write((char*) &size,sizeof(size));
@@ -125,20 +123,20 @@ public:
     typedef IQIndex IndexT;
     typedef IQIndexVal IndexValT;
     typedef IQCombiner CombinerT;
-    typedef list<ITensor>::iterator iten_it;
-    typedef list<ITensor>::const_iterator const_iten_it;
+    typedef std::list<ITensor>::iterator iten_it;
+    typedef std::list<ITensor>::const_iterator const_iten_it;
     typedef std::vector<IQIndex>::iterator iqind_it;
     typedef std::vector<IQIndex>::const_iterator const_iqind_it;
     static const IQIndex& ReImIndex;
 private:
-    intrusive_ptr<IQTDat> p;
+    boost::intrusive_ptr<IQTDat> p;
 
     void solo()
     {
         assert(p != 0);
         if(p->count() != 1)
         {
-            intrusive_ptr<IQTDat> new_p(new IQTDat(*p));
+            boost::intrusive_ptr<IQTDat> new_p(new IQTDat(*p));
             p.swap(new_p);
         }
     }
@@ -155,11 +153,11 @@ public:
     //IQTensor: iterators 
     const_iten_it const_iten_begin() const { return p->itensor.begin(); }
     const_iten_it const_iten_end() const { return p->itensor.end(); }
-    pair<const_iten_it,const_iten_it> itensors() const { return make_pair(p->itensor.begin(),p->itensor.end()); }
+    std::pair<const_iten_it,const_iten_it> itensors() const { return std::make_pair(p->itensor.begin(),p->itensor.end()); }
 
     const_iqind_it const_iqind_begin() const { return p->iqindex_.begin(); }
     const_iqind_it const_iqind_end()   const { return p->iqindex_.end(); }
-    pair<const_iqind_it,const_iqind_it> iqinds() const { return make_pair(p->iqindex_.begin(),p->iqindex_.end()); }
+    std::pair<const_iqind_it,const_iqind_it> iqinds() const { return std::make_pair(p->iqindex_.begin(),p->iqindex_.end()); }
 
     //----------------------------------------------------
     //IQTensor: Constructors
@@ -204,9 +202,9 @@ public:
     IQTensor(PrimeType pt,const IQTensor& other) : p(other.p)
     { doprime(pt); }
 
-    explicit IQTensor(istream& s) : p(0) { read(s); }
+    explicit IQTensor(std::istream& s) : p(0) { read(s); }
 
-    void read(istream& s)
+    void read(std::istream& s)
     {
         bool null_;
         s.read((char*) &null_,sizeof(null_));
@@ -214,7 +212,7 @@ public:
         p = new IQTDat(s);
     }
 
-    void write(ostream& s) const
+    void write(std::ostream& s) const
     {
         bool null_ = is_null();
         s.write((char*) &null_,sizeof(null_));
@@ -346,7 +344,7 @@ public:
                 { div_ += qn(t.index(j))*dir(t.index(j)); }
             if(div_ != expected)
             {
-                cerr << "Block didn't match expected div\n";
+                std::cerr << "Block didn't match expected div\n";
                 Print(t);
                 return false;
             }
@@ -394,7 +392,7 @@ public:
 
         if(!gotit)
         {
-            cerr << "IQIndex was " << i << "\n";
+            std::cerr << "IQIndex was " << i << "\n";
             Error("ind_inc_prime: couldn't find IQIndex");
         }
 
@@ -629,20 +627,20 @@ public:
     
     void Randomize() { solo(); foreach(ITensor& t, p->itensor) t.Randomize(); }
 
-    void print(string name = "",Printdat pdat = HideData) const 
-    { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
+    void print(std::string name = "",Printdat pdat = HideData) const 
+    { printdat = (pdat==ShowData); std::cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
 
-    void printIQInds(string name = "") const
+    void printIQInds(std::string name = "") const
     { 
-        cerr << "\n" << name << " (IQIndices only) = \n";
+        std::cerr << "\n" << name << " (IQIndices only) = \n";
         for(size_t j = 0; j < p->iqindex_.size(); ++j)
-        { cerr << p->iqindex_[j] << "\n\n"; }
-        cerr << "---------------------------\n\n";
+        { std::cerr << p->iqindex_[j] << "\n\n"; }
+        std::cerr << "---------------------------\n\n";
     }
 
     void assignFrom(const IQTensor& other) const
     {
-        map<ApproxReal,iten_it> semap;
+        std::map<ApproxReal,iten_it> semap;
         for(iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
         { semap[ApproxReal(i->unique_Real())] = i; }
         for(const_iten_it i = other.p->itensor.begin(); i != other.p->itensor.end(); ++i)
@@ -650,8 +648,8 @@ public:
             ApproxReal se = ApproxReal(i->unique_Real());
             if(semap.count(se) == 0)
             {
-                std::cout << "warning assignFrom semap.count is 0" << endl;
-                cerr << "offending ITensor is " << *i << "\n";
+                std::cout << "warning assignFrom semap.count is 0" << std::endl;
+                std::cerr << "offending ITensor is " << *i << "\n";
                 Error("bad assignFrom count se");
             }
             else { semap[se]->assignFrom(*i); }
@@ -702,10 +700,10 @@ private:
 
 public:
 
-    inline friend ostream& operator<<(ostream & s, const IQTensor &t)
+    inline friend std::ostream& operator<<(std::ostream & s, const IQTensor &t)
     {
-        s << "\n----- IQTensor -----\nIQIndices: " << endl;
-        foreach(const IQIndex& I, t.iqinds()) s << "  " << I << endl;
+        s << "\n----- IQTensor -----\nIQIndices: " << std::endl;
+        foreach(const IQIndex& I, t.iqinds()) s << "  " << I << std::endl;
         s << "ITensors: \n";
         foreach(const ITensor& i, t.itensors())
         s <<"	" << i << "\n";
@@ -745,9 +743,9 @@ inline bool checkQNs(const IQTensor& T)
 
         if(q != qtot) 
         {
-            cerr << "checkQNs: inconsistent QN.\n";
-            cerr << "\nqtot = " << qtot << "\n\n";
-            cerr << "Offending ITensor = " << it << "\n\n";
+            std::cerr << "checkQNs: inconsistent QN.\n";
+            std::cerr << "\nqtot = " << qtot << "\n\n";
+            std::cerr << "Offending ITensor = " << it << "\n\n";
             T.printIQInds("T");
             return false;
         }
@@ -758,9 +756,9 @@ inline bool checkQNs(const IQTensor& T)
 template<class T> class Printit
 {
 public:
-    ostream& s;
-    string spacer;
-    Printit(ostream& _s, string _spacer) : s(_s), spacer(_spacer) {}
+    std::ostream& s;
+    std::string spacer;
+    Printit(std::ostream& _s, std::string _spacer) : s(_s), spacer(_spacer) {}
     void operator()(const T& t) { s << t << spacer; }
 };
 
@@ -771,11 +769,11 @@ class SiteOp
     mutable bool made_iqt, made_t;
     mutable IQTensor iqt;
     mutable ITensor t;
-    map<ApproxReal, pair<IQIndexVal,IQIndexVal> > ivmap;
-    map<ApproxReal, Real> valmap;
-    typedef map<ApproxReal, Real>::value_type valmap_vt;
+    std::map<ApproxReal, std::pair<IQIndexVal,IQIndexVal> > ivmap;
+    std::map<ApproxReal, Real> valmap;
+    typedef std::map<ApproxReal, Real>::value_type valmap_vt;
 
-    pair<IQIndexVal,IQIndexVal> civmap(const ApproxReal& key) const { return ivmap.find(key)->second; }
+    std::pair<IQIndexVal,IQIndexVal> civmap(const ApproxReal& key) const { return ivmap.find(key)->second; }
 
     void make_iqt() const
     {
@@ -803,13 +801,13 @@ public:
         if(iv.iqind.primeLevel() != 0) Error("SiteOp::operator(): first IndexVal must be unprimed.");
         if(ivp.iqind.primeLevel() != 1) Error("SiteOp::operator(): second IndexVal must be primed.");
         Real r = iv.iqind.unique_Real() + ivp.iqind.unique_Real() + iv.i + 1000*ivp.i;
-        ivmap[ApproxReal(r)] = make_pair(iv,ivp);
+        ivmap[ApproxReal(r)] = std::make_pair(iv,ivp);
         return valmap[ApproxReal(r)];
     }
 
-    void print(string name = "",Printdat pdat = HideData) const 
-    { printdat = (pdat==ShowData); cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
-    friend ostream& operator<<(ostream& s, const SiteOp& op) { return s << IQTensor(op); }
+    void print(std::string name = "",Printdat pdat = HideData) const 
+    { printdat = (pdat==ShowData); std::cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
+    friend std::ostream& operator<<(std::ostream& s, const SiteOp& op) { return s << IQTensor(op); }
 
     template <class X>
     ITensor operator*(const X& x) const { ITensor res(*this); res *= x; return res; }

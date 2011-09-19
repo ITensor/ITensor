@@ -115,7 +115,7 @@ inline void VectorRef::checkindex(int i) const
     {
     if (i < 1 || i > length)
 	{
-	cerr << "index=(" << i << ")\n";
+    std::cerr << "index=(" << i << ")\n";
 	_merror("VectorRef: index out of bounds");
 	}
     }
@@ -393,7 +393,7 @@ inline void MatrixRef::checkindex(int i,int j) const
     {
     if (i < 1 || i > Nrows() || j < 1 || j > Ncols())
 	{
-	cerr << "index=(" << i << "," << j << ") ";
+    std::cerr << "index=(" << i << "," << j << ") ";
 	_merror("MatrixRef: index out of bounds");
 	}
     }

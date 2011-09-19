@@ -32,7 +32,7 @@ public:
         for(int i = 1; i <= d; i++)
         if(ind_[i] > d || ind_[i] < 1) 
         {
-        cerr << "\nbad Permutation level 1\n\n";
+        std::cerr << "\nbad Permutation level 1\n\n";
         return false;
         }
 
@@ -42,14 +42,14 @@ public:
             if(i == j) continue;
             if(ind_[i] == ind_[j]) 
             {
-                cerr << "\nbad Permutation level 2\n\n";
+                std::cerr << "\nbad Permutation level 2\n\n";
                 return false;
             }
         }
         return true;
 	}
 
-    friend inline ostream& operator<<(ostream& s, const Permutation& p)
+    friend inline std::ostream& operator<<(std::ostream& s, const Permutation& p)
     {
         for(int i = 1; i <= NMAX; i++) s << "(" << i << "," << p.ind_[i] << ")";
         return s;

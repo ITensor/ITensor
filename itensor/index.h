@@ -7,10 +7,6 @@
 #include "boost/uuid/uuid.hpp"
 #include "boost/uuid/random_generator.hpp"
 #include "boost/uuid/string_generator.hpp"
-using boost::intrusive_ptr;
-using boost::uuids::uuid;
-using boost::uuids::random_generator;
-using boost::uuids::string_generator;
 
 enum Arrow { In = -1, Out = 1 };
 
@@ -48,7 +44,7 @@ inline IndexType IntToIndexType(int i)
     if(i == 1) return Link;
     if(i == 2) return Site;
     if(i == 3) return ReIm;
-    cerr << boost::format("No IndexType value defined for i=%d\n")%i,Error("");
+    std::cerr << boost::format("No IndexType value defined for i=%d\n")%i,Error("");
     return Link;
 }
 
@@ -64,10 +60,10 @@ inline std::string nameint(std::string f,int ix)
 enum Imaker {makeReIm,makeReImP,makeReImPP,makeNull};
 
 #define UID_NUM_PRINT 2
-inline std::ostream& operator<<(std::ostream& s, const uuid& id)
+inline std::ostream& operator<<(std::ostream& s, const boost::uuids::uuid& id)
 { 
     s.width(2);
-    for(uuid::size_type i = id.size()-UID_NUM_PRINT; i < id.size(); ++i) 
+    for(boost::uuids::uuid::size_type i = id.size()-UID_NUM_PRINT; i < id.size(); ++i) 
     {
         s << static_cast<unsigned int>(id.data[i]);
     }
@@ -77,9 +73,9 @@ inline std::ostream& operator<<(std::ostream& s, const uuid& id)
 
 struct UniqueID
 {
-    uuid id;
+    boost::uuids::uuid id;
 
-    UniqueID() : id(random_generator()()) { }
+    UniqueID() : id(boost::uuids::random_generator()()) { }
 
     UniqueID& operator++()
     {
@@ -92,12 +88,11 @@ struct UniqueID
         return *this;
     }
 
-    operator uuid() const { return id; }
+    operator boost::uuids::uuid() const { return id; }
 
     friend inline std::ostream& operator<<(std::ostream& s, const UniqueID& uid) { s << uid.id; return s; }
 };
 
-namespace {
 inline int prime_number(int n)
 {
     static const boost::array<int,54> plist = { { 
@@ -110,7 +105,14 @@ inline int prime_number(int n)
     } };
     return plist.at(n);
 }
+
+class IndexDat;
+namespace boost
+{
+    inline void intrusive_ptr_add_ref(IndexDat* p);
+    inline void intrusive_ptr_release(IndexDat* p);
 }
+
 //Storage for Index's
 class IndexDat
 {
@@ -120,7 +122,7 @@ public:
     static UniqueID lastID;
 
     IndexType _type;
-    uuid ind;
+    boost::uuids::uuid ind;
     int m_;
     Real ur;
     std::string sname;
@@ -149,7 +151,7 @@ public:
 	}
 
     //For use with read/write functionality of Index class
-    IndexDat(const std::string& ss, int mm, IndexType it, const uuid& ind_) :
+    IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& ind_) :
     numref(0), is_static_(false), _type(it), ind(ind_), m_(mm), sname(ss)
 	{ 
         if(it == ReIm) Error("bad call to create IndexDat with type ReIm");
@@ -162,7 +164,7 @@ public:
     _type(ReIm), 
     m_( (im==makeNull) ? 1 : 2)
 	{ 
-        string_generator gen;
+        boost::uuids::string_generator gen;
         if(im==makeNull)
         { ind = gen("{00000000-0000-0000-0000-000000000000}"); }
         else                               
@@ -181,13 +183,19 @@ public:
         set_unique_Real(); 
 	}
 
-    friend inline void intrusive_ptr_add_ref(IndexDat* p) { ++(p->numref); }
-    friend inline void intrusive_ptr_release(IndexDat* p) { if(!p->is_static_ && --(p->numref) == 0){ delete p; } }
+    friend inline void ::boost::intrusive_ptr_add_ref(IndexDat* p);
+    friend inline void ::boost::intrusive_ptr_release(IndexDat* p);
     int count() const { return numref; }
 private:
     IndexDat(const IndexDat&);
     void operator=(const IndexDat&);
 };
+
+namespace boost
+{
+    inline void intrusive_ptr_add_ref(IndexDat* p) { ++(p->numref); }
+    inline void intrusive_ptr_release(IndexDat* p) { if(!p->is_static_ && --(p->numref) == 0){ delete p; } }
+}
 
 extern IndexDat IndexDatNull, IndReDat, IndReDatP, IndReDatPP;
 
@@ -196,14 +204,14 @@ struct IndexVal;
 class Index
 {
 private:
-    intrusive_ptr<IndexDat> p;
+    boost::intrusive_ptr<IndexDat> p;
     int primelevel_; 
 protected:
     void set_m(int newm) { p->m_ = newm; }
 public:
 
     inline int m() const { return p->m_; }
-    uuid Ind() const { return p->ind; }
+    boost::uuids::uuid Ind() const { return p->ind; }
     inline IndexType type() const { return p->_type; }
 
     std::string name() const  { return putprimes(rawname(),primelevel_); }
@@ -335,7 +343,7 @@ public:
     }
 
     void print(std::string name = "") const
-    { cerr << "\n" << name << " =\n" << *this << "\n"; }
+    { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
 
     void conj() { } //for forward compatibility with arrows
 
