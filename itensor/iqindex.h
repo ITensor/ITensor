@@ -406,6 +406,7 @@ public:
 	{
         std::string res = " ";
         std::ostringstream oh; 
+        oh << this->m() << " | ";
         foreach(const inqn& x, pd->iq_)
         {
             QN q = x.qn;

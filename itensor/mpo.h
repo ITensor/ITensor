@@ -53,7 +53,7 @@ public:
     using Parent::minm;
     using Parent::maxm;
     using Parent::truncerr;
-    using Parent::eigs_kept;
+    using Parent::eigsKept;
     using Parent::showeigs;
     using Parent::svd;
 

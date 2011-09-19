@@ -68,7 +68,7 @@ class SVDWorker
       is determined automatically.
     */
     LogNumber refNorm_;
-    std::vector<Vector> eigs_kept_;
+    std::vector<Vector> eigsKept_;
 public:
     //SVDWorker Accessors ---------------
 
@@ -101,26 +101,42 @@ public:
         refNorm_ = val; 
     }
 
-    const Vector& eigs_kept(int b = 1) const { return eigs_kept_.at(b); }
+    const Vector& eigsKept(int b = 1) const { return eigsKept_.at(b); }
+
+    int maxEigsKept() const
+    {
+        int res = -1;
+        foreach(const Vector& eigs,eigsKept_)
+            res = max(res,eigs.Length());
+        return res;
+    }
+
+    Real maxTruncerr() const
+    {
+        Real res = -1;
+        foreach(const Real& te,truncerr_)
+            res = max(res,te);
+        return res;
+    }
 
     //SVDWorker Constructors ---------------
     SVDWorker() :
     N(1), truncerr_(N+1), cutoff_(MAX_CUT), minm_(1), maxm_(MAX_M),
     truncate_(true), showeigs_(false), doRelCutoff_(false),
-    refNorm_(1), eigs_kept_(N+1)
+    refNorm_(1), eigsKept_(N+1)
     { }
 
     SVDWorker(int N_) :
     N(N_), truncerr_(N+1), cutoff_(MAX_CUT), minm_(1), maxm_(MAX_M),
     truncate_(true), showeigs_(false), doRelCutoff_(false),
-    refNorm_(1), eigs_kept_(N+1)
+    refNorm_(1), eigsKept_(N+1)
     { }
 
     SVDWorker(int N_, Real cutoff, int minm, int maxm, 
               bool doRelCutoff, const LogNumber& refNorm) :
     N(N_), truncerr_(N+1), cutoff_(cutoff), minm_(minm), maxm_(maxm),
     truncate_(true), showeigs_(false), doRelCutoff_(doRelCutoff),
-    refNorm_(refNorm), eigs_kept_(N+1)
+    refNorm_(refNorm), eigsKept_(N+1)
     { }
 
     SVDWorker(std::istream& s) { read(s); }
@@ -139,7 +155,7 @@ public:
         s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
         s.read((char*)&refNorm_,sizeof(refNorm_));
         for(int j = 1; j <= N; ++j)
-            readVec(s,eigs_kept_[j]);
+            readVec(s,eigsKept_[j]);
     }
 
     void write(std::ostream& s) const
@@ -155,7 +171,7 @@ public:
         s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
         s.write((char*)&refNorm_,sizeof(refNorm_));
         for(int j = 1; j <= N; ++j)
-            writeVec(s,eigs_kept_[j]);
+            writeVec(s,eigsKept_[j]);
     }
 
     Real diag_denmat(const ITensor& rho, Vector& D, ITensor& U);
@@ -180,8 +196,8 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     {
         A *= 0;
         B *= 0;
-        eigs_kept_.at(b).ReDimension(1);
-        eigs_kept_.at(b) = 1;
+        eigsKept_.at(b).ReDimension(1);
+        eigsKept_.at(b) = 1;
         return;
     }
 
@@ -211,8 +227,8 @@ void SVDWorker::operator()(int b, const Tensor& AA,
         assert(comb.check_init());
         comb.product(AA,newoc);
         to_orth = comb; to_orth.conj();
-        eigs_kept_.at(b) = Vector(comb.right().m()); 
-        eigs_kept_.at(b) = 1.0/comb.right().m();
+        eigsKept_.at(b) = Vector(comb.right().m()); 
+        eigsKept_.at(b) = 1.0/comb.right().m();
         return;
     }
 
@@ -252,7 +268,7 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     }
 
     Tensor U;
-    truncerr_.at(b) = diag_denmat(rho,eigs_kept_.at(b),U);
+    truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),U);
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 
@@ -377,7 +393,7 @@ public:
 
     Real truncerr(int b) const { return svd_.truncerr(b); }
 
-    Vector eigs_kept(int b) const { return svd_.eigs_kept(b); }
+    const Vector& eigsKept(int b) const { return svd_.eigsKept(b); }
 
     bool showeigs() const { return svd_.showeigs(); }
     void showeigs(bool val) { svd_.showeigs(val); }

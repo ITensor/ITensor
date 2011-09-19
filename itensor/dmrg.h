@@ -290,42 +290,17 @@ public:
     {
         if(printeigs)
         {
-            Index bi = psi.LinkInd(b);
-            if(b == 1 && ha == 1)
-            {
-                largest_m = -1;
-                max_eigs_bond = -1;
-                max_eigs = Vector(1); max_eigs = 2;
-                center_eigs = Vector(1); center_eigs = 2;
-            }
-
-            largest_m = max(largest_m,bi.m());
-            assert(lastd.Length() > 0);
-            assert(max_eigs.Length() > 0);
-            if(lastd(1) < max_eigs(1) && b != 1 && b != (psi.NN()-1)) { max_eigs = lastd; max_eigs_bond = b; }
-            if(b == psi.NN()/2) 
-            {
-                center_eigs = lastd;
-                bulk_entanglement_gap = (lastd.Length() >= 2 ? lastd(1)-lastd(2) : 1);
-            }
-
             if(b == 1 && ha == 2) 
             {
-                std::cout << "\n    Largest m during sweep " << sw << " was " << largest_m << "\n";
-                std::cout << boost::format("    Eigs at bond %d: ") % max_eigs_bond;
-                for(int j = 1; j <= min(max_eigs.Length(),10); ++j) 
-                {
-                    std::cout << boost::format(max_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % max_eigs(j);
-                    std::cout << ((j != min(max_eigs.Length(),10)) ? ", " : "\n");
-                }
+                std::cout << "\n    Largest m during sweep " << sw << " was " << psi.svd().maxEigsKept() << "\n";
+                std::cout << "    Largest truncation error: " << psi.svd().maxTruncerr() << "\n";
+                Vector center_eigs = psi.eigsKept(psi.NN()/2);
                 std::cout << "    Eigs at center bond: ";
                 for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                 {
                     std::cout << boost::format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
                     std::cout << ((j != min(center_eigs.Length(),10)) ? ", " : "\n");
                 }
-                std::cout << boost::format("    Bulk entanglement gap = %f\n") % bulk_entanglement_gap;
-
                 std::cout << boost::format("    Energy after sweep %d is %f\n") % sw % energy;
             }
         }
@@ -377,8 +352,13 @@ Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOp
             energy = psi.bondDavidson(b,H.bondTensor(b),PH[b],PH[b+1],
                      sweeps.niter(sw),debuglevel,(ha==1?Fromleft:Fromright));
 
-            if(!opts.quiet) { std::cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
-                                      % sweeps.cutoff(sw) % sweeps.maxm(sw) % psi.LinkInd(b).showm(); }
+            if(!opts.quiet) 
+            { 
+                std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d\n") 
+                                      % sweeps.cutoff(sw) % sweeps.minm(sw) % sweeps.maxm(sw);
+                std::cout << boost::format("    Trunc. err=%.1E, States kept=%s\n")
+                                      % psi.svd().truncerr(b) % psi.LinkInd(b).showm();
+            }
 
             opts.measure(sw,ha,b,psi,energy);
 
