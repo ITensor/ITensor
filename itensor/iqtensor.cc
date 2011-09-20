@@ -213,8 +213,9 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
 IQTensor& IQTensor::operator+=(const IQTensor& other)
 {
     solo(); p->uninit_rmap();
-    if(this == &other)
-    foreach(ITensor& t, p->itensor) { t *= 2; return *this; }
+    if(this == &other) {
+        foreach(ITensor& t, p->itensor) { t *= 2; return *this; }
+    }
 
     if(p->iqindex_.size() == 0)		// Automatic initializing a summed IQTensor in a loop
     { return (*this = other); }

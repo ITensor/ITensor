@@ -12,9 +12,9 @@ SOURCES=itensor.cc iqtensor.cc mps.cc mpo.cc dmrg.cc
 
 ####################################
 
-INCLUDEFLAGS=-I$(INCLUDEDIR) -I$(BOOST_DIR)
+INCLUDEFLAGS=-I$(INCLUDEDIR) -I$(BOOST_DIR) 
 
-CCFLAGS= $(INCLUDEFLAGS) -O2
+CCFLAGS= $(INCLUDEFLAGS) $(OPTIMIZATIONS) 
 CCGFLAGS= $(INCLUDEFLAGS) -ansi -Wall -pedantic -Wno-long-long -g -O0\
  -DDEBUG -DBOUNDS -DMATRIXBOUNDS -DSTRONG_DEBUG
 

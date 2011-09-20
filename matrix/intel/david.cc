@@ -28,7 +28,7 @@ void David(    // Object containing big hamiltonian
 	   int debug)		// Level of debugging printout
     {
     Real norm = 1000000.0;
-    int sstep;
+    int sstep = 0;
 
     int i,n = big.Size();
     int mmax = min(n, evecs.Nrows());

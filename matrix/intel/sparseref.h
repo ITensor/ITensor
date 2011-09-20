@@ -12,7 +12,7 @@ class SparseMatBase : private Array1<SparseVector>
     int ncols;
     int numref;
     SparseMatBase(int nr, int nc) 
-	: nrows(nr), ncols(nc), numref(1), Array1<SparseVector>(nr) { }
+	: Array1<SparseVector>(nr), nrows(nr), ncols(nc), numref(1) { }
     SparseVector& Row(int i) 
 	{ return Array1<SparseVector>::operator[](i); }
     void OwnCopy()

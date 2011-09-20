@@ -10,7 +10,7 @@
 
 void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M to num cols
     {
-    const Real tolerance = 1e-10;
+    // const Real tolerance = 1e-10;
 
     int nkeep;			// Orthogonalize to at most the column dim 
     if (num > M.Nrows() || (num == 0 && M.Ncols() > M.Nrows()))
@@ -380,7 +380,7 @@ static void tql2(Vector& D, Vector& E, Matrix& Z)
     dotranspose(z,n);
     }
 
-static void tred3(const Matrix& X, Vector& D, Vector& E, Matrix& A)
+/* static void tred3(const Matrix& X, Vector& D, Vector& E, Matrix& A)
 {
    Real tol =
       FloatingPointPrecision::Minimum()/FloatingPointPrecision::Epsilon();
@@ -419,9 +419,9 @@ static void tred3(const Matrix& X, Vector& D, Vector& E, Matrix& A)
       }
       *d = *a; *a = h;
    }
-}
+}*/
 
-static void tql1(Vector& D, Vector& E)
+/*static void tql1(Vector& D, Vector& E)
 {
 //   Tracer et("Evalue(tql1)");
    Real eps = FloatingPointPrecision::Epsilon();
@@ -478,7 +478,7 @@ static void tql1(Vector& D, Vector& E)
       if (!test) i=0;
       D.el(i) = p;
    }
-}
+}*/
 
 void BackupEigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 {
@@ -579,7 +579,7 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 void ludcmp(Matrix& a,int* indx,Real* d)
     {
     const Real TINY = 1e-20;
-    int i, imax, j, k;
+    int i, imax=0, j, k;
     Real big, dum, sum, temp;
     Real *vv;
     int n = a.Nrows();
@@ -1451,7 +1451,7 @@ void GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
 
     double QWORK[1];
     MKL_INT qlwork = -1;
-    double* noevecs; MKL_INT num_evecs = 1;
+    double* noevecs = 0; MKL_INT num_evecs = 1;
 
     //Query work size
     MKL_INT info = 0;
@@ -1502,7 +1502,7 @@ void rotate22(double *zki,double *zki1,double c,double s,int n)
     double *pzki1 = zki1 - 1;
     double *pzki = zki - 1;
     static double junk[10];
-    int nr = n&3 + 4;	// Same as n%4 + 4
+    int nr = (n&3) + 4;	// Same as n%4 + 4
     int nmain = n-nr;
     if(nmain < 0) nmain = 0;
     int k;
@@ -1593,7 +1593,7 @@ double dotprod(double *a,double *b, int l)
     register double s0 = 0, s1 = 0, s2 = 0, s3 = 0;	// 4
     register double t0 = 0, t1 = 0, t2 = 0, t3 = 0;	// 4
     register double a0,b0,a1,b1,a2,b2,a3,b3;
-    register double prea,preb;
+    register double prea=0,preb=0;
     int i,ll = l&3;
     for(i = l-ll; i < l; i++)
 	s3 += a[i] * b[i];
@@ -2632,7 +2632,7 @@ void CSVD(ComplexMatrix a,   ComplexMatrix& u, Vector& s, ComplexMatrix& v)
     eta = 2.8E-16;			/* eta = the relative machine precision */
     tol = 4.0E-293; 		/* tol = the smallest normalized positive number, divided by eta */
     /* eta = 2^-52 * 1.26 fudge
-    /* tol = 2^-1023 / eta */
+     * tol = 2^-1023 / eta */
     np = n + p;
     nM1 = n - 1;
     L = 0;

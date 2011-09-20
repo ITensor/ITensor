@@ -85,7 +85,7 @@ for(i = ii; i < ilim; i += 4)
 	register double c31,c32,c33,c34,c41,c42,c43,c44;
 	register double t1,t2,t3,t4,t5;
 	register double a1,a2,a3,a4,b1,b2,b3,b4;
-	register double extra1,extra2;
+	register double extra1=0,extra2=0;
 	register double* pa1 = a+i*ars;
 	register double* pa2 = pa1+ars;
 	register double* pa3 = pa2+ars;
