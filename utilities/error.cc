@@ -1,6 +1,7 @@
 // error.cc -- Print out an error message and abort for debugging
 
 #include "error.h"
+#include <cstdlib>
 using std::cout;
 using std::cerr;
 using std::endl;

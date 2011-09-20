@@ -334,7 +334,7 @@ Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOp
     const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
     int debuglevel = (opts.quiet ? 0 : 1);
     int N = psi.NN();
-    Real energy;
+    Real energy = 0;
 
     psi.position(1);
     //if(H.is_complex()) psi.AAnc(1) *= Complex_1;

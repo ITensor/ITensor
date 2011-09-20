@@ -16,7 +16,7 @@ OBJECTS= intarray2.o error.o ran1.o\
 SOURCES= array2.cc error.cc ran1.cc indexx.cc hash.cc\
 	cputime.cc tarray1.cc testarray.cc intarray2.cc input.cc
 
-CCFLAGS= -I$(INCLUDEDIR) -O2
+CCFLAGS= -I$(INCLUDEDIR) $(OPTIMIZATION) 
 CCGFLAGS= -I$(INCLUDEDIR) -g -DBOUNDS
 CCPGFLAGS= -I$(INCLUDEDIR) -pg -O
 

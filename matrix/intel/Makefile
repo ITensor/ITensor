@@ -24,7 +24,7 @@ GOBJECTS= $(patsubst %,.g_objs/%, $(OBJECTS))
 PGOBJECTS= $(patsubst %,.pg_objs/%, $(OBJECTS))
 
 INCLUDEFLAGS=. -I$(INCLUDEDIR) $(BLAS_LAPACK_INCLUDEFLAGS)
-CCFLAGS= -I$(INCLUDEFLAGS) -O2 -DNDEBUG
+CCFLAGS= -I$(INCLUDEFLAGS) $(OPTIMIZATION) 
 CCGFLAGS= -I$(INCLUDEFLAGS) -DMATRIXBOUNDS -DBOUNDS -g -O0
 CCPGFLAGS= -I$(INCLUDEFLAGS) -pg -O
 
@@ -79,11 +79,11 @@ mkpgdir:
 	mkdir -p .pg_objs
 
 daxpy.o-o: daxpy.cc
-	$(CCCOM) -O2 -c daxpy.cc
+	$(CCCOM) $(OPTIMIZATION) -c daxpy.cc
 	mv daxpy.o daxpy.o-o
 
 daxpy.o-g: daxpy.cc
-	$(CCCOM) -O2 -c daxpy.cc
+	$(CCCOM) $(OPTIMIZATION) -c daxpy.cc
 	mv daxpy.o daxpy.o-g
 
 #dgemm.o-o: dgemm.cc
