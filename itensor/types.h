@@ -25,11 +25,16 @@ static const int MAX_M = 5000;
 //----------------------------------
 
 #ifndef DEBUG
+
 #ifndef NDEBUG
 #define NDEBUG //turn off asserts
 #endif
+
+#ifndef BOOST_DISABLE_ASSERTS
 #define BOOST_DISABLE_ASSERTS //turn off asserts
 #endif
+
+#endif //DEBUG
 
 #ifdef DEBUG
 #define DO_IF_DEBUG(X) X
