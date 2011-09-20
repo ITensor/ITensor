@@ -56,7 +56,7 @@ public:
 
     void read(std::istream& s)
     {
-        rmap_init = false;
+        uninit_rmap();
         size_t size;
         s.read((char*) &size,sizeof(size));
         itensor.resize(size);
@@ -86,7 +86,12 @@ public:
         rmap_init = true;
     }
 
-    void uninit_rmap() const { assert(numref == 1); rmap_init = false; }
+    void uninit_rmap() const 
+    { 
+        assert(numref == 1); 
+        rmap.clear();
+        rmap_init = false; 
+    }
 
     bool has_itensor(const ApproxReal& r) const
     { 
