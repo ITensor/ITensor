@@ -524,7 +524,7 @@ MatrixRef::Randomize()
     {
     if(ncols == 0 || nrows == 0)
 	return *this;
-    int nc = Ncols();
+    //int nc = Ncols();
     ColumnIter col(*this);
     while(col.inc())
 	col.Randomize();

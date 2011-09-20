@@ -6,7 +6,7 @@ PREFIX=$(THIS_DIR)
 LIBDIR=$(PREFIX)/lib
 INCLUDEDIR=$(PREFIX)/include
 BOOST_DIR=$(PREFIX)/../boost
-
+OPTIMIZATIONS=-O3 -DNDEBUG -Wall
 ###BLAS/LAPACK Related Options
 
 ##For a recent Mac OSX system (include flags intentionally left blank)

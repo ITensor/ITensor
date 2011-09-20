@@ -602,7 +602,11 @@ public:
     {
         getCenterMatrix(AAnc(j),(dir == Fromleft ? RightLinkInd(j) : LeftLinkInd(j)),cutoff,minm,maxm,lambda,nameint("c",j));
 
-        if(dir == Fromleft) if(left_orth_lim == j-1 || j == 1) left_orth_lim = j;
+        if(dir == Fromleft) {
+		if(left_orth_lim == j-1 || j == 1) {
+		       	left_orth_lim = j;
+		}
+	}
         else if(right_orth_lim == j+1 || j == N) right_orth_lim = j;
 
         if(do_signfix) Error("do_signfix not implemented.");
