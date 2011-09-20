@@ -818,7 +818,8 @@ ITensor& ITensor::operator+=(const ITensor& other)
         *this = other;
         return *this;
     }
-    if(other.scale_.isRealZero()) { return *this; }
+    //if(other.scale_.isRealZero()) { return *this; }
+    if((other.scale_/scale_).isRealZero()) { return *this; }
 
     solo();
 
@@ -832,8 +833,18 @@ ITensor& ITensor::operator+=(const ITensor& other)
     }
     else
     {
+        /*
+        LogNumber LNscalefac = other.scale_/scale_;
+        if(LNscalefac.isRealZero())
+        {
+            //Other has no effect on this
+            return *this;
+        }
+        */
+        //scalefac = LNscalefac.real();
         scalefac = (other.scale_/scale_).real();
     }
+
 
 #ifdef DO_ALT
     p->alt.clear();

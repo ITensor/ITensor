@@ -875,6 +875,11 @@ public:
 	{
         if(p->v.Length() != v.Length()) 
             Error("ITensor::assignToVec bad size");
+        if(scale_.isRealZero()) 
+        {
+            v *= 0;
+            return;
+        }
         v = p->v;
         v *= scale_.real();
 	}
@@ -946,11 +951,12 @@ public:
 	{
         if(scale_ == newscale) return;
         solo();
-        if(newscale.isRealZero()) { p->v = 0; }
+        if(newscale.isRealZero()) { p->v *= 0; }
         else 
 	    {
             scale_ /= newscale;
-            p->v *= scale_.real();
+            if(scale_.isRealZero()) p->v *= 0;
+            else p->v *= scale_.real();
 	    }
         scale_ = newscale;
 	}
