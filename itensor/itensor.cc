@@ -18,22 +18,30 @@ ostream& operator<<(ostream & s, const ITensor & t)
 
     if(t.is_null()) s << " (dat is null)\n";
     else 
-    {
-        s << boost::format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
-        if(printdat)
-        {
-            const Real scale = t.scale_.real();
-            const Vector& v = t.p->v;
-            Counter c; t.initCounter(c);
-            for(; c.notDone(); ++c)
-            {
-                Real val = v(c.ind)*scale;
-                if(fabs(val) > 1E-10)
-                { s << c << " " << val << "\n"; }
-            }
-        }
-        else { s << "\n"; }
-    }
+	{
+	if(t.scale_.isFiniteReal())
+	    s << boost::format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
+	else
+	    s << boost::format(" (L=%d,N=too big)\n") % t.vec_size() << t.scale() << std::endl;
+	if(printdat)
+	    {
+	    Real scale = 1.0;
+	    if(t.scale_.isFiniteReal())
+		scale = t.scale_.real();
+	    else
+		s << "\n(omitting too large scale factor)" << endl;
+	    const Vector& v = t.p->v;
+	    Counter c; t.initCounter(c);
+	    for(; c.notDone(); ++c)
+		{
+		Real val = v(c.ind)*scale;
+		if(fabs(val) > 1E-10)
+		    { s << c << " " << val << "\n"; }
+		}
+	    }
+	else 
+	    s << "\n";
+	}
     return s;
 }
 

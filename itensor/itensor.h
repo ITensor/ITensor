@@ -727,7 +727,31 @@ public:
     //Element Access Methods ----------------------------------------
 
     Real val0() const 
-	{ assert(p != 0); assert(rn_ == 0); return p->v(1)*scale_.real(); }
+	{ 
+	assert(p != 0); 
+	assert(rn_ == 0); 
+	try {
+	    return p->v(1)*scale_.real(); 
+	    }
+	catch(TooBigForReal)
+	    {
+	    std::cout << "too big for real() in val0" << std::endl;
+	    std::cerr << "too big for real() in val0" << std::endl;
+	    std::cout << "p->v(1) is " << p->v(1) << std::endl;
+	    std::cout << "scale is " << scale() << std::endl;
+	    std::cout << "rethrowing" << std::endl;
+	    throw;		// rethrow
+	    }
+	catch(TooSmallForReal)
+	    {
+	    std::cout << "warning: too small for real() in val0" << std::endl;
+	    std::cerr << "warning: too small for real() in val0" << std::endl;
+	    std::cout << "p->v(1) is " << p->v(1) << std::endl;
+	    std::cout << "scale is " << scale() << std::endl;
+	    return 0.0;
+	    }
+	return 0.0;
+	}
 
     Real val1(int i1) const
 	{ assert(p != 0); assert(rn_ <= 1); return p->v(i1)*scale_.real(); }
