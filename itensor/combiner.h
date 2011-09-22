@@ -64,7 +64,7 @@ public:
 
     //Index Methods -------------------------------------------------
 
-    inline bool check_init() const { return initted; }
+    inline bool isInit() const { return initted; }
 
     void addleft(const Index& l)// Include another left index
 	{ 
@@ -114,7 +114,10 @@ public:
 
     friend inline std::ostream & operator<<(std::ostream & s, const Combiner & c)
     {
-        s << "\nRight index: " << c.right() << "\n";
+        if(c.isInit())
+            s << "\nRight index: " << c.right() << "\n";
+        else
+            s << "\nRight index not initialized" << "\n";
         s << "Left indices:\n";
         foreach(const Index& l, c.left()) s << " " << l << "\n";
         return s;

@@ -224,7 +224,7 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     if(unique_link == 0)
     {
         comb.init(mid.rawname());
-        assert(comb.check_init());
+        assert(comb.isInit());
         comb.product(AA,newoc);
         to_orth = comb; to_orth.conj();
         eigsKept_.at(b) = Vector(comb.right().m()); 

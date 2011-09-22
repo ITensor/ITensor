@@ -270,7 +270,7 @@ public:
         initted = false;
 	}
 
-    inline bool check_init() const { return initted; }
+    inline bool isInit() const { return initted; }
 
     // Initialize after all lefts are there and before being used
     void init(std::string rname = "combined", IndexType = Link, 
@@ -390,9 +390,11 @@ public:
 
     inline friend std::ostream& operator<<(std::ostream & s, const IQCombiner & c)
     {
-        c.init();
-        s << std::endl << "right is " << c.right() << std::endl;
-        s << "lefts are " << std::endl;
+        if(c.isInit())
+            { s << std::endl << "right is " << c.right() << "\n"; }
+        else
+            { s << std::endl << "right is not initialized\n"; }
+        s << "lefts are \n";
         foreach(const IQIndex& I, c.left) s << I << std::endl;
         return s << "\n\n";
     }
