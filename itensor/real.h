@@ -29,6 +29,9 @@ static Real maxlogdouble = log(std::numeric_limits<double>::max());
 
 static const Real LogNumber_Accuracy = 1E-12;
 
+class TooBigForReal {};
+class TooSmallForReal {};
+
 //Stores a real number r as lognum_ = log(|r|) and sign_ = sgn(r)
 class LogNumber
 {
@@ -74,12 +77,14 @@ public:
         if(lognum_ > maxlogdouble)
         { 
             Print(lognum_);
-            Error("LogNumber too big to convert to Real"); 
+	    throw TooBigForReal();
+            //Error("LogNumber too big to convert to Real"); 
         }
         if(lognum_ < -maxlogdouble)
         { 
             Print(lognum_);
-            Error("LogNumber too small to convert to Real"); 
+	    throw TooSmallForReal();
+            //Error("LogNumber too small to convert to Real"); 
         }
 #endif
         return sign_ * exp(lognum_);
