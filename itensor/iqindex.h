@@ -493,6 +493,7 @@ public:
 
     inline friend std::ostream& operator<<(std::ostream &o, const IQIndex &I)
     {
+        if(I.is_null()) { o << "IQIndex: (null)"; return o; }
         o << "IQIndex: " << (const Index&) I << " <" << I.dir() << ">" << std::endl;
         for(int j = 1; j <= I.nindex(); ++j) o << " " << I.index(j) SP I.qn(j) << "\n";
         return o;
