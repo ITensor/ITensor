@@ -342,12 +342,15 @@ public:
         iqinds.push_back((do_condense ? cindex : _right));
         IQTensor res(iqinds);
         for(std::map<ApproxReal,Combiner>::const_iterator it = setcomb.begin();
-            it != setcomb.end(); ++it)
-        { res.insert(it->second); }
+            it != setcomb.end(); 
+            ++it)
+            { res.insert(it->second); }
 
         //Combiners should always have the 
         //structure of zero divergence IQTensors
         assert(checkQNs(res));
+
+        if(do_condense) { IQTensor rcopy(res); cond.product(rcopy,res); }
 
         return res;
     }
