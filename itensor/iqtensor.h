@@ -189,6 +189,25 @@ public:
     : p(new IQTDat(iqinds_))
     { }
 
+    IQTensor(const IQIndexVal& iv1) 
+    : p(new IQTDat(iv1.iqind))
+    { 
+        operator()(iv1) = 1;
+    }
+
+    IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2) 
+    : p(new IQTDat(iv1.iqind,iv2.iqind))
+    { 
+        operator()(iv1,iv2) = 1;
+    }
+
+    IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
+             const IQIndexVal& iv3) 
+    : p(new IQTDat(iv1.iqind,iv2.iqind,iv3.iqind))
+    { 
+        operator()(iv1,iv2,iv3) = 1;
+    }
+
     IQTensor(ITmaker itm) : p(new IQTDat(IQIndReIm))
     {
         if(itm == makeComplex_1)      operator+=(Complex_1);
@@ -294,20 +313,17 @@ public:
         Real ur = 0; int nn = 0; 
         while(GET(iv,nn+1).iqind != IQIVNull.iqind) 
         { ++nn; ur += GET(iv,nn).index().unique_Real(); }
+        if(nn != r()) Error("Not enough IQIndexVals provided");
         ApproxReal r(ur);
 
         if(!p->has_itensor(r))
         {
-            std::vector<Index> indices; indices.reserve(nn);
-            foreach(const IQIndex& I, p->iqindex_)
-            {
-                if(I.type() == Site) continue;
-                if(I.m() == 1 && I.nindex() == 1) indices.push_back(I.index(1));
-                else Error("IQTensor::operator() not permitted for IQTensor with non-trivial Link indices.");
-            }
+            std::vector<Index> indices; 
+            indices.reserve(nn);
             for(int j = 1; j <= nn; ++j) 
             {
-                if(!hasindex(iv[j].iqind)) Error("IQTensor::operator(): IQIndex not found.");
+                if(!hasindex(iv[j].iqind)) 
+                    Error("IQTensor::operator(): IQIndex not found.");
                 indices.push_back(iv[j].index());
             }
             ITensor t(indices);

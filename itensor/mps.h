@@ -328,14 +328,12 @@ protected:
 
         std::vector<IQIndex> a(N+1);
         for(int i = 1; i <= N; ++i)
-        { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
-        A_[1] = IQTensor(si(1),a[1]); A_[1](initState(1))=1;
+            { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
+
+        A_[1] = IQTensor(initState(1),a[1](1));
         for(int i = 2; i < N; ++i)
-        { 
-        A_[i] = IQTensor(conj(a[i-1]),si(i),a[i]); 
-        A_[i](initState(i))=1;
-        }
-        A_[N] = IQTensor(conj(a[N-1]),si(N)); A_[N](initState(N))=1;
+            A_[i] = IQTensor(conj(a[i-1])(1),initState(i),a[i](1)); 
+        A_[N] = IQTensor(conj(a[N-1])(1),initState(N));
     }
 
     typedef std::pair<typename std::vector<Tensor>::const_iterator,typename std::vector<Tensor>::const_iterator> const_range_type;

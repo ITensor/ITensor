@@ -515,7 +515,8 @@ struct IQIndexVal
     IQIndexVal(const IQIndex& iqindex, int i_) : iqind(iqindex),i(i_) 
     { 
         assert(i <= iqind.m());
-        if(iqindex.type() != Site) Error("IQIndexVals only defined for type Site");
+        if(iqindex.m() != iqindex.nindex()) 
+            Error("IQIndexVals only defined when all sub-indices have m==1");
     }
 
     Index index() const { return iqind.index(i); }
