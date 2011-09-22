@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
 
     c2.init();
 
-    CHECK(c2.check_init());
+    CHECK(c2.isInit());
     CHECK(c2.hasindex(l1));
     CHECK(c2.hasindex(a1));
     CHECK(c2.hasindex(l2));
