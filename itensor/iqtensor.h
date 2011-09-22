@@ -134,7 +134,7 @@ public:
     typedef std::vector<IQIndex>::const_iterator const_iqind_it;
     static const IQIndex& ReImIndex()
     {
-        return IQIndReIm;
+        return IQIndex::IndReIm();
     }
 private:
     boost::intrusive_ptr<IQTDat> p;
@@ -211,7 +211,7 @@ public:
         operator()(iv1,iv2,iv3) = 1;
     }
 
-    IQTensor(ITmaker itm) : p(new IQTDat(IQIndReIm))
+    IQTensor(ITmaker itm) : p(new IQTDat(IQIndex::IndReIm()))
     {
         if(itm == makeComplex_1)      operator+=(Complex_1);
         else if(itm == makeComplex_i) operator+=(Complex_i);
@@ -306,15 +306,15 @@ public:
         return *this;
     } //IQTensor::operator+=(ITensor)
 
-    Real& operator()(const IQIndexVal& iv1, const IQIndexVal& iv2 = IQIVNull, const IQIndexVal& iv3 = IQIVNull,
-                     const IQIndexVal& iv4 = IQIVNull, const IQIndexVal& iv5 = IQIVNull, const IQIndexVal& iv6 = IQIVNull,
-                     const IQIndexVal& iv7 = IQIVNull, const IQIndexVal& iv8 = IQIVNull)
+    Real& operator()(const IQIndexVal& iv1, const IQIndexVal& iv2 = IQIndexVal::Null(), const IQIndexVal& iv3 = IQIndexVal::Null(),
+                     const IQIndexVal& iv4 = IQIndexVal::Null(), const IQIndexVal& iv5 = IQIndexVal::Null(), const IQIndexVal& iv6 = IQIndexVal::Null(),
+                     const IQIndexVal& iv7 = IQIndexVal::Null(), const IQIndexVal& iv8 = IQIndexVal::Null())
 	{
         solo();
         boost::array<IQIndexVal,NMAX+1> iv 
-            = {{ IQIVNull, iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
+            = {{ IQIndexVal::Null(), iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
         Real ur = 0; int nn = 0; 
-        while(GET(iv,nn+1).iqind != IQIVNull.iqind) 
+        while(GET(iv,nn+1).iqind != IQIndexVal::Null().iqind) 
         { ++nn; ur += GET(iv,nn).index().unique_Real(); }
         if(nn != r()) Error("Not enough IQIndexVals provided");
         ApproxReal r(ur);
@@ -540,7 +540,7 @@ public:
         foreach(const IQIndex& I, p->iqindex_)
         if(I.type() == t) { return I; }
         Error("IQTensor::findtype: couldn't find type");
-        return IQIndNull;
+        return IQIndex::Null();
     }
 
     const IQIndex& finddir(Arrow dir) const
@@ -548,7 +548,7 @@ public:
         foreach(const IQIndex& I, p->iqindex_)
         if(I.dir() == dir) { return I; }
         Error("IQTensor::finddir: couldn't find dir");
-        return IQIndNull;
+        return IQIndex::Null();
     }
 
     bool hasindex(const IQIndex& i) const 
@@ -558,7 +558,7 @@ public:
         return false;
     }
 
-    bool is_complex() const { return findindex(IQIndReIm) != 0; }
+    bool is_complex() const { return findindex(IQIndex::IndReIm()) != 0; }
 
     void addindex1(const IQIndex& I)
     {

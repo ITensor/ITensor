@@ -217,7 +217,38 @@ public:
     explicit IQIndexDat(Imaker im)
     : numref(0), is_static_(true)
     { 
-        iq_.push_back(inqn(Index(im),QN())); 
+        if(im == makeNull)
+            iq_.push_back(inqn(Index::Null(),QN())); 
+        else if(im == makeReIm)
+            iq_.push_back(inqn(Index::IndReIm(),QN())); 
+        else if(im == makeReImP)
+            iq_.push_back(inqn(Index::IndReImP(),QN())); 
+        else if(im == makeReImPP)
+            iq_.push_back(inqn(Index::IndReImPP(),QN())); 
+    }
+
+    static IQIndexDat* Null()
+    {
+        static IQIndexDat Null_(makeNull);
+        return &Null_;
+    }
+
+    static IQIndexDat* ReImDat()
+    {
+        static IQIndexDat ReImDat_(makeReIm);
+        return &ReImDat_;
+    }
+
+    static IQIndexDat* ReImDatP()
+    {
+        static IQIndexDat ReImDatP_(makeReImP);
+        return &ReImDatP_;
+    }
+
+    static IQIndexDat* ReImDatPP()
+    {
+        static IQIndexDat ReImDatPP_(makeReImPP);
+        return &ReImDatPP_;
     }
 
     friend inline void boost::intrusive_ptr_add_ref(IQIndexDat* p);
@@ -232,8 +263,6 @@ namespace boost
     inline void intrusive_ptr_add_ref(IQIndexDat* p) { ++(p->numref); }
     inline void intrusive_ptr_release(IQIndexDat* p) { if(!p->is_static_ && --(p->numref) == 0){ delete p; } }
 }
-
-extern IQIndexDat IQIndexDatNull, IQIndReDat, IQIndReDatP, IQIndReDatPP;
 
 struct IQIndexVal;
 
@@ -381,15 +410,39 @@ public:
     : Index(im), _dir(In)
 	{
         if(im == makeNull)
-        { pd = &IQIndexDatNull; }
+        { pd = IQIndexDat::Null(); }
         else if(im == makeReIm)
-        { pd = &IQIndReDat; }
+        { pd = IQIndexDat::ReImDat(); }
         else if(im == makeReImP)
-        { pd = &IQIndReDatP; }
+        { pd = IQIndexDat::ReImDatP(); }
         else if(im == makeReImPP)
-        { pd = &IQIndReDatPP;}
+        { pd = IQIndexDat::ReImDatPP(); }
         else Error("IQIndex: Unrecognized Imaker type.");
 	}
+
+    static const IQIndex& Null()
+    {
+        static const IQIndex Null_(makeNull);
+        return Null_;
+    }
+
+    static const IQIndex& IndReIm()
+    {
+        static const IQIndex IndReIm_(makeReIm);
+        return IndReIm_;
+    }
+
+    static const IQIndex& IndReImP()
+    {
+        static const IQIndex IndReImP_(makeReImP);
+        return IndReImP_;
+    }
+
+    static const IQIndex& IndReImPP()
+    {
+        static const IQIndex IndReImPP_(makeReImPP);
+        return IndReImPP_;
+    }
 
     IQIndexVal operator()(int n) const;
 
@@ -504,14 +557,13 @@ public:
 
 }; //class IQIndex
 
-extern IQIndex IQIndNull, IQIndReIm, IQIndReImP, IQIndReImPP;
 enum IQmaker {makeSing};
 
 struct IQIndexVal
 {
     IQIndex iqind; 
     int i;
-    IQIndexVal() : iqind(IQIndNull),i(0) { }
+    IQIndexVal() : iqind(IQIndex::Null()),i(0) { }
     IQIndexVal(const IQIndex& iqindex, int i_) : iqind(iqindex),i(i_) 
     { 
         assert(i <= iqind.m());
@@ -532,23 +584,14 @@ struct IQIndexVal
     { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
     inline friend std::ostream& operator<<(std::ostream& s, const IQIndexVal& iv)
     { return s << "IQIndexVal: i = " << iv.i << ", iqind = " << iv.iqind << "\n"; }
+
+    static const IQIndexVal& Null()
+    {
+        static const IQIndexVal Null_(IQIndex::Null(),0);
+        return Null_;
+    }
 };
-extern IQIndexVal IQIVNull;
 
 inline IQIndexVal IQIndex::operator()(int n) const { return IQIndexVal(*this,n); }
-
-#ifdef THIS_IS_MAIN
-IQIndexDat IQIndexDatNull(makeNull);
-IQIndexDat IQIndReDat(makeReIm);
-IQIndexDat IQIndReDatP(makeReImP);
-IQIndexDat IQIndReDatPP(makeReImPP);
-
-IQIndex IQIndNull(makeNull);
-IQIndex IQIndReIm(makeReIm);
-IQIndex IQIndReImP(makeReImP);
-IQIndex IQIndReImPP(makeReImPP);
-
-IQIndexVal IQIVNull(IQIndNull,0);
-#endif
 
 #endif

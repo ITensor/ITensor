@@ -247,17 +247,17 @@ public:
 
     IQCombiner() : initted(false), do_condense(false) { }
     IQCombiner(
-	    const IQIndex& l1, const IQIndex& l2 = IQIndNull, 
-        const IQIndex& l3 = IQIndNull, const IQIndex& l4 = IQIndNull, 
-	    const IQIndex& l5 = IQIndNull, const IQIndex& l6 = IQIndNull )
+	    const IQIndex& l1, const IQIndex& l2 = IQIndex::Null(), 
+        const IQIndex& l3 = IQIndex::Null(), const IQIndex& l4 = IQIndex::Null(), 
+	    const IQIndex& l5 = IQIndex::Null(), const IQIndex& l6 = IQIndex::Null() )
         : initted(false), do_condense(false)
 	{
-        if(l1 != IQIndNull) left.push_back(l1); 
-        if(l2 != IQIndNull) left.push_back(l2);
-        if(l3 != IQIndNull) left.push_back(l3); 
-        if(l4 != IQIndNull) left.push_back(l4);
-        if(l5 != IQIndNull) left.push_back(l5); 
-        if(l6 != IQIndNull) left.push_back(l6);
+        if(l1 != IQIndex::Null()) left.push_back(l1); 
+        if(l2 != IQIndex::Null()) left.push_back(l2);
+        if(l3 != IQIndex::Null()) left.push_back(l3); 
+        if(l4 != IQIndex::Null()) left.push_back(l4);
+        if(l5 != IQIndex::Null()) left.push_back(l5); 
+        if(l6 != IQIndex::Null()) left.push_back(l6);
         foreach(IQIndex& L, left) L.conj();
 	}
     void addleft(const IQIndex& l) 	// Include another left index

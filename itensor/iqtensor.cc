@@ -12,7 +12,7 @@ void MapPrimer::operator()(IQIndex &iqi) const { iqi.mapprime(plevold,plevnew,pt
 
 void IQTensor::SplitReIm(IQTensor& re, IQTensor& im) const
 {
-    if(!hasindex(IQIndReIm))
+    if(!hasindex(IQIndex::IndReIm()))
 	{
 	IQTensor cop(*this);
 	re = cop;
@@ -22,7 +22,7 @@ void IQTensor::SplitReIm(IQTensor& re, IQTensor& im) const
 	}
     vector<IQIndex> newreinds;
     remove_copy_if(p->iqindex_.begin(),p->iqindex_.end(),std::back_inserter(newreinds),
-		    bind2nd(std::equal_to<IQIndex>(),IQIndReIm));
+		    bind2nd(std::equal_to<IQIndex>(),IQIndex::IndReIm()));
     re = IQTensor(newreinds);
     im = re;
     ITensor a,b;
@@ -36,15 +36,15 @@ void IQTensor::SplitReIm(IQTensor& re, IQTensor& im) const
 
 IQTensor& IQTensor::operator*=(const IQTensor& other)
 {
-    if(hasindex(IQIndReIm) && other.hasindex(IQIndReIm) && !other.hasindex(IQIndReImP)
-	    && !other.hasindex(IQIndReImPP) && !hasindex(IQIndReImP) && !hasindex(IQIndReImPP))
+    if(hasindex(IQIndex::IndReIm()) && other.hasindex(IQIndex::IndReIm()) && !other.hasindex(IQIndex::IndReImP())
+	    && !other.hasindex(IQIndex::IndReImPP()) && !hasindex(IQIndex::IndReImP()) && !hasindex(IQIndex::IndReImPP()))
 	{
         static ITensor primer(Index::IndReIm(),Index::IndReImP(),1.0);
         static ITensor primerP(Index::IndReIm(),Index::IndReImPP(),1.0);
         static ITensor prod(Index::IndReIm(),Index::IndReImP(),Index::IndReImPP());
-        static IQTensor iqprimer(IQIndReIm,IQIndReImP);
-        static IQTensor iqprimerP(IQIndReIm,IQIndReImPP);
-        static IQTensor iqprod(IQIndReIm,IQIndReImP,IQIndReImPP);
+        static IQTensor iqprimer(IQIndex::IndReIm(),IQIndex::IndReImP());
+        static IQTensor iqprimerP(IQIndex::IndReIm(),IQIndex::IndReImPP());
+        static IQTensor iqprod(IQIndex::IndReIm(),IQIndex::IndReImP(),IQIndex::IndReImPP());
         static int first = 1;
         if(first)
         {
@@ -165,7 +165,7 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
     IQTensor tre,tim;
     SplitReIm(tre,tim);
 
-    //Only IQIndex should be IQIndReIm
+    //Only IQIndex should be IQIndex::IndReIm()
     /*
     if(tre.p->iqindex_.size() != 1)
 	{
@@ -219,8 +219,8 @@ IQTensor& IQTensor::operator+=(const IQTensor& other)
 
     if(p->iqindex_.size() == 0)		// Automatic initializing a summed IQTensor in a loop
     { return (*this = other); }
-    bool complex_this = hasindex(IQIndReIm); 
-    bool complex_other = other.hasindex(IQIndReIm); 
+    bool complex_this = hasindex(IQIndex::IndReIm()); 
+    bool complex_other = other.hasindex(IQIndex::IndReIm()); 
     IQTensor& This(*this);
     if(!complex_this && complex_other)
         return (This = (This * IQComplex_1) + other);
