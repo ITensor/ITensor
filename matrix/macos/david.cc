@@ -13,7 +13,6 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-void reportnew();
 
 // David -- Block Davidson Diagonalization.
 
@@ -77,7 +76,6 @@ void David(    // Object containing big hamiltonian
     if(print(1)) 
 	cout << "In David, bytes used by Matrix classes: "
 		<< 8 * StoreLink::TotalStorage() << iendl;
-    reportnew();
     int lastsstep = -100;
 
     int iter;

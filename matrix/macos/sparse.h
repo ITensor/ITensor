@@ -301,9 +301,9 @@ public:
     friend class MatrixRef;
     };
 
-#ifdef THIS_IS_MAIN
-std::ostream & operator << (std::ostream &s, const SparseVector &a) {return s; }
+inline std::ostream & operator << (std::ostream &s, const SparseVector &a) {return s; }
 
+#ifdef THIS_IS_MAIN
 int  SparseVector::minrsize = default_minrsize;
 Real SparseVector::efactor = default_efactor;
 Real SparseVector::thresh = default_thresh;

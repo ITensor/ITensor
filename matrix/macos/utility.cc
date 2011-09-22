@@ -13,7 +13,7 @@ using std::endl;
 
 void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M to num cols
     {
-    const Real tolerance = 1e-10;
+    //const Real tolerance = 1e-10;
 
     int nkeep;			// Orthogonalize to at most the column dim 
     if (num > M.Nrows() || (num == 0 && M.Ncols() > M.Nrows()))
@@ -383,6 +383,7 @@ static void tql2(Vector& D, Vector& E, Matrix& Z)
     dotranspose(z,n);
     }
 
+/*
 static void tred3(const Matrix& X, Vector& D, Vector& E, Matrix& A)
 {
    Real tol =
@@ -423,7 +424,9 @@ static void tred3(const Matrix& X, Vector& D, Vector& E, Matrix& A)
       *d = *a; *a = h;
    }
 }
+*/
 
+/*
 static void tql1(Vector& D, Vector& E)
 {
 //   Tracer et("Evalue(tql1)");
@@ -482,6 +485,7 @@ static void tql1(Vector& D, Vector& E)
       D.el(i) = p;
    }
 }
+*/
 
 void BackupEigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 {
@@ -2494,7 +2498,7 @@ void CSVD(ComplexMatrix a,   ComplexMatrix& u, Vector& s, ComplexMatrix& v)
     double tol, w, x, y, z;
     eta = 2.8E-16;			/* eta = the relative machine precision */
     tol = 4.0E-293; 		/* tol = the smallest normalized positive number, divided by eta */
-    /* eta = 2^-52 * 1.26 fudge
+    /* eta = 2^-52 * 1.26 fudge*/
     /* tol = 2^-1023 / eta */
     np = n + p;
     nM1 = n - 1;

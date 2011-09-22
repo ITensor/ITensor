@@ -53,8 +53,8 @@ public:
 private:
     char temporary;             // 1 if current matrix is a temporary
 protected:
-    static int nummats;		// number of news - number of deletes 
-    static int numcon;		// number of constructor calls 
+    //static int nummats;	// number of news - number of deletes 
+    //static int numcon;	// number of constructor calls 
     void makematrix(int, int);	// Real Resize/Constructor 
     void copy(const Matrix &);	// real copy 
     void copytransfer(Matrix &);// copy by grabbing storage 
@@ -145,8 +145,8 @@ protected:
     void copytransfer(Vector &);// copy by grabbing storage 
     inline void init();
     inline void fixref();
-    static int numvecs;		// number of news - number of deletes 
-    static int numcon;		// number of constructor calls 
+    //static int numvecs;		// number of news - number of deletes 
+    //static int numcon;		// number of constructor calls 
     };
 
 // Functions not members of Vector class
@@ -160,10 +160,10 @@ std::ostream & operator << (std::ostream &, const Vector &);
 
 #ifdef THIS_IS_MAIN
 
-int Matrix::nummats = 0;        // number of new's - number of delete's
-int Matrix::numcon = 0;         // Constructor counter 
-int Vector::numvecs = 0;        // number of new's - number of delete's
-int Vector::numcon = 0;         // Constructor counter 
+//int Matrix::nummats = 0;        // number of new's - number of delete's
+//int Matrix::numcon = 0;         // Constructor counter 
+//int Vector::numvecs = 0;        // number of new's - number of delete's
+//int Vector::numcon = 0;         // Constructor counter 
 ARRAY1CC_DEFS(Matrix)
 ARRAY1CC_DEFS(Vector)
 

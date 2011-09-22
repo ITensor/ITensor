@@ -635,7 +635,7 @@ ostream& operator<<(ostream& s, const SparseMatrix& X)
 
 void SparseMatrix::PrintSymmetric(ostream& s)
     {
-    int w = s.width();
+    //int w = s.width();
     int nr = nrows;
     //long f = s.flags();
     //s.setf(0, std::ios::floatfield);	// Make sure fixed and scientific are cleared 

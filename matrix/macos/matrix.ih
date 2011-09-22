@@ -1,7 +1,10 @@
 // Inlines for matrix.h
 
 inline void Matrix::init()
-    { MatrixRef::init(); temporary = 0; numcon++; }
+    { MatrixRef::init(); 
+      temporary = 0; 
+      //numcon++; 
+    }
 
 inline void Matrix::fixref()		
     { transpose=0; scale=1.0; rowstride=ncols; store=slink.Store(); }
@@ -19,7 +22,10 @@ inline Matrix::Matrix(const MatrixRef &M)
     { init(); makematrix(M.Nrows(), M.Ncols()); MatrixRef::operator=(M); }
 
 inline Matrix::~Matrix ()
-    { makematrix(0, 0); numcon--; }
+    { 
+        makematrix(0, 0); 
+        //numcon--; 
+    }
 
 inline void Matrix::ReDimension(int s1, int s2)
     { makematrix(s1, s2); }
@@ -60,14 +66,14 @@ inline Matrix Matrix::operator + (Real a) const
 inline Matrix operator + (Real a, const Matrix& M)
     { return M+a; }
 
-inline int Matrix::GetNumMats()
-    { return nummats; }
+//inline int Matrix::GetNumMats()
+//    { return nummats; }
 
-inline void Matrix::ResetNumMats()
-    { nummats = 0; }
+//inline void Matrix::ResetNumMats()
+//    { nummats = 0; }
 
-inline int Matrix::GetNumCon()
-    { return numcon; }
+//inline int Matrix::GetNumCon()
+//    { return numcon; }
 
 inline void Matrix::MakeTemp()
     { temporary = 1; }
@@ -102,7 +108,11 @@ Matrix::operator() (int i1, int i2)
     }
 
 inline void Vector::init()
-    { VectorRef::init(); temporary = 0; numcon++; }
+    { 
+        VectorRef::init(); 
+        temporary = 0; 
+        //numcon++; 
+    }
 
 inline void Vector::fixref()		
     { scale = 1.0; stride = 1; store=slink.Store(); }
@@ -120,7 +130,10 @@ inline Vector::Vector (const VectorRef &V)
     { init(); makevector(V.Length()); VectorRef::operator=(V); }
 
 inline Vector::~Vector ()
-    { makevector(0); numcon--; }
+    { 
+        makevector(0); 
+        //numcon--; 
+    }
 
 inline int Vector::Storage() const
     { return slink.Storage(); }

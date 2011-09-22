@@ -28,10 +28,12 @@ Matrix::makematrix(int s1, int s2)
     if (s1 < 0 || s2 < 0)
 	_merror("Matrix::makematrix: bad args");
     int size = s1 * s2;
+    /*
     if (Store() == 0)
 	{ if (size > 0) nummats++; }
     else
 	{ if (size == 0) nummats--; }
+    */
     slink.makestorage(size);
     nrows = s1;
     ncols = s2;
@@ -83,7 +85,9 @@ Matrix::copytransfer(Matrix & M)
     if (Store() != 0)
 	makematrix(0,0);
     MatrixRef::operator<<(M);
-    M.makematrix(0,0); numcon--; M.init();
+    M.makematrix(0,0); 
+    //numcon--; 
+    M.init();
     temporary = 0;
     }
 
@@ -151,10 +155,12 @@ void
 Vector::makevector(int s)
     {
     if(s == length) return;
+    /*
     if (Store() == 0)
 	{ if (s > 0) numvecs++; }
     else
 	{ if (s == 0) numvecs--; }
+    */
     slink.makestorage(s);
     length = s;
     fixref();
@@ -197,7 +203,9 @@ Vector::copytransfer(Vector & V)
     if (Store() != 0)
 	makevector(0);
     VectorRef::operator<<(V);
-    V.makevector(0); numcon--; V.init();
+    V.makevector(0); 
+    //numcon--; 
+    V.init();
     temporary = 0;
     }
 
