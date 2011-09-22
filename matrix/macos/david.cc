@@ -9,6 +9,8 @@
 #include <math.h>
 #include <malloc/malloc.h>
 
+extern void reportnew();
+
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -32,7 +34,7 @@ void David(    // Object containing big hamiltonian
 	   int debug)		// Level of debugging printout
 {
     Real norm = 1000000.0;
-    int sstep;
+    int sstep = 0;
 
     int i,n = big.Size();
     int mmax = min(n, evecs.Nrows());
@@ -76,6 +78,7 @@ void David(    // Object containing big hamiltonian
     if(print(1)) 
 	cout << "In David, bytes used by Matrix classes: "
 		<< 8 * StoreLink::TotalStorage() << iendl;
+    reportnew();
     int lastsstep = -100;
 
     int iter;
@@ -114,33 +117,10 @@ void David(    // Object containing big hamiltonian
 	    big.product(Bref.Column(i),AB[i]);
 	    }
 
-	if (debug > 5)
-    {
-	    cout << "AB is:" << iendl << AB;
-	    cout << "pn is: " << pn << iendl;
-        cout << "Bref.Nrows .Ncols = " << Bref.Nrows() << " " << Bref.Ncols() << iendl;
-    }
-
 	for(i=1; i <= pn; i++)
     {
-        //cerr << "AB[" << i << "] = " << iendl << AB[i];
-        //cerr << "Bref.t() = " << iendl << Bref.t();
-        if(0)
-        {
-            Matrix BBrt = Bref.t();
-            Matrix QQ(pn,pn);
-            for(int k = 1; k <= BBrt.Ncols(); ++k)
-            {
-            QQ(1,i) += BBrt(1,k) * AB[i][k-1];
-            }
-            Mref = QQ;
-        }
-        else //Original code
-        {
-            Mref.Column(i) = Bref.t() * AB[i];
-        }
+        Mref.Column(i) = Bref.t() * AB[i];
     }
-    //cerr << "Mref = " << iendl << Mref;
 
 	for (sstep = pn; sstep <= mmax; sstep++)
 	    {

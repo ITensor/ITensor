@@ -148,12 +148,23 @@ inline void readVec(std::istream& s, Vector& V)
     }
 }
 
+class Globals
+{
+public:
+    static bool& printdat()
+    {
+        static bool printdat_ = false;
+        return printdat_;
+    }
+};
+
 
 extern bool printdat;
 extern bool debug1, debug2, debug3, debug4;
 extern Vector lastd;
 Real ran1();
 #ifdef THIS_IS_MAIN
+void reportnew() { }
 Real ran1(int);
 bool printdat = false;
 bool debug1 = false, debug2 = false, debug3 = false, debug4 = false;

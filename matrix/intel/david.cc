@@ -8,6 +8,12 @@
 #include "indent.h"
 #include <math.h>
 //#include <malloc/malloc.h>
+void reportnew();
+
+using std::cout;
+using std::cerr;
+using std::endl;
+
 
 // David -- Block Davidson Diagonalization.
 
@@ -25,7 +31,7 @@ void David(    // Object containing big hamiltonian
 	   int numget,		// number of states to get
 	   int maxiter,		// max number of passes
 	   int debug)		// Level of debugging printout
-    {
+{
     Real norm = 1000000.0;
     int sstep = 0;
 
@@ -36,7 +42,8 @@ void David(    // Object containing big hamiltonian
     eigs.ReduceDimension(mmax);	// Eigenvalues on return 
 
     int oldp = cout.precision(12);	// Set and save precision 
-    if(n <= 20 && err < 1.0e-6)
+    //if(debug > 2 && n < 20)
+    if(n <= 20 && err <= 1.0e-6)
 	{
         //cout << "Calling direct Hamiltonian matrix Eig routine:" << iendl;
         Matrix Hmat(n,n);
@@ -48,12 +55,14 @@ void David(    // Object containing big hamiltonian
             big.product(X,Y);
             Hmat.Row(ii) = Y;
         }
+        //cerr << "Hmat = " << endl << Hmat << endl;
         Vector eva;
         Matrix evec;
         EigenValues(Hmat, eva,evec);	// Step A/I in Davidson 
         for(int ii = 1; ii <= mmax; ii++)
             evecs.Row(ii) = evec.Column(ii);
         eigs.SubVector(1,mmax) = eva.SubVector(1,mmax);
+        //cout << "eigs(1) = " << eigs(1) << endl;
         return;
 	}
 
@@ -68,6 +77,7 @@ void David(    // Object containing big hamiltonian
     if(print(1)) 
 	cout << "In David, bytes used by Matrix classes: "
 		<< 8 * StoreLink::TotalStorage() << iendl;
+    reportnew();
     int lastsstep = -100;
 
     int iter;
@@ -108,10 +118,7 @@ void David(    // Object containing big hamiltonian
 
 	for(i=1; i <= pn; i++)
     {
-        //cerr << "AB[" << i << "] = " << iendl << AB[i];
-        //cerr << "Bref.t() = " << iendl << Bref.t();
-
-	    Mref.Column(i) = Bref.t() * AB[i];
+        Mref.Column(i) = Bref.t() * AB[i];
     }
     //cerr << "Mref = " << iendl << Mref;
 
@@ -149,7 +156,7 @@ void David(    // Object containing big hamiltonian
 		norm = Norm(xi);// Step C 
 		if (debug > 1 || (debug > 0 && iter == 1 && sstep == pn))
 		    {
-		    cout << iter << " " << sstep << " " << norm;
+            cout << iter << " " << sstep << " " << norm;
 		    for(int ww = 1; ww <= min(numget,eigs.Length()); ww++)
 			cout << " Eigs: " << eigs(ww);
 		    cout << iendl;
@@ -239,4 +246,4 @@ void David(    // Object containing big hamiltonian
 	cout << eigs.SubVector(1, sstep);
 	}
     cout.precision(oldp);
-    }
+}
