@@ -549,6 +549,6 @@ IQIndex IQIndReImP(makeReImP);
 IQIndex IQIndReImPP(makeReImPP);
 
 IQIndexVal IQIVNull(IQIndNull,0);
-#endif //THIS_IS_MAIN
+#endif
 
 #endif

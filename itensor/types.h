@@ -154,7 +154,6 @@ extern bool debug1, debug2, debug3, debug4;
 extern Vector lastd;
 Real ran1();
 #ifdef THIS_IS_MAIN
-void reportnew() {}
 Real ran1(int);
 bool printdat = false;
 bool debug1 = false, debug2 = false, debug3 = false, debug4 = false;

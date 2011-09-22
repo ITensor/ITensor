@@ -330,8 +330,8 @@ inline void psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITens
     if(L.is_complex())
     {
         if(L.vec_size() != 2) Error("Non-scalar result in psiHphi.");
-        re = L(IndReIm(1));
-        im = L(IndReIm(2));
+        re = L(Index::IndReIm()(1));
+        im = L(Index::IndReIm()(2));
     }
     else 
     {

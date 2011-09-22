@@ -39,20 +39,20 @@ public:
     //Constructors --------------------------------------------------
 
     Combiner() : rl_(0), initted(false) {}
-    Combiner(const Index& l1 , const Index& l2 = IndNull, 
-    const Index& l3 = IndNull, const Index& l4 = IndNull, 
-    const Index& l5 = IndNull, const Index& l6 = IndNull, 
-    const Index& l7 = IndNull, const Index& l8 = IndNull )
+    Combiner(const Index& l1 , const Index& l2 = Index::Null(), 
+    const Index& l3 = Index::Null(), const Index& l4 = Index::Null(), 
+    const Index& l5 = Index::Null(), const Index& l6 = Index::Null(), 
+    const Index& l7 = Index::Null(), const Index& l8 = Index::Null() )
     : rl_(0), initted(false)
 	{
         boost::array<const Index*,NMAX+1> ll 
-        = {{ &IndNull, &l1, &l2, &l3, &l4, &l5, &l6, &l7, &l8 }};
+        = {{ &Index::Null(), &l1, &l2, &l3, &l4, &l5, &l6, &l7, &l8 }};
 
         do { ++rl_; left_[rl_] = *ll[rl_]; } 
-        while(rl_ < NMAX && *ll[rl_+1] != IndNull);
+        while(rl_ < NMAX && *ll[rl_+1] != Index::Null());
 
-        assert(rl_ == NMAX || left_[rl_+1] == IndNull);
-        assert(left_[rl_] != IndNull);
+        assert(rl_ == NMAX || left_[rl_+1] == Index::Null());
+        assert(left_[rl_] != Index::Null());
 	}
     
     //Operators -----------------------------------------------------

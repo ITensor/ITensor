@@ -39,16 +39,16 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
     if(hasindex(IQIndReIm) && other.hasindex(IQIndReIm) && !other.hasindex(IQIndReImP)
 	    && !other.hasindex(IQIndReImPP) && !hasindex(IQIndReImP) && !hasindex(IQIndReImPP))
 	{
-        static ITensor primer(IndReIm,IndReImP,1.0);
-        static ITensor primerP(IndReIm,IndReImPP,1.0);
-        static ITensor prod(IndReIm,IndReImP,IndReImPP);
+        static ITensor primer(Index::IndReIm(),Index::IndReImP(),1.0);
+        static ITensor primerP(Index::IndReIm(),Index::IndReImPP(),1.0);
+        static ITensor prod(Index::IndReIm(),Index::IndReImP(),Index::IndReImPP());
         static IQTensor iqprimer(IQIndReIm,IQIndReImP);
         static IQTensor iqprimerP(IQIndReIm,IQIndReImPP);
         static IQTensor iqprod(IQIndReIm,IQIndReImP,IQIndReImPP);
         static int first = 1;
         if(first)
         {
-            IndexVal iv0(IndReIm,1), iv1(IndReImP,1), iv2(IndReImPP,1);
+            IndexVal iv0(Index::IndReIm(),1), iv1(Index::IndReImP(),1), iv2(Index::IndReImPP(),1);
             iv0.i = 1; iv1.i = 1; iv2.i = 1; prod(iv0,iv1,iv2) = 1.0;
             iv0.i = 1; iv1.i = 2; iv2.i = 2; prod(iv0,iv1,iv2) = -1.0;
             iv0.i = 2; iv1.i = 2; iv2.i = 1; prod(iv0,iv1,iv2) = 1.0;

@@ -132,7 +132,10 @@ public:
     typedef std::list<ITensor>::const_iterator const_iten_it;
     typedef std::vector<IQIndex>::iterator iqind_it;
     typedef std::vector<IQIndex>::const_iterator const_iqind_it;
-    static const IQIndex& ReImIndex;
+    static const IQIndex& ReImIndex()
+    {
+        return IQIndReIm;
+    }
 private:
     boost::intrusive_ptr<IQTDat> p;
 
@@ -843,7 +846,6 @@ public:
 #ifdef THIS_IS_MAIN
 IQTensor IQTSing(makeSing);
 IQTensor IQComplex_1(makeComplex_1), IQComplex_i(makeComplex_i);
-const IQIndex& IQTensor::ReImIndex = IQIndReIm;
 #endif
 
 #endif

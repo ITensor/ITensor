@@ -6,14 +6,11 @@
 enum Direction { Fromright, Fromleft, Both, None };
 
 static const LogNumber DefaultRefScale(7.58273202392352185);
-extern bool showeigs;
 
 void convertToIQ(const BaseModel& model, const std::vector<ITensor>& A, std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
 template<class Tensor, class TensorSet>
 Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal);
-
-extern Real truncerror, svdtruncerr;
 
 template<class Tensor, class IndexT>
 IndexT index_in_common(const Tensor& A, const Tensor& B, IndexType t)
@@ -213,7 +210,7 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     for(int j = 1; j <= to_orth.r(); ++j) 
     { 
         const IndexT& I = to_orth.index(j);
-        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex ))
+        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex() ))
         {
             if(I.type() == Link) ++unique_link;
             comb.addleft(I);
@@ -886,11 +883,5 @@ void sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, in
     return;
 } // void sum(const std::vector<MPSType>& terms, Real cut, int maxm, MPSType& res)
 
-
-#ifdef THIS_IS_MAIN
-Real truncerror = 0.0;
-Real svdtruncerr = 0.0;
-bool showeigs = false;
-#endif
 
 #endif

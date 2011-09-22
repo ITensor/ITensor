@@ -119,7 +119,11 @@ class IndexDat
     mutable unsigned int numref;
     const bool is_static_;
 public:
-    static UniqueID lastID;
+    static const UniqueID& nextID()
+    {
+        static UniqueID lastID_;
+        return ++lastID_;
+    }
 
     IndexType _type;
     boost::uuids::uuid ind;
@@ -142,7 +146,7 @@ public:
     IndexDat(const std::string& name="", int mm = 1,IndexType it=Link) :
     numref(0), is_static_(false),
     _type(it), 
-    ind(++lastID),
+    ind(nextID()),
     m_(mm), 
     sname(name)
 	{ 
@@ -183,6 +187,30 @@ public:
         set_unique_Real(); 
 	}
 
+    static IndexDat* Null()
+    {
+        static IndexDat Null_(makeNull);
+        return &Null_;
+    }
+
+    static IndexDat* ReImDat()
+    {
+        static IndexDat ReImDat_(makeReIm);
+        return &ReImDat_;
+    }
+
+    static IndexDat* ReImDatP()
+    {
+        static IndexDat ReImDatP_(makeReImP);
+        return &ReImDatP_;
+    }
+
+    static IndexDat* ReImDatPP()
+    {
+        static IndexDat ReImDatPP_(makeReImPP);
+        return &ReImDatPP_;
+    }
+
     friend inline void ::boost::intrusive_ptr_add_ref(IndexDat* p);
     friend inline void ::boost::intrusive_ptr_release(IndexDat* p);
     int count() const { return numref; }
@@ -197,7 +225,7 @@ namespace boost
     inline void intrusive_ptr_release(IndexDat* p) { if(!p->is_static_ && --(p->numref) == 0){ delete p; } }
 }
 
-extern IndexDat IndexDatNull, IndReDat, IndReDatP, IndReDatPP;
+//extern IndexDat IndexDatNull, IndReDat, IndReDatP, IndReDatPP;
 
 struct IndexVal;
 
@@ -220,8 +248,10 @@ public:
 
     inline std::string showm() const { return (boost::format("m=%d")%(p->m_)).str(); }
     Real unique_Real() const { return p->ur*(1+primelevel_); }
-    inline bool is_null() const { return (p == &IndexDatNull); }
-    inline bool is_not_null() const { return (p != &IndexDatNull); }
+    //inline bool is_null() const { return (p == &IndexDatNull); }
+    //inline bool is_not_null() const { return (p != &IndexDatNull); }
+    inline bool is_null() const { return (p == IndexDat::Null()); }
+    inline bool is_not_null() const { return (p != IndexDat::Null()); }
     int count() const { return p->count(); }
 
     inline int primeLevel() const { return primelevel_; }
@@ -230,7 +260,7 @@ public:
     //-----------------------------------------------
     //Index: Constructors
 
-    Index() : p(&IndexDatNull), primelevel_(0) { }
+    Index() : p(IndexDat::Null()), primelevel_(0) { }
 
     Index(const std::string& name, int mm = 1, IndexType it=Link, int plev = 0) 
 	: p(new IndexDat(name,mm,it)), primelevel_(plev) { }
@@ -240,13 +270,13 @@ public:
     Index(Imaker im)
 	{
         if(im == makeNull)
-            p = &IndexDatNull, primelevel_ = 0;
+            p = IndexDat::Null(), primelevel_ = 0;
         else if(im == makeReIm)
-            p = &IndReDat, primelevel_ = 0;
+            p = IndexDat::ReImDat(), primelevel_ = 0;
         else if(im == makeReImP)
-            p = &IndReDatP,  primelevel_ = 1;
+            p = IndexDat::ReImDatP(),  primelevel_ = 1;
         else if(im == makeReImPP)
-            p = &IndReDatPP,  primelevel_ = 2;
+            p = IndexDat::ReImDatPP(),  primelevel_ = 2;
         else Error("Unrecognized Imaker type.");
 	}
 
@@ -256,6 +286,30 @@ public:
         primelevel_ = other.primelevel_;
         for(int i = 1; i <= primeinc; ++i) doprime(pt);
 	}
+
+    static const Index& Null()
+    {
+        static const Index Null_(makeNull);
+        return Null_;
+    }
+
+    static const Index& IndReIm()
+    {
+        static const Index IndReIm_(makeReIm);
+        return IndReIm_;
+    }
+
+    static const Index& IndReImP()
+    {
+        static const Index IndReImP_(makeReImP);
+        return IndReImP_;
+    }
+
+    static const Index& IndReImPP()
+    {
+        static const Index IndReImPP_(makeReImPP);
+        return IndReImPP_;
+    }
 
     //-----------------------------------------------
     //Index: Operators
@@ -348,7 +402,6 @@ public:
     void conj() { } //for forward compatibility with arrows
 
 }; //class Index
-extern Index IndNull, IndReIm, IndReImP, IndReImPP;
 
 template <class T> 
 T conj(T res) { res.conj(); return res; }
@@ -357,29 +410,21 @@ struct IndexVal
 {
     Index ind; 
     int i;
-    IndexVal() : ind(IndNull),i(0) { }
+    IndexVal() : ind(Index::Null()),i(0) { }
     IndexVal(const Index& index, int i_) : ind(index),i(i_) { assert(i <= ind.m()); }
     bool operator==(const IndexVal& other) const { return (ind == other.ind && i == other.i); }
     inline friend std::ostream& operator<<(std::ostream& s, const IndexVal& iv)
     { return s << "IndexVal: i = " << iv.i << ", ind = " << iv.ind << "\n"; }
     IndexVal primed() const { return IndexVal(ind.primed(),i); }
+
+    static const IndexVal& Null()
+    {
+        static const IndexVal Null_(Index::Null(),1);
+        return Null_;
+    }
 };
-extern IndexVal IVNull;
 
 inline IndexVal Index::operator()(int i) const 
 { return IndexVal(*this,i); }
-
-#ifdef THIS_IS_MAIN
-UniqueID IndexDat::lastID; 
-IndexDat IndexDatNull(makeNull);
-IndexDat IndReDat(makeReIm);
-IndexDat IndReDatP(makeReImP);
-IndexDat IndReDatPP(makeReImPP);
-Index IndNull(makeNull);
-Index IndReIm(makeReIm);
-Index IndReImP(makeReImP);
-Index IndReImPP(makeReImPP);
-IndexVal IVNull(IndNull,1);
-#endif //THIS_IS_MAIN
 
 #endif

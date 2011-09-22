@@ -168,7 +168,11 @@ public:
     typedef IndexVal IndexValT;
     typedef Combiner CombinerT;
     typedef boost::array<Index,NMAX+1>::const_iterator index_it;
-    static const Index& ReImIndex;
+    //static const Index& ReImIndex;
+    static const Index& ReImIndex()
+    {
+        return Index::IndReIm();
+    }
 private:
     //mutable: const methods may want to reshape data
     mutable boost::intrusive_ptr<ITDat> p; 
@@ -246,7 +250,7 @@ private:
         for(int n = 0; n < r_; ++n)
         {
             const Index& i = I[n];
-            DO_IF_DEBUG(if(i == IndNull) \
+            DO_IF_DEBUG(if(i == Index::Null()) \
             Error("ITensor: null Index in constructor.");)
             if(i.m()==1) { GET(index1_,++r1_) = &i; }
             else         { GET(index_, ++rn_) = i; alloc_size *= i.m(); }
@@ -302,9 +306,9 @@ private:
     int _ind2(const IndexVal& iv1, const IndexVal& iv2) const;
 
     int _ind8(const IndexVal& iv1, const IndexVal& iv2, 
-              const IndexVal& iv3, const IndexVal& iv4 = IVNull, 
-              const IndexVal& iv5 = IVNull,const IndexVal& iv6 = IVNull,
-              const IndexVal& iv7 = IVNull,const IndexVal& iv8 = IVNull)
+              const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
+              const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
+              const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
     const;
 
 public:
@@ -320,8 +324,8 @@ public:
 
     inline bool is_null() const { return (p == 0); }
     inline bool is_not_null() const { return (p != 0); }
-    inline bool is_complex() const { return hasindexn(IndReIm); }
-    inline bool is_not_complex() const { return !hasindexn(IndReIm); }
+    inline bool is_complex() const { return hasindexn(Index::IndReIm()); }
+    inline bool is_not_complex() const { return !hasindexn(Index::IndReIm()); }
 
     inline LogNumber scale() const { return scale_; }
 
@@ -386,13 +390,13 @@ public:
     }
 
     ITensor(Index i1, Index i2, Index i3,
-            Index i4 = IndNull, Index i5 = IndNull, Index i6 = IndNull,
-            Index i7 = IndNull, Index i8 = IndNull)
+            Index i4 = Index::Null(), Index i5 = Index::Null(), Index i6 = Index::Null(),
+            Index i7 = Index::Null(), Index i8 = Index::Null())
             : rn_(0)
     {
         boost::array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
         int size = 3;
-        while(ii[size] != IndNull) ++size;
+        while(ii[size] != Index::Null()) ++size;
         int alloc_size = fillFromIndices(ii,size);
         allocate(alloc_size);
     }
@@ -410,16 +414,16 @@ public:
     }
 
     ITensor(const IndexVal& iv1, const IndexVal& iv2, 
-            const IndexVal& iv3, const IndexVal& iv4 = IVNull, 
-            const IndexVal& iv5 = IVNull, const IndexVal& iv6 = IVNull, 
-            const IndexVal& iv7 = IVNull, const IndexVal& iv8 = IVNull)
+            const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
+            const IndexVal& iv5 = IndexVal::Null(), const IndexVal& iv6 = IndexVal::Null(), 
+            const IndexVal& iv7 = IndexVal::Null(), const IndexVal& iv8 = IndexVal::Null())
             : rn_(0)
 	{
         //Construct ITensor
         boost::array<Index,NMAX+1> ii = 
             {{ iv1.ind, iv2.ind, iv3.ind, iv4.ind, iv5.ind, 
                iv6.ind, iv7.ind, iv8.ind }};
-        int size = 3; while(size < NMAX && ii[size+1] != IVNull.ind) ++size;
+        int size = 3; while(size < NMAX && ii[size+1] != IndexVal::Null().ind) ++size;
         int alloc_size = fillFromIndices(ii,size);
         allocate(alloc_size);
 
@@ -469,7 +473,7 @@ public:
 
     ITensor(ITmaker itm) : r_(1), rn_(1)
 	{
-        GET(index_,1) = IndReIm; allocate(2);
+        GET(index_,1) = Index::IndReIm(); allocate(2);
         if(itm == makeComplex_1)  { p->v(1) = 1; }
         if(itm == makeComplex_i)  { p->v(2) = 1; }
         if(itm == makeConjTensor) { p->v(1) = 1; p->v(2) = -1; }
@@ -798,9 +802,9 @@ public:
     }
 
     inline Real& operator()(const IndexVal& iv1, const IndexVal& iv2, 
-                    const IndexVal& iv3, const IndexVal& iv4 = IVNull, 
-                    const IndexVal& iv5 = IVNull,const IndexVal& iv6 = IVNull,
-                    const IndexVal& iv7 = IVNull,const IndexVal& iv8 = IVNull)
+                    const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
+                    const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
+                    const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
     {
 	    assert(p != 0); 
         solo(); 
@@ -809,9 +813,9 @@ public:
     }
 
     inline const Real operator()(const IndexVal& iv1, const IndexVal& iv2, 
-                    const IndexVal& iv3, const IndexVal& iv4 = IVNull, 
-                    const IndexVal& iv5 = IVNull,const IndexVal& iv6 = IVNull,
-                    const IndexVal& iv7 = IVNull,const IndexVal& iv8 = IVNull) const
+                    const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
+                    const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
+                    const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null()) const
 	{
 	    assert(p != 0); 
         return scale_.real()*p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
@@ -923,12 +927,12 @@ public:
 	{
 	re = *this; im = *this;
 	if(!is_complex()) { im *= 0; return; }
-	//re *= IndReIm(1); im *= IndReIm(2);
+	//re *= Index::IndReIm()(1); im *= Index::IndReIm()(2);
 
-	re.mapindex(IndReIm,IndReImP);
-	im.mapindex(IndReIm,IndReImP);
-	re *= IndReImP(1);
-	im *= IndReImP(2);
+	re.mapindex(Index::IndReIm(),Index::IndReImP());
+	im.mapindex(Index::IndReIm(),Index::IndReImP());
+	re *= Index::IndReImP()(1);
+	im *= Index::IndReImP()(2);
 	}
 
     inline void conj() { if(!is_complex()) return; operator/=(ConjTensor); }
@@ -1033,7 +1037,6 @@ inline ITAssigner operator<<(ITensor& T, Real r) { return ITAssigner(T,r); }
 ITensor Complex_1(makeComplex_1), 
         Complex_i(makeComplex_i), 
         ConjTensor(makeConjTensor);
-const Index& ITensor::ReImIndex = IndReIm;
 #endif
 
 #endif

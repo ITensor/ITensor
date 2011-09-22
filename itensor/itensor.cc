@@ -654,16 +654,16 @@ ITensor& ITensor::operator*=(const ITensor& other)
 {
     //Complex types are treated as just another index, of type ReIm
     //Multiplication is handled automatically with these simple tensor helpers
-    if(findindexn(IndReIm) && other.findindexn(IndReIm) && !other.findindexn(IndReImP)
-	    && !other.hasindex(IndReImPP) && !hasindex(IndReImP) && !hasindex(IndReImPP))
+    if(findindexn(Index::IndReIm()) && other.findindexn(Index::IndReIm()) && !other.findindexn(Index::IndReImP())
+	    && !other.hasindex(Index::IndReImPP()) && !hasindex(Index::IndReImP()) && !hasindex(Index::IndReImPP()))
 	{
-        static ITensor primer(IndReIm,IndReImP,1.0);
-        static ITensor primerP(IndReIm,IndReImPP,1.0);
-        static ITensor prod(IndReIm,IndReImP,IndReImPP);
+        static ITensor primer(Index::IndReIm(),Index::IndReImP(),1.0);
+        static ITensor primerP(Index::IndReIm(),Index::IndReImPP(),1.0);
+        static ITensor prod(Index::IndReIm(),Index::IndReImP(),Index::IndReImPP());
         static bool first = true;
         if(first)
         {
-            IndexVal iv0(IndReIm,1), iv1(IndReImP,1), iv2(IndReImPP,1);
+            IndexVal iv0(Index::IndReIm(),1), iv1(Index::IndReImP(),1), iv2(Index::IndReImPP(),1);
             iv0.i = 1; iv1.i = 1; iv2.i = 1; prod(iv0,iv1,iv2) = 1.0;
             iv0.i = 1; iv1.i = 2; iv2.i = 2; prod(iv0,iv1,iv2) = -1.0;
             iv0.i = 2; iv1.i = 2; iv2.i = 1; prod(iv0,iv1,iv2) = 1.0;
@@ -946,7 +946,7 @@ void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, cons
     if(nrow != res.Nrows()) Error("toMatrix22: wrong number of rows");
     if(ncol != res.Ncols()) Error("toMatrix22: wrong number of cols");
     res.ReDimension(nrow,ncol);
-    const boost::array<Index,NMAX+1> reshuf = {{ IndNull, i3, i4, i1, i2, IndNull, IndNull, IndNull, IndNull }};
+    const boost::array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i4, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; getperm(reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
@@ -975,7 +975,7 @@ void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matr
     assert(hasindex(i1));
     assert(hasindex(i2));
     res.ReDimension(i1.m()*i2.m(),i3.m());
-    const boost::array<Index,NMAX+1> reshuf = {{ IndNull, i3, i1, i2, IndNull, IndNull, IndNull, IndNull, IndNull }};
+    const boost::array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; getperm(reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
@@ -989,7 +989,7 @@ void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matr
     assert(hasindex(i2));
     assert(hasindex(i3));
     res.ReDimension(i1.m(),i2.m()*i3.m());
-    const boost::array<Index,NMAX+1> reshuf = {{ IndNull, i2, i3, i1, IndNull, IndNull, IndNull, IndNull, IndNull }};
+    const boost::array<Index,NMAX+1> reshuf = {{ Index::Null(), i2, i3, i1, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; getperm(reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
@@ -1049,16 +1049,16 @@ void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im,
 	{
         ITensor res = (doconj ? conj(x) : x); res *= y;
         if(res.r() != 1) error("Bad Dot 334234");
-        re = res(IndReIm(1));
-        im = res(IndReIm(2));
+        re = res(Index::IndReIm()(1));
+        im = res(Index::IndReIm()(2));
         return;
 	}
     else if(y.is_complex())
 	{
         ITensor res = x; res *= y;
         if(res.r() != 1) error("Bad Dot 47298789");
-        re = res(IndReIm(1));
-        im = res(IndReIm(2));
+        re = res(Index::IndReIm()(1));
+        im = res(Index::IndReIm()(2));
         return;
 	}
     if(x.r() != y.r()) 
