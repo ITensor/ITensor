@@ -366,6 +366,20 @@ public:
         res(Emp(i),EmpP(i)) = 1; res(Occ(i),OccP(i)) = -1;
         return res;
     }
+
+    SiteOp projEmp(int i) const
+    {
+        SiteOp res(si(i));
+        res(Emp(i),EmpP(i)) = 1;
+        return res;
+    }
+
+    SiteOp projOcc(int i) const
+    {
+        SiteOp res(si(i));
+        res(Occ(i),OccP(i)) = 1;
+        return res;
+    }
 };
 
 } //end namespace Spinless
