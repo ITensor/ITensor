@@ -191,6 +191,74 @@ public:
         iq_.push_back(inqn(i4,q4));
     }
 
+    IQIndexDat(const Index& i1, const QN& q1,
+               const Index& i2, const QN& q2,
+               const Index& i3, const QN& q3,
+               const Index& i4, const QN& q4,
+               const Index& i5, const QN& q5)
+    : numref(0), is_static_(false)
+    {
+        iq_.push_back(inqn(i1,q1));
+        iq_.push_back(inqn(i2,q2));
+        iq_.push_back(inqn(i3,q3));
+        iq_.push_back(inqn(i4,q4));
+        iq_.push_back(inqn(i5,q5));
+    }
+
+    IQIndexDat(const Index& i1, const QN& q1,
+               const Index& i2, const QN& q2,
+               const Index& i3, const QN& q3,
+               const Index& i4, const QN& q4,
+               const Index& i5, const QN& q5,
+               const Index& i6, const QN& q6)
+    : numref(0), is_static_(false)
+    {
+        iq_.push_back(inqn(i1,q1));
+        iq_.push_back(inqn(i2,q2));
+        iq_.push_back(inqn(i3,q3));
+        iq_.push_back(inqn(i4,q4));
+        iq_.push_back(inqn(i5,q5));
+        iq_.push_back(inqn(i6,q6));
+    }
+
+    IQIndexDat(const Index& i1, const QN& q1,
+               const Index& i2, const QN& q2,
+               const Index& i3, const QN& q3,
+               const Index& i4, const QN& q4,
+               const Index& i5, const QN& q5,
+               const Index& i6, const QN& q6,
+               const Index& i7, const QN& q7)
+    : numref(0), is_static_(false)
+    {
+        iq_.push_back(inqn(i1,q1));
+        iq_.push_back(inqn(i2,q2));
+        iq_.push_back(inqn(i3,q3));
+        iq_.push_back(inqn(i4,q4));
+        iq_.push_back(inqn(i5,q5));
+        iq_.push_back(inqn(i6,q6));
+        iq_.push_back(inqn(i7,q7));
+    }
+
+    IQIndexDat(const Index& i1, const QN& q1,
+               const Index& i2, const QN& q2,
+               const Index& i3, const QN& q3,
+               const Index& i4, const QN& q4,
+               const Index& i5, const QN& q5,
+               const Index& i6, const QN& q6,
+               const Index& i7, const QN& q7,
+               const Index& i8, const QN& q8)
+    : numref(0), is_static_(false)
+    {
+        iq_.push_back(inqn(i1,q1));
+        iq_.push_back(inqn(i2,q2));
+        iq_.push_back(inqn(i3,q3));
+        iq_.push_back(inqn(i4,q4));
+        iq_.push_back(inqn(i5,q5));
+        iq_.push_back(inqn(i6,q6));
+        iq_.push_back(inqn(i7,q7));
+        iq_.push_back(inqn(i8,q8));
+    }
+
     IQIndexDat(std::vector<inqn>& ind_qn)
     : numref(0), is_static_(false)
     { iq_.swap(ind_qn); }
@@ -342,6 +410,24 @@ public:
         if(i2.type() != i1.type() 
         || i3.type() != i1.type()
         || i4.type() != i1.type())
+            Error("Indices must have the same type");
+    }
+
+    IQIndex(const std::string& name, 
+            const Index& i1, const QN& q1, 
+            const Index& i2, const QN& q2,
+            const Index& i3, const QN& q3,
+            const Index& i4, const QN& q4,
+            const Index& i5, const QN& q5,
+            Arrow dir = Out) 
+    : Index(name,i1.m()+i2.m()+i3.m()+i4.m()+i5.m(),i1.type()), _dir(dir),
+    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4,i5,q5))
+    {
+        primeLevel(i1.primeLevel());
+        if(i2.type() != i1.type() 
+        || i3.type() != i1.type()
+        || i4.type() != i1.type()
+        || i5.type() != i1.type())
             Error("Indices must have the same type");
     }
 

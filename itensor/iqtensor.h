@@ -20,30 +20,47 @@ public:
 
     IQTDat() : numref(0), rmap_init(false) { }
 
-    explicit IQTDat(const IQIndex& i1): numref(0), rmap_init(false), iqindex_(1)
+    explicit IQTDat(const IQIndex& i1)
+    : numref(0), rmap_init(false), iqindex_(1)
     { 
         iqindex_[0] = i1; 
     }
 
-    IQTDat(const IQIndex& i1, const IQIndex& i2): numref(0), rmap_init(false), iqindex_(2)
+    IQTDat(const IQIndex& i1, const IQIndex& i2)
+    : numref(0), rmap_init(false), iqindex_(2)
     { 
         iqindex_[0] = i1; 
         iqindex_[1] = i2; 
     }
 
-    IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3): numref(0), rmap_init(false), iqindex_(3)
+    IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
+    : numref(0), rmap_init(false), iqindex_(3)
     { 
         iqindex_[0] = i1; 
         iqindex_[1] = i2; 
         iqindex_[2] = i3; 
     }
 
-    IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3, const IQIndex& i4): numref(0), rmap_init(false), iqindex_(4)
+    IQTDat(const IQIndex& i1, const IQIndex& i2, 
+           const IQIndex& i3, const IQIndex& i4,
+           const IQIndex& i5 = IQIndex::Null(), 
+           const IQIndex& i6 = IQIndex::Null(), 
+           const IQIndex& i7 = IQIndex::Null(), 
+           const IQIndex& i8 = IQIndex::Null())
+    : numref(0), rmap_init(false), iqindex_(4)
     { 
         iqindex_[0] = i1; 
         iqindex_[1] = i2; 
         iqindex_[2] = i3; 
         iqindex_[3] = i4; 
+        if(i5 != IQIndex::Null()) 
+            iqindex_.push_back(i5);
+        if(i6 != IQIndex::Null()) 
+            iqindex_.push_back(i6);
+        if(i7 != IQIndex::Null()) 
+            iqindex_.push_back(i7);
+        if(i8 != IQIndex::Null()) 
+            iqindex_.push_back(i8);
     }
 
     explicit IQTDat(std::vector<IQIndex>& iqinds_) : numref(0), rmap_init(false) { iqindex_.swap(iqinds_); }
@@ -184,8 +201,31 @@ public:
     : p(new IQTDat(i1,i2,i3))
     { }
 
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,const IQIndex& i4) 
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
+             const IQIndex& i4) 
     : p(new IQTDat(i1,i2,i3,i4))
+    { }
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
+             const IQIndex& i4,const IQIndex& i5)
+    : p(new IQTDat(i1,i2,i3,i4,i5))
+    { }
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
+             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6)
+    : p(new IQTDat(i1,i2,i3,i4,i5,i6))
+    { }
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
+             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6,
+             const IQIndex& i7)
+    : p(new IQTDat(i1,i2,i3,i4,i5,i6,i7))
+    { }
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
+             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6,
+             const IQIndex& i7,const IQIndex& i8)
+    : p(new IQTDat(i1,i2,i3,i4,i5,i6,i7,i8))
     { }
 
     explicit IQTensor(std::vector<IQIndex>& iqinds_) 
@@ -349,7 +389,7 @@ public:
         }
         const ITensor& t = p->itensor.front();
         for(int j = 1; j <= t.r(); ++j)
-        { div_ += qn(t.index(j))*dir(t.index(j)); }
+            { div_ += qn(t.index(j))*dir(t.index(j)); }
         return div_;
     }
 
