@@ -68,7 +68,7 @@ public:
 
     void reset()
     {
-        left.clear();
+        rl_ = 0;
         initted = false;
     }
 
