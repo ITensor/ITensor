@@ -10,13 +10,13 @@ class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
     mutable std::map<std::pair<Index,int>,Index > small_to_big;
 
     // Use connections in t to create groupings; big = uncondensed, small = cond
-    void init(const IQIndex& _bigind, const std::string& smallind_name)
+    void init(const std::string& smallind_name)
     {
         /* May not be appropriate when orthogonalizing MPOs
            Could be a hint that there is a better way...
-        if(_bigind.dir() != _smallind.dir())
+        if(bigind_.dir() != _smallind.dir())
         {
-            std::cerr << "_bigind = " << _bigind << std::endl;
+            std::cerr << "bigind_ = " << bigind_ << std::endl;
             std::cerr << "_smallind = " << _smallind << std::endl;
             Error("Arrow dirs not the same in Condenser.");
         }
@@ -47,7 +47,8 @@ class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
             }
             iq.push_back(inqn(small_qind,q));
         }
-        smallind_ = IQIndex(smallind_name,iq,_bigind.dir(),_bigind.primeLevel());
+        smallind_ = IQIndex(smallind_name,iq,bigind_.dir(),bigind_.primeLevel());
+        bigind_.conj();
     }
 public:
     const IQIndex& bigind() const   { return bigind_; }
@@ -55,16 +56,22 @@ public:
     
     Condenser() { }
 
-    Condenser(const IQIndex& _bigind, IQIndex& _smallind)
-        : bigind_(_bigind) //Use connections in bigind to create groupings
-    { init(_bigind,_smallind.name()); _smallind = smallind_; }
+    Condenser(const IQIndex& bigindex, IQIndex& smallindex)
+    : bigind_(bigindex) //Use connections in bigind to create groupings
+    { init(smallindex.name()); smallindex = smallind_; }
 
-    Condenser(const IQIndex& _bigind, const std::string& smallind_name)
-    : bigind_(_bigind)
-    { init(_bigind,smallind_name); }
+    Condenser(const IQIndex& bigindex, const std::string& smallind_name)
+    : bigind_(bigindex)
+    { init(smallind_name); }
 
     IQTensor operator*(const IQTensor& t) { IQTensor res; product(t,res); return res; }
     friend inline IQTensor operator*(const IQTensor& t, const Condenser& c) { IQTensor res; c.product(t,res); return res; }
+
+    void conj()
+    {
+        bigind_.conj();
+        smallind_.conj();
+    }
 
     void product(const IQTensor& t, IQTensor& res) const
     {
@@ -77,8 +84,24 @@ public:
         for(int j = 1; j <= t.r(); ++j)
         {
             iqinds.push_back(t.index(j));
-            if(iqinds.back() == smallind_) smallind_pos = (j-1);
-            else if(iqinds.back() == bigind_) bigind_pos = (j-1);
+            if(iqinds.back() == smallind_) 
+            {
+                if(iqinds.back().dir() == smallind_.dir())
+                {
+                    Print(smallind_);
+                    Error("Incompatible Arrow for smallind");
+                }
+                smallind_pos = (j-1);
+            }
+            else if(iqinds.back() == bigind_) 
+            {
+                if(iqinds.back().dir() == bigind_.dir())
+                {
+                    Print(bigind_);
+                    Error("Incompatible Arrow for bigind");
+                }
+                bigind_pos = (j-1);
+            }
         }
 
         if(smallind_pos != -2) //expand condensed form into uncondensed
@@ -228,20 +251,21 @@ public:
 class IQCombiner
 {
     std::vector<IQIndex> left;
-    mutable IQIndex _right;
+    mutable IQIndex right_;
     mutable std::map<ApproxReal, Combiner> setcomb;
     mutable std::map<Index, Combiner> rightcomb;
     mutable bool initted;
 
     mutable Condenser cond;
-    mutable IQIndex cindex;
+    mutable IQIndex ucright_;
     bool do_condense;
 public:
 
+    bool doCondense() const { return do_condense; }
     void doCondense(bool val) 
     {
         if(initted) 
-            Error("IQCombiner: can't set doCondense after already initted.");
+            Error("Can't set doCondense after already initted.");
         do_condense = val;
     }
 
@@ -252,6 +276,7 @@ public:
 	    const IQIndex& l5 = IQIndex::Null(), const IQIndex& l6 = IQIndex::Null() )
         : initted(false), do_condense(false)
 	{
+        if(l1 == IQIndex::Null()) Error("Null IQIndex");
         if(l1 != IQIndex::Null()) left.push_back(l1); 
         if(l2 != IQIndex::Null()) left.push_back(l2);
         if(l3 != IQIndex::Null()) left.push_back(l3); 
@@ -269,11 +294,11 @@ public:
 
     void addleft(const IQIndex& l) 	// Include another left index
 	{ 
+        if(l == IQIndex::Null()) Error("Null IQIndex");
         left.push_back(l);
         //Flip arrows to make combiner compatible with
         //the IQTensor from which it got its left indices
         left.back().conj();
-        //assert(l.dir() != left.front().dir());
         initted = false;
 	}
 
@@ -328,12 +353,12 @@ public:
         }
         if(do_condense) 
         {
-            cindex = IQIndex(rname,iq,rdir,plev);
+            ucright_ = IQIndex(rname,iq,rdir,plev);
             std::string cname = "cond::" + rname;
-            cond = Condenser(cindex,cname);
-            _right = cond.smallind();
+            cond = Condenser(ucright_,cname);
+            right_ = cond.smallind();
         }
-        else _right = IQIndex(rname,iq,rdir,plev);
+        else right_ = IQIndex(rname,iq,rdir,plev);
 
         initted = true;
 	}
@@ -342,11 +367,11 @@ public:
     {
         if(!initted) Error("IQCombiner::operator IQTensor(): IQCombiner not initialized.");
 
-        //if(_right.m() > 16) 
+        //if(right_.m() > 16) 
         //{ std::cerr << std::endl << std::endl << "WARNING: too large of an m in IQCombiner::operator IQTensor(). May be inefficient!" << std::endl << std::endl; }
 
         std::vector<IQIndex> iqinds(left);
-        iqinds.push_back((do_condense ? cindex : _right));
+        iqinds.push_back((do_condense ? ucright_ : right_));
         IQTensor res(iqinds);
         for(std::map<ApproxReal,Combiner>::const_iterator it = setcomb.begin();
             it != setcomb.end(); 
@@ -365,7 +390,7 @@ public:
     const IQIndex& right() const 
     { 
         if(!initted) Error("IQCombiner::right(): IQCombiner not initialized.");
-        return _right; 
+        return right_;
     }
 
     int findindex(const IQIndex& i) const
@@ -392,7 +417,12 @@ public:
     { 
         if(!initted) Error("IQCombiner::conj(): IQCombiner not initialized.");
         foreach(IQIndex& I, left) I.conj(); 
-        (do_condense ? cindex : _right).conj(); 
+        if(do_condense) 
+        {
+            cond.conj();
+            ucright_.conj();
+        }
+        right_.conj();
     }
 
     inline friend std::ostream& operator<<(std::ostream & s, const IQCombiner & c)
@@ -415,16 +445,16 @@ public:
 
         int j;
         //t has right IQIndex, expand it
-        if((j = t.findindex(_right)) != 0)
+        if((j = t.findindex(right_)) != 0)
         {
             IQTensor t_uncondensed;
             if(do_condense) 
             { 
                 cond.product(t,t_uncondensed); 
-                j = t_uncondensed.findindex(cindex);
+                j = t_uncondensed.findindex(ucright_);
             }
             const IQTensor& t_ = (do_condense ? t_uncondensed : t);
-            const IQIndex& r = (do_condense ? cindex : _right);
+            const IQIndex& r = (do_condense ? ucright_ : right_);
 
             if(t_.index(j).dir() == r.dir())
             {
@@ -452,13 +482,14 @@ public:
 
             //res will have all IQIndex's of t not in the left of c
             foreach(const IQIndex& I, t.iqinds()) 
-            { if(!hasindex(I)) iqinds.push_back(I); }
+                { if(!hasindex(I)) iqinds.push_back(I); }
             //and res will have c's right IQIndex
-            if(do_condense) iqinds.push_back(cindex);
-            else            iqinds.push_back(_right);
+            if(do_condense) iqinds.push_back(ucright_);
+            else            iqinds.push_back(right_);
 
             res = IQTensor(iqinds);
 
+            //Check left indices
             for(std::vector<IQIndex>::const_iterator I = left.begin(); I != left.end(); ++I)
             {
                 if((j = t.findindex(*I)) == 0)
@@ -471,13 +502,16 @@ public:
                     Error("bad IQCombiner IQTensor product");
                 }
                 else //IQIndex is in left
-                if(t.index(j).dir() == I->dir())
                 {
-                    std::cerr << "IQTensor = " << t << std::endl;
-                    std::cerr << "IQCombiner = " << *this << std::endl;
-                    std::cerr << "IQIndex from IQTensor = " << t.index(j) << std::endl;
-                    std::cerr << "(Left) IQIndex from IQCombiner = " << *I << std::endl;
-                    Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
+                    //Check arrow directions
+                    if(t.index(j).dir() == I->dir())
+                    {
+                        std::cerr << "IQTensor = " << t << std::endl;
+                        std::cerr << "IQCombiner = " << *this << std::endl;
+                        std::cerr << "IQIndex from IQTensor = " << t.index(j) << std::endl;
+                        std::cerr << "(Left) IQIndex from IQCombiner = " << *I << std::endl;
+                        Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
+                    }
                 }
             }
 
@@ -486,8 +520,8 @@ public:
                 Real rse = 0;
                 for(int k = 1; k <= i->r(); ++k)
                 {
-                if(hasindex(i->index(k))) 
-                { rse += i->index(k).unique_Real(); }
+                    if(hasindex(i->index(k))) 
+                        rse += i->index(k).unique_Real();
                 }
 
                 if(setcomb.count(rse) == 0)

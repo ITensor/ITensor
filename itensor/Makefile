@@ -62,7 +62,7 @@ itensor.o: $(HEADERS)
 HEADERS+= iqindex.h iqtensor.h
 iqtensor.o: $(HEADERS)
 .debug_objs/iqtensor.o: $(HEADERS)
-HEADERS+= mps.h
+HEADERS+= combiner.h iqcombiner.h mps.h
 mps.o: $(HEADERS)
 .debug_objs/mps.o: $(HEADERS)
 HEADERS+= mpo.h
