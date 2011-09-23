@@ -66,6 +66,12 @@ public:
 
     inline bool isInit() const { return initted; }
 
+    void reset()
+    {
+        left.clear();
+        initted = false;
+    }
+
     void addleft(const Index& l)// Include another left index
 	{ 
         initted = false;

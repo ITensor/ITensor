@@ -260,6 +260,13 @@ public:
         if(l6 != IQIndex::Null()) left.push_back(l6);
         foreach(IQIndex& L, left) L.conj();
 	}
+    
+    void reset()
+    {
+        left.clear();
+        initted = false;
+    }
+
     void addleft(const IQIndex& l) 	// Include another left index
 	{ 
         left.push_back(l);
