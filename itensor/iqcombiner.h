@@ -273,7 +273,7 @@ public:
     inline bool isInit() const { return initted; }
 
     // Initialize after all lefts are there and before being used
-    void init(std::string rname = "combined", IndexType = Link, 
+    void init(std::string rname = "combined", IndexType type = Link, 
               int primelevel = -1) const 
 	{
         if(initted) return;
@@ -313,7 +313,7 @@ public:
                 co.addleft(i); 
                 rss += i.unique_Real(); 
             }
-            co.init(rname+q.toString());
+            co.init(rname+q.toString(),type,plev);
 
             iq.push_back(inqn(co.right(),q));
             setcomb[ApproxReal(rss)] = co;
