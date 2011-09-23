@@ -14,5 +14,23 @@ BOOST_AUTO_TEST_CASE(Null)
     CHECK(i2.is_not_null());
 }
 
+BOOST_AUTO_TEST_CASE(Primes)
+{
+    Index I("I");
+
+    I = I.primed();
+    CHECK_EQUAL(I.primeLevel(),1);
+
+    I = I.primed();
+    CHECK_EQUAL(I.primeLevel(),2);
+
+    I = I.primed(7);
+    CHECK_EQUAL(I.primeLevel(),9);
+
+    I = I.primed(-7);
+    CHECK_EQUAL(I.primeLevel(),2);
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

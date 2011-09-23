@@ -284,7 +284,7 @@ public:
 	: p(other.p), primelevel_(other.primelevel_)
 	{
         primelevel_ = other.primelevel_;
-        for(int i = 1; i <= primeinc; ++i) doprime(pt);
+        doprime(pt,primeinc);
 	}
 
     static const Index& Null()
