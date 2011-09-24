@@ -8,7 +8,7 @@ REPORT_LEVEL=confirm
 
 HEADERS=test.h
 SOURCES=test.cc matrix_test.cc real_test.cc index_test.cc itensor_test.cc\
-combiner_test.cc iqtensor_test.cc mps_test.cc
+combiner_test.cc iqcombiner_test.cc iqtensor_test.cc mps_test.cc mpo_test.cc
 
 LIBNAMES=matrix utilities itensor
 
@@ -69,8 +69,17 @@ mkdebugdir:
 clean:
 	rm -fr *.o .debug_objs test test-g
 
-real_test.o: $(INCLUDEDIR)/real.h
-index_test.o: $(INCLUDEDIR)/index.h
-itensor_test.o: $(INCLUDEDIR)/index.h $(INCLUDEDIR)/itensor.h
-combiner_test.o: $(INCLUDEDIR)/index.h $(INCLUDEDIR)/itensor.h \
-$(INCLUDEDIR)/combiner.h
+LIBHEADERS=$(INCLUDEDIR)/real.h
+real_test.o: $(LIBHEADERS)
+LIBHEADERS+= $(INCLUDEDIR)/index.h
+index_test.o: $(LIBHEADERS)
+LIBHEADERS+= $(INCLUDEDIR)/itensor.h
+itensor_test.o: $(LIBHEADERS)
+LIBHEADERS+= $(INCLUDEDIR)/combiner.h
+combiner_test.o: $(LIBHEADERS)
+LIBHEADERS+= $(INCLUDEDIR)/iqcombiner.h
+iqcombiner_test.o: $(LIBHEADERS)
+LIBHEADERS+= $(INCLUDEDIR)/mps.h
+mps_test.o: $(LIBHEADERS)
+LIBHEADERS+= $(INCLUDEDIR)/mpo.h
+mpo_test.o: $(LIBHEADERS)
