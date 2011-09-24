@@ -256,45 +256,42 @@ public:
     int niter(int sw) const { return Niter.at(sw); }
 };
 
-//Struct of options for fine-tuning DMRG algorithms
-struct DMRGOpts
+//Class for fine-tuning DMRG algorithms
+class DMRGOpts
 {
 private:
-    int largest_m,max_eigs_bond;
-    Vector max_eigs,center_eigs;
-public:
-    Real bulk_entanglement_gap; //Difference between leading denmat evals at center bond
-    Real bulk_ent_errgoal;
+    Vector center_eigs;
     Real energy_errgoal;    //Stop DMRG once energy has converged to this precision
-    int ntarget;            //Number of states to target
     Real orth_weight;       //How much to penalize non-orthogonality in multiple-state DMRG
     bool printeigs;         //Print slowest decaying eigenvalues after every sweep
+public:
     bool quiet;             //Show/don't show info after every step
 
+    Real energyErrgoal() const { return energy_errgoal; }
+    void energyErrgoal(Real val) { energy_errgoal = val; }
+
+    Real orthWeight() const { return orth_weight; }
+    void orthWeight(Real val) { orth_weight = val; }
+
+    bool printEigs() const { return printeigs; }
+    void printEigs(bool val) { printeigs = val; }
+
     DMRGOpts() : 
-    largest_m(-1),
-    max_eigs_bond(-1),
-    max_eigs(1),
-    center_eigs(1),
-    bulk_entanglement_gap(-1),
-    bulk_ent_errgoal(-1),
     energy_errgoal(-1), 
-    ntarget(1),
     orth_weight(1),
     printeigs(true), 
     quiet(true)
     { }
 
-    template<class MPSType>
-    void measure(int sw, int ha, int b, const MPSType& psi, Real energy)
+    virtual void measure(int sw, int ha, int b, const SVDWorker& svd, Real energy)
     {
         if(printeigs)
         {
             if(b == 1 && ha == 2) 
             {
-                std::cout << "\n    Largest m during sweep " << sw << " was " << psi.svd().maxEigsKept() << "\n";
-                std::cout << "    Largest truncation error: " << psi.svd().maxTruncerr() << "\n";
-                Vector center_eigs = psi.eigsKept(psi.NN()/2);
+                std::cout << "\n    Largest m during sweep " << sw << " was " << svd.maxEigsKept() << "\n";
+                std::cout << "    Largest truncation error: " << svd.maxTruncerr() << "\n";
+                Vector center_eigs = svd.eigsKept(svd.NN()/2);
                 std::cout << "    Eigs at center bond: ";
                 for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                 {
@@ -306,8 +303,7 @@ public:
         }
     }
 
-    template<class MPSType>
-    bool checkDone(int sw, const MPSType& psi, Real energy)
+    virtual bool checkDone(int sw, Real energy)
     {
         static Real last_energy;
 
@@ -327,8 +323,8 @@ public:
     }
 };
 
-template <class Tensor, class DMRGOptions>
-Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOptions& opts)
+template <class Tensor>
+Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOpts& opts)
 {
     const Real orig_cutoff = psi.cutoff(); 
     const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
@@ -360,13 +356,13 @@ Real dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps, DMRGOp
                                       % psi.svd().truncerr(b) % psi.LinkInd(b).showm();
             }
 
-            opts.measure(sw,ha,b,psi,energy);
+            opts.measure(sw,ha,b,psi.svd(),energy);
 
             if(ha == 1 && b != N-1) psi.projectOp(b,Fromleft,PH[b],H.AA(b),PH[b+1]);
             if(ha == 2 && b != 1)   psi.projectOp(b+1,Fromright,PH[b+1],H.AA(b+1),PH[b]);
         } //for loop over b
 
-        if(opts.checkDone(sw,psi,energy))
+        if(opts.checkDone(sw,energy))
         {
             psi.cutoff(orig_cutoff); 
             psi.minm(orig_minm); 

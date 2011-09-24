@@ -66,7 +66,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
             //printdat = false; cerr << "Multiple state phi = " << phi << "\n"; 
 
-            LocalHamOrth<ITensor> lham(leftright[l],leftright[l+1],mpoh,phi,opts.orth_weight);
+            LocalHamOrth<ITensor> lham(leftright[l],leftright[l+1],mpoh,phi,opts.orthWeight());
             lham.other.resize(other.size());
             if(l == 1)
             {
@@ -98,7 +98,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
 
             //Keep track of the largest_m, slowest decaying denmat eigs
-            if(opts.printeigs)
+            if(opts.printEigs())
             {
                 largest_m = max(largest_m,ll.m());
                 //if(deigs.Length() >= max(largest_m,max_eigs.Length()) && max_eigs(max_eigs.Length()) < deigs(max_eigs.Length())) 
@@ -152,10 +152,10 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
         }
 
-        if(opts.energy_errgoal > 0 && sw%2 == 0)
+        if(opts.energyErrgoal() > 0 && sw%2 == 0)
         {
             Real dE = fabs(energy-last_energy);
-            if(dE < opts.energy_errgoal)
+            if(dE < opts.energyErrgoal())
             {
                 cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
                 psi.cutoff(orig_cutoff); 
@@ -393,14 +393,13 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
             { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
 
             //Keep track of the largest_m, slowest decaying denmat eigs
-            if(opts.printeigs)
+            if(opts.printEigs())
             {
                 largest_m = max(largest_m,ll.m());
                 if(lastd(1) < max_eigs(1) && l != 1 && l != (N-1)) { max_eigs = lastd; max_eigs_bond = l; }
                 if(l == psi.NN()/2) 
                 {
                     center_eigs = lastd;
-                    opts.bulk_entanglement_gap = (lastd.Length() >= 2 ? lastd(1)-lastd(2) : 1);
                 }
 
                 if(l == 1 && ha == 2) 
@@ -418,7 +417,6 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
                         cout << boost::format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
                         cout << ((j != min(center_eigs.Length(),10)) ? ", " : "\n");
                     }
-                    cout << boost::format("    Bulk entanglement gap = %f\n") % opts.bulk_entanglement_gap;
 
                     cout << boost::format("    Energy after sweep %d is %f\n") % sw % energy;
                 }
@@ -462,10 +460,10 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
 
         } //for loop over l
 
-        if(opts.energy_errgoal > 0 && sw%2 == 0)
+        if(opts.energyErrgoal() > 0 && sw%2 == 0)
         {
             Real dE = fabs(energy-last_energy);
-            if(dE < opts.energy_errgoal)
+            if(dE < opts.energyErrgoal())
             {
                 cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
                 psi.cutoff(orig_cutoff); 
