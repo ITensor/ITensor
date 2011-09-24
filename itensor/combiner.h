@@ -82,24 +82,12 @@ public:
 
     //Initialize after all lefts are added and before being used
     void init(std::string rname = "combined", IndexType type = Link, 
-    int primelevel = -1) const
+    int primelevel = 0) const
 	{
         if(initted) return;
         int m = 1; 
         for(int i = 1; i <= rl_; ++i) 
             { m *= left_[i].m(); }
-        if(primelevel == -1)
-        {
-            //Prefer to get primelevel from Link inds
-            for(int i = 1; i <= rl_; ++i) 
-            {
-                if(left_[i].type() == Link) 
-                    primelevel = left_[i].primeLevel();
-            }
-            //If no Links, use last left ind
-            if(primelevel == -1) 
-                primelevel = left_[rl_].primeLevel();
-        }
         right_ = Index(rname,m,type,primelevel); 
         initted = true;
     }

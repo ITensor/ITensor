@@ -306,23 +306,19 @@ public:
 
     // Initialize after all lefts are there and before being used
     void init(std::string rname = "combined", IndexType type = Link, 
-              int primelevel = -1) const 
+              int primelevel = 0) const 
 	{
         if(initted) return;
         if(left.size() == 0)
             Error("No left indices in IQCombiner.");
 
         Arrow rdir = Switch*left.back().dir();
-        int plev = 0;
-        if(primelevel == -1) { plev = left.back().primeLevel(); }
-        else                 { plev = primelevel; }
 
         //Prefer to derive right Arrow, primelevel from Link indices
         for(size_t j = 0; j < left.size(); ++j)
         if(left[j].type() == Link) 
         { 
             rdir = Switch*left[j].dir(); 
-            if(primelevel == -1) { plev = left[j].primeLevel(); }
             break;
         }
 
@@ -345,7 +341,7 @@ public:
                 co.addleft(i); 
                 rss += i.unique_Real(); 
             }
-            co.init(rname+q.toString(),type,plev);
+            co.init(rname+q.toString(),type,primelevel);
 
             iq.push_back(inqn(co.right(),q));
             setcomb[ApproxReal(rss)] = co;
@@ -353,12 +349,12 @@ public:
         }
         if(do_condense) 
         {
-            ucright_ = IQIndex(rname,iq,rdir,plev);
+            ucright_ = IQIndex(rname,iq,rdir,primelevel);
             std::string cname = "cond::" + rname;
             cond = Condenser(ucright_,cname);
             right_ = cond.smallind();
         }
-        else right_ = IQIndex(rname,iq,rdir,plev);
+        else right_ = IQIndex(rname,iq,rdir,primelevel);
 
         initted = true;
 	}
