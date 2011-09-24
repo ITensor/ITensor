@@ -122,6 +122,17 @@ public:
         rmap[r] = itensor.begin();
     }
 
+    void clean(Real min_norm)
+    {
+        std::list<ITensor> nitensor;
+        foreach(const ITensor& t, itensor)
+        {
+            if(t.norm() >= min_norm)
+                nitensor.push_back(t);
+        }
+        itensor.swap(nitensor);
+    }
+
     inline void* operator new(size_t size) throw(std::bad_alloc)
         { return allocator.alloc(); }
 
@@ -653,6 +664,9 @@ public:
         foreach(const ITensor& t, p->itensor)
             { t.scaleTo(newscale); }
     }
+
+    inline void clean(Real min_norm = MIN_CUT)
+        { p->clean(min_norm); }
 
     int vec_size() const
     {

@@ -699,7 +699,10 @@ public:
         Error("ITensor::mapprimeind: index not found.");
 	}
 
-    void primeind(const Index& I, int inc = 1) { mapindex(I,I.primed(inc)); }
+    void primeind(const Index& I, int inc = 1) 
+    { 
+        mapindex(I,I.primed(inc)); 
+    }
 
     void primeind(const Index& I, const Index& J)
 	{ 

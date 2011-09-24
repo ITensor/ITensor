@@ -61,7 +61,7 @@ public:
 
     MPOt() : Parent() { doRelCutoff(true); }
 
-    MPOt(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MAX_CUT, 
+    MPOt(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MIN_CUT, 
     bool _doRelCutoff = true, LogNumber _refNorm = DefaultRefScale) 
     : Parent(model,maxm_,cutoff_)
 	{ 

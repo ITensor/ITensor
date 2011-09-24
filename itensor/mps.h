@@ -118,13 +118,13 @@ public:
 
     //SVDWorker Constructors ---------------
     SVDWorker() :
-    N(1), truncerr_(N+1), cutoff_(MAX_CUT), minm_(1), maxm_(MAX_M),
+    N(1), truncerr_(N+1), cutoff_(MIN_CUT), minm_(1), maxm_(MAX_M),
     truncate_(true), showeigs_(false), doRelCutoff_(false),
     refNorm_(1), eigsKept_(N+1)
     { }
 
     SVDWorker(int N_) :
-    N(N_), truncerr_(N+1), cutoff_(MAX_CUT), minm_(1), maxm_(MAX_M),
+    N(N_), truncerr_(N+1), cutoff_(MIN_CUT), minm_(1), maxm_(MAX_M),
     truncate_(true), showeigs_(false), doRelCutoff_(false),
     refNorm_(1), eigsKept_(N+1)
     { }
@@ -402,12 +402,12 @@ public:
     : N(0), model_(0)
     { }
 
-    MPSt(const ModelT& mod_,int maxmm = MAX_M, Real cut = MAX_CUT) 
+    MPSt(const ModelT& mod_,int maxmm = MAX_M, Real cut = MIN_CUT) 
     : N(mod_.NN()), A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
     model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
 	{ random_tensors(A); }
 
-    MPSt(const ModelT& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MAX_CUT) 
+    MPSt(const ModelT& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MIN_CUT) 
     : N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(2),
     model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
 	{ init_tensors(A,initState); }
@@ -848,7 +848,7 @@ inline void fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
 
 //Template method for efficiently summing a set of MPS's or MPO's (or any class supporting operator+=)
 template <typename MPSType>
-void sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MAX_CUT, int maxm = MAX_M)
+void sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MIN_CUT, int maxm = MAX_M)
 {
     int Nt = terms.size();
     if(Nt == 1) 
