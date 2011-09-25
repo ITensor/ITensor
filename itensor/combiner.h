@@ -108,11 +108,13 @@ public:
 
     operator ITensor() const
     {
+        /*
         if(right_.m() > 16) 
         { 
             std::cerr << "\n\n" 
             << "WARNING: too large of an m in Combiner to ITensor!\n\n"; 
         }
+        */
 
         //Use a kronecker delta tensor to convert this Combiner into an Tensor
         ITensor res = operator*(ITensor(right_,right_.primed(5),1));
