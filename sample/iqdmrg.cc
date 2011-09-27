@@ -1,6 +1,7 @@
 #define THIS_IS_MAIN
 #include "core.h"
 #include "hams.h"
+#include "DMRGWorker.h"
 using boost::format;
 using std::cout;
 using std::cerr;
@@ -25,9 +26,13 @@ int main(int argc, char* argv[])
 
     cout << format("Initial energy = %.5f\n")%psiHphi(psi,H,psi);
 
-    Sweeps sweeps(ramp_m,nsweep,minm,maxm,cutoff);
-    Real En = dmrg(psi,H,sweeps);
+    Sweeps sweeps(Sweeps::ramp_m,nsweep,minm,maxm,cutoff);
+    
+    DMRGWorker<IQTensor,IQMPS,IQMPO> dmrgWorker(sweeps);
 
+    dmrgWorker.run(psi,H);
+    
+    Real En = dmrgWorker.energy();
     cout << format("\nGround State Energy = %.10f\n")%En;
     cout << "\nTotal QN of Ground State = " << totalQN(psi) << "\n";
 
