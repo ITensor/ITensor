@@ -8,7 +8,7 @@ include ../options.mk
 
 ####################################
 
-SOURCES=itensor.cc iqtensor.cc mps.cc mpo.cc dmrg.cc
+SOURCES=itensor.cc iqtensor.cc svdworker.cc mps.cc mpo.cc dmrg.cc
 
 ####################################
 
@@ -62,7 +62,9 @@ itensor.o: $(HEADERS)
 HEADERS+= iqindex.h iqtensor.h
 iqtensor.o: $(HEADERS)
 .debug_objs/iqtensor.o: $(HEADERS)
-HEADERS+= combiner.h iqcombiner.h mps.h
+HEADERS+= combiner.h iqcombiner.h svdworker.h
+svdworker.o: $(HEADERS)
+HEADERS+= mps.h
 mps.o: $(HEADERS)
 .debug_objs/mps.o: $(HEADERS)
 HEADERS+= mpo.h
