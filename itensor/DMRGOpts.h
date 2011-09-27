@@ -10,8 +10,11 @@ private:
     Real energy_errgoal;    //Stop DMRG once energy has converged to this precision
     Real orth_weight;       //How much to penalize non-orthogonality in multiple-state DMRG
     bool printeigs;         //Print slowest decaying eigenvalues after every sweep
+    bool quiet_;             //Show/don't show info after every step
 public:
-    bool quiet;             //Show/don't show info after every step
+
+    bool quiet() const { return quiet_; }
+    void quiet(bool val) { quiet_ = val; }
     
     Real energyErrgoal() const { return energy_errgoal; }
     void energyErrgoal(Real val) { energy_errgoal = val; }
@@ -26,7 +29,7 @@ public:
     energy_errgoal(-1), 
     orth_weight(1),
     printeigs(true), 
-    quiet(true)
+    quiet_(true)
     { }
     
     virtual void measure(int sw, int ha, int b, const SVDWorker& svd, Real energy)

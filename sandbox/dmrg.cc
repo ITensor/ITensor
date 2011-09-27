@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 
     cout << format("Initial energy = %.5f\n")%psiHphi(psi,H,psi);
 
-    Sweeps sweeps(ramp_m,nsweep,minm,maxm,cutoff);
+    Sweeps sweeps(Sweeps::ramp_m,nsweep,minm,maxm,cutoff);
     Real En = dmrg(psi,H,sweeps);
 
     cout << format("\nGround State Energy = %.10f\n")%En;

@@ -15,22 +15,22 @@ inline void sweepnext(int &l, int &ha, int N, int min_l = 1)
 class Sweeps
 {
 public:
-    enum SweepScheme {ramp_m, fixed_m, fixed_cutoff};
-    SweepScheme scheme;
+    enum Scheme {ramp_m, fixed_m, fixed_cutoff};
+    Scheme scheme_;
     int Minm;
     std::vector<int>  Maxm, Niter;
     std::vector<Real> Cutoff;
     int Nsweep;
     int num_site_center;        // May not be implemented in some cases
-    Sweeps(SweepScheme sch, int nsw, int _minm, int _maxm, Real _cut)
-    : scheme(sch), Minm(_minm), Maxm(nsw+1), Niter(nsw+1,4), Cutoff(nsw+1), Nsweep(nsw), num_site_center(2)
+    Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut)
+    : scheme_(sch), Minm(_minm), Maxm(nsw+1), Niter(nsw+1,4), Cutoff(nsw+1), Nsweep(nsw), num_site_center(2)
     {
-        if(scheme == ramp_m)
+        if(scheme_ == ramp_m)
         {
             for(int s = 1; s <= Nsweep; s++)
             { Cutoff.at(s) = _cut; Maxm.at(s) = (int)(_minm + (s-1.0)/nsw * (_maxm - _minm)); }
         }
-        else if(scheme == fixed_m || scheme == fixed_cutoff)
+        else if(scheme_ == fixed_m || scheme_ == fixed_cutoff)
         {
             for(int s = 1; s <= Nsweep; s++)
             { Cutoff.at(s) = _cut; Maxm.at(s) = _maxm; }

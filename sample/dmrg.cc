@@ -1,8 +1,6 @@
 #define THIS_IS_MAIN
 #include "core.h"
 #include "hams.h"
-#include "DMRGWorker.h"
-
 using boost::format;
 using std::cout;
 using std::cerr;
@@ -28,12 +26,8 @@ int main(int argc, char* argv[])
     cout << format("Initial energy = %.5f\n")%psiHphi(psi,H,psi);
 
     Sweeps sweeps(Sweeps::ramp_m,nsweep,minm,maxm,cutoff);
-    
-    DMRGWorker<> dmrgWorker(sweeps);
-    
-    dmrgWorker.run(psi,H);
-    
-    Real En = dmrgWorker.energy();
+    Real En = dmrg(psi,H,sweeps);
+
     cout << format("\nGround State Energy = %.10f\n")%En;
 
     return 0;

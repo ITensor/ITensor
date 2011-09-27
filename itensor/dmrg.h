@@ -311,6 +311,8 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps,
 // Deprecated, use MPOSet to work with a set of MPOs
 //Real dmrg(MPS& psi, const std::vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts);
 
+//Unit Cell DMRG. Does DMRG on part of a larger system using a Hamiltonian with boundary
+//tensors representing its projection into the basis of the larger system.
 Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, 
             const Sweeps& sweeps, DMRGOpts& opts, bool preserve_edgelink);
 

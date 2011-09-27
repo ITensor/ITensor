@@ -70,7 +70,7 @@ mps.o: $(HEADERS)
 HEADERS+= mpo.h
 mpo.o: $(HEADERS)
 .debug_objs/mpo.o: $(HEADERS)
-HEADERS+= dmrg.h
+HEADERS+= DMRGOpts.h dmrg.h
 dmrg.o: $(HEADERS)
 .debug_objs/dmrg.o: $(HEADERS)
 
