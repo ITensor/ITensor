@@ -10,13 +10,13 @@ template <class MPSType, class MPOType>
 class DMRGWorker 
 {
 public:
-    typedef DMRGOpts DMRGOptsType; // choose what type to use here
+    typedef DMRGOpts DefaultDMRGOptsType; // choose what type to use here
 
     typedef typename MPSType::TensorT Tensor;
     
     DMRGWorker(const Sweeps& sweeps)
     : sweeps_(sweeps),
-    own_opts_(true),opts_(new DMRGOptsType()),
+    own_opts_(true),opts_(new DefaultDMRGOptsType()),
     energy_(0) 
     { }
 
