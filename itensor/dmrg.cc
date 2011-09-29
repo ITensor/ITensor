@@ -8,7 +8,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
     const Real orig_cutoff = psi.cutoff(); 
     const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
     int debuglevel = 1;
-    if(opts.quiet) debuglevel = 0;
+    if(opts.quiet()) debuglevel = 0;
 
     Real energy = 0.0, last_energy = -10000;
 
@@ -52,7 +52,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
         Vector max_eigs(1); max_eigs = 2; //max in the sense of slowly decaying
         for(int l = 1, ha = 1; ha != 3; sweepnext(l,ha,N))
         {
-            if(!opts.quiet) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
+            if(!opts.quiet()) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
 
             ITensor mpoh = finalham.AA(l) * finalham.AA(l+1);
 
@@ -94,7 +94,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).doprime(primeBoth);
 
             Index ll = psi.LinkInd(l);
-            if(!opts.quiet) 
+            if(!opts.quiet()) 
             { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
 
             //Keep track of the largest_m, slowest decaying denmat eigs
@@ -178,7 +178,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts)
 {
     int debuglevel = 1;
-    if(opts.quiet) debuglevel = 0;
+    if(opts.quiet()) debuglevel = 0;
     Real energy, last_energy = -10000;
 
     const int N = psi.NN();
@@ -219,7 +219,7 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts)
         Vector center_eigs(1); center_eigs = 2;
         for(int l = 1, ha = 1; ha != 3; sweepnext(l,ha,N))
         {
-            if(!opts.quiet) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
+            if(!opts.quiet()) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
 
             for(int n = 0; n < NH; ++n) 
             {
@@ -236,7 +236,7 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts)
             psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).doprime(primeBoth);
 
             Index ll = psi.LinkInd(l);
-            if(!opts.quiet) 
+            if(!opts.quiet()) 
             { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
 
             //Keep track of the largest_m, slowest decaying denmat eigs
@@ -326,7 +326,7 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
     const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
 
     int debuglevel = 1;
-    if(opts.quiet) debuglevel = 0;
+    if(opts.quiet()) debuglevel = 0;
     Real energy, last_energy = -10000;
 
     int N = psi.NN();
@@ -365,7 +365,7 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
         Vector center_eigs(1); center_eigs = 2;
         for(int l = 1, ha = 1; ha != 3; sweepnext(l,ha,N))
         {
-            if(!opts.quiet) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
+            if(!opts.quiet()) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
 
             ITensor mpoh = H.AA(l) * H.AA(l+1);
 
@@ -389,7 +389,7 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
             psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).doprime(primeBoth);
 
             Index ll = psi.LinkInd(l);
-            if(!opts.quiet) 
+            if(!opts.quiet()) 
             { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
 
             //Keep track of the largest_m, slowest decaying denmat eigs

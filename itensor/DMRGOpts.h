@@ -1,5 +1,5 @@
-#ifndef DMRG_OPTS_H
-#define DMRG_OPTS_H
+#ifndef __ITENSOR_DMRGOPTS_H
+#define __ITENSOR_DMRGOPTS_H
 #include "BaseDMRGOpts.h"
 
 //Class for fine-tuning DMRG algorithms
@@ -72,4 +72,4 @@ public:
     }
 }; // class DMRGOpts
 
-#endif // DMRGOpts
+#endif // __ITENSOR_DMRGOPTS_H

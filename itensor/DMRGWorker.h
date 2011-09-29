@@ -1,58 +1,47 @@
-#ifndef DMRG_WORKER_H
-#define DMRG_WORKER_H
+#ifndef __ITENSOR_DMRG_WORKER_H
+#define __ITENSOR_DMRG_WORKER_H
 
-#include "BaseDMRGOpts.h" //<-- abstract base class 
-#include "DMRGOpts.h" // <-- default implementation
+#include "BaseDMRGWorker.h"
 #include "itensor.h"
-#include "Sweeps.h"
 
-template <class MPSType, class MPOType>
-class DMRGWorker 
+template <class MPSType, class MPOType, class DefaultDMRGOptsType=DMRGOpts>
+class DMRGWorker : public BaseDMRGWorker<MPSType,MPOType,DefaultDMRGOptsType>
 {
 public:
-    typedef DMRGOpts DefaultDMRGOptsType; // choose what type to use here
+    typedef BaseDMRGWorker<MPSType,MPOType,DefaultDMRGOptsType> Parent;
 
     typedef typename MPSType::TensorT Tensor;
     
     DMRGWorker(const Sweeps& sweeps)
-    : sweeps_(sweeps),
-    own_opts_(true),opts_(new DefaultDMRGOptsType()),
-    energy_(0) 
+    : Parent(sweeps), energy_(0) 
     { }
 
     DMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts)
-    : sweeps_(sweeps),
-    own_opts_(false), opts_(&opts),
-    energy_(0) 
+    : Parent(sweeps, opts), energy_(0) 
     { }
 
-    virtual ~DMRGWorker()
-    {
-        if(own_opts_) { delete opts_; }
-    }
-    
+    virtual ~DMRGWorker() { }
+
+    using Parent::sweeps;
+    using Parent::opts;
+
     void run(const MPOType& H, MPSType& psi)
     {
         runInternal(H,psi);
     }
 
-    const Real& energy() const { return energy_; } 
+    Real energy() const { return energy_; } 
 
-    void opts(BaseDMRGOpts& new_opts) 
-    { 
-        if(own_opts_) { delete opts_; }
-        opts_ = &new_opts; 
-    }
-    const BaseDMRGOpts& opts() const { return *opts_; }
-    
 private:
+
+    Real energy_;
    
     void runInternal(const MPOType& H, MPSType& psi)
     {
         const Real orig_cutoff = psi.cutoff(); 
         const int orig_minm = psi.minm(), 
                   orig_maxm = psi.maxm();
-        int debuglevel = (opts_->quiet() ? 0 : 1);
+        int debuglevel = (opts().quiet() ? 0 : 1);
         int N = psi.NN();
         energy_ = 0;
         
@@ -63,15 +52,15 @@ private:
         for(int l = N-1; l >= 2; --l) 
             psi.projectOp(l+1,Fromright,PH[l+1],H.AA(l+1),PH[l]);
         
-        for(int sw = 1; sw <= sweeps_.nsweep(); ++sw)
+        for(int sw = 1; sw <= sweeps().nsweep(); ++sw)
         {
-            psi.cutoff(sweeps_.cutoff(sw)); 
-            psi.minm(sweeps_.minm(sw)); 
-            psi.maxm(sweeps_.maxm(sw));
+            psi.cutoff(sweeps().cutoff(sw)); 
+            psi.minm(sweeps().minm(sw)); 
+            psi.maxm(sweeps().maxm(sw));
 
             for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
             {
-                if(!opts_->quiet()) 
+                if(!opts().quiet()) 
                 {
                     std::cout << 
                         boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") 
@@ -79,18 +68,18 @@ private:
                 }
                 
                 energy_ = psi.bondDavidson(b,H.bondTensor(b),PH[b],PH[b+1],
-                                           sweeps_.niter(sw),debuglevel,
+                                           sweeps().niter(sw),debuglevel,
                                            (ha==1?Fromleft:Fromright));
                 
-                if(!opts_->quiet()) 
+                if(!opts().quiet()) 
                 { 
                     std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d\n") 
-                    % sweeps_.cutoff(sw) % sweeps_.minm(sw) % sweeps_.maxm(sw);
+                    % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw);
                     std::cout << boost::format("    Trunc. err=%.1E, States kept=%s\n")
                     % psi.svd().truncerr(b) % psi.LinkInd(b).showm();
                 }
                 
-                opts_->measure(sw,ha,b,psi.svd(),energy_);
+                opts().measure(sw,ha,b,psi.svd(),energy_);
                 
                 if(ha == 1 && b != N-1) 
                     psi.projectOp(b,Fromleft,PH[b],H.AA(b),PH[b+1]);
@@ -98,7 +87,7 @@ private:
                     psi.projectOp(b+1,Fromright,PH[b+1],H.AA(b+1),PH[b]);
             } //for loop over b
             
-            if(opts_->checkDone(sw,energy_)) break;
+            if(opts().checkDone(sw,energy_)) break;
         
         } //for loop over sw
         
@@ -106,11 +95,6 @@ private:
         psi.minm(orig_minm); 
         psi.maxm(orig_maxm);
     }
-
-    const Sweeps& sweeps_;
-    bool own_opts_;
-    BaseDMRGOpts* opts_;
-    Real energy_;
 
 }; // class DMRGWorker
 
@@ -131,4 +115,4 @@ inline Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps,
     return worker.energy();
 }
 
-#endif // DMRG_WORKER_H
+#endif // __ITENSOR_DMRG_WORKER_H
