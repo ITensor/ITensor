@@ -16,7 +16,7 @@ public:
 
     BaseDMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts) :
     sweeps_(sweeps),
-    own_opts_(false),opts_(opts)
+    own_opts_(false),opts_(&opts)
     { }
 
     virtual ~BaseDMRGWorker()
