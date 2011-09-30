@@ -883,6 +883,11 @@ ITensor& ITensor::operator+=(const ITensor& other)
         //n[k] = index_[k].m();
     }
 
+#ifdef STRONG_DEBUG
+    Real tot_this = thisdat.sumels();
+    Real tot_othr = othrdat.sumels();
+#endif
+
     if(scalefac == 1)
     {
         for(; c.notDone(); ++c)
@@ -903,6 +908,16 @@ ITensor& ITensor::operator+=(const ITensor& other)
             += scalefac * othrdat(c.ind);
         }
     }
+
+#ifdef STRONG_DEBUG
+    Real new_tot = thisdat.sumels();
+    Real compare = tot_this + scalefac*tot_othr;
+    if(fabs(new_tot-compare) > 1E-12)
+    {
+        cerr << boost::format("new_tot = %f, compare = %f\n")%new_tot%compare;
+        Error("Incorrect sum");
+    }
+#endif
 
     return *this;
 } 

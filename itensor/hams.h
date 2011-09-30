@@ -382,15 +382,15 @@ inline Tensor MultSiteOps(Tensor a, Tensor b) // a * b  (a above b in diagram, u
     return res;
     }
 
-ITensor MultSiteOps(const SiteOp& aa, const SiteOp& bb) // a * b  (a above b in diagram, unprimed = right index of matrix)
-    {
+inline ITensor MultSiteOps(const SiteOp& aa, const SiteOp& bb) // a * b  (a above b in diagram, unprimed = right index of matrix)
+{
     ITensor a(aa), b(bb);
     a.mapprime(1,2,primeSite);
     a.mapprime(0,1,primeSite);
     ITensor res = a * b;
     res.mapprime(2,1,primeSite);
     return res;
-    }
+}
 
 namespace Hubbard
 {

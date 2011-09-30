@@ -1,6 +1,6 @@
 #ifndef BASE_DMRG_OPTS_H
 #define BASE_DMRG_OPTS_H
-#include "mps.h"
+#include "svdworker.h"
 
 // virtual base class
 

@@ -314,7 +314,7 @@ public:
 
         Arrow rdir = Switch*left.back().dir();
 
-        //Prefer to derive right Arrow, primelevel from Link indices
+        //Prefer to derive right Arrow from Link indices
         for(size_t j = 0; j < left.size(); ++j)
         if(left[j].type() == Link) 
         { 
