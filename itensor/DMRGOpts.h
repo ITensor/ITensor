@@ -31,6 +31,8 @@ public:
     printeigs(true), 
     quiet_(true)
     { }
+
+    virtual ~DMRGOpts() { }
     
     virtual void measure(int sw, int ha, int b, const SVDWorker& svd, Real energy)
     {

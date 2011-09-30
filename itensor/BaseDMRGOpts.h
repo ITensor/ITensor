@@ -14,6 +14,8 @@ public:
     virtual void measure(int sw, int ha, int b, const SVDWorker& svd, Real energy) = 0;
     
     virtual bool checkDone(int sw, Real energy) = 0;
+
+    virtual ~BaseDMRGOpts() { }
 };
 
 #endif // BASE_DMRG_OPTS_H
