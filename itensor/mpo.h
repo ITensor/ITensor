@@ -383,7 +383,7 @@ inline Real psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMP
 
 template <class MPOType>
 void nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm);
-void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm);
+void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position = false);
 void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
 
 #endif

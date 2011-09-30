@@ -68,7 +68,7 @@ void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res,Real cut, int maxm);
 template
 void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm);
 
-void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm)
+void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position)
 {
     if(cutoff < 0) cutoff = x.cutoff();
     if(maxm < 0) maxm = x.maxm();
@@ -79,7 +79,7 @@ void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm
         cerr << "x is " << endl << x << endl;
         Error("bad right_lim for x");
     }
-    if(K.right_lim() > 3)
+    if(!allow_arb_position && K.right_lim() > 3)
     {
         //cerr << "K is " << endl << K << endl;
         Error("bad right_lim for K");
