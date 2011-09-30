@@ -370,6 +370,136 @@ public:
 
 } //end namespace SpinOne
 
+// Given Tensors which represent operators (e.g. A(site-1',site-1), B(site-1',site-1), 
+// Multiply them, fixing primes C(site-1',site-1)
+template<class Tensor>
+inline Tensor MultSiteOps(Tensor a, Tensor b) // a * b  (a above b in diagram, unprimed = right index of matrix)
+    {
+    a.mapprime(1,2,primeSite);
+    a.mapprime(0,1,primeSite);
+    Tensor res = a * b;
+    res.mapprime(2,1,primeSite);
+    return res;
+    }
+
+ITensor MultSiteOps(const SiteOp& aa, const SiteOp& bb) // a * b  (a above b in diagram, unprimed = right index of matrix)
+    {
+    ITensor a(aa), b(bb);
+    a.mapprime(1,2,primeSite);
+    a.mapprime(0,1,primeSite);
+    ITensor res = a * b;
+    res.mapprime(2,1,primeSite);
+    return res;
+    }
+
+namespace Hubbard
+{
+
+class HubbardChain : public MPOBuilder
+{
+public:
+    const Model& mod;
+
+    HubbardChain(const Model& mod_) : MPOBuilder(mod_), mod(mod_) {}
+
+    void getTrotterGates(Real U, Real tau, Real Etot, std::vector<IQTensor>& gates)
+	{
+	int N = Ns;
+	for(int i = 1; i < N; i++)
+	    {
+	    IQTensor ui(mod.id(i)), uj(mod.id(i+1));
+	    IQTensor udi(mod.NupNdn(i)), udj(mod.NupNdn(i+1));
+	    IQTensor cui(mod.Cup(i)), cuj(mod.Cup(i+1));
+	    IQTensor cdi(mod.Cdn(i)), cdj(mod.Cdn(i+1));
+	    IQTensor dui(mod.Cdagup(i)), duj(mod.Cdagup(i+1));
+	    IQTensor ddi(mod.Cdagdn(i)), ddj(mod.Cdagdn(i+1));
+	    IQTensor fi(mod.FermiPhase(i));
+	    IQTensor one = ui * uj;
+	    udi *= (i == 1 ? U : U*0.5);
+	    udj *= (i == N-1 ? U : U*0.5);
+	    IQTensor udbond = udi * uj + ui * udj; 
+	    IQTensor ke = MultSiteOps(dui,fi) * cuj + duj * MultSiteOps(fi,cui) + 
+			MultSiteOps(ddi,fi) * cdj + ddj * MultSiteOps(fi,cdi);
+	    ke *= -1.0;
+	    IQTensor con = one * (-Etot/(N-1.0));
+	    IQTensor ham = (udbond + ke + con);
+	    ham *= -tau;
+	    //cout << "ham is " << ham;
+	    //cout << "one is " << one;
+	    IQTensor term = ham, kk;
+// exp(x) = 1 + x +  x^2/2! + x^3/3! ..
+// = 1 + x * (1 + x/2 *(1 + x/3 * (...
+// ~ ((x/3 + 1) * x/2 + 1) * x + 1
+	    for(int o = 100; o >= 1; o--)
+		{
+		if(o != 1) term *= 1.0 / o;
+		kk = one + term;
+		term = MultSiteOps(kk,ham);
+		}
+	    //kk.reverse_dirs();
+	    gates[i] = kk;
+	    //if(i == 2) cout << "expbondham 2 is " << expbondham[2];
+	    }
+	}
+    void getIMPO(Real U, MPO& H, ITensor& Ledge, ITensor& Redge)
+	{
+        H = MPO(mod);
+
+        const int k = 6;
+
+	std::vector<Index> links(Ns+1);
+        for(int l = 0; l <= Ns; ++l) links.at(l) = Index(nameint("hl",l),k);
+
+        ITensor W;
+        for(int n = 1; n <= Ns; ++n)
+	    {
+            ITensor& W = H.AAnc(n);
+            Index &row = links.at(n-1), &col = links.at(n);
+
+	    /*
+            // MPO is (save this):
+            //
+            // 1 / I                                  \
+            // 2 | -c+up  0                           |
+            // 3 | -c+dn  0       0                   |
+            // 4 | -cup   0       0    0              |
+            // 5 | -cdn   0       0    0       0      | 
+            // 6 | Unud   F cup F cdn c+up F c+dn F  I |
+            //     1       2      3    4       5     6 
+            // F = FermiPhase
+	    */
+
+            W = ITensor(mod.si(n),mod.siP(n),row,col);
+            W += mod.NupNdn(n) * row(6) * col(1) * U;
+            W += MultSiteOps(mod.FermiPhase(n),mod.Cup(n)) * row(6) * col(2);
+            W += MultSiteOps(mod.FermiPhase(n),mod.Cdn(n)) * row(6) * col(3);
+            W += MultSiteOps(mod.Cdagup(n),mod.FermiPhase(n)) * row(6) * col(4);
+            W += MultSiteOps(mod.Cdagdn(n),mod.FermiPhase(n)) * row(6) * col(5);
+            W += mod.id(n) * row(6) * col(6);
+
+            W += mod.id(n) * row(1) * col(1);
+            W += mod.Cdagup(n) * row(2) * col(1) * (-1.0);
+            W += mod.Cdagdn(n) * row(3) * col(1) * (-1.0);
+            W += mod.Cup(n) * row(4) * col(1) * (-1.0);
+            W += mod.Cdn(n) * row(5) * col(1) * (-1.0);
+	    }
+
+        Ledge = makeLedge(links.at(0));
+        Redge = makeRedge(links.at(Ns));
+	}
+
+    void getMPO(Real U, MPO& H)
+    {
+        ITensor Ledge,Redge;
+        getIMPO(U,H,Ledge,Redge);
+        
+        H.AAnc(1) = Ledge * H.AA(1);
+        H.AAnc(Ns) = H.AA(Ns) * Redge;
+    }
+
+}; //class HubbardChain
+
+} //end namespace Hubbard
 /*
 namespace Hubbard
 {
