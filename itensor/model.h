@@ -7,7 +7,7 @@ class BaseModel
 public:
     virtual int dim() const = 0;
     virtual int NN() const = 0;
-    virtual IQIndex si(int i) const = 0;
+    virtual const IQIndex& si(int i) const = 0;
     virtual IQIndex siP(int i) const = 0;
 
     virtual void read(std::istream& s) = 0;
@@ -70,7 +70,7 @@ public:
 
     int dim() const { return SpinOne::Dim; }
     inline int NN() const { return N; }
-    inline IQIndex si(int i) const { return site.at(i); }
+    inline const IQIndex& si(int i) const { return site.at(i); }
     inline IQIndex siP(int i) const { return site.at(i).primed(); }
 
     IQIndexVal Up(int i) const { return si(i)(1); }
@@ -193,7 +193,7 @@ public:
 
     int dim() const { return SpinHalf::Dim; }
     int NN() const { return N; }
-    IQIndex si(int i) const { return site.at(i); }
+    const IQIndex& si(int i) const { return site.at(i); }
     IQIndex siP(int i) const { return site.at(i).primed(); }
 
     IQIndexVal Up(int i) const { return si(i)(1); }
@@ -322,7 +322,7 @@ public:
 
     int dim() const { return Spinless::Dim; }
     int NN() const { return N; }
-    IQIndex si(int i) const { return GET(site,i); }
+    const IQIndex& si(int i) const { return GET(site,i); }
     IQIndex siP(int i) const { return GET(site,i).primed(); }
 
     IQIndexVal Emp(int i) const { return si(i)(1); }
@@ -426,7 +426,7 @@ public:
 
     int dim() const { return Hubbard::Dim; }
     int NN() const { return N; }
-    IQIndex si(int i) const { return GET(site,i); }
+    const IQIndex& si(int i) const { return GET(site,i); }
     IQIndex siP(int i) const { return GET(site,i).primed(); }
 
     IQIndexVal Emp(int i) const { return si(i)(1); }
