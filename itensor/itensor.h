@@ -143,7 +143,7 @@ public:
     
     void print() const { std::cout << "ITDat: v = " << v; }
 
-    inline void* operator new(size_t size) throw(std::bad_alloc)
+    inline void* operator new(size_t) throw(std::bad_alloc)
         { return allocator.alloc(); }
 
     inline void operator delete(void* p) throw()
@@ -158,8 +158,6 @@ private:
 };
 
 class Combiner;
-
-class ITensor; extern ITensor Complex_1, Complex_i, ConjTensor;
 
 class ITensor
 {
@@ -481,6 +479,24 @@ public:
 	}
 
     ITensor(std::istream& s) { read(s); }
+
+    static const ITensor& Complex_1()
+    {
+        static const ITensor Complex_1_(makeComplex_1);
+        return Complex_1_;
+    }
+
+    static const ITensor& Complex_i()
+    {
+        static const ITensor Complex_i_(makeComplex_i);
+        return Complex_i_;
+    }
+
+    static const ITensor& ConjTensor()
+    {
+        static const ITensor ConjTensor_(makeConjTensor);
+        return ConjTensor_;
+    }
 
     //ITensor: Read/Write ---------------------------------------------------
 
@@ -962,7 +978,11 @@ public:
 	im *= Index::IndReImP()(2);
 	}
 
-    inline void conj() { if(!is_complex()) return; operator/=(ConjTensor); }
+    inline void conj() 
+    { 
+        if(!is_complex()) return; 
+        operator/=(ITensor::ConjTensor()); 
+    }
 
     inline bool is_zero() const { return (norm() < 1E-20); } 
 
@@ -1058,12 +1078,5 @@ public:
 };
 inline ITAssigner operator<<(ITensor& T, Real r) { return ITAssigner(T,r); }
 
-
-
-#ifdef THIS_IS_MAIN
-ITensor Complex_1(makeComplex_1), 
-        Complex_i(makeComplex_i), 
-        ConjTensor(makeConjTensor);
-#endif
 
 #endif

@@ -109,7 +109,7 @@ public:
             if(fabs(im) < 1E-10)
             { psip += (weight*re) * phi;}
             else
-            { psip += weight*(re*Complex_1 + im*Complex_i) * phi; }
+            { psip += weight*(re*ITensor::Complex_1() + im*ITensor::Complex_i()) * phi; }
         }
         psi.assignFrom(psip);
         psi.assignToVec(B);
@@ -235,7 +235,7 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
     Real energy;
 
     psi.position(1);
-    //if(H.is_complex()) psi.AAnc(1) *= Complex_1;
+    //if(H.is_complex()) psi.AAnc(1) *= ITensor::Complex_1();
 
     std::vector<MPOTensor> LH(N+1);
     std::vector<MPOTensor> RH(N+1);

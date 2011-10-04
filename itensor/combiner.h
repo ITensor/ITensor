@@ -158,7 +158,7 @@ public:
     }
 
     //For interface compatibility with IQCombiner
-    void doCondense(bool val) { } 
+    void doCondense(bool) { } 
 
 }; //class Combiner
 

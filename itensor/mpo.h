@@ -369,7 +369,7 @@ inline void psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMP
         L = ((((L * phi.AA(i)) * H.AA(i)) * Kp.AA(i)) * psiconj.AA(i));
     }
     //scales as m^2 k^2 d
-    L = ((((L * phi.AA(N)) * H.AA(N)) * Kp.AA(N)) * psiconj.AA(N)) * IQTSing;
+    L = ((((L * phi.AA(N)) * H.AA(N)) * Kp.AA(N)) * psiconj.AA(N)) * IQTensor::Sing();
     //cout << "in psiHKpsi, L is "; PrintDat(L);
     L.GetSingComplex(re,im);
 }

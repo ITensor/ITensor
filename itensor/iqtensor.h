@@ -148,8 +148,6 @@ private:
 
 class IQCombiner;
 
-class IQTensor; extern IQTensor IQTSing, IQComplex_1, IQComplex_i;
-
 class IQTensor
 {
 public:
@@ -264,8 +262,10 @@ public:
 
     IQTensor(ITmaker itm) : p(new IQTDat(IQIndex::IndReIm()))
     {
-        if(itm == makeComplex_1)      operator+=(Complex_1);
-        else if(itm == makeComplex_i) operator+=(Complex_i);
+        if(itm == makeComplex_1)      
+            operator+=(ITensor::Complex_1());
+        else if(itm == makeComplex_i) 
+            operator+=(ITensor::Complex_i());
     }
 
     IQTensor(IQmaker i) : p(new IQTDat())
@@ -281,6 +281,24 @@ public:
     { doprime(pt); }
 
     explicit IQTensor(std::istream& s) : p(0) { read(s); }
+
+    static const IQTensor& Sing()
+    {
+        static const IQTensor Sing_(makeSing);
+        return Sing_;
+    }
+
+    static const IQTensor& Complex_1()
+    {
+        static const IQTensor Complex_1_(makeComplex_1);
+        return Complex_1_;
+    }
+
+    static const IQTensor& Complex_i()
+    {
+        static const IQTensor Complex_i_(makeComplex_i);
+        return Complex_i_;
+    }
 
     void read(std::istream& s)
     {
@@ -352,6 +370,9 @@ public:
     { 
         solo();
         ApproxReal r(t.unique_Real());
+
+        if(t.scale().isRealZero()) { return *this; }
+
         if(!p->has_itensor(r)) { p->insert_itensor(r,t); }
         else { *(p->rmap[r]) += t; }
         return *this;
@@ -516,7 +537,8 @@ public:
             { jj->doprime(pt); }
     } //end IQTensor::doprime
 
-    void mapprime(int plevold, int plevnew, PrimeType pt = primeBoth) // no need to keep prime level small
+    //no need to keep prime level small
+    void mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)
     {
         solo();
         p->uninit_rmap();
@@ -541,6 +563,9 @@ public:
     }
     friend inline IQTensor primeind(IQTensor A, const IQIndex& I)
     { A.primeind(I); return A; }
+    friend inline IQTensor primeind(IQTensor A, const IQIndex& I, 
+                                                const IQIndex& J)
+    { A.primeind(I); A.primeind(J); return A; }
 
     friend inline IQTensor primed(IQTensor A)
     { A.doprime(primeBoth); return A; }
@@ -748,7 +773,7 @@ public:
             foreach(IQIndex& I,r.p->iqindex_) I.conj();
             foreach(IQIndex& I,i.p->iqindex_) I.conj();
             i *= -1.0;
-            *this = r * IQComplex_1 + IQComplex_i * i;
+            *this = r * IQTensor::Complex_1() + IQTensor::Complex_i() * i;
         }
     }
 
@@ -799,12 +824,12 @@ inline Real ReSingVal(const IQTensor& x)
 }
 inline Real Dot(const IQTensor& x, const IQTensor& y, bool doconj = true)
 {
-    IQTensor res(IQTSing*(doconj ? conj(x) : x)*y);
+    IQTensor res(IQTensor::Sing()*(doconj ? conj(x) : x)*y);
     return ReSingVal(res);
 }
 inline void Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool doconj = true)
 {
-    IQTensor res(IQTSing*(doconj ? conj(x) : x)*y);
+    IQTensor res(IQTensor::Sing()*(doconj ? conj(x) : x)*y);
     res.GetSingComplex(re,im);
 }
 
@@ -896,10 +921,5 @@ public:
     friend inline IQTensor operator*(const IQTensor& t, const SiteOp& op) { IQTensor res(op); return (res *= t); }
 
 };
-
-#ifdef THIS_IS_MAIN
-IQTensor IQTSing(makeSing);
-IQTensor IQComplex_1(makeComplex_1), IQComplex_i(makeComplex_i);
-#endif
 
 #endif

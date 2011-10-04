@@ -18,7 +18,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
     if(finalham.is_complex() && !psi.is_complex())
     {
-        for(int i = 1; i <= N; ++i) psi.AAnc(i) = psi.AA(i)*Complex_1;
+        for(int i = 1; i <= N; ++i) psi.AAnc(i) = psi.AA(i)*ITensor::Complex_1();
     }
 
     vector<ITensor> leftright(N+1);
@@ -188,7 +188,7 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts)
 
     if(H[0].is_complex() && !psi.is_complex())
     {
-        for(int i = 1; i <= N; ++i) psi.AAnc(i) = psi.AA(i)*Complex_1;
+        for(int i = 1; i <= N; ++i) psi.AAnc(i) = psi.AA(i)*ITensor::Complex_1();
     }
 
     MPS psiconj(psi);
@@ -333,7 +333,7 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
 
     psi.position(1,preserve_edgelink);
 
-    if(H.is_complex()) psi.AAnc(1) *= Complex_1;
+    if(H.is_complex()) psi.AAnc(1) *= ITensor::Complex_1();
 
     MPS psiconj(psi);
     for(int i = 1; i <= psi.NN(); i++)

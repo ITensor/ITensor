@@ -177,7 +177,7 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
     */
     foreach(const IQIndex& I, tre.p->iqindex_)
     {
-        if(I != IQTSing.p->iqindex_[0])
+        if(I != IQTensor::Sing().p->iqindex_[0])
         {
             cout << *this;
             cout << tre;
@@ -185,7 +185,7 @@ void IQTensor::GetSingComplex(Real& re, Real& im) const
         }
     }
     foreach(const IQIndex& I, tim.p->iqindex_)
-    if(I != IQTSing.p->iqindex_[0])
+    if(I != IQTensor::Sing().p->iqindex_[0])
     { Error("bad tim size"); }
 
     if(tre.iten_size() == 0)
@@ -223,9 +223,9 @@ IQTensor& IQTensor::operator+=(const IQTensor& other)
     bool complex_other = other.hasindex(IQIndex::IndReIm()); 
     IQTensor& This(*this);
     if(!complex_this && complex_other)
-        return (This = (This * IQComplex_1) + other);
+        return (This = (This * IQTensor::Complex_1()) + other);
     if(complex_this && !complex_other)
-        return (This += other * IQComplex_1);
+        return (This += other * IQTensor::Complex_1());
     if(fabs(This.unique_Real()-other.unique_Real()) > 1.0e-11) 
 	{
         cout << "This is " << This;
