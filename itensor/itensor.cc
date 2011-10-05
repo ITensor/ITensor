@@ -21,7 +21,11 @@ ostream& operator<<(ostream & s, const ITensor & t)
 	{
         if(t.scale_.isFiniteReal())
         {
-            s << boost::format(" (L=%d,N=%.2f)\n") % t.vec_size() % t.norm();
+            Real nrm = t.norm();
+            if(nrm >= 1E-2)
+                s << boost::format(" (L=%d,N=%.2f)\n") % t.vec_size() % nrm;
+            else
+                s << boost::format(" (L=%d,N=%.1E)\n") % t.vec_size() % nrm;
         }
         else
         {
