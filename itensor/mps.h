@@ -189,8 +189,8 @@ public:
     {
         model_ = &model;
         N = model_->NN();
-        A.resize(N);
-        for(int j = 1; j <= N; ++j) A[j].read(s);
+        A.resize(N+1);
+        for(int j = 1; j <= N; ++j) A.at(j).read(s);
         s.read((char*) &left_orth_lim,sizeof(left_orth_lim));
         s.read((char*) &right_orth_lim,sizeof(right_orth_lim));
         svd_.read(s);
