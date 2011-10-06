@@ -3,6 +3,8 @@
 #
 ####################################
 
+.NOTPARALLEL:
+
 include options.mk
 
 build: utilities matrix itensor 

@@ -10,6 +10,11 @@ include ../options.mk
 
 SOURCES=itensor.cc iqtensor.cc svdworker.cc mps.cc mpo.cc dmrg.cc
 
+HEADERS=types.h allocator.h real.h permutation.h index.h itensor.h \
+        iqindex.h iqtensor.h combiner.h iqcombiner.h svdworker.h \
+        mps.h mpo.h DMRGOpts.h dmrg.h core.h BaseDMRGOpts.h \
+        BaseDMRGWorker.h Sweeps.h hams.h measure.h model.h
+
 ####################################
 
 INCLUDEFLAGS=-I$(INCLUDEDIR) -I$(BOOST_DIR) 
@@ -20,8 +25,12 @@ CCGFLAGS= $(INCLUDEFLAGS) -ansi -Wall -pedantic -Wno-long-long -g -O0\
 
 OBJECTS= $(patsubst %.cc,%.o, $(SOURCES))
 GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
+INCLUDE_HEADERS= $(patsubst %,$(INCLUDEDIR)/%, $(HEADERS))
 
 .SUFFIXES: .cc $(SUFFIXES)
+
+$(INCLUDEDIR)/%.h: %.h
+	cp $^ $(INCLUDEDIR)
 
 %.o: %.cc
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
@@ -39,8 +48,7 @@ libitensor-g.a: mkdebugdir $(GOBJECTS)
 	ar rv libitensor-g.a $(GOBJECTS)
 	ranlib libitensor-g.a
 
-headerscopy:	
-	cp -r *.h .profiling $(INCLUDEDIR)
+headerscopy: $(INCLUDE_HEADERS)
 
 libs: libitensor.a 
 	cp libitensor.a $(LIBDIR)
@@ -56,25 +64,23 @@ installg: headerscopy libitensor-g.a
 mkdebugdir:
 	mkdir -p .debug_objs
 
-HEADERS=types.h allocator.h real.h permutation.h index.h itensor.h
-itensor.o: $(HEADERS)
-.debug_objs/itensor.o: $(HEADERS)
-HEADERS+= iqindex.h iqtensor.h
-iqtensor.o: $(HEADERS)
-.debug_objs/iqtensor.o: $(HEADERS)
-HEADERS+= combiner.h iqcombiner.h svdworker.h
-svdworker.o: $(HEADERS)
-HEADERS+= mps.h
-mps.o: $(HEADERS)
-.debug_objs/mps.o: $(HEADERS)
-HEADERS+= mpo.h
-mpo.o: $(HEADERS)
-.debug_objs/mpo.o: $(HEADERS)
-HEADERS+= DMRGOpts.h dmrg.h
-dmrg.o: $(HEADERS)
-.debug_objs/dmrg.o: $(HEADERS)
-
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-#dependencies
+DEPHEADERS=types.h allocator.h real.h permutation.h index.h itensor.h
+itensor.o: $(DEPHEADERS)
+.debug_objs/itensor.o: $(DEPHEADERS)
+DEPHEADERS+= iqindex.h iqtensor.h
+iqtensor.o: $(DEPHEADERS)
+.debug_objs/iqtensor.o: $(DEPHEADERS)
+DEPHEADERS+= combiner.h iqcombiner.h svdworker.h
+svdworker.o: $(DEPHEADERS)
+DEPHEADERS+= mps.h
+mps.o: $(DEPHEADERS)
+.debug_objs/mps.o: $(DEPHEADERS)
+DEPHEADERS+= mpo.h
+mpo.o: $(DEPHEADERS)
+.debug_objs/mpo.o: $(DEPHEADERS)
+DEPHEADERS+= DMRGOpts.h dmrg.h
+dmrg.o: $(DEPHEADERS)
+.debug_objs/dmrg.o: $(DEPHEADERS)
