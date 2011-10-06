@@ -73,7 +73,7 @@ public:
     Real real() const
 	{
         if(sign_ == 0) return 0;
-#ifndef DNDEBUG
+#ifdef DEBUG
         if(lognum_ > maxlogdouble)
         { 
             Print(lognum_);

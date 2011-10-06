@@ -105,7 +105,7 @@ public:
 
     void uninit_rmap() const 
     { 
-        assert(numref == 1); 
+        assert(numref <= 1); 
         rmap.clear();
         rmap_init = false; 
     }
@@ -129,6 +129,13 @@ public:
         {
             if(t.norm() >= min_norm)
                 nitensor.push_back(t);
+            /*
+            else
+            {
+                std::cout << boost::format("Discarding tensor with norm %.2E")%t.norm() << std::endl;
+                PrintDat(t);
+            }
+            */
         }
         itensor.swap(nitensor);
     }
@@ -691,7 +698,10 @@ public:
     }
 
     inline void clean(Real min_norm = MIN_CUT)
-        { p->clean(min_norm); }
+    { 
+        solo();
+        p->clean(min_norm); 
+    }
 
     int vec_size() const
     {

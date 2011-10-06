@@ -73,6 +73,12 @@ public:
         smallind_.conj();
     }
 
+    void doprime(PrimeType pt = primeBoth)
+    {
+        bigind_.doprime(pt);
+        smallind_.doprime(pt);
+    }
+
     void product(const IQTensor& t, IQTensor& res) const
     {
         assert(&t != &res);
@@ -512,7 +518,7 @@ public:
             }
 
             for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
-            {
+                {
                 Real rse = 0;
                 for(int k = 1; k <= i->r(); ++k)
                 {
@@ -521,7 +527,7 @@ public:
                 }
 
                 if(setcomb.count(rse) == 0)
-                {
+                    {
                     Print(*i);
                     std::cerr << "\nleft indices \n";
                     for(size_t j = 0; j < left.size(); ++j)
@@ -529,14 +535,16 @@ public:
                     std::cerr << "\n\n";
                     for(std::map<ApproxReal, Combiner>::const_iterator uu = setcomb.begin();
                         uu != setcomb.end(); ++uu)
-                    {
+                        {
                         std::cout << "Combiner: " << std::endl;
                         std::cout << uu->second << std::endl;
-                    }
+                        }
                     Error("no setcomb for rse in IQCombiner prod");
-                }
+                    }
+
                 res += (*i * setcomb[rse]);
-            }
+
+                }
             if(do_condense) { IQTensor rcopy(res); cond.product(rcopy,res); }
         }
     } //void product(const IQTensor& t, IQTensor& res) const
