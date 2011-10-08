@@ -143,6 +143,9 @@ public:
     bool doRelCutoff() const { return svd_.doRelCutoff(); }
     void doRelCutoff(bool val) { svd_.doRelCutoff(val); }
 
+    bool absoluteCutoff() const { return svd_.absoluteCutoff(); }
+    void absoluteCutoff(bool val) { svd_.absoluteCutoff(val); }
+
     LogNumber refNorm() const { return svd_.refNorm(); }
     void refNorm(LogNumber val) { svd_.refNorm(val); }
 
@@ -580,7 +583,9 @@ Real psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
 {
     Real re, im;
     psiphi(psi,phi,re,im);
-    if(im != 0) std::cerr << "Real psiphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
+    if(im != 0) 
+	if(fabs(im) > 1.0e-12 * fabs(re))
+	    std::cerr << "Real psiphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
     return re;
 }
 

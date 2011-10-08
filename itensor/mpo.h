@@ -312,7 +312,8 @@ Real psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi
 {
     Real re, im;
     psiHphi(psi,H,phi,re,im);
-    if(im != 0) std::cerr << boost::format("\nReal psiHphi: WARNING, dropping non-zero (im = %.5f) imaginary part of expectation value.\n")%im;
+    if(fabs(im) > 1.0e-12 * fabs(re))
+	std::cerr << boost::format("\nReal psiHphi: WARNING, dropping non-zero (im = %.5f) imaginary part of expectation value.\n")%im;
     return re;
 }
 
@@ -343,7 +344,8 @@ inline void psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITens
 inline Real psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi) //Re[<psi|H|phi>]
 {
     Real re,im; psiHphi(psi,H,LB,RB,phi,re,im);
-    if(im != 0) std::cerr << "Real psiHphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
+    if(fabs(im) > 1.0e-12 * fabs(re))
+	std::cerr << "Real psiHphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
     return re;
 }
 
@@ -377,7 +379,8 @@ inline Real psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMP
 {
     Real re,im;
     psiHKphi(psi,H,K,phi,re,im);
-    if(fabs(im) > 1E-12) Error("Non-zero imaginary part in psiHKphi");
+    if(fabs(im) > 1.0e-12 * fabs(re))
+	Error("Non-zero imaginary part in psiHKphi");
     return re;
 }
 
