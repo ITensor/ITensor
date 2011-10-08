@@ -372,7 +372,6 @@ public:
         s.write((char*) &primelevel_,sizeof(primelevel_));
         const int t = IndexTypeToInt(p->_type);
         s.write((char*) &t,sizeof(t));
-        //s.write((char*) &(p->ind),sizeof(p->ind));
         for(int i = 0; i < int(p->ind.size()); ++i) 
         { const char c = p->ind.data[i] - '0'; s.write(&c,sizeof(c)); }
         s.write((char*) &(p->m_),sizeof(p->m_));
@@ -382,19 +381,32 @@ public:
     }
 
     void read(std::istream& s)
-    {
+        {
         s.read((char*) &primelevel_,sizeof(primelevel_));
         int t; s.read((char*) &t,sizeof(t));
-        //int ind; s.read((char*) &ind,sizeof(ind));
         boost::uuids::uuid ind;
         for(int i = 0; i < int(ind.size()); ++i) 
-        { char c; s.read(&c,sizeof(c)); ind.data[i] = '0'+c; }
+            { char c; s.read(&c,sizeof(c)); ind.data[i] = '0'+c; }
         int mm; s.read((char*) &mm,sizeof(mm));
         int nlength; s.read((char*) &nlength,sizeof(nlength));
         char* newname = new char[nlength+1]; s.read(newname,nlength+1);
         std::string ss(newname); delete newname;
-        p = new IndexDat(ss,mm,IntToIndexType(t),ind);
-    }
+        if(IntToIndexType(t) == ReIm)
+            {
+            if(primelevel_ == 0) 
+                p = IndexDat::ReImDat();
+            else if(primelevel_ == 1) 
+                p = IndexDat::ReImDatP();
+            else if(primelevel_ == 2) 
+                p = IndexDat::ReImDatPP();
+            else
+                Error("Illegal primelevel for Index of ReIm type");
+            }
+        else
+            {
+            p = new IndexDat(ss,mm,IntToIndexType(t),ind);
+            }
+        }
 
     void print(std::string name = "") const
     { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
