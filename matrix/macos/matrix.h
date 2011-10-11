@@ -78,6 +78,8 @@ void Orthog(const MatrixRef &, int nr = 0, int numpass = 2);
 
 void EigenValues(const MatrixRef &, Vector &, Matrix &);
 void GenEigenValues(const MatrixRef&, Vector&, Vector&);
+void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
+	                                Matrix& revecs, Matrix& ievecs);
 
 void SVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);
 void newSVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);

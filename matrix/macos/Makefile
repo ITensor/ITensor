@@ -102,10 +102,8 @@ testmem:	testmem.o-g $(LIBGFILE)
 	mv testmem.o testmem.o-g
 	touch testmem
 
-testmat:	testmat.o-g $(LIBGFILE)
-	mv testmat.o-g testmat.o
-#	$(CCCOM) $(CCGFLAGS) -o testmat testmat.o cblas_dgemm.o $(LIBGFLAGS)
-	$(CCCOM) $(CCGFLAGS) -o testmat testmat.o $(LIBGFLAGS)
+testmat:	.g_objs/testmat.o $(LIBGFILE)
+	$(CCCOM) $(CCGFLAGS) -o testmat .g_objs/testmat.o $(LIBGFLAGS)
 #-L. -lmatrix-g -lutilities-g -framework Accelerate
 #-L. -lmatrix-g -L./lib -lutilities -lcblas -latlas -lm
 

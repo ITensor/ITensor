@@ -5,6 +5,11 @@
 #include <math.h>
 #include <fstream>
 #include <iomanip>
+using std::cout;
+using std::cin;
+using std::endl;
+using std::ifstream;
+using std::setprecision;
 
 extern Real svdtruncerr;
 #ifdef THIS_IS_MAIN
@@ -369,5 +374,20 @@ void newSVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);
 	check = A - Matrix(U * D * V);
 	cout << "new SVD error is " << Norm(check.TreatAsVector()) << endl;
 	cout << d;
+	}
+    if(1)
+	{
+	Matrix hre(2,2), him(2,2);
+	him = hre = 0.0;
+	hre(2,2) = 1.0;
+	him(1,2) = -1.0;
+	him(2,1) = 1.0;
+	Matrix revecs,ievecs;
+	Vector evals;
+	HermitianEigenvalues(hre,him,evals,revecs,ievecs);
+	cout << "evals are " << evals;
+	cout << "revecs are " << revecs;
+	cout << "ievecs are " << ievecs;
+	cout << "exact from Mathematica is \n{{1.61803, -0.618034}, {{0. - 0.525731 I, \n 0.850651}, {0. - 0.850651 I, -0.525731}}}\n";
 	}
     }
