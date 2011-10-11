@@ -295,6 +295,8 @@ public:
     void reset()
     {
         left.clear();
+        setcomb.clear();
+        rightcomb.clear();
         initted = false;
     }
 
@@ -417,7 +419,7 @@ public:
 
     void conj() 
     { 
-        if(!initted) Error("IQCombiner::conj(): IQCombiner not initialized.");
+        init();
         foreach(IQIndex& I, left) I.conj(); 
         if(do_condense) 
         {
