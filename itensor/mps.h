@@ -171,41 +171,51 @@ public:
     //MPSt: Constructors --------------------------------------------
 
     MPSt() 
-    : N(0), model_(0)
-    { }
+        : N(0), model_(0)
+        { }
 
     MPSt(const ModelT& mod_,int maxmm = MAX_M, Real cut = MIN_CUT) 
     : N(mod_.NN()), A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
     model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
-	{ random_tensors(A); }
+        { 
+        random_tensors(A);
+        }
 
     MPSt(const ModelT& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MIN_CUT) 
     : N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(2),
     model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
-	{ init_tensors(A,initState); }
+        { 
+        init_tensors(A,initState);
+        }
 
-    MPSt(const ModelT& model, std::istream& s) { read(model,s); }
+    MPSt(const ModelT& model, std::istream& s)
+        : N(model.NN()), A(model.NN()+1), model_(&model)
+        { 
+        read(s); 
+        }
 
     virtual ~MPSt() { }
 
-    void read(const ModelT& model, std::istream& s)
-    {
-        model_ = &model;
-        N = model_->NN();
-        A.resize(N+1);
-        for(int j = 1; j <= N; ++j) A.at(j).read(s);
+    void read(std::istream& s)
+        {
+        if(model_ == 0)
+            Error("Can't read to default constructed MPS");
+
+        for(int j = 1; j <= N; ++j) 
+            A.at(j).read(s);
         s.read((char*) &left_orth_lim,sizeof(left_orth_lim));
         s.read((char*) &right_orth_lim,sizeof(right_orth_lim));
         svd_.read(s);
-    }
+        }
 
     void write(std::ostream& s) const
-    {
-        for(int j = 1; j <= N; ++j) A[j].write(s);
+        {
+        for(int j = 1; j <= N; ++j) 
+            A.at(j).write(s);
         s.write((char*) &left_orth_lim,sizeof(left_orth_lim));
         s.write((char*) &right_orth_lim,sizeof(right_orth_lim));
         svd_.write(s);
-    }
+        }
 
 
     //MPSt: operators ------------------------------------------------------
