@@ -2950,3 +2950,45 @@ void SVDcomplex(const Matrix& Mre, const Matrix& Mim, Matrix& Ure,
     Vim = -V.ImMat().t();
     }
 
+void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
+	                                Matrix& revecs, Matrix& ievecs)
+    {
+    MKL_INT N = re.Ncols();
+    if (N != re.Nrows() || re.Nrows() < 1)
+      _merror("HermitianEigenValues: Input Matrix must be square");
+    if(im.Ncols() != N || im.Nrows() != N)
+      _merror("HermitianEigenValues: im not same dimensions as re");
+
+    Matrix imt(im.t());
+    ComplexMatrix H(re,imt), evecs(re,imt);
+
+    char jobz = 'V';
+    char uplo = 'U';
+    MKL_INT lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
+    MKL_Complex16 work[lwork];
+    double rwork[lwork];
+    MKL_INT info;
+    
+    evals.ReDimension(N);
+
+    zheev_(&jobz,&uplo,&N,(MKL_Complex16*)&(H.dat[0]),&N,evals.Store(),work,&lwork,rwork,&info);
+    revecs = H.RealMat().t();
+    ievecs = H.ImMat().t();
+
+    if(info != 0)
+	{
+        cerr << "info is " << info << endl;
+        cout << "info is " << info << endl;
+        //cout << "redoing EigenValues " << endl;
+        //cerr << "redoing EigenValues " << endl;
+        //Matrix AA(A);
+        //for(int i = 1; i <= N; i++)
+	    //for(int j = i+1; j <= N; j++)
+		//if(AA(i,j) != AA(j,i))
+		    //cout << "Asym: " << i SP j SP AA(i,j) SP AA(j,i) << endl;
+        //BackupEigenValues(A,D,Z);
+        //return;
+	_merror("EigenValues: info bad");
+	}
+    }
+
