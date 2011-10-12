@@ -5,6 +5,7 @@
 #include "allocator.h"
 #include "index.h"
 #include "permutation.h"
+#include "prodstats.h"
 
 enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
 
