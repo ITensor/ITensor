@@ -10,8 +10,8 @@ include ../options.mk
 
 SOURCES=itensor.cc iqtensor.cc svdworker.cc mps.cc mpo.cc dmrg.cc
 
-HEADERS=types.h allocator.h real.h permutation.h index.h itensor.h \
-        iqindex.h iqtensor.h combiner.h iqcombiner.h svdworker.h \
+HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
+        itensor.h iqindex.h iqtensor.h combiner.h iqcombiner.h svdworker.h \
         mps.h mpo.h DMRGOpts.h dmrg.h core.h BaseDMRGOpts.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
 
@@ -49,6 +49,7 @@ libitensor-g.a: mkdebugdir $(GOBJECTS)
 	ranlib libitensor-g.a
 
 headerscopy: $(INCLUDE_HEADERS)
+	cp core.h $(INCLUDEDIR)
 
 libs: libitensor.a 
 	cp libitensor.a $(LIBDIR)
