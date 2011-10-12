@@ -41,7 +41,6 @@ clean:
 	cd sample && make clean
 	cd sandbox && make clean
 	rm -f include/*
-	rm -f include/.profiling/*
 	rm -f lib/*
 
 distclean: clean
