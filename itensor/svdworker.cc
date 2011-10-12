@@ -172,32 +172,32 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     Real e1 = max(alleig.back(),1.0e-60);
     int mdisc = 0, m = (int)alleig.size();
     if(absoluteCutoff_)
-	{
-	//Sort all eigenvalues from largest to smallest
-	//irrespective of quantum numbers
-	reverse(alleig.begin(),alleig.end());
-	m = minm_;
-	while(m < maxm_ && m < (int)alleig.size() && alleig[m-1] > cutoff_ ) 
-	    svdtruncerr += alleig[m++ - 1];
-	reverse(alleig.begin(),alleig.end());
-	mdisc = (int)alleig.size() - m;
-	docut = (mdisc > 0 ?  docut = (alleig.at(mdisc-1) + alleig[mdisc])*0.5 : -1);
-	}
+        {
+        //Sort all eigenvalues from largest to smallest
+        //irrespective of quantum numbers
+        reverse(alleig.begin(),alleig.end());
+        m = minm_;
+        while(m < maxm_ && m < (int)alleig.size() && alleig[m-1] > cutoff_ ) 
+            svdtruncerr += alleig[m++ - 1];
+        reverse(alleig.begin(),alleig.end());
+        mdisc = (int)alleig.size() - m;
+        docut = (mdisc > 0 ?  (alleig[mdisc-1] + alleig[mdisc])*0.5 : -1);
+        }
     else
 	if(m > minm_)
 	    {
 	    Real sca = doRelCutoff_ ? e1 : 1.0;
 	    for(; mdisc < (int)alleig.size(); mdisc++, m--)
-		{
-		if(((svdtruncerr += GET(alleig,mdisc)/sca) > cutoff_ && m <= maxm_) 
-			   || m <= minm_)
-		    { 
-		    docut = (mdisc > 0 ?  docut = (alleig[mdisc-1] + alleig[mdisc])*0.5 : -1);
-		    //Overshot by one, correct truncerr
-		    svdtruncerr -= alleig[mdisc]/sca;
-		    break; 
-		    }
-		}
+        {
+        if(((svdtruncerr += GET(alleig,mdisc)/sca) > cutoff_ && m <= maxm_) 
+               || m <= minm_)
+            { 
+            docut = (mdisc > 0 ?  (alleig[mdisc-1] + alleig[mdisc])*0.5 : -1);
+            //Overshot by one, correct truncerr
+            svdtruncerr -= alleig[mdisc]/sca;
+            break; 
+            }
+        }
 	    }
     if(showeigs_)
 	{

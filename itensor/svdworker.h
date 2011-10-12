@@ -39,6 +39,9 @@ public:
     bool doRelCutoff() const { return doRelCutoff_; }
     void doRelCutoff(bool val) { doRelCutoff_ = val; }
 
+    // If absoluteCutoff_ == true, do a strict limit
+    // on the eigenvalues of the density matrix, 
+    // not trying for a truncation error
     bool absoluteCutoff() const { return absoluteCutoff_; }
     void absoluteCutoff(bool val) { absoluteCutoff_ = val; }
 
@@ -90,6 +93,7 @@ private:
     bool truncate_; 
     bool showeigs_;
     bool doRelCutoff_;
+    bool absoluteCutoff_;
     LogNumber refNorm_;
     std::vector<Vector> eigsKept_;
 
@@ -120,7 +124,7 @@ SVDWorker::
 SVDWorker() 
     : N(1), truncerr_(N+1), cutoff_(MIN_CUT), minm_(1), maxm_(MAX_M),
       truncate_(true), showeigs_(false), doRelCutoff_(false),
-      refNorm_(1), eigsKept_(N+1)
+      absoluteCutoff_(false), refNorm_(1), eigsKept_(N+1)
     { }
 
 inline
@@ -128,7 +132,7 @@ SVDWorker::
 SVDWorker(int N_)
     : N(N_), truncerr_(N+1), cutoff_(MIN_CUT), minm_(1), maxm_(MAX_M),
       truncate_(true), showeigs_(false), doRelCutoff_(false),
-      refNorm_(1), eigsKept_(N+1)
+      absoluteCutoff_(false), refNorm_(1), eigsKept_(N+1)
     { }
 
 inline
@@ -137,7 +141,7 @@ SVDWorker(int N_, Real cutoff, int minm, int maxm,
           bool doRelCutoff, const LogNumber& refNorm)
     : N(N_), truncerr_(N+1), cutoff_(cutoff), minm_(minm), maxm_(maxm),
       truncate_(true), showeigs_(false), doRelCutoff_(doRelCutoff),
-      refNorm_(refNorm), eigsKept_(N+1)
+      absoluteCutoff_(false), refNorm_(refNorm), eigsKept_(N+1)
     { }
 
 inline
@@ -154,6 +158,7 @@ read(std::istream& s)
     s.read((char*)&truncate_,sizeof(truncate_));
     s.read((char*)&showeigs_,sizeof(showeigs_));
     s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
+    s.read((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.read((char*)&refNorm_,sizeof(refNorm_));
     for(int j = 1; j <= N; ++j)
         readVec(s,eigsKept_[j]);
@@ -172,6 +177,7 @@ write(std::ostream& s) const
     s.write((char*)&truncate_,sizeof(truncate_));
     s.write((char*)&showeigs_,sizeof(showeigs_));
     s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
+    s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.write((char*)&refNorm_,sizeof(refNorm_));
     for(int j = 1; j <= N; ++j)
         writeVec(s,eigsKept_[j]);
