@@ -208,6 +208,12 @@ public:
 
     IQTensor() : p(0) {}
 
+    explicit IQTensor(Real val) 
+        : p(new IQTDat()) 
+        { 
+        operator+=(ITensor(val));
+        }
+
     explicit IQTensor(const IQIndex& i1) : p(new IQTDat(i1)) { }
 
     IQTensor(const IQIndex& i1,const IQIndex& i2) : p(new IQTDat(i1,i2)) { }
