@@ -566,6 +566,12 @@ void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, bo
 //Non-contracting product: Cikj = Aij Bkj (no sum over j)
 ITensor& ITensor::operator/=(const ITensor& other)
 {
+    if(this == &other)
+        {
+        ITensor cp_oth(other);
+        return operator/=(cp_oth);
+        }
+
     //These hold the indices from other 
     //that will be added to this->index_
     int nr1_ = 0;
@@ -667,11 +673,17 @@ ITensor& ITensor::operator/=(const ITensor& other)
 
 ITensor& ITensor::operator*=(const ITensor& other)
 {
+    if(this == &other)
+        {
+        ITensor cp_oth(other);
+        return operator*=(cp_oth);
+        }
+
     //Complex types are treated as just another index, of type ReIm
     //Multiplication is handled automatically with these simple tensor helpers
     if(findindexn(Index::IndReIm()) && other.findindexn(Index::IndReIm()) && !other.findindexn(Index::IndReImP())
 	    && !other.hasindex(Index::IndReImPP()) && !hasindex(Index::IndReImP()) && !hasindex(Index::IndReImPP()))
-	{
+        {
         static ITensor primer(Index::IndReIm(),Index::IndReImP(),1.0);
         static ITensor primerP(Index::IndReIm(),Index::IndReImPP(),1.0);
         static ITensor prod(Index::IndReIm(),Index::IndReImP(),Index::IndReImPP());
@@ -688,7 +700,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
         operator*=(primer);
         operator*=(prod * (other * primerP));
         return *this;
-	}
+        }
 
     static boost::array<Index,NMAX+1> new_index_;
 
@@ -699,42 +711,54 @@ ITensor& ITensor::operator*=(const ITensor& other)
     //Handle m==1 Indices
 
     for(int k = rn_+1; k <= this->r_; ++k)
-    {
+        {
         const Index& K = index_[k];
         for(int j = other.rn_+1; j <= other.r_; ++j)
         { if(other.index_[j] == K) { goto skip_this; } }
         new_index1_[++nr1_] = &K;
         skip_this:;
-    }
+        }
     for(int j = other.rn_+1; j <= other.r_; ++j)
-    {
+        {
         const Index& J = other.index_[j];
         for(int k = this->rn_+1; k <= this->r_; ++k)
         { if(index_[k] == J) { goto skip_other; } }
         new_index1_[++nr1_] = &J;
         skip_other:;
-    }
+        }
 
     if(other.rn_ == 0)
-    {
+        {
         scale_ *= other.scale_;
         scale_ *= other.p->v(1);
         r_ = rn_ + nr1_;
-        assert(r_ <= NMAX);
+        if(r_ > NMAX) 
+            {
+            std::cout << "new r_ = " << r_ << "\n";
+            std::cerr << "new r_ = " << r_ << "\n";
+            Print(*this);
+            Print(other);
+            Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
+            }
         //Keep current m!=1 indices, overwrite m==1 indices
         for(int j = 1; j <= nr1_; ++j) 
             { index_[rn_+j] = *(new_index1_[j]); }
         set_unique_Real();
         return *this;
-    }
+        }
     else if(rn_ == 0)
-    {
+        {
         scale_ *= other.scale_;
         scale_ *= p->v(1);
         p = other.p;
         rn_ = other.rn_;
         r_ = rn_ + nr1_;
-        assert(r_ <= NMAX);
+        if(r_ > NMAX) 
+            {
+            Print(*this);
+            Print(other);
+            Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
+            }
         for(int j = 1; j <= rn_; ++j) 
             { new_index_[j] = other.index_[j]; }
         for(int j = 1; j <= nr1_; ++j) 
@@ -742,7 +766,7 @@ ITensor& ITensor::operator*=(const ITensor& other)
         index_.swap(new_index_);
         set_unique_Real();
         return *this;
-    }
+        }
 
     int nsamen,cdim;
     boost::array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
@@ -759,29 +783,28 @@ ITensor& ITensor::operator*=(const ITensor& other)
 
     //Fill in new_index_
 
-#ifdef DEBUG
     if((rn_ + other.rn_ - 2*nsamen + nr1_) > NMAX) 
-    {
+        {
         Print(*this);
         Print(other);
         Print(nsamen);
         cerr << "new m==1 indices\n";
         for(int j = 1; j <= nr1_; ++j) cerr << *(new_index1_.at(j)) << "\n";
         Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
-    }
-#endif
+        }
 
     //Handle m!=1 indices
     int new_rn_ = 0;
     for(int j = 1; j <= this->rn_; ++j)
-    { if(!contractedL[j]) new_index_[++new_rn_] = index_[j]; }
+        { if(!contractedL[j]) new_index_[++new_rn_] = index_[j]; }
     for(int j = 1; j <= other.rn_; ++j)
-    { if(!contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
+        { if(!contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
     rn_ = new_rn_;
 
     //Put in m==1 indices
     r_ = rn_;
-    for(int j = 1; j <= nr1_; ++j) new_index_[++r_] = *(new_index1_.at(j));
+    for(int j = 1; j <= nr1_; ++j) 
+        new_index_[++r_] = *(new_index1_.at(j));
 
     index_.swap(new_index_);
 
