@@ -239,24 +239,6 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     const IndexT& active = comb.right();
 
     Tensor rho;
-<<<<<<< HEAD
-    if(AAc.is_complex())
-        {
-        Tensor re,im;
-        AAc.SplitReIm(re,im);
-        rho = re; rho.conj(); rho.primeind(active);
-        rho *= re;
-        im *= conj(primeind(im,active));
-        rho += im;
-        }
-    else 
-        { 
-        Tensor AAcc = conj(AAc); 
-        AAcc.primeind(active); 
-        rho = AAc*AAcc; 
-        }
-    assert(rho.r() == 2);
-=======
     if(0 && AAc.is_complex())
 	{
 	Tensor re,im;
@@ -273,7 +255,6 @@ void SVDWorker::operator()(int b, const Tensor& AA,
 	rho = AAc*AAcc; 
 	}
     //assert(rho.r() == 2);
->>>>>>> Added diag_denmat_complex to do the proper diagonalization of a Hermitian
 
     Real saved_cutoff = cutoff_; 
     int saved_minm = minm_; 
