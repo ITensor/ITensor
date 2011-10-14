@@ -137,7 +137,6 @@ void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
     if(K.NN() != N) Error("Mismatched N in exact_applyMPO");
 
     res = x;
-    res.position(1);
 
     res.AAnc(1) = x.AA(1) * K.AA(1);
     for(int j = 1; j < N; ++j)
