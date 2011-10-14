@@ -2950,6 +2950,11 @@ void SVDcomplex(const Matrix& Mre, const Matrix& Mim, Matrix& Ure,
     Vim = -V.ImMat().t();
     }
 
+extern "C"
+void zheev_(char *jobz, char *uplo, MKL_INT *n, MKL_Complex16 *a, 
+            MKL_INT *lda, double *w, MKL_Complex16 *work, MKL_INT *lwork, 
+            double *rwork, MKL_INT *info );
+
 void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
 	                                Matrix& revecs, Matrix& ievecs)
     {
@@ -2971,7 +2976,8 @@ void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
     
     evals.ReDimension(N);
 
-    zheev_(&jobz,&uplo,&N,(MKL_Complex16*)&(H.dat[0]),&N,evals.Store(),work,&lwork,rwork,&info);
+    zheev_(&jobz,&uplo,&N,(MKL_Complex16*)&(H.dat[0]),&N,evals.Store(),
+           work,&lwork,rwork,&info);
     revecs = H.RealMat().t();
     ievecs = H.ImMat().t();
 
