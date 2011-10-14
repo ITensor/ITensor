@@ -177,10 +177,10 @@ writeVec(std::ostream& s, const Vector& V)
     s.write((char*)&m,sizeof(m));
     Real val;
     for(int k = 1; k <= m; ++k)
-	{
-	val = V(k);
-	s.write((char*)&val,sizeof(val));
-	}
+        {
+        val = V(k);
+        s.write((char*)&val,sizeof(val));
+        }
     }
 
     inline void 
@@ -191,10 +191,10 @@ readVec(std::istream& s, Vector& V)
     V.ReDimension(m);
     Real val;
     for(int k = 1; k <= m; ++k)
-	{
-	s.read((char*)&val,sizeof(val));
-	V(k) = val;
-	}
+        {
+        s.read((char*)&val,sizeof(val));
+        V(k) = val;
+        }
     }
 
 class Globals

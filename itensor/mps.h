@@ -501,7 +501,7 @@ inline bool checkQNs(const IQMPS& psi)
 {
     const int N = psi.NN();
 
-    QN zero;
+    QN Zero;
 
     int center = findCenter(psi);
     if(center == -1)
@@ -520,11 +520,11 @@ inline bool checkQNs(const IQMPS& psi)
             std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
             return false;
         }
-        if(psi.AA(i).div() != zero)
+        if(psi.AA(i).div() != Zero)
         {
             std::cerr << "At i = " << i << "\n";
             Print(psi.AA(i));
-            std::cerr << "Multiple non-zero div IQTensors in MPS\n";
+            std::cerr << "IQTensor other than the ortho center had non-zero divergence\n";
             return false;
         }
     }
