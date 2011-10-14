@@ -461,6 +461,7 @@ public:
 		{
 		std::cerr << "Block didn't match expected div\n";
 		std::cout << "Block didn't match expected div\n";
+        this->printIQInds("this IQTensor");
 		Print(t);
 		return false;
 		}
@@ -592,6 +593,25 @@ public:
     friend inline 
     IQTensor primeind(IQTensor A, const IQIndex& I, const IQIndex& J)
     { A.primeind(I); A.primeind(J); return A; }
+
+    void noprimeind(const IQIndex& I)
+	{
+	solo();
+	p->uninit_rmap();
+	foreach(IQIndex& J, p->iqindex_)
+	    if(J == I) 
+            {
+            J.noprime();
+            break;
+            }
+
+	foreach(ITensor& t, p->itensor)
+    foreach(const inqn& x, I.iq())
+        {
+        if(t.hasindex(x.index)) 
+            t.noprimeind(x.index);
+        }
+	}
 
     friend inline IQTensor primed(IQTensor A)
 	{ A.doprime(primeBoth); return A; }
@@ -783,13 +803,15 @@ public:
 	printdat = false; 
 	}
 
-    void printIQInds(std::string name = "") const
+    void printIQInds(const std::string& name = "") const
 	{ 
 	std::cerr << "\n" << name << " (IQIndices only) = \n";
 	for(size_t j = 0; j < p->iqindex_.size(); ++j)
 	    std::cerr << p->iqindex_[j] << "\n\n";
 	std::cerr << "---------------------------\n\n";
 	}
+    inline void printIQInds(const boost::format& fname) const
+        { printIQInds(fname.str()); }
 
     void assignFrom(const IQTensor& other) const
 	{
@@ -861,15 +883,22 @@ private:
 public:
 
     inline friend std::ostream& operator<<(std::ostream & s, const IQTensor &t)
-	{
-	s << "\n----- IQTensor -----\nIQIndices: " << std::endl;
-	foreach(const IQIndex& I, t.iqinds()) s << "  " << I << std::endl;
-	s << "ITensors: \n";
-	foreach(const ITensor& i, t.itensors())
-		    s <<"	" << i << "\n";
-	s << "-------------------" << "\n\n";
-	return s;
-	}
+        {
+        s << "\n----- IQTensor -----\n";
+        if(t.is_null())
+            {
+            s << "(IQTensor is null)\n\n";
+            return s;
+            }
+        s << "IQIndices:\n";
+        foreach(const IQIndex& I, t.iqinds()) 
+            s << "  " << I << std::endl;
+        s << "ITensors:\n";
+        foreach(const ITensor& i, t.itensors())
+            s << "  " << i << std::endl;
+        s << "-------------------" << "\n\n";
+        return s;
+        }
 
 }; //class IQTensor
 
