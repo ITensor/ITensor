@@ -198,7 +198,6 @@ private:
         if(p->count() != 1) 
         {
             p = new ITDat(*p);
-            IF_COUNT_COPIES(++copycount;)
         }
 	}
     
