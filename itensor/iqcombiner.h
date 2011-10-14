@@ -432,10 +432,10 @@ public:
     inline friend std::ostream& operator<<(std::ostream & s, const IQCombiner & c)
     {
         if(c.isInit())
-            { s << std::endl << "right is " << c.right() << "\n"; }
+            { s << std::endl << "Right index is " << c.right() << "\n"; }
         else
-            { s << std::endl << "right is not initialized\n"; }
-        s << "lefts are \n";
+            { s << std::endl << "Right index is not initialized\n\n"; }
+        s << "Left indices: \n";
         foreach(const IQIndex& I, c.left) s << I << std::endl;
         return s << "\n\n";
     }
