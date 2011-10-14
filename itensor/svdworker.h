@@ -75,6 +75,8 @@ public:
 
     Real diag_denmat(const ITensor& rho, Vector& D, ITensor& U);
     Real diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U);
+    Real diag_denmat_complex(const IQTensor& rho, Vector& D, IQTensor& U);
+    Real diag_denmat_complex(const ITensor& rho, Vector& D, ITensor& U);
 
     template <class Tensor>
     void operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
@@ -237,6 +239,7 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     const IndexT& active = comb.right();
 
     Tensor rho;
+<<<<<<< HEAD
     if(AAc.is_complex())
         {
         Tensor re,im;
@@ -253,6 +256,24 @@ void SVDWorker::operator()(int b, const Tensor& AA,
         rho = AAc*AAcc; 
         }
     assert(rho.r() == 2);
+=======
+    if(0 && AAc.is_complex())
+	{
+	Tensor re,im;
+	AAc.SplitReIm(re,im);
+	rho = re; rho.conj(); rho.primeind(active);
+	rho *= re;
+	im *= conj(primeind(im,active));
+	rho += im;
+	}
+    else 
+	{ 
+	Tensor AAcc = conj(AAc); 
+	AAcc.primeind(active); 
+	rho = AAc*AAcc; 
+	}
+    //assert(rho.r() == 2);
+>>>>>>> Added diag_denmat_complex to do the proper diagonalization of a Hermitian
 
     Real saved_cutoff = cutoff_; 
     int saved_minm = minm_; 
@@ -265,7 +286,10 @@ void SVDWorker::operator()(int b, const Tensor& AA,
         }
 
     Tensor U;
-    truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),U);
+    if(AAc.is_complex())
+	truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),U);
+    else
+	truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),U);
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 

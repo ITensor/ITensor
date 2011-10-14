@@ -4,6 +4,7 @@ using std::vector;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::pair;
 
 Real SVDWorker::diag_denmat(const ITensor& rho, Vector& D, ITensor& U)
     {
@@ -53,6 +54,13 @@ Real SVDWorker::diag_denmat(const ITensor& rho, Vector& D, ITensor& U)
     U = ITensor(active,newmid,UU.Columns(1,mp));
     lastd = D;
     return svdtruncerr;
+    }
+
+Real SVDWorker::diag_denmat_complex(const ITensor& rho, Vector& D, ITensor& U)
+    {
+    ITensor rhore,rhoim;
+    rho.SplitReIm(rhore,rhoim);		// Need to fix this to put in Hermitian case!
+    return diag_denmat(rhore,D,U);
     }
 
 Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
@@ -172,6 +180,7 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     Real e1 = max(alleig.back(),1.0e-60);
     int mdisc = 0, m = (int)alleig.size();
     if(absoluteCutoff_)
+<<<<<<< HEAD
         {
         //Sort all eigenvalues from largest to smallest
         //irrespective of quantum numbers
@@ -183,11 +192,25 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
         mdisc = (int)alleig.size() - m;
         docut = (mdisc > 0 ?  (alleig[mdisc-1] + alleig[mdisc])*0.5 : -1);
         }
+=======
+	{
+	//Sort all eigenvalues from largest to smallest
+	//irrespective of quantum numbers
+	reverse(alleig.begin(),alleig.end());
+	m = minm_;
+	while(m < maxm_ && m < (int)alleig.size() && alleig[m-1] > cutoff_ ) 
+	    svdtruncerr += alleig[m++ - 1];
+	reverse(alleig.begin(),alleig.end());
+	mdisc = (int)alleig.size() - m;
+	docut = (mdisc > 0 ?  (alleig.at(mdisc-1) + alleig[mdisc])*0.5 : -1);
+	}
+>>>>>>> Added diag_denmat_complex to do the proper diagonalization of a Hermitian
     else
 	if(m > minm_)
 	    {
 	    Real sca = doRelCutoff_ ? e1 : 1.0;
 	    for(; mdisc < (int)alleig.size(); mdisc++, m--)
+<<<<<<< HEAD
         {
         if(((svdtruncerr += GET(alleig,mdisc)/sca) > cutoff_ && m <= maxm_) 
                || m <= minm_)
@@ -198,6 +221,18 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
             break; 
             }
         }
+=======
+		{
+		if(((svdtruncerr += GET(alleig,mdisc)/sca) > cutoff_ && m <= maxm_) 
+			   || m <= minm_)
+		    { 
+		    docut = (mdisc > 0 ?  (alleig[mdisc-1] + alleig[mdisc])*0.5 : -1);
+		    //Overshot by one, correct truncerr
+		    svdtruncerr -= alleig[mdisc]/sca;
+		    break; 
+		    }
+		}
+>>>>>>> Added diag_denmat_complex to do the proper diagonalization of a Hermitian
 	    }
     if(showeigs_)
 	{
@@ -268,3 +303,210 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     lastd = D;
     return svdtruncerr;
     } //Real SVDWorker::diag_denmat
+
+Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQTensor& U)
+    {
+    bool docomplex = false;
+    IQIndex active;
+    printdat = true;
+    if(rho.r() == 3) 
+	{
+	docomplex = true;
+	for(int i = 1; i <= 3; i++)
+	    if(rho.index(i).dir() == Out)
+		active = rho.index(i);
+	}
+    else
+	active = rho.finddir(Out);
+
+    assert(active.primeLevel() == 0);
+
+    vector<Matrix> mmatrixre(rho.iten_size());
+    vector<Matrix> mmatrixim(rho.iten_size());
+    vector<Vector> mvector(rho.iten_size());
+    vector<Real> alleig;
+
+    if(doRelCutoff_)
+	{
+        Real maxLogNum = -200;
+        foreach(const ITensor& t, rho.itensors())
+	    maxLogNum = max(maxLogNum,t.scale().logNum());
+        refNorm_ = LogNumber(maxLogNum,1);
+	}
+    //1. Diagonalize each ITensor within rho
+    int itenind = 0;
+    for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
+	{
+        const ITensor& t = *it;
+        t.scaleTo(refNorm_);
+
+        Matrix &UUre = GET(mmatrixre,itenind);
+        Matrix &UUim = GET(mmatrixim,itenind);
+        Vector &d = GET(mvector,itenind);
+
+        //Diag ITensors within rho
+	int ii = 1, jj = 2;
+	if(docomplex)
+	    {
+	    if(t.index(1) == IQIndex::IndReIm())
+		ii = 2, jj = 3;
+	    else if(t.index(2) == IQIndex::IndReIm())
+		ii = 1, jj = 3;
+	    else if(t.index(3) == IQIndex::IndReIm())
+		ii = 1, jj = 2;
+	    else 
+		Error("bad IndReIm");
+	    }
+	//cout << "nontrivial indices are " << t.index(ii) SP t.index(jj) << endl;
+	//cout << "t is " << t << endl;
+	//cout << "refNorm_ is " << refNorm_ << endl;
+        int n = t.index(ii).m();
+        Matrix Mre(n,n), Mim(n,n);
+	ITensor tre,tim;
+	if(docomplex)
+	    {
+	    t.SplitReIm(tre,tim);
+	    tre.scaleTo(refNorm_);
+	    tim.scaleTo(refNorm_);
+	    tre.toMatrix11NoScale(t.index(ii),t.index(jj),Mre);
+	    tim.toMatrix11NoScale(t.index(ii),t.index(jj),Mim);
+	    Mre *= -1;
+	    Mim *= -1;
+	    HermitianEigenvalues(Mre,Mim,d,UUre,UUim);
+	    }
+	else
+	    {
+	    t.toMatrix11NoScale(t.index(ii),t.index(jj),Mre);
+	    Mre *= -1;
+	    EigenValues(Mre,d,UUre);
+	    }
+	d *= -1;
+        for(int j = 1; j <= n; ++j) 
+            { alleig.push_back(d(j)); }
+        ++itenind;
+	}
+
+    //2. Truncate eigenvalues
+
+    //Sort all eigenvalues from smallest to largest
+    //irrespective of quantum numbers
+    sort(alleig.begin(),alleig.end());
+
+    //Truncate
+    Real docut = -1;
+    Real svdtruncerr = 0;
+    Real e1 = max(alleig.back(),1.0e-60);
+    int mdisc = 0, m = (int)alleig.size();
+    if(absoluteCutoff_)
+	{
+	//Sort all eigenvalues from largest to smallest
+	//irrespective of quantum numbers
+	reverse(alleig.begin(),alleig.end());
+	m = minm_;
+	while(m < maxm_ && m < (int)alleig.size() && alleig[m-1] > cutoff_ ) 
+	    svdtruncerr += alleig[m++ - 1];
+	reverse(alleig.begin(),alleig.end());
+	mdisc = (int)alleig.size() - m;
+	docut = (mdisc > 0 ?  (alleig.at(mdisc-1) + alleig[mdisc])*0.5 : -1);
+	}
+    else
+	if(m > minm_)
+	    {
+	    Real sca = doRelCutoff_ ? e1 : 1.0;
+	    for(; mdisc < (int)alleig.size(); mdisc++, m--)
+		{
+		if(((svdtruncerr += GET(alleig,mdisc)/sca) > cutoff_ && m <= maxm_) 
+			   || m <= minm_)
+		    { 
+		    docut = (mdisc > 0 ? (alleig[mdisc-1] + alleig[mdisc])*0.5 : -1);
+		    //Overshot by one, correct truncerr
+		    svdtruncerr -= alleig[mdisc]/sca;
+		    break; 
+		    }
+		}
+	    }
+    if(showeigs_)
+	{
+        cout << endl;
+        cout << boost::format("truncate_ = %s")%(truncate_?"true":"false")<<endl;
+        cout << boost::format("Kept %d, discarded %d states in diag_denmat")
+                                     % m % mdisc << endl;
+        cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
+        cout << boost::format("docut = %.2E")%docut << endl;
+        cout << boost::format("cutoff=%.2E, minm=%d, maxm=%d")%cutoff_%minm_%maxm_ << endl;
+        cout << "doRelCutoff is " << (doRelCutoff_ ? "true" : "false") << endl;
+        cout << "absoluteCutoff is " << (absoluteCutoff_ ? "true" : "false") << endl;
+        cout << "refNorm is " << refNorm_ << endl;
+        int s = alleig.size();
+        const int max_show = 20;
+        int stop = s-min(s,max_show);
+        cout << "Eigs: ";
+        for(int j = s-1; j >= stop; --j)
+	    {
+            cout << boost::format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
+                                % alleig[j];
+            cout << ((j != stop) ? ", " : "\n");
+	    }
+	}
+
+    assert(m <= maxm_); 
+    assert(m < 20000);
+
+    //3. Construct orthogonalized IQTensor U
+    vector<ITensor> terms; terms.reserve(rho.iten_size());
+    vector<inqn> iq; iq.reserve(rho.iten_size());
+    itenind = 0;
+    for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
+	{
+        const ITensor& t = *it;
+        const Vector& thisD = GET(mvector,itenind);
+
+        int this_m = 1;
+        for(; this_m <= thisD.Length(); ++this_m)
+            if(thisD(this_m) < docut) 
+		break;
+        --this_m; //since for loop overshoots by 1
+
+        if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
+            { this_m = 1; m = 1; docut = 1; }
+
+        if(this_m == 0) 
+	    { 
+	    ++itenind; 
+	    continue; 
+	    }
+
+        Index nm("qlink",this_m);
+        Index act = t.index(1).deprimed();
+	if(docomplex && act == Index::IndReIm())
+	    act = t.index(2).deprimed();
+        iq.push_back(inqn(nm,active.qn(act)));
+
+        Matrix Utruncre = GET(mmatrixre,itenind).Columns(1,this_m);
+        Matrix Utruncim;
+	if(docomplex)
+	    Utruncim = GET(mmatrixim,itenind).Columns(1,this_m);
+
+        ITensor termre(act,nm),termim(act,nm); 
+        termre.fromMatrix11(act,nm,Utruncre); 
+	if(docomplex)
+	    {
+	    termim.fromMatrix11(act,nm,Utruncim); 
+	    termre += ITensor::Complex_i() * termim;
+	    }
+        terms.push_back(termre);
+        ++itenind;
+	}
+    IQIndex newmid("qlink",iq,In);
+    U = IQTensor(active,newmid);
+    if(docomplex)
+	U *= IQTensor::Complex_1();
+    foreach(const ITensor& t, terms) 
+	U += t;
+    D.ReDimension(m);
+    for(int i = 1; i <= m; ++i) 
+        D(i) = GET(alleig,alleig.size()-i);
+    lastd = D;
+    return svdtruncerr;
+    } //Real SVDWorker::diag_denmat
+
