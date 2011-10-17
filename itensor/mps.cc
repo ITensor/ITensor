@@ -380,7 +380,6 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
     Index bond, prev_bond;
     for(int s = 1; s <= N; ++s)
     {
-        if(debug3) cerr << "s = " << s << "\n";
 
         qD.clear(); qt.clear();
         if(s > 1) prev_bond = LinkInd(s-1); 
