@@ -213,46 +213,56 @@ const
 }
 
 int ITensor::_ind2(const IndexVal& iv1, const IndexVal& iv2) const
-{
-    assert(r_ >= 2);
-    boost::array<int,2+1> ja; ja.assign(1);
-    if(rn_ > 2) 
     {
-        cerr << boost::format("# given = 2, rn_ = %d\n")%rn_;
-        Error("Not enough indices (requires all having m!=1)");
+    if(r_ != 2) 
+        {
+        Print(*this);
+        Error("Wrong number of IndexVals");
+        }
+    if(index_[1] == iv1.ind)
+        return ((iv2.i-1)*m(1)+iv1.i);
+    else
+        return ((iv1.i-1)*m(1)+iv2.i);
     }
-    for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
-    {
-        if(index_[k] == iv1.ind)      { ja[k] = iv1.i; }
-        else if(index_[k] == iv2.ind) { ja[k] = iv2.i; }
-    }
-    return ((ja[2]-1)*m(1)+ja[1]);
-}
 
 int ITensor::_ind8(const IndexVal& iv1, const IndexVal& iv2, 
           const IndexVal& iv3, const IndexVal& iv4,
           const IndexVal& iv5,const IndexVal& iv6,
           const IndexVal& iv7,const IndexVal& iv8)
 const
-{
+    {
     boost::array<const IndexVal*,NMAX+1> iv = 
         {{ 0, &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
     boost::array<int,NMAX+1> ja; ja.assign(1);
-    for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
-    {
-        bool gotit = false;
-        for(int j = 1; j <= NMAX; ++j)  // loop over the given indices
-        if(index_[k] == iv[j]->ind) 
-        { ja[k] = iv[j]->i; gotit = true; break; }
-        if(!gotit)
+    //Loop over the given IndexVals
+    int j = 1;
+    while(iv[j]->ind != Index::Null())
         {
+        //Loop over indices of this ITensor
+        bool matched = false;
+        for(int k = 1; k <= r_; ++k)
+            {
+            if(index_[k] == iv[j]->ind)
+                {
+                matched = true;
+                ja[k] = iv[j]->i;
+                break;
+                }
+            }
+        if(!matched)
+            {
             Print(*this);
-            Print(index_[k]);
-            Error("Missing m!=1 Index in arg list");
+            Print(iv[j]);
+            Error("Extra/incorrect IndexVal argument to ITensor");
+            }
+        ++j;
         }
-    }
+
+    if(j != r_+1)
+        Error("Not enough IndexVals provided");
+
     return _ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]);
-}
+    }
 
 void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 {
