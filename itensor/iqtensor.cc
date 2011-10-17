@@ -77,14 +77,15 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
         if(f != other.p->iqindex_.end()) //I is an element of other.iqindex_
             {
             //Check that arrow directions are compatible
-            if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
-                {
-                Print(*this);
-                Print(other);
-                cerr << "IQIndex from *this = " << I << endl;
-                cerr << "IQIndex from other = " << *f << endl;
-                Error("Incompatible arrow directions in IQTensor::operator*.");
-                }
+            if(Globals::checkArrows())
+                if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
+                    {
+                    this->printIQInds("*this");
+                    other.printIQInds("other");
+                    cerr << "IQIndex from *this = " << I << endl;
+                    cerr << "IQIndex from other = " << *f << endl;
+                    Error("Incompatible arrow directions in IQTensor::operator*=.");
+                    }
             for(size_t n = 0; n < I.iq().size(); ++n) 
                 { common_inds.insert(ApproxReal(I.iq()[n].index.unique_Real())); }
 
