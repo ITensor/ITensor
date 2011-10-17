@@ -329,28 +329,32 @@ public:
     //IQTensor operators
 
     IQTensor operator*(IQTensor other) const 
-	{ other *= *this; return other; }
+        { other *= *this; return other; }
     IQTensor& operator*=(const IQTensor& other);
+
+    IQTensor operator/(IQTensor other) const 
+        { other /= *this; return other; }
+    IQTensor& operator/=(const IQTensor& other);
 
     IQTensor& operator+=(const IQTensor& o);
     IQTensor operator+(const IQTensor& o) const 
-	{ IQTensor res(*this); res += o; return res; }
+        { IQTensor res(*this); res += o; return res; }
     IQTensor operator-(const IQTensor& o) const 
-	{ IQTensor res(o); res *= -1; res += *this; return res; }
+        { IQTensor res(o); res *= -1; res += *this; return res; }
 
     IQTensor& operator*=(Real fac) 
-	{ 
-	solo();
-	if(fac == 0) 
-	    { p->itensor.clear(); p->uninit_rmap(); return *this; }
-	foreach(ITensor& t, p->itensor) 
-	    t *= fac;
-	return *this; 
-	}
+        { 
+        solo();
+        if(fac == 0) 
+            { p->itensor.clear(); p->uninit_rmap(); return *this; }
+        foreach(ITensor& t, p->itensor) 
+            t *= fac;
+        return *this; 
+        }
     IQTensor operator*(Real fac) 
-	{ IQTensor res(*this); res *= fac; return res; }
+        { IQTensor res(*this); res *= fac; return res; }
     friend inline IQTensor operator*(Real fac, IQTensor T) 
-	{ T *= fac; return T; }
+        { T *= fac; return T; }
 
     /*
     operator ITensor() const
@@ -402,27 +406,28 @@ public:
         solo();
         boost::array<IQIndexVal,NMAX+1> iv 
             = {{ IQIndexVal::Null(), iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
+
         Real ur = 0; 
-	int nn = 0; 
+        int nn = 0; 
         while(GET(iv,nn+1).iqind != IQIndexVal::Null().iqind) 
-	    ur += GET(iv,++nn).index().unique_Real(); 
+            ur += GET(iv,++nn).index().unique_Real(); 
         if(nn != r()) 
-	    Error("Not enough IQIndexVals provided");
+            Error("Wrong number of IQIndexVals provided");
         ApproxReal r(ur);
 
         if(!p->has_itensor(r))
-	    {
-	    std::vector<Index> indices; 
-	    indices.reserve(nn);
-	    for(int j = 1; j <= nn; ++j) 
-		{
-		if(!hasindex(iv[j].iqind)) 
-		    Error("IQTensor::operator(): IQIndex not found.");
-		indices.push_back(iv[j].index());
-		}
-	    ITensor t(indices);
-	    p->insert_itensor(r,t);
-	    }
+            {
+            std::vector<Index> indices; 
+            indices.reserve(nn);
+            for(int j = 1; j <= nn; ++j) 
+                {
+                if(!hasindex(iv[j].iqind)) 
+                    Error("IQTensor::operator(): IQIndex not found.");
+                indices.push_back(iv[j].index());
+                }
+            ITensor t(indices);
+            p->insert_itensor(r,t);
+            }
         return (p->rmap[r])->operator()(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8);
 	}
 
@@ -581,12 +586,17 @@ public:
 	p->uninit_rmap();
 	foreach(IQIndex& J, p->iqindex_)
 	    if(J == I) 
-		J = J.primed();
+            {
+            J = J.primed();
+            break;
+            }
 
 	foreach(ITensor& t, p->itensor)
-	    foreach(const inqn& x, I.iq())
+    foreach(const inqn& x, I.iq())
+        {
 		if(t.hasindex(x.index)) 
 		    t.primeind(x.index);
+        }
 	}
     friend inline IQTensor primeind(IQTensor A, const IQIndex& I)
     { A.primeind(I); return A; }

@@ -36,6 +36,18 @@ void IQTensor::SplitReIm(IQTensor& re, IQTensor& im) const
 
 IQTensor& IQTensor::operator*=(const IQTensor& other)
 {
+    if(this == &other)
+        {
+        IQTensor cp_oth(other);
+        return operator*=(cp_oth);
+        }
+
+    if(this->is_null()) 
+        Error("'This' IQTensor null in product");
+
+    if(other.is_null()) 
+        Error("Multiplying by null IQTensor");
+
     if(hasindex(IQIndex::IndReIm()) && other.hasindex(IQIndex::IndReIm()) && !other.hasindex(IQIndex::IndReImP())
 	    && !other.hasindex(IQIndex::IndReImPP()) && !hasindex(IQIndex::IndReImP()) && !hasindex(IQIndex::IndReImPP()))
         {
@@ -98,7 +110,7 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
     if(!common_inds.count(ApproxReal(other.p->iqindex_[i].unique_Real())))
         { riqind_holder.push_back(other.p->iqindex_[i]); }
 
-    if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator* riqind_holder had to reallocate.\n\n";
+    if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator*=, riqind_holder had to reallocate.\n\n";
     p->iqindex_.swap(riqind_holder);
 
     std::set<ApproxReal> keys;
@@ -158,6 +170,125 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
     return *this;
 
 } //IQTensor& IQTensor::operator*=(const IQTensor& other)
+
+IQTensor& IQTensor::operator/=(const IQTensor& other)
+{
+    if(this == &other)
+        {
+        IQTensor cp_oth(other);
+        return operator/=(cp_oth);
+        }
+
+    if(this->is_null()) 
+        Error("'This' IQTensor null in product");
+
+    if(other.is_null()) 
+        Error("Multiplying by null IQTensor");
+
+    if(hasindex(IQIndex::IndReIm()) && other.hasindex(IQIndex::IndReIm()) && !other.hasindex(IQIndex::IndReImP())
+	    && !other.hasindex(IQIndex::IndReImPP()) && !hasindex(IQIndex::IndReImP()) && !hasindex(IQIndex::IndReImPP()))
+        {
+        Error("IQTensor::operator/= not yet implemented for complex numbers");
+        }
+
+    solo();
+    p->uninit_rmap();
+
+    std::set<ApproxReal> common_inds;
+    
+    static vector<IQIndex> riqind_holder(1000);
+    riqind_holder.resize(0);
+
+    for(size_t i = 0; i < p->iqindex_.size(); ++i)
+        {
+        const IQIndex& I = p->iqindex_[i];
+        vector<IQIndex>::const_iterator f = find(other.p->iqindex_.begin(),other.p->iqindex_.end(),I);
+        if(f != other.p->iqindex_.end()) //I is an element of other.iqindex_
+            {
+            //Check that arrow directions are compatible
+            if(Globals::checkArrows())
+                if(f->dir() != I.dir() && f->type() != ReIm && I.type() != ReIm)
+                    {
+                    this->printIQInds("*this");
+                    other.printIQInds("other");
+                    cerr << "IQIndex from *this = " << I << endl;
+                    cerr << "IQIndex from other = " << *f << endl;
+                    Error("Incompatible arrow directions in IQTensor::operator/=.");
+                    }
+            for(size_t n = 0; n < I.iq().size(); ++n) 
+                { common_inds.insert(ApproxReal(I.iq()[n].index.unique_Real())); }
+
+            common_inds.insert(ApproxReal(I.unique_Real()));
+            }
+        riqind_holder.push_back(I);
+        }
+
+    for(size_t i = 0; i < other.p->iqindex_.size(); ++i)
+    if(!common_inds.count(ApproxReal(other.p->iqindex_[i].unique_Real())))
+        { riqind_holder.push_back(other.p->iqindex_[i]); }
+
+    if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator/=, riqind_holder had to reallocate.\n\n";
+    p->iqindex_.swap(riqind_holder);
+
+    std::set<ApproxReal> keys;
+
+    list<ITensor> old_itensor; p->itensor.swap(old_itensor);
+
+    //com_this maps the unique_Real of a set of Index's to be summed over together
+    //to those ITensors in *this.itensor having all Index's in that set
+    std::multimap<ApproxReal,const_iten_it> com_this;
+    for(const_iten_it tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
+        {
+        Real r = 0.0;
+        for(int a = 1; a <= tt->r(); ++a)
+            {
+            Real ur = tt->index(a).unique_Real();
+            if(common_inds.count(ApproxReal(ur)))
+                r += ur;
+            }
+        com_this.insert(std::make_pair(ApproxReal(r),tt));
+        keys.insert(ApproxReal(r));
+        }
+
+    //com_other is the same as com_this but for other
+    std::multimap<ApproxReal,const_iten_it> com_other;
+    for(const_iten_it ot = other.const_iten_begin(); ot != other.const_iten_end(); ++ot)
+        {
+        Real r = 0.0;
+        for(int b = 1; b <= ot->r(); ++b)
+            {
+            Real ur = ot->index(b).unique_Real();
+            if(common_inds.count(ApproxReal(ur)))
+                r += ur;
+            }
+        com_other.insert(std::make_pair(ApproxReal(r),ot));
+        keys.insert(ApproxReal(r));
+        }
+
+    typedef std::multimap<ApproxReal,const_iten_it>::iterator mit;
+    std::pair<mit,mit> lrange,rrange;
+    ITensor tt;
+    for(std::set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
+        {
+        //Equal range returns the begin and end iterators for the sequence
+        //corresponding to multimap[key] as a pair
+        lrange = com_this.equal_range(*k);
+        rrange = com_other.equal_range(*k);
+
+        //Iterate over all ITensors in *this and other sharing
+        //the set of contracted Index's corresponding to k
+        for(mit ll = lrange.first; ll != lrange.second; ++ll)
+        for(mit rr = rrange.first; rr != rrange.second; ++rr)
+            {
+            //Multiply the ITensors and add into res
+            tt = *(ll->second); tt /= *(rr->second);
+            operator+=(tt);
+            }
+        }
+
+    return *this;
+
+} //IQTensor& IQTensor::operator/=(const IQTensor& other)
 
 //Extracts the real and imaginary parts of the 
 //component of a rank 0 tensor (scalar)
