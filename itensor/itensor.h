@@ -764,13 +764,17 @@ public:
 
     Real& operator()(const IndexVal& iv1)
 	{
-        assert(r_ >= 1);
         if(rn_ > 1) 
         {
             std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
-            Error("Not enough indices (requires all having m!=1)");
+            Error("Not enough m!=1 indices provided");
         }
-	    assert(p != 0); 
+        if(index_[1] != iv1.ind)
+            {
+            Print(*this);
+            Print(iv1);
+            Error("Incorrect IndexVal argument to ITensor");
+            }
         solo(); 
         scaleTo(1);
         return p->v(iv1.i);
@@ -778,50 +782,53 @@ public:
 
     const Real operator()(const IndexVal& iv1) const
 	{
-        assert(r_ >= 1);
         if(rn_ > 1) 
         {
             std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
-            Error("Not enough indices (requires all having m!=1)");
+            Error("Not enough m!=1 indices provided");
         }
+        if(index_[1] != iv1.ind)
+            {
+            Print(*this);
+            Print(iv1);
+            Error("Incorrect IndexVal argument to ITensor");
+            }
 	    assert(p != 0); 
         return scale_.real()*p->v(iv1.i);
 	}
 
     inline Real& operator()(const IndexVal& iv1, const IndexVal& iv2) 
-    {
-	    assert(p != 0); 
+        {
         solo(); 
         scaleTo(1);
         return p->v(_ind2(iv1,iv2));
-    }
+        }
 
     inline const Real operator()(const IndexVal& iv1, 
                                  const IndexVal& iv2) const
-	{
+        {
 	    assert(p != 0); 
         return scale_.real()*p->v(_ind2(iv1,iv2));
-    }
+        }
 
     inline Real& operator()(const IndexVal& iv1, const IndexVal& iv2, 
                     const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
                     const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
                     const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
-    {
-	    assert(p != 0); 
+        {
         solo(); 
         scaleTo(1);
         return p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
-    }
+        }
 
     inline const Real operator()(const IndexVal& iv1, const IndexVal& iv2, 
                     const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
                     const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
                     const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null()) const
-	{
+        {
 	    assert(p != 0); 
         return scale_.real()*p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
-    }
+        }
 
     //Methods for Mapping to Other Objects ----------------------------------
 

@@ -183,13 +183,27 @@ private:
 	    }
 	}
 public:
-    int r() const { return p->iqindex_.size(); }
-    inline const IQIndex& index(int j) const { return GET(p->iqindex_,j-1); }
-    inline int iten_size() const { return p->itensor.size(); }
-    inline bool iten_empty() const { return p->itensor.empty(); }
-    inline bool is_null() const { return p == 0; }
-    inline bool is_not_null() const { return p != 0; }
-    inline int num_index() const { return p->iqindex_.size(); }
+    int 
+    r() const 
+        { return p->iqindex_.size(); }
+    inline const IQIndex& 
+    index(int j) const 
+        { return GET(p->iqindex_,j-1); }
+    inline int 
+    iten_size() const 
+        { return p->itensor.size(); }
+    inline bool 
+    iten_empty() const 
+        { return p->itensor.empty(); }
+    inline bool 
+    is_null() const 
+        { return p == 0; }
+    inline bool 
+    is_not_null() const 
+        { return p != 0; }
+    inline int 
+    num_index() const 
+        { return p->iqindex_.size(); }
     
     //----------------------------------------------------
     //IQTensor: iterators 
@@ -351,26 +365,22 @@ public:
             t *= fac;
         return *this; 
         }
-    IQTensor operator*(Real fac) 
+    IQTensor operator*(Real fac) const
         { IQTensor res(*this); res *= fac; return res; }
     friend inline IQTensor operator*(Real fac, IQTensor T) 
         { T *= fac; return T; }
 
-    /*
-    operator ITensor() const
-    {
-        std::vector<Index> indices;
-        foreach(const IQIndex& I, p->iqindex_)
-        {
-            if(I.type() != Site) 
-            { Error("IQTensor to ITensor conversion requires all IQIndex's of type Site."); }
-            indices.push_back(I);
-        }
-        ITensor res(indices);
-        match_order();
-        return res;
-    }
-    */
+    ITensor operator*(const ITensor& t) const
+        { ITensor res(*this); res *= t; return res; }
+    friend inline ITensor operator*(const ITensor& t, const IQTensor& T) 
+        { return T.operator*(t); }
+    
+    ITensor operator*(const IndexVal& iv) const
+        { ITensor res(*this); res *= iv; return res; }
+    friend inline ITensor operator*(const IndexVal& iv, const IQTensor& T) 
+        { return T.operator*(iv); }
+
+    operator ITensor() const;
 
     void insert(const ITensor& t) 
 	{ 
@@ -642,8 +652,10 @@ public:
     int find_iqind(const Index& I) const
 	{
 	for(size_t j = 0; j < p->iqindex_.size(); ++j)
+        {
 	    if(p->iqindex_[j].hasindex(I)) 
-		return j+1;
+            return j+1;
+        }
 	return 0;
 	}
 
@@ -912,6 +924,7 @@ public:
 
 }; //class IQTensor
 
+
 inline Real ReSingVal(const IQTensor& x)
     {
     Real re, im;
@@ -966,73 +979,6 @@ public:
     std::string spacer;
     Printit(std::ostream& _s, std::string _spacer) : s(_s), spacer(_spacer) {}
     void operator()(const T& t) { s << t << spacer; }
-    };
-
-
-class SiteOp
-    {
-    const IQIndex si;
-    mutable bool made_iqt, made_t;
-    mutable IQTensor iqt;
-    mutable ITensor t;
-    std::map<ApproxReal, std::pair<IQIndexVal,IQIndexVal> > ivmap;
-    std::map<ApproxReal, Real> valmap;
-    typedef std::map<ApproxReal, Real>::value_type valmap_vt;
-
-    std::pair<IQIndexVal,IQIndexVal> civmap(const ApproxReal& key) const 
-	{ return ivmap.find(key)->second; }
-
-    void make_iqt() const
-	{
-	if(made_iqt) 
-	    return;
-	iqt = IQTensor(conj(si),si.primed());
-	foreach(const valmap_vt& x, valmap)
-	    iqt(civmap(x.first).first,civmap(x.first).second) = x.second;
-	made_iqt = true;
-	}
-    void make_t() const
-	{
-	if(made_t) 
-	    return;
-	t = ITensor(conj(si),si.primed());
-	foreach(const valmap_vt& x, valmap)
-	    t(civmap(x.first).first,civmap(x.first).second) = x.second;
-	made_t = true;
-	}
-public:
-    SiteOp(const IQIndex& si_) : si(si_), made_iqt(false), made_t(false) { }
-    operator ITensor() const 
-	{ make_t(); return t; }
-    operator IQTensor() const 
-	{ make_iqt(); return iqt; }
-
-    Real& operator()(const IQIndexVal& iv, const IQIndexVal& ivp)
-	{
-	if(iv.iqind.primeLevel() != 0) 
-	    Error("SiteOp::operator(): first IndexVal must be unprimed.");
-	if(ivp.iqind.primeLevel() != 1) 
-	    Error("SiteOp::operator(): second IndexVal must be primed.");
-	Real r = iv.iqind.unique_Real() + ivp.iqind.unique_Real() + iv.i + 1000*ivp.i;
-	ivmap[ApproxReal(r)] = std::make_pair(iv,ivp);
-	return valmap[ApproxReal(r)];
-	}
-
-    void print(std::string name = "",Printdat pdat = HideData) const 
-	{ printdat = (pdat==ShowData); std::cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
-    friend std::ostream& operator<<(std::ostream& s, const SiteOp& op) { return s << IQTensor(op); }
-
-    template <class X>
-	ITensor operator*(const X& x) const 
-	    { ITensor res(*this); res *= x; return res; }
-    template <class X>
-	friend inline ITensor operator*(const X& x, const SiteOp& op) 
-	    { ITensor res(op); return (res *= x); }
-
-    IQTensor operator*(const IQTensor& t) const 
-	{ IQTensor res(*this); res *= t; return res; }
-    friend inline IQTensor operator*(const IQTensor& t, const SiteOp& op) 
-	{ IQTensor res(op); return (res *= t); }
     };
 
 #endif

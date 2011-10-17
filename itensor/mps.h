@@ -77,7 +77,14 @@ protected:
     void random_tensors(std::vector<IQTensor>& A_) { }
 
     void init_tensors(std::vector<ITensor>& A_, const InitState& initState)
-    { new_tensors(A_); for(int i = 1; i <= N; ++i) A_[i](initState(i))=1; }
+        { 
+        new_tensors(A_); 
+        for(int i = 1; i <= N; ++i) 
+            {
+            //Will transform into an ITensor automatically
+            A_[i] = IQTensor(initState(i)); 
+            }
+        }
 
     void init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
     {

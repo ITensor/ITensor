@@ -649,6 +649,21 @@ class IQIndex : public Index
         return false;
         }
 
+    int offset(const Index& I) const
+        {
+        int os = 0;
+        for(size_t j = 0; j < pd->iq_.size(); ++j)
+            {
+            const Index& J = pd->iq_[j].index;
+            if(J == I) return os;
+            os += J.m();
+            }
+        Print(*this);
+        Print(I);
+        Error("Index not contained in IQIndex");
+        return 0;
+        }
+
     //------------------------------------------
     //IQIndex: prime methods
 

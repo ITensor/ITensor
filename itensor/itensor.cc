@@ -116,28 +116,28 @@ void ITensor::groupIndices(const boost::array<Index,NMAX+1>& indices, int nind,
 
 void ITensor::expandIndex(const Index& small, const Index& big, 
                           int start, ITensor& res) const
-{
+    {
     assert(small.m() <= big.m());
     assert(start < big.m());
 
     vector<Index> indices; indices.reserve(r_);
     int w = -1;
     for(int j = 1; j <= r_; ++j)
-    {
+        {
         if(index_[j] == small) 
-        { 
+            { 
             w = j;
             indices.push_back(big); 
-        }
+            }
         else indices.push_back(index_[j]);
-    }
+        }
     
     if(w == -1)
-    {
+        {
         Print(*this);
         Print(small);
         Error("couldn't find index");
-    }
+        }
 
     res = ITensor(indices);
     res.scale_ = scale_;
@@ -155,7 +155,7 @@ void ITensor::expandIndex(const Index& small, const Index& big,
     const Vector& thisdat = p->v;
     Vector& resdat = res.p->v;
     for(; c.notDone(); ++c)
-    {
+        {
         resdat((((((((
         c.i[8]+inc8-1)*c.n[7]+
         c.i[7]+inc7-1)*c.n[6]+
@@ -166,8 +166,8 @@ void ITensor::expandIndex(const Index& small, const Index& big,
         c.i[2]+inc2-1)*c.n[1]+
         c.i[1]+inc1)
         = thisdat(c.ind);
+        }
     }
-}
 
 int ITensor::_ind(int i1, int i2, int i3, int i4, 
                   int i5, int i6, int i7, int i8)
@@ -214,15 +214,23 @@ const
 
 int ITensor::_ind2(const IndexVal& iv1, const IndexVal& iv2) const
     {
-    if(r_ != 2) 
+    if(rn_ > 2) 
+        {
+        std::cerr << boost::format("# given = 2, rn_ = %d\n")%rn_;
+        Error("Not enough m!=1 indices provided");
+        }
+    if(index_[1] == iv1.ind && index_[2] == iv2.ind)
+        return ((iv2.i-1)*m(1)+iv1.i);
+    else if(index_[1] == iv2.ind && index_[2] == iv1.ind)
+        return ((iv1.i-1)*m(1)+iv2.i);
+    else
         {
         Print(*this);
-        Error("Wrong number of IndexVals");
+        Print(iv1);
+        Print(iv2);
+        Error("Incorrect IndexVal argument to ITensor");
+        return 1;
         }
-    if(index_[1] == iv1.ind)
-        return ((iv2.i-1)*m(1)+iv1.i);
-    else
-        return ((iv1.i-1)*m(1)+iv2.i);
     }
 
 int ITensor::_ind8(const IndexVal& iv1, const IndexVal& iv2, 
@@ -235,7 +243,7 @@ const
         {{ 0, &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
     boost::array<int,NMAX+1> ja; ja.assign(1);
     //Loop over the given IndexVals
-    int j = 1;
+    int j = 1, nn = 0;
     while(iv[j]->ind != Index::Null())
         {
         //Loop over indices of this ITensor
@@ -245,6 +253,7 @@ const
             if(index_[k] == iv[j]->ind)
                 {
                 matched = true;
+                if(k <= rn_) ++nn;
                 ja[k] = iv[j]->i;
                 break;
                 }
@@ -258,8 +267,10 @@ const
         ++j;
         }
 
-    if(j != r_+1)
-        Error("Not enough IndexVals provided");
+    if(nn != rn_)
+        {
+        Error("Too few m!=1 indices provided");
+        }
 
     return _ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]);
     }

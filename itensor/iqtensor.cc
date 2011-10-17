@@ -368,4 +368,47 @@ IQTensor& IQTensor::operator+=(const IQTensor& other)
     return *this;
 }
 
+IQTensor::
+operator ITensor() const
+    {
+    //Resulting ITensor's indices are 
+    //the Index versions of this's IQIndices
+    std::vector<Index> indices;
+    for(size_t j = 0; j < p->iqindex_.size(); ++j)
+        {
+        indices.push_back(Index(p->iqindex_[j]));
+        }
+    ITensor res(indices);
+
+    //Loop over ITensors (blocks) within this IQTensor
+    for(list<ITensor>::const_iterator it = p->itensor.begin();
+        it != p->itensor.end();
+        ++it)
+        {
+        ITensor exp(*it),nexp;
+        //Loop over Index's of the k'th ITensor
+        for(int j = 1; j <= it->r(); ++j)
+            {
+            //Want to transform 'small' into the 
+            //Index version of the IQIndex that contains
+            //it, with the appropriate offset
+            const Index& small = it->index(j);
+            //Find the IQIndex that contains 'small'
+            const IQIndex* big;
+            int offset = -1;
+            for(size_t q = 0; q < p->iqindex_.size(); ++q)
+                if(p->iqindex_[q].hasindex(small))
+                    {
+                    big = &(p->iqindex_[q]);
+                    offset = big->offset(small);
+                    break;
+                    }
+            exp.expandIndex(small,*big,offset,nexp);
+            exp = nexp;
+            }
+        //Once all Indices expanded, add to res
+        res += exp;
+        }
+    return res;
+    } //IQTensor::operator ITensor() const
 
