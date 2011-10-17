@@ -1,4 +1,3 @@
-#define THIS_IS_MAIN
 #include "test.h"
 #include "iqtensor.h"
 #include <boost/test/unit_test.hpp>
@@ -12,7 +11,7 @@ struct IQTensorDefaults
 
     IQIndex S1,S2,L1,L2;
 
-    IQTensor phi;
+    IQTensor phi,A,B;
 
     IQTensorDefaults() :
     s1u(Index("Site1 Up",1,Site)),
@@ -61,6 +60,26 @@ struct IQTensorDefaults
         du.Randomize();
         phi += du;
         }
+
+        A = IQTensor(L1,S1,L2,S2);
+        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
+        for(int n2 = 1; n2 <= L2.nindex(); ++n2)
+        for(int p1 = 1; p1 <= S1.nindex(); ++p1)
+        for(int p2 = 1; p2 <= S2.nindex(); ++p2)
+            {
+            ITensor T(L1.index(n1),L2.index(n2),S1.index(p1),S2.index(p2));
+            T.Randomize();
+            A += T;
+            }
+
+        B = IQTensor(L1,L2);
+        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
+        for(int n2 = 1; n2 <= L2.nindex(); ++n2)
+            {
+            ITensor T(L1.index(n1),L2.index(n2));
+            T.Randomize();
+            B += T;
+            }
     }
 
 };
@@ -86,26 +105,6 @@ BOOST_AUTO_TEST_CASE(Constructors)
 BOOST_AUTO_TEST_CASE(NonContractProd)
     {
 
-    IQTensor A(L1,S1,L2,S2);
-    for(int n1 = 1; n1 <= L1.nindex(); ++n1)
-    for(int n2 = 1; n2 <= L2.nindex(); ++n2)
-    for(int p1 = 1; p1 <= S1.nindex(); ++p1)
-    for(int p2 = 1; p2 <= S2.nindex(); ++p2)
-        {
-        ITensor T(L1.index(n1),L2.index(n2),S1.index(p1),S2.index(p2));
-        T.Randomize();
-        A += T;
-        }
-
-    IQTensor B(L1,L2);
-    for(int n1 = 1; n1 <= L1.nindex(); ++n1)
-    for(int n2 = 1; n2 <= L2.nindex(); ++n2)
-        {
-        ITensor T(L1.index(n1),L2.index(n2));
-        T.Randomize();
-        B += T;
-        }
-
     IQTensor res = A / B;
 
     for(int j1 = 1; j1 <= L1.m(); ++j1)
@@ -116,6 +115,29 @@ BOOST_AUTO_TEST_CASE(NonContractProd)
         CHECK_CLOSE(res(L1(j1),L2(j2),S1(k1),S2(k2)),
                     A(L1(j1),S1(k1),L2(j2),S2(k2))*B(L1(j1),L2(j2)),1E-5);
         }
+
+    }
+
+BOOST_AUTO_TEST_CASE(ITensorConversion)
+    {
+
+    ITensor itphi = phi;
+
+    for(int k1 = 1; k1 <= S1.m(); ++k1)
+    for(int k2 = 1; k2 <= S2.m(); ++k2)
+    for(int j2 = 1; j2 <= L2.m(); ++j2)
+        CHECK_CLOSE(phi(S1(k1),S2(k2),L2(j2)),itphi(Index(S1)(k1),Index(S2)(k2),Index(L2)(j2)),1E-5);
+
+    ITensor itA = A;
+
+    for(int k1 = 1; k1 <= S1.m(); ++k1)
+    for(int k2 = 1; k2 <= S2.m(); ++k2)
+    for(int j1 = 1; j1 <= L1.m(); ++j1)
+    for(int j2 = 1; j2 <= L2.m(); ++j2)
+        CHECK_CLOSE(A(S1(k1),S2(k2),L1(j1),L2(j2)),
+                    itA(Index(S1)(k1),Index(S2)(k2),Index(L1)(j1),Index(L2)(j2)),
+                    1E-5);
+
 
     }
 

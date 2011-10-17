@@ -39,12 +39,12 @@ class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
             int start = 0;
             foreach(const inqn& x, bigind_.iq())
             if(x.qn == q)
-            {
+                {
                 const Index &xi = x.index;
                 small_to_big[std::make_pair(small_qind,start)] = xi;
                 big_to_small[xi] = std::make_pair(small_qind,start);
                 start += xi.m();
-            }
+                }
             iq.push_back(inqn(small_qind,q));
         }
         smallind_ = IQIndex(smallind_name,iq,bigind_.dir(),bigind_.primeLevel());

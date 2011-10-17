@@ -8,7 +8,7 @@ using std::endl;
 DatAllocator<ITDat> ITDat::allocator;
 
 ostream& operator<<(ostream & s, const ITensor & t)
-{
+    {
     s << "log(scale)[incl in elems] = " << t.scale().logNum() 
       << ", r = " << t.r() << ": ";
 
@@ -50,11 +50,11 @@ ostream& operator<<(ostream & s, const ITensor & t)
             s << "\n";
 	}
     return s;
-}
+    }
 
 void ITensor::groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
                            const Index& grouped, ITensor& res) const
-{
+    {
     boost::array<bool,NMAX+1> isReplaced; isReplaced.assign(false);
 
     int tot_m = 1;
@@ -112,7 +112,7 @@ void ITensor::groupIndices(const boost::array<Index,NMAX+1>& indices, int nind,
 
     if(nn == 0) res = ITensor(nindices,*this);
     else        res = ITensor(nindices,*this,P); 
-}
+    }
 
 void ITensor::expandIndex(const Index& small, const Index& big, 
                           int start, ITensor& res) const
@@ -142,29 +142,21 @@ void ITensor::expandIndex(const Index& small, const Index& big,
     res = ITensor(indices);
     res.scale_ = scale_;
 
-    boost::array<int,NMAX+1> inc; inc.assign(0);
+    boost::array<int,NMAX+1> inc; 
+    //Make sure all other inc's are zero
+    inc.assign(0);
     inc.at(w) = start;
 
     Counter c; initCounter(c);
-
-    const int inc1 = inc[1],inc2 = inc[2], 
-              inc3 = inc[3],inc4 = inc[4], 
-              inc5 = inc[5],inc6 = inc[6], 
-              inc7 = inc[7],inc8 = inc[8];
 
     const Vector& thisdat = p->v;
     Vector& resdat = res.p->v;
     for(; c.notDone(); ++c)
         {
-        resdat((((((((
-        c.i[8]+inc8-1)*c.n[7]+
-        c.i[7]+inc7-1)*c.n[6]+
-        c.i[6]+inc6-1)*c.n[5]+
-        c.i[5]+inc5-1)*c.n[4]+
-        c.i[4]+inc4-1)*c.n[3]+
-        c.i[3]+inc3-1)*c.n[2]+
-        c.i[2]+inc2-1)*c.n[1]+
-        c.i[1]+inc1)
+        resdat(res._ind(c.i[1]+inc[1],c.i[2]+inc[2],
+                        c.i[3]+inc[3],c.i[4]+inc[4],
+                        c.i[5]+inc[5],c.i[6]+inc[6],
+                        c.i[7]+inc[7],c.i[8]+inc[8]))
         = thisdat(c.ind);
         }
     }
@@ -261,7 +253,7 @@ const
         if(!matched)
             {
             Print(*this);
-            Print(iv[j]);
+            Print(*iv[j]);
             Error("Extra/incorrect IndexVal argument to ITensor");
             }
         ++j;
