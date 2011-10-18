@@ -81,8 +81,7 @@ protected:
         new_tensors(A_); 
         for(int i = 1; i <= N; ++i) 
             {
-            //Will transform into an ITensor automatically
-            A_[i] = IQTensor(initState(i)); 
+            A_[i] = ITensor(initState(i)); 
             }
         }
 

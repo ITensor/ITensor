@@ -735,6 +735,8 @@ struct IQIndexVal
 
     IndexVal toIndexVal() const;
 
+    operator ITensor() const;
+
     ITensor operator*(const IndexVal& iv) const 
         { 
         return IndexVal(Index(iqind),i) * iv; 
@@ -799,6 +801,13 @@ toIndexVal() const
     int j,ii;
     calc_ind_ii(j,ii);
     return IndexVal(iqind.index(j),ii); 
+    }
+
+inline
+IQIndexVal::
+operator ITensor() const 
+    { 
+    return ITensor(IndexVal(iqind,i)); 
     }
 
 inline
