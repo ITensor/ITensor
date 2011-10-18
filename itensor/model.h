@@ -83,21 +83,21 @@ public:
 
     virtual IQTensor id(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 1; res(Z0(i),Z0P(i)) = 1; res(Dn(i),DnP(i)) = 1;
         return res;
     }
 
     IQTensor sz(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 1; res(Dn(i),DnP(i)) = -1;
         return res;
     }
 
     IQTensor sx(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),Z0P(i)) = ISqrt2; res(Z0(i),UpP(i)) = ISqrt2;
         res(Z0(i),DnP(i)) = ISqrt2; res(Dn(i),Z0P(i)) = ISqrt2;
         return res;
@@ -105,7 +105,7 @@ public:
 
     IQTensor isy(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),Z0P(i)) = +ISqrt2; res(Z0(i),UpP(i)) = -ISqrt2;
         res(Z0(i),DnP(i)) = +ISqrt2; res(Dn(i),Z0P(i)) = -ISqrt2;
         return res;
@@ -113,28 +113,28 @@ public:
 
     IQTensor sp(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Dn(i),Z0P(i)) = Sqrt2; res(Z0(i),UpP(i)) = Sqrt2;
         return res;
     }
 
     IQTensor sm(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),Z0P(i)) = Sqrt2; res(Z0(i),DnP(i)) = Sqrt2;
         return res;
     }
 
     IQTensor sz2(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 1; res(Dn(i),DnP(i)) = 1;
         return res;
     }
 
     IQTensor sx2(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 0.5; res(Up(i),DnP(i)) = 0.5;
         res(Z0(i),Z0P(i)) = 1;
         res(Dn(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = 0.5;
@@ -143,7 +143,7 @@ public:
 
     IQTensor sy2(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 0.5; res(Up(i),DnP(i)) = -0.5;
         res(Z0(i),Z0P(i)) = 1;
         res(Dn(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = -0.5;
@@ -204,28 +204,28 @@ public:
 
     virtual IQTensor id(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 1; res(Dn(i),DnP(i)) = 1;
         return res;
     }
 
     IQTensor sz(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 0.5; res(Dn(i),DnP(i)) = -0.5;
         return res;
     }
 
     IQTensor sx(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = 0.5;
         return res;
     }
 
     IQTensor isy(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = -0.5;
         return res;
     }
@@ -233,7 +233,7 @@ public:
     //S^+
     IQTensor sp(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Dn(i),UpP(i)) = 1;
         return res;
     }
@@ -241,7 +241,7 @@ public:
     //S^-
     IQTensor sm(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),DnP(i)) = 1;
         return res;
     }
@@ -333,28 +333,28 @@ public:
 
     virtual IQTensor id(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Emp(i),EmpP(i)) = 1; res(Occ(i),OccP(i)) = 1;
         return res;
     }
 
     IQTensor C(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Occ(i),EmpP(i)) = 1;
         return res;
     }
 
     IQTensor Cdag(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Emp(i),OccP(i)) = 1;
         return res;
     }
 
     IQTensor n(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Occ(i),OccP(i)) = 1;
         return res;
     }
@@ -362,21 +362,21 @@ public:
     //String operator F_i = (-1)^{n_i} = (1-2*n_i)
     IQTensor FermiPhase(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Emp(i),EmpP(i)) = 1; res(Occ(i),OccP(i)) = -1;
         return res;
     }
 
     IQTensor projEmp(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Emp(i),EmpP(i)) = 1;
         return res;
     }
 
     IQTensor projOcc(int i) const
     {
-        IQTensor res(si(i),siP(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Occ(i),OccP(i)) = 1;
         return res;
     }
@@ -441,7 +441,7 @@ public:
 
     virtual IQTensor id(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(Emp(i),EmpP(i)) = 1; res(UpState(i),UpStateP(i)) = 1;
 	res(DnState(i),DnStateP(i)) = 1; res(UpDnState(i),UpDnStateP(i)) = 1;
 	return res;
@@ -449,7 +449,7 @@ public:
 
     IQTensor Cup(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(UpState(i),EmpP(i)) = 1;
 	res(UpDnState(i),DnStateP(i)) = -1;
 	return res;
@@ -457,7 +457,7 @@ public:
 
     IQTensor Cdagup(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(Emp(i),UpStateP(i)) = 1;
 	res(DnState(i),UpDnStateP(i)) = -1;
 	return res;
@@ -465,7 +465,7 @@ public:
 
     IQTensor Cdn(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(DnState(i),EmpP(i)) = 1;
 	res(UpDnState(i),UpStateP(i)) = 1;
 	return res;
@@ -473,7 +473,7 @@ public:
 
     IQTensor Cdagdn(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(Emp(i),DnStateP(i)) = 1;
 	res(UpState(i),UpDnStateP(i)) = 1;
 	return res;
@@ -481,7 +481,7 @@ public:
 
     IQTensor Nup(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(UpState(i),UpStateP(i)) = 1;
 	res(UpDnState(i),UpDnStateP(i)) = 1;
 	return res;
@@ -489,7 +489,7 @@ public:
 
     IQTensor Ndn(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(DnState(i),DnStateP(i)) = 1;
 	res(UpDnState(i),UpDnStateP(i)) = 1;
 	return res;
@@ -497,7 +497,7 @@ public:
 
     IQTensor Ntot(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(Emp(i),EmpP(i)) = 0; res(UpState(i),UpStateP(i)) = 1;
 	res(DnState(i),DnStateP(i)) = 1; res(UpDnState(i),UpDnStateP(i)) = 2;
 	return res;
@@ -505,14 +505,14 @@ public:
 
     IQTensor NupNdn(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(UpDnState(i),UpDnStateP(i)) = 1;
 	return res;
 	}
 
     IQTensor Sz(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(UpState(i),UpStateP(i)) = 0.5;
 	res(DnState(i),DnStateP(i)) = -0.5;
 	return res;
@@ -521,7 +521,7 @@ public:
     //String operator F_i = (-1)^{n_i} = (1-2*n_i)
     IQTensor FermiPhase(int i) const
 	{
-	IQTensor res(si(i),siP(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(Emp(i),EmpP(i)) = 1; res(UpState(i),UpStateP(i)) = -1;
 	res(DnState(i),DnStateP(i)) = -1; res(UpDnState(i),UpDnStateP(i)) = 1;
 	return res;
