@@ -2,12 +2,425 @@
 #define __IQ_H
 #include "itensor.h"
 #include "iqindex.h"
-#include <set>
 #include <list>
 #include <map>
 
+class IQTDat;
+
+class IQCombiner;
+
+class IQTensor
+{
+public:
+
+    typedef std::list<ITensor>::iterator 
+    iten_it;
+
+    typedef std::list<ITensor>::const_iterator 
+    const_iten_it;
+
+    typedef std::vector<IQIndex>::iterator 
+    iqind_it;
+
+    typedef std::vector<IQIndex>::const_iterator 
+    const_iqind_it;
+
+    int 
+    r() const;
+
+    const IQIndex& 
+    index(int j) const;
+
+    int 
+    iten_size() const;
+
+    bool 
+    iten_empty() const;
+
+    inline bool 
+    is_null() const { return p == 0; }
+
+    inline bool 
+    is_not_null() const { return p != 0; }
+
+    int 
+    num_index() const;
+    
+    //----------------------------------------------------
+    //IQTensor: iterators 
+    const_iten_it 
+    const_iten_begin() const;
+
+    const_iten_it 
+    const_iten_end() const;
+
+    std::pair<const_iten_it,const_iten_it> 
+    itensors() const;
+
+    const_iqind_it 
+    const_iqind_begin() const;
+
+    const_iqind_it 
+    const_iqind_end() const;
+
+    std::pair<const_iqind_it,const_iqind_it> 
+    iqinds() const;
+
+    //----------------------------------------------------
+    //IQTensor: Constructors
+
+    IQTensor();
+
+    explicit 
+    IQTensor(Real val);
+
+    explicit 
+    IQTensor(const IQIndex& i1);
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2);
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3);
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
+             const IQIndex& i4);
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
+             const IQIndex& i4,const IQIndex& i5);
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
+             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6);
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
+             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6,
+             const IQIndex& i7);
+
+    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
+             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6,
+             const IQIndex& i7,const IQIndex& i8);
+
+    explicit 
+    IQTensor(std::vector<IQIndex>& iqinds_);
+
+    explicit
+    IQTensor(const IQIndexVal& iv1);
+
+    IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2);
+
+    IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
+             const IQIndexVal& iv3);
+
+    IQTensor(ITmaker itm);
+
+    IQTensor(IQmaker i);
+
+    IQTensor(PrimeType pt, const IQTensor& other);
+
+    explicit 
+    IQTensor(std::istream& s);
+
+    static const IQTensor& Sing()
+        {
+        static const IQTensor Sing_(makeSing);
+        return Sing_;
+        }
+
+    static const IQTensor& Complex_1()
+        {
+        static const IQTensor Complex_1_(makeComplex_1);
+        return Complex_1_;
+        }
+
+    static const IQTensor& Complex_i()
+        {
+        static const IQTensor Complex_i_(makeComplex_i);
+        return Complex_i_;
+        }
+
+    void read(std::istream& s);
+
+    void write(std::ostream& s) const;
+
+
+    //----------------------------------------------------
+    //IQTensor operators
+
+    //
+    // Contracting product
+    //
+    IQTensor 
+    operator*(IQTensor other) const 
+        { other *= *this; return other; }
+
+    IQTensor& 
+    operator*=(const IQTensor& other);
+
+    //
+    // Non-Contracting product
+    //
+    IQTensor 
+    operator/(IQTensor other) const 
+        { other /= *this; return other; }
+
+    IQTensor& 
+    operator/=(const IQTensor& other);
+
+    //
+    // Addition and subtraction
+    //
+    IQTensor& 
+    operator+=(const IQTensor& o);
+
+    IQTensor 
+    operator+(const IQTensor& o) const 
+        { IQTensor res(*this); res += o; return res; }
+
+    IQTensor 
+    operator-(const IQTensor& o) const 
+        { IQTensor res(o); res *= -1; res += *this; return res; }
+
+    //
+    // Multiplication by a scalar
+    //
+    IQTensor& 
+    operator*=(Real fac);
+
+    IQTensor 
+    operator*(Real fac) const
+        { IQTensor res(*this); res *= fac; return res; }
+
+    friend inline IQTensor 
+    operator*(Real fac, IQTensor T) 
+        { T *= fac; return T; }
+
+    //
+    // Multiplication by an ITensor
+    //
+    ITensor 
+    operator*(const ITensor& t) const
+        { ITensor res(*this); res *= t; return res; }
+    
+    //
+    // Multiplication by an IQIndexVal
+    //
+    IQTensor 
+    operator*(const IQIndexVal& iv) const
+        { IQTensor res(*this); res *= IQTensor(iv); return res; }
+
+    friend inline IQTensor 
+    operator*(const IQIndexVal& iv, const IQTensor& T) 
+        { return IQTensor(iv) * T; }
+
+    //
+    // Multiplication by an IndexVal
+    //
+    ITensor 
+    operator*(const IndexVal& iv) const
+        { ITensor res(*this); res *= iv; return res; }
+
+    friend inline ITensor 
+    operator*(const IndexVal& iv, const IQTensor& T) 
+        { return ITensor(iv) * T; }
+
+    //Convert to ITensor
+    operator ITensor() const;
+
+    IQTensor& 
+    operator+=(const ITensor& t);
+
+    //Like operator+=(ITensor) but
+    //demands that the block is zero
+    //before inserting
+    void insert(const ITensor& t);
+
+    Real& 
+    operator()(const IQIndexVal& iv1, 
+               const IQIndexVal& iv2 = IQIndexVal::Null(), 
+	           const IQIndexVal& iv3 = IQIndexVal::Null(), 
+               const IQIndexVal& iv4 = IQIndexVal::Null(), 
+	           const IQIndexVal& iv5 = IQIndexVal::Null(), 
+               const IQIndexVal& iv6 = IQIndexVal::Null(),
+	           const IQIndexVal& iv7 = IQIndexVal::Null(), 
+               const IQIndexVal& iv8 = IQIndexVal::Null());
+
+    //----------------------------------------------------
+    //IQTensor quantum number methods
+
+    QN 
+    div() const;
+
+    bool 
+    checkDiv(QN expected) const;
+
+    QN 
+    qn(const Index& in) const;
+
+    Arrow 
+    dir(const Index& in) const;
+
+
+    //----------------------------------------------------
+    //IQTensor: prime methods
+
+    void ind_inc_prime(const IQIndex& i,int inc);
+
+    void noprime(PrimeType pt = primeBoth);
+
+    friend inline IQTensor 
+    deprimed(IQTensor A) { A.noprime(); return A; }
+
+    void 
+    noprimelink();
+
+    void 
+    doprime(PrimeType pt);
+
+    //no need to keep prime level small
+    void 
+    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
+
+    void 
+    primeind(const IQIndex& I);
+
+    friend inline IQTensor 
+    primeind(IQTensor A, const IQIndex& I)
+        { A.primeind(I); return A; }
+
+    friend inline IQTensor 
+    primeind(IQTensor A, const IQIndex& I, const IQIndex& J)
+        { A.primeind(I); A.primeind(J); return A; }
+
+    void 
+    noprimeind(const IQIndex& I);
+
+    friend inline IQTensor 
+    primed(IQTensor A) { A.doprime(primeBoth); return A; }
+
+    void 
+    primesite() { doprime(primeSite); }
+
+    friend inline IQTensor 
+    primesite(IQTensor A) { A.doprime(primeSite); return A; }
+
+    void 
+    primelink() { doprime(primeLink); }
+
+    friend inline IQTensor 
+    primelink(const IQTensor& A)
+        { IQTensor res(A); res.doprime(primeLink); return res; }
+
+
+    //----------------------------------------------------
+    //IQTensor index methods
+
+    int 
+    find_iqind(const Index& I) const;
+
+    //Return true if one of the ITensors uses this Index
+    bool 
+    uses_ind(const Index& i) const;
+
+    int 
+    findindex(const IQIndex& i) const;
+
+    bool 
+    hastype(IndexType t) const;
+
+    const IQIndex& 
+    findtype(IndexType t) const;
+
+    const IQIndex& 
+    finddir(Arrow dir) const;
+
+    bool 
+    hasindex(const IQIndex& i) const;
+
+    bool 
+    is_complex() const 
+        { return findindex(IQIndex::IndReIm()) != 0; }
+
+    void 
+    addindex1(const IQIndex& I);
+
+    //----------------------------------------------------
+    //IQTensor miscellaneous methods
+
+    Real 
+    unique_Real() const;
+
+    int 
+    num_index(IndexType t) const;
+
+    Real 
+    norm() const;
+
+    Real 
+    sumels() const;
+
+    void 
+    scaleOutNorm() const;
+
+    void 
+    scaleTo(LogNumber newscale) const;
+
+    inline void 
+    clean(Real min_norm = MIN_CUT);
+
+    int 
+    vec_size() const;
+
+    void 
+    assignToVec(VectorRef v) const;
+
+    void 
+    assignFromVec(VectorRef v);
+
+    void 
+    GetSingComplex(Real& re, Real& im) const;
+    
+    void 
+    Randomize();
+
+    void 
+    print(std::string name = "",Printdat pdat = HideData) const;
+
+    void 
+    printIQInds(const std::string& name = "") const;
+    inline void 
+    printIQInds(const boost::format& fname) const
+        { printIQInds(fname.str()); }
+
+    void 
+    assignFrom(const IQTensor& other) const;
+
+    void 
+    SplitReIm(IQTensor& re, IQTensor& im) const;
+
+    void 
+    conj();
+
+    friend std::ostream& 
+    operator<<(std::ostream & s, const IQTensor &t);
+
+    typedef IQIndex IndexT;
+
+    typedef IQIndexVal IndexValT;
+
+    typedef IQCombiner CombinerT;
+
+
+    static const IQIndex& ReImIndex()
+        { return IQIndex::IndReIm(); }
+
+private:
+
+    boost::intrusive_ptr<IQTDat> p;
+
+    void solo();
+
+}; //class IQTensor
+
 class IQTDat
-    {
+{
 public:
 
     IQTDat();
@@ -94,550 +507,28 @@ private:
     mutable bool 
     rmap_init;
 
-    };
+}; //class IQTDat
 
-class IQCombiner;
 
-/////////////////////////////////
-//                             //
-// IQTensor                    //
-//                             //
-/////////////////////////////////
+Real 
+ReSingVal(const IQTensor& x);
 
-class IQTensor
-    {
-public:
+Real 
+Dot(const IQTensor& x, const IQTensor& y, bool doconj = true);
 
-    typedef std::list<ITensor>::iterator 
-    iten_it;
+void 
+Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool doconj = true);
 
-    typedef std::list<ITensor>::const_iterator 
-    const_iten_it;
-
-    typedef std::vector<IQIndex>::iterator 
-    iqind_it;
-
-    typedef std::vector<IQIndex>::const_iterator 
-    const_iqind_it;
-
-    int 
-    r() const { return p->iqindex_.size(); }
-
-    inline const IQIndex& 
-    index(int j) const { return GET(p->iqindex_,j-1); }
-
-    inline int 
-    iten_size() const { return p->itensor.size(); }
-
-    inline bool 
-    iten_empty() const { return p->itensor.empty(); }
-
-    inline bool 
-    is_null() const { return p == 0; }
-
-    inline bool 
-    is_not_null() const { return p != 0; }
-
-    inline int 
-    num_index() const { return p->iqindex_.size(); }
-    
-    //----------------------------------------------------
-    //IQTensor: iterators 
-    const_iten_it 
-    const_iten_begin() const { return p->itensor.begin(); }
-
-    const_iten_it 
-    const_iten_end() const { return p->itensor.end(); }
-
-    std::pair<const_iten_it,const_iten_it> 
-    itensors() const 
-        { return std::make_pair(p->itensor.begin(),p->itensor.end()); }
-
-    const_iqind_it 
-    const_iqind_begin() const { return p->iqindex_.begin(); }
-
-    const_iqind_it 
-    const_iqind_end()   const { return p->iqindex_.end(); }
-
-    std::pair<const_iqind_it,const_iqind_it> 
-    iqinds() const 
-        { return std::make_pair(p->iqindex_.begin(),p->iqindex_.end()); }
-
-    //----------------------------------------------------
-    //IQTensor: Constructors
-
-    IQTensor();
-
-    explicit 
-    IQTensor(Real val);
-
-    explicit 
-    IQTensor(const IQIndex& i1);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
-             const IQIndex& i4);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
-             const IQIndex& i4,const IQIndex& i5);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
-             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
-             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6,
-             const IQIndex& i7);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
-             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6,
-             const IQIndex& i7,const IQIndex& i8);
-
-    explicit 
-    IQTensor(std::vector<IQIndex>& iqinds_);
-
-    explicit
-    IQTensor(const IQIndexVal& iv1);
-
-    IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2);
-
-    IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
-             const IQIndexVal& iv3);
-
-    IQTensor(ITmaker itm);
-
-    IQTensor(IQmaker i);
-
-    IQTensor(PrimeType pt, const IQTensor& other);
-
-    explicit 
-    IQTensor(std::istream& s);
-
-    static const IQTensor& Sing()
-        {
-        static const IQTensor Sing_(makeSing);
-        return Sing_;
-        }
-
-    static const IQTensor& Complex_1()
-        {
-        static const IQTensor Complex_1_(makeComplex_1);
-        return Complex_1_;
-        }
-
-    static const IQTensor& Complex_i()
-        {
-        static const IQTensor Complex_i_(makeComplex_i);
-        return Complex_i_;
-        }
-
-    void read(std::istream& s);
-
-    void write(std::ostream& s) const;
-
-
-    //----------------------------------------------------
-    //IQTensor operators
-
-    //
-    // Contracting product
-    //
-    IQTensor 
-    operator*(IQTensor other) const 
-        { other *= *this; return other; }
-    IQTensor& 
-    operator*=(const IQTensor& other);
-
-    //
-    // Non-Contracting product
-    //
-    IQTensor 
-    operator/(IQTensor other) const 
-        { other /= *this; return other; }
-    IQTensor& 
-    operator/=(const IQTensor& other);
-
-    //
-    // Addition and subtraction
-    //
-    IQTensor& 
-    operator+=(const IQTensor& o);
-    IQTensor 
-    operator+(const IQTensor& o) const 
-        { IQTensor res(*this); res += o; return res; }
-    IQTensor 
-    operator-(const IQTensor& o) const 
-        { IQTensor res(o); res *= -1; res += *this; return res; }
-
-    //
-    // Multiplication by a scalar
-    //
-    IQTensor& 
-    operator*=(Real fac);
-    IQTensor 
-    operator*(Real fac) const
-        { IQTensor res(*this); res *= fac; return res; }
-    friend inline IQTensor 
-    operator*(Real fac, IQTensor T) 
-        { T *= fac; return T; }
-
-    //
-    // Multiplication by an ITensor
-    //
-    ITensor 
-    operator*(const ITensor& t) const
-        { ITensor res(*this); res *= t; return res; }
-    
-    //
-    // Multiplication by an IQIndexVal
-    //
-    IQTensor 
-    operator*(const IQIndexVal& iv) const
-        { IQTensor res(*this); res *= IQTensor(iv); return res; }
-    friend inline IQTensor 
-    operator*(const IQIndexVal& iv, const IQTensor& T) 
-        { return IQTensor(iv) * T; }
-
-    //
-    // Multiplication by an IndexVal
-    //
-    ITensor 
-    operator*(const IndexVal& iv) const
-        { ITensor res(*this); res *= iv; return res; }
-    friend inline ITensor 
-    operator*(const IndexVal& iv, const IQTensor& T) 
-        { return ITensor(iv) * T; }
-
-    //Convert to ITensor
-    operator ITensor() const;
-
-    IQTensor& 
-    operator+=(const ITensor& t);
-
-    //Like operator+=(ITensor) but
-    //demands that the block is zero
-    //before inserting
-    void insert(const ITensor& t);
-
-    Real& 
-    operator()(const IQIndexVal& iv1, 
-               const IQIndexVal& iv2 = IQIndexVal::Null(), 
-	           const IQIndexVal& iv3 = IQIndexVal::Null(), 
-               const IQIndexVal& iv4 = IQIndexVal::Null(), 
-	           const IQIndexVal& iv5 = IQIndexVal::Null(), 
-               const IQIndexVal& iv6 = IQIndexVal::Null(),
-	           const IQIndexVal& iv7 = IQIndexVal::Null(), 
-               const IQIndexVal& iv8 = IQIndexVal::Null());
-
-    //----------------------------------------------------
-    //IQTensor quantum number methods
-
-    QN 
-    div() const;
-
-    bool 
-    checkDiv(QN expected) const;
-
-    QN 
-    qn(const Index& in) const;
-
-    Arrow 
-    dir(const Index& in) const;
-
-
-    //----------------------------------------------------
-    //IQTensor: prime methods
-
-    void ind_inc_prime(const IQIndex& i,int inc);
-
-    void noprime(PrimeType pt = primeBoth);
-
-    friend inline IQTensor 
-    deprimed(IQTensor A)
-        { A.noprime(); return A; }
-
-    void 
-    noprimelink();
-
-    void 
-    doprime(PrimeType pt);
-
-    //no need to keep prime level small
-    void 
-    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
-
-    void 
-    primeind(const IQIndex& I);
-
-    friend inline IQTensor 
-    primeind(IQTensor A, const IQIndex& I)
-        { A.primeind(I); return A; }
-
-    friend inline IQTensor 
-    primeind(IQTensor A, const IQIndex& I, const IQIndex& J)
-        { A.primeind(I); A.primeind(J); return A; }
-
-    void 
-    noprimeind(const IQIndex& I);
-
-    friend inline IQTensor 
-    primed(IQTensor A)
-        { A.doprime(primeBoth); return A; }
-
-    void 
-    primesite() 
-        { doprime(primeSite); }
-    friend inline IQTensor 
-    primesite(IQTensor A)
-        { A.doprime(primeSite); return A; }
-    void 
-    primelink() 
-        { doprime(primeLink); }
-    friend inline IQTensor 
-    primelink(const IQTensor& A)
-        { IQTensor res(A); res.doprime(primeLink); return res; }
-
-
-    //----------------------------------------------------
-    //IQTensor index methods
-
-    int 
-    find_iqind(const Index& I) const
-        {
-        for(size_t j = 0; j < p->iqindex_.size(); ++j)
-            {
-            if(p->iqindex_[j].hasindex(I)) 
-                return j+1;
-            }
-        return 0;
-        }
-
-    //Return true if one of the ITensors uses this Index
-    bool 
-    uses_ind(const Index& i) const
-        {
-        foreach(const ITensor& it, p->itensor)
-            if(it.hasindex(i)) 
-            return true;
-        return false;
-        }
-
-    int 
-    findindex(const IQIndex& i) const
-        {
-        std::vector<IQIndex>::const_iterator f = find(p->iqindex_.begin(),p->iqindex_.end(),i);
-        if(f == p->iqindex_.end()) 
-            return 0;
-        else 
-            return (f - p->iqindex_.begin())+1;
-        }
-
-    bool 
-    hastype(IndexType t) const
-        {
-        foreach(const IQIndex& I, p->iqindex_)
-            if(I.type() == t) { return true; }
-        return false;
-        }
-
-    const IQIndex& 
-    findtype(IndexType t) const
-        {
-        foreach(const IQIndex& I, p->iqindex_)
-            if(I.type() == t) 
-            return I;
-        Error("IQTensor::findtype: couldn't find type");
-        return IQIndex::Null();
-        }
-
-    const IQIndex& 
-    finddir(Arrow dir) const
-        {
-        foreach(const IQIndex& I, p->iqindex_)
-            if(I.dir() == dir) 
-            return I;
-        Error("IQTensor::finddir: couldn't find dir");
-        return IQIndex::Null();
-        }
-
-    bool 
-    hasindex(const IQIndex& i) const 
-        { 
-        for(size_t j = 0; j < p->iqindex_.size(); ++j)
-            if(i == p->iqindex_[j]) 
-            return true;
-        return false;
-        }
-
-    bool 
-    is_complex() const 
-        { return findindex(IQIndex::IndReIm()) != 0; }
-
-    void 
-    addindex1(const IQIndex& I);
-
-    //----------------------------------------------------
-    //IQTensor miscellaneous methods
-
-    Real 
-    unique_Real() const
-        {
-        Real ur = 0.0;
-        foreach(const IQIndex& I, p->iqindex_) 
-            ur += I.unique_Real();
-        return ur;
-        }
-
-    int 
-    num_index(IndexType t) const 
-        { 
-        int count = 0;
-        foreach(const IQIndex& I, p->iqindex_)
-            if(I.type() == t) ++count;
-        return count;
-        }
-
-    Real 
-    norm() const
-        {
-        Real res = 0;
-        foreach(const ITensor& t, p->itensor) 
-            res += sqr(t.norm());
-        return sqrt(res);
-        }
-
-    Real 
-    sumels() const
-        {
-        Real res = 0;
-        foreach(const ITensor& t, p->itensor)
-            res += t.sumels();
-        return res;
-        }
-
-    void 
-    scaleOutNorm() const
-        {
-        Real f = norm();
-        foreach(const ITensor& t, p->itensor)
-            t.scaleTo(f);
-        }
-
-    void 
-    scaleTo(LogNumber newscale) const
-        {
-        foreach(const ITensor& t, p->itensor)
-            t.scaleTo(newscale);
-        }
-
-    inline void 
-    clean(Real min_norm = MIN_CUT)
-        { solo(); p->clean(min_norm); }
-
-    int 
-    vec_size() const;
-
-    void 
-    assignToVec(VectorRef v) const;
-
-    void 
-    assignFromVec(VectorRef v);
-
-    void 
-    GetSingComplex(Real& re, Real& im) const;
-    
-    void 
-    Randomize();
-
-    void 
-    print(std::string name = "",Printdat pdat = HideData) const;
-
-    void 
-    printIQInds(const std::string& name = "") const;
-    inline void 
-    printIQInds(const boost::format& fname) const
-        { printIQInds(fname.str()); }
-
-    void 
-    assignFrom(const IQTensor& other) const;
-
-    void 
-    SplitReIm(IQTensor& re, IQTensor& im) const;
-
-    void 
-    conj();
-
-    friend std::ostream& 
-    operator<<(std::ostream & s, const IQTensor &t);
-
-    typedef IQIndex IndexT;
-
-    typedef IQIndexVal IndexValT;
-
-    typedef IQCombiner CombinerT;
-
-
-    static const IQIndex& ReImIndex()
-        { return IQIndex::IndReIm(); }
-
-private:
-    boost::intrusive_ptr<IQTDat> p;
-
-    void solo();
-
-}; //class IQTensor
-
-
-inline Real ReSingVal(const IQTensor& x)
-    {
-    Real re, im;
-    x.GetSingComplex(re,im);
-    return re;
-    }
-
-inline Real Dot(const IQTensor& x, const IQTensor& y, bool doconj = true)
-    {
-    IQTensor res(IQTensor::Sing()*(doconj ? conj(x) : x)*y);
-    return ReSingVal(res);
-    }
-
-inline void Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool doconj = true)
-    {
-    IQTensor res(IQTensor::Sing()*(doconj ? conj(x) : x)*y);
-    res.GetSingComplex(re,im);
-    }
-
-inline bool checkQNs(const ITensor& t) 
+inline bool 
+checkQNs(const ITensor& t) 
     { return true; }
 
 //Checks if all IQTensor blocks have the same divergence
-inline bool checkQNs(const IQTensor& T)
-    {
-    QN qtot = T.div();
-    foreach(const ITensor& it, T.itensors())
-	{
-	QN q;
-	for(int j = 1; j <= it.r(); ++j) 
-	    q += T.qn(it.index(j))*T.dir(it.index(j));
+bool 
+checkQNs(const IQTensor& T);
 
-	if(q != qtot) 
-	    {
-	    std::cerr << "checkQNs: inconsistent QN.\n";
-	    std::cerr << "\nqtot = " << qtot << "\n\n";
-	    std::cerr << "Offending ITensor = " << it << "\n\n";
-	    std::cout << "checkQNs: inconsistent QN.\n";
-	    std::cout << "\nqtot = " << qtot << "\n\n";
-	    std::cout << "Offending ITensor = " << it << "\n\n";
-	    T.printIQInds("T");
-	    return false;
-	    }
-	}
-    return true;
-    }
-
-template<class T> class Printit
+template<class T> 
+class Printit
     {
 public:
     std::ostream& s;
