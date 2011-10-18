@@ -272,7 +272,7 @@ public:
     noprimelink();
 
     void 
-    doprime(PrimeType pt);
+    doprime(PrimeType pt, int inc = 1);
 
     //no need to keep prime level small
     void 

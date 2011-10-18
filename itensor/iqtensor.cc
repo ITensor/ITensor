@@ -525,16 +525,16 @@ noprimelink()
 	}
 
 void IQTensor::
-doprime(PrimeType pt)
+doprime(PrimeType pt, int inc)
 	{
 	solo();
 	p->uninit_rmap();
 
-	DoPrimer prim(pt);
+	DoPrimer prim(pt,inc);
 	for_each(p->iqindex_.begin(), p->iqindex_.end(),prim);
 
 	for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-	    jj->doprime(pt);
+	    jj->doprime(pt,inc);
 	}
 
 void IQTensor::

@@ -618,7 +618,7 @@ class IQIndex : public Index
         return QN();
         }
 
-    const Arrow dir() const { return _dir; }
+    Arrow dir() const { return _dir; }
     void conj() { _dir = _dir*Switch; }
 
     //------------------------------------------
