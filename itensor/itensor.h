@@ -12,7 +12,7 @@ enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
 class Permutation;
 
 class Counter
-{
+    {
 private:
     void reset(int a)
 	{
@@ -34,16 +34,16 @@ public:
     Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r) { init(ii,rn,r); }
 
     void init(const boost::array<Index,NMAX+1>& ii, int rn, int r)
-    {
-        rn_ = rn;
-        r_ = r;
-        n[0] = 0;
-        for(int j = 1; j <= rn_; ++j) 
-        { GET(n,j) = ii[j].m(); }
-        for(int j = rn_+1; j <= NMAX; ++j) 
-        { n[j] = 1; }
-        reset(1);
-    }
+	{
+	rn_ = rn;
+	r_ = r;
+	n[0] = 0;
+	for(int j = 1; j <= rn_; ++j) 
+	    GET(n,j) = ii[j].m();
+	for(int j = rn_+1; j <= NMAX; ++j) 
+	    n[j] = 1;
+	reset(1);
+	}
 
     Counter& operator++()
 	{
@@ -51,11 +51,11 @@ public:
         ++i[1];
         if(i[1] > n[1])
         for(int j = 2; j <= rn_; ++j)
-        {
-            i[j-1] = 1;
-            ++i[j];
-            if(i[j] <= n[j]) break;
-        }
+	    {
+	    i[j-1] = 1;
+	    ++i[j];
+	    if(i[j] <= n[j]) break;
+	    }
         //set 'done' condition
         if(i[rn_] > n[rn_]) reset(0);
         return *this;
@@ -64,7 +64,8 @@ public:
     bool operator!=(const Counter& other) const
 	{
         for(int j = 1; j <= NMAX; ++j)
-        { if(i[j] != other.i[j]) return true; }
+	    if(i[j] != other.i[j]) 
+		return true;
         return false;
 	}
     bool operator==(const Counter& other) const
@@ -73,32 +74,35 @@ public:
     inline bool notDone() const { return i[1] != 0; }
 
     friend inline std::ostream& operator<<(std::ostream& s, const Counter& c)
-    {
-        s << "("; 
-        for(int i = 1; i < c.r_; ++i)
-            {s << c.i[i] << " ";} 
-        s << c.i[c.r_] << ")";
-        return s;
-    }
-};
+	{
+	s << "("; 
+	for(int i = 1; i < c.r_; ++i)
+	    s << c.i[i] << " ";
+	s << c.i[c.r_] << ")";
+	return s;
+	}
+    };
 
 //#define DO_ALT
 #ifdef DO_ALT
 struct PDat
-{
+    {
     Permutation I; 
     Vector v;
     PDat(const Permutation& P_, const Vector& v_) 
-    : I(P_.inverse()), v(v_) { }
+		: I(P_.inverse()), v(v_) { }
     PDat(const Permutation& P_) : I(P_.inverse()) { }
-};
+    };
 #endif
 
 //Storage for ITensors
 class ITDat
-{
+    {
 private:
     mutable unsigned int numref;
+    static DatAllocator<ITDat> allocator;
+    void operator=(const ITDat&);
+    ~ITDat() { } //must be dynamically allocated
 public:
     Vector v;
 #ifdef DO_ALT
@@ -107,70 +111,58 @@ public:
 
     ITDat() : numref(0), v(0) { }
 
-    explicit ITDat(int size) 
-    : numref(0), v(size)
+    explicit 
+    ITDat(int size) : numref(0), v(size)
 	{ assert(size > 0); v = 0; }
 
-    explicit ITDat(const Vector& v_) 
-    : numref(0), v(v_)
-    { }
+    explicit 
+    ITDat(const Vector& v_) : numref(0), v(v_) { }
 
-    explicit ITDat(Real r) 
-    : numref(0), v(1)
-    { v = r; }
+    explicit 
+    ITDat(Real r) : numref(0), v(1)
+	{ v = r; }
 
-    explicit ITDat(std::istream& s) : numref(0) { read(s); }
+    explicit 
+    ITDat(std::istream& s) : numref(0) 
+	{ read(s); }
 
-    explicit ITDat(const ITDat& other) 
-    : numref(0), v(other.v)
-    { }
+    explicit 
+    ITDat(const ITDat& other) : numref(0), v(other.v) { }
 
     void read(std::istream& s)
 	{ 
-        int size = 0;
-        s.read((char*) &size,sizeof(size));
-        v.ReDimension(size);
-        s.read((char*) v.Store(), sizeof(Real)*size);
-    }
+	int size = 0;
+	s.read((char*) &size,sizeof(size));
+	v.ReDimension(size);
+	s.read((char*) v.Store(), sizeof(Real)*size);
+	}
 
     void write(std::ostream& s) const 
-    { 
-        const int size = v.Length();
-        s.write((char*) &size, sizeof(size));
-        s.write((char*) v.Store(), sizeof(Real)*size); 
-    }
+	{ 
+	const int size = v.Length();
+	s.write((char*) &size, sizeof(size));
+	s.write((char*) v.Store(), sizeof(Real)*size); 
+	}
     
-    void print() const { std::cout << "ITDat: v = " << v; }
+    void print() const 
+	{ std::cout << "ITDat: v = " << v; }
 
-    inline void* operator new(size_t) throw(std::bad_alloc)
+    inline void* operator 
+    new(size_t) throw(std::bad_alloc)
         { return allocator.alloc(); }
 
-    inline void operator delete(void* p) throw()
+    inline void operator 
+    delete(void* p) throw()
         { return allocator.dealloc(p); }
 
     friend class ITensor;
     ENABLE_INTRUSIVE_PTR(ITDat)
-private:
-    static DatAllocator<ITDat> allocator;
-    void operator=(const ITDat&);
-    ~ITDat() { } //must be dynamically allocated
-};
+    };
 
 class Combiner;
 
 class ITensor
-{
-public:
-    typedef Index IndexT;
-    typedef IndexVal IndexValT;
-    typedef Combiner CombinerT;
-    typedef boost::array<Index,NMAX+1>::const_iterator index_it;
-    //static const Index& ReImIndex;
-    static const Index& ReImIndex()
     {
-        return Index::IndReIm();
-    }
-private:
     //mutable: const methods may want to reshape data
     mutable boost::intrusive_ptr<ITDat> p; 
     int r_,rn_;
@@ -308,6 +300,7 @@ private:
     const;
 
 public:
+    typedef boost::array<Index,NMAX+1>::const_iterator index_it;
 
     //Accessor Methods ----------------------------------------------
 
@@ -1020,7 +1013,11 @@ public:
     friend std::ostream& operator<<(std::ostream & s, const ITensor & t);
 
     friend class ITAssigner;
-}; //ITensor
+    typedef Index IndexT;
+    typedef IndexVal IndexValT;
+    typedef Combiner CombinerT;
+    static const Index& ReImIndex() { return Index::IndReIm(); }
+    }; //ITensor
 
 
 Real Dot(const ITensor& x, const ITensor& y, bool doconj = true);
