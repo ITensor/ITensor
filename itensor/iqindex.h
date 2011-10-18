@@ -733,15 +733,11 @@ struct IQIndexVal
     void conj() 
         { iqind.conj(); }
 
-    operator IndexVal() const;
+    IndexVal toIndexVal() const;
 
     ITensor operator*(const IndexVal& iv) const 
         { 
-        return (IndexVal(*this) * iv); 
-        }
-    ITensor operator*(Real fac) const 
-        { 
-        return (IndexVal(*this) * fac); 
+        return IndexVal(Index(iqind),i) * iv; 
         }
 
     void print(std::string name = "") const
@@ -797,8 +793,8 @@ qn() const
     }
 
 inline
-IQIndexVal::operator
-IndexVal() const 
+IndexVal IQIndexVal::
+toIndexVal() const 
     { 
     int j,ii;
     calc_ind_ii(j,ii);
