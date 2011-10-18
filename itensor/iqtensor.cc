@@ -4,8 +4,151 @@ using std::cerr;
 using std::endl;
 using std::vector;
 using std::list;
+using std::set;
+using std::map;
+using std::multimap;
+using std::ostream;
+using std::istream;
+using std::pair;
+using std::make_pair;
 
 DatAllocator<IQTDat> IQTDat::allocator;
+
+IQTDat::
+IQTDat() : numref(0), rmap_init(false) { }
+
+IQTDat::
+IQTDat(const IQIndex& i1) 
+    : iqindex_(1), numref(0), rmap_init(false)
+	{ iqindex_[0] = i1; }
+
+IQTDat::
+IQTDat(const IQIndex& i1, const IQIndex& i2)
+    : iqindex_(2), numref(0), rmap_init(false)
+	{ 
+	iqindex_[0] = i1; 
+	iqindex_[1] = i2; 
+	}
+
+IQTDat::
+IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
+    : iqindex_(3), numref(0), rmap_init(false)
+	{ 
+	iqindex_[0] = i1; 
+	iqindex_[1] = i2; 
+	iqindex_[2] = i3; 
+	}
+
+IQTDat::
+IQTDat(const IQIndex& i1, const IQIndex& i2, 
+       const IQIndex& i3, const IQIndex& i4,
+       const IQIndex& i5, const IQIndex& i6, 
+	   const IQIndex& i7, const IQIndex& i8)
+    : iqindex_(4), numref(0), rmap_init(false)
+	{ 
+	iqindex_[0] = i1; 
+	iqindex_[1] = i2; 
+	iqindex_[2] = i3; 
+	iqindex_[3] = i4; 
+	if(i5 != IQIndex::Null()) 
+	    iqindex_.push_back(i5);
+	if(i6 != IQIndex::Null()) 
+	    iqindex_.push_back(i6);
+	if(i7 != IQIndex::Null()) 
+	    iqindex_.push_back(i7);
+	if(i8 != IQIndex::Null()) 
+	    iqindex_.push_back(i8);
+	}
+
+IQTDat::
+IQTDat(vector<IQIndex>& iqinds_) 
+    : numref(0), rmap_init(false) 
+    { iqindex_.swap(iqinds_); }
+
+IQTDat::
+IQTDat(const IQTDat& other) 
+    : itensor(other.itensor), iqindex_(other.iqindex_), numref(0), rmap_init(false)
+	{ }
+
+IQTDat::
+IQTDat(istream& s) 
+    : numref(0) 
+    { read(s); }
+
+void IQTDat::
+read(istream& s)
+	{
+	uninit_rmap();
+	size_t size;
+	s.read((char*) &size,sizeof(size));
+	itensor.resize(size);
+	foreach(ITensor& t, itensor) 
+	    t.read(s);
+
+	s.read((char*) &size,sizeof(size));
+	iqindex_.resize(size);
+	foreach(IQIndex& I, iqindex_) 
+	    I.read(s);
+	}
+
+void IQTDat::
+write(ostream& s) const
+	{
+	size_t size = itensor.size();
+	s.write((char*) &size,sizeof(size));
+	foreach(const ITensor& t, itensor) 
+	    t.write(s);
+
+	size = iqindex_.size();
+	s.write((char*) &size,sizeof(size));
+	foreach(const IQIndex& I, iqindex_) 
+	    I.write(s);
+	}
+
+void IQTDat::
+init_rmap() const
+	{
+	if(rmap_init) return;
+	for(list<ITensor>::iterator it = itensor.begin(); 
+        it != itensor.end(); 
+        ++it)
+	    rmap[ApproxReal(it->unique_Real())] = it;
+	rmap_init = true;
+	}
+
+void IQTDat::
+uninit_rmap() const 
+	{ 
+	assert(numref <= 1); 
+	rmap.clear();
+	rmap_init = false; 
+	}
+
+bool IQTDat::
+has_itensor(const ApproxReal& r) const
+	{ 
+	init_rmap();
+	return rmap.count(r) == 1; 
+	}
+
+void IQTDat::
+insert_itensor(const ApproxReal& r, const ITensor& t)
+    {
+    itensor.push_front(t);
+    rmap[r] = itensor.begin();
+    }
+
+void IQTDat::
+clean(Real min_norm)
+{
+list<ITensor> nitensor;
+foreach(const ITensor& t, itensor)
+    {
+        if(t.norm() >= min_norm)
+            nitensor.push_back(t);
+    }
+itensor.swap(nitensor);
+}
 
 void DoPrimer::operator()(IQIndex &iqi) const { iqi.doprime(pt,inc); }
 void MapPrimer::operator()(IQIndex &iqi) const { iqi.mapprime(plevold,plevnew,pt); }
@@ -76,7 +219,7 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
     solo();
     p->uninit_rmap();
 
-    std::set<ApproxReal> common_inds;
+    set<ApproxReal> common_inds;
     
     //Load iqindex_ with those IQIndex's *not* common to *this and other
     static vector<IQIndex> riqind_holder(1000);
@@ -113,13 +256,13 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
     if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator*=, riqind_holder had to reallocate.\n\n";
     p->iqindex_.swap(riqind_holder);
 
-    std::set<ApproxReal> keys;
+    set<ApproxReal> keys;
 
     list<ITensor> old_itensor; p->itensor.swap(old_itensor);
 
     //com_this maps the unique_Real of a set of Index's to be contracted over together
     //to those ITensors in *this.itensor having all Index's in that set
-    std::multimap<ApproxReal,const_iten_it> com_this;
+    multimap<ApproxReal,const_iten_it> com_this;
     for(const_iten_it tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
         {
         Real r = 0.0;
@@ -128,12 +271,12 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
             if(common_inds.count(ApproxReal(tt->index(a).unique_Real())))
                 { r += tt->index(a).unique_Real(); }
             }
-        com_this.insert(std::make_pair(ApproxReal(r),tt));
+        com_this.insert(make_pair(ApproxReal(r),tt));
         keys.insert(ApproxReal(r));
         }
 
     //com_other is the same as com_this but for other
-    std::multimap<ApproxReal,const_iten_it> com_other;
+    multimap<ApproxReal,const_iten_it> com_other;
     for(const_iten_it ot = other.const_iten_begin(); ot != other.const_iten_end(); ++ot)
         {
         Real r = 0.0;
@@ -142,14 +285,14 @@ IQTensor& IQTensor::operator*=(const IQTensor& other)
             if(common_inds.count(ApproxReal(ot->index(b).unique_Real())))
                 { r += ot->index(b).unique_Real(); }
             }
-        com_other.insert(std::make_pair(ApproxReal(r),ot));
+        com_other.insert(make_pair(ApproxReal(r),ot));
         keys.insert(ApproxReal(r));
         }
 
-    typedef std::multimap<ApproxReal,const_iten_it>::iterator mit;
-    std::pair<mit,mit> lrange,rrange;
+    typedef multimap<ApproxReal,const_iten_it>::iterator mit;
+    pair<mit,mit> lrange,rrange;
     ITensor tt;
-    for(std::set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
+    for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
         {
         //Equal range returns the begin and end iterators for the sequence
         //corresponding to multimap[key] as a pair
@@ -194,7 +337,7 @@ IQTensor& IQTensor::operator/=(const IQTensor& other)
     solo();
     p->uninit_rmap();
 
-    std::set<ApproxReal> common_inds;
+    set<ApproxReal> common_inds;
     
     static vector<IQIndex> riqind_holder(1000);
     riqind_holder.resize(0);
@@ -230,13 +373,13 @@ IQTensor& IQTensor::operator/=(const IQTensor& other)
     if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator/=, riqind_holder had to reallocate.\n\n";
     p->iqindex_.swap(riqind_holder);
 
-    std::set<ApproxReal> keys;
+    set<ApproxReal> keys;
 
     list<ITensor> old_itensor; p->itensor.swap(old_itensor);
 
     //com_this maps the unique_Real of a set of Index's to be summed over together
     //to those ITensors in *this.itensor having all Index's in that set
-    std::multimap<ApproxReal,const_iten_it> com_this;
+    multimap<ApproxReal,const_iten_it> com_this;
     for(const_iten_it tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
         {
         Real r = 0.0;
@@ -246,12 +389,12 @@ IQTensor& IQTensor::operator/=(const IQTensor& other)
             if(common_inds.count(ApproxReal(ur)))
                 r += ur;
             }
-        com_this.insert(std::make_pair(ApproxReal(r),tt));
+        com_this.insert(make_pair(ApproxReal(r),tt));
         keys.insert(ApproxReal(r));
         }
 
     //com_other is the same as com_this but for other
-    std::multimap<ApproxReal,const_iten_it> com_other;
+    multimap<ApproxReal,const_iten_it> com_other;
     for(const_iten_it ot = other.const_iten_begin(); ot != other.const_iten_end(); ++ot)
         {
         Real r = 0.0;
@@ -261,14 +404,14 @@ IQTensor& IQTensor::operator/=(const IQTensor& other)
             if(common_inds.count(ApproxReal(ur)))
                 r += ur;
             }
-        com_other.insert(std::make_pair(ApproxReal(r),ot));
+        com_other.insert(make_pair(ApproxReal(r),ot));
         keys.insert(ApproxReal(r));
         }
 
-    typedef std::multimap<ApproxReal,const_iten_it>::iterator mit;
-    std::pair<mit,mit> lrange,rrange;
+    typedef multimap<ApproxReal,const_iten_it>::iterator mit;
+    pair<mit,mit> lrange,rrange;
     ITensor tt;
-    for(std::set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
+    for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
         {
         //Equal range returns the begin and end iterators for the sequence
         //corresponding to multimap[key] as a pair
@@ -373,7 +516,7 @@ operator ITensor() const
     {
     //Resulting ITensor's indices are 
     //the Index versions of this's IQIndices
-    std::vector<Index> indices;
+    vector<Index> indices;
     for(size_t j = 0; j < p->iqindex_.size(); ++j)
         {
         indices.push_back(Index(p->iqindex_[j]));
@@ -412,3 +555,13 @@ operator ITensor() const
     return res;
     } //IQTensor::operator ITensor() const
 
+void IQTensor::
+solo()
+	{
+	assert(p != 0);
+	if(p->count() != 1)
+	    {
+	    boost::intrusive_ptr<IQTDat> new_p(new IQTDat(*p));
+	    p.swap(new_p);
+	    }
+	}

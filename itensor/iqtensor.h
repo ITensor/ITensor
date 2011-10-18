@@ -8,152 +8,81 @@
 
 class IQTDat
     {
-    typedef std::list<ITensor>::iterator       iten_it;
-    typedef std::list<ITensor>::const_iterator const_iten_it;
-    private:
-    mutable unsigned int numref;
-    mutable bool rmap_init;
-    public:
-    mutable std::list<ITensor> itensor; // This is mutable to allow reordering
-    std::vector<IQIndex> iqindex_;
-    mutable std::map<ApproxReal,iten_it> rmap; //mutable so that const IQTensor methods can use rmap
+public:
 
-    IQTDat() : numref(0), rmap_init(false) { }
+    IQTDat();
 
-    explicit IQTDat(const IQIndex& i1) : numref(0), rmap_init(false), iqindex_(1)
-	{ iqindex_[0] = i1; }
+    explicit IQTDat(const IQIndex& i1);
 
-    IQTDat(const IQIndex& i1, const IQIndex& i2)
-		: numref(0), rmap_init(false), iqindex_(2)
-	{ 
-	iqindex_[0] = i1; 
-	iqindex_[1] = i2; 
-	}
+    IQTDat(const IQIndex& i1, const IQIndex& i2);
 
-    IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
-		: numref(0), rmap_init(false), iqindex_(3)
-	{ 
-	iqindex_[0] = i1; 
-	iqindex_[1] = i2; 
-	iqindex_[2] = i3; 
-	}
+    IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3);
 
     IQTDat(const IQIndex& i1, const IQIndex& i2, 
-	    const IQIndex& i3, const IQIndex& i4,
-	    const IQIndex& i5 = IQIndex::Null(), 
-	    const IQIndex& i6 = IQIndex::Null(), 
-	    const IQIndex& i7 = IQIndex::Null(), 
-	    const IQIndex& i8 = IQIndex::Null())
-		: numref(0), rmap_init(false), iqindex_(4)
-	{ 
-	iqindex_[0] = i1; 
-	iqindex_[1] = i2; 
-	iqindex_[2] = i3; 
-	iqindex_[3] = i4; 
-	if(i5 != IQIndex::Null()) 
-	    iqindex_.push_back(i5);
-	if(i6 != IQIndex::Null()) 
-	    iqindex_.push_back(i6);
-	if(i7 != IQIndex::Null()) 
-	    iqindex_.push_back(i7);
-	if(i8 != IQIndex::Null()) 
-	    iqindex_.push_back(i8);
-	}
+	       const IQIndex& i3, const IQIndex& i4,
+	       const IQIndex& i5 = IQIndex::Null(), 
+	       const IQIndex& i6 = IQIndex::Null(), 
+	       const IQIndex& i7 = IQIndex::Null(), 
+	       const IQIndex& i8 = IQIndex::Null());
 
-    explicit IQTDat(std::vector<IQIndex>& iqinds_) : numref(0), rmap_init(false) 
-	{ iqindex_.swap(iqinds_); }
+    explicit IQTDat(std::vector<IQIndex>& iqinds_);
 
-    explicit IQTDat(const IQTDat& other) 
-	: numref(0), rmap_init(false), itensor(other.itensor), iqindex_(other.iqindex_)
-	{ }
+    explicit IQTDat(const IQTDat& other);
 
-    explicit IQTDat(std::istream& s) : numref(0) 
-	{ read(s); }
+    explicit IQTDat(std::istream& s);
 
-    void read(std::istream& s)
-	{
-	uninit_rmap();
-	size_t size;
-	s.read((char*) &size,sizeof(size));
-	itensor.resize(size);
-	foreach(ITensor& t, itensor) 
-	    t.read(s);
+    void read(std::istream& s);
 
-	s.read((char*) &size,sizeof(size));
-	iqindex_.resize(size);
-	foreach(IQIndex& I, iqindex_) 
-	    I.read(s);
-	}
+    void write(std::ostream& s) const;
 
-    void write(std::ostream& s) const
-	{
-	size_t size = itensor.size();
-	s.write((char*) &size,sizeof(size));
-	foreach(const ITensor& t, itensor) 
-	    t.write(s);
+    void init_rmap() const;
 
-	size = iqindex_.size();
-	s.write((char*) &size,sizeof(size));
-	foreach(const IQIndex& I, iqindex_) 
-	    I.write(s);
-	}
+    void uninit_rmap() const;
 
-    void init_rmap() const
-	{
-	if(rmap_init) return;
-	for(iten_it it = itensor.begin(); it != itensor.end(); ++it)
-	    rmap[ApproxReal(it->unique_Real())] = it;
-	rmap_init = true;
-	}
+    bool has_itensor(const ApproxReal& r) const;
 
-    void uninit_rmap() const 
-	{ 
-	assert(numref <= 1); 
-	rmap.clear();
-	rmap_init = false; 
-	}
+    void insert_itensor(const ApproxReal& r, const ITensor& t);
 
-    bool has_itensor(const ApproxReal& r) const
-	{ 
-	init_rmap();
-	return rmap.count(r) == 1; 
-	}
+    void clean(Real min_norm);
 
-    void insert_itensor(const ApproxReal& r, const ITensor& t)
-	{
-	itensor.push_front(t);
-	rmap[r] = itensor.begin();
-	}
+    inline void* operator 
+    new(size_t size) 
+        throw(std::bad_alloc)
+        { return allocator.alloc(); }
 
-    void clean(Real min_norm)
-    {
-    std::list<ITensor> nitensor;
-    foreach(const ITensor& t, itensor)
-        {
-            if(t.norm() >= min_norm)
-                nitensor.push_back(t);
-            /*
-            else
-                {
-                std::cout << boost::format("Discarding tensor with norm %.2E")%t.norm() << std::endl;
-                PrintDat(t);
-                }
-            */
-        }
-    itensor.swap(nitensor);
-    }
+    inline void operator 
+    delete(void* p) 
+        throw()
+        { return allocator.dealloc(p); }
 
-    inline void* operator new(size_t size) throw(std::bad_alloc)
-	{ return allocator.alloc(); }
+public:
 
-    inline void operator delete(void* p) throw()
-	{ return allocator.dealloc(p); }
+    mutable std::list<ITensor> 
+    itensor; // This is mutable to allow reordering
+
+    std::vector<IQIndex> 
+    iqindex_;
+
+    mutable std::map<ApproxReal,std::list<ITensor>::iterator> 
+    rmap; //mutable so that const IQTensor methods can use rmap
 
     ENABLE_INTRUSIVE_PTR(IQTDat)
+
 private:
-    static DatAllocator<IQTDat> allocator;
+
     ~IQTDat() { } //must be dynamically allocated
+
     void operator=(const IQTDat&);
+
+    static DatAllocator<IQTDat> 
+    allocator;
+
+    mutable unsigned int 
+    numref;
+
+    mutable bool 
+    rmap_init;
+
     };
 
 class IQCombiner;
@@ -161,61 +90,61 @@ class IQCombiner;
 class IQTensor
     {
 public:
-    typedef IQIndex IndexT;
-    typedef IQIndexVal IndexValT;
-    typedef IQCombiner CombinerT;
-    typedef std::list<ITensor>::iterator iten_it;
-    typedef std::list<ITensor>::const_iterator const_iten_it;
-    typedef std::vector<IQIndex>::iterator iqind_it;
-    typedef std::vector<IQIndex>::const_iterator const_iqind_it;
-    static const IQIndex& ReImIndex()
-	{ return IQIndex::IndReIm(); }
-private:
-    boost::intrusive_ptr<IQTDat> p;
 
-    void solo()
-	{
-	assert(p != 0);
-	if(p->count() != 1)
-	    {
-	    boost::intrusive_ptr<IQTDat> new_p(new IQTDat(*p));
-	    p.swap(new_p);
-	    }
-	}
-public:
+    typedef std::list<ITensor>::iterator 
+    iten_it;
+
+    typedef std::list<ITensor>::const_iterator 
+    const_iten_it;
+
+    typedef std::vector<IQIndex>::iterator 
+    iqind_it;
+
+    typedef std::vector<IQIndex>::const_iterator 
+    const_iqind_it;
+
     int 
-    r() const 
-        { return p->iqindex_.size(); }
+    r() const { return p->iqindex_.size(); }
+
     inline const IQIndex& 
-    index(int j) const 
-        { return GET(p->iqindex_,j-1); }
+    index(int j) const { return GET(p->iqindex_,j-1); }
+
     inline int 
-    iten_size() const 
-        { return p->itensor.size(); }
+    iten_size() const { return p->itensor.size(); }
+
     inline bool 
-    iten_empty() const 
-        { return p->itensor.empty(); }
+    iten_empty() const { return p->itensor.empty(); }
+
     inline bool 
-    is_null() const 
-        { return p == 0; }
+    is_null() const { return p == 0; }
+
     inline bool 
-    is_not_null() const 
-        { return p != 0; }
+    is_not_null() const { return p != 0; }
+
     inline int 
-    num_index() const 
-        { return p->iqindex_.size(); }
+    num_index() const { return p->iqindex_.size(); }
     
     //----------------------------------------------------
     //IQTensor: iterators 
-    const_iten_it const_iten_begin() const { return p->itensor.begin(); }
-    const_iten_it const_iten_end() const { return p->itensor.end(); }
-    std::pair<const_iten_it,const_iten_it> itensors() const 
-	{ return std::make_pair(p->itensor.begin(),p->itensor.end()); }
+    const_iten_it 
+    const_iten_begin() const { return p->itensor.begin(); }
 
-    const_iqind_it const_iqind_begin() const { return p->iqindex_.begin(); }
-    const_iqind_it const_iqind_end()   const { return p->iqindex_.end(); }
-    std::pair<const_iqind_it,const_iqind_it> iqinds() const 
-	{ return std::make_pair(p->iqindex_.begin(),p->iqindex_.end()); }
+    const_iten_it 
+    const_iten_end() const { return p->itensor.end(); }
+
+    std::pair<const_iten_it,const_iten_it> 
+    itensors() const 
+        { return std::make_pair(p->itensor.begin(),p->itensor.end()); }
+
+    const_iqind_it 
+    const_iqind_begin() const { return p->iqindex_.begin(); }
+
+    const_iqind_it 
+    const_iqind_end()   const { return p->iqindex_.end(); }
+
+    std::pair<const_iqind_it,const_iqind_it> 
+    iqinds() const 
+        { return std::make_pair(p->iqindex_.begin(),p->iqindex_.end()); }
 
     //----------------------------------------------------
     //IQTensor: Constructors
@@ -877,33 +806,6 @@ public:
         }
     }
 
-private:
-    void match_order() const
-	{
-	const int s = p->iqindex_.size();
-	foreach(ITensor& t, p->itensor)
-	    {
-	    if(t.r() != s)
-		{
-		Print(*this); Print(t);
-		Error("match_order: ds not same");
-		}
-	    Permutation P;
-	    for(int j = 1; j <= t.r(); ++j)
-		{
-		bool gotone = false;
-		for(int k = 0; k < s; ++k)
-		    if(p->iqindex_[k].hasindex(t.index(j)))
-			{ P.from_to(j,k+1); gotone = true; break; }
-		if(!gotone) 
-		    Error("match_order: !gotone");
-		}
-	    t.reshape(P);
-	    }
-	}
-
-public:
-
     inline friend std::ostream& operator<<(std::ostream & s, const IQTensor &t)
         {
         s << "\n----- IQTensor -----\n";
@@ -921,6 +823,21 @@ public:
         s << "-------------------" << "\n\n";
         return s;
         }
+
+    typedef IQIndex IndexT;
+
+    typedef IQIndexVal IndexValT;
+
+    typedef IQCombiner CombinerT;
+
+
+    static const IQIndex& ReImIndex()
+        { return IQIndex::IndReIm(); }
+
+private:
+    boost::intrusive_ptr<IQTDat> p;
+
+    void solo();
 
 }; //class IQTensor
 
