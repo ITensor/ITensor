@@ -756,10 +756,10 @@ ITensor& ITensor::operator*=(const ITensor& other)
         r_ = rn_ + nr1_;
         if(r_ > NMAX) 
             {
-            std::cout << "new r_ = " << r_ << "\n";
-            std::cerr << "new r_ = " << r_ << "\n";
-            Print(*this);
-            Print(other);
+            std::cout << "new r_ would be = " << r_ << "\n";
+            std::cerr << "new r_ would be = " << r_ << "\n";
+            //Print(*this);
+            //Print(other);
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
             }
         //Keep current m!=1 indices, overwrite m==1 indices
@@ -777,8 +777,10 @@ ITensor& ITensor::operator*=(const ITensor& other)
         r_ = rn_ + nr1_;
         if(r_ > NMAX) 
             {
-            Print(*this);
-            Print(other);
+            std::cout << "new r_ would be = " << r_ << "\n";
+            std::cerr << "new r_ would be = " << r_ << "\n";
+            //Print(*this);
+            //Print(other);
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
             }
         for(int j = 1; j <= rn_; ++j) 
