@@ -23,6 +23,7 @@ void error(const char* s, int line, const char* file = 0)
     cerr << endl << s << endl;
     cout << endl << s << endl;
     cout.flush();
+    cerr.flush();
     throw ITError(s);
 }
 

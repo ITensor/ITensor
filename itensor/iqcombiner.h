@@ -39,12 +39,12 @@ class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
             int start = 0;
             foreach(const inqn& x, bigind_.iq())
             if(x.qn == q)
-            {
+                {
                 const Index &xi = x.index;
                 small_to_big[std::make_pair(small_qind,start)] = xi;
                 big_to_small[xi] = std::make_pair(small_qind,start);
                 start += xi.m();
-            }
+                }
             iq.push_back(inqn(small_qind,q));
         }
         smallind_ = IQIndex(smallind_name,iq,bigind_.dir(),bigind_.primeLevel());
@@ -460,14 +460,15 @@ public:
             const IQTensor& t_ = (do_condense ? t_uncondensed : t);
             const IQIndex& r = (do_condense ? ucright_ : right_);
 
-            if(t_.index(j).dir() == r.dir())
-            {
-                std::cerr << "IQTensor = " << t_ << std::endl;
-                std::cerr << "IQCombiner = " << *this << std::endl;
-                std::cerr << "IQIndex from IQTensor = " << t_.index(j) << std::endl;
-                std::cerr << "(Right) IQIndex from IQCombiner = " << r << std::endl;
-                Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
-            }
+            if(Globals::checkArrows())
+                if(t_.index(j).dir() == r.dir())
+                    {
+                    std::cerr << "IQTensor = " << t_ << std::endl;
+                    std::cerr << "IQCombiner = " << *this << std::endl;
+                    std::cerr << "IQIndex from IQTensor = " << t_.index(j) << std::endl;
+                    std::cerr << "(Right) IQIndex from IQCombiner = " << r << std::endl;
+                    Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
+                    }
             copy(t_.const_iqind_begin(),t_.const_iqind_begin()+j-1,std::back_inserter(iqinds));
             copy(left.begin(),left.end(),std::back_inserter(iqinds));
             copy(t_.const_iqind_begin()+j,t_.const_iqind_end(),std::back_inserter(iqinds));
@@ -495,29 +496,30 @@ public:
 
             //Check left indices
             for(std::vector<IQIndex>::const_iterator I = left.begin(); I != left.end(); ++I)
-            {
-                if((j = t.findindex(*I)) == 0)
                 {
+                if((j = t.findindex(*I)) == 0)
+                    {
                     t.printIQInds("t");
                     std::cerr << "Left indices\n";
                     for(size_t j = 0; j < left.size(); ++j)
-                    { std::cerr << j SP left[j] << "\n"; }
+                        { std::cerr << j SP left[j] << "\n"; }
                     
                     Error("bad IQCombiner IQTensor product");
-                }
+                    }
                 else //IQIndex is in left
-                {
-                    //Check arrow directions
-                    if(t.index(j).dir() == I->dir())
                     {
-                        std::cerr << "IQTensor = " << t << std::endl;
-                        std::cerr << "IQCombiner = " << *this << std::endl;
-                        std::cerr << "IQIndex from IQTensor = " << t.index(j) << std::endl;
-                        std::cerr << "(Left) IQIndex from IQCombiner = " << *I << std::endl;
-                        Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
+                    //Check arrow directions
+                    if(Globals::checkArrows())
+                        if(t.index(j).dir() == I->dir())
+                            {
+                            std::cerr << "IQTensor = " << t << std::endl;
+                            std::cerr << "IQCombiner = " << *this << std::endl;
+                            std::cerr << "IQIndex from IQTensor = " << t.index(j) << std::endl;
+                            std::cerr << "(Left) IQIndex from IQCombiner = " << *I << std::endl;
+                            Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
+                            }
                     }
                 }
-            }
 
             for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
                 {

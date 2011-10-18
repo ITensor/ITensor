@@ -556,6 +556,27 @@ BOOST_AUTO_TEST_CASE(SumDifference)
 
 BOOST_AUTO_TEST_CASE(ContractingProduct)
 {
+
+    //Check for rank 0 ITensors
+    {
+    Real f = ran1();
+    ITensor rZ(f), T(b2,a1,b4);
+    T.Randomize();
+
+    ITensor res = rZ * T;
+
+    CHECK_EQUAL(rZ.r(),0);
+    CHECK_EQUAL(res.r(),3);
+
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int j4 = 1; j4 <= 4; ++j4)
+        {
+        Real val = f * T(b2(j2),a1(1),b4(j4));
+        CHECK_CLOSE(res(b2(j2),a1(1),b4(j4)),val,1E-10);
+        }
+    }
+
+    //More general case
     ITensor L(b2,a1,b3,b4), R(a1,b3,a2,b5,b4);
 
     L.Randomize(); R.Randomize();
@@ -884,7 +905,7 @@ BOOST_AUTO_TEST_CASE(toMatrix11)
 BOOST_AUTO_TEST_CASE(CommaAssignment)
 {
     ITensor ZZ(s1,s2);
-    ZZ << 1, 0, 0, -1;
+    commaInit(ZZ) << 1, 0, 0, -1;
     CHECK_EQUAL(ZZ(s1(1),s2(1)),1);
     CHECK_EQUAL(ZZ(s1(2),s2(1)),0);
     CHECK_EQUAL(ZZ(s1(1),s2(2)),0);
@@ -893,7 +914,7 @@ BOOST_AUTO_TEST_CASE(CommaAssignment)
     ITensor XX(s1,s2);
     XX(s1(2),s2(1)) = 5;
     XX *= 3;
-    XX << 0, 1, 1, 0;
+    commaInit(XX) << 0, 1, 1, 0;
     CHECK_EQUAL(XX(s1(1),s2(1)),0);
     CHECK_EQUAL(XX(s1(2),s2(1)),1);
     CHECK_EQUAL(XX(s1(1),s2(2)),1);
@@ -902,7 +923,7 @@ BOOST_AUTO_TEST_CASE(CommaAssignment)
     ITensor AA(s1,s2);
     AA.Randomize();
     AA *= -ran1();
-    AA << 11, 21, 12, 22;
+    commaInit(AA) << 11, 21, 12, 22;
     CHECK_EQUAL(AA(s1(1),s2(1)),11);
     CHECK_EQUAL(AA(s1(2),s2(1)),21);
     CHECK_EQUAL(AA(s1(1),s2(2)),12);
@@ -914,8 +935,8 @@ BOOST_AUTO_TEST_CASE(Website)
 
     Index a("a",2), b("b",2), c("c",2);
     ITensor Z(a,b), X(b,c);
-    Z << 1, 0, 0, -1;
-    X << 0, 1, 1, 0;
+    commaInit(Z) << 1, 0, 0, -1;
+    commaInit(X) << 0, 1, 1, 0;
     ITensor R = Z * X;
 
     CHECK_CLOSE(R(a(1),c(1)),0,1E-10);

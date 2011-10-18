@@ -8,7 +8,7 @@ using std::endl;
 DatAllocator<ITDat> ITDat::allocator;
 
 ostream& operator<<(ostream & s, const ITensor & t)
-{
+    {
     s << "log(scale)[incl in elems] = " << t.scale().logNum() 
       << ", r = " << t.r() << ": ";
 
@@ -50,11 +50,11 @@ ostream& operator<<(ostream & s, const ITensor & t)
             s << "\n";
 	}
     return s;
-}
+    }
 
 void ITensor::groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
                            const Index& grouped, ITensor& res) const
-{
+    {
     boost::array<bool,NMAX+1> isReplaced; isReplaced.assign(false);
 
     int tot_m = 1;
@@ -112,62 +112,54 @@ void ITensor::groupIndices(const boost::array<Index,NMAX+1>& indices, int nind,
 
     if(nn == 0) res = ITensor(nindices,*this);
     else        res = ITensor(nindices,*this,P); 
-}
+    }
 
 void ITensor::expandIndex(const Index& small, const Index& big, 
                           int start, ITensor& res) const
-{
+    {
     assert(small.m() <= big.m());
     assert(start < big.m());
 
     vector<Index> indices; indices.reserve(r_);
     int w = -1;
     for(int j = 1; j <= r_; ++j)
-    {
+        {
         if(index_[j] == small) 
-        { 
+            { 
             w = j;
             indices.push_back(big); 
-        }
+            }
         else indices.push_back(index_[j]);
-    }
+        }
     
     if(w == -1)
-    {
+        {
         Print(*this);
         Print(small);
         Error("couldn't find index");
-    }
+        }
 
     res = ITensor(indices);
     res.scale_ = scale_;
 
-    boost::array<int,NMAX+1> inc; inc.assign(0);
+    boost::array<int,NMAX+1> inc; 
+    //Make sure all other inc's are zero
+    inc.assign(0);
     inc.at(w) = start;
 
     Counter c; initCounter(c);
 
-    const int inc1 = inc[1],inc2 = inc[2], 
-              inc3 = inc[3],inc4 = inc[4], 
-              inc5 = inc[5],inc6 = inc[6], 
-              inc7 = inc[7],inc8 = inc[8];
-
     const Vector& thisdat = p->v;
     Vector& resdat = res.p->v;
     for(; c.notDone(); ++c)
-    {
-        resdat((((((((
-        c.i[8]+inc8-1)*c.n[7]+
-        c.i[7]+inc7-1)*c.n[6]+
-        c.i[6]+inc6-1)*c.n[5]+
-        c.i[5]+inc5-1)*c.n[4]+
-        c.i[4]+inc4-1)*c.n[3]+
-        c.i[3]+inc3-1)*c.n[2]+
-        c.i[2]+inc2-1)*c.n[1]+
-        c.i[1]+inc1)
+        {
+        resdat(res._ind(c.i[1]+inc[1],c.i[2]+inc[2],
+                        c.i[3]+inc[3],c.i[4]+inc[4],
+                        c.i[5]+inc[5],c.i[6]+inc[6],
+                        c.i[7]+inc[7],c.i[8]+inc[8]))
         = thisdat(c.ind);
+        }
     }
-}
 
 int ITensor::_ind(int i1, int i2, int i3, int i4, 
                   int i5, int i6, int i7, int i8)
@@ -213,46 +205,67 @@ const
 }
 
 int ITensor::_ind2(const IndexVal& iv1, const IndexVal& iv2) const
-{
-    assert(r_ >= 2);
-    boost::array<int,2+1> ja; ja.assign(1);
+    {
     if(rn_ > 2) 
-    {
-        cerr << boost::format("# given = 2, rn_ = %d\n")%rn_;
-        Error("Not enough indices (requires all having m!=1)");
+        {
+        std::cerr << boost::format("# given = 2, rn_ = %d\n")%rn_;
+        Error("Not enough m!=1 indices provided");
+        }
+    if(index_[1] == iv1.ind && index_[2] == iv2.ind)
+        return ((iv2.i-1)*m(1)+iv1.i);
+    else if(index_[1] == iv2.ind && index_[2] == iv1.ind)
+        return ((iv1.i-1)*m(1)+iv2.i);
+    else
+        {
+        Print(*this);
+        Print(iv1);
+        Print(iv2);
+        Error("Incorrect IndexVal argument to ITensor");
+        return 1;
+        }
     }
-    for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
-    {
-        if(index_[k] == iv1.ind)      { ja[k] = iv1.i; }
-        else if(index_[k] == iv2.ind) { ja[k] = iv2.i; }
-    }
-    return ((ja[2]-1)*m(1)+ja[1]);
-}
 
 int ITensor::_ind8(const IndexVal& iv1, const IndexVal& iv2, 
           const IndexVal& iv3, const IndexVal& iv4,
           const IndexVal& iv5,const IndexVal& iv6,
           const IndexVal& iv7,const IndexVal& iv8)
 const
-{
+    {
     boost::array<const IndexVal*,NMAX+1> iv = 
         {{ 0, &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
     boost::array<int,NMAX+1> ja; ja.assign(1);
-    for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
-    {
-        bool gotit = false;
-        for(int j = 1; j <= NMAX; ++j)  // loop over the given indices
-        if(index_[k] == iv[j]->ind) 
-        { ja[k] = iv[j]->i; gotit = true; break; }
-        if(!gotit)
+    //Loop over the given IndexVals
+    int j = 1, nn = 0;
+    while(iv[j]->ind != Index::Null())
         {
+        //Loop over indices of this ITensor
+        bool matched = false;
+        for(int k = 1; k <= r_; ++k)
+            {
+            if(index_[k] == iv[j]->ind)
+                {
+                matched = true;
+                if(k <= rn_) ++nn;
+                ja[k] = iv[j]->i;
+                break;
+                }
+            }
+        if(!matched)
+            {
             Print(*this);
-            Print(index_[k]);
-            Error("Missing m!=1 Index in arg list");
+            Print(*iv[j]);
+            Error("Extra/incorrect IndexVal argument to ITensor");
+            }
+        ++j;
         }
-    }
+
+    if(nn != rn_)
+        {
+        Error("Too few m!=1 indices provided");
+        }
+
     return _ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]);
-}
+    }
 
 void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 {

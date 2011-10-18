@@ -13,7 +13,7 @@
 #include "boost/foreach.hpp"
 #define foreach BOOST_FOREACH
 
-    template<class T, class Op> void 
+template<class T, class Op> void 
 for_all(T& a, Op f) 
     { for_each(a.begin(),a.end(),f); }
 
@@ -75,10 +75,7 @@ enum Printdat { ShowData, HideData };
 #define Print(X)    PrintEither(X,false)
 #define PrintDat(X) PrintEither(X,true)
 
-//#define PrintDat(X) { printdat = true; std::cout << "\n" << #X << " =\n" << X << std::endl; printdat = false; }
-
-
-    template<class T> std::vector<T>& 
+template<class T> std::vector<T>& 
 operator*=(std::vector<T>& v1, const std::vector<T>& v2) 
     {
     const unsigned int sz = v1.size();
@@ -88,7 +85,7 @@ operator*=(std::vector<T>& v1, const std::vector<T>& v2)
     return v1;
     }
 
-    template<class T> std::vector<T> 
+template<class T> std::vector<T> 
 operator*(const std::vector<T>& v1, const std::vector<T>& v2) 
     { 
     std::vector<T> res(v1); 
@@ -96,7 +93,7 @@ operator*(const std::vector<T>& v1, const std::vector<T>& v2)
     return res; 
     }
 
-    template<class T> std::vector<T>& 
+template<class T> std::vector<T>& 
 operator*=(std::vector<T>& v1, const std::vector<T*>& v2) 
     {
     const unsigned int sz = v1.size();
@@ -106,7 +103,7 @@ operator*=(std::vector<T>& v1, const std::vector<T*>& v2)
     return v1;
     }
 
-    template<class T> std::vector<T> 
+template<class T> std::vector<T> 
 operator*(const std::vector<T>& v1, const std::vector<T*>& v2) 
     { 
     std::vector<T> res(v1); 
@@ -114,7 +111,7 @@ operator*(const std::vector<T>& v1, const std::vector<T*>& v2)
     return res; 
     }
 
-    template<class T> std::vector<T> 
+template<class T> std::vector<T> 
 operator*(const std::vector<const T*>& v1, const std::vector<const T*>& v2) 
     { 
     const size_t sz = v1.size();
@@ -125,7 +122,7 @@ operator*(const std::vector<const T*>& v1, const std::vector<const T*>& v2)
     return res; 
     }
 
-    template<class T> std::ostream& 
+template<class T> std::ostream& 
 operator<<(std::ostream& s, const std::vector<T>& v)
     { 
     if(v.size() == 0) 
@@ -135,14 +132,14 @@ operator<<(std::ostream& s, const std::vector<T>& v)
     return s; 
     }
 
-    template<class T> T& 
+template<class T> T& 
 operator*=(T& t1, const T* pt2) 
     { 
     t1 *= *(pt2); 
     return t1; 
     }
 
-    template<class T> T 
+template<class T> T 
 operator*(const T& t1, const T* pt2) 
     { 
     T res(t1); 
@@ -150,7 +147,7 @@ operator*(const T& t1, const T* pt2)
     return res; 
     }
 
-    template<class T> inline void 
+template<class T> inline void 
 readFromFile(const char* fname, T& t) 
     { 
     std::ifstream s(fname); 
@@ -160,7 +157,7 @@ readFromFile(const char* fname, T& t)
     s.close(); 
     }
 
-    template<class T> inline void 
+template<class T> inline void 
 writeToFile(const char* fname, const T& t) 
     { 
     std::ofstream s(fname); 
@@ -170,7 +167,7 @@ writeToFile(const char* fname, const T& t)
     s.close(); 
     }
 
-    inline void 
+inline void 
 writeVec(std::ostream& s, const Vector& V)
     {
     int m = V.Length();
@@ -183,7 +180,7 @@ writeVec(std::ostream& s, const Vector& V)
         }
     }
 
-    inline void 
+inline void 
 readVec(std::istream& s, Vector& V)
     {
     int m = 1;
@@ -230,10 +227,14 @@ public:
 	static Vector lastd_;
 	return lastd_;
 	}
+    static bool& checkArrows()
+    {
+    static bool checkArrows_ = true;
+    return checkArrows_;
+    }
     };
 
 extern bool printdat;		// want to deprecate this
-extern bool debug1, debug2, debug3, debug4;		// want to deprecate these
 extern Vector lastd;		// want to deprecate this
 Real ran1();
 
@@ -241,7 +242,6 @@ Real ran1();
 void reportnew() { }
 Real ran1(int);
 bool printdat = false;		// want to deprecate this
-bool debug1 = false, debug2 = false, debug3 = false, debug4 = false;	// want to deprecate this
 Vector lastd(1);
 #endif
 

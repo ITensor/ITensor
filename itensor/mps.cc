@@ -155,7 +155,7 @@ int collapseCols(const Vector& Diag, Matrix& M)
 }
 
 void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq, Real cut)
-{
+    {
     const int N = A.size()-1;
     qA.resize(A.size());
     const bool is_mpo = A[1].hasindex(model.si(1).primed());
@@ -183,19 +183,25 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
 
     Index bond, prev_bond;
     for(int s = 1; s <= N; ++s)
-    {
+        {
         qD.clear(); qt.clear();
         if(s > 1) prev_bond = index_in_common(A[s-1],A[s],Link);
         if(s < N) bond = index_in_common(A[s],A[s+1],Link);
 
         if(s == show_s) { PrintDat(A[s]); }
 
-        foreach(const qC_vt& x, qC) {
-        const QN& prev_q = x.first; const ITensor& comp = x.second; 
+        foreach(const qC_vt& x, qC) 
         for(int n = 1; n <= Dim;  ++n)
         for(int u = 1; u <= PDim; ++u)
-        {
-            q = (is_mpo ? prev_q+model.si(s).qn(n)-model.si(s).qn(u) : prev_q-model.si(s).qn(n));
+            {
+            //Each compressor represents a particular
+            //QN channel given by prev_q
+            const QN& prev_q = x.first; 
+            //Alias previous compressor ITensor to comp
+            const ITensor& comp = x.second; 
+
+            q = (is_mpo ? prev_q+model.si(s).qn(n)-model.si(s).qn(u) 
+                        : prev_q-model.si(s).qn(n));
 
             //For the last site, only keep blocks 
             //compatible with specified totalq i.e. q=0 here
@@ -204,8 +210,8 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
             //Set Site indices of A[s] and its previous Link Index
             block = A[s];
             if(s != 1) block *= conj(comp);
-            block *= model.si(s)(n);
-            if(is_mpo) block *= model.siP(s)(u);
+            block *= Index(model.si(s))(n);
+            if(is_mpo) block *= Index(model.siP(s))(u);
 
             //Initialize D Vector (D records which values of
             //the right Link Index to keep for the current QN q)
@@ -214,37 +220,40 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
             if(count == 0) { D.ReDimension(bond.m()); D = 0; }
 
             if(s == show_s)
-            {
+                {
                 cerr << boost::format("For n = %d\n")%n;
                 cerr << boost::format("Got a block with norm %.10f\n")%block.norm();
                 cerr << boost::format("bond.m() = %d\n")%bond.m();
                 PrintDat(block);
                 if(s != 1) PrintDat(comp);
-            }
+                }
 
             bool keep_block = false;
-            if(s == N) keep_block = true;
+            if(s == N) 
+                { keep_block = true; }
             else
-            {
-                if(bond.m() == 1 && block.norm() != 0) { D = 1; keep_block = true; }
-                else
                 {
-                    ITensor summed_block;
-                    if(s==1) summed_block = block;
-                    else
+                if(bond.m() == 1 && block.norm() != 0) 
+                    { D = 1; keep_block = true; }
+                else
                     {
+                    ITensor summed_block;
+                    if(s==1) 
+                        { summed_block = block; }
+                    else
+                        {
                         //Here we sum over the previous link index
                         //which is already ok, analyze the one to the right
                         assert(comp.r()==2);
                         Index new_ind = (comp.index(1)==prev_bond ? comp.index(2) : comp.index(1));
                         summed_block = ITensor(new_ind,1) * block;
-                    }
+                        }
                     //cerr << boost::format("s = %d, bond=")%s << bond << "\n";
                     //summed_block.print("summed_block");
 
                     Real rel_cut = -1;
                     for(int j = 1; j <= bond.m(); ++j)
-                    { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
+                        { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
                     assert(rel_cut >= 0);
                     //Real rel_cut = summed_block.norm()/summed_block.vec_size();
                     rel_cut *= cut;
@@ -252,49 +261,50 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
 
                     if(rel_cut > 0)
                     for(int j = 1; j <= bond.m(); ++j)
-                    if(fabs(summed_block.val1(j)) > rel_cut) 
-                    { D(j) = 1; keep_block = true; }
-                }
-            } //else (s != N)
-
-            //if(!keep_block && q == totalq) { D(1) = 1; keep_block = true; }
+                        {
+                        if(fabs(summed_block.val1(j)) > rel_cut) 
+                            { D(j) = 1; keep_block = true; }
+                        }
+                    }
+                } //else (s != N)
 
             if(keep_block)
-            {
+                {
                 qD[q] = D;
 
                 if(is_mpo) 
-                {
-                block.addindex1(conj(model.si(s)(n).index()));
-                block.addindex1(model.siP(s)(u).index());
-                }
-                else { block.addindex1(model.si(s)(n).index()); }
+                    {
+                    block.addindex1(conj(model.si(s)(n).index()));
+                    block.addindex1(model.siP(s)(u).index());
+                    }
+                else 
+                    { block.addindex1(model.si(s)(n).index()); }
 
                 qt[q].push_back(block);
 
                 if(s==show_s)
-                {
-                block.print("Kept block",ShowData);
-                cerr << "D = " << D << "\n";
+                    {
+                    block.print("Kept block",ShowData);
+                    cerr << "D = " << D << "\n";
+                    }
                 }
             }
-        }}
 
         qC.clear();
 
         foreach(const qt_vt& x, qt)
-        {
+            {
             const vector<ITensor>& blks = x.second;
             if(blks.size() != 0)
-            {
+                {
                 q = x.first; 
                 if(s == N) 
-                { foreach(const ITensor& t, blks) nblock.push_back(t); }
+                    { foreach(const ITensor& t, blks) nblock.push_back(t); }
                 else
-                {
+                    {
                     Matrix M; int mm = collapseCols(qD[q],M);
                     if(s==show_s)
-                    {
+                        {
                         cerr << boost::format("Adding block, mm = %d\n")%mm;
                         q.print("q");
                         cerr << "qD[q] = " << qD[q] << "\n";
@@ -302,7 +312,7 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
                         int count = 0;
                         foreach(const ITensor& t, blks) 
                         t.print((boost::format("t%02d")%(++count)).str(),ShowData);
-                    }
+                        }
                     //string qname = (boost::format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
                     string qname = (boost::format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
                     Index qbond(qname,mm);
@@ -310,38 +320,48 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
                     foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
                     iq.push_back(inqn(qbond,q));
                     qC[q] = compressor;
+                    }
                 }
             }
-        }
 
         if(s != N) 
-        { 
+            { 
             if(iq.empty()) 
-            {
+                {
                 cerr << "At site " << s << "\n";
                 Error("convertToIQ: no compatible QNs to put into Link.");
-            }
+                }
             linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
-        }
+            }
         if(s == 1)
-            qA[s] = (is_mpo ? IQTensor(conj(model.si(s)),model.siP(s),linkind[s]) : IQTensor(model.si(s),linkind[s]));
+            {
+            qA[s] = (is_mpo ? IQTensor(conj(model.si(s)),model.siP(s),linkind[s]) 
+                            : IQTensor(model.si(s),linkind[s]));
+            }
         else if(s == N)
+            {
             qA[s] = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(model.si(s)),model.siP(s)) 
-                                    : IQTensor(conj(linkind[s-1]),model.si(s)));
+                            : IQTensor(conj(linkind[s-1]),model.si(s)));
+            }
         else
+            {
             qA[s] = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(model.si(s)),model.siP(s),linkind[s]) 
-                                    : IQTensor(conj(linkind[s-1]),model.si(s),linkind[s]));
+                            : IQTensor(conj(linkind[s-1]),model.si(s),linkind[s]));
+            }
 
-        foreach(const ITensor& nb, nblock) { qA[s] += nb; } nblock.clear();
+        foreach(const ITensor& nb, nblock) 
+            { qA[s] += nb; } 
+        nblock.clear();
 
         if(s==show_s)
-        {
-        qA[s].print((boost::format("qA[%d]")%s).str(),ShowData);
-        Error("Stopping");
-        }
+            {
+            qA[s].print((boost::format("qA[%d]")%s).str(),ShowData);
+            Error("Stopping");
+            }
 
-    } //for loop over s
-}
+        } //for loop over s
+
+    } //void convertToIQ
 
 /*
 template <class Tensor> 
@@ -380,7 +400,6 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
     Index bond, prev_bond;
     for(int s = 1; s <= N; ++s)
     {
-        if(debug3) cerr << "s = " << s << "\n";
 
         qD.clear(); qt.clear();
         if(s > 1) prev_bond = LinkInd(s-1); 

@@ -36,19 +36,19 @@ public:
 
     Sweeps() 
     : scheme_(ramp_m),
-      Minm(1), Maxm(MAX_M), Cutoff(MIN_CUT),
+      Minm(1), finalMaxm(MAX_M), finalCut(MIN_CUT),
       Nsweep(0), num_site_center(2)
     { }
     
     Sweeps(Scheme sch)
     : scheme_(sch),
-      Minm(1), Maxm(MAX_M), Cutoff(MIN_CUT),
+      Minm(1), finalMaxm(MAX_M), finalCut(MIN_CUT),
       Nsweep(0), num_site_center(2)
     { }
 
     Sweeps(Scheme sch, int nsw)
     : scheme_(sch),
-      Minm(1), Maxm(MAX_M), Cutoff(MIN_CUT),
+      Minm(1), finalMaxm(MAX_M), finalCut(MIN_CUT),
       Nsweep(nsw), num_site_center(2)
     { }
 

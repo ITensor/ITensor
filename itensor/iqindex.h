@@ -618,7 +618,7 @@ class IQIndex : public Index
         return QN();
         }
 
-    const Arrow dir() const { return _dir; }
+    Arrow dir() const { return _dir; }
     void conj() { _dir = _dir*Switch; }
 
     //------------------------------------------
@@ -647,6 +647,21 @@ class IQIndex : public Index
         foreach(const inqn& x, pd->iq_) 
             if(x.index.noprime_equals(i)) return true;
         return false;
+        }
+
+    int offset(const Index& I) const
+        {
+        int os = 0;
+        for(size_t j = 0; j < pd->iq_.size(); ++j)
+            {
+            const Index& J = pd->iq_[j].index;
+            if(J == I) return os;
+            os += J.m();
+            }
+        Print(*this);
+        Print(I);
+        Error("Index not contained in IQIndex");
+        return 0;
         }
 
     //------------------------------------------
@@ -703,21 +718,29 @@ struct IQIndexVal
 {
     IQIndex iqind; 
     int i;
-    IQIndexVal() : iqind(IQIndex::Null()),i(0) { }
-    IQIndexVal(const IQIndex& iqindex, int i_) : iqind(iqindex),i(i_) 
-    { 
-        if(i > iqind.m() || i < 1) 
-            Error("IQIndexVal: i out of range");
-    }
 
-    Index index() const { return iqind.index(i); }
-    QN qn() const { return iqind.qn(i); }
-    IQIndexVal primed() const { return IQIndexVal(iqind.primed(),i); }
-    void conj() { iqind.conj(); }
+    IQIndexVal();
 
-    operator IndexVal() const { return IndexVal(iqind,i); }
-    ITensor operator*(const IndexVal& iv) const { IndexVal iv_this = *this; return (iv_this * iv); }
-    ITensor operator*(Real fac) const { IndexVal iv_this = *this; return iv_this * fac; }
+    IQIndexVal(const IQIndex& iqindex, int i_);
+
+    Index index() const;
+
+    QN qn() const;
+
+    IQIndexVal primed() const 
+        { return IQIndexVal(iqind.primed(),i); }
+
+    void conj() 
+        { iqind.conj(); }
+
+    IndexVal toIndexVal() const;
+
+    operator ITensor() const;
+
+    ITensor operator*(const IndexVal& iv) const 
+        { 
+        return IndexVal(Index(iqind),i) * iv; 
+        }
 
     void print(std::string name = "") const
         { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
@@ -725,11 +748,80 @@ struct IQIndexVal
         { return s << "IQIndexVal: i = " << iv.i << ", iqind = " << iv.iqind << "\n"; }
 
     static const IQIndexVal& Null()
-    {
+        {
         static const IQIndexVal Null_(IQIndex::Null(),1);
         return Null_;
-    }
+        }
+private:
+    void calc_ind_ii(int& j, int& ii) const;
+
 };
+
+inline
+IQIndexVal::
+IQIndexVal()
+    : iqind(IQIndex::Null()), i(1) 
+    { }
+
+inline
+IQIndexVal::
+IQIndexVal(const IQIndex& iqindex, int i_) 
+    : iqind(iqindex),i(i_) 
+    { 
+    if(i > iqind.m() || i < 1) 
+        {
+        Print(iqindex);
+        Print(i);
+        Error("IQIndexVal: i out of range");
+        }
+    }
+
+inline
+Index IQIndexVal::
+index() const 
+    { 
+    int j,ii;
+    calc_ind_ii(j,ii);
+    return iqind.index(j);
+    }
+
+inline
+QN IQIndexVal::
+qn() const 
+    { 
+    int j,ii;
+    calc_ind_ii(j,ii);
+    return iqind.qn(j);
+    }
+
+inline
+IndexVal IQIndexVal::
+toIndexVal() const 
+    { 
+    int j,ii;
+    calc_ind_ii(j,ii);
+    return IndexVal(iqind.index(j),ii); 
+    }
+
+inline
+IQIndexVal::
+operator ITensor() const 
+    { 
+    return ITensor(IndexVal(iqind,i)); 
+    }
+
+inline
+void IQIndexVal::
+calc_ind_ii(int& j, int& ii) const
+    {
+    j = 1;
+    ii = i;
+    while(ii > iqind.index(j).m())
+        {
+        ii -= iqind.index(j).m();
+        ++j;
+        }
+    }
 
 inline IQIndexVal IQIndex::operator()(int n) const 
     { return IQIndexVal(*this,n); }

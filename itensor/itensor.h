@@ -12,76 +12,36 @@ enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
 class Permutation;
 
 class Counter
-    {
+{
+public:
+    boost::array<int,NMAX+1> n;
+    boost::array<int,NMAX+1> i;
+    int ind;
+
+    Counter();
+    Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r);
+
+    void init(const boost::array<Index,NMAX+1>& ii, int rn, int r);
+
+    Counter& operator++();
+
+    bool operator!=(const Counter& other) const;
+    bool operator==(const Counter& other) const;
+
+    inline bool notDone() const { return i[1] != 0; }
+
+    friend inline std::ostream& operator<<(std::ostream& s, const Counter& c);
+
 private:
     void reset(int a)
 	{
         i.assign(a);
         ind = 1;
 	}
+
     int rn_,r_;
-public:
-    boost::array<int,NMAX+1> n;
-    boost::array<int,NMAX+1> i;
-    int ind;
 
-    Counter() : rn_(0)
-	{
-        n.assign(1); n[0] = 0;
-        reset(0);
-	}
-
-    Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r) { init(ii,rn,r); }
-
-    void init(const boost::array<Index,NMAX+1>& ii, int rn, int r)
-	{
-	rn_ = rn;
-	r_ = r;
-	n[0] = 0;
-	for(int j = 1; j <= rn_; ++j) 
-	    GET(n,j) = ii[j].m();
-	for(int j = rn_+1; j <= NMAX; ++j) 
-	    n[j] = 1;
-	reset(1);
-	}
-
-    Counter& operator++()
-	{
-        ++ind;
-        ++i[1];
-        if(i[1] > n[1])
-        for(int j = 2; j <= rn_; ++j)
-	    {
-	    i[j-1] = 1;
-	    ++i[j];
-	    if(i[j] <= n[j]) break;
-	    }
-        //set 'done' condition
-        if(i[rn_] > n[rn_]) reset(0);
-        return *this;
-	}
-
-    bool operator!=(const Counter& other) const
-	{
-        for(int j = 1; j <= NMAX; ++j)
-	    if(i[j] != other.i[j]) 
-		return true;
-        return false;
-	}
-    bool operator==(const Counter& other) const
-	{ return !(*this != other); }
-
-    inline bool notDone() const { return i[1] != 0; }
-
-    friend inline std::ostream& operator<<(std::ostream& s, const Counter& c)
-	{
-	s << "("; 
-	for(int i = 1; i < c.r_; ++i)
-	    s << c.i[i] << " ";
-	s << c.i[c.r_] << ")";
-	return s;
-	}
-    };
+};
 
 //#define DO_ALT
 #ifdef DO_ALT
@@ -783,7 +743,7 @@ public:
         return p->v(1);
     }
 
-    const Real operator()() const
+    Real operator()() const
 	{ 
         if(rn_ != 0)
         {
@@ -796,64 +756,71 @@ public:
 
     Real& operator()(const IndexVal& iv1)
 	{
-        assert(r_ >= 1);
         if(rn_ > 1) 
         {
             std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
-            Error("Not enough indices (requires all having m!=1)");
+            Error("Not enough m!=1 indices provided");
         }
-	    assert(p != 0); 
+        if(index_[1] != iv1.ind)
+            {
+            Print(*this);
+            Print(iv1);
+            Error("Incorrect IndexVal argument to ITensor");
+            }
         solo(); 
         scaleTo(1);
         return p->v(iv1.i);
 	}
 
-    const Real operator()(const IndexVal& iv1) const
+    Real operator()(const IndexVal& iv1) const
 	{
-        assert(r_ >= 1);
         if(rn_ > 1) 
         {
             std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
-            Error("Not enough indices (requires all having m!=1)");
+            Error("Not enough m!=1 indices provided");
         }
+        if(index_[1] != iv1.ind)
+            {
+            Print(*this);
+            Print(iv1);
+            Error("Incorrect IndexVal argument to ITensor");
+            }
 	    assert(p != 0); 
         return scale_.real()*p->v(iv1.i);
 	}
 
     inline Real& operator()(const IndexVal& iv1, const IndexVal& iv2) 
-    {
-	    assert(p != 0); 
+        {
         solo(); 
         scaleTo(1);
         return p->v(_ind2(iv1,iv2));
-    }
+        }
 
-    inline const Real operator()(const IndexVal& iv1, 
+    inline Real operator()(const IndexVal& iv1, 
                                  const IndexVal& iv2) const
-	{
+        {
 	    assert(p != 0); 
         return scale_.real()*p->v(_ind2(iv1,iv2));
-    }
+        }
 
     inline Real& operator()(const IndexVal& iv1, const IndexVal& iv2, 
                     const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
                     const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
                     const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
-    {
-	    assert(p != 0); 
+        {
         solo(); 
         scaleTo(1);
         return p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
-    }
+        }
 
-    inline const Real operator()(const IndexVal& iv1, const IndexVal& iv2, 
+    inline Real operator()(const IndexVal& iv1, const IndexVal& iv2, 
                     const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
                     const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
                     const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null()) const
-	{
+        {
 	    assert(p != 0); 
         return scale_.real()*p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
-    }
+        }
 
     //Methods for Mapping to Other Objects ----------------------------------
 
@@ -1012,11 +979,11 @@ public:
 
     friend std::ostream& operator<<(std::ostream & s, const ITensor & t);
 
-    friend class ITAssigner;
     typedef Index IndexT;
     typedef IndexVal IndexValT;
     typedef Combiner CombinerT;
     static const Index& ReImIndex() { return Index::IndReIm(); }
+    friend class commaInit;
     }; //ITensor
 
 
@@ -1046,32 +1013,107 @@ inline Tensor multSiteOps(Tensor a, Tensor b)
     return res;
 }
 
-class ITAssigner
+class commaInit
 {
-    ITensor& T;
-    Counter c; 
-
-    ITAssigner(ITensor& T_, Real r)
-    : T(T_)
-    { 
+public:
+    commaInit(ITensor& T_)
+        : T(T_)
+        { 
         if(T.is_null()) Error("Can't assign to null ITensor");
         T.solo();
         T.scaleTo(1);
         T.initCounter(c);
-        operator,(r);
-    }
+        }
 
-public:
-    ITAssigner& operator,(Real r)
-    {
-        if(c.notDone()) { T.p->v(c.ind) = r; ++c; }
-        else { Error("Comma assignment list too long.\n"); }
+    commaInit& operator<<(Real r)
+        {
+        return operator,(r);
+        }
+
+    commaInit& operator,(Real r)
+        {
+        if(c.notDone()) 
+            { T.p->v(c.ind) = r; ++c; }
+        else 
+            { Error("Comma assignment list too long.\n"); }
         return *this;
+        }
+
+private:
+    ITensor& T;
+    Counter c; 
+};
+
+inline
+Counter::
+Counter() 
+    : rn_(0)
+	{
+    n.assign(1); n[0] = 0;
+    reset(0);
+	}
+
+inline
+Counter::
+Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r) 
+    { init(ii,rn,r); }
+
+inline
+void Counter::
+init(const boost::array<Index,NMAX+1>& ii, int rn, int r)
+    {
+    rn_ = rn;
+    r_ = r;
+    n[0] = 0;
+    for(int j = 1; j <= rn_; ++j) 
+        { GET(n,j) = ii[j].m(); }
+    for(int j = rn_+1; j <= NMAX; ++j) 
+        { n[j] = 1; }
+    reset(1);
     }
 
-    friend ITAssigner operator<<(ITensor& T, Real r);
-};
-inline ITAssigner operator<<(ITensor& T, Real r) { return ITAssigner(T,r); }
+inline
+Counter& Counter::
+operator++()
+	{
+    ++ind;
+    ++i[1];
+    if(i[1] > n[1])
+    for(int j = 2; j <= rn_; ++j)
+        {
+        i[j-1] = 1;
+        ++i[j];
+        if(i[j] <= n[j]) break;
+        }
+    //set 'done' condition
+    if(i[rn_] > n[rn_]) reset(0);
+    return *this;
+	}
+
+inline
+bool Counter::
+operator!=(const Counter& other) const
+	{
+    for(int j = 1; j <= NMAX; ++j)
+        { if(i[j] != other.i[j]) return true; }
+    return false;
+	}
+
+inline
+bool Counter::
+operator==(const Counter& other) const
+        { return !(*this != other); }
+
+inline 
+std::ostream&
+operator<<(std::ostream& s, const Counter& c)
+    {
+    s << "("; 
+    for(int i = 1; i < c.r_; ++i)
+        {s << c.i[i] << " ";} 
+    s << c.i[c.r_] << ")";
+    return s;
+    }
 
 
 #endif

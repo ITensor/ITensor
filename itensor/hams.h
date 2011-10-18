@@ -370,28 +370,6 @@ public:
 
 } //end namespace SpinOne
 
-// Given Tensors which represent operators (e.g. A(site-1',site-1), B(site-1',site-1), 
-// Multiply them, fixing primes C(site-1',site-1)
-template<class Tensor>
-inline Tensor MultSiteOps(Tensor a, Tensor b) // a * b  (a above b in diagram, unprimed = right index of matrix)
-    {
-    a.mapprime(1,2,primeSite);
-    a.mapprime(0,1,primeSite);
-    Tensor res = a * b;
-    res.mapprime(2,1,primeSite);
-    return res;
-    }
-
-inline ITensor MultSiteOps(const SiteOp& aa, const SiteOp& bb) // a * b  (a above b in diagram, unprimed = right index of matrix)
-{
-    ITensor a(aa), b(bb);
-    a.mapprime(1,2,primeSite);
-    a.mapprime(0,1,primeSite);
-    ITensor res = a * b;
-    res.mapprime(2,1,primeSite);
-    return res;
-}
-
 namespace Hubbard
 {
 
@@ -418,8 +396,8 @@ public:
 	    udi *= (i == 1 ? U : U*0.5);
 	    udj *= (i == N-1 ? U : U*0.5);
 	    IQTensor udbond = udi * uj + ui * udj; 
-	    IQTensor ke = MultSiteOps(dui,fi) * cuj + duj * MultSiteOps(fi,cui) + 
-			MultSiteOps(ddi,fi) * cdj + ddj * MultSiteOps(fi,cdi);
+	    IQTensor ke = multSiteOps(dui,fi) * cuj + duj * multSiteOps(fi,cui) + 
+			multSiteOps(ddi,fi) * cdj + ddj * multSiteOps(fi,cdi);
 	    ke *= -1.0;
 	    IQTensor con = one * (-Etot/(N-1.0));
 	    IQTensor ham = (udbond + ke + con);
@@ -434,7 +412,7 @@ public:
 		{
 		if(o != 1) term *= 1.0 / o;
 		kk = one + term;
-		term = MultSiteOps(kk,ham);
+		term = multSiteOps(kk,ham);
 		}
 	    //kk.reverse_dirs();
 	    gates[i] = kk;
@@ -471,10 +449,10 @@ public:
 
             W = ITensor(mod.si(n),mod.siP(n),row,col);
             W += mod.NupNdn(n) * row(6) * col(1) * U;
-            W += MultSiteOps(mod.FermiPhase(n),mod.Cup(n)) * row(6) * col(2);
-            W += MultSiteOps(mod.FermiPhase(n),mod.Cdn(n)) * row(6) * col(3);
-            W += MultSiteOps(mod.Cdagup(n),mod.FermiPhase(n)) * row(6) * col(4);
-            W += MultSiteOps(mod.Cdagdn(n),mod.FermiPhase(n)) * row(6) * col(5);
+            W += multSiteOps(mod.FermiPhase(n),mod.Cup(n)) * row(6) * col(2);
+            W += multSiteOps(mod.FermiPhase(n),mod.Cdn(n)) * row(6) * col(3);
+            W += multSiteOps(mod.Cdagup(n),mod.FermiPhase(n)) * row(6) * col(4);
+            W += multSiteOps(mod.Cdagdn(n),mod.FermiPhase(n)) * row(6) * col(5);
             W += mod.id(n) * row(6) * col(6);
 
             W += mod.id(n) * row(1) * col(1);

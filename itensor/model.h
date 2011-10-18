@@ -13,7 +13,7 @@ public:
     virtual void read(std::istream& s) = 0;
     virtual void write(std::ostream& s) const = 0;
 
-    virtual SiteOp id(int i) const = 0;
+    virtual IQTensor id(int i) const = 0;
 protected:
     virtual ~BaseModel() { }
 };
@@ -81,69 +81,69 @@ public:
     IQIndexVal Z0P(int i) const { return siP(i)(2); }
     IQIndexVal DnP(int i) const { return siP(i)(3); }
 
-    virtual SiteOp id(int i) const
+    virtual IQTensor id(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 1; res(Z0(i),Z0P(i)) = 1; res(Dn(i),DnP(i)) = 1;
         return res;
     }
 
-    SiteOp sz(int i) const
+    IQTensor sz(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 1; res(Dn(i),DnP(i)) = -1;
         return res;
     }
 
-    SiteOp sx(int i) const
+    IQTensor sx(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),Z0P(i)) = ISqrt2; res(Z0(i),UpP(i)) = ISqrt2;
         res(Z0(i),DnP(i)) = ISqrt2; res(Dn(i),Z0P(i)) = ISqrt2;
         return res;
     }
 
-    SiteOp isy(int i) const
+    IQTensor isy(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),Z0P(i)) = +ISqrt2; res(Z0(i),UpP(i)) = -ISqrt2;
         res(Z0(i),DnP(i)) = +ISqrt2; res(Dn(i),Z0P(i)) = -ISqrt2;
         return res;
     }
 
-    SiteOp sp(int i) const
+    IQTensor sp(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Dn(i),Z0P(i)) = Sqrt2; res(Z0(i),UpP(i)) = Sqrt2;
         return res;
     }
 
-    SiteOp sm(int i) const
+    IQTensor sm(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),Z0P(i)) = Sqrt2; res(Z0(i),DnP(i)) = Sqrt2;
         return res;
     }
 
-    SiteOp sz2(int i) const
+    IQTensor sz2(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 1; res(Dn(i),DnP(i)) = 1;
         return res;
     }
 
-    SiteOp sx2(int i) const
+    IQTensor sx2(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 0.5; res(Up(i),DnP(i)) = 0.5;
         res(Z0(i),Z0P(i)) = 1;
         res(Dn(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = 0.5;
         return res;
     }
 
-    SiteOp sy2(int i) const
+    IQTensor sy2(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 0.5; res(Up(i),DnP(i)) = -0.5;
         res(Z0(i),Z0P(i)) = 1;
         res(Dn(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = -0.5;
@@ -202,46 +202,46 @@ public:
     IQIndexVal UpP(int i) const { return siP(i)(1); }
     IQIndexVal DnP(int i) const { return siP(i)(2); }
 
-    virtual SiteOp id(int i) const
+    virtual IQTensor id(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 1; res(Dn(i),DnP(i)) = 1;
         return res;
     }
 
-    SiteOp sz(int i) const
+    IQTensor sz(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),UpP(i)) = 0.5; res(Dn(i),DnP(i)) = -0.5;
         return res;
     }
 
-    SiteOp sx(int i) const
+    IQTensor sx(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = 0.5;
         return res;
     }
 
-    SiteOp isy(int i) const
+    IQTensor isy(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),DnP(i)) = 0.5; res(Dn(i),UpP(i)) = -0.5;
         return res;
     }
 
     //S^+
-    SiteOp sp(int i) const
+    IQTensor sp(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Dn(i),UpP(i)) = 1;
         return res;
     }
 
     //S^-
-    SiteOp sm(int i) const
+    IQTensor sm(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Up(i),DnP(i)) = 1;
         return res;
     }
@@ -331,52 +331,52 @@ public:
     IQIndexVal EmpP(int i) const { return siP(i)(1); }
     IQIndexVal OccP(int i) const { return siP(i)(2); }
 
-    virtual SiteOp id(int i) const
+    virtual IQTensor id(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Emp(i),EmpP(i)) = 1; res(Occ(i),OccP(i)) = 1;
         return res;
     }
 
-    SiteOp C(int i) const
+    IQTensor C(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Occ(i),EmpP(i)) = 1;
         return res;
     }
 
-    SiteOp Cdag(int i) const
+    IQTensor Cdag(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Emp(i),OccP(i)) = 1;
         return res;
     }
 
-    SiteOp n(int i) const
+    IQTensor n(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Occ(i),OccP(i)) = 1;
         return res;
     }
 
     //String operator F_i = (-1)^{n_i} = (1-2*n_i)
-    SiteOp FermiPhase(int i) const
+    IQTensor FermiPhase(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Emp(i),EmpP(i)) = 1; res(Occ(i),OccP(i)) = -1;
         return res;
     }
 
-    SiteOp projEmp(int i) const
+    IQTensor projEmp(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Emp(i),EmpP(i)) = 1;
         return res;
     }
 
-    SiteOp projOcc(int i) const
+    IQTensor projOcc(int i) const
     {
-        SiteOp res(si(i));
+        IQTensor res(conj(si(i)),siP(i));
         res(Occ(i),OccP(i)) = 1;
         return res;
     }
@@ -439,89 +439,89 @@ public:
     IQIndexVal DnStateP(int i) const { return siP(i)(3); }
     IQIndexVal UpDnStateP(int i) const { return siP(i)(4); }
 
-    virtual SiteOp id(int i) const
+    virtual IQTensor id(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(Emp(i),EmpP(i)) = 1; res(UpState(i),UpStateP(i)) = 1;
 	res(DnState(i),DnStateP(i)) = 1; res(UpDnState(i),UpDnStateP(i)) = 1;
 	return res;
 	}
 
-    SiteOp Cup(int i) const
+    IQTensor Cup(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(UpState(i),EmpP(i)) = 1;
 	res(UpDnState(i),DnStateP(i)) = -1;
 	return res;
 	}
 
-    SiteOp Cdagup(int i) const
+    IQTensor Cdagup(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(Emp(i),UpStateP(i)) = 1;
 	res(DnState(i),UpDnStateP(i)) = -1;
 	return res;
 	}
 
-    SiteOp Cdn(int i) const
+    IQTensor Cdn(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(DnState(i),EmpP(i)) = 1;
 	res(UpDnState(i),UpStateP(i)) = 1;
 	return res;
 	}
 
-    SiteOp Cdagdn(int i) const
+    IQTensor Cdagdn(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(Emp(i),DnStateP(i)) = 1;
 	res(UpState(i),UpDnStateP(i)) = 1;
 	return res;
 	}
 
-    SiteOp Nup(int i) const
+    IQTensor Nup(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(UpState(i),UpStateP(i)) = 1;
 	res(UpDnState(i),UpDnStateP(i)) = 1;
 	return res;
 	}
 
-    SiteOp Ndn(int i) const
+    IQTensor Ndn(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(DnState(i),DnStateP(i)) = 1;
 	res(UpDnState(i),UpDnStateP(i)) = 1;
 	return res;
 	}
 
-    SiteOp Ntot(int i) const
+    IQTensor Ntot(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(Emp(i),EmpP(i)) = 0; res(UpState(i),UpStateP(i)) = 1;
 	res(DnState(i),DnStateP(i)) = 1; res(UpDnState(i),UpDnStateP(i)) = 2;
 	return res;
 	}
 
-    SiteOp NupNdn(int i) const
+    IQTensor NupNdn(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(UpDnState(i),UpDnStateP(i)) = 1;
 	return res;
 	}
 
-    SiteOp Sz(int i) const
+    IQTensor Sz(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(UpState(i),UpStateP(i)) = 0.5;
 	res(DnState(i),DnStateP(i)) = -0.5;
 	return res;
 	}
 
     //String operator F_i = (-1)^{n_i} = (1-2*n_i)
-    SiteOp FermiPhase(int i) const
+    IQTensor FermiPhase(int i) const
 	{
-	SiteOp res(si(i));
+	IQTensor res(conj(si(i)),siP(i));
 	res(Emp(i),EmpP(i)) = 1; res(UpState(i),UpStateP(i)) = -1;
 	res(DnState(i),DnStateP(i)) = -1; res(UpDnState(i),UpDnStateP(i)) = 1;
 	return res;
