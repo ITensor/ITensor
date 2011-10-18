@@ -751,7 +751,7 @@ public:
         return p->v(1);
     }
 
-    const Real operator()() const
+    Real operator()() const
 	{ 
         if(rn_ != 0)
         {
@@ -780,7 +780,7 @@ public:
         return p->v(iv1.i);
 	}
 
-    const Real operator()(const IndexVal& iv1) const
+    Real operator()(const IndexVal& iv1) const
 	{
         if(rn_ > 1) 
         {
@@ -804,7 +804,7 @@ public:
         return p->v(_ind2(iv1,iv2));
         }
 
-    inline const Real operator()(const IndexVal& iv1, 
+    inline Real operator()(const IndexVal& iv1, 
                                  const IndexVal& iv2) const
         {
 	    assert(p != 0); 
@@ -821,7 +821,7 @@ public:
         return p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
         }
 
-    inline const Real operator()(const IndexVal& iv1, const IndexVal& iv2, 
+    inline Real operator()(const IndexVal& iv1, const IndexVal& iv2, 
                     const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
                     const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
                     const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null()) const
