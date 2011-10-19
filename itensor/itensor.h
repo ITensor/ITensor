@@ -12,7 +12,7 @@ enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
 class Permutation;
 
 class Counter
-{
+    {
 public:
     boost::array<int,NMAX+1> n;
     boost::array<int,NMAX+1> i;
@@ -28,7 +28,8 @@ public:
     bool operator!=(const Counter& other) const;
     bool operator==(const Counter& other) const;
 
-    inline bool notDone() const { return i[1] != 0; }
+    inline bool notDone() const 
+	{ return i[1] != 0; }
 
     friend inline std::ostream& operator<<(std::ostream& s, const Counter& c);
 
@@ -38,10 +39,8 @@ private:
         i.assign(a);
         ind = 1;
 	}
-
     int rn_,r_;
-
-};
+    };
 
 //#define DO_ALT
 #ifdef DO_ALT
@@ -125,12 +124,15 @@ class ITensor
     {
     //mutable: const methods may want to reshape data
     mutable boost::intrusive_ptr<ITDat> p; 
-    int r_,rn_;
+
     //Indices, maximum of 8 (index_[0] not used), mutable to allow reordering
     mutable boost::array<Index,NMAX+1> index_; 
-    Real ur;
+
+    int r_,rn_;
     //mutable since e.g. scaleTo is logically const
     mutable LogNumber scale_; 
+
+    Real ur;
 
     void allocate(int dim) { p = new ITDat(dim); }
     void allocate() { p = new ITDat(); }
@@ -148,47 +150,46 @@ class ITensor
 	{
         assert(p != 0);
         if(p->count() != 1) 
-        {
             p = new ITDat(*p);
-        }
 	}
     
     void set_unique_Real()
 	{
         ur = 0;
         for(int j = 1; j <= r_; ++j)
-            { ur += index_[j].unique_Real(); }
+            ur += index_[j].unique_Real();
 	}
 
     void _construct1(const Index& i1)
-    {
-        assert(r_ == 1);
-        if(i1.m() != 1) rn_ = 1; 
-        index_[1] = i1;
-        allocate(i1.m());
-        set_unique_Real();
-    }
+	{
+	assert(r_ == 1);
+	if(i1.m() != 1) 
+	    rn_ = 1; 
+	index_[1] = i1;
+	allocate(i1.m());
+	set_unique_Real();
+	}
 
     void _construct2(const Index& i1, const Index& i2)
-    {
-        assert(r_ == 2);
-        if(i1.m()==1) 
-        {
-            index_[1] = i2; index_[2] = i1; 
-            rn_ = (i2.m() == 1 ? 0 : 1);
-        }
-        else 
-        { 
-            index_[1] = i1; index_[2] = i2; 
-            rn_ = (i2.m() == 1 ? 1 : 2); 
-        }
-        allocate(i1.m()*i2.m()); 
-        set_unique_Real();
-    }
+	{
+	assert(r_ == 2);
+	if(i1.m()==1) 
+	    {
+	    index_[1] = i2; index_[2] = i1; 
+	    rn_ = (i2.m() == 1 ? 0 : 1);
+	    }
+	else 
+	    { 
+	    index_[1] = i1; index_[2] = i2; 
+	    rn_ = (i2.m() == 1 ? 1 : 2); 
+	    }
+	allocate(i1.m()*i2.m()); 
+	set_unique_Real();
+	}
 
     template<class IndexContainer>
     int fillFromIndices(const IndexContainer& I, int size)
-    {
+	{
         r_ = size;
         assert(r_ <= NMAX);
         assert(rn_ == 0);
@@ -196,51 +197,56 @@ class ITensor
         boost::array<const Index*,NMAX+1> index1_;
         int alloc_size = 1;
         for(int n = 0; n < r_; ++n)
-        {
+	    {
             const Index& i = I[n];
-            DO_IF_DEBUG(if(i == Index::Null()) \
-            Error("ITensor: null Index in constructor.");)
-            if(i.m()==1) { GET(index1_,++r1_) = &i; }
-            else         { GET(index_, ++rn_) = i; alloc_size *= i.m(); }
-        }
-        for(int l = 1; l <= r1_; ++l) index_[rn_+l] = *(index1_[l]);
+            DO_IF_DEBUG(if(i == Index::Null()) Error("ITensor: null Index in constructor.");)
+            if(i.m()==1) 
+		GET(index1_,++r1_) = &i;
+            else         
+		{ 
+		GET(index_, ++rn_) = i; 
+		alloc_size *= i.m(); 
+		}
+	    }
+        for(int l = 1; l <= r1_; ++l) 
+	    index_[rn_+l] = *(index1_[l]);
         set_unique_Real();
         return alloc_size;
-    }
+	}
 
     //Prefer to map via a Combiner
     //Though 'mapindex' is useful for tested, internal calls
     void mapindex(const Index& i1, const Index& i2)
 	{
-        assert(i1.m() == i2.m());
-        for(int j = 1; j <= r_; ++j) 
-        if(GET(index_,j) == i1) 
-        {
-            GET(index_,j) = i2;
-            set_unique_Real();
-            return;
-        }
-        Print(i1);
-        Error("ITensor::mapindex: couldn't find i1.");
+	assert(i1.m() == i2.m());
+	for(int j = 1; j <= r_; ++j) 
+	    if(GET(index_,j) == i1) 
+		{
+		GET(index_,j) = i2;
+		set_unique_Real();
+		return;
+		}
+	Print(i1);
+	Error("ITensor::mapindex: couldn't find i1.");
 	}
 
     void getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const
-    {
-        for(int j = 1; j <= r_; ++j)
-        {
-            bool got_one = false;
-            for(int k = 1; k <= r_; ++k)
-            if(oth_index_[j] == index_[k])
-            { P.from_to(j,k); got_one = true; break; }
-            if(!got_one)
-            {
-                std::cerr << "j = " << j << "\n";
-                Print(*this); std::cerr << "oth_index_ = \n";
-                foreach(const Index& I, oth_index_) { std::cerr << I << "\n"; }
-                Error("ITensor::getperm: no matching index");
-            }
-        }
-    }
+	{
+	for(int j = 1; j <= r_; ++j)
+	    {
+	    bool got_one = false;
+	    for(int k = 1; k <= r_; ++k)
+		if(oth_index_[j] == index_[k])
+		    { P.from_to(j,k); got_one = true; break; }
+	    if(!got_one)
+		{
+		std::cerr << "j = " << j << "\n";
+		Print(*this); std::cerr << "oth_index_ = \n";
+		foreach(const Index& I, oth_index_) { std::cerr << I << "\n"; }
+		Error("ITensor::getperm: no matching index");
+		}
+	    }
+	}
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
                              int& nsamen, int& cdim,
@@ -305,62 +311,63 @@ public:
     ITensor(const Index& i1, const Vector& V) 
     : p(new ITDat(V)), r_(1), rn_(0)
 	{ 
-        if(i1.m() != V.Length()) 
-            Error("Mismatch of Index and Vector sizes.");
-        if(i1.m() != 1) rn_ = 1;
-        index_[1] = i1;
-        set_unique_Real();
-    }
+	if(i1.m() != V.Length()) 
+	    Error("Mismatch of Index and Vector sizes.");
+	if(i1.m() != 1) rn_ = 1;
+	index_[1] = i1;
+	set_unique_Real();
+	}
 
     ITensor(Index i1,Index i2) : r_(2), rn_(0)
 	{ _construct2(i1,i2); }
 
     //Create an ITensor as a matrix with 'a' on the diagonal
     ITensor(Index i1,Index i2,Real a) : r_(2), rn_(0)
-    {
-        _construct2(i1,i2);
-        if(rn_ == 2) //then index order is i1, i2
-        {
-            const int nn = min(i1.m(),i2.m());
-            for(int i = 1; i <= nn; ++i) 
-                p->v((i-1)*i1.m()+i) = a;
-        }
-        else { p->v(1) = a; }
-    }
+	{
+	_construct2(i1,i2);
+	if(rn_ == 2) //then index order is i1, i2
+	    {
+	    const int nn = min(i1.m(),i2.m());
+	    for(int i = 1; i <= nn; ++i) 
+		p->v((i-1)*i1.m()+i) = a;
+	    }
+	else 
+	    p->v(1) = a;
+	}
 
     ITensor(Index i1,Index i2,const MatrixRef& M) : r_(2), rn_(0)
-    {
-        _construct2(i1,i2);
-        if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
-            { Error("Mismatch of Index sizes and matrix."); }
-        MatrixRef dref; 
-        p->v.TreatAsMatrix(dref,i2.m(),i1.m()); 
-        dref = M.t();
-    }
+	{
+	_construct2(i1,i2);
+	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
+	    Error("Mismatch of Index sizes and matrix.");
+	MatrixRef dref; 
+	p->v.TreatAsMatrix(dref,i2.m(),i1.m()); 
+	dref = M.t();
+	}
 
     ITensor(Index i1, Index i2, Index i3,
             Index i4 = Index::Null(), Index i5 = Index::Null(), Index i6 = Index::Null(),
             Index i7 = Index::Null(), Index i8 = Index::Null())
             : rn_(0)
-    {
-        boost::array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
-        int size = 3;
-        while(ii[size] != Index::Null()) ++size;
-        int alloc_size = fillFromIndices(ii,size);
-        allocate(alloc_size);
-    }
+	{
+	boost::array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
+	int size = 3;
+	while(ii[size] != Index::Null()) ++size;
+	int alloc_size = fillFromIndices(ii,size);
+	allocate(alloc_size);
+	}
 
     explicit ITensor(const IndexVal& iv, Real fac = 1) : r_(1), rn_(0)
-    { 
-        _construct1(iv.ind);
-        p->v(iv.i) = fac; 
-    }
+	{ 
+	_construct1(iv.ind);
+	p->v(iv.i) = fac; 
+	}
 
     ITensor(const IndexVal& iv1, const IndexVal& iv2) : r_(2), rn_(0)
-    { 
-        _construct2(iv1.ind,iv2.ind);
-        p->v((iv2.i-1)*iv1.ind.m()+iv1.i) = 1; 
-    }
+	{ 
+	_construct2(iv1.ind,iv2.ind);
+	p->v((iv2.i-1)*iv1.ind.m()+iv1.i) = 1; 
+	}
 
     ITensor(const IndexVal& iv1, const IndexVal& iv2, 
             const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
@@ -381,34 +388,33 @@ public:
             {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i }};
         boost::array<int,NMAX+1> ja; ja.assign(1);
         for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
-        {
             for(int j = 0; j < size; ++j)  // loop over the given indices
-            { if(index_[k] == ii[j]) { ja[k] = iv[j]; break; } }
-        }
+		if(index_[k] == ii[j]) 
+		    { ja[k] = iv[j]; break; }
         p->v(_ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])) = 1;
     }
 
     explicit ITensor(const std::vector<Index>& I) : rn_(0)
-    {
-        int alloc_size = fillFromIndices(I,I.size());
-        allocate(alloc_size);
-    }
+	{
+	int alloc_size = fillFromIndices(I,I.size());
+	allocate(alloc_size);
+	}
 
     ITensor(const std::vector<Index>& I, const Vector& V) 
-    : p(new ITDat(V)), rn_(0)
-    {
-        int alloc_size = fillFromIndices(I,I.size());
-        if(alloc_size != V.Length()) 
-            { Error("incompatible Index and Vector sizes"); }
-    }
+	    : p(new ITDat(V)), rn_(0)
+	{
+	int alloc_size = fillFromIndices(I,I.size());
+	if(alloc_size != V.Length()) 
+	    { Error("incompatible Index and Vector sizes"); }
+	}
 
     ITensor(const std::vector<Index>& I, const ITensor& other) 
-    : p(other.p), rn_(0), scale_(other.scale_)
-    {
-        int alloc_size = fillFromIndices(I,I.size());
-        if(alloc_size != other.vec_size()) 
-            { Error("incompatible Index and ITensor sizes"); }
-    }
+	    : p(other.p), rn_(0), scale_(other.scale_)
+	{
+	int alloc_size = fillFromIndices(I,I.size());
+	if(alloc_size != other.vec_size()) 
+	    { Error("incompatible Index and ITensor sizes"); }
+	}
 
     ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P) 
     : p(0), rn_(0), scale_(other.scale_)
@@ -1005,16 +1011,16 @@ inline ITensor operator*(Real fac, const IndexVal& iv)
 // a * b  (a above b in diagram, unprimed = right index of matrix)
 template<class Tensor>
 inline Tensor multSiteOps(Tensor a, Tensor b) 
-{
+    {
     a.mapprime(1,2,primeSite);
     a.mapprime(0,1,primeSite);
     Tensor res = a * b;
     res.mapprime(2,1,primeSite);
     return res;
-}
+    }
 
 class commaInit
-{
+    {
 public:
     commaInit(ITensor& T_)
         : T(T_)
@@ -1042,25 +1048,21 @@ public:
 private:
     ITensor& T;
     Counter c; 
-};
+    };
 
-inline
-Counter::
-Counter() 
-    : rn_(0)
-	{
+inline 
+Counter::Counter() : rn_(0)
+    {
     n.assign(1); n[0] = 0;
     reset(0);
-	}
+    }
 
 inline
-Counter::
-Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r) 
+Counter::Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r) 
     { init(ii,rn,r); }
 
-inline
-void Counter::
-init(const boost::array<Index,NMAX+1>& ii, int rn, int r)
+inline void 
+Counter::init(const boost::array<Index,NMAX+1>& ii, int rn, int r)
     {
     rn_ = rn;
     r_ = r;
@@ -1072,10 +1074,9 @@ init(const boost::array<Index,NMAX+1>& ii, int rn, int r)
     reset(1);
     }
 
-inline
-Counter& Counter::
-operator++()
-	{
+inline Counter& 
+Counter::operator++()
+    {
     ++ind;
     ++i[1];
     if(i[1] > n[1])
@@ -1088,24 +1089,21 @@ operator++()
     //set 'done' condition
     if(i[rn_] > n[rn_]) reset(0);
     return *this;
-	}
+    }
 
-inline
-bool Counter::
-operator!=(const Counter& other) const
-	{
+inline bool 
+Counter::operator!=(const Counter& other) const
+    {
     for(int j = 1; j <= NMAX; ++j)
         { if(i[j] != other.i[j]) return true; }
     return false;
-	}
+    }
 
-inline
-bool Counter::
-operator==(const Counter& other) const
-        { return !(*this != other); }
+inline bool 
+Counter::operator==(const Counter& other) const
+    { return !(*this != other); }
 
-inline 
-std::ostream&
+inline std::ostream&
 operator<<(std::ostream& s, const Counter& c)
     {
     s << "("; 
