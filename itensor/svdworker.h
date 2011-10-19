@@ -187,7 +187,7 @@ write(std::ostream& s) const
 
 template<class Tensor>
 void SVDWorker::operator()(int b, const Tensor& AA, 
-                          Tensor& A, Tensor& B, Direction dir) 
+                          Tensor& A, Tensor& B, Direction dir)
     {
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::CombinerT CombinerT;
@@ -203,6 +203,16 @@ void SVDWorker::operator()(int b, const Tensor& AA,
 
     IndexT mid = index_in_common(A,B,Link);
     if(mid.is_null()) mid = IndexT("mid");
+
+    //If dir==None, put the O.C. on the side
+    //that keeps mid's arrow the same
+    bool do_edge_case = true;
+    if(dir == None)
+        {
+        //std::cerr << boost::format("Arrow before = %s\n")%(mid.dir() == Out ? "Out" : "In");
+        dir = (mid.dir() == Out ? Fromright : Fromleft);
+        do_edge_case = false;
+        }
 
     Tensor& to_orth = (dir==Fromleft ? A : B);
     Tensor& newoc   = (dir==Fromleft ? B : A);
@@ -221,7 +231,7 @@ void SVDWorker::operator()(int b, const Tensor& AA,
         }
 
     //Check if we're at the edge
-    if(unique_link == 0)
+    if(unique_link == 0 && do_edge_case)
         {
         comb.init(mid.rawname());
         comb.product(AA,newoc);
@@ -254,7 +264,6 @@ void SVDWorker::operator()(int b, const Tensor& AA,
 	AAcc.primeind(active); 
 	rho = AAc*AAcc; 
 	}
-    //assert(rho.r() == 2);
 
     Real saved_cutoff = cutoff_; 
     int saved_minm = minm_; 
@@ -268,9 +277,9 @@ void SVDWorker::operator()(int b, const Tensor& AA,
 
     Tensor U;
     if(AAc.is_complex())
-	truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),U);
+        truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),U);
     else
-	truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),U);
+        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),U);
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 
@@ -279,6 +288,11 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     comb.conj();
     comb.product(U,to_orth);
     newoc = conj(U) * AAc;
+
+    //PrintDat(U);
+
+    IndexT nmid = index_in_common(A,B,Link);
+    //std::cerr << boost::format("Arrow after = %s\n")%(nmid.dir() == Out ? "Out" : "In");
 
     } //void SVDWorker::operator()
 

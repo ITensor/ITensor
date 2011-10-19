@@ -23,33 +23,35 @@ Real SVDWorker::diag_denmat(const ITensor& rho, Vector& D, ITensor& U)
     int mp = D.Length();
     Real sca = doRelCutoff_ ? D(1) : 1.0;
     if(absoluteCutoff_)
-	{
-	mp = minm_;
-	while(mp < maxm_ && D(mp) < cutoff_ ) 
-	    svdtruncerr += D(mp++);
-	}
+        {
+        mp = minm_;
+        while(mp < maxm_ && D(mp) < cutoff_ ) 
+            svdtruncerr += D(mp++);
+        }
     else
-	while(mp > maxm_ || (svdtruncerr+D(mp) < cutoff_*sca && mp > minm_)) 
-	    svdtruncerr += D(mp--);
+        {
+        while(mp > maxm_ || (svdtruncerr+D(mp) < cutoff_*sca && mp > minm_)) 
+            svdtruncerr += D(mp--);
+        }
     if(!absoluteCutoff_)
-	svdtruncerr = (D(1) == 0 ? 0 : svdtruncerr/sca);
+        { svdtruncerr = (D(1) == 0 ? 0 : svdtruncerr/sca); }
     D.ReduceDimension(mp); 
     if(showeigs_)
-	{
-	cout << endl;
-	cout << boost::format("truncate_ = %s")%(truncate_?"true":"false")<<endl;
-	cout << boost::format("Kept %d states in diag_denmat\n")% mp;
-	cout << boost::format("svdtruncerr = %.2E\n")%svdtruncerr;
-	//cout << "doRelCutoff is " << doRelCutoff_ << endl;
-	//cout << "refNorm is " << refNorm_ << endl;
-	int stop = min(D.Length(),10);
-	cout << "Eigs: ";
-	for(int j = 1; j <= stop; ++j)
-	    {
-	    cout << boost::format(D(j) > 1E-3 ? ("%.3f") : ("%.3E")) % D(j);
-	    cout << ((j != stop) ? ", " : "\n");
-	    }
-	}
+        {
+        cout << endl;
+        cout << boost::format("truncate_ = %s")%(truncate_?"true":"false")<<endl;
+        cout << boost::format("Kept %d states in diag_denmat\n")% mp;
+        cout << boost::format("svdtruncerr = %.2E\n")%svdtruncerr;
+        //cout << "doRelCutoff is " << doRelCutoff_ << endl;
+        //cout << "refNorm is " << refNorm_ << endl;
+        int stop = min(D.Length(),10);
+        cout << "Eigs: ";
+        for(int j = 1; j <= stop; ++j)
+            {
+            cout << boost::format(D(j) > 1E-3 ? ("%.3f") : ("%.3E")) % D(j);
+            cout << ((j != stop) ? ", " : "\n");
+            }
+        }
     Index newmid(active.rawname(),mp,active.type());
     U = ITensor(active,newmid,UU.Columns(1,mp));
     lastd = D;
@@ -65,23 +67,28 @@ Real SVDWorker::diag_denmat_complex(const ITensor& rho, Vector& D, ITensor& U)
 
 Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     {
-    assert(rho.r() == 2);
-    IQIndex active = rho.finddir(Out);
-    assert(active.primeLevel() == 0);
+    if(rho.r() != 2)
+        {
+        rho.printIQInds("rho");
+        Error("Density matrix doesn't have rank 2");
+        }
+
+    IQIndex active = (rho.index(1).primeLevel() == 0 ? rho.index(1)
+                                                     : rho.index(2));
 
     vector<Matrix> mmatrix(rho.iten_size());
     vector<Vector> mvector(rho.iten_size());
     vector<Real> alleig;
 
     if(doRelCutoff_)
-	{
+        {
         //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
         Real maxLogNum = -200;
         foreach(const ITensor& t, rho.itensors())
 	    maxLogNum = max(maxLogNum,t.scale().logNum());
         refNorm_ = LogNumber(maxLogNum,1);
         //DO_IF_DEBUG(cout << "refNorm = " << refNorm << endl; )
-	}
+        }
     //else DO_IF_DEBUG(cout << "Not doing relative cutoff\n";);
 
     //cerr << boost::format("refNorm = %.1E (lognum = %f, sign = %d)\n\n")
@@ -91,14 +98,14 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     //1. Diagonalize each ITensor within rho
     int itenind = 0;
     for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
-	{
+        {
         const ITensor& t = *it;
         if(!t.index(1).noprime_equals(t.index(2)))
-	    { 
-	    Print(rho); 
-	    Print(t); 
-	    Error("Non-symmetric ITensor in density matrix, perhaps QNs not conserved?");
-	    }
+            { 
+            Print(rho); 
+            Print(t); 
+            Error("Non-symmetric ITensor in density matrix, perhaps QNs not conserved?");
+            }
 
         t.scaleTo(refNorm_);
 
@@ -166,7 +173,7 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
         for(int j = 1; j <= n; ++j) 
             { alleig.push_back(d(j)); }
         ++itenind;
-	}
+        }
 
     //2. Truncate eigenvalues
 
