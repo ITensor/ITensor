@@ -72,6 +72,7 @@ public:
     void 
     init(std::string rname = "combined", 
          IndexType type = Link, 
+         Arrow dir = Switch,
          int primelevel = 0) const;
 
     int 
@@ -147,7 +148,7 @@ addleft(const Index& l)// Include another left index
 
 inline
 void Combiner::
-init(std::string rname, IndexType type, int primelevel) const
+init(std::string rname, IndexType type, Arrow dir, int primelevel) const
     {
     if(initted) return;
     int m = 1; 

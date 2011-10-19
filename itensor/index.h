@@ -257,6 +257,8 @@ public:
     inline int primeLevel() const { return primelevel_; }
     inline void primeLevel(int plev) { primelevel_ = plev; }
 
+    Arrow dir() const { return Out; }
+
     //-----------------------------------------------
     //Index: Constructors
 
