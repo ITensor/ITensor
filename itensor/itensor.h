@@ -543,32 +543,42 @@ public:
 class Counter
     {
 public:
-    boost::array<int,NMAX+1> n;
-    boost::array<int,NMAX+1> i;
+    boost::array<int,NMAX+1> n, i;
     int ind;
 
     Counter();
     Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r);
 
-    void init(const boost::array<Index,NMAX+1>& ii, int rn, int r);
+    void 
+    init(const boost::array<Index,NMAX+1>& ii, int rn, int r);
 
-    Counter& operator++();
+    Counter& 
+    operator++();
 
-    bool operator!=(const Counter& other) const;
-    bool operator==(const Counter& other) const;
+    bool 
+    operator!=(const Counter& other) const;
 
-    inline bool notDone() const 
-	{ return i[1] != 0; }
+    bool 
+    operator==(const Counter& other) const;
 
-    friend inline std::ostream& operator<<(std::ostream& s, const Counter& c);
+    inline bool 
+    notDone() const 
+        { return i[1] != 0; }
+
+    friend inline std::ostream& 
+    operator<<(std::ostream& s, const Counter& c);
 
 private:
-    void reset(int a)
-	{
+
+    void 
+    reset(int a)
+        {
         i.assign(a);
         ind = 1;
-	}
+        }
+
     int rn_,r_;
+
     };
 
 //#define DO_ALT
@@ -588,54 +598,51 @@ struct PDat
 //
 class ITDat
     {
-private:
-    mutable unsigned int numref;
-    static DatAllocator<ITDat> allocator;
-    void operator=(const ITDat&);
-    ~ITDat() { } //must be dynamically allocated
 public:
+
     Vector v;
 #ifdef DO_ALT
     std::vector<PDat> alt;
 #endif
 
-    ITDat() : numref(0), v(0) { }
+    ITDat() 
+        : v(0), numref(0)
+        { }
 
     explicit 
-    ITDat(int size) : numref(0), v(size)
-	{ assert(size > 0); v = 0; }
+    ITDat(int size) 
+        : v(size), numref(0)
+        { assert(size > 0); v = 0; }
 
     explicit 
-    ITDat(const Vector& v_) : numref(0), v(v_) { }
+    ITDat(const Vector& v_) 
+        : v(v_), numref(0)
+        { }
 
     explicit 
-    ITDat(Real r) : numref(0), v(1)
-	{ v = r; }
+    ITDat(Real r) 
+        : v(1), numref(0)
+        { v = r; }
 
     explicit 
-    ITDat(std::istream& s) : numref(0) 
-	{ read(s); }
+    ITDat(std::istream& s) 
+        : numref(0) 
+        { read(s); }
 
     explicit 
-    ITDat(const ITDat& other) : numref(0), v(other.v) { }
+    ITDat(const ITDat& other) 
+        : v(other.v), numref(0)
+        { }
 
-    void read(std::istream& s)
-	{ 
-	int size = 0;
-	s.read((char*) &size,sizeof(size));
-	v.ReDimension(size);
-	s.read((char*) v.Store(), sizeof(Real)*size);
-	}
+    void 
+    read(std::istream& s);
 
-    void write(std::ostream& s) const 
-	{ 
-	const int size = v.Length();
-	s.write((char*) &size, sizeof(size));
-	s.write((char*) v.Store(), sizeof(Real)*size); 
-	}
+    void 
+    write(std::ostream& s) const;
     
-    void print() const 
-	{ std::cout << "ITDat: v = " << v; }
+    void 
+    print() const 
+        { std::cout << "ITDat: v = " << v; }
 
     inline void* operator 
     new(size_t) throw(std::bad_alloc)
@@ -646,7 +653,21 @@ public:
         { return allocator.dealloc(p); }
 
     friend class ITensor;
+
     ENABLE_INTRUSIVE_PTR(ITDat)
+
+private:
+
+    mutable unsigned int 
+    numref;
+
+    static DatAllocator<ITDat> 
+    allocator;
+
+    //Must be dynamically allocated:
+    void operator=(const ITDat&);
+    ~ITDat() { }
+
     };
 
 

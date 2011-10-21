@@ -1025,8 +1025,10 @@ getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const
 	    if(!got_one)
             {
             std::cerr << "j = " << j << "\n";
-            Print(*this); std::cerr << "oth_index_ = \n";
-            foreach(const Index& I, oth_index_) { std::cerr << I << "\n"; }
+            Print(*this); 
+            std::cerr << "oth_index_ = \n";
+            for(int j = 1; j <= r_; ++j) 
+                { std::cerr << oth_index_[j] << "\n"; }
             Error("ITensor::getperm: no matching index");
             }
 	    }
@@ -1361,8 +1363,11 @@ toMatrixProd(const ITensor& L, const ITensor& R, const ProductProps& pp,
 	bool done_with_L = false;
 #ifdef DO_ALT
 	//Not matrix, see if alternate dat is
-	foreach(const PDat& Alt, L.p->alt)
+    for(std::vector<PDat>::const_iterator it = L.p->alt.begin();
+        it != L.p->alt.end();
+        ++it)
 	    {
+        const PDat& Alt = *it;
 	    bool front_matrix=true;
 	    for(int j = 1; j <= pp.nsamen; ++j)
 		if(!GET(pp.contractedL,Alt.I.dest(j)))
@@ -1421,8 +1426,11 @@ toMatrixProd(const ITensor& L, const ITensor& R, const ProductProps& pp,
 	bool done_with_R = false;
 #ifdef DO_ALT
 	//Not matrix, see if alternate dat is
-	foreach(const PDat& Alt, R.p->alt)
+    for(std::vector<PDat>::const_iterator it = R.p->alt.begin();
+        it != R.p->alt.end();
+        ++it)
 	    {
+        const PDat& Alt = *it;
 	    bool front_matrix=true;
 	    for(int j = 1; j <= pp.nsamen; ++j)
 		if(!GET(pp.contractedR,Alt.I.dest(j)))
@@ -2188,3 +2196,20 @@ void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im,
     re = res.val0();
     im = 0;
 }
+
+void ITDat::
+read(std::istream& s)
+    { 
+    int size = 0;
+    s.read((char*) &size,sizeof(size));
+    v.ReDimension(size);
+    s.read((char*) v.Store(), sizeof(Real)*size);
+    }
+
+void ITDat::
+write(std::ostream& s) const 
+    { 
+    const int size = v.Length();
+    s.write((char*) &size, sizeof(size));
+    s.write((char*) v.Store(), sizeof(Real)*size); 
+    }
