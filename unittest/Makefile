@@ -35,10 +35,10 @@ LIBGFLAGS=-L$(THIS_LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS) $(BOOST_UN
 
 #Rules ------------------
 
-%.o: %.cc $(LIBFILES) $(HEADERS)
+%.o: %.cc $(HEADERS)
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-.debug_objs/%.o: %.cc $(LIBFILES) $(HEADERS)
+.debug_objs/%.o: %.cc $(HEADERS)
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 #Targets -----------------
