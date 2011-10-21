@@ -833,10 +833,10 @@ BOOST_AUTO_TEST_CASE(TieIndices)
 
     //Try tying m==1 inds
     {
-    Index t("tied",1);
     ITensor T(l1,a2,a1,s2,a3);
     T.Randomize();
 
+    Index t;
     ITensor TT;
     T.tieIndices(a1,a3,a2,t,TT);
 
