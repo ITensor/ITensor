@@ -52,8 +52,236 @@ ostream& operator<<(ostream & s, const ITensor & t)
     return s;
     }
 
-void ITensor::groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
-                           const Index& grouped, ITensor& res) const
+const Index& ITensor::
+index(int j) const
+    {
+#ifdef DEBUG
+    if(j > r_) 
+        {
+        Print(*this);
+        Print(j);
+        Error("j out of range (j > r_)");
+        }
+#endif
+    return index_[j];
+    }
+
+int ITensor::
+m(int j) const
+    {
+#ifdef DEBUG
+    if(j > r_) 
+        {
+        Print(*this);
+        Print(j);
+        Error("j out of range (j > r_)");
+        }
+#endif
+    return index_[j].m();
+    }
+
+ITensor::
+ITensor()  
+    : p(0), r_(0), rn_(0), ur(0)  
+    { }
+
+
+ITensor::
+ITensor(Real val) 
+    : r_(0), rn_(0)
+    { 
+    allocate(1);
+    p->v = val;
+    set_unique_Real();
+    }
+
+ITensor::
+ITensor(const Index& i1) 
+    : r_(1), rn_(0)
+	{ _construct1(i1); }
+
+ITensor::
+ITensor(const Index& i1, Real val) 
+    : r_(1), rn_(0)
+	{ _construct1(i1); p->v = val; }
+
+ITensor::
+ITensor(const Index& i1, const Vector& V) 
+    : p(new ITDat(V)), r_(1), rn_(0)
+	{ 
+	if(i1.m() != V.Length()) 
+	    Error("Mismatch of Index and Vector sizes.");
+	if(i1.m() != 1) rn_ = 1;
+	index_[1] = i1;
+	set_unique_Real();
+	}
+
+ITensor::
+ITensor(Index i1,Index i2) 
+    : r_(2), rn_(0)
+	{ _construct2(i1,i2); }
+
+ITensor::
+ITensor(Index i1,Index i2,Real a) 
+    : r_(2), rn_(0)
+	{
+	_construct2(i1,i2);
+	if(rn_ == 2) //then index order is i1, i2
+	    {
+	    const int nn = min(i1.m(),i2.m());
+	    for(int i = 1; i <= nn; ++i) 
+		p->v((i-1)*i1.m()+i) = a;
+	    }
+	else 
+	    p->v(1) = a;
+	}
+
+ITensor::
+ITensor(Index i1,Index i2,const MatrixRef& M) 
+    : r_(2), rn_(0)
+	{
+	_construct2(i1,i2);
+	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
+	    Error("Mismatch of Index sizes and matrix.");
+	MatrixRef dref; 
+	p->v.TreatAsMatrix(dref,i2.m(),i1.m()); 
+	dref = M.t();
+	}
+
+ITensor::
+ITensor(Index i1, Index i2, Index i3,
+            Index i4, Index i5, Index i6,
+            Index i7, Index i8)
+    : rn_(0)
+	{
+	boost::array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
+	int size = 3;
+	while(ii[size] != Index::Null()) ++size;
+	int alloc_size = fillFromIndices(ii,size);
+	allocate(alloc_size);
+	}
+
+ITensor::
+ITensor(const IndexVal& iv, Real fac) 
+    : r_(1), rn_(0)
+	{ 
+	_construct1(iv.ind);
+	p->v(iv.i) = fac; 
+	}
+
+ITensor::
+ITensor(const IndexVal& iv1, const IndexVal& iv2) 
+    : r_(2), rn_(0)
+	{ 
+	_construct2(iv1.ind,iv2.ind);
+	p->v((iv2.i-1)*iv1.ind.m()+iv1.i) = 1; 
+	}
+
+ITensor::
+ITensor(const IndexVal& iv1, const IndexVal& iv2, 
+        const IndexVal& iv3, const IndexVal& iv4, 
+        const IndexVal& iv5, const IndexVal& iv6, 
+        const IndexVal& iv7, const IndexVal& iv8)
+    : rn_(0)
+	{
+        //Construct ITensor
+        boost::array<Index,NMAX+1> ii = 
+            {{ iv1.ind, iv2.ind, iv3.ind, iv4.ind, iv5.ind, 
+               iv6.ind, iv7.ind, iv8.ind }};
+        int size = 3; while(size < NMAX && ii[size+1] != IndexVal::Null().ind) ++size;
+        int alloc_size = fillFromIndices(ii,size);
+        allocate(alloc_size);
+
+        //Assign specified element to 1
+        boost::array<int,NMAX+1> iv = 
+            {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i }};
+        boost::array<int,NMAX+1> ja; ja.assign(1);
+        for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
+            for(int j = 0; j < size; ++j)  // loop over the given indices
+		if(index_[k] == ii[j]) 
+		    { ja[k] = iv[j]; break; }
+        p->v(_ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])) = 1;
+    }
+
+ITensor::
+ITensor(const std::vector<Index>& I) 
+    : rn_(0)
+	{
+	int alloc_size = fillFromIndices(I,I.size());
+	allocate(alloc_size);
+	}
+
+ITensor::
+ITensor(const std::vector<Index>& I, const Vector& V) 
+    : p(new ITDat(V)), rn_(0)
+	{
+	int alloc_size = fillFromIndices(I,I.size());
+	if(alloc_size != V.Length()) 
+	    { Error("incompatible Index and Vector sizes"); }
+	}
+
+
+ITensor::
+ITensor(const std::vector<Index>& I, const ITensor& other) 
+    : p(other.p), rn_(0), scale_(other.scale_)
+	{
+	int alloc_size = fillFromIndices(I,I.size());
+	if(alloc_size != other.vec_size()) 
+	    { Error("incompatible Index and ITensor sizes"); }
+	}
+
+ITensor::
+ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P) 
+    : p(0), rn_(0), scale_(other.scale_)
+    {
+        int alloc_size = fillFromIndices(I,I.size());
+        if(alloc_size != other.vec_size()) 
+            { Error("incompatible Index and ITensor sizes"); }
+        if(P.is_trivial()) { p = other.p; }
+        else               { allocate(); other.reshapeDat(P,p->v); }
+    }
+
+ITensor::
+ITensor(ITmaker itm) 
+    : r_(1), rn_(1)
+	{
+        GET(index_,1) = Index::IndReIm(); allocate(2);
+        if(itm == makeComplex_1)  { p->v(1) = 1; }
+        if(itm == makeComplex_i)  { p->v(2) = 1; }
+        if(itm == makeConjTensor) { p->v(1) = 1; p->v(2) = -1; }
+        set_unique_Real();
+	}
+
+void ITensor::
+read(std::istream& s)
+    { 
+        bool null_;
+        s.read((char*) &null_,sizeof(null_));
+        if(null_) { *this = ITensor(); return; }
+        s.read((char*) &r_,sizeof(r_));
+        s.read((char*) &rn_,sizeof(rn_));
+        for(int j = 1; j <= r_; ++j) index_[j].read(s);
+        scale_.read(s);
+        p = new ITDat(s);
+        set_unique_Real();
+    }
+
+void ITensor::
+write(std::ostream& s) const 
+    { 
+        bool null_ = is_null();
+        s.write((char*) &null_,sizeof(null_));
+        if(null_) return;
+        s.write((char*) &r_,sizeof(r_));
+        s.write((char*) &rn_,sizeof(rn_));
+        for(int j = 1; j <= r_; ++j) index_[j].write(s);
+        scale_.write(s);
+        p->write(s);
+    }
+
+void ITensor::
+groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
+             const Index& grouped, ITensor& res) const
     {
     boost::array<bool,NMAX+1> isReplaced; isReplaced.assign(false);
 
@@ -114,8 +342,9 @@ void ITensor::groupIndices(const boost::array<Index,NMAX+1>& indices, int nind,
     else        res = ITensor(nindices,*this,P); 
     }
 
-void ITensor::expandIndex(const Index& small, const Index& big, 
-                          int start, ITensor& res) const
+void ITensor::
+expandIndex(const Index& small, const Index& big, 
+            int start, ITensor& res) const
     {
     assert(small.m() <= big.m());
     assert(start < big.m());
@@ -274,12 +503,9 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 
     if(P.is_trivial())
 	{
-        DO_IF_PS(++prodstats.c2;)
         rdat = thisdat;
         return;
 	}
-
-    DO_IF_PS(++prodstats.c1;)
 
     rdat.ReDimension(thisdat.Length());
     rdat = 0;
