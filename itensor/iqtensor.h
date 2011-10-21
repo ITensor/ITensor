@@ -479,6 +479,18 @@ public:
         throw()
         { return allocator.dealloc(p); }
 
+    typedef std::list<ITensor>::iterator 
+    iten_it;
+
+    typedef std::list<ITensor>::const_iterator 
+    const_iten_it;
+
+    typedef std::vector<IQIndex>::iterator 
+    iqind_it;
+
+    typedef std::vector<IQIndex>::const_iterator 
+    const_iqind_it;
+
 public:
 
     mutable std::list<ITensor> 
@@ -487,7 +499,7 @@ public:
     std::vector<IQIndex> 
     iqindex_;
 
-    mutable std::map<ApproxReal,std::list<ITensor>::iterator> 
+    mutable std::map<ApproxReal,iten_it>
     rmap; //mutable so that const IQTensor methods can use rmap
 
     ENABLE_INTRUSIVE_PTR(IQTDat)
