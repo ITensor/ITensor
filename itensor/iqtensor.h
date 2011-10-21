@@ -109,7 +109,7 @@ public:
     IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
              const IQIndexVal& iv3);
 
-    IQTensor(ITmaker itm);
+    IQTensor(ITensor::ITmaker itm);
 
     IQTensor(IQmaker i);
 
@@ -126,13 +126,13 @@ public:
 
     static const IQTensor& Complex_1()
         {
-        static const IQTensor Complex_1_(makeComplex_1);
+        static const IQTensor Complex_1_(ITensor::makeComplex_1);
         return Complex_1_;
         }
 
     static const IQTensor& Complex_i()
         {
-        static const IQTensor Complex_i_(makeComplex_i);
+        static const IQTensor Complex_i_(ITensor::makeComplex_i);
         return Complex_i_;
         }
 

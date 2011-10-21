@@ -7,7 +7,78 @@ using std::endl;
 
 DatAllocator<ITDat> ITDat::allocator;
 
-ostream& operator<<(ostream & s, const ITensor & t)
+#ifdef DEBUG
+#define ITENSOR_CHECK_NULL if(p == 0) Error("ITensor is null");
+#else
+#define ITENSOR_CHECK_NULL
+#endif
+
+Counter::
+Counter() : rn_(0)
+    {
+    n.assign(1); n[0] = 0;
+    reset(0);
+    }
+
+Counter::
+Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r) 
+    { init(ii,rn,r); }
+
+void 
+Counter::
+init(const boost::array<Index,NMAX+1>& ii, int rn, int r)
+    {
+    rn_ = rn;
+    r_ = r;
+    n[0] = 0;
+    for(int j = 1; j <= rn_; ++j) 
+        { GET(n,j) = ii[j].m(); }
+    for(int j = rn_+1; j <= NMAX; ++j) 
+        { n[j] = 1; }
+    reset(1);
+    }
+
+Counter& Counter::
+operator++()
+    {
+    ++ind;
+    ++i[1];
+    if(i[1] > n[1])
+    for(int j = 2; j <= rn_; ++j)
+        {
+        i[j-1] = 1;
+        ++i[j];
+        if(i[j] <= n[j]) break;
+        }
+    //set 'done' condition
+    if(i[rn_] > n[rn_]) reset(0);
+    return *this;
+    }
+
+bool Counter::
+operator!=(const Counter& other) const
+    {
+    for(int j = 1; j <= NMAX; ++j)
+        { if(i[j] != other.i[j]) return true; }
+    return false;
+    }
+
+bool Counter::
+operator==(const Counter& other) const
+    { return !(*this != other); }
+
+std::ostream&
+operator<<(std::ostream& s, const Counter& c)
+    {
+    s << "("; 
+    for(int i = 1; i < c.r_; ++i)
+        {s << c.i[i] << " ";} 
+    s << c.i[c.r_] << ")";
+    return s;
+    }
+
+ostream& 
+operator<<(ostream & s, const ITensor & t)
     {
     s << "log(scale)[incl in elems] = " << t.scale().logNum() 
       << ", r = " << t.r() << ": ";
@@ -234,50 +305,405 @@ ITensor::
 ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P) 
     : p(0), rn_(0), scale_(other.scale_)
     {
-        int alloc_size = fillFromIndices(I,I.size());
-        if(alloc_size != other.vec_size()) 
-            { Error("incompatible Index and ITensor sizes"); }
-        if(P.is_trivial()) { p = other.p; }
-        else               { allocate(); other.reshapeDat(P,p->v); }
+    int alloc_size = fillFromIndices(I,I.size());
+    if(alloc_size != other.vec_size()) 
+        { Error("incompatible Index and ITensor sizes"); }
+    if(P.is_trivial()) { p = other.p; }
+    else               { allocate(); other.reshapeDat(P,p->v); }
     }
 
 ITensor::
 ITensor(ITmaker itm) 
     : r_(1), rn_(1)
 	{
-        GET(index_,1) = Index::IndReIm(); allocate(2);
-        if(itm == makeComplex_1)  { p->v(1) = 1; }
-        if(itm == makeComplex_i)  { p->v(2) = 1; }
-        if(itm == makeConjTensor) { p->v(1) = 1; p->v(2) = -1; }
-        set_unique_Real();
+    index_[1] = Index::IndReIm(); 
+    allocate(2);
+    if(itm == makeComplex_1)  { p->v(1) = 1; }
+    if(itm == makeComplex_i)  { p->v(2) = 1; }
+    if(itm == makeConjTensor) { p->v(1) = 1; p->v(2) = -1; }
+    set_unique_Real();
 	}
 
 void ITensor::
 read(std::istream& s)
     { 
-        bool null_;
-        s.read((char*) &null_,sizeof(null_));
-        if(null_) { *this = ITensor(); return; }
-        s.read((char*) &r_,sizeof(r_));
-        s.read((char*) &rn_,sizeof(rn_));
-        for(int j = 1; j <= r_; ++j) index_[j].read(s);
-        scale_.read(s);
-        p = new ITDat(s);
-        set_unique_Real();
+    bool null_;
+    s.read((char*) &null_,sizeof(null_));
+    if(null_) { *this = ITensor(); return; }
+    s.read((char*) &r_,sizeof(r_));
+    s.read((char*) &rn_,sizeof(rn_));
+    for(int j = 1; j <= r_; ++j) 
+        index_[j].read(s);
+    scale_.read(s);
+    p = new ITDat(s);
+    set_unique_Real();
     }
 
 void ITensor::
 write(std::ostream& s) const 
     { 
-        bool null_ = is_null();
-        s.write((char*) &null_,sizeof(null_));
-        if(null_) return;
-        s.write((char*) &r_,sizeof(r_));
-        s.write((char*) &rn_,sizeof(rn_));
-        for(int j = 1; j <= r_; ++j) index_[j].write(s);
-        scale_.write(s);
-        p->write(s);
+    bool null_ = is_null();
+    s.write((char*) &null_,sizeof(null_));
+    if(null_) return;
+    s.write((char*) &r_,sizeof(r_));
+    s.write((char*) &rn_,sizeof(rn_));
+    for(int j = 1; j <= r_; ++j) 
+        index_[j].write(s);
+    scale_.write(s);
+    p->write(s);
     }
+
+
+Index ITensor::
+findtype(IndexType t) const
+	{
+        for(int j = 1; j <= rn_; ++j)
+        if(index_[j].type() == t) return index_[j];
+        Error("ITensor::findtype failed."); return Index();
+	}
+
+bool ITensor::
+findtype(IndexType t, Index& I) const
+	{
+        for(int j = 1; j <= r_; ++j)
+        if(index_[j].type() == t)
+        {
+            I = index_[j];
+            return true;
+        }
+        return false;
+	}
+
+int ITensor::
+findindex(const Index& I) const
+    {
+        if(I.m() == 1) return findindex1(I);
+        else           return findindexn(I);
+        return 0;
+    }
+
+int ITensor::
+findindexn(const Index& I) const
+	{
+        for(int j = 1; j <= rn_; ++j)
+        if(index_[j] == I) return j;
+        return 0;
+	}
+
+int ITensor::
+findindex1(const Index& I) const
+	{
+        for(int j = rn_+1; j <= r_; ++j)
+        if(index_[j] == I) return j;
+        return 0;
+	}
+
+bool ITensor::
+has_common_index(const ITensor& other) const
+    {
+        for(int j = 1; j <= r_; ++j)
+        for(int k = 1; k <= other.r_; ++k)
+        if(index_[j] == other.index_[k]) return true;
+
+        return false;
+    }
+
+bool ITensor::
+hasindex(const Index& I) const
+	{
+        if(I.m() == 1) return hasindex1(I);
+        else           return hasindexn(I);
+        return false;
+	}
+
+bool ITensor::
+hasindexn(const Index& I) const
+	{
+        for(int j = 1; j <= rn_; ++j)
+        if(index_[j] == I) return true;
+        return false;
+	}
+
+bool ITensor::
+hasindex1(const Index& I) const
+	{
+        for(int j = rn_+1; j <= r_; ++j)
+        if(index_[j] == I) return true;
+        return false;
+	}
+
+
+void ITensor::
+addindex1(const std::vector<Index>& indices) 
+    { 
+#ifdef DEBUG
+    if((r_+(int)indices.size()) > NMAX)
+        {
+        Print(*this);
+        Print(indices.size());
+        Error("Too many indices added");
+        }
+#endif
+    for(size_t j = 0; j < indices.size(); ++j)
+        { 
+        assert(indices[j].m() == 1);
+        assert(!hasindex1(indices[j]));
+        index_[++r_] = indices[j]; 
+        }
+    set_unique_Real();
+    }
+
+void ITensor::
+addindex1(const Index& I) 
+    { 
+    if(I.m() != 1)
+        {
+        Print(I);
+        Error("Index must have m==1.");
+        }
+#ifdef DEBUG
+    if(hasindex1(I))
+        {
+        Print(*this);
+        Print(I);
+        Error("Adding Index twice");
+        }
+    if(r_ == NMAX) Error("Maximum number of indices reached");
+#endif
+    index_[++r_] = I;
+    set_unique_Real();
+    }
+
+void ITensor::
+removeindex1(int j) 
+    { 
+    assert(j <= r_);
+    assert(j > rn_);
+    for(int k = j; k < r_; ++k) 
+        index_[k] = index_[k+1];
+    --r_;
+    set_unique_Real();
+    }
+
+void ITensor::
+noprime(PrimeType p)
+    {
+    for(int j = 1; j <= r_; ++j) 
+        index_[j].noprime(p);
+    set_unique_Real();
+	}
+
+void ITensor::
+doprime(PrimeType pt, int inc)
+	{
+    for(int j = 1; j <= r_; ++j) index_[j].doprime(pt,inc);
+    set_unique_Real();
+	}
+
+void ITensor::
+mapprime(int plevold, int plevnew, PrimeType pt)
+	{
+    for(int j = 1; j <= r_; ++j) index_[j].mapprime(plevold,plevnew,pt);
+    set_unique_Real();
+	}
+
+void ITensor::
+mapprimeind(const Index& I, int plevold, int plevnew, PrimeType pt)
+	{
+    for(int j = (I.m() == 1 ? rn_+1 : 1); j <= r_; ++j) 
+        if(index_[j] == I)
+        {
+        index_[j].mapprime(plevold,plevnew,pt);
+        set_unique_Real();
+        return;
+        }
+    Print(*this);
+    Print(I);
+    Error("ITensor::mapprimeind: index not found.");
+	}
+
+void ITensor::
+primeind(const Index& I, const Index& J)
+	{ 
+    mapindex(I,primed(I)); 
+    mapindex(J,primed(J));
+	}
+
+ITensor 
+primeind(ITensor A, const Index& I1, const Index& I2)
+    { 
+    A.mapindex(I1,primed(I1));
+    A.mapindex(I2,primed(I2));
+    return A; 
+    }
+
+Real ITensor::
+val0() const 
+	{ 
+#ifdef DEBUG
+    if(this->is_null())
+        Error("ITensor is null");
+#endif
+    if(rn_ != 0)
+        {
+        Print(*this);
+        Error("ITensor is not a scalar");
+        }
+
+	try {
+	    return p->v(1)*scale_.real(); 
+	    }
+	catch(TooBigForReal)
+	    {
+	    std::cout << "too big for real() in val0" << std::endl;
+	    std::cerr << "too big for real() in val0" << std::endl;
+	    std::cout << "p->v(1) is " << p->v(1) << std::endl;
+	    std::cout << "scale is " << scale() << std::endl;
+	    std::cout << "rethrowing" << std::endl;
+	    throw;		// rethrow
+	    }
+	catch(TooSmallForReal)
+	    {
+	    std::cout << "warning: too small for real() in val0" << std::endl;
+	    std::cerr << "warning: too small for real() in val0" << std::endl;
+	    std::cout << "p->v(1) is " << p->v(1) << std::endl;
+	    std::cout << "scale is " << scale() << std::endl;
+	    return 0.0;
+	    }
+	return 0.0;
+	}
+
+Real ITensor::
+val1(int i1) const
+	{ 
+#ifdef DEBUG
+    if(this->is_null())
+        Error("ITensor is null");
+#endif
+    if(rn_ > 1)
+        {
+        Print(*this);
+        Error("ITensor has rank > 1");
+        }
+    return p->v(i1)*scale_.real(); 
+    }
+
+Real& ITensor::
+operator()()
+	{ 
+    if(rn_ != 0)
+        {
+        std::cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
+        Error("Not enough indices (requires all having m!=1)");
+        }
+    solo(); 
+    scaleTo(1);
+    return p->v(1);
+    }
+
+Real ITensor::
+operator()() const
+	{ 
+    ITENSOR_CHECK_NULL
+    if(rn_ != 0)
+        {
+        std::cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
+        Error("Not enough indices (requires all having m!=1)");
+        }
+    return scale_.real()*p->v(1);
+    }
+
+Real& ITensor::
+operator()(const IndexVal& iv1)
+	{
+    if(rn_ > 1) 
+        {
+        std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
+        Error("Not enough m!=1 indices provided");
+        }
+    if(index_[1] != iv1.ind)
+        {
+        Print(*this);
+        Print(iv1);
+        Error("Incorrect IndexVal argument to ITensor");
+        }
+    solo(); 
+    scaleTo(1);
+    return p->v(iv1.i);
+	}
+
+Real ITensor::
+operator()(const IndexVal& iv1) const
+	{
+    ITENSOR_CHECK_NULL
+    if(rn_ > 1) 
+        {
+        std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
+        Error("Not enough m!=1 indices provided");
+        }
+    if(index_[1] != iv1.ind)
+        {
+        Print(*this);
+        Print(iv1);
+        Error("Incorrect IndexVal argument to ITensor");
+        }
+    return scale_.real()*p->v(iv1.i);
+	}
+
+Real& ITensor::
+operator()(const IndexVal& iv1, const IndexVal& iv2) 
+    {
+    solo(); 
+    scaleTo(1);
+    return p->v(_ind2(iv1,iv2));
+    }
+
+Real ITensor::
+operator()(const IndexVal& iv1, const IndexVal& iv2) const
+    {
+    ITENSOR_CHECK_NULL
+    return scale_.real()*p->v(_ind2(iv1,iv2));
+    }
+
+Real& ITensor::
+operator()(const IndexVal& iv1, const IndexVal& iv2, 
+           const IndexVal& iv3, const IndexVal& iv4, 
+           const IndexVal& iv5,const IndexVal& iv6,
+           const IndexVal& iv7,const IndexVal& iv8)
+    {
+    solo(); 
+    scaleTo(1);
+    return p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
+    }
+
+Real ITensor::
+operator()(const IndexVal& iv1, const IndexVal& iv2, 
+           const IndexVal& iv3, const IndexVal& iv4,
+           const IndexVal& iv5,const IndexVal& iv6,
+           const IndexVal& iv7,const IndexVal& iv8) const
+    {
+    ITENSOR_CHECK_NULL
+    return scale_.real()*p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
+    }
+
+void ITensor::
+assignFrom(const ITensor& other)
+    {
+    if(this == &other) return;
+    if(fabs(other.ur - ur) > 1E-12)
+        {
+        Print(*this); Print(other);
+        Error("assignFrom: unique Real not the same"); 
+        }
+    Permutation P; getperm(other.index_,P);
+    scale_ = other.scale_;
+    if(p->count() != 1) { p = new ITDat(); }
+#ifdef DO_ALT
+    else { p->alt.clear(); }
+#endif
+    other.reshapeDat(P,p->v);
+    }
+
 
 void ITensor::
 groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
@@ -390,11 +816,225 @@ expandIndex(const Index& small, const Index& big,
         }
     }
 
-int ITensor::_ind(int i1, int i2, int i3, int i4, 
-                  int i5, int i6, int i7, int i8)
-const
-{
-    assert(p != 0);
+int ITensor::
+vec_size() const 
+    { return p->v.Length(); }
+
+void ITensor::
+assignToVec(VectorRef v) const
+	{
+    if(p->v.Length() != v.Length()) 
+        Error("ITensor::assignToVec bad size");
+    if(scale_.isRealZero()) 
+        {
+        v *= 0;
+        return;
+        }
+    ITENSOR_CHECK_NULL
+    v = p->v;
+    v *= scale_.real();
+	}
+
+void ITensor::
+assignFromVec(const VectorRef& v)
+	{
+    ITENSOR_CHECK_NULL
+    if(p->v.Length() != v.Length()) 
+        Error("ITensor::assignToVec bad size");
+    scale_ = 1;
+    if(p->count() != 1) 
+        { 
+        boost::intrusive_ptr<ITDat> new_p(new ITDat(v)); 
+        p.swap(new_p); 
+        }
+    else
+        {
+        p->v = v;
+#ifdef DO_ALT
+        p->alt.clear();
+#endif
+        }
+	}
+
+void ITensor::
+reshape(const Permutation& P)
+    {
+    if(P.is_trivial()) return;
+    solo();
+    Vector newdat;
+    this->reshapeDat(P,newdat);
+    p->v = newdat;
+    }
+
+void ITensor::
+Randomize() 
+    { 
+    solo(); 
+    p->v.Randomize(); 
+    }
+
+void ITensor::
+SplitReIm(ITensor& re, ITensor& im) const
+	{
+	re = *this; im = *this;
+	if(!is_complex()) { im *= 0; return; }
+	//re *= Index::IndReIm()(1); im *= Index::IndReIm()(2);
+
+	re.mapindex(Index::IndReIm(),Index::IndReImP());
+	im.mapindex(Index::IndReIm(),Index::IndReImP());
+	re *= Index::IndReImP()(1);
+	im *= Index::IndReImP()(2);
+	}
+
+Real ITensor::
+sumels() const 
+    { return p->v.sumels() * scale_.real(); }
+
+Real ITensor::
+norm() const 
+    { return Norm(p->v) * scale_.real(); }
+
+void ITensor::
+scaleOutNorm() const
+	{
+    Real f = Norm(p->v);
+    if(fabs(f-1) < 1E-12) return;
+    solo();
+    if(f != 0) { p->v *= 1.0/f; scale_ *= f; }
+	}
+
+void ITensor::
+scaleTo(LogNumber newscale) const
+	{
+    if(scale_ == newscale) return;
+    solo();
+    if(newscale.isRealZero()) 
+        { p->v *= 0; }
+    else 
+        {
+        scale_ /= newscale;
+        if(scale_.isRealZero()) p->v *= 0;
+        else p->v *= scale_.real();
+        }
+    scale_ = newscale;
+	}
+
+void ITensor::
+print(std::string name,Printdat pdat) const 
+    { 
+    Globals::printdat() = (pdat==ShowData); 
+    std::cerr << "\n" << name << " =\n" << *this << "\n"; 
+    Globals::printdat() = false; 
+    }
+
+void ITensor::
+initCounter(Counter& C) const 
+    { C.init(index_,rn_,r_); }
+
+void ITensor::
+allocate(int dim) 
+    { p = new ITDat(dim); }
+
+void ITensor::
+allocate() 
+    { p = new ITDat(); }
+
+#ifdef DO_ALT
+void 
+newAltDat(const Permutation& P) const
+    { p->alt.push_back(PDat(P)); }
+
+PDat& ITensor::
+lastAlt() const 
+    { return p->alt.back(); } 
+
+#endif //DO_ALT
+
+void ITensor::
+solo() const
+	{
+    ITENSOR_CHECK_NULL
+    if(p->count() != 1) 
+        p = new ITDat(*p);
+	}
+
+void ITensor::
+set_unique_Real()
+	{
+    ur = 0;
+    for(int j = 1; j <= r_; ++j)
+        ur += index_[j].unique_Real();
+	}
+
+void ITensor::
+_construct1(const Index& i1)
+	{
+	assert(r_ == 1);
+	if(i1.m() != 1) 
+	    rn_ = 1; 
+	index_[1] = i1;
+	allocate(i1.m());
+	set_unique_Real();
+	}
+
+void ITensor::
+_construct2(const Index& i1, const Index& i2)
+	{
+	assert(r_ == 2);
+	if(i1.m()==1) 
+	    {
+	    index_[1] = i2; index_[2] = i1; 
+	    rn_ = (i2.m() == 1 ? 0 : 1);
+	    }
+	else 
+	    { 
+	    index_[1] = i1; index_[2] = i2; 
+	    rn_ = (i2.m() == 1 ? 1 : 2); 
+	    }
+	allocate(i1.m()*i2.m()); 
+	set_unique_Real();
+	}
+
+
+void ITensor::
+mapindex(const Index& i1, const Index& i2)
+	{
+	assert(i1.m() == i2.m());
+	for(int j = 1; j <= r_; ++j) 
+	    if(GET(index_,j) == i1) 
+		{
+		GET(index_,j) = i2;
+		set_unique_Real();
+		return;
+		}
+	Print(i1);
+	Error("ITensor::mapindex: couldn't find i1.");
+	}
+
+void ITensor::
+getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const
+	{
+	for(int j = 1; j <= r_; ++j)
+	    {
+	    bool got_one = false;
+	    for(int k = 1; k <= r_; ++k)
+            if(oth_index_[j] == index_[k])
+                { P.from_to(j,k); got_one = true; break; }
+	    if(!got_one)
+            {
+            std::cerr << "j = " << j << "\n";
+            Print(*this); std::cerr << "oth_index_ = \n";
+            foreach(const Index& I, oth_index_) { std::cerr << I << "\n"; }
+            Error("ITensor::getperm: no matching index");
+            }
+	    }
+	}
+
+int ITensor::
+_ind(int i1, int i2, int i3, int i4, 
+     int i5, int i6, int i7, int i8) const
+    {
+    ITENSOR_CHECK_NULL
     switch(rn_)
     {
     case 0:
@@ -431,9 +1071,10 @@ const
     } //switch(rn_)
     Error("ITensor::_ind: Failed switch case");
     return 1;
-}
+    }
 
-int ITensor::_ind2(const IndexVal& iv1, const IndexVal& iv2) const
+int ITensor::
+_ind2(const IndexVal& iv1, const IndexVal& iv2) const
     {
     if(rn_ > 2) 
         {
@@ -454,11 +1095,11 @@ int ITensor::_ind2(const IndexVal& iv1, const IndexVal& iv2) const
         }
     }
 
-int ITensor::_ind8(const IndexVal& iv1, const IndexVal& iv2, 
-          const IndexVal& iv3, const IndexVal& iv4,
-          const IndexVal& iv5,const IndexVal& iv6,
-          const IndexVal& iv7,const IndexVal& iv8)
-const
+int ITensor::
+_ind8(const IndexVal& iv1, const IndexVal& iv2, 
+      const IndexVal& iv3, const IndexVal& iv4,
+      const IndexVal& iv5,const IndexVal& iv6,
+      const IndexVal& iv7,const IndexVal& iv8) const
     {
     boost::array<const IndexVal*,NMAX+1> iv = 
         {{ 0, &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
@@ -496,9 +1137,11 @@ const
     return _ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]);
     }
 
-void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
-{
-    assert(p != 0);
+void ITensor::
+reshapeDat(const Permutation& P, Vector& rdat) const
+    {
+    ITENSOR_CHECK_NULL
+
     const Vector& thisdat = p->v;
 
     if(P.is_trivial())
@@ -611,11 +1254,11 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
 
     //Catch-all loop that works for any tensor
     for(; c.notDone(); ++c)
-    {
+        {
         rdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
             = thisdat(c.ind);
+        }
     }
-}
 
 //
 // Analyzes two ITensors to determine
@@ -680,8 +1323,9 @@ ProductProps(const ITensor& L, const ITensor& R)
 
 //Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref
 //contractedL/R[j] == true if L/R.indexn(j) contracted
-void toMatrixProd(const ITensor& L, const ITensor& R, const ProductProps& pp,
-                           MatrixRefNoLink& lref, MatrixRefNoLink& rref)
+void 
+toMatrixProd(const ITensor& L, const ITensor& R, const ProductProps& pp,
+             MatrixRefNoLink& lref, MatrixRefNoLink& rref)
     {
     assert(L.p != 0);
     assert(R.p != 0);
@@ -835,8 +1479,9 @@ void toMatrixProd(const ITensor& L, const ITensor& R, const ProductProps& pp,
 
 
 //Non-contracting product: Cikj = Aij Bkj (no sum over j)
-ITensor& ITensor::operator/=(const ITensor& other)
-{
+ITensor& ITensor::
+operator/=(const ITensor& other)
+    {
     if(this == &other)
         {
         ITensor cp_oth(other);
@@ -939,15 +1584,17 @@ ITensor& ITensor::operator/=(const ITensor& other)
     set_unique_Real();
 
     return *this;
-}
+    }
 
 
-inline int ind4(int i4, int m3, int i3, int m2, int i2, int m1, int i1)
+inline int 
+ind4(int i4, int m3, int i3, int m2, int i2, int m1, int i1)
     {
     return (((i4-1)*m3+i3-1)*m2+i2-1)*m1+i1;
     }
 
-ITensor& ITensor::operator*=(const ITensor& other)
+ITensor& ITensor::
+operator*=(const ITensor& other)
     {
     if(this == &other)
         {
@@ -1218,8 +1865,9 @@ ITensor& ITensor::operator*=(const ITensor& other)
     return *this;
     } //ITensor::operator*=(ITensor)
 
-void ITensor::reshapeTo(const Permutation& P, ITensor& res) const
-{
+void ITensor::
+reshapeTo(const Permutation& P, ITensor& res) const
+    {
     res.rn_ = rn_;
     res.r_ = r_;
     res.scale_ = scale_;
@@ -1230,10 +1878,11 @@ void ITensor::reshapeTo(const Permutation& P, ITensor& res) const
     res.p->alt.clear();
 #endif
     this->reshapeDat(P,res.p->v);
-}
+    }
 
-ITensor& ITensor::operator+=(const ITensor& other)
-{
+ITensor& ITensor::
+operator+=(const ITensor& other)
+    {
     if(this == &other) { scale_ *= 2; return *this; }
 
     bool complex_this = is_complex();
@@ -1353,10 +2002,11 @@ ITensor& ITensor::operator+=(const ITensor& other)
 #endif
 
     return *this;
-} 
+    } 
 
-void ITensor::fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
-{
+void ITensor::
+fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
+    {
     if(r() != 2) Error("fromMatrix11: incorrect rank");
     assert(hasindex(i1));
     assert(hasindex(i2));
@@ -1371,10 +2021,11 @@ void ITensor::fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     { dref = M.t(i1==index(1)); }
     else
     { dref = M.t(); }
-}
+    }
 
-void ITensor::toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
-{
+void ITensor::
+toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
+    {
     if(r() != 2) Error("toMatrix11: incorrect rank");
     assert(hasindex(i1));
     assert(hasindex(i2));
@@ -1385,9 +2036,11 @@ void ITensor::toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) c
     { res = dref.t(i1==index(1)); }
     else
     { res = dref.t(); }
-}
-void ITensor::toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
-{ toMatrix11NoScale(i1,i2,res); res *= scale_.real(); }
+    }
+
+void ITensor::
+toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
+    { toMatrix11NoScale(i1,i2,res); res *= scale_.real(); }
 
 /*
 // group i1,i2; i3,i4

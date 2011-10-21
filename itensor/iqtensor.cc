@@ -278,11 +278,11 @@ IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
 	}
 
 IQTensor::
-IQTensor(ITmaker itm) 
+IQTensor(ITensor::ITmaker itm) 
     : p(new IQTDat(IQIndex::IndReIm()))
     {
-    if(itm == makeComplex_1)      operator+=(ITensor::Complex_1());
-    else if(itm == makeComplex_i) operator+=(ITensor::Complex_i());
+    if(itm == ITensor::makeComplex_1)      operator+=(ITensor::Complex_1());
+    else if(itm == ITensor::makeComplex_i) operator+=(ITensor::Complex_i());
     }
 
 IQTensor::

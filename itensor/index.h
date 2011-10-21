@@ -355,6 +355,9 @@ public:
 	}
     Index primed(int inc = 1) const { return Index(primeBoth,*this,inc); }
 
+    friend inline Index
+    primed(const Index& I, int inc = 1) { return Index(primeBoth,I,inc); }
+
     Index deprimed() const { Index cp(*this); cp.primelevel_ = 0; return cp; }
 
     void noprime(PrimeType pt = primeBoth) { doprime(pt,-primelevel_); }

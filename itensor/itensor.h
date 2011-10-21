@@ -7,121 +7,15 @@
 #include "permutation.h"
 #include "prodstats.h"
 
-enum ITmaker {makeComplex_1,makeComplex_i,makeConjTensor};
-
+//Forward declarations
 struct ProductProps;
-
-class Permutation;
-
-class Counter
-    {
-public:
-    boost::array<int,NMAX+1> n;
-    boost::array<int,NMAX+1> i;
-    int ind;
-
-    Counter();
-    Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r);
-
-    void init(const boost::array<Index,NMAX+1>& ii, int rn, int r);
-
-    Counter& operator++();
-
-    bool operator!=(const Counter& other) const;
-    bool operator==(const Counter& other) const;
-
-    inline bool notDone() const 
-	{ return i[1] != 0; }
-
-    friend inline std::ostream& operator<<(std::ostream& s, const Counter& c);
-
-private:
-    void reset(int a)
-	{
-        i.assign(a);
-        ind = 1;
-	}
-    int rn_,r_;
-    };
-
-//#define DO_ALT
-#ifdef DO_ALT
-struct PDat
-    {
-    Permutation I; 
-    Vector v;
-    PDat(const Permutation& P_, const Vector& v_) 
-		: I(P_.inverse()), v(v_) { }
-    PDat(const Permutation& P_) : I(P_.inverse()) { }
-    };
-#endif
-
-//Storage for ITensors
-class ITDat
-    {
-private:
-    mutable unsigned int numref;
-    static DatAllocator<ITDat> allocator;
-    void operator=(const ITDat&);
-    ~ITDat() { } //must be dynamically allocated
-public:
-    Vector v;
-#ifdef DO_ALT
-    std::vector<PDat> alt;
-#endif
-
-    ITDat() : numref(0), v(0) { }
-
-    explicit 
-    ITDat(int size) : numref(0), v(size)
-	{ assert(size > 0); v = 0; }
-
-    explicit 
-    ITDat(const Vector& v_) : numref(0), v(v_) { }
-
-    explicit 
-    ITDat(Real r) : numref(0), v(1)
-	{ v = r; }
-
-    explicit 
-    ITDat(std::istream& s) : numref(0) 
-	{ read(s); }
-
-    explicit 
-    ITDat(const ITDat& other) : numref(0), v(other.v) { }
-
-    void read(std::istream& s)
-	{ 
-	int size = 0;
-	s.read((char*) &size,sizeof(size));
-	v.ReDimension(size);
-	s.read((char*) v.Store(), sizeof(Real)*size);
-	}
-
-    void write(std::ostream& s) const 
-	{ 
-	const int size = v.Length();
-	s.write((char*) &size, sizeof(size));
-	s.write((char*) v.Store(), sizeof(Real)*size); 
-	}
-    
-    void print() const 
-	{ std::cout << "ITDat: v = " << v; }
-
-    inline void* operator 
-    new(size_t) throw(std::bad_alloc)
-        { return allocator.alloc(); }
-
-    inline void operator 
-    delete(void* p) throw()
-        { return allocator.dealloc(p); }
-
-    friend class ITensor;
-    ENABLE_INTRUSIVE_PTR(ITDat)
-    };
-
+class Counter;
 class Combiner;
+class ITDat;
 
+//
+// ITensor
+//
 class ITensor
     {
 public:
@@ -210,8 +104,6 @@ public:
 
     ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P);
 
-    ITensor(ITmaker itm);
-
     ITensor(std::istream& s) { read(s); }
 
     static const ITensor& 
@@ -240,6 +132,7 @@ public:
 
     void
     write(std::ostream& s) const;
+
 
     //Operators -------------------------------------------------------
 
@@ -309,343 +202,174 @@ public:
     operator-(const ITensor& o) const 
         { ITensor res(*this); res -= o; return res; }
 
+
     //Index Methods ---------------------------------------------------
 
-    Index findtype(IndexType t) const
-	{
-        for(int j = 1; j <= rn_; ++j)
-        if(index_[j].type() == t) return index_[j];
-        Error("ITensor::findtype failed."); return Index();
-	}
+    Index 
+    findtype(IndexType t) const;
 
-    bool findtype(IndexType t, Index& I) const
-	{
-        for(int j = 1; j <= r_; ++j)
-        if(index_[j].type() == t)
-        {
-            I = index_[j];
-            return true;
-        }
-        return false;
-	}
+    bool 
+    findtype(IndexType t, Index& I) const;
 
-    int findindex(const Index& I) const
-    {
-        if(I.m() == 1) return findindex1(I);
-        else           return findindexn(I);
-        return 0;
-    }
+    int 
+    findindex(const Index& I) const;
 
-    int findindexn(const Index& I) const
-	{
-        for(int j = 1; j <= rn_; ++j)
-        if(index_[j] == I) return j;
-        return 0;
-	}
+    int 
+    findindexn(const Index& I) const;
 
-    int findindex1(const Index& I) const
-	{
-        for(int j = rn_+1; j <= r_; ++j)
-        if(index_[j] == I) return j;
-        return 0;
-	}
+    int 
+    findindex1(const Index& I) const;
 
-    bool has_common_index(const ITensor& other) const
-    {
-        for(int j = 1; j <= r_; ++j)
-        for(int k = 1; k <= other.r_; ++k)
-        if(index_[j] == other.index_[k]) return true;
-
-        return false;
-    }
+    bool 
+    has_common_index(const ITensor& other) const;
     
-    bool hasindex(const Index& I) const
-	{
-        if(I.m() == 1) return hasindex1(I);
-        else           return hasindexn(I);
-        return false;
-	}
+    bool 
+    hasindex(const Index& I) const;
 
-    bool hasindexn(const Index& I) const
-	{
-        for(int j = 1; j <= rn_; ++j)
-        if(index_[j] == I) return true;
-        return false;
-	}
+    bool 
+    hasindexn(const Index& I) const;
 
-    bool hasindex1(const Index& I) const
-	{
-        for(int j = rn_+1; j <= r_; ++j)
-        if(index_[j] == I) return true;
-        return false;
-	}
+    bool 
+    hasindex1(const Index& I) const;
 
-    bool notin(const Index& I) const { return !hasindex(I); }
+    inline bool 
+    notin(const Index& I) const { return !hasindex(I); }
 
-    template <class Iterable>
-    void addindex1(const Iterable& indices) 
-    { 
-        assert((r_+(int)indices.size()) <= NMAX);
-        for(size_t j = 0; j < indices.size(); ++j)
-        { 
-            assert(indices[j].m() == 1);
-            assert(!hasindex1(indices[j]));
-            index_[++r_] = indices[j]; 
-        }
-        set_unique_Real();
-    }
+    void 
+    addindex1(const std::vector<Index>& indices);
 
-    void addindex1(const Index& I) 
-    { 
-        assert(I.m() == 1);
-        assert(r_ < NMAX);
-        assert(!hasindex1(I));
-        index_[++r_] = I;
-        set_unique_Real();
-    }
+    void 
+    addindex1(const Index& I);
 
     //Removes the jth index as found by findindex
-    void removeindex1(int j) 
-    { 
-        assert(j <= r_);
-        assert(j > rn_);
-        for(int k = j; k < r_; ++k) index_[k] = index_[k+1];
-        --r_;
-        set_unique_Real();
-    }
+    void 
+    removeindex1(int j);
 
-    inline void removeindex1(const Index& I) 
+    inline void 
+    removeindex1(const Index& I) 
         { removeindex1(findindex1(I)); }
-
 
 
     //Primelevel Methods ------------------------------------
 
-    void noprime(PrimeType p = primeBoth)
-	{
-        for(int j = 1; j <= r_; ++j) index_[j].noprime(p);
-        set_unique_Real();
-	}
+    void 
+    noprime(PrimeType p = primeBoth);
 
-    void doprime(PrimeType pt, int inc = 1)
-	{
-        for(int j = 1; j <= r_; ++j) index_[j].doprime(pt,inc);
-        set_unique_Real();
-	}
+    void 
+    doprime(PrimeType pt, int inc = 1);
 
-    void primeall() { doprime(primeBoth,1); }
-    void primesite() { doprime(primeSite,1); }
-    void primelink() { doprime(primeLink,1); }
+    inline void 
+    primeall() { doprime(primeBoth,1); }
 
-    void mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)
-	{
-        for(int j = 1; j <= r_; ++j) index_[j].mapprime(plevold,plevnew,pt);
-        set_unique_Real();
-	}
+    inline void 
+    primesite() { doprime(primeSite,1); }
 
-    void mapprimeind(const Index& I, int plevold, int plevnew, 
-                     PrimeType pt = primeBoth)
-	{
-        for(int j = (I.m() == 1 ? rn_+1 : 1); j <= r_; ++j) 
-        if(index_[j] == I)
-        {
-            index_[j].mapprime(plevold,plevnew,pt);
-            set_unique_Real();
-            return;
-        }
-        Print(*this);
-        Print(I);
-        Error("ITensor::mapprimeind: index not found.");
-	}
+    inline void 
+    primelink() { doprime(primeLink,1); }
 
-    void primeind(const Index& I, int inc = 1) 
-    { 
-        mapindex(I,I.primed(inc)); 
-    }
+    void 
+    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
 
-    void primeind(const Index& I, const Index& J)
-	{ 
-        mapindex(I,I.primed());
-        mapindex(J,J.primed());
-	}
+    void 
+    mapprimeind(const Index& I, int plevold, int plevnew, 
+                PrimeType pt = primeBoth);
 
-    void noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
+    inline void 
+    primeind(const Index& I, int inc = 1)
+        { mapindex(I,primed(I)); }
 
-    friend inline ITensor primed(ITensor A)
-    { A.doprime(primeBoth,1); return A; }
+    void 
+    primeind(const Index& I, const Index& J);
 
-    friend inline ITensor primesite(ITensor A)
-    { A.doprime(primeSite,1); return A; }
+    inline void 
+    noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
 
-    friend inline ITensor primelink(const ITensor& A)
-    { ITensor res(A); res.doprime(primeLink,1); return res; }
+    friend inline ITensor 
+    primed(ITensor A, int inc = 1)
+        { A.doprime(primeBoth,inc); return A; }
 
-    friend inline ITensor primeind(ITensor A, const Index& I)
-    { A.mapindex(I,I.primed()); return A; }
+    friend inline ITensor 
+    primesite(ITensor A, int inc = 1)
+        { A.doprime(primeSite,inc); return A; }
 
-    friend inline ITensor primeind(ITensor A, const Index& I1, 
-                                   const Index& I2)
-    { A.mapindex(I1,I1.primed()); A.mapindex(I2,I2.primed()); return A; }
+    friend inline ITensor 
+    primelink(ITensor A, int inc = 1)
+        { A.doprime(primeLink,inc); return A; }
 
-    friend inline ITensor deprimed(ITensor A)
-    { A.noprime(); return A; }
+    friend inline ITensor 
+    primeind(ITensor A, const Index& I)
+        { A.mapindex(I,primed(I)); return A; }
+
+    friend ITensor 
+    primeind(ITensor A, const Index& I1, const Index& I2);
+
+    friend inline ITensor 
+    deprimed(ITensor A) { A.noprime(); return A; }
+
 
     //Element Access Methods ----------------------------------------
 
-    Real val0() const 
-	{ 
-	assert(p != 0); 
-	assert(rn_ == 0); 
-	try {
-	    return p->v(1)*scale_.real(); 
-	    }
-	catch(TooBigForReal)
-	    {
-	    std::cout << "too big for real() in val0" << std::endl;
-	    std::cerr << "too big for real() in val0" << std::endl;
-	    std::cout << "p->v(1) is " << p->v(1) << std::endl;
-	    std::cout << "scale is " << scale() << std::endl;
-	    std::cout << "rethrowing" << std::endl;
-	    throw;		// rethrow
-	    }
-	catch(TooSmallForReal)
-	    {
-	    std::cout << "warning: too small for real() in val0" << std::endl;
-	    std::cerr << "warning: too small for real() in val0" << std::endl;
-	    std::cout << "p->v(1) is " << p->v(1) << std::endl;
-	    std::cout << "scale is " << scale() << std::endl;
-	    return 0.0;
-	    }
-	return 0.0;
-	}
+    Real 
+    val0() const;
 
-    Real val1(int i1) const
-	{ assert(p != 0); assert(rn_ <= 1); return p->v(i1)*scale_.real(); }
+    Real 
+    val1(int i1) const;
 
-    Real& operator()()
-	{ 
-        if(rn_ != 0)
-        {
-            std::cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
-            Error("Not enough indices (requires all having m!=1)");
-        }
-        assert(p != 0); 
-        solo(); 
-        scaleTo(1);
-        return p->v(1);
-    }
+    Real& 
+    operator()();
 
-    Real operator()() const
-	{ 
-        if(rn_ != 0)
-        {
-            std::cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
-            Error("Not enough indices (requires all having m!=1)");
-        }
-        assert(p != 0); 
-        return scale_.real()*p->v(1);
-    }
+    Real 
+    operator()() const;
 
-    Real& operator()(const IndexVal& iv1)
-	{
-        if(rn_ > 1) 
-        {
-            std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
-            Error("Not enough m!=1 indices provided");
-        }
-        if(index_[1] != iv1.ind)
-            {
-            Print(*this);
-            Print(iv1);
-            Error("Incorrect IndexVal argument to ITensor");
-            }
-        solo(); 
-        scaleTo(1);
-        return p->v(iv1.i);
-	}
+    Real& 
+    operator()(const IndexVal& iv1);
 
-    Real operator()(const IndexVal& iv1) const
-	{
-        if(rn_ > 1) 
-        {
-            std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
-            Error("Not enough m!=1 indices provided");
-        }
-        if(index_[1] != iv1.ind)
-            {
-            Print(*this);
-            Print(iv1);
-            Error("Incorrect IndexVal argument to ITensor");
-            }
-	    assert(p != 0); 
-        return scale_.real()*p->v(iv1.i);
-	}
+    Real operator()(const IndexVal& iv1) const;
 
-    inline Real& operator()(const IndexVal& iv1, const IndexVal& iv2) 
-        {
-        solo(); 
-        scaleTo(1);
-        return p->v(_ind2(iv1,iv2));
-        }
+    Real& 
+    operator()(const IndexVal& iv1, const IndexVal& iv2);
 
-    inline Real operator()(const IndexVal& iv1, 
-                                 const IndexVal& iv2) const
-        {
-	    assert(p != 0); 
-        return scale_.real()*p->v(_ind2(iv1,iv2));
-        }
+    Real 
+    operator()(const IndexVal& iv1, const IndexVal& iv2) const;
 
-    inline Real& operator()(const IndexVal& iv1, const IndexVal& iv2, 
-                    const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
-                    const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
-                    const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
-        {
-        solo(); 
-        scaleTo(1);
-        return p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
-        }
+    Real& 
+    operator()(const IndexVal& iv1, const IndexVal& iv2, 
+               const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
+               const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
+               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null());
 
-    inline Real operator()(const IndexVal& iv1, const IndexVal& iv2, 
-                    const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
-                    const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
-                    const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null()) const
-        {
-	    assert(p != 0); 
-        return scale_.real()*p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
-        }
+    Real 
+    operator()(const IndexVal& iv1, const IndexVal& iv2, 
+               const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
+               const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
+               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null()) 
+    const;
+
 
     //Methods for Mapping to Other Objects ----------------------------------
 
     // Assume *this and other have same indices but different order.
     // Copy other into *this, without changing the order of indices in either
     // operator= would put the order of other into *this
-    void assignFrom(const ITensor& other)
-    {
-        if(this == &other) return;
-        if(fabs(other.ur - ur) > 1E-12)
-        {
-            Print(*this); Print(other);
-            Error("assignFrom: unique Real not the same"); 
-        }
-        Permutation P; getperm(other.index_,P);
-        scale_ = other.scale_;
-        if(p->count() != 1) { p = new ITDat(); }
-#ifdef DO_ALT
-        else { p->alt.clear(); }
-#endif
-        other.reshapeDat(P,p->v);
-    }
+    void 
+    assignFrom(const ITensor& other);
 
-    void groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
+    void 
+    groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
                       const Index& grouped, ITensor& res) const;
 
-    void expandIndex(const Index& small, const Index& big, 
+    void 
+    expandIndex(const Index& small, const Index& big, 
                      int start, ITensor& res) const;
 
-    void fromMatrix11(const Index& i1, const Index& i2, const Matrix& res);
-    void toMatrix11NoScale(const Index& i1, const Index& i2, 
+    void 
+    fromMatrix11(const Index& i1, const Index& i2, const Matrix& res);
+
+    void 
+    toMatrix11NoScale(const Index& i1, const Index& i2, 
                            Matrix& res) const;
-    void toMatrix11(const Index& i1, const Index& i2, Matrix& res) const;
+    void 
+    toMatrix11(const Index& i1, const Index& i2, Matrix& res) const;
 
     /*
     // group i1,i2; i3,i4
@@ -667,115 +391,67 @@ public:
                       const Index& i3, const Matrix& res);
     */
 
-    int vec_size() const { return p->v.Length(); }
-    void assignToVec(VectorRef v) const
-	{
-        if(p->v.Length() != v.Length()) 
-            Error("ITensor::assignToVec bad size");
-        if(scale_.isRealZero()) 
-        {
-            v *= 0;
-            return;
-        }
-        v = p->v;
-        v *= scale_.real();
-	}
-    void assignFromVec(const VectorRef& v)
-	{
-        if(p->v.Length() != v.Length()) 
-            Error("ITensor::assignToVec bad size");
-        scale_ = 1;
-        assert(p != 0);
-        if(p->count() != 1) 
-        { 
-            boost::intrusive_ptr<ITDat> new_p(new ITDat(v)); 
-            p.swap(new_p); 
-        }
-        else
-        {
-            p->v = v;
-#ifdef DO_ALT
-            p->alt.clear();
-#endif
-        }
-	}
+    int 
+    vec_size() const;
 
-    void reshapeDat(const Permutation& p, Vector& rdat) const;
-    void reshapeTo(const Permutation& P, ITensor& res) const;
+    void 
+    assignToVec(VectorRef v) const;
 
-    void reshape(const Permutation& P)
-    {
-        if(P.is_trivial()) return;
-        solo();
-        Vector newdat;
-        this->reshapeDat(P,newdat);
-        p->v = newdat;
-    }
+    void 
+    assignFromVec(const VectorRef& v);
+
+    void 
+    reshapeDat(const Permutation& p, Vector& rdat) const;
+
+    void 
+    reshapeTo(const Permutation& P, ITensor& res) const;
+
+    void 
+    reshape(const Permutation& P);
+
 
     //Other Methods -------------------------------------------------
 
-    void Randomize() { solo(); p->v.Randomize(); }
+    void 
+    Randomize();
 
-    void SplitReIm(ITensor& re, ITensor& im) const
-	{
-	re = *this; im = *this;
-	if(!is_complex()) { im *= 0; return; }
-	//re *= Index::IndReIm()(1); im *= Index::IndReIm()(2);
+    void 
+    SplitReIm(ITensor& re, ITensor& im) const;
 
-	re.mapindex(Index::IndReIm(),Index::IndReImP());
-	im.mapindex(Index::IndReIm(),Index::IndReImP());
-	re *= Index::IndReImP()(1);
-	im *= Index::IndReImP()(2);
-	}
-
-    inline void conj() 
-    { 
+    inline void 
+    conj() 
+        { 
         if(!is_complex()) return; 
         operator/=(ITensor::ConjTensor()); 
-    }
+        }
 
-    inline bool is_zero() const { return (norm() < 1E-20); } 
+    inline bool 
+    is_zero() const { return (norm() < 1E-20); } 
 
-    Real sumels() const { return p->v.sumels() * scale_.real(); }
+    Real 
+    sumels() const;
 
-    Real norm() const { return Norm(p->v) * scale_.real(); }
+    Real 
+    norm() const;
 
-    void scaleOutNorm() const
-	{
-        Real f = Norm(p->v);
-        if(fabs(f-1) < 1E-12) return;
-        solo();
-        if(f != 0) { p->v *= 1.0/f; scale_ *= f; }
-	}
+    void 
+    scaleOutNorm() const;
 
-    void scaleTo(LogNumber newscale) const
-	{
-        if(scale_ == newscale) return;
-        solo();
-        if(newscale.isRealZero()) { p->v *= 0; }
-        else 
-	    {
-            scale_ /= newscale;
-            if(scale_.isRealZero()) p->v *= 0;
-            else p->v *= scale_.real();
-	    }
-        scale_ = newscale;
-	}
+    void 
+    scaleTo(LogNumber newscale) const;
 
-    void print(std::string name = "",Printdat pdat = HideData) const 
-    { 
-        printdat = (pdat==ShowData); 
-        std::cerr << "\n" << name << " =\n" << *this << "\n"; 
-        printdat = false; 
-    }
+    void 
+    print(std::string name = "",Printdat pdat = HideData) const;
 
-    friend std::ostream& operator<<(std::ostream & s, const ITensor & t);
+    friend std::ostream& 
+    operator<<(std::ostream & s, const ITensor & t);
+
+    friend class commaInit;
 
     typedef Index IndexT;
     typedef IndexVal IndexValT;
     typedef Combiner CombinerT;
     static const Index& ReImIndex() { return Index::IndReIm(); }
-    friend class commaInit;
 
 private:
 
@@ -792,121 +468,48 @@ private:
     Real ur;
 
     void 
-    initCounter(Counter& C) const { C.init(index_,rn_,r_); }
+    initCounter(Counter& C) const;
 
-    void allocate(int dim) { p = new ITDat(dim); }
-    void allocate() { p = new ITDat(); }
+    void 
+    allocate(int dim);
+
+    void 
+    allocate();
 
 #ifdef DO_ALT
-    void newAltDat(const Permutation& P) const
-    { p->alt.push_back(PDat(P)); }
-    PDat& lastAlt() const { return p->alt.back(); } 
+    void 
+    newAltDat(const Permutation& P) const;
+
+    PDat& 
+    lastAlt() const;
 #endif
 
     //Disattach self from current ITDat and create own copy instead.
     //Necessary because ITensors logically represent distinct
     //objects even though they may share data in reality.
-    void solo() const
-	{
-        assert(p != 0);
-        if(p->count() != 1) 
-            p = new ITDat(*p);
-	}
+    void 
+    solo() const;
     
-    void set_unique_Real()
-	{
-        ur = 0;
-        for(int j = 1; j <= r_; ++j)
-            ur += index_[j].unique_Real();
-	}
+    void 
+    set_unique_Real();
 
-    void _construct1(const Index& i1)
-	{
-	assert(r_ == 1);
-	if(i1.m() != 1) 
-	    rn_ = 1; 
-	index_[1] = i1;
-	allocate(i1.m());
-	set_unique_Real();
-	}
+    void 
+    _construct1(const Index& i1);
 
-    void _construct2(const Index& i1, const Index& i2)
-	{
-	assert(r_ == 2);
-	if(i1.m()==1) 
-	    {
-	    index_[1] = i2; index_[2] = i1; 
-	    rn_ = (i2.m() == 1 ? 0 : 1);
-	    }
-	else 
-	    { 
-	    index_[1] = i1; index_[2] = i2; 
-	    rn_ = (i2.m() == 1 ? 1 : 2); 
-	    }
-	allocate(i1.m()*i2.m()); 
-	set_unique_Real();
-	}
+    void 
+    _construct2(const Index& i1, const Index& i2);
 
-    template<class IndexContainer>
-    int fillFromIndices(const IndexContainer& I, int size)
-	{
-        r_ = size;
-        assert(r_ <= NMAX);
-        assert(rn_ == 0);
-        int r1_ = 0;
-        boost::array<const Index*,NMAX+1> index1_;
-        int alloc_size = 1;
-        for(int n = 0; n < r_; ++n)
-	    {
-            const Index& i = I[n];
-            DO_IF_DEBUG(if(i == Index::Null()) Error("ITensor: null Index in constructor.");)
-            if(i.m()==1) 
-		GET(index1_,++r1_) = &i;
-            else         
-		{ 
-		GET(index_, ++rn_) = i; 
-		alloc_size *= i.m(); 
-		}
-	    }
-        for(int l = 1; l <= r1_; ++l) 
-	    index_[rn_+l] = *(index1_[l]);
-        set_unique_Real();
-        return alloc_size;
-	}
+    template<class Iterable>
+    int 
+    fillFromIndices(const Iterable& I, int size);
 
     //Prefer to map via a Combiner
     //Though 'mapindex' is useful for tested, internal calls
-    void mapindex(const Index& i1, const Index& i2)
-	{
-	assert(i1.m() == i2.m());
-	for(int j = 1; j <= r_; ++j) 
-	    if(GET(index_,j) == i1) 
-		{
-		GET(index_,j) = i2;
-		set_unique_Real();
-		return;
-		}
-	Print(i1);
-	Error("ITensor::mapindex: couldn't find i1.");
-	}
+    void 
+    mapindex(const Index& i1, const Index& i2);
 
-    void getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const
-	{
-	for(int j = 1; j <= r_; ++j)
-	    {
-	    bool got_one = false;
-	    for(int k = 1; k <= r_; ++k)
-		if(oth_index_[j] == index_[k])
-		    { P.from_to(j,k); got_one = true; break; }
-	    if(!got_one)
-		{
-		std::cerr << "j = " << j << "\n";
-		Print(*this); std::cerr << "oth_index_ = \n";
-		foreach(const Index& I, oth_index_) { std::cerr << I << "\n"; }
-		Error("ITensor::getperm: no matching index");
-		}
-	    }
-	}
+    void 
+    getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const;
 
     friend struct ProductProps;
 
@@ -926,7 +529,125 @@ private:
               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
         const;
 
+public:
+
+    enum ITmaker { makeComplex_1, makeComplex_i, makeConjTensor };
+
+    ITensor(ITmaker itm);
+
     }; // class ITensor
+
+//
+// Counter
+//
+class Counter
+    {
+public:
+    boost::array<int,NMAX+1> n;
+    boost::array<int,NMAX+1> i;
+    int ind;
+
+    Counter();
+    Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r);
+
+    void init(const boost::array<Index,NMAX+1>& ii, int rn, int r);
+
+    Counter& operator++();
+
+    bool operator!=(const Counter& other) const;
+    bool operator==(const Counter& other) const;
+
+    inline bool notDone() const 
+	{ return i[1] != 0; }
+
+    friend inline std::ostream& operator<<(std::ostream& s, const Counter& c);
+
+private:
+    void reset(int a)
+	{
+        i.assign(a);
+        ind = 1;
+	}
+    int rn_,r_;
+    };
+
+//#define DO_ALT
+#ifdef DO_ALT
+struct PDat
+    {
+    Permutation I; 
+    Vector v;
+    PDat(const Permutation& P_, const Vector& v_) 
+		: I(P_.inverse()), v(v_) { }
+    PDat(const Permutation& P_) : I(P_.inverse()) { }
+    };
+#endif
+
+//
+// ITDat
+//
+class ITDat
+    {
+private:
+    mutable unsigned int numref;
+    static DatAllocator<ITDat> allocator;
+    void operator=(const ITDat&);
+    ~ITDat() { } //must be dynamically allocated
+public:
+    Vector v;
+#ifdef DO_ALT
+    std::vector<PDat> alt;
+#endif
+
+    ITDat() : numref(0), v(0) { }
+
+    explicit 
+    ITDat(int size) : numref(0), v(size)
+	{ assert(size > 0); v = 0; }
+
+    explicit 
+    ITDat(const Vector& v_) : numref(0), v(v_) { }
+
+    explicit 
+    ITDat(Real r) : numref(0), v(1)
+	{ v = r; }
+
+    explicit 
+    ITDat(std::istream& s) : numref(0) 
+	{ read(s); }
+
+    explicit 
+    ITDat(const ITDat& other) : numref(0), v(other.v) { }
+
+    void read(std::istream& s)
+	{ 
+	int size = 0;
+	s.read((char*) &size,sizeof(size));
+	v.ReDimension(size);
+	s.read((char*) v.Store(), sizeof(Real)*size);
+	}
+
+    void write(std::ostream& s) const 
+	{ 
+	const int size = v.Length();
+	s.write((char*) &size, sizeof(size));
+	s.write((char*) v.Store(), sizeof(Real)*size); 
+	}
+    
+    void print() const 
+	{ std::cout << "ITDat: v = " << v; }
+
+    inline void* operator 
+    new(size_t) throw(std::bad_alloc)
+        { return allocator.alloc(); }
+
+    inline void operator 
+    delete(void* p) throw()
+        { return allocator.dealloc(p); }
+
+    friend class ITensor;
+    ENABLE_INTRUSIVE_PTR(ITDat)
+    };
 
 
 Real Dot(const ITensor& x, const ITensor& y, bool doconj = true);
@@ -934,11 +655,16 @@ Real Dot(const ITensor& x, const ITensor& y, bool doconj = true);
 void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, 
                 bool doconj = true);
 
-inline ITensor operator*(const IndexVal& iv1, const IndexVal& iv2) 
+inline ITensor 
+operator*(const IndexVal& iv1, const IndexVal& iv2) 
     { ITensor t(iv1); return (t *= iv2); }
-inline ITensor operator*(const IndexVal& iv1, Real fac) 
+
+inline ITensor 
+operator*(const IndexVal& iv1, Real fac) 
     { return ITensor(iv1,fac); }
-inline ITensor operator*(Real fac, const IndexVal& iv) 
+
+inline ITensor 
+operator*(Real fac, const IndexVal& iv) 
     { return ITensor(iv,fac); }
 
 // Given Tensors which represent operators 
@@ -946,7 +672,8 @@ inline ITensor operator*(Real fac, const IndexVal& iv)
 // Multiply them, fixing primes C(site-1',site-1)
 // a * b  (a above b in diagram, unprimed = right index of matrix)
 template<class Tensor>
-inline Tensor multSiteOps(Tensor a, Tensor b) 
+inline Tensor 
+multSiteOps(Tensor a, Tensor b) 
     {
     a.mapprime(1,2,primeSite);
     a.mapprime(0,1,primeSite);
@@ -986,67 +713,33 @@ private:
     Counter c; 
     };
 
-inline 
-Counter::Counter() : rn_(0)
-    {
-    n.assign(1); n[0] = 0;
-    reset(0);
-    }
 
-inline
-Counter::Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r) 
-    { init(ii,rn,r); }
-
-inline void 
-Counter::init(const boost::array<Index,NMAX+1>& ii, int rn, int r)
+template<class Iterable>
+int ITensor::
+fillFromIndices(const Iterable& I, int size)
     {
-    rn_ = rn;
-    r_ = r;
-    n[0] = 0;
-    for(int j = 1; j <= rn_; ++j) 
-        { GET(n,j) = ii[j].m(); }
-    for(int j = rn_+1; j <= NMAX; ++j) 
-        { n[j] = 1; }
-    reset(1);
-    }
-
-inline Counter& 
-Counter::operator++()
-    {
-    ++ind;
-    ++i[1];
-    if(i[1] > n[1])
-    for(int j = 2; j <= rn_; ++j)
+    r_ = size;
+    assert(r_ <= NMAX);
+    assert(rn_ == 0);
+    int r1_ = 0;
+    boost::array<const Index*,NMAX+1> index1_;
+    int alloc_size = 1;
+    for(int n = 0; n < r_; ++n)
         {
-        i[j-1] = 1;
-        ++i[j];
-        if(i[j] <= n[j]) break;
+        const Index& i = I[n];
+        DO_IF_DEBUG(if(i == Index::Null()) Error("ITensor: null Index in constructor.");)
+        if(i.m()==1) 
+            { GET(index1_,++r1_) = &i; }
+        else         
+            { 
+            GET(index_, ++rn_) = i; 
+            alloc_size *= i.m(); 
+            }
         }
-    //set 'done' condition
-    if(i[rn_] > n[rn_]) reset(0);
-    return *this;
-    }
-
-inline bool 
-Counter::operator!=(const Counter& other) const
-    {
-    for(int j = 1; j <= NMAX; ++j)
-        { if(i[j] != other.i[j]) return true; }
-    return false;
-    }
-
-inline bool 
-Counter::operator==(const Counter& other) const
-    { return !(*this != other); }
-
-inline std::ostream&
-operator<<(std::ostream& s, const Counter& c)
-    {
-    s << "("; 
-    for(int i = 1; i < c.r_; ++i)
-        {s << c.i[i] << " ";} 
-    s << c.i[c.r_] << ")";
-    return s;
+    for(int l = 1; l <= r1_; ++l) 
+        index_[rn_+l] = *(index1_[l]);
+    set_unique_Real();
+    return alloc_size;
     }
 
 
