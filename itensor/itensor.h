@@ -358,6 +358,24 @@ public:
     groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
                       const Index& grouped, ITensor& res) const;
 
+    void
+    tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
+               Index& tied, ITensor& res) const;
+
+    void
+    tieIndices(const Index& i1, const Index& i2,
+               Index& tied, ITensor& res) const;
+
+    void
+    tieIndices(const Index& i1, const Index& i2,
+               const Index& i3,
+               Index& tied, ITensor& res) const;
+
+    void
+    tieIndices(const Index& i1, const Index& i2,
+               const Index& i3, const Index& i4,
+               Index& tied, ITensor& res) const;
+
     void 
     expandIndex(const Index& small, const Index& big, 
                      int start, ITensor& res) const;

@@ -61,8 +61,8 @@ struct ITensorDefaults
 
         {
         Matrix M(s1.m(),s2.m());
-        M(1,1) = 0; M(1,2) = 0;
-        M(2,1) = 1; M(2,2) = 1;
+        M(1,1) = 0; M(1,2) = 1;
+        M(2,1) = 1; M(2,2) = 0;
         X = ITensor(s1,s2,M);
         }
         
@@ -797,6 +797,60 @@ BOOST_AUTO_TEST_CASE(NonContractingProduct)
     for(int j2 = 1; j2 <= 2; ++j2)
     { CHECK_CLOSE(Hpsi(l2(j2)),psi()*mpoh(l2(j2)),1E-10); }
 }
+
+BOOST_AUTO_TEST_CASE(TieIndices)
+    {
+
+    Index t("tied",2);
+
+    ITensor dX;
+    X.tieIndices(s1,s2,t,dX);
+
+    CHECK_CLOSE(dX.norm(),0,1E-5);
+    CHECK_EQUAL(dX.r(),1);
+    CHECK(dX.hasindex(t));
+
+    ITensor dZ;
+    Z.tieIndices(s1,s2,t,dZ);
+    CHECK_CLOSE(dZ(t(1)),+1,1E-5);
+    CHECK_CLOSE(dZ(t(2)),-1,1E-5);
+
+    {
+    ITensor T(l1,l2,a1,s2,s1);
+    T.Randomize();
+
+    ITensor TT;
+    T.tieIndices(l2,l1,s1,t,TT);
+
+    CHECK_EQUAL(TT.r(),3);
+
+    for(int j = 1; j <= 2; ++j)
+    for(int k = 1; k <= 2; ++k)
+        {
+        CHECK_CLOSE(T(l1(j),l2(j),a1(1),s2(k),s1(j)),TT(t(j),s2(k),a1(1)),1E-5);
+        }
+    }
+
+    //Try tying m==1 inds
+    {
+    Index t("tied",1);
+    ITensor T(l1,a2,a1,s2,a3);
+    T.Randomize();
+
+    ITensor TT;
+    T.tieIndices(a1,a3,a2,t,TT);
+
+    CHECK_EQUAL(TT.r(),3);
+
+    for(int j = 1; j <= 2; ++j)
+    for(int k = 1; k <= 2; ++k)
+        {
+        CHECK_CLOSE(T(l1(j),s2(k)),TT(l1(j),s2(k)),1E-5);
+        }
+    }
+
+
+    }
 
 BOOST_AUTO_TEST_CASE(fromMatrix11)
 {

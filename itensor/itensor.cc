@@ -771,6 +771,133 @@ groupIndices(const boost::array<Index,NMAX+1>& indices, int nind,
     }
 
 void ITensor::
+tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
+           Index& tied, ITensor& res) const
+    {
+    if(nind == 0) Error("No indices given");
+    const int tm = indices[1].m();
+    
+    //Prepare tied Index
+    if(tied.is_null()) 
+        { tied = Index("tied",tm,indices[1].type()); }
+    if(tied.m() != tm)
+        Error("Tied indices and resulting Index must have same m");
+
+    vector<Index> new_inds;
+    new_inds.push_back(tied);
+
+    boost::array<bool,NMAX+1> is_tied;
+    is_tied.assign(false);
+
+    int nmatched = 0;
+    for(int k = 1; k <= r_; ++k)
+    {
+    for(int j = 1; j <= nind; ++j)
+    if(index_[k] == indices[j]) 
+        { 
+        if(indices[j].m() != tm)
+            Error("Tied indices must have matching m's");
+
+        is_tied[k] = true;
+
+        ++nmatched;
+
+        break;
+        }
+
+    if(!is_tied[k])
+        new_inds.push_back(index_[k]);
+    }
+
+    //Check that all indices were found
+    if(nmatched != nind)
+        {
+        Print(*this);
+        cout << "indices = " << endl;
+        for(int j = 1; j <= nind; ++j)
+            cout << indices[j] << endl;
+        Error("Couldn't find Index to tie");
+        }
+
+    if(tm == 1)
+        {
+        res = ITensor(new_inds,*this);
+        return;
+        }
+
+    res = ITensor(new_inds);
+    res.scale_ = scale_;
+
+    Counter c; res.initCounter(c);
+
+    boost::array<int*,NMAX+1> ii;
+
+    int n = 2;
+    for(int j = 1; j <= r_; ++j)
+        {
+        if(is_tied[j])
+            ii[j] = &(c.i[1]);
+        else
+            ii[j] = &(c.i[n++]);
+        }
+
+    int one = 1;
+    for(int j = r_+1; j <= NMAX; ++j)
+        ii[j] = &one;
+    
+    const Vector& thisdat = p->v;
+    Vector& resdat = res.p->v;
+    for(; c.notDone(); ++c)
+        {
+        resdat(c.ind) =
+        thisdat(this->_ind(*ii[1],*ii[2],
+                           *ii[3],*ii[4],
+                           *ii[5],*ii[6],
+                           *ii[7],*ii[8]));
+        }
+
+    } //ITensor::tieIndices
+
+void ITensor::
+tieIndices(const Index& i1, const Index& i2,
+           Index& tied, ITensor& res) const
+    {
+    boost::array<Index,NMAX+1> inds =
+        {{ Index::Null(), i1, i2, 
+           Index::Null(), Index::Null(), 
+           Index::Null(), Index::Null(), 
+           Index::Null(), Index::Null() }};
+
+    tieIndices(inds,2,tied,res);
+    }
+
+void ITensor::
+tieIndices(const Index& i1, const Index& i2,
+           const Index& i3,
+           Index& tied, ITensor& res) const
+    {
+    boost::array<Index,NMAX+1> inds =
+        {{ Index::Null(), i1, i2, i3,
+           Index::Null(), Index::Null(), 
+           Index::Null(), Index::Null(), Index::Null() }};
+
+    tieIndices(inds,3,tied,res);
+    }
+
+void ITensor::
+tieIndices(const Index& i1, const Index& i2,
+           const Index& i3, const Index& i4,
+           Index& tied, ITensor& res) const
+    {
+    boost::array<Index,NMAX+1> inds =
+        {{ Index::Null(), i1, i2, i3, i4,
+           Index::Null(), Index::Null(), 
+           Index::Null(), Index::Null() }};
+
+    tieIndices(inds,4,tied,res);
+    }
+
+void ITensor::
 expandIndex(const Index& small, const Index& big, 
             int start, ITensor& res) const
     {
@@ -935,7 +1062,9 @@ initCounter(Counter& C) const
 
 void ITensor::
 allocate(int dim) 
-    { p = new ITDat(dim); }
+    { 
+    p = new ITDat(dim); 
+    }
 
 void ITensor::
 allocate() 
@@ -1828,6 +1957,7 @@ operator*=(const ITensor& other)
         }
     else
         {
+        
         DO_IF_PS(++prodstats.c2;)
         MatrixRefNoLink lref, rref;
         toMatrixProd(*this,other,pp,lref,rref);
