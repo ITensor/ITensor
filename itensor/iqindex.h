@@ -151,6 +151,9 @@ class IQIndexDat
     mutable unsigned int numref;
     const bool is_static_;
 public:
+    typedef std::vector<inqn>::iterator iq_it;
+    typedef std::vector<inqn>::const_iterator const_iq_it;
+
     std::vector<inqn> iq_;
 
     IQIndexDat() : numref(0), is_static_(false) { }
@@ -272,14 +275,16 @@ public:
     {
         size_t size = iq_.size();
         s.write((char*)&size,sizeof(size));
-        foreach(const inqn& x,iq_) x.write(s);
+        for(const_iq_it x = iq_.begin(); x != iq_.end(); ++x)
+            { x->write(s); }
     }
 
     void read(std::istream& s)
     {
         size_t size; s.read((char*)&size,sizeof(size));
         iq_.resize(size);
-        foreach(inqn& x,iq_) x.read(s);
+        for(iq_it x = iq_.begin(); x != iq_.end(); ++x)
+            { x->read(s); }
     }
 
     explicit IQIndexDat(Imaker im)
@@ -357,6 +362,9 @@ class IQIndex : public Index
         }
 
     public:
+
+    typedef IQIndexDat::iq_it iq_it;
+    typedef IQIndexDat::const_iq_it const_iq_it;
 
     const std::vector<inqn>& iq() const 
         { 
@@ -471,10 +479,10 @@ class IQIndex : public Index
           _dir(dir), pd(new IQIndexDat(ind_qn))
         { 
         int mm = 0;
-        foreach(const inqn& x, pd->iq_) 
+        for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
             {
-            mm += x.index.m();
-            if(x.index.type() != this->type())
+            mm += x->index.m();
+            if(x->index.type() != this->type())
                 Error("Indices must have the same type");
             }
         set_m(mm);
@@ -487,10 +495,10 @@ class IQIndex : public Index
           _dir(other._dir), pd(new IQIndexDat(ind_qn))
         { 
         int mm = 0;
-        foreach(const inqn& x, pd->iq_) 
+        for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
             {
-            mm += x.index.m();
-            if(x.index.type() != this->type())
+            mm += x->index.m();
+            if(x->index.type() != this->type())
                 Error("Indices must have the same type");
             }
         set_m(mm);
@@ -574,7 +582,8 @@ class IQIndex : public Index
         {
         IQINDEX_CHECK_NULL
         int mm = 0;
-        foreach(const inqn& x, pd->iq_) mm = max(mm,x.index.m());
+        for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
+            { mm = max(mm,x->index.m()); }
         return mm;
         }
     std::string showm() const
@@ -583,10 +592,10 @@ class IQIndex : public Index
         std::string res = " ";
         std::ostringstream oh; 
         oh << this->m() << " | ";
-        foreach(const inqn& x, pd->iq_)
+        for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
             {
-            QN q = x.qn;
-            oh << boost::format("[%d,%d,%s]:%d ") % q.sz() % q.Nf() % (q.fp()==1?"+":"-") % x.index.m(); 
+            QN q = x->qn;
+            oh << boost::format("[%d,%d,%s]:%d ") % q.sz() % q.Nf() % (q.fp()==1?"+":"-") % x->index.m(); 
             }
         return oh.str();
         }
@@ -597,8 +606,8 @@ class IQIndex : public Index
     void negate()
         {
         IQINDEX_CHECK_NULL
-        foreach(inqn& x, pd->iq_) 
-            x.qn *= -1;
+        for(iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
+            { x->qn *= -1; }
         }
 
     friend inline IQIndex negate(IQIndex I) // Quantum numbers negated
@@ -610,8 +619,8 @@ class IQIndex : public Index
     QN qn(const Index& i) const
         { 
         IQINDEX_CHECK_NULL
-        foreach(const inqn& x, pd->iq_) 
-            if(x.index == i) return x.qn;
+        for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
+            { if(x->index == i) return x->qn; }
         std::cerr << *this << "\n";
         std::cerr << "i = " << i << "\n";
         Error("IQIndex::qn(Index): IQIndex does not contain given index.");
@@ -637,15 +646,15 @@ class IQIndex : public Index
     bool hasindex(const Index& i) const
         { 
         IQINDEX_CHECK_NULL
-        foreach(const inqn& x, pd->iq_) 
-            if(x.index == i) return true;
+        for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
+            if(x->index == i) return true;
         return false;
         }
     bool hasindex_noprime(const Index& i) const
         { 
         IQINDEX_CHECK_NULL
-        foreach(const inqn& x, pd->iq_) 
-            if(x.index.noprime_equals(i)) return true;
+        for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
+            if(x->index.noprime_equals(i)) return true;
         return false;
         }
 
@@ -691,6 +700,10 @@ class IQIndex : public Index
         {
         return IQIndex(primeBoth,*this,inc);
         }
+
+    friend inline IQIndex
+    primed(const IQIndex& I, int inc = 1)
+        { return IQIndex(primeBoth,I,inc); }
 
     inline friend std::ostream& operator<<(std::ostream &o, const IQIndex &I)
         {

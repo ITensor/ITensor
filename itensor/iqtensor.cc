@@ -83,13 +83,15 @@ read(istream& s)
 	size_t size;
 	s.read((char*) &size,sizeof(size));
 	itensor.resize(size);
-	foreach(ITensor& t, itensor) 
-	    t.read(s);
+    for(std::list<ITensor>::iterator 
+        it = itensor.begin(); it != itensor.end(); ++it)
+        { it->read(s); }
 
 	s.read((char*) &size,sizeof(size));
 	iqindex_.resize(size);
-	foreach(IQIndex& I, iqindex_) 
-	    I.read(s);
+    for(std::vector<IQIndex>::iterator 
+        jj = iqindex_.begin(); jj != iqindex_.end(); ++jj)
+        { jj->read(s); }
 	}
 
 void IQTDat::
@@ -97,13 +99,15 @@ write(ostream& s) const
 	{
 	size_t size = itensor.size();
 	s.write((char*) &size,sizeof(size));
-	foreach(const ITensor& t, itensor) 
-	    t.write(s);
+    for(std::list<ITensor>::const_iterator 
+        it = itensor.begin(); it != itensor.end(); ++it)
+        { it->write(s); }
 
 	size = iqindex_.size();
 	s.write((char*) &size,sizeof(size));
-	foreach(const IQIndex& I, iqindex_) 
-	    I.write(s);
+    for(std::vector<IQIndex>::const_iterator
+        jj = iqindex_.begin(); jj != iqindex_.end(); ++jj)
+        { jj->write(s); }
 	}
 
 void IQTDat::
@@ -143,10 +147,11 @@ void IQTDat::
 clean(Real min_norm)
 {
 list<ITensor> nitensor;
-foreach(const ITensor& t, itensor)
+for(std::list<ITensor>::const_iterator 
+    it = itensor.begin(); it != itensor.end(); ++it)
     {
-        if(t.norm() >= min_norm)
-            nitensor.push_back(t);
+        if(it->norm() >= min_norm)
+            nitensor.push_back(*it);
     }
 itensor.swap(nitensor);
 }
@@ -331,8 +336,11 @@ operator*=(Real fac)
     solo();
     if(fac == 0) 
         { p->itensor.clear(); p->uninit_rmap(); return *this; }
-    foreach(ITensor& t, p->itensor) 
-        t *= fac;
+    for(std::list<ITensor>::iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+        {
+        (*it) *= fac;
+        }
     return *this; 
     }
 
@@ -430,8 +438,10 @@ checkDiv(QN expected) const
 	    this->printIQInds("this");
 	    Error("IQTensor has no blocks");
 	    }
-	foreach(const ITensor& t, p->itensor)
+    for(std::list<ITensor>::iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
 	    {
+        const ITensor& t = *it;
 	    QN div_;
 	    for(int j = 1; j <= t.r(); ++j)
 		div_ += qn(t.index(j))*dir(t.index(j));
@@ -475,12 +485,13 @@ ind_inc_prime(const IQIndex& i,int inc)
 	solo();
 	p->uninit_rmap();
 	bool gotit = false;
-	foreach(IQIndex& jj, p->iqindex_)
-	    if(jj.noprime_equals(i))
+    for(std::vector<IQIndex>::iterator 
+        jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+	    if(jj->noprime_equals(i))
 		{
 		gotit = true;
-		int p = jj.primeLevel();
-		jj.mapprime(p,p+inc);
+		int p = jj->primeLevel();
+		jj->mapprime(p,p+inc);
 		}
 
 	if(!gotit)
@@ -504,11 +515,13 @@ noprime(PrimeType pt)
 	{
 	solo();
 	p->uninit_rmap();
-	foreach(IQIndex& J, p->iqindex_)
-	    J.noprime(pt);
+    for(std::vector<IQIndex>::iterator 
+        jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+        { jj->noprime(pt); }
 	for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-	    foreach(ITensor& t, p->itensor) 
-		t.noprime(pt);
+    for(std::list<ITensor>::iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+        { it->noprime(pt); }
 	} 
 
 void IQTensor::
@@ -516,12 +529,16 @@ noprimelink()
 	{
 	solo();
 	p->uninit_rmap();
-	foreach(IQIndex& J, p->iqindex_)
-	    if(J.type() == Link) 
-		J.noprime();
+    for(std::vector<IQIndex>::iterator 
+        jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+        {
+	    if(jj->type() == Link) 
+		jj->noprime();
+        }
 	for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-	    foreach(ITensor& t, p->itensor) 
-		t.noprime(primeLink);
+    for(std::list<ITensor>::iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+        { it->noprime(primeLink); }
 	}
 
 void IQTensor::
@@ -555,18 +572,23 @@ primeind(const IQIndex& I)
 	{
 	solo();
 	p->uninit_rmap();
-	foreach(IQIndex& J, p->iqindex_)
-	    if(J == I) 
+    for(std::vector<IQIndex>::iterator 
+        jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+        {
+	    if(*jj == I) 
             {
-            J = J.primed();
+            *jj = primed(*jj);
             break;
             }
+        }
 
-	foreach(ITensor& t, p->itensor)
-    foreach(const inqn& x, I.iq())
+    for(std::list<ITensor>::iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+    for(std::vector<inqn>::const_iterator
+        x = I.iq().begin(); x != I.iq().end(); ++x)
         {
-		if(t.hasindex(x.index)) 
-		    t.primeind(x.index);
+		if(it->hasindex(x->index)) 
+		    it->primeind(x->index);
         }
 	}
 
@@ -575,18 +597,23 @@ noprimeind(const IQIndex& I)
 	{
 	solo();
 	p->uninit_rmap();
-	foreach(IQIndex& J, p->iqindex_)
-	    if(J == I) 
+    for(std::vector<IQIndex>::iterator 
+        jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+        {
+	    if(*jj == I) 
             {
-            J.noprime();
+            jj->noprime();
             break;
             }
+        }
 
-	foreach(ITensor& t, p->itensor)
-    foreach(const inqn& x, I.iq())
+    for(std::list<ITensor>::iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+    for(std::vector<inqn>::const_iterator
+        x = I.iq().begin(); x != I.iq().end(); ++x)
         {
-        if(t.hasindex(x.index)) 
-            t.noprimeind(x.index);
+        if(it->hasindex(x->index)) 
+            it->noprimeind(x->index);
         }
 	}
 
@@ -605,16 +632,20 @@ find_iqind(const Index& I) const
 bool IQTensor::
 uses_ind(const Index& i) const
     {
-    foreach(const ITensor& it, p->itensor)
-        if(it.hasindex(i)) 
-        return true;
+    for(std::list<ITensor>::const_iterator 
+        it=p->itensor.begin(); it != p->itensor.end(); ++it)
+        {
+        if(it->hasindex(i)) 
+            return true;
+        }
     return false;
     }
 
 int IQTensor::
 findindex(const IQIndex& i) const
     {
-    std::vector<IQIndex>::const_iterator f = find(p->iqindex_.begin(),p->iqindex_.end(),i);
+    std::vector<IQIndex>::const_iterator f = 
+        find(p->iqindex_.begin(),p->iqindex_.end(),i);
     if(f == p->iqindex_.end()) 
         return 0;
     else 
@@ -624,17 +655,21 @@ findindex(const IQIndex& i) const
 bool IQTensor::
 hastype(IndexType t) const
     {
-    foreach(const IQIndex& I, p->iqindex_)
-        if(I.type() == t) { return true; }
+    for(std::vector<IQIndex>::const_iterator
+        jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+        { if(jj->type() == t) return true; }
     return false;
     }
 
 const IQIndex& IQTensor::
 findtype(IndexType t) const
     {
-    foreach(const IQIndex& I, p->iqindex_)
-        if(I.type() == t) 
-        return I;
+    for(std::vector<IQIndex>::const_iterator
+        jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+        {
+        if(jj->type() == t) 
+        return *jj;
+        }
     Error("IQTensor::findtype: couldn't find type");
     return IQIndex::Null();
     }
@@ -642,9 +677,9 @@ findtype(IndexType t) const
 const IQIndex& IQTensor::
 finddir(Arrow dir) const
     {
-    foreach(const IQIndex& I, p->iqindex_)
-        if(I.dir() == dir) 
-        return I;
+    for(std::vector<IQIndex>::const_iterator
+        jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+        { if(jj->dir() == dir) return *jj; }
     Error("IQTensor::finddir: couldn't find dir");
     return IQIndex::Null();
     }
@@ -662,8 +697,9 @@ Real IQTensor::
 unique_Real() const
     {
     Real ur = 0.0;
-    foreach(const IQIndex& I, p->iqindex_) 
-        ur += I.unique_Real();
+    for(std::vector<IQIndex>::const_iterator
+        jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+        { ur += jj->unique_Real(); }
     return ur;
     }
 
@@ -671,8 +707,9 @@ int IQTensor::
 num_index(IndexType t) const
     { 
     int count = 0;
-    foreach(const IQIndex& I, p->iqindex_)
-        if(I.type() == t) ++count;
+    for(std::vector<IQIndex>::const_iterator
+        jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+        { if(jj->type() == t) ++count; }
     return count;
     }
 
@@ -680,8 +717,9 @@ Real IQTensor::
 norm() const
     {
     Real res = 0;
-    foreach(const ITensor& t, p->itensor) 
-        res += sqr(t.norm());
+    for(std::list<ITensor>::const_iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+        { res += sqr(it->norm()); }
     return sqrt(res);
     }
 
@@ -689,8 +727,9 @@ Real IQTensor::
 sumels() const
     {
     Real res = 0;
-    foreach(const ITensor& t, p->itensor)
-        res += t.sumels();
+    for(std::list<ITensor>::const_iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+        { res += it->sumels(); }
     return res;
     }
 
@@ -698,15 +737,17 @@ void IQTensor::
 scaleOutNorm() const
     {
     Real f = norm();
-    foreach(const ITensor& t, p->itensor)
-        t.scaleTo(f);
+    for(std::list<ITensor>::const_iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+        it->scaleTo(f);
     }
 
 void IQTensor::
 scaleTo(LogNumber newscale) const
     {
-    foreach(const ITensor& t, p->itensor)
-        t.scaleTo(newscale);
+    for(std::list<ITensor>::const_iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+        it->scaleTo(newscale);
     }
 
 void IQTensor::
@@ -720,8 +761,9 @@ addindex1(const IQIndex& I)
 	    Error("IQTensor::operator*=(IQIndex): IQIndex must have m == 1.");    
 	solo(); 
 	p->uninit_rmap();
-	foreach(ITensor& t, p->itensor) 
-	    t.addindex1(I.index(1));
+    for(std::list<ITensor>::iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+        { it->addindex1(I.index(1)); }
 	p->iqindex_.push_back(I);
 	}
 
@@ -767,8 +809,9 @@ void IQTensor::
 Randomize() 
 	{ 
 	solo(); 
-	foreach(ITensor& t, p->itensor) 
-	    t.Randomize(); 
+    for(std::list<ITensor>::iterator 
+        it = p->itensor.begin(); it != p->itensor.end(); ++it)
+        { it->Randomize(); }
 	}
 
 void IQTensor::
@@ -814,17 +857,20 @@ conj()
     solo();
     if(!is_complex())
         {
-        foreach(IQIndex& I,p->iqindex_) 
-            { I.conj(); }
+        for(std::vector<IQIndex>::iterator 
+            jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
+            { jj->conj(); }
         }
     else
         {
         IQTensor r,i;
         SplitReIm(r,i);
-        foreach(IQIndex& I,r.p->iqindex_) 
-            { I.conj(); }
-        foreach(IQIndex& I,i.p->iqindex_) 
-            { I.conj(); }
+        for(std::vector<IQIndex>::iterator 
+            jj = r.p->iqindex_.begin(); jj != r.p->iqindex_.end(); ++jj)
+            { jj->conj(); }
+        for(std::vector<IQIndex>::iterator 
+            jj = i.p->iqindex_.begin(); jj != i.p->iqindex_.end(); ++jj)
+            { jj->conj(); }
         i *= -1.0;
         *this = r * IQTensor::Complex_1() + IQTensor::Complex_i() * i;
         }
@@ -840,11 +886,13 @@ operator<<(std::ostream & s, const IQTensor &t)
         return s;
         }
     s << "IQIndices:\n";
-    foreach(const IQIndex& I, t.iqinds()) 
-        s << "  " << I << std::endl;
+    for(std::vector<IQIndex>::const_iterator
+        jj = t.p->iqindex_.begin(); jj != t.p->iqindex_.end(); ++jj)
+        { s << "  " << *jj << std::endl; }
     s << "ITensors:\n";
-    foreach(const ITensor& i, t.itensors())
-        s << "  " << i << std::endl;
+    for(std::list<ITensor>::const_iterator
+        it = t.p->itensor.begin(); it != t.p->itensor.end(); ++it)
+        { s << "  " << *it << std::endl; }
     s << "-------------------" << "\n\n";
     return s;
     }
@@ -1150,18 +1198,20 @@ GetSingComplex(Real& re, Real& im) const
 	}
     if(tim.p->iqindex_.size() != 1) Error("bad tim size");
     */
-    foreach(const IQIndex& I, tre.p->iqindex_)
-    {
-        if(I != IQTensor::Sing().p->iqindex_[0])
+    for(std::vector<IQIndex>::const_iterator
+        jj = tre.p->iqindex_.begin(); jj != tre.p->iqindex_.end(); ++jj)
+        {
+        if(*jj != IQTensor::Sing().p->iqindex_[0])
         {
             cout << *this;
             cout << tre;
             Error("bad tre size");
         }
-    }
-    foreach(const IQIndex& I, tim.p->iqindex_)
-    if(I != IQTensor::Sing().p->iqindex_[0])
-    { Error("bad tim size"); }
+        }
+    for(std::vector<IQIndex>::const_iterator
+        jj = tim.p->iqindex_.begin(); jj != tim.p->iqindex_.end(); ++jj)
+        if(*jj != IQTensor::Sing().p->iqindex_[0])
+        { Error("bad tim size"); }
 
     if(tre.iten_size() == 0)
     { re = 0.0; }
@@ -1190,7 +1240,9 @@ operator+=(const IQTensor& other)
 {
     solo(); p->uninit_rmap();
     if(this == &other) {
-        foreach(ITensor& t, p->itensor) { t *= 2; return *this; }
+        for(std::list<ITensor>::iterator 
+            it = p->itensor.begin(); it != p->itensor.end(); ++it)
+            { *it *= 2; return *this; }
     }
 
     if(p->iqindex_.size() == 0)		// Automatic initializing a summed IQTensor in a loop
@@ -1208,7 +1260,9 @@ operator+=(const IQTensor& other)
         cout << "other is " << other;
         Error("bad match unique real in IQTensor::operator+=");
 	}
-    foreach(const ITensor& t, other.p->itensor) operator+=(t);
+    for(std::list<ITensor>::const_iterator 
+        it = other.p->itensor.begin(); it != other.p->itensor.end(); ++it)
+        { operator+=(*it); }
     return *this;
 }
 
@@ -1293,20 +1347,21 @@ bool
 checkQNs(const IQTensor& T)
     {
     QN qtot = T.div();
-    foreach(const ITensor& it, T.itensors())
+    for(IQTensor::const_iten_it 
+        it = T.const_iten_begin(); it != T.const_iten_end(); ++it)
         {
         QN q;
-        for(int j = 1; j <= it.r(); ++j) 
-            q += T.qn(it.index(j))*T.dir(it.index(j));
+        for(int j = 1; j <= it->r(); ++j) 
+            q += T.qn(it->index(j))*T.dir(it->index(j));
 
         if(q != qtot) 
             {
             std::cerr << "checkQNs: inconsistent QN.\n";
             std::cerr << "\nqtot = " << qtot << "\n\n";
-            std::cerr << "Offending ITensor = " << it << "\n\n";
+            std::cerr << "Offending ITensor = " << *it << "\n\n";
             std::cout << "checkQNs: inconsistent QN.\n";
             std::cout << "\nqtot = " << qtot << "\n\n";
-            std::cout << "Offending ITensor = " << it << "\n\n";
+            std::cout << "Offending ITensor = " << *it << "\n\n";
             T.printIQInds("T");
             return false;
             }
