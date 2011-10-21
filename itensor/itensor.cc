@@ -357,79 +357,79 @@ write(std::ostream& s) const
 Index ITensor::
 findtype(IndexType t) const
 	{
-        for(int j = 1; j <= rn_; ++j)
-        if(index_[j].type() == t) return index_[j];
-        Error("ITensor::findtype failed."); return Index();
+    for(int j = 1; j <= rn_; ++j)
+    if(index_[j].type() == t) return index_[j];
+    Error("ITensor::findtype failed."); return Index();
 	}
 
 bool ITensor::
 findtype(IndexType t, Index& I) const
 	{
-        for(int j = 1; j <= r_; ++j)
-        if(index_[j].type() == t)
-        {
-            I = index_[j];
-            return true;
-        }
-        return false;
+    for(int j = 1; j <= r_; ++j)
+    if(index_[j].type() == t)
+    {
+        I = index_[j];
+        return true;
+    }
+    return false;
 	}
 
 int ITensor::
 findindex(const Index& I) const
     {
-        if(I.m() == 1) return findindex1(I);
-        else           return findindexn(I);
-        return 0;
+    if(I.m() == 1) return findindex1(I);
+    else           return findindexn(I);
+    return 0;
     }
 
 int ITensor::
 findindexn(const Index& I) const
 	{
-        for(int j = 1; j <= rn_; ++j)
-        if(index_[j] == I) return j;
-        return 0;
+    for(int j = 1; j <= rn_; ++j)
+    if(index_[j] == I) return j;
+    return 0;
 	}
 
 int ITensor::
 findindex1(const Index& I) const
 	{
-        for(int j = rn_+1; j <= r_; ++j)
-        if(index_[j] == I) return j;
-        return 0;
+    for(int j = rn_+1; j <= r_; ++j)
+    if(index_[j] == I) return j;
+    return 0;
 	}
 
 bool ITensor::
 has_common_index(const ITensor& other) const
     {
-        for(int j = 1; j <= r_; ++j)
-        for(int k = 1; k <= other.r_; ++k)
-        if(index_[j] == other.index_[k]) return true;
+    for(int j = 1; j <= r_; ++j)
+    for(int k = 1; k <= other.r_; ++k)
+    if(index_[j] == other.index_[k]) return true;
 
-        return false;
+    return false;
     }
 
 bool ITensor::
 hasindex(const Index& I) const
 	{
-        if(I.m() == 1) return hasindex1(I);
-        else           return hasindexn(I);
-        return false;
+    if(I.m() == 1) return hasindex1(I);
+    else           return hasindexn(I);
+    return false;
 	}
 
 bool ITensor::
 hasindexn(const Index& I) const
 	{
-        for(int j = 1; j <= rn_; ++j)
-        if(index_[j] == I) return true;
-        return false;
+    for(int j = 1; j <= rn_; ++j)
+    if(index_[j] == I) return true;
+    return false;
 	}
 
 bool ITensor::
 hasindex1(const Index& I) const
 	{
-        for(int j = rn_+1; j <= r_; ++j)
-        if(index_[j] == I) return true;
-        return false;
+    for(int j = rn_+1; j <= r_; ++j)
+    if(index_[j] == I) return true;
+    return false;
 	}
 
 
@@ -496,14 +496,16 @@ noprime(PrimeType p)
 void ITensor::
 doprime(PrimeType pt, int inc)
 	{
-    for(int j = 1; j <= r_; ++j) index_[j].doprime(pt,inc);
+    for(int j = 1; j <= r_; ++j) 
+        index_[j].doprime(pt,inc);
     set_unique_Real();
 	}
 
 void ITensor::
 mapprime(int plevold, int plevnew, PrimeType pt)
 	{
-    for(int j = 1; j <= r_; ++j) index_[j].mapprime(plevold,plevnew,pt);
+    for(int j = 1; j <= r_; ++j) 
+        index_[j].mapprime(plevold,plevnew,pt);
     set_unique_Real();
 	}
 

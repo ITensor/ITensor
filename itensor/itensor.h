@@ -276,7 +276,7 @@ public:
 
     inline void 
     primeind(const Index& I, int inc = 1)
-        { mapindex(I,primed(I)); }
+        { mapindex(I,primed(I,inc)); }
 
     void 
     primeind(const Index& I, const Index& J);
