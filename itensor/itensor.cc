@@ -617,25 +617,45 @@ void ITensor::reshapeDat(const Permutation& P, Vector& rdat) const
     }
 }
 
-//Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref
-//contractedL/R[j] == true if L/R.indexn(j) contracted
-void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, boost::array<bool,NMAX+1>& contractedL, boost::array<bool,NMAX+1>& contractedR,
-                           MatrixRefNoLink& lref, MatrixRefNoLink& rref)
-    {
-    assert(L.p != 0);
-    assert(R.p != 0);
-    const Vector &Ldat = L.p->v, &Rdat = R.p->v;
+//
+// Analyzes two ITensors to determine
+// how they should be multiplied:
+// how many indices do they share?
+// which indices are common? etc.
+//
+struct ProductProps
+{
+    ProductProps(const ITensor& L, const ITensor& R);
 
-    for(int j = 1; j <= NMAX; ++j) 
-	contractedL[j] = contractedR[j] = false;
+    //arrays specifying which indices match
+    boost::array<bool,NMAX+1> contractedL, contractedR; 
 
-    nsamen = 0; //How many m!=1 Indices this and other share
-    cdim = 1;   //dimension of contracted inds
+    int nsamen, //number of m !=1 indices that match
+        cdim,   //total dimension of contracted inds
+        odimL,  //outer (total uncontracted) dim of L
+        odimR,  //outer (total uncontracted) dim of R
+        lcstart, //where L's contracted inds start
+        rcstart; //where R's contracted inds start
 
+    //Permutations that move all matching m!=1
+    //indices pairwise to the front 
     Permutation pl, pr;
 
-    int q = 0; 
-    int lcstart = -1, rcstart = -1;
+};
+
+ProductProps::
+ProductProps(const ITensor& L, const ITensor& R)
+    : nsamen(0), 
+      cdim(1), 
+      odimL(-1), 
+      odimR(-1),
+      lcstart(-1), 
+      rcstart(-1)
+    {
+
+    for(int j = 1; j <= NMAX; ++j) 
+        contractedL[j] = contractedR[j] = false;
+
     for(int j = 1; j <= L.rn_; ++j)
 	for(int k = 1; k <= R.rn_; ++k)
 	    if(L.index_[j] == R.index_[k])
@@ -644,37 +664,51 @@ void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, bo
 		if(rcstart == -1) rcstart = k;
 
 		++nsamen;
+		pl.from_to(j,nsamen);
+		pr.from_to(k,nsamen);
 
 		contractedL[j] = contractedR[k] = true;
 
-		++q;
-		pl.from_to(j,q);
-		pr.from_to(k,q);
+        cdim *= L.index_[j].m();
 
-		cdim *= L.index_[j].m();
 		}
-    const int odimL = Ldat.Length()/cdim;
-    const int odimR = Rdat.Length()/cdim;
+
+    odimL = L.p->v.Length()/cdim;
+    odimR = R.p->v.Length()/cdim;
+
+    }
+
+//Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref
+//contractedL/R[j] == true if L/R.indexn(j) contracted
+void toMatrixProd(const ITensor& L, const ITensor& R, const ProductProps& pp,
+                           MatrixRefNoLink& lref, MatrixRefNoLink& rref)
+    {
+    assert(L.p != 0);
+    assert(R.p != 0);
+    const Vector &Ldat = L.p->v, &Rdat = R.p->v;
+
+    Permutation pl = pp.pl;
+    Permutation pr = pp.pr;
 
     bool L_is_matrix = true, R_is_matrix = true;
-    if(nsamen != 0)
+    if(pp.nsamen != 0)
 	{
 	//Check that contracted inds are contiguous
-	for(int i = 0; i < nsamen; ++i) 
+	for(int i = 0; i < pp.nsamen; ++i) 
 	    {
-	    if(!contractedL[lcstart+i]) L_is_matrix = false;
-	    if(!contractedR[rcstart+i]) R_is_matrix = false;
+	    if(!pp.contractedL[pp.lcstart+i]) L_is_matrix = false;
+	    if(!pp.contractedR[pp.rcstart+i]) R_is_matrix = false;
 	    }
 	//Check that contracted inds are all at beginning or end of _indexn
-	if(!(contractedL[1] || contractedL[L.rn_])) L_is_matrix = false; 
-	if(!(contractedR[1] || contractedR[R.rn_])) R_is_matrix = false;
+	if(!(pp.contractedL[1] || pp.contractedL[L.rn_])) L_is_matrix = false; 
+	if(!(pp.contractedR[1] || pp.contractedR[R.rn_])) R_is_matrix = false;
 	}
 
     if(L_is_matrix)  
 	{
-	if(contractedL[1]) 
-	    { Ldat.TreatAsMatrix(lref,odimL,cdim); lref.ApplyTrans(); }
-	else { Ldat.TreatAsMatrix(lref,cdim,odimL); }
+	if(pp.contractedL[1]) 
+	    { Ldat.TreatAsMatrix(lref,pp.odimL,pp.cdim); lref.ApplyTrans(); }
+	else { Ldat.TreatAsMatrix(lref,pp.cdim,pp.odimL); }
 	}
     else
 	{
@@ -684,30 +718,28 @@ void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, bo
 	foreach(const PDat& Alt, L.p->alt)
 	    {
 	    bool front_matrix=true;
-	    for(int j = 1; j <= nsamen; ++j)
-		if(!GET(contractedL,Alt.I.dest(j)))
+	    for(int j = 1; j <= pp.nsamen; ++j)
+		if(!GET(pp.contractedL,Alt.I.dest(j)))
 		    { front_matrix = false; break; }
 
 	    if(front_matrix) 
 		{ 
-		Alt.v.TreatAsMatrix(lref,odimL,cdim); lref.ApplyTrans();
+		Alt.v.TreatAsMatrix(lref,pp.odimL,pp.cdim); lref.ApplyTrans();
 		done_with_L = true;
 		L_is_matrix = true;
-		//DO_IF_PS(++prodstats.c3;)
 		break;
 		}
 
 	    bool back_matrix=true;
-	    for(int j = L.rn_; j > (L.rn_-nsamen); --j)
-		if(!GET(contractedL,Alt.I.dest(j)))
+	    for(int j = L.rn_; j > (L.rn_-pp.nsamen); --j)
+		if(!GET(pp.contractedL,Alt.I.dest(j)))
 		    { back_matrix = false; break; }
 
 	    if(back_matrix)
 		{
-		Alt.v.TreatAsMatrix(lref,cdim,odimL); 
+		Alt.v.TreatAsMatrix(lref,pp.cdim,pp.odimL); 
 		done_with_L = true;
 		L_is_matrix = true;
-		DO_IF_PS(++prodstats.c3;)
 			    break;
 		}
 	    } //for int n
@@ -715,17 +747,17 @@ void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, bo
 	//Finish making the permutation (stick non contracted inds on the back)
 	if(!done_with_L)
 	    {
-	    q = nsamen;
+	    int q = pp.nsamen;
 	    for(int j = 1; j <= L.rn_; ++j)
-		if(!contractedL[j]) pl.from_to(j,++q);
+		if(!pp.contractedL[j]) pl.from_to(j,++q);
 	    if(L_is_matrix) Error("Calling reshapeDat although L is matrix.");
 #ifdef DO_ALT
 	    L.newAltDat(pl);
 	    L.reshapeDat(pl,L.lastAlt().v);
-	    L.lastAlt().v.TreatAsMatrix(lref,odimL,cdim); lref.ApplyTrans();
+	    L.lastAlt().v.TreatAsMatrix(lref,pp.odimL,pp.cdim); lref.ApplyTrans();
 #else
 	    Vector lv; L.reshapeDat(pl,lv);
-	    lv.TreatAsMatrix(lref,odimL,cdim); lref.ApplyTrans();
+	    lv.TreatAsMatrix(lref,pp.odimL,pp.cdim); lref.ApplyTrans();
 #endif
 	    done_with_L = true;
 	    }
@@ -734,9 +766,9 @@ void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, bo
 
     if(R_is_matrix) 
 	{
-	if(contractedR[1]) { Rdat.TreatAsMatrix(rref,odimR,cdim); }
+	if(pp.contractedR[1]) { Rdat.TreatAsMatrix(rref,pp.odimR,pp.cdim); }
 	else                    
-	    { Rdat.TreatAsMatrix(rref,cdim,odimR); rref.ApplyTrans(); }
+	    { Rdat.TreatAsMatrix(rref,pp.cdim,pp.odimR); rref.ApplyTrans(); }
 	}
     else
 	{
@@ -746,30 +778,28 @@ void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, bo
 	foreach(const PDat& Alt, R.p->alt)
 	    {
 	    bool front_matrix=true;
-	    for(int j = 1; j <= nsamen; ++j)
-		if(!GET(contractedR,Alt.I.dest(j)))
+	    for(int j = 1; j <= pp.nsamen; ++j)
+		if(!GET(pp.contractedR,Alt.I.dest(j)))
 		    { front_matrix = false; break; }
 
 	    if(front_matrix) 
 		{ 
-		Alt.v.TreatAsMatrix(rref,odimR,cdim); 
+		Alt.v.TreatAsMatrix(rref,pp.odimR,pp.cdim); 
 		done_with_R = true;
 		R_is_matrix = true;
-		//DO_IF_PS(++prodstats.c3;)
 		break;
 		}
 
 	    bool back_matrix=true;
-	    for(int j = R.rn_; j > (R.rn_-nsamen); --j)
-		if(!GET(contractedR,Alt.I.dest(j)))
+	    for(int j = R.rn_; j > (R.rn_-pp.nsamen); --j)
+		if(!GET(pp.contractedR,Alt.I.dest(j)))
 		    { back_matrix = false; break; }
 
 	    if(back_matrix)
 		{
-		Alt.v.TreatAsMatrix(rref,cdim,odimR); rref.ApplyTrans();
+		Alt.v.TreatAsMatrix(rref,pp.cdim,pp.odimR); rref.ApplyTrans();
 		done_with_R = true;
 		R_is_matrix = true;
-		DO_IF_PS(++prodstats.c3;)
 			    break;
 		}
 	    } //for int n
@@ -777,31 +807,32 @@ void toMatrixProd(const ITensor& L, const ITensor& R, int& nsamen, int& cdim, bo
 	//Finish making the permutation (stick non contracted inds on the back)
 	if(!done_with_R)
 	    {
-	    q = nsamen;
+	    int q = pp.nsamen;
 	    for(int j = 1; j <= R.rn_; ++j)
-		if(!contractedR[j]) pr.from_to(j,++q);
+		if(!pp.contractedR[j]) pr.from_to(j,++q);
 	    if(R_is_matrix) Error("Calling reshape even though R is matrix.");
 #ifdef DO_ALT
 	    R.newAltDat(pr);
 	    R.reshapeDat(pr,R.lastAlt().v);
-	    R.lastAlt().v.TreatAsMatrix(rref,odimR,cdim);
+	    R.lastAlt().v.TreatAsMatrix(rref,pp.odimR,pp.cdim);
 #else
 	    Vector rv; R.reshapeDat(pr,rv);
-	    rv.TreatAsMatrix(rref,odimR,cdim);
+	    rv.TreatAsMatrix(rref,pp.odimR,pp.cdim);
 #endif
 	    done_with_R = true;
 	    }
 	}
 
 #ifdef COLLECT_PRODSTATS
-    if(L.rn_ > R.rn_) ++prodstats.global[make_pair(L.rn_,R.rn_)];
-    else ++prodstats.global[make_pair(R.rn_,L.rn_)];
+    if(L.rn_ > R.rn_) ++prodstats.global[std::make_pair(L.rn_,R.rn_)];
+    else ++prodstats.global[std::make_pair(R.rn_,L.rn_)];
     ++prodstats.total;
     if(L_is_matrix) ++prodstats.did_matrix;
     if(R_is_matrix) ++prodstats.did_matrix;
 #endif
 
     }
+
 
 //Non-contracting product: Cikj = Aij Bkj (no sum over j)
 ITensor& ITensor::operator/=(const ITensor& other)
@@ -861,9 +892,9 @@ ITensor& ITensor::operator/=(const ITensor& other)
         return *this;
     }
 
-    int nsamen, cdim;
-    boost::array<bool,NMAX+1> contractedL, contractedR; MatrixRefNoLink lref, rref;
-    toMatrixProd(*this,other,nsamen,cdim,contractedL,contractedR,lref,rref);
+    ProductProps pp(*this,other);
+    MatrixRefNoLink lref, rref;
+    toMatrixProd(*this,other,pp,lref,rref);
 
     if(p->count() != 1) { p = new ITDat(); }
 #ifdef DO_ALT
@@ -880,17 +911,17 @@ ITensor& ITensor::operator/=(const ITensor& other)
     for(int i = 1; i <= ni; ++i)
         { thisdat(((j-1)*nk+k-1)*ni+i) =  R(k,j) * L(j,i); }
 
-    if((r_ + other.rn_ - nsamen + nr1_) > NMAX) 
+    if((r_ + other.rn_ - pp.nsamen + nr1_) > NMAX) 
         Error("ITensor::operator/=: too many indices in product.");
 
     //Handle m!=1 indices
     int nrn_ = 0;
     for(int j = 1; j <= rn_; ++j)
-        { if(!contractedL[j]) new_index_[++nrn_] = this->index_[j]; }
+        { if(!pp.contractedL[j]) new_index_[++nrn_] = this->index_[j]; }
     for(int j = 1; j <= other.rn_; ++j)
-        { if(!contractedR[j]) new_index_[++nrn_] = other.index_[j]; }
+        { if(!pp.contractedR[j]) new_index_[++nrn_] = other.index_[j]; }
     for(int j = 1; j <= rn_; ++j)
-        { if(contractedL[j])  new_index_[++nrn_] = this->index_[j]; }
+        { if(pp.contractedL[j])  new_index_[++nrn_] = this->index_[j]; }
 
     for(int j = rn_+1; j <= r_; ++j) new_index_[nrn_+j-rn_] = index_[j];
     r_ = (r_-rn_) + nrn_;
@@ -950,12 +981,12 @@ ITensor& ITensor::operator*=(const ITensor& other)
 
     //These hold  regular new indices and the m==1 indices that appear in the result
     static boost::array<Index,NMAX+1> new_index_;
-    static boost::array<Index,NMAX+1> contracted;
     static boost::array<const Index*,NMAX+1> new_index1_;
     int nr1_ = 0;
 
+    //
     //Handle m==1 Indices
-
+    //
     for(int k = rn_+1; k <= this->r_; ++k)
         {
         const Index& K = index_[k];
@@ -975,6 +1006,10 @@ ITensor& ITensor::operator*=(const ITensor& other)
         skip_other:;
         }
 
+    //
+    //Special cases when one of the tensors
+    //has only m==1 indices (effectively a scalar)
+    //
     if(other.rn_ == 0)
         {
         scale_ *= other.scale_;
@@ -984,8 +1019,6 @@ ITensor& ITensor::operator*=(const ITensor& other)
             {
             std::cout << "new r_ would be = " << r_ << "\n";
             std::cerr << "new r_ would be = " << r_ << "\n";
-            //Print(*this);
-            //Print(other);
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
             }
         //Keep current m!=1 indices, overwrite m==1 indices
@@ -1005,8 +1038,6 @@ ITensor& ITensor::operator*=(const ITensor& other)
             {
             std::cout << "new r_ would be = " << r_ << "\n";
             std::cerr << "new r_ would be = " << r_ << "\n";
-            //Print(*this);
-            //Print(other);
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
             }
         for(int j = 1; j <= rn_; ++j) 
@@ -1018,168 +1049,160 @@ ITensor& ITensor::operator*=(const ITensor& other)
         return *this;
         }
 
-    boost::array<bool,NMAX+1> contractedL, contractedR; 
-    for(int j = 1; j <= NMAX; ++j) 
-	contractedL[j] = contractedR[j] = false;
-    int nsamen = 0,cdim, nop, newdim;
-    nop = newdim = p->v.Length() * other.p->v.Length();
+    ProductProps pp(*this,other);
 
-    for(int j = 1; j <= rn_; ++j)
-	for(int k = 1; k <= other.rn_; ++k)
-	    if(index_[j] == other.index_[k])
-		{
-		++nsamen;
-		contractedL[j] = contractedR[k] = true;
-		int tm = index_[j].m();
-		nop /= tm;
-		newdim /= tm * tm;
-		}
+    int new_rn_ = 0;
 
-    int new_rn_ = 0, n_con = 0;
-    if(nop < 10000 && nsamen > 0 && rn_+other.rn_-2*nsamen <= 4 && rn_ <= 4 && other.rn_ <= 4)
-	{
-	int am[NMAX+1], bm[NMAX+1], mcon[NMAX+1], mnew[NMAX+1];
-	typedef int *p_int;
-	p_int pa[NMAX+1], pb[NMAX+1];
-	int one = 1;
-	for(int j = 1; j <= NMAX; ++j)
-	    {
-	    pa[j] = pb[j] = &one, mcon[j] = mnew[j] = 1;
-	    am[j] = index_[j].m();
-	    bm[j] = other.index_[j].m();
-	    }
-	int icon[NMAX+1], inew[NMAX+1];
-	for(int j = 1; j <= this->rn_; ++j)
-	    if(!contractedL[j]) 
-		{
-		new_index_[++new_rn_] = index_[j];
-		mnew[new_rn_] = index_[j].m();
-		pa[j] = inew + new_rn_;
-		}
-	    else
-		{
-		contracted[++n_con] = index_[j];
-		mcon[n_con] = index_[j].m();
-		pa[j] = icon + n_con;
-		}
-	for(int j = 1; j <= other.rn_; ++j)
-	    if(!contractedR[j]) 
-		{
-		new_index_[++new_rn_] = other.index_[j];
-		mnew[new_rn_] = other.index_[j].m();
-		pb[j] = inew + new_rn_;
-		}
-	    else
-		{
-		for(int k = 1; k <= n_con; ++k)
-		    if(contracted[k] == other.index_[j])
-			pb[j] = icon + k;
-		}
-	if(new_rn_ > 4) 
-	    {
-	    printdat = false;
-	    cout << "this is " << *this << endl;
-	    cout << "other is " << other << endl;
-	    cout << "new_rn_ is " << new_rn_ << endl;
-	    Error("new_rn_ too big for this part!");
-	    }
-	if(n_con > 4) Error("n_con too big for this part!");
+    if((pp.odimL*pp.cdim*pp.odimR) < 10000 && (rn_+other.rn_-2*pp.nsamen) <= 4 && rn_ <= 4 && other.rn_ <= 4)
+        {
+        int am[NMAX+1], bm[NMAX+1], mcon[NMAX+1], mnew[NMAX+1];
+        int *pa[NMAX+1], *pb[NMAX+1];
+        int one = 1;
+        for(int j = 1; j <= NMAX; ++j)
+            {
+            //Set *pa[j],*pb[j],mcon[j] and mnew[j]
+            // to 1 unless set otherwise below
+            pa[j] = pb[j] = &one, mcon[j] = mnew[j] = 1;
+            am[j] = index_[j].m();
+            bm[j] = other.index_[j].m();
+            }
+        int icon[NMAX+1], inew[NMAX+1];
+        for(int j = 1; j <= this->rn_; ++j)
+            if(!pp.contractedL[j]) 
+                {
+                new_index_[++new_rn_] = index_[j];
+                mnew[new_rn_] = am[j];
+                pa[j] = inew + new_rn_;
+                }
+            else
+                {
+                mcon[pp.pl.dest(j)] = am[j];
+                pa[j] = icon + pp.pl.dest(j);
+                }
 
-	static Vector newdat;
-	newdat.ReduceDimension(newdim);
-	icon[1] = icon[2] = icon[3] = icon[4] = 1;
-	inew[1] = inew[2] = inew[3] = inew[4] = 1;
-	int basea = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]); 
-	int baseb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]); 
-	icon[1] = 2;
-	int inca1 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
-	int incb1 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
-	icon[1] = 1;
-	int inca2,incb2;
-	if(n_con == 2)
-	    {
-	    icon[2] = 2;
-	    inca2 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
-	    incb2 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
-	    icon[2] = 1;
-	    }
+        for(int j = 1; j <= other.rn_; ++j)
+            if(!pp.contractedR[j]) 
+                {
+                new_index_[++new_rn_] = other.index_[j];
+                mnew[new_rn_] = bm[j];
+                pb[j] = inew + new_rn_;
+                }
+            else
+                {
+                mcon[pp.pr.dest(j)] = bm[j];
+                pb[j] = icon + pp.pr.dest(j);
+                }
 
+        if(new_rn_ > 4) 
+            {
+            printdat = false;
+            cout << "this is " << *this << endl;
+            cout << "other is " << other << endl;
+            cout << "new_rn_ is " << new_rn_ << endl;
+            Error("new_rn_ too big for this part!");
+            }
+        if(pp.nsamen > 4) Error("nsamen too big for this part!");
 
-	Real *pv = p->v.Store()-1, *opv = other.p->v.Store()-1;
-	for(inew[4] = 1; inew[4] <= mnew[4]; inew[4]++)
-	for(inew[3] = 1; inew[3] <= mnew[3]; inew[3]++)
-	for(inew[2] = 1; inew[2] <= mnew[2]; inew[2]++)
-	for(inew[1] = 1; inew[1] <= mnew[1]; inew[1]++)
-	    {
-	    Real d = 0.0;
-	    if(n_con == 1)
-		{
-		icon[1] = 1;
-		int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
-		int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
-		for(icon[1] = 1; icon[1] <= mcon[1]; icon[1]++, inda += inca1, indb += incb1)
-		    d += pv[inda] * opv[indb];
-		}
-	    else if(n_con == 2)
-		{
-		icon[2] = icon[1] = 1;
-		int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
-		int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
-		int indaa = inda, indbb = indb;
-		for(icon[2] = 1; icon[2] <= mcon[2]; icon[2]++, indaa += inca2, indbb += incb2)
-		    {
-		    inda = indaa; indb = indbb;
-		    for(icon[1] = 1; icon[1] <= mcon[1]; icon[1]++, inda += inca1, indb += incb1)
-			d += pv[inda] * opv[indb];
-		    }
-		}
-	    else
-		{
-		for(icon[4] = 1; icon[4] <= mcon[4]; icon[4]++)
-		for(icon[3] = 1; icon[3] <= mcon[3]; icon[3]++)
-		for(icon[2] = 1; icon[2] <= mcon[2]; icon[2]++)
-		for(icon[1] = 1; icon[1] <= mcon[1]; icon[1]++)
-		    d +=        p->v(ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1])) 
-			* other.p->v(ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]));
-		}
+        static Vector newdat;
+        newdat.ReduceDimension(pp.odimL*pp.odimR);
 
-	    newdat(ind4(inew[4],mnew[3],inew[3],mnew[2],inew[2],mnew[1],inew[1])) = d;
-	    }
-	if(p->count() != 1) { p = new ITDat(); } 
-	p->v = newdat;
-	}
+        icon[1] = icon[2] = icon[3] = icon[4] = 1;
+        inew[1] = inew[2] = inew[3] = inew[4] = 1;
+        int basea = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]); 
+        int baseb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]); 
+        icon[1] = 2;
+        int inca1 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
+        int incb1 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
+        icon[1] = 1;
+        int inca2,incb2;
+        if(pp.nsamen == 2)
+            {
+            icon[2] = 2;
+            inca2 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
+            incb2 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
+            icon[2] = 1;
+            }
+
+        Real *pv = p->v.Store()-1, *opv = other.p->v.Store()-1;
+        for(inew[4] = 1; inew[4] <= mnew[4]; ++inew[4])
+        for(inew[3] = 1; inew[3] <= mnew[3]; ++inew[3])
+        for(inew[2] = 1; inew[2] <= mnew[2]; ++inew[2])
+        for(inew[1] = 1; inew[1] <= mnew[1]; ++inew[1])
+            {
+            Real d = 0.0;
+            if(pp.nsamen == 1)
+            {
+                icon[1] = 1;
+                int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
+                int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
+                for(icon[1] = 1; icon[1] <= mcon[1]; icon[1]++, inda += inca1, indb += incb1)
+                    d += pv[inda] * opv[indb];
+            }
+            else if(pp.nsamen == 2)
+            {
+                icon[2] = icon[1] = 1;
+                int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
+                int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
+                int indaa = inda, indbb = indb;
+                for(icon[2] = 1; icon[2] <= mcon[2]; icon[2]++, indaa += inca2, indbb += incb2)
+                    {
+                    inda = indaa; indb = indbb;
+                    for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1], inda += inca1, indb += incb1)
+                    d += pv[inda] * opv[indb];
+                    }
+            }
+            else
+            {
+                for(icon[4] = 1; icon[4] <= mcon[4]; ++icon[4])
+                for(icon[3] = 1; icon[3] <= mcon[3]; ++icon[3])
+                for(icon[2] = 1; icon[2] <= mcon[2]; ++icon[2])
+                for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1])
+                    d +=      p->v(ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1])) 
+                      * other.p->v(ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]));
+            }
+
+            newdat(ind4(inew[4],mnew[3],inew[3],mnew[2],inew[2],mnew[1],inew[1])) = d;
+            }
+
+        if(p->count() != 1) { p = new ITDat(); } 
+        p->v = newdat;
+
+        DO_IF_PS(++prodstats.c1;)
+        }
     else
-	{
-	MatrixRefNoLink lref, rref;
-	toMatrixProd(*this,other,nsamen,cdim,contractedL,contractedR,lref,rref);
+        {
+        DO_IF_PS(++prodstats.c2;)
+        MatrixRefNoLink lref, rref;
+        toMatrixProd(*this,other,pp,lref,rref);
 
-	//Do the matrix multiplication
-	if(p->count() != 1) { p = new ITDat(); } 
+        //Do the matrix multiplication
+        if(p->count() != 1) { p = new ITDat(); } 
 #ifdef DO_ALT
-	else { p->alt.clear(); }
+        else { p->alt.clear(); }
 #endif
-	p->v.ReDimension(rref.Nrows()*lref.Ncols());
-	MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
-	nref = rref*lref;
+        p->v.ReDimension(rref.Nrows()*lref.Ncols());
+        MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
+        nref = rref*lref;
 
-	//Fill in new_index_
+        //Fill in new_index_
 
-	if((rn_ + other.rn_ - 2*nsamen + nr1_) > NMAX) 
-	    {
-	    Print(*this);
-	    Print(other);
-	    Print(nsamen);
-	    cerr << "new m==1 indices\n";
-	    for(int j = 1; j <= nr1_; ++j) cerr << *(new_index1_.at(j)) << "\n";
-	    Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
-	    }
+        if((rn_ + other.rn_ - 2*pp.nsamen + nr1_) > NMAX) 
+            {
+            Print(*this);
+            Print(other);
+            Print(pp.nsamen);
+            cerr << "new m==1 indices\n";
+            for(int j = 1; j <= nr1_; ++j) cerr << *(new_index1_.at(j)) << "\n";
+            Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
+            }
 
-	//Handle m!=1 indices
-	for(int j = 1; j <= this->rn_; ++j)
-	    { if(!contractedL[j]) new_index_[++new_rn_] = index_[j]; }
-	for(int j = 1; j <= other.rn_; ++j)
-	    { if(!contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
-	}
+        //Handle m!=1 indices
+        for(int j = 1; j <= this->rn_; ++j)
+            { if(!pp.contractedL[j]) new_index_[++new_rn_] = index_[j]; }
+        for(int j = 1; j <= other.rn_; ++j)
+            { if(!pp.contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
+        }
+
     rn_ = new_rn_;
 
     //Put in m==1 indices
