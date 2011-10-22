@@ -360,21 +360,37 @@ public:
 
     void
     tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
-               Index& tied, ITensor& res) const;
+               const Index& tied);
 
     void
     tieIndices(const Index& i1, const Index& i2,
-               Index& tied, ITensor& res) const;
+               const Index& tied);
+
+    friend inline ITensor
+    tieIndices(const Index& i1, const Index& i2, 
+               const Index& tied, ITensor T)
+        { T.tieIndices(i1,i2,tied); return T; }
 
     void
     tieIndices(const Index& i1, const Index& i2,
                const Index& i3,
-               Index& tied, ITensor& res) const;
+               const Index& tied);
+
+    friend inline ITensor
+    tieIndices(const Index& i1, const Index& i2, 
+               const Index& i3, const Index& tied, ITensor T)
+        { T.tieIndices(i1,i2,i3,tied); return T; }
 
     void
     tieIndices(const Index& i1, const Index& i2,
                const Index& i3, const Index& i4,
-               Index& tied, ITensor& res) const;
+               const Index& tied);
+
+    friend inline ITensor
+    tieIndices(const Index& i1, const Index& i2, 
+               const Index& i3, const Index& i4, 
+               const Index& tied, ITensor T)
+        { T.tieIndices(i1,i2,i3,i4,tied); return T; }
 
     void 
     expandIndex(const Index& small, const Index& big, 
@@ -754,31 +770,32 @@ private:
 
 
 template<class Iterable>
-int ITensor::
-fillFromIndices(const Iterable& I, int size)
+void
+sortIndices(const Iterable& I, int ninds, int& rn_, int& alloc_size, 
+            boost::array<Index,NMAX+1>& index_, int offset = 0)
     {
-    r_ = size;
-    assert(r_ <= NMAX);
-    assert(rn_ == 0);
+    assert(ninds <= NMAX);
+
+    rn_ = 0;
+    alloc_size = 1;
+
     int r1_ = 0;
     boost::array<const Index*,NMAX+1> index1_;
-    int alloc_size = 1;
-    for(int n = 0; n < r_; ++n)
+
+    for(int n = offset; n < ninds+offset; ++n)
         {
         const Index& i = I[n];
         DO_IF_DEBUG(if(i == Index::Null()) Error("ITensor: null Index in constructor.");)
         if(i.m()==1) 
-            { GET(index1_,++r1_) = &i; }
+            { index1_[++r1_] = &i; }
         else         
             { 
-            GET(index_, ++rn_) = i; 
+            index_[++rn_] = i; 
             alloc_size *= i.m(); 
             }
         }
     for(int l = 1; l <= r1_; ++l) 
         index_[rn_+l] = *(index1_[l]);
-    set_unique_Real();
-    return alloc_size;
     }
 
 

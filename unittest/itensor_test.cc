@@ -4,7 +4,7 @@
 
 struct ITensorDefaults
 {
-    const Index s1,s2,s3,s4,
+    Index s1,s2,s3,s4,
           s1P,s2P,s3P,s4P,
           l1,l2,l3,l4,l5,l6,l7,l8,
           a1,a2,a3,a4,
@@ -803,15 +803,15 @@ BOOST_AUTO_TEST_CASE(TieIndices)
 
     Index t("tied",2);
 
-    ITensor dX;
-    X.tieIndices(s1,s2,t,dX);
+    ITensor dX(X);
+    dX.tieIndices(s1,s2,t);
 
     CHECK_CLOSE(dX.norm(),0,1E-5);
     CHECK_EQUAL(dX.r(),1);
     CHECK(dX.hasindex(t));
 
-    ITensor dZ;
-    Z.tieIndices(s1,s2,t,dZ);
+    ITensor dZ(Z);
+    dZ.tieIndices(s1,s2,t);
     CHECK_CLOSE(dZ(t(1)),+1,1E-5);
     CHECK_CLOSE(dZ(t(2)),-1,1E-5);
 
@@ -819,15 +819,15 @@ BOOST_AUTO_TEST_CASE(TieIndices)
     ITensor T(l1,l2,a1,s2,s1);
     T.Randomize();
 
-    ITensor TT;
-    T.tieIndices(l2,l1,s1,t,TT);
+    ITensor TT(T);
+    TT.tieIndices(l2,l1,s1,l2);
 
     CHECK_EQUAL(TT.r(),3);
 
     for(int j = 1; j <= 2; ++j)
     for(int k = 1; k <= 2; ++k)
         {
-        CHECK_CLOSE(T(l1(j),l2(j),a1(1),s2(k),s1(j)),TT(t(j),s2(k),a1(1)),1E-5);
+        CHECK_CLOSE(T(l1(j),l2(j),a1(1),s2(k),s1(j)),TT(l2(j),s2(k),a1(1)),1E-5);
         }
     }
 
@@ -836,9 +836,8 @@ BOOST_AUTO_TEST_CASE(TieIndices)
     ITensor T(l1,a2,a1,s2,a3);
     T.Randomize();
 
-    Index t;
-    ITensor TT;
-    T.tieIndices(a1,a3,a2,t,TT);
+    ITensor TT(T);
+    TT.tieIndices(a1,a3,a2,a1);
 
     CHECK_EQUAL(TT.r(),3);
 
@@ -850,7 +849,8 @@ BOOST_AUTO_TEST_CASE(TieIndices)
     }
 
 
-    }
+
+    } //TieIndices
 
 BOOST_AUTO_TEST_CASE(fromMatrix11)
 {

@@ -228,8 +228,10 @@ ITensor(Index i1, Index i2, Index i3,
 	boost::array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
 	int size = 3;
 	while(ii[size] != Index::Null()) ++size;
-	int alloc_size = fillFromIndices(ii,size);
+    r_ = size;
+	int alloc_size; sortIndices(ii,size,rn_,alloc_size,index_);
 	allocate(alloc_size);
+    set_unique_Real();
 	}
 
 ITensor::
@@ -260,7 +262,8 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
             {{ iv1.ind, iv2.ind, iv3.ind, iv4.ind, iv5.ind, 
                iv6.ind, iv7.ind, iv8.ind }};
         int size = 3; while(size < NMAX && ii[size+1] != IndexVal::Null().ind) ++size;
-        int alloc_size = fillFromIndices(ii,size);
+        r_ = size;
+        int alloc_size; sortIndices(ii,size,rn_,alloc_size,index_);
         allocate(alloc_size);
 
         //Assign specified element to 1
@@ -272,44 +275,50 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
 		if(index_[k] == ii[j]) 
 		    { ja[k] = iv[j]; break; }
         p->v(_ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])) = 1;
+
+        set_unique_Real();
     }
 
 ITensor::
 ITensor(const std::vector<Index>& I) 
-    : rn_(0)
+    : r_(I.size()), rn_(0)
 	{
-	int alloc_size = fillFromIndices(I,I.size());
+    int alloc_size; sortIndices(I,r_,rn_,alloc_size,index_);
 	allocate(alloc_size);
+    set_unique_Real();
 	}
 
 ITensor::
 ITensor(const std::vector<Index>& I, const Vector& V) 
-    : p(new ITDat(V)), rn_(0)
+    : p(new ITDat(V)), r_(I.size()), rn_(0)
 	{
-	int alloc_size = fillFromIndices(I,I.size());
+    int alloc_size; sortIndices(I,r_,rn_,alloc_size,index_);
 	if(alloc_size != V.Length()) 
 	    { Error("incompatible Index and Vector sizes"); }
+    set_unique_Real();
 	}
 
 
 ITensor::
 ITensor(const std::vector<Index>& I, const ITensor& other) 
-    : p(other.p), rn_(0), scale_(other.scale_)
+    : p(other.p), r_(I.size()), rn_(0), scale_(other.scale_)
 	{
-	int alloc_size = fillFromIndices(I,I.size());
+    int alloc_size; sortIndices(I,r_,rn_,alloc_size,index_);
 	if(alloc_size != other.vec_size()) 
 	    { Error("incompatible Index and ITensor sizes"); }
+    set_unique_Real();
 	}
 
 ITensor::
 ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P) 
-    : p(0), rn_(0), scale_(other.scale_)
+    : p(0), r_(I.size()), rn_(0), scale_(other.scale_)
     {
-    int alloc_size = fillFromIndices(I,I.size());
+    int alloc_size; sortIndices(I,r_,rn_,alloc_size,index_);
     if(alloc_size != other.vec_size()) 
         { Error("incompatible Index and ITensor sizes"); }
     if(P.is_trivial()) { p = other.p; }
     else               { allocate(); other.reshapeDat(P,p->v); }
+    set_unique_Real();
     }
 
 ITensor::
@@ -772,19 +781,17 @@ groupIndices(const boost::array<Index,NMAX+1>& indices, int nind,
 
 void ITensor::
 tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
-           Index& tied, ITensor& res) const
+           const Index& tied)
     {
     if(nind == 0) Error("No indices given");
-    const int tm = indices[1].m();
-    
-    //Prepare tied Index
-    if(tied.is_null()) 
-        { tied = Index("tied",tm,indices[1].type()); }
-    if(tied.m() != tm)
-        Error("Tied indices and resulting Index must have same m");
 
-    vector<Index> new_inds;
-    new_inds.push_back(tied);
+    const int tm = tied.m();
+    
+    boost::array<Index,NMAX+1> new_index_;
+    new_index_[1] = tied;
+    //will count these up below
+    int new_r_ = 1;
+    int alloc_size = tm;
 
     boost::array<bool,NMAX+1> is_tied;
     is_tied.assign(false);
@@ -792,8 +799,9 @@ tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
     int nmatched = 0;
     for(int k = 1; k <= r_; ++k)
     {
+    const Index& K = index_[k];
     for(int j = 1; j <= nind; ++j)
-    if(index_[k] == indices[j]) 
+    if(K == indices[j]) 
         { 
         if(indices[j].m() != tm)
             Error("Tied indices must have matching m's");
@@ -806,7 +814,10 @@ tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
         }
 
     if(!is_tied[k])
-        new_inds.push_back(index_[k]);
+        {
+        new_index_[++new_r_] = K;
+        alloc_size *= K.m();
+        }
     }
 
     //Check that all indices were found
@@ -819,48 +830,60 @@ tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
         Error("Couldn't find Index to tie");
         }
 
+    //If tied indices have m==1, no work
+    //to do; just replace indices
     if(tm == 1)
         {
-        res = ITensor(new_inds,*this);
+        r_ = new_r_;
+        sortIndices(new_index_,r_,rn_,alloc_size,index_,1);
         return;
         }
 
-    res = ITensor(new_inds);
-    res.scale_ = scale_;
+    int new_rn_ = rn_-nind+1;
 
-    Counter c; res.initCounter(c);
+    Counter nc(new_index_,new_rn_,new_r_);
 
+    //Set up ii pointers to link
+    //elements of res to appropriate
+    //elements of *this
     boost::array<int*,NMAX+1> ii;
-
     int n = 2;
     for(int j = 1; j <= r_; ++j)
         {
         if(is_tied[j])
-            ii[j] = &(c.i[1]);
+            ii[j] = &(nc.i[1]);
         else
-            ii[j] = &(c.i[n++]);
+            ii[j] = &(nc.i[n++]);
         }
 
     int one = 1;
     for(int j = r_+1; j <= NMAX; ++j)
         ii[j] = &one;
     
+    //Create the new dat
+    boost::intrusive_ptr<ITDat> np = new ITDat(alloc_size);
+    Vector& resdat = np->v;
+
     const Vector& thisdat = p->v;
-    Vector& resdat = res.p->v;
-    for(; c.notDone(); ++c)
+    for(; nc.notDone(); ++nc)
         {
-        resdat(c.ind) =
+        resdat(nc.ind) =
         thisdat(this->_ind(*ii[1],*ii[2],
                            *ii[3],*ii[4],
                            *ii[5],*ii[6],
                            *ii[7],*ii[8]));
         }
 
+    index_.swap(new_index_);
+    p.swap(np);
+    r_ = new_r_;
+    rn_ = new_rn_;
+
     } //ITensor::tieIndices
 
 void ITensor::
 tieIndices(const Index& i1, const Index& i2,
-           Index& tied, ITensor& res) const
+           const Index& tied)
     {
     boost::array<Index,NMAX+1> inds =
         {{ Index::Null(), i1, i2, 
@@ -868,33 +891,33 @@ tieIndices(const Index& i1, const Index& i2,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null() }};
 
-    tieIndices(inds,2,tied,res);
+    tieIndices(inds,2,tied);
     }
 
 void ITensor::
 tieIndices(const Index& i1, const Index& i2,
            const Index& i3,
-           Index& tied, ITensor& res) const
+           const Index& tied)
     {
     boost::array<Index,NMAX+1> inds =
         {{ Index::Null(), i1, i2, i3,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null(), Index::Null() }};
 
-    tieIndices(inds,3,tied,res);
+    tieIndices(inds,3,tied);
     }
 
 void ITensor::
 tieIndices(const Index& i1, const Index& i2,
            const Index& i3, const Index& i4,
-           Index& tied, ITensor& res) const
+           const Index& tied)
     {
     boost::array<Index,NMAX+1> inds =
         {{ Index::Null(), i1, i2, i3, i4,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null() }};
 
-    tieIndices(inds,4,tied,res);
+    tieIndices(inds,4,tied);
     }
 
 void ITensor::
