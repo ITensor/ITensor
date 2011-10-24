@@ -320,13 +320,15 @@ public:
         return (left_orth_lim + 1);
     }
 
-    void orthogonalize()
+    void orthogonalize(bool verbose = false)
     {
         //Do a half-sweep to the right, orthogonalizing each bond
         //but do not truncate since the basis to the right might not
         //be ortho (i.e. use the current m).
         svd_.truncate(false);
         position(N);
+        if(verbose)
+            std::cout << "Done orthogonalizing, starting truncation." << std::endl;
         //Now basis is ortho, ok to truncate
         svd_.truncate(true);
         position(1);
@@ -480,110 +482,28 @@ private:
 typedef MPSt<ITensor> MPS;
 typedef MPSt<IQTensor> IQMPS;
 
-inline int findCenter(const IQMPS& psi)
-{
-    for(int j = 1; j <= psi.NN(); ++j) 
+int 
+findCenter(const IQMPS& psi);
+
+inline bool 
+checkQNs(const MPS& psi) { return true; }
+
+bool 
+checkQNs(const IQMPS& psi);
+
+inline QN 
+totalQN(const IQMPS& psi)
     {
-        const IQTensor& A = psi.AA(j);
-        if(A.r() == 0) Error("Zero rank tensor in MPS");
-        bool allSameDir = true;
-        Arrow dir = A.index(1).dir();
-        for(int i = 2; i <= A.r(); ++i)
-            if(A.index(i).dir() != dir)
-            {
-                allSameDir = false;
-                break;
-            }
-
-        //Found the ortho. center
-        if(allSameDir) return j;
-    }
-    return -1;
-}
-
-inline bool checkQNs(const MPS& psi) { return true; }
-
-inline bool checkQNs(const IQMPS& psi)
-{
-    const int N = psi.NN();
-
-    QN Zero;
-
-    int center = findCenter(psi);
-    if(center == -1)
-    {
-        std::cerr << "Did not find an ortho. center\n";
-        return false;
-    }
-
-    //Check that all IQTensors have zero div
-    //except possibly the ortho. center
-    for(int i = 1; i <= N; ++i) 
-    {
-        if(i == center) continue;
-        if(psi.AA(i).is_null())
-        {
-            std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
-            return false;
-        }
-        if(psi.AA(i).div() != Zero)
-        {
-            std::cerr << "At i = " << i << "\n";
-            Print(psi.AA(i));
-            std::cerr << "IQTensor other than the ortho center had non-zero divergence\n";
-            return false;
-        }
-    }
-
-    //Check arrows from left edge
-    for(int i = 1; i < center; ++i)
-    {
-        if(psi.RightLinkInd(i).dir() != In) 
-        {
-            std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
-            return false;
-        }
-        if(i > 1)
-        {
-            if(psi.LeftLinkInd(i).dir() != Out) 
-            {
-                std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
-                return false;
-            }
-        }
-    }
-
-    //Check arrows from right edge
-    for(int i = N; i > center; --i)
-    {
-        if(i < N)
-        if(psi.RightLinkInd(i).dir() != Out) 
-        {
-            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
-            return false;
-        }
-        if(psi.LeftLinkInd(i).dir() != In) 
-        {
-            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
-            return false;
-        }
-    }
-
-    //Done checking arrows
-    return true;
-}
-
-inline QN totalQN(const IQMPS& psi)
-{
     int center = findCenter(psi);
     if(center == -1)
         Error("Could not find ortho. center");
     return psi.AA(center).div();
-}
+    }
 
 template <class MPSType>
-void psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)  // <psi | phi>
-{
+void 
+psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)  // <psi | phi>
+    {
     const int N = psi.NN();
     if(N != phi.NN()) Error("psiphi: mismatched N");
 
@@ -593,83 +513,61 @@ void psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)  // <psi
     L = L * phi.AA(N);
 
     Dot(primeind(psi.AA(N),psi.LinkInd(N-1)),L,re,im);
-}
+    }
+
 template <class MPSType>
-Real psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
-{
+Real 
+psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
+    {
     Real re, im;
     psiphi(psi,phi,re,im);
     if(im != 0) 
 	if(fabs(im) > 1.0e-12 * fabs(re))
 	    std::cerr << "Real psiphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
     return re;
-}
+    }
 
 //Computes an MPS which has the same overlap with psi_basis as psi_to_fit,
 //but which differs from psi_basis only on the first site, and has same index
 //structure as psi_basis. Result is stored to psi_to_fit on return.
-inline void fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
-{
-    if(!psi_basis.is_ortho()) Error("fitWF: psi_basis must be orthogonolized.");
-    if(psi_basis.ortho_center() != 1) Error("fitWF: psi_basis must be orthogonolized to site 1.");
-    psi_to_fit.position(1);
-
-    const IQMPS& psib = psi_basis;
-    IQMPS& psif = psi_to_fit;
-    IQMPS res = psib;
-
-    int N = psib.NN();
-    if(psif.NN() != N) Error("fitWF: sizes of wavefunctions must match.");
-
-    IQTensor A = psif.AA(N) * conj(psib.AA(N));
-    for(int n = N-1; n > 1; --n)
-    {
-        A = conj(psib.AA(n)) * A;
-        A = psif.AA(n) * A;
-    }
-    A = psif.AA(1) * A;
-
-    res.AAnc(1) = A;
-
-    assert(checkQNs(res));
-
-    psi_to_fit = res;
-}
+void 
+fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit);
 
 //Template method for efficiently summing a set of MPS's or MPO's (or any class supporting operator+=)
 template <typename MPSType>
-void sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MIN_CUT, int maxm = MAX_M)
+void 
+sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MIN_CUT, int maxm = MAX_M)
 {
     int Nt = terms.size();
     if(Nt == 1) 
-    {
+        {
         res = terms[0];
         res.cutoff(cut); res.maxm(maxm);
         return;
-    }
+        }
     else if(Nt == 2)
-	{ 
+        { 
         res = terms[0];
         res.cutoff(cut); res.maxm(maxm);
         //std::cerr << boost::format("Before +=, cutoff = %.1E, maxm = %d\n")%(res.cutoff)%(res.maxm);
         res += terms[1];
         return;
-    }
+        }
     else if(Nt > 2)
-	{
+        {
         //Add all MPS's in pairs
         std::vector<MPSType> terms2(2), nterms; nterms.reserve(Nt/2);
         for(int n = 0; n < Nt-1; n += 2)
-        {
+            {
             terms2[0] = terms[n]; terms2[1] = terms[n+1];
             sum(terms2,res,cut,maxm);
             nterms.push_back(res);
-        }
+            }
         if(Nt%2 == 1) nterms.push_back(terms.back());
         //Recursively call sum again
         sum(nterms,res,cut,maxm);
         return;
-	}
+        }
     return;
 } // void sum(const std::vector<MPSType>& terms, Real cut, int maxm, MPSType& res)
 

@@ -140,19 +140,20 @@ public:
     operator*=(const ITensor& other);
 
     ITensor 
-    operator*(ITensor other) const { other *= *this; return other; }
+    operator*(const ITensor& other) const 
+        { ITensor res(*this); res *= other; return res; }
 
-    ITensor& 
+    inline ITensor& 
     operator*=(const IndexVal& iv) 
-        { ITensor oth(iv); return operator*=(oth); } 
+        { return operator*=(ITensor(iv)); } 
 
     ITensor 
     operator*(const IndexVal& iv) const 
         { ITensor res(*this); res *= iv; return res; }
 
     friend inline ITensor 
-    operator*(const IndexVal& iv, ITensor t) 
-        { return (t *= iv); }
+    operator*(const IndexVal& iv, const ITensor& t) 
+        { return (ITensor(iv) *= t); }
 
     ITensor& 
     operator*=(Real fac) { scale_ *= fac; return *this; }

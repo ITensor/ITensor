@@ -6,73 +6,128 @@ using std::endl;
 using std::map;
 using std::string;
 
-void plussers(const Index& l1, const Index& l2, Index& sumind, 
-              ITensor& first, ITensor& second)
-{
+void 
+plussers(const Index& l1, const Index& l2, Index& sumind, 
+          ITensor& first, ITensor& second)
+    {
     sumind = Index(sumind.rawname(),l1.m()+l2.m(),sumind.type());
     first = ITensor(l1,sumind,1);
     second = ITensor(l2,sumind);
     for(int i = 1; i <= l2.m(); ++i) second(l2(i),sumind(l1.m()+i)) = 1;
-}
+    }
 
-void plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind, 
-              IQTensor& first, IQTensor& second)
-{
+void 
+plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind, 
+         IQTensor& first, IQTensor& second)
+    {
     map<Index,Index> l1map, l2map;
     vector<inqn> iq;
     foreach(const inqn& x, l1.iq())
-	{
+        {
         Index ii = x.index;
         Index jj(ii.name(),ii.m(),ii.type());
         l1map[ii] = jj;
         iq.push_back(inqn(jj,x.qn));
-	}
+        }
     foreach(const inqn& x, l2.iq())
-	{
+        {
         Index ii = x.index;
         Index jj(ii.name(),ii.m(),ii.type());
         l2map[ii] = jj;
         iq.push_back(inqn(jj,x.qn));
-	}
+        }
     sumind = IQIndex(sumind,iq);
     first = IQTensor(conj(l1),sumind);
     foreach(const inqn& x, l1.iq())
-	{
+        {
         Index il1 = x.index;
         Index s1 = l1map[il1];
         ITensor t(il1,s1,1.0);
         first += t;
-	}
+        }
     second = IQTensor(conj(l2),sumind);
     foreach(const inqn& x, l2.iq())
-	{
+        {
         Index il2 = x.index;
         Index s2 = l2map[il2];
         ITensor t(il2,s2,1.0);
         second += t;
-	}
-}
+        }
+    }
+
+#define NEW_MPS_ADDITION
+
+#ifdef NEW_MPS_ADDITION
+
+template <>
+MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
+    {
+
+    std::cout << "Adding A tensors in MPS +=" << std::endl;
+
+    primelinks(0,4);
+
+    //Create new link indices
+    vector<IQIndex> nlinks(N);
+    for(int b = 1; b < N; ++b)
+        {
+        IQIndex l1 = this->LinkInd(b);
+        IQIndex l2 = other.LinkInd(b);
+        vector<inqn> iq(l1.iq());
+        iq.insert(iq.begin(),l2.iq().begin(),l2.iq().end());
+        nlinks.at(b) = IQIndex(l2,iq);
+        }
+    //Create new A tensors
+    vector<IQTensor> nA(N+1);
+    nA[1] = IQTensor(si(1),nlinks[1]);
+    for(int j = 2; j < N; ++j)
+        nA[j] = IQTensor(conj(nlinks[j-1]),si(j),nlinks[j]);
+    nA[N] = IQTensor(conj(nlinks[N-1]),si(N));
+
+    for(int j = 1; j <= N; ++j)
+        {
+        for(IQTensor::const_iten_it 
+            it = AA(j).const_iten_begin(); 
+            it != AA(j).const_iten_end();
+            ++it)
+            { nA[j].insert(*it); }
+        for(IQTensor::const_iten_it 
+            it = other.AA(j).const_iten_begin(); 
+            it != other.AA(j).const_iten_end();
+            ++it)
+            { nA[j].insert(*it); }
+        }
+
+    A.swap(nA);
+
+    //std::cout << "Doing orthogonalize in MPS +=" << std::endl;
+    //orthogonalize();
+    std::cout << "Doing position(1) in MPS +=" << std::endl;
+    position(1);
+
+    return *this;
+    }
 
 template <class Tensor>
 MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
-{
+    {
     primelinks(0,4);
 
     vector<Tensor> first(N), second(N);
     for(int i = 1; i < N; ++i)
-    {
+        {
         IndexT l1 = this->RightLinkInd(i);
         IndexT l2 = other.RightLinkInd(i);
         IndexT r(l1.rawname());
         plussers(l1,l2,r,first[i],second[i]);
-    }
+        }
 
     AAnc(1) = AA(1) * first[1] + other.AA(1) * second[1];
     for(int i = 2; i < N; ++i)
-    {
+        {
         AAnc(i) = conj(first[i-1]) * AA(i) * first[i] 
                   + conj(second[i-1]) * other.AA(i) * second[i];
-    }
+        }
     AAnc(N) = conj(first[N-1]) * AA(N) + conj(second[N-1]) * other.AA(N);
 
     noprimelink();
@@ -81,11 +136,45 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
     orthogonalize();
 
     return *this;
-}
+    }
+template
+MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
+
+#else
+template <class Tensor>
+MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
+    {
+    primelinks(0,4);
+
+    vector<Tensor> first(N), second(N);
+    for(int i = 1; i < N; ++i)
+        {
+        IndexT l1 = this->RightLinkInd(i);
+        IndexT l2 = other.RightLinkInd(i);
+        IndexT r(l1.rawname());
+        plussers(l1,l2,r,first[i],second[i]);
+        }
+
+    AAnc(1) = AA(1) * first[1] + other.AA(1) * second[1];
+    for(int i = 2; i < N; ++i)
+        {
+        AAnc(i) = conj(first[i-1]) * AA(i) * first[i] 
+                  + conj(second[i-1]) * other.AA(i) * second[i];
+        }
+    AAnc(N) = conj(first[N-1]) * AA(N) + conj(second[N-1]) * other.AA(N);
+
+    noprimelink();
+
+    //cerr << "WARNING: skipping orthogonalize in operator+=\n";
+    orthogonalize();
+
+    return *this;
+    }
 template
 MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
 template
 MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
+#endif
 
 /* getCenterMatrix:
  * 
@@ -142,8 +231,9 @@ void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm, int ma
 }
 */
 
+//Auxilary method for convertToIQ
 int collapseCols(const Vector& Diag, Matrix& M)
-{
+    {
     int nr = Diag.Length(), nc = int(Diag.sumels());
     assert(nr != 0);
     if(nc == 0) return nc;
@@ -152,7 +242,7 @@ int collapseCols(const Vector& Diag, Matrix& M)
     for(int r = 1; r <= nr; ++r)
     if(Diag(r) == 1) { M(r,++c) = 1; }
     return nc;
-}
+    }
 
 void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq, Real cut)
     {
@@ -580,3 +670,118 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 } //void convertToIQ(IQMPSType& iqpsi) const
 */
 
+int 
+findCenter(const IQMPS& psi)
+    {
+    for(int j = 1; j <= psi.NN(); ++j) 
+        {
+        const IQTensor& A = psi.AA(j);
+        if(A.r() == 0) Error("Zero rank tensor in MPS");
+        bool allSameDir = true;
+        Arrow dir = A.index(1).dir();
+        for(int i = 2; i <= A.r(); ++i)
+            if(A.index(i).dir() != dir)
+            {
+                allSameDir = false;
+                break;
+            }
+
+        //Found the ortho. center
+        if(allSameDir) return j;
+        }
+    return -1;
+    }
+
+bool 
+checkQNs(const IQMPS& psi)
+    {
+    const int N = psi.NN();
+
+    QN Zero;
+
+    int center = findCenter(psi);
+    if(center == -1)
+        {
+        std::cerr << "Did not find an ortho. center\n";
+        return false;
+        }
+
+    //Check that all IQTensors have zero div
+    //except possibly the ortho. center
+    for(int i = 1; i <= N; ++i) 
+        {
+        if(i == center) continue;
+        if(psi.AA(i).is_null())
+            {
+            std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
+            return false;
+            }
+        if(psi.AA(i).div() != Zero)
+            {
+            std::cerr << "At i = " << i << "\n";
+            Print(psi.AA(i));
+            std::cerr << "IQTensor other than the ortho center had non-zero divergence\n";
+            return false;
+            }
+        }
+
+    //Check arrows from left edge
+    for(int i = 1; i < center; ++i)
+        {
+        if(psi.RightLinkInd(i).dir() != In) 
+            {
+            std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            return false;
+            }
+        if(i > 1)
+            {
+            if(psi.LeftLinkInd(i).dir() != Out) 
+                {
+                std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                return false;
+                }
+            }
+        }
+
+    //Check arrows from right edge
+    for(int i = N; i > center; --i)
+        {
+        if(i < N)
+        if(psi.RightLinkInd(i).dir() != Out) 
+            {
+            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            return false;
+            }
+        if(psi.LeftLinkInd(i).dir() != In) 
+            {
+            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            return false;
+            }
+        }
+
+    //Done checking arrows
+    return true;
+    }
+
+void 
+fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
+    {
+    if(!psi_basis.is_ortho()) Error("psi_basis must be orthogonolized.");
+    if(psi_basis.ortho_center() != 1) Error("psi_basis must be orthogonolized to site 1.");
+
+
+    int N = psi_basis.NN();
+    if(psi_to_fit.NN() != N) Error("Wavefunctions must have same number of sites.");
+
+    IQTensor A = psi_to_fit.AA(N) * conj(primelink(psi_basis.AA(N)));
+    for(int n = N-1; n > 1; --n)
+        {
+        A *= conj(primelink(psi_basis.AA(n)));
+        A *= psi_to_fit.AA(n);
+        }
+    A = psi_to_fit.AA(1) * A;
+    A.noprime();
+
+    psi_to_fit = psi_basis;
+    psi_to_fit.AAnc(1) = A;
+    }

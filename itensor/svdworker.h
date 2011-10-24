@@ -265,9 +265,9 @@ void SVDWorker::operator()(int b, const Tensor& AA,
 	rho = AAc*AAcc; 
 	}
 
-    Real saved_cutoff = cutoff_; 
-    int saved_minm = minm_; 
-    int saved_maxm = maxm_; 
+    const Real saved_cutoff = cutoff_; 
+    const int saved_minm = minm_,
+              saved_maxm = maxm_; 
     if(!truncate_)
         {
         cutoff_ = -1;
