@@ -165,7 +165,7 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
     putInQNs(phi,mpoh,LH,RH);
     LocalHam<Tensor,TensorSet> lham(LH,RH,mpoh,phi);
     if(niter < 1)
-    {
+        {
         //Just return the current energy (no optimization via Davidson)
         Vector Phi(phi.vec_size()),HPhi(phi.vec_size()); 
         phi.assignToVec(Phi);
@@ -174,16 +174,16 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
         Tensor Hphi(phi); Hphi.assignFromVec(HPhi);
         phi.assignFromVec(Phi);
         return Dot(phi,Hphi);
-    }
+        }
     else
-    {
+        {
         Matrix evecs(niter,phi.vec_size()); Vector evals;
         phi.assignToVec(evecs.Row(1));
         evecs.Row(1) /= Norm(evecs.Row(1));
         David(lham,1,errgoal,evals,evecs,1,1,debuglevel);
         phi.assignFromVec(evecs.Row(1));
         return evals(1); //energy
-    }
+        }
     return 1000;
 }
 

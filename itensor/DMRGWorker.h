@@ -38,8 +38,14 @@ private:
 
 }; // class DMRGWorker
 
+//
+// Convenience templated wrapper functions
+// so that one can call dmrg directly instead
+// of using a DMRGWorker instance.
+//
 template <class MPSType, class MPOType>
-inline Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
+inline Real 
+dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
     {
     DMRGWorker<MPSType,MPOType> worker(sweeps);
     worker.run(H,psi);
@@ -47,14 +53,14 @@ inline Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
     }
 
 template <class MPSType, class MPOType>
-inline Real dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, 
-                 BaseDMRGOpts& opts)
+inline Real 
+dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, 
+     BaseDMRGOpts& opts)
     {
     DMRGWorker<MPSType,MPOType> worker(sweeps,opts);
     worker.run(H,psi);
     return worker.energy();
     }
-
 
 
 
