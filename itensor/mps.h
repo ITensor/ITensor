@@ -49,129 +49,102 @@ template <class Tensor>
 class MPSt //the lowercase t stands for "type" or "template"
 {
 public:
+
     typedef Tensor TensorT;
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::IndexValT IndexValT;
     typedef BaseModel ModelT;
-protected:
-    int N;
-    std::vector<Tensor> A;
-    int left_orth_lim,right_orth_lim;
-    const ModelT* model_;
-    SVDWorker svd_;
-
-    void new_tensors(std::vector<ITensor>& A_)
-    {
-        std::vector<Index> a(N+1);
-        for(int i = 1; i <= N; ++i)
-        { a[i] = Index(nameint("a",i)); }
-        A_[1] = ITensor(si(1),a[1]);
-        for(int i = 2; i < N; i++)
-        { A_[i] = ITensor(conj(a[i-1]),si(i),a[i]); }
-        A_[N] = ITensor(conj(a[N-1]),si(N));
-    }
-
-    void random_tensors(std::vector<ITensor>& A_)
-    { new_tensors(A_); for(int i = 1; i <= N; ++i) A_[i].Randomize(); }
-
-    void random_tensors(std::vector<IQTensor>& A_) { }
-
-    void init_tensors(std::vector<ITensor>& A_, const InitState& initState)
-        { 
-        new_tensors(A_); 
-        for(int i = 1; i <= N; ++i) 
-            {
-            A_[i] = ITensor(initState(i)); 
-            }
-        }
-
-    void init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
-    {
-        std::vector<QN> qa(N+1); //qn[i] = qn on i^th bond
-        for(int i = 1; i <= N; ++i) { qa[0] -= initState(i).qn()*In; }
-
-        //Taking OC to be at the leftmost site,
-        //compute the QuantumNumbers of all the Links.
-        for(int i = 1; i <= N; ++i)
-        {
-            //Taking the divergence to be zero,solve for qa[i]
-            qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
-        }
-
-        std::vector<IQIndex> a(N+1);
-        for(int i = 1; i <= N; ++i)
-            { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
-
-        A_[1] = IQTensor(initState(1),a[1](1));
-        for(int i = 2; i < N; ++i)
-            A_[i] = IQTensor(conj(a[i-1])(1),initState(i),a[i](1)); 
-        A_[N] = IQTensor(conj(a[N-1])(1),initState(N));
-    }
-
-    typedef std::pair<typename std::vector<Tensor>::const_iterator,typename std::vector<Tensor>::const_iterator> const_range_type;
-public:
 
     //Accessor Methods ------------------------------
 
-    int NN() const { return N;}
-    int right_lim() const { return right_orth_lim; }
-    int left_lim() const { return left_orth_lim; }
-    IQIndex si(int i) const { return model_->si(i); }
-    IQIndex siP(int i) const { return model_->siP(i); }
+    int 
+    NN() const { return N;}
+
+    int 
+    right_lim() const { return right_orth_lim; }
+
+    int 
+    left_lim() const { return left_orth_lim; }
+
+    IQIndex 
+    si(int i) const { return model_->si(i); }
+
+    IQIndex 
+    siP(int i) const { return model_->siP(i); }
+
     typedef typename std::vector<Tensor>::const_iterator AA_it;
-    const std::pair<AA_it,AA_it> AA() const { return std::make_pair(A.begin()+1,A.end()); }
-    const Tensor& AA(int i) const { return GET(A,i); }
-    const ModelT& model() const { return *model_; }
-    const SVDWorker& svd() const { return svd_; }
-    Tensor& AAnc(int i) //nc means 'non const'
-    { 
+    const std::pair<AA_it,AA_it> 
+    AA() const { return std::make_pair(A.begin()+1,A.end()); }
+
+    const Tensor& 
+    AA(int i) const { return GET(A,i); }
+
+    Tensor& 
+    AAnc(int i) //nc means 'non const'
+        { 
         if(i <= left_orth_lim) left_orth_lim = i-1;
         if(i >= right_orth_lim) right_orth_lim = i+1;
         return GET(A,i); 
-    }
-    Tensor& setU(int i, Direction dir) //set unitary
-    {
-        if(dir == Fromleft)
-        {
-        if(i == left_orth_lim+1) left_orth_lim = i;
-        else Error("left_orth_lim not at i-1");
         }
-        else if(dir == Fromright)
-        {
-        if(i == right_orth_lim-1) right_orth_lim = i;
-        else Error("right_orth_lim not at i-1");
-        }
-        return GET(A,i);
-    }
-    bool is_null() const { return (model_==0); }
-    bool is_not_null() const { return (model_!=0); }
 
-    bool doRelCutoff() const { return svd_.doRelCutoff(); }
-    void doRelCutoff(bool val) { svd_.doRelCutoff(val); }
+    const ModelT& 
+    model() const { return *model_; }
 
-    bool absoluteCutoff() const { return svd_.absoluteCutoff(); }
-    void absoluteCutoff(bool val) { svd_.absoluteCutoff(val); }
+    const SVDWorker& 
+    svd() const { return svd_; }
 
-    LogNumber refNorm() const { return svd_.refNorm(); }
-    void refNorm(LogNumber val) { svd_.refNorm(val); }
 
-    Real cutoff() const { return svd_.cutoff(); }
-    void cutoff(Real val) { svd_.cutoff(val); }
+    Tensor& 
+    setU(int i, Direction dir); //set unitary
 
-    int minm() const { return svd_.minm(); }
-    void minm(int val) { svd_.minm(val); }
+    bool 
+    is_null() const { return (model_==0); }
+    bool 
+    is_not_null() const { return (model_!=0); }
 
-    int maxm() const { return svd_.maxm(); }
-    void maxm(int val) { svd_.maxm(val); }
+    bool 
+    doRelCutoff() const { return svd_.doRelCutoff(); }
+    void 
+    doRelCutoff(bool val) { svd_.doRelCutoff(val); }
 
-    Real truncerr(int b) const { return svd_.truncerr(b); }
+    bool 
+    absoluteCutoff() const { return svd_.absoluteCutoff(); }
+    void 
+    absoluteCutoff(bool val) { svd_.absoluteCutoff(val); }
 
-    const Vector& eigsKept(int b) const { return svd_.eigsKept(b); }
+    LogNumber 
+    refNorm() const { return svd_.refNorm(); }
+    void 
+    refNorm(LogNumber val) { svd_.refNorm(val); }
 
-    bool showeigs() const { return svd_.showeigs(); }
-    void showeigs(bool val) { svd_.showeigs(val); }
+    Real 
+    cutoff() const { return svd_.cutoff(); }
+    void 
+    cutoff(Real val) { svd_.cutoff(val); }
 
-    Tensor bondTensor(int b) const 
+    int 
+    minm() const { return svd_.minm(); }
+    void 
+    minm(int val) { svd_.minm(val); }
+
+    int 
+    maxm() const { return svd_.maxm(); }
+    void 
+    maxm(int val) { svd_.maxm(val); }
+
+    Real 
+    truncerr(int b) const { return svd_.truncerr(b); }
+
+    const Vector& 
+    eigsKept(int b) const { return svd_.eigsKept(b); }
+
+    bool 
+    showeigs() const { return svd_.showeigs(); }
+    void 
+    showeigs(bool val) { svd_.showeigs(val); }
+
+    Tensor 
+    bondTensor(int b) const 
         { Tensor res = A.at(b) * A.at(b+1); return res; }
 
     //MPSt: Constructors --------------------------------------------
@@ -202,42 +175,31 @@ public:
 
     virtual ~MPSt() { }
 
-    void read(std::istream& s)
-        {
-        if(model_ == 0)
-            Error("Can't read to default constructed MPS");
+    void 
+    read(std::istream& s);
 
-        for(int j = 1; j <= N; ++j) 
-            A.at(j).read(s);
-        s.read((char*) &left_orth_lim,sizeof(left_orth_lim));
-        s.read((char*) &right_orth_lim,sizeof(right_orth_lim));
-        svd_.read(s);
-        }
-
-    void write(std::ostream& s) const
-        {
-        for(int j = 1; j <= N; ++j) 
-            A.at(j).write(s);
-        s.write((char*) &left_orth_lim,sizeof(left_orth_lim));
-        s.write((char*) &right_orth_lim,sizeof(right_orth_lim));
-        svd_.write(s);
-        }
-
+    void 
+    write(std::ostream& s) const;
 
     //MPSt: operators ------------------------------------------------------
 
-    MPSt& operator*=(Real a)
-    {
-        AAnc(left_orth_lim+1) *= a;
-        return *this;
-    }
-    inline MPSt operator*(Real r) const { MPSt res(*this); res *= r; return res; }
-    friend inline MPSt operator*(Real r, MPSt res) { res *= r; return res; }
+    inline MPSt& 
+    operator*=(Real a) { AAnc(left_orth_lim+1) *= a; return *this; }
 
-    MPSt& operator+=(const MPSt& oth);
-    inline MPSt operator+(MPSt res) const { res += *this; return res; }
-    //friend inline MPSt operator+(MPSt A, const MPSt& B) { A += B; return A; }
-    inline MPSt operator-(MPSt res) const { res *= -1; res += *this; return res; }
+    inline MPSt 
+    operator*(Real r) const { MPSt res(*this); res *= r; return res; }
+
+    friend inline MPSt 
+    operator*(Real r, MPSt res) { res *= r; return res; }
+
+    MPSt& 
+    operator+=(const MPSt& oth);
+
+    inline MPSt 
+    operator+(MPSt res) const { res += *this; return res; }
+
+    inline MPSt 
+    operator-(MPSt res) const { res *= -1; res += *this; return res; }
 
     //MPSt: index methods --------------------------------------------------
 
@@ -445,7 +407,11 @@ public:
         doSVD(left_orth_lim+1,AA,Fromleft);
 	}
 
-    Real norm() const { return sqrt(psiphi(*this,*this)); }
+    Real 
+    norm() const { return sqrt(psiphi(*this,*this)); }
+
+    int
+    averageM() const;
 
     Real normalize()
     {
@@ -474,6 +440,66 @@ public:
         iqpsi.svd_ = svd_;
         convertToIQ(*model_,A,iqpsi.A,totalq,cut);
     }
+
+protected:
+
+    //Data Members ----------
+
+    int N;
+
+    std::vector<Tensor> A;
+
+    int left_orth_lim,
+        right_orth_lim;
+
+    const ModelT* model_;
+
+    SVDWorker svd_;
+
+    //Constructor Helpers ----------
+
+    void 
+    new_tensors(std::vector<ITensor>& A_);
+
+    void 
+    random_tensors(std::vector<ITensor>& A_);
+
+    void 
+    random_tensors(std::vector<IQTensor>& A_) { }
+
+    void 
+    init_tensors(std::vector<ITensor>& A_, const InitState& initState)
+        { 
+        new_tensors(A_); 
+        for(int i = 1; i <= N; ++i) 
+            {
+            A_[i] = ITensor(initState(i)); 
+            }
+        }
+
+    void 
+    init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
+        {
+        std::vector<QN> qa(N+1); //qn[i] = qn on i^th bond
+        for(int i = 1; i <= N; ++i) { qa[0] -= initState(i).qn()*In; }
+
+        //Taking OC to be at the leftmost site,
+        //compute the QuantumNumbers of all the Links.
+        for(int i = 1; i <= N; ++i)
+        {
+            //Taking the divergence to be zero,solve for qa[i]
+            qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
+        }
+
+        std::vector<IQIndex> a(N+1);
+        for(int i = 1; i <= N; ++i)
+            { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
+
+        A_[1] = IQTensor(initState(1),a[1](1));
+        for(int i = 2; i < N; ++i)
+            A_[i] = IQTensor(conj(a[i-1])(1),initState(i),a[i](1)); 
+        A_[N] = IQTensor(conj(a[N-1])(1),initState(N));
+        }
 
 private:
     friend class MPSt<ITensor>;

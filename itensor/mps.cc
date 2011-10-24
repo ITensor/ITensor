@@ -6,6 +6,107 @@ using std::endl;
 using std::map;
 using std::string;
 
+template <class Tensor>
+Tensor& MPSt<Tensor>::
+setU(int i, Direction dir) //set unitary
+    {
+    if(dir == Fromleft)
+        {
+        if(i == left_orth_lim+1) left_orth_lim = i;
+        else Error("left_orth_lim not at i-1");
+        }
+    else if(dir == Fromright)
+        {
+        if(i == right_orth_lim-1) right_orth_lim = i;
+        else Error("right_orth_lim not at i-1");
+        }
+    return GET(A,i);
+    }
+template
+ITensor& MPSt<ITensor>::setU(int i, Direction dir);
+template
+IQTensor& MPSt<IQTensor>::setU(int i, Direction dir);
+
+template <class Tensor>
+void MPSt<Tensor>::
+read(std::istream& s)
+    {
+    if(model_ == 0)
+        Error("Can't read to default constructed MPS");
+    for(int j = 1; j <= N; ++j) 
+        A.at(j).read(s);
+    s.read((char*) &left_orth_lim,sizeof(left_orth_lim));
+    s.read((char*) &right_orth_lim,sizeof(right_orth_lim));
+    svd_.read(s);
+    }
+template
+void MPSt<ITensor>::read(std::istream& s);
+template
+void MPSt<IQTensor>::read(std::istream& s);
+
+
+template <class Tensor>
+void MPSt<Tensor>::
+write(std::ostream& s) const
+    {
+    for(int j = 1; j <= N; ++j) 
+        A.at(j).write(s);
+    s.write((char*) &left_orth_lim,sizeof(left_orth_lim));
+    s.write((char*) &right_orth_lim,sizeof(right_orth_lim));
+    svd_.write(s);
+    }
+template
+void MPSt<ITensor>::write(std::ostream& s) const;
+template
+void MPSt<IQTensor>::write(std::ostream& s) const;
+
+
+template <class Tensor>
+void MPSt<Tensor>::
+new_tensors(std::vector<ITensor>& A_)
+    {
+        std::vector<Index> a(N+1);
+        for(int i = 1; i <= N; ++i)
+        { a[i] = Index(nameint("a",i)); }
+        A_[1] = ITensor(si(1),a[1]);
+        for(int i = 2; i < N; i++)
+        { A_[i] = ITensor(conj(a[i-1]),si(i),a[i]); }
+        A_[N] = ITensor(conj(a[N-1]),si(N));
+    }
+template
+void MPSt<ITensor>::new_tensors(std::vector<ITensor>& A_);
+template
+void MPSt<IQTensor>::new_tensors(std::vector<ITensor>& A_);
+
+template <class Tensor>
+void MPSt<Tensor>::
+random_tensors(std::vector<ITensor>& A_)
+    { 
+    new_tensors(A_); 
+    for(int i = 1; i <= N; ++i)
+        A_[i].Randomize(); 
+    }
+template
+void MPSt<ITensor>::random_tensors(std::vector<ITensor>& A_);
+template
+void MPSt<IQTensor>::random_tensors(std::vector<ITensor>& A_);
+
+template <class Tensor>
+int MPSt<Tensor>::
+averageM() const
+    {
+    Real avgm = 0;
+    for(int b = 1; b < NN(); ++b)
+        avgm += LinkInd(b).m();
+    avgm /= (NN()-1);
+    return (int)avgm;
+    }
+template
+int MPSt<ITensor>::averageM() const;
+template
+int MPSt<IQTensor>::averageM() const;
+
+
 void 
 plussers(const Index& l1, const Index& l2, Index& sumind, 
           ITensor& first, ITensor& second)
@@ -62,9 +163,6 @@ plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind,
 template <>
 MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
     {
-
-    std::cout << "Adding A tensors in MPS +=" << std::endl;
-
     primelinks(0,4);
 
     //Create new link indices
@@ -100,10 +198,7 @@ MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
 
     A.swap(nA);
 
-    //std::cout << "Doing orthogonalize in MPS +=" << std::endl;
-    //orthogonalize();
-    std::cout << "Doing position(1) in MPS +=" << std::endl;
-    position(1);
+    orthogonalize();
 
     return *this;
     }

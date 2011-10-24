@@ -1256,7 +1256,7 @@ operator ITensor() const
             //it, with the appropriate offset
             const Index& small = it->index(j);
             //Find the IQIndex that contains 'small'
-            const IQIndex* big;
+            const IQIndex* big = 0;
             int offset = -1;
             for(size_t q = 0; q < p->iqindex_.size(); ++q)
                 if(p->iqindex_[q].hasindex(small))

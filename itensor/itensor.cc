@@ -336,9 +336,10 @@ ITensor(ITmaker itm)
 void ITensor::
 read(std::istream& s)
     { 
-    bool null_;
-    s.read((char*) &null_,sizeof(null_));
-    if(null_) { *this = ITensor(); return; }
+    bool is_null_;
+    s.read((char*) &is_null_,sizeof(is_null_));
+    if(is_null_) { *this = ITensor(); return; }
+
     s.read((char*) &r_,sizeof(r_));
     s.read((char*) &rn_,sizeof(rn_));
     for(int j = 1; j <= r_; ++j) 
@@ -351,9 +352,10 @@ read(std::istream& s)
 void ITensor::
 write(std::ostream& s) const 
     { 
-    bool null_ = is_null();
-    s.write((char*) &null_,sizeof(null_));
-    if(null_) return;
+    bool is_null_ = is_null();
+    s.write((char*) &is_null_,sizeof(is_null_));
+    if(is_null_) return;
+
     s.write((char*) &r_,sizeof(r_));
     s.write((char*) &rn_,sizeof(rn_));
     for(int j = 1; j <= r_; ++j) 
@@ -1923,7 +1925,7 @@ operator*=(const ITensor& other)
         int inca1 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
         int incb1 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
         icon[1] = 1;
-        int inca2,incb2;
+        int inca2=0,incb2=0;
         if(pp.nsamen == 2)
             {
             icon[2] = 2;

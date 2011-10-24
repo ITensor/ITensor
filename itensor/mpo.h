@@ -7,27 +7,19 @@ template<class Tensor>
 class MPOt : private MPSt<Tensor>
 {
 public:
+    typedef MPSt<Tensor> Parent;
     typedef Tensor TensorT;
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::IndexValT IndexValT;
     typedef typename Tensor::CombinerT CombinerT;
-private:
-    typedef MPSt<Tensor> Parent;
-    using Parent::N;
-    using Parent::A;
-    using Parent::left_orth_lim;
-    using Parent::right_orth_lim;
-    using Parent::model_;
-    using Parent::svd_;
-public:
 
     operator MPOt<IQTensor>()
-    { 
+        { 
         MPOt<IQTensor> res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm()); 
         res.svd_ = svd_;
         convertToIQ(*model_,A,res.A);
         return res; 
-    }
+        }
 
     //Accessor Methods ------------------------------
 
@@ -121,16 +113,24 @@ public:
 
     using Parent::applygate;
 
-    friend inline std::ostream& operator<<(std::ostream& s, const MPOt& M)
-    {
+    friend inline std::ostream& 
+    operator<<(std::ostream& s, const MPOt& M)
+        {
         s << "\n";
         for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
         return s;
-    }
+        }
 
     using Parent::print;
 
 private:
+    using Parent::N;
+    using Parent::A;
+    using Parent::left_orth_lim;
+    using Parent::right_orth_lim;
+    using Parent::model_;
+    using Parent::svd_;
+
     friend class MPOt<ITensor>;
     friend class MPOt<IQTensor>;
 }; //class MPOt<Tensor>
