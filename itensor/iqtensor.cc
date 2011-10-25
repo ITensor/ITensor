@@ -796,10 +796,15 @@ print(std::string name,Printdat pdat) const
 void IQTensor::
 printIQInds(const std::string& name) const
 	{ 
-	std::cerr << "\n" << name << " (IQIndices only) = \n";
+	cout << "\n" << name << " (IQIndices only) = \n";
+    if(this->is_null())
+        {
+        cout << "    [IQTensor is null]" << endl;
+        return;
+        }
 	for(size_t j = 0; j < p->iqindex_.size(); ++j)
-	    std::cerr << p->iqindex_[j] << "\n\n";
-	std::cerr << "---------------------------\n\n";
+	    cout << p->iqindex_[j] << "\n\n";
+	cout << "---------------------------\n" << endl;
 	}
 
 void IQTensor::

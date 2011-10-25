@@ -364,15 +364,15 @@ public:
     int niter, int debuglevel, Direction dir, Real errgoal=1E-4)
     {
         if(b-1 > left_orth_lim)
-        {
+            {
             std::cerr << boost::format("b=%d, Lb=%d\n")%b%left_orth_lim;
             Error("b-1 > left_orth_lim");
-        }
+            }
         if(b+2 < right_orth_lim)
-        {
+            {
             std::cerr << boost::format("b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
             Error("b+1 < right_orth_lim");
-        }
+            }
         Tensor phi = GET(A,b); phi *= GET(A,b+1);
         Real En = doDavidson(phi,mpoh,LH,RH,niter,debuglevel,errgoal);
         doSVD(b,phi,dir);
@@ -391,10 +391,15 @@ public:
     void projectOp(int j, Direction dir, const Tensor& P, const OpTensor& Op, Tensor& res) const
     {
         if(dir==Fromleft && j > left_orth_lim) 
-        { std::cerr << boost::format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim, Error(""); }
+            { 
+            std::cerr << boost::format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim; 
+            Error("Projecting operator at j > left_orth_lim"); 
+            }
         if(dir==Fromright && j < right_orth_lim) 
-        { std::cerr << boost::format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim, Error(""); }
-
+            { 
+            std::cerr << boost::format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim; 
+            Error("Projecting operator at j < right_orth_lim"); 
+            }
         res = (P.is_null() ? AA(j) : P * AA(j));
         res *= Op; res *= conj(primed(AA(j)));
     }
