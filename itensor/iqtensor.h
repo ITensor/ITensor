@@ -362,7 +362,7 @@ public:
     void 
     scaleTo(LogNumber newscale) const;
 
-    inline void 
+    void 
     clean(Real min_norm = MIN_CUT);
 
     int 
