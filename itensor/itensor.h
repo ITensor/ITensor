@@ -69,7 +69,7 @@ public:
 
     ITensor(const Index& i1, Real val);
 
-    ITensor(const Index& i1, const Vector& V);
+    ITensor(const Index& i1, const VectorRef& V);
 
     ITensor(Index i1,Index i2);
 
@@ -650,7 +650,7 @@ public:
         { assert(size > 0); v = 0; }
 
     explicit 
-    ITDat(const Vector& v_) 
+    ITDat(const VectorRef& v_) 
         : v(v_), numref(0)
         { }
 

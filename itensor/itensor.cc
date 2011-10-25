@@ -177,7 +177,7 @@ ITensor(const Index& i1, Real val)
 	{ _construct1(i1); p->v = val; }
 
 ITensor::
-ITensor(const Index& i1, const Vector& V) 
+ITensor(const Index& i1, const VectorRef& V) 
     : p(new ITDat(V)), r_(1), rn_(0)
 	{ 
 	if(i1.m() != V.Length()) 
