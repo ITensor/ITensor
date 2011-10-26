@@ -111,6 +111,8 @@ public:
 
     using Parent::is_complex;
 
+    using Parent::averageM;
+
     using Parent::applygate;
 
     friend inline std::ostream& 
