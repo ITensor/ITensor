@@ -248,22 +248,9 @@ void SVDWorker::operator()(int b, const Tensor& AA,
 
     const IndexT& active = comb.right();
 
-    Tensor rho;
-    if(0 && AAc.is_complex())
-	{
-	Tensor re,im;
-	AAc.SplitReIm(re,im);
-	rho = re; rho.conj(); rho.primeind(active);
-	rho *= re;
-	im *= conj(primeind(im,active));
-	rho += im;
-	}
-    else 
-	{ 
-	Tensor AAcc = conj(AAc); 
-	AAcc.primeind(active); 
-	rho = AAc*AAcc; 
-	}
+    Tensor AAcc = conj(AAc); 
+    AAcc.primeind(active); 
+    Tensor rho = AAc*AAcc; 
 
     const Real saved_cutoff = cutoff_; 
     const int saved_minm = minm_,
@@ -288,11 +275,6 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     comb.conj();
     comb.product(U,to_orth);
     newoc = conj(U) * AAc;
-
-    //PrintDat(U);
-
-    IndexT nmid = index_in_common(A,B,Link);
-    //std::cerr << boost::format("Arrow after = %s\n")%(nmid.dir() == Out ? "Out" : "In");
 
     } //void SVDWorker::operator()
 
