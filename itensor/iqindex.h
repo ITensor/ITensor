@@ -746,9 +746,11 @@ struct IQIndexVal
     void conj() 
         { iqind.conj(); }
 
-    IndexVal toIndexVal() const;
+    operator IndexVal() const;
 
-    operator ITensor() const;
+    IndexVal blockIndexVal() const;
+
+    //operator ITensor() const;
 
     ITensor operator*(const IndexVal& iv) const 
         { 
@@ -808,20 +810,29 @@ qn() const
     }
 
 inline
+IQIndexVal::
+operator IndexVal() const 
+    { 
+    return IndexVal(Index(iqind),i); 
+    }
+
+inline
 IndexVal IQIndexVal::
-toIndexVal() const 
+blockIndexVal() const 
     { 
     int j,ii;
     calc_ind_ii(j,ii);
     return IndexVal(iqind.index(j),ii); 
     }
 
+/*
 inline
 IQIndexVal::
 operator ITensor() const 
     { 
     return ITensor(IndexVal(iqind,i)); 
     }
+*/
 
 inline
 void IQIndexVal::

@@ -397,14 +397,14 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
         ITensor t(indices);
         p->insert_itensor(r,t);
         }
-    return (p->rmap[r])->operator()(iv1.toIndexVal(),
-                                    iv2.toIndexVal(),
-                                    iv3.toIndexVal(),
-                                    iv4.toIndexVal(),
-                                    iv5.toIndexVal(),
-                                    iv6.toIndexVal(),
-                                    iv7.toIndexVal(),
-                                    iv8.toIndexVal());
+    return (p->rmap[r])->operator()(iv1.blockIndexVal(),
+                                    iv2.blockIndexVal(),
+                                    iv3.blockIndexVal(),
+                                    iv4.blockIndexVal(),
+                                    iv5.blockIndexVal(),
+                                    iv6.blockIndexVal(),
+                                    iv7.blockIndexVal(),
+                                    iv8.blockIndexVal());
 	}
 
 QN IQTensor::
