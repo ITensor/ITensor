@@ -19,12 +19,9 @@ public:
 
     //Accessor Methods ----------------------------------------------
 
-    const Index& 
+    inline const Index& 
     right() const 
-        { 
-        if(!initted) Error("Combiner: right ind requested prior to init");
-        return right_; 
-        }
+        { init(); return right_; }
 
     int 
     rl() const { return rl_; }
@@ -118,22 +115,22 @@ Combiner(const Index& l1, const Index& l2,
          const Index& l7, const Index& l8)
     : rl_(0), initted(false)
 	{
-        boost::array<const Index*,NMAX+1> ll 
-        = {{ &Index::Null(), &l1, &l2, &l3, &l4, &l5, &l6, &l7, &l8 }};
+    boost::array<const Index*,NMAX+1> ll 
+    = {{ &Index::Null(), &l1, &l2, &l3, &l4, &l5, &l6, &l7, &l8 }};
 
-        do { ++rl_; left_[rl_] = *ll[rl_]; } 
-        while(rl_ < NMAX && *ll[rl_+1] != Index::Null());
+    do { ++rl_; left_[rl_] = *ll[rl_]; } 
+    while(rl_ < NMAX && *ll[rl_+1] != Index::Null());
 
-        assert(rl_ == NMAX || left_[rl_+1] == Index::Null());
-        assert(left_[rl_] != Index::Null());
+    assert(rl_ == NMAX || left_[rl_+1] == Index::Null());
+    assert(left_[rl_] != Index::Null());
 	}
 
 inline
 void Combiner::
 reset()
     {
-        rl_ = 0;
-        initted = false;
+    rl_ = 0;
+    initted = false;
     }
 
 inline
@@ -201,7 +198,7 @@ product(const ITensor& t, ITensor& res) const
 
     int j;
     if((j = t.findindex(right_)) != 0)
-    {
+        {
         std::vector<Index> nindices; 
         nindices.reserve(t.r()+rl_-1);
         for(int i = 1; i < j; ++i)
@@ -212,7 +209,7 @@ product(const ITensor& t, ITensor& res) const
             nindices.push_back(t.index(i));
         res = ITensor(nindices,t);
         return;
-    }
+        }
 
     t.groupIndices(left_,rl_,right_,res);
     }
