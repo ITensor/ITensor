@@ -85,7 +85,7 @@ public:
     inline void operator()(const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
         { operator()<Tensor>(1,AA,A,B,dir); }
 
-private:
+protected:
 
     int N;
     std::vector<Real> truncerr_;
@@ -98,6 +98,13 @@ private:
     bool absoluteCutoff_;
     LogNumber refNorm_;
     std::vector<Vector> eigsKept_;
+
+    void
+    diag_and_truncate(const IQTensor& rho, std::vector<Matrix>& mmatrix, std::vector<Vector>& mvector,
+                      std::vector<Real>& alleig, Real& docut, Real& svdtruncerr, int& m);
+    void
+    buildUnitary(const IQTensor& rho, const std::vector<Matrix>& mmatrix, const std::vector<Vector>& mvector,
+                 Real docut, int m, IQIndex& newmid, IQTensor& U);
 
 }; //class SVDWorker
 

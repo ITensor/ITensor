@@ -65,7 +65,15 @@ Real SVDWorker::diag_denmat_complex(const ITensor& rho, Vector& D, ITensor& U)
     return diag_denmat(rhore,D,U);
     }
 
-Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
+
+//
+// Helper method for SVDWorker::diag_denmat(const IQTensor& rho,...)
+// Diagonalizes and truncates the density matrix but doesn't create 
+// any IQTensors such as U
+//
+void SVDWorker::
+diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& mvector,
+                  vector<Real>& alleig, Real& docut, Real& svdtruncerr, int& m)
     {
     if(rho.r() != 2)
         {
@@ -73,12 +81,12 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
         Error("Density matrix doesn't have rank 2");
         }
 
-    IQIndex active = (rho.index(1).primeLevel() == 0 ? rho.index(1)
-                                                     : rho.index(2));
-
-    vector<Matrix> mmatrix(rho.iten_size());
-    vector<Vector> mvector(rho.iten_size());
-    vector<Real> alleig;
+    mmatrix = vector<Matrix>(rho.iten_size());
+    mvector = vector<Vector>(rho.iten_size());
+    alleig.clear();
+    //vector<Matrix> mmatrix(rho.iten_size());
+    //vector<Vector> mvector(rho.iten_size());
+    //vector<Real> alleig;
 
     if(doRelCutoff_)
         {
@@ -182,10 +190,11 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     sort(alleig.begin(),alleig.end());
 
     //Truncate
-    Real docut = -1;
-    Real svdtruncerr = 0;
+    docut = -1;
+    svdtruncerr = 0;
     Real e1 = max(alleig.back(),1.0e-60);
-    int mdisc = 0, m = (int)alleig.size();
+    int mdisc = 0; 
+    m = (int)alleig.size();
     if(absoluteCutoff_)
         {
         //Sort all eigenvalues from largest to smallest
@@ -215,7 +224,7 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
 		}
 	    }
     if(showeigs_)
-	{
+        {
         cout << endl;
         cout << boost::format("truncate_ = %s")%(truncate_?"true":"false")<<endl;
         cout << boost::format("Kept %d, discarded %d states in diag_denmat")
@@ -231,22 +240,31 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
         int stop = s-min(s,max_show);
         cout << "Eigs: ";
         for(int j = s-1; j >= stop; --j)
-	    {
+            {
             cout << boost::format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
                                 % alleig[j];
             cout << ((j != stop) ? ", " : "\n");
-	    }
-	}
+            }
+        }
 
     assert(m <= maxm_); 
     assert(m < 20000);
+    }
 
-    //3. Construct orthogonalized IQTensor U
+void SVDWorker::
+buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Vector>& mvector,
+             Real docut, int m, IQIndex& newmid, IQTensor& U)
+    {
+    IQIndex active = (rho.index(1).primeLevel() == 0 ? rho.index(1)
+                                                     : rho.index(2));
+
+    // Construct orthogonalized IQTensor U
     vector<ITensor> terms; terms.reserve(rho.iten_size());
     vector<inqn> iq; iq.reserve(rho.iten_size());
-    itenind = 0;
+    int itenind = 0;
+    int mm = m;
     for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
-	{
+        {
         const ITensor& t = *it;
         const Vector& thisD = GET(mvector,itenind);
 
@@ -256,8 +274,8 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
 		break;
         --this_m; //since for loop overshoots by 1
 
-        if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
-            { this_m = 1; m = 1; docut = 1; }
+        if(mm == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
+            { this_m = 1; mm = 1; docut = 1; }
 
         if(this_m == 0) { ++itenind; continue; }
 
@@ -272,11 +290,28 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
         terms.push_back(term);
 
         ++itenind;
-	}
-    IQIndex newmid("qlink",iq,In);
+        }
+    newmid = IQIndex("qlink",iq,In);
     U = IQTensor(active,newmid);
     foreach(const ITensor& t, terms) 
-	U += t;
+        U += t;
+    }
+
+
+Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
+    {
+
+    vector<Matrix> mmatrix;
+    vector<Vector> mvector;
+    vector<Real> alleig;
+    Real docut = 0,svdtruncerr = 0;
+    int m = -1;
+
+    diag_and_truncate(rho,mmatrix,mvector,alleig,docut,svdtruncerr,m);
+
+    IQIndex newmid;
+    buildUnitary(rho,mmatrix,mvector,docut,m,newmid,U);
+
     D.ReDimension(m);
     for(int i = 1; i <= m; ++i) 
         D(i) = GET(alleig,alleig.size()-i);
