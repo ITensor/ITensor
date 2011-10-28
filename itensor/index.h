@@ -136,8 +136,8 @@ public:
         //ur = sin(ind * sqrt(1.0/7.0) + ((int)_type - (int)Site) * sqrt(1.0 / 13.0));
         Real arg = 0;
         int pn = 1;
-        for(int i = int(ind.size()); i >= 0; --i)
-        { arg += ind.data[i]*sqrt(1.0/(prime_number(++pn)*1.0)); }
+        for(int i = int(ind.size())-1; i >= 0; --i)
+            { arg += ind.data[i]*sqrt(1.0/(prime_number(++pn)*1.0)); }
         arg *= sqrt(1.0/(prime_number(++pn)*1.0));
         arg += ((int)_type - (int)Site) * sqrt(1.0/(prime_number(++pn)*1.0));
         ur = sin(arg);
