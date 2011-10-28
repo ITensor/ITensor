@@ -11,7 +11,7 @@ include ../options.mk
 SOURCES=itensor.cc iqtensor.cc svdworker.cc mps.cc mpo.cc dmrg.cc
 
 HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
-        itensor.h iqindex.h iqtensor.h combiner.h iqcombiner.h svdworker.h \
+        itensor.h iqindex.h iqtensor.h condenser.h combiner.h iqcombiner.h svdworker.h \
         mps.h mpo.h DMRGOpts.h dmrg.h core.h BaseDMRGOpts.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
 
@@ -74,7 +74,7 @@ itensor.o: $(DEPHEADERS)
 DEPHEADERS+= iqindex.h iqtensor.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
-DEPHEADERS+= combiner.h iqcombiner.h svdworker.h
+DEPHEADERS+= combiner.h condenser.h iqcombiner.h svdworker.h
 svdworker.o: $(DEPHEADERS)
 DEPHEADERS+= mps.h
 mps.o: $(DEPHEADERS)
