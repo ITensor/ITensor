@@ -2129,8 +2129,8 @@ operator+=(const ITensor& other)
     }
 
 #ifdef STRONG_DEBUG
-    Real tot_this = thisdat.sumels();
-    Real tot_othr = othrdat.sumels();
+    //Real tot_this = thisdat.sumels();
+    //Real tot_othr = othrdat.sumels();
 #endif
 
     if(scalefac == 1)
@@ -2154,17 +2154,19 @@ operator+=(const ITensor& other)
         }
     }
 
+    /*
 #ifdef STRONG_DEBUG
     Real new_tot = thisdat.sumels();
     Real compare = tot_this + scalefac*tot_othr;
     Real ref = Norm(thisdat);
-    if(fabs(new_tot-compare) > 1E-12 * ref)
+    if(fabs(compare) > 1E-12 && fabs(new_tot-compare) > 1E-12 * ref)
 	{
 	Real di = new_tot - compare;
 	cerr << boost::format("new_tot = %f, compare = %f, dif = %f\n")%new_tot%compare%di;
 	Error("Incorrect sum");
 	}
 #endif
+    */
 
     return *this;
     } 
