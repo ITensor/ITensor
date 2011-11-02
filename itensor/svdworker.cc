@@ -73,7 +73,7 @@ Real SVDWorker::diag_denmat_complex(const ITensor& rho, Vector& D, ITensor& U)
 //
 void SVDWorker::
 diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& mvector,
-                  vector<Real>& alleig, Real& docut, Real& svdtruncerr, int& m)
+                  vector<Real>& alleig, Real& svdtruncerr, IQIndex& newmid)
     {
     if(rho.r() != 2)
         {
@@ -189,12 +189,12 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
     //irrespective of quantum numbers
     sort(alleig.begin(),alleig.end());
 
-    //Truncate
-    docut = -1;
+    //Determine number of states to keep m
+    Real docut = -1;
     svdtruncerr = 0;
     Real e1 = max(alleig.back(),1.0e-60);
     int mdisc = 0; 
-    m = (int)alleig.size();
+    int m = (int)alleig.size();
     if(absoluteCutoff_)
         {
         //Sort all eigenvalues from largest to smallest
@@ -249,24 +249,18 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
 
     assert(m <= maxm_); 
     assert(m < 20000);
-    }
 
-void SVDWorker::
-buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Vector>& mvector,
-             Real docut, int m, IQIndex& newmid, IQTensor& U)
-    {
     IQIndex active = (rho.index(1).primeLevel() == 0 ? rho.index(1)
                                                      : rho.index(2));
 
-    // Construct orthogonalized IQTensor U
-    vector<ITensor> terms; terms.reserve(rho.iten_size());
+    //Truncate denmat eigenvalue vectors
+    //Also form new Link index with appropriate m's for each block
     vector<inqn> iq; iq.reserve(rho.iten_size());
-    int itenind = 0;
-    int mm = m;
+    itenind = 0;
     for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
         {
         const ITensor& t = *it;
-        const Vector& thisD = GET(mvector,itenind);
+        Vector& thisD = GET(mvector,itenind);
 
         int this_m = 1;
         for(; this_m <= thisD.Length(); ++this_m)
@@ -274,14 +268,55 @@ buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Ve
 		break;
         --this_m; //since for loop overshoots by 1
 
-        if(mm == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
-            { this_m = 1; mm = 1; docut = 1; }
+        if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
+            { this_m = 1; m = 1; docut = 1; }
+
+        thisD.ReduceDimension(this_m);
 
         if(this_m == 0) { ++itenind; continue; }
 
         Index nm("qlink",this_m);
         Index act = t.index(1).deprimed();
         iq.push_back(inqn(nm,active.qn(act)));
+
+        ++itenind;
+        }
+    newmid = IQIndex("qlink",iq,In);
+    assert(newmid.m() == m);
+    }
+
+void SVDWorker::
+buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Vector>& mvector,
+             const IQIndex& newmid, IQTensor& U)
+    {
+    IQIndex active = (rho.index(1).primeLevel() == 0 ? rho.index(1)
+                                                     : rho.index(2));
+
+    // Construct orthogonalized IQTensor U
+    vector<ITensor> terms; terms.reserve(rho.iten_size());
+    int itenind = 0, kept_block = 0;
+    int m = newmid.m();
+    for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
+        {
+        const Vector& thisD = GET(mvector,itenind);
+        int this_m = thisD.Length();
+
+        if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
+            { this_m = 1; m = 1; }
+
+        if(this_m == 0) { ++itenind; continue; }
+
+        const Index& nm = newmid.index(++kept_block);
+        Index act = it->index(1).deprimed();
+
+#ifdef DEBUG
+        if(nm.m() != this_m)
+            {
+            Print(nm.m());
+            Print(this_m);
+            Error("Mismatched m");
+            }
+#endif
 
         Matrix Utrunc = GET(mmatrix,itenind).Columns(1,this_m);
 
@@ -291,7 +326,6 @@ buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Ve
 
         ++itenind;
         }
-    newmid = IQIndex("qlink",iq,In);
     U = IQTensor(active,newmid);
     foreach(const ITensor& t, terms) 
         U += t;
@@ -300,20 +334,18 @@ buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Ve
 
 Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     {
-
     vector<Matrix> mmatrix;
     vector<Vector> mvector;
     vector<Real> alleig;
-    Real docut = 0,svdtruncerr = 0;
-    int m = -1;
-
-    diag_and_truncate(rho,mmatrix,mvector,alleig,docut,svdtruncerr,m);
+    Real svdtruncerr = 0;
 
     IQIndex newmid;
-    buildUnitary(rho,mmatrix,mvector,docut,m,newmid,U);
+    diag_and_truncate(rho,mmatrix,mvector,alleig,svdtruncerr,newmid);
+    
+    buildUnitary(rho,mmatrix,mvector,newmid,U);
 
-    D.ReDimension(m);
-    for(int i = 1; i <= m; ++i) 
+    D.ReDimension(newmid.m());
+    for(int i = 1; i <= newmid.m(); ++i) 
         D(i) = GET(alleig,alleig.size()-i);
     lastd = D;
     return svdtruncerr;

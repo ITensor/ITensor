@@ -101,10 +101,10 @@ protected:
 
     void
     diag_and_truncate(const IQTensor& rho, std::vector<Matrix>& mmatrix, std::vector<Vector>& mvector,
-                      std::vector<Real>& alleig, Real& docut, Real& svdtruncerr, int& m);
+                      std::vector<Real>& alleig, Real& svdtruncerr, IQIndex& newmid);
     void
     buildUnitary(const IQTensor& rho, const std::vector<Matrix>& mmatrix, const std::vector<Vector>& mvector,
-                 Real docut, int m, IQIndex& newmid, IQTensor& U);
+                 const IQIndex& newmid, IQTensor& U);
 
 }; //class SVDWorker
 
