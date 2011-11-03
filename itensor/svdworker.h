@@ -73,10 +73,14 @@ public:
     void read(std::istream& s);
     void write(std::ostream& s) const;
 
-    Real diag_denmat(const ITensor& rho, Vector& D, ITensor& U);
-    Real diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U);
-    Real diag_denmat_complex(const IQTensor& rho, Vector& D, IQTensor& U);
-    Real diag_denmat_complex(const ITensor& rho, Vector& D, ITensor& U);
+    Real diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U);
+    Real diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U);
+
+    Real diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& C, ITensor& U);
+    Real diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& C, IQTensor& U);
+
+    Real diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U);
+    Real diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, ITensor& U);
 
     template <class Tensor>
     void operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
@@ -85,7 +89,14 @@ public:
     inline void operator()(const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
         { operator()<Tensor>(1,AA,A,B,dir); }
 
-protected:
+    template <class Tensor>
+    void operator()(int b, const Tensor& AA, Tensor& L, Tensor& V, Tensor& R);
+
+    template <class Tensor>
+    inline void operator()(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R)
+        { operator()<Tensor>(1,AA,L,V,R); }
+
+private:
 
     int N;
     std::vector<Real> truncerr_;
@@ -105,6 +116,16 @@ protected:
     void
     buildUnitary(const IQTensor& rho, const std::vector<Matrix>& mmatrix, const std::vector<Vector>& mvector,
                  const IQIndex& newmid, IQTensor& U);
+
+    void
+    buildCenter(const IQTensor& rho, const std::vector<Matrix>& mmatrix, const std::vector<Vector>& mvector,
+                const IQIndex& newmid, IQTensor& C);
+
+    ITensor 
+    pseudoInverse(const ITensor& C);
+
+    IQTensor 
+    pseudoInverse(const IQTensor& C);
 
 }; //class SVDWorker
 
@@ -269,11 +290,12 @@ void SVDWorker::operator()(int b, const Tensor& AA,
         maxm_ = mid.m();
         }
 
+    IndexT newmid;
     Tensor U;
     if(AAc.is_complex())
-        truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),U);
+        truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),newmid,U);
     else
-        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),U);
+        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),newmid,U);
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 
@@ -282,6 +304,68 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     comb.conj();
     comb.product(U,to_orth);
     newoc = conj(U) * AAc;
+
+    } //void SVDWorker::operator()
+
+template<class Tensor>
+void SVDWorker::operator()(int b, const Tensor& AA, 
+                          Tensor& L, Tensor& V, Tensor& R)
+    {
+    typedef typename Tensor::IndexT IndexT;
+    typedef typename Tensor::CombinerT CombinerT;
+
+    IndexT ll = V.index(1);
+
+    if(minm() != 1) Error("minm == 1 recommended for canonical SVD");
+
+    CombinerT comb;
+    for(int j = 1; j <= R.r(); ++j) 
+        { 
+        const IndexT& I = R.index(j);
+        if(I == ll || I == Tensor::ReImIndex()) continue;
+        comb.addleft(I);
+        }
+
+    //Apply combiner
+    comb.doCondense(true);
+    comb.init(ll.rawname());
+    Tensor AAc; comb.product(AA,AAc);
+
+    const IndexT& active = comb.right();
+
+    Tensor AAcc = conj(AAc); 
+    AAcc.primeind(active); 
+    Tensor rho = AAc*AAcc; 
+
+    const Real saved_cutoff = cutoff_; 
+    const int saved_minm = minm_,
+              saved_maxm = maxm_; 
+    if(!truncate_)
+        {
+        cutoff_ = -1;
+        minm_ = ll.m();
+        maxm_ = ll.m();
+        }
+
+    Tensor C,U;
+    if(AAc.is_complex())
+        {
+        Error("Complex case not implemented");
+        }
+    else
+        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),ll,C,U);
+
+    cutoff_ = saved_cutoff; 
+    minm_ = saved_minm; 
+    maxm_ = saved_maxm; 
+
+    L = conj(U) * AAc;
+
+    V = pseudoInverse(C);
+
+    comb.conj();
+    comb.product(U,R);
+    R /= C;
 
     } //void SVDWorker::operator()
 

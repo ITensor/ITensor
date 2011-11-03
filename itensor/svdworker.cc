@@ -6,7 +6,16 @@ using std::cerr;
 using std::endl;
 using std::pair;
 
-Real SVDWorker::diag_denmat(const ITensor& rho, Vector& D, ITensor& U)
+inline Vector
+sqrt(Vector V)
+    {
+    for(int j = 1; j <= V.Length(); ++j)
+        V(j) = sqrt(fabs(V(j)));
+    return V;
+    }
+
+
+Real SVDWorker::diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
     {
     assert(rho.r() == 2);
     Index active = rho.index(1); active.noprime();
@@ -52,19 +61,27 @@ Real SVDWorker::diag_denmat(const ITensor& rho, Vector& D, ITensor& U)
             cout << ((j != stop) ? ", " : "\n");
             }
         }
-    Index newmid(active.rawname(),mp,active.type());
+    newmid = Index(active.rawname(),mp,active.type());
     U = ITensor(active,newmid,UU.Columns(1,mp));
     lastd = D;
     return svdtruncerr;
     }
 
-Real SVDWorker::diag_denmat_complex(const ITensor& rho, Vector& D, ITensor& U)
+Real SVDWorker::
+diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& C, ITensor& U)
+    {
+    Real svdtruncerr = diag_denmat(rho,D,newmid,U);
+    C = ITensor(newmid,sqrt(D));
+    return svdtruncerr;
+    }
+
+Real SVDWorker::
+diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
     {
     ITensor rhore,rhoim;
     rho.SplitReIm(rhore,rhoim);		// Need to fix this to put in Hermitian case!
-    return diag_denmat(rhore,D,U);
+    return diag_denmat(rhore,D,newmid,U);
     }
-
 
 //
 // Helper method for SVDWorker::diag_denmat(const IQTensor& rho,...)
@@ -327,19 +344,47 @@ buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Ve
         ++itenind;
         }
     U = IQTensor(active,newmid);
-    foreach(const ITensor& t, terms) 
-        U += t;
+    for(size_t j = 0; j < terms.size(); ++j)
+        U += terms[j];
+    }
+
+void SVDWorker::
+buildCenter(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Vector>& mvector,
+             const IQIndex& newmid, IQTensor& C)
+    {
+    vector<ITensor> terms; terms.reserve(rho.iten_size());
+    int itenind = 0, kept_block = 0;
+    int m = newmid.m();
+    for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
+        {
+        const Vector& thisD = GET(mvector,itenind);
+        int this_m = thisD.Length();
+
+        if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
+            { this_m = 1; m = 1; }
+
+        if(this_m == 0) { ++itenind; continue; }
+
+        const Index& nm = newmid.index(++kept_block);
+
+        ITensor term(nm,sqrt(thisD)); 
+        terms.push_back(term);
+
+        ++itenind;
+        }
+    C = IQTensor(newmid);
+    for(size_t j = 0; j < terms.size(); ++j)
+        C += terms[j];
     }
 
 
-Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
+Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
     {
     vector<Matrix> mmatrix;
     vector<Vector> mvector;
     vector<Real> alleig;
     Real svdtruncerr = 0;
 
-    IQIndex newmid;
     diag_and_truncate(rho,mmatrix,mvector,alleig,svdtruncerr,newmid);
     
     buildUnitary(rho,mmatrix,mvector,newmid,U);
@@ -351,7 +396,27 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQTensor& U)
     return svdtruncerr;
     } //Real SVDWorker::diag_denmat
 
-Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQTensor& U)
+Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& C, IQTensor& U)
+    {
+    vector<Matrix> mmatrix;
+    vector<Vector> mvector;
+    vector<Real> alleig;
+    Real svdtruncerr = 0;
+
+    diag_and_truncate(rho,mmatrix,mvector,alleig,svdtruncerr,newmid);
+    
+    buildUnitary(rho,mmatrix,mvector,newmid,U);
+
+    buildCenter(rho,mmatrix,mvector,newmid,C);
+
+    D.ReDimension(newmid.m());
+    for(int i = 1; i <= newmid.m(); ++i) 
+        D(i) = GET(alleig,alleig.size()-i);
+    lastd = D;
+    return svdtruncerr;
+    } //Real SVDWorker::diag_denmat
+
+Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
     {
     bool docomplex = false;
     IQIndex active;
@@ -544,7 +609,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQTensor& U)
         terms.push_back(termre);
         ++itenind;
 	}
-    IQIndex newmid("qlink",iq,In);
+    newmid = IQIndex("qlink",iq,In);
     U = IQTensor(active,newmid);
     if(docomplex)
 	U *= IQTensor::Complex_1();
@@ -556,4 +621,39 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQTensor& U)
     lastd = D;
     return svdtruncerr;
     } //Real SVDWorker::diag_denmat
+
+
+ITensor SVDWorker::
+pseudoInverse(const ITensor& C)
+    {
+    if(C.r() != 1)
+        {
+        Print(C);
+        Error("pseudoInverse only defined for rank 1 ITensors");
+        }
+    const int m = C.vec_size();
+    Vector V(m);
+    C.assignToVec(V);
+
+    for(int j = 1; j <= m; ++j)
+        V(j) = (fabs(V(j)) == 0 ? 0 : 1/V(j));
+
+    return ITensor(C.index(1),V);
+    }
+
+IQTensor SVDWorker::
+pseudoInverse(const IQTensor& C)
+    {
+    if(C.r() != 1)
+        {
+        C.printIQInds("C");
+        Error("pseudoInverse only defined for rank 1 ITensors");
+        }
+    IQTensor res(C.index(1));
+    for(IQTensor::const_iten_it it = C.const_iten_begin(); 
+        it != C.const_iten_end(); 
+        ++it)
+        { res += pseudoInverse(*it); }
+    return res;
+    }
 
