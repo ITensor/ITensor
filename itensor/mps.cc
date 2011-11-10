@@ -156,7 +156,7 @@ plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind,
         }
     }
 
-#define NEW_MPS_ADDITION
+//#define NEW_MPS_ADDITION
 
 #ifdef NEW_MPS_ADDITION
 
@@ -775,10 +775,13 @@ findCenter(const IQMPS& psi)
         bool allSameDir = true;
         Arrow dir = A.index(1).dir();
         for(int i = 2; i <= A.r(); ++i)
-            if(A.index(i).dir() != dir)
             {
+            if(A.index(i).type() == ReIm) continue;
+            if(A.index(i).dir() != dir)
+                {
                 allSameDir = false;
                 break;
+                }
             }
 
         //Found the ortho. center
