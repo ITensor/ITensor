@@ -134,7 +134,7 @@ int SVDWorker::
 maxEigsKept() const
     {
     int res = -1;
-    foreach(const Vector& eigs,eigsKept_)
+    Foreach(const Vector& eigs,eigsKept_)
         res = max(res,eigs.Length());
     return res;
     }
@@ -144,7 +144,7 @@ Real SVDWorker::
 maxTruncerr() const
     {
     Real res = -1;
-    foreach(const Real& te,truncerr_)
+    Foreach(const Real& te,truncerr_)
         res = max(res,te);
     return res;
     }

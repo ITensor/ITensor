@@ -98,7 +98,7 @@ public:
     bool don;
     QCounter(const std::vector<IQIndex>& v)
 	{
-        foreach(const IQIndex& I,v)
+        Foreach(const IQIndex& I,v)
         {
             n.push_back(I.nindex());
             ind.push_back(0);
@@ -165,7 +165,7 @@ IQCombiner(
     if(l4 != IQIndex::Null()) left.push_back(l4);
     if(l5 != IQIndex::Null()) left.push_back(l5); 
     if(l6 != IQIndex::Null()) left.push_back(l6);
-    foreach(IQIndex& L, left) L.conj();
+    Foreach(IQIndex& L, left) L.conj();
     }
 
 inline
@@ -238,7 +238,7 @@ init(std::string rname, IndexType type,
         q *= -rdir;
 
         Combiner co; Real rss = 0.0;
-        foreach(const Index& i, vind)
+        Foreach(const Index& i, vind)
         { 
             co.addleft(i); 
             rss += i.unique_Real(); 
@@ -327,7 +327,7 @@ void IQCombiner::
 conj() 
     { 
     init();
-    foreach(IQIndex& I, left) I.conj(); 
+    Foreach(IQIndex& I, left) I.conj(); 
     if(do_condense) 
         {
         cond.conj();
@@ -345,7 +345,7 @@ operator<<(std::ostream & s, const IQCombiner & c)
     else
         { s << std::endl << "Right index is not initialized\n\n"; }
     s << "Left indices: \n";
-    foreach(const IQIndex& I, c.left) s << I << std::endl;
+    Foreach(const IQIndex& I, c.left) s << I << std::endl;
     return s << "\n\n";
     }
 
@@ -384,7 +384,7 @@ product(const IQTensor& t, IQTensor& res) const
 
         res = IQTensor(iqinds);
 
-        foreach(const ITensor& it, t_.itensors())
+        Foreach(const ITensor& it, t_.itensors())
         for(int k = 1; k <= it.r(); ++k)
         if(r.hasindex(it.index(k)))
         { res += (it * rightcomb[it.index(k)]); }
@@ -395,7 +395,7 @@ product(const IQTensor& t, IQTensor& res) const
         //t has left IQIndex's, combine them
 
         //res will have all IQIndex's of t not in the left of c
-        foreach(const IQIndex& I, t.iqinds()) 
+        Foreach(const IQIndex& I, t.iqinds()) 
             { if(!hasindex(I)) iqinds.push_back(I); }
         //and res will have c's right IQIndex
         if(do_condense) iqinds.push_back(ucright_);

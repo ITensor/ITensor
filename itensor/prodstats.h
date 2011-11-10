@@ -80,7 +80,7 @@ public:
     {
         std::cerr << "\n-------- Product Statistics ----------\n";
         std::cerr << "Global Count: " << std::endl;
-        foreach(gitertype pp, global) std::cerr << boost::format("(%d,%d) = %d\n")%pp.first.first%pp.first.second%pp.second;
+        Foreach(gitertype pp, global) std::cerr << boost::format("(%d,%d) = %d\n")%pp.first.first%pp.first.second%pp.second;
         std::cerr << "Total = " << total << std::endl;
         std::cerr << boost::format("# Matrices = %d (%.2f%%)\n") % (did_matrix) % (total == 0 ? 0 : (100.0*(1.*did_matrix/(2*total))));
 

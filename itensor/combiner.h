@@ -223,7 +223,7 @@ operator<<(std::ostream & s, const Combiner & c)
     else
         s << "\nRight index not initialized" << "\n";
     s << "Left indices:\n";
-    foreach(const Index& l, c.left()) s << " " << l << "\n";
+    Foreach(const Index& l, c.left()) s << " " << l << "\n";
     return s;
     }
 

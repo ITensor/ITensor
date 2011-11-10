@@ -109,7 +109,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
         {
         //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
         Real maxLogNum = -200;
-        foreach(const ITensor& t, rho.itensors())
+        Foreach(const ITensor& t, rho.itensors())
 	    maxLogNum = max(maxLogNum,t.scale().logNum());
         refNorm_ = LogNumber(maxLogNum,1);
         //DO_IF_DEBUG(cout << "refNorm = " << refNorm << endl; )
@@ -441,7 +441,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
     if(doRelCutoff_)
 	{
         Real maxLogNum = -200;
-        foreach(const ITensor& t, rho.itensors())
+        Foreach(const ITensor& t, rho.itensors())
 	    maxLogNum = max(maxLogNum,t.scale().logNum());
         refNorm_ = LogNumber(maxLogNum,1);
 	}
@@ -613,7 +613,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
     U = IQTensor(active,newmid);
     if(docomplex)
 	U *= IQTensor::Complex_1();
-    foreach(const ITensor& t, terms) 
+    Foreach(const ITensor& t, terms) 
 	U += t;
     D.ReDimension(m);
     for(int i = 1; i <= m; ++i) 

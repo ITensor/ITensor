@@ -103,7 +103,7 @@ public:
         psi.assignFromVec(A);
         Tensor psip;
         applyProjOp(psi,LeftTerm,RightTerm,MPOTerm,psip);
-        foreach(const ITensor& phi, other)
+        Foreach(const ITensor& phi, other)
         {
             Real re,im; Dot(phi,psi,re,im);
             if(fabs(im) < 1E-10)

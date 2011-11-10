@@ -11,7 +11,7 @@
 #include "boost/array.hpp"
 
 #include "boost/foreach.hpp"
-#define foreach BOOST_FOREACH
+#define Foreach BOOST_FOREACH
 
 template<class T, class Op> void 
 for_all(T& a, Op f) 

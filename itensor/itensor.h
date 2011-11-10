@@ -50,8 +50,8 @@ public:
     inline LogNumber 
     scale() const { return scale_; }
 
-    //Can be used for iteration over Indices in a foreach loop
-    //e.g. foreach(const Index& I, t.index() ) { ... }
+    //Can be used for iteration over Indices in a Foreach loop
+    //e.g. Foreach(const Index& I, t.index() ) { ... }
     typedef boost::array<Index,NMAX+1>::const_iterator index_it;
     inline const std::pair<index_it,index_it> 
     index() const  

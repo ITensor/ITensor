@@ -83,7 +83,7 @@ init(const std::string& smallind_name)
         */
         static std::vector<QN> qns(1000);
         qns.resize(0);
-        foreach(const inqn& x, bigind_.iq()) qns.push_back(x.qn);
+        Foreach(const inqn& x, bigind_.iq()) qns.push_back(x.qn);
         sort(qns.begin(),qns.end());
         std::vector<QN>::iterator ue = unique(qns.begin(),qns.end());
 
@@ -92,12 +92,12 @@ init(const std::string& smallind_name)
         {
             const QN& q = *qi;
             int totm = 0;
-            foreach(const inqn& x, bigind_.iq())
+            Foreach(const inqn& x, bigind_.iq())
             if(x.qn == q) totm += x.index.m();
 
             Index small_qind("condensed",totm);
             int start = 0;
-            foreach(const inqn& x, bigind_.iq())
+            Foreach(const inqn& x, bigind_.iq())
             if(x.qn == q)
                 {
                 const Index &xi = x.index;
@@ -177,7 +177,7 @@ product(const IQTensor& t, IQTensor& res) const
             GET(iqinds,bigind_pos) = smallind_;
             res = IQTensor(iqinds);
             ITensor tt;
-            foreach(const ITensor& it, t.itensors())
+            Foreach(const ITensor& it, t.itensors())
             {
                 bool gotit = false;
                 for(int k = 1; k <= it.r(); ++k)

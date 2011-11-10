@@ -123,14 +123,14 @@ plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind,
     {
     map<Index,Index> l1map, l2map;
     vector<inqn> iq;
-    foreach(const inqn& x, l1.iq())
+    Foreach(const inqn& x, l1.iq())
         {
         Index ii = x.index;
         Index jj(ii.name(),ii.m(),ii.type());
         l1map[ii] = jj;
         iq.push_back(inqn(jj,x.qn));
         }
-    foreach(const inqn& x, l2.iq())
+    Foreach(const inqn& x, l2.iq())
         {
         Index ii = x.index;
         Index jj(ii.name(),ii.m(),ii.type());
@@ -139,7 +139,7 @@ plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind,
         }
     sumind = IQIndex(sumind,iq);
     first = IQTensor(conj(l1),sumind);
-    foreach(const inqn& x, l1.iq())
+    Foreach(const inqn& x, l1.iq())
         {
         Index il1 = x.index;
         Index s1 = l1map[il1];
@@ -147,7 +147,7 @@ plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind,
         first += t;
         }
     second = IQTensor(conj(l2),sumind);
-    foreach(const inqn& x, l2.iq())
+    Foreach(const inqn& x, l2.iq())
         {
         Index il2 = x.index;
         Index s2 = l2map[il2];
@@ -184,16 +184,10 @@ MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
 
     for(int j = 1; j <= N; ++j)
         {
-        for(IQTensor::const_iten_it 
-            it = AA(j).const_iten_begin(); 
-            it != AA(j).const_iten_end();
-            ++it)
-            { nA[j].insert(*it); }
-        for(IQTensor::const_iten_it 
-            it = other.AA(j).const_iten_begin(); 
-            it != other.AA(j).const_iten_end();
-            ++it)
-            { nA[j].insert(*it); }
+        Foreach(const ITensor& t, AA(j).itensors())
+            { nA[j].insert(t); }
+        Foreach(const ITensor& t, other.AA(j).itensors())
+            { nA[j].insert(t); }
         }
 
     A.swap(nA);
@@ -286,12 +280,12 @@ void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm, int ma
 {
     //Create combiner
     Combiner comb;
-    foreach(const Index& i, A.indexn())
+    Foreach(const Index& i, A.indexn())
     if(!(i == bond || i == IndReIm))
     { 
         comb.addleft(i); 
     }
-    foreach(const Index& i, A.index1())
+    Foreach(const Index& i, A.index1())
     if(!(i == bond || i == IndReIm ))
     { 
         comb.addleft(i); 
@@ -375,7 +369,7 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
 
         if(s == show_s) { PrintDat(A[s]); }
 
-        foreach(const qC_vt& x, qC) 
+        Foreach(const qC_vt& x, qC) 
         for(int n = 1; n <= Dim;  ++n)
         for(int u = 1; u <= PDim; ++u)
             {
@@ -477,14 +471,14 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
 
         qC.clear();
 
-        foreach(const qt_vt& x, qt)
+        Foreach(const qt_vt& x, qt)
             {
             const vector<ITensor>& blks = x.second;
             if(blks.size() != 0)
                 {
                 q = x.first; 
                 if(s == N) 
-                    { foreach(const ITensor& t, blks) nblock.push_back(t); }
+                    { Foreach(const ITensor& t, blks) nblock.push_back(t); }
                 else
                     {
                     Matrix M; int mm = collapseCols(qD[q],M);
@@ -495,14 +489,14 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
                         cerr << "qD[q] = " << qD[q] << "\n";
                         cerr << "M = \n" << M << "\n";
                         int count = 0;
-                        foreach(const ITensor& t, blks) 
+                        Foreach(const ITensor& t, blks) 
                         t.print((boost::format("t%02d")%(++count)).str(),ShowData);
                         }
                     //string qname = (boost::format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
                     string qname = (boost::format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
                     Index qbond(qname,mm);
                     ITensor compressor(bond,qbond,M);
-                    foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
+                    Foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
                     iq.push_back(inqn(qbond,q));
                     qC[q] = compressor;
                     }
@@ -534,7 +528,7 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
                             : IQTensor(conj(linkind[s-1]),model.si(s),linkind[s]));
             }
 
-        foreach(const ITensor& nb, nblock) 
+        Foreach(const ITensor& nb, nblock) 
             { qA[s] += nb; } 
         nblock.clear();
 
@@ -595,7 +589,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
             PrintDat(A[s]);
         }
 
-        foreach(const qC_vt& x, qC) {
+        Foreach(const qC_vt& x, qC) {
         const QN& prev_q = x.first; const ITensor& comp = x.second; 
         for(int n = 1; n <= Dim;  ++n)
         for(int u = 1; u <= PDim; ++u)
@@ -687,14 +681,14 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
         qC.clear();
 
-        foreach(const qt_vt& x, qt)
+        Foreach(const qt_vt& x, qt)
         {
             const vector<ITensor>& blks = x.second;
             if(blks.size() != 0)
             {
                 q = x.first; 
                 if(s == N) 
-                { foreach(const ITensor& t, blks) nblock.push_back(t); }
+                { Foreach(const ITensor& t, blks) nblock.push_back(t); }
                 else
                 {
                     Matrix M; int mm = collapseCols(qD[q],M);
@@ -705,14 +699,14 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                         cerr << "qD[q] = " << qD[q] << "\n";
                         cerr << "M = \n" << M << "\n";
                         int count = 0;
-                        foreach(const ITensor& t, blks) 
+                        Foreach(const ITensor& t, blks) 
                         t.print((boost::format("t%02d")%(++count)).str(),ShowData);
                     }
                     //string qname = (boost::format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
                     string qname = (boost::format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
                     Index qbond(qname,mm);
                     ITensor compressor(bond,qbond,M);
-                    foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
+                    Foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
                     iq.push_back(inqn(qbond,q));
                     qC[q] = compressor;
                 }
@@ -743,7 +737,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                                     : IQTensor(conj(linkind[s-1]),si(s),linkind[s]));
         }
 
-        foreach(const ITensor& nb, nblock) { iqpsi.AAnc(s) += nb; } nblock.clear();
+        Foreach(const ITensor& nb, nblock) { iqpsi.AAnc(s) += nb; } nblock.clear();
 
         if(0) //try to get this working ideally
         if(!is_mpo && s > 1) 
