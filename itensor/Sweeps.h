@@ -127,10 +127,10 @@ init() const
         Niter_.at(s) = 10-s;
         }
 
-    for(int s = 1; s <= Nsweep_; ++s)
-        {
-        std::cout << boost::format("Maxm(%d)=%d, Niter(%d)=%d, Cutoff(%d)=%.2E\n")%s%Maxm_[s]%s%Niter_[s]%s%Cutoff_[s];
-        }
+    //for(int s = 1; s <= Nsweep_; ++s)
+        //{
+        //std::cout << boost::format("Maxm(%d)=%d, Niter(%d)=%d, Cutoff(%d)=%.2E\n")%s%Maxm_[s]%s%Niter_[s]%s%Cutoff_[s];
+        //}
 
     init_ = true;
     } //Sweeps::init
