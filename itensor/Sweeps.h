@@ -106,31 +106,33 @@ init() const
     {
     if(init_) return;
 
-    Maxm_.resize(Nsweep_+1);
-    Niter_.resize(Nsweep_+1);
-    Cutoff_.resize(Nsweep_+1);
+    Maxm_.assign(Nsweep_+1,finalMaxm_);
+    Niter_.assign(Nsweep_+1,4);
+    Cutoff_.assign(Nsweep_+1,finalCut_);
 
     if(scheme_ == ramp_m)
         {
-        for(int s = 1; s <= Nsweep_; s++)
-        { Cutoff_.at(s) = finalCut_; Maxm_.at(s) = (int)(Minm_ + (s-1.0)/Nsweep_ * (finalMaxm_ - Minm_)); }
-        }
-    else if(scheme_ == fixed_m || scheme_ == fixed_cutoff)
-        {
-        for(int s = 1; s <= Nsweep_; s++)
-        { Cutoff_.at(s) = finalCut_; Maxm_.at(s) = finalMaxm_; }
+        //Don't want to start with m too low unless requested
+        int start_m = (finalMaxm_ < 10 ? Minm_ : 10);
+
+        if(Nsweep_ > 1) 
+        for(int s = 1; s <= Nsweep_; ++s)
+            { 
+            Maxm_.at(s) = (int)(start_m + (s-1.0)/(Nsweep_-1.0) * (finalMaxm_ - start_m)); 
+            }
         }
     
-    for(int s = 1; s <= Nsweep_; s++)
+    for(int s = 1; s <= min(Nsweep_,4); ++s)
         { 
-        if(s <= min(Nsweep_,4))
-            Niter_.at(s) = 10-s;
-        else
-            Niter_.at(s) = 4; 
+        Niter_.at(s) = 10-s;
+        }
+
+    for(int s = 1; s <= Nsweep_; ++s)
+        {
+        std::cout << boost::format("Maxm(%d)=%d, Niter(%d)=%d, Cutoff(%d)=%.2E\n")%s%Maxm_[s]%s%Niter_[s]%s%Cutoff_[s];
         }
 
     init_ = true;
-
     } //Sweeps::init
 
 inline void 
