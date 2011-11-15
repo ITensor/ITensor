@@ -148,9 +148,9 @@ operator*(const T& t1, const T* pt2)
     }
 
 template<class T> inline void 
-readFromFile(const char* fname, T& t) 
+readFromFile(const std::string& fname, T& t) 
     { 
-    std::ifstream s(fname); 
+    std::ifstream s(fname.c_str()); 
     if(!s.good()) 
 	Error("Couldn't open file for reading");
     t.read(s); 
@@ -158,9 +158,9 @@ readFromFile(const char* fname, T& t)
     }
 
 template<class T> inline void 
-writeToFile(const char* fname, const T& t) 
+writeToFile(const std::string& fname, const T& t) 
     { 
-    std::ofstream s(fname); 
+    std::ofstream s(fname.c_str()); 
     if(!s.good()) 
 	Error("Couldn't open file for writing");
     t.write(s); 
