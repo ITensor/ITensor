@@ -4,7 +4,7 @@
 class Sweeps
 {
 public:
-    enum Scheme {ramp_m, fixed_m, fixed_cutoff, plateau};
+    enum Scheme {ramp_m, fixed_m, fixed_cutoff, exp_m};
 
     //Constructors --------------
 
@@ -98,7 +98,7 @@ Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut)
     : scheme_(sch), 
       Minm_(_minm), finalMaxm_(_maxm), finalCut_(_cut),
       Maxm_(nsw+1), Niter_(nsw+1,4), Cutoff_(nsw+1), 
-      Nsweep_(nsw), Nwarm_(0), 
+      Nsweep_(nsw), Nwarm_(nsw-1), 
       num_site_center_(2), init_(false)
     { }
 
@@ -124,7 +124,7 @@ init() const
     if(init_) return;
 
     Maxm_.assign(Nsweep_+1,finalMaxm_);
-    Niter_.assign(Nsweep_+1,4);
+    Niter_.assign(Nsweep_+1,2);
     Cutoff_.assign(Nsweep_+1,finalCut_);
 
     //Don't want to start with m too low unless requested
@@ -132,25 +132,26 @@ init() const
 
     if(scheme_ == ramp_m)
         {
-        if(Nsweep_ > 1) 
-        for(int s = 1; s <= Nsweep_; ++s)
-            Maxm_.at(s) = (int)(start_m + (s-1.0)/(Nsweep_-1.0) * (finalMaxm_ - start_m)); 
-        }
-    else
-    if(scheme_ == plateau)
-        {
+        //Actual number of warmup sweeps to do
         int act_nwm = min(Nwarm_+1,Nsweep_);
+        if(act_nwm > 1) 
         for(int s = 1; s <= act_nwm; ++s)
             Maxm_.at(s) = (int)(start_m + (s-1.0)/(act_nwm-1.0) * (finalMaxm_ - start_m)); 
+        }
+    else
+    if(scheme_ == exp_m)
+        {
+        int act_nwm = min(Nwarm_+2,Nsweep_);
+        if(act_nwm > 1)
+        for(int s = 1; s <= act_nwm; ++s)
+            {
+            int p = (act_nwm-s)/2; //intentional integer division
+            Maxm_.at(s) = (int)(start_m + pow(0.5,p) * (finalMaxm_ - start_m)); 
+            }
         }
     
     for(int s = 1; s <= min(Nsweep_,4); ++s)
         Niter_.at(s) = 10-s;
-
-    //for(int s = 1; s <= Nsweep_; ++s)
-    //    {
-    //    std::cout << boost::format("Maxm(%d)=%d, Niter(%d)=%d, Cutoff(%d)=%.2E\n")%s%Maxm_[s]%s%Niter_[s]%s%Cutoff_[s];
-    //    }
 
     init_ = true;
     } //Sweeps::init
@@ -166,5 +167,16 @@ sweepnext(int &l, int &ha, int N, int min_l = 1)
         }
     if(l-- == min_l) ha = 3;
     }
+
+inline std::ostream&
+operator<<(std::ostream& s, const Sweeps& swps)
+    {
+    s << "Sweeps:\n";
+    for(int sw = 1; sw <= swps.nsweep(); ++sw)
+        s << boost::format("    Maxm(%d)=%d, Niter(%d)=%d, Cutoff(%d)=%.2E\n")
+             % sw % swps.maxm(sw) % sw % swps.niter(sw) % sw % swps.cutoff(sw);
+    return s;
+    }
+
 
 #endif //__ITENSOR_SWEEPS_HEADER_H
