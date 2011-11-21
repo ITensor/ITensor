@@ -398,6 +398,9 @@ public:
     void 
     conj();
 
+    void 
+    conj(const IQIndex& I);
+
     friend std::ostream& 
     operator<<(std::ostream & s, const IQTensor &t);
 

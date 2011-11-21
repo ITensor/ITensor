@@ -849,6 +849,16 @@ conj()
         }
     }
 
+void IQTensor::
+conj(const IQIndex& I)
+    {
+    solo();
+    Foreach(IQIndex& J, p->iqindex_)
+        { 
+        if(J == I) J.conj(); 
+        }
+    }
+
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t)
     {
@@ -1035,7 +1045,7 @@ operator*=(const IQTensor& other)
 
 IQTensor& IQTensor::
 operator/=(const IQTensor& other)
-{
+    {
     if(this == &other)
         {
         IQTensor cp_oth(other);
@@ -1151,7 +1161,7 @@ operator/=(const IQTensor& other)
 
     return *this;
 
-} //IQTensor& IQTensor::operator/=(const IQTensor& other)
+    } //IQTensor& IQTensor::operator/=(const IQTensor& other)
 
 //Extracts the real and imaginary parts of the 
 //component of a rank 0 tensor (scalar)
