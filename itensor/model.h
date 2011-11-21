@@ -26,6 +26,16 @@ inline std::ostream& operator<<(std::ostream& s, const BaseModel& b)
     return s;
 }
 
+class SpinModel : public BaseModel
+{
+public:
+    virtual IQTensor sx(int i) const = 0;
+    virtual IQTensor isy(int i) const = 0;
+    virtual IQTensor sz(int i) const = 0;
+    virtual IQTensor sp(int i) const = 0;
+    virtual IQTensor sm(int i) const = 0;
+};
+
 //---------------------------------------------------------
 //Definition of Model Types
 //---------------------------------------------------------
@@ -34,9 +44,9 @@ namespace SpinOne {
 
 const int Dim = 3;
 
-class Model : public BaseModel
+class Model : public SpinModel
 {
-    typedef BaseModel Parent;
+    typedef SpinModel Parent;
 
     int N;
     std::vector<IQIndex> site;
@@ -158,9 +168,9 @@ namespace SpinHalf {
 
 const int Dim = 2;
 
-class Model : public BaseModel
+class Model : public SpinModel
 {
-    typedef BaseModel Parent;
+    typedef SpinModel Parent;
     
     int N;
     std::vector<IQIndex> site;
