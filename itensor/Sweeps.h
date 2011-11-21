@@ -150,7 +150,7 @@ init() const
             }
         }
     
-    for(int s = 1; s <= min(Nsweep_,4); ++s)
+    for(int s = 1; s <= min(Nwarm_+1,4); ++s)
         Niter_.at(s) = 10-s;
 
     init_ = true;
