@@ -212,15 +212,16 @@ Vector doDavidson(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorS
     return energies;
 }
 
-void onesite_sweepnext(int &l, int &ha, int N)
-{
-    if(ha == 1)
+inline void 
+onesite_sweepnext(int &l, int &ha, int N)
     {
+    if(ha == 1)
+        {
         if(++l == N) ha = 2;
         return;
-    }
+        }
     if(--l == 1) ha = 3;
-}
+    }
 
 
 template <class MPSType, class MPOType, class DMRGOptions>
