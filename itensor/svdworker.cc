@@ -300,7 +300,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
         }
     newmid = IQIndex("qlink",iq,In);
     assert(newmid.m() == m);
-    }
+    } //void SVDWorker::diag_and_truncate
 
 void SVDWorker::
 buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Vector>& mvector,
@@ -372,7 +372,7 @@ buildCenter(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Vec
 
         ++itenind;
         }
-    C = IQTensor(newmid);
+    C = IQTensor(conj(newmid));
     for(size_t j = 0; j < terms.size(); ++j)
         C += terms[j];
     }

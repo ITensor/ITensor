@@ -9,6 +9,7 @@
 #include "matrix.h"
 #include "assert.h"
 #include "boost/array.hpp"
+#include "boost/format.hpp"
 
 #include "boost/foreach.hpp"
 #define Foreach BOOST_FOREACH

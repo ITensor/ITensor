@@ -460,6 +460,9 @@ public:
         operator/=(ITensor::ConjTensor()); 
         }
 
+    inline void 
+    conj(const Index& I) { }
+
     inline bool 
     is_zero() const { return (norm() < 1E-20); } 
 

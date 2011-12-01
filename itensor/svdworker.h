@@ -365,6 +365,7 @@ void SVDWorker::operator()(int b, const Tensor& AA,
 
     comb.conj();
     comb.product(U,R);
+    R.conj(C.index(1));
     R /= C;
 
     } //void SVDWorker::operator()
