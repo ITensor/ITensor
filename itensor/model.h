@@ -5,6 +5,8 @@
 class BaseModel
 {
 public:
+    BaseModel() { }
+
     virtual int dim() const = 0;
     virtual int NN() const = 0;
     virtual const IQIndex& si(int i) const = 0;
@@ -14,6 +16,7 @@ public:
     virtual void write(std::ostream& s) const = 0;
 
     virtual IQTensor id(int i) const = 0;
+
 protected:
     virtual ~BaseModel() { }
 };
@@ -29,11 +32,30 @@ inline std::ostream& operator<<(std::ostream& s, const BaseModel& b)
 class SpinModel : public BaseModel
 {
 public:
-    virtual IQTensor sx(int i) const = 0;
-    virtual IQTensor isy(int i) const = 0;
-    virtual IQTensor sz(int i) const = 0;
-    virtual IQTensor sp(int i) const = 0;
-    virtual IQTensor sm(int i) const = 0;
+    typedef BaseModel Parent;
+
+    SpinModel() { }
+
+    virtual IQTensor 
+    sx(int i) const = 0;
+
+    virtual IQTensor 
+    isy(int i) const = 0;
+
+    virtual IQTensor 
+    sz(int i) const = 0;
+
+    virtual IQTensor 
+    sp(int i) const = 0;
+
+    virtual IQTensor 
+    sm(int i) const = 0;
+};
+
+class ParticleModel : public BaseModel
+{
+public:
+    virtual IQTensor n(int i) const = 0;
 };
 
 //---------------------------------------------------------
@@ -46,22 +68,26 @@ const int Dim = 3;
 
 class Model : public SpinModel
 {
+public:
+
     typedef SpinModel Parent;
 
-    int N;
-    std::vector<IQIndex> site;
-public:
-    Model() : N(-1) { }
-    Model(int N_) : N(N_), site(N_+1) 
-    { 
+    Model() 
+        : N(-1) 
+        { }
+
+    Model(int N_)
+        : N(N_), 
+          site(N_+1) 
+        { 
         for(int i = 1; i <= N; ++i)
-        {
+            {
         site.at(i) = IQIndex(nameint("S=1, site=",i),
         Index(nameint("Up for site",i),1,Site),QN(+2,0),
         Index(nameint("Z0 for site",i),1,Site),QN( 0,0),
         Index(nameint("Dn for site",i),1,Site),QN(-2,0));
+            }
         }
-    }
     Model(std::istream& s) { read(s); }
 
     virtual ~Model() { }
@@ -160,6 +186,10 @@ public:
         return res;
     }
 
+private:
+
+    int N;
+    std::vector<IQIndex> site;
 };
 
 } //end namespace SpinOne
