@@ -5,6 +5,7 @@ using std::cerr;
 using std::endl;
 using std::map;
 using std::string;
+using boost::format;
 
 template <class Tensor>
 Tensor& MPSt<Tensor>::
@@ -50,7 +51,9 @@ void MPSt<Tensor>::
 write(std::ostream& s) const
     {
     for(int j = 1; j <= N; ++j) 
+        {
         A.at(j).write(s);
+        }
     s.write((char*) &left_orth_lim,sizeof(left_orth_lim));
     s.write((char*) &right_orth_lim,sizeof(right_orth_lim));
     svd_.write(s);
@@ -333,6 +336,16 @@ int collapseCols(const Vector& Diag, Matrix& M)
     return nc;
     }
 
+int periodicWrap(int j, int N)
+    {
+    if(j < 1)
+        while(j < 1) j += N;
+    else
+    if(j > N)
+        while(j > N) j -= N;
+    return j;
+    }
+
 void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq, Real cut)
     {
     const int N = A.size()-1;
@@ -341,7 +354,27 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
     const int Dim = model.dim();
     const int PDim = (is_mpo ? Dim : 1);
 
-    vector<IQIndex> linkind(N);
+    const int fullrank = (is_mpo ? 4 : 3);
+    int start = 1, end = N;
+    for(int j = 1; j <= N; ++j)
+        {
+        if(A[j].r() < fullrank)
+            {
+            if(A.at(periodicWrap(j-1,N)).r() < fullrank) 
+                {
+                //cerr << "Got start at " << j << "\n";
+                start = j;
+                }
+            if(A.at(periodicWrap(j+1,N)).r() < fullrank) 
+                {
+                //cerr << "Got end at " << j << "\n";
+                end = j;
+                }
+            }
+        }
+    cout << "Converting to IQ with (start, end) = " << start SP end << endl;
+
+    vector<IQIndex> linkind(N+1);
 
     typedef map<QN,Vector>::value_type qD_vt;
     map<QN,Vector> qD; //Diags of compressor matrices by QN
@@ -361,11 +394,17 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
     const int show_s = 0;
 
     Index bond, prev_bond;
-    for(int s = 1; s <= N; ++s)
+    int Send = (end < start ? N+end : end); 
+    for(int S = start; S <= Send; ++S)
         {
+        int s = periodicWrap(S,N);
+        int sprev = periodicWrap(S-1,N);
+        int snext = periodicWrap(S+1,N);
+        //cerr << format("S = %d, s = %d, sprev = %d, snext = %d\n")%S%s%sprev%snext;
+
         qD.clear(); qt.clear();
-        if(s > 1) prev_bond = index_in_common(A[s-1],A[s],Link);
-        if(s < N) bond = index_in_common(A[s],A[s+1],Link);
+        if(S > start) prev_bond = index_in_common(A[sprev],A[s],Link);
+        if(S < Send) bond = index_in_common(A[s],A[snext],Link);
 
         if(s == show_s) { PrintDat(A[s]); }
 
@@ -384,11 +423,11 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
 
             //For the last site, only keep blocks 
             //compatible with specified totalq i.e. q=0 here
-            if(s == N && q != QN()) continue;
+            if(S == Send && q != QN()) continue;
 
             //Set Site indices of A[s] and its previous Link Index
             block = A[s];
-            if(s != 1) block *= conj(comp);
+            if(S != start) block *= conj(comp);
             block *= Index(model.si(s))(n);
             if(is_mpo) block *= Index(model.siP(s))(u);
 
@@ -408,7 +447,7 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
                 }
 
             bool keep_block = false;
-            if(s == N) 
+            if(S == Send) 
                 { keep_block = true; }
             else
                 {
@@ -417,7 +456,7 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
                 else
                     {
                     ITensor summed_block;
-                    if(s==1) 
+                    if(S==start) 
                         { summed_block = block; }
                     else
                         {
@@ -445,7 +484,7 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
                             { D(j) = 1; keep_block = true; }
                         }
                     }
-                } //else (s != N)
+                } //else (S != Send)
 
             if(keep_block)
                 {
@@ -477,7 +516,7 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
             if(blks.size() != 0)
                 {
                 q = x.first; 
-                if(s == N) 
+                if(S == Send) 
                     { Foreach(const ITensor& t, blks) nblock.push_back(t); }
                 else
                     {
@@ -503,7 +542,7 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
                 }
             }
 
-        if(s != N) 
+        if(S != Send) 
             { 
             if(iq.empty()) 
                 {
@@ -512,24 +551,25 @@ void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTens
                 }
             linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
             }
-        if(s == 1)
+        if(S == start)
             {
-            qA[s] = (is_mpo ? IQTensor(conj(model.si(s)),model.siP(s),linkind[s]) 
+            qA.at(s) = (is_mpo ? IQTensor(conj(model.si(s)),model.siP(s),linkind.at(s)) 
                             : IQTensor(model.si(s),linkind[s]));
             }
-        else if(s == N)
+        else 
+        if(S == Send)
             {
-            qA[s] = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(model.si(s)),model.siP(s)) 
-                            : IQTensor(conj(linkind[s-1]),model.si(s)));
+            qA.at(s) = (is_mpo ? IQTensor(conj(linkind[sprev]),conj(model.si(s)),model.siP(s)) 
+                            : IQTensor(conj(linkind[sprev]),model.si(s)));
             }
         else
             {
-            qA[s] = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(model.si(s)),model.siP(s),linkind[s]) 
-                            : IQTensor(conj(linkind[s-1]),model.si(s),linkind[s]));
+            qA.at(s) = (is_mpo ? IQTensor(conj(linkind[sprev]),conj(model.si(s)),model.siP(s),linkind[s]) 
+                            : IQTensor(conj(linkind[sprev]),model.si(s),linkind[s]));
             }
 
         Foreach(const ITensor& nb, nblock) 
-            { qA[s] += nb; } 
+            { qA.at(s) += nb; } 
         nblock.clear();
 
         if(s==show_s)
