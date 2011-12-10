@@ -429,15 +429,33 @@ public:
     bool is_complex() const
     { return A[left_orth_lim+1].is_complex(); }
 
-    friend inline std::ostream& operator<<(std::ostream& s, const MPSt& M)
-    {
+    friend inline std::ostream& 
+    operator<<(std::ostream& s, const MPSt& M)
+        {
         s << "\n";
         for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
         return s;
-    }
+        }
 
     void print(std::string name = "",Printdat pdat = HideData) const 
-    { printdat = (pdat==ShowData); std::cerr << "\n" << name << " =\n" << *this << "\n"; printdat = false; }
+        { 
+        bool savep = Globals::printdat();
+        Globals::printdat() = (pdat==ShowData); 
+        std::cerr << "\n" << name << " =\n" << *this << "\n"; 
+        Globals::printdat() = savep;
+        }
+
+    void 
+    printIndices(const std::string& name = "") const
+        {
+        std::cout << name << "=\n";
+        for(int i = 1; i <= NN(); ++i) 
+            AA(i).printIndices(boost::format("AA(%d)")%i);
+        }
+
+    void 
+    printIndices(const boost::format& fname) const
+        { printIndices(fname.str()); }
 
     void toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
     {

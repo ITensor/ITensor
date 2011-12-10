@@ -94,7 +94,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
     {
     if(rho.r() != 2)
         {
-        rho.printIQInds("rho");
+        rho.printIndices("rho");
         Error("Density matrix doesn't have rank 2");
         }
 
@@ -420,7 +420,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
     {
     bool docomplex = false;
     IQIndex active;
-    printdat = true;
+    Globals::printdat() = true;
     if(rho.r() == 3) 
 	{
 	docomplex = true;
@@ -646,7 +646,7 @@ pseudoInverse(const IQTensor& C)
     {
     if(C.r() != 1)
         {
-        C.printIQInds("C");
+        C.printIndices("C");
         Error("pseudoInverse only defined for rank 1 ITensors");
         }
     IQTensor res(C.index(1));

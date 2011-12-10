@@ -408,7 +408,7 @@ product(const IQTensor& t, IQTensor& res) const
             {
             if((j = t.findindex(*I)) == 0)
                 {
-                t.printIQInds("t");
+                t.printIndices("t");
                 std::cerr << "Left indices\n";
                 for(size_t j = 0; j < left.size(); ++j)
                     { std::cerr << j SP left[j] << "\n"; }

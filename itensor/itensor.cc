@@ -89,37 +89,39 @@ operator<<(ostream & s, const ITensor & t)
 
     if(t.is_null()) s << " (dat is null)\n";
     else 
-	{
-        if(t.scale_.isFiniteReal())
         {
+        if(t.scale_.isFiniteReal())
+            {
             Real nrm = t.norm();
             if(nrm >= 1E-2)
                 s << boost::format(" (L=%d,N=%.2f)\n") % t.vec_size() % nrm;
             else
                 s << boost::format(" (L=%d,N=%.1E)\n") % t.vec_size() % nrm;
-        }
+            }
         else
-        {
+            {
             s << boost::format(" (L=%d,N=too big)\n") 
                  % t.vec_size() << t.scale() << std::endl;
-        }
-        if(printdat)
-        {
+            }
+        if(Globals::printdat())
+            {
             Real scale = 1.0;
             if(t.scale_.isFiniteReal()) scale = t.scale_.real();
             else s << "\n(omitting too large scale factor)" << endl;
             const Vector& v = t.p->v;
             Counter c; t.initCounter(c);
             for(; c.notDone(); ++c)
-            {
+                {
                 Real val = v(c.ind)*scale;
-                if(fabs(val) > 1E-10)
+                if(fabs(val) > Globals::printScale())
                     { s << c << " " << val << "\n"; }
+                }
+            }
+        else 
+            {
+            s << "\n";
             }
         }
-        else 
-            s << "\n";
-	}
     return s;
     }
 
@@ -1864,6 +1866,7 @@ operator*=(const ITensor& other)
 
     int new_rn_ = 0;
 
+    /*
     if((pp.odimL*pp.cdim*pp.odimR) < 10000 && (rn_+other.rn_-2*pp.nsamen) <= 4 && rn_ <= 4 && other.rn_ <= 4)
         {
         int am[NMAX+1], bm[NMAX+1], mcon[NMAX+1], mnew[NMAX+1];
@@ -1982,7 +1985,7 @@ operator*=(const ITensor& other)
         }
     else
         {
-        
+    */
         DO_IF_PS(++prodstats.c2;)
         MatrixRefNoLink lref, rref;
         toMatrixProd(*this,other,pp,lref,rref);
@@ -2013,7 +2016,9 @@ operator*=(const ITensor& other)
             { if(!pp.contractedL[j]) new_index_[++new_rn_] = index_[j]; }
         for(int j = 1; j <= other.rn_; ++j)
             { if(!pp.contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
+    /*
         }
+    */
 
     rn_ = new_rn_;
 

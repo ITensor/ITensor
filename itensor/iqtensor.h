@@ -384,10 +384,10 @@ public:
     print(std::string name = "",Printdat pdat = HideData) const;
 
     void 
-    printIQInds(const std::string& name = "") const;
+    printIndices(const std::string& name = "") const;
     inline void 
-    printIQInds(const boost::format& fname) const
-        { printIQInds(fname.str()); }
+    printIndices(const boost::format& fname) const
+        { printIndices(fname.str()); }
 
     void 
     assignFrom(const IQTensor& other) const;

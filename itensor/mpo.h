@@ -124,6 +124,7 @@ public:
         }
 
     using Parent::print;
+    using Parent::printIndices;
 
 private:
     using Parent::N;

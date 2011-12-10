@@ -69,12 +69,13 @@ enum Printdat { ShowData, HideData };
 #define PrintEither(X,Y) \
     {\
     bool savep = Globals::printdat();\
-    printdat = Y; \
+    Globals::printdat() = Y; \
     std::cout << "\n" << #X << " =\n" << X << std::endl; \
     Globals::printdat() = savep;\
     }
 #define Print(X)    PrintEither(X,false)
 #define PrintDat(X) PrintEither(X,true)
+#define PrintIndices(T) { T.printIndices(#T); }
 
 template<class T> std::vector<T>& 
 operator*=(std::vector<T>& v1, const std::vector<T>& v2) 
@@ -198,41 +199,54 @@ readVec(std::istream& s, Vector& V)
 class Globals
     {
 public:
-    static bool& printdat()
-	{
-	static bool printdat_ = false;
-	return printdat_;
-	}
-    static bool& debug1()
-	{
-	static bool debug1_ = false;
-	return debug1_;
-	}
-    static bool& debug2()
-	{
-	static bool debug2_ = false;
-	return debug2_;
-	}
-    static bool& debug3()
-	{
-	static bool debug3_ = false;
-	return debug3_;
-	}
-    static bool& debug4()
-	{
-	static bool debug4_ = false;
-	return debug4_;
-	}
-    static Vector& lastd()
-	{
-	static Vector lastd_;
-	return lastd_;
-	}
-    static bool& checkArrows()
-    {
-    static bool checkArrows_ = true;
-    return checkArrows_;
-    }
+    static bool& 
+    printdat()
+        {
+        static bool printdat_ = false;
+        return printdat_;
+        }
+    static Real& 
+    printScale()
+        {
+        static Real printScale_ = 1E-10;
+        return printScale_;
+        }
+    static bool& 
+    debug1()
+        {
+        static bool debug1_ = false;
+        return debug1_;
+        }
+    static bool& 
+    debug2()
+        {
+        static bool debug2_ = false;
+        return debug2_;
+        }
+    static bool& 
+    debug3()
+        {
+        static bool debug3_ = false;
+        return debug3_;
+        }
+    static bool& 
+    debug4()
+        {
+        static bool debug4_ = false;
+        return debug4_;
+        }
+    static Vector& 
+    lastd()
+        {
+        static Vector lastd_;
+        return lastd_;
+        }
+    static bool& 
+    checkArrows()
+        {
+        static bool checkArrows_ = true;
+        return checkArrows_;
+        }
     };
 
 extern bool printdat;		// want to deprecate this

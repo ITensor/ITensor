@@ -414,7 +414,7 @@ div() const
 	assert(p != 0);
 	if(p->itensor.empty())
 	    {   
-	    this->printIQInds("this");
+	    this->printIndices("this");
 	    Error("IQTensor has no blocks");
 	    }
 	const ITensor& t = p->itensor.front();
@@ -429,7 +429,7 @@ checkDiv(QN expected) const
 	assert(p != 0);
 	if(p->itensor.empty())
 	    {   
-	    this->printIQInds("this");
+	    this->printIndices("this");
 	    Error("IQTensor has no blocks");
 	    }
     for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
@@ -442,7 +442,7 @@ checkDiv(QN expected) const
 		{
 		std::cerr << "Block didn't match expected div\n";
 		std::cout << "Block didn't match expected div\n";
-        this->printIQInds("this IQTensor");
+        this->printIndices("this IQTensor");
 		Print(t);
 		return false;
 		}
@@ -788,13 +788,14 @@ Randomize()
 void IQTensor::
 print(std::string name,Printdat pdat) const 
 	{ 
-	printdat = (pdat==ShowData); 
+    bool savep = Globals::printdat();
+    Globals::printdat() = (pdat==ShowData); 
 	std::cerr << "\n" << name << " =\n" << *this << "\n"; 
-	printdat = false; 
+    Globals::printdat() = savep;
 	}
 
 void IQTensor::
-printIQInds(const std::string& name) const
+printIndices(const std::string& name) const
 	{ 
 	cout << "\n" << name << " (IQIndices only) = \n";
     if(this->is_null())
@@ -964,8 +965,8 @@ operator*=(const IQTensor& other)
             if(Globals::checkArrows())
                 if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
                     {
-                    this->printIQInds("*this");
-                    other.printIQInds("other");
+                    this->printIndices("*this");
+                    other.printIndices("other");
                     cerr << "IQIndex from *this = " << I << endl;
                     cerr << "IQIndex from other = " << *f << endl;
                     Error("Incompatible arrow directions in IQTensor::operator*=.");
@@ -1082,8 +1083,8 @@ operator/=(const IQTensor& other)
             if(Globals::checkArrows())
                 if(f->dir() != I.dir() && f->type() != ReIm && I.type() != ReIm)
                     {
-                    this->printIQInds("*this");
-                    other.printIQInds("other");
+                    this->printIndices("*this");
+                    other.printIndices("other");
                     cerr << "IQIndex from *this = " << I << endl;
                     cerr << "IQIndex from other = " << *f << endl;
                     Error("Incompatible arrow directions in IQTensor::operator/=.");
@@ -1341,7 +1342,7 @@ checkQNs(const IQTensor& T)
             std::cout << "checkQNs: inconsistent QN.\n";
             std::cout << "\nqtot = " << qtot << "\n\n";
             std::cout << "Offending ITensor = " << *it << "\n\n";
-            T.printIQInds("T");
+            T.printIndices("T");
             return false;
             }
         }
