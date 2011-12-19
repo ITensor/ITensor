@@ -187,7 +187,7 @@ init() const
     for(int s = 0; s <= min(Nwarm_,3); ++s)
         {
         int ni = Max_Niter_-s;
-        Niter_.at(s) = (ni > 2 ? ni : 2);
+        Niter_.at(1+s) = (ni > 2 ? ni : 2);
         }
 
     init_ = true;
