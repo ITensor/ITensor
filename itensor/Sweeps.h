@@ -55,9 +55,13 @@ public:
     int 
     niter(int sw) const { init(); return Niter_.at(sw); }
 
+    int 
+    maxNiter() const { return Max_Niter_; }
+    void 
+    setMaxNiter(int val) { uninit(); Max_Niter_ = val; }
+
     int
     numSiteCenter() const { return num_site_center_; }
-
     void
     setNumSiteCenter(int val) { num_site_center_ = val; }
 
@@ -75,7 +79,7 @@ private:
     Real finalCut_;
     mutable std::vector<int>  Maxm_, Niter_;
     mutable std::vector<Real> Cutoff_;
-    int Nsweep_, Nwarm_;
+    int Nsweep_, Nwarm_, Max_Niter_;
     int num_site_center_;        // May not be implemented in some cases
     mutable bool init_;
 };
@@ -83,40 +87,69 @@ private:
 inline Sweeps::
 Sweeps()
     : scheme_(ramp_m),
-      Minm_(1), finalMaxm_(MAX_M), finalCut_(MIN_CUT),
-      Nsweep_(0), Nwarm_(0), num_site_center_(2)
+      Minm_(1), 
+      finalMaxm_(MAX_M), 
+      finalCut_(MIN_CUT),
+      Nsweep_(0), 
+      Nwarm_(0), 
+      Max_Niter_(9),
+      num_site_center_(2)
     { }
 
 inline Sweeps::
 Sweeps(Scheme sch)
     : scheme_(sch),
-      Minm_(1), finalMaxm_(MAX_M), finalCut_(MIN_CUT),
-      Nsweep_(0), Nwarm_(0), num_site_center_(2)
+      Minm_(1), 
+      finalMaxm_(MAX_M), 
+      finalCut_(MIN_CUT),
+      Nsweep_(0), 
+      Nwarm_(0), 
+      Max_Niter_(9),
+      num_site_center_(2)
     { }
 
 inline Sweeps::
 Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut)
     : scheme_(sch), 
-      Minm_(_minm), finalMaxm_(_maxm), finalCut_(_cut),
-      Maxm_(nsw+1), Niter_(nsw+1,4), Cutoff_(nsw+1), 
-      Nsweep_(nsw), Nwarm_(nsw-1), 
-      num_site_center_(2), init_(false)
+      Minm_(_minm), 
+      finalMaxm_(_maxm), 
+      finalCut_(_cut),
+      Maxm_(nsw+1), 
+      Niter_(nsw+1,2), 
+      Cutoff_(nsw+1), 
+      Nsweep_(nsw), 
+      Nwarm_(nsw-1), 
+      Max_Niter_(9),
+      num_site_center_(2), 
+      init_(false)
     { }
 
 inline Sweeps::
 Sweeps(Scheme sch, int nsw, int nwm, int _minm, int _maxm, Real _cut)
     : scheme_(sch), 
-      Minm_(_minm), finalMaxm_(_maxm), finalCut_(_cut),
-      Maxm_(nsw+1), Niter_(nsw+1,4), Cutoff_(nsw+1), 
-      Nsweep_(nsw), Nwarm_(nwm), 
-      num_site_center_(2), init_(false)
+      Minm_(_minm), 
+      finalMaxm_(_maxm), 
+      finalCut_(_cut),
+      Maxm_(nsw+1), 
+      Niter_(nsw+1,2), 
+      Cutoff_(nsw+1), 
+      Nsweep_(nsw), 
+      Nwarm_(nwm), 
+      Max_Niter_(9),
+      num_site_center_(2), 
+      init_(false)
     { }
 
 inline Sweeps::
 Sweeps(Scheme sch, int nsw)
     : scheme_(sch),
-      Minm_(1), finalMaxm_(MAX_M), finalCut_(MIN_CUT),
-      Nsweep_(nsw), Nwarm_(0), num_site_center_(2)
+      Minm_(1), 
+      finalMaxm_(MAX_M), 
+      finalCut_(MIN_CUT),
+      Nsweep_(nsw), 
+      Nwarm_(0), 
+      Max_Niter_(9),
+      num_site_center_(2)
     { }
 
 inline void Sweeps::
@@ -151,8 +184,11 @@ init() const
             }
         }
     
-    for(int s = 1; s <= min(Nwarm_+1,4); ++s)
-        Niter_.at(s) = 10-s;
+    for(int s = 0; s <= min(Nwarm_,3); ++s)
+        {
+        int ni = Max_Niter_-s;
+        Niter_.at(s) = (ni > 2 ? ni : 2);
+        }
 
     init_ = true;
     } //Sweeps::init
