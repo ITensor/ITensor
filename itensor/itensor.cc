@@ -1662,19 +1662,19 @@ operator/=(const ITensor& other)
     //------------------------------------------------------------------
     //Handle m==1 Indices: set union
     for(int j = other.rn_+1; j <= other.r_; ++j)
-    {
+        {
         const Index& J = other.index_[j];
         bool this_has_index = false;
         for(int k = this->rn_+1; k <= this->r_; ++k)
         { if(index_[k] == J) { this_has_index = true; break; } }
 
         if(!this_has_index) extra_index1_[++nr1_] = &J;
-    }
+        }
 
     static boost::array<Index,NMAX+1> new_index_;
 
     if(other.rn_ == 0)
-    {
+        {
         scale_ *= other.scale_;
         scale_ *= other.p->v(1);
         assert(r_+nr1_ <= NMAX);
@@ -1683,25 +1683,37 @@ operator/=(const ITensor& other)
         r_ += nr1_;
         set_unique_Real();
         return *this;
-    }
+        }
     else if(rn_ == 0)
-    {
+        {
         scale_ *= other.scale_;
         scale_ *= p->v(1);
         p = other.p;
         rn_ = other.rn_;
         //Copy other's m!=1 indices
-        for(int j = 1; j <= rn_; ++j) new_index_[j] = other.index_[j];
+        for(int j = 1; j <= rn_; ++j) 
+            {
+            //cerr << "Copying [" << j << "] " << other.index_[j] << "\n";
+            new_index_[j] = other.index_[j];
+            }
         //Move current m==1 indices past rn_
-        for(int j = 1; j <= r_; ++j)  new_index_[rn_+j] = index_[j];
+        for(int j = 1; j <= r_; ++j) 
+            {
+            //cerr << "Copying [" << rn_+j << "] " << index_[j] << "\n";
+            new_index_[rn_+j] = index_[j];
+            }
         r_ += rn_;
         //Get the extra m==1 indices from other
-        for(int j = 1; j <= nr1_; ++j) index_[r_+j] = *(extra_index1_[j]);
+        for(int j = 1; j <= nr1_; ++j) 
+            {
+            //cerr << "Copying [" << r_+j << "] " << *(extra_index1_[j]) << "\n";
+            new_index_[r_+j] = *(extra_index1_[j]);
+            }
         r_ += nr1_;
         index_.swap(new_index_);
         set_unique_Real();
         return *this;
-    }
+        }
 
     ProductProps pp(*this,other);
     MatrixRefNoLink lref, rref;
