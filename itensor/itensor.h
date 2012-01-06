@@ -298,8 +298,8 @@ public:
         { A.doprime(primeLink,inc); return A; }
 
     friend inline ITensor 
-    primeind(ITensor A, const Index& I)
-        { A.mapindex(I,primed(I)); return A; }
+    primeind(ITensor A, const Index& I, int inc = 1)
+        { A.mapindex(I,primed(I,inc)); return A; }
 
     friend ITensor 
     primeind(ITensor A, const Index& I1, const Index& I2);
