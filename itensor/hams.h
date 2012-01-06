@@ -115,25 +115,25 @@ typedef Internal::HamBuilder<ITensor> HamBuilder;
 class MPOBuilder
 {
 protected:
-    const SiteSet& sst;
+    const BaseModel& model;
     const int Ns;
 public:
 
-    MPOBuilder(const SiteSet& sst_) : sst(sst_), Ns(sst_.NN()) { }
+    MPOBuilder(const BaseModel& model_) : model(model_), Ns(model_.NN()) { }
 
     virtual ~MPOBuilder() { }
 
     ITensor makeLedge(const Index& L) const
-    {
+        {
         ITensor res(L); res(L(L.m())) = 1;
         return res;
-    }
+        }
 
     ITensor makeRedge(const Index& R) const
-    {
+        {
         ITensor res(R); res(R(1)) = 1;
         return res;
-    }
+        }
 };
 
 namespace SpinHalf 
@@ -251,7 +251,7 @@ public:
 
     void getIMPO(MPO& H, ITensor& Ledge, ITensor& Redge)
     {
-        H = MPO(sst);
+        H = MPO(model);
 
         if(H.si(1).m() != SpinOne::Dim) Error("SpinOne::Heisenberg is only defined for S=1");
 

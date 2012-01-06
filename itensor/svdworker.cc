@@ -23,9 +23,13 @@ Real SVDWorker::diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITenso
     if(!doRelCutoff_) rho.scaleTo(refNorm_);
 
     //Do the diagonalization
-    Index ri = rho.index(1); ri.noprime();
-    Matrix R,UU; rho.toMatrix11NoScale(ri,ri.primed(),R);
-    R *= -1.0; EigenValues(R,D,UU); D *= -1.0;
+    Index ri = rho.index(1); 
+    ri.noprime();
+    Matrix R,UU; 
+    rho.toMatrix11NoScale(ri,ri.primed(),R);
+    R *= -1.0; 
+    EigenValues(R,D,UU); 
+    D *= -1.0;
 
     //Truncate
     Real svdtruncerr = 0.0;

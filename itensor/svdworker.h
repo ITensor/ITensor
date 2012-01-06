@@ -70,31 +70,39 @@ public:
 
     SVDWorker(std::istream& s) { read(s); }
 
-    void read(std::istream& s);
-    void write(std::ostream& s) const;
+    template <class Tensor> void 
+    operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
 
-    Real diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U);
-    Real diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U);
-
-    Real diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& C, ITensor& U);
-    Real diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& C, IQTensor& U);
-
-    Real diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U);
-    Real diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, ITensor& U);
-
-    template <class Tensor>
-    void operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
-
-    template <class Tensor>
-    inline void operator()(const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
+    template <class Tensor> void 
+    operator()(const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
         { operator()<Tensor>(1,AA,A,B,dir); }
 
-    template <class Tensor>
-    void operator()(int b, const Tensor& AA, Tensor& L, Tensor& V, Tensor& R);
+    template <class Tensor> void 
+    operator()(int b, const Tensor& AA, Tensor& L, Tensor& V, Tensor& R);
 
-    template <class Tensor>
-    inline void operator()(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R)
+    template <class Tensor> void 
+    operator()(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R)
         { operator()<Tensor>(1,AA,L,V,R); }
+
+    Real 
+    diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U);
+    Real 
+    diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U);
+
+    Real 
+    diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& C, ITensor& U);
+    Real 
+    diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& C, IQTensor& U);
+
+    Real 
+    diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U);
+    Real 
+    diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, ITensor& U);
+
+    void 
+    read(std::istream& s);
+    void 
+    write(std::ostream& s) const;
 
 private:
 
