@@ -56,7 +56,9 @@ class LocalHam : public BaseLocalHam<Tensor>
 public:
     LocalHam(const TensorSet& le, const TensorSet& ri, const TensorSet& mpo, Tensor& psi_) 
 	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo)
-    { diag.ReDimension(psi.vec_size()); diag = 1; }
+    { 
+    diag.ReDimension(psi.vec_size()); diag = 1; 
+    }
 
     int Size() const { return psi.vec_size(); }
     VectorRef DiagRef() const { return diag; }
@@ -68,6 +70,75 @@ public:
 	{
         psi.assignFromVec(A);
         Tensor psip; 
+        applyProjOp(psi,LeftTerm,RightTerm,MPOTerm,psip);
+        psi.assignFrom(psip);
+        psi.assignToVec(B);
+	}
+};
+
+template <>
+class LocalHam<ITensor,ITensor> : public BaseLocalHam<ITensor>
+{
+    typedef BaseLocalHam<ITensor> Parent;
+    ITensor& psi;
+    Vector diag;
+    const ITensor &LeftTerm, &RightTerm, &MPOTerm;
+public:
+    LocalHam(const ITensor& le, const ITensor& ri, const ITensor& mpo, ITensor& psi_) 
+	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo)
+        { 
+        diag.ReDimension(psi.vec_size());
+
+//#define MAKE_DIAG
+
+#ifndef MAKE_DIAG
+        diag = 1;
+#else
+        ITensor Diag(mpo);
+
+        for(int j = 1; j <= mpo.r(); ++j)
+            {
+            const Index& s = mpo.index(j);
+            if(s.primeLevel() != 0 || s.type() == Link) 
+                continue;
+
+            Diag.tieIndices(s,primed(s),s);
+            }
+
+        if(le.is_not_null())
+            {
+            Index llink = index_in_common(le,psi,Link);
+            if(llink.is_not_null())
+                Diag *= tieIndices(llink,primed(llink),llink,le);
+            else
+                Diag *= le;
+            }
+
+        if(ri.is_not_null())
+            {
+            Index rlink = index_in_common(ri,psi,Link);
+            if(rlink.is_not_null())
+                Diag *= tieIndices(rlink,primed(rlink),rlink,ri);
+            else
+                Diag *= ri;
+            }
+
+        psi.assignFrom(Diag);
+        psi.assignToVec(diag);
+#endif
+
+        }
+
+    int Size() const { return psi.vec_size(); }
+    VectorRef DiagRef() const { return diag; }
+
+    Vector operator*(const VectorRef &A) const
+	{ Vector res(Size()); product(A,res); return res; }
+
+    void product(const VectorRef& A, VectorRef& B) const
+	{
+        psi.assignFromVec(A);
+        ITensor psip; 
         applyProjOp(psi,LeftTerm,RightTerm,MPOTerm,psip);
         psi.assignFrom(psip);
         psi.assignToVec(B);
