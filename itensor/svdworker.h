@@ -198,8 +198,9 @@ read(std::istream& s)
     s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
     s.read((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.read((char*)&refNorm_,sizeof(refNorm_));
+    eigsKept_.resize(N+1);
     for(int j = 1; j <= N; ++j)
-        readVec(s,eigsKept_[j]);
+        readVec(s,eigsKept_.at(j));
     }
 
 inline
