@@ -266,7 +266,7 @@ IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2) 
 	: p(new IQTDat(iv1.iqind,iv2.iqind))
 	{ 
-        operator()(iv1,iv2) = 1;
+    operator()(iv1,iv2) = 1;
 	}
 
 IQTensor::
@@ -274,7 +274,7 @@ IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
          const IQIndexVal& iv3) 
 	: p(new IQTDat(iv1.iqind,iv2.iqind,iv3.iqind))
 	{ 
-        operator()(iv1,iv2,iv3) = 1;
+    operator()(iv1,iv2,iv3) = 1;
 	}
 
 IQTensor::
@@ -368,9 +368,9 @@ operator+=(const ITensor& t)
 
 Real& IQTensor::
 operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
-    const IQIndexVal& iv3, const IQIndexVal& iv4, 
-    const IQIndexVal& iv5, const IQIndexVal& iv6,
-    const IQIndexVal& iv7, const IQIndexVal& iv8)
+           const IQIndexVal& iv3, const IQIndexVal& iv4, 
+           const IQIndexVal& iv5, const IQIndexVal& iv6,
+           const IQIndexVal& iv7, const IQIndexVal& iv8)
 	{
     solo();
     boost::array<IQIndexVal,NMAX+1> iv 
@@ -811,9 +811,11 @@ printIndices(const std::string& name) const
 void IQTensor::
 assignFrom(const IQTensor& other) const
 	{
+    //TODO: account for fermion sign here
 	std::map<ApproxReal,iten_it> semap;
 	for(iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
 	    semap[ApproxReal(i->unique_Real())] = i;
+
 	for(const_iten_it i = other.p->itensor.begin(); i != other.p->itensor.end(); ++i)
 	    {
 	    ApproxReal se = ApproxReal(i->unique_Real());
@@ -883,15 +885,15 @@ operator<<(std::ostream & s, const IQTensor &t)
 
 void IQTensor::
 SplitReIm(IQTensor& re, IQTensor& im) const
-{
+    {
     if(!hasindex(IQIndex::IndReIm()))
-	{
-	IQTensor cop(*this);
-	re = cop;
-	im = cop;
-	im *= 0.0;
-	return;
-	}
+        {
+        IQTensor cop(*this);
+        re = cop;
+        im = cop;
+        im *= 0.0;
+        return;
+        }
     vector<IQIndex> newreinds;
     remove_copy_if(p->iqindex_.begin(),p->iqindex_.end(),std::back_inserter(newreinds),
 		    bind2nd(std::equal_to<IQIndex>(),IQIndex::IndReIm()));
@@ -899,16 +901,17 @@ SplitReIm(IQTensor& re, IQTensor& im) const
     im = re;
     ITensor a,b;
     for(const_iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
-	{
-	i->SplitReIm(a,b);
-	re.insert(a);
-	im.insert(b);
-	}
-}
+        {
+        i->SplitReIm(a,b);
+        re.insert(a);
+        im.insert(b);
+        }
+    }
 
 IQTensor& IQTensor::
 operator*=(const IQTensor& other)
-{
+    {
+    //TODO: account for fermion sign here
     if(this == &other)
         {
         IQTensor cp_oth(other);
@@ -1042,11 +1045,12 @@ operator*=(const IQTensor& other)
 
     return *this;
 
-} //IQTensor& IQTensor::operator*=(const IQTensor& other)
+    } //IQTensor& IQTensor::operator*=(const IQTensor& other)
 
 IQTensor& IQTensor::
 operator/=(const IQTensor& other)
     {
+    //TODO: account for fermion sign here
     if(this == &other)
         {
         IQTensor cp_oth(other);
@@ -1168,7 +1172,7 @@ operator/=(const IQTensor& other)
 //component of a rank 0 tensor (scalar)
 void IQTensor::
 GetSingComplex(Real& re, Real& im) const
-{
+    {
     IQTensor tre,tim;
     SplitReIm(tre,tim);
 
@@ -1185,49 +1189,51 @@ GetSingComplex(Real& re, Real& im) const
     for(const_iqind_it jj = tre.p->iqindex_.begin(); jj != tre.p->iqindex_.end(); ++jj)
         {
         if(*jj != IQTensor::Sing().p->iqindex_[0])
-        {
+            {
             cout << *this;
             cout << tre;
             Error("bad tre size");
-        }
+            }
         }
     for(const_iqind_it jj = tim.p->iqindex_.begin(); jj != tim.p->iqindex_.end(); ++jj)
         if(*jj != IQTensor::Sing().p->iqindex_[0])
         { Error("bad tim size"); }
 
     if(tre.iten_size() == 0)
-    { re = 0.0; }
+        { re = 0.0; }
     else
-	{
+        {
         const ITensor& t = tre.p->itensor.front();
         if(t.vec_size() != 1) 
-        {
+            {
             cout << "tre is\n" << tre << endl;
             Error("bad tre dat size");
-        }
+            }
         re = t.val0();
-	}
+        }
     if(tim.iten_size() == 0)
-	{ im = 0.0; }
+        { im = 0.0; }
     else
-	{
+        {
         const ITensor& t = tim.p->itensor.front();
         if(t.vec_size() != 1) Error("bad tim dat size");
         im = t.val0();
-	}
-}
+        }
+    }
 
 IQTensor& IQTensor::
 operator+=(const IQTensor& other)
-{
+    {
+    //TODO: account for fermion sign here
     solo(); p->uninit_rmap();
-    if(this == &other) {
+    if(this == &other) 
+        {
         for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
             { *it *= 2; return *this; }
-    }
+        }
 
     if(p->iqindex_.size() == 0)		// Automatic initializing a summed IQTensor in a loop
-    { return (*this = other); }
+        { return (*this = other); }
     bool complex_this = hasindex(IQIndex::IndReIm()); 
     bool complex_other = other.hasindex(IQIndex::IndReIm()); 
     IQTensor& This(*this);
@@ -1236,15 +1242,15 @@ operator+=(const IQTensor& other)
     if(complex_this && !complex_other)
         return (This += other * IQTensor::Complex_1());
     if(fabs(This.unique_Real()-other.unique_Real()) > 1.0e-11) 
-	{
+        {
         cout << "This is " << This;
         cout << "other is " << other;
         Error("bad match unique real in IQTensor::operator+=");
-	}
+        }
     for(const_iten_it it = other.p->itensor.begin(); it != other.p->itensor.end(); ++it)
         { operator+=(*it); }
     return *this;
-}
+    }
 
 IQTensor::
 operator ITensor() const

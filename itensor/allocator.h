@@ -4,32 +4,40 @@
 template <class T>
 class DatAllocator
 {
-    static const size_t stackSize = 50000;
-    static const size_t allocSize = sizeof(T);
+    static const size_t 
+    stackSize = 50000;
+
+    static const size_t 
+    allocSize = sizeof(T);
 private:
     void* pf_[stackSize];
     size_t nf_;
 
-    DatAllocator() : nf_(0) { }
+    DatAllocator() 
+        : nf_(0) 
+        { }
+
     ~DatAllocator()
-    {
+        {
         for(size_t j = 0; j < nf_; ++j)
             free(pf_[j]);
-    }
+        }
 
-    void* alloc()
-    {
+    void* 
+    alloc()
+        {
         if(nf_ != 0) { return pf_[--nf_]; }
         void* p = malloc(allocSize);
         if(p == 0) throw std::bad_alloc();
         return p;
-    }
+        }
 
-    void dealloc(void* p) throw()
-    {
+    void 
+    dealloc(void* p) throw()
+        {
         if(nf_ == stackSize) free(p);
         else pf_[nf_++] = p;
-    }
+        }
 
     friend class IndexDat;
     friend class ITDat;

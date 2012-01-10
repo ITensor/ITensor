@@ -22,76 +22,119 @@
 
 class QN
 {
-    int _sz, _Nf, _Nfp; //_Nfp stands for fermion number parity, and tracks whether Nf is even or odd
 public:
-    QN(int sz=0,int Nf=0) : _sz(sz), _Nf(Nf), _Nfp(abs(Nf%2)) { }
-    QN(int sz,int Nf,int Nfp) : _sz(sz), _Nf(Nf), _Nfp(abs(Nfp%2))
-    { assert(_Nf==0 || abs(_Nf%2) == _Nfp); }
+
+    QN(int sz=0,int Nf=0) 
+        : _sz(sz), _Nf(Nf), _Nfp(abs(Nf%2)) 
+        { }
+
+    QN(int sz,int Nf,int Nfp) 
+        : _sz(sz), _Nf(Nf), _Nfp(abs(Nfp%2))
+        { assert(_Nf==0 || abs(_Nf%2) == _Nfp); }
 
     QN(std::istream& s) { read(s); }
 
-    int sz() const { return _sz; }
-    int Nf() const { return _Nf; }
-    int Nfp() const { assert(_Nfp == 0 || _Nfp == 1); return _Nfp; }
-    int fp() const { return (_Nfp == 0 ? +1 : -1); }
-    //int& sz() { return _sz; }
-    //int& Nf() { return _Nf; }
-    //int& Nfp() { assert(_Nfp == 0 || _Nfp == 1); return _Nfp; }
+    int 
+    sz() const { return _sz; }
 
-    void write(std::ostream& s) const 
-    { 
+    int 
+    Nf() const { return _Nf; }
+
+    int 
+    Nfp() const { assert(_Nfp == 0 || _Nfp == 1); return _Nfp; }
+
+    int 
+    sign() const { return (_Nfp == 0 ? +1 : -1); }
+
+    void 
+    write(std::ostream& s) const 
+        { 
         s.write((char*)&_sz,sizeof(_sz)); 
         s.write((char*)&_Nf,sizeof(_Nf)); 
         s.write((char*)&_Nfp,sizeof(_Nfp)); 
-    }
-    void read(std::istream& s) 
-    { 
+        }
+
+    void 
+    read(std::istream& s) 
+        { 
         s.read((char*)&_sz,sizeof(_sz)); 
         s.read((char*)&_Nf,sizeof(_Nf)); 
         s.read((char*)&_Nfp,sizeof(_Nfp)); 
-    }
+        }
 
-    QN operator+(const QN &other) const
-	{ QN res(*this); res+=other; return res; }
-    QN operator-(const QN &other) const
-	{ QN res(*this); res-=other; return res; }
-    QN& operator+=(const QN &other)
-	{
+    QN 
+    operator+(const QN &other) const
+        { QN res(*this); res+=other; return res; }
+
+    QN 
+    operator-(const QN &other) const
+        { QN res(*this); res-=other; return res; }
+
+    QN& 
+    operator+=(const QN &other)
+        {
         _sz+=other._sz; _Nf+=other._Nf; _Nfp = abs(_Nfp+other._Nfp)%2;
         return *this;
-	}
-    QN& operator-=(const QN &other)
-	{
+        }
+
+    QN& 
+    operator-=(const QN &other)
+        {
         _sz-=other._sz; _Nf-=other._Nf; _Nfp = abs(_Nfp-other._Nfp)%2;
         return *this;
-	}
-    QN operator-() const  
-	{ return QN(-_sz,-_Nf,_Nfp); }
+        }
+
+    QN 
+    operator-() const  
+        { return QN(-_sz,-_Nf,_Nfp); }
     
-    QN negated() const { return QN(-_sz,-_Nf,_Nfp); }
+    QN 
+    negated() const { return QN(-_sz,-_Nf,_Nfp); }
 
     //Multiplication and division should only be used to change the sign
-    QN& operator*=(int i) { assert(i*i == 1); _sz*=i; _Nf*=i; return *this; }
-    QN operator*(int i) const { QN res(*this); res*=i; return res; }
-    QN operator/(int i) const { QN res(*this); res*=i; return res; }
+    QN& 
+    operator*=(int i) { assert(i*i == 1); _sz*=i; _Nf*=i; return *this; }
 
-    inline std::string toString() const
-    {  return (boost::format("(%+d:%d:%s)")%_sz%_Nf%(_Nfp==1 ? "-" : "+")).str(); }
+    QN 
+    operator*(int i) const { QN res(*this); res*=i; return res; }
 
-    inline friend std::ostream& operator<<(std::ostream &o, const QN &q)
-    { return o<< boost::format("sz = %d, Nf = %d, fp = %s") % q.sz() % q.Nf() % (q.fp() < 0 ? "-" : "+"); }
+    QN 
+    operator/(int i) const { QN res(*this); res*=i; return res; }
 
-    void print(std::string name = "") const
-    { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
+    std::string 
+    toString() const
+        { return (boost::format("(%+d:%d:%s)")%_sz%_Nf%(_Nfp==1 ? "-" : "+")).str(); }
+
+    inline friend std::ostream& 
+    operator<<(std::ostream &o, const QN &q)
+        { return o<< boost::format("sz = %d, Nf = %d, fp = %s") % q.sz() % q.Nf() % (q.sign() < 0 ? "-" : "+"); }
+
+    void 
+    print(std::string name = "") const
+        { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
+
+private:
+
+    int _sz, 
+        _Nf, 
+        _Nfp; //_Nfp stands for fermion number parity, and tracks whether Nf is even or odd
 };
-inline bool operator==(const QN &a,const QN &b)
+
+inline bool 
+operator==(const QN &a,const QN &b)
     { return a.sz() == b.sz() && a.Nf() == b.Nf() && a.Nfp() == b.Nfp(); }
-inline bool operator!=(const QN &a,const QN &b)
+
+inline bool 
+operator!=(const QN &a,const QN &b)
     { return a.sz() != b.sz() || a.Nf() != b.Nf() || a.Nfp() != b.Nfp(); }
-inline bool operator<(const QN &a,const QN &b)
+
+inline bool 
+operator<(const QN &a,const QN &b)
     { return a.sz() < b.sz() || (a.sz() == b.sz() && a.Nf() < b.Nf()) 
              || (a.sz() == b.sz() && a.Nf() == b.Nf() && a.Nfp() < b.Nfp()); }
-inline QN operator*(int i,const QN& a)
+
+inline QN 
+operator*(int i,const QN& a)
     { return a*i; }
 
 
@@ -595,7 +638,7 @@ class IQIndex : public Index
         for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
             {
             QN q = x->qn;
-            oh << boost::format("[%d,%d,%s]:%d ") % q.sz() % q.Nf() % (q.fp()==1?"+":"-") % x->index.m(); 
+            oh << boost::format("[%d,%d,%s]:%d ") % q.sz() % q.Nf() % (q.sign()==1?"+":"-") % x->index.m(); 
             }
         return oh.str();
         }
