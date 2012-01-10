@@ -974,7 +974,7 @@ expandIndex(const Index& small, const Index& big,
 
 int ITensor::
 vec_size() const 
-    { return p->v.Length(); }
+    { return (p == 0 ? 0 : p->v.Length()); }
 
 void ITensor::
 assignToVec(VectorRef v) const

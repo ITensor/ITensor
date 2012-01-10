@@ -742,6 +742,7 @@ addindex1(const IQIndex& I)
 int IQTensor::
 vec_size() const
 	{
+    if(this->is_null()) return 0;
 	int s = 0;
 	for(const_iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
 	    s += jj->vec_size();
