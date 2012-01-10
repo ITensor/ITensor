@@ -131,6 +131,14 @@ public:
     nextID()
         {
         static UniqueID lastID_;
+        static int count_ = 0;
+        //After making so many ID's sequentially,
+        //call the random number generator again
+        if(++count_ > 1000)
+            {
+            count_ = 0;
+            lastID_ = UniqueID();
+            }
         return ++lastID_;
         }
 
@@ -147,9 +155,9 @@ public:
         Real arg = 0;
         int pn = 1;
         for(int i = int(ind.size())-1; i >= 0; --i)
-            { arg += ind.data[i]*sqrt(1.0/(prime_number(++pn)*1.0)); }
-        arg *= sqrt(1.0/(prime_number(++pn)*1.0));
-        arg += ((int)_type - (int)Site) * sqrt(1.0/(prime_number(++pn)*1.0));
+            { arg += ind.data[i]*sqrt(1.0/(prime_number(++pn))); }
+        arg *= sqrt(1.0/(prime_number(++pn)));
+        arg += ((int)_type - (int)Site) * sqrt(1.0/(prime_number(++pn)));
         ur = sin(arg);
         }
 
