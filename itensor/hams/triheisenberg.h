@@ -1,18 +1,18 @@
-#ifndef __ITENSOR_HAMS_HEISENBERG_H
-#define __ITENSOR_HAMS_HEISENBERG_H
+#ifndef __ITENSOR_HAMS_TRIANGULARHEISENBERG_H
+#define __ITENSOR_HAMS_TRIANGULARHEISENBERG_H
 #include "../mpo.h"
 #include "../hams.h"
 
-class Heisenberg : public MPOBuilder
-{
-public:
-    typedef MPOBuilder Parent;
+class TriangularHeisenberg : public MPOBuilder
+    {
+    public:
 
-    Heisenberg(const SpinModel& model_);
+    typedef MPOBuilder 
+    Parent;
 
-    Heisenberg(const SpinModel& model_, int ny);
+    TriangularHeisenberg(const SpinModel& model_, int ny);
 
-    Heisenberg(const SpinModel& model_, int ny, Real boundary_h);
+    TriangularHeisenberg(const SpinModel& model_, int ny, Real boundary_h);
 
     Real
     J() const { return J_; }
@@ -30,7 +30,9 @@ public:
 
     operator IQMPO() { init_(); return H; }
 
-private:
+    //------------------------------------------------------//
+
+    private:
 
     const SpinModel& model;
     int ny_,nx_;
@@ -40,21 +42,10 @@ private:
 
     void init_();
 
-}; //class Heisenberg
+    }; //class TriangularHeisenberg
 
-inline Heisenberg::
-Heisenberg(const SpinModel& model_) 
-    : Parent(model_), 
-      model(model_), 
-      ny_(1),
-      nx_(this->Ns),
-      J_(1), 
-      boundary_h_(0),
-      initted(false)
-    { }
-
-inline Heisenberg::
-Heisenberg(const SpinModel& model_, int ny) 
+inline TriangularHeisenberg::
+TriangularHeisenberg(const SpinModel& model_, int ny) 
     : Parent(model_), 
       model(model_), 
       ny_(ny),
@@ -64,8 +55,8 @@ Heisenberg(const SpinModel& model_, int ny)
       initted(false)
     { }
 
-inline Heisenberg::
-Heisenberg(const SpinModel& model_, int ny, Real boundary_h) 
+inline TriangularHeisenberg::
+TriangularHeisenberg(const SpinModel& model_, int ny, Real boundary_h) 
     : Parent(model_), 
       model(model_), 
       ny_(ny),
@@ -75,7 +66,7 @@ Heisenberg(const SpinModel& model_, int ny, Real boundary_h)
       initted(false)
     { }
 
-void inline Heisenberg::
+void inline TriangularHeisenberg::
 init_()
     {
     if(initted) return;
@@ -83,7 +74,7 @@ init_()
     H = MPO(model);
 
     const int nop = 3;
-    const int max_mpo_dist = ny_;
+    const int max_mpo_dist = ny_+1;
     const int k = 5+nop*(max_mpo_dist-1);
 
     std::vector<Index> links(Ns+1);
@@ -105,7 +96,7 @@ init_()
         W += model.sp(n) * row(3) * col(1);
         W += model.sm(n) * row(4) * col(1);
 
-        //Horizontal bonds
+        //Horizontal bonds, connect n -> n+ny_
         int mpo_dist = ny_; 
         W += model.sz(n) * row(k) * col(2+nop*(mpo_dist-1)) * J_;
         W += model.sm(n) * row(k) * col(3+nop*(mpo_dist-1)) * J_/2;
@@ -116,8 +107,8 @@ init_()
         if(boundary_h_ != 0 && (x == 1 || x == nx_))
             {
             Real eff_h = boundary_h_;
-            if(J_ > 0) eff_h *= (x%2==1 ? -1 : 1)*(y%2==1 ? -1 : 1);
-            //cerr << format("Doing a staggered bf of %.2f at site %d (%d,%d)\n")%eff_h%n%x%y;
+            if(J_ > 0) eff_h *= ((x-y)%3==0 ? 1 : -0.5);
+            std::cout << boost::format("Applying a pinning field of %.2f at site %d (%d,%d)\n")%eff_h%n%x%y;
             W += model.sz(n) * ITensor(row(k),col(1)) * eff_h;
             }
 
@@ -127,26 +118,33 @@ init_()
         for(int q = 1; q <= nop*(max_mpo_dist-1); ++q)
             { W += model.id(n) * row(1+nop+q) * col(1+q); }
 
-        //Periodic BC bond
-        if(y == 1 && ny_ > 1)
+        //Square lattice periodic BC bond
+        //Connects n -> n+(ny_-1)
+        if(y == 1)
             {
-            int mpo_dist = ny_-1; 
+            mpo_dist = ny_-1; 
             W += model.sz(n) * row(k) * col(2+nop*(mpo_dist-1)) * J_;
             W += model.sm(n) * row(k) * col(3+nop*(mpo_dist-1)) * J_/2;
             W += model.sp(n) * row(k) * col(4+nop*(mpo_dist-1)) * J_/2;
             }
 
         //N.N. bond along column
+        W += model.sz(n) * row(k) * col(2) * J_;
+        W += model.sm(n) * row(k) * col(3) * J_/2;
+        W += model.sp(n) * row(k) * col(4) * J_/2;
+
+        //Diagonal bonds
         if(y != ny_)
             {
-            W += model.sz(n) * row(k) * col(2) * J_;
-            W += model.sm(n) * row(k) * col(3) * J_/2;
-            W += model.sp(n) * row(k) * col(4) * J_/2;
+            mpo_dist = ny_+1; 
+            W += model.sz(n) * row(k) * col(2+nop*(mpo_dist-1)) * J_;
+            W += model.sm(n) * row(k) * col(3+nop*(mpo_dist-1)) * J_/2;
+            W += model.sp(n) * row(k) * col(4+nop*(mpo_dist-1)) * J_/2;
             }
         }
 
-        H.AAnc(1) *= makeLedge(links.at(0));
-        H.AAnc(Ns) *= makeRedge(links.at(Ns));
+    H.AAnc(1) *= makeLedge(links.at(0));
+    H.AAnc(Ns) *= makeRedge(links.at(Ns));
 
     initted = true;
     }

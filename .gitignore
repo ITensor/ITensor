@@ -2,6 +2,7 @@
 *~
 include/*.h
 include/*.ih
+include/hams/*.h
 include/.profiling
 *.swp
 utilities/Makefile
