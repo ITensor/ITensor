@@ -68,22 +68,23 @@ void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res,Real cut, int maxm);
 template
 void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm);
 
-void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position)
-{
+void 
+napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position)
+    {
     if(cutoff < 0) cutoff = x.cutoff();
     if(maxm < 0) maxm = x.maxm();
     int N = x.NN();
     if(K.NN() != N) Error("Mismatched N in napplyMPO");
     if(x.right_lim() > 3)
-    {
+        {
         cerr << "x is " << endl << x << endl;
         Error("bad right_lim for x");
-    }
+        }
     if(!allow_arb_position && K.right_lim() > 3)
-    {
+        {
         //cerr << "K is " << endl << K << endl;
         Error("bad right_lim for K");
-    }
+        }
 
     SVDWorker svd = K.svd();
     svd.cutoff(cutoff);
@@ -99,7 +100,7 @@ void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm
     vector<int> midsize(N);
     int maxdim = 1;
     for(int i = 1; i < N; i++)
-	{
+        {
         if(i == 1) { clust = x.AA(i) * K.AA(i); }
         else { clust = nfork * (x.AA(i) * K.AA(i)); }
         if(i == N-1) break; //No need to SVD for i == N-1
@@ -116,10 +117,10 @@ void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm
         maxdim = max(midsize[i],maxdim);
         assert(res.RightLinkInd(i+1).dir() == Out);
         res.AAnc(i+1) = IQTensor(mid,res.si(i+1).primed(),res.RightLinkInd(i+1));
-	}
+        }
     nfork = clust * x.AA(N) * K.AA(N);
     if(nfork.iten_size() == 0)	// this product gives 0 !!
-	{ res *= 0; return; }
+        { res *= 0; return; }
 
     res.doSVD(N-1,nfork,Fromright,false);
     res.noprimelink();
@@ -128,11 +129,11 @@ void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm
     res.maxm(x.maxm()); 
     res.cutoff(x.cutoff());
 
-} //void napplyMPO
+    } //void napplyMPO
 
 //Expensive: scales as m^3 k^3!
 void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
-{
+    {
     int N = x.NN();
     if(K.NN() != N) Error("Mismatched N in exact_applyMPO");
 
@@ -140,7 +141,7 @@ void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
 
     res.AAnc(1) = x.AA(1) * K.AA(1);
     for(int j = 1; j < N; ++j)
-	{
+        {
         //cerr << boost::format("exact_applyMPO: step %d\n") % j;
         //Compute product of MPS tensor and MPO tensor
         res.AAnc(j+1) = x.AA(j+1) * K.AA(j+1); //m^2 k^2 d^2
@@ -155,7 +156,7 @@ void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
         //Apply combiner to product tensors
         res.AAnc(j) = res.AA(j) * comb; //m^3 k^3 d
         res.AAnc(j+1) = conj(comb) * res.AA(j+1); //m^3 k^3 d
-	}
+        }
     res.mapprime(1,0,primeSite);
     //res.orthogonalize();
-} //void exact_applyMPO
+    } //void exact_applyMPO
