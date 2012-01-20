@@ -107,7 +107,7 @@ init_()
         if(boundary_h_ != 0 && (x == 1 || x == nx_))
             {
             Real eff_h = boundary_h_;
-            if(J_ > 0) eff_h *= ((x-y)%3==0 ? 1 : -0.5);
+            eff_h *= ((x+y-2)%3==0 ? -1 : 0.5);
             std::cout << boost::format("Applying a pinning field of %.2f at site %d (%d,%d)\n")%eff_h%n%x%y;
             W += model.sz(n) * ITensor(row(k),col(1)) * eff_h;
             }
