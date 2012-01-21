@@ -103,10 +103,10 @@ class Model
     getNN() const = 0;
 
     virtual const IQIndex&
-    getSi() const = 0;
+    getSi(int i) const = 0;
 
     virtual IQIndex
-    getSiP() const = 0;
+    getSiP(int i) const = 0;
 
     virtual IQTensor 
     makeId(int i) const;
