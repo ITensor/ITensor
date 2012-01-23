@@ -10,6 +10,8 @@ class Spinless : public Model
 
     Spinless(int N);
 
+    Spinless(std::ifstream& s) { doRead(s); }
+
     IQIndexVal
     Emp(int i) const;
 

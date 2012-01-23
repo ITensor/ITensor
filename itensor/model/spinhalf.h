@@ -10,6 +10,8 @@ class SpinHalf : public Model
 
     SpinHalf(int N);
 
+    SpinHalf(std::ifstream& s) { doRead(s); }
+
     IQIndexVal
     Up(int i) const;
 

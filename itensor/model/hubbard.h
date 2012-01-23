@@ -10,6 +10,8 @@ class Hubbard : public Model
 
     Hubbard(int N);
 
+    Hubbard(std::ifstream& s) { doRead(s); }
+
     IQIndexVal
     Emp(int i) const;
 

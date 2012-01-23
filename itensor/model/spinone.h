@@ -10,6 +10,8 @@ class SpinOne : public Model
 
     SpinOne(int N);
 
+    SpinOne(std::ifstream& s) { doRead(s); }
+
     IQIndexVal
     Up(int i) const;
 

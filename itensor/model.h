@@ -8,6 +8,8 @@ class Model
 
     Model() { }
 
+    Model(std::ifstream& s) { }
+
     //Number of Sites
     int 
     NN() const { return getNN(); }
