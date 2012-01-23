@@ -65,6 +65,11 @@ public:
     void
     setNumSiteCenter(int val) { num_site_center_ = val; }
 
+    Real 
+    expFac() const { return exp_fac_; }
+    void 
+    setExpFac(Real val) { exp_fac_ = val; }
+
 private:
 
     void 
@@ -82,6 +87,7 @@ private:
     int Nsweep_, Nwarm_, Max_Niter_;
     int num_site_center_;        // May not be implemented in some cases
     mutable bool init_;
+    Real exp_fac_;
 };
 
 inline Sweeps::
@@ -93,7 +99,8 @@ Sweeps()
       Nsweep_(0), 
       Nwarm_(0), 
       Max_Niter_(9),
-      num_site_center_(2)
+      num_site_center_(2),
+      exp_fac_(0.5)
     { }
 
 inline Sweeps::
@@ -105,7 +112,8 @@ Sweeps(Scheme sch)
       Nsweep_(0), 
       Nwarm_(0), 
       Max_Niter_(9),
-      num_site_center_(2)
+      num_site_center_(2),
+      exp_fac_(0.5)
     { }
 
 inline Sweeps::
@@ -121,7 +129,8 @@ Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut)
       Nwarm_(nsw-1), 
       Max_Niter_(9),
       num_site_center_(2), 
-      init_(false)
+      init_(false),
+      exp_fac_(0.5)
     { }
 
 inline Sweeps::
@@ -137,7 +146,8 @@ Sweeps(Scheme sch, int nsw, int nwm, int _minm, int _maxm, Real _cut)
       Nwarm_(nwm), 
       Max_Niter_(9),
       num_site_center_(2), 
-      init_(false)
+      init_(false),
+      exp_fac_(0.5)
     { }
 
 inline Sweeps::
@@ -149,7 +159,8 @@ Sweeps(Scheme sch, int nsw)
       Nsweep_(nsw), 
       Nwarm_(0), 
       Max_Niter_(9),
-      num_site_center_(2)
+      num_site_center_(2),
+      exp_fac_(0.5)
     { }
 
 inline void Sweeps::
@@ -180,7 +191,7 @@ init() const
         for(int s = 1; s <= act_nwm; ++s)
             {
             int p = (act_nwm-s)/2; //intentional integer division
-            Maxm_.at(s) = (int)(start_m + pow(0.5,p) * (finalMaxm_ - start_m)); 
+            Maxm_.at(s) = (int)(start_m + pow(exp_fac_,p) * (finalMaxm_ - start_m)); 
             }
         }
     
