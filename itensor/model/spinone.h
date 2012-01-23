@@ -1,15 +1,18 @@
-#ifndef __ITENSOR_SPINHALF_H
-#define __ITENSOR_SPINHALF_H
+#ifndef __ITENSOR_SPINONE_H
+#define __ITENSOR_SPINONE_H
 #include "../model.h"
 
-class SpinHalf : public Model
+class SpinOne : public Model
     {
     public:
 
-    SpinHalf(int N);
+    SpinOne(int N);
 
     IQIndexVal
     Up(int i) const;
+
+    IQIndexVal
+    Z0(int i) const;
 
     IQIndexVal
     Dn(int i) const;
@@ -42,35 +45,36 @@ class SpinHalf : public Model
 
     virtual void
     constructSites();
-
+        
     //Data members -----------------
 
     int N_;
 
     std::vector<IQIndex> site_;
-        
+
     };
 
-SpinHalf::
-SpinHalf(int N)
+SpinOne::
+SpinOne(int N)
     : N_(N),
       site_(N_)
     { 
     constructSites();
     }
 
-inline void SpinHalf::
+inline void SpinOne::
 constructSites()
     {
     for(int j = 1; j <= N_; ++j)
         {
-        site_.at(j) = IQIndex(nameint("S=1/2, site=",i),
-            Index(nameint("Up for site",i),1,Site),QN(+1,0),
-            Index(nameint("Dn for site",i),1,Site),QN(-1,0));
+        site_.at(j) = IQIndex(nameint("S=1, site=",i),
+            Index(nameint("Up for site",i),1,Site),QN(+2,0),
+            Index(nameint("Z0 for site",i),1,Site),QN( 0,0),
+            Index(nameint("Dn for site",i),1,Site),QN(-2,0));
         }
     }
 
-inline void SpinHalf::
+inline void SpinOne::
 doRead(std::istream& s)
     {
     s.read((char*) &N_,sizeof(N_));
@@ -79,7 +83,7 @@ doRead(std::istream& s)
         site.at(j).read(s);
     }
 
-inline void SpinHalf::
+inline void SpinOne::
 doWrite(std::ostream& s) const
     {
     s.write((char*) &N,sizeof(N));
@@ -87,58 +91,64 @@ doWrite(std::ostream& s) const
         site.at(j).write(s);
     }
 
-inline int SpinHalf::
+inline int SpinOne::
 getNN() const
     { return N_; }
 
-inline const IQIndex& SpinHalf::
+inline const IQIndex& SpinOne::
 getSi(int i) const
     { return site_.at(i); }
 
-inline const IQIndex& SpinHalf::
+inline const IQIndex& SpinOne::
 getSiP(int i) const
     { return site_.at(i).primed(); }
 
-inline IQTensor SpinHalf::
+inline IQTensor SpinOne::
 makeSz(int i) const
     {
     IQTensor Sz(si(i),siP(i));
-    Sz(Up(i),UpP(i)) = +0.5;
-    Sz(Dn(i),DnP(i)) = -0.5;
+    Sz(Up(i),UpP(i)) = +1.;
+    Sz(Dn(i),DnP(i)) = -1.;
     return Sz;
     }
 
-inline IQTensor SpinHalf::
+inline IQTensor SpinOne::
 makeSx(int i) const
     {
     IQTensor Sx(si(i),siP(i));
-    Sx(Up(i),DnP(i)) = +0.5;
-    Sx(Dn(i),UpP(i)) = +0.5;
+    Sx(Up(i),Z0P(i)) = ISqrt2; 
+    Sx(Z0(i),UpP(i)) = ISqrt2;
+    Sx(Z0(i),DnP(i)) = ISqrt2; 
+    Sx(Dn(i),Z0P(i)) = ISqrt2;
     return Sx;
     }
 
-inline IQTensor SpinHalf::
+inline IQTensor SpinOne::
 makeISy(int i) const
     {
     IQTensor ISy(si(i),siP(i));
-    ISy(Up(i),DnP(i)) = -0.5;
-    ISy(Dn(i),UpP(i)) = +0.5;
+    ISy(Up(i),Z0P(i)) = +ISqrt2; 
+    ISy(Z0(i),UpP(i)) = -ISqrt2;
+    ISy(Z0(i),DnP(i)) = +ISqrt2; 
+    ISy(Dn(i),Z0P(i)) = -ISqrt2;
     return ISy;
     }
 
-inline IQTensor SpinHalf::
+inline IQTensor SpinOne::
 makeSp(int i) const
     {
     IQTensor Sp(si(i),siP(i));
-    Sp(Dn(i),UpP(i)) = 1;
+    Sp(Dn(i),Z0P(i)) = Sqrt2; 
+    Sp(Z0(i),UpP(i)) = Sqrt2;
     return Sp;
     }
 
-inline IQTensor SpinHalf::
+inline IQTensor SpinOne::
 makeSm(int i) const
     {
     IQTensor Sm(si(i),siP(i));
-    Sm(Up(i),DnP(i)) = 1;
+    Sm(Up(i),Z0P(i)) = Sqrt2; 
+    Sm(Z0(i),DnP(i)) = Sqrt2;
     return Sm;
     }
 
