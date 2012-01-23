@@ -6,6 +6,8 @@ class SpinOne : public Model
     {
     public:
 
+    SpinOne();
+
     SpinOne(int N);
 
     IQIndexVal
@@ -69,7 +71,12 @@ class SpinOne : public Model
 
     };
 
-SpinOne::
+inline SpinOne::
+SpinOne()
+    : N_(-1)
+    { }
+
+inline SpinOne::
 SpinOne(int N)
     : N_(N),
       site_(N_+1)

@@ -6,6 +6,8 @@ class SpinHalf : public Model
     {
     public:
 
+    SpinHalf();
+
     SpinHalf(int N);
 
     IQIndexVal
@@ -63,7 +65,12 @@ class SpinHalf : public Model
         
     };
 
-SpinHalf::
+inline SpinHalf::
+SpinHalf()
+    : N_(-1)
+    { }
+
+inline SpinHalf::
 SpinHalf(int N)
     : N_(N),
       site_(N_+1)
