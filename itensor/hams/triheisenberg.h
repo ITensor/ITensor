@@ -10,9 +10,9 @@ class TriangularHeisenberg : public MPOBuilder
     typedef MPOBuilder 
     Parent;
 
-    TriangularHeisenberg(const SpinModel& model_, int ny);
+    TriangularHeisenberg(const Model& model_, int ny);
 
-    TriangularHeisenberg(const SpinModel& model_, int ny, Real boundary_h);
+    TriangularHeisenberg(const Model& model_, int ny, Real boundary_h);
 
     Real
     J() const { return J_; }
@@ -34,7 +34,7 @@ class TriangularHeisenberg : public MPOBuilder
 
     private:
 
-    const SpinModel& model;
+    const Model& model;
     int ny_,nx_;
     Real J_, boundary_h_;
     bool initted;
@@ -45,7 +45,7 @@ class TriangularHeisenberg : public MPOBuilder
     }; //class TriangularHeisenberg
 
 inline TriangularHeisenberg::
-TriangularHeisenberg(const SpinModel& model_, int ny) 
+TriangularHeisenberg(const Model& model_, int ny) 
     : Parent(model_), 
       model(model_), 
       ny_(ny),
@@ -56,7 +56,7 @@ TriangularHeisenberg(const SpinModel& model_, int ny)
     { }
 
 inline TriangularHeisenberg::
-TriangularHeisenberg(const SpinModel& model_, int ny, Real boundary_h) 
+TriangularHeisenberg(const Model& model_, int ny, Real boundary_h) 
     : Parent(model_), 
       model(model_), 
       ny_(ny),
