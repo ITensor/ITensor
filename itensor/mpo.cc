@@ -131,12 +131,8 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
     } //void napplyMPO
 
 //Expensive: scales as m^3 k^3!
-<<<<<<< HEAD
-void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
-=======
 void 
 exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
->>>>>>> Fixed pinning in triangular Heisenberg.
     {
     int N = x.NN();
     if(K.NN() != N) Error("Mismatched N in exact_applyMPO");
@@ -164,8 +160,3 @@ exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
     res.mapprime(1,0,primeSite);
     //res.orthogonalize();
     } //void exact_applyMPO
-<<<<<<< HEAD
-=======
-
-
->>>>>>> Fixed pinning in triangular Heisenberg.
