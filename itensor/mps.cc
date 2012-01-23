@@ -346,12 +346,14 @@ int periodicWrap(int j, int N)
     return j;
     }
 
-void convertToIQ(const BaseModel& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq, Real cut)
+void convertToIQ(const Model& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq, Real cut)
     {
     const int N = A.size()-1;
     qA.resize(A.size());
     const bool is_mpo = A[1].hasindex(model.si(1).primed());
-    const int Dim = model.dim();
+    const int Dim = model.si(1).m();
+    if(model.si(2).m() != Dim)
+        Error("convertToIQ assumes uniform site dimension");
     const int PDim = (is_mpo ? Dim : 1);
 
     const int fullrank = (is_mpo ? 4 : 3);

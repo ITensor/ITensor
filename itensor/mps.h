@@ -5,21 +5,21 @@
 
 static const LogNumber DefaultRefScale(7.58273202392352185);
 
-void convertToIQ(const BaseModel& model, const std::vector<ITensor>& A, std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
+void convertToIQ(const Model& model, const std::vector<ITensor>& A, std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
 template<class Tensor, class TensorSet>
 Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal);
 
 template<class Tensor, class IndexT>
 IndexT index_in_common(const Tensor& A, const Tensor& B, IndexType t)
-{
-    for(int j = 1; j <= A.r(); ++j)
     {
+    for(int j = 1; j <= A.r(); ++j)
+        {
         const IndexT& I = A.index(j);
         if(I.type() == t && B.hasindex(I)) { return I; }
-    }
+        }
     return IndexT();
-}
+    }
 inline Index index_in_common(const ITensor& A, const ITensor& B, IndexType t)
 { return index_in_common<ITensor,Index>(A,B,t); }
 inline IQIndex index_in_common(const IQTensor& A, const IQTensor& B, IndexType t)
@@ -53,7 +53,7 @@ public:
     typedef Tensor TensorT;
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::IndexValT IndexValT;
-    typedef BaseModel ModelT;
+    typedef Model ModelT;
 
     //Accessor Methods ------------------------------
 

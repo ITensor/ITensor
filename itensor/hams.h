@@ -10,7 +10,7 @@ class HamBuilder
 public:
     typedef Tensor TensorT;
     typedef typename Tensor::IndexT IndexT;
-    typedef BaseModel SiteSetT;
+    typedef Model SiteSetT;
 private:
     const SiteSetT& iss;
     const int N;
@@ -115,11 +115,11 @@ typedef Internal::HamBuilder<ITensor> HamBuilder;
 class MPOBuilder
 {
 protected:
-    const BaseModel& model;
+    const Model& model;
     const int Ns;
 public:
 
-    MPOBuilder(const BaseModel& model_) : model(model_), Ns(model_.NN()) { }
+    MPOBuilder(const Model& model_) : model(model_), Ns(model_.NN()) { }
 
     virtual ~MPOBuilder() { }
 
@@ -136,6 +136,7 @@ public:
         }
 };
 
+/*
 namespace SpinHalf 
 {
 
@@ -236,7 +237,9 @@ public:
 } //namespace SquareLattice
 
 } //end namespace SpinHalf
+*/
 
+/*
 namespace SpinOne 
 {
 
@@ -304,7 +307,12 @@ public:
 
 }; //class Heisenberg
 
+
+} //end namespace SpinOne
+*/
+
 /*
+namespace SpinOne {
 class BBChain : public MPOBuilder
 {
 public:
@@ -366,10 +374,10 @@ public:
     }
 
 }; //class BBChain
+}
 */
 
-} //end namespace SpinOne
-
+/*
 namespace Hubbard
 {
 
@@ -434,7 +442,6 @@ public:
             ITensor& W = H.AAnc(n);
             Index &row = links.at(n-1), &col = links.at(n);
 
-	    /*
             // MPO is (save this):
             //
             // 1 / I                                  \
@@ -445,7 +452,6 @@ public:
             // 6 | Unud   F cup F cdn c+up F c+dn F  I |
             //     1       2      3    4       5     6 
             // F = FermiPhase
-	    */
 
             W = ITensor(mod.si(n),mod.siP(n),row,col);
             W += mod.NupNdn(n) * row(6) * col(1) * U;
@@ -478,6 +484,8 @@ public:
 }; //class HubbardChain
 
 } //end namespace Hubbard
+*/
+
 /*
 namespace Hubbard
 {

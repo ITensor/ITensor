@@ -14,16 +14,22 @@ class SpinHalf : public Model
     IQIndexVal
     Dn(int i) const;
 
+    IQIndexVal
+    UpP(int i) const;
+
+    IQIndexVal
+    DnP(int i) const;
+
     private:
 
     virtual int
     getNN() const;
 
     virtual const IQIndex&
-    getSi() const;
+    getSi(int i) const;
 
-    virtual const IQIndex&
-    getSiP() const;
+    virtual IQIndex
+    getSiP(int i) const;
 
     virtual IQTensor
     makeSz(int i) const;
@@ -41,6 +47,12 @@ class SpinHalf : public Model
     makeSm(int i) const;
 
     virtual void
+    doRead(std::istream& s);
+
+    virtual void
+    doWrite(std::ostream& s) const;
+
+    virtual void
     constructSites();
 
     //Data members -----------------
@@ -54,7 +66,7 @@ class SpinHalf : public Model
 SpinHalf::
 SpinHalf(int N)
     : N_(N),
-      site_(N_)
+      site_(N_+1)
     { 
     constructSites();
     }
@@ -64,9 +76,9 @@ constructSites()
     {
     for(int j = 1; j <= N_; ++j)
         {
-        site_.at(j) = IQIndex(nameint("S=1/2, site=",i),
-            Index(nameint("Up for site",i),1,Site),QN(+1,0),
-            Index(nameint("Dn for site",i),1,Site),QN(-1,0));
+        site_.at(j) = IQIndex(nameint("S=1/2, site=",j),
+            Index(nameint("Up for site",j),1,Site),QN(+1,0),
+            Index(nameint("Dn for site",j),1,Site),QN(-1,0));
         }
     }
 
@@ -74,17 +86,17 @@ inline void SpinHalf::
 doRead(std::istream& s)
     {
     s.read((char*) &N_,sizeof(N_));
-    site.resize(N_+1);
+    site_.resize(N_+1);
     for(int j = 1; j <= N_; ++j) 
-        site.at(j).read(s);
+        site_.at(j).read(s);
     }
 
 inline void SpinHalf::
 doWrite(std::ostream& s) const
     {
-    s.write((char*) &N,sizeof(N));
+    s.write((char*) &N_,sizeof(N_));
     for(int j = 1; j <= N_; ++j) 
-        site.at(j).write(s);
+        site_.at(j).write(s);
     }
 
 inline int SpinHalf::
@@ -95,9 +107,33 @@ inline const IQIndex& SpinHalf::
 getSi(int i) const
     { return site_.at(i); }
 
-inline const IQIndex& SpinHalf::
+inline IQIndex SpinHalf::
 getSiP(int i) const
     { return site_.at(i).primed(); }
+
+inline IQIndexVal SpinHalf::
+Up(int i) const
+    {
+    return getSi(i)(1);
+    }
+
+inline IQIndexVal SpinHalf::
+Dn(int i) const
+    {
+    return getSi(i)(2);
+    }
+
+inline IQIndexVal SpinHalf::
+UpP(int i) const
+    {
+    return getSiP(i)(1);
+    }
+
+inline IQIndexVal SpinHalf::
+DnP(int i) const
+    {
+    return getSiP(i)(2);
+    }
 
 inline IQTensor SpinHalf::
 makeSz(int i) const

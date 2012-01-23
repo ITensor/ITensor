@@ -8,11 +8,11 @@ class Heisenberg : public MPOBuilder
 public:
     typedef MPOBuilder Parent;
 
-    Heisenberg(const SpinModel& model_);
+    Heisenberg(const Model& model_);
 
-    Heisenberg(const SpinModel& model_, int ny);
+    Heisenberg(const Model& model_, int ny);
 
-    Heisenberg(const SpinModel& model_, int ny, Real boundary_h);
+    Heisenberg(const Model& model_, int ny, Real boundary_h);
 
     Real
     J() const { return J_; }
@@ -32,7 +32,7 @@ public:
 
 private:
 
-    const SpinModel& model;
+    const Model& model;
     int ny_,nx_;
     Real J_, boundary_h_;
     bool initted;
@@ -43,7 +43,7 @@ private:
 }; //class Heisenberg
 
 inline Heisenberg::
-Heisenberg(const SpinModel& model_) 
+Heisenberg(const Model& model_) 
     : Parent(model_), 
       model(model_), 
       ny_(1),
@@ -54,7 +54,7 @@ Heisenberg(const SpinModel& model_)
     { }
 
 inline Heisenberg::
-Heisenberg(const SpinModel& model_, int ny) 
+Heisenberg(const Model& model_, int ny) 
     : Parent(model_), 
       model(model_), 
       ny_(ny),
@@ -65,7 +65,7 @@ Heisenberg(const SpinModel& model_, int ny)
     { }
 
 inline Heisenberg::
-Heisenberg(const SpinModel& model_, int ny, Real boundary_h) 
+Heisenberg(const Model& model_, int ny, Real boundary_h) 
     : Parent(model_), 
       model(model_), 
       ny_(ny),

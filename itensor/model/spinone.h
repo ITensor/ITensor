@@ -17,16 +17,25 @@ class SpinOne : public Model
     IQIndexVal
     Dn(int i) const;
 
+    IQIndexVal
+    UpP(int i) const;
+
+    IQIndexVal
+    Z0P(int i) const;
+
+    IQIndexVal
+    DnP(int i) const;
+
     private:
 
     virtual int
     getNN() const;
 
     virtual const IQIndex&
-    getSi() const;
+    getSi(int i) const;
 
-    virtual const IQIndex&
-    getSiP() const;
+    virtual IQIndex
+    getSiP(int i) const;
 
     virtual IQTensor
     makeSz(int i) const;
@@ -44,6 +53,12 @@ class SpinOne : public Model
     makeSm(int i) const;
 
     virtual void
+    doRead(std::istream& s);
+
+    virtual void
+    doWrite(std::ostream& s) const;
+
+    virtual void
     constructSites();
         
     //Data members -----------------
@@ -57,7 +72,7 @@ class SpinOne : public Model
 SpinOne::
 SpinOne(int N)
     : N_(N),
-      site_(N_)
+      site_(N_+1)
     { 
     constructSites();
     }
@@ -67,10 +82,10 @@ constructSites()
     {
     for(int j = 1; j <= N_; ++j)
         {
-        site_.at(j) = IQIndex(nameint("S=1, site=",i),
-            Index(nameint("Up for site",i),1,Site),QN(+2,0),
-            Index(nameint("Z0 for site",i),1,Site),QN( 0,0),
-            Index(nameint("Dn for site",i),1,Site),QN(-2,0));
+        site_.at(j) = IQIndex(nameint("S=1, site=",j),
+            Index(nameint("Up for site",j),1,Site),QN(+2,0),
+            Index(nameint("Z0 for site",j),1,Site),QN( 0,0),
+            Index(nameint("Dn for site",j),1,Site),QN(-2,0));
         }
     }
 
@@ -78,17 +93,17 @@ inline void SpinOne::
 doRead(std::istream& s)
     {
     s.read((char*) &N_,sizeof(N_));
-    site.resize(N_+1);
+    site_.resize(N_+1);
     for(int j = 1; j <= N_; ++j) 
-        site.at(j).read(s);
+        site_.at(j).read(s);
     }
 
 inline void SpinOne::
 doWrite(std::ostream& s) const
     {
-    s.write((char*) &N,sizeof(N));
+    s.write((char*) &N_,sizeof(N_));
     for(int j = 1; j <= N_; ++j) 
-        site.at(j).write(s);
+        site_.at(j).write(s);
     }
 
 inline int SpinOne::
@@ -99,9 +114,45 @@ inline const IQIndex& SpinOne::
 getSi(int i) const
     { return site_.at(i); }
 
-inline const IQIndex& SpinOne::
+inline IQIndex SpinOne::
 getSiP(int i) const
     { return site_.at(i).primed(); }
+
+inline IQIndexVal SpinOne::
+Up(int i) const
+    {
+    return getSi(i)(1);
+    }
+
+inline IQIndexVal SpinOne::
+Z0(int i) const
+    {
+    return getSi(i)(2);
+    }
+
+inline IQIndexVal SpinOne::
+Dn(int i) const
+    {
+    return getSi(i)(3);
+    }
+
+inline IQIndexVal SpinOne::
+UpP(int i) const
+    {
+    return getSiP(i)(1);
+    }
+
+inline IQIndexVal SpinOne::
+Z0P(int i) const
+    {
+    return getSiP(i)(2);
+    }
+
+inline IQIndexVal SpinOne::
+DnP(int i) const
+    {
+    return getSiP(i)(3);
+    }
 
 inline IQTensor SpinOne::
 makeSz(int i) const

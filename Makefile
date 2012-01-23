@@ -40,7 +40,7 @@ clean:
 	cd itensor && make clean
 	cd sample && make clean
 	cd sandbox && make clean
-	rm -f include/*
+	rm -fr include/*
 	rm -f lib/*
 
 distclean: clean

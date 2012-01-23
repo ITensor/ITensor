@@ -1,10 +1,9 @@
 #define THIS_IS_MAIN
 #include "core.h"
+#include "model/spinmodels.h"
 #include "hams/heisenberg.h"
 using boost::format;
-using std::cout;
-using std::cerr;
-using std::endl;
+using namespace std;
 
 int main(int argc, char* argv[])
 {
@@ -14,12 +13,14 @@ int main(int argc, char* argv[])
     int maxm = 100;
     Real cutoff = 1E-5;
 
-    SpinOne::Model model(N);
+    SpinHalf model(N);
+    //SpinOne model(N);
 
     IQMPO H = Heisenberg(model);
 
     InitState initState(N);
-    for(int i = 1; i <= N; ++i) initState(i) = (i%2==1 ? model.Up(i) : model.Dn(i));
+    for(int i = 1; i <= N; ++i) 
+        initState(i) = (i%2==1 ? model.Up(i) : model.Dn(i));
 
     IQMPS psi(model,initState);
 

@@ -53,7 +53,7 @@ public:
 
     MPOt() : Parent() { doRelCutoff(true); }
 
-    MPOt(const BaseModel& model, int maxm_ = MAX_M, Real cutoff_ = MIN_CUT, 
+    MPOt(const Model& model, int maxm_ = MAX_M, Real cutoff_ = MIN_CUT, 
     bool _doRelCutoff = true, LogNumber _refNorm = DefaultRefScale) 
     : Parent(model,maxm_,cutoff_)
 	{ 
@@ -65,7 +65,7 @@ public:
         if(_refNorm == DefaultRefScale) refNorm(exp(model.NN()));
 	}
 
-    MPOt(BaseModel& model, std::istream& s) { read(model,s); }
+    MPOt(Model& model, std::istream& s) { read(model,s); }
 
     virtual ~MPOt() { }
 
