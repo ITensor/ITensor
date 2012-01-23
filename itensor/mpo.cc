@@ -77,7 +77,6 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
     if(K.NN() != N) Error("Mismatched N in napplyMPO");
     if(x.right_lim() > 3)
         {
-        cerr << "x is " << endl << x << endl;
         Error("bad right_lim for x");
         }
     if(!allow_arb_position && K.right_lim() > 3)
@@ -132,7 +131,12 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
     } //void napplyMPO
 
 //Expensive: scales as m^3 k^3!
+<<<<<<< HEAD
 void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
+=======
+void 
+exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
+>>>>>>> Fixed pinning in triangular Heisenberg.
     {
     int N = x.NN();
     if(K.NN() != N) Error("Mismatched N in exact_applyMPO");
@@ -150,7 +154,7 @@ void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
         IQCombiner comb; comb.doCondense(false);
         Foreach(const IQIndex& I, res.AA(j).iqinds())
         if(res.AA(j+1).hasindex(I) && I != IQIndex::IndReIm())
-        { assert(I.dir() == Out); comb.addleft(I);}
+            { assert(I.dir() == Out); comb.addleft(I);}
         comb.init(nameint("a",j));
 
         //Apply combiner to product tensors
@@ -160,3 +164,8 @@ void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
     res.mapprime(1,0,primeSite);
     //res.orthogonalize();
     } //void exact_applyMPO
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> Fixed pinning in triangular Heisenberg.
