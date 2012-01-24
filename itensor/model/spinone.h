@@ -8,7 +8,7 @@ class SpinOne : public Model
 
     SpinOne();
 
-    SpinOne(int N);
+    SpinOne(int N, bool shalf_edge = false);
 
     SpinOne(std::ifstream& s) { doRead(s); }
 
@@ -63,7 +63,7 @@ class SpinOne : public Model
     doWrite(std::ostream& s) const;
 
     virtual void
-    constructSites();
+    constructSites(bool shalf_edge);
         
     //Data members -----------------
 
@@ -79,23 +79,30 @@ SpinOne()
     { }
 
 inline SpinOne::
-SpinOne(int N)
+SpinOne(int N, bool shalf_edge)
     : N_(N),
       site_(N_+1)
     { 
-    constructSites();
+    constructSites(shalf_edge);
     }
 
 inline void SpinOne::
-constructSites()
+constructSites(bool shalf_edge)
     {
     for(int j = 1; j <= N_; ++j)
-        {
-        site_.at(j) = IQIndex(nameint("S=1, site=",j),
-            Index(nameint("Up for site",j),1,Site),QN(+2,0),
-            Index(nameint("Z0 for site",j),1,Site),QN( 0,0),
-            Index(nameint("Dn for site",j),1,Site),QN(-2,0));
-        }
+        if(shalf_edge && (j == 1 || j == N_))
+            {
+            site_.at(j) = IQIndex(nameint("S=1/2, site=",j),
+                Index(nameint("Up for site",j),1,Site),QN(+1,0),
+                Index(nameint("Dn for site",j),1,Site),QN(-1,0));
+            }
+        else
+            {
+            site_.at(j) = IQIndex(nameint("S=1, site=",j),
+                Index(nameint("Up for site",j),1,Site),QN(+2,0),
+                Index(nameint("Z0 for site",j),1,Site),QN( 0,0),
+                Index(nameint("Dn for site",j),1,Site),QN(-2,0));
+            }
     }
 
 inline void SpinOne::
@@ -136,13 +143,17 @@ Up(int i) const
 inline IQIndexVal SpinOne::
 Z0(int i) const
     {
-    return getSi(i)(2);
+    IQIndex ind = getSi(i);
+    if(ind.m() == 2)
+        Error("Z0 not defined for spin 1/2 site");
+    return ind(2);
     }
 
 inline IQIndexVal SpinOne::
 Dn(int i) const
     {
-    return getSi(i)(3);
+    IQIndex ind = getSi(i);
+    return ind(ind.m());
     }
 
 inline IQIndexVal SpinOne::
@@ -154,21 +165,33 @@ UpP(int i) const
 inline IQIndexVal SpinOne::
 Z0P(int i) const
     {
-    return getSiP(i)(2);
+    IQIndex ind = getSiP(i);
+    if(ind.m() == 2)
+        Error("Z0 not defined for spin 1/2 site");
+    return ind(2);
     }
 
 inline IQIndexVal SpinOne::
 DnP(int i) const
     {
-    return getSiP(i)(3);
+    IQIndex ind = getSiP(i);
+    return ind(ind.m());
     }
 
 inline IQTensor SpinOne::
 makeSz(int i) const
     {
     IQTensor Sz(conj(si(i)),siP(i));
-    Sz(Up(i),UpP(i)) = +1.;
-    Sz(Dn(i),DnP(i)) = -1.;
+    if(si(i).m() == 2)
+        {
+        Sz(Up(i),UpP(i)) = +0.5;
+        Sz(Dn(i),DnP(i)) = -0.5;
+        }
+    else
+        {
+        Sz(Up(i),UpP(i)) = +1.;
+        Sz(Dn(i),DnP(i)) = -1.;
+        }
     return Sz;
     }
 
@@ -176,10 +199,18 @@ inline IQTensor SpinOne::
 makeSx(int i) const
     {
     IQTensor Sx(conj(si(i)),siP(i));
-    Sx(Up(i),Z0P(i)) = ISqrt2; 
-    Sx(Z0(i),UpP(i)) = ISqrt2;
-    Sx(Z0(i),DnP(i)) = ISqrt2; 
-    Sx(Dn(i),Z0P(i)) = ISqrt2;
+    if(si(i).m() == 2)
+        {
+        Sx(Up(i),DnP(i)) = +0.5;
+        Sx(Dn(i),UpP(i)) = +0.5;
+        }
+    else
+        {
+        Sx(Up(i),Z0P(i)) = ISqrt2; 
+        Sx(Z0(i),UpP(i)) = ISqrt2;
+        Sx(Z0(i),DnP(i)) = ISqrt2; 
+        Sx(Dn(i),Z0P(i)) = ISqrt2;
+        }
     return Sx;
     }
 
@@ -187,10 +218,18 @@ inline IQTensor SpinOne::
 makeISy(int i) const
     {
     IQTensor ISy(conj(si(i)),siP(i));
-    ISy(Up(i),Z0P(i)) = +ISqrt2; 
-    ISy(Z0(i),UpP(i)) = -ISqrt2;
-    ISy(Z0(i),DnP(i)) = +ISqrt2; 
-    ISy(Dn(i),Z0P(i)) = -ISqrt2;
+    if(si(i).m() == 2)
+        {
+        ISy(Up(i),DnP(i)) = -0.5;
+        ISy(Dn(i),UpP(i)) = +0.5;
+        }
+    else
+        {
+        ISy(Up(i),Z0P(i)) = +ISqrt2; 
+        ISy(Z0(i),UpP(i)) = -ISqrt2;
+        ISy(Z0(i),DnP(i)) = +ISqrt2; 
+        ISy(Dn(i),Z0P(i)) = -ISqrt2;
+        }
     return ISy;
     }
 
@@ -198,8 +237,15 @@ inline IQTensor SpinOne::
 makeSp(int i) const
     {
     IQTensor Sp(conj(si(i)),siP(i));
-    Sp(Dn(i),Z0P(i)) = Sqrt2; 
-    Sp(Z0(i),UpP(i)) = Sqrt2;
+    if(si(i).m() == 2)
+        {
+        Sp(Dn(i),UpP(i)) = 1;
+        }
+    else
+        {
+        Sp(Dn(i),Z0P(i)) = Sqrt2; 
+        Sp(Z0(i),UpP(i)) = Sqrt2;
+        }
     return Sp;
     }
 
@@ -207,8 +253,15 @@ inline IQTensor SpinOne::
 makeSm(int i) const
     {
     IQTensor Sm(conj(si(i)),siP(i));
-    Sm(Up(i),Z0P(i)) = Sqrt2; 
-    Sm(Z0(i),DnP(i)) = Sqrt2;
+    if(si(i).m() == 2)
+        {
+        Sm(Up(i),DnP(i)) = 1;
+        }
+    else
+        {
+        Sm(Up(i),Z0P(i)) = Sqrt2; 
+        Sm(Z0(i),DnP(i)) = Sqrt2;
+        }
     return Sm;
     }
 
