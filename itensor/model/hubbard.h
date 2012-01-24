@@ -200,7 +200,7 @@ UpDnP(int i) const
 inline IQTensor Hubbard::
 makeNup(int i) const
     {
-    IQTensor Nup(si(i),siP(i));
+    IQTensor Nup(conj(si(i)),siP(i));
     Nup(Up(i),UpP(i)) = 1;
     Nup(UpDn(i),UpDnP(i)) = 1;
     return Nup;
@@ -209,7 +209,7 @@ makeNup(int i) const
 inline IQTensor Hubbard::
 makeNdn(int i) const
     {
-    IQTensor Ndn(si(i),siP(i));
+    IQTensor Ndn(conj(si(i)),siP(i));
     Ndn(Dn(i),DnP(i)) = 1;
     Ndn(UpDn(i),UpDnP(i)) = 1;
     return Ndn;
@@ -218,7 +218,7 @@ makeNdn(int i) const
 inline IQTensor Hubbard::
 makeNupdn(int i) const
     {
-    IQTensor Nupdn(si(i),siP(i));
+    IQTensor Nupdn(conj(si(i)),siP(i));
     Nupdn(UpDn(i),UpDnP(i)) = 1;
     return Nupdn;
     }
@@ -226,7 +226,7 @@ makeNupdn(int i) const
 inline IQTensor Hubbard::
 makeNtot(int i) const
     {
-    IQTensor Ntot(si(i),siP(i));
+    IQTensor Ntot(conj(si(i)),siP(i));
     Ntot(Up(i),UpP(i)) = 1;
     Ntot(Dn(i),DnP(i)) = 1;
     Ntot(UpDn(i),UpDnP(i)) = 2;
@@ -236,7 +236,7 @@ makeNtot(int i) const
 inline IQTensor Hubbard::
 makeCup(int i) const
     {
-    IQTensor Cup(si(i),siP(i));
+    IQTensor Cup(conj(si(i)),siP(i));
     Cup(Up(i),EmpP(i)) = 1;
     Cup(UpDn(i),DnP(i)) = -1;
     return Cup;
@@ -245,7 +245,7 @@ makeCup(int i) const
 inline IQTensor Hubbard::
 makeCdagup(int i) const
     {
-    IQTensor Cdagup(si(i),siP(i));
+    IQTensor Cdagup(conj(si(i)),siP(i));
     Cdagup(Emp(i),UpP(i)) = 1;
     Cdagup(Dn(i),UpDnP(i)) = -1;
     return Cdagup;
@@ -254,7 +254,7 @@ makeCdagup(int i) const
 inline IQTensor Hubbard::
 makeCdn(int i) const
     {
-    IQTensor Cdn(si(i),siP(i));
+    IQTensor Cdn(conj(si(i)),siP(i));
     Cdn(Dn(i),EmpP(i)) = 1;
     Cdn(UpDn(i),UpP(i)) = 1;
     return Cdn;
@@ -263,7 +263,7 @@ makeCdn(int i) const
 inline IQTensor Hubbard::
 makeCdagdn(int i) const
     {
-    IQTensor Cdagdn(si(i),siP(i));
+    IQTensor Cdagdn(conj(si(i)),siP(i));
     Cdagdn(Emp(i),DnP(i)) = 1;
     Cdagdn(Up(i),UpDnP(i)) = 1;
     return Cdagdn;
@@ -272,7 +272,7 @@ makeCdagdn(int i) const
 inline IQTensor Hubbard::
 makeFermiPhase(int i) const
     {
-    IQTensor fermiPhase(si(i),siP(i));
+    IQTensor fermiPhase(conj(si(i)),siP(i));
     fermiPhase(Emp(i),EmpP(i)) = +1;
     fermiPhase(Up(i),UpP(i)) = -1;
     fermiPhase(Dn(i),DnP(i)) = -1;
@@ -283,7 +283,7 @@ makeFermiPhase(int i) const
 inline IQTensor Hubbard::
 makeSz(int i) const
     {
-    IQTensor Sz(si(i),siP(i));
+    IQTensor Sz(conj(si(i)),siP(i));
     Sz(Up(i),UpP(i)) = +0.5; 
     Sz(Dn(i),DnP(i)) = -0.5;
     return Sz;

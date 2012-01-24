@@ -179,7 +179,7 @@ OccP(int i) const
 inline IQTensor Spinless::
 makeN(int i) const
     {
-    IQTensor N(si(i),siP(i));
+    IQTensor N(conj(si(i)),siP(i));
     N(Occ(i),OccP(i)) = 1;
     return N;
     }
@@ -187,7 +187,7 @@ makeN(int i) const
 inline IQTensor Spinless::
 makeC(int i) const
     {
-    IQTensor C(si(i),siP(i));
+    IQTensor C(conj(si(i)),siP(i));
     C(Occ(i),EmpP(i)) = 1;
     return C;
     }
@@ -195,7 +195,7 @@ makeC(int i) const
 inline IQTensor Spinless::
 makeCdag(int i) const
     {
-    IQTensor Cdag(si(i),siP(i));
+    IQTensor Cdag(conj(si(i)),siP(i));
     Cdag(Emp(i),OccP(i)) = 1;
     return Cdag;
     }
@@ -203,7 +203,7 @@ makeCdag(int i) const
 inline IQTensor Spinless::
 makeFermiPhase(int i) const
     {
-    IQTensor fermiPhase(si(i),siP(i));
+    IQTensor fermiPhase(conj(si(i)),siP(i));
     fermiPhase(Emp(i),EmpP(i)) = +1;
     fermiPhase(Occ(i),OccP(i)) = -1;
     return fermiPhase;

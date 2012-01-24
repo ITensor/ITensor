@@ -166,7 +166,7 @@ DnP(int i) const
 inline IQTensor SpinOne::
 makeSz(int i) const
     {
-    IQTensor Sz(si(i),siP(i));
+    IQTensor Sz(conj(si(i)),siP(i));
     Sz(Up(i),UpP(i)) = +1.;
     Sz(Dn(i),DnP(i)) = -1.;
     return Sz;
@@ -175,7 +175,7 @@ makeSz(int i) const
 inline IQTensor SpinOne::
 makeSx(int i) const
     {
-    IQTensor Sx(si(i),siP(i));
+    IQTensor Sx(conj(si(i)),siP(i));
     Sx(Up(i),Z0P(i)) = ISqrt2; 
     Sx(Z0(i),UpP(i)) = ISqrt2;
     Sx(Z0(i),DnP(i)) = ISqrt2; 
@@ -186,7 +186,7 @@ makeSx(int i) const
 inline IQTensor SpinOne::
 makeISy(int i) const
     {
-    IQTensor ISy(si(i),siP(i));
+    IQTensor ISy(conj(si(i)),siP(i));
     ISy(Up(i),Z0P(i)) = +ISqrt2; 
     ISy(Z0(i),UpP(i)) = -ISqrt2;
     ISy(Z0(i),DnP(i)) = +ISqrt2; 
@@ -197,7 +197,7 @@ makeISy(int i) const
 inline IQTensor SpinOne::
 makeSp(int i) const
     {
-    IQTensor Sp(si(i),siP(i));
+    IQTensor Sp(conj(si(i)),siP(i));
     Sp(Dn(i),Z0P(i)) = Sqrt2; 
     Sp(Z0(i),UpP(i)) = Sqrt2;
     return Sp;
@@ -206,7 +206,7 @@ makeSp(int i) const
 inline IQTensor SpinOne::
 makeSm(int i) const
     {
-    IQTensor Sm(si(i),siP(i));
+    IQTensor Sm(conj(si(i)),siP(i));
     Sm(Up(i),Z0P(i)) = Sqrt2; 
     Sm(Z0(i),DnP(i)) = Sqrt2;
     return Sm;

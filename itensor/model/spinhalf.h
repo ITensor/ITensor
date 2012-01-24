@@ -147,7 +147,7 @@ DnP(int i) const
 inline IQTensor SpinHalf::
 makeSz(int i) const
     {
-    IQTensor Sz(si(i),siP(i));
+    IQTensor Sz(conj(si(i)),siP(i));
     Sz(Up(i),UpP(i)) = +0.5;
     Sz(Dn(i),DnP(i)) = -0.5;
     return Sz;
@@ -156,7 +156,7 @@ makeSz(int i) const
 inline IQTensor SpinHalf::
 makeSx(int i) const
     {
-    IQTensor Sx(si(i),siP(i));
+    IQTensor Sx(conj(si(i)),siP(i));
     Sx(Up(i),DnP(i)) = +0.5;
     Sx(Dn(i),UpP(i)) = +0.5;
     return Sx;
@@ -165,7 +165,7 @@ makeSx(int i) const
 inline IQTensor SpinHalf::
 makeISy(int i) const
     {
-    IQTensor ISy(si(i),siP(i));
+    IQTensor ISy(conj(si(i)),siP(i));
     ISy(Up(i),DnP(i)) = -0.5;
     ISy(Dn(i),UpP(i)) = +0.5;
     return ISy;
@@ -174,7 +174,7 @@ makeISy(int i) const
 inline IQTensor SpinHalf::
 makeSp(int i) const
     {
-    IQTensor Sp(si(i),siP(i));
+    IQTensor Sp(conj(si(i)),siP(i));
     Sp(Dn(i),UpP(i)) = 1;
     return Sp;
     }
@@ -182,7 +182,7 @@ makeSp(int i) const
 inline IQTensor SpinHalf::
 makeSm(int i) const
     {
-    IQTensor Sm(si(i),siP(i));
+    IQTensor Sm(conj(si(i)),siP(i));
     Sm(Up(i),DnP(i)) = 1;
     return Sm;
     }
