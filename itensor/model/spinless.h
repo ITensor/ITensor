@@ -8,7 +8,7 @@ class Spinless : public Model
 
     Spinless();
 
-    Spinless(int N);
+    Spinless(int N, bool odd_even_up_down = false, bool conserve_Nf = true);
 
     Spinless(std::ifstream& s) { doRead(s); }
 
@@ -60,7 +60,7 @@ class Spinless : public Model
 
     int N_;
 
-    bool odd_even_up_dn_;
+    bool odd_even_up_down_;
 
     bool conserve_Nf_;
 
@@ -77,7 +77,7 @@ Spinless()
     }
 
 inline Spinless::
-Spinless(int N, bool odd_even_up_down = false, bool conserve_Nf = true)
+Spinless(int N, bool odd_even_up_down, bool conserve_Nf)
     : N_(N),
       odd_even_up_down_(odd_even_up_down),
       conserve_Nf_(conserve_Nf),
