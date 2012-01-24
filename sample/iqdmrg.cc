@@ -11,10 +11,10 @@ int main(int argc, char* argv[])
     int nsweep = 5;
     int minm = 1;
     int maxm = 100;
-    Real cutoff = 1E-5;
+    Real cutoff = 1E-8;
 
-    SpinHalf model(N);
-    //SpinOne model(N);
+    //SpinHalf model(N);
+    SpinOne model(N);
 
     IQMPO H = Heisenberg(model);
 
