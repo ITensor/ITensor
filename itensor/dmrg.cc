@@ -58,7 +58,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
             ITensor phi = psi.AA(l) * psi.AA(l+1);
 
-            int dim = phi.vec_size();
+            int dim = phi.vecSize();
             Matrix evecs(sweeps.niter(sw),dim);
             Vector evals;
             phi.assignToVec(evecs.Row(1));

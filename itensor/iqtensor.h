@@ -366,7 +366,7 @@ public:
     clean(Real min_norm = MIN_CUT);
 
     int 
-    vec_size() const;
+    vecSize() const;
 
     void 
     assignToVec(VectorRef v) const;

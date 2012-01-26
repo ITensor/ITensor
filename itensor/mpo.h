@@ -333,13 +333,13 @@ inline void psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITens
     if(!RB.is_null()) L *= RB;
     if(L.is_complex())
     {
-        if(L.vec_size() != 2) Error("Non-scalar result in psiHphi.");
+        if(L.vecSize() != 2) Error("Non-scalar result in psiHphi.");
         re = L(Index::IndReIm()(1));
         im = L(Index::IndReIm()(2));
     }
     else 
     {
-        if(L.vec_size() != 1) Error("Non-scalar result in psiHphi.");
+        if(L.vecSize() != 1) Error("Non-scalar result in psiHphi.");
         re = L.val0();
         im = 0;
     }

@@ -94,14 +94,14 @@ operator<<(ostream & s, const ITensor & t)
             {
             Real nrm = t.norm();
             if(nrm >= 1E-2)
-                s << boost::format(" (L=%d,N=%.2f)\n") % t.vec_size() % nrm;
+                s << boost::format(" (L=%d,N=%.2f)\n") % t.vecSize() % nrm;
             else
-                s << boost::format(" (L=%d,N=%.1E)\n") % t.vec_size() % nrm;
+                s << boost::format(" (L=%d,N=%.1E)\n") % t.vecSize() % nrm;
             }
         else
             {
             s << boost::format(" (L=%d,N=too big)\n") 
-                 % t.vec_size() << t.scale() << std::endl;
+                 % t.vecSize() << t.scale() << std::endl;
             }
         if(Globals::printdat())
             {
@@ -306,7 +306,7 @@ ITensor(const std::vector<Index>& I, const ITensor& other)
     : p(other.p), r_(I.size()), rn_(0), scale_(other.scale_)
 	{
     int alloc_size; sortIndices(I,r_,rn_,alloc_size,index_);
-	if(alloc_size != other.vec_size()) 
+	if(alloc_size != other.vecSize()) 
 	    { Error("incompatible Index and ITensor sizes"); }
     set_unique_Real();
 	}
@@ -316,7 +316,7 @@ ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P)
     : p(0), r_(I.size()), rn_(0), scale_(other.scale_)
     {
     int alloc_size; sortIndices(I,r_,rn_,alloc_size,index_);
-    if(alloc_size != other.vec_size()) 
+    if(alloc_size != other.vecSize()) 
         { Error("incompatible Index and ITensor sizes"); }
     if(P.is_trivial()) { p = other.p; }
     else               { allocate(); other.reshapeDat(P,p->v); }
@@ -973,7 +973,7 @@ expandIndex(const Index& small, const Index& big,
     }
 
 int ITensor::
-vec_size() const 
+vecSize() const 
     { return (p == 0 ? 0 : p->v.Length()); }
 
 void ITensor::

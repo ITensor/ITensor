@@ -475,7 +475,7 @@ void convertToIQ(const Model& model, const vector<ITensor>& A, vector<IQTensor>&
                     for(int j = 1; j <= bond.m(); ++j)
                         { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
                     assert(rel_cut >= 0);
-                    //Real rel_cut = summed_block.norm()/summed_block.vec_size();
+                    //Real rel_cut = summed_block.norm()/summed_block.vecSize();
                     rel_cut *= cut;
                     //cerr << "rel_cut == " << rel_cut << "\n";
 
@@ -687,7 +687,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                     for(int j = 1; j <= bond.m(); ++j)
                     { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
                     assert(rel_cut >= 0);
-                    //Real rel_cut = summed_block.norm()/summed_block.vec_size();
+                    //Real rel_cut = summed_block.norm()/summed_block.vecSize();
                     rel_cut *= cut;
                     //cerr << "rel_cut == " << rel_cut << "\n";
 

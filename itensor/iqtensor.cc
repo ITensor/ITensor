@@ -740,24 +740,24 @@ addindex1(const IQIndex& I)
 	}
 
 int IQTensor::
-vec_size() const
+vecSize() const
 	{
     if(this->is_null()) return 0;
 	int s = 0;
 	for(const_iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-	    s += jj->vec_size();
+	    s += jj->vecSize();
 	return s;
 	}
 
 void IQTensor::
 assignToVec(VectorRef v) const
 	{
-	if(vec_size() != v.Length())
+	if(vecSize() != v.Length())
 	    Error("Mismatched sizes in IQTensor::assignToVec(VectorRef v).");
 	int off = 1;
 	for(const_iten_it jj = const_iten_begin(); jj != const_iten_end(); ++jj)
 	    {
-	    int d = jj->vec_size();
+	    int d = jj->vecSize();
 	    jj->assignToVec(v.SubVector(off,off+d-1));
 	    off += d;
 	    }
@@ -767,12 +767,12 @@ void IQTensor::
 assignFromVec(VectorRef v)
 	{
 	solo();
-	if(vec_size() != v.Length())
+	if(vecSize() != v.Length())
 	    Error("bad size");
 	int off = 1;
 	for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
 	    {
-	    int d = jj->vec_size();
+	    int d = jj->vecSize();
 	    jj->assignFromVec(v.SubVector(off,off+d-1));
 	    off += d;
 	    }
@@ -1205,7 +1205,7 @@ GetSingComplex(Real& re, Real& im) const
     else
         {
         const ITensor& t = tre.p->itensor.front();
-        if(t.vec_size() != 1) 
+        if(t.vecSize() != 1) 
             {
             cout << "tre is\n" << tre << endl;
             Error("bad tre dat size");
@@ -1217,7 +1217,7 @@ GetSingComplex(Real& re, Real& im) const
     else
         {
         const ITensor& t = tim.p->itensor.front();
-        if(t.vec_size() != 1) Error("bad tim dat size");
+        if(t.vecSize() != 1) Error("bad tim dat size");
         im = t.val0();
         }
     }

@@ -229,7 +229,7 @@ void SVDWorker::operator()(int b, const Tensor& AA,
     typedef typename Tensor::IndexT IndexT;
     typedef typename Tensor::CombinerT CombinerT;
 
-    if(AA.vec_size() == 0) 
+    if(AA.vecSize() == 0) 
         {
         A *= 0;
         B *= 0;

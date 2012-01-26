@@ -635,7 +635,7 @@ pseudoInverse(const ITensor& C)
         Print(C);
         Error("pseudoInverse only defined for rank 1 ITensors");
         }
-    const int m = C.vec_size();
+    const int m = C.vecSize();
     Vector V(m);
     C.assignToVec(V);
 

@@ -57,10 +57,10 @@ public:
     LocalHam(const TensorSet& le, const TensorSet& ri, const TensorSet& mpo, Tensor& psi_) 
 	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo)
     { 
-    diag.ReDimension(psi.vec_size()); diag = 1; 
+    diag.ReDimension(psi.vecSize()); diag = 1; 
     }
 
-    int Size() const { return psi.vec_size(); }
+    int Size() const { return psi.vecSize(); }
     VectorRef DiagRef() const { return diag; }
 
     Vector operator*(const VectorRef &A) const
@@ -87,7 +87,7 @@ public:
     LocalHam(const ITensor& le, const ITensor& ri, const ITensor& mpo, ITensor& psi_) 
 	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo)
         { 
-        diag.ReDimension(psi.vec_size());
+        diag.ReDimension(psi.vecSize());
 
 //#define MAKE_DIAG
 
@@ -129,7 +129,7 @@ public:
 
         }
 
-    int Size() const { return psi.vec_size(); }
+    int Size() const { return psi.vecSize(); }
     VectorRef DiagRef() const { return diag; }
 
     Vector operator*(const VectorRef &A) const
@@ -161,9 +161,9 @@ public:
     LocalHamOrth(const Tensor& le, const Tensor& ri, const Tensor& mpo, Tensor& psi_, Real weight_) 
 	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), 
       useleft(le.is_not_null()), useright(ri.is_not_null()), weight(weight_)
-    { diag.ReDimension(psi.vec_size()); diag = 1; }
+    { diag.ReDimension(psi.vecSize()); diag = 1; }
 
-    int Size() const { return psi.vec_size(); }
+    int Size() const { return psi.vecSize(); }
     VectorRef DiagRef() const { return diag; }
 
     Vector operator*(const VectorRef &A) const
@@ -196,11 +196,11 @@ void putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const Ten
         applyProjOp(phi,LH,RH,mpoh,phip);
         phip *= -0.00232341; //arbitrary small number
         phip += phi; //evolve by (1-tau*H)
-        int phisize = phi.vec_size();
+        int phisize = phi.vecSize();
         phi = phip;
         if(cnt > 10) std::cerr << "Warning: large number of time evolution steps in putInQNs." << std::endl;
         if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
-        else if(phip.vec_size() == phisize) break;
+        else if(phip.vecSize() == phisize) break;
     }
 }
 template<class Tensor, class TensorSet>
@@ -209,7 +209,7 @@ void putInQNs(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& 
     for(size_t n = 0; n < phi.size(); ++n)
     {
         Tensor phip;
-        if(phi[n].is_null() || phi[n].vec_size() == 0)
+        if(phi[n].is_null() || phi[n].vecSize() == 0)
         {
             Print(n); Print(phi[n]);
             Error("Null or zero size tensor in putInQNs.");
@@ -219,11 +219,11 @@ void putInQNs(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& 
             applyProjOp(phi[n],LH,RH,mpoh,phip);
             phip *= -0.00232341; //arbitrary small number
             phip += phi[n]; //evolve by (1-tau*H)
-            int phisize = phi[n].vec_size();
+            int phisize = phi[n].vecSize();
             phi[n] = phip;
             if(cnt > 10) std::cerr << "Warning: large number of time evolution steps in putInQNs." << std::endl;
             if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
-            else if(phip.vec_size() == phisize) break;
+            else if(phip.vecSize() == phisize) break;
         }
     }
 }
@@ -238,7 +238,7 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
     if(niter < 1)
         {
         //Just return the current energy (no optimization via Davidson)
-        Vector Phi(phi.vec_size()),HPhi(phi.vec_size()); 
+        Vector Phi(phi.vecSize()),HPhi(phi.vecSize()); 
         phi.assignToVec(Phi);
         Phi /= Norm(Phi);
         lham.product(Phi,HPhi);
@@ -248,7 +248,7 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
         }
     else
         {
-        Matrix evecs(niter,phi.vec_size()); Vector evals;
+        Matrix evecs(niter,phi.vecSize()); Vector evals;
         phi.assignToVec(evecs.Row(1));
         evecs.Row(1) /= Norm(evecs.Row(1));
         David(lham,1,errgoal,evals,evecs,1,1,debuglevel);
@@ -267,7 +267,7 @@ Vector doDavidson(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorS
     putInQNs(phi,mpoh,LH,RH);
     LocalHam<Tensor,TensorSet> lham(LH,RH,mpoh,phi[0]);
 
-    Matrix evecs(max(ntarget,niter),phi[0].vec_size()); Vector evals;
+    Matrix evecs(max(ntarget,niter),phi[0].vecSize()); Vector evals;
     for(int n = 0; n < ntarget; ++n)
     { 
         phi[n].assignToVec(evecs.Row(1+n)); 
