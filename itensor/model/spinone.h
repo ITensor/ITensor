@@ -30,6 +30,17 @@ class SpinOne : public Model
     IQIndexVal
     DnP(int i) const;
 
+    //(Sz)^2, etc. operators
+
+    IQTensor
+    sz2(int i) const { return makeSx2(i); }
+
+    IQTensor
+    sx2(int i) const { return makeSx2(i); }
+
+    IQTensor
+    sy2(int i) const { return makeSx2(i); }
+
     private:
 
     virtual int
@@ -55,6 +66,15 @@ class SpinOne : public Model
 
     virtual IQTensor
     makeSm(int i) const;
+
+    virtual IQTensor
+    makeSz2(int i) const;
+
+    virtual IQTensor
+    makeSx2(int i) const;
+
+    virtual IQTensor
+    makeSy2(int i) const;
 
     virtual void
     doRead(std::istream& s);
@@ -263,6 +283,43 @@ makeSm(int i) const
         Sm(Z0(i),DnP(i)) = Sqrt2;
         }
     return Sm;
+    }
+
+
+inline IQTensor SpinOne::
+makeSz2(int i) const
+    {
+    if(si(i).m() == 2) Error("Sz^2 only non-trivial for S=1 sites");
+    IQTensor Sz2(conj(si(i)),siP(i));
+    Sz2(Up(i),UpP(i)) = 1; 
+    Sz2(Dn(i),DnP(i)) = 1;
+    return Sz2;
+    }
+
+inline IQTensor SpinOne::
+makeSx2(int i) const
+    {
+    if(si(i).m() == 2) Error("Sx^2 only non-trivial for S=1 sites");
+    IQTensor Sx2(conj(si(i)),siP(i));
+    Sx2(Up(i),UpP(i)) = 0.5; 
+    Sx2(Up(i),DnP(i)) = 0.5;
+    Sx2(Z0(i),Z0P(i)) = 1;
+    Sx2(Dn(i),DnP(i)) = 0.5; 
+    Sx2(Dn(i),UpP(i)) = 0.5;
+    return Sx2;
+    }
+
+inline IQTensor SpinOne::
+makeSy2(int i) const
+    {
+    if(si(i).m() == 2) Error("Sy^2 only non-trivial for S=1 sites");
+    IQTensor Sy2(conj(si(i)),siP(i));
+    Sy2(Up(i),UpP(i)) = 0.5; 
+    Sy2(Up(i),DnP(i)) = -0.5;
+    Sy2(Z0(i),Z0P(i)) = 1;
+    Sy2(Dn(i),DnP(i)) = 0.5; 
+    Sy2(Dn(i),UpP(i)) = -0.5;
+    return Sy2;
     }
 
 #endif
