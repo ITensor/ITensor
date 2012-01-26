@@ -473,7 +473,7 @@ TEST(assignToVec)
 
     T *= f;
 
-    Vector U(T.vec_size()); T.assignToVec(U);
+    Vector U(T.vecSize()); T.assignToVec(U);
 
     CHECK_EQUAL(U.Length(),V.Length());
 
@@ -525,12 +525,12 @@ TEST(SumDifference)
     Real f1 = -ran1(), f2 = 0.1*f1;
 
     ITensor r = f1*v + w/f2; 
-    Vector R(r.vec_size()); r.assignToVec(R);
+    Vector R(r.vecSize()); r.assignToVec(R);
     for(int j = 1; j < R.Length(); ++j)
     { CHECK_CLOSE(R(j),f1*V(j)+W(j)/f2,1E-10); }
 
     ITensor d(v); d -= w;
-    Vector D(d.vec_size()); d.assignToVec(D);
+    Vector D(d.vecSize()); d.assignToVec(D);
     for(int j = 1; j < D.Length(); ++j)
     { CHECK_CLOSE(D(j),V(j)-W(j),1E-10); }
 
@@ -964,11 +964,28 @@ TEST(SymmetricDiag11)
     T *= -2;
     Index mid;
     ITensor D,U;
-    T.symmetricDiag11(s1,s1.primed(),D,U,mid);
+    T.symmetricDiag11(s1,D,U,mid);
     ITensor UD(U);
     UD.primeind(s1);
     UD /= D;
     ITensor diff(UD*U - T);
+    CHECK(diff.norm() < 1E-10);
+
+    //Construct a random, symmetric ITensor
+    const int qs = 50;
+    Index q("q",qs);
+    Matrix QQ(qs,qs);
+    QQ.Randomize();
+    QQ += QQ.t();
+    ITensor Q(q,primed(q),QQ);
+    Q *= -2;
+
+    //Diagonalize and check the factorization
+    Q.symmetricDiag11(q,D,U,mid);
+    UD =U;
+    UD.primeind(q);
+    UD /= D;
+    diff = UD*U - Q;
     CHECK(diff.norm() < 1E-10);
     }
 

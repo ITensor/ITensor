@@ -228,7 +228,7 @@ public:
     operator+=(const ITensor& t);
 
     //Like operator+=(ITensor) but
-    //demands that the block is zero
+    //demands that the block is zero/absent
     //before inserting
     void insert(const ITensor& t);
 
@@ -343,6 +343,9 @@ public:
 
     //----------------------------------------------------
     //IQTensor miscellaneous methods
+
+    void
+    symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid) const;
 
     Real 
     unique_Real() const;

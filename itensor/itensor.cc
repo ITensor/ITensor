@@ -1158,6 +1158,12 @@ void ITensor::
 mapindex(const Index& i1, const Index& i2)
 	{
 	assert(i1.m() == i2.m());
+    if(i2.m() != i1.m())
+        {
+        Print(i1);
+        Print(i2);
+        Error("mapIndex: index must have matching m");
+        }
 	for(int j = 1; j <= r_; ++j) 
 	    if(GET(index_,j) == i1) 
 		{
@@ -2315,13 +2321,12 @@ void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, co
 */
 
 void ITensor::
-symmetricDiag11(const Index& i1, const Index& i2, ITensor& D, ITensor& U, Index& mid) const
+symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid) const
     {
     assert(hasindex(i1));
-    assert(hasindex(i2));
+    assert(hasindex(primed(i1)));
     if(r() != 2) Error("symDiag11: rank must be 2");
     const int m = i1.m();
-    if(i2.m() != m) Error("symDiag11: not square");
 
     MatrixRef ref; 
     p->v.TreatAsMatrix(ref,m,m);
@@ -2332,7 +2337,7 @@ symmetricDiag11(const Index& i1, const Index& i2, ITensor& D, ITensor& U, Index&
     ref *= -1;
     d *= -1;
 
-    mid = Index((mid.is_null() ? "mid" : mid.name()),m,mid.type());
+    mid = Index((mid.is_null() ? "mid" : mid.rawname()),m,mid.type());
     U = ITensor(i1,mid,UU);
     D = ITensor(mid,d);
     D.scale_ = scale_;

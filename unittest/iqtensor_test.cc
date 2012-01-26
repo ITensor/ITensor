@@ -3,7 +3,7 @@
 #include <boost/test/unit_test.hpp>
 
 struct IQTensorDefaults
-{
+    {
     const Index
     s1u,s1d,s2u,s2d,
     l1u,l10,l1d,
@@ -11,7 +11,7 @@ struct IQTensorDefaults
 
     IQIndex S1,S2,L1,L2;
 
-    IQTensor phi,A,B;
+    IQTensor phi,A,B,C;
 
     IQTensorDefaults() :
     s1u(Index("Site1 Up",1,Site)),
@@ -26,7 +26,7 @@ struct IQTensorDefaults
     l20(Index("Link2 Z0",2,Link)),
     l2d(Index("Link2 Dn",2,Link)),
     l2dd(Index("Link2 DD",2,Link))
-    {
+        {
         S1 = IQIndex("S1",
                      s1u,QN(+1),
                      s1d,QN(-1),Out);
@@ -80,9 +80,19 @@ struct IQTensorDefaults
             T.Randomize();
             B += T;
             }
-    }
 
-};
+        C = IQTensor(conj(L1),primed(L1));
+        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
+            {
+            Matrix U(L1.index(n1).m(),L1.index(n1).m());
+            U.Randomize();
+            U += U.t();
+            ITensor T(L1.index(n1),primed(L1).index(n1),U);
+            C += T;
+            }
+        }
+
+    };
 
 BOOST_FIXTURE_TEST_SUITE(IQTensorTest,IQTensorDefaults)
 
@@ -139,6 +149,19 @@ TEST(ITensorConversion)
                     1E-5);
 
 
+    }
+
+TEST(SymmetricDiag11)
+    {
+    IQTensor D,U;
+    IQIndex mid;
+    C.symmetricDiag11(L1,D,U,mid);
+
+    IQTensor UD(U);
+    UD.primeind(L1);
+    UD /= D;
+    ITensor diff(conj(UD)*U - C);
+    CHECK(diff.norm() < 1E-10);
     }
 
 BOOST_AUTO_TEST_SUITE_END()

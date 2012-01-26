@@ -250,6 +250,8 @@ public:
     removeindex1(const Index& I) 
         { removeindex1(findindex1(I)); }
 
+    void 
+    mapindex(const Index& i1, const Index& i2);
 
     //Primelevel Methods ------------------------------------
 
@@ -427,11 +429,10 @@ public:
     */
 
     void
-    symmetricDiag11(const Index& i1, const Index& i2, 
-                    ITensor& D, ITensor& U, Index& mid) const;
+    symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid) const;
 
     int 
-    vec_size() const;
+    vecSize() const;
 
     void 
     assignToVec(VectorRef v) const;
@@ -552,11 +553,6 @@ private:
     template<class Iterable>
     int 
     fillFromIndices(const Iterable& I, int size);
-
-    //Prefer to map via a Combiner
-    //Though 'mapindex' is useful for tested, internal calls
-    void 
-    mapindex(const Index& i1, const Index& i2);
 
     void 
     getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const;

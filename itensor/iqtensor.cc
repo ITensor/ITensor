@@ -439,13 +439,15 @@ checkDiv(QN expected) const
 	    for(int j = 1; j <= t.r(); ++j)
 		div_ += qn(t.index(j))*dir(t.index(j));
 	    if(div_ != expected)
-		{
-		std::cerr << "Block didn't match expected div\n";
-		std::cout << "Block didn't match expected div\n";
-        this->printIndices("this IQTensor");
-		Print(t);
-		return false;
-		}
+            {
+            std::cerr << "Block didn't match expected div\n";
+            std::cout << "Block didn't match expected div\n";
+            Print(expected);
+            this->printIndices("this IQTensor:");
+            std::cout << "Incorrect block:\n";
+            Print(t);
+            return false;
+            }
 	    }
 	return true;
 	}
@@ -670,6 +672,41 @@ hasindex(const IQIndex& i) const
         if(i == p->iqindex_[j]) 
         return true;
     return false;
+    }
+
+void IQTensor::
+symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid) const
+    {
+    assert(hasindex(i1));
+    assert(hasindex(primed(i1)));
+    if(r() != 2) Error("symDiag11: rank must be 2");
+    //This method is only intended for IQTensors with zero divergence
+    DO_IF_DEBUG(this->checkDiv(QN());)
+
+    vector<inqn> iq(iten_size()); 
+    vector<ITensor> UU(iten_size()); 
+    vector<ITensor> d(iten_size()); 
+
+    int w = 0;
+    for(IQTensor::const_iten_it it = const_iten_begin(); it != const_iten_end(); ++it)
+        {
+        Index mi;
+        Index act = it->index(1);
+        act.noprime();
+        it->symmetricDiag11(act,d[w],UU[w],mi);
+        iq[w] = inqn(mi,i1.qn(act));
+        ++w;
+        }
+
+    mid = IQIndex((mid.is_null() ? "mid" : mid.rawname()),iq,i1.dir()*Switch);
+
+    U = IQTensor(i1,mid);
+    for(size_t j = 0; j < UU.size(); ++j)
+        U += UU[j];
+
+    D = IQTensor(mid);
+    for(size_t j = 0; j < d.size(); ++j)
+        D += d[j];
     }
 
 Real IQTensor::
