@@ -80,7 +80,7 @@ struct ITensorDefaults
         mixed_inds[4] = a4;
         mixed_inds[5] = l4;
 
-        foreach(const Index& I, mixed_inds)
+        Foreach(const Index& I, mixed_inds)
         { mixed_inds_dim *= I.m(); }
 
         reordered_mixed_inds[0] = a2;
@@ -97,7 +97,7 @@ struct ITensorDefaults
 
 BOOST_FIXTURE_TEST_SUITE(ITensorTest,ITensorDefaults)
 
-BOOST_AUTO_TEST_CASE(Null)
+TEST(Null)
 {
     ITensor t1;
 
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(Null)
     CHECK(t2.is_not_null());
 }
 
-BOOST_AUTO_TEST_CASE(Constructors)
+TEST(Constructors)
 {
     ITensor t1(l1);
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
     CHECK_CLOSE(t10.norm(),Norm(V),1E-10);
 }
 
-BOOST_AUTO_TEST_CASE(IndexValConstructors)
+TEST(IndexValConstructors)
 {
     ITensor t1(l1(2));
 
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(IndexValConstructors)
     CHECK_CLOSE(t4.norm(),1,1E-10);
 }
 
-BOOST_AUTO_TEST_CASE(MultiIndexConstructors)
+TEST(MultiIndexConstructors)
 {
     std::vector<Index> indices(4);
     indices[0] = a2;
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(MultiIndexConstructors)
     CHECK_CLOSE(t2.sumels(),V.sumels(),1E-10);
 }
 
-BOOST_AUTO_TEST_CASE(ITensorConstructors)
+TEST(ITensorConstructors)
 {
     Index clink("clink",4);
     std::vector<Index> indices1(3);
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(ITensorConstructors)
 
 }
 
-BOOST_AUTO_TEST_CASE(Copy)
+TEST(Copy)
 {
     std::vector<Index> indices(4);
     indices[0] = a2;
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(Copy)
     CHECK_CLOSE(t3.sumels(),V.sumels(),1E-10);
 }
 
-BOOST_AUTO_TEST_CASE(ScalarMultiply)
+TEST(ScalarMultiply)
 {
     A *= -1;
     CHECK_EQUAL(A(s1(1),s2(1)),-11);
@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(ScalarMultiply)
     CHECK_CLOSE(B(s1(2),s2(2)),220/f,1E-10);
 }
 
-BOOST_AUTO_TEST_CASE(assignToVec)
+TEST(assignToVec)
 {
     Vector V(l1.m()*l2.m()*l3.m());
     V.Randomize();
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(assignToVec)
 
 }
 
-BOOST_AUTO_TEST_CASE(reshape)
+TEST(reshape)
 {
     Permutation P;
     P.from_to(1,2);
@@ -500,13 +500,13 @@ BOOST_AUTO_TEST_CASE(reshape)
 
 }
 
-BOOST_AUTO_TEST_CASE(findindex)
+TEST(findindex)
 {
     ITensor T(mixed_inds);
 
     boost::array<int,6> arb_order = {{ 3, 4, 1, 0, 2, 5 }};
 
-    foreach(int i, arb_order)
+    Foreach(int i, arb_order)
     {
         int j = T.findindex(mixed_inds.at(i));
         CHECK_EQUAL(T.index(j),mixed_inds.at(i));
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(findindex)
 
 }
 
-BOOST_AUTO_TEST_CASE(SumDifference)
+TEST(SumDifference)
 {
     Vector V(mixed_inds_dim),W(mixed_inds_dim);
     V.Randomize();
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(SumDifference)
 
 }
 
-BOOST_AUTO_TEST_CASE(ContractingProduct)
+TEST(ContractingProduct)
 {
 
     //Check for rank 0 ITensors
@@ -688,7 +688,7 @@ BOOST_AUTO_TEST_CASE(ContractingProduct)
     CHECK(!Hpsi.hasindex(a2));
 }
 
-BOOST_AUTO_TEST_CASE(NonContractingProduct)
+TEST(NonContractingProduct)
 {
     ITensor L(b2,a1,b3,b4), R(a1,b3,a2,b5,b4);
 
@@ -798,7 +798,7 @@ BOOST_AUTO_TEST_CASE(NonContractingProduct)
     { CHECK_CLOSE(Hpsi(l2(j2)),psi()*mpoh(l2(j2)),1E-10); }
 }
 
-BOOST_AUTO_TEST_CASE(TieIndices)
+TEST(TieIndices)
     {
 
     Index t("tied",2);
@@ -852,7 +852,7 @@ BOOST_AUTO_TEST_CASE(TieIndices)
 
     } //TieIndices
 
-BOOST_AUTO_TEST_CASE(fromMatrix11)
+TEST(fromMatrix11)
 {
     Matrix M22(s1.m(),s2.m());
 
@@ -902,8 +902,8 @@ BOOST_AUTO_TEST_CASE(fromMatrix11)
     CHECK_CLOSE(P(s2(2),a1(1)),M12(1,2),1E-10);
 }
 
-BOOST_AUTO_TEST_CASE(toMatrix11)
-{
+TEST(toMatrix11)
+    {
     Matrix M(s1.m(),s2.m());    
 
     Real f = -ran1();
@@ -954,12 +954,29 @@ BOOST_AUTO_TEST_CASE(toMatrix11)
     CHECK_CLOSE(M14(1,3),V(3),1E-10);
     CHECK_CLOSE(M14(1,4),V(4),1E-10);
 
-}
+    }
 
-BOOST_AUTO_TEST_CASE(CommaAssignment)
-{
+TEST(SymmetricDiag11)
+    {
+    ITensor T(s1,s1.primed());
+    commaInit(T) << 1, 2,
+                    2, 1;
+    T *= -2;
+    Index mid;
+    ITensor D,U;
+    T.symmetricDiag11(s1,s1.primed(),D,U,mid);
+    ITensor UD(U);
+    UD.primeind(s1);
+    UD /= D;
+    ITensor diff(UD*U - T);
+    CHECK(diff.norm() < 1E-10);
+    }
+
+TEST(CommaAssignment)
+    {
     ITensor ZZ(s1,s2);
-    commaInit(ZZ) << 1, 0, 0, -1;
+    commaInit(ZZ) << 1, 0, 
+                     0, -1;
     CHECK_EQUAL(ZZ(s1(1),s2(1)),1);
     CHECK_EQUAL(ZZ(s1(2),s2(1)),0);
     CHECK_EQUAL(ZZ(s1(1),s2(2)),0);
@@ -968,7 +985,8 @@ BOOST_AUTO_TEST_CASE(CommaAssignment)
     ITensor XX(s1,s2);
     XX(s1(2),s2(1)) = 5;
     XX *= 3;
-    commaInit(XX) << 0, 1, 1, 0;
+    commaInit(XX) << 0, 1, 
+                     1, 0;
     CHECK_EQUAL(XX(s1(1),s2(1)),0);
     CHECK_EQUAL(XX(s1(2),s2(1)),1);
     CHECK_EQUAL(XX(s1(1),s2(2)),1);
@@ -977,20 +995,23 @@ BOOST_AUTO_TEST_CASE(CommaAssignment)
     ITensor AA(s1,s2);
     AA.Randomize();
     AA *= -ran1();
-    commaInit(AA) << 11, 21, 12, 22;
+    commaInit(AA) << 11, 21, 
+                     12, 22;
     CHECK_EQUAL(AA(s1(1),s2(1)),11);
     CHECK_EQUAL(AA(s1(2),s2(1)),21);
     CHECK_EQUAL(AA(s1(1),s2(2)),12);
     CHECK_EQUAL(AA(s1(2),s2(2)),22);
-}
+    }
 
-BOOST_AUTO_TEST_CASE(Website)
-{
+TEST(Website)
+    {
 
     Index a("a",2), b("b",2), c("c",2);
     ITensor Z(a,b), X(b,c);
-    commaInit(Z) << 1, 0, 0, -1;
-    commaInit(X) << 0, 1, 1, 0;
+    commaInit(Z) << 1, 0, 
+                    0, -1;
+    commaInit(X) << 0, 1, 
+                    1, 0;
     ITensor R = Z * X;
 
     CHECK_CLOSE(R(a(1),c(1)),0,1E-10);
@@ -998,6 +1019,6 @@ BOOST_AUTO_TEST_CASE(Website)
     CHECK_CLOSE(R(a(2),c(1)),-1,1E-10);
     CHECK_CLOSE(R(a(2),c(2)),0,1E-10);
 
-}
+    }
 
 BOOST_AUTO_TEST_SUITE_END()

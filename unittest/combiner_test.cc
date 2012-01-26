@@ -45,7 +45,7 @@ struct CombinerDefaults
 
 BOOST_FIXTURE_TEST_SUITE(CombinerTest,CombinerDefaults)
 
-BOOST_AUTO_TEST_CASE(Constructors)
+TEST(Constructors)
 {
 
     Combiner c1;
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
 
 }
 
-BOOST_AUTO_TEST_CASE(addLeft)
+TEST(addLeft)
 {
     Combiner c1;
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(addLeft)
 
 }
 
-BOOST_AUTO_TEST_CASE(Product)
+TEST(Product)
 {
 
     ITensor A(a1,b3,l2,a4,l3);

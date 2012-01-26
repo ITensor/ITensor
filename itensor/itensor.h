@@ -426,6 +426,10 @@ public:
                       const Index& i3, const Matrix& res);
     */
 
+    void
+    symmetricDiag11(const Index& i1, const Index& i2, 
+                    ITensor& D, ITensor& U, Index& mid) const;
+
     int 
     vec_size() const;
 

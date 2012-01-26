@@ -86,14 +86,14 @@ struct IQTensorDefaults
 
 BOOST_FIXTURE_TEST_SUITE(IQTensorTest,IQTensorDefaults)
 
-BOOST_AUTO_TEST_CASE(Null)
+TEST(Null)
     {
     IQTensor t1;
 
     CHECK(t1.is_null());
     }
 
-BOOST_AUTO_TEST_CASE(Constructors)
+TEST(Constructors)
     {
     Real f = ran1();
     IQTensor rZ(f);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
     CHECK_CLOSE(rZ.norm(),f,1E-10);
     }
 
-BOOST_AUTO_TEST_CASE(NonContractProd)
+TEST(NonContractProd)
     {
 
     IQTensor res = A / B;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(NonContractProd)
 
     }
 
-BOOST_AUTO_TEST_CASE(ITensorConversion)
+TEST(ITensorConversion)
     {
 
     ITensor itphi = phi;

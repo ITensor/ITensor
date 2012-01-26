@@ -2314,6 +2314,30 @@ void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, co
 }
 */
 
+void ITensor::
+symmetricDiag11(const Index& i1, const Index& i2, ITensor& D, ITensor& U, Index& mid) const
+    {
+    assert(hasindex(i1));
+    assert(hasindex(i2));
+    if(r() != 2) Error("symDiag11: rank must be 2");
+    const int m = i1.m();
+    if(i2.m() != m) Error("symDiag11: not square");
+
+    MatrixRef ref; 
+    p->v.TreatAsMatrix(ref,m,m);
+    Matrix UU(m,m);
+    Vector d(m);
+    ref *= -1;
+    EigenValues(ref,d,UU);
+    ref *= -1;
+    d *= -1;
+
+    mid = Index((mid.is_null() ? "mid" : mid.name()),m,mid.type());
+    U = ITensor(i1,mid,UU);
+    D = ITensor(mid,d);
+    D.scale_ = scale_;
+    }
+
 Real Dot(const ITensor& x, const ITensor& y, bool doconj)
 {
     if(x.is_complex())

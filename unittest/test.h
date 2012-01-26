@@ -5,7 +5,6 @@
 #define CHECK_EQUAL BOOST_CHECK_EQUAL 
 #define CHECK       BOOST_CHECK
 
-
-
+#define TEST   BOOST_AUTO_TEST_CASE
 
 #endif

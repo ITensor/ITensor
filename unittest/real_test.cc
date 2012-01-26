@@ -4,7 +4,7 @@
 
 BOOST_AUTO_TEST_SUITE(LogNumberTest)
 
-BOOST_AUTO_TEST_CASE(Constructors)
+TEST(Constructors)
 {
     LogNumber l1;
 
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(Constructors)
     CHECK_CLOSE(l7.real(),r,LogNumber_Accuracy);
 }
 
-BOOST_AUTO_TEST_CASE(Operators)
+TEST(Operators)
 {
     Real a = ran1(), b = ran1();
 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(Operators)
     CHECK_CLOSE(l8.real(),a/b,LogNumber_Accuracy);
 }
 
-BOOST_AUTO_TEST_CASE(Comparison)
+TEST(Comparison)
 {
     Real a = ran1(), b = ran1();
 
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(Comparison)
     CHECK(zero.approxEquals(0));
 }
 
-BOOST_AUTO_TEST_CASE(ReadWrite)
+TEST(ReadWrite)
 {
     Real a = ran1();
     LogNumber la(a); 
