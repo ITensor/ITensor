@@ -5,13 +5,14 @@ class ProjectedOp
     {
     public:
 
-    ProjectedOp(const MPO& Op, int b = 1)
+    ProjectedOp(const MPO& Op, int b = 1, int num_center = 2)
         : Op_(Op),
           b_(b),
           L_(Op.NN()+1),
           R_(Op.NN()+1),
           LHlim_(1),
-          RHlim_(Op.NN())
+          RHlim_(Op.NN()),
+          nc_(num_center)
         { }
 
     void
@@ -27,7 +28,12 @@ class ProjectedOp
     L() const { return L_.at(b_); }
 
     const ITensor&
-    R() const { return R_.at(b_+1); }
+    R() const { return R_.at(b_+nc_-1); }
+
+    int
+    numCenter() const { return nc_; }
+    void
+    numCenter(int val) { nc_ = val; }
 
     private:
 
@@ -41,6 +47,7 @@ class ProjectedOp
     int b_;
     std::vector<ITensor> L_,R_;
     int LHlim_,RHlim_;
+    int nc_;
 
     };
 
@@ -49,7 +56,7 @@ product(const ITensor& phi, ITensor& phip) const
     {
     phip = (L().is_null() ? phi : L() * phi); //m^3 k d
     phip *= Op_.AA(b_);   //m^2 k^2 d^2
-    phip *= Op_.AA(b_+1); //m^2 k^2 d^3
+    phip *= Op_.AA(b_+nc_-1); //m^2 k^2 d^3
     if(R().is_not_null()) 
         phip *= R();
     phip.mapprime(1,0);
@@ -75,7 +82,7 @@ diag(ITensor& D) const
     if(!found) Error("Couldn't find Index");
     Diag.tieIndices(toTie,primed(toTie),toTie);
 
-    const ITensor& Op2 = Op_.AA(b_+1);
+    const ITensor& Op2 = Op_.AA(b_+nc_-1);
     found = false;
     for(int j = 1; j <= Op2.r(); ++j)
         {
@@ -135,10 +142,10 @@ inline void ProjectedOp::
 setBond(int b, const MPS& psi)
     {
     makeL(psi,b);
-    makeR(psi,b+1);
+    makeR(psi,b+nc_-1);
     b_ = b;
     LHlim_ = b_;
-    RHlim_ = b_+1;
+    RHlim_ = b_+nc_-1;
     }
 
 inline void ProjectedOp::
@@ -156,7 +163,7 @@ makeL(const MPS& psi, int k)
 inline void ProjectedOp::
 makeR(const MPS& psi, int k)
     {
-    if(k == -1) k = b_+1;
+    if(k == -1) k = b_+nc_-1;
     while(RHlim_ > k)
         {
         const int j = RHlim_;
