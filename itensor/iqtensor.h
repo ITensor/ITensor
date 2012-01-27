@@ -347,6 +347,9 @@ public:
     void
     symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid) const;
 
+    void
+    symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& mink, int& maxk) const;
+
     Real 
     unique_Real() const;
 

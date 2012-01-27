@@ -2,6 +2,8 @@
 #include "iqtensor.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace std;
+
 struct IQTensorDefaults
     {
     const Index
@@ -155,13 +157,21 @@ TEST(SymmetricDiag11)
     {
     IQTensor D,U;
     IQIndex mid;
-    C.symmetricDiag11(L1,D,U,mid);
+    int mink,maxk;
+    C *= -2;
+    C.symmetricDiag11(L1,D,U,mid,mink,maxk);
 
     IQTensor UD(U);
     UD.primeind(L1);
     UD /= D;
     ITensor diff(conj(UD)*U - C);
     CHECK(diff.norm() < 1E-10);
+
+    IQTensor set1(conj(mid));
+    set1(mid(mink)) = 1;
+    U *= set1;
+    CHECK_CLOSE(D(mid(mink)),Dot(primed(U),C*U),1E-10);
+
     }
 
 BOOST_AUTO_TEST_SUITE_END()

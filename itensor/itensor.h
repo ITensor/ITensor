@@ -431,6 +431,9 @@ public:
     void
     symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid) const;
 
+    void
+    symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid, int& mink, int& maxk) const;
+
     int 
     vecSize() const;
 

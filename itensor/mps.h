@@ -498,6 +498,18 @@ protected:
             {
             A_[i] = ITensor(initState(i)); 
             }
+
+        std::vector<Index> a(N+1);
+        for(int i = 1; i <= N; ++i)
+            { a[i] = Index(nameint("l",i)); }
+
+        A_[1].addindex1(a[1]);
+        for(int i = 2; i < N; ++i)
+            {
+            A_[i].addindex1(a[i-1]);
+            A_[i].addindex1(a[i]);
+            }
+        A_[N].addindex1(a[N-1]);
         }
 
     void 

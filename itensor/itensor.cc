@@ -2323,6 +2323,13 @@ void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, co
 void ITensor::
 symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid) const
     {
+    int mink,maxk;
+    symmetricDiag11(i1,D,U,mid,mink,maxk);
+    }
+
+void ITensor::
+symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid, int& mink, int& maxk) const
+    {
     assert(hasindex(i1));
     assert(hasindex(primed(i1)));
     if(r() != 2) Error("symDiag11: rank must be 2");
@@ -2341,6 +2348,9 @@ symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid) const
     U = ITensor(i1,mid,UU);
     D = ITensor(mid,d);
     D.scale_ = scale_;
+
+    maxk = 1;
+    mink = m;
     }
 
 Real Dot(const ITensor& x, const ITensor& y, bool doconj)
