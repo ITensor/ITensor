@@ -24,6 +24,12 @@ class Spinless : public Model
     IQIndexVal
     OccP(int i) const;
 
+    IQTensor
+    projEmp(int i) const { return makeProjEmp(i); }
+
+    IQTensor
+    projOcc(int i) const { return makeProjOcc(i); }
+
     private:
 
     virtual int
@@ -46,6 +52,12 @@ class Spinless : public Model
 
     virtual IQTensor
     makeFermiPhase(int i) const;
+
+    virtual IQTensor
+    makeProjEmp(int i) const;
+
+    virtual IQTensor
+    makeProjOcc(int i) const;
 
     virtual void
     doRead(std::istream& s);
@@ -207,6 +219,22 @@ makeFermiPhase(int i) const
     fermiPhase(Emp(i),EmpP(i)) = +1;
     fermiPhase(Occ(i),OccP(i)) = -1;
     return fermiPhase;
+    }
+
+inline IQTensor Spinless::
+makeProjEmp(int i) const
+    {
+    IQTensor projEmp(conj(si(i)),siP(i));
+    projEmp(Emp(i),EmpP(i)) = 1;
+    return projEmp;
+    }
+
+inline IQTensor Spinless::
+makeProjOcc(int i) const
+    {
+    IQTensor projOcc(conj(si(i)),siP(i));
+    projOcc(Occ(i),OccP(i)) = 1;
+    return projOcc;
     }
 
 #endif
