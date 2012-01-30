@@ -237,7 +237,6 @@ inline IQTensor Model::
 makeCdag(int i) const 
     { 
     Error("Cdag not implemented"); 
-    return IQTensor();
     return IQTensor(); 
     }
 
@@ -245,7 +244,6 @@ inline IQTensor Model::
 makeFermiPhase(int i) const 
     { 
     Error("fermiPhase not implemented"); 
-    return IQTensor();
     return IQTensor(); 
     }
 
@@ -253,7 +251,6 @@ inline IQTensor Model::
 makeNup(int i) const 
     { 
     Error("Nup not implemented"); 
-    return IQTensor();
     return IQTensor(); 
     }
 
@@ -262,14 +259,12 @@ makeNdn(int i) const
     { 
     Error("Ndn not implemented"); 
     return IQTensor();
-    return IQTensor(); 
     }
 
 inline IQTensor Model::
 makeNupdn(int i) const 
     { 
     Error("Nupdn not implemented"); 
-    return IQTensor();
     return IQTensor(); 
     }
 
@@ -277,7 +272,6 @@ inline IQTensor Model::
 makeNtot(int i) const 
     { 
     Error("Ntot not implemented"); 
-    return IQTensor();
     return IQTensor(); 
     }
 
@@ -285,7 +279,6 @@ inline IQTensor Model::
 makeCup(int i) const 
     { 
     Error("Cup not implemented"); 
-    return IQTensor();
     return IQTensor(); 
     }
 
