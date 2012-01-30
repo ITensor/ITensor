@@ -10,7 +10,7 @@
 #include <cctype>
 #define SP << " " <<
 typedef double Real;
-void error(const char* s);
+void error(const std::string& s);
 
 class InputFile
     {

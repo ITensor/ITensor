@@ -5,11 +5,9 @@
 #include <iostream>
 
 
-using std::cout;
-using std::cerr;
-using std::endl;
+using namespace std;
 
-void error(const char*);
+void error(const string&);
 
 void Hash::copy(const Hash &other)
 	{

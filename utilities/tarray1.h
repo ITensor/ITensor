@@ -4,7 +4,7 @@
 #define _tarray1_h
 #define SP << " " <<
 
-void error(const char* s);
+#include "error.h"
 
 #include <iostream>
 #include "indent.h"

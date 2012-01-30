@@ -49,7 +49,7 @@ class IntArray2
 inline int& IntArray2::operator()(int i,int j)
     {
 #ifdef BOUNDS
-    void error(const char*);
+    void error(const std::string&);
     if (i < off1 || i >= off1+size1 || j < off2 || j >= off2+size2)
       error("IntArray2: Index out of bounds");
 #endif
@@ -59,7 +59,7 @@ inline int& IntArray2::operator()(int i,int j)
 inline int IntArray2::operator()(int i,int j) const
     {
 #ifdef BOUNDS
-    void error(const char*);
+    void error(const std::string&);
     if (i < off1 || i >= off1+size1 || j < off2 || j >= off2+size2)
       error("IntArray2: Index out of bounds");
 #endif

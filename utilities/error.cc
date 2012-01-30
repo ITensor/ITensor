@@ -2,20 +2,20 @@
 
 #include "error.h"
 #include <cstdlib>
-using std::cout;
-using std::cerr;
-using std::endl;
+using namespace std;
 
-void error(const char* s)
-{
+void 
+error(const string& s)
+    {
     cerr << endl << s << endl;
     cout << endl << s << endl;
     cout.flush();
     abort();
-}
+    }
 
-void error(const char* s, int line, const char* file = 0)
-{
+void 
+error(const string& s, int line, const char* file = 0)
+    {
     cerr << "From line " << line;
     if(file != 0) cerr << ", file " << file;
     cerr << endl;
@@ -25,5 +25,5 @@ void error(const char* s, int line, const char* file = 0)
     cout.flush();
     cerr.flush();
     throw ITError(s);
-}
+    }
 

@@ -2,7 +2,7 @@
 
 #include "intarray2.h"
 
-void error(const char* s);
+void error(const std::string& s);
 
 // Constructor/Resize
 

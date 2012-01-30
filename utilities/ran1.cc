@@ -1,6 +1,8 @@
 // ran1.cc -- adaptation of random number generator from Num. Rec. 1st edition
 //            for C++
 
+#include <string>
+
 typedef double Real;
 static int seed = -1237;
 
@@ -34,7 +36,7 @@ Real ran1(int* idum)
     Real temp;
     static int iff=0;
     int j;
-    void error(const char*);
+    void error(const std::string&);
     
     if (*idum < 0 || iff == 0) {
 	iff=1;

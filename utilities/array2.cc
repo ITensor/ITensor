@@ -2,7 +2,7 @@
 
 //#include "array2.h" /* Use cat in make to make this file */
 
-void error(const char* s);
+void error(const string& s);
 
 // Constructor/Resize
 
