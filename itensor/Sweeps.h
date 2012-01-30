@@ -1,64 +1,43 @@
 #ifndef __ITENSOR_SWEEPS_HEADER_H
 #define __ITENSOR_SWEEPS_HEADER_H
 #include "types.h"
+#include "input.h"
 
 class Sweeps
-{
-public:
-    enum Scheme {ramp_m, fixed_m, fixed_cutoff, exp_m};
+    {
+    public:
+    enum Scheme {ramp_m, fixed_m, fixed_cutoff, exp_m, table};
 
     //Constructors --------------
-
-    Sweeps();
-    
-    Sweeps(Scheme sch);
-
-    Sweeps(Scheme sch, int nsw);
 
     Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut);
 
     Sweeps(Scheme sch, int nsw, int nwm, int _minm, int _maxm, Real _cut);
+
+    Sweeps(int nsw, InputGroup& sweep_table);
     
     //Accessor methods ----------
 
     Scheme 
     scheme() const { return scheme_; }
 
-    void 
-    setScheme(Scheme val) { uninit(); scheme_ = val; }
+    int 
+    minm(int sw) const { return Minm_.at(sw); }
 
     int 
-    minm(int sw) const { return Minm_; }
-    void 
-    setMinm(int val) { uninit(); Minm_ = val; }
-
-    int 
-    maxm(int sw) const { init(); return Maxm_.at(sw); }
-    void 
-    setMaxm(int val) { uninit(); finalMaxm_ = val; }
+    maxm(int sw) const { return Maxm_.at(sw); }
 
     Real 
-    cutoff(int sw) const { init(); return Cutoff_.at(sw); }
-    void 
-    setCutoff(Real val) { uninit(); finalCut_ = val; }
+    cutoff(int sw) const { return Cutoff_.at(sw); }
 
     int 
     nsweep() const { return Nsweep_; }
-    void 
-    setNsweep(int val) { uninit(); Nsweep_ = val; }
 
     int 
     nwarm() const { return Nwarm_; }
-    void 
-    setNwarm(int val) { uninit(); Nwarm_ = val; }
 
     int 
-    niter(int sw) const { init(); return Niter_.at(sw); }
-
-    int 
-    maxNiter() const { return Max_Niter_; }
-    void 
-    setMaxNiter(int val) { uninit(); Max_Niter_ = val; }
+    niter(int sw) const { return Niter_.at(sw); }
 
     int
     numSiteCenter() const { return num_site_center_; }
@@ -73,107 +52,65 @@ public:
 private:
 
     void 
-    uninit() { init_ = false; }
+    init(int _minm, int _maxm, Real _cut);
 
     void 
-    init() const;
+    tableInit(InputGroup& table);
 
-private:
     Scheme scheme_;
-    int Minm_, finalMaxm_;
-    Real finalCut_;
-    mutable std::vector<int>  Maxm_, Niter_;
-    mutable std::vector<Real> Cutoff_;
-    int Nsweep_, Nwarm_, Max_Niter_;
+    std::vector<int> Maxm_;
+    std::vector<int> Minm_;
+    std::vector<int> Niter_;
+    std::vector<Real> Cutoff_;
+    int Nsweep_, Nwarm_;
     int num_site_center_;        // May not be implemented in some cases
-    mutable bool init_;
     Real exp_fac_;
-};
-
-inline Sweeps::
-Sweeps()
-    : scheme_(ramp_m),
-      Minm_(1), 
-      finalMaxm_(MAX_M), 
-      finalCut_(MIN_CUT),
-      Nsweep_(0), 
-      Nwarm_(0), 
-      Max_Niter_(9),
-      num_site_center_(2),
-      exp_fac_(0.5)
-    { }
-
-inline Sweeps::
-Sweeps(Scheme sch)
-    : scheme_(sch),
-      Minm_(1), 
-      finalMaxm_(MAX_M), 
-      finalCut_(MIN_CUT),
-      Nsweep_(0), 
-      Nwarm_(0), 
-      Max_Niter_(9),
-      num_site_center_(2),
-      exp_fac_(0.5)
-    { }
+    };
 
 inline Sweeps::
 Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut)
     : scheme_(sch), 
-      Minm_(_minm), 
-      finalMaxm_(_maxm), 
-      finalCut_(_cut),
-      Maxm_(nsw+1), 
-      Niter_(nsw+1,2), 
-      Cutoff_(nsw+1), 
       Nsweep_(nsw), 
       Nwarm_(nsw-1), 
-      Max_Niter_(9),
       num_site_center_(2), 
-      init_(false),
       exp_fac_(0.5)
-    { }
+    { 
+    init(_minm,_maxm,_cut);
+    }
 
 inline Sweeps::
 Sweeps(Scheme sch, int nsw, int nwm, int _minm, int _maxm, Real _cut)
     : scheme_(sch), 
-      Minm_(_minm), 
-      finalMaxm_(_maxm), 
-      finalCut_(_cut),
-      Maxm_(nsw+1), 
-      Niter_(nsw+1,2), 
-      Cutoff_(nsw+1), 
       Nsweep_(nsw), 
       Nwarm_(nwm), 
-      Max_Niter_(9),
       num_site_center_(2), 
-      init_(false),
       exp_fac_(0.5)
-    { }
+    { 
+    init(_minm,_maxm,_cut);
+    }
 
 inline Sweeps::
-Sweeps(Scheme sch, int nsw)
-    : scheme_(sch),
-      Minm_(1), 
-      finalMaxm_(MAX_M), 
-      finalCut_(MIN_CUT),
-      Nsweep_(nsw), 
+Sweeps(int nsw, InputGroup& sweep_table)
+    : scheme_(table),
+      Nsweep_(nsw),
       Nwarm_(0), 
-      Max_Niter_(9),
       num_site_center_(2),
       exp_fac_(0.5)
-    { }
+    {
+    tableInit(sweep_table);
+    }
 
 inline void Sweeps::
-init() const
+init(int _minm, int _maxm, Real _cut)
     {
-    if(init_) return;
 
-    Maxm_.assign(Nsweep_+1,finalMaxm_);
-    Niter_.assign(Nsweep_+1,2);
-    Cutoff_.assign(Nsweep_+1,finalCut_);
+    Minm_ = std::vector<int>(Nsweep_+1,_minm);
+    Maxm_ = std::vector<int>(Nsweep_+1,_maxm);
+    Niter_ = std::vector<int>(Nsweep_+1,2);
+    Cutoff_ = std::vector<Real>(Nsweep_+1,_cut);
 
     //Don't want to start with m too low unless requested
-    int start_m = (finalMaxm_ < 10 ? Minm_ : 10);
+    int start_m = (_maxm < 10 ? _minm : 10);
 
     if(scheme_ == ramp_m)
         {
@@ -181,7 +118,7 @@ init() const
         int act_nwm = min(Nwarm_+1,Nsweep_);
         if(act_nwm > 1) 
         for(int s = 1; s <= act_nwm; ++s)
-            Maxm_.at(s) = (int)(start_m + (s-1.0)/(act_nwm-1.0) * (finalMaxm_ - start_m)); 
+            Maxm_.at(s) = (int)(start_m + (s-1.0)/(act_nwm-1.0) * (_maxm - start_m)); 
         }
     else
     if(scheme_ == exp_m)
@@ -191,18 +128,48 @@ init() const
         for(int s = 1; s <= act_nwm; ++s)
             {
             int p = (act_nwm-s)/2; //intentional integer division
-            Maxm_.at(s) = (int)(start_m + pow(exp_fac_,p) * (finalMaxm_ - start_m)); 
+            Maxm_.at(s) = (int)(start_m + pow(exp_fac_,p) * (_maxm - start_m)); 
             }
         }
     
+    //Set number of Davidson iterations
+    const int Max_Niter = 9;
     for(int s = 0; s <= min(Nwarm_,3); ++s)
         {
-        int ni = Max_Niter_-s;
+        int ni = Max_Niter-s;
         Niter_.at(1+s) = (ni > 2 ? ni : 2);
         }
 
-    init_ = true;
     } //Sweeps::init
+
+inline void Sweeps::
+tableInit(InputGroup& table)
+    {
+    if(!table.GotoGroup()) 
+        Error("Couldn't find table " + table.name);
+
+    Minm_ = std::vector<int>(Nsweep_+1);
+    Maxm_ = std::vector<int>(Nsweep_+1);
+    Cutoff_ = std::vector<Real>(Nsweep_+1);
+    Niter_ = std::vector<int>(Nsweep_+1);
+
+    table.SkipLine(); //SkipLine so we can have a table key
+    for(int i = 1; i <= Nsweep_; i++)
+        {
+        table.infile.file >> Maxm_[i] >> Minm_[i] >> Cutoff_[i] >> Niter_[i];
+        }
+
+    } //Sweeps::tableInit
+
+inline std::ostream&
+operator<<(std::ostream& s, const Sweeps& swps)
+    {
+    s << "Sweeps:\n";
+    for(int sw = 1; sw <= swps.nsweep(); ++sw)
+        s << boost::format("    Maxm(%d)=%d, Niter(%d)=%d, Cutoff(%d)=%.2E\n")
+             % sw % swps.maxm(sw) % sw % swps.niter(sw) % sw % swps.cutoff(sw);
+    return s;
+    }
 
 inline void 
 sweepnext(int &l, int &ha, int N, int min_l = 1)
@@ -214,16 +181,6 @@ sweepnext(int &l, int &ha, int N, int min_l = 1)
         return;
         }
     if(l-- == min_l) ha = 3;
-    }
-
-inline std::ostream&
-operator<<(std::ostream& s, const Sweeps& swps)
-    {
-    s << "Sweeps:\n";
-    for(int sw = 1; sw <= swps.nsweep(); ++sw)
-        s << boost::format("    Maxm(%d)=%d, Niter(%d)=%d, Cutoff(%d)=%.2E\n")
-             % sw % swps.maxm(sw) % sw % swps.niter(sw) % sw % swps.cutoff(sw);
-    return s;
     }
 
 
