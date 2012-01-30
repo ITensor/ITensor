@@ -7,6 +7,7 @@
 #define CHANGE      0
 #include <fstream>
 #include "mkl_types.h"
+#include "error.h"
 
 void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M to num cols
     {
