@@ -116,8 +116,8 @@ void Condenser::
 product(const IQTensor& t, IQTensor& res) const
     {
         assert(&t != &res);
-        assert(smallind_.is_not_null());
-        assert(bigind_.is_not_null());
+        assert(smallind_.isNotNull());
+        assert(bigind_.isNotNull());
         std::vector<IQIndex> iqinds; iqinds.reserve(t.r());
         int smallind_pos = -2;
         int bigind_pos   = -2;

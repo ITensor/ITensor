@@ -10,8 +10,8 @@ class IQTDat;
 class IQCombiner;
 
 class IQTensor
-{
-public:
+    {
+    public:
 
     typedef std::list<ITensor>::iterator 
     iten_it;
@@ -38,10 +38,10 @@ public:
     iten_empty() const;
 
     inline bool 
-    is_null() const { return p == 0; }
+    isNull() const { return p == 0; }
 
     inline bool 
-    is_not_null() const { return p != 0; }
+    isNotNull() const { return p != 0; }
 
     int 
     num_index() const;
@@ -351,7 +351,7 @@ public:
     symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& mink, int& maxk) const;
 
     Real 
-    unique_Real() const;
+    uniqueReal() const;
 
     int 
     num_index(IndexType t) const;
@@ -416,21 +416,20 @@ public:
 
     typedef IQCombiner CombinerT;
 
-
     static const IQIndex& ReImIndex()
         { return IQIndex::IndReIm(); }
 
-private:
+    private:
 
     boost::intrusive_ptr<IQTDat> p;
 
     void solo();
 
-}; //class IQTensor
+    }; //class IQTensor
 
 class IQTDat
-{
-public:
+    {
+    public:
 
     IQTDat();
 
@@ -500,7 +499,7 @@ public:
     typedef std::vector<IQIndex>::const_iterator 
     const_iqind_it;
 
-public:
+    public:
 
     mutable std::list<ITensor> 
     itensor; // This is mutable to allow reordering
@@ -513,7 +512,7 @@ public:
 
     ENABLE_INTRUSIVE_PTR(IQTDat)
 
-private:
+    private:
 
     ~IQTDat() { } //must be dynamically allocated
 
@@ -528,7 +527,7 @@ private:
     mutable bool 
     rmap_init;
 
-}; //class IQTDat
+    }; //class IQTDat
 
 
 Real 

@@ -241,7 +241,7 @@ init(std::string rname, IndexType type,
         Foreach(const Index& i, vind)
         { 
             co.addleft(i); 
-            rss += i.unique_Real(); 
+            rss += i.uniqueReal(); 
         }
         co.init(rname+q.toString(),type,rdir,primelevel);
 
@@ -436,7 +436,7 @@ product(const IQTensor& t, IQTensor& res) const
             for(int k = 1; k <= i->r(); ++k)
                 {
                 if(hasindex(i->index(k))) 
-                    rse += i->index(k).unique_Real();
+                    rse += i->index(k).uniqueReal();
                 }
 
             if(setcomb.count(rse) == 0)

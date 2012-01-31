@@ -113,7 +113,7 @@ init_rmap() const
 	for(iten_it it = itensor.begin(); 
         it != itensor.end(); 
         ++it)
-	    rmap[ApproxReal(it->unique_Real())] = it;
+	    rmap[ApproxReal(it->uniqueReal())] = it;
 	rmap_init = true;
 	}
 
@@ -319,7 +319,7 @@ read(std::istream& s)
 void IQTensor::
 write(std::ostream& s) const
 	{
-	bool null_ = is_null();
+	bool null_ = isNull();
 	s.write((char*) &null_,sizeof(null_));
 	if(null_) return;
 	p->write(s);
@@ -342,7 +342,7 @@ void IQTensor::
 insert(const ITensor& t) 
 	{ 
 	solo();
-	ApproxReal r(t.unique_Real());
+	ApproxReal r(t.uniqueReal());
 	if(p->has_itensor(r))
 	    {
 	    Print(*(p->rmap[r])); Print(t);
@@ -355,14 +355,22 @@ IQTensor& IQTensor::
 operator+=(const ITensor& t) 
     { 
     solo();
-    ApproxReal r(t.unique_Real());
+    ApproxReal r(t.uniqueReal());
 
     if(t.scale().isRealZero()) { return *this; }
 
     if(!p->has_itensor(r)) 
+        {
         p->insert_itensor(r,t);
+        }
     else 
+        {
+        Print(*(p->rmap[r]));
+        Print((p->rmap[r])->uniqueReal());
+        Print(t);
+        Print(t.uniqueReal());
         *(p->rmap[r]) += t;
+        }
     return *this;
     }
 
@@ -379,7 +387,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     Real ur = 0; 
     int nn = 0; 
     while(GET(iv,nn+1).iqind != IQIndexVal::Null().iqind) 
-        ur += GET(iv,++nn).index().unique_Real(); 
+        ur += GET(iv,++nn).index().uniqueReal(); 
     if(nn != r()) 
         Error("Wrong number of IQIndexVals provided");
     ApproxReal r(ur);
@@ -720,7 +728,7 @@ symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& 
         ++w;
         }
 
-    mid = IQIndex((mid.is_null() ? "mid" : mid.rawname()),iq,i1.dir()*Switch);
+    mid = IQIndex((mid.isNull() ? "mid" : mid.rawname()),iq,i1.dir()*Switch);
 
     //Insert blocks backwards so that mink and maxk
     //label the appropriate values (because IQTDat::insert_itensor
@@ -735,11 +743,11 @@ symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& 
     }
 
 Real IQTensor::
-unique_Real() const
+uniqueReal() const
     {
     Real ur = 0.0;
     for(const_iqind_it jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
-        { ur += jj->unique_Real(); }
+        { ur += jj->uniqueReal(); }
     return ur;
     }
 
@@ -861,7 +869,7 @@ void IQTensor::
 printIndices(const std::string& name) const
 	{ 
 	cout << "\n" << name << " (IQIndices only) = \n";
-    if(this->is_null())
+    if(this->isNull())
         {
         cout << "    [IQTensor is null]" << endl;
         return;
@@ -877,11 +885,11 @@ assignFrom(const IQTensor& other) const
     //TODO: account for fermion sign here
 	std::map<ApproxReal,iten_it> semap;
 	for(iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
-	    semap[ApproxReal(i->unique_Real())] = i;
+	    semap[ApproxReal(i->uniqueReal())] = i;
 
 	for(const_iten_it i = other.p->itensor.begin(); i != other.p->itensor.end(); ++i)
 	    {
-	    ApproxReal se = ApproxReal(i->unique_Real());
+	    ApproxReal se = ApproxReal(i->uniqueReal());
 	    if(semap.count(se) == 0)
 		{
 		std::cout << "warning assignFrom semap.count is 0" << std::endl;
@@ -929,7 +937,7 @@ std::ostream&
 operator<<(std::ostream & s, const IQTensor &t)
     {
     s << "\n----- IQTensor -----\n";
-    if(t.is_null())
+    if(t.isNull())
         {
         s << "(IQTensor is null)\n\n";
         return s;
@@ -981,10 +989,10 @@ operator*=(const IQTensor& other)
         return operator*=(cp_oth);
         }
 
-    if(this->is_null()) 
+    if(this->isNull()) 
         Error("'This' IQTensor null in product");
 
-    if(other.is_null()) 
+    if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
     if(hasindex(IQIndex::IndReIm()) && other.hasindex(IQIndex::IndReIm()) && !other.hasindex(IQIndex::IndReImP())
@@ -1038,15 +1046,15 @@ operator*=(const IQTensor& other)
                     Error("Incompatible arrow directions in IQTensor::operator*=.");
                     }
             for(size_t n = 0; n < I.iq().size(); ++n) 
-                { common_inds.insert(ApproxReal(I.iq()[n].index.unique_Real())); }
+                { common_inds.insert(ApproxReal(I.iq()[n].index.uniqueReal())); }
 
-            common_inds.insert(ApproxReal(I.unique_Real()));
+            common_inds.insert(ApproxReal(I.uniqueReal()));
             }
         else { riqind_holder.push_back(I); }
         }
 
     for(size_t i = 0; i < other.p->iqindex_.size(); ++i)
-    if(!common_inds.count(ApproxReal(other.p->iqindex_[i].unique_Real())))
+    if(!common_inds.count(ApproxReal(other.p->iqindex_[i].uniqueReal())))
         { riqind_holder.push_back(other.p->iqindex_[i]); }
 
     if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator*=, riqind_holder had to reallocate.\n\n";
@@ -1056,7 +1064,7 @@ operator*=(const IQTensor& other)
 
     list<ITensor> old_itensor; p->itensor.swap(old_itensor);
 
-    //com_this maps the unique_Real of a set of Index's to be contracted over together
+    //com_this maps the uniqueReal of a set of Index's to be contracted over together
     //to those ITensors in *this.itensor having all Index's in that set
     multimap<ApproxReal,const_iten_it> com_this;
     for(const_iten_it tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
@@ -1064,8 +1072,8 @@ operator*=(const IQTensor& other)
         Real r = 0.0;
         for(int a = 1; a <= tt->r(); ++a)
             {
-            if(common_inds.count(ApproxReal(tt->index(a).unique_Real())))
-                { r += tt->index(a).unique_Real(); }
+            if(common_inds.count(ApproxReal(tt->index(a).uniqueReal())))
+                { r += tt->index(a).uniqueReal(); }
             }
         com_this.insert(make_pair(ApproxReal(r),tt));
         keys.insert(ApproxReal(r));
@@ -1078,8 +1086,8 @@ operator*=(const IQTensor& other)
         Real r = 0.0;
         for(int b = 1; b <= ot->r(); ++b)
             {
-            if(common_inds.count(ApproxReal(ot->index(b).unique_Real())))
-                { r += ot->index(b).unique_Real(); }
+            if(common_inds.count(ApproxReal(ot->index(b).uniqueReal())))
+                { r += ot->index(b).uniqueReal(); }
             }
         com_other.insert(make_pair(ApproxReal(r),ot));
         keys.insert(ApproxReal(r));
@@ -1120,10 +1128,10 @@ operator/=(const IQTensor& other)
         return operator/=(cp_oth);
         }
 
-    if(this->is_null()) 
+    if(this->isNull()) 
         Error("'This' IQTensor null in product");
 
-    if(other.is_null()) 
+    if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
     if(hasindex(IQIndex::IndReIm()) && other.hasindex(IQIndex::IndReIm()) && !other.hasindex(IQIndex::IndReImP())
@@ -1157,15 +1165,15 @@ operator/=(const IQTensor& other)
                     Error("Incompatible arrow directions in IQTensor::operator/=.");
                     }
             for(size_t n = 0; n < I.iq().size(); ++n) 
-                { common_inds.insert(ApproxReal(I.iq()[n].index.unique_Real())); }
+                { common_inds.insert(ApproxReal(I.iq()[n].index.uniqueReal())); }
 
-            common_inds.insert(ApproxReal(I.unique_Real()));
+            common_inds.insert(ApproxReal(I.uniqueReal()));
             }
         riqind_holder.push_back(I);
         }
 
     for(size_t i = 0; i < other.p->iqindex_.size(); ++i)
-    if(!common_inds.count(ApproxReal(other.p->iqindex_[i].unique_Real())))
+    if(!common_inds.count(ApproxReal(other.p->iqindex_[i].uniqueReal())))
         { riqind_holder.push_back(other.p->iqindex_[i]); }
 
     if(riqind_holder.size() > 1000) cerr << "\nWARNING: in IQTensor::operator/=, riqind_holder had to reallocate.\n\n";
@@ -1175,7 +1183,7 @@ operator/=(const IQTensor& other)
 
     list<ITensor> old_itensor; p->itensor.swap(old_itensor);
 
-    //com_this maps the unique_Real of a set of Index's to be summed over together
+    //com_this maps the uniqueReal of a set of Index's to be summed over together
     //to those ITensors in *this.itensor having all Index's in that set
     multimap<ApproxReal,const_iten_it> com_this;
     for(const_iten_it tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
@@ -1183,7 +1191,7 @@ operator/=(const IQTensor& other)
         Real r = 0.0;
         for(int a = 1; a <= tt->r(); ++a)
             {
-            Real ur = tt->index(a).unique_Real();
+            Real ur = tt->index(a).uniqueReal();
             if(common_inds.count(ApproxReal(ur)))
                 r += ur;
             }
@@ -1198,7 +1206,7 @@ operator/=(const IQTensor& other)
         Real r = 0.0;
         for(int b = 1; b <= ot->r(); ++b)
             {
-            Real ur = ot->index(b).unique_Real();
+            Real ur = ot->index(b).uniqueReal();
             if(common_inds.count(ApproxReal(ur)))
                 r += ur;
             }
@@ -1304,7 +1312,7 @@ operator+=(const IQTensor& other)
         return (This = (This * IQTensor::Complex_1()) + other);
     if(complex_this && !complex_other)
         return (This += other * IQTensor::Complex_1());
-    if(fabs(This.unique_Real()-other.unique_Real()) > 1.0e-11) 
+    if(fabs(This.uniqueReal()-other.uniqueReal()) > 1.0e-11) 
         {
         cout << "This is " << This;
         cout << "other is " << other;

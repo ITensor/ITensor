@@ -63,10 +63,10 @@ template <class Tensor>
 inline void ProjectedOp<Tensor>::
 product(const Tensor& phi, Tensor& phip) const
     {
-    if(L().is_null())
+    if(L().isNull())
         {
         phip = phi;
-        if(R().is_not_null()) 
+        if(R().isNotNull()) 
             phip *= R(); //m^3 k d
         for(int j = RHlim_; j >= LHlim_; --j)
             phip *= Op_.AA(j); //m^2 k^2
@@ -76,7 +76,7 @@ product(const Tensor& phi, Tensor& phip) const
         phip = phi * L(); //m^3 k d
         for(int j = LHlim_; j <= RHlim_; ++j)
             phip *= Op_.AA(j); //m^2 k^2
-        if(R().is_not_null()) 
+        if(R().isNotNull()) 
             phip *= R();
         }
     phip.mapprime(1,0);
@@ -118,7 +118,7 @@ diag(Tensor& D) const
     if(!found) Error("Couldn't find Index");
     Diag *= tieIndices(toTie,primed(toTie),toTie,Op2);
 
-    if(L().is_not_null())
+    if(L().isNotNull())
         {
         found = false;
         for(int j = 1; j <= L().r(); ++j)
@@ -137,7 +137,7 @@ diag(Tensor& D) const
             Diag *= L();
         }
 
-    if(R().is_not_null())
+    if(R().isNotNull())
         {
         found = false;
         for(int j = 1; j <= R().r(); ++j)
@@ -171,11 +171,11 @@ setBond(int b, const MPSt<Tensor>& psi)
     //Calculate linear size of this projected
     //op as a square matrix
     size_ = 1;
-    if(L().is_not_null()) 
+    if(L().isNotNull()) 
         {
         size_ *= index_in_common(psi.AA(LHlim_),L(),Link).m();
         }
-    if(R().is_not_null()) 
+    if(R().isNotNull()) 
         {
         size_ *= index_in_common(psi.AA(RHlim_),R(),Link).m();
         }

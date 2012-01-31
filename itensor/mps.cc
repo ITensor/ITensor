@@ -845,7 +845,7 @@ checkQNs(const IQMPS& psi)
     for(int i = 1; i <= N; ++i) 
         {
         if(i == center) continue;
-        if(psi.AA(i).is_null())
+        if(psi.AA(i).isNull())
             {
             std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
             return false;

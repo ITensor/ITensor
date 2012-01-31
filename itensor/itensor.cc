@@ -87,7 +87,7 @@ operator<<(ostream & s, const ITensor & t)
     for(; i < t.r(); ++i) { s << t.index(i) << ", "; } 
     if(t.r() != 0) { s << t.index(i); } //print last one
 
-    if(t.is_null()) s << " (dat is null)\n";
+    if(t.isNull()) s << " (dat is null)\n";
     else 
         {
         if(t.scale_.isFiniteReal())
@@ -165,7 +165,7 @@ ITensor(Real val)
     { 
     allocate(1);
     p->v = val;
-    set_unique_Real();
+    setUniqueReal();
     }
 
 ITensor::
@@ -186,7 +186,7 @@ ITensor(const Index& i1, const VectorRef& V)
 	    Error("Mismatch of Index and Vector sizes.");
 	if(i1.m() != 1) rn_ = 1;
 	index_[1] = i1;
-	set_unique_Real();
+	setUniqueReal();
 	}
 
 ITensor::
@@ -233,7 +233,7 @@ ITensor(Index i1, Index i2, Index i3,
     r_ = size;
 	int alloc_size; sortIndices(ii,size,rn_,alloc_size,index_);
 	allocate(alloc_size);
-    set_unique_Real();
+    setUniqueReal();
 	}
 
 ITensor::
@@ -278,7 +278,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
 		    { ja[k] = iv[j]; break; }
         p->v(_ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])) = 1;
 
-        set_unique_Real();
+        setUniqueReal();
     }
 
 ITensor::
@@ -287,7 +287,7 @@ ITensor(const std::vector<Index>& I)
 	{
     int alloc_size; sortIndices(I,r_,rn_,alloc_size,index_);
 	allocate(alloc_size);
-    set_unique_Real();
+    setUniqueReal();
 	}
 
 ITensor::
@@ -297,7 +297,7 @@ ITensor(const std::vector<Index>& I, const Vector& V)
     int alloc_size; sortIndices(I,r_,rn_,alloc_size,index_);
 	if(alloc_size != V.Length()) 
 	    { Error("incompatible Index and Vector sizes"); }
-    set_unique_Real();
+    setUniqueReal();
 	}
 
 
@@ -308,7 +308,7 @@ ITensor(const std::vector<Index>& I, const ITensor& other)
     int alloc_size; sortIndices(I,r_,rn_,alloc_size,index_);
 	if(alloc_size != other.vecSize()) 
 	    { Error("incompatible Index and ITensor sizes"); }
-    set_unique_Real();
+    setUniqueReal();
 	}
 
 ITensor::
@@ -320,7 +320,7 @@ ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P)
         { Error("incompatible Index and ITensor sizes"); }
     if(P.is_trivial()) { p = other.p; }
     else               { allocate(); other.reshapeDat(P,p->v); }
-    set_unique_Real();
+    setUniqueReal();
     }
 
 ITensor::
@@ -332,15 +332,15 @@ ITensor(ITmaker itm)
     if(itm == makeComplex_1)  { p->v(1) = 1; }
     if(itm == makeComplex_i)  { p->v(2) = 1; }
     if(itm == makeConjTensor) { p->v(1) = 1; p->v(2) = -1; }
-    set_unique_Real();
+    setUniqueReal();
 	}
 
 void ITensor::
 read(std::istream& s)
     { 
-    bool is_null_;
-    s.read((char*) &is_null_,sizeof(is_null_));
-    if(is_null_) { *this = ITensor(); return; }
+    bool isNull_;
+    s.read((char*) &isNull_,sizeof(isNull_));
+    if(isNull_) { *this = ITensor(); return; }
 
     s.read((char*) &r_,sizeof(r_));
     s.read((char*) &rn_,sizeof(rn_));
@@ -348,15 +348,15 @@ read(std::istream& s)
         index_[j].read(s);
     scale_.read(s);
     p = new ITDat(s);
-    set_unique_Real();
+    setUniqueReal();
     }
 
 void ITensor::
 write(std::ostream& s) const 
     { 
-    bool is_null_ = is_null();
-    s.write((char*) &is_null_,sizeof(is_null_));
-    if(is_null_) return;
+    bool isNull_ = isNull();
+    s.write((char*) &isNull_,sizeof(isNull_));
+    if(isNull_) return;
 
     s.write((char*) &r_,sizeof(r_));
     s.write((char*) &rn_,sizeof(rn_));
@@ -445,6 +445,36 @@ hasindex1(const Index& I) const
     return false;
 	}
 
+bool ITensor::
+hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const
+    {
+    for(int n = 1; n <= nind; ++n)
+        {
+        const Index& ii = I[n];
+        bool found = false;
+        if(ii.m() == 1)
+            {
+            for(int j = rn_+1; j <= r_; ++j)
+                if(index_[j] == ii)
+                    {
+                    found = true;
+                    break;
+                    }
+            }
+        else
+            {
+            for(int j = 1; j <= rn_; ++j)
+                if(index_[j] == ii)
+                    {
+                    found = true;
+                    break;
+                    }
+            }
+        if(!found) return false;
+        }
+    return true;
+    }
+
 
 void ITensor::
 addindex1(const std::vector<Index>& indices) 
@@ -463,7 +493,7 @@ addindex1(const std::vector<Index>& indices)
         assert(!hasindex1(indices[j]));
         index_[++r_] = indices[j]; 
         }
-    set_unique_Real();
+    setUniqueReal();
     }
 
 void ITensor::
@@ -484,7 +514,7 @@ addindex1(const Index& I)
     if(r_ == NMAX) Error("Maximum number of indices reached");
 #endif
     index_[++r_] = I;
-    set_unique_Real();
+    setUniqueReal();
     }
 
 void ITensor::
@@ -495,7 +525,7 @@ removeindex1(int j)
     for(int k = j; k < r_; ++k) 
         index_[k] = index_[k+1];
     --r_;
-    set_unique_Real();
+    setUniqueReal();
     }
 
 void ITensor::
@@ -503,7 +533,7 @@ noprime(PrimeType p)
     {
     for(int j = 1; j <= r_; ++j) 
         index_[j].noprime(p);
-    set_unique_Real();
+    setUniqueReal();
 	}
 
 void ITensor::
@@ -511,7 +541,7 @@ doprime(PrimeType pt, int inc)
 	{
     for(int j = 1; j <= r_; ++j) 
         index_[j].doprime(pt,inc);
-    set_unique_Real();
+    setUniqueReal();
 	}
 
 void ITensor::
@@ -519,7 +549,7 @@ mapprime(int plevold, int plevnew, PrimeType pt)
 	{
     for(int j = 1; j <= r_; ++j) 
         index_[j].mapprime(plevold,plevnew,pt);
-    set_unique_Real();
+    setUniqueReal();
 	}
 
 void ITensor::
@@ -529,7 +559,7 @@ mapprimeind(const Index& I, int plevold, int plevnew, PrimeType pt)
         if(index_[j] == I)
         {
         index_[j].mapprime(plevold,plevnew,pt);
-        set_unique_Real();
+        setUniqueReal();
         return;
         }
     Print(*this);
@@ -556,7 +586,7 @@ Real ITensor::
 val0() const 
 	{ 
 #ifdef DEBUG
-    if(this->is_null())
+    if(this->isNull())
         Error("ITensor is null");
 #endif
     if(rn_ != 0)
@@ -592,7 +622,7 @@ Real ITensor::
 val1(int i1) const
 	{ 
 #ifdef DEBUG
-    if(this->is_null())
+    if(this->isNull())
         Error("ITensor is null");
 #endif
     if(rn_ > 1)
@@ -729,28 +759,28 @@ groupIndices(const boost::array<Index,NMAX+1>& indices, int nind,
     int tot_m = 1;
     int nn = 0; //number of m != 1 indices
     for(int j = 1; j <= nind; ++j) 
-    {
+        {
         const Index& J = indices[j];
         if(J.m() != 1) ++nn;
         tot_m *= J.m();
 
         bool foundit = false;
         for(int k = 1; k <= r_; ++k) 
-        { 
+            { 
             if(index_[k] == J) 
-            {
+                {
                 isReplaced[k] = true; 
                 foundit = true; 
                 break; 
+                }
             }
-        }
         if(!foundit)
-        {
+            {
             Print(*this);
             cerr << "Couldn't find Index " << J << " in ITensor.\n";
             Error("bad request for Index to replace");
+            }
         }
-    }
     if(tot_m != grouped.m()) Error("ITensor::groupAndReplace: \
                                     mismatched index sizes.");
 
@@ -761,18 +791,18 @@ groupIndices(const boost::array<Index,NMAX+1>& indices, int nind,
     Permutation P;
     int kk = 0, kr = 0;
     for(int j = 1; j <= rn_; ++j)
-    {
+        {
         if(isReplaced[j])
-        { 
+            { 
             P.from_to(j,res_rn_+kr);
             kr += 1;
-        }
+            }
         else 
-        { 
+            { 
             P.from_to(j,++kk);
             nindices.push_back(index_[j]); 
+            }
         }
-    }
 
     nindices.push_back(grouped);
 
@@ -802,27 +832,26 @@ tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
 
     int nmatched = 0;
     for(int k = 1; k <= r_; ++k)
-    {
-    const Index& K = index_[k];
-    for(int j = 1; j <= nind; ++j)
-    if(K == indices[j]) 
-        { 
-        if(indices[j].m() != tm)
-            Error("Tied indices must have matching m's");
-
-        is_tied[k] = true;
-
-        ++nmatched;
-
-        break;
-        }
-
-    if(!is_tied[k])
         {
-        new_index_[++new_r_] = K;
-        alloc_size *= K.m();
+        const Index& K = index_[k];
+        for(int j = 1; j <= nind; ++j)
+        if(K == indices[j]) 
+            { 
+            if(indices[j].m() != tm)
+                Error("Tied indices must have matching m's");
+            is_tied[k] = true;
+
+            ++nmatched;
+
+            break;
+            }
+
+        if(!is_tied[k])
+            {
+            new_index_[++new_r_] = K;
+            alloc_size *= K.m();
+            }
         }
-    }
 
     //Check that all indices were found
     if(nmatched != nind)
@@ -1123,11 +1152,11 @@ solo() const
 	}
 
 void ITensor::
-set_unique_Real()
+setUniqueReal()
 	{
     ur = 0;
     for(int j = 1; j <= r_; ++j)
-        ur += index_[j].unique_Real();
+        ur += index_[j].uniqueReal();
 	}
 
 void ITensor::
@@ -1138,7 +1167,7 @@ _construct1(const Index& i1)
 	    rn_ = 1; 
 	index_[1] = i1;
 	allocate(i1.m());
-	set_unique_Real();
+	setUniqueReal();
 	}
 
 void ITensor::
@@ -1156,7 +1185,7 @@ _construct2(const Index& i1, const Index& i2)
 	    rn_ = (i2.m() == 1 ? 1 : 2); 
 	    }
 	allocate(i1.m()*i2.m()); 
-	set_unique_Real();
+	setUniqueReal();
 	}
 
 
@@ -1174,7 +1203,7 @@ mapindex(const Index& i1, const Index& i2)
 	    if(GET(index_,j) == i1) 
 		{
 		GET(index_,j) = i2;
-		set_unique_Real();
+		setUniqueReal();
 		return;
 		}
 	Print(i1);
@@ -1693,7 +1722,7 @@ operator/=(const ITensor& other)
         for(int j = 1; j <= nr1_; ++j) 
             { index_[r_+j] = *(extra_index1_[j]); }
         r_ += nr1_;
-        set_unique_Real();
+        setUniqueReal();
         return *this;
         }
     else if(rn_ == 0)
@@ -1723,7 +1752,7 @@ operator/=(const ITensor& other)
             }
         r_ += nr1_;
         index_.swap(new_index_);
-        set_unique_Real();
+        setUniqueReal();
         return *this;
         }
 
@@ -1771,7 +1800,7 @@ operator/=(const ITensor& other)
 
     scaleOutNorm();
 
-    set_unique_Real();
+    setUniqueReal();
 
     return *this;
     }
@@ -1861,7 +1890,7 @@ operator*=(const ITensor& other)
         //Keep current m!=1 indices, overwrite m==1 indices
         for(int j = 1; j <= nr1_; ++j) 
             index_[rn_+j] = *(new_index1_[j]);
-        set_unique_Real();
+        setUniqueReal();
         return *this;
         }
     else if(rn_ == 0)
@@ -1882,7 +1911,7 @@ operator*=(const ITensor& other)
         for(int j = 1; j <= nr1_; ++j) 
             new_index_[rn_+j] = *(new_index1_[j]);
         index_.swap(new_index_);
-        set_unique_Real();
+        setUniqueReal();
         return *this;
         }
 
@@ -2054,7 +2083,7 @@ operator*=(const ITensor& other)
     index_.swap(new_index_);
     scale_ *= other.scale_;
     scaleOutNorm();
-    set_unique_Real();
+    setUniqueReal();
 
     return *this;
     } //ITensor::operator*=(ITensor)
@@ -2350,7 +2379,7 @@ symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid, int& mink, 
     ref *= -1;
     d *= -1;
 
-    mid = Index((mid.is_null() ? "mid" : mid.rawname()),m,mid.type());
+    mid = Index((mid.isNull() ? "mid" : mid.rawname()),m,mid.type());
     U = ITensor(i1,mid,UU);
     D = ITensor(mid,d);
     D.scale_ = scale_;

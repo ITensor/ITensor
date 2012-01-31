@@ -22,9 +22,9 @@ public:
 
     //Accessor Methods ----------------------------------------------
 
-    //unique_Real depends on indices only, unordered:
+    //uniqueReal depends on indices only, unordered:
     inline Real 
-    unique_Real() const { return ur; } 
+    uniqueReal() const { return ur; } 
 
     const Index& 
     index(int j) const;
@@ -36,10 +36,10 @@ public:
     m(int j) const;
 
     inline bool 
-    is_null() const { return (p == 0); }
+    isNull() const { return (p == 0); }
 
     inline bool 
-    is_not_null() const { return (p != 0); }
+    isNotNull() const { return (p != 0); }
 
     inline bool 
     is_complex() const { return hasindexn(Index::IndReIm()); }
@@ -232,6 +232,9 @@ public:
 
     bool 
     hasindex1(const Index& I) const;
+
+    bool
+    hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const;
 
     inline bool 
     notin(const Index& I) const { return !hasindex(I); }
@@ -544,17 +547,13 @@ private:
     solo() const;
     
     void 
-    set_unique_Real();
+    setUniqueReal();
 
     void 
     _construct1(const Index& i1);
 
     void 
     _construct2(const Index& i1, const Index& i2);
-
-    template<class Iterable>
-    int 
-    fillFromIndices(const Iterable& I, int size);
 
     void 
     getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const;
@@ -757,7 +756,7 @@ public:
     commaInit(ITensor& T_)
         : T(T_)
         { 
-        if(T.is_null()) Error("Can't assign to null ITensor");
+        if(T.isNull()) Error("Can't assign to null ITensor");
         T.solo();
         T.scaleTo(1);
         T.initCounter(c);

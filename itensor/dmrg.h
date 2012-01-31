@@ -9,8 +9,8 @@
 template<class Tensor,class TensorSet, class OpTensorSet>
 void applyProjOp(const Tensor& phi, const TensorSet& L, const TensorSet& R, const OpTensorSet& H, Tensor& Hphi)
 {
-    bool useL(L.size() == 0 ? false : L[0].is_not_null()),
-         useR(R.size() == 0 ? false : R[0].is_not_null());
+    bool useL(L.size() == 0 ? false : L[0].isNotNull()),
+         useR(R.size() == 0 ? false : R[0].isNotNull());
     Hphi = (useL ? L[0]*phi : phi); 
     Hphi *= H[0];
     if(useR) Hphi *= R[0];
@@ -27,8 +27,8 @@ void applyProjOp(const Tensor& phi, const TensorSet& L, const TensorSet& R, cons
 template<class Tensor, class OpTensor>
 void applyProjOp(const Tensor& phi, const Tensor& L, const Tensor& R, const OpTensor& H, Tensor& Hphi)
 {
-    bool useL = L.is_not_null(),
-         useR = R.is_not_null();
+    bool useL = L.isNotNull(),
+         useR = R.isNotNull();
     Hphi = (useL ? L*phi : phi); 
     Hphi *= H;
     if(useR) Hphi *= R;
@@ -105,19 +105,19 @@ public:
             Diag.tieIndices(s,primed(s),s);
             }
 
-        if(le.is_not_null())
+        if(le.isNotNull())
             {
             Index llink = index_in_common(le,psi,Link);
-            if(llink.is_not_null())
+            if(llink.isNotNull())
                 Diag *= tieIndices(llink,primed(llink),llink,le);
             else
                 Diag *= le;
             }
 
-        if(ri.is_not_null())
+        if(ri.isNotNull())
             {
             Index rlink = index_in_common(ri,psi,Link);
-            if(rlink.is_not_null())
+            if(rlink.isNotNull())
                 Diag *= tieIndices(rlink,primed(rlink),rlink,ri);
             else
                 Diag *= ri;
@@ -160,7 +160,7 @@ public:
 
     LocalHamOrth(const Tensor& le, const Tensor& ri, const Tensor& mpo, Tensor& psi_, Real weight_) 
 	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), 
-      useleft(le.is_not_null()), useright(ri.is_not_null()), weight(weight_)
+      useleft(le.isNotNull()), useright(ri.isNotNull()), weight(weight_)
     { diag.ReDimension(psi.vecSize()); diag = 1; }
 
     int Size() const { return psi.vecSize(); }
@@ -209,7 +209,7 @@ void putInQNs(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& 
     for(size_t n = 0; n < phi.size(); ++n)
     {
         Tensor phip;
-        if(phi[n].is_null() || phi[n].vecSize() == 0)
+        if(phi[n].isNull() || phi[n].vecSize() == 0)
         {
             Print(n); Print(phi[n]);
             Error("Null or zero size tensor in putInQNs.");

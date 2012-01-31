@@ -101,11 +101,11 @@ TEST(Null)
 {
     ITensor t1;
 
-    CHECK(t1.is_null());
+    CHECK(t1.isNull());
 
     ITensor t2(s1);
 
-    CHECK(t2.is_not_null());
+    CHECK(t2.isNotNull());
 }
 
 TEST(Constructors)

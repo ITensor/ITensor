@@ -98,9 +98,9 @@ public:
     setU(int i, Direction dir); //set unitary
 
     bool 
-    is_null() const { return (model_==0); }
+    isNull() const { return (model_==0); }
     bool 
-    is_not_null() const { return (model_!=0); }
+    isNotNull() const { return (model_!=0); }
 
     bool 
     doRelCutoff() const { return svd_.doRelCutoff(); }
@@ -259,7 +259,7 @@ public:
     //Move the orthogonality center to site i (left_orth_lim = i-1, right_orth_lim = i+1)
     void position(int i, bool preserve_shape = false)
 	{
-        if(is_null()) Error("position: MPS is null");
+        if(isNull()) Error("position: MPS is null");
         while(left_orth_lim < i-1)
         {
             if(left_orth_lim < 0) left_orth_lim = 0;
@@ -400,7 +400,7 @@ public:
             std::cerr << boost::format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim; 
             Error("Projecting operator at j < right_orth_lim"); 
             }
-        res = (P.is_null() ? AA(j) : P * AA(j));
+        res = (P.isNull() ? AA(j) : P * AA(j));
         res *= Op; res *= conj(primed(AA(j)));
     }
 

@@ -239,7 +239,7 @@ void SVDWorker::operator()(int b, const Tensor& AA,
         }
 
     IndexT mid = index_in_common(A,B,Link);
-    if(mid.is_null()) mid = IndexT("mid");
+    if(mid.isNull()) mid = IndexT("mid");
 
     //If dir==None, put the O.C. on the side
     //that keeps mid's arrow the same

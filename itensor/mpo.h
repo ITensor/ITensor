@@ -26,8 +26,8 @@ public:
     using Parent::NN;
 
     using Parent::model;
-    using Parent::is_null;
-    using Parent::is_not_null;
+    using Parent::isNull;
+    using Parent::isNotNull;
 
     using Parent::si;
     using Parent::siP;
@@ -191,7 +191,7 @@ inline bool checkQNs(const IQMPO& psi)
     //including the ortho. center
     for(int i = 1; i <= N; ++i) 
     {
-        if(psi.AA(i).is_null())
+        if(psi.AA(i).isNull())
         {
             std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
             return false;
@@ -298,59 +298,68 @@ typedef Internal::MPOSet<IQTensor> IQMPOSet;
 
 template <class MPSType, class MPOType>
 void psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real& im) //<psi|H|phi>
-{
+    {
     typedef typename MPSType::TensorT Tensor;
     const int N = H.NN();
     if(phi.NN() != N || psi.NN() != N) Error("psiHphi: mismatched N");
 
-    Tensor L = phi.AA(1); L *= H.AA(1); L *= conj(primed(psi.AA(1)));
+    Tensor L = phi.AA(1); 
+    L *= H.AA(1); 
+    L *= conj(primed(psi.AA(1)));
     for(int i = 2; i < N; ++i) 
-    { L *= phi.AA(i); L *= H.AA(i); L *= conj(primed(psi.AA(i))); }
+        { 
+        L *= phi.AA(i); 
+        L *= H.AA(i); 
+        L *= conj(primed(psi.AA(i))); 
+        }
     L *= phi.AA(N); L *= H.AA(N);
 
     Dot(primed(psi.AA(N)),L,re,im);
-}
+    }
 template <class MPSType, class MPOType>
 Real psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|phi>]
-{
+    {
     Real re, im;
     psiHphi(psi,H,phi,re,im);
     if(fabs(im) > 1.0e-12 * fabs(re))
 	std::cerr << boost::format("\nReal psiHphi: WARNING, dropping non-zero (im = %.5f) imaginary part of expectation value.\n")%im;
     return re;
-}
+    }
 
-inline void psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi, Real& re, Real& im) //<psi|H|phi>
-{
+inline void 
+psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi, Real& re, Real& im) //<psi|H|phi>
+    {
     int N = psi.NN();
     if(N != phi.NN() || H.NN() < N) Error("mismatched N in psiHphi");
     MPS psiconj(psi);
-    for(int i = 1; i <= N; ++i) psiconj.AAnc(i) = conj(primed(psi.AA(i)));
-    ITensor L = (LB.is_null() ? phi.AA(1) : LB * phi.AA(1));
+    for(int i = 1; i <= N; ++i) 
+        psiconj.AAnc(i) = conj(primed(psi.AA(i)));
+    ITensor L = (LB.isNull() ? phi.AA(1) : LB * phi.AA(1));
     L *= H.AA(1); L *= psiconj.AA(1);
     for(int i = 2; i <= N; ++i)
-	{ L *= phi.AA(i); L *= H.AA(i); L *= psiconj.AA(i); }
-    if(!RB.is_null()) L *= RB;
+        { L *= phi.AA(i); L *= H.AA(i); L *= psiconj.AA(i); }
+    if(!RB.isNull()) L *= RB;
     if(L.is_complex())
-    {
+        {
         if(L.vecSize() != 2) Error("Non-scalar result in psiHphi.");
         re = L(Index::IndReIm()(1));
         im = L(Index::IndReIm()(2));
-    }
+        }
     else 
-    {
+        {
         if(L.vecSize() != 1) Error("Non-scalar result in psiHphi.");
         re = L.val0();
         im = 0;
+        }
     }
-}
-inline Real psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi) //Re[<psi|H|phi>]
-{
+inline Real 
+psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi) //Re[<psi|H|phi>]
+    {
     Real re,im; psiHphi(psi,H,LB,RB,phi,re,im);
     if(fabs(im) > 1.0e-12 * fabs(re))
 	std::cerr << "Real psiHphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
     return re;
-}
+    }
 
 inline void psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real& re, Real& im) //<psi|H K|phi>
 {

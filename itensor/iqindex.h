@@ -750,7 +750,7 @@ class IQIndex : public Index
 
     inline friend std::ostream& operator<<(std::ostream &o, const IQIndex &I)
         {
-        if(I.is_null()) 
+        if(I.isNull()) 
             { 
             o << "IQIndex: (null)"; 
             return o;
