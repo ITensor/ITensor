@@ -13,7 +13,7 @@ struct IQTensorDefaults
 
     IQIndex S1,S2,L1,L2;
 
-    IQTensor phi,A,B,C;
+    IQTensor phi,A,B,C,D;
 
     IQTensorDefaults() :
     s1u(Index("Site1 Up",1,Site)),
@@ -92,6 +92,17 @@ struct IQTensorDefaults
             ITensor T(L1.index(n1),primed(L1).index(n1),U);
             C += T;
             }
+
+        D = IQTensor(conj(L1),S1,primed(L1),primed(L1,2));
+        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
+        for(int n2 = 1; n2 <= S1.nindex(); ++n2)
+        for(int n3 = 1; n3 <= L1.nindex(); ++n3)
+        for(int n4 = 1; n4 <= S1.nindex(); ++n4)
+            {
+            ITensor T(L1.index(n1),S1.index(n2),primed(L1).index(n3),primed(L1,2).index(n4));
+            T.Randomize();
+            D += T;
+            }
         }
 
     };
@@ -102,7 +113,7 @@ TEST(Null)
     {
     IQTensor t1;
 
-    CHECK(t1.is_null());
+    CHECK(t1.isNull());
     }
 
 TEST(Constructors)
@@ -172,6 +183,18 @@ TEST(SymmetricDiag11)
     U *= set1;
     CHECK_CLOSE(D(mid(mink)),Dot(primed(U),C*U),1E-10);
 
+    }
+
+TEST(TieIndices)
+    {
+    IQTensor D1 = tieIndices(L1,L1.primed(),L1,D);
+
+    for(int k1 = 1; k1 <= L1.m(); ++k1)
+    for(int k2 = 1; k2 <= L1.m(); ++k2)
+    for(int k3 = 1; k3 <= S1.m(); ++k3)
+        {
+        CHECK_CLOSE(D1(L1(k1),primed(L1,2)(k2),S1(k3)),D(L1(k1),primed(L1)(k1),primed(L1,2)(k2),S1(k3)),1E-10);
+        }
     }
 
 BOOST_AUTO_TEST_SUITE_END()

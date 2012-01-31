@@ -1,17 +1,6 @@
 #include "iqtensor.h"
 #include <set>
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::vector;
-using std::list;
-using std::set;
-using std::map;
-using std::multimap;
-using std::ostream;
-using std::istream;
-using std::pair;
-using std::make_pair;
+using namespace std;
 
 DatAllocator<IQTDat> IQTDat::allocator;
 
@@ -141,15 +130,15 @@ insert_itensor(const ApproxReal& r, const ITensor& t)
 
 void IQTDat::
 clean(Real min_norm)
-{
-list<ITensor> nitensor;
-for(const_iten_it it = itensor.begin(); it != itensor.end(); ++it)
     {
+    list<ITensor> nitensor;
+    for(const_iten_it it = itensor.begin(); it != itensor.end(); ++it)
+        {
         if(it->norm() >= min_norm)
             nitensor.push_back(*it);
+        }
+    itensor.swap(nitensor);
     }
-itensor.swap(nitensor);
-}
 
 void DoPrimer::operator()(IQIndex &iqi) const { iqi.doprime(pt,inc); }
 void MapPrimer::operator()(IQIndex &iqi) const { iqi.mapprime(plevold,plevnew,pt); }
@@ -190,6 +179,9 @@ const_iqind_end()   const { return p->iqindex_.end(); }
 std::pair<IQTensor::const_iqind_it,IQTensor::const_iqind_it> IQTensor::
 iqinds() const 
     { return std::make_pair(p->iqindex_.begin(),p->iqindex_.end()); }
+
+//----------------------------------------------------
+//IQTensor: Constructors 
 
 IQTensor::
 IQTensor() 
@@ -281,8 +273,14 @@ IQTensor::
 IQTensor(ITensor::ITmaker itm) 
     : p(new IQTDat(IQIndex::IndReIm()))
     {
-    if(itm == ITensor::makeComplex_1)      operator+=(ITensor::Complex_1());
-    else if(itm == ITensor::makeComplex_i) operator+=(ITensor::Complex_i());
+    if(itm == ITensor::makeComplex_1)      
+        {
+        operator+=(ITensor::Complex_1());
+        }
+    else if(itm == ITensor::makeComplex_i) 
+        {
+        operator+=(ITensor::Complex_i());
+        }
     }
 
 IQTensor::
@@ -345,7 +343,8 @@ insert(const ITensor& t)
 	ApproxReal r(t.uniqueReal());
 	if(p->has_itensor(r))
 	    {
-	    Print(*(p->rmap[r])); Print(t);
+	    Print(*(p->rmap[r])); 
+        Print(t);
 	    Error("Can't insert ITensor with identical structure twice, use operator+=.");
 	    }
 	p->insert_itensor(r,t);
@@ -365,10 +364,6 @@ operator+=(const ITensor& t)
         }
     else 
         {
-        Print(*(p->rmap[r]));
-        Print((p->rmap[r])->uniqueReal());
-        Print(t);
-        Print(t.uniqueReal());
         *(p->rmap[r]) += t;
         }
     return *this;
@@ -809,10 +804,77 @@ addindex1(const IQIndex& I)
 	p->iqindex_.push_back(I);
 	}
 
+void IQTensor::
+tieIndices(const boost::array<IQIndex,NMAX+1>& indices, int niqind, const IQIndex& tied)
+    {
+    boost::array<Index,NMAX+1> totie;
+    const int nindex = indices[1].nindex();
+
+    boost::intrusive_ptr<IQTDat> np = new IQTDat();
+    np->iqindex_.reserve(p->iqindex_.size()+1-niqind);
+    np->iqindex_.push_back(tied);
+
+    int nmatched = 0;
+    for(size_t k = 0; k < p->iqindex_.size(); ++k)
+        {
+        const IQIndex& K = p->iqindex_[k];
+        bool K_is_tied = false;
+        for(int j = 1; j <= niqind; ++j)
+        if(K == indices[j]) 
+            {
+            if(indices[j].m() != tied.m())
+                Error("Tied indices must have matching m's");
+            K_is_tied = true;
+            ++nmatched;
+            break;
+            }
+        if(!K_is_tied)
+            {
+            np->iqindex_.push_back(K);
+            }
+        }
+
+    if(nmatched != niqind)
+        {
+        PrintIndices((*this));
+        cout << "Indices to tie = " << endl;
+        for(int j = 1; j <= niqind; ++j)
+            cout << indices[j] << endl;
+        Error("Couldn't find IQIndex to tie");
+        }
+
+    for(int i = 1; i <= nindex; ++i)
+        {
+        for(int n = 1; n <= niqind; ++n)
+            totie[n] = indices[n].index(i);
+
+        for(const_iten_it it=p->itensor.begin(); it != p->itensor.end(); ++it)
+            {
+            if(!it->hasAllIndex(totie,niqind)) continue;
+            np->itensor.push_back(*it);
+            np->itensor.back().tieIndices(totie,niqind,tied.index(i));
+            }
+        }
+    np->uninit_rmap();
+    p.swap(np);
+    }
+
+void IQTensor::
+tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied)
+    {
+    boost::array<IQIndex,NMAX+1> inds =
+        {{ IQIndex::Null(), i1, i2, 
+           IQIndex::Null(), IQIndex::Null(), 
+           IQIndex::Null(), IQIndex::Null(), 
+           IQIndex::Null(), IQIndex::Null() }};
+
+    tieIndices(inds,2,tied);
+    }
+
 int IQTensor::
 vecSize() const
 	{
-    if(this->is_null()) return 0;
+    if(this->isNull()) return 0;
 	int s = 0;
 	for(const_iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
 	    s += jj->vecSize();

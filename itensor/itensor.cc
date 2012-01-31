@@ -1,9 +1,7 @@
 #include "itensor.h"
-using std::vector;
-using std::ostream;
-using std::cout;
-using std::cerr;
-using std::endl;
+using namespace std;
+using boost::format;
+using boost::array;
 
 DatAllocator<ITDat> ITDat::allocator;
 
@@ -21,12 +19,12 @@ Counter() : rn_(0)
     }
 
 Counter::
-Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r) 
+Counter(const array<Index,NMAX+1>& ii,int rn,int r) 
     { init(ii,rn,r); }
 
 void 
 Counter::
-init(const boost::array<Index,NMAX+1>& ii, int rn, int r)
+init(const array<Index,NMAX+1>& ii, int rn, int r)
     {
     rn_ = rn;
     r_ = r;
@@ -94,14 +92,14 @@ operator<<(ostream & s, const ITensor & t)
             {
             Real nrm = t.norm();
             if(nrm >= 1E-2)
-                s << boost::format(" (L=%d,N=%.2f)\n") % t.vecSize() % nrm;
+                s << format(" (L=%d,N=%.2f)\n") % t.vecSize() % nrm;
             else
-                s << boost::format(" (L=%d,N=%.1E)\n") % t.vecSize() % nrm;
+                s << format(" (L=%d,N=%.1E)\n") % t.vecSize() % nrm;
             }
         else
             {
-            s << boost::format(" (L=%d,N=too big)\n") 
-                 % t.vecSize() << t.scale() << std::endl;
+            s << format(" (L=%d,N=too big)\n") 
+                 % t.vecSize() << t.scale();
             }
         if(Globals::printdat())
             {
@@ -227,7 +225,7 @@ ITensor(Index i1, Index i2, Index i3,
             Index i7, Index i8)
     : rn_(0)
 	{
-	boost::array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
+	array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
 	int size = 3;
 	while(ii[size] != Index::Null()) ++size;
     r_ = size;
@@ -260,7 +258,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
     : rn_(0)
 	{
         //Construct ITensor
-        boost::array<Index,NMAX+1> ii = 
+        array<Index,NMAX+1> ii = 
             {{ iv1.ind, iv2.ind, iv3.ind, iv4.ind, iv5.ind, 
                iv6.ind, iv7.ind, iv8.ind }};
         int size = 3; while(size < NMAX && ii[size+1] != IndexVal::Null().ind) ++size;
@@ -269,9 +267,9 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
         allocate(alloc_size);
 
         //Assign specified element to 1
-        boost::array<int,NMAX+1> iv = 
+        array<int,NMAX+1> iv = 
             {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i }};
-        boost::array<int,NMAX+1> ja; ja.assign(1);
+        array<int,NMAX+1> ja; ja.assign(1);
         for(int k = 1; k <= rn_; ++k) //loop over indices of this ITensor
             for(int j = 0; j < size; ++j)  // loop over the given indices
 		if(index_[k] == ii[j]) 
@@ -446,7 +444,7 @@ hasindex1(const Index& I) const
 	}
 
 bool ITensor::
-hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const
+hasAllIndex(const array<Index,NMAX+1>& I, int nind) const
     {
     for(int n = 1; n <= nind; ++n)
         {
@@ -638,7 +636,7 @@ operator()()
 	{ 
     if(rn_ != 0)
         {
-        std::cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
+        std::cerr << format("# given = 0, rn_ = %d\n")%rn_;
         Error("Not enough indices (requires all having m!=1)");
         }
     solo(); 
@@ -652,7 +650,7 @@ operator()() const
     ITENSOR_CHECK_NULL
     if(rn_ != 0)
         {
-        std::cerr << boost::format("# given = 0, rn_ = %d\n")%rn_;
+        std::cerr << format("# given = 0, rn_ = %d\n")%rn_;
         Error("Not enough indices (requires all having m!=1)");
         }
     return scale_.real()*p->v(1);
@@ -663,7 +661,7 @@ operator()(const IndexVal& iv1)
 	{
     if(rn_ > 1) 
         {
-        std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
+        std::cerr << format("# given = 1, rn_ = %d\n")%rn_;
         Error("Not enough m!=1 indices provided");
         }
     if(index_[1] != iv1.ind)
@@ -683,7 +681,7 @@ operator()(const IndexVal& iv1) const
     ITENSOR_CHECK_NULL
     if(rn_ > 1) 
         {
-        std::cerr << boost::format("# given = 1, rn_ = %d\n")%rn_;
+        std::cerr << format("# given = 1, rn_ = %d\n")%rn_;
         Error("Not enough m!=1 indices provided");
         }
     if(index_[1] != iv1.ind)
@@ -751,10 +749,10 @@ assignFrom(const ITensor& other)
 
 
 void ITensor::
-groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
+groupIndices(const array<Index,NMAX+1>& indices, int nind, 
              const Index& grouped, ITensor& res) const
     {
-    boost::array<bool,NMAX+1> isReplaced; isReplaced.assign(false);
+    array<bool,NMAX+1> isReplaced; isReplaced.assign(false);
 
     int tot_m = 1;
     int nn = 0; //number of m != 1 indices
@@ -814,20 +812,20 @@ groupIndices(const boost::array<Index,NMAX+1>& indices, int nind,
     }
 
 void ITensor::
-tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
+tieIndices(const array<Index,NMAX+1>& indices, int nind,
            const Index& tied)
     {
     if(nind == 0) Error("No indices given");
 
     const int tm = tied.m();
     
-    boost::array<Index,NMAX+1> new_index_;
+    array<Index,NMAX+1> new_index_;
     new_index_[1] = tied;
     //will count these up below
     int new_r_ = 1;
     int alloc_size = tm;
 
-    boost::array<bool,NMAX+1> is_tied;
+    array<bool,NMAX+1> is_tied;
     is_tied.assign(false);
 
     int nmatched = 0;
@@ -879,7 +877,7 @@ tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
     //Set up ii pointers to link
     //elements of res to appropriate
     //elements of *this
-    boost::array<int*,NMAX+1> ii;
+    array<int*,NMAX+1> ii;
     int n = 2;
     for(int j = 1; j <= r_; ++j)
         {
@@ -908,6 +906,7 @@ tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
         }
 
     index_.swap(new_index_);
+    setUniqueReal();
     p.swap(np);
     r_ = new_r_;
     rn_ = new_rn_;
@@ -918,7 +917,7 @@ void ITensor::
 tieIndices(const Index& i1, const Index& i2,
            const Index& tied)
     {
-    boost::array<Index,NMAX+1> inds =
+    array<Index,NMAX+1> inds =
         {{ Index::Null(), i1, i2, 
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null(), 
@@ -932,7 +931,7 @@ tieIndices(const Index& i1, const Index& i2,
            const Index& i3,
            const Index& tied)
     {
-    boost::array<Index,NMAX+1> inds =
+    array<Index,NMAX+1> inds =
         {{ Index::Null(), i1, i2, i3,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null(), Index::Null() }};
@@ -945,7 +944,7 @@ tieIndices(const Index& i1, const Index& i2,
            const Index& i3, const Index& i4,
            const Index& tied)
     {
-    boost::array<Index,NMAX+1> inds =
+    array<Index,NMAX+1> inds =
         {{ Index::Null(), i1, i2, i3, i4,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null() }};
@@ -985,7 +984,7 @@ expandIndex(const Index& small, const Index& big, int start)
     ITensor res(indices);
     res.scale_ = scale_;
 
-    boost::array<int,NMAX+1> inc;
+    array<int,NMAX+1> inc;
     //Make sure all other inc's are zero
     inc.assign(0);
     inc.at(w) = start;
@@ -1211,7 +1210,7 @@ mapindex(const Index& i1, const Index& i2)
 	}
 
 void ITensor::
-getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const
+getperm(const array<Index,NMAX+1>& oth_index_, Permutation& P) const
 	{
 	for(int j = 1; j <= r_; ++j)
 	    {
@@ -1279,7 +1278,7 @@ _ind2(const IndexVal& iv1, const IndexVal& iv2) const
     {
     if(rn_ > 2) 
         {
-        std::cerr << boost::format("# given = 2, rn_ = %d\n")%rn_;
+        std::cerr << format("# given = 2, rn_ = %d\n")%rn_;
         Error("Not enough m!=1 indices provided");
         }
     if(index_[1] == iv1.ind && index_[2] == iv2.ind)
@@ -1302,9 +1301,9 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
       const IndexVal& iv5,const IndexVal& iv6,
       const IndexVal& iv7,const IndexVal& iv8) const
     {
-    boost::array<const IndexVal*,NMAX+1> iv = 
+    array<const IndexVal*,NMAX+1> iv = 
         {{ 0, &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
-    boost::array<int,NMAX+1> ja; ja.assign(1);
+    array<int,NMAX+1> ja; ja.assign(1);
     //Loop over the given IndexVals
     int j = 1, nn = 0;
     while(iv[j]->ind != Index::Null())
@@ -1358,7 +1357,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
 
     //Make a counter for thisdat
     Counter c; initCounter(c);
-    boost::array<int,NMAX+1> n;
+    array<int,NMAX+1> n;
     for(int j = 1; j <= rn_; ++j) n[ind[j]] = c.n[j];
 
     //Special case loops
@@ -1450,7 +1449,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
 
     //The j's are pointers to the i's of xdat's Counter,
     //but reordered in a way appropriate for rdat
-    boost::array<int*,NMAX+1> j;
+    array<int*,NMAX+1> j;
     for(int k = 1; k <= NMAX; ++k) { j[ind[k]] = &(c.i[k]); }
 
     //Catch-all loop that works for any tensor
@@ -1472,7 +1471,7 @@ struct ProductProps
     ProductProps(const ITensor& L, const ITensor& R);
 
     //arrays specifying which indices match
-    boost::array<bool,NMAX+1> contractedL, contractedR; 
+    array<bool,NMAX+1> contractedL, contractedR; 
 
     int nsamen, //number of m !=1 indices that match
         cdim,   //total dimension of contracted inds
@@ -1698,7 +1697,7 @@ operator/=(const ITensor& other)
     //These hold the indices from other 
     //that will be added to this->index_
     int nr1_ = 0;
-    static boost::array<const Index*,NMAX+1> extra_index1_;
+    static array<const Index*,NMAX+1> extra_index1_;
 
     //------------------------------------------------------------------
     //Handle m==1 Indices: set union
@@ -1712,7 +1711,7 @@ operator/=(const ITensor& other)
         if(!this_has_index) extra_index1_[++nr1_] = &J;
         }
 
-    static boost::array<Index,NMAX+1> new_index_;
+    static array<Index,NMAX+1> new_index_;
 
     if(other.rn_ == 0)
         {
@@ -1846,8 +1845,8 @@ operator*=(const ITensor& other)
         }
 
     //These hold  regular new indices and the m==1 indices that appear in the result
-    static boost::array<Index,NMAX+1> new_index_;
-    static boost::array<const Index*,NMAX+1> new_index1_;
+    static array<Index,NMAX+1> new_index_;
+    static array<const Index*,NMAX+1> new_index1_;
     int nr1_ = 0;
 
     //
@@ -2118,7 +2117,7 @@ operator+=(const ITensor& other)
 
     if(fabs(ur - other.ur) > 1E-12)
     {
-        cerr << boost::format("this ur = %.10f, other.ur = %.10f\n")%ur%other.ur;
+        cerr << format("this ur = %.10f, other.ur = %.10f\n")%ur%other.ur;
         Print(*this);
         Print(other);
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
@@ -2220,7 +2219,7 @@ operator+=(const ITensor& other)
     if(fabs(compare) > 1E-12 && fabs(new_tot-compare) > 1E-12 * ref)
 	{
 	Real di = new_tot - compare;
-	cerr << boost::format("new_tot = %f, compare = %f, dif = %f\n")%new_tot%compare%di;
+	cerr << format("new_tot = %f, compare = %f, dif = %f\n")%new_tot%compare%di;
 	Error("Incorrect sum");
 	}
 #endif
@@ -2280,7 +2279,7 @@ void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, cons
     if(nrow != res.Nrows()) Error("toMatrix22: wrong number of rows");
     if(ncol != res.Ncols()) Error("toMatrix22: wrong number of cols");
     res.ReDimension(nrow,ncol);
-    const boost::array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i4, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
+    const array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i4, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; getperm(reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
@@ -2309,7 +2308,7 @@ void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matr
     assert(hasindex(i1));
     assert(hasindex(i2));
     res.ReDimension(i1.m()*i2.m(),i3.m());
-    const boost::array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
+    const array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; getperm(reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
@@ -2323,7 +2322,7 @@ void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matr
     assert(hasindex(i2));
     assert(hasindex(i3));
     res.ReDimension(i1.m(),i2.m()*i3.m());
-    const boost::array<Index,NMAX+1> reshuf = {{ Index::Null(), i2, i3, i1, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
+    const array<Index,NMAX+1> reshuf = {{ Index::Null(), i2, i3, i1, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; getperm(reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;

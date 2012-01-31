@@ -9,7 +9,7 @@ REPORT_LEVEL=confirm
 HEADERS=test.h
 SOURCES=test.cc matrix_test.cc real_test.cc index_test.cc itensor_test.cc\
 combiner_test.cc iqcombiner_test.cc iqtensor_test.cc mps_test.cc mpo_test.cc\
-eigensolver_test.cc
+#eigensolver_test.cc
 
 LIBNAMES=matrix utilities itensor
 
@@ -84,4 +84,4 @@ LIBHEADERS+= $(INCLUDEDIR)/mps.h
 mps_test.o: $(LIBHEADERS)
 LIBHEADERS+= $(INCLUDEDIR)/mpo.h
 mpo_test.o: $(LIBHEADERS)
-eigensolver_test.o: $(INCLUDEDIR)/eigensolver.h
+eigensolver_test.cc: $(INCLUDEDIR)/eigensolver.h

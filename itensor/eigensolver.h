@@ -2,6 +2,15 @@
 #define __ITENSOR_EIGENSOLVER_H
 #include "iqcombiner.h"
 
+/* Notes on optimization:
+ *
+ * - Should be able to avoid re-forming the projected 
+ *   A i.e. the matrix M. Instead just expand a single
+ *   row and column using the new vector.
+ *
+ *
+ */
+
 class Davidson
     {
     public:

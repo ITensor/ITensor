@@ -341,6 +341,17 @@ class IQTensor
     void 
     addindex1(const IQIndex& I);
 
+    void
+    tieIndices(const boost::array<IQIndex,NMAX+1>& indices, int nind, const IQIndex& tied);
+
+    void
+    tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied);
+
+    friend inline IQTensor
+    tieIndices(const IQIndex& i1, const IQIndex& i2, 
+               const IQIndex& tied, IQTensor T)
+        { T.tieIndices(i1,i2,tied); return T; }
+
     //----------------------------------------------------
     //IQTensor miscellaneous methods
 
