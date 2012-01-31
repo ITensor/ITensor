@@ -122,41 +122,41 @@ product(const IQTensor& t, IQTensor& res) const
         int smallind_pos = -2;
         int bigind_pos   = -2;
         for(int j = 1; j <= t.r(); ++j)
-        {
+            {
             iqinds.push_back(t.index(j));
             if(iqinds.back() == smallind_) 
-            {
-                if(iqinds.back().dir() == smallind_.dir())
                 {
+                if(iqinds.back().dir() == smallind_.dir())
+                    {
                     Print(smallind_);
                     Error("Incompatible Arrow for smallind");
-                }
+                    }
                 smallind_pos = (j-1);
-            }
+                }
             else if(iqinds.back() == bigind_) 
-            {
-                if(iqinds.back().dir() == bigind_.dir())
                 {
+                if(iqinds.back().dir() == bigind_.dir())
+                    {
                     Print(bigind_);
                     Error("Incompatible Arrow for bigind");
-                }
+                    }
                 bigind_pos = (j-1);
+                }
             }
-        }
 
         if(smallind_pos != -2) //expand condensed form into uncondensed
-        {
+            {
             GET(iqinds,smallind_pos) = bigind_;
             res = IQTensor(iqinds);
             for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
-            {
+                {
                 int k;
                 for(k = 1; k <= i->r(); k++)
                 if(smallind_.hasindex(i->index(k))) break;
 
                 Index sind = i->index(k);
                 for(int start = 0; start < sind.m(); )
-                {
+                    {
                     Index bind = small_to_big[std::make_pair(sind,start)];
                     Matrix C(sind.m(),bind.m()); C = 0;
                     for(int kk = 1; kk <= bind.m(); ++kk) { C(start+kk,kk) = 1; }
@@ -164,40 +164,40 @@ product(const IQTensor& t, IQTensor& res) const
                     converter *= (*i);
                     res += converter;
                     start += bind.m();
+                    }
                 }
             }
-        }
         else //contract regular form into condensed
-        {
-            if(bigind_pos == -2)
             {
+            if(bigind_pos == -2)
+                {
                 Print(t); Print(*this);
                 Error("Condenser::product: couldn't find bigind");
-            }
+                }
             GET(iqinds,bigind_pos) = smallind_;
             res = IQTensor(iqinds);
             ITensor tt;
             Foreach(const ITensor& it, t.itensors())
-            {
+                {
                 bool gotit = false;
                 for(int k = 1; k <= it.r(); ++k)
                 if(bigind_.hasindex(it.index(k)))
-                {
+                    {
                     std::pair<Index,int> Ii = big_to_small[it.index(k)];
-                    //doconvert(it,pp.first,it.index(k),pp.second,tt);
-                    it.expandIndex(it.index(k),Ii.first,Ii.second,tt);
+                    tt = it;
+                    tt.expandIndex(it.index(k),Ii.first,Ii.second);
                     res += tt;
                     gotit = true;
                     break;
-                }
+                    }
                 if(!gotit)
-                {
+                    {
                     Print(*this);
                     Print(it);
                     Error("Combiner::product: Can't find common Index");
+                    }
                 }
             }
-        }
     }
 
 inline

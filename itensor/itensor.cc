@@ -925,24 +925,27 @@ tieIndices(const Index& i1, const Index& i2,
     }
 
 void ITensor::
-expandIndex(const Index& small, const Index& big, 
-            int start, ITensor& res) const
+expandIndex(const Index& small, const Index& big, int start)
     {
     assert(small.m() <= big.m());
     assert(start < big.m());
 
-    vector<Index> indices; indices.reserve(r_);
+    vector<Index> indices; 
+    indices.reserve(r_);
     int w = -1;
     for(int j = 1; j <= r_; ++j)
         {
-        if(index_[j] == small) 
-            { 
+        if(index_[j] == small)
+            {
             w = j;
-            indices.push_back(big); 
+            indices.push_back(big);
             }
-        else indices.push_back(index_[j]);
+        else 
+            {
+            indices.push_back(index_[j]);
+            }
         }
-    
+
     if(w == -1)
         {
         Print(*this);
@@ -950,15 +953,16 @@ expandIndex(const Index& small, const Index& big,
         Error("couldn't find index");
         }
 
-    res = ITensor(indices);
+    ITensor res(indices);
     res.scale_ = scale_;
 
-    boost::array<int,NMAX+1> inc; 
+    boost::array<int,NMAX+1> inc;
     //Make sure all other inc's are zero
     inc.assign(0);
     inc.at(w) = start;
 
-    Counter c; initCounter(c);
+    Counter c; 
+    initCounter(c);
 
     const Vector& thisdat = p->v;
     Vector& resdat = res.p->v;
@@ -970,6 +974,8 @@ expandIndex(const Index& small, const Index& big,
                         c.i[7]+inc[7],c.i[8]+inc[8]))
         = thisdat(c.ind);
         }
+
+    *this = res;
     }
 
 int ITensor::

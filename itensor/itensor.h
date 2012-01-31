@@ -396,8 +396,7 @@ public:
         { T.tieIndices(i1,i2,i3,i4,tied); return T; }
 
     void 
-    expandIndex(const Index& small, const Index& big, 
-                     int start, ITensor& res) const;
+    expandIndex(const Index& small, const Index& big, int start);
 
     void 
     fromMatrix11(const Index& i1, const Index& i2, const Matrix& res);

@@ -1332,7 +1332,7 @@ operator ITensor() const
         it != p->itensor.end();
         ++it)
         {
-        ITensor exp(*it),nexp;
+        ITensor exp(*it);
         //Loop over Index's of the k'th ITensor
         for(int j = 1; j <= it->r(); ++j)
             {
@@ -1350,8 +1350,7 @@ operator ITensor() const
                     offset = big->offset(small);
                     break;
                     }
-            exp.expandIndex(small,*big,offset,nexp);
-            exp = nexp;
+            exp.expandIndex(small,*big,offset);
             }
         //Once all Indices expanded, add to res
         res += exp;
