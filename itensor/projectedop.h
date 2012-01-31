@@ -1,74 +1,95 @@
 #ifndef __ITENSOR_PROJECTED_OP
 #define __ITENSOR_PROJECTED_OP
 
+template <class Tensor>
 class ProjectedOp
     {
     public:
 
-    ProjectedOp(const MPO& Op, int b = 1, int num_center = 2)
-        : Op_(Op),
-          b_(b),
-          L_(Op.NN()+1),
-          R_(Op.NN()+1),
-          LHlim_(1),
-          RHlim_(Op.NN()),
-          nc_(num_center)
-        { }
+    ProjectedOp(const MPOt<Tensor>& Op, int num_center = 2);
 
     void
-    product(const ITensor& phi, ITensor& phip) const;
+    product(const Tensor& phi, Tensor& phip) const;
 
     void
-    diag(ITensor& D) const;
+    diag(Tensor& D) const;
 
     void
-    setBond(int b, const MPS& psi);
+    setBond(int b, const MPSt<Tensor>& psi);
 
-    const ITensor&
-    L() const { return L_.at(b_); }
+    const Tensor&
+    L() const { return L_.at(LHlim_); }
 
-    const ITensor&
-    R() const { return R_.at(b_+nc_-1); }
+    const Tensor&
+    R() const { return R_.at(RHlim_); }
 
     int
     numCenter() const { return nc_; }
     void
     numCenter(int val) { nc_ = val; }
 
+    int
+    size() const { return size_; }
+
     private:
 
     void
-    makeL(const MPS& psi, int k = -1);
+    makeL(const MPSt<Tensor>& psi, int k);
 
     void
-    makeR(const MPS& psi, int k = -1);
+    makeR(const MPSt<Tensor>& psi, int k);
 
-    const MPO& Op_;
-    int b_;
-    std::vector<ITensor> L_,R_;
+    const MPOt<Tensor>& Op_;
+    std::vector<Tensor> L_,R_;
     int LHlim_,RHlim_;
     int nc_;
+    int size_;
 
     };
 
-inline void ProjectedOp::
-product(const ITensor& phi, ITensor& phip) const
+template <class Tensor>
+inline ProjectedOp<Tensor>::
+ProjectedOp(const MPOt<Tensor>& Op, int num_center)
+    : Op_(Op),
+      L_(Op.NN()+1),
+      R_(Op.NN()+1),
+      LHlim_(1),
+      RHlim_(Op.NN()),
+      nc_(num_center),
+      size_(-1)
+    { }
+
+template <class Tensor>
+inline void ProjectedOp<Tensor>::
+product(const Tensor& phi, Tensor& phip) const
     {
-    phip = (L().is_null() ? phi : L() * phi); //m^3 k d
-    phip *= Op_.AA(b_);   //m^2 k^2 d^2
-    phip *= Op_.AA(b_+nc_-1); //m^2 k^2 d^3
-    if(R().is_not_null()) 
-        phip *= R();
+    if(L().is_null())
+        {
+        phip = phi;
+        if(R().is_not_null()) 
+            phip *= R(); //m^3 k d
+        for(int j = RHlim_; j >= LHlim_; --j)
+            phip *= Op_.AA(j); //m^2 k^2
+        }
+    else
+        {
+        phip = phi * L(); //m^3 k d
+        for(int j = LHlim_; j <= RHlim_; ++j)
+            phip *= Op_.AA(j); //m^2 k^2
+        if(R().is_not_null()) 
+            phip *= R();
+        }
     phip.mapprime(1,0);
     }
 
-inline void ProjectedOp::
-diag(ITensor& D) const
+template <class Tensor>
+inline void ProjectedOp<Tensor>::
+diag(Tensor& D) const
     {
     Index toTie;
     bool found = false;
 
-    ITensor Diag = Op_.AA(b_);
+    Tensor Diag = Op_.AA(LHlim_);
     for(int j = 1; j <= Diag.r(); ++j)
         {
         const Index& s = Diag.index(j);
@@ -82,7 +103,7 @@ diag(ITensor& D) const
     if(!found) Error("Couldn't find Index");
     Diag.tieIndices(toTie,primed(toTie),toTie);
 
-    const ITensor& Op2 = Op_.AA(b_+nc_-1);
+    const Tensor& Op2 = Op_.AA(RHlim_);
     found = false;
     for(int j = 1; j <= Op2.r(); ++j)
         {
@@ -138,36 +159,52 @@ diag(ITensor& D) const
     D.assignFrom(Diag);
     }
 
-inline void ProjectedOp::
-setBond(int b, const MPS& psi)
+template <class Tensor>
+inline void ProjectedOp<Tensor>::
+setBond(int b, const MPSt<Tensor>& psi)
     {
     makeL(psi,b);
     makeR(psi,b+nc_-1);
-    b_ = b;
-    LHlim_ = b_;
-    RHlim_ = b_+nc_-1;
+    LHlim_ = b; //not redundant since LHlim_ could be > b
+    RHlim_ = b+nc_-1; //not redundant since RHlim_ could be < b+nc_-1
+
+    //Calculate linear size of this projected
+    //op as a square matrix
+    size_ = 1;
+    if(L().is_not_null()) 
+        {
+        size_ *= index_in_common(psi.AA(LHlim_),L(),Link).m();
+        }
+    if(R().is_not_null()) 
+        {
+        size_ *= index_in_common(psi.AA(RHlim_),R(),Link).m();
+        }
+    for(int j = LHlim_; j <= RHlim_; ++j)
+        {
+        size_ *= psi.AA(j).findtype(Site).m();
+        }
     }
 
-inline void ProjectedOp::
-makeL(const MPS& psi, int k)
+template <class Tensor>
+inline void ProjectedOp<Tensor>::
+makeL(const MPSt<Tensor>& psi, int k)
     {
-    if(k == -1) k = b_;
     while(LHlim_ < k)
         {
-        const int j = LHlim_;
-        psi.projectOp(j,Fromleft,L_[j],Op_.AA(j),L_[j+1]);
+        const int ll = LHlim_;
+        psi.projectOp(ll,Fromleft,L_.at(ll),Op_.AA(ll),L_.at(ll+1));
         ++LHlim_;
         }
     }
 
-inline void ProjectedOp::
-makeR(const MPS& psi, int k)
+template <class Tensor>
+inline void ProjectedOp<Tensor>::
+makeR(const MPSt<Tensor>& psi, int k)
     {
-    if(k == -1) k = b_+nc_-1;
     while(RHlim_ > k)
         {
-        const int j = RHlim_;
-        psi.projectOp(j,Fromright,R_[j],Op_.AA(j),R_[j-1]);
+        const int rl = RHlim_;
+        psi.projectOp(rl,Fromright,R_.at(rl),Op_.AA(rl),R_.at(rl-1));
         --RHlim_;
         }
     }
