@@ -8,7 +8,7 @@ class Davidson
 
     //Constructors ---------------
 
-    Davidson(int niter, Real errgoal = 1E-4, int numget = 1);
+    Davidson(int maxiter, Real errgoal = 1E-4, int numget = 1);
 
     //The solve method runs the actual Davidson algorithm
 
@@ -17,11 +17,20 @@ class Davidson
 
     //Accessor methods ------------
 
-    Real errgoal() const { return errgoal_; }
-    void errgoal(Real val) { errgoal_ = val; }
+    Real 
+    errgoal() const { return errgoal_; }
+    void 
+    errgoal(Real val) { errgoal_ = val; }
 
-    int numGet() const { return numget_; }
-    void numGet(int val) { numget_ = val; }
+    int 
+    numGet() const { return numget_; }
+    void 
+    numGet(int val) { numget_ = val; }
+
+    int 
+    maxIter() const { return maxiter_; }
+    void 
+    maxIter(int val) { maxiter_ = val; }
 
     void 
     read(std::istream& s);
@@ -30,15 +39,21 @@ class Davidson
 
     private:
 
-    int niter_;
+    void
+    combine(ITensor&, ITensor&, Index&) const;
+
+    void
+    combine(IQTensor&, IQTensor&, IQIndex&) const;
+
+    int maxiter_;
     Real errgoal_;
     int numget_;
 
     }; //class Davidson
 
 inline Davidson::
-Davidson(int niter, Real errgoal, int numget)
-    : niter_(niter),
+Davidson(int maxiter, Real errgoal, int numget)
+    : maxiter_(maxiter),
       errgoal_(errgoal),
       numget_(numget)
     { }
@@ -47,18 +62,20 @@ template <class SparseT, class Tensor>
 inline Real Davidson::
 solve(const SparseT& A, Tensor& phi)
     {
-    typedef typename Tensor::IndexT IndexT;
-    typedef typename Tensor::CombinerT CombinerT;
+    typedef typename Tensor::IndexT 
+    IndexT;
 
-    Real lambda = 1E30;
+    const int maxsize = A.size();
+    const int actual_maxiter = min(maxiter_,maxsize);
+    Real lambda = 1E30, last_lambda = lambda;
 
-    // p is the same as Davidson's M
-    // i.e. number of states in our 
-    IndexT p("p0",1);
-    const Index np("np",1);
+    // p.m() is the same as Davidson's M
+    // i.e. number of states in our current basis
+    IndexT p = IQIndex("P0",Index("p0",1),QN());
     Tensor B = phi;
     B.addindex1(p);
-    for(int iter = 1; iter <= 100*numget_; ++iter)
+
+    for(int iter = 1; iter <= actual_maxiter; ++iter)
         {
         //std::cout << boost::format("Iteration %d -------------------")%iter << std::endl;
         Tensor AB;
@@ -73,11 +90,13 @@ solve(const SparseT& A, Tensor& phi)
             {
             lambda = Dot(B,AB);
 
+            Print(Dot(B,AB));
+
             //Calculate residual q
             q = B;
             q *= -lambda;
             q += AB; 
-            q *= Tensor(p,1); 
+            q *= Tensor(p(1)); 
             }
         else // p.m() != 1
             {
@@ -106,14 +125,19 @@ solve(const SparseT& A, Tensor& phi)
         std::cout << boost::format("At iter %d, lambda = %.10f")%iter%lambda << std::endl;
 
         //Check convergence (i.e. whether ||q|| is small)
-        std::cout << boost::format("q.norm() = %.3E")%q.norm() << std::endl;
-        if(q.norm() < errgoal_)
+        Real qnorm = q.norm();
+        std::cout << boost::format("q.norm() = %.3E")%qnorm << std::endl;
+        //std::cout << boost::format("fabs(lambda-last_lambda) = %.3E")%fabs(lambda-last_lambda) << std::endl;
+        if( (qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_) 
+            || qnorm < 1E-12 )
             {
             std::cout << boost::format("Davidson: %d iterations, energy = %.10f")%iter%lambda << std::endl;
             return lambda;
             }
 
+        Tensor xi(q);
         //Apply Davidson preconditioner
+        {
         Tensor Ad(q);
         A.diag(Ad);
         const int size = Ad.vecSize();
@@ -122,9 +146,8 @@ solve(const SparseT& A, Tensor& phi)
         q.assignToVec(qv);
         for(int j = 1; j <= size; ++j)
             qv(j) /= -(dv(j)-lambda+1E-33);
-        Tensor xi(q);
         xi.assignFromVec(qv);
-
+        }
 
         //Perform Gram-Schmidt on xi
         //before including it in the subbasis
@@ -136,16 +159,9 @@ solve(const SparseT& A, Tensor& phi)
         d *= 1.0/d.norm();
 
         //Combine d into B
-        Index oldp = p;
-        p = Index(nameint("p",iter),oldp.m()+1);
-        Tensor newB;
-        B.expandIndex(oldp,p,0,newB);
+        combine(d,B,p);
 
-        d *= Tensor(p(p.m()));
-
-        newB += d;
-
-        B = newB;
+        last_lambda = lambda;
 
         } //for(iter)
 
@@ -153,5 +169,25 @@ solve(const SparseT& A, Tensor& phi)
 
     } //Davidson::solve
 
+inline void Davidson::
+combine(ITensor& d, ITensor& B, Index& p) const
+    {
+    //Expand B's p-index
+    Index oldp = p;
+    p = Index(nameint("p",oldp.m()),oldp.m()+1);
+    B.expandIndex(oldp,p,0);
+
+    //Stick new p index onto d
+    d *= ITensor(p(p.m()));
+
+    //Combine them by adding
+    B += d;
+    }
+
+inline void Davidson::
+combine(IQTensor& d, IQTensor& B, IQIndex& p) const
+    {
+    Error("Not yet implemented.");
+    }
 
 #endif
