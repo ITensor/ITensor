@@ -60,6 +60,23 @@ class Davidson
 
     }; //class Davidson
 
+//Function object which applies the mapping
+// f(x,theta) = 1/(theta - x)
+class DavidsonPrecond
+    {
+    public:
+        DavidsonPrecond(Real theta)
+            : theta_(theta)
+            { }
+        Real
+        operator()(Real val) const
+            {
+            return 1.0/(theta_-val+1E-33);
+            }
+    private:
+        Real theta_;
+    };
+
 inline Davidson::
 Davidson(int maxiter, Real errgoal, int numget)
     : maxiter_(maxiter),
@@ -99,13 +116,11 @@ solve(const SparseT& A, Tensor& phi)
             {
             lambda = Dot(B,AB);
 
-            Print(Dot(B,AB));
-
             //Calculate residual q
             q = B;
             q *= -lambda;
             q += AB; 
-            q *= Tensor(p(1)); 
+            q *= conj(Tensor(p(1))); 
             }
         else // p.m() != 1
             {
@@ -121,9 +136,9 @@ solve(const SparseT& A, Tensor& phi)
             //lambda is the minimum eigenvalue of M
             lambda = D(mid(mink));
             //alpha pick out the corresponding eigenvector
-            Tensor alpha = U * Tensor(conj(mid)(mink));
+            Tensor alpha = conj(U) * Tensor(mid(mink));
             
-            phi = alpha; 
+            phi = alpha;
             phi *= B;
 
             //Calculate residual q
@@ -144,21 +159,17 @@ solve(const SparseT& A, Tensor& phi)
             return lambda;
             }
 
-        Tensor xi(q);
         //Apply Davidson preconditioner
+        Tensor xi(q);
         {
         Tensor Ad(q);
         A.diag(Ad);
-        const int size = Ad.vecSize();
-        Vector qv(size),dv(size);
-        Ad.assignToVec(dv);
-        q.assignToVec(qv);
-        for(int j = 1; j <= size; ++j)
-            qv(j) /= -(dv(j)-lambda+1E-33);
-        xi.assignFromVec(qv);
+        DavidsonPrecond dp(lambda);
+        Ad.mapElems(dp);
+        xi /= Ad;
         }
 
-        //Perform Gram-Schmidt on xi
+        //Do Gram-Schmidt on xi
         //before including it in the subbasis
         Tensor d(xi);
         d *= conj(B); //m^2 d^2 p 
@@ -194,9 +205,41 @@ combine(ITensor& d, ITensor& B, Index& p) const
     }
 
 inline void Davidson::
-combine(IQTensor& d, IQTensor& B, IQIndex& p) const
+combine(IQTensor& d, IQTensor& B, IQIndex& P) const
     {
-    Error("Not yet implemented.");
+    if(P.nindex() != 1)
+        Error("Basis IQIndex P should have a single block.");
+
+    //Create a new version of P with a range expanded by 1
+    Index oldp = P.index(1);
+    Index newp = Index(nameint("p",oldp.m()),oldp.m()+1);
+    IQIndex newP = IQIndex(nameint("P",oldp.m()),newp,QN());
+
+    //Create a new IQTensor with expanded P IQIndex
+    std::vector<IQIndex> iqinds;
+    iqinds.reserve(B.r());
+    Foreach(const IQIndex& I, B.iqinds())
+        {
+        if(I == P)
+            iqinds.push_back(newP);
+        else
+            iqinds.push_back(I);
+        }
+
+    //Expand blocks of B and insert into newB
+    IQTensor newB(iqinds);
+    Foreach(ITensor t, B.itensors())
+        {
+        t.expandIndex(oldp,newp,0);
+        newB.insert(t);
+        }
+
+    //Combine with d
+    d *= IQTensor(newP(newP.m()));
+    newB += d;
+
+    B = newB;
+    P = newP;
     }
 
 #endif

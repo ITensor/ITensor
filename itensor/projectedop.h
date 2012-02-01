@@ -31,6 +31,9 @@ class ProjectedOp
     int
     size() const { return size_; }
 
+    typedef typename Tensor::IndexT
+    IndexT;
+
     private:
 
     void
@@ -86,13 +89,13 @@ template <class Tensor>
 inline void ProjectedOp<Tensor>::
 diag(Tensor& D) const
     {
-    Index toTie;
+    IndexT toTie;
     bool found = false;
 
     Tensor Diag = Op_.AA(LHlim_);
     for(int j = 1; j <= Diag.r(); ++j)
         {
-        const Index& s = Diag.index(j);
+        const IndexT& s = Diag.index(j);
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
             toTie = s;
@@ -107,7 +110,7 @@ diag(Tensor& D) const
     found = false;
     for(int j = 1; j <= Op2.r(); ++j)
         {
-        const Index& s = Op2.index(j);
+        const IndexT& s = Op2.index(j);
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
             toTie = s;
@@ -123,7 +126,7 @@ diag(Tensor& D) const
         found = false;
         for(int j = 1; j <= L().r(); ++j)
             {
-            const Index& ll = L().index(j);
+            const IndexT& ll = L().index(j);
             if(ll.primeLevel() == 0 && !Diag.hasindex(ll))
                 {
                 toTie = ll;
@@ -142,7 +145,7 @@ diag(Tensor& D) const
         found = false;
         for(int j = 1; j <= R().r(); ++j)
             {
-            const Index& ll = R().index(j);
+            const IndexT& ll = R().index(j);
             if(ll.primeLevel() == 0 && !Diag.hasindex(ll))
                 {
                 toTie = ll;
