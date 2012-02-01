@@ -698,23 +698,24 @@ symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& 
          maxv = -minv;
     int w = 0;
     int totk = 0;
+    int itMink = -1, itMaxk = -1;
     for(IQTensor::const_iten_it it = const_iten_begin(); it != const_iten_end(); ++it)
         {
         Index mi;
         Index act = it->index(1);
         act.noprime();
-        it->symmetricDiag11(act,d[w],UU[w],mi);
+        it->symmetricDiag11(act,d[w],UU[w],mi,itMink,itMaxk);
         iq[w] = inqn(mi,i1.qn(act));
 
-        if(d[w](mi(1)) < minv)
+        if(d[w](mi(itMink)) < minv)
             {
-            mink = totk+1;
-            minv = d[w](mi(1));
+            mink = totk+itMink;
+            minv = d[w](mi(itMink));
             }
-        if(d[w](mi(mi.m())) > maxv)
+        if(d[w](mi(itMaxk)) > maxv)
             {
-            maxv = d[w](mi(mi.m()));
-            maxk = totk+mi.m();
+            maxv = d[w](mi(itMaxk));
+            maxk = totk+itMaxk;
             }
         totk += mi.m();
         ++w;
@@ -939,9 +940,10 @@ printIndices(const std::string& name) const
 	}
 
 void IQTensor::
-assignFrom(const IQTensor& other) const
+assignFrom(const IQTensor& other)
 	{
     //TODO: account for fermion sign here
+    solo();
     if(fabs(uniqueReal()-other.uniqueReal()) > 1E-10)
         {
         PrintIndices((*this));

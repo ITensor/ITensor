@@ -409,7 +409,7 @@ class IQTensor
         { printIndices(fname.str()); }
 
     void 
-    assignFrom(const IQTensor& other) const;
+    assignFrom(const IQTensor& other);
 
     void 
     SplitReIm(IQTensor& re, IQTensor& im) const;
@@ -545,6 +545,7 @@ class IQTDat
 template <typename Callable> void IQTensor::
 mapElems(const Callable& f)
     {
+    solo();
 	for(iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
         i->mapElems(f);
     }
