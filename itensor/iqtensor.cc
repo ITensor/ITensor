@@ -140,9 +140,6 @@ clean(Real min_norm)
     itensor.swap(nitensor);
     }
 
-void DoPrimer::operator()(IQIndex &iqi) const { iqi.doprime(pt,inc); }
-void MapPrimer::operator()(IQIndex &iqi) const { iqi.mapprime(plevold,plevnew,pt); }
-
 int IQTensor::
 r() const { return p->iqindex_.size(); }
 

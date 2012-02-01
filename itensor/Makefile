@@ -8,7 +8,7 @@ include ../options.mk
 
 ####################################
 
-SOURCES=index.cc itensor.cc iqtensor.cc svdworker.cc mps.cc mpo.cc dmrg.cc
+SOURCES=index.cc itensor.cc iqindex.cc iqtensor.cc svdworker.cc mps.cc mpo.cc dmrg.cc
 
 HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
         itensor.h iqindex.h iqtensor.h condenser.h combiner.h iqcombiner.h svdworker.h \
