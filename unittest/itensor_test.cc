@@ -482,6 +482,30 @@ TEST(assignToVec)
 
 }
 
+TEST(MapElems)
+    {
+    // class Functor and the function Func
+    // are defined in test.h
+
+    ITensor A1(A);
+    Functor f;
+    A1.mapElems(f);
+    for(int n1 = 1; n1 <= s1.m(); ++n1)
+    for(int n2 = 1; n2 <= s2.m(); ++n2)
+        {
+        CHECK_CLOSE( f( A(s1(n1),s2(n2)) ), A1(s1(n1),s2(n2)) ,1E-10);
+        }
+
+    ITensor A2(A);
+    Real (*pFunc)(Real) = Func;
+    A2.mapElems(*pFunc);
+    for(int n1 = 1; n1 <= s1.m(); ++n1)
+    for(int n2 = 1; n2 <= s2.m(); ++n2)
+        {
+        CHECK_CLOSE( Func( A(s1(n1),s2(n2)) ), A2(s1(n1),s2(n2)) ,1E-10);
+        }
+    }
+
 TEST(reshape)
 {
     Permutation P;

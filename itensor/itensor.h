@@ -482,6 +482,9 @@ public:
     Real 
     norm() const;
 
+    template <typename Callable> void
+    mapElems(const Callable& f);
+
     void 
     scaleOutNorm() const;
 
@@ -718,37 +721,6 @@ private:
     };
 
 
-Real Dot(const ITensor& x, const ITensor& y, bool doconj = true);
-
-void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, 
-                bool doconj = true);
-
-inline ITensor 
-operator*(const IndexVal& iv1, const IndexVal& iv2) 
-    { ITensor t(iv1); return (t *= iv2); }
-
-inline ITensor 
-operator*(const IndexVal& iv1, Real fac) 
-    { return ITensor(iv1,fac); }
-
-inline ITensor 
-operator*(Real fac, const IndexVal& iv) 
-    { return ITensor(iv,fac); }
-
-// Given Tensors which represent operators 
-//(e.g. A(site-1',site-1), B(site-1',site-1), 
-// Multiply them, fixing primes C(site-1',site-1)
-// a * b  (a above b in diagram, unprimed = right index of matrix)
-template<class Tensor>
-inline Tensor 
-multSiteOps(Tensor a, Tensor b) 
-    {
-    a.mapprime(1,2,primeSite);
-    a.mapprime(0,1,primeSite);
-    Tensor res = a * b;
-    res.mapprime(2,1,primeSite);
-    return res;
-    }
 
 class commaInit
     {
@@ -781,6 +753,49 @@ private:
     Counter c; 
     };
 
+template <typename Callable> void ITensor::
+mapElems(const Callable& f)
+    {
+    solo();
+    scaleTo(1);
+    for(int j = 1; j <= p->v.Length(); ++j)
+        p->v(j) = f(p->v(j));
+    }
+
+Real 
+Dot(const ITensor& x, const ITensor& y, bool doconj = true);
+
+void 
+Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, 
+                bool doconj = true);
+
+inline ITensor 
+operator*(const IndexVal& iv1, const IndexVal& iv2) 
+    { ITensor t(iv1); return (t *= iv2); }
+
+inline ITensor 
+operator*(const IndexVal& iv1, Real fac) 
+    { return ITensor(iv1,fac); }
+
+inline ITensor 
+operator*(Real fac, const IndexVal& iv) 
+    { return ITensor(iv,fac); }
+
+// Given Tensors which represent operators 
+//(e.g. A(site-1',site-1), B(site-1',site-1), 
+// Multiply them, fixing primes C(site-1',site-1)
+// a * b  (a above b in diagram, unprimed = right index of matrix)
+template<class Tensor>
+inline Tensor 
+multSiteOps(Tensor a, Tensor b) 
+    {
+    a.mapprime(1,2,primeSite);
+    a.mapprime(0,1,primeSite);
+    Tensor res = a * b;
+    res.mapprime(2,1,primeSite);
+    return res;
+    }
+
 
 template<class Iterable>
 void
@@ -810,6 +825,7 @@ sortIndices(const Iterable& I, int ninds, int& rn_, int& alloc_size,
     for(int l = 1; l <= r1_; ++l) 
         index_[rn_+l] = *(index1_[l]);
     }
+
 
 
 #endif

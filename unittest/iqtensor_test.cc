@@ -197,4 +197,19 @@ TEST(TieIndices)
         }
     }
 
+TEST(MapElems)
+    {
+    IQTensor B1(B);
+
+    Functor f;
+    B1.mapElems(f);
+
+    for(int j1 = 1; j1 <= L1.m(); ++j1)
+    for(int j2 = 1; j2 <= L2.m(); ++j2)
+        {
+        CHECK_CLOSE( f( B(L1(j1),L2(j2)) ), 
+                    B1(L1(j1),L2(j2)),1E-3);
+        }
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,6 +1,5 @@
 #ifndef __IQ_H
 #define __IQ_H
-#include "itensor.h"
 #include "iqindex.h"
 #include <list>
 #include <map>
@@ -373,6 +372,9 @@ class IQTensor
     Real 
     sumels() const;
 
+    template <typename Callable> void
+    mapElems(const Callable& f);
+
     void 
     scaleOutNorm() const;
 
@@ -540,6 +542,12 @@ class IQTDat
 
     }; //class IQTDat
 
+template <typename Callable> void IQTensor::
+mapElems(const Callable& f)
+    {
+	for(iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
+        i->mapElems(f);
+    }
 
 Real 
 ReSingVal(const IQTensor& x);
