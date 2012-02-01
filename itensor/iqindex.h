@@ -217,6 +217,11 @@ class IQIndex : public Index
     void 
     print(std::string name = "") const;
 
+    typedef std::vector<inqn>::iterator 
+    iq_it;
+    typedef std::vector<inqn>::const_iterator 
+    const_iq_it;
+
     private:
 
     Arrow _dir;
