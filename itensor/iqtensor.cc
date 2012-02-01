@@ -942,21 +942,24 @@ void IQTensor::
 assignFrom(const IQTensor& other) const
 	{
     //TODO: account for fermion sign here
-	std::map<ApproxReal,iten_it> semap;
-	for(iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
-	    semap[ApproxReal(i->uniqueReal())] = i;
+    if(fabs(uniqueReal()-other.uniqueReal()) > 1E-10)
+        {
+        PrintIndices((*this));
+        PrintIndices(other);
+        Error("Can't assign from IQTensor, different IQIndices");
+        }
 
 	for(const_iten_it i = other.p->itensor.begin(); i != other.p->itensor.end(); ++i)
 	    {
-	    ApproxReal se = ApproxReal(i->uniqueReal());
-	    if(semap.count(se) == 0)
-		{
-		std::cout << "warning assignFrom semap.count is 0" << std::endl;
-		std::cerr << "offending ITensor is " << *i << "\n";
-		Error("bad assignFrom count se");
-		}
-	    else 
-		semap[se]->assignFrom(*i);
+	    ApproxReal r(i->uniqueReal());
+	    if(p->has_itensor(r))
+            {
+            p->rmap[r]->assignFrom(*i);
+            }
+        else
+            {
+            p->insert_itensor(r,*i);
+            }
 	    }
 	}
 
