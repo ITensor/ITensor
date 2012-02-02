@@ -126,6 +126,8 @@ public:
     using Parent::print;
     using Parent::printIndices;
 
+    using Parent::toIQ;
+
 private:
     using Parent::N;
     using Parent::A;

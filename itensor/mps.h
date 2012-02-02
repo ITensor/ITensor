@@ -457,12 +457,13 @@ public:
     printIndices(const boost::format& fname) const
         { printIndices(fname.str()); }
 
-    void toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
-    {
+    void 
+    toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
+        {
         iqpsi = MPSt<IQTensor>(*model_,maxm(),cutoff());
         iqpsi.svd_ = svd_;
         convertToIQ(*model_,A,iqpsi.A,totalq,cut);
-    }
+        }
 
 protected:
 
