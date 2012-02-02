@@ -126,7 +126,13 @@ public:
     using Parent::print;
     using Parent::printIndices;
 
-    using Parent::toIQ;
+    void 
+    toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
+        {
+        res = MPOt<IQTensor>(*model_,maxm(),cutoff());
+        res.svd_ = svd_;
+        convertToIQ(*model_,A,res.A,totalq,cut);
+        }
 
 private:
     using Parent::N;
