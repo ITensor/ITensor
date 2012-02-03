@@ -302,7 +302,7 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
     typedef typename MPOType::TensorT MPOTensor;
     const Real orig_cutoff = psi.cutoff(); 
     const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
-    int debuglevel = (opts.quiet ? 0 : 1);
+    int debuglevel = (opts.quiet() ? 0 : 1);
     int N = psi.NN();
     Real energy;
 
@@ -318,7 +318,7 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
     psi.cutoff(sweeps.cutoff(sw)); psi.minm(sweeps.minm(sw)); psi.maxm(sweeps.maxm(sw));
     for(int b = 1, ha = 1; ha != 3; onesite_sweepnext(b,ha,N))
     {
-        if(!opts.quiet) 
+        if(!opts.quiet()) 
         {
             std::cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") 
                                 % sw   % ha     % b % (b+1);
@@ -343,7 +343,7 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
         }
 
 
-        if(!opts.quiet) { std::cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
+        if(!opts.quiet()) { std::cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, %s\n") 
                                   % sweeps.cutoff(sw) % sweeps.maxm(sw) 
                                   % (ha == 1 ? psi.LinkInd(b) : psi.LinkInd(b-1)).showm(); }
 

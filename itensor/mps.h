@@ -2,6 +2,12 @@
 #define __MPS_H
 #include "svdworker.h"
 #include "model.h"
+#include "eigensolver.h"
+
+class Eigensolver;
+
+template <class Tensor>
+class ProjectedOp;
 
 static const LogNumber DefaultRefScale(7.58273202392352185);
 
@@ -378,6 +384,10 @@ public:
         doSVD(b,phi,dir);
         return En;
     }
+
+    Real
+    bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<Tensor>& PH,
+                      Direction dir);
 
     template<class TensorSet, class OpTensorSet>
     void projectOp(int j, Direction dir, const TensorSet& P, const OpTensorSet& Op, TensorSet& res) const

@@ -4,6 +4,12 @@
 
 /* Notes on optimization:
  *
+ * - Important not to re-form AB every time since
+ *   multiplication by A is the most expensive
+ *   part. Turn AB into a vector of Tensors?
+ *   Or try multiplying d times A (Ad), then
+ *   adding that into AB.
+ *
  * - Should be able to avoid re-forming the projected 
  *   A i.e. the matrix M. Instead just expand a single
  *   row and column using the new vector.
@@ -11,18 +17,14 @@
  *
  */
 
-class Davidson
+class Eigensolver
     {
     public:
 
-    //Constructors ---------------
-
-    Davidson(int maxiter, Real errgoal = 1E-4, int numget = 1);
-
-    //The solve method runs the actual Davidson algorithm
+    Eigensolver(int maxiter = 2, Real errgoal = 1E-4, int numget = 1);
 
     template <class SparseT, class Tensor> Real 
-    solve(const SparseT& A, Tensor& phi);
+    davidson(const SparseT& A, Tensor& phi) const;
 
     //Accessor methods ------------
 
@@ -41,103 +43,125 @@ class Davidson
     void 
     maxIter(int val) { maxiter_ = val; }
 
+    int 
+    debugLevel() const { return debug_level_; }
     void 
-    read(std::istream& s);
-    void 
-    write(std::ostream& s) const;
+    debugLevel(int val) { debug_level_ = val; }
+
+    //Other methods ------------
 
     private:
 
     void
-    combine(ITensor&, ITensor&, Index&) const;
-
+    combine(ITensor&, ITensor&, const Index&, const Index&) const;
     void
-    combine(IQTensor&, IQTensor&, IQIndex&) const;
+    combine(IQTensor&, IQTensor&, const IQIndex&, const IQIndex&) const;
+
+    //Function object which applies the mapping
+    // f(x,theta) = 1/(theta - x)
+    class DavidsonPrecond
+        {
+        public:
+            DavidsonPrecond(Real theta)
+                : theta_(theta)
+                { }
+            Real
+            operator()(Real val) const
+                {
+                return 1.0/(theta_-val+1E-33);
+                }
+        private:
+            Real theta_;
+        };
+
+    class LanczosPrecond
+        {
+        public:
+            LanczosPrecond(Real theta)
+                : theta_(theta)
+                { }
+            Real
+            operator()(Real val) const
+                {
+                return 1.0/(theta_-1+1E-33);
+                }
+        private:
+            Real theta_;
+        };
 
     int maxiter_;
     Real errgoal_;
     int numget_;
+    int debug_level_;
 
-    }; //class Davidson
+    }; //class Eigensolver
 
-//Function object which applies the mapping
-// f(x,theta) = 1/(theta - x)
-class DavidsonPrecond
-    {
-    public:
-        DavidsonPrecond(Real theta)
-            : theta_(theta)
-            { }
-        Real
-        operator()(Real val) const
-            {
-            return 1.0/(theta_-val+1E-33);
-            }
-    private:
-        Real theta_;
-    };
 
-inline Davidson::
-Davidson(int maxiter, Real errgoal, int numget)
+inline Eigensolver::
+Eigensolver(int maxiter, Real errgoal, int numget)
     : maxiter_(maxiter),
       errgoal_(errgoal),
-      numget_(numget)
+      numget_(numget),
+      debug_level_(-1)
     { }
 
 template <class SparseT, class Tensor> 
-inline Real Davidson::
-solve(const SparseT& A, Tensor& phi)
+inline Real Eigensolver::
+davidson(const SparseT& A, Tensor& phi) const
     {
     typedef typename Tensor::IndexT 
     IndexT;
 
+    phi *= 1.0/phi.norm();
+
     const int maxsize = A.size();
     const int actual_maxiter = min(maxiter_,maxsize);
     Real lambda = 1E30, last_lambda = lambda;
+    Real qnorm = 1E30;
 
     // p.m() is the same as Davidson's M
     // i.e. number of states in our current basis
-    IndexT p = IQIndex("P0",Index("p0",1),QN());
+    IndexT P = IQIndex("P0",Index("p0",1),QN());
     Tensor B = phi;
-    B.addindex1(p);
+    B.addindex1(P);
+
+    Tensor AB;
+    A.product(B,AB);
 
     for(int iter = 1; iter <= actual_maxiter; ++iter)
         {
-        //std::cout << boost::format("Iteration %d -------------------")%iter << std::endl;
-        Tensor AB;
-        A.product(B,AB);
-
-        //Compute q which is the difference
-        //between the action of A on our
-        //candidate eigenstate and this
-        //state times its approxiate eigenvalue
+        //Diagonalize conj(B)*A*B
+        //and compute the residual q
         Tensor q;
-        if(p.m() == 1)
+        if(P.m() == 1)
             {
+            //No need to diagonalize
             lambda = Dot(B,AB);
 
             //Calculate residual q
             q = B;
             q *= -lambda;
             q += AB; 
-            q *= conj(Tensor(p(1))); 
+            q *= conj(Tensor(P(1))); 
             }
         else // p.m() != 1
             {
             Tensor M = AB;
-            M *= conj(primeind(B,p));
+            M *= conj(primeind(B,P));
 
             //Diagonalize M
             Tensor D,U;
             IndexT mid;
             int mink=-1,maxk=-1;
-            M.symmetricDiag11(p,D,U,mid,mink,maxk);
+            M.symmetricDiag11(P,D,U,mid,mink,maxk);
 
             //lambda is the minimum eigenvalue of M
             lambda = D(mid(mink));
-            //alpha pick out the corresponding eigenvector
+            //alpha picks out the corresponding eigenvector
             Tensor alpha = conj(U) * Tensor(mid(mink));
             
+            //Set phi to the current best
+            //eigenvector
             phi = alpha;
             phi *= B;
 
@@ -146,27 +170,34 @@ solve(const SparseT& A, Tensor& phi)
             q *= -lambda;
             q += (AB * alpha);
             }
-        std::cout << boost::format("At iter %d, lambda = %.10f")%iter%lambda << std::endl;
 
-        //Check convergence (i.e. whether ||q|| is small)
-        Real qnorm = q.norm();
-        std::cout << boost::format("q.norm() = %.3E")%qnorm << std::endl;
-        //std::cout << boost::format("fabs(lambda-last_lambda) = %.3E")%fabs(lambda-last_lambda) << std::endl;
+        //Check convergence
+        qnorm = q.norm();
         if( (qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_) 
             || qnorm < 1E-12 )
             {
-            std::cout << boost::format("Davidson: %d iterations, energy = %.10f")%iter%lambda << std::endl;
+            if(debug_level_ > 0)
+                {
+                std::cout << boost::format("Iter %d, lambda = %.10f")%iter%lambda << std::endl;
+                std::cout << boost::format("qnorm = %.1E, lambda err = %.1E")%qnorm % fabs(lambda-last_lambda) << std::endl;
+                }
             return lambda;
+            }
+
+        if(debug_level_ > 1 || (iter == 1 && debug_level_ > 0))
+            {
+            std::cout << boost::format("Iter %d, lambda = %.10f")%iter%lambda << std::endl;
+            std::cout << boost::format("qnorm = %.1E, lambda err = %.1E")%qnorm % fabs(lambda-last_lambda) << std::endl;
             }
 
         //Apply Davidson preconditioner
         Tensor xi(q);
         {
-        Tensor Ad(q);
-        A.diag(Ad);
+        Tensor cond(q);
+        A.diag(cond);
         DavidsonPrecond dp(lambda);
-        Ad.mapElems(dp);
-        xi /= Ad;
+        cond.mapElems(dp);
+        xi /= cond;
         }
 
         //Do Gram-Schmidt on xi
@@ -178,42 +209,54 @@ solve(const SparseT& A, Tensor& phi)
         d += xi;
         d *= 1.0/d.norm();
 
+        Tensor Ad;
+        A.product(d,Ad);
+
+        IQIndex newP = IQIndex(nameint("P",P.m()),
+                         Index(nameint("p",P.m()),P.m()+1),
+                         QN());
+
         //Combine d into B
-        combine(d,B,p);
+        combine(d,B,P,newP);
+
+        //Combine Ad into AB
+        combine(Ad,AB,P,newP);
+
+        //B.scaleTo(1);
+
+        P = newP;
 
         last_lambda = lambda;
 
         } //for(iter)
 
+    if(debug_level_ > 0)
+        {
+        std::cout << boost::format("Iter %d, lambda = %.10f")%actual_maxiter%lambda << std::endl;
+        std::cout << boost::format("qnorm = %.1E, lambda err = %.1E")%qnorm % fabs(lambda-last_lambda) << std::endl;
+        }
     return lambda;
 
-    } //Davidson::solve
+    } //Eigensolver::davidson
 
-inline void Davidson::
-combine(ITensor& d, ITensor& B, Index& p) const
+inline void Eigensolver::
+combine(ITensor& d, ITensor& B, const Index& p, const Index& newp) const
     {
     //Expand B's p-index
-    Index oldp = p;
-    p = Index(nameint("p",oldp.m()),oldp.m()+1);
-    B.expandIndex(oldp,p,0);
+    B.expandIndex(p,newp,0);
 
     //Stick new p index onto d
-    d *= ITensor(p(p.m()));
+    d *= ITensor(newp(newp.m()));
 
     //Combine them by adding
     B += d;
     }
 
-inline void Davidson::
-combine(IQTensor& d, IQTensor& B, IQIndex& P) const
+inline void Eigensolver::
+combine(IQTensor& d, IQTensor& B, const IQIndex& P, const IQIndex& newP) const
     {
     if(P.nindex() != 1)
         Error("Basis IQIndex P should have a single block.");
-
-    //Create a new version of P with a range expanded by 1
-    Index oldp = P.index(1);
-    Index newp = Index(nameint("p",oldp.m()),oldp.m()+1);
-    IQIndex newP = IQIndex(nameint("P",oldp.m()),newp,QN());
 
     //Create a new IQTensor with expanded P IQIndex
     std::vector<IQIndex> iqinds;
@@ -230,7 +273,7 @@ combine(IQTensor& d, IQTensor& B, IQIndex& P) const
     IQTensor newB(iqinds);
     Foreach(ITensor t, B.itensors())
         {
-        t.expandIndex(oldp,newp,0);
+        t.expandIndex(P.index(1),newP.index(1),0);
         newB.insert(t);
         }
 
@@ -239,7 +282,6 @@ combine(IQTensor& d, IQTensor& B, IQIndex& P) const
     newB += d;
 
     B = newB;
-    P = newP;
     }
 
 #endif

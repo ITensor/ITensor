@@ -1,11 +1,7 @@
 #include "mps.h"
-using std::vector;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::map;
-using std::string;
+using namespace std;
 using boost::format;
+#include "projectedop.h"
 
 template <class Tensor>
 Tensor& MPSt<Tensor>::
@@ -267,6 +263,34 @@ MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
 template
 MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
 #endif
+
+template<class Tensor> Real 
+MPSt<Tensor>::
+bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<Tensor>& PH,
+             Direction dir)
+        {
+        if(b-1 > left_orth_lim)
+            {
+            std::cerr << boost::format("b=%d, Lb=%d\n")%b%left_orth_lim;
+            Error("b-1 > left_orth_lim");
+            }
+        if(b+2 < right_orth_lim)
+            {
+            std::cerr << boost::format("b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
+            Error("b+1 < right_orth_lim");
+            }
+        Tensor phi = GET(A,b); 
+        phi *= GET(A,b+1);
+        Real En = solver.davidson(PH,phi);
+        doSVD(b,phi,dir);
+        return En;
+        }
+template Real MPSt<ITensor>::
+bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<ITensor>& PH,
+             Direction dir);
+template Real MPSt<IQTensor>::
+bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<IQTensor>& PH,
+             Direction dir);
 
 /* getCenterMatrix:
  * 

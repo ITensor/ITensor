@@ -1,5 +1,6 @@
 #ifndef __ITENSOR_PROJECTED_OP
 #define __ITENSOR_PROJECTED_OP
+#include "mpo.h"
 
 template <class Tensor>
 class ProjectedOp
@@ -10,6 +11,9 @@ class ProjectedOp
 
     void
     product(const Tensor& phi, Tensor& phip) const;
+
+    Real
+    expect(const Tensor& phi) const;
 
     void
     diag(Tensor& D) const;
@@ -83,6 +87,15 @@ product(const Tensor& phi, Tensor& phip) const
             phip *= R();
         }
     phip.mapprime(1,0);
+    }
+
+template <class Tensor>
+inline Real ProjectedOp<Tensor>::
+expect(const Tensor& phi) const
+    {
+    Tensor phip;
+    product(phi,phip);
+    return Dot(phip,phi);
     }
 
 template <class Tensor>
@@ -195,6 +208,7 @@ makeL(const MPSt<Tensor>& psi, int k)
     while(LHlim_ < k)
         {
         const int ll = LHlim_;
+        //std::cout << boost::format("Shifting L from %d to %d") % ll % (ll+1) << std::endl;
         psi.projectOp(ll,Fromleft,L_.at(ll),Op_.AA(ll),L_.at(ll+1));
         ++LHlim_;
         }
@@ -207,10 +221,10 @@ makeR(const MPSt<Tensor>& psi, int k)
     while(RHlim_ > k)
         {
         const int rl = RHlim_;
+        //std::cout << boost::format("Shifting R from %d to %d") % rl % (rl-1) << std::endl;
         psi.projectOp(rl,Fromright,R_.at(rl),Op_.AA(rl),R_.at(rl-1));
         --RHlim_;
         }
     }
-
 
 #endif
