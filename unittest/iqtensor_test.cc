@@ -1,3 +1,4 @@
+//#define THIS_IS_MAIN
 #include "test.h"
 #include "iqtensor.h"
 #include <boost/test/unit_test.hpp>

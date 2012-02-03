@@ -1346,10 +1346,10 @@ reshapeDat(const Permutation& P, Vector& rdat) const
     const Vector& thisdat = p->v;
 
     if(P.is_trivial())
-	{
+        {
         rdat = thisdat;
         return;
-	}
+        }
 
     rdat.ReDimension(thisdat.Length());
     rdat = 0;
@@ -1388,13 +1388,13 @@ reshapeDat(const Permutation& P, Vector& rdat) const
 #define Bif6(a,b,c,d,e,g) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e && ind[6] == g)
 
     if(rn_ == 2 && ind[1] == 2 && ind[2] == 1)
-	{
+        {
         MatrixRef xref; thisdat.TreatAsMatrix(xref,c.n[2],c.n[1]);
         rdat = Matrix(xref.t()).TreatAsVector();
         return; 
-	}
+        }
     else if(rn_ == 3)
-	{
+        {
         DO_IF_PS(int idx = ((ind[1]-1)*3+ind[2]-1)*3+ind[3]; prodstats.perms_of_3[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif3(2,1,3) Loop3(i2,i1,i3)
@@ -1402,9 +1402,9 @@ reshapeDat(const Permutation& P, Vector& rdat) const
         Bif3(3,1,2) Loop3(i3,i1,i2)
         //Bif3(1,3,2) Loop3(i1,i3,i2)
         //Bif3(3,2,1) Loop3(i3,i2,i1)
-	}
+        }
     else if(rn_ == 4)
-	{
+        {
         DO_IF_PS(int idx = (((ind[1]-1)*4+ind[2]-1)*4+ind[3]-1)*4+ind[4]; prodstats.perms_of_4[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif4(1,2,4,3) Loop4(i1,i2,i4,i3)
@@ -1415,9 +1415,9 @@ reshapeDat(const Permutation& P, Vector& rdat) const
         Bif4(2,1,3,4) Loop4(i2,i1,i3,i4)
         Bif4(2,1,4,3) Loop4(i2,i1,i4,i3)
         Bif4(3,4,1,2) Loop4(i3,i4,i1,i2)
-	}
+        }
     else if(rn_ == 5)
-	{
+        {
         DO_IF_PS(int idx = ((((ind[1]-1)*5+ind[2]-1)*5+ind[3]-1)*5+ind[4]-1)*5+ind[5]; prodstats.perms_of_5[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
@@ -1435,9 +1435,9 @@ reshapeDat(const Permutation& P, Vector& rdat) const
         Bif5(2,3,4,1,5) Loop5(i2,i3,i4,i1,i5)
         Bif5(3,4,1,5,2) Loop5(i3,i4,i1,i5,i2)
         Bif5(5,1,4,2,3) Loop5(i5,i1,i4,i2,i3)
-	}
+        }
     else if(rn_ == 6)
-	{
+        {
         DO_IF_PS(int idx = (((((ind[1]-1)*6+ind[2]-1)*6+ind[3]-1)*6+ind[4]-1)*6+ind[5]-1)*6+ind[6]; prodstats.perms_of_6[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif6(2,4,1,3,5,6) Loop6(i2,i4,i1,i3,i5,i6)
@@ -1445,7 +1445,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
         Bif6(2,4,1,5,3,6) Loop6(i2,i4,i1,i5,i3,i6)
         Bif6(1,2,4,5,3,6) Loop6(i1,i2,i4,i5,i3,i6)
         Bif6(3,4,1,5,6,2) Loop6(i3,i4,i1,i5,i6,i2)
-    }
+        }
     DO_IF_PS(prodstats.c4 += 1;)
 
     //The j's are pointers to the i's of xdat's Counter,
@@ -1459,7 +1459,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
         rdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
             = thisdat(c.ind);
         }
-    }
+    } // ITensor::reshapeDat
 
 //
 // Analyzes two ITensors to determine
@@ -1468,7 +1468,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
 // which indices are common? etc.
 //
 struct ProductProps
-{
+    {
     ProductProps(const ITensor& L, const ITensor& R);
 
     //arrays specifying which indices match
@@ -1485,7 +1485,7 @@ struct ProductProps
     //indices pairwise to the front 
     Permutation pl, pr;
 
-};
+    };
 
 ProductProps::
 ProductProps(const ITensor& L, const ITensor& R)
@@ -1525,158 +1525,214 @@ ProductProps(const ITensor& L, const ITensor& R)
 //Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref
 //contractedL/R[j] == true if L/R.indexn(j) contracted
 void 
-toMatrixProd(const ITensor& L, const ITensor& R, const ProductProps& pp,
+toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
              MatrixRefNoLink& lref, MatrixRefNoLink& rref)
     {
     assert(L.p != 0);
     assert(R.p != 0);
     const Vector &Ldat = L.p->v, &Rdat = R.p->v;
 
-    Permutation pl = pp.pl;
-    Permutation pr = pp.pr;
-
     bool L_is_matrix = true, R_is_matrix = true;
-    if(pp.nsamen != 0)
-	{
-	//Check that contracted inds are contiguous
-	for(int i = 0; i < pp.nsamen; ++i) 
-	    {
-	    if(!pp.contractedL[pp.lcstart+i]) L_is_matrix = false;
-	    if(!pp.contractedR[pp.rcstart+i]) R_is_matrix = false;
-	    }
-	//Check that contracted inds are all at beginning or end of _indexn
-	if(!(pp.contractedL[1] || pp.contractedL[L.rn_])) L_is_matrix = false; 
-	if(!(pp.contractedR[1] || pp.contractedR[R.rn_])) R_is_matrix = false;
-	}
+    if(props.nsamen != 0)
+        {
+        //Check that contracted inds are contiguous
+        //and in the same order
+        for(int i = 0; i < props.nsamen; ++i) 
+            {
+            if(!props.contractedL[props.lcstart+i] ||
+                props.pl.dest(props.lcstart+i) != (i+1)) 
+                {
+                L_is_matrix = false;
+                }
+            if(!props.contractedR[props.rcstart+i] ||
+                props.pr.dest(props.rcstart+i) != (i+1)) 
+                { 
+                R_is_matrix = false; 
+                }
+            }
+        //Check that contracted inds are all at beginning or end of _indexn
+        if(!(props.contractedL[1] || props.contractedL[L.rn_])) 
+            {
+            L_is_matrix = false; 
+            }
+        if(!(props.contractedR[1] || props.contractedR[R.rn_]))
+            {
+            R_is_matrix = false; 
+            }
+        }
+
+    /*
+    if(L_is_matrix)
+        {
+        cerr << "L is matrix, props.pl = " << props.pl << "\n";
+        cerr << format("contractedL = %d %d %d %d %d\n")
+                % props.contractedL[1]
+                % props.contractedL[2]
+                % props.contractedL[3]
+                % props.contractedL[4]
+                % props.contractedL[5];
+        }
+    else
+        {
+        cerr << "L is not matrix\n";
+        }
+    if(R_is_matrix)
+        {
+        cerr << "R is matrix, props.pl = " << props.pr << "\n";
+        cerr << format("contractedR = %d %d %d %d %d\n")
+                % props.contractedR[1]
+                % props.contractedR[2]
+                % props.contractedR[3]
+                % props.contractedR[4]
+                % props.contractedR[5];
+        }
+    else
+        {
+        cerr << "R is not matrix\n";
+        }
+        */
 
     if(L_is_matrix)  
-	{
-	if(pp.contractedL[1]) 
-	    { Ldat.TreatAsMatrix(lref,pp.odimL,pp.cdim); lref.ApplyTrans(); }
-	else { Ldat.TreatAsMatrix(lref,pp.cdim,pp.odimL); }
-	}
+        {
+        if(props.contractedL[1]) 
+            { 
+            Ldat.TreatAsMatrix(lref,props.odimL,props.cdim); 
+            lref.ApplyTrans(); 
+            }
+        else 
+            { 
+            Ldat.TreatAsMatrix(lref,props.cdim,props.odimL); 
+            }
+        }
     else
-	{
-	bool done_with_L = false;
+        {
+        bool done_with_L = false;
 #ifdef DO_ALT
-	//Not matrix, see if alternate dat is
-    for(std::vector<PDat>::const_iterator it = L.p->alt.begin();
-        it != L.p->alt.end();
-        ++it)
-	    {
-        const PDat& Alt = *it;
-	    bool front_matrix=true;
-	    for(int j = 1; j <= pp.nsamen; ++j)
-		if(!GET(pp.contractedL,Alt.I.dest(j)))
-		    { front_matrix = false; break; }
+        //Not matrix, see if alternate dat is
+        for(std::vector<PDat>::const_iterator it = L.p->alt.begin();
+            it != L.p->alt.end();
+            ++it)
+            {
+            const PDat& Alt = *it;
+            bool front_matrix=true;
+            for(int j = 1; j <= props.nsamen; ++j)
+            if(!GET(props.contractedL,Alt.I.dest(j)))
+                { front_matrix = false; break; }
 
-	    if(front_matrix) 
-		{ 
-		Alt.v.TreatAsMatrix(lref,pp.odimL,pp.cdim); lref.ApplyTrans();
-		done_with_L = true;
-		L_is_matrix = true;
-		break;
-		}
+            if(front_matrix) 
+                { 
+                Alt.v.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
+                done_with_L = true;
+                L_is_matrix = true;
+                break;
+                }
 
-	    bool back_matrix=true;
-	    for(int j = L.rn_; j > (L.rn_-pp.nsamen); --j)
-		if(!GET(pp.contractedL,Alt.I.dest(j)))
-		    { back_matrix = false; break; }
+            bool back_matrix=true;
+            for(int j = L.rn_; j > (L.rn_-props.nsamen); --j)
+            if(!GET(props.contractedL,Alt.I.dest(j)))
+                { back_matrix = false; break; }
 
-	    if(back_matrix)
-		{
-		Alt.v.TreatAsMatrix(lref,pp.cdim,pp.odimL); 
-		done_with_L = true;
-		L_is_matrix = true;
-			    break;
-		}
-	    } //for int n
+            if(back_matrix)
+                {
+                Alt.v.TreatAsMatrix(lref,props.cdim,props.odimL); 
+                done_with_L = true;
+                L_is_matrix = true;
+                        break;
+                }
+            } //for int n
 #endif
-	//Finish making the permutation (stick non contracted inds on the back)
-	if(!done_with_L)
-	    {
-	    int q = pp.nsamen;
-	    for(int j = 1; j <= L.rn_; ++j)
-		if(!pp.contractedL[j]) pl.from_to(j,++q);
-	    if(L_is_matrix) Error("Calling reshapeDat although L is matrix.");
+        //Finish making the permutation (stick non contracted inds on the back)
+        if(!done_with_L)
+            {
+            int q = props.nsamen;
+            for(int j = 1; j <= L.rn_; ++j)
+            if(!props.contractedL[j]) props.pl.from_to(j,++q);
+            if(L_is_matrix) Error("Calling reshapeDat although L is matrix.");
 #ifdef DO_ALT
-	    L.newAltDat(pl);
-	    L.reshapeDat(pl,L.lastAlt().v);
-	    L.lastAlt().v.TreatAsMatrix(lref,pp.odimL,pp.cdim); lref.ApplyTrans();
+            L.newAltDat(props.pl);
+            L.reshapeDat(props.pl,L.lastAlt().v);
+            L.lastAlt().v.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
 #else
-	    Vector lv; L.reshapeDat(pl,lv);
-	    lv.TreatAsMatrix(lref,pp.odimL,pp.cdim); lref.ApplyTrans();
+            Vector lv; L.reshapeDat(props.pl,lv);
+            lv.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
 #endif
-	    done_with_L = true;
-	    }
-	assert(done_with_L);
-	}
+            done_with_L = true;
+            }
+        assert(done_with_L);
+        }
 
     if(R_is_matrix) 
-	{
-	if(pp.contractedR[1]) { Rdat.TreatAsMatrix(rref,pp.odimR,pp.cdim); }
-	else                    
-	    { Rdat.TreatAsMatrix(rref,pp.cdim,pp.odimR); rref.ApplyTrans(); }
-	}
+        {
+        if(props.contractedR[1]) 
+            { Rdat.TreatAsMatrix(rref,props.odimR,props.cdim); }
+        else                    
+            { Rdat.TreatAsMatrix(rref,props.cdim,props.odimR); rref.ApplyTrans(); }
+        }
     else
-	{
-	bool done_with_R = false;
+        {
+        bool done_with_R = false;
 #ifdef DO_ALT
-	//Not matrix, see if alternate dat is
-    for(std::vector<PDat>::const_iterator it = R.p->alt.begin();
-        it != R.p->alt.end();
-        ++it)
-	    {
-        const PDat& Alt = *it;
-	    bool front_matrix=true;
-	    for(int j = 1; j <= pp.nsamen; ++j)
-		if(!GET(pp.contractedR,Alt.I.dest(j)))
-		    { front_matrix = false; break; }
+        //Not matrix, see if alternate dat is
+        for(std::vector<PDat>::const_iterator it = R.p->alt.begin();
+            it != R.p->alt.end();
+            ++it)
+            {
+            const PDat& Alt = *it;
+            bool front_matrix=true;
+            for(int j = 1; j <= props.nsamen; ++j)
+            if(!GET(props.contractedR,Alt.I.dest(j)))
+                { front_matrix = false; break; }
 
-	    if(front_matrix) 
-		{ 
-		Alt.v.TreatAsMatrix(rref,pp.odimR,pp.cdim); 
-		done_with_R = true;
-		R_is_matrix = true;
-		break;
-		}
+            if(front_matrix) 
+                { 
+                Alt.v.TreatAsMatrix(rref,props.odimR,props.cdim); 
+                done_with_R = true;
+                R_is_matrix = true;
+                break;
+                }
 
-	    bool back_matrix=true;
-	    for(int j = R.rn_; j > (R.rn_-pp.nsamen); --j)
-		if(!GET(pp.contractedR,Alt.I.dest(j)))
-		    { back_matrix = false; break; }
+            bool back_matrix=true;
+            for(int j = R.rn_; j > (R.rn_-props.nsamen); --j)
+            if(!GET(props.contractedR,Alt.I.dest(j)))
+                { back_matrix = false; break; }
 
-	    if(back_matrix)
-		{
-		Alt.v.TreatAsMatrix(rref,pp.cdim,pp.odimR); rref.ApplyTrans();
-		done_with_R = true;
-		R_is_matrix = true;
-			    break;
-		}
-	    } //for int n
+            if(back_matrix)
+                {
+                Alt.v.TreatAsMatrix(rref,props.cdim,props.odimR); rref.ApplyTrans();
+                done_with_R = true;
+                R_is_matrix = true;
+                        break;
+                }
+            } //for int n
 #endif
-	//Finish making the permutation (stick non contracted inds on the back)
-	if(!done_with_R)
-	    {
-	    int q = pp.nsamen;
-	    for(int j = 1; j <= R.rn_; ++j)
-		if(!pp.contractedR[j]) pr.from_to(j,++q);
-	    if(R_is_matrix) Error("Calling reshape even though R is matrix.");
+        //Finish making the permutation (stick non contracted inds on the back)
+        if(!done_with_R)
+            {
+            int q = props.nsamen;
+            for(int j = 1; j <= R.rn_; ++j)
+            if(!props.contractedR[j]) props.pr.from_to(j,++q);
+            if(R_is_matrix) Error("Calling reshape even though R is matrix.");
 #ifdef DO_ALT
-	    R.newAltDat(pr);
-	    R.reshapeDat(pr,R.lastAlt().v);
-	    R.lastAlt().v.TreatAsMatrix(rref,pp.odimR,pp.cdim);
+            R.newAltDat(props.pr);
+            R.reshapeDat(props.pr,R.lastAlt().v);
+            R.lastAlt().v.TreatAsMatrix(rref,props.odimR,props.cdim);
 #else
-	    Vector rv; R.reshapeDat(pr,rv);
-	    rv.TreatAsMatrix(rref,pp.odimR,pp.cdim);
+            Vector rv; R.reshapeDat(props.pr,rv);
+            rv.TreatAsMatrix(rref,props.odimR,props.cdim);
 #endif
-	    done_with_R = true;
-	    }
-	}
+            done_with_R = true;
+            }
+        }
 
 #ifdef COLLECT_PRODSTATS
-    if(L.rn_ > R.rn_) ++prodstats.global[std::make_pair(L.rn_,R.rn_)];
-    else ++prodstats.global[std::make_pair(R.rn_,L.rn_)];
+    if(L.rn_ > R.rn_) 
+        {
+        ++prodstats.global[std::make_pair(L.rn_,R.rn_)];
+        }
+    else 
+        {
+        ++prodstats.global[std::make_pair(R.rn_,L.rn_)];
+        }
     ++prodstats.total;
     if(L_is_matrix) ++prodstats.did_matrix;
     if(R_is_matrix) ++prodstats.did_matrix;
@@ -1756,9 +1812,9 @@ operator/=(const ITensor& other)
         return *this;
         }
 
-    ProductProps pp(*this,other);
+    ProductProps props(*this,other);
     MatrixRefNoLink lref, rref;
-    toMatrixProd(*this,other,pp,lref,rref);
+    toMatrixProd(*this,other,props,lref,rref);
 
     if(p->count() != 1) { p = new ITDat(); }
 #ifdef DO_ALT
@@ -1775,17 +1831,17 @@ operator/=(const ITensor& other)
     for(int i = 1; i <= ni; ++i)
         { thisdat(((j-1)*nk+k-1)*ni+i) =  R(k,j) * L(j,i); }
 
-    if((r_ + other.rn_ - pp.nsamen + nr1_) > NMAX) 
+    if((r_ + other.rn_ - props.nsamen + nr1_) > NMAX) 
         Error("ITensor::operator/=: too many indices in product.");
 
     //Handle m!=1 indices
     int nrn_ = 0;
     for(int j = 1; j <= rn_; ++j)
-        { if(!pp.contractedL[j]) new_index_[++nrn_] = this->index_[j]; }
+        { if(!props.contractedL[j]) new_index_[++nrn_] = this->index_[j]; }
     for(int j = 1; j <= other.rn_; ++j)
-        { if(!pp.contractedR[j]) new_index_[++nrn_] = other.index_[j]; }
+        { if(!props.contractedR[j]) new_index_[++nrn_] = other.index_[j]; }
     for(int j = 1; j <= rn_; ++j)
-        { if(pp.contractedL[j])  new_index_[++nrn_] = this->index_[j]; }
+        { if(props.contractedL[j])  new_index_[++nrn_] = this->index_[j]; }
 
     for(int j = rn_+1; j <= r_; ++j) new_index_[nrn_+j-rn_] = index_[j];
     r_ = (r_-rn_) + nrn_;
@@ -1813,7 +1869,7 @@ ind4(int i4, int m3, int i3, int m2, int i2, int m1, int i1)
     }
 
 void ITensor::
-directMultiply(const ITensor& other, ProductProps& pp, 
+directMultiply(const ITensor& other, ProductProps& props, 
                int& new_rn_, array<Index,NMAX+1>& new_index_)
     {
     int am[NMAX+1], bm[NMAX+1], mcon[NMAX+1], mnew[NMAX+1];
@@ -1829,7 +1885,7 @@ directMultiply(const ITensor& other, ProductProps& pp,
         }
     int icon[NMAX+1], inew[NMAX+1];
     for(int j = 1; j <= this->rn_; ++j)
-        if(!pp.contractedL[j]) 
+        if(!props.contractedL[j]) 
             {
             new_index_[++new_rn_] = index_[j];
             mnew[new_rn_] = am[j];
@@ -1837,12 +1893,12 @@ directMultiply(const ITensor& other, ProductProps& pp,
             }
         else
             {
-            mcon[pp.pl.dest(j)] = am[j];
-            pa[j] = icon + pp.pl.dest(j);
+            mcon[props.pl.dest(j)] = am[j];
+            pa[j] = icon + props.pl.dest(j);
             }
 
     for(int j = 1; j <= other.rn_; ++j)
-        if(!pp.contractedR[j]) 
+        if(!props.contractedR[j]) 
             {
             new_index_[++new_rn_] = other.index_[j];
             mnew[new_rn_] = bm[j];
@@ -1850,8 +1906,8 @@ directMultiply(const ITensor& other, ProductProps& pp,
             }
         else
             {
-            mcon[pp.pr.dest(j)] = bm[j];
-            pb[j] = icon + pp.pr.dest(j);
+            mcon[props.pr.dest(j)] = bm[j];
+            pb[j] = icon + props.pr.dest(j);
             }
 
     if(new_rn_ > 4) 
@@ -1862,10 +1918,10 @@ directMultiply(const ITensor& other, ProductProps& pp,
         cout << "new_rn_ is " << new_rn_ << endl;
         Error("new_rn_ too big for this part!");
         }
-    if(pp.nsamen > 4) Error("nsamen too big for this part!");
+    if(props.nsamen > 4) Error("nsamen too big for this part!");
 
     static Vector newdat;
-    newdat.ReduceDimension(pp.odimL*pp.odimR);
+    newdat.ReduceDimension(props.odimL*props.odimR);
 
     icon[1] = icon[2] = icon[3] = icon[4] = 1;
     inew[1] = inew[2] = inew[3] = inew[4] = 1;
@@ -1876,7 +1932,7 @@ directMultiply(const ITensor& other, ProductProps& pp,
     int incb1 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
     icon[1] = 1;
     int inca2=0,incb2=0;
-    if(pp.nsamen == 2)
+    if(props.nsamen == 2)
         {
         icon[2] = 2;
         inca2 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
@@ -1891,7 +1947,7 @@ directMultiply(const ITensor& other, ProductProps& pp,
     for(inew[1] = 1; inew[1] <= mnew[1]; ++inew[1])
         {
         Real d = 0.0;
-        if(pp.nsamen == 1)
+        if(props.nsamen == 1)
         {
             icon[1] = 1;
             int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
@@ -1899,7 +1955,7 @@ directMultiply(const ITensor& other, ProductProps& pp,
             for(icon[1] = 1; icon[1] <= mcon[1]; icon[1]++, inda += inca1, indb += incb1)
                 d += pv[inda] * opv[indb];
         }
-        else if(pp.nsamen == 2)
+        else if(props.nsamen == 2)
         {
             icon[2] = icon[1] = 1;
             int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
@@ -2035,26 +2091,26 @@ operator*=(const ITensor& other)
         return *this;
         }
 
-    ProductProps pp(*this,other);
+    ProductProps props(*this,other);
 
     int new_rn_ = 0;
 
     /*
-    bool mult_as_matrix = (pp.odimL*pp.cdim*pp.odimR) > 10000 
-                       || (rn_+other.rn_-2*pp.nsamen) > 4 
+    bool mult_as_matrix = (props.odimL*props.cdim*props.odimR) > 10000 
+                       || (rn_+other.rn_-2*props.nsamen) > 4 
                        || rn_ > 4 
                        || other.rn_ > 4 ;
 
     if(!mult_as_matrix)
         {
-        directMultiply(other,pp,new_rn_,new_index_);
+        directMultiply(other,props,new_rn_,new_index_);
         }
     else
         {
     */
         DO_IF_PS(++prodstats.c2;)
         MatrixRefNoLink lref, rref;
-        toMatrixProd(*this,other,pp,lref,rref);
+        toMatrixProd(*this,other,props,lref,rref);
 
         //Do the matrix multiplication
         if(p->count() != 1) { p = new ITDat(); } 
@@ -2067,11 +2123,11 @@ operator*=(const ITensor& other)
 
         //Fill in new_index_
 
-        if((rn_ + other.rn_ - 2*pp.nsamen + nr1_) > NMAX) 
+        if((rn_ + other.rn_ - 2*props.nsamen + nr1_) > NMAX) 
             {
             Print(*this);
             Print(other);
-            Print(pp.nsamen);
+            Print(props.nsamen);
             cerr << "new m==1 indices\n";
             for(int j = 1; j <= nr1_; ++j) cerr << *(new_index1_.at(j)) << "\n";
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
@@ -2079,11 +2135,11 @@ operator*=(const ITensor& other)
 
         //Handle m!=1 indices
         for(int j = 1; j <= this->rn_; ++j)
-            { if(!pp.contractedL[j]) new_index_[++new_rn_] = index_[j]; }
+            { if(!props.contractedL[j]) new_index_[++new_rn_] = index_[j]; }
         for(int j = 1; j <= other.rn_; ++j)
-            { if(!pp.contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
+            { if(!props.contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
 
-        //} //this brace goes back in if we use directMultiply
+        //} //this brace goes back in when using directMultiply
 
     rn_ = new_rn_;
 

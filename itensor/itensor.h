@@ -564,7 +564,7 @@ private:
     friend struct ProductProps;
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
-                             const ProductProps& pp,
+                             ProductProps& pp,
                              MatrixRefNoLink& lref, MatrixRefNoLink& rref);
 
     void

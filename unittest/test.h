@@ -7,8 +7,6 @@
 
 #define TEST   BOOST_AUTO_TEST_CASE
 
-#include <iostream>
-
 inline double 
 Func(double x)
     {
