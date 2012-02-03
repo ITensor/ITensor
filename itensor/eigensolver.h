@@ -2,18 +2,15 @@
 #define __ITENSOR_EIGENSOLVER_H
 #include "iqcombiner.h"
 
-/* Notes on optimization:
+
+/* Notes on optimization
+ * 
+ * - May be able to avoid additional
+ *   work on the last iteration.
+ *   See line 140 of david.cc
  *
- * - Important not to re-form AB every time since
- *   multiplication by A is the most expensive
- *   part. Turn AB into a vector of Tensors?
- *   Or try multiplying d times A (Ad), then
- *   adding that into AB.
- *
- * - Should be able to avoid re-forming the projected 
- *   A i.e. the matrix M. Instead just expand a single
- *   row and column using the new vector.
- *
+ * - Is the MatrixRef Davidon
+ *   actually doing fewer iterations?
  *
  */
 
@@ -51,11 +48,6 @@ class Eigensolver
     //Other methods ------------
 
     private:
-
-    void
-    combine(ITensor&, ITensor&, const Index&, const Index&) const;
-    void
-    combine(IQTensor&, IQTensor&, const IQIndex&, const IQIndex&) const;
 
     //Function object which applies the mapping
     // f(x,theta) = 1/(theta - x)
@@ -109,66 +101,68 @@ template <class SparseT, class Tensor>
 inline Real Eigensolver::
 davidson(const SparseT& A, Tensor& phi) const
     {
-    typedef typename Tensor::IndexT 
-    IndexT;
-
     phi *= 1.0/phi.norm();
 
     const int maxsize = A.size();
     const int actual_maxiter = min(maxiter_,maxsize);
-    Real lambda = 1E30, last_lambda = lambda;
-    Real qnorm = 1E30;
+    Real lambda = 1E30, 
+         last_lambda = lambda,
+         qnorm = 1E30;
 
-    // p.m() is the same as Davidson's M
-    // i.e. number of states in our current basis
-    IndexT P = IQIndex("P0",Index("p0",1),QN());
-    Tensor B = phi;
-    B.addindex1(P);
+    std::vector<Tensor> B(actual_maxiter+2),
+                       AB(actual_maxiter+2);
 
-    Tensor AB;
-    A.product(B,AB);
+    //Storage for Matrix that gets diagonalized 
+    Matrix M(actual_maxiter+2,actual_maxiter+2);
 
-    for(int iter = 1; iter <= actual_maxiter; ++iter)
+    MatrixRef Mref(M.SubMatrix(1, 1, 1, 1));
+
+    //Get diagonal of A to use later
+    Tensor Adiag(phi);
+    A.diag(Adiag);
+
+    for(int ii = 1; ii <= actual_maxiter; ++ii)
         {
         //Diagonalize conj(B)*A*B
         //and compute the residual q
         Tensor q;
-        if(P.m() == 1)
+        if(ii == 1)
             {
+            B[1] = phi;
+            A.product(B[1],AB[1]);
+
             //No need to diagonalize
-            lambda = Dot(B,AB);
+            lambda = Dot(B[1],AB[1]);
+            Mref = lambda;
 
             //Calculate residual q
-            q = B;
+            q = B[1];
             q *= -lambda;
-            q += AB; 
-            q *= conj(Tensor(P(1))); 
+            q += AB[1]; 
             }
-        else // p.m() != 1
+        else // ii != 1
             {
-            Tensor M = AB;
-            M *= conj(primeind(B,P));
-
             //Diagonalize M
-            Tensor D,U;
-            IndexT mid;
-            int mink=-1,maxk=-1;
-            M.symmetricDiag11(P,D,U,mid,mink,maxk);
+            Vector D;
+            Matrix U;
+            EigenValues(Mref,D,U);
 
             //lambda is the minimum eigenvalue of M
-            lambda = D(mid(mink));
-            //alpha picks out the corresponding eigenvector
-            Tensor alpha = conj(U) * Tensor(mid(mink));
-            
-            //Set phi to the current best
-            //eigenvector
-            phi = alpha;
-            phi *= B;
+            lambda = D(1);
+
+            //Compute corresponding eigenvector
+            //phi of A from the min evec of M
+            //(and start calculating residual q)
+            phi = U(1,1)*B[1];
+            q   = U(1,1)*AB[1];
+            for(int k = 2; k <= ii; ++k)
+                {
+                phi += U(k,1)*B[k];
+                q   += U(k,1)*AB[k];
+                }
 
             //Calculate residual q
-            q = phi;
-            q *= -lambda;
-            q += (AB * alpha);
+            q += (-lambda)*phi;
             }
 
         //Check convergence
@@ -178,110 +172,83 @@ davidson(const SparseT& A, Tensor& phi) const
             {
             if(debug_level_ > 0)
                 {
-                std::cout << boost::format("Iter %d, lambda = %.10f")%iter%lambda << std::endl;
-                std::cout << boost::format("qnorm = %.1E, lambda err = %.1E")%qnorm % fabs(lambda-last_lambda) << std::endl;
+                std::cout << boost::format("I %d q %.0E E %.10f")
+                             % ii
+                             % qnorm
+                             % lambda 
+                             << std::endl;
                 }
             return lambda;
             }
 
-        if(debug_level_ > 1 || (iter == 1 && debug_level_ > 0))
+        if(debug_level_ > 1 || (ii == 1 && debug_level_ > 0))
             {
-            std::cout << boost::format("Iter %d, lambda = %.10f")%iter%lambda << std::endl;
-            std::cout << boost::format("qnorm = %.1E, lambda err = %.1E")%qnorm % fabs(lambda-last_lambda) << std::endl;
+            std::cout << boost::format("I %d q %.0E E %.10f")
+                         % ii
+                         % qnorm
+                         % lambda 
+                         << std::endl;
             }
 
         //Apply Davidson preconditioner
-        Tensor xi(q);
         {
-        Tensor cond(q);
-        A.diag(cond);
         DavidsonPrecond dp(lambda);
+        Tensor cond(Adiag);
         cond.mapElems(dp);
-        xi /= cond;
+        q /= cond;
         }
 
         //Do Gram-Schmidt on xi
-        //before including it in the subbasis
-        Tensor d(xi);
-        d *= conj(B); //m^2 d^2 p 
-        d *= B;       //m^2 d^2 p
+        //to include it in the subbasis
+        Tensor& d = B[ii+1];
+        d = q;
+        Vector Bd(ii);
+        for(int k = 1; k <= ii; ++k)
+            {
+            Bd(k) = Dot(B[k],d);
+            }
+        d = Bd(1)*B[1];
+        for(int k = 2; k <= ii; ++k)
+            {
+            d += Bd(k)*B[k];
+            }
         d *= -1;
-        d += xi;
-        d *= 1.0/d.norm();
-
-        Tensor Ad;
-        A.product(d,Ad);
-
-        IQIndex newP = IQIndex(nameint("P",P.m()),
-                         Index(nameint("p",P.m()),P.m()+1),
-                         QN());
-
-        //Combine d into B
-        combine(d,B,P,newP);
-
-        //Combine Ad into AB
-        combine(Ad,AB,P,newP);
-
-        //B.scaleTo(1);
-
-        P = newP;
+        d += q;
+        d *= 1.0/(d.norm()+1E-33);
 
         last_lambda = lambda;
 
-        } //for(iter)
+        //Expand AB and M
+        //for next step
+        if(ii < actual_maxiter)
+            {
+            A.product(d,AB[ii+1]);
+
+            //Add new row and column to M
+            Mref << M.SubMatrix(1,ii+1,1,ii+1);
+            Vector newCol(ii+1);
+            for(int k = 1; k <= ii+1; ++k)
+                {
+                newCol(k) = Dot(B[k],AB[ii+1]);
+                }
+            Mref.Column(ii+1) = newCol;
+            Mref.Row(ii+1) = newCol;
+            }
+
+        } //for(ii)
 
     if(debug_level_ > 0)
         {
-        std::cout << boost::format("Iter %d, lambda = %.10f")%actual_maxiter%lambda << std::endl;
-        std::cout << boost::format("qnorm = %.1E, lambda err = %.1E")%qnorm % fabs(lambda-last_lambda) << std::endl;
+        std::cout << boost::format("I %d q %.0E E %.10f")
+                     % actual_maxiter
+                     % qnorm
+                     % lambda 
+                     << std::endl;
         }
+
     return lambda;
 
     } //Eigensolver::davidson
 
-inline void Eigensolver::
-combine(ITensor& d, ITensor& B, const Index& p, const Index& newp) const
-    {
-    //Expand B's p-index
-    B.expandIndex(p,newp,0);
-
-    //Stick new p index onto d
-    d *= ITensor(newp(newp.m()));
-
-    //Combine them by adding
-    B += d;
-    }
-
-inline void Eigensolver::
-combine(IQTensor& d, IQTensor& B, const IQIndex& P, const IQIndex& newP) const
-    {
-    if(P.nindex() != 1)
-        Error("Basis IQIndex P should have a single block.");
-
-    //Create a new IQTensor with expanded P IQIndex
-    std::vector<IQIndex> iqinds;
-    iqinds.reserve(B.r());
-    Foreach(const IQIndex& I, B.iqinds())
-        {
-        if(I == P)
-            iqinds.push_back(newP);
-        else
-            iqinds.push_back(I);
-        }
-
-    //Expand blocks of B and insert into newB
-    IQTensor newB(iqinds);
-    Foreach(ITensor t, B.itensors())
-        {
-        t.expandIndex(P.index(1),newP.index(1),0);
-        newB.insert(t);
-        }
-
-    //Combine with d
-    d *= IQTensor(newP(newP.m()));
-    newB += d;
-
-    B = newB;
-    }
 
 #endif

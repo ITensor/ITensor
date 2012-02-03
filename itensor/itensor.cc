@@ -1083,7 +1083,7 @@ sumels() const
 
 Real ITensor::
 norm() const 
-    { return Norm(p->v) * scale_.real(); }
+    { return fabs(Norm(p->v) * scale_.real()); }
 
 void ITensor::
 scaleOutNorm() const
