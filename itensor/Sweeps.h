@@ -23,12 +23,18 @@ class Sweeps
 
     int 
     minm(int sw) const { return Minm_.at(sw); }
+    void 
+    setMinm(int sw, int val) { Minm_.at(sw) = val; }
 
     int 
     maxm(int sw) const { return Maxm_.at(sw); }
+    void 
+    setMaxm(int sw, int val) { Maxm_.at(sw) = val; }
 
     Real 
     cutoff(int sw) const { return Cutoff_.at(sw); }
+    void 
+    setCutoff(int sw, Real val) { Cutoff_.at(sw) = val; }
 
     int 
     nsweep() const { return Nsweep_; }
@@ -38,6 +44,8 @@ class Sweeps
 
     int 
     niter(int sw) const { return Niter_.at(sw); }
+    void 
+    setNiter(int sw, int val) { Niter_.at(sw) = val; }
 
     int
     numSiteCenter() const { return num_site_center_; }
