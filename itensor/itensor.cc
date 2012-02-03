@@ -2,6 +2,7 @@
 using namespace std;
 using boost::format;
 using boost::array;
+using boost::intrusive_ptr;
 
 DatAllocator<ITDat> ITDat::allocator;
 
@@ -1811,6 +1812,126 @@ ind4(int i4, int m3, int i3, int m2, int i2, int m1, int i1)
     return (((i4-1)*m3+i3-1)*m2+i2-1)*m1+i1;
     }
 
+void ITensor::
+directMultiply(const ITensor& other, ProductProps& pp, 
+               int& new_rn_, array<Index,NMAX+1>& new_index_)
+    {
+    int am[NMAX+1], bm[NMAX+1], mcon[NMAX+1], mnew[NMAX+1];
+    int *pa[NMAX+1], *pb[NMAX+1];
+    int one = 1;
+    for(int j = 1; j <= NMAX; ++j)
+        {
+        //Set *pa[j],*pb[j],mcon[j] and mnew[j]
+        // to 1 unless set otherwise below
+        pa[j] = pb[j] = &one, mcon[j] = mnew[j] = 1;
+        am[j] = index_[j].m();
+        bm[j] = other.index_[j].m();
+        }
+    int icon[NMAX+1], inew[NMAX+1];
+    for(int j = 1; j <= this->rn_; ++j)
+        if(!pp.contractedL[j]) 
+            {
+            new_index_[++new_rn_] = index_[j];
+            mnew[new_rn_] = am[j];
+            pa[j] = inew + new_rn_;
+            }
+        else
+            {
+            mcon[pp.pl.dest(j)] = am[j];
+            pa[j] = icon + pp.pl.dest(j);
+            }
+
+    for(int j = 1; j <= other.rn_; ++j)
+        if(!pp.contractedR[j]) 
+            {
+            new_index_[++new_rn_] = other.index_[j];
+            mnew[new_rn_] = bm[j];
+            pb[j] = inew + new_rn_;
+            }
+        else
+            {
+            mcon[pp.pr.dest(j)] = bm[j];
+            pb[j] = icon + pp.pr.dest(j);
+            }
+
+    if(new_rn_ > 4) 
+        {
+        printdat = false;
+        cout << "this is " << *this << endl;
+        cout << "other is " << other << endl;
+        cout << "new_rn_ is " << new_rn_ << endl;
+        Error("new_rn_ too big for this part!");
+        }
+    if(pp.nsamen > 4) Error("nsamen too big for this part!");
+
+    static Vector newdat;
+    newdat.ReduceDimension(pp.odimL*pp.odimR);
+
+    icon[1] = icon[2] = icon[3] = icon[4] = 1;
+    inew[1] = inew[2] = inew[3] = inew[4] = 1;
+    int basea = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]); 
+    int baseb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]); 
+    icon[1] = 2;
+    int inca1 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
+    int incb1 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
+    icon[1] = 1;
+    int inca2=0,incb2=0;
+    if(pp.nsamen == 2)
+        {
+        icon[2] = 2;
+        inca2 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
+        incb2 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
+        icon[2] = 1;
+        }
+
+    Real *pv = p->v.Store()-1, *opv = other.p->v.Store()-1;
+    for(inew[4] = 1; inew[4] <= mnew[4]; ++inew[4])
+    for(inew[3] = 1; inew[3] <= mnew[3]; ++inew[3])
+    for(inew[2] = 1; inew[2] <= mnew[2]; ++inew[2])
+    for(inew[1] = 1; inew[1] <= mnew[1]; ++inew[1])
+        {
+        Real d = 0.0;
+        if(pp.nsamen == 1)
+        {
+            icon[1] = 1;
+            int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
+            int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
+            for(icon[1] = 1; icon[1] <= mcon[1]; icon[1]++, inda += inca1, indb += incb1)
+                d += pv[inda] * opv[indb];
+        }
+        else if(pp.nsamen == 2)
+        {
+            icon[2] = icon[1] = 1;
+            int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
+            int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
+            int indaa = inda, indbb = indb;
+            for(icon[2] = 1; icon[2] <= mcon[2]; icon[2]++, indaa += inca2, indbb += incb2)
+                {
+                inda = indaa; indb = indbb;
+                for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1], inda += inca1, indb += incb1)
+                d += pv[inda] * opv[indb];
+                }
+        }
+        else
+        {
+            for(icon[4] = 1; icon[4] <= mcon[4]; ++icon[4])
+            for(icon[3] = 1; icon[3] <= mcon[3]; ++icon[3])
+            for(icon[2] = 1; icon[2] <= mcon[2]; ++icon[2])
+            for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1])
+                d +=      p->v(ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1])) 
+                  * other.p->v(ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]));
+        }
+
+        newdat(ind4(inew[4],mnew[3],inew[3],mnew[2],inew[2],mnew[1],inew[1])) = d;
+        }
+
+    if(p->count() != 1) { p = new ITDat(); } 
+    p->v = newdat;
+
+    DO_IF_PS(++prodstats.c1;)
+
+    } // directMultiply
+
 ITensor& ITensor::
 operator*=(const ITensor& other)
     {
@@ -1919,121 +2040,14 @@ operator*=(const ITensor& other)
     int new_rn_ = 0;
 
     /*
-    if((pp.odimL*pp.cdim*pp.odimR) < 10000 && (rn_+other.rn_-2*pp.nsamen) <= 4 && rn_ <= 4 && other.rn_ <= 4)
+    bool mult_as_matrix = (pp.odimL*pp.cdim*pp.odimR) > 10000 
+                       || (rn_+other.rn_-2*pp.nsamen) > 4 
+                       || rn_ > 4 
+                       || other.rn_ > 4 ;
+
+    if(!mult_as_matrix)
         {
-        int am[NMAX+1], bm[NMAX+1], mcon[NMAX+1], mnew[NMAX+1];
-        int *pa[NMAX+1], *pb[NMAX+1];
-        int one = 1;
-        for(int j = 1; j <= NMAX; ++j)
-            {
-            //Set *pa[j],*pb[j],mcon[j] and mnew[j]
-            // to 1 unless set otherwise below
-            pa[j] = pb[j] = &one, mcon[j] = mnew[j] = 1;
-            am[j] = index_[j].m();
-            bm[j] = other.index_[j].m();
-            }
-        int icon[NMAX+1], inew[NMAX+1];
-        for(int j = 1; j <= this->rn_; ++j)
-            if(!pp.contractedL[j]) 
-                {
-                new_index_[++new_rn_] = index_[j];
-                mnew[new_rn_] = am[j];
-                pa[j] = inew + new_rn_;
-                }
-            else
-                {
-                mcon[pp.pl.dest(j)] = am[j];
-                pa[j] = icon + pp.pl.dest(j);
-                }
-
-        for(int j = 1; j <= other.rn_; ++j)
-            if(!pp.contractedR[j]) 
-                {
-                new_index_[++new_rn_] = other.index_[j];
-                mnew[new_rn_] = bm[j];
-                pb[j] = inew + new_rn_;
-                }
-            else
-                {
-                mcon[pp.pr.dest(j)] = bm[j];
-                pb[j] = icon + pp.pr.dest(j);
-                }
-
-        if(new_rn_ > 4) 
-            {
-            printdat = false;
-            cout << "this is " << *this << endl;
-            cout << "other is " << other << endl;
-            cout << "new_rn_ is " << new_rn_ << endl;
-            Error("new_rn_ too big for this part!");
-            }
-        if(pp.nsamen > 4) Error("nsamen too big for this part!");
-
-        static Vector newdat;
-        newdat.ReduceDimension(pp.odimL*pp.odimR);
-
-        icon[1] = icon[2] = icon[3] = icon[4] = 1;
-        inew[1] = inew[2] = inew[3] = inew[4] = 1;
-        int basea = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]); 
-        int baseb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]); 
-        icon[1] = 2;
-        int inca1 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
-        int incb1 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
-        icon[1] = 1;
-        int inca2=0,incb2=0;
-        if(pp.nsamen == 2)
-            {
-            icon[2] = 2;
-            inca2 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
-            incb2 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
-            icon[2] = 1;
-            }
-
-        Real *pv = p->v.Store()-1, *opv = other.p->v.Store()-1;
-        for(inew[4] = 1; inew[4] <= mnew[4]; ++inew[4])
-        for(inew[3] = 1; inew[3] <= mnew[3]; ++inew[3])
-        for(inew[2] = 1; inew[2] <= mnew[2]; ++inew[2])
-        for(inew[1] = 1; inew[1] <= mnew[1]; ++inew[1])
-            {
-            Real d = 0.0;
-            if(pp.nsamen == 1)
-            {
-                icon[1] = 1;
-                int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
-                int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
-                for(icon[1] = 1; icon[1] <= mcon[1]; icon[1]++, inda += inca1, indb += incb1)
-                    d += pv[inda] * opv[indb];
-            }
-            else if(pp.nsamen == 2)
-            {
-                icon[2] = icon[1] = 1;
-                int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
-                int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
-                int indaa = inda, indbb = indb;
-                for(icon[2] = 1; icon[2] <= mcon[2]; icon[2]++, indaa += inca2, indbb += incb2)
-                    {
-                    inda = indaa; indb = indbb;
-                    for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1], inda += inca1, indb += incb1)
-                    d += pv[inda] * opv[indb];
-                    }
-            }
-            else
-            {
-                for(icon[4] = 1; icon[4] <= mcon[4]; ++icon[4])
-                for(icon[3] = 1; icon[3] <= mcon[3]; ++icon[3])
-                for(icon[2] = 1; icon[2] <= mcon[2]; ++icon[2])
-                for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1])
-                    d +=      p->v(ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1])) 
-                      * other.p->v(ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]));
-            }
-
-            newdat(ind4(inew[4],mnew[3],inew[3],mnew[2],inew[2],mnew[1],inew[1])) = d;
-            }
-
-        if(p->count() != 1) { p = new ITDat(); } 
-        p->v = newdat;
-
-        DO_IF_PS(++prodstats.c1;)
+        directMultiply(other,pp,new_rn_,new_index_);
         }
     else
         {
@@ -2068,9 +2082,8 @@ operator*=(const ITensor& other)
             { if(!pp.contractedL[j]) new_index_[++new_rn_] = index_[j]; }
         for(int j = 1; j <= other.rn_; ++j)
             { if(!pp.contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
-    /*
-        }
-    */
+
+        //} //this brace goes back in if we use directMultiply
 
     rn_ = new_rn_;
 

@@ -567,6 +567,9 @@ private:
                              const ProductProps& pp,
                              MatrixRefNoLink& lref, MatrixRefNoLink& rref);
 
+    void
+    directMultiply(const ITensor& other, ProductProps& pp, 
+                   int& new_rn_, boost::array<Index,NMAX+1>& new_index_);
 
     int _ind(int i1, int i2, int i3, int i4, 
              int i5, int i6, int i7, int i8) const;
