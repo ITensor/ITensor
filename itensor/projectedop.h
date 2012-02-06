@@ -27,6 +27,11 @@ class ProjectedOp
     const Tensor&
     R() const { return R_.at(RHlim_); }
 
+    bool
+    combineMPO() const { return combine_mpo_; }
+    void
+    combineMPO(bool val) { combine_mpo_ = val; }
+
     int
     numCenter() const { return nc_; }
     void
@@ -51,6 +56,8 @@ class ProjectedOp
     int LHlim_,RHlim_;
     int nc_;
     int size_;
+    bool combine_mpo_;
+    Tensor mpoh_;
 
     };
 
@@ -63,7 +70,8 @@ ProjectedOp(const MPOt<Tensor>& Op, int num_center)
       LHlim_(1),
       RHlim_(Op.NN()),
       nc_(num_center),
-      size_(-1)
+      size_(-1),
+      combine_mpo_(true)
     { }
 
 template <class Tensor>
@@ -75,14 +83,29 @@ product(const Tensor& phi, Tensor& phip) const
         phip = phi;
         if(R().isNotNull()) 
             phip *= R(); //m^3 k d
-        for(int j = RHlim_; j >= LHlim_; --j)
-            phip *= Op_.AA(j); //m^2 k^2
+
+        if(combine_mpo_)
+            {
+            phip *= mpoh_;
+            }
+        else
+            {
+            for(int j = RHlim_; j >= LHlim_; --j)
+                phip *= Op_.AA(j); //m^2 k^2
+            }
         }
     else
         {
         phip = phi * L(); //m^3 k d
+        if(combine_mpo_)
+            {
+            phip *= mpoh_;
+            }
+        else
+            {
         for(int j = LHlim_; j <= RHlim_; ++j)
             phip *= Op_.AA(j); //m^2 k^2
+            }
         if(R().isNotNull()) 
             phip *= R();
         }
@@ -183,6 +206,12 @@ setBond(int b, const MPSt<Tensor>& psi)
     makeR(psi,b+nc_-1);
     LHlim_ = b; //not redundant since LHlim_ could be > b
     RHlim_ = b+nc_-1; //not redundant since RHlim_ could be < b+nc_-1
+
+    if(combine_mpo_)
+        {
+        if(nc_ != 2) Error("nc_ must be 2 for combine_mpo_");
+        mpoh_ = Op_.AA(b)*Op_.AA(b+1);
+        }
 
     //Calculate linear size of this projected
     //op as a square matrix
