@@ -181,6 +181,29 @@ davidson(const SparseT& A, Tensor& phi) const
             return lambda;
             }
 
+        /*
+        if(debug_level_ >= 1 && qnorm > 3)
+            {
+            std::cerr << "Large qnorm = " << qnorm << "\n";
+            Print(Mref);
+            Vector D;
+            Matrix U;
+            EigenValues(Mref,D,U);
+            Print(D);
+
+            std::cerr << "ii = " << ii  << "\n";
+            Matrix Borth(ii,ii);
+            for(int i = 1; i <= ii; ++i)
+            for(int j = i; j <= ii; ++j)
+                {
+                Borth(i,j) = Dot(B[i],B[j]);
+                Borth(j,i) = Borth(i,j);
+                }
+            Print(Borth);
+            exit(0);
+            }
+        */
+
         if(debug_level_ > 1 || (ii == 1 && debug_level_ > 0))
             {
             std::cout << boost::format("I %d q %.0E E %.10f")

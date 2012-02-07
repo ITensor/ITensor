@@ -1,4 +1,5 @@
 #include "svdworker.h"
+#include "projectedop.h"
 
 using namespace std;
 using boost::format;
@@ -23,7 +24,8 @@ SVDWorker()
       doRelCutoff_(false),
       absoluteCutoff_(false), 
       refNorm_(1), 
-      eigsKept_(N+1)
+      eigsKept_(N+1),
+      noise_(0)
     { }
 
 SVDWorker::
@@ -38,7 +40,8 @@ SVDWorker(int N_)
       doRelCutoff_(false),
       absoluteCutoff_(false), 
       refNorm_(1), 
-      eigsKept_(N+1)
+      eigsKept_(N+1),
+      noise_(0)
     { }
 
 SVDWorker::
@@ -54,66 +57,235 @@ SVDWorker(int N_, Real cutoff, int minm, int maxm,
       doRelCutoff_(doRelCutoff),
       absoluteCutoff_(false), 
       refNorm_(refNorm), 
-      eigsKept_(N+1)
+      eigsKept_(N+1),
+      noise_(0)
     { }
 
-int SVDWorker::
-maxEigsKept() const
-    {
-    int res = -1;
-    Foreach(const Vector& eigs,eigsKept_)
-        res = max(res,eigs.Length());
-    return res;
-    }
-
-Real SVDWorker::
-maxTruncerr() const
-    {
-    Real res = -1;
-    Foreach(const Real& te,truncerr_)
-        res = max(res,te);
-    return res;
-    }
-
-
+template <class Tensor> 
 void SVDWorker::
-read(std::istream& s)
-    {
-    s.read((char*) &N,sizeof(N));
-    truncerr_.resize(N+1);
-    for(int j = 1; j <= N; ++j)
-        s.read((char*)&truncerr_[j],sizeof(truncerr_[j]));
-    s.read((char*)&cutoff_,sizeof(cutoff_));
-    s.read((char*)&minm_,sizeof(minm_));
-    s.read((char*)&maxm_,sizeof(maxm_));
-    s.read((char*)&use_orig_m_,sizeof(use_orig_m_));
-    s.read((char*)&showeigs_,sizeof(showeigs_));
-    s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
-    s.read((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
-    s.read((char*)&refNorm_,sizeof(refNorm_));
-    eigsKept_.resize(N+1);
-    for(int j = 1; j <= N; ++j)
-        readVec(s,eigsKept_.at(j));
+operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
+    { 
+    operator()<Tensor>(1,ProjectedOp<Tensor>(),AA,A,B,dir); 
     }
-
+template
 void SVDWorker::
-write(std::ostream& s) const
-    {
-    s.write((char*) &N,sizeof(N));
-    for(int j = 1; j <= N; ++j)
-        s.write((char*)&truncerr_[j],sizeof(truncerr_[j]));
-    s.write((char*)&cutoff_,sizeof(cutoff_));
-    s.write((char*)&minm_,sizeof(minm_));
-    s.write((char*)&maxm_,sizeof(maxm_));
-    s.write((char*)&use_orig_m_,sizeof(use_orig_m_));
-    s.write((char*)&showeigs_,sizeof(showeigs_));
-    s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
-    s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
-    s.write((char*)&refNorm_,sizeof(refNorm_));
-    for(int j = 1; j <= N; ++j)
-        writeVec(s,eigsKept_[j]);
-    }
+operator()(int b, const ITensor& AA, ITensor& A, ITensor& B, Direction dir);
+template
+void SVDWorker::
+operator()(int b, const IQTensor& AA, IQTensor& A, IQTensor& B, Direction dir);
 
+template<class Tensor>
+void SVDWorker::
+operator()(int b, const ProjectedOp<Tensor>& PH, const Tensor& AA, 
+           Tensor& A, Tensor& B, Direction dir)
+    {
+    typedef typename Tensor::IndexT 
+    IndexT;
+    typedef typename Tensor::CombinerT 
+    CombinerT;
+
+    if(AA.vecSize() == 0) 
+        {
+        A *= 0;
+        B *= 0;
+        eigsKept_.at(b).ReDimension(1);
+        eigsKept_.at(b) = 1;
+        return;
+        }
+
+    IndexT mid = index_in_common(A,B,Link);
+    if(mid.isNull()) mid = IndexT("mid");
+
+    //If dir==None, put the O.C. on the side
+    //that keeps mid's arrow the same
+    bool do_edge_case = true;
+    if(dir == None)
+        {
+        //std::cerr << boost::format("Arrow before = %s\n")%(mid.dir() == Out ? "Out" : "In");
+        dir = (mid.dir() == Out ? Fromright : Fromleft);
+        do_edge_case = false;
+        }
+
+    Tensor& to_orth = (dir==Fromleft ? A : B);
+    Tensor& newoc   = (dir==Fromleft ? B : A);
+
+    CombinerT comb;
+
+    int unique_link = 0; //number of Links unique to to_orth
+    for(int j = 1; j <= to_orth.r(); ++j) 
+        { 
+        const IndexT& I = to_orth.index(j);
+        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex() ))
+            {
+            if(I.type() == Link) ++unique_link;
+            comb.addleft(I);
+            }
+        }
+
+    //Check if we're at the edge
+    if(unique_link == 0 && do_edge_case)
+        {
+        comb.init(mid.rawname());
+        comb.product(AA,newoc);
+        to_orth = comb; to_orth.conj();
+        eigsKept_.at(b) = Vector(comb.right().m()); 
+        eigsKept_.at(b) = 1.0/comb.right().m();
+        return;
+        }
+
+    //Apply combiner
+    comb.doCondense(true);
+    comb.init(mid.rawname());
+    Tensor AAc; comb.product(AA,AAc);
+
+    const IndexT& active = comb.right();
+
+    Tensor AAcc = conj(AAc); 
+    AAcc.primeind(active); 
+    Tensor rho = AAc*AAcc; 
+
+    if(noise_ > 0 && PH.isNotNull())
+        {
+        rho += noise_*PH.deltaRho(rho,comb,dir);
+        }
+
+    const Real saved_cutoff = cutoff_; 
+    const int saved_minm = minm_,
+              saved_maxm = maxm_; 
+    if(use_orig_m_)
+        {
+        cutoff_ = -1;
+        minm_ = mid.m();
+        maxm_ = mid.m();
+        }
+
+    IndexT newmid;
+    Tensor U;
+    if(AAc.is_complex())
+        truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),newmid,U);
+    else
+        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),newmid,U);
+
+    cutoff_ = saved_cutoff; 
+    minm_ = saved_minm; 
+    maxm_ = saved_maxm; 
+
+    comb.conj();
+    comb.product(U,to_orth);
+    newoc = conj(U) * AAc;
+
+    } //void SVDWorker::operator()
+template
+void SVDWorker::
+operator()(int b, const ProjectedOp<ITensor>& PH, const ITensor& AA, 
+           ITensor& A, ITensor& B, Direction dir);
+template
+void SVDWorker::
+operator()(int b, const ProjectedOp<IQTensor>& PH, const IQTensor& AA, 
+           IQTensor& A, IQTensor& B, Direction dir);
+
+template <class Tensor> 
+void SVDWorker::
+operator()(int b, const Tensor& AA, Tensor& L, Tensor& V, Tensor& R)
+    { 
+    operator()<Tensor>(1,ProjectedOp<Tensor>(),AA,L,V,R); 
+    }
+template
+void SVDWorker::
+operator()(int b, const ITensor& AA, ITensor& L, ITensor& V, ITensor& R);
+template
+void SVDWorker::
+operator()(int b, const IQTensor& AA, IQTensor& L, IQTensor& V, IQTensor& R);
+
+template<class Tensor>
+void SVDWorker::
+operator()(int b, const ProjectedOp<Tensor>& PH, const Tensor& AA, 
+           Tensor& L, Tensor& V, Tensor& R)
+    {
+    typedef typename Tensor::IndexT 
+    IndexT;
+    typedef typename Tensor::CombinerT 
+    CombinerT;
+
+    IndexT ll = V.index(1);
+
+    //Form the density matrix for the smaller
+    //of the two halves of the system
+    int ldim = L.maxSize()/ll.m(),
+        rdim = R.maxSize()/ll.m();
+
+    Tensor& Act = (ldim < rdim ? L : R);
+    Tensor& Oth = (ldim < rdim ? R : L);
+
+    //Form a combiner for the active indices
+    CombinerT comb;
+    for(int j = 1; j <= Act.r(); ++j) 
+        { 
+        const IndexT& I = Act.index(j);
+        if(I == ll || I == Tensor::ReImIndex()) continue;
+        comb.addleft(I);
+        }
+
+    //Apply combiner
+    comb.doCondense(true);
+    comb.init(ll.rawname());
+
+    Tensor AAc; 
+    comb.product(AA,AAc);
+
+    const IndexT& active = comb.right();
+
+    Tensor AAcc = conj(AAc); 
+    AAcc.primeind(active); 
+    Tensor rho = AAc*AAcc; 
+
+    if(noise_ > 0 && PH.isNotNull())
+        {
+        Direction dir = (ldim < rdim ? Fromleft : Fromright);
+        rho += noise_*PH.deltaRho(rho,comb,dir);
+        }
+
+    const Real saved_cutoff = cutoff_; 
+    const int saved_minm = minm_,
+              saved_maxm = maxm_; 
+    if(use_orig_m_)
+        {
+        cutoff_ = -1;
+        minm_ = ll.m();
+        maxm_ = ll.m();
+        }
+
+    Tensor C,U;
+    if(AAc.is_complex())
+        {
+        Error("Complex case not implemented");
+        }
+    else
+        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),ll,C,U);
+
+    cutoff_ = saved_cutoff; 
+    minm_ = saved_minm; 
+    maxm_ = saved_maxm; 
+
+    Oth = conj(U) * AAc;
+
+    V = pseudoInverse(C);
+    //V = pseudoInverse(C,0.01*sqrt(cutoff_));
+
+    comb.conj();
+    comb.product(U,Act);
+    Act.conj(C.index(1));
+    Act /= C;
+
+    } //void SVDWorker::operator()
+template
+void SVDWorker::
+operator()(int b, const ProjectedOp<ITensor>& PH, const ITensor& AA, 
+           ITensor& L, ITensor& V, ITensor& R);
+template
+void SVDWorker::
+operator()(int b, const ProjectedOp<IQTensor>& PH, const IQTensor& AA, 
+           IQTensor& L, IQTensor& V, IQTensor& R);
 
 Real SVDWorker::
 diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
@@ -167,7 +339,8 @@ diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
     if(showeigs_)
         {
         cout << endl;
-        cout << format("minm_ = %d, maxm_ = %d, cutoff_ = %.3E")%minm_%maxm_%cutoff_ << endl;
+        cout << format("minm_ = %d, maxm_ = %d, cutoff_ = %.3E")
+                       %minm_%maxm_%cutoff_ << endl;
         cout << format("use_orig_m_ = %s")%(use_orig_m_?"true":"false")<<endl;
         cout << format("Kept %d states in diag_denmat\n")% m;
         cout << format("svdtruncerr = %.3E\n")%svdtruncerr;
@@ -211,7 +384,8 @@ diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
 // any IQTensors such as U
 //
 void SVDWorker::
-diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& mvector,
+diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, 
+                  vector<Vector>& mvector,
                   vector<Real>& alleig, Real& svdtruncerr, IQIndex& newmid)
     {
     if(rho.r() != 2)
@@ -242,7 +416,8 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
     //1. Diagonalize each ITensor within rho.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
-    for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
+    for(IQTensor::const_iten_it it = rho.const_iten_begin(); 
+        it != rho.const_iten_end(); ++it)
         {
         const ITensor& t = *it;
         if(!t.index(1).noprime_equals(t.index(2)))
@@ -291,7 +466,8 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
             Error("UU not unitary in diag_denmat");
             }
         
-        if(fabs(d.sumels() + Trace(M))/(fabs(d.sumels())+fabs(Trace(M))) > 1E-5)
+        if(fabs(d.sumels() + Trace(M))/(fabs(d.sumels())+fabs(Trace(M))) 
+            > 1E-5)
             {
             cerr << boost::format("d.sumels() = %.10f, Trace(M) = %.10f\n")
                      % d.sumels()        % Trace(M);
@@ -349,7 +525,8 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
     else
 	    {
 	    Real scale = doRelCutoff_ ? alleig.back() : 1.0;
-        while(m > maxm_ || (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
+        while(m > maxm_ 
+            || (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
             && mdisc < (int)alleig.size())
             {
             if(alleig[mdisc] > 0)
@@ -360,19 +537,23 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
             ++mdisc;
             --m;
             }
-        docut = (mdisc > 0 ? (alleig[mdisc-1] + alleig[mdisc])*0.5 : -1) + 1E-40;
+        docut = (mdisc > 0 
+                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 
+                : -1) + 1E-40;
         svdtruncerr = (alleig.back() == 0 ? 0 : svdtruncerr/scale);
 	    }
 
     if(showeigs_)
         {
         cout << endl;
-        cout << boost::format("use_orig_m_ = %s")%(use_orig_m_?"true":"false")<<endl;
+        cout << boost::format("use_orig_m_ = %s")
+                %(use_orig_m_?"true":"false")<<endl;
         cout << boost::format("Kept %d, discarded %d states in diag_denmat")
-                                     % m % mdisc << endl;
+                                % m % mdisc << endl;
         cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
         cout << boost::format("docut = %.2E")%docut << endl;
-        cout << boost::format("cutoff=%.2E, minm=%d, maxm=%d")%cutoff_%minm_%maxm_ << endl;
+        cout << boost::format("cutoff=%.2E, minm=%d, maxm=%d")
+                %cutoff_%minm_%maxm_ << endl;
         cout << "doRelCutoff is " << (doRelCutoff_ ? "true" : "false") << endl;
         cout << "absoluteCutoff is " << (absoluteCutoff_ ? "true" : "false") << endl;
         cout << "refNorm is " << refNorm_ << endl;
@@ -398,7 +579,8 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
     //Also form new Link index with appropriate m's for each block
     vector<inqn> iq; iq.reserve(rho.iten_size());
     itenind = 0;
-    for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
+    for(IQTensor::const_iten_it it = rho.const_iten_begin(); 
+        it != rho.const_iten_end(); ++it)
         {
         const ITensor& t = *it;
         Vector& thisD = mvector.at(itenind);
@@ -433,7 +615,8 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix, vector<Vector>& 
     } //void SVDWorker::diag_and_truncate
 
 void SVDWorker::
-buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Vector>& mvector,
+buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, 
+             const vector<Vector>& mvector,
              const IQIndex& newmid, IQTensor& U)
     {
     IQIndex active = (rho.index(1).primeLevel() == 0 ? rho.index(1)
@@ -443,7 +626,8 @@ buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Ve
     vector<ITensor> terms; terms.reserve(rho.iten_size());
     int itenind = 0, kept_block = 0;
     int m = newmid.m();
-    for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
+    for(IQTensor::const_iten_it it = rho.const_iten_begin(); 
+        it != rho.const_iten_end(); ++it)
         {
         const Vector& thisD = mvector.at(itenind);
         int this_m = thisD.Length();
@@ -479,13 +663,15 @@ buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Ve
     }
 
 void SVDWorker::
-buildCenter(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Vector>& mvector,
-             const IQIndex& newmid, IQTensor& C)
+buildCenter(const IQTensor& rho, const vector<Matrix>& mmatrix, 
+            const vector<Vector>& mvector,
+            const IQIndex& newmid, IQTensor& C)
     {
     vector<ITensor> terms; terms.reserve(rho.iten_size());
     int itenind = 0, kept_block = 0;
     int m = newmid.m();
-    for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
+    for(IQTensor::const_iten_it it = rho.const_iten_begin(); 
+        it != rho.const_iten_end(); ++it)
         {
         const Vector& thisD = mvector.at(itenind);
         int this_m = thisD.Length();
@@ -508,7 +694,8 @@ buildCenter(const IQTensor& rho, const vector<Matrix>& mmatrix, const vector<Vec
     }
 
 
-Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
+Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, 
+                            IQTensor& U)
     {
     vector<Matrix> mmatrix;
     vector<Vector> mvector;
@@ -751,6 +938,64 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
     Globals::lastd() = D;
     return svdtruncerr;
     } //Real SVDWorker::diag_denmat
+
+int SVDWorker::
+maxEigsKept() const
+    {
+    int res = -1;
+    Foreach(const Vector& eigs,eigsKept_)
+        res = max(res,eigs.Length());
+    return res;
+    }
+
+Real SVDWorker::
+maxTruncerr() const
+    {
+    Real res = -1;
+    Foreach(const Real& te,truncerr_)
+        res = max(res,te);
+    return res;
+    }
+
+
+void SVDWorker::
+read(std::istream& s)
+    {
+    s.read((char*) &N,sizeof(N));
+    truncerr_.resize(N+1);
+    for(int j = 1; j <= N; ++j)
+        s.read((char*)&truncerr_[j],sizeof(truncerr_[j]));
+    s.read((char*)&cutoff_,sizeof(cutoff_));
+    s.read((char*)&minm_,sizeof(minm_));
+    s.read((char*)&maxm_,sizeof(maxm_));
+    s.read((char*)&use_orig_m_,sizeof(use_orig_m_));
+    s.read((char*)&showeigs_,sizeof(showeigs_));
+    s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
+    s.read((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
+    s.read((char*)&refNorm_,sizeof(refNorm_));
+    eigsKept_.resize(N+1);
+    for(int j = 1; j <= N; ++j)
+        readVec(s,eigsKept_.at(j));
+    }
+
+void SVDWorker::
+write(std::ostream& s) const
+    {
+    s.write((char*) &N,sizeof(N));
+    for(int j = 1; j <= N; ++j)
+        s.write((char*)&truncerr_[j],sizeof(truncerr_[j]));
+    s.write((char*)&cutoff_,sizeof(cutoff_));
+    s.write((char*)&minm_,sizeof(minm_));
+    s.write((char*)&maxm_,sizeof(maxm_));
+    s.write((char*)&use_orig_m_,sizeof(use_orig_m_));
+    s.write((char*)&showeigs_,sizeof(showeigs_));
+    s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
+    s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
+    s.write((char*)&refNorm_,sizeof(refNorm_));
+    for(int j = 1; j <= N; ++j)
+        writeVec(s,eigsKept_[j]);
+    }
+
 
 
 ITensor SVDWorker::

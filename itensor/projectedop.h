@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
 #ifndef __ITENSOR_PROJECTED_OP
 #define __ITENSOR_PROJECTED_OP
 #include "mpo.h"
@@ -7,7 +11,15 @@ class ProjectedOp
     {
     public:
 
+    ProjectedOp();
+
     ProjectedOp(const MPOt<Tensor>& Op, int num_center = 2);
+
+    typedef typename Tensor::IndexT
+    IndexT;
+
+    typedef typename Tensor::CombinerT
+    CombinerT;
 
     void
     product(const Tensor& phi, Tensor& phip) const;
@@ -15,11 +27,16 @@ class ProjectedOp
     Real
     expect(const Tensor& phi) const;
 
+    Tensor
+    deltaRho(const Tensor& rho, 
+             const CombinerT& comb, Direction dir) const;
+
     void
     diag(Tensor& D) const;
 
+    template <class MPSType>
     void
-    setBond(int b, const MPSt<Tensor>& psi);
+    position(int b, const MPSType& psi);
 
     const Tensor&
     L() const { return L_.at(LHlim_); }
@@ -40,18 +57,22 @@ class ProjectedOp
     int
     size() const { return size_; }
 
-    typedef typename Tensor::IndexT
-    IndexT;
+    bool
+    isNull() const { return Op_ == 0; }
+    bool
+    isNotNull() const { return Op_ != 0; }
 
     private:
 
+    template <class MPSType>
     void
-    makeL(const MPSt<Tensor>& psi, int k);
+    makeL(const MPSType& psi, int k);
 
+    template <class MPSType>
     void
-    makeR(const MPSt<Tensor>& psi, int k);
+    makeR(const MPSType& psi, int k);
 
-    const MPOt<Tensor>& Op_;
+    const MPOt<Tensor>* Op_;
     std::vector<Tensor> L_,R_;
     int LHlim_,RHlim_;
     int nc_;
@@ -63,8 +84,19 @@ class ProjectedOp
 
 template <class Tensor>
 inline ProjectedOp<Tensor>::
+ProjectedOp()
+    : Op_(0),
+      LHlim_(0),
+      RHlim_(0),
+      nc_(2),
+      size_(-1),
+      combine_mpo_(true)
+    { }
+
+template <class Tensor>
+inline ProjectedOp<Tensor>::
 ProjectedOp(const MPOt<Tensor>& Op, int num_center)
-    : Op_(Op),
+    : Op_(&Op),
       L_(Op.NN()+1),
       R_(Op.NN()+1),
       LHlim_(1),
@@ -78,6 +110,8 @@ template <class Tensor>
 inline void ProjectedOp<Tensor>::
 product(const Tensor& phi, Tensor& phip) const
     {
+    if(this->isNull()) Error("ProjectedOp is null");
+
     if(L().isNull())
         {
         phip = phi;
@@ -91,7 +125,7 @@ product(const Tensor& phi, Tensor& phip) const
         else
             {
             for(int j = RHlim_; j >= LHlim_; --j)
-                phip *= Op_.AA(j); //m^2 k^2
+                phip *= Op_->AA(j); //m^2 k^2
             }
         }
     else
@@ -104,7 +138,7 @@ product(const Tensor& phi, Tensor& phip) const
         else
             {
         for(int j = LHlim_; j <= RHlim_; ++j)
-            phip *= Op_.AA(j); //m^2 k^2
+            phip *= Op_->AA(j); //m^2 k^2
             }
         if(R().isNotNull()) 
             phip *= R();
@@ -122,13 +156,53 @@ expect(const Tensor& phi) const
     }
 
 template <class Tensor>
+inline Tensor ProjectedOp<Tensor>::
+deltaRho(const Tensor& rho, const CombinerT& comb, Direction dir) const
+    {
+    Tensor delta(rho);
+
+    Tensor A;
+    IndexT hl;
+    if(dir == Fromleft)
+        {
+        A = Op_->AA(LHlim_);
+        if(L().isNotNull()) A *= L();
+        hl = Op_->RightLinkInd(LHlim_);
+        }
+    else //dir == Fromright
+        {
+        A = Op_->AA(RHlim_);
+        if(R().isNotNull()) A *= R();
+        hl = Op_->LeftLinkInd(RHlim_);
+        }
+
+    A = comb * A;
+    A = primed(comb) * A;
+
+    A.mapprime(1,2);
+    delta *= A;
+    delta.mapprime(2,0);
+
+    A.conj();
+    A.mapprime(0,1);
+    delta *= A;
+    delta.mapprime(2,1);
+
+    delta.trace(hl,primed(hl));
+
+    return delta;
+    }
+
+template <class Tensor>
 inline void ProjectedOp<Tensor>::
 diag(Tensor& D) const
     {
+    if(this->isNull()) Error("ProjectedOp is null");
+
     IndexT toTie;
     bool found = false;
 
-    Tensor Diag = Op_.AA(LHlim_);
+    Tensor Diag = Op_->AA(LHlim_);
     for(int j = 1; j <= Diag.r(); ++j)
         {
         const IndexT& s = Diag.index(j);
@@ -142,7 +216,7 @@ diag(Tensor& D) const
     if(!found) Error("Couldn't find Index");
     Diag.tieIndices(toTie,primed(toTie),toTie);
 
-    const Tensor& Op2 = Op_.AA(RHlim_);
+    const Tensor& Op2 = Op_->AA(RHlim_);
     found = false;
     for(int j = 1; j <= Op2.r(); ++j)
         {
@@ -199,9 +273,12 @@ diag(Tensor& D) const
     }
 
 template <class Tensor>
+template <class MPSType> 
 inline void ProjectedOp<Tensor>::
-setBond(int b, const MPSt<Tensor>& psi)
+position(int b, const MPSType& psi)
     {
+    if(this->isNull()) Error("ProjectedOp is null");
+
     makeL(psi,b);
     makeR(psi,b+nc_-1);
     LHlim_ = b; //not redundant since LHlim_ could be > b
@@ -210,7 +287,7 @@ setBond(int b, const MPSt<Tensor>& psi)
     if(combine_mpo_)
         {
         if(nc_ != 2) Error("nc_ must be 2 for combine_mpo_");
-        mpoh_ = Op_.AA(b)*Op_.AA(b+1);
+        mpoh_ = Op_->AA(b)*Op_->AA(b+1);
         }
 
     //Calculate linear size of this projected
@@ -231,27 +308,29 @@ setBond(int b, const MPSt<Tensor>& psi)
     }
 
 template <class Tensor>
+template <class MPSType> 
 inline void ProjectedOp<Tensor>::
-makeL(const MPSt<Tensor>& psi, int k)
+makeL(const MPSType& psi, int k)
     {
     while(LHlim_ < k)
         {
         const int ll = LHlim_;
         //std::cout << boost::format("Shifting L from %d to %d") % ll % (ll+1) << std::endl;
-        psi.projectOp(ll,Fromleft,L_.at(ll),Op_.AA(ll),L_.at(ll+1));
+        psi.projectOp(ll,Fromleft,L_.at(ll),Op_->AA(ll),L_.at(ll+1));
         ++LHlim_;
         }
     }
 
 template <class Tensor>
+template <class MPSType> 
 inline void ProjectedOp<Tensor>::
-makeR(const MPSt<Tensor>& psi, int k)
+makeR(const MPSType& psi, int k)
     {
     while(RHlim_ > k)
         {
         const int rl = RHlim_;
         //std::cout << boost::format("Shifting R from %d to %d") % rl % (rl-1) << std::endl;
-        psi.projectOp(rl,Fromright,R_.at(rl),Op_.AA(rl),R_.at(rl-1));
+        psi.projectOp(rl,Fromright,R_.at(rl),Op_->AA(rl),R_.at(rl-1));
         --RHlim_;
         }
     }

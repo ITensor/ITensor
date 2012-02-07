@@ -177,7 +177,7 @@ TEST(SiteSVD)
 
     ITensor a(L1,S1),b(S2,L2);
 
-    svd.showeigs(true);
+    //svd.showeigs(true);
     svd(phi0,a,b,Fromleft);
 
     Print(((a*b)-phi0).norm());

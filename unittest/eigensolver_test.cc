@@ -34,7 +34,7 @@ TEST(FourSite)
 
     ITensor phip;
     psi.position(2);
-    PH.setBond(2,psi);
+    PH.position(2,psi);
 
     ITensor phi1 = psi.AA(2) * psi.AA(3);
 
@@ -58,7 +58,7 @@ TEST(FourSite)
 
     psi.doSVD(2,phi1,Fromleft);
     psi.position(3);
-    PH.setBond(3,psi);
+    PH.position(3,psi);
     ITensor phi3 = psi.AA(3) * psi.AA(4);
     Real En3 = d.davidson(PH,phi3);
     cout << format("Energy from tensor Davidson (b=3) = %.20f")%En3 << endl;
@@ -74,7 +74,7 @@ TEST(FourSite)
 
     psi.doSVD(3,phi3,Fromright);
     psi.position(3);
-    PH.setBond(2,psi);
+    PH.position(2,psi);
     ITensor phi4 = psi.AA(2) * psi.AA(3);
     Real En4 = d.davidson(PH,phi4);
     cout << format("Energy from tensor Davidson (b=2) = %.20f")%En4 << endl;
@@ -90,7 +90,7 @@ TEST(FourSite)
 
     psi.doSVD(2,phi4,Fromright);
     psi.position(1);
-    PH.setBond(1,psi);
+    PH.position(1,psi);
 
     //With doDavidson
     mpoh = H.AA(1)*H.AA(2);
@@ -134,7 +134,7 @@ TEST(IQFourSite)
 
     IQTensor phip;
     psi.position(2);
-    PH.setBond(2,psi);
+    PH.position(2,psi);
 
     IQTensor phi1 = psi.AA(2) * psi.AA(3);
 

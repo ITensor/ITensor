@@ -911,9 +911,6 @@ TEST(Trace)
         }
     CHECK_CLOSE(tr,check_tr,1E-10);
 
-    PrintDat(MM);
-    Print(tr);
-
     }
 
 TEST(fromMatrix11)

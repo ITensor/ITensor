@@ -198,6 +198,26 @@ TEST(TieIndices)
         }
     }
 
+TEST(Trace)
+    {
+
+    Real f = -ran1();
+    D *= f;
+
+    IQTensor Dt = trace(conj(L1),primed(L1,2),D);
+
+    for(int j2 = 1; j2 <= S1.m(); ++j2)
+    for(int j1 = 1; j1 <= L1.m(); ++j1)
+        {
+        Real val = 0;
+        for(int k1 = 1; k1 <= L1.m(); ++k1)
+            {
+            val += D(conj(L1)(k1),S1(j2),primed(L1)(j1),primed(L1,2)(k1));
+            }
+        CHECK_CLOSE(val,Dt(S1(j2),primed(L1)(j1)),1E-10);
+        }
+    }
+
 TEST(MapElems)
     {
     IQTensor B1(B);

@@ -2,6 +2,9 @@
 #define __ITENSOR_SVDWORKER_H
 #include "iqcombiner.h"
 
+template <class Tensor>
+class ProjectedOp;
+
 enum Direction { Fromright, Fromleft, Both, None };
 
 template<class Tensor, class IndexT>
@@ -15,9 +18,11 @@ index_in_common(const Tensor& A, const Tensor& B, IndexType t)
         }
     return IndexT();
     }
+
 Index inline
 index_in_common(const ITensor& A, const ITensor& B, IndexType t)
     { return index_in_common<ITensor,Index>(A,B,t); }
+
 IQIndex inline
 index_in_common(const IQTensor& A, const IQTensor& B, IndexType t)
     { return index_in_common<IQTensor,IQIndex>(A,B,t); }
@@ -45,21 +50,23 @@ class SVDWorker
 
     template <class Tensor> 
     void 
-    operator()(int b, const Tensor& AA, Tensor& L, Tensor& V, Tensor& R);
-
-    template <class Tensor> 
-    void 
     operator()(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R)
         { 
         operator()<Tensor>(1,AA,L,V,R); 
         }
 
-    //Site SVD -----------------------------------------------
-    //(weights in A or B tensor, for dir = Fromleft or Fromright, respectively)
+    template <class Tensor> 
+    void 
+    operator()(int b, const Tensor& AA, Tensor& L, Tensor& V, Tensor& R);
 
     template <class Tensor> 
     void 
-    operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
+    operator()(int b, const ProjectedOp<Tensor>& PH, 
+               const Tensor& AA, Tensor& L, Tensor& V, Tensor& R);
+
+
+    //Site SVD -----------------------------------------------
+    //(weights in A or B tensor, for dir = Fromleft or Fromright, respectively)
 
     template <class Tensor> 
     void 
@@ -67,6 +74,15 @@ class SVDWorker
         { 
         operator()<Tensor>(1,AA,A,B,dir); 
         }
+
+    template <class Tensor> 
+    void
+    operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
+
+    template <class Tensor> 
+    void
+    operator()(int b, const ProjectedOp<Tensor>& PH, 
+               const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
 
     //Accessors ---------------
 
@@ -143,6 +159,10 @@ class SVDWorker
     Real 
     maxTruncerr() const;
 
+    Real
+    noise() const { return noise_; }
+    void
+    noise(Real val) { noise_ = val; }
 
     Real 
     diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U);
@@ -150,14 +170,18 @@ class SVDWorker
     diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U);
 
     Real 
-    diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& C, ITensor& U);
+    diag_denmat(const ITensor& rho, Vector& D, Index& newmid, 
+                ITensor& C, ITensor& U);
     Real 
-    diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& C, IQTensor& U);
+    diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, 
+                IQTensor& C, IQTensor& U);
 
     Real 
-    diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U);
+    diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& newmid, 
+                        IQTensor& U);
     Real 
-    diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, ITensor& U);
+    diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, 
+                        ITensor& U);
 
     void 
     read(std::istream& s);
@@ -167,14 +191,17 @@ class SVDWorker
 private:
 
     void
-    diag_and_truncate(const IQTensor& rho, std::vector<Matrix>& mmatrix, std::vector<Vector>& mvector,
-                      std::vector<Real>& alleig, Real& svdtruncerr, IQIndex& newmid);
+    diag_and_truncate(const IQTensor& rho, std::vector<Matrix>& mmatrix, 
+                      std::vector<Vector>& mvector, std::vector<Real>& alleig, 
+                      Real& svdtruncerr, IQIndex& newmid);
     void
-    buildUnitary(const IQTensor& rho, const std::vector<Matrix>& mmatrix, const std::vector<Vector>& mvector,
+    buildUnitary(const IQTensor& rho, const std::vector<Matrix>& mmatrix, 
+                 const std::vector<Vector>& mvector,
                  const IQIndex& newmid, IQTensor& U);
 
     void
-    buildCenter(const IQTensor& rho, const std::vector<Matrix>& mmatrix, const std::vector<Vector>& mvector,
+    buildCenter(const IQTensor& rho, const std::vector<Matrix>& mmatrix, 
+                const std::vector<Vector>& mvector,
                 const IQIndex& newmid, IQTensor& C);
 
     ITensor 
@@ -194,182 +221,9 @@ private:
     bool absoluteCutoff_;
     LogNumber refNorm_;
     std::vector<Vector> eigsKept_;
+    Real noise_;
 
     }; //class SVDWorker
 
-
-template<class Tensor>
-void SVDWorker::
-operator()(int b, const Tensor& AA, 
-           Tensor& A, Tensor& B, Direction dir)
-    {
-    typedef typename Tensor::IndexT 
-    IndexT;
-    typedef typename Tensor::CombinerT 
-    CombinerT;
-
-    if(AA.vecSize() == 0) 
-        {
-        A *= 0;
-        B *= 0;
-        eigsKept_.at(b).ReDimension(1);
-        eigsKept_.at(b) = 1;
-        return;
-        }
-
-    IndexT mid = index_in_common(A,B,Link);
-    if(mid.isNull()) mid = IndexT("mid");
-
-    //If dir==None, put the O.C. on the side
-    //that keeps mid's arrow the same
-    bool do_edge_case = true;
-    if(dir == None)
-        {
-        //std::cerr << boost::format("Arrow before = %s\n")%(mid.dir() == Out ? "Out" : "In");
-        dir = (mid.dir() == Out ? Fromright : Fromleft);
-        do_edge_case = false;
-        }
-
-    Tensor& to_orth = (dir==Fromleft ? A : B);
-    Tensor& newoc   = (dir==Fromleft ? B : A);
-
-    CombinerT comb;
-
-    int unique_link = 0; //number of Links unique to to_orth
-    for(int j = 1; j <= to_orth.r(); ++j) 
-        { 
-        const IndexT& I = to_orth.index(j);
-        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex() ))
-            {
-            if(I.type() == Link) ++unique_link;
-            comb.addleft(I);
-            }
-        }
-
-    //Check if we're at the edge
-    if(unique_link == 0 && do_edge_case)
-        {
-        comb.init(mid.rawname());
-        comb.product(AA,newoc);
-        to_orth = comb; to_orth.conj();
-        eigsKept_.at(b) = Vector(comb.right().m()); 
-        eigsKept_.at(b) = 1.0/comb.right().m();
-        return;
-        }
-
-    //Apply combiner
-    comb.doCondense(true);
-    comb.init(mid.rawname());
-    Tensor AAc; comb.product(AA,AAc);
-
-    const IndexT& active = comb.right();
-
-    Tensor AAcc = conj(AAc); 
-    AAcc.primeind(active); 
-    Tensor rho = AAc*AAcc; 
-
-    const Real saved_cutoff = cutoff_; 
-    const int saved_minm = minm_,
-              saved_maxm = maxm_; 
-    if(use_orig_m_)
-        {
-        cutoff_ = -1;
-        minm_ = mid.m();
-        maxm_ = mid.m();
-        }
-
-    IndexT newmid;
-    Tensor U;
-    if(AAc.is_complex())
-        truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),newmid,U);
-    else
-        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),newmid,U);
-
-    cutoff_ = saved_cutoff; 
-    minm_ = saved_minm; 
-    maxm_ = saved_maxm; 
-
-    comb.conj();
-    comb.product(U,to_orth);
-    newoc = conj(U) * AAc;
-
-    } //void SVDWorker::operator()
-
-template<class Tensor>
-void SVDWorker::
-operator()(int b, const Tensor& AA, 
-           Tensor& L, Tensor& V, Tensor& R)
-    {
-    typedef typename Tensor::IndexT 
-    IndexT;
-    typedef typename Tensor::CombinerT 
-    CombinerT;
-
-
-    IndexT ll = V.index(1);
-
-    //Form the density matrix for the smaller
-    //of the two halves of the system
-    int ldim = L.maxSize()/ll.m(),
-        rdim = R.maxSize()/ll.m();
-
-    Tensor& Act = (ldim < rdim ? L : R);
-    Tensor& Oth = (ldim < rdim ? R : L);
-
-    //Make a combiner for each side
-    CombinerT comb;
-    for(int j = 1; j <= Act.r(); ++j) 
-        { 
-        const IndexT& I = Act.index(j);
-        if(I == ll || I == Tensor::ReImIndex()) continue;
-        comb.addleft(I);
-        }
-
-    //Apply combiner
-    comb.doCondense(true);
-    comb.init(ll.rawname());
-
-    Tensor AAc; 
-    comb.product(AA,AAc);
-
-    const IndexT& active = comb.right();
-
-    Tensor AAcc = conj(AAc); 
-    AAcc.primeind(active); 
-    Tensor rho = AAc*AAcc; 
-
-    const Real saved_cutoff = cutoff_; 
-    const int saved_minm = minm_,
-              saved_maxm = maxm_; 
-    if(use_orig_m_)
-        {
-        cutoff_ = -1;
-        minm_ = ll.m();
-        maxm_ = ll.m();
-        }
-
-    Tensor C,U;
-    if(AAc.is_complex())
-        {
-        Error("Complex case not implemented");
-        }
-    else
-        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),ll,C,U);
-
-    cutoff_ = saved_cutoff; 
-    minm_ = saved_minm; 
-    maxm_ = saved_maxm; 
-
-    Oth = conj(U) * AAc;
-
-    V = pseudoInverse(C);
-    //V = pseudoInverse(C,0.01*sqrt(cutoff_));
-
-    comb.conj();
-    comb.product(U,Act);
-    Act.conj(C.index(1));
-    Act /= C;
-
-    } //void SVDWorker::operator()
 
 #endif
