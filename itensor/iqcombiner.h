@@ -61,6 +61,12 @@ public:
     int 
     num_left() const { return int(left.size()); }
 
+    void
+    doprime(PrimeType pr, int inc = 1);
+
+    friend IQCombiner
+    primed(IQCombiner C, int inc = 1);
+
     void 
     conj();
 
@@ -231,7 +237,7 @@ init(std::string rname, IndexType type,
     QCounter c(left);
     std::vector<inqn> iq;
     for( ; c.notdone(); ++c)
-    {
+        {
         std::vector<Index> vind;
         QN q;
         c.getVecInd(left, vind, q);		// updates vind and q
@@ -239,23 +245,23 @@ init(std::string rname, IndexType type,
 
         Combiner co; Real rss = 0.0;
         Foreach(const Index& i, vind)
-        { 
+            { 
             co.addleft(i); 
             rss += i.uniqueReal(); 
-        }
+            }
         co.init(rname+q.toString(),type,rdir,primelevel);
 
         iq.push_back(inqn(co.right(),q));
         setcomb[ApproxReal(rss)] = co;
         rightcomb[co.right()] = co;
-    }
+        }
     if(do_condense) 
-    {
+        {
         ucright_ = IQIndex(rname,iq,rdir,primelevel);
         std::string cname = "cond::" + rname;
         cond = Condenser(ucright_,cname);
         right_ = cond.smallind();
-    }
+        }
     else right_ = IQIndex(rname,iq,rdir,primelevel);
 
     initted = true;
@@ -319,6 +325,21 @@ hasindex(const Index& i) const
     for(size_t j = 0; j < left.size(); ++j)
         if(left[j].hasindex(i)) return true;
     return false;
+    }
+
+void inline IQCombiner::
+doprime(PrimeType pr, int inc)
+    {
+    initted = false;
+    Foreach(IQIndex& ll, left)
+        ll.doprime(pr,inc);
+    }
+
+IQCombiner inline
+primed(IQCombiner C, int inc)
+    {
+    C.doprime(primeBoth,inc);
+    return C;
     }
 
 
@@ -386,8 +407,10 @@ product(const IQTensor& t, IQTensor& res) const
 
         Foreach(const ITensor& it, t_.itensors())
         for(int k = 1; k <= it.r(); ++k)
-        if(r.hasindex(it.index(k)))
-        { res += (it * rightcomb[it.index(k)]); }
+            if(r.hasindex(it.index(k)))
+            { 
+            res += (it * rightcomb[it.index(k)]); 
+            }
 
     }
     else

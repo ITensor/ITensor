@@ -78,6 +78,12 @@ public:
     bool 
     hasindex(const Index& I) const;
 
+    void
+    doprime(PrimeType pr, int inc = 1);
+
+    friend Combiner
+    primed(Combiner C, int inc = 1);
+
 
     //Other Methods -------------------------------------------------
 
@@ -170,6 +176,27 @@ hasindex(const Index& I) const
     {
     for(int j = 1; j <= rl_; ++j) if(left_[j] == I) return true;
     return false;
+    }
+
+inline
+void Combiner::
+doprime(PrimeType pr, int inc)
+    {
+    for(int j = 1; j <= rl_; ++j) 
+        {
+        left_[j].doprime(pr,inc);
+        }
+    if(initted)
+        {
+        right_.doprime(pr,inc);
+        }
+    }
+
+Combiner inline
+primed(Combiner C, int inc)
+    {
+    C.doprime(primeBoth,inc);
+    return C;
     }
 
 inline
