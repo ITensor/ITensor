@@ -16,50 +16,53 @@ void convertToIQ(const Model& model, const std::vector<ITensor>& A, std::vector<
 template<class Tensor, class TensorSet>
 Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal);
 
-template<class Tensor, class IndexT>
-IndexT index_in_common(const Tensor& A, const Tensor& B, IndexType t)
-    {
-    for(int j = 1; j <= A.r(); ++j)
-        {
-        const IndexT& I = A.index(j);
-        if(I.type() == t && B.hasindex(I)) { return I; }
-        }
-    return IndexT();
-    }
-inline Index index_in_common(const ITensor& A, const ITensor& B, IndexType t)
-{ return index_in_common<ITensor,Index>(A,B,t); }
-inline IQIndex index_in_common(const IQTensor& A, const IQTensor& B, IndexType t)
-{ return index_in_common<IQTensor,IQIndex>(A,B,t); }
-
 class InitState
-{
-    int N;
-    std::vector<IQIndexVal> state;
+    {
     typedef IQIndexVal (*SetFuncPtr)(int);
-public:
+    public:
+
+    InitState(int nsite) 
+        : N(nsite), 
+          state(N+1) 
+        { }
+
+    InitState(int nsite,SetFuncPtr setter) 
+        : N(nsite), 
+          state(N+1) 
+        { set_all(setter); }
+
     int NN() const { return N; }
 
-    InitState(int nsite) : N(nsite), state(N+1) { }
-    InitState(int nsite,SetFuncPtr setter) : N(nsite), state(N+1) 
-    { set_all(setter); }
+    void 
+    set_all(SetFuncPtr setter)
+        { 
+        for(int j = 1; j <= N; ++j) GET(state,j-1) = (*setter)(j); 
+        }
 
-    void set_all(SetFuncPtr setter)
-    { for(int j = 1; j <= N; ++j) GET(state,j-1) = (*setter)(j); }
+    IQIndexVal& 
+    operator()(int i) { return state.at(i-1); }
+    const IQIndexVal& 
+    operator()(int i) const { return state.at(i-1); }
 
-    IQIndexVal& operator()(int i) { return GET(state,i-1); }
-    const IQIndexVal& operator()(int i) const { return GET(state,i-1); }
     operator std::vector<IQIndexVal>() const { return state; }
-};
+
+    private:
+
+    int N;
+    std::vector<IQIndexVal> state;
+    };
 
 template <class Tensor>
-class MPSt //the lowercase t stands for "type" or "template"
-{
-public:
+class MPSt //the lowercase t stands for "template"
+    {
+    public:
 
-    typedef Tensor TensorT;
-    typedef typename Tensor::IndexT IndexT;
-    typedef typename Tensor::IndexValT IndexValT;
-    typedef Model ModelT;
+    typedef Tensor 
+    TensorT;
+    typedef typename Tensor::IndexT 
+    IndexT;
+    typedef typename Tensor::IndexValT 
+    IndexValT;
 
     //Accessor Methods ------------------------------
 
@@ -67,10 +70,10 @@ public:
     NN() const { return N;}
 
     int 
-    right_lim() const { return right_orth_lim; }
+    right_lim() const { return r_orth_lim_; }
 
     int 
-    left_lim() const { return left_orth_lim; }
+    left_lim() const { return l_orth_lim_; }
 
     IQIndex 
     si(int i) const { return model_->si(i); }
@@ -78,7 +81,9 @@ public:
     IQIndex 
     siP(int i) const { return model_->siP(i); }
 
-    typedef typename std::vector<Tensor>::const_iterator AA_it;
+    typedef typename std::vector<Tensor>::const_iterator 
+    AA_it;
+
     const std::pair<AA_it,AA_it> 
     AA() const { return std::make_pair(A.begin()+1,A.end()); }
 
@@ -86,22 +91,13 @@ public:
     AA(int i) const { return GET(A,i); }
 
     Tensor& 
-    AAnc(int i) //nc means 'non const'
-        { 
-        if(i <= left_orth_lim) left_orth_lim = i-1;
-        if(i >= right_orth_lim) right_orth_lim = i+1;
-        return GET(A,i); 
-        }
+    AAnc(int i); //nc means 'non const'
 
-    const ModelT& 
+    const Model& 
     model() const { return *model_; }
 
     const SVDWorker& 
     svd() const { return svd_; }
-
-
-    Tensor& 
-    setU(int i, Direction dir); //set unitary
 
     bool 
     isNull() const { return (model_==0); }
@@ -150,8 +146,7 @@ public:
     showeigs(bool val) { svd_.showeigs(val); }
 
     Tensor 
-    bondTensor(int b) const 
-        { Tensor res = A.at(b) * A.at(b+1); return res; }
+    bondWF(int b) const;
 
     //MPSt: Constructors --------------------------------------------
 
@@ -159,21 +154,21 @@ public:
         : N(0), model_(0)
         { }
 
-    MPSt(const ModelT& mod_,int maxmm = MAX_M, Real cut = MIN_CUT) 
-    : N(mod_.NN()), A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(mod_.NN()),
+    MPSt(const Model& mod_,int maxmm = MAX_M, Real cut = MIN_CUT) 
+    : N(mod_.NN()), A(mod_.NN()+1),l_orth_lim_(0),r_orth_lim_(mod_.NN()),
     model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
         { 
         random_tensors(A);
         }
 
-    MPSt(const ModelT& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MIN_CUT) 
-    : N(mod_.NN()),A(mod_.NN()+1),left_orth_lim(0),right_orth_lim(2),
+    MPSt(const Model& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MIN_CUT) 
+    : N(mod_.NN()),A(mod_.NN()+1),l_orth_lim_(0),r_orth_lim_(2),
     model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
         { 
         init_tensors(A,initState);
         }
 
-    MPSt(const ModelT& model, std::istream& s)
+    MPSt(const Model& model, std::istream& s)
         : N(model.NN()), A(model.NN()+1), model_(&model)
         { 
         read(s); 
@@ -190,7 +185,7 @@ public:
     //MPSt: operators ------------------------------------------------------
 
     inline MPSt& 
-    operator*=(Real a) { AAnc(left_orth_lim+1) *= a; return *this; }
+    operator*=(Real a) { AAnc(l_orth_lim_+1) *= a; return *this; }
 
     inline MPSt 
     operator*(Real r) const { MPSt res(*this); res *= r; return res; }
@@ -209,102 +204,66 @@ public:
 
     //MPSt: index methods --------------------------------------------------
 
-    void mapprime(int oldp, int newp, PrimeType pt = primeBoth)
-	{ for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,pt); }
+    void 
+    mapprime(int oldp, int newp, PrimeType pt = primeBoth)
+        { for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,pt); }
 
-    void primelinks(int oldp, int newp)
-	{ for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,primeLink); }
+    void 
+    primelinks(int oldp, int newp)
+        { for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,primeLink); }
 
-    void noprimelink()
-	{ for(int i = 1; i <= N; ++i) A[i].noprime(primeLink); }
+    void 
+    noprimelink()
+        { for(int i = 1; i <= N; ++i) A[i].noprime(primeLink); }
 
-    IndexT LinkInd(int b) const 
+    IndexT 
+    LinkInd(int b) const 
         { return index_in_common(AA(b),AA(b+1),Link); }
-    IndexT RightLinkInd(int i) const 
-        { assert(i < N); return index_in_common(AA(i),AA(i+1),Link); }
-    IndexT LeftLinkInd(int i)  const 
-        { assert(i > 1); return index_in_common(AA(i),AA(i-1),Link); }
+    IndexT 
+    RightLinkInd(int i) const 
+        { return index_in_common(AA(i),AA(i+1),Link); }
+    IndexT 
+    LeftLinkInd(int i)  const 
+        { return index_in_common(AA(i),AA(i-1),Link); }
 
     //MPSt: orthogonalization methods -------------------------------------
 
-    void doSVD(int b, const Tensor& AA, Direction dir, 
-               bool preserve_shape = false)
-	{
-        assert(b > 0);
-        assert(b < N);
+    void 
+    doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false);
 
-        if(dir == Fromleft && b-1 > left_orth_lim)
-        {
-            std::cerr << boost::format("b=%d, left_orth_lim=%d\n")
-                    %b%left_orth_lim;
-            Error("b-1 > left_orth_lim");
-        }
-        if(dir == Fromright && b+2 < right_orth_lim)
-        {
-            std::cerr << boost::format("b=%d, right_orth_lim=%d\n")
-                    %b%right_orth_lim;
-            Error("b+2 < right_orth_lim");
-        }
+    //Move the orthogonality center to site i (l_orth_lim_ = i-1, r_orth_lim_ = i+1)
+    void 
+    position(int i, bool preserve_shape = false);
 
-        svd_(b,AA,A[b],A[b+1],dir);
-                 
-        if(dir == Fromleft)
-        {
-            //if(left_orth_lim >= b-1 || b == 1) 
-            left_orth_lim = b;
-            if(right_orth_lim < b+2) right_orth_lim = b+2;
-        }
-        else //dir == Fromright
-        {
-            if(left_orth_lim > b-1) left_orth_lim = b-1;
-            //if(right_orth_lim <= b+2 || b == N-1) 
-            right_orth_lim = b+1;
-        }
-	}
+    bool 
+    is_ortho() const { return (l_orth_lim_ + 1 == r_orth_lim_ - 1); }
 
-    //Move the orthogonality center to site i (left_orth_lim = i-1, right_orth_lim = i+1)
-    void position(int i, bool preserve_shape = false)
-	{
-        if(isNull()) Error("position: MPS is null");
-        while(left_orth_lim < i-1)
-        {
-            if(left_orth_lim < 0) left_orth_lim = 0;
-            Tensor WF = AA(left_orth_lim+1) * AA(left_orth_lim+2);
-            doSVD(left_orth_lim+1,WF,Fromleft,preserve_shape);
-        }
-        while(right_orth_lim > i+1)
-        {
-            if(right_orth_lim > N+1) right_orth_lim = N+1;
-            Tensor WF = AA(right_orth_lim-2) * AA(right_orth_lim-1);
-            doSVD(right_orth_lim-2,WF,Fromright,preserve_shape);
-        }
-	}
-
-    bool is_ortho() const { return (left_orth_lim + 1 == right_orth_lim - 1); }
-
-    int ortho_center() const 
-    { 
+    int 
+    ortho_center() const 
+        { 
         if(!is_ortho()) Error("orthogonality center not well defined.");
-        return (left_orth_lim + 1);
-    }
+        return (l_orth_lim_ + 1);
+        }
 
-    void orthogonalize(bool verbose = false)
-    {
+    void 
+    orthogonalize(bool verbose = false)
+        {
         //Do a half-sweep to the right, orthogonalizing each bond
         //but do not truncate since the basis to the right might not
         //be ortho (i.e. use the current m).
-        svd_.truncate(false);
+        svd_.useOrigM(true);
         position(N);
         if(verbose)
             std::cout << "Done orthogonalizing, starting truncation." << std::endl;
         //Now basis is ortho, ok to truncate
-        svd_.truncate(true);
+        svd_.useOrigM(false);
         position(1);
-    }
+        }
 
     //Checks if A[i] is left (left == true) or right (left == false) orthogonalized
-    bool checkOrtho(int i, bool left) const
-    {
+    bool 
+    checkOrtho(int i, bool left) const
+        {
         IndexT link = (left ? RightLinkInd(i) : LeftLinkInd(i));
         Tensor A = AA(i);
         Tensor Ac = conj(A); Ac.primeind(link,4);
@@ -329,61 +288,59 @@ public:
         //-----------------------------
 
         return false;
-    }
-    bool checkRightOrtho(int i) const { return checkOrtho(i,false); }
-    bool checkLeftOrtho(int i) const { return checkOrtho(i,true); }
+        }
+    bool 
+    checkRightOrtho(int i) const { return checkOrtho(i,false); }
+    bool 
+    checkLeftOrtho(int i) const { return checkOrtho(i,true); }
     
-    bool checkOrtho() const
-    {
-        for(int i = 1; i <= left_orth_lim; ++i)
+    bool 
+    checkOrtho() const
+        {
+        for(int i = 1; i <= l_orth_lim_; ++i)
         if(!checkLeftOrtho(i))
         {
             std::cerr << "checkOrtho: A[i] not left orthogonal at site i=" << i << std::endl;
             return false;
         }
 
-        for(int i = NN(); i >= right_orth_lim; --i)
+        for(int i = NN(); i >= r_orth_lim_; --i)
         if(!checkRightOrtho(i))
         {
             std::cerr << "checkOrtho: A[i] not right orthogonal at site i=" << i << std::endl;
             return false;
         }
         return true;
-    }
+        }
 
-    void getCenter(int j, Direction dir, Tensor& lambda, bool do_signfix = false)
-    {
+    void 
+    getCenter(int j, Direction dir, Tensor& lambda, bool do_signfix = false)
+        {
         getCenterMatrix(AAnc(j),(dir == Fromleft ? RightLinkInd(j) : LeftLinkInd(j)),cutoff,minm,maxm,lambda,nameint("c",j));
 
-        if(dir == Fromleft) {
-		if(left_orth_lim == j-1 || j == 1) {
-		       	left_orth_lim = j;
-		}
-	}
-        else if(right_orth_lim == j+1 || j == N) right_orth_lim = j;
+        if(dir == Fromleft) 
+            {
+            if(l_orth_lim_ == j-1 || j == 1) 
+                l_orth_lim_ = j;
+            }
+        else 
+            {
+            if(r_orth_lim_ == j+1 || j == N) 
+                r_orth_lim_ = j;
+            }
 
         if(do_signfix) Error("do_signfix not implemented.");
-    }
+        }
 
     template<class TensorSet>
     Real bondDavidson(int b, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, 
     int niter, int debuglevel, Direction dir, Real errgoal=1E-4)
-    {
-        if(b-1 > left_orth_lim)
-            {
-            std::cerr << boost::format("b=%d, Lb=%d\n")%b%left_orth_lim;
-            Error("b-1 > left_orth_lim");
-            }
-        if(b+2 < right_orth_lim)
-            {
-            std::cerr << boost::format("b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
-            Error("b+1 < right_orth_lim");
-            }
-        Tensor phi = GET(A,b); phi *= GET(A,b+1);
+        {
+        Tensor phi = bondWF(b);
         Real En = doDavidson(phi,mpoh,LH,RH,niter,debuglevel,errgoal);
         doSVD(b,phi,dir);
         return En;
-    }
+        }
 
     Real
     bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<Tensor>& PH,
@@ -400,15 +357,15 @@ public:
     template<class OpTensor>
     void projectOp(int j, Direction dir, const Tensor& P, const OpTensor& Op, Tensor& res) const
     {
-        if(dir==Fromleft && j > left_orth_lim) 
+        if(dir==Fromleft && j > l_orth_lim_) 
             { 
-            std::cerr << boost::format("projectOp: from left j > left_orth_lim (j=%d,left_orth_lim=%d)\n")%j%left_orth_lim; 
-            Error("Projecting operator at j > left_orth_lim"); 
+            std::cerr << boost::format("projectOp: from left j > l_orth_lim_ (j=%d,l_orth_lim_=%d)\n")%j%l_orth_lim_; 
+            Error("Projecting operator at j > l_orth_lim_"); 
             }
-        if(dir==Fromright && j < right_orth_lim) 
+        if(dir==Fromright && j < r_orth_lim_) 
             { 
-            std::cerr << boost::format("projectOp: from left j < right_orth_lim (j=%d,right_orth_lim=%d)\n")%j%right_orth_lim; 
-            Error("Projecting operator at j < right_orth_lim"); 
+            std::cerr << boost::format("projectOp: from left j < r_orth_lim_ (j=%d,r_orth_lim_=%d)\n")%j%r_orth_lim_; 
+            Error("Projecting operator at j < r_orth_lim_"); 
             }
         res = (P.isNull() ? AA(j) : P * AA(j));
         res *= Op; res *= conj(primed(AA(j)));
@@ -417,9 +374,9 @@ public:
 
     void applygate(const Tensor& gate)
 	{
-        Tensor AA = A[left_orth_lim+1] * A[left_orth_lim+2] * gate;
+        Tensor AA = A[l_orth_lim_+1] * A[l_orth_lim_+2] * gate;
         AA.noprime();
-        doSVD(left_orth_lim+1,AA,Fromleft);
+        doSVD(l_orth_lim_+1,AA,Fromleft);
 	}
 
     Real 
@@ -437,7 +394,7 @@ public:
     }
 
     bool is_complex() const
-    { return A[left_orth_lim+1].is_complex(); }
+    { return A[l_orth_lim_+1].is_complex(); }
 
     friend inline std::ostream& 
     operator<<(std::ostream& s, const MPSt& M)
@@ -483,10 +440,10 @@ protected:
 
     std::vector<Tensor> A;
 
-    int left_orth_lim,
-        right_orth_lim;
+    int l_orth_lim_,
+        r_orth_lim_;
 
-    const ModelT* model_;
+    const Model* model_;
 
     SVDWorker svd_;
 

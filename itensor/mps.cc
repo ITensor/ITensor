@@ -5,24 +5,39 @@ using boost::format;
 
 template <class Tensor>
 Tensor& MPSt<Tensor>::
-setU(int i, Direction dir) //set unitary
-    {
-    if(dir == Fromleft)
-        {
-        if(i == left_orth_lim+1) left_orth_lim = i;
-        else Error("left_orth_lim not at i-1");
-        }
-    else if(dir == Fromright)
-        {
-        if(i == right_orth_lim-1) right_orth_lim = i;
-        else Error("right_orth_lim not at i-1");
-        }
-    return GET(A,i);
+AAnc(int i) //nc means 'non const'
+    { 
+    if(i <= l_orth_lim_) l_orth_lim_ = i-1;
+    if(i >= r_orth_lim_) r_orth_lim_ = i+1;
+    return A.at(i); 
     }
 template
-ITensor& MPSt<ITensor>::setU(int i, Direction dir);
+ITensor& MPSt<ITensor>::AAnc(int i);
 template
-IQTensor& MPSt<IQTensor>::setU(int i, Direction dir);
+IQTensor& MPSt<IQTensor>::AAnc(int i);
+
+template <class Tensor>
+Tensor MPSt<Tensor>::
+bondWF(int b) const 
+    { 
+    if(b-1 > l_orth_lim_)
+        {
+        std::cerr << boost::format("b=%d, Lb=%d\n")%b%l_orth_lim_;
+        Error("b-1 > l_orth_lim_");
+        }
+    if(b+2 < r_orth_lim_)
+        {
+        std::cerr << boost::format("b+2=%d, Rb=%d\n")%(b+2)%r_orth_lim_;
+        Error("b+2 < r_orth_lim_");
+        }
+    Tensor res = A.at(b) * A.at(b+1); 
+    return res; 
+    }
+template
+ITensor MPSt<ITensor>::bondWF(int b) const;
+template
+IQTensor MPSt<IQTensor>::bondWF(int b) const;
+
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -32,8 +47,8 @@ read(std::istream& s)
         Error("Can't read to default constructed MPS");
     for(int j = 1; j <= N; ++j) 
         A.at(j).read(s);
-    s.read((char*) &left_orth_lim,sizeof(left_orth_lim));
-    s.read((char*) &right_orth_lim,sizeof(right_orth_lim));
+    s.read((char*) &l_orth_lim_,sizeof(l_orth_lim_));
+    s.read((char*) &r_orth_lim_,sizeof(r_orth_lim_));
     svd_.read(s);
     }
 template
@@ -50,8 +65,8 @@ write(std::ostream& s) const
         {
         A.at(j).write(s);
         }
-    s.write((char*) &left_orth_lim,sizeof(left_orth_lim));
-    s.write((char*) &right_orth_lim,sizeof(right_orth_lim));
+    s.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
+    s.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
     svd_.write(s);
     }
 template
@@ -264,23 +279,78 @@ template
 MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
 #endif
 
+template<class Tensor> void
+MPSt<Tensor>::
+doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape)
+    {
+    if(preserve_shape)
+        {
+        //The idea of the preserve_shape flag is to 
+        //leave any external indices of the MPS on the
+        //tensors they originally belong to
+        Error("preserve_shape not currently implemented");
+        }
+
+    if(dir == Fromleft && b-1 > l_orth_lim_)
+        {
+        std::cerr << boost::format("b=%d, l_orth_lim_=%d\n")
+                %b%l_orth_lim_;
+        Error("b-1 > l_orth_lim_");
+        }
+    if(dir == Fromright && b+2 < r_orth_lim_)
+        {
+        std::cerr << boost::format("b=%d, r_orth_lim_=%d\n")
+                %b%r_orth_lim_;
+        Error("b+2 < r_orth_lim_");
+        }
+
+    svd_(b,AA,A[b],A[b+1],dir);
+             
+    if(dir == Fromleft)
+        {
+        l_orth_lim_ = b;
+        if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
+        }
+    else //dir == Fromright
+        {
+        if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
+        r_orth_lim_ = b+1;
+        }
+    }
+template void MPSt<ITensor>::
+doSVD(int b, const ITensor& AA, Direction dir, bool);
+template void MPSt<IQTensor>::
+doSVD(int b, const IQTensor& AA, Direction dir, bool);
+
+template<class Tensor> void
+MPSt<Tensor>::
+position(int i, bool preserve_shape)
+    {
+    if(isNull()) Error("position: MPS is null");
+    while(l_orth_lim_ < i-1)
+        {
+        if(l_orth_lim_ < 0) l_orth_lim_ = 0;
+        Tensor WF = AA(l_orth_lim_+1) * AA(l_orth_lim_+2);
+        doSVD(l_orth_lim_+1,WF,Fromleft,preserve_shape);
+        }
+    while(r_orth_lim_ > i+1)
+        {
+        if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
+        Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
+        doSVD(r_orth_lim_-2,WF,Fromright,preserve_shape);
+        }
+    }
+template void MPSt<ITensor>::
+position(int b, bool preserve_shape);
+template void MPSt<IQTensor>::
+position(int b, bool preserve_shape);
+
 template<class Tensor> Real 
 MPSt<Tensor>::
 bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<Tensor>& PH,
              Direction dir)
         {
-        if(b-1 > left_orth_lim)
-            {
-            std::cerr << boost::format("b=%d, Lb=%d\n")%b%left_orth_lim;
-            Error("b-1 > left_orth_lim");
-            }
-        if(b+2 < right_orth_lim)
-            {
-            std::cerr << boost::format("b+1=%d, Rb=%d\n")%(b+1)%right_orth_lim;
-            Error("b+1 < right_orth_lim");
-            }
-        Tensor phi = GET(A,b); 
-        phi *= GET(A,b+1);
+        Tensor phi = bondWF(b);
         Real En = solver.davidson(PH,phi);
         doSVD(b,phi,dir);
         return En;
@@ -614,7 +684,7 @@ template <class IQMPSType>
 void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 {
     assert(model_ != 0);
-    const ModelT& sst = *model_;
+    const Model& sst = *model_;
 
     iqpsi = IQMPSType(sst,maxm,cutoff);
 

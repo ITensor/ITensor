@@ -443,6 +443,7 @@ checkDiv(QN expected) const
             std::cerr << "Block didn't match expected div\n";
             std::cout << "Block didn't match expected div\n";
             Print(expected);
+            Print(div_);
             this->printIndices("this IQTensor:");
             std::cout << "Incorrect block:\n";
             Print(t);
@@ -878,6 +879,15 @@ vecSize() const
 	    s += jj->vecSize();
 	return s;
 	}
+
+int IQTensor::
+maxSize() const
+	{
+    int ms = 1;
+	for(size_t j = 0; j < p->iqindex_.size(); ++j)
+	    ms *= p->iqindex_[j].m();
+    return ms;
+    }
 
 void IQTensor::
 assignToVec(VectorRef v) const

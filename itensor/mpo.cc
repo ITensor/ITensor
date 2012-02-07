@@ -121,7 +121,7 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
     if(nfork.iten_size() == 0)	// this product gives 0 !!
         { res *= 0; return; }
 
-    res.doSVD(N-1,nfork,Fromright,false);
+    res.doSVD(N-1,nfork,Fromright);
     res.noprimelink();
     res.mapprime(1,0,primeSite);
     res.position(1);

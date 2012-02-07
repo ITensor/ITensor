@@ -248,7 +248,7 @@ class IQTensor
     div() const;
 
     bool 
-    checkDiv(QN expected) const;
+    checkDiv(QN expected = QN()) const;
 
     QN 
     qn(const Index& in) const;
@@ -386,6 +386,9 @@ class IQTensor
 
     int 
     vecSize() const;
+
+    int 
+    maxSize() const;
 
     void 
     assignToVec(VectorRef v) const;

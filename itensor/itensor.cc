@@ -1009,7 +1009,18 @@ expandIndex(const Index& small, const Index& big, int start)
 
 int ITensor::
 vecSize() const 
-    { return (p == 0 ? 0 : p->v.Length()); }
+    { 
+    return (p == 0 ? 0 : p->v.Length()); 
+    }
+
+int ITensor::
+maxSize() const 
+    { 
+    int ms = 1;
+    for(int j = 1; j <= rn_; ++j)
+        ms *= index_[j].m();
+    return ms;
+    }
 
 void ITensor::
 assignToVec(VectorRef v) const
@@ -1084,6 +1095,21 @@ sumels() const
 Real ITensor::
 norm() const 
     { return fabs(Norm(p->v) * scale_.real()); }
+
+void ITensor::
+pseudoInvertElems(Real cutoff)
+    {
+    solo();
+    //Invert scale_
+    scale_ = scale_.pow(-1);
+
+    //Invert elems
+    for(int j = 1; j <= p->v.Length(); ++j)
+        {
+        Real elem = p->v(j);
+        p->v(j) = (fabs(elem) <= cutoff ? 0 : 1./elem);
+        }
+    }
 
 void ITensor::
 scaleOutNorm() const
@@ -1945,41 +1971,41 @@ directMultiply(const ITensor& other, ProductProps& props,
     for(inew[3] = 1; inew[3] <= mnew[3]; ++inew[3])
     for(inew[2] = 1; inew[2] <= mnew[2]; ++inew[2])
     for(inew[1] = 1; inew[1] <= mnew[1]; ++inew[1])
-        {
-        Real d = 0.0;
-        if(props.nsamen == 1)
-        {
-            icon[1] = 1;
-            int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
-            int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
-            for(icon[1] = 1; icon[1] <= mcon[1]; icon[1]++, inda += inca1, indb += incb1)
-                d += pv[inda] * opv[indb];
-        }
-        else if(props.nsamen == 2)
-        {
-            icon[2] = icon[1] = 1;
-            int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
-            int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
-            int indaa = inda, indbb = indb;
-            for(icon[2] = 1; icon[2] <= mcon[2]; icon[2]++, indaa += inca2, indbb += incb2)
+            {
+            Real d = 0.0;
+            if(props.nsamen == 1)
                 {
-                inda = indaa; indb = indbb;
-                for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1], inda += inca1, indb += incb1)
-                d += pv[inda] * opv[indb];
+                icon[1] = 1;
+                int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
+                int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
+                for(icon[1] = 1; icon[1] <= mcon[1]; icon[1]++, inda += inca1, indb += incb1)
+                    d += pv[inda] * opv[indb];
                 }
-        }
-        else
-        {
-            for(icon[4] = 1; icon[4] <= mcon[4]; ++icon[4])
-            for(icon[3] = 1; icon[3] <= mcon[3]; ++icon[3])
-            for(icon[2] = 1; icon[2] <= mcon[2]; ++icon[2])
-            for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1])
-                d +=      p->v(ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1])) 
-                  * other.p->v(ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]));
-        }
+            else if(props.nsamen == 2)
+                {
+                icon[2] = icon[1] = 1;
+                int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
+                int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
+                int indaa = inda, indbb = indb;
+                for(icon[2] = 1; icon[2] <= mcon[2]; icon[2]++, indaa += inca2, indbb += incb2)
+                    {
+                    inda = indaa; indb = indbb;
+                    for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1], inda += inca1, indb += incb1)
+                    d += pv[inda] * opv[indb];
+                    }
+                }
+            else
+                {
+                for(icon[4] = 1; icon[4] <= mcon[4]; ++icon[4])
+                for(icon[3] = 1; icon[3] <= mcon[3]; ++icon[3])
+                for(icon[2] = 1; icon[2] <= mcon[2]; ++icon[2])
+                for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1])
+                    d +=      p->v(ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1])) 
+                      * other.p->v(ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]));
+                }
 
-        newdat(ind4(inew[4],mnew[3],inew[3],mnew[2],inew[2],mnew[1],inew[1])) = d;
-        }
+            newdat(ind4(inew[4],mnew[3],inew[3],mnew[2],inew[2],mnew[1],inew[1])) = d;
+            }
 
     if(p->count() != 1) { p = new ITDat(); } 
     p->v = newdat;
@@ -2096,50 +2122,52 @@ operator*=(const ITensor& other)
     int new_rn_ = 0;
 
     /*
-    bool mult_as_matrix = (props.odimL*props.cdim*props.odimR) > 10000 
-                       || (rn_+other.rn_-2*props.nsamen) > 4 
-                       || rn_ > 4 
-                       || other.rn_ > 4 ;
+    bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 10000 
+                              || (rn_+other.rn_-2*props.nsamen) > 4 
+                              || rn_ > 4 
+                              || other.rn_ > 4 ;
 
-    if(!mult_as_matrix)
+    if(do_matrix_multiply)
+        {
+    */
+
+    DO_IF_PS(++prodstats.c2;)
+    MatrixRefNoLink lref, rref;
+    toMatrixProd(*this,other,props,lref,rref);
+
+    //Do the matrix multiplication
+    if(p->count() != 1) { p = new ITDat(); } 
+#ifdef DO_ALT
+    else { p->alt.clear(); }
+#endif
+    p->v.ReDimension(rref.Nrows()*lref.Ncols());
+    MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
+    nref = rref*lref;
+
+    //Fill in new_index_
+
+    if((rn_ + other.rn_ - 2*props.nsamen + nr1_) > NMAX) 
+        {
+        Print(*this);
+        Print(other);
+        Print(props.nsamen);
+        cerr << "new m==1 indices\n";
+        for(int j = 1; j <= nr1_; ++j) cerr << *(new_index1_.at(j)) << "\n";
+        Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
+        }
+
+    //Handle m!=1 indices
+    for(int j = 1; j <= this->rn_; ++j)
+        { if(!props.contractedL[j]) new_index_[++new_rn_] = index_[j]; }
+    for(int j = 1; j <= other.rn_; ++j)
+        { if(!props.contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
+
+    /*
+    else
         {
         directMultiply(other,props,new_rn_,new_index_);
         }
-    else
-        {
     */
-        DO_IF_PS(++prodstats.c2;)
-        MatrixRefNoLink lref, rref;
-        toMatrixProd(*this,other,props,lref,rref);
-
-        //Do the matrix multiplication
-        if(p->count() != 1) { p = new ITDat(); } 
-#ifdef DO_ALT
-        else { p->alt.clear(); }
-#endif
-        p->v.ReDimension(rref.Nrows()*lref.Ncols());
-        MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
-        nref = rref*lref;
-
-        //Fill in new_index_
-
-        if((rn_ + other.rn_ - 2*props.nsamen + nr1_) > NMAX) 
-            {
-            Print(*this);
-            Print(other);
-            Print(props.nsamen);
-            cerr << "new m==1 indices\n";
-            for(int j = 1; j <= nr1_; ++j) cerr << *(new_index1_.at(j)) << "\n";
-            Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
-            }
-
-        //Handle m!=1 indices
-        for(int j = 1; j <= this->rn_; ++j)
-            { if(!props.contractedL[j]) new_index_[++new_rn_] = index_[j]; }
-        for(int j = 1; j <= other.rn_; ++j)
-            { if(!props.contractedR[j]) new_index_[++new_rn_] = other.index_[j]; }
-
-        //} //this brace goes back in when using directMultiply
 
     rn_ = new_rn_;
 

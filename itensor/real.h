@@ -61,19 +61,25 @@ public:
         { return lognum_ != lognum_; }
 
     //Default is Real(LogNum()) == 1
-    LogNumber() : lognum_(0), sign_(1) { }
+    LogNumber() 
+        : lognum_(0), 
+          sign_(1) 
+        { }
 
     LogNumber(Real r)
         {
         if(r == 0)
             { sign_ = 0;  lognum_ = 0; }
-        else if(r > 0)
-            { sign_ = 1;  lognum_ = log(r); }
-        else
+        else if(r < 0)
             { sign_ = -1; lognum_ = log(-r); }
+        else
+            { sign_ = 1;  lognum_ = log(r); }
         }
 
-    LogNumber(Real lognum, int sign) : lognum_(lognum), sign_(sign) { } 
+    LogNumber(Real lognum, int sign) 
+        : lognum_(lognum), 
+          sign_(sign) 
+        { } 
 
     inline void 
     read(std::istream& s) 
@@ -89,7 +95,8 @@ public:
         }
 
     //operator Real() const	too easy to misuse accidentally
-    Real real() const
+    Real 
+    real() const
         {
         if(sign_ == 0) return 0;
 #ifdef DEBUG
@@ -177,6 +184,13 @@ public:
         if(sign_ == 0) return other.sign_ != 0;
         if(other.sign_ == 0) return false;
         return lognum_ < other.lognum_;
+        }
+
+    LogNumber
+    pow(Real p)
+        {
+        LogNumber res(p*lognum_,sign_);
+        return res;
         }
 
     friend inline std::ostream& 

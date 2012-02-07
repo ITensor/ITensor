@@ -439,6 +439,9 @@ public:
     int 
     vecSize() const;
 
+    int 
+    maxSize() const;
+
     void 
     assignToVec(VectorRef v) const;
 
@@ -484,6 +487,9 @@ public:
 
     template <typename Callable> void
     mapElems(const Callable& f);
+
+    void
+    pseudoInvertElems(Real cutoff = 0);
 
     void 
     scaleOutNorm() const;

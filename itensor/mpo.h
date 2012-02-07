@@ -37,7 +37,7 @@ public:
 
     using Parent::AA;
     using Parent::AAnc;
-    using Parent::bondTensor;
+    using Parent::bondWF;
 
     using Parent::doRelCutoff;
     using Parent::refNorm;
@@ -137,8 +137,8 @@ public:
 private:
     using Parent::N;
     using Parent::A;
-    using Parent::left_orth_lim;
-    using Parent::right_orth_lim;
+    using Parent::l_orth_lim_;
+    using Parent::r_orth_lim_;
     using Parent::model_;
     using Parent::svd_;
 
@@ -295,7 +295,7 @@ public:
     int NN() const { return N; }
     int size() const { return size_; }
     const std::vector<const Tensor*>& AA(int j) const { return GET(A,j); }
-    const std::vector<Tensor> bondTensor(int b) const
+    const std::vector<Tensor> bondWF(int b) const
     { std::vector<Tensor> res = A[b] * A[b+1]; return res; }
 
 }; //class Internal::MPOSet
