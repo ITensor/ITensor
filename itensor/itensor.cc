@@ -23,15 +23,21 @@ Counter::
 Counter(const array<Index,NMAX+1>& ii,int rn,int r) 
     { init(ii,rn,r); }
 
-void 
-Counter::
+void Counter::
+reset(int a)
+    {
+    i.assign(a);
+    ind = 1;
+    }
+
+void Counter::
 init(const array<Index,NMAX+1>& ii, int rn, int r)
     {
     rn_ = rn;
     r_ = r;
     n[0] = 0;
     for(int j = 1; j <= rn_; ++j) 
-        { GET(n,j) = ii[j].m(); }
+        { n[j] = ii[j].m(); }
     for(int j = rn_+1; j <= NMAX; ++j) 
         { n[j] = 1; }
     reset(1);
@@ -951,6 +957,148 @@ tieIndices(const Index& i1, const Index& i2,
            Index::Null(), Index::Null() }};
 
     tieIndices(inds,4,tied);
+    }
+
+void ITensor::
+trace(const array<Index,NMAX+1>& indices, int nind)
+    {
+    if(nind == 0) Error("No indices given");
+
+    const int tm = indices[1].m();
+    
+    array<Index,NMAX+1> new_index_;
+
+    //will count these up below
+    int new_r_ = 0;
+    int alloc_size = 1;
+
+    array<bool,NMAX+1> traced;
+    traced.assign(false);
+
+    int nmatched = 0;
+    for(int k = 1; k <= r_; ++k)
+        {
+        const Index& K = index_[k];
+        for(int j = 1; j <= nind; ++j)
+        if(K == indices[j]) 
+            { 
+            if(indices[j].m() != tm)
+                Error("Traced indices must have matching m's");
+            traced[k] = true;
+
+            ++nmatched;
+
+            break;
+            }
+
+        if(!traced[k])
+            {
+            new_index_[++new_r_] = K;
+            alloc_size *= K.m();
+            }
+        }
+
+    //Check that all indices were found
+    if(nmatched != nind)
+        {
+        Print(*this);
+        cout << "indices = " << endl;
+        for(int j = 1; j <= nind; ++j)
+            cout << indices[j] << endl;
+        Error("Couldn't find Index to trace");
+        }
+
+    //If traced indices have m==1, no work
+    //to do; just replace indices
+    if(tm == 1)
+        {
+        r_ = new_r_;
+        sortIndices(new_index_,r_,rn_,alloc_size,index_,1);
+        return;
+        }
+
+    int new_rn_ = rn_-nind;
+
+    Counter nc(new_index_,new_rn_,new_r_);
+
+    //Set up ii pointers to link
+    //elements of res to appropriate
+    //elements of *this
+    int trace_ind = 0;
+    array<int*,NMAX+1> ii;
+    int n = 1;
+    for(int j = 1; j <= r_; ++j)
+        {
+        if(traced[j])
+            ii[j] = &(trace_ind);
+        else
+            ii[j] = &(nc.i[n++]);
+        }
+
+    int one = 1;
+    for(int j = r_+1; j <= NMAX; ++j)
+        ii[j] = &one;
+    
+    //Create the new dat
+    boost::intrusive_ptr<ITDat> np = new ITDat(alloc_size);
+    Vector& resdat = np->v;
+
+    const Vector& thisdat = p->v;
+    for(; nc.notDone(); ++nc)
+        {
+        Real newval = 0;
+        for(trace_ind = 1; trace_ind <= tm; ++trace_ind)
+            {
+            newval += 
+            thisdat(this->_ind(*ii[1],*ii[2],
+                               *ii[3],*ii[4],
+                               *ii[5],*ii[6],
+                               *ii[7],*ii[8]));
+            }
+        resdat(nc.ind) = newval;
+        }
+
+    index_.swap(new_index_);
+    setUniqueReal();
+    p.swap(np);
+    r_ = new_r_;
+    rn_ = new_rn_;
+
+    } //ITensor::trace
+
+void ITensor::
+trace(const Index& i1, const Index& i2)
+    {
+    array<Index,NMAX+1> inds =
+        {{ Index::Null(), i1, i2, 
+           Index::Null(), Index::Null(), 
+           Index::Null(), Index::Null(), 
+           Index::Null(), Index::Null() }};
+
+    trace(inds,2);
+    }
+
+void ITensor::
+trace(const Index& i1, const Index& i2, const Index& i3)
+    {
+    array<Index,NMAX+1> inds =
+        {{ Index::Null(), i1, i2, i3,
+           Index::Null(), Index::Null(), 
+           Index::Null(), Index::Null(), Index::Null() }};
+
+    trace(inds,3);
+    }
+
+void ITensor::
+trace(const Index& i1, const Index& i2,
+      const Index& i3, const Index& i4)
+    {
+    array<Index,NMAX+1> inds =
+        {{ Index::Null(), i1, i2, i3, i4,
+           Index::Null(), Index::Null(), 
+           Index::Null(), Index::Null() }};
+
+    trace(inds,4);
     }
 
 void ITensor::

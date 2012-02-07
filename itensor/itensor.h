@@ -398,6 +398,39 @@ public:
                const Index& tied, ITensor T)
         { T.tieIndices(i1,i2,i3,i4,tied); return T; }
 
+    void
+    trace(const boost::array<Index,NMAX+1>& indices, int nind);
+
+    void
+    trace(const Index& i1, const Index& i2);
+
+    ITensor friend inline
+    trace(const Index& i1, const Index& i2, ITensor T)
+        { T.trace(i1,i2); return T; }
+
+    void
+    trace(const Index& i1, const Index& i2, const Index& i3);
+
+    ITensor friend inline
+    trace(const Index& i1, const Index& i2, const Index& i3,
+          ITensor T)
+        { T.trace(i1,i2,i3); return T; }
+
+    void
+    trace(const Index& i1, const Index& i2, const Index& i3, const Index& i4);
+
+    ITensor friend inline
+    trace(const Index& i1, const Index& i2, const Index& i3, const Index& i4,
+          ITensor T)
+        { T.trace(i1,i2,i3,i4); return T; }
+
+    Real friend inline
+    trace(ITensor T)
+        {
+        T.trace(T.index_,T.rn_);
+        return T.val0();
+        }
+
     void 
     expandIndex(const Index& small, const Index& big, int start);
 
@@ -630,11 +663,7 @@ public:
 private:
 
     void 
-    reset(int a)
-        {
-        i.assign(a);
-        ind = 1;
-        }
+    reset(int a);
 
     int rn_,r_;
 

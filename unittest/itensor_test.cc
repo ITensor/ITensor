@@ -4,7 +4,7 @@
 #include <boost/test/unit_test.hpp>
 
 struct ITensorDefaults
-{
+    {
     Index s1,s2,s3,s4,
           s1P,s2P,s3P,s4P,
           l1,l2,l3,l4,l5,l6,l7,l8,
@@ -94,7 +94,7 @@ struct ITensorDefaults
 
     ~ITensorDefaults() { }
 
-};
+    }; //struct ITensorDefaults
 
 BOOST_FIXTURE_TEST_SUITE(ITensorTest,ITensorDefaults)
 
@@ -580,7 +580,7 @@ TEST(SumDifference)
 }
 
 TEST(ContractingProduct)
-{
+    {
 
     //Check for rank 0 ITensors
     {
@@ -602,7 +602,7 @@ TEST(ContractingProduct)
     }
 
     //More general case
-    ITensor L(b2,a1,b3,b4), R(a1,b3,a2,b5,b4);
+    ITensor L(b4,a1,b3,a2,b2), R(b5,a1,b4,b2,b3);
 
     L.Randomize(); R.Randomize();
 
@@ -612,49 +612,49 @@ TEST(ContractingProduct)
 
     ITensor res1 = Lf*Rf;
 
-    CHECK(res1.hasindex(b2));
-    CHECK(res1.hasindex(a2));
     CHECK(res1.hasindex(b5));
+    CHECK(res1.hasindex(a2));
     CHECK(!res1.hasindex(a1));
+    CHECK(!res1.hasindex(b2));
     CHECK(!res1.hasindex(b3));
     CHECK(!res1.hasindex(b4));
 
-    CHECK_EQUAL(res1.r(),3);
+    CHECK_EQUAL(res1.r(),2);
 
-    for(int j2 = 1; j2 <= 2; ++j2)
-    for(int j5 = 1; j5 <= 5; ++j5)
-    {
+    for(int j5 = 1; j5 <= b5.m(); ++j5)
+        {
         Real val = 0;
+        for(int j2 = 1; j2 <= 2; ++j2)
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int j4 = 1; j4 <= 4; ++j4)
-        {
-            val += L(b2(j2),a1(1),b3(j3),b4(j4))*fL * R(a1(1),b3(j3),a2(1),b5(j5),b4(j4))*fR;
+            {
+            val += L(b2(j2),a1(1),b3(j3),b4(j4))*fL * R(b5(j5),a1(1),b3(j3),b2(j2),b4(j4))*fR;
+            }
+        CHECK_CLOSE(res1(a2(1),b5(j5)),val,1E-10);
         }
-        CHECK_CLOSE(res1(b2(j2),a2(1),b5(j5)),val,1E-10);
-    }
 
     ITensor res2 = R*L;
 
-    CHECK(res2.hasindex(b2));
-    CHECK(res2.hasindex(a2));
     CHECK(res2.hasindex(b5));
+    CHECK(res2.hasindex(a2));
     CHECK(!res2.hasindex(a1));
+    CHECK(!res2.hasindex(b2));
     CHECK(!res2.hasindex(b3));
     CHECK(!res2.hasindex(b4));
 
-    CHECK_EQUAL(res2.r(),3);
+    CHECK_EQUAL(res2.r(),2);
 
-    for(int j2 = 1; j2 <= 2; ++j2)
-    for(int j5 = 1; j5 <= 5; ++j5)
-    {
+    for(int j5 = 1; j5 <= b5.m(); ++j5)
+        {
         Real val = 0;
+        for(int j2 = 1; j2 <= 2; ++j2)
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int j4 = 1; j4 <= 4; ++j4)
-        {
-            val += L(b2(j2),a1(1),b3(j3),b4(j4)) * R(a1(1),b3(j3),a2(1),b5(j5),b4(j4));
+            {
+            val += L(b2(j2),a1(1),b3(j3),b4(j4)) * R(b5(j5),a1(1),b3(j3),b2(j2),b4(j4));
+            }
+        CHECK_CLOSE(res2(a2(1),b5(j5)),val,1E-10);
         }
-        CHECK_CLOSE(res2(b2(j2),a2(1),b5(j5)),val,1E-10);
-    }
 
     ITensor Q(a1,b4,a2,b2), P(a2,a3,a1);
 
@@ -674,12 +674,12 @@ TEST(ContractingProduct)
 
     CHECK_EQUAL(res3.r(),3);
 
-    for(int j2 = 1; j2 <= 2; ++j2)
-    for(int j4 = 1; j4 <= 4; ++j4)
-    {
+    for(int j2 = 1; j2 <= b2.m(); ++j2)
+    for(int j4 = 1; j4 <= b4.m(); ++j4)
+        {
         Real val = Q(a1(1),b4(j4),a2(1),b2(j2))*fQ * P(a2(1),a3(1),a1(1))*fP;
         CHECK_CLOSE(res3(b4(j4),b2(j2)),val,1E-10);
-    }
+        }
 
     ITensor res4 = Pf*Qf;
 
@@ -693,10 +693,10 @@ TEST(ContractingProduct)
 
     for(int j2 = 1; j2 <= 2; ++j2)
     for(int j4 = 1; j4 <= 4; ++j4)
-    {
+        {
         Real val = Q(a1(1),b4(j4),a2(1),b2(j2))*fQ * P(a2(1),a3(1),a1(1))*fP;
         CHECK_CLOSE(res4(b4(j4),b2(j2)),val,1E-10);
-    }
+        }
 
 
     ITensor psi(a1,a2,a3), mpoh(l2,a1,a1.primed(),a2,a2.primed());
@@ -711,7 +711,7 @@ TEST(ContractingProduct)
     CHECK(Hpsi.hasindex(a3));
     CHECK(!Hpsi.hasindex(a1));
     CHECK(!Hpsi.hasindex(a2));
-}
+    }
 
 TEST(NonContractingProduct)
 {
@@ -876,6 +876,45 @@ TEST(TieIndices)
 
 
     } //TieIndices
+
+TEST(Trace)
+    {
+
+    ITensor A(b2,a1,b3,b5,primed(b3));
+    A.Randomize();
+    Real f = -ran1();
+    A *= f;
+
+    ITensor At = trace(b3,primed(b3),A);
+
+    for(int j2 = 1; j2 <= b2.m(); ++j2)
+    for(int j5 = 1; j5 <= b5.m(); ++j5)
+        {
+        Real val = 0;
+        for(int j3 = 1; j3 <= b3.m(); ++j3)
+            {
+            val += A(b2(j2),a1(1),b3(j3),b5(j5),primed(b3)(j3));
+            }
+        CHECK_CLOSE(val,At(b2(j2),a1(1),b5(j5)),1E-10);
+        }
+
+    ITensor MM(b5,primed(b5));
+    MM.Randomize();
+    MM *= -2.34;
+
+    Real tr = trace(MM);
+
+    Real check_tr = 0;
+    for(int j5 = 1; j5 <= b5.m(); ++j5)
+        {
+        check_tr += MM(b5(j5),primed(b5)(j5));
+        }
+    CHECK_CLOSE(tr,check_tr,1E-10);
+
+    PrintDat(MM);
+    Print(tr);
+
+    }
 
 TEST(fromMatrix11)
 {
