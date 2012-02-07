@@ -5,8 +5,8 @@
 
 template<class Tensor>
 class MPOt : private MPSt<Tensor>
-{
-public:
+    {
+    public:
     typedef MPSt<Tensor> Parent;
     typedef Tensor TensorT;
     typedef typename Tensor::IndexT IndexT;
@@ -144,7 +144,7 @@ private:
 
     friend class MPOt<ITensor>;
     friend class MPOt<IQTensor>;
-}; //class MPOt<Tensor>
+    }; //class MPOt<Tensor>
 typedef MPOt<ITensor> MPO;
 typedef MPOt<IQTensor> IQMPO;
 

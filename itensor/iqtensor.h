@@ -351,6 +351,16 @@ class IQTensor
                const IQIndex& tied, IQTensor T)
         { T.tieIndices(i1,i2,tied); return T; }
 
+    void
+    trace(const boost::array<IQIndex,NMAX+1>& indices, int nind);
+
+    void
+    trace(const IQIndex& i1, const IQIndex& i2);
+
+    IQTensor friend inline
+    trace(const IQIndex& i1, const IQIndex& i2, IQTensor T)
+        { T.trace(i1,i2); return T; }
+
     //----------------------------------------------------
     //IQTensor miscellaneous methods
 

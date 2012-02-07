@@ -804,9 +804,11 @@ addindex1(const IQIndex& I)
 	}
 
 void IQTensor::
-tieIndices(const boost::array<IQIndex,NMAX+1>& indices, int niqind, const IQIndex& tied)
+tieIndices(const boost::array<IQIndex,NMAX+1>& indices, int niqind, 
+           const IQIndex& tied)
     {
-    boost::array<Index,NMAX+1> totie;
+    if(niqind < 1) Error("No IQIndices to tie");
+
     const int nindex = indices[1].nindex();
 
     boost::intrusive_ptr<IQTDat> np = new IQTDat();
@@ -842,6 +844,7 @@ tieIndices(const boost::array<IQIndex,NMAX+1>& indices, int niqind, const IQInde
         Error("Couldn't find IQIndex to tie");
         }
 
+    boost::array<Index,NMAX+1> totie;
     for(int i = 1; i <= nindex; ++i)
         {
         for(int n = 1; n <= niqind; ++n)
@@ -868,6 +871,77 @@ tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied)
            IQIndex::Null(), IQIndex::Null() }};
 
     tieIndices(inds,2,tied);
+    }
+
+void IQTensor::
+trace(const boost::array<IQIndex,NMAX+1>& indices, int niqind)
+    {
+    if(niqind < 1) Error("No IQIndices to trace");
+
+    const int nindex = indices[1].nindex();
+    const int tm = indices[1].m();
+
+    vector<IQIndex> new_iqinds_;
+    new_iqinds_.reserve(p->iqindex_.size()-niqind);
+
+    int nmatched = 0;
+    for(size_t k = 0; k < p->iqindex_.size(); ++k)
+        {
+        const IQIndex& K = p->iqindex_[k];
+        bool K_traced = false;
+        for(int j = 1; j <= niqind; ++j)
+        if(K == indices[j]) 
+            {
+            if(indices[j].m() != tm)
+                Error("Traced indices must have matching m's");
+            K_traced = true;
+            ++nmatched;
+            break;
+            }
+        if(!K_traced)
+            {
+            new_iqinds_.push_back(K);
+            }
+        }
+
+    if(nmatched != niqind)
+        {
+        PrintIndices((*this));
+        cout << "Indices to trace = " << endl;
+        for(int j = 1; j <= niqind; ++j)
+            cout << indices[j] << endl;
+        Error("Couldn't find IQIndex to trace");
+        }
+
+    IQTensor res(new_iqinds_);
+
+    boost::array<Index,NMAX+1> totrace;
+    for(int i = 1; i <= nindex; ++i)
+        {
+        for(int n = 1; n <= niqind; ++n)
+            totrace[n] = indices[n].index(i);
+
+        for(const_iten_it it=p->itensor.begin(); it != p->itensor.end(); ++it)
+            {
+            if(!it->hasAllIndex(totrace,niqind)) continue;
+            ITensor tt(*it);
+            tt.trace(totrace,niqind);
+            res += tt;
+            }
+        }
+    this->operator=(res);
+    }
+
+void IQTensor::
+trace(const IQIndex& i1, const IQIndex& i2)
+    {
+    boost::array<IQIndex,NMAX+1> inds =
+        {{ IQIndex::Null(), i1, i2, 
+           IQIndex::Null(), IQIndex::Null(), 
+           IQIndex::Null(), IQIndex::Null(), 
+           IQIndex::Null(), IQIndex::Null() }};
+
+    trace(inds,2);
     }
 
 int IQTensor::

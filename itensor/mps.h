@@ -57,6 +57,34 @@ class MPSt //the lowercase t stands for "template"
     {
     public:
 
+    //MPSt: Constructors --------------------------------------------
+
+    MPSt() 
+        : N(0), model_(0)
+        { }
+
+    MPSt(const Model& mod_,int maxmm = MAX_M, Real cut = MIN_CUT) 
+    : N(mod_.NN()), A(mod_.NN()+1),l_orth_lim_(0),r_orth_lim_(mod_.NN()),
+    model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
+        { 
+        random_tensors(A);
+        }
+
+    MPSt(const Model& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MIN_CUT) 
+    : N(mod_.NN()),A(mod_.NN()+1),l_orth_lim_(0),r_orth_lim_(2),
+    model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
+        { 
+        init_tensors(A,initState);
+        }
+
+    MPSt(const Model& model, std::istream& s)
+        : N(model.NN()), A(model.NN()+1), model_(&model)
+        { 
+        read(s); 
+        }
+
+    virtual ~MPSt() { }
+
     typedef Tensor 
     TensorT;
     typedef typename Tensor::IndexT 
@@ -120,6 +148,11 @@ class MPSt //the lowercase t stands for "template"
     refNorm(LogNumber val) { svd_.refNorm(val); }
 
     Real 
+    noise() const { return svd_.noise(); }
+    void 
+    noise(Real val) { svd_.noise(val); }
+
+    Real 
     cutoff() const { return svd_.cutoff(); }
     void 
     cutoff(Real val) { svd_.cutoff(val); }
@@ -147,34 +180,6 @@ class MPSt //the lowercase t stands for "template"
 
     Tensor 
     bondWF(int b) const;
-
-    //MPSt: Constructors --------------------------------------------
-
-    MPSt() 
-        : N(0), model_(0)
-        { }
-
-    MPSt(const Model& mod_,int maxmm = MAX_M, Real cut = MIN_CUT) 
-    : N(mod_.NN()), A(mod_.NN()+1),l_orth_lim_(0),r_orth_lim_(mod_.NN()),
-    model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
-        { 
-        random_tensors(A);
-        }
-
-    MPSt(const Model& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MIN_CUT) 
-    : N(mod_.NN()),A(mod_.NN()+1),l_orth_lim_(0),r_orth_lim_(2),
-    model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
-        { 
-        init_tensors(A,initState);
-        }
-
-    MPSt(const Model& model, std::istream& s)
-        : N(model.NN()), A(model.NN()+1), model_(&model)
-        { 
-        read(s); 
-        }
-
-    virtual ~MPSt() { }
 
     void 
     read(std::istream& s);
@@ -231,7 +236,8 @@ class MPSt //the lowercase t stands for "template"
     void 
     doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false);
 
-    //Move the orthogonality center to site i (l_orth_lim_ = i-1, r_orth_lim_ = i+1)
+    //Move the orthogonality center to site i 
+    //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
     void 
     position(int i, bool preserve_shape = false);
 
@@ -254,13 +260,15 @@ class MPSt //the lowercase t stands for "template"
         svd_.useOrigM(true);
         position(N);
         if(verbose)
-            std::cout << "Done orthogonalizing, starting truncation." << std::endl;
+            std::cout << "Done orthogonalizing, starting truncation." 
+                      << std::endl;
         //Now basis is ortho, ok to truncate
         svd_.useOrigM(false);
         position(1);
         }
 
-    //Checks if A[i] is left (left == true) or right (left == false) orthogonalized
+    //Checks if A[i] is left (left == true) 
+    //or right (left == false) orthogonalized
     bool 
     checkOrtho(int i, bool left) const
         {
@@ -281,10 +289,15 @@ class MPSt //the lowercase t stands for "template"
         if(Norm(diff) < threshold) return true;
 
         //Print any helpful debugging info here:
-        std::cerr << "checkOrtho: on line " << __LINE__ << " of mps.h," << std::endl;
-        std::cerr << "checkOrtho: Tensor at position " << i << " failed to be " << (left ? "left" : "right") << " ortho." << std::endl;
-        std::cerr << "checkOrtho: Norm(diff) = " << boost::format("%E") % Norm(diff) << std::endl;
-        std::cerr << "checkOrtho: Error threshold set to " << boost::format("%E") % threshold << std::endl;
+        std::cerr << "checkOrtho: on line " << __LINE__ 
+                  << " of mps.h," << std::endl;
+        std::cerr << "checkOrtho: Tensor at position " << i 
+                  << " failed to be " << (left ? "left" : "right") 
+                  << " ortho." << std::endl;
+        std::cerr << "checkOrtho: Norm(diff) = " << boost::format("%E") 
+                  % Norm(diff) << std::endl;
+        std::cerr << "checkOrtho: Error threshold set to " 
+                  << boost::format("%E") % threshold << std::endl;
         //-----------------------------
 
         return false;
@@ -300,14 +313,16 @@ class MPSt //the lowercase t stands for "template"
         for(int i = 1; i <= l_orth_lim_; ++i)
         if(!checkLeftOrtho(i))
         {
-            std::cerr << "checkOrtho: A[i] not left orthogonal at site i=" << i << std::endl;
+            std::cerr << "checkOrtho: A[i] not left orthogonal at site i=" 
+                      << i << std::endl;
             return false;
         }
 
         for(int i = NN(); i >= r_orth_lim_; --i)
         if(!checkRightOrtho(i))
         {
-            std::cerr << "checkOrtho: A[i] not right orthogonal at site i=" << i << std::endl;
+            std::cerr << "checkOrtho: A[i] not right orthogonal at site i=" 
+                      << i << std::endl;
             return false;
         }
         return true;
@@ -316,7 +331,9 @@ class MPSt //the lowercase t stands for "template"
     void 
     getCenter(int j, Direction dir, Tensor& lambda, bool do_signfix = false)
         {
-        getCenterMatrix(AAnc(j),(dir == Fromleft ? RightLinkInd(j) : LeftLinkInd(j)),cutoff,minm,maxm,lambda,nameint("c",j));
+        getCenterMatrix(AAnc(j),
+            (dir == Fromleft ? RightLinkInd(j) : LeftLinkInd(j)),
+            cutoff,minm,maxm,lambda,nameint("c",j));
 
         if(dir == Fromleft) 
             {
@@ -333,8 +350,9 @@ class MPSt //the lowercase t stands for "template"
         }
 
     template<class TensorSet>
-    Real bondDavidson(int b, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, 
-    int niter, int debuglevel, Direction dir, Real errgoal=1E-4)
+    Real bondDavidson(int b, const TensorSet& mpoh, const TensorSet& LH, 
+        const TensorSet& RH, 
+        int niter, int debuglevel, Direction dir, Real errgoal=1E-4)
         {
         Tensor phi = bondWF(b);
         Real En = doDavidson(phi,mpoh,LH,RH,niter,debuglevel,errgoal);
@@ -343,20 +361,28 @@ class MPSt //the lowercase t stands for "template"
         }
 
     Real
-    bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<Tensor>& PH,
-                      Direction dir);
+    bondDavidson(int b, const Eigensolver& solver, 
+                 const ProjectedOp<Tensor>& PH,
+                 Direction dir);
 
     template<class TensorSet, class OpTensorSet>
-    void projectOp(int j, Direction dir, const TensorSet& P, const OpTensorSet& Op, TensorSet& res) const
-    {
+    void 
+    projectOp(int j, Direction dir, const TensorSet& P, 
+              const OpTensorSet& Op, TensorSet& res) const
+        {
         if(res.size() != Op.size()) res.resize(Op.size());
-        const TensorSet& nP = (P.size() == Op.size() ? P : TensorSet(Op.size()));
-        for(unsigned int n = 0; n < Op.size(); ++n) projectOp(j,dir,GET(nP,n),Op[n],GET(res,n));
-    }
+        const TensorSet& nP = (P.size() == Op.size() 
+                              ? P 
+                              : TensorSet(Op.size()));
+        for(size_t n = 0; n < Op.size(); ++n) 
+            projectOp(j,dir,GET(nP,n),Op[n],GET(res,n));
+        }
 
     template<class OpTensor>
-    void projectOp(int j, Direction dir, const Tensor& P, const OpTensor& Op, Tensor& res) const
-    {
+    void 
+    projectOp(int j, Direction dir, const Tensor& P, 
+              const OpTensor& Op, Tensor& res) const
+        {
         if(dir==Fromleft && j > l_orth_lim_) 
             { 
             std::cerr << boost::format("projectOp: from left j > l_orth_lim_ (j=%d,l_orth_lim_=%d)\n")%j%l_orth_lim_; 
@@ -369,15 +395,16 @@ class MPSt //the lowercase t stands for "template"
             }
         res = (P.isNull() ? AA(j) : P * AA(j));
         res *= Op; res *= conj(primed(AA(j)));
-    }
+        }
 
 
-    void applygate(const Tensor& gate)
-	{
+    void 
+    applygate(const Tensor& gate)
+        {
         Tensor AA = A[l_orth_lim_+1] * A[l_orth_lim_+2] * gate;
         AA.noprime();
         doSVD(l_orth_lim_+1,AA,Fromleft);
-	}
+        }
 
     Real 
     norm() const { return sqrt(psiphi(*this,*this)); }
@@ -385,16 +412,18 @@ class MPSt //the lowercase t stands for "template"
     int
     averageM() const;
 
-    Real normalize()
-    {
+    Real 
+    normalize()
+        {
         Real norm_ = norm();
         if(fabs(norm_) < 1E-20) Error("Zero norm");
         *this *= 1.0/norm_;
         return norm_;
-    }
+        }
 
-    bool is_complex() const
-    { return A[l_orth_lim_+1].is_complex(); }
+    bool 
+    is_complex() const
+        { return A[l_orth_lim_+1].is_complex(); }
 
     friend inline std::ostream& 
     operator<<(std::ostream& s, const MPSt& M)
@@ -459,50 +488,10 @@ protected:
     random_tensors(std::vector<IQTensor>& A_) { }
 
     void 
-    init_tensors(std::vector<ITensor>& A_, const InitState& initState)
-        { 
-        new_tensors(A_); 
-        for(int i = 1; i <= N; ++i) 
-            {
-            A_[i] = ITensor(initState(i)); 
-            }
-
-        std::vector<Index> a(N+1);
-        for(int i = 1; i <= N; ++i)
-            { a[i] = Index(nameint("l",i)); }
-
-        A_[1].addindex1(a[1]);
-        for(int i = 2; i < N; ++i)
-            {
-            A_[i].addindex1(a[i-1]);
-            A_[i].addindex1(a[i]);
-            }
-        A_[N].addindex1(a[N-1]);
-        }
+    init_tensors(std::vector<ITensor>& A_, const InitState& initState);
 
     void 
-    init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
-        {
-        std::vector<QN> qa(N+1); //qn[i] = qn on i^th bond
-        for(int i = 1; i <= N; ++i) { qa[0] -= initState(i).qn()*In; }
-
-        //Taking OC to be at the leftmost site,
-        //compute the QuantumNumbers of all the Links.
-        for(int i = 1; i <= N; ++i)
-        {
-            //Taking the divergence to be zero,solve for qa[i]
-            qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
-        }
-
-        std::vector<IQIndex> a(N+1);
-        for(int i = 1; i <= N; ++i)
-            { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
-
-        A_[1] = IQTensor(initState(1),a[1](1));
-        for(int i = 2; i < N; ++i)
-            A_[i] = IQTensor(conj(a[i-1])(1),initState(i),a[i](1)); 
-        A_[N] = IQTensor(conj(a[N-1])(1),initState(N));
-        }
+    init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
 private:
     friend class MPSt<ITensor>;
@@ -566,7 +555,7 @@ fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit);
 template <typename MPSType>
 void 
 sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MIN_CUT, int maxm = MAX_M)
-{
+    {
     int Nt = terms.size();
     if(Nt == 1) 
         {
@@ -598,7 +587,7 @@ sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MIN_CUT, int max
         return;
         }
     return;
-} // void sum(const std::vector<MPSType>& terms, Real cut, int maxm, MPSType& res)
+    } // void sum(const std::vector<MPSType>& terms, Real cut, int maxm, MPSType& res)
 
 
 #endif

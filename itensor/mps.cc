@@ -106,6 +106,62 @@ template
 void MPSt<IQTensor>::random_tensors(std::vector<ITensor>& A_);
 
 template <class Tensor>
+void MPSt<Tensor>::
+init_tensors(std::vector<ITensor>& A_, const InitState& initState)
+    { 
+    new_tensors(A_); 
+    for(int i = 1; i <= N; ++i) 
+        {
+        A_[i] = ITensor(initState(i)); 
+        }
+
+    std::vector<Index> a(N+1);
+    for(int i = 1; i <= N; ++i)
+        { a[i] = Index(nameint("l",i)); }
+
+    A_[1].addindex1(a[1]);
+    for(int i = 2; i < N; ++i)
+        {
+        A_[i].addindex1(a[i-1]);
+        A_[i].addindex1(a[i]);
+        }
+    A_[N].addindex1(a[N-1]);
+    }
+template
+void MPSt<ITensor>::
+init_tensors(std::vector<ITensor>& A_, const InitState& initState);
+
+
+template <class Tensor>
+void MPSt<Tensor>::
+init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
+    {
+    std::vector<QN> qa(N+1); //qn[i] = qn on i^th bond
+    for(int i = 1; i <= N; ++i) { qa[0] -= initState(i).qn()*In; }
+
+    //Taking OC to be at the leftmost site,
+    //compute the QuantumNumbers of all the Links.
+    for(int i = 1; i <= N; ++i)
+    {
+        //Taking the divergence to be zero,solve for qa[i]
+        qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
+    }
+
+    std::vector<IQIndex> a(N+1);
+    for(int i = 1; i <= N; ++i)
+        { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
+
+    A_[1] = IQTensor(initState(1),a[1](1));
+    for(int i = 2; i < N; ++i)
+        A_[i] = IQTensor(conj(a[i-1])(1),initState(i),a[i](1)); 
+    A_[N] = IQTensor(conj(a[N-1])(1),initState(N));
+    }
+template
+void MPSt<IQTensor>::
+init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
+
+
+template <class Tensor>
 int MPSt<Tensor>::
 averageM() const
     {
@@ -352,14 +408,29 @@ bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<Tensor>& PH,
         {
         Tensor phi = bondWF(b);
         Real En = solver.davidson(PH,phi);
-        doSVD(b,phi,dir);
+
+        svd_(b,PH,phi,A[b],A[b+1],dir);
+
+        if(dir == Fromleft)
+            {
+            l_orth_lim_ = b;
+            if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
+            }
+        else //dir == Fromright
+            {
+            if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
+            r_orth_lim_ = b+1;
+            }
+
         return En;
         }
 template Real MPSt<ITensor>::
-bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<ITensor>& PH,
+bondDavidson(int b, const Eigensolver& solver, 
+             const ProjectedOp<ITensor>& PH,
              Direction dir);
 template Real MPSt<IQTensor>::
-bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<IQTensor>& PH,
+bondDavidson(int b, const Eigensolver& solver, 
+             const ProjectedOp<IQTensor>& PH,
              Direction dir);
 
 /* getCenterMatrix:
