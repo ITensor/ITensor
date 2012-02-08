@@ -15,6 +15,8 @@ class ProjectedOp
 
     ProjectedOp(const MPOt<Tensor>& Op, int num_center = 2);
 
+    ProjectedOp(const MPOt<Tensor>& Op, const Tensor& L, const Tensor& R, int num_center = 2);
+
     typedef typename Tensor::IndexT
     IndexT;
 
@@ -39,10 +41,18 @@ class ProjectedOp
     position(int b, const MPSType& psi);
 
     const Tensor&
-    L() const { return L_.at(LHlim_); }
+    L() const 
+        { 
+        if(pL_ == 0) Error("pL_ not set");
+        return *pL_; 
+        }
 
     const Tensor&
-    R() const { return R_.at(RHlim_); }
+    R() const 
+        { 
+        if(pR_ == 0) Error("pR_ not set");
+        return *pR_; 
+        }
 
     bool
     combineMPO() const { return combine_mpo_; }
@@ -64,6 +74,23 @@ class ProjectedOp
 
     private:
 
+    /////////////////
+    //
+    // Data Members
+    //
+
+    const MPOt<Tensor>* Op_;
+    std::vector<Tensor> L_,R_;
+    int LHlim_,RHlim_;
+    const Tensor *pL_, *pR_;
+    int nc_;
+    int size_;
+    bool combine_mpo_;
+    Tensor mpoh_;
+
+    //
+    /////////////////
+
     template <class MPSType>
     void
     makeL(const MPSType& psi, int k);
@@ -72,13 +99,6 @@ class ProjectedOp
     void
     makeR(const MPSType& psi, int k);
 
-    const MPOt<Tensor>* Op_;
-    std::vector<Tensor> L_,R_;
-    int LHlim_,RHlim_;
-    int nc_;
-    int size_;
-    bool combine_mpo_;
-    Tensor mpoh_;
 
     };
 
@@ -88,6 +108,8 @@ ProjectedOp()
     : Op_(0),
       LHlim_(0),
       RHlim_(0),
+      pL_(0),
+      pR_(0),
       nc_(2),
       size_(-1),
       combine_mpo_(true)
@@ -101,10 +123,27 @@ ProjectedOp(const MPOt<Tensor>& Op, int num_center)
       R_(Op.NN()+1),
       LHlim_(1),
       RHlim_(Op.NN()),
+      pL_(&(L[LHlim_])),
+      pR_(&(R[RHlim_])),
       nc_(num_center),
       size_(-1),
       combine_mpo_(true)
     { }
+
+template <class Tensor>
+inline ProjectedOp<Tensor>::
+ProjectedOp(const MPOt<Tensor>& Op, 
+            const Tensor& L, const Tensor& R, int num_center)
+    : Op_(&Op),
+      LHlim_(0),
+      RHlim_(0),
+      nc_(num_center),
+      size_(-1),
+      combine_mpo_(true)
+    { 
+    pL_ = &L;
+    pR_ = &R;
+    }
 
 template <class Tensor>
 inline void ProjectedOp<Tensor>::
@@ -281,6 +320,7 @@ position(int b, const MPSType& psi)
 
     makeL(psi,b);
     makeR(psi,b+nc_-1);
+
     LHlim_ = b; //not redundant since LHlim_ could be > b
     RHlim_ = b+nc_-1; //not redundant since RHlim_ could be < b+nc_-1
 
@@ -312,12 +352,14 @@ template <class MPSType>
 inline void ProjectedOp<Tensor>::
 makeL(const MPSType& psi, int k)
     {
+    if(!L_.empty())
     while(LHlim_ < k)
         {
         const int ll = LHlim_;
         //std::cout << boost::format("Shifting L from %d to %d") % ll % (ll+1) << std::endl;
         psi.projectOp(ll,Fromleft,L_.at(ll),Op_->AA(ll),L_.at(ll+1));
         ++LHlim_;
+        pL_ = &(L_.at(LHlim_));
         }
     }
 
@@ -326,12 +368,14 @@ template <class MPSType>
 inline void ProjectedOp<Tensor>::
 makeR(const MPSType& psi, int k)
     {
+    if(!R_.empty())
     while(RHlim_ > k)
         {
         const int rl = RHlim_;
         //std::cout << boost::format("Shifting R from %d to %d") % rl % (rl-1) << std::endl;
         psi.projectOp(rl,Fromright,R_.at(rl),Op_->AA(rl),R_.at(rl-1));
         --RHlim_;
+        pR_ = &(R_.at(RHlim_));
         }
     }
 
