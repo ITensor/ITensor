@@ -285,7 +285,7 @@ operator IQTensor() const
 
     //Combiners should always have the 
     //structure of zero divergence IQTensors
-    assert(checkQNs(res));
+    DO_IF_DEBUG(checkQNs(res));
 
     if(do_condense) { IQTensor rcopy(res); cond.product(rcopy,res); }
 

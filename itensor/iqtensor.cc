@@ -423,7 +423,7 @@ div() const
 	return div_;
 	}
 
-bool IQTensor::
+void IQTensor::
 checkDiv(QN expected) const
 	{
 	assert(p != 0);
@@ -440,17 +440,14 @@ checkDiv(QN expected) const
 		div_ += qn(t.index(j))*dir(t.index(j));
 	    if(div_ != expected)
             {
-            std::cerr << "Block didn't match expected div\n";
-            std::cout << "Block didn't match expected div\n";
             Print(expected);
             Print(div_);
             this->printIndices("this IQTensor:");
             std::cout << "Incorrect block:\n";
             Print(t);
-            return false;
+            Error("Block didn't match expected div");
             }
 	    }
-	return true;
 	}
 
 QN IQTensor::
@@ -1547,7 +1544,7 @@ Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool doconj)
     res.GetSingComplex(re,im);
     }
 
-bool 
+void 
 checkQNs(const IQTensor& T)
     {
     QN qtot = T.div();
@@ -1560,15 +1557,10 @@ checkQNs(const IQTensor& T)
 
         if(q != qtot) 
             {
-            std::cerr << "checkQNs: inconsistent QN.\n";
-            std::cerr << "\nqtot = " << qtot << "\n\n";
-            std::cerr << "Offending ITensor = " << *it << "\n\n";
-            std::cout << "checkQNs: inconsistent QN.\n";
             std::cout << "\nqtot = " << qtot << "\n\n";
             std::cout << "Offending ITensor = " << *it << "\n\n";
             T.printIndices("T");
-            return false;
+            Error("checkQNs: inconsistent QN");
             }
         }
-    return true;
     }

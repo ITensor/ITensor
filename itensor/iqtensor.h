@@ -247,7 +247,7 @@ class IQTensor
     QN 
     div() const;
 
-    bool 
+    void 
     checkDiv(QN expected = QN()) const;
 
     QN 
@@ -572,12 +572,12 @@ Dot(const IQTensor& x, const IQTensor& y, bool doconj = true);
 void 
 Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool doconj = true);
 
-inline bool 
+inline void 
 checkQNs(const ITensor& t) 
-    { return true; }
+    { }
 
 //Checks if all IQTensor blocks have the same divergence
-bool 
+void 
 checkQNs(const IQTensor& T);
 
 template<class T> 
