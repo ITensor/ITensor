@@ -249,13 +249,11 @@ public:
         }
     };
 
-extern bool printdat;		// want to deprecate this
 Real ran1();
 
 #ifdef THIS_IS_MAIN
 void reportnew() { }
 Real ran1(int);
-bool printdat = false;		// want to deprecate this
 #endif
 
 #endif

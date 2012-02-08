@@ -2086,9 +2086,8 @@ directMultiply(const ITensor& other, ProductProps& props,
 
     if(new_rn_ > 4) 
         {
-        printdat = false;
-        cout << "this is " << *this << endl;
-        cout << "other is " << other << endl;
+        Print((*this));
+        Print(other);
         cout << "new_rn_ is " << new_rn_ << endl;
         Error("new_rn_ too big for this part!");
         }
