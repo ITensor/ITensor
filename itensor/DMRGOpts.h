@@ -2,32 +2,48 @@
 #define __ITENSOR_DMRGOPTS_H
 #include "BaseDMRGOpts.h"
 
-//Class for fine-tuning DMRG algorithms
-class DMRGOpts : public BaseDMRGOpts
-{
-public:
+//
+// Class for fine-tuning DMRG algorithms.
+// The measure and checkDone methods are virtual
+// so that behavior can be customized in a
+// derived class.
+//
 
-    bool quiet() const { return quiet_; }
-    void quiet(bool val) { quiet_ = val; }
+class DMRGOpts : public BaseDMRGOpts
+    {
+    public:
+
+    bool 
+    quiet() const { return quiet_; }
+    void 
+    quiet(bool val) { quiet_ = val; }
     
-    Real energyErrgoal() const { return energy_errgoal; }
-    void energyErrgoal(Real val) { energy_errgoal = val; }
+    Real 
+    energyErrgoal() const { return energy_errgoal; }
+    void 
+    energyErrgoal(Real val) { energy_errgoal = val; }
     
-    Real orthWeight() const { return orth_weight; }
-    void orthWeight(Real val) { orth_weight = val; }
+    Real 
+    orthWeight() const { return orth_weight; }
+    void 
+    orthWeight(Real val) { orth_weight = val; }
     
-    bool printEigs() const { return printeigs; }
-    void printEigs(bool val) { printeigs = val; }
+    bool 
+    printEigs() const { return printeigs; }
+    void 
+    printEigs(bool val) { printeigs = val; }
     
     DMRGOpts();
 
     virtual ~DMRGOpts() { }
     
-    virtual void measure(int sw, int ha, int b, const SVDWorker& svd, Real energy);
+    virtual void 
+    measure(int sw, int ha, int b, const SVDWorker& svd, Real energy);
     
-    virtual bool checkDone(int sw, Real energy);
+    virtual bool 
+    checkDone(int sw, Real energy);
 
-private:
+    private:
 
     Vector center_eigs;
     Real energy_errgoal; //Stop DMRG once energy has converged to this precision
@@ -35,7 +51,7 @@ private:
     bool printeigs;      //Print slowest decaying eigenvalues after every sweep
     bool quiet_;         //Show/don't show info after every step
 
-}; // class DMRGOpts
+    }; // class DMRGOpts
 
 inline DMRGOpts::
 DMRGOpts() 

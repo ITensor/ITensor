@@ -12,7 +12,7 @@ class Sweeps
 
     Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut);
 
-    Sweeps(Scheme sch, int nsw, int nwm, int _minm, int _maxm, Real _cut);
+    Sweeps(Scheme sch, int nsw, int nwarm, int _minm, int _maxm, Real _cut);
 
     Sweeps(int nsw, InputGroup& sweep_table);
     
@@ -35,6 +35,11 @@ class Sweeps
     cutoff(int sw) const { return Cutoff_.at(sw); }
     void 
     setCutoff(int sw, Real val) { Cutoff_.at(sw) = val; }
+
+    Real 
+    noise(int sw) const { return Noise_.at(sw); }
+    void 
+    setNoise(int sw, Real val) { Noise_.at(sw) = val; }
 
     int 
     nsweep() const { return Nsweep_; }
@@ -66,10 +71,11 @@ private:
     tableInit(InputGroup& table);
 
     Scheme scheme_;
-    std::vector<int> Maxm_;
-    std::vector<int> Minm_;
-    std::vector<int> Niter_;
-    std::vector<Real> Cutoff_;
+    std::vector<int> Maxm_,
+                     Minm_,
+                     Niter_;
+    std::vector<Real> Cutoff_,
+                      Noise_;
     int Nsweep_, Nwarm_;
     int num_site_center_;        // May not be implemented in some cases
     Real exp_fac_;
@@ -116,6 +122,7 @@ init(int _minm, int _maxm, Real _cut)
     Maxm_ = std::vector<int>(Nsweep_+1,_maxm);
     Niter_ = std::vector<int>(Nsweep_+1,2);
     Cutoff_ = std::vector<Real>(Nsweep_+1,_cut);
+    Noise_ = std::vector<Real>(Nsweep_+1,0);
 
     //Don't want to start with m too low unless requested
     int start_m = (_maxm < 10 ? _minm : 10);
@@ -142,7 +149,7 @@ init(int _minm, int _maxm, Real _cut)
     
     //Set number of Davidson iterations
     const int Max_Niter = 9;
-    for(int s = 0; s <= min(Nwarm_,3); ++s)
+    for(int s = 0; s <= min(Nwarm_,4); ++s)
         {
         int ni = Max_Niter-s;
         Niter_.at(1+s) = (ni > 2 ? ni : 2);
@@ -160,11 +167,12 @@ tableInit(InputGroup& table)
     Maxm_ = std::vector<int>(Nsweep_+1);
     Cutoff_ = std::vector<Real>(Nsweep_+1);
     Niter_ = std::vector<int>(Nsweep_+1);
+    Noise_ = std::vector<Real>(Nsweep_+1);
 
     table.SkipLine(); //SkipLine so we can have a table key
     for(int i = 1; i <= Nsweep_; i++)
         {
-        table.infile.file >> Maxm_[i] >> Minm_[i] >> Cutoff_[i] >> Niter_[i];
+        table.infile.file >> Maxm_[i] >> Minm_[i] >> Cutoff_[i] >> Niter_[i] >> Noise_[i];
         }
 
     } //Sweeps::tableInit
@@ -174,8 +182,8 @@ operator<<(std::ostream& s, const Sweeps& swps)
     {
     s << "Sweeps:\n";
     for(int sw = 1; sw <= swps.nsweep(); ++sw)
-        s << boost::format("    Maxm(%d)=%d, Niter(%d)=%d, Cutoff(%d)=%.2E\n")
-             % sw % swps.maxm(sw) % sw % swps.niter(sw) % sw % swps.cutoff(sw);
+        s << boost::format("%d  Maxm=%d, Minm=%d, Cutoff=%.2E, Niter=%d, Noise=%.2E\n")
+             % sw % swps.maxm(sw) % swps.minm(sw) % swps.cutoff(sw) %swps.niter(sw) % swps.noise(sw);
     return s;
     }
 

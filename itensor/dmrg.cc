@@ -102,7 +102,11 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             {
                 largest_m = max(largest_m,ll.m());
                 //if(deigs.Length() >= max(largest_m,max_eigs.Length()) && max_eigs(max_eigs.Length()) < deigs(max_eigs.Length())) 
-                if(lastd(1) < max_eigs(1) && l != 1 && l != (N-1)) { max_eigs = lastd; max_eigs_bond = l; }
+                if(Globals::lastd()(1) < max_eigs(1) && l != 1 && l != (N-1)) 
+                    { 
+                    max_eigs = Globals::lastd(); 
+                    max_eigs_bond = l; 
+                    }
 
                 if(l == 1 && ha == 2) 
                 {
@@ -396,11 +400,15 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
             if(opts.printEigs())
             {
                 largest_m = max(largest_m,ll.m());
-                if(lastd(1) < max_eigs(1) && l != 1 && l != (N-1)) { max_eigs = lastd; max_eigs_bond = l; }
+                if(Globals::lastd()(1) < max_eigs(1) && l != 1 && l != (N-1)) 
+                    { 
+                    max_eigs = Globals::lastd(); 
+                    max_eigs_bond = l; 
+                    }
                 if(l == psi.NN()/2) 
-                {
-                    center_eigs = lastd;
-                }
+                    {
+                    center_eigs = Globals::lastd();
+                    }
 
                 if(l == 1 && ha == 2) 
                 {

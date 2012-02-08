@@ -4,42 +4,86 @@
 #include "DMRGOpts.h" // <-- default implementation
 #include "Sweeps.h"
 
-template <class MPSType, class MPOType, 
-          class DefaultDMRGOptsType=DMRGOpts>
+template <class MPSType, class MPOType>
 class BaseDMRGWorker
-{
-public:
-    BaseDMRGWorker(const Sweeps& sweeps) :
-    sweeps_(sweeps),
-    own_opts_(true),opts_(new DefaultDMRGOptsType())
-    { }
-
-    BaseDMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts) :
-    sweeps_(sweeps),
-    own_opts_(false),opts_(&opts)
-    { }
-
-    virtual ~BaseDMRGWorker()
     {
-        if(own_opts_) { delete opts_; }
-    }
+    public:
 
-    virtual const Sweeps& sweeps() const { return sweeps_; }
+    BaseDMRGWorker(const Sweeps& sweeps);
 
-    virtual void opts(BaseDMRGOpts& new_opts)
-    { 
-        if(own_opts_) { delete opts_; }
-        opts_ = &new_opts; 
-    }
-    virtual BaseDMRGOpts& opts() const { return *opts_; }
+    BaseDMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts);
 
-    virtual void run(const MPOType& H, MPSType& psi) = 0;
-    virtual Real energy() const = 0;
+    virtual 
+    ~BaseDMRGWorker();
+
+    const Sweeps& 
+    sweeps() const { return sweeps_; }
+
+    void 
+    opts(BaseDMRGOpts& new_opts);
+
+    BaseDMRGOpts& 
+    opts() const;
+
+    Real 
+    run(const MPOType& H, MPSType& psi) 
+        { return runInternal(H,psi); }
+
+    Real 
+    energy() const { return getEnergy(); }
 
 private:
+
+    virtual Real 
+    runInternal(const MPOType& H, MPSType& psi) = 0;
+
+    virtual Real 
+    getEnergy() const = 0;
+
     const Sweeps& sweeps_;
+
     bool own_opts_;
+
     BaseDMRGOpts* opts_;
 };
+
+
+template <class MPSType, class MPOType>
+inline BaseDMRGWorker<MPSType, MPOType>::
+BaseDMRGWorker(const Sweeps& sweeps)
+    : sweeps_(sweeps),
+      own_opts_(true),
+      opts_(new DMRGOpts())
+    { }
+
+template <class MPSType, class MPOType>
+inline BaseDMRGWorker<MPSType, MPOType>::
+BaseDMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts)
+    : sweeps_(sweeps),
+      own_opts_(false),
+      opts_(&opts)
+    { }
+
+template <class MPSType, class MPOType>
+inline BaseDMRGWorker<MPSType, MPOType>::
+~BaseDMRGWorker()
+    {
+    if(own_opts_) { delete opts_; }
+    }
+
+template <class MPSType, class MPOType>
+inline void BaseDMRGWorker<MPSType, MPOType>::
+opts(BaseDMRGOpts& new_opts)
+    { 
+    if(own_opts_) { delete opts_; }
+    opts_ = &new_opts; 
+    }
+
+template <class MPSType, class MPOType>
+inline BaseDMRGOpts& BaseDMRGWorker<MPSType, MPOType>::
+opts() const 
+    { 
+    return *opts_; 
+    }
 
 #endif
