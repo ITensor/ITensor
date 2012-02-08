@@ -18,42 +18,42 @@ class ITDat;
 //
 class ITensor
     {
-public:
+    public:
 
     //Accessor Methods ----------------------------------------------
 
     //uniqueReal depends on indices only, unordered:
-    inline Real 
+    Real 
     uniqueReal() const { return ur; } 
 
     const Index& 
     index(int j) const;
 
-    inline int 
+    int 
     r() const { return r_; }
 
     int 
     m(int j) const;
 
-    inline bool 
+    bool 
     isNull() const { return (p == 0); }
 
-    inline bool 
+    bool 
     isNotNull() const { return (p != 0); }
 
-    inline bool 
+    bool 
     is_complex() const { return hasindexn(Index::IndReIm()); }
 
-    inline bool 
+    bool 
     is_not_complex() const { return !hasindexn(Index::IndReIm()); }
 
-    inline LogNumber 
+    LogNumber 
     scale() const { return scale_; }
 
     //Can be used for iteration over Indices in a Foreach loop
     //e.g. Foreach(const Index& I, t.index() ) { ... }
     typedef boost::array<Index,NMAX+1>::const_iterator index_it;
-    inline const std::pair<index_it,index_it> 
+    const std::pair<index_it,index_it> 
     index() const  
         { return std::make_pair(index_.begin()+1,index_.begin()+r_+1); }
 
@@ -143,7 +143,7 @@ public:
     operator*(const ITensor& other) const 
         { ITensor res(*this); res *= other; return res; }
 
-    inline ITensor& 
+    ITensor& 
     operator*=(const IndexVal& iv) 
         { return operator*=(ITensor(iv)); } 
 
@@ -236,7 +236,7 @@ public:
     bool
     hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const;
 
-    inline bool 
+    bool 
     notin(const Index& I) const { return !hasindex(I); }
 
     void 
@@ -249,7 +249,7 @@ public:
     void 
     removeindex1(int j);
 
-    inline void 
+    void 
     removeindex1(const Index& I) 
         { removeindex1(findindex1(I)); }
 
@@ -264,13 +264,13 @@ public:
     void 
     doprime(PrimeType pt, int inc = 1);
 
-    inline void 
+    void 
     primeall() { doprime(primeBoth,1); }
 
-    inline void 
+    void 
     primesite() { doprime(primeSite,1); }
 
-    inline void 
+    void 
     primelink() { doprime(primeLink,1); }
 
     void 
@@ -280,14 +280,14 @@ public:
     mapprimeind(const Index& I, int plevold, int plevnew, 
                 PrimeType pt = primeBoth);
 
-    inline void 
+    void 
     primeind(const Index& I, int inc = 1)
         { mapindex(I,primed(I,inc)); }
 
     void 
     primeind(const Index& I, const Index& J);
 
-    inline void 
+    void 
     noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
 
     friend inline ITensor 
@@ -354,16 +354,31 @@ public:
 
     //Methods for Mapping to Other Objects ----------------------------------
 
+    //
     // Assume *this and other have same indices but different order.
     // Copy other into *this, without changing the order of indices in either
     // operator= would put the order of other into *this
+    //
     void 
     assignFrom(const ITensor& other);
 
+    //
+    // groupIndices combines a set of indices (of possibly different sizes) 
+    // together, leaving only single grouped Index.
+    //
+    // RiJ = Ai(jk) <-- Here J represents the grouped pair of indices (jk)
+    //                  If j.m() == 5 and k.m() == 7, J.m() == 5*7.
+    //
     void 
     groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
                       const Index& grouped, ITensor& res) const;
 
+    //
+    // tieIndices locks a set of indices (of the same size) together,
+    // leaving only a single tied Index.
+    //
+    // Rijl = Aijil <-- here we have tied the 1st and 3rd index of A
+    //
     void
     tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
                const Index& tied);
@@ -398,6 +413,13 @@ public:
                const Index& tied, ITensor T)
         { T.tieIndices(i1,i2,i3,i4,tied); return T; }
 
+    //
+    // The trace method sums over the given set of indices
+    // (which must all have the same dimension).
+    //
+    // Rik = trace(j,l,m,Aijkml) = \sum_j Aijkjj
+    //
+
     void
     trace(const boost::array<Index,NMAX+1>& indices, int nind);
 
@@ -424,12 +446,25 @@ public:
           ITensor T)
         { T.trace(i1,i2,i3,i4); return T; }
 
+    //
+    // Tracing over all indices results in a Real
+    //
     Real friend inline
     trace(ITensor T)
         {
         T.trace(T.index_,T.rn_);
         return T.val0();
         }
+
+    //
+    // expandIndex replaces a smaller index with a bigger one, padding out
+    // the elements of the resulting ITensor with zeros as necessary.
+    // Say we have a tensor Aij and j has range m. Now expand j with 
+    // a larger Index J. The result is RiJ, where
+    //        _
+    // RiJ = |  Ai(j=J-start+1) for J = start...start+m
+    //       |_ 0               otherwise
+    //        
 
     void 
     expandIndex(const Index& small, const Index& big, int start);
@@ -499,17 +534,17 @@ public:
     void 
     SplitReIm(ITensor& re, ITensor& im) const;
 
-    inline void 
+    void 
     conj() 
         { 
         if(!is_complex()) return; 
         operator/=(ITensor::ConjTensor()); 
         }
 
-    inline void 
+    void 
     conj(const Index& I) { }
 
-    inline bool 
+    bool 
     is_zero() const { return (norm() < 1E-20); } 
 
     Real 
@@ -546,24 +581,41 @@ public:
 
     friend class commaInit;
 
-    typedef Index IndexT;
-    typedef IndexVal IndexValT;
-    typedef Combiner CombinerT;
-    static const Index& ReImIndex() { return Index::IndReIm(); }
+    typedef Index 
+    IndexT;
 
-private:
+    typedef IndexVal 
+    IndexValT;
+
+    typedef Combiner 
+    CombinerT;
+
+    static const Index& 
+    ReImIndex() { return Index::IndReIm(); }
+
+    private:
+
+    //////////////
+    //
+    // Data members
+    //
 
     //mutable: const methods may want to reshape data
     mutable boost::intrusive_ptr<ITDat> p; 
 
-    //Indices, maximum of 8 (index_[0] not used), mutable to allow reordering
-    mutable boost::array<Index,NMAX+1> index_; 
+    //Indices, maximum of 8 (index_[0] not used)
+    boost::array<Index,NMAX+1> index_; 
 
     int r_,rn_;
+
     //mutable since e.g. scaleTo is logically const
     mutable LogNumber scale_; 
 
     Real ur;
+
+    //
+    //
+    //////////////
 
     void 
     initCounter(Counter& C) const;
@@ -621,7 +673,7 @@ private:
               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
         const;
 
-public:
+    public:
 
     enum ITmaker { makeComplex_1, makeComplex_i, makeConjTensor };
 
@@ -653,7 +705,7 @@ public:
     bool 
     operator==(const Counter& other) const;
 
-    inline bool 
+    bool 
     notDone() const 
         { return i[1] != 0; }
 
@@ -732,11 +784,11 @@ public:
     print() const 
         { std::cout << "ITDat: v = " << v; }
 
-    inline void* operator 
+    void* operator 
     new(size_t) throw(std::bad_alloc)
         { return allocator.alloc(); }
 
-    inline void operator 
+    void operator 
     delete(void* p) throw()
         { return allocator.dealloc(p); }
 
