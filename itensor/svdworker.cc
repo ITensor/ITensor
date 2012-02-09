@@ -211,11 +211,15 @@ operator()(int b, const ProjectedOp<Tensor>& PH, const Tensor& AA,
 
     //Form the density matrix for the smaller
     //of the two halves of the system
+    /*
     int ldim = L.maxSize()/ll.m(),
         rdim = R.maxSize()/ll.m();
 
     Tensor& Act = (ldim < rdim ? L : R);
     Tensor& Oth = (ldim < rdim ? R : L);
+    */
+    Tensor& Act = R;
+    Tensor& Oth = L;
 
     //Form a combiner for the active indices
     CombinerT comb;
@@ -241,8 +245,9 @@ operator()(int b, const ProjectedOp<Tensor>& PH, const Tensor& AA,
 
     if(noise_ > 0 && PH.isNotNull())
         {
-        Direction dir = (ldim < rdim ? Fromleft : Fromright);
-        rho += noise_*PH.deltaRho(rho,comb,dir);
+        //Direction dir = (ldim < rdim ? Fromleft : Fromright);
+        //rho += noise_*PH.deltaRho(rho,comb,dir);
+        rho += noise_*PH.deltaRho(rho,comb,Fromright);
         }
 
     const Real saved_cutoff = cutoff_; 

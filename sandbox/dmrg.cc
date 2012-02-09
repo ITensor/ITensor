@@ -27,7 +27,8 @@ int main(int argc, char* argv[])
 
     cout << format("Initial energy = %.5f")%psiHphi(psi,H,psi) << endl;
 
-    Sweeps sweeps(Sweeps::ramp_m,nsweep,minm,maxm,cutoff);
+    Sweeps sweeps(Sweeps::exp_m,nsweep,minm,maxm,cutoff);
+    cout << sweeps;
 
     Real En = dmrg(psi,H,sweeps);
 
