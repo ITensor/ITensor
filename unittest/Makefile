@@ -72,16 +72,24 @@ clean:
 
 LIBHEADERS=$(INCLUDEDIR)/real.h
 real_test.o: $(LIBHEADERS)
+.debug/real_test.o: $(LIBHEADERS)
 LIBHEADERS+= $(INCLUDEDIR)/index.h
 index_test.o: $(LIBHEADERS)
+.debug_objs/index_test.o: $(LIBHEADERS)
 LIBHEADERS+= $(INCLUDEDIR)/itensor.h
 itensor_test.o: $(LIBHEADERS)
+.debug_objs/itensor_test.o: $(LIBHEADERS)
 LIBHEADERS+= $(INCLUDEDIR)/combiner.h
 combiner_test.o: $(LIBHEADERS)
+.debug_objs/combiner_test.o: $(LIBHEADERS)
 LIBHEADERS+= $(INCLUDEDIR)/iqcombiner.h
 iqcombiner_test.o: $(LIBHEADERS)
+.debug_objs/iqcombiner_test.o: $(LIBHEADERS)
 LIBHEADERS+= $(INCLUDEDIR)/mps.h
 mps_test.o: $(LIBHEADERS)
+.debug_objs/mps_test.o: $(LIBHEADERS)
 LIBHEADERS+= $(INCLUDEDIR)/mpo.h
 mpo_test.o: $(LIBHEADERS)
-eigensolver_test.cc: $(INCLUDEDIR)/eigensolver.h
+.debug_objs/mpo_test.o: $(LIBHEADERS)
+eigensolver_test.o: $(INCLUDEDIR)/eigensolver.h
+.debug_objs/eigensolver_test.o: $(INCLUDEDIR)/eigensolver.h

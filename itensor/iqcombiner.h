@@ -482,7 +482,9 @@ product(const IQTensor& t, IQTensor& res) const
 
         //res will have all IQIndex's of t not in the left of c
         Foreach(const IQIndex& I, t.iqinds()) 
-            { if(!hasindex(I)) iqinds.push_back(I); }
+            { 
+            if(!hasindex(I)) iqinds.push_back(I); 
+            }
         //and res will have c's right IQIndex
         if(do_condense) iqinds.push_back(ucright_);
         else            iqinds.push_back(right_);
@@ -490,22 +492,24 @@ product(const IQTensor& t, IQTensor& res) const
         res = IQTensor(iqinds);
 
         //Check left indices
-        for(std::vector<IQIndex>::const_iterator I = left.begin(); I != left.end(); ++I)
+        Foreach(const IQIndex& I, left)
             {
-            if((j = t.findindex(*I)) == 0)
+            if((j = t.findindex(I)) == 0)
                 {
+                std::cerr << "Could not find left IQIndex " << I << "\n";
                 t.printIndices("t");
                 std::cerr << "Left indices\n";
                 for(size_t j = 0; j < left.size(); ++j)
-                    { std::cerr << j SP left[j] << "\n"; }
-                
+                    { 
+                    std::cerr << j SP left[j] << "\n"; 
+                    }
                 Error("bad IQCombiner IQTensor product");
                 }
             else //IQIndex is in left
                 {
                 //Check arrow directions
                 if(Globals::checkArrows())
-                    if(t.index(j).dir() == I->dir())
+                    if(t.index(j).dir() == I.dir())
                         {
                         std::cerr << "IQTensor = " << t << std::endl;
                         std::cerr << "IQCombiner = " << *this << std::endl;
@@ -530,7 +534,7 @@ product(const IQTensor& t, IQTensor& res) const
             Real rse = 0;
             for(int k = 1; k <= i->r(); ++k)
                 {
-                if(hasindex(i->index(k))) 
+                if(this->hasindex(i->index(k))) 
                     rse += i->index(k).uniqueReal();
                 }
 
@@ -553,6 +557,7 @@ product(const IQTensor& t, IQTensor& res) const
             res += (*setcomb[rse] * (*i));
 
             }
+
         if(do_condense) 
             { 
             IQTensor rcopy(res); 

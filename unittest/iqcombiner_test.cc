@@ -3,7 +3,7 @@
 #include <boost/test/unit_test.hpp>
 
 struct IQCombinerDefaults
-{
+    {
     const Index
     s1u,s1d,s2u,s2d,
     l1u,l10,l1d,
@@ -11,20 +11,22 @@ struct IQCombinerDefaults
 
     IQIndex S1,S2,L1,L2;
 
+    IQTensor phi;
+
     IQCombinerDefaults() :
-    s1u(Index("Site1 Up",1,Site)),
-    s1d(Index("Site1 Dn",1,Site)),
-    s2u(Index("Site2 Up",1,Site)),
-    s2d(Index("Site2 Dn",1,Site)),
-    l1u(Index("Link1 Up",2,Link)),
-    l10(Index("Link1 Z0",2,Link)),
-    l1d(Index("Link1 Dn",2,Link)),
-    l2uu(Index("Link2 UU",2,Link)),
-    l2u(Index("Link2 Up",2,Link)),
-    l20(Index("Link2 Z0",2,Link)),
-    l2d(Index("Link2 Dn",2,Link)),
-    l2dd(Index("Link2 DD",2,Link))
-    {
+        s1u(Index("Site1 Up",1,Site)),
+        s1d(Index("Site1 Dn",1,Site)),
+        s2u(Index("Site2 Up",1,Site)),
+        s2d(Index("Site2 Dn",1,Site)),
+        l1u(Index("Link1 Up",2,Link)),
+        l10(Index("Link1 Z0",2,Link)),
+        l1d(Index("Link1 Dn",2,Link)),
+        l2uu(Index("Link2 UU",2,Link)),
+        l2u(Index("Link2 Up",2,Link)),
+        l20(Index("Link2 Z0",2,Link)),
+        l2d(Index("Link2 Dn",2,Link)),
+        l2dd(Index("Link2 DD",2,Link))
+        {
         S1 = IQIndex("S1",
                      s1u,QN(+1),
                      s1d,QN(-1),Out);
@@ -43,17 +45,31 @@ struct IQCombinerDefaults
                      l2d,QN(-1),
                      l2dd,QN(-2),
                      Out);
-    }
+
+        phi = IQTensor(S1,S2,L2);
+            {
+            ITensor uu(s1u,s2u,l2dd);
+            uu.Randomize();
+            phi += uu;
+
+            ITensor ud(s1u,s2d,l20);
+            ud.Randomize();
+            phi += ud;
+
+            ITensor du(s1d,s2u,l20);
+            du.Randomize();
+            phi += du;
+            }
+        }
 
     ~IQCombinerDefaults() { }
 
-};
+    };
 
 BOOST_FIXTURE_TEST_SUITE(IQCombinerTest,IQCombinerDefaults)
 
-BOOST_AUTO_TEST_CASE(Constructors)
-{
-
+TEST(Constructors)
+    {
     IQCombiner c1;
 
     IQCombiner c2(L1,S1,L2);
@@ -65,11 +81,10 @@ BOOST_AUTO_TEST_CASE(Constructors)
     CHECK(c2.hasindex(S1));
     CHECK(c2.hasindex(L2));
     CHECK_EQUAL(c2.right().m(),L1.m()*S1.m()*L2.m());
+    }
 
-}
-
-BOOST_AUTO_TEST_CASE(addLeft)
-{
+TEST(addLeft)
+    {
     IQCombiner c1;
 
     c1.addleft(L2);
@@ -94,27 +109,11 @@ BOOST_AUTO_TEST_CASE(addLeft)
     CHECK_EQUAL(c1.right().m(),L2.m()*S2.m()*L1.m()*S1.m());
     CHECK_EQUAL(c1s.right().m(),L2.m()*S2.m()*L1.m()*S1.m());
 
-}
+    }
 
-BOOST_AUTO_TEST_CASE(Product)
-{
+TEST(Product)
+    {
     CHECK_EQUAL(L2.dir(),Out);
-
-    IQTensor phi(S1,S2,L2);
-
-    ITensor uu(s1u,s2u,l2dd);
-    uu.Randomize();
-    phi += uu;
-
-    ITensor ud(s1u,s2d,l20);
-    ud.Randomize();
-    phi += ud;
-
-    ITensor du(s1d,s2u,l20);
-    du.Randomize();
-    phi += du;
-
-    CHECK(phi.checkDiv(QN(0)));
 
     IQCombiner c;
     c.addleft(S2);
@@ -125,6 +124,11 @@ BOOST_AUTO_TEST_CASE(Product)
 
     CHECK(cphi.hasindex(S1));
     CHECK(cphi.hasindex(c.right()));
+
+    IQIndex r = c.right();
+
+    //Now uncombine - to do so
+    //must use the conjugate IQCombiner
 
     IQCombiner cc(c);
     cc.conj();
@@ -138,10 +142,33 @@ BOOST_AUTO_TEST_CASE(Product)
 
     IQTensor diff = phi - ucphi;
     CHECK_CLOSE(diff.norm(),0,1E-10);
-}
+    }
 
-BOOST_AUTO_TEST_CASE(CondenseProduct)
-{
+TEST(Primes)
+    {
+    IQCombiner c;
+    c.addleft(S2);
+    c.addleft(L2);
+    c.init();
+
+    IQTensor pphi = primed(phi);
+
+    IQTensor cpphi = primed(c) * pphi;
+
+    CHECK(cpphi.hasindex(primed(S1)));
+    CHECK(cpphi.hasindex(primed(c.right())));
+
+    //Check that using a primed combiner gives
+    //same result as regular combiner, then
+    //priming
+    IQTensor cphi = c * phi;
+    IQTensor diff = primed(cphi) - cpphi;
+    CHECK(diff.norm() < 1E-10);
+
+    }
+
+TEST(CondenseProduct)
+    {
     CHECK_EQUAL(L2.dir(),Out);
 
     IQTensor phi(S1,S2,L2);
@@ -158,7 +185,7 @@ BOOST_AUTO_TEST_CASE(CondenseProduct)
     du.Randomize();
     phi += du;
 
-    CHECK(phi.checkDiv(QN(0)));
+    phi.checkDiv(QN(0));
 
     IQCombiner c;
     c.doCondense(true);
@@ -185,6 +212,6 @@ BOOST_AUTO_TEST_CASE(CondenseProduct)
 
     IQTensor diff = phi - ucphi;
     CHECK(diff.norm() < 1E-12);
-}
+    }
 
 BOOST_AUTO_TEST_SUITE_END()

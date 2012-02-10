@@ -123,8 +123,8 @@ ProjectedOp(const MPOt<Tensor>& Op, int num_center)
       R_(Op.NN()+1),
       LHlim_(1),
       RHlim_(Op.NN()),
-      pL_(&(L[LHlim_])),
-      pR_(&(R[RHlim_])),
+      pL_(&(L_[LHlim_])),
+      pR_(&(R_[RHlim_])),
       nc_(num_center),
       size_(-1),
       combine_mpo_(true)
