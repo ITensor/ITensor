@@ -178,9 +178,9 @@ class Model
 inline IQTensor Model::
 makeId(int i) const
     { 
-    IQTensor id_(si(i),siP(i));
+    IQTensor id_(conj(si(i)),siP(i));
     for(int j = 1; j <= si(i).m(); ++j)
-        id_(si(i)(j),siP(i)(j)) = 1;
+        id_(conj(si(i))(j),siP(i)(j)) = 1;
     return id_;
     }
 
