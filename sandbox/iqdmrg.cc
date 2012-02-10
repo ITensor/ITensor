@@ -7,7 +7,7 @@ using boost::format;
 using namespace std;
 
 int main(int argc, char* argv[])
-{
+    {
     int N = 100;
     int nsweep = 5;
     int minm = 1;
@@ -35,4 +35,4 @@ int main(int argc, char* argv[])
     cout << "\nTotal QN of Ground State = " << totalQN(psi) << "\n";
 
     return 0;
-}
+    }
