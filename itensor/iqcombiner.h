@@ -15,8 +15,8 @@
    use of IQTensors for this purpose would not be.
 */
 class IQCombiner
-{
-public:
+    {
+    public:
 
     IQCombiner();
 
@@ -82,79 +82,105 @@ public:
     void 
     product(const IQTensor& t, IQTensor& res) const;
 
-private:
+    private:
+
+    /////////////
+    //
+    // Data Members
+    //
 
     std::vector<IQIndex> left;
     mutable IQIndex right_;
-    mutable std::map<ApproxReal, Combiner> setcomb;
-    mutable std::map<Index, Combiner> rightcomb;
+    mutable std::vector<Combiner> combs;
+    //mutable std::map<ApproxReal, Combiner> setcomb;
+    //mutable std::map<Index, Combiner> rightcomb;
     mutable bool initted;
 
     mutable Condenser cond;
     mutable IQIndex ucright_;
     bool do_condense;
 
-};
+    //
+    /////////////
+
+    typedef std::map<ApproxReal, Combiner>::iterator
+    setcomb_it;
+
+    typedef std::map<Index, Combiner>::iterator
+    rightcomb_it;
+
+    };
 
 class QCounter
-{
-public:
-    std::vector<int> n;
-    std::vector<int> ind;
-    bool don;
+    {
+    public:
+
     QCounter(const std::vector<IQIndex>& v)
-	{
-        Foreach(const IQIndex& I,v)
+        : don(false)
         {
+        Foreach(const IQIndex& I,v)
+            {
             n.push_back(I.nindex());
             ind.push_back(0);
+            }
         }
-        don = false;
-	}
-    bool notdone() const { return !don; }
-    QCounter& operator++()
-	{
+
+    bool 
+    notdone() const { return !don; }
+
+    QCounter& 
+    operator++()
+        {
         int nn = n.size();
         ind[0]++;
         if(ind[0] >= n[0])
-        {
-            for(int j = 1; j < nn; j++)
             {
+            for(int j = 1; j < nn; j++)
+                {
                 ind[j-1] = 0;
                 ++ind[j];
                 if(ind[j] < n[j]) break;
+                }
             }
-        }
         if(ind[nn-1] >= n[nn-1])
-        {
+            {
             ind = std::vector<int>(nn,0);
             don = true;
-        }
+            }
 
         return *this;
-	}
+        }
 
-    void getVecInd(const std::vector<IQIndex>& v, std::vector<Index>& vind, QN& q) const
-	{
+    void 
+    getVecInd(const std::vector<IQIndex>& v, std::vector<Index>& vind, QN& q) const
+        {
         q = QN(); vind.clear();
         for(unsigned int i = 0; i < ind.size(); ++i)
-        {
+            {
             const int j = ind[i]+1;
             if(GET(v,i).nindex() < j)
-            {
+                {
                 for(unsigned int k = 0; k < n.size(); ++k) std::cerr << boost::format("n[%d] = %d\n")%k%n[k];
                 std::cout << boost::format("i=%d, j=%d, v[i].nindex()=%d\n")%i%j%v[i].nindex();
                 Error("bad v[i].iq in getVecInd");
-            }
+                }
             vind.push_back(v[i].index(j));
             q += v[i].qn(j)*v[i].dir();
-        }
-	} //void QCounter::getVecInd
-};
+            }
+        } //void QCounter::getVecInd
+
+    private:
+
+    bool don;
+
+    std::vector<int> n,
+                     ind;
+    };
 
 inline IQCombiner::
 IQCombiner() 
-    : initted(false), do_condense(false) 
+    : initted(false), 
+      do_condense(false) 
     { }
 
 inline IQCombiner::
@@ -162,7 +188,8 @@ IQCombiner(
     const IQIndex& l1, const IQIndex& l2, 
     const IQIndex& l3, const IQIndex& l4, 
     const IQIndex& l5, const IQIndex& l6)
-    : initted(false), do_condense(false)
+    : initted(false), 
+      do_condense(false)
     {
     if(l1 == IQIndex::Null()) Error("Null IQIndex");
     if(l1 != IQIndex::Null()) left.push_back(l1); 
@@ -188,8 +215,8 @@ void IQCombiner::
 reset()
     {
     left.clear();
-    setcomb.clear();
-    rightcomb.clear();
+    //setcomb.clear();
+    //rightcomb.clear();
     initted = false;
     }
 
@@ -230,8 +257,8 @@ init(std::string rname, IndexType type,
     else
         { rdir = dir; }
 
-    setcomb.clear();
-    rightcomb.clear();
+    //setcomb.clear();
+    //rightcomb.clear();
 
     //Construct individual Combiners
     QCounter c(left);
@@ -243,17 +270,18 @@ init(std::string rname, IndexType type,
         c.getVecInd(left, vind, q);		// updates vind and q
         q *= -rdir;
 
-        Combiner co; Real rss = 0.0;
+        combs.push_back(Combiner());
+        Combiner& co = combs.back();
         Foreach(const Index& i, vind)
             { 
             co.addleft(i); 
-            rss += i.uniqueReal(); 
+            //rss += i.uniqueReal(); 
             }
         co.init(rname+q.toString(),type,rdir,primelevel);
 
         iq.push_back(inqn(co.right(),q));
-        setcomb[ApproxReal(rss)] = co;
-        rightcomb[co.right()] = co;
+        //setcomb[ApproxReal(rss)] = co;
+        //rightcomb[co.right()] = co;
         }
     if(do_condense) 
         {
@@ -262,8 +290,10 @@ init(std::string rname, IndexType type,
         cond = Condenser(ucright_,cname);
         right_ = cond.smallind();
         }
-    else right_ = IQIndex(rname,iq,rdir,primelevel);
-
+    else 
+        {
+        right_ = IQIndex(rname,iq,rdir,primelevel);
+        }
     initted = true;
 	}
 
@@ -278,16 +308,28 @@ operator IQTensor() const
     std::vector<IQIndex> iqinds(left);
     iqinds.push_back((do_condense ? ucright_ : right_));
     IQTensor res(iqinds);
+    /*
     for(std::map<ApproxReal,Combiner>::const_iterator it = setcomb.begin();
         it != setcomb.end(); 
         ++it)
         { res.insert(it->second); }
+    */
+    Foreach(const Combiner& co, combs)
+        {
+        //Here we are using the fact that Combiners
+        //can be converted to ITensors
+        res.insert(co);
+        }
 
     //Combiners should always have the 
     //structure of zero divergence IQTensors
     DO_IF_DEBUG(checkQNs(res));
 
-    if(do_condense) { IQTensor rcopy(res); cond.product(rcopy,res); }
+    if(do_condense) 
+        { 
+        IQTensor rcopy(res); 
+        cond.product(rcopy,res); 
+        }
 
     return res;
     }
@@ -330,9 +372,19 @@ hasindex(const Index& i) const
 void inline IQCombiner::
 doprime(PrimeType pr, int inc)
     {
-    initted = false;
     Foreach(IQIndex& ll, left)
         ll.doprime(pr,inc);
+    Foreach(Combiner& co, combs)
+        co.doprime(pr,inc);
+    if(initted)
+        {
+        right_.doprime(pr,inc);
+        if(do_condense) 
+            {
+            cond.doprime(pr,inc);
+            ucright_.doprime(pr,inc);
+            }
+        }
     }
 
 IQCombiner inline
@@ -380,13 +432,13 @@ product(const IQTensor& t, IQTensor& res) const
     int j;
     //t has right IQIndex, expand it
     if((j = t.findindex(right_)) != 0)
-    {
+        {
         IQTensor t_uncondensed;
         if(do_condense) 
-        { 
+            { 
             cond.product(t,t_uncondensed); 
             j = t_uncondensed.findindex(ucright_);
-        }
+            }
         const IQTensor& t_ = (do_condense ? t_uncondensed : t);
         const IQIndex& r = (do_condense ? ucright_ : right_);
 
@@ -405,16 +457,27 @@ product(const IQTensor& t, IQTensor& res) const
 
         res = IQTensor(iqinds);
 
-        Foreach(const ITensor& it, t_.itensors())
-        for(int k = 1; k <= it.r(); ++k)
-            if(r.hasindex(it.index(k)))
-            { 
-            res += (it * rightcomb[it.index(k)]); 
+        std::map<Index, const Combiner*> rightcomb;
+        Foreach(const Combiner& co, combs)
+            {
+            rightcomb[co.right()] = &co;
             }
 
-    }
+        Foreach(const ITensor& tt, t_.itensors())
+            {
+            for(int k = 1; k <= tt.r(); ++k)
+                {
+                if(r.hasindex(tt.index(k)))
+                    { 
+                    res += (*(rightcomb[tt.index(k)]) * tt); 
+                    break;
+                    }
+                } //end for
+            } //end Foreach
+
+        }
     else
-    {
+        {
         //t has left IQIndex's, combine them
 
         //res will have all IQIndex's of t not in the left of c
@@ -453,6 +516,15 @@ product(const IQTensor& t, IQTensor& res) const
                 }
             }
 
+        std::map<ApproxReal, const Combiner*> setcomb;
+        typedef std::map<ApproxReal, const Combiner*>::const_iterator
+        setcomb_const_it;
+
+        Foreach(const Combiner& co, combs)
+            {
+            setcomb[co.uniqueReal()] = &co;
+            }
+
         for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
             {
             Real rse = 0;
@@ -469,20 +541,24 @@ product(const IQTensor& t, IQTensor& res) const
                 for(size_t j = 0; j < left.size(); ++j)
                     { std::cerr << j << " " << left[j] << "\n"; }
                 std::cerr << "\n\n";
-                for(std::map<ApproxReal, Combiner>::const_iterator uu = setcomb.begin();
+                for(setcomb_const_it uu = setcomb.begin();
                     uu != setcomb.end(); ++uu)
                     {
                     std::cout << "Combiner: " << std::endl;
-                    std::cout << uu->second << std::endl;
+                    std::cout << *(uu->second) << std::endl;
                     }
                 Error("no setcomb for rse in IQCombiner prod");
                 }
 
-            res += (*i * setcomb[rse]);
+            res += (*setcomb[rse] * (*i));
 
             }
-        if(do_condense) { IQTensor rcopy(res); cond.product(rcopy,res); }
-    }
+        if(do_condense) 
+            { 
+            IQTensor rcopy(res); 
+            cond.product(rcopy,res); 
+            }
+        }
     } //void product(const IQTensor& t, IQTensor& res) const
 
 

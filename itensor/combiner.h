@@ -13,9 +13,10 @@ Combine several indices into one, use * to convert tensors efficiently
 
 */
 class Combiner
-{
-    typedef boost::array<Index,NMAX+1>::const_iterator left_it;
-public:
+    {
+    typedef boost::array<Index,NMAX+1>::const_iterator 
+    left_it;
+    public:
 
     //Accessor Methods ----------------------------------------------
 
@@ -86,6 +87,9 @@ public:
 
 
     //Other Methods -------------------------------------------------
+
+    Real
+    uniqueReal() const;
 
     operator ITensor() const;
 
@@ -241,6 +245,15 @@ product(const ITensor& t, ITensor& res) const
     t.groupIndices(left_,rl_,right_,res);
     }
 
+Real inline Combiner::
+uniqueReal() const
+    {
+    Real ur = 0;
+    for(int j = 1; j <= rl_; ++j)
+        ur += left_[j].uniqueReal();
+    return ur;
+    }
+
 inline 
 std::ostream& 
 operator<<(std::ostream & s, const Combiner & c)
@@ -253,5 +266,7 @@ operator<<(std::ostream & s, const Combiner & c)
     Foreach(const Index& l, c.left()) s << " " << l << "\n";
     return s;
     }
+
+
 
 #endif

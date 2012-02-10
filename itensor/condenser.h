@@ -3,8 +3,8 @@
 #include "iqtensor.h"
 
 class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
-{
-public:
+    {
+    public:
 
     Condenser() { }
 
@@ -33,10 +33,10 @@ public:
         }
 
     void 
-    doprime(PrimeType pt = primeBoth)
+    doprime(PrimeType pt = primeBoth, int inc = 1)
         {
-        bigind_.doprime(pt);
-        smallind_.doprime(pt);
+        bigind_.doprime(pt,inc);
+        smallind_.doprime(pt,inc);
         }
 
     void product(const IQTensor& t, IQTensor& res) const;
