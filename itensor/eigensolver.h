@@ -60,7 +60,10 @@ class Eigensolver
             Real
             operator()(Real val) const
                 {
-                return 1.0/(theta_-val+1E-33);
+                if(theta_ == val)
+                    return 0;
+                else
+                    return 1.0/(theta_-val);
                 }
         private:
             Real theta_;

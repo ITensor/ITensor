@@ -215,7 +215,7 @@ deltaRho(const Tensor& rho, const CombinerT& comb, Direction dir) const
         hl = Op_->LeftLinkInd(RHlim_);
         }
 
-    A = comb * A;
+    A = conj(comb) * A;
     A = primed(comb) * A;
 
     A.mapprime(1,2);

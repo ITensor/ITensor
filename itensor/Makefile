@@ -87,6 +87,7 @@ iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
 DEPHEADERS+= combiner.h condenser.h iqcombiner.h projectedop.h svdworker.h
 svdworker.o: $(DEPHEADERS)
+.debug_objs/svdworker.o: $(DEPHEADERS)
 DEPHEADERS+= mps.h eigensolver.h
 mps.o: $(DEPHEADERS)
 .debug_objs/mps.o: $(DEPHEADERS)
