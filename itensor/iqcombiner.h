@@ -514,7 +514,7 @@ product(const IQTensor& t, IQTensor& res) const
                         std::cerr << "IQTensor = " << t << std::endl;
                         std::cerr << "IQCombiner = " << *this << std::endl;
                         std::cerr << "IQIndex from IQTensor = " << t.index(j) << std::endl;
-                        std::cerr << "(Left) IQIndex from IQCombiner = " << *I << std::endl;
+                        std::cerr << "(Left) IQIndex from IQCombiner = " << I << std::endl;
                         Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
                         }
                 }
