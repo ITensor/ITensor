@@ -37,7 +37,7 @@ class MPOt : private MPSt<Tensor>
 
     using Parent::AA;
     using Parent::AAnc;
-    using Parent::bondWF;
+    using Parent::bondTensor;
 
     using Parent::doRelCutoff;
     using Parent::refNorm;
@@ -253,50 +253,97 @@ namespace Internal {
 
 template<class Tensor>
 class MPOSet
-{
-    int N, size_;
-    std::vector<std::vector<const Tensor*> > A;
-public:
-    typedef std::vector<Tensor> TensorT;
+    {
+    public:
 
-    MPOSet() : N(-1), size_(0) { }
+    typedef std::vector<Tensor> 
+    TensorT;
+
+    MPOSet() 
+        : 
+        N(-1), 
+        size_(0) 
+        { }
 
     MPOSet(const MPOt<Tensor>& Op1) 
-    : N(-1), size_(0) 
-    { include(Op1); }
+        : 
+        N(-1), 
+        size_(0) 
+        { include(Op1); }
 
     MPOSet(const MPOt<Tensor>& Op1, 
            const MPOt<Tensor>& Op2) 
-    : N(-1), size_(0) 
-    { include(Op1); include(Op2); }
+        : 
+        N(-1), 
+        size_(0) 
+        { include(Op1); include(Op2); }
 
     MPOSet(const MPOt<Tensor>& Op1, 
            const MPOt<Tensor>& Op2,
            const MPOt<Tensor>& Op3) 
-    : N(-1), size_(0) 
-    { include(Op1); include(Op2); include(Op3); }
+        : 
+        N(-1), 
+        size_(0) 
+        { include(Op1); include(Op2); include(Op3); }
 
     MPOSet(const MPOt<Tensor>& Op1, 
            const MPOt<Tensor>& Op2,
            const MPOt<Tensor>& Op3, 
            const MPOt<Tensor>& Op4) 
-    : N(-1), size_(0) 
-    { include(Op1); include(Op2); include(Op3); include(Op4); }
+        : 
+        N(-1), 
+        size_(0) 
+        { include(Op1); include(Op2); include(Op3); include(Op4); }
 
-    void include(const MPOt<Tensor>& Op)
-    {
-        if(N < 0) { N = Op.NN(); A.resize(N+1); }
-        for(int n = 1; n <= N; ++n) GET(A,n).push_back(&(Op.AA(n))); 
+    void 
+    include(const MPOt<Tensor>& Op)
+        {
+        if(N < 0) 
+            { 
+            N = Op.NN(); 
+            A.resize(N+1); 
+            }
+        for(int n = 1; n <= N; ++n) 
+            A[n].push_back(&(Op.AA(n))); 
         ++size_;
-    }
+        }
 
-    int NN() const { return N; }
-    int size() const { return size_; }
-    const std::vector<const Tensor*>& AA(int j) const { return GET(A,j); }
-    const std::vector<Tensor> bondWF(int b) const
-    { std::vector<Tensor> res = A[b] * A[b+1]; return res; }
+    int 
+    NN() const { return N; }
 
-}; //class Internal::MPOSet
+    int 
+    size() const { return size_; }
+
+    const std::vector<const Tensor*>& 
+    AA(int j) const 
+        { 
+        return A.at(j); 
+        }
+
+    const std::vector<Tensor> 
+    bondTensor(int b) const
+        { 
+        std::vector<Tensor> res = A[b] * A[b+1]; 
+        return res; 
+        }
+
+    private:
+
+    ////////////
+    //
+    // Data Members
+    //
+
+    int N, 
+        size_;
+
+    std::vector<std::vector<const Tensor*> > 
+    A;
+
+    //
+    ////////////
+
+    }; //class Internal::MPOSet
 
 } //namespace Internal
 typedef Internal::MPOSet<ITensor> MPOSet;

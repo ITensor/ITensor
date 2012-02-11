@@ -18,7 +18,7 @@ IQTensor& MPSt<IQTensor>::AAnc(int i);
 
 template <class Tensor>
 Tensor MPSt<Tensor>::
-bondWF(int b) const 
+bondTensor(int b) const 
     { 
     if(b-1 > l_orth_lim_)
         {
@@ -34,9 +34,9 @@ bondWF(int b) const
     return res; 
     }
 template
-ITensor MPSt<ITensor>::bondWF(int b) const;
+ITensor MPSt<ITensor>::bondTensor(int b) const;
 template
-IQTensor MPSt<IQTensor>::bondWF(int b) const;
+IQTensor MPSt<IQTensor>::bondTensor(int b) const;
 
 
 template <class Tensor>
@@ -406,7 +406,7 @@ MPSt<Tensor>::
 bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<Tensor>& PH,
              Direction dir)
         {
-        Tensor phi = bondWF(b);
+        Tensor phi = bondTensor(b);
         Real En = solver.davidson(PH,phi);
 
         svd_(b,PH,phi,A[b],A[b+1],dir);

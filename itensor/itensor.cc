@@ -1662,15 +1662,15 @@ struct ProductProps
     };
 
 ProductProps::
-ProductProps(const ITensor& L, const ITensor& R)
-    : nsamen(0), 
-      cdim(1), 
-      odimL(-1), 
-      odimR(-1),
-      lcstart(-1), 
-      rcstart(-1)
+ProductProps(const ITensor& L, const ITensor& R) 
+    :
+    nsamen(0), 
+    cdim(1), 
+    odimL(-1), 
+    odimR(-1),
+    lcstart(-1), 
+    rcstart(-1)
     {
-
     for(int j = 1; j <= NMAX; ++j) 
         contractedL[j] = contractedR[j] = false;
 

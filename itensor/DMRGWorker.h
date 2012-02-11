@@ -5,7 +5,7 @@
 #include "projectedop.h"
 #include "eigensolver.h"
 
-#define NEW_DAVIDSON
+//#define NEW_DAVIDSON
 
 template <class MPSType, class MPOType>
 class DMRGWorker : public BaseDMRGWorker<MPSType,MPOType>

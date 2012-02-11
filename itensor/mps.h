@@ -179,7 +179,7 @@ class MPSt //the lowercase t stands for "template"
     showeigs(bool val) { svd_.showeigs(val); }
 
     Tensor 
-    bondWF(int b) const;
+    bondTensor(int b) const;
 
     void 
     read(std::istream& s);
@@ -354,7 +354,7 @@ class MPSt //the lowercase t stands for "template"
         const TensorSet& RH, 
         int niter, int debuglevel, Direction dir, Real errgoal=1E-4)
         {
-        Tensor phi = bondWF(b);
+        Tensor phi = bondTensor(b);
         Real En = doDavidson(phi,mpoh,LH,RH,niter,debuglevel,errgoal);
         doSVD(b,phi,dir);
         return En;
