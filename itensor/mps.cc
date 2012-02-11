@@ -20,16 +20,6 @@ template <class Tensor>
 Tensor MPSt<Tensor>::
 bondTensor(int b) const 
     { 
-    if(b-1 > l_orth_lim_)
-        {
-        std::cerr << boost::format("b=%d, Lb=%d\n")%b%l_orth_lim_;
-        Error("b-1 > l_orth_lim_");
-        }
-    if(b+2 < r_orth_lim_)
-        {
-        std::cerr << boost::format("b+2=%d, Rb=%d\n")%(b+2)%r_orth_lim_;
-        Error("b+2 < r_orth_lim_");
-        }
     Tensor res = A.at(b) * A.at(b+1); 
     return res; 
     }
@@ -406,6 +396,17 @@ MPSt<Tensor>::
 bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<Tensor>& PH,
              Direction dir)
         {
+        if(b-1 > l_orth_lim_)
+            {
+            std::cerr << boost::format("b=%d, Lb=%d\n")%b%l_orth_lim_;
+            Error("b-1 > l_orth_lim_");
+            }
+        if(b+2 < r_orth_lim_)
+            {
+            std::cerr << boost::format("b+2=%d, Rb=%d\n")%(b+2)%r_orth_lim_;
+            Error("b+2 < r_orth_lim_");
+            }
+
         Tensor phi = bondTensor(b);
         Real En = solver.davidson(PH,phi);
 

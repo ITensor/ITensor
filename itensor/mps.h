@@ -354,6 +354,16 @@ class MPSt //the lowercase t stands for "template"
         const TensorSet& RH, 
         int niter, int debuglevel, Direction dir, Real errgoal=1E-4)
         {
+        if(b-1 > l_orth_lim_)
+            {
+            std::cerr << boost::format("b=%d, Lb=%d\n")%b%l_orth_lim_;
+            Error("b-1 > l_orth_lim_");
+            }
+        if(b+2 < r_orth_lim_)
+            {
+            std::cerr << boost::format("b+2=%d, Rb=%d\n")%(b+2)%r_orth_lim_;
+            Error("b+2 < r_orth_lim_");
+            }
         Tensor phi = bondTensor(b);
         Real En = doDavidson(phi,mpoh,LH,RH,niter,debuglevel,errgoal);
         doSVD(b,phi,dir);
