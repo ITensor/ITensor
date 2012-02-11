@@ -322,7 +322,10 @@ position(int b, const MPSType& psi)
     makeR(psi,b+nc_-1);
 
     LHlim_ = b; //not redundant since LHlim_ could be > b
+    pL_ = &(L_.at(LHlim_));
+
     RHlim_ = b+nc_-1; //not redundant since RHlim_ could be < b+nc_-1
+    pR_ = &(R_.at(RHlim_));
 
     if(combine_mpo_)
         {
@@ -372,7 +375,6 @@ makeR(const MPSType& psi, int k)
     while(RHlim_ > k)
         {
         const int rl = RHlim_;
-        //std::cout << boost::format("Shifting R from %d to %d") % rl % (rl-1) << std::endl;
         psi.projectOp(rl,Fromright,R_.at(rl),Op_->AA(rl),R_.at(rl-1));
         --RHlim_;
         pR_ = &(R_.at(RHlim_));
