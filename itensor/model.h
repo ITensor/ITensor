@@ -2,6 +2,29 @@
 #define __ITENSOR_MODEL_H
 #include "iqtensor.h"
 
+//
+// Classes derived from Model 
+// represent the abstract lattice of a 
+// system as a set of Site indices.
+//
+// Classes derived from Model are
+// responsible for implementing 
+// site operators such as Sz for 
+// spin models, Cdag for particle
+// models, etc. whereas the Model
+// base class is reponsible for
+// enforcing a consistent interface.
+//
+// The convention for operators is
+// that they are 2-index IQTensors
+// with the Site IQIndex pointing
+// In and the Site' IQIndex pointing
+// Out. This is so we can compute expectation
+// values by doing conj(primesite(A)) * Op * A.
+// (assuming the tensor A is an ortho center 
+// of our MPS)
+//
+
 class Model
     {
     public:

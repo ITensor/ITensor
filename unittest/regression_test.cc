@@ -15,6 +15,56 @@ struct RegressionDefaults
 
 BOOST_FIXTURE_TEST_SUITE(RegressionTest,RegressionDefaults)
 
+TEST(ExpandIndex)
+    {
+    //
+    //ITensor::expandIndex was
+    //failing when the first Index 
+    //had m == 1 and the second or
+    //third Index was to be expanded.
+    //The reason is that expandIndex
+    //assumed a stable Index order
+    //whereas the ITensor constructor
+    //moves m==1's to the back
+    //
+    Index l("l");
+
+    Index emp("emp"),occ("occ");
+    IQIndex S("S",emp,QN(0,0),
+                  occ,QN(1,0),
+                  Out);
+
+    ITensor oo(l,occ,primed(occ));
+    oo(l(1),occ(1),primed(occ)(1)) = 1;
+
+    oo.expandIndex(occ,S,S.offset(occ));
+
+    oo.expandIndex(primed(occ),primed(S),primed(S).offset(primed(occ)));
+
+    CHECK_CLOSE(0,oo(S(1),primed(S)(1),l(1)),1E-5);
+    CHECK_CLOSE(1,oo(S(2),primed(S)(2),l(1)),1E-5);
+    }
+
+TEST(ConvertToITensor)
+    {
+    IQIndex L("L",Index("l"),QN(),Out);
+    Index emp("emp"),occ("occ");
+    IQIndex S("S",emp,QN(0,0),
+                  occ,QN(1,0),
+                  Out);
+
+    IQTensor T(L,S,primed(S));
+    T(L(1),S(1),primed(S)(1)) = 1;
+    T(L(1),S(2),primed(S)(2)) = 1;
+
+    ITensor t = T;
+
+    CHECK_CLOSE(1,t(L(1),S(1),primed(S)(1)),1E-5);
+    CHECK_CLOSE(1,t(L(1),S(2),primed(S)(2)),1E-5);
+    CHECK_CLOSE(0,t(L(1),S(2),primed(S)(1)),1E-5);
+    CHECK_CLOSE(0,t(L(1),S(2),primed(S)(1)),1E-5);
+    }
+
 
 TEST(IndexOrder)
     {

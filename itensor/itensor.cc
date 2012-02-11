@@ -1133,6 +1133,12 @@ expandIndex(const Index& small, const Index& big, int start)
     ITensor res(indices);
     res.scale_ = scale_;
 
+    //Big Index not guaranteed
+    //to remain at position w
+    //e.g. if some m==1 Indices
+    //get moved to the back
+    w = res.findindex(big);
+
     array<int,NMAX+1> inc;
     //Make sure all other inc's are zero
     inc.assign(0);
@@ -1688,12 +1694,10 @@ ProductProps(const ITensor& L, const ITensor& R)
 		contractedL[j] = contractedR[k] = true;
 
         cdim *= L.index_[j].m();
-
 		}
 
     odimL = L.p->v.Length()/cdim;
     odimR = R.p->v.Length()/cdim;
-
     }
 
 //Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref

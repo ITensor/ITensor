@@ -1468,6 +1468,10 @@ operator+=(const IQTensor& other)
     return *this;
     }
 
+//
+//Automatically convert this IQTensor
+//to an ITensor
+//
 IQTensor::
 operator ITensor() const
     {
