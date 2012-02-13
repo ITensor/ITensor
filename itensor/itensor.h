@@ -42,10 +42,10 @@ class ITensor
     isNotNull() const { return (p != 0); }
 
     bool 
-    is_complex() const { return hasindexn(Index::IndReIm()); }
+    isComplex() const { return hasindexn(Index::IndReIm()); }
 
     bool 
-    is_not_complex() const { return !hasindexn(Index::IndReIm()); }
+    isNotComplex() const { return !hasindexn(Index::IndReIm()); }
 
     LogNumber 
     scale() const { return scale_; }
@@ -452,7 +452,7 @@ class ITensor
     Real friend inline
     trace(ITensor T)
         {
-        T.trace(T.index_,T.rn_);
+        if(T.rn_ != 0) T.trace(T.index_,T.rn_);
         return T.val0();
         }
 
@@ -525,6 +525,15 @@ class ITensor
     void 
     reshape(const Permutation& P);
 
+    //
+    // Swap can be used for similar purposes
+    // as operator=(const ITensor& other)
+    // but is more efficient and has same
+    // end result if other is just a temporary
+    //
+    void
+    swap(ITensor& other);
+
 
     //Other Methods -------------------------------------------------
 
@@ -537,7 +546,7 @@ class ITensor
     void 
     conj() 
         { 
-        if(!is_complex()) return; 
+        if(!isComplex()) return; 
         operator/=(ITensor::ConjTensor()); 
         }
 
@@ -597,7 +606,7 @@ class ITensor
 
     //////////////
     //
-    // Data members
+    // Data Members
     //
 
     //mutable: const methods may want to reshape data

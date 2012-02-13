@@ -158,6 +158,11 @@ m(int j) const
     return index_[j].m();
     }
 
+
+//
+// ITensor Constructors
+//
+
 ITensor::
 ITensor()  
     : p(0), r_(0), rn_(0), ur(0)  
@@ -1158,7 +1163,7 @@ expandIndex(const Index& small, const Index& big, int start)
         = thisdat(c.ind);
         }
 
-    *this = res;
+    this->swap(res);
     }
 
 int ITensor::
@@ -1223,6 +1228,27 @@ reshape(const Permutation& P)
     }
 
 void ITensor::
+swap(ITensor& other)
+    {
+    p.swap(other.p);
+    index_.swap(other.index_);
+
+    int si = r_;
+    r_ = other.r_;
+    other.r_ = si;
+
+    si = rn_;
+    rn_ = other.rn_;
+    other.rn_ = si;
+    
+    scale_.swap(other.scale_);
+
+    Real sr = ur;
+    ur = other.ur;
+    other.ur = sr;
+    }
+
+void ITensor::
 Randomize() 
     { 
     solo(); 
@@ -1233,7 +1259,7 @@ void ITensor::
 SplitReIm(ITensor& re, ITensor& im) const
 	{
 	re = *this; im = *this;
-	if(!is_complex()) { im *= 0; return; }
+	if(!isComplex()) { im *= 0; return; }
 	//re *= Index::IndReIm()(1); im *= Index::IndReIm()(2);
 
 	re.mapindex(Index::IndReIm(),Index::IndReImP());
@@ -2046,6 +2072,10 @@ ind4(int i4, int m3, int i3, int m2, int i2, int m1, int i1)
     return (((i4-1)*m3+i3-1)*m2+i2-1)*m1+i1;
     }
 
+//#define NEW_DIRECT_MULT
+
+#ifndef NEW_DIRECT_MULT
+
 void ITensor::
 directMultiply(const ITensor& other, ProductProps& props, 
                int& new_rn_, array<Index,NMAX+1>& new_index_)
@@ -2164,6 +2194,112 @@ directMultiply(const ITensor& other, ProductProps& props,
     DO_IF_PS(++prodstats.c1;)
 
     } // directMultiply
+
+#else
+
+void ITensor::
+directMultiply(const ITensor& other, ProductProps& props, 
+               int& new_rn_, array<Index,NMAX+1>& new_index_)
+    {
+    //will count these up below
+    int new_r_ = 0;
+    int alloc_size = 1;
+
+    array<bool,NMAX+1> traced;
+    traced.assign(false);
+
+    int nmatched = 0;
+    for(int k = 1; k <= r_; ++k)
+        {
+        const Index& K = index_[k];
+        for(int j = 1; j <= nind; ++j)
+        if(K == indices[j]) 
+            { 
+            if(indices[j].m() != tm)
+                Error("Traced indices must have matching m's");
+            traced[k] = true;
+
+            ++nmatched;
+
+            break;
+            }
+
+        if(!traced[k])
+            {
+            new_index_[++new_r_] = K;
+            alloc_size *= K.m();
+            }
+        }
+
+    //Check that all indices were found
+    if(nmatched != nind)
+        {
+        Print(*this);
+        cout << "indices = " << endl;
+        for(int j = 1; j <= nind; ++j)
+            cout << indices[j] << endl;
+        Error("Couldn't find Index to trace");
+        }
+
+    //If traced indices have m==1, no work
+    //to do; just replace indices
+    if(tm == 1)
+        {
+        r_ = new_r_;
+        sortIndices(new_index_,r_,rn_,alloc_size,index_,1);
+        return;
+        }
+
+    int new_rn_ = rn_-nind;
+
+    Counter nc(new_index_,new_rn_,new_r_);
+
+    //Set up ii pointers to link
+    //elements of res to appropriate
+    //elements of *this
+    int trace_ind = 0;
+    array<int*,NMAX+1> ii;
+    int n = 1;
+    for(int j = 1; j <= r_; ++j)
+        {
+        if(traced[j])
+            ii[j] = &(trace_ind);
+        else
+            ii[j] = &(nc.i[n++]);
+        }
+
+    int one = 1;
+    for(int j = r_+1; j <= NMAX; ++j)
+        ii[j] = &one;
+    
+    //Create the new dat
+    boost::intrusive_ptr<ITDat> np = new ITDat(alloc_size);
+    Vector& resdat = np->v;
+
+    const Vector& thisdat = p->v;
+    for(; nc.notDone(); ++nc)
+        {
+        Real newval = 0;
+        for(trace_ind = 1; trace_ind <= tm; ++trace_ind)
+            {
+            newval += 
+            thisdat(this->_ind(*ii[1],*ii[2],
+                               *ii[3],*ii[4],
+                               *ii[5],*ii[6],
+                               *ii[7],*ii[8]));
+            }
+        resdat(nc.ind) = newval;
+        }
+
+    index_.swap(new_index_);
+    setUniqueReal();
+    p.swap(np);
+    r_ = new_r_;
+    rn_ = new_rn_;
+
+    } //ITensor::directMultiply
+
+#endif
 
 ITensor& ITensor::
 operator*=(const ITensor& other)
@@ -2355,8 +2491,8 @@ operator+=(const ITensor& other)
     {
     if(this == &other) { scale_ *= 2; return *this; }
 
-    bool complex_this = is_complex();
-    bool complex_other = other.is_complex();
+    bool complex_this = isComplex();
+    bool complex_other = other.isComplex();
     if(!complex_this && complex_other)
     {
         return (*this = (*this * ITensor::Complex_1()) + other);
@@ -2637,13 +2773,13 @@ symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid, int& mink, 
 
 Real Dot(const ITensor& x, const ITensor& y, bool doconj)
 {
-    if(x.is_complex())
+    if(x.isComplex())
 	{
         ITensor res = (doconj ? conj(x) : x); res *= y;
         if(res.r() != 1) Error("Bad Dot 234234");
         return res.val0();
 	}
-    else if(y.is_complex())
+    else if(y.isComplex())
 	{
         ITensor res = x; res *= y;
         if(res.r() != 1) Error("Bad Dot 37298789");
@@ -2659,7 +2795,7 @@ Real Dot(const ITensor& x, const ITensor& y, bool doconj)
 void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, 
                 bool doconj)
 {
-    if(x.is_complex())
+    if(x.isComplex())
 	{
         ITensor res = (doconj ? conj(x) : x); res *= y;
         if(res.r() != 1) error("Bad Dot 334234");
@@ -2667,7 +2803,7 @@ void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im,
         im = res(Index::IndReIm()(2));
         return;
 	}
-    else if(y.is_complex())
+    else if(y.isComplex())
 	{
         ITensor res = x; res *= y;
         if(res.r() != 1) error("Bad Dot 47298789");

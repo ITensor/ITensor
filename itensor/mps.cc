@@ -467,7 +467,7 @@ void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm, int ma
     ITensor Ac = comb * A;
 
     ITensor rho;
-    if(Ac.is_complex())
+    if(Ac.isComplex())
     {
         ITensor re,im;
         Ac.SplitReIm(re,im);

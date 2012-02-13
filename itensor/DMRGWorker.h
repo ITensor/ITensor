@@ -166,7 +166,7 @@ runInternal(const MPOType& H, MPSType& psi)
     energy_ = 0;
     
     psi.position(1);
-    //if(H.is_complex()) psi.AAnc(1) *= Complex_1;
+    //if(H.isComplex()) psi.AAnc(1) *= Complex_1;
     
     std::vector<MPOTensor> PH(N+1);
     for(int l = N-1; l >= 2; --l) 

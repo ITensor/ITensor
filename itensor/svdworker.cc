@@ -161,7 +161,7 @@ operator()(int b, const ProjectedOp<Tensor>& PH, const Tensor& AA,
 
     IndexT newmid;
     Tensor U;
-    if(AAc.is_complex())
+    if(AAc.isComplex())
         truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),newmid,U);
     else
         truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),newmid,U);
@@ -261,7 +261,7 @@ operator()(int b, const ProjectedOp<Tensor>& PH, const Tensor& AA,
         }
 
     Tensor C,U;
-    if(AAc.is_complex())
+    if(AAc.isComplex())
         {
         Error("Complex case not implemented");
         }

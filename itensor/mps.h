@@ -432,8 +432,8 @@ class MPSt //the lowercase t stands for "template"
         }
 
     bool 
-    is_complex() const
-        { return A[l_orth_lim_+1].is_complex(); }
+    isComplex() const
+        { return A[l_orth_lim_+1].isComplex(); }
 
     friend inline std::ostream& 
     operator<<(std::ostream& s, const MPSt& M)

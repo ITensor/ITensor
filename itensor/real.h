@@ -14,16 +14,19 @@ template <typename T>
 T sqr(T x) { return x*x; }
 
 struct ApproxReal
-{
+    {
     Real r;
     ApproxReal() : r(0) {}
     ApproxReal(Real _r) : r(_r) {}
 
-    friend inline bool operator==(const ApproxReal &a,const ApproxReal &b)
-    { return fabs(a.r-b.r) < 1E-12; }
-    friend inline bool operator<(const ApproxReal &a,const ApproxReal &b)
-    { return b.r-a.r > 1E-12; }
-};
+    bool friend inline
+    operator==(const ApproxReal &a,const ApproxReal &b)
+        { return fabs(a.r-b.r) < 1E-12; }
+
+    bool friend inline 
+    operator<(const ApproxReal &a,const ApproxReal &b)
+        { return b.r-a.r > 1E-12; }
+    };
 
 static Real maxlogdouble = log(std::numeric_limits<double>::max());
 
@@ -32,12 +35,14 @@ static const Real LogNumber_Accuracy = 1E-12;
 class TooBigForReal {};
 class TooSmallForReal {};
 
+//
+// LogNumber
+//
+
 //Stores a real number r as lognum_ = log(|r|) and sign_ = sgn(r)
 class LogNumber
-{
-    Real lognum_;
-    int sign_;
-public:
+    {
+    public:
 
     Real 
     logNum() const { return lognum_; }
@@ -178,6 +183,18 @@ public:
         return lognum_ > other.lognum_;
         }
 
+    void
+    swap(LogNumber& other)
+        {
+        Real sl = lognum_;
+        lognum_ = other.lognum_;
+        other.lognum_ = sl;
+
+        int si = sign_;
+        sign_ = other.sign_;
+        other.sign_ = si;
+        }
+
     bool 
     magnitudeLessThan(const LogNumber& other) const
         {
@@ -202,14 +219,27 @@ public:
         return s;
         }
 
-};
+    private:
 
-inline LogNumber 
+    /////////////
+    //
+    // Data Members
+    //
+
+    Real lognum_;
+    int sign_;
+
+    //
+    /////////////
+
+    };
+
+LogNumber inline
 sqrt(const LogNumber& L)
-{
+    {
     if(L.sign() < 0) 
         Error("Negative LogNumber in sqrt");
     return LogNumber(L.logNum()/2,L.sign());
-}
+    }
 
 #endif

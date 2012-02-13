@@ -109,7 +109,7 @@ class MPOt : private MPSt<Tensor>
     using Parent::ortho_center;
     using Parent::orthogonalize;
 
-    using Parent::is_complex;
+    using Parent::isComplex;
 
     using Parent::averageM;
 
@@ -392,7 +392,7 @@ psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, cons
     for(int i = 2; i <= N; ++i)
         { L *= phi.AA(i); L *= H.AA(i); L *= psiconj.AA(i); }
     if(!RB.isNull()) L *= RB;
-    if(L.is_complex())
+    if(L.isComplex())
         {
         if(L.vecSize() != 2) Error("Non-scalar result in psiHphi.");
         re = L(Index::IndReIm()(1));

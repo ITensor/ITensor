@@ -1050,7 +1050,7 @@ void IQTensor::
 conj()
     {
     solo();
-    if(!is_complex())
+    if(!isComplex())
         {
         for(iqind_it jj = p->iqindex_.begin(); jj != p->iqindex_.end(); ++jj)
             { jj->conj(); }
