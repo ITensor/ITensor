@@ -540,7 +540,7 @@ void convertToIQ(const Model& model, const vector<ITensor>& A, vector<IQTensor>&
                 }
             }
         }
-    cout << "Converting to IQ with (start, end) = " << start SP end << endl;
+    //cout << "Converting to IQ with (start, end) = " << start SP end << endl;
 
     vector<IQIndex> linkind(N+1);
 

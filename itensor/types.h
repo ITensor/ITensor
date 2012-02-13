@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <exception>
 #include <error.h> //utilities
 #include "matrix.h"
 #include "assert.h"
@@ -250,6 +251,15 @@ public:
     };
 
 Real ran1();
+
+class ResultIsZero : public std::exception
+    {
+    const char* c;
+public:
+    ResultIsZero(const char* c_) : c(c_) {}
+    virtual const char* what() const throw()
+	{ return c; }
+    };
 
 #ifdef THIS_IS_MAIN
 void reportnew() { }

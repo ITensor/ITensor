@@ -403,6 +403,10 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
     mvector = vector<Vector>(rho.iten_size());
     alleig.clear();
     alleig.reserve(rho.index(1).m());
+    if(rho.index(1).m() == 0)
+	throw ResultIsZero("rho.index(1).m()");
+    if(rho.iten_size() == 0)
+	throw ResultIsZero("rho.iten_size() == 0");
 
     if(doRelCutoff_)
         {
@@ -611,11 +615,14 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
 
         ++itenind;
         }
+    if(iq.size() == 0)
+	throw ResultIsZero("iq.size() == 0");
     newmid = IQIndex("qlink",iq,In);
     if(newmid.m() != m)
         {
         cout << format("m = %d, newmid.m() = %d") % m % newmid.m() << endl;
-        Error("newmid not properly formed");
+        //Error("newmid not properly formed");
+	cout << "Warning:  newmid != m" << endl;
         }
     } //void SVDWorker::diag_and_truncate
 
