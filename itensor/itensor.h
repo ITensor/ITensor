@@ -24,13 +24,16 @@ class ITensor
 
     //uniqueReal depends on indices only, unordered:
     Real 
-    uniqueReal() const { return ur; } 
+    uniqueReal() const { return is_.ur_; } 
 
     const Index& 
     index(int j) const;
 
     int 
-    r() const { return r_; }
+    r() const { return is_.r_; }
+
+    int 
+    rn() const { return is_.rn_; }
 
     int 
     m(int j) const;
@@ -602,7 +605,7 @@ class ITensor
     static const Index& 
     ReImIndex() { return Index::IndReIm(); }
 
-    private:
+    protected:
 
     //////////////
     //
@@ -612,15 +615,11 @@ class ITensor
     //mutable: const methods may want to reshape data
     mutable boost::intrusive_ptr<ITDat> p; 
 
-    //Indices, maximum of 8 (index_[0] not used)
-    boost::array<Index,NMAX+1> index_; 
-
-    int r_,rn_;
+    //Indices, maximum of 8 (is_.index_[0] not used)
+    IndexSet is_;
 
     //mutable since e.g. scaleTo is logically const
     mutable LogNumber scale_; 
-
-    Real ur;
 
     //
     //
@@ -649,9 +648,6 @@ class ITensor
     void 
     solo() const;
     
-    void 
-    setUniqueReal();
-
     void 
     _construct1(const Index& i1);
 
@@ -698,6 +694,7 @@ class Counter
 public:
     boost::array<int,NMAX+1> n, i;
     int ind;
+    int rn_,r_;
 
     Counter();
     Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r);
@@ -721,12 +718,10 @@ public:
     friend inline std::ostream& 
     operator<<(std::ostream& s, const Counter& c);
 
-private:
+    private:
 
     void 
     reset(int a);
-
-    int rn_,r_;
 
     };
 
@@ -820,7 +815,6 @@ private:
     };
 
 
-
 class commaInit
     {
 public:
@@ -894,37 +888,5 @@ multSiteOps(Tensor a, Tensor b)
     res.mapprime(2,1,primeSite);
     return res;
     }
-
-
-template<class Iterable>
-void
-sortIndices(const Iterable& I, int ninds, int& rn_, int& alloc_size, 
-            boost::array<Index,NMAX+1>& index_, int offset = 0)
-    {
-    assert(ninds <= NMAX);
-
-    rn_ = 0;
-    alloc_size = 1;
-
-    int r1_ = 0;
-    boost::array<const Index*,NMAX+1> index1_;
-
-    for(int n = offset; n < ninds+offset; ++n)
-        {
-        const Index& i = I[n];
-        DO_IF_DEBUG(if(i == Index::Null()) Error("ITensor: null Index in constructor.");)
-        if(i.m()==1) 
-            { index1_[++r1_] = &i; }
-        else         
-            { 
-            index_[++rn_] = i; 
-            alloc_size *= i.m(); 
-            }
-        }
-    for(int l = 1; l <= r1_; ++l) 
-        index_[rn_+l] = *(index1_[l]);
-    }
-
-
 
 #endif
