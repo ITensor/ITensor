@@ -636,14 +636,6 @@ class ITensor
     void 
     allocate();
 
-#ifdef DO_ALT
-    void 
-    newAltDat(const Permutation& P) const;
-
-    PDat& 
-    lastAlt() const;
-#endif
-
     //Disattach self from current ITDat and create own copy instead.
     //Necessary because ITensors logically represent distinct
     //objects even though they may share data in reality.
@@ -733,18 +725,6 @@ public:
 
     };
 
-//#define DO_ALT
-#ifdef DO_ALT
-struct PDat
-    {
-    Permutation I; 
-    Vector v;
-    PDat(const Permutation& P_, const Vector& v_) 
-		: I(P_.inverse()), v(v_) { }
-    PDat(const Permutation& P_) : I(P_.inverse()) { }
-    };
-#endif
-
 //
 // ITDat
 //
@@ -753,9 +733,6 @@ class ITDat
 public:
 
     Vector v;
-#ifdef DO_ALT
-    std::vector<PDat> alt;
-#endif
 
     ITDat() 
         : v(0), numref(0)

@@ -558,9 +558,6 @@ assignFrom(const ITensor& other)
     is_.getperm(other.is_,P);
     scale_ = other.scale_;
     if(p->count() != 1) { p = new ITDat(); }
-#ifdef DO_ALT
-    else { p->alt.clear(); }
-#endif
     other.reshapeDat(P,p->v);
     }
 
@@ -1016,9 +1013,6 @@ assignFromVec(const VectorRef& v)
     else
         {
         p->v = v;
-#ifdef DO_ALT
-        p->alt.clear();
-#endif
         }
 	}
 
@@ -1131,17 +1125,6 @@ allocate(int dim)
 void ITensor::
 allocate() 
     { p = new ITDat(); }
-
-#ifdef DO_ALT
-void 
-newAltDat(const Permutation& P) const
-    { p->alt.push_back(PDat(P)); }
-
-PDat& ITensor::
-lastAlt() const 
-    { return p->alt.back(); } 
-
-#endif //DO_ALT
 
 void ITensor::
 solo() const
@@ -1481,37 +1464,6 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
             }
         }
 
-    /*
-    if(L_is_matrix)
-        {
-        cerr << "L is matrix, props.pl = " << props.pl << "\n";
-        cerr << format("contractedL = %d %d %d %d %d\n")
-                % props.contractedL[1]
-                % props.contractedL[2]
-                % props.contractedL[3]
-                % props.contractedL[4]
-                % props.contractedL[5];
-        }
-    else
-        {
-        cerr << "L is not matrix\n";
-        }
-    if(R_is_matrix)
-        {
-        cerr << "R is matrix, props.pl = " << props.pr << "\n";
-        cerr << format("contractedR = %d %d %d %d %d\n")
-                % props.contractedR[1]
-                % props.contractedR[2]
-                % props.contractedR[3]
-                % props.contractedR[4]
-                % props.contractedR[5];
-        }
-    else
-        {
-        cerr << "R is not matrix\n";
-        }
-        */
-
     if(L_is_matrix)  
         {
         if(props.contractedL[1]) 
@@ -1527,40 +1479,6 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
     else
         {
         bool done_with_L = false;
-#ifdef DO_ALT
-        //Not matrix, see if alternate dat is
-        for(std::vector<PDat>::const_iterator it = L.p->alt.begin();
-            it != L.p->alt.end();
-            ++it)
-            {
-            const PDat& Alt = *it;
-            bool front_matrix=true;
-            for(int j = 1; j <= props.nsamen; ++j)
-            if(!GET(props.contractedL,Alt.I.dest(j)))
-                { front_matrix = false; break; }
-
-            if(front_matrix) 
-                { 
-                Alt.v.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
-                done_with_L = true;
-                L_is_matrix = true;
-                break;
-                }
-
-            bool back_matrix=true;
-            for(int j = L.rn(); j > (L.rn()-props.nsamen); --j)
-            if(!GET(props.contractedL,Alt.I.dest(j)))
-                { back_matrix = false; break; }
-
-            if(back_matrix)
-                {
-                Alt.v.TreatAsMatrix(lref,props.cdim,props.odimL); 
-                done_with_L = true;
-                L_is_matrix = true;
-                        break;
-                }
-            } //for int n
-#endif
         //Finish making the permutation (stick non contracted inds on the back)
         if(!done_with_L)
             {
@@ -1568,14 +1486,8 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
             for(int j = 1; j <= L.rn(); ++j)
             if(!props.contractedL[j]) props.pl.from_to(j,++q);
             if(L_is_matrix) Error("Calling reshapeDat although L is matrix.");
-#ifdef DO_ALT
-            L.newAltDat(props.pl);
-            L.reshapeDat(props.pl,L.lastAlt().v);
-            L.lastAlt().v.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
-#else
             Vector lv; L.reshapeDat(props.pl,lv);
             lv.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
-#endif
             done_with_L = true;
             }
         assert(done_with_L);
@@ -1591,40 +1503,6 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
     else
         {
         bool done_with_R = false;
-#ifdef DO_ALT
-        //Not matrix, see if alternate dat is
-        for(std::vector<PDat>::const_iterator it = R.p->alt.begin();
-            it != R.p->alt.end();
-            ++it)
-            {
-            const PDat& Alt = *it;
-            bool front_matrix=true;
-            for(int j = 1; j <= props.nsamen; ++j)
-            if(!GET(props.contractedR,Alt.I.dest(j)))
-                { front_matrix = false; break; }
-
-            if(front_matrix) 
-                { 
-                Alt.v.TreatAsMatrix(rref,props.odimR,props.cdim); 
-                done_with_R = true;
-                R_is_matrix = true;
-                break;
-                }
-
-            bool back_matrix=true;
-            for(int j = R.rn(); j > (R.rn()-props.nsamen); --j)
-            if(!GET(props.contractedR,Alt.I.dest(j)))
-                { back_matrix = false; break; }
-
-            if(back_matrix)
-                {
-                Alt.v.TreatAsMatrix(rref,props.cdim,props.odimR); rref.ApplyTrans();
-                done_with_R = true;
-                R_is_matrix = true;
-                        break;
-                }
-            } //for int n
-#endif
         //Finish making the permutation (stick non contracted inds on the back)
         if(!done_with_R)
             {
@@ -1632,14 +1510,8 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
             for(int j = 1; j <= R.rn(); ++j)
             if(!props.contractedR[j]) props.pr.from_to(j,++q);
             if(R_is_matrix) Error("Calling reshape even though R is matrix.");
-#ifdef DO_ALT
-            R.newAltDat(props.pr);
-            R.reshapeDat(props.pr,R.lastAlt().v);
-            R.lastAlt().v.TreatAsMatrix(rref,props.odimR,props.cdim);
-#else
             Vector rv; R.reshapeDat(props.pr,rv);
             rv.TreatAsMatrix(rref,props.odimR,props.cdim);
-#endif
             done_with_R = true;
             }
         }
@@ -1743,9 +1615,6 @@ operator/=(const ITensor& other)
     toMatrixProd(*this,other,props,lref,rref);
 
     if(p->count() != 1) { p = new ITDat(); }
-#ifdef DO_ALT
-    else { p->alt.clear(); }
-#endif
     Vector& thisdat = p->v; 
     
     const int ni = lref.Ncols(), nj = lref.Nrows(), nk = rref.Nrows();
@@ -2146,9 +2015,6 @@ operator*=(const ITensor& other)
 
     //Do the matrix multiplication
     if(p->count() != 1) { p = new ITDat(); } 
-#ifdef DO_ALT
-    else { p->alt.clear(); }
-#endif
     p->v.ReDimension(rref.Nrows()*lref.Ncols());
     MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
     nref = rref*lref;
@@ -2206,9 +2072,6 @@ reshapeTo(const Permutation& P, ITensor& res) const
 
     res.scale_ = scale_;
 
-#ifdef DO_ALT //add a flag to solo to let it know not to even copy alt
-    res.p->alt.clear();
-#endif
     this->reshapeDat(P,res.p->v);
     }
 
@@ -2264,11 +2127,6 @@ operator+=(const ITensor& other)
         //scalefac = LNscalefac.real();
         scalefac = (other.scale_/scale_).real();
         }
-
-
-#ifdef DO_ALT
-    p->alt.clear();
-#endif
 
     bool same_ind_order = true;
     for(int j = 1; j <= rn(); ++j)
