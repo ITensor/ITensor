@@ -4,8 +4,8 @@
 #include "real.h"
 #include "allocator.h"
 #include "index.h"
-#include "permutation.h"
 #include "prodstats.h"
+#include "indexset.h"
 
 //Forward declarations
 struct ProductProps;
@@ -55,10 +55,9 @@ class ITensor
 
     //Can be used for iteration over Indices in a Foreach loop
     //e.g. Foreach(const Index& I, t.index() ) { ... }
-    typedef boost::array<Index,NMAX+1>::const_iterator index_it;
-    const std::pair<index_it,index_it> 
+    const std::pair<IndexSet::index_it,IndexSet::index_it> 
     index() const  
-        { return std::make_pair(index_.begin()+1,index_.begin()+r_+1); }
+        { return is_.index(); }
 
 
     //Constructors --------------------------------------------------
@@ -210,62 +209,63 @@ class ITensor
     //Index Methods ---------------------------------------------------
 
     Index 
-    findtype(IndexType t) const;
+    findtype(IndexType t) const { return is_.findtype(t); }
 
     bool 
-    findtype(IndexType t, Index& I) const;
+    findtype(IndexType t, Index& I) const { return is_.findtype(t,I); }
 
     int 
-    findindex(const Index& I) const;
+    findindex(const Index& I) const { return is_.findindex(I); }
 
     int 
-    findindexn(const Index& I) const;
+    findindexn(const Index& I) const { return is_.findindexn(I); }
 
     int 
-    findindex1(const Index& I) const;
+    findindex1(const Index& I) const { return is_.findindex1(I); }
 
     bool 
-    has_common_index(const ITensor& other) const;
+    has_common_index(const ITensor& other) const
+        { return is_.has_common_index(other.is_); }
     
     bool 
-    hasindex(const Index& I) const;
+    hasindex(const Index& I) const { return is_.hasindex(I); }
 
     bool 
-    hasindexn(const Index& I) const;
+    hasindexn(const Index& I) const { return is_.hasindexn(I); }
 
     bool 
-    hasindex1(const Index& I) const;
+    hasindex1(const Index& I) const { return is_.hasindex1(I); }
 
     bool
-    hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const;
+    hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const
+        { return is_.hasAllIndex(I,nind); }
 
     bool 
     notin(const Index& I) const { return !hasindex(I); }
 
     void 
-    addindex1(const std::vector<Index>& indices);
+    addindex1(const std::vector<Index>& indices) { is_.addindex1(indices); }
 
     void 
-    addindex1(const Index& I);
+    addindex1(const Index& I) { is_.addindex1(I); }
 
     //Removes the jth index as found by findindex
     void 
-    removeindex1(int j);
+    removeindex1(int j) { is_.removeindex1(j); }
 
     void 
-    removeindex1(const Index& I) 
-        { removeindex1(findindex1(I)); }
+    removeindex1(const Index& I) { is_.removeindex1(is_.findindex1(I)); }
 
     void 
-    mapindex(const Index& i1, const Index& i2);
+    mapindex(const Index& i1, const Index& i2) { is_.mapindex(i1,i2); }
 
     //Primelevel Methods ------------------------------------
 
     void 
-    noprime(PrimeType p = primeBoth);
+    noprime(PrimeType p = primeBoth) { is_.noprime(p); }
 
     void 
-    doprime(PrimeType pt, int inc = 1);
+    doprime(PrimeType pt, int inc = 1) { is_.doprime(pt,inc); }
 
     void 
     primeall() { doprime(primeBoth,1); }
@@ -277,18 +277,20 @@ class ITensor
     primelink() { doprime(primeLink,1); }
 
     void 
-    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
+    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)
+        { is_.mapprime(plevold,plevnew,pt); }
 
     void 
     mapprimeind(const Index& I, int plevold, int plevnew, 
-                PrimeType pt = primeBoth);
+                PrimeType pt = primeBoth)
+        { is_.mapprimeind(I,plevold,plevnew,pt); }
 
     void 
     primeind(const Index& I, int inc = 1)
         { mapindex(I,primed(I,inc)); }
 
     void 
-    primeind(const Index& I, const Index& J);
+    primeind(const Index& I, const Index& J) { is_.primeind(I,J); }
 
     void 
     noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
@@ -455,7 +457,7 @@ class ITensor
     Real friend inline
     trace(ITensor T)
         {
-        if(T.rn_ != 0) T.trace(T.index_,T.rn_);
+        if(T.rn() != 0) T.trace(T.is_.index_,T.rn());
         return T.val0();
         }
 
@@ -697,10 +699,16 @@ public:
     int rn_,r_;
 
     Counter();
+
     Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r);
+
+    Counter(const IndexSet& is);
 
     void 
     init(const boost::array<Index,NMAX+1>& ii, int rn, int r);
+
+    void 
+    init(const IndexSet& is);
 
     Counter& 
     operator++();

@@ -1,4 +1,7 @@
 #include "indexset.h"
+using namespace std;
+using boost::format;
+using boost::array;
 
 IndexSet::
 IndexSet()
@@ -296,12 +299,41 @@ primeind(const Index& I, const Index& J)
     mapindex(J,primed(J));
 	}
 
+/*
 ITensor 
 primeind(ITensor A, const Index& I1, const Index& I2)
     { 
     A.mapindex(I1,primed(I1));
     A.mapindex(I2,primed(I2));
     return A; 
+    }
+*/
+
+std::ostream&
+operator<<(std::ostream& s, const IndexSet& is)
+    {
+    int i = 1; 
+    for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
+    if(is.r() != 0) { s << is.index(i); } //print last one
+    return s;
+    }
+
+void IndexSet::
+swap(IndexSet& other)
+    {
+    index_.swap(other.index_);
+
+    int si = r_;
+    r_ = other.r_;
+    other.r_ = si;
+
+    si = rn_;
+    rn_ = other.rn_;
+    other.rn_ = si;
+
+    Real sr = ur_;
+    ur_ = other.ur_;
+    other.ur_ = sr;
     }
 
 

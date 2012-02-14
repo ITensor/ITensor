@@ -1,6 +1,7 @@
 #ifndef __ITENSOR_INDEXSET_H
 #define __ITENSOR_INDEXSET_H
 #include "index.h"
+#include "permutation.h"
 
 //
 // IndexSet
@@ -12,6 +13,32 @@ class IndexSet
     IndexSet();
 
     IndexSet(const Index& i1);
+
+    IndexSet(const Index& i1, const Index& i2);
+
+    template <class Iterable>
+    IndexSet(const Iterable& ii, int size, int& alloc_size, int offset = 0);
+
+    int
+    r() const { return r_; }
+
+    int
+    rn() const { return rn_; }
+
+    const Index&
+    index(int j) const { return GET(index_,j); }
+
+    int
+    m(int j) const { return GET(index_,j).m(); }
+
+    typedef boost::array<Index,NMAX+1>::const_iterator 
+    index_it;
+
+    //Can be used for iteration over Indices in a Foreach loop
+    //e.g. Foreach(const Index& I, t.index() ) { ... }
+    const std::pair<index_it,index_it> 
+    index() const  
+        { return std::make_pair(index_.begin()+1,index_.begin()+r_+1); }
 
     void
     setUniqueReal();
@@ -35,7 +62,7 @@ class IndexSet
     findindex1(const Index& I) const;
 
     bool 
-    has_common_index(const ITensor& other) const;
+    has_common_index(const IndexSet& other) const;
     
     bool 
     hasindex(const Index& I) const;
@@ -113,10 +140,16 @@ class IndexSet
     //
 
     void
+    swap(IndexSet& other);
+
+    void
     read(std::istream& s);
 
     void
     write(std::ostream& s) const;
+
+    friend std::ostream&
+    operator<<(std::ostream& s, const IndexSet& is);
 
     //////////
     //
@@ -136,12 +169,12 @@ class IndexSet
     };
 
 template <class Iterable>
-inline IndexSet::
-IndexSet(const Iterable& ii, int size, int& alloc_size)
+IndexSet::
+IndexSet(const Iterable& ii, int size, int& alloc_size, int offset)
     :
     r_(size)
     { 
-    sortIndices(ii,size,rn_,alloc_size,index_);
+    sortIndices(ii,size,rn_,alloc_size,index_,offset);
     setUniqueReal();
     }
 
@@ -149,7 +182,7 @@ IndexSet(const Iterable& ii, int size, int& alloc_size)
 template<class Iterable>
 void
 sortIndices(const Iterable& I, int ninds, int& rn_, int& alloc_size, 
-            boost::array<Index,NMAX+1>& index_, int offset)
+            boost::array<Index,NMAX+1>& index_, int offset = 0)
     {
     assert(ninds <= NMAX);
 

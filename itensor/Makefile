@@ -8,7 +8,11 @@ include ../options.mk
 
 ####################################
 
-SOURCES=index.cc indexset.cc itensor.cc sparseitensor.cc iqindex.cc iqtensor.cc \
+SOURCES=index.cc indexset.cc itensor.cc \
+        iqindex.cc iqtensor.cc \
+        svdworker.cc mps.cc mpo.cc dmrg.cc
+#SOURCES=index.cc indexset.cc itensor.cc sparseitensor.cc \
+        iqindex.cc iqtensor.cc \
         svdworker.cc mps.cc mpo.cc dmrg.cc
 
 HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
@@ -17,7 +21,7 @@ HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
         hams/hubbardchain.h hams/heisenberg.h hams/triheisenberg.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
-        eigensolver.h projectedop.h sparseitensor.h
+        eigensolver.h projectedop.h #sparseitensor.h
 
 ####################################
 
