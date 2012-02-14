@@ -15,16 +15,17 @@ IndexSet::
 IndexSet(const Index& i1)
     :
     rn_((i1.m() == 1 ? 0 : 1)),
-    r_(1)
+    r_(1),
+    ur_(i1.uniqueReal())
     { 
     index_[1] = i1;
-    setUniqueReal();
     }
 
 IndexSet::
 IndexSet(const Index& i1, const Index& i2)
     :
-    r_(2)
+    r_(2),
+    ur_(i1.uniqueReal() + i1.uniqueReal())
     { 
 	if(i1.m()==1) 
 	    {
@@ -38,17 +39,7 @@ IndexSet(const Index& i1, const Index& i2)
         index_[2] = i2; 
 	    rn_ = (i2.m() == 1 ? 1 : 2); 
 	    }
-    setUniqueReal();
     }
-
-void IndexSet::
-setUniqueReal()
-	{
-    ur_ = 0;
-    for(int j = 1; j <= r_; ++j)
-        ur_ += index_[j].uniqueReal();
-	}
-
 
 Index IndexSet::
 findtype(IndexType t) const
@@ -159,57 +150,6 @@ hasAllIndex(const array<Index,NMAX+1>& I, int nind) const
     }
 
 
-void IndexSet::
-addindex1(const std::vector<Index>& indices) 
-    { 
-#ifdef DEBUG
-    if((r_+(int)indices.size()) > NMAX)
-        {
-        Print(*this);
-        Print(indices.size());
-        Error("Too many indices added");
-        }
-#endif
-    for(size_t j = 0; j < indices.size(); ++j)
-        { 
-        assert(indices[j].m() == 1);
-        assert(!hasindex1(indices[j]));
-        index_[++r_] = indices[j]; 
-        }
-    setUniqueReal();
-    }
-
-void IndexSet::
-addindex1(const Index& I) 
-    { 
-#ifdef DEBUG
-    if(I.m() != 1)
-        {
-        Print(I);
-        Error("Index must have m==1.");
-        }
-    if(hasindex1(I))
-        {
-        Print(*this);
-        Print(I);
-        Error("Adding Index twice");
-        }
-    if(r_ == NMAX) Error("Maximum number of indices reached");
-#endif
-    index_[++r_] = I;
-    setUniqueReal();
-    }
-
-void IndexSet::
-removeindex1(int j) 
-    { 
-    assert(j <= r_);
-    assert(j > rn_);
-    for(int k = j; k < r_; ++k) 
-        index_[k] = index_[k+1];
-    --r_;
-    setUniqueReal();
-    }
 
 void IndexSet::
 mapindex(const Index& i1, const Index& i2)
@@ -222,10 +162,11 @@ mapindex(const Index& i1, const Index& i2)
         Error("mapIndex: index must have matching m");
         }
 	for(int j = 1; j <= r_; ++j) 
-	    if(GET(index_,j) == i1) 
+	    if(index_[j] == i1) 
 		{
-		GET(index_,j) = i2;
-		setUniqueReal();
+		index_[j] = i2;
+        ur_ -= i1.uniqueReal();
+        ur_ += i2.uniqueReal();
 		return;
 		}
 	Print(i1);
@@ -256,25 +197,37 @@ getperm(const IndexSet& other, Permutation& P) const
 void IndexSet::
 noprime(PrimeType p)
     {
+    ur_ = 0;
     for(int j = 1; j <= r_; ++j) 
-        index_[j].noprime(p);
-    setUniqueReal();
+        {
+        Index& J = index_[j];
+        J.noprime(p);
+        ur_ += J.uniqueReal();
+        }
 	}
 
 void IndexSet::
 doprime(PrimeType pt, int inc)
 	{
+    ur_ = 0;
     for(int j = 1; j <= r_; ++j) 
-        index_[j].doprime(pt,inc);
-    setUniqueReal();
+        {
+        Index& J = index_[j];
+        J.doprime(pt,inc);
+        ur_ += J.uniqueReal();
+        }
 	}
 
 void IndexSet::
 mapprime(int plevold, int plevnew, PrimeType pt)
 	{
+    ur_ = 0;
     for(int j = 1; j <= r_; ++j) 
-        index_[j].mapprime(plevold,plevnew,pt);
-    setUniqueReal();
+        {
+        Index& J = index_[j];
+        J.mapprime(plevold,plevnew,pt);
+        ur_ += J.uniqueReal();
+        }
 	}
 
 void IndexSet::
@@ -284,7 +237,8 @@ mapprimeind(const Index& I, int plevold, int plevnew, PrimeType pt)
         if(index_[j] == I)
         {
         index_[j].mapprime(plevold,plevnew,pt);
-        setUniqueReal();
+        ur_ -= I.uniqueReal();
+        ur_ += index_[j].uniqueReal();
         return;
         }
     Print(*this);
@@ -309,14 +263,101 @@ primeind(ITensor A, const Index& I1, const Index& I2)
     }
 */
 
-std::ostream&
-operator<<(std::ostream& s, const IndexSet& is)
+//
+// Methods for Manipulating IndexSets
+//
+
+void IndexSet::
+addindexn(const array<Index,NMAX+1>& indices, int n) 
     {
-    int i = 1; 
-    for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
-    if(is.r() != 0) { s << is.index(i); } //print last one
-    return s;
+    for(int j = 1; j <= n; ++j)
+        {
+        const Index& J = indices[j];
+        index_[++rn_] = J;
+        ur_ += J.uniqueReal();
+        }
+    r_ += n;
     }
+
+void IndexSet::
+addindexn(const Index& I)
+    {
+    index_[++rn_] = I;
+    ur_ += I.uniqueReal();
+    ++r_;
+    }
+
+void IndexSet::
+addindex1(const array<Index,NMAX+1>& indices, int n) 
+    {
+    for(int j = 1; j <= n; ++j)
+        {
+        const Index& J = indices[j];
+        index_[++r_] = J;
+        ur_ += J.uniqueReal();
+        }
+    }
+
+void IndexSet::
+addindex1(const std::vector<Index>& indices) 
+    { 
+#ifdef DEBUG
+    if((r_+(int)indices.size()) > NMAX)
+        {
+        Print(*this);
+        Print(indices.size());
+        Error("Too many indices added");
+        }
+#endif
+    for(size_t j = 0; j < indices.size(); ++j)
+        { 
+        assert(indices[j].m() == 1);
+        assert(!hasindex1(indices[j]));
+
+        index_[++r_] = indices[j]; 
+        ur_ += indices[j].uniqueReal();
+        }
+    }
+
+void IndexSet::
+addindex1(const Index& I) 
+    { 
+#ifdef DEBUG
+    if(I.m() != 1)
+        {
+        Print(I);
+        Error("Index must have m==1.");
+        }
+    if(hasindex1(I))
+        {
+        Print(*this);
+        Print(I);
+        Error("Adding Index twice");
+        }
+    if(r_ == NMAX) Error("Maximum number of indices reached");
+#endif
+    index_[++r_] = I;
+    ur_ += I.uniqueReal();
+    }
+
+void IndexSet::
+removeindex1(int j) 
+    { 
+    assert(j <= r_);
+    assert(j > rn_);
+    ur_ -= index_[j].uniqueReal();
+    for(int k = j; k < r_; ++k) 
+        index_[k] = index_[k+1];
+    --r_;
+    }
+
+void IndexSet::
+setUniqueReal()
+	{
+    ur_ = 0;
+    for(int j = 1; j <= r_; ++j)
+        ur_ += index_[j].uniqueReal();
+	}
 
 void IndexSet::
 swap(IndexSet& other)
@@ -336,15 +377,35 @@ swap(IndexSet& other)
     other.ur_ = sr;
     }
 
+void IndexSet::
+clear()
+    {
+    rn_ = 0;
+    r_ = 0;
+    ur_ = 0;
+    }
+
+std::ostream&
+operator<<(std::ostream& s, const IndexSet& is)
+    {
+    int i = 1; 
+    for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
+    if(is.r() != 0) { s << is.index(i); } //print last one
+    return s;
+    }
+
 
 void IndexSet::
 read(std::istream& s)
     {
     s.read((char*) &r_,sizeof(r_));
     s.read((char*) &rn_,sizeof(rn_));
+    ur_ = 0;
     for(int j = 1; j <= r_; ++j) 
+        {
         index_[j].read(s);
-    setUniqueReal();
+        ur_ += index_[j].uniqueReal();
+        }
     }
 
 void IndexSet::

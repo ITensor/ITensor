@@ -19,6 +19,10 @@ class IndexSet
     template <class Iterable>
     IndexSet(const Iterable& ii, int size, int& alloc_size, int offset = 0);
 
+    //
+    // Accessor Methods
+    //
+
     int
     r() const { return r_; }
 
@@ -40,11 +44,12 @@ class IndexSet
     index() const  
         { return std::make_pair(index_.begin()+1,index_.begin()+r_+1); }
 
-    void
-    setUniqueReal();
-
     Real
     uniqueReal() const { return ur_; }
+
+    //
+    // Index Analysis
+    //
 
     Index 
     findtype(IndexType t) const;
@@ -78,21 +83,6 @@ class IndexSet
 
     bool 
     notin(const Index& I) const { return !hasindex(I); }
-
-    void 
-    addindex1(const std::vector<Index>& indices);
-
-    void 
-    addindex1(const Index& I);
-
-    //Removes the jth index as found by findindex
-    void 
-    removeindex1(int j);
-
-    void 
-    removeindex1(const Index& I) 
-        { removeindex1(findindex1(I)); }
-
     void 
     mapindex(const Index& i1, const Index& i2);
 
@@ -136,11 +126,47 @@ class IndexSet
     noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
 
     //
-    // Other Methods
+    // Methods for Manipulating IndexSets
     //
+    // Warning: these can overwrite other
+    // Indices if not used properly
+    //
+
+    void 
+    addindexn(const boost::array<Index,NMAX+1>& indices, int n);
+
+    void 
+    addindexn(const Index& I);
+
+    void 
+    addindex1(const boost::array<Index,NMAX+1>& indices, int n);
+
+    void 
+    addindex1(const std::vector<Index>& indices);
+
+    void 
+    addindex1(const Index& I);
+
+    //Removes the jth index as found by findindex
+    void 
+    removeindex1(int j);
+
+    void 
+    removeindex1(const Index& I) 
+        { removeindex1(findindex1(I)); }
+
+    void
+    setUniqueReal();
 
     void
     swap(IndexSet& other);
+
+    void
+    clear();
+
+    //
+    // Other Methods
+    //
 
     void
     read(std::istream& s);
