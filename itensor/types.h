@@ -257,7 +257,7 @@ public:
     typedef ITError
     Parent;
 
-    ResultIsZero(std::string& message) 
+    ResultIsZero(const std::string& message) 
         : Parent(message)
         { }
     };
