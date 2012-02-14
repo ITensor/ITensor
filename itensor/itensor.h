@@ -27,7 +27,7 @@ class ITensor
     uniqueReal() const { return is_.ur_; } 
 
     const Index& 
-    index(int j) const;
+    index(int j) const { return is_.index(j); }
 
     int 
     r() const { return is_.r_; }
@@ -36,7 +36,7 @@ class ITensor
     rn() const { return is_.rn_; }
 
     int 
-    m(int j) const;
+    m(int j) const { return is_.m(j); }
 
     bool 
     isNull() const { return (p == 0); }

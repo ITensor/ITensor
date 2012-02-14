@@ -144,35 +144,6 @@ operator<<(ostream & s, const ITensor & t)
     return s;
     }
 
-const Index& ITensor::
-index(int j) const
-    {
-#ifdef DEBUG
-    if(j > r()) 
-        {
-        Print(*this);
-        Print(j);
-        Error("j out of range (j > r_)");
-        }
-#endif
-    return is_.index_[j];
-    }
-
-int ITensor::
-m(int j) const
-    {
-#ifdef DEBUG
-    if(j > r()) 
-        {
-        Print(*this);
-        Print(j);
-        Error("j out of range (j > r_)");
-        }
-#endif
-    return is_.index_[j].m();
-    }
-
-
 //
 // ITensor Constructors
 //
@@ -189,7 +160,6 @@ ITensor(Real val)
     { 
     allocate(1);
     p->v = val;
-    is_.setUniqueReal();
     }
 
 ITensor::
@@ -234,7 +204,7 @@ ITensor(Index i1,Index i2,Real a)
     is_(i1,i2)
 	{
     allocate(i1.m()*i2.m());
-	if(is_.rn_ == 2) //then index order is i1, i2
+	if(is_.rn() == 2) //then index order is i1, i2
 	    {
 	    const int nn = min(i1.m(),i2.m());
 	    for(int i = 1; i <= nn; ++i) 
@@ -310,7 +280,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
     array<int,NMAX+1> ja; ja.assign(1);
     for(int k = 1; k <= rn(); ++k) //loop over indices of this ITensor
         for(int j = 0; j < size; ++j)  // loop over the given indices
-    if(is_.index_[k] == ii[j]) 
+    if(is_.index(k) == ii[j]) 
         { ja[k] = iv[j]; break; }
     p->v(_ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])) = 1;
     }
@@ -646,7 +616,7 @@ tieIndices(const array<Index,NMAX+1>& indices, int nind,
     int nmatched = 0;
     for(int k = 1; k <= r(); ++k)
         {
-        const Index& K = is_.index_[k];
+        const Index& K = is_.index(k);
         for(int j = 1; j <= nind; ++j)
         if(K == indices[j]) 
             { 
@@ -676,17 +646,17 @@ tieIndices(const array<Index,NMAX+1>& indices, int nind,
         Error("Couldn't find Index to tie");
         }
 
+    IndexSet new_is_(new_index_,new_r_,alloc_size,1);
+
     //If tied indices have m==1, no work
     //to do; just replace indices
     if(tm == 1)
         {
-        is_ = IndexSet(new_index_,new_r_,alloc_size,1);
+        is_.swap(new_is_);
         return;
         }
 
-    int new_rn_ = rn()-nind+1;
-
-    Counter nc(new_index_,new_rn_,new_r_);
+    Counter nc(new_is_);
 
     //Set up ii pointers to link
     //elements of res to appropriate
@@ -719,10 +689,7 @@ tieIndices(const array<Index,NMAX+1>& indices, int nind,
                            *ii[7],*ii[8]));
         }
 
-    is_.index_.swap(new_index_);
-    is_.r_ = new_r_;
-    is_.rn_ = new_rn_;
-    is_.setUniqueReal();
+    is_.swap(new_is_);
     p.swap(np);
 
     } //ITensor::tieIndices
@@ -815,18 +782,17 @@ trace(const array<Index,NMAX+1>& indices, int nind)
         Error("Couldn't find Index to trace");
         }
 
+    IndexSet new_is_(new_index_,new_r_,alloc_size,1);
+
     //If traced indices have m==1, no work
     //to do; just replace indices
     if(tm == 1)
         {
-        is_.r_ = new_r_;
-        sortIndices(new_index_,is_.r_,is_.rn_,alloc_size,is_.index_,1);
+        is_.swap(new_is_);
         return;
         }
 
-    int new_rn_ = rn()-nind;
-
-    Counter nc(new_index_,new_rn_,new_r_);
+    Counter nc(new_is_);
 
     //Set up ii pointers to link
     //elements of res to appropriate
@@ -865,10 +831,7 @@ trace(const array<Index,NMAX+1>& indices, int nind)
         resdat(nc.ind) = newval;
         }
 
-    is_.index_.swap(new_index_);
-    is_.setUniqueReal();
-    is_.r_ = new_r_;
-    is_.rn_ = new_rn_;
+    is_.swap(new_is_);
     p.swap(np);
 
     } //ITensor::trace
@@ -1552,11 +1515,11 @@ operator/=(const ITensor& other)
     //Handle m==1 Indices: set union
     for(int j = other.rn()+1; j <= other.r(); ++j)
         {
-        const Index& J = other.is_.index_[j];
+        const Index& J = other.is_.index(j);
         bool this_has_index = false;
         for(int k = this->rn()+1; k <= this->r(); ++k)
             { 
-            if(is_.index_[k] == J) 
+            if(is_.index(k) == J) 
                 { 
                 this_has_index = true; 
                 break; 
@@ -1626,19 +1589,19 @@ operator/=(const ITensor& other)
     for(int i = 1; i <= ni; ++i)
         { thisdat(((j-1)*nk+k-1)*ni+i) =  R(k,j) * L(j,i); }
 
-    if((is_.r_ + other.is_.rn_ - props.nsamen + nr1_) > NMAX) 
+    if((is_.r() + other.is_.rn() - props.nsamen + nr1_) > NMAX) 
         Error("ITensor::operator/=: too many indices in product.");
 
     //Handle m!=1 indices
     int nrn_ = 0;
-    for(int j = 1; j <= is_.rn_; ++j)
+    for(int j = 1; j <= is_.rn(); ++j)
         { if(!props.contractedL[j]) new_index_[++nrn_] = this->index(j); }
-    for(int j = 1; j <= other.is_.rn_; ++j)
+    for(int j = 1; j <= other.is_.rn(); ++j)
         { if(!props.contractedR[j]) new_index_[++nrn_] = other.index(j); }
-    for(int j = 1; j <= is_.rn_; ++j)
+    for(int j = 1; j <= is_.rn(); ++j)
         { if(props.contractedL[j])  new_index_[++nrn_] = this->index(j); }
 
-    for(int j = rn()+1; j <= r(); ++j) new_index_[nrn_+j-is_.rn_] = index(j);
+    for(int j = rn()+1; j <= r(); ++j) new_index_[nrn_+j-is_.rn()] = index(j);
     is_.r_ = (r()-rn()) + nrn_;
     for(int j = 1; j <= nr1_; ++j) new_index_[r()+j] = *(extra_index1_[j]);
     is_.r_ += nr1_;
@@ -1831,18 +1794,17 @@ directMultiply(const ITensor& other, ProductProps& props,
         Error("Couldn't find Index to trace");
         }
 
+    IndexSet new_is_(new_index_,new_r_,alloc_size,1);
+
     //If traced indices have m==1, no work
     //to do; just replace indices
     if(tm == 1)
         {
-        is_.r_ = new_r_;
-        sortIndices(new_index_,is_.r_,is_.rn_,alloc_size,is_.index_,1);
+        is_.swap(new_is_);
         return;
         }
 
-    int new_rn_ = is_.rn_-nind;
-
-    Counter nc(new_index_,new_rn_,new_r_);
+    Counter nc(new_is_);
 
     //Set up ii pointers to link
     //elements of res to appropriate
@@ -1881,10 +1843,7 @@ directMultiply(const ITensor& other, ProductProps& props,
         resdat(nc.ind) = newval;
         }
 
-    is_.index_.swap(new_index_);
-    is_.setUniqueReal();
-    is_.r_ = new_r_;
-    is_.rn_ = new_rn_;
+    is_.swap(new_is_);
 
     p.swap(np);
 
@@ -1935,7 +1894,7 @@ operator*=(const ITensor& other)
     //
     for(int k = rn()+1; k <= this->r(); ++k)
         {
-        const Index& K = is_.index_[k];
+        const Index& K = is_.index(k);
         for(int j = other.rn()+1; j <= other.r(); ++j)
 	    if(other.index(j) == K) 
 		goto skip_this;
@@ -1961,10 +1920,10 @@ operator*=(const ITensor& other)
         scale_ *= other.scale_;
         scale_ *= other.p->v(1);
         is_.r_ = is_.rn_ + nr1_;
-        if(is_.r_ > NMAX) 
+        if(is_.r() > NMAX) 
             {
-            std::cout << "new r_ would be = " << is_.r_ << "\n";
-            std::cerr << "new r_ would be = " << is_.r_ << "\n";
+            std::cout << "new r_ would be = " << is_.r() << "\n";
+            std::cerr << "new r_ would be = " << is_.r() << "\n";
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
             }
         //Keep current m!=1 indices, overwrite m==1 indices
@@ -1980,14 +1939,14 @@ operator*=(const ITensor& other)
         p = other.p;
         is_.rn_ = other.is_.rn_;
         is_.r_ = is_.rn_ + nr1_;
-        if(is_.r_ > NMAX) 
+        if(is_.r() > NMAX) 
             {
-            std::cout << "new r_ would be = " << is_.r_ << "\n";
-            std::cerr << "new r_ would be = " << is_.r_ << "\n";
+            std::cout << "new r_ would be = " << is_.r() << "\n";
+            std::cerr << "new r_ would be = " << is_.r() << "\n";
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
             }
-        for(int j = 1; j <= is_.rn_; ++j) 
-            new_index_[j] = other.is_.index_[j];
+        for(int j = 1; j <= is_.rn(); ++j) 
+            new_index_[j] = other.is_.index(j);
         for(int j = 1; j <= nr1_; ++j) 
             new_index_[is_.rn_+j] = *(new_index1_[j]);
         is_.index_.swap(new_index_);
@@ -2066,9 +2025,7 @@ reshapeTo(const Permutation& P, ITensor& res) const
     {
     res.solo();
 
-    res.is_ = is_;
-    for(int k = 1; k <= r(); ++k) 
-        res.is_.index_[P.dest(k)] = index(k);
+    res.is_ = IndexSet(is_,P);
 
     res.scale_ = scale_;
 

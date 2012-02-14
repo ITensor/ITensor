@@ -19,6 +19,8 @@ class IndexSet
     template <class Iterable>
     IndexSet(const Iterable& ii, int size, int& alloc_size, int offset = 0);
 
+    IndexSet(const IndexSet& other, const Permutation& P);
+
     //
     // Accessor Methods
     //
@@ -83,8 +85,6 @@ class IndexSet
 
     bool 
     notin(const Index& I) const { return !hasindex(I); }
-    void 
-    mapindex(const Index& i1, const Index& i2);
 
     void
     getperm(const IndexSet& other, Permutation& P) const;
@@ -131,6 +131,12 @@ class IndexSet
     // Warning: these can overwrite other
     // Indices if not used properly
     //
+
+    void 
+    mapindex(const Index& i1, const Index& i2);
+
+    void 
+    addindex(const Index& I);
 
     void 
     addindexn(const boost::array<Index,NMAX+1>& indices, int n);

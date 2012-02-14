@@ -41,6 +41,17 @@ IndexSet(const Index& i1, const Index& i2)
 	    }
     }
 
+IndexSet::
+IndexSet(const IndexSet& other, const Permutation& P)
+    :
+    rn_(other.rn_),
+    r_(other.r_),
+    ur_(other.ur_)
+    {
+    for(int j = 1; j <= r_; ++j)
+        index_[P.dest(j)] = other.index_[j];
+    }
+
 Index IndexSet::
 findtype(IndexType t) const
 	{
@@ -151,27 +162,6 @@ hasAllIndex(const array<Index,NMAX+1>& I, int nind) const
 
 
 
-void IndexSet::
-mapindex(const Index& i1, const Index& i2)
-	{
-	assert(i1.m() == i2.m());
-    if(i2.m() != i1.m())
-        {
-        Print(i1);
-        Print(i2);
-        Error("mapIndex: index must have matching m");
-        }
-	for(int j = 1; j <= r_; ++j) 
-	    if(index_[j] == i1) 
-		{
-		index_[j] = i2;
-        ur_ -= i1.uniqueReal();
-        ur_ += i2.uniqueReal();
-		return;
-		}
-	Print(i1);
-	Error("IndexSet::mapindex: couldn't find i1.");
-	}
 
 void IndexSet::
 getperm(const IndexSet& other, Permutation& P) const
@@ -268,8 +258,53 @@ primeind(ITensor A, const Index& I1, const Index& I2)
 //
 
 void IndexSet::
+mapindex(const Index& i1, const Index& i2)
+	{
+	assert(i1.m() == i2.m());
+    if(i2.m() != i1.m())
+        {
+        Print(i1);
+        Print(i2);
+        Error("mapIndex: index must have matching m");
+        }
+	for(int j = 1; j <= r_; ++j) 
+	    if(index_[j] == i1) 
+		{
+		index_[j] = i2;
+        ur_ -= i1.uniqueReal();
+        ur_ += i2.uniqueReal();
+		return;
+		}
+	Print(i1);
+	Error("IndexSet::mapindex: couldn't find i1.");
+	}
+
+void IndexSet::
+addindex(const Index& I)
+    {
+    if(I.m() == 1)
+        {
+        index_[++r_] = I;
+        }
+    else
+        {
+#ifdef DEBUG
+        if(r_ != rn_)
+            Error("Adding m != 1 Index will overwrite m == 1 Index.");
+#endif
+        index_[++rn_] = I;
+        ++r_;
+        }
+    ur_ += I.uniqueReal();
+    }
+
+void IndexSet::
 addindexn(const array<Index,NMAX+1>& indices, int n) 
     {
+#ifdef DEBUG
+    if(r_ != rn_)
+        Error("Adding m != 1 Index will overwrite m == 1 Index.");
+#endif
     for(int j = 1; j <= n; ++j)
         {
         const Index& J = indices[j];
@@ -282,6 +317,10 @@ addindexn(const array<Index,NMAX+1>& indices, int n)
 void IndexSet::
 addindexn(const Index& I)
     {
+#ifdef DEBUG
+    if(r_ != rn_)
+        Error("Adding m != 1 Index will overwrite m == 1 Index.");
+#endif
     index_[++rn_] = I;
     ur_ += I.uniqueReal();
     ++r_;
