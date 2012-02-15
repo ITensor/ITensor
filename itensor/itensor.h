@@ -4,14 +4,15 @@
 #include "real.h"
 #include "allocator.h"
 #include "index.h"
-#include "permutation.h"
 #include "prodstats.h"
+#include "indexset.h"
 
 //Forward declarations
 struct ProductProps;
 class Counter;
 class Combiner;
 class ITDat;
+class SparseITensor;
 
 //
 // ITensor
@@ -24,16 +25,19 @@ class ITensor
 
     //uniqueReal depends on indices only, unordered:
     Real 
-    uniqueReal() const { return ur; } 
+    uniqueReal() const { return is_.ur_; } 
 
     const Index& 
-    index(int j) const;
+    index(int j) const { return is_.index(j); }
 
     int 
-    r() const { return r_; }
+    r() const { return is_.r_; }
 
     int 
-    m(int j) const;
+    rn() const { return is_.rn_; }
+
+    int 
+    m(int j) const { return is_.m(j); }
 
     bool 
     isNull() const { return (p == 0); }
@@ -47,15 +51,14 @@ class ITensor
     bool 
     isNotComplex() const { return !hasindexn(Index::IndReIm()); }
 
-    LogNumber 
+    const LogNumber&
     scale() const { return scale_; }
 
     //Can be used for iteration over Indices in a Foreach loop
     //e.g. Foreach(const Index& I, t.index() ) { ... }
-    typedef boost::array<Index,NMAX+1>::const_iterator index_it;
-    const std::pair<index_it,index_it> 
+    const std::pair<IndexSet::index_it,IndexSet::index_it> 
     index() const  
-        { return std::make_pair(index_.begin()+1,index_.begin()+r_+1); }
+        { return is_.index(); }
 
 
     //Constructors --------------------------------------------------
@@ -134,7 +137,9 @@ class ITensor
     write(std::ostream& s) const;
 
 
-    //Operators -------------------------------------------------------
+    //
+    // Operators
+    //
 
     ITensor& 
     operator*=(const ITensor& other);
@@ -207,62 +212,63 @@ class ITensor
     //Index Methods ---------------------------------------------------
 
     Index 
-    findtype(IndexType t) const;
+    findtype(IndexType t) const { return is_.findtype(t); }
 
     bool 
-    findtype(IndexType t, Index& I) const;
+    findtype(IndexType t, Index& I) const { return is_.findtype(t,I); }
 
     int 
-    findindex(const Index& I) const;
+    findindex(const Index& I) const { return is_.findindex(I); }
 
     int 
-    findindexn(const Index& I) const;
+    findindexn(const Index& I) const { return is_.findindexn(I); }
 
     int 
-    findindex1(const Index& I) const;
+    findindex1(const Index& I) const { return is_.findindex1(I); }
 
     bool 
-    has_common_index(const ITensor& other) const;
+    has_common_index(const ITensor& other) const
+        { return is_.has_common_index(other.is_); }
     
     bool 
-    hasindex(const Index& I) const;
+    hasindex(const Index& I) const { return is_.hasindex(I); }
 
     bool 
-    hasindexn(const Index& I) const;
+    hasindexn(const Index& I) const { return is_.hasindexn(I); }
 
     bool 
-    hasindex1(const Index& I) const;
+    hasindex1(const Index& I) const { return is_.hasindex1(I); }
 
     bool
-    hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const;
+    hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const
+        { return is_.hasAllIndex(I,nind); }
 
     bool 
     notin(const Index& I) const { return !hasindex(I); }
 
     void 
-    addindex1(const std::vector<Index>& indices);
+    addindex1(const std::vector<Index>& indices) { is_.addindex1(indices); }
 
     void 
-    addindex1(const Index& I);
+    addindex1(const Index& I) { is_.addindex1(I); }
 
     //Removes the jth index as found by findindex
     void 
-    removeindex1(int j);
+    removeindex1(int j) { is_.removeindex1(j); }
 
     void 
-    removeindex1(const Index& I) 
-        { removeindex1(findindex1(I)); }
+    removeindex1(const Index& I) { is_.removeindex1(is_.findindex1(I)); }
 
     void 
-    mapindex(const Index& i1, const Index& i2);
+    mapindex(const Index& i1, const Index& i2) { is_.mapindex(i1,i2); }
 
     //Primelevel Methods ------------------------------------
 
     void 
-    noprime(PrimeType p = primeBoth);
+    noprime(PrimeType p = primeBoth) { is_.noprime(p); }
 
     void 
-    doprime(PrimeType pt, int inc = 1);
+    doprime(PrimeType pt, int inc = 1) { is_.doprime(pt,inc); }
 
     void 
     primeall() { doprime(primeBoth,1); }
@@ -274,18 +280,20 @@ class ITensor
     primelink() { doprime(primeLink,1); }
 
     void 
-    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
+    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)
+        { is_.mapprime(plevold,plevnew,pt); }
 
     void 
     mapprimeind(const Index& I, int plevold, int plevnew, 
-                PrimeType pt = primeBoth);
+                PrimeType pt = primeBoth)
+        { is_.mapprimeind(I,plevold,plevnew,pt); }
 
     void 
     primeind(const Index& I, int inc = 1)
         { mapindex(I,primed(I,inc)); }
 
     void 
-    primeind(const Index& I, const Index& J);
+    primeind(const Index& I, const Index& J) { is_.primeind(I,J); }
 
     void 
     noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
@@ -452,7 +460,7 @@ class ITensor
     Real friend inline
     trace(ITensor T)
         {
-        if(T.rn_ != 0) T.trace(T.index_,T.rn_);
+        if(T.rn() != 0) T.trace(T.is_.index_,T.rn());
         return T.val0();
         }
 
@@ -602,7 +610,7 @@ class ITensor
     static const Index& 
     ReImIndex() { return Index::IndReIm(); }
 
-    private:
+    protected:
 
     //////////////
     //
@@ -612,15 +620,11 @@ class ITensor
     //mutable: const methods may want to reshape data
     mutable boost::intrusive_ptr<ITDat> p; 
 
-    //Indices, maximum of 8 (index_[0] not used)
-    boost::array<Index,NMAX+1> index_; 
-
-    int r_,rn_;
+    //Indices, maximum of 8 (is_.index_[0] not used)
+    IndexSet is_;
 
     //mutable since e.g. scaleTo is logically const
     mutable LogNumber scale_; 
-
-    Real ur;
 
     //
     //
@@ -635,32 +639,12 @@ class ITensor
     void 
     allocate();
 
-#ifdef DO_ALT
-    void 
-    newAltDat(const Permutation& P) const;
-
-    PDat& 
-    lastAlt() const;
-#endif
-
     //Disattach self from current ITDat and create own copy instead.
     //Necessary because ITensors logically represent distinct
     //objects even though they may share data in reality.
     void 
     solo() const;
     
-    void 
-    setUniqueReal();
-
-    void 
-    _construct1(const Index& i1);
-
-    void 
-    _construct2(const Index& i1, const Index& i2);
-
-    void 
-    getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const;
-
     friend struct ProductProps;
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
@@ -682,6 +666,11 @@ class ITensor
               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
         const;
 
+    friend class SparseITensor;
+
+    friend void 
+    product(const SparseITensor& S, const ITensor& T, ITensor& res);
+
     public:
 
     enum ITmaker { makeComplex_1, makeComplex_i, makeConjTensor };
@@ -698,12 +687,19 @@ class Counter
 public:
     boost::array<int,NMAX+1> n, i;
     int ind;
+    int rn_,r_;
 
     Counter();
+
     Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r);
+
+    Counter(const IndexSet& is);
 
     void 
     init(const boost::array<Index,NMAX+1>& ii, int rn, int r);
+
+    void 
+    init(const IndexSet& is);
 
     Counter& 
     operator++();
@@ -718,29 +714,13 @@ public:
     notDone() const 
         { return i[1] != 0; }
 
-    friend inline std::ostream& 
+    friend std::ostream& 
     operator<<(std::ostream& s, const Counter& c);
-
-private:
 
     void 
     reset(int a);
 
-    int rn_,r_;
-
     };
-
-//#define DO_ALT
-#ifdef DO_ALT
-struct PDat
-    {
-    Permutation I; 
-    Vector v;
-    PDat(const Permutation& P_, const Vector& v_) 
-		: I(P_.inverse()), v(v_) { }
-    PDat(const Permutation& P_) : I(P_.inverse()) { }
-    };
-#endif
 
 //
 // ITDat
@@ -750,9 +730,6 @@ class ITDat
 public:
 
     Vector v;
-#ifdef DO_ALT
-    std::vector<PDat> alt;
-#endif
 
     ITDat() 
         : v(0), numref(0)
@@ -818,7 +795,6 @@ private:
     ~ITDat() { }
 
     };
-
 
 
 class commaInit
@@ -894,37 +870,5 @@ multSiteOps(Tensor a, Tensor b)
     res.mapprime(2,1,primeSite);
     return res;
     }
-
-
-template<class Iterable>
-void
-sortIndices(const Iterable& I, int ninds, int& rn_, int& alloc_size, 
-            boost::array<Index,NMAX+1>& index_, int offset = 0)
-    {
-    assert(ninds <= NMAX);
-
-    rn_ = 0;
-    alloc_size = 1;
-
-    int r1_ = 0;
-    boost::array<const Index*,NMAX+1> index1_;
-
-    for(int n = offset; n < ninds+offset; ++n)
-        {
-        const Index& i = I[n];
-        DO_IF_DEBUG(if(i == Index::Null()) Error("ITensor: null Index in constructor.");)
-        if(i.m()==1) 
-            { index1_[++r1_] = &i; }
-        else         
-            { 
-            index_[++rn_] = i; 
-            alloc_size *= i.m(); 
-            }
-        }
-    for(int l = 1; l <= r1_; ++l) 
-        index_[rn_+l] = *(index1_[l]);
-    }
-
-
 
 #endif

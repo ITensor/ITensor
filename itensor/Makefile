@@ -8,15 +8,17 @@ include ../options.mk
 
 ####################################
 
-SOURCES=index.cc itensor.cc iqindex.cc iqtensor.cc svdworker.cc mps.cc mpo.cc dmrg.cc
+SOURCES=index.cc indexset.cc itensor.cc sparseitensor.cc \
+        iqindex.cc iqtensor.cc \
+        svdworker.cc mps.cc mpo.cc dmrg.cc
 
 HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
-        itensor.h iqindex.h iqtensor.h condenser.h combiner.h iqcombiner.h svdworker.h \
-        mps.h mpo.h DMRGOpts.h dmrg.h core.h BaseDMRGOpts.h \
+        indexset.h itensor.h iqindex.h iqtensor.h condenser.h combiner.h iqcombiner.h \
+        svdworker.h mps.h mpo.h DMRGOpts.h dmrg.h core.h BaseDMRGOpts.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
-        hams/hubbardchain.h hams/heisenberg.h hams/triheisenberg.h\
+        hams/hubbardchain.h hams/heisenberg.h hams/triheisenberg.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
-        eigensolver.h projectedop.h
+        eigensolver.h projectedop.h sparseitensor.h
 
 ####################################
 
@@ -82,6 +84,9 @@ clean:
 DEPHEADERS=types.h allocator.h real.h permutation.h index.h itensor.h
 itensor.o: $(DEPHEADERS)
 .debug_objs/itensor.o: $(DEPHEADERS)
+DEPHEADERS+= sparseitensor.h
+sparseitensor.o: $(DEPHEADERS)
+.debug_objs/sparseitensor.o: $(DEPHEADERS)
 DEPHEADERS+= iqindex.h iqtensor.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
