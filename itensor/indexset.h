@@ -16,6 +16,13 @@ class IndexSet
 
     IndexSet(const Index& i1, const Index& i2);
 
+    IndexSet(Index i1, Index i2, Index i3,
+             Index i4 = Index::Null(), 
+             Index i5 = Index::Null(), 
+             Index i6 = Index::Null(),
+             Index i7 = Index::Null(), 
+             Index i8 = Index::Null());
+
     template <class Iterable>
     IndexSet(const Iterable& ii, int size, int& alloc_size, int offset = 0);
 
@@ -88,6 +95,9 @@ class IndexSet
 
     void
     getperm(const IndexSet& other, Permutation& P) const;
+
+    int
+    minM() const;
 
     //
     // Primelevel Methods

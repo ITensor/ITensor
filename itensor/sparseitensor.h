@@ -5,7 +5,7 @@
 //
 // SparseITensor
 //
-class SparseITensor : protected ITensor
+class SparseITensor
     {
     public:
 
@@ -23,16 +23,55 @@ class SparseITensor : protected ITensor
 
     SparseITensor(const Index& i1, const Index& i2, Real d);
 
+    SparseITensor(const Index& i1, const Index& i2, const Vector& diag);
+
+    SparseITensor(const Index& i1, const Index& i2, 
+                  const Index& i3, Real d);
+
+    SparseITensor(const Index& i1, const Index& i2, 
+                  const Index& i3, const Vector& diag);
+
+
+    SparseITensor(const Index& i1, const Index& i2, 
+                  const Index& i3, const Index& i4, Real d);
+
     //
     // Accessor Methods
     //
 
-    using ITensor::index;
-    using ITensor::r;
-    using ITensor::m;
-    using ITensor::isComplex;
-    using ITensor::isNotComplex;
-    using ITensor::scale;
+    const Index& 
+    index(int j) const { return is_.index(j); }
+
+    int 
+    r() const { return is_.r_; }
+
+    int 
+    rn() const { return is_.rn_; }
+
+    int 
+    m(int j) const { return is_.m(j); }
+
+    //uniqueReal depends on indices only, unordered:
+    Real 
+    uniqueReal() const { return is_.ur_; } 
+
+    bool 
+    isComplex() const { return hasindexn(Index::IndReIm()); }
+
+    bool 
+    isNotComplex() const { return !hasindexn(Index::IndReIm()); }
+
+    const LogNumber&
+    scale() const { return scale_; }
+
+    bool
+    isDiag() const { return true; }
+
+    bool
+    diagAllSame() const { return diag_.Length() == 0; }
+
+    int
+    diagSize() const;
 
     //
     // Operators
@@ -63,36 +102,142 @@ class SparseITensor : protected ITensor
         return res; 
         }
 
+    SparseITensor& 
+    operator*=(Real fac) { scale_ *= fac; return *this; }
+
+    SparseITensor 
+    operator*(Real fac) const 
+        { SparseITensor res(*this); res *= fac; return res; }
+
+    friend inline SparseITensor 
+    operator*(Real fac, SparseITensor s) 
+        { return (s *= fac); }
+
+    SparseITensor& 
+    operator/=(Real fac) { scale_ /= fac; return *this; }
+
+    SparseITensor 
+    operator/(Real fac) const 
+        { SparseITensor res(*this); res /= fac; return res; }
+
+    friend inline SparseITensor 
+    operator/(Real fac, SparseITensor s) 
+        { return (s /= fac); }
+
     //
     // Index Methods
     //
 
-    using ITensor::findtype;
-    using ITensor::findindex;
-    using ITensor::hasindex;
-    using ITensor::hasAllIndex;
-    using ITensor::notin;
-    using ITensor::mapindex;
+    Index 
+    findtype(IndexType t) const { return is_.findtype(t); }
+
+    bool 
+    findtype(IndexType t, Index& I) const { return is_.findtype(t,I); }
+
+    int 
+    findindex(const Index& I) const { return is_.findindex(I); }
+
+    int 
+    findindexn(const Index& I) const { return is_.findindexn(I); }
+
+    int 
+    findindex1(const Index& I) const { return is_.findindex1(I); }
+
+    bool 
+    has_common_index(const ITensor& other) const
+        { return is_.has_common_index(other.is_); }
+    
+    bool 
+    hasindex(const Index& I) const { return is_.hasindex(I); }
+
+    bool 
+    hasindexn(const Index& I) const { return is_.hasindexn(I); }
+
+    bool 
+    hasindex1(const Index& I) const { return is_.hasindex1(I); }
+
+    bool
+    hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const
+        { return is_.hasAllIndex(I,nind); }
+
+    bool 
+    notin(const Index& I) const { return !hasindex(I); }
+
+    void 
+    addindex1(const std::vector<Index>& indices) { is_.addindex1(indices); }
+
+    void 
+    addindex1(const Index& I) { is_.addindex1(I); }
+
+    //Removes the jth index as found by findindex
+    void 
+    removeindex1(int j) { is_.removeindex1(j); }
+
+    void 
+    removeindex1(const Index& I) { is_.removeindex1(is_.findindex1(I)); }
+
+    void 
+    mapindex(const Index& i1, const Index& i2) { is_.mapindex(i1,i2); }
 
     //
-    // Primelevel Methods
+    // Primelevel Methods 
     //
 
-    using ITensor::noprime;
-    using ITensor::doprime;
-    using ITensor::primeall;
-    using ITensor::primesite;
-    using ITensor::primelink;
-    using ITensor::mapprime;
-    using ITensor::primeind;
-    using ITensor::noprimeind;
+    void 
+    noprime(PrimeType p = primeBoth) { is_.noprime(p); }
+
+    void 
+    doprime(PrimeType pt, int inc = 1) { is_.doprime(pt,inc); }
+
+    void 
+    primeall() { doprime(primeBoth,1); }
+
+    void 
+    primesite() { doprime(primeSite,1); }
+
+    void 
+    primelink() { doprime(primeLink,1); }
+
+    void 
+    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)
+        { is_.mapprime(plevold,plevnew,pt); }
+
+    void 
+    mapprimeind(const Index& I, int plevold, int plevnew, 
+                PrimeType pt = primeBoth)
+        { is_.mapprimeind(I,plevold,plevnew,pt); }
+
+    void 
+    primeind(const Index& I, int inc = 1)
+        { mapindex(I,primed(I,inc)); }
+
+    void 
+    primeind(const Index& I, const Index& J) { is_.primeind(I,J); }
+
+    void 
+    noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
 
     //
     // Other Methods
     //
 
-    using ITensor::print;
-    using ITensor::printIndices;
+    Real
+    norm() const;
+
+    void 
+    scaleOutNorm() const;
+
+    void 
+    scaleTo(LogNumber newscale) const;
+
+    void
+    read(std::istream& s);
+
+    void
+    write(std::ostream& s) const;
+
+    friend std::ostream&
+    operator<<(std::ostream & s, const SparseITensor & t);
 
     typedef Index 
     IndexT;
@@ -111,25 +256,14 @@ class SparseITensor : protected ITensor
     //
 
     //diagonal elements
-    Vector diag_;
+    mutable Vector diag_;
 
-    //boost::array<Index,NMAX+1>
-    using ITensor::index_;
+    IndexSet is_;
 
-    //int
-    using ITensor::r_;
-    using ITensor::rn_;
-
-    //mutable LogNumber
-    using ITensor::scale_;
-
-    //Real
-    using ITensor::ur;
+    mutable LogNumber scale_;
 
     //
     //////////////
-
-    using ITensor::setUniqueReal;
 
     void
     _construct1(const Index& i1);
@@ -137,9 +271,12 @@ class SparseITensor : protected ITensor
     void
     _construct2(const Index& i1, const Index& i2);
 
-    void friend
+    friend void 
     product(const SparseITensor& S, const ITensor& T, ITensor& res);
 
     }; // class SparseITensor
+
+void 
+product(const SparseITensor& S, const ITensor& T, ITensor& res);
 
 #endif

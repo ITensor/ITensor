@@ -1022,6 +1022,7 @@ TEST(SymmetricDiag11)
     ITensor T(s1,s1.primed());
     commaInit(T) << 1, 2,
                     2, 1;
+
     T *= -2;
     Index mid;
     ITensor D,U;
@@ -1029,6 +1030,7 @@ TEST(SymmetricDiag11)
     ITensor UD(U);
     UD.primeind(s1);
     UD /= D;
+    ITensor rT = UD*U;
     ITensor diff(UD*U - T);
     CHECK(diff.norm() < 1E-10);
 

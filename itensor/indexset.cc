@@ -25,7 +25,7 @@ IndexSet::
 IndexSet(const Index& i1, const Index& i2)
     :
     r_(2),
-    ur_(i1.uniqueReal() + i1.uniqueReal())
+    ur_(i1.uniqueReal() + i2.uniqueReal())
     { 
 	if(i1.m()==1) 
 	    {
@@ -39,6 +39,19 @@ IndexSet(const Index& i1, const Index& i2)
         index_[2] = i2; 
 	    rn_ = (i2.m() == 1 ? 1 : 2); 
 	    }
+    }
+
+IndexSet::
+IndexSet(Index i1, Index i2, Index i3,
+         Index i4, Index i5, Index i6,
+         Index i7, Index i8)
+    :
+    r_(3)
+    { 
+	array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
+	while(ii[r_] != Index::Null()) ++r_;
+    int alloc_size;
+    sortIndices(ii,r_,rn_,alloc_size,index_,0);
     }
 
 IndexSet::
@@ -184,6 +197,18 @@ getperm(const IndexSet& other, Permutation& P) const
 	    }
 	}
 
+int IndexSet::
+minM() const
+    {
+    if(rn_ == 0) return 1;
+
+    int mm = index_[1].m();
+    for(int j = 2; j <= rn_; ++j)
+        mm = min(mm,index_[j].m());
+
+    return mm;
+    }
+
 void IndexSet::
 noprime(PrimeType p)
     {
@@ -194,6 +219,9 @@ noprime(PrimeType p)
         J.noprime(p);
         ur_ += J.uniqueReal();
         }
+#ifdef SET_UR
+        setUniqueReal();
+#endif
 	}
 
 void IndexSet::
@@ -206,6 +234,9 @@ doprime(PrimeType pt, int inc)
         J.doprime(pt,inc);
         ur_ += J.uniqueReal();
         }
+#ifdef SET_UR
+        setUniqueReal();
+#endif
 	}
 
 void IndexSet::
@@ -218,6 +249,9 @@ mapprime(int plevold, int plevnew, PrimeType pt)
         J.mapprime(plevold,plevnew,pt);
         ur_ += J.uniqueReal();
         }
+#ifdef SET_UR
+        setUniqueReal();
+#endif
 	}
 
 void IndexSet::
@@ -229,6 +263,9 @@ mapprimeind(const Index& I, int plevold, int plevnew, PrimeType pt)
         index_[j].mapprime(plevold,plevnew,pt);
         ur_ -= I.uniqueReal();
         ur_ += index_[j].uniqueReal();
+#ifdef SET_UR
+        setUniqueReal();
+#endif
         return;
         }
     Print(*this);

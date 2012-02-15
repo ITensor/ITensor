@@ -12,6 +12,7 @@ struct ProductProps;
 class Counter;
 class Combiner;
 class ITDat;
+class SparseITensor;
 
 //
 // ITensor
@@ -50,7 +51,7 @@ class ITensor
     bool 
     isNotComplex() const { return !hasindexn(Index::IndReIm()); }
 
-    LogNumber 
+    const LogNumber&
     scale() const { return scale_; }
 
     //Can be used for iteration over Indices in a Foreach loop
@@ -136,7 +137,9 @@ class ITensor
     write(std::ostream& s) const;
 
 
-    //Operators -------------------------------------------------------
+    //
+    // Operators
+    //
 
     ITensor& 
     operator*=(const ITensor& other);
@@ -642,15 +645,6 @@ class ITensor
     void 
     solo() const;
     
-    void 
-    _construct1(const Index& i1);
-
-    void 
-    _construct2(const Index& i1, const Index& i2);
-
-    void 
-    getperm(const boost::array<Index,NMAX+1>& oth_index_, Permutation& P) const;
-
     friend struct ProductProps;
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
@@ -671,6 +665,11 @@ class ITensor
               const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
         const;
+
+    friend class SparseITensor;
+
+    friend void 
+    product(const SparseITensor& S, const ITensor& T, ITensor& res);
 
     public:
 
@@ -715,10 +714,8 @@ public:
     notDone() const 
         { return i[1] != 0; }
 
-    friend inline std::ostream& 
+    friend std::ostream& 
     operator<<(std::ostream& s, const Counter& c);
-
-    private:
 
     void 
     reset(int a);
