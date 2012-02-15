@@ -618,12 +618,14 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
     if(iq.size() == 0)
 	throw ResultIsZero("iq.size() == 0");
     newmid = IQIndex("qlink",iq,In);
+    /*
     if(newmid.m() != m)
         {
         cout << format("m = %d, newmid.m() = %d") % m % newmid.m() << endl;
         //Error("newmid not properly formed");
-	cout << "Warning:  newmid != m" << endl;
+        cout << "Warning:  newmid != m" << endl;
         }
+    */
     } //void SVDWorker::diag_and_truncate
 
 void SVDWorker::
