@@ -59,9 +59,11 @@ class SVDWorker
     void 
     operator()(int b, const Tensor& AA, Tensor& L, Tensor& V, Tensor& R);
 
-    template <class Tensor> 
+    //Object PH of type ProjectedOpT has to provide the deltaRho method
+    //to use the noise term feature (see projectedop.h)
+    template <class Tensor, class ProjectedOpT>
     void 
-    operator()(int b, const ProjectedOp<Tensor>& PH, 
+    operator()(int b, const ProjectedOpT& PH, 
                const Tensor& AA, Tensor& L, Tensor& V, Tensor& R);
 
 
@@ -79,9 +81,11 @@ class SVDWorker
     void
     operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
 
-    template <class Tensor> 
+    //Object PH of type ProjectedOpT has to provide the deltaRho method
+    //to use the noise term feature (see projectedop.h)
+    template <class Tensor, class ProjectedOpT>
     void
-    operator()(int b, const ProjectedOp<Tensor>& PH, 
+    operator()(int b, const ProjectedOpT& PH, 
                const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
 
     //Accessors ---------------
@@ -224,6 +228,195 @@ private:
     Real noise_;
 
     }; //class SVDWorker
+
+template<class Tensor, class ProjectedOpT>
+void SVDWorker::
+operator()(int b, const ProjectedOpT& PH, const Tensor& AA, 
+           Tensor& L, Tensor& V, Tensor& R)
+    {
+    typedef typename Tensor::IndexT 
+    IndexT;
+    typedef typename Tensor::CombinerT 
+    CombinerT;
+
+    IndexT ll = V.index(1);
+
+    //Form the density matrix for the smaller
+    //of the two halves of the system
+    /*
+    int ldim = L.maxSize()/ll.m(),
+        rdim = R.maxSize()/ll.m();
+
+    Tensor& Act = (ldim < rdim ? L : R);
+    Tensor& Oth = (ldim < rdim ? R : L);
+    */
+    Tensor& Act = R;
+    Tensor& Oth = L;
+
+    //Form a combiner for the active indices
+    CombinerT comb;
+    for(int j = 1; j <= Act.r(); ++j) 
+        { 
+        const IndexT& I = Act.index(j);
+        if(I == ll || I == Tensor::ReImIndex()) continue;
+        comb.addleft(I);
+        }
+
+    //Apply combiner
+    comb.doCondense(true);
+    comb.init(ll.rawname());
+
+    Tensor AAc; 
+    comb.product(AA,AAc);
+
+    const IndexT& active = comb.right();
+
+    Tensor AAcc = conj(AAc); 
+    AAcc.primeind(active); 
+    Tensor rho = AAc*AAcc; 
+
+    if(noise_ > 0 && PH.isNotNull())
+        {
+        //Direction dir = (ldim < rdim ? Fromleft : Fromright);
+        //rho += noise_*PH.deltaRho(rho,comb,dir);
+        rho += noise_*PH.deltaRho(rho,comb,Fromright);
+        }
+
+    const Real saved_cutoff = cutoff_; 
+    const int saved_minm = minm_,
+              saved_maxm = maxm_; 
+    if(use_orig_m_)
+        {
+        cutoff_ = -1;
+        minm_ = ll.m();
+        maxm_ = ll.m();
+        }
+
+    Tensor C,U;
+    if(AAc.isComplex())
+        {
+        Error("Complex case not implemented");
+        }
+    else
+        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),ll,C,U);
+
+    cutoff_ = saved_cutoff; 
+    minm_ = saved_minm; 
+    maxm_ = saved_maxm; 
+
+    Oth = conj(U) * AAc;
+
+    V = pseudoInverse(C);
+    //V = pseudoInverse(C,0.01*sqrt(cutoff_));
+
+    comb.conj();
+    comb.product(U,Act);
+    Act.conj(C.index(1));
+    Act /= C;
+
+    } //void SVDWorker::operator()
+
+template<class Tensor, class ProjectedOpT>
+void SVDWorker::
+operator()(int b, const ProjectedOpT& PH, const Tensor& AA, 
+           Tensor& A, Tensor& B, Direction dir)
+    {
+    typedef typename Tensor::IndexT 
+    IndexT;
+    typedef typename Tensor::CombinerT 
+    CombinerT;
+
+    if(AA.vecSize() == 0) 
+        {
+        A *= 0;
+        B *= 0;
+        eigsKept_.at(b).ReDimension(1);
+        eigsKept_.at(b) = 1;
+        return;
+        }
+
+    IndexT mid = index_in_common(A,B,Link);
+    if(mid.isNull()) mid = IndexT("mid");
+
+    //If dir==None, put the O.C. on the side
+    //that keeps mid's arrow the same
+    bool do_edge_case = true;
+    if(dir == None)
+        {
+        //std::cerr << boost::format("Arrow before = %s\n")%(mid.dir() == Out ? "Out" : "In");
+        dir = (mid.dir() == Out ? Fromright : Fromleft);
+        do_edge_case = false;
+        }
+
+    Tensor& to_orth = (dir==Fromleft ? A : B);
+    Tensor& newoc   = (dir==Fromleft ? B : A);
+
+    CombinerT comb;
+
+    int unique_link = 0; //number of Links unique to to_orth
+    for(int j = 1; j <= to_orth.r(); ++j) 
+        { 
+        const IndexT& I = to_orth.index(j);
+        if(!(newoc.hasindex(I) || I == Tensor::ReImIndex() ))
+            {
+            if(I.type() == Link) ++unique_link;
+            comb.addleft(I);
+            }
+        }
+
+    //Check if we're at the edge
+    if(unique_link == 0 && do_edge_case)
+        {
+        comb.init(mid.rawname());
+        comb.product(AA,newoc);
+        to_orth = comb; to_orth.conj();
+        eigsKept_.at(b) = Vector(comb.right().m()); 
+        eigsKept_.at(b) = 1.0/comb.right().m();
+        return;
+        }
+
+    //Apply combiner
+    comb.doCondense(true);
+    comb.init(mid.rawname());
+    Tensor AAc; comb.product(AA,AAc);
+
+    const IndexT& active = comb.right();
+
+    Tensor AAcc = conj(AAc); 
+    AAcc.primeind(active); 
+    Tensor rho = AAc*AAcc; 
+
+    if(noise_ > 0 && PH.isNotNull())
+        {
+        rho += noise_*PH.deltaRho(rho,comb,dir);
+        }
+
+    const Real saved_cutoff = cutoff_; 
+    const int saved_minm = minm_,
+              saved_maxm = maxm_; 
+    if(use_orig_m_)
+        {
+        cutoff_ = -1;
+        minm_ = mid.m();
+        maxm_ = mid.m();
+        }
+
+    IndexT newmid;
+    Tensor U;
+    if(AAc.isComplex())
+        truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),newmid,U);
+    else
+        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),newmid,U);
+
+    cutoff_ = saved_cutoff; 
+    minm_ = saved_minm; 
+    maxm_ = saved_maxm; 
+
+    comb.conj();
+    comb.product(U,to_orth);
+    newoc = conj(U) * AAc;
+
+    } //void SVDWorker::operator()
 
 
 #endif

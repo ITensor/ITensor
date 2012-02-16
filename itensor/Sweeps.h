@@ -10,6 +10,8 @@ class Sweeps
 
     //Constructors --------------
 
+    Sweeps();
+
     Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut);
 
     Sweeps(Scheme sch, int nsw, int nwarm, int _minm, int _maxm, Real _cut);
@@ -80,6 +82,16 @@ private:
     int num_site_center_;        // May not be implemented in some cases
     Real exp_fac_;
     };
+
+inline Sweeps::
+Sweeps()
+    :
+    Nsweep_(0),
+    Nwarm_(0),
+    num_site_center_(2), 
+    exp_fac_(0.5)
+    {
+    }
 
 inline Sweeps::
 Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut)
