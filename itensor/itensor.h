@@ -141,12 +141,17 @@ class ITensor
     // Operators
     //
 
+    // Contracting product
+
     ITensor& 
     operator*=(const ITensor& other);
 
     ITensor 
     operator*(const ITensor& other) const 
         { ITensor res(*this); res *= other; return res; }
+
+    // Contracting product with IndexVals
+    // (sets an Index to a particular value)
 
     ITensor& 
     operator*=(const IndexVal& iv) 
@@ -159,6 +164,8 @@ class ITensor
     friend inline ITensor 
     operator*(const IndexVal& iv, const ITensor& t) 
         { return (ITensor(iv) *= t); }
+
+    // Multiplication and division by scalars
 
     ITensor& 
     operator*=(Real fac) { scale_ *= fac; return *this; }
@@ -182,13 +189,16 @@ class ITensor
     operator/(Real fac, ITensor t) 
         { return (t /= fac); }
 
-    //operator/=(ITensor) is actually non-contracting product
+    // Non-contracting product
+
     ITensor& 
     operator/=(const ITensor& other);
 
     ITensor 
     operator/(const ITensor& other) const 
         { ITensor res(*this); res /= other; return res; }
+
+    // Addition and subtraction
 
     ITensor& 
     operator+=(const ITensor& o);

@@ -73,9 +73,14 @@ class ITSparse
     int
     diagSize() const;
 
+    Vector
+    diag() const;
+
     //
     // Operators
     //
+
+    // Contracting product with ITensor
 
     ITensor
     operator*(const ITensor& T) const
@@ -88,6 +93,24 @@ class ITSparse
     ITensor friend inline
     operator*(const ITensor& T, const ITSparse& S)
         { ITensor res; product(S,T,res); return res; }
+
+    // Addition and subtraction
+
+    ITSparse&
+    operator+=(const ITSparse& other);
+
+    ITSparse
+    operator+(const ITSparse& other)
+        { ITSparse res(*this); res += other; return res; }
+
+    ITSparse&
+    operator-=(const ITSparse& other);
+
+    ITSparse
+    operator-(const ITSparse& other)
+        { ITSparse res(*this); res -= other; return res; }
+
+    // Multiplication and division by scalars
 
     ITSparse& 
     operator*=(Real fac) { scale_ *= fac; return *this; }

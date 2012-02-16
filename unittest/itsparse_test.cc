@@ -118,6 +118,63 @@ TEST(Constructors)
     CHECK_CLOSE(Norm(diag),D.norm(),1E-5);
     }
 
+TEST(Addition)
+    {
+    Real f1 = -ran1(), f2 = -ran1(),
+         f3 = -ran1(), f4 = -ran1();
+
+    //Both diagonal, all diag elems same
+
+    ITSparse D1(b3,b4,1);
+    D1 *= f1;
+
+    ITSparse D2(b4,b3,2);
+    D2 *= f2;
+
+    CHECK_EQUAL(D1.diagSize(),D2.diagSize());
+
+    ITSparse R1 = D1 + D2;
+
+    Vector checkDiag1(D1.diagSize());
+    checkDiag1 = f1 + 2*f2;
+
+    CHECK(Norm(checkDiag1-R1.diag()) < 1E-10);
+
+    //Both diagonal, arbitrary elems
+
+    Vector v3(b3.m()); 
+    v3.Randomize();
+    ITSparse D3(b3,b4,v3);
+    D3 *= f3;
+
+    Vector v4(b3.m()); 
+    v4.Randomize();
+    ITSparse D4(b4,b3,v4);
+    D4 *= f4;
+
+    CHECK_EQUAL(D3.diagSize(),D4.diagSize());
+
+    ITSparse R2 = D3 + D4;
+
+    Vector checkDiag2(D3.diagSize());
+    checkDiag2 = f3*v3 + f4*v4;
+
+    CHECK(Norm(checkDiag2-R2.diag()) < 1E-10);
+
+    ITSparse R3 = D2 + D4;
+    Vector checkDiag3(D2.diagSize());
+    checkDiag3 = 2*f2;
+    checkDiag3 += f4*v4;
+
+    CHECK(Norm(checkDiag3-R3.diag()) < 1E-10);
+
+    ITSparse R4 = D4 + D2;
+    Vector checkDiag4 = checkDiag3;
+
+    CHECK(Norm(checkDiag4-R4.diag()) < 1E-10);
+
+    }
+
 TEST(ContractingProduct)
     {
     ITSparse D(b3,b4,1);

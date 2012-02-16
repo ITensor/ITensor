@@ -111,6 +111,107 @@ diagSize() const
         return diag_.Length();
     }
 
+Vector ITSparse::
+diag() const
+    {
+    if(diagAllSame())
+        {
+        Vector res(diagSize());
+        res = scale_.real();
+        return res;
+        }
+    else
+        {
+        return diag_*scale_.real();
+        }
+    }
+
+ITSparse& ITSparse::
+operator+=(const ITSparse& other)
+    {
+    if(this == &other)
+        {
+        operator*=(2);
+        return *this;
+        }
+
+    if(fabs(is_.uniqueReal() - other.is_.uniqueReal()) > 1E-12)
+        {
+        cerr << format("this ur = %.10f, other.ur = %.10f\n")%is_.uniqueReal()%other.is_.uniqueReal();
+        Print(*this);
+        Print(other);
+        Error("ITSparse::operator+=: unique Reals don't match (different Index structure).");
+        }
+
+    const bool this_allsame = this->diagAllSame();
+    const bool othr_allsame = other.diagAllSame();
+
+    if(this_allsame && othr_allsame)
+        {
+        //In this case, scale_ represents
+        //the value of each diag element
+        scale_ += other.scale_;
+        return *this;
+        }
+
+    //Check if this or other is effectively zero
+    if(this->scale_.isRealZero())
+        {
+        *this = other;
+        return *this;
+        }
+
+    if((other.scale_/scale_).isRealZero()) 
+        { 
+        return *this; 
+        }
+
+    //Determine a scale factor for the sum
+    Real scalefac = 1;
+    if(scale_.magnitudeLessThan(other.scale_)) 
+        {
+        this->scaleTo(other.scale_); 
+        }
+    else
+        {
+        scalefac = (other.scale_/scale_).real();
+        }
+
+    //Already checked both diagAllSame case
+    if(this_allsame)
+        {
+        diag_ = other.diag_;
+        diag_ = 1;
+        diag_ += scalefac*other.diag_;
+        }
+    else
+    if(othr_allsame)
+        {
+        diag_ += scalefac;
+        }
+    else
+        {
+        diag_ += scalefac*other.diag_;
+        }
+        
+    return *this;
+    }
+
+ITSparse& ITSparse::
+operator-=(const ITSparse& other)
+    {
+    if(this == &other) 
+        { 
+        scale_ = 0; 
+        diag_.ReDimension(0); 
+        return *this; 
+        }
+    operator*=(-1); 
+    operator+=(other); 
+    operator*=(-1);
+    return *this;
+    }
+
 Real ITSparse::
 norm() const
     {

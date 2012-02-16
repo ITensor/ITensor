@@ -32,8 +32,27 @@ static Real maxlogdouble = log(std::numeric_limits<double>::max());
 
 static const Real LogNumber_Accuracy = 1E-12;
 
-class TooBigForReal {};
-class TooSmallForReal {};
+class TooBigForReal : public ITError
+    {
+public:
+    typedef ITError
+    Parent;
+
+    TooBigForReal(const std::string& message) 
+        : Parent(message)
+        { }
+    };
+
+class TooSmallForReal : public ITError
+    {
+public:
+    typedef ITError
+    Parent;
+
+    TooSmallForReal(const std::string& message) 
+        : Parent(message)
+        { }
+    };
 
 //
 // LogNumber
@@ -108,20 +127,33 @@ class LogNumber
         if(lognum_ > maxlogdouble)
             { 
             Print(lognum_);
-            throw TooBigForReal();
-            //Error("LogNumber too big to convert to Real"); 
+            throw TooBigForReal("LogNumber too big to convert to Real");
             }
         if(lognum_ < -maxlogdouble)
             { 
             Print(lognum_);
-            throw TooSmallForReal();
-            //Error("LogNumber too small to convert to Real"); 
+            throw TooSmallForReal("LogNumber too small to convert to Real");
             }
 #endif
         return sign_ * exp(lognum_);
         }
 
-    inline bool 
+    LogNumber&
+    operator+=(const LogNumber& other)
+        {
+        try {
+            *this = 
+                LogNumber(this->real()+other.real());
+            }
+        catch(const ITError& e)
+            {
+            Error("Could not convert to real in LogNumber::operator+=");
+            }
+        return *this;
+        }
+
+
+    bool 
     operator==(const LogNumber& other) const
         { return (sign_ == other.sign_) && (lognum_ == other.lognum_); }
 

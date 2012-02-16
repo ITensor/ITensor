@@ -1055,7 +1055,9 @@ scaleTo(LogNumber newscale) const
     if(scale_ == newscale) return;
     solo();
     if(newscale.isRealZero()) 
-        { p->v *= 0; }
+        { 
+        p->v *= 0; 
+        }
     else 
         {
         scale_ /= newscale;
@@ -2035,7 +2037,11 @@ reshapeTo(const Permutation& P, ITensor& res) const
 ITensor& ITensor::
 operator+=(const ITensor& other)
     {
-    if(this == &other) { scale_ *= 2; return *this; }
+    if(this == &other) 
+        { 
+        scale_ *= 2; 
+        return *this; 
+        }
 
     bool complex_this = isComplex();
     bool complex_other = other.isComplex();
@@ -2058,8 +2064,10 @@ operator+=(const ITensor& other)
         *this = other;
         return *this;
         }
-    //if(other.scale_.isRealZero()) { return *this; }
-    if((other.scale_/scale_).isRealZero()) { return *this; }
+    if((other.scale_/scale_).isRealZero()) 
+        { 
+        return *this; 
+        }
 
     solo();
 
@@ -2088,7 +2096,10 @@ operator+=(const ITensor& other)
     bool same_ind_order = true;
     for(int j = 1; j <= rn(); ++j)
     if(index(j) != other.index(j))
-        { same_ind_order = false; break; }
+        { 
+        same_ind_order = false; 
+        break; 
+        }
 
     if(same_ind_order) 
         { 
