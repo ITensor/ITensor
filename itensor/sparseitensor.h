@@ -79,28 +79,15 @@ class SparseITensor
 
     ITensor
     operator*(const ITensor& T) const
-        {
-        ITensor res;
-        product(*this,T,res);
-        return res;
-        }
+        { ITensor res; product(*this,T,res); return res; }
 
     friend inline ITensor&
     operator*=(ITensor& T, const SparseITensor& S)
-        {
-        ITensor res;
-        product(S,T,res);
-        T.swap(res);
-        return T;
-        }
+        { ITensor res; product(S,T,res); T.swap(res); return T; }
 
     ITensor friend inline
     operator*(const ITensor& T, const SparseITensor& S)
-        { 
-        ITensor res; 
-        product(S,T,res);
-        return res; 
-        }
+        { ITensor res; product(S,T,res); return res; }
 
     SparseITensor& 
     operator*=(Real fac) { scale_ *= fac; return *this; }

@@ -8,25 +8,28 @@
 *
 * * Arrows point In or Out, never right/left/up/down.
 *
-* * The Site indices of a ket point out.
+* * The Site indices of a ket point Out.
 *
 * * Conjugation switches arrow directions.
 *
-* * All arrows flow out from the ortho center of an MPS (ket - in if it's a bra).
+* * All arrows flow Out from the ortho center of an MPS 
+*   (assuming it's a ket - In if it's a bra).
 *
-* * IQMPOs are created with the same arrow structure as if they are orthogonalized
-*   to site 1, but this is just a default since they aren't actually ortho. If position 
-*   is called on an IQMPO it follows the same convention as for an MPS except Site 
-*   indices point In and Site' indices point Out.
+* * IQMPOs are created with the same arrow structure as if they are 
+*   orthogonalized to site 1, but this is just a default since they 
+*   aren't actually ortho. If position is called on an IQMPO it follows 
+*   the same convention as for an MPS except Site indices point In and 
+*   Site' indices point Out.
+*
+* * Local site operators have two IQIndices, one unprimed and pointing In, 
+*   the other primed and pointing Out.
 *
 */
 
+// Forward declarations
 class QN;
-
 struct inqn;
-
 class IQIndexDat;
-
 struct IQIndexVal;
 
 

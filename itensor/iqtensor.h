@@ -5,8 +5,12 @@
 #include <map>
 
 class IQTDat;
-
 class IQCombiner;
+
+
+//
+// IQTensor
+//
 
 class IQTensor
     {
@@ -447,7 +451,14 @@ class IQTensor
 
     private:
 
+    /////////////////
+    // 
+    // Data Members
+
     boost::intrusive_ptr<IQTDat> p;
+
+    //
+    /////////////////
 
     void solo();
 
