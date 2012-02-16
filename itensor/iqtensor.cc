@@ -1016,6 +1016,13 @@ conj(const IQIndex& I)
     is_->conj(I);
     }
 
+void IQTensor::
+swap(IQTensor& other)
+    {
+    is_.swap(other.is_);
+    p.swap(other.p);
+    }
+
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor& T)
     {

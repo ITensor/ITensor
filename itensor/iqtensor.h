@@ -434,6 +434,9 @@ class IQTensor
     void 
     conj(const IQIndex& I);
 
+    void
+    swap(IQTensor& other);
+
     friend std::ostream& 
     operator<<(std::ostream & s, const IQTensor &t);
 

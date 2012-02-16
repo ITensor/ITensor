@@ -240,6 +240,19 @@ indIncPrime(const IQIndex& I, int inc)
     Error("indIncPrime: couldn't find IQIndex");
     }
 
+void IQIndexSet::
+noprimeind(const IQIndex& I)
+    {
+	for(size_t j = 0; j < index_.size(); ++j) 
+	    if(index_[j] == I) 
+		{
+        ur_ -= index_[j].uniqueReal();
+		index_[j].noprime();
+        ur_ += index_[j].uniqueReal();
+		return;
+		}
+    }
+
 //
 // Methods for Manipulating IQIndexSets
 //

@@ -9,7 +9,7 @@ include ../options.mk
 ####################################
 
 SOURCES=index.cc indexset.cc itensor.cc itsparse.cc \
-        iqindex.cc iqindexset.cc iqtensor.cc \
+        iqindex.cc iqindexset.cc iqtensor.cc iqtsparse.cc\
         svdworker.cc mps.cc mpo.cc dmrg.cc
 
 HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
@@ -19,7 +19,7 @@ HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
         hams/hubbardchain.h hams/heisenberg.h hams/triheisenberg.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
-        eigensolver.h projectedop.h itsparse.h
+        eigensolver.h projectedop.h itsparse.h iqtsparse.h
 
 ####################################
 
@@ -103,6 +103,9 @@ iqindexset.o: $(DEPHEADERS)
 DEPHEADERS+= iqtensor.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
+DEPHEADERS+= iqtsparse.h
+iqtsparse.o: $(DEPHEADERS)
+.debug_objs/iqtsparse.o: $(DEPHEADERS)
 DEPHEADERS+= combiner.h condenser.h iqcombiner.h projectedop.h svdworker.h
 svdworker.o: $(DEPHEADERS)
 .debug_objs/svdworker.o: $(DEPHEADERS)

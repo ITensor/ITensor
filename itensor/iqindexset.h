@@ -128,12 +128,7 @@ class IQIndexSet
     indIncPrime(const IQIndex& I, int inc);
 
     void 
-    noprimeind(const IQIndex& I) 
-        { 
-        IQIndex J(I);
-        J.noprime();
-        mapindex(I,J); 
-        }
+    noprimeind(const IQIndex& I);
 
     //
     // Methods for Manipulating IQIndexSets
