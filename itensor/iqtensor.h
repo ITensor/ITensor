@@ -1,6 +1,6 @@
 #ifndef __IQ_H
 #define __IQ_H
-#include "iqindex.h"
+#include "iqindexset.h"
 #include <list>
 #include <map>
 
@@ -323,19 +323,19 @@ class IQTensor
     uses_ind(const Index& i) const;
 
     int 
-    findindex(const IQIndex& i) const;
+    findindex(const IQIndex& I) const { return is_->findindex(I); }
 
     bool 
-    hastype(IndexType t) const;
+    hastype(IndexType t) const { return is_->hastype(t); }
 
     const IQIndex& 
-    findtype(IndexType t) const;
+    findtype(IndexType t) const { return is_->findtype(t); }
 
     const IQIndex& 
-    finddir(Arrow dir) const;
+    finddir(Arrow dir) const { return is_->finddir(dir); }
 
     bool 
-    hasindex(const IQIndex& i) const;
+    hasindex(const IQIndex& I) const { return is_->hasindex(I); }
 
     bool 
     isComplex() const 
@@ -375,10 +375,7 @@ class IQTensor
     symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& mink, int& maxk) const;
 
     Real 
-    uniqueReal() const;
-
-    int 
-    num_index(IndexType t) const;
+    uniqueReal() const { return is_->uniqueReal(); }
 
     Real 
     norm() const;
@@ -455,12 +452,24 @@ class IQTensor
     // 
     // Data Members
 
-    boost::intrusive_ptr<IQTDat> p;
+    boost::intrusive_ptr<IQIndexSet>
+    is_;
+
+    boost::intrusive_ptr<IQTDat> 
+    p;
 
     //
     /////////////////
 
-    void solo();
+    void 
+    soloIndex();
+
+    void 
+    soloDat();
+
+    void 
+    solo();
+
 
     }; //class IQTensor
 
@@ -469,23 +478,6 @@ class IQTDat
     public:
 
     IQTDat();
-
-    explicit 
-    IQTDat(const IQIndex& i1);
-
-    IQTDat(const IQIndex& i1, const IQIndex& i2);
-
-    IQTDat(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3);
-
-    IQTDat(const IQIndex& i1, const IQIndex& i2, 
-	       const IQIndex& i3, const IQIndex& i4,
-	       const IQIndex& i5 = IQIndex::Null(), 
-	       const IQIndex& i6 = IQIndex::Null(), 
-	       const IQIndex& i7 = IQIndex::Null(), 
-	       const IQIndex& i8 = IQIndex::Null());
-
-    explicit 
-    IQTDat(std::vector<IQIndex>& iqinds_);
 
     explicit 
     IQTDat(const IQTDat& other);
@@ -509,7 +501,19 @@ class IQTDat
     has_itensor(const ApproxReal& r) const;
 
     void 
-    insert_itensor(const ApproxReal& r, const ITensor& t);
+    insert(const ApproxReal& r, const ITensor& t);
+
+    void 
+    insert(const ITensor& t);
+
+    void 
+    insert_add(const ApproxReal& r, const ITensor& t);
+
+    void 
+    insert_add(const ITensor& t);
+
+    void 
+    insert_assign(const ITensor& t);
 
     void 
     clean(Real min_norm);
@@ -530,19 +534,10 @@ class IQTDat
     typedef std::list<ITensor>::const_iterator 
     const_iten_it;
 
-    typedef std::vector<IQIndex>::iterator 
-    iqind_it;
-
-    typedef std::vector<IQIndex>::const_iterator 
-    const_iqind_it;
-
     public:
 
     mutable std::list<ITensor> 
     itensor; // This is mutable to allow reordering
-
-    std::vector<IQIndex> 
-    iqindex_;
 
     mutable std::map<ApproxReal,iten_it>
     rmap; //mutable so that const IQTensor methods can use rmap
@@ -566,7 +561,8 @@ class IQTDat
 
     }; //class IQTDat
 
-template <typename Callable> void IQTensor::
+template <typename Callable> 
+void IQTensor::
 mapElems(const Callable& f)
     {
     solo();
@@ -583,22 +579,13 @@ Dot(const IQTensor& x, const IQTensor& y, bool doconj = true);
 void 
 Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool doconj = true);
 
-inline void 
-checkQNs(const ITensor& t) 
-    { }
-
 //Checks if all IQTensor blocks have the same divergence
 void 
 checkQNs(const IQTensor& T);
 
-template<class T> 
-class Printit
-    {
-public:
-    std::ostream& s;
-    std::string spacer;
-    Printit(std::ostream& _s, std::string _spacer) : s(_s), spacer(_spacer) {}
-    void operator()(const T& t) { s << t << spacer; }
-    };
+//ITensor version for compatibility
+void inline
+checkQNs(const ITensor& t) { }
+
 
 #endif

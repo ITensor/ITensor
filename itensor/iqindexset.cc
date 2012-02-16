@@ -78,13 +78,13 @@ IQIndexSet(std::vector<IQIndex>& iqinds)
     setUniqueReal();
     }
 
-IQIndex IQIndexSet::
+const IQIndex& IQIndexSet::
 findtype(IndexType t) const
 	{
     for(size_t j = 0; j < index_.size(); ++j)
         if(index_[j].type() == t) return index_[j];
     Error("IQIndexSet::findtype failed."); 
-    return IQIndex();
+    return IQIndex::Null();
 	}
 
 bool IQIndexSet::
@@ -107,6 +107,15 @@ findindex(const IQIndex& I) const
     return 0;
 	}
 
+const IQIndex& IQIndexSet::
+finddir(Arrow dir) const
+    {
+    Foreach(const IQIndex& I, index_)
+        if(I.dir() == dir) return I;
+    Error("Couldn't find arrow with specified dir");
+    return IQIndex::Null();
+    }
+
 bool IQIndexSet::
 has_common_index(const IQIndexSet& other) const
     {
@@ -125,6 +134,14 @@ hasindex(const IQIndex& I) const
     return false;
 	}
 
+bool IQIndexSet::
+hastype(IndexType t) const
+    {
+    for(size_t j = 0; j < index_.size(); ++j)
+    if(index_[j].type() == t) return true;
+    return false;
+    }
+
 int IQIndexSet::
 minM() const
     {
@@ -133,6 +150,18 @@ minM() const
     int mm = index_[0].m();
     for(size_t j = 1; j < index_.size(); ++j)
         mm = min(mm,index_[j].m());
+
+    return mm;
+    }
+
+int IQIndexSet::
+maxM() const
+    {
+    if(index_.empty()) return 1;
+
+    int mm = index_[0].m();
+    for(size_t j = 1; j < index_.size(); ++j)
+        mm = max(mm,index_[j].m());
 
     return mm;
     }
@@ -196,6 +225,21 @@ primeind(const IQIndex& I, const IQIndex& J)
     mapindex(J,primed(J));
 	}
 
+void IQIndexSet::
+indIncPrime(const IQIndex& I, int inc)
+    {
+    Foreach(IQIndex& J, index_)
+        if(J.noprime_equals(I))
+        {
+        int p = J.primeLevel();
+        J.mapprime(p,p+inc);
+        return;
+        }
+    cerr << "IQIndex was " << I << "\n";
+    cout << "IQIndex was " << I << "\n";
+    Error("indIncPrime: couldn't find IQIndex");
+    }
+
 //
 // Methods for Manipulating IQIndexSets
 //
@@ -254,6 +298,13 @@ swap(IQIndexSet& other)
     }
 
 void IQIndexSet::
+swapInds(vector<IQIndex>& newinds)
+    {
+    index_.swap(newinds);
+    setUniqueReal();
+    }
+
+void IQIndexSet::
 clear()
     {
     index_.clear();
@@ -269,6 +320,23 @@ operator<<(std::ostream& s, const IQIndexSet& is)
     return s;
     }
 
+void IQIndexSet::
+conj()
+    {
+    for(size_t j = 0; j < index_.size(); ++j)
+        index_[j].conj();
+    }
+
+void IQIndexSet::
+conj(const IQIndex& I)
+    {
+    for(size_t j = 0; j < index_.size(); ++j)
+        if(index_[j] == I)
+            {
+            index_[j].conj();
+            return;
+            }
+    }
 
 void IQIndexSet::
 read(std::istream& s)

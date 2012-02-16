@@ -65,12 +65,13 @@ IndexSet(const IndexSet& other, const Permutation& P)
         index_[P.dest(j)] = other.index_[j];
     }
 
-Index IndexSet::
+const Index& IndexSet::
 findtype(IndexType t) const
 	{
     for(int j = 1; j <= rn_; ++j)
     if(index_[j].type() == t) return index_[j];
-    Error("IndexSet::findtype failed."); return Index();
+    Error("IndexSet::findtype failed."); 
+    return Index::Null();
 	}
 
 bool IndexSet::
@@ -205,6 +206,18 @@ minM() const
     int mm = index_[1].m();
     for(int j = 2; j <= rn_; ++j)
         mm = min(mm,index_[j].m());
+
+    return mm;
+    }
+
+int IndexSet::
+maxM() const
+    {
+    if(rn_ == 0) return 1;
+
+    int mm = index_[1].m();
+    for(int j = 2; j <= rn_; ++j)
+        mm = max(mm,index_[j].m());
 
     return mm;
     }

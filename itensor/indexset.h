@@ -12,6 +12,7 @@ class IndexSet
 
     IndexSet();
 
+    explicit
     IndexSet(const Index& i1);
 
     IndexSet(const Index& i1, const Index& i2);
@@ -60,7 +61,7 @@ class IndexSet
     // Index Analysis
     //
 
-    Index 
+    const Index&
     findtype(IndexType t) const;
 
     bool 
@@ -98,6 +99,9 @@ class IndexSet
 
     int
     minM() const;
+
+    int
+    maxM() const;
 
     //
     // Primelevel Methods

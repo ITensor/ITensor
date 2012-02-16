@@ -11,6 +11,7 @@ class IQIndexSet
 
     IQIndexSet();
 
+    explicit
     IQIndexSet(const IQIndex& i1);
 
     IQIndexSet(const IQIndex& i1, const IQIndex& i2);
@@ -25,6 +26,8 @@ class IQIndexSet
                IQIndex i8 = IQIndex::Null());
 
     IQIndexSet(std::vector<IQIndex>& iqinds);
+
+    IQIndexSet(std::istream& s) { read(s); }
 
     //
     // Accessor Methods
@@ -55,14 +58,20 @@ class IQIndexSet
     // IQIndex Analysis
     //
 
-    IQIndex 
+    const IQIndex&
     findtype(IndexType t) const;
 
     bool 
     findtype(IndexType t, IQIndex& I) const;
 
+    bool 
+    hastype(IndexType t) const;
+
     int 
     findindex(const IQIndex& I) const;
+
+    const IQIndex&
+    finddir(Arrow dir) const;
 
     bool 
     has_common_index(const IQIndexSet& other) const;
@@ -71,10 +80,16 @@ class IQIndexSet
     hasindex(const IQIndex& I) const;
 
     bool 
+    hasType(IndexType t) const;
+
+    bool 
     notin(const IQIndex& I) const { return !hasindex(I); }
 
     int
     minM() const;
+
+    int
+    maxM() const;
 
     //
     // Primelevel Methods
@@ -109,6 +124,9 @@ class IQIndexSet
     void 
     primeind(const IQIndex& I, const IQIndex& J);
 
+    void
+    indIncPrime(const IQIndex& I, int inc);
+
     void 
     noprimeind(const IQIndex& I) 
         { 
@@ -140,11 +158,20 @@ class IQIndexSet
     swap(IQIndexSet& other);
 
     void
+    swapInds(std::vector<IQIndex>& newinds);
+
+    void
     clear();
 
     //
     // Other Methods
     //
+
+    void
+    conj();
+
+    void
+    conj(const IQIndex& I);
 
     void
     read(std::istream& s);
