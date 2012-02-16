@@ -1,11 +1,11 @@
-#ifndef __ITENSOR_SPARSEITENSOR_H
-#define __ITENSOR_SPARSEITENSOR_H
+#ifndef __ITENSOR_ITSPARSE_H
+#define __ITENSOR_ITSPARSE_H
 #include "itensor.h"
 
 //
-// SparseITensor
+// ITSparse
 //
-class SparseITensor
+class ITSparse
     {
     public:
 
@@ -13,26 +13,26 @@ class SparseITensor
     // Constructors
     //
 
-    SparseITensor();
+    ITSparse();
 
-    SparseITensor(const Index& i1);
+    ITSparse(const Index& i1);
 
-    SparseITensor(const Index& i1, Real d);
+    ITSparse(const Index& i1, Real d);
 
-    SparseITensor(const Index& i1, const Vector& diag);
+    ITSparse(const Index& i1, const Vector& diag);
 
-    SparseITensor(const Index& i1, const Index& i2, Real d);
+    ITSparse(const Index& i1, const Index& i2, Real d);
 
-    SparseITensor(const Index& i1, const Index& i2, const Vector& diag);
+    ITSparse(const Index& i1, const Index& i2, const Vector& diag);
 
-    SparseITensor(const Index& i1, const Index& i2, 
+    ITSparse(const Index& i1, const Index& i2, 
                   const Index& i3, Real d);
 
-    SparseITensor(const Index& i1, const Index& i2, 
+    ITSparse(const Index& i1, const Index& i2, 
                   const Index& i3, const Vector& diag);
 
 
-    SparseITensor(const Index& i1, const Index& i2, 
+    ITSparse(const Index& i1, const Index& i2, 
                   const Index& i3, const Index& i4, Real d);
 
     //
@@ -82,33 +82,33 @@ class SparseITensor
         { ITensor res; product(*this,T,res); return res; }
 
     friend inline ITensor&
-    operator*=(ITensor& T, const SparseITensor& S)
+    operator*=(ITensor& T, const ITSparse& S)
         { ITensor res; product(S,T,res); T.swap(res); return T; }
 
     ITensor friend inline
-    operator*(const ITensor& T, const SparseITensor& S)
+    operator*(const ITensor& T, const ITSparse& S)
         { ITensor res; product(S,T,res); return res; }
 
-    SparseITensor& 
+    ITSparse& 
     operator*=(Real fac) { scale_ *= fac; return *this; }
 
-    SparseITensor 
+    ITSparse 
     operator*(Real fac) const 
-        { SparseITensor res(*this); res *= fac; return res; }
+        { ITSparse res(*this); res *= fac; return res; }
 
-    friend inline SparseITensor 
-    operator*(Real fac, SparseITensor s) 
+    friend inline ITSparse 
+    operator*(Real fac, ITSparse s) 
         { return (s *= fac); }
 
-    SparseITensor& 
+    ITSparse& 
     operator/=(Real fac) { scale_ /= fac; return *this; }
 
-    SparseITensor 
+    ITSparse 
     operator/(Real fac) const 
-        { SparseITensor res(*this); res /= fac; return res; }
+        { ITSparse res(*this); res /= fac; return res; }
 
-    friend inline SparseITensor 
-    operator/(Real fac, SparseITensor s) 
+    friend inline ITSparse 
+    operator/(Real fac, ITSparse s) 
         { return (s /= fac); }
 
     //
@@ -224,7 +224,7 @@ class SparseITensor
     write(std::ostream& s) const;
 
     friend std::ostream&
-    operator<<(std::ostream & s, const SparseITensor & t);
+    operator<<(std::ostream & s, const ITSparse & t);
 
     typedef Index 
     IndexT;
@@ -259,11 +259,11 @@ class SparseITensor
     _construct2(const Index& i1, const Index& i2);
 
     friend void 
-    product(const SparseITensor& S, const ITensor& T, ITensor& res);
+    product(const ITSparse& S, const ITensor& T, ITensor& res);
 
-    }; // class SparseITensor
+    }; // class ITSparse
 
 void 
-product(const SparseITensor& S, const ITensor& T, ITensor& res);
+product(const ITSparse& S, const ITensor& T, ITensor& res);
 
 #endif

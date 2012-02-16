@@ -8,7 +8,7 @@ REPORT_LEVEL=confirm
 
 HEADERS=test.h
 SOURCES=test.cc matrix_test.cc real_test.cc index_test.cc itensor_test.cc\
-sparseitensor_test.cc combiner_test.cc iqcombiner_test.cc iqtensor_test.cc mps_test.cc mpo_test.cc\
+itsparse_test.cc combiner_test.cc iqcombiner_test.cc iqtensor_test.cc mps_test.cc mpo_test.cc\
 eigensolver_test.cc regression_test.cc svdworker_test.cc
 
 LIBNAMES=matrix utilities itensor
@@ -79,6 +79,9 @@ index_test.o: $(LIBHEADERS)
 LIBHEADERS+= $(INCLUDEDIR)/itensor.h
 itensor_test.o: $(LIBHEADERS)
 .debug_objs/itensor_test.o: $(LIBHEADERS)
+LIBHEADERS+= $(INCLUDEDIR)/itsparse.h
+itsparse_test.o: $(LIBHEADERS)
+.debug_objs/itsparse_test.o: $(LIBHEADERS)
 LIBHEADERS+= $(INCLUDEDIR)/combiner.h
 combiner_test.o: $(LIBHEADERS)
 .debug_objs/combiner_test.o: $(LIBHEADERS)

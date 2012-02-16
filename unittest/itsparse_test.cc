@@ -1,8 +1,8 @@
 #include "test.h"
-#include "sparseitensor.h"
+#include "itsparse.h"
 #include <boost/test/unit_test.hpp>
 
-struct SparseITensorDefaults
+struct ITSparseDefaults
     {
     Index s1,s2,s3,s4,
           s1P,s2P,s3P,s4P,
@@ -16,7 +16,7 @@ struct SparseITensorDefaults
 
     int mixed_inds_dim;
 
-    SparseITensorDefaults()
+    ITSparseDefaults()
         :
         s1(Index("s1",2,Site)),
         s2(Index("s2",2,Site)),
@@ -92,15 +92,15 @@ struct SparseITensorDefaults
         reordered_mixed_inds[5] = l2;
     }
 
-    ~SparseITensorDefaults() { }
+    ~ITSparseDefaults() { }
 
-    }; //struct SparseITensorDefaults
+    }; //struct ITSparseDefaults
 
-BOOST_FIXTURE_TEST_SUITE(SparseITensorTest,SparseITensorDefaults)
+BOOST_FIXTURE_TEST_SUITE(ITSparseTest,ITSparseDefaults)
 
 TEST(Constructors)
     {
-    SparseITensor B(b2,b3,2);
+    ITSparse B(b2,b3,2);
 
     CHECK_CLOSE(sqrt(2)*2,B.norm(),1E-5);
     CHECK(B.hasindex(b2));
@@ -110,7 +110,7 @@ TEST(Constructors)
     Vector diag(b3.m());
     diag.Randomize();
 
-    SparseITensor D(b3,primed(b3),diag);
+    ITSparse D(b3,primed(b3),diag);
     D *= -1;
     CHECK(D.hasindex(b3));
     CHECK(D.hasindex(primed(b3)));
@@ -120,7 +120,7 @@ TEST(Constructors)
 
 TEST(ContractingProduct)
     {
-    SparseITensor D(b3,b4,1);
+    ITSparse D(b3,b4,1);
 
     ITensor T(a1,b2,b4,s1);
     T.Randomize();
@@ -143,7 +143,7 @@ TEST(ContractingProduct)
     Vector diag(min(b3.m(),b4.m()));
     diag.Randomize();
 
-    SparseITensor D2(b3,b4,diag);
+    ITSparse D2(b3,b4,diag);
 
     ITensor T2(a1,b2,b4,s1);
     T2.Randomize();
@@ -170,7 +170,7 @@ TEST(TieIndices)
     T.Randomize();
 
     Index tied("tied",l2.m());
-    SparseITensor S(l2,l1,s1,tied,1);
+    ITSparse S(l2,l1,s1,tied,1);
 
     ITensor TT = S * T;
 
@@ -191,10 +191,10 @@ TEST(Trace)
     Real f = -ran1();
     A *= f;
 
-    ITensor At = SparseITensor(b3,primed(b3),1) * A;
+    ITensor At = ITSparse(b3,primed(b3),1) * A;
 
     Vector v(b3.m()); v = 1;
-    ITensor AtV = SparseITensor(b3,primed(b3),v) * A;
+    ITensor AtV = ITSparse(b3,primed(b3),v) * A;
 
     for(int j2 = 1; j2 <= b2.m(); ++j2)
     for(int j5 = 1; j5 <= b5.m(); ++j5)

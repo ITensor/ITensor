@@ -12,7 +12,7 @@ struct ProductProps;
 class Counter;
 class Combiner;
 class ITDat;
-class SparseITensor;
+class ITSparse;
 
 //
 // ITensor
@@ -666,10 +666,10 @@ class ITensor
               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
         const;
 
-    friend class SparseITensor;
+    friend class ITSparse;
 
     friend void 
-    product(const SparseITensor& S, const ITensor& T, ITensor& res);
+    product(const ITSparse& S, const ITensor& T, ITensor& res);
 
     public:
 

@@ -1,32 +1,32 @@
-#include "sparseitensor.h"
+#include "itsparse.h"
 using namespace std;
 using boost::format;
 using boost::array;
 
-SparseITensor::
-SparseITensor()
+ITSparse::
+ITSparse()
     :
     scale_(0)
     { }
 
-SparseITensor::
-SparseITensor(const Index& i1)
+ITSparse::
+ITSparse(const Index& i1)
     :
     is_(i1),
     scale_(0)
     { 
     }
 
-SparseITensor::
-SparseITensor(const Index& i1, Real d)
+ITSparse::
+ITSparse(const Index& i1, Real d)
     :
     is_(i1),
     scale_(d)
     { 
     }
 
-SparseITensor::
-SparseITensor(const Index& i1, const Vector& diag)
+ITSparse::
+ITSparse(const Index& i1, const Vector& diag)
     :
     diag_(diag),
     is_(i1)
@@ -41,16 +41,16 @@ SparseITensor(const Index& i1, const Vector& diag)
 #endif
     }
 
-SparseITensor::
-SparseITensor(const Index& i1, const Index& i2, Real d)
+ITSparse::
+ITSparse(const Index& i1, const Index& i2, Real d)
     :
     is_(i1,i2),
     scale_(d)
     { 
     }
 
-SparseITensor::
-SparseITensor(const Index& i1, const Index& i2, const Vector& diag)
+ITSparse::
+ITSparse(const Index& i1, const Index& i2, const Vector& diag)
     :
     diag_(diag),
     is_(i1,i2)
@@ -66,8 +66,8 @@ SparseITensor(const Index& i1, const Index& i2, const Vector& diag)
 #endif
     }
 
-SparseITensor::
-SparseITensor(const Index& i1, const Index& i2, 
+ITSparse::
+ITSparse(const Index& i1, const Index& i2, 
               const Index& i3, Real d)
     :
     is_(i1,i2,i3),
@@ -75,8 +75,8 @@ SparseITensor(const Index& i1, const Index& i2,
     {
     }
 
-SparseITensor::
-SparseITensor(const Index& i1, const Index& i2, 
+ITSparse::
+ITSparse(const Index& i1, const Index& i2, 
               const Index& i3, const Vector& diag)
     :
     diag_(diag),
@@ -93,8 +93,8 @@ SparseITensor(const Index& i1, const Index& i2,
 #endif
     }
 
-SparseITensor::
-SparseITensor(const Index& i1, const Index& i2, 
+ITSparse::
+ITSparse(const Index& i1, const Index& i2, 
               const Index& i3, const Index& i4, Real d)
     :
     is_(i1,i2,i3,i4),
@@ -102,7 +102,7 @@ SparseITensor(const Index& i1, const Index& i2,
     {
     }
 
-int SparseITensor::
+int ITSparse::
 diagSize() const
     {
     if(diagAllSame())
@@ -111,7 +111,7 @@ diagSize() const
         return diag_.Length();
     }
 
-Real SparseITensor::
+Real ITSparse::
 norm() const
     {
     if(diagAllSame())
@@ -120,7 +120,7 @@ norm() const
         return fabs(Norm(diag_) * scale_.real());
     }
 
-void SparseITensor::
+void ITSparse::
 scaleOutNorm() const
 	{
     if(diag_.Length() == 0) return;
@@ -131,7 +131,7 @@ scaleOutNorm() const
     if(f != 0) { diag_ = 1.0/f; scale_ *= f; }
 	}
 
-void SparseITensor::
+void ITSparse::
 scaleTo(LogNumber newscale) const
 	{
     if(diag_.Length() == 0) return;
@@ -149,7 +149,7 @@ scaleTo(LogNumber newscale) const
     scale_ = newscale;
 	}
 
-void SparseITensor::
+void ITSparse::
 read(std::istream& s)
     {
     readVec(s,diag_);
@@ -157,7 +157,7 @@ read(std::istream& s)
     scale_.read(s);
     }
 
-void SparseITensor::
+void ITSparse::
 write(std::ostream& s) const
     {
     writeVec(s,diag_);
@@ -166,10 +166,10 @@ write(std::ostream& s) const
     }
 
 void
-product(const SparseITensor& S, const ITensor& T, ITensor& res)
+product(const ITSparse& S, const ITensor& T, ITensor& res)
     {
     if(!S.isDiag()) 
-        Error("product only implemented for diagonal SparseITensors");
+        Error("product only implemented for diagonal ITSparses");
 
     //This is set to true if some of the indices
     //of res come from S.
@@ -419,10 +419,10 @@ product(const SparseITensor& S, const ITensor& T, ITensor& res)
         }
 
 
-    } // void product(const SparseITensor& S, const ITensor& T, ITensor& res)
+    } // void product(const ITSparse& S, const ITensor& T, ITensor& res)
 
 ostream& 
-operator<<(ostream & s, const SparseITensor& t)
+operator<<(ostream & s, const ITSparse& t)
     {
     s << "log(scale)[incl in elems] = " << t.scale().logNum() 
       << ", r = " << t.r() << ": ";
