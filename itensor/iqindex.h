@@ -207,6 +207,14 @@ class IQIndex : public Index
     void 
     noprime(PrimeType pt = primeBoth);
 
+    IQIndex friend inline
+    noprime(const IQIndex& I)
+        { 
+        IQIndex J(I);
+        J.noprime(); 
+        return J; 
+        }
+
     IQIndex 
     primed(int inc = 1) const;
 

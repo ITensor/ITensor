@@ -9,11 +9,12 @@ include ../options.mk
 ####################################
 
 SOURCES=index.cc indexset.cc itensor.cc sparseitensor.cc \
-        iqindex.cc iqtensor.cc \
+        iqindex.cc iqindexset.cc iqtensor.cc \
         svdworker.cc mps.cc mpo.cc dmrg.cc
 
 HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
-        indexset.h itensor.h iqindex.h iqtensor.h condenser.h combiner.h iqcombiner.h \
+        indexset.h itensor.h iqindex.h iqindexset.h iqtensor.h \
+        condenser.h combiner.h iqcombiner.h \
         svdworker.h mps.h mpo.h DMRGOpts.h dmrg.h core.h BaseDMRGOpts.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
         hams/hubbardchain.h hams/heisenberg.h hams/triheisenberg.h \
@@ -81,13 +82,25 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-DEPHEADERS=types.h allocator.h real.h permutation.h index.h itensor.h
+DEPHEADERS=types.h real.h permutation.h index.h 
+index.o: $(DEPHEADERS)
+.debug_objs/index.o: $(DEPHEADERS)
+DEPHEADERS+= indexset.h
+indexset.o: $(DEPHEADERS)
+.debug_objs/indexset.o: $(DEPHEADERS)
+DEPHEADERS+= allocator.h itensor.h
 itensor.o: $(DEPHEADERS)
 .debug_objs/itensor.o: $(DEPHEADERS)
 DEPHEADERS+= sparseitensor.h
 sparseitensor.o: $(DEPHEADERS)
 .debug_objs/sparseitensor.o: $(DEPHEADERS)
-DEPHEADERS+= iqindex.h iqtensor.h
+DEPHEADERS+= iqindex.h
+iqindex.o: $(DEPHEADERS)
+.debug_objs/iqindex.o: $(DEPHEADERS)
+DEPHEADERS+= iqindexset.h
+iqindexset.o: $(DEPHEADERS)
+.debug_objs/iqindexset.o: $(DEPHEADERS)
+DEPHEADERS+= iqtensor.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
 DEPHEADERS+= combiner.h condenser.h iqcombiner.h projectedop.h svdworker.h

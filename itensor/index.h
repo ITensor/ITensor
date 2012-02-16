@@ -9,13 +9,14 @@
 
 enum Arrow { In = -1, Out = 1 };
 
-inline Arrow operator*(const Arrow& a, const Arrow& b)
-{ return (int(a)*int(b) == In) ? In : Out; }
+Arrow inline
+operator*(const Arrow& a, const Arrow& b)
+    { return (int(a)*int(b) == In) ? In : Out; }
 
 const Arrow Switch = In*Out;
 
 inline std::ostream& 
-operator<<(std::ostream& s, const Arrow& D)
+operator<<(std::ostream& s, Arrow D)
     { if(D == In) s << "In"; else s << "Out"; return s; }
 
 enum IndexType { Link, Site, ReIm };
@@ -51,17 +52,27 @@ IntToIndexType(int i)
     return Link;
     }
 
-inline std::string 
+std::string inline
 putprimes(std::string s, int plev = 0)
-    { for(int i = 1; i <= plev; ++i) s += "\'"; return s;}
+    { 
+    for(int i = 1; i <= plev; ++i) 
+        s += "\'"; 
+    return s;
+    }
 
-inline std::string 
+std::string inline
 nameindex(IndexType it, int plev = 0)
-    { return putprimes(std::string(indextypename[(int)it]),plev); }
+    { 
+    return putprimes(std::string(indextypename[(int)it]),plev); 
+    }
 
-inline std::string 
+std::string inline
 nameint(std::string f,int ix)
-    { std::stringstream ss; ss << f << ix; return ss.str(); }
+    { 
+    std::stringstream ss; 
+    ss << f << ix; 
+    return ss.str(); 
+    }
 
 enum Imaker {makeReIm,makeReImP,makeReImPP,makeNull};
 
@@ -97,12 +108,22 @@ struct UniqueID
 
     operator boost::uuids::uuid() const { return id; }
 
-    friend inline std::ostream& operator<<(std::ostream& s, const UniqueID& uid) { s << uid.id; return s; }
+    friend inline std::ostream&
+    operator<<(std::ostream& s, const UniqueID& uid) 
+        { 
+        s << uid.id; 
+        return s; 
+        }
     };
 
 class IndexDat;
-
 struct IndexVal;
+
+
+
+//
+// Index
+//
 
 class Index
     {
@@ -252,9 +273,14 @@ class Index
 
     int primelevel_; 
 
-}; //class Index
+    }; //class Index
 
-//Storage for Index's
+
+//
+// IndexDat
+//
+
+//Storage for Indexes
 class IndexDat
     {
     public:
@@ -322,7 +348,13 @@ class IndexDat
 
     mutable unsigned int numref;
     const bool is_static_;
-    };
+
+    }; //class IndexDat
+
+
+//
+// IndexVal
+//
 
 struct IndexVal
     {
