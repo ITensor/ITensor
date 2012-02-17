@@ -81,9 +81,10 @@ void GenEigenValues(const MatrixRef&, Vector&, Vector&);
 void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
 	                                Matrix& revecs, Matrix& ievecs);
 
-void SVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);
-void newSVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);
-void thinsvd(const Matrix& A,Matrix& U, Vector& d,  Matrix &V,Real cutsq = 1.0e-20);
+#include "svd.h"
+//void SVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);
+//void newSVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);
+//void thinsvd(const Matrix& A,Matrix& U, Vector& d,  Matrix &V,Real cutsq = 1.0e-20);
 void checkSVD(const Matrix& A,const Matrix &U, const Vector &d, const Matrix& V);
 void newcomplexSVD(const Matrix& Are, const Matrix& Aim, Matrix& Ure, Matrix& Uim, 
 	Vector& d, Matrix& Vre, Matrix& Vim);

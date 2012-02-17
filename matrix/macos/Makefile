@@ -9,20 +9,21 @@ include ../../options.mk
 ####################################################################
 
 HEADERS=matrixref.h matrix.h precisio.h sparse.h bigmatrix.h davidson.h\
-	storelink.h matrixref.ih matrix.ih conjugate_gradient.h sparseref.h
+	storelink.h matrixref.ih matrix.ih conjugate_gradient.h sparseref.h\
+    svd.h
 
 OBJECTS=  matrix.o  utility.o  sparse.o  david.o sparseref.o\
 	hpsortir.o  daxpy.o matrixref.o  storelink.o conjugate_gradient.o\
-	 dgemm.o 
+	 dgemm.o svd.o
 
 OOBJECTS=  matrix.o-o  utility.o-o  sparse.o-o  david.o-o sparseref.o-o\
 	daxpy.o-o hpsortir.o-o conjugate_gradient.o-o  matrixref.o-o  storelink.o-o \
-	dgemm.o-o
+	dgemm.o-o svd.o-o
 
 SOURCES= matrix.cc utility.cc sparse.cc david.cc hpsortir.cc \
 	matrixref.cc storelink.cc hpsortir.cc \
 	conjugate_gradient.cc sparseref.cc\
-	daxpy.cc 
+	daxpy.cc svd.cc
 
 GOBJECTS= $(patsubst %,.g_objs/%, $(OBJECTS))
 PGOBJECTS= $(patsubst %,.pg_objs/%, $(OBJECTS))
@@ -125,6 +126,7 @@ davidtest.o: matrix.h sparse.h bigmatrix.h davidson.h precisio.h\
 	matrixref.h storelink.h
 david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
 sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
+svd.o: svd.h matrix.h
 
 .g_objs/conjugate_gradient.o: matrix.h bigmatrix.h
 .g_objs/sparseref.o: sparseref.h
@@ -138,6 +140,7 @@ sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 	matrixref.h storelink.h
 .g_objs/david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
 .g_objs/sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
+.g_objs/svd.o: svd.h matrix.h
 
 .pg_objs/conjugate_gradient.o: matrix.h bigmatrix.h
 .pg_objs/sparseref.o: sparseref.h
@@ -151,6 +154,7 @@ sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 	matrixref.h storelink.h
 .pg_objs/david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
 .pg_objs/sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
+.pg_objs/svd.o: svd.h matrix.h
 	
 #dependencies
 
@@ -233,3 +237,7 @@ sparse.o-o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 sparse.o-g: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 
 sparse.o-pg: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
+
+svd.o-o: svd.h matrix.h
+svd.o-g: svd.h matrix.h
+svd.o-pg: svd.h matrix.h

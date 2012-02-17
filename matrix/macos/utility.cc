@@ -1596,6 +1596,7 @@ void SVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V)
 
 void dosvd(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);
 
+/*
 void SVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V)
     {
     if(A.Nrows() < A.Ncols())
@@ -1626,6 +1627,7 @@ void SVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V)
     for(i = 1; i <= VV.Nrows(); i++)
 	V.Row(i) = VV.Row(ind(i));
     }
+*/
 
 int svd(double *a, int *m, int *n, int *mp, int *np, 
 	double *w, double *v);
@@ -1998,6 +2000,7 @@ extern "C" lint dgesdd_(char*,lint*,lint*,double*,lint*,double*,
 	    double*,lint*,double*,lint*,double*,lint*,lint*,lint*);
 */
 
+/*
 void newSVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V)
     {
     __CLPK_integer m = A.Nrows(), n = A.Ncols(); 
@@ -2065,6 +2068,7 @@ void newSVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V)
 	    }
 	}
     }
+    */
 
 void getrowbasis(Matrix& B, Real cutoff,bool nopivot = false)	// cutoff is in norm^2 of a row, 10^-20 is OK
     {
@@ -2123,6 +2127,7 @@ void onepassSVD(const Matrix& A,Matrix& U, Matrix& D, Matrix& V1, Matrix &V2,Rea
     startSVD(r2,D,V1);
     }
 
+/*
 void thinsvd(const Matrix& A,Matrix& U, Vector& d,  Matrix &V,Real cutsq)
     {
     int m = A.Nrows(), n = A.Ncols();
@@ -2163,6 +2168,7 @@ void thinsvd(const Matrix& A,Matrix& U, Vector& d,  Matrix &V,Real cutsq)
     newSVD(r1,U,d,vv);
     V = vv * VV;
     }
+    */
 
 void checkSVD(const Matrix& A,const Matrix &U, const Vector &d, const Matrix& V)
     {
