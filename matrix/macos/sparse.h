@@ -15,9 +15,25 @@ public:
     IntArray1 index;
     Vector data;
     int sorted;
-    static Real efactor;		// Factor for expanding rows 
-    static Real thresh;		// threshold for accepting elements 
-    static int minrsize;	// static default min. row size 
+
+    static Real& efactor()
+        {
+        //Factor for expanding rows
+        static Real efactor_ = default_efactor;
+        return efactor_;
+        }
+
+    static Real& thresh()
+        {
+        static Real thresh_ = default_thresh; // threshold for accepting elements 
+        return thresh_;
+        }
+
+    static int& minrsize()
+        {
+        static int minrsize_ = default_minrsize; // static default min. row size 
+        return minrsize_;
+        }
 
     SparseVector() {sorted = 1;}
 
@@ -88,22 +104,22 @@ public:
     // delete old storage 
 
     void SetMinRowSize(int s)	// Set it 
-	{ minrsize = s; }
+	{ SparseVector::minrsize() = s; }
 
     Real Threshold() const
-	{ return thresh; }
+	{ return SparseVector::thresh(); }
 
     void SetThresh(Real x)	// Set threshold 
-	{ thresh = x; }
+	{ SparseVector::thresh() = x; }
 
     void SetExFactor(Real f)	// Set the expansion factor for a row 
-	{ efactor = f; }
+	{ SparseVector::efactor() = f; }
 
     Real ExFactor() const	// get the expansion factor 
-	{ return efactor; }
+	{ return SparseVector::efactor(); }
 
     int MinRowSize() const	// Get the minimum row size 
-	{ return minrsize; }
+	{ return SparseVector::minrsize(); }
 
     int memory() const		// Return amount of memory used in bytes 
     	{ return data.memory() +
@@ -304,9 +320,6 @@ public:
 inline std::ostream & operator << (std::ostream &s, const SparseVector &a) {return s; }
 
 #ifdef THIS_IS_MAIN
-int  SparseVector::minrsize = default_minrsize;
-Real SparseVector::efactor = default_efactor;
-Real SparseVector::thresh = default_thresh;
 ARRAY1CC_DEFS(SparseVector)
 #endif
 

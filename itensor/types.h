@@ -249,7 +249,6 @@ public:
         }
     };
 
-Real ran1();
 
 class ResultIsZero : public ITError
     {
@@ -262,9 +261,10 @@ public:
         { }
     };
 
-#ifdef THIS_IS_MAIN
-void reportnew() { }
-Real ran1(int);
-#endif
+Real ran1();
+
+//#ifdef THIS_IS_MAIN
+//void reportnew() { }
+//#endif
 
 #endif

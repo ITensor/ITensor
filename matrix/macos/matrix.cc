@@ -15,10 +15,7 @@
 
 // Real resize/constructor
 
-using std::cerr;
-using std::cout;
-using std::endl;
-using std::ostream;
+using namespace std;
 
 
 void 
@@ -30,9 +27,9 @@ Matrix::makematrix(int s1, int s2)
     int size = s1 * s2;
     /*
     if (Store() == 0)
-	{ if (size > 0) nummats++; }
+	{ if (size > 0) Matrix::nummats()++; }
     else
-	{ if (size == 0) nummats--; }
+	{ if (size == 0) Matrix::nummats()--; }
     */
     slink.makestorage(size);
     nrows = s1;
@@ -86,7 +83,7 @@ Matrix::copytransfer(Matrix & M)
 	makematrix(0,0);
     MatrixRef::operator<<(M);
     M.makematrix(0,0); 
-    //numcon--; 
+    //Matrix::numcon()--; 
     M.init();
     temporary = 0;
     }
@@ -157,9 +154,9 @@ Vector::makevector(int s)
     if(s == length) return;
     /*
     if (Store() == 0)
-	{ if (s > 0) numvecs++; }
+	{ if (s > 0) Vector::numvecs()++; }
     else
-	{ if (s == 0) numvecs--; }
+	{ if (s == 0) Vector::numvecs()--; }
     */
     slink.makestorage(s);
     length = s;
@@ -204,7 +201,7 @@ Vector::copytransfer(Vector & V)
 	makevector(0);
     VectorRef::operator<<(V);
     V.makevector(0); 
-    //numcon--; 
+    //Vector::numcon()--; 
     V.init();
     temporary = 0;
     }

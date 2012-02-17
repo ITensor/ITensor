@@ -5,11 +5,7 @@
 #include <math.h>
 #include <fstream>
 #include <iomanip>
-using std::cout;
-using std::cin;
-using std::endl;
-using std::ifstream;
-using std::setprecision;
+using namespace std;
 
 extern Real svdtruncerr;
 #ifdef THIS_IS_MAIN

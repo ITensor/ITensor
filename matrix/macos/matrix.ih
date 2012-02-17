@@ -24,7 +24,7 @@ inline Matrix::Matrix(const MatrixRef &M)
 inline Matrix::~Matrix ()
     { 
         makematrix(0, 0); 
-        //numcon--; 
+        Matrix::numcon()--; 
     }
 
 inline void Matrix::ReDimension(int s1, int s2)
@@ -66,14 +66,14 @@ inline Matrix Matrix::operator + (Real a) const
 inline Matrix operator + (Real a, const Matrix& M)
     { return M+a; }
 
-//inline int Matrix::GetNumMats()
-//    { return nummats; }
+inline int Matrix::GetNumMats()
+    { return Matrix::nummats(); }
 
-//inline void Matrix::ResetNumMats()
-//    { nummats = 0; }
+inline void Matrix::ResetNumMats()
+    { Matrix::nummats() = 0; }
 
-//inline int Matrix::GetNumCon()
-//    { return numcon; }
+inline int Matrix::GetNumCon()
+    { return Matrix::numcon(); }
 
 inline void Matrix::MakeTemp()
     { temporary = 1; }
@@ -111,7 +111,7 @@ inline void Vector::init()
     { 
         VectorRef::init(); 
         temporary = 0; 
-        //numcon++; 
+        Vector::numcon()++; 
     }
 
 inline void Vector::fixref()		
@@ -132,7 +132,7 @@ inline Vector::Vector (const VectorRef &V)
 inline Vector::~Vector ()
     { 
         makevector(0); 
-        //numcon--; 
+        Vector::numcon()--; 
     }
 
 inline int Vector::Storage() const

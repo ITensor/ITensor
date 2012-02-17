@@ -55,10 +55,30 @@ public:
 private:
     storerep *p;			// Only data member
 
-    static int storageinuse;
-    static int numberofobjects;		// Number of new's - no. of deletes
-    static storerep nullrep; 
-    static storerep * pnullrep; 
+    static int& 
+    storageinuse()
+        {
+        static int storageinuse_ = 0;
+        return storageinuse_;
+        }
+    static int& 
+    numberofobjects()
+        {
+        static int numberofobjects_ = 0;		// Number of new's - no. of deletes
+        return numberofobjects_;
+        }
+    static storerep& 
+    nullrep()
+        {
+        static storerep nullrep_; 
+        return nullrep_;
+        }
+    static storerep* 
+    pnullrep()
+        {
+        static storerep * pnullrep_ = &StoreLink::nullrep();
+        return pnullrep_;
+        }
 
     enum { offset = (sizeof(storerep)-1) / sizeof(Real) + 1 };
     inline void donew(int s);
@@ -81,6 +101,12 @@ public:
 	     StoreLink::TotalStorage() << endl; 
 	*/
 	}
+
+    static StoreReport& doreport()
+        {
+        static StoreReport doreport_;
+        return doreport_;
+        }
     };
 
 // Inline functions for StoreLink
@@ -90,12 +116,12 @@ inline void StoreLink::donew(int s)
     if (s > 0)
 	{
 	p = (storerep *) new Real[s + offset];
-	p->numref = 1; p->storage = s; storageinuse += s;
-	numberofobjects++;
+	p->numref = 1; p->storage = s; StoreLink::storageinuse() += s;
+    StoreLink::numberofobjects()++;
 	// cout << "Making storage address " << (long)(p) << endl;
 	}
     else  
-	{ p = pnullrep; p->numref++; }
+	{ p = StoreLink::pnullrep(); p->numref++; }
     }
 
 inline void StoreLink::dodelete()
@@ -103,14 +129,14 @@ inline void StoreLink::dodelete()
     if(--p->numref == 0) 
 	{
 	// cout << "Deleting storage address " << (long)(p) << endl;
-	storageinuse -= p->storage; numberofobjects--;
+    StoreLink::storageinuse() -= p->storage; StoreLink::numberofobjects()--;
 	delete [] ((Real *) p);
-//	if(storageinuse <= 0)
-//	    cout << "Storage in use is now " << storageinuse << endl;
+//	if(StoreLink::storageinuse() <= 0)
+//	    cout << "Storage in use is now " << StoreLink::storageinuse() << endl;
 	}
     }
 
-inline StoreLink::StoreLink() : p(pnullrep)
+inline StoreLink::StoreLink() : p(StoreLink::pnullrep())
     { p->numref++; }
 
 inline Real * StoreLink::Store() const
@@ -147,24 +173,13 @@ inline void StoreLink::increasestorage(int s)
 inline int StoreLink::memory() const
     { return sizeof(Real)*(Storage()+offset); }
 
-inline int StoreLink::TotalStorage() { return storageinuse; }
+inline int StoreLink::TotalStorage() { return StoreLink::storageinuse(); }
 
-inline int StoreLink::NumObjects() { return numberofobjects; }
+inline int StoreLink::NumObjects() { return StoreLink::numberofobjects(); }
 
 inline StoreLink & StoreLink::operator = (const StoreLink & other)
     { return *this << other; } 		// private member function!
 
-// Static member definitions
-#ifdef THIS_IS_MAIN
-
-int StoreLink::storageinuse = 0;
-int StoreLink::numberofobjects = 0;
-// The following has one initial reference, so it never goes away.
-storerep StoreLink::nullrep;
-storerep * StoreLink::pnullrep = &StoreLink::nullrep;
-StoreReport doreport;
-
-#endif
 
 #endif
 

@@ -14,7 +14,7 @@ SparseRef::SparseRef(const MatrixRef& M)
 	for (j = 1; j <= ncols; j++)
 	    {			// Count up non-zero elements in row
 	    Real x = M(i,j);
-	    if (fabs(x) >= SparseVector::thresh)
+	    if (fabs(x) >= SparseVector::thresh())
 		where[++count] = j;
 	    }
 	SparseVector& row(Row(i));

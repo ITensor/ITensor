@@ -42,8 +42,8 @@ SparseVector::adjustsize(int minsize,int maxsize)
     if (maxsize < minsize)
 	maxsize = minsize;
 
-    int s = max(minsize, int (cursize * efactor));
-    s = max(minrsize, s);
+    int s = max(minsize, int (cursize * SparseVector::efactor()));
+    s = max(SparseVector::minrsize(), s);
     s = min(maxsize, s);
 
     if (Length() > 1 && !sorted)
@@ -320,7 +320,7 @@ void SparseMatrix::copy(const MatrixRef& M)
 	for (j = 1; j <= ncols; j++)
 	    {			// Count up non-zero elements in row
 	    Real x = M(i, j);
-	    if (fabs(x) >= SparseVector::thresh && i != j)
+	    if (fabs(x) >= SparseVector::thresh() && i != j)
 		where[++count] = j;
 	    }
 	row[i-1].ReDimension(count,count);
@@ -363,7 +363,7 @@ void SparseMatrix::AddElement(int i, int j, Real value)
 	}
 
     i--;
-    if (fabs(value) < SparseVector::thresh)
+    if (fabs(value) < SparseVector::thresh())
 	return;
     int newlen = row[i].Length() + 1;
     if(newlen > row[i].Storage())

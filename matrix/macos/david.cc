@@ -9,7 +9,7 @@
 #include <math.h>
 #include <malloc/malloc.h>
 
-extern void reportnew();
+//extern void reportnew();
 
 using std::cout;
 using std::cerr;
@@ -78,7 +78,7 @@ void David(    // Object containing big hamiltonian
     if(print(1)) 
 	cout << "In David, bytes used by Matrix classes: "
 		<< 8 * StoreLink::TotalStorage() << iendl;
-    reportnew();
+    //reportnew();
     int lastsstep = -100;
 
     int iter;
