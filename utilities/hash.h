@@ -1,3 +1,8 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
+
 // hash.h -- Steve's hash table class
 
 #ifndef _hash_h

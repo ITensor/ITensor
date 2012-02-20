@@ -1,3 +1,8 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
+
 // intarray2.h -- integer array with two indices, starting at offset.
 
 #ifndef _intarray2_h

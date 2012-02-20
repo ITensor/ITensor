@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
 #include "iqtsparse.h"
 #include <set>
 using namespace std;

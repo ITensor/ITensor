@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
 #ifndef ALGORITHM_H
 #define ALGORITHM_H
 #include "mpo.h"

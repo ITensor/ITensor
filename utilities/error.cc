@@ -1,3 +1,8 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
+
 // error.cc -- Print out an error message and abort for debugging
 
 #include "error.h"

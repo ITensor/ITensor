@@ -1,3 +1,8 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
+
 // test.cc -- Test the matrix package
 #define THIS_IS_MAIN
 

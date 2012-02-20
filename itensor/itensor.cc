@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
 #include "itensor.h"
 using namespace std;
 using boost::format;

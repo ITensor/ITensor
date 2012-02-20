@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
 #ifndef __PERMUTATION_H
 #define __PERMUTATION_H
 #include "types.h"

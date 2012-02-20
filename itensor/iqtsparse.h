@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
 #ifndef __ITENSOR_IQTSPARSE_H
 #define __ITENSOR_IQTSPARSE_H
 #include "itsparse.h"

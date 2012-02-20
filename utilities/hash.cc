@@ -1,3 +1,8 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
+
 // hash.cc -- Members for Steve's Hash and FirstNext classes
 
 #include "hash.h"

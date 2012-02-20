@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
 #ifndef BASE_DMRG_OPTS_H
 #define BASE_DMRG_OPTS_H
 #include "svdworker.h"

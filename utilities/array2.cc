@@ -1,3 +1,8 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
+
 // array2.cc -- Code for ARRAY2 class, an array of ELEMENTs with two indices
 
 //#include "array2.h" /* Use cat in make to make this file */

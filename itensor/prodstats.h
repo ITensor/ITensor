@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
 #ifndef __ITENSOR_PRODSTATS_H
 #define __ITENSOR_PRODSTATS_H
 

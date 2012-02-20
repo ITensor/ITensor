@@ -1,3 +1,8 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
+
 // int array2.cc -- Code for IntArray2 class, an array of ints with two indices
 
 #include "intarray2.h"

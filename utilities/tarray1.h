@@ -1,3 +1,8 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
+
 // tarray1.h -- template class for array with one index, starting at offset. 
 
 #ifndef _tarray1_h

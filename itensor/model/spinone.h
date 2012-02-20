@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
 #ifndef __ITENSOR_SPINONE_H
 #define __ITENSOR_SPINONE_H
 #include "../model.h"

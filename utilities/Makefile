@@ -11,9 +11,9 @@ include ../options.mk
 HEADERS=array2.h intarray2.h hash.h indent.h cputime.h tarray1.h input.h error.h minmax.h
 
 OBJECTS= intarray2.o error.o ran1.o\
-	indexx.o hash.o cputime.o tarray1.o input.o
+	hash.o cputime.o tarray1.o input.o
 
-SOURCES= array2.cc error.cc ran1.cc indexx.cc hash.cc\
+SOURCES= array2.cc error.cc ran1.cc hash.cc\
 	cputime.cc tarray1.cc testarray.cc intarray2.cc input.cc
 
 CCFLAGS= -I$(INCLUDEDIR) $(OPTIMIZATIONS)
@@ -40,7 +40,6 @@ libutilities-g.a: $(SOURCES) $(HEADERS)
 	$(CCCOM) $(CCGFLAGS) -c tarray1.cc
 	$(CCCOM) $(CCGFLAGS) -c error.cc
 	$(CCCOM) $(CCGFLAGS) -c ran1.cc
-	$(CCCOM) $(CCGFLAGS) -c indexx.cc
 	$(CCCOM) $(CCGFLAGS) -c hash.cc
 	$(CCCOM) $(CCGFLAGS) -c cputime.cc
 	$(CCCOM) $(CCGFLAGS) -c input.cc
@@ -52,7 +51,6 @@ libutilities-pg.a: $(SOURCES) $(HEADERS)
 	$(CCCOM) $(CCPGFLAGS) -c tarray1.cc
 	$(CCCOM) $(CCPGFLAGS) -c error.cc
 	$(CCCOM) $(CCPGFLAGS) -c ran1.cc
-	$(CCCOM) $(CCPGFLAGS) -c indexx.cc
 	$(CCCOM) $(CCPGFLAGS) -c hash.cc
 	$(CCCOM) $(CCPGFLAGS) -c cputime.cc
 	$(CCCOM) $(CCPGFLAGS) -c input.cc

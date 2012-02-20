@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.0.
+//    (See accompanying LICENSE file.)
+//
 #ifndef __IQINDEX_H
 #define __IQINDEX_H
 #include "index.h"
