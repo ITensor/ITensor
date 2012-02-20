@@ -66,7 +66,7 @@ template <class Tensor, class SparseT>
 void SVDWorker::
 csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R)
     { 
-    csvd<Tensor>(1,ProjectedOp<Tensor>(),AA,L,V,R); 
+    csvd<Tensor>(b,ProjectedOp<Tensor>(),AA,L,V,R); 
     }
 template
 void SVDWorker::
@@ -80,7 +80,7 @@ template <class Tensor>
 void SVDWorker::
 denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
     { 
-    denmatDecomp<Tensor>(1,ProjectedOp<Tensor>(),AA,A,B,dir); 
+    denmatDecomp<Tensor>(b,ProjectedOp<Tensor>(),AA,A,B,dir); 
     }
 template
 void SVDWorker::
@@ -95,7 +95,7 @@ template <class Tensor, class SparseT>
 void SVDWorker::
 svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V)
     { 
-    svd<Tensor>(1,ProjectedOp<Tensor>(),AA,U,D,V); 
+    svd<Tensor>(b,ProjectedOp<Tensor>(),AA,U,D,V); 
     }
 template
 void SVDWorker::
