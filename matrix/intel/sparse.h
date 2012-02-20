@@ -15,9 +15,25 @@ public:
     IntArray1 index;
     Vector data;
     int sorted;
-    static Real efactor;		// Factor for expanding rows 
-    static Real thresh;		// threshold for accepting elements 
-    static int minrsize;	// static default min. row size 
+
+    static Real& efactor()
+        {
+        //Factor for expanding rows
+        static Real efactor_ = default_efactor;
+        return efactor_;
+        }
+
+    static Real& thresh()
+        {
+        static Real thresh_ = default_thresh; // threshold for accepting elements 
+        return thresh_;
+        }
+
+    static int& minrsize()
+        {
+        static int minrsize_ = default_minrsize; // static default min. row size 
+        return minrsize_;
+        }
 
     SparseVector() {sorted = 1;}
 
@@ -82,28 +98,28 @@ public:
     friend void sparsesaxpy(Vector &V, Real alpha, const SparseVector & S);
 	// V += alpha * S
 
-    void read(istream & s);	// Read and write in binary to a stream 
+    void read(std::istream & s);	// Read and write in binary to a stream 
 
-    void write(ostream & s);	// read dims new storage, write does not 
+    void write(std::ostream & s);	// read dims new storage, write does not 
     // delete old storage 
 
     void SetMinRowSize(int s)	// Set it 
-	{ minrsize = s; }
+	{ SparseVector::minrsize() = s; }
 
     Real Threshold() const
-	{ return thresh; }
+	{ return SparseVector::thresh(); }
 
     void SetThresh(Real x)	// Set threshold 
-	{ thresh = x; }
+	{ SparseVector::thresh() = x; }
 
     void SetExFactor(Real f)	// Set the expansion factor for a row 
-	{ efactor = f; }
+	{ SparseVector::efactor() = f; }
 
     Real ExFactor() const	// get the expansion factor 
-	{ return efactor; }
+	{ return SparseVector::efactor(); }
 
     int MinRowSize() const	// Get the minimum row size 
-	{ return minrsize; }
+	{ return SparseVector::minrsize(); }
 
     int memory() const		// Return amount of memory used in bytes 
     	{ return data.memory() +
@@ -283,16 +299,16 @@ public:
 
     int memory() const;		// Return amount of memory used in bytes 
 
-    void PrintMemory(ostream &) const;	// Print a summary of memory usage 
+    void PrintMemory(std::ostream &) const;	// Print a summary of memory usage 
 
-    void read(istream & s);	// Read and write in binary to a stream 
-    void write(ostream & s);	// read dims new storage, write does not 
+    void read(std::istream & s);	// Read and write in binary to a stream 
+    void write(std::ostream & s);	// read dims new storage, write does not 
     // delete old storage 
 
     // Output a sparse matrix 
-    friend ostream & operator << (ostream &, const SparseMatrix &);
+    friend std::ostream & operator << (std::ostream &, const SparseMatrix &);
 
-    void PrintSymmetric(ostream &);// Print in an efficient way, assuming the 
+    void PrintSymmetric(std::ostream &);// Print in an efficient way, assuming the 
     // matrix is symmetric.  Prints lower half. 
 
     friend MatrixRef &
@@ -301,13 +317,18 @@ public:
     friend class MatrixRef;
     };
 
-#ifdef THIS_IS_MAIN
-ostream & operator << (ostream &s, const SparseVector &a) {return s; }
+inline std::ostream & operator << (std::ostream &s, const SparseVector &a) {return s; }
 
-int  SparseVector::minrsize = default_minrsize;
-Real SparseVector::efactor = default_efactor;
-Real SparseVector::thresh = default_thresh;
+#ifdef HEADER_DEFS
+
+ARRAY1CC_DEFS(SparseVector)
+
+#else //ifndef HEADER_DEFS
+
+#ifdef THIS_IS_MAIN
 ARRAY1CC_DEFS(SparseVector)
 #endif
+
+#endif //HEADER_DEFS
 
 #endif

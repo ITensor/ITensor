@@ -8,9 +8,8 @@
 #include "minmax.h"
 #include "storelink.h"
 #include "tarray1.h"
+#include <Accelerate/Accelerate.h>
 #include <cassert>
-#include <cstdlib>
-#include "error.h"
 
 inline void trade(int & i, int & j) { int k = i; i = j; j = k; }
 
@@ -453,16 +452,24 @@ public:
 	{ return VectorRef::operator=(other); }
     };
 
-ostream & operator << (ostream &s, const MatrixRef &a);
-ostream & operator << (ostream &s, const VectorRef &a);
-ostream & operator << (ostream &s, const MatrixMatrixRes &a);
-ostream & operator << (ostream &s, const MatrixVectorRes &a);
+std::ostream & operator << (std::ostream &s, const MatrixRef &a);
+std::ostream & operator << (std::ostream &s, const VectorRef &a);
+std::ostream & operator << (std::ostream &s, const MatrixMatrixRes &a);
+std::ostream & operator << (std::ostream &s, const MatrixVectorRes &a);
 
 #include "matrixref.ih"
+
+#ifdef HEADER_DEFS
+ARRAY1CC_DEFS(MatrixRef)
+ARRAY1CC_DEFS(VectorRef)
+
+#else //ifndef HEADER_DEFS
 
 #ifdef THIS_IS_MAIN
 ARRAY1CC_DEFS(MatrixRef)
 ARRAY1CC_DEFS(VectorRef)
 #endif
+
+#endif //HEADER_DEFS
 
 #endif

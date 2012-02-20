@@ -319,8 +319,16 @@ public:
 
 inline std::ostream & operator << (std::ostream &s, const SparseVector &a) {return s; }
 
+#ifdef HEADER_DEFS
+
+ARRAY1CC_DEFS(SparseVector)
+
+#else //ifndef HEADER_DEFS
+
 #ifdef THIS_IS_MAIN
 ARRAY1CC_DEFS(SparseVector)
 #endif
+
+#endif //HEADER_DEFS
 
 #endif

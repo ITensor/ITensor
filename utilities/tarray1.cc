@@ -153,7 +153,11 @@ void ArrayDo::EnLarge(int off,int limit) // Assume offset stays same
 	{
 	inuse++;
 	deleterep();
+#ifdef HEADER_DEFS
+	(*prep) = &Array1_base::Nullbase();
+#else
 	(*prep) = &Nullbase;
+#endif
 	(*prep)->numref++;
 	inuse--;
 	return;

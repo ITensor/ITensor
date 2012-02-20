@@ -181,11 +181,17 @@ std::ostream & operator << (std::ostream &, const Vector &);
 
 #include "matrix.ih"
 
-#ifdef THIS_IS_MAIN
-
+#ifdef HEADER_DEFS
 ARRAY1CC_DEFS(Matrix)
 ARRAY1CC_DEFS(Vector)
 
+#else //ifndef HEADER_DEFS
+
+#ifdef THIS_IS_MAIN
+ARRAY1CC_DEFS(Matrix)
+ARRAY1CC_DEFS(Vector)
 #endif
+
+#endif //HEADER_DEFS
 
 #endif

@@ -1,4 +1,5 @@
 #include "svd.h"
+using namespace std;
 
 //
 // Performs an accurate singular value decomposition
@@ -33,7 +34,7 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
         return;
         }
 
-    //Form density matrix rho
+    //Form 'density matrix' rho
     Matrix rho = A * A.t();
 
     //Diagonalize rho

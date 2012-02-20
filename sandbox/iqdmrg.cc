@@ -1,4 +1,3 @@
-#define THIS_IS_MAIN
 #include "core.h"
 #include "model/spinhalf.h"
 #include "model/spinone.h"

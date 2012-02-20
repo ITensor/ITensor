@@ -9,6 +9,10 @@
 #include <iostream>
 #include "indent.h"
 
+//---------------------------
+#define HEADER_DEFS
+//---------------------------
+
 //#define BOUNDS	        /* Define this if you want bounds checking */
 
 typedef void copyarrayfun( void *, const void *, int);
@@ -47,6 +51,13 @@ public:
     void init();
     void deletestore(dodeletefun * dodel);
     void checkindex(int i);
+#ifdef HEADER_DEFS
+    static Array1_base& Nullbase()
+        {
+        static Array1_base Nullbase_;
+        return Nullbase_;
+        }
+#endif
     };
 
 class ArrayDo
@@ -81,7 +92,9 @@ public:
 
 ArrayDo * makedo(Array1_base ** prep, FunPoint * funp);
 
+#ifndef HEADER_DEFS
 extern Array1_base Nullbase;
+#endif
 
 // *************************************************************
 
@@ -91,7 +104,11 @@ template<class T> class Array1
 
 public:
     inline ArrayDo * operator->() const
+#ifdef HEADER_DEFS
+	{ return makedo((Array1_base **)&rep,T::pfunpoint()); }
+#else
 	{ return makedo((Array1_base **)&rep,T::pfunpoint); }
+#endif
 
     inline Array1(int off,int limit = SPECIAL)	// Usual usage: Array1(0,lim-1)
 	{
@@ -142,11 +159,19 @@ public:
     inline void operator=(const T& val)
 	{
 	(*this)->OwnCopy();
+#ifdef HEADER_DEFS
+	T::pfunpoint()->copyvalue(rep->store,(void*)&val,rep->size);
+#else
 	T::pfunpoint->copyvalue(rep->store,(void*)&val,rep->size);
+#endif
 	}
 
     inline Array1()
+#ifdef HEADER_DEFS
+	{ rep = &Array1_base::Nullbase(); rep->numref++; }
+#else
 	{ rep = &Nullbase; rep->numref++; }
+#endif
 
     inline ~Array1()
 	{ 
@@ -156,6 +181,46 @@ public:
     inline friend std::ostream& operator<<(std::ostream& s, const Array1<T>& V)
 	{ return V->outputarray(s); }
     };
+
+
+#ifdef HEADER_DEFS
+
+#define ARRAY1H_DEFS(T) \
+static FunPoint* pfunpoint();
+
+#define ARRAY1CC_DEFS(T) \
+inline void T##copyarray( void * vA, const void * vB, int n)\
+    {\
+    T *A = (T *) vA;\
+    const T *B = (const T *) vB;\
+    for (int i = 0; i < n; i++)\
+	A[i] = B[i];\
+    } \
+inline void T##copyvalue( void * vA, const void * pvalue, int n)\
+    {\
+    T *A = (T *) vA;\
+    const T& value = *((const T*)pvalue);\
+    for (int i = 0; i < n; i++)\
+	A[i] = value;\
+    } \
+inline void * T##donew(int len)\
+    { return new T[len]; }\
+inline void T##dodelete(void * vA)\
+    { delete [] ((T *)vA); }\
+inline void T##outputarray( std::ostream& s, void * vA, int n, int offset)\
+    {\
+    T *A = (T *) vA;\
+    for (int i = 0; i < n; i++)\
+	s << i + offset << " " << A[i] << iendl;\
+    }\
+inline FunPoint* T::pfunpoint()\
+    {\
+    static FunPoint fp_(T##copyarray,T##copyvalue,T##donew,\
+                        T##dodelete,T##outputarray);\
+    return &fp_;\
+    }
+
+#else //HEADER_DEFS undefined
 
 #define ARRAY1H_DEFS(T) \
 static FunPoint * pfunpoint;
@@ -189,6 +254,8 @@ FunPoint T##funpoint(T##copyarray,T##copyvalue,T##donew,\
 		    T##dodelete,T##outputarray);\
 FunPoint * T::pfunpoint = &T##funpoint;
 
+#endif //HEADER_DEFS
+
 #define ARRAYTYPE(t,T) \
 class T\
     {\
@@ -202,10 +269,19 @@ public:\
     };\
 std::istream & operator >> (std::istream &s, T & x);
 
+#ifdef HEADER_DEFS
+
+#define ARRAYTYPECC(T) \
+inline std::istream & operator >> (std::istream &s, T & x)\
+    { return s >> x.a; }
+
+#else //HEADER_DEFS undefined
+
 #define ARRAYTYPECC(T) \
 std::istream & operator >> (std::istream &s, T & x)\
     { return s >> x.a; }
 
+#endif //HEADER_DEFS
 
 ARRAYTYPE(int,Int)
 
@@ -228,6 +304,16 @@ public:
     ARRAY1H_DEFS(IntArray1)
     };
 
+#ifdef HEADER_DEFS
+
+ARRAYTYPECC(Int)
+
+ARRAY1CC_DEFS(Int)
+
+ARRAY1CC_DEFS(IntArray1)
+
+#else //ifndef HEADER_DEFS
+
 #ifdef THIS_IS_MAIN
 
 ARRAYTYPECC(Int)
@@ -237,5 +323,7 @@ Array1_base Nullbase;
 
 ARRAY1CC_DEFS(IntArray1)
 #endif
+
+#endif //HEADER_DEFS
 
 #endif

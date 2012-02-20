@@ -24,11 +24,11 @@ public:
 	{ time = mytime(); }
     cpu_time sincemark();
 
-    static init_time init;
+    static init_time& init()
+        {
+        static init_time init_;
+        return init_;
+        }
     };
-
-#ifdef THIS_IS_MAIN
-init_time cpu_time::init;
-#endif
 
 #endif

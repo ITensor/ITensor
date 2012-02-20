@@ -9,12 +9,16 @@
 class Indent	// new-line and indent
     {
 private:
-    static int indentlev;
+    static int& indentlev()
+        {
+        static int indentlev_ = 0;
+        return indentlev_;
+        }
 public:
-    static int indentlevel() {return indentlev;}
-    static void indent() {indentlev++;}
+    static int indentlevel() {return indentlev();}
+    static void indent() {indentlev()++;}
     static void unindent() 
-	    {indentlev--; if(indentlev < 0)indentlev = 0;}
+	    {indentlev()--; if(indentlev() < 0)indentlev() = 0;}
     };
 
 // std::ostream io manipulator to do newline and indent
@@ -42,22 +46,21 @@ inline std::istream& nextline(std::istream &is)
 class PrintLevel	// what to print
     {
 private:
-    static int printlev;
+    static int& printlev()
+        {
+        static int printlev_ = 0;
+        return printlev_;
+        }
 public:
     static void setprint(int i)
-	{ printlev = i; }
+	{ printlev() = i; }
     static int print(int i)
-	{ return i <= printlev; }
+	{ return i <= printlev(); }
     static int printlevel()
-	{ return printlev; }
+	{ return printlev(); }
     };
 
 inline int print(int i) {return PrintLevel::print(i);}
 inline int printlevel() {return PrintLevel::printlevel();}
-
-#ifdef THIS_IS_MAIN
-int Indent::indentlev = 0;
-int PrintLevel::printlev = 0;
-#endif
 
 #endif
