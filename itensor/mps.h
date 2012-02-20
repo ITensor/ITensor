@@ -91,6 +91,8 @@ class MPSt //the lowercase t stands for "template"
     IndexT;
     typedef typename Tensor::IndexValT 
     IndexValT;
+    typedef typename Tensor::SparseT
+    SparseT;
 
     //Accessor Methods ------------------------------
 
@@ -234,7 +236,11 @@ class MPSt //the lowercase t stands for "template"
     //MPSt: orthogonalization methods -------------------------------------
 
     void 
-    doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false);
+    replaceBond(int b, const Tensor& AA, Direction dir, bool preserve_shape = false);
+
+    void
+    doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false)
+        { replaceBond(b,AA,dir,preserve_shape); }
 
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
@@ -348,32 +354,6 @@ class MPSt //the lowercase t stands for "template"
 
         if(do_signfix) Error("do_signfix not implemented.");
         }
-
-    template<class TensorSet>
-    Real bondDavidson(int b, const TensorSet& mpoh, const TensorSet& LH, 
-        const TensorSet& RH, 
-        int niter, int debuglevel, Direction dir, Real errgoal=1E-4)
-        {
-        if(b-1 > l_orth_lim_)
-            {
-            std::cerr << boost::format("b=%d, Lb=%d\n")%b%l_orth_lim_;
-            Error("b-1 > l_orth_lim_");
-            }
-        if(b+2 < r_orth_lim_)
-            {
-            std::cerr << boost::format("b+2=%d, Rb=%d\n")%(b+2)%r_orth_lim_;
-            Error("b+2 < r_orth_lim_");
-            }
-        Tensor phi = bondTensor(b);
-        Real En = doDavidson(phi,mpoh,LH,RH,niter,debuglevel,errgoal);
-        doSVD(b,phi,dir);
-        return En;
-        }
-
-    Real
-    bondDavidson(int b, const Eigensolver& solver, 
-                 const ProjectedOp<Tensor>& PH,
-                 Direction dir);
 
     template<class TensorSet, class OpTensorSet>
     void 

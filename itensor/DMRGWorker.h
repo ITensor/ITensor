@@ -123,8 +123,12 @@ runInternal(const MPOType& H, MPSType& psi)
                 }
 
             PH.position(b,psi);
+
+            Tensor phi = psi.bondTensor(b);
+
+            energy_ = solver.davidson(PH,phi);
             
-            energy_ = psi.bondDavidson(b,solver,PH,(ha==1?Fromleft:Fromright));
+            psi.replaceBond(b,phi,(ha==1?Fromleft:Fromright));
 
             if(!opts().quiet()) 
                 { 
@@ -186,10 +190,13 @@ runInternal(const MPOType& H, MPSType& psi)
                     boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") 
                     % sw % ha % b % (b+1);
                 }
-            
-            energy_ = psi.bondDavidson(b,H.bondTensor(b),PH[b],PH[b+1],
-                                       sweeps().niter(sw),debuglevel,
-                                       (ha==1?Fromleft:Fromright));
+
+            Tensor phi = psi.bondTensor(b);
+
+            energy_ = doDavidson(phi,H.bondTensor(b),PH[b],PH[b+1],
+                                 sweeps().niter(sw),debuglevel,1E-4);
+
+            psi.replaceBond(b,phi,(ha==1 ? Fromleft : Fromright));
             
             if(!opts().quiet()) 
                 { 

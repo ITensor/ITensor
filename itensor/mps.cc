@@ -327,7 +327,7 @@ MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
 
 template<class Tensor> void
 MPSt<Tensor>::
-doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape)
+replaceBond(int b, const Tensor& AA, Direction dir, bool preserve_shape)
     {
     if(preserve_shape)
         {
@@ -351,7 +351,14 @@ doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape)
         }
 
     svd_.denmatDecomp(b,AA,A[b],A[b+1],dir);
-             
+
+    /*
+    SparseT D;
+    svd_.svd(b,AA,A[b],D,A[b+1]);
+    if(dir == Fromleft) A[b+1] *= D;
+    else                A[b] *= D;
+    */
+
     if(dir == Fromleft)
         {
         l_orth_lim_ = b;
@@ -364,9 +371,9 @@ doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape)
         }
     }
 template void MPSt<ITensor>::
-doSVD(int b, const ITensor& AA, Direction dir, bool);
+replaceBond(int b, const ITensor& AA, Direction dir, bool);
 template void MPSt<IQTensor>::
-doSVD(int b, const IQTensor& AA, Direction dir, bool);
+replaceBond(int b, const IQTensor& AA, Direction dir, bool);
 
 template<class Tensor> void
 MPSt<Tensor>::
@@ -391,48 +398,6 @@ position(int b, bool preserve_shape);
 template void MPSt<IQTensor>::
 position(int b, bool preserve_shape);
 
-template<class Tensor> Real 
-MPSt<Tensor>::
-bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<Tensor>& PH,
-             Direction dir)
-        {
-        if(b-1 > l_orth_lim_)
-            {
-            std::cerr << boost::format("b=%d, Lb=%d\n")%b%l_orth_lim_;
-            Error("b-1 > l_orth_lim_");
-            }
-        if(b+2 < r_orth_lim_)
-            {
-            std::cerr << boost::format("b+2=%d, Rb=%d\n")%(b+2)%r_orth_lim_;
-            Error("b+2 < r_orth_lim_");
-            }
-
-        Tensor phi = bondTensor(b);
-        Real En = solver.davidson(PH,phi);
-
-        svd_.denmatDecomp(b,PH,phi,A[b],A[b+1],dir);
-
-        if(dir == Fromleft)
-            {
-            l_orth_lim_ = b;
-            if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
-            }
-        else //dir == Fromright
-            {
-            if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
-            r_orth_lim_ = b+1;
-            }
-
-        return En;
-        }
-template Real MPSt<ITensor>::
-bondDavidson(int b, const Eigensolver& solver, 
-             const ProjectedOp<ITensor>& PH,
-             Direction dir);
-template Real MPSt<IQTensor>::
-bondDavidson(int b, const Eigensolver& solver, 
-             const ProjectedOp<IQTensor>& PH,
-             Direction dir);
 
 /* getCenterMatrix:
  * 
