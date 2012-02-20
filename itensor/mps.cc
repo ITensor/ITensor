@@ -350,7 +350,7 @@ doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape)
         Error("b+2 < r_orth_lim_");
         }
 
-    svd_(b,AA,A[b],A[b+1],dir);
+    svd_.denmatDecomp(b,AA,A[b],A[b+1],dir);
              
     if(dir == Fromleft)
         {
@@ -410,7 +410,7 @@ bondDavidson(int b, const Eigensolver& solver, const ProjectedOp<Tensor>& PH,
         Tensor phi = bondTensor(b);
         Real En = solver.davidson(PH,phi);
 
-        svd_(b,PH,phi,A[b],A[b+1],dir);
+        svd_.denmatDecomp(b,PH,phi,A[b],A[b+1],dir);
 
         if(dir == Fromleft)
             {

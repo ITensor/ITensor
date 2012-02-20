@@ -80,7 +80,7 @@ class IQCombiner
     operator*(const IQTensor& t, const IQCombiner& c) { return c.operator*(t); }
 
     void 
-    product(const IQTensor& t, IQTensor& res) const;
+    product(IQTensor t, IQTensor& res) const;
 
     private:
 
@@ -424,7 +424,7 @@ operator<<(std::ostream & s, const IQCombiner & c)
 
 inline
 void IQCombiner::
-product(const IQTensor& t, IQTensor& res) const
+product(IQTensor t, IQTensor& res) const
     {
     init();
     std::vector<IQIndex> iqinds;

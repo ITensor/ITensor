@@ -258,8 +258,7 @@ class IQTSDat
 
     IQTSDat();
 
-    IQTSDat(std::istream& s) { read(s); }
-
+    IQTSDat(std::istream& s);
 
     //
     // Accessors

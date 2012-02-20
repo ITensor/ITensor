@@ -61,32 +61,50 @@ SVDWorker(int N_, Real cutoff, int minm, int maxm,
       noise_(0)
     { }
 
-template <class Tensor> 
+
+template <class Tensor, class SparseT> 
 void SVDWorker::
-operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
+csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R)
     { 
-    operator()<Tensor>(1,ProjectedOp<Tensor>(),AA,A,B,dir); 
+    csvd<Tensor>(1,ProjectedOp<Tensor>(),AA,L,V,R); 
     }
 template
 void SVDWorker::
-operator()(int b, const ITensor& AA, ITensor& A, ITensor& B, Direction dir);
+csvd(int b, const ITensor& AA, ITensor& L, ITSparse& V, ITensor& R);
 template
 void SVDWorker::
-operator()(int b, const IQTensor& AA, IQTensor& A, IQTensor& B, Direction dir);
+csvd(int b, const IQTensor& AA, IQTensor& L, IQTSparse& V, IQTensor& R);
 
 
 template <class Tensor> 
 void SVDWorker::
-operator()(int b, const Tensor& AA, Tensor& L, Tensor& V, Tensor& R)
+denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
     { 
-    operator()<Tensor>(1,ProjectedOp<Tensor>(),AA,L,V,R); 
+    denmatDecomp<Tensor>(1,ProjectedOp<Tensor>(),AA,A,B,dir); 
     }
 template
 void SVDWorker::
-operator()(int b, const ITensor& AA, ITensor& L, ITensor& V, ITensor& R);
+denmatDecomp(int b, const ITensor& AA, ITensor& A, ITensor& B, Direction dir);
 template
 void SVDWorker::
-operator()(int b, const IQTensor& AA, IQTensor& L, IQTensor& V, IQTensor& R);
+denmatDecomp(int b, const IQTensor& AA, IQTensor& A, IQTensor& B, Direction dir);
+
+
+
+template <class Tensor, class SparseT>
+void SVDWorker::
+svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V)
+    { 
+    svd<Tensor>(1,ProjectedOp<Tensor>(),AA,U,D,V); 
+    }
+template
+void SVDWorker::
+svd(int b, const ITensor& AA, ITensor& U, ITSparse& D, ITensor& V);
+template
+void SVDWorker::
+svd(int b, const IQTensor& AA, IQTensor& U, IQTSparse& D, IQTensor& V);
+
+
 
 void SVDWorker::
 svdRank2(const ITensor& A, ITensor& U, ITSparse& D, ITensor& V)
@@ -95,8 +113,9 @@ svdRank2(const ITensor& A, ITensor& U, ITSparse& D, ITensor& V)
         {
         Error("A.r() must be 2");
         }
-    Index ui = (U.hasindex(A.index(1)) ? A.index(1) : A.index(2)),
-          vi = (V.hasindex(A.index(2)) ? A.index(2) : A.index(1));
+
+    const Index &ui = (U.hasindex(A.index(1)) ? A.index(1) : A.index(2)),
+                &vi = (V.hasindex(A.index(2)) ? A.index(2) : A.index(1));
 
     Matrix M;
     A.toMatrix11NoScale(ui,vi,M);
@@ -158,14 +177,228 @@ svdRank2(const ITensor& A, ITensor& U, ITSparse& D, ITensor& V)
     D = ITSparse(l,r,DD);
     U = ITensor(ui,l,UU.Columns(1,m));
     V = ITensor(r,vi,VV.Rows(1,m));
-    }
 
-/*
+    } // SVDWorker::svdRank2
+
 void SVDWorker::
 svdRank2(const IQTensor& A, IQTensor& U, IQTSparse& D, IQTensor& V)
     {
+    if(A.r() != 2)
+        {
+        Error("A.r() must be 2");
+        }
+
+    const
+    IQIndex &uI = (U.hasindex(A.index(1)) ? A.index(1) : A.index(2)),
+            &vI = (U.hasindex(A.index(1)) ? A.index(2) : A.index(1));
+
+    const int Nblock = A.iten_size();
+    if(Nblock == 0)
+        throw ResultIsZero("A.iten_size() == 0");
+
+    vector<Matrix> Umatrix(Nblock),
+                   Vmatrix(Nblock);
+    vector<Vector> dvector(Nblock);
+
+    vector<Real> alleig;
+    alleig.reserve(min(uI.m(),vI.m()));
+
+    if(uI.m() == 0)
+        throw ResultIsZero("uI.m() == 0");
+    if(vI.m() == 0)
+        throw ResultIsZero("vI.m() == 0");
+
+    if(doRelCutoff_)
+        {
+        Real maxLogNum = -200;
+        Foreach(const ITensor& t, A.itensors())
+            maxLogNum = max(maxLogNum,t.scale().logNum());
+        refNorm_ = LogNumber(maxLogNum,1);
+        }
+
+    //1. SVD each ITensor within A.
+    //   Store results in mmatrix and mvector.
+    int itenind = 0;
+    for(IQTensor::const_iten_it it = A.const_iten_begin(); 
+        it != A.const_iten_end(); ++it)
+        {
+        const ITensor& t = *it;
+
+        t.scaleTo(refNorm_);
+
+        Matrix &UU = Umatrix.at(itenind);
+        Matrix &VV = Vmatrix.at(itenind);
+        Vector &d =  dvector.at(itenind);
+
+        const 
+        Index &ui = t.index(uI.hasindex(t.index(1)) ? 1 : 2),
+              &vi = t.index(uI.hasindex(t.index(1)) ? 2 : 1);
+
+        Matrix M(ui.m(),vi.m());
+        t.toMatrix11NoScale(ui,vi,M);
+
+        SVD(M,UU,d,VV);
+
+        //Store the squared singular values
+        //(denmat eigenvalues) in alleig
+        for(int j = 1; j <= d.Length(); ++j) 
+            alleig.push_back(sqr(d(j)));
+
+        ++itenind;
+        }
+
+    //2. Truncate eigenvalues
+
+    //Sort all eigenvalues from smallest to largest
+    //irrespective of quantum numbers
+    sort(alleig.begin(),alleig.end());
+
+    //Determine number of states to keep m
+    int m = (int)alleig.size();
+    Real svdtruncerr = 0;
+    Real docut = -1;
+    int mdisc = 0; 
+
+    if(absoluteCutoff_)
+        {
+        while(m > maxm_ || (alleig[mdisc] < cutoff_ && m > minm_)
+            && mdisc < (int)alleig.size())
+            {
+            if(alleig[mdisc] > 0)
+                svdtruncerr += alleig[mdisc];
+            else
+                alleig[mdisc] = 0;
+
+            ++mdisc;
+            --m;
+            }
+        docut = (mdisc > 0 ? (alleig[mdisc-1] + alleig[mdisc])*0.5 : -1) + 1E-40;
+        }
+    else
+	    {
+	    Real scale = doRelCutoff_ ? alleig.back() : 1.0;
+        while(m > maxm_ 
+            || (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
+            && mdisc < (int)alleig.size())
+            {
+            if(alleig[mdisc] > 0)
+                svdtruncerr += alleig[mdisc];
+            else
+                alleig[mdisc] = 0;
+
+            ++mdisc;
+            --m;
+            }
+        docut = (mdisc > 0 
+                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 
+                : -1) + 1E-40;
+        svdtruncerr = (alleig.back() == 0 ? 0 : svdtruncerr/scale);
+	    }
+
+    if(showeigs_)
+        {
+        cout << endl;
+        cout << boost::format("use_orig_m_ = %s")
+                %(use_orig_m_?"true":"false")<<endl;
+        cout << boost::format("Kept %d, discarded %d states in diag_denmat")
+                                % m % mdisc << endl;
+        cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
+        cout << boost::format("docut = %.2E")%docut << endl;
+        cout << boost::format("cutoff=%.2E, minm=%d, maxm=%d")
+                %cutoff_%minm_%maxm_ << endl;
+        cout << "doRelCutoff is " << (doRelCutoff_ ? "true" : "false") << endl;
+        cout << "absoluteCutoff is " << (absoluteCutoff_ ? "true" : "false") << endl;
+        cout << "refNorm is " << refNorm_ << endl;
+        int s = alleig.size();
+        const int max_show = 20;
+        int stop = s-min(s,max_show);
+        cout << "Eigs: ";
+        for(int j = s-1; j >= stop; --j)
+            {
+            cout << boost::format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
+                                % alleig[j];
+            cout << ((j != stop) ? ", " : "\n");
+            }
+        }
+
+    assert(m <= maxm_); 
+    assert(m < 20000);
+
+    //Truncate denmat eigenvalue vectors
+    //Also form new Link index with appropriate m's for each block
+    vector<inqn> Liq,Riq;
+    Liq.reserve(Nblock);
+    Riq.reserve(Nblock);
+
+    vector<ITensor> Ublock,
+                    Vblock;
+    Ublock.reserve(Nblock);
+    Vblock.reserve(Nblock);
+
+    vector<ITSparse> Dblock;
+    Dblock.reserve(Nblock);
+
+    itenind = 0;
+    for(IQTensor::const_iten_it it = A.const_iten_begin(); 
+        it != A.const_iten_end(); ++it)
+        {
+        const ITensor& t = *it;
+
+        const Matrix& UU = Umatrix.at(itenind);
+        const Matrix& VV = Vmatrix.at(itenind);
+        Vector& thisD = dvector.at(itenind);
+
+        int this_m = 1;
+        while(this_m <= thisD.Length() && sqr(thisD(this_m)) > docut) 
+            {
+            if(thisD(this_m) < 0) thisD(this_m) = 0;
+            ++this_m;
+            }
+        --this_m; //since the loop overshoots by 1
+
+        if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
+            { this_m = 1; m = 1; docut = 1; }
+
+        thisD.ReduceDimension(this_m);
+
+        if(this_m == 0) { ++itenind; continue; }
+
+        const 
+        Index &ui = t.index(uI.hasindex(t.index(1)) ? 1 : 2),
+              &vi = t.index(uI.hasindex(t.index(1)) ? 2 : 1);
+
+        Index l("l",this_m);
+        Liq.push_back(inqn(l,uI.qn(ui)));
+
+        Index r("r",this_m);
+        Riq.push_back(inqn(r,vI.qn(vi)));
+
+        Dblock.push_back(ITSparse(l,r,thisD));
+
+        Ublock.push_back(ITensor(ui,l,UU.Columns(1,this_m)));
+        Vblock.push_back(ITensor(r,vi,VV.Rows(1,this_m)));
+
+        ++itenind;
+        }
+
+    if(Liq.size() == 0)
+        throw ResultIsZero("Liq.size() == 0");
+
+    IQIndex L("L",Liq,Out), R("R",Riq,Out);
+
+    D = IQTSparse(L,R);
+    U = IQTensor(uI,L);
+    V = IQTensor(R,vI);
+
+    //Load blocks into D,U, and V
+    for(int j = 0; j < Nblock; ++j)
+        {
+        D += Dblock[j];
+        U += Ublock[j];
+        V += Vblock[j];
+        }
+
     }
-    */
 
 
 Real SVDWorker::

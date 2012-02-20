@@ -6,6 +6,7 @@
 
 class IQTDat;
 class IQCombiner;
+class IQTSparse;
 
 
 //
@@ -440,11 +441,17 @@ class IQTensor
     friend std::ostream& 
     operator<<(std::ostream & s, const IQTensor &t);
 
-    typedef IQIndex IndexT;
+    typedef IQIndex 
+    IndexT;
 
-    typedef IQIndexVal IndexValT;
+    typedef IQIndexVal 
+    IndexValT;
 
-    typedef IQCombiner CombinerT;
+    typedef IQCombiner 
+    CombinerT;
+
+    typedef IQTSparse
+    SparseT;
 
     static const IQIndex& ReImIndex()
         { return IQIndex::IndReIm(); }

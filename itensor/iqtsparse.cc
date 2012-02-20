@@ -15,6 +15,15 @@ IQTSDat()
     {
     }
 
+IQTSDat::
+IQTSDat(istream& s)
+    :
+    numref(0),
+    init(false)
+    {
+    read(s);
+    }
+
 void IQTSDat::
 insert_add(const ITSparse& s)
     {
@@ -69,6 +78,26 @@ uninit_rmap() const
 #endif
     rmap.clear();
     init = false;
+    }
+
+void IQTSDat::
+read(istream& s)
+    {
+    uninit_rmap();
+	size_t size;
+	s.read((char*) &size,sizeof(size));
+	its_.resize(size);
+    for(iterator it = its_.begin(); it != its_.end(); ++it)
+        { it->read(s); }
+    }
+
+void IQTSDat::
+write(ostream& s) const
+    {
+	size_t size = its_.size();
+	s.write((char*) &size,sizeof(size));
+    for(const_iterator it = its_.begin(); it != its_.end(); ++it)
+        { it->write(s); }
     }
 
 
@@ -235,6 +264,8 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     {
     if(!S.isDiag()) 
         Error("product only implemented for diagonal IQTSparse's");
+
+    Error("Not yet implemented.");
 
     } // void product(const IQTSparse& S, const ITensor& T, ITensor& res)
 

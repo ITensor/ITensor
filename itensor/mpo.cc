@@ -41,7 +41,7 @@ void nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut,
             res *= 0;
             return; 
         }
-        svd(i,clust, res.AAnc(i), nfork,Fromleft);
+        svd.denmatDecomp(i,clust, res.AAnc(i), nfork,Fromleft);
         IndexT mid = index_in_common(res.AA(i),nfork,Link);
         mid.conj();
         midsize[i] = mid.m();
@@ -108,7 +108,7 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
         nfork = IQTensor(x.RightLinkInd(i),K.RightLinkInd(i),oldmid);
         if(clust.iten_size() == 0)	// this product gives 0 !!
         { res *= 0; return; }
-        svd(i,clust, res.AAnc(i), nfork,Fromleft);
+        svd.denmatDecomp(i,clust, res.AAnc(i), nfork,Fromleft);
         IQIndex mid = index_in_common(res.AA(i),nfork,Link);
         assert(mid.dir() == In);
         mid.conj();

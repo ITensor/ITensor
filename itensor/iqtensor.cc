@@ -22,7 +22,8 @@ IQTDat(const IQTDat& other)
 IQTDat::
 IQTDat(istream& s) 
     : 
-    numref(0) 
+    numref(0),
+    rmap_init(false)
     { read(s); }
 
 void IQTDat::

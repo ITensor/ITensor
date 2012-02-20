@@ -617,6 +617,9 @@ class ITensor
     typedef Combiner 
     CombinerT;
 
+    typedef ITSparse
+    SparseT;
+
     static const Index& 
     ReImIndex() { return Index::IndReIm(); }
 

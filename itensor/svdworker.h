@@ -1,7 +1,7 @@
 #ifndef __ITENSOR_SVDWORKER_H
 #define __ITENSOR_SVDWORKER_H
 #include "iqcombiner.h"
-#include "itsparse.h"
+#include "iqtsparse.h"
 
 enum Direction { Fromright, Fromleft, Both, None };
 
@@ -33,7 +33,9 @@ class SVDWorker
     {
     public:
 
-    //Constructors ---------------
+    //
+    // Constructors
+    //
 
     SVDWorker();
 
@@ -44,49 +46,80 @@ class SVDWorker
 
     SVDWorker(std::istream& s) { read(s); }
 
-    //Canonical/Bond SVD (weights in V tensor) ---------------
+    //
+    // Site Canonical SVD 
+    // (weights in both L and R, inverse weights in V)
+    //
 
-    template <class Tensor> 
+    template <class Tensor,class SparseT> 
     void 
-    operator()(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R)
+    csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R)
         { 
-        operator()<Tensor>(1,AA,L,V,R); 
+        csvd<Tensor>(1,AA,L,V,R); 
         }
 
-    template <class Tensor> 
+    template <class Tensor, class SparseT> 
     void 
-    operator()(int b, const Tensor& AA, Tensor& L, Tensor& V, Tensor& R);
+    csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R);
 
-    //Object PH of type ProjectedOpT has to provide the deltaRho method
+    //Object PH of type LocalOpT has to provide the deltaRho method
     //to use the noise term feature (see projectedop.h)
-    template <class Tensor, class ProjectedOpT>
+    template <class Tensor, class SparseT, class LocalOpT>
     void 
-    operator()(int b, const ProjectedOpT& PH, 
-               const Tensor& AA, Tensor& L, Tensor& V, Tensor& R);
+    csvd(int b, const LocalOpT& PH, 
+          const Tensor& AA, Tensor& L, SparseT& V, Tensor& R);
 
 
-    //Site SVD -----------------------------------------------
-    //(weights in A or B tensor, for dir = Fromleft or Fromright, respectively)
+    //
+    // Density Matrix Decomposition
+    // (weights in B for dir == Fromleft, weights in A for dir == Fromright)
+    //
 
     template <class Tensor> 
     void 
-    operator()(const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
+    denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
         { 
-        operator()<Tensor>(1,AA,A,B,dir); 
+        denmatDecomp<Tensor>(1,AA,A,B,dir); 
         }
 
     template <class Tensor> 
     void
-    operator()(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
+    denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
 
-    //Object PH of type ProjectedOpT has to provide the deltaRho method
+    //Object PH of type LocalOpT has to provide the deltaRho method
     //to use the noise term feature (see projectedop.h)
-    template <class Tensor, class ProjectedOpT>
+    template <class Tensor, class LocalOpT>
     void
-    operator()(int b, const ProjectedOpT& PH, 
-               const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
+    denmatDecomp(int b, const LocalOpT& PH, 
+         const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
 
-    //Accessors ---------------
+    //
+    // Singular Value Decomposition
+    // (a.k.a. bond canonical SVD; weights in D)
+    //
+
+    template <class Tensor, class SparseT> 
+    void 
+    svd(const Tensor& AA, Tensor& U, SparseT& D, Tensor& V)
+        { 
+        svd<Tensor>(1,AA,U,D,V); 
+        }
+
+    template <class Tensor, class SparseT> 
+    void 
+    svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V);
+
+    //Object PH of type LocalOpT has to provide the deltaRho method
+    //to use the noise term feature (see projectedop.h)
+    template <class Tensor, class SparseT, class LocalOpT>
+    void 
+    svd(int b, const LocalOpT& PH, 
+        const Tensor& AA, Tensor& U, SparseT& D, Tensor& V);
+
+
+    //
+    // Accessor Methods
+    //
 
     int 
     NN() const { return N; }
@@ -166,6 +199,10 @@ class SVDWorker
     void
     noise(Real val) { noise_ = val; }
 
+    //
+    // Other Methods
+    //
+
     Real 
     diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U);
     Real 
@@ -194,8 +231,8 @@ class SVDWorker
     void 
     svdRank2(const ITensor& A, ITensor& U, ITSparse& D, ITensor& V);
 
-    //void 
-    //svdRank2(const IQTensor& A, IQTensor& U, IQTSparse& D, IQTensor& V);
+    void 
+    svdRank2(const IQTensor& A, IQTensor& U, IQTSparse& D, IQTensor& V);
 
 private:
 
@@ -219,6 +256,11 @@ private:
     IQTensor 
     pseudoInverse(const IQTensor& C, Real cutoff = 0);
 
+    /////////////////
+    //
+    // Data Members
+    //
+
     int N;
     std::vector<Real> truncerr_;
     Real cutoff_;
@@ -232,47 +274,57 @@ private:
     std::vector<Vector> eigsKept_;
     Real noise_;
 
+    //
+    /////////////////
+
     }; //class SVDWorker
 
-template<class Tensor, class ProjectedOpT>
+template<class Tensor, class SparseT, class LocalOpT>
 void SVDWorker::
-operator()(int b, const ProjectedOpT& PH, const Tensor& AA, 
-           Tensor& L, Tensor& V, Tensor& R)
+csvd(int b, const LocalOpT& PH, const Tensor& AA, 
+     Tensor& L, SparseT& V, Tensor& R)
     {
     typedef typename Tensor::IndexT 
     IndexT;
     typedef typename Tensor::CombinerT 
     CombinerT;
 
-    IndexT ll = V.index(1);
-
-    //Form the density matrix for the smaller
-    //of the two halves of the system
-    /*
-    int ldim = L.maxSize()/ll.m(),
-        rdim = R.maxSize()/ll.m();
-
-    Tensor& Act = (ldim < rdim ? L : R);
-    Tensor& Oth = (ldim < rdim ? R : L);
-    */
-    Tensor& Act = R;
-    Tensor& Oth = L;
-
-    //Form a combiner for the active indices
-    CombinerT comb;
-    for(int j = 1; j <= Act.r(); ++j) 
+    CombinerT Lcomb;
+    Lcomb.doCondense(true);
+    for(int j = 1; j <= L.r(); ++j) 
         { 
-        const IndexT& I = Act.index(j);
-        if(I == ll || I == Tensor::ReImIndex()) continue;
-        comb.addleft(I);
+        const IndexT& I = L.index(j);
+
+        if( V.hasindex(I) 
+         || R.hasindex(I) 
+         || I == Tensor::ReImIndex()) 
+            continue;
+
+        Lcomb.addleft(I);
         }
 
-    //Apply combiner
-    comb.doCondense(true);
+    CombinerT Rcomb;
+    Rcomb.doCondense(true);
+    for(int j = 1; j <= R.r(); ++j) 
+        { 
+        const IndexT& I = R.index(j);
+
+        if( V.hasindex(I) 
+         || L.hasindex(I) 
+         || I == Tensor::ReImIndex()) 
+            continue;
+
+        Rcomb.addleft(I);
+        }
+
+    /*
+
+    //Apply combiners
     comb.init(ll.rawname());
 
     Tensor AAc; 
-    comb.product(AA,AAc);
+    Lcomb.product(AA,AAc);
+    Rcomb.product(AAc,AAc);
 
     const IndexT& active = comb.right();
 
@@ -318,12 +370,13 @@ operator()(int b, const ProjectedOpT& PH, const Tensor& AA,
     comb.product(U,Act);
     Act.conj(C.index(1));
     Act /= C;
+    */
 
-    } //void SVDWorker::operator()
+    } //void SVDWorker::csvd
 
-template<class Tensor, class ProjectedOpT>
+template<class Tensor, class LocalOpT>
 void SVDWorker::
-operator()(int b, const ProjectedOpT& PH, const Tensor& AA, 
+denmatDecomp(int b, const LocalOpT& PH, const Tensor& AA, 
            Tensor& A, Tensor& B, Direction dir)
     {
     typedef typename Tensor::IndexT 
@@ -421,7 +474,19 @@ operator()(int b, const ProjectedOpT& PH, const Tensor& AA,
     comb.product(U,to_orth);
     newoc = conj(U) * AAc;
 
-    } //void SVDWorker::operator()
+    } //void SVDWorker::denmatDecomp
+
+template<class Tensor, class SparseT, class LocalOpT>
+void SVDWorker::
+svd(int b, const LocalOpT& PH, const Tensor& AA, 
+     Tensor& L, SparseT& V, Tensor& R)
+    {
+    typedef typename Tensor::IndexT 
+    IndexT;
+    typedef typename Tensor::CombinerT 
+    CombinerT;
+
+    } // void SVDWorker::svd
 
 
 #endif
