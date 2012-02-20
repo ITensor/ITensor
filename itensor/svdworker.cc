@@ -107,26 +107,28 @@ svd(int b, const IQTensor& AA, IQTensor& U, IQTSparse& D, IQTensor& V);
 
 
 void SVDWorker::
-svdRank2(const ITensor& A, ITensor& U, ITSparse& D, ITensor& V)
+svdRank2(const ITensor& A, const Index& ui, const Index& vi,
+         ITensor& U, ITSparse& D, ITensor& V, int b)
     {
     if(A.r() != 2)
         {
         Error("A.r() must be 2");
         }
 
-    const Index &ui = (U.hasindex(A.index(1)) ? A.index(1) : A.index(2)),
-                &vi = (V.hasindex(A.index(2)) ? A.index(2) : A.index(1));
+    //const Index &ui = (U.hasindex(A.index(1)) ? A.index(1) : A.index(2)),
+    //            &vi = (V.hasindex(A.index(2)) ? A.index(2) : A.index(1));
 
     Matrix M;
     A.toMatrix11NoScale(ui,vi,M);
 
     Matrix UU,VV;
-    Vector DD;
+    Vector& DD = eigsKept_.at(b);
     SVD(M,UU,DD,VV);
 
     //Truncate
     int m = DD.Length();
-    Real svdtruncerr = 0.0;
+    Real& svdtruncerr = truncerr_.at(b);
+    svdtruncerr = 0;
 
     //Zero out any negative weight
     for(int zerom = m; zerom > 0; --zerom)
@@ -178,19 +180,22 @@ svdRank2(const ITensor& A, ITensor& U, ITSparse& D, ITensor& V)
     U = ITensor(ui,l,UU.Columns(1,m));
     V = ITensor(r,vi,VV.Rows(1,m));
 
-    } // SVDWorker::svdRank2
+    Globals::lastd() = DD;
+
+    } // void SVDWorker::svdRank2
 
 void SVDWorker::
-svdRank2(const IQTensor& A, IQTensor& U, IQTSparse& D, IQTensor& V)
+svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
+         IQTensor& U, IQTSparse& D, IQTensor& V, int b)
     {
     if(A.r() != 2)
         {
         Error("A.r() must be 2");
         }
 
-    const
-    IQIndex &uI = (U.hasindex(A.index(1)) ? A.index(1) : A.index(2)),
-            &vI = (U.hasindex(A.index(1)) ? A.index(2) : A.index(1));
+    //const
+    //IQIndex &uI = (U.hasindex(A.index(1)) ? A.index(1) : A.index(2)),
+    //        &vI = (U.hasindex(A.index(1)) ? A.index(2) : A.index(1));
 
     const int Nblock = A.iten_size();
     if(Nblock == 0)
@@ -387,18 +392,28 @@ svdRank2(const IQTensor& A, IQTensor& U, IQTSparse& D, IQTensor& V)
     IQIndex L("L",Liq,Out), R("R",Riq,Out);
 
     D = IQTSparse(L,R);
-    U = IQTensor(uI,L);
-    V = IQTensor(R,vI);
+    U = IQTensor(uI,conj(L));
+    V = IQTensor(conj(R),vI);
 
     //Load blocks into D,U, and V
-    for(int j = 0; j < Nblock; ++j)
+    for(size_t j = 0; j < Dblock.size(); ++j)
         {
         D += Dblock[j];
         U += Ublock[j];
         V += Vblock[j];
         }
 
-    }
+    //Update truncerr_ and eigsKept_
+    truncerr_.at(b) = svdtruncerr;
+
+    Vector& DD = eigsKept_.at(b);
+    DD.ReDimension(L.m());
+    for(int i = 1; i <= L.m(); ++i) 
+        DD(i) = alleig.at(alleig.size()-i);
+
+    Globals::lastd() = DD;
+
+    } //void SVDWorker::svdRank2
 
 
 Real SVDWorker::

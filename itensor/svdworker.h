@@ -229,10 +229,12 @@ class SVDWorker
 
 
     void 
-    svdRank2(const ITensor& A, ITensor& U, ITSparse& D, ITensor& V);
+    svdRank2(const ITensor& A, const Index& ui, const Index& vi,
+             ITensor& U, ITSparse& D, ITensor& V, int b = 1);
 
     void 
-    svdRank2(const IQTensor& A, IQTensor& U, IQTSparse& D, IQTensor& V);
+    svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
+             IQTensor& U, IQTSparse& D, IQTensor& V, int b = 1);
 
 private:
 
@@ -277,6 +279,28 @@ private:
     //
     /////////////////
 
+    //Function object which applies the mapping
+    // f(x) = (x < cut ? 0 : 1/x);
+    class PseudoInverter
+        {
+        public:
+            PseudoInverter(Real cut = MIN_CUT)
+                :
+                cut_(cut)
+                { }
+
+            Real
+            operator()(Real val) const
+                {
+                if(fabs(val) < cut_)
+                    return 0;
+                else
+                    return 1./val;
+                }
+        private:
+            Real cut_;
+        };
+
     }; //class SVDWorker
 
 template<class Tensor, class SparseT, class LocalOpT>
@@ -289,55 +313,64 @@ csvd(int b, const LocalOpT& PH, const Tensor& AA,
     typedef typename Tensor::CombinerT 
     CombinerT;
 
-    CombinerT Lcomb;
-    Lcomb.doCondense(true);
-    for(int j = 1; j <= L.r(); ++j) 
-        { 
-        const IndexT& I = L.index(j);
+    Tensor UU,VV;
+    SparseT D;
+    svd(b,PH,AA,UU,D,VV);
 
-        if( V.hasindex(I) 
-         || R.hasindex(I) 
+    L = UU*D;
+    R = D*VV;
+
+    V = conj(D);
+
+    PseudoInverter inv;
+    V.mapElems(inv);
+
+    } //void SVDWorker::csvd
+
+template<class Tensor, class SparseT, class LocalOpT>
+void SVDWorker::
+svd(int b, const LocalOpT& PH, const Tensor& AA, 
+    Tensor& U, SparseT& D, Tensor& V)
+    {
+    typedef typename Tensor::IndexT 
+    IndexT;
+    typedef typename Tensor::CombinerT 
+    CombinerT;
+
+    CombinerT Ucomb;
+    Ucomb.doCondense(true);
+    for(int j = 1; j <= U.r(); ++j) 
+        { 
+        const IndexT& I = U.index(j);
+
+        if( D.hasindex(I) 
+         || V.hasindex(I) 
          || I == Tensor::ReImIndex()) 
             continue;
 
-        Lcomb.addleft(I);
+        Ucomb.addleft(I);
         }
 
-    CombinerT Rcomb;
-    Rcomb.doCondense(true);
-    for(int j = 1; j <= R.r(); ++j) 
+    CombinerT Vcomb;
+    Vcomb.doCondense(true);
+    for(int j = 1; j <= V.r(); ++j) 
         { 
-        const IndexT& I = R.index(j);
+        const IndexT& I = V.index(j);
 
-        if( V.hasindex(I) 
-         || L.hasindex(I) 
+        if( D.hasindex(I) 
+         || U.hasindex(I) 
          || I == Tensor::ReImIndex()) 
             continue;
 
-        Rcomb.addleft(I);
+        Vcomb.addleft(I);
         }
 
-    /*
-
-    //Apply combiners
-    comb.init(ll.rawname());
-
-    Tensor AAc; 
-    Lcomb.product(AA,AAc);
-    Rcomb.product(AAc,AAc);
-
-    const IndexT& active = comb.right();
-
-    Tensor AAcc = conj(AAc); 
-    AAcc.primeind(active); 
-    Tensor rho = AAc*AAcc; 
-
+    //Add in noise term
     if(noise_ > 0 && PH.isNotNull())
         {
-        //Direction dir = (ldim < rdim ? Fromleft : Fromright);
-        //rho += noise_*PH.deltaRho(rho,comb,dir);
-        rho += noise_*PH.deltaRho(rho,comb,Fromright);
         }
+
+    Tensor AAc = Ucomb * AA * Vcomb;
 
     const Real saved_cutoff = cutoff_; 
     const int saved_minm = minm_,
@@ -345,34 +378,25 @@ csvd(int b, const LocalOpT& PH, const Tensor& AA,
     if(use_orig_m_)
         {
         cutoff_ = -1;
-        minm_ = ll.m();
-        maxm_ = ll.m();
+        if(D.r() == 0)
+            {
+            Print(D);
+            Error("D.r() must be > 1 to use original m option");
+            }
+        minm_ = D.index(1).m();
+        maxm_ = D.index(1).m();
         }
 
-    Tensor C,U;
-    if(AAc.isComplex())
-        {
-        Error("Complex case not implemented");
-        }
-    else
-        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),ll,C,U);
+    svdRank2(AAc,Ucomb.right(),Vcomb.right(),U,D,V,b);
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 
     maxm_ = saved_maxm; 
 
-    Oth = conj(U) * AAc;
+    U = conj(Ucomb) * U;
+    V = V * conj(Vcomb);
 
-    V = pseudoInverse(C);
-    //V = pseudoInverse(C,0.01*sqrt(cutoff_));
-
-    comb.conj();
-    comb.product(U,Act);
-    Act.conj(C.index(1));
-    Act /= C;
-    */
-
-    } //void SVDWorker::csvd
+    } // void SVDWorker::svd
 
 template<class Tensor, class LocalOpT>
 void SVDWorker::
@@ -476,17 +500,6 @@ denmatDecomp(int b, const LocalOpT& PH, const Tensor& AA,
 
     } //void SVDWorker::denmatDecomp
 
-template<class Tensor, class SparseT, class LocalOpT>
-void SVDWorker::
-svd(int b, const LocalOpT& PH, const Tensor& AA, 
-     Tensor& L, SparseT& V, Tensor& R)
-    {
-    typedef typename Tensor::IndexT 
-    IndexT;
-    typedef typename Tensor::CombinerT 
-    CombinerT;
-
-    } // void SVDWorker::svd
 
 
 #endif
