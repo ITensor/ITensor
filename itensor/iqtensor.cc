@@ -534,10 +534,9 @@ noprime(PrimeType pt)
 	{
 	solo();
 
-    is_->noprime();
+    is_->noprime(pt);
 
 	p->uninit_rmap();
-	for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
     for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
         { it->noprime(pt); }
 	} 
@@ -550,7 +549,6 @@ noprimelink()
     is_->noprime(primeLink);
 
 	p->uninit_rmap();
-	for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
     for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
         { it->noprime(primeLink); }
 	}
@@ -1497,7 +1495,11 @@ operator ITensor() const
 void IQTensor::
 soloIndex()
 	{
-	assert(is_ != 0);
+	if(is_ == 0)
+        {
+        Error("IQTensor is null");
+        }
+
 	if(is_->count() != 1)
 	    {
 	    boost::intrusive_ptr<IQIndexSet> 
@@ -1509,7 +1511,11 @@ soloIndex()
 void IQTensor::
 soloDat()
     {
-	assert(p != 0);
+	if(p == 0)
+        {
+        Error("IQTensor is null");
+        }
+
 	if(p->count() != 1)
 	    {
 	    boost::intrusive_ptr<IQTDat> new_p(new IQTDat(*p));
