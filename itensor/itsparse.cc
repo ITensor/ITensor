@@ -525,7 +525,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
 ostream& 
 operator<<(ostream & s, const ITSparse& t)
     {
-    s << "log(scale)[incl in elems] = " << t.scale().logNum() 
+    s << "(S) log(scale)[incl in elems] = " << t.scale().logNum() 
       << ", r = " << t.r() << ": ";
 
     s << t.is_;
