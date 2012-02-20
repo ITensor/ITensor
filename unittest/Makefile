@@ -7,9 +7,21 @@ REPORT_LEVEL=confirm
 #REPORT_LEVEL=detailed
 
 HEADERS=test.h
-SOURCES=test.cc matrix_test.cc real_test.cc index_test.cc itensor_test.cc\
-itsparse_test.cc combiner_test.cc iqcombiner_test.cc iqtensor_test.cc mps_test.cc mpo_test.cc\
-eigensolver_test.cc regression_test.cc svdworker_test.cc
+SOURCES = test.cc
+SOURCES+= matrix_test.cc
+SOURCES+= real_test.cc
+SOURCES+= index_test.cc
+SOURCES+= itensor_test.cc
+SOURCES+= itsparse_test.cc
+SOURCES+= combiner_test.cc
+SOURCES+= iqcombiner_test.cc
+SOURCES+= iqtensor_test.cc
+SOURCES+= mps_test.cc
+SOURCES+= mpo_test.cc
+SOURCES+= eigensolver_test.cc
+SOURCES+= regression_test.cc
+SOURCES+= svdworker_test.cc
+SOURCES+= iqtsparse_test.cc
 
 LIBNAMES=matrix utilities itensor
 
@@ -70,29 +82,53 @@ mkdebugdir:
 clean:
 	rm -fr *.o .debug_objs test test-g
 
+LIBHEADERS=$(INCLUDEDIR)/matrix.h
+matrix_test.o: $(LIBHEADERS)
+.debug/matrix_test.o: $(LIBHEADERS)
+
 LIBHEADERS=$(INCLUDEDIR)/real.h
 real_test.o: $(LIBHEADERS)
 .debug/real_test.o: $(LIBHEADERS)
+
 LIBHEADERS+= $(INCLUDEDIR)/index.h
 index_test.o: $(LIBHEADERS)
 .debug_objs/index_test.o: $(LIBHEADERS)
+
 LIBHEADERS+= $(INCLUDEDIR)/itensor.h
 itensor_test.o: $(LIBHEADERS)
 .debug_objs/itensor_test.o: $(LIBHEADERS)
+
 LIBHEADERS+= $(INCLUDEDIR)/itsparse.h
 itsparse_test.o: $(LIBHEADERS)
 .debug_objs/itsparse_test.o: $(LIBHEADERS)
+
 LIBHEADERS+= $(INCLUDEDIR)/combiner.h
 combiner_test.o: $(LIBHEADERS)
 .debug_objs/combiner_test.o: $(LIBHEADERS)
+
 LIBHEADERS+= $(INCLUDEDIR)/iqcombiner.h
 iqcombiner_test.o: $(LIBHEADERS)
 .debug_objs/iqcombiner_test.o: $(LIBHEADERS)
+
+LIBHEADERS+= $(INCLUDEDIR)/iqtsparse.h
+iqtensor_test.o: $(LIBHEADERS)
+.debug_objs/iqtensor_test.o: $(LIBHEADERS)
+
+LIBHEADERS+= $(INCLUDEDIR)/iqtsparse.h
+iqtsparse_test.o: $(LIBHEADERS)
+.debug_objs/iqtsparse_test.o: $(LIBHEADERS)
+
 LIBHEADERS+= $(INCLUDEDIR)/mps.h
 mps_test.o: $(LIBHEADERS)
 .debug_objs/mps_test.o: $(LIBHEADERS)
+
 LIBHEADERS+= $(INCLUDEDIR)/mpo.h
 mpo_test.o: $(LIBHEADERS)
 .debug_objs/mpo_test.o: $(LIBHEADERS)
+
+LIBHEADERS+= $(INCLUDEDIR)/svdworker.h
+svdworker_test.o: $(LIBHEADERS)
+.debug_objs/svdworker_test.o: $(LIBHEADERS)
+
 eigensolver_test.o: $(INCLUDEDIR)/eigensolver.h
 .debug_objs/eigensolver_test.o: $(INCLUDEDIR)/eigensolver.h

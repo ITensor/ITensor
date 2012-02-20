@@ -1,9 +1,7 @@
 #ifndef __ITENSOR_SVDWORKER_H
 #define __ITENSOR_SVDWORKER_H
 #include "iqcombiner.h"
-
-template <class Tensor>
-class ProjectedOp;
+#include "itsparse.h"
 
 enum Direction { Fromright, Fromleft, Both, None };
 
@@ -191,6 +189,13 @@ class SVDWorker
     read(std::istream& s);
     void 
     write(std::ostream& s) const;
+
+
+    void 
+    svdRank2(const ITensor& A, ITensor& U, ITSparse& D, ITensor& V);
+
+    //void 
+    //svdRank2(const IQTensor& A, IQTensor& U, IQTSparse& D, IQTensor& V);
 
 private:
 

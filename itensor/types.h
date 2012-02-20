@@ -22,7 +22,7 @@ using namespace std::rel_ops;
 
 //#define NMAX 8
 static const int NMAX = 8;
-static const Real MIN_CUT = 1E-15;
+static const Real MIN_CUT = 1E-20;
 static const int MAX_M = 5000;
 
 //----------------------------------

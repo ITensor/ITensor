@@ -380,5 +380,42 @@ TEST(UseOrigM)
     CHECK(svd.truncerr() < 1E-12);
     }
 
+TEST(SvdRank2)
+    {
+    int n = 100, m = 50;
+
+    Matrix M(n,m);
+    Matrix dd(n,n); dd = 0.0;
+    for(int i = 1; i <= n; i++)
+        {
+        Real eig = pow(0.5,5*(i-1));
+        dd(i,i) = eig;
+        }
+    Matrix uu(n,n), vv(n,m);
+    uu.Randomize(); vv.Randomize();
+    Orthog(uu,n,2);
+    Orthog(vv,n,2);
+    M = uu * dd * vv;
+
+    //Matrix UU,VV;
+    //Vector DD;
+    //SVD(M,UU,DD,VV);
+    //Print(DD);
+
+    Index ui("ui",n), vi("vi",m);
+    ITensor T(ui,vi,M);
+    ITensor U(ui), V(vi);
+
+    SVDWorker svd;
+    svd.showeigs(true);
+
+    ITSparse D;
+    svd.svdRank2(T,U,D,V);
+    ITensor nT = U * D * V;
+
+    cerr << format("\n(T-nT).norm() = %.3E\n") % ((T-nT).norm()) << endl;
+
+    }
+
 
 BOOST_AUTO_TEST_SUITE_END()

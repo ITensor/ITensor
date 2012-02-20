@@ -88,6 +88,85 @@ template
 void SVDWorker::
 operator()(int b, const IQTensor& AA, IQTensor& L, IQTensor& V, IQTensor& R);
 
+void SVDWorker::
+svdRank2(const ITensor& A, ITensor& U, ITSparse& D, ITensor& V)
+    {
+    if(A.r() != 2)
+        {
+        Error("A.r() must be 2");
+        }
+    Index ui = (U.hasindex(A.index(1)) ? A.index(1) : A.index(2)),
+          vi = (V.hasindex(A.index(2)) ? A.index(2) : A.index(1));
+
+    Matrix M;
+    A.toMatrix11NoScale(ui,vi,M);
+
+    Matrix UU,VV;
+    Vector DD;
+    SVD(M,UU,DD,VV);
+
+    //Truncate
+    int m = DD.Length();
+    Real svdtruncerr = 0.0;
+
+    //Zero out any negative weight
+    for(int zerom = m; zerom > 0; --zerom)
+        {
+        if(DD(zerom) >= 0) break;
+        else              DD(zerom) = 0;
+        }
+
+    if(absoluteCutoff_)
+        {
+        while(m > maxm_ || (sqr(DD(m)) < cutoff_ && m > minm_))
+            {
+            svdtruncerr += sqr(DD(m--));
+            }
+        }
+    else
+        {
+        Real scale = doRelCutoff_ ? sqr(DD(1)) : 1.0;
+        while(m > maxm_ || (svdtruncerr+sqr(DD(m)) < cutoff_*scale && m > minm_))
+            {
+            svdtruncerr += sqr(DD(m--));
+            }
+        svdtruncerr = (DD(1) == 0 ? 0 : svdtruncerr/scale);
+        }
+
+    DD.ReduceDimension(m); 
+
+    if(showeigs_)
+        {
+        cout << endl;
+        cout << format("minm_ = %d, maxm_ = %d, cutoff_ = %.3E")
+                       %minm_%maxm_%cutoff_ << endl;
+        cout << format("use_orig_m_ = %s")%(use_orig_m_?"true":"false")<<endl;
+        cout << format("Kept %d states in diag_denmat\n")% m;
+        cout << format("svdtruncerr = %.3E\n")%svdtruncerr;
+
+        int stop = DD.Length();
+        cout << "Eigs: ";
+        for(int j = 1; j <= stop; ++j)
+            {
+            cout << boost::format(DD(j) > 1E-6 ? ("%.3f") : ("%.3E")) % sqr(DD(j));
+            cout << ((j != stop) ? ", " : "\n");
+            }
+        }
+    
+    Index l("l",m,Link),r("r",m,Link);
+
+    D = ITSparse(l,r,DD);
+    U = ITensor(ui,l,UU.Columns(1,m));
+    V = ITensor(r,vi,VV.Rows(1,m));
+    }
+
+/*
+void SVDWorker::
+svdRank2(const IQTensor& A, IQTensor& U, IQTSparse& D, IQTensor& V)
+    {
+    }
+    */
+
 
 Real SVDWorker::
 diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
