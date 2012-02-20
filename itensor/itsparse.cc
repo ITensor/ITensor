@@ -251,6 +251,14 @@ scaleTo(LogNumber newscale) const
 	}
 
 void ITSparse::
+print(std::string name,Printdat pdat) const 
+    { 
+    Globals::printdat() = (pdat==ShowData); 
+    std::cerr << "\n" << name << " =\n" << *this << "\n"; 
+    Globals::printdat() = false; 
+    }
+
+void ITSparse::
 read(std::istream& s)
     {
     readVec(s,diag_);

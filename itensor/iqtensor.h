@@ -453,6 +453,11 @@ class IQTensor
     typedef IQTSparse
     SparseT;
 
+    friend class IQTSparse;
+
+    friend void 
+    product(const IQTSparse& S, const IQTensor& T, IQTensor& res);
+
     static const IQIndex& ReImIndex()
         { return IQIndex::IndReIm(); }
 

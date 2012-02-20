@@ -116,36 +116,32 @@ class IQTSparse
     //
 
     IQIndex 
-    findtype(IndexType t) const { return is_->findtype(t); }
+    findtype(IndexType t) const;
 
     bool 
-    findtype(IndexType t, IQIndex& I) const { return is_->findtype(t,I); }
+    findtype(IndexType t, IQIndex& I) const;
 
     int 
-    findindex(const IQIndex& I) const { return is_->findindex(I); }
+    findindex(const IQIndex& I) const;
 
     bool 
-    has_common_index(const IQTSparse& other) const
-        { return is_->has_common_index(*other.is_); }
+    has_common_index(const IQTSparse& other) const;
     
     bool 
-    hasindex(const IQIndex& I) const { return is_->hasindex(I); }
+    hasindex(const IQIndex& I) const;
 
     bool 
     notin(const IQIndex& I) const { return !hasindex(I); }
-
-    void 
-    mapindex(const IQIndex& i1, const IQIndex& i2) { is_->mapindex(i1,i2); }
 
     //
     // Primelevel Methods 
     //
 
     void 
-    noprime(PrimeType p = primeBoth) { is_->noprime(p); }
+    noprime(PrimeType p = primeBoth);
 
     void 
-    doprime(PrimeType pt, int inc = 1) { is_->doprime(pt,inc); }
+    doprime(PrimeType pt, int inc = 1);
 
     void 
     primeall() { doprime(primeBoth,1); }
@@ -157,27 +153,27 @@ class IQTSparse
     primelink() { doprime(primeLink,1); }
 
     void 
-    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)
-        { is_->mapprime(plevold,plevnew,pt); }
+    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
 
     void 
     mapprimeind(const IQIndex& I, int plevold, int plevnew, 
-                PrimeType pt = primeBoth)
-        { is_->mapprimeind(I,plevold,plevnew,pt); }
+                PrimeType pt = primeBoth);
 
     void 
-    primeind(const IQIndex& I, int inc = 1)
-        { mapindex(I,primed(I,inc)); }
+    primeind(const IQIndex& I, int inc = 1);
 
     void 
-    primeind(const IQIndex& I, const IQIndex& J) { is_->primeind(I,J); }
-
-    void 
-    noprimeind(const IQIndex& I) { is_->noprimeind(I); }
+    noprimeind(const IQIndex& I);
 
     //
     // Other Methods
     //
+
+    template <typename Callable> void
+    mapElems(const Callable& f); 
+
+    void
+    conj();
 
     Real
     norm() const;
@@ -187,6 +183,17 @@ class IQTSparse
 
     void 
     scaleTo(const LogNumber& newscale) const;
+
+    void 
+    print(std::string name = "",Printdat pdat = HideData) const;
+
+    void 
+    printIndices(const std::string& name = "") const;
+
+    inline void 
+    printIndices(const boost::format& fname) const
+        { printIndices(fname.str()); }
+
 
     void
     read(std::istream& s);
@@ -266,13 +273,15 @@ class IQTSDat
 
     const_iterator
     begin() const { return its_.begin(); }
+
     iterator
-    begin() { return its_.begin(); }
+    begin() { uninit_rmap(); return its_.begin(); }
 
     const_iterator
     end() const { return its_.end(); }
+
     iterator
-    end() { return its_.end(); }
+    end() { uninit_rmap(); return its_.end(); }
 
     void
     insert_add(const ITSparse& s);
@@ -321,5 +330,17 @@ class IQTSDat
 
 void 
 product(const IQTSparse& S, const IQTensor& T, IQTensor& res);
+
+template <typename Callable> void IQTSparse::
+mapElems(const Callable& f)
+    {
+    soloDat();
+
+    Foreach(ITSparse& s, *(d_))
+        { 
+        s.mapElems(f);
+        }
+    }
+
 
 #endif

@@ -231,6 +231,9 @@ class ITSparse
     // Other Methods
     //
 
+    template <typename Callable> void
+    mapElems(const Callable& f);
+
     Real
     norm() const;
 
@@ -245,6 +248,20 @@ class ITSparse
 
     void
     write(std::ostream& s) const;
+
+    void
+    conj() { }
+
+    void 
+    print(std::string name = "",Printdat pdat = HideData) const;
+
+    void 
+    printIndices(const std::string& name = "") const
+        { print(name,HideData); }
+
+    void 
+    printIndices(const boost::format& fname) const
+        { printIndices(fname.str()); }
 
     friend std::ostream&
     operator<<(std::ostream & s, const ITSparse & t);
@@ -288,5 +305,13 @@ class ITSparse
 
 void 
 product(const ITSparse& S, const ITensor& T, ITensor& res);
+
+template <typename Callable> void ITSparse::
+mapElems(const Callable& f)
+    {
+    scaleTo(1);
+    for(int j = 1; j <= diag_.Length(); ++j)
+        diag_(j) = f(diag_(j));
+    }
 
 #endif
