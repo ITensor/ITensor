@@ -1,4 +1,3 @@
-#define THIS_IS_MAIN
 #include "test.h"
 #include "mps.h"
 #include "model/spinhalf.h"

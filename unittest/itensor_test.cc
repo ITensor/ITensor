@@ -1,4 +1,3 @@
-//#define THIS_IS_MAIN
 #include "test.h"
 #include "itensor.h"
 #include <boost/test/unit_test.hpp>
