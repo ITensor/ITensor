@@ -84,7 +84,6 @@ DMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts)
     { }
 
 
-#ifdef NEW_DAVIDSON
 
 template <class MPSType, class MPOType> inline
 Real DMRGWorker<MPSType,MPOType>::
@@ -130,9 +129,14 @@ runInternal(const MPOType& H, MPSType& psi)
 
             Tensor phi = psi.bondTensor(b);
 
+#ifdef NEW_DAVIDSON
             energy_ = solver.davidson(PH,phi);
+#else
+            energy_ = doDavidson(phi,PH.bondTensor(),PH.L(),PH.R(),
+                                 sweeps().niter(sw),debuglevel,1E-4);
+#endif
             
-            psi.replaceBond(b,phi,(ha==1?Fromleft:Fromright));
+            psi.replaceBond(b,phi,(ha==1?Fromleft:Fromright),PH);
 
             if(!opts().quiet()) 
                 { 
@@ -158,6 +162,7 @@ runInternal(const MPOType& H, MPSType& psi)
     return energy_;
     }
 
+/*
 #else //NEW_DAVIDSON undefined
 
 template <class MPSType, class MPOType> inline
@@ -229,6 +234,7 @@ runInternal(const MPOType& H, MPSType& psi)
     }
 
 #endif
+*/
 
 
 #endif // __ITENSOR_DMRG_WORKER_H

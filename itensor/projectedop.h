@@ -54,6 +54,9 @@ class ProjectedOp
         return *pR_; 
         }
 
+    const Tensor&
+    bondTensor() const { return mpoh_; }
+
     bool
     combineMPO() const { return combine_mpo_; }
     void
@@ -71,6 +74,12 @@ class ProjectedOp
     isNull() const { return Op_ == 0; }
     bool
     isNotNull() const { return Op_ != 0; }
+
+    static ProjectedOp& Null()
+        {
+        static ProjectedOp Null_;
+        return Null_;
+        }
 
     private:
 

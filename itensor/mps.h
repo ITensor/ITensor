@@ -242,6 +242,11 @@ class MPSt //the lowercase t stands for "template"
     void 
     replaceBond(int b, const Tensor& AA, Direction dir, bool preserve_shape = false);
 
+    template <class LocalOpT>
+    void 
+    replaceBond(int b, const Tensor& AA, Direction dir, 
+                const LocalOpT& PH, bool preserve_shape = false);
+
     void
     doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false)
         { replaceBond(b,AA,dir,preserve_shape); }
@@ -493,6 +498,63 @@ private:
 }; //class MPSt<Tensor>
 typedef MPSt<ITensor> MPS;
 typedef MPSt<IQTensor> IQMPS;
+
+//
+// MPSt
+// Template Methods
+//
+
+template <class Tensor>
+template <class LocalOpT>
+void MPSt<Tensor>::
+replaceBond(int b, const Tensor& AA, Direction dir, 
+            const LocalOpT& PH, bool preserve_shape)
+    {
+    if(preserve_shape)
+        {
+        //The idea of the preserve_shape flag is to 
+        //leave any external indices of the MPS on the
+        //tensors they originally belong to
+        Error("preserve_shape not currently implemented");
+        }
+
+    if(dir == Fromleft && b-1 > l_orth_lim_)
+        {
+        std::cerr << boost::format("b=%d, l_orth_lim_=%d\n")
+                %b%l_orth_lim_;
+        Error("b-1 > l_orth_lim_");
+        }
+    if(dir == Fromright && b+2 < r_orth_lim_)
+        {
+        std::cerr << boost::format("b=%d, r_orth_lim_=%d\n")
+                %b%r_orth_lim_;
+        Error("b+2 < r_orth_lim_");
+        }
+
+    svd_.denmatDecomp(b,AA,A[b],A[b+1],dir,PH);
+
+    /*
+    SparseT D;
+    svd_.svd(b,AA,A[b],D,A[b+1]);
+    if(dir == Fromleft) A[b+1] *= D;
+    else                A[b] *= D;
+    */
+
+    if(dir == Fromleft)
+        {
+        l_orth_lim_ = b;
+        if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
+        }
+    else //dir == Fromright
+        {
+        if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
+        r_orth_lim_ = b+1;
+        }
+    }
+
+//
+// Other Methods Related to MPSt
+//
 
 int 
 findCenter(const IQMPS& psi);

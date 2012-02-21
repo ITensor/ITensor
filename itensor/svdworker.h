@@ -9,25 +9,22 @@
 
 enum Direction { Fromright, Fromleft, Both, None };
 
-template<class Tensor, class IndexT>
-IndexT
-index_in_common(const Tensor& A, const Tensor& B, IndexType t)
+template<class TensorA, class TensorB>
+typename TensorA::IndexT
+index_in_common(const TensorA& A, const TensorB& B, IndexType t)
     {
+    typedef typename TensorA::IndexT
+    IndexT;
+
     for(int j = 1; j <= A.r(); ++j)
         {
         const IndexT& I = A.index(j);
         if(I.type() == t && B.hasindex(I)) { return I; }
         }
+
     return IndexT();
     }
 
-Index inline
-index_in_common(const ITensor& A, const ITensor& B, IndexType t)
-    { return index_in_common<ITensor,Index>(A,B,t); }
-
-IQIndex inline
-index_in_common(const IQTensor& A, const IQTensor& B, IndexType t)
-    { return index_in_common<IQTensor,IQIndex>(A,B,t); }
 
 //
 // SVDWorker
@@ -66,12 +63,12 @@ class SVDWorker
     void 
     csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R);
 
-    //Object PH of type LocalOpT has to provide the deltaRho method
+    //Object PH of type LocalOpT has to provide the deltaPhi method
     //to use the noise term feature (see projectedop.h)
     template <class Tensor, class SparseT, class LocalOpT>
     void 
-    csvd(int b, const LocalOpT& PH, 
-          const Tensor& AA, Tensor& L, SparseT& V, Tensor& R);
+    csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R, 
+         const LocalOpT& PH);
 
 
     //
@@ -94,8 +91,9 @@ class SVDWorker
     //to use the noise term feature (see projectedop.h)
     template <class Tensor, class LocalOpT>
     void
-    denmatDecomp(int b, const LocalOpT& PH, 
-         const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
+    denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
+                 const LocalOpT& PH);
+
 
     //
     // Singular Value Decomposition
@@ -113,12 +111,12 @@ class SVDWorker
     void 
     svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V);
 
-    //Object PH of type LocalOpT has to provide the deltaRho method
+    //Object PH of type LocalOpT has to provide the deltaPhi method
     //to use the noise term feature (see projectedop.h)
     template <class Tensor, class SparseT, class LocalOpT>
     void 
-    svd(int b, const LocalOpT& PH, 
-        const Tensor& AA, Tensor& U, SparseT& D, Tensor& V);
+    svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V, 
+        const LocalOpT& PH);
 
 
     //
@@ -309,8 +307,8 @@ private:
 
 template<class Tensor, class SparseT, class LocalOpT>
 void SVDWorker::
-csvd(int b, const LocalOpT& PH, const Tensor& AA, 
-     Tensor& L, SparseT& V, Tensor& R)
+csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R, 
+     const LocalOpT& PH)
     {
     typedef typename Tensor::IndexT 
     IndexT;
@@ -319,7 +317,7 @@ csvd(int b, const LocalOpT& PH, const Tensor& AA,
 
     Tensor UU(L),VV(R);
     SparseT D(V);
-    svd(b,PH,AA,UU,D,VV);
+    svd(b,AA,UU,D,VV,PH);
 
     L = UU*D;
     R = D*VV;
@@ -333,8 +331,8 @@ csvd(int b, const LocalOpT& PH, const Tensor& AA,
 
 template<class Tensor, class SparseT, class LocalOpT>
 void SVDWorker::
-svd(int b, const LocalOpT& PH, const Tensor& AA, 
-    Tensor& U, SparseT& D, Tensor& V)
+svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V, 
+    const LocalOpT& PH)
     {
     typedef typename Tensor::IndexT 
     IndexT;
@@ -404,8 +402,8 @@ svd(int b, const LocalOpT& PH, const Tensor& AA,
 
 template<class Tensor, class LocalOpT>
 void SVDWorker::
-denmatDecomp(int b, const LocalOpT& PH, const Tensor& AA, 
-           Tensor& A, Tensor& B, Direction dir)
+denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
+             const LocalOpT& PH)
     {
     typedef typename Tensor::IndexT 
     IndexT;
