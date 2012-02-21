@@ -231,6 +231,26 @@ class ITSparse
     void 
     noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
 
+    friend inline ITSparse
+    primed(ITSparse S, int inc = 1)
+        { S.doprime(primeBoth,inc); return S; }
+
+    friend inline ITSparse
+    primesite(ITSparse S, int inc = 1)
+        { S.doprime(primeSite,inc); return S; }
+
+    friend inline ITSparse
+    primelink(ITSparse S, int inc = 1)
+        { S.doprime(primeLink,inc); return S; }
+
+    friend inline ITSparse
+    primeind(ITSparse S, const Index& I, int inc = 1)
+        { S.primeind(I,inc); return S; }
+
+    friend inline ITSparse
+    deprimed(ITSparse S)
+        { S.noprime(); return S; }
+
     //
     // Other Methods
     //

@@ -169,6 +169,26 @@ class IQTSparse
     void 
     noprimeind(const IQIndex& I);
 
+    friend inline IQTSparse
+    primed(IQTSparse S, int inc = 1)
+        { S.doprime(primeBoth,inc); return S; }
+
+    friend inline IQTSparse
+    primesite(IQTSparse S, int inc = 1)
+        { S.doprime(primeSite,inc); return S; }
+
+    friend inline IQTSparse
+    primelink(IQTSparse S, int inc = 1)
+        { S.doprime(primeLink,inc); return S; }
+
+    friend inline IQTSparse
+    primeind(IQTSparse S, const IQIndex& I, int inc = 1)
+        { S.primeind(I,inc); return S; }
+
+    friend inline IQTSparse
+    deprimed(IQTSparse S)
+        { S.noprime(); return S; }
+
     //
     // Other Methods
     //
