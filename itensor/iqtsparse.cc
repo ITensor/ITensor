@@ -21,6 +21,15 @@ IQTSDat()
     }
 
 IQTSDat::
+IQTSDat(const IQTSDat& other)
+    :
+    numref(0),
+    init(false),
+    its_(other.its_)
+    {
+    }
+
+IQTSDat::
 IQTSDat(istream& s)
     :
     numref(0),
@@ -84,6 +93,13 @@ uninit_rmap() const
 #endif
     rmap.clear();
     init = false;
+    }
+
+void IQTSDat::
+scaleTo(const LogNumber& newscale)
+    {
+    Foreach(ITSparse& s, its_)
+        s.scaleTo(newscale);
     }
 
 void IQTSDat::
@@ -348,19 +364,13 @@ void IQTSparse::
 scaleOutNorm() const
 	{
     Real nrm = norm();
-    Foreach(ITSparse& s, (*d_))
-        {
-        s.scaleTo(nrm);
-        }
+    d_->scaleTo(nrm);
 	}
 
 void IQTSparse::
 scaleTo(const LogNumber& newscale) const
 	{
-    Foreach(ITSparse& s, (*d_))
-        {
-        s.scaleTo(newscale);
-        }
+    d_->scaleTo(newscale);
 	}
 
 void IQTSparse::

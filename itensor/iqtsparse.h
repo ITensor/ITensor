@@ -269,6 +269,8 @@ class IQTSDat
 
     IQTSDat();
 
+    IQTSDat(const IQTSDat& other);
+
     IQTSDat(std::istream& s);
 
     //
@@ -296,6 +298,9 @@ class IQTSDat
     //
     // Other Methods
     //
+
+    void
+    scaleTo(const LogNumber& newscale);
 
     void
     read(std::istream& s);
