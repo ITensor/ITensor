@@ -317,8 +317,8 @@ csvd(int b, const LocalOpT& PH, const Tensor& AA,
     typedef typename Tensor::CombinerT 
     CombinerT;
 
-    Tensor UU,VV;
-    SparseT D;
+    Tensor UU(L),VV(R);
+    SparseT D(V);
     svd(b,PH,AA,UU,D,VV);
 
     L = UU*D;

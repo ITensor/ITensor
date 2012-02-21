@@ -158,8 +158,7 @@ runInternal(const MPOType& H, MPSType& psi)
     return energy_;
     }
 
-
-#else
+#else //NEW_DAVIDSON undefined
 
 template <class MPSType, class MPOType> inline
 Real DMRGWorker<MPSType,MPOType>::
