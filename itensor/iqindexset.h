@@ -123,7 +123,7 @@ class IQIndexSet
 
     void 
     primeind(const IQIndex& I, int inc = 1)
-        { mapindex(I,primed(I,inc)); }
+        { indIncPrime(I,inc); }
 
     void 
     primeind(const IQIndex& I, const IQIndex& J);

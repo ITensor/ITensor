@@ -578,12 +578,18 @@ template <class MPSType>
 void 
 psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)  // <psi | phi>
     {
+    typedef typename MPSType::TensorT
+    Tensor;
+
     const int N = psi.NN();
     if(N != phi.NN()) Error("psiphi: mismatched N");
 
-    typename MPSType::TensorT L = phi.AA(1) * conj(primeind(psi.AA(1),psi.LinkInd(1))); 
+    Tensor L = phi.AA(1) * conj(primeind(psi.AA(1),psi.LinkInd(1))); 
+
     for(int i = 2; i < psi.NN(); ++i) 
-        { L = L * phi.AA(i) * conj(primelink(psi.AA(i))); }
+        { 
+        L = L * phi.AA(i) * conj(primelink(psi.AA(i))); 
+        }
     L = L * phi.AA(N);
 
     Dot(primeind(psi.AA(N),psi.LinkInd(N-1)),L,re,im);
