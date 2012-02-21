@@ -489,12 +489,30 @@ class IQTensor
     void 
     solo();
 
+    //Workaround to ensure
+    //that p is treated as const
+    //by the compiler
+    const IQTDat&
+    dat() const { return *p; }
 
     }; //class IQTensor
 
 class IQTDat
     {
     public:
+
+    typedef std::list<ITensor>
+    StorageT;
+
+    typedef StorageT::const_iterator
+    const_iterator;
+
+    typedef StorageT::iterator
+    iterator;
+
+    //
+    // Constructors
+    //
 
     IQTDat();
 
@@ -504,20 +522,36 @@ class IQTDat
     explicit 
     IQTDat(std::istream& s);
 
-    void 
-    read(std::istream& s);
+    //
+    // Accessors
+    //
 
-    void 
-    write(std::ostream& s) const;
+    const_iterator
+    begin() const { return itensor.begin(); }
 
-    void 
-    init_rmap() const;
+    iterator
+    begin() { uninit_rmap(); return itensor.begin(); }
 
-    void 
-    uninit_rmap() const;
+    const_iterator
+    end() const { return itensor.end(); }
 
-    bool 
-    has_itensor(const ApproxReal& r) const;
+    iterator
+    end() { uninit_rmap(); return itensor.end(); }
+
+    const ITensor&
+    get(const ApproxReal& r) const { return *rmap[r]; }
+
+    ITensor&
+    get(const ApproxReal& r) { return *rmap[r]; }
+
+    int
+    size() const { return itensor.size(); }
+
+    bool
+    empty() const { return itensor.empty(); }
+
+    void
+    clear();
 
     void 
     insert(const ApproxReal& r, const ITensor& t);
@@ -537,46 +571,75 @@ class IQTDat
     void 
     clean(Real min_norm);
 
+    bool 
+    has_itensor(const ApproxReal& r) const;
+
+    void
+    swap(StorageT& new_itensor);
+
+    //
+    // Other Methods
+    //
+
+    void
+    scaleTo(const LogNumber& newscale);
+
+    void 
+    read(std::istream& s);
+
+    void 
+    write(std::ostream& s) const;
+
     inline void* operator 
     new(size_t size) 
         throw(std::bad_alloc)
-        { return allocator.alloc(); }
+        { return allocator().alloc(); }
 
     inline void operator 
     delete(void* p) 
         throw()
-        { return allocator.dealloc(p); }
+        { return allocator().dealloc(p); }
 
-    typedef std::list<ITensor>::iterator 
-    iten_it;
-
-    typedef std::list<ITensor>::const_iterator 
-    const_iten_it;
-
-    public:
-
-    mutable std::list<ITensor> 
-    itensor; // This is mutable to allow reordering
-
-    mutable std::map<ApproxReal,iten_it>
-    rmap; //mutable so that const IQTensor methods can use rmap
 
     ENABLE_INTRUSIVE_PTR(IQTDat)
 
     private:
 
-    ~IQTDat() { } //must be dynamically allocated
+    //////////////
+    //
+    // Data Members
+    //
 
-    void operator=(const IQTDat&);
+    mutable std::list<ITensor> 
+    itensor;
 
-    static DatAllocator<IQTDat> 
-    allocator;
+    mutable std::map<ApproxReal,iterator>
+    rmap; //mutable so that const IQTensor methods can use rmap
 
     mutable unsigned int 
     numref;
 
     mutable bool 
     rmap_init;
+
+    //
+    //////////////
+
+    void 
+    init_rmap() const;
+
+    void 
+    uninit_rmap() const;
+
+    //Must be dynamically allocated
+    ~IQTDat() { }
+    void operator=(const IQTDat&);
+
+    static DatAllocator<IQTDat>& allocator()
+        {
+        static DatAllocator<IQTDat> allocator_;
+        return allocator_;
+        };
 
     }; //class IQTDat
 
@@ -585,8 +648,8 @@ void IQTensor::
 mapElems(const Callable& f)
     {
     solo();
-	for(iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
-        i->mapElems(f);
+    Foreach(ITensor& t, *p)
+        t.mapElems(f);
     }
 
 Real 

@@ -6,8 +6,6 @@
 #include <set>
 using namespace std;
 
-DatAllocator<IQTDat> IQTDat::allocator;
-
 IQTDat::
 IQTDat() 
     : 
@@ -37,8 +35,8 @@ read(istream& s)
 	size_t size;
 	s.read((char*) &size,sizeof(size));
 	itensor.resize(size);
-    for(iten_it it = itensor.begin(); it != itensor.end(); ++it)
-        { it->read(s); }
+    Foreach(ITensor& t, itensor)
+        { t.read(s); }
 	}
 
 void IQTDat::
@@ -46,25 +44,31 @@ write(ostream& s) const
 	{
 	size_t size = itensor.size();
 	s.write((char*) &size,sizeof(size));
-    for(const_iten_it it = itensor.begin(); it != itensor.end(); ++it)
-        { it->write(s); }
+    Foreach(const ITensor& t, itensor)
+        { t.write(s); }
 	}
 
 void IQTDat::
 init_rmap() const
 	{
 	if(rmap_init) return;
-	for(iten_it it = itensor.begin(); 
-        it != itensor.end(); 
-        ++it)
+
+    for(iterator it = itensor.begin(); it != itensor.end(); ++it)
 	    rmap[ApproxReal(it->uniqueReal())] = it;
+
 	rmap_init = true;
 	}
 
 void IQTDat::
 uninit_rmap() const 
 	{ 
-	assert(numref <= 1); 
+#ifdef DEBUG
+    if(numref > 1)
+        {
+        Print(numref);
+        Error("uninit_rmap called on shared IQTDat");
+        }
+#endif
 	rmap.clear();
 	rmap_init = false; 
 	}
@@ -77,9 +81,30 @@ has_itensor(const ApproxReal& r) const
 	}
 
 void IQTDat::
+clear()
+    {
+#ifdef DEBUG
+    if(numref > 1)
+        {
+        Print(numref);
+        Error("clear called on shared IQTDat");
+        }
+#endif
+    uninit_rmap();
+    itensor.clear();
+    }
+
+void IQTDat::
 insert(const ApproxReal& r, const ITensor& t)
     {
     init_rmap();
+#ifdef DEBUG
+    if(numref > 1)
+        {
+        Print(numref);
+        Error("insert called on shared IQTDat");
+        }
+#endif
     if(rmap.count(r) == 1)
         {
         Print((*rmap[r])); 
@@ -104,6 +129,13 @@ void IQTDat::
 insert_add(const ApproxReal& r, const ITensor& t)
     {
     init_rmap();
+#ifdef DEBUG
+    if(numref > 1)
+        {
+        Print(numref);
+        Error("insert_add called on shared IQTDat");
+        }
+#endif
     if(rmap.count(r) == 1)
         {
         *rmap[r] += t;
@@ -127,6 +159,13 @@ void IQTDat::
 insert_assign(const ITensor& t)
     {
     init_rmap();
+#ifdef DEBUG
+    if(numref > 1)
+        {
+        Print(numref);
+        Error("insert_assign called on shared IQTDat");
+        }
+#endif
     ApproxReal r(t.uniqueReal());
     if(rmap.count(r) == 1)
         {
@@ -143,13 +182,41 @@ insert_assign(const ITensor& t)
 void IQTDat::
 clean(Real min_norm)
     {
-    list<ITensor> nitensor;
-    for(const_iten_it it = itensor.begin(); it != itensor.end(); ++it)
+#ifdef DEBUG
+    if(numref > 1)
         {
-        if(it->norm() >= min_norm)
-            nitensor.push_back(*it);
+        Print(numref);
+        Error("clean called on shared IQTDat");
         }
-    itensor.swap(nitensor);
+#endif
+    list<ITensor> nitensor;
+    Foreach(const ITensor& t, itensor)
+        {
+        if(t.norm() >= min_norm)
+            nitensor.push_back(t);
+        }
+    swap(nitensor);
+    }
+
+void IQTDat::
+swap(StorageT& new_itensor)
+    {
+#ifdef DEBUG
+    if(numref > 1)
+        {
+        Print(numref);
+        Error("clean called on shared IQTDat");
+        }
+#endif
+    uninit_rmap();
+    itensor.swap(new_itensor);
+    }
+
+void IQTDat::
+scaleTo(const LogNumber& newscale)
+    {
+    Foreach(ITensor& t, itensor)
+        t.scaleTo(newscale);
     }
 
 //
@@ -163,22 +230,28 @@ const IQIndex& IQTensor::
 index(int j) const { return is_->index(j); }
 
 int IQTensor::
-iten_size() const { return p->itensor.size(); }
+iten_size() const { return dat().size(); }
 
 bool IQTensor::
-iten_empty() const { return p->itensor.empty(); }
+iten_empty() const { return dat().empty(); }
 
 //----------------------------------------------------
 //IQTensor: iterators 
 IQTensor::const_iten_it IQTensor::
-const_iten_begin() const { return p->itensor.begin(); }
+const_iten_begin() const 
+    { 
+    return dat().begin();
+    }
 
 IQTensor::const_iten_it IQTensor::
-const_iten_end() const { return p->itensor.end(); }
+const_iten_end() const 
+    { 
+    return dat().end();
+    }
 
 std::pair<IQTensor::const_iten_it,IQTensor::const_iten_it> IQTensor::
 itensors() const 
-    { return std::make_pair(p->itensor.begin(),p->itensor.end()); }
+    { return std::make_pair(dat().begin(),dat().end()); }
 
 IQIndexSet::index_it IQTensor::
 const_iqind_begin() const { return is_->index_.begin(); }
@@ -368,23 +441,25 @@ write(std::ostream& s) const
 	s.write((char*) &null_,sizeof(null_));
 	if(null_) return;
     is_->write(s);
-	p->write(s);
+	dat().write(s);
 	}
 
 IQTensor& IQTensor::
 operator*=(Real fac) 
     { 
     soloDat();
+
     if(fac == 0) 
         { 
-        p->itensor.clear(); 
-        p->uninit_rmap(); 
+        p->clear(); 
         return *this; 
         }
-    for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
+
+    Foreach(ITensor& t, *p)
         {
-        (*it) *= fac;
+        t *= fac;
         }
+
     return *this; 
     }
 
@@ -427,7 +502,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
         Error("Wrong number of IQIndexVals provided");
     ApproxReal r(ur);
 
-    if(!p->has_itensor(r))
+    if(!dat().has_itensor(r))
         {
         std::vector<Index> indices; 
         indices.reserve(nn);
@@ -440,14 +515,15 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
         ITensor t(indices);
         p->insert_add(r,t);
         }
-    return (p->rmap[r])->operator()(iv1.blockIndexVal(),
-                                    iv2.blockIndexVal(),
-                                    iv3.blockIndexVal(),
-                                    iv4.blockIndexVal(),
-                                    iv5.blockIndexVal(),
-                                    iv6.blockIndexVal(),
-                                    iv7.blockIndexVal(),
-                                    iv8.blockIndexVal());
+
+    return (p->get(r)).operator()(iv1.blockIndexVal(),
+                                  iv2.blockIndexVal(),
+                                  iv3.blockIndexVal(),
+                                  iv4.blockIndexVal(),
+                                  iv5.blockIndexVal(),
+                                  iv6.blockIndexVal(),
+                                  iv7.blockIndexVal(),
+                                  iv8.blockIndexVal());
 	}
 
 QN IQTensor::
@@ -455,12 +531,12 @@ div() const
 	{
 	QN div_;
 	assert(p != 0);
-	if(p->itensor.empty())
+	if(dat().empty())
 	    {   
 	    this->printIndices("this");
 	    Error("IQTensor has no blocks");
 	    }
-	const ITensor& t = p->itensor.front();
+	const ITensor& t = *(dat().begin());
 	for(int j = 1; j <= t.r(); ++j)
 	    div_ += qn(t.index(j))*dir(t.index(j));
 	return div_;
@@ -470,14 +546,13 @@ void IQTensor::
 checkDiv(QN expected) const
 	{
 	assert(p != 0);
-	if(p->itensor.empty())
+	if(dat().empty())
 	    {   
 	    this->printIndices("this");
 	    Error("IQTensor has no blocks");
 	    }
-    for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
+    Foreach(const ITensor& t, dat())
 	    {
-        const ITensor& t = *it;
 	    QN div_;
 	    for(int j = 1; j <= t.r(); ++j)
 		div_ += qn(t.index(j))*dir(t.index(j));
@@ -522,15 +597,16 @@ ind_inc_prime(const IQIndex& i,int inc)
     is_->indIncPrime(i,inc);
 
     soloDat();
-	p->uninit_rmap();
 
-	for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-	    for(int ii = 1; ii <= jj->r(); ++ii)
-		if(i.hasindex_noprime(jj->index(ii)))
+    Foreach(ITensor& t, *p)
+        {
+	    for(int ii = 1; ii <= t.r(); ++ii)
+		if(i.hasindex_noprime(t.index(ii)))
 		    {
-		    int p = jj->index(ii).primeLevel();
-		    jj->mapprimeind(jj->index(ii),p,p+inc);
+		    int p = t.index(ii).primeLevel();
+		    t.mapprimeind(t.index(ii),p,p+inc);
 		    }
+        }
 	}
 
 void IQTensor::
@@ -540,9 +616,8 @@ noprime(PrimeType pt)
 
     is_->noprime(pt);
 
-	p->uninit_rmap();
-    for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
-        { it->noprime(pt); }
+    Foreach(ITensor& t, *p)
+        { t.noprime(pt); }
 	} 
 
 void IQTensor::
@@ -552,9 +627,8 @@ noprimelink()
 
     is_->noprime(primeLink);
 
-	p->uninit_rmap();
-    for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
-        { it->noprime(primeLink); }
+    Foreach(ITensor& t, *p)
+        { t.noprime(primeLink); }
 	}
 
 void IQTensor::
@@ -564,9 +638,8 @@ doprime(PrimeType pt, int inc)
 
     is_->doprime(pt,inc);
 
-	p->uninit_rmap();
-	for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-	    jj->doprime(pt,inc);
+    Foreach(ITensor& t, *p)
+	    t.doprime(pt,inc);
 	}
 
 void IQTensor::
@@ -576,9 +649,8 @@ mapprime(int plevold, int plevnew, PrimeType pt)
 
     is_->mapprime(plevold,plevnew,pt);
 
-    p->uninit_rmap();
-	for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-	    jj->mapprime(plevold,plevnew,pt);
+    Foreach(ITensor& t, *p)
+	    t.mapprime(plevold,plevnew,pt);
 	}
 
 void IQTensor::
@@ -588,13 +660,12 @@ primeind(const IQIndex& I)
 
     is_->primeind(I);
 
-	p->uninit_rmap();
-    for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
+    Foreach(ITensor& t, *p)
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
-		if(it->hasindex(x->index)) 
-		    it->primeind(x->index);
+		if(t.hasindex(x->index)) 
+		    t.primeind(x->index);
         }
 	}
 
@@ -605,13 +676,12 @@ noprimeind(const IQIndex& I)
 
     is_->noprimeind(I);
 
-	p->uninit_rmap();
-    for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
+    Foreach(ITensor& t, *p)
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
-        if(it->hasindex(x->index)) 
-            it->noprimeind(x->index);
+        if(t.hasindex(x->index)) 
+            t.noprimeind(x->index);
         }
 	}
 
@@ -630,7 +700,7 @@ find_iqind(const Index& ii) const
 bool IQTensor::
 uses_ind(const Index& ii) const
     {
-    Foreach(const ITensor& t, p->itensor)
+    Foreach(const ITensor& t, dat())
         {
         if(t.hasindex(ii)) 
             return true;
@@ -703,8 +773,8 @@ Real IQTensor::
 norm() const
     {
     Real res = 0;
-    for(const_iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
-        { res += sqr(it->norm()); }
+    Foreach(const ITensor& t, dat())
+        { res += sqr(t.norm()); }
     return sqrt(res);
     }
 
@@ -712,8 +782,8 @@ Real IQTensor::
 sumels() const
     {
     Real res = 0;
-    for(const_iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
-        { res += it->sumels(); }
+    Foreach(const ITensor& t, dat())
+        { res += t.sumels(); }
     return res;
     }
 
@@ -721,15 +791,15 @@ void IQTensor::
 scaleOutNorm() const
     {
     Real f = norm();
-    for(const_iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
-        it->scaleTo(f);
+    Foreach(const ITensor& t, dat())
+        t.scaleTo(f);
     }
 
 void IQTensor::
 scaleTo(LogNumber newscale) const
     {
-    for(const_iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
-        it->scaleTo(newscale);
+    Foreach(const ITensor& t, dat())
+        t.scaleTo(newscale);
     }
 
 void IQTensor::
@@ -745,9 +815,8 @@ addindex1(const IQIndex& I)
 	if(I.m() != 1) 
 	    Error("IQTensor::operator*=(IQIndex): IQIndex must have m == 1.");    
 	solo(); 
-	p->uninit_rmap();
-    for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
-        { it->addindex1(I.index(1)); }
+    Foreach(ITensor& t, *p)
+        { t.addindex1(I.index(1)); }
 	is_->addindex(I);
 	}
 
@@ -797,14 +866,14 @@ tieIndices(const boost::array<IQIndex,NMAX+1>& indices, int niqind,
         for(int n = 1; n <= niqind; ++n)
             totie[n] = indices[n].index(i);
 
-        for(const_iten_it it=p->itensor.begin(); it != p->itensor.end(); ++it)
+        Foreach(const ITensor& t, dat())
             {
-            if(!it->hasAllIndex(totie,niqind)) continue;
-            np->itensor.push_back(*it);
-            np->itensor.back().tieIndices(totie,niqind,tied.index(i));
+            if(!t.hasAllIndex(totie,niqind)) continue;
+            ITensor nt(t);
+            nt.tieIndices(totie,niqind,tied.index(i));
+            np->insert_add(nt);
             }
         }
-    np->uninit_rmap();
     p.swap(np);
     is_.swap(nis_);
     }
@@ -867,10 +936,10 @@ trace(const boost::array<IQIndex,NMAX+1>& indices, int niqind)
         for(int n = 1; n <= niqind; ++n)
             totrace[n] = indices[n].index(i);
 
-        for(const_iten_it it=p->itensor.begin(); it != p->itensor.end(); ++it)
+        Foreach(const ITensor& t, dat())
             {
-            if(!it->hasAllIndex(totrace,niqind)) continue;
-            ITensor tt(*it);
+            if(!t.hasAllIndex(totrace,niqind)) continue;
+            ITensor tt(t);
             tt.trace(totrace,niqind);
             np->insert_add(tt);
             }
@@ -896,8 +965,8 @@ vecSize() const
 	{
     if(this->isNull()) return 0;
 	int s = 0;
-	for(const_iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
-	    s += jj->vecSize();
+    Foreach(const ITensor& t, (dat()))
+	    s += t.vecSize();
 	return s;
 	}
 
@@ -931,10 +1000,10 @@ assignFromVec(VectorRef v)
 	if(vecSize() != v.Length())
 	    Error("bad size");
 	int off = 1;
-	for(iten_it jj = p->itensor.begin(); jj != p->itensor.end(); ++jj)
+    Foreach(ITensor& t, *p)
 	    {
-	    int d = jj->vecSize();
-	    jj->assignFromVec(v.SubVector(off,off+d-1));
+	    int d = t.vecSize();
+	    t.assignFromVec(v.SubVector(off,off+d-1));
 	    off += d;
 	    }
 	}
@@ -943,8 +1012,8 @@ void IQTensor::
 Randomize() 
 	{ 
 	soloDat(); 
-    for(iten_it it = p->itensor.begin(); it != p->itensor.end(); ++it)
-        { it->Randomize(); }
+    Foreach(ITensor& t, *p)
+        { t.Randomize(); }
 	}
 
 void IQTensor::
@@ -982,7 +1051,7 @@ assignFrom(const IQTensor& other)
         }
 
     soloDat();
-    Foreach(const ITensor& t, other.p->itensor)
+    Foreach(const ITensor& t, *other.p)
 	    {
         p->insert_assign(t);
 	    }
@@ -1039,7 +1108,7 @@ operator<<(std::ostream & s, const IQTensor& T)
     for(int k = 1; k <= T.r(); ++k)
         { s << "  " << T.index(k) << std::endl; }
     s << "ITensors:\n";
-    Foreach(const ITensor& t, T.p->itensor)
+    Foreach(const ITensor& t, *T.p)
         { s << "  " << t << std::endl; }
     s << "-------------------" << "\n\n";
     return s;
@@ -1062,9 +1131,9 @@ SplitReIm(IQTensor& re, IQTensor& im) const
     re = IQTensor(newreinds);
     im = re;
     ITensor a,b;
-    for(const_iten_it i = p->itensor.begin(); i != p->itensor.end(); ++i)
+    Foreach(const ITensor& t, dat())
         {
-        i->SplitReIm(a,b);
+        t.SplitReIm(a,b);
         re.insert(a);
         im.insert(b);
         }
@@ -1160,8 +1229,7 @@ operator*=(const IQTensor& other)
     set<ApproxReal> keys;
 
     list<ITensor> old_itensor; 
-    p->uninit_rmap();
-    p->itensor.swap(old_itensor);
+    p->swap(old_itensor);
 
     //com_this maps the uniqueReal of a set of Index's to be contracted over together
     //to those ITensors in *this.itensor having all Index's in that set
@@ -1293,8 +1361,7 @@ operator/=(const IQTensor& other)
     soloDat();
 
     list<ITensor> old_itensor; 
-    p->uninit_rmap();
-    p->itensor.swap(old_itensor);
+    p->swap(old_itensor);
 
     set<ApproxReal> keys;
 
@@ -1390,7 +1457,7 @@ GetSingComplex(Real& re, Real& im) const
         { re = 0.0; }
     else
         {
-        const ITensor& t = tre.p->itensor.front();
+        const ITensor& t = *(tre.dat().begin());
         if(t.vecSize() != 1) 
             {
             cout << "tre is\n" << tre << endl;
@@ -1402,7 +1469,7 @@ GetSingComplex(Real& re, Real& im) const
         { im = 0.0; }
     else
         {
-        const ITensor& t = tim.p->itensor.front();
+        const ITensor& t = *(tim.dat().begin());
         if(t.vecSize() != 1) Error("bad tim dat size");
         im = t.val0();
         }
@@ -1439,9 +1506,8 @@ operator+=(const IQTensor& other)
         return (This += other * IQTensor::Complex_1());
 
     soloDat(); 
-    //p->uninit_rmap();
 
-    Foreach(const ITensor& t, other.p->itensor)
+    Foreach(const ITensor& t, *other.p)
         { 
         p->insert_add(t);
         }
@@ -1466,18 +1532,16 @@ operator ITensor() const
     ITensor res(indices);
 
     //Loop over ITensors (blocks) within this IQTensor
-    for(const_iten_it it = p->itensor.begin();
-        it != p->itensor.end();
-        ++it)
+    Foreach(const ITensor& t, dat())
         {
-        ITensor exp(*it);
+        ITensor exp(t);
         //Loop over Index's of the k'th ITensor
-        for(int j = 1; j <= it->r(); ++j)
+        for(int j = 1; j <= t.r(); ++j)
             {
             //Want to transform 'small' into the 
             //Index version of the IQIndex that contains
             //it, with the appropriate offset
-            const Index& small = it->index(j);
+            const Index& small = t.index(j);
             //Find the IQIndex that contains 'small'
             const IQIndex* big = 0;
             int offset = -1;

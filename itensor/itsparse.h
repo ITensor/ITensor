@@ -256,6 +256,12 @@ class ITSparse
     void
     conj() { }
 
+    bool
+    isNull() const { return (scale_ == LogNumber(0) && diag_.Length() == 0); }
+
+    bool
+    isNotNull() const { return (scale_ != LogNumber(0) || diag_.Length() != 0); }
+
     void 
     print(std::string name = "",Printdat pdat = HideData) const;
 

@@ -269,8 +269,10 @@ class IQTSDat
 
     IQTSDat();
 
+    explicit
     IQTSDat(const IQTSDat& other);
 
+    explicit
     IQTSDat(std::istream& s);
 
     //

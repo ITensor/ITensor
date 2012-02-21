@@ -517,8 +517,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     set<ApproxReal> keys;
 
     list<ITensor> old_itensor; 
-    res.p->uninit_rmap();
-    res.p->itensor.swap(old_itensor);
+    res.p->swap(old_itensor);
 
     multimap<ApproxReal,IQTSDat::const_iterator> com_S;
     for(IQTSDat::const_iterator tt = S.d_->begin(); tt != S.d_->end(); ++tt)
