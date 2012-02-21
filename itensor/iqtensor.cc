@@ -451,7 +451,7 @@ operator*=(Real fac)
 
     if(fac == 0) 
         { 
-        p->clear(); 
+        ncdat().clear(); 
         return *this; 
         }
 
@@ -469,7 +469,7 @@ insert(const ITensor& t)
     if(!t.scale().isRealZero())
         {
         soloDat();
-        p->insert(t);
+        ncdat().insert(t);
         }
 	}
 
@@ -479,7 +479,7 @@ operator+=(const ITensor& t)
     if(!t.scale().isRealZero())
         {
         soloDat();
-        p->insert_add(t);
+        ncdat().insert_add(t);
         }
     return *this;
     }
@@ -513,10 +513,10 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
             indices.push_back(iv[j].index());
             }
         ITensor t(indices);
-        p->insert_add(r,t);
+        ncdat().insert_add(r,t);
         }
 
-    return (p->get(r)).operator()(iv1.blockIndexVal(),
+    return (ncdat().get(r)).operator()(iv1.blockIndexVal(),
                                   iv2.blockIndexVal(),
                                   iv3.blockIndexVal(),
                                   iv4.blockIndexVal(),
@@ -806,7 +806,7 @@ void IQTensor::
 clean(Real min_norm)
     { 
     soloDat(); 
-    p->clean(min_norm); 
+    ncdat().clean(min_norm); 
     }
 
 void IQTensor::
@@ -1051,9 +1051,9 @@ assignFrom(const IQTensor& other)
         }
 
     soloDat();
-    Foreach(const ITensor& t, *other.p)
+    Foreach(const ITensor& t, other.dat())
 	    {
-        p->insert_assign(t);
+        ncdat().insert_assign(t);
 	    }
 	}
 
@@ -1229,7 +1229,7 @@ operator*=(const IQTensor& other)
     set<ApproxReal> keys;
 
     list<ITensor> old_itensor; 
-    p->swap(old_itensor);
+    ncdat().swap(old_itensor);
 
     //com_this maps the uniqueReal of a set of Index's to be contracted over together
     //to those ITensors in *this.itensor having all Index's in that set
@@ -1278,7 +1278,7 @@ operator*=(const IQTensor& other)
             //Multiply the ITensors and add into res
             tt = *(ll->second); tt *= *(rr->second);
             if(!tt.scale().isRealZero())
-                p->insert_add(tt);
+                ncdat().insert_add(tt);
             }
         }
 
@@ -1361,7 +1361,7 @@ operator/=(const IQTensor& other)
     soloDat();
 
     list<ITensor> old_itensor; 
-    p->swap(old_itensor);
+    ncdat().swap(old_itensor);
 
     set<ApproxReal> keys;
 
@@ -1414,7 +1414,7 @@ operator/=(const IQTensor& other)
             //Multiply the ITensors and add into res
             tt = *(ll->second); tt /= *(rr->second);
             if(!tt.scale().isRealZero())
-                p->insert_add(tt);
+                ncdat().insert_add(tt);
             }
         }
 
@@ -1507,9 +1507,9 @@ operator+=(const IQTensor& other)
 
     soloDat(); 
 
-    Foreach(const ITensor& t, *other.p)
+    Foreach(const ITensor& t, other.dat())
         { 
-        p->insert_add(t);
+        ncdat().insert_add(t);
         }
 
     return *this;
@@ -1584,7 +1584,7 @@ soloDat()
         Error("IQTensor is null");
         }
 
-	if(p->count() != 1)
+	if(dat().count() != 1)
 	    {
 	    boost::intrusive_ptr<IQTDat> new_p(new IQTDat(*p));
 	    p.swap(new_p);

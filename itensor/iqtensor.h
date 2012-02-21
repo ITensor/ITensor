@@ -495,6 +495,9 @@ class IQTensor
     const IQTDat&
     dat() const { return *p; }
 
+    IQTDat&
+    ncdat() const { return *p; }
+
     }; //class IQTensor
 
 class IQTDat

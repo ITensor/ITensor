@@ -8,8 +8,6 @@ using boost::format;
 using boost::array;
 using boost::intrusive_ptr;
 
-DatAllocator<ITDat> ITDat::allocator;
-
 #ifdef DEBUG
 #define ITENSOR_CHECK_NULL if(p == 0) Error("ITensor is null");
 #else

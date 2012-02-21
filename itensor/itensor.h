@@ -789,11 +789,11 @@ public:
 
     void* operator 
     new(size_t) throw(std::bad_alloc)
-        { return allocator.alloc(); }
+        { return allocator().alloc(); }
 
     void operator 
     delete(void* p) throw()
-        { return allocator.dealloc(p); }
+        { return allocator().dealloc(p); }
 
     friend class ITensor;
 
@@ -804,12 +804,15 @@ private:
     mutable unsigned int 
     numref;
 
-    static DatAllocator<ITDat> 
-    allocator;
-
     //Must be dynamically allocated:
     void operator=(const ITDat&);
     ~ITDat() { }
+
+    static DatAllocator<ITDat>& allocator()
+        {
+        static DatAllocator<ITDat> allocator_;
+        return allocator_;
+        }
 
     };
 
