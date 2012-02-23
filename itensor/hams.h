@@ -50,7 +50,7 @@ public:
         }
 	}
 
-    Tensor unit(int i) const { return Tensor(si(i),si(i).primed(),1); }
+    Tensor unit(int i) const { return Tensor(si(i),primed(si(i)),1); }
 
     void getidentity(Real factor, MPOt<ITensor>& res)
 	{
@@ -338,7 +338,7 @@ public:
         ITensor W;
         for(int n = 1; n <= Ns; ++n)
         {
-            W = ITensor(H.si(n),H.si(n).primed(),links[n-1],links[n]);
+            W = ITensor(H.si(n),primed(H.si(n)),links[n-1],links[n]);
 
             W(1,1,1,1) = 1.0;     W(2,2,1,1) = 1.0;     W(3,3,1,1) = 1.0;      //Ident in ul corner
             W(1,1,2,1) = 1.0;     W(2,2,2,1) = 0.0;     W(3,3,2,1) = -1.0;     //Sz
@@ -518,7 +518,7 @@ public:
         ITensor W;
         for(int n = 1; n <= Nsp; ++n)
         {
-            W = ITensor(links[n-1],links[n],H.si(n),H.si(n).primed());
+            W = ITensor(links[n-1],links[n],H.si(n),primed(H.si(n)));
 
             W(1,1,Emp,Emp) = 1; W(1,1,Occ,Occ) = 1; //Ident at 1,1
             W(k,k,Emp,Emp) = 1; W(k,k,Occ,Occ) = 1; //Ident at k,k (k==7)

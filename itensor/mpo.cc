@@ -3,14 +3,12 @@
 //    (See accompanying LICENSE file.)
 //
 #include "mpo.h"
-using std::vector;
-using std::cout;
-using std::cerr;
-using std::endl;
+using namespace std;
 
 template <class MPOType>
-void nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm)
-{
+void 
+nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm)
+    {
     typedef typename MPOType::TensorT Tensor;
     typedef typename MPOType::IndexT IndexT;
     if(Aorig.NN() != Borig.NN()) Error("nmultMPO(MPOType): Mismatched N");
@@ -49,7 +47,7 @@ void nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut,
         IndexT mid = index_in_common(res.AA(i),nfork,Link);
         mid.conj();
         midsize[i] = mid.m();
-        res.AAnc(i+1) = Tensor(mid,conj(res.si(i+1)),res.si(i+1).primed().primed(),res.RightLinkInd(i+1));
+        res.AAnc(i+1) = Tensor(mid,conj(res.si(i+1)),primed(res.si(i+1),2),res.RightLinkInd(i+1));
 	}
 
     nfork = clust * A.AA(N) * B.AA(N);
@@ -66,7 +64,7 @@ void nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut,
     res.cutoff(cut);
     res.orthogonalize();
 
-}//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
+    }//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
 template
 void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res,Real cut, int maxm);
 template
@@ -119,7 +117,7 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
         midsize[i] = mid.m();
         maxdim = max(midsize[i],maxdim);
         assert(res.RightLinkInd(i+1).dir() == Out);
-        res.AAnc(i+1) = IQTensor(mid,res.si(i+1).primed(),res.RightLinkInd(i+1));
+        res.AAnc(i+1) = IQTensor(mid,primed(res.si(i+1)),res.RightLinkInd(i+1));
         }
     nfork = clust * x.AA(N) * K.AA(N);
     if(nfork.iten_size() == 0)	// this product gives 0 !!

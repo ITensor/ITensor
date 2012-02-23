@@ -379,7 +379,8 @@ struct IndexVal
     bool 
     operator==(const IndexVal& other) const; 
 
-    IndexVal primed() const;
+    friend IndexVal
+    primed(const IndexVal& iv, int inc = 1);
 
     friend std::ostream& 
     operator<<(std::ostream& s, const IndexVal& iv);

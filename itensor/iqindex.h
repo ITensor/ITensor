@@ -546,8 +546,11 @@ struct IQIndexVal
 
     QN qn() const;
 
-    IQIndexVal primed() const 
-        { return IQIndexVal(iqind.primed(),i); }
+    friend inline IQIndexVal
+    primed(const IQIndexVal& IV, int inc = 1)
+        {
+        return IQIndexVal(primed(IV.iqind,inc),IV.i); 
+        }
 
     void conj() 
         { iqind.conj(); }

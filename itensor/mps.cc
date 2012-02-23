@@ -447,7 +447,7 @@ void convertToIQ(const Model& model, const vector<ITensor>& A, vector<IQTensor>&
     {
     const int N = A.size()-1;
     qA.resize(A.size());
-    const bool is_mpo = A[1].hasindex(model.si(1).primed());
+    const bool is_mpo = A[1].hasindex(model.siP(1));
     const int Dim = model.si(1).m();
     if(model.si(2).m() != Dim)
         Error("convertToIQ assumes uniform site dimension");
@@ -692,7 +692,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
     iqpsi = IQMPSType(sst,maxm,cutoff);
 
     if(!A[1].hasindex(si(1))) Error("convertToIQ: incorrect primelevel for conversion");
-    bool is_mpo = A[1].hasindex(si(1).primed());
+    bool is_mpo = A[1].hasindex(primed(si(1)));
     const int Dim = si(1).m();
     const int PDim = (is_mpo ? Dim : 1);
 

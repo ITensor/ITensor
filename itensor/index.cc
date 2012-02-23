@@ -327,10 +327,10 @@ operator==(const IndexVal& other) const
     return (ind == other.ind && i == other.i); 
     }
 
-IndexVal IndexVal::
-primed() const 
-    { 
-    return IndexVal(ind.primed(),i); 
+IndexVal
+primed(const IndexVal& iv, int inc)
+    {
+    return IndexVal(primed(iv.ind,inc),iv.i);
     }
 
 std::ostream& 
