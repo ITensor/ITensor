@@ -1429,6 +1429,38 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 
 }
 
+void 
+GeneralizedEV(const MatrixRef& A, const MatrixRef& B, Vector& D, Matrix& Z)
+    {
+    __CLPK_integer N = A.Ncols();
+    if (N != A.Nrows() || A.Nrows() < 1)
+      _merror("EigenValues: Input Matrix must be square");
+
+    int itype = 1; //A x = lambda B x type problem
+    char jobz = 'V';
+    char uplo = 'U';
+    __CLPK_integer lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
+    __CLPK_doublereal work[lwork];
+    __CLPK_integer info;
+    
+    D.ReDimension(N);
+    Z = A;
+    Matrix BB(B);//Need to copy since BB gets overwritten
+
+    dsygv_(&itype,&jobz,&uplo,&N,Z.Store(),&N,BB.Store(),&N,D.Store(),work,&lwork,&info);
+
+    if(info != 0)
+        {
+        cerr << "info is " << info << endl;
+        cout << "info is " << info << endl;
+        Error("Error in call to dsygv");
+        return;
+        }
+
+    //Transpose Z before return
+    Z = Z.t();
+    }
+
 void GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
 {
     if (A.Ncols() != A.Nrows() || A.Nrows() < 1)

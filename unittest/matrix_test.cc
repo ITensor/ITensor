@@ -7,17 +7,71 @@ using namespace std;
 using boost::format;
 
 struct MatrixDefaults
-{
-    MatrixDefaults() {} 
-};
+    {
+    int N; 
+    MatrixDefaults() 
+        :
+        N(20)
+        {} 
+    };
 
 BOOST_FIXTURE_TEST_SUITE(MatrixTest,MatrixDefaults)
 
-TEST(EigenValues)
+TEST(TestEigenValues)
     {
-    Matrix M(2,2);
-    M(1,1) = 5;
-    CHECK_EQUAL(M(1,1),5);
+    Matrix A(N,N);
+    A.Randomize();
+    //A must be symmetric
+    A += A.t();
+
+    Matrix U;
+    Vector D;
+    EigenValues(A,D,U);
+
+    for(int j = 1; j <= N; ++j)
+        {
+        Vector diff = D(j)*U.Column(j);
+        diff -= A*U.Column(j);
+        CHECK(Norm(diff) < 1E-10);
+        }
+    }
+
+TEST(GeneralizedEigenValues)
+    {
+    Matrix A(N,N);
+    A.Randomize();
+    A += A.t();
+
+    vector<Vector> b(N);
+    for(int j = 0; j < N; ++j)
+        {
+        b[j] = Vector(N);
+        b[j].Randomize();
+        b[j] *= 1./Norm(b[j]);
+        }
+
+    Matrix B(N,N);
+    for(int i = 0; i < N; ++i)
+    for(int j = 0; j < N; ++j)
+        {
+        B(i+1,j+1) = b[i]*b[j];
+        }
+
+    Matrix U;
+    Vector D;
+    GeneralizedEV(A,B,D,U);
+
+    for(int j = 1; j <= N; ++j)
+        {
+        Vector diff = D(j)*B*U.Column(j);
+        diff -= A*U.Column(j);
+        if(Norm(diff) > 1E-8)
+            {
+            cerr << format("j = %d: Norm(diff) = %.3E\n") % j % Norm(diff);
+            cerr << format("j = %d: D(j) = %.3E\n") % j % D(j);
+            }
+        CHECK(Norm(diff) < 1E-8);
+        }
     }
 
 TEST(TestSVD)

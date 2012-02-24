@@ -90,6 +90,8 @@ void EigenValues(const MatrixRef &, Vector &, Matrix &);
 void GenEigenValues(const MatrixRef&, Vector&, Vector&);
 void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
 	                                Matrix& revecs, Matrix& ievecs);
+void
+GeneralizedEV(const MatrixRef& A, const MatrixRef& B, Vector& D, Matrix& Z);
 
 #include "svd.h"
 //void SVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);
