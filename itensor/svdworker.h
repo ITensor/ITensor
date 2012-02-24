@@ -64,7 +64,7 @@ class SVDWorker
     csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R);
 
     //Object PH of type LocalOpT has to provide the deltaPhi method
-    //to use the noise term feature (see projectedop.h)
+    //to use the noise term feature (see localop.h)
     template <class Tensor, class SparseT, class LocalOpT>
     void 
     csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R, 
@@ -88,7 +88,7 @@ class SVDWorker
     denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir);
 
     //Object PH of type LocalOpT has to provide the deltaRho method
-    //to use the noise term feature (see projectedop.h)
+    //to use the noise term feature (see localop.h)
     template <class Tensor, class LocalOpT>
     void
     denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
@@ -112,7 +112,7 @@ class SVDWorker
     svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V);
 
     //Object PH of type LocalOpT has to provide the deltaPhi method
-    //to use the noise term feature (see projectedop.h)
+    //to use the noise term feature (see localop.h)
     template <class Tensor, class SparseT, class LocalOpT>
     void 
     svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V, 

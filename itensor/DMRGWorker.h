@@ -6,10 +6,10 @@
 #define __ITENSOR_DMRG_WORKER_H
 #include "BaseDMRGWorker.h"
 #include "itensor.h"
-#include "projectedop.h"
+#include "localmpo.h"
 #include "eigensolver.h"
 
-//#define NEW_DAVIDSON
+#define NEW_DAVIDSON
 
 template <class MPSType, class MPOType>
 class DMRGWorker : public BaseDMRGWorker<MPSType,MPOType>
@@ -103,7 +103,7 @@ runInternal(const MPOType& H, MPSType& psi)
 
     psi.position(1);
     
-    ProjectedOp<MPOTensor> PH(H);
+    LocalMPO<MPOTensor> PH(H);
 
     Eigensolver solver;
     solver.debugLevel(debuglevel);

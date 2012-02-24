@@ -3,9 +3,10 @@
 //    (See accompanying LICENSE file.)
 //
 #include "mps.h"
+#include "localmpo.h"
+
 using namespace std;
 using boost::format;
-#include "projectedop.h"
 
 template <class Tensor>
 Tensor& MPSt<Tensor>::
@@ -333,7 +334,7 @@ template<class Tensor> void
 MPSt<Tensor>::
 replaceBond(int b, const Tensor& AA, Direction dir, bool preserve_shape)
     {
-    replaceBond(b,AA,dir,ProjectedOp<Tensor>::Null(),preserve_shape);
+    replaceBond(b,AA,dir,LocalMPO<Tensor>::Null(),preserve_shape);
     }
 template void MPSt<ITensor>::
 replaceBond(int b, const ITensor& AA, Direction dir, bool);

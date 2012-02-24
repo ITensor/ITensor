@@ -19,7 +19,7 @@ HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
         hams/hubbardchain.h hams/heisenberg.h hams/triheisenberg.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
-        eigensolver.h projectedop.h itsparse.h iqtsparse.h
+        eigensolver.h localop.h localmpo.h itsparse.h iqtsparse.h
 
 ####################################
 
@@ -106,7 +106,7 @@ iqtensor.o: $(DEPHEADERS)
 DEPHEADERS+= iqtsparse.h
 iqtsparse.o: $(DEPHEADERS)
 .debug_objs/iqtsparse.o: $(DEPHEADERS)
-DEPHEADERS+= combiner.h condenser.h iqcombiner.h projectedop.h svdworker.h
+DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h svdworker.h
 svdworker.o: $(DEPHEADERS)
 .debug_objs/svdworker.o: $(DEPHEADERS)
 DEPHEADERS+= mps.h eigensolver.h

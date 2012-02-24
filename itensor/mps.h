@@ -11,7 +11,7 @@
 class Eigensolver;
 
 template <class Tensor>
-class ProjectedOp;
+class LocalMPO;
 
 static const LogNumber DefaultRefScale(7.58273202392352185);
 

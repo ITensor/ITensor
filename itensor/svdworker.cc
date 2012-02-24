@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "svdworker.h"
-#include "projectedop.h"
+#include "localop.h"
 
 using namespace std;
 using boost::format;
@@ -70,7 +70,7 @@ template <class Tensor, class SparseT>
 void SVDWorker::
 csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R)
     { 
-    csvd<Tensor>(b,AA,L,V,R,ProjectedOp<Tensor>::Null()); 
+    csvd<Tensor>(b,AA,L,V,R,LocalOp<Tensor>::Null()); 
     }
 template
 void SVDWorker::
@@ -84,7 +84,7 @@ template <class Tensor>
 void SVDWorker::
 denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir)
     { 
-    denmatDecomp<Tensor>(b,AA,A,B,dir,ProjectedOp<Tensor>::Null()); 
+    denmatDecomp<Tensor>(b,AA,A,B,dir,LocalOp<Tensor>::Null()); 
     }
 template
 void SVDWorker::
@@ -99,7 +99,7 @@ template <class Tensor, class SparseT>
 void SVDWorker::
 svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V)
     { 
-    svd<Tensor>(b,AA,U,D,V,ProjectedOp<Tensor>::Null()); 
+    svd<Tensor>(b,AA,U,D,V,LocalOp<Tensor>::Null()); 
     }
 template
 void SVDWorker::
@@ -434,7 +434,7 @@ diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
     Index ri = rho.index(1); 
     ri.noprime();
     Matrix R,UU; 
-    rho.toMatrix11NoScale(ri,ri.primed(),R);
+    rho.toMatrix11NoScale(ri,primed(ri),R);
     R *= -1.0; 
     EigenValues(R,D,UU); 
     D *= -1.0;
