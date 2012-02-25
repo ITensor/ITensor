@@ -52,6 +52,9 @@ class LocalOp
     // Accessor Methods
     //
 
+    void
+    update(const Tensor& Op1, const Tensor& Op2, const Tensor& L, const Tensor& R);
+
     const Tensor&
     L() const 
         { 
@@ -137,13 +140,26 @@ template <class Tensor>
 inline LocalOp<Tensor>::
 LocalOp(const Tensor& Op1, const Tensor& Op2, const Tensor& L, const Tensor& R)
     : 
-    Op1_(&Op1),
-    Op2_(&Op2),
-    L_(&L),
-    R_(&R),
+    Op1_(0),
+    Op2_(0),
+    L_(0),
+    R_(0),
     combine_mpo_(true),
     size_(-1)
     {
+    update(Op1,Op2,L,R);
+    }
+
+template <class Tensor>
+void inline LocalOp<Tensor>::
+update(const Tensor& Op1, const Tensor& Op2, const Tensor& L, const Tensor& R)
+    {
+    Op1_ = &Op1;
+    Op2_ = &Op2;
+    L_ = &L;
+    R_ = &R;
+    size_ = -1;
+    bond_ = Tensor();
     }
 
 template <class Tensor>

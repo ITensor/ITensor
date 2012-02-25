@@ -152,7 +152,7 @@ position(int b, const MPSType& psi)
         }
 #endif
 
-    lop_ = LocalOp<Tensor>(Op_->AA(b),Op_->AA(b+1),L(),R());
+    lop_.update(Op_->AA(b),Op_->AA(b+1),L(),R());
     }
 
 template <class Tensor>
