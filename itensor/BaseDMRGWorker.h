@@ -34,12 +34,23 @@ class BaseDMRGWorker
         { return runInternal(H,psi); }
 
     Real 
+    run(const std::vector<MPOType>& H, MPSType& psi) 
+        { return runInternal(H,psi); }
+
+    Real 
     energy() const { return getEnergy(); }
 
 private:
 
     virtual Real 
     runInternal(const MPOType& H, MPSType& psi) = 0;
+
+    virtual Real 
+    runInternal(const std::vector<MPOType>& H, MPSType& psi)
+        {
+        Error("DMRG with a vector of MPOs not implemented for this DMRGWorker.");
+        return 0;
+        }
 
     virtual Real 
     getEnergy() const = 0;
@@ -49,7 +60,7 @@ private:
     bool own_opts_;
 
     BaseDMRGOpts* opts_;
-};
+    };
 
 
 template <class MPSType, class MPOType>
