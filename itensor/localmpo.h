@@ -45,15 +45,13 @@ class LocalMPO
     const Tensor&
     L() const 
         { 
-        if(pL_ == 0) Error("pL_ not set");
-        return *pL_; 
+        return PH_[LHlim_];
         }
 
     const Tensor&
     R() const 
         { 
-        if(pR_ == 0) Error("pR_ not set");
-        return *pR_; 
+        return PH_[RHlim_];
         }
 
     const Tensor&
@@ -91,9 +89,8 @@ class LocalMPO
     //
 
     const MPOt<Tensor>* Op_;
-    std::vector<Tensor> L_,R_;
+    std::vector<Tensor> PH_;
     int LHlim_,RHlim_;
-    const Tensor *pL_, *pR_;
     int nc_;
 
     LocalOp<Tensor> lop_;
@@ -118,8 +115,6 @@ LocalMPO()
     : Op_(0),
       LHlim_(0),
       RHlim_(0),
-      pL_(0),
-      pR_(0),
       nc_(2)
     { }
 
@@ -127,27 +122,11 @@ template <class Tensor>
 inline LocalMPO<Tensor>::
 LocalMPO(const MPOt<Tensor>& Op, int num_center)
     : Op_(&Op),
-      L_(Op.NN()+1),
-      R_(Op.NN()+1),
+      PH_(Op.NN()+1),
       LHlim_(1),
       RHlim_(Op.NN()),
-      pL_(&(L_[LHlim_])),
-      pR_(&(R_[RHlim_])),
       nc_(num_center)
     { 
-    }
-
-template <class Tensor>
-inline LocalMPO<Tensor>::
-LocalMPO(const MPOt<Tensor>& Op, 
-            const Tensor& L, const Tensor& R, int num_center)
-    : Op_(&Op),
-      LHlim_(0),
-      RHlim_(0),
-      nc_(num_center)
-    { 
-    pL_ = &L;
-    pR_ = &R;
     }
 
 template <class Tensor>
@@ -161,12 +140,9 @@ position(int b, const MPSType& psi)
     makeR(psi,b+nc_-1);
 
     LHlim_ = b; //not redundant since LHlim_ could be > b
-    pL_ = &(L_.at(LHlim_));
-
     RHlim_ = b+nc_-1; //not redundant since RHlim_ could be < b+nc_-1
-    pR_ = &(R_.at(RHlim_));
 
-    lop_ = LocalOp<Tensor>(Op_->AA(b),Op_->AA(b+1),*pL_,*pR_);
+    lop_ = LocalOp<Tensor>(Op_->AA(b),Op_->AA(b+1),L(),R());
     }
 
 template <class Tensor>
@@ -174,14 +150,13 @@ template <class MPSType>
 inline void LocalMPO<Tensor>::
 makeL(const MPSType& psi, int k)
     {
-    if(!L_.empty())
+    if(!PH_.empty())
     while(LHlim_ < k)
         {
         const int ll = LHlim_;
         //std::cout << boost::format("Shifting L from %d to %d") % ll % (ll+1) << std::endl;
-        psi.projectOp(ll,Fromleft,L_.at(ll),Op_->AA(ll),L_.at(ll+1));
+        psi.projectOp(ll,Fromleft,PH_.at(ll),Op_->AA(ll),PH_.at(ll+1));
         ++LHlim_;
-        pL_ = &(L_.at(LHlim_));
         }
     }
 
@@ -190,13 +165,12 @@ template <class MPSType>
 inline void LocalMPO<Tensor>::
 makeR(const MPSType& psi, int k)
     {
-    if(!R_.empty())
+    if(!PH_.empty())
     while(RHlim_ > k)
         {
         const int rl = RHlim_;
-        psi.projectOp(rl,Fromright,R_.at(rl),Op_->AA(rl),R_.at(rl-1));
+        psi.projectOp(rl,Fromright,PH_.at(rl),Op_->AA(rl),PH_.at(rl-1));
         --RHlim_;
-        pR_ = &(R_.at(RHlim_));
         }
     }
 
