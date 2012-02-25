@@ -16,8 +16,6 @@ class LocalMPO
 
     LocalMPO(const MPOt<Tensor>& Op, int num_center = 2);
 
-    LocalMPO(const MPOt<Tensor>& Op, const Tensor& L, const Tensor& R, int num_center = 2);
-
     typedef typename Tensor::IndexT
     IndexT;
 
@@ -65,7 +63,11 @@ class LocalMPO
     int
     numCenter() const { return nc_; }
     void
-    numCenter(int val) { nc_ = val; }
+    numCenter(int val) 
+        { 
+        if(val < 1) Error("numCenter must be set >= 1");
+        nc_ = val; 
+        }
 
     int
     size() const { return lop_.size(); }
@@ -113,8 +115,8 @@ template <class Tensor>
 inline LocalMPO<Tensor>::
 LocalMPO()
     : Op_(0),
-      LHlim_(0),
-      RHlim_(0),
+      LHlim_(-1),
+      RHlim_(-1),
       nc_(2)
     { }
 
@@ -122,11 +124,12 @@ template <class Tensor>
 inline LocalMPO<Tensor>::
 LocalMPO(const MPOt<Tensor>& Op, int num_center)
     : Op_(&Op),
-      PH_(Op.NN()+1),
-      LHlim_(1),
-      RHlim_(Op.NN()),
-      nc_(num_center)
+      PH_(Op.NN()+2),
+      LHlim_(0),
+      RHlim_(Op.NN()+1),
+      nc_(2)
     { 
+    numCenter(num_center);
     }
 
 template <class Tensor>
@@ -136,11 +139,18 @@ position(int b, const MPSType& psi)
     {
     if(this->isNull()) Error("LocalMPO is null");
 
-    makeL(psi,b);
-    makeR(psi,b+nc_-1);
+    makeL(psi,b-1);
+    makeR(psi,b+nc_);
 
-    LHlim_ = b; //not redundant since LHlim_ could be > b
-    RHlim_ = b+nc_-1; //not redundant since RHlim_ could be < b+nc_-1
+    LHlim_ = b-1; //not redundant since LHlim_ could be > b-1
+    RHlim_ = b+nc_; //not redundant since RHlim_ could be < b+nc_
+
+#ifdef DEBUG
+    if(nc_ != 2)
+        {
+        Error("LocalOp only supports 2 center sites currently");
+        }
+#endif
 
     lop_ = LocalOp<Tensor>(Op_->AA(b),Op_->AA(b+1),L(),R());
     }
@@ -154,8 +164,7 @@ makeL(const MPSType& psi, int k)
     while(LHlim_ < k)
         {
         const int ll = LHlim_;
-        //std::cout << boost::format("Shifting L from %d to %d") % ll % (ll+1) << std::endl;
-        psi.projectOp(ll,Fromleft,PH_.at(ll),Op_->AA(ll),PH_.at(ll+1));
+        psi.projectOp(ll+1,Fromleft,PH_.at(ll),Op_->AA(ll+1),PH_.at(ll+1));
         ++LHlim_;
         }
     }
@@ -169,7 +178,7 @@ makeR(const MPSType& psi, int k)
     while(RHlim_ > k)
         {
         const int rl = RHlim_;
-        psi.projectOp(rl,Fromright,PH_.at(rl),Op_->AA(rl),PH_.at(rl-1));
+        psi.projectOp(rl-1,Fromright,PH_.at(rl),Op_->AA(rl-1),PH_.at(rl-1));
         --RHlim_;
         }
     }
