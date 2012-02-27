@@ -138,6 +138,17 @@ class ITSparse
     operator/(Real fac, ITSparse s) 
         { return (s /= fac); }
 
+    ITSparse& 
+    operator*=(const LogNumber& fac) { scale_ *= fac; return *this; }
+
+    ITSparse 
+    operator*(const LogNumber& fac) const 
+        { ITSparse res(*this); res *= fac; return res; }
+
+    friend inline ITSparse 
+    operator*(const LogNumber& fac, ITSparse s) 
+        { return (s *= fac); }
+
     //
     // Index Methods
     //
@@ -257,6 +268,9 @@ class ITSparse
 
     template <typename Callable> void
     mapElems(const Callable& f);
+
+    void
+    pseudoInvert(Real cutoff = 0);
 
     Real
     norm() const;

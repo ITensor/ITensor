@@ -201,6 +201,24 @@ operator*=(Real fac)
     return *this;
     }
 
+IQTSparse& IQTSparse::
+operator*=(const LogNumber& fac)
+    { 
+    soloDat();
+
+    if(fac == 0)
+        {
+        d_->clear();
+        return *this;
+        }
+
+    Foreach(ITSparse& s, *d_)
+        {
+        s *= fac;
+        }
+    return *this;
+    }
+
 IQIndex IQTSparse::
 findtype(IndexType t) const 
     { 
@@ -346,6 +364,17 @@ conj()
     else
         {
         Error("Complex IQTSparse not yet implemented");
+        }
+    }
+
+void IQTSparse::
+pseudoInvert(Real cutoff)
+    {
+    soloDat();
+
+    Foreach(ITSparse& s, *(d_))
+        { 
+        s.pseudoInvert(cutoff);
         }
     }
 

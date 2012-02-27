@@ -588,7 +588,7 @@ class ITensor
     mapElems(const Callable& f);
 
     void
-    pseudoInvertElems(Real cutoff = 0);
+    pseudoInvert(Real cutoff = 0);
 
     void 
     scaleOutNorm() const;

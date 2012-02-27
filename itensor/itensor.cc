@@ -1028,11 +1028,11 @@ norm() const
     { return fabs(Norm(p->v) * scale_.real()); }
 
 void ITensor::
-pseudoInvertElems(Real cutoff)
+pseudoInvert(Real cutoff)
     {
     solo();
     //Invert scale_
-    scale_ = scale_.pow(-1);
+    scale_.pow(-1);
 
     //Invert elems
     for(int j = 1; j <= p->v.Length(); ++j)

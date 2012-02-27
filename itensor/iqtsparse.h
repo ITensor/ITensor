@@ -115,6 +115,17 @@ class IQTSparse
     friend inline IQTSparse 
     operator/(Real fac, IQTSparse s) { return (s /= fac); }
 
+    IQTSparse& 
+    operator*=(const LogNumber& fac);
+
+    IQTSparse 
+    operator*(const LogNumber& fac) const 
+        { IQTSparse res(*this); res *= fac; return res; }
+
+    friend inline IQTSparse 
+    operator*(const LogNumber& fac, IQTSparse s) 
+        { return (s *= fac); }
+
     //
     // IQIndex Methods
     //
@@ -198,6 +209,9 @@ class IQTSparse
 
     void
     conj();
+
+    void
+    pseudoInvert(Real cutoff = 0);
 
     Real
     norm() const;

@@ -2,7 +2,7 @@
 #include "eigensolver.h"
 #include "hams/heisenberg.h"
 #include "model/spinhalf.h"
-#include "projectedop.h"
+#include "localmpo.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
@@ -30,7 +30,7 @@ TEST(FourSite)
 
     MPS psi(model,initState);
 
-    ProjectedOp<ITensor> PH(H,2);
+    LocalMPO<ITensor> PH(H,2);
 
     ITensor phip;
     psi.position(2);
@@ -130,7 +130,7 @@ TEST(IQFourSite)
 
     IQMPS psi(model,initState);
 
-    ProjectedOp<IQTensor> PH(H,2);
+    LocalMPO<IQTensor> PH(H,2);
 
     IQTensor phip;
     psi.position(2);

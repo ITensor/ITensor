@@ -239,11 +239,10 @@ class LogNumber
         return lognum_ < other.lognum_;
         }
 
-    LogNumber
+    void
     pow(Real p)
         {
-        LogNumber res(p*lognum_,sign_);
-        return res;
+        lognum_ *= p;
         }
 
     friend inline std::ostream& 

@@ -216,6 +216,19 @@ operator-=(const ITSparse& other)
     return *this;
     }
 
+void ITSparse::
+pseudoInvert(Real cutoff)
+    {
+    scale_.pow(-1); //succeeds even if scale_ == 0
+    for(int j = 1; j <= diag_.Length(); ++j)
+        {
+        if(diag_(j) > cutoff)
+            diag_(j) = 1./diag_(j);
+        else
+            diag_(j) = 0;
+        }
+    }
+
 Real ITSparse::
 norm() const
     {
@@ -239,6 +252,7 @@ scaleOutNorm() const
 void ITSparse::
 scaleTo(LogNumber newscale) const
 	{
+    //If diag is all same no need to rescale
     if(diag_.Length() == 0) return;
 
     if(scale_ == newscale) return;
