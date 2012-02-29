@@ -70,7 +70,7 @@ TEST(GeneralizedEigenValues)
             cerr << format("j = %d: Norm(diff) = %.3E\n") % j % Norm(diff);
             cerr << format("j = %d: D(j) = %.3E\n") % j % D(j);
             }
-        CHECK(Norm(diff) < 1E-8);
+        CHECK(Norm(diff) < 1E-7);
         }
     }
 

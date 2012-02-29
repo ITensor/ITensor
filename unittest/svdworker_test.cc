@@ -185,6 +185,7 @@ TEST(SiteSVD)
     ITensor a(L1,S1),b(S2,L2);
 
     //svd.showeigs(true);
+    phi0 *= -1.2324;
     svd.denmatDecomp(phi0,a,b,Fromleft);
 
     Print(((a*b)-phi0).norm());
@@ -198,8 +199,10 @@ TEST(SiteSVD)
 
     IQTensor A(L1,S1),B(S2,L2);
 
+    Phi0 *= -10.23432;
     svd.denmatDecomp(Phi0,A,B,Fromleft);
 
+    Print(((A*B)-Phi0).norm());
     CHECK(((A*B)-Phi0).norm() < 1E-12 );
 
     CHECK(svd.truncerr() < 1E-12);
@@ -216,11 +219,13 @@ TEST(BondSVD)
     ITensor l(L1,S1,Mid),r(Mid,S2,L2);
     ITSparse v(Mid);
 
+    phi0 *= -0.235;
+
     svd.csvd(phi0,l,v,r);
 
+    Print(((l*v*r)-phi0).norm());
     CHECK(((l*v*r)-phi0).norm() < 1E-12 );
 
-    CHECK(((l*v*r)-phi0).norm() < 1E-12 );
 
     CHECK(svd.truncerr() < 1E-12);
 
@@ -239,6 +244,53 @@ TEST(BondSVD)
 
     CHECK(svd.truncerr() < 1E-12);
     
+    }
+
+TEST(CSVDNorm)
+    {
+    SVDWorker svd;
+
+    //
+    //ITensor version
+    //
+
+    Index rr("rr",1,Link),s1("s1",3,Site),s2("s2",3,Site);
+    phi0 = ITensor(s1,s2,rr);
+
+    ITensor l(s1,Mid),r(Mid,s2,rr);
+    ITSparse v(Mid);
+
+    phi0(s1(3),s2(1),rr(1)) = -0.172148;
+    phi0(s1(2),s2(2),rr(1)) = 0.427132;
+    phi0(s1(1),s2(3),rr(1)) = -0.88765;
+    phi0.scaleTo(-2.127145);
+
+    svd.svd(phi0,l,v,r);
+    Index nmr = index_in_common(r,v,Link);
+    ITensor rhoRsvd1 = r * conj(primeind(r,rr));
+    ITensor rhoRsvd2 = r * conj(primeind(r,nmr));
+    PrintDat(r);
+    PrintDat(rhoRsvd1);
+    PrintDat(rhoRsvd2);
+
+
+    svd.csvd(phi0,l,v,r);
+
+    CHECK_CLOSE(1,l.norm(),1E-2);
+    CHECK_CLOSE(1,r.norm(),1E-2);
+    CHECK((l*v*r-phi0).norm() < 1E-10);
+
+    cerr << format("l.norm() = %.3E\n") % l.norm();
+    cerr << format("v.norm() = %.3E\n") % v.norm();
+    cerr << format("r.norm() = %.3E\n") % r.norm();
+
+    cerr << format("(l*v*r-phi0).norm() = %.3E\n") % (l*v*r-phi0).norm();
+
+    PrintDat(v * r);
+    ITensor ur = v*r; 
+    ITensor rhoR = ur * conj(primeind(ur,rr));
+    PrintDat(rhoR);
+
     }
 
 TEST(AbsoluteCutoff)

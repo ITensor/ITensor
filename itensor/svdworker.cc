@@ -166,25 +166,27 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
         cout << format("minm_ = %d, maxm_ = %d, cutoff_ = %.3E")
                        %minm_%maxm_%cutoff_ << endl;
         cout << format("use_orig_m_ = %s")%(use_orig_m_?"true":"false")<<endl;
-        cout << format("Kept %d states in diag_denmat\n")% m;
+        cout << format("Kept %d states in svd\n")% m;
         cout << format("svdtruncerr = %.3E\n")%svdtruncerr;
 
-        int stop = DD.Length();
+        Vector Ds = DD*A.scale().real();
+        int stop = Ds.Length();
         cout << "Eigs: ";
         for(int j = 1; j <= stop; ++j)
             {
-            cout << boost::format(DD(j) > 1E-6 ? ("%.3f") : ("%.3E")) % sqr(DD(j));
+            cout << boost::format(Ds(j) > 1E-6 ? ("%.3f") : ("%.3E")) % sqr(Ds(j));
             cout << ((j != stop) ? ", " : "\n");
             }
         }
     
-    Index l("l",m,Link),r("r",m,Link);
+    Index aa("a",m,Link),bb("b",m,Link);
 
-    D = ITSparse(l,r,DD);
-    U = ITensor(ui,l,UU.Columns(1,m));
-    V = ITensor(r,vi,VV.Rows(1,m));
+    D = ITSparse(aa,bb,DD);
+    D *= A.scale();
+    U = ITensor(ui,aa,UU.Columns(1,m));
+    V = ITensor(bb,vi,VV.Rows(1,m));
 
-    Globals::lastd() = DD;
+    Globals::lastd() = DD*A.scale().real();
 
     } // void SVDWorker::svdRank2
 
@@ -439,6 +441,8 @@ diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
     EigenValues(R,D,UU); 
     D *= -1.0;
 
+    D *= rho.scale().real();
+
     //Truncate
     int m = D.Length();
     Real svdtruncerr = 0.0;
@@ -543,8 +547,10 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         Foreach(const ITensor& t, rho.itensors())
             maxLogNum = max(maxLogNum,t.scale().logNum());
         refNorm_ = LogNumber(maxLogNum,1);
-        //DO_IF_DEBUG(cout << "refNorm = " << refNorm << endl; )
         }
+    //DO_IF_DEBUG(cout << "refNorm = " << refNorm_ << endl; )
+    //cout << "WARNING - SETTING REFNORM TO 10\n";
+    //refNorm_ = LogNumber(log(10),-1);
     //else DO_IF_DEBUG(cout << "Not doing relative cutoff\n";);
 
     //cerr << boost::format("refNorm = %.1E (lognum = %f, sign = %d)\n\n")
@@ -578,6 +584,8 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         EigenValues(M,d,UU);
         d *= -1;
 
+        d *= refNorm_.real();
+
         for(int j = 1; j <= n; ++j) 
             alleig.push_back(d(j));
 
@@ -603,11 +611,11 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
             Error("UU not unitary in diag_denmat");
             }
         
-        if(fabs(d.sumels() + Trace(M))/(fabs(d.sumels())+fabs(Trace(M))) 
+        if(fabs(d.sumels() + Trace(M)*refNorm_.real())/(fabs(d.sumels())+fabs(Trace(M)*refNorm_.real())) 
             > 1E-5)
             {
-            cerr << boost::format("d.sumels() = %.10f, Trace(M) = %.10f\n")
-                     % d.sumels()        % Trace(M);
+            cerr << boost::format("d.sumels() = %.10f, Trace(M)*refNorm_.real() = %.10f\n")
+                     % d.sumels()        % (Trace(M)*refNorm_.real());
             Error("Total eigs != trace");
             }
 
@@ -1149,7 +1157,7 @@ pseudoInverse(const ITensor& C, Real cutoff)
         Error("pseudoInverse only defined for rank 1 ITensors");
         }
     ITensor res(C);
-    res.pseudoInvertElems(cutoff);
+    res.pseudoInvert(cutoff);
     return res;
     }
 

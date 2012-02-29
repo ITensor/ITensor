@@ -294,10 +294,10 @@ private:
             Real
             operator()(Real val) const
                 {
-                if(fabs(val) < cut_)
-                    return 0;
-                else
+                if(fabs(val) > cut_)
                     return 1./val;
+                else
+                    return 0;
                 }
         private:
             Real cut_;
@@ -323,9 +323,7 @@ csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R,
     R = D*VV;
 
     V = conj(D);
-
-    PseudoInverter inv;
-    V.mapElems(inv);
+    V.pseudoInvert(0);
 
     } //void SVDWorker::csvd
 
