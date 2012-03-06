@@ -1429,19 +1429,23 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 
 }
 
+//extern "C" void dsygv_(char* jobz, char* uplo, MKL_INT* n, Real* a, MKL_INT* lda, Real* w, Real* work, MKL_INT* lwork, MKL_INT *iwork, MKL_INT* liwork, MKL_INT* info);
+extern "C" void    dsygv( MKL_INT *itype, char *jobz, char *uplo, MKL_INT *n, double *a, MKL_INT *lda, double *b, MKL_INT *ldb, double *w, double *work, MKL_INT *lwork, MKL_INT *info );
+extern "C" void    dsygv_( MKL_INT *itype, char *jobz, char *uplo, MKL_INT *n, double *a, MKL_INT *lda, double *b, MKL_INT *ldb, double *w, double *work, MKL_INT *lwork, MKL_INT *info );
+
 void 
 GeneralizedEV(const MatrixRef& A, const MatrixRef& B, Vector& D, Matrix& Z)
     {
-    __CLPK_integer N = A.Ncols();
+    MKL_INT N = A.Ncols();
     if (N != A.Nrows() || A.Nrows() < 1)
       _merror("EigenValues: Input Matrix must be square");
 
     int itype = 1; //A x = lambda B x type problem
     char jobz = 'V';
     char uplo = 'U';
-    __CLPK_integer lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
-    __CLPK_doublereal work[lwork];
-    __CLPK_integer info;
+    MKL_INT lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
+    double work[lwork];
+    MKL_INT info;
     
     D.ReDimension(N);
     Z = A;

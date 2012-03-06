@@ -15,6 +15,9 @@
 
 // Real resize/constructor
 
+using namespace std;
+
+
 void 
 Matrix::makematrix(int s1, int s2)
     {
@@ -22,10 +25,12 @@ Matrix::makematrix(int s1, int s2)
     if (s1 < 0 || s2 < 0)
 	_merror("Matrix::makematrix: bad args");
     int size = s1 * s2;
+    /*
     if (Store() == 0)
-	{ if (size > 0) nummats++; }
+	{ if (size > 0) Matrix::nummats()++; }
     else
-	{ if (size == 0) nummats--; }
+	{ if (size == 0) Matrix::nummats()--; }
+    */
     slink.makestorage(size);
     nrows = s1;
     ncols = s2;
@@ -77,7 +82,9 @@ Matrix::copytransfer(Matrix & M)
     if (Store() != 0)
 	makematrix(0,0);
     MatrixRef::operator<<(M);
-    M.makematrix(0,0); numcon--; M.init();
+    M.makematrix(0,0); 
+    //Matrix::numcon()--; 
+    M.init();
     temporary = 0;
     }
 
@@ -129,11 +136,11 @@ ostream & operator << (ostream & s, const Matrix & M)
     {
     int w = s.width();
     //long f = s.flags();
-    s.setf(ios::fixed, ios::floatfield);
+    s.setf(std::ios::fixed, std::ios::floatfield);
     for (int i = 1; i <= M.Nrows(); i++)
 	{
 	for (int j = 1; j <= M.Ncols(); j++)
-	    s << setw(w) << M(i, j) << " ";
+	    s << std::setw(w) << M(i, j) << " ";
 	s << iendl;
 	}
     s << iendl;
@@ -145,10 +152,12 @@ void
 Vector::makevector(int s)
     {
     if(s == length) return;
+    /*
     if (Store() == 0)
-	{ if (s > 0) numvecs++; }
+	{ if (s > 0) Vector::numvecs()++; }
     else
-	{ if (s == 0) numvecs--; }
+	{ if (s == 0) Vector::numvecs()--; }
+    */
     slink.makestorage(s);
     length = s;
     fixref();
@@ -191,7 +200,9 @@ Vector::copytransfer(Vector & V)
     if (Store() != 0)
 	makevector(0);
     VectorRef::operator<<(V);
-    V.makevector(0); numcon--; V.init();
+    V.makevector(0); 
+    //Vector::numcon()--; 
+    V.init();
     temporary = 0;
     }
 
@@ -218,9 +229,9 @@ ostream & operator << (ostream & s, const Vector & V)
     {
     int w = s.width();
     //long f = s.flags();
-    s.setf(ios:: fixed, ios::floatfield);
+    s.setf(std::ios:: fixed, std::ios::floatfield);
     for (int i = 1; i <= V.Length(); i++)
-	s << setw(w) << V(i) << " ";
+	s << std::setw(w) << V(i) << " ";
     s << "\n" << iendl;
     //s.flags(f);
     return s;

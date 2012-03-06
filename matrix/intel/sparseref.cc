@@ -1,5 +1,7 @@
 #include "sparseref.h"
 #include <math.h>
+using std::ostream;
+using std::istream;
 
 SparseRef::SparseRef(const MatrixRef& M)
     : base(new SparseMatBase(M.Nrows(),M.Ncols())), scale(1.0), transpose(0)
@@ -12,7 +14,7 @@ SparseRef::SparseRef(const MatrixRef& M)
 	for (j = 1; j <= ncols; j++)
 	    {			// Count up non-zero elements in row
 	    Real x = M(i,j);
-	    if (fabs(x) >= SparseVector::thresh)
+	    if (fabs(x) >= SparseVector::thresh())
 		where[++count] = j;
 	    }
 	SparseVector& row(Row(i));

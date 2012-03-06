@@ -11,6 +11,10 @@
 #define VECTOR
 #endif
 
+using std::istream;
+using std::ostream;
+using std::endl;
+
 void SparseVector::AddElement(int i, Real value) 
 // SparseMatrix must make sure the storage is big enough.
     {
@@ -38,8 +42,8 @@ SparseVector::adjustsize(int minsize,int maxsize)
     if (maxsize < minsize)
 	maxsize = minsize;
 
-    int s = max(minsize, int (cursize * efactor));
-    s = max(minrsize, s);
+    int s = max(minsize, int (cursize * SparseVector::efactor()));
+    s = max(SparseVector::minrsize(), s);
     s = min(maxsize, s);
 
     if (Length() > 1 && !sorted)
@@ -316,7 +320,7 @@ void SparseMatrix::copy(const MatrixRef& M)
 	for (j = 1; j <= ncols; j++)
 	    {			// Count up non-zero elements in row
 	    Real x = M(i, j);
-	    if (fabs(x) >= SparseVector::thresh && i != j)
+	    if (fabs(x) >= SparseVector::thresh() && i != j)
 		where[++count] = j;
 	    }
 	row[i-1].ReDimension(count,count);
@@ -359,7 +363,7 @@ void SparseMatrix::AddElement(int i, int j, Real value)
 	}
 
     i--;
-    if (fabs(value) < SparseVector::thresh)
+    if (fabs(value) < SparseVector::thresh())
 	return;
     int newlen = row[i].Length() + 1;
     if(newlen > row[i].Storage())
@@ -607,22 +611,22 @@ ostream& operator<<(ostream& s, const SparseMatrix& X)
     int w = s.width();
     int nr = X.nrows;
     //long f = s.flags();
-    s.setf(ios::fixed, ios::floatfield);
+    s.setf(std::ios::fixed, std::ios::floatfield);
 
     s << "Sparse Matrix, dimension=" << X.nrows << "x" << X.ncols;
     s << ", diagonal Elements:" << iendl;
 
     int i,j;
     for (i = 0; i < min(X.nrows, X.ncols); i++)
-	s << i << "," << i << ": " << setw(w) << X.diag.el(i) << iendl;
+	s << i << "," << i << ": " << std::setw(w) << X.diag.el(i) << iendl;
 
     s << iendl << "Off-diagonal Elements:" << iendl;
 
     for (i = 0; i < nr; i++)
 	for (j = 0; j < X.Rowsize0(i); j++)
 	    s << i << "," << X.Column0(i,j) << ": "
-		<< setw(w) << X.Element0(i,j) << iendl;
-    s << flush;
+		<< std::setw(w) << X.Element0(i,j) << iendl;
+    s << std::flush;
     //s.flags(f);
     return s;
     }
@@ -634,14 +638,14 @@ void SparseMatrix::PrintSymmetric(ostream& s)
     //int w = s.width();
     int nr = nrows;
     //long f = s.flags();
-    //s.setf(0, ios::floatfield);	// Make sure fixed and scientific are cleared 
+    //s.setf(0, std::ios::floatfield);	// Make sure fixed and scientific are cleared 
 
     s << endl << "Sparse Matrix, dimension=" << nrows << "x" << ncols;
     s << ", diagonal Elements:" << endl;
 
     int i,j;
     for (i = 0; i < min(nrows, ncols); i++)
-	s << i << " " << i << ": " << setw(0) << setprecision(7)
+	s << i << " " << i << ": " << std::setw(0) << std::setprecision(7)
 	    << diag.el(i) << endl;
 
     s << endl << "Off-diagonal Elements:" << endl;
@@ -650,8 +654,8 @@ void SparseMatrix::PrintSymmetric(ostream& s)
 	for (j = 0; j < row[i].Length(); j++)
 	    if (Column0(i,j) < i)
 		s << i << " " << Column0(i,j) << " "
-		    << setw(0) << setprecision(7) << Element0(i,j) << endl;
-    s << flush;
+		    << std::setw(0) << std::setprecision(7) << Element0(i,j) << endl;
+    s << std::flush;
     //s.flags(f);
     }
 
