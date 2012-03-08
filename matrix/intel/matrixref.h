@@ -460,17 +460,7 @@ std::ostream & operator << (std::ostream &s, const MatrixVectorRes &a);
 
 #include "matrixref.ih"
 
-#ifdef HEADER_DEFS
 ARRAY1CC_DEFS(MatrixRef)
 ARRAY1CC_DEFS(VectorRef)
-
-#else //ifndef HEADER_DEFS
-
-#ifdef THIS_IS_MAIN
-ARRAY1CC_DEFS(MatrixRef)
-ARRAY1CC_DEFS(VectorRef)
-#endif
-
-#endif //HEADER_DEFS
 
 #endif

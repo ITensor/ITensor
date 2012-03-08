@@ -1,23 +1,43 @@
-// sparseref.h -- Header file for the SparseRef class-- S.R. White 1/00 
+// sparseref.h -- Header file for the SparseRef class-- S.R. White 2/00 
 
 #ifndef _sparseref_h
 #define _sparseref_h
 
-#include "sparse.h"
+//#include "sparse.h"
+#include <map>
 
-class SparseMatBase : private Array1<SparseVector>
+typedef map<int,Real>::const_iterator CRowIter;
+
+class SparseVec : public map<int,Real>
+    {
+    SparseVec() {}
+    int Storage() const { return size() * (2*sizeof(int) + sizeof(Real)); }
+					// estimate
+    Real operator()(int i) const
+	{
+	iterator p = find(i);
+	if(p != end())
+	    return p->second;
+	return 0.0;
+	}
+    void write(ostream& s) const;
+    void read(istream& s);
+
+    };
+
+class SparseMatBase : private Array1<SparseVec>
     {
     friend class SparseRef;
     int nrows; 
     int ncols;
     int numref;
     SparseMatBase(int nr, int nc) 
-	: nrows(nr), ncols(nc), numref(1), Array1<SparseVector>(nr) { }
-    SparseVector& Row(int i) 
-	{ return Array1<SparseVector>::operator[](i); }
+	: nrows(nr), ncols(nc), numref(1), Array1<SparseVec>(nr) { }
+    SparseVec& Row(int i) 
+	{ return Array1<SparseVec>::operator[](i); }
     void OwnCopy()
 	{
-	ArrayDo* a = Array1<SparseVector>::operator->();
+	ArrayDo* a = Array1<SparseVec>::operator->();
 	a->OwnCopy();
 	}
     };
@@ -34,7 +54,7 @@ class SparseRef
 	    delete base;
 	base = 0;
 	}
-    SparseVector& Row(int i) const
+    SparseVec& Row(int i) const
 	{ return base->Row(i); }
     void OwnCopy()
 	{
@@ -65,16 +85,16 @@ public:
 	base->numref++;
 	return *this;
 	}
-    ~SparseRef() { dodelete(); }
+    SparseRef::~SparseRef() { dodelete(); }
     int Nrows() const { return transpose ? base->ncols : base->nrows; }
     int Ncols() const { return transpose ? base->nrows : base->ncols; }
     int NumRef() const { return base->numref; }
-    int RowLen(int row) const { return Row(row).Length(); }
-    int Column(int row,int i) const { return Row(row).index(i); }
-    Real Element(int row,int i) const { return Row(row).data(i); }
+//    int RowLen(int row) const { return Row(row).Length(); }
+//    int Column(int row,int i) const { return Row(row).index(i); }
+//    Real Element(int row,int i) const { return Row(row).data(i); }
     Real operator() (int i, int j) const
 	{
-	return scale * (transpose ? Row(j).el(i-1) : Row(i).el(j-1));
+	return scale * (transpose ? Row(j)(i) : Row(i)(j));
 	}
     SparseRef operator *(Real a) const
 	{
@@ -102,17 +122,19 @@ public:
 		      MatrixRef &,ClearFlag cf = NoClear);
     friend void mult(const MatrixRef &, const SparseRef &,
 		      MatrixRef &,ClearFlag cf = NoClear);
-    void write(std::ostream& s) const;
-    void read(std::istream& s);
+    void write(ostream& s) const;
+    void read(istream& s);
+/*
     void  RemoveElement(int row,int i)
 	{
 	OwnCopy();
 	base->Row(row).data(i) = 0.0;
 	}
     void ClearZeroes();
+*/
     int memory() const;
     };
-inline std::ostream & operator << (std::ostream &s, const SparseRef &a) {return s; }
+inline ostream & operator << (ostream &s, const SparseRef &a) {return s; }
 
 inline SparseRef operator * (Real a, const SparseRef& sp)
     {

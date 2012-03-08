@@ -19,7 +19,7 @@ matrix: configure
 	@echo
 	@echo Building MatrixRef library
 	@echo
-	cd matrix/$(PLATFORM) && make
+	cd matrix && make
 
 itensor: configure
 	@echo
@@ -36,7 +36,7 @@ this_dir.mk:
 
 clean:
 	cd utilities && make clean
-	cd matrix/$(PLATFORM) && make clean
+	cd matrix && make clean
 	cd itensor && make clean
 	cd sample && make clean
 	cd sandbox && make clean

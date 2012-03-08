@@ -5,7 +5,9 @@
 #include "indent.h"
 #include "conjugate_gradient.h"
 
-using namespace std;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 // *************************************************************************
 // The conjugate gradient method as described in numerical recipes

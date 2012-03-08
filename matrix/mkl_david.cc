@@ -7,12 +7,10 @@
 #include "bigmatrix.h"		/* include file for BigMatrix type */
 #include "indent.h"
 #include <math.h>
-//#include <malloc/malloc.h>
-void reportnew();
 
-using std::cout;
-using std::cerr;
-using std::endl;
+//extern void reportnew();
+
+using namespace std;
 
 
 // David -- Block Davidson Diagonalization.
@@ -120,7 +118,6 @@ void David(    // Object containing big hamiltonian
     {
         Mref.Column(i) = Bref.t() * AB[i];
     }
-    //cerr << "Mref = " << iendl << Mref;
 
 	for (sstep = pn; sstep <= mmax; sstep++)
 	    {
