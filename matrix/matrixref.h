@@ -9,6 +9,7 @@
 #include "storelink.h"
 #include "tarray1.h"
 #include <cassert>
+#include <cstdlib>
 
 inline void trade(int & i, int & j) { int k = i; i = j; j = k; }
 
