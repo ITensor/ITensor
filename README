@@ -1,3 +1,7 @@
-A C++ library for creating efficient and flexible physics simulations based on tensor product wavefunctions.
+A C++ library for creating efficient and flexible physics simulations based 
+on tensor product wavefunctions.
 
-The foundation of the library is the Intelligent Tensor or ITensor. Contracting ITensors is no harder than multiplying scalars; matching indices automatically find each other and contract. This makes it easy to transcribe tensor network diagrams into correct, efficient code.
+The foundation of the library is the Intelligent Tensor or ITensor. 
+Contracting ITensors is no harder than multiplying scalars; matching indices 
+automatically find each other and contract. This makes it easy to transcribe 
+tensor network diagrams into correct, efficient code.
