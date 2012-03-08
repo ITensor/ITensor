@@ -9,6 +9,7 @@ class MinFunction
   virtual void optimal(VectorRef& x,VectorRef& Ax,VectorRef& h,
 		       VectorRef& Ah, Real& opti )=0;
   virtual void matrixA(VectorRef& x,VectorRef& Ax)=0;
+  virtual ~MinFunction() { } 
 };
 
 class solveAmina0xeqb : public MinFunction
@@ -21,6 +22,7 @@ class solveAmina0xeqb : public MinFunction
   virtual void optimal(VectorRef& x,VectorRef& Ax,VectorRef& h,
 		       VectorRef& Ah, Real& opti );
   virtual void matrixA(VectorRef& x,VectorRef& Ax);
+  virtual ~solveAmina0xeqb() { } 
  private:
   VectorRef b,x0;
   BigMatrix const *pA;
@@ -36,6 +38,7 @@ class minxAx : public MinFunction
   virtual void optimal(VectorRef& x,VectorRef& Ax,VectorRef& h,
 		       VectorRef& Ah, Real& opti );
   virtual void matrixA(VectorRef& x,VectorRef& Ax);
+  virtual ~minxAx() { } 
  private:
   BigMatrix const *pA;
 };

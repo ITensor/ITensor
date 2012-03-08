@@ -50,7 +50,7 @@ void daxpy(register int n,register double a,register double *x,
 
 void dscal(int n,double a,register double *x,register int incx)
     {
-    register int m,i,n7 = n - 7,ii,inc2 = incx+incx;
+    register int m,i,n7 = n - 7,ii;//,inc2 = incx+incx;
     register double t0,t1,t2,t3,t4,x0,x1,x2,x3,x4;
     register double aa = a;
     if(n <= 0) return;
@@ -108,7 +108,7 @@ void dcopy(register int n,register double *x,
 	    *y = t1; y += incy;
 	    }
 	}
-    register double *xx = x;
+    //register double *xx = x;
     for(i = 0; i < n7; i += 8)
 	{
 	x0 = *x; 		x += incx;

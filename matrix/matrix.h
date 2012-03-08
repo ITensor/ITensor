@@ -93,7 +93,6 @@ void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
 void
 GeneralizedEV(const MatrixRef& A, const MatrixRef& B, Vector& D, Matrix& Z);
 
-#include "svd.h"
 //void SVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);
 //void newSVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V);
 //void thinsvd(const Matrix& A,Matrix& U, Vector& d,  Matrix &V,Real cutsq = 1.0e-20);
@@ -179,9 +178,11 @@ protected:
 void Sort(Vector &);
 void Sort(Vector &, IntArray1 &);
 
-std::ostream & operator << (std::ostream &, const Vector &);
+std::ostream& operator<<(std::ostream &, const Vector &);
 
 #include "matrix.ih"
+
+#include "svd.h"
 
 ARRAY1CC_DEFS(Matrix)
 ARRAY1CC_DEFS(Vector)
