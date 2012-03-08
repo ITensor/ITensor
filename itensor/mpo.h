@@ -152,106 +152,14 @@ private:
 typedef MPOt<ITensor> MPO;
 typedef MPOt<IQTensor> IQMPO;
 
-int inline
-findCenter(const IQMPO& psi)
-{
-    for(int j = 1; j <= psi.NN(); ++j) 
-    {
-        const IQTensor& A = psi.AA(j);
-        if(A.r() == 0) Error("Zero rank tensor in IQMPO");
-        bool allSameDir = true;
-        Arrow dir = Switch;
-        for(int i = 2; i <= A.r(); ++i)
-        {
-            //Only look at Link IQIndices
-            if(A.index(i).type() != Link) continue;
-            //First Link ind, grab its dir and continue
-            if(dir == Switch)
-            {
-                dir = A.index(i).dir();
-                continue;
-            }
-            //Other Link ind, check if dir matches
-            if(A.index(i).dir() != dir)
-            {
-                allSameDir = false;
-                break;
-            }
-        }
-
-        //Found the ortho. center
-        if(allSameDir) return j;
-    }
-    return -1;
-}
+int
+findCenter(const IQMPO& psi);
 
 void inline 
 checkQNs(const MPO& psi) { }
 
-void inline 
-checkQNs(const IQMPO& psi)
-    {
-    const int N = psi.NN();
-
-    QN zero;
-
-    int center = findCenter(psi);
-    if(center == -1)
-        {
-        Error("Did not find an ortho. center");
-        }
-
-    //Check that all IQTensors have zero div
-    //including the ortho. center
-    for(int i = 1; i <= N; ++i) 
-        {
-        if(psi.AA(i).isNull())
-            {
-            std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
-            Error("QNs not well defined");
-            }
-        if(psi.AA(i).div() != zero)
-            {
-            std::cerr << "At i = " << i << "\n";
-            Print(psi.AA(i));
-            Error("Non-zero div IQTensor in IQMPO");
-            }
-        }
-
-    //Check arrows from left edge
-    for(int i = 1; i < center; ++i)
-        {
-        if(psi.RightLinkInd(i).dir() != In) 
-            {
-            std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
-            Error("Incorrect Arrow in IQMPO");
-            }
-        if(i > 1)
-            {
-            if(psi.LeftLinkInd(i).dir() != Out) 
-                {
-                std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
-                Error("Incorrect Arrow in IQMPO");
-                }
-            }
-        }
-
-    //Check arrows from right edge
-    for(int i = N; i > center; --i)
-        {
-        if(i < N)
-        if(psi.RightLinkInd(i).dir() != Out) 
-            {
-            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
-            Error("Incorrect Arrow in IQMPO");
-            }
-        if(psi.LeftLinkInd(i).dir() != In) 
-            {
-            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
-            Error("Incorrect Arrow in IQMPO");
-            }
-        }
-    }
+void
+checkQNs(const IQMPO& psi);
 
 namespace Internal {
 
@@ -418,8 +326,9 @@ psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, cons
     return re;
     }
 
-inline void psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real& re, Real& im) //<psi|H K|phi>
-{
+void inline 
+psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real& re, Real& im) //<psi|H K|phi>
+    {
     if(psi.NN() != phi.NN() || psi.NN() != H.NN() || psi.NN() != K.NN()) Error("Mismatched N in psiHKphi");
     int N = psi.NN();
     IQMPS psiconj(psi);
@@ -443,19 +352,26 @@ inline void psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMP
     L = ((((L * phi.AA(N)) * H.AA(N)) * Kp.AA(N)) * psiconj.AA(N)) * IQTensor::Sing();
     //cout << "in psiHKpsi, L is "; PrintDat(L);
     L.GetSingComplex(re,im);
-}
-inline Real psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi) //<psi|H K|phi>
-{
+    }
+
+Real inline 
+psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi) //<psi|H K|phi>
+    {
     Real re,im;
     psiHKphi(psi,H,K,phi,re,im);
     if(fabs(im) > 1.0e-12 * fabs(re))
 	Error("Non-zero imaginary part in psiHKphi");
     return re;
-}
+    }
 
 template <class MPOType>
-void nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm);
-void napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position = false);
-void exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
+void 
+nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm);
+
+void 
+napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position = false);
+
+void 
+exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
 
 #endif

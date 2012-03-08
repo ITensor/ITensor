@@ -4,6 +4,99 @@
 //
 #include "mpo.h"
 using namespace std;
+using boost::format;
+
+int 
+findCenter(const IQMPO& psi)
+    {
+    for(int j = 1; j <= psi.NN(); ++j) 
+        {
+        const IQTensor& A = psi.AA(j);
+        if(A.r() == 0) Error("Zero rank tensor in IQMPO");
+        bool allOut = true;
+        for(int i = 1; i <= A.r(); ++i)
+            {
+            //Only look at Link IQIndices
+            if(A.index(i).type() != Link) continue;
+
+            if(A.index(i).dir() != Out)
+                {
+                allOut = false;
+                break;
+                }
+            }
+
+        //Found the ortho. center
+        if(allOut) return j;
+        }
+    return -1;
+    }
+
+void
+checkQNs(const IQMPO& psi)
+    {
+    const int N = psi.NN();
+
+    QN zero;
+
+    int center = findCenter(psi);
+    //std::cerr << boost::format("Found the OC at %d\n") % center;
+    if(center == -1)
+        {
+        Error("Did not find an ortho. center");
+        }
+
+    //Check that all IQTensors have zero div
+    //including the ortho. center
+    for(int i = 1; i <= N; ++i) 
+        {
+        if(psi.AA(i).isNull())
+            {
+            std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
+            Error("QNs not well defined");
+            }
+        if(psi.AA(i).div() != zero)
+            {
+            std::cerr << "At i = " << i << "\n";
+            Print(psi.AA(i));
+            Error("Non-zero div IQTensor in IQMPO");
+            }
+        }
+
+    //Check arrows from left edge
+    for(int i = 1; i < center; ++i)
+        {
+        if(psi.RightLinkInd(i).dir() != In) 
+            {
+            std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            Error("Incorrect Arrow in IQMPO");
+            }
+        if(i > 1)
+            {
+            if(psi.LeftLinkInd(i).dir() != Out) 
+                {
+                std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                Error("Incorrect Arrow in IQMPO");
+                }
+            }
+        }
+
+    //Check arrows from right edge
+    for(int i = N; i > center; --i)
+        {
+        if(i < N)
+        if(psi.RightLinkInd(i).dir() != Out) 
+            {
+            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            Error("Incorrect Arrow in IQMPO");
+            }
+        if(psi.LeftLinkInd(i).dir() != In) 
+            {
+            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            Error("Incorrect Arrow in IQMPO");
+            }
+        }
+    }
 
 template <class MPOType>
 void 
@@ -30,33 +123,48 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
     Tensor clust,nfork;
     vector<int> midsize(N);
     for(int i = 1; i < N; ++i)
-	{
-        if(i == 1) { clust = A.AA(i) * B.AA(i); }
-        else       { clust = nfork * A.AA(i) * B.AA(i); }
+        {
+        if(i == 1) 
+            { 
+            clust = A.AA(i) * B.AA(i); 
+            }
+        else       
+            { 
+            clust = nfork * A.AA(i) * B.AA(i); 
+            }
+
         if(i == N-1) break;
 
         IndexT oldmid = res.RightLinkInd(i);
         nfork = Tensor(A.RightLinkInd(i),B.RightLinkInd(i),oldmid);
+
+        /*
         if(clust.norm() == 0) // this product gives 0 !!
-        { 
+            { 
             cerr << boost::format("WARNING: clust.norm()==0 in nmultMPO (i=%d).\n")%i; 
             res *= 0;
             return; 
-        }
+            }
+            */
+
         svd.denmatDecomp(i,clust, res.AAnc(i), nfork,Fromleft);
+
         IndexT mid = index_in_common(res.AA(i),nfork,Link);
         mid.conj();
         midsize[i] = mid.m();
         res.AAnc(i+1) = Tensor(mid,conj(res.si(i+1)),primed(res.si(i+1),2),res.RightLinkInd(i+1));
-	}
+        }
 
     nfork = clust * A.AA(N) * B.AA(N);
+
+    /*
     if(nfork.norm() == 0) // this product gives 0 !!
-    { 
+        { 
         cerr << "WARNING: nfork.norm()==0 in nmultMPO\n"; 
         res *= 0;
         return; 
-    }
+        }
+        */
 
     res.doSVD(N-1,nfork,Fromright);
     res.noprimelink();
@@ -162,3 +270,4 @@ exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
     res.mapprime(1,0,primeSite);
     //res.orthogonalize();
     } //void exact_applyMPO
+

@@ -395,7 +395,7 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
     if(Liq.size() == 0)
         throw ResultIsZero("Liq.size() == 0");
 
-    IQIndex L("L",Liq,Out), R("R",Riq,Out);
+    IQIndex L("L",Liq,uI.dir()), R("R",Riq,vI.dir());
 
     D = IQTSparse(L,R);
     U = IQTensor(uI,conj(L));
@@ -753,7 +753,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         }
     if(iq.size() == 0)
 	throw ResultIsZero("iq.size() == 0");
-    newmid = IQIndex("qlink",iq,In);
+    newmid = IQIndex("qlink",iq,active.dir()*Switch);
     /*
     if(newmid.m() != m)
         {
