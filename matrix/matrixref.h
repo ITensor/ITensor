@@ -8,7 +8,6 @@
 #include "minmax.h"
 #include "storelink.h"
 #include "tarray1.h"
-#include <Accelerate/Accelerate.h>
 #include <cassert>
 
 inline void trade(int & i, int & j) { int k = i; i = j; j = k; }

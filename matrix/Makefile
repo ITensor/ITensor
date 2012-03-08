@@ -3,26 +3,24 @@
 #
 #################################
 
-include ../../this_dir.mk
-include ../../options.mk
+include ../this_dir.mk
+include ../options.mk
 
 ####################################################################
-
-UTILITY_PREFIX=mkl
 
 HEADERS=matrixref.h matrix.h precisio.h sparse.h bigmatrix.h davidson.h\
 	storelink.h matrixref.ih matrix.ih conjugate_gradient.h sparseref.h\
     svd.h
 
-OBJECTS=  matrix.o  $(UTILITY_PREFIX)_utility.o  sparse.o  david.o sparseref.o\
+OBJECTS=  matrix.o  $(PLATFORM)_utility.o  sparse.o  $(PLATFORM)_david.o sparseref.o\
 	hpsortir.o  daxpy.o matrixref.o  storelink.o conjugate_gradient.o\
 	 dgemm.o svd.o
 
-OOBJECTS=  matrix.o-o  $(UTILITY_PREFIX)_utility.o-o  sparse.o-o  david.o-o sparseref.o-o\
+OOBJECTS=  matrix.o-o  $(PLATFORM)_utility.o-o  sparse.o-o  $(PLATFORM)_david.o-o sparseref.o-o\
 	daxpy.o-o hpsortir.o-o conjugate_gradient.o-o  matrixref.o-o  storelink.o-o \
 	dgemm.o-o svd.o-o
 
-SOURCES= matrix.cc $(UTILITY_PREFIX)_utility.cc sparse.cc david.cc hpsortir.cc \
+SOURCES= matrix.cc $(PLATFORM)_utility.cc sparse.cc $(PLATFORM)_david.cc hpsortir.cc \
 	matrixref.cc storelink.cc hpsortir.cc \
 	conjugate_gradient.cc sparseref.cc\
 	daxpy.cc svd.cc
@@ -121,12 +119,12 @@ sparseref.o: sparseref.h
 storelink.o: storelink.h
 matrixref.o: matrix.h matrixref.h storelink.h
 matrix.o: matrix.h matrixref.h storelink.h
-$(UTILITY_PREFIX)_utility.o: matrix.h matrixref.h storelink.h
+$(PLATFORM)_utility.o: matrix.h matrixref.h storelink.h
 test.o: matrix.h matrixref.h storelink.h
 testsparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 davidtest.o: matrix.h sparse.h bigmatrix.h davidson.h precisio.h\
 	matrixref.h storelink.h
-david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
+$(PLATFORM)_david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
 sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 svd.o: svd.h matrix.h
 
@@ -135,12 +133,12 @@ svd.o: svd.h matrix.h
 .g_objs/storelink.o: storelink.h
 .g_objs/matrixref.o: matrix.h matrixref.h storelink.h
 .g_objs/matrix.o: matrix.h matrixref.h storelink.h
-.g_objs/$(UTILITY_PREFIX)_utility.o: matrix.h matrixref.h storelink.h
+.g_objs/$(PLATFORM)_utility.o: matrix.h matrixref.h storelink.h
 .g_objs/test.o: matrix.h matrixref.h storelink.h
 .g_objs/testsparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 .g_objs/davidtest.o: matrix.h sparse.h bigmatrix.h davidson.h precisio.h\
 	matrixref.h storelink.h
-.g_objs/david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
+.g_objs/$(PLATFORM)_david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
 .g_objs/sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 .g_objs/svd.o: svd.h matrix.h
 
@@ -149,12 +147,12 @@ svd.o: svd.h matrix.h
 .pg_objs/storelink.o: storelink.h
 .pg_objs/matrixref.o: matrix.h matrixref.h storelink.h
 .pg_objs/matrix.o: matrix.h matrixref.h storelink.h
-.pg_objs/$(UTILITY_PREFIX)_utility.o: matrix.h matrixref.h storelink.h
+.pg_objs/$(PLATFORM)_utility.o: matrix.h matrixref.h storelink.h
 .pg_objs/test.o: matrix.h matrixref.h storelink.h
 .pg_objs/testsparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 .pg_objs/davidtest.o: matrix.h sparse.h bigmatrix.h davidson.h precisio.h\
 	matrixref.h storelink.h
-.pg_objs/david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
+.pg_objs/$(PLATFORM)_david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
 .pg_objs/sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 .pg_objs/svd.o: svd.h matrix.h
 	
@@ -198,11 +196,11 @@ matrix.o-g: matrix.h matrixref.h storelink.h
 
 matrix.o-pg: matrix.h matrixref.h storelink.h
 
-$(UTILITY_PREFIX)_utility.o-o: matrix.h matrixref.h storelink.h
+$(PLATFORM)_utility.o-o: matrix.h matrixref.h storelink.h
 
-$(UTILITY_PREFIX)_utility.o-g: matrix.h matrixref.h storelink.h
+$(PLATFORM)_utility.o-g: matrix.h matrixref.h storelink.h
 
-$(UTILITY_PREFIX)_utility.o-pg: matrix.h matrixref.h storelink.h
+$(PLATFORM)_utility.o-pg: matrix.h matrixref.h storelink.h
 
 test.o-o: matrix.h matrixref.h storelink.h
 
@@ -227,11 +225,11 @@ davidtest.o-g: matrix.h sparse.h bigmatrix.h davidson.h precisio.h\
 davidtest.o-pg: matrix.h sparse.h bigmatrix.h davidson.h precisio.h\
 	matrixref.h storelink.h
 
-david.o-o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
+$(PLATFORM)_david.o-o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
 
-david.o-g: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
+$(PLATFORM)_david.o-g: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
 
-david.o-pg: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h\
+$(PLATFORM)_david.o-pg: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h\
 	storelink.h
 
 sparse.o-o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h

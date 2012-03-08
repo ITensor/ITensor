@@ -7,9 +7,9 @@
 #define CHANGE      0
 #include <fstream>
 
-using std::cout;
-using std::cerr;
-using std::endl;
+#include <Accelerate/Accelerate.h>
+
+using namespace std;
 
 void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M to num cols
     {

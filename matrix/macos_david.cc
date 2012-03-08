@@ -11,9 +11,7 @@
 
 //extern void reportnew();
 
-using std::cout;
-using std::cerr;
-using std::endl;
+using namespace std;
 
 
 // David -- Block Davidson Diagonalization.
