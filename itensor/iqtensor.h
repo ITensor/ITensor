@@ -205,7 +205,7 @@ class IQTensor
     //
     ITensor 
     operator*(const ITensor& t) const
-        { ITensor res(*this); res *= t; return res; }
+        { ITensor res = this->toITensor(); res *= t; return res; }
     
     //
     // Multiplication by an IQIndexVal
@@ -223,15 +223,21 @@ class IQTensor
     //
     ITensor 
     operator*(const IndexVal& iv) const
-        { ITensor res(*this); res *= iv; return res; }
+        { ITensor res = this->toITensor(); res *= iv; return res; }
 
     friend inline ITensor 
     operator*(const IndexVal& iv, const IQTensor& T) 
-        { return ITensor(iv) * T; }
+        { return ITensor(iv) * T.toITensor(); }
 
     //Convert to ITensor
-    operator ITensor() const;
+    ITensor 
+    toITensor() const;
 
+    //Automatic conversion to ITensor
+    operator ITensor() { return toITensor(); }
+
+    //Inserts an ITensor block or adds it to
+    //existing one if already present and QNs match
     IQTensor& 
     operator+=(const ITensor& t);
 
@@ -256,8 +262,8 @@ class IQTensor
     QN 
     div() const;
 
-    void 
-    checkDiv(QN expected = QN()) const;
+    friend void 
+    checkDiv(const IQTensor& T, QN expected = QN());
 
     QN 
     qn(const Index& in) const;
@@ -365,6 +371,9 @@ class IQTensor
 
     void
     trace(const IQIndex& i1, const IQIndex& i2);
+
+    void
+    trace(const IQIndex& i1);
 
     IQTensor friend inline
     trace(const IQIndex& i1, const IQIndex& i2, IQTensor T)
@@ -672,5 +681,8 @@ checkQNs(const IQTensor& T);
 void inline
 checkQNs(const ITensor& t) { }
 
+//ITensor version for compatibility
+void inline
+checkDiv(const ITensor& t, QN q = QN()) { } 
 
 #endif

@@ -17,38 +17,40 @@ void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M
 
     int nkeep;			// Orthogonalize to at most the column dim 
     if (num > M.Nrows() || (num == 0 && M.Ncols() > M.Nrows()))
-	_merror("Ncols() > M.Nrows() in Orthog!");
+        _merror("Ncols() > M.Nrows() in Orthog!");
+
     if (num > 0 && num <= M.Ncols() && num <= M.Nrows())
-	nkeep = num;
+        nkeep = num;
     else
-	nkeep = min(M.Nrows(), M.Ncols());
+        nkeep = min(M.Nrows(), M.Ncols());
 
     Vector dots(nkeep);
     MatrixRef Mcols;
     VectorRef dotsref, coli;
     int i;
     for (i = 1; i <= nkeep; i++)
-	{
-	coli << M.Column(i);
-	Real norm = Norm(coli);
-	if (norm == 0.0)
-	    {
-	    coli.Randomize();
-	    norm = Norm(coli);
-	    }
-	coli /= norm;
-	if (i == 1)
-	    continue;
-	Mcols << M.Columns(1,i-1);
-	dotsref << dots.SubVector(1,i-1);
-	int pass;
-	for(pass = 1; pass <= numpass; pass++)
-	    {
-	    dotsref = Mcols.t() * coli;
-	    coli -= Mcols * dotsref;
-	    coli /= Norm(coli);
-	    }
-	}
+        {
+        coli << M.Column(i);
+        Real norm = Norm(coli);
+        if (norm == 0.0)
+            {
+            coli.Randomize();
+            norm = Norm(coli);
+            }
+        coli /= norm;
+        if (i == 1)
+            continue;
+
+        Mcols << M.Columns(1,i-1);
+        dotsref << dots.SubVector(1,i-1);
+        int pass;
+        for(pass = 1; pass <= numpass; pass++)
+            {
+            dotsref = Mcols.t() * coli;
+            coli -= Mcols * dotsref;
+            coli /= Norm(coli);
+            }
+        }
     }
 
 // Possibly extra stuff for EigenValues:

@@ -180,27 +180,33 @@ hasAllIndex(const array<Index,NMAX+1>& I, int nind) const
 
 
 
-
 void IndexSet::
-getperm(const IndexSet& other, Permutation& P) const
+getperm(const boost::array<Index,NMAX+1>& ind, Permutation& P) const
 	{
 	for(int j = 1; j <= r_; ++j)
 	    {
 	    bool got_one = false;
 	    for(int k = 1; k <= r_; ++k)
-            if(other.index_[j] == index_[k])
+            if(ind[j] == index_[k])
                 { P.from_to(j,k); got_one = true; break; }
 	    if(!got_one)
             {
             std::cerr << "j = " << j << "\n";
             Print(*this); 
-            std::cerr << "other.index_ = \n";
+            std::cerr << "ind = \n";
             for(int j = 1; j <= r_; ++j) 
-                { std::cerr << other.index_[j] << "\n"; }
+                { std::cerr << ind[j] << "\n"; }
             Error("IndexSet::getperm: no matching index");
             }
 	    }
 	}
+
+void IndexSet::
+getperm(const IndexSet& other, Permutation& P) const
+    {
+    getperm(other.index_,P);
+    }
+
 
 int IndexSet::
 minM() const

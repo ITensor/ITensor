@@ -5,6 +5,7 @@
 #include "iqtensor.h"
 #include <set>
 using namespace std;
+using boost::format;
 
 IQTDat::
 IQTDat() 
@@ -542,31 +543,6 @@ div() const
 	return div_;
 	}
 
-void IQTensor::
-checkDiv(QN expected) const
-	{
-	assert(p != 0);
-	if(dat().empty())
-	    {   
-	    this->printIndices("this");
-	    Error("IQTensor has no blocks");
-	    }
-    Foreach(const ITensor& t, dat())
-	    {
-	    QN div_;
-	    for(int j = 1; j <= t.r(); ++j)
-		div_ += qn(t.index(j))*dir(t.index(j));
-	    if(div_ != expected)
-            {
-            Print(expected);
-            Print(div_);
-            this->printIndices("this IQTensor:");
-            std::cout << "Incorrect block:\n";
-            Print(t);
-            Error("Block didn't match expected div");
-            }
-	    }
-	}
 
 QN IQTensor::
 qn(const Index& in) const
@@ -722,7 +698,7 @@ symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& 
     assert(hasindex(primed(i1)));
     if(r() != 2) Error("symDiag11: rank must be 2");
     //This method is only intended for IQTensors with zero divergence
-    DO_IF_DEBUG(this->checkDiv(QN());)
+    DO_IF_DEBUG(checkDiv(*this,QN());)
 
     vector<inqn> iq(iten_size()); 
     vector<ITensor> UU(iten_size()); 
@@ -958,6 +934,18 @@ trace(const IQIndex& i1, const IQIndex& i2)
            IQIndex::Null(), IQIndex::Null() }};
 
     trace(inds,2);
+    }
+
+void IQTensor::
+trace(const IQIndex& i1)
+    {
+    boost::array<IQIndex,NMAX+1> inds =
+        {{ IQIndex::Null(), i1, IQIndex::Null(), 
+           IQIndex::Null(), IQIndex::Null(), 
+           IQIndex::Null(), IQIndex::Null(), 
+           IQIndex::Null(), IQIndex::Null() }};
+
+    trace(inds,1);
     }
 
 int IQTensor::
@@ -1519,8 +1507,8 @@ operator+=(const IQTensor& other)
 //Automatically convert this IQTensor
 //to an ITensor
 //
-IQTensor::
-operator ITensor() const
+ITensor IQTensor::
+toITensor() const
     {
     //Resulting ITensor's indices are 
     //the Index versions of this's IQIndices
@@ -1640,3 +1628,29 @@ checkQNs(const IQTensor& T)
             }
         }
     }
+
+void 
+checkDiv(const IQTensor& T, QN expected)
+	{
+	if(T.dat().empty())
+	    {   
+	    T.printIndices("this");
+	    Error("IQTensor has no blocks");
+	    }
+
+    Foreach(const ITensor& t, T.dat())
+	    {
+	    QN div_;
+	    for(int j = 1; j <= t.r(); ++j)
+            div_ += T.qn(t.index(j))*T.dir(t.index(j));
+	    if(div_ != expected)
+            {
+            Print(expected);
+            Print(div_);
+            T.printIndices("This IQTensor:");
+            cout << "Incorrect block:\n";
+            Print(t);
+            Error("Block didn't match expected div");
+            }
+	    }
+	}

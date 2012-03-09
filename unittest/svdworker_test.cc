@@ -92,7 +92,7 @@ struct SVDWorkerDefaults
             Phi0 += zdduu;
             }
         Phi0 *= 1.0/Phi0.norm();
-        Phi0.checkDiv();
+        checkDiv(Phi0);
 
         phi0 = Phi0;
 

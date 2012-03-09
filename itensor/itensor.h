@@ -448,6 +448,9 @@ class ITensor
     void
     trace(const Index& i1, const Index& i2);
 
+    void
+    trace(const Index& i1);
+
     ITensor friend inline
     trace(const Index& i1, const Index& i2, ITensor T)
         { T.trace(i1,i2); return T; }

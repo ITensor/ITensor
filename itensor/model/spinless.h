@@ -112,13 +112,13 @@ constructSites()
             {
             if(i%2==1)
                 {
-                site_.at(i) = IQIndex(nameint("Spinless, Up site=",i),
+                site_.at(i) = IQIndex(nameint("Spinless Up site=",i),
                 Index(nameint("Emp for Up site",i),1,Site),QN(0,0,0),
                 Index(nameint("Occ for Up site",i),1,Site),QN(+1,occ,1));
                 }
             else
                 {
-                site_.at(i) = IQIndex(nameint("Spinless, Dn site=",i),
+                site_.at(i) = IQIndex(nameint("Spinless Dn site=",i),
                 Index(nameint("Emp for Dn site",i),1,Site),QN(0,0,0),
                 Index(nameint("Occ for Dn site",i),1,Site),QN(-1,occ,1));
                 }
@@ -128,7 +128,7 @@ constructSites()
         {
         for(int i = 1; i <= N_; ++i)
             {
-            site_.at(i) = IQIndex(nameint("Spinless, site=",i),
+            site_.at(i) = IQIndex(nameint("Spinless site=",i),
             Index(nameint("Emp for site",i),1,Site),QN(0,0,0),
             Index(nameint("Occ for site",i),1,Site),QN(0,occ,1));
             }

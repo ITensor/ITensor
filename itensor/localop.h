@@ -260,6 +260,42 @@ deltaRho(const Tensor& rho, const CombinerT& comb, Direction dir) const
     }
 
 template <class Tensor>
+inline Tensor LocalOp<Tensor>::
+deltaPhi(const Tensor& phi) const
+    {
+    Tensor deltaL(phi),
+           deltaR(phi);
+
+    if(L().isNotNull()) 
+        {
+        deltaL *= L();
+        }
+
+    if(R().isNotNull()) 
+        {
+        deltaR *= R();
+        }
+
+    const Tensor& Op1 = *Op1_;
+    const Tensor& Op2 = *Op2_;
+
+    deltaL *= Op1;
+    deltaR *= Op2;
+
+    IndexT hl = index_in_common(Op1,Op2,Link);
+
+    deltaL.trace(hl);
+    deltaL.mapprime(1,0);
+
+    deltaR.trace(hl);
+    deltaR.mapprime(1,0);
+
+    deltaL += deltaR;
+
+    return deltaL;
+    }
+
+template <class Tensor>
 inline void LocalOp<Tensor>::
 diag(Tensor& D) const
     {

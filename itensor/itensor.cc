@@ -839,6 +839,18 @@ trace(const array<Index,NMAX+1>& indices, int nind)
     } //ITensor::trace
 
 void ITensor::
+trace(const Index& i1)
+    {
+    array<Index,NMAX+1> inds =
+        {{ Index::Null(), i1, Index::Null(), 
+           Index::Null(), Index::Null(), 
+           Index::Null(), Index::Null(), 
+           Index::Null(), Index::Null() }};
+
+    trace(inds,1);
+    }
+
+void ITensor::
 trace(const Index& i1, const Index& i2)
     {
     array<Index,NMAX+1> inds =

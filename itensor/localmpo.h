@@ -33,6 +33,9 @@ class LocalMPO
              const CombinerT& comb, Direction dir) const
         { return lop_.deltaRho(rho,comb,dir); }
 
+    Tensor
+    deltaPhi(const Tensor& phi) const { return lop_.deltaPhi(phi); }
+
     void
     diag(Tensor& D) const { lop_.diag(D); }
 

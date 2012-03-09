@@ -99,6 +99,9 @@ class IndexSet
     notin(const Index& I) const { return !hasindex(I); }
 
     void
+    getperm(const boost::array<Index,NMAX+1>& I, Permutation& P) const;
+
+    void
     getperm(const IndexSet& other, Permutation& P) const;
 
     int
