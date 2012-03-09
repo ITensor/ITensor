@@ -167,20 +167,36 @@ TEST(Constructors)
     CHECK_CLOSE(t7(l1(2),l2(2)),a,1E-10);
     CHECK_CLOSE(t7.norm(),sqrt(min(l1.m(),l2.m()))*fabs(a),1E-10);
 
-    Matrix M(l1.m(),l2.m()); 
-    M(1,1) = ran1(); M(1,2) = ran1();
-    M(2,1) = ran1(); M(2,2) = ran1();
-    ITensor t8(l1,l2,M);
+    Matrix M(l1.m(),b3.m()); 
+    M(1,1) = 11; M(1,2) = 12; M(1,3) = 13;
+    M(2,1) = 21; M(2,2) = 22; M(2,3) = 23;
+    ITensor t8(l1,b3,M);
 
     CHECK_EQUAL(t8.r(),2);
     CHECK(t8.hasindex(l1));
-    CHECK(t8.hasindex(l2));
-    CHECK_CLOSE(t8(l1(1),l2(1)),M(1,1),1E-10);
-    CHECK_CLOSE(t8(l1(1),l2(2)),M(1,2),1E-10);
-    CHECK_CLOSE(t8(l1(2),l2(1)),M(2,1),1E-10);
-    CHECK_CLOSE(t8(l1(2),l2(2)),M(2,2),1E-10);
+    CHECK(t8.hasindex(b3));
+    CHECK_CLOSE(t8(l1(1),b3(1)),11,1E-10);
+    CHECK_CLOSE(t8(l1(1),b3(2)),12,1E-10);
+    CHECK_CLOSE(t8(l1(1),b3(3)),13,1E-10);
+    CHECK_CLOSE(t8(l1(2),b3(1)),21,1E-10);
+    CHECK_CLOSE(t8(l1(2),b3(2)),22,1E-10);
+    CHECK_CLOSE(t8(l1(2),b3(3)),23,1E-10);
     CHECK_CLOSE(t8.sumels(),M.TreatAsVector().sumels(),1E-10);
     CHECK_CLOSE(t8.norm(),Norm(M.TreatAsVector()),1E-10);
+
+    ITensor t85(b3,l1,M.t());
+
+    CHECK_EQUAL(t85.r(),2);
+    CHECK(t85.hasindex(l1));
+    CHECK(t85.hasindex(b3));
+    CHECK_CLOSE(t85(l1(1),b3(1)),11,1E-10);
+    CHECK_CLOSE(t85(l1(1),b3(2)),12,1E-10);
+    CHECK_CLOSE(t85(l1(1),b3(3)),13,1E-10);
+    CHECK_CLOSE(t85(l1(2),b3(1)),21,1E-10);
+    CHECK_CLOSE(t85(l1(2),b3(2)),22,1E-10);
+    CHECK_CLOSE(t85(l1(2),b3(3)),23,1E-10);
+    CHECK_CLOSE(t85.sumels(),M.TreatAsVector().sumels(),1E-10);
+    CHECK_CLOSE(t85.norm(),Norm(M.TreatAsVector()),1E-10);
 
     Matrix W(a1.m(),l2.m()); 
     W(1,1) = ran1(); W(1,2) = ran1();
@@ -913,7 +929,7 @@ TEST(Trace)
     }
 
 TEST(fromMatrix11)
-{
+    {
     Matrix M22(s1.m(),s2.m());
 
     M22(1,1) = -0.3; M22(1,2) = 110;
@@ -960,9 +976,9 @@ TEST(fromMatrix11)
 
     CHECK_CLOSE(P(s2(1),a1(1)),M12(1,1),1E-10);
     CHECK_CLOSE(P(s2(2),a1(1)),M12(1,2),1E-10);
-}
+    }
 
-TEST(toMatrix11)
+TEST(ToFromMatrix11)
     {
     Matrix M(s1.m(),s2.m());    
 
@@ -990,6 +1006,22 @@ TEST(toMatrix11)
     CHECK_CLOSE(M(2,1),12,1E-10);
     CHECK_CLOSE(M(1,2),21,1E-10);
     CHECK_CLOSE(M(2,2),22,1E-10);
+
+    A *= -40;
+    A.fromMatrix11(s2,s1,M);
+
+    CHECK_CLOSE(A(s1(1),s2(1)),11,1E-10);
+    CHECK_CLOSE(A(s1(1),s2(2)),12,1E-10);
+    CHECK_CLOSE(A(s1(2),s2(1)),21,1E-10);
+    CHECK_CLOSE(A(s1(2),s2(2)),22,1E-10);
+
+    A.fromMatrix11(s1,s2,M);
+
+    CHECK_CLOSE(A(s1(1),s2(1)),11,1E-10);
+    CHECK_CLOSE(A(s1(1),s2(2)),21,1E-10);
+    CHECK_CLOSE(A(s1(2),s2(1)),12,1E-10);
+    CHECK_CLOSE(A(s1(2),s2(2)),22,1E-10);
+
 
     Vector V(4);
     V(1) = 3.14; V(2) = 2.718; V(3) = -1; V(4) = 0;

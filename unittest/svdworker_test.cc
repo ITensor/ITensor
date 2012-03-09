@@ -188,7 +188,7 @@ TEST(SiteSVD)
     phi0 *= -1.2324;
     svd.denmatDecomp(phi0,a,b,Fromleft);
 
-    Print(((a*b)-phi0).norm());
+    //Print(((a*b)-phi0).norm());
     CHECK(((a*b)-phi0).norm() < 1E-12 );
 
     CHECK(svd.truncerr() < 1E-12);
@@ -202,7 +202,7 @@ TEST(SiteSVD)
     Phi0 *= -10.23432;
     svd.denmatDecomp(Phi0,A,B,Fromleft);
 
-    Print(((A*B)-Phi0).norm());
+    //Print(((A*B)-Phi0).norm());
     CHECK(((A*B)-Phi0).norm() < 1E-12 );
 
     CHECK(svd.truncerr() < 1E-12);
@@ -223,7 +223,7 @@ TEST(BondSVD)
 
     svd.csvd(phi0,l,v,r);
 
-    Print(((l*v*r)-phi0).norm());
+    //Print(((l*v*r)-phi0).norm());
     CHECK(((l*v*r)-phi0).norm() < 1E-12 );
 
 
@@ -267,11 +267,11 @@ TEST(CSVDNorm)
 
     svd.svd(phi0,l,v,r);
     Index nmr = index_in_common(r,v,Link);
-    ITensor rhoRsvd1 = r * conj(primeind(r,rr));
-    ITensor rhoRsvd2 = r * conj(primeind(r,nmr));
-    PrintDat(r);
-    PrintDat(rhoRsvd1);
-    PrintDat(rhoRsvd2);
+    //ITensor rhoRsvd1 = r * conj(primeind(r,rr));
+    //ITensor rhoRsvd2 = r * conj(primeind(r,nmr));
+    //PrintDat(r);
+    //PrintDat(rhoRsvd1);
+    //PrintDat(rhoRsvd2);
 
 
     svd.csvd(phi0,l,v,r);
@@ -280,16 +280,16 @@ TEST(CSVDNorm)
     CHECK_CLOSE(1,r.norm(),1E-2);
     CHECK((l*v*r-phi0).norm() < 1E-10);
 
-    cerr << format("l.norm() = %.3E\n") % l.norm();
-    cerr << format("v.norm() = %.3E\n") % v.norm();
-    cerr << format("r.norm() = %.3E\n") % r.norm();
+    //cerr << format("l.norm() = %.3E\n") % l.norm();
+    //cerr << format("v.norm() = %.3E\n") % v.norm();
+    //cerr << format("r.norm() = %.3E\n") % r.norm();
 
-    cerr << format("(l*v*r-phi0).norm() = %.3E\n") % (l*v*r-phi0).norm();
+    //cerr << format("(l*v*r-phi0).norm() = %.3E\n") % (l*v*r-phi0).norm();
 
-    PrintDat(v * r);
-    ITensor ur = v*r; 
-    ITensor rhoR = ur * conj(primeind(ur,rr));
-    PrintDat(rhoR);
+    //PrintDat(v * r);
+    //ITensor ur = v*r; 
+    //ITensor rhoR = ur * conj(primeind(ur,rr));
+    //PrintDat(rhoR);
 
     }
 

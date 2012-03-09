@@ -2,6 +2,7 @@
 #include "matrix.h"
 #include <boost/test/unit_test.hpp>
 #include "boost/format.hpp"
+#include "math.h"
 
 using namespace std;
 using boost::format;
@@ -94,7 +95,7 @@ TEST(TestSVD)
     Matrix DD(n,n); DD = 0.0; DD.Diagonal() = D;
     Matrix err = A - U * DD * V;
     Real sumerrsq = Trace(err * err.t());
-    cout << format("Avg err is %.2E") % sqrt(sumerrsq/(n*m)) << endl;
+    //cout << format("Avg err is %.2E") % sqrt(sumerrsq/(n*m)) << endl;
     CHECK(sumerrsq < 1E-10);
     }
 

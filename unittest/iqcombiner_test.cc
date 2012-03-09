@@ -185,7 +185,7 @@ TEST(CondenseProduct)
     du.Randomize();
     phi += du;
 
-    phi.checkDiv(QN(0));
+    checkDiv(phi);
 
     IQCombiner c;
     c.doCondense(true);

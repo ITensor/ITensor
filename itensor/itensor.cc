@@ -538,12 +538,16 @@ void ITensor::
 groupIndices(const array<Index,NMAX+1>& indices, int nind, 
              const Index& grouped, ITensor& res) const
     {
-    array<bool,NMAX+1> isReplaced; isReplaced.assign(false);
+    array<int,NMAX+1> isReplaced; 
+    isReplaced.assign(0);
+
+    //Print(*this);
 
     int tot_m = 1;
     int nn = 0; //number of m != 1 indices
     for(int j = 1; j <= nind; ++j) 
         {
+        //cerr << format("indices[%d] = ") % j << indices[j] << "\n";
         const Index& J = indices[j];
         if(J.m() != 1) ++nn;
         tot_m *= J.m();
@@ -553,7 +557,8 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
             { 
             if(index(k) == J) 
                 {
-                isReplaced[k] = true; 
+                isReplaced[k] = (J.m() == 1 ? -1 : nn);
+                //cerr << format("setting isReplaced[%d] = %d\n ") % k % isReplaced[k];
                 foundit = true; 
                 break; 
                 }
@@ -574,28 +579,32 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
     vector<Index> nindices; 
     nindices.reserve(r()-nind+1);
     Permutation P;
-    int kk = 0, kr = 0;
+    int nkept = 0; 
     for(int j = 1; j <= rn(); ++j)
         {
-        if(isReplaced[j])
-            { 
-            P.from_to(j,res_rn_+kr);
-            kr += 1;
-            }
-        else 
-            { 
-            P.from_to(j,++kk);
+        //cerr << format("isReplaced[%d] = %d\n") % j % isReplaced[j];
+        if(isReplaced[j] == 0)
+            {
+            //cerr << format("Kept index, setting P.from_to(%d,%d)\n") % j % (nkept+1);
+            P.from_to(j,++nkept);
             nindices.push_back(index(j)); 
+            }
+        else
+            {
+            //cerr << format("Replaced index, setting P.from_to(%d,%d)\n") % j % (res_rn_+isReplaced[j]-1);
+            P.from_to(j,res_rn_+isReplaced[j]-1);
             }
         }
 
     nindices.push_back(grouped);
 
     for(int j = rn()+1; j <= r(); ++j) 
-        if(!isReplaced[j]) nindices.push_back(index(j));
+        if(isReplaced[j] == 0) nindices.push_back(index(j));
 
-    if(nn == 0) res = ITensor(nindices,*this);
-    else        res = ITensor(nindices,*this,P); 
+    if(nn == 0) 
+        res = ITensor(nindices,*this);
+    else        
+        res = ITensor(nindices,*this,P); 
     }
 
 void ITensor::
@@ -2191,11 +2200,17 @@ fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     solo();
     scale_ = 1;
 
-    MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
-    if(rn() == 2)
-    { dref = M.t(i1==index(1)); }
+    MatrixRef dref; 
+    if(i1 == index(1))
+        {
+        p->v.TreatAsMatrix(dref,i2.m(),i1.m());
+        dref = M.t();
+        }
     else
-    { dref = M.t(); }
+        {
+        p->v.TreatAsMatrix(dref,i1.m(),i2.m());
+        dref = M;
+        }
     }
 
 void ITensor::
@@ -2206,16 +2221,66 @@ toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
     assert(hasindex(i2));
     res.ReDimension(i1.m(),i2.m());
 
-    MatrixRef dref; p->v.TreatAsMatrix(dref,i2.m(),i1.m());
-    if(rn() == 2)
-    { res = dref.t(i1==index(1)); }
-    else
-    { res = dref.t(); }
+    MatrixRef dref; 
+    p->v.TreatAsMatrix(dref,m(2),m(1));
+    res = dref.t(i1==index(1)); 
     }
 
 void ITensor::
 toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
-    { toMatrix11NoScale(i1,i2,res); res *= scale_.real(); }
+    { 
+    toMatrix11NoScale(i1,i2,res); 
+    res *= scale_.real(); 
+    }
+
+void ITensor::
+toMatrix12NoScale(const Index& i1, const Index& i2, 
+                  const Index& i3, Matrix& res) const
+    {
+    if(r() != 3) Error("toMatrix11: incorrect rank");
+    assert(hasindex(i1));
+    assert(hasindex(i2));
+    assert(hasindex(i3));
+
+    res.ReDimension(i1.m(),i2.m()*i3.m());
+
+    const array<Index,NMAX+1> reshuf 
+        = {{ Index::Null(), i2, i3, i1, 
+             Index::Null(), Index::Null(), 
+             Index::Null(), Index::Null(), Index::Null() }};
+
+    Permutation P; 
+    is_.getperm(reshuf,P);
+
+    Vector V;
+    reshapeDat(P,V);
+    res.TreatAsVector() = V;
+    }
+
+void ITensor::
+toMatrix12(const Index& i1, const Index& i2, 
+           const Index& i3, Matrix& res) const
+    { 
+    toMatrix12NoScale(i1,i2,i3,res); 
+    res *= scale_.real(); 
+    }
+
+void ITensor::
+fromMatrix12(const Index& i1, const Index& i2, 
+             const Index& i3, const Matrix& M)
+    {
+    if(r() != 3) Error("fromMatrix12: incorrect rank");
+    assert(hasindex(i1));
+    assert(hasindex(i2));
+    assert(hasindex(i3));
+
+    solo();
+    scale_ = 1;
+
+    ITensor Q(i3,i1,i2);
+    Q.p->v = M.TreatAsVector();
+    assignFrom(Q);
+    }
 
 /*
 // group i1,i2; i3,i4

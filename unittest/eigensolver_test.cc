@@ -140,7 +140,7 @@ TEST(IQFourSite)
 
     Eigensolver d(9);
     Real En1 = d.davidson(PH,phi1);
-    cout << format("Energy from tensor Davidson (b=2) = %.20f")%En1 << endl;
+    //cout << format("Energy from tensor Davidson (b=2) = %.20f")%En1 << endl;
     CHECK_CLOSE(En1,-1.1896926208,1E-4);
 
 

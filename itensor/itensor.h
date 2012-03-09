@@ -516,12 +516,17 @@ class ITensor
     void fromMatrix21(const Index& i1, const Index& i2, 
                       const Index& i3, const Matrix& res);
 
+    */
+
     // group i1; i2,i3
+    void toMatrix12NoScale(const Index& i1, const Index& i2, 
+                           const Index& i3, Matrix& res) const;
+
     void toMatrix12(const Index& i1, const Index& i2, 
                     const Index& i3, Matrix& res) const;
+
     void fromMatrix12(const Index& i1, const Index& i2, 
                       const Index& i3, const Matrix& res);
-    */
 
     void
     symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid) const;

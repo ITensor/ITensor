@@ -1,9 +1,18 @@
 #include "test.h"
-#include "iqtensor.h"
 #include <boost/test/unit_test.hpp>
+#include "svdworker.h"
 
 using namespace std;
 using boost::format;
+
+//
+//The tests in this suite are
+//regression tests, meaning they
+//are designed to check for a specific
+//bug that came up in the use of the library.
+//Keeping these tests around is supposed
+//to prevent the same bugs from coming up again.
+//
 
 struct RegressionDefaults
     {
@@ -14,6 +23,110 @@ struct RegressionDefaults
     };
 
 BOOST_FIXTURE_TEST_SUITE(RegressionTest,RegressionDefaults)
+
+TEST(CombinerOrder)
+    {
+    Index a("a",2),c("c",2);
+
+    ITensor U(a,c);
+    U(a(1),c(2)) = 1;
+    //PrintDat(U);
+
+    Combiner C(c,a);
+    ITensor CU = C * U;
+    //PrintDat(CU);
+    ITensor UU = C * CU;
+    //PrintDat(UU);
+
+    CHECK((U-UU).norm() < 1E-10);
+
+    Combiner D(a,c);
+    CU = D * U;
+    //PrintDat(CU);
+    UU = D * CU;
+
+    CHECK((U-UU).norm() < 1E-10);
+    }
+
+TEST(SVDIndexOrder)
+    {
+    Index a("a",2),b("b",1),c("c",2);
+
+    ITensor z(c,a,b);
+    z(c(1),a(2),b(1)) = 1;
+    z(c(1),a(1),b(1)) = 1;
+
+    SVDWorker svd;
+    //svd.showeigs(true);
+
+    ITensor V(b);
+
+    //ITensor U(c,a); //This order succeeds
+    ITensor U(a,c); //This order was failing
+
+    ITSparse D;
+    //Globals::debug2() = true;
+    svd.svd(z,U,D,V);
+    //Globals::debug2() = false;
+
+    //PrintDat(U);
+
+    //Combiner c1(a,c),c2(c,a);
+
+    //U = c2*U;
+    //PrintDat(U);
+    //U = c2*U;
+    //PrintDat(U);
+
+    ITensor nz = U*D*V;
+    CHECK((z-nz).norm() < 1E-10);
+
+    }
+    //z(primed(a)(1),a(1),b(1),h(1)) = 11.8196;
+    //z(primed(a)(2),a(2),b(1),h(1)) = 10.4226;
+    //z(primed(a)(3),a(3),b(1),h(1)) = 9.02554;
+    //z(primed(a)(1),a(1),b(2),h(1)) = 3.7886;
+    //z(primed(a)(2),a(2),b(2),h(1)) = 3.11396;
+    //z(primed(a)(3),a(3),b(2),h(1)) = 2.43931;
+    //z(primed(a)(1),a(1),b(1),h(2)) = -1.55971;
+    //z(primed(a)(3),a(3),b(1),h(2)) = 1.55971;
+    //z(primed(a)(1),a(1),b(2),h(2)) = -0.753196;
+    //z(primed(a)(3),a(3),b(2),h(2)) = 0.753196;
+    //z(primed(a)(2),a(1),b(1),h(3)) = -1.10288;
+    //z(primed(a)(3),a(2),b(1),h(3)) = -1.10288;
+    //z(primed(a)(2),a(1),b(2),h(3)) = -0.53259;
+    //z(primed(a)(3),a(2),b(2),h(3)) = -0.53259;
+    //z(primed(a)(1),a(2),b(1),h(4)) = -1.10288;
+    //z(primed(a)(1),a(2),b(2),h(4)) = -0.53259;
+    //z(primed(a)(2),a(3),b(2),h(4)) = -0.53259;
+    //z(primed(a)(2),a(2),b(1),h(5)) = -1.55971;
+    //z(primed(a)(3),a(3),b(1),h(5)) = -1.55971;
+    //z(primed(a)(1),a(1),b(2),h(5)) = -0.753196;
+    //z(primed(a)(2),a(2),b(2),h(5)) = -0.753196;
+    //z(primed(a)(3),a(3),b(2),h(5)) = -0.753196;
+
+TEST(SVDArrows)
+    {
+    SVDWorker svd;
+
+    Index l("l",2),r("r",2);
+    IQIndex L("L",l,QN(1,1),In),R("R",r,QN(1,1),Out);
+
+    IQTensor AA(L,R);
+
+    ITensor block(l,r);
+    block.Randomize();
+    AA += block;
+
+    checkDiv(AA);
+
+    IQTensor U(L),V(R);
+    IQTSparse D;
+    svd.svd(AA,U,D,V);
+
+    checkDiv(U);
+    checkDiv(V);
+    }
 
 TEST(ExpandIndex)
     {
@@ -68,6 +181,13 @@ TEST(ConvertToITensor)
 
 TEST(IndexOrder)
     {
+    //
+    //The ITensor contracting product code,
+    //specifically the toMatrixProd part,
+    //was mis-identifying certain products 
+    //as matrix products when they were not.
+    //
+
     //Globals::debug1() = true;
 
     Index l("l",2),r("r",2),s("s",2,Site);
@@ -97,37 +217,6 @@ TEST(IndexOrder)
 
     CHECK_CLOSE(order2.val0(),order2alt.val0(),1E-5);
 
-
     }
-
-    /*
-    A1(l(1),s(1),m(1)) = -0.932365;
-    A1(l(2),s(2),m(1)) = 0.355546;
-    A1(l(3),s(3),m(1)) = -0.0654365;
-    A1(l(1),s(2),m(2)) = -0.888391;
-    A1(l(2),s(3),m(2)) = 0.459087;
-    A1(l(1),s(3),m(3)) = 1;
-
-
-    A2(r(5),m(1),s2(1)) = -0.0522478;
-    A2(r(2),m(2),s2(1)) = 0.21836;
-    A2(r(6),m(2),s2(1)) = -0.0248947;
-    A2(r(1),m(3),s2(1)) = 0.0924649;
-    A2(r(4),m(3),s2(1)) = -0.0422058;
-    A2(r(7),m(3),s2(1)) = 0.00784149;
-    A2(r(2),m(1),s2(2)) = -0.325766;
-    A2(r(6),m(1),s2(2)) = -0.0166869;
-    A2(r(1),m(2),s2(2)) = 0.384654;
-    A2(r(4),m(2),s2(2)) = -0.0599322;
-    A2(r(7),m(2),s2(2)) = -0.00477761;
-    A2(r(3),m(3),s2(2)) = -0.0282654;
-    A2(r(8),m(3),s2(2)) = -0.003913;
-    A2(r(1),m(1),s2(3)) = -0.819829;
-    A2(r(4),m(1),s2(3)) = -0.0328797;
-    A2(r(7),m(1),s2(3)) = -0.00135719;
-    A2(r(3),m(2),s2(3)) = -0.0811007;
-    A2(r(8),m(2),s2(3)) = 0.00136376;
-    A2(r(9),m(3),s2(3)) = -0.00242845;
-    */
 
 BOOST_AUTO_TEST_SUITE_END()
