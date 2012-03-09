@@ -182,6 +182,7 @@ class Index
 
     Index(std::istream& s) { read(s); }
 
+    explicit
     Index(Imaker im);
 
     Index(PrimeType pt,const Index& other, int primeinc = 1);

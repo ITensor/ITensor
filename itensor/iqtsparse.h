@@ -22,6 +22,7 @@ class IQTSparse
 
     IQTSparse();
 
+    explicit
     IQTSparse(const IQIndex& i1);
 
     IQTSparse(const IQIndex& i1, const IQIndex& i2);
@@ -31,6 +32,9 @@ class IQTSparse
 
     IQTSparse(const IQIndex& i1, const IQIndex& i2, 
                   const IQIndex& i3, const IQIndex& i4);
+
+    explicit
+    IQTSparse(std::istream& s) { read(s); }
 
     //
     // Accessor Methods
@@ -243,7 +247,7 @@ class IQTSparse
     operator<<(std::ostream & s, const IQTSparse & t);
 
     typedef IQIndex 
-    IQIndexT;
+    IndexT;
 
     typedef IQIndexVal 
     IQIndexValT;

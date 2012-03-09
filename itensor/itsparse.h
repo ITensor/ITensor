@@ -19,6 +19,7 @@ class ITSparse
 
     ITSparse();
 
+    explicit
     ITSparse(const Index& i1);
 
     ITSparse(const Index& i1, Real d);
@@ -38,6 +39,9 @@ class ITSparse
 
     ITSparse(const Index& i1, const Index& i2, 
                   const Index& i3, const Index& i4, Real d);
+
+    explicit
+    ITSparse(std::istream& s) { read(s); }
 
     //
     // Accessor Methods

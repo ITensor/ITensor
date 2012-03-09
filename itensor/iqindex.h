@@ -123,6 +123,7 @@ class IQIndex : public Index
     void 
     read(std::istream& s);
 
+    explicit
     IQIndex(Imaker im);
 
     static const IQIndex& 
