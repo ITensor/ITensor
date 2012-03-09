@@ -115,7 +115,7 @@ class SVDWorker
     //to use the noise term feature (see localop.h)
     template <class Tensor, class SparseT, class LocalOpT>
     void 
-    svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V, 
+    svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V, 
         const LocalOpT& PH);
 
 
@@ -329,13 +329,19 @@ csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R,
 
 template<class Tensor, class SparseT, class LocalOpT>
 void SVDWorker::
-svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V, 
+svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V, 
     const LocalOpT& PH)
     {
     typedef typename Tensor::IndexT 
     IndexT;
     typedef typename Tensor::CombinerT 
     CombinerT;
+
+    //Add in noise term
+    if(noise_ > 0 && PH.isNotNull())
+        {
+        AA += noise_*PH.deltaPhi(AA);
+        }
 
     CombinerT Ucomb;
     Ucomb.doCondense(true);
@@ -365,12 +371,7 @@ svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V,
         Vcomb.addleft(I);
         }
 
-    //Add in noise term
-    if(noise_ > 0 && PH.isNotNull())
-        {
-        }
-
-    Tensor AAc = Ucomb * AA * Vcomb;
+    AA = Ucomb * AA * Vcomb;
 
     const Real saved_cutoff = cutoff_; 
     const int saved_minm = minm_,
@@ -387,7 +388,7 @@ svd(int b, const Tensor& AA, Tensor& U, SparseT& D, Tensor& V,
         maxm_ = D.index(1).m();
         }
 
-    svdRank2(AAc,Ucomb.right(),Vcomb.right(),U,D,V,b);
+    svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,b);
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 

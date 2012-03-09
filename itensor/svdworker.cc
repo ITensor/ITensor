@@ -179,12 +179,12 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
             }
         }
     
-    Index aa("a",m,Link),bb("b",m,Link);
+    Index uL("ul",m,Link),vL("vl",m,Link);
 
-    D = ITSparse(aa,bb,DD);
+    D = ITSparse(uL,vL,DD);
     D *= A.scale();
-    U = ITensor(ui,aa,UU.Columns(1,m));
-    V = ITensor(bb,vi,VV.Rows(1,m));
+    U = ITensor(ui,uL,UU.Columns(1,m));
+    V = ITensor(vL,vi,VV.Rows(1,m));
 
     Globals::lastd() = DD*A.scale().real();
 
