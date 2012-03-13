@@ -22,6 +22,7 @@ index_in_common(const TensorA& A, const TensorB& B, IndexType t)
         if(I.type() == t && B.hasindex(I)) { return I; }
         }
 
+    throw ITError("No common index found");
     return IndexT();
     }
 
@@ -418,8 +419,14 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         return;
         }
 
-    IndexT mid = index_in_common(A,B,Link);
-    if(mid.isNull()) mid = IndexT("mid");
+    IndexT mid; 
+    try {
+        mid = index_in_common(A,B,Link);
+        }
+    catch(const ITError& e)
+        {
+        mid = IndexT("mid");
+        }
 
     //If dir==None, put the O.C. on the side
     //that keeps mid's arrow the same

@@ -752,7 +752,11 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         ++itenind;
         }
     if(iq.size() == 0)
-	throw ResultIsZero("iq.size() == 0");
+        {
+        Print(m);
+        Print(docut);
+        throw ResultIsZero("iq.size() == 0");
+        }
     newmid = IQIndex("qlink",iq,active.dir()*Switch);
     /*
     if(newmid.m() != m)
