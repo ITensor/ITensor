@@ -12,6 +12,7 @@ void error(const std::string& s);
 void error(const std::string& s, int line,const char* file);
 #define Error(exp)  error(exp, __LINE__, __FILE__)
 
+/*
 class ITError : public std::runtime_error
     {
     public:
@@ -25,5 +26,29 @@ class ITError : public std::runtime_error
         { }
 
     }; //class ITError
+    */
+
+class ITError
+    {
+    public:
+
+    explicit 
+    ITError(const std::string& message)
+        : 
+        message_(message)
+        { }
+
+    virtual 
+    const char* what() const throw()
+        {
+        return message_.c_str();
+        }
+
+    private:
+
+        std::string message_;
+
+    }; //class ITError
+
 
 #endif
