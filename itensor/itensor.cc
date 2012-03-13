@@ -1131,39 +1131,31 @@ _ind(int i1, int i2, int i3, int i4,
     {
     case 0:
         return (1);
-        break;
     case 1:
         return (i1);
-        break;
     case 2:
         return ((i2-1)*m(1)+i1);
-        break;
     case 3:
         return (((i3-1)*m(2)+i2-1)*m(1)+i1);
-        break;
     case 4:
         return ((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
-        break;
     case 5:
         return (((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)
                         *m(1)+i1);
-        break;
     case 6:
         return ((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)
                         *m(2)+i2-1)*m(1)+i1);
-        break;
     case 7:
         return (((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)
                         *m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
-        break;
     case 8:
         return ((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)
                         *m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
-        break;
     } //switch(rn_)
     Error("ITensor::_ind: Failed switch case");
     return 1;
     }
+
 
 int ITensor::
 _ind2(const IndexVal& iv1, const IndexVal& iv2) const
@@ -1346,12 +1338,60 @@ reshapeDat(const Permutation& P, Vector& rdat) const
     array<int*,NMAX+1> j;
     for(int k = 1; k <= NMAX; ++k) { j[ind[k]] = &(c.i[k]); }
 
-    //Catch-all loop that works for any tensor
-    for(; c.notDone(); ++c)
-        {
-        rdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-            = thisdat(c.ind);
-        }
+    //Catch-all loops that work for any tensor
+    switch(c.rn_)
+    {
+    case 2:
+        for(; c.notDone(); ++c)
+            {
+            rdat((*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    case 3:
+        for(; c.notDone(); ++c)
+            {
+            rdat(((*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    case 4:
+        for(; c.notDone(); ++c)
+            {
+            rdat((((*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    case 5:
+        for(; c.notDone(); ++c)
+            {
+            rdat(((((*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    case 6:
+        for(; c.notDone(); ++c)
+            {
+            rdat((((((*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    case 7:
+        for(; c.notDone(); ++c)
+            {
+            rdat(((((((*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    default:
+        for(; c.notDone(); ++c)
+            {
+            rdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    } //switch(c.rn_)
+
     } // ITensor::reshapeDat
 
 //
