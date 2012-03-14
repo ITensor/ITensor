@@ -595,7 +595,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         for(int r = 1; r <= n; ++r)
 	    for(int c = r+1; c <= n; ++c)
             {
-            if(fabs(M(r,c)-M(c,r)) > 1E-15)
+            if(fabs(M(r,c)-M(c,r)) > 1E-14)
                 {
                 Print(M);
                 Error("M not symmetric in diag_denmat");
