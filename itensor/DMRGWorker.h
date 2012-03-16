@@ -164,7 +164,7 @@ runInternal(const MPOType& H, MPSType& psi)
 
             energy_ = solver.davidson(PH,phi);
             
-            psi.replaceBond(b,phi,(ha==1?Fromleft:Fromright),PH);
+            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH);
 
             if(!opts().quiet()) 
                 { 
@@ -236,7 +236,7 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
 
             energy_ = solver.davidson(PH,phi);
             
-            psi.replaceBond(b,phi,(ha==1?Fromleft:Fromright),PH);
+            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH);
 
             if(!opts().quiet()) 
                 { 

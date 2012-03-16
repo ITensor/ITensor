@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.0.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __MPS_H
-#define __MPS_H
+#ifndef __ITENSOR_MPS_H
+#define __ITENSOR_MPS_H
 #include "svdworker.h"
 #include "model.h"
 #include "eigensolver.h"
@@ -15,10 +15,9 @@ class LocalMPO;
 
 static const LogNumber DefaultRefScale(7.58273202392352185);
 
-void convertToIQ(const Model& model, const std::vector<ITensor>& A, std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
-
-template<class Tensor, class TensorSet>
-Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal);
+void 
+convertToIQ(const Model& model, const std::vector<ITensor>& A, 
+            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
 class InitState
     {
@@ -54,51 +53,60 @@ class InitState
 
     int N;
     std::vector<IQIndexVal> state;
-    };
+    }; 
+
+//
+// class MPSt
+// (the lowercase t stands for "template")
+// 
+// Unless there is a need to use MPSt
+// specifically as a templated class,
+// it is recommended to use one of the 
+// typedefs of MPSt:
+//
+//      MPS for ITensors
+//    IQMPS for IQTensors
+//
 
 template <class Tensor>
-class MPSt //the lowercase t stands for "template"
+class MPSt
     {
     public:
 
-    //MPSt: Constructors --------------------------------------------
+    //
+    //MPSt Constructors
+    //
 
-    MPSt() 
-        : N(0), model_(0)
-        { }
+    MPSt();
 
-    MPSt(const Model& mod_,int maxmm = MAX_M, Real cut = MIN_CUT) 
-    : N(mod_.NN()), A(mod_.NN()+1),l_orth_lim_(0),r_orth_lim_(mod_.NN()),
-    model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
-        { 
-        random_tensors(A);
-        }
+    MPSt(const Model& mod_,int maxmm = MAX_M, Real cut = MIN_CUT);
 
-    MPSt(const Model& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MIN_CUT) 
-    : N(mod_.NN()),A(mod_.NN()+1),l_orth_lim_(0),r_orth_lim_(2),
-    model_(&mod_), svd_(N,cut,1,maxmm,false,LogNumber(1))
-        { 
-        init_tensors(A,initState);
-        }
+    MPSt(const Model& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MIN_CUT);
 
-    MPSt(const Model& model, std::istream& s)
-        : N(model.NN()), A(model.NN()+1), model_(&model)
-        { 
-        read(s); 
-        }
+    MPSt(const Model& model, std::istream& s);
 
-    virtual ~MPSt() { }
+    virtual 
+    ~MPSt() { }
+
+    //
+    //MPSt Typedefs
+    //
 
     typedef Tensor 
     TensorT;
+
     typedef typename Tensor::IndexT 
     IndexT;
+
     typedef typename Tensor::IndexValT 
     IndexValT;
+
     typedef typename Tensor::SparseT
     SparseT;
 
-    //Accessor Methods ------------------------------
+    //
+    //MPSt Accessor Methods
+    //
 
     int 
     NN() const { return N;}
@@ -193,12 +201,14 @@ class MPSt //the lowercase t stands for "template"
     void 
     write(std::ostream& s) const;
 
-    //MPSt: operators ------------------------------------------------------
+    //
+    //MPSt Operators
+    //
 
-    inline MPSt& 
+    MPSt& 
     operator*=(Real a) { AAnc(l_orth_lim_+1) *= a; return *this; }
 
-    inline MPSt 
+    MPSt 
     operator*(Real r) const { MPSt res(*this); res *= r; return res; }
 
     friend inline MPSt 
@@ -213,19 +223,18 @@ class MPSt //the lowercase t stands for "template"
     inline MPSt 
     operator-(MPSt res) const { res *= -1; res += *this; return res; }
 
-    //MPSt: index methods --------------------------------------------------
+    //
+    //MPSt Index Methods
+    //
 
     void 
-    mapprime(int oldp, int newp, PrimeType pt = primeBoth)
-        { for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,pt); }
+    mapprime(int oldp, int newp, PrimeType pt = primeBoth);
 
     void 
-    primelinks(int oldp, int newp)
-        { for(int i = 1; i <= N; ++i) A[i].mapprime(oldp,newp,primeLink); }
+    primelinks(int oldp, int newp);
 
     void 
-    noprimelink()
-        { for(int i = 1; i <= N; ++i) A[i].noprime(primeLink); }
+    noprimelink();
 
     IndexT 
     LinkInd(int b) const 
@@ -240,16 +249,18 @@ class MPSt //the lowercase t stands for "template"
     //MPSt: orthogonalization methods -------------------------------------
 
     void 
-    replaceBond(int b, const Tensor& AA, Direction dir, bool preserve_shape = false);
+    svdBond(int b, const Tensor& AA, Direction dir, bool preserve_shape = false);
 
     template <class LocalOpT>
     void 
-    replaceBond(int b, const Tensor& AA, Direction dir, 
+    svdBond(int b, const Tensor& AA, Direction dir, 
                 const LocalOpT& PH, bool preserve_shape = false);
 
     void
     doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false)
-        { replaceBond(b,AA,dir,preserve_shape); }
+        { 
+        svdBond(b,AA,dir,preserve_shape); 
+        }
 
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
@@ -267,143 +278,53 @@ class MPSt //the lowercase t stands for "template"
         }
 
     void 
-    orthogonalize(bool verbose = false)
-        {
-        //Do a half-sweep to the right, orthogonalizing each bond
-        //but do not truncate since the basis to the right might not
-        //be ortho (i.e. use the current m).
-        svd_.useOrigM(true);
-        position(N);
-        if(verbose)
-            std::cout << "Done orthogonalizing, starting truncation." 
-                      << std::endl;
-        //Now basis is ortho, ok to truncate
-        svd_.useOrigM(false);
-        position(1);
-        }
+    orthogonalize(bool verbose = false);
 
     //Checks if A[i] is left (left == true) 
     //or right (left == false) orthogonalized
     bool 
-    checkOrtho(int i, bool left) const
-        {
-        IndexT link = (left ? RightLinkInd(i) : LeftLinkInd(i));
-        Tensor A = AA(i);
-        Tensor Ac = conj(A); Ac.primeind(link,4);
+    checkOrtho(int i, bool left) const;
 
-        Tensor rho = A * Ac;
-
-        Tensor Delta(link,link.primed(4),1);
-
-        Tensor Diff = rho - Delta;
-
-        Vector diff(Diff.Length());
-        Diff.AssignToVec(diff);
-
-        Real threshold = 1E-13;
-        if(Norm(diff) < threshold) return true;
-
-        //Print any helpful debugging info here:
-        std::cerr << "checkOrtho: on line " << __LINE__ 
-                  << " of mps.h," << std::endl;
-        std::cerr << "checkOrtho: Tensor at position " << i 
-                  << " failed to be " << (left ? "left" : "right") 
-                  << " ortho." << std::endl;
-        std::cerr << "checkOrtho: Norm(diff) = " << boost::format("%E") 
-                  % Norm(diff) << std::endl;
-        std::cerr << "checkOrtho: Error threshold set to " 
-                  << boost::format("%E") % threshold << std::endl;
-        //-----------------------------
-
-        return false;
-        }
     bool 
     checkRightOrtho(int i) const { return checkOrtho(i,false); }
+
     bool 
     checkLeftOrtho(int i) const { return checkOrtho(i,true); }
     
     bool 
-    checkOrtho() const
-        {
-        for(int i = 1; i <= l_orth_lim_; ++i)
-        if(!checkLeftOrtho(i))
-        {
-            std::cerr << "checkOrtho: A[i] not left orthogonal at site i=" 
-                      << i << std::endl;
-            return false;
-        }
+    checkOrtho() const;
 
-        for(int i = NN(); i >= r_orth_lim_; --i)
-        if(!checkRightOrtho(i))
-        {
-            std::cerr << "checkOrtho: A[i] not right orthogonal at site i=" 
-                      << i << std::endl;
-            return false;
-        }
-        return true;
-        }
 
+    //
+    // projectOp takes the projected edge tensor W 
+    // of an operator and the site tensor X for the operator
+    // and creates the next projected edge tensor nE
+    //
+    // dir==Fromleft example:
+    //
+    //  /---A--     /----
+    //  |   |       |
+    //  E-- X -  =  nE -
+    //  |   |       |
+    //  \---A--     \----
+    //
     void 
-    getCenter(int j, Direction dir, Tensor& lambda, bool do_signfix = false)
-        {
-        getCenterMatrix(AAnc(j),
-            (dir == Fromleft ? RightLinkInd(j) : LeftLinkInd(j)),
-            cutoff,minm,maxm,lambda,nameint("c",j));
+    projectOp(int j, Direction dir, 
+              const Tensor& E, const Tensor& X, Tensor& nE) const;
 
-        if(dir == Fromleft) 
-            {
-            if(l_orth_lim_ == j-1 || j == 1) 
-                l_orth_lim_ = j;
-            }
-        else 
-            {
-            if(r_orth_lim_ == j+1 || j == N) 
-                r_orth_lim_ = j;
-            }
 
-        if(do_signfix) Error("do_signfix not implemented.");
-        }
-
-    template<class TensorSet, class OpTensorSet>
+    //
+    // Applies a bond gate to the bond that is currently
+    // the OC.                                    |      |
+    // After calling position b, this bond is - A[b] - A[b+1] -
+    //
+    //      |      |
+    //      ==gate==
+    //      |      |
+    //  - A[b] - A[b+1] -
+    //
     void 
-    projectOp(int j, Direction dir, const TensorSet& P, 
-              const OpTensorSet& Op, TensorSet& res) const
-        {
-        if(res.size() != Op.size()) res.resize(Op.size());
-        const TensorSet& nP = (P.size() == Op.size() 
-                              ? P 
-                              : TensorSet(Op.size()));
-        for(size_t n = 0; n < Op.size(); ++n) 
-            projectOp(j,dir,GET(nP,n),Op[n],GET(res,n));
-        }
-
-    template<class OpTensor>
-    void 
-    projectOp(int j, Direction dir, const Tensor& P, 
-              const OpTensor& Op, Tensor& res) const
-        {
-        if(dir==Fromleft && j > l_orth_lim_) 
-            { 
-            std::cerr << boost::format("projectOp: from left j > l_orth_lim_ (j=%d,l_orth_lim_=%d)\n")%j%l_orth_lim_; 
-            Error("Projecting operator at j > l_orth_lim_"); 
-            }
-        if(dir==Fromright && j < r_orth_lim_) 
-            { 
-            std::cerr << boost::format("projectOp: from left j < r_orth_lim_ (j=%d,r_orth_lim_=%d)\n")%j%r_orth_lim_; 
-            Error("Projecting operator at j < r_orth_lim_"); 
-            }
-        res = (P.isNull() ? AA(j) : P * AA(j));
-        res *= Op; res *= conj(primed(AA(j)));
-        }
-
-
-    void 
-    applygate(const Tensor& gate)
-        {
-        Tensor AA = A[l_orth_lim_+1] * A[l_orth_lim_+2] * gate;
-        AA.noprime();
-        doSVD(l_orth_lim_+1,AA,Fromleft);
-        }
+    applygate(const Tensor& gate);
 
     Real 
     norm() const { return sqrt(psiphi(*this,*this)); }
@@ -507,7 +428,7 @@ typedef MPSt<IQTensor> IQMPS;
 template <class Tensor>
 template <class LocalOpT>
 void MPSt<Tensor>::
-replaceBond(int b, const Tensor& AA, Direction dir, 
+svdBond(int b, const Tensor& AA, Direction dir, 
             const LocalOpT& PH, bool preserve_shape)
     {
     if(preserve_shape)
@@ -532,13 +453,6 @@ replaceBond(int b, const Tensor& AA, Direction dir,
         }
 
     svd_.denmatDecomp(b,AA,A[b],A[b+1],dir,PH);
-
-    /*
-    SparseT D;
-    svd_.svd(b,AA,A[b],D,A[b+1]);
-    if(dir == Fromleft) A[b+1] *= D;
-    else                A[b] *= D;
-    */
 
     if(dir == Fromleft)
         {

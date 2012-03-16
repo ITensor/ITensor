@@ -8,6 +8,77 @@
 using namespace std;
 using boost::format;
 
+//
+// class MPSt
+//
+
+//
+// Constructors
+//
+
+template <class Tensor>
+MPSt<Tensor>::
+MPSt() 
+    : 
+    N(0), 
+    model_(0)
+    { }
+template MPSt<ITensor>::
+MPSt();
+template MPSt<IQTensor>::
+MPSt();
+
+template <class Tensor>
+MPSt<Tensor>::
+MPSt(const Model& mod_,int maxmm, Real cut) 
+    : 
+    N(mod_.NN()), 
+    A(mod_.NN()+1),
+    l_orth_lim_(0),
+    r_orth_lim_(mod_.NN()),
+    model_(&mod_), 
+    svd_(N,cut,1,maxmm,false,LogNumber(1))
+    { 
+    random_tensors(A);
+    }
+template MPSt<ITensor>::
+MPSt(const Model& mod_,int maxmm, Real cut);
+template MPSt<IQTensor>::
+MPSt(const Model& mod_,int maxmm, Real cut);
+
+template <class Tensor>
+MPSt<Tensor>::
+MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut)
+    : 
+    N(mod_.NN()),
+    A(mod_.NN()+1),
+    l_orth_lim_(0),
+    r_orth_lim_(2),
+    model_(&mod_), 
+    svd_(N,cut,1,maxmm,false,LogNumber(1))
+    { 
+    init_tensors(A,initState);
+    }
+template MPSt<ITensor>::
+MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut);
+template MPSt<IQTensor>::
+MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut);
+
+template <class Tensor>
+MPSt<Tensor>::
+MPSt(const Model& model, std::istream& s)
+    : 
+    N(model.NN()), 
+    A(model.NN()+1), 
+    model_(&model)
+    { 
+    read(s); 
+    }
+template MPSt<ITensor>::
+MPSt(const Model& model, std::istream& s);
+template MPSt<IQTensor>::
+MPSt(const Model& model, std::istream& s);
+
 template <class Tensor>
 Tensor& MPSt<Tensor>::
 AAnc(int i) //nc means 'non const'
@@ -330,16 +401,57 @@ template
 MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
 #endif
 
+
+//
+//MPSt Index Methods
+//
+
+template <class Tensor>
+void MPSt<Tensor>::
+mapprime(int oldp, int newp, PrimeType pt)
+    { 
+    for(int i = 1; i <= N; ++i) 
+        A[i].mapprime(oldp,newp,pt); 
+    }
+template
+void MPSt<ITensor>::mapprime(int oldp, int newp, PrimeType pt);
+template
+void MPSt<IQTensor>::mapprime(int oldp, int newp, PrimeType pt);
+
+template <class Tensor>
+void MPSt<Tensor>::
+primelinks(int oldp, int newp)
+    { 
+    for(int i = 1; i <= N; ++i) 
+        A[i].mapprime(oldp,newp,primeLink); 
+    }
+template
+void MPSt<ITensor>::primelinks(int oldp, int newp);
+template
+void MPSt<IQTensor>::primelinks(int oldp, int newp);
+
+template <class Tensor>
+void MPSt<Tensor>::
+noprimelink()
+    { 
+    for(int i = 1; i <= N; ++i) 
+        A[i].noprime(primeLink); 
+    }
+template
+void MPSt<ITensor>::noprimelink();
+template
+void MPSt<IQTensor>::noprimelink();
+
 template<class Tensor> void
 MPSt<Tensor>::
-replaceBond(int b, const Tensor& AA, Direction dir, bool preserve_shape)
+svdBond(int b, const Tensor& AA, Direction dir, bool preserve_shape)
     {
-    replaceBond(b,AA,dir,LocalMPO<Tensor>::Null(),preserve_shape);
+    svdBond(b,AA,dir,LocalMPO<Tensor>::Null(),preserve_shape);
     }
 template void MPSt<ITensor>::
-replaceBond(int b, const ITensor& AA, Direction dir, bool);
+svdBond(int b, const ITensor& AA, Direction dir, bool);
 template void MPSt<IQTensor>::
-replaceBond(int b, const IQTensor& AA, Direction dir, bool);
+svdBond(int b, const IQTensor& AA, Direction dir, bool);
 
 
 template<class Tensor> void
@@ -365,64 +477,156 @@ position(int b, bool preserve_shape);
 template void MPSt<IQTensor>::
 position(int b, bool preserve_shape);
 
-
-/* getCenterMatrix:
- * 
- *                    s                   s
- *                    |                   |
- * Decomposes A = -<--A-->- bond into -<--U-<-- -<--Lambda-->- bond
- *
- * A is replaced with the unitary U and Lambda is diagonal.
- * If A is the OC of an MPS, Lambda will contain the Schmidt weights. 
- *
- */
- /*
-void getCenterMatrix(ITensor& A, const Index& bond, Real cutoff,int minm, int maxm, ITensor& Lambda, string newbondname = "")
-{
-    //Create combiner
-    Combiner comb;
-    Foreach(const Index& i, A.indexn())
-    if(!(i == bond || i == IndReIm))
-    { 
-        comb.addleft(i); 
-    }
-    Foreach(const Index& i, A.index1())
-    if(!(i == bond || i == IndReIm ))
-    { 
-        comb.addleft(i); 
-    }
-    comb.init("combined");
-    Index active = comb.right();
-
-    //Apply combiner....
-    //comb.init(active);
-    ITensor Ac = comb * A;
-
-    ITensor rho;
-    if(Ac.isComplex())
+template <class Tensor>
+void MPSt<Tensor>::
+orthogonalize(bool verbose)
     {
-        ITensor re,im;
-        Ac.SplitReIm(re,im);
-        ITensor rec = conj(re), imc = conj(im);
-        rec.primeind(active);
-        rho = re * rec;
-        imc.primeind(active);
-        rho += im * imc;
+    //Do a half-sweep to the right, orthogonalizing each bond
+    //but do not truncate since the basis to the right might not
+    //be ortho (i.e. use the current m).
+    svd_.useOrigM(true);
+    position(N);
+    if(verbose)
+        std::cout << "Done orthogonalizing, starting truncation." 
+                  << std::endl;
+    //Now basis is ortho, ok to truncate
+    svd_.useOrigM(false);
+    position(1);
     }
-    else rho = Ac * primeind(Ac,active);
-    assert(rho.r() == 2);
+template
+void MPSt<ITensor>::orthogonalize(bool verbose);
+template
+void MPSt<IQTensor>::orthogonalize(bool verbose);
 
-    //Diagonalize & truncate the density matrix
-    ITensor Uc; Vector D; diag_denmat(rho,cutoff,minm,maxm,Uc,D);
+//Methods for use internally by checkOrtho
+ITensor
+makeKroneckerDelta(const Index& i, int plev)
+    {
+    return ITensor(i,primed(i,plev),1);
+    }
+IQTensor
+makeKroneckerDelta(const IQIndex& I, int plev)
+    {
+    IQTensor D(I,primed(I,plev));
 
-    Lambda = conj(Uc) * Ac;
-    A = Uc * comb; //should be conj(comb) with arrows
+    for(int j = 1; j <= I.nindex(); ++j)
+        {
+        D += makeKroneckerDelta(I.index(j),plev);
+        }
+    return D;
+    }
 
-}
-*/
+template <class Tensor>
+bool MPSt<Tensor>::
+checkOrtho(int i, bool left) const
+    {
+    IndexT link = (left ? RightLinkInd(i) : LeftLinkInd(i));
+    Tensor A = AA(i);
+    Tensor Ac = conj(A); 
+    Ac.primeind(link,4);
+
+    Tensor rho = A * Ac;
+
+    Tensor Delta = makeKroneckerDelta(link,4);
+
+    Tensor Diff = rho - Delta;
+
+    Vector diff(Diff.vecSize());
+    Diff.assignToVec(diff);
+
+    Real threshold = 1E-13;
+    if(Norm(diff) < threshold) return true;
+
+    //Print any helpful debugging info here:
+    std::cerr << "checkOrtho: on line " << __LINE__ 
+              << " of mps.h," << std::endl;
+    std::cerr << "checkOrtho: Tensor at position " << i 
+              << " failed to be " << (left ? "left" : "right") 
+              << " ortho." << std::endl;
+    std::cerr << "checkOrtho: Norm(diff) = " << boost::format("%E") 
+              % Norm(diff) << std::endl;
+    std::cerr << "checkOrtho: Error threshold set to " 
+              << boost::format("%E") % threshold << std::endl;
+    //-----------------------------
+
+    return false;
+    }
+template
+bool MPSt<ITensor>::checkOrtho(int i, bool left) const;
+template
+bool MPSt<IQTensor>::checkOrtho(int i, bool left) const;
+
+template <class Tensor>
+bool MPSt<Tensor>::
+checkOrtho() const
+    {
+    for(int i = 1; i <= l_orth_lim_; ++i)
+    if(!checkLeftOrtho(i))
+    {
+        std::cerr << "checkOrtho: A[i] not left orthogonal at site i=" 
+                  << i << std::endl;
+        return false;
+    }
+
+    for(int i = NN(); i >= r_orth_lim_; --i)
+    if(!checkRightOrtho(i))
+    {
+        std::cerr << "checkOrtho: A[i] not right orthogonal at site i=" 
+                  << i << std::endl;
+        return false;
+    }
+    return true;
+    }
+template
+bool MPSt<ITensor>::checkOrtho() const;
+template
+bool MPSt<IQTensor>::checkOrtho() const;
+
+template <class Tensor>
+void MPSt<Tensor>::
+projectOp(int j, Direction dir, 
+          const Tensor& E, const Tensor& X, Tensor& nE) const
+    {
+    if(dir==Fromleft && j > l_orth_lim_) 
+        { 
+        std::cerr << boost::format("projectOp: from left j > l_orth_lim_ (j=%d,l_orth_lim_=%d)\n")%j%l_orth_lim_; 
+        Error("Projecting operator at j > l_orth_lim_"); 
+        }
+    if(dir==Fromright && j < r_orth_lim_) 
+        { 
+        std::cerr << boost::format("projectOp: from left j < r_orth_lim_ (j=%d,r_orth_lim_=%d)\n")%j%r_orth_lim_; 
+        Error("Projecting operator at j < r_orth_lim_"); 
+        }
+    nE = (E.isNull() ? AA(j) : E * AA(j));
+    nE *= X; 
+    nE *= conj(primed(AA(j)));
+    }
+template
+void MPSt<ITensor>::projectOp(int j, Direction dir, 
+                              const ITensor& E, const ITensor& X, 
+                              ITensor& nE) const;
+template
+void MPSt<IQTensor>::projectOp(int j, Direction dir, 
+                              const IQTensor& E, const IQTensor& X, 
+                              IQTensor& nE) const;
+
+template <class Tensor>
+void MPSt<Tensor>::
+applygate(const Tensor& gate)
+    {
+    Tensor AA = A[l_orth_lim_+1] * A[l_orth_lim_+2] * gate;
+    AA.noprime();
+    doSVD(l_orth_lim_+1,AA,Fromleft);
+    }
+template
+void MPSt<ITensor>::applygate(const ITensor& gate);
+template
+void MPSt<IQTensor>::applygate(const IQTensor& gate);
+
 
 //Auxilary method for convertToIQ
-int collapseCols(const Vector& Diag, Matrix& M)
+int 
+collapseCols(const Vector& Diag, Matrix& M)
     {
     int nr = Diag.Length(), nc = int(Diag.sumels());
     assert(nr != 0);
@@ -434,7 +638,8 @@ int collapseCols(const Vector& Diag, Matrix& M)
     return nc;
     }
 
-int periodicWrap(int j, int N)
+int 
+periodicWrap(int j, int N)
     {
     if(j < 1)
         while(j < 1) j += N;
@@ -444,7 +649,9 @@ int periodicWrap(int j, int N)
     return j;
     }
 
-void convertToIQ(const Model& model, const vector<ITensor>& A, vector<IQTensor>& qA, QN totalq, Real cut)
+void 
+convertToIQ(const Model& model, const vector<ITensor>& A, 
+            vector<IQTensor>& qA, QN totalq, Real cut)
     {
     const int N = A.size()-1;
     qA.resize(A.size());
