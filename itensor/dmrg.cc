@@ -325,8 +325,10 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts)
 }
 */
 
-Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweeps& sweeps, DMRGOpts& opts, bool preserve_edgelink)
-{
+/*
+Real 
+ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweeps& sweeps, DMRGOpts& opts, bool preserve_edgelink)
+    {
     const bool useleft = (LB.r() != 0);
     const bool useright = (RB.r() != 0);
 
@@ -381,15 +383,13 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
 
             energy = doDavidson(phi,mpoh,leftright[l],leftright[l+1],sweeps.niter(sw),debuglevel,1e-4);
 
-            /*
-            if(preserve_edgelink)
-            if((l == 1 && useleft) || (l == (psi.NN()-1) && useright))
-            {
-                const ITensor& B = (l == 1 ? LB : RB);
-                const int s = (l==1 ? 1 : psi.NN());
-                ITensor newA(psi.AA(s).findtype(Site),index_in_common(psi.AA(s),B,Link));
-            }
-            */
+            //if(preserve_edgelink)
+            //if((l == 1 && useleft) || (l == (psi.NN()-1) && useright))
+            //{
+            //    const ITensor& B = (l == 1 ? LB : RB);
+            //    const int s = (l==1 ? 1 : psi.NN());
+            //    ITensor newA(psi.AA(s).findtype(Site),index_in_common(psi.AA(s),B,Link));
+            //}
 
             psi.doSVD(l,phi,(ha==1 ? Fromleft : Fromright));
 
@@ -493,4 +493,5 @@ Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const 
     psi.maxm(orig_maxm);
 
     return energy;
-}
+    }
+*/

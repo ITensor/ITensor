@@ -2,42 +2,53 @@
 // Distributed under the ITensor Library License, Version 1.0.
 //    (See accompanying LICENSE file.)
 //
-#ifndef ALGORITHM_H
-#define ALGORITHM_H
+#ifndef __ITENSOR_DMRG_H
+#define __ITENSOR_DMRG_H
 #include "mpo.h"
 #include "sparse.h"
 #include "davidson.h"
 #include "Sweeps.h"
 #include "DMRGOpts.h"
 
+
+//
+// March 15, 2012
+//
+// Note: most of the functions
+// and classes in this file and
+// in dmrg.cc are deprecated or
+// will be merged into newer 
+// designs
+//
+
 template<class Tensor,class TensorSet, class OpTensorSet>
 void applyProjOp(const Tensor& phi, const TensorSet& L, const TensorSet& R, const OpTensorSet& H, Tensor& Hphi)
-{
+    {
     bool useL(L.size() == 0 ? false : L[0].isNotNull()),
          useR(R.size() == 0 ? false : R[0].isNotNull());
     Hphi = (useL ? L[0]*phi : phi); 
     Hphi *= H[0];
     if(useR) Hphi *= R[0];
     for(unsigned int j = 1; j < H.size(); ++j)
-    {
+        {
         Tensor phij = (useL ? L[j]*phi : phi);
         phij *= H[j];
         if(useR) phij *= R[j];
         Hphi += phij;
-    }
+        }
     Hphi.mapprime(1,0);
-}
+    }
 
 template<class Tensor, class OpTensor>
 void applyProjOp(const Tensor& phi, const Tensor& L, const Tensor& R, const OpTensor& H, Tensor& Hphi)
-{
+    {
     bool useL = L.isNotNull(),
          useR = R.isNotNull();
     Hphi = (useL ? L*phi : phi); 
     Hphi *= H;
     if(useR) Hphi *= R;
     Hphi.mapprime(1,0);
-}
+    }
 
 template<class Tensor>
 class BaseLocalHam : public BigMatrix // to do DMRG using an MPO
@@ -50,6 +61,7 @@ public:
     void product(const VectorRef &A , VectorRef & B) const = 0;
 };
 
+/*
 template<class Tensor, class TensorSet>
 class LocalHam : public BaseLocalHam<Tensor>
 {
@@ -79,7 +91,9 @@ public:
         psi.assignToVec(B);
 	}
 };
+*/
 
+/*
 template <>
 class LocalHam<ITensor,ITensor> : public BaseLocalHam<ITensor>
 {
@@ -148,10 +162,11 @@ public:
         psi.assignToVec(B);
 	}
 };
+*/
 
 template<class Tensor>
 class LocalHamOrth : public BaseLocalHam<Tensor> // to do DMRG using an MPO, ortho to other vecs
-{
+    {
     typedef BaseLocalHam<Tensor> Parent;
 
     Tensor& psi;
@@ -163,40 +178,54 @@ public:
     std::vector<Tensor> other;
 
     LocalHamOrth(const Tensor& le, const Tensor& ri, const Tensor& mpo, Tensor& psi_, Real weight_) 
-	: psi(psi_), LeftTerm(le), RightTerm(ri), MPOTerm(mpo), 
-      useleft(le.isNotNull()), useright(ri.isNotNull()), weight(weight_)
-    { diag.ReDimension(psi.vecSize()); diag = 1; }
+        : 
+        psi(psi_), 
+        LeftTerm(le), 
+        RightTerm(ri), 
+        MPOTerm(mpo), 
+        useleft(le.isNotNull()), 
+        useright(ri.isNotNull()), weight(weight_)
+        { 
+        diag.ReDimension(psi.vecSize()); 
+        diag = 1; 
+        }
 
-    int Size() const { return psi.vecSize(); }
-    VectorRef DiagRef() const { return diag; }
+    int 
+    Size() const { return psi.vecSize(); }
 
-    Vector operator*(const VectorRef &A) const
-	{ Vector res(Size()); product(A,res); return res; }
+    VectorRef 
+    DiagRef() const { return diag; }
 
-    void product(const VectorRef &A , VectorRef & B) const
-	{
+    Vector 
+    operator*(const VectorRef &A) const
+        { Vector res(Size()); product(A,res); return res; }
+
+    void 
+    product(const VectorRef &A , VectorRef & B) const
+        {
         psi.assignFromVec(A);
         Tensor psip;
         applyProjOp(psi,LeftTerm,RightTerm,MPOTerm,psip);
         Foreach(const ITensor& phi, other)
-        {
+            {
             Real re,im; Dot(phi,psi,re,im);
             if(fabs(im) < 1E-10)
-            { psip += (weight*re) * phi;}
+                { psip += (weight*re) * phi;}
             else
-            { psip += weight*(re*ITensor::Complex_1() + im*ITensor::Complex_i()) * phi; }
-        }
+                { psip += weight*(re*ITensor::Complex_1() + im*ITensor::Complex_i()) * phi; }
+            }
         psi.assignFrom(psip);
         psi.assignToVec(B);
-	}
-};
+        }
+    };
 
 template<class Tensor, class TensorSet>
-void putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH)
-{
+void 
+putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH)
+    {
     Tensor phip;
     for(int cnt = 1; cnt <= 1E5; ++cnt)
-    {
+        {
         applyProjOp(phi,LH,RH,mpoh,phip);
         phip *= -0.00232341; //arbitrary small number
         phip += phi; //evolve by (1-tau*H)
@@ -205,21 +234,21 @@ void putInQNs(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const Ten
         if(cnt > 10) std::cerr << "Warning: large number of time evolution steps in putInQNs." << std::endl;
         if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
         else if(phip.vecSize() == phisize) break;
+        }
     }
-}
 template<class Tensor, class TensorSet>
 void putInQNs(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH)
-{
-    for(size_t n = 0; n < phi.size(); ++n)
     {
+    for(size_t n = 0; n < phi.size(); ++n)
+        {
         Tensor phip;
         if(phi[n].isNull() || phi[n].vecSize() == 0)
-        {
+            {
             Print(n); Print(phi[n]);
             Error("Null or zero size tensor in putInQNs.");
-        }
+            }
         for(int cnt = 1; cnt <= 1E5; ++cnt)
-        {
+            {
             applyProjOp(phi[n],LH,RH,mpoh,phip);
             phip *= -0.00232341; //arbitrary small number
             phip += phi[n]; //evolve by (1-tau*H)
@@ -228,15 +257,18 @@ void putInQNs(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& 
             if(cnt > 10) std::cerr << "Warning: large number of time evolution steps in putInQNs." << std::endl;
             if(phisize == 0) { if(cnt > 9) Error("phi has zero size in putInQNs."); else continue; }
             else if(phip.vecSize() == phisize) break;
+            }
         }
     }
-}
 template<class TensorSet>
 void putInQNs(ITensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH) { }
 
+/*
 template<class Tensor, class TensorSet>
-Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal)
-{
+Real doDavidson(Tensor& phi, const TensorSet& mpoh, 
+                const TensorSet& LH, const TensorSet& RH, 
+                int niter, int debuglevel, Real errgoal)
+    {
     putInQNs(phi,mpoh,LH,RH);
     LocalHam<Tensor,TensorSet> lham(LH,RH,mpoh,phi);
     if(niter < 1)
@@ -260,11 +292,15 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh, const TensorSet& LH, const T
         return evals(1); //energy
         }
     return 1000;
-}
+    }
+*/
 
+/*
 template<class Tensor, class TensorSet>
-Vector doDavidson(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorSet& LH, const TensorSet& RH, int niter, int debuglevel, Real errgoal)
-{
+Vector doDavidson(std::vector<Tensor>& phi, const TensorSet& mpoh, 
+                  const TensorSet& LH, const TensorSet& RH, 
+                  int niter, int debuglevel, Real errgoal)
+    {
     const int ntarget = phi.size();
     assert(ntarget != 0);
 
@@ -273,19 +309,20 @@ Vector doDavidson(std::vector<Tensor>& phi, const TensorSet& mpoh, const TensorS
 
     Matrix evecs(max(ntarget,niter),phi[0].vecSize()); Vector evals;
     for(int n = 0; n < ntarget; ++n)
-    { 
+        { 
         phi[n].assignToVec(evecs.Row(1+n)); 
         evecs.Row(1+n) /= Norm(evecs.Row(1+n));
-    }
+        }
     David(lham,1,errgoal,evals,evecs,1,1,debuglevel);
     Vector energies(ntarget);
     for(int n = 0; n < ntarget; ++n)
-    { 
+        { 
         phi[n].assignFromVec(evecs.Row(1+n));
         energies(1+n) = evals(1+n);
-    }
+        }
     return energies;
-}
+    }
+    */
 
 inline void 
 onesite_sweepnext(int &l, int &ha, int N)
@@ -299,9 +336,10 @@ onesite_sweepnext(int &l, int &ha, int N)
     }
 
 
+/*
 template <class MPSType, class MPOType, class DMRGOptions>
 Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptions& opts)
-{
+    {
     typedef typename MPSType::TensorT Tensor;
     typedef typename MPOType::TensorT MPOTensor;
     const Real orig_cutoff = psi.cutoff(); 
@@ -371,25 +409,26 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
     psi.minm(orig_minm); 
     psi.maxm(orig_maxm);
     return energy;
-}
+    }
+*/
 
+/*
 template <class MPSType, class MPOType>
-Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
-{
+Real 
+onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
+    {
     DMRGOpts opts; 
     return onesitedmrg(psi,H,sweeps,opts);
-}
+    }
+    */
 
 //Orthogonalizing DMRG. Puts in an energy penalty if psi has an overlap with any MPS in 'other'.
 Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, 
           const std::vector<MPS>& other, DMRGOpts& opts);
 
-// Deprecated, use MPOSet to work with a set of MPOs
-//Real dmrg(MPS& psi, const std::vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts);
-
 //Unit Cell DMRG. Does DMRG on part of a larger system using a Hamiltonian with boundary
 //tensors representing its projection into the basis of the larger system.
-Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, 
-            const Sweeps& sweeps, DMRGOpts& opts, bool preserve_edgelink);
+//Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, 
+//            const Sweeps& sweeps, DMRGOpts& opts, bool preserve_edgelink);
 
 #endif

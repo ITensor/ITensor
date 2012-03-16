@@ -6,6 +6,27 @@
 #define __ITENSOR_LOCAL_OP
 #include "iqtensor.h"
 
+//
+// The LocalOp class represents
+// an MPO or other operator that
+// has been projected into the
+// reduced Hilbert space of 
+// two sites of an MPS.
+//
+//   .-              -.
+//   |    |      |    |
+//   L - Op1 -- Op2 - R
+//   |    |      |    |
+//   '-              -'
+//
+// (Note that L, Op1, Op2 and R
+//  are not required to have this
+//  precise structure. L and R
+//  can even be null which means
+//  they will not be used.)
+//
+
+
 template <class Tensor>
 class LocalOp
     {

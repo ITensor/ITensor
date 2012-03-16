@@ -7,6 +7,28 @@
 #include "mpo.h"
 #include "localop.h"
 
+//
+// The LocalMPO class projects an MPO 
+// into the reduced Hilbert space of
+// some number of sites of an MPS.
+// (The default is 2 sites.)
+//
+//   .----..---             ----...-.
+//   |  |    |    |      |   |      | 
+//   W1 W2.. Wj-1 Wj - Wj+1  Wj+2..WN
+//   |  |    |    |      |   |      | 
+//   '----..---             ----...-'
+//
+// 
+//  Here the W's are the site tensors
+//  of the MPO "Op" and the method position(j,psi)
+//  has been called using the MPS 'psi' as a basis 
+//  for the projection.
+//
+//  This results in an unprojected region of
+//  num_center sites starting at site j.
+//
+
 template <class Tensor>
 class LocalMPO
     {
