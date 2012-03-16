@@ -592,10 +592,15 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         ++itenind;
 
 #ifdef STRONG_DEBUG
+	Real maxM = 1.0;
+        for(int r = 1; r <= n; ++r)
+	    for(int c = r+1; c <= n; ++c)
+		maxM = max(maxM,fabs(M(r,c)));
+	Real maxcheck = 1e-14 * maxM;
         for(int r = 1; r <= n; ++r)
 	    for(int c = r+1; c <= n; ++c)
             {
-            if(fabs(M(r,c)-M(c,r)) > 1E-15)
+            if(fabs(M(r,c)-M(c,r)) > maxcheck)
                 {
                 Print(M);
                 Error("M not symmetric in diag_denmat");
