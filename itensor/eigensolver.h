@@ -28,9 +28,9 @@ class Eigensolver
     Eigensolver(int maxiter = 2, Real errgoal = 1E-4, int numget = 1);
 
     //
-    // Uses the Davidson algorithm to find the minimal
-    // eigenvector of the sparse matrix represented by 
-    // A (which must implement the methods product, size and diag).
+    // Uses the Davidson algorithm to find the 
+    // minimal eigenvector of the sparse matrix A.
+    // (LocalT objects must implement the methods product, size and diag.)
     // Returns the minimal eigenvalue lambda such that
     // A phi = lambda phi.
     //
@@ -94,6 +94,8 @@ class Eigensolver
             Real theta_;
         };
 
+    //Function object which applies the mapping
+    // f(x,theta) = 1/(theta - 1)
     class LanczosPrecond
         {
         public:
