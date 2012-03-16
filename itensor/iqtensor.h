@@ -293,7 +293,7 @@ class IQTensor
     mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
 
     void 
-    primeind(const IQIndex& I);
+    primeind(const IQIndex& I, int inc = 1);
 
     friend inline IQTensor 
     primeind(IQTensor A, const IQIndex& I)

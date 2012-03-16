@@ -630,18 +630,18 @@ mapprime(int plevold, int plevnew, PrimeType pt)
 	}
 
 void IQTensor::
-primeind(const IQIndex& I)
+primeind(const IQIndex& I, int inc)
 	{
 	solo();
 
-    is_->primeind(I);
+    is_->primeind(I,inc);
 
     Foreach(ITensor& t, *p)
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
 		if(t.hasindex(x->index)) 
-		    t.primeind(x->index);
+		    t.primeind(x->index,inc);
         }
 	}
 
