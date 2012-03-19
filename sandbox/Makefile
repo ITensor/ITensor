@@ -34,9 +34,9 @@ LIBGFLAGS=-L$(LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS)
 
 #Targets -----------------
 
-build: dmrg iqdmrg onesiteopt
+build: dmrg iqdmrg
 
-debug: dmrg-g iqdmrg-g onesiteopt-g
+debug: dmrg-g iqdmrg-g
 
 dmrg: dmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)

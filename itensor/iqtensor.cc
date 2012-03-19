@@ -1096,7 +1096,7 @@ operator<<(std::ostream & s, const IQTensor& T)
     for(int k = 1; k <= T.r(); ++k)
         { s << "  " << T.index(k) << std::endl; }
     s << "ITensors:\n";
-    Foreach(const ITensor& t, *T.p)
+    Foreach(const ITensor& t, T.dat())
         { s << "  " << t << std::endl; }
     s << "-------------------" << "\n\n";
     return s;
