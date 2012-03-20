@@ -1114,22 +1114,4 @@ TEST(CommaAssignment)
     CHECK_EQUAL(AA(s1(2),s2(2)),22);
     }
 
-TEST(Website)
-    {
-
-    Index a("a",2), b("b",2), c("c",2);
-    ITensor Z(a,b), X(b,c);
-    commaInit(Z) << 1, 0, 
-                    0, -1;
-    commaInit(X) << 0, 1, 
-                    1, 0;
-    ITensor R = Z * X;
-
-    CHECK_CLOSE(R(a(1),c(1)),0,1E-10);
-    CHECK_CLOSE(R(a(1),c(2)),+1,1E-10);
-    CHECK_CLOSE(R(a(2),c(1)),-1,1E-10);
-    CHECK_CLOSE(R(a(2),c(2)),0,1E-10);
-
-    }
-
 BOOST_AUTO_TEST_SUITE_END()

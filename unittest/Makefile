@@ -22,6 +22,7 @@ SOURCES+= eigensolver_test.cc
 SOURCES+= regression_test.cc
 SOURCES+= svdworker_test.cc
 SOURCES+= iqtsparse_test.cc
+SOURCES+= webpage_test.cc
 
 LIBNAMES=matrix utilities itensor
 
