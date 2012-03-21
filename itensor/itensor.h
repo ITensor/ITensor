@@ -334,8 +334,10 @@ class ITensor
     friend inline ITensor 
     deprimed(ITensor A) { A.noprime(); return A; }
 
-
     //Element Access Methods ----------------------------------------
+
+    Real
+    toReal() const { return val0(); }
 
     Real 
     val0() const;
