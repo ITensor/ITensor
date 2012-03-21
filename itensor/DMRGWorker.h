@@ -154,8 +154,8 @@ runInternal(const MPOType& H, MPSType& psi)
             if(!opts().quiet()) 
                 {
                 std::cout << 
-                    boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") 
-                    % sw % ha % b % (b+1);
+                    boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)") 
+                    % sw % ha % b % (b+1) << std::endl;
                 }
 
             PH.position(b,psi);
@@ -168,10 +168,10 @@ runInternal(const MPOType& H, MPSType& psi)
 
             if(!opts().quiet()) 
                 { 
-                std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d\n") 
-                % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw);
-                std::cout << boost::format("    Trunc. err=%.1E, States kept=%s\n")
-                % psi.svd().truncerr(b) % psi.LinkInd(b).showm();
+                std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d") 
+                % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw) << std::endl;
+                std::cout << boost::format("    Trunc. err=%.1E, States kept=%s")
+                % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
                 }
 
             opts().measure(sw,ha,b,psi.svd(),energy_);
@@ -226,8 +226,8 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
             if(!opts().quiet()) 
                 {
                 std::cout << 
-                    boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") 
-                    % sw % ha % b % (b+1);
+                    boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)") 
+                    % sw % ha % b % (b+1) << std::endl;
                 }
 
             PH.position(b,psi);
@@ -240,10 +240,10 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
 
             if(!opts().quiet()) 
                 { 
-                std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d\n") 
-                % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw);
-                std::cout << boost::format("    Trunc. err=%.1E, States kept=%s\n")
-                % psi.svd().truncerr(b) % psi.LinkInd(b).showm();
+                std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d")
+                % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw) << std::endl;
+                std::cout << boost::format("    Trunc. err=%.1E, States kept=%s")
+                % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
                 }
 
             opts().measure(sw,ha,b,psi.svd(),energy_);
