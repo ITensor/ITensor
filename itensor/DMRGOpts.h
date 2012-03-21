@@ -74,15 +74,16 @@ measure(int sw, int ha, int b, const SVDWorker& svd, Real energy)
         if(b == 1 && ha == 2) 
             {
             std::cout << "\n    Largest m during sweep " << sw << " was " << svd.maxEigsKept() << "\n";
-            std::cout << "    Largest truncation error: " << svd.maxTruncerr() << "\n";
+            std::cout << "    Largest truncation error: " << svd.maxTruncerr() << std::endl;
             Vector center_eigs = svd.eigsKept(svd.NN()/2);
             std::cout << "    Eigs at center bond: ";
             for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                 {
                 std::cout << boost::format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
-                std::cout << ((j != min(center_eigs.Length(),10)) ? ", " : "\n");
+                std::cout << ((j != min(center_eigs.Length(),10)) ? ", " : "");
                 }
-            std::cout << boost::format("    Energy after sweep %d is %f\n") % sw % energy;
+            std::cout << std::endl;
+            std::cout << boost::format("    Energy after sweep %d is %f") % sw % energy << std::endl;
             }
         }
     }

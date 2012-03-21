@@ -364,7 +364,7 @@ class MPSt
     void 
     printIndices(const std::string& name = "") const
         {
-        std::cout << name << "=\n";
+        std::cout << name << "=" << std::endl;
         for(int i = 1; i <= NN(); ++i) 
             AA(i).printIndices(boost::format("AA(%d)")%i);
         }
@@ -441,14 +441,14 @@ svdBond(int b, const Tensor& AA, Direction dir,
 
     if(dir == Fromleft && b-1 > l_orth_lim_)
         {
-        std::cerr << boost::format("b=%d, l_orth_lim_=%d\n")
-                %b%l_orth_lim_;
+        std::cout << boost::format("b=%d, l_orth_lim_=%d")
+                %b%l_orth_lim_ << std::endl;
         Error("b-1 > l_orth_lim_");
         }
     if(dir == Fromright && b+2 < r_orth_lim_)
         {
-        std::cerr << boost::format("b=%d, r_orth_lim_=%d\n")
-                %b%r_orth_lim_;
+        std::cout << boost::format("b=%d, r_orth_lim_=%d")
+                %b%r_orth_lim_ << std::endl;
         Error("b+2 < r_orth_lim_");
         }
 

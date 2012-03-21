@@ -241,6 +241,7 @@ class SVDWorker
 
 private:
 
+    /*
     void
     diag_and_truncate(const IQTensor& rho, std::vector<Matrix>& mmatrix, 
                       std::vector<Vector>& mvector, std::vector<Real>& alleig, 
@@ -254,6 +255,7 @@ private:
     buildCenter(const IQTensor& rho, const std::vector<Matrix>& mmatrix, 
                 const std::vector<Vector>& mvector,
                 const IQIndex& newmid, IQTensor& C);
+                */
 
     ITensor 
     pseudoInverse(const ITensor& C, Real cutoff = 0);
