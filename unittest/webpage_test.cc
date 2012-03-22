@@ -1,6 +1,6 @@
 #include "test.h"
-#include "itensor.h"
 #include <boost/test/unit_test.hpp>
+#include "iqtensor.h"
 
 using namespace std;
 using boost::format;
@@ -60,11 +60,11 @@ TEST(TutorialSimpleMeasurement)
 
     ITensor bra = conj(primed(ket));
 
-    Real zz = (bra * Sz * ket).toReal();
-    Real xx = (bra * Sx * ket).toReal();
+    //Real zz = (bra * Sz * ket).toReal();
+    //Real xx = (bra * Sx * ket).toReal();
 
-    cout << format("<Sz> = %.5f") % zz << endl;
-    cout << format("<Sx> = %.5f") % xx << endl;
+    //cout << format("<Sz> = %.5f") % zz << endl;
+    //cout << format("<Sx> = %.5f") % xx << endl;
     }
 
 BOOST_AUTO_TEST_SUITE_END()

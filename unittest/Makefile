@@ -133,3 +133,6 @@ svdworker_test.o: $(LIBHEADERS)
 
 eigensolver_test.o: $(INCLUDEDIR)/eigensolver.h
 .debug_objs/eigensolver_test.o: $(INCLUDEDIR)/eigensolver.h
+
+webpage_test.o: $(INCLUDEDIR)/iqtensor.h
+.debug_objs/webpage_test.o: $(INCLUDEDIR)/iqtensor.h
