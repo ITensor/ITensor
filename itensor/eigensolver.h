@@ -6,6 +6,10 @@
 #define __ITENSOR_EIGENSOLVER_H
 #include "iqcombiner.h"
 
+template<class Tensor>
+void
+orthog(std::vector<Tensor>& T, int num, int numpass, int start = 1);
+
 
 /* Notes on optimization
  * 
@@ -271,6 +275,13 @@ davidson(const LocalT& A, Tensor& phi) const
 
         //Do Gram-Schmidt on xi
         //to include it in the subbasis
+#define USE_ORTHOG
+
+#ifdef USE_ORTHOG
+        V[ii+1] = q;
+        orthog(V,ii+1,2);
+        const Tensor& d = V[ii+1];
+#else
         Tensor& d = V[ii+1];
         d = q;
         Vector Vd(ii);
@@ -286,6 +297,7 @@ davidson(const LocalT& A, Tensor& phi) const
         d *= -1;
         d += q;
         d *= 1.0/(d.norm()+1E-33);
+#endif
 
         last_lambda = lambda;
 
@@ -564,6 +576,66 @@ genDavidson(const LocalTA& A, const LocalTB& B, Tensor& phi) const
     return lambda;
 
     } //Eigensolver::genDavidson
+
+template<class Tensor>
+void
+orthog(std::vector<Tensor>& T, int num, int numpass, int start = 1)
+    {
+    const int size = T[start].maxSize();
+    if(num > size)
+        {
+        Print(num);
+        Print(size);
+        Error("num > size");
+        }
+
+    for(int n = start; n <= num+(start-1); ++n)
+        { 
+        Tensor& col = T.at(n);
+        Real norm = col.norm();
+        if(norm == 0)
+            {
+            col.Randomize();
+            norm = col.norm();
+            //If norm still zero, may be
+            //an IQTensor with no blocks
+            if(norm == 0)
+                {
+                PrintDat(col);
+                Error("Couldn't randomize column");
+                }
+            }
+        col /= norm;
+        col.scaleTo(1);
+        
+        if(n == start) continue;
+
+        for(int pass = 1; pass <= numpass; ++pass)
+            {
+            Vector dps(n-start);
+            for(int m = start; m < n; ++m)
+                {
+                dps(m-start+1) = Dot(col,T.at(m));
+                }
+            Tensor ovrlp = dps(1)*T.at(start);
+            for(int m = start+1; m < n; ++m)
+                {
+                ovrlp += dps(m-start+1)*T.at(m);
+                }
+            ovrlp *= -1;
+            col += ovrlp;
+
+            norm = col.norm();
+            if(norm == 0)
+                {
+                Error("Couldn't normalize column");
+                }
+            col /= norm;
+            col.scaleTo(1);
+
+            }
+        }
+    } // orthog(vector<Tensor> ... )
 
 
 #endif
