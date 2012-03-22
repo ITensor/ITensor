@@ -182,9 +182,18 @@ class IQTensor
     operator+(const IQTensor& o) const 
         { IQTensor res(*this); res += o; return res; }
 
+    IQTensor&
+    operator-=(const IQTensor& o)
+        { 
+        if(this == &o) { operator*=(0); return *this; }
+        IQTensor oth(o);
+        oth *= -1;
+        return operator+=(oth);
+        }
+
     IQTensor 
     operator-(const IQTensor& o) const 
-        { IQTensor res(o); res *= -1; res += *this; return res; }
+        { IQTensor res(*this); res -= o; return res; }
 
     //
     // Multiplication by a scalar
@@ -199,6 +208,17 @@ class IQTensor
     friend inline IQTensor 
     operator*(Real fac, IQTensor T) 
         { T *= fac; return T; }
+
+    IQTensor& 
+    operator/=(Real fac);
+
+    IQTensor 
+    operator/(Real fac) const 
+        { IQTensor res(*this); res /= fac; return res; }
+
+    friend inline IQTensor 
+    operator/(Real fac, IQTensor t) 
+        { return (t /= fac); }
 
     //
     // Multiplication by an ITensor

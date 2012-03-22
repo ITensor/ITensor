@@ -351,7 +351,15 @@ IQTensor(std::vector<IQIndex>& iqinds_)
 	: 
     is_(new IQIndexSet(iqinds_)),
     p(new IQTDat()) 
-	{ }
+	{ 
+#ifdef DEBUG
+    Foreach(const IQIndex& I, iqinds_)
+        {
+        if(I == IQIndex::Null())
+            Error("IQIndex is null");
+        }
+#endif
+    }
 
 IQTensor::
 IQTensor(const IQIndexVal& iv1) 
@@ -422,7 +430,9 @@ IQTensor(std::istream& s)
     : 
     is_(0),
     p(0) 
-    { read(s); }
+    { 
+    read(s); 
+    }
 
 void IQTensor::
 read(std::istream& s)
@@ -456,9 +466,28 @@ operator*=(Real fac)
         return *this; 
         }
 
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
         {
         t *= fac;
+        }
+
+    return *this; 
+    }
+
+IQTensor& IQTensor::
+operator/=(Real fac) 
+    { 
+    soloDat();
+
+    if(fac == 0) 
+        { 
+        ncdat().clear(); 
+        return *this; 
+        }
+
+    Foreach(ITensor& t, ncdat())
+        {
+        t /= fac;
         }
 
     return *this; 
@@ -518,13 +547,13 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
         }
 
     return (ncdat().get(r)).operator()(iv1.blockIndexVal(),
-                                  iv2.blockIndexVal(),
-                                  iv3.blockIndexVal(),
-                                  iv4.blockIndexVal(),
-                                  iv5.blockIndexVal(),
-                                  iv6.blockIndexVal(),
-                                  iv7.blockIndexVal(),
-                                  iv8.blockIndexVal());
+                                       iv2.blockIndexVal(),
+                                       iv3.blockIndexVal(),
+                                       iv4.blockIndexVal(),
+                                       iv5.blockIndexVal(),
+                                       iv6.blockIndexVal(),
+                                       iv7.blockIndexVal(),
+                                       iv8.blockIndexVal());
 	}
 
 QN IQTensor::
