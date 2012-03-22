@@ -224,7 +224,7 @@ davidson(const LocalT& A, Tensor& phi) const
         //Check convergence
         qnorm = q.norm();
         if( (qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_) 
-            || qnorm < 1E-12 )
+            || qnorm < max(1E-12,errgoal_ * 1.0e-3) )
             {
             break; //Out of ii loop to return
             }
@@ -271,21 +271,20 @@ davidson(const LocalT& A, Tensor& phi) const
 
         //Do Gram-Schmidt on xi
         //to include it in the subbasis
-        Tensor& d = V[ii+1];
-        d = q;
-        Vector Vd(ii);
-        for(int k = 1; k <= ii; ++k)
-            {
-            Vd(k) = Dot(V[k],d);
-            }
-        d = Vd(1)*V[1];
-        for(int k = 2; k <= ii; ++k)
-            {
-            d += Vd(k)*V[k];
-            }
-        d *= -1;
-        d += q;
-        d *= 1.0/(d.norm()+1E-33);
+	Tensor& d = V[ii+1];
+	Vector Vd(ii);
+	for(int pass = 1; pass <= 2; pass++)
+	    {
+	    d = q;
+	    for(int k = 1; k <= ii; ++k)
+		Vd(k) = Dot(V[k],d);
+	    d = Vd(1)*V[1];
+	    for(int k = 2; k <= ii; ++k)
+		d += Vd(k)*V[k];
+	    d *= -1;
+	    d += q;
+	    d *= 1.0/(d.norm()+1E-33);
+	    }
 
         last_lambda = lambda;
 
