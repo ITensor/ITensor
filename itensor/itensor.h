@@ -78,19 +78,19 @@ class ITensor
 
     ITensor(const Index& i1, const VectorRef& V);
 
-    ITensor(Index i1,Index i2);
+    ITensor(const Index& i1,const Index& i2);
 
     //Create an ITensor as a matrix with 'a' on the diagonal
-    ITensor(Index i1,Index i2,Real a);
+    ITensor(const Index& i1,const Index& i2,Real a);
 
-    ITensor(Index i1,Index i2,const MatrixRef& M);
+    ITensor(const Index& i1,const Index& i2,const MatrixRef& M);
 
-    ITensor(Index i1, Index i2, Index i3,
-            Index i4 = Index::Null(), 
-            Index i5 = Index::Null(), 
-            Index i6 = Index::Null(),
-            Index i7 = Index::Null(), 
-            Index i8 = Index::Null());
+    ITensor(const Index& i1, const Index& i2, const Index& i3,
+            const Index& i4 = Index::Null(), 
+            const Index& i5 = Index::Null(), 
+            const Index& i6 = Index::Null(),
+            const Index& i7 = Index::Null(), 
+            const Index& i8 = Index::Null());
 
     explicit 
     ITensor(const IndexVal& iv, Real fac = 1);

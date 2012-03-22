@@ -22,6 +22,10 @@ IndexSet(const Index& i1)
     r_(1),
     ur_(i1.uniqueReal())
     { 
+#ifdef DEBUG
+    if(i1 == Index::Null())
+        Error("i1 is null");
+#endif
     index_[1] = i1;
     }
 
@@ -31,6 +35,12 @@ IndexSet(const Index& i1, const Index& i2)
     r_(2),
     ur_(i1.uniqueReal() + i2.uniqueReal())
     { 
+#ifdef DEBUG
+    if(i1 == Index::Null())
+        Error("i1 is null");
+    if(i2 == Index::Null())
+        Error("i2 is null");
+#endif
 	if(i1.m()==1) 
 	    {
 	    index_[1] = i2; 
@@ -52,6 +62,14 @@ IndexSet(Index i1, Index i2, Index i3,
     :
     r_(3)
     { 
+#ifdef DEBUG
+    if(i1 == Index::Null())
+        Error("i1 is null");
+    if(i2 == Index::Null())
+        Error("i2 is null");
+    if(i3 == Index::Null())
+        Error("i3 is null");
+#endif
 	array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
 	while(ii[r_] != Index::Null()) ++r_;
     int alloc_size;
@@ -342,6 +360,10 @@ mapindex(const Index& i1, const Index& i2)
 void IndexSet::
 addindex(const Index& I)
     {
+#ifdef DEBUG
+    if(I == Index::Null())
+        Error("Index is null");
+#endif
     if(I.m() == 1)
         {
         index_[++r_] = I;

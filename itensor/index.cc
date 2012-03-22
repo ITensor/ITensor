@@ -318,7 +318,25 @@ IndexVal(const Index& index, int i_)
     : ind(index),
       i(i_)
     { 
+#ifdef DEBUG
+    if(index == Index::Null())
+        Error("IndexVal initialized with null Index");
+#endif
     assert(i <= ind.m()); 
+    }
+
+IndexVal::
+IndexVal(Imaker im)
+    {
+    if(im == makeNull)
+        {
+        ind = Index::Null();
+        i = 1;
+        }
+    else
+        {
+        Error("Imaker type not supported");
+        }
     }
 
 bool IndexVal::

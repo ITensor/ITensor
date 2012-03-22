@@ -192,7 +192,7 @@ ITensor(const Index& i1, const VectorRef& V)
 	}
 
 ITensor::
-ITensor(Index i1,Index i2) 
+ITensor(const Index& i1,const Index& i2) 
     :
     is_(i1,i2)
 	{ 
@@ -201,7 +201,7 @@ ITensor(Index i1,Index i2)
     
 
 ITensor::
-ITensor(Index i1,Index i2,Real a) 
+ITensor(const Index& i1,const Index& i2,Real a) 
     :
     is_(i1,i2)
 	{
@@ -217,7 +217,7 @@ ITensor(Index i1,Index i2,Real a)
 	}
 
 ITensor::
-ITensor(Index i1,Index i2,const MatrixRef& M) 
+ITensor(const Index& i1,const Index& i2,const MatrixRef& M) 
     :
     is_(i1,i2)
 	{
@@ -230,10 +230,18 @@ ITensor(Index i1,Index i2,const MatrixRef& M)
 	}
 
 ITensor::
-ITensor(Index i1, Index i2, Index i3,
-            Index i4, Index i5, Index i6,
-            Index i7, Index i8)
+ITensor(const Index& i1, const Index& i2, const Index& i3,
+        const Index& i4, const Index& i5, const Index& i6,
+        const Index& i7, const Index& i8)
 	{
+#ifdef DEBUG
+    if(i1 == Index::Null())
+        Error("i1 is null");
+    if(i2 == Index::Null())
+        Error("i2 is null");
+    if(i3 == Index::Null())
+        Error("i3 is null");
+#endif
 	array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
 	int size = 3;
 	while(ii[size] != Index::Null()) ++size;

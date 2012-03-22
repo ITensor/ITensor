@@ -556,6 +556,9 @@ struct IQIndexVal
     void conj() 
         { iqind.conj(); }
 
+    bool
+    operator==(const IQIndexVal& other) const;
+
     operator IndexVal() const;
 
     IndexVal blockIndexVal() const;
@@ -578,7 +581,7 @@ struct IQIndexVal
 
     static const IQIndexVal& Null()
         {
-        static const IQIndexVal Null_(IQIndex::Null(),1);
+        static const IQIndexVal Null_(makeNull);
         return Null_;
         }
 
@@ -586,6 +589,9 @@ struct IQIndexVal
 
     void 
     calc_ind_ii(int& j, int& ii) const;
+
+    explicit
+    IQIndexVal(Imaker im);
 
     };
 

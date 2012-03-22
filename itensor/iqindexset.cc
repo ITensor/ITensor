@@ -21,6 +21,10 @@ IQIndexSet(const IQIndex& i1)
     ur_(i1.uniqueReal()),
     numref(0)
     { 
+#ifdef DEBUG
+    if(i1 == IQIndex::Null())
+        Error("i1 was null");
+#endif
     index_[0] = i1;
     }
 
@@ -31,6 +35,12 @@ IQIndexSet(const IQIndex& i1, const IQIndex& i2)
     ur_(i1.uniqueReal() + i2.uniqueReal()),
     numref(0)
     { 
+#ifdef DEBUG
+    if(i1 == IQIndex::Null())
+        Error("i1 was null");
+    if(i2 == IQIndex::Null())
+        Error("i2 was null");
+#endif
     index_[0] = i1;
     index_[1] = i2;
     }
@@ -43,6 +53,14 @@ IQIndexSet(const IQIndex& i1, const IQIndex& i2,
     ur_(i1.uniqueReal() + i2.uniqueReal() + i3.uniqueReal()),
     numref(0)
     { 
+#ifdef DEBUG
+    if(i1 == IQIndex::Null())
+        Error("i1 was null");
+    if(i2 == IQIndex::Null())
+        Error("i2 was null");
+    if(i3 == IQIndex::Null())
+        Error("i3 was null");
+#endif
     index_[0] = i1;
     index_[1] = i2;
     index_[2] = i3;
@@ -56,6 +74,16 @@ IQIndexSet(IQIndex i1, IQIndex i2, IQIndex i3,
     index_(4),
     numref(0)
     { 
+#ifdef DEBUG
+    if(i1 == IQIndex::Null())
+        Error("i1 was null");
+    if(i2 == IQIndex::Null())
+        Error("i2 was null");
+    if(i3 == IQIndex::Null())
+        Error("i3 was null");
+    if(i4 == IQIndex::Null())
+        Error("i4 was null");
+#endif
 	index_[0] = i1; 
 	index_[1] = i2; 
 	index_[2] = i3; 
@@ -285,6 +313,10 @@ mapindex(const IQIndex& i1, const IQIndex& i2)
 void IQIndexSet::
 addindex(const IQIndex& I)
     {
+#ifdef DEBUG
+    if(I == IQIndex::Null())
+        Error("IQIndex is null");
+#endif
     index_.push_back(I);
     ur_ += I.uniqueReal();
     }

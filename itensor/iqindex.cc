@@ -583,13 +583,35 @@ IQIndexVal()
 
 IQIndexVal::
 IQIndexVal(const IQIndex& iqindex, int i_) 
-    : iqind(iqindex),i(i_) 
+    : 
+    iqind(iqindex),
+    i(i_) 
     { 
+#ifdef DEBUG
+    if(iqindex == IQIndex::Null())
+        {
+        Error("IQIndexVal index set to null");
+        }
+#endif
     if(i > iqind.m() || i < 1) 
         {
         Print(iqindex);
         Print(i);
         Error("IQIndexVal: i out of range");
+        }
+    }
+
+IQIndexVal::
+IQIndexVal(Imaker im)
+    {
+    if(im == makeNull)
+        {
+        iqind = IQIndex::Null();
+        i = 1;
+        }
+    else
+        {
+        Error("Only makeNull supported in Imaker constructor");
         }
     }
 
@@ -611,6 +633,11 @@ qn() const
     return iqind.qn(j);
     }
 
+bool IQIndexVal::
+operator==(const IQIndexVal& other) const
+    {
+    return (iqind == other.iqind && i == other.i);
+    }
 
 IQIndexVal::
 operator IndexVal() const 
@@ -622,6 +649,8 @@ operator IndexVal() const
 IndexVal IQIndexVal::
 blockIndexVal() const 
     { 
+    if(*this == IQIndexVal::Null())
+        return IndexVal::Null();
     int j,ii;
     calc_ind_ii(j,ii);
     return IndexVal(iqind.index(j),ii); 

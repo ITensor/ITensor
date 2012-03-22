@@ -373,7 +373,7 @@ struct IndexVal
     static const IndexVal& 
     Null()
         {
-        static const IndexVal Null_(Index::Null(),1);
+        static const IndexVal Null_(makeNull);
         return Null_;
         }
 
@@ -385,6 +385,12 @@ struct IndexVal
 
     friend std::ostream& 
     operator<<(std::ostream& s, const IndexVal& iv);
+
+    private:
+
+    explicit
+    IndexVal(Imaker im);
+
     };
 
 template <class T> T 
