@@ -663,23 +663,26 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
 
     const int fullrank = (is_mpo ? 4 : 3);
     int start = 1, end = N;
+
     for(int j = 1; j <= N; ++j)
-        {
-        if(A[j].r() < fullrank)
-            {
+        if(A[j].r() == fullrank)
             if(A.at(periodicWrap(j-1,N)).r() < fullrank) 
                 {
-                //cerr << "Got start at " << j << "\n";
-                start = j;
+                start = periodicWrap(j-1,N);
+                //cerr << "Got start at " << start << "\n";
+                break;
                 }
+
+    for(int j = 1; j <= N; ++j)
+        if(A[j].r() == fullrank)
             if(A.at(periodicWrap(j+1,N)).r() < fullrank) 
                 {
-                //cerr << "Got end at " << j << "\n";
-                end = j;
+                end = periodicWrap(j+1,N);
+                //cerr << "Got end at " << end << "\n";
+                break;
                 }
-            }
-        }
-    //cout << "Converting to IQ with (start, end) = " << start SP end << endl;
+
+    cout << "Converting to IQ with (start, end) = " << start SP end << endl;
 
     vector<IQIndex> linkind(N+1);
 
