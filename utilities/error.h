@@ -44,6 +44,9 @@ class ITError
         return message_.c_str();
         }
 
+    virtual
+    ~ITError() { }
+
     private:
 
         std::string message_;
