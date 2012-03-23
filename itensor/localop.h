@@ -313,7 +313,26 @@ deltaPhi(const Tensor& phi) const
 
     deltaL += deltaR;
 
-    return deltaL;
+    std::vector<IQIndex> iqinds;
+    iqinds.reserve(deltaL.r());
+    for(int j = 1; j <= deltaL.r(); ++j)
+        iqinds.push_back(deltaL.index(j));
+
+    IQTensor delta(iqinds);
+
+    QN targetQn = phi.div();
+
+    Foreach(const ITensor& block, deltaL.itensors())
+        {
+        QN div;
+        for(int j = 1; j <= block.r(); ++j)
+            div += deltaL.qn(block.index(j));
+
+        if(div == targetQn)
+            delta += block;
+        }
+
+    return delta;
     }
 
 template <class Tensor>
