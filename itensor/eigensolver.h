@@ -273,30 +273,24 @@ davidson(const LocalT& A, Tensor& phi) const
         q /= cond;
         }
 
-        //Do Gram-Schmidt on xi
+        //Do Gram-Schmidt on d
         //to include it in the subbasis
-#define USE_ORTHOG
-
-#ifdef USE_ORTHOG
-        V[ii+1] = q;
-        orthog(V,ii+1,2);
-        const Tensor& d = V[ii+1];
-#else
         Tensor& d = V[ii+1];
+        d = q;
         Vector Vd(ii);
-        for(int pass = 1; pass <= 2; pass++)
+        for(int pass = 1; pass <= 2; ++pass)
             {
-            d = q;
             for(int k = 1; k <= ii; ++k)
-            Vd(k) = Dot(V[k],d);
-            d = Vd(1)*V[1];
+                Vd(k) = Dot(V[k],d);
+
+            Tensor proj = Vd(1)*V[1];
             for(int k = 2; k <= ii; ++k)
-            d += Vd(k)*V[k];
-            d *= -1;
-            d += q;
+                proj += Vd(k)*V[k];
+            proj *= -1;
+
+            d += proj;
             d *= 1.0/(d.norm()+1E-33);
             }
-#endif
 
         last_lambda = lambda;
 
