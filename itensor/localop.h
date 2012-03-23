@@ -313,6 +313,42 @@ deltaPhi(const Tensor& phi) const
 
     deltaL += deltaR;
 
+    return deltaL;
+    }
+
+template <>
+inline IQTensor LocalOp<IQTensor>::
+deltaPhi(const IQTensor& phi) const
+    {
+    IQTensor deltaL(phi),
+           deltaR(phi);
+
+    if(L().isNotNull()) 
+        {
+        deltaL *= L();
+        }
+
+    if(R().isNotNull()) 
+        {
+        deltaR *= R();
+        }
+
+    const IQTensor& Op1 = *Op1_;
+    const IQTensor& Op2 = *Op2_;
+
+    deltaL *= Op1;
+    deltaR *= Op2;
+
+    IndexT hl = index_in_common(Op1,Op2,Link);
+
+    deltaL.trace(hl);
+    deltaL.mapprime(1,0);
+
+    deltaR.trace(hl);
+    deltaR.mapprime(1,0);
+
+    deltaL += deltaR;
+
     std::vector<IQIndex> iqinds;
     iqinds.reserve(deltaL.r());
     for(int j = 1; j <= deltaL.r(); ++j)
