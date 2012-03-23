@@ -46,6 +46,8 @@ class Sweeps
     noise(int sw) const { return Noise_.at(sw); }
     void 
     setNoise(int sw, Real val) { Noise_.at(sw) = val; }
+    void 
+    setNoise(Real val) { Noise_.assign(Nsweep_+1,val); }
 
     int 
     nsweep() const { return Nsweep_; }
@@ -198,7 +200,7 @@ operator<<(std::ostream& s, const Sweeps& swps)
     {
     s << "Sweeps:\n";
     for(int sw = 1; sw <= swps.nsweep(); ++sw)
-        s << boost::format("%d  Maxm=%d, Minm=%d, Cutoff=%.2E, Niter=%d, Noise=%.2E\n")
+        s << boost::format("%d  Maxm=%d, Minm=%d, Cutoff=%.1E, Niter=%d, Noise=%.1E\n")
              % sw % swps.maxm(sw) % swps.minm(sw) % swps.cutoff(sw) %swps.niter(sw) % swps.noise(sw);
     return s;
     }
