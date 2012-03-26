@@ -81,7 +81,8 @@ class MPSt
 
     MPSt(const Model& mod_,int maxmm = MAX_M, Real cut = MIN_CUT);
 
-    MPSt(const Model& mod_,const InitState& initState,int maxmm = MAX_M, Real cut = MIN_CUT);
+    MPSt(const Model& mod_,const InitState& initState,
+         int maxmm = MAX_M, Real cut = MIN_CUT);
 
     MPSt(const Model& model, std::istream& s);
 
@@ -202,6 +203,16 @@ class MPSt
     Tensor 
     bondTensor(int b) const;
 
+    bool
+    doWrite() const { return do_write_; }
+    void
+    doWrite(bool val) { do_write_ = val; initWrite(); }
+
+    const std::string&
+    writeDir() const { return writedir_; }
+    void 
+    writeDir(const std::string& val) { writedir_ = val; initWrite(); }
+
     void 
     read(std::istream& s);
 
@@ -253,10 +264,13 @@ class MPSt
     LeftLinkInd(int i)  const 
         { return index_in_common(AA(i),AA(i-1),Link); }
 
-    //MPSt: orthogonalization methods -------------------------------------
+    //
+    //MPSt orthogonalization methods
+    //
 
     void 
-    svdBond(int b, const Tensor& AA, Direction dir, bool preserve_shape = false);
+    svdBond(int b, const Tensor& AA, Direction dir, 
+            bool preserve_shape = false);
 
     template <class LocalOpT>
     void 
@@ -309,11 +323,11 @@ class MPSt
     //
     // dir==Fromleft example:
     //
-    //  /---A--     /----
+    //  /---A--     /---
     //  |   |       |
     //  E-- X -  =  nE -
     //  |   |       |
-    //  \---A--     \----
+    //  \---A--     \---
     //
     void 
     projectOp(int j, Direction dir, 
@@ -390,10 +404,13 @@ class MPSt
 
 protected:
 
-    //Data Members ----------
+    //////////////////////////
+    //
+    //Data Members
 
     int N;
 
+    mutable
     std::vector<Tensor> A;
 
     int l_orth_lim_,
@@ -403,7 +420,51 @@ protected:
 
     SVDWorker svd_;
 
-    //Constructor Helpers ----------
+    mutable
+    int atb_;
+
+    std::string writedir_;
+
+    bool do_write_;
+
+    //
+    //////////////////////////
+
+    //
+    //MPSt methods for writing to disk
+    //
+
+    //if doWrite(true) is called
+    //setBond(b) loads bond b
+    //from disk, keeping all other
+    //tensors written to disk
+
+    void
+    setBond(int b) const;
+
+    void
+    setSite(int j) const
+        {
+        if(atb_ < j) 
+            setBond(j);
+        else if(atb_ > j+1) 
+            setBond(j+1);
+        }
+
+
+    void
+    initWrite() const
+        {
+        //system((boost::format("mkdir -p %s")%writedir_).str().c_str());
+        system(("mkdir -p " + writedir_).c_str());
+        }
+
+    std::string
+    AFName(int j) const;
+
+    //
+    //Constructor Helpers
+    //
 
     void 
     new_tensors(std::vector<ITensor>& A_);
@@ -438,6 +499,7 @@ void MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, 
             const LocalOpT& PH, bool preserve_shape)
     {
+    setBond(b);
     if(preserve_shape)
         {
         //The idea of the preserve_shape flag is to 
@@ -495,9 +557,12 @@ totalQN(const IQMPS& psi)
     return psi.AA(center).div();
     }
 
+//
+// <psi | phi>
+//
 template <class MPSType>
 void 
-psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)  // <psi | phi>
+psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
     {
     typedef typename MPSType::TensorT
     Tensor;
@@ -534,10 +599,12 @@ psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
 void 
 fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit);
 
-//Template method for efficiently summing a set of MPS's or MPO's (or any class supporting operator+=)
+//Template method for efficiently summing a set of MPS's or MPO's 
+//(or any class supporting operator+=)
 template <typename MPSType>
 void 
-sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MIN_CUT, int maxm = MAX_M)
+sum(const std::vector<MPSType>& terms, MPSType& res, 
+    Real cut = MIN_CUT, int maxm = MAX_M)
     {
     int Nt = terms.size();
     if(Nt == 1) 
@@ -570,7 +637,7 @@ sum(const std::vector<MPSType>& terms, MPSType& res, Real cut = MIN_CUT, int max
         return;
         }
     return;
-    } // void sum(const std::vector<MPSType>& terms, Real cut, int maxm, MPSType& res)
+    }
 
 
 #endif
