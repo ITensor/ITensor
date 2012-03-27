@@ -22,7 +22,7 @@
 // (Note that L, Op1, Op2 and R
 //  are not required to have this
 //  precise structure. L and R
-//  can even be null which means
+//  can even be null in which case
 //  they will not be used.)
 //
 
@@ -47,7 +47,7 @@ class LocalOp
     LocalOp(const Tensor& Op1, const Tensor& Op2, const Tensor& L, const Tensor& R);
 
     //
-    // Sparse Matrix Type Methods
+    // Sparse Matrix Methods
     //
 
     void
@@ -123,6 +123,7 @@ class LocalOp
         combine_mpo_ = other.combine_mpo_;
         bond_ = other.bond_;
         }
+
     private:
 
     /////////////////

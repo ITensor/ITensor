@@ -2,28 +2,58 @@
 // Distributed under the ITensor Library License, Version 1.0.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __MPO_H
-#define __MPO_H
+#ifndef __ITENSOR_MPO_H
+#define __ITENSOR_MPO_H
 #include "mps.h"
 
-
+//
+// class MPOt
+//
+// (defines MPO and IQMPO via typedefs)
+//
 template<class Tensor>
 class MPOt : private MPSt<Tensor>
     {
     public:
-    typedef MPSt<Tensor> Parent;
-    typedef Tensor TensorT;
-    typedef typename Tensor::IndexT IndexT;
-    typedef typename Tensor::IndexValT IndexValT;
-    typedef typename Tensor::CombinerT CombinerT;
 
-    operator MPOt<IQTensor>()
+    typedef MPSt<Tensor> 
+    Parent;
+
+    typedef Tensor 
+    TensorT;
+
+    typedef typename Tensor::IndexT 
+    IndexT;
+
+    typedef typename Tensor::IndexValT 
+    IndexValT;
+
+    typedef typename Tensor::CombinerT 
+    CombinerT;
+
+    //MPOt: Constructors -----------------------------------------
+
+    MPOt() 
+        : 
+        Parent() 
+        { doRelCutoff(true); }
+
+    MPOt(const Model& model, int maxm_ = MAX_M, Real cutoff_ = MIN_CUT, 
+         bool _doRelCutoff = true, LogNumber _refNorm = DefaultRefScale) 
+        : 
+        Parent(model,maxm_,cutoff_)
         { 
-        MPOt<IQTensor> res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm()); 
-        res.svd_ = svd_;
-        convertToIQ(*model_,A,res.A);
-        return res; 
+        doRelCutoff(_doRelCutoff);
+        refNorm(_refNorm);
+
+        // Norm of psi^2 = 1 = norm = sum of denmat evals. 
+        // This translates to Tr{Adag A} = norm.  
+        // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
+        if(_refNorm == DefaultRefScale) 
+            refNorm(exp(model.NN()));
         }
+
+    MPOt(Model& model, std::istream& s) { read(model,s); }
 
     //Accessor Methods ------------------------------
 
@@ -53,38 +83,38 @@ class MPOt : private MPSt<Tensor>
     using Parent::showeigs;
     using Parent::svd;
 
-    //MPOt: Constructors -----------------------------------------
-
-    MPOt() : Parent() { doRelCutoff(true); }
-
-    MPOt(const Model& model, int maxm_ = MAX_M, Real cutoff_ = MIN_CUT, 
-    bool _doRelCutoff = true, LogNumber _refNorm = DefaultRefScale) 
-    : Parent(model,maxm_,cutoff_)
-	{ 
-        doRelCutoff(_doRelCutoff);
-        refNorm(_refNorm);
-        // Norm of psi^2 = 1 = norm = sum of denmat evals. 
-        // This translates to Tr{Adag A} = norm.  
-        // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
-        if(_refNorm == DefaultRefScale) refNorm(exp(model.NN()));
-	}
-
-    MPOt(Model& model, std::istream& s) { read(model,s); }
-
-    virtual ~MPOt() { }
 
     using Parent::read;
     using Parent::write;
 
     //MPOt: operators ------------------------------------------------------
 
-    MPOt& operator*=(Real a) { Parent::operator*=(a); return *this; }
-    inline MPOt operator*(Real r) const { MPOt res(*this); res *= r; return res; }
-    friend inline MPOt operator*(Real r, MPOt res) { res *= r; return res; }
+    MPOt& 
+    operator*=(Real a) { Parent::operator*=(a); return *this; }
 
-    MPOt& operator+=(const MPOt& oth) { Parent::operator+=(oth); return *this; }
-    inline MPOt operator+(MPOt res) const { res += *this; return res; }
-    inline MPOt operator-(MPOt res) const { res *= -1; res += *this; return res; }
+    MPOt
+    operator*(Real r) const { MPOt res(*this); res *= r; return res; }
+
+    friend MPOt inline
+    operator*(Real r, MPOt res) { res *= r; return res; }
+
+    MPOt& 
+    operator+=(const MPOt& oth) { Parent::operator+=(oth); return *this; }
+
+    MPOt 
+    operator+(MPOt res) const { res += *this; return res; }
+
+    MPOt 
+    operator-(MPOt res) const { res *= -1; res += *this; return res; }
+
+    operator MPOt<IQTensor>()
+        { 
+        MPOt<IQTensor> res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm()); 
+        res.svd_ = svd_;
+        convertToIQ(*model_,A,res.A);
+        return res; 
+        }
+
 
     //MPOt: index methods --------------------------------------------------
 
@@ -96,15 +126,16 @@ class MPOt : private MPSt<Tensor>
     using Parent::RightLinkInd;
     using Parent::LeftLinkInd;
 
-    void primeall()	// sites i,i' -> i',i'';  link:  l -> l'
-	{
-        for(int i = 1; i <= this->NN(); i++)
+    void 
+    primeall()	// sites i,i' -> i',i'';  link:  l -> l'
         {
+        for(int i = 1; i <= this->NN(); i++)
+            {
             AAnc(i).mapprime(0,1,primeLink);
             AAnc(i).mapprime(1,2,primeSite);
             AAnc(i).mapprime(0,1,primeSite);
+            }
         }
-	}
 
     using Parent::doSVD;
     using Parent::position;
@@ -262,7 +293,8 @@ typedef Internal::MPOSet<ITensor> MPOSet;
 typedef Internal::MPOSet<IQTensor> IQMPOSet;
 
 template <class MPSType, class MPOType>
-void psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real& im) //<psi|H|phi>
+void 
+psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real& im) //<psi|H|phi>
     {
     typedef typename MPSType::TensorT Tensor;
     const int N = H.NN();
@@ -282,7 +314,8 @@ void psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re,
     Dot(primed(psi.AA(N)),L,re,im);
     }
 template <class MPSType, class MPOType>
-Real psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|phi>]
+Real 
+psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|phi>]
     {
     Real re, im;
     psiHphi(psi,H,phi,re,im);
@@ -291,7 +324,7 @@ Real psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi
     return re;
     }
 
-inline void 
+void inline
 psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi, Real& re, Real& im) //<psi|H|phi>
     {
     int N = psi.NN();
@@ -317,7 +350,7 @@ psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, cons
         im = 0;
         }
     }
-inline Real 
+Real inline
 psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi) //Re[<psi|H|phi>]
     {
     Real re,im; psiHphi(psi,H,LB,RB,phi,re,im);
@@ -333,10 +366,10 @@ psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real
     int N = psi.NN();
     IQMPS psiconj(psi);
     for(int i = 1; i <= N; i++)
-	{
+        {
         psiconj.AAnc(i) = conj(psi.AA(i));
         psiconj.AAnc(i).mapprime(0,2);
-	}
+        }
     IQMPO Kp(K);
     Kp.mapprime(1,2);
     Kp.mapprime(0,1);
@@ -344,10 +377,10 @@ psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real
     //scales as m^2 k^2 d
     IQTensor L = (((phi.AA(1) * H.AA(1)) * Kp.AA(1)) * psiconj.AA(1));
     for(int i = 2; i < N; i++)
-    {
+        {
         //scales as m^3 k^2 d + m^2 k^3 d^2
         L = ((((L * phi.AA(i)) * H.AA(i)) * Kp.AA(i)) * psiconj.AA(i));
-    }
+        }
     //scales as m^2 k^2 d
     L = ((((L * phi.AA(N)) * H.AA(N)) * Kp.AA(N)) * psiconj.AA(N)) * IQTensor::Sing();
     //cout << "in psiHKpsi, L is "; PrintDat(L);

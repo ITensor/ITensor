@@ -13,11 +13,11 @@
 // some number of sites of an MPS.
 // (The default is 2 sites.)
 //
-//   .----..---             ----...-.
-//   |  |    |    |      |   |      | 
-//   W1 W2.. Wj-1 Wj - Wj+1  Wj+2..WN
-//   |  |    |    |      |   |      | 
-//   '----..---             ----...-'
+//   .----...---                ----...--.
+//   |  |     |      |      |     |      | 
+//   W1-W2-..Wj-1 - Wj - Wj+1 -- Wj+2..-WN
+//   |  |     |      |      |     |      | 
+//   '----...---                ----...--'
 //
 // 
 //  Here the W's are the site tensors
@@ -34,15 +34,20 @@ class LocalMPO
     {
     public:
 
+    typedef typename Tensor::CombinerT
+    CombinerT;
+
+    //
+    // Constructors
+    //
+
     LocalMPO();
 
     LocalMPO(const MPOt<Tensor>& Op, int num_center = 2);
 
-    typedef typename Tensor::IndexT
-    IndexT;
-
-    typedef typename Tensor::CombinerT
-    CombinerT;
+    //
+    // Sparse Matrix Methods
+    //
 
     void
     product(const Tensor& phi, Tensor& phip) const { lop_.product(phi,phip); }
