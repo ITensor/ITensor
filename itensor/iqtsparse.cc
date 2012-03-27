@@ -96,7 +96,7 @@ uninit_rmap() const
     }
 
 void IQTSDat::
-scaleTo(const LogNumber& newscale)
+scaleTo(const LogNumber& newscale) const
     {
     Foreach(ITSparse& s, its_)
         s.scaleTo(newscale);
@@ -162,7 +162,7 @@ IQTSparse(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
 IQTSparse& IQTSparse::
 operator+=(const ITSparse& s)
     {
-    d_->insert_add(s);
+    ncdat().insert_add(s);
     return *this;
     }
 
@@ -175,9 +175,9 @@ operator+=(const IQTSparse& other)
         return *this;
         }
 
-    Foreach(const ITSparse& s, *(other.d_))
+    Foreach(const ITSparse& s, other.dat())
         {
-        d_->insert_add(s);
+        ncdat().insert_add(s);
         }
 
     return *this;
@@ -190,11 +190,11 @@ operator*=(Real fac)
 
     if(fac == 0)
         {
-        d_->clear();
+        ncdat().clear();
         return *this;
         }
 
-    Foreach(ITSparse& s, *d_)
+    Foreach(ITSparse& s, ncdat())
         {
         s *= fac;
         }
@@ -208,11 +208,11 @@ operator*=(const LogNumber& fac)
 
     if(fac == 0)
         {
-        d_->clear();
+        ncdat().clear();
         return *this;
         }
 
-    Foreach(ITSparse& s, *d_)
+    Foreach(ITSparse& s, ncdat())
         {
         s *= fac;
         }
@@ -274,7 +274,7 @@ noprime(PrimeType pt)
 
     is_->noprime(pt); 
 
-    Foreach(ITSparse& t, *(d_))
+    Foreach(ITSparse& t, ncdat())
         {
         t.noprime(pt);
         }
@@ -287,7 +287,7 @@ doprime(PrimeType pt, int inc)
 
     is_->doprime(pt,inc);
 
-    Foreach(ITSparse& t, *(d_))
+    Foreach(ITSparse& t, ncdat())
         {
         t.doprime(pt,inc);
         }
@@ -300,7 +300,7 @@ mapprime(int plevold, int plevnew, PrimeType pt)
 
     is_->mapprime(plevold,plevnew,pt); 
 
-    Foreach(ITSparse& t, *(d_))
+    Foreach(ITSparse& t, ncdat())
         {
         t.mapprime(plevold,plevnew,pt);
         }
@@ -314,7 +314,7 @@ mapprimeind(const IQIndex& I, int plevold, int plevnew,
 
     is_->mapprimeind(I,plevold,plevnew,pt); 
 
-    Foreach(ITSparse& t, *(d_))
+    Foreach(ITSparse& t, ncdat())
         {
         t.mapprimeind(I,plevold,plevnew,pt);
         }
@@ -327,7 +327,7 @@ primeind(const IQIndex& I, int inc)
 
     is_->primeind(I,inc);
 
-    Foreach(ITSparse& t, *(d_))
+    Foreach(ITSparse& t, ncdat())
     for(std::vector<inqn>::const_iterator x = I.iq().begin(); 
             x != I.iq().end(); ++x)
         {
@@ -343,7 +343,7 @@ noprimeind(const IQIndex& I)
 
     is_->noprimeind(I); 
 
-    Foreach(ITSparse& t, *(d_))
+    Foreach(ITSparse& t, ncdat())
     for(std::vector<inqn>::const_iterator x = I.iq().begin(); 
             x != I.iq().end(); ++x)
         {
@@ -372,7 +372,7 @@ pseudoInvert(Real cutoff)
     {
     soloDat();
 
-    Foreach(ITSparse& s, *(d_))
+    Foreach(ITSparse& s, ncdat())
         { 
         s.pseudoInvert(cutoff);
         }
@@ -382,7 +382,7 @@ Real IQTSparse::
 norm() const
     {
     Real res = 0;
-    Foreach(const ITSparse& s, (*d_))
+    Foreach(const ITSparse& s, dat())
         {
         res += sqr(s.norm());
         }
@@ -393,13 +393,13 @@ void IQTSparse::
 scaleOutNorm() const
 	{
     Real nrm = norm();
-    d_->scaleTo(nrm);
+    dat().scaleTo(nrm);
 	}
 
 void IQTSparse::
 scaleTo(const LogNumber& newscale) const
 	{
-    d_->scaleTo(newscale);
+    dat().scaleTo(newscale);
 	}
 
 void IQTSparse::
@@ -443,7 +443,7 @@ write(std::ostream& s) const
 	s.write((char*) &null_,sizeof(null_));
 	if(null_) return;
     is_->write(s);
-	d_->write(s);
+	dat().write(s);
     }
 
 void IQTSparse::
@@ -454,7 +454,7 @@ soloDat()
         Error("IQTSparse is null");
         }
 
-	if(d_->count() != 1)
+	if(dat().count() != 1)
 	    {
 	    boost::intrusive_ptr<IQTSDat> new_d_(new IQTSDat(*d_));
 	    d_.swap(new_d_);
@@ -549,7 +549,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     res.p->swap(old_itensor);
 
     multimap<ApproxReal,IQTSDat::const_iterator> com_S;
-    for(IQTSDat::const_iterator tt = S.d_->begin(); tt != S.d_->end(); ++tt)
+    for(IQTSDat::const_iterator tt = S.dat().begin(); tt != S.dat().end(); ++tt)
         {
         Real r = 0.0;
         for(int a = 1; a <= tt->r(); ++a)
@@ -617,7 +617,7 @@ operator<<(ostream & s, const IQTSparse& T)
     for(int k = 1; k <= T.r(); ++k)
         { s << "  " << T.index(k) << std::endl; }
     s << "ITSparse blocks:\n";
-    Foreach(const ITSparse& t, (*T.d_))
+    Foreach(const ITSparse& t, T.dat())
         { s << "  " << t << std::endl; }
     s << "-------------------" << "\n\n";
     return s;

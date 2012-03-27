@@ -278,6 +278,11 @@ class IQTSparse
     void
     solo();
 
+    const IQTSDat&
+    dat() const { return *d_; }
+
+    IQTSDat&
+    ncdat() { return *d_; }
 
     friend void 
     product(const IQTSparse& S, const IQTensor& T, IQTensor& res);
@@ -339,8 +344,8 @@ class IQTSDat
     // Other Methods
     //
 
-    void
-    scaleTo(const LogNumber& newscale);
+    void 
+    scaleTo(const LogNumber& newscale) const;
 
     void
     read(std::istream& s);

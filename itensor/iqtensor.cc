@@ -603,7 +603,7 @@ ind_inc_prime(const IQIndex& i,int inc)
 
     soloDat();
 
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
         {
 	    for(int ii = 1; ii <= t.r(); ++ii)
 		if(i.hasindex_noprime(t.index(ii)))
@@ -621,7 +621,7 @@ noprime(PrimeType pt)
 
     is_->noprime(pt);
 
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
         { t.noprime(pt); }
 	} 
 
@@ -632,7 +632,7 @@ noprimelink()
 
     is_->noprime(primeLink);
 
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
         { t.noprime(primeLink); }
 	}
 
@@ -643,7 +643,7 @@ doprime(PrimeType pt, int inc)
 
     is_->doprime(pt,inc);
 
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
 	    t.doprime(pt,inc);
 	}
 
@@ -654,7 +654,7 @@ mapprime(int plevold, int plevnew, PrimeType pt)
 
     is_->mapprime(plevold,plevnew,pt);
 
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
 	    t.mapprime(plevold,plevnew,pt);
 	}
 
@@ -665,7 +665,7 @@ primeind(const IQIndex& I, int inc)
 
     is_->primeind(I,inc);
 
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
@@ -681,7 +681,7 @@ noprimeind(const IQIndex& I)
 
     is_->noprimeind(I);
 
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
@@ -820,7 +820,7 @@ addindex1(const IQIndex& I)
 	if(I.m() != 1) 
 	    Error("IQTensor::operator*=(IQIndex): IQIndex must have m == 1.");    
 	solo(); 
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
         { t.addindex1(I.index(1)); }
 	is_->addindex(I);
 	}
@@ -1017,7 +1017,7 @@ assignFromVec(VectorRef v)
 	if(vecSize() != v.Length())
 	    Error("bad size");
 	int off = 1;
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
 	    {
 	    int d = t.vecSize();
 	    t.assignFromVec(v.SubVector(off,off+d-1));
@@ -1029,7 +1029,7 @@ void IQTensor::
 Randomize() 
 	{ 
 	soloDat(); 
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, ncdat())
         { t.Randomize(); }
 	}
 
