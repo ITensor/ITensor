@@ -343,7 +343,11 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
     //Add in noise term
     if(noise_ > 0 && PH.isNotNull())
         {
+        Real orig_norm = AA.norm();
+
         AA += noise_*PH.deltaPhi(AA);
+
+        AA *= orig_norm/AA.norm();
         }
 
     CombinerT Ucomb;
@@ -480,7 +484,11 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     if(noise_ > 0 && PH.isNotNull())
         {
+        Real orig_norm = rho.norm();
+
         rho += noise_*PH.deltaRho(rho,comb,dir);
+
+        rho *= orig_norm/rho.norm();
         }
 
     const Real saved_cutoff = cutoff_; 
