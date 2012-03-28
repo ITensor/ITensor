@@ -66,20 +66,50 @@ class LocalMPO
     void
     diag(Tensor& D) const { lop_.diag(D); }
 
+    //
+    // position(b,psi) uses the MPS psi
+    // to adjust the edge tensors such
+    // that the MPO tensors at positions
+    // b and b+1 are exposed
+    //
     template <class MPSType>
     void
     position(int b, const MPSType& psi);
+
+    void
+    shift(int j, Direction dir, const Tensor& A);
+
+    //
+    // Accessor Methods
+    //
+
+    void
+    reset()
+        {
+        LHlim_ = 0;
+        RHlim_ = Op_->NN()+1;
+        }
 
     const Tensor&
     L() const 
         { 
         return PH_[LHlim_];
         }
+    void
+    L(const Tensor& nL)
+        {
+        PH_[LHlim_] = nL;
+        }
 
     const Tensor&
     R() const 
         { 
         return PH_[RHlim_];
+        }
+    void
+    R(const Tensor& nR)
+        {
+        PH_[RHlim_] = nR;
         }
 
     const Tensor&
@@ -183,6 +213,61 @@ position(int b, const MPSType& psi)
 #endif
 
     lop_.update(Op_->AA(b),Op_->AA(b+1),L(),R());
+    }
+
+template <class Tensor>
+inline void LocalMPO<Tensor>::
+shift(int j, Direction dir, const Tensor& A)
+    {
+    if(this->isNull()) Error("LocalMPO is null");
+
+#ifdef DEBUG
+    if(nc_ != 2)
+        {
+        Error("LocalOp only supports 2 center sites currently");
+        }
+#endif
+
+    if(dir == Fromleft)
+        {
+        if((j-1) != LHlim_)
+            {
+            std::cout << "j-1 = " << (j-1) << ", LHlim_ = " << LHlim_ << std::endl;
+            Error("Can only shift at LHlim_");
+            }
+        Tensor& E = PH_.at(LHlim_);
+        Tensor& nE = PH_.at(j);
+        nE = E * A;
+        nE *= Op_->AA(j);
+        nE *= conj(primed(A));
+        LHlim_ = j;
+        RHlim_ = j+nc_+1;
+
+#ifdef DEBUG
+        //std::cerr << boost::format("LocalMPO at (%d,%d) \n") % LHlim_ % RHlim_;
+        //PrintIndices(L());
+        //PrintIndices(R());
+#endif
+
+        lop_.update(Op_->AA(j+1),Op_->AA(j+2),L(),R());
+        }
+    else //dir == Fromright
+        {
+        if((j+1) != LHlim_)
+            {
+            std::cout << "j+1 = " << (j+1) << ", RHlim_ = " << RHlim_ << std::endl;
+            Error("Can only shift at RHlim_");
+            }
+        Tensor& E = PH_.at(RHlim_);
+        Tensor& nE = PH_.at(j);
+        nE = E * A;
+        nE *= Op_->AA(j);
+        nE *= conj(primed(A));
+        LHlim_ = j-nc_-1;
+        RHlim_ = j;
+
+        lop_.update(Op_->AA(j-1),Op_->AA(j),L(),R());
+        }
     }
 
 template <class Tensor>
