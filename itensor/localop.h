@@ -272,11 +272,9 @@ deltaRho(const Tensor& rho, const CombinerT& comb, Direction dir) const
     delta.mapprime(2,0);
 
     A.conj();
-    A.mapprime(0,1);
+    A.primeind(comb.right());
     delta *= A;
     delta.mapprime(2,1);
-
-    delta.trace(hl,primed(hl));
 
     return delta;
     }
