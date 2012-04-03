@@ -217,7 +217,7 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
         IQIndex oldmid = res.RightLinkInd(i); assert(oldmid.dir() == Out);
         nfork = IQTensor(x.RightLinkInd(i),K.RightLinkInd(i),oldmid);
         if(clust.iten_size() == 0)	// this product gives 0 !!
-        { res *= 0; return; }
+	    throw ResultIsZero("clust.iten size == 0");
         svd.denmatDecomp(i,clust, res.AAnc(i), nfork,Fromleft);
         IQIndex mid = index_in_common(res.AA(i),nfork,Link);
         assert(mid.dir() == In);
@@ -229,7 +229,7 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
         }
     nfork = clust * x.AA(N) * K.AA(N);
     if(nfork.iten_size() == 0)	// this product gives 0 !!
-        { res *= 0; return; }
+	throw ResultIsZero("nfork.iten size == 0");
 
     res.doSVD(N-1,nfork,Fromright);
     res.noprimelink();
