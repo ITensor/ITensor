@@ -595,7 +595,7 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
         for(int r = 1; r <= n; ++r)
 	    for(int c = r+1; c <= n; ++c)
 		maxM = max(maxM,fabs(M(r,c)));
-	Real maxcheck = 1e-14 * maxM;
+	Real maxcheck = 1e-13 * maxM;
         for(int r = 1; r <= n; ++r)
 	    for(int c = r+1; c <= n; ++c)
             {
@@ -877,7 +877,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         for(int r = 1; r <= n; ++r)
 	    for(int c = r+1; c <= n; ++c)
 		maxM = max(maxM,fabs(M(r,c)));
-	Real maxcheck = 1e-14 * maxM;
+	Real maxcheck = 1e-13 * maxM;
         for(int r = 1; r <= n; ++r)
 	    for(int c = r+1; c <= n; ++c)
             {
