@@ -484,11 +484,8 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     if(noise_ > 0 && PH.isNotNull())
         {
-        Real orig_norm = rho.norm();
-
         rho += noise_*PH.deltaRho(rho,comb,dir);
-
-        rho *= orig_norm/rho.norm();
+        rho *= 1./trace(rho);
         }
 
     const Real saved_cutoff = cutoff_; 

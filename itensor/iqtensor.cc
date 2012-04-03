@@ -977,6 +977,19 @@ trace(const IQIndex& i1)
     trace(inds,1);
     }
 
+Real
+trace(IQTensor T)
+    {
+    boost::array<IQIndex,NMAX+1> inds;
+    for(int k = 1; k <= T.r(); ++k)
+        {
+        inds.at(k) = T.index(k);
+        }
+    T.trace(inds,T.r());
+    T *= IQTensor::Sing();
+    return ReSingVal(T);
+    }
+
 int IQTensor::
 vecSize() const
 	{
@@ -1444,6 +1457,13 @@ operator/=(const IQTensor& other)
 void IQTensor::
 GetSingComplex(Real& re, Real& im) const
     {
+#ifdef DEBUG
+    if(r() != 1)
+        {
+        PrintIndices((*this));
+        Error("GetSingComplex only valid for rank 1 IQTensor with index 'single'");
+        }
+#endif
     IQTensor tre,tim;
     SplitReIm(tre,tim);
 

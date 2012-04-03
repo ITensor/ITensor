@@ -399,6 +399,12 @@ class IQTensor
     trace(const IQIndex& i1, const IQIndex& i2, IQTensor T)
         { T.trace(i1,i2); return T; }
 
+    //
+    // Tracing over all indices results in a Real
+    //
+    Real friend
+    trace(IQTensor T);
+
     //----------------------------------------------------
     //IQTensor miscellaneous methods
 
