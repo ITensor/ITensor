@@ -420,6 +420,8 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         {
         A *= 0;
         B *= 0;
+	std::cout << "Warning: AA.vecSize == 0, returning" << std::endl;
+
         eigsKept_.at(b).ReDimension(1);
         eigsKept_.at(b) = 1;
         return;

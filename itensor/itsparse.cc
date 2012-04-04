@@ -159,16 +159,15 @@ operator+=(const ITSparse& other)
         }
 
     //Check if this or other is effectively zero
-    if(this->scale_.isRealZero())
+    //if(this->scale_.isRealZero())
+    if(this->scale_.sign() == 0)
         {
         *this = other;
         return *this;
         }
 
     if((other.scale_/scale_).isRealZero()) 
-        { 
         return *this; 
-        }
 
     //Determine a scale factor for the sum
     Real scalefac = 1;
@@ -251,22 +250,18 @@ scaleOutNorm() const
 
 void ITSparse::
 scaleTo(LogNumber newscale) const
-	{
+    {
+    if(newscale.sign() == 0) 
+	Error("Trying to scale to a 0 lognumber in ITSparse");
     //If diag is all same no need to rescale
-    if(diag_.Length() == 0) return;
-
+    if(diag_.Length() == 0) 
+	{ scale_ = newscale; return; }
     if(scale_ == newscale) return;
     //solo();
-    if(newscale.isRealZero()) 
-        { diag_ *= 0; }
-    else 
-        {
-        scale_ /= newscale;
-        if(scale_.isRealZero()) diag_ *= 0;
-        else diag_ *= scale_.real();
-        }
+    scale_ /= newscale;
+    diag_ *= scale_.real0();
     scale_ = newscale;
-	}
+    }
 
 void ITSparse::
 print(std::string name,Printdat pdat) const 

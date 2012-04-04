@@ -979,36 +979,34 @@ maxSize() const
 
 void ITensor::
 assignToVec(VectorRef v) const
-	{
+    {
     if(p->v.Length() != v.Length()) 
-        Error("ITensor::assignToVec bad size");
+	Error("ITensor::assignToVec bad size");
     if(scale_.isRealZero()) 
-        {
-        v *= 0;
-        return;
-        }
+	{
+	v *= 0;
+	return;
+	}
     ITENSOR_CHECK_NULL
     v = p->v;
     v *= scale_.real();
-	}
+    }
 
 void ITensor::
 assignFromVec(const VectorRef& v)
-	{
+    {
     ITENSOR_CHECK_NULL
     if(p->v.Length() != v.Length()) 
-        Error("ITensor::assignToVec bad size");
+	Error("ITensor::assignToVec bad size");
     scale_ = 1;
     if(p->count() != 1) 
-        { 
-        boost::intrusive_ptr<ITDat> new_p(new ITDat(v)); 
-        p.swap(new_p); 
-        }
-    else
-        {
-        p->v = v;
-        }
+	{ 
+	boost::intrusive_ptr<ITDat> new_p(new ITDat(v)); 
+	p.swap(new_p); 
 	}
+    else
+	p->v = v;
+    }
 
 void ITensor::
 reshape(const Permutation& P)
@@ -1050,11 +1048,11 @@ SplitReIm(ITensor& re, ITensor& im) const
 
 Real ITensor::
 sumels() const 
-    { return p->v.sumels() * scale_.real(); }
+    { return p->v.sumels() * scale_.real0(); }
 
 Real ITensor::
 norm() const 
-    { return fabs(Norm(p->v) * scale_.real()); }
+    { return fabs(Norm(p->v) * scale_.real0()); }
 
 void ITensor::
 pseudoInvert(Real cutoff)
@@ -1073,30 +1071,27 @@ pseudoInvert(Real cutoff)
 
 void ITensor::
 scaleOutNorm() const
-	{
+    {
     Real f = Norm(p->v);
     if(fabs(f-1) < 1E-12) return;
     solo();
-    if(f != 0) { p->v *= 1.0/f; scale_ *= f; }
-	}
+    if(f != 0) 
+	{ p->v *= 1.0/f; scale_ *= f; }
+    else
+	scale_ = LogNumber(0.0);
+    }
 
 void ITensor::
 scaleTo(LogNumber newscale) const
-	{
+    {
+    if(newscale.sign() == 0) 
+	Error("Trying to scale an ITensor to a 0 scale");
     if(scale_ == newscale) return;
     solo();
-    if(newscale.isRealZero()) 
-        { 
-        p->v *= 0; 
-        }
-    else 
-        {
-        scale_ /= newscale;
-        if(scale_.isRealZero()) p->v *= 0;
-        else p->v *= scale_.real();
-        }
+    scale_ /= newscale;
+    p->v *= scale_.real0();
     scale_ = newscale;
-	}
+    }
 
 void ITensor::
 print(std::string name,Printdat pdat) const 
@@ -2130,7 +2125,8 @@ operator+=(const ITensor& other)
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
         }
 
-    if(this->scale_.isRealZero())
+    //if(this->scale_.isRealZero())
+    if(this->scale_.sign() == 0)
         {
         *this = other;
         return *this;

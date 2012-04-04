@@ -597,7 +597,8 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
             {
             //Multiply the ITensors and add into res
             tt = *(ll->second) * *(rr->second);
-            if(!tt.scale().isRealZero())
+            //if(!tt.scale().isRealZero())
+            if(tt.scale().sign() != 0)
                 res.p->insert_add(tt);
             }
         }

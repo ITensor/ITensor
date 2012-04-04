@@ -142,6 +142,13 @@ class LogNumber
         return sign_ * exp(lognum_);
         }
 
+    Real
+    real0() const
+	{
+	if(isRealZero()) return 0.0;
+	return real();
+	}
+
     LogNumber&
     operator+=(const LogNumber& other)
         {

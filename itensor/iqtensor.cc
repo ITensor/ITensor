@@ -495,18 +495,20 @@ operator/=(Real fac)
 
 void IQTensor::
 insert(const ITensor& t) 
-	{ 
-    if(!t.scale().isRealZero())
-        {
-        soloDat();
-        ncdat().insert(t);
-        }
+    { 
+    //if(!t.scale().isRealZero())
+    if(t.scale().sign() != 0)
+	{
+	soloDat();
+	ncdat().insert(t);
 	}
+    }
 
 IQTensor& IQTensor::
 operator+=(const ITensor& t) 
     { 
-    if(!t.scale().isRealZero())
+    //if(!t.scale().isRealZero())
+    if(t.scale().sign() != 0)
         {
         soloDat();
         ncdat().insert_add(t);
@@ -1307,7 +1309,8 @@ operator*=(const IQTensor& other)
             {
             //Multiply the ITensors and add into res
             tt = *(ll->second); tt *= *(rr->second);
-            if(!tt.scale().isRealZero())
+            //if(!tt.scale().isRealZero())
+            if(tt.scale().sign() != 0)
                 ncdat().insert_add(tt);
             }
         }
@@ -1443,7 +1446,8 @@ operator/=(const IQTensor& other)
             {
             //Multiply the ITensors and add into res
             tt = *(ll->second); tt /= *(rr->second);
-            if(!tt.scale().isRealZero())
+            //if(!tt.scale().isRealZero())
+            if(tt.scale().sign() != 0)
                 ncdat().insert_add(tt);
             }
         }
