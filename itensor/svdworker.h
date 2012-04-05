@@ -395,6 +395,7 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
         maxm_ = D.index(1).m();
         }
 
+    std::cout << "calling svdRank2" << std::endl;
     svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,b);
 
     cutoff_ = saved_cutoff; 
@@ -514,6 +515,19 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     comb.conj();
     comb.product(U,to_orth);
     newoc = conj(U) * AAc;
+
+    if(0)	// check results  XXXXXXXXXXXXXXXXXXXXX
+	{
+	Tensor ch(A*B);
+	ch -= AA;
+	Real chnorm = ch.norm();
+	Real aanorm = AA.norm();
+	if(aanorm==0.0)
+	    std::cout << "ESVD: two norms= " << chnorm SP aanorm << std::endl;
+	else
+	    std::cout << "ESVD: " << chnorm/aanorm <<  " cutoff,trunc= " << 
+			cutoff_ SP truncerr_.at(b) << std::endl;
+	}
 
     } //void SVDWorker::denmatDecomp
 

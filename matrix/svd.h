@@ -88,6 +88,20 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
 
     V.SubMatrix(start,n,1,m) = v * Vt.t().SubMatrix(start,n,1,m);
 
+    if(1)
+	{
+	// U D V
+	int n = D.Length();
+	Matrix DD(n,n);  DD = 0.0;
+	DD.Diagonal() = D;
+	Matrix Ach = U * DD * V;
+	Ach += (-1) * A;
+	Real err = Norm(Ach.TreatAsVector());
+	Real anorm = Norm(A.TreatAsVector());
+	if(anorm != 0.0)
+	    std::cout << "called SVD, error is " << err/anorm << std::endl;
+	}
+
     return;
     }
 
