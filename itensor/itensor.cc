@@ -981,12 +981,12 @@ void ITensor::
 assignToVec(VectorRef v) const
     {
     if(p->v.Length() != v.Length()) 
-	Error("ITensor::assignToVec bad size");
+        Error("ITensor::assignToVec bad size");
     if(scale_.isRealZero()) 
-	{
-	v *= 0;
-	return;
-	}
+        {
+        v *= 0;
+        return;
+        }
     ITENSOR_CHECK_NULL
     v = p->v;
     v *= scale_.real();
@@ -1073,19 +1073,27 @@ void ITensor::
 scaleOutNorm() const
     {
     Real f = Norm(p->v);
+    //If norm already 1 return so
+    //we don't have to call solo()
     if(fabs(f-1) < 1E-12) return;
-    solo();
+
     if(f != 0) 
-	{ p->v *= 1.0/f; scale_ *= f; }
+        { 
+        solo();
+        p->v *= 1./f; 
+        scale_ *= f; 
+        }
     else
-	scale_ = LogNumber(0.0);
+        {
+        scale_ = LogNumber(0.0);
+        }
     }
 
 void ITensor::
 scaleTo(LogNumber newscale) const
     {
     if(newscale.sign() == 0) 
-	Error("Trying to scale an ITensor to a 0 scale");
+        Error("Trying to scale an ITensor to a 0 scale");
     if(scale_ == newscale) return;
     solo();
     scale_ /= newscale;
@@ -2125,7 +2133,6 @@ operator+=(const ITensor& other)
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
         }
 
-    //if(this->scale_.isRealZero())
     if(this->scale_.sign() == 0)
         {
         *this = other;
