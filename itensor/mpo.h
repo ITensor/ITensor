@@ -25,6 +25,9 @@ class MPOt : private MPSt<Tensor>
     typedef typename Tensor::IndexT 
     IndexT;
 
+    typedef typename Tensor::SparseT
+    SparseT;
+
     typedef typename Tensor::IndexValT 
     IndexValT;
 
@@ -137,8 +140,20 @@ class MPOt : private MPSt<Tensor>
             }
         }
 
-    using Parent::doSVD;
-    using Parent::position;
+    void 
+    svdBond(int b, const Tensor& AA, Direction dir, bool preserve_shape = false);
+
+    void
+    doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false)
+        { 
+        svdBond(b,AA,dir,preserve_shape); 
+        }
+
+    //using Parent::position;
+    //Move the orthogonality center to site i 
+    //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
+    void 
+    position(int i, bool preserve_shape = false);
 
     using Parent::is_ortho;
     using Parent::ortho_center;

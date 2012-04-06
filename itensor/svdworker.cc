@@ -174,7 +174,8 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
         cout << "Eigs: ";
         for(int j = 1; j <= stop; ++j)
             {
-            cout << boost::format(Ds(j) > 1E-6 ? ("%.3f") : ("%.3E")) % sqr(Ds(j));
+            cout << boost::format( (Ds(j) > 1E-6 && Ds(j) < 1E3) ? ("%.3f") : ("%.3E")) 
+                    % sqr(Ds(j));
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -327,7 +328,7 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         cout << "Eigs: ";
         for(int j = s-1; j >= stop; --j)
             {
-            cout << boost::format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
+            cout << boost::format( (alleig.at(j) > 1E-6 && alleig.at(j) < 1E3) ? ("%.3f") : ("%.3E")) 
                                 % alleig[j];
             cout << ((j != stop) ? ", " : "\n");
             }

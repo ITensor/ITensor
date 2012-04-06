@@ -6,6 +6,80 @@
 using namespace std;
 using boost::format;
 
+template<class Tensor> 
+void MPOt<Tensor>::
+position(int i, bool preserve_shape)
+    {
+    if(isNull()) Error("position: MPS is null");
+    while(l_orth_lim_ < i-1)
+        {
+        if(l_orth_lim_ < 0) l_orth_lim_ = 0;
+        Tensor WF = AA(l_orth_lim_+1) * AA(l_orth_lim_+2);
+        svdBond(l_orth_lim_+1,WF,Fromleft,preserve_shape);
+        }
+    while(r_orth_lim_ > i+1)
+        {
+        if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
+        Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
+        svdBond(r_orth_lim_-2,WF,Fromright,preserve_shape);
+        }
+    }
+template void MPOt<ITensor>::
+position(int b, bool preserve_shape);
+template void MPOt<IQTensor>::
+position(int b, bool preserve_shape);
+
+template <class Tensor>
+void MPOt<Tensor>::
+svdBond(int b, const Tensor& AA, Direction dir, bool preserve_shape)
+    {
+    if(preserve_shape)
+        {
+        //The idea of the preserve_shape flag is to 
+        //leave any external indices of the MPO on the
+        //tensors they originally belong to
+        Error("preserve_shape not currently implemented");
+        }
+
+    if(dir == Fromleft && b-1 > l_orth_lim_)
+        {
+        std::cout << boost::format("b=%d, l_orth_lim_=%d")
+                %b%l_orth_lim_ << std::endl;
+        Error("b-1 > l_orth_lim_");
+        }
+    if(dir == Fromright && b+2 < r_orth_lim_)
+        {
+        std::cout << boost::format("b=%d, r_orth_lim_=%d")
+                %b%r_orth_lim_ << std::endl;
+        Error("b+2 < r_orth_lim_");
+        }
+
+    SparseT D;
+    svd_.svd(b,AA,A[b],D,A[b+1]);
+
+    //Push singular values/amplitudes
+    //to the right or left as requested
+    //and update orth_lims
+    if(dir == Fromleft)
+        {
+        A[b+1] *= D;
+
+        l_orth_lim_ = b;
+        if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
+        }
+    else //dir == Fromright
+        {
+        A[b] *= D;
+
+        if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
+        r_orth_lim_ = b+1;
+        }
+    }
+template void MPOt<ITensor>::
+svdBond(int b, const ITensor& AA, Direction dir, bool preserve_shape);
+template void MPOt<IQTensor>::
+svdBond(int b, const IQTensor& AA, Direction dir, bool preserve_shape);
+
 int 
 findCenter(const IQMPO& psi)
     {
