@@ -17,6 +17,8 @@ static const Real ISqrt2 = 1.0/sqrt(2);
 template <typename T>
 T sqr(T x) { return x*x; }
 
+static const Real ApproxReal_Accuracy = 1E-14;
+
 struct ApproxReal
     {
     Real r;
@@ -25,11 +27,11 @@ struct ApproxReal
 
     bool friend inline
     operator==(const ApproxReal &a,const ApproxReal &b)
-        { return fabs(a.r-b.r) < 1E-12; }
+        { return fabs(a.r-b.r) < ApproxReal_Accuracy; }
 
     bool friend inline 
     operator<(const ApproxReal &a,const ApproxReal &b)
-        { return b.r-a.r > 1E-12; }
+        { return b.r-a.r > ApproxReal_Accuracy; }
     };
 
 static Real maxlogdouble = log(std::numeric_limits<double>::max());

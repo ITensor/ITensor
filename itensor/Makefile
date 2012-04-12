@@ -110,7 +110,7 @@ iqtsparse.o: $(DEPHEADERS)
 DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h svdworker.h
 svdworker.o: $(DEPHEADERS)
 .debug_objs/svdworker.o: $(DEPHEADERS)
-DEPHEADERS+= mps.h eigensolver.h
+DEPHEADERS+= mps.h
 mps.o: $(DEPHEADERS)
 .debug_objs/mps.o: $(DEPHEADERS)
 DEPHEADERS+= mpo.h

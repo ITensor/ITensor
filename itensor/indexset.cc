@@ -209,11 +209,12 @@ getperm(const boost::array<Index,NMAX+1>& ind, Permutation& P) const
                 { P.from_to(j,k); got_one = true; break; }
 	    if(!got_one)
             {
-            std::cerr << "j = " << j << "\n";
+            cout << "j = " << j << "\n";
             Print(*this); 
-            std::cerr << "ind = \n";
+            cout << "ind = \n";
             for(int j = 1; j <= r_; ++j) 
-                { std::cerr << ind[j] << "\n"; }
+                cout << ind[j] << "\n";
+            cout << endl;
             Error("IndexSet::getperm: no matching index");
             }
 	    }
