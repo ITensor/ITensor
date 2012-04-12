@@ -76,6 +76,9 @@ class LocalMPO
     void
     position(int b, const MPSType& psi);
 
+    int
+    position() const;
+
     void
     shift(int j, Direction dir, const Tensor& A);
 
@@ -91,26 +94,42 @@ class LocalMPO
         }
 
     const Tensor&
-    L() const 
-        { 
-        return PH_[LHlim_];
-        }
+    L() const;
+
+    //
+    // Replace left edge tensor
+    // at current bond
+    //
     void
-    L(const Tensor& nL)
-        {
-        PH_[LHlim_] = nL;
-        }
+    L(const Tensor& nL);
+
+    //
+    // Replace left edge tensor 
+    // bordering site j
+    // (so that nL includes sites < j)
+    //
+    void
+    L(int j, const Tensor& nL);
+
 
     const Tensor&
-    R() const 
-        { 
-        return PH_[RHlim_];
-        }
+    R() const;
+
+    //
+    // Replace right edge tensor
+    // at current bond
+    //
     void
-    R(const Tensor& nR)
-        {
-        PH_[RHlim_] = nR;
-        }
+    R(const Tensor& nR);
+
+    //
+    // Replace right edge tensor 
+    // bordering site j
+    // (so that nR includes sites > j)
+    //
+    void
+    R(int j, const Tensor& nR);
+
 
     const Tensor&
     bondTensor() const { return lop_.bondTensor(); }
@@ -193,6 +212,52 @@ LocalMPO(const MPOt<Tensor>& Op, int num_center)
     }
 
 template <class Tensor>
+inline
+const Tensor& LocalMPO<Tensor>::
+L() const 
+    { 
+    return PH_[LHlim_];
+    }
+
+template <class Tensor>
+void inline LocalMPO<Tensor>::
+L(const Tensor& nL)
+    {
+    PH_[LHlim_] = nL;
+    }
+
+template <class Tensor>
+void inline LocalMPO<Tensor>::
+L(int j, const Tensor& nL)
+    {
+    if(LHlim_ > j-1) LHlim_ = j-1;
+    PH_[LHlim_] = nL;
+    }
+
+template <class Tensor>
+inline
+const Tensor& LocalMPO<Tensor>::
+R() const 
+    { 
+    return PH_[RHlim_];
+    }
+
+template <class Tensor>
+void inline LocalMPO<Tensor>::
+R(const Tensor& nR)
+    {
+    PH_[RHlim_] = nR;
+    }
+
+template <class Tensor>
+void inline LocalMPO<Tensor>::
+R(int j, const Tensor& nR)
+    {
+    if(RHlim_ < j+1) RHlim_ = j+1;
+    PH_[RHlim_] = nR;
+    }
+
+template <class Tensor>
 template <class MPSType> 
 inline void LocalMPO<Tensor>::
 position(int b, const MPSType& psi)
@@ -213,6 +278,17 @@ position(int b, const MPSType& psi)
 #endif
 
     lop_.update(Op_->AA(b),Op_->AA(b+1),L(),R());
+    }
+
+template <class Tensor>
+int inline LocalMPO<Tensor>::
+position() const
+    {
+    if(RHlim_-LHlim_ != (nc_+1))
+        {
+        throw ITError("LocalMPO position not set");
+        }
+    return LHlim_+1;
     }
 
 template <class Tensor>

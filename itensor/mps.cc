@@ -661,6 +661,13 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
         Error("convertToIQ assumes uniform site dimension");
     const int PDim = (is_mpo ? Dim : 1);
 
+    // If MPO, set all tensors to identity ops initially
+    if(is_mpo)
+        {
+        for(int j = 1; j <= N; ++j)
+            qA.at(j) = model.id(j);
+        }
+
     const int fullrank = (is_mpo ? 4 : 3);
     int start = 1, end = N;
 
@@ -688,10 +695,13 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
 
     typedef map<QN,Vector>::value_type qD_vt;
     map<QN,Vector> qD; //Diags of compressor matrices by QN
+
     typedef map<QN,vector<ITensor> >::value_type qt_vt;
     map<QN,vector<ITensor> > qt; //ITensor blocks by QN
+
     typedef map<QN,ITensor>::value_type qC_vt;
     map<QN,ITensor> qC; //Compressor ITensors by QN
+
     ITensor block;
     vector<ITensor> nblock;
     vector<inqn> iq;
@@ -712,7 +722,9 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
         int snext = periodicWrap(S+1,N);
         //cerr << format("S = %d, s = %d, sprev = %d, snext = %d\n")%S%s%sprev%snext;
 
-        qD.clear(); qt.clear();
+        qD.clear(); 
+        qt.clear();
+
         if(S > start) prev_bond = index_in_common(A[sprev],A[s],Link);
         if(S < Send) bond = index_in_common(A[s],A[snext],Link);
 
@@ -830,7 +842,8 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                     { Foreach(const ITensor& t, blks) nblock.push_back(t); }
                 else
                     {
-                    Matrix M; int mm = collapseCols(qD[q],M);
+                    Matrix M; 
+                    int mm = collapseCols(qD[q],M);
                     if(s==show_s)
                         {
                         cerr << boost::format("Adding block, mm = %d\n")%mm;

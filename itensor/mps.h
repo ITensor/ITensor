@@ -6,9 +6,6 @@
 #define __ITENSOR_MPS_H
 #include "svdworker.h"
 #include "model.h"
-#include "eigensolver.h"
-
-class Eigensolver;
 
 template <class Tensor>
 class LocalMPO;

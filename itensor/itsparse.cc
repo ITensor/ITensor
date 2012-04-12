@@ -130,6 +130,13 @@ diag() const
         }
     }
 
+void ITSparse::
+diag(VectorRef v)
+    {
+    diag_ = v;
+    scale_ = 1;
+    }
+
 ITSparse& ITSparse::
 operator+=(const ITSparse& other)
     {

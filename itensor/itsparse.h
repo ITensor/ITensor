@@ -84,6 +84,9 @@ class ITSparse
     Vector
     diag() const;
 
+    void
+    diag(VectorRef v);
+
     //
     // Operators
     //
