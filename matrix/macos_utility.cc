@@ -53,6 +53,49 @@ void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M
         }
     }
 
+void 
+QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R)
+    {
+    int m = M.Nrows();
+    int n = M.Ncols();
+    int tlen = min(m,n);
+    Vector Tau(tlen); Tau = 0;
+    int lwork = max(1,4*max(n,m));
+    Vector Work(lwork); Work = 0;
+
+    Q = M.t();
+
+    int info = 0;
+
+    //Call lapack routine
+
+    dgeqrf_(&m, &n, Q.Store(), &m, Tau.Store(), Work.Store(), &lwork, &info);
+
+    //int* jpvt = new int[n];
+    //for(int i = 0; i < n; ++i) jpvt[i] = 0;
+    //dgeqp3_(&m, &n, Q.Store(), &m, jpvt, Tau.Store(), Work.Store(), &lwork, &info);
+    //delete jpvt;
+
+    if(info != 0) error("Error in call to dgeqrf_.");
+
+    //Grab R
+    R = Matrix(tlen,tlen);
+    R = 0;
+    //Grab elements of R from Q
+    for(int i = 1; i <= tlen; ++i)      
+    for(int j = i; j <= tlen; ++j) 
+        {
+        R(i,j) = Q(j,i);
+        }       
+
+    //Generate Q
+    dorgqr_(&m, &n, &tlen, Q.Store(), &m, Tau.Store(), Work.Store(), &lwork, &info);
+    if(info != 0) error("Error in call to dorgqr_.");
+
+    Q = Q.t();
+
+    } //void QRDecomp
+
 // Possibly extra stuff for EigenValues:
 // This is grabbed from evalue.cc:
 

@@ -84,6 +84,9 @@ Matrix Solve(const MatrixRef &A, const MatrixRef &B);	// return A^-1 * B
 
 void Orthog(const MatrixRef &, int nr = 0, int numpass = 2);
 
+void 
+QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R);
+
 // one argument means do all columns < rows 
 
 void EigenValues(const MatrixRef &, Vector &, Matrix &);
