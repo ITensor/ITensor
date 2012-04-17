@@ -14,12 +14,16 @@
 // DMRGWorker
 //
 
-template <class MPSType, class MPOType>
-class DMRGWorker : public BaseDMRGWorker<MPSType,MPOType>
+template <class MPSType>
+class DMRGWorker : public BaseDMRGWorker<MPSType>
     {
     public:
-    typedef BaseDMRGWorker<MPSType,MPOType>
+
+    typedef BaseDMRGWorker<MPSType>
     Parent;
+
+    typedef typename Parent::MPOType
+    MPOType;
     
     DMRGWorker(const Sweeps& sweeps);
 
@@ -59,42 +63,42 @@ class DMRGWorker : public BaseDMRGWorker<MPSType,MPOType>
 
 //DMRG with an MPO
 template <class MPSType, class MPOType>
-inline Real 
+Real inline
 dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
     {
-    DMRGWorker<MPSType,MPOType> worker(sweeps);
+    DMRGWorker<MPSType> worker(sweeps);
     worker.run(H,psi);
     return worker.energy();
     }
 
 //DMRG with an MPO and options
 template <class MPSType, class MPOType>
-inline Real 
+Real inline
 dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, 
      BaseDMRGOpts& opts)
     {
-    DMRGWorker<MPSType,MPOType> worker(sweeps,opts);
+    DMRGWorker<MPSType> worker(sweeps,opts);
     worker.run(H,psi);
     return worker.energy();
     }
 
 //DMRG with a set of MPOs (lazily summed)
 template <class MPSType, class MPOType>
-inline Real 
+Real inline
 dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps)
     {
-    DMRGWorker<MPSType,MPOType> worker(sweeps);
+    DMRGWorker<MPSType> worker(sweeps);
     worker.run(H,psi);
     return worker.energy();
     }
 
 //DMRG with a set of MPOs and options
 template <class MPSType, class MPOType>
-inline Real 
+Real inline
 dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps, 
      BaseDMRGOpts& opts)
     {
-    DMRGWorker<MPSType,MPOType> worker(sweeps,opts);
+    DMRGWorker<MPSType> worker(sweeps,opts);
     worker.run(H,psi);
     return worker.energy();
     }
@@ -105,21 +109,21 @@ dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps,
 //
 
 
-template <class MPSType, class MPOType> inline
-DMRGWorker<MPSType,MPOType>::
+template <class MPSType> inline
+DMRGWorker<MPSType>::
 DMRGWorker(const Sweeps& sweeps)
     : Parent(sweeps), energy_(0) 
     { }
 
-template <class MPSType, class MPOType> inline
-DMRGWorker<MPSType,MPOType>::
+template <class MPSType> inline
+DMRGWorker<MPSType>::
 DMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts)
     : Parent(sweeps, opts), energy_(0) 
     { }
 
 
-template <class MPSType, class MPOType> inline
-Real DMRGWorker<MPSType,MPOType>::
+template <class MPSType> inline
+Real DMRGWorker<MPSType>::
 runInternal(const MPOType& H, MPSType& psi)
     {
     typedef typename MPOType::TensorT 
@@ -190,8 +194,8 @@ runInternal(const MPOType& H, MPSType& psi)
     return energy_;
     }
 
-template <class MPSType, class MPOType> inline
-Real DMRGWorker<MPSType,MPOType>::
+template <class MPSType> inline
+Real DMRGWorker<MPSType>::
 runInternal(const std::vector<MPOType>& H, MPSType& psi)
     {
     typedef typename MPOType::TensorT 

@@ -8,6 +8,9 @@
 #include "model.h"
 
 template <class Tensor>
+class MPOt;
+
+template <class Tensor>
 class LocalMPO;
 
 static const LogNumber DefaultRefScale(7.58273202392352185);
@@ -100,6 +103,9 @@ class MPSt
 
     typedef typename Tensor::SparseT
     SparseT;
+
+    typedef MPOt<Tensor>
+    MPOType;
 
     //
     //MPSt Accessor Methods

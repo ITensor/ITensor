@@ -67,14 +67,14 @@ Partition(int N, int nblocks)
 int inline Partition::
 begin(int block) const
     {
-    if(block <= 1) return 1;
+    if(block == 1) return 1;
     return bound_.at(block-2)+1;
     }
 
 int inline Partition::
 end(int block) const
     {
-    if(block >= Nb_) return N_;
+    if(block == Nb_) return N_;
     return bound_.at(block-1);
     }
 
