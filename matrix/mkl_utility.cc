@@ -1514,17 +1514,18 @@ GeneralizedEV(const MatrixRef& A, const MatrixRef& B, Vector& D, Matrix& Z)
     Z = Z.t();
     }
 
-void GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
-{
+void 
+GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
+    {
     if (A.Ncols() != A.Nrows() || A.Nrows() < 1)
         _merror("GenEigenValues: Input Matrix must be square");
 
     if(A.Ncols() == 1)
-	{
+        {
         Re = A.Column(1);
         Im = Vector(1); Im(1) = 0.0;
         return;
-	}
+        }
 
     MKL_INT n = A.Ncols();
 
@@ -1543,10 +1544,10 @@ void GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
     MKL_INT info = 0;
     dgeev_(&jobvl,&jobvr,&n,Z.Store(),&n,Re.Store(),Im.Store(),noevecs,&num_evecs,noevecs,&num_evecs,QWORK,&qlwork,&info);
 	if(info != 0)
-    {
+        {
         cerr << "info is " << info << endl;
         _merror("Error condition in dsyev_ (query call).");
-    }
+        }
 
     //Call routine
     MKL_INT lwork = (MKL_INT) QWORK[0];
@@ -1554,11 +1555,11 @@ void GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
     info = 0;
     dgeev_(&jobvl,&jobvr,&n,Z.Store(),&n,Re.Store(),Im.Store(),noevecs,&num_evecs,noevecs,&num_evecs,WORK,&lwork,&info);
 	if(info != 0)
-    {
+        {
         cerr << "info is " << info << endl;
         _merror("Error condition in dsyev_.");
+        }
     }
-}
 
 //End greenplanet code
 

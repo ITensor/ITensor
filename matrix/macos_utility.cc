@@ -1408,16 +1408,16 @@ GeneralizedEV(const MatrixRef& A, const MatrixRef& B, Vector& D, Matrix& Z)
     }
 
 void GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
-{
+    {
     if (A.Ncols() != A.Nrows() || A.Nrows() < 1)
         _merror("GenEigenValues: Input Matrix must be square");
 
     if(A.Ncols() == 1)
-	{
+        {
         Re = A.Column(1);
         Im = Vector(1); Im(1) = 0.0;
         return;
-	}
+        }
 
     int n = A.Ncols();
 
@@ -1440,11 +1440,11 @@ void GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
     //      JOBVL JOBVR  N   A       LDA   WR         WI         VL             LDVL       VR               LDVR      WORK        LWORK   INFO 
     dgeev_(&jobvl,&jobvr,&n,Z.Store(),&n,Re.Store(),Im.Store(),noevecs.Store(),&num_evecs,noevecs.Store(),&num_evecs,Work.Store(),&lwork,&info);
 	if(info != 0)
-    {
+        {
         cerr << "info is " << info << endl;
         _merror("Error condition in dsyev_.");
+        }
     }
-}
 
 
 void rotate22(double *zki,double *zki1,double c,double s,int n)
