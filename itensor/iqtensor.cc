@@ -721,14 +721,14 @@ uses_ind(const Index& ii) const
     return false;
     }
 
-int inline IQTensor::
+int IQTensor::
 findindex(const IQIndex& I) const 
     { 
     if(is_ == 0) return 0;
     return is_->findindex(I); 
     }
 
-bool inline IQTensor::
+bool IQTensor::
 hastype(IndexType t) const 
     { 
     if(is_ == 0) return false;
@@ -749,7 +749,7 @@ finddir(Arrow dir) const
     return is_->finddir(dir); 
     }
 
-bool inline IQTensor::
+bool IQTensor::
 hasindex(const IQIndex& I) const 
     { 
     if(is_ == 0) return false;

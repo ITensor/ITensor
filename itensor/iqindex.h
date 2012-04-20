@@ -67,9 +67,9 @@ class IQIndex : public Index
 
     explicit 
     IQIndex(const std::string& name,
-                     IndexType it = Link, 
-                     Arrow dir = Out, 
-                     int plev = 0);
+            IndexType it = Link, 
+            Arrow dir = Out, 
+            int plev = 0);
 
     IQIndex(const std::string& name, 
             const Index& i1, const QN& q1, 
