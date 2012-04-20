@@ -52,7 +52,13 @@ void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M
 	}
     }
 
-extern "C" void dgeqrf_( MKL_INT *m, MKL_INT *n, double *a, MKL_INT *lda, double *tau, double *work, MKL_INT *lwork, MKL_INT *info );
+extern "C" void dgeqrf_(MKL_INT *m, MKL_INT *n, double *a, MKL_INT *lda, 
+                        double *tau, double *work, MKL_INT *lwork, 
+                        MKL_INT *info );
+
+extern "C" void dorgqr_(MKL_INT *m, MKL_INT *n, MKL_INT *k, double *a, 
+                       MKL_INT *lda, double *tau, double *work, 
+                       MKL_INT *lwork, MKL_INT *info );
 
 void 
 QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R)
