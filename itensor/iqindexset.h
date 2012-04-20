@@ -55,6 +55,13 @@ class IQIndexSet
     index() const  
         { return std::make_pair(index_.begin(),index_.end()); }
 
+    index_it
+    begin() const { return index_.begin(); }
+
+    index_it
+    end() const { return index_.end(); }
+
+
     Real
     uniqueReal() const { return ur_; }
 
@@ -182,6 +189,14 @@ class IQIndexSet
     operator<<(std::ostream& s, const IQIndexSet& is);
 
     ENABLE_INTRUSIVE_PTR(IQIndexSet)
+
+    //static IQIndexSet& Null()
+    //    {
+    //    static IQIndexSet Null_;
+    //    return Null_;
+    //    }
+
+    private:
 
     //////////
     //

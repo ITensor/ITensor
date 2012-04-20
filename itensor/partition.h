@@ -31,6 +31,11 @@ class Partition
     int
     size(int block) const;
 
+    bool
+    hasSite(int block, int s) const;
+    bool
+    hasBond(int block, int b) const;
+
     private:
     
     ////////////////
@@ -82,6 +87,17 @@ int inline Partition::
 size(int block) const
     {
     return (end(block)-begin(block)+1);
+    }
+
+bool inline Partition::
+hasSite(int block, int s) const
+    {
+    return (s >= begin(block) && s <= end(block));
+    }
+bool inline Partition::
+hasBond(int block, int b) const
+    {
+    return (b >= begin(block) && b < end(block));
     }
 
 inline 

@@ -350,32 +350,28 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
         AA *= orig_norm/AA.norm();
         }
 
-    CombinerT Ucomb;
+    //Combiners which transform AA
+    //into a rank 2 tensor
+    CombinerT Ucomb, Vcomb;
     Ucomb.doCondense(true);
-    for(int j = 1; j <= U.r(); ++j) 
-        { 
-        const IndexT& I = U.index(j);
-
-        if( D.hasindex(I) 
-         || V.hasindex(I) 
-         || I == Tensor::ReImIndex()) 
-            continue;
-
-        Ucomb.addleft(I);
-        }
-
-    CombinerT Vcomb;
     Vcomb.doCondense(true);
-    for(int j = 1; j <= V.r(); ++j) 
-        { 
-        const IndexT& I = V.index(j);
 
-        if( D.hasindex(I) 
-         || U.hasindex(I) 
-         || I == Tensor::ReImIndex()) 
+    //Divide up indices based on U
+    //If U is null, use V instead
+    const Tensor &L = (U.isNull() ? V : U);
+    CombinerT &Lcomb = (U.isNull() ? Vcomb : Ucomb),
+              &Rcomb = (U.isNull() ? Ucomb : Vcomb);
+    for(int j = 1; j <= AA.r(); ++j) 
+        { 
+        const IndexT& I = AA.index(j);
+
+        if(I == Tensor::ReImIndex()) 
             continue;
 
-        Vcomb.addleft(I);
+        if(L.hasindex(I))
+            Lcomb.addleft(I);
+        else
+            Rcomb.addleft(I);
         }
 
     AA = Ucomb * AA * Vcomb;

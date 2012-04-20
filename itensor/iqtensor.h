@@ -354,19 +354,19 @@ class IQTensor
     uses_ind(const Index& i) const;
 
     int 
-    findindex(const IQIndex& I) const { return is_->findindex(I); }
+    findindex(const IQIndex& I) const;
 
     bool 
-    hastype(IndexType t) const { return is_->hastype(t); }
+    hastype(IndexType t) const;
 
     const IQIndex& 
-    findtype(IndexType t) const { return is_->findtype(t); }
+    findtype(IndexType t) const;
 
     const IQIndex& 
-    finddir(Arrow dir) const { return is_->finddir(dir); }
+    finddir(Arrow dir) const;
 
     bool 
-    hasindex(const IQIndex& I) const { return is_->hasindex(I); }
+    hasindex(const IQIndex& I) const;
 
     bool 
     isComplex() const 
@@ -415,7 +415,7 @@ class IQTensor
     symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& mink, int& maxk) const;
 
     Real 
-    uniqueReal() const { return is_->uniqueReal(); }
+    uniqueReal() const;
 
     Real 
     norm() const;

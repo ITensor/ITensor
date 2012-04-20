@@ -225,10 +225,18 @@ scaleTo(const LogNumber& newscale)
 //
 
 int IQTensor::
-r() const { return is_->r(); }
+r() const 
+    { 
+    if(is_ == 0) return 0;
+    return is_->r(); 
+    }
 
 const IQIndex& IQTensor::
-index(int j) const { return is_->index(j); }
+index(int j) const 
+    { 
+    if(is_ == 0) Error("IQTensor is null");
+    return is_->index(j); 
+    }
 
 int IQTensor::
 iten_size() const { return dat().size(); }
@@ -255,10 +263,10 @@ itensors() const
     { return std::make_pair(dat().begin(),dat().end()); }
 
 IQIndexSet::index_it IQTensor::
-const_iqind_begin() const { return is_->index_.begin(); }
+const_iqind_begin() const { return is_->begin(); }
 
 IQIndexSet::index_it IQTensor::
-const_iqind_end()   const { return is_->index_.end(); }
+const_iqind_end()   const { return is_->end(); }
 
 std::pair<IQIndexSet::index_it,IQIndexSet::index_it> IQTensor::
 iqinds() const 
@@ -576,23 +584,23 @@ div() const
 QN IQTensor::
 qn(const Index& in) const
 	{
-	int iqq = find_iqind(in)-1;
-	if(iqq == -1) 
+	int iqq = find_iqind(in);
+	if(iqq == 0) 
 	    Error("qn: cant find index");
-	return is_->index_[iqq].qn(in);
+	return is_->index(iqq).qn(in);
 	} 
 
 Arrow IQTensor::
 dir(const Index& in) const
 	{
-	int iqq = find_iqind(in)-1;
-	if(iqq == -1) 
+	int iqq = find_iqind(in);
+	if(iqq == 0) 
 	    {
 	    this->print("this IQTensor");
 	    in.print("in"); 
 	    Error("IQTensor::dir(Index&): cant find Index in IQIndices");
 	    }
-	return is_->index_[iqq].dir();
+	return is_->index(iqq).dir();
 	}
 
 void IQTensor::
@@ -694,10 +702,10 @@ noprimeind(const IQIndex& I)
 int IQTensor::
 find_iqind(const Index& ii) const
     {
-    for(size_t j = 0; j < is_->index_.size(); ++j)
+    for(int j = 1; j <= is_->r(); ++j)
         {
-        if(is_->index_[j].hasindex(ii)) 
-            return (j+1);
+        if(is_->index(j).hasindex(ii)) 
+            return j;
         }
     return 0;
     }
@@ -711,6 +719,41 @@ uses_ind(const Index& ii) const
             return true;
         }
     return false;
+    }
+
+int inline IQTensor::
+findindex(const IQIndex& I) const 
+    { 
+    if(is_ == 0) return 0;
+    return is_->findindex(I); 
+    }
+
+bool inline IQTensor::
+hastype(IndexType t) const 
+    { 
+    if(is_ == 0) return false;
+    return is_->hastype(t); 
+    }
+
+const IQIndex& IQTensor::
+findtype(IndexType t) const 
+    { 
+    if(is_ == 0) Error("findtype failed, IQTensor is null");
+    return is_->findtype(t); 
+    }
+
+const IQIndex& IQTensor::
+finddir(Arrow dir) const 
+    { 
+    if(is_ == 0) Error("finddir failed, IQTensor is null");
+    return is_->finddir(dir); 
+    }
+
+bool inline IQTensor::
+hasindex(const IQIndex& I) const 
+    { 
+    if(is_ == 0) return false;
+    return is_->hasindex(I); 
     }
 
 void IQTensor::
@@ -772,6 +815,13 @@ symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& 
     D = IQTensor(mid);
     for(int j = d.size()-1; j >= 0; --j)
         D.insert(d.at(j));
+    }
+
+Real IQTensor::
+uniqueReal() const 
+    { 
+    if(is_ == 0) Error("IQTensor is null");
+    return is_->uniqueReal(); 
     }
 
 Real IQTensor::
@@ -1005,7 +1055,7 @@ maxSize() const
 	{
     int ms = 1;
 	for(int j = 0; j < is_->r(); ++j)
-	    ms *= is_->index_[j].m();
+	    ms *= is_->m(j);
     return ms;
     }
 
@@ -1156,7 +1206,7 @@ SplitReIm(IQTensor& re, IQTensor& im) const
         return;
         }
     vector<IQIndex> newreinds;
-    remove_copy_if(is_->index_.begin(),is_->index_.end(),std::back_inserter(newreinds),
+    remove_copy_if(is_->begin(),is_->end(),std::back_inserter(newreinds),
 		    bind2nd(std::equal_to<IQIndex>(),IQIndex::IndReIm()));
     re = IQTensor(newreinds);
     im = re;
@@ -1221,8 +1271,8 @@ operator*=(const IQTensor& other)
     for(int i = 1; i <= is_->r(); ++i)
         {
         const IQIndex& I = is_->index(i);
-        const_iqind_it f = find(other.is_->index_.begin(),other.is_->index_.end(),I);
-        if(f != other.is_->index_.end()) //I is an element of other.iqindex_
+        const_iqind_it f = find(other.is_->begin(),other.is_->end(),I);
+        if(f != other.is_->end()) //I is an element of other.iqindex_
             {
             //Check that arrow directions are compatible
             if(Globals::checkArrows())
@@ -1347,8 +1397,8 @@ operator/=(const IQTensor& other)
     for(int i = 1; i <= is_->r(); ++i)
         {
         const IQIndex& I = is_->index(i);
-        const_iqind_it f = find(other.is_->index_.begin(),other.is_->index_.end(),I);
-        if(f != other.is_->index_.end()) //I is an element of other.iqindex_
+        const_iqind_it f = find(other.is_->begin(),other.is_->end(),I);
+        if(f != other.is_->end()) //I is an element of other.iqindex_
             {
             //Check that arrow directions are compatible
             if(Globals::checkArrows())
@@ -1477,17 +1527,17 @@ GetSingComplex(Real& re, Real& im) const
 	}
     if(tim.p->iqindex_.size() != 1) Error("bad tim size");
     */
-    for(const_iqind_it jj = tre.is_->index_.begin(); jj != tre.is_->index_.end(); ++jj)
+    for(const_iqind_it jj = tre.is_->begin(); jj != tre.is_->end(); ++jj)
         {
-        if(*jj != IQTensor::Sing().is_->index_[0])
+        if(*jj != IQTensor::Sing().is_->index(1))
             {
             cout << *this;
             cout << tre;
             Error("bad tre size");
             }
         }
-    for(const_iqind_it jj = tim.is_->index_.begin(); jj != tim.is_->index_.end(); ++jj)
-        if(*jj != IQTensor::Sing().is_->index_[0])
+    for(const_iqind_it jj = tim.is_->begin(); jj != tim.is_->end(); ++jj)
+        if(*jj != IQTensor::Sing().is_->index(1))
         { Error("bad tim size"); }
 
     if(tre.iten_size() == 0)
