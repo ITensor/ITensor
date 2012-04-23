@@ -33,6 +33,9 @@ class IQIndexSet
 
     IQIndexSet(std::istream& s) { read(s); }
 
+    explicit
+    IQIndexSet(const IQIndexSet& other);
+
     //
     // Accessor Methods
     //
@@ -188,7 +191,14 @@ class IQIndexSet
     friend std::ostream&
     operator<<(std::ostream& s, const IQIndexSet& is);
 
-    ENABLE_INTRUSIVE_PTR(IQIndexSet)
+    friend void 
+    intrusive_ptr_add_ref(IQIndexSet* p);
+
+    friend void 
+    intrusive_ptr_release(IQIndexSet* p);
+
+    int 
+    count() const { return numref; }
 
     //static IQIndexSet& Null()
     //    {

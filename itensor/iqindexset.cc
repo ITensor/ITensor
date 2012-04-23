@@ -7,6 +7,21 @@ using namespace std;
 using boost::format;
 using boost::array;
 
+void 
+intrusive_ptr_add_ref(IQIndexSet* p) 
+    { 
+    ++(p->numref); 
+    }
+
+void 
+intrusive_ptr_release(IQIndexSet* p) 
+    { 
+    if(--(p->numref) == 0)
+        { 
+        delete p; 
+        } 
+    }
+
 IQIndexSet::
 IQIndexSet()
     :
@@ -108,6 +123,15 @@ IQIndexSet(std::vector<IQIndex>& iqinds)
     {
     index_.swap(iqinds);
     setUniqueReal();
+    }
+
+IQIndexSet::
+IQIndexSet(const IQIndexSet& other)
+    :
+    index_(other.index_),
+    ur_(other.ur_),
+    numref(0)
+    {
     }
 
 const IQIndex& IQIndexSet::
