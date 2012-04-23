@@ -254,7 +254,7 @@ class IQTensor
     toITensor() const;
 
     //Automatic conversion to ITensor
-    operator ITensor() { return toITensor(); }
+    //operator ITensor() { return toITensor(); }
 
     //Inserts an ITensor block or adds it to
     //existing one if already present and QNs match
@@ -628,18 +628,25 @@ class IQTDat
     void 
     write(std::ostream& s) const;
 
-    inline void* operator 
-    new(size_t size) 
-        throw(std::bad_alloc)
-        { return allocator().alloc(); }
+    //void* operator 
+    //new(size_t size) 
+    //    throw(std::bad_alloc)
+    //    { return allocator().alloc(); }
 
-    inline void operator 
-    delete(void* p) 
-        throw()
-        { return allocator().dealloc(p); }
+    //void operator 
+    //delete(void* p) 
+    //    throw()
+    //    { return allocator().dealloc(p); }
 
 
-    ENABLE_INTRUSIVE_PTR(IQTDat)
+    friend void 
+    intrusive_ptr_add_ref(IQTDat* p);
+
+    friend void 
+    intrusive_ptr_release(IQTDat* p);
+
+    int 
+    count() const { return numref; }
 
     private:
 
@@ -673,11 +680,11 @@ class IQTDat
     ~IQTDat() { }
     void operator=(const IQTDat&);
 
-    static DatAllocator<IQTDat>& allocator()
-        {
-        static DatAllocator<IQTDat> allocator_;
-        return allocator_;
-        };
+    //static DatAllocator<IQTDat>& allocator()
+    //    {
+    //    static DatAllocator<IQTDat> allocator_;
+    //    return allocator_;
+    //    };
 
     }; //class IQTDat
 

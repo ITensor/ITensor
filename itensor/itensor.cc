@@ -537,7 +537,10 @@ assignFrom(const ITensor& other)
     Permutation P; 
     is_.getperm(other.is_,P);
     scale_ = other.scale_;
-    if(p->count() != 1) { p = new ITDat(); }
+    if(p->count() != 1) 
+        { 
+        p = new ITDat(); 
+        }
     other.reshapeDat(P,p->v);
     }
 
@@ -1001,8 +1004,7 @@ assignFromVec(const VectorRef& v)
     scale_ = 1;
     if(p->count() != 1) 
 	{ 
-	boost::intrusive_ptr<ITDat> new_p(new ITDat(v)); 
-	p.swap(new_p); 
+    p = new ITDat(v);
 	}
     else
 	p->v = v;
@@ -1123,14 +1125,18 @@ allocate(int dim)
 
 void ITensor::
 allocate() 
-    { p = new ITDat(); }
+    { 
+    p = new ITDat(); 
+    }
 
 void ITensor::
 solo() const
 	{
     ITENSOR_CHECK_NULL
     if(p->count() != 1) 
+        { 
         p = new ITDat(*p);
+        }
 	}
 
 int ITensor::
@@ -1653,7 +1659,10 @@ operator/=(const ITensor& other)
     MatrixRefNoLink lref, rref;
     toMatrixProd(*this,other,props,lref,rref);
 
-    if(p->count() != 1) { p = new ITDat(); }
+    if(p->count() != 1) 
+        {
+        p = new ITDat(); 
+        }
     Vector& thisdat = p->v; 
     
     const int ni = lref.Ncols(), nj = lref.Nrows(), nk = rref.Nrows();
@@ -1817,7 +1826,10 @@ directMultiply(const ITensor& other, ProductProps& props,
             newdat(ind4(inew[4],mnew[3],inew[3],mnew[2],inew[2],mnew[1],inew[1])) = d;
             }
 
-    if(p->count() != 1) { p = new ITDat(); } 
+    if(p->count() != 1) 
+        { 
+        p = new ITDat(); 
+        } 
     p->v = newdat;
 
     DO_IF_PS(++Prodstats::stats().c1;)
@@ -2049,7 +2061,10 @@ operator*=(const ITensor& other)
     toMatrixProd(*this,other,props,lref,rref);
 
     //Do the matrix multiplication
-    if(p->count() != 1) { p = new ITDat(); } 
+    if(p->count() != 1) 
+        { 
+        p = new ITDat(); 
+        } 
     p->v.ReDimension(rref.Nrows()*lref.Ncols());
     MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
     nref = rref*lref;
@@ -2509,6 +2524,24 @@ void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im,
         }
     re = res.val0();
     im = 0;
+    }
+
+//
+// ITDat
+//
+
+void intrusive_ptr_add_ref(ITDat* p) 
+    { 
+    ++(p->numref); 
+    }
+
+void 
+intrusive_ptr_release(ITDat* p) 
+    { 
+    if(--(p->numref) == 0) 
+        {
+        delete p; 
+        } 
     }
 
 void ITDat::

@@ -456,8 +456,7 @@ soloDat()
 
 	if(dat().count() != 1)
 	    {
-	    boost::intrusive_ptr<IQTSDat> new_d_(new IQTSDat(*d_));
-	    d_.swap(new_d_);
+        d_ = new IQTSDat(*d_);
 	    }
     }
 
@@ -465,16 +464,10 @@ void IQTSparse::
 soloIndex()
     {
 	if(is_ == 0)
-        {
         Error("IQTSparse is null");
-        }
 
 	if(is_->count() != 1)
-	    {
-	    boost::intrusive_ptr<IQIndexSet> 
-            new_is_(new IQIndexSet(*is_));
-	    is_.swap(new_is_);
-	    }
+        is_ = new IQIndexSet(*is_);
     }
 
 void IQTSparse::

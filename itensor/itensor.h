@@ -6,7 +6,7 @@
 #define __ITENSOR_ITENSOR_H
 #include "types.h"
 #include "real.h"
-#include "allocator.h"
+//#include "allocator.h"
 #include "index.h"
 #include "prodstats.h"
 #include "indexset.h"
@@ -797,17 +797,23 @@ public:
     print() const 
         { std::cout << "ITDat: v = " << v; }
 
-    void* operator 
-    new(size_t) throw(std::bad_alloc)
-        { return allocator().alloc(); }
+    //void* operator 
+    //new(size_t) throw(std::bad_alloc)
+    //    { return allocator().alloc(); }
 
-    void operator 
-    delete(void* p) throw()
-        { return allocator().dealloc(p); }
+    //void operator 
+    //delete(void* p) throw()
+    //    { return allocator().dealloc(p); }
 
     friend class ITensor;
 
-    ENABLE_INTRUSIVE_PTR(ITDat)
+    friend void 
+    intrusive_ptr_add_ref(ITDat* p);
+
+    friend void 
+    intrusive_ptr_release(ITDat* p);
+
+    int count() const { return numref; }
 
 private:
 
@@ -818,11 +824,13 @@ private:
     void operator=(const ITDat&);
     ~ITDat() { }
 
+    /*
     static DatAllocator<ITDat>& allocator()
         {
         static DatAllocator<ITDat> allocator_;
         return allocator_;
         }
+        */
 
     };
 

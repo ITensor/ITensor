@@ -7,6 +7,22 @@
 using namespace std;
 using boost::format;
 
+
+void 
+intrusive_ptr_add_ref(IQTDat* p) 
+    { 
+    ++(p->numref); 
+    }
+
+void 
+intrusive_ptr_release(IQTDat* p) 
+    { 
+    if(--(p->numref) == 0)
+        { 
+        delete p; 
+        } 
+    }
+
 IQTDat::
 IQTDat() 
     : 
@@ -296,21 +312,24 @@ IQTensor(const IQIndex& i1)
     : 
     is_(new IQIndexSet(i1)),
     p(new IQTDat()) 
-    { }
+    { 
+    }
 
 IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2) 
     : 
     is_(new IQIndexSet(i1,i2)),
     p(new IQTDat()) 
-    { }
+    { 
+    }
 
 IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3) 
 	: 
     is_(new IQIndexSet(i1,i2,i3)),
     p(new IQTDat()) 
-    { }
+    { 
+    }
 
 IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
@@ -318,7 +337,8 @@ IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
     : 
     is_(new IQIndexSet(i1,i2,i3,i4)),
     p(new IQTDat())
-    { }
+    { 
+    }
 
 IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
@@ -326,7 +346,8 @@ IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
     : 
     is_(new IQIndexSet(i1,i2,i3,i4,i5)),
     p(new IQTDat()) 
-    { }
+    { 
+    }
 
 IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
@@ -334,7 +355,8 @@ IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
 	: 
     is_(new IQIndexSet(i1,i2,i3,i4,i5,i6)),
     p(new IQTDat()) 
-	{ }
+	{ 
+    }
 
 IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
@@ -343,7 +365,8 @@ IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
 	: 
     is_(new IQIndexSet(i1,i2,i3,i4,i5,i6,i7)),
     p(new IQTDat()) 
-	{ }
+	{ 
+    }
 
 IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
@@ -352,7 +375,8 @@ IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
 	: 
     is_(new IQIndexSet(i1,i2,i3,i4,i5,i6,i7,i8)),
     p(new IQTDat()) 
-	{ }
+	{ 
+    }
 
 IQTensor::
 IQTensor(std::vector<IQIndex>& iqinds_) 
@@ -1651,31 +1675,20 @@ void IQTensor::
 soloIndex()
 	{
 	if(is_ == 0)
-        {
         Error("IQTensor is null");
-        }
 
 	if(is_->count() != 1)
-	    {
-	    boost::intrusive_ptr<IQIndexSet> 
-            new_is_(new IQIndexSet(*is_));
-	    is_.swap(new_is_);
-	    }
+        is_ = new IQIndexSet(*is_);
     }
 
 void IQTensor::
 soloDat()
     {
 	if(p == 0)
-        {
         Error("IQTensor is null");
-        }
 
 	if(dat().count() != 1)
-	    {
-	    boost::intrusive_ptr<IQTDat> new_p(new IQTDat(*p));
-	    p.swap(new_p);
-	    }
+        p = new IQTDat(*p);
 	}
 
 void IQTensor::
