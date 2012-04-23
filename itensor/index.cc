@@ -30,7 +30,9 @@ void
 intrusive_ptr_release(IndexDat* p) 
     { 
     if(!p->is_static_ && --(p->numref) == 0)
-        { delete p; } 
+        { 
+        delete p; 
+        } 
     }
 
 const UniqueID& IndexDat::
@@ -67,7 +69,7 @@ IndexDat(const std::string& name, int mm,IndexType it)
       ind(nextID()),
       m_(mm), 
       sname(name),
-      numref(0), 
+      numref(0),
       is_static_(false)
     { 
     if(it == ReIm) Error("bad call to create IndexDat with type ReIm");
@@ -89,10 +91,11 @@ IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& 
 
 IndexDat::
 IndexDat(Imaker im) 
-    : _type(ReIm), 
-      m_( (im==makeNull) ? 1 : 2),
-      numref(1000000000), 
-      is_static_(true)
+    : 
+    _type(ReIm), 
+    m_( (im==makeNull) ? 1 : 2),
+    numref(0), 
+    is_static_(true)
     { 
     //Don't use random uuid generator for these static IndexDats
     boost::uuids::string_generator gen;
@@ -123,9 +126,11 @@ Index()
 
 Index::
 Index(const std::string& name, int mm, IndexType it, int plev) 
-    : p(new IndexDat(name,mm,it)), 
-      primelevel_(plev) 
-    { }
+    : 
+    p(new IndexDat(name,mm,it)), 
+    primelevel_(plev) 
+    { 
+    }
 
 Index::
 Index(Imaker im)
@@ -277,8 +282,10 @@ read(std::istream& s)
 
     int nlength; s.read((char*) &nlength,sizeof(nlength));
 
-    char* newname = new char[nlength+1]; s.read(newname,nlength+1);
-    std::string ss(newname); delete newname;
+    char* newname = new char[nlength+1]; 
+    s.read(newname,nlength+1);
+    std::string ss(newname); 
+    delete newname;
 
     if(IntToIndexType(t) == ReIm)
         {
@@ -296,9 +303,6 @@ read(std::istream& s)
         p = new IndexDat(ss,mm,IntToIndexType(t),ind);
         }
     }
-
-void Index::
-set_m(int newm) { p->m_ = newm; }
 
 std::ostream& 
 operator<<(std::ostream & s, const Index & t)

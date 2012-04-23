@@ -41,7 +41,7 @@ struct IQIndexVal;
 // IQIndex
 //
 
-class IQIndex : public Index
+class IQIndex
     {
     public:
 
@@ -56,6 +56,28 @@ class IQIndex : public Index
 
     const QN& 
     qn(int i) const;
+
+    IndexType 
+    type() const { return index_.type(); }
+
+    std::string 
+    name() const { return index_.name(); }
+
+    const std::string&
+    rawname() const { return index_.rawname(); }
+
+    Real 
+    uniqueReal() const { return index_.uniqueReal(); }
+
+    int 
+    primeLevel() const { return index_.primeLevel(); }
+    void 
+    primeLevel(int val) { index_.primeLevel(val); }
+
+    bool
+    isNull() const { return index_.isNull(); }
+    bool
+    isNotNull() const { return index_.isNotNull(); }
 
     //------------------------------------------
     //IQIndex: Constructors
@@ -154,11 +176,31 @@ class IQIndex : public Index
         return IndReImPP_;
         }
 
+    //------------------------------------------
+    //IQIndex: operators
+
     IQIndexVal 
     operator()(int n) const;
 
+    operator Index() const { return index_; }
+
+    bool 
+    operator==(const IQIndex& other) const
+        { return index_.operator==(other.index_); }
+
+    bool 
+    operator<(const IQIndex& other) const
+        { return index_.operator<(other.index_); }
+
+    bool 
+    noprime_equals(const IQIndex& other) const
+        { return index_.noprime_equals(other.index_); }
+
     //------------------------------------------
     //IQIndex: methods for querying m's
+
+    int
+    m() const { return index_.m(); }
 
     int 
     biggestm() const;
@@ -240,6 +282,8 @@ class IQIndex : public Index
 
     private:
 
+    Index index_;
+
     Arrow _dir;
 
     boost::intrusive_ptr<IQIndexDat> pd;
@@ -249,7 +293,6 @@ class IQIndex : public Index
 
 
     }; //class IQIndex
-
 
 
 
@@ -412,7 +455,6 @@ class IQIndexDat
     {
     public:
 
-    std::vector<inqn> iq_;
 
     IQIndexDat();
 
@@ -463,13 +505,7 @@ class IQIndexDat
     IQIndexDat(std::vector<inqn>& ind_qn);
 
     explicit 
-    IQIndexDat(const IQIndexDat& other);
-
-    explicit 
     IQIndexDat(std::istream& s);
-
-    explicit 
-    IQIndexDat(Imaker im);
 
     void 
     write(std::ostream& s) const;
@@ -501,26 +537,49 @@ class IQIndexDat
         return &ReImDatPP_;
         }
 
-    friend void intrusive_ptr_add_ref(IQIndexDat* p);
-    friend void intrusive_ptr_release(IQIndexDat* p);
+    friend void 
+    intrusive_ptr_add_ref(IQIndexDat* p);
+
+    friend void 
+    intrusive_ptr_release(IQIndexDat* p);
 
     int 
     count() const { return numref; }
 
     typedef std::vector<inqn>::iterator 
     iq_it;
+
     typedef std::vector<inqn>::const_iterator 
     const_iq_it;
 
     private:
 
-    //Disallow copying
+    friend class IQIndex;
+
+    explicit 
+    IQIndexDat(Imaker im);
+
+    //////////////////
+    //
+    // Data Members
+    //
+
+    std::vector<inqn> iq_;
+
+    mutable int numref;
+
+    const bool is_static_;
+
+    //
+    /////////////////
+
+    explicit 
+    IQIndexDat(const IQIndexDat& other);
+
+    //Disallow copying using =
     void 
     operator=(const IQIndexDat&);
 
-    mutable unsigned int numref;
-
-    const bool is_static_;
     };
 
 

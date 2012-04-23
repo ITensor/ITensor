@@ -10,21 +10,31 @@ using boost::array;
 
 
 void 
-intrusive_ptr_add_ref(IQIndexDat* p) 
-    { ++(p->numref); }
+intrusive_ptr_add_ref(IQIndexDat* pd) 
+    { 
+    ++(pd->numref); 
+    }
+
 void 
-intrusive_ptr_release(IQIndexDat* p) 
-    { if(!p->is_static_ && --(p->numref) == 0){ delete p; } }
+intrusive_ptr_release(IQIndexDat* pd) 
+    { 
+    if(!pd->is_static_ && --(pd->numref) == 0)
+        { 
+        delete pd; 
+        } 
+    }
 
 IQIndexDat::
 IQIndexDat() 
-    : numref(0), 
-      is_static_(false) 
+    : 
+    numref(0), 
+    is_static_(false) 
     { }
 
 IQIndexDat::
 IQIndexDat(const Index& i1, const QN& q1)
-    : numref(0), 
+    : 
+    numref(0), 
     is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
@@ -33,7 +43,8 @@ IQIndexDat(const Index& i1, const QN& q1)
 IQIndexDat::
 IQIndexDat(const Index& i1, const QN& q1,
            const Index& i2, const QN& q2)
-    : numref(0), 
+    : 
+    numref(0), 
     is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
@@ -44,8 +55,9 @@ IQIndexDat::
 IQIndexDat(const Index& i1, const QN& q1,
            const Index& i2, const QN& q2,
            const Index& i3, const QN& q3)
-    : numref(0), 
-      is_static_(false)
+    : 
+    numref(0), 
+    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -57,8 +69,9 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i2, const QN& q2,
            const Index& i3, const QN& q3,
            const Index& i4, const QN& q4)
-    : numref(0), 
-      is_static_(false)
+    : 
+    numref(0), 
+    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -72,8 +85,9 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i3, const QN& q3,
            const Index& i4, const QN& q4,
            const Index& i5, const QN& q5)
-    : numref(0), 
-      is_static_(false)
+    : 
+    numref(0), 
+    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -89,8 +103,9 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i4, const QN& q4,
            const Index& i5, const QN& q5,
            const Index& i6, const QN& q6)
-    : numref(0), 
-      is_static_(false)
+    : 
+    numref(0), 
+    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -108,8 +123,9 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i5, const QN& q5,
            const Index& i6, const QN& q6,
            const Index& i7, const QN& q7)
-    : numref(0), 
-      is_static_(false)
+    : 
+    numref(0), 
+    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -129,8 +145,9 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i6, const QN& q6,
            const Index& i7, const QN& q7,
            const Index& i8, const QN& q8)
-    : numref(0), 
-      is_static_(false)
+    : 
+    numref(0), 
+    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -144,29 +161,34 @@ IQIndexDat(const Index& i1, const QN& q1,
 
 IQIndexDat::
 IQIndexDat(std::vector<inqn>& ind_qn)
-    : numref(0), 
-      is_static_(false)
+    : 
+    numref(0), 
+    is_static_(false)
     { 
     iq_.swap(ind_qn); 
     }
 
 IQIndexDat::
 IQIndexDat(const IQIndexDat& other) 
-    : iq_(other.iq_),
-      numref(0), 
-      is_static_(false)
-    { }
+    : 
+    iq_(other.iq_),
+    numref(0), 
+    is_static_(other.is_static_)
+    { 
+    }
 
 IQIndexDat::
 IQIndexDat(std::istream& s) 
-    : numref(0), 
-      is_static_(false) 
+    : 
+    numref(0), 
+    is_static_(false) 
     { read(s); }
 
 IQIndexDat::
 IQIndexDat(Imaker im)
-    : numref(0), 
-      is_static_(true)
+    : 
+    numref(0), 
+    is_static_(true)
     { 
     if(im == makeNull)
         iq_.push_back(inqn(Index::Null(),QN())); 
@@ -236,11 +258,17 @@ qn(int i) const
 
 IQIndex::
 IQIndex() 
-: _dir(Out), pd(0) { }
+    : 
+    _dir(Out), 
+    pd(0) 
+    { }
 
 IQIndex::
 IQIndex(const Index& other, Arrow dir)
-    : Index(other), _dir(dir), pd(0)
+    : 
+    index_(other), 
+    _dir(dir), 
+    pd(0)
     { }
 
 IQIndex::
@@ -248,17 +276,21 @@ IQIndex(const std::string& name,
                  IndexType it, 
                  Arrow dir, 
                  int plev) 
-    : Index(name,1,it,plev), _dir(dir), pd(0) 
+    : 
+    index_(name,1,it,plev), 
+    _dir(dir), 
+    pd(0) 
     { }
 
 IQIndex::
 IQIndex(const std::string& name, 
         const Index& i1, const QN& q1, 
         Arrow dir) 
-    : Index(name,i1.m(),i1.type()), 
-      _dir(dir), pd(new IQIndexDat(i1,q1))
+    : 
+    index_(name,i1.m(),i1.type(),i1.primeLevel()), 
+    _dir(dir), 
+    pd(new IQIndexDat(i1,q1))
     {
-    primeLevel(i1.primeLevel());
     }
 
 IQIndex::
@@ -266,10 +298,11 @@ IQIndex(const std::string& name,
         const Index& i1, const QN& q1, 
         const Index& i2, const QN& q2,
         Arrow dir) 
-    : Index(name,i1.m()+i2.m(),i1.type()), _dir(dir), 
-      pd(new IQIndexDat(i1,q1,i2,q2))
+    : 
+    index_(name,i1.m()+i2.m(),i1.type(),i1.primeLevel()), 
+    _dir(dir), 
+    pd(new IQIndexDat(i1,q1,i2,q2))
     {
-    primeLevel(i1.primeLevel());
     if(i2.type() != i1.type())
         Error("Indices must have the same type");
     }
@@ -280,10 +313,11 @@ IQIndex(const std::string& name,
         const Index& i2, const QN& q2,
         const Index& i3, const QN& q3,
         Arrow dir) 
-    : Index(name,i1.m()+i2.m()+i3.m(),i1.type()), _dir(dir),
-      pd(new IQIndexDat(i1,q1,i2,q2,i3,q3))
+    : 
+    index_(name,i1.m()+i2.m()+i3.m(),i1.type(),i1.primeLevel()), 
+    _dir(dir),
+    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3))
     {
-    primeLevel(i1.primeLevel());
     if(i2.type() != i1.type() 
     || i3.type() != i1.type())
         Error("Indices must have the same type");
@@ -296,10 +330,11 @@ IQIndex(const std::string& name,
         const Index& i3, const QN& q3,
         const Index& i4, const QN& q4,
         Arrow dir) 
-    : Index(name,i1.m()+i2.m()+i3.m()+i4.m(),i1.type()), _dir(dir),
-      pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4))
+    : 
+    index_(name,i1.m()+i2.m()+i3.m()+i4.m(),i1.type(),i1.primeLevel()), 
+    _dir(dir),
+    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4))
     {
-    primeLevel(i1.primeLevel());
     if(i2.type() != i1.type() 
     || i3.type() != i1.type()
     || i4.type() != i1.type())
@@ -314,10 +349,11 @@ IQIndex(const std::string& name,
         const Index& i4, const QN& q4,
         const Index& i5, const QN& q5,
         Arrow dir) 
-    : Index(name,i1.m()+i2.m()+i3.m()+i4.m()+i5.m(),i1.type()), _dir(dir),
-      pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4,i5,q5))
+    : 
+    index_(name,i1.m()+i2.m()+i3.m()+i4.m()+i5.m(),i1.type(),i1.primeLevel()), 
+    _dir(dir),
+    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4,i5,q5))
     {
-    primeLevel(i1.primeLevel());
     if(i2.type() != i1.type() 
     || i3.type() != i1.type()
     || i4.type() != i1.type()
@@ -329,49 +365,56 @@ IQIndex::
 IQIndex(const std::string& name, 
         std::vector<inqn>& ind_qn, 
         Arrow dir, int plev) 
-    : Index(name,0,ind_qn.back().index.type(),plev), 
-      _dir(dir), pd(new IQIndexDat(ind_qn))
+    : 
+    _dir(dir), 
+    pd(new IQIndexDat(ind_qn))
     { 
     int mm = 0;
     for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
         {
         mm += x->index.m();
-        if(x->index.type() != this->type())
+        if(x->index.type() != index(1).type())
             Error("Indices must have the same type");
         }
-    set_m(mm);
-    primeLevel(pd->iq_.back().index.primeLevel());
+    index_ = Index(name,mm,index(1).type(),plev);
     }
 
 IQIndex::
 IQIndex(const IQIndex& other, 
         std::vector<inqn>& ind_qn)
-    : Index(other.name(),0,other.type()), 
-      _dir(other._dir), pd(new IQIndexDat(ind_qn))
+    : 
+    _dir(other._dir), 
+    pd(new IQIndexDat(ind_qn))
     { 
     int mm = 0;
     for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
         {
         mm += x->index.m();
-        if(x->index.type() != this->type())
+        if(x->index.type() != index(1).type())
             Error("Indices must have the same type");
         }
-    set_m(mm);
-    primeLevel(pd->iq_.back().index.primeLevel());
+    index_ = Index(other.name(),mm,other.type(),
+                   pd->iq_.back().index.primeLevel()); 
     }
 
 IQIndex::
 IQIndex(const Index& other, 
         const Index& i1, const QN& q1, 
         Arrow dir) 
-    : Index(other), _dir(dir), pd(new IQIndexDat(i1,q1))
+    : 
+    index_(other),
+    _dir(dir), 
+    pd(new IQIndexDat(i1,q1))
     {
-    primeLevel(i1.primeLevel());
+    index_.primeLevel(i1.primeLevel());
     }
 
 IQIndex::
 IQIndex(PrimeType pt, const IQIndex& other, int inc) 
-    : Index(other), _dir(other._dir), pd(other.pd)  
+    : 
+    index_(other), 
+    _dir(other._dir), 
+    pd(other.pd)  
     { doprime(pt,inc); }
 
 IQIndex::
@@ -380,7 +423,9 @@ IQIndex(std::istream& s)
 
 IQIndex::
 IQIndex(Imaker im)
-    : Index(im), _dir(In)
+    : 
+    index_(im), 
+    _dir(In)
     {
     if(im == makeNull)
         { pd = IQIndexDat::Null(); }
@@ -397,7 +442,7 @@ void IQIndex::
 write(std::ostream& s) const
     {
     IQINDEX_CHECK_NULL
-    Index::write(s);
+    index_.write(s);
     s.write((char*)&_dir,sizeof(_dir));
     pd->write(s);
     }
@@ -405,7 +450,7 @@ write(std::ostream& s) const
 void IQIndex::
 read(std::istream& s)
     {
-    Index::read(s);
+    index_.read(s);
     s.read((char*)&_dir,sizeof(_dir));
     pd = new IQIndexDat(s);
     }
@@ -516,7 +561,7 @@ void IQIndex::
 doprime(PrimeType pt, int inc)
     {
     solo();
-    Index::doprime(pt,inc);
+    index_.doprime(pt,inc);
     DoPrimer dp(pt,inc);
     for_each(pd->iq_.begin(),pd->iq_.end(),dp);
     }
@@ -525,7 +570,7 @@ void IQIndex::
 mapprime(int plevold, int plevnew, PrimeType pt)
     {
     solo();
-    Index::mapprime(plevold,plevnew,pt);
+    index_.mapprime(plevold,plevnew,pt);
     for_each(pd->iq_.begin(),pd->iq_.end(),MapPrimer(plevold,plevnew,pt));
     }
 
@@ -533,7 +578,7 @@ void IQIndex::
 noprime(PrimeType pt)
     {
     solo();
-    Index::noprime(pt);
+    index_.noprime(pt);
     for(size_t j = 0; j < pd->iq_.size(); ++j)
     { pd->iq_[j].index.noprime(pt); }
     }
@@ -554,9 +599,7 @@ solo()
     IQINDEX_CHECK_NULL
     if(pd->count() != 1)
         {
-        boost::intrusive_ptr<IQIndexDat> new_pd(new IQIndexDat(*pd));
-        //new_pd->iq_ = pd->iq_;
-        pd.swap(new_pd);
+        pd = new IQIndexDat(*pd);
         }
     }
 

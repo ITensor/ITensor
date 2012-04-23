@@ -182,9 +182,6 @@ class Index
 
     Index(std::istream& s) { read(s); }
 
-    explicit
-    Index(Imaker im);
-
     Index(PrimeType pt,const Index& other, int primeinc = 1);
 
     static const Index& Null()
@@ -267,16 +264,27 @@ class Index
     void 
     conj() { } //for forward compatibility with arrows
 
-    protected:
-
-    void 
-    set_m(int newm);
-
     private:
+
+    friend class IQIndex;
+
+    //void 
+    //set_m(int newm);
+
+    //Constructor for static Index's
+    explicit
+    Index(Imaker im);
+
+    /////////////
+    //
+    // Data Members
 
     boost::intrusive_ptr<IndexDat> p;
 
     int primelevel_; 
+
+    //
+    /////////////
 
     }; //class Index
 
@@ -290,11 +298,19 @@ class IndexDat
     {
     public:
 
+
+    //////////////
+    //
+    // Public Data Members
+
     IndexType _type;
     boost::uuids::uuid ind;
     int m_;
     Real ur;
     std::string sname;
+
+    //
+    //////////////
 
     void 
     setUniqueReal();
@@ -304,7 +320,6 @@ class IndexDat
     //For use with read/write functionality of Index class
     IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& ind_);
 
-    IndexDat(Imaker im);
 
     static IndexDat* 
     Null()
@@ -334,14 +349,30 @@ class IndexDat
         return &ReImDatPP_;
         }
 
+    friend void 
+    intrusive_ptr_add_ref(IndexDat* p);
 
-    friend void intrusive_ptr_add_ref(IndexDat* p);
-    friend void intrusive_ptr_release(IndexDat* p);
+    friend void 
+    intrusive_ptr_release(IndexDat* p);
 
     int 
     count() const { return numref; }
 
     private:
+
+    //////////////
+    //
+    // (Private) Data Members
+    
+    mutable unsigned int numref;
+
+    const bool is_static_;
+
+    //
+    /////////////
+
+    explicit
+    IndexDat(Imaker im);
 
     static const UniqueID& 
     nextID();
@@ -350,9 +381,6 @@ class IndexDat
     //to disallow copying
     IndexDat(const IndexDat&);
     void operator=(const IndexDat&);
-
-    mutable unsigned int numref;
-    const bool is_static_;
 
     }; //class IndexDat
 
