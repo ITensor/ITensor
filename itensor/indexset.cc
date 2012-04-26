@@ -230,7 +230,7 @@ getperm(const IndexSet& other, Permutation& P) const
 int IndexSet::
 minM() const
     {
-    if(rn_ == 0) return 1;
+    if(rn_ < r_) return 1;
 
     int mm = index_[1].m();
     for(int j = 2; j <= rn_; ++j)
