@@ -546,6 +546,7 @@ operator+=(const ITensor& t)
     return *this;
     }
 
+//Non-const element access
 Real& IQTensor::
 operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
            const IQIndexVal& iv3, const IQIndexVal& iv4, 
@@ -587,6 +588,52 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
                                        iv7.blockIndexVal(),
                                        iv8.blockIndexVal());
 	}
+
+//const element access
+Real IQTensor::
+operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
+           const IQIndexVal& iv3, const IQIndexVal& iv4, 
+           const IQIndexVal& iv5, const IQIndexVal& iv6,
+           const IQIndexVal& iv7, const IQIndexVal& iv8) const
+	{
+    boost::array<IQIndexVal,NMAX+1> iv 
+        = {{ IQIndexVal::Null(), iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
+
+    Real ur = 0; 
+    int nn = 0; 
+    while(GET(iv,nn+1).iqind != IQIndexVal::Null().iqind) 
+        ur += GET(iv,++nn).index().uniqueReal(); 
+    if(nn != r()) 
+        Error("Wrong number of IQIndexVals provided");
+    ApproxReal r(ur);
+
+    if(!dat().has_itensor(r))
+        {
+        return 0.;
+        }
+    else
+        {
+        return (dat().get(r)).operator()(iv1.blockIndexVal(),
+                                         iv2.blockIndexVal(),
+                                         iv3.blockIndexVal(),
+                                         iv4.blockIndexVal(),
+                                         iv5.blockIndexVal(),
+                                         iv6.blockIndexVal(),
+                                         iv7.blockIndexVal(),
+                                         iv8.blockIndexVal());
+        }
+	}
+
+//Method for specifically requesting const access
+Real IQTensor::
+at(const IQIndexVal& iv1, const IQIndexVal& iv2,
+   const IQIndexVal& iv3, const IQIndexVal& iv4, 
+   const IQIndexVal& iv5, const IQIndexVal& iv6,
+   const IQIndexVal& iv7, const IQIndexVal& iv8) const
+    {
+    return operator()(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8);
+    }
+
 
 QN IQTensor::
 div() const

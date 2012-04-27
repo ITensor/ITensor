@@ -68,6 +68,9 @@ class IQTSparse
     bool
     isDiag() const { return true; }
 
+    const IQTSDat&
+    blocks() const { return *d_; }
+
     //
     // Operators
     //
@@ -129,6 +132,16 @@ class IQTSparse
     friend inline IQTSparse 
     operator*(const LogNumber& fac, IQTSparse s) 
         { return (s *= fac); }
+
+    //Real& 
+    //operator()(const IQIndexVal& iv1, 
+    //           const IQIndexVal& iv2 = IQIndexVal::Null(), 
+	//           const IQIndexVal& iv3 = IQIndexVal::Null(), 
+    //           const IQIndexVal& iv4 = IQIndexVal::Null(), 
+	//           const IQIndexVal& iv5 = IQIndexVal::Null(), 
+    //           const IQIndexVal& iv6 = IQIndexVal::Null(),
+	//           const IQIndexVal& iv7 = IQIndexVal::Null(), 
+    //           const IQIndexVal& iv8 = IQIndexVal::Null());
 
     //
     // IQIndex Methods
@@ -278,11 +291,9 @@ class IQTSparse
     void
     solo();
 
-    const IQTSDat&
-    dat() const { return *d_; }
 
     IQTSDat&
-    ncdat() { return *d_; }
+    ncblocks() { return *d_; }
 
     friend void 
     product(const IQTSparse& S, const IQTensor& T, IQTensor& res);

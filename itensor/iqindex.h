@@ -383,7 +383,7 @@ class QN
 
     std::string 
     toString() const
-        { return (boost::format("(%+d:%d:%s)")%_sz%_Nf%(_Nfp==1 ? "-" : "+")).str(); }
+        { return (boost::format("(%+d:%d)")%_sz%_Nf).str(); }
 
     inline friend std::ostream& 
     operator<<(std::ostream &o, const QN &q)

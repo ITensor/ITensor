@@ -266,6 +266,7 @@ class IQTensor
     //before inserting
     void insert(const ITensor& t);
 
+    //Non-const element access
     Real& 
     operator()(const IQIndexVal& iv1, 
                const IQIndexVal& iv2 = IQIndexVal::Null(), 
@@ -275,6 +276,28 @@ class IQTensor
                const IQIndexVal& iv6 = IQIndexVal::Null(),
 	           const IQIndexVal& iv7 = IQIndexVal::Null(), 
                const IQIndexVal& iv8 = IQIndexVal::Null());
+
+    //const element access
+    Real 
+    operator()(const IQIndexVal& iv1, 
+               const IQIndexVal& iv2 = IQIndexVal::Null(), 
+	           const IQIndexVal& iv3 = IQIndexVal::Null(), 
+               const IQIndexVal& iv4 = IQIndexVal::Null(), 
+	           const IQIndexVal& iv5 = IQIndexVal::Null(), 
+               const IQIndexVal& iv6 = IQIndexVal::Null(),
+	           const IQIndexVal& iv7 = IQIndexVal::Null(), 
+               const IQIndexVal& iv8 = IQIndexVal::Null()) const;
+
+    //Method for specifically requesting const access
+    Real 
+    at(const IQIndexVal& iv1, 
+       const IQIndexVal& iv2 = IQIndexVal::Null(), 
+	   const IQIndexVal& iv3 = IQIndexVal::Null(), 
+       const IQIndexVal& iv4 = IQIndexVal::Null(), 
+	   const IQIndexVal& iv5 = IQIndexVal::Null(), 
+       const IQIndexVal& iv6 = IQIndexVal::Null(),
+	   const IQIndexVal& iv7 = IQIndexVal::Null(), 
+       const IQIndexVal& iv8 = IQIndexVal::Null()) const;
 
     //----------------------------------------------------
     //IQTensor quantum number methods

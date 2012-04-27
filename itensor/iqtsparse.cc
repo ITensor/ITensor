@@ -162,7 +162,7 @@ IQTSparse(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
 IQTSparse& IQTSparse::
 operator+=(const ITSparse& s)
     {
-    ncdat().insert_add(s);
+    ncblocks().insert_add(s);
     return *this;
     }
 
@@ -175,9 +175,9 @@ operator+=(const IQTSparse& other)
         return *this;
         }
 
-    Foreach(const ITSparse& s, other.dat())
+    Foreach(const ITSparse& s, other.blocks())
         {
-        ncdat().insert_add(s);
+        ncblocks().insert_add(s);
         }
 
     return *this;
@@ -190,11 +190,11 @@ operator*=(Real fac)
 
     if(fac == 0)
         {
-        ncdat().clear();
+        ncblocks().clear();
         return *this;
         }
 
-    Foreach(ITSparse& s, ncdat())
+    Foreach(ITSparse& s, ncblocks())
         {
         s *= fac;
         }
@@ -208,16 +208,60 @@ operator*=(const LogNumber& fac)
 
     if(fac == 0)
         {
-        ncdat().clear();
+        ncblocks().clear();
         return *this;
         }
 
-    Foreach(ITSparse& s, ncdat())
+    Foreach(ITSparse& s, ncblocks())
         {
         s *= fac;
         }
     return *this;
     }
+
+/*
+Real& IQTSparse::
+operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
+           const IQIndexVal& iv3, const IQIndexVal& iv4, 
+           const IQIndexVal& iv5, const IQIndexVal& iv6,
+           const IQIndexVal& iv7, const IQIndexVal& iv8)
+	{
+    soloDat();
+    boost::array<IQIndexVal,NMAX+1> iv 
+        = {{ IQIndexVal::Null(), iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
+
+    Real ur = 0; 
+    int nn = 0; 
+    while(GET(iv,nn+1).iqind != IQIndexVal::Null().iqind) 
+        ur += GET(iv,++nn).index().uniqueReal(); 
+    if(nn != r()) 
+        Error("Wrong number of IQIndexVals provided");
+    ApproxReal r(ur);
+
+    if(!blocks().has_itensor(r))
+        {
+        std::vector<Index> indices; 
+        indices.reserve(nn);
+        for(int j = 1; j <= nn; ++j) 
+            {
+            if(!hasindex(iv[j].iqind)) 
+                Error("IQTensor::operator(): IQIndex not found.");
+            indices.push_back(iv[j].index());
+            }
+        ITensor t(indices);
+        ncdat().insert_add(r,t);
+        }
+
+    return (ncblocks().get(r)).operator()(iv1.blockIndexVal(),
+                                       iv2.blockIndexVal(),
+                                       iv3.blockIndexVal(),
+                                       iv4.blockIndexVal(),
+                                       iv5.blockIndexVal(),
+                                       iv6.blockIndexVal(),
+                                       iv7.blockIndexVal(),
+                                       iv8.blockIndexVal());
+	}
+    */
 
 IQIndex IQTSparse::
 findtype(IndexType t) const 
@@ -274,7 +318,7 @@ noprime(PrimeType pt)
 
     is_->noprime(pt); 
 
-    Foreach(ITSparse& t, ncdat())
+    Foreach(ITSparse& t, ncblocks())
         {
         t.noprime(pt);
         }
@@ -287,7 +331,7 @@ doprime(PrimeType pt, int inc)
 
     is_->doprime(pt,inc);
 
-    Foreach(ITSparse& t, ncdat())
+    Foreach(ITSparse& t, ncblocks())
         {
         t.doprime(pt,inc);
         }
@@ -300,7 +344,7 @@ mapprime(int plevold, int plevnew, PrimeType pt)
 
     is_->mapprime(plevold,plevnew,pt); 
 
-    Foreach(ITSparse& t, ncdat())
+    Foreach(ITSparse& t, ncblocks())
         {
         t.mapprime(plevold,plevnew,pt);
         }
@@ -314,7 +358,7 @@ mapprimeind(const IQIndex& I, int plevold, int plevnew,
 
     is_->mapprimeind(I,plevold,plevnew,pt); 
 
-    Foreach(ITSparse& t, ncdat())
+    Foreach(ITSparse& t, ncblocks())
         {
         t.mapprimeind(I,plevold,plevnew,pt);
         }
@@ -327,7 +371,7 @@ primeind(const IQIndex& I, int inc)
 
     is_->primeind(I,inc);
 
-    Foreach(ITSparse& t, ncdat())
+    Foreach(ITSparse& t, ncblocks())
     for(std::vector<inqn>::const_iterator x = I.iq().begin(); 
             x != I.iq().end(); ++x)
         {
@@ -343,7 +387,7 @@ noprimeind(const IQIndex& I)
 
     is_->noprimeind(I); 
 
-    Foreach(ITSparse& t, ncdat())
+    Foreach(ITSparse& t, ncblocks())
     for(std::vector<inqn>::const_iterator x = I.iq().begin(); 
             x != I.iq().end(); ++x)
         {
@@ -372,7 +416,7 @@ pseudoInvert(Real cutoff)
     {
     soloDat();
 
-    Foreach(ITSparse& s, ncdat())
+    Foreach(ITSparse& s, ncblocks())
         { 
         s.pseudoInvert(cutoff);
         }
@@ -382,7 +426,7 @@ Real IQTSparse::
 norm() const
     {
     Real res = 0;
-    Foreach(const ITSparse& s, dat())
+    Foreach(const ITSparse& s, blocks())
         {
         res += sqr(s.norm());
         }
@@ -393,13 +437,13 @@ void IQTSparse::
 scaleOutNorm() const
 	{
     Real nrm = norm();
-    dat().scaleTo(nrm);
+    blocks().scaleTo(nrm);
 	}
 
 void IQTSparse::
 scaleTo(const LogNumber& newscale) const
 	{
-    dat().scaleTo(newscale);
+    blocks().scaleTo(newscale);
 	}
 
 void IQTSparse::
@@ -443,7 +487,7 @@ write(std::ostream& s) const
 	s.write((char*) &null_,sizeof(null_));
 	if(null_) return;
     is_->write(s);
-	dat().write(s);
+	blocks().write(s);
     }
 
 void IQTSparse::
@@ -454,7 +498,7 @@ soloDat()
         Error("IQTSparse is null");
         }
 
-	if(dat().count() != 1)
+	if(blocks().count() != 1)
 	    {
         d_ = new IQTSDat(*d_);
 	    }
@@ -542,7 +586,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     res.p->swap(old_itensor);
 
     multimap<ApproxReal,IQTSDat::const_iterator> com_S;
-    for(IQTSDat::const_iterator tt = S.dat().begin(); tt != S.dat().end(); ++tt)
+    for(IQTSDat::const_iterator tt = S.blocks().begin(); tt != S.blocks().end(); ++tt)
         {
         Real r = 0.0;
         for(int a = 1; a <= tt->r(); ++a)
@@ -610,7 +654,7 @@ operator<<(ostream & s, const IQTSparse& T)
     for(int k = 1; k <= T.r(); ++k)
         { s << "  " << T.index(k) << std::endl; }
     s << "ITSparse blocks:\n";
-    Foreach(const ITSparse& t, T.dat())
+    Foreach(const ITSparse& t, T.blocks())
         { s << "  " << t << std::endl; }
     s << "-------------------" << "\n\n";
     return s;
