@@ -292,9 +292,6 @@ operator IQTensor() const
     {
     if(!initted) Error("IQCombiner::operator IQTensor(): IQCombiner not initialized.");
 
-    //if(right_.m() > 16) 
-    //{ std::cerr << std::endl << std::endl << "WARNING: too large of an m in IQCombiner::operator IQTensor(). May be inefficient!" << std::endl << std::endl; }
-
     std::vector<IQIndex> iqinds(left);
     iqinds.push_back((do_condense ? ucright_ : right_));
     IQTensor res(iqinds);
@@ -510,43 +507,45 @@ product(IQTensor T, IQTensor& res) const
                 }
             }
 
-        std::map<ApproxReal, const Combiner*> setcomb;
-
-        typedef std::map<ApproxReal, const Combiner*>::const_iterator
-        setcomb_const_it;
-
+        //Create map of Combiners using uniqueReal as key
+        std::map<ApproxReal, const Combiner*> combmap;
         Foreach(const Combiner& co, combs)
             {
-            setcomb[co.uniqueReal()] = &co;
+            combmap[co.uniqueReal()] = &co;
             }
 
-        for(IQTensor::const_iten_it i = T.const_iten_begin(); i != T.const_iten_end(); ++i)
+        //Loop over each block in T and apply appropriate
+        //Combiner (determined by the uniqueReal of the 
+        //combined Indices)
+        Foreach(const ITensor& t, T.blocks())
             {
-            Real rse = 0;
-            for(int k = 1; k <= i->r(); ++k)
+            Real block_ur = 0;
+            for(int k = 1; k <= t.r(); ++k)
                 {
-                if(this->hasindex(i->index(k))) 
-                    rse += i->index(k).uniqueReal();
+                if(this->hasindex(t.index(k))) 
+                    block_ur += t.index(k).uniqueReal();
                 }
 
-            if(setcomb.count(rse) == 0)
+            if(combmap.count(block_ur) == 0)
                 {
-                Print(*i);
+                Print(t);
                 std::cerr << "\nleft indices \n";
                 for(size_t j = 0; j < left.size(); ++j)
                     { std::cerr << j << " " << left[j] << "\n"; }
                 std::cerr << "\n\n";
-                for(setcomb_const_it uu = setcomb.begin();
-                    uu != setcomb.end(); ++uu)
+
+                typedef std::map<ApproxReal, const Combiner*>::const_iterator
+                combmap_const_it;
+                for(combmap_const_it uu = combmap.begin();
+                    uu != combmap.end(); ++uu)
                     {
                     std::cout << "Combiner: " << std::endl;
                     std::cout << *(uu->second) << std::endl;
                     }
-                Error("no setcomb for rse in IQCombiner prod");
+                Error("no combmap entry for block_ur in IQCombiner prod");
                 }
 
-            res += (*setcomb[rse] * (*i));
-
+            res += (*combmap[block_ur] * t);
             }
 
         if(do_condense) 

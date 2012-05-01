@@ -53,6 +53,9 @@ class IQTensor
 
     int 
     num_index() const;
+
+    const IQTDat&
+    blocks() const { return *p; }
     
     //----------------------------------------------------
     //IQTensor: iterators 
