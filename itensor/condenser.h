@@ -6,7 +6,13 @@
 #define __ITENSOR_CONDENSER_H
 #include "iqtensor.h"
 
-class Condenser	// Within one IQIndex, combine indices, presumably with same QNs
+//
+// Condenser
+//
+// Within one IQIndex, combine all Index's having the same QNs
+//
+
+class Condenser
     {
     public:
 

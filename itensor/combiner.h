@@ -18,9 +18,10 @@ Combine several indices into one, use * to convert tensors efficiently
 */
 class Combiner
     {
+    public:
+
     typedef boost::array<Index,NMAX+1>::const_iterator 
     left_it;
-    public:
 
     //Accessor Methods ----------------------------------------------
 
@@ -69,6 +70,9 @@ class Combiner
 
     void 
     addleft(const Index& l);// Include another left index
+
+    void
+    addleft(const std::vector<Index>& ls);
 
     //Initialize after all lefts are added and before being used
     void 
@@ -127,7 +131,9 @@ Combiner(const Index& l1, const Index& l2,
          const Index& l3, const Index& l4, 
          const Index& l5, const Index& l6, 
          const Index& l7, const Index& l8)
-    : rl_(0), initted(false)
+    : 
+    rl_(0), 
+    initted(false)
 	{
     boost::array<const Index*,NMAX+1> ll 
     = {{ &Index::Null(), &l1, &l2, &l3, &l4, &l5, &l6, &l7, &l8 }};
@@ -147,14 +153,23 @@ reset()
     initted = false;
     }
 
-inline
-void Combiner::
+void inline Combiner::
 addleft(const Index& l)// Include another left index
     { 
     initted = false;
     if(rl_ == NMAX) 
         Error("Combiner: already reached max number of left indices.");
     left_[++rl_] = l; 
+    }
+
+void inline Combiner::
+addleft(const std::vector<Index>& ls)
+    { 
+    initted = false;
+    if(rl_+int(ls.size()) > NMAX) 
+        Error("Combiner: too many left indices.");
+    for(size_t j = 0; j < ls.size(); ++j)
+        left_[++rl_] = ls[j]; 
     }
 
 inline

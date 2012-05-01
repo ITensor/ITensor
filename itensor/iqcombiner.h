@@ -96,8 +96,6 @@ class IQCombiner
     std::vector<IQIndex> left;
     mutable IQIndex right_;
     mutable std::vector<Combiner> combs;
-    //mutable std::map<ApproxReal, Combiner> setcomb;
-    //mutable std::map<Index, Combiner> rightcomb;
     mutable bool initted;
 
     mutable Condenser cond;
@@ -120,12 +118,15 @@ class QCounter
     public:
 
     QCounter(const std::vector<IQIndex>& v)
-        : don(false)
+        : 
+        v_(v),
+        don(false),
+        n_(v.size()),
+        ind_(v.size(),0)
         {
-        Foreach(const IQIndex& I,v)
+        for(size_t j = 0; j < v_.size(); ++j)
             {
-            n.push_back(I.nindex());
-            ind.push_back(0);
+            n_[j] = v_[j].nindex();
             }
         }
 
@@ -135,20 +136,20 @@ class QCounter
     QCounter& 
     operator++()
         {
-        int nn = n.size();
-        ind[0]++;
-        if(ind[0] >= n[0])
+        int nn = n_.size();
+        ind_[0]++;
+        if(ind_[0] >= n_[0])
             {
             for(int j = 1; j < nn; j++)
                 {
-                ind[j-1] = 0;
-                ++ind[j];
-                if(ind[j] < n[j]) break;
+                ind_[j-1] = 0;
+                ++ind_[j];
+                if(ind_[j] < n_[j]) break;
                 }
             }
-        if(ind[nn-1] >= n[nn-1])
+        if(ind_[nn-1] >= n_[nn-1])
             {
-            ind = std::vector<int>(nn,0);
+            ind_ = std::vector<int>(nn,0);
             don = true;
             }
 
@@ -156,29 +157,25 @@ class QCounter
         }
 
     void 
-    getVecInd(const std::vector<IQIndex>& v, std::vector<Index>& vind, QN& q) const
+    getVecInd(std::vector<Index>& vind, QN& q) const
         {
-        q = QN(); vind.clear();
-        for(unsigned int i = 0; i < ind.size(); ++i)
+        vind.resize(v_.size());
+        q = QN(); 
+        for(size_t i = 0; i < ind_.size(); ++i)
             {
-            const int j = ind[i]+1;
-            if(GET(v,i).nindex() < j)
-                {
-                for(unsigned int k = 0; k < n.size(); ++k) std::cerr << boost::format("n[%d] = %d\n")%k%n[k];
-                std::cout << boost::format("i=%d, j=%d, v[i].nindex()=%d\n")%i%j%v[i].nindex();
-                Error("bad v[i].iq in getVecInd");
-                }
-            vind.push_back(v[i].index(j));
-            q += v[i].qn(j)*v[i].dir();
+            const IQIndex& I = v_[i];
+            int j = ind_[i]+1;
+            vind[i] = I.index(j);
+            q += I.qn(j)*I.dir();
             }
-        } //void QCounter::getVecInd
+        }
 
     private:
 
+    const std::vector<IQIndex>& v_;
     bool don;
+    std::vector<int> n_, ind_;
 
-    std::vector<int> n,
-                     ind;
     };
 
 inline IQCombiner::
@@ -219,8 +216,6 @@ void IQCombiner::
 reset()
     {
     left.clear();
-    //setcomb.clear();
-    //rightcomb.clear();
     initted = false;
     }
 
@@ -261,9 +256,6 @@ init(std::string rname, IndexType type,
     else
         { rdir = dir; }
 
-    //setcomb.clear();
-    //rightcomb.clear();
-
     //Construct individual Combiners
     QCounter c(left);
     std::vector<inqn> iq;
@@ -271,21 +263,15 @@ init(std::string rname, IndexType type,
         {
         std::vector<Index> vind;
         QN q;
-        c.getVecInd(left, vind, q);		// updates vind and q
+        c.getVecInd(vind, q); // updates vind and q
         q *= -rdir;
 
         combs.push_back(Combiner());
         Combiner& co = combs.back();
-        Foreach(const Index& i, vind)
-            { 
-            co.addleft(i); 
-            //rss += i.uniqueReal(); 
-            }
+        co.addleft(vind);
         co.init(rname+q.toString(),type,rdir,primelevel);
 
         iq.push_back(inqn(co.right(),q));
-        //setcomb[ApproxReal(rss)] = co;
-        //rightcomb[co.right()] = co;
         }
     if(do_condense) 
         {
@@ -312,12 +298,7 @@ operator IQTensor() const
     std::vector<IQIndex> iqinds(left);
     iqinds.push_back((do_condense ? ucright_ : right_));
     IQTensor res(iqinds);
-    /*
-    for(std::map<ApproxReal,Combiner>::const_iterator it = setcomb.begin();
-        it != setcomb.end(); 
-        ++it)
-        { res.insert(it->second); }
-    */
+
     Foreach(const Combiner& co, combs)
         {
         //Here we are using the fact that Combiners
@@ -428,36 +409,39 @@ operator<<(std::ostream & s, const IQCombiner & c)
 
 inline
 void IQCombiner::
-product(IQTensor t, IQTensor& res) const
+product(IQTensor T, IQTensor& res) const
     {
     init();
     std::vector<IQIndex> iqinds;
 
     int j;
-    //t has right IQIndex, expand it
-    if((j = t.findindex(right_)) != 0)
+    if((j = T.findindex(right_)) != 0)
         {
-        IQTensor t_uncondensed;
+        //
+        //T has right IQIndex, expand it
+        //
+
+        IQTensor T_uncondensed;
         if(do_condense) 
             { 
-            cond.product(t,t_uncondensed); 
-            j = t_uncondensed.findindex(ucright_);
+            cond.product(T,T_uncondensed); 
+            j = T_uncondensed.findindex(ucright_);
             }
-        const IQTensor& t_ = (do_condense ? t_uncondensed : t);
+        const IQTensor& T_ = (do_condense ? T_uncondensed : T);
         const IQIndex& r = (do_condense ? ucright_ : right_);
 
         if(Globals::checkArrows())
-            if(t_.index(j).dir() == r.dir())
+            if(T_.index(j).dir() == r.dir())
                 {
-                std::cerr << "IQTensor = " << t_ << std::endl;
+                std::cerr << "IQTensor = " << T_ << std::endl;
                 std::cerr << "IQCombiner = " << *this << std::endl;
-                std::cerr << "IQIndex from IQTensor = " << t_.index(j) << std::endl;
+                std::cerr << "IQIndex from IQTensor = " << T_.index(j) << std::endl;
                 std::cerr << "(Right) IQIndex from IQCombiner = " << r << std::endl;
                 Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
                 }
-        copy(t_.const_iqind_begin(),t_.const_iqind_begin()+j-1,std::back_inserter(iqinds));
+        copy(T_.const_iqind_begin(),T_.const_iqind_begin()+j-1,std::back_inserter(iqinds));
         copy(left.begin(),left.end(),std::back_inserter(iqinds));
-        copy(t_.const_iqind_begin()+j,t_.const_iqind_end(),std::back_inserter(iqinds));
+        copy(T_.const_iqind_begin()+j,T_.const_iqind_end(),std::back_inserter(iqinds));
 
         res = IQTensor(iqinds);
 
@@ -467,7 +451,7 @@ product(IQTensor t, IQTensor& res) const
             rightcomb[co.right()] = &co;
             }
 
-        Foreach(const ITensor& tt, t_.itensors())
+        Foreach(const ITensor& tt, T_.itensors())
             {
             for(int k = 1; k <= tt.r(); ++k)
                 {
@@ -482,10 +466,12 @@ product(IQTensor t, IQTensor& res) const
         }
     else
         {
-        //t has left IQIndex's, combine them
+        //
+        //T has left IQIndex's, combine them
+        //
 
-        //res will have all IQIndex's of t not in the left of c
-        Foreach(const IQIndex& I, t.iqinds()) 
+        //res will have all IQIndex's of T not in the left of c
+        Foreach(const IQIndex& I, T.iqinds()) 
             { 
             if(!hasindex(I)) iqinds.push_back(I); 
             }
@@ -498,10 +484,10 @@ product(IQTensor t, IQTensor& res) const
         //Check left indices
         Foreach(const IQIndex& I, left)
             {
-            if((j = t.findindex(I)) == 0)
+            if((j = T.findindex(I)) == 0)
                 {
                 std::cerr << "Could not find left IQIndex " << I << "\n";
-                t.printIndices("t");
+                T.printIndices("T");
                 std::cerr << "Left indices\n";
                 for(size_t j = 0; j < left.size(); ++j)
                     { 
@@ -513,11 +499,11 @@ product(IQTensor t, IQTensor& res) const
                 {
                 //Check arrow directions
                 if(Globals::checkArrows())
-                    if(t.index(j).dir() == I.dir())
+                    if(T.index(j).dir() == I.dir())
                         {
-                        std::cerr << "IQTensor = " << t << std::endl;
+                        std::cerr << "IQTensor = " << T << std::endl;
                         std::cerr << "IQCombiner = " << *this << std::endl;
-                        std::cerr << "IQIndex from IQTensor = " << t.index(j) << std::endl;
+                        std::cerr << "IQIndex from IQTensor = " << T.index(j) << std::endl;
                         std::cerr << "(Left) IQIndex from IQCombiner = " << I << std::endl;
                         Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
                         }
@@ -525,6 +511,7 @@ product(IQTensor t, IQTensor& res) const
             }
 
         std::map<ApproxReal, const Combiner*> setcomb;
+
         typedef std::map<ApproxReal, const Combiner*>::const_iterator
         setcomb_const_it;
 
@@ -533,7 +520,7 @@ product(IQTensor t, IQTensor& res) const
             setcomb[co.uniqueReal()] = &co;
             }
 
-        for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
+        for(IQTensor::const_iten_it i = T.const_iten_begin(); i != T.const_iten_end(); ++i)
             {
             Real rse = 0;
             for(int k = 1; k <= i->r(); ++k)
@@ -568,7 +555,7 @@ product(IQTensor t, IQTensor& res) const
             cond.product(rcopy,res); 
             }
         }
-    } //void product(const IQTensor& t, IQTensor& res) const
+    } //void product(const IQTensor& T, IQTensor& res) const
 
 
 #endif
