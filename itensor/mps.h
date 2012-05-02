@@ -115,10 +115,14 @@ class MPSt
     NN() const { return N;}
 
     int 
-    right_lim() const { return r_orth_lim_; }
+    rightLim() const { return r_orth_lim_; }
+    void 
+    rightLim(int val) { r_orth_lim_ = val; }
 
     int 
-    left_lim() const { return l_orth_lim_; }
+    leftLim() const { return l_orth_lim_; }
+    void 
+    leftLim(int val) { l_orth_lim_ = val; }
 
     IQIndex 
     si(int i) const { return model_->si(i); }

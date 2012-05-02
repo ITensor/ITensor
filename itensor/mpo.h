@@ -69,8 +69,8 @@ class MPOt : private MPSt<Tensor>
     using Parent::si;
     using Parent::siP;
 
-    using Parent::right_lim;
-    using Parent::left_lim;
+    using Parent::rightLim;
+    using Parent::leftLim;
 
     using Parent::AA;
     using Parent::AAnc;

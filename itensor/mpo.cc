@@ -259,14 +259,14 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
     if(maxm < 0) maxm = x.maxm();
     int N = x.NN();
     if(K.NN() != N) Error("Mismatched N in napplyMPO");
-    if(x.right_lim() > 3)
+    if(x.rightLim() > 3)
         {
-        Error("bad right_lim for x");
+        Error("bad rightLim for x");
         }
-    if(!allow_arb_position && K.right_lim() > 3)
+    if(!allow_arb_position && K.rightLim() > 3)
         {
         //cerr << "K is " << endl << K << endl;
-        Error("bad right_lim for K");
+        Error("bad rightLim for K");
         }
 
     SVDWorker svd = K.svd();
