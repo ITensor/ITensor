@@ -285,7 +285,9 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
             ++mdisc;
             --m;
             }
-        docut = (mdisc > 0 ? (alleig[mdisc-1] + alleig[mdisc])*0.5 : -1) - 1E-30;
+        docut = (mdisc > 0 
+                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
+                : -1);
         }
     else
 	    {
@@ -303,8 +305,8 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
             --m;
             }
         docut = (mdisc > 0 
-                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 
-                : -1) - 1E-30;
+                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
+                : -1);
         svdtruncerr = (alleig.back() == 0 ? 0 : svdtruncerr/scale);
 	    }
 
@@ -363,7 +365,7 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         Vector& thisD = dvector.at(itenind);
 
         int this_m = 1;
-        while(this_m <= thisD.Length() && sqr(thisD(this_m)) >= docut) 
+        while(this_m <= thisD.Length() && sqr(thisD(this_m)) > docut) 
             {
             if(thisD(this_m) < 0) thisD(this_m) = 0;
             ++this_m;
@@ -670,7 +672,9 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
             ++mdisc;
             --m;
             }
-        docut = (mdisc > 0 ? (alleig[mdisc-1] + alleig[mdisc])*0.5 : -1) - 1E-30;
+        docut = (mdisc > 0 
+                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
+                : -1);
         }
     else
 	    {
@@ -688,8 +692,8 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
             --m;
             }
         docut = (mdisc > 0 
-                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 
-                : -1) - 1E-30;
+                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
+                : -1);
         svdtruncerr = (alleig.back() == 0 ? 0 : svdtruncerr/scale);
 	    }
 
@@ -747,7 +751,7 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
         Matrix& thisU = mmatrix.at(itenind);
 
         int this_m = 1;
-        while(this_m <= thisD.Length() && thisD(this_m) >= docut) 
+        while(this_m <= thisD.Length() && thisD(this_m) > docut) 
             {
             if(thisD(this_m) < 0) thisD(this_m) = 0;
             ++this_m;
