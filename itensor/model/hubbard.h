@@ -76,6 +76,18 @@ class Hubbard : public Model
     makeCdagdn(int i) const;
 
     virtual IQTensor
+    makeAup(int i) const;
+
+    virtual IQTensor
+    makeAdagup(int i) const;
+
+    virtual IQTensor
+    makeAdn(int i) const;
+
+    virtual IQTensor
+    makeAdagdn(int i) const;
+
+    virtual IQTensor
     makeFermiPhase(int i) const;
 
     virtual IQTensor
@@ -271,6 +283,42 @@ makeCdagdn(int i) const
     Cdagdn(Emp(i),DnP(i)) = 1;
     Cdagdn(Up(i),UpDnP(i)) = 1;
     return Cdagdn;
+    }
+
+inline IQTensor Hubbard::
+makeAup(int i) const
+    {
+    IQTensor Aup(conj(si(i)),siP(i));
+    Aup(Up(i),EmpP(i)) = 1;
+    Aup(UpDn(i),DnP(i)) = 1;
+    return Aup;
+    }
+
+inline IQTensor Hubbard::
+makeAdagup(int i) const
+    {
+    IQTensor Adagup(conj(si(i)),siP(i));
+    Adagup(Emp(i),UpP(i)) = 1;
+    Adagup(Dn(i),UpDnP(i)) = 1;
+    return Adagup;
+    }
+
+inline IQTensor Hubbard::
+makeAdn(int i) const
+    {
+    IQTensor Adn(conj(si(i)),siP(i));
+    Adn(Dn(i),EmpP(i)) = 1;
+    Adn(UpDn(i),UpP(i)) = 1;
+    return Adn;
+    }
+
+inline IQTensor Hubbard::
+makeAdagdn(int i) const
+    {
+    IQTensor Adagdn(conj(si(i)),siP(i));
+    Adagdn(Emp(i),DnP(i)) = 1;
+    Adagdn(Up(i),UpDnP(i)) = 1;
+    return Adagdn;
     }
 
 inline IQTensor Hubbard::

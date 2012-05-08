@@ -83,6 +83,12 @@ class Model
     Cdag(int i) const { return makeCdag(i); }
 
     IQTensor
+    A(int i) const { return makeA(i); }
+
+    IQTensor
+    Adag(int i) const { return makeAdag(i); }
+
+    IQTensor
     fermiPhase(int i) const { return makeFermiPhase(i); }
 
     //Hubbard Model Operators -----------
@@ -110,6 +116,18 @@ class Model
 
     IQTensor
     Cdagdn(int i) const { return makeCdagdn(i); }
+
+    IQTensor
+    Aup(int i) const { return makeAup(i); }
+
+    IQTensor
+    Adagup(int i) const { return makeAdagup(i); }
+
+    IQTensor
+    Adn(int i) const { return makeAdn(i); }
+
+    IQTensor
+    Adagdn(int i) const { return makeAdagdn(i); }
 
     //Other Methods -----------------------
 
@@ -165,6 +183,12 @@ class Model
     makeCdag(int i) const;
 
     virtual IQTensor 
+    makeA(int i) const;
+
+    virtual IQTensor 
+    makeAdag(int i) const;
+
+    virtual IQTensor 
     makeFermiPhase(int i) const;
 
     virtual IQTensor 
@@ -190,6 +214,18 @@ class Model
 
     virtual IQTensor 
     makeCdagdn(int i) const;
+
+    virtual IQTensor 
+    makeAup(int i) const;
+
+    virtual IQTensor 
+    makeAdagup(int i) const;
+
+    virtual IQTensor 
+    makeAdn(int i) const;
+
+    virtual IQTensor 
+    makeAdagdn(int i) const;
 
 
     protected:
@@ -268,6 +304,20 @@ makeCdag(int i) const
     }
 
 inline IQTensor Model::
+makeA(int i) const 
+    { 
+    Error("A not implemented"); 
+    return IQTensor();
+    }
+
+inline IQTensor Model::
+makeAdag(int i) const 
+    { 
+    Error("Adag not implemented"); 
+    return IQTensor(); 
+    }
+
+inline IQTensor Model::
 makeFermiPhase(int i) const 
     { 
     Error("fermiPhase not implemented"); 
@@ -327,6 +377,34 @@ inline IQTensor Model::
 makeCdagdn(int i) const 
     { 
     Error("Cdagdn not implemented"); 
+    return IQTensor();
+    }
+
+inline IQTensor Model::
+makeAup(int i) const 
+    { 
+    Error("Aup not implemented"); 
+    return IQTensor(); 
+    }
+
+inline IQTensor Model::
+makeAdagup(int i) const 
+    { 
+    Error("Adagup not implemented"); 
+    return IQTensor();
+    }
+
+inline IQTensor Model::
+makeAdn(int i) const 
+    { 
+    Error("Adn not implemented"); 
+    return IQTensor();
+    }
+
+inline IQTensor Model::
+makeAdagdn(int i) const 
+    { 
+    Error("Adagdn not implemented"); 
     return IQTensor();
     }
 
