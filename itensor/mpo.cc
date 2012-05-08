@@ -129,6 +129,14 @@ checkQNs(const IQMPO& psi)
             std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
             Error("QNs not well defined");
             }
+        try {
+            checkQNs(psi.AA(i));
+            }
+        catch(const ITError& e)
+            {
+            std::cerr << "At i = " << i << "\n";
+            throw e;
+            }
         if(psi.AA(i).div() != zero)
             {
             std::cerr << "At i = " << i << "\n";
