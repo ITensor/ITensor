@@ -223,6 +223,12 @@ davidson(const LocalT& A, Tensor& phi) const
 
             //Calculate residual q
             q += (-lambda)*phi;
+
+            if(U(1,1) < 0)
+                {
+                phi *= -1;
+                q *= -1;
+                }
             }
 
         //Check convergence
@@ -289,7 +295,7 @@ davidson(const LocalT& A, Tensor& phi) const
             proj *= -1;
 
             d += proj;
-            d *= 1.0/(d.norm()+1E-33);
+            d *= 1./(d.norm()+1E-33);
             }
 
         last_lambda = lambda;
