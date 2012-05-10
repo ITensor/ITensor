@@ -299,6 +299,21 @@ indIncPrime(const IQIndex& I, int inc)
 void IQIndexSet::
 noprimeind(const IQIndex& I)
     {
+#ifdef DEBUG
+    int nmatch = 0;
+	for(size_t j = 0; j < index_.size(); ++j) 
+	    if(index_[j].noprime_equals(I))
+            {
+            ++nmatch;
+            }
+    if(nmatch > 1)
+        {
+        Print(*this);
+        Print(I);
+        Error("Calling noprimeind would lead to two copies of I");
+        }
+#endif
+
 	for(size_t j = 0; j < index_.size(); ++j) 
 	    if(index_[j] == I) 
 		{
@@ -307,6 +322,8 @@ noprimeind(const IQIndex& I)
         ur_ += index_[j].uniqueReal();
 		return;
 		}
+    Print(I);
+    Error("IQIndexSet does not contain IQIndex I");
     }
 
 //
