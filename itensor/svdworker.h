@@ -340,6 +340,9 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
     typedef typename Tensor::CombinerT 
     CombinerT;
 
+    if(AA.vecSize() == 0) 
+        throw ResultIsZero("denmatDecomp: AA.vecSize == 0");
+
     //Add in noise term
     if(noise_ > 0 && PH.isNotNull())
         {
@@ -413,15 +416,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     CombinerT;
 
     if(AA.vecSize() == 0) 
-        {
-        A *= 0;
-        B *= 0;
-	std::cout << "Warning: AA.vecSize == 0, returning" << std::endl;
-
-        eigsKept_.at(b).ReDimension(1);
-        eigsKept_.at(b) = 1;
-        return;
-        }
+        throw ResultIsZero("denmatDecomp: AA.vecSize == 0");
 
     IndexT mid; 
     try {
