@@ -41,7 +41,7 @@ _merror(const char *s)
     {
     cerr << "Matrix Error: " << s << endl;
     cout << std::flush;
-    abort();
+    throw MatrixError(s);
     }
 
 void VectorRef::Put0(int i, Real a)

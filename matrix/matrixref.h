@@ -15,6 +15,17 @@ inline void trade(int & i, int & j) { int k = i; i = j; j = k; }
 
 void _merror(const char *);		// error message and exit 
 
+class MatrixError : public ITError
+    {
+public:
+    typedef ITError
+    Parent;
+
+    MatrixError(const std::string& message) 
+        : Parent(message)
+        { }
+    };
+
 class Vector;
 class MatrixRef;
 class MatrixVectorRes;

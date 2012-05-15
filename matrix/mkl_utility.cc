@@ -1463,10 +1463,10 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
     MKL_INT info = 0;
     dsyevd_(&jobz,&uplo,&n,Z.Store(),&n,D.Store(),QWORK,&qlwork,QIWORK,&qliwork,&info);
 	if(info != 0)
-    {
+        {
         cerr << "info is " << info << endl;
         _merror("Error condition in dsyev_ (query call).");
-    }
+        }
 
     //Call routine
     MKL_INT lwork = (MKL_INT) QWORK[0];
@@ -1476,10 +1476,10 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
     info = 0;
     dsyevd_(&jobz,&uplo,&n,Z.Store(),&n,D.Store(),WORK,&lwork,IWORK,&liwork,&info);
 	if(info != 0)
-    {
+        {
         cerr << "info is " << info << endl;
         _merror("Error condition in dsyev_.");
-    }
+        }
     Z = Z.t();
 
 }
