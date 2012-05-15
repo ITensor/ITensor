@@ -59,6 +59,8 @@ class Sweeps
     niter(int sw) const { return Niter_.at(sw); }
     void 
     setNiter(int sw, int val) { Niter_.at(sw) = val; }
+    void 
+    setNiter(int val) { Niter_.assign(Nsweep_+1,val); }
 
     int
     numSiteCenter() const { return num_site_center_; }
