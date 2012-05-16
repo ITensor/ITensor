@@ -13,7 +13,7 @@ SOURCES=index.cc indexset.cc itensor.cc itsparse.cc \
         svdworker.cc mps.cc mpo.cc dmrg.cc
 
 HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
-        indexset.h itensor.h iqindex.h iqindexset.h iqtensor.h \
+        indexset.h itensor.h qn.h iqindex.h iqindexset.h iqtensor.h \
         condenser.h combiner.h iqcombiner.h \
         svdworker.h mps.h mpo.h DMRGOpts.h dmrg.h core.h BaseDMRGOpts.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
@@ -96,7 +96,7 @@ itensor.o: $(DEPHEADERS)
 DEPHEADERS+= itsparse.h
 itsparse.o: $(DEPHEADERS)
 .debug_objs/itsparse.o: $(DEPHEADERS)
-DEPHEADERS+= iqindex.h
+DEPHEADERS+= qn.h iqindex.h
 iqindex.o: $(DEPHEADERS)
 .debug_objs/iqindex.o: $(DEPHEADERS)
 DEPHEADERS+= iqindexset.h

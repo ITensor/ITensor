@@ -6,6 +6,7 @@
 #define __IQINDEX_H
 #include "index.h"
 #include "itensor.h"
+#include "qn.h"
 
 /*
 * Conventions regarding arrows:
@@ -31,7 +32,6 @@
 */
 
 // Forward declarations
-class QN;
 struct inqn;
 class IQIndexDat;
 struct IQIndexVal;
@@ -294,128 +294,6 @@ class IQIndex
 
     }; //class IQIndex
 
-
-
-//
-// QN
-//
-
-class QN
-    {
-    public:
-
-    QN(int sz=0,int Nf=0) 
-        : _sz(sz), _Nf(Nf), _Nfp(abs(Nf%2)) 
-        { }
-
-    QN(int sz,int Nf,int Nfp) 
-        : _sz(sz), _Nf(Nf), _Nfp(abs(Nfp%2))
-        { assert(_Nf==0 || abs(_Nf%2) == _Nfp); }
-
-    QN(std::istream& s) { read(s); }
-
-    int 
-    sz() const { return _sz; }
-
-    int 
-    Nf() const { return _Nf; }
-
-    int 
-    Nfp() const { assert(_Nfp == 0 || _Nfp == 1); return _Nfp; }
-
-    int 
-    sign() const { return (_Nfp == 0 ? +1 : -1); }
-
-    void 
-    write(std::ostream& s) const 
-        { 
-        s.write((char*)&_sz,sizeof(_sz)); 
-        s.write((char*)&_Nf,sizeof(_Nf)); 
-        s.write((char*)&_Nfp,sizeof(_Nfp)); 
-        }
-
-    void 
-    read(std::istream& s) 
-        { 
-        s.read((char*)&_sz,sizeof(_sz)); 
-        s.read((char*)&_Nf,sizeof(_Nf)); 
-        s.read((char*)&_Nfp,sizeof(_Nfp)); 
-        }
-
-    QN 
-    operator+(const QN &other) const
-        { QN res(*this); res+=other; return res; }
-
-    QN 
-    operator-(const QN &other) const
-        { QN res(*this); res-=other; return res; }
-
-    QN& 
-    operator+=(const QN &other)
-        {
-        _sz+=other._sz; _Nf+=other._Nf; _Nfp = abs(_Nfp+other._Nfp)%2;
-        return *this;
-        }
-
-    QN& 
-    operator-=(const QN &other)
-        {
-        _sz-=other._sz; _Nf-=other._Nf; _Nfp = abs(_Nfp-other._Nfp)%2;
-        return *this;
-        }
-
-    QN 
-    operator-() const  
-        { return QN(-_sz,-_Nf,_Nfp); }
-    
-    QN 
-    negated() const { return QN(-_sz,-_Nf,_Nfp); }
-
-    //Multiplication and division should only be used to change the sign
-    QN& 
-    operator*=(int i) { assert(i*i == 1); _sz*=i; _Nf*=i; return *this; }
-
-    QN 
-    operator*(int i) const { QN res(*this); res*=i; return res; }
-
-    QN 
-    operator/(int i) const { QN res(*this); res*=i; return res; }
-
-    std::string 
-    toString() const
-        { return (boost::format("(%+d:%d)")%_sz%_Nf).str(); }
-
-    inline friend std::ostream& 
-    operator<<(std::ostream &o, const QN &q)
-        { return o<< boost::format("sz = %d, Nf = %d, fp = %s") % q.sz() % q.Nf() % (q.sign() < 0 ? "-" : "+"); }
-
-    void 
-    print(std::string name = "") const
-        { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
-
-    private:
-
-    int _sz, 
-        _Nf, 
-        _Nfp; //_Nfp stands for fermion number parity, and tracks whether Nf is even or odd
-    };
-
-inline bool 
-operator==(const QN &a,const QN &b)
-    { return a.sz() == b.sz() && a.Nf() == b.Nf() && a.Nfp() == b.Nfp(); }
-
-inline bool 
-operator!=(const QN &a,const QN &b)
-    { return a.sz() != b.sz() || a.Nf() != b.Nf() || a.Nfp() != b.Nfp(); }
-
-inline bool 
-operator<(const QN &a,const QN &b)
-    { return a.sz() < b.sz() || (a.sz() == b.sz() && a.Nf() < b.Nf()) 
-             || (a.sz() == b.sz() && a.Nf() == b.Nf() && a.Nfp() < b.Nfp()); }
-
-inline QN 
-operator*(int i,const QN& a)
-    { return a*i; }
 
 
 
