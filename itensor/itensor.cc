@@ -1562,13 +1562,13 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
         }
 
 #ifdef COLLECT_PRODSTATS
-    if(L.rn_ > R.rn_) 
+    if(L.rn() > R.rn()) 
         {
-        ++(Prodstats::stats().global[std::make_pair(L.rn_,R.rn_)]);
+        ++(Prodstats::stats().global[std::make_pair(L.rn(),R.rn())]);
         }
     else 
         {
-        ++(Prodstats::stats().global[std::make_pair(R.rn_,L.rn_)]);
+        ++(Prodstats::stats().global[std::make_pair(R.rn(),L.rn())]);
         }
     ++Prodstats::stats().total;
     if(L_is_matrix) ++Prodstats::stats().did_matrix;
