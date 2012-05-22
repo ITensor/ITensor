@@ -1646,8 +1646,8 @@ operator+=(const IQTensor& other)
     IQTensor& This = *this;
     if(fabs(This.uniqueReal()-other.uniqueReal()) > 1.0e-11) 
         {
-        cout << "This is " << This;
-        cout << "other is " << other;
+        PrintIndices(This);
+        PrintIndices(other);
         Error("bad match unique real in IQTensor::operator+=");
         }
 
