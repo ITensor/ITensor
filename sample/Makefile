@@ -50,6 +50,12 @@ iqdmrg: iqdmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 iqdmrg-g: mkdebugdir .debug_objs/iqdmrg.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/iqdmrg.o -o iqdmrg-g $(LIBGFLAGS)
 
+dmrg_table: dmrg_table.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) dmrg_table.o -o dmrg_table $(LIBFLAGS)
+
+dmrg_table-g: mkdebugdir .debug_objs/dmrg_table.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/dmrg_table.o -o dmrg_table-g $(LIBGFLAGS)
+
 mkdebugdir:
 	mkdir -p .debug_objs
 

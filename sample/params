@@ -1,0 +1,19 @@
+basic
+    {
+
+    N = 100
+
+    nsweeps = 5
+    sweeps
+        {
+        maxm  minm  cutoff  niter  noise
+        50    50    1E-12   9      1E-7
+        50    50    1E-12   8      1E-8
+        100   100   1E-12   7      1E-10
+        150   150   1E-12   4      0
+        150   150   1E-12   4      0
+        }
+
+    quiet = no
+
+    }
