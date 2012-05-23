@@ -68,7 +68,7 @@ Partition(int N, int Nb)
     :
     N_(N),
     Nb_(Nb),
-    bound_(Nb_-1)
+    bound_(Nb_)
     {
     //Enlarge first block if N_ not a
     //multiple of Nb_
@@ -87,7 +87,7 @@ Partition(int N, int Nb, int bound_size)
     :
     N_(N),
     Nb_(Nb),
-    bound_(Nb_-1)
+    bound_(Nb_)
     {
     //Set requested boundary size
     bound_.at(0) = bound_size;
