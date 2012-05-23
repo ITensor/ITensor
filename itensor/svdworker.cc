@@ -547,7 +547,10 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
         //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
         Real maxLogNum = -200;
         Foreach(const ITensor& t, rho.itensors())
+	    {
+	    t.scaleOutNorm();
             maxLogNum = max(maxLogNum,t.scale().logNum());
+	    }
         refNorm_ = LogNumber(maxLogNum,1);
         }
     //DO_IF_DEBUG(cout << "refNorm = " << refNorm_ << endl; )
@@ -586,7 +589,7 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
         EigenValues(M,d,UU);
         d *= -1;
 
-        d *= refNorm_.real();
+        // d *= refNorm_.real();	// SRW 5/23/12
 
         for(int j = 1; j <= n; ++j) 
             alleig.push_back(d(j));
@@ -618,6 +621,8 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
             Error("UU not unitary in diag_denmat");
             }
         
+	/*
+	   Uses refNorm_.real()  srw 
         if(fabs(d.sumels() + Trace(M)*refNorm_.real())/(fabs(d.sumels())+fabs(Trace(M)*refNorm_.real())) 
             > 1E-5)
             {
@@ -625,6 +630,7 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
                      % d.sumels()        % (Trace(M)*refNorm_.real());
             Error("Total eigs != trace");
             }
+	    */
 
         /*
         Matrix DD(n,n); DD.TreatAsVector() = 0;
@@ -1180,7 +1186,10 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
 	{
         Real maxLogNum = -200;
         Foreach(const ITensor& t, rho.itensors())
+	    {
+	    t.scaleOutNorm();
 	    maxLogNum = max(maxLogNum,t.scale().logNum());
+	    }
         refNorm_ = LogNumber(maxLogNum,1);
 	}
     //1. Diagonalize each ITensor within rho

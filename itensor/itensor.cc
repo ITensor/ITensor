@@ -115,9 +115,9 @@ operator<<(ostream & s, const ITensor & t)
             {
             Real nrm = t.norm();
             if(nrm >= 1E-2)
-                s << format(" (L=%d,N=%.2f)\n") % t.vecSize() % nrm;
+                s << format(" (L=%d,N=%.2f,Nv=%.2f)\n") % t.vecSize() % nrm % Norm(t.p->v);
             else
-                s << format(" (L=%d,N=%.1E)\n") % t.vecSize() % nrm;
+                s << format(" (L=%d,N=%.1E,Nv=%.1E)\n") % t.vecSize() % nrm % Norm(t.p->v);
             }
         else
             {
