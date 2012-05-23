@@ -56,9 +56,9 @@ class LocalMPO
     expect(const Tensor& phi) const { return lop_.expect(phi); }
 
     Tensor
-    deltaRho(const Tensor& rho, 
+    deltaRho(const Tensor& AA, 
              const CombinerT& comb, Direction dir) const
-        { return lop_.deltaRho(rho,comb,dir); }
+        { return lop_.deltaRho(AA,comb,dir); }
 
     Tensor
     deltaPhi(const Tensor& phi) const { return lop_.deltaPhi(phi); }

@@ -467,17 +467,20 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     //Apply combiner
     comb.doCondense(true);
     comb.init(mid.rawname());
-    Tensor AAc; comb.product(AA,AAc);
 
-    const IndexT& active = comb.right();
+    //Form density matrix
+    Tensor AAc; 
+    comb.product(AA,AAc);
 
     Tensor AAcc = conj(AAc); 
-    AAcc.primeind(active); 
+    AAcc.primeind(comb.right()); 
+
     Tensor rho = AAc*AAcc; 
 
+    //Add noise term if requested
     if(noise_ > 0 && PH.isNotNull())
         {
-        rho += noise_*PH.deltaRho(rho,comb,dir);
+        rho += noise_*PH.deltaRho(AA,comb,dir);
         rho *= 1./trace(rho);
         }
 
@@ -493,7 +496,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     IndexT newmid;
     Tensor U;
-    if(AAc.isComplex())
+    if(AA.isComplex())
         truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),newmid,U);
     else
         truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),newmid,U);

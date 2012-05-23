@@ -32,7 +32,7 @@ class LocalMPOSet
     expect(const Tensor& phi) const;
 
     Tensor
-    deltaRho(const Tensor& rho, 
+    deltaRho(const Tensor& AA, 
              const CombinerT& comb, Direction dir) const;
 
     void
@@ -130,13 +130,13 @@ expect(const Tensor& phi) const
 
 template <class Tensor>
 Tensor inline LocalMPOSet<Tensor>::
-deltaRho(const Tensor& rho,
+deltaRho(const Tensor& AA,
          const CombinerT& comb, Direction dir) const
     {
-    Tensor delta = lmpo_.at(1).deltaRho(rho,comb,dir);
+    Tensor delta = lmpo_.at(1).deltaRho(AA,comb,dir);
     for(size_t n = 2; n < lmpo_.size(); ++n)
         {
-        delta += lmpo_.at(n).deltaRho(rho,comb,dir);
+        delta += lmpo_.at(n).deltaRho(AA,comb,dir);
         }
     return delta;
     }

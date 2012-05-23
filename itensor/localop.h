@@ -242,39 +242,24 @@ expect(const Tensor& phi) const
 
 template <class Tensor>
 inline Tensor LocalOp<Tensor>::
-deltaRho(const Tensor& rho, const CombinerT& comb, Direction dir) const
+deltaRho(const Tensor& AA, const CombinerT& comb, Direction dir) const
     {
-    Tensor delta(rho);
-
-    const Tensor& Op1 = *Op1_;
-    const Tensor& Op2 = *Op2_;
-
-    Tensor A;
-    IndexT hl;
+    Tensor delta(AA);
     if(dir == Fromleft)
         {
-        A = Op1;
-        if(L().isNotNull()) A *= L();
-        hl = index_in_common(Op1,Op2,Link);
+        if(L().isNotNull()) delta *= L();
+        delta *= (*Op1_);
         }
     else //dir == Fromright
         {
-        A = Op2;
-        if(R().isNotNull()) A *= R();
-        hl = index_in_common(Op2,Op1,Link);
+        if(R().isNotNull()) delta *= R();
+        delta *= (*Op2_);
         }
 
-    A = conj(comb) * A;
-    A = primed(comb) * A;
-
-    A.mapprime(1,2);
-    delta *= A;
-    delta.mapprime(2,0);
-
-    A.conj();
-    A.primeind(comb.right());
-    delta *= A;
-    delta.mapprime(2,1);
+    delta.noprime();
+    delta = comb * delta;
+    
+    delta *= conj(primeind(delta,comb.right()));
 
     return delta;
     }
