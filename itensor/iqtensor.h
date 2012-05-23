@@ -726,11 +726,35 @@ mapElems(const Callable& f)
 Real 
 ReSingVal(const IQTensor& x);
 
-Real 
-Dot(const IQTensor& x, const IQTensor& y, bool doconj = true);
 
+//
+// Computes the scalar (inner) product of two
+// real-valued IQTensors
+//
+// Equivalent to computing x * y except the
+// result will be a Real number versus a 
+// rank 0 IQTensor
+//
+// N.B. this (real-valued) version of Dot
+// does not automatically call conj() on the 
+// first argument (unlike the complex version below)
+// so it may be necessary to call conj on one of the 
+// arguments to ensure compatible IQIndex arrows
+//
+Real 
+Dot(const IQTensor& x, const IQTensor& y);
+
+//
+// Computes the scalar (inner) product of two
+// possibly complex ITensors.
+//
+// This version of Dot conjugates the first entry
+// and is equivalent conj(x) * y except it yields
+// two real numbers (re and im) instead of a rank
+// zero IQTensor
+//
 void 
-Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool doconj = true);
+Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im);
 
 //Checks if all IQTensor blocks have the same divergence
 void 

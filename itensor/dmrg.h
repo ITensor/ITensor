@@ -280,7 +280,7 @@ Real doDavidson(Tensor& phi, const TensorSet& mpoh,
         lham.product(Phi,HPhi);
         Tensor Hphi(phi); Hphi.assignFromVec(HPhi);
         phi.assignFromVec(Phi);
-        return Dot(phi,Hphi);
+        return Dot(conj(phi),Hphi);
         }
     else
         {

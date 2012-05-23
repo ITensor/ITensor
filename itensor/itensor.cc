@@ -2469,60 +2469,54 @@ symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid, int& mink, 
     mink = m;
     }
 
-Real Dot(const ITensor& x, const ITensor& y, bool doconj)
+Real 
+Dot(const ITensor& x, const ITensor& y)
     {
-    if(x.isComplex())
-        {
-        ITensor res = (doconj ? conj(x) : x); res *= y;
-        if(res.r() != 1) Error("Bad Dot 234234");
-        return res.val0();
-        }
-    else if(y.isComplex())
-        {
-        ITensor res = x; res *= y;
-        if(res.r() != 1) Error("Bad Dot 37298789");
-        return res.val0();
-        }
-
-    ITensor res = x; res *= y;
+    ITensor res = x; 
+    res *= y;
     if(res.r() != 0) 
-        { x.print("x"); y.print("y"); Error("bad Dot"); }
+        { 
+        x.print("x"); 
+        y.print("y"); 
+        Error("Bad Dot, product is not a scalar"); 
+        }
     return res.val0();
     }
 
-void Dot(const ITensor& x, const ITensor& y, Real& re, Real& im, 
-                bool doconj)
+void 
+Dot(const ITensor& x, const ITensor& y, Real& re, Real& im)
     {
     if(x.isComplex())
         {
-        ITensor res = (doconj ? conj(x) : x); res *= y;
-        if(res.r() != 1) error("Bad Dot 334234");
+        ITensor res = conj(x);
+        res *= y;
+        if(res.r() != 1) 
+            {
+            x.print("x");
+            y.print("y");
+            Error("Bad Dot, product not a complex scalar");
+            }
         re = res(Index::IndReIm()(1));
         im = res(Index::IndReIm()(2));
         return;
         }
-    else if(y.isComplex())
+    else
+    if(y.isComplex())
         {
-        ITensor res = x; res *= y;
-        if(res.r() != 1) error("Bad Dot 47298789");
+        ITensor res = x;
+        res *= y;
+        if(res.r() != 1) 
+            {
+            x.print("x");
+            y.print("y");
+            Error("Bad Dot, product not a complex scalar");
+            }
         re = res(Index::IndReIm()(1));
         im = res(Index::IndReIm()(2));
         return;
         }
-    if(x.r() != y.r()) 
-        {
-        cerr << "x = " << x << "\n";
-        cerr << "y = " << y << "\n";
-        Error("bad Dot 122414");
-        }
-    ITensor res = x; res *= y;
-    if(res.r() != 0) 
-        {
-        cerr << "x = " << x << "\n";
-        cerr << "y = " << y << "\n";
-        Error("bad Dot 20234");
-        }
-    re = res.val0();
+
+    re = Dot(x,y);
     im = 0;
     }
 

@@ -1754,16 +1754,16 @@ ReSingVal(const IQTensor& x)
     }
 
 Real 
-Dot(const IQTensor& x, const IQTensor& y, bool doconj)
+Dot(const IQTensor& x, const IQTensor& y)
     {
-    IQTensor res(IQTensor::Sing()*(doconj ? conj(x) : x)*y);
+    IQTensor res(IQTensor::Sing() * x * y);
     return ReSingVal(res);
     }
 
 void 
-Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im, bool doconj)
+Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im)
     {
-    IQTensor res(IQTensor::Sing()*(doconj ? conj(x) : x)*y);
+    IQTensor res(IQTensor::Sing() * conj(x) * y);
     res.GetSingComplex(re,im);
     }
 
