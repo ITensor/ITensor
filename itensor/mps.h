@@ -578,7 +578,7 @@ psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
         }
     L = L * phi.AA(N);
 
-    Dot(primeind(psi.AA(N),psi.LinkInd(N-1)),L,re,im);
+    BraKet(primeind(psi.AA(N),psi.LinkInd(N-1)),L,re,im);
     }
 
 template <class MPSType>

@@ -36,6 +36,17 @@ struct inqn;
 class IQIndexDat;
 struct IQIndexVal;
 
+class ArrowError : public ITError
+    {
+public:
+    typedef ITError
+    Parent;
+
+    ArrowError(const std::string& message) 
+        : Parent(message)
+        { }
+    };
+
 
 //
 // IQIndex

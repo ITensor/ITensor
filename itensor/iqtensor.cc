@@ -1351,9 +1351,10 @@ operator*=(const IQTensor& other)
                     {
                     this->printIndices("*this");
                     other.printIndices("other");
-                    cerr << "IQIndex from *this = " << I << endl;
-                    cerr << "IQIndex from other = " << *f << endl;
-                    Error("Incompatible arrow directions in IQTensor::operator*=.");
+                    cout << "IQIndex from *this = " << I << endl;
+                    cout << "IQIndex from other = " << *f << endl;
+                    cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
+                    throw ArrowError("Incompatible arrow directions in IQTensor::operator*=.");
                     }
             for(size_t n = 0; n < I.iq().size(); ++n) 
                 { common_inds.insert(ApproxReal(I.iq()[n].index.uniqueReal())); }
@@ -1477,9 +1478,10 @@ operator/=(const IQTensor& other)
                     {
                     this->printIndices("*this");
                     other.printIndices("other");
-                    cerr << "IQIndex from *this = " << I << endl;
-                    cerr << "IQIndex from other = " << *f << endl;
-                    Error("Incompatible arrow directions in IQTensor::operator/=.");
+                    cout << "IQIndex from *this = " << I << endl;
+                    cout << "IQIndex from other = " << *f << endl;
+                    cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
+                    throw ArrowError("Incompatible arrow directions in IQTensor::operator/=.");
                     }
             for(size_t n = 0; n < I.iq().size(); ++n) 
                 { common_inds.insert(ApproxReal(I.iq()[n].index.uniqueReal())); }
@@ -1756,12 +1758,25 @@ ReSingVal(const IQTensor& x)
 Real 
 Dot(const IQTensor& x, const IQTensor& y)
     {
-    IQTensor res(IQTensor::Sing() * x * y);
+    IQTensor res(y);
+
+    int j = x.findindex(y.index(1));
+    if(x.index(j).dir() != y.index(1).dir())
+        {
+        //Arrows do match
+        res *= x;
+        }
+    else
+        {
+        //Arrows do not match, fix:
+        res *= conj(x);
+        }
+    res *= IQTensor::Sing();
     return ReSingVal(res);
     }
 
 void 
-Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im)
+BraKet(const IQTensor& x, const IQTensor& y, Real& re, Real& im)
     {
     IQTensor res(IQTensor::Sing() * conj(x) * y);
     res.GetSingComplex(re,im);

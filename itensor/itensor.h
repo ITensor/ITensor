@@ -876,12 +876,12 @@ mapElems(const Callable& f)
     }
 
 //
-// Computes the scalar (inner) product of two
-// real-valued ITensors
+// Computes the scalar/inner/dot product of two
+// real-valued ITensors.
 //
-// Equivalent to computing x * y except the
-// result will be a Real number versus a 
-// rank 0 ITensor
+// Equivalent to the ITensor contraction x * y 
+// except the result is a Real number instead
+// of a rank 0 ITensor.
 //
 Real 
 Dot(const ITensor& x, const ITensor& y);
@@ -890,13 +890,13 @@ Dot(const ITensor& x, const ITensor& y);
 // Computes the scalar (inner) product of two
 // possibly complex ITensors.
 //
-// This version of Dot conjugates the first entry
-// and is equivalent to conj(x) * y except that it
-// yields two real numbers (re and im) instead of
-// a rank 0 ITensor
+// The first argument gets conjugated so this method
+// is equivalent to the ITensor contraction conj(x) * y 
+// except the result is two real numbers (re and im) 
+// instead of a rank 0 ITensor.
 //
 void 
-Dot(const ITensor& x, const ITensor& y, Real& re, Real& im);
+BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im);
 
 inline ITensor 
 operator*(const IndexVal& iv1, const IndexVal& iv2) 

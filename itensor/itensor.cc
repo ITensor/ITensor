@@ -2484,7 +2484,7 @@ Dot(const ITensor& x, const ITensor& y)
     }
 
 void 
-Dot(const ITensor& x, const ITensor& y, Real& re, Real& im)
+BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im)
     {
     if(x.isComplex())
         {

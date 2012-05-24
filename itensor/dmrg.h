@@ -208,7 +208,7 @@ public:
         applyProjOp(psi,LeftTerm,RightTerm,MPOTerm,psip);
         Foreach(const ITensor& phi, other)
             {
-            Real re,im; Dot(phi,psi,re,im);
+            Real re,im; BraKet(phi,psi,re,im);
             if(fabs(im) < 1E-10)
                 { psip += (weight*re) * phi;}
             else

@@ -326,7 +326,7 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real
         }
     L *= phi.AA(N); L *= H.AA(N);
 
-    Dot(primed(psi.AA(N)),L,re,im);
+    BraKet(primed(psi.AA(N)),L,re,im);
     }
 template <class MPSType, class MPOType>
 Real 

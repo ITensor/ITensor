@@ -728,18 +728,16 @@ ReSingVal(const IQTensor& x);
 
 
 //
-// Computes the scalar (inner) product of two
-// real-valued IQTensors
+// Computes the scalar/inner/dot product of two
+// real-valued IQTensors.
 //
-// Equivalent to computing x * y except the
-// result will be a Real number versus a 
-// rank 0 IQTensor
+// Equivalent to the IQTensor contraction x * y 
+// except the result is a Real number versus a 
+// rank 0 IQTensor.
 //
-// N.B. this (real-valued) version of Dot
-// does not automatically call conj() on the 
-// first argument (unlike the complex version below)
-// so it may be necessary to call conj on one of the 
-// arguments to ensure compatible IQIndex arrows
+// N.B. even if the IQIndex arrows of the two
+// arguments don't match, the method will 
+// automatically correct them.
 //
 Real 
 Dot(const IQTensor& x, const IQTensor& y);
@@ -748,13 +746,13 @@ Dot(const IQTensor& x, const IQTensor& y);
 // Computes the scalar (inner) product of two
 // possibly complex ITensors.
 //
-// This version of Dot conjugates the first entry
-// and is equivalent conj(x) * y except it yields
-// two real numbers (re and im) instead of a rank
-// zero IQTensor
+// The first argument gets conjugated so this method
+// is equivalent to the IQTensor contraction conj(x) * y 
+// except it yields two real numbers (re and im) instead 
+// of a rank 0 IQTensor.
 //
 void 
-Dot(const IQTensor& x, const IQTensor& y, Real& re, Real& im);
+BraKet(const IQTensor& x, const IQTensor& y, Real& re, Real& im);
 
 //Checks if all IQTensor blocks have the same divergence
 void 

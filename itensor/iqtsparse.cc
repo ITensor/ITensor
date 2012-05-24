@@ -556,7 +556,8 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
                     PrintIndices(T);
                     cerr << "IQIndex from S = " << I << endl;
                     cerr << "IQIndex from T = " << *f << endl;
-                    Error("Incompatible arrow directions in IQTensor::operator*=.");
+                    cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
+                    throw ArrowError("Incompatible arrow directions in IQTensor::operator*=.");
                     }
             for(size_t n = 0; n < I.iq().size(); ++n) 
                 { common_inds.insert(ApproxReal(I.iq()[n].index.uniqueReal())); }

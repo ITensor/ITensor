@@ -8,7 +8,6 @@ using namespace std;
 using boost::format;
 using boost::array;
 
-
 void 
 intrusive_ptr_add_ref(IQIndexDat* pd) 
     { 
