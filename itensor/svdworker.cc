@@ -169,9 +169,21 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
         cout << format("Kept %d states in svd")% m << endl;
         cout << format("svdtruncerr = %.3E")%svdtruncerr << endl;
 
-        Vector Ds = DD*A.scale().real();
-        int stop = Ds.Length();
-        cout << "Eigs: ";
+
+        int stop = min(10,DD.Length());
+        Vector Ds = DD.SubVector(1,stop);
+
+        Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
+        if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
+            {
+            Ds *= A.scale().real();
+            cout << "Eigs: ";
+            }
+        else
+            {
+            cout << "Eigs (not including scale = " << A.scale() << "):";
+            }
+
         for(int j = 1; j <= stop; ++j)
             {
             cout << boost::format( (Ds(j) > 1E-6 && Ds(j) < 1E3) ? ("%.3f") : ("%.3E")) 
@@ -188,7 +200,16 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
     U = ITensor(ui,uL,UU.Columns(1,m));
     V = ITensor(vL,vi,VV.Rows(1,m));
 
-    Globals::lastd() = DD*A.scale().real();
+    Globals::lastd() = DD;
+
+    //Include A's scale to get the actual eigenvalues kept
+    //as long as the leading eigenvalue is within a few orders
+    //of magnitude of 1.0. Otherwise just report the scaled eigs.
+    Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
+    if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
+        {
+        Globals::lastd() *= A.scale().real();
+        }
 
     } // void SVDWorker::svdRank2
 
@@ -321,14 +342,30 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         cout << "doRelCutoff is " << (doRelCutoff_ ? "true" : "false") << endl;
         cout << "absoluteCutoff is " << (absoluteCutoff_ ? "true" : "false") << endl;
         cout << "refNorm is " << refNorm_ << endl;
-        int s = alleig.size();
+
+        const int s = alleig.size();
         const int max_show = 20;
         int stop = s-min(s,max_show);
-        cout << "Eigs: ";
+
+        //Include refNorm_ in printed eigs as long as
+        //the leading eig is within a few orders of magnitude
+        //of 1.0. Otherwise just print the scaled eigs.
+        Real orderMag = log(fabs(alleig.at(s-1))) + refNorm_.logNum();
+        Real real_fac = 1;
+        if(fabs(orderMag) < 5 && refNorm_.isFiniteReal())
+            {
+            real_fac = refNorm_.real();
+            cout << "Eigs: ";
+            }
+        else
+            {
+            cout << "Eigs [omitting scale factor " << refNorm_ << "]: \n";
+            }
+
         for(int j = s-1; j >= stop; --j)
             {
             cout << boost::format( (alleig.at(j) > 1E-6 && alleig.at(j) < 1E3) ? ("%.3f") : ("%.3E")) 
-                                % alleig[j];
+                                % (alleig[j] * real_fac);
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -447,7 +484,14 @@ diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
     EigenValues(R,D,UU); 
     D *= -1.0;
 
-    D *= rho.scale().real();
+    //Include rho's scale to get the actual eigenvalues kept
+    //as long as the leading eigenvalue is within a few orders
+    //of magnitude of 1.0. Otherwise just report the scaled eigs.
+    Real orderMag = log(fabs(D(1))) + rho.scale().logNum();
+    if(fabs(orderMag) < 5 && rho.scale().isFiniteReal())
+        {
+        D *= rho.scale().real();
+        }
 
     //Truncate
     int m = D.Length();
@@ -565,10 +609,8 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
     //1. Diagonalize each ITensor within rho.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
-    for(IQTensor::const_iten_it it = rho.const_iten_begin(); 
-        it != rho.const_iten_end(); ++it)
+    Foreach(const ITensor& t, rho.blocks())
         {
-        const ITensor& t = *it;
         if(!t.index(1).noprime_equals(t.index(2)))
             { 
             Print(rho); 
@@ -589,8 +631,6 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
         M *= -1;
         EigenValues(M,d,UU);
         d *= -1;
-
-        // d *= refNorm_.real();	// SRW 5/23/12
 
         for(int j = 1; j <= n; ++j) 
             alleig.push_back(d(j));
@@ -622,35 +662,6 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
             Error("UU not unitary in diag_denmat");
             }
         
-	/*
-	   Uses refNorm_.real()  srw 
-        if(fabs(d.sumels() + Trace(M)*refNorm_.real())/(fabs(d.sumels())+fabs(Trace(M)*refNorm_.real())) 
-            > 1E-5)
-            {
-            cerr << boost::format("d.sumels() = %.10f, Trace(M)*refNorm_.real() = %.10f\n")
-                     % d.sumels()        % (Trace(M)*refNorm_.real());
-            Error("Total eigs != trace");
-            }
-	    */
-
-        /*
-        Matrix DD(n,n); DD.TreatAsVector() = 0;
-        for(int j = 1; j <= n; ++j) DD(j,j) = -d(j);
-        Matrix nM = UU*DD*UU.t();
-        for(int r = 1; r <= n; ++r)
-        for(int c = r+1; c <= n; ++c)
-        {
-            if(fabs(M(r,c)) < 1E-16) continue;
-            if(fabs(nM(r,c)-M(r,c))/(fabs(nM(r,c))+fabs(M(r,c))) > 1E-3)
-            {
-                Print(M);
-                Print(nM);
-                cerr << boost::format("nM(r,c)=%.2E\n")%nM(r,c);
-                cerr << boost::format(" M(r,c)=%.2E\n")%M(r,c);
-                Error("Inaccurate diag");
-            }
-        }
-        */
 #endif //STRONG_DEBUG
         }
 
@@ -801,7 +812,16 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
     D.ReDimension(newmid.m());
     for(int i = 1; i <= newmid.m(); ++i) 
         D(i) = alleig.at(alleig.size()-i);
+
     Globals::lastd() = D;
+    //Include refNorm_ to get the actual eigenvalues kept
+    //as long as the leading eigenvalue is within a few orders
+    //of magnitude of 1.0. Otherwise just report the scaled eigs.
+    Real orderMag = log(fabs(D(1))) + refNorm_.logNum();
+    if(fabs(orderMag) < 5 && refNorm_.isFiniteReal())
+        {
+        Globals::lastd() *= refNorm_.real();
+        }
 
     return svdtruncerr;
 
