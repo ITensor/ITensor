@@ -429,12 +429,12 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     //If dir==None, put the O.C. on the side
     //that keeps mid's arrow the same
-    bool do_edge_case = true;
+    //bool do_edge_case = true;
     if(dir == None)
         {
         //std::cerr << boost::format("Arrow before = %s\n")%(mid.dir() == Out ? "Out" : "In");
         dir = (mid.dir() == Out ? Fromright : Fromleft);
-        do_edge_case = false;
+        //do_edge_case = false;
         }
 
     Tensor& to_orth = (dir==Fromleft ? A : B);
@@ -453,6 +453,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
             }
         }
 
+    /*
     //Check if we're at the edge
     if(unique_link == 0 && do_edge_case)
         {
@@ -463,6 +464,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         eigsKept_.at(b) = 1.0/comb.right().m();
         return;
         }
+    */
 
     //Apply combiner
     comb.doCondense(true);
@@ -497,9 +499,13 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     IndexT newmid;
     Tensor U;
     if(AA.isComplex())
+        {
         truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),newmid,U);
+        }
     else
+        {
         truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),newmid,U);
+        }
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 

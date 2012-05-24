@@ -232,11 +232,8 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
     //1. SVD each ITensor within A.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
-    for(IQTensor::const_iten_it it = A.const_iten_begin(); 
-        it != A.const_iten_end(); ++it)
+    Foreach(const ITensor& t, A.blocks())
         {
-        const ITensor& t = *it;
-
         t.scaleTo(refNorm_);
 
         Matrix &UU = Umatrix.at(itenind);
@@ -413,6 +410,10 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         U += Ublock[j];
         V += Vblock[j];
         }
+
+    //Originally eigs were found by calling
+    //toMatrix11NoScale, so put the scale back in
+    D *= refNorm_;
 
     //Update truncerr_ and eigsKept_
     truncerr_.at(b) = svdtruncerr;

@@ -620,8 +620,10 @@ orthogonalize(bool verbose)
     svd_.useOrigM(true);
     position(N);
     if(verbose)
+        {
         std::cout << "Done orthogonalizing, starting truncation." 
                   << std::endl;
+        }
     //Now basis is ortho, ok to truncate
     svd_.useOrigM(false);
     position(1);
