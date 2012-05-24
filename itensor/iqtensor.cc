@@ -525,6 +525,19 @@ operator/=(Real fac)
     return *this; 
     }
 
+IQTensor& IQTensor::
+operator*=(const LogNumber& lgnum) 
+    { 
+    soloDat();
+
+    Foreach(ITensor& t, ncdat())
+        {
+        t *= lgnum;
+        }
+
+    return *this; 
+    }
+
 void IQTensor::
 insert(const ITensor& t) 
     { 
@@ -901,6 +914,14 @@ norm() const
     Real res = 0;
     Foreach(const ITensor& t, dat())
         { res += sqr(t.norm()); }
+
+    //Even if the ITensor norms aren't separately too
+    //large for Real, their sum may be
+    if(res > std::numeric_limits<Real>::max())
+        {
+        throw TooBigForReal("Norm too large for real in IQTensor::norm()");
+        }
+
     return sqrt(res);
     }
 

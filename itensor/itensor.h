@@ -193,6 +193,18 @@ class ITensor
     operator/(Real fac, ITensor t) 
         { return (t /= fac); }
 
+    ITensor& 
+    operator*=(const LogNumber& lgnum) { scale_ *= lgnum; return *this; }
+
+    ITensor 
+    operator*(const LogNumber& lgnum) const 
+        { ITensor res(*this); res *= lgnum; return res; }
+
+    friend inline ITensor 
+    operator*(const LogNumber& lgnum, ITensor t) 
+        { return (t *= lgnum); }
+
+
     // Non-contracting product
 
     ITensor& 

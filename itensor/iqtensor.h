@@ -223,6 +223,17 @@ class IQTensor
     operator/(Real fac, IQTensor t) 
         { return (t /= fac); }
 
+    IQTensor& 
+    operator*=(const LogNumber& lgnum);
+
+    IQTensor 
+    operator*(const LogNumber& lgnum) const
+        { IQTensor res(*this); res *= lgnum; return res; }
+
+    friend inline IQTensor 
+    operator*(const LogNumber& lgnum, IQTensor T) 
+        { T *= lgnum; return T; }
+
     //
     // Multiplication by an ITensor
     //

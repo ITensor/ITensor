@@ -75,18 +75,26 @@ class LogNumber
     int 
     sign() const { return sign_; }
 
-    inline bool 
+    bool 
     isRealZero() const
         { return (sign_ == 0 || lognum_ < -maxlogdouble); }
 
-    inline bool 
+    bool 
     isOne() const { return (lognum_ == 0 && sign_ == 1); }
 
-    inline bool 
+    bool 
     isFiniteReal() const 
         { return (lognum_ < maxlogdouble && lognum_ > -maxlogdouble); }
 
-    inline bool 
+    bool 
+    isTooBigForReal() const 
+        { return (lognum_ > maxlogdouble); }
+
+    bool 
+    isTooSmallForReal() const 
+        { return (lognum_ < -maxlogdouble); }
+
+    bool 
     isNan() const 
         { return lognum_ != lognum_; }
 
@@ -111,13 +119,13 @@ class LogNumber
           sign_(sign) 
         { } 
 
-    inline void 
+    void 
     read(std::istream& s) 
         { 
         s.read((char*) &lognum_,sizeof(lognum_)); 
         s.read((char*) &sign_,sizeof(sign_)); 
         }
-    inline void 
+    void 
     write(std::ostream& s) const 
         { 
         s.write((char*) &lognum_,sizeof(lognum_)); 
@@ -146,10 +154,10 @@ class LogNumber
 
     Real
     real0() const
-	{
-	if(isRealZero()) return 0.0;
-	return real();
-	}
+        {
+        if(isRealZero()) return 0.0;
+        return real();
+        }
 
     LogNumber&
     operator+=(const LogNumber& other)
@@ -170,7 +178,7 @@ class LogNumber
     operator==(const LogNumber& other) const
         { return (sign_ == other.sign_) && (lognum_ == other.lognum_); }
 
-    inline bool 
+    bool 
     approxEquals(const LogNumber& other) const
         { return (sign_ == other.sign_) && (fabs(lognum_-other.lognum_) < LogNumber_Accuracy); }
 

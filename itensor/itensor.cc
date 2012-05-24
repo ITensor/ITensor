@@ -114,7 +114,7 @@ operator<<(ostream & s, const ITensor & t)
         if(t.scale_.isFiniteReal())
             {
             Real nrm = t.norm();
-            if(nrm >= 1E-2)
+            if(nrm >= 1E-2 && nrm < 1E5)
                 s << format(" (L=%d,N=%.2f,Nv=%.2f)\n") % t.vecSize() % nrm % Norm(t.p->v);
             else
                 s << format(" (L=%d,N=%.1E,Nv=%.1E)\n") % t.vecSize() % nrm % Norm(t.p->v);
@@ -1054,7 +1054,15 @@ sumels() const
 
 Real ITensor::
 norm() const 
-    { return fabs(Norm(p->v) * scale_.real0()); }
+    { 
+    if(scale_.isTooBigForReal())
+        {
+        throw TooBigForReal("Scale too large for real in ITensor::norm()");
+        }
+    //If scale_ is too small to be converted to Real,
+    //real0 method will return 0.0
+    return fabs(Norm(p->v) * scale_.real0()); 
+    }
 
 void ITensor::
 pseudoInvert(Real cutoff)
