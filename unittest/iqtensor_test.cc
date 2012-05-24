@@ -144,14 +144,14 @@ TEST(NonContractProd)
 TEST(ITensorConversion)
     {
 
-    ITensor itphi = phi;
+    ITensor itphi = phi.toITensor();
 
     for(int k1 = 1; k1 <= S1.m(); ++k1)
     for(int k2 = 1; k2 <= S2.m(); ++k2)
     for(int j2 = 1; j2 <= L2.m(); ++j2)
         CHECK_CLOSE(phi(S1(k1),S2(k2),L2(j2)),itphi(Index(S1)(k1),Index(S2)(k2),Index(L2)(j2)),1E-5);
 
-    ITensor itA = A;
+    ITensor itA = A.toITensor();
 
     for(int k1 = 1; k1 <= S1.m(); ++k1)
     for(int k2 = 1; k2 <= S2.m(); ++k2)
@@ -175,7 +175,7 @@ TEST(SymmetricDiag11)
     IQTensor UD(U);
     UD.primeind(L1);
     UD /= D;
-    ITensor diff(conj(UD)*U - C);
+    ITensor diff = (conj(UD)*U - C).toITensor();
     CHECK(diff.norm() < 1E-10);
 
     IQTensor set1(conj(mid));

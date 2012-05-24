@@ -118,6 +118,7 @@ TEST(SVDArrows)
     block.Randomize();
     AA += block;
 
+    //PrintDat(AA);
     checkDiv(AA);
 
     IQTensor U(L),V(R);
@@ -170,7 +171,7 @@ TEST(ConvertToITensor)
     T(L(1),S(1),primed(S)(1)) = 1;
     T(L(1),S(2),primed(S)(2)) = 1;
 
-    ITensor t = T;
+    ITensor t = T.toITensor();
 
     CHECK_CLOSE(1,t(L(1),S(1),primed(S)(1)),1E-5);
     CHECK_CLOSE(1,t(L(1),S(2),primed(S)(2)),1E-5);

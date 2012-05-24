@@ -94,7 +94,7 @@ struct SVDWorkerDefaults
         Phi0 *= 1.0/Phi0.norm();
         checkDiv(Phi0);
 
-        phi0 = Phi0;
+        phi0 = Phi0.toITensor();
 
         L = IQTensor(L1,S1,Mid10);
             {
@@ -115,7 +115,7 @@ struct SVDWorkerDefaults
             L += zdu;
             }
         L *= 1./L.norm();
-        l = L;
+        l = L.toITensor();
 
         R = IQTensor(Mid10,S2,L2);
             {
@@ -136,7 +136,7 @@ struct SVDWorkerDefaults
             R += zdu;
             }
         R *= 1./R.norm();
-        r = R;
+        r = R.toITensor();
 
         /*
         V = IQTSparse(Mid10);
@@ -166,7 +166,7 @@ struct SVDWorkerDefaults
         Psi.conj(Mid10);
         Psi *= R;
 
-        psi = Psi;
+        psi = Psi.toITensor();
         }
 
 

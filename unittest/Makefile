@@ -18,7 +18,7 @@ SOURCES+= iqcombiner_test.cc
 SOURCES+= iqtensor_test.cc
 SOURCES+= mps_test.cc
 SOURCES+= mpo_test.cc
-SOURCES+= eigensolver_test.cc
+#SOURCES+= eigensolver_test.cc
 SOURCES+= regression_test.cc
 SOURCES+= svdworker_test.cc
 SOURCES+= iqtsparse_test.cc
@@ -131,8 +131,12 @@ LIBHEADERS+= $(INCLUDEDIR)/svdworker.h
 svdworker_test.o: $(LIBHEADERS)
 .debug_objs/svdworker_test.o: $(LIBHEADERS)
 
+regression_test.o: $(LIBHEADERS)
+.debug_objs/regression_test.o: $(LIBHEADERS)
+
 eigensolver_test.o: $(INCLUDEDIR)/eigensolver.h
 .debug_objs/eigensolver_test.o: $(INCLUDEDIR)/eigensolver.h
 
 webpage_test.o: $(INCLUDEDIR)/iqtensor.h
 .debug_objs/webpage_test.o: $(INCLUDEDIR)/iqtensor.h
+
