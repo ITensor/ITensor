@@ -404,9 +404,8 @@ clear()
 std::ostream&
 operator<<(std::ostream& s, const IQIndexSet& is)
     {
-    int i = 1; 
-    for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
-    if(is.r() != 0) { s << is.index(i); } //print last one
+    for(int i = 1; i <= is.r(); ++i) 
+        s << is.index(i) << "\n"; 
     return s;
     }
 
@@ -440,6 +439,7 @@ read(std::istream& s)
         index_[j].read(s);
         ur_ += index_[j].uniqueReal();
         }
+    numref = 0;
     }
 
 void IQIndexSet::
