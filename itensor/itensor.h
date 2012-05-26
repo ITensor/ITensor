@@ -114,26 +114,14 @@ class ITensor
     ITensor(std::istream& s) { read(s); }
 
     static const ITensor& 
-    Complex_1()
-        {
-        static const ITensor Complex_1_(makeComplex_1);
-        return Complex_1_;
-        }
+    Complex_1();
 
     static const ITensor& 
-    Complex_i()
-        {
-        static const ITensor Complex_i_(makeComplex_i);
-        return Complex_i_;
-        }
+    Complex_i();
 
     static const ITensor& 
-    ConjTensor()
-        {
-        static const ITensor ConjTensor_(makeConjTensor);
-        return ConjTensor_;
-        }
-
+    ConjTensor();
+        
     void 
     read(std::istream& s);
 
@@ -563,11 +551,19 @@ class ITensor
     void 
     reshapeDat(const Permutation& p, Vector& rdat) const;
 
+    //In-place version of reshapeDat. Does not re-order indices
+    //so resulting ITensor is *not* equivalent to original.
+    void 
+    reshapeDat(const Permutation& P);
+
+    //Re-orders indices and dat consistently
+    //so resulting ITensor *is* equivalent to original.
+    void 
+    reshape(const Permutation& P) const;
+
     void 
     reshapeTo(const Permutation& P, ITensor& res) const;
 
-    void 
-    reshape(const Permutation& P);
 
     //
     // Swap can be used for similar purposes
@@ -660,7 +656,7 @@ class ITensor
     mutable boost::intrusive_ptr<ITDat> p; 
 
     //Indices, maximum of 8 (is_.index_[0] not used)
-    IndexSet is_;
+    mutable IndexSet is_;
 
     //mutable since e.g. scaleTo is logically const
     mutable LogNumber scale_; 

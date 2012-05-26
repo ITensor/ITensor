@@ -351,6 +351,27 @@ ITensor(ITmaker itm)
     if(itm == makeConjTensor) { p->v(1) = 1; p->v(2) = -1; }
 	}
 
+const ITensor& ITensor::
+Complex_1()
+    {
+    static const ITensor Complex_1_(makeComplex_1);
+    return Complex_1_;
+    }
+
+const ITensor& ITensor::
+Complex_i()
+    {
+    static const ITensor Complex_i_(makeComplex_i);
+    return Complex_i_;
+    }
+
+const ITensor& ITensor::
+ConjTensor()
+    {
+    static const ITensor ConjTensor_(makeConjTensor);
+    return ConjTensor_;
+    }
+
 void ITensor::
 read(std::istream& s)
     { 
@@ -1011,9 +1032,207 @@ assignFromVec(const VectorRef& v)
     }
 
 void ITensor::
-reshape(const Permutation& P)
+reshapeDat(const Permutation& P, Vector& rdat) const
+    {
+    ITENSOR_CHECK_NULL
+
+    const Vector& thisdat = p->v;
+
+    if(P.is_trivial())
+        {
+        rdat = thisdat;
+        return;
+        }
+
+    rdat.ReDimension(thisdat.Length());
+    rdat = 0;
+
+    const Permutation::int9& ind = P.ind();
+
+    //Make a counter for thisdat
+    Counter c; 
+    initCounter(c);
+    array<int,NMAX+1> n;
+    for(int j = 1; j <= c.rn_; ++j) n[ind[j]] = c.n[j];
+
+    //Special case loops
+#define Loop6(q,z,w,k,y,s) {for(int i1 = 1; i1 <= n[1]; ++i1) for(int i2 = 1; i2 <= n[2]; ++i2)\
+	for(int i3 = 1; i3 <= n[3]; ++i3) for(int i4 = 1; i4 <= n[4]; ++i4) for(int i5 = 1; i5 <= n[5]; ++i5)\
+    for(int i6 = 1; i6 <= n[6]; ++i6)\
+    rdat( (((((i6-1)*n[5]+i5-1)*n[4]+i4-1)*n[3]+i3-1)*n[2]+i2-1)*n[1]+i1 ) =\
+    thisdat( (((((s-1)*c.n[5]+y-1)*c.n[4]+k-1)*c.n[3]+w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
+
+#define Loop5(q,z,w,k,y) {for(int i1 = 1; i1 <= n[1]; ++i1) for(int i2 = 1; i2 <= n[2]; ++i2)\
+	for(int i3 = 1; i3 <= n[3]; ++i3) for(int i4 = 1; i4 <= n[4]; ++i4) for(int i5 = 1; i5 <= n[5]; ++i5)\
+    rdat( ((((i5-1)*n[4]+i4-1)*n[3]+i3-1)*n[2]+i2-1)*n[1]+i1 ) = thisdat( ((((y-1)*c.n[4]+k-1)*c.n[3]+w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
+
+#define Loop4(q,z,w,k) {for(int i1 = 1; i1 <= n[1]; ++i1)  for(int i2 = 1; i2 <= n[2]; ++i2)\
+	for(int i3 = 1; i3 <= n[3]; ++i3) for(int i4 = 1; i4 <= n[4]; ++i4)\
+	rdat( (((i4-1)*n[3]+i3-1)*n[2]+i2-1)*n[1]+i1 ) = thisdat( (((k-1)*c.n[3]+w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
+
+#define Loop3(q,z,w) {for(int i1 = 1; i1 <= n[1]; ++i1)  for(int i2 = 1; i2 <= n[2]; ++i2)\
+	for(int i3 = 1; i3 <= n[3]; ++i3) rdat( ((i3-1)*n[2]+i2-1)*n[1]+i1 ) = thisdat( ((w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
+
+#define Bif3(a,b,c) if(ind[1] == a && ind[2] == b && ind[3] == c)
+
+#define Bif4(a,b,c,d) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4] == d)
+
+#define Bif5(a,b,c,d,e) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e)
+
+#define Bif6(a,b,c,d,e,g) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e && ind[6] == g)
+
+    if(rn() == 2 && ind[1] == 2 && ind[2] == 1)
+        {
+        MatrixRef xref; 
+        thisdat.TreatAsMatrix(xref,c.n[2],c.n[1]);
+        rdat = Matrix(xref.t()).TreatAsVector();
+        return; 
+        }
+    else if(rn() == 3)
+        {
+        DO_IF_PS(int idx = ((ind[1]-1)*3+ind[2]-1)*3+ind[3]; Prodstats::stats().perms_of_3[idx] += 1; )
+        //Arranged loosely in order of frequency of occurrence
+        Bif3(2,1,3) Loop3(i2,i1,i3)
+        Bif3(2,3,1) Loop3(i2,i3,i1) //cyclic
+        Bif3(3,1,2) Loop3(i3,i1,i2)
+        //Bif3(1,3,2) Loop3(i1,i3,i2)
+        //Bif3(3,2,1) Loop3(i3,i2,i1)
+        }
+    else if(rn() == 4)
+        {
+        DO_IF_PS(int idx = (((ind[1]-1)*4+ind[2]-1)*4+ind[3]-1)*4+ind[4]; Prodstats::stats().perms_of_4[idx] += 1; )
+        //Arranged loosely in order of frequency of occurrence
+        Bif4(1,2,4,3) Loop4(i1,i2,i4,i3)
+        Bif4(1,3,2,4) Loop4(i1,i3,i2,i4)
+        Bif4(2,3,1,4) Loop4(i2,i3,i1,i4)
+        Bif4(2,3,4,1) Loop4(i2,i3,i4,i1) //cyclic
+        Bif4(1,4,2,3) Loop4(i1,i4,i2,i3)
+        Bif4(2,1,3,4) Loop4(i2,i1,i3,i4)
+        Bif4(2,1,4,3) Loop4(i2,i1,i4,i3)
+        Bif4(3,4,1,2) Loop4(i3,i4,i1,i2)
+        }
+    else if(rn() == 5)
+        {
+        DO_IF_PS(int idx = ((((ind[1]-1)*5+ind[2]-1)*5+ind[3]-1)*5+ind[4]-1)*5+ind[5]; Prodstats::stats().perms_of_5[idx] += 1; )
+        //Arranged loosely in order of frequency of occurrence
+        Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
+        Bif5(1,4,2,5,3) Loop5(i1,i4,i2,i5,i3)
+        Bif5(1,4,2,3,5) Loop5(i1,i4,i2,i3,i5)
+        Bif5(3,1,4,2,5) Loop5(i3,i1,i4,i2,i5)
+        Bif5(2,4,1,3,5) Loop5(i2,i4,i1,i3,i5)
+        Bif5(2,4,3,5,1) Loop5(i2,i4,i3,i5,i1)
+        Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
+        Bif5(3,4,1,2,5) Loop5(i3,i4,i1,i2,i5)
+        Bif5(2,1,3,4,5) Loop5(i2,i1,i3,i4,i5)
+        Bif5(2,3,4,5,1) Loop5(i2,i3,i4,i5,i1)
+        Bif5(2,3,4,1,5) Loop5(i2,i3,i4,i1,i5)
+        Bif5(2,3,1,4,5) Loop5(i2,i3,i1,i4,i5)
+        Bif5(2,3,4,1,5) Loop5(i2,i3,i4,i1,i5)
+        Bif5(3,4,1,5,2) Loop5(i3,i4,i1,i5,i2)
+        Bif5(5,1,4,2,3) Loop5(i5,i1,i4,i2,i3)
+        }
+    else if(rn() == 6)
+        {
+        DO_IF_PS(int idx = (((((ind[1]-1)*6+ind[2]-1)*6+ind[3]-1)*6+ind[4]-1)*6+ind[5]-1)*6+ind[6]; Prodstats::stats().perms_of_6[idx] += 1; )
+        //Arranged loosely in order of frequency of occurrence
+        Bif6(2,4,1,3,5,6) Loop6(i2,i4,i1,i3,i5,i6)
+        Bif6(1,4,2,3,5,6) Loop6(i1,i4,i2,i3,i5,i6)
+        Bif6(2,4,1,5,3,6) Loop6(i2,i4,i1,i5,i3,i6)
+        Bif6(1,2,4,5,3,6) Loop6(i1,i2,i4,i5,i3,i6)
+        Bif6(3,4,1,5,6,2) Loop6(i3,i4,i1,i5,i6,i2)
+        }
+    DO_IF_PS(Prodstats::stats().c4 += 1;)
+
+    //The j's are pointers to the i's of xdat's Counter,
+    //but reordered in a way appropriate for rdat
+    array<int*,NMAX+1> j;
+    for(int k = 1; k <= NMAX; ++k) { j[ind[k]] = &(c.i[k]); }
+
+    //Catch-all loops that work for any tensor
+    switch(c.rn_)
+    {
+    case 2:
+        for(; c.notDone(); ++c)
+            {
+            rdat((*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    case 3:
+        for(; c.notDone(); ++c)
+            {
+            rdat(((*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    case 4:
+        for(; c.notDone(); ++c)
+            {
+            rdat((((*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    case 5:
+        for(; c.notDone(); ++c)
+            {
+            rdat(((((*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    case 6:
+        for(; c.notDone(); ++c)
+            {
+            rdat((((((*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    case 7:
+        for(; c.notDone(); ++c)
+            {
+            rdat(((((((*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    default:
+        for(; c.notDone(); ++c)
+            {
+            rdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
+                = thisdat(c.ind);
+            }
+        return;
+    } //switch(c.rn_)
+
+    } // ITensor::reshapeDat
+
+void ITensor::
+reshapeDat(const Permutation& P)
     {
     if(P.is_trivial()) return;
+    solo();
+    Vector newdat;
+    this->reshapeDat(P,newdat);
+    p->v = newdat;
+    }
+
+void ITensor::
+reshapeTo(const Permutation& P, ITensor& res) const
+    {
+    res.solo();
+
+    res.is_ = IndexSet(is_,P);
+
+    res.scale_ = scale_;
+
+    this->reshapeDat(P,res.p->v);
+    }
+
+void ITensor::
+reshape(const Permutation& P) const
+    {
+    if(P.is_trivial()) return;
+
+    is_ = IndexSet(is_,P);
+
     solo();
     Vector newdat;
     this->reshapeDat(P,newdat);
@@ -1246,178 +1465,6 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
     return _ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]);
     }
 
-void ITensor::
-reshapeDat(const Permutation& P, Vector& rdat) const
-    {
-    ITENSOR_CHECK_NULL
-
-    const Vector& thisdat = p->v;
-
-    if(P.is_trivial())
-        {
-        rdat = thisdat;
-        return;
-        }
-
-    rdat.ReDimension(thisdat.Length());
-    rdat = 0;
-
-    const Permutation::int9& ind = P.ind();
-
-    //Make a counter for thisdat
-    Counter c; 
-    initCounter(c);
-    array<int,NMAX+1> n;
-    for(int j = 1; j <= c.rn_; ++j) n[ind[j]] = c.n[j];
-
-    //Special case loops
-#define Loop6(q,z,w,k,y,s) {for(int i1 = 1; i1 <= n[1]; ++i1) for(int i2 = 1; i2 <= n[2]; ++i2)\
-	for(int i3 = 1; i3 <= n[3]; ++i3) for(int i4 = 1; i4 <= n[4]; ++i4) for(int i5 = 1; i5 <= n[5]; ++i5)\
-    for(int i6 = 1; i6 <= n[6]; ++i6)\
-    rdat( (((((i6-1)*n[5]+i5-1)*n[4]+i4-1)*n[3]+i3-1)*n[2]+i2-1)*n[1]+i1 ) =\
-    thisdat( (((((s-1)*c.n[5]+y-1)*c.n[4]+k-1)*c.n[3]+w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
-
-#define Loop5(q,z,w,k,y) {for(int i1 = 1; i1 <= n[1]; ++i1) for(int i2 = 1; i2 <= n[2]; ++i2)\
-	for(int i3 = 1; i3 <= n[3]; ++i3) for(int i4 = 1; i4 <= n[4]; ++i4) for(int i5 = 1; i5 <= n[5]; ++i5)\
-    rdat( ((((i5-1)*n[4]+i4-1)*n[3]+i3-1)*n[2]+i2-1)*n[1]+i1 ) = thisdat( ((((y-1)*c.n[4]+k-1)*c.n[3]+w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
-
-#define Loop4(q,z,w,k) {for(int i1 = 1; i1 <= n[1]; ++i1)  for(int i2 = 1; i2 <= n[2]; ++i2)\
-	for(int i3 = 1; i3 <= n[3]; ++i3) for(int i4 = 1; i4 <= n[4]; ++i4)\
-	rdat( (((i4-1)*n[3]+i3-1)*n[2]+i2-1)*n[1]+i1 ) = thisdat( (((k-1)*c.n[3]+w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
-
-#define Loop3(q,z,w) {for(int i1 = 1; i1 <= n[1]; ++i1)  for(int i2 = 1; i2 <= n[2]; ++i2)\
-	for(int i3 = 1; i3 <= n[3]; ++i3) rdat( ((i3-1)*n[2]+i2-1)*n[1]+i1 ) = thisdat( ((w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
-
-#define Bif3(a,b,c) if(ind[1] == a && ind[2] == b && ind[3] == c)
-
-#define Bif4(a,b,c,d) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4] == d)
-
-#define Bif5(a,b,c,d,e) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e)
-
-#define Bif6(a,b,c,d,e,g) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e && ind[6] == g)
-
-    if(rn() == 2 && ind[1] == 2 && ind[2] == 1)
-        {
-        MatrixRef xref; 
-        thisdat.TreatAsMatrix(xref,c.n[2],c.n[1]);
-        rdat = Matrix(xref.t()).TreatAsVector();
-        return; 
-        }
-    else if(rn() == 3)
-        {
-        DO_IF_PS(int idx = ((ind[1]-1)*3+ind[2]-1)*3+ind[3]; Prodstats::stats().perms_of_3[idx] += 1; )
-        //Arranged loosely in order of frequency of occurrence
-        Bif3(2,1,3) Loop3(i2,i1,i3)
-        Bif3(2,3,1) Loop3(i2,i3,i1) //cyclic
-        Bif3(3,1,2) Loop3(i3,i1,i2)
-        //Bif3(1,3,2) Loop3(i1,i3,i2)
-        //Bif3(3,2,1) Loop3(i3,i2,i1)
-        }
-    else if(rn() == 4)
-        {
-        DO_IF_PS(int idx = (((ind[1]-1)*4+ind[2]-1)*4+ind[3]-1)*4+ind[4]; Prodstats::stats().perms_of_4[idx] += 1; )
-        //Arranged loosely in order of frequency of occurrence
-        Bif4(1,2,4,3) Loop4(i1,i2,i4,i3)
-        Bif4(1,3,2,4) Loop4(i1,i3,i2,i4)
-        Bif4(2,3,1,4) Loop4(i2,i3,i1,i4)
-        Bif4(2,3,4,1) Loop4(i2,i3,i4,i1) //cyclic
-        Bif4(1,4,2,3) Loop4(i1,i4,i2,i3)
-        Bif4(2,1,3,4) Loop4(i2,i1,i3,i4)
-        Bif4(2,1,4,3) Loop4(i2,i1,i4,i3)
-        Bif4(3,4,1,2) Loop4(i3,i4,i1,i2)
-        }
-    else if(rn() == 5)
-        {
-        DO_IF_PS(int idx = ((((ind[1]-1)*5+ind[2]-1)*5+ind[3]-1)*5+ind[4]-1)*5+ind[5]; Prodstats::stats().perms_of_5[idx] += 1; )
-        //Arranged loosely in order of frequency of occurrence
-        Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
-        Bif5(1,4,2,5,3) Loop5(i1,i4,i2,i5,i3)
-        Bif5(1,4,2,3,5) Loop5(i1,i4,i2,i3,i5)
-        Bif5(3,1,4,2,5) Loop5(i3,i1,i4,i2,i5)
-        Bif5(2,4,1,3,5) Loop5(i2,i4,i1,i3,i5)
-        Bif5(2,4,3,5,1) Loop5(i2,i4,i3,i5,i1)
-        Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
-        Bif5(3,4,1,2,5) Loop5(i3,i4,i1,i2,i5)
-        Bif5(2,1,3,4,5) Loop5(i2,i1,i3,i4,i5)
-        Bif5(2,3,4,5,1) Loop5(i2,i3,i4,i5,i1)
-        Bif5(2,3,4,1,5) Loop5(i2,i3,i4,i1,i5)
-        Bif5(2,3,1,4,5) Loop5(i2,i3,i1,i4,i5)
-        Bif5(2,3,4,1,5) Loop5(i2,i3,i4,i1,i5)
-        Bif5(3,4,1,5,2) Loop5(i3,i4,i1,i5,i2)
-        Bif5(5,1,4,2,3) Loop5(i5,i1,i4,i2,i3)
-        }
-    else if(rn() == 6)
-        {
-        DO_IF_PS(int idx = (((((ind[1]-1)*6+ind[2]-1)*6+ind[3]-1)*6+ind[4]-1)*6+ind[5]-1)*6+ind[6]; Prodstats::stats().perms_of_6[idx] += 1; )
-        //Arranged loosely in order of frequency of occurrence
-        Bif6(2,4,1,3,5,6) Loop6(i2,i4,i1,i3,i5,i6)
-        Bif6(1,4,2,3,5,6) Loop6(i1,i4,i2,i3,i5,i6)
-        Bif6(2,4,1,5,3,6) Loop6(i2,i4,i1,i5,i3,i6)
-        Bif6(1,2,4,5,3,6) Loop6(i1,i2,i4,i5,i3,i6)
-        Bif6(3,4,1,5,6,2) Loop6(i3,i4,i1,i5,i6,i2)
-        }
-    DO_IF_PS(Prodstats::stats().c4 += 1;)
-
-    //The j's are pointers to the i's of xdat's Counter,
-    //but reordered in a way appropriate for rdat
-    array<int*,NMAX+1> j;
-    for(int k = 1; k <= NMAX; ++k) { j[ind[k]] = &(c.i[k]); }
-
-    //Catch-all loops that work for any tensor
-    switch(c.rn_)
-    {
-    case 2:
-        for(; c.notDone(); ++c)
-            {
-            rdat((*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
-            }
-        return;
-    case 3:
-        for(; c.notDone(); ++c)
-            {
-            rdat(((*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
-            }
-        return;
-    case 4:
-        for(; c.notDone(); ++c)
-            {
-            rdat((((*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
-            }
-        return;
-    case 5:
-        for(; c.notDone(); ++c)
-            {
-            rdat(((((*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
-            }
-        return;
-    case 6:
-        for(; c.notDone(); ++c)
-            {
-            rdat((((((*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
-            }
-        return;
-    case 7:
-        for(; c.notDone(); ++c)
-            {
-            rdat(((((((*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
-            }
-        return;
-    default:
-        for(; c.notDone(); ++c)
-            {
-            rdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
-            }
-        return;
-    } //switch(c.rn_)
-
-    } // ITensor::reshapeDat
 
 //
 // Analyzes two ITensors to determine
@@ -2116,20 +2163,20 @@ operator*=(const ITensor& other)
 
     scaleOutNorm();
 
+    /*
+    if(!R_is_matrix && L_is_matrix) 
+        {
+        //Print(props.matchL);
+        //other.reshape(props.matchL);
+        //if(do_print) other.print("after",ShowData);
+        DO_IF_PS(++Prodstats::stats().c3;)
+        }
+        */
+
     return *this;
     } //ITensor::operator*=(ITensor)
 
-void ITensor::
-reshapeTo(const Permutation& P, ITensor& res) const
-    {
-    res.solo();
 
-    res.is_ = IndexSet(is_,P);
-
-    res.scale_ = scale_;
-
-    this->reshapeDat(P,res.p->v);
-    }
 
 ITensor& ITensor::
 operator+=(const ITensor& other)
