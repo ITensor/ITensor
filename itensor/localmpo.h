@@ -156,6 +156,16 @@ class LocalMPO
     bool
     isNotNull() const { return Op_ != 0; }
 
+    bool
+    doWrite() const { return do_write_; }
+    void
+    doWrite(bool val) { do_write_ = val; initWrite(); }
+
+    const std::string&
+    writeDir() const { return writedir_; }
+    void 
+    writeDir(const std::string& val) { writedir_ = val; initWrite(); }
+
     static LocalMPO& Null()
         {
         static LocalMPO Null_;
@@ -176,6 +186,9 @@ class LocalMPO
 
     LocalOp<Tensor> lop_;
 
+    bool do_write_;
+    std::string writedir_;
+
     //
     /////////////////
 
@@ -187,6 +200,23 @@ class LocalMPO
     void
     makeR(const MPSType& psi, int k);
 
+    void
+    setLHlim(int val);
+
+    void
+    setRHlim(int val);
+
+    void
+    initWrite() const
+        {
+        system(("mkdir -p " + writedir_).c_str());
+        }
+
+    std::string
+    PHFName(int j) const
+        {
+        return (boost::format("%s/PH_%03d")%writedir_%j).str();
+        }
 
     };
 
@@ -196,7 +226,9 @@ LocalMPO()
     : Op_(0),
       LHlim_(-1),
       RHlim_(-1),
-      nc_(2)
+      nc_(2),
+      do_write_(false),
+      writedir_("PH")
     { }
 
 template <class Tensor>
@@ -206,7 +238,9 @@ LocalMPO(const MPOt<Tensor>& Op, int num_center)
       PH_(Op.NN()+2),
       LHlim_(0),
       RHlim_(Op.NN()+1),
-      nc_(2)
+      nc_(2),
+      do_write_(false),
+      writedir_("PH")
     { 
     numCenter(num_center);
     }
@@ -230,7 +264,7 @@ template <class Tensor>
 void inline LocalMPO<Tensor>::
 L(int j, const Tensor& nL)
     {
-    if(LHlim_ > j-1) LHlim_ = j-1;
+    if(LHlim_ > j-1) setLHlim(j-1);
     PH_[LHlim_] = nL;
     }
 
@@ -253,7 +287,7 @@ template <class Tensor>
 void inline LocalMPO<Tensor>::
 R(int j, const Tensor& nR)
     {
-    if(RHlim_ < j+1) RHlim_ = j+1;
+    if(RHlim_ < j+1) setRHlim(j+1);
     PH_[RHlim_] = nR;
     }
 
@@ -267,8 +301,8 @@ position(int b, const MPSType& psi)
     makeL(psi,b-1);
     makeR(psi,b+nc_);
 
-    LHlim_ = b-1; //not redundant since LHlim_ could be > b-1
-    RHlim_ = b+nc_; //not redundant since RHlim_ could be < b+nc_
+    setLHlim(b-1); //not redundant since LHlim_ could be > b-1
+    setRHlim(b+nc_); //not redundant since RHlim_ could be < b+nc_
 
 #ifdef DEBUG
     if(nc_ != 2)
@@ -308,16 +342,16 @@ shift(int j, Direction dir, const Tensor& A)
         {
         if((j-1) != LHlim_)
             {
-            std::cout << "j-1 = " << (j-1) << ", LHlim_ = " << LHlim_ << std::endl;
-            Error("Can only shift at LHlim_");
+            std::cout << "j-1 = " << (j-1) << ", LHlim = " << LHlim_ << std::endl;
+            Error("Can only shift at LHlim");
             }
         Tensor& E = PH_.at(LHlim_);
         Tensor& nE = PH_.at(j);
         nE = E * A;
         nE *= Op_->AA(j);
         nE *= conj(primed(A));
-        LHlim_ = j;
-        RHlim_ = j+nc_+1;
+        setLHlim(j);
+        setRHlim(j+nc_+1);
 
 #ifdef DEBUG
         //std::cerr << boost::format("LocalMPO at (%d,%d) \n") % LHlim_ % RHlim_;
@@ -339,8 +373,8 @@ shift(int j, Direction dir, const Tensor& A)
         nE = E * A;
         nE *= Op_->AA(j);
         nE *= conj(primed(A));
-        LHlim_ = j-nc_-1;
-        RHlim_ = j;
+        setLHlim(j-nc_-1);
+        setRHlim(j);
 
         lop_.update(Op_->AA(j-1),Op_->AA(j),L(),R());
         }
@@ -356,7 +390,7 @@ makeL(const MPSType& psi, int k)
         {
         const int ll = LHlim_;
         psi.projectOp(ll+1,Fromleft,PH_.at(ll),Op_->AA(ll+1),PH_.at(ll+1));
-        ++LHlim_;
+        setLHlim(LHlim_+1);
         }
     }
 
@@ -370,7 +404,87 @@ makeR(const MPSType& psi, int k)
         {
         const int rl = RHlim_;
         psi.projectOp(rl-1,Fromright,PH_.at(rl),Op_->AA(rl-1),PH_.at(rl-1));
-        --RHlim_;
+        setRHlim(RHlim_-1);
+        }
+    }
+
+template <class Tensor>
+void inline LocalMPO<Tensor>::
+setLHlim(int val)
+    {
+    if(!do_write_)
+        {
+        LHlim_ = val;
+        return;
+        }
+
+    if(PH_.at(LHlim_).isNotNull())
+        {
+        //std::cerr << boost::format("Writing A(%d) to %s\n")%atb_%writedir_;
+        writeToFile(PHFName(LHlim_),PH_.at(LHlim_));
+        PH_.at(LHlim_) = Tensor();
+        }
+    LHlim_ = val;
+    if(LHlim_ < 1) 
+        {
+        //Set to null tensor and return
+        PH_.at(LHlim_) = Tensor();
+        return;
+        }
+    if(PH_.at(LHlim_).isNull())
+        {
+        std::string fname = PHFName(LHlim_);
+        std::ifstream s(fname.c_str());
+        if(s.good())
+            {
+            PH_.at(LHlim_).read(s);
+            s.close();
+            }
+        else
+            {
+            std::cerr << boost::format("Tried to read file %s\n")%fname;
+            Error("Missing file");
+            }
+        }
+    }
+
+template <class Tensor>
+void inline LocalMPO<Tensor>::
+setRHlim(int val)
+    {
+    if(!do_write_)
+        {
+        RHlim_ = val;
+        return;
+        }
+
+    if(PH_.at(RHlim_).isNotNull())
+        {
+        //std::cerr << boost::format("Writing A(%d) to %s\n")%atb_%writedir_;
+        writeToFile(PHFName(RHlim_),PH_.at(RHlim_));
+        PH_.at(RHlim_) = Tensor();
+        }
+    RHlim_ = val;
+    if(RHlim_ > Op_->NN()) 
+        {
+        //Set to null tensor and return
+        PH_.at(RHlim_) = Tensor();
+        return;
+        }
+    if(PH_.at(RHlim_).isNull())
+        {
+        std::string fname = PHFName(RHlim_);
+        std::ifstream s(fname.c_str());
+        if(s.good())
+            {
+            PH_.at(RHlim_).read(s);
+            s.close();
+            }
+        else
+            {
+            std::cerr << boost::format("Tried to read file %s\n")%fname;
+            Error("Missing file");
+            }
         }
     }
 
