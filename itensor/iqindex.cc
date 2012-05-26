@@ -215,6 +215,7 @@ read(std::istream& s)
     iq_.resize(size);
     for(iq_it x = iq_.begin(); x != iq_.end(); ++x)
         { x->read(s); }
+    numref = 0;
     }
 
 //
@@ -603,14 +604,14 @@ solo()
     }
 
 std::ostream& 
-operator<<(std::ostream &o, const IQIndex &I)
+operator<<(std::ostream &o, const IQIndex& I)
     {
     if(I.isNull()) 
         { 
         o << "IQIndex: (null)"; 
         return o;
         }
-    o << "IQIndex: " << (const Index&) I << " <" << I.dir() << ">" << std::endl;
+    o << "IQIndex: " << I.index_ << " <" << I.dir() << ">" << std::endl;
     for(int j = 1; j <= I.nindex(); ++j) 
         o << " " << I.index(j) SP I.qn(j) << "\n";
     return o;

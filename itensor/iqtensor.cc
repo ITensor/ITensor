@@ -54,6 +54,7 @@ read(istream& s)
 	itensor.resize(size);
     Foreach(ITensor& t, itensor)
         { t.read(s); }
+    numref = 0;
 	}
 
 void IQTDat::
@@ -1201,14 +1202,14 @@ void IQTensor::
 printIndices(const std::string& name) const
 	{ 
 	cout << "\n" << name << " (IQIndices only) = \n";
+	cout << "/--------------------------------------\n" << endl;
     if(this->isNull())
         {
         cout << "    [IQTensor is null]" << endl;
         return;
         }
-	for(int j = 1; j <= is_->r(); ++j)
-	    cout << is_->index(j) << "\n\n";
-	cout << "---------------------------\n" << endl;
+    cout << (*is_);
+	cout << "\\-------------------------------------\n" << endl;
 	}
 
 void IQTensor::
@@ -1270,10 +1271,10 @@ swap(IQTensor& other)
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor& T)
     {
-    s << "\n----- IQTensor -----\n";
+	s << "/--------------IQTensor--------------\n";
     if(T.isNull())
         {
-        s << "(IQTensor is null)\n\n";
+        s << "     (IQTensor is null)\n\n";
         return s;
         }
     s << "IQIndices:\n";
@@ -1282,7 +1283,7 @@ operator<<(std::ostream & s, const IQTensor& T)
     s << "ITensors:\n";
     Foreach(const ITensor& t, T.dat())
         { s << "  " << t << std::endl; }
-    s << "-------------------" << "\n\n";
+	s << "\\------------------------------------\n\n";
     return s;
     }
 

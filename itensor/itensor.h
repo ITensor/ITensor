@@ -791,8 +791,7 @@ public:
 
     explicit 
     ITDat(std::istream& s) 
-        : numref(0) 
-        { read(s); }
+        { read(s); } //numref set to zero by read method
 
     explicit 
     ITDat(const ITDat& other) 

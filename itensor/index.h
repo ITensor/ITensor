@@ -52,7 +52,9 @@ IntToIndexType(int i)
     if(i == 1) return Link;
     if(i == 2) return Site;
     if(i == 3) return ReIm;
-    std::cerr << boost::format("No IndexType value defined for i=%d\n")%i,Error("");
+    std::cout << boost::format("No IndexType value defined for i=%d\n")%i 
+              << std::endl;
+    Error("Undefined IntToIndexType value");
     return Link;
     }
 

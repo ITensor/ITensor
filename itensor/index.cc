@@ -203,7 +203,9 @@ operator==(const Index& other) const
 
 bool Index::
 noprime_equals(const Index& other) const
-    { return (p->ur == other.p->ur); }
+    { 
+    return (p->ur == other.p->ur); 
+    }
 
 bool Index::
 operator<(const Index& other) const 

@@ -178,6 +178,11 @@ setBond(int b) const
         atb_ = b;
         return;
         }
+    //
+    //Shift atb_ (location of bond that is loaded into RAM)
+    //to requested value b, writing any non-Null tensors to
+    //disk along the way
+    //
     while(b > atb_)
         {
         if(A.at(atb_).isNotNull())
@@ -211,6 +216,10 @@ setBond(int b) const
         --atb_;
         }
     assert(atb_ == b);
+    //
+    //Load tensors at bond b into RAM if
+    //they aren't loaded already
+    //
     if(A.at(b).isNull())
         {
         std::string fname = AFName(b);

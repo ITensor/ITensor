@@ -2553,6 +2553,7 @@ read(std::istream& s)
     s.read((char*) &size,sizeof(size));
     v.ReDimension(size);
     s.read((char*) v.Store(), sizeof(Real)*size);
+    numref = 0;
     }
 
 void ITDat::
