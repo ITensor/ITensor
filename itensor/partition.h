@@ -89,6 +89,10 @@ Partition(int N, int Nb, int bound_size)
     Nb_(Nb),
     bound_(Nb_)
     {
+    if(Nb <= 2 && (bound_size * Nb) != N)
+        {
+        Error("Cannot honor bound_size request");
+        }
     //Set requested boundary size
     bound_.at(0) = bound_size;
 

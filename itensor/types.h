@@ -158,7 +158,7 @@ readFromFile(const std::string& fname, T& t)
     { 
     std::ifstream s(fname.c_str()); 
     if(!s.good()) 
-        Error("Couldn't open file for reading");
+        Error("Couldn't open file \"" + fname + "\" for reading");
     t.read(s); 
     s.close(); 
     }
@@ -168,7 +168,7 @@ writeToFile(const std::string& fname, const T& t)
     { 
     std::ofstream s(fname.c_str()); 
     if(!s.good()) 
-        Error("Couldn't open file for writing");
+        Error("Couldn't open file \"" + fname + "\" for writing");
     t.write(s); 
     s.close(); 
     }
