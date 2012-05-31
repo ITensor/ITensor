@@ -708,6 +708,9 @@ class ITensor
 
     public:
 
+    // The ITmaker constructor is for making constant, global
+    // ITensors and is not intended to be called by users,
+    // only internally by static ITensor methods
     enum ITmaker { makeComplex_1, makeComplex_i, makeConjTensor };
 
     ITensor(ITmaker itm);
@@ -766,36 +769,22 @@ public:
 
     Vector v;
 
-    ITDat() 
-        : v(0), numref(0)
-        { }
+    ITDat();
 
     explicit 
-    ITDat(int size) 
-        : v(size), numref(0)
-        { assert(size > 0); v = 0; }
+    ITDat(int size);
 
     explicit 
-    ITDat(const VectorRef& v_) 
-        : v(v_), numref(0)
-        { }
+    ITDat(const VectorRef& v_);
 
     explicit 
-    ITDat(Real r) 
-        : v(1), numref(0)
-        { v = r; }
+    ITDat(Real r);
 
     explicit 
-    ITDat(std::istream& s) 
-        { read(s); } //numref set to zero by read method
+    ITDat(std::istream& s);
 
     explicit 
-    ITDat(const ITDat& other) 
-        : v(other.v), numref(0)
-        { }
-
-    void 
-    read(std::istream& s);
+    ITDat(const ITDat& other);
 
     void 
     write(std::ostream& s) const;

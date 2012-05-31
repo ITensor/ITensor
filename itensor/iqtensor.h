@@ -660,9 +660,6 @@ class IQTDat
     scaleTo(const LogNumber& newscale);
 
     void 
-    read(std::istream& s);
-
-    void 
     write(std::ostream& s) const;
 
     //void* operator 

@@ -111,7 +111,6 @@ read(istream& s)
 	its_.resize(size);
     for(iterator it = its_.begin(); it != its_.end(); ++it)
         { it->read(s); }
-    numref = 0;
     }
 
 void IQTSDat::

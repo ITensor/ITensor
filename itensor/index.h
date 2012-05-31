@@ -300,7 +300,6 @@ class IndexDat
     {
     public:
 
-
     //////////////
     //
     // Public Data Members

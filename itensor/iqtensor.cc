@@ -43,19 +43,15 @@ IQTDat(istream& s)
     : 
     numref(0),
     rmap_init(false)
-    { read(s); }
-
-void IQTDat::
-read(istream& s)
-	{
-	uninit_rmap();
+    { 
 	size_t size;
 	s.read((char*) &size,sizeof(size));
 	itensor.resize(size);
     Foreach(ITensor& t, itensor)
-        { t.read(s); }
-    numref = 0;
-	}
+        { 
+        t.read(s); 
+        }
+    }
 
 void IQTDat::
 write(ostream& s) const

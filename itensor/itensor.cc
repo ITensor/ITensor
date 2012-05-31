@@ -2579,6 +2579,56 @@ BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im)
 // ITDat
 //
 
+ITDat::
+ITDat() 
+    : 
+    v(0), 
+    numref(0)
+    { }
+
+ITDat::
+ITDat(int size) 
+    : 
+    v(size), 
+    numref(0)
+    { 
+    v = 0; 
+    }
+
+ITDat::
+ITDat(const VectorRef& v_) 
+    : 
+    v(v_), 
+    numref(0)
+    { }
+
+ITDat::
+ITDat(Real r) 
+    : 
+    v(1), 
+    numref(0)
+    { 
+    v = r; 
+    }
+
+ITDat:: 
+ITDat(std::istream& s) 
+    :
+    numref(0)
+    { 
+    int size = 0;
+    s.read((char*) &size,sizeof(size));
+    v.ReDimension(size);
+    s.read((char*) v.Store(), sizeof(Real)*size);
+    }
+
+ITDat::
+ITDat(const ITDat& other) 
+    : 
+    v(other.v), 
+    numref(0)
+    { }
+
 void intrusive_ptr_add_ref(ITDat* p) 
     { 
     ++(p->numref); 
@@ -2591,16 +2641,6 @@ intrusive_ptr_release(ITDat* p)
         {
         delete p; 
         } 
-    }
-
-void ITDat::
-read(std::istream& s)
-    { 
-    int size = 0;
-    s.read((char*) &size,sizeof(size));
-    v.ReDimension(size);
-    s.read((char*) v.Store(), sizeof(Real)*size);
-    numref = 0;
     }
 
 void ITDat::

@@ -31,8 +31,7 @@ class IQIndexSet
 
     IQIndexSet(std::vector<IQIndex>& iqinds);
 
-    IQIndexSet(std::istream& s) 
-        { read(s); } //numref is set by read method
+    IQIndexSet(std::istream& s);
 
     explicit
     IQIndexSet(const IQIndexSet& other);
@@ -182,9 +181,6 @@ class IQIndexSet
 
     void
     conj(const IQIndex& I);
-
-    void
-    read(std::istream& s);
 
     void
     write(std::ostream& s) const;

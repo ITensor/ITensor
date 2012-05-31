@@ -134,6 +134,22 @@ IQIndexSet(const IQIndexSet& other)
     {
     }
 
+IQIndexSet::
+IQIndexSet(std::istream& s) 
+    : 
+    numref(0)
+    { 
+    int size;
+    s.read((char*) &size,sizeof(size));
+    index_.resize(size);
+    ur_ = 0;
+    for(int j = 0; j < size; ++j) 
+        {
+        index_[j].read(s);
+        ur_ += index_[j].uniqueReal();
+        }
+    }
+
 const IQIndex& IQIndexSet::
 findtype(IndexType t) const
 	{
@@ -425,21 +441,6 @@ conj(const IQIndex& I)
             index_[j].conj();
             return;
             }
-    }
-
-void IQIndexSet::
-read(std::istream& s)
-    {
-    int size;
-    s.read((char*) &size,sizeof(size));
-    index_.resize(size);
-    ur_ = 0;
-    for(int j = 0; j < size; ++j) 
-        {
-        index_[j].read(s);
-        ur_ += index_[j].uniqueReal();
-        }
-    numref = 0;
     }
 
 void IQIndexSet::
