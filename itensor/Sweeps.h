@@ -7,6 +7,9 @@
 #include "types.h"
 #include "input.h"
 
+template <typename T>
+class SweepSetter;
+
 class Sweeps
     {
     public:
@@ -15,6 +18,8 @@ class Sweeps
     //Constructors --------------
 
     Sweeps();
+
+    Sweeps(int nsw, int _minm = 1, int _maxm = 500, Real _cut = 1E-8);
 
     Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut);
 
@@ -32,15 +37,28 @@ class Sweeps
     void 
     setMinm(int sw, int val) { Minm_.at(sw) = val; }
 
+    //Use as sweeps.minm() = 20,20,10; (all remaining set to 10)
+    SweepSetter<int> 
+    minm();
+
     int 
     maxm(int sw) const { return Maxm_.at(sw); }
     void 
     setMaxm(int sw, int val) { Maxm_.at(sw) = val; }
 
+    //Use as sweeps.maxm() = 50,50,100,100,500; (all remaining set to 500)
+    SweepSetter<int> 
+    maxm();
+
     Real 
     cutoff(int sw) const { return Cutoff_.at(sw); }
     void 
     setCutoff(int sw, Real val) { Cutoff_.at(sw) = val; }
+
+    //Use as sweeps.cutoff() = 1E-8; (cutoff set to 1E-8 for all sweeps)
+    //or as sweeps.cutoff() = 1E-4,1E-4,1E-5,1E-5,1E-10; (all remaining set to 1E-10)
+    SweepSetter<Real> 
+    cutoff();
 
     Real 
     noise(int sw) const { return Noise_.at(sw); }
@@ -48,6 +66,11 @@ class Sweeps
     setNoise(int sw, Real val) { Noise_.at(sw) = val; }
     void 
     setNoise(Real val) { Noise_.assign(Nsweep_+1,val); }
+
+    //Use as sweeps.noise() = 1E-10; (noise set to 1E-10 for all sweeps)
+    //or as sweeps.noise() = 1E-8,1E-9,1E-10,0.0; (all remaining set to 0)
+    SweepSetter<Real> 
+    noise();
 
     int 
     nsweep() const { return Nsweep_; }
@@ -61,6 +84,10 @@ class Sweeps
     setNiter(int sw, int val) { Niter_.at(sw) = val; }
     void 
     setNiter(int val) { Niter_.assign(Nsweep_+1,val); }
+
+    //Use as sweeps.niter() = 5,4,3,2; (all remaining set to 2)
+    SweepSetter<int> 
+    niter();
 
     int
     numSiteCenter() const { return num_site_center_; }
@@ -89,16 +116,84 @@ private:
     int Nsweep_, Nwarm_;
     int num_site_center_;        // May not be implemented in some cases
     Real exp_fac_;
+
+    };
+
+//
+// Helper class for Sweeps accessor methods.
+// Accumulates a comma separated list of 
+// values of type T, storing them in the
+// vector v passed to its constructor.
+//
+template <typename T>
+class SweepSetter
+    {
+    public:
+
+    SweepSetter(std::vector<T>& v)
+        :
+        v_(v),
+        size_(int(v_.size())),
+        j_(1)
+        { 
+        last_val_ = v_[j_];
+        }
+    
+    ~SweepSetter()
+        {
+        while(j_ < size_)
+            {
+            v_[j_] = last_val_;
+            ++j_;
+            }
+        }
+
+    SweepSetter& operator=(T val)
+        {
+        return operator,(val);
+        }
+
+    SweepSetter& operator<<(T val)
+        {
+        return operator,(val);
+        }
+
+    SweepSetter& operator,(T val)
+        {
+        if(j_ >= size_) Error("Sweep assignment list too long");
+        v_[j_] = val;
+        ++j_;
+        last_val_ = val;
+        return *this;
+        }
+
+    private:
+    std::vector<T>& v_;
+    int size_,j_;
+    T last_val_;
     };
 
 inline Sweeps::
 Sweeps()
     :
+    scheme_(table),
     Nsweep_(0),
     Nwarm_(0),
     num_site_center_(2), 
     exp_fac_(0.5)
     {
+    }
+
+inline Sweeps::
+Sweeps(int nsw, int _minm, int _maxm, Real _cut)
+    :
+    scheme_(fixed_m),
+    Nsweep_(nsw),
+    Nwarm_(0),
+    num_site_center_(2), 
+    exp_fac_(0.5)
+    {
+    init(_minm,_maxm,_cut);
     }
 
 inline Sweeps::
@@ -132,6 +227,36 @@ Sweeps(int nsw, InputGroup& sweep_table)
       exp_fac_(0.5)
     {
     tableInit(sweep_table);
+    }
+
+SweepSetter<int> inline Sweeps::
+minm() 
+    { 
+    return SweepSetter<int>(Minm_); 
+    }
+
+SweepSetter<int> inline Sweeps::
+maxm() 
+    { 
+    return SweepSetter<int>(Maxm_); 
+    }
+
+SweepSetter<Real> inline Sweeps::
+cutoff() 
+    { 
+    return SweepSetter<Real>(Cutoff_); 
+    }
+
+SweepSetter<Real> inline Sweeps::
+noise() 
+    { 
+    return SweepSetter<Real>(Noise_); 
+    }
+
+SweepSetter<int> inline Sweeps::
+niter() 
+    { 
+    return SweepSetter<int>(Niter_); 
     }
 
 inline void Sweeps::
@@ -218,6 +343,7 @@ sweepnext(int &l, int &ha, int N, int min_l = 1)
         }
     if(l-- == min_l) ha = 3;
     }
+
 
 
 #endif //__ITENSOR_SWEEPS_HEADER_H
