@@ -160,7 +160,7 @@ class SweepSetter
 
     SweepSetter& operator,(T val)
         {
-        if(j_ >= size_) Error("Sweep assignment list too long");
+        if(j_ >= size_) return *this;
         v_[j_] = val;
         ++j_;
         last_val_ = val;
