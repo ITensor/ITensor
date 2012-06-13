@@ -604,14 +604,14 @@ position(int i, bool preserve_shape)
         if(l_orth_lim_ < 0) l_orth_lim_ = 0;
         setBond(l_orth_lim_+1);
         Tensor WF = AA(l_orth_lim_+1) * AA(l_orth_lim_+2);
-        doSVD(l_orth_lim_+1,WF,Fromleft,preserve_shape);
+        svdBond(l_orth_lim_+1,WF,Fromleft,preserve_shape);
         }
     while(r_orth_lim_ > i+1)
         {
         if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
         setBond(r_orth_lim_-2);
         Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
-        doSVD(r_orth_lim_-2,WF,Fromright,preserve_shape);
+        svdBond(r_orth_lim_-2,WF,Fromright,preserve_shape);
         }
     }
 template void MPSt<ITensor>::
