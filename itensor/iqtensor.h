@@ -682,6 +682,12 @@ class IQTDat
     int 
     count() const { return numref; }
 
+    static IQTDat* Null()
+        {
+        static IQTDat Null_;
+        return &Null_;
+        }
+
     private:
 
     //////////////

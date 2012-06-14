@@ -197,11 +197,11 @@ class IQIndexSet
     int 
     count() const { return numref; }
 
-    //static IQIndexSet& Null()
-    //    {
-    //    static IQIndexSet Null_;
-    //    return Null_;
-    //    }
+    static IQIndexSet* Null()
+        {
+        static IQIndexSet Null_;
+        return &Null_;
+        }
 
     private:
 

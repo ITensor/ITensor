@@ -366,6 +366,13 @@ class IQTSDat
 
     ENABLE_INTRUSIVE_PTR(IQTSDat)
 
+
+    static IQTSDat* Null()
+        {
+        static IQTSDat Null_;
+        return &Null_;
+        }
+
     private:
 
     //////////////

@@ -240,7 +240,6 @@ scaleTo(const LogNumber& newscale)
 int IQTensor::
 r() const 
     { 
-    if(is_ == 0) return 0;
     return is_->r(); 
     }
 
@@ -291,8 +290,8 @@ iqinds() const
 IQTensor::
 IQTensor() 
     : 
-    is_(0),
-    p(0) 
+    is_(IQIndexSet::Null()),
+    p(IQTDat::Null()) 
     { }
 
 IQTensor::

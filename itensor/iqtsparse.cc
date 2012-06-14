@@ -130,8 +130,8 @@ write(ostream& s) const
 IQTSparse::
 IQTSparse()
     :
-    is_(0),
-    d_(0)
+    is_(IQIndexSet::Null()),
+    d_(IQTSDat::Null())
     { }
 
 IQTSparse::

@@ -387,11 +387,22 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
         cutoff_ = -1;
         if(D.r() == 0)
             {
-            Print(D);
-            Error("D.r() must be > 1 to use original m option");
+            IndexT mid;
+            try {
+                mid = index_in_common(U,V,Link);
+                }
+            catch(const ITError& e)
+                {
+                mid = IndexT("mid");
+                }
+            minm_ = mid.m();
+            maxm_ = mid.m();
             }
-        minm_ = D.index(1).m();
-        maxm_ = D.index(1).m();
+        else
+            {
+            minm_ = D.index(1).m();
+            maxm_ = D.index(1).m();
+            }
         }
 
     svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,b);

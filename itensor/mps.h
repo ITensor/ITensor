@@ -525,14 +525,12 @@ svdBond(int b, const Tensor& AA, Direction dir,
         {
         //If we don't need extreme accuracy,
         //use a density matrix approach
-        //if(Globals::debug1()) std::cout << "Calling denmatDecomp" << std::endl;
         svd_.denmatDecomp(b,AA,A[b],A[b+1],dir,PH);
         }
     else
         {
         //Otherwise use the more accurate svd method
         //(calls the accurate SVD method in the MatrixRef library)
-        //if(Globals::debug1()) std::cout << "Calling svd" << std::endl;
         SparseT D;
         svd_.svd(b,AA,A[b],D,A[b+1]);
         //Push the singular values into the appropriate site tensor
