@@ -46,18 +46,19 @@ void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M
         dotsref << dots.SubVector(1,i-1);
         int pass;
         for(pass = 1; pass <= numpass; pass++)
-            {
-            startover:
-            dotsref = Mcols.t() * coli;
-            coli -= Mcols * dotsref;
-            Real norm = Norm(coli);
-            if(norm == 0.0)
-                {
-                coli.Randomize();
-                goto startover;
-                }
-            coli /= norm;
-            }
+	    {
+	    dotsref = Mcols.t() * coli;
+	    coli -= Mcols * dotsref;
+	    Real norm = Norm(coli);
+	    if(norm < 1.0e-3)   // orthog is suspect
+		pass--;
+	    if(norm < 1.0e-10)  // What if a subspace was zero in all vectors?
+		{
+		coli.Randomize();
+		norm = Norm(coli);
+		}
+	    coli /= norm;
+	    }
         }
     }
 
