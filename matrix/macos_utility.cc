@@ -32,7 +32,7 @@ void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M
         {
         coli << M.Column(i);
         Real norm = Norm(coli);
-        if (norm == 0.0)
+        if(norm == 0.0)
             {
             coli.Randomize();
             norm = Norm(coli);
@@ -46,9 +46,16 @@ void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M
         int pass;
         for(pass = 1; pass <= numpass; pass++)
             {
+            startover:
             dotsref = Mcols.t() * coli;
             coli -= Mcols * dotsref;
-            coli /= Norm(coli);
+            Real norm = Norm(coli);
+            if(norm == 0.0)
+                {
+                coli.Randomize();
+                goto startover;
+                }
+            coli /= norm;
             }
         }
     }
