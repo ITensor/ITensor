@@ -7,6 +7,7 @@
 
 #include "measure.h"
 #include "DMRGWorker.h"
+#include "option.h"
 #include "dmrg.h"
 
 #endif
