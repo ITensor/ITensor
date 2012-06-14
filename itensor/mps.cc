@@ -498,10 +498,24 @@ MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
 
 #else
 template <class Tensor>
-MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
+MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other_)
     {
     if(do_write_)
         Error("operator+= not supported if doWrite(true)");
+
+    //cout << "calling new orthog in sum" << endl;
+    try { orthogonalize(); }
+    catch(ResultIsZero aa) 
+	{ 
+	*this = other_;
+	return *this;
+	}
+    MPSt<Tensor> other(other_);
+    try { other.orthogonalize(); }
+    catch(ResultIsZero bb) 
+	{ 
+	return *this;
+	}
 
     primelinks(0,4);
 

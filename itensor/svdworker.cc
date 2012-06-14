@@ -166,7 +166,7 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
         cout << format("minm_ = %d, maxm_ = %d, cutoff_ = %.3E")
                        %minm_%maxm_%cutoff_ << endl;
         cout << format("use_orig_m_ = %s")%(use_orig_m_?"true":"false")<<endl;
-        cout << format("Kept %d states in svd")% m << endl;
+        cout << format("Kept %d states in svdRank2 line 169")% m << endl;
         cout << format("svdtruncerr = %.3E")%svdtruncerr << endl;
 
 
@@ -246,7 +246,10 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         {
         Real maxLogNum = -200;
         Foreach(const ITensor& t, A.itensors())
+	    {
+	    t.scaleOutNorm();
             maxLogNum = max(maxLogNum,t.scale().logNum());
+	    }
         refNorm_ = LogNumber(maxLogNum,1);
         }
 
@@ -333,7 +336,7 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         cout << endl;
         cout << boost::format("use_orig_m_ = %s")
                 %(use_orig_m_?"true":"false")<<endl;
-        cout << boost::format("Kept %d, discarded %d states in diag_denmat")
+        cout << boost::format("Kept %d, discarded %d states in svdRank2 line 336")
                                 % m % mdisc << endl;
         cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
         cout << boost::format("docut = %.2E")%docut << endl;
@@ -360,6 +363,10 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         else
             {
             cout << "Eigs [omitting scale factor " << refNorm_ << "]: \n";
+	    if(alleig.at(s-1) > 1.e10)
+		{
+		Error("bad alleig");
+		}
             }
 
         for(int j = s-1; j >= stop; --j)
@@ -460,6 +467,13 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
 
     Globals::lastd() = DD;
 
+    if(0)
+	{
+	IQTensor Ach = U * D * V;
+	Ach -= A;
+	Real nor = A.norm();
+	cout << "relative error in SVD is " << Ach.norm()/nor SP cutoff_ << endl;
+	}
     } //void SVDWorker::svdRank2
 
 
@@ -718,7 +732,7 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
         cout << endl;
         cout << boost::format("use_orig_m_ = %s")
                 %(use_orig_m_?"true":"false")<<endl;
-        cout << boost::format("Kept %d, discarded %d states in diag_denmat")
+        cout << boost::format("Kept %d, discarded %d states in diag_denmat line 721")
                                 % m % mdisc << endl;
         cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
         cout << boost::format("docut = %.2E")%docut << endl;
@@ -1307,7 +1321,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
 	{
         cout << endl;
         cout << boost::format("use_orig_m_ = %s")%(use_orig_m_?"true":"false")<<endl;
-        cout << boost::format("Kept %d, discarded %d states in diag_denmat")
+        cout << boost::format("Kept %d, discarded %d states in diag_denmat_complex line 1310")
                                      % m % mdisc << endl;
         cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
         cout << boost::format("docut = %.2E")%docut << endl;

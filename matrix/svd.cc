@@ -42,6 +42,19 @@ writeMatrix(const string& fname, const Matrix& M)
 // If newThresh == 0 the algorithm does only one pass.
 //
 
+void checksvd(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V)
+    {
+#ifdef CHKSVD
+    Matrix Ach = U;
+    for(int i = 1; i <= D.Length(); i++)
+	Ach.Column(i) *= D(i);
+    Ach = Ach * V;
+    Ach -= A;
+    Real nor = Norm(A.TreatAsVector());
+    if(nor != 0.0)
+	cout << "relative error with sqrt is low level svd is " << Norm(Ach.TreatAsVector())/nor << endl;
+#endif
+    }
 void 
 SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
     Real newThresh)
@@ -55,7 +68,8 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
         SVD(At,Vt,D,Ut,newThresh);
         U = Ut.t();
         V = Vt.t();
-        return;
+	checksvd(A,U,D,V);
+	return;
         }
 
     //Form 'density matrix' rho
@@ -79,7 +93,11 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
     D = B.Diagonal();
     V = Vt.t();
 
-    if(D(1) == 0 || newThresh == 0) return;
+    if(D(1) == 0 || newThresh == 0)
+	{
+	checksvd(A,U,D,V);
+	return;
+	}
 
     int start = 2;
     const Real D1 = D(1);
@@ -88,7 +106,11 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
         if(D(start)/D1 < newThresh) break;
         }
 
-    if(start >= (n-1)) return;
+    if(start >= (n-1)) 
+	{
+	checksvd(A,U,D,V);
+	return;
+	}
 
     //
     //Recursively SVD part of B 
@@ -106,6 +128,8 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
     U.SubMatrix(1,n,start,n) = U.SubMatrix(1,n,start,n) * u;
 
     V.SubMatrix(start,n,1,m) = v * Vt.t().SubMatrix(start,n,1,m);
+
+    checksvd(A,U,D,V);
 
     return;
     }
