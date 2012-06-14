@@ -371,6 +371,10 @@ class IQTSDat
         {
         //Set initial numref to 1000, stack allocated
         static IQTSDat Null_(1000);
+#ifdef DEBUG
+        if(Null_.numref < 500)
+            Error("Null_.numref too low");
+#endif
         return &Null_;
         }
 

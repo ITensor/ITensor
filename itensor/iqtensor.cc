@@ -245,6 +245,12 @@ scaleTo(const LogNumber& newscale)
 // IQTensor
 //
 
+bool IQTensor::
+isNull() const { return p.get() == IQTDat::Null(); }
+
+bool IQTensor::
+isNotNull() const { return p.get() != IQTDat::Null(); }
+
 int IQTensor::
 r() const 
     { 

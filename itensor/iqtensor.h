@@ -45,11 +45,11 @@ class IQTensor
     bool 
     iten_empty() const;
 
-    inline bool 
-    isNull() const { return p == 0; }
+    bool 
+    isNull() const;
 
-    inline bool 
-    isNotNull() const { return p != 0; }
+    bool 
+    isNotNull() const;
 
     int 
     num_index() const;
@@ -268,7 +268,7 @@ class IQTensor
     toITensor() const;
 
     //Automatic conversion to ITensor
-    //operator ITensor() { return toITensor(); }
+    operator ITensor() { return toITensor(); }
 
     //Inserts an ITensor block or adds it to
     //existing one if already present and QNs match
@@ -686,6 +686,10 @@ class IQTDat
         {
         //Set initial numref to 1000
         static IQTDat Null_(1000);
+#ifdef DEBUG
+        if(Null_.numref < 500)
+            Error("Null_.numref too low");
+#endif
         return &Null_;
         }
 

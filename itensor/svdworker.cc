@@ -409,8 +409,6 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
             { this_m = 1; m = 1; docut = 1; }
 
-        thisD.ReduceDimension(this_m);
-
         if(this_m == 0) { ++itenind; continue; }
 
         const 
@@ -423,7 +421,7 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         Index r("r",this_m);
         Riq.push_back(inqn(r,vI.qn(vi)));
 
-        Dblock.push_back(ITSparse(l,r,thisD));
+        Dblock.push_back(ITSparse(l,r,thisD.SubVector(1,this_m)));
 
         Ublock.push_back(ITensor(ui,l,UU.Columns(1,this_m)));
         Vblock.push_back(ITensor(r,vi,VV.Rows(1,this_m)));

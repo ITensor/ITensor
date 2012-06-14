@@ -201,6 +201,10 @@ class IQIndexSet
         {
         //Set initial numref to 1000
         static IQIndexSet Null_(1000);
+#ifdef DEBUG
+        if(Null_.numref < 500)
+            Error("Null_.numref too low");
+#endif
         return &Null_;
         }
 
