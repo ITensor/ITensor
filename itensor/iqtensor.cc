@@ -53,6 +53,14 @@ IQTDat(istream& s)
         }
     }
 
+IQTDat::
+IQTDat(int init_numref) 
+    : 
+    numref(init_numref), 
+    rmap_init(false)
+    { }
+
+
 void IQTDat::
 write(ostream& s) const
 	{

@@ -369,7 +369,8 @@ class IQTSDat
 
     static IQTSDat* Null()
         {
-        static IQTSDat Null_;
+        //Set initial numref to 1000, stack allocated
+        static IQTSDat Null_(1000);
         return &Null_;
         }
 
@@ -391,6 +392,9 @@ class IQTSDat
 
     //
     //////////////
+
+    explicit
+    IQTSDat(int init_numref);
 
     void
     uninit_rmap() const;

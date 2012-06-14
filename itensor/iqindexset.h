@@ -199,7 +199,8 @@ class IQIndexSet
 
     static IQIndexSet* Null()
         {
-        static IQIndexSet Null_;
+        //Set initial numref to 1000
+        static IQIndexSet Null_(1000);
         return &Null_;
         }
 
@@ -219,6 +220,9 @@ class IQIndexSet
 
     //
     /////////
+
+    explicit
+    IQIndexSet(int init_numref);
 
     void 
     operator=(const IQIndexSet&);

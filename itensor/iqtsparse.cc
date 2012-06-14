@@ -38,6 +38,14 @@ IQTSDat(istream& s)
     read(s);
     }
 
+IQTSDat::
+IQTSDat(int init_numref)
+    :
+    numref(init_numref),
+    init(false)
+    {
+    }
+
 void IQTSDat::
 insert_add(const ITSparse& s)
     {

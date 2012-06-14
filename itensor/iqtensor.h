@@ -684,7 +684,8 @@ class IQTDat
 
     static IQTDat* Null()
         {
-        static IQTDat Null_;
+        //Set initial numref to 1000
+        static IQTDat Null_(1000);
         return &Null_;
         }
 
@@ -715,6 +716,9 @@ class IQTDat
 
     void 
     uninit_rmap() const;
+
+    explicit
+    IQTDat(int init_numref);
 
     //Must be dynamically allocated
     ~IQTDat() { }

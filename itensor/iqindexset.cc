@@ -150,6 +150,13 @@ IQIndexSet(std::istream& s)
         }
     }
 
+IQIndexSet::
+IQIndexSet(int init_numref)
+    :
+    ur_(0),
+    numref(init_numref)
+    { }
+
 const IQIndex& IQIndexSet::
 findtype(IndexType t) const
 	{
