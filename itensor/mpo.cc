@@ -8,32 +8,32 @@ using boost::format;
 
 template<class Tensor> 
 void MPOt<Tensor>::
-position(int i, bool preserve_shape)
+position(int i, Option opt)
     {
     if(isNull()) Error("position: MPS is null");
     while(l_orth_lim_ < i-1)
         {
         if(l_orth_lim_ < 0) l_orth_lim_ = 0;
         Tensor WF = AA(l_orth_lim_+1) * AA(l_orth_lim_+2);
-        svdBond(l_orth_lim_+1,WF,Fromleft,preserve_shape);
+        svdBond(l_orth_lim_+1,WF,Fromleft,opt);
         }
     while(r_orth_lim_ > i+1)
         {
         if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
         Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
-        svdBond(r_orth_lim_-2,WF,Fromright,preserve_shape);
+        svdBond(r_orth_lim_-2,WF,Fromright,opt);
         }
     }
 template void MPOt<ITensor>::
-position(int b, bool preserve_shape);
+position(int b, Option opt);
 template void MPOt<IQTensor>::
-position(int b, bool preserve_shape);
+position(int b, Option opt);
 
 template <class Tensor>
 void MPOt<Tensor>::
-svdBond(int b, const Tensor& AA, Direction dir, bool preserve_shape)
+svdBond(int b, const Tensor& AA, Direction dir, Option opt)
     {
-    if(preserve_shape)
+    if(opt == PreserveShape())
         {
         //The idea of the preserve_shape flag is to 
         //leave any external indices of the MPO on the
@@ -76,9 +76,9 @@ svdBond(int b, const Tensor& AA, Direction dir, bool preserve_shape)
         }
     }
 template void MPOt<ITensor>::
-svdBond(int b, const ITensor& AA, Direction dir, bool preserve_shape);
+svdBond(int b, const ITensor& AA, Direction dir, Option opt);
 template void MPOt<IQTensor>::
-svdBond(int b, const IQTensor& AA, Direction dir, bool preserve_shape);
+svdBond(int b, const IQTensor& AA, Direction dir, Option opt);
 
 int 
 findCenter(const IQMPO& psi)

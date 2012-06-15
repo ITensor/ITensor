@@ -141,21 +141,21 @@ class MPOt : private MPSt<Tensor>
         }
 
     void 
-    svdBond(int b, const Tensor& AA, Direction dir, bool preserve_shape = false);
+    svdBond(int b, const Tensor& AA, Direction dir, Option opt = Option());
 
     void
-    doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false)
+    doSVD(int b, const Tensor& AA, Direction dir, Option opt = Option())
         { 
-        svdBond(b,AA,dir,preserve_shape); 
+        svdBond(b,AA,dir,opt); 
         }
 
     //using Parent::position;
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
     void 
-    position(int i, bool preserve_shape = false);
+    position(int i, Option opt = Option());
 
-    using Parent::is_ortho;
+    using Parent::isOrtho;
     using Parent::ortho_center;
     using Parent::orthogonalize;
 

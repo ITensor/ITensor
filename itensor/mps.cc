@@ -21,6 +21,7 @@ MPSt<Tensor>::
 MPSt() 
     : 
     N(0), 
+    is_ortho_(false),
     model_(0),
     atb_(1),
     writedir_("psi"),
@@ -39,6 +40,7 @@ MPSt(const Model& mod_,int maxmm, Real cut)
     A(mod_.NN()+1),
     l_orth_lim_(0),
     r_orth_lim_(mod_.NN()),
+    is_ortho_(false),
     model_(&mod_), 
     svd_(N,cut,1,maxmm,false,LogNumber(1)),
     atb_(1),
@@ -60,6 +62,7 @@ MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut)
     A(mod_.NN()+1),
     l_orth_lim_(0),
     r_orth_lim_(2),
+    is_ortho_(true),
     model_(&mod_), 
     svd_(N,cut,1,maxmm,false,LogNumber(1)),
     atb_(1),
@@ -79,6 +82,7 @@ MPSt(const Model& model, std::istream& s)
     : 
     N(model.NN()), 
     A(model.NN()+1), 
+    is_ortho_(false),
     model_(&model),
     atb_(1),
     writedir_("psi"),
@@ -98,6 +102,7 @@ AAnc(int i) //nc means 'non const'
     setSite(i);
     if(i <= l_orth_lim_) l_orth_lim_ = i-1;
     if(i >= r_orth_lim_) r_orth_lim_ = i+1;
+    is_ortho_ = false;
     return A.at(i); 
     }
 template
@@ -488,7 +493,6 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
 
     noprimelink();
 
-    //cerr << "WARNING: skipping orthogonalize in operator+=\n";
     orthogonalize();
 
     return *this;
@@ -504,18 +508,49 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other_)
         Error("operator+= not supported if doWrite(true)");
 
     //cout << "calling new orthog in sum" << endl;
-    try { orthogonalize(); }
-    catch(ResultIsZero aa) 
-	{ 
-	*this = other_;
-	return *this;
-	}
-    MPSt<Tensor> other(other_);
-    try { other.orthogonalize(); }
-    catch(ResultIsZero bb) 
-	{ 
-	return *this;
-	}
+    if(!this->isOrtho())
+        {
+        try { 
+            orthogonalize(); 
+            }
+        catch(const ResultIsZero& rz) 
+            { 
+            *this = other_;
+            return *this;
+            }
+        }
+
+    if(!other_.isOrtho())
+        {
+        MPSt<Tensor> other(other_);
+        try { 
+            other.orthogonalize(); 
+            }
+        catch(const ResultIsZero& rz) 
+            { 
+            return *this;
+            }
+        return addNoOrth(other);
+        }
+
+    return addNoOrth(other_);
+    }
+template
+MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
+template
+MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
+#endif
+
+//
+// Adds two MPOs but doesn't attempt to
+// orthogonalize them first
+//
+template <class Tensor>
+MPSt<Tensor>& MPSt<Tensor>::
+addNoOrth(const MPSt<Tensor>& other_)
+    {
+    if(do_write_)
+        Error("addNoOrth not supported if doWrite(true)");
 
     primelinks(0,4);
 
@@ -523,31 +558,29 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other_)
     for(int i = 1; i < N; ++i)
         {
         IndexT l1 = this->RightLinkInd(i);
-        IndexT l2 = other.RightLinkInd(i);
+        IndexT l2 = other_.RightLinkInd(i);
         IndexT r(l1.rawname());
         plussers(l1,l2,r,first[i],second[i]);
         }
 
-    AAnc(1) = AA(1) * first[1] + other.AA(1) * second[1];
+    AAnc(1) = AA(1) * first[1] + other_.AA(1) * second[1];
     for(int i = 2; i < N; ++i)
         {
         AAnc(i) = conj(first[i-1]) * AA(i) * first[i] 
-                  + conj(second[i-1]) * other.AA(i) * second[i];
+                  + conj(second[i-1]) * other_.AA(i) * second[i];
         }
-    AAnc(N) = conj(first[N-1]) * AA(N) + conj(second[N-1]) * other.AA(N);
+    AAnc(N) = conj(first[N-1]) * AA(N) + conj(second[N-1]) * other_.AA(N);
 
     noprimelink();
 
-    //cerr << "WARNING: skipping orthogonalize in operator+=\n";
     orthogonalize();
 
     return *this;
     }
 template
-MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
+MPSt<ITensor>& MPSt<ITensor>::addNoOrth(const MPSt<ITensor>& other);
 template
-MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
-#endif
+MPSt<IQTensor>& MPSt<IQTensor>::addNoOrth(const MPSt<IQTensor>& other);
 
 
 //
@@ -598,19 +631,19 @@ void MPSt<IQTensor>::noprimelink();
 
 template<class Tensor> void
 MPSt<Tensor>::
-svdBond(int b, const Tensor& AA, Direction dir, bool preserve_shape)
+svdBond(int b, const Tensor& AA, Direction dir, Option opt)
     {
-    svdBond(b,AA,dir,LocalMPO<Tensor>::Null(),preserve_shape);
+    svdBond(b,AA,dir,LocalMPO<Tensor>::Null(),opt);
     }
 template void MPSt<ITensor>::
-svdBond(int b, const ITensor& AA, Direction dir, bool);
+svdBond(int b, const ITensor& AA, Direction dir, Option);
 template void MPSt<IQTensor>::
-svdBond(int b, const IQTensor& AA, Direction dir, bool);
+svdBond(int b, const IQTensor& AA, Direction dir, Option);
 
 
 template<class Tensor> void
 MPSt<Tensor>::
-position(int i, bool preserve_shape)
+position(int i, Option opt)
     {
     if(isNull()) Error("position: MPS is null");
     while(l_orth_lim_ < i-1)
@@ -618,31 +651,31 @@ position(int i, bool preserve_shape)
         if(l_orth_lim_ < 0) l_orth_lim_ = 0;
         setBond(l_orth_lim_+1);
         Tensor WF = AA(l_orth_lim_+1) * AA(l_orth_lim_+2);
-        svdBond(l_orth_lim_+1,WF,Fromleft,preserve_shape);
+        svdBond(l_orth_lim_+1,WF,Fromleft,opt);
         }
     while(r_orth_lim_ > i+1)
         {
         if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
         setBond(r_orth_lim_-2);
         Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
-        svdBond(r_orth_lim_-2,WF,Fromright,preserve_shape);
+        svdBond(r_orth_lim_-2,WF,Fromright,opt);
         }
     }
 template void MPSt<ITensor>::
-position(int b, bool preserve_shape);
+position(int b, Option opt);
 template void MPSt<IQTensor>::
-position(int b, bool preserve_shape);
+position(int b, Option opt);
 
 template <class Tensor>
 void MPSt<Tensor>::
-orthogonalize(bool verbose)
+orthogonalize(Option opt)
     {
     //Do a half-sweep to the right, orthogonalizing each bond
     //but do not truncate since the basis to the right might not
     //be ortho (i.e. use the current m).
     svd_.useOrigM(true);
     position(N);
-    if(verbose)
+    if(opt == Verbose())
         {
         std::cout << "Done orthogonalizing, starting truncation." 
                   << std::endl;
@@ -650,11 +683,13 @@ orthogonalize(bool verbose)
     //Now basis is ortho, ok to truncate
     svd_.useOrigM(false);
     position(1);
+
+    is_ortho_ = true;
     }
 template
-void MPSt<ITensor>::orthogonalize(bool verbose);
+void MPSt<ITensor>::orthogonalize(Option opt);
 template
-void MPSt<IQTensor>::orthogonalize(bool verbose);
+void MPSt<IQTensor>::orthogonalize(Option opt);
 
 //Methods for use internally by checkOrtho
 ITensor
@@ -1386,7 +1421,7 @@ checkQNs(const IQMPS& psi)
 void 
 fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
     {
-    if(!psi_basis.is_ortho()) Error("psi_basis must be orthogonolized.");
+    if(!psi_basis.isOrtho()) Error("psi_basis must be orthogonolized.");
     if(psi_basis.ortho_center() != 1) Error("psi_basis must be orthogonolized to site 1.");
 
 

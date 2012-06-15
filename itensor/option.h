@@ -19,8 +19,10 @@ class Option
     enum OptionType
         {
         NullOption,
+        PreserveShape,
         Quiet,
-        UseWF
+        UseWF,
+        Verbose
         };
 
     Option();
@@ -266,6 +268,12 @@ OptionSet(Option opt1, Option opt2, Option opt3,
 // creating Option instances
 
 Option inline
+PreserveShape()
+    {
+    return Option(Option::PreserveShape);
+    }
+
+Option inline
 Quiet()
     {
     return Option(Option::Quiet);
@@ -275,6 +283,12 @@ Option inline
 UseWF()
     {
     return Option(Option::UseWF);
+    }
+
+Option inline
+Verbose()
+    {
+    return Option(Option::Verbose);
     }
 
 #endif

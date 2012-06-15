@@ -246,10 +246,10 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         {
         Real maxLogNum = -200;
         Foreach(const ITensor& t, A.itensors())
-	    {
-	    t.scaleOutNorm();
+            {
+            t.scaleOutNorm();
             maxLogNum = max(maxLogNum,t.scale().logNum());
-	    }
+            }
         refNorm_ = LogNumber(maxLogNum,1);
         }
 
@@ -467,13 +467,15 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
 
     Globals::lastd() = DD;
 
-    if(0)
-	{
-	IQTensor Ach = U * D * V;
-	Ach -= A;
-	Real nor = A.norm();
-	cout << "relative error in SVD is " << Ach.norm()/nor SP cutoff_ << endl;
-	}
+    /*
+    {
+    IQTensor Ach = U * D * V;
+    Ach -= A;
+    Real nor = A.norm();
+    cout << "relative error in SVD is " << Ach.norm()/nor SP cutoff_ << endl;
+    }
+    */
+
     } //void SVDWorker::svdRank2
 
 

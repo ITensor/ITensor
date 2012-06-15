@@ -213,9 +213,16 @@ class MPSt
     void 
     writeDir(const std::string& val) { writedir_ = val; initWrite(); }
 
+    bool 
+    isOrtho() const { return is_ortho_; }
+    //Only use the following method if
+    //you are sure of what you are doing!
+    void 
+    isOrtho(bool val) { is_ortho_ = val; }
+
+
     void 
     read(std::istream& s);
-
     void 
     write(std::ostream& s) const;
 
@@ -234,6 +241,8 @@ class MPSt
 
     MPSt& 
     operator+=(const MPSt& oth);
+    MPSt& 
+    addNoOrth(const MPSt& oth);
 
     inline MPSt 
     operator+(MPSt res) const { res += *this; return res; }
@@ -270,36 +279,33 @@ class MPSt
 
     void 
     svdBond(int b, const Tensor& AA, Direction dir, 
-            bool preserve_shape = false);
+            Option opt = Option());
 
     template <class LocalOpT>
     void 
     svdBond(int b, const Tensor& AA, Direction dir, 
-                const LocalOpT& PH, bool preserve_shape = false);
+                const LocalOpT& PH, Option opt = Option());
 
     void
-    doSVD(int b, const Tensor& AA, Direction dir, bool preserve_shape = false)
+    doSVD(int b, const Tensor& AA, Direction dir, Option opt = Option())
         { 
-        svdBond(b,AA,dir,preserve_shape); 
+        svdBond(b,AA,dir,opt); 
         }
 
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
     void 
-    position(int i, bool preserve_shape = false);
-
-    bool 
-    is_ortho() const { return (l_orth_lim_ + 1 == r_orth_lim_ - 1); }
+    position(int i, Option opt = Option());
 
     int 
     ortho_center() const 
         { 
-        if(!is_ortho()) Error("orthogonality center not well defined.");
+        if(!isOrtho()) Error("orthogonality center not well defined.");
         return (l_orth_lim_ + 1);
         }
 
     void 
-    orthogonalize(bool verbose = false);
+    orthogonalize(Option opt = Option());
 
     //Checks if A[i] is left (left == true) 
     //or right (left == false) orthogonalized
@@ -416,6 +422,8 @@ protected:
     int l_orth_lim_,
         r_orth_lim_;
 
+    bool is_ortho_;
+
     const Model* model_;
 
     SVDWorker svd_;
@@ -497,10 +505,10 @@ template <class Tensor>
 template <class LocalOpT>
 void MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, 
-            const LocalOpT& PH, bool preserve_shape)
+            const LocalOpT& PH, Option opt)
     {
     setBond(b);
-    if(preserve_shape)
+    if(opt == PreserveShape())
         {
         //The idea of the preserve_shape flag is to 
         //leave any external indices of the MPS on the
