@@ -18,6 +18,8 @@
 #include "boost/foreach.hpp"
 #define Foreach BOOST_FOREACH
 
+#include "option.h"
+
 template<class T, class Op> void 
 for_all(T& a, Op f) 
     { for_each(a.begin(),a.end(),f); }
