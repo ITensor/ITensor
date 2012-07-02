@@ -244,9 +244,13 @@ class IQTensor
     //
     // Multiplication by an IQIndexVal
     //
+    IQTensor& 
+    operator*=(const IQIndexVal& iv)
+        { (*this) *= IQTensor(iv); return *this; }
+
     IQTensor 
     operator*(const IQIndexVal& iv) const
-        { IQTensor res(*this); res *= IQTensor(iv); return res; }
+        { IQTensor res(*this); res *= iv; return res; }
 
     friend inline IQTensor 
     operator*(const IQIndexVal& iv, const IQTensor& T) 

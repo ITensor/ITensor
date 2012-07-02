@@ -180,7 +180,10 @@ class Index
 
     Index();
 
-    Index(const std::string& name, int mm = 1, IndexType it=Link, int plev = 0);
+    Index(const std::string& name, 
+          int mm = 1, 
+          IndexType it=Link, 
+          int plev = 0);
 
     Index(std::istream& s) { read(s); }
 
