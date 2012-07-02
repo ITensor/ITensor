@@ -514,7 +514,6 @@ setLHlim(int val)
 
     if(PH_.at(LHlim_).isNotNull())
         {
-        //std::cerr << boost::format("Writing A(%d) to %s\n")%atb_%writedir_;
         writeToFile(PHFName(LHlim_),PH_.at(LHlim_));
         PH_.at(LHlim_) = Tensor();
         }
@@ -554,7 +553,6 @@ setRHlim(int val)
 
     if(PH_.at(RHlim_).isNotNull())
         {
-        //std::cerr << boost::format("Writing A(%d) to %s\n")%atb_%writedir_;
         writeToFile(PHFName(RHlim_),PH_.at(RHlim_));
         PH_.at(RHlim_) = Tensor();
         }

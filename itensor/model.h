@@ -49,10 +49,15 @@ class Model
     IQIndex 
     siP(int i) const { return getSiP(i); }
 
-    //Operators -----------------------
+    //General Operators --------------------
 
+    //Identity
     IQTensor 
     id(int i) const { return makeId(i); }
+
+    //Projector onto state n
+    IQTensor 
+    proj(int i,int n) const { return makeProj(i,n); }
 
     //Spin Operators -----------------------
 
@@ -159,6 +164,9 @@ class Model
     makeId(int i) const;
 
     virtual IQTensor 
+    makeProj(int i, int n) const;
+
+    virtual IQTensor 
     makeSx(int i) const;
 
     virtual IQTensor 
@@ -245,6 +253,14 @@ makeId(int i) const
     for(int j = 1; j <= si(i).m(); ++j)
         id_(conj(si(i))(j),siP(i)(j)) = 1;
     return id_;
+    }
+
+inline IQTensor Model::
+makeProj(int i, int n) const
+    { 
+    IQTensor P_(conj(si(i)),siP(i));
+    P_(conj(si(i))(n),siP(i)(n)) = 1;
+    return P_;
     }
 
 inline IQTensor Model::
