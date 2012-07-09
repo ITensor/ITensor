@@ -459,8 +459,8 @@ makeL(const MPSType& psi, int k)
         while(LHlim_ < k)
             {
             const int ll = LHlim_;
-            PH_.at(ll+1) = (PH_.at(ll).isNull() ? psi.AA(ll+1) : PH_[ll]*psi.AA(ll+1));
-            PH_[ll+1] *= conj(primelink(Psi_->AA(ll+1)));
+            PH_.at(ll+1) = (PH_.at(ll).isNull() ? conj(psi.AA(ll+1)) : PH_[ll]*conj(psi.AA(ll+1)));
+            PH_[ll+1] *= primelink(Psi_->AA(ll+1));
             setLHlim(LHlim_+1);
             }
         }
@@ -486,8 +486,8 @@ makeR(const MPSType& psi, int k)
         while(RHlim_ > k)
             {
             const int rl = RHlim_;
-            PH_.at(rl-1) = (PH_.at(rl).isNull() ? psi.AA(rl-1) : PH_[rl]*psi.AA(rl-1));
-            PH_[rl-1] *= conj(primelink(Psi_->AA(rl-1)));
+            PH_.at(rl-1) = (PH_.at(rl).isNull() ? conj(psi.AA(rl-1)) : PH_[rl]*conj(psi.AA(rl-1)));
+            PH_[rl-1] *= primelink(Psi_->AA(rl-1));
             setRHlim(RHlim_-1);
             }
         }
