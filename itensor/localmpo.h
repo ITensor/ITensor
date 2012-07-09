@@ -43,14 +43,18 @@ class LocalMPO
 
     LocalMPO();
 
-    LocalMPO(const MPOt<Tensor>& Op, int num_center = 2);
+    LocalMPO(const MPOt<Tensor>& Op, 
+             const Option& opt1 = Option(), const Option& opt2 = Option()); 
+
+    LocalMPO(const MPSt<Tensor>& Psi, 
+             const Option& opt1 = Option(), const Option& opt2 = Option()); 
 
     //
     // Sparse Matrix Methods
     //
 
     void
-    product(const Tensor& phi, Tensor& phip) const { lop_.product(phi,phip); }
+    product(const Tensor& phi, Tensor& phip) const;
 
     Real
     expect(const Tensor& phi) const { return lop_.expect(phi); }
@@ -152,9 +156,9 @@ class LocalMPO
     size() const { return lop_.size(); }
 
     bool
-    isNull() const { return Op_ == 0; }
+    isNull() const { return Op_ == 0 && Psi_ == 0; }
     bool
-    isNotNull() const { return Op_ != 0; }
+    isNotNull() const { return Op_ != 0 || Psi_ != 0; }
 
     bool
     doWrite() const { return do_write_; }
@@ -188,6 +192,8 @@ class LocalMPO
 
     bool do_write_;
     std::string writedir_;
+
+    const MPSt<Tensor>* Psi_;
 
     //
     /////////////////
@@ -228,21 +234,80 @@ LocalMPO()
       RHlim_(-1),
       nc_(2),
       do_write_(false),
-      writedir_("PH")
+      writedir_("PH"),
+      Psi_(0)
     { }
 
 template <class Tensor>
 inline LocalMPO<Tensor>::
-LocalMPO(const MPOt<Tensor>& Op, int num_center)
+LocalMPO(const MPOt<Tensor>& Op, 
+         const Option& opt1, const Option& opt2)
     : Op_(&Op),
       PH_(Op.NN()+2),
       LHlim_(0),
       RHlim_(Op.NN()+1),
       nc_(2),
       do_write_(false),
-      writedir_("PH")
+      writedir_("PH"),
+      Psi_(0)
     { 
-    numCenter(num_center);
+    OptionSet oset(opt1,opt2);
+    if(oset.includes(Option::NumCenter))
+        numCenter(oset.intVal(Option::NumCenter));
+    }
+
+template <class Tensor>
+inline LocalMPO<Tensor>::
+LocalMPO(const MPSt<Tensor>& Psi, 
+         const Option& opt1, const Option& opt2)
+    : Op_(0),
+      PH_(Psi.NN()+2),
+      LHlim_(0),
+      RHlim_(Psi.NN()+1),
+      nc_(2),
+      do_write_(false),
+      writedir_("PH"),
+      Psi_(&Psi)
+    { 
+    OptionSet oset(opt1,opt2);
+    if(oset.includes(Option::NumCenter))
+        numCenter(oset.intVal(Option::NumCenter));
+    }
+
+template <class Tensor> inline
+void LocalMPO<Tensor>::
+product(const Tensor& phi, Tensor& phip) const
+    {
+    if(Op_ != 0)
+        {
+        lop_.product(phi,phip);
+        }
+    else if(Psi_ != 0)
+        {
+        int b = position();
+        Tensor othr = (L().isNull() ? primelink(Psi_->AA(b)) : L()*primelink(Psi_->AA(b)));
+        othr *= primelink(Psi_->AA(b+1));
+        if(R().isNotNull()) 
+            othr *= R();
+
+        Real re = 0, im = 0;
+        BraKet(othr,phi,re,im);
+
+        phip = othr;
+        phip.mapprime(1,0);
+        if(fabs(im) < 1E-10) 
+            {
+            phip *= re;
+            }
+        else
+            {
+            phip *= (re*Tensor::Complex_1() + im*Tensor::Complex_i());
+            }
+        }
+    else
+        {
+        Error("LocalMPO is null");
+        }
     }
 
 template <class Tensor>
@@ -311,7 +376,10 @@ position(int b, const MPSType& psi)
         }
 #endif
 
-    lop_.update(Op_->AA(b),Op_->AA(b+1),L(),R());
+    if(Op_ != 0) //normal MPO case
+        {
+        lop_.update(Op_->AA(b),Op_->AA(b+1),L(),R());
+        }
     }
 
 template <class Tensor>
@@ -386,11 +454,24 @@ inline void LocalMPO<Tensor>::
 makeL(const MPSType& psi, int k)
     {
     if(!PH_.empty())
-    while(LHlim_ < k)
+    if(Op_ == 0) //Op is actually an MPS
         {
-        const int ll = LHlim_;
-        psi.projectOp(ll+1,Fromleft,PH_.at(ll),Op_->AA(ll+1),PH_.at(ll+1));
-        setLHlim(LHlim_+1);
+        while(LHlim_ < k)
+            {
+            const int ll = LHlim_;
+            PH_.at(ll+1) = (PH_.at(ll).isNull() ? psi.AA(ll+1) : PH_[ll]*psi.AA(ll+1));
+            PH_[ll+1] *= conj(primelink(Psi_->AA(ll+1)));
+            setLHlim(LHlim_+1);
+            }
+        }
+    else //normal MPO case
+        {
+        while(LHlim_ < k)
+            {
+            const int ll = LHlim_;
+            psi.projectOp(ll+1,Fromleft,PH_.at(ll),Op_->AA(ll+1),PH_.at(ll+1));
+            setLHlim(LHlim_+1);
+            }
         }
     }
 
@@ -400,11 +481,24 @@ inline void LocalMPO<Tensor>::
 makeR(const MPSType& psi, int k)
     {
     if(!PH_.empty())
-    while(RHlim_ > k)
+    if(Op_ == 0) //Op is actually an MPS
         {
-        const int rl = RHlim_;
-        psi.projectOp(rl-1,Fromright,PH_.at(rl),Op_->AA(rl-1),PH_.at(rl-1));
-        setRHlim(RHlim_-1);
+        while(RHlim_ > k)
+            {
+            const int rl = RHlim_;
+            PH_.at(rl-1) = (PH_.at(rl).isNull() ? psi.AA(rl-1) : PH_[rl]*psi.AA(rl-1));
+            PH_[rl-1] *= conj(primelink(Psi_->AA(rl-1)));
+            setRHlim(RHlim_-1);
+            }
+        }
+    else //normal MPO case
+        {
+        while(RHlim_ > k)
+            {
+            const int rl = RHlim_;
+            psi.projectOp(rl-1,Fromright,PH_.at(rl),Op_->AA(rl-1),PH_.at(rl-1));
+            setRHlim(RHlim_-1);
+            }
         }
     }
 

@@ -488,6 +488,9 @@ class IQTensor
     void 
     assignFromVec(VectorRef v);
 
+    Real
+    toReal() const;
+
     void 
     GetSingComplex(Real& re, Real& im) const;
     

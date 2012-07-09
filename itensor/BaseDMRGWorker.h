@@ -42,6 +42,10 @@ class BaseDMRGWorker
         { return runInternal(H,psi); }
 
     Real 
+    run(const MPOType& H, const std::vector<MPSType>& psis, MPSType& psi) 
+        { return runInternal(H,psis,psi); }
+
+    Real 
     energy() const { return getEnergy(); }
 
 private:
@@ -53,6 +57,13 @@ private:
     runInternal(const std::vector<MPOType>& H, MPSType& psi)
         {
         Error("DMRG with a vector of MPOs not implemented for this DMRGWorker.");
+        return 0;
+        }
+
+    virtual Real 
+    runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
+        {
+        Error("DMRG orthogonalized against a vector of MPS not implemented for this DMRGWorker.");
         return 0;
         }
 

@@ -1606,6 +1606,24 @@ operator/=(const IQTensor& other)
 
     } //IQTensor& IQTensor::operator/=(const IQTensor& other)
 
+//Extracts the real part of a
+//rank 0 IQTensor (scalar)
+Real IQTensor::
+toReal() const
+    {
+#ifdef DEBUG
+    if(r() != 0)
+        {
+        PrintIndices((*this));
+        Error("toReal only valid for rank 0 IQTensor");
+        }
+#endif
+    if(iten_size() == 0)
+        return  0; 
+    else
+        return dat().begin()->toReal();
+    }
+
 //Extracts the real and imaginary parts of the 
 //component of a rank 0 tensor (scalar)
 void IQTensor::
@@ -1792,15 +1810,24 @@ Dot(const IQTensor& x, const IQTensor& y)
     IQTensor res(y);
 
     int j = x.findindex(y.index(1));
-    if(x.index(j).dir() != y.index(1).dir())
-        {
-        //Arrows do match
-        res *= x;
+    try {
+        if(x.index(j).dir() != y.index(1).dir())
+            {
+            //Arrows do match
+            res *= x;
+            }
+        else
+            {
+            //Arrows do not match, fix:
+            res *= conj(x);
+            }
         }
-    else
+    catch(const ITError& e)
         {
-        //Arrows do not match, fix:
-        res *= conj(x);
+        cout << "Caught an ITError in Dot (IQTensor version)" << endl;
+        PrintIndices(x);
+        PrintIndices(y);
+        exit(0);
         }
     res *= IQTensor::Sing();
     return ReSingVal(res);

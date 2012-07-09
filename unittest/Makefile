@@ -9,20 +9,21 @@ REPORT_LEVEL=confirm
 HEADERS=test.h
 SOURCES = test.cc
 SOURCES+= matrix_test.cc
-SOURCES+= real_test.cc
-SOURCES+= index_test.cc
-SOURCES+= itensor_test.cc
-SOURCES+= itsparse_test.cc
-SOURCES+= combiner_test.cc
-SOURCES+= iqcombiner_test.cc
+#SOURCES+= real_test.cc
+#SOURCES+= index_test.cc
+#SOURCES+= itensor_test.cc
+#SOURCES+= itsparse_test.cc
+#SOURCES+= combiner_test.cc
+#SOURCES+= iqcombiner_test.cc
 SOURCES+= iqtensor_test.cc
-SOURCES+= mps_test.cc
-SOURCES+= mpo_test.cc
+#SOURCES+= mps_test.cc
+#SOURCES+= mpo_test.cc
 #SOURCES+= eigensolver_test.cc
-SOURCES+= regression_test.cc
-SOURCES+= svdworker_test.cc
-SOURCES+= iqtsparse_test.cc
-SOURCES+= webpage_test.cc
+#SOURCES+= regression_test.cc
+#SOURCES+= svdworker_test.cc
+#SOURCES+= iqtsparse_test.cc
+#SOURCES+= webpage_test.cc
+SOURCES+= localmpo_test.cc
 
 LIBNAMES=matrix utilities itensor
 
@@ -139,4 +140,8 @@ eigensolver_test.o: $(INCLUDEDIR)/eigensolver.h
 
 webpage_test.o: $(INCLUDEDIR)/iqtensor.h
 .debug_objs/webpage_test.o: $(INCLUDEDIR)/iqtensor.h
+
+LIBHEADERS+= $(INCLUDEDIR)/localmpo.h
+localmpo_test.o: $(LIBHEADERS)
+.debug_objs/localmpo_test.o: $(LIBHEADERS)
 

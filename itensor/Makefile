@@ -21,7 +21,7 @@ HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
         hams/triheisenberg.h hams/ising.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
         eigensolver.h localop.h localmpo.h localmposet.h itsparse.h iqtsparse.h\
-        partition.h option.h hambuilder.h
+        partition.h option.h hambuilder.h localmpo_mps.h
 
 ####################################
 

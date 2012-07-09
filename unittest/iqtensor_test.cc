@@ -197,6 +197,18 @@ TEST(TieIndices)
         }
     }
 
+TEST(ToReal)
+    {
+    Real f = ran1();
+    IQTensor T(f);
+    CHECK_CLOSE(T.toReal(),f,1E-5);
+
+    //Default constructed IQTensor should
+    //have a toReal value of zero
+    IQTensor Z;
+    CHECK_CLOSE(Z.toReal(),0,1E-5);
+    }
+
 TEST(Trace)
     {
 

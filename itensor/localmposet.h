@@ -14,7 +14,7 @@ class LocalMPOSet
 
     LocalMPOSet();
 
-    LocalMPOSet(const std::vector<MPOt<Tensor> >& Op, int num_center = 2);
+    LocalMPOSet(const std::vector<MPOt<Tensor> >& Op);
 
     typedef typename Tensor::IndexT
     IndexT;
@@ -90,16 +90,15 @@ LocalMPOSet()
 
 template <class Tensor>
 inline LocalMPOSet<Tensor>::
-LocalMPOSet(const std::vector<MPOt<Tensor> >& Op, int num_center)
+LocalMPOSet(const std::vector<MPOt<Tensor> >& Op)
     : 
     Op_(&Op),
     lmpo_(Op.size())
     { 
     for(size_t n = 1; n < lmpo_.size(); ++n)
         {
-        lmpo_[n] = LocalMPOT(Op.at(n),num_center);
+        lmpo_[n] = LocalMPOT(Op.at(n));
         }
-    numCenter(num_center);
     }
 
 template <class Tensor>
