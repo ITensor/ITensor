@@ -239,6 +239,7 @@ template <class Tensor>
 void HamBuilder::
 initialize(MPOt<Tensor>& res) const
     {
+    res = MPOt<Tensor>(mod_);
     for(int j = 1; j <= N_; ++j)
         res.AAnc(j) = mod_.id(j);
     }
@@ -280,12 +281,12 @@ putLinks(MPOt<IQTensor>& res) const
         }
 
     res.AAnc(1) *= links.at(1)(1);
-    for(int i = 1; i < N_; ++i)
+    for(int i = 2; i < N_; ++i)
         {
-        res.AAnc(i) *= links.at(i-1)(1);
+        res.AAnc(i) *= conj(links.at(i-1)(1));
         res.AAnc(i) *= links.at(i)(1);
         }
-    res.AAnc(N_) *= links.at(N_-1)(1);
+    res.AAnc(N_) *= conj(links.at(N_-1)(1));
     }
 
 #endif
