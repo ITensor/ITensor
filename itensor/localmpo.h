@@ -215,7 +215,11 @@ class LocalMPO
     void
     initWrite() const
         {
-        system(("mkdir -p " + writedir_).c_str());
+        if(do_write_)
+            {
+            system(("mkdir -p " + writedir_).c_str());
+            //std::cout << "Successfully created directory " + writedir_ << std::endl;
+            }
         }
 
     std::string
@@ -512,8 +516,9 @@ setLHlim(int val)
         return;
         }
 
-    if(PH_.at(LHlim_).isNotNull())
+    if(LHlim_ != val && PH_.at(LHlim_).isNotNull())
         {
+        //std::cerr << boost::format("Writing PH(%d) to %s\n")%LHlim_%writedir_;
         writeToFile(PHFName(LHlim_),PH_.at(LHlim_));
         PH_.at(LHlim_) = Tensor();
         }
@@ -551,8 +556,9 @@ setRHlim(int val)
         return;
         }
 
-    if(PH_.at(RHlim_).isNotNull())
+    if(RHlim_ != val && PH_.at(RHlim_).isNotNull())
         {
+        //std::cerr << boost::format("Writing PH(%d) to %s\n")%RHlim_%writedir_;
         writeToFile(PHFName(RHlim_),PH_.at(RHlim_));
         PH_.at(RHlim_) = Tensor();
         }
