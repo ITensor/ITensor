@@ -7,8 +7,6 @@
 
 using namespace std;
 
-//enum sii {size = 2000};
-
 int main()
     {
     const char* ont = getenv("OMP_NUM_THREADS");
