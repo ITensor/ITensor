@@ -18,6 +18,8 @@ class Option
     // 
     enum Type
         {
+        DebugLevel,
+        DoPinning,
         NullOption,
         NumCenter,
         PreserveShape,
@@ -325,6 +327,18 @@ realVal(const Option& opt) const
 //
 // Convenience functions for
 // creating Option instances
+
+Option inline
+DebugLevel(int level)
+    {
+    return Option(Option::DebugLevel,level);
+    }
+
+Option inline
+DoPinning()
+    {
+    return Option(Option::DoPinning);
+    }
 
 Option inline
 NumCenter(int nc = 2)
