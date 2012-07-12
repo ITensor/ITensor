@@ -79,8 +79,8 @@ libmatrix-pg.a: mkpgdir $(PGOBJECTS) $(HEADERS)
 mkpgdir:
 	mkdir -p .pg_objs
 
-timeit:	timeit.o-o $(LIBFILE)
-	mv timeit.o-o timeit.o
+timeit:	timeit.o $(LIBFILE)
+	#mv timeit.o-o timeit.o
 	$(CCCOM) $(CCFLAGS) -o timeit timeit.o $(LIBFLAGS)
 	mv timeit.o timeit.o-o
 	touch timeit

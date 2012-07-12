@@ -18,3 +18,8 @@ BLAS_LAPACK_INCLUDEFLAGS=
 #PLATFORM=mkl
 #BLAS_LAPACK_INCLUDEFLAGS=-I/sopt/intel/mkl/10.1.0.015/include
 #BLAS_LAPACK_LIBFLAGS=-L/sopt/intel/mkl/10.1.0.015/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lgfortran -lpthread
+
+##Example using the AMD ACML library
+#PLATFORM=acml
+#BLAS_LAPACK_INCLUDEFLAGS=-I/opt/acml5.1.0/gfortran64/include
+#BLAS_LAPACK_LIBFLAGS=-L/opt/acml5.1.0/gfortran64/lib -lacml -lgfortran -lpthread
