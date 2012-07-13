@@ -18,6 +18,7 @@ class Option
     // 
     enum Type
         {
+        Auto,
         DebugLevel,
         DoPinning,
         NullOption,
@@ -53,15 +54,23 @@ class Option
 
     bool
     operator==(const Option& other) const
-        { return type_ == other.type_; }
-
-    bool
-    operator!=(const Option& other) const
-        { return type_ != other.type_; }
+        { 
+        return (type_ == other.type_ && 
+                bval_ == other.bval_ &&
+                sval_ == other.sval_ &&
+                ival_ == other.ival_ &&
+                rval_ == other.rval_);
+        }
 
     bool
     operator<(const Option& other) const
-        { return type_ < other.type_; }
+        { 
+        return (type_ < other.type_ || 
+                bval_ < other.bval_ ||
+                sval_ < other.sval_ ||
+                ival_ < other.ival_ ||
+                rval_ < other.rval_);
+        }
 
     //
     // Accessor methods
@@ -199,9 +208,6 @@ class OptionSet
     bool
     includes(const Option& val) const { return opts_.count(val) == 1; }
 
-    bool
-    includes(Option::Type type) const { return opts_.count(Option(type)) == 1; }
-
     void
     insert(const Option& val) { if(val.isNotNull()) opts_.insert(val); }
 
@@ -295,15 +301,6 @@ get(const Option& opt) const
     return *it;
     }
 
-inline const Option& OptionSet::
-get(Option::Type type) const
-    {
-    opts_it_ it = opts_.find(Option(type));
-    if(it == opts_.end())
-        Error("OptionSet does not contain requested option");
-    return *it;
-    }
-
 inline const std::string& OptionSet::
 stringVal(const Option& opt) const
     {
@@ -327,6 +324,12 @@ realVal(const Option& opt) const
 //
 // Convenience functions for
 // creating Option instances
+
+Option inline
+Auto(bool val = true)
+    {
+    return Option(Option::Auto,val);
+    }
 
 Option inline
 DebugLevel(int level)
@@ -353,9 +356,9 @@ PreserveShape()
     }
 
 Option inline
-Quiet()
+Quiet(bool val = true)
     {
-    return Option(Option::Quiet);
+    return Option(Option::Quiet,val);
     }
 
 Option inline
@@ -365,9 +368,9 @@ UseWF()
     }
 
 Option inline
-Verbose()
+Verbose(bool val = true)
     {
-    return Option(Option::Verbose);
+    return Option(Option::Verbose,val);
     }
 
 Option inline
