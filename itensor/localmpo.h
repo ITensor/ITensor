@@ -458,23 +458,25 @@ inline void LocalMPO<Tensor>::
 makeL(const MPSType& psi, int k)
     {
     if(!PH_.empty())
-    if(Op_ == 0) //Op is actually an MPS
         {
-        while(LHlim_ < k)
+        if(Op_ == 0) //Op is actually an MPS
             {
-            const int ll = LHlim_;
-            PH_.at(ll+1) = (PH_.at(ll).isNull() ? conj(psi.AA(ll+1)) : PH_[ll]*conj(psi.AA(ll+1)));
-            PH_[ll+1] *= primelink(Psi_->AA(ll+1));
-            setLHlim(LHlim_+1);
+            while(LHlim_ < k)
+                {
+                const int ll = LHlim_;
+                PH_.at(ll+1) = (PH_.at(ll).isNull() ? conj(psi.AA(ll+1)) : PH_[ll]*conj(psi.AA(ll+1)));
+                PH_[ll+1] *= primelink(Psi_->AA(ll+1));
+                setLHlim(LHlim_+1);
+                }
             }
-        }
-    else //normal MPO case
-        {
-        while(LHlim_ < k)
+        else //normal MPO case
             {
-            const int ll = LHlim_;
-            psi.projectOp(ll+1,Fromleft,PH_.at(ll),Op_->AA(ll+1),PH_.at(ll+1));
-            setLHlim(LHlim_+1);
+            while(LHlim_ < k)
+                {
+                const int ll = LHlim_;
+                psi.projectOp(ll+1,Fromleft,PH_.at(ll),Op_->AA(ll+1),PH_.at(ll+1));
+                setLHlim(LHlim_+1);
+                }
             }
         }
     }
@@ -485,23 +487,25 @@ inline void LocalMPO<Tensor>::
 makeR(const MPSType& psi, int k)
     {
     if(!PH_.empty())
-    if(Op_ == 0) //Op is actually an MPS
         {
-        while(RHlim_ > k)
+        if(Op_ == 0) //Op is actually an MPS
             {
-            const int rl = RHlim_;
-            PH_.at(rl-1) = (PH_.at(rl).isNull() ? conj(psi.AA(rl-1)) : PH_[rl]*conj(psi.AA(rl-1)));
-            PH_[rl-1] *= primelink(Psi_->AA(rl-1));
-            setRHlim(RHlim_-1);
+            while(RHlim_ > k)
+                {
+                const int rl = RHlim_;
+                PH_.at(rl-1) = (PH_.at(rl).isNull() ? conj(psi.AA(rl-1)) : PH_[rl]*conj(psi.AA(rl-1)));
+                PH_[rl-1] *= primelink(Psi_->AA(rl-1));
+                setRHlim(RHlim_-1);
+                }
             }
-        }
-    else //normal MPO case
-        {
-        while(RHlim_ > k)
+        else //normal MPO case
             {
-            const int rl = RHlim_;
-            psi.projectOp(rl-1,Fromright,PH_.at(rl),Op_->AA(rl-1),PH_.at(rl-1));
-            setRHlim(RHlim_-1);
+            while(RHlim_ > k)
+                {
+                const int rl = RHlim_;
+                psi.projectOp(rl-1,Fromright,PH_.at(rl),Op_->AA(rl-1),PH_.at(rl-1));
+                setRHlim(RHlim_-1);
+                }
             }
         }
     }

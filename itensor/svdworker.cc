@@ -295,8 +295,8 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
 
     if(absoluteCutoff_)
         {
-        while(m > maxm_ || (alleig[mdisc] < cutoff_ && m > minm_)
-            && mdisc < (int)alleig.size())
+        while(m > maxm_ || ( (alleig[mdisc] < cutoff_ && m > minm_)
+            && mdisc < (int)alleig.size() ) )
             {
             if(alleig[mdisc] > 0)
                 svdtruncerr += alleig[mdisc];
@@ -314,8 +314,8 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
 	    {
 	    Real scale = doRelCutoff_ ? alleig.back() : 1.0;
         while(m > maxm_ 
-            || (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
-            && mdisc < (int)alleig.size())
+            || ( (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
+            && mdisc < (int)alleig.size() ) )
             {
             if(alleig[mdisc] > 0)
                 svdtruncerr += alleig[mdisc];
@@ -693,8 +693,8 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
 
     if(absoluteCutoff_)
         {
-        while(m > maxm_ || (alleig[mdisc] < cutoff_ && m > minm_)
-            && mdisc < (int)alleig.size())
+        while(m > maxm_ || ( (alleig[mdisc] < cutoff_ && m > minm_)
+            && mdisc < (int)alleig.size() ) )
             {
             if(alleig[mdisc] > 0)
                 svdtruncerr += alleig[mdisc];
@@ -712,8 +712,8 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
 	    {
 	    Real scale = doRelCutoff_ ? alleig.back() : 1.0;
         while(m > maxm_ 
-            || (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
-            && mdisc < (int)alleig.size())
+            || ( (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
+            && mdisc < (int)alleig.size() ) )
             {
             if(alleig[mdisc] > 0)
                 svdtruncerr += alleig[mdisc];

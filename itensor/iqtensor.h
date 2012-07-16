@@ -579,7 +579,7 @@ class IQTensor
 
     }; //class IQTensor
 
-class IQTDat
+class IQTDat : public boost::noncopyable
     {
     public:
 
