@@ -127,66 +127,108 @@ struct IndexVal;
 
 
 
-//
-// Index
-//
-
+///
+/// Index: represents a tensor index of fixed bond dimension m.
+/// The == operator can be used to determine if two Index's match
+/// (copies of the same Index instance).
+/// An Index can be made temporarily distinct from other copies 
+/// by increasing its "primelevel".
+///
 class Index
     {
     public:
 
+    /// Returns the bond dimension of an Index.
+    /// @return Bond dimension of this Index
     int 
     m() const;
 
     const boost::uuids::uuid&
     Ind() const;
 
+    /// Returns the IndexType of this Index.
+    /// @return IndexType of this Index
     IndexType 
     type() const;
 
+    /// Returns the name of this Index.
+    /// @return Name of this Index
     std::string 
     name() const;
 
+    /// Returns the name of this Index with primes removed.
+    /// @return Name of this Index without primes
     const std::string&
     rawname() const;
 
+    /// Sets the name of this Index.
     void 
     setname(const std::string& newname);
 
+    /// Returns a string version of this Index's bond dimension.
+    /// @return String version of bond dimension
     std::string 
     showm() const;
 
+    /// Returns a unique Real number identifying this Index.
+    /// Useful for rapidly checking that two Index instances match.
+    /// @return Unique Real id number
     Real 
     uniqueReal() const;
 
+    /// Returns true if Index was default initialized.
+    /// @return True if default initialized
     bool 
     isNull() const;
+    /// Returns true if Index was NOT default initialized.
+    /// @return True if not default initialized
     bool 
     isNotNull() const;
 
+    /// Returns the number of copies of this Index.
+    /// @return Number of copies of Index
     int 
     count() const;
 
+    /// Returns the prime level of this Index
+    /// @return Prime level
     int 
     primeLevel() const;
+    /// Sets the prime level to a specified value.
+    /// @param plev New prime level
     void 
     primeLevel(int plev);
 
+    /// Returns the Arrow direction of this Index.
+    /// @return Arrow direction
     Arrow 
     dir() const { return Out; }
 
     //-----------------------------------------------
     //Index: Constructors
 
+    /// Default constructor.
+    /// For default constructed Index's, isNull() returns true.
     Index();
 
+    /// Index constructor.
+    /// @param name Name of Index for printing purposes
+    /// @param mm   Bond dimension 
+    /// @param it   IndexType of Index (Link, Site)
+    /// @param plev Prime level
     Index(const std::string& name, 
           int mm = 1, 
           IndexType it=Link, 
           int plev = 0);
 
+    /// Input stream constructor.
+    /// @param s Binary input stream
     Index(std::istream& s) { read(s); }
 
+    /// Prime level copy constructor.
+    /// @param pt       PrimeType to use
+    /// @param other    Index to copy and prime
+    /// @param primeinc Prime increment level
     Index(PrimeType pt,const Index& other, int primeinc = 1);
 
     static const Index& Null()
