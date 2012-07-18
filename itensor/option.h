@@ -381,9 +381,9 @@ DebugLevel(int level)
     }
 
 Option inline
-DoPinning()
+DoPinning(Real val = 1)
     {
-    return Option(Option::DoPinning);
+    return Option(Option::DoPinning,val);
     }
 
 Option inline
