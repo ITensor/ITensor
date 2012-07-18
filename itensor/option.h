@@ -6,6 +6,7 @@
 #define __ITENSOR_OPTION_H
 
 #include <set>
+#include "real.h"
 
 
 class Option
@@ -19,10 +20,12 @@ class Option
     enum Type
         {
         Auto,
+        Cutoff,
         DebugLevel,
         DoPinning,
         NullOption,
         NumCenter,
+        Offset,
         PreserveShape,
         Quiet,
         UseWF,
@@ -86,12 +89,17 @@ class Option
     intVal() const { return ival_; }
 
     Real
-    realVal() const { return rval_; }
+    realVal() const { return rval_.r; }
 
     bool
     isNull() const { return type_ == NullOption; }
     bool
     isNotNull() const { return type_ != NullOption; }
+
+    Type
+    type() const { return type_; }
+
+    operator Type() const { return type_; }
 
     private:
 
@@ -103,7 +111,7 @@ class Option
     bool bval_;
     std::string sval_;
     int ival_;
-    Real rval_;
+    ApproxReal rval_;
 
     //
     /////////////////////
@@ -207,6 +215,8 @@ class OptionSet
 
     bool
     includes(const Option& val) const { return opts_.count(val) == 1; }
+    bool
+    includes(Option::Type type) const;
 
     void
     insert(const Option& val) { if(val.isNotNull()) opts_.insert(val); }
@@ -292,6 +302,16 @@ OptionSet(Option opt1, Option opt2, Option opt3,
     insert(opt6);
     }
 
+bool inline OptionSet::
+includes(Option::Type type) const
+    {
+    Foreach(const Option& oo, opts_)
+        {
+        if(oo.type() == type) return true;
+        }
+    return false;
+    }
+
 inline const Option& OptionSet::
 get(const Option& opt) const
     {
@@ -299,6 +319,17 @@ get(const Option& opt) const
     if(it == opts_.end())
         Error("OptionSet does not contain requested option");
     return *it;
+    }
+
+inline const Option& OptionSet::
+get(Option::Type type) const
+    {
+    Foreach(const Option& oo, opts_)
+        {
+        if(oo.type() == type) return oo;
+        }
+    Error("OptionSet does not contain requested option");
+    return *(opts_.begin());
     }
 
 inline const std::string& OptionSet::
@@ -332,6 +363,18 @@ Auto(bool val = true)
     }
 
 Option inline
+Cutoff(int val)
+    {
+    return Option(Option::Cutoff,val);
+    }
+
+Option inline
+Cutoff(Real val = 0)
+    {
+    return Option(Option::Cutoff,val);
+    }
+
+Option inline
 DebugLevel(int level)
     {
     return Option(Option::DebugLevel,level);
@@ -347,6 +390,12 @@ Option inline
 NumCenter(int nc = 2)
     {
     return Option(Option::NumCenter,nc);
+    }
+
+Option inline
+Offset(int n = 0)
+    {
+    return Option(Option::Offset,n);
     }
 
 Option inline

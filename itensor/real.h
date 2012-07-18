@@ -140,12 +140,12 @@ class LogNumber
 #ifdef DEBUG
         if(lognum_ > maxlogdouble)
             { 
-            Print(lognum_);
+            std::cout << "lognum_ = " << lognum_ << std::endl;
             throw TooBigForReal("LogNumber too big to convert to Real");
             }
         if(lognum_ < -maxlogdouble)
             { 
-            Print(lognum_);
+            std::cout << "lognum_ = " << lognum_ << std::endl;
             throw TooSmallForReal("LogNumber too small to convert to Real");
             }
 #endif
@@ -204,7 +204,9 @@ class LogNumber
     LogNumber& 
     operator/=(const LogNumber& other)
         {
-        DO_IF_DEBUG(if(other.sign_ == 0) Error("divide by zero in LogNumber");)
+#ifdef DEBUG
+        if(other.sign_ == 0) Error("divide by zero in LogNumber");
+#endif
         sign_ *= other.sign_;
         lognum_ -= other.lognum_;
         return *this;
