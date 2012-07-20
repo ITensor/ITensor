@@ -137,12 +137,47 @@ struct IndexVal;
 class Index
     {
     public:
+    //
+    // Constructors
+    //
+
+    /// Default constructor.
+    /// For a default constructed Index, isNull() returns true.
+    Index();
+
+    /// Standard Index constructor.
+    /// @param name Name of Index for printing purposes
+    /// @param mm   Bond dimension (default = 1)
+    /// @param it   IndexType of Index (Link, Site) (default = Link)
+    /// @param plev Prime level (default = 0)
+    Index(const std::string& name, 
+          int mm = 1, 
+          IndexType it=Link, 
+          int plev = 0);
+
+    /// Input stream constructor.
+    /// @param s Binary input stream
+    Index(std::istream& s) { read(s); }
+
+    /// Primelevel copy constructor.
+    /// @param pt       PrimeType to use
+    /// @param other    Index to copy and prime
+    /// @param primeinc Incremement amount (default = 1)
+    Index(PrimeType pt,
+          const Index& other, 
+          int primeinc = 1);
+
+    //
+    // Accessor Methods
+    //
 
     /// Returns the bond dimension of an Index.
     /// @return Bond dimension of this Index
     int 
     m() const;
 
+    /// Returns the unique id (uuid) of this Index.
+    /// @return Unique id of this Index.
     const boost::uuids::uuid&
     Ind() const;
 
@@ -204,32 +239,102 @@ class Index
     Arrow 
     dir() const { return Out; }
 
-    //-----------------------------------------------
-    //Index: Constructors
+    //
+    // Operators
+    //
 
-    /// Default constructor.
-    /// For default constructed Index's, isNull() returns true.
-    Index();
+    /// Equality (==) operator.
+    /// Evaluates to true if other Index
+    /// is a copy of this Index with the same
+    /// primelevel.
+    bool 
+    operator==(const Index& other) const;
 
-    /// Index constructor.
-    /// @param name Name of Index for printing purposes
-    /// @param mm   Bond dimension 
-    /// @param it   IndexType of Index (Link, Site)
-    /// @param plev Prime level
-    Index(const std::string& name, 
-          int mm = 1, 
-          IndexType it=Link, 
-          int plev = 0);
+    /// Check if other Index is a copy of this, ignoring primelevel.
+    bool 
+    noprime_equals(const Index& other) const;
 
-    /// Input stream constructor.
-    /// @param s Binary input stream
-    Index(std::istream& s) { read(s); }
+    /// Less than (<) operator.
+    /// Useful for sorting Index objects.
+    bool 
+    operator<(const Index& other) const;
 
-    /// Prime level copy constructor.
-    /// @param pt       PrimeType to use
-    /// @param other    Index to copy and prime
-    /// @param primeinc Prime increment level
-    Index(PrimeType pt,const Index& other, int primeinc = 1);
+    /// Creates an IndexVal from this Index.
+    /// @param i The index value to use
+    /// @return An IndexVal instance referring to the ith value of this Index
+    IndexVal operator()(int i) const;
+
+    /// Output stream (<<) operator.
+    /// @param s Standard output stream
+    /// @param t Index object
+    /// @return Reference to modified output stream
+    friend std::ostream& 
+    operator<<(std::ostream & s, const Index &t);
+
+    //
+    // Prime methods
+    //
+
+    /// Switch primelevel from plevold to plevnew. 
+    /// @param plevold Old primelevel
+    /// @param plevnew New primelevel
+    /// @param pt      Type of Index to modify (default = primeBoth)
+    void 
+    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
+
+    /// Switch primelevel from plevold to plevnew. 
+    /// @param pt      Type of Index to modify
+    /// @param inc     Primelevel increment amount (default = 1)
+    void 
+    doprime(PrimeType pt, int inc = 1);
+
+    /// Return copy of this Index, increasing primelevel.
+    /// @param inc     Primelevel increment amount (default = 1)
+    Index 
+    primed(int inc = 1) const { return Index(primeBoth,*this,inc); }
+
+    /// Make a copy of this Index, increasing primelevel.
+    /// @param inc     Primelevel increment amount (default = 1)
+    /// @return Copy of this Index with increased primelevel
+    Index friend inline
+    primed(const Index& I, int inc = 1) { return Index(primeBoth,I,inc); }
+
+    /// Return a copy of this Index with primelevel set to zero.
+    /// @return Copy of this Index with zero primelevel
+    Index 
+    deprimed() const;
+
+    /// Set primelevel to zero.
+    /// @param pt Type of Index to modify (default = primeBoth)
+    void 
+    noprime(PrimeType pt = primeBoth) { doprime(pt,-primelevel_); }
+
+    //
+    // Other methods
+    //
+
+    /// Write Index to binary output stream.
+    /// @param s Output stream for writing
+    void 
+    write(std::ostream& s) const;
+
+    /// Read Index from binary input stream.
+    /// @param s Input stream for reading
+    void 
+    read(std::istream& s);
+
+    /// Print Index to stdout.
+    /// @param name Name of Index variable (default = "")
+    void 
+    print(const std::string& name = "") const
+        { std::cout << "\n" << name << " =\n" << *this << std::endl; }
+
+    /// Conjugate this Index.
+    /// Currently has no effect; for forward compatibility
+    /// with Arrows and interface compatibility with class IQIndex.
+    void 
+    conj() { } //for forward compatibility with arrows
+
 
     static const Index& Null()
         {
@@ -255,70 +360,10 @@ class Index
         return IndReImPP_;
         }
 
-    //-----------------------------------------------
-    //Index: Operators
-
-    // rel_ops defines the other comparisons based on == and <
-    bool 
-    operator==(const Index& other) const;
-
-    bool 
-    noprime_equals(const Index& other) const;
-
-    bool 
-    operator<(const Index& other) const;
-
-    IndexVal operator()(int i) const;
-
-
-    //-----------------------------------------------
-    //Index: Prime methods
-
-    void 
-    mapprime(int plevold, int plevnew, PrimeType pr = primeBoth);
-
-    void 
-    doprime(PrimeType pr, int inc = 1);
-
-    Index 
-    primed(int inc = 1) const { return Index(primeBoth,*this,inc); }
-
-    friend inline Index
-    primed(const Index& I, int inc = 1) { return Index(primeBoth,I,inc); }
-
-    Index 
-    deprimed() const;
-
-    void 
-    noprime(PrimeType pt = primeBoth) { doprime(pt,-primelevel_); }
-
-    friend std::ostream& 
-    operator<<(std::ostream & s, const Index & t);
-
-    //-----------------------------------------------
-    //Index: Other methods
-
-    void 
-    write(std::ostream& s) const;
-
-    void 
-    read(std::istream& s);
-
-    void 
-    print(std::string name = "") const
-        { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
-
-    void 
-    conj() { } //for forward compatibility with arrows
-
     private:
 
     friend class IQIndex;
 
-    //void 
-    //set_m(int newm);
-
-    //Constructor for static Index's
     explicit
     Index(Imaker im);
 
