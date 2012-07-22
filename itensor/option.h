@@ -13,39 +13,23 @@ class Option
     {
     public:
 
-    //
-    // List of all Option types,
-    // in alphabetical order
-    // 
-    enum Type
-        {
-        Auto,
-        Cutoff,
-        DebugLevel,
-        DoPinning,
-        NullOption,
-        NumCenter,
-        Offset,
-        PreserveShape,
-        Quiet,
-        UseWF,
-        Verbose,
-        Weight
-        };
+    typedef const std::string
+    Name;
 
     Option();
 
-    Option(Type type);
+    explicit
+    Option(Name& name);
 
-    Option(Type type, bool bval);
+    Option(Name& name, bool bval);
 
-    Option(Type type, const std::string& sval);
+    Option(Name& name, const std::string& sval);
 
-    Option(Type type, int ival);
+    Option(Name& name, int ival);
 
-    Option(Type type, Real rval);
+    Option(Name& name, Real rval);
 
-    Option(Type type, 
+    Option(Name& name, 
            bool bval,
            const std::string& sval, 
            int ival, 
@@ -58,7 +42,7 @@ class Option
     bool
     operator==(const Option& other) const
         { 
-        return (type_ == other.type_ && 
+        return (name_ == other.name_ && 
                 bval_ == other.bval_ &&
                 sval_ == other.sval_ &&
                 ival_ == other.ival_ &&
@@ -68,7 +52,7 @@ class Option
     bool
     operator<(const Option& other) const
         { 
-        return (type_ < other.type_ || 
+        return (name_ < other.name_ || 
                 bval_ < other.bval_ ||
                 sval_ < other.sval_ ||
                 ival_ < other.ival_ ||
@@ -92,21 +76,21 @@ class Option
     realVal() const { return rval_.r; }
 
     bool
-    isNull() const { return type_ == NullOption; }
+    isNull() const { return name_ == "NullOption"; }
     bool
-    isNotNull() const { return type_ != NullOption; }
+    isNotNull() const { return name_ != "NullOption"; }
 
-    Type
-    type() const { return type_; }
+    Name
+    name() const { return name_; }
 
-    operator Type() const { return type_; }
+    operator Name() const { return name_; }
 
     private:
 
     /////////////////////
     // Data Members
 
-    Type type_;
+    Name name_;
 
     bool bval_;
     std::string sval_;
@@ -121,34 +105,34 @@ class Option
 inline Option::
 Option()
     :
-    type_(NullOption),
+    name_("NullOption"),
     bval_(false),
     ival_(0),
     rval_(0)
     { }
 
 inline Option::
-Option(Type type)
+Option(Name& name)
     :
-    type_(type),
+    name_(name),
     bval_(false),
     ival_(0),
     rval_(0)
     { }
 
 inline Option::
-Option(Type type, bool bval)
+Option(Name& name, bool bval)
     :
-    type_(type),
+    name_(name),
     bval_(bval),
     ival_(0),
     rval_(0)
     { }
 
 inline Option::
-Option(Type type, const std::string& sval)
+Option(Name& name, const std::string& sval)
     :
-    type_(type),
+    name_(name),
     bval_(false),
     sval_(sval),
     ival_(0),
@@ -156,31 +140,31 @@ Option(Type type, const std::string& sval)
     { }
 
 inline Option::
-Option(Type type, int ival)
+Option(Name& name, int ival)
     :
-    type_(type),
+    name_(name),
     bval_(false),
     ival_(ival),
     rval_(0)
     { }
 
 inline Option::
-Option(Type type, Real rval)
+Option(Name& name, Real rval)
     :
-    type_(type),
+    name_(name),
     bval_(false),
     ival_(0),
     rval_(rval)
     { }
 
 inline Option::
-Option(Type type, 
+Option(Name& name, 
        bool bval,
        const std::string& sval, 
        int ival, 
        Real rval)
     :
-    type_(type),
+    name_(name),
     bval_(bval),
     sval_(sval),
     ival_(ival),
@@ -216,7 +200,7 @@ class OptionSet
     bool
     includes(const Option& val) const { return opts_.count(val) == 1; }
     bool
-    includes(Option::Type type) const;
+    includes(Option::Name& name) const;
 
     void
     insert(const Option& val) { if(val.isNotNull()) opts_.insert(val); }
@@ -224,16 +208,27 @@ class OptionSet
     const Option&
     get(const Option& opt) const;
     const Option&
-    get(Option::Type type) const;
+    get(Option::Name& name) const;
+
+    bool
+    boolVal(const Option& opt) const;
+    bool
+    boolVal(Option::Name& name) const;
 
     const std::string&
     stringVal(const Option& opt) const;
+    const std::string&
+    stringVal(Option::Name& name) const;
 
     int
     intVal(const Option& opt) const;
+    int
+    intVal(Option::Name& name) const;
 
     Real
     realVal(const Option& opt) const;
+    Real
+    realVal(Option::Name& name) const;
 
     private:
 
@@ -303,11 +298,11 @@ OptionSet(Option opt1, Option opt2, Option opt3,
     }
 
 bool inline OptionSet::
-includes(Option::Type type) const
+includes(Option::Name& name) const
     {
     Foreach(const Option& oo, opts_)
         {
-        if(oo.type() == type) return true;
+        if(oo.name() == name) return true;
         }
     return false;
     }
@@ -322,14 +317,25 @@ get(const Option& opt) const
     }
 
 inline const Option& OptionSet::
-get(Option::Type type) const
+get(Option::Name& name) const
     {
     Foreach(const Option& oo, opts_)
         {
-        if(oo.type() == type) return oo;
+        if(oo.name() == name) return oo;
         }
     Error("OptionSet does not contain requested option");
     return *(opts_.begin());
+    }
+
+bool inline OptionSet::
+boolVal(const Option& opt) const
+    {
+    return get(opt).boolVal();
+    }
+bool inline OptionSet::
+boolVal(Option::Name& name) const
+    {
+    return get(name).boolVal();
     }
 
 inline const std::string& OptionSet::
@@ -337,17 +343,32 @@ stringVal(const Option& opt) const
     {
     return get(opt).stringVal();
     }
+inline const std::string& OptionSet::
+stringVal(Option::Name& name) const
+    {
+    return get(name).stringVal();
+    }
 
 int inline OptionSet::
 intVal(const Option& opt) const
     {
     return get(opt).intVal();
     }
+int inline OptionSet::
+intVal(Option::Name& name) const
+    {
+    return get(name).intVal();
+    }
 
 Real inline OptionSet::
 realVal(const Option& opt) const
     {
     return get(opt).realVal();
+    }
+Real inline OptionSet::
+realVal(Option::Name& name) const
+    {
+    return get(name).realVal();
     }
 
 
@@ -359,73 +380,73 @@ realVal(const Option& opt) const
 Option inline
 Auto(bool val = true)
     {
-    return Option(Option::Auto,val);
+    return Option("Auto",val);
     }
 
 Option inline
 Cutoff(int val)
     {
-    return Option(Option::Cutoff,val);
+    return Option("Cutoff",val);
     }
 
 Option inline
 Cutoff(Real val = 0)
     {
-    return Option(Option::Cutoff,val);
+    return Option("Cutoff",val);
     }
 
 Option inline
 DebugLevel(int level)
     {
-    return Option(Option::DebugLevel,level);
+    return Option("DebugLevel",level);
     }
 
 Option inline
 DoPinning(Real val = 1)
     {
-    return Option(Option::DoPinning,val);
+    return Option("DoPinning",val);
     }
 
 Option inline
 NumCenter(int nc = 2)
     {
-    return Option(Option::NumCenter,nc);
+    return Option("NumCenter",nc);
     }
 
 Option inline
 Offset(int n = 0)
     {
-    return Option(Option::Offset,n);
+    return Option("Offset",n);
     }
 
 Option inline
 PreserveShape()
     {
-    return Option(Option::PreserveShape);
+    return Option("PreserveShape");
     }
 
 Option inline
 Quiet(bool val = true)
     {
-    return Option(Option::Quiet,val);
+    return Option("Quiet",val);
     }
 
 Option inline
 UseWF()
     {
-    return Option(Option::UseWF);
+    return Option("UseWF");
     }
 
 Option inline
 Verbose(bool val = true)
     {
-    return Option(Option::Verbose,val);
+    return Option("Verbose",val);
     }
 
 Option inline
 Weight(Real w = 1)
     {
-    return Option(Option::Weight,w);
+    return Option("Weight",w);
     }
 
 #endif

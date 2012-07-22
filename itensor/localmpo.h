@@ -256,8 +256,8 @@ LocalMPO(const MPOt<Tensor>& Op,
       Psi_(0)
     { 
     OptionSet oset(opt1,opt2);
-    if(oset.includes(Option::NumCenter))
-        numCenter(oset.intVal(Option::NumCenter));
+    if(oset.includes("NumCenter"))
+        numCenter(oset.intVal("NumCenter"));
     }
 
 template <class Tensor>
@@ -274,8 +274,8 @@ LocalMPO(const MPSt<Tensor>& Psi,
       Psi_(&Psi)
     { 
     OptionSet oset(opt1,opt2);
-    if(oset.includes(Option::NumCenter))
-        numCenter(oset.intVal(Option::NumCenter));
+    if(oset.includes("NumCenter"))
+        numCenter(oset.intVal("NumCenter"));
     }
 
 template <class Tensor> inline

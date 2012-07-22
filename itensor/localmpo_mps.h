@@ -125,8 +125,8 @@ LocalMPO_MPS(const MPOt<Tensor>& Op,
         lmps_[j] = LocalMPOType(psis[j]);
 
     OptionSet oset(opt1,opt2);
-    if(oset.includes(Option::Weight))
-        weight(oset.realVal(Option::Weight));
+    if(oset.includes("Weight"))
+        weight(oset.realVal("Weight"));
     }
 
 template <class Tensor>
