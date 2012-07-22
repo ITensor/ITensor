@@ -215,20 +215,32 @@ class OptionSet
     bool
     boolVal(Option::Name& name) const;
 
+    bool
+    boolOrDefault(Option::Name& name, bool default_val) const;
+
     const std::string&
     stringVal(const Option& opt) const;
     const std::string&
     stringVal(Option::Name& name) const;
+
+    const std::string&
+    stringOrDefault(Option::Name& name, const std::string& default_val) const;
 
     int
     intVal(const Option& opt) const;
     int
     intVal(Option::Name& name) const;
 
+    int
+    intOrDefault(Option::Name& name, int default_val) const;
+
     Real
     realVal(const Option& opt) const;
     Real
     realVal(Option::Name& name) const;
+
+    Real
+    realOrDefault(Option::Name& name, Real default_val) const;
 
     private:
 
@@ -338,6 +350,15 @@ boolVal(Option::Name& name) const
     return get(name).boolVal();
     }
 
+bool inline OptionSet::
+boolOrDefault(Option::Name& name, bool default_value) const
+    {
+    if(includes(name))
+        return get(name).boolVal();
+    else
+        return default_value;
+    }
+
 inline const std::string& OptionSet::
 stringVal(const Option& opt) const
     {
@@ -347,6 +368,15 @@ inline const std::string& OptionSet::
 stringVal(Option::Name& name) const
     {
     return get(name).stringVal();
+    }
+
+inline const std::string& OptionSet::
+stringOrDefault(Option::Name& name, const std::string& default_value) const
+    {
+    if(includes(name))
+        return get(name).stringVal();
+    else
+        return default_value;
     }
 
 int inline OptionSet::
@@ -360,6 +390,15 @@ intVal(Option::Name& name) const
     return get(name).intVal();
     }
 
+int inline OptionSet::
+intOrDefault(Option::Name& name, int default_value) const
+    {
+    if(includes(name))
+        return get(name).intVal();
+    else
+        return default_value;
+    }
+
 Real inline OptionSet::
 realVal(const Option& opt) const
     {
@@ -371,6 +410,14 @@ realVal(Option::Name& name) const
     return get(name).realVal();
     }
 
+Real inline OptionSet::
+realOrDefault(Option::Name& name, Real default_value) const
+    {
+    if(includes(name))
+        return get(name).realVal();
+    else
+        return default_value;
+    }
 
 
 //
@@ -402,9 +449,9 @@ DebugLevel(int level)
     }
 
 Option inline
-DoPinning(Real val = 1)
+Pinning(Real val = 1)
     {
-    return Option("DoPinning",val);
+    return Option("Pinning",val);
     }
 
 Option inline
