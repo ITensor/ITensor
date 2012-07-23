@@ -5,21 +5,25 @@
 #ifndef BASE_DMRG_OPTS_H
 #define BASE_DMRG_OPTS_H
 #include "svdworker.h"
+#include "option.h"
 
 // virtual base class
 
 class BaseDMRGOpts 
-{
-public:
+    {
+    public:
     
-    virtual bool quiet() const = 0;
-    virtual void quiet(bool val) = 0;
-
-    virtual void measure(int sw, int ha, int b, const SVDWorker& svd, Real energy) = 0;
+    void virtual
+    measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
+            const Option& opt1 = Option(), const Option& opt2 = Option(),
+            const Option& opt3 = Option(), const Option& opt4 = Option()) = 0;
     
-    virtual bool checkDone(int sw, Real energy) = 0;
+    bool virtual
+    checkDone(int sw, const SVDWorker& svd, Real energy, 
+              const Option& opt1 = Option(), const Option& opt2 = Option()) = 0;
 
     virtual ~BaseDMRGOpts() { }
-};
+
+    };
 
 #endif // BASE_DMRG_OPTS_H

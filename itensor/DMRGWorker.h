@@ -237,7 +237,7 @@ runInternal(const MPOType& H, MPSType& psi)
 
             } //for loop over b
         
-        if(opts().checkDone(sw,energy_)) break;
+        if(opts().checkDone(sw,psi.svd(),energy_)) break;
     
         } //for loop over sw
     
@@ -309,7 +309,7 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
 
             } //for loop over b
         
-        if(opts().checkDone(sw,energy_)) break;
+        if(opts().checkDone(sw,psi.svd(),energy_)) break;
     
         } //for loop over sw
     
@@ -381,7 +381,7 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
 
             } //for loop over b
         
-        if(opts().checkDone(sw,energy_)) break;
+        if(opts().checkDone(sw,psi.svd(),energy_)) break;
     
         } //for loop over sw
     

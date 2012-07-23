@@ -8,11 +8,10 @@ using std::vector;
 
 //Orthogonalizing DMRG. Puts in an energy penalty if psi has an overlap with any MPS in 'other'.
 Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>& other, DMRGOpts& opts)
-{
+    {
     const Real orig_cutoff = psi.cutoff(); 
     const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
     int debuglevel = 1;
-    if(opts.quiet()) debuglevel = 0;
 
     Real energy = 0.0, last_energy = -10000;
 
@@ -55,8 +54,8 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
         int max_eigs_bond = -1;
         Vector max_eigs(1); max_eigs = 2; //max in the sense of slowly decaying
         for(int l = 1, ha = 1; ha != 3; sweepnext(l,ha,N))
-        {
-            if(!opts.quiet()) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
+            {
+            cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
 
             ITensor mpoh = finalham.AA(l) * finalham.AA(l+1);
 
@@ -98,8 +97,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).doprime(primeBoth);
 
             Index ll = psi.LinkInd(l);
-            if(!opts.quiet()) 
-            { cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m(); }
+            cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m();
 
             //Keep track of the largest_m, slowest decaying denmat eigs
             if(opts.printEigs())
@@ -158,7 +156,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             }
             }
 
-        }
+            }
 
         if(opts.energyErrgoal() > 0 && sw%2 == 0)
         {
@@ -180,7 +178,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
     psi.maxm(orig_maxm);
 
     return energy;
-}
+    }
 
 /*
 Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts)

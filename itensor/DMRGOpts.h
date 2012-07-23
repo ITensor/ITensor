@@ -17,11 +17,6 @@ class DMRGOpts : public BaseDMRGOpts
     {
     public:
 
-    bool 
-    quiet() const { return quiet_; }
-    void 
-    quiet(bool val) { quiet_ = val; }
-    
     Real 
     energyErrgoal() const { return energy_errgoal; }
     void 
@@ -40,20 +35,29 @@ class DMRGOpts : public BaseDMRGOpts
     DMRGOpts();
 
     virtual ~DMRGOpts() { }
-    
-    virtual void 
-    measure(int sw, int ha, int b, const SVDWorker& svd, Real energy);
-    
-    virtual bool 
-    checkDone(int sw, Real energy);
 
+    void virtual
+    measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
+              const Option& opt1 = Option(), const Option& opt2 = Option(), 
+              const Option& opt3 = Option(), const Option& opt4 = Option());
+    
+    bool virtual
+    checkDone(int sw, const SVDWorker& svd, Real energy,
+                const Option& opt1 = Option(), const Option& opt2 = Option());
+    
     private:
+
+    /////////////
+    //
+    // Data Members
 
     Vector center_eigs;
     Real energy_errgoal; //Stop DMRG once energy has converged to this precision
     Real orth_weight;    //How much to penalize non-orthogonality in multiple-state DMRG
     bool printeigs;      //Print slowest decaying eigenvalues after every sweep
-    bool quiet_;         //Show/don't show info after every step
+
+    //
+    /////////////
 
     }; // class DMRGOpts
 
@@ -61,13 +65,13 @@ inline DMRGOpts::
 DMRGOpts() 
     : energy_errgoal(-1), 
       orth_weight(1),
-      printeigs(true), 
-      quiet_(true)
+      printeigs(true)
     { }
 
-inline
-void DMRGOpts::
-measure(int sw, int ha, int b, const SVDWorker& svd, Real energy)
+
+void inline DMRGOpts::
+measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
+        const Option& opt1, const Option& opt2, const Option& opt3, const Option& opt4)
     {
     if(printeigs)
         {
@@ -88,9 +92,10 @@ measure(int sw, int ha, int b, const SVDWorker& svd, Real energy)
         }
     }
 
-inline
-bool DMRGOpts::
-checkDone(int sw, Real energy)
+
+bool inline DMRGOpts::
+checkDone(int sw, const SVDWorker& svd, Real energy,
+          const Option& opt1, const Option& opt2)
     {
     static Real last_energy;
     
