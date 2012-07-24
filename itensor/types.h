@@ -61,13 +61,6 @@ static const int MAX_M = 5000;
 #define GET(container,j) (container[j])
 #endif						//}
 
-//---------------------------------------
-#define ENABLE_INTRUSIVE_PTR(ClassName) \
-friend inline void intrusive_ptr_add_ref(ClassName* p) { ++(p->numref); } \
-friend inline void intrusive_ptr_release(ClassName* p) { if(--(p->numref) == 0){ delete p; } } \
-int count() const { return numref; }
-//---------------------------------------
-
 enum Printdat { ShowData, HideData };
 
 #define PrintEither(X,Y) \

@@ -364,8 +364,14 @@ class IQTSDat
     void
     write(std::ostream& s) const;
 
-    ENABLE_INTRUSIVE_PTR(IQTSDat)
+    friend void 
+    intrusive_ptr_add_ref(IQTSDat* p);
 
+    friend void 
+    intrusive_ptr_release(IQTSDat* p);
+
+    int 
+    count() const { return numref; }
 
     static IQTSDat* Null()
         {

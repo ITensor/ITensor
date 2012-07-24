@@ -12,6 +12,21 @@ using boost::array;
 // IQTSDat
 //
 
+void 
+intrusive_ptr_add_ref(IQTSDat* p) 
+    { 
+    ++(p->numref); 
+    }
+
+void 
+intrusive_ptr_release(IQTSDat* p) 
+    { 
+    if(--(p->numref) == 0)
+        { 
+        delete p; 
+        } 
+    }
+
 IQTSDat::
 IQTSDat()
     :
