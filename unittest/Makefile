@@ -25,6 +25,7 @@ SOURCES = test.cc
 #SOURCES+= webpage_test.cc
 #SOURCES+= localmpo_test.cc
 SOURCES+= option_test.cc
+SOURCES+= iqindexset_test.cc
 
 LIBNAMES=matrix utilities itensor
 

@@ -138,8 +138,20 @@ class IQIndexSet
     void 
     primeind(const IQIndex& I, const IQIndex& J);
 
+    // Increments primelevel of a specific IQIndex I.
+    // For example, if the original indices are 
+    // I, I', J, calling indIncPrime(I',2)
+    // results in I, I''', J.
     void
     indIncPrime(const IQIndex& I, int inc);
+
+    // Increments primelevel of ALL copies of
+    // an IQIndex I, regardless of original primelevel.
+    // For example, if the original indices are 
+    // I, I', J, calling indIncPrime(I,2)
+    // results in I'', I''', J.
+    void
+    indIncAllPrime(const IQIndex& I, int inc);
 
     void 
     noprimeind(const IQIndex& I);
@@ -181,6 +193,12 @@ class IQIndexSet
 
     void
     conj(const IQIndex& I);
+
+    // Checks if the IQIndexSet is properly
+    // formed (e.g. no IQIndex appears more than once),
+    // if not, throws an ITError.
+    void
+    check() const;
 
     void
     write(std::ostream& s) const;

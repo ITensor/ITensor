@@ -255,6 +255,10 @@ noprime(PrimeType p)
         J.noprime(p);
         ur_ += J.uniqueReal();
         }
+#ifdef DEBUG
+    //Check if noprime resulted in any duplicate indices
+    this->check();
+#endif
 	}
 
 void IQIndexSet::
@@ -308,15 +312,39 @@ void IQIndexSet::
 indIncPrime(const IQIndex& I, int inc)
     {
     Foreach(IQIndex& J, index_)
+        if(J == I)
+        {
+        int p = J.primeLevel();
+        J.mapprime(p,p+inc);
+#ifdef DEBUG
+        //check because incrementing just one copy of
+        //an IQIndex can lead to duplicates
+        this->check();
+#endif
+        return;
+        }
+    //or throw an error because we didn't find I
+    cerr << "IQIndex was " << I << "\n";
+    cout << "IQIndex was " << I << "\n";
+    Error("indIncPrime: couldn't find IQIndex");
+    }
+
+void IQIndexSet::
+indIncAllPrime(const IQIndex& I, int inc)
+    {
+    bool got_one = false;
+    Foreach(IQIndex& J, index_)
         if(J.noprime_equals(I))
         {
         int p = J.primeLevel();
         J.mapprime(p,p+inc);
-        return;
+        got_one = true;
         }
+    if(got_one) return;
+    //else, throw an error because we didn't find I
     cerr << "IQIndex was " << I << "\n";
     cout << "IQIndex was " << I << "\n";
-    Error("indIncPrime: couldn't find IQIndex");
+    Error("indIncAllPrime: couldn't find IQIndex");
     }
 
 void IQIndexSet::
@@ -372,6 +400,10 @@ mapindex(const IQIndex& i1, const IQIndex& i2)
 		}
 	Print(i1);
 	Error("IQIndexSet::mapindex: couldn't find i1.");
+#ifdef DEBUG
+    //Check because mapindex can result in duplicates
+    this->check();
+#endif
 	}
 
 void IQIndexSet::
@@ -448,6 +480,21 @@ conj(const IQIndex& I)
             index_[j].conj();
             return;
             }
+    }
+
+void IQIndexSet::
+check() const
+    {
+    //Check for duplicates
+    for(size_t i = 0; i < index_.size(); ++i)
+    for(size_t j = i+1; j < index_.size(); ++j)
+        {
+        if(index_[i] == index_[j])
+            {
+            cout << "Duplicate IQIndex = " << index_[i] << endl;
+            Error("Duplicate IQIndex");
+            }
+        }
     }
 
 void IQIndexSet::
