@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include <string>
-#include "types.h"
+#include "global.h"
 #include "boost/intrusive_ptr.hpp"
 #include "boost/uuid/uuid.hpp"
 #include "boost/uuid/random_generator.hpp"

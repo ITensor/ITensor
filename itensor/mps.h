@@ -383,10 +383,10 @@ class MPSt
 
     void print(std::string name = "",Printdat pdat = HideData) const 
         { 
-        bool savep = Globals::printdat();
-        Globals::printdat() = (pdat==ShowData); 
+        bool savep = Global::printdat();
+        Global::printdat() = (pdat==ShowData); 
         std::cerr << "\n" << name << " =\n" << *this << "\n"; 
-        Globals::printdat() = savep;
+        Global::printdat() = savep;
         }
 
     void 

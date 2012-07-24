@@ -4,7 +4,7 @@
 //
 #ifndef __PERMUTATION_H
 #define __PERMUTATION_H
-#include "types.h"
+#include "global.h"
 
 //
 // Tell where each index will go, 

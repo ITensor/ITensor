@@ -6,7 +6,7 @@
 #define __ITENSOR_REAL_H
 #include "matrix.h"
 #include <limits>
-#include "types.h"
+#include "global.h"
 
 static const Real Pi = M_PI;
 static const Real Sqrt2 = sqrt(2);

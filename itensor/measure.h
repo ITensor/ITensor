@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_MEASURE_H
 #define __ITENSOR_MEASURE_H
-#include "types.h"
+#include "global.h"
 #include "real.h"
 #include <vector>
 

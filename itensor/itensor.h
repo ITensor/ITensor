@@ -4,7 +4,6 @@
 //
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
-#include "types.h"
 #include "real.h"
 //#include "allocator.h"
 #include "index.h"

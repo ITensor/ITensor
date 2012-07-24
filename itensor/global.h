@@ -2,15 +2,15 @@
 // Distributed under the ITensor Library License, Version 1.0.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __TYPES_H
-#define __TYPES_H
+#ifndef __ITENSOR_GLOBAL_H
+#define __ITENSOR_GLOBAL_H
 #include <cmath>
 #include <cstdlib>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <error.h> //utilities
-#include "matrix.h"
+#include "option.h"
 #include "assert.h"
 #include "boost/array.hpp"
 #include "boost/format.hpp"
@@ -65,10 +65,10 @@ enum Printdat { ShowData, HideData };
 
 #define PrintEither(X,Y) \
     {\
-    bool savep = Globals::printdat();\
-    Globals::printdat() = Y; \
+    bool savep = Global::printdat();\
+    Global::printdat() = Y; \
     std::cout << "\n" << #X << " =\n" << X << std::endl; \
-    Globals::printdat() = savep;\
+    Global::printdat() = savep;\
     }
 #define Print(X)    PrintEither(X,false)
 #define PrintDat(X) PrintEither(X,true)
@@ -193,9 +193,10 @@ readVec(std::istream& s, Vector& V)
         }
     }
 
-class Globals
+class Global
     {
-public:
+    public:
+
     static bool& 
     printdat()
         {
@@ -244,6 +245,12 @@ public:
         static bool checkArrows_ = true;
         return checkArrows_;
         }
+    static OptionSet&
+    options()
+        {
+        static OptionSet oset_;
+        return oset_;
+        }
     };
 
 
@@ -260,8 +267,6 @@ public:
 
 Real ran1();
 
-//#ifdef THIS_IS_MAIN
 //void reportnew() { }
-//#endif
 
 #endif

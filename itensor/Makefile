@@ -12,7 +12,7 @@ SOURCES=index.cc indexset.cc itensor.cc itsparse.cc \
         iqindex.cc iqindexset.cc iqtensor.cc iqtsparse.cc\
         svdworker.cc mps.cc mpo.cc dmrg.cc
 
-HEADERS=types.h allocator.h real.h permutation.h index.h prodstats.h \
+HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         indexset.h itensor.h qn.h iqindex.h iqindexset.h iqtensor.h \
         condenser.h combiner.h iqcombiner.h \
         svdworker.h mps.h mpo.h DMRGOpts.h dmrg.h core.h BaseDMRGOpts.h \
@@ -84,7 +84,7 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-DEPHEADERS=types.h real.h permutation.h index.h 
+DEPHEADERS=global.h real.h permutation.h index.h 
 index.o: $(DEPHEADERS)
 .debug_objs/index.o: $(DEPHEADERS)
 DEPHEADERS+= indexset.h

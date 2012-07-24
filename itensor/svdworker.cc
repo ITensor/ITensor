@@ -200,7 +200,7 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
     U = ITensor(ui,uL,UU.Columns(1,m));
     V = ITensor(vL,vi,VV.Rows(1,m));
 
-    Globals::lastd() = DD;
+    Global::lastd() = DD;
 
     //Include A's scale to get the actual eigenvalues kept
     //as long as the leading eigenvalue is within a few orders
@@ -208,7 +208,7 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
     Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
     if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
         {
-        Globals::lastd() *= A.scale().real();
+        Global::lastd() *= A.scale().real();
         }
 
     } // void SVDWorker::svdRank2
@@ -465,7 +465,7 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
     for(int i = 1; i <= L.m(); ++i) 
         DD(i) = alleig.at(alleig.size()-i);
 
-    Globals::lastd() = DD;
+    Global::lastd() = DD;
 
     /*
     {
@@ -560,7 +560,7 @@ diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
 
     newmid = Index(active.rawname(),m,active.type());
     U = ITensor(active,newmid,UU.Columns(1,m));
-    Globals::lastd() = D;
+    Global::lastd() = D;
     return svdtruncerr;
     }
 
@@ -827,14 +827,14 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
     for(int i = 1; i <= newmid.m(); ++i) 
         D(i) = alleig.at(alleig.size()-i);
 
-    Globals::lastd() = D;
+    Global::lastd() = D;
     //Include refNorm_ to get the actual eigenvalues kept
     //as long as the leading eigenvalue is within a few orders
     //of magnitude of 1.0. Otherwise just report the scaled eigs.
     Real orderMag = log(fabs(D(1))) + refNorm_.logNum();
     if(fabs(orderMag) < 5 && refNorm_.isFiniteReal())
         {
-        Globals::lastd() *= refNorm_.real();
+        Global::lastd() *= refNorm_.real();
         }
 
     return svdtruncerr;
@@ -1169,7 +1169,7 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid,
     D.ReDimension(newmid.m());
     for(int i = 1; i <= newmid.m(); ++i) 
         D(i) = alleig.at(alleig.size()-i);
-    Globals::lastd() = D;
+    Global::lastd() = D;
     return svdtruncerr;
     } //Real SVDWorker::diag_denmat
 
@@ -1189,7 +1189,7 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQT
     D.ReDimension(newmid.m());
     for(int i = 1; i <= newmid.m(); ++i) 
         D(i) = alleig.at(alleig.size()-i);
-    Globals::lastd() = D;
+    Global::lastd() = D;
     return svdtruncerr;
     } //Real SVDWorker::diag_denmat
 
@@ -1199,7 +1199,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
     {
     bool docomplex = false;
     IQIndex active;
-    Globals::printdat() = true;
+    Global::printdat() = true;
     if(rho.r() == 3) 
 	{
 	docomplex = true;
@@ -1401,7 +1401,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
     D.ReDimension(m);
     for(int i = 1; i <= m; ++i) 
         D(i) = GET(alleig,alleig.size()-i);
-    Globals::lastd() = D;
+    Global::lastd() = D;
     return svdtruncerr;
     } //Real SVDWorker::diag_denmat
 

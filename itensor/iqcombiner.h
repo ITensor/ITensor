@@ -436,7 +436,7 @@ product(IQTensor T, IQTensor& res) const
         const IQTensor& T_ = (do_condense ? T_uncondensed : T);
         const IQIndex& r = (do_condense ? ucright_ : right_);
 
-        if(Globals::checkArrows())
+        if(Global::checkArrows())
             if(T_.index(j).dir() == r.dir())
                 {
                 std::cerr << "IQTensor = " << T_ << std::endl;
@@ -504,7 +504,7 @@ product(IQTensor T, IQTensor& res) const
             else //IQIndex is in left
                 {
                 //Check arrow directions
-                if(Globals::checkArrows())
+                if(Global::checkArrows())
                     if(T.index(j).dir() == I.dir())
                         {
                         PrintIndices(T);

@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_PRODSTATS_H
 #define __ITENSOR_PRODSTATS_H
 
-#include "types.h"
+#include "global.h"
 
 //#define COLLECT_PRODSTATS
 

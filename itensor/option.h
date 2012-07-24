@@ -5,8 +5,8 @@
 #ifndef __ITENSOR_OPTION_H
 #define __ITENSOR_OPTION_H
 
+#include "matrix.h"
 #include <map>
-#include "real.h"
 
 
 class Option
@@ -69,7 +69,7 @@ class Option
     intVal() const { return ival_; }
 
     Real
-    realVal() const { return rval_.r; }
+    realVal() const { return rval_; }
 
     bool
     isNull() const { return name_ == "NullOption"; }
@@ -94,7 +94,7 @@ class Option
     bool bval_;
     std::string sval_;
     int ival_;
-    ApproxReal rval_;
+    Real rval_;
 
     //
     /////////////////////
@@ -479,21 +479,27 @@ Auto(bool val = true)
     }
 
 Option inline
-Cutoff(int val)
+Cutoff(int icut)
     {
-    return Option("Cutoff",val);
+    return Option("Cutoff",icut);
     }
 
 Option inline
-Cutoff(Real val = 0)
+Cutoff(Real cut = 0)
     {
-    return Option("Cutoff",val);
+    return Option("Cutoff",cut);
     }
 
 Option inline
 DebugLevel(int level)
     {
     return Option("DebugLevel",level);
+    }
+
+Option inline
+DoWrite(bool val = true)
+    {
+    return Option("DoWrite",val);
     }
 
 Option inline
@@ -542,6 +548,12 @@ Option inline
 Weight(Real w = 1)
     {
     return Option("Weight",w);
+    }
+
+Option inline
+WriteM(int m)
+    {
+    return Option("WriteM",m);
     }
 
 #endif

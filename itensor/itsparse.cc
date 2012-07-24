@@ -273,9 +273,9 @@ scaleTo(LogNumber newscale) const
 void ITSparse::
 print(std::string name,Printdat pdat) const 
     { 
-    Globals::printdat() = (pdat==ShowData); 
+    Global::printdat() = (pdat==ShowData); 
     std::cerr << "\n" << name << " =\n" << *this << "\n"; 
-    Globals::printdat() = false; 
+    Global::printdat() = false; 
     }
 
 void ITSparse::
@@ -571,7 +571,7 @@ operator<<(ostream & s, const ITSparse& t)
         s << " (N=too big)\n";
         }
 
-    if(Globals::printdat())
+    if(Global::printdat())
         {
         bool finite_scale = t.scale_.isFiniteReal();
         Real scale = (finite_scale ? t.scale_.real() : 1);
@@ -592,7 +592,7 @@ operator<<(ostream & s, const ITSparse& t)
             for(int j = 1; j <= t.diagSize(); ++j)
                 {
                 Real val = t.diag_(j)*scale;
-                if(fabs(val) > Globals::printScale())
+                if(fabs(val) > Global::printScale())
                     { s << j << " " << val << "\n"; }
                 }
             }

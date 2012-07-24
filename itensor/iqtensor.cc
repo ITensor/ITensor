@@ -1201,10 +1201,10 @@ Randomize()
 void IQTensor::
 print(std::string name,Printdat pdat) const 
 	{ 
-    bool savep = Globals::printdat();
-    Globals::printdat() = (pdat==ShowData); 
+    bool savep = Global::printdat();
+    Global::printdat() = (pdat==ShowData); 
 	std::cerr << "\n" << name << " =\n" << *this << "\n"; 
-    Globals::printdat() = savep;
+    Global::printdat() = savep;
 	}
 
 void IQTensor::
@@ -1377,7 +1377,7 @@ operator*=(const IQTensor& other)
         if(f != other.is_->end()) //I is an element of other.iqindex_
             {
             //Check that arrow directions are compatible
-            if(Globals::checkArrows())
+            if(Global::checkArrows())
                 if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
                     {
                     this->printIndices("*this");
@@ -1504,7 +1504,7 @@ operator/=(const IQTensor& other)
         if(f != other.is_->end()) //I is an element of other.iqindex_
             {
             //Check that arrow directions are compatible
-            if(Globals::checkArrows())
+            if(Global::checkArrows())
                 if(f->dir() != I.dir() && f->type() != ReIm && I.type() != ReIm)
                     {
                     this->printIndices("*this");
