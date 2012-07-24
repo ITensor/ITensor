@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_OPTION_H
 #define __ITENSOR_OPTION_H
 
-#include <set>
+#include <map>
 #include "real.h"
 
 
@@ -13,23 +13,23 @@ class Option
     {
     public:
 
-    typedef const std::string
+    typedef std::string
     Name;
 
     Option();
 
     explicit
-    Option(Name& name);
+    Option(const Name& name);
 
-    Option(Name& name, bool bval);
+    Option(const Name& name, bool bval);
 
-    Option(Name& name, const std::string& sval);
+    Option(const Name& name, const std::string& sval);
 
-    Option(Name& name, int ival);
+    Option(const Name& name, int ival);
 
-    Option(Name& name, Real rval);
+    Option(const Name& name, Real rval);
 
-    Option(Name& name, 
+    Option(const Name& name, 
            bool bval,
            const std::string& sval, 
            int ival, 
@@ -39,24 +39,20 @@ class Option
     // Operators for comparison and sorting
     //
 
+    // Two Options are equal if they have the same name,
+    // regardless of other fields that may be set.
     bool
     operator==(const Option& other) const
         { 
-        return (name_ == other.name_ && 
-                bval_ == other.bval_ &&
-                sval_ == other.sval_ &&
-                ival_ == other.ival_ &&
-                rval_ == other.rval_);
+        return name_ == other.name_;
         }
 
+    // Compares two Options based on their name, using
+    // the < operator of std::string. Useful for sorting.
     bool
     operator<(const Option& other) const
         { 
-        return (name_ < other.name_ || 
-                bval_ < other.bval_ ||
-                sval_ < other.sval_ ||
-                ival_ < other.ival_ ||
-                rval_ < other.rval_);
+        return name_ < other.name_;
         }
 
     //
@@ -80,10 +76,13 @@ class Option
     bool
     isNotNull() const { return name_ != "NullOption"; }
 
-    Name
+    const Name&
     name() const { return name_; }
 
-    operator Name() const { return name_; }
+    operator const Name&() const { return name_; }
+
+    friend std::ostream& 
+    operator<<(std::ostream & s, const Option& opt);
 
     private:
 
@@ -112,16 +111,16 @@ Option()
     { }
 
 inline Option::
-Option(Name& name)
+Option(const Name& name)
     :
     name_(name),
-    bval_(false),
+    bval_(true),
     ival_(0),
     rval_(0)
     { }
 
 inline Option::
-Option(Name& name, bool bval)
+Option(const Name& name, bool bval)
     :
     name_(name),
     bval_(bval),
@@ -130,35 +129,35 @@ Option(Name& name, bool bval)
     { }
 
 inline Option::
-Option(Name& name, const std::string& sval)
+Option(const Name& name, const std::string& sval)
     :
     name_(name),
-    bval_(false),
+    bval_(true),
     sval_(sval),
     ival_(0),
     rval_(0)
     { }
 
 inline Option::
-Option(Name& name, int ival)
+Option(const Name& name, int ival)
     :
     name_(name),
-    bval_(false),
+    bval_(true),
     ival_(ival),
     rval_(0)
     { }
 
 inline Option::
-Option(Name& name, Real rval)
+Option(const Name& name, Real rval)
     :
     name_(name),
-    bval_(false),
+    bval_(true),
     ival_(0),
     rval_(rval)
     { }
 
 inline Option::
-Option(Name& name, 
+Option(const Name& name, 
        bool bval,
        const std::string& sval, 
        int ival, 
@@ -171,6 +170,18 @@ Option(Name& name,
     rval_(rval)
     { }
 
+inline std::ostream& 
+operator<<(std::ostream & s, const Option& opt)
+    {
+    s << "Option \"" << opt.name() << "\"\n";
+    s << "  boolVal   = " << (opt.boolVal() ? "true" : "false") << "\n";
+    s << "  intVal    = " << opt.intVal() << "\n";
+    s << "  realVal   = " << opt.realVal() << "\n";
+    s << "  stringVal = \"" << opt.stringVal() << "\"" 
+      << std::endl;
+    return s;
+    }
+
 
 //
 // OptionSet
@@ -182,72 +193,96 @@ class OptionSet
 
     OptionSet();
 
-    OptionSet(Option opt1);
+    OptionSet(const Option& opt1);
 
-    OptionSet(Option opt1, Option opt2);
+    OptionSet(const Option& opt1, const Option& opt2);
 
-    OptionSet(Option opt1, Option opt2, Option opt3);
+    OptionSet(const Option& opt1, const Option& opt2, const Option& opt3);
 
-    OptionSet(Option opt1, Option opt2, Option opt3,
-              Option opt4);
+    OptionSet(const Option& opt1, const Option& opt2, 
+              const Option& opt3, const Option& opt4);
 
-    OptionSet(Option opt1, Option opt2, Option opt3,
-              Option opt4, Option opt5);
+    OptionSet(const Option& opt1, const Option& opt2, 
+              const Option& opt3, const Option& opt4, const Option& opt5);
 
-    OptionSet(Option opt1, Option opt2, Option opt3,
-              Option opt4, Option opt5, Option opt6);
+    OptionSet(const Option& opt1, const Option& opt2, const Option& opt3,
+              const Option& opt4, const Option& opt5, const Option& opt6);
+
+    //
+    // Methods for accessing Options
+    //
 
     bool
-    includes(const Option& val) const { return opts_.count(val) == 1; }
+    defined(const Option::Name& name) const;
     bool
-    includes(Option::Name& name) const;
+    defined(const Option& opt) const;
 
     void
-    insert(const Option& val) { if(val.isNotNull()) opts_.insert(val); }
+    insert(const Option& opt) { if(opt.isNotNull()) opts_[opt.name()] = opt; }
 
+    const Option&
+    get(const Option::Name& name) const;
     const Option&
     get(const Option& opt) const;
-    const Option&
-    get(Option::Name& name) const;
 
+    //
+    // Methods for getting fields of a specific Option
+    //
+
+    bool
+    boolVal(const Option::Name& name) const;
     bool
     boolVal(const Option& opt) const;
-    bool
-    boolVal(Option::Name& name) const;
 
     bool
-    boolOrDefault(Option::Name& name, bool default_val) const;
+    boolOrDefault(const Option::Name& name, bool default_val) const;
 
+    const std::string&
+    stringVal(const Option::Name& name) const;
     const std::string&
     stringVal(const Option& opt) const;
-    const std::string&
-    stringVal(Option::Name& name) const;
 
     const std::string&
-    stringOrDefault(Option::Name& name, const std::string& default_val) const;
+    stringOrDefault(const Option::Name& name, const std::string& default_val) const;
 
+    int
+    intVal(const Option::Name& name) const;
     int
     intVal(const Option& opt) const;
-    int
-    intVal(Option::Name& name) const;
 
     int
-    intOrDefault(Option::Name& name, int default_val) const;
+    intOrDefault(const Option::Name& name, int default_val) const;
 
+    Real
+    realVal(const Option::Name& name) const;
     Real
     realVal(const Option& opt) const;
-    Real
-    realVal(Option::Name& name) const;
 
     Real
-    realOrDefault(Option::Name& name, Real default_val) const;
+    realOrDefault(const Option::Name& name, Real default_val) const;
+
+    friend std::ostream& 
+    operator<<(std::ostream & s, const OptionSet& oset);
 
     private:
 
-    std::set<Option> opts_;
+    typedef std::map<Option::Name,Option>
+    storage_type;
 
-    typedef std::set<Option>::iterator
-    opts_it_;
+    typedef storage_type::iterator
+    iterator;
+
+    typedef storage_type::const_iterator
+    const_iterator;
+
+    ///////////////
+    //
+    // Data Members
+
+    storage_type opts_;
+
+    //
+    ///////////////
 
     };
 
@@ -256,20 +291,20 @@ OptionSet()
     { }
 
 inline OptionSet::
-OptionSet(Option opt1)
+OptionSet(const Option& opt1)
     {
-    opts_.insert(opt1);
+    insert(opt1);
     }
 
 inline OptionSet::
-OptionSet(Option opt1, Option opt2)
+OptionSet(const Option& opt1, const Option& opt2)
     {
     insert(opt1);
     insert(opt2);
     }
 
 inline OptionSet::
-OptionSet(Option opt1, Option opt2, Option opt3)
+OptionSet(const Option& opt1, const Option& opt2, const Option& opt3)
     {
     insert(opt1);
     insert(opt2);
@@ -277,8 +312,8 @@ OptionSet(Option opt1, Option opt2, Option opt3)
     }
 
 inline OptionSet::
-OptionSet(Option opt1, Option opt2, Option opt3,
-          Option opt4)
+OptionSet(const Option& opt1, const Option& opt2, const Option& opt3,
+          const Option& opt4)
     {
     insert(opt1);
     insert(opt2);
@@ -287,8 +322,8 @@ OptionSet(Option opt1, Option opt2, Option opt3,
     }
 
 inline OptionSet::
-OptionSet(Option opt1, Option opt2, Option opt3,
-          Option opt4, Option opt5)
+OptionSet(const Option& opt1, const Option& opt2, const Option& opt3,
+          const Option& opt4, const Option& opt5)
     {
     insert(opt1);
     insert(opt2);
@@ -298,8 +333,8 @@ OptionSet(Option opt1, Option opt2, Option opt3,
     }
 
 inline OptionSet::
-OptionSet(Option opt1, Option opt2, Option opt3,
-          Option opt4, Option opt5, Option opt6)
+OptionSet(const Option& opt1, const Option& opt2, const Option& opt3,
+          const Option& opt4, const Option& opt5, const Option& opt6)
     {
     insert(opt1);
     insert(opt2);
@@ -310,33 +345,32 @@ OptionSet(Option opt1, Option opt2, Option opt3,
     }
 
 bool inline OptionSet::
-includes(Option::Name& name) const
+defined(const Option::Name& name) const
     {
-    Foreach(const Option& oo, opts_)
-        {
-        if(oo.name() == name) return true;
-        }
-    return false;
+    return opts_.count(name);
+    }
+
+bool inline OptionSet::
+defined(const Option& opt) const
+    {
+    return defined(opt.name());
     }
 
 inline const Option& OptionSet::
 get(const Option& opt) const
     {
-    opts_it_ it = opts_.find(opt);
-    if(it == opts_.end())
-        Error("OptionSet does not contain requested option");
-    return *it;
+    return get(opt.name());
     }
 
 inline const Option& OptionSet::
-get(Option::Name& name) const
+get(const Option::Name& name) const
     {
-    Foreach(const Option& oo, opts_)
-        {
-        if(oo.name() == name) return oo;
-        }
+    const_iterator it = opts_.find(name);
+    if(it != opts_.end()) return it->second;
+    //else, couldn't find the Option
+    std::cout << "Option name = " << name << std::endl;
     Error("OptionSet does not contain requested option");
-    return *(opts_.begin());
+    return opts_.begin()->second;
     }
 
 bool inline OptionSet::
@@ -345,15 +379,15 @@ boolVal(const Option& opt) const
     return get(opt).boolVal();
     }
 bool inline OptionSet::
-boolVal(Option::Name& name) const
+boolVal(const Option::Name& name) const
     {
     return get(name).boolVal();
     }
 
 bool inline OptionSet::
-boolOrDefault(Option::Name& name, bool default_value) const
+boolOrDefault(const Option::Name& name, bool default_value) const
     {
-    if(includes(name))
+    if(defined(name))
         return get(name).boolVal();
     else
         return default_value;
@@ -365,15 +399,15 @@ stringVal(const Option& opt) const
     return get(opt).stringVal();
     }
 inline const std::string& OptionSet::
-stringVal(Option::Name& name) const
+stringVal(const Option::Name& name) const
     {
     return get(name).stringVal();
     }
 
 inline const std::string& OptionSet::
-stringOrDefault(Option::Name& name, const std::string& default_value) const
+stringOrDefault(const Option::Name& name, const std::string& default_value) const
     {
-    if(includes(name))
+    if(defined(name))
         return get(name).stringVal();
     else
         return default_value;
@@ -385,15 +419,15 @@ intVal(const Option& opt) const
     return get(opt).intVal();
     }
 int inline OptionSet::
-intVal(Option::Name& name) const
+intVal(const Option::Name& name) const
     {
     return get(name).intVal();
     }
 
 int inline OptionSet::
-intOrDefault(Option::Name& name, int default_value) const
+intOrDefault(const Option::Name& name, int default_value) const
     {
-    if(includes(name))
+    if(defined(name))
         return get(name).intVal();
     else
         return default_value;
@@ -405,24 +439,38 @@ realVal(const Option& opt) const
     return get(opt).realVal();
     }
 Real inline OptionSet::
-realVal(Option::Name& name) const
+realVal(const Option::Name& name) const
     {
     return get(name).realVal();
     }
 
 Real inline OptionSet::
-realOrDefault(Option::Name& name, Real default_value) const
+realOrDefault(const Option::Name& name, Real default_value) const
     {
-    if(includes(name))
+    if(defined(name))
         return get(name).realVal();
     else
         return default_value;
     }
 
+inline std::ostream& 
+operator<<(std::ostream & s, const OptionSet& oset)
+    {
+    typedef OptionSet::const_iterator const_it;
+    s << "/- OptionSet -------\n\n";
+    for(const_it it = oset.opts_.begin();
+        it != oset.opts_.end(); ++it)
+        {
+        s << it->second << "\n";
+        }
+    s << "\\------------------" << std::endl;
+    return s;
+    }
 
 //
 // Convenience functions for
-// creating Option instances
+// Options used within the library.
+//
 
 Option inline
 Auto(bool val = true)

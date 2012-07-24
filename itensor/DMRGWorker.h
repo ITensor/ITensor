@@ -172,8 +172,8 @@ void DMRGWorker<MPSType>::
 parseOptions(const Option& opt1, const Option& opt2)
     {
     OptionSet oset(opt1,opt2);
-    if(oset.includes(Quiet())) quiet_ = true;
-    if(oset.includes(Verbose())) quiet_ = false;
+    if(oset.defined("Quiet") && oset.boolVal("Quiet")) quiet_ = true;
+    if(oset.defined("Verbose") && oset.boolVal("Verbose")) quiet_ = false;
     }
 
 

@@ -125,7 +125,7 @@ LocalMPO_MPS(const MPOt<Tensor>& Op,
         lmps_[j] = LocalMPOType(psis[j]);
 
     OptionSet oset(opt1,opt2);
-    if(oset.includes("Weight"))
+    if(oset.defined("Weight"))
         weight(oset.realVal("Weight"));
     }
 
