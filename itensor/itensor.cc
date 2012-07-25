@@ -124,7 +124,7 @@ operator<<(ostream & s, const ITensor & t)
             s << format(" (L=%d,N=too big)\n") 
                  % t.vecSize() << t.scale();
             }
-        if(Globals::printdat())
+        if(Global::printdat())
             {
             Real scale = 1.0;
             if(t.scale_.isFiniteReal()) scale = t.scale_.real();
@@ -134,7 +134,7 @@ operator<<(ostream & s, const ITensor & t)
             for(; c.notDone(); ++c)
                 {
                 Real val = v(c.ind)*scale;
-                if(fabs(val) > Globals::printScale())
+                if(fabs(val) > Global::printScale())
                     { s << c << " " << val << "\n"; }
                 }
             }
@@ -1333,9 +1333,9 @@ scaleTo(LogNumber newscale) const
 void ITensor::
 print(std::string name,Printdat pdat) const 
     { 
-    Globals::printdat() = (pdat==ShowData); 
+    Global::printdat() = (pdat==ShowData); 
     std::cerr << "\n" << name << " =\n" << *this << "\n"; 
-    Globals::printdat() = false; 
+    Global::printdat() = false; 
     }
 
 void ITensor::
