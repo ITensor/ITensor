@@ -208,6 +208,26 @@ runInternal(const MPOType& H, MPSType& psi)
         psi.noise(sweeps().noise(sw));
         solver.maxIter(sweeps().niter(sw));
 
+        if(Global::options().defined("WriteM") &&
+           sweeps().maxm(sw) >= Global::options().intVal("WriteM"))
+            {
+            std::string psi_wdname;
+            if(Global::options().defined("WriteDir"))
+                psi_wdname = Global::options().stringVal("WriteDir") + "/psi";
+            else
+                psi_wdname = "psi";
+            psi.writeDir(psi_wdname);
+            psi.doWrite(true);
+ 
+            std::string PHwdname;
+            if(Global::options().defined("WriteDir"))
+                PHwdname = Global::options().stringVal("WriteDir") + "/PH";
+            else
+                PHwdname = "PH";
+            PH.writeDir(PHwdname);
+            PH.doWrite(true);
+            }
+
         for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
             {
             if(!quiet_)

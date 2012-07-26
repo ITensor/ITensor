@@ -218,7 +218,7 @@ class OptionSet
     defined(const Option& opt) const;
 
     void
-    insert(const Option& opt) { if(opt.isNotNull()) opts_[opt.name()] = opt; }
+    add(const Option& opt) { if(opt.isNotNull()) opts_[opt.name()] = opt; }
 
     const Option&
     get(const Option::Name& name) const;
@@ -293,55 +293,55 @@ OptionSet()
 inline OptionSet::
 OptionSet(const Option& opt1)
     {
-    insert(opt1);
+    add(opt1);
     }
 
 inline OptionSet::
 OptionSet(const Option& opt1, const Option& opt2)
     {
-    insert(opt1);
-    insert(opt2);
+    add(opt1);
+    add(opt2);
     }
 
 inline OptionSet::
 OptionSet(const Option& opt1, const Option& opt2, const Option& opt3)
     {
-    insert(opt1);
-    insert(opt2);
-    insert(opt3);
+    add(opt1);
+    add(opt2);
+    add(opt3);
     }
 
 inline OptionSet::
 OptionSet(const Option& opt1, const Option& opt2, const Option& opt3,
           const Option& opt4)
     {
-    insert(opt1);
-    insert(opt2);
-    insert(opt3);
-    insert(opt4);
+    add(opt1);
+    add(opt2);
+    add(opt3);
+    add(opt4);
     }
 
 inline OptionSet::
 OptionSet(const Option& opt1, const Option& opt2, const Option& opt3,
           const Option& opt4, const Option& opt5)
     {
-    insert(opt1);
-    insert(opt2);
-    insert(opt3);
-    insert(opt4);
-    insert(opt5);
+    add(opt1);
+    add(opt2);
+    add(opt3);
+    add(opt4);
+    add(opt5);
     }
 
 inline OptionSet::
 OptionSet(const Option& opt1, const Option& opt2, const Option& opt3,
           const Option& opt4, const Option& opt5, const Option& opt6)
     {
-    insert(opt1);
-    insert(opt2);
-    insert(opt3);
-    insert(opt4);
-    insert(opt5);
-    insert(opt6);
+    add(opt1);
+    add(opt2);
+    add(opt3);
+    add(opt4);
+    add(opt5);
+    add(opt6);
     }
 
 bool inline OptionSet::
@@ -497,12 +497,6 @@ DebugLevel(int level)
     }
 
 Option inline
-DoWrite(bool val = true)
-    {
-    return Option("DoWrite",val);
-    }
-
-Option inline
 Pinning(Real val = 1)
     {
     return Option("Pinning",val);
@@ -548,6 +542,12 @@ Option inline
 Weight(Real w = 1)
     {
     return Option("Weight",w);
+    }
+
+Option inline
+WriteDir(const std::string& dirname)
+    {
+    return Option("WriteDir",dirname);
     }
 
 Option inline
