@@ -3,7 +3,7 @@ include ../options.mk
 ################################################################
 
 TENSOR_HEADERS=core.h
-LIBNAMES=matrix utilities itensor
+LIBNAMES=itensor matrix utilities
 
 #################################################################
 

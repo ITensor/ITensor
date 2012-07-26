@@ -3,7 +3,7 @@ include ../options.mk
 ################################################################
 
 TENSOR_HEADERS=dmrg.h hams.h
-LIBNAMES=matrix utilities itensor
+LIBNAMES=itensor matrix utilities
 
 #################################################################
 
