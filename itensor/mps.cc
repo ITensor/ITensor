@@ -136,7 +136,7 @@ read(std::istream& s)
     //using the same model
     IndexT s1 = A.at(1).findtype(Site);
     s1.noprime();
-    if(s1 != model_.si(1))
+    if(s1 != IndexT(model_->si(1)))
         Error("Tensors read from disk not compatible with Model passed to constructor.");
     s.read((char*) &l_orth_lim_,sizeof(l_orth_lim_));
     s.read((char*) &r_orth_lim_,sizeof(r_orth_lim_));
