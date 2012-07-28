@@ -547,7 +547,10 @@ Weight(Real w = 1)
 Option inline
 WriteDir(const std::string& dirname)
     {
-    return Option("WriteDir",dirname);
+    if(dirname[dirname.length()-1] == '/')
+        return Option("WriteDir",dirname);
+    else
+        return Option("WriteDir",dirname + "/");
     }
 
 Option inline
