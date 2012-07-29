@@ -24,42 +24,36 @@ for_all(T& a, Op f)
 
 using namespace std::rel_ops;
 
-//#define NMAX 8
 static const int NMAX = 8;
 static const Real MIN_CUT = 1E-20;
 static const int MAX_M = 5000;
 
-//----------------------------------
-//For bounds checking - can remove once implementation is tested
-//#define ITENSOR_USE_AT
 
-//----------------------------------
+#ifndef DEBUG
 
-#ifndef DEBUG					//{
-
-#ifndef NDEBUG						//{
+#ifndef NDEBUG
 #define NDEBUG //turn off asserts
-#endif							//}
+#endif
 
-#ifndef BOOST_DISABLE_ASSERTS				//{
-#define BOOST_DISABLE_ASSERTS //turn off asserts
-#endif							//}
+#ifndef BOOST_DISABLE_ASSERTS
+#define BOOST_DISABLE_ASSERTS
+#endif
 
-#endif 						//}
+#endif
 
 
-#ifdef DEBUG					//{
+#ifdef DEBUG
 #define DO_IF_DEBUG(X) X
 #else
 #define DO_IF_DEBUG(X)
-#endif						//}
+#endif
 
 
-#ifdef DEBUG					//{
+#ifdef DEBUG
 #define GET(container,j) (container.at(j))
 #else
 #define GET(container,j) (container[j])
-#endif						//}
+#endif	
 
 enum Printdat { ShowData, HideData };
 
@@ -74,6 +68,7 @@ enum Printdat { ShowData, HideData };
 #define PrintDat(X) PrintEither(X,true)
 #define PrintIndices(T) { T.printIndices(#T); }
 
+/*
 template<class T> std::vector<T>& 
 operator*=(std::vector<T>& v1, const std::vector<T>& v2) 
     {
@@ -145,6 +140,7 @@ operator*(const T& t1, const T* pt2)
     res *= *(pt2); 
     return res; 
     }
+*/
 
 template<class T> inline void 
 readFromFile(const std::string& fname, T& t) 
@@ -157,6 +153,12 @@ readFromFile(const std::string& fname, T& t)
     }
 
 template<class T> inline void 
+readFromFile(const boost::format& fname, T& t) 
+    { 
+    readFromFile(fname.str(),t);
+    }
+
+template<class T> inline void 
 writeToFile(const std::string& fname, const T& t) 
     { 
     std::ofstream s(fname.c_str()); 
@@ -165,6 +167,10 @@ writeToFile(const std::string& fname, const T& t)
     t.write(s); 
     s.close(); 
     }
+
+template<class T> inline void 
+writeToFile(const boost::format& fname, const T& t) 
+    { writeToFile(fname.str(),t); }
 
 inline void 
 writeVec(std::ostream& s, const Vector& V)
