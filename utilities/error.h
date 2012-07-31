@@ -33,7 +33,7 @@ class ITError
     public:
 
     explicit 
-    ITError(const std::string& message)
+    ITError(const std::string& message = "")
         : 
         message_(message)
         { }
@@ -49,7 +49,7 @@ class ITError
 
     private:
 
-        std::string message_;
+    std::string message_;
 
     }; //class ITError
 
