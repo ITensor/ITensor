@@ -170,7 +170,9 @@ writeToFile(const std::string& fname, const T& t)
 
 template<class T> inline void 
 writeToFile(const boost::format& fname, const T& t) 
-    { writeToFile(fname.str(),t); }
+    { 
+    writeToFile(fname.str(),t); 
+    }
 
 inline void 
 writeVec(std::ostream& s, const Vector& V)

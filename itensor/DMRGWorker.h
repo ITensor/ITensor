@@ -208,7 +208,8 @@ runInternal(const MPOType& H, MPSType& psi)
         psi.noise(sweeps().noise(sw));
         solver.maxIter(sweeps().niter(sw));
 
-        if(Global::options().defined("WriteM")
+        if(!psi.doWrite() 
+           && Global::options().defined("WriteM")
            && sweeps().maxm(sw) >= Global::options().intVal("WriteM"))
             {
             std::string write_dir = Global::options().stringOrDefault("WriteDir","./");
