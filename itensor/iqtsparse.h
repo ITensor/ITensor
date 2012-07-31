@@ -54,10 +54,10 @@ class IQTSparse
     uniqueReal() const { return is_->uniqueReal(); } 
 
     bool
-    isNull() const { return (d_ == 0 || is_ == 0); }
+    isNull() const;
 
     bool
-    isNotNull() const { return (d_ != 0 && is_ != 0); }
+    isNotNull() const;
 
     bool 
     isComplex() const { return hasindex(IQIndex::IndReIm()); }

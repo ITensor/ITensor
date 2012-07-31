@@ -181,6 +181,12 @@ IQTSparse(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
     { 
     }
 
+bool IQTSparse::
+isNull() const { return (d_ == IQTSDat::Null() || is_ == IQIndexSet::Null()); }
+
+bool IQTSparse::
+isNotNull() const { return !(d_ == IQTSDat::Null() || is_ == IQIndexSet::Null()); }
+
 
 IQTSparse& IQTSparse::
 operator+=(const ITSparse& s)
