@@ -72,7 +72,8 @@ IndexDat(const std::string& name, int mm,IndexType it)
       numref(0),
       is_static_(false)
     { 
-    if(it == ReIm) Error("bad call to create IndexDat with type ReIm");
+    if(it == ReIm) Error("Not allowed to create Index with type ReIm");
+    if(it == Any) Error("Not allowed to create Index with type Any");
     setUniqueReal();
     }
 
@@ -85,7 +86,8 @@ IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& 
       numref(0), 
       is_static_(false)
     { 
-    if(it == ReIm) Error("bad call to create IndexDat with type ReIm");
+    if(it == ReIm) Error("Not allowed to create Index with type ReIm");
+    if(it == Any) Error("Not allowed to create Index with type Any");
     setUniqueReal();
     }
 
