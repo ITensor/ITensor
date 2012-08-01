@@ -76,6 +76,18 @@ class Model
     IQTensor 
     sm(int i) const { return makeSm(i); }
 
+    //(Sz)^2, useful for spin 1 and higher
+    IQTensor
+    sz2(int i) const { return makeSz2(i); }
+
+    //(Sx)^2, useful for spin 1 and higher
+    IQTensor
+    sx2(int i) const { return makeSx2(i); }
+
+    //(Sy)^2, useful for spin 1 and higher
+    IQTensor
+    sy2(int i) const { return makeSy2(i); }
+
     //Particle Operators -----------------------
 
     IQTensor
@@ -180,6 +192,15 @@ class Model
 
     virtual IQTensor 
     makeSm(int i) const;
+
+    virtual IQTensor
+    makeSz2(int i) const;
+
+    virtual IQTensor
+    makeSx2(int i) const;
+
+    virtual IQTensor
+    makeSy2(int i) const;
 
     virtual IQTensor 
     makeN(int i) const;
@@ -295,6 +316,27 @@ inline IQTensor Model::
 makeSm(int i) const 
     { 
     Error("sm not implemented"); 
+    return IQTensor();
+    }
+
+inline IQTensor Model::
+makeSz2(int i) const 
+    { 
+    Error("sz2 not implemented"); 
+    return IQTensor();
+    }
+
+inline IQTensor Model::
+makeSx2(int i) const 
+    { 
+    Error("sx2 not implemented"); 
+    return IQTensor();
+    }
+
+inline IQTensor Model::
+makeSy2(int i) const 
+    { 
+    Error("sy2 not implemented"); 
     return IQTensor();
     }
 

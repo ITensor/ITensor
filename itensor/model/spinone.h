@@ -34,17 +34,6 @@ class SpinOne : public Model
     IQIndexVal
     DnP(int i) const;
 
-    //(Sz)^2, etc. operators
-
-    IQTensor
-    sz2(int i) const { return makeSx2(i); }
-
-    IQTensor
-    sx2(int i) const { return makeSx2(i); }
-
-    IQTensor
-    sy2(int i) const { return makeSx2(i); }
-
     private:
 
     virtual int
@@ -114,6 +103,7 @@ inline void SpinOne::
 constructSites(bool shalf_edge)
     {
     for(int j = 1; j <= N_; ++j)
+        {
         if(shalf_edge && (j == 1 || j == N_))
             {
             site_.at(j) = IQIndex(nameint("S=1/2 site=",j),
@@ -127,6 +117,7 @@ constructSites(bool shalf_edge)
                 Index(nameint("Z0 for site",j),1,Site),QN( 0,0),
                 Index(nameint("Dn for site",j),1,Site),QN(-2,0));
             }
+        }
     }
 
 inline void SpinOne::
