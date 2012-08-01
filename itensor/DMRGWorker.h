@@ -137,6 +137,20 @@ dmrg(MPSType& psi,
     return worker.energy();
     }
 
+//DMRG with a single Hamiltonian MPO and a set of 
+//MPS to orthogonalize against, as well as a DMRGOpts instance
+template <class MPSType, class MPOType>
+Real inline
+dmrg(MPSType& psi, 
+     const MPOType& H, const std::vector<MPSType>& psis, 
+     const Sweeps& sweeps, BaseDMRGOpts& opts, 
+     const Option& opt1 = Option(), const Option& opt2 = Option())
+    {
+    DMRGWorker<MPSType> worker(sweeps,opts,opt1,opt2);
+    worker.run(H,psis,psi);
+    return worker.energy();
+    }
+
 
 //
 // DMRGWorker
