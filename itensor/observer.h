@@ -2,14 +2,14 @@
 // Distributed under the ITensor Library License, Version 1.0.
 //    (See accompanying LICENSE file.)
 //
-#ifndef BASE_DMRG_OPTS_H
-#define BASE_DMRG_OPTS_H
+#ifndef __ITENSOR_OBSERVER_H
+#define __ITENSOR_OBSERVER_H
 #include "svdworker.h"
 #include "option.h"
 
 // virtual base class
 
-class BaseDMRGOpts 
+class Observer 
     {
     public:
     
@@ -22,8 +22,8 @@ class BaseDMRGOpts
     checkDone(int sw, const SVDWorker& svd, Real energy, 
               const Option& opt1 = Option(), const Option& opt2 = Option()) = 0;
 
-    virtual ~BaseDMRGOpts() { }
+    virtual ~Observer() { }
 
     };
 
-#endif // BASE_DMRG_OPTS_H
+#endif 

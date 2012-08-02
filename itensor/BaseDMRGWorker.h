@@ -5,10 +5,10 @@
 #ifndef __ITENSOR_BASE_DMRG_WORKER_H
 #define __ITENSOR_BASE_DMRG_WORKER_H
 
-#include "DMRGOpts.h" // <-- default implementation
+#include "DMRGObserver.h" // <-- default implementation
 #include "Sweeps.h"
 
-template <class MPSType, class DefaultOpts=DMRGOpts>
+template <class MPSType, class DefaultObserver=DMRGObserver>
 class BaseDMRGWorker
     {
     public:
@@ -18,7 +18,7 @@ class BaseDMRGWorker
 
     BaseDMRGWorker(const Sweeps& sweeps);
 
-    BaseDMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts);
+    BaseDMRGWorker(const Sweeps& sweeps, Observer& obs);
 
     virtual 
     ~BaseDMRGWorker();
@@ -28,10 +28,10 @@ class BaseDMRGWorker
     void
     sweeps(const Sweeps& nswps) { sweeps_ = &nswps; }
 
-    BaseDMRGOpts& 
-    opts() const;
+    Observer& 
+    observer() const;
     void 
-    opts(BaseDMRGOpts& new_opts);
+    observer(Observer& new_obs);
 
     Real 
     run(const MPOType& H, MPSType& psi) 
@@ -72,48 +72,48 @@ private:
 
     const Sweeps* sweeps_;
 
-    bool own_opts_;
+    bool own_obs_;
 
-    BaseDMRGOpts* opts_;
+    Observer* obs_;
     };
 
 
-template <class MPSType, class DefaultOpts>
-inline BaseDMRGWorker<MPSType, DefaultOpts>::
+template <class MPSType, class DefaultObserver>
+inline BaseDMRGWorker<MPSType, DefaultObserver>::
 BaseDMRGWorker(const Sweeps& sweeps)
     : sweeps_(&sweeps),
-      own_opts_(true),
-      opts_(new DefaultOpts())
+      own_obs_(true),
+      obs_(new DefaultObserver())
     { }
 
-template <class MPSType, class DefaultOpts>
-inline BaseDMRGWorker<MPSType, DefaultOpts>::
-BaseDMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts)
+template <class MPSType, class DefaultObserver>
+inline BaseDMRGWorker<MPSType, DefaultObserver>::
+BaseDMRGWorker(const Sweeps& sweeps, Observer& obs)
     : sweeps_(&sweeps),
-      own_opts_(false),
-      opts_(&opts)
+      own_obs_(false),
+      obs_(&obs)
     { }
 
-template <class MPSType, class DefaultOpts>
-inline BaseDMRGWorker<MPSType, DefaultOpts>::
+template <class MPSType, class DefaultObserver>
+inline BaseDMRGWorker<MPSType, DefaultObserver>::
 ~BaseDMRGWorker()
     {
-    if(own_opts_) { delete opts_; }
+    if(own_obs_) { delete obs_; }
     }
 
-template <class MPSType, class DefaultOpts>
-inline void BaseDMRGWorker<MPSType, DefaultOpts>::
-opts(BaseDMRGOpts& new_opts)
+template <class MPSType, class DefaultObserver>
+inline void BaseDMRGWorker<MPSType, DefaultObserver>::
+observer(Observer& new_obs)
     { 
-    if(own_opts_) { delete opts_; }
-    opts_ = &new_opts; 
+    if(own_obs_) { delete obs_; }
+    obs_ = &new_obs; 
     }
 
-template <class MPSType, class DefaultOpts>
-inline BaseDMRGOpts& BaseDMRGWorker<MPSType, DefaultOpts>::
-opts() const 
+template <class MPSType, class DefaultObserver>
+inline Observer& BaseDMRGWorker<MPSType, DefaultObserver>::
+observer() const 
     { 
-    return *opts_; 
+    return *obs_; 
     }
 
 #endif

@@ -7,7 +7,8 @@ using std::cout;
 using std::vector;
 
 //Orthogonalizing DMRG. Puts in an energy penalty if psi has an overlap with any MPS in 'other'.
-Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>& other, DMRGOpts& opts)
+/*
+Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>& other, DMRGObserver& obs)
     {
     const Real orig_cutoff = psi.cutoff(); 
     const int orig_minm = psi.minm(), orig_maxm = psi.maxm();
@@ -69,7 +70,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
             //printdat = false; cerr << "Multiple state phi = " << phi << "\n"; 
 
-            LocalHamOrth<ITensor> lham(leftright[l],leftright[l+1],mpoh,phi,opts.orthWeight());
+            LocalHamOrth<ITensor> lham(leftright[l],leftright[l+1],mpoh,phi,obs.orthWeight());
             lham.other.resize(other.size());
             if(l == 1)
             {
@@ -100,7 +101,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m();
 
             //Keep track of the largest_m, slowest decaying denmat eigs
-            if(opts.printEigs())
+            if(obs.printEigs())
             {
                 largest_m = max(largest_m,ll.m());
                 //if(deigs.Length() >= max(largest_m,max_eigs.Length()) && max_eigs(max_eigs.Length()) < deigs(max_eigs.Length())) 
@@ -158,10 +159,10 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
             }
 
-        if(opts.energyErrgoal() > 0 && sw%2 == 0)
+        if(obs.energyErrgoal() > 0 && sw%2 == 0)
         {
             Real dE = fabs(energy-last_energy);
-            if(dE < opts.energyErrgoal())
+            if(dE < obs.energyErrgoal())
             {
                 cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
                 psi.cutoff(orig_cutoff); 
@@ -179,9 +180,10 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
     return energy;
     }
+*/
 
 /*
-Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& opts)
+Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
 {
     int debuglevel = 1;
     if(opts.quiet()) debuglevel = 0;

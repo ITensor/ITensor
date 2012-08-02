@@ -29,18 +29,23 @@ class DMRGWorker : public BaseDMRGWorker<MPSType>
     DMRGWorker(const Sweeps& sweeps,
                const Option& opt1 = Option(), const Option& opt2 = Option());
 
-    DMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts,
+    DMRGWorker(const Sweeps& sweeps, Observer& obs,
                const Option& opt1 = Option(), const Option& opt2 = Option());
 
     using Parent::sweeps;
 
-    using Parent::opts;
+    using Parent::observer;
 
     typedef typename MPSType::TensorT 
     Tensor;
 
     virtual 
     ~DMRGWorker() { }
+
+    Real
+    weight() const { return weight_; }
+    void
+    weight(Real val) { weight_ = val; }
 
     private:
 
@@ -50,6 +55,7 @@ class DMRGWorker : public BaseDMRGWorker<MPSType>
 
     Real energy_;
     bool quiet_;
+    Real weight_;
 
     //
     /////////////
@@ -92,10 +98,10 @@ dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps,
 template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, 
-     BaseDMRGOpts& opts,
+     Observer& obs,
      const Option& opt1 = Option(), const Option& opt2 = Option())
     {
-    DMRGWorker<MPSType> worker(sweeps,opts,opt1,opt2);
+    DMRGWorker<MPSType> worker(sweeps,obs,opt1,opt2);
     worker.run(H,psi);
     return worker.energy();
     }
@@ -111,14 +117,14 @@ dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps,
     return worker.energy();
     }
 
-//DMRG with a set of MPOs and options
+//DMRG with a set of MPOs and a custom Observer
 template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps, 
-     BaseDMRGOpts& opts,
+     Observer& obs,
      const Option& opt1 = Option(), const Option& opt2 = Option())
     {
-    DMRGWorker<MPSType> worker(sweeps,opts,opt1,opt2);
+    DMRGWorker<MPSType> worker(sweeps,obs,opt1,opt2);
     worker.run(H,psi);
     return worker.energy();
     }
@@ -138,15 +144,15 @@ dmrg(MPSType& psi,
     }
 
 //DMRG with a single Hamiltonian MPO and a set of 
-//MPS to orthogonalize against, as well as a DMRGOpts instance
+//MPS to orthogonalize against, as well as a custom Observer
 template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, 
      const MPOType& H, const std::vector<MPSType>& psis, 
-     const Sweeps& sweeps, BaseDMRGOpts& opts, 
+     const Sweeps& sweeps, Observer& obs, 
      const Option& opt1 = Option(), const Option& opt2 = Option())
     {
-    DMRGWorker<MPSType> worker(sweeps,opts,opt1,opt2);
+    DMRGWorker<MPSType> worker(sweeps,obs,opt1,opt2);
     worker.run(H,psis,psi);
     return worker.energy();
     }
@@ -164,19 +170,21 @@ DMRGWorker(const Sweeps& sweeps,
     : 
     Parent(sweeps), 
     energy_(0),
-    quiet_(false)
+    quiet_(false),
+    weight_(1)
     { 
     parseOptions(opt1,opt2);
     }
 
 template <class MPSType> inline
 DMRGWorker<MPSType>::
-DMRGWorker(const Sweeps& sweeps, BaseDMRGOpts& opts,
+DMRGWorker(const Sweeps& sweeps, Observer& obs,
            const Option& opt1, const Option& opt2)
     : 
-    Parent(sweeps, opts), 
+    Parent(sweeps, obs), 
     energy_(0),
-    quiet_(false)
+    quiet_(false),
+    weight_(1)
     { 
     parseOptions(opt1,opt2);
     }
@@ -186,8 +194,8 @@ void DMRGWorker<MPSType>::
 parseOptions(const Option& opt1, const Option& opt2)
     {
     OptionSet oset(opt1,opt2);
-    if(oset.defined("Quiet") && oset.boolVal("Quiet")) quiet_ = true;
-    if(oset.defined("Verbose") && oset.boolVal("Verbose")) quiet_ = false;
+    quiet_ = oset.boolOrDefault("Quiet",false);
+    weight_ = oset.realOrDefault("Weight",1);
     }
 
 
@@ -263,11 +271,11 @@ runInternal(const MPOType& H, MPSType& psi)
                 % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
                 }
 
-            opts().measure(sw,ha,b,psi.svd(),energy_);
+            obs().measure(sw,ha,b,psi.svd(),energy_);
 
             } //for loop over b
         
-        if(opts().checkDone(sw,psi.svd(),energy_)) break;
+        if(obs().checkDone(sw,psi.svd(),energy_)) break;
     
         } //for loop over sw
     
@@ -335,11 +343,11 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
                 % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
                 }
 
-            opts().measure(sw,ha,b,psi.svd(),energy_);
+            obs().measure(sw,ha,b,psi.svd(),energy_);
 
             } //for loop over b
         
-        if(opts().checkDone(sw,psi.svd(),energy_)) break;
+        if(obs().checkDone(sw,psi.svd(),energy_)) break;
     
         } //for loop over sw
     
@@ -370,6 +378,7 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
     psi.position(1);
     
     LocalMPO_MPS<MPOTensor> PH(H,psis);
+    PH.weight(this->weight_);
 
     Eigensolver solver;
     solver.debugLevel(debuglevel);
@@ -407,11 +416,11 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
                 % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
                 }
 
-            opts().measure(sw,ha,b,psi.svd(),energy_);
+            obs().measure(sw,ha,b,psi.svd(),energy_);
 
             } //for loop over b
         
-        if(opts().checkDone(sw,psi.svd(),energy_)) break;
+        if(obs().checkDone(sw,psi.svd(),energy_)) break;
     
         } //for loop over sw
     

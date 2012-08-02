@@ -15,10 +15,10 @@ SOURCES=index.cc indexset.cc itensor.cc itsparse.cc \
 HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         indexset.h itensor.h qn.h iqindex.h iqindexset.h iqtensor.h \
         condenser.h combiner.h iqcombiner.h \
-        svdworker.h mps.h mpo.h DMRGOpts.h dmrg.h core.h BaseDMRGOpts.h \
+        svdworker.h mps.h mpo.h dmrg.h core.h observer.h DMRGObserver.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
         hams/hubbardchain.h hams/heisenberg.h \
-        hams/triheisenberg.h hams/ising.h \
+        hams/triheisenberg.h hams/ising.h hams/J1J2Chain.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
         eigensolver.h localop.h localmpo.h localmposet.h itsparse.h iqtsparse.h\
         partition.h option.h hambuilder.h localmpo_mps.h
@@ -117,6 +117,6 @@ mps.o: $(DEPHEADERS)
 DEPHEADERS+= mpo.h
 mpo.o: $(DEPHEADERS)
 .debug_objs/mpo.o: $(DEPHEADERS)
-DEPHEADERS+= DMRGOpts.h dmrg.h
+DEPHEADERS+= DMRGObserver.h dmrg.h
 dmrg.o: $(DEPHEADERS)
 .debug_objs/dmrg.o: $(DEPHEADERS)

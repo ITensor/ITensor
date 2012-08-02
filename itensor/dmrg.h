@@ -8,7 +8,7 @@
 #include "sparse.h"
 #include "davidson.h"
 #include "Sweeps.h"
-#include "DMRGOpts.h"
+#include "DMRGObserver.h"
 
 
 //
@@ -164,6 +164,7 @@ public:
 };
 */
 
+/*
 template<class Tensor>
 class LocalHamOrth : public BaseLocalHam<Tensor> // to do DMRG using an MPO, ortho to other vecs
     {
@@ -218,6 +219,7 @@ public:
         psi.assignToVec(B);
         }
     };
+*/
 
 template<class Tensor, class TensorSet>
 void 
@@ -423,12 +425,12 @@ onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps)
     */
 
 //Orthogonalizing DMRG. Puts in an energy penalty if psi has an overlap with any MPS in 'other'.
-Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, 
-          const std::vector<MPS>& other, DMRGOpts& opts);
+//Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, 
+//          const std::vector<MPS>& other, DMRGObserver& obs);
 
 //Unit Cell DMRG. Does DMRG on part of a larger system using a Hamiltonian with boundary
 //tensors representing its projection into the basis of the larger system.
 //Real ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, 
-//            const Sweeps& sweeps, DMRGOpts& opts, bool preserve_edgelink);
+//            const Sweeps& sweeps, DMRGObserver& obs, bool preserve_edgelink);
 
 #endif

@@ -2,20 +2,33 @@
 // Distributed under the ITensor Library License, Version 1.0.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_DMRGOPTS_H
-#define __ITENSOR_DMRGOPTS_H
-#include "BaseDMRGOpts.h"
+#ifndef __ITENSOR_DMRGOBSERVER_H
+#define __ITENSOR_DMRGOBSERVER_H
+#include "observer.h"
 
 //
-// Class for fine-tuning DMRG algorithms.
+// Class for monitoring DMRG calculations.
 // The measure and checkDone methods are virtual
 // so that behavior can be customized in a
 // derived class.
 //
 
-class DMRGOpts : public BaseDMRGOpts
+class DMRGObserver : public Observer
     {
     public:
+    
+    DMRGObserver();
+
+    virtual ~DMRGObserver() { }
+
+    void virtual
+    measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
+              const Option& opt1 = Option(), const Option& opt2 = Option(), 
+              const Option& opt3 = Option(), const Option& opt4 = Option());
+    
+    bool virtual
+    checkDone(int sw, const SVDWorker& svd, Real energy,
+                const Option& opt1 = Option(), const Option& opt2 = Option());
 
     Real 
     energyErrgoal() const { return energy_errgoal; }
@@ -32,19 +45,6 @@ class DMRGOpts : public BaseDMRGOpts
     void 
     printEigs(bool val) { printeigs = val; }
     
-    DMRGOpts();
-
-    virtual ~DMRGOpts() { }
-
-    void virtual
-    measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
-              const Option& opt1 = Option(), const Option& opt2 = Option(), 
-              const Option& opt3 = Option(), const Option& opt4 = Option());
-    
-    bool virtual
-    checkDone(int sw, const SVDWorker& svd, Real energy,
-                const Option& opt1 = Option(), const Option& opt2 = Option());
-    
     private:
 
     /////////////
@@ -59,17 +59,17 @@ class DMRGOpts : public BaseDMRGOpts
     //
     /////////////
 
-    }; // class DMRGOpts
+    }; // class DMRGObserver
 
-inline DMRGOpts::
-DMRGOpts() 
+inline DMRGObserver::
+DMRGObserver() 
     : energy_errgoal(-1), 
       orth_weight(1),
       printeigs(true)
     { }
 
 
-void inline DMRGOpts::
+void inline DMRGObserver::
 measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
         const Option& opt1, const Option& opt2, const Option& opt3, const Option& opt4)
     {
@@ -93,7 +93,7 @@ measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
     }
 
 
-bool inline DMRGOpts::
+bool inline DMRGObserver::
 checkDone(int sw, const SVDWorker& svd, Real energy,
           const Option& opt1, const Option& opt2)
     {
@@ -114,4 +114,4 @@ checkDone(int sw, const SVDWorker& svd, Real energy,
     return false;
     }
 
-#endif // __ITENSOR_DMRGOPTS_H
+#endif // __ITENSOR_DMRGOBSERVER_H
