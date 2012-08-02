@@ -38,6 +38,7 @@ build: dmrg iqdmrg
 
 debug: dmrg-g iqdmrg-g
 
+
 dmrg: dmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
 
@@ -50,6 +51,12 @@ iqdmrg: iqdmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 iqdmrg-g: mkdebugdir .debug_objs/iqdmrg.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/iqdmrg.o -o iqdmrg-g $(LIBGFLAGS)
 
+dmrgj1j2: dmrgj1j2.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) dmrgj1j2.o -o dmrgj1j2 $(LIBFLAGS)
+
+dmrgj1j2-g: mkdebugdir .debug_objs/dmrgj1j2.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) .debug_objs/dmrgj1j2.o -o dmrgj1j2-g $(LIBFLAGS)
+
 onesiteopt: onesiteopt.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) onesiteopt.o -o onesiteopt $(LIBFLAGS)
 
@@ -61,4 +68,5 @@ mkdebugdir:
 	mkdir -p .debug_objs
 
 clean:
-	rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g onesiteopt onesiteopt-g
+	rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g onesiteopt onesiteopt-g \
+	dmrgj1j2 dmrgj1j2-g

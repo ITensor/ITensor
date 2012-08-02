@@ -10,7 +10,7 @@ using namespace std;
 // DMRG sample code which reads its
 // parameters from an input file
 //
-// See the sample input file "params"
+// See the sample input file "inputfile_dmrg_table"
 // included in this folder
 //
 
@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     //Parse the input file
     if(argc != 2)
         {
-        cout << "Usage: " << argv[0] << " params." << endl;
+        cout << "Usage: " << argv[0] << " inputfile." << endl;
         return 0;
         }
     string infilename(argv[1]);
