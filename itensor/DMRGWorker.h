@@ -271,11 +271,11 @@ runInternal(const MPOType& H, MPSType& psi)
                 % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
                 }
 
-            obs().measure(sw,ha,b,psi.svd(),energy_);
+            observer().measure(sw,ha,b,psi.svd(),energy_);
 
             } //for loop over b
         
-        if(obs().checkDone(sw,psi.svd(),energy_)) break;
+        if(observer().checkDone(sw,psi.svd(),energy_)) break;
     
         } //for loop over sw
     
@@ -343,11 +343,11 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
                 % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
                 }
 
-            obs().measure(sw,ha,b,psi.svd(),energy_);
+            observer().measure(sw,ha,b,psi.svd(),energy_);
 
             } //for loop over b
         
-        if(obs().checkDone(sw,psi.svd(),energy_)) break;
+        if(observer().checkDone(sw,psi.svd(),energy_)) break;
     
         } //for loop over sw
     
@@ -416,11 +416,11 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
                 % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
                 }
 
-            obs().measure(sw,ha,b,psi.svd(),energy_);
+            observer().measure(sw,ha,b,psi.svd(),energy_);
 
             } //for loop over b
         
-        if(obs().checkDone(sw,psi.svd(),energy_)) break;
+        if(observer().checkDone(sw,psi.svd(),energy_)) break;
     
         } //for loop over sw
     
