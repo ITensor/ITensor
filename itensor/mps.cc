@@ -169,6 +169,43 @@ template
 void MPSt<IQTensor>::write(std::ostream& s) const;
 
 template <class Tensor>
+void MPSt<Tensor>::
+read(const std::string& dirname)
+    {
+    if(model_ == 0)
+        Error("Can't read to default constructed MPS, must specify model");
+
+    l_orth_lim_ = 0;
+    r_orth_lim_ = NN();
+    is_ortho_ = false;
+
+    //std::string dname_ = dirname;
+    //if(dname_[dname_.length()-1] != '/')
+    //    dname_ += "/";
+
+    for(int j = 1; j <= N; ++j)
+        {
+        std::string fname = (format("%s/A_%03d")%dirname%j).str();
+        std::ifstream s(fname.c_str());
+        if(s.good())
+            {
+            A.at(j).read(s);
+            s.close();
+            }
+        else
+            {
+            std::cerr << boost::format("Tried read A[%d]\n") % j;
+            Error("Missing file");
+            }
+        }
+    }
+template
+void MPSt<ITensor>::read(const std::string& dirname);
+template
+void MPSt<IQTensor>::read(const std::string& dirname);
+
+
+template <class Tensor>
 string MPSt<Tensor>::
 AFName(int j) const
     { 
@@ -264,11 +301,11 @@ setBond(int b) const
     if(b == 1)
         {
         writeToFile(writedir_+"/model",*model_);
-        std::ofstream inf((boost::format("%s/info")%writedir_).str().c_str());
-            inf.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
-            inf.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
-            svd_.write(inf);
-        inf.close();
+        //std::ofstream inf((boost::format("%s/info")%writedir_).str().c_str());
+        //    inf.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
+        //    inf.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
+        //    svd_.write(inf);
+        //inf.close();
         }
     }
 template
@@ -842,6 +879,9 @@ initWrite()
         writedir_ = tempnam(global_write_dir.c_str(),pfix.c_str());
         system(("mkdir -p " + writedir_).c_str());
         //std::cout << "Successfully created directory " + writedir_ << std::endl;
+
+        //std::string mod_name = writedir_ + "/model";
+        //writeToFile(mod_name,(*model));
         }
     }
 template

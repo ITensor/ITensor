@@ -225,6 +225,11 @@ class MPSt
     void 
     write(std::ostream& s) const;
 
+    //Read from a directory containing individual tensors,
+    //as created when doWrite(true) is called.
+    void 
+    read(const std::string& dirname);
+
     //
     //MPSt Operators
     //
