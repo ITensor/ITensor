@@ -239,10 +239,7 @@ runInternal(const MPOType& H, MPSType& psi)
             if(!quiet_)
                 std::cout << "\nTurning on write to disk, write_dir = " << write_dir << std::endl;
 
-            psi.writeDir(write_dir + "psi");
             psi.doWrite(true);
- 
-            PH.writeDir(write_dir + "PH");
             PH.doWrite(true);
             }
 
@@ -390,6 +387,19 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
         psi.maxm(sweeps().maxm(sw));
         psi.noise(sweeps().noise(sw));
         solver.maxIter(sweeps().niter(sw));
+
+        if(!psi.doWrite() 
+           && Global::options().defined("WriteM")
+           && sweeps().maxm(sw) >= Global::options().intVal("WriteM"))
+            {
+            std::string write_dir = Global::options().stringOrDefault("WriteDir","./");
+
+            if(!quiet_)
+                std::cout << "\nTurning on write to disk, write_dir = " << write_dir << std::endl;
+
+            psi.doWrite(true);
+            PH.doWrite(true);
+            }
 
         for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
             {

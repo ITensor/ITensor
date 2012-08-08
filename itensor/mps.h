@@ -211,8 +211,6 @@ class MPSt
 
     const std::string&
     writeDir() const { return writedir_; }
-    void 
-    writeDir(const std::string& val) { writedir_ = val; initWrite(); }
 
     bool 
     isOrtho() const { return is_ortho_; }
@@ -462,11 +460,7 @@ protected:
 
 
     void
-    initWrite() const
-        {
-        //system((boost::format("mkdir -p %s")%writedir_).str().c_str());
-        system(("mkdir -p " + writedir_).c_str());
-        }
+    initWrite();
 
     std::string
     AFName(int j) const;

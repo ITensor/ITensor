@@ -167,8 +167,6 @@ class LocalMPO
 
     const std::string&
     writeDir() const { return writedir_; }
-    void 
-    writeDir(const std::string& val) { writedir_ = val; initWrite(); }
 
     static LocalMPO& Null()
         {
@@ -213,14 +211,7 @@ class LocalMPO
     setRHlim(int val);
 
     void
-    initWrite() const
-        {
-        if(do_write_)
-            {
-            system(("mkdir -p " + writedir_).c_str());
-            //std::cout << "Successfully created directory " + writedir_ << std::endl;
-            }
-        }
+    initWrite();
 
     std::string
     PHFName(int j) const
@@ -238,7 +229,7 @@ LocalMPO()
       RHlim_(-1),
       nc_(2),
       do_write_(false),
-      writedir_("PH"),
+      writedir_("."),
       Psi_(0)
     { }
 
@@ -252,7 +243,7 @@ LocalMPO(const MPOt<Tensor>& Op,
       RHlim_(Op.NN()+1),
       nc_(2),
       do_write_(false),
-      writedir_("PH"),
+      writedir_("."),
       Psi_(0)
     { 
     OptionSet oset(opt1,opt2);
@@ -270,7 +261,7 @@ LocalMPO(const MPSt<Tensor>& Psi,
       RHlim_(Psi.NN()+1),
       nc_(2),
       do_write_(false),
-      writedir_("PH"),
+      writedir_("."),
       Psi_(&Psi)
     { 
     OptionSet oset(opt1,opt2);
@@ -587,6 +578,22 @@ setRHlim(int val)
             std::cerr << boost::format("Tried to read file %s\n")%fname;
             Error("Missing file");
             }
+        }
+    }
+
+template <class Tensor>
+void inline LocalMPO<Tensor>::
+initWrite()
+    {
+    if(do_write_)
+        {
+        std::string global_write_dir = Global::options().stringOrDefault("WriteDir","./");
+        std::string pfix = "PH_";
+        //tempnam creates a random directory name underneath global_write_dir with a given prefix
+        //something like /global_write_dir/PH_sxPtQm
+        writedir_ = tempnam(global_write_dir.c_str(),pfix.c_str());
+        system(("mkdir -p " + writedir_).c_str());
+        //std::cout << "Successfully created directory " + writedir_ << std::endl;
         }
     }
 

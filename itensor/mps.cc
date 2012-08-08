@@ -24,7 +24,7 @@ MPSt()
     is_ortho_(false),
     model_(0),
     atb_(1),
-    writedir_("psi"),
+    writedir_("."),
     do_write_(false)
     { }
 template MPSt<ITensor>::
@@ -44,7 +44,7 @@ MPSt(const Model& mod_,int maxmm, Real cut)
     model_(&mod_), 
     svd_(N,cut,1,maxmm,false,LogNumber(1)),
     atb_(1),
-    writedir_("psi"),
+    writedir_("."),
     do_write_(false)
     { 
     random_tensors(A);
@@ -66,7 +66,7 @@ MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut)
     model_(&mod_), 
     svd_(N,cut,1,maxmm,false,LogNumber(1)),
     atb_(1),
-    writedir_("psi"),
+    writedir_("."),
     do_write_(false)
     { 
     init_tensors(A,initState);
@@ -85,7 +85,7 @@ MPSt(const Model& model, std::istream& s)
     is_ortho_(false),
     model_(&model),
     atb_(1),
-    writedir_("psi"),
+    writedir_("."),
     do_write_(false)
     { 
     read(s); 
@@ -829,6 +829,25 @@ void MPSt<ITensor>::applygate(const ITensor& gate);
 template
 void MPSt<IQTensor>::applygate(const IQTensor& gate);
 
+template <class Tensor>
+void MPSt<Tensor>::
+initWrite()
+    {
+    if(do_write_)
+        {
+        std::string global_write_dir = Global::options().stringOrDefault("WriteDir","./");
+        std::string pfix = "psi_";
+        //tempnam creates a random directory name underneath global_write_dir with a given prefix
+        //something like /global_write_dir/PH_sxPtQm
+        writedir_ = tempnam(global_write_dir.c_str(),pfix.c_str());
+        system(("mkdir -p " + writedir_).c_str());
+        //std::cout << "Successfully created directory " + writedir_ << std::endl;
+        }
+    }
+template
+void MPSt<ITensor>::initWrite();
+template
+void MPSt<IQTensor>::initWrite();
 
 //Auxilary method for convertToIQ
 int 

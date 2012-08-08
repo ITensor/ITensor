@@ -70,6 +70,11 @@ class LocalMPO_MPS
     void
     weight(Real val) { weight_ = val; }
 
+    bool
+    doWrite() const { return lmpo_.doWrite(); }
+    void
+    doWrite(bool val);
+
     static LocalMPO_MPS& Null()
         {
         static LocalMPO_MPS Null_;
@@ -174,6 +179,15 @@ position(int b, const MPSType& psi)
     lmpo_.position(b,psi);
     for(size_t j = 0; j < lmps_.size(); ++j)
         lmps_[j].position(b,psi);
+    }
+
+template <class Tensor>
+void inline LocalMPO_MPS<Tensor>::
+doWrite(bool val) 
+    { 
+    lmpo_.doWrite(val);
+    for(size_t j = 0; j < lmps_.size(); ++j)
+        lmps_[j].doWrite(val);
     }
 
 #endif
