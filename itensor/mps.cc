@@ -870,19 +870,16 @@ template <class Tensor>
 void MPSt<Tensor>::
 initWrite()
     {
-    if(do_write_)
-        {
-        std::string global_write_dir = Global::options().stringOrDefault("WriteDir","./");
-        std::string pfix = "psi_";
-        //tempnam creates a random directory name underneath global_write_dir with a given prefix
-        //something like /global_write_dir/PH_sxPtQm
-        writedir_ = tempnam(global_write_dir.c_str(),pfix.c_str());
-        system(("mkdir -p " + writedir_).c_str());
-        //std::cout << "Successfully created directory " + writedir_ << std::endl;
+    std::string global_write_dir = Global::options().stringOrDefault("WriteDir","./");
+    std::string pfix = "psi_";
+    //tempnam creates a random directory name underneath global_write_dir with a given prefix
+    //something like /global_write_dir/PH_sxPtQm
+    writedir_ = tempnam(global_write_dir.c_str(),pfix.c_str());
+    system(("mkdir -p " + writedir_).c_str());
+    //std::cout << "Successfully created directory " + writedir_ << std::endl;
 
-        //std::string mod_name = writedir_ + "/model";
-        //writeToFile(mod_name,(*model));
-        }
+    //std::string mod_name = writedir_ + "/model";
+    //writeToFile(mod_name,(*model));
     }
 template
 void MPSt<ITensor>::initWrite();

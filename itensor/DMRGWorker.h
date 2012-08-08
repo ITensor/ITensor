@@ -230,7 +230,7 @@ runInternal(const MPOType& H, MPSType& psi)
         psi.noise(sweeps().noise(sw));
         solver.maxIter(sweeps().niter(sw));
 
-        if(!psi.doWrite() 
+        if(!PH.doWrite() 
            && Global::options().defined("WriteM")
            && sweeps().maxm(sw) >= Global::options().intVal("WriteM"))
             {
@@ -388,7 +388,7 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
         psi.noise(sweeps().noise(sw));
         solver.maxIter(sweeps().niter(sw));
 
-        if(!psi.doWrite() 
+        if(!PH.doWrite() 
            && Global::options().defined("WriteM")
            && sweeps().maxm(sw) >= Global::options().intVal("WriteM"))
             {

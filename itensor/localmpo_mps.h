@@ -186,8 +186,8 @@ void inline LocalMPO_MPS<Tensor>::
 doWrite(bool val) 
     { 
     lmpo_.doWrite(val);
-    for(size_t j = 0; j < lmps_.size(); ++j)
-        lmps_[j].doWrite(val);
+    //for(size_t j = 0; j < lmps_.size(); ++j)
+    //    lmps_[j].doWrite(val);
     }
 
 #endif

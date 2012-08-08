@@ -163,7 +163,14 @@ class LocalMPO
     bool
     doWrite() const { return do_write_; }
     void
-    doWrite(bool val) { do_write_ = val; initWrite(); }
+    doWrite(bool val) 
+        { 
+        if(Psi_ != 0)
+            Error("Write to disk not yet supported for LocalMPO initialized with an MPS");
+        if(!do_write_ && (val == true))
+            initWrite(); 
+        do_write_ = val; 
+        }
 
     const std::string&
     writeDir() const { return writedir_; }
@@ -277,7 +284,8 @@ product(const Tensor& phi, Tensor& phip) const
         {
         lop_.product(phi,phip);
         }
-    else if(Psi_ != 0)
+    else 
+    if(Psi_ != 0)
         {
         int b = position();
         Tensor othr = (L().isNull() ? primelink(Psi_->AA(b)) : L()*primelink(Psi_->AA(b)));
@@ -585,16 +593,13 @@ template <class Tensor>
 void inline LocalMPO<Tensor>::
 initWrite()
     {
-    if(do_write_)
-        {
-        std::string global_write_dir = Global::options().stringOrDefault("WriteDir","./");
-        std::string pfix = "PH_";
-        //tempnam creates a random directory name underneath global_write_dir with a given prefix
-        //something like /global_write_dir/PH_sxPtQm
-        writedir_ = tempnam(global_write_dir.c_str(),pfix.c_str());
-        system(("mkdir -p " + writedir_).c_str());
-        //std::cout << "Successfully created directory " + writedir_ << std::endl;
-        }
+    std::string global_write_dir = Global::options().stringOrDefault("WriteDir","./");
+    std::string pfix = "PH_";
+    //tempnam creates a random directory name underneath global_write_dir with a given prefix
+    //something like /global_write_dir/PH_sxPtQm
+    writedir_ = tempnam(global_write_dir.c_str(),pfix.c_str());
+    system(("mkdir -p " + writedir_).c_str());
+    //std::cout << "Successfully created directory " + writedir_ << std::endl;
     }
 
 #endif

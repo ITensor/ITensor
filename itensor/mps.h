@@ -139,7 +139,11 @@ class MPSt
     AA() const { return std::make_pair(A.begin()+1,A.end()); }
 
     const Tensor& 
-    AA(int i) const { return GET(A,i); }
+    AA(int i) const 
+        { 
+        setSite(i);
+        return A.at(i); 
+        }
 
     Tensor& 
     AAnc(int i); //nc means 'non const'
@@ -207,7 +211,12 @@ class MPSt
     bool
     doWrite() const { return do_write_; }
     void
-    doWrite(bool val) { do_write_ = val; initWrite(); }
+    doWrite(bool val) 
+        { 
+        if(!do_write_ && (val == true))
+            initWrite(); 
+        do_write_ = val;
+        }
 
     const std::string&
     writeDir() const { return writedir_; }
@@ -457,10 +466,20 @@ protected:
     void
     setSite(int j) const
         {
-        if(atb_ < j) 
+        if(!do_write_)
+            {
+            atb_ = (j > atb_ ? j-1 : j);
+            return;
+            }
+
+        if(j < atb_)
             setBond(j);
-        else if(atb_ > j+1) 
-            setBond(j+1);
+        else
+        if(j > atb_+1)
+            setBond(j-1);
+
+        //otherwise the set bond already
+        //contains this site
         }
 
 
