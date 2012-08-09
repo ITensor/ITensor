@@ -578,7 +578,7 @@ genDavidson(const LocalTA& A, const LocalTB& B, Tensor& phi) const
 
 template<class Tensor>
 void
-orthog(std::vector<Tensor>& T, int num, int numpass, int start = 1)
+orthog(std::vector<Tensor>& T, int num, int numpass, int start)
     {
     const int size = T[start].maxSize();
     if(num > size)
