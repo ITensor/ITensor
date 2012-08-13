@@ -52,6 +52,9 @@ class Hubbard : public Model
     getSiP(int i) const;
 
     virtual IQTensor
+    makeTReverse(int i) const;
+
+    virtual IQTensor
     makeNup(int i) const;
 
     virtual IQTensor
@@ -92,6 +95,9 @@ class Hubbard : public Model
 
     virtual IQTensor
     makeSz(int i) const;
+
+    virtual IQTensor
+    makeSx(int i) const;
 
     virtual void
     doRead(std::istream& s);
@@ -211,6 +217,18 @@ inline IQIndexVal Hubbard::
 UpDnP(int i) const
     {
     return getSiP(i)(4);
+    }
+
+inline IQTensor Hubbard::
+makeTReverse(int i) const
+    { 
+    IQTensor tr(conj(si(i)),siP(i));
+    tr(UpDn(i),UpDnP(i)) = -1;
+    //tr(Dn(i),UpP(i)) = -1;
+    tr(Dn(i),UpP(i)) = +1;
+    tr(Up(i),DnP(i)) = 1;
+    tr(Emp(i),EmpP(i)) = 1;
+    return tr;
     }
 
 inline IQTensor Hubbard::
@@ -339,6 +357,15 @@ makeSz(int i) const
     Sz(Up(i),UpP(i)) = +0.5; 
     Sz(Dn(i),DnP(i)) = -0.5;
     return Sz;
+    }
+
+inline IQTensor Hubbard::
+makeSx(int i) const
+    {
+    IQTensor Sx(conj(si(i)),siP(i));
+    Sx(Up(i),DnP(i)) = 1;
+    Sx(Dn(i),UpP(i)) = 1;
+    return Sx;
     }
 
 #endif

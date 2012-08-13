@@ -59,6 +59,10 @@ class Model
     IQTensor 
     proj(int i,int n) const { return makeProj(i,n); }
 
+    //Time reversal operator
+    IQTensor
+    tReverse(int i) const { return makeTReverse(i); }
+
     //Spin Operators -----------------------
 
     IQTensor 
@@ -179,6 +183,9 @@ class Model
     makeProj(int i, int n) const;
 
     virtual IQTensor 
+    makeTReverse(int i) const;
+
+    virtual IQTensor 
     makeSx(int i) const;
 
     virtual IQTensor 
@@ -282,6 +289,13 @@ makeProj(int i, int n) const
     IQTensor P_(conj(si(i)),siP(i));
     P_(conj(si(i))(n),siP(i)(n)) = 1;
     return P_;
+    }
+
+inline IQTensor Model::
+makeTReverse(int i) const
+    { 
+    Error("tReverse not implemented"); 
+    return IQTensor();
     }
 
 inline IQTensor Model::
