@@ -18,10 +18,6 @@
 #include "boost/foreach.hpp"
 #define Foreach BOOST_FOREACH
 
-template<class T, class Op> void 
-for_all(T& a, Op f) 
-    { for_each(a.begin(),a.end(),f); }
-
 using namespace std::rel_ops;
 
 static const int NMAX = 8;
@@ -141,6 +137,18 @@ operator*(const T& t1, const T* pt2)
     return res; 
     }
 */
+
+bool inline
+fileExists(const std::string& fname)
+    {
+    std::ifstream file(fname.c_str());
+    return file.good();
+    }
+bool inline
+fileExists(const boost::format& fname)
+    {
+    return fileExists(fname.str());
+    }
 
 template<class T> inline void 
 readFromFile(const std::string& fname, T& t) 
