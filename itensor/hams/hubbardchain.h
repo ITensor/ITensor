@@ -6,10 +6,11 @@
 #define __ITENSOR_HAMS_HUBBARDCHAIN_H
 #include "../mpo.h"
 #include "../hams.h"
+#include "../model/hubbard.h"
 
 class HubbardChain : public MPOBuilder
-{
-public:
+    {
+    public:
     typedef MPOBuilder Parent;
 
     HubbardChain(const Hubbard::Model& model_);
@@ -32,7 +33,7 @@ public:
 
     operator IQMPO() { init_(); return H; }
 
-private:
+    private:
 
     const Hubbard::Model& model;
     Real t_,U_;
@@ -41,7 +42,7 @@ private:
 
     void init_();
 
-}; //class HubbardChain
+    }; //class HubbardChain
 
 inline HubbardChain::
 HubbardChain(const Hubbard::Model& model_) 
@@ -81,11 +82,11 @@ init_()
 
         W = ITensor(model.si(n),model.siP(n),row,col);
 
-        W += model.NupNdn(n) * row(k) * col(1) * U_;
-        W += multSiteOps(model.FermiPhase(n),model.Cup(n)) * row(k) * col(2) * t_;
-        W += multSiteOps(model.FermiPhase(n),model.Cdn(n)) * row(k) * col(3) * t_;
-        W += multSiteOps(model.Cdagup(n),model.FermiPhase(n)) * row(k) * col(4) * t_;
-        W += multSiteOps(model.Cdagdn(n),model.FermiPhase(n)) * row(k) * col(5) * t_;
+        W += model.Nupdn(n) * row(k) * col(1) * U_;
+        W += multSiteOps(model.fermiPhase(n),model.Cup(n)) * row(k) * col(2) * t_;
+        W += multSiteOps(model.fermiPhase(n),model.Cdn(n)) * row(k) * col(3) * t_;
+        W += multSiteOps(model.Cdagup(n),model.fermiPhase(n)) * row(k) * col(4) * t_;
+        W += multSiteOps(model.Cdagdn(n),model.fermiPhase(n)) * row(k) * col(5) * t_;
         W += model.id(n) * row(k) * col(k);
 
         W += model.id(n) * row(1) * col(1);
