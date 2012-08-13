@@ -174,6 +174,23 @@ IQTSparse(const IQIndex& i1, const IQIndex& i2)
     }
 
 IQTSparse::
+IQTSparse(const IQIndex& i1, const IQIndex& i2,
+          Real r)
+    :
+    is_(new IQIndexSet(i1,i2)),
+    d_(new IQTSDat())
+    { 
+    if(i1.nindex() != i2.nindex())
+        {
+        Print(i1);
+        Print(i2);
+        Error("IQIndex's have different number of qn blocks");
+        }
+    for(int j = 1; j <= i1.nindex(); ++j)
+        operator+=(ITSparse(i1.index(j),i2.index(j),r));
+    }
+
+IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
     :
     is_(new IQIndexSet(i1,i2,i3)),
