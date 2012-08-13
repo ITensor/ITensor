@@ -287,10 +287,10 @@ class ITensor
     primeall() { doprime(primeBoth,1); }
 
     void 
-    primesite() { doprime(primeSite,1); }
+    primesite(int inc = 1) { doprime(primeSite,inc); }
 
     void 
-    primelink() { doprime(primeLink,1); }
+    primelink(int inc = 1) { doprime(primeLink,inc); }
 
     void 
     mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)

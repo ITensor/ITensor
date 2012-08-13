@@ -368,20 +368,20 @@ class IQTensor
     noprimeind(const IQIndex& I);
 
     friend inline IQTensor 
-    primed(IQTensor A) { A.doprime(primeBoth); return A; }
+    primed(IQTensor A, int inc = 1) { A.doprime(primeBoth,inc); return A; }
 
     void 
-    primesite() { doprime(primeSite); }
+    primesite(int inc = 1) { doprime(primeSite,inc); }
 
     friend inline IQTensor 
-    primesite(IQTensor A) { A.doprime(primeSite); return A; }
+    primesite(IQTensor A, int inc = 1) { A.doprime(primeSite,inc); return A; }
 
     void 
-    primelink() { doprime(primeLink); }
+    primelink(int inc = 1) { doprime(primeLink,inc); }
 
     friend inline IQTensor 
-    primelink(const IQTensor& A)
-        { IQTensor res(A); res.doprime(primeLink); return res; }
+    primelink(IQTensor A, int inc = 1)
+        { A.doprime(primeLink,inc); return A; }
 
 
     //----------------------------------------------------
