@@ -118,6 +118,8 @@ class MPOt : private MPSt<Tensor>
         return res; 
         }
 
+    MPOt<ITensor>
+    toMPO() const;
 
     //MPOt: index methods --------------------------------------------------
 
@@ -197,6 +199,30 @@ private:
     }; //class MPOt<Tensor>
 typedef MPOt<ITensor> MPO;
 typedef MPOt<IQTensor> IQMPO;
+
+template <> inline
+MPO MPOt<IQTensor>::
+toMPO() const
+    {
+    MPO res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm());
+    res.svd_ = svd_;
+    for(int j = 1; j <= NN(); ++j)
+        {
+        res.A.at(j) = AA(j).toITensor();
+        }
+    return res;
+    }
+
+//toMPO method fails unless template class 
+//Tensor is set to IQTensor (object is an IQMPO)
+template<class Tensor>
+MPO MPOt<Tensor>::
+toMPO() const
+    {
+    Error("toMPO only implemented for class IQMPO");
+    return MPO();
+    }
+
 
 int
 findCenter(const IQMPO& psi);

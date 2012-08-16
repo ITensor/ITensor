@@ -272,7 +272,9 @@ class IQTensor
     toITensor() const;
 
     //Automatic conversion to ITensor
-    operator ITensor() { return toITensor(); }
+    operator 
+    ITensor() const 
+        { return toITensor(); }
 
     //Inserts an ITensor block or adds it to
     //existing one if already present and QNs match
