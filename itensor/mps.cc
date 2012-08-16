@@ -871,12 +871,8 @@ void MPSt<Tensor>::
 initWrite()
     {
     std::string global_write_dir = Global::options().stringOrDefault("WriteDir","./");
-    std::string pfix = "psi_";
-    //tempnam creates a random directory name underneath global_write_dir with a given prefix
-    //something like /global_write_dir/PH_sxPtQm
-    writedir_ = tempnam(global_write_dir.c_str(),pfix.c_str());
-    system(("mkdir -p " + writedir_).c_str());
-    //std::cout << "Successfully created directory " + writedir_ << std::endl;
+    writedir_ = mkTempDir("psi",global_write_dir);
+    std::cout << "Successfully created directory " + writedir_ << std::endl;
 
     //std::string mod_name = writedir_ + "/model";
     //writeToFile(mod_name,(*model));

@@ -150,7 +150,8 @@ fileExists(const boost::format& fname)
     return fileExists(fname.str());
     }
 
-template<class T> inline void 
+template<class T> 
+void inline
 readFromFile(const std::string& fname, T& t) 
     { 
     std::ifstream s(fname.c_str()); 
@@ -160,13 +161,15 @@ readFromFile(const std::string& fname, T& t)
     s.close(); 
     }
 
-template<class T> inline void 
+template<class T> 
+void inline
 readFromFile(const boost::format& fname, T& t) 
     { 
     readFromFile(fname.str(),t);
     }
 
-template<class T> inline void 
+template<class T> 
+void inline
 writeToFile(const std::string& fname, const T& t) 
     { 
     std::ofstream s(fname.c_str()); 
@@ -176,13 +179,14 @@ writeToFile(const std::string& fname, const T& t)
     s.close(); 
     }
 
-template<class T> inline void 
+template<class T> 
+void inline
 writeToFile(const boost::format& fname, const T& t) 
     { 
     writeToFile(fname.str(),t); 
     }
 
-inline void 
+void inline
 writeVec(std::ostream& s, const Vector& V)
     {
     int m = V.Length();
@@ -195,7 +199,7 @@ writeVec(std::ostream& s, const Vector& V)
         }
     }
 
-inline void 
+void inline
 readVec(std::istream& s, Vector& V)
     {
     int m = 1;
@@ -207,6 +211,45 @@ readVec(std::istream& s, Vector& V)
         s.read((char*)&val,sizeof(val));
         V(k) = val;
         }
+    }
+
+//Given a prefix (e.g. pfix == "mydir")
+//and an optional location (e.g. locn == "/var/tmp/")
+//creates a temporary directory and returns its name
+//without a trailing slash
+//(e.g. /var/tmp/mydir_SfqPyR)
+std::string inline
+mkTempDir(const std::string& pfix,
+          const std::string& locn = "./")
+    {
+    //Construct dirname
+    std::string dirname = locn;
+    if(dirname[dirname.length()-1] != '/')
+        dirname += '/';
+    //Add prefix and template string of X's for mkdtemp
+    dirname += pfix + "_XXXXXX";
+
+    //Create C string version of dirname
+    char* cstr;
+    cstr = new char[dirname.size()+1];
+    strcpy(cstr,dirname.c_str());
+
+    //Call mkdtemp
+    char* retval = mkdtemp(cstr);
+    //Check error condition
+    if(retval == NULL)
+        {
+        delete[] cstr;
+        throw ITError("mkTempDir failed");
+        }
+
+    //Prepare return value
+    std::string final_dirname(retval);
+
+    //Clean up
+    delete[] cstr;
+
+    return final_dirname;
     }
 
 class Global
