@@ -158,7 +158,7 @@ class MPOt : private MPSt<Tensor>
     position(int i, Option opt = Option());
 
     using Parent::isOrtho;
-    using Parent::ortho_center;
+    using Parent::orthoCenter;
     using Parent::orthogonalize;
 
     using Parent::isComplex;
@@ -193,6 +193,7 @@ private:
     using Parent::r_orth_lim_;
     using Parent::model_;
     using Parent::svd_;
+    using Parent::is_ortho_;
 
     friend class MPOt<ITensor>;
     friend class MPOt<IQTensor>;
@@ -442,11 +443,32 @@ template <class MPOType>
 void 
 nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm);
 
+//
+// Applies an MPO to an MPS using the zip-up method described
+// more fully in Stoudenmire and White, New. J. Phys. 12, 055026 (2010).
+//
+// This method applies the MPO to an MPS one site at a time,
+// with the new MPS being calculated at each step via an
+// SVD of the MPO-MPS product.
+//
+// Uses cutoff and max of MPS psi unless specified.
+//
 template<class Tensor>
 void 
-napplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff, int maxm, bool allow_arb_position = false);
+zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff = -1, int maxm = -1);
+
+template<class Tensor>
+void 
+napplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, 
+          Real cutoff = -1, int maxm = -1, bool allow_arb_position = false)
+    {
+    static int count = 0;
+    if(count++ < 10)
+        std::cout << "\n\n\nWarning: function name napplyMPO deprecated, use zipUpApplyMPO instead\n\n\n" << std::endl;
+    zipUpApplyMPO(psi,K,res,cutoff,maxm);
+    }
 
 void 
-exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
+exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
 
 #endif

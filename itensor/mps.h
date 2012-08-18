@@ -311,7 +311,7 @@ class MPSt
     position(int i, Option opt = Option());
 
     int 
-    ortho_center() const 
+    orthoCenter() const 
         { 
         if(!isOrtho()) Error("orthogonality center not well defined.");
         return (l_orth_lim_ + 1);

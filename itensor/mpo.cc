@@ -23,6 +23,8 @@ position(int i, Option opt)
         Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
         svdBond(r_orth_lim_-2,WF,Fromright,opt);
         }
+
+    is_ortho_ = true;
     }
 template void MPOt<ITensor>::
 position(int b, Option opt);
@@ -263,30 +265,32 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
 
 template <class Tensor>
 void 
-napplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff, int maxm, bool allow_arb_position)
+zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff, int maxm)
     {
     typedef typename Tensor::IndexT
     IndexT;
 
-    if(cutoff < 0) cutoff = x.cutoff();
-    if(maxm < 0) maxm = x.maxm();
-    int N = x.NN();
-    if(K.NN() != N) Error("Mismatched N in napplyMPO");
-    if(x.rightLim() > 3)
-        {
-        Error("bad rightLim for x");
-        }
-    if(!allow_arb_position && K.rightLim() > 3)
-        {
-        //cerr << "K is " << endl << K << endl;
-        Error("bad rightLim for K");
-        }
+    if(&psi == &res)
+        Error("psi and res must be different MPS instances");
+
+    if(cutoff < 0) cutoff = psi.cutoff();
+    if(maxm < 0) maxm = psi.maxm();
+
+    const int N = psi.NN();
+    if(K.NN() != N) 
+        Error("Mismatched N in napplyMPO");
+
+    if(!psi.isOrtho() || psi.orthoCenter() != 1)
+        Error("Ortho center of psi must be site 1");
+
+    if(!K.isOrtho() || K.orthoCenter() != 1)
+        Error("Ortho center of K must be site 1");
 
     SVDWorker svd = K.svd();
     svd.cutoff(cutoff);
     svd.maxm(maxm);
 
-    res = x; 
+    res = psi; 
     res.maxm(maxm); 
     res.cutoff(cutoff);
     res.primelinks(0,4);
@@ -297,24 +301,24 @@ napplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real 
     int maxdim = 1;
     for(int i = 1; i < N; i++)
         {
-        if(i == 1) { clust = x.AA(i) * K.AA(i); }
-        else { clust = nfork * (x.AA(i) * K.AA(i)); }
+        if(i == 1) { clust = psi.AA(i) * K.AA(i); }
+        else { clust = nfork * (psi.AA(i) * K.AA(i)); }
         if(i == N-1) break; //No need to SVD for i == N-1
 
         IndexT oldmid = res.RightLinkInd(i); assert(oldmid.dir() == Out);
-        nfork = Tensor(x.RightLinkInd(i),K.RightLinkInd(i),oldmid);
+        nfork = Tensor(psi.RightLinkInd(i),K.RightLinkInd(i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
         svd.denmatDecomp(i,clust, res.AAnc(i), nfork,Fromleft);
         IndexT mid = index_in_common(res.AA(i),nfork,Link);
-        assert(mid.dir() == In);
+        //assert(mid.dir() == In);
         mid.conj();
         midsize[i] = mid.m();
         maxdim = max(midsize[i],maxdim);
         assert(res.RightLinkInd(i+1).dir() == Out);
         res.AAnc(i+1) = Tensor(mid,primed(res.si(i+1)),res.RightLinkInd(i+1));
         }
-    nfork = clust * x.AA(N) * K.AA(N);
+    nfork = clust * psi.AA(N) * K.AA(N);
     //if(nfork.iten_size() == 0)	// this product gives 0 !!
 	//throw ResultIsZero("nfork.iten size == 0");
 
@@ -322,23 +326,22 @@ napplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real 
     res.noprimelink();
     res.mapprime(1,0,primeSite);
     res.position(1);
-    res.maxm(x.maxm()); 
-    res.cutoff(x.cutoff());
-
-    } //void napplyMPO
+    res.maxm(psi.maxm()); 
+    res.cutoff(psi.cutoff());
+    } //void zipUpApplyMPO
 template
 void 
-napplyMPO(const MPS& x, const MPO& K, MPS& res, Real cutoff, int maxm, bool allow_arb_position);
+zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, Real cutoff, int maxm);
 template
 void 
-napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position);
+zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm);
 
 //Expensive: scales as m^3 k^3!
 void 
-exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
+exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
     {
     int N = x.NN();
-    if(K.NN() != N) Error("Mismatched N in exact_applyMPO");
+    if(K.NN() != N) Error("Mismatched N in exactApplyMPO");
 
     res = x;
 

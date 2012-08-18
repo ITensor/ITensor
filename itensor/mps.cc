@@ -703,6 +703,7 @@ position(int i, Option opt)
         Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
         svdBond(r_orth_lim_-2,WF,Fromright,opt);
         }
+    is_ortho_ = true;
     }
 template void MPSt<ITensor>::
 position(int b, Option opt);
@@ -1479,12 +1480,14 @@ checkQNs(const IQMPS& psi)
 void 
 fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
     {
-    if(!psi_basis.isOrtho()) Error("psi_basis must be orthogonolized.");
-    if(psi_basis.ortho_center() != 1) Error("psi_basis must be orthogonolized to site 1.");
-
+    if(!psi_basis.isOrtho()) 
+        Error("psi_basis must be orthogonolized.");
+    if(psi_basis.orthoCenter() != 1) 
+        Error("psi_basis must be orthogonolized to site 1.");
 
     int N = psi_basis.NN();
-    if(psi_to_fit.NN() != N) Error("Wavefunctions must have same number of sites.");
+    if(psi_to_fit.NN() != N) 
+        Error("Wavefunctions must have same number of sites.");
 
     IQTensor A = psi_to_fit.AA(N) * conj(primelink(psi_basis.AA(N)));
     for(int n = N-1; n > 1; --n)
