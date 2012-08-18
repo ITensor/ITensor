@@ -260,9 +260,14 @@ void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res,Real cut, int maxm);
 template
 void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm);
 
+
+template <class Tensor>
 void 
-napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position)
+napplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff, int maxm, bool allow_arb_position)
     {
+    typedef typename Tensor::IndexT
+    IndexT;
+
     if(cutoff < 0) cutoff = x.cutoff();
     if(maxm < 0) maxm = x.maxm();
     int N = x.NN();
@@ -287,7 +292,7 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
     res.primelinks(0,4);
     res.mapprime(0,1,primeSite);
 
-    IQTensor clust,nfork;
+    Tensor clust,nfork;
     vector<int> midsize(N);
     int maxdim = 1;
     for(int i = 1; i < N; i++)
@@ -296,22 +301,22 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
         else { clust = nfork * (x.AA(i) * K.AA(i)); }
         if(i == N-1) break; //No need to SVD for i == N-1
 
-        IQIndex oldmid = res.RightLinkInd(i); assert(oldmid.dir() == Out);
-        nfork = IQTensor(x.RightLinkInd(i),K.RightLinkInd(i),oldmid);
-        if(clust.iten_size() == 0)	// this product gives 0 !!
-	    throw ResultIsZero("clust.iten size == 0");
+        IndexT oldmid = res.RightLinkInd(i); assert(oldmid.dir() == Out);
+        nfork = Tensor(x.RightLinkInd(i),K.RightLinkInd(i),oldmid);
+        //if(clust.iten_size() == 0)	// this product gives 0 !!
+	    //throw ResultIsZero("clust.iten size == 0");
         svd.denmatDecomp(i,clust, res.AAnc(i), nfork,Fromleft);
-        IQIndex mid = index_in_common(res.AA(i),nfork,Link);
+        IndexT mid = index_in_common(res.AA(i),nfork,Link);
         assert(mid.dir() == In);
         mid.conj();
         midsize[i] = mid.m();
         maxdim = max(midsize[i],maxdim);
         assert(res.RightLinkInd(i+1).dir() == Out);
-        res.AAnc(i+1) = IQTensor(mid,primed(res.si(i+1)),res.RightLinkInd(i+1));
+        res.AAnc(i+1) = Tensor(mid,primed(res.si(i+1)),res.RightLinkInd(i+1));
         }
     nfork = clust * x.AA(N) * K.AA(N);
-    if(nfork.iten_size() == 0)	// this product gives 0 !!
-	throw ResultIsZero("nfork.iten size == 0");
+    //if(nfork.iten_size() == 0)	// this product gives 0 !!
+	//throw ResultIsZero("nfork.iten size == 0");
 
     res.doSVD(N-1,nfork,Fromright);
     res.noprimelink();
@@ -321,6 +326,12 @@ napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, boo
     res.cutoff(x.cutoff());
 
     } //void napplyMPO
+template
+void 
+napplyMPO(const MPS& x, const MPO& K, MPS& res, Real cutoff, int maxm, bool allow_arb_position);
+template
+void 
+napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position);
 
 //Expensive: scales as m^3 k^3!
 void 

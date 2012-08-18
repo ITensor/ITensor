@@ -442,8 +442,9 @@ template <class MPOType>
 void 
 nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm);
 
+template<class Tensor>
 void 
-napplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position = false);
+napplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff, int maxm, bool allow_arb_position = false);
 
 void 
 exact_applyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
