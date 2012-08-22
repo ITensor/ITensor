@@ -252,6 +252,56 @@ mkTempDir(const std::string& pfix,
     return final_dirname;
     }
 
+
+/*
+*
+* The Arrow enum is used to label how indices
+* transform under a particular symmetry group. 
+* Indices with an Out Arrow transform as vectors
+* (kets) and with an In Arrow as dual vectors (bras).
+*
+* Conventions regarding arrows:
+*
+* * Arrows point In or Out, never right/left/up/down.
+*
+* * The Site indices of an MPS representing a ket point Out.
+*
+* * Conjugation switches arrow directions.
+*
+* * All arrows flow Out from the ortho center of an MPS 
+*   (assuming it's a ket - In if it's a bra).
+*
+* * IQMPOs are created with the same arrow structure as if they are 
+*   orthogonalized to site 1, but this is just a default since they 
+*   aren't actually ortho. If position is called on an IQMPO it follows 
+*   the same convention as for an MPS except Site indices point In and 
+*   Site' indices point Out.
+*
+* * Local site operators have two IQIndices, one unprimed and pointing In, 
+*   the other primed and pointing Out.
+*
+*/
+
+enum Arrow { In = -1, Out = 1 };
+
+Arrow inline
+operator*(const Arrow& a, const Arrow& b)
+    { 
+    return (int(a)*int(b) == int(In)) ? In : Out; 
+    }
+const Arrow Switch = In*Out;
+
+inline std::ostream& 
+operator<<(std::ostream& s, Arrow D)
+    { 
+    s << (D == In ? "In" : "Out");
+    return s; 
+    }
+
+////////
+///////
+
+
 class Global
     {
     public:
@@ -315,11 +365,24 @@ class Global
 
 class ResultIsZero : public ITError
     {
-public:
+    public:
+
     typedef ITError
     Parent;
 
     ResultIsZero(const std::string& message) 
+        : Parent(message)
+        { }
+    };
+
+class ArrowError : public ITError
+    {
+    public:
+
+    typedef ITError
+    Parent;
+
+    ArrowError(const std::string& message) 
         : Parent(message)
         { }
     };

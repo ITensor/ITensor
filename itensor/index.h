@@ -11,123 +11,14 @@
 #include "boost/uuid/random_generator.hpp"
 #include "boost/uuid/string_generator.hpp"
 
-enum Arrow { In = -1, Out = 1 };
 
-Arrow inline
-operator*(const Arrow& a, const Arrow& b)
-    { return (int(a)*int(b) == In) ? In : Out; }
-
-const Arrow Switch = In*Out;
-
-inline std::ostream& 
-operator<<(std::ostream& s, Arrow D)
-    { if(D == In) s << "In"; else s << "Out"; return s; }
-
-enum IndexType { Link, Site, ReIm, Any };
-static const char* indextypename[] = { "Link","Site","ReIm", "Any" };
+enum IndexType { Link, Site, ReIm, Any, NewType };
 
 enum PrimeType { primeLink, primeSite, primeBoth, primeNone };
 
-inline std::ostream& 
-operator<<(std::ostream& s, const IndexType& it)
-    { 
-    if(it == Link) s << "Link"; 
-    else if(it == Site) s << "Site"; 
-    else if(it == ReIm) s << "ReIm"; 
-    else if(it == Any) s << "Any"; 
-    return s; 
-    }
-
-inline int 
-IndexTypeToInt(IndexType it)
-    {
-    if(it == Link) return 1;
-    if(it == Site) return 2;
-    if(it == ReIm) return 3;
-    if(it == Any) return 4;
-    Error("No integer value defined for IndexType.");
-    return -1;
-    }
-inline IndexType 
-IntToIndexType(int i)
-    {
-    if(i == 1) return Link;
-    if(i == 2) return Site;
-    if(i == 3) return ReIm;
-    if(i == 4) return Any;
-    std::cout << boost::format("No IndexType value defined for i=%d\n")%i 
-              << std::endl;
-    Error("Undefined IntToIndexType value");
-    return Link;
-    }
-
-std::string inline
-putprimes(std::string s, int plev = 0)
-    { 
-    for(int i = 1; i <= plev; ++i) 
-        s += "\'"; 
-    return s;
-    }
-
-std::string inline
-nameindex(IndexType it, int plev = 0)
-    { 
-    return putprimes(std::string(indextypename[(int)it]),plev); 
-    }
-
-std::string inline
-nameint(std::string f,int ix)
-    { 
-    std::stringstream ss; 
-    ss << f << ix; 
-    return ss.str(); 
-    }
-
-enum Imaker {makeReIm,makeReImP,makeReImPP,makeNull};
-
-#define UID_NUM_PRINT 2
-inline std::ostream& 
-operator<<(std::ostream& s, const boost::uuids::uuid& id)
-    { 
-    s.width(2);
-    for(boost::uuids::uuid::size_type i = id.size()-UID_NUM_PRINT; i < id.size(); ++i) 
-        {
-        s << static_cast<unsigned int>(id.data[i]);
-        }
-    s.width(0);
-    return s; 
-    }
-
-struct UniqueID
-    {
-    boost::uuids::uuid id;
-
-    UniqueID() : id(boost::uuids::random_generator()()) { }
-
-    UniqueID& operator++()
-        {
-        int i = id.size(); 
-        while(--i >= 0)
-            { 
-            if(++id.data[i] == 0) continue; 
-            break;
-            }
-        return *this;
-        }
-
-    operator boost::uuids::uuid() const { return id; }
-
-    friend inline std::ostream&
-    operator<<(std::ostream& s, const UniqueID& uid) 
-        { 
-        s << uid.id; 
-        return s; 
-        }
-    };
-
+struct UniqueID;
 class IndexDat;
 struct IndexVal;
-
 
 
 //
@@ -301,32 +192,18 @@ class Index
     conj() { } //for forward compatibility with arrows
 
 
-    static const Index& Null()
-        {
-        static const Index Null_(makeNull);
-        return Null_;
-        }
+    static const Index& Null();
 
     // Static Index indexing real and imaginary parts of a complex ITensor.
-    static const Index& IndReIm()
-        {
-        static const Index IndReIm_(makeReIm);
-        return IndReIm_;
-        }
+    static const Index& IndReIm();
 
     // IndReIm with primelevel 1
-    static const Index& IndReImP()
-        {
-        static const Index IndReImP_(makeReImP);
-        return IndReImP_;
-        }
+    static const Index& IndReImP();
 
     // IndReIm with primelevel 2
-    static const Index& IndReImPP()
-        {
-        static const Index IndReImPP_(makeReImPP);
-        return IndReImPP_;
-        }
+    static const Index& IndReImPP();
+
+    enum Imaker { makeReIm, makeReImP, makeReImPP, makeNull };
 
     private:
 
@@ -380,32 +257,16 @@ class IndexDat
 
 
     static IndexDat* 
-    Null()
-        {
-        static IndexDat Null_(makeNull);
-        return &Null_;
-        }
+    Null();
 
     static IndexDat* 
-    ReImDat()
-        {
-        static IndexDat ReImDat_(makeReIm);
-        return &ReImDat_;
-        }
+    ReImDat();
 
     static IndexDat* 
-    ReImDatP()
-        {
-        static IndexDat ReImDatP_(makeReImP);
-        return &ReImDatP_;
-        }
+    ReImDatP();
 
     static IndexDat* 
-    ReImDatPP()
-        {
-        static IndexDat ReImDatPP_(makeReImPP);
-        return &ReImDatPP_;
-        }
+    ReImDatPP();
 
     friend void 
     intrusive_ptr_add_ref(IndexDat* p);
@@ -430,7 +291,7 @@ class IndexDat
     /////////////
 
     explicit
-    IndexDat(Imaker im);
+    IndexDat(Index::Imaker im);
 
     static const UniqueID& 
     nextID();
@@ -469,15 +330,29 @@ struct IndexVal
     static const IndexVal& 
     Null()
         {
-        static const IndexVal Null_(makeNull);
+        static const IndexVal Null_(Index::makeNull);
         return Null_;
         }
 
     private:
 
     explicit
-    IndexVal(Imaker im);
+    IndexVal(Index::Imaker im);
 
+    };
+
+struct UniqueID
+    {
+    boost::uuids::uuid id;
+
+    UniqueID() : id(boost::uuids::random_generator()()) { }
+
+    UniqueID& operator++();
+
+    operator boost::uuids::uuid() const { return id; }
+
+    friend std::ostream&
+    operator<<(std::ostream& s, const UniqueID& uid);
     };
 
 template <class T> T 
@@ -486,5 +361,26 @@ conj(T res)
     res.conj(); 
     return res; 
     }
+
+std::ostream& 
+operator<<(std::ostream& s, const boost::uuids::uuid& id);
+
+std::ostream& 
+operator<<(std::ostream& s, const IndexType& it);
+
+int 
+IndexTypeToInt(IndexType it);
+
+IndexType 
+IntToIndexType(int i);
+
+std::string 
+putprimes(std::string s, int plev = 0);
+
+std::string 
+nameindex(IndexType it, int plev = 0);
+
+std::string 
+nameint(const std::string& f, int n);
 
 #endif

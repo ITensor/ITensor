@@ -8,44 +8,12 @@
 #include "itensor.h"
 #include "qn.h"
 
-/*
-* Conventions regarding arrows:
-*
-* * Arrows point In or Out, never right/left/up/down.
-*
-* * The Site indices of a ket point Out.
-*
-* * Conjugation switches arrow directions.
-*
-* * All arrows flow Out from the ortho center of an MPS 
-*   (assuming it's a ket - In if it's a bra).
-*
-* * IQMPOs are created with the same arrow structure as if they are 
-*   orthogonalized to site 1, but this is just a default since they 
-*   aren't actually ortho. If position is called on an IQMPO it follows 
-*   the same convention as for an MPS except Site indices point In and 
-*   Site' indices point Out.
-*
-* * Local site operators have two IQIndices, one unprimed and pointing In, 
-*   the other primed and pointing Out.
-*
-*/
 
 // Forward declarations
 struct inqn;
 class IQIndexDat;
 struct IQIndexVal;
 
-class ArrowError : public ITError
-    {
-public:
-    typedef ITError
-    Parent;
-
-    ArrowError(const std::string& message) 
-        : Parent(message)
-        { }
-    };
 
 
 //
@@ -156,36 +124,13 @@ class IQIndex
     void 
     read(std::istream& s);
 
-    explicit
-    IQIndex(Imaker im);
+    static const IQIndex& Null();
 
-    static const IQIndex& 
-    Null()
-        {
-        static const IQIndex Null_(makeNull);
-        return Null_;
-        }
+    static const IQIndex& IndReIm();
 
-    static const IQIndex& 
-    IndReIm()
-        {
-        static const IQIndex IndReIm_(makeReIm);
-        return IndReIm_;
-        }
+    static const IQIndex& IndReImP();
 
-    static const IQIndex& 
-    IndReImP()
-        {
-        static const IQIndex IndReImP_(makeReImP);
-        return IndReImP_;
-        }
-
-    static const IQIndex& 
-    IndReImPP()
-        {
-        static const IQIndex IndReImPP_(makeReImPP);
-        return IndReImPP_;
-        }
+    static const IQIndex& IndReImPP();
 
     //------------------------------------------
     //IQIndex: operators
@@ -299,6 +244,9 @@ class IQIndex
 
     boost::intrusive_ptr<IQIndexDat> pd;
 
+    explicit
+    IQIndex(Index::Imaker im);
+
     void 
     solo();
 
@@ -402,29 +350,13 @@ class IQIndexDat
     void 
     read(std::istream& s);
 
-    static IQIndexDat* Null()
-        {
-        static IQIndexDat Null_(makeNull);
-        return &Null_;
-        }
+    static IQIndexDat* Null();
 
-    static IQIndexDat* ReImDat()
-        {
-        static IQIndexDat ReImDat_(makeReIm);
-        return &ReImDat_;
-        }
+    static IQIndexDat* ReImDat();
 
-    static IQIndexDat* ReImDatP()
-        {
-        static IQIndexDat ReImDatP_(makeReImP);
-        return &ReImDatP_;
-        }
+    static IQIndexDat* ReImDatP();
 
-    static IQIndexDat* ReImDatPP()
-        {
-        static IQIndexDat ReImDatPP_(makeReImPP);
-        return &ReImDatPP_;
-        }
+    static IQIndexDat* ReImDatPP();
 
     friend void 
     intrusive_ptr_add_ref(IQIndexDat* p);
@@ -446,7 +378,7 @@ class IQIndexDat
     friend class IQIndex;
 
     explicit 
-    IQIndexDat(Imaker im);
+    IQIndexDat(Index::Imaker im);
 
     //////////////////
     //
@@ -529,7 +461,7 @@ struct IQIndexVal
 
     static const IQIndexVal& Null()
         {
-        static const IQIndexVal Null_(makeNull);
+        static const IQIndexVal Null_(Index::makeNull);
         return Null_;
         }
 
@@ -539,7 +471,7 @@ struct IQIndexVal
     calc_ind_ii(int& j, int& ii) const;
 
     explicit
-    IQIndexVal(Imaker im);
+    IQIndexVal(Index::Imaker im);
 
     };
 

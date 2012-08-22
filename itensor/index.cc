@@ -5,6 +5,101 @@
 #include "index.h"
 
 using namespace std;
+using boost::format;
+
+ostream& 
+operator<<(ostream& s, const IndexType& it)
+    { 
+    if(it == Link) s << "Link"; 
+    else if(it == Site) s << "Site"; 
+    else if(it == ReIm) s << "ReIm"; 
+    else if(it == Any) s << "Any"; 
+    return s; 
+    }
+
+int 
+IndexTypeToInt(IndexType it)
+    {
+    if(it == Link) return 1;
+    if(it == Site) return 2;
+    if(it == ReIm) return 3;
+    if(it == Any) return 4;
+    Error("No integer value defined for IndexType.");
+    return -1;
+    }
+
+IndexType 
+IntToIndexType(int i)
+    {
+    if(i == 1) return Link;
+    if(i == 2) return Site;
+    if(i == 3) return ReIm;
+    if(i == 4) return Any;
+    cout << format("No IndexType value defined for i=%d\n")%i 
+              << endl;
+    Error("Undefined IntToIndexType value");
+    return Link;
+    }
+
+string 
+putprimes(string s, int plev)
+    { 
+    for(int i = 1; i <= plev; ++i) 
+        s += "\'"; 
+    return s;
+    }
+
+string 
+nameindex(IndexType it, int plev)
+    { 
+    static const boost::array<string,4>
+    indextypename = {{ "Link","Site","ReIm", "Any" }};
+#ifdef DEBUG
+    return putprimes(indextypename.at(int(it)),plev);
+#else
+    return putprimes(indextypename[int(it)],plev); 
+#endif
+    }
+
+string 
+nameint(const string& f, int n)
+    { 
+    stringstream ss; 
+    ss << f << n; 
+    return ss.str(); 
+    }
+
+#define UID_NUM_PRINT 2
+std::ostream& 
+operator<<(std::ostream& s, const boost::uuids::uuid& id)
+    { 
+    s.width(2);
+    for(boost::uuids::uuid::size_type i = id.size()-UID_NUM_PRINT; i < id.size(); ++i) 
+        {
+        s << static_cast<unsigned int>(id.data[i]);
+        }
+    s.width(0);
+    return s; 
+    }
+
+UniqueID& UniqueID::
+operator++()
+    {
+    int i = id.size(); 
+    while(--i >= 0)
+        { 
+        if(++id.data[i] == 0) continue; 
+        break;
+        }
+    return *this;
+    }
+
+std::ostream&
+operator<<(std::ostream& s, const UniqueID& uid) 
+    { 
+    s << uid.id; 
+    return s; 
+    }
 
 int 
 prime_number(int n)
@@ -92,31 +187,59 @@ IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& 
     }
 
 IndexDat::
-IndexDat(Imaker im) 
+IndexDat(Index::Imaker im) 
     : 
     _type(ReIm), 
-    m_( (im==makeNull) ? 1 : 2),
+    m_( (im==Index::makeNull) ? 1 : 2),
     numref(0), 
     is_static_(true)
     { 
     //Don't use random uuid generator for these static IndexDats
     boost::uuids::string_generator gen;
-    if(im==makeNull)
+    if(im==Index::makeNull)
         { ind = gen("{00000000-0000-0000-0000-000000000000}"); }
     else                               
         { ind = gen("{10000000-0000-0000-0000-000000000000}"); }
 
-    if(im == makeNull)
+    if(im == Index::makeNull)
         {
         sname = "Null";
         _type = Site;
         ur = 0.0;
         return;
         }
-    else if(im == makeReIm) sname = "ReIm";
-    else if(im == makeReImP) sname = "ReImP";
-    else if(im == makeReImPP) sname = "ReImPP";
+    else if(im == Index::makeReIm) sname = "ReIm";
+    else if(im == Index::makeReImP) sname = "ReImP";
+    else if(im == Index::makeReImPP) sname = "ReImPP";
     setUniqueReal(); 
+    }
+
+IndexDat* IndexDat::
+Null()
+    {
+    static IndexDat Null_(Index::makeNull);
+    return &Null_;
+    }
+
+IndexDat* IndexDat::
+ReImDat()
+    {
+    static IndexDat ReImDat_(Index::makeReIm);
+    return &ReImDat_;
+    }
+
+IndexDat* IndexDat::
+ReImDatP()
+    {
+    static IndexDat ReImDatP_(Index::makeReImP);
+    return &ReImDatP_;
+    }
+
+IndexDat* IndexDat::
+ReImDatPP()
+    {
+    static IndexDat ReImDatPP_(Index::makeReImPP);
+    return &ReImDatPP_;
     }
 
 
@@ -308,6 +431,34 @@ read(std::istream& s)
         }
     }
 
+const Index& Index::
+Null()
+    {
+    static const Index Null_(makeNull);
+    return Null_;
+    }
+
+const Index& Index::
+IndReIm()
+    {
+    static const Index IndReIm_(makeReIm);
+    return IndReIm_;
+    }
+
+const Index& Index::
+IndReImP()
+    {
+    static const Index IndReImP_(makeReImP);
+    return IndReImP_;
+    }
+
+const Index& Index::
+IndReImPP()
+    {
+    static const Index IndReImPP_(makeReImPP);
+    return IndReImPP_;
+    }
+
 std::ostream& 
 operator<<(std::ostream & s, const Index & t)
     {
@@ -334,9 +485,9 @@ IndexVal(const Index& index, int i_)
     }
 
 IndexVal::
-IndexVal(Imaker im)
+IndexVal(Index::Imaker im)
     {
-    if(im == makeNull)
+    if(im == Index::makeNull)
         {
         ind = Index::Null();
         i = 1;
