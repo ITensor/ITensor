@@ -8,6 +8,10 @@
 #include "model.h"
 #include "option.h"
 
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
+
 template <class Tensor>
 class MPOt;
 
@@ -153,6 +157,9 @@ class MPSt
 
     const SVDWorker& 
     svd() const { return svd_; }
+    SVDWorker& 
+    svd() { return svd_; }
+
 
     bool 
     isNull() const { return (model_==0); }
@@ -292,15 +299,15 @@ class MPSt
 
     void 
     svdBond(int b, const Tensor& AA, Direction dir, 
-            Option opt = Option());
+            const Option& opt = Option());
 
     template <class LocalOpT>
     void 
     svdBond(int b, const Tensor& AA, Direction dir, 
-                const LocalOpT& PH, Option opt = Option());
+                const LocalOpT& PH, const Option& opt = Option());
 
     void
-    doSVD(int b, const Tensor& AA, Direction dir, Option opt = Option())
+    doSVD(int b, const Tensor& AA, Direction dir, const Option& opt = Option())
         { 
         svdBond(b,AA,dir,opt); 
         }
@@ -308,7 +315,7 @@ class MPSt
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
     void 
-    position(int i, Option opt = Option());
+    position(int i, const Option& opt = Option());
 
     int 
     orthoCenter() const 
@@ -318,7 +325,7 @@ class MPSt
         }
 
     void 
-    orthogonalize(Option opt = Option());
+    orthogonalize(const Option& opt = Option());
 
     //Checks if A[i] is left (left == true) 
     //or right (left == false) orthogonalized
@@ -404,7 +411,7 @@ class MPSt
     void 
     printIndices(const std::string& name = "") const
         {
-        std::cout << name << "=" << std::endl;
+        Cout << name << "=" << Endl;
         for(int i = 1; i <= NN(); ++i) 
             AA(i).printIndices(boost::format("AA(%d)")%i);
         }
@@ -524,7 +531,7 @@ template <class Tensor>
 template <class LocalOpT>
 void MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, 
-            const LocalOpT& PH, Option opt)
+            const LocalOpT& PH, const Option& opt)
     {
     setBond(b);
     if(opt == PreserveShape())
@@ -537,35 +544,73 @@ svdBond(int b, const Tensor& AA, Direction dir,
 
     if(dir == Fromleft && b-1 > l_orth_lim_)
         {
-        std::cout << boost::format("b=%d, l_orth_lim_=%d")
-                %b%l_orth_lim_ << std::endl;
+        Cout << Format("b=%d, l_orth_lim_=%d")
+                %b%l_orth_lim_ << Endl;
         Error("b-1 > l_orth_lim_");
         }
     if(dir == Fromright && b+2 < r_orth_lim_)
         {
-        std::cout << boost::format("b=%d, r_orth_lim_=%d")
-                %b%r_orth_lim_ << std::endl;
+        Cout << Format("b=%d, r_orth_lim_=%d")
+                %b%r_orth_lim_ << Endl;
         Error("b+2 < r_orth_lim_");
         }
 
-    if(cutoff() > 1E-12)
-        {
-        //If we don't need extreme accuracy,
-        //use a density matrix approach
-        svd_.denmatDecomp(b,AA,A[b],A[b+1],dir,PH);
-        }
+#define USE_SVD_ONLY
+
+#ifdef USE_SVD_ONLY
+    {
+    SparseT D;
+    svd_.svd(b,AA,A[b],D,A[b+1]);
+
+    //Normalize the orthogonality center
+    //if(opt.boolEquals(DoNormalize(true)))
+    //    {
+    //    Real norm = D.norm();
+    //    D *= 1./norm;
+    //    }
+
+    //Push the singular values into the appropriate site tensor
+    if(dir == Fromleft)
+        A[b+1] *= D;
     else
+        A[b] *= D;
+    }
+#else
+    if(cutoff() < 1E-12)
         {
-        //Otherwise use the more accurate svd method
-        //(calls the accurate SVD method in the MatrixRef library)
+        //Need high accuracy, use svd which calls the
+        //accurate SVD method in the MatrixRef library
         SparseT D;
         svd_.svd(b,AA,A[b],D,A[b+1]);
+
+        //Normalize the orthogonality center
+        //if(opt.boolEquals(DoNormalize(true)))
+        //    {
+        //    Real norm = D.norm();
+        //    D *= 1./norm;
+        //    }
+
         //Push the singular values into the appropriate site tensor
         if(dir == Fromleft)
             A[b+1] *= D;
         else
             A[b] *= D;
         }
+    else
+        {
+        //If we don't need extreme accuracy,
+        //use presumably faster density matrix approach
+        svd_.denmatDecomp(b,AA,A[b],A[b+1],dir,PH);
+
+        //Normalize the ortho center
+        //if(opt.boolEquals(DoNormalize(true)))
+        //    {
+        //    Tensor& oc = (dir == Fromleft ? A[b+1] : A[b]);
+        //    Real norm = oc.norm();
+        //    oc *= 1./norm;
+        //    }
+        }
+#endif
 
     if(dir == Fromleft)
         {
@@ -650,38 +695,44 @@ void
 sum(const std::vector<MPSType>& terms, MPSType& res, 
     Real cut = MIN_CUT, int maxm = MAX_M)
     {
-    int Nt = terms.size();
+    const int Nt = terms.size();
+    if(Nt == 2)
+        { 
+        res = terms[0];
+        res.cutoff(cut); 
+        res.maxm(maxm);
+        //std::cerr << boost::format("Before +=, cutoff = %.1E, maxm = %d\n")%(res.cutoff())%(res.maxm());
+        res += terms[1];
+        }
+    else 
     if(Nt == 1) 
         {
         res = terms[0];
-        res.cutoff(cut); res.maxm(maxm);
-        return;
+        res.cutoff(cut); 
+        res.maxm(maxm);
         }
-    else if(Nt == 2)
-        { 
-        res = terms[0];
-        res.cutoff(cut); res.maxm(maxm);
-        //std::cerr << boost::format("Before +=, cutoff = %.1E, maxm = %d\n")%(res.cutoff)%(res.maxm);
-        res += terms[1];
-        return;
-        }
-    else if(Nt > 2)
+    else 
+    if(Nt > 2)
         {
         //Add all MPS's in pairs
-        std::vector<MPSType> terms2(2), nterms; nterms.reserve(Nt/2);
-        for(int n = 0; n < Nt-1; n += 2)
+        const int nsize = (Nt%2==0 ? Nt/2 : (Nt-1)/2+1);
+        std::vector<MPSType> tpair(2), 
+                             newterms(nsize); 
+        for(int n = 0, np = 0; n < Nt-1; n += 2, ++np)
             {
-            terms2[0] = terms[n]; terms2[1] = terms[n+1];
-            sum(terms2,res,cut,maxm);
-            nterms.push_back(res);
+            tpair[0] = terms[n]; 
+            tpair[1] = terms[n+1];
+            sum(tpair,newterms.at(np),cut,maxm);
             }
-        if(Nt%2 == 1) nterms.push_back(terms.back());
+        if(Nt%2 == 1) newterms.at(nsize-1) = terms.back();
+
         //Recursively call sum again
-        sum(nterms,res,cut,maxm);
-        return;
+        sum(newterms,res,cut,maxm);
         }
-    return;
     }
 
+#undef Cout
+#undef Endl
+#undef Format
 
 #endif

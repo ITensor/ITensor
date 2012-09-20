@@ -7,6 +7,10 @@
 #include "iqcombiner.h"
 #include "iqtsparse.h"
 
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
+
 enum Direction { Fromright, Fromleft, Both, None };
 
 template<class TensorA, class TensorB>
@@ -145,11 +149,18 @@ class SVDWorker
     void 
     maxm(int val) { maxm_ = val; }
 
+    //Perform the SVD, but do not truncate.
+    //Try to keep the original bond dimension 
+    //as determined by the shared indices of 
+    //the tensors holding the factorized
+    //pieces of the original tensor.
     bool 
     useOrigM() const { return use_orig_m_; }
     void 
     useOrigM(bool val) { use_orig_m_ = val; }
 
+    //Print detailed information about the
+    //eigenvalues computed during the SVD
     bool 
     showeigs() const { return showeigs_; }
     void 
@@ -339,7 +350,7 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
     IndexT;
     typedef typename Tensor::CombinerT 
     CombinerT;
-
+    
     if(AA.vecSize() == 0) 
         throw ResultIsZero("denmatDecomp: AA.vecSize == 0");
 
@@ -384,6 +395,8 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
               saved_maxm = maxm_; 
     if(use_orig_m_)
         {
+        //Try to determine current m,
+        //then set minm_ and maxm_ to this.
         cutoff_ = -1;
         if(D.r() == 0)
             {
@@ -403,6 +416,11 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
             minm_ = D.index(1).m();
             maxm_ = D.index(1).m();
             }
+        //if(Global::debug1())
+        //    {
+        //    Cout << "Increasing maxm by 10" << Endl;
+        //    maxm_ += 10;
+        //    }
         }
 
     svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,b);
@@ -443,7 +461,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     //bool do_edge_case = true;
     if(dir == None)
         {
-        //std::cerr << boost::format("Arrow before = %s\n")%(mid.dir() == Out ? "Out" : "In");
+        //Cout << Format("Arrow before = %s")%(mid.dir() == Out ? "Out" : "In") << Endl;
         dir = (mid.dir() == Out ? Fromright : Fromleft);
         //do_edge_case = false;
         }
@@ -528,6 +546,9 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     } //void SVDWorker::denmatDecomp
 
+#undef Cout
+#undef Format
+#undef Endl
 
 
 #endif

@@ -76,6 +76,7 @@ class MPOt : private MPSt<Tensor>
     using Parent::AAnc;
     using Parent::bondTensor;
 
+    using Parent::doWrite;
     using Parent::doRelCutoff;
     using Parent::refNorm;
     using Parent::cutoff;
@@ -101,8 +102,12 @@ class MPOt : private MPSt<Tensor>
     friend MPOt inline
     operator*(Real r, MPOt res) { res *= r; return res; }
 
+    MPOt&
+    addNoOrth(const MPOt& oth) { Parent::addNoOrth(oth); return *this; }
+
     MPOt& 
-    operator+=(const MPOt& oth) { Parent::operator+=(oth); return *this; }
+    operator+=(const MPOt& oth);
+
 
     MPOt 
     operator+(MPOt res) const { res += *this; return res; }
@@ -143,19 +148,21 @@ class MPOt : private MPSt<Tensor>
         }
 
     void 
-    svdBond(int b, const Tensor& AA, Direction dir, Option opt = Option());
+    svdBond(int b, const Tensor& AA, Direction dir, const Option& opt = Option());
 
     void
-    doSVD(int b, const Tensor& AA, Direction dir, Option opt = Option())
+    doSVD(int b, const Tensor& AA, Direction dir, const Option& opt = Option())
         { 
         svdBond(b,AA,dir,opt); 
         }
 
-    //using Parent::position;
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
     void 
-    position(int i, Option opt = Option());
+    position(int i, const Option& opt = Option());
+
+    void 
+    orthogonalize(const Option& opt = Option());
 
     using Parent::isOrtho;
     using Parent::orthoCenter;
@@ -468,7 +475,17 @@ napplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     zipUpApplyMPO(psi,K,res,cutoff,maxm);
     }
 
+//Applies an MPO K to an MPS x with no approximation (|res>=K|x>)
+//The bond dimension of res will be the product of bond dimensions
+//of x and K.
+template<class Tensor>
 void 
-exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
+exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res);
+
+//Computes the exponential of the MPO H: K=exp(-tau*(H-Etot))
+template<class Tensor>
+void 
+expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
+     Real Kcutoff, int ndoub);
 
 #endif

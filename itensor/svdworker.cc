@@ -166,7 +166,7 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
         cout << format("minm_ = %d, maxm_ = %d, cutoff_ = %.3E")
                        %minm_%maxm_%cutoff_ << endl;
         cout << format("use_orig_m_ = %s")%(use_orig_m_?"true":"false")<<endl;
-        cout << format("Kept %d states in svdRank2 line 169")% m << endl;
+        cout << format("Kept m=%d states in svdRank2 line 169") % m << endl;
         cout << format("svdtruncerr = %.3E")%svdtruncerr << endl;
 
 
@@ -200,6 +200,14 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
     U = ITensor(ui,uL,UU.Columns(1,m));
     V = ITensor(vL,vi,VV.Rows(1,m));
 
+    //Square all singular values
+    //since convention is to report
+    //density matrix eigs
+    for(int j = 1; j <= m; ++j)
+        {
+        DD(j) *= DD(j);
+        }
+
     Global::lastd() = DD;
 
     //Include A's scale to get the actual eigenvalues kept
@@ -222,10 +230,6 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         Error("A.r() must be 2");
         }
 
-    //const
-    //IQIndex &uI = (U.hasindex(A.index(1)) ? A.index(1) : A.index(2)),
-    //        &vI = (U.hasindex(A.index(1)) ? A.index(2) : A.index(1));
-
     const int Nblock = A.iten_size();
     if(Nblock == 0)
         throw ResultIsZero("A.iten_size() == 0");
@@ -245,7 +249,7 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
     if(doRelCutoff_)
         {
         Real maxLogNum = -200;
-        Foreach(const ITensor& t, A.itensors())
+        Foreach(const ITensor& t, A.blocks())
             {
             t.scaleOutNorm();
             maxLogNum = max(maxLogNum,t.scale().logNum());
@@ -334,17 +338,20 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
     if(showeigs_)
         {
         cout << endl;
-        cout << boost::format("use_orig_m_ = %s")
+        cout << "svdRank2 (IQTensor):" << endl;
+        cout << format("    minm_ = %d, maxm_ = %d, cutoff_ = %.3E")
+                       %minm_%maxm_%cutoff_ << endl;
+        cout << format("    use_orig_m_ = %s")
                 %(use_orig_m_?"true":"false")<<endl;
-        cout << boost::format("Kept %d, discarded %d states in svdRank2 line 336")
+        cout << format("    Kept m = %d, discarded %d states in svdRank2")
                                 % m % mdisc << endl;
-        cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
-        cout << boost::format("docut = %.2E")%docut << endl;
-        cout << boost::format("cutoff=%.2E, minm=%d, maxm=%d")
+        cout << format("    svdtruncerr = %.2E")%svdtruncerr << endl;
+        cout << format("    docut = %.2E")%docut << endl;
+        cout << format("    cutoff=%.2E, minm=%d, maxm=%d")
                 %cutoff_%minm_%maxm_ << endl;
-        cout << "doRelCutoff is " << (doRelCutoff_ ? "true" : "false") << endl;
-        cout << "absoluteCutoff is " << (absoluteCutoff_ ? "true" : "false") << endl;
-        cout << "refNorm is " << refNorm_ << endl;
+        cout << "    doRelCutoff is " << (doRelCutoff_ ? "true" : "false") << endl;
+        cout << "    absoluteCutoff is " << (absoluteCutoff_ ? "true" : "false") << endl;
+        cout << "    refNorm is " << refNorm_ << endl;
 
         const int s = alleig.size();
         const int max_show = 20;
@@ -358,28 +365,26 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         if(fabs(orderMag) < 5 && refNorm_.isFiniteReal())
             {
             real_fac = refNorm_.real();
-            cout << "Eigs: ";
+            cout << "    Eigs: ";
             }
         else
             {
-            cout << "Eigs [omitting scale factor " << refNorm_ << "]: \n";
-	    if(alleig.at(s-1) > 1.e10)
-		{
-		Error("bad alleig");
-		}
+            cout << "    Eigs [omitting scale factor " << refNorm_ << "]: \n";
+            if(alleig.at(s-1) > 1.e10)
+                {
+                Error("bad alleig");
+                }
             }
 
+        cout << "    ";
         for(int j = s-1; j >= stop; --j)
             {
-            cout << boost::format( (alleig.at(j) > 1E-6 && alleig.at(j) < 1E3) ? ("%.3f") : ("%.3E")) 
+            cout << format( (alleig.at(j) > 1E-6 && alleig.at(j) < 1E3) ? ("%.3f") : ("%.3E")) 
                                 % (alleig[j] * real_fac);
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
-        }
-
-    assert(m <= maxm_); 
-    assert(m < 20000);
+        } //end if(showeigs_)
 
     //Truncate denmat eigenvalue vectors
     //Also form new Link index with appropriate m's for each block
@@ -396,11 +401,9 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
     Dblock.reserve(Nblock);
 
     itenind = 0;
-    for(IQTensor::const_iten_it it = A.const_iten_begin(); 
-        it != A.const_iten_end(); ++it)
+    int total_m = 0;
+    Foreach(const ITensor& t, A.blocks())
         {
-        const ITensor& t = *it;
-
         const Matrix& UU = Umatrix.at(itenind);
         const Matrix& VV = Vmatrix.at(itenind);
         Vector& thisD = dvector.at(itenind);
@@ -408,6 +411,11 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
         int this_m = 1;
         while(this_m <= thisD.Length() && sqr(thisD(this_m)) > docut) 
             {
+            ++total_m;
+            //if(Global::debug1())
+            //    {
+            //    cout << format("    %d Keeping eig %.3E, %.3E > %.3E") % total_m % thisD(this_m) % sqr(thisD(this_m)) % docut << endl;
+            //    }
             if(thisD(this_m) < 0) thisD(this_m) = 0;
             ++this_m;
             }
@@ -605,7 +613,7 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
         {
         //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
         Real maxLogNum = -200;
-        Foreach(const ITensor& t, rho.itensors())
+        Foreach(const ITensor& t, rho.blocks())
 	    {
 	    t.scaleOutNorm();
             maxLogNum = max(maxLogNum,t.scale().logNum());
@@ -871,7 +879,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         {
         //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
         Real maxLogNum = -200;
-        Foreach(const ITensor& t, rho.itensors())
+        Foreach(const ITensor& t, rho.blocks())
             maxLogNum = max(maxLogNum,t.scale().logNum());
         refNorm_ = LogNumber(maxLogNum,1);
         }
@@ -1220,7 +1228,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
     if(doRelCutoff_)
 	{
         Real maxLogNum = -200;
-        Foreach(const ITensor& t, rho.itensors())
+        Foreach(const ITensor& t, rho.blocks())
 	    {
 	    t.scaleOutNorm();
 	    maxLogNum = max(maxLogNum,t.scale().logNum());

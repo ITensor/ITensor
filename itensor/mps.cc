@@ -616,7 +616,7 @@ addNoOrth(const MPSt<Tensor>& other_)
 
     noprimelink();
 
-    orthogonalize();
+    //orthogonalize();
 
     return *this;
     }
@@ -674,19 +674,19 @@ void MPSt<IQTensor>::noprimelink();
 
 template<class Tensor> void
 MPSt<Tensor>::
-svdBond(int b, const Tensor& AA, Direction dir, Option opt)
+svdBond(int b, const Tensor& AA, Direction dir, const Option& opt)
     {
     svdBond(b,AA,dir,LocalMPO<Tensor>::Null(),opt);
     }
 template void MPSt<ITensor>::
-svdBond(int b, const ITensor& AA, Direction dir, Option);
+svdBond(int b, const ITensor& AA, Direction dir, const Option& opt);
 template void MPSt<IQTensor>::
-svdBond(int b, const IQTensor& AA, Direction dir, Option);
+svdBond(int b, const IQTensor& AA, Direction dir, const Option& opt);
 
 
 template<class Tensor> void
 MPSt<Tensor>::
-position(int i, Option opt)
+position(int i, const Option& opt)
     {
     if(isNull()) Error("position: MPS is null");
     while(l_orth_lim_ < i-1)
@@ -706,13 +706,13 @@ position(int i, Option opt)
     is_ortho_ = true;
     }
 template void MPSt<ITensor>::
-position(int b, Option opt);
+position(int b, const Option& opt);
 template void MPSt<IQTensor>::
-position(int b, Option opt);
+position(int b, const Option& opt);
 
 template <class Tensor>
 void MPSt<Tensor>::
-orthogonalize(Option opt)
+orthogonalize(const Option& opt)
     {
     //Do a half-sweep to the right, orthogonalizing each bond
     //but do not truncate since the basis to the right might not
@@ -731,9 +731,9 @@ orthogonalize(Option opt)
     is_ortho_ = true;
     }
 template
-void MPSt<ITensor>::orthogonalize(Option opt);
+void MPSt<ITensor>::orthogonalize(const Option& opt);
 template
-void MPSt<IQTensor>::orthogonalize(Option opt);
+void MPSt<IQTensor>::orthogonalize(const Option& opt);
 
 //Methods for use internally by checkOrtho
 ITensor

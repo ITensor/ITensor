@@ -55,6 +55,20 @@ class Option
         return name_ < other.name_;
         }
 
+    bool
+    boolEquals(const Option& other) const
+        {
+        return name_ == other.name_
+            && bval_ == other.bval_;
+        }
+
+    bool
+    intEquals(const Option& other) const
+        {
+        return name_ == other.name_
+            && ival_ == other.ival_;
+        }
+
     //
     // Accessor methods
     //
@@ -494,6 +508,12 @@ Option inline
 DebugLevel(int level)
     {
     return Option("DebugLevel",level);
+    }
+
+Option inline
+DoNormalize(bool val = true)
+    {
+    return Option("DoNormalize",val);
     }
 
 Option inline

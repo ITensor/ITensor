@@ -245,7 +245,7 @@ initialize(MPOt<Tensor>& res) const
     }
 
 
-void HamBuilder::
+void inline HamBuilder::
 putLinks(MPOt<ITensor>& res) const
     {
     int ver = hamNumber();
@@ -264,7 +264,7 @@ putLinks(MPOt<ITensor>& res) const
     res.AAnc(N_) *= links.at(N_-1)(1);
     }
 
-void HamBuilder::
+void inline HamBuilder::
 putLinks(MPOt<IQTensor>& res) const
     {
     QN q;

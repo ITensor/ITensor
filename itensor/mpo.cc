@@ -2,15 +2,17 @@
 // Distributed under the ITensor Library License, Version 1.0.
 //    (See accompanying LICENSE file.)
 //
-#include "mpo.h"
+#include "hambuilder.h"
+
 using namespace std;
 using boost::format;
 
 template<class Tensor> 
 void MPOt<Tensor>::
-position(int i, Option opt)
+position(int i, const Option& opt)
     {
     if(isNull()) Error("position: MPS is null");
+
     while(l_orth_lim_ < i-1)
         {
         if(l_orth_lim_ < 0) l_orth_lim_ = 0;
@@ -27,13 +29,40 @@ position(int i, Option opt)
     is_ortho_ = true;
     }
 template void MPOt<ITensor>::
-position(int b, Option opt);
+position(int b, const Option& opt);
 template void MPOt<IQTensor>::
-position(int b, Option opt);
+position(int b, const Option& opt);
 
 template <class Tensor>
 void MPOt<Tensor>::
-svdBond(int b, const Tensor& AA, Direction dir, Option opt)
+orthogonalize(const Option& opt)
+    {
+    //Do a half-sweep to the right, orthogonalizing each bond
+    //but do not truncate since the basis to the right might not
+    //be ortho (i.e. use the current m).
+    //svd_.useOrigM(true);
+    int orig_maxm = svd_.maxm();
+    Real orig_cutoff = svd_.cutoff();
+    svd_.maxm(MAX_M);
+    svd_.cutoff(MIN_CUT);
+
+    position(N);
+    //Now basis is ortho, ok to truncate
+    svd_.useOrigM(false);
+    svd_.maxm(orig_maxm);
+    svd_.cutoff(orig_cutoff);
+    position(1);
+
+    is_ortho_ = true;
+    }
+template
+void MPOt<ITensor>::orthogonalize(const Option& opt);
+template
+void MPOt<IQTensor>::orthogonalize(const Option& opt);
+
+template <class Tensor>
+void MPOt<Tensor>::
+svdBond(int b, const Tensor& AA, Direction dir, const Option& opt)
     {
     if(opt == PreserveShape())
         {
@@ -78,9 +107,49 @@ svdBond(int b, const Tensor& AA, Direction dir, Option opt)
         }
     }
 template void MPOt<ITensor>::
-svdBond(int b, const ITensor& AA, Direction dir, Option opt);
+svdBond(int b, const ITensor& AA, Direction dir, const Option& opt);
 template void MPOt<IQTensor>::
-svdBond(int b, const IQTensor& AA, Direction dir, Option opt);
+svdBond(int b, const IQTensor& AA, Direction dir, const Option& opt);
+
+template <class Tensor>
+MPOt<Tensor>& MPOt<Tensor>::
+operator+=(const MPOt<Tensor>& other_)
+    {
+    if(doWrite())
+        Error("operator+= not supported if doWrite(true)");
+
+    //cout << "calling new orthog in sum" << endl;
+    if(!this->isOrtho())
+        {
+        try { 
+            orthogonalize(); 
+            }
+        catch(const ResultIsZero& rz) 
+            { 
+            *this = other_;
+            return *this;
+            }
+        }
+
+    if(!other_.isOrtho())
+        {
+        MPOt<Tensor> other(other_);
+        try { 
+            other.orthogonalize(); 
+            }
+        catch(const ResultIsZero& rz) 
+            { 
+            return *this;
+            }
+        return addNoOrth(other);
+        }
+
+    return addNoOrth(other_);
+    }
+template
+MPOt<ITensor>& MPOt<ITensor>::operator+=(const MPOt<ITensor>& other);
+template
+MPOt<IQTensor>& MPOt<IQTensor>::operator+=(const MPOt<IQTensor>& other);
 
 int 
 findCenter(const IQMPO& psi)
@@ -337,9 +406,15 @@ void
 zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm);
 
 //Expensive: scales as m^3 k^3!
+template<class Tensor>
 void 
-exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
+exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
     {
+    typedef typename Tensor::IndexT
+    IndexT;
+    typedef typename Tensor::CombinerT
+    CombinerT;
+
     int N = x.NN();
     if(K.NN() != N) Error("Mismatched N in exactApplyMPO");
 
@@ -353,10 +428,13 @@ exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
         res.AAnc(j+1) = x.AA(j+1) * K.AA(j+1); //m^2 k^2 d^2
 
         //Add common IQIndices to IQCombiner
-        IQCombiner comb; comb.doCondense(false);
-        Foreach(const IQIndex& I, res.AA(j).iqinds())
-        if(res.AA(j+1).hasindex(I) && I != IQIndex::IndReIm())
-            { assert(I.dir() == Out); comb.addleft(I);}
+        CombinerT comb; comb.doCondense(false);
+        for(int ii = 1; ii <= res.AA(j).r(); ++ii)
+            {
+            const IndexT& I = res.AA(j).index(j);
+            if(res.AA(j+1).hasindex(I) && I != IndexT::IndReIm())
+                { assert(I.dir() == Out); comb.addleft(I);}
+            }
         comb.init(nameint("a",j));
 
         //Apply combiner to product tensors
@@ -366,4 +444,93 @@ exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res)
     res.mapprime(1,0,primeSite);
     //res.orthogonalize();
     } //void exact_applyMPO
+template
+void 
+exactApplyMPO(const MPS& x, const MPO& K, MPS& res);
+template
+void 
+exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
+
+
+template<class Tensor>
+void 
+expsmallH(const MPOt<Tensor>& H, MPOt<Tensor>& K, 
+          Real tau, Real Etot, Real Kcutoff)
+    {
+    const int maxm = 400;
+
+    HamBuilder hb(H.model());
+
+    MPOt<Tensor> Hshift;
+    hb.getMPO(Hshift,-Etot);
+    Hshift += H;
+    Hshift.AAnc(1) *= -tau;
+
+    vector<MPOt<Tensor> > xx(2);
+    hb.getMPO(xx.at(0),1.0);
+    xx.at(1) = Hshift;
+
+    //
+    // Exponentiate by building up a Taylor series in reverse:
+    //      o=1    o=2      o=3      o=4  
+    // K = 1-t*H*(1-t*H/2*(1-t*H/3*(1-t*H/4*(...))))
+    //
+    for(int o = 50; o >= 1; --o)
+        {
+        if(o > 1) xx[1].AAnc(1) *= 1.0 / o;
+
+        Real errlim = 1E-14;
+
+        sum(xx,K,errlim,maxm);
+        if(o > 1)
+            nmultMPO(K,Hshift,xx[1],errlim,maxm);
+        }
+    }
+template
+void 
+expsmallH(const MPO& H, MPO& K, Real tau, Real Etot, Real Kcutoff);
+template
+void 
+expsmallH(const IQMPO& H, IQMPO& K, Real tau, Real Etot, Real Kcutoff);
+
+template<class Tensor>
+void 
+expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
+     Real Kcutoff, int ndoub)
+    {
+    Real ttau = tau / pow(2.0,ndoub);
+    //cout << "ttau in expH is " << ttau << endl;
+
+    K.cutoff(0.1 * Kcutoff * pow(0.25,ndoub));
+    expsmallH(H, K, ttau,Etot,K.cutoff());
+
+    cout << "Starting doubling in expH" << endl;
+    for(int doub = 1; doub <= ndoub; ++doub)
+        {
+        //cout << " Double step " << doub << endl;
+        if(doub == ndoub) 
+            K.cutoff(Kcutoff);
+        else
+            K.cutoff(0.1 * Kcutoff * pow(0.25,ndoub-doub));
+        //cout << "in expH, K.cutoff is " << K.cutoff << endl;
+        MPOt<Tensor> KK;
+        nmultMPO(K,K,KK,K.cutoff(),K.maxm());
+        K = KK;
+        /*
+        if(doub == ndoub)
+            {
+            cout << "step " << doub << ", K is " << endl;
+            cout << "K.cutoff, K.maxm are " << K.cutoff SP K.maxm << endl;
+            for(int i = 1; i <= N; i++)
+                cout << i SP K.A[i];
+            }
+        */
+        }
+    }
+template
+void 
+expH(const MPO& H, MPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub);
+template
+void 
+expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub);
 
