@@ -115,9 +115,9 @@ operator<<(ostream & s, const ITensor & t)
             {
             Real nrm = t.norm();
             if(nrm >= 1E-2 && nrm < 1E5)
-                s << format(" (L=%d,N=%.2f,Nv=%.2f)\n") % t.vecSize() % nrm % Norm(t.p->v);
+                s << format(" (L=%d,N=%.2f)\n") % t.vecSize() % nrm;
             else
-                s << format(" (L=%d,N=%.1E,Nv=%.1E)\n") % t.vecSize() % nrm % Norm(t.p->v);
+                s << format(" (L=%d,N=%.1E)\n") % t.vecSize() % nrm;
             }
         else
             {
@@ -546,6 +546,8 @@ operator()(const IndexVal& iv1, const IndexVal& iv2,
     return scale_.real()*p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
     }
 
+//#define DO_REWRITE_ASSIGN
+
 void ITensor::
 assignFrom(const ITensor& other)
     {
@@ -555,6 +557,11 @@ assignFrom(const ITensor& other)
         Print(*this); Print(other);
         Error("assignFrom: unique Real not the same"); 
         }
+#ifdef DO_REWRITE_ASSIGN
+    is_ = other.is_;
+    scale_ = other.scale_;
+    p = other.p;
+#else
     Permutation P; 
     is_.getperm(other.is_,P);
     scale_ = other.scale_;
@@ -563,6 +570,8 @@ assignFrom(const ITensor& other)
         p = new ITDat(); 
         }
     other.reshapeDat(P,p->v);
+    DO_IF_PS(++Prodstats::stats().c1;)
+#endif
     }
 
 
@@ -1490,6 +1499,10 @@ struct ProductProps
     //indices pairwise to the front 
     Permutation pl, pr;
 
+    //Permutation which, if applied, will make
+    //contracted indices of R match order of L
+    //Permutation matchL;
+
     };
 
 ProductProps::
@@ -1519,7 +1532,22 @@ ProductProps(const ITensor& L, const ITensor& R)
 		contractedL[j] = contractedR[k] = true;
 
         cdim *= L.index(j).m();
+
+        //matchL.from_to(k,j-lcstart+1);
 		}
+    //Finish making pl
+    int q = nsamen;
+    for(int j = 1; j <= L.rn(); ++j)
+        if(!contractedL[j]) pl.from_to(j,++q);
+    //Finish making pr and matchL
+    q = nsamen;
+    for(int j = 1; j <= R.rn(); ++j)
+        if(!contractedR[j]) 
+            {
+            ++q;
+            pr.from_to(j,q);
+            //matchL.from_to(j,q);
+            }
 
     odimL = L.p->v.Length()/cdim;
     odimR = R.p->v.Length()/cdim;
@@ -1529,13 +1557,17 @@ ProductProps(const ITensor& L, const ITensor& R)
 //contractedL/R[j] == true if L/R.indexn(j) contracted
 void 
 toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
-             MatrixRefNoLink& lref, MatrixRefNoLink& rref)
+             MatrixRefNoLink& lref, MatrixRefNoLink& rref, 
+             bool& L_is_matrix, bool& R_is_matrix)
     {
     assert(L.p != 0);
     assert(R.p != 0);
     const Vector &Ldat = L.p->v, &Rdat = R.p->v;
 
-    bool L_is_matrix = true, R_is_matrix = true;
+    //Initially, assume both L & R are matrix-like
+    L_is_matrix = true, 
+    R_is_matrix = true;
+
     if(props.nsamen != 0)
         {
         //Check that contracted inds are contiguous
@@ -1576,21 +1608,16 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
             Ldat.TreatAsMatrix(lref,props.cdim,props.odimL); 
             }
         }
-    else
+    else //L not matrix, need to reshape to make lref
         {
-        bool done_with_L = false;
-        //Finish making the permutation (stick non contracted inds on the back)
-        if(!done_with_L)
-            {
-            int q = props.nsamen;
-            for(int j = 1; j <= L.rn(); ++j)
-            if(!props.contractedL[j]) props.pl.from_to(j,++q);
-            if(L_is_matrix) Error("Calling reshapeDat although L is matrix.");
-            Vector lv; L.reshapeDat(props.pl,lv);
-            lv.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
-            done_with_L = true;
-            }
-        assert(done_with_L);
+        //Deprecated code: now props finishes making full pl Permutation
+        //int q = props.nsamen;
+        //for(int j = 1; j <= L.rn(); ++j)
+        //    if(!props.contractedL[j]) props.pl.from_to(j,++q);
+
+        if(L_is_matrix) Error("Calling reshapeDat although L is matrix.");
+        Vector lv; L.reshapeDat(props.pl,lv);
+        lv.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
         }
 
     if(R_is_matrix) 
@@ -1600,20 +1627,16 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
         else                    
             { Rdat.TreatAsMatrix(rref,props.cdim,props.odimR); rref.ApplyTrans(); }
         }
-    else
+    else //R not matrix, need to reshape to make rref
         {
-        bool done_with_R = false;
-        //Finish making the permutation (stick non contracted inds on the back)
-        if(!done_with_R)
-            {
-            int q = props.nsamen;
-            for(int j = 1; j <= R.rn(); ++j)
-            if(!props.contractedR[j]) props.pr.from_to(j,++q);
-            if(R_is_matrix) Error("Calling reshape even though R is matrix.");
-            Vector rv; R.reshapeDat(props.pr,rv);
-            rv.TreatAsMatrix(rref,props.odimR,props.cdim);
-            done_with_R = true;
-            }
+        //Deprecated code: now props finishes making full pr Permutation
+        //int q = props.nsamen;
+        //for(int j = 1; j <= R.rn(); ++j)
+        //    if(!props.contractedR[j]) props.pr.from_to(j,++q);
+
+        if(R_is_matrix) Error("Calling reshape even though R is matrix.");
+        Vector rv; R.reshapeDat(props.pr,rv);
+        rv.TreatAsMatrix(rref,props.odimR,props.cdim);
         }
 
 #ifdef COLLECT_PRODSTATS
@@ -1712,7 +1735,8 @@ operator/=(const ITensor& other)
 
     ProductProps props(*this,other);
     MatrixRefNoLink lref, rref;
-    toMatrixProd(*this,other,props,lref,rref);
+    bool L_is_matrix,R_is_matrix;
+    toMatrixProd(*this,other,props,lref,rref,L_is_matrix,R_is_matrix);
 
     if(p->count() != 1) 
         {
@@ -1887,7 +1911,6 @@ directMultiply(const ITensor& other, ProductProps& props,
         } 
     p->v = newdat;
 
-    DO_IF_PS(++Prodstats::stats().c1;)
 
     } // directMultiply
 
@@ -2108,12 +2131,20 @@ operator*=(const ITensor& other)
                               || other.rn_ > 4 ;
 
     if(do_matrix_multiply)
-        {
     */
 
     DO_IF_PS(++Prodstats::stats().c2;)
     MatrixRefNoLink lref, rref;
-    toMatrixProd(*this,other,props,lref,rref);
+    bool L_is_matrix,R_is_matrix;
+    toMatrixProd(*this,other,props,lref,rref,L_is_matrix,R_is_matrix);
+
+    /*
+    if(!R_is_matrix && L_is_matrix) 
+        {
+        this->print("this");
+        other.print("other");
+        }
+        */
 
     //Do the matrix multiplication
     if(p->count() != 1) 

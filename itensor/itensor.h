@@ -5,10 +5,15 @@
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
 #include "real.h"
-//#include "allocator.h"
 #include "index.h"
 #include "prodstats.h"
 #include "indexset.h"
+
+#define ITENSOR_USE_ALLOCATOR
+
+#ifdef ITENSOR_USE_ALLOCATOR
+#include "allocator.h"
+#endif
 
 //Forward declarations
 struct ProductProps;
@@ -26,25 +31,32 @@ class ITensor
 
     //Accessor Methods ----------------------------------------------
 
-    //uniqueReal depends on indices only, unordered:
+    //Returns a Real number that uniquely identifies this
+    //ITensor's set of Index's (independent of their order).
     Real 
     uniqueReal() const { return is_.ur_; } 
 
+    //Get the jth index, j = 1,2,..,r()
     const Index& 
     index(int j) const { return is_.index(j); }
 
+    //The rank of this ITensor (number of indices)
     int 
     r() const { return is_.r_; }
 
+    //Number of m != 1 indices
     int 
     rn() const { return is_.rn_; }
 
+    //Bond dimension of a given Index, j = 1,2,..,r()
     int 
     m(int j) const { return is_.m(j); }
 
+    //Returns true if ITensor is default constructed
     bool 
     isNull() const { return (p == 0); }
 
+    //Returns true if ITensor is NOT default constructed
     bool 
     isNotNull() const { return (p != 0); }
 
@@ -683,7 +695,8 @@ class ITensor
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
                              ProductProps& pp,
-                             MatrixRefNoLink& lref, MatrixRefNoLink& rref);
+                             MatrixRefNoLink& lref, MatrixRefNoLink& rref,
+                             bool& L_is_matrix, bool& R_is_matrix);
 
     void
     directMultiply(const ITensor& other, ProductProps& pp, 
@@ -792,13 +805,22 @@ public:
     print() const 
         { std::cout << "ITDat: v = " << v; }
 
-    //void* operator 
-    //new(size_t) throw(std::bad_alloc)
-    //    { return allocator().alloc(); }
 
-    //void operator 
-    //delete(void* p) throw()
-    //    { return allocator().dealloc(p); }
+#ifdef ITENSOR_USE_ALLOCATOR
+    void* operator 
+    new(size_t) throw(std::bad_alloc)
+        { return allocator().alloc(); }
+
+    void operator 
+    delete(void* p) throw()
+        { return allocator().dealloc(p); }
+
+    static DatAllocator<ITDat>& allocator()
+        {
+        static DatAllocator<ITDat> allocator_;
+        return allocator_;
+        }
+#endif
 
     friend class ITensor;
 
@@ -819,13 +841,6 @@ private:
     void operator=(const ITDat&);
     ~ITDat() { }
 
-    /*
-    static DatAllocator<ITDat>& allocator()
-        {
-        static DatAllocator<ITDat> allocator_;
-        return allocator_;
-        }
-        */
 
     };
 
