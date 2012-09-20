@@ -401,7 +401,7 @@ diag(Tensor& D) const
         for(int j = 1; j <= L().r(); ++j)
             {
             const IndexT& ll = L().index(j);
-            if(ll.primeLevel() == 0 && !Diag.hasindex(ll))
+            if(ll.primeLevel() == 0 && L().hasindex(primed(ll)))
                 {
                 toTie = ll;
                 found = true;
@@ -419,10 +419,10 @@ diag(Tensor& D) const
         found = false;
         for(int j = 1; j <= R().r(); ++j)
             {
-            const IndexT& ll = R().index(j);
-            if(ll.primeLevel() == 0 && !Diag.hasindex(ll))
+            const IndexT& rr = R().index(j);
+            if(rr.primeLevel() == 0 && R().hasindex(primed(rr)))
                 {
-                toTie = ll;
+                toTie = rr;
                 found = true;
                 break;
                 }

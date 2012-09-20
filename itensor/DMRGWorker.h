@@ -221,6 +221,8 @@ runInternal(const MPOType& H, MPSType& psi)
 
     Eigensolver solver;
     solver.debugLevel(debuglevel);
+
+    const Option doNorm = DoNormalize(true);
     
     for(int sw = 1; sw <= sweeps().nsweep(); ++sw)
         {
@@ -258,7 +260,7 @@ runInternal(const MPOType& H, MPSType& psi)
 
             energy_ = solver.davidson(PH,phi);
             
-            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH);
+            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,doNorm);
 
             if(!quiet_)
                 { 
@@ -306,6 +308,8 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
 
     Eigensolver solver;
     solver.debugLevel(debuglevel);
+
+    const Option doNorm = DoNormalize(true);
     
     for(int sw = 1; sw <= sweeps().nsweep(); ++sw)
         {
@@ -330,7 +334,7 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
 
             energy_ = solver.davidson(PH,phi);
             
-            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH);
+            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,doNorm);
 
             if(!quiet_)
                 { 
@@ -379,6 +383,8 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
 
     Eigensolver solver;
     solver.debugLevel(debuglevel);
+
+    const Option doNorm = DoNormalize(true);
     
     for(int sw = 1; sw <= sweeps().nsweep(); ++sw)
         {
@@ -416,7 +422,7 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
 
             energy_ = solver.davidson(PH,phi);
             
-            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH);
+            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,doNorm);
 
             if(!quiet_)
                 { 

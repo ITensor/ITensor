@@ -7,24 +7,33 @@
 
 template <class T>
 class DatAllocator
-{
+    {
     static const size_t 
-    stackSize = 50000;
+    stackSize = 500;
 
     static const size_t 
     allocSize = sizeof(T);
-private:
+
+    private:
+
+    //size_t maxNf;
+
     void* pf_[stackSize];
     size_t nf_;
 
+
     DatAllocator() 
-        : nf_(0) 
+        : 
+        //maxNf(0),
+        nf_(0)
         { }
 
     ~DatAllocator()
         {
         for(size_t j = 0; j < nf_; ++j)
             free(pf_[j]);
+        //std::cout << "Stack size was " << nf_ << std::endl;
+        //std::cout << "Max stack size was " << maxNf << std::endl;
         }
 
     void* 
@@ -41,13 +50,15 @@ private:
         {
         if(nf_ == stackSize) free(p);
         else pf_[nf_++] = p;
+
+        //if(nf_ > maxNf) maxNf = nf_;
         }
 
     friend class IndexDat;
     friend class ITDat;
     friend class IQIndexDat;
     friend class IQTDat;
-};
+    };
 
 /*
 class DatAllocator
