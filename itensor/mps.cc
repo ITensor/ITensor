@@ -39,7 +39,7 @@ MPSt(const Model& mod_,int maxmm, Real cut)
     N(mod_.NN()), 
     A(mod_.NN()+1),
     l_orth_lim_(0),
-    r_orth_lim_(mod_.NN()),
+    r_orth_lim_(mod_.NN()+1),
     is_ortho_(false),
     model_(&mod_), 
     svd_(N,cut,1,maxmm,false,LogNumber(1)),
@@ -694,6 +694,7 @@ position(int i, const Option& opt)
         if(l_orth_lim_ < 0) l_orth_lim_ = 0;
         setBond(l_orth_lim_+1);
         Tensor WF = AA(l_orth_lim_+1) * AA(l_orth_lim_+2);
+        //cout << format("In position, SVDing bond %d\n") % (l_orth_lim_+1) << endl;
         svdBond(l_orth_lim_+1,WF,Fromleft,opt);
         }
     while(r_orth_lim_ > i+1)
@@ -701,6 +702,7 @@ position(int i, const Option& opt)
         if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
         setBond(r_orth_lim_-2);
         Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
+        //cout << format("In position, SVDing bond %d\n") % (r_orth_lim_-2) << endl;
         svdBond(r_orth_lim_-2,WF,Fromright,opt);
         }
     is_ortho_ = true;

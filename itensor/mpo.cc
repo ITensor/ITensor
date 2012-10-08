@@ -418,7 +418,8 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
     int N = x.NN();
     if(K.NN() != N) Error("Mismatched N in exactApplyMPO");
 
-    res = x;
+    if(&res != &x)
+        res = x;
 
     res.AAnc(1) = x.AA(1) * K.AA(1);
     for(int j = 1; j < N; ++j)
@@ -428,12 +429,13 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
         res.AAnc(j+1) = x.AA(j+1) * K.AA(j+1); //m^2 k^2 d^2
 
         //Add common IQIndices to IQCombiner
-        CombinerT comb; comb.doCondense(false);
+        CombinerT comb; 
+        comb.doCondense(false);
         for(int ii = 1; ii <= res.AA(j).r(); ++ii)
             {
-            const IndexT& I = res.AA(j).index(j);
+            const IndexT& I = res.AA(j).index(ii);
             if(res.AA(j+1).hasindex(I) && I != IndexT::IndReIm())
-                { assert(I.dir() == Out); comb.addleft(I);}
+                comb.addleft(I);
             }
         comb.init(nameint("a",j));
 
