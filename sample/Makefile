@@ -62,9 +62,15 @@ dmrgj1j2: dmrgj1j2.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 dmrgj1j2-g: mkdebugdir .debug_objs/dmrgj1j2.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) .debug_objs/dmrgj1j2.o -o dmrgj1j2-g $(LIBFLAGS)
 
+exthubbard: exthubbard.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) exthubbard.o -o exthubbard $(LIBFLAGS)
+
+exthubbard-g: mkdebugdir .debug_objs/exthubbard.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) .debug_objs/exthubbard.o -o exthubbard-g $(LIBFLAGS)
+
 mkdebugdir:
 	mkdir -p .debug_objs
 
 clean:
 	rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g \
-	dmrg_table dmrg_table-g dmrgj1j2 dmrgj1j2-g
+	dmrg_table dmrg_table-g dmrgj1j2 dmrgj1j2-g exthubbard exthubbard-g
