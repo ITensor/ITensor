@@ -6,6 +6,10 @@
 #define __ITENSOR_DMRGOBSERVER_H
 #include "observer.h"
 
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
+
 //
 // Class for monitoring DMRG calculations.
 // The measure and checkDone methods are virtual
@@ -77,17 +81,17 @@ measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
         {
         if(b == 1 && ha == 2) 
             {
-            std::cout << "\n    Largest m during sweep " << sw << " was " << svd.maxEigsKept() << "\n";
-            std::cout << "    Largest truncation error: " << svd.maxTruncerr() << std::endl;
+            Cout << "\n    Largest m during sweep " << sw << " was " << svd.maxEigsKept() << "\n";
+            Cout << "    Largest truncation error: " << svd.maxTruncerr() << Endl;
             Vector center_eigs = svd.eigsKept(svd.NN()/2);
-            std::cout << "    Eigs at center bond: ";
+            Cout << "    Eigs at center bond: ";
             for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                 {
-                std::cout << boost::format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
-                std::cout << ((j != min(center_eigs.Length(),10)) ? ", " : "");
+                Cout << Format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
+                Cout << ((j != min(center_eigs.Length(),10)) ? ", " : "");
                 }
-            std::cout << std::endl;
-            std::cout << boost::format("    Energy after sweep %d is %f") % sw % energy << std::endl;
+            Cout << std::endl;
+            Cout << Format("    Energy after sweep %d is %f") % sw % energy << Endl;
             }
         }
     }
@@ -105,13 +109,24 @@ checkDone(int sw, const SVDWorker& svd, Real energy,
         Real dE = fabs(energy-last_energy);
         if(dE < energy_errgoal)
             {
-            std::cout << boost::format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
+            Cout << Format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
             return true;
             }
         }
     last_energy = energy;
+
+    if(fileExists("STOP_DMRG"))
+        {
+        Cout << "File STOP_DMRG found: stopping this DMRG run after sweep " << sw << Endl;
+        system("rm -f STOP_DMRG");
+        return true;
+        }
     
     return false;
     }
+
+#undef Cout
+#undef Endl
+#undef Format
 
 #endif // __ITENSOR_DMRGOBSERVER_H
