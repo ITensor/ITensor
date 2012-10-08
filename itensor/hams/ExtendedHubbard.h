@@ -46,9 +46,9 @@ class ExtendedHubbard : public MPOBuilder
 
     }; //class HubbardChain
 
-inline HubbardChain::
-HubbardChain(const Hubbard::Model& model, 
-             Real t, Real U, Real V) 
+inline ExtendedHubbard::
+ExtendedHubbard(const Hubbard& model, 
+                Real t, Real U, Real V) 
     : Parent(model), 
       model_(model), 
       t_(t), 
@@ -57,14 +57,14 @@ HubbardChain(const Hubbard::Model& model,
       initted(false)
     { }
 
-void inline HubbardChain::
+void inline ExtendedHubbard::
 init_()
     {
     if(initted) return;
 
     H = MPO(model_);
 
-    const int k = 6;
+    const int k = 7;
 
     std::vector<Index> links(Ns+1);
     for(int l = 0; l <= Ns; ++l) links.at(l) = Index(nameint("hl",l),k);
@@ -77,14 +77,23 @@ init_()
 
         W = ITensor(model_.si(n),model_.siP(n),row,col);
 
+        //Identity strings
+        W += model_.id(n) * row(1) * col(1);
+        W += model_.id(n) * row(k) * col(k);
+
+        //Hubbard U term
         W += model_.Nupdn(n) * row(k) * col(1) * U_;
+
+        //Hubbard V term
+        W += model_.Ntot(n) * row(6) * col(1);
+        W += model_.Ntot(n) * row(k) * col(6) * V_;
+
+        //Kinetic energy/hopping terms, defined as -t_*(c^d_i c_{i+1} + h.c.)
         W += multSiteOps(model_.fermiPhase(n),model_.Cup(n)) * row(k) * col(2) * t_;
         W += multSiteOps(model_.fermiPhase(n),model_.Cdn(n)) * row(k) * col(3) * t_;
         W += multSiteOps(model_.Cdagup(n),model_.fermiPhase(n)) * row(k) * col(4) * t_;
         W += multSiteOps(model_.Cdagdn(n),model_.fermiPhase(n)) * row(k) * col(5) * t_;
-        W += model_.id(n) * row(k) * col(k);
 
-        W += model_.id(n) * row(1) * col(1);
         W += model_.Cdagup(n) * row(2) * col(1) * (-1.0);
         W += model_.Cdagdn(n) * row(3) * col(1) * (-1.0);
         W += model_.Cup(n) * row(4) * col(1) * (-1.0);

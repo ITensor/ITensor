@@ -17,7 +17,7 @@ HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         condenser.h combiner.h iqcombiner.h \
         svdworker.h mps.h mpo.h dmrg.h core.h observer.h DMRGObserver.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
-        hams/hubbardchain.h hams/heisenberg.h \
+        hams/hubbardchain.h hams/heisenberg.h hams/ExtendedHubbard.h \
         hams/triheisenberg.h hams/ising.h hams/J1J2Chain.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
         eigensolver.h localop.h localmpo.h localmposet.h itsparse.h iqtsparse.h\
