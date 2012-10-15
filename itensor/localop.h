@@ -44,7 +44,8 @@ class LocalOp
 
     LocalOp();
 
-    LocalOp(const Tensor& Op1, const Tensor& Op2, const Tensor& L, const Tensor& R);
+    LocalOp(const Tensor& Op1, const Tensor& Op2, 
+            const Tensor& L, const Tensor& R);
 
     //
     // Sparse Matrix Methods
@@ -74,7 +75,8 @@ class LocalOp
     //
 
     void
-    update(const Tensor& Op1, const Tensor& Op2, const Tensor& L, const Tensor& R);
+    update(const Tensor& Op1, const Tensor& Op2, 
+           const Tensor& L, const Tensor& R);
 
     const Tensor&
     L() const 
@@ -160,7 +162,8 @@ LocalOp()
 
 template <class Tensor>
 inline LocalOp<Tensor>::
-LocalOp(const Tensor& Op1, const Tensor& Op2, const Tensor& L, const Tensor& R)
+LocalOp(const Tensor& Op1, const Tensor& Op2, 
+        const Tensor& L, const Tensor& R)
     : 
     Op1_(0),
     Op2_(0),
@@ -174,7 +177,8 @@ LocalOp(const Tensor& Op1, const Tensor& Op2, const Tensor& L, const Tensor& R)
 
 template <class Tensor>
 void inline LocalOp<Tensor>::
-update(const Tensor& Op1, const Tensor& Op2, const Tensor& L, const Tensor& R)
+update(const Tensor& Op1, const Tensor& Op2, 
+       const Tensor& L, const Tensor& R)
     {
     Op1_ = &Op1;
     Op2_ = &Op2;

@@ -51,7 +51,11 @@ class BaseDMRGWorker
 private:
 
     virtual Real 
-    runInternal(const MPOType& H, MPSType& psi) = 0;
+    runInternal(const MPOType& H, MPSType& psi)
+        {
+        Error("DMRG for single wavefunction and Hamiltonian not implemented for this DMRGWorker.");
+        return 0;
+        }
 
     virtual Real 
     runInternal(const std::vector<MPOType>& H, MPSType& psi)
