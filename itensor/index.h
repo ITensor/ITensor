@@ -11,6 +11,9 @@
 #include "boost/uuid/random_generator.hpp"
 #include "boost/uuid/string_generator.hpp"
 
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
 
 enum IndexType { Link, Site, ReIm, Any, NewType };
 
@@ -22,11 +25,13 @@ struct IndexVal;
 
 
 //
-// Index: represents a tensor index of fixed bond dimension m.
+// Index
+//
+// Represents a tensor index of fixed bond dimension m.
 // The == operator can be used to determine if two Index's match
-// (copies of the same Index instance).
+// (are copies of the same Index instance).
 // An Index can be made temporarily distinct from other copies 
-// by increasing its "primelevel".
+// by increasing its primeLevel.
 //
 class Index
     {
@@ -123,7 +128,7 @@ class Index
     bool 
     operator==(const Index& other) const;
 
-    // Check if other Index is a copy of this, ignoring primelevel.
+    // Check if other Index is a copy of this, ignoring primeLevel.
     bool 
     noprime_equals(const Index& other) const;
 
@@ -154,7 +159,15 @@ class Index
 
     // Return copy of this Index, increasing primelevel.
     Index 
-    primed(int inc = 1) const { return Index(primeBoth,*this,inc); }
+    primed(int inc = 1) const 
+        { 
+        static int depcount = 0;
+        if(++depcount < 20)
+            {
+            Cout << "WARNING: I.primed() method deprecated, use primed(I) instead." << Endl;
+            }
+        return Index(primeBoth,*this,inc); 
+        }
 
     // Make a copy of this Index, increasing primelevel.
     Index friend inline
@@ -197,10 +210,10 @@ class Index
     // Static Index indexing real and imaginary parts of a complex ITensor.
     static const Index& IndReIm();
 
-    // IndReIm with primelevel 1
+    // IndReIm with primeLevel 1
     static const Index& IndReImP();
 
-    // IndReIm with primelevel 2
+    // IndReIm with primeLevel 2
     static const Index& IndReImPP();
 
     enum Imaker { makeReIm, makeReImP, makeReImPP, makeNull };
@@ -224,6 +237,44 @@ class Index
     /////////////
 
     }; //class Index
+
+//
+// IndexVal
+//
+// Struct pairing an Index (of dimension m)
+// with a specific value i where 1 <= i <= m.
+//
+struct IndexVal
+    {
+    Index ind; 
+    int i;
+
+    IndexVal();
+
+    IndexVal(const Index& index, int i_);
+
+    bool 
+    operator==(const IndexVal& other) const; 
+
+    friend IndexVal
+    primed(const IndexVal& iv, int inc = 1);
+
+    friend std::ostream& 
+    operator<<(std::ostream& s, const IndexVal& iv);
+
+    static const IndexVal& 
+    Null()
+        {
+        static const IndexVal Null_(Index::makeNull);
+        return Null_;
+        }
+
+    private:
+
+    explicit
+    IndexVal(Index::Imaker im);
+
+    };
 
 
 //
@@ -304,42 +355,6 @@ class IndexDat
     }; //class IndexDat
 
 
-//
-// IndexVal
-// Represents an Index set to a specific value
-// from 1 to its maximum range m.
-//
-struct IndexVal
-    {
-    Index ind; 
-    int i;
-
-    IndexVal();
-
-    IndexVal(const Index& index, int i_);
-
-    bool 
-    operator==(const IndexVal& other) const; 
-
-    friend IndexVal
-    primed(const IndexVal& iv, int inc = 1);
-
-    friend std::ostream& 
-    operator<<(std::ostream& s, const IndexVal& iv);
-
-    static const IndexVal& 
-    Null()
-        {
-        static const IndexVal Null_(Index::makeNull);
-        return Null_;
-        }
-
-    private:
-
-    explicit
-    IndexVal(Index::Imaker im);
-
-    };
 
 struct UniqueID
     {
@@ -382,5 +397,9 @@ nameindex(IndexType it, int plev = 0);
 
 std::string 
 nameint(const std::string& f, int n);
+
+#undef Cout
+#undef Format
+#undef Endl
 
 #endif
