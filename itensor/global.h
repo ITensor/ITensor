@@ -24,6 +24,11 @@ static const int NMAX = 8;
 static const Real MIN_CUT = 1E-20;
 static const int MAX_M = 5000;
 
+// The PAUSE macro is useful for debugging. 
+// Prints the current line number and pauses
+// execution until the enter key is pressed.
+#define PAUSE { Cout << "(Paused, Line " << __LINE__ << ")"; std::cin.get(); }
+
 
 #ifndef DEBUG
 
@@ -64,79 +69,6 @@ enum Printdat { ShowData, HideData };
 #define PrintDat(X) PrintEither(X,true)
 #define PrintIndices(T) { T.printIndices(#T); }
 
-/*
-template<class T> std::vector<T>& 
-operator*=(std::vector<T>& v1, const std::vector<T>& v2) 
-    {
-    const unsigned int sz = v1.size();
-    assert(v2.size() == sz);
-    for(unsigned int n = 0; n < sz; ++n) 
-	v1[n] *= v2[n];
-    return v1;
-    }
-
-template<class T> std::vector<T> 
-operator*(const std::vector<T>& v1, const std::vector<T>& v2) 
-    { 
-    std::vector<T> res(v1); 
-    res *= v2; 
-    return res; 
-    }
-
-template<class T> std::vector<T>& 
-operator*=(std::vector<T>& v1, const std::vector<T*>& v2) 
-    {
-    const unsigned int sz = v1.size();
-    assert(v2.size() == sz);
-    for(unsigned int n = 0; n < sz; ++n) 
-	v1[n] *= *(v2[n]);
-    return v1;
-    }
-
-template<class T> std::vector<T> 
-operator*(const std::vector<T>& v1, const std::vector<T*>& v2) 
-    { 
-    std::vector<T> res(v1); 
-    res *= v2; 
-    return res; 
-    }
-
-template<class T> std::vector<T> 
-operator*(const std::vector<const T*>& v1, const std::vector<const T*>& v2) 
-    { 
-    const size_t sz = v1.size();
-    assert(v2.size() == sz);
-    std::vector<T> res(sz); 
-    for(size_t n = 0; n < sz; ++n) 
-	res[n] = *(v1[n]) * *(v2[n]);
-    return res; 
-    }
-
-template<class T> std::ostream& 
-operator<<(std::ostream& s, const std::vector<T>& v)
-    { 
-    if(v.size() == 0) 
-	s << "(Empty vector)\n";
-    for(size_t n = 0; n < v.size(); ++n) 
-	s << n << ": " << GET(v,n) << "\n";
-    return s; 
-    }
-
-template<class T> T& 
-operator*=(T& t1, const T* pt2) 
-    { 
-    t1 *= *(pt2); 
-    return t1; 
-    }
-
-template<class T> T 
-operator*(const T& t1, const T* pt2) 
-    { 
-    T res(t1); 
-    res *= *(pt2); 
-    return res; 
-    }
-*/
 
 bool inline
 fileExists(const std::string& fname)
