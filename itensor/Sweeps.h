@@ -74,6 +74,8 @@ class Sweeps
 
     int 
     nsweep() const { return Nsweep_; }
+    void 
+    nsweep(int val);
 
     int 
     nwarm() const { return Nwarm_; }
@@ -259,10 +261,18 @@ niter()
     return SweepSetter<int>(Niter_); 
     }
 
-inline void Sweeps::
+void inline Sweeps::
+nsweep(int val)
+    { 
+    if(val > Nsweep_) 
+        Error("Can't use nsweep accessor to increase number of sweeps.");
+    Nsweep_ = val; 
+    }
+
+
+void inline Sweeps::
 init(int _minm, int _maxm, Real _cut)
     {
-
     Minm_ = std::vector<int>(Nsweep_+1,_minm);
     Maxm_ = std::vector<int>(Nsweep_+1,_maxm);
     Niter_ = std::vector<int>(Nsweep_+1,2);
