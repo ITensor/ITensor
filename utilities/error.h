@@ -54,4 +54,13 @@ class ITError
     }; //class ITError
 
 
+inline 
+std::ostream&
+operator<<(std::ostream& s, const ITError& e)
+    {
+    s << e.what();
+    return s;
+    }
+
+
 #endif
