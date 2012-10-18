@@ -1512,8 +1512,8 @@ ProductProps(const ITensor& L, const ITensor& R)
     cdim(1), 
     odimL(-1), 
     odimR(-1),
-    lcstart(-1), 
-    rcstart(-1)
+    lcstart(100), 
+    rcstart(100)
     {
     for(int j = 1; j <= NMAX; ++j) 
         contractedL[j] = contractedR[j] = false;
@@ -1522,8 +1522,8 @@ ProductProps(const ITensor& L, const ITensor& R)
 	for(int k = 1; k <= R.rn(); ++k)
 	    if(L.index(j) == R.index(k))
 		{
-		if(lcstart == -1) lcstart = j;
-		if(rcstart == -1) rcstart = k;
+		if(j < lcstart) lcstart = j;
+        if(k < rcstart) rcstart = k;
 
 		++nsamen;
 		pl.from_to(j,nsamen);
@@ -2025,6 +2025,9 @@ operator*=(const ITensor& other)
         ITensor cp_oth(other);
         return operator*=(cp_oth);
         }
+
+    if(this->isNull() || other.isNull())
+        Error("Null ITensor in product");
 
     //Complex types are treated as just another index, of type ReIm
     //Multiplication is handled automatically with these simple tensor helpers
