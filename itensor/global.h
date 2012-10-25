@@ -82,42 +82,6 @@ fileExists(const boost::format& fname)
     return fileExists(fname.str());
     }
 
-template<class T> 
-void inline
-readFromFile(const std::string& fname, T& t) 
-    { 
-    std::ifstream s(fname.c_str()); 
-    if(!s.good()) 
-        Error("Couldn't open file \"" + fname + "\" for reading");
-    t.read(s); 
-    s.close(); 
-    }
-
-template<class T> 
-void inline
-readFromFile(const boost::format& fname, T& t) 
-    { 
-    readFromFile(fname.str(),t);
-    }
-
-template<class T> 
-void inline
-writeToFile(const std::string& fname, const T& t) 
-    { 
-    std::ofstream s(fname.c_str()); 
-    if(!s.good()) 
-        Error("Couldn't open file \"" + fname + "\" for writing");
-    t.write(s); 
-    s.close(); 
-    }
-
-template<class T> 
-void inline
-writeToFile(const boost::format& fname, const T& t) 
-    { 
-    writeToFile(fname.str(),t); 
-    }
-
 void inline
 writeVec(std::ostream& s, const Vector& V)
     {
@@ -143,6 +107,79 @@ readVec(std::istream& s, Vector& V)
         s.read((char*)&val,sizeof(val));
         V(k) = val;
         }
+    }
+
+template<class T> 
+void inline
+readFromFile(const std::string& fname, T& t) 
+    { 
+    std::ifstream s(fname.c_str()); 
+    if(!s.good()) 
+        Error("Couldn't open file \"" + fname + "\" for reading");
+    t.read(s); 
+    s.close(); 
+    }
+
+template<class T> 
+void inline
+readFromFile(const boost::format& fname, T& t) 
+    { 
+    readFromFile(fname.str(),t);
+    }
+
+template<>
+void inline
+readFromFile(const std::string& fname, Matrix& t) 
+    { 
+    std::ifstream s(fname.c_str()); 
+    if(!s.good()) 
+        Error("Couldn't open file \"" + fname + "\" for reading");
+    int Nr = 1;
+    s.read((char*)&Nr,sizeof(Nr));
+    Vector V;
+    readVec(s,V);
+    int Nc = V.Length()/Nr;
+    t = Matrix(Nr,Nc);
+    for(int r = 1; r <= Nr; ++r)
+    for(int c = 1; c <= Nc; ++c)
+        t(r,c) = V(r+Nr*(c-1));
+    s.close(); 
+    }
+
+template<class T> 
+void inline
+writeToFile(const std::string& fname, const T& t) 
+    { 
+    std::ofstream s(fname.c_str()); 
+    if(!s.good()) 
+        Error("Couldn't open file \"" + fname + "\" for writing");
+    t.write(s); 
+    s.close(); 
+    }
+
+template<class T> 
+void inline
+writeToFile(const boost::format& fname, const T& t) 
+    { 
+    writeToFile(fname.str(),t); 
+    }
+
+template<>
+void inline
+writeToFile(const std::string& fname, const Matrix& t) 
+    { 
+    std::ofstream s(fname.c_str()); 
+    if(!s.good()) 
+        Error("Couldn't open file \"" + fname + "\" for writing");
+    int Nr = t.Nrows();
+    int Nc = t.Ncols();
+    s.write((char*)&Nr,sizeof(Nr));
+    Vector V(Nr*Nc);
+    for(int r = 1; r <= Nr; ++r)
+    for(int c = 1; c <= Nc; ++c)
+        V(r+Nr*(c-1)) = t(r,c);
+    writeVec(s,V);
+    s.close(); 
     }
 
 //Given a prefix (e.g. pfix == "mydir")
