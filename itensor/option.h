@@ -493,6 +493,12 @@ Auto(bool val = true)
     }
 
 Option inline
+ConserveNf(bool val = true)
+    {
+    return Option("ConserveNf",val);
+    }
+
+Option inline
 Cutoff(int icut)
     {
     return Option("Cutoff",icut);

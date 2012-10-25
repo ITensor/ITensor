@@ -173,6 +173,8 @@ class SVDWorker
     // If doRelCutoff_ is true, refNorm_
     // is determined automatically.
     //
+    // (Default is false.)
+    //
     bool 
     doRelCutoff() const { return doRelCutoff_; }
     void 
