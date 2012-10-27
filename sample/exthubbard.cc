@@ -23,12 +23,14 @@ int main(int argc, char* argv[])
 
     int nsweeps = 0;
     basic.GetIntM("nsweeps",nsweeps);
-    Real t = 0;
-    basic.GetRealM("t",t);
+    Real t1 = 0;
+    basic.GetRealM("t1",t1);
+    Real t2 = 0;
+    basic.GetRealM("t2",t2);
     Real U = 0;
     basic.GetRealM("U",U);
-    Real V = 0;
-    basic.GetRealM("V",V);
+    Real V1 = 0;
+    basic.GetRealM("V1",V1);
 
     InputGroup table(basic,"sweeps");
     Sweeps sweeps(nsweeps,table);
@@ -45,7 +47,7 @@ int main(int argc, char* argv[])
     // IQTensors, tensors whose indices are sorted
     // with respect to quantum numbers
     //
-    IQMPO H = ExtendedHubbard(model,t,U,V);
+    IQMPO H = ExtendedHubbard(model,U,t1,t2,V1);
 
     //
     // Set the initial wavefunction matrix product state
