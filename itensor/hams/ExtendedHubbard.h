@@ -127,7 +127,7 @@ init_()
             W += model_.Cup(n)*row(6)*col(1)*(-1.0);
             W += model_.fermiPhase(n)*row(7)*col(6);
             W += model_.Cdn(n)*row(8)*col(1)*(-1.0);
-            W += model_.fermiPhase(n)*row(7)*col(6);
+            W += model_.fermiPhase(n)*row(9)*col(8);
             }
         }
 
