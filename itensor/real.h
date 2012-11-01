@@ -24,7 +24,11 @@ static const Real ApproxReal_Accuracy = 1E-14;
 struct ApproxReal
     {
     Real r;
-    ApproxReal() : r(0) {}
+
+    //Default constructed to NaN 
+    //to signal initialization errors
+    ApproxReal() : r(NaN) {}
+
     ApproxReal(Real _r) : r(_r) {}
 
     bool friend inline
@@ -100,9 +104,10 @@ class LogNumber
     isNan() const 
         { return lognum_ != lognum_; }
 
-    //Default is Real(LogNum()) == 1
+    //Default constructed to NaN 
+    //to signal initialization errors
     LogNumber() 
-        : lognum_(0), 
+        : lognum_(NaN), 
           sign_(1) 
         { }
 

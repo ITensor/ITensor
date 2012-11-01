@@ -153,12 +153,15 @@ operator<<(ostream & s, const ITensor & t)
 ITensor::
 ITensor()  
     : 
-    p(0) 
+    p(0),
+    scale_(1)
     { }
 
 
 ITensor::
 ITensor(Real val) 
+    :
+    scale_(1)
     { 
     allocate(1);
     p->v = val;
@@ -167,7 +170,8 @@ ITensor(Real val)
 ITensor::
 ITensor(const Index& i1) 
     :
-    is_(i1)
+    is_(i1),
+    scale_(1)
 	{ 
     allocate(i1.m());
     }
@@ -175,7 +179,8 @@ ITensor(const Index& i1)
 ITensor::
 ITensor(const Index& i1, Real val) 
     :
-    is_(i1)
+    is_(i1),
+    scale_(1)
 	{ 
     allocate(i1.m());
     p->v = val; 
@@ -185,7 +190,8 @@ ITensor::
 ITensor(const Index& i1, const VectorRef& V) 
     : 
     p(new ITDat(V)),
-    is_(i1)
+    is_(i1),
+    scale_(1)
 	{ 
 	if(i1.m() != V.Length()) 
 	    Error("Mismatch of Index and Vector sizes.");
@@ -194,7 +200,8 @@ ITensor(const Index& i1, const VectorRef& V)
 ITensor::
 ITensor(const Index& i1,const Index& i2) 
     :
-    is_(i1,i2)
+    is_(i1,i2),
+    scale_(1)
 	{ 
     allocate(i1.m()*i2.m());
     }
@@ -203,7 +210,8 @@ ITensor(const Index& i1,const Index& i2)
 ITensor::
 ITensor(const Index& i1,const Index& i2,Real a) 
     :
-    is_(i1,i2)
+    is_(i1,i2),
+    scale_(1)
 	{
     allocate(i1.m()*i2.m());
 	if(is_.rn() == 2) //then index order is i1, i2
@@ -219,7 +227,8 @@ ITensor(const Index& i1,const Index& i2,Real a)
 ITensor::
 ITensor(const Index& i1,const Index& i2,const MatrixRef& M) 
     :
-    is_(i1,i2)
+    is_(i1,i2),
+    scale_(1)
 	{
     allocate(i1.m()*i2.m());
 	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
@@ -233,6 +242,8 @@ ITensor::
 ITensor(const Index& i1, const Index& i2, const Index& i3,
         const Index& i4, const Index& i5, const Index& i6,
         const Index& i7, const Index& i8)
+    :
+    scale_(1)
 	{
 #ifdef DEBUG
     if(i1 == Index::Null())
@@ -253,7 +264,8 @@ ITensor(const Index& i1, const Index& i2, const Index& i3,
 ITensor::
 ITensor(const IndexVal& iv, Real fac) 
     :
-    is_(iv.ind)
+    is_(iv.ind),
+    scale_(1)
 	{ 
     allocate(iv.ind.m());
 	p->v(iv.i) = fac; 
@@ -262,7 +274,8 @@ ITensor(const IndexVal& iv, Real fac)
 ITensor::
 ITensor(const IndexVal& iv1, const IndexVal& iv2) 
     :
-    is_(iv1.ind,iv2.ind)
+    is_(iv1.ind,iv2.ind),
+    scale_(1)
 	{ 
     allocate(iv1.ind.m()*iv2.ind.m());
 	p->v((iv2.i-1)*iv1.ind.m()+iv1.i) = 1; 
@@ -273,6 +286,8 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
         const IndexVal& iv3, const IndexVal& iv4, 
         const IndexVal& iv5, const IndexVal& iv6, 
         const IndexVal& iv7, const IndexVal& iv8)
+    :
+    scale_(1)
 	{
     //Construct ITensor
     array<Index,NMAX+1> ii = 
@@ -297,6 +312,8 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
 
 ITensor::
 ITensor(const std::vector<Index>& I) 
+    :
+    scale_(1)
 	{
     int alloc_size;
     is_ = IndexSet(I,I.size(),alloc_size);
@@ -306,7 +323,8 @@ ITensor(const std::vector<Index>& I)
 ITensor::
 ITensor(const std::vector<Index>& I, const Vector& V) 
     : 
-    p(new ITDat(V))
+    p(new ITDat(V)),
+    scale_(1)
 	{
     int alloc_size;
     is_ = IndexSet(I,I.size(),alloc_size);
@@ -343,6 +361,8 @@ ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P)
 
 ITensor::
 ITensor(ITmaker itm) 
+    :
+    scale_(1)
 	{
     is_ = IndexSet(Index::IndReIm());
     allocate(2);

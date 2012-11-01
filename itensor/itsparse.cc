@@ -33,7 +33,8 @@ ITSparse::
 ITSparse(const Index& i1, const Vector& diag)
     :
     diag_(diag),
-    is_(i1)
+    is_(i1),
+    scale_(1)
     { 
 #ifdef DEBUG
     if(diag_.Length() != i1.m())
@@ -57,7 +58,8 @@ ITSparse::
 ITSparse(const Index& i1, const Index& i2, const Vector& diag)
     :
     diag_(diag),
-    is_(i1,i2)
+    is_(i1,i2),
+    scale_(1)
     { 
 #ifdef DEBUG
     if(diag_.Length() != is_.minM())
@@ -84,7 +86,8 @@ ITSparse(const Index& i1, const Index& i2,
               const Index& i3, const Vector& diag)
     :
     diag_(diag),
-    is_(i1,i2,i3)
+    is_(i1,i2,i3),
+    scale_(1)
     {
 #ifdef DEBUG
     if(diag_.Length() != is_.minM())
