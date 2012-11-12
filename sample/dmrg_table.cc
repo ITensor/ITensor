@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     //Parse the input file
     if(argc != 2)
         {
-        cout << "Usage: " << argv[0] << " inputfile." << endl;
+        cout << "Usage: " << argv[0] << " inputfile_dmrg_table" << endl;
         return 0;
         }
     string infilename(argv[1]);
@@ -61,10 +61,7 @@ int main(int argc, char* argv[])
 
     cout << format("Initial energy = %.5f")%psiHphi(psi,H,psi) << endl;
 
-    DMRGOpts opts;
-        opts.quiet(quiet);
-
-    Real En = dmrg(psi,H,sweeps,opts);
+    Real En = dmrg(psi,H,sweeps,Quiet(quiet));
 
     cout << format("\nGround State Energy = %.10f")%En << endl;
 

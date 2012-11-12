@@ -2,7 +2,7 @@ include ../this_dir.mk
 include ../options.mk
 ################################################################
 
-TENSOR_HEADERS=dmrg.h hams.h
+TENSOR_HEADERS=core.h
 LIBNAMES=itensor matrix utilities
 
 #################################################################
@@ -37,6 +37,8 @@ LIBGFLAGS=-L$(LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS)
 build: dmrg iqdmrg
 
 debug: dmrg-g iqdmrg-g
+
+all: dmrg iqdmrg dmrg_table dmrgj1j2 exthubbard
 
 dmrg: dmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
