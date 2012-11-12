@@ -10,6 +10,11 @@
 
 const Real NaN = std::numeric_limits<Real>::quiet_NaN();
 
+bool inline
+isNaN(Real r) { return (r != r); }
+bool inline
+isNotNaN(Real r) { return !(r != r); }
+
 static const Real Pi = M_PI;
 static const Real Sqrt2 = sqrt(2);
 static const Real ISqrt2 = 1.0/sqrt(2);
@@ -101,7 +106,7 @@ class LogNumber
         { return (lognum_ < -maxlogdouble); }
 
     bool 
-    isNan() const 
+    isNaN() const 
         { return lognum_ != lognum_; }
 
     //Default constructed to NaN 
