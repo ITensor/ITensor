@@ -27,7 +27,7 @@ static const int MAX_M = 5000;
 // The PAUSE macro is useful for debugging. 
 // Prints the current line number and pauses
 // execution until the enter key is pressed.
-#define PAUSE { Cout << "(Paused, Line " << __LINE__ << ")"; std::cin.get(); }
+#define PAUSE { std::cout << "(Paused, Line " << __LINE__ << ")"; std::cin.get(); }
 
 
 #ifndef DEBUG
