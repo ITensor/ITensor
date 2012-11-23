@@ -15,7 +15,7 @@
 #define Endl std::endl
 #define Format boost::format
 
-enum IndexType { Link, Site, ReIm, Any, NewType };
+enum IndexType { Link, Site, ReIm, All };
 
 enum PrimeType { primeLink, primeSite, primeBoth, primeNone };
 

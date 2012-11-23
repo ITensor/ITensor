@@ -163,8 +163,8 @@ class ITSparse
     Index 
     findtype(IndexType t) const { return is_.findtype(t); }
 
-    bool 
-    findtype(IndexType t, Index& I) const { return is_.findtype(t,I); }
+    //bool 
+    //findtype(IndexType t, Index& I) const { return is_.findtype(t,I); }
 
     int 
     findindex(const Index& I) const { return is_.findindex(I); }

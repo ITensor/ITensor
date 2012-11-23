@@ -166,18 +166,6 @@ findtype(IndexType t) const
     return IQIndex::Null();
 	}
 
-bool IQIndexSet::
-findtype(IndexType t, IQIndex& I) const
-	{
-    for(size_t j = 0; j < index_.size(); ++j)
-    if(index_[j].type() == t)
-        {
-        I = index_[j];
-        return true;
-        }
-    return false;
-	}
-
 int IQIndexSet::
 findindex(const IQIndex& I) const
     {

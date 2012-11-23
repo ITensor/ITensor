@@ -6,6 +6,10 @@
 #define __ITENSOR_EIGENSOLVER_H
 #include "iqcombiner.h"
 
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
+
 template<class Tensor>
 void
 orthog(std::vector<Tensor>& T, int num, int numpass, int start = 1);
@@ -264,11 +268,11 @@ davidson(const LocalT& A, Tensor& phi) const
 
         if(debug_level_ > 1 || (ii == 1 && debug_level_ > 0))
             {
-            std::cout << boost::format("I %d q %.0E E %.10f")
-                         % ii
-                         % qnorm
-                         % lambda 
-                         << std::endl;
+            Cout << Format("I %d q %.0E E %.10f")
+                           % ii
+                           % qnorm
+                           % lambda 
+                           << Endl;
             }
 
         //Apply Davidson preconditioner
@@ -323,11 +327,11 @@ davidson(const LocalT& A, Tensor& phi) const
 
     if(debug_level_ > 0)
         {
-        std::cout << boost::format("I %d q %.0E E %.10f")
-                     % iter
-                     % qnorm
-                     % lambda 
-                     << std::endl;
+        Cout << Format("I %d q %.0E E %.10f")
+                       % iter
+                       % qnorm
+                       % lambda 
+                       << Endl;
         }
 
     return lambda;
@@ -456,11 +460,11 @@ genDavidson(const LocalTA& A, const LocalTB& B, Tensor& phi) const
 
         if(debug_level_ > 1 || (ii == 1 && debug_level_ > 0))
             {
-            std::cout << boost::format("I %d q %.0E E %.10f")
-                         % ii
-                         % qnorm
-                         % lambda 
-                         << std::endl;
+            Cout << Format("I %d q %.0E E %.10f")
+                           % ii
+                           % qnorm
+                           % lambda 
+                           << Endl;
             }
 
         //Apply generalized Davidson preconditioner
@@ -550,11 +554,11 @@ genDavidson(const LocalTA& A, const LocalTB& B, Tensor& phi) const
 
     if(debug_level_ > 0)
         {
-        std::cout << boost::format("I %d q %.0E E %.10f")
-                     % iter
-                     % qnorm
-                     % lambda 
-                     << std::endl;
+        Cout << Format("I %d q %.0E E %.10f")
+                       % iter
+                       % qnorm
+                       % lambda 
+                       << Endl;
         }
 
     //Compute eigenvector phi before returning
@@ -636,5 +640,8 @@ orthog(std::vector<Tensor>& T, int num, int numpass, int start)
         }
     } // orthog(vector<Tensor> ... )
 
+#undef Cout
+#undef Endl
+#undef Format
 
 #endif

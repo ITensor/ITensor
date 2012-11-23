@@ -15,7 +15,7 @@ enum Direction { Fromright, Fromleft, Both, None };
 
 template<class TensorA, class TensorB>
 typename TensorA::IndexT
-index_in_common(const TensorA& A, const TensorB& B, IndexType t = Any)
+index_in_common(const TensorA& A, const TensorB& B, IndexType t = All)
     {
     typedef typename TensorA::IndexT
     IndexT;
@@ -23,7 +23,7 @@ index_in_common(const TensorA& A, const TensorB& B, IndexType t = Any)
     for(int j = 1; j <= A.r(); ++j)
         {
         const IndexT& I = A.index(j);
-        if((t == Any || I.type() == t) && B.hasindex(I)) { return I; }
+        if((t == All || I.type() == t) && B.hasindex(I)) { return I; }
         }
 
     throw ITError("No common index found");

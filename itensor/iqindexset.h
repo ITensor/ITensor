@@ -75,8 +75,8 @@ class IQIndexSet
     const IQIndex&
     findtype(IndexType t) const;
 
-    bool 
-    findtype(IndexType t, IQIndex& I) const;
+    //bool 
+    //findtype(IndexType t, IQIndex& I) const;
 
     bool 
     hastype(IndexType t) const;

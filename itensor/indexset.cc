@@ -96,18 +96,6 @@ findtype(IndexType t) const
     return Index::Null();
 	}
 
-bool IndexSet::
-findtype(IndexType t, Index& I) const
-	{
-    for(int j = 1; j <= r_; ++j)
-    if(index_[j].type() == t)
-        {
-        I = index_[j];
-        return true;
-        }
-    return false;
-	}
-
 int IndexSet::
 findindex(const Index& I) const
     {

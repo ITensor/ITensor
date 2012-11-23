@@ -13,7 +13,7 @@ operator<<(ostream& s, const IndexType& it)
     if(it == Link) s << "Link"; 
     else if(it == Site) s << "Site"; 
     else if(it == ReIm) s << "ReIm"; 
-    else if(it == Any) s << "Any"; 
+    else if(it == All) s << "All"; 
     return s; 
     }
 
@@ -23,7 +23,7 @@ IndexTypeToInt(IndexType it)
     if(it == Link) return 1;
     if(it == Site) return 2;
     if(it == ReIm) return 3;
-    if(it == Any) return 4;
+    if(it == All) return 4;
     Error("No integer value defined for IndexType.");
     return -1;
     }
@@ -34,7 +34,7 @@ IntToIndexType(int i)
     if(i == 1) return Link;
     if(i == 2) return Site;
     if(i == 3) return ReIm;
-    if(i == 4) return Any;
+    if(i == 4) return All;
     cout << format("No IndexType value defined for i=%d\n")%i 
               << endl;
     Error("Undefined IntToIndexType value");
@@ -53,7 +53,7 @@ string
 nameindex(IndexType it, int plev)
     { 
     static const boost::array<string,4>
-    indextypename = {{ "Link","Site","ReIm", "Any" }};
+    indextypename = {{ "Link","Site","ReIm", "All" }};
 #ifdef DEBUG
     return putprimes(indextypename.at(int(it)),plev);
 #else
@@ -167,8 +167,8 @@ IndexDat(const std::string& name, int mm,IndexType it)
       numref(0),
       is_static_(false)
     { 
-    if(it == ReIm) Error("Not allowed to create Index with type ReIm");
-    if(it == Any) Error("Not allowed to create Index with type Any");
+    if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
+    if(it == All) Error("Constructing Index with type All disallowed");
     setUniqueReal();
     }
 
@@ -181,8 +181,8 @@ IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& 
       numref(0), 
       is_static_(false)
     { 
-    if(it == ReIm) Error("Not allowed to create Index with type ReIm");
-    if(it == Any) Error("Not allowed to create Index with type Any");
+    if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
+    if(it == All) Error("Constructing Index with type All disallowed");
     setUniqueReal();
     }
 

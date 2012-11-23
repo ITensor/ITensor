@@ -153,8 +153,8 @@ class IQTSparse
     IQIndex 
     findtype(IndexType t) const;
 
-    bool 
-    findtype(IndexType t, IQIndex& I) const;
+    //bool 
+    //findtype(IndexType t, IQIndex& I) const;
 
     int 
     findindex(const IQIndex& I) const;

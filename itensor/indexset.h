@@ -68,9 +68,6 @@ class IndexSet
     const Index&
     findtype(IndexType t) const;
 
-    bool 
-    findtype(IndexType t, Index& I) const;
-
     int 
     findindex(const Index& I) const;
 

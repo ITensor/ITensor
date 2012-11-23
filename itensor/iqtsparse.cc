@@ -319,14 +319,6 @@ findtype(IndexType t) const
     return is_->findtype(t); 
     }
 
-bool IQTSparse::
-findtype(IndexType t, IQIndex& I) const 
-    { 
-    if(is_ == 0) return false;
-
-    return is_->findtype(t,I); 
-    }
-
 int IQTSparse::
 findindex(const IQIndex& I) const 
     { 
