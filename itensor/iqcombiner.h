@@ -457,7 +457,7 @@ product(IQTensor T, IQTensor& res) const
             rightcomb[co.right()] = &co;
             }
 
-        Foreach(const ITensor& tt, T_.itensors())
+        Foreach(const ITensor& tt, T_.blocks())
             {
             for(int k = 1; k <= tt.r(); ++k)
                 {

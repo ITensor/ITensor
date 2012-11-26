@@ -496,9 +496,9 @@ MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
 
     for(int j = 1; j <= N; ++j)
         {
-        Foreach(const ITensor& t, AA(j).itensors())
+        Foreach(const ITensor& t, AA(j).blocks())
             { nA[j].insert(t); }
-        Foreach(const ITensor& t, other.AA(j).itensors())
+        Foreach(const ITensor& t, other.AA(j).blocks())
             { nA[j].insert(t); }
         }
 

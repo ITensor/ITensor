@@ -247,7 +247,7 @@ product(const IQTensor& t, IQTensor& res) const
 
         res = IQTensor(iqinds);
 
-        Foreach(ITensor tt, t.itensors())
+        Foreach(ITensor tt, t.blocks())
             {
             bool gotit = false;
 

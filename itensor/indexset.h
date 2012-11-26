@@ -92,9 +92,6 @@ class IndexSet
     bool
     hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const;
 
-    bool 
-    notin(const Index& I) const { return !hasindex(I); }
-
     void
     getperm(const boost::array<Index,NMAX+1>& I, Permutation& P) const;
 

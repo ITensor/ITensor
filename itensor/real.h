@@ -8,6 +8,10 @@
 #include <limits>
 #include "global.h"
 
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
+
 const Real NaN = std::numeric_limits<Real>::quiet_NaN();
 
 bool inline
@@ -152,12 +156,12 @@ class LogNumber
 #ifdef DEBUG
         if(lognum_ > maxlogdouble)
             { 
-            std::cout << "lognum_ = " << lognum_ << std::endl;
+            Cout << "lognum_ = " << lognum_ << Endl;
             throw TooBigForReal("LogNumber too big to convert to Real");
             }
         if(lognum_ < -maxlogdouble)
             { 
-            std::cout << "lognum_ = " << lognum_ << std::endl;
+            Cout << "lognum_ = " << lognum_ << Endl;
             throw TooSmallForReal("LogNumber too small to convert to Real");
             }
 #endif
@@ -307,5 +311,9 @@ sqrt(const LogNumber& L)
         Error("Negative LogNumber in sqrt");
     return LogNumber(L.logNum()/2,L.sign());
     }
+
+#undef Cout
+#undef Endl
+#undef Format
 
 #endif

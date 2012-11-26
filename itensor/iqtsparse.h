@@ -153,9 +153,6 @@ class IQTSparse
     IQIndex 
     findtype(IndexType t) const;
 
-    //bool 
-    //findtype(IndexType t, IQIndex& I) const;
-
     int 
     findindex(const IQIndex& I) const;
 
@@ -164,9 +161,6 @@ class IQTSparse
     
     bool 
     hasindex(const IQIndex& I) const;
-
-    bool 
-    notin(const IQIndex& I) const { return !hasindex(I); }
 
     //
     // Primelevel Methods 

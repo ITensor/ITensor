@@ -192,9 +192,6 @@ class ITSparse
     hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const
         { return is_.hasAllIndex(I,nind); }
 
-    bool 
-    notin(const Index& I) const { return !hasindex(I); }
-
     void 
     addindex1(const std::vector<Index>& indices) { is_.addindex1(indices); }
 

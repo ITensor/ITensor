@@ -19,6 +19,7 @@ enum IndexType { Link, Site, ReIm, All };
 
 enum PrimeType { primeLink, primeSite, primeBoth, primeNone };
 
+//Forward declarations
 struct UniqueID;
 class IndexDat;
 struct IndexVal;

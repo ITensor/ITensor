@@ -75,9 +75,6 @@ class IQIndexSet
     const IQIndex&
     findtype(IndexType t) const;
 
-    //bool 
-    //findtype(IndexType t, IQIndex& I) const;
-
     bool 
     hastype(IndexType t) const;
 
@@ -95,9 +92,6 @@ class IQIndexSet
 
     bool 
     hasType(IndexType t) const;
-
-    bool 
-    notin(const IQIndex& I) const { return !hasindex(I); }
 
     int
     minM() const;
