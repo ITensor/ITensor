@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.0.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __IQ_H
-#define __IQ_H
+#ifndef __ITENSOR_IQTENSOR_H
+#define __ITENSOR_IQTENSOR_H
 #include "iqindexset.h"
 #include <list>
 #include <map>
@@ -21,6 +21,8 @@ class IQTensor
     {
     public:
 
+    //Typedefs -----------------------------------------------------
+
     typedef std::list<ITensor>::iterator 
     iten_it;
 
@@ -33,65 +35,26 @@ class IQTensor
     typedef std::vector<IQIndex>::const_iterator 
     const_iqind_it;
 
-    int 
-    r() const;
+    //Constructors --------------------------------------------------
 
-    const IQIndex& 
-    index(int j) const;
-
-    int 
-    iten_size() const;
-
-    bool 
-    iten_empty() const;
-
-    bool 
-    isNull() const;
-
-    bool 
-    isNotNull() const;
-
-    int 
-    num_index() const;
-
-    const IQTDat&
-    blocks() const { return *p; }
-    
-    //----------------------------------------------------
-    //IQTensor: iterators 
-    const_iten_it 
-    const_iten_begin() const;
-
-    const_iten_it 
-    const_iten_end() const;
-
-    std::pair<const_iten_it,const_iten_it> 
-    itensors() const;
-
-    const_iqind_it 
-    const_iqind_begin() const;
-
-    const_iqind_it 
-    const_iqind_end() const;
-
-    std::pair<const_iqind_it,const_iqind_it> 
-    iqinds() const;
-
-    //----------------------------------------------------
-    //IQTensor: Constructors
-
+    //Construct Null ITensor, isNull returns true
     IQTensor();
 
+    //Construct rank 0 IQTensor (scalar), value set to val
     explicit 
     IQTensor(Real val);
 
+    //Construct rank 1 IQTensor, set to zero
     explicit 
     IQTensor(const IQIndex& i1);
 
+    //Construct rank 2 IQTensor, set to zero
     IQTensor(const IQIndex& i1,const IQIndex& i2);
 
+    //Construct rank 3 IQTensor, set to zero
     IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3);
 
+    //Construct rank 4 IQTensor, set to zero
     IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
              const IQIndex& i4);
 
@@ -109,21 +72,27 @@ class IQTensor
              const IQIndex& i4,const IQIndex& i5,const IQIndex& i6,
              const IQIndex& i7,const IQIndex& i8);
 
+    //Construct IQTensor with IQIndices given by vector iqinds
     explicit 
-    IQTensor(std::vector<IQIndex>& iqinds_);
+    IQTensor(std::vector<IQIndex>& iqinds);
 
+    //
+    // IQIndexVal IQTensor Constructors
+    //
+    // Given a set of IQIndexVals
+    // iv1 = (I1,n1), iv2 = (I2,n2), iv3 = (I3,n3), ...
+    // construct an IQTensor T such that
+    // T(I1(n1),I2(n2),I3(n3),...) == 1
+    //
     explicit
-    IQTensor(const IQIndexVal& iv1);
+    IQTensor(const IQIndexVal& iv);
 
     IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2);
 
     IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
              const IQIndexVal& iv3);
 
-    IQTensor(ITensor::ITmaker itm);
-
-    IQTensor(IQmaker i);
-
+    //Copy IQTensor, incrementing IQIndices matching PrimeType pt by 1
     IQTensor(PrimeType pt, const IQTensor& other);
 
     explicit 
@@ -147,9 +116,57 @@ class IQTensor
         return Complex_i_;
         }
 
-    void read(std::istream& s);
+    //Accessor Methods ------------------------------------------
 
-    void write(std::ostream& s) const;
+    //Rank of this IQTensor (number of IQIndices)
+    int 
+    r() const;
+
+    //Get the jth IQIndex of this ITensor, j = 1,2,..,r()
+    const IQIndex& 
+    index(int j) const;
+
+    //Number of ITensor blocks
+    int 
+    iten_size() const;
+
+    bool 
+    iten_empty() const;
+
+    //true if IQTensor is default constructed
+    bool 
+    isNull() const;
+
+    //true if IQTensor NOT default constructed
+    bool 
+    isNotNull() const;
+
+    //Returns object containing ITensor blocks
+    //The ITensors can be iterated over using a Foreach
+    //For example, given an IQTensor T,
+    //Foreach(const ITensor& t, T.blocks()) { ... }
+    const IQTDat&
+    blocks() const { return *p; }
+    
+    //Iterators --------------------------------------
+
+    const_iten_it 
+    const_iten_begin() const;
+
+    const_iten_it 
+    const_iten_end() const;
+
+    std::pair<const_iten_it,const_iten_it> 
+    itensors() const;
+
+    const_iqind_it 
+    const_iqind_begin() const;
+
+    const_iqind_it 
+    const_iqind_end() const;
+
+    std::pair<const_iqind_it,const_iqind_it> 
+    iqinds() const;
 
 
     //----------------------------------------------------
@@ -235,7 +252,8 @@ class IQTensor
         { T *= lgnum; return T; }
 
     //
-    // Multiplication by an ITensor
+    // Contracting product with an ITensor
+    // Result is an ITensor
     //
     ITensor 
     operator*(const ITensor& t) const
@@ -543,6 +561,12 @@ class IQTensor
     friend void 
     product(const IQTSparse& S, const IQTensor& T, IQTensor& res);
 
+    void 
+    read(std::istream& s);
+
+    void 
+    write(std::ostream& s) const;
+
     static const IQIndex& ReImIndex()
         { return IQIndex::IndReIm(); }
 
@@ -560,6 +584,10 @@ class IQTensor
 
     //
     /////////////////
+
+    IQTensor(ITensor::ITmaker itm);
+
+    IQTensor(IQmaker i);
 
     void 
     soloIndex();

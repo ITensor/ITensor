@@ -36,7 +36,7 @@ class ITensor
     Real 
     uniqueReal() const { return is_.ur_; } 
 
-    //Get the jth index of this ITensor, j = 1,2,..,r()
+    //Get the jth Index of this ITensor, j = 1,2,..,r()
     const Index& 
     index(int j) const { return is_.index(j); }
 
@@ -62,7 +62,6 @@ class ITensor
 
     bool 
     isComplex() const { return hasindexn(Index::IndReIm()); }
-
     bool 
     isNotComplex() const { return !hasindexn(Index::IndReIm()); }
 
@@ -83,6 +82,7 @@ class ITensor
     ITensor();
 
     //Construct rank 0 ITensor (scalar), value set to val
+    explicit
     ITensor(Real val);
 
     //Construct rank 1 ITensor, all entries set to zero
@@ -140,6 +140,7 @@ class ITensor
 
     ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P);
 
+    explicit
     ITensor(std::istream& s) { read(s); }
 
     static const ITensor& 
@@ -166,6 +167,7 @@ class ITensor
 
     //Contracting product
     //All matching Index pairs automatically contracted
+    //Cji = \sum_{k,l} Akjl * Blki
     ITensor& 
     operator*=(const ITensor& other);
 
@@ -227,6 +229,8 @@ class ITensor
 
 
     //Non-contracting product
+    //Matching Index pairs are merged
+    //Ckjli = Akjl * Blki
     ITensor& 
     operator/=(const ITensor& other);
 
@@ -235,6 +239,8 @@ class ITensor
         { ITensor res(*this); res /= other; return res; }
 
     //Tensor addition and subtraction
+    //Summands must have same Indices, in any order
+    //Cijk = Aijk + Bkij
     ITensor& 
     operator+=(const ITensor& o);
 
@@ -277,12 +283,15 @@ class ITensor
     has_common_index(const ITensor& other) const
         { return is_.has_common_index(other.is_); }
     
+    //true if has Index I
     bool 
     hasindex(const Index& I) const { return is_.hasindex(I); }
 
+    //true if has m!=1 Index I
     bool 
     hasindexn(const Index& I) const { return is_.hasindexn(I); }
 
+    //true if has m==1 Index I
     bool 
     hasindex1(const Index& I) const { return is_.hasindex1(I); }
 
@@ -290,9 +299,6 @@ class ITensor
     bool
     hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const
         { return is_.hasAllIndex(I,nind); }
-
-    bool 
-    notin(const Index& I) const { return !hasindex(I); }
 
     //Add m==1 Index I to this, increasing rank by 1
     void 
@@ -324,68 +330,95 @@ class ITensor
     void 
     doprime(PrimeType pt, int inc = 1) { is_.doprime(pt,inc); }
 
-    //Increase primeLevel of all Indices by 1
+    //Increase primeLevel of all Indices by 1 (or optional amount inc)
     void 
     primeall() { doprime(primeBoth,1); }
 
+    //Increase primeLevel of all Site Indices by 1 (or optional amount inc)
     void 
     primesite(int inc = 1) { doprime(primeSite,inc); }
 
+    //Increase primeLevel of all Link Indices by 1 (or optional amount inc)
     void 
     primelink(int inc = 1) { doprime(primeLink,inc); }
 
+    //Change all Indices having primeLevel plevold to have primeLevel plevnew
     void 
     mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)
         { is_.mapprime(plevold,plevnew,pt); }
 
+    //Change primeLevel of Index I from plevold to plevnew
+    //If I.primeLevel() != plevold, has no effect
     void 
     mapprimeind(const Index& I, int plevold, int plevnew, 
                 PrimeType pt = primeBoth)
         { is_.mapprimeind(I,plevold,plevnew,pt); }
 
+    //Increase primeLevel of Index I by 1 (or optional amount inc)
     void 
     primeind(const Index& I, int inc = 1)
         { mapindex(I,primed(I,inc)); }
 
+    //Increase primeLevel of Index I and Index J by 1
     void 
     primeind(const Index& I, const Index& J) { is_.primeind(I,J); }
 
+    //Set primeLevel of Index I to zero
     void 
     noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
 
-    friend inline ITensor 
+    //Return copy of ITensor with primeLevel of all Indices increased by 1
+    ITensor friend inline
     primed(ITensor A, int inc = 1)
         { A.doprime(primeBoth,inc); return A; }
 
-    friend inline ITensor 
+    //Return copy of ITensor with primeLevel of all Site Indices increased by 1
+    ITensor friend inline
     primesite(ITensor A, int inc = 1)
         { A.doprime(primeSite,inc); return A; }
 
-    friend inline ITensor 
+    //Return copy of ITensor with primeLevel of all Link Indices increased by 1
+    ITensor friend inline
     primelink(ITensor A, int inc = 1)
         { A.doprime(primeLink,inc); return A; }
 
-    friend inline ITensor 
+    //Return copy of ITensor with primeLevel of Index I increased by 1
+    //(or optional amount inc)
+    ITensor friend inline
     primeind(ITensor A, const Index& I, int inc = 1)
         { A.mapindex(I,primed(I,inc)); return A; }
 
-    friend ITensor 
+    //Return copy of ITensor with primeLevel of Index I1 and I2 increased by 1
+    ITensor friend
     primeind(ITensor A, const Index& I1, const Index& I2);
 
-    friend inline ITensor 
+    //Return copy of ITensor with primeLevel of all Indices set to zero
+    ITensor friend inline
     deprimed(ITensor A) { A.noprime(); return A; }
 
     //Element Access Methods ----------------------------------------
 
+    //Get scalar value of rank 0 ITensor
+    //Throws ITError if r() != 0
     Real
     toReal() const { return val0(); }
 
+    //Get scalar value of rank 0 ITensor
+    //Throws ITError if r() != 0
     Real 
     val0() const;
 
+    //Get element j of rank 1 ITensor
+    //Throws ITError if rn() != 1
     Real 
     val1(int i1) const;
 
+    // IndexVal element access
+    // Given iv1 = (I1,n1), iv2 = (I2,n2), ...
+    // returns component of ITensor such that
+    // I1 temporarily set to n1, I2 to n2, etc.
+    // Can be used to set components of ITensors
+    // as well, for example, T(I1(2),I2(1)) = 3;
     Real& 
     operator()();
 
@@ -421,8 +454,8 @@ class ITensor
 
     //
     // Assume *this and other have same indices but different order.
-    // Copy other into *this, without changing the order of indices in either
-    // operator= would put the order of other into *this
+    // Copy other into *this, without changing the order of indices in either.
+    // Assignment operator= would put the order of other into *this.
     //
     void 
     assignFrom(const ITensor& other);
@@ -533,23 +566,27 @@ class ITensor
     // RiJ = |  Ai(j=J-start+1) for J = start...start+m
     //       |_ 0               otherwise
     //        
-
     void 
     expandIndex(const Index& small, const Index& big, int start);
 
+    //Set components of rank 2 ITensor using Matrix M as input
     void 
-    fromMatrix11(const Index& i1, const Index& i2, const Matrix& res);
+    fromMatrix11(const Index& i1, const Index& i2, const Matrix& M);
 
-    void 
-    toMatrix11NoScale(const Index& i1, const Index& i2, 
-                           Matrix& res) const;
+    //Convert rank 2 ITensor to a Matrix using given Index order
     void 
     toMatrix11(const Index& i1, const Index& i2, Matrix& res) const;
 
-    /*
+    //Convert rank 2 ITensor to a Matrix, but do not include
+    //scale factor in result
+    void 
+    toMatrix11NoScale(const Index& i1, const Index& i2, 
+                           Matrix& res) const;
+
     // group i1,i2; i3,i4
     void toMatrix22(const Index& i1, const Index& i2, 
-                    const Index& i3, const Index& i4,Matrix& res) const;
+                    const Index& i3, const Index& i4, Matrix& res) const;
+    /*
     void fromMatrix22(const Index& i1, const Index& i2, 
                       const Index& i3, const Index& i4,const Matrix& res);
 
@@ -569,7 +606,7 @@ class ITensor
                     const Index& i3, Matrix& res) const;
 
     void fromMatrix12(const Index& i1, const Index& i2, 
-                      const Index& i3, const Matrix& res);
+                      const Index& i3, const Matrix& M);
 
     void
     symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid) const;
