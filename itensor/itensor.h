@@ -365,7 +365,7 @@ class ITensor
 
     //Set primeLevel of Index I to zero
     void 
-    noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
+    noprimeind(const Index& I) { mapindex(I,deprimed(I)); }
 
     //Return copy of ITensor with primeLevel of all Indices increased by 1
     ITensor friend inline

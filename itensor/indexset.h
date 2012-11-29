@@ -138,7 +138,7 @@ class IndexSet
     primeind(const Index& I, const Index& J);
 
     void 
-    noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
+    noprimeind(const Index& I) { mapindex(I,deprimed(I)); }
 
     //
     // Methods for Manipulating IndexSets

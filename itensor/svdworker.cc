@@ -806,7 +806,7 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
         if(this_m == 0) { ++itenind; continue; }
 
         Index nm("qlink",this_m);
-        Index act = t.index(1).deprimed();
+        Index act = deprimed(t.index(1));
         iq.push_back(inqn(nm,active.qn(act)));
 
         MatrixRef Utrunc = thisU.Columns(1,this_m);
@@ -1068,7 +1068,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         if(this_m == 0) { ++itenind; continue; }
 
         Index nm("qlink",this_m);
-        Index act = t.index(1).deprimed();
+        Index act = deprimed(t.index(1));
         iq.push_back(inqn(nm,active.qn(act)));
 
         ++itenind;
@@ -1106,7 +1106,7 @@ buildUnitary(const IQTensor& rho, const vector<Matrix>& mmatrix,
         if(this_m == 0) { ++itenind; continue; }
 
         const Index& nm = newmid.index(++kept_block);
-        Index act = it->index(1).deprimed();
+        Index act = deprimed(it->index(1));
 
 #ifdef DEBUG
         if(nm.m() != this_m)
@@ -1380,9 +1380,9 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
 	    }
 
         Index nm("qlink",this_m);
-        Index act = t.index(1).deprimed();
+        Index act = deprimed(t.index(1));
 	if(docomplex && act == Index::IndReIm())
-	    act = t.index(2).deprimed();
+	    act = deprimed(t.index(2));
         iq.push_back(inqn(nm,active.qn(act)));
 
         Matrix Utruncre = GET(mmatrixre,itenind).Columns(1,this_m);

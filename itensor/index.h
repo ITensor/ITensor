@@ -137,7 +137,8 @@ class Index
     operator<(const Index& other) const;
 
     // Creates an IndexVal from this Index with index i.
-    IndexVal operator()(int i) const;
+    IndexVal 
+    operator()(int i) const;
 
     // Output stream (<<) operator.
     friend std::ostream& 
@@ -156,29 +157,17 @@ class Index
     void 
     doprime(IndexType type = All, int inc = 1);
 
-    // Return copy of this Index, increasing primelevel.
-    Index 
-    primed(int inc = 1) const 
-        { 
-        static int depcount = 0;
-        if(++depcount < 20)
-            {
-            Cout << "WARNING: I.primed() method deprecated, use primed(I) instead." << Endl;
-            }
-        return Index(All,*this,inc); 
-        }
-
-    // Make a copy of this Index, increasing primelevel.
-    Index friend inline
-    primed(const Index& I, int inc = 1) { return Index(All,I,inc); }
-
-    // Return a copy of this Index with primelevel set to zero.
-    Index 
-    deprimed() const;
-
     // Set primelevel to zero.
     void 
     noprime(IndexType type = All) { doprime(type,-primelevel_); }
+
+    // Make a copy of this Index, increasing primelevel.
+    Index friend inline
+    primed(Index I, int inc = 1) { I.primelevel_ += inc; return I; }
+
+    // Return a copy of this Index with primelevel set to zero.
+    Index friend inline
+    deprimed(Index I) { I.primelevel_ = 0; return I; }
 
     //
     // Other methods

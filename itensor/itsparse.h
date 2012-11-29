@@ -244,7 +244,7 @@ class ITSparse
     primeind(const Index& I, const Index& J) { is_.primeind(I,J); }
 
     void 
-    noprimeind(const Index& I) { mapindex(I,I.deprimed()); }
+    noprimeind(const Index& I) { mapindex(I,deprimed(I)); }
 
     friend inline ITSparse
     primed(ITSparse S, int inc = 1)

@@ -361,14 +361,6 @@ doprime(IndexType type, int inc)
         }
     }
 
-Index Index::
-deprimed() const 
-    { 
-    Index cp(*this); 
-    cp.primelevel_ = 0; 
-    return cp; 
-    }
-
 void Index::
 write(std::ostream& s) const 
     { 
