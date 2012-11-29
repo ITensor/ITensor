@@ -632,17 +632,17 @@ MPSt<IQTensor>& MPSt<IQTensor>::addNoOrth(const MPSt<IQTensor>& other);
 
 template <class Tensor>
 void MPSt<Tensor>::
-mapprime(int oldp, int newp, PrimeType pt)
+mapprime(int oldp, int newp, IndexType type)
     { 
     if(do_write_)
         Error("mapprime not supported if doWrite(true)");
     for(int i = 1; i <= N; ++i) 
-        A[i].mapprime(oldp,newp,pt); 
+        A[i].mapprime(oldp,newp,type); 
     }
 template
-void MPSt<ITensor>::mapprime(int oldp, int newp, PrimeType pt);
+void MPSt<ITensor>::mapprime(int oldp, int newp, IndexType type);
 template
-void MPSt<IQTensor>::mapprime(int oldp, int newp, PrimeType pt);
+void MPSt<IQTensor>::mapprime(int oldp, int newp, IndexType type);
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -651,7 +651,7 @@ primelinks(int oldp, int newp)
     if(do_write_)
         Error("primelinks not supported if doWrite(true)");
     for(int i = 1; i <= N; ++i) 
-        A[i].mapprime(oldp,newp,primeLink); 
+        A[i].mapprime(oldp,newp,Link); 
     }
 template
 void MPSt<ITensor>::primelinks(int oldp, int newp);
@@ -665,7 +665,7 @@ noprimelink()
     if(do_write_)
         Error("noprimelink not supported if doWrite(true)");
     for(int i = 1; i <= N; ++i) 
-        A[i].noprime(primeLink); 
+        A[i].noprime(Link); 
     }
 template
 void MPSt<ITensor>::noprimelink();

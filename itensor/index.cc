@@ -272,12 +272,12 @@ Index(Imaker im)
     }
 
 Index::
-Index(PrimeType pt,const Index& other, int primeinc) 
+Index(IndexType type,const Index& other, int primeinc) 
     : p(other.p), 
       primelevel_(other.primelevel_)
     {
     primelevel_ = other.primelevel_;
-    doprime(pt,primeinc);
+    doprime(type,primeinc);
     }
 
 
@@ -341,25 +341,21 @@ operator()(int i) const
     { return IndexVal(*this,i); }
 
 void Index::
-mapprime(int plevold, int plevnew, PrimeType pr)
+mapprime(int plevold, int plevnew, IndexType type)
     {
-    if(type() == ReIm) return;
     if(primelevel_ != plevold) return;
-    else if( pr == primeBoth
-    || (type() == Site && pr == primeSite) 
-    || (type() == Link && pr == primeLink) )
+    if(this->type() == ReIm) return;
+    else if(type == All || type == this->type() )
         {
         primelevel_ = plevnew;
         }
     }
 
 void Index::
-doprime(PrimeType pr, int inc)
+doprime(IndexType type, int inc)
     {
-    if(type() == ReIm) return;
-    if( pr == primeBoth
-    || (type() == Site && pr == primeSite) 
-    || (type() == Link && pr == primeLink) )
+    if(this->type() == ReIm) return;
+    if(type == All || type == this->type())
         {
         primelevel_ += inc;
         }

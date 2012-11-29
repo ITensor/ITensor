@@ -75,7 +75,7 @@ class IQCombiner
     num_left() const { return int(left_.size()); }
 
     void
-    doprime(PrimeType pr, int inc = 1);
+    doprime(IndexType type, int inc = 1);
 
     friend IQCombiner
     primed(IQCombiner C, int inc = 1);
@@ -361,19 +361,19 @@ hasindex(const Index& i) const
     }
 
 void inline IQCombiner::
-doprime(PrimeType pr, int inc)
+doprime(IndexType type, int inc)
     {
     Foreach(IQIndex& ll, left_)
-        ll.doprime(pr,inc);
+        ll.doprime(type,inc);
     Foreach(Combiner& co, combs)
-        co.doprime(pr,inc);
+        co.doprime(type,inc);
     if(initted)
         {
-        right_.doprime(pr,inc);
+        right_.doprime(type,inc);
         if(do_condense) 
             {
-            cond.doprime(pr,inc);
-            ucright_.doprime(pr,inc);
+            cond.doprime(type,inc);
+            ucright_.doprime(type,inc);
             }
         }
     }
@@ -381,7 +381,7 @@ doprime(PrimeType pr, int inc)
 IQCombiner inline
 primed(IQCombiner C, int inc)
     {
-    C.doprime(primeBoth,inc);
+    C.doprime(All,inc);
     return C;
     }
 

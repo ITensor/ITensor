@@ -17,8 +17,6 @@
 
 enum IndexType { Link, Site, ReIm, All };
 
-enum PrimeType { primeLink, primeSite, primeBoth, primeNone };
-
 //Forward declarations
 struct UniqueID;
 class IndexDat;
@@ -55,7 +53,7 @@ class Index
     Index(std::istream& s) { read(s); }
 
     // Copy constructor which increments the primelevel of the copy.
-    Index(PrimeType pt,
+    Index(IndexType pt,
           const Index& other, 
           int primeinc = 1);
 
@@ -152,11 +150,11 @@ class Index
     // Switch primelevel from plevold to plevnew. 
     // Has no effect if plevold doesn't match current primelevel.
     void 
-    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
+    mapprime(int plevold, int plevnew, IndexType type = All);
 
     // Increment primelevel by 1 (or optionally by amount inc).
     void 
-    doprime(PrimeType pt = primeBoth, int inc = 1);
+    doprime(IndexType type = All, int inc = 1);
 
     // Return copy of this Index, increasing primelevel.
     Index 
@@ -167,12 +165,12 @@ class Index
             {
             Cout << "WARNING: I.primed() method deprecated, use primed(I) instead." << Endl;
             }
-        return Index(primeBoth,*this,inc); 
+        return Index(All,*this,inc); 
         }
 
     // Make a copy of this Index, increasing primelevel.
     Index friend inline
-    primed(const Index& I, int inc = 1) { return Index(primeBoth,I,inc); }
+    primed(const Index& I, int inc = 1) { return Index(All,I,inc); }
 
     // Return a copy of this Index with primelevel set to zero.
     Index 
@@ -180,7 +178,7 @@ class Index
 
     // Set primelevel to zero.
     void 
-    noprime(PrimeType pt = primeBoth) { doprime(pt,-primelevel_); }
+    noprime(IndexType type = All) { doprime(type,-primelevel_); }
 
     //
     // Other methods

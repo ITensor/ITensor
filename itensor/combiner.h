@@ -88,7 +88,7 @@ class Combiner
     hasindex(const Index& I) const;
 
     void
-    doprime(PrimeType pr, int inc = 1);
+    doprime(IndexType type, int inc = 1);
 
     friend Combiner
     primed(Combiner C, int inc = 1);
@@ -203,22 +203,22 @@ hasindex(const Index& I) const
 
 inline
 void Combiner::
-doprime(PrimeType pr, int inc)
+doprime(IndexType type, int inc)
     {
     for(int j = 1; j <= rl_; ++j) 
         {
-        left_[j].doprime(pr,inc);
+        left_[j].doprime(type,inc);
         }
     if(initted)
         {
-        right_.doprime(pr,inc);
+        right_.doprime(type,inc);
         }
     }
 
 Combiner inline
 primed(Combiner C, int inc)
     {
-    C.doprime(primeBoth,inc);
+    C.doprime(All,inc);
     return C;
     }
 

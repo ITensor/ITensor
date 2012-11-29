@@ -141,9 +141,9 @@ class MPOt : private MPSt<Tensor>
         {
         for(int i = 1; i <= this->NN(); i++)
             {
-            AAnc(i).mapprime(0,1,primeLink);
-            AAnc(i).mapprime(1,2,primeSite);
-            AAnc(i).mapprime(0,1,primeSite);
+            AAnc(i).mapprime(0,1,Link);
+            AAnc(i).mapprime(1,2,Site);
+            AAnc(i).mapprime(0,1,Site);
             }
         }
 

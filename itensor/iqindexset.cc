@@ -158,10 +158,10 @@ IQIndexSet(int init_numref)
     { }
 
 const IQIndex& IQIndexSet::
-findtype(IndexType t) const
+findtype(IndexType type) const
 	{
     for(size_t j = 0; j < index_.size(); ++j)
-        if(index_[j].type() == t) return index_[j];
+        if(index_[j].type() == type) return index_[j];
     Error("IQIndexSet::findtype failed."); 
     return IQIndex::Null();
 	}
@@ -202,10 +202,10 @@ hasindex(const IQIndex& I) const
 	}
 
 bool IQIndexSet::
-hastype(IndexType t) const
+hastype(IndexType type) const
     {
     for(size_t j = 0; j < index_.size(); ++j)
-    if(index_[j].type() == t) return true;
+    if(index_[j].type() == type) return true;
     return false;
     }
 
@@ -234,13 +234,13 @@ maxM() const
     }
 
 void IQIndexSet::
-noprime(PrimeType p)
+noprime(IndexType type)
     {
     ur_ = 0;
     for(size_t j = 0; j < index_.size(); ++j) 
         {
         IQIndex& J = index_[j];
-        J.noprime(p);
+        J.noprime(type);
         ur_ += J.uniqueReal();
         }
 #ifdef DEBUG
@@ -250,36 +250,36 @@ noprime(PrimeType p)
 	}
 
 void IQIndexSet::
-doprime(PrimeType pt, int inc)
+doprime(IndexType type, int inc)
 	{
     ur_ = 0;
     for(size_t j = 0; j < index_.size(); ++j) 
         {
         IQIndex& J = index_[j];
-        J.doprime(pt,inc);
+        J.doprime(type,inc);
         ur_ += J.uniqueReal();
         }
 	}
 
 void IQIndexSet::
-mapprime(int plevold, int plevnew, PrimeType pt)
+mapprime(int plevold, int plevnew, IndexType type)
 	{
     ur_ = 0;
     for(size_t j = 0; j < index_.size(); ++j) 
         {
         IQIndex& J = index_[j];
-        J.mapprime(plevold,plevnew,pt);
+        J.mapprime(plevold,plevnew,type);
         ur_ += J.uniqueReal();
         }
 	}
 
 void IQIndexSet::
-mapprimeind(const IQIndex& I, int plevold, int plevnew, PrimeType pt)
+mapprimeind(const IQIndex& I, int plevold, int plevnew, IndexType type)
 	{
     for(size_t j = 0; j < index_.size(); ++j) 
         if(index_[j] == I)
         {
-        index_[j].mapprime(plevold,plevnew,pt);
+        index_[j].mapprime(plevold,plevnew,type);
         ur_ -= I.uniqueReal();
         ur_ += index_[j].uniqueReal();
         return;

@@ -113,7 +113,7 @@ class IQIndex
             const Index& i1, const QN& q1, 
             Arrow dir = Out);
 
-    IQIndex(PrimeType pt, const IQIndex& other, int inc = 1);
+    IQIndex(IndexType type, const IQIndex& other, int inc = 1);
 
     explicit 
     IQIndex(std::istream& s);
@@ -202,13 +202,13 @@ class IQIndex
     //IQIndex: prime methods
 
     void 
-    doprime(PrimeType pt, int inc = 1);
+    doprime(IndexType type, int inc = 1);
 
     void 
-    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
+    mapprime(int plevold, int plevnew, IndexType type = All);
 
     void 
-    noprime(PrimeType pt = primeBoth);
+    noprime(IndexType type = All);
 
     IQIndex friend inline
     noprime(const IQIndex& I)
@@ -223,7 +223,7 @@ class IQIndex
 
     friend inline IQIndex
     primed(const IQIndex& I, int inc = 1)
-        { return IQIndex(primeBoth,I,inc); }
+        { return IQIndex(All,I,inc); }
 
     friend std::ostream& 
     operator<<(std::ostream &o, const IQIndex &I);
@@ -480,47 +480,47 @@ class DoPrimer // Functor which applies doprime within STL's for_each, etc
     {
     public:
 
-    PrimeType pt; 
+    IndexType type; 
 
     int inc;
 
-    DoPrimer (PrimeType _pt, int _inc = 1) 
-        : pt(_pt), 
-          inc(_inc) 
+    DoPrimer (IndexType type_, int inc_ = 1) 
+        : type(type_), 
+          inc(inc_) 
         { }
 
     void 
-    operator()(inqn& iq) const { iq.index.doprime(pt,inc); }
+    operator()(inqn& iq) const { iq.index.doprime(type,inc); }
     void 
-    operator()(Index& i) const { i.doprime(pt,inc); }
+    operator()(Index& i) const { i.doprime(type,inc); }
     void 
-    operator()(ITensor& it) const { it.doprime(pt,inc); }
+    operator()(ITensor& it) const { it.doprime(type,inc); }
     void 
-    operator()(IQIndex &iqi) const { iqi.doprime(pt,inc); }
+    operator()(IQIndex &iqi) const { iqi.doprime(type,inc); }
     };
 
 class MapPrimer // Functor which applies mapprime within STL's for_each, etc
     {
     public:
 
-    PrimeType pt;
+    IndexType type;
 
     int plevold, plevnew;
 
-    MapPrimer (int _plevold,int _plevnew,PrimeType _pt = primeBoth) 
-		: pt(_pt), 
+    MapPrimer (int _plevold,int _plevnew,IndexType _type = All) 
+		: type(_type), 
           plevold(_plevold), 
           plevnew(_plevnew) 
         {}
 
     void 
-    operator()(inqn& iq) const { iq.index.mapprime(plevold,plevnew,pt); }
+    operator()(inqn& iq) const { iq.index.mapprime(plevold,plevnew,type); }
     void 
-    operator()(Index& i) const { i.mapprime(plevold,plevnew,pt); }
+    operator()(Index& i) const { i.mapprime(plevold,plevnew,type); }
     void 
-    operator()(ITensor& it) const { it.mapprime(plevold,plevnew,pt); }
+    operator()(ITensor& it) const { it.mapprime(plevold,plevnew,type); }
     void 
-    operator()(IQIndex &iqi) const { iqi.mapprime(plevold,plevnew,pt); }
+    operator()(IQIndex &iqi) const { iqi.mapprime(plevold,plevnew,type); }
     };
 
 class IndEq // Functor which checks if the index is equal to a specified value within STL's for_each, etc

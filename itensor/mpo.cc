@@ -271,7 +271,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
 
     res=A;
     res.primelinks(0,4);
-    res.mapprime(1,2,primeSite);
+    res.mapprime(1,2,Site);
 
     Tensor clust,nfork;
     vector<int> midsize(N);
@@ -321,7 +321,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
 
     res.doSVD(N-1,nfork,Fromright);
     res.noprimelink();
-    res.mapprime(2,1,primeSite);
+    res.mapprime(2,1,Site);
     res.cutoff(cut);
     res.orthogonalize();
 
@@ -363,7 +363,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     res.maxm(maxm); 
     res.cutoff(cutoff);
     res.primelinks(0,4);
-    res.mapprime(0,1,primeSite);
+    res.mapprime(0,1,Site);
 
     Tensor clust,nfork;
     vector<int> midsize(N);
@@ -393,7 +393,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
 
     res.doSVD(N-1,nfork,Fromright);
     res.noprimelink();
-    res.mapprime(1,0,primeSite);
+    res.mapprime(1,0,Site);
     res.position(1);
     res.maxm(psi.maxm()); 
     res.cutoff(psi.cutoff());
@@ -443,8 +443,8 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
         res.AAnc(j) = res.AA(j) * comb; //m^3 k^3 d
         res.AAnc(j+1) = conj(comb) * res.AA(j+1); //m^3 k^3 d
         }
-    res.mapprime(1,0,primeSite);
-    //res.orthogonalize();
+    res.mapprime(1,0,Site);
+    res.orthogonalize();
     } //void exact_applyMPO
 template
 void 

@@ -275,7 +275,7 @@ class MPSt
     //
 
     void 
-    mapprime(int oldp, int newp, PrimeType pt = primeBoth);
+    mapprime(int oldp, int newp, IndexType type = All);
 
     void 
     primelinks(int oldp, int newp);

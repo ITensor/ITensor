@@ -461,11 +461,11 @@ IQTensor(IQmaker i)
     }
 
 IQTensor::
-IQTensor(PrimeType pt,const IQTensor& other) 
+IQTensor(IndexType type,const IQTensor& other) 
     : 
     is_(other.is_),
     p(other.p)
-    { doprime(pt); }
+    { doprime(type); }
 
 IQTensor::
 IQTensor(std::istream& s)
@@ -717,14 +717,14 @@ ind_inc_prime(const IQIndex& i,int inc)
 	}
 
 void IQTensor::
-noprime(PrimeType pt)
+noprime(IndexType type)
 	{
 	solo();
 
-    is_->noprime(pt);
+    is_->noprime(type);
 
     Foreach(ITensor& t, ncdat())
-        { t.noprime(pt); }
+        { t.noprime(type); }
 	} 
 
 void IQTensor::
@@ -732,32 +732,32 @@ noprimelink()
 	{
 	solo();
 
-    is_->noprime(primeLink);
+    is_->noprime(Link);
 
     Foreach(ITensor& t, ncdat())
-        { t.noprime(primeLink); }
+        { t.noprime(Link); }
 	}
 
 void IQTensor::
-doprime(PrimeType pt, int inc)
+doprime(IndexType type, int inc)
 	{
 	solo();
 
-    is_->doprime(pt,inc);
+    is_->doprime(type,inc);
 
     Foreach(ITensor& t, ncdat())
-	    t.doprime(pt,inc);
+	    t.doprime(type,inc);
 	}
 
 void IQTensor::
-mapprime(int plevold, int plevnew, PrimeType pt)
+mapprime(int plevold, int plevnew, IndexType type)
     {
     solo();
 
-    is_->mapprime(plevold,plevnew,pt);
+    is_->mapprime(plevold,plevnew,type);
 
     Foreach(ITensor& t, ncdat())
-	    t.mapprime(plevold,plevnew,pt);
+	    t.mapprime(plevold,plevnew,type);
 	}
 
 void IQTensor::

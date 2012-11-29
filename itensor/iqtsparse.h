@@ -167,26 +167,26 @@ class IQTSparse
     //
 
     void 
-    noprime(PrimeType p = primeBoth);
+    noprime(IndexType type = All);
 
     void 
-    doprime(PrimeType pt, int inc = 1);
+    doprime(IndexType type, int inc = 1);
 
     void 
-    primeall() { doprime(primeBoth,1); }
+    primeall() { doprime(All,1); }
 
     void 
-    primesite() { doprime(primeSite,1); }
+    primesite() { doprime(Site,1); }
 
     void 
-    primelink() { doprime(primeLink,1); }
+    primelink() { doprime(Link,1); }
 
     void 
-    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
+    mapprime(int plevold, int plevnew, IndexType type = All);
 
     void 
     mapprimeind(const IQIndex& I, int plevold, int plevnew, 
-                PrimeType pt = primeBoth);
+                IndexType type = All);
 
     void 
     primeind(const IQIndex& I, int inc = 1);
@@ -196,15 +196,15 @@ class IQTSparse
 
     friend inline IQTSparse
     primed(IQTSparse S, int inc = 1)
-        { S.doprime(primeBoth,inc); return S; }
+        { S.doprime(All,inc); return S; }
 
     friend inline IQTSparse
     primesite(IQTSparse S, int inc = 1)
-        { S.doprime(primeSite,inc); return S; }
+        { S.doprime(Site,inc); return S; }
 
     friend inline IQTSparse
     primelink(IQTSparse S, int inc = 1)
-        { S.doprime(primeLink,inc); return S; }
+        { S.doprime(Link,inc); return S; }
 
     friend inline IQTSparse
     primeind(IQTSparse S, const IQIndex& I, int inc = 1)

@@ -73,10 +73,10 @@ class IQIndexSet
     //
 
     const IQIndex&
-    findtype(IndexType t) const;
+    findtype(IndexType type) const;
 
     bool 
-    hastype(IndexType t) const;
+    hastype(IndexType type) const;
 
     int 
     findindex(const IQIndex& I) const;
@@ -104,26 +104,26 @@ class IQIndexSet
     //
 
     void 
-    noprime(PrimeType p = primeBoth);
+    noprime(IndexType type = All);
 
     void 
-    doprime(PrimeType pt, int inc = 1);
+    doprime(IndexType type, int inc = 1);
 
     void 
-    primeall() { doprime(primeBoth,1); }
+    primeall() { doprime(All,1); }
 
     void 
-    primesite() { doprime(primeSite,1); }
+    primesite() { doprime(Site,1); }
 
     void 
-    primelink() { doprime(primeLink,1); }
+    primelink() { doprime(Link,1); }
 
     void 
-    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
+    mapprime(int plevold, int plevnew, IndexType type = All);
 
     void 
     mapprimeind(const IQIndex& I, int plevold, int plevnew, 
-                PrimeType pt = primeBoth);
+                IndexType type = All);
 
     void 
     primeind(const IQIndex& I, int inc = 1)

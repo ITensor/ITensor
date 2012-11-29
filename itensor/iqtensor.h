@@ -92,8 +92,8 @@ class IQTensor
     IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
              const IQIndexVal& iv3);
 
-    //Copy IQTensor, incrementing IQIndices matching PrimeType pt by 1
-    IQTensor(PrimeType pt, const IQTensor& other);
+    //Copy IQTensor, incrementing IQIndices of matching IndexType by 1
+    IQTensor(IndexType type, const IQTensor& other);
 
     explicit 
     IQTensor(std::istream& s);
@@ -358,7 +358,7 @@ class IQTensor
 
     void ind_inc_prime(const IQIndex& i,int inc);
 
-    void noprime(PrimeType pt = primeBoth);
+    void noprime(IndexType type = All);
 
     friend inline IQTensor 
     deprimed(IQTensor A) { A.noprime(); return A; }
@@ -367,11 +367,11 @@ class IQTensor
     noprimelink();
 
     void 
-    doprime(PrimeType pt, int inc = 1);
+    doprime(IndexType type, int inc = 1);
 
     //no need to keep prime level small
     void 
-    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth);
+    mapprime(int plevold, int plevnew, IndexType type = All);
 
     void 
     primeind(const IQIndex& I, int inc = 1);
@@ -388,20 +388,20 @@ class IQTensor
     noprimeind(const IQIndex& I);
 
     friend inline IQTensor 
-    primed(IQTensor A, int inc = 1) { A.doprime(primeBoth,inc); return A; }
+    primed(IQTensor A, int inc = 1) { A.doprime(All,inc); return A; }
 
     void 
-    primesite(int inc = 1) { doprime(primeSite,inc); }
+    primesite(int inc = 1) { doprime(Site,inc); }
 
     friend inline IQTensor 
-    primesite(IQTensor A, int inc = 1) { A.doprime(primeSite,inc); return A; }
+    primesite(IQTensor A, int inc = 1) { A.doprime(Site,inc); return A; }
 
     void 
-    primelink(int inc = 1) { doprime(primeLink,inc); }
+    primelink(int inc = 1) { doprime(Link,inc); }
 
     friend inline IQTensor 
     primelink(IQTensor A, int inc = 1)
-        { A.doprime(primeLink,inc); return A; }
+        { A.doprime(Link,inc); return A; }
 
 
     //----------------------------------------------------

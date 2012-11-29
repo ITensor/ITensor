@@ -438,12 +438,12 @@ IQIndex(const Index& other,
     }
 
 IQIndex::
-IQIndex(PrimeType pt, const IQIndex& other, int inc) 
+IQIndex(IndexType type, const IQIndex& other, int inc) 
     : 
     index_(other), 
     _dir(other._dir), 
     pd(other.pd)  
-    { doprime(pt,inc); }
+    { doprime(type,inc); }
 
 IQIndex::
 IQIndex(std::istream& s) 
@@ -586,35 +586,35 @@ offset(const Index& I) const
     }
 
 void IQIndex::
-doprime(PrimeType pt, int inc)
+doprime(IndexType type, int inc)
     {
     solo();
-    index_.doprime(pt,inc);
-    DoPrimer dp(pt,inc);
+    index_.doprime(type,inc);
+    DoPrimer dp(type,inc);
     for_each(pd->iq_.begin(),pd->iq_.end(),dp);
     }
 
 void IQIndex::
-mapprime(int plevold, int plevnew, PrimeType pt)
+mapprime(int plevold, int plevnew, IndexType type)
     {
     solo();
-    index_.mapprime(plevold,plevnew,pt);
-    for_each(pd->iq_.begin(),pd->iq_.end(),MapPrimer(plevold,plevnew,pt));
+    index_.mapprime(plevold,plevnew,type);
+    for_each(pd->iq_.begin(),pd->iq_.end(),MapPrimer(plevold,plevnew,type));
     }
 
 void IQIndex::
-noprime(PrimeType pt)
+noprime(IndexType type)
     {
     solo();
-    index_.noprime(pt);
+    index_.noprime(type);
     for(size_t j = 0; j < pd->iq_.size(); ++j)
-    { pd->iq_[j].index.noprime(pt); }
+    { pd->iq_[j].index.noprime(type); }
     }
 
 IQIndex IQIndex::
 primed(int inc) const
     {
-    return IQIndex(primeBoth,*this,inc);
+    return IQIndex(All,*this,inc);
     }
 
 void IQIndex::

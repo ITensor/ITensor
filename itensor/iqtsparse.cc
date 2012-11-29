@@ -350,55 +350,55 @@ hasindex(const IQIndex& I) const
 //
 
 void IQTSparse::
-noprime(PrimeType pt)
+noprime(IndexType type)
     { 
     solo();
 
-    is_->noprime(pt); 
+    is_->noprime(type); 
 
     Foreach(ITSparse& t, ncblocks())
         {
-        t.noprime(pt);
+        t.noprime(type);
         }
     }
 
 void IQTSparse::
-doprime(PrimeType pt, int inc) 
+doprime(IndexType type, int inc) 
     { 
     solo();
 
-    is_->doprime(pt,inc);
+    is_->doprime(type,inc);
 
     Foreach(ITSparse& t, ncblocks())
         {
-        t.doprime(pt,inc);
+        t.doprime(type,inc);
         }
     }
 
 void IQTSparse::
-mapprime(int plevold, int plevnew, PrimeType pt)
+mapprime(int plevold, int plevnew, IndexType type)
     { 
     solo();
 
-    is_->mapprime(plevold,plevnew,pt); 
+    is_->mapprime(plevold,plevnew,type); 
 
     Foreach(ITSparse& t, ncblocks())
         {
-        t.mapprime(plevold,plevnew,pt);
+        t.mapprime(plevold,plevnew,type);
         }
     }
 
 void IQTSparse::
 mapprimeind(const IQIndex& I, int plevold, int plevnew, 
-            PrimeType pt)
+            IndexType type)
     { 
     solo();
 
-    is_->mapprimeind(I,plevold,plevnew,pt); 
+    is_->mapprimeind(I,plevold,plevnew,type); 
 
     Foreach(ITSparse& t, ncblocks())
         {
-        t.mapprimeind(I,plevold,plevnew,pt);
+        t.mapprimeind(I,plevold,plevnew,type);
         }
     }
 

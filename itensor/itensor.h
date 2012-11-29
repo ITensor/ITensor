@@ -324,35 +324,35 @@ class ITensor
 
     //Set primeLevel of Indices to zero
     void 
-    noprime(PrimeType p = primeBoth) { is_.noprime(p); }
+    noprime(IndexType type = All) { is_.noprime(type); }
 
     //Increase primeLevel of Indices by 1 (or optional amount inc)
     void 
-    doprime(PrimeType pt, int inc = 1) { is_.doprime(pt,inc); }
+    doprime(IndexType type, int inc = 1) { is_.doprime(type,inc); }
 
     //Increase primeLevel of all Indices by 1 (or optional amount inc)
     void 
-    primeall() { doprime(primeBoth,1); }
+    primeall() { doprime(All,1); }
 
     //Increase primeLevel of all Site Indices by 1 (or optional amount inc)
     void 
-    primesite(int inc = 1) { doprime(primeSite,inc); }
+    primesite(int inc = 1) { doprime(Site,inc); }
 
     //Increase primeLevel of all Link Indices by 1 (or optional amount inc)
     void 
-    primelink(int inc = 1) { doprime(primeLink,inc); }
+    primelink(int inc = 1) { doprime(Link,inc); }
 
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
     void 
-    mapprime(int plevold, int plevnew, PrimeType pt = primeBoth)
-        { is_.mapprime(plevold,plevnew,pt); }
+    mapprime(int plevold, int plevnew, IndexType type = All)
+        { is_.mapprime(plevold,plevnew,type); }
 
     //Change primeLevel of Index I from plevold to plevnew
     //If I.primeLevel() != plevold, has no effect
     void 
     mapprimeind(const Index& I, int plevold, int plevnew, 
-                PrimeType pt = primeBoth)
-        { is_.mapprimeind(I,plevold,plevnew,pt); }
+                IndexType type = All)
+        { is_.mapprimeind(I,plevold,plevnew,type); }
 
     //Increase primeLevel of Index I by 1 (or optional amount inc)
     void 
@@ -370,17 +370,17 @@ class ITensor
     //Return copy of ITensor with primeLevel of all Indices increased by 1
     ITensor friend inline
     primed(ITensor A, int inc = 1)
-        { A.doprime(primeBoth,inc); return A; }
+        { A.doprime(All,inc); return A; }
 
     //Return copy of ITensor with primeLevel of all Site Indices increased by 1
     ITensor friend inline
     primesite(ITensor A, int inc = 1)
-        { A.doprime(primeSite,inc); return A; }
+        { A.doprime(Site,inc); return A; }
 
     //Return copy of ITensor with primeLevel of all Link Indices increased by 1
     ITensor friend inline
     primelink(ITensor A, int inc = 1)
-        { A.doprime(primeLink,inc); return A; }
+        { A.doprime(Link,inc); return A; }
 
     //Return copy of ITensor with primeLevel of Index I increased by 1
     //(or optional amount inc)
@@ -1011,10 +1011,10 @@ template<class Tensor>
 Tensor inline
 multSiteOps(Tensor A, const Tensor& B) 
     {
-    A.mapprime(1,2,primeSite);
-    A.mapprime(0,1,primeSite);
+    A.mapprime(1,2,Site);
+    A.mapprime(0,1,Site);
     A *= B;
-    A.mapprime(2,1,primeSite);
+    A.mapprime(2,1,Site);
     return A;
     }
 

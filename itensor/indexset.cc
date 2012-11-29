@@ -240,13 +240,13 @@ maxM() const
     }
 
 void IndexSet::
-noprime(PrimeType p)
+noprime(IndexType type)
     {
     ur_ = 0;
     for(int j = 1; j <= r_; ++j) 
         {
         Index& J = index_[j];
-        J.noprime(p);
+        J.noprime(type);
         ur_ += J.uniqueReal();
         }
 #ifdef SET_UR
@@ -255,13 +255,13 @@ noprime(PrimeType p)
 	}
 
 void IndexSet::
-doprime(PrimeType pt, int inc)
+doprime(IndexType type, int inc)
 	{
     ur_ = 0;
     for(int j = 1; j <= r_; ++j) 
         {
         Index& J = index_[j];
-        J.doprime(pt,inc);
+        J.doprime(type,inc);
         ur_ += J.uniqueReal();
         }
 #ifdef SET_UR
@@ -270,13 +270,13 @@ doprime(PrimeType pt, int inc)
 	}
 
 void IndexSet::
-mapprime(int plevold, int plevnew, PrimeType pt)
+mapprime(int plevold, int plevnew, IndexType type)
 	{
     ur_ = 0;
     for(int j = 1; j <= r_; ++j) 
         {
         Index& J = index_[j];
-        J.mapprime(plevold,plevnew,pt);
+        J.mapprime(plevold,plevnew,type);
         ur_ += J.uniqueReal();
         }
 #ifdef SET_UR
@@ -285,12 +285,12 @@ mapprime(int plevold, int plevnew, PrimeType pt)
 	}
 
 void IndexSet::
-mapprimeind(const Index& I, int plevold, int plevnew, PrimeType pt)
+mapprimeind(const Index& I, int plevold, int plevnew, IndexType type)
 	{
     for(int j = (I.m() == 1 ? rn_+1 : 1); j <= r_; ++j) 
         if(index_[j] == I)
         {
-        index_[j].mapprime(plevold,plevnew,pt);
+        index_[j].mapprime(plevold,plevnew,type);
         ur_ -= I.uniqueReal();
         ur_ += index_[j].uniqueReal();
 #ifdef SET_UR
