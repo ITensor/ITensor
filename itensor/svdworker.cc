@@ -186,8 +186,9 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
 
         for(int j = 1; j <= stop; ++j)
             {
-            cout << boost::format( (Ds(j) > 1E-6 && Ds(j) < 1E3) ? ("%.3f") : ("%.3E")) 
-                    % sqr(Ds(j));
+            const Real eig = sqr(Ds(j));
+            cout << format( (eig > 1E-3 && eig < 1000) ? ("%.3f") : ("%.3E")) 
+                    % eig;
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -560,7 +561,7 @@ diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
         cout << "Eigs: ";
         for(int j = 1; j <= stop; ++j)
             {
-            cout << boost::format(D(j) > 1E-3 ? ("%.3f") : ("%.3E")) % D(j);
+            cout << format(D(j) > 1E-3 ? ("%.3f") : ("%.3E")) % D(j);
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -757,8 +758,8 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
         cout << "Eigs: ";
         for(int j = s-1; j >= stop; --j)
             {
-            cout << boost::format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
-                                % alleig[j];
+            cout << format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
+                           % alleig[j];
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -1030,7 +1031,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         cout << "Eigs: ";
         for(int j = s-1; j >= stop; --j)
             {
-            cout << boost::format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
+            cout << format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
                                 % alleig[j];
             cout << ((j != stop) ? ", " : endl);
             }
@@ -1345,7 +1346,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
         cout << "Eigs: ";
         for(int j = s-1; j >= stop; --j)
 	    {
-            cout << boost::format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
+            cout << format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
                                 % alleig[j];
             cout << ((j != stop) ? ", " : "\n");
 	    }
