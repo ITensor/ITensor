@@ -44,6 +44,8 @@ class LocalOp
 
     LocalOp();
 
+    LocalOp(const Tensor& Op1, const Tensor& Op2);
+
     LocalOp(const Tensor& Op1, const Tensor& Op2, 
             const Tensor& L, const Tensor& R);
 
@@ -75,8 +77,25 @@ class LocalOp
     //
 
     void
+    update(const Tensor& Op1, const Tensor& Op2);
+
+    void
     update(const Tensor& Op1, const Tensor& Op2, 
            const Tensor& L, const Tensor& R);
+
+    const Tensor&
+    Op1() const 
+        { 
+        if(isNull()) Error("LocalOp is null");
+        return *Op1_;
+        }
+
+    const Tensor&
+    Op2() const 
+        { 
+        if(isNull()) Error("LocalOp is null");
+        return *Op2_;
+        }
 
     const Tensor&
     L() const 
@@ -108,6 +127,12 @@ class LocalOp
     isNull() const { return Op1_ == 0; }
     bool
     isNotNull() const { return Op1_ != 0; }
+
+    bool
+    LIsNull() const;
+
+    bool
+    RIsNull() const;
 
     static LocalOp& Null()
         {
@@ -162,6 +187,20 @@ LocalOp()
 
 template <class Tensor>
 inline LocalOp<Tensor>::
+LocalOp(const Tensor& Op1, const Tensor& Op2)
+    : 
+    Op1_(0),
+    Op2_(0),
+    L_(0),
+    R_(0),
+    combine_mpo_(true),
+    size_(-1)
+    {
+    update(Op1,Op2);
+    }
+
+template <class Tensor>
+inline LocalOp<Tensor>::
 LocalOp(const Tensor& Op1, const Tensor& Op2, 
         const Tensor& L, const Tensor& R)
     : 
@@ -177,19 +216,44 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
 
 template <class Tensor>
 void inline LocalOp<Tensor>::
-update(const Tensor& Op1, const Tensor& Op2, 
-       const Tensor& L, const Tensor& R)
+update(const Tensor& Op1, const Tensor& Op2)
     {
     Op1_ = &Op1;
     Op2_ = &Op2;
-    L_ = &L;
-    R_ = &R;
+    L_ = 0;
+    R_ = 0;
     size_ = -1;
     bond_ = Tensor();
     }
 
 template <class Tensor>
-inline void LocalOp<Tensor>::
+void inline LocalOp<Tensor>::
+update(const Tensor& Op1, const Tensor& Op2, 
+       const Tensor& L, const Tensor& R)
+    {
+    update(Op1,Op2);
+    L_ = &L;
+    R_ = &R;
+    }
+
+template <class Tensor>
+bool inline LocalOp<Tensor>::
+LIsNull() const
+    {
+    if(L_ == 0) return true;
+    return L_->isNull();
+    }
+
+template <class Tensor>
+bool inline LocalOp<Tensor>::
+RIsNull() const
+    {
+    if(R_ == 0) return true;
+    return R_->isNull();
+    }
+
+template <class Tensor>
+void inline LocalOp<Tensor>::
 product(const Tensor& phi, Tensor& phip) const
     {
     if(this->isNull()) Error("LocalOp is null");
@@ -197,11 +261,11 @@ product(const Tensor& phi, Tensor& phip) const
     const Tensor& Op1 = *Op1_;
     const Tensor& Op2 = *Op2_;
 
-    if(L().isNull())
+    if(LIsNull())
         {
         phip = phi;
 
-        if(R().isNotNull()) 
+        if(!RIsNull()) 
             phip *= R(); //m^3 k d
 
         if(combine_mpo_)
@@ -228,7 +292,7 @@ product(const Tensor& phi, Tensor& phip) const
             phip *= Op2; //m^2 k^2
             }
 
-        if(R().isNotNull()) 
+        if(!RIsNull()) 
             phip *= R();
         }
 
@@ -236,7 +300,7 @@ product(const Tensor& phi, Tensor& phip) const
     }
 
 template <class Tensor>
-inline Real LocalOp<Tensor>::
+Real inline LocalOp<Tensor>::
 expect(const Tensor& phi) const
     {
     Tensor phip;
@@ -245,18 +309,18 @@ expect(const Tensor& phi) const
     }
 
 template <class Tensor>
-inline Tensor LocalOp<Tensor>::
+Tensor inline LocalOp<Tensor>::
 deltaRho(const Tensor& AA, const CombinerT& comb, Direction dir) const
     {
     Tensor delta(AA);
     if(dir == Fromleft)
         {
-        if(L().isNotNull()) delta *= L();
+        if(!LIsNull()) delta *= L();
         delta *= (*Op1_);
         }
     else //dir == Fromright
         {
-        if(R().isNotNull()) delta *= R();
+        if(!RIsNull()) delta *= R();
         delta *= (*Op2_);
         }
 
@@ -269,18 +333,18 @@ deltaRho(const Tensor& AA, const CombinerT& comb, Direction dir) const
     }
 
 template <class Tensor>
-inline Tensor LocalOp<Tensor>::
+Tensor inline LocalOp<Tensor>::
 deltaPhi(const Tensor& phi) const
     {
     Tensor deltaL(phi),
            deltaR(phi);
 
-    if(L().isNotNull()) 
+    if(!LIsNull()) 
         {
         deltaL *= L();
         }
 
-    if(R().isNotNull()) 
+    if(!RIsNull()) 
         {
         deltaR *= R();
         }
@@ -305,18 +369,18 @@ deltaPhi(const Tensor& phi) const
     }
 
 template <>
-inline IQTensor LocalOp<IQTensor>::
+IQTensor inline LocalOp<IQTensor>::
 deltaPhi(const IQTensor& phi) const
     {
     IQTensor deltaL(phi),
            deltaR(phi);
 
-    if(L().isNotNull()) 
+    if(!LIsNull()) 
         {
         deltaL *= L();
         }
 
-    if(R().isNotNull()) 
+    if(!RIsNull()) 
         {
         deltaR *= R();
         }
@@ -346,7 +410,7 @@ deltaPhi(const IQTensor& phi) const
 
     QN targetQn = phi.div();
 
-    Foreach(const ITensor& block, deltaL.itensors())
+    Foreach(const ITensor& block, deltaL.blocks())
         {
         QN div;
         for(int j = 1; j <= block.r(); ++j)
@@ -360,7 +424,7 @@ deltaPhi(const IQTensor& phi) const
     }
 
 template <class Tensor>
-inline void LocalOp<Tensor>::
+void inline LocalOp<Tensor>::
 diag(Tensor& D) const
     {
     if(this->isNull()) Error("LocalOp is null");
@@ -382,7 +446,11 @@ diag(Tensor& D) const
             break;
             }
         }
-    if(!found) Error("Couldn't find Index");
+    if(!found) 
+        {
+        Print(Diag);
+        Error("Couldn't find Index");
+        }
     Diag.tieIndices(toTie,primed(toTie),toTie);
 
     found = false;
@@ -399,7 +467,7 @@ diag(Tensor& D) const
     if(!found) Error("Couldn't find Index");
     Diag *= tieIndices(toTie,primed(toTie),toTie,Op2);
 
-    if(L().isNotNull())
+    if(!LIsNull())
         {
         found = false;
         for(int j = 1; j <= L().r(); ++j)
@@ -418,7 +486,7 @@ diag(Tensor& D) const
             Diag *= L();
         }
 
-    if(R().isNotNull())
+    if(!RIsNull())
         {
         found = false;
         for(int j = 1; j <= R().r(); ++j)
@@ -441,7 +509,7 @@ diag(Tensor& D) const
     }
 
 template <class Tensor>
-int LocalOp<Tensor>::
+int inline LocalOp<Tensor>::
 size() const
     {
     if(this->isNull()) Error("LocalOp is null");
@@ -450,23 +518,30 @@ size() const
         //Calculate linear size of this 
         //op as a square matrix
         size_ = 1;
-        if(L().isNotNull()) 
+        if(!LIsNull()) 
             {
             size_ *= index_in_common(*Op1_,L(),Link).m();
             }
-        if(R().isNotNull()) 
+        if(!RIsNull()) 
             {
             size_ *= index_in_common(*Op2_,R(),Link).m();
             }
 
-            size_ *= Op1_->findtype(Site).m();
-            size_ *= Op2_->findtype(Site).m();
+        try {
+        size_ *= Op1_->findtype(Site).m();
+            }
+        catch(const ITError& e)
+            {
+            Print((*Op1_));
+            throw e;
+            }
+        size_ *= Op2_->findtype(Site).m();
         }
     return size_;
     }
 
 template <class Tensor>
-void LocalOp<Tensor>::
+void inline LocalOp<Tensor>::
 makeBond() const
     {
     if(bond_.isNull()) 
