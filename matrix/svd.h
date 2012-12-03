@@ -17,10 +17,10 @@ class Vector;
 // part of B that is not diagonal (usually part involving 
 // the smallest singular values) and SVD it, etc.
 //
-// Making newThresh bigger improves the accuracy but
+// Making newThresh larger improves the accuracy but
 // makes the algorithm run slower.
 //
-// If newThresh == 0 the algorithm does only one pass.
+// For the special value newThresh == 0 the algorithm does only one pass.
 //
 
 void 

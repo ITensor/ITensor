@@ -36,15 +36,14 @@ writeMatrix(const string& fname, const Matrix& M)
 // part of B that is not diagonal (usually part involving 
 // the smallest singular values) and SVD it, etc.
 //
-// Making newThresh bigger improves the accuracy but
+// Making newThresh larger improves the accuracy but
 // makes the algorithm run slower.
 //
-// If newThresh == 0 the algorithm does only one pass.
+// For the special value newThresh == 0 the algorithm does only one pass.
 //
 
 void checksvd(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V)
     {
-#ifdef CHKSVD
     Matrix Ach = U;
     for(int i = 1; i <= D.Length(); i++)
 	Ach.Column(i) *= D(i);
@@ -53,8 +52,8 @@ void checksvd(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V)
     Real nor = Norm(A.TreatAsVector());
     if(nor != 0.0)
 	cout << "relative error with sqrt is low level svd is " << Norm(Ach.TreatAsVector())/nor << endl;
-#endif
     }
+
 void 
 SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
     Real newThresh)
@@ -68,8 +67,10 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
         SVD(At,Vt,D,Ut,newThresh);
         U = Ut.t();
         V = Vt.t();
-	checksvd(A,U,D,V);
-	return;
+#ifdef CHKSVD
+        checksvd(A,U,D,V);
+#endif
+        return;
         }
 
     //Form 'density matrix' rho
@@ -94,10 +95,12 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
     V = Vt.t();
 
     if(D(1) == 0 || newThresh == 0)
-	{
-	checksvd(A,U,D,V);
-	return;
-	}
+        {
+#ifdef CHKSVD
+        checksvd(A,U,D,V);
+#endif
+        return;
+        }
 
     int start = 2;
     const Real D1 = D(1);
@@ -107,10 +110,12 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
         }
 
     if(start >= (n-1)) 
-	{
-	checksvd(A,U,D,V);
-	return;
-	}
+        {
+#ifdef CHKSVD
+        checksvd(A,U,D,V);
+#endif
+        return;
+        }
 
     //
     //Recursively SVD part of B 
@@ -129,7 +134,9 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
 
     V.SubMatrix(start,n,1,m) = v * Vt.t().SubMatrix(start,n,1,m);
 
-    checksvd(A,U,D,V);
+#ifdef CHKSVD
+	checksvd(A,U,D,V);
+#endif
 
     return;
     }
