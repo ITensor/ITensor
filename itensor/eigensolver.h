@@ -74,6 +74,11 @@ class Eigensolver
     maxIter(int val) { maxiter_ = val; }
 
     int 
+    minIter() const { return miniter_; }
+    void 
+    minIter(int val) { miniter_ = val; }
+
+    int 
     debugLevel() const { return debug_level_; }
     void 
     debugLevel(int val) { debug_level_ = val; }
@@ -142,6 +147,7 @@ class Eigensolver
         };
 
     int maxiter_;
+    int miniter_;
     Real errgoal_;
     int numget_;
     int debug_level_;
@@ -152,13 +158,14 @@ class Eigensolver
 inline Eigensolver::
 Eigensolver(int maxiter, Real errgoal, int numget)
     : maxiter_(maxiter),
+      miniter_(1),
       errgoal_(errgoal),
       numget_(numget),
       debug_level_(-1)
     { }
 
 template <class LocalT, class Tensor> 
-inline Real Eigensolver::
+Real inline Eigensolver::
 davidson(const LocalT& A, Tensor& phi) const
     {
     typedef typename Tensor::SparseT
@@ -167,67 +174,97 @@ davidson(const LocalT& A, Tensor& phi) const
     phi *= 1.0/phi.norm();
 
     const int maxsize = A.size();
-    const int actual_maxiter = min(maxiter_,maxsize);
-    Real lambda = 1E30, 
-         last_lambda = lambda,
-         qnorm = 1E30;
+    const int actual_maxiter = min(maxiter_,maxsize-1);
+    if(debug_level_ > 2)
+        {
+        Cout << Format("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d") 
+                % (maxsize-1) % maxiter_ % actual_maxiter << Endl;
+        }
 
     std::vector<Tensor> V(actual_maxiter+2),
                        AV(actual_maxiter+2);
 
     //Storage for Matrix that gets diagonalized 
     Matrix M(actual_maxiter+2,actual_maxiter+2);
+    M = NaN; //set to NaN to ensure failure if we use uninitialized elements
 
+    //Mref holds current projection of A into V's
     MatrixRef Mref(M.SubMatrix(1, 1, 1, 1));
 
     //Get diagonal of A to use later
     Tensor Adiag(phi);
     A.diag(Adiag);
 
-    int iter = 1;
-    for(int ii = 1; ii <= actual_maxiter; ++ii)
+    Real lambda = NaN, //current lowest eigenvalue
+         last_lambda = NaN,
+         qnorm = NaN; //norm of residual, primary convergence criterion
+
+    V[0] = phi;
+    A.product(V[0],AV[0]);
+
+    const Real initEn = Dot(conj(V[0]),AV[0]);
+
+    if(debug_level_ > 2)
+        Cout << Format("Initial Davidson energy = %.10f") % initEn << Endl;
+
+    //const Real enshift = 0;
+    const Real enshift = initEn;
+
+    int iter = 0;
+    for(int ii = 0; ii <= actual_maxiter; ++ii)
         {
         //Diagonalize conj(V)*A*V
         //and compute the residual q
-        Tensor q;
-        if(ii == 1)
+
+        const int ni = ii+1; 
+        Tensor& q = V.at(ni);
+
+        if(ii == 0)
             {
-            V[1] = phi;
-            A.product(V[1],AV[1]);
-
-            //No need to diagonalize
-            lambda = Dot(conj(V[1]),AV[1]);
-            Mref = lambda;
-
+            lambda = initEn;
+            Mref = lambda-enshift;
             //Calculate residual q
-            q = V[1];
+            q = V[0];
             q *= -lambda;
-            q += AV[1]; 
+            q += AV[0]; 
             }
-        else // ii != 1
+        else // ii != 0
             {
+            if(debug_level_ > 2)
+                {
+                Cout << "Step " << ii << ", Mref = " << Endl;
+                Cout << Mref; 
+                }
+
             //Diagonalize M
             Vector D;
             Matrix U;
             EigenValues(Mref,D,U);
 
+            if(debug_level_ > 2)
+                {
+                Cout << "D = " << D;
+                Cout << Format("lambda = %.10f") % (D(1)+enshift) << Endl;
+                }
+
             //lambda is the minimum eigenvalue of M
-            lambda = D(1);
+            lambda = D(1)+enshift;
 
             //Compute corresponding eigenvector
             //phi of A from the min evec of M
             //(and start calculating residual q)
-            phi = U(1,1)*V[1];
-            q   = U(1,1)*AV[1];
-            for(int k = 2; k <= ii; ++k)
+            phi = U(1,1)*V[0];
+            q   = U(1,1)*AV[0];
+            for(int k = 1; k <= ii; ++k)
                 {
-                phi += U(k,1)*V[k];
-                q   += U(k,1)*AV[k];
+                phi += U(k+1,1)*V[k];
+                q   += U(k+1,1)*AV[k];
                 }
 
             //Calculate residual q
             q += (-lambda)*phi;
 
+            //Fix sign
             if(U(1,1) < 0)
                 {
                 phi *= -1;
@@ -237,10 +274,40 @@ davidson(const LocalT& A, Tensor& phi) const
 
         //Check convergence
         qnorm = q.norm();
-        if( (qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_) 
-            || qnorm < max(1E-12,errgoal_ * 1.0e-3) )
+
+        const bool converged = (qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_) 
+                               || qnorm < max(1E-12,errgoal_ * 1.0e-3);
+
+        if((converged && ii >= miniter_) || (ii == actual_maxiter))
             {
+            if(debug_level_ > 2) //Explain why breaking out of Davidson loop early
+                {
+                if((qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_))
+                    {
+                    Cout << "Breaking out of Davidson because errgoal reached" << Endl;
+                    }
+                else
+                if(qnorm < max(1E-12,errgoal_ * 1.0e-3))
+                    {
+                    Cout << "Breaking out of Davidson because small errgoal obtained" << Endl;
+                    }
+                else
+                if(ii == actual_maxiter)
+                    {
+                    Cout << "Breaking out of Davidson because ii == actual_maxiter" << Endl;
+                    }
+                }
+
             break; //Out of ii loop to return
+            }
+
+        if(debug_level_ > 1 || (ii == 0 && debug_level_ > 0))
+            {
+            Cout << Format("I %d q %.0E E %.10f")
+                           % ii
+                           % qnorm
+                           % lambda 
+                           << Endl;
             }
 
         /*
@@ -266,60 +333,75 @@ davidson(const LocalT& A, Tensor& phi) const
             }
         */
 
-        if(debug_level_ > 1 || (ii == 1 && debug_level_ > 0))
-            {
-            Cout << Format("I %d q %.0E E %.10f")
-                           % ii
-                           % qnorm
-                           % lambda 
-                           << Endl;
-            }
 
-        //Apply Davidson preconditioner
-        {
-        DavidsonPrecond dp(lambda);
-        Tensor cond(Adiag);
-        cond.mapElems(dp);
-        q /= cond;
-        }
-
-        //Do Gram-Schmidt on d
-        //to include it in the subbasis
-        Tensor& d = V[ii+1];
-        d = q;
-        Vector Vd(ii);
-        for(int pass = 1; pass <= 2; ++pass)
-            {
-            for(int k = 1; k <= ii; ++k)
-                Vd(k) = Dot(conj(V[k]),d);
-
-            Tensor proj = Vd(1)*V[1];
-            for(int k = 2; k <= ii; ++k)
-                proj += Vd(k)*V[k];
-            proj *= -1;
-
-            d += proj;
-            d *= 1./(d.norm()+1E-33);
-            }
-
-        last_lambda = lambda;
-
-        //Expand AV and M
-        //for next step
         if(ii < actual_maxiter)
             {
-            A.product(d,AV[ii+1]);
+            //On all but last step,
+            //compute next Krylov/trial vector by
+            //first applying Davidson preconditioner
+            //formula then orthogonalizing against
+            //other vectors
+
+            if(debug_level_ > 2)
+                Cout << Format("Step %d, making next Davidson vector") % ii << Endl;
+
+            //Apply Davidson preconditioner
+            {
+            DavidsonPrecond dp(lambda);
+            Tensor cond(Adiag);
+            cond.mapElems(dp);
+            q /= cond;
+            }
+
+            //Do Gram-Schmidt on d
+            //to include it in the subbasis
+            std::vector<Real> Vq(ni,NaN);
+            for(int pass = 1; pass <= 2; ++pass)
+                {
+                for(int k = 0; k < ni; ++k)
+                    Vq.at(k) = Dot(conj(V[k]),q);
+
+                Tensor proj = Vq[0]*V[0];
+                for(int k = 1; k < ni; ++k)
+                    proj += Vq[k]*V[k];
+                proj *= -1;
+
+                q += proj;
+                q *= 1./q.norm();
+                }
+
+            if(debug_level_ > 2)
+                {
+                //Check V's are orthonormal
+                Matrix Vo(ni+1,ni+1); 
+                Vo = NaN;
+                for(int r = 1; r <= ni+1; ++r)
+                for(int c = r; c <= ni+1; ++c)
+                    {
+                    Vo(r,c) = Dot(conj(V[r-1]),V[c-1]);
+                    Vo(c,r) = Vo(r,c);
+                    }
+                Print(Vo);
+                }
+
+            last_lambda = lambda;
+
+            //Expand AV and M
+            //for next step
+            A.product(V[ni],AV[ni]);
 
             //Add new row and column to M
-            Mref << M.SubMatrix(1,ii+1,1,ii+1);
-            Vector newCol(ii+1);
-            for(int k = 1; k <= ii+1; ++k)
+            Mref << M.SubMatrix(1,ni+1,1,ni+1);
+            Vector newCol(ni+1);
+            for(int k = 0; k <= ni; ++k)
                 {
-                newCol(k) = Dot(conj(V[k]),AV[ii+1]);
+                newCol(k+1) = Dot(conj(V.at(k)),AV.at(ni));
                 }
-            Mref.Column(ii+1) = newCol;
-            Mref.Row(ii+1) = newCol;
-            }
+            newCol(ni+1) -= enshift;
+            Mref.Column(ni+1) = newCol;
+            Mref.Row(ni+1) = newCol;
+
+            } //if ii < actual_maxiter
 
         ++iter;
 
