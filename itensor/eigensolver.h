@@ -20,13 +20,6 @@ orthog(std::vector<Tensor>& T, int num, int numpass, int start = 1);
  * - May be faster to do a direct solution
  *   for small sizes.
  *
- * - May be able to avoid additional
- *   work on the last iteration.
- *   See line 140 of MatrixRef david.cc
- *
- * - Is the MatrixRef Davidon
- *   actually doing fewer iterations?
- *
  */
 
 class Eigensolver
@@ -207,8 +200,8 @@ davidson(const LocalT& A, Tensor& phi) const
     if(debug_level_ > 2)
         Cout << Format("Initial Davidson energy = %.10f") % initEn << Endl;
 
-    //const Real enshift = 0;
-    const Real enshift = initEn;
+    const Real enshift = 0;
+    //const Real enshift = initEn;
 
     int iter = 0;
     for(int ii = 0; ii <= actual_maxiter; ++ii)
