@@ -299,23 +299,23 @@ class MPSt
 
     void 
     svdBond(int b, const Tensor& AA, Direction dir, 
-            const Option& opt = Option());
+            const OptSet& opts = Global::opts());
 
     template <class LocalOpT>
     void 
     svdBond(int b, const Tensor& AA, Direction dir, 
-                const LocalOpT& PH, const Option& opt = Option());
+                const LocalOpT& PH, const OptSet& opts = Global::opts());
 
     void
-    doSVD(int b, const Tensor& AA, Direction dir, const Option& opt = Option())
+    doSVD(int b, const Tensor& AA, Direction dir, const OptSet& opts = Global::opts())
         { 
-        svdBond(b,AA,dir,opt); 
+        svdBond(b,AA,dir,opts); 
         }
 
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
     void 
-    position(int i, const Option& opt = Option());
+    position(int i, const OptSet& opts = Global::opts());
 
     int 
     orthoCenter() const 
@@ -325,7 +325,7 @@ class MPSt
         }
 
     void 
-    orthogonalize(const Option& opt = Option());
+    orthogonalize(const OptSet& opts = Global::opts());
 
     //Checks if A[i] is left (left == true) 
     //or right (left == false) orthogonalized
@@ -531,10 +531,10 @@ template <class Tensor>
 template <class LocalOpT>
 void MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, 
-            const LocalOpT& PH, const Option& opt)
+            const LocalOpT& PH, const OptSet& opts)
     {
     setBond(b);
-    if(opt == PreserveShape())
+    if(opts.boolOrDefault("PreserveShape",false))
         {
         //The idea of the preserve_shape flag is to 
         //leave any external indices of the MPS on the

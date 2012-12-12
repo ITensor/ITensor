@@ -27,12 +27,11 @@ class DMRGObserver : public Observer
 
     void virtual
     measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
-              const Option& opt1 = Option(), const Option& opt2 = Option(), 
-              const Option& opt3 = Option(), const Option& opt4 = Option());
+            const OptSet& opts = Global::opts());
     
     bool virtual
     checkDone(int sw, const SVDWorker& svd, Real energy,
-                const Option& opt1 = Option(), const Option& opt2 = Option());
+              const OptSet& opts = Global::opts());
 
     Real 
     energyErrgoal() const { return energy_errgoal; }
@@ -67,15 +66,16 @@ class DMRGObserver : public Observer
 
 inline DMRGObserver::
 DMRGObserver() 
-    : energy_errgoal(-1), 
-      orth_weight(1),
-      printeigs(true)
+    : 
+    energy_errgoal(-1), 
+    orth_weight(1),
+    printeigs(true)
     { }
 
 
 void inline DMRGObserver::
 measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
-        const Option& opt1, const Option& opt2, const Option& opt3, const Option& opt4)
+        const OptSet& opts)
     {
     if(printeigs)
         {
@@ -99,7 +99,7 @@ measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
 
 bool inline DMRGObserver::
 checkDone(int sw, const SVDWorker& svd, Real energy,
-          const Option& opt1, const Option& opt2)
+          const OptSet& opts)
     {
     static Real last_energy;
     

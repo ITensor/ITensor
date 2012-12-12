@@ -323,11 +323,10 @@ class Global
         static bool checkArrows_ = true;
         return checkArrows_;
         }
-    static OptionSet&
-    options()
+    static OptSet&
+    opts()
         {
-        static OptionSet oset_;
-        return oset_;
+        return OptSet::globalOpts();
         }
     };
 

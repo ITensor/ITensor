@@ -674,19 +674,19 @@ void MPSt<IQTensor>::noprimelink();
 
 template<class Tensor> void
 MPSt<Tensor>::
-svdBond(int b, const Tensor& AA, Direction dir, const Option& opt)
+svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
     {
-    svdBond(b,AA,dir,LocalMPO<Tensor>::Null(),opt);
+    svdBond(b,AA,dir,LocalMPO<Tensor>::Null(),opts);
     }
 template void MPSt<ITensor>::
-svdBond(int b, const ITensor& AA, Direction dir, const Option& opt);
+svdBond(int b, const ITensor& AA, Direction dir, const OptSet& opts);
 template void MPSt<IQTensor>::
-svdBond(int b, const IQTensor& AA, Direction dir, const Option& opt);
+svdBond(int b, const IQTensor& AA, Direction dir, const OptSet& opts);
 
 
 template<class Tensor> void
 MPSt<Tensor>::
-position(int i, const Option& opt)
+position(int i, const OptSet& opts)
     {
     if(isNull()) Error("position: MPS is null");
     while(l_orth_lim_ < i-1)
@@ -695,7 +695,7 @@ position(int i, const Option& opt)
         setBond(l_orth_lim_+1);
         Tensor WF = AA(l_orth_lim_+1) * AA(l_orth_lim_+2);
         //cout << format("In position, SVDing bond %d\n") % (l_orth_lim_+1) << endl;
-        svdBond(l_orth_lim_+1,WF,Fromleft,opt);
+        svdBond(l_orth_lim_+1,WF,Fromleft,opts);
         }
     while(r_orth_lim_ > i+1)
         {
@@ -703,25 +703,25 @@ position(int i, const Option& opt)
         setBond(r_orth_lim_-2);
         Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
         //cout << format("In position, SVDing bond %d\n") % (r_orth_lim_-2) << endl;
-        svdBond(r_orth_lim_-2,WF,Fromright,opt);
+        svdBond(r_orth_lim_-2,WF,Fromright,opts);
         }
     is_ortho_ = true;
     }
 template void MPSt<ITensor>::
-position(int b, const Option& opt);
+position(int b, const OptSet& opts);
 template void MPSt<IQTensor>::
-position(int b, const Option& opt);
+position(int b, const OptSet& opts);
 
 template <class Tensor>
 void MPSt<Tensor>::
-orthogonalize(const Option& opt)
+orthogonalize(const OptSet& opts)
     {
     //Do a half-sweep to the right, orthogonalizing each bond
     //but do not truncate since the basis to the right might not
     //be ortho (i.e. use the current m).
     svd_.useOrigM(true);
     position(N);
-    if(opt == Verbose())
+    if(opts.boolOrDefault("Verbose",false))
         {
         std::cout << "Done orthogonalizing, starting truncation." 
                   << std::endl;
@@ -733,9 +733,9 @@ orthogonalize(const Option& opt)
     is_ortho_ = true;
     }
 template
-void MPSt<ITensor>::orthogonalize(const Option& opt);
+void MPSt<ITensor>::orthogonalize(const OptSet& opts);
 template
-void MPSt<IQTensor>::orthogonalize(const Option& opt);
+void MPSt<IQTensor>::orthogonalize(const OptSet& opts);
 
 //Methods for use internally by checkOrtho
 ITensor
@@ -873,7 +873,7 @@ template <class Tensor>
 void MPSt<Tensor>::
 initWrite()
     {
-    std::string global_write_dir = Global::options().stringOrDefault("WriteDir","./");
+    std::string global_write_dir = Global::opts().stringOrDefault("WriteDir","./");
     writedir_ = mkTempDir("psi",global_write_dir);
     std::cout << "Successfully created directory " + writedir_ << std::endl;
 

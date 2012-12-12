@@ -20,7 +20,7 @@ class LocalMPO_MPS
 
     LocalMPO_MPS(const MPOt<Tensor>& Op, 
                  const std::vector<MPSt<Tensor> >& psis,
-                 const Option& opt1 = Option(), const Option& opt2 = Option());
+                 const OptSet& opts = Global::opts());
 
     //
     // Typedefs
@@ -117,7 +117,7 @@ template <class Tensor>
 inline LocalMPO_MPS<Tensor>::
 LocalMPO_MPS(const MPOt<Tensor>& Op,
              const std::vector<MPSt<Tensor> >& psis,
-             const Option& opt1, const Option& opt2)
+             const OptSet& opts)
     : 
     Op_(&Op),
     psis_(&psis),
@@ -129,9 +129,8 @@ LocalMPO_MPS(const MPOt<Tensor>& Op,
     for(size_t j = 0; j < lmps_.size(); ++j)
         lmps_[j] = LocalMPOType(psis[j]);
 
-    OptionSet oset(opt1,opt2);
-    if(oset.defined("Weight"))
-        weight(oset.realVal("Weight"));
+    if(opts.defined("Weight"))
+        weight(opts.realVal("Weight"));
     }
 
 template <class Tensor>

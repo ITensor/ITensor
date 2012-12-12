@@ -9,7 +9,7 @@ using boost::format;
 
 template<class Tensor> 
 void MPOt<Tensor>::
-position(int i, const Option& opt)
+position(int i, const OptSet& opts)
     {
     if(isNull()) Error("position: MPS is null");
 
@@ -17,25 +17,25 @@ position(int i, const Option& opt)
         {
         if(l_orth_lim_ < 0) l_orth_lim_ = 0;
         Tensor WF = AA(l_orth_lim_+1) * AA(l_orth_lim_+2);
-        svdBond(l_orth_lim_+1,WF,Fromleft,opt);
+        svdBond(l_orth_lim_+1,WF,Fromleft,opts);
         }
     while(r_orth_lim_ > i+1)
         {
         if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
         Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
-        svdBond(r_orth_lim_-2,WF,Fromright,opt);
+        svdBond(r_orth_lim_-2,WF,Fromright,opts);
         }
 
     is_ortho_ = true;
     }
 template void MPOt<ITensor>::
-position(int b, const Option& opt);
+position(int b, const OptSet& opts);
 template void MPOt<IQTensor>::
-position(int b, const Option& opt);
+position(int b, const OptSet& opts);
 
 template <class Tensor>
 void MPOt<Tensor>::
-orthogonalize(const Option& opt)
+orthogonalize(const OptSet& opts)
     {
     //Do a half-sweep to the right, orthogonalizing each bond
     //but do not truncate since the basis to the right might not
@@ -56,15 +56,15 @@ orthogonalize(const Option& opt)
     is_ortho_ = true;
     }
 template
-void MPOt<ITensor>::orthogonalize(const Option& opt);
+void MPOt<ITensor>::orthogonalize(const OptSet& opts);
 template
-void MPOt<IQTensor>::orthogonalize(const Option& opt);
+void MPOt<IQTensor>::orthogonalize(const OptSet& opts);
 
 template <class Tensor>
 void MPOt<Tensor>::
-svdBond(int b, const Tensor& AA, Direction dir, const Option& opt)
+svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
     {
-    if(opt == PreserveShape())
+    if(opts.boolOrDefault("PreserveShape",false))
         {
         //The idea of the preserve_shape flag is to 
         //leave any external indices of the MPO on the
@@ -107,9 +107,9 @@ svdBond(int b, const Tensor& AA, Direction dir, const Option& opt)
         }
     }
 template void MPOt<ITensor>::
-svdBond(int b, const ITensor& AA, Direction dir, const Option& opt);
+svdBond(int b, const ITensor& AA, Direction dir, const OptSet& opts);
 template void MPOt<IQTensor>::
-svdBond(int b, const IQTensor& AA, Direction dir, const Option& opt);
+svdBond(int b, const IQTensor& AA, Direction dir, const OptSet& opts);
 
 template <class Tensor>
 MPOt<Tensor>& MPOt<Tensor>::

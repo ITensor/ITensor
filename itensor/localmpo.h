@@ -44,10 +44,10 @@ class LocalMPO
     LocalMPO();
 
     LocalMPO(const MPOt<Tensor>& Op, 
-             const Option& opt1 = Option(), const Option& opt2 = Option()); 
+             const OptSet& opts = Global::opts());
 
     LocalMPO(const MPSt<Tensor>& Psi, 
-             const Option& opt1 = Option(), const Option& opt2 = Option()); 
+             const OptSet& opts = Global::opts());
 
     //
     // Sparse Matrix Methods
@@ -243,7 +243,7 @@ LocalMPO()
 template <class Tensor>
 inline LocalMPO<Tensor>::
 LocalMPO(const MPOt<Tensor>& Op, 
-         const Option& opt1, const Option& opt2)
+         const OptSet& opts)
     : Op_(&Op),
       PH_(Op.NN()+2),
       LHlim_(0),
@@ -253,15 +253,14 @@ LocalMPO(const MPOt<Tensor>& Op,
       writedir_("."),
       Psi_(0)
     { 
-    OptionSet oset(opt1,opt2);
-    if(oset.defined("NumCenter"))
-        numCenter(oset.intVal("NumCenter"));
+    if(opts.defined("NumCenter"))
+        numCenter(opts.intVal("NumCenter"));
     }
 
 template <class Tensor>
 inline LocalMPO<Tensor>::
 LocalMPO(const MPSt<Tensor>& Psi, 
-         const Option& opt1, const Option& opt2)
+         const OptSet& opts)
     : Op_(0),
       PH_(Psi.NN()+2),
       LHlim_(0),
@@ -271,9 +270,8 @@ LocalMPO(const MPSt<Tensor>& Psi,
       writedir_("."),
       Psi_(&Psi)
     { 
-    OptionSet oset(opt1,opt2);
-    if(oset.defined("NumCenter"))
-        numCenter(oset.intVal("NumCenter"));
+    if(opts.defined("NumCenter"))
+        numCenter(opts.intVal("NumCenter"));
     }
 
 template <class Tensor> inline
@@ -593,7 +591,7 @@ template <class Tensor>
 void inline LocalMPO<Tensor>::
 initWrite()
     {
-    std::string global_write_dir = Global::options().stringOrDefault("WriteDir","./");
+    std::string global_write_dir = Global::opts().stringOrDefault("WriteDir","./");
     writedir_ = mkTempDir("PH",global_write_dir);
     //std::cout << "Successfully created directory " + writedir_ << std::endl;
     }

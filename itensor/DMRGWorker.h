@@ -27,10 +27,10 @@ class DMRGWorker : public BaseDMRGWorker<MPSType>
     MPOType;
     
     DMRGWorker(const Sweeps& sweeps,
-               const Option& opt1 = Option(), const Option& opt2 = Option());
+               const OptSet& opts = Global::opts());
 
     DMRGWorker(const Sweeps& sweeps, Observer& obs,
-               const Option& opt1 = Option(), const Option& opt2 = Option());
+               const OptSet& opts = Global::opts());
 
     using Parent::sweeps;
 
@@ -61,7 +61,7 @@ class DMRGWorker : public BaseDMRGWorker<MPSType>
     /////////////
 
     void
-    parseOptions(const Option& opt1, const Option& opt2);
+    parseOptions(const OptSet& opts);
 
     Real virtual
     runInternal(const MPOType& H, MPSType& psi);
@@ -87,9 +87,9 @@ class DMRGWorker : public BaseDMRGWorker<MPSType>
 template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps,
-     const Option& opt1 = Option(), const Option& opt2 = Option())
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,opt1,opt2);
+    DMRGWorker<MPSType> worker(sweeps,opts);
     worker.run(H,psi);
     return worker.energy();
     }
@@ -99,9 +99,9 @@ template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, 
      Observer& obs,
-     const Option& opt1 = Option(), const Option& opt2 = Option())
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,obs,opt1,opt2);
+    DMRGWorker<MPSType> worker(sweeps,obs,opts);
     worker.run(H,psi);
     return worker.energy();
     }
@@ -110,9 +110,9 @@ dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps,
 template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps,
-     const Option& opt1 = Option(), const Option& opt2 = Option())
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,opt1,opt2);
+    DMRGWorker<MPSType> worker(sweeps,opts);
     worker.run(H,psi);
     return worker.energy();
     }
@@ -122,9 +122,9 @@ template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps, 
      Observer& obs,
-     const Option& opt1 = Option(), const Option& opt2 = Option())
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,obs,opt1,opt2);
+    DMRGWorker<MPSType> worker(sweeps,obs,opts);
     worker.run(H,psi);
     return worker.energy();
     }
@@ -136,9 +136,9 @@ Real inline
 dmrg(MPSType& psi, 
      const MPOType& H, const std::vector<MPSType>& psis, 
      const Sweeps& sweeps, 
-     const Option& opt1 = Option(), const Option& opt2 = Option())
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,opt1,opt2);
+    DMRGWorker<MPSType> worker(sweeps,opts);
     worker.run(H,psis,psi);
     return worker.energy();
     }
@@ -150,9 +150,9 @@ Real inline
 dmrg(MPSType& psi, 
      const MPOType& H, const std::vector<MPSType>& psis, 
      const Sweeps& sweeps, Observer& obs, 
-     const Option& opt1 = Option(), const Option& opt2 = Option())
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,obs,opt1,opt2);
+    DMRGWorker<MPSType> worker(sweeps,obs,opts);
     worker.run(H,psis,psi);
     return worker.energy();
     }
@@ -166,36 +166,35 @@ dmrg(MPSType& psi,
 template <class MPSType> inline
 DMRGWorker<MPSType>::
 DMRGWorker(const Sweeps& sweeps,
-           const Option& opt1, const Option& opt2)
+           const OptSet& opts)
     : 
     Parent(sweeps), 
     energy_(0),
     quiet_(false),
     weight_(1)
     { 
-    parseOptions(opt1,opt2);
+    parseOptions(opts);
     }
 
 template <class MPSType> inline
 DMRGWorker<MPSType>::
 DMRGWorker(const Sweeps& sweeps, Observer& obs,
-           const Option& opt1, const Option& opt2)
+           const OptSet& opts)
     : 
     Parent(sweeps, obs), 
     energy_(0),
     quiet_(false),
     weight_(1)
     { 
-    parseOptions(opt1,opt2);
+    parseOptions(opts);
     }
 
 template <class MPSType> inline
 void DMRGWorker<MPSType>::
-parseOptions(const Option& opt1, const Option& opt2)
+parseOptions(const OptSet& opts)
     {
-    OptionSet oset(opt1,opt2);
-    quiet_ = oset.boolOrDefault("Quiet",false);
-    weight_ = oset.realOrDefault("Weight",1);
+    quiet_ = opts.boolOrDefault("Quiet",false);
+    weight_ = opts.realOrDefault("Weight",1);
     }
 
 
@@ -222,7 +221,7 @@ runInternal(const MPOType& H, MPSType& psi)
     Eigensolver solver;
     solver.debugLevel(debuglevel);
 
-    const Option doNorm = DoNormalize(true);
+    const Opt doNorm = DoNormalize(true);
     
     for(int sw = 1; sw <= sweeps().nsweep(); ++sw)
         {
@@ -233,10 +232,10 @@ runInternal(const MPOType& H, MPSType& psi)
         solver.maxIter(sweeps().niter(sw));
 
         if(!PH.doWrite() 
-           && Global::options().defined("WriteM")
-           && sweeps().maxm(sw) >= Global::options().intVal("WriteM"))
+           && Global::opts().defined("WriteM")
+           && sweeps().maxm(sw) >= Global::opts().intVal("WriteM"))
             {
-            std::string write_dir = Global::options().stringOrDefault("WriteDir","./");
+            std::string write_dir = Global::opts().stringOrDefault("WriteDir","./");
 
             if(!quiet_)
                 std::cout << "\nTurning on write to disk, write_dir = " << write_dir << std::endl;
@@ -309,7 +308,7 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
     Eigensolver solver;
     solver.debugLevel(debuglevel);
 
-    const Option doNorm = DoNormalize(true);
+    const Opt doNorm = DoNormalize(true);
     
     for(int sw = 1; sw <= sweeps().nsweep(); ++sw)
         {
@@ -384,7 +383,7 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
     Eigensolver solver;
     solver.debugLevel(debuglevel);
 
-    const Option doNorm = DoNormalize(true);
+    const Opt doNorm = DoNormalize(true);
     
     for(int sw = 1; sw <= sweeps().nsweep(); ++sw)
         {
@@ -395,10 +394,10 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
         solver.maxIter(sweeps().niter(sw));
 
         if(!PH.doWrite() 
-           && Global::options().defined("WriteM")
-           && sweeps().maxm(sw) >= Global::options().intVal("WriteM"))
+           && Global::opts().defined("WriteM")
+           && sweeps().maxm(sw) >= Global::opts().intVal("WriteM"))
             {
-            std::string write_dir = Global::options().stringOrDefault("WriteDir","./");
+            std::string write_dir = Global::opts().stringOrDefault("WriteDir","./");
 
             if(!quiet_)
                 std::cout << "\nTurning on write to disk, write_dir = " << write_dir << std::endl;

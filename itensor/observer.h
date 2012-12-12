@@ -15,12 +15,11 @@ class Observer
     
     void virtual
     measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
-            const Option& opt1 = Option(), const Option& opt2 = Option(),
-            const Option& opt3 = Option(), const Option& opt4 = Option()) = 0;
+            const OptSet& opts = Global::opts()) = 0;
     
     bool virtual
     checkDone(int sw, const SVDWorker& svd, Real energy, 
-              const Option& opt1 = Option(), const Option& opt2 = Option()) = 0;
+              const OptSet& opts = Global::opts()) = 0;
 
     virtual ~Observer() { }
 
