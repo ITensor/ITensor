@@ -244,6 +244,20 @@ operator&(const Opt& opt1, const Opt& opt2)
     return OptSet(opt1,opt2);
     }
 
+OptSet inline
+operator&(OptSet oset, const Opt& opt)
+    {
+    oset.add(opt);
+    return oset;
+    }
+
+OptSet inline
+operator&(const Opt& opt, OptSet oset)
+    {
+    oset.add(opt);
+    return oset;
+    }
+
 inline Opt::
 Opt()
     :

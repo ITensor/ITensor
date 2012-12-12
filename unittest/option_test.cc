@@ -68,6 +68,18 @@ TEST(TestOptSet)
     CHECK(opts2.boolVal("Auto") == false);
     }
 
+TEST(Operator)
+    {
+    OptSet oset1 = Quiet() & Auto();
+    CHECK(oset1.defined("Quiet"));
+    CHECK(oset1.defined("Auto"));
+
+    OptSet oset2 = Quiet() & Auto() & Pinning(1);
+    CHECK(oset1.defined("Quiet"));
+    CHECK(oset1.defined("Auto"));
+    CHECK(oset1.defined("Pinning"));
+    }
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
