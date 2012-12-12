@@ -1,20 +1,21 @@
 #include "test.h"
 #include <boost/test/unit_test.hpp>
+#include "global.h"
 #include "option.h"
 
 using namespace std;
 using namespace boost;
 
-BOOST_AUTO_TEST_SUITE(OptionTest)
+BOOST_AUTO_TEST_SUITE(OptTest)
 
 TEST(BasicUsage)
     {
-    Option o1 = Quiet();
-    Option o2 = Quiet();
+    Opt o1 = Quiet();
+    Opt o2 = Quiet();
 
     CHECK(o1 == o2);
 
-    Option o3 = Quiet(false);
+    Opt o3 = Quiet(false);
     CHECK(o1 == o3);
     CHECK(o2 == o3);
 
@@ -27,28 +28,44 @@ TEST(BasicUsage)
     //cout << Pinning(-0.42) << endl;
     }
 
-TEST(TestOptionSet)
+TEST(TestOptSet)
     {
-    Option o1 = Quiet();
-    Option o2 = Pinning(0.4);
-    Option o3 = Auto(false);
-    Option o4 = Option();
+    OptSet& gopts = OptSet::GlobalOpts();
 
-    OptionSet oset(o1,o2,o3,o4);
+    Opt o1 = Quiet();
+    Opt o2 = Pinning(0.4);
+    Opt o3 = Auto(false);
+    Opt o4 = Opt();
 
-    CHECK(oset.defined("Quiet"));
-    CHECK(oset.defined(Quiet()));
-    CHECK(oset.get("Quiet").name() == "Quiet");
-    CHECK(oset.boolVal("Quiet") == true);
+    gopts.add(o1,o2);
 
-    CHECK(oset.defined("Pinning"));
-    CHECK(oset.realVal("Pinning") == 0.4);
-    CHECK(oset.get("Pinning").name() == "Pinning");
+    CHECK(gopts.boolVal("Quiet") == true);
 
-    CHECK(oset.defined("Auto"));
-    CHECK(oset.boolVal("Auto") == false);
+    //cout << "Global opts: " << endl;
+    //cout << gopts << endl;
 
-    //cout << oset;
+    OptSet opts1(Quiet(false));
+
+    //cout << "opts1: " << endl;
+    //cout << opts1 << endl;
+
+    CHECK(opts1.defined("Quiet"));
+    CHECK(opts1.defined(Quiet()));
+    CHECK(opts1.get("Quiet").name() == "Quiet");
+    CHECK(opts1.boolVal("Quiet") == false);
+
+    OptSet opts2(opts1);
+    opts2.add(o3,o4);
+
+    //cout << "opts2: " << endl;
+    //cout << opts2 << endl;
+
+    CHECK(opts2.defined("Pinning"));
+    CHECK(opts2.realVal("Pinning") == 0.4);
+    CHECK(opts2.get("Pinning").name() == "Pinning");
+
+    CHECK(opts2.defined("Auto"));
+    CHECK(opts2.boolVal("Auto") == false);
     }
 
 

@@ -326,7 +326,7 @@ class Global
     static OptSet&
     opts()
         {
-        return OptSet::globalOpts();
+        return OptSet::GlobalOpts();
         }
     };
 

@@ -93,10 +93,17 @@ class Opt
     const Name&
     name() const { return name_; }
 
-    operator const Name&() const { return name_; }
+    //operator const Name&() const { return name_; }
 
     friend std::ostream& 
     operator<<(std::ostream & s, const Opt& opt);
+
+    static Opt&
+    Null()
+        {
+        static Opt null_;
+        return null_;
+        }
 
     private:
 
@@ -127,18 +134,13 @@ class OptSet
 
     OptSet(const Opt& opt1);
 
-    OptSet(const Opt& opt1, const Opt& opt2);
+    OptSet(const Opt& opt1, 
+           const Opt& opt2, 
+           const Opt& opt3 = Opt::Null(),
+           const Opt& opt4 = Opt::Null());
 
-    OptSet(const Opt& opt1, const Opt& opt2, const Opt& opt3);
 
-    OptSet(const Opt& opt1, const Opt& opt2, 
-              const Opt& opt3, const Opt& opt4);
-
-    OptSet(const Opt& opt1, const Opt& opt2, 
-              const Opt& opt3, const Opt& opt4, const Opt& opt5);
-
-    OptSet(const Opt& opt1, const Opt& opt2, const Opt& opt3,
-              const Opt& opt4, const Opt& opt5, const Opt& opt6);
+    OptSet(const OptSet& other);
 
     //
     // Methods for accessing Opts
@@ -151,6 +153,12 @@ class OptSet
 
     void
     add(const Opt& opt) { if(opt.isNotNull()) opts_[opt.name()] = opt; }
+
+    void
+    add(const Opt& opt1, 
+        const Opt& opt2,
+        const Opt& opt3 = Opt::Null(), 
+        const Opt& opt4 = Opt::Null());
 
     const Opt&
     get(const Opt::Name& name) const;
@@ -197,7 +205,7 @@ class OptSet
     operator<<(std::ostream & s, const OptSet& oset);
 
     static OptSet&
-    globalOpts()
+    GlobalOpts()
         {
         const bool isGlobal = true;
         static OptSet gos_(isGlobal);
@@ -326,69 +334,20 @@ OptSet()
     { }
 
 inline OptSet::
-OptSet(const Opt& opt1)
+OptSet(const Opt& opt)
     :
     is_global_(false)
     {
-    add(opt1);
+    add(opt);
     }
 
 inline OptSet::
-OptSet(const Opt& opt1, const Opt& opt2)
+OptSet(const Opt& opt1, const Opt& opt2, 
+       const Opt& opt3, const Opt& opt4)
     :
     is_global_(false)
     {
-    add(opt1);
-    add(opt2);
-    }
-
-inline OptSet::
-OptSet(const Opt& opt1, const Opt& opt2, const Opt& opt3)
-    :
-    is_global_(false)
-    {
-    add(opt1);
-    add(opt2);
-    add(opt3);
-    }
-
-inline OptSet::
-OptSet(const Opt& opt1, const Opt& opt2, const Opt& opt3,
-          const Opt& opt4)
-    :
-    is_global_(false)
-    {
-    add(opt1);
-    add(opt2);
-    add(opt3);
-    add(opt4);
-    }
-
-inline OptSet::
-OptSet(const Opt& opt1, const Opt& opt2, const Opt& opt3,
-          const Opt& opt4, const Opt& opt5)
-    :
-    is_global_(false)
-    {
-    add(opt1);
-    add(opt2);
-    add(opt3);
-    add(opt4);
-    add(opt5);
-    }
-
-inline OptSet::
-OptSet(const Opt& opt1, const Opt& opt2, const Opt& opt3,
-          const Opt& opt4, const Opt& opt5, const Opt& opt6)
-    :
-    is_global_(false)
-    {
-    add(opt1);
-    add(opt2);
-    add(opt3);
-    add(opt4);
-    add(opt5);
-    add(opt6);
+    add(opt1,opt2,opt3,opt4);
     }
 
 inline OptSet::
@@ -396,6 +355,15 @@ OptSet(bool isGlobal)
     :
     is_global_(isGlobal)
     { }
+
+inline OptSet::
+OptSet(const OptSet& other)
+    :
+    is_global_(false)
+    { 
+    if(!other.is_global_)
+        opts_ = other.opts_;
+    }
 
 bool inline OptSet::
 defined(const Opt::Name& name) const
@@ -405,14 +373,32 @@ defined(const Opt::Name& name) const
 
     if(is_global_) 
         return false;
-    //else see if globalOpts contains it
-    return globalOpts().defined(name);
+    //else see if GlobalOpts contains it
+    return GlobalOpts().defined(name);
     }
 
 bool inline OptSet::
 defined(const Opt& opt) const
     {
     return defined(opt.name());
+    }
+
+void inline OptSet::
+add(const Opt& opt1, const Opt& opt2,
+    const Opt& opt3, const Opt& opt4)
+    {
+    if(opt1.isNotNull())
+        opts_[opt1.name()] = opt1;
+    if(opt2.isNotNull())
+        opts_[opt2.name()] = opt2;
+
+    if(opt3.isNotNull())
+        opts_[opt3.name()] = opt3;
+    else
+        return;
+
+    if(opt4.isNotNull())
+        opts_[opt4.name()] = opt4;
     }
 
 inline 
@@ -433,7 +419,7 @@ get(const Opt::Name& name) const
         {
         Error("Requested option " + name + " not found");
         }
-    return globalOpts().get(name);
+    return GlobalOpts().get(name);
     }
 
 bool inline OptSet::
