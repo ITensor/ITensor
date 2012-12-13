@@ -212,7 +212,7 @@ runInternal(const MPOType& H, MPSType& psi)
     int debuglevel = (quiet_ ? 0 : 1);
 
     int N = psi.NN();
-    energy_ = NaN;
+    energy_ = NAN;
 
     psi.position(1);
     

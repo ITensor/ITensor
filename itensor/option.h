@@ -5,9 +5,8 @@
 #ifndef __ITENSOR_OPTION_H
 #define __ITENSOR_OPTION_H
 
-#include "matrix.h"
 #include <map>
-
+#include "real.h"
 
 class Opt
     {
@@ -263,8 +262,8 @@ Opt()
     :
     name_("NullOpt"),
     bval_(false),
-    ival_(0),
-    rval_(0)
+    ival_(-1E5),
+    rval_(NAN)
     { }
 
 inline Opt::
@@ -272,8 +271,8 @@ Opt(const Name& name)
     :
     name_(name),
     bval_(true),
-    ival_(0),
-    rval_(0)
+    ival_(-1E5),
+    rval_(NAN)
     { }
 
 inline Opt::
@@ -281,8 +280,8 @@ Opt(const Name& name, bool bval)
     :
     name_(name),
     bval_(bval),
-    ival_(0),
-    rval_(0)
+    ival_(-1E5),
+    rval_(NAN)
     { }
 
 inline Opt::
@@ -291,8 +290,8 @@ Opt(const Name& name, const std::string& sval)
     name_(name),
     bval_(true),
     sval_(sval),
-    ival_(0),
-    rval_(0)
+    ival_(-1E5),
+    rval_(NAN)
     { }
 
 inline Opt::
@@ -301,7 +300,7 @@ Opt(const Name& name, int ival)
     name_(name),
     bval_(true),
     ival_(ival),
-    rval_(0)
+    rval_(NAN)
     { }
 
 inline Opt::
@@ -309,7 +308,7 @@ Opt(const Name& name, Real rval)
     :
     name_(name),
     bval_(true),
-    ival_(0),
+    ival_(-1E5),
     rval_(rval)
     { }
 

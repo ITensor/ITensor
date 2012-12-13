@@ -179,7 +179,7 @@ davidson(const LocalT& A, Tensor& phi) const
 
     //Storage for Matrix that gets diagonalized 
     Matrix M(actual_maxiter+2,actual_maxiter+2);
-    M = NaN; //set to NaN to ensure failure if we use uninitialized elements
+    M = NAN; //set to NAN to ensure failure if we use uninitialized elements
 
     //Mref holds current projection of A into V's
     MatrixRef Mref(M.SubMatrix(1, 1, 1, 1));
@@ -188,9 +188,9 @@ davidson(const LocalT& A, Tensor& phi) const
     Tensor Adiag(phi);
     A.diag(Adiag);
 
-    Real lambda = NaN, //current lowest eigenvalue
-         last_lambda = NaN,
-         qnorm = NaN; //norm of residual, primary convergence criterion
+    Real lambda = NAN, //current lowest eigenvalue
+         last_lambda = NAN,
+         qnorm = NAN; //norm of residual, primary convergence criterion
 
     V[0] = phi;
     A.product(V[0],AV[0]);
@@ -348,7 +348,7 @@ davidson(const LocalT& A, Tensor& phi) const
 
             //Do Gram-Schmidt on d
             //to include it in the subbasis
-            std::vector<Real> Vq(ni,NaN);
+            std::vector<Real> Vq(ni,NAN);
             for(int pass = 1; pass <= 2; ++pass)
                 {
                 for(int k = 0; k < ni; ++k)
@@ -367,7 +367,7 @@ davidson(const LocalT& A, Tensor& phi) const
                 {
                 //Check V's are orthonormal
                 Matrix Vo(ni+1,ni+1); 
-                Vo = NaN;
+                Vo = NAN;
                 for(int r = 1; r <= ni+1; ++r)
                 for(int c = r; c <= ni+1; ++c)
                     {

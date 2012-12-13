@@ -6,18 +6,17 @@
 #define __ITENSOR_REAL_H
 #include "matrix.h"
 #include <limits>
+#include "math.h"
 #include "global.h"
 
 #define Cout std::cout
 #define Endl std::endl
 #define Format boost::format
 
-const Real NaN = std::numeric_limits<Real>::quiet_NaN();
+#ifndef NAN
+#define NAN (std::numeric_limits<Real>::quiet_NaN())
+#endif
 
-bool inline
-isNaN(Real r) { return (r != r); }
-bool inline
-isNotNaN(Real r) { return !(r != r); }
 
 static const Real Pi = M_PI;
 static const Real Sqrt2 = sqrt(2);
@@ -34,9 +33,9 @@ struct ApproxReal
     {
     Real r;
 
-    //Default constructed to NaN 
+    //Default constructed to NAN 
     //to signal initialization errors
-    ApproxReal() : r(NaN) {}
+    ApproxReal() : r(NAN) {}
 
     ApproxReal(Real _r) : r(_r) {}
 
@@ -109,14 +108,13 @@ class LogNumber
     isTooSmallForReal() const 
         { return (lognum_ < -maxlogdouble); }
 
-    bool 
-    isNaN() const 
-        { return lognum_ != lognum_; }
+    bool friend inline
+    isnan(const LogNumber& L) { return std::isnan(L.lognum_); }
 
-    //Default constructed to NaN 
+    //Default constructed to NAN 
     //to signal initialization errors
     LogNumber() 
-        : lognum_(NaN), 
+        : lognum_(NAN), 
           sign_(1) 
         { }
 
