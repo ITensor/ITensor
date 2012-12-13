@@ -5,15 +5,19 @@
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
 #include "real.h"
-#include "index.h"
 #include "prodstats.h"
 #include "indexset.h"
+#include "option.h"
 
 #define ITENSOR_USE_ALLOCATOR
 
 #ifdef ITENSOR_USE_ALLOCATOR
 #include "allocator.h"
 #endif
+
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
 
 //Forward declarations
 struct ProductProps;
@@ -915,32 +919,78 @@ private:
 class commaInit
     {
 public:
-    commaInit(ITensor& T_)
-        : T(T_)
+    commaInit(ITensor& T,
+              const Index& i1,
+              const Index& i2 = Index::Null(),
+              const Index& i3 = Index::Null())
+        : 
+        T_(T),
+        started_(false)
         { 
-        if(T.isNull()) Error("Can't assign to null ITensor");
-        T.solo();
-        T.scaleTo(1);
-        T.initCounter(c);
+        if(T_.isNull()) 
+            Error("Can't assign to null ITensor");
+
+        boost::array<Index,NMAX+1> ii;
+        ii.assign(Index::Null());
+
+        if(i2 == Index::Null())
+            {
+            ii[1] = i1;
+            }
+        else
+        if(i3 == Index::Null())
+            {
+            ii[1] = i2;
+            ii[2] = i1;
+            }
+        else
+            {
+            ii[1] = i3;
+            ii[2] = i2;
+            ii[3] = i1;
+            }
+        try {
+            T_.is_.getperm(ii,P_);
+            }
+        catch(const ITError& e)
+            {
+            Error("Not enough/wrong indices passed to commaInit");
+            }
+
+        T_.solo();
+        T_.scaleTo(1);
+        T_.initCounter(c_);
         }
 
     commaInit& operator<<(Real r)
         {
+        started_ = true;
         return operator,(r);
         }
 
     commaInit& operator,(Real r)
         {
-        if(c.notDone()) 
-            { T.p->v(c.ind) = r; ++c; }
+        if(!started_)
+            {
+            Error("commaInit notation is T << #, #, #, ... ;");
+            }
+        if(c_.notDone()) 
+            { T_.p->v(c_.ind) = r; ++c_; }
         else 
             { Error("Comma assignment list too long.\n"); }
         return *this;
         }
 
+    ~commaInit()
+        {
+        T_.reshapeDat(P_);
+        }
+
 private:
-    ITensor& T;
-    Counter c; 
+    ITensor& T_;
+    bool started_;
+    Counter c_; 
+    Permutation P_;
     };
 
 template <typename Callable> void ITensor::
@@ -1017,5 +1067,9 @@ multSiteOps(Tensor A, const Tensor& B)
     A.mapprime(2,1,Site);
     return A;
     }
+
+#undef Cout
+#undef Endl
+#undef Format
 
 #endif

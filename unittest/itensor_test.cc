@@ -2,6 +2,8 @@
 #include "itensor.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace std;
+
 struct ITensorDefaults
     {
     Index s1,s2,s3,s4,
@@ -21,10 +23,10 @@ struct ITensorDefaults
     s2(Index("s2",2,Site)),
     s3(Index("s3",2,Site)),
     s4(Index("s4",2,Site)),
-    s1P(s1.primed()),
-    s2P(s2.primed()),
-    s3P(s3.primed()),
-    s4P(s4.primed()),
+    s1P(primed(s1)),
+    s2P(primed(s2)),
+    s3P(primed(s3)),
+    s4P(primed(s4)),
     l1(Index("l1",2)),
     l2(Index("l2",2)),
     l3(Index("l3",2)),
@@ -522,8 +524,8 @@ TEST(MapElems)
         }
     }
 
-TEST(reshape)
-{
+TEST(reshapeDat)
+    {
     Permutation P;
     P.from_to(1,2);
     P.from_to(2,1);
@@ -531,14 +533,46 @@ TEST(reshape)
     Real f = -5;
     A *= f;
 
-    A.reshape(P);
+    A.reshapeDat(P);
 
     CHECK_CLOSE(A(s1(1),s2(1)),11*f,1E-10);
     CHECK_CLOSE(A(s1(1),s2(2)),21*f,1E-10);
     CHECK_CLOSE(A(s1(2),s2(1)),12*f,1E-10);
     CHECK_CLOSE(A(s1(2),s2(2)),22*f,1E-10);
 
-}
+    }
+
+TEST(reshape)
+    {
+    //cout << "Begin: reshape -------------" << endl;
+    Permutation P;
+    P.from_to(1,2);
+    P.from_to(2,1);
+
+    Real f = -5;
+    A *= f;
+
+    CHECK_CLOSE(A(s1(1),s2(1)),11*f,1E-10);
+    CHECK_CLOSE(A(s1(1),s2(2)),12*f,1E-10);
+    CHECK_CLOSE(A(s1(2),s2(1)),21*f,1E-10);
+    CHECK_CLOSE(A(s1(2),s2(2)),22*f,1E-10);
+
+    ITensor cA(A);
+    cA.reshape(P);
+
+    //Check that indices are re-ordered...
+    CHECK(A.index(1) == cA.index(P.dest(1)));
+    CHECK(A.index(2) == cA.index(P.dest(2)));
+
+    //...but cA is equivalent to A apart from
+    //Index order:
+    CHECK_CLOSE(cA(s1(1),s2(1)),A(s1(1),s2(1)),1E-10);
+    CHECK_CLOSE(cA(s1(1),s2(2)),A(s1(1),s2(2)),1E-10);
+    CHECK_CLOSE(cA(s1(2),s2(1)),A(s1(2),s2(1)),1E-10);
+    CHECK_CLOSE(cA(s1(2),s2(2)),A(s1(2),s2(2)),1E-10);
+
+    //cout << "End: reshape ---------------" << endl;
+    }
 
 TEST(findindex)
 {
@@ -714,15 +748,15 @@ TEST(ContractingProduct)
         }
 
 
-    ITensor psi(a1,a2,a3), mpoh(l2,a1,a1.primed(),a2,a2.primed());
+    ITensor psi(a1,a2,a3), mpoh(l2,a1,primed(a1),a2,primed(a2));
     psi.Randomize(); mpoh.Randomize();
 
     ITensor Hpsi = mpoh * psi;
 
     CHECK_EQUAL(Hpsi.r(),4);
     CHECK(Hpsi.hasindex(l2));
-    CHECK(Hpsi.hasindex(a1.primed()));
-    CHECK(Hpsi.hasindex(a2.primed()));
+    CHECK(Hpsi.hasindex(primed(a1)));
+    CHECK(Hpsi.hasindex(primed(a2)));
     CHECK(Hpsi.hasindex(a3));
     CHECK(!Hpsi.hasindex(a1));
     CHECK(!Hpsi.hasindex(a2));
@@ -821,7 +855,7 @@ TEST(NonContractingProduct)
     }
 
 
-    ITensor psi(a1,a2,a3), mpoh(l2,a1,a1.primed(),a2,a2.primed());
+    ITensor psi(a1,a2,a3), mpoh(l2,a1,primed(a1),a2,primed(a2));
     psi.Randomize(); mpoh.Randomize();
 
     ITensor Hpsi = mpoh / psi;
@@ -830,8 +864,8 @@ TEST(NonContractingProduct)
     CHECK(Hpsi.hasindex(l2));
     CHECK(Hpsi.hasindex(a1));
     CHECK(Hpsi.hasindex(a2));
-    CHECK(Hpsi.hasindex(a1.primed()));
-    CHECK(Hpsi.hasindex(a2.primed()));
+    CHECK(Hpsi.hasindex(primed(a1)));
+    CHECK(Hpsi.hasindex(primed(a2)));
     CHECK(Hpsi.hasindex(a3));
 
     for(int j2 = 1; j2 <= 2; ++j2)
@@ -1050,9 +1084,9 @@ TEST(ToFromMatrix11)
 
 TEST(SymmetricDiag11)
     {
-    ITensor T(s1,s1.primed());
-    commaInit(T) << 1, 2,
-                    2, 1;
+    ITensor T(s1,primed(s1));
+    commaInit(T,s1,primed(s1)) << 1, 2,
+                                  2, 1;
 
     T *= -2;
     Index mid;
@@ -1085,9 +1119,16 @@ TEST(SymmetricDiag11)
 
 TEST(CommaAssignment)
     {
+    ITensor VV(s1);
+    VV.Randomize();
+    VV *= -1;
+    commaInit(VV,s1) << 1, 2;
+    CHECK_EQUAL(VV(s1(1)),1);
+    CHECK_EQUAL(VV(s1(2)),2);
+
     ITensor ZZ(s1,s2);
-    commaInit(ZZ) << 1, 0, 
-                     0, -1;
+    commaInit(ZZ,s1,s2) << 1, 0, 
+                           0, -1;
     CHECK_EQUAL(ZZ(s1(1),s2(1)),1);
     CHECK_EQUAL(ZZ(s1(2),s2(1)),0);
     CHECK_EQUAL(ZZ(s1(1),s2(2)),0);
@@ -1096,8 +1137,8 @@ TEST(CommaAssignment)
     ITensor XX(s1,s2);
     XX(s1(2),s2(1)) = 5;
     XX *= 3;
-    commaInit(XX) << 0, 1, 
-                     1, 0;
+    commaInit(XX,s1,s2) << 0, 1, 
+                           1, 0;
     CHECK_EQUAL(XX(s1(1),s2(1)),0);
     CHECK_EQUAL(XX(s1(2),s2(1)),1);
     CHECK_EQUAL(XX(s1(1),s2(2)),1);
@@ -1106,12 +1147,28 @@ TEST(CommaAssignment)
     ITensor AA(s1,s2);
     AA.Randomize();
     AA *= -ran1();
-    commaInit(AA) << 11, 21, 
-                     12, 22;
+    commaInit(AA,s1,s2) << 11, 12, 
+                           21, 22;
     CHECK_EQUAL(AA(s1(1),s2(1)),11);
-    CHECK_EQUAL(AA(s1(2),s2(1)),21);
     CHECK_EQUAL(AA(s1(1),s2(2)),12);
+    CHECK_EQUAL(AA(s1(2),s2(1)),21);
     CHECK_EQUAL(AA(s1(2),s2(2)),22);
+
+    ITensor T(s1,s2,s3);
+    T.Randomize();
+    T *= -ran1();
+    commaInit(T,s1,s2,s3) << 111, 112, 
+                             121, 122,
+                             211, 212,
+                             221, 222;
+    CHECK_EQUAL(T(s1(1),s2(1),s3(1)),111);
+    CHECK_EQUAL(T(s1(1),s2(1),s3(2)),112);
+    CHECK_EQUAL(T(s1(1),s2(2),s3(1)),121);
+    CHECK_EQUAL(T(s1(1),s2(2),s3(2)),122);
+    CHECK_EQUAL(T(s1(2),s2(1),s3(1)),211);
+    CHECK_EQUAL(T(s1(2),s2(1),s3(2)),212);
+    CHECK_EQUAL(T(s1(2),s2(2),s3(1)),221);
+    CHECK_EQUAL(T(s1(2),s2(2),s3(2)),222);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
