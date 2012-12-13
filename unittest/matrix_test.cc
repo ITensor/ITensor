@@ -4,6 +4,8 @@
 #include "boost/format.hpp"
 #include "math.h"
 
+#include <fstream>
+
 using namespace std;
 using boost::format;
 
@@ -17,6 +19,14 @@ struct MatrixDefaults
     };
 
 BOOST_FIXTURE_TEST_SUITE(MatrixTest,MatrixDefaults)
+
+TEST(Basic)
+    {
+    //Declare a 10x10 matrix
+    Matrix M(10,10);
+    M = 1;
+    cout << "M =\n" << M;
+    }
 
 TEST(TestEigenValues)
     {
@@ -37,6 +47,7 @@ TEST(TestEigenValues)
         }
     }
 
+/*
 TEST(GeneralizedEigenValues)
     {
     Matrix A(N,N);
@@ -74,7 +85,9 @@ TEST(GeneralizedEigenValues)
         CHECK(Norm(diff) < 1E-7);
         }
     }
+    */
 
+/*
 TEST(TestSVD)
     {
     int n = 200, m = 400;
@@ -98,7 +111,52 @@ TEST(TestSVD)
     //cout << format("Avg err is %.2E") % sqrt(sumerrsq/(n*m)) << endl;
     CHECK(sumerrsq < 1E-10);
     }
+*/
 
+TEST(BadSVD)
+    {
+    int n = 4, m = 4;
+
+    Matrix A(n,m);
+
+    A = 0;
+    A(1,3) = 3.3443453;
+    A(3,3) = 3.3443453;
+
+    //Matrix U,V; Vector D;
+    //SVD(A,U,D,V);
+    //cout << "D = " << endl;
+    //cout << D;
+
+
+    std::ifstream s("Vt");
+
+    int nr;
+    int nc;
+    s.read((char*)&nr,sizeof(nr));
+    s.read((char*)&nc,sizeof(nc));
+
+    Matrix Vt(nr,nc);
+
+    Real val;
+    for(int j = 1; j <= nr; ++j)
+    for(int k = 1; k <= nc; ++k)
+        {
+        s.read((char*)&val,sizeof(val));
+        Vt(j,k) = val;
+        }
+    s.close();
+
+    cout << Vt;
+
+    Orthog(Vt,4,2);
+
+    cout << Vt;
+    cout << Vt*Vt.t();
+
+    cout << "SVD went ok" << endl;
+
+    }
 
 BOOST_AUTO_TEST_SUITE_END()
 

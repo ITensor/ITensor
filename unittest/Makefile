@@ -8,7 +8,7 @@ REPORT_LEVEL=confirm
 
 HEADERS=test.h
 SOURCES = test.cc
-#SOURCES+= matrix_test.cc
+SOURCES+= matrix_test.cc
 #SOURCES+= real_test.cc
 SOURCES+= index_test.cc
 SOURCES+= itensor_test.cc

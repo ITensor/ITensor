@@ -38,6 +38,22 @@ TEST(Homepage)
     CHECK_CLOSE(R(a(2),c(2)),0,1E-10);
     }
 
+TEST(TutorialIntro)
+    {
+    //cout << "Begin: TutorialIntro -----------------------" << endl;
+    Index i("i",10), j("j",20), k("k",30);
+    ITensor A(i,j), B(j,k), C;
+    A(i(2),j(1)) = 0.5;
+    A(i(1),j(2)) = 0.5;
+
+    B(j(1),k(1)) = 1;
+    B(j(1),k(1)) = -1;
+
+    C = A * B;
+    //PrintDat(C);
+    //cout << "End: TutorialIntro -----------------------" << endl;
+    }
+
 TEST(TutorialSimpleMeasurement)
     {
     Index s("s",2,Site);

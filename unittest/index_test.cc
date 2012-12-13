@@ -18,16 +18,16 @@ BOOST_AUTO_TEST_CASE(Primes)
 {
     Index I("I");
 
-    I = I.primed();
+    I = primed(I);
     CHECK_EQUAL(I.primeLevel(),1);
 
-    I = I.primed();
+    I = primed(I);
     CHECK_EQUAL(I.primeLevel(),2);
 
-    I = I.primed(7);
+    I = primed(I,7);
     CHECK_EQUAL(I.primeLevel(),9);
 
-    I = I.primed(-7);
+    I = primed(I,-7);
     CHECK_EQUAL(I.primeLevel(),2);
 
 }
