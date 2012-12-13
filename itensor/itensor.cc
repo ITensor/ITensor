@@ -103,27 +103,30 @@ operator<<(std::ostream& s, const Counter& c)
 ostream& 
 operator<<(ostream & s, const ITensor & t)
     {
-    s << "log(scale)[incl in elems] = " << t.scale().logNum() 
-      << ", r = " << t.r() << ": ";
+    s << "ITensor r = " << t.r() << ": ";
+    s << t.is_ << "\n";
 
-    s << t.is_;
+    s << "  {log(scale)[incl in elems]=" << t.scale().logNum();
 
-    if(t.isNull()) s << " (dat is null)\n";
+
+    if(t.isNull()) s << ", dat is null}\n";
     else 
         {
+        s << ", L=" << t.vecSize();
+
         if(t.scale_.isFiniteReal())
             {
             Real nrm = t.norm();
             if(nrm >= 1E-2 && nrm < 1E5)
-                s << format(" (L=%d,N=%.2f)\n") % t.vecSize() % nrm;
+                s << format(", N=%.2f}\n") % nrm;
             else
-                s << format(" (L=%d,N=%.1E)\n") % t.vecSize() % nrm;
+                s << format(", N=%.1E}\n") % nrm;
             }
         else
             {
-            s << format(" (L=%d,N=too big)\n") 
-                 % t.vecSize() << t.scale();
+            s << ", N=too big} scale=" << t.scale() << "\n";
             }
+
         if(Global::printdat())
             {
             Real scale = 1.0;
@@ -135,7 +138,7 @@ operator<<(ostream & s, const ITensor & t)
                 {
                 Real val = v(c.ind)*scale;
                 if(fabs(val) > Global::printScale())
-                    { s << c << " " << val << "\n"; }
+                    { s << "  " << c << (format(" %.10f\n") % val); }
                 }
             }
         else 
