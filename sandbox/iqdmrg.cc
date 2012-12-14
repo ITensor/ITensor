@@ -7,7 +7,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
     {
-    int N = 110;
+    int N = 100;
 
     //
     // Initialize the site degrees of freedom.
