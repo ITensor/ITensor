@@ -13,7 +13,7 @@ class Hubbard : public Model
     Hubbard();
 
     Hubbard(int N, 
-            const Option& opt1 = Option(), const Option& opt2 = Option());
+            const OptSet& opts = Global::opts());
 
     Hubbard(std::ifstream& s) { doRead(s); }
 
@@ -128,12 +128,11 @@ Hubbard()
     { }
 
 inline Hubbard::
-Hubbard(int N, const Option& opt1, const Option& opt2)
+Hubbard(int N, const OptSet& opts)
     : N_(N),
       site_(N_+1)
     { 
-    OptionSet oset(opt1,opt2);
-    conserveNf_ = oset.boolOrDefault("ConserveNf",true);
+    conserveNf_ = opts.boolOrDefault("ConserveNf",true);
     constructSites();
     }
 
