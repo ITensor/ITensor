@@ -47,7 +47,11 @@ int main(int argc, char* argv[])
     // IQTensors, tensors whose indices are sorted
     // with respect to quantum numbers
     //
-    IQMPO H = ExtendedHubbard(model,U,t1,t2,V1);
+    IQMPO H = ExtendedHubbard(model,
+                              Opt("U",U)
+                              & Opt("t1",t1)
+                              & Opt("t2",t2)
+                              & Opt("V1",V1));
 
     //
     // Set the initial wavefunction matrix product state

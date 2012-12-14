@@ -8,34 +8,32 @@
 #include "../hams.h"
 #include "../model/hubbard.h"
 
-class ExtendedHubbard : public MPOBuilder
+class ExtendedHubbard
     {
     public:
-    typedef MPOBuilder Parent;
 
     ExtendedHubbard(const Hubbard& model, 
-                    Real U = 0, Real t1 = 1, 
-                    Real t2 = 0, Real V1 = 0);
+                    const OptSet& opts = Global::opts());
 
     Real
     t1() const { return t1_; }
     void
-    t1(Real val) { initted = false; t1_ = val; }
+    t1(Real val) { initted_ = false; t1_ = val; }
 
     Real
     t2() const { return t2_; }
     void
-    t2(Real val) { initted = false; t2_ = val; }
+    t2(Real val) { initted_ = false; t2_ = val; }
 
     Real
     U() const { return U_; }
     void
-    U(Real val) { initted = false; U_ = val; }
+    U(Real val) { initted_ = false; U_ = val; }
 
     Real
     V1() const { return V1_; }
     void
-    V1(Real val) { initted = false; V1_ = val; }
+    V1(Real val) { initted_ = false; V1_ = val; }
 
     operator MPO() { init_(); return H; }
 
@@ -43,35 +41,46 @@ class ExtendedHubbard : public MPOBuilder
 
     private:
 
+    //////////////////
+    //
+    // Data Members
+
     const Hubbard& model_;
-    Real U_,t1_,t2_,V1_;
-    bool initted;
+    Real U_,
+         t1_,
+         t2_,
+         V1_;
+    bool initted_;
     MPO H;
+
+    //
+    //////////////////
 
     void init_();
 
     }; //class HubbardChain
 
 inline ExtendedHubbard::
-ExtendedHubbard(const Hubbard& model, 
-                Real U, Real t1, 
-                Real t2, Real V1) 
-    : Parent(model), 
-      model_(model), 
-      U_(U), 
-      t1_(t1), 
-      t2_(t2),
-      V1_(V1), 
-      initted(false)
-    { }
+ExtendedHubbard(const Hubbard& model,
+                const OptSet& opts)
+    :
+    model_(model), 
+    initted_(false)
+    { 
+    U_ = opts.realOrDefault("U",0);
+    t1_ = opts.realOrDefault("t1",1);
+    t2_ = opts.realOrDefault("t2",0);
+    V1_ = opts.realOrDefault("V1",0);
+    }
 
 void inline ExtendedHubbard::
 init_()
     {
-    if(initted) return;
+    if(initted_) return;
 
     H = MPO(model_);
 
+    const int Ns = model_.NN();
     const int k = 7 + (t2_ == 0 ? 0 : 4);
 
     std::vector<Index> links(Ns+1);
@@ -131,10 +140,10 @@ init_()
             }
         }
 
-    H.AAnc(1) *= makeLedge(links.at(0));
-    H.AAnc(Ns) *= makeRedge(links.at(Ns));
+    H.AAnc(1) *= ITensor(links.at(0)(k));
+    H.AAnc(Ns) *= ITensor(links.at(Ns)(1));
 
-    initted = true;
+    initted_ = true;
     }
 
 #endif

@@ -1,7 +1,7 @@
 #include "core.h"
 #include "model/spinhalf.h"
 #include "model/spinone.h"
-#include "hams/heisenberg.h"
+#include "hams/Heisenberg.h"
 #include "input.h"
 using boost::format;
 using namespace std;
