@@ -1,7 +1,7 @@
 #include "core.h"
 #include "model/spinhalf.h"
 #include "model/spinone.h"
-#include "hams/heisenberg.h"
+#include "hams/Heisenberg.h"
 using boost::format;
 using namespace std;
 
@@ -40,13 +40,15 @@ int main(int argc, char* argv[])
 
     //
     // Set the parameters controlling the accuracy of the DMRG
-    // calculation for each DMRG sweep. Here less than 10 maxm
-    // values are provided, so all remaining sweeps will use the
-    // last maxm (= 200).
+    // calculation for each DMRG sweep. 
+    // Here less than 5 cutoff values are provided, for example,
+    // so all remaining sweeps will use the last one given (= 1E-10).
     //
-    Sweeps sweeps(10);
-    sweeps.maxm() = 50,50,100,100,200;
-    sweeps.cutoff() = 1E-8;
+    Sweeps sweeps(5);
+    sweeps.maxm() = 10,20,100,100,200;
+    sweeps.cutoff() = 1E-10;
+    sweeps.niter() = 2;
+    sweeps.noise() = 1E-7,1E-8,0.0;
     cout << sweeps;
 
     //

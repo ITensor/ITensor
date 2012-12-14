@@ -38,6 +38,7 @@ build: dmrg iqdmrg
 
 debug: dmrg-g iqdmrg-g
 
+all: dmrg iqdmrg dmrgj1j2
 
 dmrg: dmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
