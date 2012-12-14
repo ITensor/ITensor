@@ -317,30 +317,30 @@ void InputGroup::SkipLine()
 void InputGroup::GetIntM(string s, int& res,const char* c)
     {
     if(!GetInt(s,res,c))
-	error("mandatory item, exiting");
+        error("mandatory item: " + s + ", exiting");
     }
 
 void InputGroup::GetLongM(string s, lint& res,const char* c)
     {
     if(!GetLong(s,res,c))
-	error("mandatory item, exiting");
+        error("mandatory item: " + s + ", exiting");
     }
 
 void InputGroup::GetRealM(string s, Real& res,const char* c)
     {
     if(!GetReal(s,res,c))
-	error("mandatory item, exiting");
+        error("mandatory item: " + s + ", exiting");
     }
 
 void InputGroup::GetStringM(string s, string& res,const char* c)
     {
     if(!GetString(s,res,c))
-	error("mandatory item, exiting");
+        error("mandatory item: " + s + ", exiting");
     }
 
 void InputGroup::GetYesNoM(string s, int& yes,const char* c)
     {
     if(!GetYesNo(s,yes,c))
-	error("mandatory item, exiting");
+        error("mandatory item: " + s + ", exiting");
     }
 
