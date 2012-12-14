@@ -271,10 +271,16 @@ davidson(const LocalT& A, Tensor& phi) const
         const bool converged = (qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_) 
                                || qnorm < max(1E-12,errgoal_ * 1.0e-3);
 
-        if((converged && ii >= miniter_) || (ii == actual_maxiter))
+        if((qnorm < 1E-20) || (converged && ii >= miniter_) || (ii == actual_maxiter))
             {
             if(debug_level_ > 2) //Explain why breaking out of Davidson loop early
                 {
+                if(qnorm < 1E-20)
+                    {
+                    Cout << Format("Breaking out of Davidson because qnorm = %.2E < 1E-20") 
+                            % qnorm 
+                            << Endl;
+                    }
                 if((qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_))
                     {
                     Cout << "Breaking out of Davidson because errgoal reached" << Endl;
