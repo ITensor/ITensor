@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     // IQTensors, tensors whose indices are sorted
     // with respect to quantum numbers
     //
-    IQMPO H = J1J2Chain(model,J2,1);
+    IQMPO H = J1J2Chain(model,Opt("J2",J2));
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.

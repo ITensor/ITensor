@@ -1,13 +1,13 @@
 #include "core.h"
 #include "model/spinhalf.h"
 #include "model/spinone.h"
-#include "hams/heisenberg.h"
+#include "hams/Heisenberg.h"
 using boost::format;
 using namespace std;
 
 int main(int argc, char* argv[])
     {
-    int N = 100;
+    int N = 110;
 
     //
     // Initialize the site degrees of freedom.

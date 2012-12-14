@@ -1,7 +1,7 @@
 #define THIS_IS_MAIN
 #include "core.h"
 #include "model/spinhalf.h"
-#include "hams/heisenberg.h"
+#include "hams/Heisenberg.h"
 using boost::format;
 using namespace std;
 

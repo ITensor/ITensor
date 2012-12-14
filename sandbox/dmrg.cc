@@ -1,7 +1,7 @@
 #include "core.h"
 #include "model/spinhalf.h"
 #include "model/spinone.h"
-#include "hams/heisenberg.h"
+#include "hams/Heisenberg.h"
 using boost::format;
 using namespace std;
 
@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     //
     // Create the Hamiltonian matrix product operator (MPO)
     //
-    MPO H = Heisenberg(model);
+    MPO H = Heisenberg(model,Opt("J",0.1));
 
     //
     // Set the initial wavefunction matrix product state (MPS)
