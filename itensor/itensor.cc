@@ -1280,14 +1280,14 @@ swap(ITensor& other)
     }
 
 void ITensor::
-Randomize() 
+randomize() 
     { 
     solo(); 
     p->v.Randomize(); 
     }
 
 void ITensor::
-SplitReIm(ITensor& re, ITensor& im) const
+splitReIm(ITensor& re, ITensor& im) const
 	{
 	re = *this; im = *this;
 	if(!isComplex()) { im *= 0; return; }

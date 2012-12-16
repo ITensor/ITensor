@@ -587,7 +587,7 @@ Real SVDWorker::
 diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
     {
     ITensor rhore,rhoim;
-    rho.SplitReIm(rhore,rhoim);		// Need to fix this to put in Hermitian case!
+    rho.splitReIm(rhore,rhoim);		// Need to fix this to put in Hermitian case!
     return diag_denmat(rhore,D,newmid,U);
     }
 
@@ -1268,7 +1268,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
 	ITensor tre,tim;
 	if(docomplex)
 	    {
-	    t.SplitReIm(tre,tim);
+	    t.splitReIm(tre,tim);
 	    tre.scaleTo(refNorm_);
 	    tim.scaleTo(refNorm_);
 	    tre.toMatrix11NoScale(t.index(ii),t.index(jj),Mre);

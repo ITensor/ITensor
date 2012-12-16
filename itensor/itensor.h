@@ -668,10 +668,10 @@ class ITensor
     //Other Methods -------------------------------------------------
 
     void 
-    Randomize();
+    randomize();
 
     void 
-    SplitReIm(ITensor& re, ITensor& im) const;
+    splitReIm(ITensor& re, ITensor& im) const;
 
     void 
     conj() 
@@ -734,6 +734,20 @@ class ITensor
 
     static const Index& 
     ReImIndex() { return Index::IndReIm(); }
+
+    //Deprecated methods --------------------------
+
+    //
+    //Renamed to randomize in keeping with code conventions
+    //
+    //void 
+    //Randomize();
+
+    //
+    //Renamed to splitReIm in keeping with code conventions
+    //
+    //void 
+    //SplitReIm(ITensor& re, ITensor& im) const;
 
     protected:
 
@@ -856,7 +870,7 @@ public:
 //
 class ITDat
     {
-public:
+    public:
 
     Vector v;
 
@@ -911,7 +925,7 @@ public:
 
     int count() const { return numref; }
 
-private:
+    private:
 
     mutable unsigned int 
     numref;

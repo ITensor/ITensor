@@ -518,7 +518,7 @@ class IQTensor
     GetSingComplex(Real& re, Real& im) const;
     
     void 
-    Randomize();
+    randomize();
 
     void 
     print(std::string name = "",Printdat pdat = HideData) const;
@@ -533,7 +533,7 @@ class IQTensor
     assignFrom(const IQTensor& other);
 
     void 
-    SplitReIm(IQTensor& re, IQTensor& im) const;
+    splitReIm(IQTensor& re, IQTensor& im) const;
 
     void 
     conj();
@@ -572,6 +572,20 @@ class IQTensor
 
     static const IQIndex& ReImIndex()
         { return IQIndex::IndReIm(); }
+
+    //Deprecated methods --------------------------
+
+    //
+    //Renamed to randomize in keeping with code conventions
+    //
+    //void 
+    //Randomize();
+
+    //
+    //Renamed to randomize in keeping with code conventions
+    //
+    //void 
+    //SplitReIm(IQTensor& re, IQTensor& im) const;
 
     private:
 

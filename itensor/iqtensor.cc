@@ -1191,11 +1191,11 @@ assignFromVec(VectorRef v)
 	}
 
 void IQTensor::
-Randomize() 
+randomize() 
 	{ 
 	soloDat(); 
     Foreach(ITensor& t, ncdat())
-        { t.Randomize(); }
+        { t.randomize(); }
 	}
 
 void IQTensor::
@@ -1253,7 +1253,7 @@ conj()
         soloDat();
 
         IQTensor r,i;
-        SplitReIm(r,i);
+        splitReIm(r,i);
 
         r.is_->conj();
         i.is_->conj();
@@ -1297,7 +1297,7 @@ operator<<(std::ostream & s, const IQTensor& T)
     }
 
 void IQTensor::
-SplitReIm(IQTensor& re, IQTensor& im) const
+splitReIm(IQTensor& re, IQTensor& im) const
     {
     if(!hasindex(IQIndex::IndReIm()))
         {
@@ -1315,7 +1315,7 @@ SplitReIm(IQTensor& re, IQTensor& im) const
     ITensor a,b;
     Foreach(const ITensor& t, dat())
         {
-        t.SplitReIm(a,b);
+        t.splitReIm(a,b);
         re.insert(a);
         im.insert(b);
         }
@@ -1637,7 +1637,7 @@ GetSingComplex(Real& re, Real& im) const
         }
 #endif
     IQTensor tre,tim;
-    SplitReIm(tre,tim);
+    splitReIm(tre,tim);
 
     //Only IQIndex should be IQIndex::IndReIm()
     /*

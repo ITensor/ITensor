@@ -372,7 +372,7 @@ davidson(const LocalT& A, Tensor& phi) const
                 if(qn == 0.)
                     {
                     q = V.at(ni-1);
-                    q.Randomize();
+                    q.randomize();
                     qn = q.norm();
                     if(debug_level_ > 2)
                         {
@@ -710,7 +710,7 @@ orthog(std::vector<Tensor>& T, int num, int numpass, int start)
         Real norm = col.norm();
         if(norm == 0)
             {
-            col.Randomize();
+            col.randomize();
             norm = col.norm();
             //If norm still zero, may be
             //an IQTensor with no blocks
