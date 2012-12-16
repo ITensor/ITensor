@@ -352,10 +352,11 @@ davidson(const LocalT& A, Tensor& phi) const
             q /= cond;
             }
 
-            //Do Gram-Schmidt on d
+            //Do Gram-Schmidt on d (Npass times)
             //to include it in the subbasis
+            const int Npass = 2;
             std::vector<Real> Vq(ni,NAN);
-            for(int pass = 1; pass <= 2; ++pass)
+            for(int pass = 1; pass <= Npass; ++pass)
                 {
                 for(int k = 0; k < ni; ++k)
                     Vq.at(k) = Dot(conj(V[k]),q);
@@ -366,8 +367,38 @@ davidson(const LocalT& A, Tensor& phi) const
                 proj *= -1;
 
                 q += proj;
+
+                Real qn = q.norm();
+                if(qn == 0.)
+                    {
+                    q = V.at(ni-1);
+                    q.Randomize();
+                    qn = q.norm();
+                    if(debug_level_ > 2)
+                        {
+                        Cout << Format("Step %d pass %d qn %d")
+                                % ii
+                                % pass
+                                % qn
+                                << Endl;
+                        Cout << "Next vector not independent, randomizing" 
+                             << Endl;
+                        }
+                    }
+
+                if(debug_level_ > 2)
+                    {
+                    Cout << Format("I %d P %d qn %.2E")
+                            % ii
+                            % pass
+                            % qn
+                            << Endl;
+                    PrintDat(q);
+                    }
+
                 q *= 1./q.norm();
                 }
+
 
             if(debug_level_ > 2)
                 {
