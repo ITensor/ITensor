@@ -7,18 +7,20 @@
 #include "../mpo.h"
 #include "../hams.h"
 
-class Ising : public MPOBuilder
-{
-public:
-    typedef MPOBuilder Parent;
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
+
+class Ising
+    {
+    public:
 
     //
     // Constructors
     //
 
-    Ising(const Model& model_);
-
-    Ising(const Model& model_, Real hx, int ny = 1);
+    Ising(const Model& model,
+          const OptSet& opts = Global::opts());
 
     //
     // Accessor Methods
@@ -27,17 +29,17 @@ public:
     Real
     J() const { return J_; }
     void
-    J(Real val) { initted = false; J_ = val; }
+    J(Real val) { initted_ = false; J_ = val; }
 
     Real
     hx() const { return hx_; }
     void
-    hx(Real val) { initted = false; hx_ = val; }
+    hx(Real val) { initted_ = false; hx_ = val; }
 
     int
-    ny() const { return ny_; }
+    Ny() const { return Ny_; }
     void
-    ny(int val) { initted = false; ny_ = val; }
+    Ny(int val) { initted_ = false; Ny_ = val; }
 
     operator MPO() { init_(); return H; }
 
@@ -45,72 +47,67 @@ public:
 
 private:
 
-    const Model& model;
-    int ny_,nx_;
-    Real J_, hx_;
-    bool initted;
+    const Model& model_;
+    int Ny_,
+        Nx_;
+    Real J_, 
+         hx_;
+    bool initted_;
     MPO H;
 
     void init_();
 
-}; //class Ising
+    }; //class Ising
 
 inline Ising::
-Ising(const Model& model_) 
-    : Parent(model_), 
-      model(model_), 
-      ny_(1),
-      nx_(this->Ns),
-      J_(1), 
-      hx_(0),
-      initted(false)
-    { }
+Ising(const Model& model,
+      const OptSet& opts)
+    :
+    model_(model), 
+    initted_(false)
+    { 
+    Ny_ = opts.intOrDefault("Ny",1);
+    Nx_ = model_.NN()/Ny_;
+    J_  = opts.realOrDefault("J",1.);
+    hx_  = opts.realOrDefault("hx",0.);
+    }
 
-inline Ising::
-Ising(const Model& model_, Real hx, int ny)
-    : Parent(model_), 
-      model(model_), 
-      ny_(ny),
-      nx_(this->Ns/ny_),
-      J_(1), 
-      hx_(hx),
-      initted(false)
-    { }
 
 void inline Ising::
 init_()
     {
-    if(initted) return;
+    if(initted_) return;
 
-    H = MPO(model);
+    H = MPO(model_);
 
-    const int max_mpo_dist = ny_;
+    const int Ns = model_.NN();
+    const int max_mpo_dist = Ny_;
     const int k = 3+(max_mpo_dist-1);
 
     std::vector<Index> links(Ns+1);
     for(int l = 0; l <= Ns; ++l) links.at(l) = Index(nameint("hl",l),k);
-
-    ITensor W;
 
     for(int n = 1; n <= Ns; ++n)
         {
         ITensor& W = H.AAnc(n);
         Index &row = links[n-1], &col = links[n];
 
-        W = ITensor(model.si(n),model.siP(n),row,col);
+        W = ITensor(model_.si(n),model_.siP(n),row,col);
 
-        W += model.id(n) * row(1) * col(1);
-        W += model.id(n) * row(k) * col(k);
+        W += model_.id(n) * row(1) * col(1);
+        W += model_.id(n) * row(k) * col(k);
 
-        W += model.sz(n) * row(2) * col(1);
+        W += model_.sz(n) * row(2) * col(1);
 
         //Transverse field
         if(hx_ != 0)
-            W += model.sx(n) * ITensor(row(k),col(1)) * hx_;
+            {
+            W += model_.sx(n) * row(k) * col(1) * hx_;
+            }
 
         //Horizontal bonds (N.N in 1d)
-        int mpo_dist = ny_; 
-        W += model.sz(n) * row(k) * col(2+(mpo_dist-1)) * J_;
+        int mpo_dist = Ny_; 
+        W += model_.sz(n) * row(k) * col(2+(mpo_dist-1)) * J_;
 
         //
         //The following only apply if ny_ > 1:
@@ -118,28 +115,31 @@ init_()
 
         //String of identity ops
         for(int q = 1; q <= (max_mpo_dist-1); ++q)
-            { W += model.id(n) * row(2+q) * col(1+q); }
+            { W += model_.id(n) * row(2+q) * col(1+q); }
 
         //Periodic BC bond
-        const int y = (n-1)%ny_+1;
-        if(y == 1 && ny_ > 2)
+        const int y = (n-1)%Ny_+1;
+        if(y == 1 && Ny_ > 2)
             {
-            int mpo_dist = ny_-1; 
-            W += model.sz(n) * row(k) * col(2+(mpo_dist-1)) * J_;
+            int mpo_dist = Ny_-1; 
+            W += model_.sz(n) * row(k) * col(2+(mpo_dist-1)) * J_;
             }
 
         //N.N. bond along column
-        if(y != ny_)
+        if(y != Ny_)
             {
-            W += model.sz(n) * row(k) * col(2) * J_;
+            W += model_.sz(n) * row(k) * col(2) * J_;
             }
         }
 
-        H.AAnc(1) *= makeLedge(links.at(0));
-        H.AAnc(Ns) *= makeRedge(links.at(Ns));
+        H.AAnc(1) *= ITensor(links.at(0)(k));
+        H.AAnc(Ns) *= ITensor(links.at(Ns)(1));
 
-    initted = true;
+    initted_ = true;
     }
 
+#undef Cout
+#undef Endl
+#undef Format
 
 #endif
