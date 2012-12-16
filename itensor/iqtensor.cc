@@ -697,11 +697,12 @@ dir(const Index& in) const
 	return is_->index(iqq).dir();
 	}
 
+/*
 void IQTensor::
 ind_inc_prime(const IQIndex& i,int inc)
 	{
 	soloIndex();
-    is_->indIncPrime(i,inc);
+    is_->prime(i,inc);
 
     soloDat();
 
@@ -715,6 +716,7 @@ ind_inc_prime(const IQIndex& i,int inc)
 		    }
         }
 	}
+*/
 
 void IQTensor::
 noprime(IndexType type)
@@ -726,17 +728,6 @@ noprime(IndexType type)
     Foreach(ITensor& t, ncdat())
         { t.noprime(type); }
 	} 
-
-void IQTensor::
-noprimelink()
-	{
-	solo();
-
-    is_->noprime(Link);
-
-    Foreach(ITensor& t, ncdat())
-        { t.noprime(Link); }
-	}
 
 void IQTensor::
 prime(IndexType type, int inc)
@@ -761,34 +752,34 @@ mapprime(int plevold, int plevnew, IndexType type)
 	}
 
 void IQTensor::
-primeind(const IQIndex& I, int inc)
+prime(const IQIndex& I, int inc)
 	{
 	solo();
 
-    is_->primeind(I,inc);
+    is_->prime(I,inc);
 
     Foreach(ITensor& t, ncdat())
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
 		if(t.hasindex(x->index)) 
-		    t.primeind(x->index,inc);
+		    t.prime(x->index,inc);
         }
 	}
 
 void IQTensor::
-noprimeind(const IQIndex& I)
+noprime(const IQIndex& I)
 	{
 	solo();
 
-    is_->noprimeind(I);
+    is_->noprime(I);
 
     Foreach(ITensor& t, ncdat())
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
         if(t.hasindex(x->index)) 
-            t.noprimeind(x->index);
+            t.noprime(x->index);
         }
 	}
 

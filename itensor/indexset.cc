@@ -304,7 +304,7 @@ mapprimeind(const Index& I, int plevold, int plevnew, IndexType type)
 	}
 
 void IndexSet::
-primeind(const Index& I, const Index& J)
+prime(const Index& I, const Index& J)
 	{ 
     mapindex(I,primed(I)); 
     mapindex(J,primed(J));

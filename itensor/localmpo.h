@@ -286,8 +286,8 @@ product(const Tensor& phi, Tensor& phip) const
     if(Psi_ != 0)
         {
         int b = position();
-        Tensor othr = (L().isNull() ? primelink(Psi_->AA(b)) : L()*primelink(Psi_->AA(b)));
-        othr *= primelink(Psi_->AA(b+1));
+        Tensor othr = (L().isNull() ? primed(Psi_->AA(b),Link) : L()*primed(Psi_->AA(b),Link));
+        othr *= primed(Psi_->AA(b+1),Link);
         if(R().isNotNull()) 
             othr *= R();
 
@@ -462,7 +462,7 @@ makeL(const MPSType& psi, int k)
                 {
                 const int ll = LHlim_;
                 PH_.at(ll+1) = (PH_.at(ll).isNull() ? conj(psi.AA(ll+1)) : PH_[ll]*conj(psi.AA(ll+1)));
-                PH_[ll+1] *= primelink(Psi_->AA(ll+1));
+                PH_[ll+1] *= primed(Psi_->AA(ll+1),Link);
                 setLHlim(LHlim_+1);
                 }
             }
@@ -491,7 +491,7 @@ makeR(const MPSType& psi, int k)
                 {
                 const int rl = RHlim_;
                 PH_.at(rl-1) = (PH_.at(rl).isNull() ? conj(psi.AA(rl-1)) : PH_[rl]*conj(psi.AA(rl-1)));
-                PH_[rl-1] *= primelink(Psi_->AA(rl-1));
+                PH_[rl-1] *= primed(Psi_->AA(rl-1),Link);
                 setRHlim(RHlim_-1);
                 }
             }

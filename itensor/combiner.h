@@ -252,7 +252,7 @@ operator ITensor() const
 
     //Use a kronecker delta tensor to convert this Combiner into an Tensor
     ITensor res = operator*(ITensor(right_,primed(right_,5),1));
-    res.primeind(primed(right_,5),-5);
+    res.prime(primed(right_,5),-5);
     return res;
     }
 

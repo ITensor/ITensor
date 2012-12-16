@@ -290,14 +290,14 @@ mapprimeind(const IQIndex& I, int plevold, int plevnew, IndexType type)
 	}
 
 void IQIndexSet::
-primeind(const IQIndex& I, const IQIndex& J)
+prime(const IQIndex& I, const IQIndex& J)
 	{ 
     mapindex(I,primed(I)); 
     mapindex(J,primed(J));
 	}
 
 void IQIndexSet::
-indIncPrime(const IQIndex& I, int inc)
+prime(const IQIndex& I, int inc)
     {
     Foreach(IQIndex& J, index_)
         if(J == I)
@@ -314,7 +314,7 @@ indIncPrime(const IQIndex& I, int inc)
     //or throw an error because we didn't find I
     cerr << "IQIndex was " << I << "\n";
     cout << "IQIndex was " << I << "\n";
-    Error("indIncPrime: couldn't find IQIndex");
+    Error("Couldn't find IQIndex");
     }
 
 void IQIndexSet::
@@ -336,7 +336,7 @@ indIncAllPrime(const IQIndex& I, int inc)
     }
 
 void IQIndexSet::
-noprimeind(const IQIndex& I)
+noprime(const IQIndex& I)
     {
 #ifdef DEBUG
     int nmatch = 0;
@@ -349,7 +349,7 @@ noprimeind(const IQIndex& I)
         {
         Print(*this);
         Print(I);
-        Error("Calling noprimeind would lead to two copies of I");
+        Error("Calling noprime would lead to two copies of I");
         }
 #endif
 

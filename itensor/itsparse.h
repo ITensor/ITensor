@@ -213,22 +213,22 @@ class ITSparse
     //
 
     void 
-    noprime(IndexType type = All) { is_.noprime(type); }
-
-    void 
     prime(int inc = 1) { is_.prime(inc); }
 
     void 
     prime(IndexType type, int inc = 1) { is_.prime(type,inc); }
 
     void 
-    primeall() { prime(); }
+    prime(const Index& I, int inc = 1) { mapindex(I,primed(I,inc)); }
 
     void 
-    primesite() { prime(Site); }
+    prime(const Index& I, const Index& J) { is_.prime(I,J); }
 
     void 
-    primelink() { prime(Link); }
+    noprime(IndexType type = All) { is_.noprime(type); }
+
+    void 
+    noprime(const Index& I) { mapindex(I,deprimed(I)); }
 
     void 
     mapprime(int plevold, int plevnew, IndexType type = All)
@@ -239,31 +239,17 @@ class ITSparse
                 IndexType type = All)
         { is_.mapprimeind(I,plevold,plevnew,type); }
 
-    void 
-    primeind(const Index& I, int inc = 1)
-        { mapindex(I,primed(I,inc)); }
-
-    void 
-    primeind(const Index& I, const Index& J) { is_.primeind(I,J); }
-
-    void 
-    noprimeind(const Index& I) { mapindex(I,deprimed(I)); }
-
     friend inline ITSparse
-    primed(ITSparse S, int inc = 1)
+    prime(ITSparse S, int inc = 1)
         { S.prime(All,inc); return S; }
 
     friend inline ITSparse
-    primesite(ITSparse S, int inc = 1)
-        { S.prime(Site,inc); return S; }
+    prime(ITSparse S, IndexType type, int inc = 1)
+        { S.prime(type,inc); return S; }
 
     friend inline ITSparse
-    primelink(ITSparse S, int inc = 1)
-        { S.prime(Link,inc); return S; }
-
-    friend inline ITSparse
-    primeind(ITSparse S, const Index& I, int inc = 1)
-        { S.primeind(I,inc); return S; }
+    prime(ITSparse S, const Index& I, int inc = 1)
+        { S.prime(I,inc); return S; }
 
     friend inline ITSparse
     deprimed(ITSparse S)

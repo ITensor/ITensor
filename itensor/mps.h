@@ -663,7 +663,7 @@ psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
 
     for(int i = 2; i < psi.NN(); ++i) 
         { 
-        L = L * phi.AA(i) * conj(primelink(psi.AA(i))); 
+        L = L * phi.AA(i) * conj(primed(psi.AA(i),Link)); 
         }
     L = L * phi.AA(N);
 

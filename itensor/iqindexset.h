@@ -104,19 +104,19 @@ class IQIndexSet
     //
 
     void 
-    noprime(IndexType type = All);
-
-    void 
     prime(IndexType type, int inc = 1);
 
     void 
-    primeall() { prime(All); }
+    prime(const IQIndex& I, int inc = 1);
 
     void 
-    primesite() { prime(Site); }
+    prime(const IQIndex& I, const IQIndex& J);
 
     void 
-    primelink() { prime(Link); }
+    noprime(IndexType type = All);
+
+    void 
+    noprime(const IQIndex& I);
 
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);
@@ -125,19 +125,6 @@ class IQIndexSet
     mapprimeind(const IQIndex& I, int plevold, int plevnew, 
                 IndexType type = All);
 
-    void 
-    primeind(const IQIndex& I, int inc = 1)
-        { indIncPrime(I,inc); }
-
-    void 
-    primeind(const IQIndex& I, const IQIndex& J);
-
-    // Increments primelevel of a specific IQIndex I.
-    // For example, if the original indices are 
-    // I, I', J, calling indIncPrime(I',2)
-    // results in I, I''', J.
-    void
-    indIncPrime(const IQIndex& I, int inc);
 
     // Increments primelevel of ALL copies of
     // an IQIndex I, regardless of original primelevel.
@@ -146,9 +133,6 @@ class IQIndexSet
     // results in I'', I''', J.
     void
     indIncAllPrime(const IQIndex& I, int inc);
-
-    void 
-    noprimeind(const IQIndex& I);
 
     //
     // Methods for Manipulating IQIndexSets

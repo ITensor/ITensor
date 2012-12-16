@@ -763,7 +763,7 @@ checkOrtho(int i, bool left) const
     IndexT link = (left ? RightLinkInd(i) : LeftLinkInd(i));
     Tensor A = AA(i);
     Tensor Ac = conj(A); 
-    Ac.primeind(link,4);
+    Ac.prime(link,4);
 
     Tensor rho = A * Ac;
 

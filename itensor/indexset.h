@@ -115,16 +115,16 @@ class IndexSet
     prime(IndexType type, int inc = 1);
 
     void 
+    prime(const Index& I, int inc = 1) { mapindex(I,primed(I,inc)); }
+
+    void 
+    prime(const Index& I, const Index& J);
+
+    void 
     noprime(IndexType type = All);
 
     void 
-    primeall() { prime(All); }
-
-    void 
-    primesite() { prime(Site); }
-
-    void 
-    primelink() { prime(Link); }
+    noprime(const Index& I) { mapindex(I,deprimed(I)); }
 
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);
@@ -132,16 +132,6 @@ class IndexSet
     void 
     mapprimeind(const Index& I, int plevold, int plevnew, 
                 IndexType type = All);
-
-    void 
-    primeind(const Index& I, int inc = 1)
-        { mapindex(I,primed(I,inc)); }
-
-    void 
-    primeind(const Index& I, const Index& J);
-
-    void 
-    noprimeind(const Index& I) { mapindex(I,deprimed(I)); }
 
     //
     // Methods for Manipulating IndexSets

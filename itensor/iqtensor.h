@@ -356,55 +356,45 @@ class IQTensor
     //----------------------------------------------------
     //IQTensor: prime methods
 
-    void ind_inc_prime(const IQIndex& i,int inc);
-
-    void noprime(IndexType type = All);
-
-    friend inline IQTensor 
-    deprimed(IQTensor A) { A.noprime(); return A; }
-
-    void 
-    noprimelink();
-
     void 
     prime(int inc = 1) { prime(All,inc); }
 
     void 
     prime(IndexType type, int inc = 1);
 
+    void 
+    prime(const IQIndex& I, int inc = 1);
+
+    void 
+    noprime(IndexType type = All);
+
+    void 
+    noprime(const IQIndex& I);
+
     //no need to keep prime level small
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);
 
-    void 
-    primeind(const IQIndex& I, int inc = 1);
-
-    friend inline IQTensor 
-    primeind(IQTensor A, const IQIndex& I)
-        { A.primeind(I); return A; }
-
-    friend inline IQTensor 
-    primeind(IQTensor A, const IQIndex& I, const IQIndex& J)
-        { A.primeind(I); A.primeind(J); return A; }
-
-    void 
-    noprimeind(const IQIndex& I);
-
     friend inline IQTensor 
     primed(IQTensor A, int inc = 1) { A.prime(All,inc); return A; }
 
-    void 
-    primesite(int inc = 1) { prime(Site,inc); }
+    friend inline IQTensor 
+    primeind(IQTensor A, const IQIndex& I)
+        { A.prime(I); return A; }
+
+    friend inline IQTensor 
+    primeind(IQTensor A, const IQIndex& I, const IQIndex& J)
+        { A.prime(I); A.prime(J); return A; }
 
     friend inline IQTensor 
     primesite(IQTensor A, int inc = 1) { A.prime(Site,inc); return A; }
 
-    void 
-    primelink(int inc = 1) { prime(Link,inc); }
-
     friend inline IQTensor 
     primelink(IQTensor A, int inc = 1)
         { A.prime(Link,inc); return A; }
+
+    friend inline IQTensor 
+    deprimed(IQTensor A) { A.noprime(); return A; }
 
 
     //----------------------------------------------------
@@ -586,6 +576,10 @@ class IQTensor
     //
     //void 
     //SplitReIm(IQTensor& re, IQTensor& im) const;
+
+    //Use prime(I) instead
+    //void 
+    //ind_inc_prime(const IQIndex& I,int inc);
 
     private:
 

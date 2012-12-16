@@ -403,34 +403,34 @@ mapprimeind(const IQIndex& I, int plevold, int plevnew,
     }
 
 void IQTSparse::
-primeind(const IQIndex& I, int inc)
+prime(const IQIndex& I, int inc)
     {
     solo();
 
-    is_->primeind(I,inc);
+    is_->prime(I,inc);
 
     Foreach(ITSparse& t, ncblocks())
     for(std::vector<inqn>::const_iterator x = I.iq().begin(); 
             x != I.iq().end(); ++x)
         {
         if(t.hasindex(x->index))
-            t.primeind(x->index,inc);
+            t.prime(x->index,inc);
         }
     }
 
 void IQTSparse::
-noprimeind(const IQIndex& I) 
+noprime(const IQIndex& I) 
     { 
     solo();
 
-    is_->noprimeind(I); 
+    is_->noprime(I); 
 
     Foreach(ITSparse& t, ncblocks())
     for(std::vector<inqn>::const_iterator x = I.iq().begin(); 
             x != I.iq().end(); ++x)
         {
         if(t.hasindex(x->index))
-            t.noprimeind(x->index);
+            t.noprime(x->index);
         }
     }
 

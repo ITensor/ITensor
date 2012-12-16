@@ -506,7 +506,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     comb.product(AA,AAc);
 
     Tensor AAcc = conj(AAc); 
-    AAcc.primeind(comb.right()); 
+    AAcc.prime(comb.right()); 
 
     Tensor rho = AAc*AAcc; 
 

@@ -338,18 +338,6 @@ class ITensor
     void 
     prime(IndexType type, int inc = 1) { is_.prime(type,inc); }
 
-    //Increase primeLevel of all Indices by 1 (or optional amount inc)
-    void 
-    primeall() { prime(All); }
-
-    //Increase primeLevel of all Site Indices by 1 (or optional amount inc)
-    void 
-    primesite(int inc = 1) { prime(Site,inc); }
-
-    //Increase primeLevel of all Link Indices by 1 (or optional amount inc)
-    void 
-    primelink(int inc = 1) { prime(Link,inc); }
-
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
     void 
     mapprime(int plevold, int plevnew, IndexType type = All)
@@ -364,16 +352,16 @@ class ITensor
 
     //Increase primeLevel of Index I by 1 (or optional amount inc)
     void 
-    primeind(const Index& I, int inc = 1)
+    prime(const Index& I, int inc = 1)
         { mapindex(I,primed(I,inc)); }
 
     //Increase primeLevel of Index I and Index J by 1
     void 
-    primeind(const Index& I, const Index& J) { is_.primeind(I,J); }
+    prime(const Index& I, const Index& J) { is_.prime(I,J); }
 
     //Set primeLevel of Index I to zero
     void 
-    noprimeind(const Index& I) { mapindex(I,deprimed(I)); }
+    noprime(const Index& I) { mapindex(I,deprimed(I)); }
 
     //Return copy of ITensor with primeLevel of all Indices increased by 1
     ITensor friend inline
@@ -383,16 +371,6 @@ class ITensor
     ITensor friend inline
     primed(ITensor A, IndexType type, int inc = 1)
         { A.prime(type,inc); return A; }
-
-    //Return copy of ITensor with primeLevel of all Site Indices increased by 1
-    ITensor friend inline
-    primesite(ITensor A, int inc = 1)
-        { A.prime(Site,inc); return A; }
-
-    //Return copy of ITensor with primeLevel of all Link Indices increased by 1
-    ITensor friend inline
-    primelink(ITensor A, int inc = 1)
-        { A.prime(Link,inc); return A; }
 
     //Return copy of ITensor with primeLevel of Index I increased by 1
     //(or optional amount inc)
@@ -748,6 +726,35 @@ class ITensor
     //
     //void 
     //SplitReIm(ITensor& re, ITensor& im) const;
+
+    //Use prime(All) instead
+    //void 
+    //primeall() { prime(All); }
+
+    //Use prime(Site) or prime(Site,inc) instead
+    //void 
+    //primesite(int inc = 1) { prime(Site,inc); }
+
+    //Use prime(Link) or prime(Link,inc) instead
+    //void 
+    //primelink(int inc = 1) { prime(Link,inc); }
+
+    //Renamed to prime
+    //void 
+    //primeind(const Index& I, int inc = 1)
+    //    { mapindex(I,primed(I,inc)); }
+
+    //Renamed to noprime(const Index& I)
+    //void 
+    //noprimeind(const Index& I) { mapindex(I,deprimed(I)); }
+
+    //Use primed(A,Site) instead
+    //ITensor friend inline
+    //primesite(ITensor A, int inc = 1) { A.prime(Site,inc); return A; }
+
+    //Use primed(A,Link) instead
+    //ITensor friend inline
+    //primelink(ITensor A, int inc = 1) { A.prime(Link,inc); return A; }
 
     protected:
 

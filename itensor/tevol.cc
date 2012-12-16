@@ -108,7 +108,7 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
 
     //Use partial result to build LH
     LH.at(2) = dpsi[s(1)] * conj(primed(psi[s(1)]));
-    rho[2] = psi[s(1)] * conj(primelink(psi[s(1)]));
+    rho[2] = psi[s(1)] * conj(primed(psi[s(1)],Link));
 
     //Continue applying H to psi
     dpsi[s(1)] *= RH[1];
@@ -116,6 +116,11 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
     dpsi[s(1)] *= -1; //Minus sign appearing in Schrodinger eqn
 
     //Orthogonalize
+    //------------------------------------------------------
+    //
+    // SHOULD THIS LINE ONLY BE HERE FOR NORM-PRESERVING FLOW?
+    //
+    //------------------------------------------------------
     dpsi[s(1)] += psi[s(1)]*(-Dot(psi[s(1)],psi[s(1)]));
 
     //Repeat for remaining psi tensors
@@ -133,7 +138,7 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
         if(j < N)
             {
             LH.at(j+1) = Bd * conj(primed(B));
-            rho[j+1] = (rho[j] * B) * conj(primelink(B));
+            rho[j+1] = (rho[j] * B) * conj(primed(B,Link));
             }
 
         //Finish applying H to psi
@@ -177,17 +182,17 @@ derivMPS(const vector<IQTensor>& psi, const IQMPO& H,
          vector<IQTensor>& dpsi, Direction dir);
 
 
-/*
+template <class Tensor>
 Real
-expect(const vector<ITensor>& psi, const MPO& H)
+expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
     {
     const int size = psi.size();
 
-    ITensor L;
+    Tensor L;
     int s = 1;
     for(int j = 1; j < size; ++j)
         {
-        const ITensor& t = psi.at(j);
+        const Tensor& t = psi.at(j);
 
         bool last = false;
         if(j == size-1)
@@ -226,18 +231,25 @@ expect(const vector<ITensor>& psi, const MPO& H)
             L *= conj(primed(t));
             }
         }
-    return NaN;
+    return NAN;
     }
-
+template
 Real
-norm(const vector<ITensor>& psi)
+expect(const vector<ITensor>& psi, const MPO& H);
+template
+Real
+expect(const vector<IQTensor>& psi, const IQMPO& H);
+
+template <class Tensor>
+Real
+norm(const vector<Tensor>& psi)
     {
     const int size = psi.size();
 
-    ITensor L;
+    Tensor L;
     for(int j = 1; j < size; ++j)
         {
-        const ITensor& t = psi.at(j);
+        const Tensor& t = psi.at(j);
 
         bool last = false;
         if(j == size-1)
@@ -249,28 +261,51 @@ norm(const vector<ITensor>& psi)
         if(j == 1)
             {
             L = t;
-            L *= conj(primelink(t));
+            L *= conj(primed(t,Link));
             }
         else
         if(last)
             {
             L *= t;
-            return Dot(conj(primelink(t)),L);
+            return Dot(conj(primed(t,Link)),L);
             }
         else
             {
             L *= t;
-            L *= conj(primelink(t));
+            L *= conj(primed(t,Link));
             }
         }
-    return NaN;
+    return NAN;
     }
-*/
+template
+Real
+norm(const vector<ITensor>& psi);
+template
+Real
+norm(const vector<IQTensor>& psi);
+
+struct SqrtInv
+    {
+    SqrtInv(Real cut = 0)
+        :
+        cut_(cut)
+        { }
+
+    Real
+    operator()(Real r) const
+        {
+        return (r < cut_ ? 0 : 1./sqrt(r));
+        }
+
+    private:
+    Real cut_;
+    };
 
 template <class Tensor>
 void
-exactImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep, 
-                MPSt<Tensor>& psi)
+imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep, 
+          MPSt<Tensor>& psi, 
+          const OptSet& opts)
     {
     typedef typename Tensor::IndexT
     IndexT;
@@ -279,78 +314,7 @@ exactImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
     typedef MPSt<Tensor>
     MPST;
 
-    const int N = H.NN();
-
-    if(psi.NN() != N)
-        {
-        Error("Mismatched number of sites between H and psi");
-        }
-
-    const int nt = ttotal/tstep+1e-9;
-    Real tsofar = 0;
-    for(int tt = 1; tt <= nt; ++tt)
-        {
-        //
-        // 4th Order Runge-Kutta
-        //
-
-        MPST d1;
-        exactApplyMPO(psi,H,d1);
-        d1 *= -1;
-
-        MPST d2(psi);
-        d2 += (tstep/2.)*d1;
-        exactApplyMPO(d2,H,d2);
-        d2 *= -1;
-
-        MPST d3(psi);
-        d3 += (tstep/2.)*d2;
-        exactApplyMPO(d3,H,d3);
-        d3 *= -1;
-
-        MPST d4(psi);
-        d4 += (tstep)*d3;
-        exactApplyMPO(d4,H,d4);
-        d4 *= -1;
-
-
-        d1 *= (tstep/6.);
-        d2 *= (tstep/3.);
-        d3 *= (tstep/3.);
-        d4 *= (tstep/6.);
-
-        psi += d1;
-        psi += d2;
-        psi += d3;
-        psi += d4;
-
-        Real nm2 = psiphi(psi,psi);
-        psi *= 1./sqrt(nm2);
-
-        tsofar += tstep;
-
-        cout << format("%.5f %.10f") % tsofar % psiHphi(psi,H,psi) << endl;
-
-        } // for loop over tt
-    }
-template
-void
-exactImagTEvol(const MPOt<ITensor>& H, Real ttotal, Real tstep, 
-                MPSt<ITensor>& psi);
-template
-void
-exactImagTEvol(const MPOt<IQTensor>& H, Real ttotal, Real tstep, 
-                MPSt<IQTensor>& psi);
-
-template <class Tensor>
-void
-imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep, 
-          MPSt<Tensor>& psi)
-    {
-    typedef typename Tensor::IndexT
-    IndexT;
-    typedef typename Tensor::SparseT
-    SparseT;
+    bool verbose = opts.boolOrDefault("Verbose",false);
 
     const int N = H.NN();
 
@@ -361,21 +325,66 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
         Error("Mismatched number of sites between H and psi");
         }
 
+    Real tsofar = 0;
+
     //Determine if some exact timesteps needed
-    int min_m = 1E5;
-    int max_m = 1;
+    const int m_threshold = 5;
+    bool doUnprojStep = false;
     for(int b = 1; b < N; ++b)
         {
         int m = psi.LinkInd(b).m();
-        if(m < min_m) min_m = m;
-        if(m > max_m) max_m = m;
+        if(m < m_threshold) 
+            {
+            doUnprojStep = true;
+            break;
+            }
         }
 
-    if(min_m < 10)
+    if(doUnprojStep)
         {
-        const Real exactT = 3*tstep;
-        exactImagTEvol(H,exactT,tstep,psi);
+        const int nexact = 1;
+        const Real estep = tstep/nexact;
+
+        const int Order = 4;
+
+        for(int ne = 1; ne <= nexact; ++ne)
+            {
+            //Do time evol using MPO w/out projection
+            //psi' = psi-t*H*(psi-t/2*H*(psi-t/3*H*(psi-t/4*H*psi)))
+            MPST dpsi(psi);
+            for(int o = Order; o >= 1; --o)
+                {
+                exactApplyMPO(dpsi,H,dpsi);
+                dpsi *= -estep/(1.*o);
+                dpsi += psi;
+                }
+            psi = dpsi;
+
+            tsofar += estep;
+            }
+
+        if(verbose)
+            {
+            Real nm2 = psiphi(psi,psi);
+            cout << format("%.5f %.10f") % tsofar % (psiHphi(psi,H,psi)/nm2) << endl;
+            }
+
+        //Record the time step taken
+        ttotal -= nexact*estep;
+
+        if(verbose)
+            {
+            cout << format("After unprojected steps, tsofar = %.5f") % tsofar << endl;
+            cout << "After unprojected steps, m values = " << endl;
+            for(int b = 1; b < N; ++b)
+                {
+                int m = psi.LinkInd(b).m();
+                cout << m << " ";
+                }
+            cout << endl;
+            }
         }
+
 
     //Group pairs of adjacent site tensors
     const int Ng = N/2+N%2;
@@ -389,58 +398,155 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
         }
 
     SVDWorker W;
+    W.doRelCutoff(true);
+    W.absoluteCutoff(false);
     W.minm(psi.minm());
     W.maxm(psi.maxm());
     W.cutoff(psi.cutoff());
 
-    const int nt = ttotal/tstep+1e-9;
-    Real tsofar = 0;
+    int nt = ttotal/tstep+(1e-9*(ttotal/tstep));
+
+    if(fabs(nt*tstep-ttotal) > 1E-9)
+        {
+        Error("Timestep not commensurate with total time");
+        }
+
     int oc = 1;
     for(int tt = 1; tt <= nt; ++tt)
         {
         Direction dir = (tt%2==1 ? Fromleft : Fromright);
         const int groups = Ng + (N%2==0 && tt%2==0 ? 1 : 0);
 
-        cout << "\nTaking step" << endl;
+        if(verbose) cout << "\nTaking step" << endl;
 
-        //
-        // 4th Order Runge-Kutta
-        //
+        const string type = "second";
 
-        vector<Tensor> d1(psiv);
-        derivMPS(psiv,H,d1,dir);
-
-        vector<Tensor> d2(psiv);
+        if(type == "second")
             {
+            //
+            // 2nd Order Runge-Kutta
+            // (Midpoint method)
+            //
+
+            vector<Tensor> d1(psiv);
+            derivMPS(psiv,H,d1,dir);
+
             vector<Tensor> p1(psiv);
             for(int j = 1; j <= Ng; ++j)
                 p1[j] += (tstep/2.)*d1[j];
-            derivMPS(p1,H,d2,dir);
-            }
 
-        vector<Tensor> d3(psiv);
+            vector<Tensor> d2(psiv);
+            derivMPS(p1,H,d2,dir);
+
+            for(int g = 1; g <= groups; ++g)
+                {
+                psiv[g] += (tstep)*d2[g];
+                }
+            }
+        else
+        if(type == "third")
             {
+            //
+            // 3rd Order Runge-Kutta
+            //
+
+            vector<Tensor> d1(psiv);
+            derivMPS(psiv,H,d1,dir);
+
+            vector<Tensor> p1(psiv);
+            for(int j = 1; j <= Ng; ++j)
+                p1[j] += (tstep/3.)*d1[j];
+
+            vector<Tensor> d2(psiv);
+            derivMPS(p1,H,d2,dir);
+
             vector<Tensor> p2(psiv);
             for(int j = 1; j <= Ng; ++j)
-                p2[j] += (tstep/2.)*d2[j];
+                p2[j] += (2.*tstep/3.)*d2[j];
+
+            vector<Tensor> d3(psiv);
             derivMPS(p2,H,d3,dir);
-            }
 
-        vector<Tensor> d4(psiv);
+            for(int g = 1; g <= groups; ++g)
+                {
+                psiv[g] += (tstep/4.)*(d1[g]+3*d3[g]);
+                }
+            }
+        else
+        if(type == "fourth")
             {
-            vector<Tensor> p3(psiv);
-            for(int j = 1; j <= Ng; ++j)
-                p3[j] += (tstep)*d3[j];
-            derivMPS(p3,H,d4,dir);
-            }
+            //
+            // 4th Order Runge-Kutta
+            //
 
-        for(int g = 1; g <= groups; ++g)
+            vector<Tensor> d1(psiv);
+            derivMPS(psiv,H,d1,dir);
+
+            vector<Tensor> d2(psiv);
+                vector<Tensor> p1(psiv);
+                for(int j = 1; j <= Ng; ++j)
+                    p1[j] += (tstep/2.)*d1[j];
+                derivMPS(p1,H,d2,dir);
+
+            vector<Tensor> d3(psiv);
+                vector<Tensor> p2(psiv);
+                for(int j = 1; j <= Ng; ++j)
+                    p2[j] += (tstep/2.)*d2[j];
+                //derivMPS(p2,H,d3,dir);
+                derivMPS(p1,H,d3,dir);
+
+            vector<Tensor> d4(psiv);
+                vector<Tensor> p3(psiv);
+                for(int j = 1; j <= Ng; ++j)
+                    p3[j] += (tstep)*d3[j];
+                derivMPS(p3,H,d4,dir);
+
+            for(int g = 1; g <= groups; ++g)
+                {
+                //cout << format("Taking time step for group %d") % g << endl;
+                psiv[g] += (tstep/6.)*(d1[g]+2*d2[g]+2*d3[g]+d4[g]);
+                }
+            }
+        else
             {
-            //cout << format("Taking time step for group %d") % g << endl;
-            psiv[g] += (tstep/6.)*(d1[g]+2*d2[g]+2*d3[g]+d4[g]);
+            cout << "Type " << type << " not recognized" << endl;
+            exit(0);
             }
 
+        //Record time step
         tsofar += tstep;
+
+        //Orthogonalize the B's, helpful and/or necessary?
+        const bool do_orth = false;
+        if(do_orth)
+            {
+            if(verbose)
+                {
+                Real nbefore = norm(psiv);
+                cout << format("Norm before orth = %.10f") % nbefore << endl;
+                cout << format("Energy before orth = %.10f") % (expect(psiv,H)/nbefore) << endl;
+                }
+
+            for(int g = groups; g > 1; --g)
+                {
+                Tensor& B = psiv[g];
+                IndexT lnk = index_in_common(B,psiv[g-1]);
+                Tensor overlap = conj(primeind(B,lnk))*B;
+
+                SVDWorker W;
+                Tensor U(lnk),V;
+                SparseT D;
+                W.svd(overlap,U,D,V);
+
+                SqrtInv inv(1E-12);
+                D.mapElems(inv);
+
+                Tensor orth = U*D*V;
+                B *= conj(orth);
+                B.noprime();
+                }
+            }
+
 
         if(tt == nt) break;
 
@@ -457,12 +563,18 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             cout << format("psiv[%d] =") % j << psiv.at(j) << endl << endl;
             }
         */
-        //Real nbefore = norm(psiv);
-        //cout << format("Norm before regroup = %.10f") % nbefore << endl;
-        //cout << format("Energy before regroup = %.10f") % (expect(psiv,H)/nbefore) << endl;
+        if(verbose)
+            {
+            Real nbefore = norm(psiv);
+            cout << format("Norm before regroup = %.10f") % nbefore << endl;
+            cout << format("Energy before regroup = %.10f") % (expect(psiv,H)/nbefore) << endl;
+            }
 
-        cout << "Regrouping sites" << endl;
-        
+        if(verbose) cout << "Regrouping sites" << endl;
+
+        const Real orig_cutoff = W.cutoff();
+
+        W.cutoff(1E-20);
         if(tt%2 == 1)
             { //Odd step, odd bonds grouped
             for(int g = 1, j = 1; g < Ng; ++g, j += 2)
@@ -531,12 +643,13 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 }
             oc = 1;
             }
+        W.cutoff(orig_cutoff);
 
-        Real nm2 = Dot(psiv[oc],psiv[oc]);
-        cout << format("time = %.3f, nm2 = %.10f -> ") % tsofar % nm2;
-        psiv[oc] *= 1./sqrt(nm2);
-        nm2 = Dot(psiv[oc],psiv[oc]);
-        cout << format("%.10f") % nm2 << endl;
+        //Real nm2 = Dot(psiv[oc],psiv[oc]);
+        //cout << format("time = %.3f, nm2 = %.10f -> ") % tsofar % nm2;
+        //psiv[oc] *= 1./sqrt(nm2);
+        //nm2 = Dot(psiv[oc],psiv[oc]);
+        //cout << format("%.10f") % nm2 << endl;
 
         /*
         cout << format("Step %d, After regrouping, psiv =") % tt << endl;
@@ -551,11 +664,27 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             cout << format("psiv[%d] =") % j << psiv.at(j) << endl << endl;
             }
         */
-        //Real nafter = norm(psiv);
-        //cout << format("Norm after regroup = %.10f") % nafter << endl;
-        //cout << format("%.5f Energy after regroup = %.10f") % tsofar % (expect(psiv,H)/nafter) << endl;
+        if(verbose)
+            {
+            Real nafter = norm(psiv);
+            cout << format("Norm after regroup = %.10f") % nafter << endl;
+            Real enafter = expect(psiv,H)/nafter;
+            cout << format("Energy after regroup = %.10f") % enafter << endl;
+            cout << format("%.5f %.10f") % tsofar % enafter << endl;
+
+            cout << "After step, m values = " << endl;
+            for(int b = 1; b < N; ++b)
+                {
+                int m = psi.LinkInd(b).m();
+                cout << m << " ";
+                }
+            cout << endl;
+            }
 
         } // for loop over tt
+
+    if(verbose)
+        cout << format("Total time evolved = %.5f") % tsofar << endl;
 
     //
     // Factorize grouped tensors back into single sites
@@ -610,8 +739,8 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 psiv.at(g+1) *= bond;
                 }
             }
-        Real nm2 = Dot(psi.AA(N),psi.AA(N));
-        psi.AAnc(N) *= 1./sqrt(nm2);
+        //Real nm2 = Dot(psi.AA(N),psi.AA(N));
+        //psi.AAnc(N) *= 1./sqrt(nm2);
         }
     else
         {
@@ -662,17 +791,78 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 psiv.at(g-1) *= bond;
                 }
             }
-        Real nm2 = Dot(psi.AA(1),psi.AA(1));
-        psi.AAnc(1) *= 1./sqrt(nm2);
+        //Real nm2 = Dot(psi.AA(1),psi.AA(1));
+        //psi.AAnc(1) *= 1./sqrt(nm2);
         }
 
     } // imagTEvol
 template
 void
 imagTEvol(const MPOt<ITensor>& H, Real ttotal, Real tstep, 
-          MPSt<ITensor>& psi);
+          MPSt<ITensor>& psi, const OptSet& opts);
 template
 void
 imagTEvol(const MPOt<IQTensor>& H, Real ttotal, Real tstep, 
-          MPSt<IQTensor>& psi);
+          MPSt<IQTensor>& psi, const OptSet& opts);
+
+
+template <class Tensor>
+void
+gateTEvol(const list<BondGate<Tensor> >& gatelist, Real ttotal, Real tstep, 
+          MPSt<Tensor>& psi, 
+          const OptSet& opts)
+    {
+    typedef typename Tensor::IndexT
+    IndexT;
+    typedef typename Tensor::SparseT
+    SparseT;
+
+    bool verbose = opts.boolOrDefault("Verbose",false);
+
+    //const int N = psi.NN();
+
+    const int nt = ttotal/tstep+(1e-9*(ttotal/tstep));
+    if(fabs(nt*tstep-ttotal) > 1E-9)
+        {
+        Error("Timestep not commensurate with total time");
+        }
+
+    Real tsofar = 0;
+    for(int tt = 1; tt <= nt; ++tt)
+        {
+        Foreach(const BondGate<Tensor> & gate, gatelist)
+            {
+            psi.position(gate.i());
+            psi.applygate(gate.op());
+            }
+
+        if(verbose)
+            {
+            Real percentdone = 100*tt/(0.5*ttotal/tstep+1e-9);
+            if(percentdone < 99.5)
+                {
+                fprintf(stdout,"\b\b\b%2.f%%",percentdone);
+                cout.flush();
+                }
+            }
+
+        //psi.normalize();
+
+        tsofar += tstep;
+        }
+    if(verbose) 
+        {
+        cout << endl;
+        cout << format("Total time evolved = %.5f\n") % tsofar << endl;
+        }
+
+    } // gateTEvol
+template
+void
+gateTEvol(const list<BondGate<ITensor> >& gatelist, Real ttotal, Real tstep, 
+          MPSt<ITensor>& psi, const OptSet& opts);
+template
+void
+gateTEvol(const list<BondGate<IQTensor> >& gatelist, Real ttotal, Real tstep, 
+          MPSt<IQTensor>& psi, const OptSet& opts);
 
