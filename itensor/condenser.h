@@ -43,7 +43,10 @@ class Condenser
         }
 
     void 
-    doprime(IndexType type = All, int inc = 1);
+    prime(int inc = 1) { prime(All,inc); }
+
+    void 
+    prime(IndexType type = All, int inc = 1);
 
     void product(const IQTensor& t, IQTensor& res) const;
 
@@ -81,10 +84,10 @@ private:
     }; //class Condenser
 
 void inline Condenser::
-doprime(IndexType type, int inc)
+prime(IndexType type, int inc)
     {
-    bigind_.doprime(type,inc);
-    smallind_.doprime(type,inc);
+    bigind_.prime(type,inc);
+    smallind_.prime(type,inc);
 
     small_to_big.clear();
 
@@ -94,10 +97,10 @@ doprime(IndexType type, int inc)
         it != big_to_small.end(); ++it)
         {
         Index pindex = it->first;
-        pindex.doprime(type,inc);
+        pindex.prime(type,inc);
 
         std::pair<Index,int> newpair = it->second;
-        newpair.first.doprime(type,inc);
+        newpair.first.prime(type,inc);
 
         new_bts[pindex] = newpair;
         small_to_big[newpair] = pindex;

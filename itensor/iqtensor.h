@@ -367,7 +367,10 @@ class IQTensor
     noprimelink();
 
     void 
-    doprime(IndexType type, int inc = 1);
+    prime(int inc = 1) { prime(All,inc); }
+
+    void 
+    prime(IndexType type, int inc = 1);
 
     //no need to keep prime level small
     void 
@@ -388,20 +391,20 @@ class IQTensor
     noprimeind(const IQIndex& I);
 
     friend inline IQTensor 
-    primed(IQTensor A, int inc = 1) { A.doprime(All,inc); return A; }
+    primed(IQTensor A, int inc = 1) { A.prime(All,inc); return A; }
 
     void 
-    primesite(int inc = 1) { doprime(Site,inc); }
+    primesite(int inc = 1) { prime(Site,inc); }
 
     friend inline IQTensor 
-    primesite(IQTensor A, int inc = 1) { A.doprime(Site,inc); return A; }
+    primesite(IQTensor A, int inc = 1) { A.prime(Site,inc); return A; }
 
     void 
-    primelink(int inc = 1) { doprime(Link,inc); }
+    primelink(int inc = 1) { prime(Link,inc); }
 
     friend inline IQTensor 
     primelink(IQTensor A, int inc = 1)
-        { A.doprime(Link,inc); return A; }
+        { A.prime(Link,inc); return A; }
 
 
     //----------------------------------------------------

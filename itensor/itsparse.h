@@ -216,16 +216,19 @@ class ITSparse
     noprime(IndexType type = All) { is_.noprime(type); }
 
     void 
-    doprime(IndexType type, int inc = 1) { is_.doprime(type,inc); }
+    prime(int inc = 1) { is_.prime(inc); }
 
     void 
-    primeall() { doprime(All,1); }
+    prime(IndexType type, int inc = 1) { is_.prime(type,inc); }
 
     void 
-    primesite() { doprime(Site,1); }
+    primeall() { prime(); }
 
     void 
-    primelink() { doprime(Link,1); }
+    primesite() { prime(Site); }
+
+    void 
+    primelink() { prime(Link); }
 
     void 
     mapprime(int plevold, int plevnew, IndexType type = All)
@@ -248,15 +251,15 @@ class ITSparse
 
     friend inline ITSparse
     primed(ITSparse S, int inc = 1)
-        { S.doprime(All,inc); return S; }
+        { S.prime(All,inc); return S; }
 
     friend inline ITSparse
     primesite(ITSparse S, int inc = 1)
-        { S.doprime(Site,inc); return S; }
+        { S.prime(Site,inc); return S; }
 
     friend inline ITSparse
     primelink(ITSparse S, int inc = 1)
-        { S.doprime(Link,inc); return S; }
+        { S.prime(Link,inc); return S; }
 
     friend inline ITSparse
     primeind(ITSparse S, const Index& I, int inc = 1)

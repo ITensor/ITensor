@@ -277,7 +277,7 @@ Index(IndexType type,const Index& other, int primeinc)
       primelevel_(other.primelevel_)
     {
     primelevel_ = other.primelevel_;
-    doprime(type,primeinc);
+    prime(type,primeinc);
     }
 
 
@@ -352,7 +352,14 @@ mapprime(int plevold, int plevnew, IndexType type)
     }
 
 void Index::
-doprime(IndexType type, int inc)
+prime(int inc)
+    {
+    if(this->type() == ReIm) return;
+    primelevel_ += inc;
+    }
+
+void Index::
+prime(IndexType type, int inc)
     {
     if(this->type() == ReIm) return;
     if(type == All || type == this->type())

@@ -465,7 +465,7 @@ IQTensor(IndexType type,const IQTensor& other)
     : 
     is_(other.is_),
     p(other.p)
-    { doprime(type); }
+    { prime(type); }
 
 IQTensor::
 IQTensor(std::istream& s)
@@ -739,14 +739,14 @@ noprimelink()
 	}
 
 void IQTensor::
-doprime(IndexType type, int inc)
+prime(IndexType type, int inc)
 	{
 	solo();
 
-    is_->doprime(type,inc);
+    is_->prime(type,inc);
 
     Foreach(ITensor& t, ncdat())
-	    t.doprime(type,inc);
+	    t.prime(type,inc);
 	}
 
 void IQTensor::

@@ -88,7 +88,10 @@ class Combiner
     hasindex(const Index& I) const;
 
     void
-    doprime(IndexType type, int inc = 1);
+    prime(int inc = 1);
+
+    void
+    prime(IndexType type, int inc = 1);
 
     friend Combiner
     primed(Combiner C, int inc = 1);
@@ -193,32 +196,45 @@ findindex(const Index& I) const
     return 0;
     }
 
-inline
-bool Combiner::
+
+bool inline Combiner::
 hasindex(const Index& I) const
     {
     for(int j = 1; j <= rl_; ++j) if(left_[j] == I) return true;
     return false;
     }
 
-inline
-void Combiner::
-doprime(IndexType type, int inc)
+
+void inline Combiner::
+prime(int inc)
     {
     for(int j = 1; j <= rl_; ++j) 
         {
-        left_[j].doprime(type,inc);
+        left_[j].prime(inc);
         }
     if(initted)
         {
-        right_.doprime(type,inc);
+        right_.prime(inc);
+        }
+    }
+
+void inline Combiner::
+prime(IndexType type, int inc)
+    {
+    for(int j = 1; j <= rl_; ++j) 
+        {
+        left_[j].prime(type,inc);
+        }
+    if(initted)
+        {
+        right_.prime(type,inc);
         }
     }
 
 Combiner inline
 primed(Combiner C, int inc)
     {
-    C.doprime(All,inc);
+    C.prime(All,inc);
     return C;
     }
 

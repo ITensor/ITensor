@@ -363,15 +363,15 @@ noprime(IndexType type)
     }
 
 void IQTSparse::
-doprime(IndexType type, int inc) 
+prime(IndexType type, int inc) 
     { 
     solo();
 
-    is_->doprime(type,inc);
+    is_->prime(type,inc);
 
     Foreach(ITSparse& t, ncblocks())
         {
-        t.doprime(type,inc);
+        t.prime(type,inc);
         }
     }
 

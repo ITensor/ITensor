@@ -148,18 +148,23 @@ class Index
     // Prime methods
     //
 
+    // Increase primelevel by 1 (or by optional amount inc).
+    void 
+    prime(int inc = 1);
+
+    // Increase primelevel by 1 (or optional amount inc)
+    // if type matches this Index
+    void 
+    prime(IndexType type = All, int inc = 1);
+
+    // Set primelevel to zero (optionally only if type matches)
+    void 
+    noprime(IndexType type = All) { prime(type,-primelevel_); }
+
     // Switch primelevel from plevold to plevnew. 
     // Has no effect if plevold doesn't match current primelevel.
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);
-
-    // Increment primelevel by 1 (or optionally by amount inc).
-    void 
-    doprime(IndexType type = All, int inc = 1);
-
-    // Set primelevel to zero.
-    void 
-    noprime(IndexType type = All) { doprime(type,-primelevel_); }
 
     // Make a copy of this Index, increasing primelevel.
     Index friend inline

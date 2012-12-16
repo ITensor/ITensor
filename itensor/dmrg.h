@@ -20,6 +20,8 @@
 // will be merged into newer 
 // designs
 //
+// See DMRGWorker.h for current DMRG code.
+//
 
 template<class Tensor,class TensorSet, class OpTensorSet>
 void applyProjOp(const Tensor& phi, const TensorSet& L, const TensorSet& R, const OpTensorSet& H, Tensor& Hphi)

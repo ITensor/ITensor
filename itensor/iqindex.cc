@@ -443,7 +443,7 @@ IQIndex(IndexType type, const IQIndex& other, int inc)
     index_(other), 
     _dir(other._dir), 
     pd(other.pd)  
-    { doprime(type,inc); }
+    { prime(type,inc); }
 
 IQIndex::
 IQIndex(std::istream& s) 
@@ -586,12 +586,12 @@ offset(const Index& I) const
     }
 
 void IQIndex::
-doprime(IndexType type, int inc)
+prime(IndexType type, int inc)
     {
     solo();
-    index_.doprime(type,inc);
-    DoPrimer dp(type,inc);
-    for_each(pd->iq_.begin(),pd->iq_.end(),dp);
+    index_.prime(type,inc);
+    Primer pr(type,inc);
+    for_each(pd->iq_.begin(),pd->iq_.end(),pr);
     }
 
 void IQIndex::

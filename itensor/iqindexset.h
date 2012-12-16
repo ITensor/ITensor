@@ -107,16 +107,16 @@ class IQIndexSet
     noprime(IndexType type = All);
 
     void 
-    doprime(IndexType type, int inc = 1);
+    prime(IndexType type, int inc = 1);
 
     void 
-    primeall() { doprime(All,1); }
+    primeall() { prime(All); }
 
     void 
-    primesite() { doprime(Site,1); }
+    primesite() { prime(Site); }
 
     void 
-    primelink() { doprime(Link,1); }
+    primelink() { prime(Link); }
 
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);

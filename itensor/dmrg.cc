@@ -31,7 +31,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
     for(int i = 1; i <= finalham.NN(); i++)
 	{
         psiconj.AAnc(i) = conj(psi.AA(i)); 
-        psiconj.AAnc(i).doprime(primeBoth);
+        psiconj.AAnc(i).prime(primeBoth);
 	}
 
     leftright[N-1] = psi.AA(N) * finalham.AA(N) * psiconj.AA(N);
@@ -94,8 +94,8 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
             psi.doSVD(l,phi,(ha==1 ? Fromleft : Fromright));
 
-            psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).doprime(primeBoth);
-            psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).doprime(primeBoth);
+            psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).prime(primeBoth);
+            psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).prime(primeBoth);
 
             Index ll = psi.LinkInd(l);
             cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m();
@@ -203,7 +203,7 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
     for(int i = 1; i <= H[0].NN(); i++)
 	{
         psiconj.AAnc(i) = conj(psi.AA(i));
-        psiconj.AAnc(i).doprime(primeBoth);
+        psiconj.AAnc(i).prime(primeBoth);
 	}
 
     vector< vector<ITensor> > leftright(N+1);
@@ -240,8 +240,8 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
 
             do_denmat_Real(phi,psi.AAnc(l),psi.AAnc(l+1),sweeps.cutoff(sw),sweeps.minm(sw),sweeps.maxm(sw),(ha==1 ? Fromleft : Fromright));
 
-            psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).doprime(primeBoth);
-            psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).doprime(primeBoth);
+            psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).prime(primeBoth);
+            psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).prime(primeBoth);
 
             Index ll = psi.LinkInd(l);
             if(!opts.quiet()) 
@@ -349,7 +349,7 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
     for(int i = 1; i <= psi.NN(); i++)
 	{
         psiconj.AAnc(i) = conj(psi.AA(i));
-        psiconj.AAnc(i).doprime(primeBoth);
+        psiconj.AAnc(i).prime(primeBoth);
 	}
 
     vector<ITensor> leftright(N);
@@ -393,8 +393,8 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
 
             psi.doSVD(l,phi,(ha==1 ? Fromleft : Fromright));
 
-            psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).doprime(primeBoth);
-            psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).doprime(primeBoth);
+            psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).prime(primeBoth);
+            psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).prime(primeBoth);
 
             Index ll = psi.LinkInd(l);
             if(!opts.quiet()) 

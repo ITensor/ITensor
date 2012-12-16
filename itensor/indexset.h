@@ -109,19 +109,22 @@ class IndexSet
     //
 
     void 
+    prime(int inc = 1) { prime(All,inc); }
+
+    void 
+    prime(IndexType type, int inc = 1);
+
+    void 
     noprime(IndexType type = All);
 
     void 
-    doprime(IndexType type, int inc = 1);
+    primeall() { prime(All); }
 
     void 
-    primeall() { doprime(All,1); }
+    primesite() { prime(Site); }
 
     void 
-    primesite() { doprime(Site,1); }
-
-    void 
-    primelink() { doprime(Link,1); }
+    primelink() { prime(Link); }
 
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);

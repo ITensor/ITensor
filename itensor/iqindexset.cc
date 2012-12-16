@@ -250,13 +250,13 @@ noprime(IndexType type)
 	}
 
 void IQIndexSet::
-doprime(IndexType type, int inc)
+prime(IndexType type, int inc)
 	{
     ur_ = 0;
     for(size_t j = 0; j < index_.size(); ++j) 
         {
         IQIndex& J = index_[j];
-        J.doprime(type,inc);
+        J.prime(type,inc);
         ur_ += J.uniqueReal();
         }
 	}

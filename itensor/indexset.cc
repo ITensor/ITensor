@@ -255,13 +255,13 @@ noprime(IndexType type)
 	}
 
 void IndexSet::
-doprime(IndexType type, int inc)
+prime(IndexType type, int inc)
 	{
     ur_ = 0;
     for(int j = 1; j <= r_; ++j) 
         {
         Index& J = index_[j];
-        J.doprime(type,inc);
+        J.prime(type,inc);
         ur_ += J.uniqueReal();
         }
 #ifdef SET_UR

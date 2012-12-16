@@ -202,7 +202,10 @@ class IQIndex
     //IQIndex: prime methods
 
     void 
-    doprime(IndexType type, int inc = 1);
+    prime(int inc = 1) { prime(All,inc); }
+
+    void 
+    prime(IndexType type, int inc = 1);
 
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);
@@ -476,7 +479,7 @@ struct IQIndexVal
     };
 
 
-class DoPrimer // Functor which applies doprime within STL's for_each, etc
+class Primer // Functor which applies prime within STL's for_each, etc
     {
     public:
 
@@ -484,19 +487,19 @@ class DoPrimer // Functor which applies doprime within STL's for_each, etc
 
     int inc;
 
-    DoPrimer (IndexType type_, int inc_ = 1) 
+    Primer (IndexType type_, int inc_ = 1) 
         : type(type_), 
           inc(inc_) 
         { }
 
     void 
-    operator()(inqn& iq) const { iq.index.doprime(type,inc); }
+    operator()(inqn& iq) const { iq.index.prime(type,inc); }
     void 
-    operator()(Index& i) const { i.doprime(type,inc); }
+    operator()(Index& i) const { i.prime(type,inc); }
     void 
-    operator()(ITensor& it) const { it.doprime(type,inc); }
+    operator()(ITensor& it) const { it.prime(type,inc); }
     void 
-    operator()(IQIndex &iqi) const { iqi.doprime(type,inc); }
+    operator()(IQIndex &iqi) const { iqi.prime(type,inc); }
     };
 
 class MapPrimer // Functor which applies mapprime within STL's for_each, etc

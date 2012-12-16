@@ -332,19 +332,23 @@ class ITensor
 
     //Increase primeLevel of Indices by 1 (or optional amount inc)
     void 
-    doprime(IndexType type, int inc = 1) { is_.doprime(type,inc); }
+    prime(int inc = 1) { is_.prime(inc); }
+
+    //Increase primeLevel of Indices by 1 (or optional amount inc)
+    void 
+    prime(IndexType type, int inc = 1) { is_.prime(type,inc); }
 
     //Increase primeLevel of all Indices by 1 (or optional amount inc)
     void 
-    primeall() { doprime(All,1); }
+    primeall() { prime(All); }
 
     //Increase primeLevel of all Site Indices by 1 (or optional amount inc)
     void 
-    primesite(int inc = 1) { doprime(Site,inc); }
+    primesite(int inc = 1) { prime(Site,inc); }
 
     //Increase primeLevel of all Link Indices by 1 (or optional amount inc)
     void 
-    primelink(int inc = 1) { doprime(Link,inc); }
+    primelink(int inc = 1) { prime(Link,inc); }
 
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
     void 
@@ -374,17 +378,21 @@ class ITensor
     //Return copy of ITensor with primeLevel of all Indices increased by 1
     ITensor friend inline
     primed(ITensor A, int inc = 1)
-        { A.doprime(All,inc); return A; }
+        { A.prime(All,inc); return A; }
+
+    ITensor friend inline
+    primed(ITensor A, IndexType type, int inc = 1)
+        { A.prime(type,inc); return A; }
 
     //Return copy of ITensor with primeLevel of all Site Indices increased by 1
     ITensor friend inline
     primesite(ITensor A, int inc = 1)
-        { A.doprime(Site,inc); return A; }
+        { A.prime(Site,inc); return A; }
 
     //Return copy of ITensor with primeLevel of all Link Indices increased by 1
     ITensor friend inline
     primelink(ITensor A, int inc = 1)
-        { A.doprime(Link,inc); return A; }
+        { A.prime(Link,inc); return A; }
 
     //Return copy of ITensor with primeLevel of Index I increased by 1
     //(or optional amount inc)
