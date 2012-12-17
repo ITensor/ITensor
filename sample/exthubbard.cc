@@ -96,8 +96,8 @@ int main(int argc, char* argv[])
     for(int j = 1; j <= N; ++j)
         {
         psi.position(j);
-        upd(j) = Dot(conj(primesite(psi.AA(j))),model.Nup(j)*psi.AA(j));
-        dnd(j) = Dot(conj(primesite(psi.AA(j))),model.Ndn(j)*psi.AA(j));
+        upd(j) = Dot(conj(primed(psi.AA(j),Site)),model.Nup(j)*psi.AA(j));
+        dnd(j) = Dot(conj(primed(psi.AA(j),Site)),model.Ndn(j)*psi.AA(j));
         }
 
     cout << "Up Density:" << endl;

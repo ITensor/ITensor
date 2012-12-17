@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
         IQTensor ketpm = psi.AA(b)*psi.AA(b+1)*model.sp(b)*model.sm(b+1)*0.5;
         IQTensor ketmp = psi.AA(b)*psi.AA(b+1)*model.sm(b)*model.sp(b+1)*0.5;
         IQTensor bra = conj(psi.AA(b)*psi.AA(b+1));
-        bra.primesite();
+        bra.prime(Site);
         Real SdS = Dot(bra,ketzz) + Dot(bra,ketpm) + Dot(bra,ketmp);
         cout << format("S.S b %d = %.10f") % b % SdS << endl;
         }
