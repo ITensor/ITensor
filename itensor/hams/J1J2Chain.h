@@ -16,6 +16,8 @@ class J1J2Chain
 
     operator const IQMPO&() { init(); return H; }
 
+    operator MPO() { init(); return H.toMPO(); }
+
     private:
 
     /////////////
