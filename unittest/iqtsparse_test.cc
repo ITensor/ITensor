@@ -49,15 +49,15 @@ struct IQTSparseDefaults
         phi = IQTensor(S1,S2,L2);
 
         ITensor uu(s1u,s2u,l2dd);
-        uu.Randomize();
+        uu.randomize();
         phi += uu;
 
         ITensor ud(s1u,s2d,l20);
-        ud.Randomize();
+        ud.randomize();
         phi += ud;
 
         ITensor du(s1d,s2u,l20);
-        du.Randomize();
+        du.randomize();
         phi += du;
         }
 
@@ -68,7 +68,7 @@ struct IQTSparseDefaults
         for(int p2 = 1; p2 <= S2.nindex(); ++p2)
             {
             ITensor T(L1.index(n1),L2.index(n2),S1.index(p1),S2.index(p2));
-            T.Randomize();
+            T.randomize();
             A += T;
             }
 
@@ -77,7 +77,7 @@ struct IQTSparseDefaults
         for(int n2 = 1; n2 <= L2.nindex(); ++n2)
             {
             ITensor T(L1.index(n1),L2.index(n2));
-            T.Randomize();
+            T.randomize();
             B += T;
             }
 
@@ -98,7 +98,7 @@ struct IQTSparseDefaults
         for(int n4 = 1; n4 <= S1.nindex(); ++n4)
             {
             ITensor T(L1.index(n1),S1.index(n2),primed(L1).index(n3),primed(L1,2).index(n4));
-            T.Randomize();
+            T.randomize();
             D += T;
             }
         }

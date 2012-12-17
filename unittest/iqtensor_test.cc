@@ -51,15 +51,15 @@ struct IQTensorDefaults
         phi = IQTensor(S1,S2,L2);
 
         ITensor uu(s1u,s2u,l2dd);
-        uu.Randomize();
+        uu.randomize();
         phi += uu;
 
         ITensor ud(s1u,s2d,l20);
-        ud.Randomize();
+        ud.randomize();
         phi += ud;
 
         ITensor du(s1d,s2u,l20);
-        du.Randomize();
+        du.randomize();
         phi += du;
         }
 
@@ -70,7 +70,7 @@ struct IQTensorDefaults
         for(int p2 = 1; p2 <= S2.nindex(); ++p2)
             {
             ITensor T(L1.index(n1),L2.index(n2),S1.index(p1),S2.index(p2));
-            T.Randomize();
+            T.randomize();
             A += T;
             }
 
@@ -79,7 +79,7 @@ struct IQTensorDefaults
         for(int n2 = 1; n2 <= L2.nindex(); ++n2)
             {
             ITensor T(L1.index(n1),L2.index(n2));
-            T.Randomize();
+            T.randomize();
             B += T;
             }
 
@@ -100,7 +100,7 @@ struct IQTensorDefaults
         for(int n4 = 1; n4 <= S1.nindex(); ++n4)
             {
             ITensor T(L1.index(n1),S1.index(n2),primed(L1).index(n3),primed(L1,2).index(n4));
-            T.Randomize();
+            T.randomize();
             D += T;
             }
         }
@@ -173,7 +173,7 @@ TEST(SymmetricDiag11)
     C.symmetricDiag11(L1,D,U,mid,mink,maxk);
 
     IQTensor UD(U);
-    UD.primeind(L1);
+    UD.prime(L1);
     UD /= D;
     ITensor diff = (conj(UD)*U - C).toITensor();
     CHECK(diff.norm() < 1E-10);

@@ -78,11 +78,11 @@ TEST(Constructors)
 TEST(PrimeLevelMethods)
     {
     //
-    // indIncPrime
+    // prime a specific IQIndex
     //
     intrusive_ptr<IQIndexSet> P = new IQIndexSet(S1,primed(S1),S2,L2);
 
-    P->indIncPrime(primed(S1),2);
+    P->prime(primed(S1),2);
     CHECK(P->index(1) == S1);
     CHECK(P->index(2) == primed(S1,3));
     CHECK(P->index(3) == S2);

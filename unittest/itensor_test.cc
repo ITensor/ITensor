@@ -635,7 +635,7 @@ TEST(ContractingProduct)
     {
     Real f = ran1();
     ITensor rZ(f), T(b2,a1,b4);
-    T.Randomize();
+    T.randomize();
 
     ITensor res = rZ * T;
 
@@ -653,7 +653,7 @@ TEST(ContractingProduct)
     //More general case
     ITensor L(b4,a1,b3,a2,b2), R(b5,a1,b4,b2,b3);
 
-    L.Randomize(); R.Randomize();
+    L.randomize(); R.randomize();
 
     Real fL = ran1(), fR = ran1();
     ITensor Lf = L * fL;
@@ -707,7 +707,7 @@ TEST(ContractingProduct)
 
     ITensor Q(a1,b4,a2,b2), P(a2,a3,a1);
 
-    Q.Randomize(); P.Randomize();
+    Q.randomize(); P.randomize();
 
     Real fQ = ran1(), fP = ran1();
     ITensor Qf = Q * fQ;
@@ -749,7 +749,7 @@ TEST(ContractingProduct)
 
 
     ITensor psi(a1,a2,a3), mpoh(l2,a1,primed(a1),a2,primed(a2));
-    psi.Randomize(); mpoh.Randomize();
+    psi.randomize(); mpoh.randomize();
 
     ITensor Hpsi = mpoh * psi;
 
@@ -766,7 +766,7 @@ TEST(NonContractingProduct)
 {
     ITensor L(b2,a1,b3,b4), R(a1,b3,a2,b5,b4);
 
-    L.Randomize(); R.Randomize();
+    L.randomize(); R.randomize();
 
     Real fL = ran1(), fR = ran1();
     ITensor Lf = L * fL;
@@ -814,7 +814,7 @@ TEST(NonContractingProduct)
 
     ITensor Q(a1,b4,a2,b2), P(a2,a3,a1);
 
-    Q.Randomize(); P.Randomize();
+    Q.randomize(); P.randomize();
 
     Real fQ = ran1(), fP = ran1();
     ITensor Qf = Q * fQ;
@@ -856,7 +856,7 @@ TEST(NonContractingProduct)
 
 
     ITensor psi(a1,a2,a3), mpoh(l2,a1,primed(a1),a2,primed(a2));
-    psi.Randomize(); mpoh.Randomize();
+    psi.randomize(); mpoh.randomize();
 
     ITensor Hpsi = mpoh / psi;
 
@@ -891,7 +891,7 @@ TEST(TieIndices)
 
     {
     ITensor T(l1,l2,a1,s2,s1);
-    T.Randomize();
+    T.randomize();
 
     ITensor TT(T);
     TT.tieIndices(l2,l1,s1,l2);
@@ -908,7 +908,7 @@ TEST(TieIndices)
     //Try tying m==1 inds
     {
     ITensor T(l1,a2,a1,s2,a3);
-    T.Randomize();
+    T.randomize();
 
     ITensor TT(T);
     TT.tieIndices(a1,a3,a2,a1);
@@ -930,7 +930,7 @@ TEST(Trace)
     {
 
     ITensor A(b2,a1,b3,b5,primed(b3));
-    A.Randomize();
+    A.randomize();
     Real f = -ran1();
     A *= f;
 
@@ -948,7 +948,7 @@ TEST(Trace)
         }
 
     ITensor MM(b5,primed(b5));
-    MM.Randomize();
+    MM.randomize();
     MM *= -2.34;
 
     Real tr = trace(MM);
@@ -1093,7 +1093,7 @@ TEST(SymmetricDiag11)
     ITensor D,U;
     T.symmetricDiag11(s1,D,U,mid);
     ITensor UD(U);
-    UD.primeind(s1);
+    UD.prime(s1);
     UD /= D;
     ITensor rT = UD*U;
     ITensor diff(UD*U - T);
@@ -1111,7 +1111,7 @@ TEST(SymmetricDiag11)
     //Diagonalize and check the factorization
     Q.symmetricDiag11(q,D,U,mid);
     UD =U;
-    UD.primeind(q);
+    UD.prime(q);
     UD /= D;
     diff = UD*U - Q;
     CHECK(diff.norm() < 1E-10);
@@ -1120,7 +1120,7 @@ TEST(SymmetricDiag11)
 TEST(CommaAssignment)
     {
     ITensor VV(s1);
-    VV.Randomize();
+    VV.randomize();
     VV *= -1;
     commaInit(VV,s1) << 1, 2;
     CHECK_EQUAL(VV(s1(1)),1);
@@ -1145,7 +1145,7 @@ TEST(CommaAssignment)
     CHECK_EQUAL(XX(s1(2),s2(2)),0);
 
     ITensor AA(s1,s2);
-    AA.Randomize();
+    AA.randomize();
     AA *= -ran1();
     commaInit(AA,s1,s2) << 11, 12, 
                            21, 22;
@@ -1155,7 +1155,7 @@ TEST(CommaAssignment)
     CHECK_EQUAL(AA(s1(2),s2(2)),22);
 
     ITensor T(s1,s2,s3);
-    T.Randomize();
+    T.randomize();
     T *= -ran1();
     commaInit(T,s1,s2,s3) << 111, 112, 
                              121, 122,
