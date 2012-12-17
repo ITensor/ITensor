@@ -125,67 +125,6 @@ class HamBuilder
 //typedef Internal::HamBuilder<ITensor> HamBuilder;
 //typedef Internal::HamBuilder<IQTensor> IQHamBuilder;
 
-class MPOBuilder
-    {
-    public:
-
-    MPOBuilder(const Model& model_) 
-        : 
-        model(model_), 
-        Ns(model_.NN()) 
-        { }
-
-    virtual ~MPOBuilder() { }
-
-    ITensor 
-    makeLedge(const Index& L) const
-        {
-        ITensor res(L); 
-        res(L(L.m())) = 1;
-        return res;
-        }
-
-    ITensor 
-    makeRedge(const Index& R) const
-        {
-        ITensor res(R); 
-        res(R(1)) = 1;
-        return res;
-        }
-
-    IQTensor 
-    makeLedge(const IQIndex& L, const std::vector<Index>& start_inds)
-        {
-        IQTensor res(L);
-        Foreach(const Index& ind, start_inds)
-            {
-            ITensor ledge(ind,0.0);
-            ledge(ind(ind.m())) = 1.0; // [0 0 0 ... 1]
-            res.insert(ledge);
-            }
-        return res;
-        }
-
-    IQTensor 
-    makeRedge(const IQIndex& R, const std::vector<Index>& end_inds)
-        {
-        IQTensor res(R);
-        Foreach(const Index& ind, end_inds)
-            {
-            ITensor redge(ind,0.0);
-            redge(ind(1)) = 1.0; // [1 0 0 ... 0]
-            res.insert(redge);
-            }
-        return res;
-        }
-
-    protected:
-
-    const Model& model;
-    const int Ns;
-
-    };
-
 
 /*
 namespace SpinOne {
