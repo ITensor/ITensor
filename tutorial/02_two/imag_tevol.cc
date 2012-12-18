@@ -53,6 +53,12 @@ main(int argc, char* argv[])
 
     psi.randomize();
 
+    cout << "psi.norm() = " << psi.norm() << endl;
+    
+    psi *= 1./psi.norm();
+
+    cout << "psi.norm() = " << psi.norm() << endl;
+
     PrintDat(psi);
 
     //
@@ -124,6 +130,15 @@ main(int argc, char* argv[])
             % beta
             % En
             << endl;
+
+    SVDWorker W;
+
+    ITensor A(s1),B(s2);
+    ITSparse D;
+
+    W.svd(psi_beta,A,D,B);
+
+    PrintDat(D);
 
 
     return 0;

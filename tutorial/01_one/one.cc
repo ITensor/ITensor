@@ -50,6 +50,8 @@ main(int argc, char* argv[])
 
     ITensor phi = Sx * psi;
 
+    phi.noprime();
+
     PrintDat(phi);
 
     //exit(0); //uncomment to exit here

@@ -33,6 +33,12 @@ main(int argc, char* argv[])
         MPS psi = computeGroundState(model,J2);
 
         Real val = 0;
+        //
+        // Write code here that
+        // measures the dimer order parameter:
+        //
+        // B(N/2) - 1/2*B(N/2-1) - 1/2*B(N/2+1)
+        //
 
         J2s.push_back(J2);
         dimer.push_back(val);
