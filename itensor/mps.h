@@ -371,7 +371,7 @@ class MPSt
     //  - A[b] - A[b+1] -
     //
     void 
-    applygate(const Tensor& gate);
+    applygate(const Tensor& gate, const OptSet& opts = Global::opts());
 
     Real 
     norm() const { return sqrt(psiphi(*this,*this)); }

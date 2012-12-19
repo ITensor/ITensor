@@ -857,17 +857,17 @@ void MPSt<IQTensor>::projectOp(int j, Direction dir,
 
 template <class Tensor>
 void MPSt<Tensor>::
-applygate(const Tensor& gate)
+applygate(const Tensor& gate,const OptSet& opts)
     {
     setBond(l_orth_lim_+1);
     Tensor AA = A[l_orth_lim_+1] * A[l_orth_lim_+2] * gate;
     AA.noprime();
-    doSVD(l_orth_lim_+1,AA,Fromleft);
+    svdBond(l_orth_lim_+1,AA,Fromleft);
     }
 template
-void MPSt<ITensor>::applygate(const ITensor& gate);
+void MPSt<ITensor>::applygate(const ITensor& gate,const OptSet& opts);
 template
-void MPSt<IQTensor>::applygate(const IQTensor& gate);
+void MPSt<IQTensor>::applygate(const IQTensor& gate,const OptSet& opts);
 
 template <class Tensor>
 void MPSt<Tensor>::
