@@ -375,12 +375,12 @@ class ITensor
     //Return copy of ITensor with primeLevel of Index I increased by 1
     //(or optional amount inc)
     ITensor friend inline
-    primeind(ITensor A, const Index& I, int inc = 1)
+    prime(ITensor A, const Index& I, int inc = 1)
         { A.mapindex(I,primed(I,inc)); return A; }
 
     //Return copy of ITensor with primeLevel of Index I1 and I2 increased by 1
     ITensor friend
-    primeind(ITensor A, const Index& I1, const Index& I2);
+    prime(ITensor A, const Index& I1, const Index& I2);
 
     //Return copy of ITensor with primeLevel of all Indices set to zero
     ITensor friend inline

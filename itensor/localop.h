@@ -327,7 +327,7 @@ deltaRho(const Tensor& AA, const CombinerT& comb, Direction dir) const
     delta.noprime();
     delta = comb * delta;
     
-    delta *= conj(primeind(delta,comb.right()));
+    delta *= conj(prime(delta,comb.right()));
 
     return delta;
     }

@@ -202,7 +202,7 @@ class IQTSparse
         { S.prime(Link,inc); return S; }
 
     friend inline IQTSparse
-    primeind(IQTSparse S, const IQIndex& I, int inc = 1)
+    prime(IQTSparse S, const IQIndex& I, int inc = 1)
         { S.prime(I,inc); return S; }
 
     friend inline IQTSparse
