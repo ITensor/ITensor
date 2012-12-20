@@ -579,9 +579,15 @@ DoNormalize(bool val = true)
     }
 
 Opt inline
-Pinning(Real val = 1)
+Maxm(int val)
     {
-    return Opt("Pinning",val);
+    return Opt("Maxm",val);
+    }
+
+Opt inline
+Minm(int val)
+    {
+    return Opt("Minm",val);
     }
 
 Opt inline
@@ -595,6 +601,13 @@ Offset(int n = 0)
     {
     return Opt("Offset",n);
     }
+
+Opt inline
+Pinning(Real val = 1)
+    {
+    return Opt("Pinning",val);
+    }
+
 
 Opt inline
 PreserveShape()
