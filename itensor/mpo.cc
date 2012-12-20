@@ -86,21 +86,21 @@ svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
         }
 
     SparseT D;
-    svd_.svd(b,AA,A[b],D,A[b+1]);
+    svd_.svd(b,AA,A_[b],D,A_[b+1]);
 
     //Push singular values/amplitudes
     //to the right or left as requested
     //and update orth_lims
     if(dir == Fromleft)
         {
-        A[b+1] *= D;
+        A_[b+1] *= D;
 
         l_orth_lim_ = b;
         if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
         }
     else //dir == Fromright
         {
-        A[b] *= D;
+        A_[b] *= D;
 
         if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
         r_orth_lim_ = b+1;

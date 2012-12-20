@@ -119,7 +119,7 @@ class MPOt : private MPSt<Tensor>
         { 
         MPOt<IQTensor> res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm()); 
         res.svd_ = svd_;
-        convertToIQ(*model_,A,res.A);
+        convertToIQ(*model_,A_,res.A_);
         return res; 
         }
 
@@ -190,12 +190,12 @@ class MPOt : private MPSt<Tensor>
         {
         res = MPOt<IQTensor>(*model_,maxm(),cutoff());
         res.svd_ = svd_;
-        convertToIQ(*model_,A,res.A,totalq,cut);
+        convertToIQ(*model_,A_,res.A_,totalq,cut);
         }
 
 private:
     using Parent::N;
-    using Parent::A;
+    using Parent::A_;
     using Parent::l_orth_lim_;
     using Parent::r_orth_lim_;
     using Parent::model_;
@@ -216,7 +216,7 @@ toMPO() const
     res.svd_ = svd_;
     for(int j = 1; j <= NN(); ++j)
         {
-        res.A.at(j) = AA(j).toITensor();
+        res.A_.at(j) = AA(j).toITensor();
         }
     return res;
     }

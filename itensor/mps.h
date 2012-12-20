@@ -140,13 +140,13 @@ class MPSt
     AA_it;
 
     const std::pair<AA_it,AA_it> 
-    AA() const { return std::make_pair(A.begin()+1,A.end()); }
+    AA() const { return std::make_pair(A_.begin()+1,A_.end()); }
 
     const Tensor& 
     AA(int i) const 
         { 
         setSite(i);
-        return A.at(i); 
+        return A_.at(i); 
         }
 
     Tensor& 
@@ -327,7 +327,7 @@ class MPSt
     void 
     orthogonalize(const OptSet& opts = Global::opts());
 
-    //Checks if A[i] is left (left == true) 
+    //Checks if A_[i] is left (left == true) 
     //or right (left == false) orthogonalized
     bool 
     checkOrtho(int i, bool left) const;
@@ -363,12 +363,12 @@ class MPSt
     //
     // Applies a bond gate to the bond that is currently
     // the OC.                                    |      |
-    // After calling position b, this bond is - A[b] - A[b+1] -
+    // After calling position b, this bond is - A_[b] - A_[b+1] -
     //
     //      |      |
     //      ==gate==
     //      |      |
-    //  - A[b] - A[b+1] -
+    //  - A_[b] - A_[b+1] -
     //
     void 
     applygate(const Tensor& gate, const OptSet& opts = Global::opts());
@@ -390,7 +390,7 @@ class MPSt
 
     bool 
     isComplex() const
-        { return A[l_orth_lim_+1].isComplex(); }
+        { return A_[l_orth_lim_+1].isComplex(); }
 
     friend inline std::ostream& 
     operator<<(std::ostream& s, const MPSt& M)
@@ -425,7 +425,7 @@ class MPSt
         {
         iqpsi = MPSt<IQTensor>(*model_,maxm(),cutoff());
         iqpsi.svd_ = svd_;
-        convertToIQ(*model_,A,iqpsi.A,totalq,cut);
+        convertToIQ(*model_,A_,iqpsi.A_,totalq,cut);
         }
 
 protected:
@@ -437,7 +437,7 @@ protected:
     int N;
 
     mutable
-    std::vector<Tensor> A;
+    std::vector<Tensor> A_;
 
     int l_orth_lim_,
         r_orth_lim_;
@@ -560,7 +560,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
 #ifdef USE_SVD_ONLY
     {
     SparseT D;
-    svd_.svd(b,AA,A[b],D,A[b+1]);
+    svd_.svd(b,AA,A_[b],D,A_[b+1]);
 
     //Normalize the orthogonality center
     //if(opt.boolEquals(DoNormalize(true)))
@@ -571,9 +571,9 @@ svdBond(int b, const Tensor& AA, Direction dir,
 
     //Push the singular values into the appropriate site tensor
     if(dir == Fromleft)
-        A[b+1] *= D;
+        A_[b+1] *= D;
     else
-        A[b] *= D;
+        A_[b] *= D;
     }
 #else
     if(cutoff() < 1E-12)
@@ -581,7 +581,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
         SparseT D;
-        svd_.svd(b,AA,A[b],D,A[b+1]);
+        svd_.svd(b,AA,A_[b],D,A_[b+1]);
 
         //Normalize the orthogonality center
         //if(opt.boolEquals(DoNormalize(true)))
@@ -592,20 +592,20 @@ svdBond(int b, const Tensor& AA, Direction dir,
 
         //Push the singular values into the appropriate site tensor
         if(dir == Fromleft)
-            A[b+1] *= D;
+            A_[b+1] *= D;
         else
-            A[b] *= D;
+            A_[b] *= D;
         }
     else
         {
         //If we don't need extreme accuracy,
         //use presumably faster density matrix approach
-        svd_.denmatDecomp(b,AA,A[b],A[b+1],dir,PH);
+        svd_.denmatDecomp(b,AA,A_[b],A_[b+1],dir,PH);
 
         //Normalize the ortho center
         //if(opt.boolEquals(DoNormalize(true)))
         //    {
-        //    Tensor& oc = (dir == Fromleft ? A[b+1] : A[b]);
+        //    Tensor& oc = (dir == Fromleft ? A_[b+1] : A_[b]);
         //    Real norm = oc.norm();
         //    oc *= 1./norm;
         //    }

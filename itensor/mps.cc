@@ -37,7 +37,7 @@ MPSt<Tensor>::
 MPSt(const Model& mod_,int maxmm, Real cut) 
     : 
     N(mod_.NN()), 
-    A(mod_.NN()+1),
+    A_(mod_.NN()+1),
     l_orth_lim_(0),
     r_orth_lim_(mod_.NN()+1),
     is_ortho_(false),
@@ -47,7 +47,7 @@ MPSt(const Model& mod_,int maxmm, Real cut)
     writedir_("."),
     do_write_(false)
     { 
-    random_tensors(A);
+    random_tensors(A_);
     }
 template MPSt<ITensor>::
 MPSt(const Model& mod_,int maxmm, Real cut);
@@ -59,7 +59,7 @@ MPSt<Tensor>::
 MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut)
     : 
     N(mod_.NN()),
-    A(mod_.NN()+1),
+    A_(mod_.NN()+1),
     l_orth_lim_(0),
     r_orth_lim_(2),
     is_ortho_(true),
@@ -69,7 +69,7 @@ MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut)
     writedir_("."),
     do_write_(false)
     { 
-    init_tensors(A,initState);
+    init_tensors(A_,initState);
     }
 template MPSt<ITensor>::
 MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut);
@@ -81,7 +81,7 @@ MPSt<Tensor>::
 MPSt(const Model& model, std::istream& s)
     : 
     N(model.NN()), 
-    A(model.NN()+1), 
+    A_(model.NN()+1), 
     is_ortho_(false),
     model_(&model),
     atb_(1),
@@ -103,7 +103,7 @@ AAnc(int i) //nc means 'non const'
     if(i <= l_orth_lim_) l_orth_lim_ = i-1;
     if(i >= r_orth_lim_) r_orth_lim_ = i+1;
     is_ortho_ = false;
-    return A.at(i); 
+    return A_.at(i); 
     }
 template
 ITensor& MPSt<ITensor>::AAnc(int i);
@@ -115,7 +115,7 @@ Tensor MPSt<Tensor>::
 bondTensor(int b) const 
     { 
     setBond(b);
-    Tensor res = A.at(b) * A.at(b+1); 
+    Tensor res = A_.at(b) * A_.at(b+1); 
     return res; 
     }
 template
@@ -131,10 +131,10 @@ read(std::istream& s)
     if(model_ == 0)
         Error("Can't read to default constructed MPS");
     for(int j = 1; j <= N; ++j) 
-        A.at(j).read(s);
+        A_.at(j).read(s);
     //Check that tensors read from disk were constructed
     //using the same model
-    IndexT s1 = A.at(1).findtype(Site);
+    IndexT s1 = A_.at(1).findtype(Site);
     s1.noprime();
     if(s1 != IndexT(model_->si(1)))
         Error("Tensors read from disk not compatible with Model passed to constructor.");
@@ -157,7 +157,7 @@ write(std::ostream& s) const
 
     for(int j = 1; j <= N; ++j) 
         {
-        A.at(j).write(s);
+        A_.at(j).write(s);
         }
     s.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
     s.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
@@ -189,12 +189,12 @@ read(const std::string& dirname)
         std::ifstream s(fname.c_str());
         if(s.good())
             {
-            A.at(j).read(s);
+            A_.at(j).read(s);
             s.close();
             }
         else
             {
-            std::cerr << boost::format("Tried read A[%d]\n") % j;
+            std::cerr << boost::format("Tried read A_[%d]\n") % j;
             Error("Missing file");
             }
         }
@@ -233,33 +233,33 @@ setBond(int b) const
     //
     while(b > atb_)
         {
-        if(A.at(atb_).isNotNull())
+        if(A_.at(atb_).isNotNull())
             {
             //std::cerr << boost::format("Writing A(%d) to %s\n")%atb_%writedir_;
-            writeToFile(AFName(atb_),A.at(atb_));
-            A.at(atb_) = Tensor();
+            writeToFile(AFName(atb_),A_.at(atb_));
+            A_.at(atb_) = Tensor();
             }
-        if(A.at(atb_+1).isNotNull())
+        if(A_.at(atb_+1).isNotNull())
             {
             //std::cerr << boost::format("Writing A(%d) to %s\n")%(atb_+1)%writedir_;
-            writeToFile(AFName(atb_+1),A.at(atb_+1));
-            if(atb_+1 != b) A.at(atb_+1) = Tensor();
+            writeToFile(AFName(atb_+1),A_.at(atb_+1));
+            if(atb_+1 != b) A_.at(atb_+1) = Tensor();
             }
         ++atb_;
         }
     while(b < atb_)
         {
-        if(A.at(atb_).isNotNull())
+        if(A_.at(atb_).isNotNull())
             {
             //std::cerr << boost::format("Writing A(%d) to %s\n")%atb_%writedir_;
-            writeToFile(AFName(atb_),A.at(atb_));
-            if(atb_ != b+1) A.at(atb_) = Tensor();
+            writeToFile(AFName(atb_),A_.at(atb_));
+            if(atb_ != b+1) A_.at(atb_) = Tensor();
             }
-        if(A.at(atb_+1).isNotNull())
+        if(A_.at(atb_+1).isNotNull())
             {
             //std::cerr << boost::format("Writing A(%d) to %s\n")%(atb_+1)%writedir_;
-            writeToFile(AFName(atb_+1),A.at(atb_+1));
-            A.at(atb_+1) = Tensor();
+            writeToFile(AFName(atb_+1),A_.at(atb_+1));
+            A_.at(atb_+1) = Tensor();
             }
         --atb_;
         }
@@ -268,13 +268,13 @@ setBond(int b) const
     //Load tensors at bond b into RAM if
     //they aren't loaded already
     //
-    if(A.at(b).isNull())
+    if(A_.at(b).isNull())
         {
         std::string fname = AFName(b);
         std::ifstream s(fname.c_str());
         if(s.good())
             {
-            A.at(b).read(s);
+            A_.at(b).read(s);
             s.close();
             }
         else
@@ -283,18 +283,18 @@ setBond(int b) const
             Error("Missing file");
             }
         }
-    if(A.at(b+1).isNull())
+    if(A_.at(b+1).isNull())
         {
         std::string fname = AFName(b+1);
         std::ifstream s(fname.c_str());
         if(s.good())
             {
-            A.at(b+1).read(s);
+            A_.at(b+1).read(s);
             s.close();
             }
         else
             {
-            std::cerr << boost::format("Tried read A[%d]\n")%(b+1);
+            std::cerr << boost::format("Tried read A_[%d]\n")%(b+1);
             Error("Missing file");
             }
         }
@@ -637,7 +637,7 @@ mapprime(int oldp, int newp, IndexType type)
     if(do_write_)
         Error("mapprime not supported if doWrite(true)");
     for(int i = 1; i <= N; ++i) 
-        A[i].mapprime(oldp,newp,type); 
+        A_[i].mapprime(oldp,newp,type); 
     }
 template
 void MPSt<ITensor>::mapprime(int oldp, int newp, IndexType type);
@@ -651,7 +651,7 @@ primelinks(int oldp, int newp)
     if(do_write_)
         Error("primelinks not supported if doWrite(true)");
     for(int i = 1; i <= N; ++i) 
-        A[i].mapprime(oldp,newp,Link); 
+        A_[i].mapprime(oldp,newp,Link); 
     }
 template
 void MPSt<ITensor>::primelinks(int oldp, int newp);
@@ -665,7 +665,7 @@ noprimelink()
     if(do_write_)
         Error("noprimelink not supported if doWrite(true)");
     for(int i = 1; i <= N; ++i) 
-        A[i].noprime(Link); 
+        A_[i].noprime(Link); 
     }
 template
 void MPSt<ITensor>::noprimelink();
@@ -803,7 +803,7 @@ checkOrtho() const
     for(int i = 1; i <= l_orth_lim_; ++i)
     if(!checkLeftOrtho(i))
         {
-        std::cerr << "checkOrtho: A[i] not left orthogonal at site i=" 
+        std::cerr << "checkOrtho: A_[i] not left orthogonal at site i=" 
                   << i << std::endl;
         return false;
         }
@@ -811,7 +811,7 @@ checkOrtho() const
     for(int i = NN(); i >= r_orth_lim_; --i)
     if(!checkRightOrtho(i))
         {
-        std::cerr << "checkOrtho: A[i] not right orthogonal at site i=" 
+        std::cerr << "checkOrtho: A_[i] not right orthogonal at site i=" 
                   << i << std::endl;
         return false;
         }
@@ -860,7 +860,7 @@ void MPSt<Tensor>::
 applygate(const Tensor& gate,const OptSet& opts)
     {
     setBond(l_orth_lim_+1);
-    Tensor AA = A[l_orth_lim_+1] * A[l_orth_lim_+2] * gate;
+    Tensor AA = A_[l_orth_lim_+1] * A_[l_orth_lim_+2] * gate;
     AA.noprime();
     svdBond(l_orth_lim_+1,AA,Fromleft);
     }
@@ -1176,8 +1176,8 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
     iqpsi = IQMPSType(sst,maxm,cutoff);
 
-    if(!A[1].hasindex(si(1))) Error("convertToIQ: incorrect primelevel for conversion");
-    bool is_mpo = A[1].hasindex(primed(si(1)));
+    if(!A_[1].hasindex(si(1))) Error("convertToIQ: incorrect primelevel for conversion");
+    bool is_mpo = A_[1].hasindex(primed(si(1)));
     const int Dim = si(1).m();
     const int PDim = (is_mpo ? Dim : 1);
 
@@ -1210,7 +1210,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
         if(s == show_s) 
         {
-            PrintDat(A[s]);
+            PrintDat(A_[s]);
         }
 
         Foreach(const qC_vt& x, qC) {
@@ -1224,8 +1224,8 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
             //compatible with specified totalq i.e. q=0 here
             if(s == N && q != QN()) continue;
 
-            //Set Site indices of A[s] and its previous Link Index
-            block = A[s];
+            //Set Site indices of A_[s] and its previous Link Index
+            block = A_[s];
             if(s != 1) block *= conj(comp);
             block *= si(s)(n);
             if(is_mpo) block *= siP(s)(u);
