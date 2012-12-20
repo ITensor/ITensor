@@ -379,8 +379,12 @@ class IQTensor
     primed(IQTensor A, int inc = 1) { A.prime(All,inc); return A; }
 
     friend inline IQTensor 
-    primed(IQTensor A, const IQIndex& I)
-        { A.prime(I); return A; }
+    primed(IQTensor A, IndexType type, int inc = 1) 
+        { A.prime(type,inc); return A; }
+
+    friend inline IQTensor 
+    primed(IQTensor A, const IQIndex& I, int inc = 1)
+        { A.prime(I,inc); return A; }
 
     friend inline IQTensor 
     primed(IQTensor A, const IQIndex& I, const IQIndex& J)
