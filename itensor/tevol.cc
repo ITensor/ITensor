@@ -69,10 +69,10 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
             }
         if(nsite[j] > 2) Error("Max # of combined sites is 2");
         }
-    if(Ns != H.NN())
+    if(Ns != H.N())
         {
         cout << format("psi tensors only had %d total sites \
-                        whereas H has %d sites") % Ns % H.NN() << endl;
+                        whereas H has %d sites") % Ns % H.N() << endl;
         Error("Mismatch in number of sites between psi and H");
         }
 
@@ -316,11 +316,11 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
 
     bool verbose = opts.getBool("Verbose",false);
 
-    const int N = H.NN();
+    const int N = H.N();
 
     const Model& model = psi.model();
 
-    if(psi.NN() != N)
+    if(psi.N() != N)
         {
         Error("Mismatched number of sites between H and psi");
         }
@@ -819,7 +819,7 @@ gateTEvol(const list<BondGate<Tensor> >& gatelist, Real ttotal, Real tstep,
 
     bool verbose = opts.getBool("Verbose",false);
 
-    //const int N = psi.NN();
+    //const int N = psi.N();
 
     const int nt = ttotal/tstep+(1e-9*(ttotal/tstep));
     if(fabs(nt*tstep-ttotal) > 1E-9)

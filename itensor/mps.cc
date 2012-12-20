@@ -20,7 +20,7 @@ template <class Tensor>
 MPSt<Tensor>::
 MPSt() 
     : 
-    N(0), 
+    N_(0), 
     is_ortho_(false),
     model_(0),
     atb_(1),
@@ -36,13 +36,13 @@ template <class Tensor>
 MPSt<Tensor>::
 MPSt(const Model& mod_,int maxmm, Real cut) 
     : 
-    N(mod_.NN()), 
-    A_(mod_.NN()+1),
+    N_(mod_.N()), 
+    A_(mod_.N()+1),
     l_orth_lim_(0),
-    r_orth_lim_(mod_.NN()+1),
+    r_orth_lim_(mod_.N()+1),
     is_ortho_(false),
     model_(&mod_), 
-    svd_(N,cut,1,maxmm,false,LogNumber(1)),
+    svd_(N_,cut,1,maxmm,false,LogNumber(1)),
     atb_(1),
     writedir_("."),
     do_write_(false)
@@ -58,13 +58,13 @@ template <class Tensor>
 MPSt<Tensor>::
 MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut)
     : 
-    N(mod_.NN()),
-    A_(mod_.NN()+1),
+    N_(mod_.N()),
+    A_(mod_.N()+1),
     l_orth_lim_(0),
     r_orth_lim_(2),
     is_ortho_(true),
     model_(&mod_), 
-    svd_(N,cut,1,maxmm,false,LogNumber(1)),
+    svd_(N_,cut,1,maxmm,false,LogNumber(1)),
     atb_(1),
     writedir_("."),
     do_write_(false)
@@ -80,8 +80,8 @@ template <class Tensor>
 MPSt<Tensor>::
 MPSt(const Model& model, std::istream& s)
     : 
-    N(model.NN()), 
-    A_(model.NN()+1), 
+    N_(model.N()), 
+    A_(model.N()+1), 
     is_ortho_(false),
     model_(&model),
     atb_(1),
@@ -130,7 +130,7 @@ read(std::istream& s)
     {
     if(model_ == 0)
         Error("Can't read to default constructed MPS");
-    for(int j = 1; j <= N; ++j) 
+    for(int j = 1; j <= N_; ++j) 
         A_.at(j).read(s);
     //Check that tensors read from disk were constructed
     //using the same model
@@ -155,7 +155,7 @@ write(std::ostream& s) const
     if(do_write_)
         Error("MPSt::write not yet supported if doWrite(true)");
 
-    for(int j = 1; j <= N; ++j) 
+    for(int j = 1; j <= N_; ++j) 
         {
         A_.at(j).write(s);
         }
@@ -176,14 +176,14 @@ read(const std::string& dirname)
         Error("Can't read to default constructed MPS, must specify model");
 
     l_orth_lim_ = 0;
-    r_orth_lim_ = NN();
+    r_orth_lim_ = N();
     is_ortho_ = false;
 
     //std::string dname_ = dirname;
     //if(dname_[dname_.length()-1] != '/')
     //    dname_ += "/";
 
-    for(int j = 1; j <= N; ++j)
+    for(int j = 1; j <= N_; ++j)
         {
         std::string fname = (format("%s/A_%03d")%dirname%j).str();
         std::ifstream s(fname.c_str());
@@ -318,13 +318,13 @@ template <class Tensor>
 void MPSt<Tensor>::
 new_tensors(std::vector<ITensor>& A_)
     {
-    std::vector<Index> a(N+1);
-    for(int i = 1; i <= N; ++i)
+    std::vector<Index> a(N_+1);
+    for(int i = 1; i <= N_; ++i)
         { a[i] = Index(nameint("a",i)); }
     A_[1] = ITensor(si(1),a[1]);
-    for(int i = 2; i < N; i++)
+    for(int i = 2; i < N_; i++)
         { A_[i] = ITensor(conj(a[i-1]),si(i),a[i]); }
-    A_[N] = ITensor(conj(a[N-1]),si(N));
+    A_[N_] = ITensor(conj(a[N_-1]),si(N_));
     }
 template
 void MPSt<ITensor>::new_tensors(std::vector<ITensor>& A_);
@@ -336,7 +336,7 @@ void MPSt<Tensor>::
 random_tensors(std::vector<ITensor>& A_)
     { 
     new_tensors(A_); 
-    for(int i = 1; i <= N; ++i)
+    for(int i = 1; i <= N_; ++i)
         A_[i].randomize(); 
     }
 template
@@ -349,22 +349,22 @@ void MPSt<Tensor>::
 init_tensors(std::vector<ITensor>& A_, const InitState& initState)
     { 
     new_tensors(A_); 
-    for(int i = 1; i <= N; ++i) 
+    for(int i = 1; i <= N_; ++i) 
         {
         A_[i] = ITensor(initState(i)); 
         }
 
-    std::vector<Index> a(N+1);
-    for(int i = 1; i <= N; ++i)
+    std::vector<Index> a(N_+1);
+    for(int i = 1; i <= N_; ++i)
         { a[i] = Index(nameint("l",i)); }
 
     A_[1].addindex1(a[1]);
-    for(int i = 2; i < N; ++i)
+    for(int i = 2; i < N_; ++i)
         {
         A_[i].addindex1(a[i-1]);
         A_[i].addindex1(a[i]);
         }
-    A_[N].addindex1(a[N-1]);
+    A_[N_].addindex1(a[N_-1]);
     }
 template
 void MPSt<ITensor>::
@@ -375,25 +375,25 @@ template <class Tensor>
 void MPSt<Tensor>::
 init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
     {
-    std::vector<QN> qa(N+1); //qn[i] = qn on i^th bond
-    for(int i = 1; i <= N; ++i) { qa[0] -= initState(i).qn()*In; }
+    std::vector<QN> qa(N_+1); //qn[i] = qn on i^th bond
+    for(int i = 1; i <= N_; ++i) { qa[0] -= initState(i).qn()*In; }
 
     //Taking OC to be at the leftmost site,
     //compute the QuantumNumbers of all the Links.
-    for(int i = 1; i <= N; ++i)
+    for(int i = 1; i <= N_; ++i)
         {
         //Taking the divergence to be zero,solve for qa[i]
         qa[i] = Out*(-qa[i-1]*In - initState(i).qn());
         }
 
-    std::vector<IQIndex> a(N+1);
-    for(int i = 1; i <= N; ++i)
+    std::vector<IQIndex> a(N_+1);
+    for(int i = 1; i <= N_; ++i)
         { a[i] = IQIndex(nameint("L",i),Index(nameint("l",i)),qa[i]); }
 
     A_[1] = IQTensor(initState(1),a[1](1));
-    for(int i = 2; i < N; ++i)
+    for(int i = 2; i < N_; ++i)
         A_[i] = IQTensor(conj(a[i-1])(1),initState(i),a[i](1)); 
-    A_[N] = IQTensor(conj(a[N-1])(1),initState(N));
+    A_[N_] = IQTensor(conj(a[N_-1])(1),initState(N_));
     }
 template
 void MPSt<IQTensor>::
@@ -405,9 +405,9 @@ int MPSt<Tensor>::
 averageM() const
     {
     Real avgm = 0;
-    for(int b = 1; b < NN(); ++b)
+    for(int b = 1; b < N(); ++b)
         avgm += LinkInd(b).m();
-    avgm /= (NN()-1);
+    avgm /= (N()-1);
     return (int)avgm;
     }
 template
@@ -479,7 +479,7 @@ MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
 
     //Create new link indices
     vector<IQIndex> nlinks(N);
-    for(int b = 1; b < N; ++b)
+    for(int b = 1; b < N_; ++b)
         {
         IQIndex l1 = this->LinkInd(b);
         IQIndex l2 = other.LinkInd(b);
@@ -490,11 +490,11 @@ MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
     //Create new A tensors
     vector<IQTensor> nA(N+1);
     nA[1] = IQTensor(si(1),nlinks[1]);
-    for(int j = 2; j < N; ++j)
+    for(int j = 2; j < N_; ++j)
         nA[j] = IQTensor(conj(nlinks[j-1]),si(j),nlinks[j]);
     nA[N] = IQTensor(conj(nlinks[N-1]),si(N));
 
-    for(int j = 1; j <= N; ++j)
+    for(int j = 1; j <= N_; ++j)
         {
         Foreach(const ITensor& t, A(j).blocks())
             { nA[j].insert(t); }
@@ -518,7 +518,7 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
     primelinks(0,4);
 
     vector<Tensor> first(N), second(N);
-    for(int i = 1; i < N; ++i)
+    for(int i = 1; i < N_; ++i)
         {
         IndexT l1 = this->RightLinkInd(i);
         IndexT l2 = other.RightLinkInd(i);
@@ -527,7 +527,7 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
         }
 
     Aref(1) = A(1) * first[1] + other.A(1) * second[1];
-    for(int i = 2; i < N; ++i)
+    for(int i = 2; i < N_; ++i)
         {
         Aref(i) = conj(first[i-1]) * A(i) * first[i] 
                   + conj(second[i-1]) * other.A(i) * second[i];
@@ -597,8 +597,8 @@ addNoOrth(const MPSt<Tensor>& other_)
 
     primelinks(0,4);
 
-    vector<Tensor> first(N), second(N);
-    for(int i = 1; i < N; ++i)
+    vector<Tensor> first(N_), second(N_);
+    for(int i = 1; i < N_; ++i)
         {
         IndexT l1 = this->RightLinkInd(i);
         IndexT l2 = other_.RightLinkInd(i);
@@ -607,12 +607,12 @@ addNoOrth(const MPSt<Tensor>& other_)
         }
 
     Aref(1) = A(1) * first[1] + other_.A(1) * second[1];
-    for(int i = 2; i < N; ++i)
+    for(int i = 2; i < N_; ++i)
         {
         Aref(i) = conj(first[i-1]) * A(i) * first[i] 
                   + conj(second[i-1]) * other_.A(i) * second[i];
         }
-    Aref(N) = conj(first[N-1]) * A(N) + conj(second[N-1]) * other_.A(N);
+    Aref(N_) = conj(first[N_-1]) * A(N_) + conj(second[N_-1]) * other_.A(N_);
 
     noprimelink();
 
@@ -636,7 +636,7 @@ mapprime(int oldp, int newp, IndexType type)
     { 
     if(do_write_)
         Error("mapprime not supported if doWrite(true)");
-    for(int i = 1; i <= N; ++i) 
+    for(int i = 1; i <= N_; ++i) 
         A_[i].mapprime(oldp,newp,type); 
     }
 template
@@ -650,7 +650,7 @@ primelinks(int oldp, int newp)
     { 
     if(do_write_)
         Error("primelinks not supported if doWrite(true)");
-    for(int i = 1; i <= N; ++i) 
+    for(int i = 1; i <= N_; ++i) 
         A_[i].mapprime(oldp,newp,Link); 
     }
 template
@@ -664,7 +664,7 @@ noprimelink()
     { 
     if(do_write_)
         Error("noprimelink not supported if doWrite(true)");
-    for(int i = 1; i <= N; ++i) 
+    for(int i = 1; i <= N_; ++i) 
         A_[i].noprime(Link); 
     }
 template
@@ -699,7 +699,7 @@ position(int i, const OptSet& opts)
         }
     while(r_orth_lim_ > i+1)
         {
-        if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
+        if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
         setBond(r_orth_lim_-2);
         Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
         //cout << format("In position, SVDing bond %d\n") % (r_orth_lim_-2) << endl;
@@ -720,7 +720,7 @@ orthogonalize(const OptSet& opts)
     //but do not truncate since the basis to the right might not
     //be ortho (i.e. use the current m).
     svd_.useOrigM(true);
-    position(N);
+    position(N_);
     if(opts.getBool("Verbose",false))
         {
         std::cout << "Done orthogonalizing, starting truncation." 
@@ -805,7 +805,7 @@ checkOrtho() const
         return false;
         }
 
-    for(int i = NN(); i >= r_orth_lim_; --i)
+    for(int i = N(); i >= r_orth_lim_; --i)
     if(!checkRightOrtho(i))
         {
         std::cerr << "checkOrtho: A_[i] not right orthogonal at site i=" 
@@ -1383,7 +1383,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 int 
 findCenter(const IQMPS& psi)
     {
-    for(int j = 1; j <= psi.NN(); ++j) 
+    for(int j = 1; j <= psi.N(); ++j) 
         {
         const IQTensor& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in MPS");
@@ -1408,7 +1408,7 @@ findCenter(const IQMPS& psi)
 bool 
 checkQNs(const IQMPS& psi)
     {
-    const int N = psi.NN();
+    const int N = psi.N();
 
     QN Zero;
 
@@ -1484,8 +1484,8 @@ fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
     if(psi_basis.orthoCenter() != 1) 
         Error("psi_basis must be orthogonolized to site 1.");
 
-    int N = psi_basis.NN();
-    if(psi_to_fit.NN() != N) 
+    int N = psi_basis.N();
+    if(psi_to_fit.N() != N) 
         Error("Wavefunctions must have same number of sites.");
 
     IQTensor A = psi_to_fit.A(N) * conj(primelink(psi_basis.A(N)));

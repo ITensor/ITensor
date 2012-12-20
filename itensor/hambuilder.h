@@ -22,7 +22,7 @@ class HamBuilder
     HamBuilder(const Model& mod);
 
     int
-    NN() const { return N_; }
+    N() const { return N_; }
 
     //Sets res to an identity MPO
     template <class Tensor>
@@ -98,7 +98,7 @@ inline HamBuilder::
 HamBuilder(const Model& mod)
     :
     mod_(mod),
-    N_(mod.NN())
+    N_(mod.N())
     { }
 
 template <class Tensor>

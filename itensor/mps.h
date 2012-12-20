@@ -30,21 +30,21 @@ class InitState
     public:
 
     InitState(int nsite) 
-        : N(nsite), 
-          state(N+1) 
+        : N_(nsite), 
+          state(N_+1) 
         { }
 
     InitState(int nsite,SetFuncPtr setter) 
-        : N(nsite), 
-          state(N+1) 
+        : N_(nsite), 
+          state(N_+1) 
         { set_all(setter); }
 
-    int NN() const { return N; }
+    int N() const { return N_; }
 
     void 
     set_all(SetFuncPtr setter)
         { 
-        for(int j = 1; j <= N; ++j) GET(state,j-1) = (*setter)(j); 
+        for(int j = 1; j <= N_; ++j) GET(state,j-1) = (*setter)(j); 
         }
 
     IQIndexVal& 
@@ -56,7 +56,7 @@ class InitState
 
     private:
 
-    int N;
+    int N_;
     std::vector<IQIndexVal> state;
     }; 
 
@@ -118,7 +118,7 @@ class MPSt
     //
 
     int 
-    NN() const { return N;}
+    N() const { return N_;}
 
     int 
     rightLim() const { return r_orth_lim_; }
@@ -403,7 +403,7 @@ class MPSt
     operator<<(std::ostream& s, const MPSt& M)
         {
         s << "\n";
-        for(int i = 1; i <= M.NN(); ++i) s << M.A(i) << "\n";
+        for(int i = 1; i <= M.N(); ++i) s << M.A(i) << "\n";
         return s;
         }
 
@@ -419,7 +419,7 @@ class MPSt
     printIndices(const std::string& name = "") const
         {
         Cout << name << "=" << Endl;
-        for(int i = 1; i <= NN(); ++i) 
+        for(int i = 1; i <= N(); ++i) 
             A(i).printIndices(boost::format("A(%d)")%i);
         }
 
@@ -451,7 +451,7 @@ class MPSt
     //
     //Data Members
 
-    int N;
+    int N_;
 
     mutable
     std::vector<Tensor> A_;
@@ -675,12 +675,12 @@ psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
     typedef typename MPSType::TensorT
     Tensor;
 
-    const int N = psi.NN();
-    if(N != phi.NN()) Error("psiphi: mismatched N");
+    const int N = psi.N();
+    if(N != phi.N()) Error("psiphi: mismatched N");
 
     Tensor L = phi.A(1) * conj(primed(psi.A(1),psi.LinkInd(1))); 
 
-    for(int i = 2; i < psi.NN(); ++i) 
+    for(int i = 2; i < psi.N(); ++i) 
         { 
         L = L * phi.A(i) * conj(primed(psi.A(i),Link)); 
         }

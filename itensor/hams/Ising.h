@@ -67,7 +67,7 @@ Ising(const Model& model,
     initted_(false)
     { 
     Ny_ = opts.getInt("Ny",1);
-    Nx_ = model_.NN()/Ny_;
+    Nx_ = model_.N()/Ny_;
     J_  = opts.getReal("J",1.);
     hx_  = opts.getReal("hx",0.);
     }
@@ -80,7 +80,7 @@ init_()
 
     H = MPO(model_);
 
-    const int Ns = model_.NN();
+    const int Ns = model_.N();
     const int max_mpo_dist = Ny_;
     const int k = 3+(max_mpo_dist-1);
 

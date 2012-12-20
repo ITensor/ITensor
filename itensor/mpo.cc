@@ -21,7 +21,7 @@ position(int i, const OptSet& opts)
         }
     while(r_orth_lim_ > i+1)
         {
-        if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
+        if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
         Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
         svdBond(r_orth_lim_-2,WF,Fromright,opts);
         }
@@ -46,7 +46,7 @@ orthogonalize(const OptSet& opts)
     svd_.maxm(MAX_M);
     svd_.cutoff(MIN_CUT);
 
-    position(N);
+    position(N_);
     //Now basis is ortho, ok to truncate
     svd_.useOrigM(false);
     svd_.maxm(orig_maxm);
@@ -154,7 +154,7 @@ MPOt<IQTensor>& MPOt<IQTensor>::operator+=(const MPOt<IQTensor>& other);
 int 
 findCenter(const IQMPO& psi)
     {
-    for(int j = 1; j <= psi.NN(); ++j) 
+    for(int j = 1; j <= psi.N(); ++j) 
         {
         const IQTensor& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in IQMPO");
@@ -180,7 +180,7 @@ findCenter(const IQMPO& psi)
 void
 checkQNs(const IQMPO& psi)
     {
-    const int N = psi.NN();
+    const int N = psi.N();
 
     QN zero;
 
@@ -257,8 +257,8 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
     {
     typedef typename MPOType::TensorT Tensor;
     typedef typename MPOType::IndexT IndexT;
-    if(Aorig.NN() != Borig.NN()) Error("nmultMPO(MPOType): Mismatched N");
-    int N = Borig.NN();
+    if(Aorig.N() != Borig.N()) Error("nmultMPO(MPOType): Mismatched N");
+    int N = Borig.N();
     MPOType A(Aorig), B(Borig);
 
     SVDWorker svd = A.svd();
@@ -319,7 +319,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
         }
         */
 
-    res.doSVD(N-1,nfork,Fromright);
+    res.svdBond(N-1,nfork,Fromright);
     res.noprimelink();
     res.mapprime(2,1,Site);
     res.cutoff(cut);
@@ -345,8 +345,8 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     if(cutoff < 0) cutoff = psi.cutoff();
     if(maxm < 0) maxm = psi.maxm();
 
-    const int N = psi.NN();
-    if(K.NN() != N) 
+    const int N = psi.N();
+    if(K.N() != N) 
         Error("Mismatched N in napplyMPO");
 
     if(!psi.isOrtho() || psi.orthoCenter() != 1)
@@ -415,8 +415,8 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
     typedef typename Tensor::CombinerT
     CombinerT;
 
-    int N = x.NN();
-    if(K.NN() != N) Error("Mismatched N in exactApplyMPO");
+    int N = x.N();
+    if(K.N() != N) Error("Mismatched N in exactApplyMPO");
 
     if(&res != &x)
         res = x;

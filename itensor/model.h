@@ -39,7 +39,7 @@ class Model
 
     //Number of Sites
     int 
-    NN() const { return getNN(); }
+    N() const { return getN(); }
 
     //Index at Site i
     const IQIndex& 
@@ -168,7 +168,7 @@ class Model
     private:
 
     virtual int
-    getNN() const = 0;
+    getN() const = 0;
 
     virtual const IQIndex&
     getSi(int i) const = 0;
@@ -484,7 +484,7 @@ inline std::ostream&
 operator<<(std::ostream& s, const Model& M)
     {
     s << "Model:\n";
-    for(int j = 1; j <= M.NN(); ++j) 
+    for(int j = 1; j <= M.N(); ++j) 
         s << boost::format("si(%d) = ")%j << M.si(j) << "\n";
     return s;
     }

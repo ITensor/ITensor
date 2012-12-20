@@ -59,7 +59,7 @@ init()
     if(initted_) return;
 
     H = IQMPO(model_);
-    const int N = model_.NN();
+    const int N = model_.N();
 
     const int kk = 2,
               ds = 5,    //start of diagonal part

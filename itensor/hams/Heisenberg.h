@@ -66,7 +66,7 @@ Heisenberg(const Model& model, const OptSet& opts)
     initted_(false)
     { 
     Ny_ = opts.getInt("Ny",1);
-    Nx_ = model_.NN()/Ny_;
+    Nx_ = model_.N()/Ny_;
     J_ = opts.getReal("J",1.);
     Boundary_h_ = opts.getReal("Boundary_h",0.);
     }
@@ -78,12 +78,12 @@ init_()
 
     H = MPO(model_);
 
-    const int Ns = model_.NN();
+    const int Ns = model_.N();
     const int nop = 3;
     const int max_mpo_dist = Ny_;
     const int k = 5+nop*(max_mpo_dist-1);
 
-    std::vector<Index> links(model_.NN()+1);
+    std::vector<Index> links(model_.N()+1);
     for(int l = 0; l <= Ns; ++l) links.at(l) = Index(nameint("hl",l),k);
 
     for(int n = 1; n <= Ns; ++n)

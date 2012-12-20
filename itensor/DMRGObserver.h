@@ -83,7 +83,7 @@ measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
             {
             Cout << "\n    Largest m during sweep " << sw << " was " << svd.maxEigsKept() << "\n";
             Cout << "    Largest truncation error: " << svd.maxTruncerr() << Endl;
-            Vector center_eigs = svd.eigsKept(svd.NN()/2);
+            Vector center_eigs = svd.eigsKept(svd.N()/2);
             Cout << "    Eigs at center bond: ";
             for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                 {

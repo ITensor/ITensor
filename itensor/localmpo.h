@@ -94,7 +94,7 @@ class LocalMPO
     reset()
         {
         LHlim_ = 0;
-        RHlim_ = Op_->NN()+1;
+        RHlim_ = Op_->N()+1;
         }
 
     const Tensor&
@@ -245,9 +245,9 @@ inline LocalMPO<Tensor>::
 LocalMPO(const MPOt<Tensor>& Op, 
          const OptSet& opts)
     : Op_(&Op),
-      PH_(Op.NN()+2),
+      PH_(Op.N()+2),
       LHlim_(0),
-      RHlim_(Op.NN()+1),
+      RHlim_(Op.N()+1),
       nc_(2),
       do_write_(false),
       writedir_("."),
@@ -262,9 +262,9 @@ inline LocalMPO<Tensor>::
 LocalMPO(const MPSt<Tensor>& Psi, 
          const OptSet& opts)
     : Op_(0),
-      PH_(Psi.NN()+2),
+      PH_(Psi.N()+2),
       LHlim_(0),
-      RHlim_(Psi.NN()+1),
+      RHlim_(Psi.N()+1),
       nc_(2),
       do_write_(false),
       writedir_("."),
@@ -564,7 +564,7 @@ setRHlim(int val)
         PH_.at(RHlim_) = Tensor();
         }
     RHlim_ = val;
-    if(RHlim_ > Op_->NN()) 
+    if(RHlim_ > Op_->N()) 
         {
         //Set to null tensor and return
         PH_.at(RHlim_) = Tensor();

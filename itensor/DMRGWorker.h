@@ -211,7 +211,7 @@ runInternal(const MPOType& H, MPSType& psi)
               orig_maxm = psi.maxm();
     int debuglevel = (quiet_ ? 0 : 1);
 
-    int N = psi.NN();
+    int N = psi.N();
     energy_ = NAN;
 
     psi.position(1);
@@ -298,7 +298,7 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
               orig_maxm = psi.maxm();
     int debuglevel = (quiet_ ? 0 : 1);
 
-    int N = psi.NN();
+    int N = psi.N();
     energy_ = 0;
 
     psi.position(1);
@@ -372,7 +372,7 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
               orig_maxm = psi.maxm();
     int debuglevel = (quiet_ ? 0 : 1);
 
-    int N = psi.NN();
+    int N = psi.N();
     energy_ = 0;
 
     psi.position(1);

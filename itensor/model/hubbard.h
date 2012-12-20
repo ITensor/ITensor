@@ -47,7 +47,7 @@ class Hubbard : public Model
     private:
 
     virtual int
-    getNN() const;
+    getN() const;
 
     virtual const IQIndex&
     getSi(int i) const;
@@ -169,7 +169,7 @@ doWrite(std::ostream& s) const
     }
 
 int inline Hubbard::
-getNN() const
+getN() const
     { return N_; }
 
 inline const IQIndex& Hubbard::

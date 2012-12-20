@@ -19,22 +19,22 @@ class HamBuilder
     private:
 
     const Model& mod;
-    const int N;
+    const int N_;
     std::vector<IndexT> currentlinks;
 
     public:
 
-    int NN() const { return N; }
+    int N() const { return N_; }
     IndexT si(int i) const { return mod.si(i); }
 
-    HamBuilder(const Model& mod_) : mod(mod_), N(mod.NN()), currentlinks(N) { }
+    HamBuilder(const Model& mod_) : mod(mod_), N_(mod.N()), currentlinks(N_) { }
 
     void 
     newlinks(std::vector<Index>& currentlinks)
         {
-        currentlinks.resize(N);
+        currentlinks.resize(N_);
         static int ver = 0; ++ver;
-        for(int i = 1; i < N; i++)
+        for(int i = 1; i < N_; i++)
             {
             std::stringstream ss;
             ss << "h" << ver << "-" << i;
@@ -48,9 +48,9 @@ class HamBuilder
         //
         // Needs to be updated to work for IQIndex
         //
-        currentlinks.resize(N);
+        currentlinks.resize(N_);
         static int ver = 0; ++ver;
-        for(int i = 1; i < N; i++)
+        for(int i = 1; i < N_; i++)
             {
             std::stringstream ss;
             ss << "h" << ver << "-" << i;
@@ -66,9 +66,9 @@ class HamBuilder
         res.Aref(1) = mod.id(1); 
         res.Aref(1).addindex1(GET(currentlinks,1));
         res.Aref(1) *= factor;
-        res.Aref(N) = mod.id(N); 
-        res.Aref(N).addindex1(GET(currentlinks,N-1));
-        for(int i = 2; i < N; ++i)
+        res.Aref(N_) = mod.id(N_); 
+        res.Aref(N_).addindex1(GET(currentlinks,N_-1));
+        for(int i = 2; i < N_; ++i)
             {
             res.Aref(i) = mod.id(i);
             res.Aref(i).addindex1(GET(currentlinks,i-1));
@@ -82,7 +82,7 @@ class HamBuilder
         getidentity(1,res);
         res.Aref(i) = op;
         if(i > 1) res.Aref(i).addindex1(GET(currentlinks,i-1));
-        if(i < N) res.Aref(i).addindex1(GET(currentlinks,i));
+        if(i < N_) res.Aref(i).addindex1(GET(currentlinks,i));
         res *= factor;
         }
 
@@ -93,7 +93,7 @@ class HamBuilder
         getMPO(1,i2,op2,res);
         res.Aref(i1) = op1;
         if(i1 > 1) res.Aref(i1).addindex1(GET(currentlinks,i1-1));
-        if(i1 < N) res.Aref(i1).addindex1(GET(currentlinks,i1));
+        if(i1 < N_) res.Aref(i1).addindex1(GET(currentlinks,i1));
         res *= factor;
         }
 
@@ -116,7 +116,7 @@ class HamBuilder
             res.Aref(s) = ops.at(i);
             //assert(GET(ops,i).hasindex(si(sites[i])));
             if(s > 1) res.Aref(s).addindex1(GET(currentlinks,s-1));
-            if(s < N) res.Aref(s).addindex1(GET(currentlinks,s));
+            if(s < N_) res.Aref(s).addindex1(GET(currentlinks,s));
             }
         res *= factor;
         }

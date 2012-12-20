@@ -44,9 +44,9 @@ class SVDWorker
 
     SVDWorker(const OptSet& opts = Global::opts());
 
-    SVDWorker(int N_, const OptSet& opts = Global::opts());
+    SVDWorker(int N, const OptSet& opts = Global::opts());
 
-    SVDWorker(int N_, Real cutoff, int minm, int maxm, 
+    SVDWorker(int N, Real cutoff, int minm, int maxm, 
               bool doRelCutoff, const LogNumber& refNorm);
 
     SVDWorker(std::istream& s) { read(s); }
@@ -128,7 +128,7 @@ class SVDWorker
     //
 
     int 
-    NN() const { return N; }
+    N() const { return N_; }
 
     Real 
     cutoff() const { return cutoff_; }
@@ -283,7 +283,7 @@ class SVDWorker
     // Data Members
     //
 
-    int N;
+    int N_;
     std::vector<Real> truncerr_;
     Real cutoff_;
     int minm_;

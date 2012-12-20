@@ -66,7 +66,7 @@ init_()
 
     H = MPO(model_);
 
-    const int Ns = model_.NN();
+    const int Ns = model_.N();
     const int k = 6;
 
     std::vector<Index> links(Ns+1);

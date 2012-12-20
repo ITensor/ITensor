@@ -16,7 +16,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
     Real energy = 0.0, last_energy = -10000;
 
-    int N = psi.NN();
+    int N = psi.N();
 
     psi.position(1);
 
@@ -28,7 +28,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
     vector<ITensor> leftright(N+1);
     vector< vector<ITensor> > lrother(other.size());
     MPS psiconj(psi);
-    for(int i = 1; i <= finalham.NN(); i++)
+    for(int i = 1; i <= finalham.N(); i++)
 	{
         psiconj.Aref(i) = conj(psi.A(i)); 
         psiconj.Aref(i).prime(primeBoth);
@@ -189,7 +189,7 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
     if(opts.quiet()) debuglevel = 0;
     Real energy, last_energy = -10000;
 
-    const int N = psi.NN();
+    const int N = psi.N();
     const int NH = H.size();
 
     psi.position(1);
@@ -200,7 +200,7 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
     }
 
     MPS psiconj(psi);
-    for(int i = 1; i <= H[0].NN(); i++)
+    for(int i = 1; i <= H[0].N(); i++)
 	{
         psiconj.Aref(i) = conj(psi.A(i));
         psiconj.Aref(i).prime(primeBoth);
@@ -252,7 +252,7 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
             {
                 largest_m = max(largest_m,ll.m());
                 if(lastd(1) < max_eigs(1) && l != 1 && l != (N-1)) { max_eigs = lastd; max_eigs_bond = l; }
-                if(l == psi.NN()/2) 
+                if(l == psi.N()/2) 
                 {
                     center_eigs = lastd;
                     opts.bulk_entanglement_gap = (lastd.Length() >= 2 ? lastd(1)-lastd(2) : 1);
@@ -339,14 +339,14 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
     if(opts.quiet()) debuglevel = 0;
     Real energy, last_energy = -10000;
 
-    int N = psi.NN();
+    int N = psi.N();
 
     psi.position(1,preserve_edgelink);
 
     if(H.isComplex()) psi.Aref(1) *= ITensor::Complex_1();
 
     MPS psiconj(psi);
-    for(int i = 1; i <= psi.NN(); i++)
+    for(int i = 1; i <= psi.N(); i++)
 	{
         psiconj.Aref(i) = conj(psi.A(i));
         psiconj.Aref(i).prime(primeBoth);
@@ -384,10 +384,10 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
             energy = doDavidson(phi,mpoh,leftright[l],leftright[l+1],sweeps.niter(sw),debuglevel,1e-4);
 
             //if(preserve_edgelink)
-            //if((l == 1 && useleft) || (l == (psi.NN()-1) && useright))
+            //if((l == 1 && useleft) || (l == (psi.N()-1) && useright))
             //{
             //    const ITensor& B = (l == 1 ? LB : RB);
-            //    const int s = (l==1 ? 1 : psi.NN());
+            //    const int s = (l==1 ? 1 : psi.N());
             //    ITensor newA(psi.A(s).findtype(Site),index_in_common(psi.A(s),B,Link));
             //}
 
@@ -409,7 +409,7 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
                     max_eigs = Global::lastd(); 
                     max_eigs_bond = l; 
                     }
-                if(l == psi.NN()/2) 
+                if(l == psi.N()/2) 
                     {
                     center_eigs = Global::lastd();
                     }

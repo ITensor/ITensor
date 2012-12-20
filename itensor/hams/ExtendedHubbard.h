@@ -80,7 +80,7 @@ init_()
 
     H = MPO(model_);
 
-    const int Ns = model_.NN();
+    const int Ns = model_.N();
     const int k = 7 + (t2_ == 0 ? 0 : 4);
 
     std::vector<Index> links(Ns+1);

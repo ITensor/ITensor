@@ -23,19 +23,19 @@ SVDWorker(const OptSet& opts)
     { 
     initOpts(opts);
 
-    N = opts.getInt("N",1);
+    N_ = opts.getInt("N",1);
     
-    truncerr_ = vector<Real>(N+1,NAN);
-    eigsKept_ = vector<Vector>(N+1);
+    truncerr_ = vector<Real>(N_+1,NAN);
+    eigsKept_ = vector<Vector>(N_+1);
     }
 
 SVDWorker::
-SVDWorker(int N_, const OptSet& opts)
+SVDWorker(int N, const OptSet& opts)
     : 
-    N(N_), 
-    truncerr_(N+1,NAN), 
+    N_(N), 
+    truncerr_(N_+1,NAN), 
     refNorm_(1), 
-    eigsKept_(N+1)
+    eigsKept_(N_+1)
     { 
     initOpts(opts);
     }
@@ -54,10 +54,10 @@ initOpts(const OptSet& opts)
     }
 
 SVDWorker::
-SVDWorker(int N_, Real cutoff, int minm, int maxm, 
+SVDWorker(int N, Real cutoff, int minm, int maxm, 
           bool doRelCutoff, const LogNumber& refNorm)
-    : N(N_), 
-      truncerr_(N+1), 
+    : N_(N), 
+      truncerr_(N_+1), 
       cutoff_(cutoff), 
       minm_(minm), 
       maxm_(maxm),
@@ -66,7 +66,7 @@ SVDWorker(int N_, Real cutoff, int minm, int maxm,
       doRelCutoff_(doRelCutoff),
       absoluteCutoff_(false), 
       refNorm_(refNorm), 
-      eigsKept_(N+1),
+      eigsKept_(N_+1),
       noise_(0)
     { }
 
@@ -1441,9 +1441,9 @@ maxTruncerr() const
 void SVDWorker::
 read(std::istream& s)
     {
-    s.read((char*) &N,sizeof(N));
-    truncerr_.resize(N+1);
-    for(int j = 1; j <= N; ++j)
+    s.read((char*) &N_,sizeof(N_));
+    truncerr_.resize(N_+1);
+    for(int j = 1; j <= N_; ++j)
         s.read((char*)&truncerr_[j],sizeof(truncerr_[j]));
     s.read((char*)&cutoff_,sizeof(cutoff_));
     s.read((char*)&minm_,sizeof(minm_));
@@ -1453,16 +1453,16 @@ read(std::istream& s)
     s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
     s.read((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.read((char*)&refNorm_,sizeof(refNorm_));
-    eigsKept_.resize(N+1);
-    for(int j = 1; j <= N; ++j)
+    eigsKept_.resize(N_+1);
+    for(int j = 1; j <= N_; ++j)
         readVec(s,eigsKept_.at(j));
     }
 
 void SVDWorker::
 write(std::ostream& s) const
     {
-    s.write((char*) &N,sizeof(N));
-    for(int j = 1; j <= N; ++j)
+    s.write((char*) &N_,sizeof(N_));
+    for(int j = 1; j <= N_; ++j)
         s.write((char*)&truncerr_[j],sizeof(truncerr_[j]));
     s.write((char*)&cutoff_,sizeof(cutoff_));
     s.write((char*)&minm_,sizeof(minm_));
@@ -1472,7 +1472,7 @@ write(std::ostream& s) const
     s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
     s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.write((char*)&refNorm_,sizeof(refNorm_));
-    for(int j = 1; j <= N; ++j)
+    for(int j = 1; j <= N_; ++j)
         writeVec(s,eigsKept_[j]);
     }
 
