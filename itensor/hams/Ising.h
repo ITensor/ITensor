@@ -66,10 +66,10 @@ Ising(const Model& model,
     model_(model), 
     initted_(false)
     { 
-    Ny_ = opts.intOrDefault("Ny",1);
+    Ny_ = opts.getInt("Ny",1);
     Nx_ = model_.NN()/Ny_;
-    J_  = opts.realOrDefault("J",1.);
-    hx_  = opts.realOrDefault("hx",0.);
+    J_  = opts.getReal("J",1.);
+    hx_  = opts.getReal("hx",0.);
     }
 
 

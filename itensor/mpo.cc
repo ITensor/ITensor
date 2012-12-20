@@ -64,7 +64,7 @@ template <class Tensor>
 void MPOt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
     {
-    if(opts.boolOrDefault("PreserveShape",false))
+    if(opts.getBool("PreserveShape",false))
         {
         //The idea of the preserve_shape flag is to 
         //leave any external indices of the MPO on the

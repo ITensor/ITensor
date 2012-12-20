@@ -130,7 +130,7 @@ LocalMPO_MPS(const MPOt<Tensor>& Op,
         lmps_[j] = LocalMPOType(psis[j]);
 
     if(opts.defined("Weight"))
-        weight(opts.realVal("Weight"));
+        weight(opts.getReal("Weight"));
     }
 
 template <class Tensor>

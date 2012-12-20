@@ -534,7 +534,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
             const LocalOpT& PH, const OptSet& opts)
     {
     setBond(b);
-    if(opts.boolOrDefault("PreserveShape",false))
+    if(opts.getBool("PreserveShape",false))
         {
         //The idea of the preserve_shape flag is to 
         //leave any external indices of the MPS on the
@@ -678,7 +678,7 @@ psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
     psiphi(psi,phi,re,im);
     if(im != 0) 
 	if(fabs(im) > 1.0e-12 * fabs(re))
-	    std::cerr << "Real psiphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
+	    Cout << "Real psiphi: WARNING, dropping non-zero imaginary part of expectation value." << Endl;;
     return re;
     }
 

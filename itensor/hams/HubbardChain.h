@@ -55,8 +55,8 @@ HubbardChain(const Hubbard& model,
     model_(model), 
     initted_(false)
     { 
-    U_ = opts.realOrDefault("U",0);
-    t_ = opts.realOrDefault("t",1);
+    U_ = opts.getReal("U",0);
+    t_ = opts.getReal("t",1);
     }
 
 void inline HubbardChain::

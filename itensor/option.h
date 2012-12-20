@@ -129,6 +129,9 @@ class OptSet
     {
     public:
 
+    typedef Opt::Name
+    Name;
+
     OptSet();
 
     OptSet(const Opt& opt1);
@@ -146,7 +149,7 @@ class OptSet
     //
 
     bool
-    defined(const Opt::Name& name) const;
+    defined(const Name& name) const;
     bool
     defined(const Opt& opt) const;
 
@@ -160,7 +163,7 @@ class OptSet
         const Opt& opt4 = Opt::Null());
 
     const Opt&
-    get(const Opt::Name& name) const;
+    get(const Name& name) const;
     const Opt&
     get(const Opt& opt) const;
 
@@ -169,36 +172,32 @@ class OptSet
     //
 
     bool
-    boolVal(const Opt::Name& name) const;
+    getBool(const Name& name) const;
     bool
-    boolVal(const Opt& opt) const;
-
+    getBool(const Opt& opt) const;
     bool
-    boolOrDefault(const Opt::Name& name, bool default_val) const;
+    getBool(const Name& name, bool default_val) const;
 
     const std::string&
-    stringVal(const Opt::Name& name) const;
+    getString(const Name& name) const;
     const std::string&
-    stringVal(const Opt& opt) const;
-
+    getString(const Opt& opt) const;
     const std::string&
-    stringOrDefault(const Opt::Name& name, const std::string& default_val) const;
+    getString(const Name& name, const std::string& default_val) const;
 
     int
-    intVal(const Opt::Name& name) const;
+    getInt(const Name& name) const;
     int
-    intVal(const Opt& opt) const;
-
+    getInt(const Opt& opt) const;
     int
-    intOrDefault(const Opt::Name& name, int default_val) const;
+    getInt(const Name& name, int default_val) const;
 
     Real
-    realVal(const Opt::Name& name) const;
+    getReal(const Name& name) const;
     Real
-    realVal(const Opt& opt) const;
-
+    getReal(const Opt& opt) const;
     Real
-    realOrDefault(const Opt::Name& name, Real default_val) const;
+    getReal(const Name& name, Real default_val) const;
 
     friend std::ostream& 
     operator<<(std::ostream & s, const OptSet& oset);
@@ -213,7 +212,7 @@ class OptSet
 
     private:
 
-    typedef std::map<Opt::Name,Opt>
+    typedef std::map<Name,Opt>
     storage_type;
 
     typedef storage_type::iterator
@@ -436,18 +435,18 @@ get(const Opt::Name& name) const
     }
 
 bool inline OptSet::
-boolVal(const Opt& opt) const
+getBool(const Opt& opt) const
     {
     return get(opt).boolVal();
     }
 bool inline OptSet::
-boolVal(const Opt::Name& name) const
+getBool(const Opt::Name& name) const
     {
     return get(name).boolVal();
     }
 
 bool inline OptSet::
-boolOrDefault(const Opt::Name& name, bool default_value) const
+getBool(const Opt::Name& name, bool default_value) const
     {
     if(defined(name))
         return get(name).boolVal();
@@ -457,19 +456,19 @@ boolOrDefault(const Opt::Name& name, bool default_value) const
 
 inline 
 const std::string& OptSet::
-stringVal(const Opt& opt) const
+getString(const Opt& opt) const
     {
     return get(opt).stringVal();
     }
 inline 
 const std::string& OptSet::
-stringVal(const Opt::Name& name) const
+getString(const Opt::Name& name) const
     {
     return get(name).stringVal();
     }
 
 inline const std::string& OptSet::
-stringOrDefault(const Opt::Name& name, const std::string& default_value) const
+getString(const Opt::Name& name, const std::string& default_value) const
     {
     if(defined(name))
         return get(name).stringVal();
@@ -478,18 +477,18 @@ stringOrDefault(const Opt::Name& name, const std::string& default_value) const
     }
 
 int inline OptSet::
-intVal(const Opt& opt) const
+getInt(const Opt& opt) const
     {
     return get(opt).intVal();
     }
 int inline OptSet::
-intVal(const Opt::Name& name) const
+getInt(const Opt::Name& name) const
     {
     return get(name).intVal();
     }
 
 int inline OptSet::
-intOrDefault(const Opt::Name& name, int default_value) const
+getInt(const Opt::Name& name, int default_value) const
     {
     if(defined(name))
         return get(name).intVal();
@@ -498,18 +497,18 @@ intOrDefault(const Opt::Name& name, int default_value) const
     }
 
 Real inline OptSet::
-realVal(const Opt& opt) const
+getReal(const Opt& opt) const
     {
     return get(opt).realVal();
     }
 Real inline OptSet::
-realVal(const Opt::Name& name) const
+getReal(const Opt::Name& name) const
     {
     return get(name).realVal();
     }
 
 Real inline OptSet::
-realOrDefault(const Opt::Name& name, Real default_value) const
+getReal(const Opt::Name& name, Real default_value) const
     {
     if(defined(name))
         return get(name).realVal();

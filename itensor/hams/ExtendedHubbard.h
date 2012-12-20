@@ -67,10 +67,10 @@ ExtendedHubbard(const Hubbard& model,
     model_(model), 
     initted_(false)
     { 
-    U_ = opts.realOrDefault("U",0);
-    t1_ = opts.realOrDefault("t1",1);
-    t2_ = opts.realOrDefault("t2",0);
-    V1_ = opts.realOrDefault("V1",0);
+    U_ = opts.getReal("U",0);
+    t1_ = opts.getReal("t1",1);
+    t2_ = opts.getReal("t2",0);
+    V1_ = opts.getReal("V1",0);
     }
 
 void inline ExtendedHubbard::

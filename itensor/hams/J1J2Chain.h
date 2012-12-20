@@ -48,8 +48,8 @@ J1J2Chain(const Model& model,
     model_(model),
     initted_(false)
     {
-    J1_ = opts.realOrDefault("J1",1.);
-    J2_ = opts.realOrDefault("J2",0.);
+    J1_ = opts.getReal("J1",1.);
+    J2_ = opts.getReal("J2",0.);
     }
     
 

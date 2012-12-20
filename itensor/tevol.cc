@@ -314,7 +314,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
     typedef MPSt<Tensor>
     MPST;
 
-    bool verbose = opts.boolOrDefault("Verbose",false);
+    bool verbose = opts.getBool("Verbose",false);
 
     const int N = H.NN();
 
@@ -817,7 +817,7 @@ gateTEvol(const list<BondGate<Tensor> >& gatelist, Real ttotal, Real tstep,
     typedef typename Tensor::SparseT
     SparseT;
 
-    bool verbose = opts.boolOrDefault("Verbose",false);
+    bool verbose = opts.getBool("Verbose",false);
 
     //const int N = psi.NN();
 

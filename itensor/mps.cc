@@ -721,7 +721,7 @@ orthogonalize(const OptSet& opts)
     //be ortho (i.e. use the current m).
     svd_.useOrigM(true);
     position(N);
-    if(opts.boolOrDefault("Verbose",false))
+    if(opts.getBool("Verbose",false))
         {
         std::cout << "Done orthogonalizing, starting truncation." 
                   << std::endl;
@@ -873,7 +873,7 @@ template <class Tensor>
 void MPSt<Tensor>::
 initWrite()
     {
-    std::string global_write_dir = Global::opts().stringOrDefault("WriteDir","./");
+    std::string global_write_dir = Global::opts().getString("WriteDir","./");
     writedir_ = mkTempDir("psi",global_write_dir);
     std::cout << "Successfully created directory " + writedir_ << std::endl;
 

@@ -87,19 +87,19 @@ class DMRGWorker : public BaseDMRGWorker<MPSType>
 template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps,
-     const OptSet& opts)
+     const OptSet& opts = Global::opts())
     {
     DMRGWorker<MPSType> worker(sweeps,opts);
     worker.run(H,psi);
     return worker.energy();
     }
 
-//DMRG with an MPO and options
+//DMRG with an MPO and a custom Observer
 template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, 
      Observer& obs,
-     const OptSet& opts)
+     const OptSet& opts = Global::opts())
     {
     DMRGWorker<MPSType> worker(sweeps,obs,opts);
     worker.run(H,psi);
@@ -110,7 +110,7 @@ dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps,
 template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps,
-     const OptSet& opts)
+     const OptSet& opts = Global::opts())
     {
     DMRGWorker<MPSType> worker(sweeps,opts);
     worker.run(H,psi);
@@ -122,7 +122,7 @@ template <class MPSType, class MPOType>
 Real inline
 dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps, 
      Observer& obs,
-     const OptSet& opts)
+     const OptSet& opts = Global::opts())
     {
     DMRGWorker<MPSType> worker(sweeps,obs,opts);
     worker.run(H,psi);
@@ -136,7 +136,7 @@ Real inline
 dmrg(MPSType& psi, 
      const MPOType& H, const std::vector<MPSType>& psis, 
      const Sweeps& sweeps, 
-     const OptSet& opts)
+     const OptSet& opts = Global::opts())
     {
     DMRGWorker<MPSType> worker(sweeps,opts);
     worker.run(H,psis,psi);
@@ -150,7 +150,7 @@ Real inline
 dmrg(MPSType& psi, 
      const MPOType& H, const std::vector<MPSType>& psis, 
      const Sweeps& sweeps, Observer& obs, 
-     const OptSet& opts)
+     const OptSet& opts = Global::opts())
     {
     DMRGWorker<MPSType> worker(sweeps,obs,opts);
     worker.run(H,psis,psi);
@@ -193,8 +193,8 @@ template <class MPSType> inline
 void DMRGWorker<MPSType>::
 parseOptions(const OptSet& opts)
     {
-    quiet_ = opts.boolOrDefault("Quiet",false);
-    weight_ = opts.realOrDefault("Weight",1);
+    quiet_ = opts.getBool("Quiet",false);
+    weight_ = opts.getReal("Weight",1);
     }
 
 
@@ -233,9 +233,9 @@ runInternal(const MPOType& H, MPSType& psi)
 
         if(!PH.doWrite() 
            && Global::opts().defined("WriteM")
-           && sweeps().maxm(sw) >= Global::opts().intVal("WriteM"))
+           && sweeps().maxm(sw) >= Global::opts().getInt("WriteM"))
             {
-            std::string write_dir = Global::opts().stringOrDefault("WriteDir","./");
+            std::string write_dir = Global::opts().getString("WriteDir","./");
 
             if(!quiet_)
                 std::cout << "\nTurning on write to disk, write_dir = " << write_dir << std::endl;
@@ -395,9 +395,9 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
 
         if(!PH.doWrite() 
            && Global::opts().defined("WriteM")
-           && sweeps().maxm(sw) >= Global::opts().intVal("WriteM"))
+           && sweeps().maxm(sw) >= Global::opts().getInt("WriteM"))
             {
-            std::string write_dir = Global::opts().stringOrDefault("WriteDir","./");
+            std::string write_dir = Global::opts().getString("WriteDir","./");
 
             if(!quiet_)
                 std::cout << "\nTurning on write to disk, write_dir = " << write_dir << std::endl;

@@ -254,7 +254,7 @@ LocalMPO(const MPOt<Tensor>& Op,
       Psi_(0)
     { 
     if(opts.defined("NumCenter"))
-        numCenter(opts.intVal("NumCenter"));
+        numCenter(opts.getInt("NumCenter"));
     }
 
 template <class Tensor>
@@ -271,7 +271,7 @@ LocalMPO(const MPSt<Tensor>& Psi,
       Psi_(&Psi)
     { 
     if(opts.defined("NumCenter"))
-        numCenter(opts.intVal("NumCenter"));
+        numCenter(opts.getInt("NumCenter"));
     }
 
 template <class Tensor> inline
@@ -591,7 +591,7 @@ template <class Tensor>
 void inline LocalMPO<Tensor>::
 initWrite()
     {
-    std::string global_write_dir = Global::opts().stringOrDefault("WriteDir","./");
+    std::string global_write_dir = Global::opts().getString("WriteDir","./");
     writedir_ = mkTempDir("PH",global_write_dir);
     //std::cout << "Successfully created directory " + writedir_ << std::endl;
     }
