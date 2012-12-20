@@ -17,36 +17,41 @@ sqrt(Vector V)
     }
 
 SVDWorker::
-SVDWorker() 
-    : N(1), 
-      truncerr_(N+1), 
-      cutoff_(MIN_CUT), 
-      minm_(1),
-      maxm_(MAX_M),
-      use_orig_m_(false), 
-      showeigs_(false), 
-      doRelCutoff_(false),
-      absoluteCutoff_(false), 
-      refNorm_(1), 
-      eigsKept_(N+1),
-      noise_(0)
-    { }
+SVDWorker(const OptSet& opts) 
+    : 
+    refNorm_(1)
+    { 
+    initOpts(opts);
+
+    N = opts.getInt("N",1);
+    
+    truncerr_ = vector<Real>(N+1,NAN);
+    eigsKept_ = vector<Vector>(N+1);
+    }
 
 SVDWorker::
-SVDWorker(int N_)
-    : N(N_), 
-      truncerr_(N+1), 
-      cutoff_(MIN_CUT), 
-      minm_(1), 
-      maxm_(MAX_M),
-      use_orig_m_(false), 
-      showeigs_(false), 
-      doRelCutoff_(false),
-      absoluteCutoff_(false), 
-      refNorm_(1), 
-      eigsKept_(N+1),
-      noise_(0)
-    { }
+SVDWorker(int N_, const OptSet& opts)
+    : 
+    N(N_), 
+    truncerr_(N+1,NAN), 
+    refNorm_(1), 
+    eigsKept_(N+1)
+    { 
+    initOpts(opts);
+    }
+
+void SVDWorker::
+initOpts(const OptSet& opts)
+    {
+    absoluteCutoff_ = opts.getBool("AbsoluteCutoff",false);
+    cutoff_ = opts.getReal("Cutoff",MIN_CUT);
+    doRelCutoff_ = opts.getBool("DoRelCutoff",false);
+    maxm_ = opts.getInt("Maxm",MAX_M);
+    minm_ = opts.getInt("Minm",1);
+    noise_ = opts.getReal("Noise",0.);
+    showeigs_ = opts.getBool("ShowEigs",false);
+    use_orig_m_ = opts.getBool("UseOrigM",false);
+    }
 
 SVDWorker::
 SVDWorker(int N_, Real cutoff, int minm, int maxm, 

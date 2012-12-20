@@ -30,7 +30,6 @@ index_in_common(const TensorA& A, const TensorB& B, IndexType t = All)
     return IndexT();
     }
 
-
 //
 // SVDWorker
 //
@@ -43,9 +42,9 @@ class SVDWorker
     // Constructors
     //
 
-    SVDWorker();
+    SVDWorker(const OptSet& opts = Global::opts());
 
-    SVDWorker(int N_);
+    SVDWorker(int N_, const OptSet& opts = Global::opts());
 
     SVDWorker(int N_, Real cutoff, int minm, int maxm, 
               bool doRelCutoff, const LogNumber& refNorm);
@@ -252,7 +251,10 @@ class SVDWorker
     svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
              IQTensor& U, IQTSparse& D, IQTensor& V, int b = 1);
 
-private:
+    private:
+
+    void
+    initOpts(const OptSet& opts);
 
     /*
     void
@@ -320,6 +322,42 @@ private:
         };
 
     }; //class SVDWorker
+
+//
+// Convenience wrappers of SVDWorker methods
+// svd, csvd, and denmatDecomp.
+//
+
+template <class Tensor,class SparseT>
+void
+svd(const Tensor& T, Tensor& U, SparseT& D, Tensor& V,
+    const OptSet& opts = Global::opts())
+    {
+    SVDWorker W(opts);
+    W.svd(T,U,D,V);
+    }
+
+template <class Tensor,class SparseT>
+void
+csvd(const Tensor& T, Tensor& L, SparseT& V, Tensor& R,
+     const OptSet& opts = Global::opts())
+    {
+    SVDWorker W(opts);
+    W.svd(T,L,V,R);
+    }
+
+template <class Tensor,class SparseT>
+void
+denmatDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir,
+             const OptSet& opts = Global::opts())
+    {
+    SVDWorker W(opts);
+    W.denmatDecomp(T,A,B,dir);
+    }
+
+//
+// SVDWorker template methods
+//
 
 template<class Tensor, class SparseT, class LocalOpT>
 void SVDWorker::
