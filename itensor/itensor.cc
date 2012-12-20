@@ -430,7 +430,7 @@ val0() const
     if(rn() != 0)
         {
         Print(*this);
-        Error("ITensor is not a scalar");
+        Error("ITensor is not a real scalar");
         }
 
 	try {
@@ -438,19 +438,19 @@ val0() const
 	    }
 	catch(TooBigForReal)
 	    {
-	    std::cout << "too big for real() in val0" << std::endl;
-	    std::cerr << "too big for real() in val0" << std::endl;
-	    std::cout << "p->v(1) is " << p->v(1) << std::endl;
-	    std::cout << "scale is " << scale() << std::endl;
-	    std::cout << "rethrowing" << std::endl;
+	    cout << "too big for real() in val0" << endl;
+	    cerr << "too big for real() in val0" << endl;
+	    cout << "p->v(1) is " << p->v(1) << endl;
+	    cout << "scale is " << scale() << endl;
+	    cout << "rethrowing" << endl;
 	    throw;		// rethrow
 	    }
 	catch(TooSmallForReal)
 	    {
-	    std::cout << "warning: too small for real() in val0" << std::endl;
-	    std::cerr << "warning: too small for real() in val0" << std::endl;
-	    std::cout << "p->v(1) is " << p->v(1) << std::endl;
-	    std::cout << "scale is " << scale() << std::endl;
+	    cout << "warning: too small for real() in val0" << endl;
+	    cerr << "warning: too small for real() in val0" << endl;
+	    cout << "p->v(1) is " << p->v(1) << endl;
+	    cout << "scale is " << scale() << endl;
 	    return 0.0;
 	    }
 	return 0.0;
