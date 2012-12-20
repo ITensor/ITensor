@@ -150,7 +150,7 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
         //Orthogonalize
         IndexT plink = index_in_common(B,psi[s(j-1)]);
         //Define P = B^\dag B
-        Tensor P = conj(primeind(B,plink))*primed(B);
+        Tensor P = conj(prime(B,plink))*primed(B);
         //Apply (1-P) to Bd (by computing Bd = Bd - P*Bd)
         P *= Bd;
         P.noprime();
@@ -531,7 +531,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 {
                 Tensor& B = psiv[g];
                 IndexT lnk = index_in_common(B,psiv[g-1]);
-                Tensor overlap = conj(primeind(B,lnk))*B;
+                Tensor overlap = conj(prime(B,lnk))*B;
 
                 SVDWorker W;
                 Tensor U(lnk),V;
