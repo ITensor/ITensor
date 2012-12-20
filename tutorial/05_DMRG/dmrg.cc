@@ -55,7 +55,7 @@ main(int argc, char* argv[])
             Heff.position(b,psi);
 
             //Solve effective eigenvalue problem
-            ITensor phi = psi.AA(b)*psi.AA(b+1);
+            ITensor phi = psi.A(b)*psi.A(b+1);
             energy = solver.davidson(Heff,phi);
 
             //Construct SVDWorker and set
@@ -67,8 +67,8 @@ main(int argc, char* argv[])
 
             //Define tensor (references)
             //to hold SVD results
-            ITensor& A = psi.AAnc(b);   //nc means 'non-const'
-            ITensor& B = psi.AAnc(b+1); //nc means 'non-const'
+            ITensor& A = psi.Anc(b);   //nc means 'non-const'
+            ITensor& B = psi.Anc(b+1); //nc means 'non-const'
             ITSparse D;
 
             //Add code:
