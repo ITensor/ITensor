@@ -97,7 +97,7 @@ MPSt(const Model& model, std::istream& s);
 
 template <class Tensor>
 Tensor& MPSt<Tensor>::
-AAnc(int i) //nc means 'non const'
+Aref(int i)
     { 
     setSite(i);
     if(i <= l_orth_lim_) l_orth_lim_ = i-1;
@@ -106,9 +106,9 @@ AAnc(int i) //nc means 'non const'
     return A_.at(i); 
     }
 template
-ITensor& MPSt<ITensor>::AAnc(int i);
+ITensor& MPSt<ITensor>::Aref(int i);
 template
-IQTensor& MPSt<IQTensor>::AAnc(int i);
+IQTensor& MPSt<IQTensor>::Aref(int i);
 
 template <class Tensor>
 Tensor MPSt<Tensor>::
@@ -496,9 +496,9 @@ MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
 
     for(int j = 1; j <= N; ++j)
         {
-        Foreach(const ITensor& t, AA(j).blocks())
+        Foreach(const ITensor& t, A(j).blocks())
             { nA[j].insert(t); }
-        Foreach(const ITensor& t, other.AA(j).blocks())
+        Foreach(const ITensor& t, other.A(j).blocks())
             { nA[j].insert(t); }
         }
 
@@ -526,13 +526,13 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
         plussers(l1,l2,r,first[i],second[i]);
         }
 
-    AAnc(1) = AA(1) * first[1] + other.AA(1) * second[1];
+    Aref(1) = A(1) * first[1] + other.A(1) * second[1];
     for(int i = 2; i < N; ++i)
         {
-        AAnc(i) = conj(first[i-1]) * AA(i) * first[i] 
-                  + conj(second[i-1]) * other.AA(i) * second[i];
+        Aref(i) = conj(first[i-1]) * A(i) * first[i] 
+                  + conj(second[i-1]) * other.A(i) * second[i];
         }
-    AAnc(N) = conj(first[N-1]) * AA(N) + conj(second[N-1]) * other.AA(N);
+    Aref(N) = conj(first[N-1]) * A(N) + conj(second[N-1]) * other.A(N);
 
     noprimelink();
 
@@ -606,13 +606,13 @@ addNoOrth(const MPSt<Tensor>& other_)
         plussers(l1,l2,r,first[i],second[i]);
         }
 
-    AAnc(1) = AA(1) * first[1] + other_.AA(1) * second[1];
+    Aref(1) = A(1) * first[1] + other_.A(1) * second[1];
     for(int i = 2; i < N; ++i)
         {
-        AAnc(i) = conj(first[i-1]) * AA(i) * first[i] 
-                  + conj(second[i-1]) * other_.AA(i) * second[i];
+        Aref(i) = conj(first[i-1]) * A(i) * first[i] 
+                  + conj(second[i-1]) * other_.A(i) * second[i];
         }
-    AAnc(N) = conj(first[N-1]) * AA(N) + conj(second[N-1]) * other_.AA(N);
+    Aref(N) = conj(first[N-1]) * A(N) + conj(second[N-1]) * other_.A(N);
 
     noprimelink();
 
@@ -693,7 +693,7 @@ position(int i, const OptSet& opts)
         {
         if(l_orth_lim_ < 0) l_orth_lim_ = 0;
         setBond(l_orth_lim_+1);
-        Tensor WF = AA(l_orth_lim_+1) * AA(l_orth_lim_+2);
+        Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
         //cout << format("In position, SVDing bond %d\n") % (l_orth_lim_+1) << endl;
         svdBond(l_orth_lim_+1,WF,Fromleft,opts);
         }
@@ -701,7 +701,7 @@ position(int i, const OptSet& opts)
         {
         if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
         setBond(r_orth_lim_-2);
-        Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
+        Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
         //cout << format("In position, SVDing bond %d\n") % (r_orth_lim_-2) << endl;
         svdBond(r_orth_lim_-2,WF,Fromright,opts);
         }
@@ -761,11 +761,8 @@ checkOrtho(int i, bool left) const
     {
     setSite(i);
     IndexT link = (left ? RightLinkInd(i) : LeftLinkInd(i));
-    Tensor A = AA(i);
-    Tensor Ac = conj(A); 
-    Ac.prime(link,4);
 
-    Tensor rho = A * Ac;
+    Tensor rho = A(i) * conj(primed(A(i),Link,4));
 
     Tensor Delta = makeKroneckerDelta(link,4);
 
@@ -842,9 +839,9 @@ projectOp(int j, Direction dir,
         std::cerr << boost::format("projectOp: from left j < r_orth_lim_ (j=%d,r_orth_lim_=%d)\n")%j%r_orth_lim_; 
         Error("Projecting operator at j < r_orth_lim_"); 
         }
-    nE = (E.isNull() ? AA(j) : E * AA(j));
+    nE = (E.isNull() ? A(j) : E * A(j));
     nE *= X; 
-    nE *= conj(primed(AA(j)));
+    nE *= conj(primed(A(j)));
     }
 template
 void MPSt<ITensor>::projectOp(int j, Direction dir, 
@@ -1348,20 +1345,20 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
         }
         if(s == 1)
         {
-            iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
+            iqpsi.Aref(s) = (is_mpo ? IQTensor(conj(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
         }
         else if(s == N)
         {
-            iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s)) 
+            iqpsi.Aref(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s)) 
                                     : IQTensor(conj(linkind[s-1]),si(s)));
         }
         else
         {
-            iqpsi.AAnc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s),linkind[s]) 
+            iqpsi.Aref(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s),linkind[s]) 
                                     : IQTensor(conj(linkind[s-1]),si(s),linkind[s]));
         }
 
-        Foreach(const ITensor& nb, nblock) { iqpsi.AAnc(s) += nb; } nblock.clear();
+        Foreach(const ITensor& nb, nblock) { iqpsi.Aref(s) += nb; } nblock.clear();
 
         if(0) //try to get this working ideally
         if(!is_mpo && s > 1) 
@@ -1372,7 +1369,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
         if(s==show_s)
         {
-        iqpsi.AA(s).print((boost::format("qA[%d]")%s).str(),ShowData);
+        iqpsi.A(s).print((boost::format("qA[%d]")%s).str(),ShowData);
         Error("Stopping");
         }
 
@@ -1388,7 +1385,7 @@ findCenter(const IQMPS& psi)
     {
     for(int j = 1; j <= psi.NN(); ++j) 
         {
-        const IQTensor& A = psi.AA(j);
+        const IQTensor& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in MPS");
         bool allSameDir = true;
         Arrow dir = A.index(1).dir();
@@ -1427,15 +1424,15 @@ checkQNs(const IQMPS& psi)
     for(int i = 1; i <= N; ++i) 
         {
         if(i == center) continue;
-        if(psi.AA(i).isNull())
+        if(psi.A(i).isNull())
             {
-            std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
+            std::cerr << boost::format("A(%d) null, QNs not well defined\n")%i;
             return false;
             }
-        if(psi.AA(i).div() != Zero)
+        if(psi.A(i).div() != Zero)
             {
             std::cerr << "At i = " << i << "\n";
-            Print(psi.AA(i));
+            Print(psi.A(i));
             std::cerr << "IQTensor other than the ortho center had non-zero divergence\n";
             return false;
             }
@@ -1491,15 +1488,15 @@ fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
     if(psi_to_fit.NN() != N) 
         Error("Wavefunctions must have same number of sites.");
 
-    IQTensor A = psi_to_fit.AA(N) * conj(primelink(psi_basis.AA(N)));
+    IQTensor A = psi_to_fit.A(N) * conj(primelink(psi_basis.A(N)));
     for(int n = N-1; n > 1; --n)
         {
-        A *= conj(primelink(psi_basis.AA(n)));
-        A *= psi_to_fit.AA(n);
+        A *= conj(primelink(psi_basis.A(n)));
+        A *= psi_to_fit.A(n);
         }
-    A = psi_to_fit.AA(1) * A;
+    A = psi_to_fit.A(1) * A;
     A.noprime();
 
     psi_to_fit = psi_basis;
-    psi_to_fit.AAnc(1) = A;
+    psi_to_fit.Aref(1) = A;
     }

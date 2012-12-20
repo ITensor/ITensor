@@ -16,13 +16,13 @@ position(int i, const OptSet& opts)
     while(l_orth_lim_ < i-1)
         {
         if(l_orth_lim_ < 0) l_orth_lim_ = 0;
-        Tensor WF = AA(l_orth_lim_+1) * AA(l_orth_lim_+2);
+        Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
         svdBond(l_orth_lim_+1,WF,Fromleft,opts);
         }
     while(r_orth_lim_ > i+1)
         {
         if(r_orth_lim_ > N+1) r_orth_lim_ = N+1;
-        Tensor WF = AA(r_orth_lim_-2) * AA(r_orth_lim_-1);
+        Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
         svdBond(r_orth_lim_-2,WF,Fromright,opts);
         }
 
@@ -156,7 +156,7 @@ findCenter(const IQMPO& psi)
     {
     for(int j = 1; j <= psi.NN(); ++j) 
         {
-        const IQTensor& A = psi.AA(j);
+        const IQTensor& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in IQMPO");
         bool allOut = true;
         for(int i = 1; i <= A.r(); ++i)
@@ -195,23 +195,23 @@ checkQNs(const IQMPO& psi)
     //including the ortho. center
     for(int i = 1; i <= N; ++i) 
         {
-        if(psi.AA(i).isNull())
+        if(psi.A(i).isNull())
             {
-            std::cerr << boost::format("AA(%d) null, QNs not well defined\n")%i;
+            std::cerr << boost::format("A(%d) null, QNs not well defined\n")%i;
             Error("QNs not well defined");
             }
         try {
-            checkQNs(psi.AA(i));
+            checkQNs(psi.A(i));
             }
         catch(const ITError& e)
             {
             std::cerr << "At i = " << i << "\n";
             throw e;
             }
-        if(psi.AA(i).div() != zero)
+        if(psi.A(i).div() != zero)
             {
             std::cerr << "At i = " << i << "\n";
-            Print(psi.AA(i));
+            Print(psi.A(i));
             Error("Non-zero div IQTensor in IQMPO");
             }
         }
@@ -279,11 +279,11 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
         {
         if(i == 1) 
             { 
-            clust = A.AA(i) * B.AA(i); 
+            clust = A.A(i) * B.A(i); 
             }
         else       
             { 
-            clust = nfork * A.AA(i) * B.AA(i); 
+            clust = nfork * A.A(i) * B.A(i); 
             }
 
         if(i == N-1) break;
@@ -300,15 +300,15 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
             }
             */
 
-        svd.denmatDecomp(i,clust, res.AAnc(i), nfork,Fromleft);
+        svd.denmatDecomp(i,clust, res.Aref(i), nfork,Fromleft);
 
-        IndexT mid = index_in_common(res.AA(i),nfork,Link);
+        IndexT mid = index_in_common(res.A(i),nfork,Link);
         mid.conj();
         midsize[i] = mid.m();
-        res.AAnc(i+1) = Tensor(mid,conj(res.si(i+1)),primed(res.si(i+1),2),res.RightLinkInd(i+1));
+        res.Aref(i+1) = Tensor(mid,conj(res.si(i+1)),primed(res.si(i+1),2),res.RightLinkInd(i+1));
         }
 
-    nfork = clust * A.AA(N) * B.AA(N);
+    nfork = clust * A.A(N) * B.A(N);
 
     /*
     if(nfork.norm() == 0) // this product gives 0 !!
@@ -370,24 +370,24 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     int maxdim = 1;
     for(int i = 1; i < N; i++)
         {
-        if(i == 1) { clust = psi.AA(i) * K.AA(i); }
-        else { clust = nfork * (psi.AA(i) * K.AA(i)); }
+        if(i == 1) { clust = psi.A(i) * K.A(i); }
+        else { clust = nfork * (psi.A(i) * K.A(i)); }
         if(i == N-1) break; //No need to SVD for i == N-1
 
         IndexT oldmid = res.RightLinkInd(i); assert(oldmid.dir() == Out);
         nfork = Tensor(psi.RightLinkInd(i),K.RightLinkInd(i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
-        svd.denmatDecomp(i,clust, res.AAnc(i), nfork,Fromleft);
-        IndexT mid = index_in_common(res.AA(i),nfork,Link);
+        svd.denmatDecomp(i,clust, res.Aref(i), nfork,Fromleft);
+        IndexT mid = index_in_common(res.A(i),nfork,Link);
         //assert(mid.dir() == In);
         mid.conj();
         midsize[i] = mid.m();
         maxdim = max(midsize[i],maxdim);
         assert(res.RightLinkInd(i+1).dir() == Out);
-        res.AAnc(i+1) = Tensor(mid,primed(res.si(i+1)),res.RightLinkInd(i+1));
+        res.Aref(i+1) = Tensor(mid,primed(res.si(i+1)),res.RightLinkInd(i+1));
         }
-    nfork = clust * psi.AA(N) * K.AA(N);
+    nfork = clust * psi.A(N) * K.A(N);
     //if(nfork.iten_size() == 0)	// this product gives 0 !!
 	//throw ResultIsZero("nfork.iten size == 0");
 
@@ -421,27 +421,27 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
     if(&res != &x)
         res = x;
 
-    res.AAnc(1) = x.AA(1) * K.AA(1);
+    res.Aref(1) = x.A(1) * K.A(1);
     for(int j = 1; j < N; ++j)
         {
         //cerr << boost::format("exact_applyMPO: step %d\n") % j;
         //Compute product of MPS tensor and MPO tensor
-        res.AAnc(j+1) = x.AA(j+1) * K.AA(j+1); //m^2 k^2 d^2
+        res.Aref(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
 
         //Add common IQIndices to IQCombiner
         CombinerT comb; 
         comb.doCondense(false);
-        for(int ii = 1; ii <= res.AA(j).r(); ++ii)
+        for(int ii = 1; ii <= res.A(j).r(); ++ii)
             {
-            const IndexT& I = res.AA(j).index(ii);
-            if(res.AA(j+1).hasindex(I) && I != IndexT::IndReIm())
+            const IndexT& I = res.A(j).index(ii);
+            if(res.A(j+1).hasindex(I) && I != IndexT::IndReIm())
                 comb.addleft(I);
             }
         comb.init(nameint("a",j));
 
         //Apply combiner to product tensors
-        res.AAnc(j) = res.AA(j) * comb; //m^3 k^3 d
-        res.AAnc(j+1) = conj(comb) * res.AA(j+1); //m^3 k^3 d
+        res.Aref(j) = res.A(j) * comb; //m^3 k^3 d
+        res.Aref(j+1) = conj(comb) * res.A(j+1); //m^3 k^3 d
         }
     res.mapprime(1,0,Site);
     res.orthogonalize();
@@ -466,7 +466,7 @@ expsmallH(const MPOt<Tensor>& H, MPOt<Tensor>& K,
     MPOt<Tensor> Hshift;
     hb.getMPO(Hshift,-Etot);
     Hshift += H;
-    Hshift.AAnc(1) *= -tau;
+    Hshift.Aref(1) *= -tau;
 
     vector<MPOt<Tensor> > xx(2);
     hb.getMPO(xx.at(0),1.0);
@@ -479,7 +479,7 @@ expsmallH(const MPOt<Tensor>& H, MPOt<Tensor>& K,
     //
     for(int o = 50; o >= 1; --o)
         {
-        if(o > 1) xx[1].AAnc(1) *= 1.0 / o;
+        if(o > 1) xx[1].Aref(1) *= 1.0 / o;
 
         Real errlim = 1E-14;
 

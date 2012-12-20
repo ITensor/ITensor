@@ -75,7 +75,7 @@ init_()
     ITensor W;
     for(int n = 1; n <= Ns; ++n)
         {
-        ITensor& W = H.AAnc(n);
+        ITensor& W = H.Aref(n);
         Index &row = links[n-1], &col = links[n];
 
         W = ITensor(model_.si(n),model_.siP(n),row,col);
@@ -98,8 +98,8 @@ init_()
         W += model_.Cdn(n) * row(5) * col(1) * (-1.0);
         }
 
-    H.AAnc(1) *= ITensor(links.at(0)(k));
-    H.AAnc(Ns) *= ITensor(links.at(Ns)(1));
+    H.Aref(1) *= ITensor(links.at(0)(k));
+    H.Aref(Ns) *= ITensor(links.at(Ns)(1));
 
     initted_ = true;
     }

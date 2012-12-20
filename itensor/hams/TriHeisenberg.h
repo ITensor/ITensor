@@ -88,7 +88,7 @@ init_()
 
     for(int n = 1; n <= Ns; ++n)
         {
-        ITensor& W = H.AAnc(n);
+        ITensor& W = H.Aref(n);
         Index &row = links[n-1], &col = links[n];
 
         W = ITensor(model.si(n),model.siP(n),row,col);
@@ -147,8 +147,8 @@ init_()
             }
         }
 
-    H.AAnc(1) *= makeLedge(links.at(0));
-    H.AAnc(Ns) *= makeRedge(links.at(Ns));
+    H.Aref(1) *= makeLedge(links.at(0));
+    H.Aref(Ns) *= makeRedge(links.at(Ns));
 
     initted = true;
     }

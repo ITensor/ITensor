@@ -139,18 +139,23 @@ class MPSt
     typedef typename std::vector<Tensor>::const_iterator 
     AA_it;
 
+    //Returns pair of iterators which can be used in a 
+    //Foreach loop to iterate over all MPS tensors
     const std::pair<AA_it,AA_it> 
-    AA() const { return std::make_pair(A_.begin()+1,A_.end()); }
+    A() const { return std::make_pair(A_.begin()+1,A_.end()); }
 
+    //Read-only access to i'th MPS tensor
     const Tensor& 
-    AA(int i) const 
+    A(int i) const 
         { 
         setSite(i);
         return A_.at(i); 
         }
 
+    //Returns reference to i'th MPS tensor
+    //which allows reading and writing
     Tensor& 
-    AAnc(int i); //nc means 'non const'
+    Aref(int i);
 
     const Model& 
     model() const { return *model_; }
@@ -251,7 +256,7 @@ class MPSt
     //
 
     MPSt& 
-    operator*=(Real a) { AAnc(l_orth_lim_+1) *= a; return *this; }
+    operator*=(Real a) { Aref(l_orth_lim_+1) *= a; return *this; }
 
     MPSt 
     operator*(Real r) const { MPSt res(*this); res *= r; return res; }
@@ -285,13 +290,13 @@ class MPSt
 
     IndexT 
     LinkInd(int b) const 
-        { return index_in_common(AA(b),AA(b+1),Link); }
+        { return index_in_common(A(b),A(b+1),Link); }
     IndexT 
     RightLinkInd(int i) const 
-        { return index_in_common(AA(i),AA(i+1),Link); }
+        { return index_in_common(A(i),A(i+1),Link); }
     IndexT 
     LeftLinkInd(int i)  const 
-        { return index_in_common(AA(i),AA(i-1),Link); }
+        { return index_in_common(A(i),A(i-1),Link); }
 
     //
     //MPSt orthogonalization methods
@@ -370,6 +375,8 @@ class MPSt
     //      |      |
     //  - A_[b] - A_[b+1] -
     //
+    // Does not normalize the resulting wavefunction unless 
+    // Opt DoNormalize(true) is included in opts.
     void 
     applygate(const Tensor& gate, const OptSet& opts = Global::opts());
 
@@ -396,7 +403,7 @@ class MPSt
     operator<<(std::ostream& s, const MPSt& M)
         {
         s << "\n";
-        for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
+        for(int i = 1; i <= M.NN(); ++i) s << M.A(i) << "\n";
         return s;
         }
 
@@ -413,7 +420,7 @@ class MPSt
         {
         Cout << name << "=" << Endl;
         for(int i = 1; i <= NN(); ++i) 
-            AA(i).printIndices(boost::format("AA(%d)")%i);
+            A(i).printIndices(boost::format("A(%d)")%i);
         }
 
     void 
@@ -428,7 +435,17 @@ class MPSt
         convertToIQ(*model_,A_,iqpsi.A_,totalq,cut);
         }
 
-protected:
+    //
+    // Deprecated methods
+    // 
+
+    //Renamed to A
+    //const Tensor& AA(int i) const;
+
+    //Renamed to Aref
+    //Tensor& AAnc(int i);
+
+    protected:
 
     //////////////////////////
     //
@@ -515,10 +532,12 @@ protected:
     void 
     init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
-private:
+    private:
+
     friend class MPSt<ITensor>;
     friend class MPSt<IQTensor>;
-}; //class MPSt<Tensor>
+
+    }; //class MPSt<Tensor>
 typedef MPSt<ITensor> MPS;
 typedef MPSt<IQTensor> IQMPS;
 
@@ -643,7 +662,7 @@ totalQN(const IQMPS& psi)
     int center = findCenter(psi);
     if(center == -1)
         Error("Could not find ortho. center");
-    return psi.AA(center).div();
+    return psi.A(center).div();
     }
 
 //
@@ -659,15 +678,15 @@ psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
     const int N = psi.NN();
     if(N != phi.NN()) Error("psiphi: mismatched N");
 
-    Tensor L = phi.AA(1) * conj(primed(psi.AA(1),psi.LinkInd(1))); 
+    Tensor L = phi.A(1) * conj(primed(psi.A(1),psi.LinkInd(1))); 
 
     for(int i = 2; i < psi.NN(); ++i) 
         { 
-        L = L * phi.AA(i) * conj(primed(psi.AA(i),Link)); 
+        L = L * phi.A(i) * conj(primed(psi.A(i),Link)); 
         }
-    L = L * phi.AA(N);
+    L = L * phi.A(N);
 
-    BraKet(primed(psi.AA(N),psi.LinkInd(N-1)),L,re,im);
+    BraKet(primed(psi.A(N),psi.LinkInd(N-1)),L,re,im);
     }
 
 template <class MPSType>

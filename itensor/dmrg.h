@@ -353,11 +353,11 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
     Real energy;
 
     psi.position(1);
-    //if(H.isComplex()) psi.AAnc(1) *= ITensor::Complex_1();
+    //if(H.isComplex()) psi.Aref(1) *= ITensor::Complex_1();
 
     std::vector<MPOTensor> LH(N+1);
     std::vector<MPOTensor> RH(N+1);
-    for(int l = N-1; l >= 1; --l) psi.projectOp(l+1,Fromright,RH.at(l+1),H.AA(l+1),RH.at(l));
+    for(int l = N-1; l >= 1; --l) psi.projectOp(l+1,Fromright,RH.at(l+1),H.A(l+1),RH.at(l));
 
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
     {
@@ -371,20 +371,20 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
         }
 
 	    Direction dir = (ha==1?Fromleft:Fromright);
-	    Tensor phi = psi.AA(b);
+	    Tensor phi = psi.A(b);
 
 	    const Real errgoal = 1E-4;
 	    
-	    energy = doDavidson(phi, H.AA(b), LH.at(b), RH.at(b), sweeps.niter(sw), debuglevel, errgoal);
+	    energy = doDavidson(phi, H.A(b), LH.at(b), RH.at(b), sweeps.niter(sw), debuglevel, errgoal);
 
         if(ha == 1)
         {
-            phi *= psi.AA(b+1);
+            phi *= psi.A(b+1);
             psi.doSVD(b,phi,dir);
         }
         else
         {
-            phi *= psi.AA(b-1);
+            phi *= psi.A(b-1);
             psi.doSVD(b-1,phi,dir);
         }
 
@@ -395,8 +395,8 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
 
         opts.measure(sw,ha,(ha==1 ? b : b-1),psi,energy);
 
-        if(ha == 1 && b != N) psi.projectOp(b,Fromleft,LH.at(b),H.AA(b),LH.at(b+1));
-        if(ha == 2 && b >= 1)   psi.projectOp(b,Fromright,RH.at(b),H.AA(b),RH.at(b-1));
+        if(ha == 1 && b != N) psi.projectOp(b,Fromleft,LH.at(b),H.A(b),LH.at(b+1));
+        if(ha == 2 && b >= 1)   psi.projectOp(b,Fromright,RH.at(b),H.A(b),RH.at(b-1));
     } //for loop over b
 
         if(opts.checkDone(sw,psi,energy))

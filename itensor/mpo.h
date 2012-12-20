@@ -72,8 +72,8 @@ class MPOt : private MPSt<Tensor>
     using Parent::rightLim;
     using Parent::leftLim;
 
-    using Parent::AA;
-    using Parent::AAnc;
+    using Parent::A;
+    using Parent::Aref;
     using Parent::bondTensor;
 
     using Parent::doWrite;
@@ -141,9 +141,9 @@ class MPOt : private MPSt<Tensor>
         {
         for(int i = 1; i <= this->NN(); i++)
             {
-            AAnc(i).mapprime(0,1,Link);
-            AAnc(i).mapprime(1,2,Site);
-            AAnc(i).mapprime(0,1,Site);
+            Aref(i).mapprime(0,1,Link);
+            Aref(i).mapprime(1,2,Site);
+            Aref(i).mapprime(0,1,Site);
             }
         }
 
@@ -178,7 +178,7 @@ class MPOt : private MPSt<Tensor>
     operator<<(std::ostream& s, const MPOt& M)
         {
         s << "\n";
-        for(int i = 1; i <= M.NN(); ++i) s << M.AA(i) << "\n";
+        for(int i = 1; i <= M.NN(); ++i) s << M.A(i) << "\n";
         return s;
         }
 
@@ -216,7 +216,7 @@ toMPO() const
     res.svd_ = svd_;
     for(int j = 1; j <= NN(); ++j)
         {
-        res.A_.at(j) = AA(j).toITensor();
+        res.A_.at(j) = A(j).toITensor();
         }
     return res;
     }
@@ -296,7 +296,7 @@ class MPOSet
             A.resize(N+1); 
             }
         for(int n = 1; n <= N; ++n) 
-            A[n].push_back(&(Op.AA(n))); 
+            A[n].push_back(&(Op.A(n))); 
         ++size_;
         }
 
@@ -307,7 +307,7 @@ class MPOSet
     size() const { return size_; }
 
     const std::vector<const Tensor*>& 
-    AA(int j) const 
+    A(int j) const 
         { 
         return A.at(j); 
         }
@@ -330,7 +330,7 @@ class MPOSet
         size_;
 
     std::vector<std::vector<const Tensor*> > 
-    A;
+    A_;
 
     //
     ////////////
@@ -349,18 +349,18 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real
     const int N = H.NN();
     if(phi.NN() != N || psi.NN() != N) Error("psiHphi: mismatched N");
 
-    Tensor L = phi.AA(1); 
-    L *= H.AA(1); 
-    L *= conj(primed(psi.AA(1)));
+    Tensor L = phi.A(1); 
+    L *= H.A(1); 
+    L *= conj(primed(psi.A(1)));
     for(int i = 2; i < N; ++i) 
         { 
-        L *= phi.AA(i); 
-        L *= H.AA(i); 
-        L *= conj(primed(psi.AA(i))); 
+        L *= phi.A(i); 
+        L *= H.A(i); 
+        L *= conj(primed(psi.A(i))); 
         }
-    L *= phi.AA(N); L *= H.AA(N);
+    L *= phi.A(N); L *= H.A(N);
 
-    BraKet(primed(psi.AA(N)),L,re,im);
+    BraKet(primed(psi.A(N)),L,re,im);
     }
 template <class MPSType, class MPOType>
 Real 
@@ -378,13 +378,17 @@ psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, cons
     {
     int N = psi.NN();
     if(N != phi.NN() || H.NN() < N) Error("mismatched N in psiHphi");
-    MPS psiconj(psi);
-    for(int i = 1; i <= N; ++i) 
-        psiconj.AAnc(i) = conj(primed(psi.AA(i)));
-    ITensor L = (LB.isNull() ? phi.AA(1) : LB * phi.AA(1));
-    L *= H.AA(1); L *= psiconj.AA(1);
+
+    ITensor L = (LB.isNull() ? phi.A(1) : LB * phi.A(1));
+    L *= H.A(1); 
+    L *= conj(primed(psi.A(1)));
     for(int i = 2; i <= N; ++i)
-        { L *= phi.AA(i); L *= H.AA(i); L *= psiconj.AA(i); }
+        { 
+        L *= phi.A(i); 
+        L *= H.A(i); 
+        L *= conj(primed(psi.A(i))); 
+        }
+
     if(!RB.isNull()) L *= RB;
     if(L.isComplex())
         {
@@ -416,22 +420,22 @@ psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real
     IQMPS psiconj(psi);
     for(int i = 1; i <= N; i++)
         {
-        psiconj.AAnc(i) = conj(psi.AA(i));
-        psiconj.AAnc(i).mapprime(0,2);
+        psiconj.Aref(i) = conj(psi.A(i));
+        psiconj.Aref(i).mapprime(0,2);
         }
     IQMPO Kp(K);
     Kp.mapprime(1,2);
     Kp.mapprime(0,1);
 
     //scales as m^2 k^2 d
-    IQTensor L = (((phi.AA(1) * H.AA(1)) * Kp.AA(1)) * psiconj.AA(1));
+    IQTensor L = (((phi.A(1) * H.A(1)) * Kp.A(1)) * psiconj.A(1));
     for(int i = 2; i < N; i++)
         {
         //scales as m^3 k^2 d + m^2 k^3 d^2
-        L = ((((L * phi.AA(i)) * H.AA(i)) * Kp.AA(i)) * psiconj.AA(i));
+        L = ((((L * phi.A(i)) * H.A(i)) * Kp.A(i)) * psiconj.A(i));
         }
     //scales as m^2 k^2 d
-    L = ((((L * phi.AA(N)) * H.AA(N)) * Kp.AA(N)) * psiconj.AA(N)) * IQTensor::Sing();
+    L = ((((L * phi.A(N)) * H.A(N)) * Kp.A(N)) * psiconj.A(N)) * IQTensor::Sing();
     //cout << "in psiHKpsi, L is "; PrintDat(L);
     L.GetSingComplex(re,im);
     }

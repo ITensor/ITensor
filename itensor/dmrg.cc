@@ -22,7 +22,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
     if(finalham.isComplex() && !psi.isComplex())
     {
-        for(int i = 1; i <= N; ++i) psi.AAnc(i) = psi.AA(i)*ITensor::Complex_1();
+        for(int i = 1; i <= N; ++i) psi.Aref(i) = psi.A(i)*ITensor::Complex_1();
     }
 
     vector<ITensor> leftright(N+1);
@@ -30,22 +30,22 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
     MPS psiconj(psi);
     for(int i = 1; i <= finalham.NN(); i++)
 	{
-        psiconj.AAnc(i) = conj(psi.AA(i)); 
-        psiconj.AAnc(i).prime(primeBoth);
+        psiconj.Aref(i) = conj(psi.A(i)); 
+        psiconj.Aref(i).prime(primeBoth);
 	}
 
-    leftright[N-1] = psi.AA(N) * finalham.AA(N) * psiconj.AA(N);
+    leftright[N-1] = psi.A(N) * finalham.A(N) * psiconj.A(N);
 
     for(int l = N-2; l >= 2; l--)
-	leftright[l] = leftright[l+1] * psi.AA(l+1) * finalham.AA(l+1) * 
-		    psiconj.AA(l+1);
+	leftright[l] = leftright[l+1] * psi.A(l+1) * finalham.A(l+1) * 
+		    psiconj.A(l+1);
 
     for(unsigned int o = 0; o < other.size(); o++)
 	{
         lrother[o].resize(N);
-        lrother[o][N-1] = conj(psi.AA(N))* other[o].AA(N);
+        lrother[o][N-1] = conj(psi.A(N))* other[o].A(N);
         for(int l = N-2; l >= 2; l--)
-            lrother[o][l] = lrother[o][l+1] * conj(psi.AA(l+1)) * other[o].AA(l+1);
+            lrother[o][l] = lrother[o][l+1] * conj(psi.A(l+1)) * other[o].A(l+1);
 	}
 
     for(int sw = 1; sw <= sweeps.nsweep(); sw++)
@@ -58,9 +58,9 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             {
             cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
 
-            ITensor mpoh = finalham.AA(l) * finalham.AA(l+1);
+            ITensor mpoh = finalham.A(l) * finalham.A(l+1);
 
-            ITensor phi = psi.AA(l) * psi.AA(l+1);
+            ITensor phi = psi.A(l) * psi.A(l+1);
 
             int dim = phi.vecSize();
             Matrix evecs(sweeps.niter(sw),dim);
@@ -75,17 +75,17 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             if(l == 1)
             {
                 for(unsigned int o = 0; o < other.size(); o++)
-                    lham.other[o] = other[o].AA(l) * other[o].AA(l+1) * lrother[o][l+1];
+                    lham.other[o] = other[o].A(l) * other[o].A(l+1) * lrother[o][l+1];
             }
             else if(l == N-1)
             {
                 for(unsigned int o = 0; o < other.size(); o++)
-                    lham.other[o] = lrother[o][l] * other[o].AA(l) * other[o].AA(l+1);
+                    lham.other[o] = lrother[o][l] * other[o].A(l) * other[o].A(l+1);
             }
             else 
             {
                 for(unsigned int o = 0; o < other.size(); o++)
-                    lham.other[o] = lrother[o][l] * other[o].AA(l) * other[o].AA(l+1) * lrother[o][l+1];
+                    lham.other[o] = lrother[o][l] * other[o].A(l) * other[o].A(l+1) * lrother[o][l+1];
             }
             David(lham,1,1e-4,evals,evecs,1,1,debuglevel);
 
@@ -94,8 +94,8 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
             psi.doSVD(l,phi,(ha==1 ? Fromleft : Fromright));
 
-            psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).prime(primeBoth);
-            psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).prime(primeBoth);
+            psiconj.Aref(l) = conj(psi.A(l)); psiconj.Aref(l).prime(primeBoth);
+            psiconj.Aref(l+1) = conj(psi.A(l+1)); psiconj.Aref(l+1).prime(primeBoth);
 
             Index ll = psi.LinkInd(l);
             cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m();
@@ -129,31 +129,31 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
             {
                 if(l == 1)
                 {
-                    leftright[2] = psi.AA(1) * finalham.AA(1) * psiconj.AA(1);
+                    leftright[2] = psi.A(1) * finalham.A(1) * psiconj.A(1);
                     for(unsigned int o = 0; o < other.size(); o++)
-                        lrother[o][2] = conj(psi.AA(1)) * other[o].AA(1);
+                        lrother[o][2] = conj(psi.A(1)) * other[o].A(1);
                 }
                 else if(l != N-1)
                 {
-                    leftright[l+1] = leftright[l] * psi.AA(l) * finalham.AA(l) * psiconj.AA(l);
+                    leftright[l+1] = leftright[l] * psi.A(l) * finalham.A(l) * psiconj.A(l);
                     for(unsigned int o = 0; o < other.size(); o++)
-                        lrother[o][l+1] = lrother[o][l] * conj(psi.AA(l)) * other[o].AA(l);
+                        lrother[o][l+1] = lrother[o][l] * conj(psi.A(l)) * other[o].A(l);
                 }
             }
             else
             {
             if(l == N-1)
             {
-                leftright[l] = psi.AA(N) * finalham.AA(N) * psiconj.AA(N);
+                leftright[l] = psi.A(N) * finalham.A(N) * psiconj.A(N);
                 for(unsigned int o = 0; o < other.size(); o++)
-                    lrother[o][l] = conj(psi.AA(N)) * other[o].AA(N);
+                    lrother[o][l] = conj(psi.A(N)) * other[o].A(N);
             }
             else if(l != 1)
             {
-                leftright[l] = leftright[l+1] * psi.AA(l+1) * finalham.AA(l+1) * 
-                    psiconj.AA(l+1);
+                leftright[l] = leftright[l+1] * psi.A(l+1) * finalham.A(l+1) * 
+                    psiconj.A(l+1);
                 for(unsigned int o = 0; o < other.size(); o++)
-                    lrother[o][l] = lrother[o][l+1] * conj(psi.AA(l+1)) * other[o].AA(l+1);
+                    lrother[o][l] = lrother[o][l+1] * conj(psi.A(l+1)) * other[o].A(l+1);
             }
             }
 
@@ -196,14 +196,14 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
 
     if(H[0].isComplex() && !psi.isComplex())
     {
-        for(int i = 1; i <= N; ++i) psi.AAnc(i) = psi.AA(i)*ITensor::Complex_1();
+        for(int i = 1; i <= N; ++i) psi.Aref(i) = psi.A(i)*ITensor::Complex_1();
     }
 
     MPS psiconj(psi);
     for(int i = 1; i <= H[0].NN(); i++)
 	{
-        psiconj.AAnc(i) = conj(psi.AA(i));
-        psiconj.AAnc(i).prime(primeBoth);
+        psiconj.Aref(i) = conj(psi.A(i));
+        psiconj.Aref(i).prime(primeBoth);
 	}
 
     vector< vector<ITensor> > leftright(N+1);
@@ -211,10 +211,10 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
 
     for(int n = 0; n < NH; ++n)
     {
-        leftright[N-1][n] = psi.AA(N) * H[n].AA(N) * psiconj.AA(N);
+        leftright[N-1][n] = psi.A(N) * H[n].A(N) * psiconj.A(N);
 
         for(int l = N-2; l >= 2; l--)
-            leftright[l][n] = leftright[l+1][n] * psi.AA(l+1) * H[n].AA(l+1) * psiconj.AA(l+1);
+            leftright[l][n] = leftright[l+1][n] * psi.A(l+1) * H[n].A(l+1) * psiconj.A(l+1);
     }
 
     vector<ITensor> mpoh(NH);
@@ -231,17 +231,17 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
 
             for(int n = 0; n < NH; ++n) 
             {
-                mpoh[n] = H[n].AA(l) * H[n].AA(l+1);
+                mpoh[n] = H[n].A(l) * H[n].A(l+1);
             }
 
-            ITensor phi = psi.AA(l) * psi.AA(l+1);
+            ITensor phi = psi.A(l) * psi.A(l+1);
 
             energy = doDavidson(phi,mpoh,leftright[l],leftright[l+1],sweeps.niter(sw),debuglevel,1e-4);
 
-            do_denmat_Real(phi,psi.AAnc(l),psi.AAnc(l+1),sweeps.cutoff(sw),sweeps.minm(sw),sweeps.maxm(sw),(ha==1 ? Fromleft : Fromright));
+            do_denmat_Real(phi,psi.Aref(l),psi.Aref(l+1),sweeps.cutoff(sw),sweeps.minm(sw),sweeps.maxm(sw),(ha==1 ? Fromleft : Fromright));
 
-            psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).prime(primeBoth);
-            psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).prime(primeBoth);
+            psiconj.Aref(l) = conj(psi.A(l)); psiconj.Aref(l).prime(primeBoth);
+            psiconj.Aref(l+1) = conj(psi.A(l+1)); psiconj.Aref(l+1).prime(primeBoth);
 
             Index ll = psi.LinkInd(l);
             if(!opts.quiet()) 
@@ -289,9 +289,9 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
                 for(int n = 0; n < NH; ++n)
                 {
                 if(l == 1)
-                    leftright[2][n] = psi.AA(1) * H[n].AA(1) * psiconj.AA(1);
+                    leftright[2][n] = psi.A(1) * H[n].A(1) * psiconj.A(1);
                 else if(l != N-1)
-                    leftright[l+1][n] = leftright[l][n] * psi.AA(l) * H[n].AA(l) * psiconj.AA(l);
+                    leftright[l+1][n] = leftright[l][n] * psi.A(l) * H[n].A(l) * psiconj.A(l);
                 }
             }
             else
@@ -299,9 +299,9 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
                 for(int n = 0; n < NH; ++n)
                 {
                 if(l == N-1)
-                    leftright[l][n] = psi.AA(N) * H[n].AA(N) * psiconj.AA(N);
+                    leftright[l][n] = psi.A(N) * H[n].A(N) * psiconj.A(N);
                 else if(l != 1)
-                    leftright[l][n] = leftright[l+1][n] * psi.AA(l+1) * H[n].AA(l+1) * psiconj.AA(l+1);
+                    leftright[l][n] = leftright[l+1][n] * psi.A(l+1) * H[n].A(l+1) * psiconj.A(l+1);
                 }
             }
 
@@ -343,27 +343,27 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
 
     psi.position(1,preserve_edgelink);
 
-    if(H.isComplex()) psi.AAnc(1) *= ITensor::Complex_1();
+    if(H.isComplex()) psi.Aref(1) *= ITensor::Complex_1();
 
     MPS psiconj(psi);
     for(int i = 1; i <= psi.NN(); i++)
 	{
-        psiconj.AAnc(i) = conj(psi.AA(i));
-        psiconj.AAnc(i).prime(primeBoth);
+        psiconj.Aref(i) = conj(psi.A(i));
+        psiconj.Aref(i).prime(primeBoth);
 	}
 
     vector<ITensor> leftright(N);
-    if(useright) leftright[N-1] = RB * psi.AA(N); 
-    else         leftright[N-1] = psi.AA(N);
-    leftright[N-1] *= H.AA(N);
-    leftright[N-1] *= psiconj.AA(N);
+    if(useright) leftright[N-1] = RB * psi.A(N); 
+    else         leftright[N-1] = psi.A(N);
+    leftright[N-1] *= H.A(N);
+    leftright[N-1] *= psiconj.A(N);
 
     for(int l = N-2; l >= 2; l--)
     {
         leftright[l] = leftright[l+1]; 
-        leftright[l] *= psi.AA(l+1);
-        leftright[l] *= H.AA(l+1);
-        leftright[l] *= psiconj.AA(l+1);
+        leftright[l] *= psi.A(l+1);
+        leftright[l] *= H.A(l+1);
+        leftright[l] *= psiconj.A(l+1);
     }
 
     for(int sw = 1; sw <= sweeps.nsweep(); sw++)
@@ -377,9 +377,9 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
         {
             if(!opts.quiet()) cout << boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)\n") % sw % ha % l % (l+1);
 
-            ITensor mpoh = H.AA(l) * H.AA(l+1);
+            ITensor mpoh = H.A(l) * H.A(l+1);
 
-            ITensor phi = psi.AA(l) * psi.AA(l+1);
+            ITensor phi = psi.A(l) * psi.A(l+1);
 
             energy = doDavidson(phi,mpoh,leftright[l],leftright[l+1],sweeps.niter(sw),debuglevel,1e-4);
 
@@ -388,13 +388,13 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
             //{
             //    const ITensor& B = (l == 1 ? LB : RB);
             //    const int s = (l==1 ? 1 : psi.NN());
-            //    ITensor newA(psi.AA(s).findtype(Site),index_in_common(psi.AA(s),B,Link));
+            //    ITensor newA(psi.A(s).findtype(Site),index_in_common(psi.A(s),B,Link));
             //}
 
             psi.doSVD(l,phi,(ha==1 ? Fromleft : Fromright));
 
-            psiconj.AAnc(l) = conj(psi.AA(l)); psiconj.AAnc(l).prime(primeBoth);
-            psiconj.AAnc(l+1) = conj(psi.AA(l+1)); psiconj.AAnc(l+1).prime(primeBoth);
+            psiconj.Aref(l) = conj(psi.A(l)); psiconj.Aref(l).prime(primeBoth);
+            psiconj.Aref(l+1) = conj(psi.A(l+1)); psiconj.Aref(l+1).prime(primeBoth);
 
             Index ll = psi.LinkInd(l);
             if(!opts.quiet()) 
@@ -438,34 +438,34 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
             {
                 if(l == 1)
                 {
-                    if(useleft) leftright[2] = LB * psi.AA(1); 
-                    else        leftright[2] = psi.AA(1); 
-                    leftright[2] *= H.AA(1);
-                    leftright[2] *= psiconj.AA(1);
+                    if(useleft) leftright[2] = LB * psi.A(1); 
+                    else        leftright[2] = psi.A(1); 
+                    leftright[2] *= H.A(1);
+                    leftright[2] *= psiconj.A(1);
                 }
                 else if(l != N-1)
                 {
                     leftright[l+1] = leftright[l]; 
-                    leftright[l+1] *= psi.AA(l); 
-                    leftright[l+1] *= H.AA(l); 
-                    leftright[l+1] *= psiconj.AA(l);
+                    leftright[l+1] *= psi.A(l); 
+                    leftright[l+1] *= H.A(l); 
+                    leftright[l+1] *= psiconj.A(l);
                 }
             }
             else
             {
                 if(l == N-1)
                 {
-                    if(useright) leftright[l] = RB * psi.AA(N); 
-                    else         leftright[l] = psi.AA(N); 
-                    leftright[l] *= H.AA(N);
-                    leftright[l] *= psiconj.AA(N);
+                    if(useright) leftright[l] = RB * psi.A(N); 
+                    else         leftright[l] = psi.A(N); 
+                    leftright[l] *= H.A(N);
+                    leftright[l] *= psiconj.A(N);
                 }
                 else if(l != 1)
                 {
                     leftright[l] = leftright[l+1];
-                    leftright[l] *= psi.AA(l+1);
-                    leftright[l] *= H.AA(l+1);
-                    leftright[l] *= psiconj.AA(l+1);
+                    leftright[l] *= psi.A(l+1);
+                    leftright[l] *= H.A(l+1);
+                    leftright[l] *= psiconj.A(l+1);
                 }
             }
 

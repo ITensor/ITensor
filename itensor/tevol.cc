@@ -722,7 +722,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 W.svd(bond,A,D,B);
                 //Print(A);
 
-                psi.AAnc(j) = A;
+                psi.Aref(j) = A;
                 ++j;
 
                 bond = D*B;
@@ -730,7 +730,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
 
             if(g == Ng)
                 {
-                psi.AAnc(j) = bond;
+                psi.Aref(j) = bond;
                 psi.leftLim(N-1);
                 psi.rightLim(N+1);
                 }
@@ -740,7 +740,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 }
             }
         //Real nm2 = Dot(psi.AA(N),psi.AA(N));
-        //psi.AAnc(N) *= 1./sqrt(nm2);
+        //psi.Aref(N) *= 1./sqrt(nm2);
         }
     else
         {
@@ -774,7 +774,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 W.svd(bond,A,D,B);
                 //Print(A);
 
-                psi.AAnc(j) = B;
+                psi.Aref(j) = B;
                 --j;
 
                 bond = A*D;
@@ -782,7 +782,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
 
             if(g == 1)
                 {
-                psi.AAnc(j) = bond;
+                psi.Aref(j) = bond;
                 psi.leftLim(0);
                 psi.rightLim(2);
                 }
@@ -792,7 +792,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 }
             }
         //Real nm2 = Dot(psi.AA(1),psi.AA(1));
-        //psi.AAnc(1) *= 1./sqrt(nm2);
+        //psi.Aref(1) *= 1./sqrt(nm2);
         }
 
     } // imagTEvol

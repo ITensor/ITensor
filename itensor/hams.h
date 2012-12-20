@@ -63,14 +63,16 @@ class HamBuilder
         {
         newlinks(currentlinks);
         res = MPOt<ITensor>(mod,res.maxm(),res.cutoff());
-        res.AAnc(1) = mod.id(1); res.AAnc(1).addindex1(GET(currentlinks,1));
-        res.AAnc(1) *= factor;
-        res.AAnc(N) = mod.id(N); res.AAnc(N).addindex1(GET(currentlinks,N-1));
+        res.Aref(1) = mod.id(1); 
+        res.Aref(1).addindex1(GET(currentlinks,1));
+        res.Aref(1) *= factor;
+        res.Aref(N) = mod.id(N); 
+        res.Aref(N).addindex1(GET(currentlinks,N-1));
         for(int i = 2; i < N; ++i)
             {
-            res.AAnc(i) = mod.id(i);
-            res.AAnc(i).addindex1(GET(currentlinks,i-1));
-            res.AAnc(i).addindex1(GET(currentlinks,i));
+            res.Aref(i) = mod.id(i);
+            res.Aref(i).addindex1(GET(currentlinks,i-1));
+            res.Aref(i).addindex1(GET(currentlinks,i));
             }
         }
 
@@ -78,9 +80,9 @@ class HamBuilder
     getMPO(Real factor, int i, Tensor op, MPOt<ITensor>& res)
         {
         getidentity(1,res);
-        res.AAnc(i) = op;
-        if(i > 1) res.AAnc(i).addindex1(GET(currentlinks,i-1));
-        if(i < N) res.AAnc(i).addindex1(GET(currentlinks,i));
+        res.Aref(i) = op;
+        if(i > 1) res.Aref(i).addindex1(GET(currentlinks,i-1));
+        if(i < N) res.Aref(i).addindex1(GET(currentlinks,i));
         res *= factor;
         }
 
@@ -89,9 +91,9 @@ class HamBuilder
         {
         if(i1 == i2) Error("HamBuilder::getMPO: i1 cannot equal i2.");
         getMPO(1,i2,op2,res);
-        res.AAnc(i1) = op1;
-        if(i1 > 1) res.AAnc(i1).addindex1(GET(currentlinks,i1-1));
-        if(i1 < N) res.AAnc(i1).addindex1(GET(currentlinks,i1));
+        res.Aref(i1) = op1;
+        if(i1 > 1) res.Aref(i1).addindex1(GET(currentlinks,i1-1));
+        if(i1 < N) res.Aref(i1).addindex1(GET(currentlinks,i1));
         res *= factor;
         }
 
@@ -111,10 +113,10 @@ class HamBuilder
         for(int i = 0; i < (int) sites.size(); ++i)
             {
             const int s = sites[i];
-            res.AAnc(s) = ops.at(i);
+            res.Aref(s) = ops.at(i);
             //assert(GET(ops,i).hasindex(si(sites[i])));
-            if(s > 1) res.AAnc(s).addindex1(GET(currentlinks,s-1));
-            if(s < N) res.AAnc(s).addindex1(GET(currentlinks,s));
+            if(s > 1) res.Aref(s).addindex1(GET(currentlinks,s-1));
+            if(s < N) res.Aref(s).addindex1(GET(currentlinks,s));
             }
         res *= factor;
         }
@@ -172,7 +174,7 @@ public:
             W(1,3,11,10) = -K/2;                                               //-K/4 S+^2
             W(1,1,11,11) = 1.0;   W(2,2,11,11) = 1.0;   W(3,3,11,11) = 1.0;    //Ident in lr corner
 
-            H.AAnc(n) = W;
+            H.Aref(n) = W;
         }
 
         Ledge = makeLedge(links[0]);
@@ -184,8 +186,8 @@ public:
         ITensor Ledge,Redge;
         getIMPO(J,K,H,Ledge,Redge);
         
-        H.AAnc(1) = Ledge * H.AA(1);
-        H.AAnc(Ns) = H.AA(Ns) * Redge;
+        H.Aref(1) = Ledge * H.AA(1);
+        H.Aref(Ns) = H.AA(Ns) * Redge;
     }
 
 }; //class BBChain

@@ -286,8 +286,8 @@ product(const Tensor& phi, Tensor& phip) const
     if(Psi_ != 0)
         {
         int b = position();
-        Tensor othr = (L().isNull() ? primed(Psi_->AA(b),Link) : L()*primed(Psi_->AA(b),Link));
-        othr *= primed(Psi_->AA(b+1),Link);
+        Tensor othr = (L().isNull() ? primed(Psi_->A(b),Link) : L()*primed(Psi_->A(b),Link));
+        othr *= primed(Psi_->A(b+1),Link);
         if(R().isNotNull()) 
             othr *= R();
 
@@ -379,7 +379,7 @@ position(int b, const MPSType& psi)
 
     if(Op_ != 0) //normal MPO case
         {
-        lop_.update(Op_->AA(b),Op_->AA(b+1),L(),R());
+        lop_.update(Op_->A(b),Op_->A(b+1),L(),R());
         }
     }
 
@@ -417,7 +417,7 @@ shift(int j, Direction dir, const Tensor& A)
         Tensor& E = PH_.at(LHlim_);
         Tensor& nE = PH_.at(j);
         nE = E * A;
-        nE *= Op_->AA(j);
+        nE *= Op_->A(j);
         nE *= conj(primed(A));
         setLHlim(j);
         setRHlim(j+nc_+1);
@@ -428,7 +428,7 @@ shift(int j, Direction dir, const Tensor& A)
         //PrintIndices(R());
 #endif
 
-        lop_.update(Op_->AA(j+1),Op_->AA(j+2),L(),R());
+        lop_.update(Op_->A(j+1),Op_->A(j+2),L(),R());
         }
     else //dir == Fromright
         {
@@ -440,12 +440,12 @@ shift(int j, Direction dir, const Tensor& A)
         Tensor& E = PH_.at(RHlim_);
         Tensor& nE = PH_.at(j);
         nE = E * A;
-        nE *= Op_->AA(j);
+        nE *= Op_->A(j);
         nE *= conj(primed(A));
         setLHlim(j-nc_-1);
         setRHlim(j);
 
-        lop_.update(Op_->AA(j-1),Op_->AA(j),L(),R());
+        lop_.update(Op_->A(j-1),Op_->A(j),L(),R());
         }
     }
 
@@ -461,8 +461,8 @@ makeL(const MPSType& psi, int k)
             while(LHlim_ < k)
                 {
                 const int ll = LHlim_;
-                PH_.at(ll+1) = (PH_.at(ll).isNull() ? conj(psi.AA(ll+1)) : PH_[ll]*conj(psi.AA(ll+1)));
-                PH_[ll+1] *= primed(Psi_->AA(ll+1),Link);
+                PH_.at(ll+1) = (PH_.at(ll).isNull() ? conj(psi.A(ll+1)) : PH_[ll]*conj(psi.A(ll+1)));
+                PH_[ll+1] *= primed(Psi_->A(ll+1),Link);
                 setLHlim(LHlim_+1);
                 }
             }
@@ -471,7 +471,7 @@ makeL(const MPSType& psi, int k)
             while(LHlim_ < k)
                 {
                 const int ll = LHlim_;
-                psi.projectOp(ll+1,Fromleft,PH_.at(ll),Op_->AA(ll+1),PH_.at(ll+1));
+                psi.projectOp(ll+1,Fromleft,PH_.at(ll),Op_->A(ll+1),PH_.at(ll+1));
                 setLHlim(LHlim_+1);
                 }
             }
@@ -490,8 +490,8 @@ makeR(const MPSType& psi, int k)
             while(RHlim_ > k)
                 {
                 const int rl = RHlim_;
-                PH_.at(rl-1) = (PH_.at(rl).isNull() ? conj(psi.AA(rl-1)) : PH_[rl]*conj(psi.AA(rl-1)));
-                PH_[rl-1] *= primed(Psi_->AA(rl-1),Link);
+                PH_.at(rl-1) = (PH_.at(rl).isNull() ? conj(psi.A(rl-1)) : PH_[rl]*conj(psi.A(rl-1)));
+                PH_[rl-1] *= primed(Psi_->A(rl-1),Link);
                 setRHlim(RHlim_-1);
                 }
             }
@@ -500,7 +500,7 @@ makeR(const MPSType& psi, int k)
             while(RHlim_ > k)
                 {
                 const int rl = RHlim_;
-                psi.projectOp(rl-1,Fromright,PH_.at(rl),Op_->AA(rl-1),PH_.at(rl-1));
+                psi.projectOp(rl-1,Fromright,PH_.at(rl),Op_->A(rl-1),PH_.at(rl-1));
                 setRHlim(RHlim_-1);
                 }
             }
