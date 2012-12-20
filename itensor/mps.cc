@@ -97,7 +97,7 @@ MPSt(const Model& model, std::istream& s);
 
 template <class Tensor>
 Tensor& MPSt<Tensor>::
-Aref(int i)
+Anc(int i)
     { 
     setSite(i);
     if(i <= l_orth_lim_) l_orth_lim_ = i-1;
@@ -106,9 +106,9 @@ Aref(int i)
     return A_.at(i); 
     }
 template
-ITensor& MPSt<ITensor>::Aref(int i);
+ITensor& MPSt<ITensor>::Anc(int i);
 template
-IQTensor& MPSt<IQTensor>::Aref(int i);
+IQTensor& MPSt<IQTensor>::Anc(int i);
 
 template <class Tensor>
 Tensor MPSt<Tensor>::
@@ -526,13 +526,13 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
         plussers(l1,l2,r,first[i],second[i]);
         }
 
-    Aref(1) = A(1) * first[1] + other.A(1) * second[1];
+    Anc(1) = A(1) * first[1] + other.A(1) * second[1];
     for(int i = 2; i < N_; ++i)
         {
-        Aref(i) = conj(first[i-1]) * A(i) * first[i] 
+        Anc(i) = conj(first[i-1]) * A(i) * first[i] 
                   + conj(second[i-1]) * other.A(i) * second[i];
         }
-    Aref(N) = conj(first[N-1]) * A(N) + conj(second[N-1]) * other.A(N);
+    Anc(N) = conj(first[N-1]) * A(N) + conj(second[N-1]) * other.A(N);
 
     noprimelink();
 
@@ -606,13 +606,13 @@ addNoOrth(const MPSt<Tensor>& other_)
         plussers(l1,l2,r,first[i],second[i]);
         }
 
-    Aref(1) = A(1) * first[1] + other_.A(1) * second[1];
+    Anc(1) = A(1) * first[1] + other_.A(1) * second[1];
     for(int i = 2; i < N_; ++i)
         {
-        Aref(i) = conj(first[i-1]) * A(i) * first[i] 
+        Anc(i) = conj(first[i-1]) * A(i) * first[i] 
                   + conj(second[i-1]) * other_.A(i) * second[i];
         }
-    Aref(N_) = conj(first[N_-1]) * A(N_) + conj(second[N_-1]) * other_.A(N_);
+    Anc(N_) = conj(first[N_-1]) * A(N_) + conj(second[N_-1]) * other_.A(N_);
 
     noprimelink();
 
@@ -1345,20 +1345,20 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
         }
         if(s == 1)
         {
-            iqpsi.Aref(s) = (is_mpo ? IQTensor(conj(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
+            iqpsi.Anc(s) = (is_mpo ? IQTensor(conj(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
         }
         else if(s == N)
         {
-            iqpsi.Aref(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s)) 
+            iqpsi.Anc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s)) 
                                     : IQTensor(conj(linkind[s-1]),si(s)));
         }
         else
         {
-            iqpsi.Aref(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s),linkind[s]) 
+            iqpsi.Anc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s),linkind[s]) 
                                     : IQTensor(conj(linkind[s-1]),si(s),linkind[s]));
         }
 
-        Foreach(const ITensor& nb, nblock) { iqpsi.Aref(s) += nb; } nblock.clear();
+        Foreach(const ITensor& nb, nblock) { iqpsi.Anc(s) += nb; } nblock.clear();
 
         if(0) //try to get this working ideally
         if(!is_mpo && s > 1) 
@@ -1498,5 +1498,5 @@ fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
     A.noprime();
 
     psi_to_fit = psi_basis;
-    psi_to_fit.Aref(1) = A;
+    psi_to_fit.Anc(1) = A;
     }

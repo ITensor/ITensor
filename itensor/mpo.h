@@ -73,7 +73,7 @@ class MPOt : private MPSt<Tensor>
     using Parent::leftLim;
 
     using Parent::A;
-    using Parent::Aref;
+    using Parent::Anc;
     using Parent::bondTensor;
 
     using Parent::doWrite;
@@ -141,9 +141,9 @@ class MPOt : private MPSt<Tensor>
         {
         for(int i = 1; i <= this->N(); i++)
             {
-            Aref(i).mapprime(0,1,Link);
-            Aref(i).mapprime(1,2,Site);
-            Aref(i).mapprime(0,1,Site);
+            Anc(i).mapprime(0,1,Link);
+            Anc(i).mapprime(1,2,Site);
+            Anc(i).mapprime(0,1,Site);
             }
         }
 
@@ -321,8 +321,8 @@ psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real
     IQMPS psiconj(psi);
     for(int i = 1; i <= N; i++)
         {
-        psiconj.Aref(i) = conj(psi.A(i));
-        psiconj.Aref(i).mapprime(0,2);
+        psiconj.Anc(i) = conj(psi.A(i));
+        psiconj.Anc(i).mapprime(0,2);
         }
     IQMPO Kp(K);
     Kp.mapprime(1,2);

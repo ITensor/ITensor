@@ -22,7 +22,7 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
     if(finalham.isComplex() && !psi.isComplex())
     {
-        for(int i = 1; i <= N; ++i) psi.Aref(i) = psi.A(i)*ITensor::Complex_1();
+        for(int i = 1; i <= N; ++i) psi.Anc(i) = psi.A(i)*ITensor::Complex_1();
     }
 
     vector<ITensor> leftright(N+1);
@@ -30,8 +30,8 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
     MPS psiconj(psi);
     for(int i = 1; i <= finalham.N(); i++)
 	{
-        psiconj.Aref(i) = conj(psi.A(i)); 
-        psiconj.Aref(i).prime(primeBoth);
+        psiconj.Anc(i) = conj(psi.A(i)); 
+        psiconj.Anc(i).prime(primeBoth);
 	}
 
     leftright[N-1] = psi.A(N) * finalham.A(N) * psiconj.A(N);
@@ -94,8 +94,8 @@ Real dmrg(MPS& psi, const MPO& finalham, const Sweeps& sweeps, const vector<MPS>
 
             psi.doSVD(l,phi,(ha==1 ? Fromleft : Fromright));
 
-            psiconj.Aref(l) = conj(psi.A(l)); psiconj.Aref(l).prime(primeBoth);
-            psiconj.Aref(l+1) = conj(psi.A(l+1)); psiconj.Aref(l+1).prime(primeBoth);
+            psiconj.Anc(l) = conj(psi.A(l)); psiconj.Anc(l).prime(primeBoth);
+            psiconj.Anc(l+1) = conj(psi.A(l+1)); psiconj.Anc(l+1).prime(primeBoth);
 
             Index ll = psi.LinkInd(l);
             cout << boost::format("    Truncated to Cutoff=%.1E, Max_m=%d, m=%d\n") % sweeps.cutoff(sw) % sweeps.maxm(sw) % ll.m();
@@ -196,14 +196,14 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
 
     if(H[0].isComplex() && !psi.isComplex())
     {
-        for(int i = 1; i <= N; ++i) psi.Aref(i) = psi.A(i)*ITensor::Complex_1();
+        for(int i = 1; i <= N; ++i) psi.Anc(i) = psi.A(i)*ITensor::Complex_1();
     }
 
     MPS psiconj(psi);
     for(int i = 1; i <= H[0].N(); i++)
 	{
-        psiconj.Aref(i) = conj(psi.A(i));
-        psiconj.Aref(i).prime(primeBoth);
+        psiconj.Anc(i) = conj(psi.A(i));
+        psiconj.Anc(i).prime(primeBoth);
 	}
 
     vector< vector<ITensor> > leftright(N+1);
@@ -238,10 +238,10 @@ Real dmrg(MPS& psi, const vector<MPO>& H, const Sweeps& sweeps, DMRGOpts& obs)
 
             energy = doDavidson(phi,mpoh,leftright[l],leftright[l+1],sweeps.niter(sw),debuglevel,1e-4);
 
-            do_denmat_Real(phi,psi.Aref(l),psi.Aref(l+1),sweeps.cutoff(sw),sweeps.minm(sw),sweeps.maxm(sw),(ha==1 ? Fromleft : Fromright));
+            do_denmat_Real(phi,psi.Anc(l),psi.Anc(l+1),sweeps.cutoff(sw),sweeps.minm(sw),sweeps.maxm(sw),(ha==1 ? Fromleft : Fromright));
 
-            psiconj.Aref(l) = conj(psi.A(l)); psiconj.Aref(l).prime(primeBoth);
-            psiconj.Aref(l+1) = conj(psi.A(l+1)); psiconj.Aref(l+1).prime(primeBoth);
+            psiconj.Anc(l) = conj(psi.A(l)); psiconj.Anc(l).prime(primeBoth);
+            psiconj.Anc(l+1) = conj(psi.A(l+1)); psiconj.Anc(l+1).prime(primeBoth);
 
             Index ll = psi.LinkInd(l);
             if(!opts.quiet()) 
@@ -343,13 +343,13 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
 
     psi.position(1,preserve_edgelink);
 
-    if(H.isComplex()) psi.Aref(1) *= ITensor::Complex_1();
+    if(H.isComplex()) psi.Anc(1) *= ITensor::Complex_1();
 
     MPS psiconj(psi);
     for(int i = 1; i <= psi.N(); i++)
 	{
-        psiconj.Aref(i) = conj(psi.A(i));
-        psiconj.Aref(i).prime(primeBoth);
+        psiconj.Anc(i) = conj(psi.A(i));
+        psiconj.Anc(i).prime(primeBoth);
 	}
 
     vector<ITensor> leftright(N);
@@ -393,8 +393,8 @@ ucdmrg(MPS& psi, const ITensor& LB, const ITensor& RB, const MPO& H, const Sweep
 
             psi.doSVD(l,phi,(ha==1 ? Fromleft : Fromright));
 
-            psiconj.Aref(l) = conj(psi.A(l)); psiconj.Aref(l).prime(primeBoth);
-            psiconj.Aref(l+1) = conj(psi.A(l+1)); psiconj.Aref(l+1).prime(primeBoth);
+            psiconj.Anc(l) = conj(psi.A(l)); psiconj.Anc(l).prime(primeBoth);
+            psiconj.Anc(l+1) = conj(psi.A(l+1)); psiconj.Anc(l+1).prime(primeBoth);
 
             Index ll = psi.LinkInd(l);
             if(!opts.quiet()) 

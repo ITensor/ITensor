@@ -155,7 +155,7 @@ class MPSt
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
     Tensor& 
-    Aref(int i);
+    Anc(int i); //nc stands for non-const
 
     const Model& 
     model() const { return *model_; }
@@ -256,7 +256,7 @@ class MPSt
     //
 
     MPSt& 
-    operator*=(Real a) { Aref(l_orth_lim_+1) *= a; return *this; }
+    operator*=(Real a) { Anc(l_orth_lim_+1) *= a; return *this; }
 
     MPSt 
     operator*(Real r) const { MPSt res(*this); res *= r; return res; }
@@ -442,7 +442,7 @@ class MPSt
     //Renamed to A
     //const Tensor& AA(int i) const;
 
-    //Renamed to Aref
+    //Renamed to Anc
     //Tensor& AAnc(int i);
 
     protected:
@@ -680,7 +680,7 @@ psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
 
     Tensor L = phi.A(1) * conj(primed(psi.A(1),psi.LinkInd(1))); 
 
-    for(int i = 2; i < psi.N(); ++i) 
+    for(int i = 2; i < N; ++i) 
         { 
         L = L * phi.A(i) * conj(primed(psi.A(i),Link)); 
         }
@@ -695,9 +695,8 @@ psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
     {
     Real re, im;
     psiphi(psi,phi,re,im);
-    if(im != 0) 
-	if(fabs(im) > 1.0e-12 * fabs(re))
-	    Cout << "Real psiphi: WARNING, dropping non-zero imaginary part of expectation value." << Endl;;
+    if(fabs(im) > (1E-12 * fabs(re)) )
+	    Cout << "Real psiphi: WARNING, dropping non-zero imaginary part of expectation value." << Endl;
     return re;
     }
 

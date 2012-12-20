@@ -353,7 +353,7 @@ Real onesitedmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, DMRGOptio
     Real energy;
 
     psi.position(1);
-    //if(H.isComplex()) psi.Aref(1) *= ITensor::Complex_1();
+    //if(H.isComplex()) psi.Anc(1) *= ITensor::Complex_1();
 
     std::vector<MPOTensor> LH(N+1);
     std::vector<MPOTensor> RH(N+1);

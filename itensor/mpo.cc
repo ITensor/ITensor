@@ -300,12 +300,12 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
             }
             */
 
-        svd.denmatDecomp(i,clust, res.Aref(i), nfork,Fromleft);
+        svd.denmatDecomp(i,clust, res.Anc(i), nfork,Fromleft);
 
         IndexT mid = index_in_common(res.A(i),nfork,Link);
         mid.conj();
         midsize[i] = mid.m();
-        res.Aref(i+1) = Tensor(mid,conj(res.si(i+1)),primed(res.si(i+1),2),res.RightLinkInd(i+1));
+        res.Anc(i+1) = Tensor(mid,conj(res.si(i+1)),primed(res.si(i+1),2),res.RightLinkInd(i+1));
         }
 
     nfork = clust * A.A(N) * B.A(N);
@@ -378,14 +378,14 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
         nfork = Tensor(psi.RightLinkInd(i),K.RightLinkInd(i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
-        svd.denmatDecomp(i,clust, res.Aref(i), nfork,Fromleft);
+        svd.denmatDecomp(i,clust, res.Anc(i), nfork,Fromleft);
         IndexT mid = index_in_common(res.A(i),nfork,Link);
         //assert(mid.dir() == In);
         mid.conj();
         midsize[i] = mid.m();
         maxdim = max(midsize[i],maxdim);
         assert(res.RightLinkInd(i+1).dir() == Out);
-        res.Aref(i+1) = Tensor(mid,primed(res.si(i+1)),res.RightLinkInd(i+1));
+        res.Anc(i+1) = Tensor(mid,primed(res.si(i+1)),res.RightLinkInd(i+1));
         }
     nfork = clust * psi.A(N) * K.A(N);
     //if(nfork.iten_size() == 0)	// this product gives 0 !!
@@ -421,12 +421,12 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
     if(&res != &x)
         res = x;
 
-    res.Aref(1) = x.A(1) * K.A(1);
+    res.Anc(1) = x.A(1) * K.A(1);
     for(int j = 1; j < N; ++j)
         {
         //cerr << boost::format("exact_applyMPO: step %d\n") % j;
         //Compute product of MPS tensor and MPO tensor
-        res.Aref(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
+        res.Anc(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
 
         //Add common IQIndices to IQCombiner
         CombinerT comb; 
@@ -440,8 +440,8 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
         comb.init(nameint("a",j));
 
         //Apply combiner to product tensors
-        res.Aref(j) = res.A(j) * comb; //m^3 k^3 d
-        res.Aref(j+1) = conj(comb) * res.A(j+1); //m^3 k^3 d
+        res.Anc(j) = res.A(j) * comb; //m^3 k^3 d
+        res.Anc(j+1) = conj(comb) * res.A(j+1); //m^3 k^3 d
         }
     res.mapprime(1,0,Site);
     res.orthogonalize();
@@ -466,7 +466,7 @@ expsmallH(const MPOt<Tensor>& H, MPOt<Tensor>& K,
     MPOt<Tensor> Hshift;
     hb.getMPO(Hshift,-Etot);
     Hshift += H;
-    Hshift.Aref(1) *= -tau;
+    Hshift.Anc(1) *= -tau;
 
     vector<MPOt<Tensor> > xx(2);
     hb.getMPO(xx.at(0),1.0);
@@ -479,7 +479,7 @@ expsmallH(const MPOt<Tensor>& H, MPOt<Tensor>& K,
     //
     for(int o = 50; o >= 1; --o)
         {
-        if(o > 1) xx[1].Aref(1) *= 1.0 / o;
+        if(o > 1) xx[1].Anc(1) *= 1.0 / o;
 
         Real errlim = 1E-14;
 

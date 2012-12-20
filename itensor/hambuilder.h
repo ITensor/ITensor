@@ -107,7 +107,7 @@ getMPO(MPOt<Tensor>& res, Real fac) const
     {
     initialize(res);
     putLinks(res);
-    res.Aref(1) *= fac;
+    res.Anc(1) *= fac;
     }
 
 template <class Tensor>
@@ -124,8 +124,8 @@ getMPO(int j1, const Tensor& op1,
         Error("Tensor does not have correct Site index");
         }
 #endif
-    res.Aref(j1) = op1;
-    res.Aref(j1) *= fac;
+    res.Anc(j1) = op1;
+    res.Anc(j1) *= fac;
     putLinks(res);
     }
 
@@ -150,9 +150,9 @@ getMPO(int j1, const Tensor& op1,
         Error("Tensor does not have correct Site index");
         }
 #endif
-    res.Aref(j1) = op1;
-    res.Aref(j2) = op2;
-    res.Aref(j1) *= fac;
+    res.Anc(j1) = op1;
+    res.Anc(j2) = op2;
+    res.Anc(j1) *= fac;
     putLinks(res);
     }
 
@@ -184,10 +184,10 @@ getMPO(int j1, const Tensor& op1,
         Error("Tensor does not have correct Site index");
         }
 #endif
-    res.Aref(j1) = op1;
-    res.Aref(j2) = op2;
-    res.Aref(j3) = op3;
-    res.Aref(j1) *= fac;
+    res.Anc(j1) = op1;
+    res.Anc(j2) = op2;
+    res.Anc(j3) = op3;
+    res.Anc(j1) *= fac;
     putLinks(res);
     }
 
@@ -226,11 +226,11 @@ getMPO(int j1, const Tensor& op1,
         Error("Tensor does not have correct Site index");
         }
 #endif
-    res.Aref(j1) = op1;
-    res.Aref(j2) = op2;
-    res.Aref(j3) = op3;
-    res.Aref(j4) = op4;
-    res.Aref(j1) *= fac;
+    res.Anc(j1) = op1;
+    res.Anc(j2) = op2;
+    res.Anc(j3) = op3;
+    res.Anc(j4) = op4;
+    res.Anc(j1) *= fac;
     putLinks(res);
     }
 
@@ -241,7 +241,7 @@ initialize(MPOt<Tensor>& res) const
     {
     res = MPOt<Tensor>(mod_);
     for(int j = 1; j <= N_; ++j)
-        res.Aref(j) = mod_.id(j);
+        res.Anc(j) = mod_.id(j);
     }
 
 
@@ -255,13 +255,13 @@ putLinks(MPOt<ITensor>& res) const
         boost::format nm = boost::format("h%d-%d") % ver % i;
         links.at(i) = Index(nm.str());
         }
-    res.Aref(1) *= links.at(1)(1);
+    res.Anc(1) *= links.at(1)(1);
     for(int i = 1; i < N_; ++i)
         {
-        res.Aref(i) *= links.at(i-1)(1);
-        res.Aref(i) *= links.at(i)(1);
+        res.Anc(i) *= links.at(i-1)(1);
+        res.Anc(i) *= links.at(i)(1);
         }
-    res.Aref(N_) *= links.at(N_-1)(1);
+    res.Anc(N_) *= links.at(N_-1)(1);
     }
 
 void inline HamBuilder::
@@ -280,13 +280,13 @@ putLinks(MPOt<IQTensor>& res) const
                              Index(nm.str()),q);
         }
 
-    res.Aref(1) *= links.at(1)(1);
+    res.Anc(1) *= links.at(1)(1);
     for(int i = 2; i < N_; ++i)
         {
-        res.Aref(i) *= conj(links.at(i-1)(1));
-        res.Aref(i) *= links.at(i)(1);
+        res.Anc(i) *= conj(links.at(i-1)(1));
+        res.Anc(i) *= links.at(i)(1);
         }
-    res.Aref(N_) *= conj(links.at(N_-1)(1));
+    res.Anc(N_) *= conj(links.at(N_-1)(1));
     }
 
 #endif

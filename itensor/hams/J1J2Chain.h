@@ -89,7 +89,7 @@ init()
     for(int j = 1; j <= N; ++j)
         {
         //Create j^th A (an IQTensor)
-        IQTensor &W = H.Aref(j);
+        IQTensor &W = H.Anc(j);
         IQIndex row = conj(iqlinks.at(j-1)),
                 col = iqlinks.at(j);
 
@@ -118,8 +118,8 @@ init()
         W += model_.sz(j) * row(6) * col(ds);
         }
 
-    H.Aref(1) *= IQTensor(iqlinks.at(0)(k));
-    H.Aref(N) *= IQTensor(conj(iqlinks.at(N)(ds)));
+    H.Anc(1) *= IQTensor(iqlinks.at(0)(k));
+    H.Anc(N) *= IQTensor(conj(iqlinks.at(N)(ds)));
 
     initted_ = true;
     }

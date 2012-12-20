@@ -76,7 +76,7 @@ init_()
 
     for(int n = 1; n <= Ns; ++n)
         {
-        ITensor& W = H.Aref(n);
+        ITensor& W = H.Anc(n);
         Index &row = links[n-1], &col = links[n];
 
         W = ITensor(model_.si(n),model_.siP(n),row,col);
@@ -135,8 +135,8 @@ init_()
             }
         }
 
-    H.Aref(1) *= ITensor(links.at(0)(k));
-    H.Aref(Ns) *= ITensor(links.at(Ns)(1));
+    H.Anc(1) *= ITensor(links.at(0)(k));
+    H.Anc(Ns) *= ITensor(links.at(Ns)(1));
 
     initted_ = true;
     }
