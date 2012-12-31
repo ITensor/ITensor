@@ -112,26 +112,43 @@ class LogNumber
     isnan(const LogNumber& L) { return std::isnan(L.lognum_); }
 
     //Default constructed to NAN 
-    //to signal initialization errors
+    //to catch initialization errors
     LogNumber() 
-        : lognum_(NAN), 
-          sign_(1) 
+        : 
+        lognum_(NAN), 
+        sign_(1) 
         { }
 
     LogNumber(Real r)
         {
         if(r == 0)
-            { sign_ = 0;  lognum_ = 0; }
-        else if(r < 0)
-            { sign_ = -1; lognum_ = log(-r); }
+            { 
+            sign_ = 0;  
+            lognum_ = 0; 
+            }
+        else 
+        if(r < 0)
+            { 
+            sign_ = -1; 
+            lognum_ = log(-r); 
+            }
         else
-            { sign_ = 1;  lognum_ = log(r); }
+            { 
+            sign_ = 1;  
+            lognum_ = log(r); 
+            }
         }
 
     LogNumber(Real lognum, int sign) 
-        : lognum_(lognum), 
-          sign_(sign) 
-        { } 
+        : 
+        lognum_(lognum), 
+        sign_(sign) 
+        { 
+#ifdef DEBUG
+        if(!(sign == -1 || sign == 0 || sign == 1))
+            Error("sign should be -1, 0, or 1");
+#endif
+        } 
 
     void 
     read(std::istream& s) 
@@ -259,7 +276,7 @@ class LogNumber
         lognum_ = other.lognum_;
         other.lognum_ = sl;
 
-        int si = sign_;
+        char si = sign_;
         sign_ = other.sign_;
         other.sign_ = si;
         }
@@ -272,10 +289,11 @@ class LogNumber
         return lognum_ < other.lognum_;
         }
 
-    void
+    const LogNumber&
     pow(Real p)
         {
         lognum_ *= p;
+        return *this;
         }
 
     friend inline std::ostream& 
@@ -294,8 +312,14 @@ class LogNumber
     // Data Members
     //
 
+    //Log of the magnitude of 
+    //the number represented.
     Real lognum_;
-    int sign_;
+
+    //sign_ is a char to save space.
+    //Ok since sign_ == -1, 0, or 1 and char
+    //can represent small ints (-128 to 127).
+    char sign_;
 
     //
     /////////////
@@ -303,11 +327,11 @@ class LogNumber
     };
 
 LogNumber inline
-sqrt(const LogNumber& L)
+sqrt(LogNumber L)
     {
     if(L.sign() < 0) 
         Error("Negative LogNumber in sqrt");
-    return LogNumber(L.logNum()/2,L.sign());
+    return L.pow(0.5);
     }
 
 #undef Cout
