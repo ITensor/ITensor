@@ -84,7 +84,7 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-DEPHEADERS=global.h real.h permutation.h index.h 
+DEPHEADERS=global.h real.h permutation.h index.h option.h
 index.o: $(DEPHEADERS)
 .debug_objs/index.o: $(DEPHEADERS)
 DEPHEADERS+= indexset.h
