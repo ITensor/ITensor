@@ -132,7 +132,7 @@ Hubbard(int N, const OptSet& opts)
     : N_(N),
       site_(N_+1)
     { 
-    conserveNf_ = opts.boolOrDefault("ConserveNf",true);
+    conserveNf_ = opts.getBool("ConserveNf",true);
     constructSites();
     }
 
