@@ -158,6 +158,10 @@ doRead(std::istream& s)
     site_.resize(N_+1);
     for(int j = 1; j <= N_; ++j) 
         site_.at(j).read(s);
+    if(site_.at(1).qn(2).Nf() == 1)
+        conserveNf_ = true;
+    else
+        conserveNf_ = false;
     }
 
 void inline Hubbard::
