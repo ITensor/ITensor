@@ -261,7 +261,7 @@ Opt()
     :
     name_("NullOpt"),
     bval_(false),
-    ival_(-1E5),
+    ival_(-10000),
     rval_(NAN)
     { }
 
@@ -270,7 +270,7 @@ Opt(const Name& name)
     :
     name_(name),
     bval_(true),
-    ival_(-1E5),
+    ival_(-10000),
     rval_(NAN)
     { }
 
@@ -279,7 +279,7 @@ Opt(const Name& name, bool bval)
     :
     name_(name),
     bval_(bval),
-    ival_(-1E5),
+    ival_(-10000),
     rval_(NAN)
     { }
 
@@ -289,7 +289,7 @@ Opt(const Name& name, const std::string& sval)
     name_(name),
     bval_(true),
     sval_(sval),
-    ival_(-1E5),
+    ival_(-10000),
     rval_(NAN)
     { }
 
@@ -307,7 +307,7 @@ Opt(const Name& name, Real rval)
     :
     name_(name),
     bval_(true),
-    ival_(-1E5),
+    ival_(-10000),
     rval_(rval)
     { }
 
