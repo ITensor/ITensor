@@ -947,79 +947,26 @@ class ITDat
 
 class commaInit
     {
-public:
+    public:
+
     commaInit(ITensor& T,
               const Index& i1,
               const Index& i2 = Index::Null(),
-              const Index& i3 = Index::Null())
-        : 
-        T_(T),
-        started_(false)
-        { 
-        if(T_.isNull()) 
-            Error("Can't assign to null ITensor");
+              const Index& i3 = Index::Null());
 
-        boost::array<Index,NMAX+1> ii;
-        ii.assign(Index::Null());
+    commaInit& operator<<(Real r);
 
-        if(i2 == Index::Null())
-            {
-            ii[1] = i1;
-            }
-        else
-        if(i3 == Index::Null())
-            {
-            ii[1] = i2;
-            ii[2] = i1;
-            }
-        else
-            {
-            ii[1] = i3;
-            ii[2] = i2;
-            ii[3] = i1;
-            }
-        try {
-            T_.is_.getperm(ii,P_);
-            }
-        catch(const ITError& e)
-            {
-            Error("Not enough/wrong indices passed to commaInit");
-            }
+    commaInit& operator,(Real r);
 
-        T_.solo();
-        T_.scaleTo(1);
-        T_.initCounter(c_);
-        }
+    ~commaInit();
 
-    commaInit& operator<<(Real r)
-        {
-        started_ = true;
-        return operator,(r);
-        }
+    private:
 
-    commaInit& operator,(Real r)
-        {
-        if(!started_)
-            {
-            Error("commaInit notation is T << #, #, #, ... ;");
-            }
-        if(c_.notDone()) 
-            { T_.p->v(c_.ind) = r; ++c_; }
-        else 
-            { Error("Comma assignment list too long.\n"); }
-        return *this;
-        }
-
-    ~commaInit()
-        {
-        T_.reshapeDat(P_);
-        }
-
-private:
     ITensor& T_;
     bool started_;
     Counter c_; 
     Permutation P_;
+
     };
 
 template <typename Callable> void ITensor::

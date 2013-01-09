@@ -2707,3 +2707,75 @@ write(std::ostream& s) const
     s.write((char*) &size, sizeof(size));
     s.write((char*) v.Store(), sizeof(Real)*size); 
     }
+
+commaInit::
+commaInit(ITensor& T,
+          const Index& i1,
+          const Index& i2,
+          const Index& i3)
+    : 
+    T_(T),
+    started_(false)
+    { 
+    if(T_.isNull()) 
+        Error("Can't assign to null ITensor");
+
+    boost::array<Index,NMAX+1> ii;
+    ii.assign(Index::Null());
+
+    if(i2 == Index::Null())
+        {
+        ii[1] = i1;
+        }
+    else
+    if(i3 == Index::Null())
+        {
+        ii[1] = i2;
+        ii[2] = i1;
+        }
+    else
+        {
+        ii[1] = i3;
+        ii[2] = i2;
+        ii[3] = i1;
+        }
+    try {
+        T_.is_.getperm(ii,P_);
+        }
+    catch(const ITError& e)
+        {
+        Error("Not enough/wrong indices passed to commaInit");
+        }
+
+    T_.solo();
+    T_.scaleTo(1);
+    T_.initCounter(c_);
+    }
+
+commaInit& commaInit::
+operator<<(Real r)
+    {
+    started_ = true;
+    return operator,(r);
+    }
+
+
+commaInit& commaInit::
+operator,(Real r)
+    {
+    if(!started_)
+        {
+        Error("commaInit notation is T << #, #, #, ... ;");
+        }
+    if(c_.notDone()) 
+        { T_.p->v(c_.ind) = r; ++c_; }
+    else 
+        { Error("Comma assignment list too long.\n"); }
+    return *this;
+    }
+
+commaInit::
+~commaInit()
+    {
+    T_.reshapeDat(P_);
+    }
