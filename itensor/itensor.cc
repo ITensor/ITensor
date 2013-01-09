@@ -14,140 +14,9 @@ using boost::intrusive_ptr;
 #define ITENSOR_CHECK_NULL
 #endif
 
-Counter::
-Counter() : rn_(0)
-    {
-    n.assign(1); n[0] = 0;
-    reset(0);
-    }
-
-Counter::
-Counter(const array<Index,NMAX+1>& ii,int rn,int r) 
-    { init(ii,rn,r); }
-
-Counter::
-Counter(const IndexSet& is) { init(is); }
-
-void Counter::
-reset(int a)
-    {
-    i.assign(a);
-    ind = 1;
-    }
-
-void Counter::
-init(const array<Index,NMAX+1>& ii, int rn, int r)
-    {
-    rn_ = rn;
-    r_ = r;
-    n[0] = 0;
-    for(int j = 1; j <= rn_; ++j) 
-        { n[j] = ii[j].m(); }
-    for(int j = rn_+1; j <= NMAX; ++j) 
-        { n[j] = 1; }
-    reset(1);
-    }
-
-void Counter::
-init(const IndexSet& is)
-    {
-    rn_ = is.rn();
-    r_ = is.r();
-    n[0] = 0;
-    for(int j = 1; j <= rn_; ++j) 
-        { n[j] = is.index(j).m(); }
-    for(int j = rn_+1; j <= NMAX; ++j) 
-        { n[j] = 1; }
-    reset(1);
-    }
-
-Counter& Counter::
-operator++()
-    {
-    ++ind;
-    ++i[1];
-    if(i[1] > n[1])
-    for(int j = 2; j <= rn_; ++j)
-        {
-        i[j-1] = 1;
-        ++i[j];
-        if(i[j] <= n[j]) break;
-        }
-    //set 'done' condition
-    if(i[rn_] > n[rn_]) reset(0);
-    return *this;
-    }
-
-bool Counter::
-operator!=(const Counter& other) const
-    {
-    for(int j = 1; j <= NMAX; ++j)
-        { if(i[j] != other.i[j]) return true; }
-    return false;
-    }
-
-bool Counter::
-operator==(const Counter& other) const
-    { return !(*this != other); }
-
-std::ostream&
-operator<<(std::ostream& s, const Counter& c)
-    {
-    s << "("; 
-    for(int i = 1; i < c.r_; ++i)
-        {s << c.i[i] << " ";} 
-    s << c.i[c.r_] << ")";
-    return s;
-    }
-
-ostream& 
-operator<<(ostream & s, const ITensor & t)
-    {
-    s << "ITensor r = " << t.r() << ": ";
-    s << t.is_ << "\n";
-
-    s << "  {log(scale)[incl in elems]=" << t.scale().logNum();
-
-
-    if(t.isNull()) s << ", dat is null}\n";
-    else 
-        {
-        s << ", L=" << t.vecSize();
-
-        if(t.scale_.isFiniteReal())
-            {
-            Real nrm = t.norm();
-            if(nrm >= 1E-2 && nrm < 1E5)
-                s << format(", N=%.2f}\n") % nrm;
-            else
-                s << format(", N=%.1E}\n") % nrm;
-            }
-        else
-            {
-            s << ", N=too big} scale=" << t.scale() << "\n";
-            }
-
-        if(Global::printdat())
-            {
-            Real scale = 1.0;
-            if(t.scale_.isFiniteReal()) scale = t.scale_.real();
-            else s << "\n(omitting too large scale factor)" << endl;
-            const Vector& v = t.p->v;
-            Counter c; t.initCounter(c);
-            for(; c.notDone(); ++c)
-                {
-                Real val = v(c.ind)*scale;
-                if(fabs(val) > Global::printScale())
-                    { s << "  " << c << (format(" %.10f\n") % val); }
-                }
-            }
-        else 
-            {
-            s << "\n";
-            }
-        }
-    return s;
-    }
+//
+// ITensor
+//
 
 //
 // ITensor Constructors
@@ -2581,56 +2450,145 @@ symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid, int& mink, 
     mink = m;
     }
 
-Real 
-Dot(const ITensor& x, const ITensor& y)
+ostream& 
+operator<<(ostream & s, const ITensor & t)
     {
-    ITensor res = x; 
-    res *= y;
-    if(res.r() != 0) 
-        { 
-        x.print("x"); 
-        y.print("y"); 
-        Error("Bad Dot, product is not a scalar"); 
+    s << "ITensor r = " << t.r() << ": ";
+    s << t.is_ << "\n";
+
+    s << "  {log(scale)[incl in elems]=" << t.scale().logNum();
+
+
+    if(t.isNull()) s << ", dat is null}\n";
+    else 
+        {
+        s << ", L=" << t.vecSize();
+
+        if(t.scale_.isFiniteReal())
+            {
+            Real nrm = t.norm();
+            if(nrm >= 1E-2 && nrm < 1E5)
+                s << format(", N=%.2f}\n") % nrm;
+            else
+                s << format(", N=%.1E}\n") % nrm;
+            }
+        else
+            {
+            s << ", N=too big} scale=" << t.scale() << "\n";
+            }
+
+        if(Global::printdat())
+            {
+            Real scale = 1.0;
+            if(t.scale_.isFiniteReal()) scale = t.scale_.real();
+            else s << "\n(omitting too large scale factor)" << endl;
+            const Vector& v = t.p->v;
+            Counter c; t.initCounter(c);
+            for(; c.notDone(); ++c)
+                {
+                Real val = v(c.ind)*scale;
+                if(fabs(val) > Global::printScale())
+                    { s << "  " << c << (format(" %.10f\n") % val); }
+                }
+            }
+        else 
+            {
+            s << "\n";
+            }
         }
-    return res.val0();
+    return s;
     }
 
-void 
-BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im)
-    {
-    if(x.isComplex())
-        {
-        ITensor res = conj(x);
-        res *= y;
-        if(res.r() != 1) 
-            {
-            x.print("x");
-            y.print("y");
-            Error("Bad Dot, product not a complex scalar");
-            }
-        re = res(Index::IndReIm()(1));
-        im = res(Index::IndReIm()(2));
-        return;
-        }
-    else
-    if(y.isComplex())
-        {
-        ITensor res = x;
-        res *= y;
-        if(res.r() != 1) 
-            {
-            x.print("x");
-            y.print("y");
-            Error("Bad Dot, product not a complex scalar");
-            }
-        re = res(Index::IndReIm()(1));
-        im = res(Index::IndReIm()(2));
-        return;
-        }
+//
+// Counter
+//
 
-    re = Dot(x,y);
-    im = 0;
+Counter::
+Counter() : rn_(0)
+    {
+    n.assign(1); n[0] = 0;
+    reset(0);
     }
+
+Counter::
+Counter(const array<Index,NMAX+1>& ii,int rn,int r) 
+    { init(ii,rn,r); }
+
+Counter::
+Counter(const IndexSet& is) { init(is); }
+
+void Counter::
+reset(int a)
+    {
+    i.assign(a);
+    ind = 1;
+    }
+
+void Counter::
+init(const array<Index,NMAX+1>& ii, int rn, int r)
+    {
+    rn_ = rn;
+    r_ = r;
+    n[0] = 0;
+    for(int j = 1; j <= rn_; ++j) 
+        { n[j] = ii[j].m(); }
+    for(int j = rn_+1; j <= NMAX; ++j) 
+        { n[j] = 1; }
+    reset(1);
+    }
+
+void Counter::
+init(const IndexSet& is)
+    {
+    rn_ = is.rn();
+    r_ = is.r();
+    n[0] = 0;
+    for(int j = 1; j <= rn_; ++j) 
+        { n[j] = is.index(j).m(); }
+    for(int j = rn_+1; j <= NMAX; ++j) 
+        { n[j] = 1; }
+    reset(1);
+    }
+
+Counter& Counter::
+operator++()
+    {
+    ++ind;
+    ++i[1];
+    if(i[1] > n[1])
+    for(int j = 2; j <= rn_; ++j)
+        {
+        i[j-1] = 1;
+        ++i[j];
+        if(i[j] <= n[j]) break;
+        }
+    //set 'done' condition
+    if(i[rn_] > n[rn_]) reset(0);
+    return *this;
+    }
+
+bool Counter::
+operator!=(const Counter& other) const
+    {
+    for(int j = 1; j <= NMAX; ++j)
+        { if(i[j] != other.i[j]) return true; }
+    return false;
+    }
+
+bool Counter::
+operator==(const Counter& other) const
+    { return !(*this != other); }
+
+std::ostream&
+operator<<(std::ostream& s, const Counter& c)
+    {
+    s << "("; 
+    for(int i = 1; i < c.r_; ++i)
+        {s << c.i[i] << " ";} 
+    s << c.i[c.r_] << ")";
+    return s;
+    }
+
 
 //
 // ITDat
@@ -2708,6 +2666,10 @@ write(std::ostream& s) const
     s.write((char*) v.Store(), sizeof(Real)*size); 
     }
 
+//
+// commaInit
+//
+
 commaInit::
 commaInit(ITensor& T,
           const Index& i1,
@@ -2779,3 +2741,59 @@ commaInit::
     {
     T_.reshapeDat(P_);
     }
+
+//
+// Other methods defined in itensor.h
+//
+
+Real 
+Dot(const ITensor& x, const ITensor& y)
+    {
+    ITensor res = x; 
+    res *= y;
+    if(res.r() != 0) 
+        { 
+        x.print("x"); 
+        y.print("y"); 
+        Error("Bad Dot, product is not a scalar"); 
+        }
+    return res.val0();
+    }
+
+void 
+BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im)
+    {
+    if(x.isComplex())
+        {
+        ITensor res = conj(x);
+        res *= y;
+        if(res.r() != 1) 
+            {
+            x.print("x");
+            y.print("y");
+            Error("Bad Dot, product not a complex scalar");
+            }
+        re = res(Index::IndReIm()(1));
+        im = res(Index::IndReIm()(2));
+        return;
+        }
+    else
+    if(y.isComplex())
+        {
+        ITensor res = x;
+        res *= y;
+        if(res.r() != 1) 
+            {
+            x.print("x");
+            y.print("y");
+            Error("Bad Dot, product not a complex scalar");
+            }
+        re = res(Index::IndReIm()(1));
+        im = res(Index::IndReIm()(2));
+        return;
+        }
+
+    re = Dot(x,y);
+    im = 0;
+    }
+
