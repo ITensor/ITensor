@@ -276,7 +276,7 @@ class LogNumber
         lognum_ = other.lognum_;
         other.lognum_ = sl;
 
-        char si = sign_;
+        int si = sign_;
         sign_ = other.sign_;
         other.sign_ = si;
         }
@@ -316,10 +316,7 @@ class LogNumber
     //the number represented.
     Real lognum_;
 
-    //sign_ is a char to save space.
-    //Ok since sign_ == -1, 0, or 1 and char
-    //can represent small ints (-128 to 127).
-    char sign_;
+    int sign_;
 
     //
     /////////////
