@@ -404,7 +404,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
     W.maxm(psi.maxm());
     W.cutoff(psi.cutoff());
 
-    int nt = ttotal/tstep+(1e-9*(ttotal/tstep));
+    int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
 
     if(fabs(nt*tstep-ttotal) > 1E-9)
         {
@@ -821,7 +821,7 @@ gateTEvol(const list<BondGate<Tensor> >& gatelist, Real ttotal, Real tstep,
 
     //const int N = psi.N();
 
-    const int nt = ttotal/tstep+(1e-9*(ttotal/tstep));
+    const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
     if(fabs(nt*tstep-ttotal) > 1E-9)
         {
         Error("Timestep not commensurate with total time");
