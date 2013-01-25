@@ -10,7 +10,7 @@ include ../options.mk
 
 SOURCES=index.cc indexset.cc itensor.cc itsparse.cc \
         iqindex.cc iqindexset.cc iqtensor.cc iqtsparse.cc\
-        svdworker.cc mps.cc mpo.cc dmrg.cc
+        svdworker.cc mps.cc mpo.cc dmrg.cc tevol.cc
 
 HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         indexset.h itensor.h qn.h iqindex.h iqindexset.h iqtensor.h \

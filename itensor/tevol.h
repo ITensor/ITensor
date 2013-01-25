@@ -104,4 +104,9 @@ class BondGate
 
     };
 
+template <class Tensor>
+void
+derivMPS(const std::vector<Tensor>& psi, const MPOt<Tensor>& H, 
+         std::vector<Tensor>& dpsi, Direction dir = Fromleft);
+
 #endif

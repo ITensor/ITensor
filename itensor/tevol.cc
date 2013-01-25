@@ -28,7 +28,7 @@ struct SiteReverser
 template <class Tensor>
 void
 derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H, 
-         vector<Tensor>& dpsi, Direction dir = Fromleft)
+         vector<Tensor>& dpsi, Direction dir)
     {
     typedef typename Tensor::IndexT
     IndexT;
@@ -85,26 +85,26 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
     int j = N; //effective/super-site we're on
     int pj = Ns; //physical (ungrouped) site we're on
 
-    RH.at(j-1) = psi[s(j)] * H.AA(ps(pj--)); 
+    RH.at(j-1) = psi[s(j)] * H.A(ps(pj--)); 
     if(nsite[j] == 2)
-        RH.at(j-1) *= H.AA(ps(pj--));
+        RH.at(j-1) *= H.A(ps(pj--));
     RH.at(j-1) *= conj(primed(psi[s(j)]));
 
     for(--j; j > 1; --j)
         {
         RH.at(j-1) = RH.at(j) * psi[s(j)];
-        RH[j-1] *= H.AA(ps(pj--));
+        RH[j-1] *= H.A(ps(pj--));
         if(nsite[j] == 2)
-            RH[j-1] *= H.AA(ps(pj--));
+            RH[j-1] *= H.A(ps(pj--));
         RH[j-1] *= conj(primed(psi[s(j)]));
         }
 
     pj = 1;
 
     //Begin applying H to psi
-    dpsi[s(1)] = psi[s(1)] * H.AA(ps(pj++));
+    dpsi[s(1)] = psi[s(1)] * H.A(ps(pj++));
     if(nsite[1] == 2)
-        dpsi[s(1)] *= H.AA(ps(pj++));
+        dpsi[s(1)] *= H.A(ps(pj++));
 
     //Use partial result to build LH
     LH.at(2) = dpsi[s(1)] * conj(primed(psi[s(1)]));
@@ -130,9 +130,9 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
         Tensor& Bd = dpsi[s(j)];
 
         //Begin applying H to psi
-        Bd = LH[j] * B * H.AA(ps(pj++));
+        Bd = LH[j] * B * H.A(ps(pj++));
         if(nsite[j] == 2)
-            Bd *= H.AA(ps(pj++));
+            Bd *= H.A(ps(pj++));
 
         //Use partial result to build LH
         if(j < N)
@@ -150,7 +150,7 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
         //Orthogonalize
         IndexT plink = index_in_common(B,psi[s(j-1)]);
         //Define P = B^\dag B
-        Tensor P = conj(prime(B,plink))*primed(B);
+        Tensor P = conj(primed(B,plink))*primed(B);
         //Apply (1-P) to Bd (by computing Bd = Bd - P*Bd)
         P *= Bd;
         P.noprime();
@@ -212,7 +212,7 @@ expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
             {
             L = t;
             for(int n = 1; n <= nsite; ++n)
-                L *= H.AA(s++);
+                L *= H.A(s++);
             L *= conj(primed(t));
             }
         else
@@ -220,14 +220,14 @@ expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
             {
             L *= t;
             for(int n = 1; n <= nsite; ++n)
-                L *= H.AA(s++);
+                L *= H.A(s++);
             return Dot(conj(primed(t)),L);
             }
         else
             {
             L *= t;
             for(int n = 1; n <= nsite; ++n)
-                L *= H.AA(s++);
+                L *= H.A(s++);
             L *= conj(primed(t));
             }
         }
@@ -392,9 +392,9 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
     for(int j = 1, g = 1; j <= N; j += 2, ++g)
         {
         if(j != N)
-            psiv[g] = psi.AA(j)*psi.AA(j+1);
+            psiv[g] = psi.A(j)*psi.A(j+1);
         else
-            psiv[g] = psi.AA(j);
+            psiv[g] = psi.A(j);
         }
 
     SVDWorker W;
@@ -531,7 +531,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 {
                 Tensor& B = psiv[g];
                 IndexT lnk = index_in_common(B,psiv[g-1]);
-                Tensor overlap = conj(prime(B,lnk))*B;
+                Tensor overlap = conj(primed(B,lnk))*B;
 
                 SVDWorker W;
                 Tensor U(lnk),V;
@@ -710,7 +710,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 Tensor A,B;
                 if(j > 1)
                     {
-                    IndexT l = index_in_common(bond,psi.AA(j-1));
+                    IndexT l = index_in_common(bond,psi.A(j-1));
                     A = Tensor(l,sj);
                     }
                 else
@@ -739,7 +739,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 psiv.at(g+1) *= bond;
                 }
             }
-        //Real nm2 = Dot(psi.AA(N),psi.AA(N));
+        //Real nm2 = Dot(psi.A(N),psi.A(N));
         //psi.Anc(N) *= 1./sqrt(nm2);
         }
     else
@@ -762,7 +762,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 Tensor A,B;
                 if(j < N)
                     {
-                    IndexT r = index_in_common(bond,psi.AA(j+1));
+                    IndexT r = index_in_common(bond,psi.A(j+1));
                     B = Tensor(sj,r);
                     }
                 else
@@ -791,7 +791,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 psiv.at(g-1) *= bond;
                 }
             }
-        //Real nm2 = Dot(psi.AA(1),psi.AA(1));
+        //Real nm2 = Dot(psi.A(1),psi.A(1));
         //psi.Anc(1) *= 1./sqrt(nm2);
         }
 
