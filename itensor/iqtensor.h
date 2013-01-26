@@ -390,12 +390,6 @@ class IQTensor
     primed(IQTensor A, const IQIndex& I, const IQIndex& J)
         { A.prime(I); A.prime(J); return A; }
 
-    friend inline IQTensor 
-    primesite(IQTensor A, int inc = 1) { A.prime(Site,inc); return A; }
-
-    friend inline IQTensor 
-    primelink(IQTensor A, int inc = 1)
-        { A.prime(Link,inc); return A; }
 
     friend inline IQTensor 
     deprimed(IQTensor A) { A.noprime(); return A; }
@@ -584,6 +578,14 @@ class IQTensor
     //Use prime(I) instead
     //void 
     //ind_inc_prime(const IQIndex& I,int inc);
+
+    //Use primed(A,Site) instead
+    //friend inline IQTensor 
+    //primesite(IQTensor A, int inc = 1) { A.prime(Site,inc); return A; }
+
+    //Use primed(A,Link) instead
+    //friend inline IQTensor 
+    //primelink(IQTensor A, int inc = 1) { A.prime(Link,inc); return A; }
 
     private:
 

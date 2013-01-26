@@ -1488,10 +1488,10 @@ fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
     if(psi_to_fit.N() != N) 
         Error("Wavefunctions must have same number of sites.");
 
-    IQTensor A = psi_to_fit.A(N) * conj(primelink(psi_basis.A(N)));
+    IQTensor A = psi_to_fit.A(N) * conj(primed(psi_basis.A(N),Link));
     for(int n = N-1; n > 1; --n)
         {
-        A *= conj(primelink(psi_basis.A(n)));
+        A *= conj(primed(psi_basis.A(n),Link));
         A *= psi_to_fit.A(n);
         }
     A = psi_to_fit.A(1) * A;
