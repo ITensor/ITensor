@@ -78,7 +78,7 @@ class IndexSet
     findindex1(const Index& I) const;
 
     bool 
-    has_common_index(const IndexSet& other) const;
+    hasCommonIndex(const IndexSet& other) const;
     
     bool 
     hasindex(const Index& I) const;

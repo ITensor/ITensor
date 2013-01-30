@@ -330,11 +330,11 @@ findindex(const IQIndex& I) const
     }
 
 bool IQTSparse::
-has_common_index(const IQTSparse& other) const
+hasCommonIndex(const IQTSparse& other) const
     { 
     if(is_ == 0) return false;
 
-    return is_->has_common_index(*other.is_); 
+    return is_->hasCommonIndex(*other.is_); 
     }
 
 bool IQTSparse::

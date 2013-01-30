@@ -284,8 +284,8 @@ class ITensor
 
     //true if other has any Index in common with this
     bool 
-    has_common_index(const ITensor& other) const
-        { return is_.has_common_index(other.is_); }
+    hasCommonIndex(const ITensor& other) const
+        { return is_.hasCommonIndex(other.is_); }
     
     //true if has Index I
     bool 

@@ -85,7 +85,7 @@ class IQIndexSet
     finddir(Arrow dir) const;
 
     bool 
-    has_common_index(const IQIndexSet& other) const;
+    hasCommonIndex(const IQIndexSet& other) const;
     
     bool 
     hasindex(const IQIndex& I) const;

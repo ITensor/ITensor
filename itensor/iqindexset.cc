@@ -184,7 +184,7 @@ finddir(Arrow dir) const
     }
 
 bool IQIndexSet::
-has_common_index(const IQIndexSet& other) const
+hasCommonIndex(const IQIndexSet& other) const
     {
     for(size_t j = 0; j < index_.size(); ++j)
     for(size_t k = 0; k <= other.index_.size(); ++k)

@@ -157,7 +157,7 @@ class IQTSparse
     findindex(const IQIndex& I) const;
 
     bool 
-    has_common_index(const IQTSparse& other) const;
+    hasCommonIndex(const IQTSparse& other) const;
     
     bool 
     hasindex(const IQIndex& I) const;

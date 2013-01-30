@@ -121,7 +121,7 @@ findindex1(const Index& I) const
 	}
 
 bool IndexSet::
-has_common_index(const IndexSet& other) const
+hasCommonIndex(const IndexSet& other) const
     {
     for(int j = 1; j <= r_; ++j)
     for(int k = 1; k <= other.r_; ++k)

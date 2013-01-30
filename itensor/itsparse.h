@@ -176,8 +176,8 @@ class ITSparse
     findindex1(const Index& I) const { return is_.findindex1(I); }
 
     bool 
-    has_common_index(const ITensor& other) const
-        { return is_.has_common_index(other.is_); }
+    hasCommonIndex(const ITensor& other) const
+        { return is_.hasCommonIndex(other.is_); }
     
     bool 
     hasindex(const Index& I) const { return is_.hasindex(I); }

@@ -417,6 +417,11 @@ class IQTensor
     const IQIndex& 
     finddir(Arrow dir) const;
 
+    //true if other has any Index in common with this
+    bool 
+    hasCommonIndex(const IQTensor& other) const
+        { return is_->hasCommonIndex(*other.is_); }
+
     bool 
     hasindex(const IQIndex& I) const;
 
