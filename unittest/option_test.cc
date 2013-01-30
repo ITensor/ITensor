@@ -39,7 +39,7 @@ TEST(TestOptSet)
 
     gopts.add(o1,o2);
 
-    CHECK(gopts.boolVal("Quiet") == true);
+    CHECK(gopts.getBool("Quiet") == true);
 
     //cout << "Global opts: " << endl;
     //cout << gopts << endl;
@@ -52,7 +52,7 @@ TEST(TestOptSet)
     CHECK(opts1.defined("Quiet"));
     CHECK(opts1.defined(Quiet()));
     CHECK(opts1.get("Quiet").name() == "Quiet");
-    CHECK(opts1.boolVal("Quiet") == false);
+    CHECK(opts1.getBool("Quiet") == false);
 
     OptSet opts2(opts1);
     opts2.add(o3,o4);
@@ -61,11 +61,11 @@ TEST(TestOptSet)
     //cout << opts2 << endl;
 
     CHECK(opts2.defined("Pinning"));
-    CHECK(opts2.realVal("Pinning") == 0.4);
+    CHECK(opts2.getReal("Pinning") == 0.4);
     CHECK(opts2.get("Pinning").name() == "Pinning");
 
     CHECK(opts2.defined("Auto"));
-    CHECK(opts2.boolVal("Auto") == false);
+    CHECK(opts2.getBool("Auto") == false);
     }
 
 TEST(Operator)
