@@ -394,15 +394,16 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
     if(AA.vecSize() == 0) 
         throw ResultIsZero("denmatDecomp: AA.vecSize == 0");
 
-    //Add in noise term
-    if(noise_ > 0 && PH.isNotNull())
-        {
-        Real orig_norm = AA.norm();
+    if(noise_ > 0)
+        Error("Noise term not implemented for svd");
 
-        AA += noise_*PH.deltaPhi(AA);
-
-        AA *= orig_norm/AA.norm();
-        }
+    //if(noise_ > 0 && PH.isNotNull())
+    //    {
+    //    //Add in noise term
+    //    Real orig_norm = AA.norm();
+    //    AA += noise_*PH.deltaPhi(AA);
+    //    AA *= orig_norm/AA.norm();
+    //    }
 
     //Combiners which transform AA
     //into a rank 2 tensor

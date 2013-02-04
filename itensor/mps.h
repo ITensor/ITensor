@@ -553,13 +553,14 @@ svdBond(int b, const Tensor& AA, Direction dir,
             const LocalOpT& PH, const OptSet& opts)
     {
     setBond(b);
-    if(opts.getBool("PreserveShape",false))
-        {
+
+    //if(opts.getBool("PreserveShape",false))
+    //    {
         //The idea of the preserve_shape flag is to 
         //leave any external indices of the MPS on the
         //tensors they originally belong to
-        Error("preserve_shape not currently implemented");
-        }
+    //    Error("preserve_shape not currently implemented");
+    //    }
 
     if(dir == Fromleft && b-1 > l_orth_lim_)
         {
@@ -574,40 +575,33 @@ svdBond(int b, const Tensor& AA, Direction dir,
         Error("b+2 < r_orth_lim_");
         }
 
-#define USE_SVD_ONLY
+    if(noise() > 0 || cutoff() > 1E-12)
+        {
+        //If we don't need extreme accuracy
+        //or need to use noise term
+        //use density matrix approach
+        svd_.denmatDecomp(b,AA,A_[b],A_[b+1],dir,PH);
 
-#ifdef USE_SVD_ONLY
-    {
-    SparseT D;
-    svd_.svd(b,AA,A_[b],D,A_[b+1]);
-
-    //Normalize the orthogonality center
-    //if(opt.boolEquals(DoNormalize(true)))
-    //    {
-    //    Real norm = D.norm();
-    //    D *= 1./norm;
-    //    }
-
-    //Push the singular values into the appropriate site tensor
-    if(dir == Fromleft)
-        A_[b+1] *= D;
+        //Normalize the ortho center if requested
+        if(opts.getBool("DoNormalize",false))
+            {
+            Tensor& oc = (dir == Fromleft ? A_[b+1] : A_[b]);
+            Real norm = oc.norm();
+            oc *= 1./norm;
+            }
+        }
     else
-        A_[b] *= D;
-    }
-#else
-    if(cutoff() < 1E-12)
         {
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
         SparseT D;
         svd_.svd(b,AA,A_[b],D,A_[b+1]);
 
-        //Normalize the orthogonality center
-        //if(opt.boolEquals(DoNormalize(true)))
-        //    {
-        //    Real norm = D.norm();
-        //    D *= 1./norm;
-        //    }
+        //Normalize the ortho center if requested
+        if(opts.getBool("DoNormalize",false))
+            {
+            D *= 1./D.norm();
+            }
 
         //Push the singular values into the appropriate site tensor
         if(dir == Fromleft)
@@ -615,21 +609,6 @@ svdBond(int b, const Tensor& AA, Direction dir,
         else
             A_[b] *= D;
         }
-    else
-        {
-        //If we don't need extreme accuracy,
-        //use presumably faster density matrix approach
-        svd_.denmatDecomp(b,AA,A_[b],A_[b+1],dir,PH);
-
-        //Normalize the ortho center
-        //if(opt.boolEquals(DoNormalize(true)))
-        //    {
-        //    Tensor& oc = (dir == Fromleft ? A_[b+1] : A_[b]);
-        //    Real norm = oc.norm();
-        //    oc *= 1./norm;
-        //    }
-        }
-#endif
 
     if(dir == Fromleft)
         {
