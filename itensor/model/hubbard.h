@@ -285,7 +285,7 @@ makeCup(int i) const
     {
     IQTensor Cup(conj(si(i)),siP(i));
     Cup(Up(i),EmpP(i)) = 1;
-    Cup(UpDn(i),DnP(i)) = -1;
+    Cup(UpDn(i),DnP(i)) = 1;
     return Cup;
     }
 
@@ -294,7 +294,7 @@ makeCdagup(int i) const
     {
     IQTensor Cdagup(conj(si(i)),siP(i));
     Cdagup(Emp(i),UpP(i)) = 1;
-    Cdagup(Dn(i),UpDnP(i)) = -1;
+    Cdagup(Dn(i),UpDnP(i)) = 1;
     return Cdagup;
     }
 
@@ -303,7 +303,7 @@ makeCdn(int i) const
     {
     IQTensor Cdn(conj(si(i)),siP(i));
     Cdn(Dn(i),EmpP(i)) = 1;
-    Cdn(UpDn(i),UpP(i)) = 1;
+    Cdn(UpDn(i),UpP(i)) = -1;
     return Cdn;
     }
 
@@ -312,7 +312,7 @@ makeCdagdn(int i) const
     {
     IQTensor Cdagdn(conj(si(i)),siP(i));
     Cdagdn(Emp(i),DnP(i)) = 1;
-    Cdagdn(Up(i),UpDnP(i)) = 1;
+    Cdagdn(Up(i),UpDnP(i)) = -1;
     return Cdagdn;
     }
 
