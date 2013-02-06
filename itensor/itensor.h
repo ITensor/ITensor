@@ -6,8 +6,8 @@
 #define __ITENSOR_ITENSOR_H
 #include "real.h"
 #include "prodstats.h"
-#include "indexset.h"
 #include "option.h"
+#include "counter.h"
 
 #define ITENSOR_USE_ALLOCATOR
 
@@ -21,7 +21,6 @@
 
 //Forward declarations
 struct ProductProps;
-class Counter;
 class Combiner;
 class ITDat;
 class ITSparse;
@@ -75,7 +74,7 @@ class ITensor
 
     //Enables looping over Indices in a Foreach
     //e.g. Foreach(const Index& I, t.index() ) { ... }
-    const std::pair<IndexSet::index_it,IndexSet::index_it> 
+    const std::pair<IndexSet<Index>::index_it,IndexSet<Index>::index_it> 
     index() const  
         { return is_.index(); }
 
@@ -767,7 +766,7 @@ class ITensor
     mutable boost::intrusive_ptr<ITDat> p; 
 
     //Indices, maximum of 8 (is_.index_[0] not used)
-    mutable IndexSet is_;
+    mutable IndexSet<Index> is_;
 
     //mutable since e.g. scaleTo is logically const
     mutable LogNumber scale_; 
@@ -829,48 +828,6 @@ class ITensor
 
     }; // class ITensor
 
-//
-// Counter
-//
-class Counter
-    {
-public:
-    boost::array<int,NMAX+1> n, i;
-    int ind;
-    int rn_,r_;
-
-    Counter();
-
-    Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r);
-
-    Counter(const IndexSet& is);
-
-    void 
-    init(const boost::array<Index,NMAX+1>& ii, int rn, int r);
-
-    void 
-    init(const IndexSet& is);
-
-    Counter& 
-    operator++();
-
-    bool 
-    operator!=(const Counter& other) const;
-
-    bool 
-    operator==(const Counter& other) const;
-
-    bool 
-    notDone() const 
-        { return i[1] != 0; }
-
-    friend std::ostream& 
-    operator<<(std::ostream& s, const Counter& c);
-
-    void 
-    reset(int a);
-
-    };
 
 //
 // ITDat

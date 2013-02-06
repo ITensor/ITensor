@@ -322,7 +322,7 @@ class ITSparse
     //diagonal elements
     mutable Vector diag_;
 
-    IndexSet is_;
+    IndexSet<Index> is_;
 
     mutable LogNumber scale_;
 

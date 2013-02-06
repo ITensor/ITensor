@@ -129,7 +129,7 @@ ITensor(const Index& i1, const Index& i2, const Index& i3,
 	int size = 3;
 	while(ii[size] != Index::Null()) ++size;
 	int alloc_size; 
-    is_ = IndexSet(ii,size,alloc_size);
+    is_ = IndexSet<Index>(ii,size,alloc_size);
 	allocate(alloc_size);
 	}
 
@@ -168,7 +168,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
     int size = 3; 
     while(size < NMAX && ii[size+1] != IndexVal::Null().ind) ++size;
     int alloc_size; 
-    is_ = IndexSet(ii,size,alloc_size);
+    is_ = IndexSet<Index>(ii,size,alloc_size);
     allocate(alloc_size);
 
     //Assign specified element to 1
@@ -188,7 +188,7 @@ ITensor(const std::vector<Index>& I)
     scale_(1)
 	{
     int alloc_size;
-    is_ = IndexSet(I,I.size(),alloc_size);
+    is_ = IndexSet<Index>(I,I.size(),alloc_size);
 	allocate(alloc_size);
 	}
 
@@ -199,7 +199,7 @@ ITensor(const std::vector<Index>& I, const Vector& V)
     scale_(1)
 	{
     int alloc_size;
-    is_ = IndexSet(I,I.size(),alloc_size);
+    is_ = IndexSet<Index>(I,I.size(),alloc_size);
 	if(alloc_size != V.Length()) 
 	    { Error("incompatible Index and Vector sizes"); }
 	}
@@ -212,7 +212,7 @@ ITensor(const std::vector<Index>& I, const ITensor& other)
     scale_(other.scale_)
 	{
     int alloc_size;
-    is_ = IndexSet(I,I.size(),alloc_size);
+    is_ = IndexSet<Index>(I,I.size(),alloc_size);
 	if(alloc_size != other.vecSize()) 
 	    { Error("incompatible Index and ITensor sizes"); }
 	}
@@ -224,7 +224,7 @@ ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P)
     scale_(other.scale_)
     {
     int alloc_size;
-    is_ = IndexSet(I,I.size(),alloc_size);
+    is_ = IndexSet<Index>(I,I.size(),alloc_size);
     if(alloc_size != other.vecSize()) 
         { Error("incompatible Index and ITensor sizes"); }
     if(P.is_trivial()) { p = other.p; }
@@ -236,7 +236,7 @@ ITensor(ITmaker itm)
     :
     scale_(1)
 	{
-    is_ = IndexSet(Index::IndReIm());
+    is_ = IndexSet<Index>(Index::IndReIm());
     allocate(2);
     if(itm == makeComplex_1)  { p->v(1) = 1; }
     if(itm == makeComplex_i)  { p->v(2) = 1; }
@@ -590,7 +590,7 @@ tieIndices(const array<Index,NMAX+1>& indices, int nind,
         Error("Couldn't find Index to tie");
         }
 
-    IndexSet new_is_(new_index_,new_r_,alloc_size,1);
+    IndexSet<Index> new_is_(new_index_,new_r_,alloc_size,1);
 
     //If tied indices have m==1, no work
     //to do; just replace indices
@@ -726,7 +726,7 @@ trace(const array<Index,NMAX+1>& indices, int nind)
         Error("Couldn't find Index to trace");
         }
 
-    IndexSet new_is_(new_index_,new_r_,alloc_size,1);
+    IndexSet<Index> new_is_(new_index_,new_r_,alloc_size,1);
 
     //If traced indices have m==1, no work
     //to do; just replace indices
@@ -1120,7 +1120,7 @@ reshapeTo(const Permutation& P, ITensor& res) const
     {
     res.solo();
 
-    res.is_ = IndexSet(is_,P);
+    res.is_ = IndexSet<Index>(is_,P);
 
     res.scale_ = scale_;
 
@@ -1132,7 +1132,7 @@ reshape(const Permutation& P) const
     {
     if(P.is_trivial()) return;
 
-    is_ = IndexSet(is_,P);
+    is_ = IndexSet<Index>(is_,P);
 
     solo();
     Vector newdat;
@@ -1852,7 +1852,7 @@ directMultiply(const ITensor& other, ProductProps& props,
         Error("Couldn't find Index to trace");
         }
 
-    IndexSet new_is_(new_index_,new_r_,alloc_size,1);
+    IndexSet<Index> new_is_(new_index_,new_r_,alloc_size,1);
 
     //If traced indices have m==1, no work
     //to do; just replace indices
@@ -2499,95 +2499,6 @@ operator<<(ostream & s, const ITensor & t)
     return s;
     }
 
-//
-// Counter
-//
-
-Counter::
-Counter() : rn_(0)
-    {
-    n.assign(1); n[0] = 0;
-    reset(0);
-    }
-
-Counter::
-Counter(const array<Index,NMAX+1>& ii,int rn,int r) 
-    { init(ii,rn,r); }
-
-Counter::
-Counter(const IndexSet& is) { init(is); }
-
-void Counter::
-reset(int a)
-    {
-    i.assign(a);
-    ind = 1;
-    }
-
-void Counter::
-init(const array<Index,NMAX+1>& ii, int rn, int r)
-    {
-    rn_ = rn;
-    r_ = r;
-    n[0] = 0;
-    for(int j = 1; j <= rn_; ++j) 
-        { n[j] = ii[j].m(); }
-    for(int j = rn_+1; j <= NMAX; ++j) 
-        { n[j] = 1; }
-    reset(1);
-    }
-
-void Counter::
-init(const IndexSet& is)
-    {
-    rn_ = is.rn();
-    r_ = is.r();
-    n[0] = 0;
-    for(int j = 1; j <= rn_; ++j) 
-        { n[j] = is.index(j).m(); }
-    for(int j = rn_+1; j <= NMAX; ++j) 
-        { n[j] = 1; }
-    reset(1);
-    }
-
-Counter& Counter::
-operator++()
-    {
-    ++ind;
-    ++i[1];
-    if(i[1] > n[1])
-    for(int j = 2; j <= rn_; ++j)
-        {
-        i[j-1] = 1;
-        ++i[j];
-        if(i[j] <= n[j]) break;
-        }
-    //set 'done' condition
-    if(i[rn_] > n[rn_]) reset(0);
-    return *this;
-    }
-
-bool Counter::
-operator!=(const Counter& other) const
-    {
-    for(int j = 1; j <= NMAX; ++j)
-        { if(i[j] != other.i[j]) return true; }
-    return false;
-    }
-
-bool Counter::
-operator==(const Counter& other) const
-    { return !(*this != other); }
-
-std::ostream&
-operator<<(std::ostream& s, const Counter& c)
-    {
-    s << "("; 
-    for(int i = 1; i < c.r_; ++i)
-        {s << c.i[i] << " ";} 
-    s << c.i[c.r_] << ")";
-    return s;
-    }
 
 
 //
