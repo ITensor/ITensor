@@ -1184,6 +1184,11 @@ assignFromVec(VectorRef v)
 void IQTensor::
 randomize() 
 	{ 
+    if(isNull())
+        Error("Can't randomize default constructed IQTensor.");
+    if(dat().empty())
+        Error("Can't randomize IQTensor having no blocks");
+
 	soloDat(); 
     Foreach(ITensor& t, ncdat())
         { t.randomize(); }
