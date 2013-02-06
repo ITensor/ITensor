@@ -18,8 +18,6 @@
 #include "boost/foreach.hpp"
 #define Foreach BOOST_FOREACH
 
-using namespace std::rel_ops;
-
 static const int NMAX = 8;
 static const Real MIN_CUT = 1E-20;
 static const int MAX_M = 5000;

@@ -9,7 +9,7 @@
 #include "option.h"
 #include "counter.h"
 
-#define ITENSOR_USE_ALLOCATOR
+//#define ITENSOR_USE_ALLOCATOR
 
 #ifdef ITENSOR_USE_ALLOCATOR
 #include "allocator.h"
@@ -57,11 +57,11 @@ class ITensor
 
     //true if ITensor is default constructed
     bool 
-    isNull() const { return (p == 0); }
+    isNull() const { return !bool(p); }
 
     //true if ITensor is NOT default constructed
     bool 
-    isNotNull() const { return (p != 0); }
+    isNotNull() const { return bool(p); }
 
     bool 
     isComplex() const { return hasindexn(Index::IndReIm()); }
@@ -644,6 +644,9 @@ class ITensor
 
     //Other Methods -------------------------------------------------
 
+    Real*
+    datStart() const;
+
     void 
     randomize();
 
@@ -763,7 +766,7 @@ class ITensor
     //
 
     //mutable: const methods may want to reshape data
-    mutable boost::intrusive_ptr<ITDat> p; 
+    mutable boost::shared_ptr<ITDat> p; 
 
     //Indices, maximum of 8 (is_.index_[0] not used)
     mutable IndexSet<Index> is_;
@@ -774,9 +777,6 @@ class ITensor
     //
     //
     //////////////
-
-    void 
-    initCounter(Counter& C) const;
 
     void 
     allocate(int dim);
@@ -850,10 +850,10 @@ class ITDat
     ITDat(Real r);
 
     explicit 
-    ITDat(std::istream& s);
-
-    explicit 
     ITDat(const ITDat& other);
+
+    void
+    read(std::istream& s);
 
     void 
     write(std::ostream& s) const;
@@ -881,22 +881,10 @@ class ITDat
 
     friend class ITensor;
 
-    friend void 
-    intrusive_ptr_add_ref(ITDat* p);
-
-    friend void 
-    intrusive_ptr_release(ITDat* p);
-
-    int count() const { return numref; }
-
     private:
-
-    mutable unsigned int 
-    numref;
 
     //Must be dynamically allocated:
     void operator=(const ITDat&);
-    ~ITDat() { }
 
 
     };

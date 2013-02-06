@@ -6,6 +6,8 @@
 
 using namespace std;
 using boost::format;
+using boost::shared_ptr;
+using boost::make_shared;
 
 ostream& 
 operator<<(ostream& s, const IndexType& it)
@@ -115,21 +117,6 @@ prime_number(int n)
     return plist.at(n);
     }
 
-void 
-intrusive_ptr_add_ref(IndexDat* p) 
-    { 
-    ++(p->numref); 
-    }
-
-void 
-intrusive_ptr_release(IndexDat* p) 
-    { 
-    if(!p->is_static_ && --(p->numref) == 0)
-        { 
-        delete p; 
-        } 
-    }
-
 const UniqueID& IndexDat::
 nextID()
     {
@@ -160,12 +147,11 @@ setUniqueReal()
 
 IndexDat::
 IndexDat(const std::string& name, int mm,IndexType it) 
-    : _type(it), 
-      ind(nextID()),
-      m_(mm), 
-      sname(name),
-      numref(0),
-      is_static_(false)
+    : 
+    _type(it), 
+    ind(nextID()),
+    m_(mm), 
+    sname(name)
     { 
     if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
     if(it == All) Error("Constructing Index with type All disallowed");
@@ -174,12 +160,11 @@ IndexDat(const std::string& name, int mm,IndexType it)
 
 IndexDat::
 IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& ind_)
-    : _type(it), 
-      ind(ind_), 
-      m_(mm), 
-      sname(ss),
-      numref(0), 
-      is_static_(false)
+    : 
+    _type(it), 
+    ind(ind_), 
+    m_(mm), 
+    sname(ss)
     { 
     if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
     if(it == All) Error("Constructing Index with type All disallowed");
@@ -190,9 +175,7 @@ IndexDat::
 IndexDat(Index::Imaker im) 
     : 
     _type(ReIm), 
-    m_( (im==Index::makeNull) ? 1 : 2),
-    numref(0), 
-    is_static_(true)
+    m_( (im==Index::makeNull) ? 1 : 2)
     { 
     //Don't use random uuid generator for these static IndexDats
     boost::uuids::string_generator gen;
@@ -214,39 +197,40 @@ IndexDat(Index::Imaker im)
     setUniqueReal(); 
     }
 
-IndexDat* IndexDat::
+const IndexDatPtr& IndexDat::
 Null()
     {
-    static IndexDat Null_(Index::makeNull);
-    return &Null_;
+    static IndexDatPtr Null_ = make_shared<IndexDat>(Index::makeNull);
+    return Null_;
     }
 
-IndexDat* IndexDat::
+const IndexDatPtr& IndexDat::
 ReImDat()
     {
-    static IndexDat ReImDat_(Index::makeReIm);
-    return &ReImDat_;
+    static IndexDatPtr ReImDat_ = make_shared<IndexDat>(Index::makeReIm);
+    return ReImDat_;
     }
 
-IndexDat* IndexDat::
+const IndexDatPtr& IndexDat::
 ReImDatP()
     {
-    static IndexDat ReImDatP_(Index::makeReImP);
-    return &ReImDatP_;
+    static IndexDatPtr ReImDatP_ = make_shared<IndexDat>(Index::makeReImP);
+    return ReImDatP_;
     }
 
-IndexDat* IndexDat::
+const IndexDatPtr& IndexDat::
 ReImDatPP()
     {
-    static IndexDat ReImDatPP_(Index::makeReImPP);
-    return &ReImDatPP_;
+    static IndexDatPtr ReImDatPP_ = make_shared<IndexDat>(Index::makeReImPP);
+    return ReImDatPP_;
     }
 
 
 Index::
 Index() 
-    : p(IndexDat::Null()), 
-      primelevel_(0) 
+    : 
+    p(IndexDat::Null()), 
+    primelevel_(0) 
     { }
 
 Index::
@@ -310,9 +294,6 @@ isNull() const { return (p == IndexDat::Null()); }
 
 bool Index::
 isNotNull() const { return (p != IndexDat::Null()); }
-
-int Index::
-count() const { return p->count(); }
 
 int Index::
 primeLevel() const { return primelevel_; }
@@ -422,7 +403,7 @@ read(std::istream& s)
         }
     else
         {
-        p = new IndexDat(ss,mm,IntToIndexType(t),ind);
+        p = make_shared<IndexDat>(ss,mm,IntToIndexType(t),ind);
         }
     }
 

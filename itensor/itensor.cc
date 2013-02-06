@@ -6,10 +6,11 @@
 using namespace std;
 using boost::format;
 using boost::array;
-using boost::intrusive_ptr;
+using boost::shared_ptr;
+using boost::make_shared;
 
 #ifdef DEBUG
-#define ITENSOR_CHECK_NULL if(p == 0) Error("ITensor is null");
+#define ITENSOR_CHECK_NULL if(!p) Error("ITensor is null");
 #else
 #define ITENSOR_CHECK_NULL
 #endif
@@ -25,7 +26,6 @@ using boost::intrusive_ptr;
 ITensor::
 ITensor()  
     : 
-    p(0),
     scale_(1)
     { }
 
@@ -61,7 +61,7 @@ ITensor(const Index& i1, Real val)
 ITensor::
 ITensor(const Index& i1, const VectorRef& V) 
     : 
-    p(new ITDat(V)),
+    p(make_shared<ITDat>(V)),
     is_(i1),
     scale_(1)
 	{ 
@@ -195,7 +195,7 @@ ITensor(const std::vector<Index>& I)
 ITensor::
 ITensor(const std::vector<Index>& I, const Vector& V) 
     : 
-    p(new ITDat(V)),
+    p(make_shared<ITDat>(V)),
     scale_(1)
 	{
     int alloc_size;
@@ -220,7 +220,6 @@ ITensor(const std::vector<Index>& I, const ITensor& other)
 ITensor::
 ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P) 
     : 
-    p(0), 
     scale_(other.scale_)
     {
     int alloc_size;
@@ -273,7 +272,8 @@ read(std::istream& s)
 
     is_.read(s);
     scale_.read(s);
-    p = new ITDat(s);
+    p = make_shared<ITDat>();
+    p->read(s);
     }
 
 void ITensor::
@@ -457,9 +457,9 @@ assignFrom(const ITensor& other)
     Permutation P; 
     is_.getperm(other.is_,P);
     scale_ = other.scale_;
-    if(p->count() != 1) 
+    if(!p.unique())
         { 
-        p = new ITDat(); 
+        p = make_shared<ITDat>(); 
         }
     other.reshapeDat(P,p->v);
     DO_IF_PS(++Prodstats::stats().c1;)
@@ -620,7 +620,7 @@ tieIndices(const array<Index,NMAX+1>& indices, int nind,
         ii[j] = &one;
     
     //Create the new dat
-    boost::intrusive_ptr<ITDat> np = new ITDat(alloc_size);
+    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
     Vector& resdat = np->v;
 
     const Vector& thisdat = p->v;
@@ -757,7 +757,7 @@ trace(const array<Index,NMAX+1>& indices, int nind)
         ii[j] = &one;
     
     //Create the new dat
-    boost::intrusive_ptr<ITDat> np = new ITDat(alloc_size);
+    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
     Vector& resdat = np->v;
 
     const Vector& thisdat = p->v;
@@ -870,8 +870,7 @@ expandIndex(const Index& small, const Index& big, int start)
     inc.assign(0);
     inc.at(w) = start;
 
-    Counter c; 
-    initCounter(c);
+    Counter c(is_);
 
     const Vector& thisdat = p->v;
     Vector& resdat = res.p->v;
@@ -890,7 +889,7 @@ expandIndex(const Index& small, const Index& big, int start)
 int ITensor::
 vecSize() const 
     { 
-    return (p == 0 ? 0 : p->v.Length()); 
+    return (p.get() == 0 ? 0 : p->v.Length()); 
     }
 
 int ITensor::
@@ -924,12 +923,11 @@ assignFromVec(const VectorRef& v)
     if(p->v.Length() != v.Length()) 
 	Error("ITensor::assignToVec bad size");
     scale_ = 1;
-    if(p->count() != 1) 
-	{ 
-    p = new ITDat(v);
-	}
-    else
-	p->v = v;
+    if(!p.unique())
+        { 
+        p = make_shared<ITDat>();
+        }
+    p->v = v;
     }
 
 void ITensor::
@@ -951,8 +949,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
     const Permutation::int9& ind = P.ind();
 
     //Make a counter for thisdat
-    Counter c; 
-    initCounter(c);
+    Counter c(is_);
     array<int,NMAX+1> n;
     for(int j = 1; j <= c.rn_; ++j) n[ind[j]] = c.n[j];
 
@@ -1148,6 +1145,13 @@ swap(ITensor& other)
     scale_.swap(other.scale_);
     }
 
+Real* ITensor::
+datStart() const
+    {
+    if(!p) Error("ITensor is null");
+    return p->v.First();
+    }
+
 void ITensor::
 randomize() 
     { 
@@ -1240,32 +1244,29 @@ print(std::string name,Printdat pdat) const
     }
 
 void ITensor::
-initCounter(Counter& C) const 
-    { 
-    C.init(is_);
-    }
-
-void ITensor::
 allocate(int dim) 
     { 
-    p = new ITDat(dim); 
+    p = make_shared<ITDat>(dim); 
     }
 
 void ITensor::
 allocate() 
     { 
-    p = new ITDat(); 
+    p = make_shared<ITDat>(); 
     }
 
 void ITensor::
 solo() const
 	{
     ITENSOR_CHECK_NULL
-    if(p->count() != 1) 
+    if(!p.unique())
         { 
-        p = new ITDat(*p);
+        VectorRef oldv(p->v);
+        p = make_shared<ITDat>();
+        p->v = oldv;
         }
 	}
+
 
 int ITensor::
 _ind(int i1, int i2, int i3, int i4, 
@@ -1630,10 +1631,8 @@ operator/=(const ITensor& other)
     bool L_is_matrix,R_is_matrix;
     toMatrixProd(*this,other,props,lref,rref,L_is_matrix,R_is_matrix);
 
-    if(p->count() != 1) 
-        {
-        p = new ITDat(); 
-        }
+    if(!p.unique()) allocate();
+
     Vector& thisdat = p->v; 
     
     const int ni = lref.Ncols(), nj = lref.Nrows(), nk = rref.Nrows();
@@ -1797,10 +1796,8 @@ directMultiply(const ITensor& other, ProductProps& props,
             newdat(ind4(inew[4],mnew[3],inew[3],mnew[2],inew[2],mnew[1],inew[1])) = d;
             }
 
-    if(p->count() != 1) 
-        { 
-        p = new ITDat(); 
-        } 
+    if(!p.unique()) allocate();
+
     p->v = newdat;
 
 
@@ -1883,7 +1880,7 @@ directMultiply(const ITensor& other, ProductProps& props,
         ii[j] = &one;
     
     //Create the new dat
-    boost::intrusive_ptr<ITDat> np = new ITDat(alloc_size);
+    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
     Vector& resdat = np->v;
 
     const Vector& thisdat = p->v;
@@ -2042,10 +2039,8 @@ operator*=(const ITensor& other)
         */
 
     //Do the matrix multiplication
-    if(p->count() != 1) 
-        { 
-        p = new ITDat(); 
-        } 
+    if(!p.unique()) allocate();
+
     p->v.ReDimension(rref.Nrows()*lref.Ncols());
     MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
     nref = rref*lref;
@@ -2112,6 +2107,11 @@ operator+=(const ITensor& other)
         scale_ *= 2; 
         return *this; 
         }
+
+    //Possible optimization
+    //if share the same ITDat
+    //if(this->p == other.p) { ... }
+
 
     bool complex_this = isComplex();
     bool complex_other = other.isComplex();
@@ -2182,10 +2182,12 @@ operator+=(const ITensor& other)
 
     Permutation P; 
     is_.getperm(other.is_,P);
-    Counter c; other.initCounter(c);
+    Counter c(other.is_);
+
     int *j[NMAX+1];
     for(int k = 1; k <= NMAX; ++k) j[P.dest(k)] = &(c.i[k]);
-    static int n[NMAX+1];
+    //static int n[NMAX+1];
+    int n[NMAX+1];
     for(int k = 1; k <= NMAX; ++k) 
         {
         n[P.dest(k)] = c.n[k];
@@ -2217,6 +2219,7 @@ operator+=(const ITensor& other)
             += scalefac * othrdat(c.ind);
             }
         }
+
 
     /*
 #ifdef STRONG_DEBUG
@@ -2483,7 +2486,7 @@ operator<<(ostream & s, const ITensor & t)
             if(t.scale_.isFiniteReal()) scale = t.scale_.real();
             else s << "\n(omitting too large scale factor)" << endl;
             const Vector& v = t.p->v;
-            Counter c; t.initCounter(c);
+            Counter c(t.is_);
             for(; c.notDone(); ++c)
                 {
                 Real val = v(c.ind)*scale;
@@ -2508,15 +2511,13 @@ operator<<(ostream & s, const ITensor & t)
 ITDat::
 ITDat() 
     : 
-    v(0), 
-    numref(0)
+    v(0)
     { }
 
 ITDat::
 ITDat(int size) 
     : 
-    v(size), 
-    numref(0)
+    v(size)
     { 
     v = 0; 
     }
@@ -2524,23 +2525,25 @@ ITDat(int size)
 ITDat::
 ITDat(const VectorRef& v_) 
     : 
-    v(v_), 
-    numref(0)
+    v(v_)
     { }
 
 ITDat::
 ITDat(Real r) 
     : 
-    v(1), 
-    numref(0)
+    v(1)
     { 
     v = r; 
     }
 
-ITDat:: 
-ITDat(std::istream& s) 
-    :
-    numref(0)
+ITDat::
+ITDat(const ITDat& other) 
+    : 
+    v(other.v)
+    { }
+
+void ITDat:: 
+read(std::istream& s) 
     { 
     int size = 0;
     s.read((char*) &size,sizeof(size));
@@ -2548,26 +2551,6 @@ ITDat(std::istream& s)
     s.read((char*) v.Store(), sizeof(Real)*size);
     }
 
-ITDat::
-ITDat(const ITDat& other) 
-    : 
-    v(other.v), 
-    numref(0)
-    { }
-
-void intrusive_ptr_add_ref(ITDat* p) 
-    { 
-    ++(p->numref); 
-    }
-
-void 
-intrusive_ptr_release(ITDat* p) 
-    { 
-    if(--(p->numref) == 0) 
-        {
-        delete p; 
-        } 
-    }
 
 void ITDat::
 write(std::ostream& s) const 
@@ -2622,7 +2605,7 @@ commaInit(ITensor& T,
 
     T_.solo();
     T_.scaleTo(1);
-    T_.initCounter(c_);
+    c_.init(T_.is_);
     }
 
 commaInit& commaInit::

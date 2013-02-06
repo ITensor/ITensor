@@ -7,13 +7,13 @@
 #include "index.h"
 #include "itensor.h"
 #include "qn.h"
+#include "boost/intrusive_ptr.hpp"
 
 
 // Forward declarations
 struct inqn;
 class IQIndexDat;
 struct IQIndexVal;
-
 
 
 //
@@ -143,6 +143,10 @@ class IQIndex
     bool 
     operator==(const IQIndex& other) const
         { return index_.operator==(other.index_); }
+
+    bool 
+    operator!=(const IQIndex& other) const
+        { return index_.operator!=(other.index_); }
 
     bool 
     operator<(const IQIndex& other) const

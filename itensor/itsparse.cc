@@ -6,6 +6,7 @@
 using namespace std;
 using boost::format;
 using boost::array;
+using boost::make_shared;
 
 ITSparse::
 ITSparse()
@@ -442,9 +443,9 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
         }
 
     //Allocate a new dat for res if necessary
-    if(res.isNull() || res.p->count() != 1) 
+    if(res.isNull() || !res.p.unique())
         { 
-        res.p = new ITDat(alloc_size); 
+        res.p = make_shared<ITDat>(alloc_size); 
         }
     else
         {

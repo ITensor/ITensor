@@ -210,6 +210,10 @@ class LogNumber
         { return (sign_ == other.sign_) && (lognum_ == other.lognum_); }
 
     bool 
+    operator!=(const LogNumber& other) const
+        { return (sign_ != other.sign_) || (lognum_ != other.lognum_); }
+
+    bool 
     approxEquals(const LogNumber& other) const
         { return (sign_ == other.sign_) && (fabs(lognum_-other.lognum_) < LogNumber_Accuracy); }
 
