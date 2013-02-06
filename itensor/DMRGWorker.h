@@ -56,6 +56,7 @@ class DMRGWorker : public BaseDMRGWorker<MPSType>
     Real energy_;
     bool quiet_;
     Real weight_;
+    int debug_level_;
 
     //
     /////////////
@@ -171,7 +172,8 @@ DMRGWorker(const Sweeps& sweeps,
     Parent(sweeps), 
     energy_(0),
     quiet_(false),
-    weight_(1)
+    weight_(1),
+    debug_level_(0)
     { 
     parseOptions(opts);
     }
@@ -184,7 +186,8 @@ DMRGWorker(const Sweeps& sweeps, Observer& obs,
     Parent(sweeps, obs), 
     energy_(0),
     quiet_(false),
-    weight_(1)
+    weight_(1),
+    debug_level_(0)
     { 
     parseOptions(opts);
     }
@@ -195,6 +198,8 @@ parseOptions(const OptSet& opts)
     {
     quiet_ = opts.getBool("Quiet",false);
     weight_ = opts.getReal("Weight",1);
+    const int defaultDL = (quiet_ ? 0 : 1);
+    debug_level_ = opts.getInt("DebugLevel",defaultDL);
     }
 
 
@@ -209,7 +214,6 @@ runInternal(const MPOType& H, MPSType& psi)
                orig_noise  = psi.noise();
     const int orig_minm = psi.minm(), 
               orig_maxm = psi.maxm();
-    int debuglevel = (quiet_ ? 0 : 1);
 
     int N = psi.N();
     energy_ = NAN;
@@ -219,7 +223,7 @@ runInternal(const MPOType& H, MPSType& psi)
     LocalMPO<MPOTensor> PH(H);
 
     Eigensolver solver;
-    solver.debugLevel(debuglevel);
+    solver.debugLevel(debug_level_);
 
     const Opt doNorm = DoNormalize(true);
     
@@ -296,7 +300,6 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
                orig_noise  = psi.noise();
     const int orig_minm = psi.minm(), 
               orig_maxm = psi.maxm();
-    int debuglevel = (quiet_ ? 0 : 1);
 
     int N = psi.N();
     energy_ = 0;
@@ -306,7 +309,7 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
     LocalMPOSet<MPOTensor> PH(H);
 
     Eigensolver solver;
-    solver.debugLevel(debuglevel);
+    solver.debugLevel(debug_level_);
 
     const Opt doNorm = DoNormalize(true);
     
@@ -370,7 +373,6 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
                orig_noise  = psi.noise();
     const int orig_minm = psi.minm(), 
               orig_maxm = psi.maxm();
-    int debuglevel = (quiet_ ? 0 : 1);
 
     int N = psi.N();
     energy_ = 0;
@@ -381,7 +383,7 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
     PH.weight(this->weight_);
 
     Eigensolver solver;
-    solver.debugLevel(debuglevel);
+    solver.debugLevel(debug_level_);
 
     const Opt doNorm = DoNormalize(true);
     
