@@ -380,13 +380,16 @@ davidson(const LocalT& A, Tensor& phi) const
                 q += proj;
 
                 Real qn = q.norm();
-                if(qn < 1E-30)
+                if(qn < 1E-10)
                     {
                     if(debug_level_ >= 2)
                         Cout << "Vector not independent, randomizing" << Endl;
                     q = V.at(ni-1);
                     q.randomize();
                     qn = q.norm();
+                    //Do another pass for good measure
+                    if(pass == Npass) 
+                        --pass;
                     }
 
                 q *= 1./qn;
