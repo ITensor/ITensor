@@ -236,7 +236,7 @@ Index()
 Index::
 Index(const std::string& name, int mm, IndexType it, int plev) 
     : 
-    p(new IndexDat(name,mm,it)), 
+    p(make_shared<IndexDat>(name,mm,it)), 
     primelevel_(plev) 
     { 
     }

@@ -8,24 +8,24 @@ REPORT_LEVEL=confirm
 
 HEADERS=test.h
 SOURCES = test.cc
-SOURCES+= matrix_test.cc
+#SOURCES+= matrix_test.cc
 #SOURCES+= real_test.cc
-SOURCES+= index_test.cc
-SOURCES+= itensor_test.cc
+#SOURCES+= index_test.cc
+#SOURCES+= itensor_test.cc
 #SOURCES+= itsparse_test.cc
 #SOURCES+= combiner_test.cc
-#SOURCES+= iqcombiner_test.cc
-SOURCES+= iqtensor_test.cc
+SOURCES+= iqcombiner_test.cc
+#SOURCES+= iqtensor_test.cc
 #SOURCES+= mps_test.cc
 #SOURCES+= mpo_test.cc
 #SOURCES+= eigensolver_test.cc
 #SOURCES+= regression_test.cc
 #SOURCES+= svdworker_test.cc
-SOURCES+= iqtsparse_test.cc
+#SOURCES+= iqtsparse_test.cc
 #SOURCES+= webpage_test.cc
 #SOURCES+= localmpo_test.cc
-SOURCES+= option_test.cc
-SOURCES+= iqindexset_test.cc
+#SOURCES+= option_test.cc
+SOURCES+= indexset_test.cc
 
 LIBNAMES=matrix utilities itensor
 

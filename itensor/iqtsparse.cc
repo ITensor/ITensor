@@ -7,58 +7,33 @@
 using namespace std;
 using boost::format;
 using boost::array;
+using boost::shared_ptr;
+using boost::make_shared;
 
 //
 // IQTSDat
 //
 
-void 
-intrusive_ptr_add_ref(IQTSDat* p) 
-    { 
-    ++(p->numref); 
-    }
-
-void 
-intrusive_ptr_release(IQTSDat* p) 
-    { 
-    if(--(p->numref) == 0)
-        { 
-        delete p; 
-        } 
-    }
-
 IQTSDat::
 IQTSDat()
     :
-    numref(0),
     init(false)
     {
     }
 
-IQTSDat::
-IQTSDat(const IQTSDat& other)
-    :
-    numref(0),
-    init(false),
-    its_(other.its_)
+void IQTSDat::
+makeCopyOf(const IQTSDat& other)
     {
+    init = false;
+    its_ = other.its_;
     }
 
 IQTSDat::
 IQTSDat(istream& s)
     :
-    numref(0),
     init(false)
     {
     read(s);
-    }
-
-IQTSDat::
-IQTSDat(int init_numref)
-    :
-    numref(init_numref),
-    init(false)
-    {
     }
 
 void IQTSDat::
@@ -82,13 +57,6 @@ insert_add(const ITSparse& s)
 void IQTSDat::
 clear()
     {
-#ifdef DEBUG
-    if(numref > 1)
-        {
-        Print(numref);
-        Error("clear called on shared IQTSDat");
-        }
-#endif
     rmap.clear();
     its_.clear();
     }
@@ -107,13 +75,6 @@ init_rmap() const
 void IQTSDat::
 uninit_rmap() const
     {
-#ifdef DEBUG
-    if(numref > 1)
-        {
-        Print(numref);
-        Error("uninit_rmap called on shared IQTSDat");
-        }
-#endif
     rmap.clear();
     init = false;
     }
@@ -145,6 +106,12 @@ write(ostream& s) const
         { it->write(s); }
     }
 
+const shared_ptr<IQTSDat>& IQTSDat::
+Null()
+    {
+    static shared_ptr<IQTSDat> Null_ = make_shared<IQTSDat>();
+    return Null_;
+    }
 
 //
 // IQTSparse
@@ -153,23 +120,23 @@ write(ostream& s) const
 IQTSparse::
 IQTSparse()
     :
-    is_(IQIndexSet::Null()),
+    is_(IndexSet<IQIndex>::Null()),
     d_(IQTSDat::Null())
     { }
 
 IQTSparse::
 IQTSparse(const IQIndex& i1)
     :
-    is_(new IQIndexSet(i1)),
-    d_(new IQTSDat())
+    is_(make_shared<IndexSet<IQIndex> >(i1)),
+    d_(make_shared<IQTSDat>())
     { 
     }
 
 IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2)
     :
-    is_(new IQIndexSet(i1,i2)),
-    d_(new IQTSDat())
+    is_(make_shared<IndexSet<IQIndex> >(i1,i2)),
+    d_(make_shared<IQTSDat>())
     { 
     }
 
@@ -177,8 +144,8 @@ IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2,
           Real r)
     :
-    is_(new IQIndexSet(i1,i2)),
-    d_(new IQTSDat())
+    is_(make_shared<IndexSet<IQIndex> >(i1,i2)),
+    d_(make_shared<IQTSDat>())
     { 
     if(i1.nindex() != i2.nindex())
         {
@@ -193,16 +160,16 @@ IQTSparse(const IQIndex& i1, const IQIndex& i2,
 IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
     :
-    is_(new IQIndexSet(i1,i2,i3)),
-    d_(new IQTSDat())
+    is_(make_shared<IndexSet<IQIndex> >(i1,i2,i3)),
+    d_(make_shared<IQTSDat>())
     { 
     }
 
 bool IQTSparse::
-isNull() const { return (d_ == IQTSDat::Null() || is_ == IQIndexSet::Null()); }
+isNull() const { return (d_ == IQTSDat::Null() || is_ == IndexSet<IQIndex>::Null()); }
 
 bool IQTSparse::
-isNotNull() const { return !(d_ == IQTSDat::Null() || is_ == IQIndexSet::Null()); }
+isNotNull() const { return !(d_ == IQTSDat::Null() || is_ == IndexSet<IQIndex>::Null()); }
 
 
 IQTSparse& IQTSparse::
@@ -514,8 +481,10 @@ read(std::istream& s)
     s.read((char*) &null_,sizeof(null_));
     if(null_) 
         { *this = IQTSparse(); return; }
-    is_ = new IQIndexSet(s);
-    d_ = new IQTSDat(s);
+    is_ = make_shared<IndexSet<IQIndex> >();
+    is_->read(s);
+    d_ = make_shared<IQTSDat>();
+    d_->read(s);
     }
 
 void IQTSparse::
@@ -536,20 +505,26 @@ soloDat()
         Error("IQTSparse is null");
         }
 
-	if(blocks().count() != 1)
+    if(!d_.unique())
 	    {
-        d_ = new IQTSDat(*d_);
+        const IQTSDat& old_dat(*d_);
+        d_ = make_shared<IQTSDat>();
+        d_->makeCopyOf(old_dat);
 	    }
     }
 
 void IQTSparse::
 soloIndex()
     {
-	if(is_ == 0)
+	if(!is_)
         Error("IQTSparse is null");
 
-	if(is_->count() != 1)
-        is_ = new IQIndexSet(*is_);
+	if(!is_.unique())
+        {
+        const IndexSet<IQIndex>& old_is(*is_);
+        is_ = make_shared<IndexSet<IQIndex> >();
+        *is_ = old_is;
+        }
     }
 
 void IQTSparse::

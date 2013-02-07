@@ -51,17 +51,17 @@ class ITSparse
     index(int j) const { return is_.index(j); }
 
     int 
-    r() const { return is_.r_; }
+    r() const { return is_.r(); }
 
     int 
-    rn() const { return is_.rn_; }
+    rn() const { return is_.rn(); }
 
     int 
     m(int j) const { return is_.m(j); }
 
     //uniqueReal depends on indices only, unordered:
     Real 
-    uniqueReal() const { return is_.ur_; } 
+    uniqueReal() const { return is_.uniqueReal(); } 
 
     bool 
     isComplex() const { return hasindexn(Index::IndReIm()); }
@@ -189,7 +189,7 @@ class ITSparse
     hasindex1(const Index& I) const { return is_.hasindex1(I); }
 
     bool
-    hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const
+    hasAllIndex(const boost::array<Index,NMAX>& I, int nind) const
         { return is_.hasAllIndex(I,nind); }
 
     void 

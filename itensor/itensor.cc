@@ -128,8 +128,8 @@ ITensor(const Index& i1, const Index& i2, const Index& i3,
 	array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
 	int size = 3;
 	while(ii[size] != Index::Null()) ++size;
-	int alloc_size; 
-    is_ = IndexSet<Index>(ii,size,alloc_size);
+	int alloc_size = -1; 
+    is_ = IndexSet<Index>(ii,size,alloc_size,0);
 	allocate(alloc_size);
 	}
 
@@ -167,8 +167,8 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
            iv6.ind, iv7.ind, iv8.ind }};
     int size = 3; 
     while(size < NMAX && ii[size+1] != IndexVal::Null().ind) ++size;
-    int alloc_size; 
-    is_ = IndexSet<Index>(ii,size,alloc_size);
+    int alloc_size = -1;
+    is_ = IndexSet<Index>(ii,size,alloc_size,0);
     allocate(alloc_size);
 
     //Assign specified element to 1
@@ -187,8 +187,8 @@ ITensor(const std::vector<Index>& I)
     :
     scale_(1)
 	{
-    int alloc_size;
-    is_ = IndexSet<Index>(I,I.size(),alloc_size);
+    int alloc_size = -1;
+    is_ = IndexSet<Index>(I,I.size(),alloc_size,0);
 	allocate(alloc_size);
 	}
 
@@ -198,8 +198,8 @@ ITensor(const std::vector<Index>& I, const Vector& V)
     p(make_shared<ITDat>(V)),
     scale_(1)
 	{
-    int alloc_size;
-    is_ = IndexSet<Index>(I,I.size(),alloc_size);
+    int alloc_size = -1;
+    is_ = IndexSet<Index>(I,I.size(),alloc_size,0);
 	if(alloc_size != V.Length()) 
 	    { Error("incompatible Index and Vector sizes"); }
 	}
@@ -211,8 +211,8 @@ ITensor(const std::vector<Index>& I, const ITensor& other)
     p(other.p), 
     scale_(other.scale_)
 	{
-    int alloc_size;
-    is_ = IndexSet<Index>(I,I.size(),alloc_size);
+    int alloc_size = -1;
+    is_ = IndexSet<Index>(I,I.size(),alloc_size,0);
 	if(alloc_size != other.vecSize()) 
 	    { Error("incompatible Index and ITensor sizes"); }
 	}
@@ -222,8 +222,8 @@ ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P)
     : 
     scale_(other.scale_)
     {
-    int alloc_size;
-    is_ = IndexSet<Index>(I,I.size(),alloc_size);
+    int alloc_size = -1;
+    is_ = IndexSet<Index>(I,I.size(),alloc_size,0);
     if(alloc_size != other.vecSize()) 
         { Error("incompatible Index and ITensor sizes"); }
     if(P.is_trivial()) { p = other.p; }
@@ -541,7 +541,7 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
     }
 
 void ITensor::
-tieIndices(const array<Index,NMAX+1>& indices, int nind,
+tieIndices(const array<Index,NMAX>& indices, int nind,
            const Index& tied)
     {
     if(nind == 0) Error("No indices given");
@@ -561,7 +561,7 @@ tieIndices(const array<Index,NMAX+1>& indices, int nind,
     for(int k = 1; k <= r(); ++k)
         {
         const Index& K = is_.index(k);
-        for(int j = 1; j <= nind; ++j)
+        for(int j = 0; j < nind; ++j)
         if(K == indices[j]) 
             { 
             if(indices[j].m() != tm)
@@ -585,7 +585,7 @@ tieIndices(const array<Index,NMAX+1>& indices, int nind,
         {
         Print(*this);
         cout << "indices = " << endl;
-        for(int j = 1; j <= nind; ++j)
+        for(int j = 0; j < nind; ++j)
             cout << indices[j] << endl;
         Error("Couldn't find Index to tie");
         }
@@ -642,8 +642,8 @@ void ITensor::
 tieIndices(const Index& i1, const Index& i2,
            const Index& tied)
     {
-    array<Index,NMAX+1> inds =
-        {{ Index::Null(), i1, i2, 
+    array<Index,NMAX> inds =
+        {{ i1, i2, 
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null() }};
@@ -656,8 +656,8 @@ tieIndices(const Index& i1, const Index& i2,
            const Index& i3,
            const Index& tied)
     {
-    array<Index,NMAX+1> inds =
-        {{ Index::Null(), i1, i2, i3,
+    array<Index,NMAX> inds =
+        {{ i1, i2, i3,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null(), Index::Null() }};
 
@@ -669,8 +669,8 @@ tieIndices(const Index& i1, const Index& i2,
            const Index& i3, const Index& i4,
            const Index& tied)
     {
-    array<Index,NMAX+1> inds =
-        {{ Index::Null(), i1, i2, i3, i4,
+    array<Index,NMAX> inds =
+        {{ i1, i2, i3, i4,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null() }};
 
@@ -678,11 +678,11 @@ tieIndices(const Index& i1, const Index& i2,
     }
 
 void ITensor::
-trace(const array<Index,NMAX+1>& indices, int nind)
+trace(const array<Index,NMAX>& indices, int nind)
     {
     if(nind == 0) Error("No indices given");
 
-    const int tm = indices[1].m();
+    const int tm = indices[0].m();
     
     array<Index,NMAX+1> new_index_;
 
@@ -697,7 +697,7 @@ trace(const array<Index,NMAX+1>& indices, int nind)
     for(int k = 1; k <= r(); ++k)
         {
         const Index& K = index(k);
-        for(int j = 1; j <= nind; ++j)
+        for(int j = 0; j < nind; ++j)
         if(K == indices[j]) 
             { 
             if(indices[j].m() != tm)
@@ -721,7 +721,7 @@ trace(const array<Index,NMAX+1>& indices, int nind)
         {
         Print(*this);
         cout << "indices = " << endl;
-        for(int j = 1; j <= nind; ++j)
+        for(int j = 0; j < nind; ++j)
             cout << indices[j] << endl;
         Error("Couldn't find Index to trace");
         }
@@ -783,8 +783,8 @@ trace(const array<Index,NMAX+1>& indices, int nind)
 void ITensor::
 trace(const Index& i1)
     {
-    array<Index,NMAX+1> inds =
-        {{ Index::Null(), i1, Index::Null(), 
+    array<Index,NMAX> inds =
+        {{ i1, Index::Null(), 
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null() }};
@@ -795,8 +795,8 @@ trace(const Index& i1)
 void ITensor::
 trace(const Index& i1, const Index& i2)
     {
-    array<Index,NMAX+1> inds =
-        {{ Index::Null(), i1, i2, 
+    array<Index,NMAX> inds =
+        {{ i1, i2, 
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null() }};
@@ -807,8 +807,8 @@ trace(const Index& i1, const Index& i2)
 void ITensor::
 trace(const Index& i1, const Index& i2, const Index& i3)
     {
-    array<Index,NMAX+1> inds =
-        {{ Index::Null(), i1, i2, i3,
+    array<Index,NMAX> inds =
+        {{ i1, i2, i3,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null(), Index::Null() }};
 
@@ -819,8 +819,8 @@ void ITensor::
 trace(const Index& i1, const Index& i2,
       const Index& i3, const Index& i4)
     {
-    array<Index,NMAX+1> inds =
-        {{ Index::Null(), i1, i2, i3, i4,
+    array<Index,NMAX> inds =
+        {{ i1, i2, i3, i4,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null() }};
 
@@ -1559,40 +1559,19 @@ operator/=(const ITensor& other)
         return operator/=(cp_oth);
         }
 
-    //These hold the indices from other 
-    //that will be added to this->index_
-    int nr1_ = 0;
-    static array<const Index*,NMAX+1> extra_index1_;
-
     //------------------------------------------------------------------
     //Handle m==1 Indices: set union
-    for(int j = other.rn()+1; j <= other.r(); ++j)
-        {
-        const Index& J = other.is_.index(j);
-        bool this_has_index = false;
-        for(int k = this->rn()+1; k <= this->r(); ++k)
-            { 
-            if(is_.index(k) == J) 
-                { 
-                this_has_index = true; 
-                break; 
-                } 
-            }
-        if(!this_has_index) extra_index1_[++nr1_] = &J;
-        }
-
-    static array<Index,NMAX+1> new_index_;
 
     if(other.rn() == 0)
         {
         scale_ *= other.scale_;
         scale_ *= other.p->v(1);
-        for(int j = 1; j <= nr1_; ++j) 
-            { 
-            is_.index_[is_.r_+j] = *(extra_index1_[j]); 
+        for(int j = other.rn()+1; j <= other.r(); ++j)
+            {
+            const Index& J = other.is_.index(j);
+            if(!is_.hasindex1(J))
+                is_.addindex1(J);
             }
-        is_.r_ += nr1_;
-        is_.setUniqueReal();
         return *this;
         }
     else if(rn() == 0)
@@ -1600,29 +1579,14 @@ operator/=(const ITensor& other)
         scale_ *= other.scale_;
         scale_ *= p->v(1);
         p = other.p;
-        is_.rn_ = other.is_.rn_;
-        //Copy other's m!=1 indices
-        for(int j = 1; j <= rn(); ++j) 
-            {
-            //cerr << "Copying [" << j << "] " << other.index_[j] << "\n";
-            new_index_[j] = other.index(j);
-            }
-        //Move current m==1 indices past rn_
+        IndexSet<Index> new_is(other.is_);
         for(int j = 1; j <= r(); ++j) 
             {
-            //cerr << "Copying [" << rn_+j << "] " << index_[j] << "\n";
-            new_index_[rn()+j] = index(j);
+            const Index& J = is_.index(j);
+            if(!new_is.hasindex1(J))
+                new_is.addindex1(J);
             }
-        is_.r_ += is_.rn_;
-        //Get the extra m==1 indices from other
-        for(int j = 1; j <= nr1_; ++j) 
-            {
-            //cerr << "Copying [" << r_+j << "] " << *(extra_index1_[j]) << "\n";
-            new_index_[r()+j] = *(extra_index1_[j]);
-            }
-        is_.r_ += nr1_;
-        is_.index_.swap(new_index_);
-        is_.setUniqueReal();
+        is_.swap(new_is);
         return *this;
         }
 
@@ -1644,27 +1608,36 @@ operator/=(const ITensor& other)
     for(int i = 1; i <= ni; ++i)
         { thisdat(((j-1)*nk+k-1)*ni+i) =  R(k,j) * L(j,i); }
 
-    if((is_.r() + other.is_.rn() - props.nsamen + nr1_) > NMAX) 
-        Error("ITensor::operator/=: too many indices in product.");
+
+    IndexSet<Index> new_index;
 
     //Handle m!=1 indices
-    int nrn_ = 0;
+
     for(int j = 1; j <= is_.rn(); ++j)
-        { if(!props.contractedL[j]) new_index_[++nrn_] = this->index(j); }
+        if(!props.contractedL[j]) 
+            new_index.addindexn(this->index(j));
+
     for(int j = 1; j <= other.is_.rn(); ++j)
-        { if(!props.contractedR[j]) new_index_[++nrn_] = other.index(j); }
+        if(!props.contractedR[j]) 
+            new_index.addindexn(other.index(j));
+
     for(int j = 1; j <= is_.rn(); ++j)
-        { if(props.contractedL[j])  new_index_[++nrn_] = this->index(j); }
+        if(props.contractedL[j])  
+            new_index.addindexn(this->index(j));
 
-    for(int j = rn()+1; j <= r(); ++j) new_index_[nrn_+j-is_.rn()] = index(j);
-    is_.r_ = (r()-rn()) + nrn_;
-    for(int j = 1; j <= nr1_; ++j) new_index_[r()+j] = *(extra_index1_[j]);
-    is_.r_ += nr1_;
+    //Handle m==1 indices
 
-    is_.rn_ = nrn_;
+    for(int j = is_.rn()+1; j <= r(); ++j) 
+        new_index.addindex1(index(j));
 
-    is_.index_.swap(new_index_);
-    is_.setUniqueReal();
+    for(int j = other.rn()+1; j <= other.r(); ++j)
+        {
+        const Index& J = other.is_.index(j);
+        if(!is_.hasindex1(J)) 
+            new_index.addindex1(J);
+        }
+
+    is_.swap(new_index);
     
     scale_ *= other.scale_;
 
@@ -1943,8 +1916,9 @@ operator*=(const ITensor& other)
         }
 
     //These hold  regular new indices and the m==1 indices that appear in the result
-    static array<Index,NMAX+1> new_index_;
-    static array<const Index*,NMAX+1> new_index1_;
+    IndexSet<Index> new_index;
+
+    array<const Index*,NMAX+1> new_index1_;
     int nr1_ = 0;
 
     //
@@ -1953,20 +1927,15 @@ operator*=(const ITensor& other)
     for(int k = rn()+1; k <= this->r(); ++k)
         {
         const Index& K = is_.index(k);
-        for(int j = other.rn()+1; j <= other.r(); ++j)
-	    if(other.index(j) == K) 
-		goto skip_this;
-        new_index1_[++nr1_] = &K;
-        skip_this:;
+        if(!other.is_.hasindex1(K))
+            new_index1_[++nr1_] = &K;
         }
+
     for(int j = other.rn()+1; j <= other.r(); ++j)
         {
         const Index& J = other.index(j);
-        for(int k = this->rn()+1; k <= this->r(); ++k)
-	    if(index(k) == J) 
-		goto skip_other;
-        new_index1_[++nr1_] = &J;
-        skip_other:;
+        if(!is_.hasindex1(J))
+            new_index1_[++nr1_] = &J;
         }
 
     //
@@ -1977,17 +1946,21 @@ operator*=(const ITensor& other)
         {
         scale_ *= other.scale_;
         scale_ *= other.p->v(1);
-        is_.r_ = is_.rn_ + nr1_;
-        if(is_.r() > NMAX) 
+        //is_.r_ = is_.rn_ + nr1_;
+#ifdef DEBUG
+        if((is_.rn()+nr1_) > NMAX) 
             {
             std::cout << "new r_ would be = " << is_.r() << "\n";
             std::cerr << "new r_ would be = " << is_.r() << "\n";
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
             }
+#endif
+        for(int j = 1; j <= is_.rn(); ++j)
+            new_index.addindexn(is_.index(j));
         //Keep current m!=1 indices, overwrite m==1 indices
         for(int j = 1; j <= nr1_; ++j) 
-            is_.index_[is_.rn_+j] = *(new_index1_[j]);
-        is_.setUniqueReal();
+            new_index.addindex1( *(new_index1_[j]) );
+        is_.swap(new_index);
         return *this;
         }
     else if(rn() == 0)
@@ -1995,26 +1968,27 @@ operator*=(const ITensor& other)
         scale_ *= other.scale_;
         scale_ *= p->v(1);
         p = other.p;
-        is_.rn_ = other.is_.rn_;
-        is_.r_ = is_.rn_ + nr1_;
-        if(is_.r() > NMAX) 
+        //is_.rn_ = other.is_.rn_;
+        //is_.r_ = is_.rn_ + nr1_;
+#ifdef DEBUG
+        if((is_.rn()+nr1_) > NMAX) 
             {
             std::cout << "new r_ would be = " << is_.r() << "\n";
             std::cerr << "new r_ would be = " << is_.r() << "\n";
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
             }
-        for(int j = 1; j <= is_.rn(); ++j) 
-            new_index_[j] = other.is_.index(j);
+#endif
+        for(int j = 1; j <= other.is_.rn(); ++j) 
+            new_index.addindexn( other.is_.index(j) );
         for(int j = 1; j <= nr1_; ++j) 
-            new_index_[is_.rn_+j] = *(new_index1_[j]);
-        is_.index_.swap(new_index_);
-        is_.setUniqueReal();
+            new_index.addindex1( *(new_index1_[j]) );
+        is_.swap(new_index);
         return *this;
         }
 
     ProductProps props(*this,other);
 
-    int new_rn_ = 0;
+    //int new_rn_ = 0;
 
     /*
     bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 10000 
@@ -2059,9 +2033,11 @@ operator*=(const ITensor& other)
 
     //Handle m!=1 indices
     for(int j = 1; j <= this->rn(); ++j)
-        { if(!props.contractedL[j]) new_index_[++new_rn_] = index(j); }
+        if(!props.contractedL[j]) 
+            new_index.addindexn( index(j) );
     for(int j = 1; j <= other.rn(); ++j)
-        { if(!props.contractedR[j]) new_index_[++new_rn_] = other.index(j); }
+        if(!props.contractedR[j]) 
+            new_index.addindexn( other.index(j) );
 
     /*
     else
@@ -2070,15 +2046,12 @@ operator*=(const ITensor& other)
         }
     */
 
-    is_.rn_ = new_rn_;
 
     //Put in m==1 indices
-    is_.r_ = rn();
     for(int j = 1; j <= nr1_; ++j) 
-        new_index_[++(is_.r_)] = *(new_index1_.at(j));
+        new_index.addindex1( *(new_index1_.at(j)) );
 
-    is_.index_.swap(new_index_);
-    is_.setUniqueReal();
+    is_.swap(new_index);
 
     scale_ *= other.scale_;
 
@@ -2576,24 +2549,24 @@ commaInit(ITensor& T,
     if(T_.isNull()) 
         Error("Can't assign to null ITensor");
 
-    boost::array<Index,NMAX+1> ii;
+    boost::array<Index,NMAX> ii;
     ii.assign(Index::Null());
 
     if(i2 == Index::Null())
         {
-        ii[1] = i1;
+        ii[0] = i1;
         }
     else
     if(i3 == Index::Null())
         {
-        ii[1] = i2;
-        ii[2] = i1;
+        ii[0] = i2;
+        ii[1] = i1;
         }
     else
         {
-        ii[1] = i3;
-        ii[2] = i2;
-        ii[3] = i1;
+        ii[0] = i3;
+        ii[1] = i2;
+        ii[2] = i1;
         }
     try {
         T_.is_.getperm(ii,P_);

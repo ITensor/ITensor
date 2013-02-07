@@ -7,34 +7,15 @@
 using namespace std;
 using boost::format;
 using boost::array;
-
-void 
-intrusive_ptr_add_ref(IQIndexDat* pd) 
-    { 
-    ++(pd->numref); 
-    }
-
-void 
-intrusive_ptr_release(IQIndexDat* pd) 
-    { 
-    if(!pd->is_static_ && --(pd->numref) == 0)
-        { 
-        delete pd; 
-        } 
-    }
+using boost::shared_ptr;
+using boost::make_shared;
 
 IQIndexDat::
 IQIndexDat() 
-    : 
-    numref(0), 
-    is_static_(false) 
     { }
 
 IQIndexDat::
 IQIndexDat(const Index& i1, const QN& q1)
-    : 
-    numref(0), 
-    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     }
@@ -42,9 +23,6 @@ IQIndexDat(const Index& i1, const QN& q1)
 IQIndexDat::
 IQIndexDat(const Index& i1, const QN& q1,
            const Index& i2, const QN& q2)
-    : 
-    numref(0), 
-    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -54,9 +32,6 @@ IQIndexDat::
 IQIndexDat(const Index& i1, const QN& q1,
            const Index& i2, const QN& q2,
            const Index& i3, const QN& q3)
-    : 
-    numref(0), 
-    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -68,9 +43,6 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i2, const QN& q2,
            const Index& i3, const QN& q3,
            const Index& i4, const QN& q4)
-    : 
-    numref(0), 
-    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -84,9 +56,6 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i3, const QN& q3,
            const Index& i4, const QN& q4,
            const Index& i5, const QN& q5)
-    : 
-    numref(0), 
-    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -102,9 +71,6 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i4, const QN& q4,
            const Index& i5, const QN& q5,
            const Index& i6, const QN& q6)
-    : 
-    numref(0), 
-    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -122,9 +88,6 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i5, const QN& q5,
            const Index& i6, const QN& q6,
            const Index& i7, const QN& q7)
-    : 
-    numref(0), 
-    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -144,9 +107,6 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i6, const QN& q6,
            const Index& i7, const QN& q7,
            const Index& i8, const QN& q8)
-    : 
-    numref(0), 
-    is_static_(false)
     {
     iq_.push_back(inqn(i1,q1));
     iq_.push_back(inqn(i2,q2));
@@ -160,34 +120,22 @@ IQIndexDat(const Index& i1, const QN& q1,
 
 IQIndexDat::
 IQIndexDat(std::vector<inqn>& ind_qn)
-    : 
-    numref(0), 
-    is_static_(false)
     { 
     iq_.swap(ind_qn); 
     }
 
-IQIndexDat::
-IQIndexDat(const IQIndexDat& other) 
-    : 
-    iq_(other.iq_),
-    numref(0), 
-    is_static_(other.is_static_)
+void IQIndexDat::
+makeCopyOf(const IQIndexDat& other) 
     { 
+    iq_ = other.iq_;
     }
 
 IQIndexDat::
 IQIndexDat(std::istream& s) 
-    : 
-    numref(0), 
-    is_static_(false) 
     { read(s); }
 
 IQIndexDat::
 IQIndexDat(Index::Imaker im)
-    : 
-    numref(0), 
-    is_static_(true)
     { 
     if(im == Index::makeNull)
         iq_.push_back(inqn(Index::Null(),QN())); 
@@ -215,35 +163,34 @@ read(std::istream& s)
     iq_.resize(size);
     for(iq_it x = iq_.begin(); x != iq_.end(); ++x)
         { x->read(s); }
-    numref = 0;
     }
 
-IQIndexDat* IQIndexDat::
+const IQIndexDatPtr& IQIndexDat::
 Null()
     {
-    static IQIndexDat Null_(Index::makeNull);
-    return &Null_;
+    static IQIndexDatPtr Null_ = make_shared<IQIndexDat>(Index::makeNull);
+    return Null_;
     }
 
-IQIndexDat* IQIndexDat::
+const IQIndexDatPtr& IQIndexDat::
 ReImDat()
     {
-    static IQIndexDat ReImDat_(Index::makeReIm);
-    return &ReImDat_;
+    static IQIndexDatPtr ReImDat_ = make_shared<IQIndexDat>(Index::makeReIm);
+    return ReImDat_;
     }
 
-IQIndexDat* IQIndexDat::
+const IQIndexDatPtr& IQIndexDat::
 ReImDatP()
     {
-    static IQIndexDat ReImDatP_(Index::makeReImP);
-    return &ReImDatP_;
+    static IQIndexDatPtr ReImDatP_ = make_shared<IQIndexDat>(Index::makeReImP);
+    return ReImDatP_;
     }
 
-IQIndexDat* IQIndexDat::
+const IQIndexDatPtr& IQIndexDat::
 ReImDatPP()
     {
-    static IQIndexDat ReImDatPP_(Index::makeReImPP);
-    return &ReImDatPP_;
+    static IQIndexDatPtr ReImDatPP_ = make_shared<IQIndexDat>(Index::makeReImPP);
+    return ReImDatPP_;
     }
 
 //
@@ -287,16 +234,14 @@ qn(int i) const
 IQIndex::
 IQIndex() 
     : 
-    _dir(Out), 
-    pd(0) 
+    _dir(Out)
     { }
 
 IQIndex::
 IQIndex(const Index& other, Arrow dir)
     : 
     index_(other), 
-    _dir(dir), 
-    pd(0)
+    _dir(dir) 
     { }
 
 IQIndex::
@@ -306,8 +251,7 @@ IQIndex(const std::string& name,
                  int plev) 
     : 
     index_(name,1,it,plev), 
-    _dir(dir), 
-    pd(0) 
+    _dir(dir)
     { }
 
 IQIndex::
@@ -317,7 +261,7 @@ IQIndex(const std::string& name,
     : 
     index_(name,i1.m(),i1.type(),i1.primeLevel()), 
     _dir(dir), 
-    pd(new IQIndexDat(i1,q1))
+    pd(make_shared<IQIndexDat>(i1,q1))
     {
     }
 
@@ -329,7 +273,7 @@ IQIndex(const std::string& name,
     : 
     index_(name,i1.m()+i2.m(),i1.type(),i1.primeLevel()), 
     _dir(dir), 
-    pd(new IQIndexDat(i1,q1,i2,q2))
+    pd(make_shared<IQIndexDat>(i1,q1,i2,q2))
     {
     if(i2.type() != i1.type())
         Error("Indices must have the same type");
@@ -344,7 +288,7 @@ IQIndex(const std::string& name,
     : 
     index_(name,i1.m()+i2.m()+i3.m(),i1.type(),i1.primeLevel()), 
     _dir(dir),
-    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3))
+    pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3))
     {
     if(i2.type() != i1.type() 
     || i3.type() != i1.type())
@@ -361,7 +305,7 @@ IQIndex(const std::string& name,
     : 
     index_(name,i1.m()+i2.m()+i3.m()+i4.m(),i1.type(),i1.primeLevel()), 
     _dir(dir),
-    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4))
+    pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3,i4,q4))
     {
     if(i2.type() != i1.type() 
     || i3.type() != i1.type()
@@ -432,7 +376,7 @@ IQIndex(const Index& other,
     : 
     index_(other),
     _dir(dir), 
-    pd(new IQIndexDat(i1,q1))
+    pd(make_shared<IQIndexDat>(i1,q1))
     {
     index_.primeLevel(i1.primeLevel());
     }
@@ -480,7 +424,8 @@ read(std::istream& s)
     {
     index_.read(s);
     s.read((char*)&_dir,sizeof(_dir));
-    pd = new IQIndexDat(s);
+    pd = make_shared<IQIndexDat>();
+    pd->read(s);
     }
 
 int IQIndex::
@@ -625,9 +570,11 @@ void IQIndex::
 solo()
     {
     IQINDEX_CHECK_NULL
-    if(pd->count() != 1)
+    if(!pd.unique())
         {
-        pd = new IQIndexDat(*pd);
+        const IQIndexDat& olddat = *pd;
+        pd = make_shared<IQIndexDat>();
+        pd->makeCopyOf(olddat);
         }
     }
 

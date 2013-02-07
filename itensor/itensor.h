@@ -37,7 +37,7 @@ class ITensor
     //Real number that uniquely identifies this
     //ITensor's set of Indices (independent of their order)
     Real 
-    uniqueReal() const { return is_.ur_; } 
+    uniqueReal() const { return is_.uniqueReal(); } 
 
     //Get the jth Index of this ITensor, j = 1,2,..,r()
     const Index& 
@@ -45,11 +45,11 @@ class ITensor
 
     //Rank of this ITensor (number of indices)
     int 
-    r() const { return is_.r_; }
+    r() const { return is_.r(); }
 
     //Number of m!=1 indices
     int 
-    rn() const { return is_.rn_; }
+    rn() const { return is_.rn(); }
 
     //Bond dimension of jth Index, j = 1,2,..,r()
     int 
@@ -74,9 +74,9 @@ class ITensor
 
     //Enables looping over Indices in a Foreach
     //e.g. Foreach(const Index& I, t.index() ) { ... }
-    const std::pair<IndexSet<Index>::index_it,IndexSet<Index>::index_it> 
-    index() const  
-        { return is_.index(); }
+    //const std::pair<IndexSet<Index>::index_it,IndexSet<Index>::index_it> 
+    const IndexSet<Index>&
+    index() const { return is_; }
 
 
     //Constructors --------------------------------------------------
@@ -299,8 +299,9 @@ class ITensor
     hasindex1(const Index& I) const { return is_.hasindex1(I); }
 
     //true if this tensor has the first nind Indices in array I
+    //(I should be zero indexed)
     bool
-    hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const
+    hasAllIndex(const boost::array<Index,NMAX>& I, int nind) const
         { return is_.hasAllIndex(I,nind); }
 
     //Add m==1 Index I to this, increasing rank by 1
@@ -467,7 +468,7 @@ class ITensor
     // Rijl = Aijil <-- here we have tied the 1st and 3rd index of A
     //
     void
-    tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
+    tieIndices(const boost::array<Index,NMAX>& indices, int nind,
                const Index& tied);
 
     void
@@ -508,7 +509,7 @@ class ITensor
     //
 
     void
-    trace(const boost::array<Index,NMAX+1>& indices, int nind);
+    trace(const boost::array<Index,NMAX>& indices, int nind);
 
     void
     trace(const Index& i1, const Index& i2);
@@ -542,7 +543,7 @@ class ITensor
     Real friend inline
     trace(ITensor T)
         {
-        if(T.rn() != 0) T.trace(T.is_.index_,T.rn());
+        if(T.rn() != 0) T.trace(T.is_.storage(),T.rn());
         return T.val0();
         }
 

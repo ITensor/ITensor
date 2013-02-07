@@ -267,9 +267,9 @@ class IQTSparse
     // Data members
     //
 
-    boost::intrusive_ptr<IQIndexSet> is_;
+    boost::shared_ptr<IndexSet<IQIndex> > is_;
 
-    boost::intrusive_ptr<IQTSDat> d_;
+    boost::shared_ptr<IQTSDat> d_;
 
     //
     //////////////
@@ -316,9 +316,6 @@ class IQTSDat
     IQTSDat();
 
     explicit
-    IQTSDat(const IQTSDat& other);
-
-    explicit
     IQTSDat(std::istream& s);
 
     //
@@ -348,6 +345,9 @@ class IQTSDat
     //
 
     void 
+    makeCopyOf(const IQTSDat& other);
+
+    void 
     scaleTo(const LogNumber& newscale) const;
 
     void
@@ -356,25 +356,7 @@ class IQTSDat
     void
     write(std::ostream& s) const;
 
-    friend void 
-    intrusive_ptr_add_ref(IQTSDat* p);
-
-    friend void 
-    intrusive_ptr_release(IQTSDat* p);
-
-    int 
-    count() const { return numref; }
-
-    static IQTSDat* Null()
-        {
-        //Set initial numref to 1000, stack allocated
-        static IQTSDat Null_(1000);
-#ifdef DEBUG
-        if(Null_.numref < 500)
-            Error("Null_.numref too low");
-#endif
-        return &Null_;
-        }
+    static const boost::shared_ptr<IQTSDat>& Null();
 
     private:
 
@@ -382,8 +364,6 @@ class IQTSDat
     //
     // Data members
     //
-
-    mutable unsigned int numref;
 
     mutable bool init;
 
@@ -394,9 +374,6 @@ class IQTSDat
 
     //
     //////////////
-
-    explicit
-    IQTSDat(int init_numref);
 
     void
     uninit_rmap() const;

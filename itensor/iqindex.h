@@ -4,16 +4,17 @@
 //
 #ifndef __IQINDEX_H
 #define __IQINDEX_H
-#include "index.h"
 #include "itensor.h"
 #include "qn.h"
-#include "boost/intrusive_ptr.hpp"
 
 
 // Forward declarations
 struct inqn;
 class IQIndexDat;
 struct IQIndexVal;
+
+typedef boost::shared_ptr<IQIndexDat>
+IQIndexDatPtr;
 
 
 //
@@ -217,8 +218,9 @@ class IQIndex
     void 
     noprime(IndexType type = All);
 
+    // Return a copy of this Index with primelevel set to zero.
     IQIndex friend inline
-    noprime(const IQIndex& I)
+    deprimed(const IQIndex& I)
         { 
         IQIndex J(I);
         J.noprime(); 
@@ -249,7 +251,7 @@ class IQIndex
 
     Arrow _dir;
 
-    boost::intrusive_ptr<IQIndexDat> pd;
+    boost::shared_ptr<IQIndexDat> pd;
 
     explicit
     IQIndex(Index::Imaker im);
@@ -346,9 +348,12 @@ class IQIndexDat
                const Index& i7, const QN& q7,
                const Index& i8, const QN& q8);
 
+    explicit
     IQIndexDat(std::vector<inqn>& ind_qn);
 
     explicit 
+    IQIndexDat(Index::Imaker im);
+
     IQIndexDat(std::istream& s);
 
     void 
@@ -357,22 +362,13 @@ class IQIndexDat
     void 
     read(std::istream& s);
 
-    static IQIndexDat* Null();
+    static const IQIndexDatPtr& Null();
 
-    static IQIndexDat* ReImDat();
+    static const IQIndexDatPtr& ReImDat();
 
-    static IQIndexDat* ReImDatP();
+    static const IQIndexDatPtr& ReImDatP();
 
-    static IQIndexDat* ReImDatPP();
-
-    friend void 
-    intrusive_ptr_add_ref(IQIndexDat* p);
-
-    friend void 
-    intrusive_ptr_release(IQIndexDat* p);
-
-    int 
-    count() const { return numref; }
+    static const IQIndexDatPtr& ReImDatPP();
 
     typedef std::vector<inqn>::iterator 
     iq_it;
@@ -384,9 +380,6 @@ class IQIndexDat
 
     friend class IQIndex;
 
-    explicit 
-    IQIndexDat(Index::Imaker im);
-
     //////////////////
     //
     // Data Members
@@ -394,15 +387,11 @@ class IQIndexDat
 
     std::vector<inqn> iq_;
 
-    mutable int numref;
-
-    const bool is_static_;
-
     //
     /////////////////
 
-    explicit 
-    IQIndexDat(const IQIndexDat& other);
+    void
+    makeCopyOf(const IQIndexDat& other);
 
     //Disallow copying using =
     void 
@@ -412,7 +401,6 @@ class IQIndexDat
 
 
 enum IQmaker {makeSing};
-
 
 
 

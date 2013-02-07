@@ -9,11 +9,11 @@ include ../options.mk
 ####################################
 
 SOURCES=index.cc itensor.cc itsparse.cc \
-        iqindex.cc iqindexset.cc iqtensor.cc iqtsparse.cc\
+        iqindex.cc iqtensor.cc iqtsparse.cc\
         svdworker.cc mps.cc mpo.cc dmrg.cc tevol.cc
 
 HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
-        indexset.h counter.h itensor.h qn.h iqindex.h iqindexset.h iqtensor.h \
+        indexset.h counter.h itensor.h qn.h iqindex.h iqtensor.h \
         condenser.h combiner.h iqcombiner.h \
         svdworker.h mps.h mpo.h dmrg.h core.h observer.h DMRGObserver.h \
         BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
@@ -99,9 +99,6 @@ itsparse.o: $(DEPHEADERS)
 DEPHEADERS+= qn.h iqindex.h
 iqindex.o: $(DEPHEADERS)
 .debug_objs/iqindex.o: $(DEPHEADERS)
-DEPHEADERS+= iqindexset.h
-iqindexset.o: $(DEPHEADERS)
-.debug_objs/iqindexset.o: $(DEPHEADERS)
 DEPHEADERS+= iqtensor.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
