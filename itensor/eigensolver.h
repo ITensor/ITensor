@@ -223,22 +223,22 @@ davidson(const LocalT& A, Tensor& phi) const
             }
         else // ii != 0
             {
-            if(debug_level_ > 2)
-                {
-                Cout << "Step " << ii << ", Mref = " << Endl;
-                Cout << Mref; 
-                }
+            //if(debug_level_ >= 4)
+            //{
+            //Cout << "Step " << ii << ", Mref = " << Endl;
+            //Cout << Mref; 
+            //}
 
             //Diagonalize M
             Vector D;
             Matrix U;
             EigenValues(Mref,D,U);
 
-            if(debug_level_ > 2)
-                {
-                Cout << "D = " << D;
-                Cout << Format("lambda = %.10f") % (D(1)+enshift) << Endl;
-                }
+            //if(debug_level_ >= 4)
+            //{
+            //Cout << "D = " << D;
+            //Cout << Format("lambda = %.10f") % (D(1)+enshift) << Endl;
+            //}
 
             //lambda is the minimum eigenvalue of M
             lambda = D(1)+enshift;
@@ -273,7 +273,7 @@ davidson(const LocalT& A, Tensor& phi) const
 
         if((qnorm < 1E-20) || (converged && ii >= miniter_) || (ii == actual_maxiter))
             {
-            if(debug_level_ > 2) //Explain why breaking out of Davidson loop early
+            if(debug_level_ >= 3) //Explain why breaking out of Davidson loop early
                 {
                 if(qnorm < 1E-20)
                     {
@@ -297,7 +297,7 @@ davidson(const LocalT& A, Tensor& phi) const
                     }
                 }
 
-            if(debug_level_ > 2)
+            if(debug_level_ >= 3)
                 {
                 //Check V's are orthonormal
                 Matrix Vo(ni,ni); 
@@ -314,7 +314,7 @@ davidson(const LocalT& A, Tensor& phi) const
             break; //Out of ii loop to return
             }
         
-        if(debug_level_ > 1 || (ii == 0 && debug_level_ > 0))
+        if(debug_level_ >= 2 || (ii == 0 && debug_level_ >= 1))
             {
             Cout << Format("I %d q %.0E E %.10f")
                            % ii
@@ -355,9 +355,6 @@ davidson(const LocalT& A, Tensor& phi) const
             //formula then orthogonalizing against
             //other vectors
 
-            if(debug_level_ > 2)
-                Cout << Format("Step %d, making next Davidson vector") % ii << Endl;
-
             //Apply Davidson preconditioner
             {
             DavidsonPrecond dp(lambda);
@@ -385,30 +382,18 @@ davidson(const LocalT& A, Tensor& phi) const
                 Real qn = q.norm();
                 if(qn < 1E-30)
                     {
-                    if(debug_level_ > 2)
-                        {
-                        Cout << "Next vector not independent, randomizing" 
-                             << Endl;
-                        }
+                    if(debug_level_ >= 2)
+                        Cout << "Vector not independent, randomizing" << Endl;
                     q = V.at(ni-1);
                     q.randomize();
                     qn = q.norm();
-                    }
-
-                if(debug_level_ > 2)
-                    {
-                    Cout << Format("I %d Pass %d qnrm %.2E")
-                            % ii
-                            % pass
-                            % qn
-                            << Endl;
                     }
 
                 q *= 1./qn;
                 }
 
 
-            if(debug_level_ > 3)
+            if(debug_level_ >= 4)
                 {
                 //Check V's are orthonormal
                 Matrix Vo(ni+1,ni+1); 
