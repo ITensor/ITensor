@@ -30,15 +30,7 @@ class Counter
 
     template <class IndexT> 
     explicit
-    Counter(const IndexSet<IndexT>& is) { init(is); }
-
-    template <class IndexT>
-    void 
-    init(const Array<IndexT,NMAX+1>& ii, int rn, int r);
-
-    template <class IndexT>
-    void 
-    init(const IndexSet<IndexT>& is);
+    Counter(const IndexSet<IndexT>& is);
 
     Counter& 
     operator++();
@@ -70,11 +62,6 @@ Counter() : rn_(0)
     reset(0);
     }
 
-template <class IndexT>
-Counter::
-Counter(const Array<IndexT,NMAX+1>& ii,int rn,int r) 
-    { init(ii,rn,r); }
-
 void inline Counter::
 reset(int a)
     {
@@ -83,8 +70,8 @@ reset(int a)
     }
 
 template <class IndexT>
-void Counter::
-init(const Array<IndexT,NMAX+1>& ii, int rn, int r)
+Counter::
+Counter(const Array<IndexT,NMAX+1>& ii, int rn, int r)
     {
     rn_ = rn;
     r_ = r;
@@ -97,8 +84,8 @@ init(const Array<IndexT,NMAX+1>& ii, int rn, int r)
     }
 
 template <class IndexT>
-void Counter::
-init(const IndexSet<IndexT>& is)
+Counter::
+Counter(const IndexSet<IndexT>& is)
     {
     rn_ = is.rn();
     r_ = is.r();

@@ -2552,7 +2552,8 @@ commaInit(ITensor& T,
           const Index& i3)
     : 
     T_(T),
-    started_(false)
+    started_(false),
+    c_(T.is_)
     { 
     if(T_.isNull()) 
         Error("Can't assign to null ITensor");
@@ -2586,7 +2587,6 @@ commaInit(ITensor& T,
 
     T_.solo();
     T_.scaleTo(1);
-    c_.init(T_.is_);
     }
 
 commaInit& commaInit::

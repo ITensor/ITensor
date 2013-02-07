@@ -6,6 +6,7 @@
 #define __ITENSOR_QCOUNTER_H
 
 #include "counter.h"
+#include "iqindex.h"
 
 #define Array boost::array
 #define Cout std::cout
@@ -21,12 +22,6 @@ class QCounter : public Counter
 
     QCounter(const std::vector<IQIndex>& v)
         {
-        init(v);
-        }
-
-    void
-    init(const std::vector<IQIndex>& v)
-        {
         rn_ = v.size();
         r_ = rn_;
         n[0] = 0;
@@ -38,12 +33,6 @@ class QCounter : public Counter
         }
 
     QCounter(const IndexSet<IQIndex>& is)
-        {
-        init(is);
-        }
-
-    void 
-    init(const IndexSet<IQIndex>& is)
         {
         rn_ = is.rn();
         r_ = is.r();
