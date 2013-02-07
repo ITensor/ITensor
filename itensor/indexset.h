@@ -14,6 +14,7 @@
 //
 // IndexSet
 //
+
 template <class IndexT>
 class IndexSet
     {
@@ -54,12 +55,6 @@ class IndexSet
     typedef typename boost::shared_ptr<IndexSet<IndexT> >
     Ptr;
 
-    static const Ptr& Null()
-        {
-        static Ptr Null_ = boost::make_shared<IndexSet<IndexT> >();
-        return Null_;
-        }
-
     //
     // Accessor Methods
     //
@@ -84,12 +79,6 @@ class IndexSet
 
     const StorageType&
     storage() const { return index_; }
-
-    //Can be used for iteration over Indices in a Foreach loop
-    //e.g. Foreach(const IndexT& I, t.index() ) { ... }
-    //const std::pair<const_iterator,const_iterator> 
-    //index() const  
-    //    { return std::make_pair(index_.begin()+1,index_.begin()+r_+1); }
 
     Real
     uniqueReal() const { return ur_; }
@@ -186,9 +175,6 @@ class IndexSet
     //
     // Methods for Manipulating IndexSets
     //
-    // Warning: these can overwrite other
-    // Indices if not used properly
-    //
 
     void 
     mapindex(const IndexT& i1, const IndexT& i2);
@@ -247,6 +233,12 @@ class IndexSet
     void
     write(std::ostream& s) const;
 
+    static const Ptr& Null()
+        {
+        static Ptr Null_ = boost::make_shared<IndexSet<IndexT> >();
+        return Null_;
+        }
+
     private:
 
     //////////
@@ -278,68 +270,6 @@ IndexSet()
     r_(0),
     ur_(0)
     { }
-
-template <class IndexT>
-template <class Iterable>
-IndexSet<IndexT>::
-IndexSet(const Iterable& ii, int size, int offset)
-    { 
-    r_ = (size < 0 ? ii.size() : size);
-    int alloc_size = -1;
-    sortIndices(ii,r_,alloc_size,offset);
-    setUniqueReal();
-    }
-
-template <class IndexT>
-template <class Iterable>
-IndexSet<IndexT>::
-IndexSet(const Iterable& ii, int size, int& alloc_size, int offset)
-    :
-    r_(size)
-    { 
-    sortIndices(ii,size,alloc_size,offset);
-    setUniqueReal();
-    }
-
-template <class IndexT>
-template <class Iterable>
-void IndexSet<IndexT>::
-sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset)
-    {
-#ifdef DEBUG
-    if(ninds > NMAX)
-        Error("Too many indices for IndexSet");
-#endif
-
-    rn_ = 0;
-    alloc_size = 1;
-
-    int r1_ = 0;
-    Array<const IndexT*,NMAX> index1_;
-
-    for(int n = offset; n < ninds+offset; ++n)
-        {
-        const IndexT& i = I[n];
-#ifdef DEBUG
-        if(i == IndexT::Null()) Error("Null Index in sortIndices");
-#endif
-        if(i.m()==1) 
-            { 
-            index1_[r1_] = &i;
-            ++r1_;
-            }
-        else         
-            { 
-            index_[rn_] = i; 
-            ++rn_;
-            alloc_size *= i.m(); 
-            }
-        }
-    for(int l = 0; l < r1_; ++l) 
-        {
-        index_[rn_+l] = *(index1_[l]);
-        }
-    }
 
 template<class IndexT>
 IndexSet<IndexT>::
@@ -405,6 +335,29 @@ IndexSet(IndexT i1, IndexT i2, IndexT i3,
     sortIndices(ii,r_,alloc_size,0);
     setUniqueReal();
     }
+
+template <class IndexT>
+template <class Iterable>
+IndexSet<IndexT>::
+IndexSet(const Iterable& ii, int size, int offset)
+    { 
+    r_ = (size < 0 ? ii.size() : size);
+    int alloc_size = -1;
+    sortIndices(ii,r_,alloc_size,offset);
+    setUniqueReal();
+    }
+
+template <class IndexT>
+template <class Iterable>
+IndexSet<IndexT>::
+IndexSet(const Iterable& ii, int size, int& alloc_size, int offset)
+    :
+    r_(size)
+    { 
+    sortIndices(ii,size,alloc_size,offset);
+    setUniqueReal();
+    }
+
 
 template <class IndexT>
 IndexSet<IndexT>::
@@ -949,6 +902,46 @@ write(std::ostream& s) const
     s.write((char*) &rn_,sizeof(rn_));
     for(int j = 0; j < r_; ++j) 
         index_[j].write(s);
+    }
+
+template <class IndexT>
+template <class Iterable>
+void IndexSet<IndexT>::
+sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset)
+    {
+#ifdef DEBUG
+    if(ninds > NMAX)
+        Error("Too many indices for IndexSet");
+#endif
+
+    rn_ = 0;
+    alloc_size = 1;
+
+    int r1_ = 0;
+    Array<const IndexT*,NMAX> index1_;
+
+    for(int n = offset; n < ninds+offset; ++n)
+        {
+        const IndexT& i = I[n];
+#ifdef DEBUG
+        if(i == IndexT::Null()) Error("Null Index in sortIndices");
+#endif
+        if(i.m()==1) 
+            { 
+            index1_[r1_] = &i;
+            ++r1_;
+            }
+        else         
+            { 
+            index_[rn_] = i; 
+            ++rn_;
+            alloc_size *= i.m(); 
+            }
+        }
+    for(int l = 0; l < r1_; ++l) 
+        {
+        index_[rn_+l] = *(index1_[l]);
+        }
     }
 
 template <class IndexT>
