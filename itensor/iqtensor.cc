@@ -1653,7 +1653,9 @@ operator+=(const IQTensor& other)
         {
         PrintIndices(This);
         PrintIndices(other);
-        Error("bad match unique real in IQTensor::operator+=");
+        Print(This.uniqueReal());
+        Print(other.uniqueReal());
+        Error("Mismatched indices in IQTensor::operator+=");
         }
 
     if(is_->r() == 0)	// Automatic initializing a summed IQTensor in a loop

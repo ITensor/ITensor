@@ -403,6 +403,7 @@ IndexSet(IndexT i1, IndexT i2, IndexT i3,
 	while(ii[r_] != IndexT::Null()) ++r_;
     int alloc_size;
     sortIndices(ii,r_,alloc_size,0);
+    setUniqueReal();
     }
 
 template <class IndexT>
@@ -955,8 +956,8 @@ std::ostream&
 operator<<(std::ostream& s, const IndexSet<IndexT>& is)
     {
     int i = 1; 
-    for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
-    if(is.r() != 0) { s << is.index(i); } //print last one
+    for(; i < is.r(); ++i) { s << " " << is.index(i) << "\n"; } 
+    if(is.r() != 0) { s << " " << is.index(i); } //print last one
     return s;
     }
 

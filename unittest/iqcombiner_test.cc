@@ -2,6 +2,8 @@
 #include "iqcombiner.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace std;
+
 struct IQCombinerDefaults
     {
     const Index
