@@ -183,6 +183,15 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
     }
 
 ITensor::
+ITensor(const IndexSet<Index>& I) 
+    :
+    is_(I),
+    scale_(1)
+	{
+	allocate(is_.dim());
+	}
+
+ITensor::
 ITensor(const std::vector<Index>& I) 
     :
     scale_(1)
@@ -2267,9 +2276,8 @@ toMatrix12NoScale(const Index& i1, const Index& i2,
 
     res.ReDimension(i1.m(),i2.m()*i3.m());
 
-    const array<Index,NMAX+1> reshuf 
-        = {{ Index::Null(), i2, i3, i1, 
-             Index::Null(), Index::Null(), 
+    const array<Index,NMAX> reshuf 
+        = {{ i2, i3, i1,    Index::Null(), Index::Null(), 
              Index::Null(), Index::Null(), Index::Null() }};
 
     Permutation P; 

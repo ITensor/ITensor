@@ -6,6 +6,7 @@
 #define __IQCOMBINER_H
 #include "combiner.h"
 #include "condenser.h"
+#include "qcounter.h"
 
 /*
    Combine several indices into one index without loss of states.
@@ -125,70 +126,7 @@ class IQCombiner
 
     };
 
-class QCounter
-    {
-    public:
 
-    QCounter(const std::vector<IQIndex>& v)
-        : 
-        v_(v),
-        don(false),
-        n_(v.size()),
-        ind_(v.size(),0)
-        {
-        for(size_t j = 0; j < v_.size(); ++j)
-            {
-            n_[j] = v_[j].nindex();
-            }
-        }
-
-    bool 
-    notdone() const { return !don; }
-
-    QCounter& 
-    operator++()
-        {
-        int nn = n_.size();
-        ind_[0]++;
-        if(ind_[0] >= n_[0])
-            {
-            for(int j = 1; j < nn; j++)
-                {
-                ind_[j-1] = 0;
-                ++ind_[j];
-                if(ind_[j] < n_[j]) break;
-                }
-            }
-        if(ind_[nn-1] >= n_[nn-1])
-            {
-            ind_ = std::vector<int>(nn,0);
-            don = true;
-            }
-
-        return *this;
-        }
-
-    void 
-    getVecInd(std::vector<Index>& vind, QN& q) const
-        {
-        vind.resize(v_.size());
-        q = QN(); 
-        for(size_t i = 0; i < ind_.size(); ++i)
-            {
-            const IQIndex& I = v_[i];
-            int j = ind_[i]+1;
-            vind[i] = I.index(j);
-            q += I.qn(j)*I.dir();
-            }
-        }
-
-    private:
-
-    const std::vector<IQIndex>& v_;
-    bool don;
-    std::vector<int> n_, ind_;
-
-    };
 
 inline IQCombiner::
 IQCombiner() 
@@ -271,11 +209,11 @@ init(std::string rname, IndexType type,
     //Construct individual Combiners
     QCounter c(left_);
     std::vector<inqn> iq;
-    for( ; c.notdone(); ++c)
+    for( ; c.notDone(); ++c)
         {
         std::vector<Index> vind;
         QN q;
-        c.getVecInd(vind, q); // updates vind and q
+        c.getVecInd(left_,vind, q); // updates vind and q
         q *= -rdir;
 
         combs.push_back(Combiner());

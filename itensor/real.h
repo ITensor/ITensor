@@ -46,6 +46,15 @@ struct ApproxReal
     bool friend inline 
     operator<(const ApproxReal &a,const ApproxReal &b)
         { return b.r-a.r > ApproxReal_Accuracy; }
+
+    ApproxReal& 
+    operator+=(const ApproxReal &A)
+        { r += A.r; return *this; }
+
+    ApproxReal& 
+    operator+=(Real a)
+        { r += a; return *this; }
+
     };
 
 static Real maxlogdouble = log(std::numeric_limits<double>::max());

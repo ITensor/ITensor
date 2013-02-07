@@ -71,6 +71,7 @@ class Combiner
     void 
     addleft(const Index& l);// Include another left index
 
+    //Call addleft on a vector of Indices ls[0]..ls[ls.size()-1]
     void
     addleft(const std::vector<Index>& ls);
 

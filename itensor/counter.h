@@ -28,7 +28,8 @@ class Counter
     template <class IndexT>
     Counter(const Array<IndexT,NMAX+1>& ii,int rn,int r);
 
-    template <class IndexT>
+    template <class IndexT> 
+    explicit
     Counter(const IndexSet<IndexT>& is) { init(is); }
 
     template <class IndexT>
@@ -55,6 +56,7 @@ class Counter
     reset(int a);
 
     };
+
 
 //
 // Counter implementation
@@ -88,9 +90,9 @@ init(const Array<IndexT,NMAX+1>& ii, int rn, int r)
     r_ = r;
     n[0] = 0;
     for(int j = 1; j <= rn_; ++j) 
-        { n[j] = ii[j].m(); }
+        n[j] = ii[j].m();
     for(int j = rn_+1; j <= NMAX; ++j) 
-        { n[j] = 1; }
+        n[j] = 1;
     reset(1);
     }
 
@@ -102,9 +104,9 @@ init(const IndexSet<IndexT>& is)
     r_ = is.r();
     n[0] = 0;
     for(int j = 1; j <= rn_; ++j) 
-        { n[j] = is.index(j).m(); }
+        n[j] = is.index(j).m();
     for(int j = rn_+1; j <= NMAX; ++j) 
-        { n[j] = 1; }
+        n[j] = 1;
     reset(1);
     }
 
@@ -144,7 +146,7 @@ operator<<(std::ostream& s, const Counter& c)
     {
     s << "("; 
     for(int i = 1; i < c.r_; ++i)
-        {s << c.i[i] << " ";} 
+        s << c.i[i] << " ";
     s << c.i[c.r_] << ")";
     return s;
     }

@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "iqtensor.h"
+#include "qcounter.h"
 #include <set>
 using namespace std;
 using boost::format;
@@ -1131,8 +1132,38 @@ randomize()
         Error("Can't randomize IQTensor having no blocks");
 
 	soloDat(); 
-    Foreach(ITensor& t, ncdat())
-        { t.randomize(); }
+
+    const QN D = div();
+
+    QCounter C(*is_);
+
+    for(;C.notDone();++C)
+        {
+        QN nd;
+        for(int n = 1; n <= r(); ++n)
+            {
+            nd += is_->index(n).qn(C.i[n]);
+            }
+        if(nd != D) continue;
+
+        IndexSet<Index> nset;
+        for(int n = 1; n <= r(); ++n)
+            {
+            nset.addindex(is_->index(n).index(C.i[n]));
+            }
+
+        ApproxReal r(nset.uniqueReal());
+        if(dat().has_itensor(r))
+            {
+            ncdat().get(r).randomize();
+            }
+        else
+            {
+            ITensor t(nset);
+            t.randomize();
+            ncdat().insert_add(r,t);
+            }
+        }
 	}
 
 void IQTensor::

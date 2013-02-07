@@ -34,7 +34,8 @@ class IndexSet
              IndexT i7 = IndexT::Null(), 
              IndexT i8 = IndexT::Null());
 
-    template <class Iterable>
+    template <class Iterable> 
+    explicit
     IndexSet(const Iterable& ii, int size = -1, int offset = 0);
 
     template <class Iterable>
@@ -68,8 +69,17 @@ class IndexSet
     const IndexT&
     index(int j) const { return GET(index_,j-1); }
 
+    const IndexT&
+    operator[](int j) const { return index_[j]; }
+
+    int
+    size() const { return r_; }
+
     int
     m(int j) const { return GET(index_,j-1).m(); }
+
+    int
+    dim() const;
 
     const_iterator
     begin() const { return index_.begin(); }
@@ -369,6 +379,16 @@ IndexSet(const IndexSet& other, const Permutation& P)
     {
     for(int j = 1; j <= r_; ++j)
         index_[P.dest(j)-1] = other.index_[j-1];
+    }
+
+template <class IndexT>
+int IndexSet<IndexT>::
+dim() const
+    {   
+    int d = 1;
+    for(int j = 0; j < rn_; ++j)
+        d *= index_[j].m();
+    return d;
     }
 
 template <class IndexT>

@@ -135,6 +135,9 @@ class ITensor
             const IndexVal& iv7 = IndexVal::Null(), const IndexVal& iv8 = IndexVal::Null());
 
     explicit 
+    ITensor(const IndexSet<Index>& I);
+
+    explicit 
     ITensor(const std::vector<Index>& I);
 
     ITensor(const std::vector<Index>& I, const Vector& V);

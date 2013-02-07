@@ -221,14 +221,30 @@ const Index& IQIndex::
 index(int i) const 
     {
     IQINDEX_CHECK_NULL
-    return GET(pd->iq_,i-1).index; 
+#ifdef DEBUG
+    if(i > nindex())
+        {
+        Print(nindex());
+        Print(i);
+        Error("IQIndex::index arg out of range");
+        }
+#endif
+    return pd->iq_[i-1].index; 
     }
 
 const QN& IQIndex::
 qn(int i) const 
     {
     IQINDEX_CHECK_NULL
-    return GET(pd->iq_,i-1).qn; 
+#ifdef DEBUG
+    if(i > nindex())
+        {
+        Print(nindex());
+        Print(i);
+        Error("IQIndex::qn arg out of range");
+        }
+#endif
+    return pd->iq_[i-1].qn; 
     }
 
 IQIndex::
