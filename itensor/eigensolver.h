@@ -297,9 +297,23 @@ davidson(const LocalT& A, Tensor& phi) const
                     }
                 }
 
+            if(debug_level_ > 2)
+                {
+                //Check V's are orthonormal
+                Matrix Vo(ni,ni); 
+                Vo = NAN;
+                for(int r = 1; r <= ni; ++r)
+                for(int c = r; c <= ni; ++c)
+                    {
+                    Vo(r,c) = Dot(conj(V[r-1]),V[c-1]);
+                    Vo(c,r) = Vo(r,c);
+                    }
+                Print(Vo);
+                }
+
             break; //Out of ii loop to return
             }
-
+        
         if(debug_level_ > 1 || (ii == 0 && debug_level_ > 0))
             {
             Cout << Format("I %d q %.0E E %.10f")
@@ -369,38 +383,32 @@ davidson(const LocalT& A, Tensor& phi) const
                 q += proj;
 
                 Real qn = q.norm();
-                if(qn == 0.)
+                if(qn < 1E-30)
                     {
-                    q = V.at(ni-1);
-                    q.randomize();
-                    qn = q.norm();
                     if(debug_level_ > 2)
                         {
-                        Cout << Format("Step %d pass %d qn %d")
-                                % ii
-                                % pass
-                                % qn
-                                << Endl;
                         Cout << "Next vector not independent, randomizing" 
                              << Endl;
                         }
+                    q = V.at(ni-1);
+                    q.randomize();
+                    qn = q.norm();
                     }
 
                 if(debug_level_ > 2)
                     {
-                    Cout << Format("I %d P %d qn %.2E")
+                    Cout << Format("I %d Pass %d qnrm %.2E")
                             % ii
                             % pass
                             % qn
                             << Endl;
-                    PrintDat(q);
                     }
 
-                q *= 1./q.norm();
+                q *= 1./qn;
                 }
 
 
-            if(debug_level_ > 2)
+            if(debug_level_ > 3)
                 {
                 //Check V's are orthonormal
                 Matrix Vo(ni+1,ni+1); 
