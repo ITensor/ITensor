@@ -6,7 +6,8 @@
 #define __ITENSOR_INDEX_H
 #include <string>
 #include "global.h"
-#include "boost/intrusive_ptr.hpp"
+#include "boost/shared_ptr.hpp"
+#include "boost/make_shared.hpp"
 #include "boost/uuid/uuid.hpp"
 #include "boost/uuid/random_generator.hpp"
 #include "boost/uuid/string_generator.hpp"
@@ -22,6 +23,9 @@ struct UniqueID;
 class IndexDat;
 struct IndexVal;
 
+
+typedef boost::shared_ptr<IndexDat>
+IndexDatPtr;
 
 //
 // Index
@@ -127,6 +131,9 @@ class Index
     bool 
     operator==(const Index& other) const;
 
+    bool 
+    operator!=(const Index& other) const { return !operator==(other); }
+
     // Check if other Index is a copy of this, ignoring primeLevel.
     bool 
     noprime_equals(const Index& other) const;
@@ -222,7 +229,7 @@ class Index
     //
     // Data Members
 
-    boost::intrusive_ptr<IndexDat> p;
+    boost::shared_ptr<IndexDat> p;
 
     int primelevel_; 
 
@@ -299,43 +306,22 @@ class IndexDat
     //For use with read/write functionality of Index class
     IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& ind_);
 
-
-    static IndexDat* 
-    Null();
-
-    static IndexDat* 
-    ReImDat();
-
-    static IndexDat* 
-    ReImDatP();
-
-    static IndexDat* 
-    ReImDatPP();
-
-    friend void 
-    intrusive_ptr_add_ref(IndexDat* p);
-
-    friend void 
-    intrusive_ptr_release(IndexDat* p);
-
-    int 
-    count() const { return numref; }
-
-    private:
-
-    //////////////
-    //
-    // (Private) Data Members
-    
-    mutable unsigned int numref;
-
-    const bool is_static_;
-
-    //
-    /////////////
-
     explicit
     IndexDat(Index::Imaker im);
+
+    static const IndexDatPtr&
+    Null();
+
+    static const IndexDatPtr&
+    ReImDat();
+
+    static const IndexDatPtr&
+    ReImDatP();
+
+    static const IndexDatPtr&
+    ReImDatPP();
+
+    private:
 
     static const UniqueID& 
     nextID();

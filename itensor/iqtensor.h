@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_IQTENSOR_H
 #define __ITENSOR_IQTENSOR_H
-#include "iqindexset.h"
+#include "iqindex.h"
 #include <list>
 #include <map>
 
@@ -29,10 +29,11 @@ class IQTensor
     typedef std::list<ITensor>::const_iterator 
     const_iten_it;
 
-    typedef std::vector<IQIndex>::iterator 
-    iqind_it;
+    //typedef std::vector<IQIndex>::iterator 
+    //iqind_it;
 
-    typedef std::vector<IQIndex>::const_iterator 
+    //typedef std::vector<IQIndex>::const_iterator 
+    typedef IndexSet<IQIndex>::const_iterator
     const_iqind_it;
 
     //Constructors --------------------------------------------------
@@ -165,7 +166,8 @@ class IQTensor
     const_iqind_it 
     const_iqind_end() const;
 
-    std::pair<const_iqind_it,const_iqind_it> 
+    //std::pair<const_iqind_it,const_iqind_it> 
+    const IndexSet<IQIndex>& 
     iqinds() const;
 
 
@@ -433,7 +435,7 @@ class IQTensor
     addindex1(const IQIndex& I);
 
     void
-    tieIndices(const boost::array<IQIndex,NMAX+1>& indices, int nind, const IQIndex& tied);
+    tieIndices(const boost::array<IQIndex,NMAX>& indices, int nind, const IQIndex& tied);
 
     void
     tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied);
@@ -444,7 +446,7 @@ class IQTensor
         { T.tieIndices(i1,i2,tied); return T; }
 
     void
-    trace(const boost::array<IQIndex,NMAX+1>& indices, int nind);
+    trace(const boost::array<IQIndex,NMAX>& indices, int nind);
 
     void
     trace(const IQIndex& i1, const IQIndex& i2);
@@ -598,10 +600,10 @@ class IQTensor
     // 
     // Data Members
 
-    boost::intrusive_ptr<IQIndexSet>
+    boost::shared_ptr<IndexSet<IQIndex> >
     is_;
 
-    boost::intrusive_ptr<IQTDat> 
+    boost::shared_ptr<IQTDat> 
     p;
 
     //
@@ -719,6 +721,9 @@ class IQTDat : public boost::noncopyable
     scaleTo(const LogNumber& newscale);
 
     void 
+    read(std::istream& s);
+
+    void 
     write(std::ostream& s) const;
 
     //void* operator 
@@ -731,26 +736,8 @@ class IQTDat : public boost::noncopyable
     //    throw()
     //    { return allocator().dealloc(p); }
 
-
-    friend void 
-    intrusive_ptr_add_ref(IQTDat* p);
-
-    friend void 
-    intrusive_ptr_release(IQTDat* p);
-
-    int 
-    count() const { return numref; }
-
-    static IQTDat* Null()
-        {
-        //Set initial numref to 1000
-        static IQTDat Null_(1000);
-#ifdef DEBUG
-        if(Null_.numref < 500)
-            Error("Null_.numref too low");
-#endif
-        return &Null_;
-        }
+    static const boost::shared_ptr<IQTDat>& 
+    Null();
 
     private:
 
@@ -765,9 +752,6 @@ class IQTDat : public boost::noncopyable
     mutable std::map<ApproxReal,iterator>
     rmap; //mutable so that const IQTensor methods can use rmap
 
-    mutable unsigned int 
-    numref;
-
     mutable bool 
     rmap_init;
 
@@ -780,11 +764,7 @@ class IQTDat : public boost::noncopyable
     void 
     uninit_rmap() const;
 
-    explicit
-    IQTDat(int init_numref);
-
-    //Must be dynamically allocated
-    ~IQTDat() { }
+    //Not copyable with =
     void operator=(const IQTDat&);
 
     //static DatAllocator<IQTDat>& allocator()

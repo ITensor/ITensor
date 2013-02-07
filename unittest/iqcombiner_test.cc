@@ -49,15 +49,15 @@ struct IQCombinerDefaults
         phi = IQTensor(S1,S2,L2);
             {
             ITensor uu(s1u,s2u,l2dd);
-            uu.Randomize();
+            uu.randomize();
             phi += uu;
 
             ITensor ud(s1u,s2d,l20);
-            ud.Randomize();
+            ud.randomize();
             phi += ud;
 
             ITensor du(s1d,s2u,l20);
-            du.Randomize();
+            du.randomize();
             phi += du;
             }
         }
@@ -174,15 +174,15 @@ TEST(CondenseProduct)
     IQTensor phi(S1,S2,L2);
 
     ITensor uu(s1u,s2u,l2dd);
-    uu.Randomize();
+    uu.randomize();
     phi += uu;
 
     ITensor ud(s1u,s2d,l20);
-    ud.Randomize();
+    ud.randomize();
     phi += ud;
 
     ITensor du(s1d,s2u,l20);
-    du.Randomize();
+    du.randomize();
     phi += du;
 
     checkDiv(phi);

@@ -6,10 +6,10 @@
 #define __ITENSOR_ITENSOR_H
 #include "real.h"
 #include "prodstats.h"
-#include "indexset.h"
 #include "option.h"
+#include "counter.h"
 
-#define ITENSOR_USE_ALLOCATOR
+//#define ITENSOR_USE_ALLOCATOR
 
 #ifdef ITENSOR_USE_ALLOCATOR
 #include "allocator.h"
@@ -21,7 +21,6 @@
 
 //Forward declarations
 struct ProductProps;
-class Counter;
 class Combiner;
 class ITDat;
 class ITSparse;
@@ -38,7 +37,7 @@ class ITensor
     //Real number that uniquely identifies this
     //ITensor's set of Indices (independent of their order)
     Real 
-    uniqueReal() const { return is_.ur_; } 
+    uniqueReal() const { return is_.uniqueReal(); } 
 
     //Get the jth Index of this ITensor, j = 1,2,..,r()
     const Index& 
@@ -46,11 +45,11 @@ class ITensor
 
     //Rank of this ITensor (number of indices)
     int 
-    r() const { return is_.r_; }
+    r() const { return is_.r(); }
 
     //Number of m!=1 indices
     int 
-    rn() const { return is_.rn_; }
+    rn() const { return is_.rn(); }
 
     //Bond dimension of jth Index, j = 1,2,..,r()
     int 
@@ -58,11 +57,11 @@ class ITensor
 
     //true if ITensor is default constructed
     bool 
-    isNull() const { return (p == 0); }
+    isNull() const { return !bool(p); }
 
     //true if ITensor is NOT default constructed
     bool 
-    isNotNull() const { return (p != 0); }
+    isNotNull() const { return bool(p); }
 
     bool 
     isComplex() const { return hasindexn(Index::IndReIm()); }
@@ -75,9 +74,9 @@ class ITensor
 
     //Enables looping over Indices in a Foreach
     //e.g. Foreach(const Index& I, t.index() ) { ... }
-    const std::pair<IndexSet::index_it,IndexSet::index_it> 
-    index() const  
-        { return is_.index(); }
+    //const std::pair<IndexSet<Index>::index_it,IndexSet<Index>::index_it> 
+    const IndexSet<Index>&
+    index() const { return is_; }
 
 
     //Constructors --------------------------------------------------
@@ -300,8 +299,9 @@ class ITensor
     hasindex1(const Index& I) const { return is_.hasindex1(I); }
 
     //true if this tensor has the first nind Indices in array I
+    //(I should be zero indexed)
     bool
-    hasAllIndex(const boost::array<Index,NMAX+1>& I, int nind) const
+    hasAllIndex(const boost::array<Index,NMAX>& I, int nind) const
         { return is_.hasAllIndex(I,nind); }
 
     //Add m==1 Index I to this, increasing rank by 1
@@ -468,7 +468,7 @@ class ITensor
     // Rijl = Aijil <-- here we have tied the 1st and 3rd index of A
     //
     void
-    tieIndices(const boost::array<Index,NMAX+1>& indices, int nind,
+    tieIndices(const boost::array<Index,NMAX>& indices, int nind,
                const Index& tied);
 
     void
@@ -509,7 +509,7 @@ class ITensor
     //
 
     void
-    trace(const boost::array<Index,NMAX+1>& indices, int nind);
+    trace(const boost::array<Index,NMAX>& indices, int nind);
 
     void
     trace(const Index& i1, const Index& i2);
@@ -543,7 +543,7 @@ class ITensor
     Real friend inline
     trace(ITensor T)
         {
-        if(T.rn() != 0) T.trace(T.is_.index_,T.rn());
+        if(T.rn() != 0) T.trace(T.is_.storage(),T.rn());
         return T.val0();
         }
 
@@ -644,6 +644,9 @@ class ITensor
 
 
     //Other Methods -------------------------------------------------
+
+    Real*
+    datStart() const;
 
     void 
     randomize();
@@ -764,10 +767,10 @@ class ITensor
     //
 
     //mutable: const methods may want to reshape data
-    mutable boost::intrusive_ptr<ITDat> p; 
+    mutable boost::shared_ptr<ITDat> p; 
 
     //Indices, maximum of 8 (is_.index_[0] not used)
-    mutable IndexSet is_;
+    mutable IndexSet<Index> is_;
 
     //mutable since e.g. scaleTo is logically const
     mutable LogNumber scale_; 
@@ -775,9 +778,6 @@ class ITensor
     //
     //
     //////////////
-
-    void 
-    initCounter(Counter& C) const;
 
     void 
     allocate(int dim);
@@ -829,48 +829,6 @@ class ITensor
 
     }; // class ITensor
 
-//
-// Counter
-//
-class Counter
-    {
-public:
-    boost::array<int,NMAX+1> n, i;
-    int ind;
-    int rn_,r_;
-
-    Counter();
-
-    Counter(const boost::array<Index,NMAX+1>& ii,int rn,int r);
-
-    Counter(const IndexSet& is);
-
-    void 
-    init(const boost::array<Index,NMAX+1>& ii, int rn, int r);
-
-    void 
-    init(const IndexSet& is);
-
-    Counter& 
-    operator++();
-
-    bool 
-    operator!=(const Counter& other) const;
-
-    bool 
-    operator==(const Counter& other) const;
-
-    bool 
-    notDone() const 
-        { return i[1] != 0; }
-
-    friend std::ostream& 
-    operator<<(std::ostream& s, const Counter& c);
-
-    void 
-    reset(int a);
-
-    };
 
 //
 // ITDat
@@ -893,10 +851,10 @@ class ITDat
     ITDat(Real r);
 
     explicit 
-    ITDat(std::istream& s);
-
-    explicit 
     ITDat(const ITDat& other);
+
+    void
+    read(std::istream& s);
 
     void 
     write(std::ostream& s) const;
@@ -924,22 +882,10 @@ class ITDat
 
     friend class ITensor;
 
-    friend void 
-    intrusive_ptr_add_ref(ITDat* p);
-
-    friend void 
-    intrusive_ptr_release(ITDat* p);
-
-    int count() const { return numref; }
-
     private:
-
-    mutable unsigned int 
-    numref;
 
     //Must be dynamically allocated:
     void operator=(const ITDat&);
-    ~ITDat() { }
 
 
     };
