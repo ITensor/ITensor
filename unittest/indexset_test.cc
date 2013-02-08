@@ -134,6 +134,32 @@ TEST(PrimeLevelMethods)
     CHECK(P->index(4) == L2);
     }
 
+TEST(PrimeIndex)
+    {
+    shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>(S1,primed(S2));
+
+    P->prime(conj(S1));
+
+    CHECK_EQUAL(P->index(1),primed(S1));
+    //Even though the IQIndex passed to noprime had a different direction,
+    //it still compares equal and the unprimed IQIndex's arrow should be 
+    //unchanged
+    CHECK_EQUAL(P->index(1).dir(),S1.dir());
+    }
+
+TEST(NoPrimeIndex)
+    {
+    shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>(S1,primed(S2));
+
+    P->noprime(conj(primed(S2)));
+
+    CHECK_EQUAL(P->index(2),S2);
+    //Even though the IQIndex passed to noprime had a different direction,
+    //it still compares equal and the unprimed IQIndex's arrow should be 
+    //unchanged
+    CHECK_EQUAL(P->index(2).dir(),S2.dir());
+    }
+
 TEST(AddIndex)
     {
     shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>();

@@ -162,7 +162,7 @@ class IndexSet
     noprime(IndexType type = All);
 
     void 
-    noprime(const IndexT& I) { mapindex(I,deprimed(I)); }
+    noprime(const IndexT& I);
 
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);
@@ -585,6 +585,26 @@ noprime(IndexType type)
 
 template <class IndexT>
 void IndexSet<IndexT>::
+noprime(const IndexT& I)
+    {
+    for(int j = (I.m() == 1 ? rn_ : 0); 
+        j < r_; ++j) 
+        {
+        if(index_[j] == I)
+            {
+            index_[j].noprime();
+            ur_ -= I.uniqueReal();
+            ur_ += index_[j].uniqueReal();
+            return;
+            }
+        }
+    Print(*this);
+    Print(I);
+    Error("IndexSet::prime: index not found.");
+    }
+
+template <class IndexT>
+void IndexSet<IndexT>::
 prime(IndexType type, int inc)
 	{
     ur_ = 0;
@@ -618,7 +638,7 @@ prime(const IndexT& I, int inc)
         }
     Print(*this);
     Print(I);
-    Error("IndexSet::mapprimeind: index not found.");
+    Error("IndexSet::prime: index not found.");
     }
 
 template <class IndexT>
