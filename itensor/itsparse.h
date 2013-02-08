@@ -222,9 +222,6 @@ class ITSparse
     prime(const Index& I, int inc = 1) { mapindex(I,primed(I,inc)); }
 
     void 
-    prime(const Index& I, const Index& J) { is_.prime(I,J); }
-
-    void 
     noprime(IndexType type = All) { is_.noprime(type); }
 
     void 

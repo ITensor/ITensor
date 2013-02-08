@@ -249,7 +249,7 @@ TEST(Randomize)
     IQTensor T(S1,S2,L2);
     T += ITensor(s1u,s2u,l2dd);
     T.randomize();
-    PrintDat(T);
+    //PrintDat(T);
     }
 
 BOOST_AUTO_TEST_SUITE_END()

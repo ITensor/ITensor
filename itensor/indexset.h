@@ -156,10 +156,7 @@ class IndexSet
     prime(IndexType type, int inc = 1);
 
     void 
-    prime(const IndexT& I, int inc = 1) { mapindex(I,primed(I,inc)); }
-
-    void 
-    prime(const IndexT& I, const IndexT& J);
+    prime(const IndexT& I, int inc = 1);
 
     void 
     noprime(IndexType type = All);
@@ -599,6 +596,31 @@ prime(IndexType type, int inc)
         }
 	}
 
+//template <class IndexT>
+//void IndexSet<IndexT>::
+//prime(const IndexT& I, const IndexT& J)
+//	{ 
+//    mapindex(I,primed(I)); 
+//    mapindex(J,primed(J));
+//	}
+
+template <class IndexT>
+void IndexSet<IndexT>::
+prime(const IndexT& I, int inc)
+    {
+    for(int j = (I.m() == 1 ? rn_ : 0); j < r_; ++j) 
+        if(index_[j] == I)
+        {
+        index_[j].prime(inc);
+        ur_ -= I.uniqueReal();
+        ur_ += index_[j].uniqueReal();
+        return;
+        }
+    Print(*this);
+    Print(I);
+    Error("IndexSet::mapprimeind: index not found.");
+    }
+
 template <class IndexT>
 void IndexSet<IndexT>::
 mapprime(int plevold, int plevnew, IndexType type)
@@ -649,14 +671,6 @@ indIncAllPrime(const IndexT& I, int inc)
     Cout << "index was " << I << "\n";
     Error("indIncAllPrime: couldn't find index");
     }
-
-template <class IndexT>
-void IndexSet<IndexT>::
-prime(const IndexT& I, const IndexT& J)
-	{ 
-    mapindex(I,primed(I)); 
-    mapindex(J,primed(J));
-	}
 
 /*
 ITensor 

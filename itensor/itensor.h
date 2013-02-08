@@ -358,10 +358,6 @@ class ITensor
     prime(const Index& I, int inc = 1)
         { mapindex(I,primed(I,inc)); }
 
-    //Increase primeLevel of Index I and Index J by 1
-    void 
-    prime(const Index& I, const Index& J) { is_.prime(I,J); }
-
     //Set primeLevel of Index I to zero
     void 
     noprime(const Index& I) { mapindex(I,deprimed(I)); }
