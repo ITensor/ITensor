@@ -500,7 +500,7 @@ VectorRef::Randomize()
     static int idum = abs((int) ((long)this));
     quickran(idum);
     for (VIter v(*this); v.test(); v.inc())
-	v.val() = quickran(idum);
+	v.val() = quickran(idum)+0.012345;
     return *this;
     }
 
