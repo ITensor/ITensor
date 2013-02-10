@@ -23,7 +23,7 @@ HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
         model/tj.h \
         eigensolver.h localop.h localmpo.h localmposet.h itsparse.h iqtsparse.h\
-        partition.h option.h hambuilder.h localmpo_mps.h tevol.h
+        partition.h option.h hambuilder.h localmpo_mps.h tevol.h dmrg.h
 
 ####################################
 
