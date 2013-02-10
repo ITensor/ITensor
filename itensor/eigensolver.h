@@ -168,7 +168,7 @@ davidson(const LocalT& A, Tensor& phi) const
 
     const int maxsize = A.size();
     const int actual_maxiter = min(maxiter_,maxsize-1);
-    if(debug_level_ > 2)
+    if(debug_level_ >= 2)
         {
         Cout << Format("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d") 
                 % (maxsize-1) % maxiter_ % actual_maxiter << Endl;
@@ -380,6 +380,7 @@ davidson(const LocalT& A, Tensor& phi) const
                 q += proj;
 
                 Real qn = q.norm();
+
                 if(qn < 1E-10)
                     {
                     if(debug_level_ >= 2)
@@ -387,9 +388,7 @@ davidson(const LocalT& A, Tensor& phi) const
                     q = V.at(ni-1);
                     q.randomize();
                     qn = q.norm();
-                    //Do another pass for good measure
-                    if(pass == Npass) 
-                        --pass;
+                    //if(pass == Npass) --pass;
                     }
 
                 q *= 1./qn;
