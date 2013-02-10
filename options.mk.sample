@@ -7,6 +7,7 @@ LIBDIR=$(PREFIX)/lib
 INCLUDEDIR=$(PREFIX)/include
 BOOST_DIR=$(HOME)/boost
 OPTIMIZATIONS=-O2 -DNDEBUG -Wall -DBOOST_DISABLE_ASSERTS
+DEBUGFLAGS=-DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall
 ###BLAS/LAPACK Related Options
 
 ##For a recent Mac OSX system (include flags intentionally left blank)
