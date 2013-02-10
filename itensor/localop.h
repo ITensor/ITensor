@@ -520,21 +520,28 @@ size() const
         size_ = 1;
         if(!LIsNull()) 
             {
-            size_ *= index_in_common(*Op1_,L(),Link).m();
+            for(int j = L().r(); j >= 1; --j)
+                {
+                if(L().index(j).primeLevel() > 0)
+                    {
+                    size_ *= L().index(j).m();
+                    break;
+                    }
+                }
             }
         if(!RIsNull()) 
             {
-            size_ *= index_in_common(*Op2_,R(),Link).m();
+            for(int j = R().r(); j >= 1; --j)
+                {
+                if(R().index(j).primeLevel() > 0)
+                    {
+                    size_ *= R().index(j).m();
+                    break;
+                    }
+                }
             }
 
-        try {
         size_ *= Op1_->findtype(Site).m();
-            }
-        catch(const ITError& e)
-            {
-            Print((*Op1_));
-            throw e;
-            }
         size_ *= Op2_->findtype(Site).m();
         }
     return size_;
