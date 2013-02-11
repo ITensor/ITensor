@@ -425,7 +425,7 @@ deltaPhi(const IQTensor& phi) const
 
 template <class Tensor>
 void inline LocalOp<Tensor>::
-diag(Tensor& D) const
+diag(Tensor& Diag) const
     {
     if(this->isNull()) Error("LocalOp is null");
 
@@ -435,7 +435,7 @@ diag(Tensor& D) const
     IndexT toTie;
     bool found = false;
 
-    Tensor Diag = Op1;
+    Diag = Op1;
     for(int j = 1; j <= Diag.r(); ++j)
         {
         const IndexT& s = Diag.index(j);
@@ -505,7 +505,7 @@ diag(Tensor& D) const
             Diag *= R();
         }
 
-    D.assignFrom(Diag);
+    //D.assignFrom(Diag);
     }
 
 template <class Tensor>
