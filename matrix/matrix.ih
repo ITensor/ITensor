@@ -126,6 +126,9 @@ inline Vector::Vector (const Vector &V)
 inline Vector::Vector (int s)
     { init(); makevector(s); }
 
+inline Vector::Vector (int s, Real val)
+    { init(); makevector(s); operator=(val); }
+
 inline Vector::Vector (const VectorRef &V)
     { init(); makevector(V.Length()); VectorRef::operator=(V); }
 

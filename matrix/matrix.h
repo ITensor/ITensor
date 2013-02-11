@@ -128,6 +128,7 @@ public:
 
 // Making and resizing:
     inline Vector (int);
+    inline Vector (int, Real);
     inline void ReDimension(int);
     void ReduceDimension(int);
     void Enlarge(int);			// Change size while keeping contents
