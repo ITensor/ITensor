@@ -1171,15 +1171,25 @@ randomize()
 void ITensor::
 splitReIm(ITensor& re, ITensor& im) const
 	{
-	re = *this; im = *this;
-	if(!isComplex()) { im *= 0; return; }
-	//re *= Index::IndReIm()(1); im *= Index::IndReIm()(2);
+	re = *this; 
+    im = *this;
+	if(!isComplex(*this)) 
+        { im *= 0; 
+        return; 
+        }
 
 	re.mapindex(Index::IndReIm(),Index::IndReImP());
 	im.mapindex(Index::IndReIm(),Index::IndReImP());
 	re *= Index::IndReImP()(1);
 	im *= Index::IndReImP()(2);
 	}
+
+void ITensor::
+conj() 
+    { 
+    if(!isComplex(*this)) return; 
+    operator/=(ITensor::ConjTensor()); 
+    }
 
 Real ITensor::
 sumels() const 
@@ -2095,8 +2105,8 @@ operator+=(const ITensor& other)
     //if(this->p == other.p) { ... }
 
 
-    bool complex_this = isComplex();
-    bool complex_other = other.isComplex();
+    const bool complex_this = isComplex(*this);
+    const bool complex_other = isComplex(other);
     if(!complex_this && complex_other)
         {
         return (*this = (*this * ITensor::Complex_1()) + other);
@@ -2638,7 +2648,7 @@ Dot(const ITensor& x, const ITensor& y)
 void 
 BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im)
     {
-    if(x.isComplex())
+    if(isComplex(x))
         {
         ITensor res = conj(x);
         res *= y;
@@ -2653,7 +2663,7 @@ BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im)
         return;
         }
     else
-    if(y.isComplex())
+    if(isComplex(y))
         {
         ITensor res = x;
         res *= y;

@@ -63,11 +63,6 @@ class ITensor
     bool 
     isNotNull() const { return bool(p); }
 
-    bool 
-    isComplex() const { return hasindexn(Index::IndReIm()); }
-    bool 
-    isNotComplex() const { return !hasindexn(Index::IndReIm()); }
-
     //Read-only access to scale factor, used internally for efficient scalar ops
     const LogNumber&
     scale() const { return scale_; }
@@ -654,11 +649,7 @@ class ITensor
     splitReIm(ITensor& re, ITensor& im) const;
 
     void 
-    conj() 
-        { 
-        if(!isComplex()) return; 
-        operator/=(ITensor::ConjTensor()); 
-        }
+    conj();
 
     void 
     conj(const Index& I) { }
@@ -988,6 +979,14 @@ multSiteOps(Tensor A, const Tensor& B)
     A.mapprime(2,1,Site);
     return A;
     }
+
+template <class Tensor>
+bool 
+isComplex(const Tensor& T)
+    { 
+    return T.hasindex(Tensor::ReImIndex());
+    }
+
 
 #undef Cout
 #undef Endl

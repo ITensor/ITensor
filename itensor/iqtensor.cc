@@ -1210,7 +1210,7 @@ assignFrom(const IQTensor& other)
 void IQTensor::
 conj()
     {
-    if(!isComplex())
+    if(!isComplex(*this))
         {
         soloIndex();
         is_->conj();

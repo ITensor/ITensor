@@ -62,12 +62,6 @@ class IQTSparse
     bool
     isNotNull() const;
 
-    bool 
-    isComplex() const { return hasindex(IQIndex::IndReIm()); }
-
-    bool 
-    isNotComplex() const { return !hasindex(IQIndex::IndReIm()); }
-
     bool
     isDiag() const { return true; }
 
@@ -259,6 +253,8 @@ class IQTSparse
 
     typedef Combiner 
     CombinerT;
+
+    static const IQIndex& ReImIndex() { return IQIndex::IndReIm(); }
 
     private:
 

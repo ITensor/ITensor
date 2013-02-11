@@ -568,7 +568,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     IndexT newmid;
     Tensor U;
-    if(AA.isComplex())
+    if(isComplex(AA))
         {
         truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),newmid,U);
         }

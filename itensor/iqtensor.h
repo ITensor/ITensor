@@ -427,10 +427,6 @@ class IQTensor
     bool 
     hasindex(const IQIndex& I) const;
 
-    bool 
-    isComplex() const 
-        { return findindex(IQIndex::IndReIm()) != 0; }
-
     void 
     addindex1(const IQIndex& I);
 

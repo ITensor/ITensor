@@ -291,7 +291,7 @@ psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, cons
         }
 
     if(!RB.isNull()) L *= RB;
-    if(L.isComplex())
+    if(isComplex(L))
         {
         if(L.vecSize() != 2) Error("Non-scalar result in psiHphi.");
         re = L(Index::IndReIm()(1));

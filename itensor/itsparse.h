@@ -63,12 +63,6 @@ class ITSparse
     Real 
     uniqueReal() const { return is_.uniqueReal(); } 
 
-    bool 
-    isComplex() const { return hasindexn(Index::IndReIm()); }
-
-    bool 
-    isNotComplex() const { return !hasindexn(Index::IndReIm()); }
-
     const LogNumber&
     scale() const { return scale_; }
 

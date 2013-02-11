@@ -404,7 +404,7 @@ noprime(const IQIndex& I)
 void IQTSparse::
 conj()
     {
-    if(!isComplex())
+    if(!isComplex(*this))
         {
         soloIndex();
         is_->conj();
