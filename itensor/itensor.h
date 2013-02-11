@@ -820,6 +820,15 @@ class ITensor
     }; // class ITensor
 
 
+inline
+const ITensor&
+Complex_1() { return ITensor::Complex_1(); }
+
+inline
+const ITensor&
+Complex_i() { return ITensor::Complex_i(); }
+
+
 //
 // ITDat
 //

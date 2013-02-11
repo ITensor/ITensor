@@ -629,6 +629,15 @@ class IQTensor
 
     }; //class IQTensor
 
+inline
+const IQTensor&
+IQComplex_1() { return IQTensor::Complex_1(); }
+
+inline
+const IQTensor&
+IQComplex_i() { return IQTensor::Complex_i(); }
+
+
 class IQTDat : public boost::noncopyable
     {
     public:
