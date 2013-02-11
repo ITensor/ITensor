@@ -289,9 +289,9 @@ class IndexDat
     //
     // Public Data Members
 
-    IndexType _type;
+    const IndexType _type;
     boost::uuids::uuid ind;
-    int m_;
+    const int m_;
     Real ur;
     std::string sname;
 

@@ -174,20 +174,23 @@ IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& 
 IndexDat::
 IndexDat(Index::Imaker im) 
     : 
-    _type(ReIm), 
+    _type((im==Index::makeNull ? Site : ReIm)), 
     m_( (im==Index::makeNull) ? 1 : 2)
     { 
     //Don't use random uuid generator for these static IndexDats
     boost::uuids::string_generator gen;
     if(im==Index::makeNull)
-        { ind = gen("{00000000-0000-0000-0000-000000000000}"); }
-    else                               
-        { ind = gen("{10000000-0000-0000-0000-000000000000}"); }
+        { 
+        ind = gen("{00000000-0000-0000-0000-000000000000}"); 
+        }
+    else //if im == ReIm, ReImP, or ReImPP                               
+        { 
+        ind = gen("{10000000-0000-0000-0000-000000000000}"); 
+        }
 
     if(im == Index::makeNull)
         {
         sname = "Null";
-        _type = Site;
         ur = 0.0;
         return;
         }
