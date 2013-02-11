@@ -436,11 +436,6 @@ class IQTensor
     void
     tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied);
 
-    friend inline IQTensor
-    tieIndices(const IQIndex& i1, const IQIndex& i2, 
-               const IQIndex& tied, IQTensor T)
-        { T.tieIndices(i1,i2,tied); return T; }
-
     void
     trace(const boost::array<IQIndex,NMAX>& indices, int nind);
 
@@ -561,8 +556,9 @@ class IQTensor
     void 
     write(std::ostream& s) const;
 
-    static const IQIndex& ReImIndex()
-        { return IQIndex::IndReIm(); }
+    static 
+    const IQIndex& 
+    ReImIndex() { return IQIndex::IndReIm(); }
 
     //Deprecated methods --------------------------
 

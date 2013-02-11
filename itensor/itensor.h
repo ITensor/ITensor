@@ -469,31 +469,18 @@ class ITensor
     tieIndices(const Index& i1, const Index& i2,
                const Index& tied);
 
-    friend inline ITensor
-    tieIndices(const Index& i1, const Index& i2, 
-               const Index& tied, ITensor T)
-        { T.tieIndices(i1,i2,tied); return T; }
 
     void
     tieIndices(const Index& i1, const Index& i2,
                const Index& i3,
                const Index& tied);
 
-    friend inline ITensor
-    tieIndices(const Index& i1, const Index& i2, 
-               const Index& i3, const Index& tied, ITensor T)
-        { T.tieIndices(i1,i2,i3,tied); return T; }
 
     void
     tieIndices(const Index& i1, const Index& i2,
                const Index& i3, const Index& i4,
                const Index& tied);
 
-    friend inline ITensor
-    tieIndices(const Index& i1, const Index& i2, 
-               const Index& i3, const Index& i4, 
-               const Index& tied, ITensor T)
-        { T.tieIndices(i1,i2,i3,i4,tied); return T; }
 
     //
     // The trace method sums over the given set of indices
@@ -703,7 +690,8 @@ class ITensor
     typedef ITSparse
     SparseT;
 
-    static const Index& 
+    static 
+    const Index& 
     ReImIndex() { return Index::IndReIm(); }
 
     //Deprecated methods --------------------------
@@ -994,6 +982,38 @@ bool
 isComplex(const Tensor& T)
     { 
     return T.hasindex(Tensor::ReImIndex());
+    }
+
+template <class Tensor, class IndexT>
+Tensor
+tieIndices(Tensor T,
+           const IndexT& i1, const IndexT& i2, 
+           const IndexT& tied)
+    { 
+    T.tieIndices(i1,i2,tied); 
+    return T; 
+    }
+
+template <class Tensor, class IndexT>
+Tensor
+tieIndices(Tensor T,
+           const IndexT& i1, const IndexT& i2, 
+           const IndexT& i3, 
+           const IndexT& tied)
+    { 
+    T.tieIndices(i1,i2,i3,tied); 
+    return T; 
+    }
+
+template <class Tensor, class IndexT>
+Tensor
+tieIndices(Tensor T,
+           const IndexT& i1, const IndexT& i2, 
+           const IndexT& i3, const IndexT& i4, 
+           const IndexT& tied)
+    { 
+    T.tieIndices(i1,i2,i3,i4,tied); 
+    return T; 
     }
 
 

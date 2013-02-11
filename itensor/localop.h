@@ -435,10 +435,9 @@ diag(Tensor& Diag) const
     IndexT toTie;
     bool found = false;
 
-    Diag = Op1;
-    for(int j = 1; j <= Diag.r(); ++j)
+    for(int j = 1; j <= Op1.r(); ++j)
         {
-        const IndexT& s = Diag.index(j);
+        const IndexT& s = Op1.index(j);
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
             toTie = s;
@@ -448,10 +447,11 @@ diag(Tensor& Diag) const
         }
     if(!found) 
         {
-        Print(Diag);
+        Print(Op1);
         Error("Couldn't find Index");
         }
-    Diag.tieIndices(toTie,primed(toTie),toTie);
+
+    Diag = tieIndices(Op1,toTie,primed(toTie),toTie);
 
     found = false;
     for(int j = 1; j <= Op2.r(); ++j)
@@ -465,7 +465,7 @@ diag(Tensor& Diag) const
             }
         }
     if(!found) Error("Couldn't find Index");
-    Diag *= tieIndices(toTie,primed(toTie),toTie,Op2);
+    Diag *= tieIndices(Op2,toTie,primed(toTie),toTie);
 
     if(!LIsNull())
         {
@@ -481,7 +481,7 @@ diag(Tensor& Diag) const
                 }
             }
         if(found)
-            Diag *= tieIndices(toTie,primed(toTie),toTie,L());
+            Diag *= tieIndices(L(),toTie,primed(toTie),toTie);
         else
             Diag *= L();
         }
@@ -500,7 +500,7 @@ diag(Tensor& Diag) const
                 }
             }
         if(found)
-            Diag *= tieIndices(toTie,primed(toTie),toTie,R());
+            Diag *= tieIndices(R(),toTie,primed(toTie),toTie);
         else
             Diag *= R();
         }

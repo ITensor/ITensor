@@ -254,7 +254,9 @@ class IQTSparse
     typedef Combiner 
     CombinerT;
 
-    static const IQIndex& ReImIndex() { return IQIndex::IndReIm(); }
+    static 
+    const IQIndex& 
+    ReImIndex() { return IQIndex::IndReIm(); }
 
     private:
 
