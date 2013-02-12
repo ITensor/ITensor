@@ -515,8 +515,8 @@ class IQTensor
     printIndices(const boost::format& fname) const
         { printIndices(fname.str()); }
 
-    void 
-    assignFrom(const IQTensor& other);
+    //void 
+    //assignFrom(const IQTensor& other);
 
     void 
     splitReIm(IQTensor& re, IQTensor& im) const;
@@ -702,8 +702,8 @@ class IQTDat : public boost::noncopyable
     void 
     insert_add(const ITensor& t);
 
-    void 
-    insert_assign(const ITensor& t);
+    //void 
+    //insert_assign(const ITensor& t);
 
     void 
     clean(Real min_norm);

@@ -140,6 +140,7 @@ insert_add(const ITensor& t)
     insert_add(r,t);
     }
 
+/*
 void IQTDat::
 insert_assign(const ITensor& t)
     {
@@ -156,6 +157,7 @@ insert_assign(const ITensor& t)
         rmap[r] = itensor.begin();
         }
     }
+*/
 
 void IQTDat::
 clean(Real min_norm)
@@ -1189,6 +1191,7 @@ printIndices(const std::string& name) const
 	cout << "\\-------------------------------------\n" << endl;
 	}
 
+/*
 void IQTensor::
 assignFrom(const IQTensor& other)
 	{
@@ -1206,6 +1209,7 @@ assignFrom(const IQTensor& other)
         ncdat().insert_assign(t);
 	    }
 	}
+*/
 
 void IQTensor::
 conj()

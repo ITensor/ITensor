@@ -437,14 +437,6 @@ class ITensor
     //Methods for Mapping to Other Objects ----------------------------------
 
     //
-    // Assume *this and other have same indices but different order.
-    // Copy other into *this, without changing the order of indices in either.
-    // Assignment operator= would put the order of other into *this.
-    //
-    void 
-    assignFrom(const ITensor& other);
-
-    //
     // groupIndices combines a set of indices (of possibly different sizes) 
     // together, leaving only single grouped Index.
     //
@@ -695,6 +687,15 @@ class ITensor
     ReImIndex() { return Index::IndReIm(); }
 
     //Deprecated methods --------------------------
+
+    //
+    //No longer used and difficult to maintain.
+    //Instead just overwrite tensors and allow index
+    //order to change.
+    //
+    //void 
+    //assignFrom(const ITensor& other);
+
 
     //
     //Renamed to randomize in keeping with code conventions

@@ -449,6 +449,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2,
 
 //#define DO_REWRITE_ASSIGN
 
+/*
 void ITensor::
 assignFrom(const ITensor& other)
     {
@@ -474,6 +475,7 @@ assignFrom(const ITensor& other)
     DO_IF_PS(++Prodstats::stats().c1;)
 #endif
     }
+    */
 
 
 void ITensor::
@@ -2318,12 +2320,10 @@ fromMatrix12(const Index& i1, const Index& i2,
     assert(hasindex(i2));
     assert(hasindex(i3));
 
-    solo();
-    scale_ = 1;
-
     ITensor Q(i3,i1,i2);
     Q.p->v = M.TreatAsVector();
-    assignFrom(Q);
+
+    *this = Q;
     }
 
 /*
