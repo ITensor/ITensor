@@ -805,13 +805,13 @@ Real
 Dot(const IQTensor& x, const IQTensor& y);
 
 //
-// Computes the scalar (inner) product of two
+// Scalar (inner) product of two
 // possibly complex ITensors.
 //
-// The first argument gets conjugated so this method
-// is equivalent to the IQTensor contraction conj(x) * y 
-// except it yields two real numbers (re and im) instead 
-// of a rank 0 IQTensor.
+// Conjugates the first argument, therefore
+// equivalent to the contraction conj(x) * y 
+// (except it yields two real numbers, re and im,
+// instead of a rank 0 IQTensor).
 //
 void 
 BraKet(const IQTensor& x, const IQTensor& y, Real& re, Real& im);

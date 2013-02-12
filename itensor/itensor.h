@@ -923,13 +923,13 @@ Real
 Dot(const ITensor& x, const ITensor& y);
 
 //
-// Computes the scalar (inner) product of two
+// Scalar (inner) product of two
 // possibly complex ITensors.
 //
-// The first argument gets conjugated so this method
-// is equivalent to the ITensor contraction conj(x) * y 
-// except the result is two real numbers (re and im) 
-// instead of a rank 0 ITensor.
+// Conjugates the first argument, therefore
+// equivalent to the contraction conj(x) * y 
+// (except it yields two real numbers, re and im,
+// instead of a rank 0 ITensor).
 //
 void 
 BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im);
