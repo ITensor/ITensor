@@ -377,7 +377,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
 
     //Put uncontracted m != 1 Indices
     //of T into res
-    for(int i = 1; i <= T.rn(); ++i)
+    for(int i = 1; i <= T.is_.rn(); ++i)
         if(tcon[i] == 0)
             {
             res.is_.addindexn(T.index(i));
@@ -412,7 +412,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
 
     //Put uncontracted m == 1 Indices
     //of T into res
-    for(int i = T.rn()+1; i <= T.r(); ++i)
+    for(int i = T.is_.rn()+1; i <= T.r(); ++i)
         if(tcon[i] == 0)
             {
             res.is_.addindex1(T.index(i));

@@ -47,10 +47,6 @@ class ITensor
     int 
     r() const { return is_.r(); }
 
-    //Number of m!=1 indices
-    int 
-    rn() const { return is_.rn(); }
-
     //Bond dimension of jth Index, j = 1,2,..,r()
     int 
     m(int j) const { return is_.m(j); }
@@ -495,7 +491,7 @@ class ITensor
     Real friend inline
     trace(ITensor T)
         {
-        if(T.rn() != 0) T.trace(T.is_.storage(),T.rn());
+        if(T.is_.rn() != 0) T.trace(T.is_.storage(),T.is_.rn());
         return T.val0();
         }
 
