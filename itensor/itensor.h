@@ -960,6 +960,29 @@ operator*(Real fac, const IndexVal& iv)
     { return ITensor(iv,fac); }
 
 
+template<class TensorA, class TensorB> typename 
+TensorA::IndexT
+index_in_common(const TensorA& A, const TensorB& B, IndexType t = All)
+    {
+    typedef typename TensorA::IndexT
+    IndexT;
+    for(int j = 1; j <= A.r(); ++j)
+        {
+        const IndexT& I = A.index(j);
+        if((t == All || I.type() == t) && B.hasindex(I)) 
+            return I;
+        }
+    throw ITError("No common index found");
+    return IndexT();
+    }
+
+template <class Tensor>
+bool 
+isComplex(const Tensor& T)
+    { 
+    return T.hasindex(Tensor::ReImIndex());
+    }
+
 //
 // Given Tensors which represent operator matrices
 // (e.g. A(site1',site1), B(site1',site1) )
@@ -977,12 +1000,6 @@ multSiteOps(Tensor A, const Tensor& B)
     return A;
     }
 
-template <class Tensor>
-bool 
-isComplex(const Tensor& T)
-    { 
-    return T.hasindex(Tensor::ReImIndex());
-    }
 
 template <class Tensor, class IndexT>
 Tensor
