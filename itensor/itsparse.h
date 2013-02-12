@@ -230,22 +230,6 @@ class ITSparse
                 IndexType type = All)
         { is_.mapprimeind(I,plevold,plevnew,type); }
 
-    friend inline ITSparse
-    prime(ITSparse S, int inc = 1)
-        { S.prime(All,inc); return S; }
-
-    friend inline ITSparse
-    prime(ITSparse S, IndexType type, int inc = 1)
-        { S.prime(type,inc); return S; }
-
-    friend inline ITSparse
-    prime(ITSparse S, const Index& I, int inc = 1)
-        { S.prime(I,inc); return S; }
-
-    friend inline ITSparse
-    deprimed(ITSparse S)
-        { S.noprime(); return S; }
-
     //
     // Other Methods
     //

@@ -359,6 +359,12 @@ class IQTensor
     //IQTensor: prime methods
 
     void 
+    noprime(IndexType type = All);
+
+    void 
+    noprime(const IQIndex& I);
+
+    void 
     prime(int inc = 1) { prime(All,inc); }
 
     void 
@@ -367,35 +373,9 @@ class IQTensor
     void 
     prime(const IQIndex& I, int inc = 1);
 
-    void 
-    noprime(IndexType type = All);
-
-    void 
-    noprime(const IQIndex& I);
-
     //no need to keep prime level small
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);
-
-    friend inline IQTensor 
-    primed(IQTensor A, int inc = 1) { A.prime(All,inc); return A; }
-
-    friend inline IQTensor 
-    primed(IQTensor A, IndexType type, int inc = 1) 
-        { A.prime(type,inc); return A; }
-
-    friend inline IQTensor 
-    primed(IQTensor A, const IQIndex& I, int inc = 1)
-        { A.prime(I,inc); return A; }
-
-    friend inline IQTensor 
-    primed(IQTensor A, const IQIndex& I, const IQIndex& J)
-        { A.prime(I); A.prime(J); return A; }
-
-
-    friend inline IQTensor 
-    deprimed(IQTensor A) { A.noprime(); return A; }
-
 
     //----------------------------------------------------
     //IQTensor index methods

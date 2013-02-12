@@ -182,27 +182,6 @@ class IQTSparse
     mapprimeind(const IQIndex& I, int plevold, int plevnew, 
                 IndexType type = All);
 
-
-    friend inline IQTSparse
-    primed(IQTSparse S, int inc = 1)
-        { S.prime(All,inc); return S; }
-
-    friend inline IQTSparse
-    primesite(IQTSparse S, int inc = 1)
-        { S.prime(Site,inc); return S; }
-
-    friend inline IQTSparse
-    primelink(IQTSparse S, int inc = 1)
-        { S.prime(Link,inc); return S; }
-
-    friend inline IQTSparse
-    prime(IQTSparse S, const IQIndex& I, int inc = 1)
-        { S.prime(I,inc); return S; }
-
-    friend inline IQTSparse
-    deprimed(IQTSparse S)
-        { S.noprime(); return S; }
-
     //
     // Other Methods
     //

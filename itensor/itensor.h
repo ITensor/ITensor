@@ -189,7 +189,7 @@ class ITensor
     operator*(const IndexVal& iv) const 
         { ITensor res(*this); res *= iv; return res; }
 
-    friend inline ITensor 
+    ITensor friend inline
     operator*(const IndexVal& iv, const ITensor& t) 
         { return (ITensor(iv) *= t); }
 
@@ -201,7 +201,7 @@ class ITensor
     operator*(Real fac) const 
         { ITensor res(*this); res *= fac; return res; }
 
-    friend inline ITensor 
+    ITensor friend inline
     operator*(Real fac, ITensor t) 
         { return (t *= fac); }
 
@@ -212,7 +212,7 @@ class ITensor
     operator/(Real fac) const 
         { ITensor res(*this); res /= fac; return res; }
 
-    friend inline ITensor 
+    ITensor friend inline
     operator/(Real fac, ITensor t) 
         { return (t /= fac); }
 
@@ -224,7 +224,7 @@ class ITensor
     operator*(const LogNumber& lgnum) const 
         { ITensor res(*this); res *= lgnum; return res; }
 
-    friend inline ITensor 
+    ITensor friend inline
     operator*(const LogNumber& lgnum, ITensor t) 
         { return (t *= lgnum); }
 
@@ -328,6 +328,10 @@ class ITensor
     void 
     noprime(IndexType type = All) { is_.noprime(type); }
 
+    //Set primeLevel of Index I to zero
+    void 
+    noprime(const Index& I) { mapindex(I,deprimed(I)); }
+
     //Increase primeLevel of Indices by 1 (or optional amount inc)
     void 
     prime(int inc = 1) { is_.prime(inc); }
@@ -335,6 +339,10 @@ class ITensor
     //Increase primeLevel of Indices by 1 (or optional amount inc)
     void 
     prime(IndexType type, int inc = 1) { is_.prime(type,inc); }
+
+    //Increase primeLevel of Index I by 1 (or optional amount inc)
+    void 
+    prime(const Index& I, int inc = 1) { is_.prime(I,inc); }
 
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
     void 
@@ -347,38 +355,6 @@ class ITensor
     mapprimeind(const Index& I, int plevold, int plevnew, 
                 IndexType type = All)
         { is_.mapprimeind(I,plevold,plevnew,type); }
-
-    //Increase primeLevel of Index I by 1 (or optional amount inc)
-    void 
-    prime(const Index& I, int inc = 1)
-        { mapindex(I,primed(I,inc)); }
-
-    //Set primeLevel of Index I to zero
-    void 
-    noprime(const Index& I) { mapindex(I,deprimed(I)); }
-
-    //Return copy of ITensor with primeLevel of all Indices increased by 1
-    ITensor friend inline
-    primed(ITensor A, int inc = 1)
-        { A.prime(All,inc); return A; }
-
-    ITensor friend inline
-    primed(ITensor A, IndexType type, int inc = 1)
-        { A.prime(type,inc); return A; }
-
-    //Return copy of ITensor with primeLevel of Index I increased by 1
-    //(or optional amount inc)
-    ITensor friend inline
-    primed(ITensor A, const Index& I, int inc = 1)
-        { A.mapindex(I,primed(I,inc)); return A; }
-
-    //Return copy of ITensor with primeLevel of Index I1 and I2 increased by 1
-    ITensor friend
-    primed(ITensor A, const Index& I1, const Index& I2);
-
-    //Return copy of ITensor with primeLevel of all Indices set to zero
-    ITensor friend inline
-    deprimed(ITensor A) { A.noprime(); return A; }
 
     //Element Access Methods ----------------------------------------
 
@@ -1000,6 +976,30 @@ multSiteOps(Tensor A, const Tensor& B)
     A.mapprime(2,1,Site);
     return A;
     }
+
+//Return copy of ITensor with primeLevel of all Indices increased by 1
+template <class Tensor>
+Tensor
+primed(Tensor A, int inc = 1)
+    { A.prime(All,inc); return A; }
+
+template <class Tensor>
+Tensor
+primed(ITensor A, IndexType type, int inc = 1)
+    { A.prime(type,inc); return A; }
+
+//Return copy of ITensor with primeLevel of Index I increased by 1
+//(or optional amount inc)
+template <class Tensor, class IndexT>
+Tensor
+primed(Tensor A, const IndexT& I, int inc = 1)
+    { A.prime(I,inc); return A; }
+
+//Return copy of ITensor with primeLevel of all Indices set to zero
+template <class Tensor>
+Tensor
+deprimed(Tensor A) 
+    { A.noprime(); return A; }
 
 
 template <class Tensor, class IndexT>
