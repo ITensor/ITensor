@@ -1002,9 +1002,18 @@ template <class IndexT>
 std::ostream&
 operator<<(std::ostream& s, const IndexSet<IndexT>& is)
     {
+    for(int i = 1; i <= is.r(); ++i) 
+        s << is.index(i) << "\n"; 
+    return s;
+    }
+
+template <> inline
+std::ostream&
+operator<<(std::ostream& s, const IndexSet<Index>& is)
+    {
     int i = 1; 
-    for(; i < is.r(); ++i) { s << " " << is.index(i) << "\n"; } 
-    if(is.r() != 0) { s << " " << is.index(i); } //print last one
+    for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
+    if(is.r() != 0) { s << is.index(i); } //print last one
     return s;
     }
 
