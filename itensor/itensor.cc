@@ -2111,7 +2111,10 @@ operator+=(const ITensor& other)
         {
         return (*this = (*this * ITensor::Complex_1()) + other);
         }
-    if(complex_this && !complex_other) return operator+=(other * ITensor::Complex_1());
+    if(complex_this && !complex_other) 
+        {
+        return operator+=(other * ITensor::Complex_1());
+        }
 
     if(fabs(is_.uniqueReal() - other.is_.uniqueReal()) > 1E-12)
         {
@@ -2638,8 +2641,12 @@ Dot(const ITensor& x, const ITensor& y)
     res *= y;
     if(res.r() != 0) 
         { 
-        x.print("x"); 
-        y.print("y"); 
+        Print(x);
+        Print(y);
+        if(isComplex(x) || isComplex(y))
+            {
+            Error("Must use BraKet, not Dot, for complex ITensors");
+            }
         Error("Bad Dot, product is not a scalar"); 
         }
     return res.val0();
