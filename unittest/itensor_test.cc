@@ -1082,6 +1082,7 @@ TEST(ToFromMatrix11)
 
     }
 
+/*
 TEST(SymmetricDiag11)
     {
     ITensor T(s1,primed(s1));
@@ -1116,6 +1117,7 @@ TEST(SymmetricDiag11)
     diff = UD*U - Q;
     CHECK(diff.norm() < 1E-10);
     }
+    */
 
 TEST(CommaAssignment)
     {

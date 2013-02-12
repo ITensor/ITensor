@@ -785,67 +785,6 @@ hasindex(const IQIndex& I) const
     return is_->hasindex(I); 
     }
 
-void IQTensor::
-symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid) const
-    {
-    int mink,maxk;
-    symmetricDiag11(i1,D,U,mid,mink,maxk);
-    }
-
-void IQTensor::
-symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& mink, int& maxk) const
-    {
-    assert(hasindex(i1));
-    assert(hasindex(primed(i1)));
-    if(r() != 2) Error("symDiag11: rank must be 2");
-    //This method is only intended for IQTensors with zero divergence
-    DO_IF_DEBUG(checkDiv(*this,QN());)
-
-    vector<inqn> iq(iten_size()); 
-    vector<ITensor> UU(iten_size()); 
-    vector<ITensor> d(iten_size()); 
-
-    Real minv = std::numeric_limits<Real>::max(),
-         maxv = -minv;
-    int w = 0;
-    int totk = 0;
-    int itMink = -1, itMaxk = -1;
-    for(IQTensor::const_iten_it it = const_iten_begin(); it != const_iten_end(); ++it)
-        {
-        Index mi;
-        Index act = it->index(1);
-        act.noprime();
-        it->symmetricDiag11(act,d[w],UU[w],mi,itMink,itMaxk);
-        iq[w] = inqn(mi,i1.qn(act));
-
-        if(d[w](mi(itMink)) < minv)
-            {
-            mink = totk+itMink;
-            minv = d[w](mi(itMink));
-            }
-        if(d[w](mi(itMaxk)) > maxv)
-            {
-            maxv = d[w](mi(itMaxk));
-            maxk = totk+itMaxk;
-            }
-        totk += mi.m();
-        ++w;
-        }
-
-    mid = IQIndex((mid.isNull() ? "mid" : mid.rawname()),iq,i1.dir()*Switch);
-
-    //Insert blocks backwards so that mink and maxk
-    //label the appropriate values (because IQTDat::insert_add
-    //pushes from the front)
-    U = IQTensor(i1,mid);
-    for(int j = UU.size()-1; j >= 0; --j)
-        U.insert(UU.at(j));
-
-    D = IQTensor(mid);
-    for(int j = d.size()-1; j >= 0; --j)
-        D.insert(d.at(j));
-    }
-
 Real IQTensor::
 uniqueReal() const 
     { 

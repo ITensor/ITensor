@@ -438,12 +438,6 @@ class IQTensor
     //----------------------------------------------------
     //IQTensor miscellaneous methods
 
-    void
-    symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid) const;
-
-    void
-    symmetricDiag11(const IQIndex& i1, IQTensor& D, IQTensor& U, IQIndex& mid, int& mink, int& maxk) const;
-
     Real 
     uniqueReal() const;
 

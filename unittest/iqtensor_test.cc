@@ -164,6 +164,7 @@ TEST(ITensorConversion)
 
     }
 
+/*
 TEST(SymmetricDiag11)
     {
     IQTensor D,U;
@@ -184,6 +185,7 @@ TEST(SymmetricDiag11)
     CHECK_CLOSE(D(mid(mink)),Dot(primed(U),C*U),1E-10);
 
     }
+    */
 
 TEST(TieIndices)
     {

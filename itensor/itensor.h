@@ -397,17 +397,20 @@ class ITensor
     operator()(const IndexVal& iv1, const IndexVal& iv2) const;
 
     Real& 
-    operator()(const IndexVal& iv1, const IndexVal& iv2, 
-               const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
-               const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
-               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null());
+    operator()(const IndexVal& iv1, const IndexVal& iv2, const IndexVal& iv3, 
+               const IndexVal& iv4 = IndexVal::Null(), 
+               const IndexVal& iv5 = IndexVal::Null(),
+               const IndexVal& iv6 = IndexVal::Null(),
+               const IndexVal& iv7 = IndexVal::Null(),
+               const IndexVal& iv8 = IndexVal::Null());
 
     Real 
-    operator()(const IndexVal& iv1, const IndexVal& iv2, 
-               const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
-               const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
-               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null()) 
-    const;
+    operator()(const IndexVal& iv1, const IndexVal& iv2, const IndexVal& iv3, 
+               const IndexVal& iv4 = IndexVal::Null(), 
+               const IndexVal& iv5 = IndexVal::Null(),
+               const IndexVal& iv6 = IndexVal::Null(),
+               const IndexVal& iv7 = IndexVal::Null(),
+               const IndexVal& iv8 = IndexVal::Null()) const;
 
 
     //Methods for Mapping to Other Objects ----------------------------------
@@ -546,12 +549,6 @@ class ITensor
 
     void fromMatrix12(const Index& i1, const Index& i2, 
                       const Index& i3, const Matrix& M);
-
-    void
-    symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid) const;
-
-    void
-    symmetricDiag11(const Index& i1, ITensor& D, ITensor& U, Index& mid, int& mink, int& maxk) const;
 
     int 
     vecSize() const;
