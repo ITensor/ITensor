@@ -505,7 +505,7 @@ diag(Tensor& Diag) const
             Diag *= R();
         }
 
-    //D.assignFrom(Diag);
+    Diag.conj();
     }
 
 template <class Tensor>
