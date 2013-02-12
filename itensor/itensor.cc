@@ -711,8 +711,15 @@ trace(const array<Index,NMAX>& indices, int nind)
         for(int j = 0; j < nind; ++j)
         if(K == indices[j]) 
             { 
+#ifdef DEBUG
             if(indices[j].m() != tm)
-                Error("Traced indices must have matching m's");
+                {
+                Print((*this));
+                Print(K);
+                Print(indices[j]);
+                Error("Traced indices must all have same m's");
+                }
+#endif
             traced[k] = true;
 
             ++nmatched;
@@ -1169,22 +1176,6 @@ randomize()
     solo(); 
     p->v.Randomize(); 
     }
-
-void ITensor::
-splitReIm(ITensor& re, ITensor& im) const
-	{
-	re = *this; 
-    im = *this;
-	if(!isComplex(*this)) 
-        { im *= 0; 
-        return; 
-        }
-
-	re.mapindex(Index::IndReIm(),Index::IndReImP());
-	im.mapindex(Index::IndReIm(),Index::IndReImP());
-	re *= Index::IndReImP()(1);
-	im *= Index::IndReImP()(2);
-	}
 
 void ITensor::
 conj() 

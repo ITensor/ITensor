@@ -488,12 +488,9 @@ class ITensor
     //
     // Tracing over all indices results in a Real
     //
-    Real friend inline
-    trace(ITensor T)
-        {
-        if(T.is_.rn() != 0) T.trace(T.is_.storage(),T.is_.rn());
-        return T.val0();
-        }
+    Real friend
+    trace(ITensor T);
+
 
     //
     // expandIndex replaces a smaller index with a bigger one, padding out
@@ -594,9 +591,6 @@ class ITensor
     randomize();
 
     void 
-    splitReIm(ITensor& re, ITensor& im) const;
-
-    void 
     conj();
 
     void 
@@ -657,6 +651,13 @@ class ITensor
 
     //Deprecated methods --------------------------
 
+    //Use realPart(T) and imagPart(T) instead
+    //
+    //void 
+    //splitReIm(ITensor& re, ITensor& im) const;
+    //void
+    //SplitReIm(ITensor& re, ITensor& im) const;
+
     //
     //No longer used and difficult to maintain.
     //Instead just overwrite tensors and allow index
@@ -671,12 +672,6 @@ class ITensor
     //
     //void 
     //Randomize();
-
-    //
-    //Renamed to splitReIm in keeping with code conventions
-    //
-    //void 
-    //SplitReIm(ITensor& re, ITensor& im) const;
 
     //Use prime(All) instead
     //void 
@@ -1025,6 +1020,61 @@ tieIndices(Tensor T,
     { 
     T.tieIndices(i1,i2,i3,i4,tied); 
     return T; 
+    }
+
+template<class Tensor>
+Tensor
+realPart(const Tensor& T)
+    {
+    typedef typename Tensor::IndexT
+    IndexT;
+    if(!isComplex(T))
+        return T;
+    //else
+    Tensor re(T);
+	re.mapindex(IndexT::IndReIm(),IndexT::IndReImP());
+	re *= IndexT::IndReImP()(1);
+    return re;
+    }
+
+template<class Tensor>
+Tensor
+imagPart(const Tensor& T)
+    {
+    typedef typename Tensor::IndexT
+    IndexT;
+    if(!isComplex(T))
+        return (0*T);
+    //else
+    Tensor im(T);
+	im.mapindex(IndexT::IndReIm(),IndexT::IndReImP());
+	im *= IndexT::IndReImP()(2);
+    return im;
+    }
+
+Real inline
+trace(ITensor T)
+    {
+    if(isComplex(T))
+        {
+        Error("ITensor is complex, use trace(T,re,im)");
+        }
+    if(T.is_.rn() != 0) T.trace(T.is_.storage(),T.is_.rn());
+    return T.val0();
+    }
+
+template<class Tensor>
+void
+trace(const Tensor& T, Real& re, Real& im)
+    {
+    if(!isComplex(T))
+        {
+        re = trace(T);
+        im = 0;
+        return;
+        }
+    re = trace(realPart(T));
+    im = trace(imagPart(T));
     }
 
 

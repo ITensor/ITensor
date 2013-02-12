@@ -1163,8 +1163,10 @@ conj()
         {
         soloDat();
 
-        IQTensor r,i;
-        splitReIm(r,i);
+        //IQTensor r,i;
+        //splitReIm(r,i);
+        IQTensor r(realPart(*this)),
+                i(imagPart(*this));
 
         r.is_->conj();
         i.is_->conj();
@@ -1207,6 +1209,7 @@ operator<<(std::ostream & s, const IQTensor& T)
     return s;
     }
 
+/*
 void IQTensor::
 splitReIm(IQTensor& re, IQTensor& im) const
     {
@@ -1231,6 +1234,7 @@ splitReIm(IQTensor& re, IQTensor& im) const
         im.insert(b);
         }
     }
+    */
 
 IQTensor& IQTensor::
 operator*=(const IQTensor& other)
@@ -1550,8 +1554,10 @@ GetSingComplex(Real& re, Real& im) const
         Error("GetSingComplex only valid for rank 1 IQTensor with index 'single'");
         }
 #endif
-    IQTensor tre,tim;
-    splitReIm(tre,tim);
+    //IQTensor tre,tim;
+    //splitReIm(tre,tim);
+    IQTensor tre(realPart(*this)),
+             tim(imagPart(*this));
 
     //Only IQIndex should be IQIndex::IndReIm()
     /*
