@@ -187,7 +187,7 @@ TEST(SymmetricDiag11)
 
 TEST(TieIndices)
     {
-    IQTensor D1 = tieIndices(L1,L1.primed(),L1,D);
+    IQTensor D1 = tieIndices(D,L1,L1.primed(),L1);
 
     for(int k1 = 1; k1 <= L1.m(); ++k1)
     for(int k2 = 1; k2 <= L1.m(); ++k2)

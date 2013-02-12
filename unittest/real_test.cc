@@ -5,12 +5,12 @@
 BOOST_AUTO_TEST_SUITE(LogNumberTest)
 
 TEST(Constructors)
-{
+    {
     LogNumber l1;
 
-    CHECK_EQUAL(l1.logNum(),0);
+    CHECK( std::isnan(l1.logNum()) );
     CHECK_EQUAL(l1.sign(),1);
-    CHECK_EQUAL(l1.real(),1);
+    CHECK( std::isnan(l1.real()) );
 
     LogNumber l2(1);
 
@@ -52,7 +52,7 @@ TEST(Constructors)
     CHECK_CLOSE(l7.logNum(),log(fabs(r)),LogNumber_Accuracy);
     CHECK_EQUAL(l7.sign(),(r > 0 ? 1 : -1));
     CHECK_CLOSE(l7.real(),r,LogNumber_Accuracy);
-}
+    }
 
 TEST(Operators)
 {

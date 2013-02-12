@@ -282,6 +282,24 @@ class LogNumber
         return lognum_ > other.lognum_;
         }
 
+    bool 
+    operator<=(const LogNumber& other) const
+        {
+        return (operator<(other) || operator==(other));
+        }
+
+    bool 
+    operator>=(const LogNumber& other) const
+        {
+        return !(operator<(other));
+        }
+
+    bool 
+    operator>(const LogNumber& other) const
+        {
+        return (!operator<(other)) && (!operator==(other));
+        }
+
     void
     swap(LogNumber& other)
         {

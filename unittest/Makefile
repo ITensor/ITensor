@@ -9,8 +9,8 @@ REPORT_LEVEL=confirm
 HEADERS=test.h
 SOURCES = test.cc
 #SOURCES+= matrix_test.cc
-#SOURCES+= real_test.cc
-#SOURCES+= index_test.cc
+SOURCES+= real_test.cc
+SOURCES+= index_test.cc
 SOURCES+= itensor_test.cc
 #SOURCES+= itsparse_test.cc
 #SOURCES+= combiner_test.cc
@@ -24,7 +24,7 @@ SOURCES+= iqtensor_test.cc
 #SOURCES+= iqtsparse_test.cc
 #SOURCES+= webpage_test.cc
 #SOURCES+= localmpo_test.cc
-#SOURCES+= option_test.cc
+SOURCES+= option_test.cc
 SOURCES+= indexset_test.cc
 
 LIBNAMES=matrix utilities itensor
@@ -46,7 +46,7 @@ GOBJECTS=$(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 
 #Define Flags ----------
 CCFLAGS=$(CPPFLAGS) -I$(INCLUDEFLAGS) $(OPTIMIZATIONS)
-CCGFLAGS= -I$(INCLUDEFLAGS) -DDEBUG -DMATRIXBOUNDS -DBOUNDS -g -Wall -ansi
+CCGFLAGS= -I$(INCLUDEFLAGS) $(DEBUGFLAGS)
 LIBFLAGS=-L$(THIS_LIBDIR) $(LOCAL_LIBFLAGS) $(BLAS_LAPACK_LIBFLAGS) $(BOOST_UNITTEST_LIBFLAGS)
 LIBGFLAGS=-L$(THIS_LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS) $(BOOST_UNITTEST_LIBFLAGS)
 
