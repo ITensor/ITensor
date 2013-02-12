@@ -540,6 +540,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         rho *= 1./trace(realPart(rho));
         }
 
+
     const Real saved_cutoff = cutoff_; 
     const int saved_minm = minm_,
               saved_maxm = maxm_; 

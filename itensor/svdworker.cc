@@ -613,8 +613,8 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
 
     if(rho.index(1).m() == 0)
         throw ResultIsZero("rho.index(1).m()");
-    if(rho.iten_size() == 0)
-        throw ResultIsZero("rho.iten_size() == 0");
+    if(rho.iten_empty())
+        throw ResultIsZero("rho.iten_empty()");
 
     if(doRelCutoff_)
         {

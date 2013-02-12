@@ -10,9 +10,11 @@
 #define Endl std::endl
 #define Format boost::format
 
+/*
 template<class Tensor>
 void
 orthog(std::vector<Tensor>& T, int num, int numpass, int start = 1);
+*/
 
 
 /* Notes on optimization
@@ -194,7 +196,11 @@ davidson(const LocalT& A, Tensor& phi) const
     V[0] = phi;
     A.product(V[0],AV[0]);
 
-    const Real initEn = Dot(conj(V[0]),AV[0]);
+    Real re = NAN,
+         im = NAN;
+
+    BraKet(V[0],AV[0],re,im);
+    const Real initEn = re;
 
     if(debug_level_ > 2)
         Cout << Format("Initial Davidson energy = %.10f") % initEn << Endl;
@@ -267,50 +273,34 @@ davidson(const LocalT& A, Tensor& phi) const
         //Check convergence
         qnorm = q.norm();
 
-        const bool converged = (qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_) 
-                               || qnorm < max(1E-12,errgoal_ * 1.0e-3);
-
-        if((qnorm < 1E-20) || (converged && ii >= miniter_) || (ii == actual_maxiter))
+        if(qnorm < 1E-20)
             {
             if(debug_level_ >= 3) //Explain why breaking out of Davidson loop early
                 {
-                if(qnorm < 1E-20)
-                    {
-                    Cout << Format("Breaking out of Davidson because qnorm = %.2E < 1E-20") 
-                            % qnorm 
-                            << Endl;
-                    }
+                Cout << Format("Breaking out of Davidson because qnorm = %.2E < 1E-20") 
+                        % qnorm 
+                        << Endl;
+                }
+            goto done;
+            }
+
+        const bool converged = (qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_) 
+                               || qnorm < max(1E-12,errgoal_ * 1.0e-3);
+
+        if((converged && ii >= miniter_) || (ii == actual_maxiter))
+            {
+            if(debug_level_ >= 3) //Explain why breaking out of Davidson loop early
+                {
                 if((qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_))
-                    {
                     Cout << "Breaking out of Davidson because errgoal reached" << Endl;
-                    }
                 else
-                if(qnorm < max(1E-12,errgoal_ * 1.0e-3))
-                    {
+                if(qnorm < max(1E-12,errgoal_ * 1.0e-3) && ii >= miniter_)
                     Cout << "Breaking out of Davidson because small errgoal obtained" << Endl;
-                    }
                 else
                 if(ii == actual_maxiter)
-                    {
                     Cout << "Breaking out of Davidson because ii == actual_maxiter" << Endl;
-                    }
                 }
-
-            if(debug_level_ >= 3)
-                {
-                //Check V's are orthonormal
-                Matrix Vo(ni,ni); 
-                Vo = NAN;
-                for(int r = 1; r <= ni; ++r)
-                for(int c = r; c <= ni; ++c)
-                    {
-                    Vo(r,c) = Dot(conj(V[r-1]),V[c-1]);
-                    Vo(c,r) = Vo(r,c);
-                    }
-                Print(Vo);
-                }
-
-            break; //Out of ii loop to return
+            goto done;
             }
         
         if(debug_level_ >= 2 || (ii == 0 && debug_level_ >= 1))
@@ -365,29 +355,46 @@ davidson(const LocalT& A, Tensor& phi) const
             //Do Gram-Schmidt on d (Npass times)
             //to include it in the subbasis
             const int Npass = 2;
-            std::vector<Real> Vq(ni,NAN);
+            std::vector<Real> rVq(ni,NAN),
+                              iVq(ni,NAN);
             for(int pass = 1; pass <= Npass; ++pass)
                 {
                 for(int k = 0; k < ni; ++k)
-                    Vq.at(k) = Dot(conj(V[k]),q);
+                    {
+                    BraKet(V[k],q,rVq[k],iVq[k]);
+                    }
 
-                Tensor proj = Vq[0]*V[0];
-                for(int k = 1; k < ni; ++k)
-                    proj += Vq[k]*V[k];
-                proj *= -1;
-
-                q += proj;
+                for(int k = 0; k < ni; ++k)
+                    {
+                    q += (-rVq[k])*V[k];
+                    if(iVq[k] != 0)
+                        {
+                        q += (-iVq[k]*Tensor::Complex_i())*V[k];
+                        }
+                    }
 
                 Real qn = q.norm();
 
                 if(qn < 1E-10)
                     {
+                    //Orthogonalization failure,
+                    //try randomizing
                     if(debug_level_ >= 2)
                         Cout << "Vector not independent, randomizing" << Endl;
                     q = V.at(ni-1);
                     q.randomize();
+                    if(q.vecSize() <= ni)
+                        {
+                        //Not be possible to orthogonalize if
+                        //max size of q (vecSize after randomize)
+                        //is size of current basis
+                        if(debug_level_ >= 3)
+                            Cout << "Breaking out of Davidson: max Hilbert space size reached" << Endl;
+                        goto done;
+                        }
+
                     qn = q.norm();
-                    //if(pass == Npass) --pass;
+                    --pass;
                     }
 
                 q *= 1./qn;
@@ -430,6 +437,24 @@ davidson(const LocalT& A, Tensor& phi) const
         ++iter;
 
         } //for(ii)
+
+    done:
+
+    if(debug_level_ >= 3)
+        {
+        //Check V's are orthonormal
+        Matrix Vo_final(iter+1,iter+1); 
+        Vo_final = NAN;
+        for(int r = 1; r <= iter+1; ++r)
+        for(int c = r; c <= iter+1; ++c)
+            {
+            BraKet(V[r-1],V[c-1],re,im);
+            Vo_final(r,c) = re;
+            Vo_final(c,r) = Vo_final(r,c);
+            }
+        Print(Vo_final);
+        }
+
 
     if(debug_level_ > 0)
         {
@@ -686,6 +711,7 @@ genDavidson(const LocalTA& A, const LocalTB& B, Tensor& phi) const
 
     } //Eigensolver::genDavidson
 
+/*
 template<class Tensor>
 void
 orthog(std::vector<Tensor>& T, int num, int numpass, int start)
@@ -745,6 +771,7 @@ orthog(std::vector<Tensor>& T, int num, int numpass, int start)
             }
         }
     } // orthog(vector<Tensor> ... )
+    */
 
 #undef Cout
 #undef Endl
