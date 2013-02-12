@@ -66,8 +66,8 @@ class LocalOp
     Tensor
     deltaPhi(const Tensor& phi) const;
 
-    void
-    diag(Tensor& D) const;
+    Tensor
+    diag() const;
 
     int
     size() const;
@@ -424,8 +424,8 @@ deltaPhi(const IQTensor& phi) const
     }
 
 template <class Tensor>
-void inline LocalOp<Tensor>::
-diag(Tensor& Diag) const
+Tensor inline LocalOp<Tensor>::
+diag() const
     {
     if(this->isNull()) Error("LocalOp is null");
 
@@ -451,7 +451,7 @@ diag(Tensor& Diag) const
         Error("Couldn't find Index");
         }
 
-    Diag = tieIndices(Op1,toTie,primed(toTie),toTie);
+    Tensor Diag = tieIndices(Op1,toTie,primed(toTie),toTie);
 
     found = false;
     for(int j = 1; j <= Op2.r(); ++j)
@@ -506,6 +506,7 @@ diag(Tensor& Diag) const
         }
 
     Diag.conj();
+    return Diag;
     }
 
 template <class Tensor>

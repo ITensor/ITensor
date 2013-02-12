@@ -185,8 +185,7 @@ davidson(const LocalT& A, Tensor& phi) const
     MatrixRef Mref(M.SubMatrix(1, 1, 1, 1));
 
     //Get diagonal of A to use later
-    Tensor Adiag(phi);
-    A.diag(Adiag);
+    const Tensor Adiag = A.diag();
 
     Real lambda = NAN, //current lowest eigenvalue
          last_lambda = NAN,

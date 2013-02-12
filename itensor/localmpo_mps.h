@@ -50,8 +50,8 @@ class LocalMPO_MPS
     deltaRho(const Tensor& AA, 
              const CombinerT& comb, Direction dir) const;
 
-    void
-    diag(Tensor& D) const;
+    Tensor
+    diag() const;
 
     template <class MPSType>
     void
@@ -164,10 +164,10 @@ deltaRho(const Tensor& AA,
     }
 
 template <class Tensor>
-void inline LocalMPO_MPS<Tensor>::
-diag(Tensor& D) const
+Tensor inline LocalMPO_MPS<Tensor>::
+diag() const
     {
-    lmpo_.diag(D);
+    return lmpo_.diag();
     }
 
 template <class Tensor>

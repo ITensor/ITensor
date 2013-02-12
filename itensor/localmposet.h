@@ -35,8 +35,8 @@ class LocalMPOSet
     deltaRho(const Tensor& AA, 
              const CombinerT& comb, Direction dir) const;
 
-    void
-    diag(Tensor& D) const;
+    Tensor
+    diag() const;
 
     template <class MPSType>
     void
@@ -141,16 +141,15 @@ deltaRho(const Tensor& AA,
     }
 
 template <class Tensor>
-void inline LocalMPOSet<Tensor>::
-diag(Tensor& D) const
+Tensor inline LocalMPOSet<Tensor>::
+diag() const
     {
-    lmpo_.at(1).diag(D);
-    Tensor Dn(D);
+    Tensor D = lmpo_.at(1).diag();
     for(size_t n = 2; n < lmpo_.size(); ++n)
         {
-        lmpo_.at(n).diag(Dn);
-        D += Dn;
+        D += lmpo_.at(n).diag();
         }
+    return D;
     }
 
 template <class Tensor>

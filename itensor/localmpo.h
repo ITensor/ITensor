@@ -67,8 +67,8 @@ class LocalMPO
     Tensor
     deltaPhi(const Tensor& phi) const { return lop_.deltaPhi(phi); }
 
-    void
-    diag(Tensor& D) const { lop_.diag(D); }
+    Tensor
+    diag() const { return lop_.diag(); }
 
     //
     // position(b,psi) uses the MPS psi
