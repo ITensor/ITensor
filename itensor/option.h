@@ -299,7 +299,7 @@ Opt(const Name& name, int ival)
     name_(name),
     bval_(true),
     ival_(ival),
-    rval_(NAN)
+    rval_(ival)
     { }
 
 inline Opt::
