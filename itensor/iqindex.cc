@@ -693,7 +693,7 @@ hasindex_noprime(const Index& i) const
     { 
     IQINDEX_CHECK_NULL
     for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
-        if(x->index.noprime_equals(i)) return true;
+        if(x->index.noprimeEquals(i)) return true;
     return false;
     }
 

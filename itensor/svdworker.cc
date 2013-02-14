@@ -640,7 +640,7 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
     int itenind = 0;
     Foreach(const ITensor& t, rho.blocks())
         {
-        if(!t.index(1).noprime_equals(t.index(2)))
+        if(!t.index(1).noprimeEquals(t.index(2)))
             { 
             Print(rho); 
             Print(t); 

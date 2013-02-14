@@ -3,11 +3,17 @@
 //    (See accompanying LICENSE file.)
 //
 #include "index.h"
+#include "boost/make_shared.hpp"
+#include "boost/uuid/random_generator.hpp"
+#include "boost/uuid/string_generator.hpp"
 
 using namespace std;
 using boost::format;
 using boost::shared_ptr;
 using boost::make_shared;
+
+typedef boost::shared_ptr<IndexDat>
+IndexDatPtr;
 
 struct UniqueID
     {
@@ -350,9 +356,6 @@ Index(IndexType type,const Index& other, int primeinc)
 int Index::
 m() const { return p->m_; }
 
-const boost::uuids::uuid& Index::
-Ind() const { return p->ind; }
-
 IndexType Index::
 type() const { return p->_type; }
 
@@ -387,7 +390,7 @@ operator==(const Index& other) const
     }
 
 bool Index::
-noprime_equals(const Index& other) const
+noprimeEquals(const Index& other) const
     { 
     return (p->ur == other.p->ur); 
     }
@@ -512,7 +515,7 @@ std::ostream&
 operator<<(std::ostream & s, const Index & t)
     {
     if(t.name() != "" && t.name() != " ") s << t.name() << "/";
-    return s << nameindex(t.type(),t.primelevel_) << "-" << t.Ind() << ":" << t.m();
+    return s << nameindex(t.type(),t.primelevel_) << "-" << (t.p->ind) << ":" << t.m();
     }
 
 IndexVal::
@@ -551,6 +554,13 @@ bool IndexVal::
 operator==(const IndexVal& other) const 
     { 
     return (ind == other.ind && i == other.i); 
+    }
+
+const IndexVal& IndexVal::
+Null()
+    {
+    static const IndexVal Null_(Index::makeNull);
+    return Null_;
     }
 
 std::ostream& 

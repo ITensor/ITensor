@@ -6,6 +6,7 @@
 #define __ITENSOR_INDEXSET_H
 #include "index.h"
 #include "permutation.h"
+#include "boost/make_shared.hpp"
 
 #define Array boost::array
 #define Cout std::cout
@@ -668,7 +669,7 @@ indIncAllPrime(const IndexT& I, int inc)
     for(int j = 0; j < r_; ++j)
         {
         IndexT& J = index_[j];
-        if(J.noprime_equals(I))
+        if(J.noprimeEquals(I))
             {
             int p = J.primeLevel();
             J.mapprime(p,p+inc);

@@ -7,10 +7,7 @@
 #include <string>
 #include "global.h"
 #include "boost/shared_ptr.hpp"
-#include "boost/make_shared.hpp"
 #include "boost/uuid/uuid.hpp"
-#include "boost/uuid/random_generator.hpp"
-#include "boost/uuid/string_generator.hpp"
 
 #define Cout std::cout
 #define Endl std::endl
@@ -19,13 +16,9 @@
 enum IndexType { Link, Site, ReIm, All };
 
 //Forward declarations
-struct UniqueID;
 class IndexDat;
 struct IndexVal;
 
-
-typedef boost::shared_ptr<IndexDat>
-IndexDatPtr;
 
 //
 // Index
@@ -53,9 +46,6 @@ class Index
           IndexType it = Link, 
           int primelev = 0);
 
-    // Input stream constructor.
-    Index(std::istream& s) { read(s); }
-
     // Copy constructor which increments the primelevel of the copy.
     Index(IndexType pt,
           const Index& other, 
@@ -68,10 +58,6 @@ class Index
     // Returns the bond dimension of an Index.
     int 
     m() const;
-
-    // Returns the unique id (uuid) of this Index.
-    const boost::uuids::uuid&
-    Ind() const;
 
     // Returns the IndexType of this Index.
     IndexType 
@@ -97,10 +83,6 @@ class Index
     bool 
     isNotNull() const;
 
-    // Returns the number of copies of this Index.
-    int 
-    count() const;
-
     // Returns the prime level of this Index
     int 
     primeLevel() const;
@@ -117,9 +99,7 @@ class Index
     //
 
     // Equality (==) operator.
-    // Evaluates to true if other Index is a
-    // copy of this Index with the same
-    // primelevel.
+    // True if other Index is a copy of this Index with the same primelevel.
     bool 
     operator==(const Index& other) const;
 
@@ -128,9 +108,8 @@ class Index
 
     // Check if other Index is a copy of this, ignoring primeLevel.
     bool 
-    noprime_equals(const Index& other) const;
+    noprimeEquals(const Index& other) const;
 
-    // Less than (<) operator.
     // Useful for sorting Index objects.
     bool 
     operator<(const Index& other) const;
@@ -139,7 +118,6 @@ class Index
     IndexVal 
     operator()(int i) const;
 
-    // Output stream (<<) operator.
     friend std::ostream& 
     operator<<(std::ostream & s, const Index &t);
 
@@ -152,7 +130,7 @@ class Index
     prime(int inc = 1);
 
     // Increase primelevel by 1 (or optional amount inc)
-    // if type matches this Index
+    // if type matches this Index or type==All
     void 
     prime(IndexType type, int inc = 1);
 
@@ -247,15 +225,8 @@ struct IndexVal
     void
     prime(IndexType type, int inc = 1) { ind.prime(type,inc); }
 
-    friend std::ostream& 
-    operator<<(std::ostream& s, const IndexVal& iv);
-
     static const IndexVal& 
-    Null()
-        {
-        static const IndexVal Null_(Index::makeNull);
-        return Null_;
-        }
+    Null();
 
     private:
 
@@ -280,14 +251,15 @@ deprimed(Index I) { I.noprime(); return I; }
 std::string
 showm(const Index& I);
 
-
-
 template <class T> T 
 conj(T res) 
     { 
     res.conj(); 
     return res; 
     }
+
+std::ostream& 
+operator<<(std::ostream& s, const IndexVal& iv);
 
 std::ostream& 
 operator<<(std::ostream& s, const boost::uuids::uuid& id);

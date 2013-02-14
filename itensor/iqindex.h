@@ -154,8 +154,8 @@ class IQIndex
         { return index_.operator<(other.index_); }
 
     bool 
-    noprime_equals(const IQIndex& other) const
-        { return index_.noprime_equals(other.index_); }
+    noprimeEquals(const IQIndex& other) const
+        { return index_.noprimeEquals(other.index_); }
 
     //------------------------------------------
     //IQIndex: methods for querying m's
