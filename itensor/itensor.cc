@@ -322,14 +322,14 @@ val0() const
 	try {
 	    return p->v(1)*scale_.real(); 
 	    }
-	catch(TooBigForReal)
+	catch(const TooBigForReal& e)
 	    {
 	    cout << "too big for real() in val0" << endl;
 	    cerr << "too big for real() in val0" << endl;
 	    cout << "p->v(1) is " << p->v(1) << endl;
 	    cout << "scale is " << scale() << endl;
 	    cout << "rethrowing" << endl;
-	    throw;		// rethrow
+	    throw e;
 	    }
 	catch(TooSmallForReal)
 	    {
@@ -339,7 +339,7 @@ val0() const
 	    cout << "scale is " << scale() << endl;
 	    return 0.0;
 	    }
-	return 0.0;
+	return NAN; //shouldn't reach this line
 	}
 
 Real ITensor::

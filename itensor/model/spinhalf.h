@@ -122,7 +122,7 @@ getSi(int i) const
 
 inline IQIndex SpinHalf::
 getSiP(int i) const
-    { return site_.at(i).primed(); }
+    { return primed(site_.at(i)); }
 
 inline IQIndexVal SpinHalf::
 Up(int i) const

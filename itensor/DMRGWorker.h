@@ -270,7 +270,7 @@ runInternal(const MPOType& H, MPSType& psi)
                 std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d") 
                 % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw) << std::endl;
                 std::cout << boost::format("    Trunc. err=%.1E, States kept=%s")
-                % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
+                % psi.svd().truncerr(b) % showm(psi.LinkInd(b)) << std::endl;
                 }
 
             observer().measure(sw,ha,b,psi.svd(),energy_);
@@ -343,7 +343,7 @@ runInternal(const std::vector<MPOType>& H, MPSType& psi)
                 std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d")
                 % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw) << std::endl;
                 std::cout << boost::format("    Trunc. err=%.1E, States kept=%s")
-                % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
+                % psi.svd().truncerr(b) % showm(psi.LinkInd(b)) << std::endl;
                 }
 
             observer().measure(sw,ha,b,psi.svd(),energy_);
@@ -430,7 +430,7 @@ runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
                 std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d")
                 % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw) << std::endl;
                 std::cout << boost::format("    Trunc. err=%.1E, States kept=%s")
-                % psi.svd().truncerr(b) % psi.LinkInd(b).showm() << std::endl;
+                % psi.svd().truncerr(b) % showm(psi.LinkInd(b)) << std::endl;
                 }
 
             observer().measure(sw,ha,b,psi.svd(),energy_);

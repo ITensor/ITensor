@@ -940,7 +940,7 @@ index_in_common(const TensorA& A, const TensorB& B, IndexType t = All)
     for(int j = 1; j <= A.r(); ++j)
         {
         const IndexT& I = A.index(j);
-        if((t == All || I.type() == t) && B.hasindex(I)) 
+        if(((t == All && I.type()!=ReIm) || I.type() == t) && B.hasindex(I)) 
             return I;
         }
     throw ITError("No common index found");

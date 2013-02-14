@@ -166,7 +166,7 @@ getSi(int i) const
 
 inline IQIndex Spinless::
 getSiP(int i) const
-    { return site_.at(i).primed(); }
+    { return primed(site_.at(i)); }
 
 inline IQIndexVal Spinless::
 Emp(int i) const

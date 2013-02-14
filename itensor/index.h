@@ -85,14 +85,6 @@ class Index
     const std::string&
     rawname() const;
 
-    // Change the name of this Index.
-    void 
-    setname(const std::string& newname);
-
-    // Returns a string version of this Index's bond dimension.
-    std::string 
-    showm() const;
-
     // Returns a unique Real number identifying this Index.
     // Useful for rapidly checking that two Index instances match.
     Real 
@@ -162,7 +154,7 @@ class Index
     // Increase primelevel by 1 (or optional amount inc)
     // if type matches this Index
     void 
-    prime(IndexType type = All, int inc = 1);
+    prime(IndexType type, int inc = 1);
 
     // Set primelevel to zero (optionally only if type matches)
     void 
@@ -172,14 +164,6 @@ class Index
     // Has no effect if plevold doesn't match current primelevel.
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);
-
-    // Make a copy of this Index, increasing primelevel.
-    Index friend inline
-    primed(Index I, int inc = 1) { I.primelevel_ += inc; return I; }
-
-    // Return a copy of this Index with primelevel set to zero.
-    Index friend inline
-    deprimed(Index I) { I.primelevel_ = 0; return I; }
 
     //
     // Other methods
@@ -238,6 +222,7 @@ class Index
 
     }; //class Index
 
+
 //
 // IndexVal
 //
@@ -280,77 +265,22 @@ struct IndexVal
     };
 
 
-//
-// IndexDat
-// Storage for Index objects.
-//
-class IndexDat
-    {
-    public:
+// Make a copy of this Index, increasing primelevel.
+Index inline
+primed(Index I, int inc = 1) { I.prime(inc); return I; }
 
-    //////////////
-    //
-    // Public Data Members
+Index inline
+primed(Index I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
 
-    const IndexType _type;
-    boost::uuids::uuid ind;
-    const int m_;
-    Real ur;
-    std::string sname;
+// Return a copy of this Index with primelevel set to zero.
+Index inline
+deprimed(Index I) { I.noprime(); return I; }
 
-    //
-    //////////////
-
-    void 
-    setUniqueReal();
-
-    IndexDat(const std::string& name="", int mm = 1,IndexType it=Link);
-
-    //For use with read/write functionality of Index class
-    IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& ind_);
-
-    explicit
-    IndexDat(Index::Imaker im);
-
-    static const IndexDatPtr&
-    Null();
-
-    static const IndexDatPtr&
-    ReImDat();
-
-    static const IndexDatPtr&
-    ReImDatP();
-
-    static const IndexDatPtr&
-    ReImDatPP();
-
-    private:
-
-    static const UniqueID& 
-    nextID();
-
-    //These constructors are not implemented
-    //to disallow copying
-    IndexDat(const IndexDat&);
-    void operator=(const IndexDat&);
-
-    }; //class IndexDat
+// Returns a string version of this Index's bond dimension.
+std::string
+showm(const Index& I);
 
 
-
-struct UniqueID
-    {
-    boost::uuids::uuid id;
-
-    UniqueID() : id(boost::uuids::random_generator()()) { }
-
-    UniqueID& operator++();
-
-    operator boost::uuids::uuid() const { return id; }
-
-    friend std::ostream&
-    operator<<(std::ostream& s, const UniqueID& uid);
-    };
 
 template <class T> T 
 conj(T res) 
@@ -364,18 +294,6 @@ operator<<(std::ostream& s, const boost::uuids::uuid& id);
 
 std::ostream& 
 operator<<(std::ostream& s, const IndexType& it);
-
-int 
-IndexTypeToInt(IndexType it);
-
-IndexType 
-IntToIndexType(int i);
-
-std::string 
-putprimes(std::string s, int plev = 0);
-
-std::string 
-nameindex(IndexType it, int plev = 0);
 
 std::string 
 nameint(const std::string& f, int n);

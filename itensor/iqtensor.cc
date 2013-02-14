@@ -1547,75 +1547,36 @@ toReal() const
 void IQTensor::
 GetSingComplex(Real& re, Real& im) const
     {
-#ifdef DEBUG
-    if(r() != 1)
-        {
-        PrintIndices((*this));
-        Error("GetSingComplex only valid for rank 1 IQTensor with index 'single'");
-        }
-#endif
-    //IQTensor tre,tim;
-    //splitReIm(tre,tim);
     IQTensor tre(realPart(*this)),
              tim(imagPart(*this));
 
-    //Only IQIndex should be IQIndex::IndReIm()
-    /*
-    if(tre.p->iqindex_.size() != 1)
-	{
-        cout << *this;
-        cout << tre;
-        Error("bad tre size");
-	}
-    if(tim.p->iqindex_.size() != 1) Error("bad tim size");
-    */
-    Foreach(const IQIndex& J, tre.iqinds())
+#ifdef DEBUG
+    if(tre.index(1) != IQTensor::Sing().is_->index(1))
         {
-        if(J != IQTensor::Sing().is_->index(1))
-            {
-            Print(J);
-            PrintIndices((*this));
-            PrintIndices(tre);
-            Print(IQTensor::Sing().iqinds());
-            Error("bad tre size");
-            }
+        PrintIndices((*this));
+        PrintIndices(tre);
+        Print(IQTensor::Sing().iqinds());
+        Error("bad tre size");
         }
 
-    Foreach(const IQIndex& J, tim.iqinds())
-        { 
-        if(J != IQTensor::Sing().is_->index(1))
-            {
-            cout << *this;
-            cout << tim;
-            Print(IQTensor::Sing().iqinds());
-            Error("bad tim size"); 
-            }
+    if(tim.index(1) != IQTensor::Sing().is_->index(1))
+        {
+        PrintIndices((*this));
+        PrintIndices(tim);
+        Print(IQTensor::Sing().iqinds());
+        Error("bad tim size");
         }
+#endif
 
     if(tre.iten_empty())
-        { 
         re = 0.0; 
-        }
     else
-        {
-        const ITensor& t = *(tre.dat().begin());
-        if(t.vecSize() != 1) 
-            {
-            cout << "tre is\n" << tre << endl;
-            Error("bad tre dat size");
-            }
-        re = t.val0();
-        }
+        re = tre.dat().begin()->val0();
+
     if(tim.iten_empty())
-        { 
         im = 0.0; 
-        }
     else
-        {
-        const ITensor& t = *(tim.dat().begin());
-        if(t.vecSize() != 1) Error("bad tim dat size");
-        im = t.val0();
-        }
+        im = tim.dat().begin()->val0();
     }
 
 IQTensor& IQTensor::

@@ -147,7 +147,7 @@ getSi(int i) const
 
 inline IQIndex SpinOne::
 getSiP(int i) const
-    { return site_.at(i).primed(); }
+    { return primed(site_.at(i)); }
 
 inline IQIndexVal SpinOne::
 Up(int i) const

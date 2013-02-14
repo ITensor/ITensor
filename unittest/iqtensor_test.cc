@@ -189,7 +189,7 @@ TEST(SymmetricDiag11)
 
 TEST(TieIndices)
     {
-    IQTensor D1 = tieIndices(D,L1,L1.primed(),L1);
+    IQTensor D1 = tieIndices(D,L1,primed(L1),L1);
 
     for(int k1 = 1; k1 <= L1.m(); ++k1)
     for(int k2 = 1; k2 <= L1.m(); ++k2)
@@ -267,8 +267,8 @@ TEST(RealImagPart)
     IQTensor ZiX = IQComplex_1()*Z + IQComplex_i()*X;
     IQTensor R(realPart(ZiX)),
              I(imagPart(ZiX));
-    PrintDat(R);
-    PrintDat(I);
+    //PrintDat(R);
+    //PrintDat(I);
     R -= Z;
     I -= X;
     CHECK_CLOSE(R.norm(),0,1E-5);

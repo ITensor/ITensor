@@ -574,20 +574,6 @@ TEST(reshape)
     //cout << "End: reshape ---------------" << endl;
     }
 
-TEST(findindex)
-{
-    ITensor T(mixed_inds);
-
-    boost::array<int,6> arb_order = {{ 3, 4, 1, 0, 2, 5 }};
-
-    Foreach(int i, arb_order)
-    {
-        int j = T.findindex(mixed_inds.at(i));
-        CHECK_EQUAL(T.index(j),mixed_inds.at(i));
-    }
-
-}
-
 TEST(SumDifference)
 {
     Vector V(mixed_inds_dim),W(mixed_inds_dim);

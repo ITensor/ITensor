@@ -182,7 +182,7 @@ getSi(int i) const
 
 IQIndex inline Hubbard::
 getSiP(int i) const
-    { return site_.at(i).primed(); }
+    { return primed(site_.at(i)); }
 
 IQIndexVal inline Hubbard::
 Emp(int i) const

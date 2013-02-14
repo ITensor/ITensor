@@ -166,9 +166,6 @@ class IQIndex
     int 
     biggestm() const;
 
-    std::string 
-    showm() const;
-
     //------------------------------------------
     //IQIndex: quantum number methods
 
@@ -207,7 +204,7 @@ class IQIndex
     //IQIndex: prime methods
 
     void 
-    prime(int inc = 1) { prime(All,inc); }
+    prime(int inc = 1);
 
     void 
     prime(IndexType type, int inc = 1);
@@ -218,21 +215,8 @@ class IQIndex
     void 
     noprime(IndexType type = All);
 
-    // Return a copy of this Index with primelevel set to zero.
-    IQIndex friend inline
-    deprimed(const IQIndex& I)
-        { 
-        IQIndex J(I);
-        J.noprime(); 
-        return J; 
-        }
-
-    IQIndex 
-    primed(int inc = 1) const;
-
-    friend inline IQIndex
-    primed(const IQIndex& I, int inc = 1)
-        { return IQIndex(All,I,inc); }
+    void 
+    prime(int inc = 1) const;
 
     friend std::ostream& 
     operator<<(std::ostream &o, const IQIndex &I);
@@ -263,7 +247,18 @@ class IQIndex
     }; //class IQIndex
 
 
+IQIndex inline
+primed(IQIndex I, int inc = 1) { I.prime(inc); return I; }
 
+IQIndex inline
+primed(IQIndex I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
+
+// Return a copy of this Index with primelevel set to zero.
+IQIndex inline
+deprimed(IQIndex I) { I.noprime();  return I; }
+
+std::string 
+showm(const IQIndex& I);
 
 
 //
@@ -289,114 +284,6 @@ struct inqn
     inline friend std::ostream& 
     operator<<(std::ostream &o, const inqn& x)
         { o << "inqn: " << x.index << " (" << x.qn << ")\n"; return o; }
-    };
-
-
-
-//
-// IQIndexDat
-//
-
-class IQIndexDat
-    {
-    public:
-
-
-    IQIndexDat();
-
-    IQIndexDat(const Index& i1, const QN& q1);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3,
-               const Index& i4, const QN& q4);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3,
-               const Index& i4, const QN& q4,
-               const Index& i5, const QN& q5);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3,
-               const Index& i4, const QN& q4,
-               const Index& i5, const QN& q5,
-               const Index& i6, const QN& q6);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3,
-               const Index& i4, const QN& q4,
-               const Index& i5, const QN& q5,
-               const Index& i6, const QN& q6,
-               const Index& i7, const QN& q7);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3,
-               const Index& i4, const QN& q4,
-               const Index& i5, const QN& q5,
-               const Index& i6, const QN& q6,
-               const Index& i7, const QN& q7,
-               const Index& i8, const QN& q8);
-
-    explicit
-    IQIndexDat(std::vector<inqn>& ind_qn);
-
-    explicit 
-    IQIndexDat(Index::Imaker im);
-
-    IQIndexDat(std::istream& s);
-
-    void 
-    write(std::ostream& s) const;
-
-    void 
-    read(std::istream& s);
-
-    static const IQIndexDatPtr& Null();
-
-    static const IQIndexDatPtr& ReImDat();
-
-    static const IQIndexDatPtr& ReImDatP();
-
-    static const IQIndexDatPtr& ReImDatPP();
-
-    typedef std::vector<inqn>::iterator 
-    iq_it;
-
-    typedef std::vector<inqn>::const_iterator 
-    const_iq_it;
-
-    private:
-
-    friend class IQIndex;
-
-    //////////////////
-    //
-    // Data Members
-    //
-
-    std::vector<inqn> iq_;
-
-    //
-    /////////////////
-
-    void
-    makeCopyOf(const IQIndexDat& other);
-
-    //Disallow copying using =
-    void 
-    operator=(const IQIndexDat&);
-
     };
 
 
@@ -471,65 +358,6 @@ struct IQIndexVal
     };
 
 
-class Primer // Functor which applies prime within STL's for_each, etc
-    {
-    public:
-
-    IndexType type; 
-
-    int inc;
-
-    Primer (IndexType type_, int inc_ = 1) 
-        : type(type_), 
-          inc(inc_) 
-        { }
-
-    void 
-    operator()(inqn& iq) const { iq.index.prime(type,inc); }
-    void 
-    operator()(Index& i) const { i.prime(type,inc); }
-    void 
-    operator()(ITensor& it) const { it.prime(type,inc); }
-    void 
-    operator()(IQIndex &iqi) const { iqi.prime(type,inc); }
-    };
-
-class MapPrimer // Functor which applies mapprime within STL's for_each, etc
-    {
-    public:
-
-    IndexType type;
-
-    int plevold, plevnew;
-
-    MapPrimer (int _plevold,int _plevnew,IndexType _type = All) 
-		: type(_type), 
-          plevold(_plevold), 
-          plevnew(_plevnew) 
-        {}
-
-    void 
-    operator()(inqn& iq) const { iq.index.mapprime(plevold,plevnew,type); }
-    void 
-    operator()(Index& i) const { i.mapprime(plevold,plevnew,type); }
-    void 
-    operator()(ITensor& it) const { it.mapprime(plevold,plevnew,type); }
-    void 
-    operator()(IQIndex &iqi) const { iqi.mapprime(plevold,plevnew,type); }
-    };
-
-class IndEq // Functor which checks if the index is equal to a specified value within STL's for_each, etc
-    {
-    public:
-
-    Index i;
-
-    IndEq(Index _i) 
-        : i(_i) {}
-
-    bool 
-    operator()(const inqn &j) const { return i == j.index; }
-    };
 
 
 #endif

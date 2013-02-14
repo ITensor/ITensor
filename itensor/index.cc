@@ -9,6 +9,20 @@ using boost::format;
 using boost::shared_ptr;
 using boost::make_shared;
 
+struct UniqueID
+    {
+    boost::uuids::uuid id;
+
+    UniqueID() : id(boost::uuids::random_generator()()) { }
+
+    UniqueID& operator++();
+
+    operator boost::uuids::uuid() const { return id; }
+
+    friend std::ostream&
+    operator<<(std::ostream& s, const UniqueID& uid);
+    };
+
 ostream& 
 operator<<(ostream& s, const IndexType& it)
     { 
@@ -117,7 +131,60 @@ prime_number(int n)
     return plist.at(n);
     }
 
-const UniqueID& IndexDat::
+
+//
+// IndexDat
+// Storage for Index objects.
+//
+class IndexDat
+    {
+    public:
+
+    //////////////
+    //
+    // Public Data Members
+
+    const IndexType _type;
+    const boost::uuids::uuid ind;
+    const int m_;
+    const Real ur;
+    const std::string sname;
+
+    //
+    //////////////
+
+    IndexDat(const std::string& name="", int mm = 1,IndexType it=Link);
+
+    //For use with read/write functionality of Index class
+    IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& ind_);
+
+    explicit
+    IndexDat(Index::Imaker im);
+
+    static const IndexDatPtr&
+    Null();
+
+    static const IndexDatPtr&
+    ReImDat();
+
+    static const IndexDatPtr&
+    ReImDatP();
+
+    static const IndexDatPtr&
+    ReImDatPP();
+
+    private:
+
+    //These constructors are not implemented
+    //to disallow copying
+    IndexDat(const IndexDat&);
+    void operator=(const IndexDat&);
+
+    }; //class IndexDat
+
+
+
+const UniqueID& //IndexDat::
 nextID()
     {
     static UniqueID lastID_;
@@ -132,17 +199,17 @@ nextID()
     return ++lastID_;
     }
 
-void IndexDat::
-setUniqueReal()
+Real 
+setUniqueReal(const boost::uuids::uuid ind, IndexType type)
     {
-    //ur = sin(ind * sqrt(1.0/7.0) + ((int)_type - (int)Site) * sqrt(1.0 / 13.0));
+    //return sin(ind * sqrt(1.0/7.0) + ((int)type - (int)Site) * sqrt(1.0 / 13.0));
     Real arg = 0;
     int pn = 1;
     for(int i = int(ind.size())-1; i >= 0; --i)
         { arg += ind.data[i]*sqrt(1.0/(prime_number(++pn))); }
     arg *= sqrt(1.0/(prime_number(++pn)));
-    arg += ((int)_type - (int)Site) * sqrt(1.0/(prime_number(++pn)));
-    ur = sin(arg);
+    arg += ((int)type - (int)Site) * sqrt(1.0/(prime_number(++pn)));
+    return sin(arg);
     }
 
 IndexDat::
@@ -151,11 +218,11 @@ IndexDat(const std::string& name, int mm,IndexType it)
     _type(it), 
     ind(nextID()),
     m_(mm), 
+    ur(setUniqueReal(ind,it)),
     sname(name)
     { 
     if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
     if(it == All) Error("Constructing Index with type All disallowed");
-    setUniqueReal();
     }
 
 IndexDat::
@@ -164,41 +231,53 @@ IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& 
     _type(it), 
     ind(ind_), 
     m_(mm), 
+    ur(setUniqueReal(ind_,it)),
     sname(ss)
     { 
     if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
     if(it == All) Error("Constructing Index with type All disallowed");
-    setUniqueReal();
+    }
+
+const char*
+staticSetName(Index::Imaker im)
+    {
+    if(im == Index::makeNull)
+        return "Null";
+    else
+    if(im == Index::makeReIm)
+        return "ReIm";
+    else
+    if(im == Index::makeReImP)
+        return "ReImP";
+    else
+    if(im == Index::makeReImPP)
+        return "ReImPP";
+    Error("Imaker case not handled");
+    return "";
+    }
+
+boost::uuids::uuid
+staticSetInd(Index::Imaker im)
+    {
+    //Don't use random uuid generator for these static IndexDats
+    boost::uuids::string_generator gen;
+    if(im==Index::makeNull)
+        return gen("{00000000-0000-0000-0000-000000000000}"); 
+    else //if im == ReIm, ReImP, or ReImPP                               
+        return gen("{10000000-0000-0000-0000-000000000000}"); 
+    Error("Imaker case not handled");
+    return gen("{00000000-0000-0000-0000-000000000000}");
     }
 
 IndexDat::
 IndexDat(Index::Imaker im) 
     : 
     _type((im==Index::makeNull ? Site : ReIm)), 
-    m_( (im==Index::makeNull) ? 1 : 2)
-    { 
-    //Don't use random uuid generator for these static IndexDats
-    boost::uuids::string_generator gen;
-    if(im==Index::makeNull)
-        { 
-        ind = gen("{00000000-0000-0000-0000-000000000000}"); 
-        }
-    else //if im == ReIm, ReImP, or ReImPP                               
-        { 
-        ind = gen("{10000000-0000-0000-0000-000000000000}"); 
-        }
-
-    if(im == Index::makeNull)
-        {
-        sname = "Null";
-        ur = 0.0;
-        return;
-        }
-    else if(im == Index::makeReIm) sname = "ReIm";
-    else if(im == Index::makeReImP) sname = "ReImP";
-    else if(im == Index::makeReImPP) sname = "ReImPP";
-    setUniqueReal(); 
-    }
+    ind(staticSetInd(im)),
+    m_( (im==Index::makeNull) ? 1 : 2),
+    ur(im == Index::makeNull ? 0 : setUniqueReal(ind,_type)),
+    sname(staticSetName(im))
+    { }
 
 const IndexDatPtr& IndexDat::
 Null()
@@ -283,11 +362,8 @@ name() const  { return putprimes(rawname(),primelevel_); }
 const std::string& Index::
 rawname() const { return p->sname; }
 
-void Index::
-setname(const std::string& newname) { p->sname = newname; }
-
-std::string Index::
-showm() const { return (boost::format("m=%d")%(p->m_)).str(); }
+std::string
+showm(const Index& I) { return nameint("m=",I.m()); }
 
 Real Index::
 uniqueReal() const { return p->ur*(1+0.00398406*primelevel_); }
@@ -321,26 +397,20 @@ operator<(const Index& other) const
     { return (uniqueReal() < other.uniqueReal()); }
 
 IndexVal Index::
-operator()(int i) const 
-    { return IndexVal(*this,i); }
+operator()(int i) const { return IndexVal(*this,i); }
 
 void Index::
 mapprime(int plevold, int plevnew, IndexType type)
     {
-    if(primelevel_ != plevold) return;
-    if(this->type() == ReIm) return;
-    else if(type == All || type == this->type() )
+    if(primelevel_ == plevold)
         {
-        primelevel_ = plevnew;
+        if((type == All && this->type() != ReIm) || type == this->type())
+            primelevel_ = plevnew;
         }
     }
 
 void Index::
-prime(int inc)
-    {
-    if(this->type() == ReIm) return;
-    primelevel_ += inc;
-    }
+prime(int inc) { primelevel_ += inc; }
 
 void Index::
 prime(IndexType type, int inc)
