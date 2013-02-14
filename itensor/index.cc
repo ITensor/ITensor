@@ -345,8 +345,8 @@ prime(int inc)
 void Index::
 prime(IndexType type, int inc)
     {
-    if(this->type() == ReIm) return;
-    if(type == All || type == this->type())
+    if(type == this->type() ||
+       (type == All && this->type() != ReIm))
         {
         primelevel_ += inc;
         }
@@ -481,12 +481,6 @@ bool IndexVal::
 operator==(const IndexVal& other) const 
     { 
     return (ind == other.ind && i == other.i); 
-    }
-
-IndexVal
-primed(const IndexVal& iv, int inc)
-    {
-    return IndexVal(primed(iv.ind,inc),iv.i);
     }
 
 std::ostream& 

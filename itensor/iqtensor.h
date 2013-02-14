@@ -377,10 +377,6 @@ class IQTensor
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);
 
-    //Replace IQIndex i1 with IQIndex i2, throws ITError if i1.m() != i2.m()
-    void 
-    mapindex(const IQIndex& i1, const IQIndex& i2) { is_->mapindex(i1,i2); }
-
     //----------------------------------------------------
     //IQTensor index methods
 

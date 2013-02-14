@@ -486,12 +486,10 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     //If dir==None, put the O.C. on the side
     //that keeps mid's arrow the same
-    //bool do_edge_case = true;
     if(dir == None)
         {
         //Cout << Format("Arrow before = %s")%(mid.dir() == Out ? "Out" : "In") << Endl;
         dir = (mid.dir() == Out ? Fromright : Fromleft);
-        //do_edge_case = false;
         }
 
     Tensor& to_orth = (dir==Fromleft ? A : B);
@@ -499,15 +497,11 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     CombinerT comb;
 
-    int unique_link = 0; //number of Links unique to to_orth
     for(int j = 1; j <= to_orth.r(); ++j) 
         { 
         const IndexT& I = to_orth.index(j);
         if(!(newoc.hasindex(I) || I == Tensor::ReImIndex() ))
-            {
-            if(I.type() == Link) ++unique_link;
             comb.addleft(I);
-            }
         }
 
     //Apply combiner

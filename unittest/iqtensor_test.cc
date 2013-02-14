@@ -254,4 +254,45 @@ TEST(Randomize)
     //PrintDat(T);
     }
 
+TEST(RealImagPart)
+    {
+    IQTensor Z(conj(S1),primed(S1));
+    Z(S1(1),primed(S1)(1)) = +1;
+    Z(S1(2),primed(S1)(2)) = -1;
+
+    IQTensor X(conj(S1),primed(S1));
+    X(S1(1),primed(S1)(2)) = 1;
+    X(S1(2),primed(S1)(1)) = 1;
+
+    IQTensor ZiX = IQComplex_1()*Z + IQComplex_i()*X;
+    IQTensor R(realPart(ZiX)),
+             I(imagPart(ZiX));
+    PrintDat(R);
+    PrintDat(I);
+    R -= Z;
+    I -= X;
+    CHECK_CLOSE(R.norm(),0,1E-5);
+    CHECK_CLOSE(I.norm(),0,1E-5);
+    }
+
+TEST(ComplexMult)
+    {
+    IQTensor Z(conj(S1),primed(S1));
+    Z(S1(1),primed(S1)(1)) = +1;
+    Z(S1(2),primed(S1)(2)) = -1;
+
+    IQTensor Y(conj(S1),primed(S1));
+    Y(S1(1),primed(S1)(2)) =  1;
+    Y(S1(2),primed(S1)(1)) = -1;
+    Y *= IQComplex_i();
+
+    //PrintDat(Y);
+
+    IQTensor ZY = multSiteOps(Z,Y);
+    //PrintDat(ZY);
+
+    IQTensor YY = multSiteOps(Y,Y);
+    //PrintDat(YY);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

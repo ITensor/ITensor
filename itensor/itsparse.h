@@ -199,9 +199,6 @@ class ITSparse
     void 
     removeindex1(const Index& I) { is_.removeindex1(is_.findindex1(I)); }
 
-    void 
-    mapindex(const Index& i1, const Index& i2) { is_.mapindex(i1,i2); }
-
     //
     // Primelevel Methods 
     //
@@ -213,13 +210,13 @@ class ITSparse
     prime(IndexType type, int inc = 1) { is_.prime(type,inc); }
 
     void 
-    prime(const Index& I, int inc = 1) { mapindex(I,primed(I,inc)); }
+    prime(const Index& I, int inc = 1) { is_.prime(I,inc); }
 
     void 
     noprime(IndexType type = All) { is_.noprime(type); }
 
     void 
-    noprime(const Index& I) { mapindex(I,deprimed(I)); }
+    noprime(const Index& I) { is_.noprime(I); }
 
     void 
     mapprime(int plevold, int plevnew, IndexType type = All)

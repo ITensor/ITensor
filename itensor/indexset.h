@@ -184,9 +184,6 @@ class IndexSet
     //
 
     void 
-    mapindex(const IndexT& i1, const IndexT& i2);
-
-    void 
     addindex(const IndexT& I);
 
     void 
@@ -616,14 +613,6 @@ prime(IndexType type, int inc)
         }
 	}
 
-//template <class IndexT>
-//void IndexSet<IndexT>::
-//prime(const IndexT& I, const IndexT& J)
-//	{ 
-//    mapindex(I,primed(I)); 
-//    mapindex(J,primed(J));
-//	}
-
 template <class IndexT>
 void IndexSet<IndexT>::
 prime(const IndexT& I, int inc)
@@ -692,20 +681,12 @@ indIncAllPrime(const IndexT& I, int inc)
     Error("indIncAllPrime: couldn't find index");
     }
 
-/*
-ITensor 
-primeind(ITensor A, const IndexT& I1, const IndexT& I2)
-    { 
-    A.mapindex(I1,primed(I1));
-    A.mapindex(I2,primed(I2));
-    return A; 
-    }
-*/
 
 //
 // Methods for Manipulating IndexSets
 //
 
+/*
 template <class IndexT>
 void IndexSet<IndexT>::
 mapindex(const IndexT& i1, const IndexT& i2)
@@ -728,6 +709,7 @@ mapindex(const IndexT& i1, const IndexT& i2)
 	Print(i1);
 	Error("IndexSet::mapindex: couldn't find i1.");
 	}
+    */
 
 template <class IndexT>
 void IndexSet<IndexT>::

@@ -314,10 +314,6 @@ class ITensor
     void 
     removeindex1(const Index& I) { is_.removeindex1(is_.findindex1(I)); }
 
-    //Replace Index i1 with Index i2, throws ITError if i1.m() != i2.m()
-    void 
-    mapindex(const Index& i1, const Index& i2) { is_.mapindex(i1,i2); }
-
     //Primelevel Methods ------------------------------------
 
     //Set primeLevel of Indices to zero
@@ -326,7 +322,7 @@ class ITensor
 
     //Set primeLevel of Index I to zero
     void 
-    noprime(const Index& I) { mapindex(I,deprimed(I)); }
+    noprime(const Index& I) { is_.noprime(I); }
 
     //Increase primeLevel of Indices by 1 (or optional amount inc)
     void 
@@ -651,6 +647,16 @@ class ITensor
 
     //Deprecated methods --------------------------
 
+    //Removed because difficult to implement for IQTensor and of
+    //questionable value.
+    //
+    //Modify desired index in-place instead.
+    //
+    //Replace Index i1 with Index i2, throws ITError if i1.m() != i2.m()
+    //void 
+    //mapindex(const Index& i1, const Index& i2) { is_.mapindex(i1,i2); }
+
+
     //Use realPart(T) and imagPart(T) instead
     //
     //void 
@@ -955,11 +961,10 @@ isComplex(const Tensor& T)
 // so that result is again an operator matrix C(site1',site1)
 //
 template<class Tensor>
-Tensor inline
+Tensor
 multSiteOps(Tensor A, const Tensor& B) 
     {
-    A.mapprime(1,2,Site);
-    A.mapprime(0,1,Site);
+    A.prime(Site);
     A *= B;
     A.mapprime(2,1,Site);
     return A;
@@ -973,7 +978,7 @@ primed(Tensor A, int inc = 1)
 
 template <class Tensor>
 Tensor
-primed(ITensor A, IndexType type, int inc = 1)
+primed(Tensor A, IndexType type, int inc = 1)
     { A.prime(type,inc); return A; }
 
 //Return copy of ITensor with primeLevel of Index I increased by 1
@@ -1032,8 +1037,8 @@ realPart(const Tensor& T)
         return T;
     //else
     Tensor re(T);
-	re.mapindex(IndexT::IndReIm(),IndexT::IndReImP());
-	re *= IndexT::IndReImP()(1);
+    re.prime(ReIm);
+	re *= primed(Tensor::ReImIndex()(1),ReIm);
     return re;
     }
 
@@ -1047,8 +1052,8 @@ imagPart(const Tensor& T)
         return (0*T);
     //else
     Tensor im(T);
-	im.mapindex(IndexT::IndReIm(),IndexT::IndReImP());
-	im *= IndexT::IndReImP()(2);
+    im.prime(ReIm);
+	im *= primed(Tensor::ReImIndex()(2),ReIm);
     return im;
     }
 

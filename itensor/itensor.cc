@@ -1891,6 +1891,24 @@ directMultiply(const ITensor& other, ProductProps& props,
 
 #endif
 
+ITensor
+initProd()
+    {
+    ITensor prod(Index::IndReIm(),
+                 Index::IndReImP(),
+                 Index::IndReImPP());
+
+    IndexVal iv0(Index::IndReIm(),1), 
+             iv1(Index::IndReImP(),1), 
+             iv2(Index::IndReImPP(),1);
+
+    iv0.i = 1; iv1.i = 1; iv2.i = 1; prod(iv0,iv1,iv2) =  1;
+    iv0.i = 1; iv1.i = 2; iv2.i = 2; prod(iv0,iv1,iv2) = -1;
+    iv0.i = 2; iv1.i = 2; iv2.i = 1; prod(iv0,iv1,iv2) =  1;
+    iv0.i = 2; iv1.i = 1; iv2.i = 2; prod(iv0,iv1,iv2) =  1;
+    return prod;
+    }
+
 ITensor& ITensor::
 operator*=(const ITensor& other)
     {
@@ -1905,25 +1923,18 @@ operator*=(const ITensor& other)
 
     //Complex types are treated as just another index, of type ReIm
     //Multiplication is handled automatically with these simple tensor helpers
-    if(findindexn(Index::IndReIm()) && other.findindexn(Index::IndReIm()) && 
+    if(hasindexn(Index::IndReIm()) && other.hasindexn(Index::IndReIm()) && 
 	    !other.findindexn(Index::IndReImP()) && !other.hasindex(Index::IndReImPP()) 
 	    && !hasindex(Index::IndReImP()) && !hasindex(Index::IndReImPP()))
         {
-        static ITensor primer(Index::IndReIm(),Index::IndReImP(),1.0);
-        static ITensor primerP(Index::IndReIm(),Index::IndReImPP(),1.0);
-        static ITensor prod(Index::IndReIm(),Index::IndReImP(),Index::IndReImPP());
-        static bool first = true;
-        if(first)
-	    {
-            IndexVal iv0(Index::IndReIm(),1), iv1(Index::IndReImP(),1), iv2(Index::IndReImPP(),1);
-            iv0.i = 1; iv1.i = 1; iv2.i = 1; prod(iv0,iv1,iv2) = 1.0;
-            iv0.i = 1; iv1.i = 2; iv2.i = 2; prod(iv0,iv1,iv2) = -1.0;
-            iv0.i = 2; iv1.i = 2; iv2.i = 1; prod(iv0,iv1,iv2) = 1.0;
-            iv0.i = 2; iv1.i = 1; iv2.i = 2; prod(iv0,iv1,iv2) = 1.0;
-            first = false;
-	    }
-        operator*=(primer);
-        operator*=(prod * (other * primerP));
+        //static const ITensor primer(Index::IndReIm(),Index::IndReImP(),1.0);
+        //static const ITensor primerP(Index::IndReIm(),Index::IndReImPP(),1.0);
+        static const ITensor prod(initProd());
+
+        //operator*=(primer);
+        //operator*=(prod * (other * primerP));
+        this->prime(ReIm);
+        operator*=(prod * primed(other,ReIm,2));
         return *this;
         }
 

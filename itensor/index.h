@@ -256,8 +256,11 @@ struct IndexVal
     bool 
     operator==(const IndexVal& other) const; 
 
-    friend IndexVal
-    primed(const IndexVal& iv, int inc = 1);
+    void
+    prime(int inc = 1) { ind.prime(inc); }
+
+    void
+    prime(IndexType type, int inc = 1) { ind.prime(type,inc); }
 
     friend std::ostream& 
     operator<<(std::ostream& s, const IndexVal& iv);

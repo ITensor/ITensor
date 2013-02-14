@@ -1173,4 +1173,15 @@ TEST(CommaAssignment)
     CHECK_EQUAL(T(s1(2),s2(2),s3(2)),222);
     }
 
+TEST(RealImagPart)
+    {
+    ITensor ZiX = Complex_1()*Z + Complex_i()*X;
+    ITensor R(realPart(ZiX)),
+            I(imagPart(ZiX));
+    R -= Z;
+    I -= X;
+    CHECK_CLOSE(R.norm(),0,1E-5);
+    CHECK_CLOSE(I.norm(),0,1E-5);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

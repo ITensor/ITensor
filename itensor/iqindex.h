@@ -422,14 +422,14 @@ struct IQIndexVal
 
     QN qn() const;
 
-    friend inline IQIndexVal
-    primed(const IQIndexVal& IV, int inc = 1)
-        {
-        return IQIndexVal(primed(IV.iqind,inc),IV.i); 
-        }
+    void
+    prime(int inc = 1) { iqind.prime(inc); }
 
-    void conj() 
-        { iqind.conj(); }
+    void
+    prime(IndexType type, int inc = 1) { iqind.prime(type,inc); }
+
+    void 
+    conj() { iqind.conj(); }
 
     bool
     operator==(const IQIndexVal& other) const;
