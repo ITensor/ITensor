@@ -263,20 +263,38 @@ product(const ITensor& t, ITensor& res) const
     {
     init();
 
-    int j;
-    if((j = t.findindex(right_)) != 0)
+    if(t.hasindex(right_))
         {
-        std::vector<Index> nindices; 
-        nindices.reserve(t.r()+rl_-1);
-        for(int i = 1; i < j; ++i)
-            nindices.push_back(t.index(i));
-        for(int i = 1; i <= rl_; ++i)
-            nindices.push_back(left_[i]);
-        for(int i = j+1; i <= t.r(); ++i)
-            nindices.push_back(t.index(i));
-        res = ITensor(nindices,t);
+        IndexSet<Index> nind;
+        for(int i = 1; i <= t.r(); ++i)
+            {
+            if(t.index(i) == right_)
+                {
+                for(int i = 1; i <= rl_; ++i)
+                    nind.addindex(left_[i]);
+                }
+            else
+                {
+                nind.addindex(t.index(i));
+                }
+            }
+        res = ITensor(nind,t);
         return;
         }
+    //int j;
+    //if((j = t.findindex(right_)) != 0)
+        //{
+        //std::vector<Index> nindices; 
+        //nindices.reserve(t.r()+rl_-1);
+        //for(int i = 1; i < j; ++i)
+        //    nindices.push_back(t.index(i));
+        //for(int i = 1; i <= rl_; ++i)
+        //    nindices.push_back(left_[i]);
+        //for(int i = j+1; i <= t.r(); ++i)
+        //    nindices.push_back(t.index(i));
+        //res = ITensor(nindices,t);
+        //return;
+       // }
 
     t.groupIndices(left_,rl_,right_,res);
     }

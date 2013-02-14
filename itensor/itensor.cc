@@ -227,6 +227,14 @@ ITensor(const std::vector<Index>& I, const ITensor& other)
 	}
 
 ITensor::
+ITensor(const IndexSet<Index>& I, const ITensor& other) 
+    : 
+    p(other.p), 
+    is_(I),
+    scale_(other.scale_)
+	{ }
+
+ITensor::
 ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P) 
     : 
     scale_(other.scale_)
@@ -881,7 +889,7 @@ expandIndex(const Index& small, const Index& big, int start)
     //to remain at position w
     //e.g. if some m==1 Indices
     //get moved to the back
-    w = res.findindex(big);
+    w = res.is_.findindex(big);
 
     array<int,NMAX+1> inc;
     //Make sure all other inc's are zero
@@ -1924,7 +1932,7 @@ operator*=(const ITensor& other)
     //Complex types are treated as just another index, of type ReIm
     //Multiplication is handled automatically with these simple tensor helpers
     if(hasindexn(Index::IndReIm()) && other.hasindexn(Index::IndReIm()) && 
-	    !other.findindexn(Index::IndReImP()) && !other.hasindex(Index::IndReImPP()) 
+	    !other.hasindexn(Index::IndReImP()) && !other.hasindex(Index::IndReImPP()) 
 	    && !hasindex(Index::IndReImP()) && !hasindex(Index::IndReImPP()))
         {
         //static const ITensor primer(Index::IndReIm(),Index::IndReImP(),1.0);

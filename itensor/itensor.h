@@ -43,13 +43,14 @@ class ITensor
     const Index& 
     index(int j) const { return is_.index(j); }
 
+    //Bond dimension of jth Index, j = 1,2,..,r()
+    int 
+    m(int j) const { return is_.m(j); }
+
     //Rank of this ITensor (number of indices)
     int 
     r() const { return is_.r(); }
 
-    //Bond dimension of jth Index, j = 1,2,..,r()
-    int 
-    m(int j) const { return is_.m(j); }
 
     //true if ITensor is default constructed
     bool 
@@ -134,6 +135,8 @@ class ITensor
     ITensor(const std::vector<Index>& I, const Vector& V);
 
     ITensor(const std::vector<Index>& I, const ITensor& other);
+
+    ITensor(const IndexSet<Index>& I, const ITensor& other);
 
     ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P);
 
@@ -263,18 +266,6 @@ class ITensor
     const Index&
     findtype(IndexType t) const { return is_.findtype(t); }
 
-    //Return position of matching Index, 0 if not found
-    int 
-    findindex(const Index& I) const { return is_.findindex(I); }
-
-    //Return position of m!=1 Index, 0 if not found
-    int 
-    findindexn(const Index& I) const { return is_.findindexn(I); }
-
-    //Return position of m==1 Index, 0 if not found
-    int 
-    findindex1(const Index& I) const { return is_.findindex1(I); }
-
     //true if other has any Index in common with this
     bool 
     hasCommonIndex(const ITensor& other) const
@@ -301,18 +292,6 @@ class ITensor
     //Add m==1 Index I to this, increasing rank by 1
     void 
     addindex1(const Index& I) { is_.addindex1(I); }
-
-    //Add all m==1 Indices in indices to this
-    void 
-    addindex1(const std::vector<Index>& indices) { is_.addindex1(indices); }
-
-    //Remove jth m==1 index as found by findindex
-    void 
-    removeindex1(int j) { is_.removeindex1(j); }
-
-    //Remove m==1 Index matching I
-    void 
-    removeindex1(const Index& I) { is_.removeindex1(is_.findindex1(I)); }
 
     //Primelevel Methods ------------------------------------
 
@@ -344,8 +323,7 @@ class ITensor
     //Change primeLevel of Index I from plevold to plevnew
     //If I.primeLevel() != plevold, has no effect
     void 
-    mapprimeind(const Index& I, int plevold, int plevnew, 
-                IndexType type = All)
+    mapprimeind(const Index& I, int plevold, int plevnew, IndexType type = All)
         { is_.mapprimeind(I,plevold,plevnew,type); }
 
     //Element Access Methods ----------------------------------------
@@ -647,6 +625,24 @@ class ITensor
 
     //Deprecated methods --------------------------
 
+    //Deprecated: ITensor interface shouldn't depend on index order
+    //
+    //Return position of matching Index, 0 if not found
+    //int 
+    //findindex(const Index& I) const { return is_.findindex(I); }
+
+    //Deprecated: ITensor interface shouldn't depend on index order
+    //
+    //Return position of m!=1 Index, 0 if not found
+    //int 
+    //findindexn(const Index& I) const { return is_.findindexn(I); }
+
+    //Deprecated: ITensor interface shouldn't depend on index order
+    //
+    //Return position of m==1 Index, 0 if not found
+    //int 
+    //findindex1(const Index& I) const { return is_.findindex1(I); }
+
     //Removed because difficult to implement for IQTensor and of
     //questionable value.
     //
@@ -708,7 +704,7 @@ class ITensor
     //ITensor friend inline
     //primelink(ITensor A, int inc = 1) { A.prime(Link,inc); return A; }
 
-    protected:
+    private:
 
     //////////////
     //
@@ -767,6 +763,8 @@ class ITensor
     friend void 
     product(const ITSparse& S, const ITensor& T, ITensor& res);
 
+
+
     public:
 
     // The ITmaker constructor is for making constant, global
@@ -787,6 +785,30 @@ inline
 const ITensor&
 Complex_i() { return ITensor::Complex_i(); }
 
+
+class commaInit
+    {
+    public:
+
+    commaInit(ITensor& T,
+              const Index& i1,
+              const Index& i2 = Index::Null(),
+              const Index& i3 = Index::Null());
+
+    commaInit& operator<<(Real r);
+
+    commaInit& operator,(Real r);
+
+    ~commaInit();
+
+    private:
+
+    ITensor& T_;
+    bool started_;
+    Counter c_; 
+    Permutation P_;
+
+    };
 
 //
 // ITDat
@@ -849,31 +871,9 @@ class ITDat
     };
 
 
-class commaInit
-    {
-    public:
 
-    commaInit(ITensor& T,
-              const Index& i1,
-              const Index& i2 = Index::Null(),
-              const Index& i3 = Index::Null());
-
-    commaInit& operator<<(Real r);
-
-    commaInit& operator,(Real r);
-
-    ~commaInit();
-
-    private:
-
-    ITensor& T_;
-    bool started_;
-    Counter c_; 
-    Permutation P_;
-
-    };
-
-template <typename Callable> void ITensor::
+template <typename Callable> 
+void ITensor::
 mapElems(const Callable& f)
     {
     solo();
