@@ -405,7 +405,10 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
         const IndexT& I = AA.index(j);
 
         if(I == Tensor::ReImIndex()) 
+            {
+            Lcomb.addleft(I);
             continue;
+            }
 
         if(L.hasindex(I))
             Lcomb.addleft(I);
@@ -507,19 +510,6 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
             }
         }
 
-    /*
-    //Check if we're at the edge
-    if(unique_link == 0 && do_edge_case)
-        {
-        comb.init(mid.rawname());
-        comb.product(AA,newoc);
-        to_orth = comb; to_orth.conj();
-        eigsKept_.at(b) = Vector(comb.right().m()); 
-        eigsKept_.at(b) = 1.0/comb.right().m();
-        return;
-        }
-    */
-
     //Apply combiner
     comb.doCondense(true);
     comb.init(mid.rawname());
@@ -539,7 +529,6 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         rho += noise_*PH.deltaRho(AA,comb,dir);
         rho *= 1./trace(realPart(rho));
         }
-
 
     const Real saved_cutoff = cutoff_; 
     const int saved_minm = minm_,

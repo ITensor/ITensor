@@ -72,23 +72,23 @@ struct SVDWorkerDefaults
         Phi0 = IQTensor(L1,S1,S2,L2);
             {
             ITensor uudd(l1u,s1u,s2d,l2d);
-            uudd.Randomize();
+            uudd.randomize();
             Phi0 += uudd;
 
             ITensor zudz(l10,s1u,s2d,l20);
-            zudz.Randomize();
+            zudz.randomize();
             Phi0 += zudz;
 
             ITensor duud(l1d,s1u,s2u,l2d);
-            duud.Randomize();
+            duud.randomize();
             Phi0 += duud;
 
             ITensor zuudd(l10,s1u,s2u,l2dd);
-            zuudd.Randomize();
+            zuudd.randomize();
             Phi0 += zuudd;
 
             ITensor zdduu(l10,s1d,s2d,l2uu);
-            zdduu.Randomize();
+            zdduu.randomize();
             Phi0 += zdduu;
             }
         Phi0 *= 1.0/Phi0.norm();
@@ -99,19 +99,19 @@ struct SVDWorkerDefaults
         L = IQTensor(L1,S1,Mid10);
             {
             ITensor zud(l10,s1u,mid10d);
-            zud.Randomize();
+            zud.randomize();
             L += zud;
 
             ITensor udz(l1u,s1d,mid10z);
-            udz.Randomize();
+            udz.randomize();
             L += udz;
 
             ITensor duz(l1d,s1u,mid10z);
-            duz.Randomize();
+            duz.randomize();
             L += duz;
 
             ITensor zdu(l10,s1d,mid10u);
-            zdu.Randomize();
+            zdu.randomize();
             L += zdu;
             }
         L *= 1./L.norm();
@@ -120,19 +120,19 @@ struct SVDWorkerDefaults
         R = IQTensor(Mid10,S2,L2);
             {
             ITensor zud(mid10z,s2u,l2d);
-            zud.Randomize();
+            zud.randomize();
             R += zud;
 
             ITensor udz(mid10u,s2d,l20);
-            udz.Randomize();
+            udz.randomize();
             R += udz;
 
             ITensor duz(mid10d,s2u,l20);
-            duz.Randomize();
+            duz.randomize();
             R += duz;
 
             ITensor zdu(mid10z,s2d,l2u);
-            zdu.Randomize();
+            zdu.randomize();
             R += zdu;
             }
         R *= 1./R.norm();
@@ -392,7 +392,7 @@ TEST(SvdRank2)
         dd(i,i) = eig;
         }
     Matrix uu(n,n), vv(n,m);
-    uu.Randomize(); vv.Randomize();
+    uu.randomize(); vv.randomize();
     Orthog(uu,n,2);
     Orthog(vv,n,2);
     M = uu * dd * vv;
@@ -430,6 +430,23 @@ TEST(SvdRank2)
 
     }
     */
+
+TEST(ComplexSVD)
+    {
+    IQTensor TR(L1(1),primed(L1(31))),
+             TI(L1(1),primed(L1(31)));
+    IQTensor T = IQComplex_1()*TR+IQComplex_i()*TI;
+    T.randomize();
+    T *= 1.0/T.norm();
+
+    IQTensor U(L1),V;
+    IQTSparse D;
+    svd(T,U,D,V);
+
+    IQTensor diff = T-U*D*V;
+
+    CHECK(diff.norm() < 1E-10);
+    }
 
 
 BOOST_AUTO_TEST_SUITE_END()
