@@ -168,6 +168,8 @@ davidson(const LocalT& A, Tensor& phi) const
 
     phi *= 1.0/phi.norm();
 
+    bool complex_diag = false;
+
     const int maxsize = A.size();
     const int actual_maxiter = min(maxiter_,maxsize-1);
     if(debug_level_ >= 2)
@@ -180,11 +182,14 @@ davidson(const LocalT& A, Tensor& phi) const
                        AV(actual_maxiter+2);
 
     //Storage for Matrix that gets diagonalized 
-    Matrix M(actual_maxiter+2,actual_maxiter+2);
-    M = NAN; //set to NAN to ensure failure if we use uninitialized elements
+    Matrix MR(actual_maxiter+2,actual_maxiter+2),
+           MI(actual_maxiter+2,actual_maxiter+2);
+    MR = NAN; //set to NAN to ensure failure if we use uninitialized elements
+    MI = NAN;
 
     //Mref holds current projection of A into V's
-    MatrixRef Mref(M.SubMatrix(1, 1, 1, 1));
+    MatrixRef MrefR(MR.SubMatrix(1,1,1,1)),
+              MrefI(MI.SubMatrix(1,1,1,1));
 
     //Get diagonal of A to use later
     const Tensor Adiag = A.diag();
@@ -220,7 +225,8 @@ davidson(const LocalT& A, Tensor& phi) const
         if(ii == 0)
             {
             lambda = initEn;
-            Mref = lambda-enshift;
+            MrefR = lambda-enshift;
+            MrefI = 0;
             //Calculate residual q
             q = V[0];
             q *= -lambda;
@@ -228,46 +234,66 @@ davidson(const LocalT& A, Tensor& phi) const
             }
         else // ii != 0
             {
-            //if(debug_level_ >= 4)
-            //{
-            //Cout << "Step " << ii << ", Mref = " << Endl;
-            //Cout << Mref; 
-            //}
-
             //Diagonalize M
             Vector D;
-            Matrix U;
-            EigenValues(Mref,D,U);
+            Matrix UR;
+            if(complex_diag)
+                {
+                Matrix UI;
+                HermitianEigenvalues(MrefR,MrefI,D,UR,UI);
 
-            //if(debug_level_ >= 4)
-            //{
-            //Cout << "D = " << D;
-            //Cout << Format("lambda = %.10f") % (D(1)+enshift) << Endl;
-            //}
+                //Compute corresponding eigenvector
+                //phi of A from the min evec of M
+                //(and start calculating residual q)
+                const Tensor& C1 = Tensor::Complex_1();
+                const Tensor& Ci = Tensor::Complex_i();
+
+                phi = (UR(1,1)*C1+UI(1,1)*Ci)*V[0];
+                q   = (UR(1,1)*C1+UI(1,1)*Ci)*AV[0];
+                for(int k = 1; k <= ii; ++k)
+                    {
+                    const Tensor cfac = (UR(k+1,1)*C1+UI(k+1,1)*Ci);
+                    phi += cfac*V[k];
+                    q   += cfac*AV[k];
+                    }
+                }
+            else
+                {
+                EigenValues(MrefR,D,UR);
+
+                //Compute corresponding eigenvector
+                //phi of A from the min evec of M
+                //(and start calculating residual q)
+                phi = UR(1,1)*V[0];
+                q   = UR(1,1)*AV[0];
+                for(int k = 1; k <= ii; ++k)
+                    {
+                    phi += UR(k+1,1)*V[k];
+                    q   += UR(k+1,1)*AV[k];
+                    }
+                }
 
             //lambda is the minimum eigenvalue of M
             lambda = D(1)+enshift;
-
-            //Compute corresponding eigenvector
-            //phi of A from the min evec of M
-            //(and start calculating residual q)
-            phi = U(1,1)*V[0];
-            q   = U(1,1)*AV[0];
-            for(int k = 1; k <= ii; ++k)
-                {
-                phi += U(k+1,1)*V[k];
-                q   += U(k+1,1)*AV[k];
-                }
 
             //Calculate residual q
             q += (-lambda)*phi;
 
             //Fix sign
-            if(U(1,1) < 0)
+            if(UR(1,1) < 0)
                 {
                 phi *= -1;
                 q *= -1;
                 }
+
+            if(debug_level_ >= 3)
+                {
+                Cout << "complex_diag = " 
+                     << (complex_diag ? "true" : "false") << Endl;
+                Cout << "D = " << D;
+                Cout << Format("lambda = %.10f") % (D(1)+enshift) << Endl;
+                }
+
             }
 
         //Check convergence
@@ -312,30 +338,6 @@ davidson(const LocalT& A, Tensor& phi) const
                            << Endl;
             }
 
-        /*
-        if(debug_level_ >= 1 && qnorm > 3)
-            {
-            std::cerr << "Large qnorm = " << qnorm << "\n";
-            Print(Mref);
-            Vector D;
-            Matrix U;
-            EigenValues(Mref,D,U);
-            Print(D);
-
-            std::cerr << "ii = " << ii  << "\n";
-            Matrix Vorth(ii,ii);
-            for(int i = 1; i <= ii; ++i)
-            for(int j = i; j <= ii; ++j)
-                {
-                Vorth(i,j) = Dot(conj(V[i]),V[j]);
-                Vorth(j,i) = Vorth(i,j);
-                }
-            Print(Vorth);
-            exit(0);
-            }
-        */
-
-
         if(ii < actual_maxiter)
             {
             //On all but last step,
@@ -357,8 +359,11 @@ davidson(const LocalT& A, Tensor& phi) const
             const int Npass = 2;
             std::vector<Real> rVq(ni,NAN),
                               iVq(ni,NAN);
+
+            int count = 0;
             for(int pass = 1; pass <= Npass; ++pass)
                 {
+                ++count;
                 for(int k = 0; k < ni; ++k)
                     {
                     BraKet(V[k],q,rVq[k],iVq[k]);
@@ -401,6 +406,7 @@ davidson(const LocalT& A, Tensor& phi) const
                 }
 
 
+            /*
             if(debug_level_ >= 4)
                 {
                 //Check V's are orthonormal
@@ -414,6 +420,7 @@ davidson(const LocalT& A, Tensor& phi) const
                     }
                 Print(Vo);
                 }
+            */
 
             last_lambda = lambda;
 
@@ -422,15 +429,26 @@ davidson(const LocalT& A, Tensor& phi) const
             A.product(V[ni],AV[ni]);
 
             //Add new row and column to M
-            Mref << M.SubMatrix(1,ni+1,1,ni+1);
-            Vector newCol(ni+1);
+            MrefR << MR.SubMatrix(1,ni+1,1,ni+1);
+            MrefI << MI.SubMatrix(1,ni+1,1,ni+1);
+            Vector newColR(ni+1),
+                   newColI(ni+1);
             for(int k = 0; k <= ni; ++k)
                 {
-                newCol(k+1) = Dot(conj(V.at(k)),AV.at(ni));
+                BraKet(V.at(k),AV.at(ni),
+                       newColR(k+1),
+                       newColI(k+1));
                 }
-            newCol(ni+1) -= enshift;
-            Mref.Column(ni+1) = newCol;
-            Mref.Row(ni+1) = newCol;
+            newColR(ni+1) -= enshift;
+
+            MrefR.Column(ni+1) = newColR;
+            MrefR.Row(ni+1) = newColR;
+
+            if(!complex_diag && Norm(newColI) > errgoal_)
+                { complex_diag = true; }
+
+            MrefI.Column(ni+1) = newColI;
+            MrefI.Row(ni+1) = -newColI;
 
             } //if ii < actual_maxiter
 
