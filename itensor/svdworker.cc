@@ -494,9 +494,20 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
 
 
 Real SVDWorker::
-diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
+diag_denmat(ITensor rho, Vector& D, Index& newmid, ITensor& U)
     {
-    assert(rho.r() == 2);
+    if(isComplex(rho))
+        {
+        rho = realPart(rho);
+        }
+#ifdef DEBUG
+    if(rho.r() != 2)
+        {
+        Print(rho.r());
+        Print(rho);
+        Error("Too many indices for density matrix");
+        }
+#endif
 
     Index active = rho.index(1); 
     active.noprime();
@@ -578,28 +589,14 @@ diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
     return svdtruncerr;
     }
 
-/*
 Real SVDWorker::
-diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& C, ITensor& U)
+diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
     {
-    Real svdtruncerr = diag_denmat(rho,D,newmid,U);
-    C = ITensor(newmid,sqrt(D));
-    return svdtruncerr;
-    }
-*/
+    if(isComplex(rho))
+        {
+        rho = realPart(rho);
+        }
 
-Real SVDWorker::
-diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
-    {
-    // Need to fix this to put in Hermitian case!
-    ITensor rhore(realPart(rho)),
-            rhoim(imagPart(rho));
-    return diag_denmat(rhore,D,newmid,U);
-    }
-
-Real SVDWorker::
-diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
-    {
     if(rho.r() != 2)
         {
         rho.printIndices("rho");
@@ -855,6 +852,118 @@ diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
     return svdtruncerr;
 
     } //void SVDWorker::diag_denmat
+
+
+int SVDWorker::
+maxEigsKept() const
+    {
+    int res = -1;
+    Foreach(const Vector& eigs,eigsKept_)
+        res = max(res,eigs.Length());
+    return res;
+    }
+
+Real SVDWorker::
+maxTruncerr() const
+    {
+    Real res = -1;
+    Foreach(const Real& te,truncerr_)
+        res = max(res,te);
+    return res;
+    }
+
+
+void SVDWorker::
+read(std::istream& s)
+    {
+    s.read((char*) &N_,sizeof(N_));
+    truncerr_.resize(N_+1);
+    for(int j = 1; j <= N_; ++j)
+        s.read((char*)&truncerr_[j],sizeof(truncerr_[j]));
+    s.read((char*)&cutoff_,sizeof(cutoff_));
+    s.read((char*)&minm_,sizeof(minm_));
+    s.read((char*)&maxm_,sizeof(maxm_));
+    s.read((char*)&use_orig_m_,sizeof(use_orig_m_));
+    s.read((char*)&showeigs_,sizeof(showeigs_));
+    s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
+    s.read((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
+    s.read((char*)&refNorm_,sizeof(refNorm_));
+    eigsKept_.resize(N_+1);
+    for(int j = 1; j <= N_; ++j)
+        readVec(s,eigsKept_.at(j));
+    }
+
+void SVDWorker::
+write(std::ostream& s) const
+    {
+    s.write((char*) &N_,sizeof(N_));
+    for(int j = 1; j <= N_; ++j)
+        s.write((char*)&truncerr_[j],sizeof(truncerr_[j]));
+    s.write((char*)&cutoff_,sizeof(cutoff_));
+    s.write((char*)&minm_,sizeof(minm_));
+    s.write((char*)&maxm_,sizeof(maxm_));
+    s.write((char*)&use_orig_m_,sizeof(use_orig_m_));
+    s.write((char*)&showeigs_,sizeof(showeigs_));
+    s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
+    s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
+    s.write((char*)&refNorm_,sizeof(refNorm_));
+    for(int j = 1; j <= N_; ++j)
+        writeVec(s,eigsKept_[j]);
+    }
+
+
+
+ITensor SVDWorker::
+pseudoInverse(const ITensor& C, Real cutoff)
+    {
+    if(C.r() != 1)
+        {
+        Print(C);
+        Error("pseudoInverse only defined for rank 1 ITensors");
+        }
+    ITensor res(C);
+    res.pseudoInvert(cutoff);
+    return res;
+    }
+
+IQTensor SVDWorker::
+pseudoInverse(const IQTensor& C, Real cutoff)
+    {
+    if(C.r() != 1)
+        {
+        C.printIndices("C");
+        Error("pseudoInverse only defined for rank 1 ITensors");
+        }
+    IQTensor res(C.index(1));
+    for(IQTensor::const_iten_it it = C.const_iten_begin(); 
+        it != C.const_iten_end(); 
+        ++it)
+        { res += pseudoInverse(*it,cutoff); }
+    return res;
+    }
+
+
+/*
+Real SVDWorker::
+diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& C, ITensor& U)
+    {
+    Real svdtruncerr = diag_denmat(rho,D,newmid,U);
+    C = ITensor(newmid,sqrt(D));
+    return svdtruncerr;
+    }
+*/
+
+/*
+Real SVDWorker::
+diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, ITensor& U)
+    {
+    // Need to fix this to put in Hermitian case!
+    ITensor rhore(realPart(rho)),
+            rhoim(imagPart(rho));
+    return diag_denmat(rhore,D,newmid,U);
+    }
+    */
+
 
 //
 // Helper method for SVDWorker::diag_denmat(const IQTensor& rho,...)
@@ -1210,6 +1319,7 @@ Real SVDWorker::diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQT
 
     */
 
+/*
 Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U)
     {
     bool docomplex = false;
@@ -1420,92 +1530,4 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
     Global::lastd() = D;
     return svdtruncerr;
     } //Real SVDWorker::diag_denmat
-
-int SVDWorker::
-maxEigsKept() const
-    {
-    int res = -1;
-    Foreach(const Vector& eigs,eigsKept_)
-        res = max(res,eigs.Length());
-    return res;
-    }
-
-Real SVDWorker::
-maxTruncerr() const
-    {
-    Real res = -1;
-    Foreach(const Real& te,truncerr_)
-        res = max(res,te);
-    return res;
-    }
-
-
-void SVDWorker::
-read(std::istream& s)
-    {
-    s.read((char*) &N_,sizeof(N_));
-    truncerr_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j)
-        s.read((char*)&truncerr_[j],sizeof(truncerr_[j]));
-    s.read((char*)&cutoff_,sizeof(cutoff_));
-    s.read((char*)&minm_,sizeof(minm_));
-    s.read((char*)&maxm_,sizeof(maxm_));
-    s.read((char*)&use_orig_m_,sizeof(use_orig_m_));
-    s.read((char*)&showeigs_,sizeof(showeigs_));
-    s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
-    s.read((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
-    s.read((char*)&refNorm_,sizeof(refNorm_));
-    eigsKept_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j)
-        readVec(s,eigsKept_.at(j));
-    }
-
-void SVDWorker::
-write(std::ostream& s) const
-    {
-    s.write((char*) &N_,sizeof(N_));
-    for(int j = 1; j <= N_; ++j)
-        s.write((char*)&truncerr_[j],sizeof(truncerr_[j]));
-    s.write((char*)&cutoff_,sizeof(cutoff_));
-    s.write((char*)&minm_,sizeof(minm_));
-    s.write((char*)&maxm_,sizeof(maxm_));
-    s.write((char*)&use_orig_m_,sizeof(use_orig_m_));
-    s.write((char*)&showeigs_,sizeof(showeigs_));
-    s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
-    s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
-    s.write((char*)&refNorm_,sizeof(refNorm_));
-    for(int j = 1; j <= N_; ++j)
-        writeVec(s,eigsKept_[j]);
-    }
-
-
-
-ITensor SVDWorker::
-pseudoInverse(const ITensor& C, Real cutoff)
-    {
-    if(C.r() != 1)
-        {
-        Print(C);
-        Error("pseudoInverse only defined for rank 1 ITensors");
-        }
-    ITensor res(C);
-    res.pseudoInvert(cutoff);
-    return res;
-    }
-
-IQTensor SVDWorker::
-pseudoInverse(const IQTensor& C, Real cutoff)
-    {
-    if(C.r() != 1)
-        {
-        C.printIndices("C");
-        Error("pseudoInverse only defined for rank 1 ITensors");
-        }
-    IQTensor res(C.index(1));
-    for(IQTensor::const_iten_it it = C.const_iten_begin(); 
-        it != C.const_iten_end(); 
-        ++it)
-        { res += pseudoInverse(*it,cutoff); }
-    return res;
-    }
-
+*/

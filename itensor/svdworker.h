@@ -202,29 +202,19 @@ class SVDWorker
     // Other Methods
     //
 
-    Real 
-    diag_denmat(const ITensor& rho, Vector& D, Index& newmid, ITensor& U);
-    Real 
-    diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, IQTensor& U);
-
-    Real 
-    diag_denmat(const ITensor& rho, Vector& D, Index& newmid, 
-                ITensor& C, ITensor& U);
-    Real 
-    diag_denmat(const IQTensor& rho, Vector& D, IQIndex& newmid, 
-                IQTensor& C, IQTensor& U);
-
-    Real 
-    diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& newmid, 
-                        IQTensor& U);
-    Real 
-    diag_denmat_complex(const ITensor& rho, Vector& D, Index& newmid, 
-                        ITensor& U);
-
     void 
     read(std::istream& s);
     void 
     write(std::ostream& s) const;
+
+    private:
+
+    Real 
+    diag_denmat(ITensor rho, Vector& D, Index& newmid, ITensor& U);
+
+    Real 
+    diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U);
+
 
 
     void 
@@ -235,26 +225,9 @@ class SVDWorker
     svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
              IQTensor& U, IQTSparse& D, IQTensor& V, int b = 1);
 
-    private:
 
     void
     initOpts(const OptSet& opts);
-
-    /*
-    void
-    diag_and_truncate(const IQTensor& rho, std::vector<Matrix>& mmatrix, 
-                      std::vector<Vector>& mvector, std::vector<Real>& alleig, 
-                      Real& svdtruncerr, IQIndex& newmid);
-    void
-    buildUnitary(const IQTensor& rho, const std::vector<Matrix>& mmatrix, 
-                 const std::vector<Vector>& mvector,
-                 const IQIndex& newmid, IQTensor& U);
-
-    void
-    buildCenter(const IQTensor& rho, const std::vector<Matrix>& mmatrix, 
-                const std::vector<Vector>& mvector,
-                const IQIndex& newmid, IQTensor& C);
-                */
 
     ITensor 
     pseudoInverse(const ITensor& C, Real cutoff = 0);
@@ -536,14 +509,8 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     IndexT newmid;
     Tensor U;
-    if(isComplex(AA))
-        {
-        truncerr_.at(b) = diag_denmat_complex(rho,eigsKept_.at(b),newmid,U);
-        }
-    else
-        {
-        truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),newmid,U);
-        }
+
+    truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),newmid,U);
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 
