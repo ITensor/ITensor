@@ -15,10 +15,10 @@ struct CombinerDefaults
     s2(Index("s2",2,Site)),
     s3(Index("s3",2,Site)),
     s4(Index("s4",2,Site)),
-    s1P(s1.primed()),
-    s2P(s2.primed()),
-    s3P(s3.primed()),
-    s4P(s4.primed()),
+    s1P(primed(s1)),
+    s2P(primed(s2)),
+    s3P(primed(s3)),
+    s4P(primed(s4)),
     l1(Index("l1",2)),
     l2(Index("l2",2)),
     l3(Index("l3",2)),
@@ -87,7 +87,7 @@ TEST(Product)
 {
 
     ITensor A(a1,b3,l2,a4,l3);
-    A.Randomize();
+    A.randomize();
 
     Combiner c; 
     c.addleft(b3);
@@ -130,7 +130,7 @@ TEST(Product)
     }
 
     ITensor B(a1,b3,a3,l2,a4,l3);
-    B.Randomize();
+    B.randomize();
 
     Combiner c2; 
     c2.addleft(a3);

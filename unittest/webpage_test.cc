@@ -24,11 +24,11 @@ TEST(Homepage)
     Index a("a",2), b("b",2), c("c",2);
     ITensor Z(a,b), X(b,c);
 
-    commaInit(Z) << 1, 0, 
-                    0, -1;
+    commaInit(Z,a,b) << 1, 0, 
+                        0, -1;
 
-    commaInit(X) << 0, 1, 
-                    1, 0;
+    commaInit(X,b,c) << 0, 1, 
+                        1, 0;
 
     ITensor R = Z * X;
 
@@ -68,16 +68,19 @@ TEST(TutorialSimpleMeasurement)
     ITensor Sz(s,primed(s)),
             Sx(s,primed(s));
 
-    commaInit(Sz) << 0.5, 0, 
-                     0, -0.5;
+    commaInit(Sz,s,primed(s)) << 0.5, 0, 
+                                 0, -0.5;
 
-    commaInit(Sx) << 0, 0.5, 
-                     0.5, 0;
+    commaInit(Sx,s,primed(s)) << 0, 0.5, 
+                                 0.5, 0;
 
     ITensor bra = conj(primed(ket));
 
-    //Real zz = (bra * Sz * ket).toReal();
-    //Real xx = (bra * Sx * ket).toReal();
+    Real zz = (bra * Sz * ket).toReal();
+    Real xx = (bra * Sx * ket).toReal();
+
+    CHECK_CLOSE(zz,0.5*sin(Pi/4),1E-5);
+    CHECK_CLOSE(xx,0.5*sin(Pi/4),1E-5);
 
     //cout << format("<Sz> = %.5f") % zz << endl;
     //cout << format("<Sx> = %.5f") % xx << endl;

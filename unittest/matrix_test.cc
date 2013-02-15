@@ -25,7 +25,7 @@ TEST(Basic)
     //Declare a 10x10 matrix
     Matrix M(10,10);
     M = 1;
-    cout << "M =\n" << M;
+    //cout << "M =\n" << M;
     }
 
 TEST(TestEigenValues)
@@ -147,14 +147,14 @@ TEST(BadSVD)
         }
     s.close();
 
-    cout << Vt;
+    //cout << Vt;
 
     Orthog(Vt,4,2);
 
-    cout << Vt;
-    cout << Vt*Vt.t();
+    //cout << Vt;
+    //cout << Vt*Vt.t();
 
-    cout << "SVD went ok" << endl;
+    //cout << "SVD went ok" << endl;
 
     }
 
