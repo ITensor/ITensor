@@ -445,10 +445,10 @@ class IQTensor
     mapElems(const Callable& f);
 
     void 
-    scaleOutNorm() const;
+    scaleOutNorm();
 
     void 
-    scaleTo(LogNumber newscale) const;
+    scaleTo(const LogNumber& newscale);
 
     void 
     clean(Real min_norm = MIN_CUT);
@@ -711,7 +711,8 @@ class IQTDat : public boost::noncopyable
     // Data Members
     //
 
-    mutable std::list<ITensor> 
+    mutable
+    std::list<ITensor> 
     itensor;
 
     mutable std::map<ApproxReal,iterator>

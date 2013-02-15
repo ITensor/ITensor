@@ -218,11 +218,11 @@ class SVDWorker
 
 
     void 
-    svdRank2(const ITensor& A, const Index& ui, const Index& vi,
+    svdRank2(ITensor A, const Index& ui, const Index& vi,
              ITensor& U, ITSparse& D, ITensor& V, int b = 1);
 
     void 
-    svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
+    svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
              IQTensor& U, IQTSparse& D, IQTensor& V, int b = 1);
 
 

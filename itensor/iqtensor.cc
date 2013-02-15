@@ -806,17 +806,17 @@ sumels() const
     }
 
 void IQTensor::
-scaleOutNorm() const
+scaleOutNorm()
     {
     Real f = norm();
-    Foreach(const ITensor& t, dat())
+    Foreach(ITensor& t, ncdat())
         t.scaleTo(f);
     }
 
 void IQTensor::
-scaleTo(LogNumber newscale) const
+scaleTo(const LogNumber& newscale)
     {
-    Foreach(const ITensor& t, dat())
+    Foreach(ITensor& t, ncdat())
         t.scaleTo(newscale);
     }
 

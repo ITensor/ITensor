@@ -586,10 +586,10 @@ class ITensor
     pseudoInvert(Real cutoff = 0);
 
     void 
-    scaleOutNorm() const;
+    scaleOutNorm();
 
     void 
-    scaleTo(LogNumber newscale) const;
+    scaleTo(const LogNumber& newscale);
 
     void 
     print(std::string name = "",Printdat pdat = HideData) const;
@@ -724,8 +724,7 @@ class ITensor
     //Indices, maximum of 8 (is_.index_[0] not used)
     mutable IndexSet<Index> is_;
 
-    //mutable since e.g. scaleTo is logically const
-    mutable LogNumber scale_; 
+    LogNumber scale_; 
 
     //
     //

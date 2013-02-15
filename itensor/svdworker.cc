@@ -116,7 +116,7 @@ svd(int b, const IQTensor& AA, IQTensor& U, IQTSparse& D, IQTensor& V);
 
 
 void SVDWorker::
-svdRank2(const ITensor& A, const Index& ui, const Index& vi,
+svdRank2(ITensor A, const Index& ui, const Index& vi,
          ITensor& U, ITSparse& D, ITensor& V, int b)
     {
     if(A.r() != 2)
@@ -228,7 +228,7 @@ svdRank2(const ITensor& A, const Index& ui, const Index& vi,
     } // void SVDWorker::svdRank2
 
 void SVDWorker::
-svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
+svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
          IQTensor& U, IQTSparse& D, IQTensor& V, int b)
     {
     if(A.r() != 2)
@@ -255,20 +255,21 @@ svdRank2(const IQTensor& A, const IQIndex& uI, const IQIndex& vI,
     if(doRelCutoff_)
         {
         Real maxLogNum = -200;
+        A.scaleOutNorm();
         Foreach(const ITensor& t, A.blocks())
             {
-            t.scaleOutNorm();
             maxLogNum = max(maxLogNum,t.scale().logNum());
             }
         refNorm_ = LogNumber(maxLogNum,1);
         }
+
+    A.scaleTo(refNorm_);
 
     //1. SVD each ITensor within A.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
     Foreach(const ITensor& t, A.blocks())
         {
-        t.scaleTo(refNorm_);
 
         Matrix &UU = Umatrix.at(itenind);
         Matrix &VV = Vmatrix.at(itenind);
@@ -617,11 +618,11 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
         {
         //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
         Real maxLogNum = -200;
+        rho.scaleOutNorm();
         Foreach(const ITensor& t, rho.blocks())
-	    {
-	    t.scaleOutNorm();
+            {
             maxLogNum = max(maxLogNum,t.scale().logNum());
-	    }
+            }
         refNorm_ = LogNumber(maxLogNum,1);
         }
     //DO_IF_DEBUG(cout << "refNorm = " << refNorm_ << endl; )
@@ -631,6 +632,8 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
 
     //cerr << boost::format("refNorm = %.1E (lognum = %f, sign = %d)\n\n")
     //%Real(refNorm)%refNorm.logNum()%refNorm.sign();
+
+    rho.scaleTo(refNorm_);
 
     //1. Diagonalize each ITensor within rho.
     //   Store results in mmatrix and mvector.
@@ -643,8 +646,6 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
             Print(t); 
             Error("Non-symmetric ITensor in density matrix, perhaps QNs not conserved?");
             }
-
-        t.scaleTo(refNorm_);
 
         Matrix &UU = mmatrix.at(itenind);
         Vector &d =  mvector.at(itenind);

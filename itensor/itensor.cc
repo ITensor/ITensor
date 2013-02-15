@@ -1239,7 +1239,7 @@ pseudoInvert(Real cutoff)
     }
 
 void ITensor::
-scaleOutNorm() const
+scaleOutNorm()
     {
     Real f = Norm(p->v);
     //If norm already 1 return so
@@ -1259,7 +1259,7 @@ scaleOutNorm() const
     }
 
 void ITensor::
-scaleTo(LogNumber newscale) const
+scaleTo(const LogNumber& newscale)
     {
     if(newscale.sign() == 0) 
         Error("Trying to scale an ITensor to a 0 scale");
