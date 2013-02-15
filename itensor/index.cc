@@ -150,9 +150,9 @@ class IndexDat
     //
     // Public Data Members
 
-    const IndexType _type;
+    const IndexType type;
     const boost::uuids::uuid ind;
-    const int m_;
+    const int m;
     const Real ur;
     const std::string sname;
 
@@ -221,9 +221,9 @@ setUniqueReal(const boost::uuids::uuid ind, IndexType type)
 IndexDat::
 IndexDat(const std::string& name, int mm,IndexType it) 
     : 
-    _type(it), 
+    type(it), 
     ind(nextID()),
-    m_(mm), 
+    m(mm), 
     ur(setUniqueReal(ind,it)),
     sname(name)
     { 
@@ -234,9 +234,9 @@ IndexDat(const std::string& name, int mm,IndexType it)
 IndexDat::
 IndexDat(const std::string& ss, int mm, IndexType it, const boost::uuids::uuid& ind_)
     : 
-    _type(it), 
+    type(it), 
     ind(ind_), 
-    m_(mm), 
+    m(mm), 
     ur(setUniqueReal(ind_,it)),
     sname(ss)
     { 
@@ -278,10 +278,10 @@ staticSetInd(Index::Imaker im)
 IndexDat::
 IndexDat(Index::Imaker im) 
     : 
-    _type((im==Index::makeNull ? Site : ReIm)), 
+    type((im==Index::makeNull ? Site : ReIm)), 
     ind(staticSetInd(im)),
-    m_( (im==Index::makeNull) ? 1 : 2),
-    ur(im == Index::makeNull ? 0 : setUniqueReal(ind,_type)),
+    m( (im==Index::makeNull) ? 1 : 2),
+    ur(im == Index::makeNull ? 0 : setUniqueReal(ind,type)),
     sname(staticSetName(im))
     { }
 
@@ -354,10 +354,10 @@ Index(IndexType type,const Index& other, int primeinc)
 
 
 int Index::
-m() const { return p->m_; }
+m() const { return p->m; }
 
 IndexType Index::
-type() const { return p->_type; }
+type() const { return p->type; }
 
 std::string Index::
 name() const  { return putprimes(rawname(),primelevel_); }
@@ -432,13 +432,13 @@ write(std::ostream& s) const
 
     s.write((char*) &primelevel_,sizeof(primelevel_));
 
-    const int t = IndexTypeToInt(p->_type);
+    const int t = IndexTypeToInt(p->type);
     s.write((char*) &t,sizeof(t));
 
     for(int i = 0; i < int(p->ind.size()); ++i) 
         { const char c = p->ind.data[i] - '0'; s.write(&c,sizeof(c)); }
 
-    s.write((char*) &(p->m_),sizeof(p->m_));
+    s.write((char*) &(p->m),sizeof(p->m));
 
     const int nlength = p->sname.length();
     s.write((char*) &nlength,sizeof(nlength));
