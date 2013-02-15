@@ -99,17 +99,17 @@ class IQTensor
     explicit 
     IQTensor(std::istream& s);
 
-    static const IQTensor& Complex_1()
-        {
-        static const IQTensor Complex_1_(ITensor::makeComplex_1);
-        return Complex_1_;
-        }
+    static 
+    const IQTensor& 
+    Complex_1();
 
-    static const IQTensor& Complex_i()
-        {
-        static const IQTensor Complex_i_(ITensor::makeComplex_i);
-        return Complex_i_;
-        }
+    static 
+    const IQTensor& 
+    Complex_i();
+
+    static 
+    const IQTensor& 
+    ComplexProd();
 
     //Accessor Methods ------------------------------------------
 
@@ -566,8 +566,6 @@ class IQTensor
 
     //
     /////////////////
-
-    IQTensor(ITensor::ITmaker itm);
 
     void 
     soloIndex();

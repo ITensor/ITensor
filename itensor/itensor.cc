@@ -247,37 +247,59 @@ ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P)
     else               { allocate(); other.reshapeDat(P,p->v); }
     }
 
-ITensor::
-ITensor(ITmaker itm) 
-    :
-    scale_(1)
-	{
-    is_ = IndexSet<Index>(Index::IndReIm());
-    allocate(2);
-    if(itm == makeComplex_1)  { p->v(1) = 1; }
-    if(itm == makeComplex_i)  { p->v(2) = 1; }
-    if(itm == makeConjTensor) { p->v(1) = 1; p->v(2) = -1; }
-	}
-
 const ITensor& ITensor::
 Complex_1()
     {
-    static const ITensor Complex_1_(makeComplex_1);
+    static const ITensor Complex_1_(Index::IndReIm()(1));
     return Complex_1_;
     }
 
 const ITensor& ITensor::
 Complex_i()
     {
-    static const ITensor Complex_i_(makeComplex_i);
+    static const ITensor Complex_i_(Index::IndReIm()(2));
     return Complex_i_;
+    }
+
+ITensor
+makeConjTensor()
+    {
+    ITensor ct(Index::IndReIm());
+    ct(Index::IndReIm()(1)) =  1;
+    ct(Index::IndReIm()(2)) = -1;
+    return ct;
     }
 
 const ITensor& ITensor::
 ConjTensor()
     {
-    static const ITensor ConjTensor_(makeConjTensor);
+    static const ITensor ConjTensor_(makeConjTensor());
     return ConjTensor_;
+    }
+
+ITensor
+makeComplexProd()
+    {
+    ITensor prod(Index::IndReIm(),
+                 Index::IndReImP(),
+                 Index::IndReImPP());
+
+    IndexVal iv0(Index::IndReIm(),1), 
+             iv1(Index::IndReImP(),1), 
+             iv2(Index::IndReImPP(),1);
+
+    iv0.i = 1; iv1.i = 1; iv2.i = 1; prod(iv0,iv1,iv2) =  1;
+    iv0.i = 1; iv1.i = 2; iv2.i = 2; prod(iv0,iv1,iv2) = -1;
+    iv0.i = 2; iv1.i = 2; iv2.i = 1; prod(iv0,iv1,iv2) =  1;
+    iv0.i = 2; iv1.i = 1; iv2.i = 2; prod(iv0,iv1,iv2) =  1;
+    return prod;
+    }
+
+const ITensor& ITensor::
+ComplexProd()
+    {
+    static const ITensor ComplexProd_(makeComplexProd());
+    return ComplexProd_;
     }
 
 void ITensor::
@@ -1914,23 +1936,6 @@ directMultiply(const ITensor& other, ProductProps& props,
 
 #endif
 
-ITensor
-initProd()
-    {
-    ITensor prod(Index::IndReIm(),
-                 Index::IndReImP(),
-                 Index::IndReImPP());
-
-    IndexVal iv0(Index::IndReIm(),1), 
-             iv1(Index::IndReImP(),1), 
-             iv2(Index::IndReImPP(),1);
-
-    iv0.i = 1; iv1.i = 1; iv2.i = 1; prod(iv0,iv1,iv2) =  1;
-    iv0.i = 1; iv1.i = 2; iv2.i = 2; prod(iv0,iv1,iv2) = -1;
-    iv0.i = 2; iv1.i = 2; iv2.i = 1; prod(iv0,iv1,iv2) =  1;
-    iv0.i = 2; iv1.i = 1; iv2.i = 2; prod(iv0,iv1,iv2) =  1;
-    return prod;
-    }
 
 ITensor& ITensor::
 operator*=(const ITensor& other)
@@ -1950,14 +1955,8 @@ operator*=(const ITensor& other)
 	    !other.hasindexn(Index::IndReImP()) && !other.hasindex(Index::IndReImPP()) 
 	    && !hasindex(Index::IndReImP()) && !hasindex(Index::IndReImPP()))
         {
-        //static const ITensor primer(Index::IndReIm(),Index::IndReImP(),1.0);
-        //static const ITensor primerP(Index::IndReIm(),Index::IndReImPP(),1.0);
-        static const ITensor prod(initProd());
-
-        //operator*=(primer);
-        //operator*=(prod * (other * primerP));
         this->prime(ReIm);
-        operator*=(prod * primed(other,ReIm,2));
+        operator*=(ComplexProd() * primed(other,ReIm,2));
         return *this;
         }
 

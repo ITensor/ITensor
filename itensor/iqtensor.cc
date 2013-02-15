@@ -377,22 +377,6 @@ IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
 	}
 
 IQTensor::
-IQTensor(ITensor::ITmaker itm) 
-    : 
-    is_(make_shared<IndexSet<IQIndex> >(IQIndex::IndReIm())),
-    p(make_shared<IQTDat>()) 
-    {
-    if(itm == ITensor::makeComplex_1)      
-        {
-        operator+=(ITensor::Complex_1());
-        }
-    else if(itm == ITensor::makeComplex_i) 
-        {
-        operator+=(ITensor::Complex_i());
-        }
-    }
-
-IQTensor::
 IQTensor(IndexType type,const IQTensor& other) 
     : 
     is_(other.is_),
@@ -403,6 +387,38 @@ IQTensor::
 IQTensor(std::istream& s)
     { 
     read(s); 
+    }
+
+const IQTensor& IQTensor::
+Complex_1()
+    {
+    static const IQTensor Complex_1_(IQIndex::IndReIm()(1));
+    return Complex_1_;
+    }
+
+const IQTensor& IQTensor::
+Complex_i()
+    {
+    static const IQTensor Complex_i_(IQIndex::IndReIm()(2));
+    return Complex_i_;
+    }
+
+IQTensor
+IQmakeComplexProd()
+    {
+    IQTensor iqprod(IQIndex::IndReIm(),
+                    IQIndex::IndReImP(),
+                    IQIndex::IndReImPP());
+
+    iqprod += ITensor::ComplexProd();
+    return iqprod;
+    }
+
+const IQTensor& IQTensor::
+ComplexProd()
+    {
+    static const IQTensor ComplexProd_(IQmakeComplexProd());
+    return ComplexProd_;
     }
 
 void IQTensor::
@@ -1241,26 +1257,9 @@ operator*=(const IQTensor& other)
     if(hasindex(IQIndex::IndReIm()) && other.hasindex(IQIndex::IndReIm()) && !other.hasindex(IQIndex::IndReImP())
 	    && !other.hasindex(IQIndex::IndReImPP()) && !hasindex(IQIndex::IndReImP()) && !hasindex(IQIndex::IndReImPP()))
         {
-        static const ITensor primer(Index::IndReIm(),Index::IndReImP(),1.0);
-        static const ITensor primerP(Index::IndReIm(),Index::IndReImPP(),1.0);
-        static ITensor prod(Index::IndReIm(),Index::IndReImP(),Index::IndReImPP());
-        static IQTensor iqprimer(IQIndex::IndReIm(),IQIndex::IndReImP());
-        static IQTensor iqprimerP(IQIndex::IndReIm(),IQIndex::IndReImPP());
-        static IQTensor iqprod(IQIndex::IndReIm(),IQIndex::IndReImP(),IQIndex::IndReImPP());
-        static int first = 1;
-        if(first)
-            {
-            IndexVal iv0(Index::IndReIm(),1), iv1(Index::IndReImP(),1), iv2(Index::IndReImPP(),1);
-            iv0.i = 1; iv1.i = 1; iv2.i = 1; prod(iv0,iv1,iv2) = 1.0;
-            iv0.i = 1; iv1.i = 2; iv2.i = 2; prod(iv0,iv1,iv2) = -1.0;
-            iv0.i = 2; iv1.i = 2; iv2.i = 1; prod(iv0,iv1,iv2) = 1.0;
-            iv0.i = 2; iv1.i = 1; iv2.i = 2; prod(iv0,iv1,iv2) = 1.0;
-            first = 0;
-            iqprimer += primer;
-            iqprimerP += primerP;
-            iqprod += prod;
-            }
-        return *this = (*this * iqprimer) * iqprod * (other * iqprimerP);
+        this->prime(ReIm);
+        operator*=(ComplexProd() * primed(other,ReIm,2));
+        return *this;
         }
 
     solo();
@@ -1388,11 +1387,13 @@ operator/=(const IQTensor& other)
     if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
+    /*
     if(hasindex(IQIndex::IndReIm()) && other.hasindex(IQIndex::IndReIm()) && !other.hasindex(IQIndex::IndReImP())
 	    && !other.hasindex(IQIndex::IndReImPP()) && !hasindex(IQIndex::IndReImP()) && !hasindex(IQIndex::IndReImPP()))
         {
         Error("IQTensor::operator/= not yet implemented for complex numbers");
         }
+        */
 
 
     set<ApproxReal> common_inds;

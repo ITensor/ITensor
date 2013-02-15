@@ -143,14 +143,22 @@ class ITensor
     explicit
     ITensor(std::istream& s) { read(s); }
 
-    static const ITensor& 
+    static 
+    const ITensor& 
     Complex_1();
 
-    static const ITensor& 
+    static 
+    const ITensor& 
     Complex_i();
 
-    static const ITensor& 
+    static 
+    const ITensor& 
     ConjTensor();
+
+    static 
+    const ITensor&
+    ComplexProd();
+
         
     //Read in ITensor from binary stream s
     void 
@@ -769,17 +777,6 @@ class ITensor
     friend void 
     product(const ITSparse& S, const ITensor& T, ITensor& res);
 
-
-
-    public:
-
-    // The ITmaker constructor is for making constant, global
-    // ITensors and is not intended to be called by users,
-    // only internally by static ITensor methods
-    enum ITmaker { makeComplex_1, makeComplex_i, makeConjTensor };
-
-    ITensor(ITmaker itm);
-
     }; // class ITensor
 
 
@@ -1087,7 +1084,6 @@ trace(const Tensor& T, Real& re, Real& im)
     re = trace(realPart(T));
     im = trace(imagPart(T));
     }
-
 
 #undef Cout
 #undef Endl
