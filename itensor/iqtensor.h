@@ -99,12 +99,6 @@ class IQTensor
     explicit 
     IQTensor(std::istream& s);
 
-    static const IQTensor& Sing()
-        {
-        static const IQTensor Sing_(makeSing);
-        return Sing_;
-        }
-
     static const IQTensor& Complex_1()
         {
         static const IQTensor Complex_1_(ITensor::makeComplex_1);
@@ -475,7 +469,7 @@ class IQTensor
     toReal() const;
 
     void 
-    GetSingComplex(Real& re, Real& im) const;
+    toComplex(Real& re, Real& im) const;
     
     void 
     randomize();
@@ -574,8 +568,6 @@ class IQTensor
     /////////////////
 
     IQTensor(ITensor::ITmaker itm);
-
-    IQTensor(IQmaker i);
 
     void 
     soloIndex();
@@ -756,9 +748,6 @@ mapElems(const Callable& f)
     Foreach(ITensor& t, *p)
         t.mapElems(f);
     }
-
-Real 
-ReSingVal(const IQTensor& x);
 
 
 //

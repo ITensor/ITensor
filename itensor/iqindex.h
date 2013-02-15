@@ -287,10 +287,6 @@ struct inqn
     };
 
 
-enum IQmaker {makeSing};
-
-
-
 //
 // IQIndexVal
 //

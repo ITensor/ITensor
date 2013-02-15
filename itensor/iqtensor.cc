@@ -393,19 +393,6 @@ IQTensor(ITensor::ITmaker itm)
     }
 
 IQTensor::
-IQTensor(IQmaker i) 
-    : 
-    is_(make_shared<IndexSet<IQIndex> >()),
-    p(make_shared<IQTDat>())
-    {
-    Index s("sing");
-    IQIndex single("single",s,QN());
-    is_->addindex(single);
-    ITensor st(s,1);
-    operator+=(st);
-    }
-
-IQTensor::
 IQTensor(IndexType type,const IQTensor& other) 
     : 
     is_(other.is_),
@@ -1012,8 +999,7 @@ trace(IQTensor T)
         inds[k-1] = T.index(k);
         }
     T.trace(inds,T.r());
-    T *= IQTensor::Sing();
-    return ReSingVal(T);
+    return T.toReal();
     }
 
 int IQTensor::
@@ -1524,59 +1510,36 @@ operator/=(const IQTensor& other)
 
     } //IQTensor& IQTensor::operator/=(const IQTensor& other)
 
-//Extracts the real part of a
-//rank 0 IQTensor (scalar)
-Real IQTensor::
-toReal() const
-    {
-#ifdef DEBUG
-    if(r() != 0)
-        {
-        PrintIndices((*this));
-        Error("toReal only valid for rank 0 IQTensor");
-        }
-#endif
-    if(iten_size() == 0)
-        return  0; 
-    else
-        return dat().begin()->toReal();
-    }
-
 //Extracts the real and imaginary parts of the 
 //component of a rank 0 tensor (scalar)
 void IQTensor::
-GetSingComplex(Real& re, Real& im) const
+toComplex(Real& re, Real& im) const
     {
-    IQTensor tre(realPart(*this)),
-             tim(imagPart(*this));
+    if(isComplex(*this))
+        {
+        re = realPart(*this).toReal();
+        im = imagPart(*this).toReal();
+        }
+    else
+        {
+        re = toReal();
+        im = 0;
+        }
+    }
 
+Real IQTensor::
+toReal() const
+    {
+    if(is_->r() != 0)
+        Error("IQTensor not a real scalar");
 #ifdef DEBUG
-    if(tre.index(1) != IQTensor::Sing().is_->index(1))
-        {
-        PrintIndices((*this));
-        PrintIndices(tre);
-        Print(IQTensor::Sing().iqinds());
-        Error("bad tre size");
-        }
-
-    if(tim.index(1) != IQTensor::Sing().is_->index(1))
-        {
-        PrintIndices((*this));
-        PrintIndices(tim);
-        Print(IQTensor::Sing().iqinds());
-        Error("bad tim size");
-        }
+    if(iten_size() > 1)
+        Error("Too many blocks");
 #endif
-
-    if(tre.iten_empty())
-        re = 0.0; 
+    if(iten_empty())
+        return 0;
     else
-        re = tre.dat().begin()->val0();
-
-    if(tim.iten_empty())
-        im = 0.0; 
-    else
-        im = tim.dat().begin()->val0();
+        return dat().begin()->toReal();
     }
 
 IQTensor& IQTensor::
@@ -1693,13 +1656,6 @@ solo()
     soloDat();
     }
 
-Real 
-ReSingVal(const IQTensor& x)
-    {
-    Real re, im;
-    x.GetSingComplex(re,im);
-    return re;
-    }
 
 Real 
 Dot(const IQTensor& x, const IQTensor& y)
@@ -1726,15 +1682,14 @@ Dot(const IQTensor& x, const IQTensor& y)
         PrintIndices(y);
         exit(0);
         }
-    res *= IQTensor::Sing();
-    return ReSingVal(res);
+    return res.toReal();
     }
 
 void 
 BraKet(const IQTensor& x, const IQTensor& y, Real& re, Real& im)
     {
-    IQTensor res(IQTensor::Sing() * conj(x) * y);
-    res.GetSingComplex(re,im);
+    IQTensor res = conj(x) * y;
+    res.toComplex(re,im);
     }
 
 void 

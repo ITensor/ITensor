@@ -331,12 +331,12 @@ class ITensor
     //Get scalar value of rank 0 ITensor
     //Throws ITError if r() != 0
     Real
-    toReal() const { return val0(); }
+    toReal() const;
 
     //Get scalar value of rank 0 ITensor
     //Throws ITError if r() != 0
-    Real 
-    val0() const;
+    void
+    toComplex(Real& re, Real& im) const;
 
     //Get element j of rank 1 ITensor
     //Throws ITError if rn() != 1
@@ -624,6 +624,13 @@ class ITensor
     ReImIndex() { return Index::IndReIm(); }
 
     //Deprecated methods --------------------------
+
+    //Use toReal() instead
+    //
+    //Get scalar value of rank 0 ITensor
+    //Throws ITError if r() != 0
+    //Real 
+    //val0() const;
 
     //Deprecated: ITensor interface shouldn't depend on index order
     //
@@ -1065,7 +1072,7 @@ trace(ITensor T)
         Error("ITensor is complex, use trace(T,re,im)");
         }
     if(T.is_.rn() != 0) T.trace(T.is_.storage(),T.is_.rn());
-    return T.val0();
+    return T.toReal();
     }
 
 template<class Tensor>

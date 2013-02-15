@@ -307,7 +307,7 @@ write(std::ostream& s) const
 
 
 Real ITensor::
-val0() const 
+toReal() const 
 	{ 
 #ifdef DEBUG
     if(this->isNull())
@@ -324,8 +324,8 @@ val0() const
 	    }
 	catch(const TooBigForReal& e)
 	    {
-	    cout << "too big for real() in val0" << endl;
-	    cerr << "too big for real() in val0" << endl;
+	    cout << "too big for real() in toReal" << endl;
+	    cerr << "too big for real() in toReal" << endl;
 	    cout << "p->v(1) is " << p->v(1) << endl;
 	    cout << "scale is " << scale() << endl;
 	    cout << "rethrowing" << endl;
@@ -333,14 +333,29 @@ val0() const
 	    }
 	catch(TooSmallForReal)
 	    {
-	    cout << "warning: too small for real() in val0" << endl;
-	    cerr << "warning: too small for real() in val0" << endl;
+	    cout << "warning: too small for real() in toReal" << endl;
+	    cerr << "warning: too small for real() in toReal" << endl;
 	    cout << "p->v(1) is " << p->v(1) << endl;
 	    cout << "scale is " << scale() << endl;
 	    return 0.0;
 	    }
 	return NAN; //shouldn't reach this line
 	}
+
+void ITensor::
+toComplex(Real& re, Real& im) const 
+	{ 
+    if(isComplex(*this))
+        {
+        re = operator()(Index::IndReIm()(1));
+        im = operator()(Index::IndReIm()(2));
+        }
+    else
+        {
+        re = toReal();
+        im = 0;
+        }
+    }
 
 Real ITensor::
 val1(int i1) const
@@ -2626,7 +2641,7 @@ Dot(const ITensor& x, const ITensor& y)
             }
         Error("Bad Dot, product is not a scalar"); 
         }
-    return res.val0();
+    return res.toReal();
     }
 
 void 

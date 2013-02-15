@@ -300,7 +300,7 @@ psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, cons
     else 
         {
         if(L.vecSize() != 1) Error("Non-scalar result in psiHphi.");
-        re = L.val0();
+        re = L.toReal();
         im = 0;
         }
     }
@@ -336,9 +336,9 @@ psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real
         L = ((((L * phi.A(i)) * H.A(i)) * Kp.A(i)) * psiconj.A(i));
         }
     //scales as m^2 k^2 d
-    L = ((((L * phi.A(N)) * H.A(N)) * Kp.A(N)) * psiconj.A(N)) * IQTensor::Sing();
+    L = ((((L * phi.A(N)) * H.A(N)) * Kp.A(N)) * psiconj.A(N));
     //cout << "in psiHKpsi, L is "; PrintDat(L);
-    L.GetSingComplex(re,im);
+    L.toComplex(re,im);
     }
 
 Real inline 
