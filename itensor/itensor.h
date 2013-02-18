@@ -646,18 +646,6 @@ class ITensor
     //int 
     //findindex(const Index& I) const { return is_.findindex(I); }
 
-    //Deprecated: ITensor interface shouldn't depend on index order
-    //
-    //Return position of m!=1 Index, 0 if not found
-    //int 
-    //findindexn(const Index& I) const { return is_.findindexn(I); }
-
-    //Deprecated: ITensor interface shouldn't depend on index order
-    //
-    //Return position of m==1 Index, 0 if not found
-    //int 
-    //findindex1(const Index& I) const { return is_.findindex1(I); }
-
     //Removed because difficult to implement for IQTensor and of
     //questionable value.
     //

@@ -157,18 +157,6 @@ class ITSparse
     Index 
     findtype(IndexType t) const { return is_.findtype(t); }
 
-    //bool 
-    //findtype(IndexType t, Index& I) const { return is_.findtype(t,I); }
-
-    int 
-    findindex(const Index& I) const { return is_.findindex(I); }
-
-    int 
-    findindexn(const Index& I) const { return is_.findindexn(I); }
-
-    int 
-    findindex1(const Index& I) const { return is_.findindex1(I); }
-
     bool 
     hasCommonIndex(const ITensor& other) const
         { return is_.hasCommonIndex(other.is_); }
@@ -191,13 +179,6 @@ class ITSparse
 
     void 
     addindex1(const Index& I) { is_.addindex1(I); }
-
-    //Removes the jth index as found by findindex
-    void 
-    removeindex1(int j) { is_.removeindex1(j); }
-
-    void 
-    removeindex1(const Index& I) { is_.removeindex1(is_.findindex1(I)); }
 
     //
     // Primelevel Methods 

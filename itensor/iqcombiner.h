@@ -63,9 +63,6 @@ class IQCombiner
     const IQIndex& 
     right() const;
 
-    int 
-    findindex(const IQIndex& i) const;
-
     bool 
     hasindex(const IQIndex& I) const;
 
@@ -275,15 +272,6 @@ right() const
     }
 
 inline
-int IQCombiner::
-findindex(const IQIndex& i) const
-	{
-    for(size_t j = 0; j < left_.size(); ++j)
-    if(left_[j] == i) return j;
-    return -1;
-	}
-
-inline
 bool IQCombiner::
 hasindex(const IQIndex& I) const
 	{
@@ -361,34 +349,37 @@ product(IQTensor T, IQTensor& res) const
     init();
     std::vector<IQIndex> iqinds;
 
-    int j;
-    if((j = T.findindex(right_)) != 0)
+    if(T.hasindex(right_))
         {
         //
         //T has right IQIndex, expand it
         //
-
         IQTensor T_uncondensed;
         if(do_condense) 
             { 
             cond.product(T,T_uncondensed); 
-            j = T_uncondensed.findindex(ucright_);
             }
         const IQTensor& T_ = (do_condense ? T_uncondensed : T);
         const IQIndex& r = (do_condense ? ucright_ : right_);
 
         if(Global::checkArrows())
-            if(T_.index(j).dir() == r.dir())
+            if(dir(T_.indices(),r) == r.dir())
                 {
                 std::cerr << "IQTensor = " << T_ << std::endl;
                 std::cerr << "IQCombiner = " << *this << std::endl;
-                std::cerr << "IQIndex from IQTensor = " << T_.index(j) << std::endl;
                 std::cerr << "(Right) IQIndex from IQCombiner = " << r << std::endl;
                 Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
                 }
-        copy(T_.indices().begin(),T_.indices().begin()+j-1,std::back_inserter(iqinds));
-        copy(left_.begin(),left_.end(),std::back_inserter(iqinds));
-        copy(T_.indices().begin()+j,T_.indices().end(),std::back_inserter(iqinds));
+
+        iqinds.reserve(T_.indices().r()-1+left_.size());
+
+        Foreach(const IQIndex& I, T_.indices())
+            {
+            if(I == r)
+                copy(left_.begin(),left_.end(),std::back_inserter(iqinds));
+            else
+                iqinds.push_back(I);
+            }
 
         res = IQTensor(iqinds);
 
@@ -417,6 +408,8 @@ product(IQTensor T, IQTensor& res) const
         //T has left IQIndex's, combine them
         //
 
+        iqinds.reserve(T.r()-left_.size()+1);
+
         //res will have all IQIndex's of T not in the left of c
         Foreach(const IQIndex& I, T.indices()) 
             { 
@@ -431,7 +424,7 @@ product(IQTensor T, IQTensor& res) const
         //Check left indices
         Foreach(const IQIndex& I, left_)
             {
-            if((j = T.findindex(I)) == 0)
+            if(!T.hasindex(I))
                 {
                 std::cerr << "Could not find left IQIndex " << I << "\n";
                 T.printIndices("T");
@@ -446,11 +439,10 @@ product(IQTensor T, IQTensor& res) const
                 {
                 //Check arrow directions
                 if(Global::checkArrows())
-                    if(T.index(j).dir() == I.dir())
+                    if(dir(T.indices(),I) == I.dir())
                         {
                         PrintIndices(T);
                         Print((*this));
-                        std::cerr << "IQIndex from IQTensor = " << T.index(j) << std::endl;
                         std::cerr << "(Left) IQIndex from IQCombiner = " << I << std::endl;
                         Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
                         }

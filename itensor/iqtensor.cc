@@ -695,13 +695,6 @@ uses_ind(const Index& ii) const
     return false;
     }
 
-int IQTensor::
-findindex(const IQIndex& I) const 
-    { 
-    if(!is_) return 0;
-    return is_->findindex(I); 
-    }
-
 bool IQTensor::
 hastype(IndexType t) const 
     { 

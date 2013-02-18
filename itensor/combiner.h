@@ -82,9 +82,6 @@ class Combiner
          Arrow dir = Switch,
          int primelevel = 0) const;
 
-    int 
-    findindex(const Index& I) const;
-
     bool 
     hasindex(const Index& I) const;
 
@@ -188,15 +185,6 @@ init(std::string rname, IndexType type, Arrow dir, int primelevel) const
     initted = true;
     }
 
-inline
-int Combiner::
-findindex(const Index& I) const
-    {
-    for(int j = 1; j <= rl_; ++j)
-        { if(left_[j] == I) return j; }
-    return 0;
-    }
-
 
 bool inline Combiner::
 hasindex(const Index& I) const
@@ -281,20 +269,6 @@ product(const ITensor& t, ITensor& res) const
         res = ITensor(nind,t);
         return;
         }
-    //int j;
-    //if((j = t.findindex(right_)) != 0)
-        //{
-        //std::vector<Index> nindices; 
-        //nindices.reserve(t.r()+rl_-1);
-        //for(int i = 1; i < j; ++i)
-        //    nindices.push_back(t.index(i));
-        //for(int i = 1; i <= rl_; ++i)
-        //    nindices.push_back(left_[i]);
-        //for(int i = j+1; i <= t.r(); ++i)
-        //    nindices.push_back(t.index(i));
-        //res = ITensor(nindices,t);
-        //return;
-       // }
 
     t.groupIndices(left_,rl_,right_,res);
     }

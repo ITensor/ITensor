@@ -362,9 +362,6 @@ class IQTensor
     bool 
     uses_ind(const Index& i) const;
 
-    int 
-    findindex(const IQIndex& I) const;
-
     bool 
     hastype(IndexType t) const;
 
