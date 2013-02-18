@@ -542,6 +542,7 @@ TEST(reshapeDat)
 
     }
 
+/*
 TEST(reshape)
     {
     //cout << "Begin: reshape -------------" << endl;
@@ -573,6 +574,7 @@ TEST(reshape)
 
     //cout << "End: reshape ---------------" << endl;
     }
+    */
 
 TEST(SumDifference)
 {

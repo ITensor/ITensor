@@ -390,16 +390,14 @@ product(IQTensor T, IQTensor& res) const
             }
 
         Foreach(const ITensor& tt, T_.blocks())
+        Foreach(const Index& K, tt.indices())
             {
-            for(int k = 1; k <= tt.r(); ++k)
-                {
-                if(r.hasindex(tt.index(k)))
-                    { 
-                    res += (*(rightcomb[tt.index(k)]) * tt); 
-                    break;
-                    }
-                } //end for
-            } //end Foreach
+            if(r.hasindex(K))
+                { 
+                res += (*(rightcomb[K]) * tt); 
+                break;
+                }
+            } //end for
 
         }
     else
@@ -462,10 +460,10 @@ product(IQTensor T, IQTensor& res) const
         Foreach(const ITensor& t, T.blocks())
             {
             Real block_ur = 0;
-            for(int k = 1; k <= t.r(); ++k)
+            Foreach(const Index& K, t.indices())
                 {
-                if(this->hasindex(t.index(k))) 
-                    block_ur += t.index(k).uniqueReal();
+                if(this->hasindex(K)) 
+                    block_ur += K.uniqueReal();
                 }
 
             if(combmap.count(block_ur) == 0)

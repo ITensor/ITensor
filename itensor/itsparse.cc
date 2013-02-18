@@ -380,12 +380,12 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     for(int i = 1; i <= T.is_.rn(); ++i)
         if(tcon[i] == 0)
             {
-            res.is_.addindexn(T.is_.index(i));
-            alloc_size *= T.m(i);
+            res.is_.addindexn(T.is_[i-1]);
+            alloc_size *= T.is_[i-1].m();
 
             //Init appropriate elements
             //of Counter tc
-            tc.n[++tc.rn_] = T.m(i);
+            tc.n[++tc.rn_] = T.is_[i-1].m();
             ++tc.r_;
             //Link up ti pointer
             //cerr << format("Linking ti[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % i % tc.rn_ % tc.rn_ % (tc.n[tc.rn_]);

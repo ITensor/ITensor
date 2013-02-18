@@ -373,10 +373,8 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
     const Tensor &L = (U.isNull() ? V : U);
     CombinerT &Lcomb = (U.isNull() ? Vcomb : Ucomb),
               &Rcomb = (U.isNull() ? Ucomb : Vcomb);
-    for(int j = 1; j <= AA.r(); ++j) 
+    Foreach(const IndexT& I, AA.indices())
         { 
-        const IndexT& I = AA.index(j);
-
         if(I == Tensor::ReImIndex()) 
             {
             Lcomb.addleft(I);
@@ -470,9 +468,8 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     CombinerT comb;
 
-    for(int j = 1; j <= to_orth.r(); ++j) 
+    Foreach(const IndexT& I, to_orth.indices())
         { 
-        const IndexT& I = to_orth.index(j);
         if(!(newoc.hasindex(I) || I == Tensor::ReImIndex() ))
             comb.addleft(I);
         }

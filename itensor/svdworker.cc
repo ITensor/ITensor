@@ -275,12 +275,13 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         Matrix &VV = Vmatrix.at(itenind);
         Vector &d =  dvector.at(itenind);
 
-        const 
-        Index &ui = t.index(uI.hasindex(t.index(1)) ? 1 : 2),
-              &vi = t.index(uI.hasindex(t.index(1)) ? 2 : 1);
+        IndexSet<Index>::const_iterator ui = t.indices().begin(),
+                                        vi = ui+1;
+        if(!uI.hasindex(*ui))
+            swap(ui,vi);
 
-        Matrix M(ui.m(),vi.m());
-        t.toMatrix11NoScale(ui,vi,M);
+        Matrix M(ui->m(),vi->m());
+        t.toMatrix11NoScale(*ui,*vi,M);
 
         SVD(M,UU,d,VV);
 
@@ -433,20 +434,21 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         if(this_m == 0) { ++itenind; continue; }
 
-        const 
-        Index &ui = t.index(uI.hasindex(t.index(1)) ? 1 : 2),
-              &vi = t.index(uI.hasindex(t.index(1)) ? 2 : 1);
+        IndexSet<Index>::const_iterator ui = t.indices().begin(),
+                                        vi = ui+1;
+        if(!uI.hasindex(*ui))
+            swap(ui,vi);
 
         Index l("l",this_m);
-        Liq.push_back(inqn(l,uI.qn(ui)));
+        Liq.push_back(inqn(l,uI.qn(*ui)));
 
         Index r("r",this_m);
-        Riq.push_back(inqn(r,vI.qn(vi)));
+        Riq.push_back(inqn(r,vI.qn(*vi)));
 
         Dblock.push_back(ITSparse(l,r,thisD.SubVector(1,this_m)));
 
-        Ublock.push_back(ITensor(ui,l,UU.Columns(1,this_m)));
-        Vblock.push_back(ITensor(r,vi,VV.Rows(1,this_m)));
+        Ublock.push_back(ITensor(*ui,l,UU.Columns(1,this_m)));
+        Vblock.push_back(ITensor(r,*vi,VV.Rows(1,this_m)));
 
         ++itenind;
         }
@@ -510,14 +512,12 @@ diag_denmat(ITensor rho, Vector& D, Index& newmid, ITensor& U)
         }
 #endif
 
-    Index active = rho.index(1); 
-    active.noprime();
+    Index active = deprimed(rho.findtype(Link));
 
     if(!doRelCutoff_) rho.scaleTo(refNorm_);
 
     //Do the diagonalization
-    Index ri = rho.index(1); 
-    ri.noprime();
+    Index ri = deprimed(rho.findtype(Link));
     Matrix R,UU; 
     rho.toMatrix11NoScale(ri,primed(ri),R);
     R *= -1.0; 
@@ -640,20 +640,25 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
     int itenind = 0;
     Foreach(const ITensor& t, rho.blocks())
         {
-        if(!t.index(1).noprimeEquals(t.index(2)))
+        const
+        IndexSet<Index>::const_iterator i1 = t.indices().begin(),
+                                        i2 = i1+1;
+#ifdef DEBUG
+        if(!i1->noprimeEquals(*i2))
             { 
             Print(rho); 
             Print(t); 
             Error("Non-symmetric ITensor in density matrix, perhaps QNs not conserved?");
             }
+#endif
 
         Matrix &UU = mmatrix.at(itenind);
         Vector &d =  mvector.at(itenind);
 
         //Diag ITensors within rho
-        int n = t.index(1).m();
+        int n = i1->m();
         Matrix M(n,n);
-        t.toMatrix11NoScale(t.index(1),t.index(2),M);
+        t.toMatrix11NoScale(*i1,*i2,M);
 
         M *= -1;
         EigenValues(M,d,UU);
@@ -809,7 +814,7 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
         if(this_m == 0) { ++itenind; continue; }
 
         Index nm("qlink",this_m);
-        Index act = deprimed(t.index(1));
+        Index act = deprimed(t.findtype(Link));
         iq.push_back(inqn(nm,active.qn(act)));
 
         MatrixRef Utrunc = thisU.Columns(1,this_m);

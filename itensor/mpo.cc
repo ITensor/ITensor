@@ -431,9 +431,8 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
         //Add common IQIndices to IQCombiner
         CombinerT comb; 
         comb.doCondense(false);
-        for(int ii = 1; ii <= res.A(j).r(); ++ii)
+        Foreach(const IndexT& I, res.A(j).indices())
             {
-            const IndexT& I = res.A(j).index(ii);
             if(res.A(j+1).hasindex(I) && I != IndexT::IndReIm())
                 comb.addleft(I);
             }

@@ -1043,15 +1043,17 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                         //Here we sum over the previous link index
                         //which is already ok, analyze the one to the right
                         assert(comp.r()==2);
-                        Index new_ind = (comp.index(1)==prev_bond ? comp.index(2) : comp.index(1));
+                        IndexSet<Index>::const_iterator ci = comp.indices().begin();
+                        const Index& new_ind = (*ci==prev_bond ? *(ci+1) : *ci);
                         summed_block = ITensor(new_ind,1) * block;
                         }
                     //cerr << boost::format("s = %d, bond=")%s << bond << "\n";
                     //summed_block.print("summed_block");
 
                     Real rel_cut = -1;
+                    const ITensor& sb = summed_block;
                     for(int j = 1; j <= bond.m(); ++j)
-                        { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
+                        { rel_cut = max(fabs(sb(bond(j))),rel_cut); }
                     assert(rel_cut >= 0);
                     //Real rel_cut = summed_block.norm()/summed_block.vecSize();
                     rel_cut *= cut;
@@ -1060,8 +1062,11 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                     if(rel_cut > 0)
                     for(int j = 1; j <= bond.m(); ++j)
                         {
-                        if(fabs(summed_block.val1(j)) > rel_cut) 
-                            { D(j) = 1; keep_block = true; }
+                        if(fabs(sb(bond(j))) > rel_cut) 
+                            { 
+                            D(j) = 1; 
+                            keep_block = true; 
+                            }
                         }
                     }
                 } //else (S != Send)

@@ -254,16 +254,16 @@ product(const ITensor& t, ITensor& res) const
     if(t.hasindex(right_))
         {
         IndexSet<Index> nind;
-        for(int i = 1; i <= t.r(); ++i)
+        Foreach(const Index& I, t.indices())
             {
-            if(t.index(i) == right_)
+            if(I == right_)
                 {
                 for(int i = 1; i <= rl_; ++i)
                     nind.addindex(left_[i]);
                 }
             else
                 {
-                nind.addindex(t.index(i));
+                nind.addindex(I);
                 }
             }
         res = ITensor(nind,t);

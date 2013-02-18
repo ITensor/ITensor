@@ -379,21 +379,6 @@ toComplex(Real& re, Real& im) const
         }
     }
 
-Real ITensor::
-val1(int i1) const
-	{ 
-#ifdef DEBUG
-    if(this->isNull())
-        Error("ITensor is null");
-#endif
-    if(is_.rn() > 1)
-        {
-        Print(*this);
-        Error("ITensor has rank > 1");
-        }
-    return p->v(i1)*scale_.real(); 
-    }
-
 Real& ITensor::
 operator()()
 	{ 
@@ -422,6 +407,7 @@ operator()() const
 Real& ITensor::
 operator()(const IndexVal& iv1)
 	{
+#ifdef DEBUG
     if(is_.rn() > 1) 
         {
         std::cerr << format("# given = 1, rn_ = %d\n")%is_.rn();
@@ -433,6 +419,7 @@ operator()(const IndexVal& iv1)
         Print(iv1);
         Error("Incorrect IndexVal argument to ITensor");
         }
+#endif
     solo(); 
     scaleTo(1);
     return p->v(iv1.i);
@@ -442,6 +429,7 @@ Real ITensor::
 operator()(const IndexVal& iv1) const
 	{
     ITENSOR_CHECK_NULL
+#ifdef DEBUG
     if(is_.rn() > 1) 
         {
         std::cerr << format("# given = 1, rn() = %d\n")%is_.rn();
@@ -453,6 +441,7 @@ operator()(const IndexVal& iv1) const
         Print(iv1);
         Error("Incorrect IndexVal argument to ITensor");
         }
+#endif
     return scale_.real()*p->v(iv1.i);
 	}
 
@@ -955,15 +944,6 @@ vecSize() const
     return (p.get() == 0 ? 0 : p->v.Length()); 
     }
 
-int ITensor::
-maxSize() const 
-    { 
-    int ms = 1;
-    for(int j = 1; j <= is_.rn(); ++j)
-        ms *= m(j);
-    return ms;
-    }
-
 void ITensor::
 assignToVec(VectorRef v) const
     {
@@ -1324,7 +1304,6 @@ solo() const
         }
 	}
 
-
 int ITensor::
 _ind(int i1, int i2, int i3, int i4, 
      int i5, int i6, int i7, int i8) const
@@ -1337,23 +1316,23 @@ _ind(int i1, int i2, int i3, int i4,
     case 1:
         return (i1);
     case 2:
-        return ((i2-1)*m(1)+i1);
+        return ((i2-1)*is_[0].m()+i1);
     case 3:
-        return (((i3-1)*m(2)+i2-1)*m(1)+i1);
+        return (((i3-1)*is_[1].m()+i2-1)*is_[0].m()+i1);
     case 4:
-        return ((((i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+        return ((((i4-1)*is_[2].m()+i3-1)*is_[1].m()+i2-1)*is_[0].m()+i1);
     case 5:
-        return (((((i5-1)*m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)
-                        *m(1)+i1);
+        return (((((i5-1)*is_[3].m()+i4-1)*is_[2].m()+i3-1)*is_[1].m()+i2-1)
+                        *is_[0].m()+i1);
     case 6:
-        return ((((((i6-1)*m(5)+i5-1)*m(4)+i4-1)*m(3)+i3-1)
-                        *m(2)+i2-1)*m(1)+i1);
+        return ((((((i6-1)*is_[4].m()+i5-1)*is_[3].m()+i4-1)*is_[2].m()+i3-1)
+                        *is_[1].m()+i2-1)*is_[0].m()+i1);
     case 7:
-        return (((((((i7-1)*m(6)+i6-1)*m(5)+i5-1)*m(4)+i4-1)
-                        *m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+        return (((((((i7-1)*is_[5].m()+i6-1)*is_[4].m()+i5-1)*is_[3].m()+i4-1)
+                        *is_[2].m()+i3-1)*is_[1].m()+i2-1)*is_[0].m()+i1);
     case 8:
-        return ((((((((i8-1)*m(7)+i7-1)*m(6)+i6-1)*m(5)+i5-1)
-                        *m(4)+i4-1)*m(3)+i3-1)*m(2)+i2-1)*m(1)+i1);
+        return ((((((((i8-1)*is_[6].m()+i7-1)*is_[5].m()+i6-1)*is_[4].m()+i5-1)
+                        *is_[3].m()+i4-1)*is_[2].m()+i3-1)*is_[1].m()+i2-1)*is_[0].m()+i1);
     } //switch(rn_)
     Error("ITensor::_ind: Failed switch case");
     return 1;
@@ -1369,9 +1348,9 @@ _ind2(const IndexVal& iv1, const IndexVal& iv2) const
         Error("Not enough m!=1 indices provided");
         }
     if(is_[0] == iv1.ind && is_[1] == iv2.ind)
-        return ((iv2.i-1)*m(1)+iv1.i);
+        return ((iv2.i-1)*is_[0].m()+iv1.i);
     else if(is_[0] == iv2.ind && is_[1] == iv1.ind)
-        return ((iv1.i-1)*m(1)+iv2.i);
+        return ((iv1.i-1)*is_[0].m()+iv2.i);
     else
         {
         Print(*this);
@@ -1726,8 +1705,8 @@ directMultiply(const ITensor& other, ProductProps& props,
         //Set *pa[j],*pb[j],mcon[j] and mnew[j]
         // to 1 unless set otherwise below
         pa[j] = pb[j] = &one, mcon[j] = mnew[j] = 1;
-        am[j] = m(j);
-        bm[j] = other.m(j);
+        am[j] = is_[j-1].m();
+        bm[j] = other.is_[j-1].m();
         }
     int icon[NMAX+1], inew[NMAX+1];
     for(int j = 0; j < this->is_.rn(); ++j)
@@ -2293,7 +2272,7 @@ toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
     res.ReDimension(i1.m(),i2.m());
 
     MatrixRef dref; 
-    p->v.TreatAsMatrix(dref,m(2),m(1));
+    p->v.TreatAsMatrix(dref,is_[1].m(),is_[0].m());
     res = dref.t(i1==is_[0]); 
     }
 

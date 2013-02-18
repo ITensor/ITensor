@@ -39,18 +39,9 @@ class ITensor
     Real 
     uniqueReal() const { return is_.uniqueReal(); } 
 
-    //Get the jth Index of this ITensor, j = 1,2,..,r()
-    const Index& 
-    index(int j) const { return is_.index(j); }
-
-    //Bond dimension of jth Index, j = 1,2,..,r()
-    int 
-    m(int j) const { return is_.m(j); }
-
     //Rank of this ITensor (number of indices)
     int 
     r() const { return is_.r(); }
-
 
     //true if ITensor is default constructed
     bool 
@@ -69,7 +60,6 @@ class ITensor
     //const std::pair<IndexSet<Index>::index_it,IndexSet<Index>::index_it> 
     const IndexSet<Index>&
     indices() const { return is_; }
-
 
     //Constructors --------------------------------------------------
 
@@ -346,11 +336,6 @@ class ITensor
     void
     toComplex(Real& re, Real& im) const;
 
-    //Get element j of rank 1 ITensor
-    //Throws ITError if rn() != 1
-    Real 
-    val1(int i1) const;
-
     // IndexVal element access
     // Given iv1 = (I1,n1), iv2 = (I2,n2), ...
     // returns component of ITensor such that
@@ -529,7 +514,7 @@ class ITensor
     vecSize() const;
 
     int 
-    maxSize() const;
+    maxSize() const { return is_.dim(); }
 
     void 
     assignToVec(VectorRef v) const;
@@ -632,6 +617,17 @@ class ITensor
     ReImIndex() { return Index::IndReIm(); }
 
     //Deprecated methods --------------------------
+
+    // Iterate over ITensor::indices() instead
+    // Or use iterators indices().begin() and indices().end()
+    //
+    //Get the jth Index of this ITensor, j = 1,2,..,r()
+    //const Index& 
+    //index(int j) const { return is_.index(j); }
+
+    //Bond dimension of jth Index, j = 1,2,..,r()
+    //int 
+    //m(int j) const { return is_.m(j); }
 
     //Use toReal() instead
     //
@@ -928,9 +924,8 @@ commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
     {
     typedef typename TensorA::IndexT
     IndexT;
-    for(int j = 1; j <= A.r(); ++j)
+    Foreach(const IndexT& I, A.indices())
         {
-        const IndexT& I = A.index(j);
         if(((t == All && I.type()!=ReIm) || I.type() == t) && B.hasindex(I)) 
             return I;
         }

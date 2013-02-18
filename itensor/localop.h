@@ -413,8 +413,8 @@ deltaPhi(const IQTensor& phi) const
     Foreach(const ITensor& block, deltaL.blocks())
         {
         QN div;
-        for(int j = 1; j <= block.r(); ++j)
-            div += deltaL.qn(block.index(j));
+        Foreach(const Index& I, block.indices())
+            div += deltaL.qn(I);
 
         if(div == targetQn)
             delta += block;

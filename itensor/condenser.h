@@ -218,11 +218,14 @@ product(const IQTensor& t, IQTensor& res) const
 
         Foreach(const ITensor& b, t.blocks())
             {
-            int k;
-            for(k = 1; k <= b.r(); ++k)
-                if(smallind_.hasindex(b.index(k))) break;
+            Index sind;
+            Foreach(const Index& I, b.indices())
+                if(smallind_.hasindex(I))
+                    {
+                    sind = I;
+                    break;
+                    }
 
-            Index sind = b.index(k);
             for(int start = 0; start < sind.m(); )
                 {
                 Index bind = small_to_big[std::make_pair(sind,start)];
@@ -254,11 +257,11 @@ product(const IQTensor& t, IQTensor& res) const
             {
             bool gotit = false;
 
-            for(int k = 1; k <= tt.r(); ++k)
-                if(bigind_.hasindex(tt.index(k)))
+            Foreach(const Index& K, tt.indices())
+                if(bigind_.hasindex(K))
                     {
-                    std::pair<Index,int> Ii = big_to_small[tt.index(k)];
-                    tt.expandIndex(tt.index(k),Ii.first,Ii.second);
+                    std::pair<Index,int> Ii = big_to_small[K];
+                    tt.expandIndex(K,Ii.first,Ii.second);
                     res += tt;
                     gotit = true;
                     break;
