@@ -612,8 +612,8 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
         keys.insert(ApproxReal(r));
         }
 
-    multimap<ApproxReal,IQTensor::const_iten_it> com_T;
-    for(IQTensor::const_iten_it ot = T.const_iten_begin(); ot != T.const_iten_end(); ++ot)
+    multimap<ApproxReal,list<ITensor>::const_iterator> com_T;
+    for(list<ITensor>::const_iterator ot = T.blocks().begin(); ot != T.blocks().end(); ++ot)
         {
         Real r = 0.0;
         for(int b = 1; b <= ot->r(); ++b)

@@ -788,10 +788,8 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
     iq.reserve(rho.iten_size());
 
     itenind = 0;
-    for(IQTensor::const_iten_it it = rho.const_iten_begin(); 
-        it != rho.const_iten_end(); ++it)
+    Foreach(const ITensor& t, rho.blocks())
         {
-        const ITensor& t = *it;
         Vector& thisD = mvector.at(itenind);
         Matrix& thisU = mmatrix.at(itenind);
 
@@ -936,10 +934,8 @@ pseudoInverse(const IQTensor& C, Real cutoff)
         Error("pseudoInverse only defined for rank 1 ITensors");
         }
     IQTensor res(C.index(1));
-    for(IQTensor::const_iten_it it = C.const_iten_begin(); 
-        it != C.const_iten_end(); 
-        ++it)
-        { res += pseudoInverse(*it,cutoff); }
+    Foreach(const ITensor& t, C.blocks())
+        { res += pseudoInverse(t,cutoff); }
     return res;
     }
 

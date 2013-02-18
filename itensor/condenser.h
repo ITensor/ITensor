@@ -216,13 +216,13 @@ product(const IQTensor& t, IQTensor& res) const
 
         res = IQTensor(iqinds);
 
-        for(IQTensor::const_iten_it i = t.const_iten_begin(); i != t.const_iten_end(); ++i)
+        Foreach(const ITensor& b, t.blocks())
             {
             int k;
-            for(k = 1; k <= i->r(); ++k)
-                if(smallind_.hasindex(i->index(k))) break;
+            for(k = 1; k <= b.r(); ++k)
+                if(smallind_.hasindex(b.index(k))) break;
 
-            Index sind = i->index(k);
+            Index sind = b.index(k);
             for(int start = 0; start < sind.m(); )
                 {
                 Index bind = small_to_big[std::make_pair(sind,start)];
@@ -232,7 +232,7 @@ product(const IQTensor& t, IQTensor& res) const
                     C(start+kk,kk) = 1; 
                     }
                 ITensor converter(sind,bind,C);
-                converter *= (*i);
+                converter *= b;
                 res += converter;
                 start += bind.m();
                 }

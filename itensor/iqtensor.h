@@ -29,10 +29,6 @@ class IQTensor
     typedef std::list<ITensor>::const_iterator 
     const_iten_it;
 
-    //typedef std::vector<IQIndex>::iterator 
-    //iqind_it;
-
-    //typedef std::vector<IQIndex>::const_iterator 
     typedef IndexSet<IQIndex>::const_iterator
     const_iqind_it;
 
@@ -143,26 +139,8 @@ class IQTensor
     const IQTDat&
     blocks() const { return *p; }
     
-    //Iterators --------------------------------------
-
-    const_iten_it 
-    const_iten_begin() const;
-
-    const_iten_it 
-    const_iten_end() const;
-
-    std::pair<const_iten_it,const_iten_it> 
-    itensors() const;
-
-    const_iqind_it 
-    const_iqind_begin() const;
-
-    const_iqind_it 
-    const_iqind_end() const;
-
-    //std::pair<const_iqind_it,const_iqind_it> 
     const IndexSet<IQIndex>& 
-    iqinds() const;
+    indices() const { return *is_; }
 
 
     //----------------------------------------------------
@@ -492,9 +470,6 @@ class IQTensor
     void
     swap(IQTensor& other);
 
-    friend std::ostream& 
-    operator<<(std::ostream & s, const IQTensor &t);
-
     typedef IQIndex 
     IndexT;
 
@@ -575,15 +550,6 @@ class IQTensor
 
     void 
     solo();
-
-    //Workaround to ensure
-    //that p is treated as const
-    //by the compiler
-    const IQTDat&
-    dat() const { return *p; }
-
-    IQTDat&
-    ncdat() const { return *p; }
 
     }; //class IQTensor
 
@@ -787,5 +753,9 @@ checkQNs(const ITensor& t) { }
 //ITensor version for compatibility
 void inline
 checkDiv(const ITensor& t, QN q = QN()) { } 
+
+std::ostream& 
+operator<<(std::ostream & s, const IQTensor &t);
+
 
 #endif

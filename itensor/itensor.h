@@ -68,7 +68,7 @@ class ITensor
     //e.g. Foreach(const Index& I, t.index() ) { ... }
     //const std::pair<IndexSet<Index>::index_it,IndexSet<Index>::index_it> 
     const IndexSet<Index>&
-    index() const { return is_; }
+    indices() const { return is_; }
 
 
     //Constructors --------------------------------------------------
@@ -313,7 +313,7 @@ class ITensor
 
     //Increase primeLevel of Indices by 1 (or optional amount inc)
     void 
-    prime(int inc = 1) { is_.prime(inc); }
+    prime(int inc = 1) { prime(All,inc); }
 
     //Increase primeLevel of Indices by 1 (or optional amount inc)
     void 

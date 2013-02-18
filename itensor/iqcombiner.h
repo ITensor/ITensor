@@ -386,9 +386,9 @@ product(IQTensor T, IQTensor& res) const
                 std::cerr << "(Right) IQIndex from IQCombiner = " << r << std::endl;
                 Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
                 }
-        copy(T_.const_iqind_begin(),T_.const_iqind_begin()+j-1,std::back_inserter(iqinds));
+        copy(T_.indices().begin(),T_.indices().begin()+j-1,std::back_inserter(iqinds));
         copy(left_.begin(),left_.end(),std::back_inserter(iqinds));
-        copy(T_.const_iqind_begin()+j,T_.const_iqind_end(),std::back_inserter(iqinds));
+        copy(T_.indices().begin()+j,T_.indices().end(),std::back_inserter(iqinds));
 
         res = IQTensor(iqinds);
 
@@ -418,7 +418,7 @@ product(IQTensor T, IQTensor& res) const
         //
 
         //res will have all IQIndex's of T not in the left of c
-        Foreach(const IQIndex& I, T.iqinds()) 
+        Foreach(const IQIndex& I, T.indices()) 
             { 
             if(!hasindex(I)) iqinds.push_back(I); 
             }

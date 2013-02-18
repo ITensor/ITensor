@@ -140,25 +140,6 @@ insert_add(const ITensor& t)
     insert_add(r,t);
     }
 
-/*
-void IQTDat::
-insert_assign(const ITensor& t)
-    {
-    init_rmap();
-    ApproxReal r(t.uniqueReal());
-    if(rmap.count(r) == 1)
-        {
-        rmap[r]->assignFrom(t);
-        return;
-        }
-    else
-        {
-        itensor.push_front(t);
-        rmap[r] = itensor.begin();
-        }
-    }
-*/
-
 void IQTDat::
 clean(Real min_norm)
     {
@@ -209,39 +190,10 @@ index(int j) const
     }
 
 int IQTensor::
-iten_size() const { return dat().size(); }
+iten_size() const { return p->size(); }
 
 bool IQTensor::
-iten_empty() const { return dat().empty(); }
-
-//----------------------------------------------------
-//IQTensor: iterators 
-IQTensor::const_iten_it IQTensor::
-const_iten_begin() const 
-    { 
-    return dat().begin();
-    }
-
-IQTensor::const_iten_it IQTensor::
-const_iten_end() const 
-    { 
-    return dat().end();
-    }
-
-std::pair<IQTensor::const_iten_it,IQTensor::const_iten_it> IQTensor::
-itensors() const 
-    { return std::make_pair(dat().begin(),dat().end()); }
-
-IndexSet<IQIndex>::const_iterator IQTensor::
-const_iqind_begin() const { return is_->begin(); }
-
-IndexSet<IQIndex>::const_iterator IQTensor::
-const_iqind_end()   const { return is_->end(); }
-
-//std::pair<IndexSet<IQIndex>::index_it,IndexSet<IQIndex>::index_it> IQTensor::
-const IndexSet<IQIndex>& IQTensor::
-iqinds() const 
-    { return *is_; }
+iten_empty() const { return p->empty(); }
 
 //----------------------------------------------------
 //IQTensor: Constructors 
@@ -441,7 +393,7 @@ write(std::ostream& s) const
 	s.write((char*) &null_,sizeof(null_));
 	if(null_) return;
     is_->write(s);
-	dat().write(s);
+	p->write(s);
 	}
 
 IQTensor& IQTensor::
@@ -451,11 +403,11 @@ operator*=(Real fac)
 
     if(fac == 0) 
         { 
-        ncdat().clear(); 
+        p->clear(); 
         return *this; 
         }
 
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
         {
         t *= fac;
         }
@@ -470,11 +422,11 @@ operator/=(Real fac)
 
     if(fac == 0) 
         { 
-        ncdat().clear(); 
+        p->clear(); 
         return *this; 
         }
 
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
         {
         t /= fac;
         }
@@ -487,7 +439,7 @@ operator*=(const LogNumber& lgnum)
     { 
     soloDat();
 
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
         {
         t *= lgnum;
         }
@@ -501,7 +453,7 @@ insert(const ITensor& t)
     if(t.scale().sign() != 0)
         {
         soloDat();
-        ncdat().insert(t);
+        p->insert(t);
         }
     }
 
@@ -511,7 +463,7 @@ operator+=(const ITensor& t)
     if(t.scale().sign() != 0)
         {
         soloDat();
-        ncdat().insert_add(t);
+        p->insert_add(t);
         }
     return *this;
     }
@@ -535,7 +487,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
         Error("Wrong number of IQIndexVals provided");
     ApproxReal r(ur);
 
-    if(!dat().has_itensor(r))
+    if(!p->has_itensor(r))
         {
         std::vector<Index> indices; 
         indices.reserve(nn);
@@ -546,10 +498,10 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
             indices.push_back(iv[j].index());
             }
         ITensor t(indices);
-        ncdat().insert_add(r,t);
+        p->insert_add(r,t);
         }
 
-    return (ncdat().get(r)).operator()(iv1.blockIndexVal(),
+    return (p->get(r)).operator()(iv1.blockIndexVal(),
                                        iv2.blockIndexVal(),
                                        iv3.blockIndexVal(),
                                        iv4.blockIndexVal(),
@@ -577,13 +529,13 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
         Error("Wrong number of IQIndexVals provided");
     ApproxReal r(ur);
 
-    if(!dat().has_itensor(r))
+    if(!p->has_itensor(r))
         {
         return 0.;
         }
     else
         {
-        return (dat().get(r)).operator()(iv1.blockIndexVal(),
+        return (p->get(r)).operator()(iv1.blockIndexVal(),
                                          iv2.blockIndexVal(),
                                          iv3.blockIndexVal(),
                                          iv4.blockIndexVal(),
@@ -610,12 +562,12 @@ div() const
 	{
 	QN div_;
 	assert(p != 0);
-	if(dat().empty())
+	if(p->empty())
 	    {   
 	    this->printIndices("this");
 	    Error("IQTensor has no blocks");
 	    }
-	const ITensor& t = *(dat().begin());
+	const ITensor& t = *(p->begin());
 	for(int j = 1; j <= t.r(); ++j)
 	    div_ += qn(t.index(j))*dir(t.index(j));
 	return div_;
@@ -644,26 +596,6 @@ dir(const Index& in) const
 	return is_->index(iqq).dir();
 	}
 
-/*
-void IQTensor::
-ind_inc_prime(const IQIndex& i,int inc)
-	{
-	soloIndex();
-    is_->prime(i,inc);
-
-    soloDat();
-
-    Foreach(ITensor& t, ncdat())
-        {
-	    for(int ii = 1; ii <= t.r(); ++ii)
-		if(i.hasindex_noprime(t.index(ii)))
-		    {
-		    int p = t.index(ii).primeLevel();
-		    t.mapprimeind(t.index(ii),p,p+inc);
-		    }
-        }
-	}
-*/
 
 void IQTensor::
 noprime(IndexType type)
@@ -672,8 +604,8 @@ noprime(IndexType type)
 
     is_->noprime(type);
 
-    Foreach(ITensor& t, ncdat())
-        { t.noprime(type); }
+    Foreach(ITensor& t, *p)
+        t.noprime(type); 
 	} 
 
 void IQTensor::
@@ -683,7 +615,7 @@ prime(IndexType type, int inc)
 
     is_->prime(type,inc);
 
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
 	    t.prime(type,inc);
 	}
 
@@ -694,7 +626,7 @@ mapprime(int plevold, int plevnew, IndexType type)
 
     is_->mapprime(plevold,plevnew,type);
 
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
 	    t.mapprime(plevold,plevnew,type);
 	}
 
@@ -705,7 +637,7 @@ prime(const IQIndex& I, int inc)
 
     is_->prime(I,inc);
 
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
@@ -721,7 +653,7 @@ noprime(const IQIndex& I)
 
     is_->noprime(I);
 
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
@@ -745,7 +677,7 @@ find_iqind(const Index& ii) const
 bool IQTensor::
 uses_ind(const Index& ii) const
     {
-    Foreach(const ITensor& t, dat())
+    Foreach(const ITensor& t, *p)
         {
         if(t.hasindex(ii)) 
             return true;
@@ -799,7 +731,7 @@ Real IQTensor::
 norm() const
     {
     Real res = 0;
-    Foreach(const ITensor& t, dat())
+    Foreach(const ITensor& t, *p)
         { res += sqr(t.norm()); }
 
     //Even if the ITensor norms aren't separately too
@@ -816,7 +748,7 @@ Real IQTensor::
 sumels() const
     {
     Real res = 0;
-    Foreach(const ITensor& t, dat())
+    Foreach(const ITensor& t, *p)
         { res += t.sumels(); }
     return res;
     }
@@ -825,14 +757,14 @@ void IQTensor::
 scaleOutNorm()
     {
     Real f = norm();
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
         t.scaleTo(f);
     }
 
 void IQTensor::
 scaleTo(const LogNumber& newscale)
     {
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
         t.scaleTo(newscale);
     }
 
@@ -840,7 +772,7 @@ void IQTensor::
 clean(Real min_norm)
     { 
     soloDat(); 
-    ncdat().clean(min_norm); 
+    p->clean(min_norm); 
     }
 
 void IQTensor::
@@ -849,7 +781,7 @@ addindex1(const IQIndex& I)
 	if(I.m() != 1) 
 	    Error("IQTensor::operator*=(IQIndex): IQIndex must have m == 1.");    
 	solo(); 
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
         { t.addindex1(I.index(1)); }
 	is_->addindex(I);
 	}
@@ -900,7 +832,7 @@ tieIndices(const boost::array<IQIndex,NMAX>& indices, int niqind,
         for(int n = 0; n < niqind; ++n)
             totie[n] = indices[n].index(i);
 
-        Foreach(const ITensor& t, dat())
+        Foreach(const ITensor& t, *p)
             {
             if(!t.hasAllIndex(totie,niqind)) continue;
             ITensor nt(t);
@@ -970,7 +902,7 @@ trace(const boost::array<IQIndex,NMAX>& indices, int niqind)
         for(int n = 0; n < niqind; ++n)
             totrace[n] = indices[n].index(i);
 
-        Foreach(const ITensor& t, dat())
+        Foreach(const ITensor& t, *p)
             {
             if(!t.hasAllIndex(totrace,niqind)) continue;
             ITensor tt(t);
@@ -1023,7 +955,7 @@ vecSize() const
 	{
     if(this->isNull()) return 0;
 	int s = 0;
-    Foreach(const ITensor& t, (dat()))
+    Foreach(const ITensor& t, *p)
 	    s += t.vecSize();
 	return s;
 	}
@@ -1043,10 +975,10 @@ assignToVec(VectorRef v) const
 	if(vecSize() != v.Length())
 	    Error("Mismatched sizes in IQTensor::assignToVec(VectorRef v).");
 	int off = 1;
-	for(const_iten_it jj = const_iten_begin(); jj != const_iten_end(); ++jj)
+    Foreach(const ITensor& t, blocks())
 	    {
-	    int d = jj->vecSize();
-	    jj->assignToVec(v.SubVector(off,off+d-1));
+	    int d = t.vecSize();
+	    t.assignToVec(v.SubVector(off,off+d-1));
 	    off += d;
 	    }
 	}
@@ -1058,7 +990,7 @@ assignFromVec(VectorRef v)
 	if(vecSize() != v.Length())
 	    Error("bad size");
 	int off = 1;
-    Foreach(ITensor& t, ncdat())
+    Foreach(ITensor& t, *p)
 	    {
 	    int d = t.vecSize();
 	    t.assignFromVec(v.SubVector(off,off+d-1));
@@ -1071,7 +1003,7 @@ randomize()
 	{ 
     if(isNull())
         Error("Can't randomize default constructed IQTensor.");
-    if(dat().empty())
+    if(p->empty())
         Error("Can't randomize IQTensor having no blocks");
 
 	soloDat(); 
@@ -1096,15 +1028,15 @@ randomize()
             }
 
         ApproxReal r(nset.uniqueReal());
-        if(dat().has_itensor(r))
+        if(p->has_itensor(r))
             {
-            ncdat().get(r).randomize();
+            p->get(r).randomize();
             }
         else
             {
             ITensor t(nset);
             t.randomize();
-            ncdat().insert_add(r,t);
+            p->insert_add(r,t);
             }
         }
 	}
@@ -1132,25 +1064,6 @@ printIndices(const std::string& name) const
 	cout << "\\-------------------------------------\n" << endl;
 	}
 
-/*
-void IQTensor::
-assignFrom(const IQTensor& other)
-	{
-    //TODO: account for fermion sign here
-    if(fabs(uniqueReal()-other.uniqueReal()) > 1E-10)
-        {
-        PrintIndices((*this));
-        PrintIndices(other);
-        Error("Can't assign from IQTensor, different IQIndices");
-        }
-
-    soloDat();
-    Foreach(const ITensor& t, other.dat())
-	    {
-        ncdat().insert_assign(t);
-	    }
-	}
-*/
 
 void IQTensor::
 conj()
@@ -1205,38 +1118,11 @@ operator<<(std::ostream & s, const IQTensor& T)
     for(int k = 1; k <= T.r(); ++k)
         { s << "  " << T.index(k) << std::endl; }
     s << "ITensors:\n";
-    Foreach(const ITensor& t, T.dat())
+    Foreach(const ITensor& t, T.blocks())
         { s << "  " << t << std::endl; }
 	s << "\\------------------------------------\n\n";
     return s;
     }
-
-/*
-void IQTensor::
-splitReIm(IQTensor& re, IQTensor& im) const
-    {
-    if(!hasindex(IQIndex::IndReIm()))
-        {
-        IQTensor cop(*this);
-        re = cop;
-        im = cop;
-        im *= 0.0;
-        return;
-        }
-    vector<IQIndex> newreinds;
-    remove_copy_if(is_->begin(),is_->end(),std::back_inserter(newreinds),
-		    bind2nd(std::equal_to<IQIndex>(),IQIndex::IndReIm()));
-    re = IQTensor(newreinds);
-    im = re;
-    ITensor a,b;
-    Foreach(const ITensor& t, dat())
-        {
-        t.splitReIm(a,b);
-        re.insert(a);
-        im.insert(b);
-        }
-    }
-    */
 
 IQTensor& IQTensor::
 operator*=(const IQTensor& other)
@@ -1314,12 +1200,12 @@ operator*=(const IQTensor& other)
     set<ApproxReal> keys;
 
     list<ITensor> old_itensor; 
-    ncdat().swap(old_itensor);
+    p->swap(old_itensor);
 
     //com_this maps the uniqueReal of a set of Index's to be contracted over together
     //to those ITensors in *this.itensor having all Index's in that set
-    multimap<ApproxReal,const_iten_it> com_this;
-    for(const_iten_it tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
+    multimap<ApproxReal,IQTDat::const_iterator> com_this;
+    for(IQTDat::const_iterator tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
         {
         Real r = 0.0;
         for(int a = 1; a <= tt->r(); ++a)
@@ -1332,8 +1218,8 @@ operator*=(const IQTensor& other)
         }
 
     //com_other is the same as com_this but for other
-    multimap<ApproxReal,const_iten_it> com_other;
-    for(const_iten_it ot = other.const_iten_begin(); ot != other.const_iten_end(); ++ot)
+    multimap<ApproxReal,IQTDat::const_iterator> com_other;
+    for(IQTDat::const_iterator ot = other.p->begin(); ot != other.p->end(); ++ot)
         {
         Real r = 0.0;
         for(int b = 1; b <= ot->r(); ++b)
@@ -1363,7 +1249,7 @@ operator*=(const IQTensor& other)
             //Multiply the ITensors and add into res
             tt = *(ll->second); tt *= *(rr->second);
             if(tt.scale().sign() != 0)
-                ncdat().insert_add(tt);
+                p->insert_add(tt);
             }
         }
 
@@ -1450,14 +1336,14 @@ operator/=(const IQTensor& other)
     soloDat();
 
     list<ITensor> old_itensor; 
-    ncdat().swap(old_itensor);
+    p->swap(old_itensor);
 
     set<ApproxReal> keys;
 
     //com_this maps the uniqueReal of a set of Index's to be summed over together
     //to those ITensors in *this.itensor having all Index's in that set
-    multimap<ApproxReal,const_iten_it> com_this;
-    for(const_iten_it tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
+    multimap<ApproxReal,IQTDat::const_iterator> com_this;
+    for(IQTDat::const_iterator tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
         {
         Real r = 0.0;
         for(int a = 1; a <= tt->r(); ++a)
@@ -1471,8 +1357,9 @@ operator/=(const IQTensor& other)
         }
 
     //com_other is the same as com_this but for other
-    multimap<ApproxReal,const_iten_it> com_other;
-    for(const_iten_it ot = other.const_iten_begin(); ot != other.const_iten_end(); ++ot)
+    //Cheaper just to store IQTensors? (since they are just two pointers?)
+    multimap<ApproxReal,IQTDat::const_iterator> com_other;
+    for(IQTDat::const_iterator ot = other.p->begin(); ot != other.p->end(); ++ot)
         {
         Real r = 0.0;
         for(int b = 1; b <= ot->r(); ++b)
@@ -1503,7 +1390,7 @@ operator/=(const IQTensor& other)
             //Multiply the ITensors and add into res
             tt = *(ll->second); tt /= *(rr->second);
             if(tt.scale().sign() != 0)
-                ncdat().insert_add(tt);
+                p->insert_add(tt);
             }
         }
 
@@ -1540,7 +1427,7 @@ toReal() const
     if(iten_empty())
         return 0;
     else
-        return dat().begin()->toReal();
+        return p->begin()->toReal();
     }
 
 IQTensor& IQTensor::
@@ -1577,9 +1464,9 @@ operator+=(const IQTensor& other)
 
     soloDat(); 
 
-    Foreach(const ITensor& t, other.dat())
+    Foreach(const ITensor& t, *(other.p))
         { 
-        ncdat().insert_add(t);
+        p->insert_add(t);
         }
 
     return *this;
@@ -1602,7 +1489,7 @@ toITensor() const
     ITensor res(indices);
 
     //Loop over ITensors (blocks) within this IQTensor
-    Foreach(const ITensor& t, dat())
+    Foreach(const ITensor& t, *p)
         {
         ITensor exp(t);
         //Loop over Index's of the k'th ITensor
@@ -1663,25 +1550,16 @@ Dot(const IQTensor& x, const IQTensor& y)
     {
     IQTensor res(y);
 
-    int j = x.findindex(y.index(1));
-    try {
-        if(x.index(j).dir() != y.index(1).dir())
-            {
-            //Arrows do match
-            res *= x;
-            }
-        else
-            {
-            //Arrows do not match, fix:
-            res *= conj(x);
-            }
-        }
-    catch(const ITError& e)
+    const IQIndex& I = index_in_common(x,y);
+    if(I.dir() != y.index(1).dir())
         {
-        cout << "Caught an ITError in Dot (IQTensor version)" << endl;
-        PrintIndices(x);
-        PrintIndices(y);
-        exit(0);
+        //Arrows do match
+        res *= x;
+        }
+    else
+        {
+        //Arrows do not match, fix:
+        res *= conj(x);
         }
     return res.toReal();
     }
@@ -1697,17 +1575,16 @@ void
 checkQNs(const IQTensor& T)
     {
     QN qtot = T.div();
-    for(IQTensor::const_iten_it 
-        it = T.const_iten_begin(); it != T.const_iten_end(); ++it)
+    Foreach(const ITensor& t, T.blocks())
         {
         QN q;
-        for(int j = 1; j <= it->r(); ++j) 
-            q += T.qn(it->index(j))*T.dir(it->index(j));
+        for(int j = 1; j <= t.r(); ++j) 
+            q += T.qn(t.index(j))*T.dir(t.index(j));
 
         if(q != qtot) 
             {
             std::cout << "\nqtot = " << qtot << "\n\n";
-            std::cout << "Offending ITensor = " << *it << "\n\n";
+            std::cout << "Offending ITensor = " << t << "\n\n";
             T.printIndices("T");
             Error("checkQNs: inconsistent QN");
             }
@@ -1717,13 +1594,13 @@ checkQNs(const IQTensor& T)
 void 
 checkDiv(const IQTensor& T, QN expected)
 	{
-	if(T.dat().empty())
+	if(T.p->empty())
 	    {   
 	    T.printIndices("this");
 	    Error("IQTensor has no blocks");
 	    }
 
-    Foreach(const ITensor& t, T.dat())
+    Foreach(const ITensor& t, *(T.p))
 	    {
 	    QN div_;
 	    for(int j = 1; j <= t.r(); ++j)
