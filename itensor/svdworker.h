@@ -403,7 +403,7 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
             {
             IndexT mid;
             try {
-                mid = index_in_common(U,V,Link);
+                mid = commonIndex(U,V,Link);
                 }
             catch(const ITError& e)
                 {
@@ -450,7 +450,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     IndexT mid; 
     try {
-        mid = index_in_common(A,B,Link);
+        mid = commonIndex(A,B,Link);
         }
     catch(const ITError& e)
         {

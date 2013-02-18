@@ -302,7 +302,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
 
         svd.denmatDecomp(i,clust, res.Anc(i), nfork,Fromleft);
 
-        IndexT mid = index_in_common(res.A(i),nfork,Link);
+        IndexT mid = commonIndex(res.A(i),nfork,Link);
         mid.conj();
         midsize[i] = mid.m();
         res.Anc(i+1) = Tensor(mid,conj(res.si(i+1)),primed(res.si(i+1),2),res.RightLinkInd(i+1));
@@ -379,7 +379,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
         svd.denmatDecomp(i,clust, res.Anc(i), nfork,Fromleft);
-        IndexT mid = index_in_common(res.A(i),nfork,Link);
+        IndexT mid = commonIndex(res.A(i),nfork,Link);
         //assert(mid.dir() == In);
         mid.conj();
         midsize[i] = mid.m();

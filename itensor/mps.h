@@ -290,13 +290,13 @@ class MPSt
 
     IndexT 
     LinkInd(int b) const 
-        { return index_in_common(A(b),A(b+1),Link); }
+        { return commonIndex(A(b),A(b+1),Link); }
     IndexT 
     RightLinkInd(int i) const 
-        { return index_in_common(A(i),A(i+1),Link); }
+        { return commonIndex(A(i),A(i+1),Link); }
     IndexT 
     LeftLinkInd(int i)  const 
-        { return index_in_common(A(i),A(i-1),Link); }
+        { return commonIndex(A(i),A(i-1),Link); }
 
     //
     //MPSt orthogonalization methods

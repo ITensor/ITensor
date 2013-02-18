@@ -355,7 +355,7 @@ deltaPhi(const Tensor& phi) const
     deltaL *= Op1;
     deltaR *= Op2;
 
-    IndexT hl = index_in_common(Op1,Op2,Link);
+    IndexT hl = commonIndex(Op1,Op2,Link);
 
     deltaL.trace(hl);
     deltaL.mapprime(1,0);
@@ -391,7 +391,7 @@ deltaPhi(const IQTensor& phi) const
     deltaL *= Op1;
     deltaR *= Op2;
 
-    IndexT hl = index_in_common(Op1,Op2,Link);
+    IndexT hl = commonIndex(Op1,Op2,Link);
 
     deltaL.trace(hl);
     deltaL.mapprime(1,0);

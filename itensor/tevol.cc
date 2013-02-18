@@ -148,7 +148,7 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
         Bd *= -1; //Minus sign appearing in Schrodinger eqn
 
         //Orthogonalize
-        IndexT plink = index_in_common(B,psi[s(j-1)]);
+        IndexT plink = commonIndex(B,psi[s(j-1)]);
         //Define P = B^\dag B
         Tensor P = conj(primed(B,plink))*primed(B);
         //Apply (1-P) to Bd (by computing Bd = Bd - P*Bd)
@@ -530,7 +530,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             for(int g = groups; g > 1; --g)
                 {
                 Tensor& B = psiv[g];
-                IndexT lnk = index_in_common(B,psiv[g-1]);
+                IndexT lnk = commonIndex(B,psiv[g-1]);
                 Tensor overlap = conj(primed(B,lnk))*B;
 
                 SVDWorker W;
@@ -580,7 +580,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             for(int g = 1, j = 1; g < Ng; ++g, j += 2)
                 {
                 const Tensor& bond = psiv[g];
-                IndexT r = index_in_common(bond,psiv.at(g+1));
+                IndexT r = commonIndex(bond,psiv.at(g+1));
 
                 Tensor A, B(model.si(j+1),r);
                 SparseT D;
@@ -626,7 +626,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             for(int g = Ng, j = jstart; g > 1; --g, j -= 2)
                 {
                 const Tensor& bond = psiv[g];
-                IndexT l = index_in_common(bond,psiv.at(g-1));
+                IndexT l = commonIndex(bond,psiv.at(g-1));
 
                 //cout << format("bond %d = \n") % g << bond << endl;
 
@@ -710,7 +710,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 Tensor A,B;
                 if(j > 1)
                     {
-                    IndexT l = index_in_common(bond,psi.A(j-1));
+                    IndexT l = commonIndex(bond,psi.A(j-1));
                     A = Tensor(l,sj);
                     }
                 else
@@ -762,7 +762,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 Tensor A,B;
                 if(j < N)
                     {
-                    IndexT r = index_in_common(bond,psi.A(j+1));
+                    IndexT r = commonIndex(bond,psi.A(j+1));
                     B = Tensor(sj,r);
                     }
                 else

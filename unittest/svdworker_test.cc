@@ -266,7 +266,7 @@ TEST(CSVDNorm)
     phi0.scaleTo(-2.127145);
 
     svd.svd(phi0,l,v,r);
-    Index nmr = index_in_common(r,v,Link);
+    Index nmr = commonIndex(r,v,Link);
     //ITensor rhoRsvd1 = r * conj(primeind(r,rr));
     //ITensor rhoRsvd2 = r * conj(primeind(r,nmr));
     //PrintDat(r);

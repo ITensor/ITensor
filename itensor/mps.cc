@@ -983,8 +983,8 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
         qD.clear(); 
         qt.clear();
 
-        if(S > start) prev_bond = index_in_common(A[sprev],A[s],Link);
-        if(S < Send) bond = index_in_common(A[s],A[snext],Link);
+        if(S > start) prev_bond = commonIndex(A[sprev],A[s],Link);
+        if(S < Send) bond = commonIndex(A[s],A[snext],Link);
 
         if(s == show_s) { PrintDat(A[s]); }
 
