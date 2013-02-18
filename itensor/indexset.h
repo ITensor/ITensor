@@ -981,6 +981,19 @@ sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset)
         }
     }
 
+template<class IndexT>
+Arrow
+dir(const IndexSet<IndexT>& is, const IndexT& I)
+    {
+    for(int j = 0; j < is.r(); ++j)
+        {
+        if(is[j] == I) 
+            return is[j].dir();
+        }
+    Error("dir: Index not found");
+    return Switch;
+    }
+
 template <class IndexT>
 std::ostream&
 operator<<(std::ostream& s, const IndexSet<IndexT>& is)
