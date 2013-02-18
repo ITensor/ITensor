@@ -89,6 +89,9 @@ class IQTensor
     IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
              const IQIndexVal& iv3);
 
+    IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
+             const IQIndexVal& iv3, const IQIndexVal& iv4);
+
     //Copy IQTensor, incrementing IQIndices of matching IndexType by 1
     IQTensor(IndexType type, const IQTensor& other);
 
@@ -728,7 +731,7 @@ mapElems(const Callable& f)
 // automatically correct them.
 //
 Real 
-Dot(const IQTensor& x, const IQTensor& y);
+Dot(IQTensor x, const IQTensor& y);
 
 //
 // Scalar (inner) product of two
@@ -740,7 +743,7 @@ Dot(const IQTensor& x, const IQTensor& y);
 // instead of a rank 0 IQTensor).
 //
 void 
-BraKet(const IQTensor& x, const IQTensor& y, Real& re, Real& im);
+BraKet(IQTensor x, const IQTensor& y, Real& re, Real& im);
 
 //Checks if all IQTensor blocks have the same divergence
 void 

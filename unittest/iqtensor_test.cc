@@ -47,62 +47,21 @@ struct IQTensorDefaults
                      l2d,QN(-1),
                      l2dd,QN(-2),
                      Out);
-        {
-        phi = IQTensor(S1,S2,L2);
 
-        ITensor uu(s1u,s2u,l2dd);
-        uu.randomize();
-        phi += uu;
+        phi = IQTensor(S1(1),S2(1),L2(3));
+        phi.randomize();
 
-        ITensor ud(s1u,s2d,l20);
-        ud.randomize();
-        phi += ud;
+        A = IQTensor(L1(1),S1(1),L2(4),S2(2));
+        A.randomize();
 
-        ITensor du(s1d,s2u,l20);
-        du.randomize();
-        phi += du;
-        }
+        B = IQTensor(L1(4),L2(2));
+        B.randomize();
 
-        A = IQTensor(L1,S1,L2,S2);
-        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
-        for(int n2 = 1; n2 <= L2.nindex(); ++n2)
-        for(int p1 = 1; p1 <= S1.nindex(); ++p1)
-        for(int p2 = 1; p2 <= S2.nindex(); ++p2)
-            {
-            ITensor T(L1.index(n1),L2.index(n2),S1.index(p1),S2.index(p2));
-            T.randomize();
-            A += T;
-            }
+        C = IQTensor(conj(L1)(5),primed(L1)(5));
+        C.randomize();
 
-        B = IQTensor(L1,L2);
-        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
-        for(int n2 = 1; n2 <= L2.nindex(); ++n2)
-            {
-            ITensor T(L1.index(n1),L2.index(n2));
-            T.randomize();
-            B += T;
-            }
-
-        C = IQTensor(conj(L1),primed(L1));
-        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
-            {
-            Matrix U(L1.index(n1).m(),L1.index(n1).m());
-            U.Randomize();
-            U += U.t();
-            ITensor T(L1.index(n1),primed(L1).index(n1),U);
-            C += T;
-            }
-
-        D = IQTensor(conj(L1),S1,primed(L1),primed(L1,2));
-        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
-        for(int n2 = 1; n2 <= S1.nindex(); ++n2)
-        for(int n3 = 1; n3 <= L1.nindex(); ++n3)
-        for(int n4 = 1; n4 <= S1.nindex(); ++n4)
-            {
-            ITensor T(L1.index(n1),S1.index(n2),primed(L1).index(n3),primed(L1,2).index(n4));
-            T.randomize();
-            D += T;
-            }
+        D = IQTensor(conj(L1)(3),S1(1),primed(L1)(3),primed(L1,2)(5));
+        D.randomize();
         }
 
     };
@@ -209,6 +168,43 @@ TEST(ToReal)
     //have a toReal value of zero
     IQTensor Z;
     CHECK_CLOSE(Z.toReal(),0,1E-5);
+    }
+
+TEST(DotTest)
+    {
+    Real dotval1 = sqrt( Dot(conj(B),B) );
+    //Dot should auto-fix arrows
+    Real dotval2 = sqrt( Dot(B,B) );
+    Real nval   = B.norm();
+    CHECK_CLOSE(dotval1,nval,1E-5);
+    CHECK_CLOSE(dotval2,nval,1E-5);
+    }
+
+TEST(BraKetTest)
+    {
+    IQTensor R(L1(1),L2(1)),
+             I(L1(1),L2(1));
+    R.randomize();
+    I.randomize();
+    const Real rr = sqr(R.norm());
+    const Real ii = sqr(I.norm());
+
+    Real re=NAN,im=NAN;
+    BraKet(R,R,re,im);
+    CHECK_CLOSE(re,rr,1E-5);
+
+    IQTensor T = IQComplex_1()*R + IQComplex_i()*I;
+    BraKet(T,T,re,im);
+    CHECK_CLOSE(re,rr+ii,1E-5);
+    CHECK(fabs(im) < 1E-12);
+
+    BraKet(T,R,re,im);
+    CHECK_CLOSE(re,rr,1E-5);
+    CHECK_CLOSE(im,-Dot(I,R),1E-5);
+
+    BraKet(T,IQComplex_i()*I,re,im);
+    CHECK_CLOSE(re,ii,1E-5);
+    CHECK_CLOSE(im,Dot(I,R),1E-5);
     }
 
 TEST(Trace)

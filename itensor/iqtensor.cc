@@ -320,12 +320,22 @@ IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2)
 
 IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
-         const IQIndexVal& iv3) 
+         const IQIndexVal& iv3)
 	: 
     is_(make_shared<IndexSet<IQIndex> >(iv1.iqind,iv2.iqind,iv3.iqind)),
     p(make_shared<IQTDat>()) 
 	{ 
     operator()(iv1,iv2,iv3) = 1;
+	}
+
+IQTensor::
+IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
+         const IQIndexVal& iv3, const IQIndexVal& iv4)
+	: 
+    is_(make_shared<IndexSet<IQIndex> >(iv1.iqind,iv2.iqind,iv3.iqind,iv4.iqind)),
+    p(make_shared<IQTDat>()) 
+	{ 
+    operator()(iv1,iv2,iv3,iv4) = 1;
 	}
 
 IQTensor::
@@ -1546,29 +1556,23 @@ solo()
 
 
 Real 
-Dot(const IQTensor& x, const IQTensor& y)
+Dot(IQTensor x, const IQTensor& y)
     {
-    IQTensor res(y);
-
-    const IQIndex& I = index_in_common(x,y);
-    if(I.dir() != y.index(1).dir())
+    IQIndex I = commonIndex(x,y);
+    if(I.dir() == dir(y.indices(),I))
         {
-        //Arrows do match
-        res *= x;
+        x.conj();
         }
-    else
-        {
-        //Arrows do not match, fix:
-        res *= conj(x);
-        }
-    return res.toReal();
+    x *= y;
+    return x.toReal();
     }
 
 void 
-BraKet(const IQTensor& x, const IQTensor& y, Real& re, Real& im)
+BraKet(IQTensor x, const IQTensor& y, Real& re, Real& im)
     {
-    IQTensor res = conj(x) * y;
-    res.toComplex(re,im);
+    x.conj();
+    x *= y;
+    x.toComplex(re,im);
     }
 
 void 
