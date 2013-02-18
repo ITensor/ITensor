@@ -606,10 +606,10 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     for(list<ITensor>::const_iterator ot = T.blocks().begin(); ot != T.blocks().end(); ++ot)
         {
         Real r = 0.0;
-        for(int b = 1; b <= ot->r(); ++b)
+        Foreach(const Index& I, ot->indices())
             {
-            if(common_inds.count(ApproxReal(ot->index(b).uniqueReal())))
-                { r += ot->index(b).uniqueReal(); }
+            if(common_inds.count(ApproxReal(I.uniqueReal())))
+                { r += I.uniqueReal(); }
             }
         com_T.insert(make_pair(ApproxReal(r),ot));
         keys.insert(ApproxReal(r));

@@ -427,7 +427,7 @@ operator()(const IndexVal& iv1)
         std::cerr << format("# given = 1, rn_ = %d\n")%is_.rn();
         Error("Not enough m!=1 indices provided");
         }
-    if(index(1) != iv1.ind)
+    if(is_[0] != iv1.ind)
         {
         Print(*this);
         Print(iv1);
@@ -447,7 +447,7 @@ operator()(const IndexVal& iv1) const
         std::cerr << format("# given = 1, rn() = %d\n")%is_.rn();
         Error("Not enough m!=1 indices provided");
         }
-    if(index(1) != iv1.ind)
+    if(is_[0] != iv1.ind)
         {
         Print(*this);
         Print(iv1);
@@ -544,7 +544,7 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
         bool foundit = false;
         for(int k = 1; k <= r(); ++k) 
             { 
-            if(index(k) == J) 
+            if(is_.index(k) == J) 
                 {
                 isReplaced[k] = (J.m() == 1 ? -1 : nn);
                 //cerr << format("setting isReplaced[%d] = %d\n ") % k % isReplaced[k];
@@ -576,7 +576,7 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
             {
             //cerr << format("Kept index, setting P.from_to(%d,%d)\n") % j % (nkept+1);
             P.from_to(j,++nkept);
-            nindices.push_back(index(j)); 
+            nindices.push_back(is_.index(j)); 
             }
         else
             {
@@ -588,7 +588,7 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
     nindices.push_back(grouped);
 
     for(int j = is_.rn()+1; j <= r(); ++j) 
-        if(isReplaced[j] == 0) nindices.push_back(index(j));
+        if(isReplaced[j] == 0) nindices.push_back(is_.index(j));
 
     if(nn == 0) 
         res = ITensor(nindices,*this);
@@ -752,7 +752,7 @@ trace(const array<Index,NMAX>& indices, int nind)
     int nmatched = 0;
     for(int k = 1; k <= r(); ++k)
         {
-        const Index& K = index(k);
+        const Index& K = is_.index(k);
         for(int j = 0; j < nind; ++j)
         if(K == indices[j]) 
             { 
@@ -897,18 +897,18 @@ expandIndex(const Index& small, const Index& big, int start)
     assert(start < big.m());
 
     vector<Index> indices; 
-    indices.reserve(r());
+    indices.reserve(is_.r());
     int w = -1;
     for(int j = 1; j <= r(); ++j)
         {
-        if(index(j) == small)
+        if(is_.index(j) == small)
             {
             w = j;
             indices.push_back(big);
             }
         else 
             {
-            indices.push_back(index(j));
+            indices.push_back(is_.index(j));
             }
         }
 
@@ -1368,9 +1368,9 @@ _ind2(const IndexVal& iv1, const IndexVal& iv2) const
         std::cerr << format("# given = 2, rn_ = %d\n")%is_.rn();
         Error("Not enough m!=1 indices provided");
         }
-    if(index(1) == iv1.ind && index(2) == iv2.ind)
+    if(is_[0] == iv1.ind && is_[1] == iv2.ind)
         return ((iv2.i-1)*m(1)+iv1.i);
-    else if(index(1) == iv2.ind && index(2) == iv1.ind)
+    else if(is_[0] == iv2.ind && is_[1] == iv1.ind)
         return ((iv1.i-1)*m(1)+iv2.i);
     else
         {
@@ -1388,40 +1388,40 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
       const IndexVal& iv5,const IndexVal& iv6,
       const IndexVal& iv7,const IndexVal& iv8) const
     {
-    array<const IndexVal*,NMAX+1> iv = 
-        {{ 0, &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
-    array<int,NMAX+1> ja; ja.assign(1);
+    array<const IndexVal*,NMAX> iv = 
+        {{ &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
+    array<int,NMAX> ja; ja.assign(1);
     //Loop over the given IndexVals
-    int j = 1, nn = 0;
-    while(iv[j]->ind != Index::Null())
+    int nn = 0;
+    for(int j = 0; j < is_.r(); ++j)
         {
+        const IndexVal& J = *iv[j];
+        if(J.ind == Index::Null()) break;
+        if(J.ind.m() != 1) ++nn;
+        if(J.i == 1) continue;
         //Loop over indices of this ITensor
-        bool matched = false;
-        for(int k = 1; k <= r(); ++k)
+        for(int k = 0; k < is_.r(); ++k)
             {
-            if(index(k) == iv[j]->ind)
+            if(is_[k] == J.ind)
                 {
-                matched = true;
-                if(k <= is_.rn()) ++nn;
-                ja[k] = iv[j]->i;
-                break;
+                ja[k] = J.i;
+                goto next;
                 }
             }
-        if(!matched)
-            {
-            Print(*this);
-            Print(*iv[j]);
-            Error("Extra/incorrect IndexVal argument to ITensor");
-            }
-        ++j;
+        //Either didn't find index
+        Print((*this));
+        Print(J);
+        Error("Extra/incorrect IndexVal argument to ITensor");
+        //Or did find it
+        next:;
         }
 
     if(nn != is_.rn())
         {
-        Error("Too few m!=1 indices provided");
+        Error("Too few m > 1 indices provided");
         }
 
-    return _ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8]);
+    return _ind(ja[0],ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7]);
     }
 
 
@@ -1470,7 +1470,7 @@ ProductProps(const ITensor& L, const ITensor& R)
 
     for(int j = 1; j <= L.is_.rn(); ++j)
 	for(int k = 1; k <= R.is_.rn(); ++k)
-	    if(L.index(j) == R.index(k))
+	    if(L.is_.index(j) == R.is_.index(k))
 		{
 		if(j < lcstart) lcstart = j;
         if(k < rcstart) rcstart = k;
@@ -1481,7 +1481,7 @@ ProductProps(const ITensor& L, const ITensor& R)
 
 		contractedL[j] = contractedR[k] = true;
 
-        cdim *= L.index(j).m();
+        cdim *= L.is_.index(j).m();
 
         //matchL.from_to(k,j-lcstart+1);
 		}
@@ -1670,22 +1670,22 @@ operator/=(const ITensor& other)
 
     //Handle m!=1 indices
 
-    for(int j = 1; j <= is_.rn(); ++j)
-        if(!props.contractedL[j]) 
-            new_index.addindexn(this->index(j));
+    for(int j = 0; j < is_.rn(); ++j)
+        if(!props.contractedL[j+1]) 
+            new_index.addindexn(this->is_[j]);
 
-    for(int j = 1; j <= other.is_.rn(); ++j)
-        if(!props.contractedR[j]) 
-            new_index.addindexn(other.index(j));
+    for(int j = 0; j < other.is_.rn(); ++j)
+        if(!props.contractedR[j+1]) 
+            new_index.addindexn(other.is_[j]);
 
-    for(int j = 1; j <= is_.rn(); ++j)
-        if(props.contractedL[j])  
-            new_index.addindexn(this->index(j));
+    for(int j = 0; j < is_.rn(); ++j)
+        if(props.contractedL[j+1])  
+            new_index.addindexn(this->is_[j]);
 
     //Handle m==1 indices
 
-    for(int j = is_.rn()+1; j <= r(); ++j) 
-        new_index.addindex1(index(j));
+    for(int j = is_.rn(); j < r(); ++j) 
+        new_index.addindex1(is_[j]);
 
     for(int j = other.is_.rn()+1; j <= other.r(); ++j)
         {
@@ -1730,30 +1730,30 @@ directMultiply(const ITensor& other, ProductProps& props,
         bm[j] = other.m(j);
         }
     int icon[NMAX+1], inew[NMAX+1];
-    for(int j = 1; j <= this->is_.rn(); ++j)
-        if(!props.contractedL[j]) 
+    for(int j = 0; j < this->is_.rn(); ++j)
+        if(!props.contractedL[j+1]) 
             {
-            new_index_[++new_rn_] = index(j);
-            mnew[new_rn_] = am[j];
-            pa[j] = inew + new_rn_;
+            new_index_[++new_rn_] = is_[j];
+            mnew[new_rn_] = am[j+1];
+            pa[j+1] = inew + new_rn_;
             }
         else
             {
-            mcon[props.pl.dest(j)] = am[j];
-            pa[j] = icon + props.pl.dest(j);
+            mcon[props.pl.dest(j+1)] = am[j+1];
+            pa[j+1] = icon + props.pl.dest(j+1);
             }
 
-    for(int j = 1; j <= other.is_.rn(); ++j)
-        if(!props.contractedR[j]) 
+    for(int j = 0; j < other.is_.rn(); ++j)
+        if(!props.contractedR[j+1]) 
             {
-            new_index_[++new_rn_] = other.index(j);
-            mnew[new_rn_] = bm[j];
-            pb[j] = inew + new_rn_;
+            new_index_[++new_rn_] = other.is_[j];
+            mnew[new_rn_] = bm[j+1];
+            pb[j+1] = inew + new_rn_;
             }
         else
             {
-            mcon[props.pr.dest(j)] = bm[j];
-            pb[j] = icon + props.pr.dest(j);
+            mcon[props.pr.dest(j+1)] = bm[j+1];
+            pb[j+1] = icon + props.pr.dest(j+1);
             }
 
     if(new_rn_ > 4) 
@@ -1969,16 +1969,16 @@ operator*=(const ITensor& other)
     //
     //Handle m==1 Indices
     //
-    for(int k = is_.rn()+1; k <= this->r(); ++k)
+    for(int k = is_.rn(); k < this->r(); ++k)
         {
-        const Index& K = is_.index(k);
+        const Index& K = is_[k];
         if(!other.is_.hasindex1(K))
             new_index1_[++nr1_] = &K;
         }
 
-    for(int j = other.is_.rn()+1; j <= other.r(); ++j)
+    for(int j = other.is_.rn(); j < other.r(); ++j)
         {
-        const Index& J = other.index(j);
+        const Index& J = other.is_[j];
         if(!is_.hasindex1(J))
             new_index1_[++nr1_] = &J;
         }
@@ -2077,12 +2077,12 @@ operator*=(const ITensor& other)
         }
 
     //Handle m!=1 indices
-    for(int j = 1; j <= this->is_.rn(); ++j)
-        if(!props.contractedL[j]) 
-            new_index.addindexn( index(j) );
-    for(int j = 1; j <= other.is_.rn(); ++j)
-        if(!props.contractedR[j]) 
-            new_index.addindexn( other.index(j) );
+    for(int j = 0; j < this->is_.rn(); ++j)
+        if(!props.contractedL[j+1]) 
+            new_index.addindexn( is_[j] );
+    for(int j = 0; j < other.is_.rn(); ++j)
+        if(!props.contractedR[j+1]) 
+            new_index.addindexn( other.is_[j] );
 
     /*
     else
@@ -2185,8 +2185,8 @@ operator+=(const ITensor& other)
         }
 
     bool same_ind_order = true;
-    for(int j = 1; j <= is_.rn(); ++j)
-    if(index(j) != other.index(j))
+    for(int j = 0; j < is_.rn(); ++j)
+    if(is_[j] != other.is_[j])
         { 
         same_ind_order = false; 
         break; 
@@ -2272,7 +2272,7 @@ fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     scale_ = 1;
 
     MatrixRef dref; 
-    if(i1 == index(1))
+    if(i1 == is_[0])
         {
         p->v.TreatAsMatrix(dref,i2.m(),i1.m());
         dref = M.t();
@@ -2294,7 +2294,7 @@ toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
 
     MatrixRef dref; 
     p->v.TreatAsMatrix(dref,m(2),m(1));
-    res = dref.t(i1==index(1)); 
+    res = dref.t(i1==is_[0]); 
     }
 
 void ITensor::

@@ -578,8 +578,8 @@ div() const
 	    Error("IQTensor has no blocks");
 	    }
 	const ITensor& t = *(p->begin());
-	for(int j = 1; j <= t.r(); ++j)
-	    div_ += qn(t.index(j))*dir(t.index(j));
+    Foreach(const Index& i, t.indices())
+        div_ += qn(i)*dir(i);
 	return div_;
 	}
 
@@ -1211,10 +1211,10 @@ operator*=(const IQTensor& other)
     for(IQTDat::const_iterator tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
         {
         Real r = 0.0;
-        for(int a = 1; a <= tt->r(); ++a)
+        Foreach(const Index& I, tt->indices())
             {
-            if(common_inds.count(ApproxReal(tt->index(a).uniqueReal())))
-                { r += tt->index(a).uniqueReal(); }
+            if(common_inds.count(ApproxReal(I.uniqueReal())))
+                { r += I.uniqueReal(); }
             }
         com_this.insert(make_pair(ApproxReal(r),tt));
         keys.insert(ApproxReal(r));
@@ -1225,10 +1225,10 @@ operator*=(const IQTensor& other)
     for(IQTDat::const_iterator ot = other.p->begin(); ot != other.p->end(); ++ot)
         {
         Real r = 0.0;
-        for(int b = 1; b <= ot->r(); ++b)
+        Foreach(const Index& I, ot->indices())
             {
-            if(common_inds.count(ApproxReal(ot->index(b).uniqueReal())))
-                { r += ot->index(b).uniqueReal(); }
+            if(common_inds.count(ApproxReal(I.uniqueReal())))
+                { r += I.uniqueReal(); }
             }
         com_other.insert(make_pair(ApproxReal(r),ot));
         keys.insert(ApproxReal(r));
@@ -1349,9 +1349,9 @@ operator/=(const IQTensor& other)
     for(IQTDat::const_iterator tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
         {
         Real r = 0.0;
-        for(int a = 1; a <= tt->r(); ++a)
+        Foreach(const Index& I, tt->indices())
             {
-            Real ur = tt->index(a).uniqueReal();
+            const Real ur = I.uniqueReal();
             if(common_inds.count(ApproxReal(ur)))
                 r += ur;
             }
@@ -1365,9 +1365,9 @@ operator/=(const IQTensor& other)
     for(IQTDat::const_iterator ot = other.p->begin(); ot != other.p->end(); ++ot)
         {
         Real r = 0.0;
-        for(int b = 1; b <= ot->r(); ++b)
+        Foreach(const Index& I, ot->indices())
             {
-            Real ur = ot->index(b).uniqueReal();
+            const Real ur = I.uniqueReal();
             if(common_inds.count(ApproxReal(ur)))
                 r += ur;
             }
@@ -1496,23 +1496,21 @@ toITensor() const
         {
         ITensor exp(t);
         //Loop over Index's of the k'th ITensor
-        for(int j = 1; j <= t.r(); ++j)
+        Foreach(const Index& small, t.indices())
             {
             //Want to transform 'small' into the 
             //Index version of the IQIndex that contains
             //it, with the appropriate offset
-            const Index& small = t.index(j);
+
             //Find the IQIndex that contains 'small'
             const IQIndex* big = 0;
-            int offset = -1;
-            for(int q = 1; q <= is_->r(); ++q)
-                if(is_->index(q).hasindex(small))
+            Foreach(const IQIndex& I, this->indices())
+                if(I.hasindex(small))
                     {
-                    big = &(is_->index(q));
-                    offset = big->offset(small);
+                    big = &I;
                     break;
                     }
-            exp.expandIndex(small,*big,offset);
+            exp.expandIndex(small,*big,big->offset(small));
             }
         //Once all Indices expanded, add to res
         res += exp;
@@ -1575,8 +1573,8 @@ checkQNs(const IQTensor& T)
     Foreach(const ITensor& t, T.blocks())
         {
         QN q;
-        for(int j = 1; j <= t.r(); ++j) 
-            q += T.qn(t.index(j))*T.dir(t.index(j));
+        Foreach(const Index& I, t.indices())
+            q += T.qn(I)*T.dir(I);
 
         if(q != qtot) 
             {
@@ -1600,8 +1598,8 @@ checkDiv(const IQTensor& T, QN expected)
     Foreach(const ITensor& t, *(T.p))
 	    {
 	    QN div_;
-	    for(int j = 1; j <= t.r(); ++j)
-            div_ += T.qn(t.index(j))*T.dir(t.index(j));
+        Foreach(const Index& I, t.indices())
+            div_ += T.qn(I)*T.dir(I);
 	    if(div_ != expected)
             {
             Print(expected);

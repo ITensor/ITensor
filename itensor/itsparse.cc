@@ -354,7 +354,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     //Analyze contracted Indices
     for(int i = 1; i <= S.r(); ++i)
     for(int j = 1; j <= T.r(); ++j)
-        if(S.index(i) == T.index(j))
+        if(S.is_.index(i) == T.is_.index(j))
             {
             scon[i] = j;
             tcon[j] = i;
@@ -380,7 +380,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     for(int i = 1; i <= T.is_.rn(); ++i)
         if(tcon[i] == 0)
             {
-            res.is_.addindexn(T.index(i));
+            res.is_.addindexn(T.is_.index(i));
             alloc_size *= T.m(i);
 
             //Init appropriate elements
@@ -415,7 +415,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     for(int i = T.is_.rn()+1; i <= T.r(); ++i)
         if(tcon[i] == 0)
             {
-            res.is_.addindex1(T.index(i));
+            res.is_.addindex1(T.is_.index(i));
             }
 
 #ifdef DEBUG
