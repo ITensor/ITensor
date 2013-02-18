@@ -751,7 +751,7 @@ TEST(ContractingProduct)
     }
 
 TEST(NonContractingProduct)
-{
+    {
     ITensor L(b2,a1,b3,b4), R(a1,b3,a2,b5,b4);
 
     L.randomize(); R.randomize();
@@ -858,7 +858,44 @@ TEST(NonContractingProduct)
 
     for(int j2 = 1; j2 <= 2; ++j2)
     { CHECK_CLOSE(Hpsi(l2(j2)),psi()*mpoh(l2(j2)),1E-10); }
-}
+    }
+
+TEST(ComplexNonContractingProduct)
+    {
+    ITensor Lr(b2,b3,b4), Li(b2,b3,b4),
+            Rr(b3,a2,b5,b4), Ri(b3,a2,b5,b4);
+
+    Lr.randomize(); 
+    Li.randomize(); 
+    Rr.randomize();
+    Ri.randomize();
+
+    ITensor L = Complex_1()*Lr + Complex_i()*Li;
+    ITensor R = Complex_1()*Rr + Complex_i()*Ri;
+
+    ITensor res1 = L / R;
+
+    Index ri = Index::IndReIm();
+
+    CHECK(res1.hasindex(b2));
+    CHECK(res1.hasindex(a2));
+    CHECK(res1.hasindex(b5));
+    CHECK(res1.hasindex(b3));
+    CHECK(res1.hasindex(b4));
+    CHECK(res1.hasindex(ri));
+
+    CHECK_EQUAL(res1.r(),6);
+
+    ITensor resR(realPart(res1)),
+            resI(imagPart(res1));
+
+    ITensor rdiff = resR-(Lr/Rr-Li/Ri);
+    ITensor idiff = resI-(Lr/Ri+Li/Rr);
+
+    CHECK(rdiff.norm() < 1E-12);
+    CHECK(idiff.norm() < 1E-12);
+
+    }
 
 TEST(TieIndices)
     {

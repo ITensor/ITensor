@@ -100,6 +100,40 @@ TEST(NonContractProd)
 
     }
 
+TEST(ComplexNonContractingProduct)
+    {
+    IQTensor Lr(L1(1),S1(2),L2(4)), Li(L1(1),S1(2),L2(4)),
+            Rr(L1(1),S1(2),L2(4)), Ri(L1(1),S1(2),L2(4));
+
+    Lr.randomize(); 
+    Li.randomize(); 
+    Rr.randomize();
+    Ri.randomize();
+
+    IQTensor L = IQComplex_1()*Lr + IQComplex_i()*Li;
+    IQTensor R = IQComplex_1()*Rr + IQComplex_i()*Ri;
+
+    IQTensor res1 = L / R;
+
+    IQIndex ri = IQIndex::IndReIm();
+
+    CHECK(res1.hasindex(L1));
+    CHECK(res1.hasindex(S1));
+    CHECK(res1.hasindex(L2));
+    CHECK(res1.hasindex(ri));
+
+    CHECK_EQUAL(res1.r(),4);
+
+    ITensor resR(realPart(res1)),
+            resI(imagPart(res1));
+
+    ITensor rdiff = resR-(Lr/Rr-Li/Ri);
+    ITensor idiff = resI-(Lr/Ri+Li/Rr);
+
+    CHECK(rdiff.norm() < 1E-12);
+    CHECK(idiff.norm() < 1E-12);
+    }
+
 TEST(ITensorConversion)
     {
 

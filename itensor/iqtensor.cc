@@ -1276,13 +1276,15 @@ operator/=(const IQTensor& other)
     if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    /*
-    if(hasindex(IQIndex::IndReIm()) && other.hasindex(IQIndex::IndReIm()) && !other.hasindex(IQIndex::IndReImP())
-	    && !other.hasindex(IQIndex::IndReImPP()) && !hasindex(IQIndex::IndReImP()) && !hasindex(IQIndex::IndReImPP()))
+    if(hasindex(IQIndex::IndReIm())   && other.hasindex(IQIndex::IndReIm()) &&
+      !hasindex(IQIndex::IndReImP())  && !other.hasindex(IQIndex::IndReImP()) &&
+      !hasindex(IQIndex::IndReImPP()) && !other.hasindex(IQIndex::IndReImPP()))
         {
-        Error("IQTensor::operator/= not yet implemented for complex numbers");
+        prime(ReIm,1);
+        operator/=(primed(other,ReIm,2));
+        operator*=(ComplexProd());
+        return *this;
         }
-        */
 
 
     set<ApproxReal> common_inds;

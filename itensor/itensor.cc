@@ -1595,6 +1595,16 @@ operator/=(const ITensor& other)
         return operator/=(cp_oth);
         }
 
+    if(hasindexn(Index::IndReIm())   && other.hasindexn(Index::IndReIm()) &&
+      !hasindexn(Index::IndReImP())  && !other.hasindexn(Index::IndReImP()) &&
+      !hasindexn(Index::IndReImPP()) && !other.hasindexn(Index::IndReImPP()))
+        {
+        prime(ReIm,2);
+        operator/=(ComplexProd() * primed(other,ReIm,2));
+        trace(Index::IndReImPP(),Index::IndReImP());
+        return *this;
+        }
+
     //------------------------------------------------------------------
     //Handle m==1 Indices: set union
 
