@@ -264,9 +264,9 @@ Complex_i()
 ITensor
 makeConjTensor()
     {
-    ITensor ct(Index::IndReIm());
-    ct(Index::IndReIm()(1)) =  1;
-    ct(Index::IndReIm()(2)) = -1;
+    ITensor ct(Index::IndReImP());
+    ct(Index::IndReImP()(1)) =  1;
+    ct(Index::IndReImP()(2)) = -1;
     return ct;
     }
 
@@ -1206,7 +1206,9 @@ void ITensor::
 conj() 
     { 
     if(!isComplex(*this)) return; 
+    prime(ReIm,1);
     operator/=(ITensor::ConjTensor()); 
+    prime(ReIm,-1);
     }
 
 Real ITensor::
@@ -1599,9 +1601,9 @@ operator/=(const ITensor& other)
       !hasindexn(Index::IndReImP())  && !other.hasindexn(Index::IndReImP()) &&
       !hasindexn(Index::IndReImPP()) && !other.hasindexn(Index::IndReImPP()))
         {
-        prime(ReIm,2);
-        operator/=(ComplexProd() * primed(other,ReIm,2));
-        trace(Index::IndReImPP(),Index::IndReImP());
+        prime(ReIm,1);
+        operator/=(primed(other,ReIm,2));
+        operator*=(ComplexProd());
         return *this;
         }
 

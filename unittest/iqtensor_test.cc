@@ -303,6 +303,16 @@ TEST(RealImagPart)
     I -= X;
     CHECK_CLOSE(R.norm(),0,1E-5);
     CHECK_CLOSE(I.norm(),0,1E-5);
+
+    //Test conj:
+
+    ZiX.conj();
+    R = realPart(ZiX);
+    I = imagPart(ZiX);
+    R -= Z;
+    I += X;
+    CHECK_CLOSE(R.norm(),0,1E-5);
+    CHECK_CLOSE(I.norm(),0,1E-5);
     }
 
 TEST(ComplexMult)

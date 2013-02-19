@@ -59,9 +59,9 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
     for(int j = 1; j <= N; ++j)
         {
         const Tensor& B = psi[s(j)];
-        for(int ii = 1; ii <= B.r(); ++ii)
+        Foreach(const Index& I, B.indices())
             {
-            if(B.index(ii).type() == Site)
+            if(I.type() == Site)
                 {
                 ++nsite[j];
                 ++Ns;
@@ -161,7 +161,7 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
 #ifdef DEBUG
         if(r.r() != 2) Error("Expected rank of r is 2");
 #endif
-        Tensor U(r.index(1)),V; 
+        Tensor U(*r.indices().begin()),V; 
         SparseT D;
         SVDWorker W;
         W.svd(r,U,D,V);
@@ -202,9 +202,9 @@ expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
             last = true;
 
         int nsite = 0;
-        for(int n = 1; n <= t.r(); ++n)
+        Foreach(const Index& I, t.indices())
             {
-            if(t.index(n).type() == Site)
+            if(I.type() == Site)
                 ++nsite;
             }
 
@@ -698,9 +698,9 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             Tensor& bond = psiv[g];
 
             int nsite = 0;
-            for(int n = 1; n <= bond.r(); ++n)
+            Foreach(const Index& I, bond.indices())
                 {
-                if(bond.index(n).type() == Site)
+                if(I.type() == Site)
                     ++nsite;
                 }
 
@@ -750,9 +750,9 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             Tensor& bond = psiv[g];
 
             int nsite = 0;
-            for(int n = 1; n <= bond.r(); ++n)
+            Foreach(const Index& I, bond.indices())
                 {
-                if(bond.index(n).type() == Site)
+                if(I.type() == Site)
                     ++nsite;
                 }
 
