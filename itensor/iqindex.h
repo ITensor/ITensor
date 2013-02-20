@@ -64,15 +64,6 @@ class IQIndex
 
     IQIndex();
 
-    explicit 
-    IQIndex(const Index& other, Arrow dir = Out);
-
-    explicit 
-    IQIndex(const std::string& name,
-            IndexType it = Link, 
-            Arrow dir = Out, 
-            int plev = 0);
-
     IQIndex(const std::string& name, 
             const Index& i1, const QN& q1, 
             Arrow dir = Out);
@@ -114,10 +105,18 @@ class IQIndex
             const Index& i1, const QN& q1, 
             Arrow dir = Out);
 
-    IQIndex(IndexType type, const IQIndex& other, int inc = 1);
+    explicit 
+    IQIndex(const Index& other, Arrow dir = Out);
 
     explicit 
-    IQIndex(std::istream& s);
+    IQIndex(const std::string& name,
+            IndexType it = Link, 
+            Arrow dir = Out, 
+            int plev = 0);
+
+
+    explicit 
+    IQIndex(std::istream& s) { read(s); }
 
     void 
     write(std::ostream& s) const;

@@ -564,18 +564,6 @@ IQIndex(const Index& other,
     }
 
 IQIndex::
-IQIndex(IndexType type, const IQIndex& other, int inc) 
-    : 
-    index_(other), 
-    _dir(other._dir), 
-    pd(other.pd)  
-    { prime(type,inc); }
-
-IQIndex::
-IQIndex(std::istream& s) 
-    { read(s); }
-
-IQIndex::
 IQIndex(Index::Imaker im)
     : 
     index_(im), 

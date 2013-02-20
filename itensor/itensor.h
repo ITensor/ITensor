@@ -563,9 +563,6 @@ class ITensor
     void 
     conj(const Index& I) { }
 
-    //bool 			// Why not norm() == 0.0?  
-    //is_zero() const { return (norm() < 1E-20); } 
-
     Real 
     sumels() const;
 
