@@ -401,12 +401,8 @@ deltaPhi(const IQTensor& phi) const
 
     deltaL += deltaR;
 
-    std::vector<IQIndex> iqinds;
-    iqinds.reserve(deltaL.r());
-    for(int j = 1; j <= deltaL.r(); ++j)
-        iqinds.push_back(deltaL.index(j));
-
-    IQTensor delta(iqinds);
+    IQTensor delta(deltaL);
+    delta *= 0;
 
     QN targetQn = phi.div();
 
@@ -435,9 +431,8 @@ diag() const
     IndexT toTie;
     bool found = false;
 
-    for(int j = 1; j <= Op1.r(); ++j)
+    Foreach(const IndexT& s, Op1.indices())
         {
-        const IndexT& s = Op1.index(j);
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
             toTie = s;
@@ -454,9 +449,8 @@ diag() const
     Tensor Diag = tieIndices(Op1,toTie,primed(toTie),toTie);
 
     found = false;
-    for(int j = 1; j <= Op2.r(); ++j)
+    Foreach(const IndexT& s, Op2.indices())
         {
-        const IndexT& s = Op2.index(j);
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
             toTie = s;
@@ -470,9 +464,8 @@ diag() const
     if(!LIsNull())
         {
         found = false;
-        for(int j = 1; j <= L().r(); ++j)
+        Foreach(const IndexT& ll, L().indices())
             {
-            const IndexT& ll = L().index(j);
             if(ll.primeLevel() == 0 && L().hasindex(primed(ll)))
                 {
                 toTie = ll;
@@ -489,9 +482,8 @@ diag() const
     if(!RIsNull())
         {
         found = false;
-        for(int j = 1; j <= R().r(); ++j)
+        Foreach(const IndexT& rr, R().indices())
             {
-            const IndexT& rr = R().index(j);
             if(rr.primeLevel() == 0 && R().hasindex(primed(rr)))
                 {
                 toTie = rr;
@@ -521,22 +513,22 @@ size() const
         size_ = 1;
         if(!LIsNull()) 
             {
-            for(int j = L().r(); j >= 1; --j)
+            Foreach(const IndexT& I, L().indices())
                 {
-                if(L().index(j).primeLevel() > 0)
+                if(I.primeLevel() > 0)
                     {
-                    size_ *= L().index(j).m();
+                    size_ *= I.m();
                     break;
                     }
                 }
             }
         if(!RIsNull()) 
             {
-            for(int j = R().r(); j >= 1; --j)
+            Foreach(const IndexT& I, R().indices())
                 {
-                if(R().index(j).primeLevel() > 0)
+                if(I.primeLevel() > 0)
                     {
-                    size_ *= R().index(j).m();
+                    size_ *= I.m();
                     break;
                     }
                 }
