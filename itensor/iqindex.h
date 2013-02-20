@@ -56,8 +56,6 @@ class IQIndex
 
     bool
     isNull() const { return index_.isNull(); }
-    bool
-    isNotNull() const { return index_.isNotNull(); }
 
     //------------------------------------------
     //IQIndex: Constructors
@@ -228,6 +226,8 @@ class IQIndex
     typedef std::vector<inqn>::const_iterator 
     const_iq_it;
 
+    enum Imaker { makeReIm, makeReImP, makeReImPP, makeNull };
+
     private:
 
     Index index_;
@@ -236,8 +236,9 @@ class IQIndex
 
     boost::shared_ptr<IQIndexDat> pd;
 
+
     explicit
-    IQIndex(Index::Imaker im);
+    IQIndex(Imaker im);
 
     void 
     solo();
@@ -338,7 +339,7 @@ struct IQIndexVal
 
     static const IQIndexVal& Null()
         {
-        static const IQIndexVal Null_(Index::makeNull);
+        static const IQIndexVal Null_(IQIndex::makeNull);
         return Null_;
         }
 
@@ -348,7 +349,7 @@ struct IQIndexVal
     calc_ind_ii(int& j, int& ii) const;
 
     explicit
-    IQIndexVal(Index::Imaker im);
+    IQIndexVal(IQIndex::Imaker im);
 
     };
 

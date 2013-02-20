@@ -69,7 +69,7 @@ class IQIndexDat
     IQIndexDat(std::vector<inqn>& ind_qn);
 
     explicit 
-    IQIndexDat(Index::Imaker im);
+    IQIndexDat(IQIndex::Imaker im);
 
     IQIndexDat(std::istream& s);
 
@@ -301,15 +301,15 @@ IQIndexDat(std::istream& s)
     { read(s); }
 
 IQIndexDat::
-IQIndexDat(Index::Imaker im)
+IQIndexDat(IQIndex::Imaker im)
     { 
-    if(im == Index::makeNull)
+    if(im == IQIndex::makeNull)
         iq_.push_back(inqn(Index::Null(),QN())); 
-    else if(im == Index::makeReIm)
+    else if(im == IQIndex::makeReIm)
         iq_.push_back(inqn(Index::IndReIm(),QN())); 
-    else if(im == Index::makeReImP)
+    else if(im == IQIndex::makeReImP)
         iq_.push_back(inqn(Index::IndReImP(),QN())); 
-    else if(im == Index::makeReImPP)
+    else if(im == IQIndex::makeReImPP)
         iq_.push_back(inqn(Index::IndReImPP(),QN())); 
     }
 
@@ -334,28 +334,28 @@ read(std::istream& s)
 const IQIndexDatPtr& IQIndexDat::
 Null()
     {
-    static IQIndexDatPtr Null_ = make_shared<IQIndexDat>(Index::makeNull);
+    static IQIndexDatPtr Null_ = make_shared<IQIndexDat>(IQIndex::makeNull);
     return Null_;
     }
 
 const IQIndexDatPtr& IQIndexDat::
 ReImDat()
     {
-    static IQIndexDatPtr ReImDat_ = make_shared<IQIndexDat>(Index::makeReIm);
+    static IQIndexDatPtr ReImDat_ = make_shared<IQIndexDat>(IQIndex::makeReIm);
     return ReImDat_;
     }
 
 const IQIndexDatPtr& IQIndexDat::
 ReImDatP()
     {
-    static IQIndexDatPtr ReImDatP_ = make_shared<IQIndexDat>(Index::makeReImP);
+    static IQIndexDatPtr ReImDatP_ = make_shared<IQIndexDat>(IQIndex::makeReImP);
     return ReImDatP_;
     }
 
 const IQIndexDatPtr& IQIndexDat::
 ReImDatPP()
     {
-    static IQIndexDatPtr ReImDatPP_ = make_shared<IQIndexDat>(Index::makeReImPP);
+    static IQIndexDatPtr ReImDatPP_ = make_shared<IQIndexDat>(IQIndex::makeReImPP);
     return ReImDatPP_;
     }
 
@@ -564,19 +564,30 @@ IQIndex(const Index& other,
     }
 
 IQIndex::
-IQIndex(Index::Imaker im)
+IQIndex(IQIndex::Imaker im)
     : 
-    index_(im), 
     _dir(In)
     {
-    if(im == Index::makeNull)
-        { pd = IQIndexDat::Null(); }
-    else if(im == Index::makeReIm)
-        { pd = IQIndexDat::ReImDat(); }
-    else if(im == Index::makeReImP)
-        { pd = IQIndexDat::ReImDatP(); }
-    else if(im == Index::makeReImPP)
-        { pd = IQIndexDat::ReImDatPP(); }
+    if(im == IQIndex::makeNull)
+        { 
+        index_ = Index::Null();
+        pd = IQIndexDat::Null(); 
+        }
+    else if(im == IQIndex::makeReIm)
+        { 
+        index_ = Index::IndReIm();
+        pd = IQIndexDat::ReImDat(); 
+        }
+    else if(im == IQIndex::makeReImP)
+        { 
+        index_ = Index::IndReImP();
+        pd = IQIndexDat::ReImDatP(); 
+        }
+    else if(im == IQIndex::makeReImPP)
+        { 
+        index_ = Index::IndReImPP();
+        pd = IQIndexDat::ReImDatPP(); 
+        }
     else Error("IQIndex: Unrecognized Imaker type.");
     }
 
@@ -756,28 +767,28 @@ solo()
 const IQIndex& IQIndex::
 Null()
     {
-    static const IQIndex Null_(Index::makeNull);
+    static const IQIndex Null_(IQIndex::makeNull);
     return Null_;
     }
 
 const IQIndex& IQIndex::
 IndReIm()
     {
-    static const IQIndex IndReIm_(Index::makeReIm);
+    static const IQIndex IndReIm_(IQIndex::makeReIm);
     return IndReIm_;
     }
 
 const IQIndex& IQIndex::
 IndReImP()
     {
-    static const IQIndex IndReImP_(Index::makeReImP);
+    static const IQIndex IndReImP_(IQIndex::makeReImP);
     return IndReImP_;
     }
 
 const IQIndex& IQIndex::
 IndReImPP()
     {
-    static const IQIndex IndReImPP_(Index::makeReImPP);
+    static const IQIndex IndReImPP_(IQIndex::makeReImPP);
     return IndReImPP_;
     }
 
@@ -824,9 +835,9 @@ IQIndexVal(const IQIndex& iqindex, int i_)
     }
 
 IQIndexVal::
-IQIndexVal(Index::Imaker im)
+IQIndexVal(IQIndex::Imaker im)
     {
-    if(im == Index::makeNull)
+    if(im == IQIndex::makeNull)
         {
         iqind = IQIndex::Null();
         i = 1;

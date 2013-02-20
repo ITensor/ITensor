@@ -13,7 +13,7 @@ TEST(Null)
     CHECK_EQUAL(1,i1.m());
 
     Index i2("i2");
-    CHECK(i2.isNotNull());
+    CHECK(!i2.isNull());
     }
 
 TEST(Primes)

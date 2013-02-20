@@ -11,6 +11,9 @@ TEST(Null)
     IQIndex i1;
     CHECK(i1.isNull());
     CHECK_EQUAL(1,i1.m());
+
+    IQIndex I("I",Index("i"),QN());
+    CHECK(!I.isNull());
     }
 
 TEST(Primes)
