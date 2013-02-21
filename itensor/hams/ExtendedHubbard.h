@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_HAMS_EXTENDEDHUBBARD_H
 #define __ITENSOR_HAMS_EXTENDEDHUBBARD_H
 #include "../mpo.h"
-#include "../hams.h"
 #include "../model/hubbard.h"
 
 class ExtendedHubbard

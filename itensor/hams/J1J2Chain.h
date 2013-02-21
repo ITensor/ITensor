@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_HAMS_J1J2CHAIN_H
 #define __ITENSOR_HAMS_J1J2CHAIN_H
 #include "../mpo.h"
-#include "../hams.h"
 
 class J1J2Chain
     {

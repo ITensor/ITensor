@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_HAMS_TRIANGULARHEISENBERG_H
 #define __ITENSOR_HAMS_TRIANGULARHEISENBERG_H
 #include "../mpo.h"
-#include "../hams.h"
 
 class TriangularHeisenberg
     {

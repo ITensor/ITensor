@@ -16,7 +16,7 @@ HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         indexset.h counter.h itensor.h qn.h iqindex.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         svdworker.h mps.h mpo.h core.h observer.h DMRGObserver.h \
-        BaseDMRGWorker.h DMRGWorker.h Sweeps.h hams.h measure.h model.h\
+        BaseDMRGWorker.h DMRGWorker.h Sweeps.h measure.h model.h\
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
         hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h \
         hams/tJChain.h \

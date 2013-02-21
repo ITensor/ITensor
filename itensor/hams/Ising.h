@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_HAMS_ISING_H
 #define __ITENSOR_HAMS_ISING_H
 #include "../mpo.h"
-#include "../hams.h"
 
 #define Cout std::cout
 #define Endl std::endl
