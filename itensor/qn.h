@@ -28,84 +28,61 @@ class QN
     {
     public:
 
-    QN(int sz = 0,int Nf = 0);
+    QN(int sz=0, int Nf=0);
 
     QN(int sz, int Nf, int Nfp);
 
-    QN(std::istream& s) { read(s); }
-
+    //sz is measured in units of 1/2
+    //(sz==1 is 1/2, sz==2 is 1, etc.)
     int 
     sz() const { return _sz; }
 
+    //Number of particles
     int 
     Nf() const { return _Nf; }
 
+    //Fermion parity
+    //Nfp is either 0 or 1
     int 
     Nfp() const { return _Nfp; }
 
     int 
     sign() const { return (_Nfp == 0 ? +1 : -1); }
 
-    void 
-    write(std::ostream& s) const;
-
-    void 
-    read(std::istream& s);
+    QN 
+    operator+(const QN &other) const;
 
     QN 
-    operator+(const QN &other) const
-        { QN res(*this); res+=other; return res; }
-
-    QN 
-    operator-(const QN &other) const
-        { QN res(*this); res-=other; return res; }
+    operator-(const QN &other) const;
 
     QN& 
-    operator+=(const QN &other)
-        {
-        _sz+=other._sz; 
-        _Nf+=other._Nf; 
-        _Nfp = abs(_Nfp+other._Nfp)%2;
-        return *this;
-        }
+    operator+=(const QN &other);
 
     QN& 
-    operator-=(const QN &other)
-        {
-        _sz-=other._sz; 
-        _Nf-=other._Nf; 
-        _Nfp = abs(_Nfp-other._Nfp)%2;
-        return *this;
-        }
+    operator-=(const QN &other);
 
     QN 
-    operator-() const  
-        { return QN(-_sz,-_Nf,_Nfp); }
+    operator-() const;
     
-    QN 
-    negated() const { return QN(-_sz,-_Nf,_Nfp); }
-
-    //Multiplication and division should only be used to change the sign
+    // Multiplication by Arrows can change QN sign
     QN& 
-    operator*=(int i) 
-        { 
-        assert(i*i == 1); 
-        _sz*=i; 
-        _Nf*=i; 
-        return *this; 
-        }
-
+    operator*=(Arrow dir);
     QN 
-    operator*(int i) const { QN res(*this); res*=i; return res; }
-
-    QN 
-    operator/(int i) const { QN res(*this); res*=i; return res; }
+    operator*(Arrow dir) const;
 
     std::string 
     toString() const;
 
     void 
     print(std::string name = "") const;
+
+    QN(std::istream& s) { read(s); }
+
+    void 
+    write(std::ostream& s) const;
+
+    void 
+    read(std::istream& s);
 
     private:
 
@@ -132,8 +109,54 @@ QN(int sz, int Nf, int Nfp)
     _Nf(Nf), 
     _Nfp(abs(Nfp%2))
     { 
-    assert(_Nf==0 || abs(_Nf%2) == _Nfp); 
+#ifdef DEBUG
+    if(_Nf != 0 && _Nf%2 != _Nfp)
+        Error("Nfp should equal Nf%2");
+#endif
     }
+
+QN inline QN::
+operator+(const QN &other) const
+    { QN res(*this); res+=other; return res; }
+
+QN inline QN::
+operator-(const QN &other) const
+    { QN res(*this); res-=other; return res; }
+
+QN& inline QN::
+operator+=(const QN &other)
+    {
+    _sz+=other._sz; 
+    _Nf+=other._Nf; 
+    _Nfp = abs(_Nfp+other._Nfp)%2;
+    return *this;
+    }
+
+QN& inline QN::
+operator-=(const QN &other)
+    {
+    _sz-=other._sz; 
+    _Nf-=other._Nf; 
+    _Nfp = abs(_Nfp-other._Nfp)%2;
+    return *this;
+    }
+
+QN inline QN::
+operator-() const  
+    { return QN(-_sz,-_Nf,_Nfp); }
+
+QN& inline QN::
+operator*=(Arrow dir) 
+    { 
+    const int i = dir;
+    _sz*=i; 
+    _Nf*=i; 
+    return *this; 
+    }
+
+QN inline QN::
+operator*(Arrow dir) const 
+    { QN res(*this); res*=dir; return res; }
 
 void inline QN::
 write(std::ostream& s) const 

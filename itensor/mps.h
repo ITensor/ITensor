@@ -685,8 +685,14 @@ psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
 void 
 fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit);
 
-//Template method for efficiently summing a set of MPS's or MPO's 
-//(or any class supporting operator+=)
+//
+// Template method for efficiently summing 
+// a set of MPS's or MPO's (or any class supporting operator+=)
+// Performs the sum in a tree-like fashion in an attempt to
+// leave the largest summands for the last few steps
+//
+// Assumes terms are zero-indexed
+//
 template <typename MPSType>
 void 
 sum(const std::vector<MPSType>& terms, MPSType& res, 
@@ -695,16 +701,16 @@ sum(const std::vector<MPSType>& terms, MPSType& res,
     const int Nt = terms.size();
     if(Nt == 2)
         { 
-        res = terms[0];
+        res = terms.at(0);
         res.cutoff(cut); 
         res.maxm(maxm);
         //std::cerr << boost::format("Before +=, cutoff = %.1E, maxm = %d\n")%(res.cutoff())%(res.maxm());
-        res += terms[1];
+        res += terms.at(1);
         }
     else 
     if(Nt == 1) 
         {
-        res = terms[0];
+        res = terms.at(0);
         res.cutoff(cut); 
         res.maxm(maxm);
         }
@@ -717,8 +723,8 @@ sum(const std::vector<MPSType>& terms, MPSType& res,
                              newterms(nsize); 
         for(int n = 0, np = 0; n < Nt-1; n += 2, ++np)
             {
-            tpair[0] = terms[n]; 
-            tpair[1] = terms[n+1];
+            tpair[0] = terms.at(n); 
+            tpair[1] = terms.at(n+1);
             sum(tpair,newterms.at(np),cut,maxm);
             }
         if(Nt%2 == 1) newterms.at(nsize-1) = terms.back();
