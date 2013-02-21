@@ -991,7 +991,7 @@ dir(const IndexSet<IndexT>& is, const IndexT& I)
             return is[j].dir();
         }
     Error("dir: Index not found");
-    return Switch;
+    return In;
     }
 
 template <class IndexT>

@@ -123,7 +123,8 @@ QN inline QN::
 operator-(const QN &other) const
     { QN res(*this); res-=other; return res; }
 
-QN& inline QN::
+inline
+QN& QN::
 operator+=(const QN &other)
     {
     _sz+=other._sz; 
@@ -132,7 +133,8 @@ operator+=(const QN &other)
     return *this;
     }
 
-QN& inline QN::
+inline
+QN& QN::
 operator-=(const QN &other)
     {
     _sz-=other._sz; 
@@ -145,7 +147,8 @@ QN inline QN::
 operator-() const  
     { return QN(-_sz,-_Nf,_Nfp); }
 
-QN& inline QN::
+inline
+QN& QN::
 operator*=(Arrow dir) 
     { 
     const int i = dir;
@@ -217,9 +220,10 @@ operator<(const QN &a,const QN &b)
     }
 
 QN inline
-operator*(int i,const QN& a)
+operator*(Arrow dir, QN q)
     { 
-    return a*i; 
+    q *= dir;
+    return q;
     }
 
 

@@ -79,7 +79,7 @@ class Combiner
     void 
     init(std::string rname = "combined", 
          IndexType type = Link, 
-         Arrow dir = Switch,
+         Arrow dir = Out,
          int primelevel = 0) const;
 
     bool 

@@ -833,7 +833,7 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
         throw ResultIsZero("iq.size() == 0");
         }
 
-    newmid = IQIndex("qlink",iq,active.dir()*Switch);
+    newmid = IQIndex("qlink",iq, -active.dir());
 
     U = IQTensor(active,newmid);
     Foreach(const ITensor& block, blocks)
@@ -1197,7 +1197,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
         Print(docut);
         throw ResultIsZero("iq.size() == 0");
         }
-    newmid = IQIndex("qlink",iq,active.dir()*Switch);
+    newmid = IQIndex("qlink",iq,-active.dir());
     } //void SVDWorker::diag_and_truncate
 
 void SVDWorker::

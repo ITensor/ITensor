@@ -56,7 +56,7 @@ class IQCombiner
     // Initialize after all lefts are there and before being used
     void 
     init(std::string rname = "combined", IndexType type = Link, 
-         Arrow dir = Switch, int primelevel = 0) const;
+         Arrow dir = Neither, int primelevel = 0) const;
     
     operator IQTensor() const;
 
@@ -188,15 +188,15 @@ init(std::string rname, IndexType type,
         Error("No left indices in IQCombiner.");
 
     Arrow rdir; 
-    if(dir == Switch) //determine automatically
+    if(dir == Neither) //determine automatically
         {
-        rdir = Switch*left_.back().dir();
+        rdir = -left_.back().dir();
 
         //Prefer to derive right Arrow from Link indices
         for(size_t j = 0; j < left_.size(); ++j)
         if(left_[j].type() == Link) 
             { 
-            rdir = Switch*left_[j].dir(); 
+            rdir = -left_[j].dir(); 
             break;
             }
         }

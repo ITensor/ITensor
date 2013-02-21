@@ -635,21 +635,6 @@ showm(const IQIndex& I)
     return oh.str();
     }
 
-void IQIndex::
-negate()
-    {
-    IQINDEX_CHECK_NULL
-    for(iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
-        { x->qn *= -1; }
-    }
-
-IQIndex 
-negate(IQIndex I) // Quantum numbers negated
-    { 
-    I.negate();
-    return I;
-    }
-
 QN IQIndex::
 qn(const Index& i) const
     { 
@@ -666,7 +651,7 @@ Arrow IQIndex::
 dir() const { return _dir; }
 
 void IQIndex::
-conj() { _dir = _dir*Switch; }
+conj() { _dir = -_dir; }
 
 const Index& IQIndex::
 findbyqn(QN q) const

@@ -16,6 +16,12 @@ TEST(Null)
     CHECK(!I.isNull());
     }
 
+TEST(Arrows)
+    {
+    CHECK_EQUAL(-In,Out);
+    CHECK_EQUAL(-Out,In);
+    }
+
 TEST(Primes)
     {
     IQIndex I("I",Index("i"),QN());

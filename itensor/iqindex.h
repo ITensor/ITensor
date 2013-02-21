@@ -166,12 +166,6 @@ class IQIndex
     //------------------------------------------
     //IQIndex: quantum number methods
 
-    void 
-    negate();
-
-    friend IQIndex 
-    negate(IQIndex I); // Quantum numbers negated
-     
     QN 
     qn(const Index& i) const;
 

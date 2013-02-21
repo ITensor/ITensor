@@ -249,19 +249,35 @@ mkTempDir(const std::string& pfix,
 *
 */
 
-enum Arrow { In = -1, Out = 1 };
+enum Arrow { In = -1, Out = 1, Neither = 0 };
 
 Arrow inline
-operator*(const Arrow& a, const Arrow& b)
-    { 
-    return (int(a)*int(b) == int(In)) ? In : Out; 
+operator-(Arrow dir)
+    {
+#ifdef DEBUG
+    if(dir == Neither)
+        Error("Cannot reverse Arrow direction 'Neither'");
+#endif
+    return (dir == In ? Out : In);
     }
-const Arrow Switch = In*Out;
 
 inline std::ostream& 
 operator<<(std::ostream& s, Arrow D)
     { 
-    s << (D == In ? "In" : "Out");
+    switch(D)
+        {
+        case In:
+            s << "In";
+            return s;
+        case Out:
+            s << "Out";
+            return s;
+        case Neither:
+            s << "Neither";
+            return s;
+        default:
+            Error("Missing Arrow case");
+        }
     return s; 
     }
 
