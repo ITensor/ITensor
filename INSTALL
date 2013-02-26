@@ -10,12 +10,16 @@
    options file: 'cp options.mk.sample options.mk'. Then edit options.mk in 
    your favorite text editor. 
 
-   At a minimum, you must make sure that BOOST_DIR points to the location of 
+   You must make sure that BOOST_DIR points to the location of 
    your unpacked boost libraries folder (the default is a folder called 
-   'boost' located one directory above this file). Also, if you are using a 
-   system other than a recent Mac, edit PLATFORM, BLAS_LAPACK_INCLUDEFLAGS 
-   and BLAS_LAPACK_LIBFLAGS to reflect the type and location of your 
-   BLAS/LAPACK libraries.
+   'boost' located one directory above this file). 
+
+   If you are using a system other than a Mac, edit PLATFORM, 
+   BLAS_LAPACK_INCLUDEFLAGS and BLAS_LAPACK_LIBFLAGS to reflect the 
+   type and location of your BLAS/LAPACK libraries. The list of currently
+   available platforms is: macos, mkl, acml. The PLATFORM variable selects
+   which matrix/$(PLATFORM)_utility.cc file will be used to wrap
+   vendor-specific BLAS/LAPACK fortran calls into C.
 
 3. Finally, at the top level of the library (same directory as this file), 
    type "make". 
