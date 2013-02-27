@@ -233,13 +233,13 @@ setBond(int b) const
     //
     while(b > atb_)
         {
-        if(A_.at(atb_).isNotNull())
+        if(!A_.at(atb_).isNull())
             {
             //std::cerr << boost::format("Writing A(%d) to %s\n")%atb_%writedir_;
             writeToFile(AFName(atb_),A_.at(atb_));
             A_.at(atb_) = Tensor();
             }
-        if(A_.at(atb_+1).isNotNull())
+        if(!A_.at(atb_+1).isNull())
             {
             //std::cerr << boost::format("Writing A(%d) to %s\n")%(atb_+1)%writedir_;
             writeToFile(AFName(atb_+1),A_.at(atb_+1));
@@ -249,13 +249,13 @@ setBond(int b) const
         }
     while(b < atb_)
         {
-        if(A_.at(atb_).isNotNull())
+        if(!A_.at(atb_).isNull())
             {
             //std::cerr << boost::format("Writing A(%d) to %s\n")%atb_%writedir_;
             writeToFile(AFName(atb_),A_.at(atb_));
             if(atb_ != b+1) A_.at(atb_) = Tensor();
             }
-        if(A_.at(atb_+1).isNotNull())
+        if(!A_.at(atb_+1).isNull())
             {
             //std::cerr << boost::format("Writing A(%d) to %s\n")%(atb_+1)%writedir_;
             writeToFile(AFName(atb_+1),A_.at(atb_+1));

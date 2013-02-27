@@ -12,6 +12,9 @@ class IQTDat;
 class IQCombiner;
 class IQTSparse;
 
+typedef boost::shared_ptr<IQTDat>
+IQTDatPtr;
+
 
 //
 // IQTensor
@@ -131,16 +134,12 @@ class IQTensor
     bool 
     isNull() const;
 
-    //true if IQTensor NOT default constructed
-    bool 
-    isNotNull() const;
-
     //Returns object containing ITensor blocks
     //The ITensors can be iterated over using a Foreach
     //For example, given an IQTensor T,
     //Foreach(const ITensor& t, T.blocks()) { ... }
     const IQTDat&
-    blocks() const { return *p; }
+    blocks() const { return dat(); }
     
     const IndexSet<IQIndex>& 
     indices() const { return *is_; }
@@ -319,9 +318,6 @@ class IQTensor
 
     QN 
     div() const;
-
-    friend void 
-    checkDiv(const IQTensor& T, QN expected = QN());
 
     QN 
     qn(const Index& in) const;
@@ -529,6 +525,31 @@ class IQTensor
 
     private:
 
+    //Data struct ensures const-correct access
+    //to the IQTDat, preventing unnecessary sorting of blocks
+    struct Data
+        {
+        Data();
+
+        Data(const IQTDatPtr& p_);
+
+        //Const access
+        const IQTDat&
+        operator()() const { return *p; }
+
+        //Non-const access
+        IQTDat&
+        nc() { return *p; }
+
+        void inline
+        solo();
+
+        void
+        swap(Data& othr) { p.swap(othr.p); }
+
+        private: IQTDatPtr p;
+        };
+
     /////////////////
     // 
     // Data Members
@@ -536,17 +557,13 @@ class IQTensor
     boost::shared_ptr<IndexSet<IQIndex> >
     is_;
 
-    boost::shared_ptr<IQTDat> 
-    p;
+    Data dat;
 
     //
     /////////////////
 
     void 
     soloIndex();
-
-    void 
-    soloDat();
 
     void 
     solo();
@@ -710,7 +727,7 @@ void IQTensor::
 mapElems(const Callable& f)
     {
     solo();
-    Foreach(ITensor& t, *p)
+    Foreach(ITensor& t, dat.nc()) 
         t.mapElems(f);
     }
 

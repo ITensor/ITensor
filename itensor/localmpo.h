@@ -288,7 +288,7 @@ product(const Tensor& phi, Tensor& phip) const
         int b = position();
         Tensor othr = (L().isNull() ? primed(Psi_->A(b),Link) : L()*primed(Psi_->A(b),Link));
         othr *= primed(Psi_->A(b+1),Link);
-        if(R().isNotNull()) 
+        if(!R().isNull()) 
             othr *= R();
 
         Real re = 0, im = 0;
@@ -517,7 +517,7 @@ setLHlim(int val)
         return;
         }
 
-    if(LHlim_ != val && PH_.at(LHlim_).isNotNull())
+    if(LHlim_ != val && !PH_.at(LHlim_).isNull())
         {
         //std::cerr << boost::format("Writing PH(%d) to %s\n")%LHlim_%writedir_;
         writeToFile(PHFName(LHlim_),PH_.at(LHlim_));
@@ -557,7 +557,7 @@ setRHlim(int val)
         return;
         }
 
-    if(RHlim_ != val && PH_.at(RHlim_).isNotNull())
+    if(RHlim_ != val && !PH_.at(RHlim_).isNull())
         {
         //std::cerr << boost::format("Writing PH(%d) to %s\n")%RHlim_%writedir_;
         writeToFile(PHFName(RHlim_),PH_.at(RHlim_));
