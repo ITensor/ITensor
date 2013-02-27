@@ -28,7 +28,7 @@ SOURCES+= webpage_test.cc
 SOURCES+= option_test.cc
 SOURCES+= indexset_test.cc
 
-LIBNAMES=matrix utilities itensor
+LIBNAMES=itensor matrix utilities
 
 #################################################################
 
