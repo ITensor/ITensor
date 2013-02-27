@@ -1,7 +1,6 @@
 Homepage: http://itensor.org/
 
-A C++ library for creating efficient and flexible physics simulations based 
-on tensor product wavefunctions.
+A C++ library for creating efficient and flexible tensor product wavefunction calculations.
 
 The foundation of the library is the Intelligent Tensor or ITensor. 
 Contracting ITensors is no harder than multiplying scalars: matching indices 
