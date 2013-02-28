@@ -693,14 +693,13 @@ class IQTDat : public boost::noncopyable
     //
 
     mutable
-    std::list<ITensor> 
-    itensor;
+    StorageT itensor;
 
     mutable std::map<ApproxReal,iterator>
     rmap; //mutable so that const IQTensor methods can use rmap
 
-    mutable bool 
-    rmap_init;
+    mutable 
+    bool rmap_init;
 
     //
     //////////////

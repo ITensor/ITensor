@@ -586,7 +586,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
 
     set<ApproxReal> keys;
 
-    list<ITensor> old_itensor; 
+    IQTDat::StorageT old_itensor; 
     res.dat.nc().swap(old_itensor);
 
     multimap<ApproxReal,IQTSDat::const_iterator> com_S;
@@ -602,8 +602,8 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
         keys.insert(ApproxReal(r));
         }
 
-    multimap<ApproxReal,list<ITensor>::const_iterator> com_T;
-    for(list<ITensor>::const_iterator ot = T.blocks().begin(); ot != T.blocks().end(); ++ot)
+    multimap<ApproxReal,IQTDat::const_iterator> com_T;
+    for(IQTDat::const_iterator ot = T.blocks().begin(); ot != T.blocks().end(); ++ot)
         {
         Real r = 0.0;
         Foreach(const Index& I, ot->indices())

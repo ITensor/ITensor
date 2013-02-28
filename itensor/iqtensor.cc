@@ -164,7 +164,7 @@ insert_add(const ITensor& t)
 void IQTDat::
 clean(Real min_norm)
     {
-    list<ITensor> nitensor;
+    IQTDat::StorageT nitensor;
     Foreach(const ITensor& t, itensor)
         {
         if(t.norm() >= min_norm)
@@ -1206,7 +1206,7 @@ operator*=(const IQTensor& other)
 
     set<ApproxReal> keys;
 
-    list<ITensor> old_itensor; 
+    IQTDat::StorageT old_itensor; 
     dat.nc().swap(old_itensor);
 
     //com_this maps the uniqueReal of a set of Index's to be contracted over together
@@ -1344,7 +1344,7 @@ operator/=(const IQTensor& other)
 
     dat.solo();
 
-    list<ITensor> old_itensor; 
+    IQTDat::StorageT old_itensor; 
     dat.nc().swap(old_itensor);
 
     set<ApproxReal> keys;
