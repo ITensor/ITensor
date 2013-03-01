@@ -43,10 +43,26 @@ class LocalMPO
 
     LocalMPO();
 
-    LocalMPO(const MPOt<Tensor>& Op, 
+    //
+    //Regular case where H is an MPO for a finite system
+    //
+    LocalMPO(const MPOt<Tensor>& H, 
              const OptSet& opts = Global::opts());
 
+    //
+    //Use an MPS instead of an MPO. Equivalent to using an MPO
+    //of the outer product |Psi><Psi| but much more efficient.
+    //
     LocalMPO(const MPSt<Tensor>& Psi, 
+             const OptSet& opts = Global::opts());
+
+    //
+    //Use an MPO with boundary indices together with left and
+    //right boundary tensors. Ok if one or both boundary tensors
+    //are null/default-constructed.
+    //
+    LocalMPO(const MPOt<Tensor>& H, 
+             const Tensor& LH, const Tensor& RH,
              const OptSet& opts = Global::opts());
 
     //
@@ -242,12 +258,12 @@ LocalMPO()
 
 template <class Tensor>
 inline LocalMPO<Tensor>::
-LocalMPO(const MPOt<Tensor>& Op, 
+LocalMPO(const MPOt<Tensor>& H, 
          const OptSet& opts)
-    : Op_(&Op),
-      PH_(Op.N()+2),
+    : Op_(&H),
+      PH_(H.N()+2),
       LHlim_(0),
-      RHlim_(Op.N()+1),
+      RHlim_(H.N()+1),
       nc_(2),
       do_write_(false),
       writedir_("."),
@@ -270,6 +286,26 @@ LocalMPO(const MPSt<Tensor>& Psi,
       writedir_("."),
       Psi_(&Psi)
     { 
+    if(opts.defined("NumCenter"))
+        numCenter(opts.getInt("NumCenter"));
+    }
+
+template <class Tensor>
+inline LocalMPO<Tensor>::
+LocalMPO(const MPOt<Tensor>& H, 
+         const Tensor& LH, const Tensor& RH,
+         const OptSet& opts)
+    : Op_(&H),
+      PH_(H.N()+2),
+      LHlim_(0),
+      RHlim_(H.N()+1),
+      nc_(2),
+      do_write_(false),
+      writedir_("."),
+      Psi_(0)
+    { 
+    PH_[0] = LH;
+    PH_[H.N()+1] = RH;
     if(opts.defined("NumCenter"))
         numCenter(opts.getInt("NumCenter"));
     }

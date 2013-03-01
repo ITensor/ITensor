@@ -28,7 +28,7 @@ class Eigensolver
     {
     public:
 
-    Eigensolver(int maxiter = 2, Real errgoal = 1E-4, int numget = 1);
+    Eigensolver(const OptSet& opts = Global::opts());
 
     //
     // Uses the Davidson algorithm to find the 
@@ -151,13 +151,15 @@ class Eigensolver
 
 
 inline Eigensolver::
-Eigensolver(int maxiter, Real errgoal, int numget)
-    : maxiter_(maxiter),
-      miniter_(1),
-      errgoal_(errgoal),
-      numget_(numget),
-      debug_level_(-1)
-    { }
+Eigensolver(const OptSet& opts)
+    : 
+    miniter_(1)
+    { 
+    maxiter_ = opts.getInt("MaxIter",2);
+    errgoal_ = opts.getReal("ErrGoal",1E-4);
+    numget_ = opts.getInt("NumGet",1);
+    debug_level_ = opts.getInt("DebugLevel",-1);
+    }
 
 template <class LocalT, class Tensor> 
 Real inline Eigensolver::

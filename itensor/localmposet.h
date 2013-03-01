@@ -14,7 +14,8 @@ class LocalMPOSet
 
     LocalMPOSet();
 
-    LocalMPOSet(const std::vector<MPOt<Tensor> >& Op);
+    LocalMPOSet(const std::vector<MPOt<Tensor> >& Op,
+                const OptSet& opts = Global::opts());
 
     typedef typename Tensor::IndexT
     IndexT;
@@ -43,22 +44,30 @@ class LocalMPOSet
     position(int b, const MPSType& psi);
 
     bool
-    combineMPO() const { return lmpo_.at(1).combineMPO(); }
+    combineMPO() const { return lmpo_.at(0).combineMPO(); }
     void
     combineMPO(bool val);
 
     int
-    numCenter() const { return lmpo_.at(1).numCenter(); }
+    numCenter() const { return lmpo_.at(0).numCenter(); }
     void
     numCenter(int val);
 
     int
-    size() const { return lmpo_.at(1).size(); }
+    size() const { return lmpo_.at(0).size(); }
 
     bool
     isNull() const { return Op_ == 0; }
     bool
     isNotNull() const { return Op_ != 0; }
+
+    bool
+    doWrite() const { return false; }
+    void
+    doWrite(bool val) 
+        { 
+        if(val) Error("Write to disk not yet supported LocalMPOSet");
+        }
 
     static LocalMPOSet& Null()
         {
@@ -90,12 +99,13 @@ LocalMPOSet()
 
 template <class Tensor>
 inline LocalMPOSet<Tensor>::
-LocalMPOSet(const std::vector<MPOt<Tensor> >& Op)
+LocalMPOSet(const std::vector<MPOt<Tensor> >& Op,
+            const OptSet& opts)
     : 
     Op_(&Op),
     lmpo_(Op.size())
     { 
-    for(size_t n = 1; n < lmpo_.size(); ++n)
+    for(size_t n = 0; n < lmpo_.size(); ++n)
         {
         lmpo_[n] = LocalMPOT(Op.at(n));
         }
@@ -105,10 +115,10 @@ template <class Tensor>
 void inline LocalMPOSet<Tensor>::
 product(const Tensor& phi, Tensor& phip) const
     {
-    lmpo_.at(1).product(phi,phip);
+    lmpo_.at(0).product(phi,phip);
 
     Tensor phi_n;
-    for(size_t n = 2; n < lmpo_.size(); ++n)
+    for(size_t n = 1; n < lmpo_.size(); ++n)
         {
         lmpo_.at(n).product(phi,phi_n);
         phip += phi_n;
@@ -120,7 +130,7 @@ Real inline LocalMPOSet<Tensor>::
 expect(const Tensor& phi) const
     {
     Real ex_ = 0;
-    for(size_t n = 1; n < lmpo_.size(); ++n)
+    for(size_t n = 0; n < lmpo_.size(); ++n)
         {
         ex_ += lmpo_.at(n).expect(phi);
         }
@@ -132,8 +142,8 @@ Tensor inline LocalMPOSet<Tensor>::
 deltaRho(const Tensor& AA,
          const CombinerT& comb, Direction dir) const
     {
-    Tensor delta = lmpo_.at(1).deltaRho(AA,comb,dir);
-    for(size_t n = 2; n < lmpo_.size(); ++n)
+    Tensor delta = lmpo_.at(0).deltaRho(AA,comb,dir);
+    for(size_t n = 1; n < lmpo_.size(); ++n)
         {
         delta += lmpo_.at(n).deltaRho(AA,comb,dir);
         }
@@ -144,8 +154,8 @@ template <class Tensor>
 Tensor inline LocalMPOSet<Tensor>::
 diag() const
     {
-    Tensor D = lmpo_.at(1).diag();
-    for(size_t n = 2; n < lmpo_.size(); ++n)
+    Tensor D = lmpo_.at(0).diag();
+    for(size_t n = 1; n < lmpo_.size(); ++n)
         {
         D += lmpo_.at(n).diag();
         }
@@ -157,7 +167,7 @@ template <class MPSType>
 void inline LocalMPOSet<Tensor>::
 position(int b, const MPSType& psi)
     {
-    for(size_t n = 1; n < lmpo_.size(); ++n)
+    for(size_t n = 0; n < lmpo_.size(); ++n)
         lmpo_[n].position(b,psi);
     }
 
@@ -165,7 +175,7 @@ template <class Tensor>
 void inline LocalMPOSet<Tensor>::
 combineMPO(bool val)
     {
-    for(size_t n = 1; n < lmpo_.size(); ++n)
+    for(size_t n = 0; n < lmpo_.size(); ++n)
         lmpo_[n].combineMPO(val);
     }
 
@@ -173,7 +183,7 @@ template <class Tensor>
 void inline LocalMPOSet<Tensor>::
 numCenter(int val)
     {
-    for(size_t n = 1; n < lmpo_.size(); ++n)
+    for(size_t n = 0; n < lmpo_.size(); ++n)
         lmpo_[n].numCenter(val);
     }
 

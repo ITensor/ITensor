@@ -4,158 +4,200 @@
 //
 #ifndef __ITENSOR_DMRG_WORKER_H
 #define __ITENSOR_DMRG_WORKER_H
-#include "BaseDMRGWorker.h"
-#include "itensor.h"
+#include "DMRGObserver.h" // <-- default implementation
+#include "Sweeps.h"
 #include "localmpo.h"
 #include "localmposet.h"
 #include "localmpo_mps.h"
 #include "eigensolver.h"
 
-//
-// DMRGWorker
-//
-
-template <class MPSType>
-class DMRGWorker : public BaseDMRGWorker<MPSType>
-    {
-    public:
-
-    typedef BaseDMRGWorker<MPSType>
-    Parent;
-
-    typedef typename Parent::MPOType
-    MPOType;
-    
-    DMRGWorker(const Sweeps& sweeps,
-               const OptSet& opts = Global::opts());
-
-    DMRGWorker(const Sweeps& sweeps, Observer& obs,
-               const OptSet& opts = Global::opts());
-
-    using Parent::sweeps;
-
-    using Parent::observer;
-
-    typedef typename MPSType::TensorT 
-    Tensor;
-
-    virtual 
-    ~DMRGWorker() { }
-
-    Real
-    weight() const { return weight_; }
-    void
-    weight(Real val) { weight_ = val; }
-
-    private:
-
-    /////////////
-    //
-    // Data Members
-
-    Real energy_;
-    bool quiet_;
-    Real weight_;
-    int debug_level_;
-
-    //
-    /////////////
-
-    void
-    parseOptions(const OptSet& opts);
-
-    Real virtual
-    runInternal(const MPOType& H, MPSType& psi);
-
-    Real virtual 
-    runInternal(const std::vector<MPOType>& H, MPSType& psi);
-
-    Real virtual 
-    runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi);
-
-    Real virtual 
-    getEnergy() const { return energy_; } 
-
-    }; // class DMRGWorker
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
 
 //
-// Convenience templated wrapper functions
-// so that one can call dmrg directly instead
-// of using a DMRGWorker instance.
+// Available DMRG methods:
 //
+
+//
+//DMRG with an MPO
+//
+template <class MPSType, class MPOType>
+Real inline
+dmrg(MPSType& psi, 
+     const MPOType& H, 
+     const Sweeps& sweeps,
+     const OptSet& opts = Global::opts());
+
+//
+//DMRG with an MPO and custom Observer
+//
+template <class MPSType, class MPOType>
+Real
+dmrg(MPSType& psi, 
+     const MPOType& H, 
+     const Sweeps& sweeps, 
+     Observer& obs,
+     const OptSet& opts = Global::opts());
+
+//
+//DMRG with a set of MPOs (lazily summed)
+//(H vector is 0-indexed)
+//
+template <class MPSType, class MPOType>
+Real
+dmrg(MPSType& psi, 
+     const std::vector<MPOType>& H, 
+     const Sweeps& sweeps,
+     const OptSet& opts = Global::opts());
+
+//
+//DMRG with a set of MPOs and a custom Observer
+//(H vector is 0-indexed)
+//
+template <class MPSType, class MPOType>
+Real 
+dmrg(MPSType& psi, 
+     const std::vector<MPOType>& H, 
+     const Sweeps& sweeps, 
+     Observer& obs,
+     const OptSet& opts = Global::opts());
+
+//
+//DMRG with a single Hamiltonian MPO and a set of 
+//MPS to orthogonalize against
+//(psis vector is 0-indexed)
+//
+template <class MPSType, class MPOType>
+Real
+dmrg(MPSType& psi, 
+     const MPOType& H, 
+     const std::vector<MPSType>& psis, 
+     const Sweeps& sweeps, 
+     const OptSet& opts = Global::opts());
+
+//
+//DMRG with a single Hamiltonian MPO, 
+//a set of MPS to orthogonalize against, 
+//and a custom Observer.
+//(psis vector is 0-indexed)
+//
+template <class MPSType, class MPOType>
+Real
+dmrg(MPSType& psi, 
+     const MPOType& H, 
+     const std::vector<MPSType>& psis, 
+     const Sweeps& sweeps, Observer& obs, 
+     const OptSet& opts = Global::opts());
+
+
+
+
+
+///                  ///
+/// Implementations  ///
+///                  ///
+
+//
+//The DMRGWorker methods actually contain the DMRG code
+//
+template<class MPSType, class LocalOpT>
+Real
+DMRGWorker(MPSType& psi, 
+           LocalOpT& PH,
+           const Sweeps& sweeps, 
+           Observer& obs,
+           const OptSet& opts);
+
+template<class MPSType, class LocalOpT>
+Real
+DMRGWorker(MPSType& psi, 
+           LocalOpT& PH,
+           const Sweeps& sweeps, 
+           const OptSet& opts);
+
 
 //DMRG with an MPO
-template <class MPSType, class MPOType>
-Real inline
-dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps,
-     const OptSet& opts = Global::opts())
+template <class Tensor>
+Real 
+dmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Sweeps& sweeps,
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,opts);
-    worker.run(H,psi);
-    return worker.energy();
+    LocalMPO<Tensor> PH(H,opts);
+    Real energy = DMRGWorker(psi,PH,sweeps,opts);
+    return energy;
     }
 
-//DMRG with an MPO and a custom Observer
-template <class MPSType, class MPOType>
-Real inline
-dmrg(MPSType& psi, const MPOType& H, const Sweeps& sweeps, 
+//DMRG with an MPO and custom Observer
+template <class Tensor>
+Real 
+dmrg(MPSt<Tensor>& psi, 
+     const MPOt<Tensor>& H, 
+     const Sweeps& sweeps, 
      Observer& obs,
-     const OptSet& opts = Global::opts())
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,obs,opts);
-    worker.run(H,psi);
-    return worker.energy();
+    LocalMPO<Tensor> PH(H,opts);
+    Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
+    return energy;
     }
 
 //DMRG with a set of MPOs (lazily summed)
-template <class MPSType, class MPOType>
-Real inline
-dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps,
-     const OptSet& opts = Global::opts())
+template <class Tensor>
+Real
+dmrg(MPSt<Tensor>& psi, 
+     const std::vector<MPOt<Tensor> >& Hset, 
+     const Sweeps& sweeps,
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,opts);
-    worker.run(H,psi);
-    return worker.energy();
+    LocalMPOSet<Tensor> PH(Hset,opts);
+    Real energy = DMRGWorker(psi,PH,sweeps,opts);
+    return energy;
     }
 
 //DMRG with a set of MPOs and a custom Observer
-template <class MPSType, class MPOType>
-Real inline
-dmrg(MPSType& psi, const std::vector<MPOType>& H, const Sweeps& sweeps, 
+template <class Tensor>
+Real 
+dmrg(MPSt<Tensor>& psi, 
+     const std::vector<MPOt<Tensor> >& Hset,
+     const Sweeps& sweeps, 
      Observer& obs,
-     const OptSet& opts = Global::opts())
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,obs,opts);
-    worker.run(H,psi);
-    return worker.energy();
+    LocalMPOSet<Tensor> PH(Hset,opts);
+    Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
+    return energy;
     }
 
 //DMRG with a single Hamiltonian MPO and a set of 
 //MPS to orthogonalize against
-template <class MPSType, class MPOType>
-Real inline
-dmrg(MPSType& psi, 
-     const MPOType& H, const std::vector<MPSType>& psis, 
+template <class Tensor>
+Real
+dmrg(MPSt<Tensor>& psi, 
+     const MPOt<Tensor>& H, 
+     const std::vector<MPSt<Tensor> >& psis, 
      const Sweeps& sweeps, 
-     const OptSet& opts = Global::opts())
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,opts);
-    worker.run(H,psis,psi);
-    return worker.energy();
+    LocalMPO_MPS<Tensor> PH(H,psis,opts);
+    Real energy = DMRGWorker(psi,PH,sweeps,opts);
+    return energy;
     }
 
 //DMRG with a single Hamiltonian MPO and a set of 
 //MPS to orthogonalize against, as well as a custom Observer
-template <class MPSType, class MPOType>
-Real inline
-dmrg(MPSType& psi, 
-     const MPOType& H, const std::vector<MPSType>& psis, 
-     const Sweeps& sweeps, Observer& obs, 
-     const OptSet& opts = Global::opts())
+template <class Tensor>
+Real
+dmrg(MPSt<Tensor>& psi, 
+     const MPOt<Tensor>& H, 
+     const std::vector<MPSt<Tensor> >& psis, 
+     const Sweeps& sweeps, 
+     Observer& obs, 
+     const OptSet& opts)
     {
-    DMRGWorker<MPSType> worker(sweeps,obs,opts);
-    worker.run(H,psis,psi);
-    return worker.energy();
+    LocalMPO_MPS<Tensor> PH(H,psis,opts);
+    Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
+    return energy;
     }
 
 
@@ -163,86 +205,63 @@ dmrg(MPSType& psi,
 // DMRGWorker
 //
 
-
-template <class MPSType> inline
-DMRGWorker<MPSType>::
-DMRGWorker(const Sweeps& sweeps,
+template <class Tensor, class LocalOpT>
+Real inline
+DMRGWorker(MPSt<Tensor>& psi,
+           LocalOpT& PH,
+           const Sweeps& sweeps,
            const OptSet& opts)
-    : 
-    Parent(sweeps), 
-    energy_(0),
-    quiet_(false),
-    weight_(1),
-    debug_level_(0)
-    { 
-    parseOptions(opts);
+    {
+    //Default Observer type is DMRGObserver
+    DMRGObserver obs;
+    Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
+    return energy;
     }
 
-template <class MPSType> inline
-DMRGWorker<MPSType>::
-DMRGWorker(const Sweeps& sweeps, Observer& obs,
+template <class Tensor, class LocalOpT>
+Real
+DMRGWorker(MPSt<Tensor>& psi,
+           LocalOpT& PH,
+           const Sweeps& sweeps,
+           Observer& obs,
            const OptSet& opts)
-    : 
-    Parent(sweeps, obs), 
-    energy_(0),
-    quiet_(false),
-    weight_(1),
-    debug_level_(0)
-    { 
-    parseOptions(opts);
-    }
-
-template <class MPSType> inline
-void DMRGWorker<MPSType>::
-parseOptions(const OptSet& opts)
     {
-    quiet_ = opts.getBool("Quiet",false);
-    weight_ = opts.getReal("Weight",1);
-    const int defaultDL = (quiet_ ? 0 : 1);
-    debug_level_ = opts.getInt("DebugLevel",defaultDL);
-    }
-
-
-template <class MPSType> inline
-Real DMRGWorker<MPSType>::
-runInternal(const MPOType& H, MPSType& psi)
-    {
-    typedef typename MPOType::TensorT 
-    MPOTensor;
-
     const Real orig_cutoff = psi.cutoff(),
                orig_noise  = psi.noise();
     const int orig_minm = psi.minm(), 
               orig_maxm = psi.maxm();
 
-    int N = psi.N();
-    energy_ = NAN;
+    const bool quiet = opts.getBool("Quiet",false);
+    const int debug_level = opts.getInt("DebugLevel",(quiet ? 0 : 1));
+
+    const int N = psi.N();
+    Real energy = NAN;
 
     psi.position(1);
     
-    LocalMPO<MPOTensor> PH(H);
-
-    Eigensolver solver;
-    solver.debugLevel(debug_level_);
+    Eigensolver solver(opts & Opt("DebugLevel",debug_level));
 
     const Opt doNorm = DoNormalize(true);
     
-    for(int sw = 1; sw <= sweeps().nsweep(); ++sw)
+    for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
         {
-        psi.cutoff(sweeps().cutoff(sw)); 
-        psi.minm(sweeps().minm(sw)); 
-        psi.maxm(sweeps().maxm(sw));
-        psi.noise(sweeps().noise(sw));
-        solver.maxIter(sweeps().niter(sw));
+        psi.cutoff(sweeps.cutoff(sw)); 
+        psi.minm(sweeps.minm(sw)); 
+        psi.maxm(sweeps.maxm(sw));
+        psi.noise(sweeps.noise(sw));
+        solver.maxIter(sweeps.niter(sw));
 
-        if(!PH.doWrite() 
-           && Global::opts().defined("WriteM")
-           && sweeps().maxm(sw) >= Global::opts().getInt("WriteM"))
+        if(!PH.doWrite() &&
+            Global::opts().defined("WriteM") &&
+            sweeps.maxm(sw) >= Global::opts().getInt("WriteM"))
             {
             std::string write_dir = Global::opts().getString("WriteDir","./");
 
-            if(!quiet_)
-                std::cout << "\nTurning on write to disk, write_dir = " << write_dir << std::endl;
+            if(!quiet)
+                {
+                Cout << "\nTurning on write to disk, write_dir = " 
+                     << write_dir << Endl;
+                }
 
             psi.doWrite(true);
             PH.doWrite(true);
@@ -250,34 +269,39 @@ runInternal(const MPOType& H, MPSType& psi)
 
         for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
             {
-            if(!quiet_)
+            if(!quiet)
                 {
-                std::cout << 
-                    boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)") 
-                    % sw % ha % b % (b+1) << std::endl;
+                Cout << Format("Sweep=%d, HS=%d, Bond=(%d,%d)") 
+                        % sw % ha % b % (b+1) << Endl;
                 }
 
             PH.position(b,psi);
 
             Tensor phi = psi.bondTensor(b);
 
-            energy_ = solver.davidson(PH,phi);
+            energy = solver.davidson(PH,phi);
             
             psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,doNorm);
 
-            if(!quiet_)
+            if(!quiet)
                 { 
-                std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d") 
-                % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw) << std::endl;
-                std::cout << boost::format("    Trunc. err=%.1E, States kept=%s")
-                % psi.svd().truncerr(b) % showm(psi.LinkInd(b)) << std::endl;
+                Cout << 
+                    Format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d") 
+                        % sweeps.cutoff(sw) 
+                        % sweeps.minm(sw) 
+                        % sweeps.maxm(sw) 
+                        << Endl;
+                Cout << Format("    Trunc. err=%.1E, States kept=%s")
+                        % psi.svd().truncerr(b) 
+                        % showm(psi.LinkInd(b)) 
+                        << Endl;
                 }
 
-            observer().measure(sw,ha,b,psi.svd(),energy_);
+            obs.measure(sw,ha,b,psi.svd(),energy);
 
             } //for loop over b
         
-        if(observer().checkDone(sw,psi.svd(),energy_)) break;
+        if(obs.checkDone(sw,psi.svd(),energy)) break;
     
         } //for loop over sw
     
@@ -286,167 +310,12 @@ runInternal(const MPOType& H, MPSType& psi)
     psi.maxm(orig_maxm);
     psi.noise(orig_noise); 
 
-    return energy_;
+    return energy;
     }
 
-template <class MPSType> inline
-Real DMRGWorker<MPSType>::
-runInternal(const std::vector<MPOType>& H, MPSType& psi)
-    {
-    typedef typename MPOType::TensorT 
-    MPOTensor;
 
-    const Real orig_cutoff = psi.cutoff(),
-               orig_noise  = psi.noise();
-    const int orig_minm = psi.minm(), 
-              orig_maxm = psi.maxm();
-
-    int N = psi.N();
-    energy_ = 0;
-
-    psi.position(1);
-    
-    LocalMPOSet<MPOTensor> PH(H);
-
-    Eigensolver solver;
-    solver.debugLevel(debug_level_);
-
-    const Opt doNorm = DoNormalize(true);
-    
-    for(int sw = 1; sw <= sweeps().nsweep(); ++sw)
-        {
-        psi.cutoff(sweeps().cutoff(sw)); 
-        psi.minm(sweeps().minm(sw)); 
-        psi.maxm(sweeps().maxm(sw));
-        psi.noise(sweeps().noise(sw));
-        solver.maxIter(sweeps().niter(sw));
-
-        for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
-            {
-            if(!quiet_)
-                {
-                std::cout << 
-                    boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)") 
-                    % sw % ha % b % (b+1) << std::endl;
-                }
-
-            PH.position(b,psi);
-
-            Tensor phi = psi.bondTensor(b);
-
-            energy_ = solver.davidson(PH,phi);
-            
-            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,doNorm);
-
-            if(!quiet_)
-                { 
-                std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d")
-                % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw) << std::endl;
-                std::cout << boost::format("    Trunc. err=%.1E, States kept=%s")
-                % psi.svd().truncerr(b) % showm(psi.LinkInd(b)) << std::endl;
-                }
-
-            observer().measure(sw,ha,b,psi.svd(),energy_);
-
-            } //for loop over b
-        
-        if(observer().checkDone(sw,psi.svd(),energy_)) break;
-    
-        } //for loop over sw
-    
-    psi.cutoff(orig_cutoff); 
-    psi.minm(orig_minm); 
-    psi.maxm(orig_maxm);
-    psi.noise(orig_noise); 
-
-    return energy_;
-    }
-
-template <class MPSType> inline
-Real DMRGWorker<MPSType>::
-runInternal(const MPOType& H, const std::vector<MPSType> psis, MPSType& psi)
-    {
-    typedef typename MPOType::TensorT 
-    MPOTensor;
-
-    const Real orig_cutoff = psi.cutoff(),
-               orig_noise  = psi.noise();
-    const int orig_minm = psi.minm(), 
-              orig_maxm = psi.maxm();
-
-    int N = psi.N();
-    energy_ = 0;
-
-    psi.position(1);
-    
-    LocalMPO_MPS<MPOTensor> PH(H,psis);
-    PH.weight(this->weight_);
-
-    Eigensolver solver;
-    solver.debugLevel(debug_level_);
-
-    const Opt doNorm = DoNormalize(true);
-    
-    for(int sw = 1; sw <= sweeps().nsweep(); ++sw)
-        {
-        psi.cutoff(sweeps().cutoff(sw)); 
-        psi.minm(sweeps().minm(sw)); 
-        psi.maxm(sweeps().maxm(sw));
-        psi.noise(sweeps().noise(sw));
-        solver.maxIter(sweeps().niter(sw));
-
-        if(!PH.doWrite() 
-           && Global::opts().defined("WriteM")
-           && sweeps().maxm(sw) >= Global::opts().getInt("WriteM"))
-            {
-            std::string write_dir = Global::opts().getString("WriteDir","./");
-
-            if(!quiet_)
-                std::cout << "\nTurning on write to disk, write_dir = " << write_dir << std::endl;
-
-            psi.doWrite(true);
-            PH.doWrite(true);
-            }
-
-        for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
-            {
-            if(!quiet_)
-                {
-                std::cout << 
-                    boost::format("Sweep=%d, HS=%d, Bond=(%d,%d)") 
-                    % sw % ha % b % (b+1) << std::endl;
-                }
-
-            PH.position(b,psi);
-
-            Tensor phi = psi.bondTensor(b);
-
-            energy_ = solver.davidson(PH,phi);
-            
-            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,doNorm);
-
-            if(!quiet_)
-                { 
-                std::cout << boost::format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d")
-                % sweeps().cutoff(sw) % sweeps().minm(sw) % sweeps().maxm(sw) << std::endl;
-                std::cout << boost::format("    Trunc. err=%.1E, States kept=%s")
-                % psi.svd().truncerr(b) % showm(psi.LinkInd(b)) << std::endl;
-                }
-
-            observer().measure(sw,ha,b,psi.svd(),energy_);
-
-            } //for loop over b
-        
-        if(observer().checkDone(sw,psi.svd(),energy_)) break;
-    
-        } //for loop over sw
-    
-    psi.cutoff(orig_cutoff); 
-    psi.minm(orig_minm); 
-    psi.maxm(orig_maxm);
-    psi.noise(orig_noise); 
-
-    return energy_;
-    }
+#undef Cout
+#undef Endl
+#undef Format
 
 #endif // __ITENSOR_DMRG_WORKER_H

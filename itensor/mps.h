@@ -554,14 +554,6 @@ svdBond(int b, const Tensor& AA, Direction dir,
     {
     setBond(b);
 
-    //if(opts.getBool("PreserveShape",false))
-    //    {
-        //The idea of the preserve_shape flag is to 
-        //leave any external indices of the MPS on the
-        //tensors they originally belong to
-    //    Error("preserve_shape not currently implemented");
-    //    }
-
     if(dir == Fromleft && b-1 > l_orth_lim_)
         {
         Cout << Format("b=%d, l_orth_lim_=%d")
