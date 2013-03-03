@@ -16,20 +16,18 @@ OBJECTS= intarray2.o error.o ran1.o\
 SOURCES= array2.cc error.cc ran1.cc hash.cc\
 	cputime.cc tarray1.cc testarray.cc intarray2.cc input.cc
 
-CCFLAGS= -I$(INCLUDEDIR) $(OPTIMIZATIONS)
-CCGFLAGS= -I$(INCLUDEDIR) -g -DBOUNDS
-CCPGFLAGS= -I$(INCLUDEDIR) -pg -O
+CCFLAGS= -I. $(OPTIMIZATIONS)
+CCGFLAGS= -I. $(DEBUGFLAGS)
 
 .SUFFIXES: .cc $(SUFFIXES)
 
 .cc.o:	$*.cc
 	$(CCCOM) -c $(CCFLAGS) $<
 
-install: headerscopy libutilities.a libutilities-g.a libutilities-pg.a 
-	cp libutilities.a libutilities-g.a libutilities-pg.a $(LIBDIR)
-	ranlib $(LIBDIR)/libutilities.a
-	ranlib $(LIBDIR)/libutilities-g.a
-	ranlib $(LIBDIR)/libutilities-pg.a
+install: headerscopy libutilities.a libutilities-g.a
+	cp libutilities.a libutilities-g.a $(ITENSOR_LIBDIR)
+	ranlib $(ITENSOR_LIBDIR)/libutilities.a
+	ranlib $(ITENSOR_LIBDIR)/libutilities-g.a
 
 libutilities.a:	$(OBJECTS) $(HEADERS)
 	ar rv libutilities.a $(OBJECTS)
@@ -46,19 +44,8 @@ libutilities-g.a: $(SOURCES) $(HEADERS)
 	ar rv libutilities-g.a $(OBJECTS)
 	ranlib libutilities-g.a
 
-libutilities-pg.a: $(SOURCES) $(HEADERS)
-	$(CCCOM) $(CCPGFLAGS) -c intarray2.cc
-	$(CCCOM) $(CCPGFLAGS) -c tarray1.cc
-	$(CCCOM) $(CCPGFLAGS) -c error.cc
-	$(CCCOM) $(CCPGFLAGS) -c ran1.cc
-	$(CCCOM) $(CCPGFLAGS) -c hash.cc
-	$(CCCOM) $(CCPGFLAGS) -c cputime.cc
-	$(CCCOM) $(CCPGFLAGS) -c input.cc
-	ar rv libutilities-pg.a $(OBJECTS)
-	ranlib libutilities-pg.a
-
 headerscopy:	
-	cp $(HEADERS) $(INCLUDEDIR)
+	cp $(HEADERS) $(ITENSOR_INCLUDEDIR)
 
 clean:	
-	rm -f *.o libutilities.a libutilities-g.a libutilities-pg.a 
+	rm -f *.o libutilities.a libutilities-g.a

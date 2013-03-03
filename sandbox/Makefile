@@ -3,33 +3,24 @@ include ../options.mk
 ################################################################
 
 TENSOR_HEADERS=core.h
-LIBNAMES=itensor matrix utilities
 
 #################################################################
 
-#Define Dirs -----------
-INCLUDEDIR=$(PREFIX)/include
-INCLUDEFLAGS=. -I$(INCLUDEDIR) -I$(BOOST_DIR) $(BLAS_LAPACK_INCLUDEFLAGS)
-
 #Mappings --------------
-LOCAL_LIBFLAGS=$(patsubst %,-l%, $(LIBNAMES))
-LOCAL_LIBGFLAGS=$(patsubst %,-l%-g, $(LIBNAMES))
-LIBFILES=$(patsubst %,$(LIBDIR)/lib%.a, $(LIBNAMES))
-LIBGFILES=$(patsubst %,$(LIBDIR)/lib%-g.a, $(LIBNAMES))
-REL_TENSOR_HEADERS=$(patsubst %,$(INCLUDEDIR)/%, $(TENSOR_HEADERS))
+REL_TENSOR_HEADERS=$(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(TENSOR_HEADERS))
 
 #Define Flags ----------
-CCFLAGS=$(CPPFLAGS) -I$(INCLUDEFLAGS) $(OPTIMIZATIONS)
-CCGFLAGS= -I$(INCLUDEFLAGS) -DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall -ansi
-LIBFLAGS=-L$(LIBDIR) $(LOCAL_LIBFLAGS) $(BLAS_LAPACK_LIBFLAGS)
-LIBGFLAGS=-L$(LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS)
+CCFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(CPPFLAGS) $(OPTIMIZATIONS)
+CCGFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
+LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
+LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 #Rules ------------------
 
-%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS)
+%.o: %.cc $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-.debug_objs/%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS)
+.debug_objs/%.o: %.cc $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 #Targets -----------------
@@ -40,28 +31,28 @@ debug: dmrg-g iqdmrg-g
 
 all: dmrg iqdmrg dmrgj1j2
 
-dmrg: dmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+dmrg: dmrg.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
 
-dmrg-g: mkdebugdir .debug_objs/dmrg.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
+dmrg-g: mkdebugdir .debug_objs/dmrg.o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/dmrg.o -o dmrg-g $(LIBGFLAGS)
 
-iqdmrg: iqdmrg.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+iqdmrg: iqdmrg.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) iqdmrg.o -o iqdmrg $(LIBFLAGS)
 
-iqdmrg-g: mkdebugdir .debug_objs/iqdmrg.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
+iqdmrg-g: mkdebugdir .debug_objs/iqdmrg.o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/iqdmrg.o -o iqdmrg-g $(LIBGFLAGS)
 
-dmrgj1j2: dmrgj1j2.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+dmrgj1j2: dmrgj1j2.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrgj1j2.o -o dmrgj1j2 $(LIBFLAGS)
 
-dmrgj1j2-g: mkdebugdir .debug_objs/dmrgj1j2.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+dmrgj1j2-g: mkdebugdir .debug_objs/dmrgj1j2.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) .debug_objs/dmrgj1j2.o -o dmrgj1j2-g $(LIBFLAGS)
 
-onesiteopt: onesiteopt.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+onesiteopt: onesiteopt.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) onesiteopt.o -o onesiteopt $(LIBFLAGS)
 
-onesiteopt-g: mkdebugdir .debug_objs/onesiteopt.o $(LIBGFILES) $(REL_TENSOR_HEADERS) 
+onesiteopt-g: mkdebugdir .debug_objs/onesiteopt.o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS) 
 	$(CCCOM) $(CCGFLAGS) .debug_objs/onesiteopt.o -o onesiteopt-g $(LIBGFLAGS)
 
 

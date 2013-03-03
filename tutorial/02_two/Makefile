@@ -5,49 +5,36 @@ include ../../options.mk
 APP1=two
 APP2=imag_tevol
 
-LIBNAMES=itensor matrix utilities
-
-#Define Dirs -----------
-INCLUDEDIR=$(PREFIX)/include
-INCLUDEFLAGS=. -I$(INCLUDEDIR) -I$(BOOST_DIR) $(BLAS_LAPACK_INCLUDEFLAGS)
-
-#Mappings --------------
-LOCAL_LIBFLAGS=$(patsubst %,-l%, $(LIBNAMES))
-LOCAL_LIBGFLAGS=$(patsubst %,-l%-g, $(LIBNAMES))
-LIBFILES=$(patsubst %,$(LIBDIR)/lib%.a, $(LIBNAMES))
-LIBGFILES=$(patsubst %,$(LIBDIR)/lib%-g.a, $(LIBNAMES))
-REL_TENSOR_HEADERS=$(patsubst %,$(INCLUDEDIR)/%, $(TENSOR_HEADERS))
-
 #Define Flags ----------
-CCFLAGS=$(CPPFLAGS) -I$(INCLUDEFLAGS) $(OPTIMIZATIONS)
-CCGFLAGS= -I$(INCLUDEFLAGS) -DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall -ansi
-LIBFLAGS=-L$(LIBDIR) $(LOCAL_LIBFLAGS) $(BLAS_LAPACK_LIBFLAGS)
-LIBGFLAGS=-L$(LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS)
+CCFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(CPPFLAGS) $(OPTIMIZATIONS)
+CCGFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
+LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
+LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 #Rules ------------------
 
-%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS)
+%.o: %.cc $(ITENSOR_LIBS)
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-.debug_objs/%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS)
+.debug_objs/%.o: %.cc $(ITENSOR_GLIBS)
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 #Targets -----------------
 
-build: $(APP1)
+build: $(APP1) $(APP2)
 
-debug: $(APP1)-g
+debug: $(APP1)-g $(APP2)-g
 
-$(APP1): $(APP1).o $(LIBFILES) $(REL_TENSOR_HEADERS)
+$(APP1): $(APP1).o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) $(APP1).o -o $(APP1) $(LIBFLAGS)
 
-$(APP1)-g: mkdebugdir .debug_objs/$(APP1).o $(LIBGFILES) $(REL_TENSOR_HEADERS)
+$(APP1)-g: mkdebugdir .debug_objs/$(APP1).o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/$(APP1).o -o $(APP1)-g $(LIBGFLAGS)
 
-$(APP2): $(APP2).o $(LIBFILES) $(REL_TENSOR_HEADERS)
+$(APP2): $(APP2).o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) $(APP2).o -o $(APP2) $(LIBFLAGS)
 
-$(APP2)-g: mkdebugdir .debug_objs/$(APP2).o $(LIBGFILES) $(REL_TENSOR_HEADERS)
+$(APP2)-g: mkdebugdir .debug_objs/$(APP2).o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/$(APP2).o -o $(APP2)-g $(LIBGFLAGS)
 
 mkdebugdir:

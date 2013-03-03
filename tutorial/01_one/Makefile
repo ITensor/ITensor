@@ -2,31 +2,18 @@ include ../../this_dir.mk
 include ../../options.mk
 ################################################################
 
-LIBNAMES=itensor matrix utilities
-
-#Define Dirs -----------
-INCLUDEDIR=$(PREFIX)/include
-INCLUDEFLAGS=. -I$(INCLUDEDIR) -I$(BOOST_DIR) $(BLAS_LAPACK_INCLUDEFLAGS)
-
-#Mappings --------------
-LOCAL_LIBFLAGS=$(patsubst %,-l%, $(LIBNAMES))
-LOCAL_LIBGFLAGS=$(patsubst %,-l%-g, $(LIBNAMES))
-LIBFILES=$(patsubst %,$(LIBDIR)/lib%.a, $(LIBNAMES))
-LIBGFILES=$(patsubst %,$(LIBDIR)/lib%-g.a, $(LIBNAMES))
-REL_TENSOR_HEADERS=$(patsubst %,$(INCLUDEDIR)/%, $(TENSOR_HEADERS))
-
 #Define Flags ----------
-CCFLAGS=$(CPPFLAGS) -I$(INCLUDEFLAGS) $(OPTIMIZATIONS)
-CCGFLAGS= -I$(INCLUDEFLAGS) -DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall -ansi
-LIBFLAGS=-L$(LIBDIR) $(LOCAL_LIBFLAGS) $(BLAS_LAPACK_LIBFLAGS)
-LIBGFLAGS=-L$(LIBDIR) $(LOCAL_LIBGFLAGS) $(BLAS_LAPACK_LIBFLAGS)
+CCFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(CPPFLAGS) $(OPTIMIZATIONS)
+CCGFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
+LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
+LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 #Rules ------------------
 
-%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS)
+%.o: %.cc $(ITENSOR_LIBS)
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-.debug_objs/%.o: %.cc $(LIBFILES) $(REL_TENSOR_HEADERS)
+.debug_objs/%.o: %.cc $(ITENSOR_GLIBS)
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 #Targets -----------------
@@ -35,10 +22,10 @@ build: one
 
 debug: one-g
 
-one: one.o $(LIBFILES) $(REL_TENSOR_HEADERS)
+one: one.o $(ITENSOR_LIBS)
 	$(CCCOM) $(CCFLAGS) one.o -o one $(LIBFLAGS)
 
-one-g: mkdebugdir .debug_objs/one.o $(LIBGFILES) $(REL_TENSOR_HEADERS)
+one-g: mkdebugdir .debug_objs/one.o $(ITENSOR_GLIBS)
 	$(CCCOM) $(CCGFLAGS) .debug_objs/one.o -o one-g $(LIBGFLAGS)
 
 mkdebugdir:

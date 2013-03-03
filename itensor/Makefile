@@ -16,7 +16,7 @@ HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         indexset.h counter.h itensor.h qn.h iqindex.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         svdworker.h mps.h mpo.h core.h observer.h DMRGObserver.h \
-        BaseDMRGWorker.h DMRGWorker.h Sweeps.h measure.h model.h\
+        DMRGWorker.h Sweeps.h measure.h model.h\
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
         hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h \
         hams/tJChain.h \
@@ -27,28 +27,25 @@ HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
 
 ####################################
 
-INCLUDEFLAGS=-I$(INCLUDEDIR) -I$(BOOST_DIR) 
-
-CCFLAGS= $(INCLUDEFLAGS) $(OPTIMIZATIONS)
-CCGFLAGS= $(INCLUDEFLAGS) -ansi -Wall -pedantic -Wno-long-long -g -O0\
- -DDEBUG -DBOUNDS -DMATRIXBOUNDS -DSTRONG_DEBUG
+CCFLAGS= $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS)
+CCGFLAGS= $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
 
 OBJECTS= $(patsubst %.cc,%.o, $(SOURCES))
 GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
-INCLUDE_HEADERS= $(patsubst %,$(INCLUDEDIR)/%, $(HEADERS))
+INCLUDE_HEADERS= $(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(HEADERS))
 
 .SUFFIXES: .cc $(SUFFIXES)
 
-$(INCLUDEDIR)/hams/%.h: hams/%.h
-	mkdir -p $(INCLUDEDIR)/hams
-	cp $^ $(INCLUDEDIR)/hams
+$(ITENSOR_INCLUDEDIR)/hams/%.h: hams/%.h
+	mkdir -p $(ITENSOR_INCLUDEDIR)/hams
+	cp $^ $(ITENSOR_INCLUDEDIR)/hams
 
-$(INCLUDEDIR)/model/%.h: model/%.h
-	mkdir -p $(INCLUDEDIR)/model
-	cp $^ $(INCLUDEDIR)/model
+$(ITENSOR_INCLUDEDIR)/model/%.h: model/%.h
+	mkdir -p $(ITENSOR_INCLUDEDIR)/model
+	cp $^ $(ITENSOR_INCLUDEDIR)/model
 
-$(INCLUDEDIR)/%.h: %.h
-	cp $^ $(INCLUDEDIR)
+$(ITENSOR_INCLUDEDIR)/%.h: %.h
+	cp $^ $(ITENSOR_INCLUDEDIR)
 
 %.o: %.cc
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
@@ -67,18 +64,18 @@ libitensor-g.a: mkdebugdir $(GOBJECTS)
 	ranlib libitensor-g.a
 
 headerscopy: $(INCLUDE_HEADERS)
-	cp core.h $(INCLUDEDIR)
+	cp core.h $(ITENSOR_INCLUDEDIR)
 
 libs: libitensor.a 
-	cp libitensor.a $(LIBDIR)
+	cp libitensor.a $(ITENSOR_LIBDIR)
 
 installo: headerscopy libitensor.a
-	cp libitensor.a $(LIBDIR)
-	ranlib $(LIBDIR)/libitensor.a
+	cp libitensor.a $(ITENSOR_LIBDIR)
+	ranlib $(ITENSOR_LIBDIR)/libitensor.a
 
 installg: headerscopy libitensor-g.a
-	cp libitensor-g.a $(LIBDIR)
-	ranlib $(LIBDIR)/libitensor-g.a
+	cp libitensor-g.a $(ITENSOR_LIBDIR)
+	ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
 mkdebugdir:
 	mkdir -p .debug_objs
