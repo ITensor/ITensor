@@ -68,6 +68,9 @@ class IQTSparse
     const IQTSDat&
     blocks() const { return *d_; }
 
+    const IndexSet<IQIndex>& 
+    indices() const { return *is_; }
+
     //
     // Operators
     //

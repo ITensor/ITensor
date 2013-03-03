@@ -81,6 +81,12 @@ class ITSparse
     void
     diag(VectorRef v);
 
+    //Enables looping over Indices in a Foreach
+    //e.g. Foreach(const Index& I, t.index() ) { ... }
+    //const std::pair<IndexSet<Index>::index_it,IndexSet<Index>::index_it> 
+    const IndexSet<Index>&
+    indices() const { return is_; }
+
     //
     // Operators
     //
