@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "mps.h"
-#include "localmpo.h"
+#include "localop.h"
 
 using namespace std;
 using boost::format;
@@ -676,7 +676,7 @@ template<class Tensor> void
 MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
     {
-    svdBond(b,AA,dir,LocalMPO<Tensor>::Null(),opts);
+    svdBond(b,AA,dir,LocalOp<Tensor>::Null(),opts);
     }
 template void MPSt<ITensor>::
 svdBond(int b, const ITensor& AA, Direction dir, const OptSet& opts);

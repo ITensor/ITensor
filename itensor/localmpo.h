@@ -57,9 +57,9 @@ class LocalMPO
              const OptSet& opts = Global::opts());
 
     //
-    //Use an MPO with boundary indices together with left and
-    //right boundary tensors. Ok if one or both boundary tensors
-    //are null/default-constructed.
+    //Use an MPO having boundary indices capped off by left and
+    //right boundary tensors LH and RH. Ok if one or both boundary 
+    //tensors are default-constructed.
     //
     LocalMPO(const MPOt<Tensor>& H, 
              const Tensor& LH, const Tensor& RH,
@@ -115,38 +115,22 @@ class LocalMPO
 
     const Tensor&
     L() const;
-
-    //
-    // Replace left edge tensor
-    // at current bond
-    //
+    // Replace left edge tensor at current bond
     void
     L(const Tensor& nL);
-
-    //
-    // Replace left edge tensor 
-    // bordering site j
+    // Replace left edge tensor bordering site j
     // (so that nL includes sites < j)
-    //
     void
     L(int j, const Tensor& nL);
 
 
     const Tensor&
     R() const;
-
-    //
-    // Replace right edge tensor
-    // at current bond
-    //
+    // Replace right edge tensor at current bond
     void
     R(const Tensor& nR);
-
-    //
-    // Replace right edge tensor 
-    // bordering site j
+    // Replace right edge tensor bordering site j
     // (so that nR includes sites > j)
-    //
     void
     R(int j, const Tensor& nR);
 
@@ -173,8 +157,6 @@ class LocalMPO
 
     bool
     isNull() const { return Op_ == 0 && Psi_ == 0; }
-    bool
-    isNotNull() const { return Op_ != 0 || Psi_ != 0; }
 
     bool
     doWrite() const { return do_write_; }
@@ -190,12 +172,6 @@ class LocalMPO
 
     const std::string&
     writeDir() const { return writedir_; }
-
-    static LocalMPO& Null()
-        {
-        static LocalMPO Null_;
-        return Null_;
-        }
 
     private:
 

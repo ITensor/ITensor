@@ -125,8 +125,6 @@ class LocalOp
 
     bool
     isNull() const { return Op1_ == 0; }
-    bool
-    isNotNull() const { return Op1_ != 0; }
 
     bool
     LIsNull() const;
@@ -134,7 +132,7 @@ class LocalOp
     bool
     RIsNull() const;
 
-    static LocalOp& Null()
+    static const LocalOp& Null()
         {
         static LocalOp Null_;
         return Null_;

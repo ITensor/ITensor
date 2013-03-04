@@ -134,8 +134,8 @@ class SweepSetter
 
     SweepSetter(std::vector<T>& v)
         :
+        started_(false),
         v_(v),
-        size_(int(v_.size())),
         j_(1)
         { 
         last_val_ = v_[j_];
@@ -143,26 +143,27 @@ class SweepSetter
     
     ~SweepSetter()
         {
-        while(j_ < size_)
+        for(; j_ < int(v_.size()); ++j_)
             {
             v_[j_] = last_val_;
-            ++j_;
             }
         }
 
-    SweepSetter& operator=(T val)
+    SweepSetter& 
+    operator=(T val)
         {
+        started_ = true;
         return operator,(val);
         }
 
-    SweepSetter& operator<<(T val)
+    SweepSetter& 
+    operator,(T val)
         {
-        return operator,(val);
-        }
-
-    SweepSetter& operator,(T val)
-        {
-        if(j_ >= size_) return *this;
+        if(!started_)
+            {
+            Error("SweepSetter notation is setter() = #, #, #, ... ;");
+            }
+        if(j_ >= int(v_.size())) return *this;
         v_[j_] = val;
         ++j_;
         last_val_ = val;
@@ -170,8 +171,9 @@ class SweepSetter
         }
 
     private:
+    bool started_;
     std::vector<T>& v_;
-    int size_,j_;
+    int j_;
     T last_val_;
     };
 
@@ -312,7 +314,7 @@ init(int _minm, int _maxm, Real _cut)
 
     } //Sweeps::init
 
-inline void Sweeps::
+void inline Sweeps::
 tableInit(InputGroup& table)
     {
     if(!table.GotoGroup()) 
@@ -342,16 +344,16 @@ operator<<(std::ostream& s, const Sweeps& swps)
     return s;
     }
 
-inline void 
-sweepnext(int &l, int &ha, int N, int min_l = 1)
+void inline
+sweepnext(int &b, int &ha, int N, int min_b = 1)
     {
-    if(ha == 1)
+    const int inc = (ha==1 ? +1 : -1);
+    b += inc;
+    if(b == (ha==1 ? N : min_b-1))
         {
-        if(++l == N) 
-            l = N-1, ha = 2;
-        return;
+        b -= inc;
+        ++ha;
         }
-    if(l-- == min_l) ha = 3;
     }
 
 

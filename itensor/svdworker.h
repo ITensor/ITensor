@@ -354,7 +354,7 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
     if(noise_ > 0)
         Error("Noise term not implemented for svd");
 
-    //if(noise_ > 0 && PH.isNotNull())
+    //if(noise_ > 0 && !PH.isNull())
     //    {
     //    //Add in noise term
     //    Real orig_norm = AA.norm();
@@ -488,7 +488,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     Tensor rho = AAc*AAcc; 
 
     //Add noise term if requested
-    if(noise_ > 0 && PH.isNotNull())
+    if(noise_ > 0 && !PH.isNull())
         {
         rho += noise_*PH.deltaRho(AA,comb,dir);
         rho *= 1./trace(realPart(rho));
