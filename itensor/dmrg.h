@@ -51,6 +51,42 @@ dmrg(MPSt<Tensor>& psi,
     }
 
 //
+//DMRG with an MPO and boundary tensors LH, RH
+// LH - H1 - H2 - ... - HN - RH
+//(ok if one or both of LH, RH default constructed)
+//
+template <class Tensor>
+Real
+dmrg(MPSt<Tensor>& psi, 
+     const MPOt<Tensor>& H, 
+     const Tensor& LH, const Tensor& RH,
+     const Sweeps& sweeps,
+     const OptSet& opts = Global::opts())
+    {
+    LocalMPO<Tensor> PH(H,LH,RH,opts);
+    Real energy = DMRGWorker(psi,PH,sweeps,opts);
+    return energy;
+    }
+
+//
+//DMRG with an MPO and boundary tensors LH, RH
+//and a custom observer
+//
+template <class Tensor>
+Real
+dmrg(MPSt<Tensor>& psi, 
+     const MPOt<Tensor>& H, 
+     const Tensor& LH, const Tensor& RH,
+     const Sweeps& sweeps, 
+     Observer& obs,
+     const OptSet& opts = Global::opts())
+    {
+    LocalMPO<Tensor> PH(H,LH,RH,opts);
+    Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
+    return energy;
+    }
+
+//
 //DMRG with a set of MPOs (lazily summed)
 //(H vector is 0-indexed)
 //
