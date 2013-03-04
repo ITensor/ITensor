@@ -576,6 +576,17 @@ noprime(IndexType type)
     for(int j = 0; j < r_; ++j) 
         {
         IndexT& J = index_[j];
+#ifdef DEBUG
+        //Check if calling noprime is ok
+        //Error if it causes duplicate indices
+        for(int k = 0; k < r_; ++k)
+            {
+            if(k != j && index_[j].noprimeEquals(index_[k]))
+                {
+                throw ITError("Calling noprime leads to duplicate indices");
+                }
+            }
+#endif
         J.noprime(type);
         ur_ += J.uniqueReal();
         }
@@ -585,11 +596,22 @@ template <class IndexT>
 void IndexSet<IndexT>::
 noprime(const IndexT& I)
     {
-    for(int j = (I.m() == 1 ? rn_ : 0); 
-        j < r_; ++j) 
+    int j = (I.m() == 1 ? rn_ : 0);
+    for(; j < r_; ++j) 
         {
         if(index_[j] == I)
             {
+#ifdef DEBUG
+            //Check if calling noprime is ok
+            //Error if it causes duplicate indices
+            for(int k = 0; k < r_; ++k)
+                {
+                if(k != j && index_[j].noprimeEquals(index_[k]))
+                    {
+                    throw ITError("Calling noprime leads to duplicate indices");
+                    }
+                }
+#endif
             index_[j].noprime();
             ur_ -= I.uniqueReal();
             ur_ += index_[j].uniqueReal();

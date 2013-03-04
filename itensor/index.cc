@@ -284,13 +284,13 @@ rawname() const { return p->sname; }
 Real Index::
 uniqueReal() const { return p->ur*(1+(primelevel_/10.)); }
 
-bool inline Index::
+bool Index::
 isNull() const { return (p == IndexDat::Null()); }
 
-int inline Index::
+int Index::
 primeLevel() const { return primelevel_; }
 
-void inline Index::
+void Index::
 primeLevel(int plev) { primelevel_ = plev; }
 
 bool Index::
