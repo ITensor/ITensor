@@ -1219,4 +1219,41 @@ TEST(RealImagPart)
     CHECK_CLOSE(I.norm(),0,1E-5);
     }
 
+TEST(SwapPrimeTest)
+    {
+    ITensor T(s1,primed(s1));
+    commaInit(T,s1,primed(s1)) << 11, 12,
+                                  21, 22;
+
+    CHECK_EQUAL(T(s1(1),primed(s1)(1)),11);
+    CHECK_EQUAL(T(s1(2),primed(s1)(1)),21);
+    CHECK_EQUAL(T(s1(1),primed(s1)(2)),12);
+    CHECK_EQUAL(T(s1(2),primed(s1)(2)),22);
+
+    T = swapPrime(T,0,1);
+
+    CHECK_EQUAL(T(primed(s1)(1),s1(1)),11);
+    CHECK_EQUAL(T(primed(s1)(2),s1(1)),21);
+    CHECK_EQUAL(T(primed(s1)(1),s1(2)),12);
+    CHECK_EQUAL(T(primed(s1)(2),s1(2)),22);
+    }
+
+TEST(NoprimeTest)
+    {
+    ITensor T(s1,primed(s1));
+
+    //Check that T.noprime()
+    //throws an exception since it would
+    //lead to duplicate indices
+    try {
+        T.noprime();
+        CHECK(false); //shouldn't reach here because
+                      //T.noprime() should throw
+        }
+    catch(const ITError& e)
+        {
+        CHECK(true);
+        }
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

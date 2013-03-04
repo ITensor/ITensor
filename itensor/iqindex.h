@@ -2,11 +2,10 @@
 // Distributed under the ITensor Library License, Version 1.0.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __IQINDEX_H
-#define __IQINDEX_H
+#ifndef __ITENSOR_IQINDEX_H
+#define __ITENSOR_IQINDEX_H
 #include "itensor.h"
 #include "qn.h"
-
 
 // Forward declarations
 struct inqn;
@@ -15,7 +14,6 @@ struct IQIndexVal;
 
 typedef boost::shared_ptr<IQIndexDat>
 IQIndexDatPtr;
-
 
 //
 // IQIndex
@@ -243,32 +241,6 @@ showm(const IQIndex& I);
 
 
 //
-// inqn
-//
-
-struct inqn
-    {
-    Index index;
-    QN qn;
-    inqn() { }
-    inqn(const Index& i, QN q) 
-        : index(i), 
-          qn(q) 
-        { }
-
-    void 
-    write(std::ostream& s) const { index.write(s); qn.write(s); }
-
-    void 
-    read(std::istream& s) { index.read(s); qn.read(s); }
-
-    inline friend std::ostream& 
-    operator<<(std::ostream &o, const inqn& x)
-        { o << "inqn: " << x.index << " (" << x.qn << ")\n"; return o; }
-    };
-
-
-//
 // IQIndexVal
 //
 
@@ -327,7 +299,31 @@ struct IQIndexVal
 
     };
 
+//
+// inqn
+//
 
+struct inqn
+    {
+    Index index;
+    QN qn;
+
+    inqn() { }
+    inqn(const Index& i, QN q) : index(i), qn(q) { }
+
+    void 
+    write(std::ostream& s) const { index.write(s); qn.write(s); }
+    void 
+    read(std::istream& s) { index.read(s); qn.read(s); }
+    };
+
+
+inline std::ostream& 
+operator<<(std::ostream &s, const inqn& x)
+    { 
+    return s << "inqn: " << x.index 
+             << " (" << x.qn << ")\n";
+    }
 
 inline std::ostream& 
 operator<<(std::ostream& s, const IQIndexVal& iv)

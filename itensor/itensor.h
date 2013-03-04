@@ -986,6 +986,33 @@ Tensor
 deprimed(Tensor A) 
     { A.noprime(); return A; }
 
+//
+//Return copy of a tensor with primeLevels plev1 and plev2 swapped
+//
+//For example, if T has indices i,i' (like a matrix or a site
+//operator) then swapPrime(T,0,1) will have indices i',i 
+//i.e. the transpose of T.
+//
+template <class Tensor>
+Tensor
+swapPrime(Tensor T, int plev1, int plev2) 
+    { 
+    const int tempLevel = 100;
+#ifdef DEBUG
+    Foreach(const typename Tensor::IndexT& I, T.indices())
+        {
+        if(I.primeLevel() == tempLevel) 
+            {
+            Print(tempLevel);
+            Error("swapPrime fails if an index has primeLevel==tempLevel");
+            }
+        }
+#endif
+    T.mapprime(plev1,tempLevel);
+    T.mapprime(plev2,plev1);
+    T.mapprime(tempLevel,plev2);
+    return T; 
+    }
 
 template <class Tensor, class IndexT>
 Tensor
