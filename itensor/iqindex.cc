@@ -18,66 +18,57 @@ class IQIndexDat
     {
     public:
 
+    typedef vector<inqn>
+    StorageT;
 
-    IQIndexDat();
+    typedef StorageT::iterator
+    iterator;
+    typedef StorageT::const_iterator
+    const_iterator;
 
-    IQIndexDat(const Index& i1, const QN& q1);
 
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3,
-               const Index& i4, const QN& q4);
+    IQIndexDat() { }
 
     IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3,
-               const Index& i4, const QN& q4,
-               const Index& i5, const QN& q5);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3,
-               const Index& i4, const QN& q4,
-               const Index& i5, const QN& q5,
-               const Index& i6, const QN& q6);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3,
-               const Index& i4, const QN& q4,
-               const Index& i5, const QN& q5,
-               const Index& i6, const QN& q6,
-               const Index& i7, const QN& q7);
-
-    IQIndexDat(const Index& i1, const QN& q1,
-               const Index& i2, const QN& q2,
-               const Index& i3, const QN& q3,
-               const Index& i4, const QN& q4,
-               const Index& i5, const QN& q5,
-               const Index& i6, const QN& q6,
-               const Index& i7, const QN& q7,
-               const Index& i8, const QN& q8);
+               const Index& i2 = Index::Null(), const QN& q2 = QN(),
+               const Index& i3 = Index::Null(), const QN& q3 = QN(),
+               const Index& i4 = Index::Null(), const QN& q4 = QN(),
+               const Index& i5 = Index::Null(), const QN& q5 = QN(),
+               const Index& i6 = Index::Null(), const QN& q6 = QN(),
+               const Index& i7 = Index::Null(), const QN& q7 = QN(),
+               const Index& i8 = Index::Null(), const QN& q8 = QN());
 
     explicit
-    IQIndexDat(std::vector<inqn>& ind_qn);
+    IQIndexDat(vector<inqn>& ind_qn);
 
-    explicit 
-    IQIndexDat(IQIndex::Imaker im);
+    IQIndexDat(istream& s);
 
-    IQIndexDat(std::istream& s);
+    const StorageT&
+    iq() const { return iq_; }
+
+    int
+    size() { return iq_.size(); }
+
+    const Index&
+    index(int i) { return iq_[i-1].index; }
+    const QN&
+    qn(int i) { return iq_[i-1].qn; }
+
+    iterator
+    begin() { return iq_.begin(); }
+    iterator
+    end() { return iq_.end(); }
+
+    const_iterator
+    begin() const { return iq_.begin(); }
+    const_iterator
+    end()   const { return iq_.end(); }
 
     void 
-    write(std::ostream& s) const;
+    write(ostream& s) const;
 
     void 
-    read(std::istream& s);
+    read(istream& s);
 
     static const IQIndexDatPtr& Null();
 
@@ -87,182 +78,22 @@ class IQIndexDat
 
     static const IQIndexDatPtr& ReImDatPP();
 
-    typedef std::vector<inqn>::iterator 
-    iq_it;
-
-    typedef std::vector<inqn>::const_iterator 
-    const_iq_it;
+    void
+    makeCopyOf(const IQIndexDat& other);
 
     private:
 
-    friend class IQIndex;
-
     //////////////////
-    //
-    // Data Members
-    //
 
-    std::vector<inqn> iq_;
+    StorageT iq_;
 
-    //
     /////////////////
-
-    void
-    makeCopyOf(const IQIndexDat& other);
 
     //Disallow copying using =
     void 
     operator=(const IQIndexDat&);
 
     };
-
-class Primer // Functor which applies prime within STL's for_each, etc
-    {
-    public:
-
-    IndexType type; 
-
-    int inc;
-
-    Primer (IndexType type_, int inc_ = 1) 
-        : type(type_), 
-          inc(inc_) 
-        { }
-
-    void 
-    operator()(inqn& iq) const { iq.index.prime(type,inc); }
-    void 
-    operator()(Index& i) const { i.prime(type,inc); }
-    void 
-    operator()(ITensor& it) const { it.prime(type,inc); }
-    void 
-    operator()(IQIndex &iqi) const { iqi.prime(type,inc); }
-    };
-
-class MapPrimer // Functor which applies mapprime within STL's for_each, etc
-    {
-    public:
-
-    IndexType type;
-
-    int plevold, plevnew;
-
-    MapPrimer (int _plevold,int _plevnew,IndexType _type = All) 
-		: type(_type), 
-          plevold(_plevold), 
-          plevnew(_plevnew) 
-        {}
-
-    void 
-    operator()(inqn& iq) const { iq.index.mapprime(plevold,plevnew,type); }
-    void 
-    operator()(Index& i) const { i.mapprime(plevold,plevnew,type); }
-    void 
-    operator()(ITensor& it) const { it.mapprime(plevold,plevnew,type); }
-    void 
-    operator()(IQIndex &iqi) const { iqi.mapprime(plevold,plevnew,type); }
-    };
-
-class IndEq // Functor which checks if the index is equal to a specified value within STL's for_each, etc
-    {
-    public:
-
-    Index i;
-
-    IndEq(Index _i) 
-        : i(_i) {}
-
-    bool 
-    operator()(const inqn &j) const { return i == j.index; }
-    };
-
-IQIndexDat::
-IQIndexDat() 
-    { }
-
-IQIndexDat::
-IQIndexDat(const Index& i1, const QN& q1)
-    {
-    iq_.push_back(inqn(i1,q1));
-    }
-
-IQIndexDat::
-IQIndexDat(const Index& i1, const QN& q1,
-           const Index& i2, const QN& q2)
-    {
-    iq_.push_back(inqn(i1,q1));
-    iq_.push_back(inqn(i2,q2));
-    }
-
-IQIndexDat::
-IQIndexDat(const Index& i1, const QN& q1,
-           const Index& i2, const QN& q2,
-           const Index& i3, const QN& q3)
-    {
-    iq_.push_back(inqn(i1,q1));
-    iq_.push_back(inqn(i2,q2));
-    iq_.push_back(inqn(i3,q3));
-    }
-
-IQIndexDat::
-IQIndexDat(const Index& i1, const QN& q1,
-           const Index& i2, const QN& q2,
-           const Index& i3, const QN& q3,
-           const Index& i4, const QN& q4)
-    {
-    iq_.push_back(inqn(i1,q1));
-    iq_.push_back(inqn(i2,q2));
-    iq_.push_back(inqn(i3,q3));
-    iq_.push_back(inqn(i4,q4));
-    }
-
-IQIndexDat::
-IQIndexDat(const Index& i1, const QN& q1,
-           const Index& i2, const QN& q2,
-           const Index& i3, const QN& q3,
-           const Index& i4, const QN& q4,
-           const Index& i5, const QN& q5)
-    {
-    iq_.push_back(inqn(i1,q1));
-    iq_.push_back(inqn(i2,q2));
-    iq_.push_back(inqn(i3,q3));
-    iq_.push_back(inqn(i4,q4));
-    iq_.push_back(inqn(i5,q5));
-    }
-
-IQIndexDat::
-IQIndexDat(const Index& i1, const QN& q1,
-           const Index& i2, const QN& q2,
-           const Index& i3, const QN& q3,
-           const Index& i4, const QN& q4,
-           const Index& i5, const QN& q5,
-           const Index& i6, const QN& q6)
-    {
-    iq_.push_back(inqn(i1,q1));
-    iq_.push_back(inqn(i2,q2));
-    iq_.push_back(inqn(i3,q3));
-    iq_.push_back(inqn(i4,q4));
-    iq_.push_back(inqn(i5,q5));
-    iq_.push_back(inqn(i6,q6));
-    }
-
-IQIndexDat::
-IQIndexDat(const Index& i1, const QN& q1,
-           const Index& i2, const QN& q2,
-           const Index& i3, const QN& q3,
-           const Index& i4, const QN& q4,
-           const Index& i5, const QN& q5,
-           const Index& i6, const QN& q6,
-           const Index& i7, const QN& q7)
-    {
-    iq_.push_back(inqn(i1,q1));
-    iq_.push_back(inqn(i2,q2));
-    iq_.push_back(inqn(i3,q3));
-    iq_.push_back(inqn(i4,q4));
-    iq_.push_back(inqn(i5,q5));
-    iq_.push_back(inqn(i6,q6));
-    iq_.push_back(inqn(i7,q7));
-    }
 
 IQIndexDat::
 IQIndexDat(const Index& i1, const QN& q1,
@@ -275,17 +106,24 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i8, const QN& q8)
     {
     iq_.push_back(inqn(i1,q1));
-    iq_.push_back(inqn(i2,q2));
-    iq_.push_back(inqn(i3,q3));
-    iq_.push_back(inqn(i4,q4));
-    iq_.push_back(inqn(i5,q5));
-    iq_.push_back(inqn(i6,q6));
-    iq_.push_back(inqn(i7,q7));
-    iq_.push_back(inqn(i8,q8));
+    if(i2 != Index::Null())
+        iq_.push_back(inqn(i2,q2));
+    if(i3 != Index::Null())
+        iq_.push_back(inqn(i3,q3));
+    if(i4 != Index::Null())
+        iq_.push_back(inqn(i4,q4));
+    if(i5 != Index::Null())
+        iq_.push_back(inqn(i5,q5));
+    if(i6 != Index::Null())
+        iq_.push_back(inqn(i6,q6));
+    if(i7 != Index::Null())
+        iq_.push_back(inqn(i7,q7));
+    if(i8 != Index::Null())
+        iq_.push_back(inqn(i8,q8));
     }
 
 IQIndexDat::
-IQIndexDat(std::vector<inqn>& ind_qn)
+IQIndexDat(StorageT& ind_qn)
     { 
     iq_.swap(ind_qn); 
     }
@@ -297,65 +135,56 @@ makeCopyOf(const IQIndexDat& other)
     }
 
 IQIndexDat::
-IQIndexDat(std::istream& s) 
+IQIndexDat(istream& s) 
     { read(s); }
 
-IQIndexDat::
-IQIndexDat(IQIndex::Imaker im)
-    { 
-    if(im == IQIndex::makeNull)
-        iq_.push_back(inqn(Index::Null(),QN())); 
-    else if(im == IQIndex::makeReIm)
-        iq_.push_back(inqn(Index::IndReIm(),QN())); 
-    else if(im == IQIndex::makeReImP)
-        iq_.push_back(inqn(Index::IndReImP(),QN())); 
-    else if(im == IQIndex::makeReImPP)
-        iq_.push_back(inqn(Index::IndReImPP(),QN())); 
-    }
-
 void IQIndexDat::
-write(std::ostream& s) const
+write(ostream& s) const
     {
     size_t size = iq_.size();
     s.write((char*)&size,sizeof(size));
-    for(const_iq_it x = iq_.begin(); x != iq_.end(); ++x)
-        { x->write(s); }
+    Foreach(const inqn& x, iq_)
+        { 
+        x.write(s); 
+        }
     }
 
 void IQIndexDat::
-read(std::istream& s)
+read(istream& s)
     {
     size_t size; s.read((char*)&size,sizeof(size));
     iq_.resize(size);
-    for(iq_it x = iq_.begin(); x != iq_.end(); ++x)
-        { x->read(s); }
+    Foreach(inqn& x, iq_)
+        { 
+        x.read(s); 
+        }
     }
 
 const IQIndexDatPtr& IQIndexDat::
 Null()
     {
-    static IQIndexDatPtr Null_ = make_shared<IQIndexDat>(IQIndex::makeNull);
+    static IQIndexDatPtr Null_ = make_shared<IQIndexDat>(Index::Null(),QN());
     return Null_;
     }
 
 const IQIndexDatPtr& IQIndexDat::
 ReImDat()
     {
-    static IQIndexDatPtr ReImDat_ = make_shared<IQIndexDat>(IQIndex::makeReIm);
+    static IQIndexDatPtr ReImDat_ = make_shared<IQIndexDat>(Index::IndReIm(),QN());
     return ReImDat_;
     }
 
 const IQIndexDatPtr& IQIndexDat::
 ReImDatP()
     {
-    static IQIndexDatPtr ReImDatP_ = make_shared<IQIndexDat>(IQIndex::makeReImP);
+    static IQIndexDatPtr ReImDatP_ = make_shared<IQIndexDat>(Index::IndReImP(),QN());
     return ReImDatP_;
     }
 
 const IQIndexDatPtr& IQIndexDat::
 ReImDatPP()
     {
-    static IQIndexDatPtr ReImDatPP_ = make_shared<IQIndexDat>(IQIndex::makeReImPP);
+    static IQIndexDatPtr ReImDatPP_ = make_shared<IQIndexDat>(Index::IndReImPP(),QN());
     return ReImDatPP_;
     }
 
@@ -369,18 +198,18 @@ ReImDatPP()
 #define IQINDEX_CHECK_NULL
 #endif
 
-const std::vector<inqn>& IQIndex::
+const IQIndexDat::StorageT& IQIndex::
 iq() const 
     { 
     IQINDEX_CHECK_NULL
-    return pd->iq_;
+    return pd->iq();
     }
 
 int IQIndex::
 nindex() const 
     { 
     IQINDEX_CHECK_NULL
-    return (int) pd->iq_.size(); 
+    return (int) pd->size(); 
     }
 
 const Index& IQIndex::
@@ -395,7 +224,7 @@ index(int i) const
         Error("IQIndex::index arg out of range");
         }
 #endif
-    return pd->iq_[i-1].index; 
+    return pd->index(i);
     }
 
 const QN& IQIndex::
@@ -410,24 +239,18 @@ qn(int i) const
         Error("IQIndex::qn arg out of range");
         }
 #endif
-    return pd->iq_[i-1].qn; 
+    return pd->qn(i);
     }
 
 IQIndex::
 IQIndex() 
     : 
-    _dir(Out)
+    _dir(Neither)
     { }
 
-IQIndex::
-IQIndex(const Index& other, Arrow dir)
-    : 
-    index_(other), 
-    _dir(dir) 
-    { }
 
 IQIndex::
-IQIndex(const std::string& name,
+IQIndex(const string& name,
                  IndexType it, 
                  Arrow dir, 
                  int plev) 
@@ -437,7 +260,7 @@ IQIndex(const std::string& name,
     { }
 
 IQIndex::
-IQIndex(const std::string& name, 
+IQIndex(const string& name, 
         const Index& i1, const QN& q1, 
         Arrow dir) 
     : 
@@ -448,7 +271,7 @@ IQIndex(const std::string& name,
     }
 
 IQIndex::
-IQIndex(const std::string& name, 
+IQIndex(const string& name, 
         const Index& i1, const QN& q1, 
         const Index& i2, const QN& q2,
         Arrow dir) 
@@ -462,7 +285,7 @@ IQIndex(const std::string& name,
     }
 
 IQIndex::
-IQIndex(const std::string& name, 
+IQIndex(const string& name, 
         const Index& i1, const QN& q1, 
         const Index& i2, const QN& q2,
         const Index& i3, const QN& q3,
@@ -478,7 +301,7 @@ IQIndex(const std::string& name,
     }
 
 IQIndex::
-IQIndex(const std::string& name, 
+IQIndex(const string& name, 
         const Index& i1, const QN& q1, 
         const Index& i2, const QN& q2,
         const Index& i3, const QN& q3,
@@ -496,7 +319,7 @@ IQIndex(const std::string& name,
     }
 
 IQIndex::
-IQIndex(const std::string& name, 
+IQIndex(const string& name, 
         const Index& i1, const QN& q1, 
         const Index& i2, const QN& q2,
         const Index& i3, const QN& q3,
@@ -516,18 +339,18 @@ IQIndex(const std::string& name,
     }
 
 IQIndex::
-IQIndex(const std::string& name, 
-        std::vector<inqn>& ind_qn, 
+IQIndex(const string& name, 
+        IQIndexDat::StorageT& ind_qn, 
         Arrow dir, int plev) 
     : 
     _dir(dir), 
     pd(new IQIndexDat(ind_qn))
     { 
     int mm = 0;
-    for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
+    Foreach(const inqn& iq, *pd)
         {
-        mm += x->index.m();
-        if(x->index.type() != index(1).type())
+        mm += iq.index.m();
+        if(iq.index.type() != index(1).type())
             Error("Indices must have the same type");
         }
     index_ = Index(name,mm,index(1).type(),plev);
@@ -535,20 +358,20 @@ IQIndex(const std::string& name,
 
 IQIndex::
 IQIndex(const IQIndex& other, 
-        std::vector<inqn>& ind_qn)
+        IQIndexDat::StorageT& ind_qn)
     : 
     _dir(other._dir), 
     pd(new IQIndexDat(ind_qn))
     { 
     int mm = 0;
-    for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
+    Foreach(const inqn& iq, *pd)
         {
-        mm += x->index.m();
-        if(x->index.type() != index(1).type())
+        mm += iq.index.m();
+        if(iq.index.type() != index(1).type())
             Error("Indices must have the same type");
         }
     index_ = Index(other.name(),mm,other.type(),
-                   pd->iq_.back().index.primeLevel()); 
+                   pd->begin()->index.primeLevel()); 
     }
 
 IQIndex::
@@ -564,35 +387,15 @@ IQIndex(const Index& other,
     }
 
 IQIndex::
-IQIndex(IQIndex::Imaker im)
+IQIndex(const Index& index, const IQIndexDatPtr& pdat)
     : 
-    _dir(In)
-    {
-    if(im == IQIndex::makeNull)
-        { 
-        index_ = Index::Null();
-        pd = IQIndexDat::Null(); 
-        }
-    else if(im == IQIndex::makeReIm)
-        { 
-        index_ = Index::IndReIm();
-        pd = IQIndexDat::ReImDat(); 
-        }
-    else if(im == IQIndex::makeReImP)
-        { 
-        index_ = Index::IndReImP();
-        pd = IQIndexDat::ReImDatP(); 
-        }
-    else if(im == IQIndex::makeReImPP)
-        { 
-        index_ = Index::IndReImPP();
-        pd = IQIndexDat::ReImDatPP(); 
-        }
-    else Error("IQIndex: Unrecognized Imaker type.");
-    }
+    index_(index),
+    _dir(In),
+    pd(pdat)
+    { }
 
 void IQIndex::
-write(std::ostream& s) const
+write(ostream& s) const
     {
     IQINDEX_CHECK_NULL
     index_.write(s);
@@ -601,7 +404,7 @@ write(std::ostream& s) const
     }
 
 void IQIndex::
-read(std::istream& s)
+read(istream& s)
     {
     index_.read(s);
     s.read((char*)&_dir,sizeof(_dir));
@@ -614,19 +417,21 @@ biggestm() const
     {
     IQINDEX_CHECK_NULL
     int mm = 0;
-    for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
-        { mm = max(mm,x->index.m()); }
+    Foreach(const inqn& iq, *pd)
+        { 
+        mm = max(mm,iq.index.m()); 
+        }
     return mm;
     }
 
-std::string
+string
 showm(const IQIndex& I)
     {
 #ifdef DEBUG
     if(I.isNull()) Error("Null IQIndex");
 #endif
-    std::string res = " ";
-    std::ostringstream oh; 
+    string res = " ";
+    ostringstream oh; 
     oh << I.m() << " | ";
     Foreach(const inqn& iq, I.iq())
         {
@@ -639,10 +444,13 @@ QN IQIndex::
 qn(const Index& i) const
     { 
     IQINDEX_CHECK_NULL
-    for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
-        { if(x->index == i) return x->qn; }
-    std::cerr << *this << "\n";
-    std::cerr << "i = " << i << "\n";
+    Foreach(const inqn& iq, *pd)
+        { 
+        if(iq.index == i) 
+            return iq.qn; 
+        }
+    cerr << *this << "\n";
+    cerr << "i = " << i << "\n";
     Error("IQIndex::qn(Index): IQIndex does not contain given index.");
     return QN();
     }
@@ -657,18 +465,24 @@ const Index& IQIndex::
 findbyqn(QN q) const
     { 
     IQINDEX_CHECK_NULL
-    for(size_t i = 0; i < pd->iq_.size(); ++i)
-        if(pd->iq_[i].qn == q) return pd->iq_[i].index;
+    Foreach(const inqn& iq, *pd)
+        {
+        if(iq.qn == q) 
+            return iq.index;
+        }
     Error("IQIndex::findbyqn: no Index had a matching QN.");
-    return pd->iq_[0].index;
+    return Index::Null();
     }
 
 bool IQIndex::
 hasindex(const Index& i) const
     { 
     IQINDEX_CHECK_NULL
-    for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
-        if(x->index == i) return true;
+    Foreach(const inqn& iq, *pd)
+        {
+        if(iq.index == i) 
+            return true;
+        }
     return false;
     }
 
@@ -676,8 +490,11 @@ bool IQIndex::
 hasindex_noprime(const Index& i) const
     { 
     IQINDEX_CHECK_NULL
-    for(const_iq_it x = pd->iq_.begin(); x != pd->iq_.end(); ++x)
-        if(x->index.noprimeEquals(i)) return true;
+    Foreach(const inqn& iq, *pd)
+        {
+        if(iq.index.noprimeEquals(i)) 
+            return true;
+        }
     return false;
     }
 
@@ -685,11 +502,10 @@ int IQIndex::
 offset(const Index& I) const
     {
     int os = 0;
-    for(size_t j = 0; j < pd->iq_.size(); ++j)
+    Foreach(const inqn& iq, *pd)
         {
-        const Index& J = pd->iq_[j].index;
-        if(J == I) return os;
-        os += J.m();
+        if(iq.index == I) return os;
+        os += iq.index.m();
         }
     Print(*this);
     Print(I);
@@ -698,12 +514,21 @@ offset(const Index& I) const
     }
 
 void IQIndex::
+primeLevel(int val)
+    {
+    solo();
+    index_.primeLevel(val);
+    Foreach(inqn& iq, *pd)
+        iq.index.primeLevel(val);
+    }
+
+void IQIndex::
 prime(int inc)
     {
     solo();
     index_.prime(inc);
-    Foreach(inqn& i, pd->iq_)
-        i.index.prime(inc);
+    Foreach(inqn& iq, *pd)
+        iq.index.prime(inc);
     }
 
 void IQIndex::
@@ -711,8 +536,8 @@ prime(IndexType type, int inc)
     {
     solo();
     index_.prime(type,inc);
-    Primer pr(type,inc);
-    for_each(pd->iq_.begin(),pd->iq_.end(),pr);
+    Foreach(inqn& iq, *pd)
+        iq.index.prime(type,inc);
     }
 
 void IQIndex::
@@ -720,7 +545,8 @@ mapprime(int plevold, int plevnew, IndexType type)
     {
     solo();
     index_.mapprime(plevold,plevnew,type);
-    for_each(pd->iq_.begin(),pd->iq_.end(),MapPrimer(plevold,plevnew,type));
+    Foreach(inqn& iq, *pd)
+        iq.index.mapprime(plevold,plevnew,type);
     }
 
 void IQIndex::
@@ -728,14 +554,14 @@ noprime(IndexType type)
     {
     solo();
     index_.noprime(type);
-    for(size_t j = 0; j < pd->iq_.size(); ++j)
-    { pd->iq_[j].index.noprime(type); }
+    Foreach(inqn& iq, *pd)
+        iq.index.noprime(type);
     }
 
 
 void IQIndex::
-print(std::string name) const
-    { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
+print(string name) const
+    { cerr << "\n" << name << " =\n" << *this << "\n"; }
 
 void IQIndex::
 solo()
@@ -752,41 +578,41 @@ solo()
 const IQIndex& IQIndex::
 Null()
     {
-    static const IQIndex Null_(IQIndex::makeNull);
+    static const IQIndex Null_(Index::Null(),IQIndexDat::Null());
     return Null_;
     }
 
 const IQIndex& IQIndex::
 IndReIm()
     {
-    static const IQIndex IndReIm_(IQIndex::makeReIm);
+    static const IQIndex IndReIm_(Index::IndReIm(),IQIndexDat::ReImDat());
     return IndReIm_;
     }
 
 const IQIndex& IQIndex::
 IndReImP()
     {
-    static const IQIndex IndReImP_(IQIndex::makeReImP);
+    static const IQIndex IndReImP_(Index::IndReImP(),IQIndexDat::ReImDatP());
     return IndReImP_;
     }
 
 const IQIndex& IQIndex::
 IndReImPP()
     {
-    static const IQIndex IndReImPP_(IQIndex::makeReImPP);
+    static const IQIndex IndReImPP_(Index::IndReImPP(),IQIndexDat::ReImDatPP());
     return IndReImPP_;
     }
 
 
-std::ostream& 
-operator<<(std::ostream &o, const IQIndex& I)
+ostream& 
+operator<<(ostream &o, const IQIndex& I)
     {
     if(I.isNull()) 
         { 
         o << "IQIndex: (null)"; 
         return o;
         }
-    o << "IQIndex: " << I.index_ << " <" << I.dir() << ">" << std::endl;
+    o << "IQIndex: " << I.index_ << " <" << I.dir() << ">" << endl;
     for(int j = 1; j <= I.nindex(); ++j) 
         o << " " << I.index(j) SP I.qn(j) << "\n";
     return o;
@@ -805,31 +631,11 @@ IQIndexVal(const IQIndex& iqindex, int i_)
     iqind(iqindex),
     i(i_) 
     { 
-#ifdef DEBUG
-    if(iqindex == IQIndex::Null())
-        {
-        Error("IQIndexVal index set to null");
-        }
-#endif
     if(i > iqind.m() || i < 1) 
         {
         Print(iqindex);
         Print(i);
         Error("IQIndexVal: i out of range");
-        }
-    }
-
-IQIndexVal::
-IQIndexVal(IQIndex::Imaker im)
-    {
-    if(im == IQIndex::makeNull)
-        {
-        iqind = IQIndex::Null();
-        i = 1;
-        }
-    else
-        {
-        Error("Only makeNull supported in Imaker constructor");
         }
     }
 

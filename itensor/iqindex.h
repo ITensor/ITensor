@@ -52,7 +52,7 @@ class IQIndex
     int 
     primeLevel() const { return index_.primeLevel(); }
     void 
-    primeLevel(int val) { index_.primeLevel(val); }
+    primeLevel(int val);
 
     bool
     isNull() const { return index_.isNull(); }
@@ -103,8 +103,6 @@ class IQIndex
             const Index& i1, const QN& q1, 
             Arrow dir = Out);
 
-    explicit 
-    IQIndex(const Index& other, Arrow dir = Out);
 
     explicit 
     IQIndex(const std::string& name,
@@ -206,37 +204,26 @@ class IQIndex
     void 
     noprime(IndexType type = All);
 
-    void 
-    prime(int inc = 1) const;
-
     friend std::ostream& 
     operator<<(std::ostream &o, const IQIndex &I);
 
     void 
     print(std::string name = "") const;
 
-    typedef std::vector<inqn>::iterator 
-    iq_it;
-    typedef std::vector<inqn>::const_iterator 
-    const_iq_it;
-
-    enum Imaker { makeReIm, makeReImP, makeReImPP, makeNull };
-
     private:
 
+    /////////////
     Index index_;
 
     Arrow _dir;
 
     boost::shared_ptr<IQIndexDat> pd;
+    /////////////
 
-
-    explicit
-    IQIndex(Imaker im);
+    IQIndex(const Index& index, const IQIndexDatPtr& pdat);
 
     void 
     solo();
-
 
     }; //class IQIndex
 
@@ -327,13 +314,9 @@ struct IQIndexVal
     print(std::string name = "") const
         { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
 
-    inline friend std::ostream& 
-    operator<<(std::ostream& s, const IQIndexVal& iv)
-        { return s << "IQIndexVal: i = " << iv.i << ", iqind = " << iv.iqind << "\n"; }
-
     static const IQIndexVal& Null()
         {
-        static const IQIndexVal Null_(IQIndex::makeNull);
+        static const IQIndexVal Null_(IQIndex::Null(),1);
         return Null_;
         }
 
@@ -342,12 +325,16 @@ struct IQIndexVal
     void 
     calc_ind_ii(int& j, int& ii) const;
 
-    explicit
-    IQIndexVal(IQIndex::Imaker im);
-
     };
 
 
+
+inline std::ostream& 
+operator<<(std::ostream& s, const IQIndexVal& iv)
+    { 
+    return s << "IQIndexVal: i = " << iv.i 
+             << ", iqind = " << iv.iqind << "\n"; 
+    }
 
 
 #endif
