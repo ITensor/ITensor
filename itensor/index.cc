@@ -421,13 +421,12 @@ IndReImPP()
     }
 
 ostream& 
-operator<<(ostream & s, const Index & t)
+operator<<(ostream& s, const Index& t)
     {
     if(t.name() != "" && t.name() != " ") s << t.name();
-    const int iur = abs(10000*t.uniqueReal());
+    const int iur = abs(10000*deprimed(t).uniqueReal());
     return s << "(" << nameindex(t.type(),t.primeLevel()) 
-             << "," << iur << ")"
-             << ":" << t.m();
+             << "," << iur << "):" << t.m();
     }
 
 IndexVal::
