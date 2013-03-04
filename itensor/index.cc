@@ -281,19 +281,16 @@ name() const  { return putprimes(rawname(),primelevel_); }
 const string& Index::
 rawname() const { return p->sname; }
 
-string
-showm(const Index& I) { return nameint("m=",I.m()); }
-
 Real Index::
 uniqueReal() const { return p->ur*(1+(primelevel_/10.)); }
 
-bool Index::
+bool inline Index::
 isNull() const { return (p == IndexDat::Null()); }
 
-int Index::
+int inline Index::
 primeLevel() const { return primelevel_; }
 
-void Index::
+void inline Index::
 primeLevel(int plev) { primelevel_ = plev; }
 
 bool Index::
@@ -463,6 +460,20 @@ Null()
     static const IndexVal Null_;
     return Null_;
     }
+
+Index 
+mapPrime(Index I, int plevold, int plevnew, IndexType type)
+    {
+    if(I.primeLevel() == plevold && 
+       ((type == All && I.type() != ReIm) || type == I.type()))
+        {
+        I.primeLevel(plevnew);
+        }
+    return I;
+    }
+
+string
+showm(const Index& I) { return nameint("m=",I.m()); }
 
 ostream& 
 operator<<(ostream& s, const IndexVal& iv)

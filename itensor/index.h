@@ -150,7 +150,7 @@ class Index
     print(const std::string& varname = "") const;
 
     // Conjugate this Index.
-    // Currently has no effect; for forward compatibility
+    // Currently has no effect; exists for forward compatibility
     // with Arrows and interface compatibility with class IQIndex.
     void 
     conj() { } //for forward compatibility with arrows
@@ -216,18 +216,24 @@ struct IndexVal
     };
 
 
-// Make a copy of this Index, increasing primelevel.
+//Return a copy of I, increasing primelevel.
 Index inline
 primed(Index I, int inc = 1) { I.prime(inc); return I; }
 
+//Return a copy of I, increasing primelevel if I.type() == type
 Index inline
 primed(Index I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
 
-// Return a copy of this Index with primelevel set to zero.
+//Return a copy of I with primelevel set to zero.
 Index inline
 deprimed(Index I) { I.noprime(); return I; }
 
-// Returns a string version of this Index's bond dimension.
+//Return a copy of I with prime level changed to plevnew if
+//old prime level was plevold. Otherwise has no effect.
+Index 
+mapPrime(Index I, int plevold, int plevnew, IndexType type = All);
+
+//Returns a string version of this Index's bond dimension.
 std::string
 showm(const Index& I);
 
