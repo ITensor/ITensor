@@ -174,6 +174,7 @@ class SweepSetter
         checkStarted();
         if(opt.name() == "Repeat")
             {
+            if(j_ == 1) Error("No value to repeat");
             for(int n = 1; n < opt.intVal(); ++n, ++j_)
                 {
                 if(j_ >= int(v_.size())) return *this;

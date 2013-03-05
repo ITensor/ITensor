@@ -114,10 +114,10 @@ class LocalMPO
         }
 
     const Tensor&
-    L() const;
+    L() const { return PH_[LHlim_]; }
     // Replace left edge tensor at current bond
     void
-    L(const Tensor& nL);
+    L(const Tensor& nL) { PH_[LHlim_] = nL; }
     // Replace left edge tensor bordering site j
     // (so that nL includes sites < j)
     void
@@ -125,10 +125,10 @@ class LocalMPO
 
 
     const Tensor&
-    R() const;
+    R() const { return PH_[RHlim_]; }
     // Replace right edge tensor at current bond
     void
-    R(const Tensor& nR);
+    R(const Tensor& nR) { PH_[RHlim_] = nR; }
     // Replace right edge tensor bordering site j
     // (so that nR includes sites > j)
     void
@@ -241,6 +241,7 @@ LocalMPO(const MPOt<Tensor>& H,
       LHlim_(0),
       RHlim_(H.N()+1),
       nc_(2),
+      lop_(opts),
       do_write_(false),
       writedir_("."),
       Psi_(0)
@@ -258,6 +259,7 @@ LocalMPO(const MPSt<Tensor>& Psi,
       LHlim_(0),
       RHlim_(Psi.N()+1),
       nc_(2),
+      lop_(opts),
       do_write_(false),
       writedir_("."),
       Psi_(&Psi)
@@ -276,6 +278,7 @@ LocalMPO(const MPOt<Tensor>& H,
       LHlim_(0),
       RHlim_(H.N()+1),
       nc_(2),
+      lop_(opts),
       do_write_(false),
       writedir_("."),
       Psi_(0)
@@ -324,41 +327,11 @@ product(const Tensor& phi, Tensor& phip) const
     }
 
 template <class Tensor>
-inline
-const Tensor& LocalMPO<Tensor>::
-L() const 
-    { 
-    return PH_[LHlim_];
-    }
-
-template <class Tensor>
-void inline LocalMPO<Tensor>::
-L(const Tensor& nL)
-    {
-    PH_[LHlim_] = nL;
-    }
-
-template <class Tensor>
 void inline LocalMPO<Tensor>::
 L(int j, const Tensor& nL)
     {
     if(LHlim_ > j-1) setLHlim(j-1);
     PH_[LHlim_] = nL;
-    }
-
-template <class Tensor>
-inline
-const Tensor& LocalMPO<Tensor>::
-R() const 
-    { 
-    return PH_[RHlim_];
-    }
-
-template <class Tensor>
-void inline LocalMPO<Tensor>::
-R(const Tensor& nR)
-    {
-    PH_[RHlim_] = nR;
     }
 
 template <class Tensor>

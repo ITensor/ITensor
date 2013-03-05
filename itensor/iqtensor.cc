@@ -434,12 +434,6 @@ operator/=(Real fac)
     { 
     dat.solo();
 
-    if(fac == 0) 
-        { 
-        dat.nc().clear(); 
-        return *this; 
-        }
-
     Foreach(ITensor& t, dat.nc())
         {
         t /= fac;

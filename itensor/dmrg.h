@@ -181,7 +181,7 @@ DMRGWorker(MPSt<Tensor>& psi,
            LocalOpT& PH,
            const Sweeps& sweeps,
            Observer& obs,
-           const OptSet& opts = Global::opts())
+           OptSet opts = Global::opts())
     {
     const Real orig_cutoff = psi.cutoff(),
                orig_noise  = psi.noise();
@@ -195,8 +195,10 @@ DMRGWorker(MPSt<Tensor>& psi,
     Real energy = NAN;
 
     psi.position(1);
+
+    opts.add(Opt("DebugLevel",debug_level));
     
-    Eigensolver solver(opts & Opt("DebugLevel",debug_level));
+    Eigensolver solver(opts);
 
     const Opt doNorm = DoNormalize(true);
     
@@ -266,6 +268,8 @@ DMRGWorker(MPSt<Tensor>& psi,
     psi.minm(orig_minm); 
     psi.maxm(orig_maxm);
     psi.noise(orig_noise); 
+
+    psi.normalize();
 
     return energy;
     }

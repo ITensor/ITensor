@@ -42,12 +42,14 @@ class LocalOp
     // Constructors
     //
 
-    LocalOp();
+    LocalOp(const OptSet& opts = Global::opts());
 
-    LocalOp(const Tensor& Op1, const Tensor& Op2);
+    LocalOp(const Tensor& Op1, const Tensor& Op2,
+            const OptSet& opts = Global::opts());
 
     LocalOp(const Tensor& Op1, const Tensor& Op2, 
-            const Tensor& L, const Tensor& R);
+            const Tensor& L, const Tensor& R,
+            const OptSet& opts = Global::opts());
 
     //
     // Sparse Matrix Methods
@@ -168,11 +170,17 @@ class LocalOp
     void
     makeBond() const;
 
+    void
+    processOpts(const OptSet& opts)
+        {
+        combine_mpo_ = opts.getBool("CombineMPO",true);
+        }
+
     };
 
 template <class Tensor>
 inline LocalOp<Tensor>::
-LocalOp()
+LocalOp(const OptSet& opts)
     :
     Op1_(0),
     Op2_(0),
@@ -181,11 +189,13 @@ LocalOp()
     combine_mpo_(true),
     size_(-1)
     { 
+    processOpts(opts);
     }
 
 template <class Tensor>
 inline LocalOp<Tensor>::
-LocalOp(const Tensor& Op1, const Tensor& Op2)
+LocalOp(const Tensor& Op1, const Tensor& Op2,
+        const OptSet& opts)
     : 
     Op1_(0),
     Op2_(0),
@@ -194,13 +204,15 @@ LocalOp(const Tensor& Op1, const Tensor& Op2)
     combine_mpo_(true),
     size_(-1)
     {
+    processOpts(opts);
     update(Op1,Op2);
     }
 
 template <class Tensor>
 inline LocalOp<Tensor>::
 LocalOp(const Tensor& Op1, const Tensor& Op2, 
-        const Tensor& L, const Tensor& R)
+        const Tensor& L, const Tensor& R,
+        const OptSet& opts)
     : 
     Op1_(0),
     Op2_(0),
@@ -209,6 +221,7 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
     combine_mpo_(true),
     size_(-1)
     {
+    processOpts(opts);
     update(Op1,Op2,L,R);
     }
 
@@ -544,6 +557,7 @@ makeBond() const
     {
     if(bond_.isNull()) 
         {
+        if(!combine_mpo_) Error("combineMPO is false");
         bond_ = (*Op1_) * (*Op2_);
         }
     }
