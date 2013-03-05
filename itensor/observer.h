@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_OBSERVER_H
 #define __ITENSOR_OBSERVER_H
 #include "svdworker.h"
-#include "option.h"
 
 // virtual base class
 

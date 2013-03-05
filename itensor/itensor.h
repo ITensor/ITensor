@@ -6,7 +6,6 @@
 #define __ITENSOR_ITENSOR_H
 #include "real.h"
 #include "prodstats.h"
-#include "option.h"
 #include "counter.h"
 
 //#define ITENSOR_USE_ALLOCATOR

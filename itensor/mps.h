@@ -6,7 +6,6 @@
 #define __ITENSOR_MPS_H
 #include "svdworker.h"
 #include "model.h"
-#include "option.h"
 
 #define Cout std::cout
 #define Endl std::endl

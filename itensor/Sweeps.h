@@ -149,8 +149,9 @@ class SweepSetter
             }
         }
 
+    template <typename Arg>
     SweepSetter& 
-    operator=(T val)
+    operator=(Arg val)
         {
         started_ = true;
         return operator,(val);
@@ -159,10 +160,7 @@ class SweepSetter
     SweepSetter& 
     operator,(T val)
         {
-        if(!started_)
-            {
-            Error("SweepSetter notation is setter() = #, #, #, ... ;");
-            }
+        checkStarted();
         if(j_ >= int(v_.size())) return *this;
         v_[j_] = val;
         ++j_;
@@ -170,11 +168,33 @@ class SweepSetter
         return *this;
         }
 
+    SweepSetter& 
+    operator,(const Opt& opt)
+        { 
+        checkStarted();
+        if(opt.name() == "Repeat")
+            {
+            for(int n = 1; n < opt.intVal(); ++n, ++j_)
+                {
+                if(j_ >= int(v_.size())) return *this;
+                v_[j_] = last_val_;
+                }
+            }
+        return *this;
+        }
+
     private:
+
     bool started_;
     std::vector<T>& v_;
     int j_;
     T last_val_;
+
+    void
+    checkStarted() const
+        {
+        if(!started_) Error("SweepSetter notation is setter() = #,#,...;");
+        }
     };
 
 inline Sweeps::

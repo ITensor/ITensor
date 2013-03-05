@@ -622,6 +622,18 @@ Quiet(bool val = true)
     }
 
 Opt inline
+Repeat(int val)
+    {
+    return Opt("Repeat",val);
+    }
+
+Opt inline
+UseOrigM(bool val = true)
+    {
+    return Opt("UseOrigM",val);
+    }
+
+Opt inline
 UseWF()
     {
     return Opt("UseWF");
