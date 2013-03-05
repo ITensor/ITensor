@@ -735,11 +735,12 @@ class ITensor
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
                              ProductProps& pp,
                              MatrixRefNoLink& lref, MatrixRefNoLink& rref,
-                             bool& L_is_matrix, bool& R_is_matrix);
+                             bool& L_is_matrix, bool& R_is_matrix, bool doReshape = true);
 
     void
-    directMultiply(const ITensor& other, ProductProps& pp, 
-                   int& new_rn_, boost::array<Index,NMAX+1>& new_index_);
+    directMultiply(const ITensor& other, 
+                   ProductProps& pp, 
+                   IndexSet<Index>& new_index);
 
     int _ind(int i1, int i2, int i3, int i4, 
              int i5, int i6, int i7, int i8) const;

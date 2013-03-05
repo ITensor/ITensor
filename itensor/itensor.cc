@@ -1489,7 +1489,7 @@ ProductProps(const ITensor& L, const ITensor& R)
 void 
 toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
              MatrixRefNoLink& lref, MatrixRefNoLink& rref, 
-             bool& L_is_matrix, bool& R_is_matrix)
+             bool& L_is_matrix, bool& R_is_matrix, bool doReshape)
     {
     assert(L.p != 0);
     assert(R.p != 0);
@@ -1527,6 +1527,11 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
             }
         }
 
+    if(!doReshape && (!L_is_matrix || !R_is_matrix))
+        {
+        return;
+        }
+
     if(L_is_matrix)  
         {
         if(props.contractedL[1]) 
@@ -1541,12 +1546,6 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
         }
     else //L not matrix, need to reshape to make lref
         {
-        //Deprecated code: now props finishes making full pl Permutation
-        //int q = props.nsamen;
-        //for(int j = 1; j <= L.is_.rn(); ++j)
-        //    if(!props.contractedL[j]) props.pl.from_to(j,++q);
-
-        if(L_is_matrix) Error("Calling reshapeDat although L is matrix.");
         Vector lv; L.reshapeDat(props.pl,lv);
         lv.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
         }
@@ -1560,12 +1559,6 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
         }
     else //R not matrix, need to reshape to make rref
         {
-        //Deprecated code: now props finishes making full pr Permutation
-        //int q = props.nsamen;
-        //for(int j = 1; j <= R.is_.rn(); ++j)
-        //    if(!props.contractedR[j]) props.pr.from_to(j,++q);
-
-        if(R_is_matrix) Error("Calling reshape even though R is matrix.");
         Vector rv; R.reshapeDat(props.pr,rv);
         rv.TreatAsMatrix(rref,props.odimR,props.cdim);
         }
@@ -1583,7 +1576,6 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
     if(L_is_matrix) ++Prodstats::stats().did_matrix;
     if(R_is_matrix) ++Prodstats::stats().did_matrix;
 #endif
-
     }
 
 
@@ -1695,19 +1687,19 @@ operator/=(const ITensor& other)
     }
 
 
-inline int 
+#define OLD_DIRECT_MULTIPLY
+
+#ifdef OLD_DIRECT_MULTIPLY
+
+int inline
 ind4(int i4, int m3, int i3, int m2, int i2, int m1, int i1)
     {
     return (((i4-1)*m3+i3-1)*m2+i2-1)*m1+i1;
     }
 
-//#define NEW_DIRECT_MULT
-
-#ifndef NEW_DIRECT_MULT
-
 void ITensor::
 directMultiply(const ITensor& other, ProductProps& props, 
-               int& new_rn_, array<Index,NMAX+1>& new_index_)
+               IndexSet<Index>& new_index)
     {
     int am[NMAX+1], bm[NMAX+1], mcon[NMAX+1], mnew[NMAX+1];
     int *pa[NMAX+1], *pb[NMAX+1];
@@ -1720,13 +1712,15 @@ directMultiply(const ITensor& other, ProductProps& props,
         am[j] = is_[j-1].m();
         bm[j] = other.is_[j-1].m();
         }
+    int new_rn = 0;
     int icon[NMAX+1], inew[NMAX+1];
     for(int j = 0; j < this->is_.rn(); ++j)
         if(!props.contractedL[j+1]) 
             {
-            new_index_[++new_rn_] = is_[j];
-            mnew[new_rn_] = am[j+1];
-            pa[j+1] = inew + new_rn_;
+            new_index.addindexn(is_[j]);
+            ++new_rn;
+            mnew[new_rn] = am[j+1];
+            pa[j+1] = inew + new_rn;
             }
         else
             {
@@ -1737,9 +1731,10 @@ directMultiply(const ITensor& other, ProductProps& props,
     for(int j = 0; j < other.is_.rn(); ++j)
         if(!props.contractedR[j+1]) 
             {
-            new_index_[++new_rn_] = other.is_[j];
-            mnew[new_rn_] = bm[j+1];
-            pb[j+1] = inew + new_rn_;
+            new_index.addindexn(other.is_[j]);
+            ++new_rn;
+            mnew[new_rn] = bm[j+1];
+            pb[j+1] = inew + new_rn;
             }
         else
             {
@@ -1747,12 +1742,12 @@ directMultiply(const ITensor& other, ProductProps& props,
             pb[j+1] = icon + props.pr.dest(j+1);
             }
 
-    if(new_rn_ > 4) 
+    if(new_rn > 4) 
         {
         Print((*this));
         Print(other);
-        cout << "new_rn_ is " << new_rn_ << endl;
-        Error("new_rn_ too big for this part!");
+        cout << "new_rn is " << new_rn << endl;
+        Error("new_rn too big for this part!");
         }
     if(props.nsamen > 4) Error("nsamen too big for this part!");
 
@@ -1827,101 +1822,10 @@ directMultiply(const ITensor& other, ProductProps& props,
 #else
 
 void ITensor::
-directMultiply(const ITensor& other, ProductProps& props, 
-               int& new_rn_, array<Index,NMAX+1>& new_index_)
+directMultiply(const ITensor& other, 
+               ProductProps& props, 
+               IndexSet<Index>& new_index_)
     {
-    //will count these up below
-    int new_r_ = 0;
-    int alloc_size = 1;
-
-    array<bool,NMAX+1> traced;
-    traced.assign(false);
-
-    int nmatched = 0;
-    for(int k = 1; k <= r(); ++k)
-        {
-        const Index& K = index(k);
-        for(int j = 1; j <= nind; ++j)
-        if(K == indices[j]) 
-            { 
-            if(indices[j].m() != tm)
-                Error("Traced indices must have matching m's");
-            traced[k] = true;
-
-            ++nmatched;
-
-            break;
-            }
-
-        if(!traced[k])
-            {
-            new_index_[++new_r_] = K;
-            alloc_size *= K.m();
-            }
-        }
-
-    //Check that all indices were found
-    if(nmatched != nind)
-        {
-        Print(*this);
-        cout << "indices = " << endl;
-        for(int j = 1; j <= nind; ++j)
-            cout << indices[j] << endl;
-        Error("Couldn't find Index to trace");
-        }
-
-    IndexSet<Index> new_is_(new_index_,new_r_,alloc_size,1);
-
-    //If traced indices have m==1, no work
-    //to do; just replace indices
-    if(tm == 1)
-        {
-        is_.swap(new_is_);
-        return;
-        }
-
-    Counter nc(new_is_);
-
-    //Set up ii pointers to link
-    //elements of res to appropriate
-    //elements of *this
-    int trace_ind = 0;
-    array<int*,NMAX+1> ii;
-    int n = 1;
-    for(int j = 1; j <= is_.r_; ++j)
-        {
-        if(traced[j])
-            ii[j] = &(trace_ind);
-        else
-            ii[j] = &(nc.i[n++]);
-        }
-
-    int one = 1;
-    for(int j = r()+1; j <= NMAX; ++j)
-        ii[j] = &one;
-    
-    //Create the new dat
-    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
-    Vector& resdat = np->v;
-
-    const Vector& thisdat = p->v;
-    for(; nc.notDone(); ++nc)
-        {
-        Real newval = 0;
-        for(trace_ind = 1; trace_ind <= tm; ++trace_ind)
-            {
-            newval += 
-            thisdat(this->_ind(*ii[1],*ii[2],
-                               *ii[3],*ii[4],
-                               *ii[5],*ii[6],
-                               *ii[7],*ii[8]));
-            }
-        resdat(nc.ind) = newval;
-        }
-
-    is_.swap(new_is_);
-
-    p.swap(np);
 
     } //ITensor::directMultiply
 
@@ -1982,7 +1886,6 @@ operator*=(const ITensor& other)
         {
         scale_ *= other.scale_;
         scale_ *= other.p->v(1);
-        //is_.r_ = is_.rn_ + nr1_;
 #ifdef DEBUG
         if((is_.rn()+nr1_) > NMAX) 
             {
@@ -2004,8 +1907,6 @@ operator*=(const ITensor& other)
         scale_ *= other.scale_;
         scale_ *= p->v(1);
         p = other.p;
-        //is_.rn_ = other.is_.rn_;
-        //is_.r_ = is_.rn_ + nr1_;
 #ifdef DEBUG
         if((is_.rn()+nr1_) > NMAX) 
             {
@@ -2024,39 +1925,7 @@ operator*=(const ITensor& other)
 
     ProductProps props(*this,other);
 
-    //int new_rn_ = 0;
-
-    /*
-    bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 10000 
-                              || (rn_+other.rn_-2*props.nsamen) > 4 
-                              || rn_ > 4 
-                              || other.rn_ > 4 ;
-
-    if(do_matrix_multiply)
-    */
-
-    DO_IF_PS(++Prodstats::stats().c2;)
-    MatrixRefNoLink lref, rref;
-    bool L_is_matrix,R_is_matrix;
-    toMatrixProd(*this,other,props,lref,rref,L_is_matrix,R_is_matrix);
-
-    /*
-    if(!R_is_matrix && L_is_matrix) 
-        {
-        this->print("this");
-        other.print("other");
-        }
-        */
-
-    //Do the matrix multiplication
-    if(!p.unique()) allocate();
-
-    p->v.ReDimension(rref.Nrows()*lref.Ncols());
-    MatrixRef nref; p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
-    nref = rref*lref;
-
-    //Fill in new_index_
-
+#ifdef DEBUG
     if((is_.rn() + other.is_.rn() - 2*props.nsamen + nr1_) > NMAX) 
         {
         Print(*this);
@@ -2066,22 +1935,42 @@ operator*=(const ITensor& other)
         for(int j = 1; j <= nr1_; ++j) cerr << *(new_index1_.at(j)) << "\n";
         Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
         }
+#endif
 
-    //Handle m!=1 indices
-    for(int j = 0; j < this->is_.rn(); ++j)
-        if(!props.contractedL[j+1]) 
-            new_index.addindexn( is_[j] );
-    for(int j = 0; j < other.is_.rn(); ++j)
-        if(!props.contractedR[j+1]) 
-            new_index.addindexn( other.is_[j] );
+    const
+    bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 10000 ||
+                              (is_.rn()+other.is_.rn()-2*props.nsamen) > 4 ||
+                              is_.rn() > 4 ||
+                              other.is_.rn() > 4;
 
-    /*
+    MatrixRefNoLink lref, rref;
+    bool L_is_matrix,R_is_matrix;
+    toMatrixProd(*this,other,props,lref,rref,L_is_matrix,R_is_matrix,do_matrix_multiply);
+
+    if((L_is_matrix && R_is_matrix) || do_matrix_multiply)
+        {
+        DO_IF_PS(++Prodstats::stats().c2;)
+
+        //Do the matrix multiplication
+        if(!p.unique()) allocate();
+
+        p->v.ReDimension(rref.Nrows()*lref.Ncols());
+        MatrixRef nref; 
+        p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
+        nref = rref*lref;
+
+        //Handle m!=1 indices
+        for(int j = 0; j < this->is_.rn(); ++j)
+            if(!props.contractedL[j+1]) 
+                new_index.addindexn( is_[j] );
+        for(int j = 0; j < other.is_.rn(); ++j)
+            if(!props.contractedR[j+1]) 
+                new_index.addindexn( other.is_[j] );
+        }
     else
         {
-        directMultiply(other,props,new_rn_,new_index_);
+        directMultiply(other,props,new_index);
         }
-    */
-
 
     //Put in m==1 indices
     for(int j = 1; j <= nr1_; ++j) 
@@ -2092,16 +1981,6 @@ operator*=(const ITensor& other)
     scale_ *= other.scale_;
 
     scaleOutNorm();
-
-    /*
-    if(!R_is_matrix && L_is_matrix) 
-        {
-        //Print(props.matchL);
-        //other.reshape(props.matchL);
-        //if(do_print) other.print("after",ShowData);
-        DO_IF_PS(++Prodstats::stats().c3;)
-        }
-        */
 
     return *this;
     } //ITensor::operator*=(ITensor)
@@ -2116,11 +1995,6 @@ operator+=(const ITensor& other)
         scale_ *= 2; 
         return *this; 
         }
-
-    //Possible optimization
-    //if share the same ITDat
-    //if(this->p == other.p) { ... }
-
 
     const bool complex_this = isComplex(*this);
     const bool complex_other = isComplex(other);
