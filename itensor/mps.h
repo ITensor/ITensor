@@ -256,6 +256,8 @@ class MPSt
 
     MPSt& 
     operator*=(Real a) { Anc(l_orth_lim_+1) *= a; return *this; }
+    MPSt& 
+    operator/=(Real a) { Anc(l_orth_lim_+1) /= a; return *this; }
 
     MPSt 
     operator*(Real r) const { MPSt res(*this); res *= r; return res; }
@@ -380,7 +382,17 @@ class MPSt
     applygate(const Tensor& gate, const OptSet& opts = Global::opts());
 
     Real 
-    norm() const { return sqrt(psiphi(*this,*this)); }
+    norm() const 
+        { 
+        if(isOrtho())
+            {
+            return A(orthoCenter()).norm();
+            }
+        else
+            {
+            return sqrt(psiphi(*this,*this)); 
+            }
+        }
 
     int
     averageM() const;
@@ -390,7 +402,7 @@ class MPSt
         {
         Real norm_ = norm();
         if(fabs(norm_) < 1E-20) Error("Zero norm");
-        *this *= 1.0/norm_;
+        operator/=(norm_);
         return norm_;
         }
 
@@ -552,6 +564,11 @@ svdBond(int b, const Tensor& AA, Direction dir,
             const LocalOpT& PH, const OptSet& opts)
     {
     setBond(b);
+    const bool use_orig_setting = svd_.useOrigM();
+    if(opts.getBool("UseOrigM",false)) 
+        {
+        svd_.useOrigM(true);
+        }
 
     if(dir == Fromleft && b-1 > l_orth_lim_)
         {
@@ -611,6 +628,8 @@ svdBond(int b, const Tensor& AA, Direction dir,
         if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
         r_orth_lim_ = b+1;
         }
+
+    svd_.useOrigM(use_orig_setting);
     }
 
 //
