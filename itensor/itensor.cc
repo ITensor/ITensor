@@ -2141,14 +2141,22 @@ operator+=(const ITensor& other)
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
         }
 
-    if(this->scale_.sign() == 0)
+    if(this->scale_.isRealZero() == 0)
         {
         *this = other;
         return *this;
         }
+
     if((other.scale_/scale_).isRealZero()) 
         { 
         return *this; 
+        }
+
+    if(this->p == other.p) 
+        { 
+        Real fac = 1+(other.scale_/scale_).real();
+        scale_ *= fac;
+        return *this;
         }
 
     solo();
@@ -2163,15 +2171,6 @@ operator+=(const ITensor& other)
         }
     else
         {
-        /*
-        LogNumber LNscalefac = other.scale_/scale_;
-        if(LNscalefac.isRealZero())
-        {
-            //Other has no effect on this
-            return *this;
-        }
-        */
-        //scalefac = LNscalefac.real();
         scalefac = (other.scale_/scale_).real();
         }
 
@@ -2206,10 +2205,10 @@ operator+=(const ITensor& other)
         //n[k] = index_[k].m();
         }
 
-#ifdef STRONG_DEBUG
+//#ifdef STRONG_DEBUG
     //Real tot_this = thisdat.sumels();
     //Real tot_othr = othrdat.sumels();
-#endif
+//#endif
 
     if(scalefac == 1)
         {
