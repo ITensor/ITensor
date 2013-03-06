@@ -1336,7 +1336,7 @@ _ind(const IndexSet<Index>& is,
         return ((((((((i8-1)*is[6].m()+i7-1)*is[5].m()+i6-1)*is[4].m()+i5-1)
                         *is[3].m()+i4-1)*is[2].m()+i3-1)*is[1].m()+i2-1)*is[0].m()+i1);
     } //switch
-    Error("ITensor::_ind: Failed switch case");
+    Error("_ind: Failed switch case");
     return 1;
     }
 
@@ -1687,7 +1687,7 @@ operator/=(const ITensor& other)
     }
 
 
-#define OLD_DIRECT_MULTIPLY
+//#define OLD_DIRECT_MULTIPLY
 
 #ifdef OLD_DIRECT_MULTIPLY
 
@@ -1821,6 +1821,40 @@ directMultiply(const ITensor& other, ProductProps& props,
 
 #else
 
+int
+_ind(int rn, const array<int,NMAX>& n,
+     int i1, int i2, int i3, int i4, 
+     int i5, int i6, int i7, int i8)
+    {
+    switch(rn)
+    {
+    case 0:
+        return (1);
+    case 1:
+        return (i1);
+    case 2:
+        return ((i2-1)*n[0]+i1);
+    case 3:
+        return (((i3-1)*n[1]+i2-1)*n[0]+i1);
+    case 4:
+        return ((((i4-1)*n[2]+i3-1)*n[1]+i2-1)*n[0]+i1);
+    case 5:
+        return (((((i5-1)*n[3]+i4-1)*n[2]+i3-1)*n[1]+i2-1)
+                        *n[0]+i1);
+    case 6:
+        return ((((((i6-1)*n[4]+i5-1)*n[3]+i4-1)*n[2]+i3-1)
+                        *n[1]+i2-1)*n[0]+i1);
+    case 7:
+        return (((((((i7-1)*n[5]+i6-1)*n[4]+i5-1)*n[3]+i4-1)
+                        *n[2]+i3-1)*n[1]+i2-1)*n[0]+i1);
+    case 8:
+        return ((((((((i8-1)*n[6]+i7-1)*n[5]+i6-1)*n[4]+i5-1)
+                        *n[3]+i4-1)*n[2]+i3-1)*n[1]+i2-1)*n[0]+i1);
+    } //switch
+    Error("_ind: Failed switch case");
+    return 1;
+    }
+
 void ITensor::
 directMultiply(const ITensor& other, 
                ProductProps& props, 
@@ -1830,73 +1864,75 @@ directMultiply(const ITensor& other,
             c;  //contracted indices
 
     int one = 1;
-    array<int*,NMAX+1> li,
-                       ri,
-                       ni;
+    array<int*,NMAX> li,
+                     ri;
     li.assign(&one);
     ri.assign(&one);
-    ni.assign(&one);
 
-    int n = 1; //n is which ni index to assign next
+    array<int,NMAX> nl,
+                    nr;
 
-    for(int j = 0; j < is_.rn(); ++j)
+    const int trn = this->is_.rn();
+    const int orn = other.is_.rn();
+
+    for(int j = 0; j < trn; ++j)
         {
         if(!props.contractedL[j+1])
             {
-            ++u.rn; (++u.r);
+            ++u.rn; //(++u.r);
             u.n[u.rn] = is_[j].m();
-            li[j+1] = &(u.i[u.rn]);
-            ni[n++] = &(u.i[u.rn]);
+            li[j] = &(u.i[u.rn]);
             new_index.addindexn(is_[j]);
             }
+        else
+            {
+            for(int k = 0; k < orn; ++k)
+                {
+                if(is_[j] == other.is_[k])
+                    {
+                    ++c.rn; //(++c.r);
+                    c.n[c.rn] = is_[j].m();
+                    li[j] = &(c.i[c.rn]);
+                    ri[k] = &(c.i[c.rn]);
+                    break;
+                    }
+                }
+            }
+        nl[j] = is_[j].m();
         }
 
-    for(int j = 0; j < other.is_.rn(); ++j)
+    for(int j = 0; j < orn; ++j)
         {
         if(!props.contractedR[j+1])
             {
-            ++u.rn; (++u.r);
+            ++u.rn; //(++u.r);
             u.n[u.rn] = other.is_[j].m();
-            ri[j+1] = &(u.i[u.rn]);
-            ni[n++] = &(u.i[u.rn]);
+            ri[j] = &(u.i[u.rn]);
             new_index.addindexn(other.is_[j]);
             }
-        }
-
-    for(int j = 0; j < this->is_.rn(); ++j)
-    for(int k = 0; k < other.is_.rn(); ++k)
-        {
-        if(is_[j] == other.is_[k])
-            {
-            ++c.rn; (++c.r);
-            c.n[c.rn] = is_[j].m();
-            li[j+1] = &(c.i[c.rn]);
-            ri[k+1] = &(c.i[c.rn]);
-            }
+        nr[j] = other.is_[j].m();
         }
 
     Vector newdat(props.odimL*props.odimR);
 
-    const Vector& Ldat = this->p->v;
-    const Vector& Rdat = other.p->v;
+    const Real* pL = this->p->v.Store()-1;
+    const Real* pR = other.p->v.Store()-1;
+    Real* pN = newdat.Store()-1;
 
     for(; u.notDone(); ++u)
         {
-        Real& val =
-        newdat(_ind(new_index,*ni[1],*ni[2],*ni[3],*ni[4],
-                              *ni[5],*ni[6],*ni[7],*ni[8]));
+        Real& val = pN[u.ind];
         val = 0;
-        for(; c.notDone(); ++c)
+        for(c.reset(); c.notDone(); ++c)
             {
-            val += Ldat(_ind(this->is_,*li[1],*li[2],*li[3],*li[4],
-                                       *li[5],*li[6],*li[7],*li[8]))
-                 * Rdat(_ind(other.is_,*ri[1],*ri[2],*ri[3],*ri[4],
-                                       *ri[5],*ri[6],*ri[7],*ri[8]));
+            val += pL[_ind(trn,nl,*li[0],*li[1],*li[2],*li[3],
+                                  *li[4],*li[5],*li[6],*li[7])]
+                 * pR[_ind(orn,nr,*ri[0],*ri[1],*ri[2],*ri[3],
+                                  *ri[4],*ri[5],*ri[6],*ri[7])];
             }
         }
 
     if(!p.unique()) allocate();
-
     p->v = newdat;
 
     } //ITensor::directMultiply
