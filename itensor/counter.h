@@ -15,6 +15,37 @@
 // Counter
 //
 
+//
+// A Counter "C" is iterated as
+// for(; C.notDone(); ++C) { ... }
+//
+// When iterated, each index C.i[j]
+// runs from 1 to C.n[j] such that taken
+// together the C.i run over all values
+// compatible with their ranges.
+//
+// The index C.i[1] changes every step,
+// C.i[2] after every C.n[1] steps, etc.
+//
+// For example: (if C.n[1] == C.n[2] == 2, say)
+// C.i[1]  C.i[2]   C.i[3]
+//   1       1        1
+//   2       1        1
+//   1       2        1
+//   2       2        1
+//   1       1        2
+//   2       1        2
+//   ...
+// 
+// Counters also keep a straight count of which
+// step they are on through the field C.ind
+//
+// ITensor data is ordered and the method
+// ITensor::_ind is defined such that
+// v(C.ind) == v(_ind(C.i[1],C.i[2],...,C.i[8])
+// where v is the Vector in an ITDat.
+//
+
 class Counter
     {
     public:
@@ -35,11 +66,11 @@ class Counter
     Counter& 
     operator++();
 
-    bool 
-    operator!=(const Counter& other) const;
+    //bool 
+    //operator!=(const Counter& other) const;
 
-    bool 
-    operator==(const Counter& other) const;
+    //bool 
+    //operator==(const Counter& other) const;
 
     bool 
     notDone() const { return i[1] != 0; }
@@ -115,6 +146,7 @@ operator++()
     return *this;
     }
 
+/*
 bool inline Counter::
 operator!=(const Counter& other) const
     {
@@ -126,6 +158,7 @@ operator!=(const Counter& other) const
 bool inline Counter::
 operator==(const Counter& other) const
     { return !(*this != other); }
+    */
 
 inline
 std::ostream&
