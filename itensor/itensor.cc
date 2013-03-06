@@ -1155,30 +1155,6 @@ reshapeDat(const Permutation& P)
     p->v = newdat;
     }
 
-void ITensor::
-reshapeTo(const Permutation& P, ITensor& res) const
-    {
-    res.solo();
-
-    res.is_ = IndexSet<Index>(is_,P);
-
-    res.scale_ = scale_;
-
-    this->reshapeDat(P,res.p->v);
-    }
-
-void ITensor::
-reshape(const Permutation& P) const
-    {
-    if(P.is_trivial()) return;
-
-    is_ = IndexSet<Index>(is_,P);
-
-    solo();
-    Vector newdat;
-    this->reshapeDat(P,newdat);
-    p->v = newdat;
-    }
 
 void ITensor::
 swap(ITensor& other)
@@ -1295,7 +1271,7 @@ allocate()
     }
 
 void ITensor::
-solo() const
+solo()
 	{
     ITENSOR_CHECK_NULL
     if(!p.unique())
@@ -1687,7 +1663,7 @@ operator/=(const ITensor& other)
     }
 
 
-//#define OLD_DIRECT_MULTIPLY
+#define OLD_DIRECT_MULTIPLY
 
 #ifdef OLD_DIRECT_MULTIPLY
 
@@ -2053,9 +2029,10 @@ operator*=(const ITensor& other)
 
     MatrixRefNoLink lref, rref;
     bool L_is_matrix,R_is_matrix;
-    toMatrixProd(*this,other,props,lref,rref,L_is_matrix,R_is_matrix,do_matrix_multiply);
+    toMatrixProd(*this,other,props,lref,rref,
+                 L_is_matrix,R_is_matrix,do_matrix_multiply);
 
-    if((L_is_matrix && R_is_matrix) || do_matrix_multiply)
+    if(do_matrix_multiply || (L_is_matrix && R_is_matrix))
         {
         DO_IF_PS(++Prodstats::stats().c2;)
 

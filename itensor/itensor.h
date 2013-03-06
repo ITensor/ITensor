@@ -529,15 +529,6 @@ class ITensor
     void 
     reshapeDat(const Permutation& P);
 
-    //Re-orders indices and dat consistently
-    //so resulting ITensor *is* equivalent to original.
-    void 
-    reshape(const Permutation& P) const;
-
-    void 
-    reshapeTo(const Permutation& P, ITensor& res) const;
-
-
     //
     // Swap can be used for similar purposes
     // as operator=(const ITensor& other)
@@ -707,10 +698,10 @@ class ITensor
     //
 
     //mutable: const methods may want to reshape data
-    mutable boost::shared_ptr<ITDat> p; 
+    boost::shared_ptr<ITDat> p; 
 
     //Indices, maximum of 8 (is_.index_[0] not used)
-    mutable IndexSet<Index> is_;
+    IndexSet<Index> is_;
 
     LogNumber scale_; 
 
@@ -728,7 +719,7 @@ class ITensor
     //Necessary because ITensors logically represent distinct
     //objects even though they may share data in reality.
     void 
-    solo() const;
+    solo();
     
     friend struct ProductProps;
 
