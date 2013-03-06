@@ -2015,7 +2015,7 @@ operator+=(const ITensor& other)
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
         }
 
-    if(this->scale_.isRealZero() == 0)
+    if(this->scale_.sign() == 0)
         {
         *this = other;
         return *this;
