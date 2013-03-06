@@ -22,26 +22,26 @@ class QCounter : public Counter
 
     QCounter(const std::vector<IQIndex>& v)
         {
-        rn_ = v.size();
-        r_ = rn_;
+        rn = v.size();
+        r = rn;
         n[0] = 0;
-        for(int j = 0; j < rn_; ++j) 
+        for(int j = 0; j < rn; ++j) 
             n[j+1] = v[j].nindex();
-        for(int j = rn_+1; j <= NMAX; ++j) 
+        for(int j = rn+1; j <= NMAX; ++j) 
             n[j] = 1;
-        reset(1);
+        reset();
         }
 
     QCounter(const IndexSet<IQIndex>& is)
         {
-        rn_ = is.rn();
-        r_ = is.r();
+        rn = is.rn();
+        r = is.r();
         n[0] = 0;
-        for(int j = 1; j <= rn_; ++j) 
+        for(int j = 1; j <= rn; ++j) 
             n[j] = is.index(j).nindex();
-        for(int j = rn_+1; j <= NMAX; ++j) 
+        for(int j = rn+1; j <= NMAX; ++j) 
             n[j] = 1;
-        reset(1);
+        reset();
         }
 
     void 

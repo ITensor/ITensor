@@ -50,9 +50,11 @@ class Counter
     {
     public:
 
-    Array<int,NMAX+1> n, i;
-    int ind;
-    int rn_,r_;
+    Array<int,NMAX+1> n, 
+                      i;
+    int ind,
+        rn,
+        r;
 
     Counter();
 
@@ -66,17 +68,11 @@ class Counter
     Counter& 
     operator++();
 
-    //bool 
-    //operator!=(const Counter& other) const;
-
-    //bool 
-    //operator==(const Counter& other) const;
-
     bool 
     notDone() const { return i[1] != 0; }
 
     void 
-    reset(int a);
+    reset();
 
     };
 
@@ -85,47 +81,48 @@ class Counter
 // Counter implementation
 //
 
-inline 
-Counter::
-Counter() : rn_(0)
+inline Counter::
+Counter() 
+    : rn(0), r(0)
     {
-    n.assign(1); n[0] = 0;
-    reset(0);
+    n.assign(1); 
+    n[0] = 0;
+    reset();
     }
 
 void inline Counter::
-reset(int a)
+reset()
     {
-    i.assign(a);
+    i.assign(1);
     ind = 1;
     }
 
 template <class IndexT>
 Counter::
-Counter(const Array<IndexT,NMAX+1>& ii, int rn, int r)
+Counter(const Array<IndexT,NMAX+1>& ii, int rn_, int r_)
     {
-    rn_ = rn;
-    r_ = r;
+    rn = rn_;
+    r = r_;
     n[0] = 0;
-    for(int j = 1; j <= rn_; ++j) 
+    for(int j = 1; j <= rn; ++j) 
         n[j] = ii[j].m();
-    for(int j = rn_+1; j <= NMAX; ++j) 
+    for(int j = rn+1; j <= NMAX; ++j) 
         n[j] = 1;
-    reset(1);
+    reset();
     }
 
 template <class IndexT>
 Counter::
 Counter(const IndexSet<IndexT>& is)
     {
-    rn_ = is.rn();
-    r_ = is.r();
+    rn = is.rn();
+    r = is.r();
     n[0] = 0;
-    for(int j = 1; j <= rn_; ++j) 
+    for(int j = 1; j <= rn; ++j) 
         n[j] = is.index(j).m();
-    for(int j = rn_+1; j <= NMAX; ++j) 
+    for(int j = rn+1; j <= NMAX; ++j) 
         n[j] = 1;
-    reset(1);
+    reset();
     }
 
 inline
@@ -135,15 +132,29 @@ operator++()
     ++ind;
     ++i[1];
     if(i[1] > n[1])
-    for(int j = 2; j <= rn_; ++j)
+    for(int j = 2; j <= rn; ++j)
         {
         i[j-1] = 1;
         ++i[j];
         if(i[j] <= n[j]) break;
         }
     //set 'done' condition
-    if(i[rn_] > n[rn_]) reset(0);
+    if(i[rn] > n[rn]) 
+        {
+        i[1] = 0;
+        }
     return *this;
+    }
+
+inline
+std::ostream&
+operator<<(std::ostream& s, const Counter& c)
+    {
+    s << "("; 
+    for(int i = 1; i < c.r; ++i)
+        s << c.i[i] << " ";
+    s << c.i[c.r] << ")";
+    return s;
     }
 
 /*
@@ -160,16 +171,6 @@ operator==(const Counter& other) const
     { return !(*this != other); }
     */
 
-inline
-std::ostream&
-operator<<(std::ostream& s, const Counter& c)
-    {
-    s << "("; 
-    for(int i = 1; i < c.r_; ++i)
-        s << c.i[i] << " ";
-    s << c.i[c.r_] << ")";
-    return s;
-    }
 
 #undef Array
 #undef Cout

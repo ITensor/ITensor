@@ -385,15 +385,15 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
 
             //Init appropriate elements
             //of Counter tc
-            tc.n[++tc.rn_] = T.is_[i-1].m();
-            ++tc.r_;
+            tc.n[++tc.rn] = T.is_[i-1].m();
+            ++tc.r;
             //Link up ti pointer
-            //cerr << format("Linking ti[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % i % tc.rn_ % tc.rn_ % (tc.n[tc.rn_]);
-            ti[i] = &(tc.i[tc.rn_]);
+            //cerr << format("Linking ti[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % i % tc.rn % tc.rn % (tc.n[tc.rn]);
+            ti[i] = &(tc.i[tc.rn]);
 
             //Link ri pointer to free index of T
-            //cerr << format("Linking ri[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % res.is_.r() % tc.rn_ % tc.rn_ % (tc.n[tc.rn_]);
-            ri[res.is_.r()] = &(tc.i[tc.rn_]);
+            //cerr << format("Linking ri[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % res.is_.r() % tc.rn % tc.rn % (tc.n[tc.rn]);
+            ri[res.is_.r()] = &(tc.i[tc.rn]);
             }
         else
             {
@@ -454,11 +454,11 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
         }
 
     //Finish initting Counter tc
-    for(int k = tc.rn_+1; k <= NMAX; ++k)
+    for(int k = tc.rn+1; k <= NMAX; ++k)
         {
         tc.n[k] = 1;
         }
-    tc.reset(1);
+    tc.reset();
 
 
     const Vector& Tdat = T.p->v;

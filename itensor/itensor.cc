@@ -994,7 +994,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
     //Make a counter for thisdat
     Counter c(is_);
     array<int,NMAX+1> n;
-    for(int j = 1; j <= c.rn_; ++j) n[ind[j]] = c.n[j];
+    for(int j = 1; j <= c.rn; ++j) n[ind[j]] = c.n[j];
 
     //Special case loops
 #define Loop6(q,z,w,k,y,s) {for(int i1 = 1; i1 <= n[1]; ++i1) for(int i2 = 1; i2 <= n[2]; ++i2)\
@@ -1090,7 +1090,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
     for(int k = 1; k <= NMAX; ++k) { j[ind[k]] = &(c.i[k]); }
 
     //Catch-all loops that work for any tensor
-    switch(c.rn_)
+    switch(c.rn)
     {
     case 2:
         for(; c.notDone(); ++c)
@@ -1141,7 +1141,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
                 = thisdat(c.ind);
             }
         return;
-    } //switch(c.rn_)
+    } //switch(c.rn)
 
     } // ITensor::reshapeDat
 
@@ -1824,9 +1824,8 @@ directMultiply(const ITensor& other, ProductProps& props,
 void ITensor::
 directMultiply(const ITensor& other, 
                ProductProps& props, 
-               IndexSet<Index>& new_index_)
+               IndexSet<Index>& new_index)
     {
-
     } //ITensor::directMultiply
 
 #endif
