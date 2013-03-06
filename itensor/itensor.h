@@ -742,8 +742,10 @@ class ITensor
                    ProductProps& pp, 
                    IndexSet<Index>& new_index);
 
+    /*
     int _ind(int i1, int i2, int i3, int i4, 
              int i5, int i6, int i7, int i8) const;
+             */
 
     int _ind2(const IndexVal& iv1, const IndexVal& iv2) const;
 
@@ -1100,6 +1102,11 @@ trace(const Tensor& T, Real& re, Real& im)
     re = trace(realPart(T));
     im = trace(imagPart(T));
     }
+
+int
+_ind(const IndexSet<Index>& is,
+     int i1, int i2, int i3, int i4, 
+     int i5, int i6, int i7, int i8);
 
 #undef Cout
 #undef Endl

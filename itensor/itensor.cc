@@ -179,7 +179,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
         for(int j = 0; j < size; ++j)  // loop over the given indices
     if(is_.index(k) == ii[j]) 
         { ja[k] = iv[j]; break; }
-    p->v(_ind(ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])) = 1;
+    p->v(_ind(is_,ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])) = 1;
     }
 
 ITensor::
@@ -672,10 +672,10 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
     for(; nc.notDone(); ++nc)
         {
         resdat(nc.ind) =
-        thisdat(this->_ind(*ii[1],*ii[2],
-                           *ii[3],*ii[4],
-                           *ii[5],*ii[6],
-                           *ii[7],*ii[8]));
+        thisdat(_ind(is_,*ii[1],*ii[2],
+                         *ii[3],*ii[4],
+                         *ii[5],*ii[6],
+                         *ii[7],*ii[8]));
         }
 
     is_.swap(new_is_);
@@ -819,10 +819,10 @@ trace(const array<Index,NMAX>& indices, int nind)
         for(trace_ind = 1; trace_ind <= tm; ++trace_ind)
             {
             newval += 
-            thisdat(this->_ind(*ii[1],*ii[2],
-                               *ii[3],*ii[4],
-                               *ii[5],*ii[6],
-                               *ii[7],*ii[8]));
+            thisdat(_ind(is_,*ii[1],*ii[2],
+                             *ii[3],*ii[4],
+                             *ii[5],*ii[6],
+                             *ii[7],*ii[8]));
             }
         resdat(nc.ind) = newval;
         }
@@ -928,10 +928,10 @@ expandIndex(const Index& small, const Index& big, int start)
     Vector& resdat = res.p->v;
     for(; c.notDone(); ++c)
         {
-        resdat(res._ind(c.i[1]+inc[1],c.i[2]+inc[2],
-                        c.i[3]+inc[3],c.i[4]+inc[4],
-                        c.i[5]+inc[5],c.i[6]+inc[6],
-                        c.i[7]+inc[7],c.i[8]+inc[8]))
+        resdat(_ind(res.is_,c.i[1]+inc[1],c.i[2]+inc[2],
+                            c.i[3]+inc[3],c.i[4]+inc[4],
+                            c.i[5]+inc[5],c.i[6]+inc[6],
+                            c.i[7]+inc[7],c.i[8]+inc[8]))
         = thisdat(c.ind);
         }
 
@@ -1306,36 +1306,36 @@ solo() const
         }
 	}
 
-int ITensor::
-_ind(int i1, int i2, int i3, int i4, 
-     int i5, int i6, int i7, int i8) const
+int
+_ind(const IndexSet<Index>& is,
+     int i1, int i2, int i3, int i4, 
+     int i5, int i6, int i7, int i8)
     {
-    ITENSOR_CHECK_NULL
-    switch(is_.rn())
+    switch(is.rn())
     {
     case 0:
         return (1);
     case 1:
         return (i1);
     case 2:
-        return ((i2-1)*is_[0].m()+i1);
+        return ((i2-1)*is[0].m()+i1);
     case 3:
-        return (((i3-1)*is_[1].m()+i2-1)*is_[0].m()+i1);
+        return (((i3-1)*is[1].m()+i2-1)*is[0].m()+i1);
     case 4:
-        return ((((i4-1)*is_[2].m()+i3-1)*is_[1].m()+i2-1)*is_[0].m()+i1);
+        return ((((i4-1)*is[2].m()+i3-1)*is[1].m()+i2-1)*is[0].m()+i1);
     case 5:
-        return (((((i5-1)*is_[3].m()+i4-1)*is_[2].m()+i3-1)*is_[1].m()+i2-1)
-                        *is_[0].m()+i1);
+        return (((((i5-1)*is[3].m()+i4-1)*is[2].m()+i3-1)*is[1].m()+i2-1)
+                        *is[0].m()+i1);
     case 6:
-        return ((((((i6-1)*is_[4].m()+i5-1)*is_[3].m()+i4-1)*is_[2].m()+i3-1)
-                        *is_[1].m()+i2-1)*is_[0].m()+i1);
+        return ((((((i6-1)*is[4].m()+i5-1)*is[3].m()+i4-1)*is[2].m()+i3-1)
+                        *is[1].m()+i2-1)*is[0].m()+i1);
     case 7:
-        return (((((((i7-1)*is_[5].m()+i6-1)*is_[4].m()+i5-1)*is_[3].m()+i4-1)
-                        *is_[2].m()+i3-1)*is_[1].m()+i2-1)*is_[0].m()+i1);
+        return (((((((i7-1)*is[5].m()+i6-1)*is[4].m()+i5-1)*is[3].m()+i4-1)
+                        *is[2].m()+i3-1)*is[1].m()+i2-1)*is[0].m()+i1);
     case 8:
-        return ((((((((i8-1)*is_[6].m()+i7-1)*is_[5].m()+i6-1)*is_[4].m()+i5-1)
-                        *is_[3].m()+i4-1)*is_[2].m()+i3-1)*is_[1].m()+i2-1)*is_[0].m()+i1);
-    } //switch(rn_)
+        return ((((((((i8-1)*is[6].m()+i7-1)*is[5].m()+i6-1)*is[4].m()+i5-1)
+                        *is[3].m()+i4-1)*is[2].m()+i3-1)*is[1].m()+i2-1)*is[0].m()+i1);
+    } //switch
     Error("ITensor::_ind: Failed switch case");
     return 1;
     }
@@ -1402,7 +1402,7 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
         Error("Too few m > 1 indices provided");
         }
 
-    return _ind(ja[0],ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7]);
+    return _ind(is_,ja[0],ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7]);
     }
 
 
@@ -1826,6 +1826,79 @@ directMultiply(const ITensor& other,
                ProductProps& props, 
                IndexSet<Index>& new_index)
     {
+    Counter u,  //uncontracted indices
+            c;  //contracted indices
+
+    int one = 1;
+    array<int*,NMAX+1> li,
+                       ri,
+                       ni;
+    li.assign(&one);
+    ri.assign(&one);
+    ni.assign(&one);
+
+    int n = 1; //n is which ni index to assign next
+
+    for(int j = 0; j < is_.rn(); ++j)
+        {
+        if(!props.contractedL[j+1])
+            {
+            ++u.rn; (++u.r);
+            u.n[u.rn] = is_[j].m();
+            li[j+1] = &(u.i[u.rn]);
+            ni[n++] = &(u.i[u.rn]);
+            new_index.addindexn(is_[j]);
+            }
+        }
+
+    for(int j = 0; j < other.is_.rn(); ++j)
+        {
+        if(!props.contractedR[j+1])
+            {
+            ++u.rn; (++u.r);
+            u.n[u.rn] = other.is_[j].m();
+            ri[j+1] = &(u.i[u.rn]);
+            ni[n++] = &(u.i[u.rn]);
+            new_index.addindexn(other.is_[j]);
+            }
+        }
+
+    for(int j = 0; j < this->is_.rn(); ++j)
+    for(int k = 0; k < other.is_.rn(); ++k)
+        {
+        if(is_[j] == other.is_[k])
+            {
+            ++c.rn; (++c.r);
+            c.n[c.rn] = is_[j].m();
+            li[j+1] = &(c.i[c.rn]);
+            ri[k+1] = &(c.i[c.rn]);
+            }
+        }
+
+    Vector newdat(props.odimL*props.odimR);
+
+    const Vector& Ldat = this->p->v;
+    const Vector& Rdat = other.p->v;
+
+    for(; u.notDone(); ++u)
+        {
+        Real& val =
+        newdat(_ind(new_index,*ni[1],*ni[2],*ni[3],*ni[4],
+                              *ni[5],*ni[6],*ni[7],*ni[8]));
+        val = 0;
+        for(; c.notDone(); ++c)
+            {
+            val += Ldat(_ind(this->is_,*li[1],*li[2],*li[3],*li[4],
+                                       *li[5],*li[6],*li[7],*li[8]))
+                 * Rdat(_ind(other.is_,*ri[1],*ri[2],*ri[3],*ri[4],
+                                       *ri[5],*ri[6],*ri[7],*ri[8]));
+            }
+        }
+
+    if(!p.unique()) allocate();
+
+    p->v = newdat;
+
     } //ITensor::directMultiply
 
 #endif

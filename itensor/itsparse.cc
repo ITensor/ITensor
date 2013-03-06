@@ -474,14 +474,14 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
             for(; tc.notDone(); ++tc)
             for(diag_ind = 1; diag_ind <= dsize; ++diag_ind)
                 {
-                resdat(res._ind(*ri[1],*ri[2],
-                                *ri[3],*ri[4],
-                                *ri[5],*ri[6],
-                                *ri[7],*ri[8]))
-                 =  Tdat(T._ind(*ti[1],*ti[2],
-                                *ti[3],*ti[4],
-                                *ti[5],*ti[6],
-                                *ti[7],*ti[8]));
+                resdat(_ind(res.is_,*ri[1],*ri[2],
+                                    *ri[3],*ri[4],
+                                    *ri[5],*ri[6],
+                                    *ri[7],*ri[8]))
+                 =  Tdat(_ind(T.is_,*ti[1],*ti[2],
+                                    *ti[3],*ti[4],
+                                    *ti[5],*ti[6],
+                                    *ti[7],*ti[8]));
                 }
             }
         else
@@ -494,15 +494,15 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
                 for(diag_ind = 1; diag_ind <= dsize; ++diag_ind)
                     {
                     val +=
-                    Tdat(T._ind(*ti[1],*ti[2],
-                                *ti[3],*ti[4],
-                                *ti[5],*ti[6],
-                                *ti[7],*ti[8]));
+                    Tdat(_ind(T.is_,*ti[1],*ti[2],
+                                    *ti[3],*ti[4],
+                                    *ti[5],*ti[6],
+                                    *ti[7],*ti[8]));
                     }
-                resdat(res._ind(*ri[1],*ri[2],
-                                *ri[3],*ri[4],
-                                *ri[5],*ri[6],
-                                *ri[7],*ri[8]))
+                resdat(_ind(res.is_,*ri[1],*ri[2],
+                                    *ri[3],*ri[4],
+                                    *ri[5],*ri[6],
+                                    *ri[7],*ri[8]))
                 = val;
                 }
             }
@@ -516,15 +516,15 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
             for(; tc.notDone(); ++tc)
             for(diag_ind = 1; diag_ind <= dsize; ++diag_ind)
                 {
-                resdat(res._ind(*ri[1],*ri[2],
-                                *ri[3],*ri[4],
-                                *ri[5],*ri[6],
-                                *ri[7],*ri[8]))
+                resdat(_ind(res.is_,*ri[1],*ri[2],
+                                    *ri[3],*ri[4],
+                                    *ri[5],*ri[6],
+                                    *ri[7],*ri[8]))
                  = S.diag_(diag_ind) 
-                   * Tdat(T._ind(*ti[1],*ti[2],
-                                 *ti[3],*ti[4],
-                                 *ti[5],*ti[6],
-                                 *ti[7],*ti[8]));
+                   * Tdat(_ind(T.is_,*ti[1],*ti[2],
+                                     *ti[3],*ti[4],
+                                     *ti[5],*ti[6],
+                                     *ti[7],*ti[8]));
                 }
             }
         else
@@ -537,15 +537,15 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
                     {
                     val +=
                     S.diag_(diag_ind) 
-                    * Tdat(T._ind(*ti[1],*ti[2],
-                                  *ti[3],*ti[4],
-                                  *ti[5],*ti[6],
-                                  *ti[7],*ti[8]));
+                    * Tdat(_ind(T.is_,*ti[1],*ti[2],
+                                      *ti[3],*ti[4],
+                                      *ti[5],*ti[6],
+                                      *ti[7],*ti[8]));
                     }
-                resdat(res._ind(*ri[1],*ri[2],
-                                *ri[3],*ri[4],
-                                *ri[5],*ri[6],
-                                *ri[7],*ri[8]))
+                resdat(_ind(res.is_,*ri[1],*ri[2],
+                                    *ri[3],*ri[4],
+                                    *ri[5],*ri[6],
+                                    *ri[7],*ri[8]))
                 = val;
                 }
             }
