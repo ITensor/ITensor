@@ -278,10 +278,11 @@ class LogNumber
         {
         if(sign_ != other.sign_)
             { return sign_ < other.sign_; }
-        else if(sign_ == 0)
-            { return false; }
-        else if(sign_ > 0)
+        else if(sign_ > 0)  //this and other are positive
             { return lognum_ < other.lognum_; }
+        else if(sign_ == 0) //this and other are zero
+            { return false; }
+        //this and other are negative
         return lognum_ > other.lognum_;
         }
 

@@ -1424,7 +1424,29 @@ operator+=(const IQTensor& other)
         return *this;
         }
 
+    /*
+    //EMS Mar 7 2013: not sure what this does or if it's correct
+    if(is_->r() == 0)	// Automatic initializing a summed IQTensor in a loop
+        { 
+        return (*this = other); 
+        }
+        */
+
     IQTensor& This = *this;
+
+    const bool complex_this = hasindex(IQIndex::IndReIm()); 
+    const bool complex_other = other.hasindex(IQIndex::IndReIm()); 
+    if(!complex_this && complex_other)
+        {
+        operator*=(IQComplex_1());
+        return operator+=(other);
+        }
+    else
+    if(complex_this && !complex_other)
+        {
+        return operator+=(other * IQComplex_1());
+        }
+
     if(fabs(This.uniqueReal()-other.uniqueReal()) > 1.0e-11) 
         {
         PrintIndices(This);
@@ -1433,18 +1455,6 @@ operator+=(const IQTensor& other)
         Print(other.uniqueReal());
         Error("Mismatched indices in IQTensor::operator+=");
         }
-
-    if(is_->r() == 0)	// Automatic initializing a summed IQTensor in a loop
-        { 
-        return (*this = other); 
-        }
-
-    bool complex_this = hasindex(IQIndex::IndReIm()); 
-    bool complex_other = other.hasindex(IQIndex::IndReIm()); 
-    if(!complex_this && complex_other)
-        return (This = (This * IQTensor::Complex_1()) + other);
-    if(complex_this && !complex_other)
-        return (This += other * IQTensor::Complex_1());
 
     dat.solo(); 
 
