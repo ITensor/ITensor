@@ -1018,14 +1018,14 @@ randomize()
         QN nd;
         for(int n = 1; n <= r(); ++n)
             {
-            nd += is_->index(n).qn(C.i[n]);
+            nd += is_->index(n).qn(1+C.i[n]);
             }
         if(nd != D) continue;
 
         IndexSet<Index> nset;
         for(int n = 1; n <= r(); ++n)
             {
-            nset.addindex(is_->index(n).index(C.i[n]));
+            nset.addindex(is_->index(n).index(1+C.i[n]));
             }
 
         ApproxReal r(nset.uniqueReal());

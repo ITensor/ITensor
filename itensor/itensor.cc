@@ -174,12 +174,13 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
     //Assign specified element to 1
     array<int,NMAX+1> iv = 
         {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i }};
-    array<int,NMAX+1> ja; ja.assign(1);
+    array<int,NMAX+1> ja; 
+    ja.assign(0);
     for(int k = 1; k <= is_.rn(); ++k) //loop over indices of this ITensor
         for(int j = 0; j < size; ++j)  // loop over the given indices
     if(is_.index(k) == ii[j]) 
-        { ja[k] = iv[j]; break; }
-    p->v(_ind(is_,ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])) = 1;
+        { ja[k] = iv[j]-1; break; }
+    p->v[_ind(is_,ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])] = 1;
     }
 
 ITensor::
@@ -450,14 +451,14 @@ operator()(const IndexVal& iv1, const IndexVal& iv2)
     {
     solo(); 
     scaleTo(1);
-    return p->v(_ind2(iv1,iv2));
+    return p->v[_ind2(iv1,iv2)];
     }
 
 Real ITensor::
 operator()(const IndexVal& iv1, const IndexVal& iv2) const
     {
     ITENSOR_CHECK_NULL
-    return scale_.real()*p->v(_ind2(iv1,iv2));
+    return scale_.real()*p->v[_ind2(iv1,iv2)];
     }
 
 Real& ITensor::
@@ -468,7 +469,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2,
     {
     solo(); 
     scaleTo(1);
-    return p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
+    return p->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
     }
 
 Real ITensor::
@@ -478,7 +479,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2,
            const IndexVal& iv7,const IndexVal& iv8) const
     {
     ITENSOR_CHECK_NULL
-    return scale_.real()*p->v(_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8));
+    return scale_.real()*p->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
     }
 
 //#define DO_REWRITE_ASSIGN
@@ -650,7 +651,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
     //Set up ii pointers to link
     //elements of res to appropriate
     //elements of *this
-    array<int*,NMAX+1> ii;
+    array<const int*,NMAX+1> ii;
     int n = 2;
     for(int j = 1; j <= r(); ++j)
         {
@@ -660,9 +661,9 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
             ii[j] = &(nc.i[n++]);
         }
 
-    int one = 1;
+    const int zero = 0;
     for(int j = r()+1; j <= NMAX; ++j)
-        ii[j] = &one;
+        ii[j] = &zero;
     
     //Create the new dat
     shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
@@ -671,11 +672,11 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
     const Vector& thisdat = p->v;
     for(; nc.notDone(); ++nc)
         {
-        resdat(nc.ind) =
-        thisdat(_ind(is_,*ii[1],*ii[2],
+        resdat[nc.ind] =
+        thisdat[_ind(is_,*ii[1],*ii[2],
                          *ii[3],*ii[4],
                          *ii[5],*ii[6],
-                         *ii[7],*ii[8]));
+                         *ii[7],*ii[8])];
         }
 
     is_.swap(new_is_);
@@ -794,7 +795,7 @@ trace(const array<Index,NMAX>& indices, int nind)
     //elements of res to appropriate
     //elements of *this
     int trace_ind = 0;
-    array<int*,NMAX+1> ii;
+    array<const int*,NMAX+1> ii;
     int n = 1;
     for(int j = 1; j <= r(); ++j)
         {
@@ -804,9 +805,9 @@ trace(const array<Index,NMAX>& indices, int nind)
             ii[j] = &(nc.i[n++]);
         }
 
-    int one = 1;
+    const int zero = 0;
     for(int j = r()+1; j <= NMAX; ++j)
-        ii[j] = &one;
+        ii[j] = &zero;
     
     //Create the new dat
     shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
@@ -816,15 +817,15 @@ trace(const array<Index,NMAX>& indices, int nind)
     for(; nc.notDone(); ++nc)
         {
         Real newval = 0;
-        for(trace_ind = 1; trace_ind <= tm; ++trace_ind)
+        for(trace_ind = 0; trace_ind < tm; ++trace_ind)
             {
             newval += 
-            thisdat(_ind(is_,*ii[1],*ii[2],
+            thisdat[_ind(is_,*ii[1],*ii[2],
                              *ii[3],*ii[4],
                              *ii[5],*ii[6],
-                             *ii[7],*ii[8]));
+                             *ii[7],*ii[8])];
             }
-        resdat(nc.ind) = newval;
+        resdat[nc.ind] = newval;
         }
 
     is_.swap(new_is_);
@@ -928,11 +929,11 @@ expandIndex(const Index& small, const Index& big, int start)
     Vector& resdat = res.p->v;
     for(; c.notDone(); ++c)
         {
-        resdat(_ind(res.is_,c.i[1]+inc[1],c.i[2]+inc[2],
+        resdat[_ind(res.is_,c.i[1]+inc[1],c.i[2]+inc[2],
                             c.i[3]+inc[3],c.i[4]+inc[4],
                             c.i[5]+inc[5],c.i[6]+inc[6],
-                            c.i[7]+inc[7],c.i[8]+inc[8]))
-        = thisdat(c.ind);
+                            c.i[7]+inc[7],c.i[8]+inc[8])]
+        = thisdat[c.ind];
         }
 
     this->swap(res);
@@ -997,22 +998,22 @@ reshapeDat(const Permutation& P, Vector& rdat) const
     for(int j = 1; j <= c.rn; ++j) n[ind[j]] = c.n[j];
 
     //Special case loops
-#define Loop6(q,z,w,k,y,s) {for(int i1 = 1; i1 <= n[1]; ++i1) for(int i2 = 1; i2 <= n[2]; ++i2)\
-	for(int i3 = 1; i3 <= n[3]; ++i3) for(int i4 = 1; i4 <= n[4]; ++i4) for(int i5 = 1; i5 <= n[5]; ++i5)\
-    for(int i6 = 1; i6 <= n[6]; ++i6)\
-    rdat( (((((i6-1)*n[5]+i5-1)*n[4]+i4-1)*n[3]+i3-1)*n[2]+i2-1)*n[1]+i1 ) =\
-    thisdat( (((((s-1)*c.n[5]+y-1)*c.n[4]+k-1)*c.n[3]+w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
+#define Loop6(q,z,w,k,y,s) {for(int i1 = 0; i1 < n[1]; ++i1) for(int i2 = 0; i2 < n[2]; ++i2)\
+	for(int i3 = 0; i3 < n[3]; ++i3) for(int i4 = 0; i4 < n[4]; ++i4) for(int i5 = 0; i5 < n[5]; ++i5)\
+    for(int i6 = 0; i6 < n[6]; ++i6)\
+    rdat[ (((((i6)*n[5]+i5)*n[4]+i4)*n[3]+i3)*n[2]+i2)*n[1]+i1 ] =\
+    thisdat[ (((((s)*c.n[5]+y)*c.n[4]+k)*c.n[3]+w)*c.n[2]+z)*c.n[1]+q ]; return; }
 
-#define Loop5(q,z,w,k,y) {for(int i1 = 1; i1 <= n[1]; ++i1) for(int i2 = 1; i2 <= n[2]; ++i2)\
-	for(int i3 = 1; i3 <= n[3]; ++i3) for(int i4 = 1; i4 <= n[4]; ++i4) for(int i5 = 1; i5 <= n[5]; ++i5)\
-    rdat( ((((i5-1)*n[4]+i4-1)*n[3]+i3-1)*n[2]+i2-1)*n[1]+i1 ) = thisdat( ((((y-1)*c.n[4]+k-1)*c.n[3]+w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
+#define Loop5(q,z,w,k,y) {for(int i1 = 0; i1 < n[1]; ++i1) for(int i2 = 0; i2 < n[2]; ++i2)\
+	for(int i3 = 0; i3 < n[3]; ++i3) for(int i4 = 0; i4 < n[4]; ++i4) for(int i5 = 0; i5 < n[5]; ++i5)\
+    rdat[ ((((i5)*n[4]+i4)*n[3]+i3)*n[2]+i2)*n[1]+i1 ] = thisdat[ ((((y)*c.n[4]+k)*c.n[3]+w)*c.n[2]+z)*c.n[1]+q ]; return; }
 
-#define Loop4(q,z,w,k) {for(int i1 = 1; i1 <= n[1]; ++i1)  for(int i2 = 1; i2 <= n[2]; ++i2)\
-	for(int i3 = 1; i3 <= n[3]; ++i3) for(int i4 = 1; i4 <= n[4]; ++i4)\
-	rdat( (((i4-1)*n[3]+i3-1)*n[2]+i2-1)*n[1]+i1 ) = thisdat( (((k-1)*c.n[3]+w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
+#define Loop4(q,z,w,k) {for(int i1 = 0; i1 < n[1]; ++i1)  for(int i2 = 0; i2 < n[2]; ++i2)\
+	for(int i3 = 0; i3 < n[3]; ++i3) for(int i4 = 0; i4 < n[4]; ++i4)\
+	rdat[ (((i4)*n[3]+i3)*n[2]+i2)*n[1]+i1 ] = thisdat[ (((k)*c.n[3]+w)*c.n[2]+z)*c.n[1]+q ]; return; }
 
-#define Loop3(q,z,w) {for(int i1 = 1; i1 <= n[1]; ++i1)  for(int i2 = 1; i2 <= n[2]; ++i2)\
-	for(int i3 = 1; i3 <= n[3]; ++i3) rdat( ((i3-1)*n[2]+i2-1)*n[1]+i1 ) = thisdat( ((w-1)*c.n[2]+z-1)*c.n[1]+q ); return; }
+#define Loop3(q,z,w) {for(int i1 = 0; i1 < n[1]; ++i1)  for(int i2 = 0; i2 < n[2]; ++i2)\
+	for(int i3 = 0; i3 < n[3]; ++i3) rdat[ ((i3)*n[2]+i2)*n[1]+i1 ] = thisdat[ ((w)*c.n[2]+z)*c.n[1]+q ]; return; }
 
 #define Bif3(a,b,c) if(ind[1] == a && ind[2] == b && ind[3] == c)
 
@@ -1031,7 +1032,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
         }
     else if(is_.rn() == 3)
         {
-        DO_IF_PS(int idx = ((ind[1]-1)*3+ind[2]-1)*3+ind[3]; Prodstats::stats().perms_of_3[idx] += 1; )
+        DO_IF_PS(int idx = ((ind[1])*3+ind[2])*3+ind[3]; Prodstats::stats().perms_of_3[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif3(2,1,3) Loop3(i2,i1,i3)
         Bif3(2,3,1) Loop3(i2,i3,i1) //cyclic
@@ -1041,7 +1042,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
         }
     else if(is_.rn() == 4)
         {
-        DO_IF_PS(int idx = (((ind[1]-1)*4+ind[2]-1)*4+ind[3]-1)*4+ind[4]; Prodstats::stats().perms_of_4[idx] += 1; )
+        DO_IF_PS(int idx = (((ind[1])*4+ind[2])*4+ind[3])*4+ind[4]; Prodstats::stats().perms_of_4[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif4(1,2,4,3) Loop4(i1,i2,i4,i3)
         Bif4(1,3,2,4) Loop4(i1,i3,i2,i4)
@@ -1054,7 +1055,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
         }
     else if(is_.rn() == 5)
         {
-        DO_IF_PS(int idx = ((((ind[1]-1)*5+ind[2]-1)*5+ind[3]-1)*5+ind[4]-1)*5+ind[5]; Prodstats::stats().perms_of_5[idx] += 1; )
+        DO_IF_PS(int idx = ((((ind[1])*5+ind[2])*5+ind[3])*5+ind[4])*5+ind[5]; Prodstats::stats().perms_of_5[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
         Bif5(1,4,2,5,3) Loop5(i1,i4,i2,i5,i3)
@@ -1074,7 +1075,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
         }
     else if(is_.rn() == 6)
         {
-        DO_IF_PS(int idx = (((((ind[1]-1)*6+ind[2]-1)*6+ind[3]-1)*6+ind[4]-1)*6+ind[5]-1)*6+ind[6]; Prodstats::stats().perms_of_6[idx] += 1; )
+        DO_IF_PS(int idx = (((((ind[1])*6+ind[2])*6+ind[3])*6+ind[4])*6+ind[5])*6+ind[6]; Prodstats::stats().perms_of_6[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif6(2,4,1,3,5,6) Loop6(i2,i4,i1,i3,i5,i6)
         Bif6(1,4,2,3,5,6) Loop6(i1,i4,i2,i3,i5,i6)
@@ -1087,7 +1088,10 @@ reshapeDat(const Permutation& P, Vector& rdat) const
     //The j's are pointers to the i's of xdat's Counter,
     //but reordered in a way appropriate for rdat
     array<int*,NMAX+1> j;
-    for(int k = 1; k <= NMAX; ++k) { j[ind[k]] = &(c.i[k]); }
+    for(int k = 1; k <= NMAX; ++k) 
+        { 
+        j[ind[k]] = &(c.i[k]); 
+        }
 
     //Catch-all loops that work for any tensor
     switch(c.rn)
@@ -1095,50 +1099,50 @@ reshapeDat(const Permutation& P, Vector& rdat) const
     case 2:
         for(; c.notDone(); ++c)
             {
-            rdat((*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
+            rdat[(*j[2])*n[1]+*j[1]]
+                = thisdat[c.ind];
             }
         return;
     case 3:
         for(; c.notDone(); ++c)
             {
-            rdat(((*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
+            rdat[((*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = thisdat[c.ind];
             }
         return;
     case 4:
         for(; c.notDone(); ++c)
             {
-            rdat((((*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
+            rdat[(((*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = thisdat[c.ind];
             }
         return;
     case 5:
         for(; c.notDone(); ++c)
             {
-            rdat(((((*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
+            rdat[((((*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = thisdat[c.ind];
             }
         return;
     case 6:
         for(; c.notDone(); ++c)
             {
-            rdat((((((*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
+            rdat[(((((*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = thisdat[c.ind];
             }
         return;
     case 7:
         for(; c.notDone(); ++c)
             {
-            rdat(((((((*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
+            rdat[((((((*j[7])*n[6]+*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = thisdat[c.ind];
             }
         return;
     default:
         for(; c.notDone(); ++c)
             {
-            rdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]+*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]+*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-                = thisdat(c.ind);
+            rdat[(((((((*j[8])*n[7]+*j[7])*n[6]+*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = thisdat[c.ind];
             }
         return;
     } //switch(c.rn)
@@ -1290,30 +1294,30 @@ _ind(const IndexSet<Index>& is,
     switch(is.rn())
     {
     case 0:
-        return (1);
+        return 0;
     case 1:
         return (i1);
     case 2:
-        return ((i2-1)*is[0].m()+i1);
+        return ((i2)*is[0].m()+i1);
     case 3:
-        return (((i3-1)*is[1].m()+i2-1)*is[0].m()+i1);
+        return (((i3)*is[1].m()+i2)*is[0].m()+i1);
     case 4:
-        return ((((i4-1)*is[2].m()+i3-1)*is[1].m()+i2-1)*is[0].m()+i1);
+        return ((((i4)*is[2].m()+i3)*is[1].m()+i2)*is[0].m()+i1);
     case 5:
-        return (((((i5-1)*is[3].m()+i4-1)*is[2].m()+i3-1)*is[1].m()+i2-1)
+        return (((((i5)*is[3].m()+i4)*is[2].m()+i3)*is[1].m()+i2)
                         *is[0].m()+i1);
     case 6:
-        return ((((((i6-1)*is[4].m()+i5-1)*is[3].m()+i4-1)*is[2].m()+i3-1)
-                        *is[1].m()+i2-1)*is[0].m()+i1);
+        return ((((((i6)*is[4].m()+i5)*is[3].m()+i4)*is[2].m()+i3)
+                        *is[1].m()+i2)*is[0].m()+i1);
     case 7:
-        return (((((((i7-1)*is[5].m()+i6-1)*is[4].m()+i5-1)*is[3].m()+i4-1)
-                        *is[2].m()+i3-1)*is[1].m()+i2-1)*is[0].m()+i1);
+        return (((((((i7)*is[5].m()+i6)*is[4].m()+i5)*is[3].m()+i4)
+                        *is[2].m()+i3)*is[1].m()+i2)*is[0].m()+i1);
     case 8:
-        return ((((((((i8-1)*is[6].m()+i7-1)*is[5].m()+i6-1)*is[4].m()+i5-1)
-                        *is[3].m()+i4-1)*is[2].m()+i3-1)*is[1].m()+i2-1)*is[0].m()+i1);
+        return ((((((((i8)*is[6].m()+i7)*is[5].m()+i6)*is[4].m()+i5)
+                        *is[3].m()+i4)*is[2].m()+i3)*is[1].m()+i2)*is[0].m()+i1);
     } //switch
     Error("_ind: Failed switch case");
-    return 1;
+    return 0;
     }
 
 
@@ -1326,16 +1330,16 @@ _ind2(const IndexVal& iv1, const IndexVal& iv2) const
         Error("Not enough m!=1 indices provided");
         }
     if(is_[0] == iv1.ind && is_[1] == iv2.ind)
-        return ((iv2.i-1)*is_[0].m()+iv1.i);
+        return ((iv2.i-1)*is_[0].m()+iv1.i-1);
     else if(is_[0] == iv2.ind && is_[1] == iv1.ind)
-        return ((iv1.i-1)*is_[0].m()+iv2.i);
+        return ((iv1.i-1)*is_[0].m()+iv2.i-1);
     else
         {
         Print(*this);
         Print(iv1);
         Print(iv2);
         Error("Incorrect IndexVal argument to ITensor");
-        return 1;
+        return 0;
         }
     }
 
@@ -1347,7 +1351,8 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
     {
     array<const IndexVal*,NMAX> iv = 
         {{ &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
-    array<int,NMAX> ja; ja.assign(1);
+    array<int,NMAX> ja; 
+    ja.assign(0);
     //Loop over the given IndexVals
     int nn = 0;
     for(int j = 0; j < is_.r(); ++j)
@@ -1361,7 +1366,7 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
             {
             if(is_[k] == J.ind)
                 {
-                ja[k] = J.i;
+                ja[k] = J.i-1;
                 goto next;
                 }
             }
@@ -1805,14 +1810,14 @@ directMultiply(const ITensor& other,
     Counter u,  //uncontracted indices
             c;  //contracted indices
 
-    const int one = 1;
+    const int zero = 0;
 
     const int* li[NMAX];
     const int* ri[NMAX];
     for(int n = 0; n < NMAX; ++n)
         {
-        li[n] = &one;
-        ri[n] = &one;
+        li[n] = &zero;
+        ri[n] = &zero;
         }
 
     int nl[NMAX];
@@ -1861,9 +1866,9 @@ directMultiply(const ITensor& other,
 
     Vector newdat(props.odimL*props.odimR);
 
-    const Real* pL = this->p->v.Store()-1;
-    const Real* pR = other.p->v.Store()-1;
-    Real* pN = newdat.Store()-1;
+    const Real* pL = this->p->v.Store();
+    const Real* pR = other.p->v.Store();
+    Real* pN = newdat.Store();
 
     for(; u.notDone(); ++u)
         {
@@ -1871,10 +1876,10 @@ directMultiply(const ITensor& other,
         val = 0;
         for(c.reset(); c.notDone(); ++c)
             {
-            val += pL[((((((((*li[7]-1)*nl[6]+*li[6]-1)*nl[5]+*li[5]-1)*nl[4]+*li[4]-1)
-                      *nl[3]+*li[3]-1)*nl[2]+*li[2]-1)*nl[1]+*li[1]-1)*nl[0]+*li[0])]
-                 * pR[((((((((*ri[7]-1)*nr[6]+*ri[6]-1)*nr[5]+*ri[5]-1)*nr[4]+*ri[4]-1)
-                      *nr[3]+*ri[3]-1)*nr[2]+*ri[2]-1)*nr[1]+*ri[1]-1)*nr[0]+*ri[0])];
+            val += pL[((((((((*li[7])*nl[6]+*li[6])*nl[5]+*li[5])*nl[4]+*li[4])
+                      *nl[3]+*li[3])*nl[2]+*li[2])*nl[1]+*li[1])*nl[0]+*li[0])]
+                 * pR[((((((((*ri[7])*nr[6]+*ri[6])*nr[5]+*ri[5])*nr[4]+*ri[4])
+                      *nr[3]+*ri[3])*nr[2]+*ri[2])*nr[1]+*ri[1])*nr[0]+*ri[0])];
             }
         }
 
@@ -2129,14 +2134,16 @@ operator+=(const ITensor& other)
     is_.getperm(other.is_,P);
     Counter c(other.is_);
 
-    int *j[NMAX+1];
-    for(int k = 1; k <= NMAX; ++k) j[P.dest(k)] = &(c.i[k]);
-    //static int n[NMAX+1];
+    const int* j[NMAX+1];
+    for(int k = 1; k <= NMAX; ++k) 
+        {
+        j[P.dest(k)] = &(c.i[k]);
+        }
+
     int n[NMAX+1];
     for(int k = 1; k <= NMAX; ++k) 
         {
         n[P.dest(k)] = c.n[k];
-        //n[k] = index_[k].m();
         }
 
 //#ifdef STRONG_DEBUG
@@ -2148,20 +2155,20 @@ operator+=(const ITensor& other)
         {
         for(; c.notDone(); ++c)
             {
-            thisdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]
-            +*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]
-            +*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-            += othrdat(c.ind);
+            thisdat[(((((((*j[8])*n[7]+*j[7])*n[6]
+            +*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]
+            +*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+            += othrdat[c.ind];
             }
         }
     else
         {
         for(; c.notDone(); ++c)
             {
-            thisdat((((((((*j[8]-1)*n[7]+*j[7]-1)*n[6]
-            +*j[6]-1)*n[5]+*j[5]-1)*n[4]+*j[4]-1)*n[3]
-            +*j[3]-1)*n[2]+*j[2]-1)*n[1]+*j[1])
-            += scalefac * othrdat(c.ind);
+            thisdat[(((((((*j[8])*n[7]+*j[7])*n[6]
+            +*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]
+            +*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+            += scalefac * othrdat[c.ind];
             }
         }
 
@@ -2411,7 +2418,7 @@ operator<<(ostream & s, const ITensor & t)
             Counter c(t.is_);
             for(; c.notDone(); ++c)
                 {
-                Real val = v(c.ind)*scale;
+                Real val = v[c.ind]*scale;
                 if(fabs(val) > Global::printScale())
                     { s << "  " << c << (format(" %.10f\n") % val); }
                 }
@@ -2546,7 +2553,7 @@ operator,(Real r)
         Error("commaInit notation is T << #, #, #, ... ;");
         }
     if(c_.notDone()) 
-        { T_.p->v(c_.ind) = r; ++c_; }
+        { T_.p->v[c_.ind] = r; ++c_; }
     else 
         { Error("Comma assignment list too long.\n"); }
     return *this;

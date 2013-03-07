@@ -320,21 +320,24 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     //
     //The ri pointer does the same
     //but for res
-    int one = 1;
-    array<int*,NMAX+1> ti,
-                       ri; 
-    ti.assign(&one);
-    ri.assign(&one);
+    const int zero = 0;
+    array<const int*,NMAX+1> ti,
+                             ri; 
+
+    for(int n = 0; n <= NMAX; ++n)
+        {
+        ti[n] = &zero;
+        ri[n] = &zero;
+        }
 
     //Index that will loop over 
     //the diagonal elems of S
-    int diag_ind = 1;
+    int diag_ind = 0;
     const int dsize = S.diagSize();
 
     //Create a Counter that only loops
     //over the free Indices of T
     Counter tc;
-    tc.n[0] = 0;
 
     res.is_.clear();
     int alloc_size = 1;
@@ -461,7 +464,6 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
         {
         tc.n[k] = 1;
         }
-    tc.reset();
 
 
     const Vector& Tdat = T.p->v;
@@ -474,38 +476,38 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
             {
             //cout << "Doing allSame, res_has_Sind case" << endl;
             //cout << "Case I\n";
-            for(; tc.notDone(); ++tc)
-            for(diag_ind = 1; diag_ind <= dsize; ++diag_ind)
+            for(tc.reset(); tc.notDone(); ++tc)
+            for(diag_ind = 0; diag_ind < dsize; ++diag_ind)
                 {
-                resdat(_ind(res.is_,*ri[1],*ri[2],
+                resdat[_ind(res.is_,*ri[1],*ri[2],
                                     *ri[3],*ri[4],
                                     *ri[5],*ri[6],
-                                    *ri[7],*ri[8]))
-                 =  Tdat(_ind(T.is_,*ti[1],*ti[2],
+                                    *ri[7],*ri[8])]
+                 =  Tdat[_ind(T.is_,*ti[1],*ti[2],
                                     *ti[3],*ti[4],
                                     *ti[5],*ti[6],
-                                    *ti[7],*ti[8]));
+                                    *ti[7],*ti[8])];
                 }
             }
         else
             {
             //cout << "Doing allSame, !res_has_Sind case" << endl;
             //cout << "Case II\n";
-            for(; tc.notDone(); ++tc)
+            for(tc.reset(); tc.notDone(); ++tc)
                 {
                 Real val = 0;
-                for(diag_ind = 1; diag_ind <= dsize; ++diag_ind)
+                for(diag_ind = 0; diag_ind < dsize; ++diag_ind)
                     {
                     val +=
-                    Tdat(_ind(T.is_,*ti[1],*ti[2],
+                    Tdat[_ind(T.is_,*ti[1],*ti[2],
                                     *ti[3],*ti[4],
                                     *ti[5],*ti[6],
-                                    *ti[7],*ti[8]));
+                                    *ti[7],*ti[8])];
                     }
-                resdat(_ind(res.is_,*ri[1],*ri[2],
+                resdat[_ind(res.is_,*ri[1],*ri[2],
                                     *ri[3],*ri[4],
                                     *ri[5],*ri[6],
-                                    *ri[7],*ri[8]))
+                                    *ri[7],*ri[8])]
                 = val;
                 }
             }
@@ -516,39 +518,39 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
         if(res_has_Sind)
             {
             //cout << "Case III\n";
-            for(; tc.notDone(); ++tc)
-            for(diag_ind = 1; diag_ind <= dsize; ++diag_ind)
+            for(tc.reset(); tc.notDone(); ++tc)
+            for(diag_ind = 0; diag_ind < dsize; ++diag_ind)
                 {
-                resdat(_ind(res.is_,*ri[1],*ri[2],
+                resdat[_ind(res.is_,*ri[1],*ri[2],
                                     *ri[3],*ri[4],
                                     *ri[5],*ri[6],
-                                    *ri[7],*ri[8]))
-                 = S.diag_(diag_ind) 
-                   * Tdat(_ind(T.is_,*ti[1],*ti[2],
+                                    *ri[7],*ri[8])]
+                 = S.diag_[diag_ind] 
+                   * Tdat[_ind(T.is_,*ti[1],*ti[2],
                                      *ti[3],*ti[4],
                                      *ti[5],*ti[6],
-                                     *ti[7],*ti[8]));
+                                     *ti[7],*ti[8])];
                 }
             }
         else
             {
             //cout << "Case IV\n";
-            for(; tc.notDone(); ++tc)
+            for(tc.reset(); tc.notDone(); ++tc)
                 {
                 Real val = 0;
-                for(diag_ind = 1; diag_ind <= dsize; ++diag_ind)
+                for(diag_ind = 0; diag_ind < dsize; ++diag_ind)
                     {
                     val +=
-                    S.diag_(diag_ind) 
-                    * Tdat(_ind(T.is_,*ti[1],*ti[2],
+                    S.diag_[diag_ind] 
+                    * Tdat[_ind(T.is_,*ti[1],*ti[2],
                                       *ti[3],*ti[4],
                                       *ti[5],*ti[6],
-                                      *ti[7],*ti[8]));
+                                      *ti[7],*ti[8])];
                     }
-                resdat(_ind(res.is_,*ri[1],*ri[2],
+                resdat[_ind(res.is_,*ri[1],*ri[2],
                                     *ri[3],*ri[4],
                                     *ri[5],*ri[6],
-                                    *ri[7],*ri[8]))
+                                    *ri[7],*ri[8])]
                 = val;
                 }
             }

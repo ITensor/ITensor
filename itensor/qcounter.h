@@ -54,7 +54,7 @@ class QCounter : public Counter
         for(int k = 0; k < size; ++k)
             {
             const IQIndex& I = origv[k];
-            const int j = i[k+1];
+            const int j = i[k+1]+1;
             vind[k] = I.index(j);
             q += I.qn(j)*I.dir();
             }

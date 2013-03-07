@@ -69,7 +69,7 @@ class Counter
     operator++();
 
     bool 
-    notDone() const { return i[1] != 0; }
+    notDone() const { return i[1] >= 0; }
 
     void 
     reset();
@@ -93,8 +93,8 @@ Counter()
 void inline Counter::
 reset()
     {
-    i.assign(1);
-    ind = 1;
+    i.assign(0);
+    ind = 0;
     }
 
 template <class IndexT>
@@ -131,17 +131,19 @@ operator++()
     {
     ++ind;
     ++i[1];
-    if(i[1] > n[1])
-    for(int j = 2; j <= rn; ++j)
+    if(i[1] >= n[1])
         {
-        i[j-1] = 1;
-        ++i[j];
-        if(i[j] <= n[j]) break;
+        for(int j = 2; j <= rn; ++j)
+            {
+            i[j-1] = 0;
+            ++i[j];
+            if(i[j] < n[j]) break;
+            }
         }
     //set 'done' condition
-    if(i[rn] > n[rn]) 
+    if(i[rn] >= n[rn]) 
         {
-        i[1] = 0;
+        i[1] = -1;
         }
     return *this;
     }
@@ -152,8 +154,10 @@ operator<<(std::ostream& s, const Counter& c)
     {
     s << "("; 
     for(int i = 1; i < c.r; ++i)
-        s << c.i[i] << " ";
-    s << c.i[c.r] << ")";
+        {
+        s << (c.i[i]+1) << " ";
+        }
+    s << (c.i[c.r]+1) << ")";
     return s;
     }
 
