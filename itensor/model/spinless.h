@@ -36,40 +36,46 @@ class Spinless : public Model
 
     private:
 
-    virtual int
+    int
     getN() const;
 
-    virtual const IQIndex&
+    const IQIndex&
     getSi(int i) const;
 
-    virtual IQIndex
+    IQIndex
     getSiP(int i) const;
 
-    virtual IQTensor
+    IQTensor
     makeN(int i) const;
 
-    virtual IQTensor
+    IQTensor
     makeC(int i) const;
 
-    virtual IQTensor
+    IQTensor
+    makeA(int i) const { return makeC(i); }
+
+    IQTensor
     makeCdag(int i) const;
 
-    virtual IQTensor
+    IQTensor
+    makeAdag(int i) const { return makeCdag(i); }
+
+    IQTensor
     makeFermiPhase(int i) const;
 
-    virtual IQTensor
+    IQTensor
     makeProjEmp(int i) const;
 
-    virtual IQTensor
+    IQTensor
     makeProjOcc(int i) const;
 
-    virtual void
+    void
     doRead(std::istream& s);
 
-    virtual void
+    void
     doWrite(std::ostream& s) const;
 
-    virtual void
+    void
     constructSites();
         
     //Data members -----------------
@@ -102,7 +108,7 @@ Spinless(int N, bool odd_even_up_down, bool conserve_Nf)
     constructSites();
     }
 
-inline void Spinless::
+void inline Spinless::
 constructSites()
     {
     const int occ = (conserve_Nf_ ? 1 : 0);
@@ -135,7 +141,7 @@ constructSites()
         }
     }
 
-inline void Spinless::
+void inline Spinless::
 doRead(std::istream& s)
     {
     s.read((char*) &odd_even_up_down_,sizeof(odd_even_up_down_));
@@ -146,7 +152,7 @@ doRead(std::istream& s)
         site_.at(j).read(s);
     }
 
-inline void Spinless::
+void inline Spinless::
 doWrite(std::ostream& s) const
     {
     s.write((char*) &odd_even_up_down_,sizeof(odd_even_up_down_));
@@ -156,43 +162,44 @@ doWrite(std::ostream& s) const
         site_.at(j).write(s);
     }
 
-inline int Spinless::
+int inline Spinless::
 getN() const
     { return N_; }
 
-inline const IQIndex& Spinless::
+inline 
+const IQIndex& Spinless::
 getSi(int i) const
     { return site_.at(i); }
 
-inline IQIndex Spinless::
+IQIndex inline Spinless::
 getSiP(int i) const
     { return primed(site_.at(i)); }
 
-inline IQIndexVal Spinless::
+IQIndexVal inline Spinless::
 Emp(int i) const
     {
     return getSi(i)(1);
     }
 
-inline IQIndexVal Spinless::
+IQIndexVal inline Spinless::
 Occ(int i) const
     {
     return getSi(i)(2);
     }
 
-inline IQIndexVal Spinless::
+IQIndexVal inline Spinless::
 EmpP(int i) const
     {
     return getSiP(i)(1);
     }
 
-inline IQIndexVal Spinless::
+IQIndexVal inline Spinless::
 OccP(int i) const
     {
     return getSiP(i)(2);
     }
 
-inline IQTensor Spinless::
+IQTensor inline Spinless::
 makeN(int i) const
     {
     IQTensor N(conj(si(i)),siP(i));
@@ -200,7 +207,7 @@ makeN(int i) const
     return N;
     }
 
-inline IQTensor Spinless::
+IQTensor inline Spinless::
 makeC(int i) const
     {
     IQTensor C(conj(si(i)),siP(i));
@@ -208,7 +215,7 @@ makeC(int i) const
     return C;
     }
 
-inline IQTensor Spinless::
+IQTensor inline Spinless::
 makeCdag(int i) const
     {
     IQTensor Cdag(conj(si(i)),siP(i));
@@ -216,7 +223,7 @@ makeCdag(int i) const
     return Cdag;
     }
 
-inline IQTensor Spinless::
+IQTensor inline Spinless::
 makeFermiPhase(int i) const
     {
     IQTensor fermiPhase(conj(si(i)),siP(i));
@@ -225,7 +232,7 @@ makeFermiPhase(int i) const
     return fermiPhase;
     }
 
-inline IQTensor Spinless::
+IQTensor inline Spinless::
 makeProjEmp(int i) const
     {
     IQTensor projEmp(conj(si(i)),siP(i));
@@ -233,7 +240,7 @@ makeProjEmp(int i) const
     return projEmp;
     }
 
-inline IQTensor Spinless::
+IQTensor inline Spinless::
 makeProjOcc(int i) const
     {
     IQTensor projOcc(conj(si(i)),siP(i));
