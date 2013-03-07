@@ -860,6 +860,12 @@ tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied)
 void IQTensor::
 trace(const boost::array<IQIndex,NMAX>& indices, int niqind)
     {
+    if(niqind < 0)
+        {
+        niqind = 0;
+        while(indices[niqind] != IQIndex::Null()) ++niqind;
+        }
+
     if(niqind < 1) Error("No IQIndices to trace");
 
     const int nindex = indices[0].nindex();
@@ -916,39 +922,14 @@ trace(const boost::array<IQIndex,NMAX>& indices, int niqind)
     }
 
 void IQTensor::
-trace(const IQIndex& i1, const IQIndex& i2)
+trace(const IQIndex& i1, const IQIndex& i2,
+      const IQIndex& i3, const IQIndex& i4,
+      const IQIndex& i5, const IQIndex& i6,
+      const IQIndex& i7, const IQIndex& i8)
     {
-    boost::array<IQIndex,NMAX> inds =
-        {{ i1, i2, 
-           IQIndex::Null(), IQIndex::Null(), 
-           IQIndex::Null(), IQIndex::Null(), 
-           IQIndex::Null(), IQIndex::Null() }};
-
-    trace(inds,2);
-    }
-
-void IQTensor::
-trace(const IQIndex& i1)
-    {
-    boost::array<IQIndex,NMAX> inds =
-        {{ i1, IQIndex::Null(), 
-           IQIndex::Null(), IQIndex::Null(), 
-           IQIndex::Null(), IQIndex::Null(), 
-           IQIndex::Null(), IQIndex::Null() }};
-
-    trace(inds,1);
-    }
-
-Real
-trace(IQTensor T)
-    {
-    boost::array<IQIndex,NMAX> inds;
-    for(int k = 1; k <= T.r(); ++k)
-        {
-        inds[k-1] = T.index(k);
-        }
-    T.trace(inds,T.r());
-    return T.toReal();
+    array<IQIndex,NMAX> inds = {{ i1, i2, i3, i4,
+                                i5, i6, i7, i8 }};
+    trace(inds);
     }
 
 int IQTensor::

@@ -385,23 +385,17 @@ class IQTensor
     tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied);
 
     void
-    trace(const boost::array<IQIndex,NMAX>& indices, int nind);
+    trace(const boost::array<IQIndex,NMAX>& indices, int niqind = -1);
 
     void
-    trace(const IQIndex& i1, const IQIndex& i2);
-
-    void
-    trace(const IQIndex& i1);
-
-    IQTensor friend inline
-    trace(const IQIndex& i1, const IQIndex& i2, IQTensor T)
-        { T.trace(i1,i2); return T; }
-
-    //
-    // Tracing over all indices results in a Real
-    //
-    Real friend
-    trace(IQTensor T);
+    trace(const IQIndex& i1, 
+          const IQIndex& i2 = IQIndex::Null(), 
+          const IQIndex& i3 = IQIndex::Null(),
+          const IQIndex& i4 = IQIndex::Null(),
+          const IQIndex& i5 = IQIndex::Null(),
+          const IQIndex& i6 = IQIndex::Null(),
+          const IQIndex& i7 = IQIndex::Null(),
+          const IQIndex& i8 = IQIndex::Null());
 
     //----------------------------------------------------
     //IQTensor miscellaneous methods

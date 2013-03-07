@@ -726,6 +726,12 @@ tieIndices(const Index& i1, const Index& i2,
 void ITensor::
 trace(const array<Index,NMAX>& indices, int nind)
     {
+    if(nind < 0)
+        {
+        nind = 0;
+        while(indices[nind] != Index::Null()) ++nind;
+        }
+
     if(nind == 0) Error("No indices given");
 
     const int tm = indices[0].m();
@@ -833,51 +839,16 @@ trace(const array<Index,NMAX>& indices, int nind)
 
     } //ITensor::trace
 
-void ITensor::
-trace(const Index& i1)
-    {
-    array<Index,NMAX> inds =
-        {{ i1, Index::Null(), 
-           Index::Null(), Index::Null(), 
-           Index::Null(), Index::Null(), 
-           Index::Null(), Index::Null() }};
-
-    trace(inds,1);
-    }
-
-void ITensor::
-trace(const Index& i1, const Index& i2)
-    {
-    array<Index,NMAX> inds =
-        {{ i1, i2, 
-           Index::Null(), Index::Null(), 
-           Index::Null(), Index::Null(), 
-           Index::Null(), Index::Null() }};
-
-    trace(inds,2);
-    }
-
-void ITensor::
-trace(const Index& i1, const Index& i2, const Index& i3)
-    {
-    array<Index,NMAX> inds =
-        {{ i1, i2, i3,
-           Index::Null(), Index::Null(), 
-           Index::Null(), Index::Null(), Index::Null() }};
-
-    trace(inds,3);
-    }
 
 void ITensor::
 trace(const Index& i1, const Index& i2,
-      const Index& i3, const Index& i4)
+      const Index& i3, const Index& i4,
+      const Index& i5, const Index& i6,
+      const Index& i7, const Index& i8)
     {
-    array<Index,NMAX> inds =
-        {{ i1, i2, i3, i4,
-           Index::Null(), Index::Null(), 
-           Index::Null(), Index::Null() }};
-
-    trace(inds,4);
+    array<Index,NMAX> inds = {{ i1, i2, i3, i4,
+                                i5, i6, i7, i8 }};
+    trace(inds);
     }
 
 void ITensor::
@@ -2244,10 +2215,10 @@ void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, co
 */
 
 ostream& 
-operator<<(ostream & s, const ITensor & t)
+operator<<(ostream & s, const ITensor& t)
     {
     s << "ITensor r = " << t.r() << ": ";
-    s << t.is_ << "\n";
+    s << t.indices() << "\n";
 
     s << "  {log(scale)[incl in elems]=" << t.scale().logNum();
 
@@ -2257,7 +2228,7 @@ operator<<(ostream & s, const ITensor & t)
         {
         s << ", L=" << t.vecSize();
 
-        if(t.scale_.isFiniteReal())
+        if(t.scale().isFiniteReal())
             {
             Real nrm = t.norm();
             if(nrm >= 1E-2 && nrm < 1E5)
@@ -2273,13 +2244,13 @@ operator<<(ostream & s, const ITensor & t)
         if(Global::printdat())
             {
             Real scale = 1.0;
-            if(t.scale_.isFiniteReal()) scale = t.scale_.real();
+            if(t.scale().isFiniteReal()) scale = t.scale().real();
             else s << "\n(omitting too large scale factor)" << endl;
-            const Vector& v = t.p->v;
-            Counter c(t.is_);
+            const Real* pv = t.datStart();
+            Counter c(t.indices());
             for(; c.notDone(); ++c)
                 {
-                Real val = v[c.ind]*scale;
+                Real val = pv[c.ind]*scale;
                 if(fabs(val) > Global::printScale())
                     { s << "  " << c << (format(" %.10f\n") % val); }
                 }

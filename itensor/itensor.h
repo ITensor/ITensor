@@ -35,11 +35,6 @@ class ITensor
     //Accessor Methods
     //
 
-    //Real number that uniquely identifies this
-    //ITensor's set of Indices (independent of their order)
-    Real 
-    uniqueReal() const { return is_.uniqueReal(); } 
-
     //Rank of this ITensor (number of indices)
     int 
     r() const { return is_.r(); }
@@ -48,19 +43,19 @@ class ITensor
     bool 
     isNull() const { return !bool(p); }
 
-    //true if ITensor is NOT default constructed
-    bool 
-    isNotNull() const { return bool(p); }
+    //Enables looping over Indices in a Foreach
+    //e.g. Foreach(const Index& I, t.index() ) { ... }
+    const IndexSet<Index>&
+    indices() const { return is_; }
 
     //Read-only access to scale factor, used internally for efficient scalar ops
     const LogNumber&
     scale() const { return scale_; }
 
-    //Enables looping over Indices in a Foreach
-    //e.g. Foreach(const Index& I, t.index() ) { ... }
-    //const std::pair<IndexSet<Index>::index_it,IndexSet<Index>::index_it> 
-    const IndexSet<Index>&
-    indices() const { return is_; }
+    //Real number that uniquely identifies this
+    //ITensor's set of Indices (independent of their order)
+    Real 
+    uniqueReal() const { return is_.uniqueReal(); } 
 
 
     //
@@ -224,7 +219,6 @@ class ITensor
     hasCommonIndex(const ITensor& other) const
         { return is_.hasCommonIndex(other.is_); }
     
-    //true if has Index I
     bool 
     hasindex(const Index& I) const { return is_.hasindex(I); }
 
@@ -236,8 +230,8 @@ class ITensor
     bool 
     hasindex1(const Index& I) const { return is_.hasindex1(I); }
 
-    //true if this tensor has the first nind Indices in array I
-    //(I should be zero indexed)
+    //true if this tensor has the first nind Indices 
+    //in array I (starting from I[0])
     bool
     hasAllIndex(const boost::array<Index,NMAX>& I, int nind) const
         { return is_.hasAllIndex(I,nind); }
@@ -382,41 +376,19 @@ class ITensor
     // The trace method sums over the given set of indices
     // (which must all have the same dimension).
     //
-    // Rik = trace(j,l,m,Aijkml) = \sum_j Aijkjj
+    // Rik = Aijkml.trace(j,l,m) = \sum_t Aitktt
     void
-    trace(const boost::array<Index,NMAX>& indices, int nind);
-
-    void
-    trace(const Index& i1, const Index& i2);
-
-    void
-    trace(const Index& i1);
-
-    ITensor friend inline
-    trace(const Index& i1, const Index& i2, ITensor T)
-        { T.trace(i1,i2); return T; }
+    trace(const Index& i1, 
+          const Index& i2 = Index::Null(), 
+          const Index& i3 = Index::Null(),
+          const Index& i4 = Index::Null(),
+          const Index& i5 = Index::Null(),
+          const Index& i6 = Index::Null(),
+          const Index& i7 = Index::Null(),
+          const Index& i8 = Index::Null());
 
     void
-    trace(const Index& i1, const Index& i2, const Index& i3);
-
-    ITensor friend inline
-    trace(const Index& i1, const Index& i2, const Index& i3,
-          ITensor T)
-        { T.trace(i1,i2,i3); return T; }
-
-    void
-    trace(const Index& i1, const Index& i2, const Index& i3, const Index& i4);
-
-    ITensor friend inline
-    trace(const Index& i1, const Index& i2, const Index& i3, const Index& i4,
-          ITensor T)
-        { T.trace(i1,i2,i3,i4); return T; }
-
-    //
-    // Tracing over all indices results in a Real
-    //
-    Real friend
-    trace(ITensor T);
+    trace(const boost::array<Index,NMAX>& indices, int nind = -1);
 
 
     //
@@ -520,7 +492,8 @@ class ITensor
     Real 
     norm() const;
 
-    template <typename Callable> void
+    template <typename Callable> 
+    void
     mapElems(const Callable& f);
 
     void
@@ -543,8 +516,6 @@ class ITensor
     printIndices(const boost::format& fname) const
         { printIndices(fname.str()); }
 
-    friend std::ostream& 
-    operator<<(std::ostream & s, const ITensor & t);
 
     friend class commaInit;
 
@@ -903,7 +874,7 @@ commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
             return I;
         }
     throw ITError("No common index found");
-    return IndexT();
+    return IndexT::Null();
     }
 template<class TensorA, class TensorB> typename 
 TensorA::IndexT
@@ -1052,14 +1023,21 @@ imagPart(const Tensor& T)
     return im;
     }
 
-Real inline
-trace(ITensor T)
+//
+// Tracing over all indices results in a Real
+//
+template <class Tensor>
+Real
+trace(Tensor T)
     {
     if(isComplex(T))
         {
         Error("ITensor is complex, use trace(T,re,im)");
         }
-    if(T.is_.rn() != 0) T.trace(T.is_.storage(),T.is_.rn());
+    if(T.indices().rn() != 0) 
+        {
+        T.trace(T.indices().storage(),T.indices().rn());
+        }
     return T.toReal();
     }
 
@@ -1077,10 +1055,29 @@ trace(const Tensor& T, Real& re, Real& im)
     im = trace(imagPart(T));
     }
 
+template<class Tensor, class IndexT>
+Tensor
+trace(Tensor T, 
+      const IndexT& i1,
+      const IndexT& i2 = IndexT::Null(), 
+      const IndexT& i3 = IndexT::Null(), 
+      const IndexT& i4 = IndexT::Null(),
+      const IndexT& i5 = IndexT::Null(),
+      const IndexT& i6 = IndexT::Null(),
+      const IndexT& i7 = IndexT::Null(),
+      const IndexT& i8 = IndexT::Null())
+    { 
+    T.trace(i1,i2,i3,i4,i5,i6,i7,i8); 
+    return T; 
+    }
+
 int
 _ind(const IndexSet<Index>& is,
      int i1, int i2, int i3, int i4, 
      int i5, int i6, int i7, int i8);
+
+std::ostream& 
+operator<<(std::ostream & s, const ITensor& T);
 
 #undef Cout
 #undef Endl
