@@ -1168,11 +1168,11 @@ swap(ITensor& other)
     scale_.swap(other.scale_);
     }
 
-Real* ITensor::
+const Real* ITensor::
 datStart() const
     {
     if(!p) Error("ITensor is null");
-    return p->v.First();
+    return p->v.Store();
     }
 
 void ITensor::
@@ -1668,143 +1668,11 @@ operator/=(const ITensor& other)
     }
 
 
-//#define OLD_DIRECT_MULTIPLY
-
-#ifdef OLD_DIRECT_MULTIPLY
-
-int inline
-ind4(int i4, int m3, int i3, int m2, int i2, int m1, int i1)
-    {
-    return (((i4-1)*m3+i3-1)*m2+i2-1)*m1+i1;
-    }
-
-void ITensor::
-directMultiply(const ITensor& other, ProductProps& props, 
-               IndexSet<Index>& new_index)
-    {
-    int am[NMAX+1], bm[NMAX+1], mcon[NMAX+1], mnew[NMAX+1];
-    int *pa[NMAX+1], *pb[NMAX+1];
-    int one = 1;
-    for(int j = 1; j <= NMAX; ++j)
-        {
-        //Set *pa[j],*pb[j],mcon[j] and mnew[j]
-        // to 1 unless set otherwise below
-        pa[j] = pb[j] = &one, mcon[j] = mnew[j] = 1;
-        am[j] = is_[j-1].m();
-        bm[j] = other.is_[j-1].m();
-        }
-    int new_rn = 0;
-    int icon[NMAX+1], inew[NMAX+1];
-    for(int j = 0; j < this->is_.rn(); ++j)
-        if(!props.contractedL[j+1]) 
-            {
-            new_index.addindexn(is_[j]);
-            ++new_rn;
-            mnew[new_rn] = am[j+1];
-            pa[j+1] = inew + new_rn;
-            }
-        else
-            {
-            mcon[props.pl.dest(j+1)] = am[j+1];
-            pa[j+1] = icon + props.pl.dest(j+1);
-            }
-
-    for(int j = 0; j < other.is_.rn(); ++j)
-        if(!props.contractedR[j+1]) 
-            {
-            new_index.addindexn(other.is_[j]);
-            ++new_rn;
-            mnew[new_rn] = bm[j+1];
-            pb[j+1] = inew + new_rn;
-            }
-        else
-            {
-            mcon[props.pr.dest(j+1)] = bm[j+1];
-            pb[j+1] = icon + props.pr.dest(j+1);
-            }
-
-    if(new_rn > 4) 
-        {
-        Print((*this));
-        Print(other);
-        cout << "new_rn is " << new_rn << endl;
-        Error("new_rn too big for this part!");
-        }
-    if(props.nsamen > 4) Error("nsamen too big for this part!");
-
-    static Vector newdat;
-    newdat.ReduceDimension(props.odimL*props.odimR);
-
-    icon[1] = icon[2] = icon[3] = icon[4] = 1;
-    inew[1] = inew[2] = inew[3] = inew[4] = 1;
-    int basea = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]); 
-    int baseb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]); 
-    icon[1] = 2;
-    int inca1 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
-    int incb1 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
-    icon[1] = 1;
-    int inca2=0,incb2=0;
-    if(props.nsamen == 2)
-        {
-        icon[2] = 2;
-        inca2 = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]) - basea; 
-        incb2 = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]) - baseb; 
-        icon[2] = 1;
-        }
-
-    Real *pv = p->v.Store()-1, *opv = other.p->v.Store()-1;
-    for(inew[4] = 1; inew[4] <= mnew[4]; ++inew[4])
-    for(inew[3] = 1; inew[3] <= mnew[3]; ++inew[3])
-    for(inew[2] = 1; inew[2] <= mnew[2]; ++inew[2])
-    for(inew[1] = 1; inew[1] <= mnew[1]; ++inew[1])
-            {
-            Real d = 0.0;
-            if(props.nsamen == 1)
-                {
-                icon[1] = 1;
-                int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
-                int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
-                for(icon[1] = 1; icon[1] <= mcon[1]; icon[1]++, inda += inca1, indb += incb1)
-                    d += pv[inda] * opv[indb];
-                }
-            else if(props.nsamen == 2)
-                {
-                icon[2] = icon[1] = 1;
-                int inda = ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1]);
-                int indb = ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]);
-                int indaa = inda, indbb = indb;
-                for(icon[2] = 1; icon[2] <= mcon[2]; icon[2]++, indaa += inca2, indbb += incb2)
-                    {
-                    inda = indaa; indb = indbb;
-                    for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1], inda += inca1, indb += incb1)
-                    d += pv[inda] * opv[indb];
-                    }
-                }
-            else
-                {
-                for(icon[4] = 1; icon[4] <= mcon[4]; ++icon[4])
-                for(icon[3] = 1; icon[3] <= mcon[3]; ++icon[3])
-                for(icon[2] = 1; icon[2] <= mcon[2]; ++icon[2])
-                for(icon[1] = 1; icon[1] <= mcon[1]; ++icon[1])
-                    d +=      p->v(ind4(*pa[4],am[3],*pa[3],am[2],*pa[2],am[1],*pa[1])) 
-                      * other.p->v(ind4(*pb[4],bm[3],*pb[3],bm[2],*pb[2],bm[1],*pb[1]));
-                }
-
-            newdat(ind4(inew[4],mnew[3],inew[3],mnew[2],inew[2],mnew[1],inew[1])) = d;
-            }
-
-    if(!p.unique()) allocate();
-
-    p->v = newdat;
-
-
-    } // directMultiply
-
-#else
-
-void ITensor::
-directMultiply(const ITensor& other, 
+void
+directMultiply(const ITensor& L,
+               const ITensor& R, 
                ProductProps& props, 
+               Vector& newdat,
                IndexSet<Index>& new_index)
     {
     Counter u,  //uncontracted indices
@@ -1823,33 +1691,36 @@ directMultiply(const ITensor& other,
     int nl[NMAX];
     int nr[NMAX];
 
-    const int trn = this->is_.rn();
-    const int orn = other.is_.rn();
+    const IndexSet<Index>& Lis = L.indices();
+    const IndexSet<Index>& Ris = R.indices();
+
+    const int trn = Lis.rn();
+    const int orn = Ris.rn();
 
     for(int j = 0; j < trn; ++j)
         {
         if(!props.contractedL[j+1])
             {
             ++u.rn; //(++u.r);
-            u.n[u.rn] = is_[j].m();
+            u.n[u.rn] = Lis[j].m();
             li[j] = &(u.i[u.rn]);
-            new_index.addindexn(is_[j]);
+            new_index.addindexn(Lis[j]);
             }
         else
             {
             for(int k = 0; k < orn; ++k)
                 {
-                if(is_[j] == other.is_[k])
+                if(Lis[j] == Ris[k])
                     {
                     ++c.rn; //(++c.r);
-                    c.n[c.rn] = is_[j].m();
+                    c.n[c.rn] = Lis[j].m();
                     li[j] = &(c.i[c.rn]);
                     ri[k] = &(c.i[c.rn]);
                     break;
                     }
                 }
             }
-        nl[j] = is_[j].m();
+        nl[j] = Lis[j].m();
         }
 
     for(int j = 0; j < orn; ++j)
@@ -1857,17 +1728,17 @@ directMultiply(const ITensor& other,
         if(!props.contractedR[j+1])
             {
             ++u.rn; //(++u.r);
-            u.n[u.rn] = other.is_[j].m();
+            u.n[u.rn] = Ris[j].m();
             ri[j] = &(u.i[u.rn]);
-            new_index.addindexn(other.is_[j]);
+            new_index.addindexn(Ris[j]);
             }
-        nr[j] = other.is_[j].m();
+        nr[j] = Ris[j].m();
         }
 
-    Vector newdat(props.odimL*props.odimR);
+    newdat.ReDimension(props.odimL*props.odimR);
 
-    const Real* pL = this->p->v.Store();
-    const Real* pR = other.p->v.Store();
+    const Real* pL = L.datStart();
+    const Real* pR = R.datStart();
     Real* pN = newdat.Store();
 
     for(; u.notDone(); ++u)
@@ -1883,12 +1754,7 @@ directMultiply(const ITensor& other,
             }
         }
 
-    if(!p.unique()) allocate();
-    p->v = newdat;
-
     } //ITensor::directMultiply
-
-#endif
 
 
 ITensor& ITensor::
@@ -1996,16 +1862,8 @@ operator*=(const ITensor& other)
         }
 #endif
 
-#ifdef OLD_DIRECT_MULTIPLY
-    const
-    bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 10000 ||
-                              (is_.rn()+other.is_.rn()-2*props.nsamen) > 4 ||
-                              is_.rn() > 4 ||
-                              other.is_.rn() > 4;
-#else
     const
     bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 1000;
-#endif
 
     MatrixRefNoLink lref, rref;
     bool L_is_matrix,R_is_matrix;
@@ -2034,7 +1892,10 @@ operator*=(const ITensor& other)
         }
     else
         {
-        directMultiply(other,props,new_index);
+        Vector newdat;
+        directMultiply(*this,other,props,newdat,new_index);
+        if(!p.unique()) allocate();
+        p->v = newdat;
         }
 
     //Put in m==1 indices

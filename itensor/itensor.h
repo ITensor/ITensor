@@ -502,7 +502,7 @@ class ITensor
 
     //Other Methods -------------------------------------------------
 
-    Real*
+    const Real*
     datStart() const;
 
     void 
@@ -689,11 +689,6 @@ class ITensor
                              ProductProps& pp,
                              MatrixRefNoLink& lref, MatrixRefNoLink& rref,
                              bool& L_is_matrix, bool& R_is_matrix, bool doReshape = true);
-
-    void
-    directMultiply(const ITensor& other, 
-                   ProductProps& pp, 
-                   IndexSet<Index>& new_index);
 
     int _ind2(const IndexVal& iv1, const IndexVal& iv2) const;
 
