@@ -349,24 +349,6 @@ class MPSt
 
 
     //
-    // projectOp takes the projected edge tensor W 
-    // of an operator and the site tensor X for the operator
-    // and creates the next projected edge tensor nE
-    //
-    // dir==Fromleft example:
-    //
-    //  /---A--     /---
-    //  |   |       |
-    //  E-- X -  =  nE -
-    //  |   |       |
-    //  \---A--     \---
-    //
-    void 
-    projectOp(int j, Direction dir, 
-              const Tensor& E, const Tensor& X, Tensor& nE) const;
-
-
-    //
     // Applies a bond gate to the bond that is currently
     // the OC.                                    |      |
     // After calling position b, this bond is - A_[b] - A_[b+1] -
@@ -635,6 +617,41 @@ svdBond(int b, const Tensor& AA, Direction dir,
 //
 // Other Methods Related to MPSt
 //
+
+//
+// projectOp takes the projected edge tensor W 
+// of an operator and the site tensor X for the operator
+// and creates the next projected edge tensor nE
+//
+// dir==Fromleft example:
+//
+//  /---A--     /---
+//  |   |       |
+//  E-- X -  =  nE -
+//  |   |       |
+//  \---A--     \---
+//
+template <class Tensor>
+void 
+projectOp(const MPSt<Tensor>& psi, int j, Direction dir, 
+          const Tensor& E, const Tensor& X, Tensor& nE)
+    {
+    if(dir==Fromleft && j > psi.leftLim()) 
+        { 
+        Cout << Format("projectOp: from left j > l_orth_lim_ (j=%d,leftLim=%d)")%j%psi.leftLim() << Endl;
+        Error("Projecting operator at j > l_orth_lim_"); 
+        }
+    if(dir==Fromright && j < psi.rightLim()) 
+        { 
+        Cout << Format("projectOp: from left j < r_orth_lim_ (j=%d,r_orth_lim_=%d)")%j%psi.rightLim() << Endl;
+        Error("Projecting operator at j < r_orth_lim_"); 
+        }
+    nE = (E.isNull() ? psi.A(j) : E * psi.A(j));
+    nE *= X; 
+    nE *= conj(primed(psi.A(j)));
+    }
+
+
 
 int 
 findCenter(const IQMPS& psi);

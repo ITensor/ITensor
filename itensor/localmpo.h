@@ -456,7 +456,7 @@ makeL(const MPSType& psi, int k)
             while(LHlim_ < k)
                 {
                 const int ll = LHlim_;
-                psi.projectOp(ll+1,Fromleft,PH_.at(ll),Op_->A(ll+1),PH_.at(ll+1));
+                projectOp(psi,ll+1,Fromleft,PH_.at(ll),Op_->A(ll+1),PH_.at(ll+1));
                 setLHlim(LHlim_+1);
                 }
             }
@@ -485,7 +485,7 @@ makeR(const MPSType& psi, int k)
             while(RHlim_ > k)
                 {
                 const int rl = RHlim_;
-                psi.projectOp(rl-1,Fromright,PH_.at(rl),Op_->A(rl-1),PH_.at(rl-1));
+                projectOp(psi,rl-1,Fromright,PH_.at(rl),Op_->A(rl-1),PH_.at(rl-1));
                 setRHlim(RHlim_-1);
                 }
             }

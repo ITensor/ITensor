@@ -819,38 +819,6 @@ bool MPSt<ITensor>::checkOrtho() const;
 template
 bool MPSt<IQTensor>::checkOrtho() const;
 
-template <class Tensor>
-void MPSt<Tensor>::
-projectOp(int j, Direction dir, 
-          const Tensor& E, const Tensor& X, Tensor& nE) const
-    {
-    if(dir == Fromleft)
-        setBond(j);
-    else
-        setBond(j-1);
-
-    if(dir==Fromleft && j > l_orth_lim_) 
-        { 
-        std::cerr << boost::format("projectOp: from left j > l_orth_lim_ (j=%d,l_orth_lim_=%d)\n")%j%l_orth_lim_; 
-        Error("Projecting operator at j > l_orth_lim_"); 
-        }
-    if(dir==Fromright && j < r_orth_lim_) 
-        { 
-        std::cerr << boost::format("projectOp: from left j < r_orth_lim_ (j=%d,r_orth_lim_=%d)\n")%j%r_orth_lim_; 
-        Error("Projecting operator at j < r_orth_lim_"); 
-        }
-    nE = (E.isNull() ? A(j) : E * A(j));
-    nE *= X; 
-    nE *= conj(primed(A(j)));
-    }
-template
-void MPSt<ITensor>::projectOp(int j, Direction dir, 
-                              const ITensor& E, const ITensor& X, 
-                              ITensor& nE) const;
-template
-void MPSt<IQTensor>::projectOp(int j, Direction dir, 
-                              const IQTensor& E, const IQTensor& X, 
-                              IQTensor& nE) const;
 
 template <class Tensor>
 void MPSt<Tensor>::
