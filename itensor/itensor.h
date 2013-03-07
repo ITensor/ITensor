@@ -184,6 +184,9 @@ class ITensor
     ITensor& 
     operator/=(Real fac) { scale_ /= fac; return *this; }
 
+    ITensor
+    operator-() const { ITensor T(*this); T.scale_ *= -1; return T; }
+
     //Multiplication with LogNumber (very large or very small Real)
     ITensor& 
     operator*=(LogNumber lgnum) { scale_ *= lgnum; return *this; }

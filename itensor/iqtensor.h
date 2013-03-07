@@ -216,6 +216,9 @@ class IQTensor
     operator/(Real fac, IQTensor t) 
         { return (t /= fac); }
 
+    IQTensor
+    operator-() const { IQTensor T(*this); T *= -1; return T; }
+
     IQTensor& 
     operator*=(const LogNumber& lgnum);
 
