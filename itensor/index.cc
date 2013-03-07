@@ -4,9 +4,7 @@
 //
 #include "index.h"
 #include "boost/make_shared.hpp"
-#include "boost/uuid/uuid.hpp"
-#include "boost/uuid/random_generator.hpp"
-#include "boost/uuid/string_generator.hpp"
+#include "boost/random/mersenne_twister.hpp"
 
 using namespace std;
 using boost::array;
@@ -77,64 +75,6 @@ nameint(const string& f, int n)
     return ss.str(); 
     }
 
-struct UniqueID
-    {
-    boost::uuids::uuid id;
-
-    UniqueID() : id(boost::uuids::random_generator()()) { }
-
-    UniqueID& operator++();
-
-    operator boost::uuids::uuid() const { return id; }
-    };
-
-#define UID_NUM_PRINT 2
-ostream& 
-operator<<(ostream& s, const boost::uuids::uuid& id)
-    { 
-    s.width(2);
-    for(boost::uuids::uuid::size_type i = id.size()-UID_NUM_PRINT; i < id.size(); ++i) 
-        {
-        s << static_cast<unsigned int>(id.data[i]);
-        }
-    s.width(0);
-    return s; 
-    }
-
-UniqueID& UniqueID::
-operator++()
-    {
-    int i = id.size(); 
-    while(--i >= 0)
-        { 
-        if(++id.data[i] == 0) continue; 
-        break;
-        }
-    return *this;
-    }
-
-ostream&
-operator<<(ostream& s, const UniqueID& uid) 
-    { 
-    s << uid.id; 
-    return s; 
-    }
-
-const UniqueID&
-nextID()
-    {
-    static UniqueID lastID_;
-    static int count_ = 0;
-    //After making so many ID's sequentially,
-    //call the random number generator again
-    if(++count_ > 1000)
-        {
-        count_ = 0;
-        lastID_ = UniqueID();
-        }
-    return ++lastID_;
-    }
-
 
 //
 // IndexDat
@@ -178,38 +118,18 @@ class IndexDat
     }; //class IndexDat
 
 
-int 
-prime_number(int n)
-    {
-    static const array<int,54> plist = { { 
-    2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 
-    37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 
-    79, 83, 89, 97, 101, 103, 107, 109, 113, 
-    127, 131, 137, 139, 149, 151, 157, 163, 
-    167, 173, 179, 181, 191, 193, 197, 199, 
-    211, 223, 227, 229, 233, 239, 241, 251 
-    } };
-#ifdef DEBUG
-    if(n > 53)
-        Error("prime_number: out of range");
-#endif
-    return plist[n];
-    }
-
+typedef boost::random::mt19937 
+Generator;
 
 Real 
-setUniqueReal(const boost::uuids::uuid& ind, IndexType type)
+generateUniqueReal(IndexType type)
     {
-    //return sin(ind * sqrt(1.0/7.0) + ((int)type - (int)Site) * sqrt(1.0 / 13.0));
-    Real arg = 0;
-    int pn = 1;
-    for(int i = int(ind.size())-1; i >= 0; --i)
-        { 
-        arg += ind.data[i]*sqrt(1.0/(prime_number(++pn))); 
-        }
-    arg *= sqrt(1.0/(prime_number(++pn)));
-    arg += ((int)type - (int)Site) * sqrt(1.0/(prime_number(++pn)));
-    return sin(arg);
+    static const char seed = 's';
+
+    //Construct rng and seed with address of seed
+    static Generator rng((uintptr_t)&seed);
+
+    return sin(rng() * sqrt(1.0/7.0) + ((int)type - (int)Site) * sqrt(1.0 / 13.0));
     }
 
 IndexDat::
@@ -217,7 +137,7 @@ IndexDat(const string& name, int m_, IndexType it)
     : 
     type(it), 
     m(m_), 
-    ur(setUniqueReal(nextID(),it)),
+    ur(generateUniqueReal(it)),
     sname(name)
     { 
     if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
