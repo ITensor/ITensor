@@ -182,7 +182,7 @@ operator+=(const ITSparse& other)
 
     //Determine a scale factor for the sum
     Real scalefac = 1;
-    if(scale_.magnitudeLessThan(other.scale_)) 
+    if(!this_allsame && scale_.magnitudeLessThan(other.scale_)) 
         {
         this->scaleTo(other.scale_); 
         }
@@ -194,7 +194,7 @@ operator+=(const ITSparse& other)
     //Already checked both diagAllSame case
     if(this_allsame)
         {
-        diag_ = other.diag_;
+        diag_.ReDimension(other.diag_.Length());
         diag_ = 1;
         diag_ += scalefac*other.diag_;
         }
@@ -266,7 +266,10 @@ scaleTo(LogNumber newscale) const
 	Error("Trying to scale to a 0 lognumber in ITSparse");
     //If diag is all same no need to rescale
     if(diag_.Length() == 0) 
-	{ scale_ = newscale; return; }
+        { 
+        Error("Cannot call scaleTo on ITSparse with allsame diag");
+        return; 
+        }
     if(scale_ == newscale) return;
     //solo();
     scale_ /= newscale;

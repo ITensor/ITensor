@@ -22,10 +22,10 @@ struct ITSparseDefaults
         s2(Index("s2",2,Site)),
         s3(Index("s3",2,Site)),
         s4(Index("s4",2,Site)),
-        s1P(s1.primed()),
-        s2P(s2.primed()),
-        s3P(s3.primed()),
-        s4P(s4.primed()),
+        s1P(primed(s1)),
+        s2P(primed(s2)),
+        s3P(primed(s3)),
+        s4P(primed(s4)),
         l1(Index("l1",2)),
         l2(Index("l2",2)),
         l3(Index("l3",2)),
@@ -180,7 +180,7 @@ TEST(ContractingProduct)
     ITSparse D(b3,b4,1);
 
     ITensor T(a1,b2,b4,s1);
-    T.Randomize();
+    T.randomize();
 
     ITensor R = D * T;
 
@@ -203,7 +203,7 @@ TEST(ContractingProduct)
     ITSparse D2(b3,b4,diag);
 
     ITensor T2(a1,b2,b4,s1);
-    T2.Randomize();
+    T2.randomize();
 
     ITensor R2 = D2 * T2;
 
@@ -224,7 +224,7 @@ TEST(ContractingProduct)
 TEST(TieIndices)
     {
     ITensor T(l1,l2,a1,s2,s1);
-    T.Randomize();
+    T.randomize();
 
     Index tied("tied",l2.m());
     ITSparse S(l2,l1,s1,tied,1);
@@ -244,7 +244,7 @@ TEST(Trace)
     {
 
     ITensor A(b2,a1,b3,b5,primed(b3));
-    A.Randomize();
+    A.randomize();
     Real f = -ran1();
     A *= f;
 

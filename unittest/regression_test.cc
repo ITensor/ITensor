@@ -115,7 +115,7 @@ TEST(SVDArrows)
     IQTensor AA(L,R);
 
     ITensor block(l,r);
-    block.Randomize();
+    block.randomize();
     AA += block;
 
     //PrintDat(AA);
@@ -180,6 +180,7 @@ TEST(ConvertToITensor)
     }
 
 
+/*
 TEST(IndexOrder)
     {
     //
@@ -219,5 +220,6 @@ TEST(IndexOrder)
     CHECK_CLOSE(order2.val0(),order2alt.val0(),1E-5);
 
     }
+    */
 
 BOOST_AUTO_TEST_SUITE_END()
