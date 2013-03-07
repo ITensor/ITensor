@@ -1663,7 +1663,7 @@ operator/=(const ITensor& other)
     }
 
 
-#define OLD_DIRECT_MULTIPLY
+//#define OLD_DIRECT_MULTIPLY
 
 #ifdef OLD_DIRECT_MULTIPLY
 
