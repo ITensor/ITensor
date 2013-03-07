@@ -107,7 +107,7 @@ TEST(Null)
 
     ITensor t2(s1);
 
-    CHECK(t2.isNotNull());
+    CHECK(!t2.isNull());
 }
 
 TEST(Constructors)
@@ -959,7 +959,7 @@ TEST(Trace)
     Real f = -ran1();
     A *= f;
 
-    ITensor At = trace(b3,primed(b3),A);
+    ITensor At = trace(A,b3,primed(b3));
 
     for(int j2 = 1; j2 <= b2.m(); ++j2)
     for(int j5 = 1; j5 <= b5.m(); ++j5)

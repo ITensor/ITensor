@@ -247,7 +247,7 @@ TEST(Trace)
     Real f = -ran1();
     D *= f;
 
-    IQTensor Dt = trace(conj(L1),primed(L1,2),D);
+    IQTensor Dt = trace(D,conj(L1),primed(L1,2));
 
     for(int j2 = 1; j2 <= S1.m(); ++j2)
     for(int j1 = 1; j1 <= L1.m(); ++j1)
@@ -333,6 +333,25 @@ TEST(ComplexMult)
 
     IQTensor YY = multSiteOps(Y,Y);
     //PrintDat(YY);
+    }
+
+TEST(ComplexAdd)
+    {
+    IQTensor Z(conj(S1),primed(S1));
+    Z(S1(1),primed(S1)(1)) = +1;
+    Z(S1(2),primed(S1)(2)) = -1;
+
+    IQTensor X(conj(S1),primed(S1));
+    X(S1(1),primed(S1)(2)) = +1;
+    X(S1(2),primed(S1)(1)) = +1;
+
+    IQTensor iX = X * IQComplex_i();
+
+    IQTensor R = Z + iX;
+
+    CHECK_CLOSE((realPart(R)-Z).norm(),0,1E-5);
+    CHECK_CLOSE((imagPart(R)-X).norm(),0,1E-5);
+
     }
 
 BOOST_AUTO_TEST_SUITE_END()

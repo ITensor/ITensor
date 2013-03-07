@@ -42,9 +42,11 @@ TEST(Complex)
 
     I.prime();
     CHECK_EQUAL(I.primeLevel(),1);
+    CHECK_EQUAL(I,Index::IndReImP());
 
-    I.prime(2);
-    CHECK_EQUAL(I.primeLevel(),3);
+    I.prime();
+    CHECK_EQUAL(I.primeLevel(),2);
+    CHECK_EQUAL(I,Index::IndReImPP());
 
     Index J = primed(Index::IndReIm());
     CHECK_EQUAL(J.primeLevel(),1);

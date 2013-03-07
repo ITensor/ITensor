@@ -55,7 +55,7 @@ TEST(Constructors)
     }
 
 TEST(Operators)
-{
+    {
     Real a = ran1(), b = ran1();
 
     const LogNumber la(a), lb(b);
@@ -93,10 +93,10 @@ TEST(Operators)
     l8 /= l9;
 
     CHECK_CLOSE(l8.real(),a/b,LogNumber_Accuracy);
-}
+    }
 
 TEST(Comparison)
-{
+    {
     Real a = ran1(), b = ran1();
 
     const LogNumber la(a),lb(b);
@@ -129,10 +129,14 @@ TEST(Comparison)
     zero *= -1;
 
     CHECK(zero.approxEquals(0));
-}
+
+    LogNumber one(1);
+
+    CHECK(zero < one);
+    }
 
 TEST(ReadWrite)
-{
+    {
     Real a = ran1();
     LogNumber la(a); 
 
@@ -142,7 +146,7 @@ TEST(ReadWrite)
     readFromFile(".read_write/LogNumber",laR);
 
     CHECK(laR == la);
-}
+    }
 
 BOOST_AUTO_TEST_SUITE_END()
 
