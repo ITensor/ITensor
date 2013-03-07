@@ -640,7 +640,7 @@ UseWF()
     }
 
 Opt inline
-Verbose(bool val = true)
+Verbose(int val = 1)
     {
     return Opt("Verbose",val);
     }

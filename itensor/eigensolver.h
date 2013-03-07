@@ -390,7 +390,11 @@ davidson(const LocalT& A, Tensor& phi) const
                         Cout << "Vector not independent, randomizing" << Endl;
                     q = V.at(ni-1);
                     q.randomize();
-                    if(q.vecSize() <= ni)
+
+                    //Don't want to count real and imaginary parts as independent
+                    //from the point of view of orthogonalization
+                    const int cplxVecSize = q.vecSize() / (isComplex(q) ? 2 : 1);
+                    if(cplxVecSize <= ni)
                         {
                         //Not be possible to orthogonalize if
                         //max size of q (vecSize after randomize)
