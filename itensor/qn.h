@@ -28,32 +28,26 @@ class QN
     {
     public:
 
-    QN(int sz=0, int Nf=0);
+    QN(int sz = 0, int Nf = 0);
 
     QN(int sz, int Nf, int Nfp);
 
     //sz is measured in units of 1/2
     //(sz==1 is 1/2, sz==2 is 1, etc.)
     int 
-    sz() const { return _sz; }
+    sz() const { return sz_; }
 
     //Number of particles
     int 
-    Nf() const { return _Nf; }
+    Nf() const { return Nf_; }
 
     //Fermion parity
     //Nfp is either 0 or 1
     int 
-    Nfp() const { return _Nfp; }
+    Nfp() const { return Nfp_; }
 
     int 
-    sign() const { return (_Nfp == 0 ? +1 : -1); }
-
-    QN 
-    operator+(const QN &other) const;
-
-    QN 
-    operator-(const QN &other) const;
+    sign() const { return (Nfp_ == 0 ? +1 : -1); }
 
     QN& 
     operator+=(const QN &other);
@@ -67,8 +61,6 @@ class QN
     // Multiplication by Arrows can change QN sign
     QN& 
     operator*=(Arrow dir);
-    QN 
-    operator*(Arrow dir) const;
 
     std::string 
     toString() const;
@@ -86,9 +78,9 @@ class QN
 
     private:
 
-    int _sz, 
-        _Nf, 
-        _Nfp; //_Nfp stands for fermion number parity, 
+    int sz_, 
+        Nf_, 
+        Nfp_; //Nfp_ stands for fermion number parity, 
               //and tracks whether Nf is even or odd
               //(can't just calculate Nfp from Nf on the fly
               //because we may not be tracking Nf, i.e. Nf==0)
@@ -97,39 +89,39 @@ class QN
 inline QN::
 QN(int sz, int Nf)
     :
-    _sz(sz),
-    _Nf(Nf),
-    _Nfp(abs(Nf%2))
+    sz_(sz),
+    Nf_(Nf),
+    Nfp_(abs(Nf%2))
     { }
 
 inline QN::
 QN(int sz, int Nf, int Nfp) 
     : 
-    _sz(sz), 
-    _Nf(Nf), 
-    _Nfp(abs(Nfp%2))
+    sz_(sz), 
+    Nf_(Nf), 
+    Nfp_(abs(Nfp%2))
     { 
 #ifdef DEBUG
-    if(_Nf != 0 && _Nf%2 != _Nfp)
-        Error("Nfp should equal Nf%2");
+    if(Nf_ != 0 && abs(Nf_%2) != Nfp_)
+        {
+        Error("Nfp should equal abs(Nf%2)");
+        }
 #endif
     }
 
-QN inline QN::
-operator+(const QN &other) const
-    { QN res(*this); res+=other; return res; }
+QN inline
+operator+(QN A, const QN& B) { A += B; return A; }
 
-QN inline QN::
-operator-(const QN &other) const
-    { QN res(*this); res-=other; return res; }
+QN inline
+operator-(QN A, const QN& B) { A -= B; return A; }
 
 inline
 QN& QN::
 operator+=(const QN &other)
     {
-    _sz+=other._sz; 
-    _Nf+=other._Nf; 
-    _Nfp = abs(_Nfp+other._Nfp)%2;
+    sz_ += other.sz_; 
+    Nf_ += other.Nf_; 
+    Nfp_ = abs(Nfp_+other.Nfp_)%2;
     return *this;
     }
 
@@ -137,49 +129,47 @@ inline
 QN& QN::
 operator-=(const QN &other)
     {
-    _sz-=other._sz; 
-    _Nf-=other._Nf; 
-    _Nfp = abs(_Nfp-other._Nfp)%2;
+    sz_ -= other.sz_; 
+    Nf_ -= other.Nf_; 
+    Nfp_ = abs(Nfp_-other.Nfp_)%2;
     return *this;
     }
 
 QN inline QN::
-operator-() const  
-    { return QN(-_sz,-_Nf,_Nfp); }
+operator-() const { return QN(-sz_,-Nf_,Nfp_); }
 
 inline
 QN& QN::
 operator*=(Arrow dir) 
     { 
     const int i = dir;
-    _sz*=i; 
-    _Nf*=i; 
+    sz_*=i; 
+    Nf_*=i; 
     return *this; 
     }
 
-QN inline QN::
-operator*(Arrow dir) const 
-    { QN res(*this); res*=dir; return res; }
+QN inline
+operator*(QN q, Arrow dir) { q *= dir; return q; }
 
 void inline QN::
 write(std::ostream& s) const 
     { 
-    s.write((char*)&_sz,sizeof(_sz)); 
-    s.write((char*)&_Nf,sizeof(_Nf)); 
-    s.write((char*)&_Nfp,sizeof(_Nfp)); 
+    s.write((char*)&sz_,sizeof(sz_)); 
+    s.write((char*)&Nf_,sizeof(Nf_)); 
+    s.write((char*)&Nfp_,sizeof(Nfp_)); 
     }
 
 void inline QN::
 read(std::istream& s) 
     { 
-    s.read((char*)&_sz,sizeof(_sz)); 
-    s.read((char*)&_Nf,sizeof(_Nf)); 
-    s.read((char*)&_Nfp,sizeof(_Nfp)); 
+    s.read((char*)&sz_,sizeof(sz_)); 
+    s.read((char*)&Nf_,sizeof(Nf_)); 
+    s.read((char*)&Nfp_,sizeof(Nfp_)); 
     }
 
 std::string inline QN::
 toString() const
-    { return (boost::format("(%+d:%d)")%_sz%_Nf).str(); }
+    { return (boost::format("(%+d:%d)")%sz_%Nf_).str(); }
 
 inline std::ostream& 
 operator<<(std::ostream &o, const QN &q)
