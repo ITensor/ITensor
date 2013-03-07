@@ -2004,7 +2004,7 @@ operator*=(const ITensor& other)
                               other.is_.rn() > 4;
 #else
     const
-    bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 10000;
+    bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 1000;
 #endif
 
     MatrixRefNoLink lref, rref;
