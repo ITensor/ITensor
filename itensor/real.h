@@ -226,6 +226,9 @@ class LogNumber
     approxEquals(const LogNumber& other) const
         { return (sign_ == other.sign_) && (fabs(lognum_-other.lognum_) < LogNumber_Accuracy); }
 
+    void
+    negate() { sign_ *= -1; }
+
     LogNumber& 
     operator*=(const LogNumber& other)
         {

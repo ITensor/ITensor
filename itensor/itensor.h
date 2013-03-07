@@ -31,7 +31,9 @@ class ITensor
     {
     public:
 
-    //Accessor Methods ----------------------------------------------
+    //
+    //Accessor Methods
+    //
 
     //Real number that uniquely identifies this
     //ITensor's set of Indices (independent of their order)
@@ -60,7 +62,10 @@ class ITensor
     const IndexSet<Index>&
     indices() const { return is_; }
 
-    //Constructors --------------------------------------------------
+
+    //
+    //Constructors
+    //
 
     //Construct Null ITensor, isNull returns true
     ITensor();
@@ -74,16 +79,19 @@ class ITensor
     ITensor(const Index& i1);
 
     //Construct rank 1 ITensor, all entries set to val
-    ITensor(const Index& i1, Real val);
+    ITensor(const Index& i1, 
+            Real val);
 
     //Construct rank 1 ITensor, entries set to those of V
-    ITensor(const Index& i1, const VectorRef& V);
+    ITensor(const Index& i1, 
+            const VectorRef& V);
 
     //Construct rank 2 ITensor, all entries set to zero
     ITensor(const Index& i1,const Index& i2);
 
     //Construct rank 2 ITensor (a matrix) with 'a' on the diagonal
-    ITensor(const Index& i1, const Index& i2, Real a);
+    ITensor(const Index& i1, const Index& i2, 
+            Real a);
 
     //Construct rank 2 ITensor, entries set to those of M
     ITensor(const Index& i1,const Index& i2,const MatrixRef& M);
@@ -168,9 +176,22 @@ class ITensor
     ITensor& 
     operator*=(const ITensor& other);
 
-    ITensor 
-    operator*(const ITensor& other) const 
-        { ITensor res(*this); res *= other; return res; }
+    //Non-contracting product
+    //Matching Index pairs are merged
+    //Ckjli = Akjl * Blki
+    ITensor& 
+    operator/=(const ITensor& other);
+
+    //Multiplication and division by scalar
+    ITensor& 
+    operator*=(Real fac) { scale_ *= fac; return *this; }
+
+    ITensor& 
+    operator/=(Real fac) { scale_ /= fac; return *this; }
+
+    //Multiplication with LogNumber (very large or very small Real)
+    ITensor& 
+    operator*=(LogNumber lgnum) { scale_ *= lgnum; return *this; }
 
     // Contract with IndexVal
     // If iv = (J,n), Index J is fixed to it's nth
@@ -178,86 +199,21 @@ class ITensor
     // (similar to summing against a Kronecker
     // delta tensor \delta_{J,n})
     ITensor& 
-    operator*=(const IndexVal& iv) 
-        { return operator*=(ITensor(iv)); } 
-
-    ITensor 
-    operator*(const IndexVal& iv) const 
-        { ITensor res(*this); res *= iv; return res; }
-
-    ITensor friend inline
-    operator*(const IndexVal& iv, const ITensor& t) 
-        { return (ITensor(iv) *= t); }
-
-    //Multiplication and division by scalar
-    ITensor& 
-    operator*=(Real fac) { scale_ *= fac; return *this; }
-
-    ITensor 
-    operator*(Real fac) const 
-        { ITensor res(*this); res *= fac; return res; }
-
-    ITensor friend inline
-    operator*(Real fac, ITensor t) 
-        { return (t *= fac); }
-
-    ITensor& 
-    operator/=(Real fac) { scale_ /= fac; return *this; }
-
-    ITensor 
-    operator/(Real fac) const 
-        { ITensor res(*this); res /= fac; return res; }
-
-    ITensor friend inline
-    operator/(Real fac, ITensor t) 
-        { return (t /= fac); }
-
-    //Multiplication with LogNumber (very large or very small Real)
-    ITensor& 
-    operator*=(const LogNumber& lgnum) { scale_ *= lgnum; return *this; }
-
-    ITensor 
-    operator*(const LogNumber& lgnum) const 
-        { ITensor res(*this); res *= lgnum; return res; }
-
-    ITensor friend inline
-    operator*(const LogNumber& lgnum, ITensor t) 
-        { return (t *= lgnum); }
-
-
-    //Non-contracting product
-    //Matching Index pairs are merged
-    //Ckjli = Akjl * Blki
-    ITensor& 
-    operator/=(const ITensor& other);
-
-    ITensor 
-    operator/(const ITensor& other) const 
-        { ITensor res(*this); res /= other; return res; }
+    operator*=(const IndexVal& iv) { return operator*=(ITensor(iv)); } 
 
     //Tensor addition and subtraction
     //Summands must have same Indices, in any order
     //Cijk = Aijk + Bkij
     ITensor& 
-    operator+=(const ITensor& o);
-
-    ITensor 
-    operator+(const ITensor& o) const 
-        { ITensor res(*this); res += o; return res; }
+    operator+=(const ITensor& other);
 
     ITensor& 
-    operator-=(const ITensor& o)
-        {
-        if(this == &o) { scale_ = 0; return *this; }
-        scale_ *= -1; operator+=(o); scale_ *= -1; return *this; 
-        }
-
-    ITensor 
-    operator-(const ITensor& o) const 
-        { ITensor res(*this); res -= o; return res; }
+    operator-=(const ITensor& other);
 
 
-    //Index Methods ---------------------------------------------------
+    //
+    //Index Methods
+    //
 
     //Return first Index of matching type
     const Index&
@@ -290,7 +246,10 @@ class ITensor
     void 
     addindex1(const Index& I) { is_.addindex1(I); }
 
-    //Primelevel Methods ------------------------------------
+
+    //
+    //Primelevel Methods
+    //
 
     //Set primeLevel of Indices to zero
     void 
@@ -323,7 +282,10 @@ class ITensor
     mapprimeind(const Index& I, int plevold, int plevnew, IndexType type = All)
         { is_.mapprimeind(I,plevold,plevnew,type); }
 
-    //Element Access Methods ----------------------------------------
+
+    //
+    //Element Access Methods
+    //
 
     //Get scalar value of rank 0 ITensor
     //Throws ITError if r() != 0
@@ -375,7 +337,9 @@ class ITensor
                const IndexVal& iv8 = IndexVal::Null()) const;
 
 
-    //Methods for Mapping to Other Objects ----------------------------------
+    //
+    //Methods for Mapping to Other Objects
+    //
 
     //
     // groupIndices combines a set of indices (of possibly different sizes) 
@@ -415,13 +379,10 @@ class ITensor
                const Index& tied);
 
 
-    //
     // The trace method sums over the given set of indices
     // (which must all have the same dimension).
     //
     // Rik = trace(j,l,m,Aijkml) = \sum_j Aijkjj
-    //
-
     void
     trace(const boost::array<Index,NMAX>& indices, int nind);
 
@@ -697,12 +658,13 @@ class ITensor
     // Data Members
     //
 
-    //mutable: const methods may want to reshape data
+    //Pointer to ITDat containing tensor data
     boost::shared_ptr<ITDat> p; 
 
-    //Indices, maximum of 8 (is_.index_[0] not used)
+    //Indices, maximum of 8
     IndexSet<Index> is_;
 
+    //scale_ absorbs scalar factors to avoid copying ITDat
     LogNumber scale_; 
 
     //
@@ -717,7 +679,7 @@ class ITensor
 
     //Disattach self from current ITDat and create own copy instead.
     //Necessary because ITensors logically represent distinct
-    //objects even though they may share data in reality.
+    //objects even though they may share data
     void 
     solo();
     
@@ -732,11 +694,6 @@ class ITensor
     directMultiply(const ITensor& other, 
                    ProductProps& pp, 
                    IndexSet<Index>& new_index);
-
-    /*
-    int _ind(int i1, int i2, int i3, int i4, 
-             int i5, int i6, int i7, int i8) const;
-             */
 
     int _ind2(const IndexVal& iv1, const IndexVal& iv2) const;
 
@@ -847,7 +804,38 @@ class ITDat
 
     };
 
+ITensor inline
+operator*(ITensor A, const ITensor& B) { A *= B; return A; }
 
+ITensor inline
+operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }
+
+ITensor inline
+operator*(const IndexVal& iv, const ITensor& t) { return (ITensor(iv) *= t); }
+
+ITensor inline
+operator*(ITensor T, Real fac) { T *= fac; return T; }
+
+ITensor inline
+operator*(Real fac, ITensor T) { T *= fac; return T; }
+
+ITensor inline
+operator/(ITensor T, Real fac) { T /= fac; return T; }
+
+ITensor inline
+operator*(ITensor T, LogNumber lgnum) { T *= lgnum; return T; }
+
+ITensor inline
+operator*(LogNumber lgnum, ITensor T) { T *= lgnum; return T; }
+
+ITensor inline
+operator/(ITensor A, const ITensor& B) { A /= B; return A; }
+
+ITensor inline
+operator+(ITensor A, const ITensor& B) { A += B; return A; }
+
+ITensor inline
+operator-(ITensor A, const ITensor& B) { A -= B; return A; }
 
 template <typename Callable> 
 void ITensor::

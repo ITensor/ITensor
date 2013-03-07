@@ -2208,6 +2208,19 @@ operator+=(const ITensor& other)
     return *this;
     } 
 
+ITensor& ITensor::
+operator-=(const ITensor& other)
+    {
+    if(this == &other) 
+        { scale_ = 0; 
+        return *this; 
+        }
+    scale_.negate();
+    operator+=(other); 
+    scale_.negate();
+    return *this; 
+    }
+
 void ITensor::
 fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     {
