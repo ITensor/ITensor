@@ -1797,40 +1797,6 @@ directMultiply(const ITensor& other, ProductProps& props,
 
 #else
 
-int
-_ind(int rn, const array<int,NMAX>& n,
-     int i1, int i2, int i3, int i4, 
-     int i5, int i6, int i7, int i8)
-    {
-    switch(rn)
-    {
-    case 0:
-        return (1);
-    case 1:
-        return (i1);
-    case 2:
-        return ((i2-1)*n[0]+i1);
-    case 3:
-        return (((i3-1)*n[1]+i2-1)*n[0]+i1);
-    case 4:
-        return ((((i4-1)*n[2]+i3-1)*n[1]+i2-1)*n[0]+i1);
-    case 5:
-        return (((((i5-1)*n[3]+i4-1)*n[2]+i3-1)*n[1]+i2-1)
-                        *n[0]+i1);
-    case 6:
-        return ((((((i6-1)*n[4]+i5-1)*n[3]+i4-1)*n[2]+i3-1)
-                        *n[1]+i2-1)*n[0]+i1);
-    case 7:
-        return (((((((i7-1)*n[5]+i6-1)*n[4]+i5-1)*n[3]+i4-1)
-                        *n[2]+i3-1)*n[1]+i2-1)*n[0]+i1);
-    case 8:
-        return ((((((((i8-1)*n[6]+i7-1)*n[5]+i6-1)*n[4]+i5-1)
-                        *n[3]+i4-1)*n[2]+i3-1)*n[1]+i2-1)*n[0]+i1);
-    } //switch
-    Error("_ind: Failed switch case");
-    return 1;
-    }
-
 void ITensor::
 directMultiply(const ITensor& other, 
                ProductProps& props, 
@@ -1839,14 +1805,18 @@ directMultiply(const ITensor& other,
     Counter u,  //uncontracted indices
             c;  //contracted indices
 
-    int one = 1;
-    array<int*,NMAX> li,
-                     ri;
-    li.assign(&one);
-    ri.assign(&one);
+    const int one = 1;
 
-    array<int,NMAX> nl,
-                    nr;
+    const int* li[NMAX];
+    const int* ri[NMAX];
+    for(int n = 0; n < NMAX; ++n)
+        {
+        li[n] = &one;
+        ri[n] = &one;
+        }
+
+    int nl[NMAX];
+    int nr[NMAX];
 
     const int trn = this->is_.rn();
     const int orn = other.is_.rn();
@@ -1901,10 +1871,10 @@ directMultiply(const ITensor& other,
         val = 0;
         for(c.reset(); c.notDone(); ++c)
             {
-            val += pL[_ind(trn,nl,*li[0],*li[1],*li[2],*li[3],
-                                  *li[4],*li[5],*li[6],*li[7])]
-                 * pR[_ind(orn,nr,*ri[0],*ri[1],*ri[2],*ri[3],
-                                  *ri[4],*ri[5],*ri[6],*ri[7])];
+            val += pL[((((((((*li[7]-1)*nl[6]+*li[6]-1)*nl[5]+*li[5]-1)*nl[4]+*li[4]-1)
+                      *nl[3]+*li[3]-1)*nl[2]+*li[2]-1)*nl[1]+*li[1]-1)*nl[0]+*li[0])]
+                 * pR[((((((((*ri[7]-1)*nr[6]+*ri[6]-1)*nr[5]+*ri[5]-1)*nr[4]+*ri[4]-1)
+                      *nr[3]+*ri[3]-1)*nr[2]+*ri[2]-1)*nr[1]+*ri[1]-1)*nr[0]+*ri[0])];
             }
         }
 
@@ -2021,11 +1991,16 @@ operator*=(const ITensor& other)
         }
 #endif
 
+#ifdef OLD_DIRECT_MULTIPLY
     const
     bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 10000 ||
                               (is_.rn()+other.is_.rn()-2*props.nsamen) > 4 ||
                               is_.rn() > 4 ||
                               other.is_.rn() > 4;
+#else
+    const
+    bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 10000;
+#endif
 
     MatrixRefNoLink lref, rref;
     bool L_is_matrix,R_is_matrix;
