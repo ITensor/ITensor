@@ -6,6 +6,7 @@
 #define __ITENSOR_SWEEPS_HEADER_H
 #include "global.h"
 #include "input.h"
+#include "boost/function.hpp"
 
 template <typename T>
 class SweepSetter;
@@ -13,24 +14,24 @@ class SweepSetter;
 class Sweeps
     {
     public:
-    enum Scheme {ramp_m, fixed_m, fixed_cutoff, exp_m, table};
 
     //Constructors --------------
 
     Sweeps();
 
-    Sweeps(int nsw, int _minm = 1, int _maxm = 500, Real _cut = 1E-8);
+    Sweeps(int nsweeps, 
+           int minm = 1, 
+           int maxm = 500, 
+           Real cutoff = 1E-8);
 
-    Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut);
-
-    Sweeps(Scheme sch, int nsw, int nwarm, int _minm, int _maxm, Real _cut);
-
-    Sweeps(int nsw, InputGroup& sweep_table);
+    Sweeps(int nsweeps, InputGroup& sweep_table);
     
     //Accessor methods ----------
 
-    Scheme 
-    scheme() const { return scheme_; }
+    int 
+    nsweep() const { return Nsweep_; }
+    void 
+    nsweep(int val);
 
     int 
     minm(int sw) const { return Minm_.at(sw); }
@@ -73,14 +74,6 @@ class Sweeps
     noise();
 
     int 
-    nsweep() const { return Nsweep_; }
-    void 
-    nsweep(int val);
-
-    int 
-    nwarm() const { return Nwarm_; }
-
-    int 
     niter(int sw) const { return Niter_.at(sw); }
     void 
     setNiter(int sw, int val) { Niter_.at(sw) = val; }
@@ -91,17 +84,7 @@ class Sweeps
     SweepSetter<int> 
     niter();
 
-    int
-    numSiteCenter() const { return num_site_center_; }
-    void
-    setNumSiteCenter(int val) { num_site_center_ = val; }
-
-    Real 
-    expFac() const { return exp_fac_; }
-    void 
-    setExpFac(Real val) { exp_fac_ = val; }
-
-private:
+    private:
 
     void 
     init(int _minm, int _maxm, Real _cut);
@@ -109,16 +92,12 @@ private:
     void 
     tableInit(InputGroup& table);
 
-    Scheme scheme_;
     std::vector<int> Maxm_,
                      Minm_,
                      Niter_;
     std::vector<Real> Cutoff_,
                       Noise_;
-    int Nsweep_, Nwarm_;
-    int num_site_center_;        // May not be implemented in some cases
-    Real exp_fac_;
-
+    int Nsweep_;
     };
 
 //
@@ -134,6 +113,7 @@ class SweepSetter
 
     SweepSetter(std::vector<T>& v)
         :
+        nsweep_(int(v.size())-1),
         started_(false),
         v_(v),
         j_(1)
@@ -143,7 +123,7 @@ class SweepSetter
     
     ~SweepSetter()
         {
-        for(; j_ < int(v_.size()); ++j_)
+        for(; j_ <= nsweep_; ++j_)
             {
             v_[j_] = last_val_;
             }
@@ -161,7 +141,7 @@ class SweepSetter
     operator,(T val)
         {
         checkStarted();
-        if(j_ >= int(v_.size())) return *this;
+        if(j_ > nsweep_) return *this;
         v_[j_] = val;
         ++j_;
         last_val_ = val;
@@ -177,15 +157,43 @@ class SweepSetter
             if(j_ == 1) Error("No value to repeat");
             for(int n = 1; n < opt.intVal(); ++n, ++j_)
                 {
-                if(j_ >= int(v_.size())) return *this;
+                if(j_ > nsweep_) return *this;
                 v_[j_] = last_val_;
                 }
             }
         return *this;
         }
 
+    typedef boost::function2<T,int,int> 
+    Func;
+
+    //
+    //Sets the remaining values of v_ by 
+    //accepting (the address of a) function 
+    //with signature:
+    //
+    //  T f(int sw, int nsweep) { ... }
+    //
+    //or an instance of a function object
+    //which defines a method:
+    //
+    //  T operator()(int sw, int nsweep) const { ... } 
+    //
+    SweepSetter&
+    operator,(Func f)
+        {
+        checkStarted();
+        for(; j_ <= nsweep_ ; ++j_)
+            {
+            v_[j_] = f(j_,nsweep_);
+            }
+        last_val_ = v_.back();
+        return *this;
+        }
+
     private:
 
+    const int nsweep_;
     bool started_;
     std::vector<T>& v_;
     int j_;
@@ -198,91 +206,93 @@ class SweepSetter
         }
     };
 
+struct RampM
+    {
+    RampM(int start_m, int end_m,
+          const OptSet& opts = Global::opts())
+        :
+        start_m_(start_m),
+        end_m_(end_m),
+        nwarm_(opts.getInt("Warmup",-1))
+        { }
+
+    int
+    operator()(int sw, int nsweep) const 
+        { 
+        const int actual_nwarm = (nwarm_ < 0 ? nsweep : min(nwarm_+1,nsweep));
+        if(sw <= actual_nwarm)
+            return (int) (start_m_ + (sw-1.)/(actual_nwarm-1.)*(end_m_-start_m_));
+        else
+            return end_m_;
+        }
+
+    private:
+    const
+    int start_m_,
+        end_m_,
+        nwarm_;
+    };
+
+struct ExpM
+    {
+    ExpM(int start_m, int end_m,
+         const OptSet& opts = Global::opts())
+        :
+        start_m_(start_m),
+        end_m_(end_m),
+        exp_base_(opts.getReal("ExpBase",2.))
+        { }
+
+    int
+    operator()(int sw, int nsweep) const 
+        { 
+        return min((int) (start_m_*pow(exp_base_,sw-1)),end_m_);
+        }
+
+    private:
+    const
+    int start_m_,
+        end_m_;
+    const
+    Real exp_base_;
+    };
+
 inline Sweeps::
 Sweeps()
     :
-    scheme_(table),
-    Nsweep_(0),
-    Nwarm_(0),
-    num_site_center_(2), 
-    exp_fac_(0.5)
-    {
-    }
+    Nsweep_(0)
+    { }
 
 inline Sweeps::
 Sweeps(int nsw, int _minm, int _maxm, Real _cut)
     :
-    scheme_(fixed_m),
-    Nsweep_(nsw),
-    Nwarm_(0),
-    num_site_center_(2), 
-    exp_fac_(0.5)
+    Nsweep_(nsw)
     {
-    init(_minm,_maxm,_cut);
-    }
-
-inline Sweeps::
-Sweeps(Scheme sch, int nsw, int _minm, int _maxm, Real _cut)
-    : scheme_(sch), 
-      Nsweep_(nsw), 
-      Nwarm_(nsw-1), 
-      num_site_center_(2), 
-      exp_fac_(0.5)
-    { 
-    init(_minm,_maxm,_cut);
-    }
-
-inline Sweeps::
-Sweeps(Scheme sch, int nsw, int nwm, int _minm, int _maxm, Real _cut)
-    : scheme_(sch), 
-      Nsweep_(nsw), 
-      Nwarm_(nwm), 
-      num_site_center_(2), 
-      exp_fac_(0.5)
-    { 
     init(_minm,_maxm,_cut);
     }
 
 inline Sweeps::
 Sweeps(int nsw, InputGroup& sweep_table)
-    : scheme_(table),
-      Nsweep_(nsw),
-      Nwarm_(0), 
-      num_site_center_(2),
-      exp_fac_(0.5)
+    : 
+    Nsweep_(nsw)
     {
     tableInit(sweep_table);
     }
 
 SweepSetter<int> inline Sweeps::
-minm() 
-    { 
-    return SweepSetter<int>(Minm_); 
-    }
+minm() { return SweepSetter<int>(Minm_); }
 
 SweepSetter<int> inline Sweeps::
-maxm() 
-    { 
-    return SweepSetter<int>(Maxm_); 
-    }
+maxm() { return SweepSetter<int>(Maxm_); }
 
 SweepSetter<Real> inline Sweeps::
-cutoff() 
-    { 
-    return SweepSetter<Real>(Cutoff_); 
-    }
+cutoff() { return SweepSetter<Real>(Cutoff_); }
 
 SweepSetter<Real> inline Sweeps::
-noise() 
-    { 
-    return SweepSetter<Real>(Noise_); 
-    }
+noise() { return SweepSetter<Real>(Noise_); }
 
 SweepSetter<int> inline Sweeps::
-niter() 
-    { 
-    return SweepSetter<int>(Niter_); 
-    }
+niter() { return SweepSetter<int>(Niter_); }
 
 void inline Sweeps::
 nsweep(int val)
@@ -302,32 +312,9 @@ init(int _minm, int _maxm, Real _cut)
     Cutoff_ = std::vector<Real>(Nsweep_+1,_cut);
     Noise_ = std::vector<Real>(Nsweep_+1,0);
 
-    //Don't want to start with m too low unless requested
-    int start_m = (_maxm < 10 ? _minm : 10);
-
-    if(scheme_ == ramp_m)
-        {
-        //Actual number of warmup sweeps to do
-        int act_nwm = min(Nwarm_+1,Nsweep_);
-        if(act_nwm > 1) 
-        for(int s = 1; s <= act_nwm; ++s)
-            Maxm_.at(s) = (int)(start_m + (s-1.0)/(act_nwm-1.0) * (_maxm - start_m)); 
-        }
-    else
-    if(scheme_ == exp_m)
-        {
-        int act_nwm = min(Nwarm_+2,Nsweep_);
-        if(act_nwm > 1)
-        for(int s = 1; s <= act_nwm; ++s)
-            {
-            int p = (act_nwm-s)/2; //intentional integer division
-            Maxm_.at(s) = (int)(start_m + pow(exp_fac_,p) * (_maxm - start_m)); 
-            }
-        }
-    
     //Set number of Davidson iterations
     const int Max_Niter = 9;
-    for(int s = 0; s <= min(Nwarm_,4); ++s)
+    for(int s = 0; s <= 4; ++s)
         {
         int ni = Max_Niter-s;
         Niter_.at(1+s) = (ni > 2 ? ni : 2);
@@ -360,8 +347,10 @@ operator<<(std::ostream& s, const Sweeps& swps)
     {
     s << "Sweeps:\n";
     for(int sw = 1; sw <= swps.nsweep(); ++sw)
+        {
         s << boost::format("%d  Maxm=%d, Minm=%d, Cutoff=%.1E, Niter=%d, Noise=%.1E\n")
              % sw % swps.maxm(sw) % swps.minm(sw) % swps.cutoff(sw) %swps.niter(sw) % swps.noise(sw);
+        }
     return s;
     }
 
@@ -376,7 +365,6 @@ sweepnext(int &b, int &ha, int N, int min_b = 1)
         ++ha;
         }
     }
-
 
 
 #endif //__ITENSOR_SWEEPS_HEADER_H
