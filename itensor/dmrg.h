@@ -8,7 +8,7 @@
 #include "eigensolver.h"
 #include "localmposet.h"
 #include "localmpo_mps.h"
-#include "Sweeps.h"
+#include "sweeps.h"
 #include "DMRGObserver.h"
 
 #define Cout std::cout

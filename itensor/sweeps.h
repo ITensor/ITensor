@@ -314,10 +314,9 @@ init(int _minm, int _maxm, Real _cut)
 
     //Set number of Davidson iterations
     const int Max_Niter = 9;
-    for(int s = 0; s <= 4; ++s)
+    for(int s = 1; s <= min(4,Nsweep_); ++s)
         {
-        int ni = Max_Niter-s;
-        Niter_.at(1+s) = (ni > 2 ? ni : 2);
+        Niter_.at(s) = max(Max_Niter-s+1,2);
         }
 
     } //Sweeps::init
