@@ -1055,7 +1055,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
 
                 if(s==show_s)
                     {
-                    block.print("Kept block",ShowData);
+                    PrintDat(block);
                     cerr << "D = " << D << "\n";
                     }
                 }
@@ -1083,7 +1083,9 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                         cerr << "M = \n" << M << "\n";
                         int count = 0;
                         Foreach(const ITensor& t, blks) 
-                        t.print((boost::format("t%02d")%(++count)).str(),ShowData);
+                            {
+                            cout << format("t%02d") % (++count) << t << endl;
+                            }
                         }
                     //string qname = (boost::format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
                     string qname = (boost::format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
@@ -1128,7 +1130,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
 
         if(s==show_s)
             {
-            qA[s].print((boost::format("qA[%d]")%s).str(),ShowData);
+            cout << format("qA[%d]")%s << qA[s] << endl;
             Error("Stopping");
             }
 

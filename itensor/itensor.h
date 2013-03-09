@@ -508,18 +508,6 @@ class ITensor
     void 
     scaleTo(const LogNumber& newscale);
 
-    void 
-    print(std::string name = "",Printdat pdat = HideData) const;
-
-    void 
-    printIndices(const std::string& name = "") const
-        { print(name,HideData); }
-
-    void 
-    printIndices(const boost::format& fname) const
-        { printIndices(fname.str()); }
-
-
     friend class commaInit;
 
     typedef Index 
@@ -742,9 +730,8 @@ class ITDat
     void 
     write(std::ostream& s) const;
     
-    void 
-    print() const 
-        { std::cout << "ITDat: v = " << v; }
+    //void 
+    //print() const { std::cout << "ITDat: v = " << v; }
 
 
 #ifdef ITENSOR_USE_ALLOCATOR

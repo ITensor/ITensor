@@ -555,8 +555,8 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
             if(Global::checkArrows())
                 if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
                     {
-                    PrintIndices(S);
-                    PrintIndices(T);
+                    Print(S.indices());
+                    Print(T.indices());
                     cerr << "IQIndex from S = " << I << endl;
                     cerr << "IQIndex from T = " << *f << endl;
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;

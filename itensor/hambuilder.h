@@ -120,7 +120,7 @@ getMPO(int j1, const Tensor& op1,
     if(!op1.hasindex(mod_.si(j1)))
         {
         Print(j1);
-        PrintIndices(op1);
+        Print(op1.indices());
         Error("Tensor does not have correct Site index");
         }
 #endif
@@ -140,13 +140,13 @@ getMPO(int j1, const Tensor& op1,
     if(!op1.hasindex(mod_.si(j1)))
         {
         Print(j1);
-        PrintIndices(op1);
+        Print(op1.indices());
         Error("Tensor does not have correct Site index");
         }
     if(!op2.hasindex(mod_.si(j2)))
         {
         Print(j2);
-        PrintIndices(op2);
+        Print(op2.indices());
         Error("Tensor does not have correct Site index");
         }
 #endif
@@ -168,19 +168,19 @@ getMPO(int j1, const Tensor& op1,
     if(!op1.hasindex(mod_.si(j1)))
         {
         Print(j1);
-        PrintIndices(op1);
+        Print(op1.indices());
         Error("Tensor does not have correct Site index");
         }
     if(!op2.hasindex(mod_.si(j2)))
         {
         Print(j2);
-        PrintIndices(op2);
+        Print(op2.indices());
         Error("Tensor does not have correct Site index");
         }
     if(!op3.hasindex(mod_.si(j3)))
         {
         Print(j3);
-        PrintIndices(op3);
+        Print(op3.indices());
         Error("Tensor does not have correct Site index");
         }
 #endif
@@ -204,25 +204,25 @@ getMPO(int j1, const Tensor& op1,
     if(!op1.hasindex(mod_.si(j1)))
         {
         Print(j1);
-        PrintIndices(op1);
+        Print(op1.indices());
         Error("Tensor does not have correct Site index");
         }
     if(!op2.hasindex(mod_.si(j2)))
         {
         Print(j2);
-        PrintIndices(op2);
+        Print(op2.indices());
         Error("Tensor does not have correct Site index");
         }
     if(!op3.hasindex(mod_.si(j3)))
         {
         Print(j3);
-        PrintIndices(op3);
+        Print(op3.indices());
         Error("Tensor does not have correct Site index");
         }
     if(!op4.hasindex(mod_.si(j4)))
         {
         Print(j4);
-        PrintIndices(op4);
+        Print(op4.indices());
         Error("Tensor does not have correct Site index");
         }
 #endif

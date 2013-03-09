@@ -58,14 +58,13 @@ enum Printdat { ShowData, HideData };
 
 #define PrintEither(X,Y) \
     {\
-    bool savep = Global::printdat();\
+    const bool savep = Global::printdat();\
     Global::printdat() = Y; \
     std::cout << "\n" << #X << " =\n" << X << std::endl; \
     Global::printdat() = savep;\
     }
 #define Print(X)    PrintEither(X,false)
 #define PrintDat(X) PrintEither(X,true)
-#define PrintIndices(T) { T.printIndices(#T); }
 
 
 bool inline

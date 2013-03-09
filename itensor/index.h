@@ -145,10 +145,6 @@ class Index
     void 
     read(std::istream& s);
 
-    // Print Index to stdout.
-    void 
-    print(const std::string& varname = "") const;
-
     // Conjugate this Index.
     // Currently has no effect; exists for forward compatibility
     // with Arrows and interface compatibility with class IQIndex.

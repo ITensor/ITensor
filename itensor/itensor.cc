@@ -1225,13 +1225,6 @@ scaleTo(const LogNumber& newscale)
     scale_ = newscale;
     }
 
-void ITensor::
-print(std::string name,Printdat pdat) const 
-    { 
-    Global::printdat() = (pdat==ShowData); 
-    std::cerr << "\n" << name << " =\n" << *this << "\n"; 
-    Global::printdat() = false; 
-    }
 
 void ITensor::
 allocate(int dim) 
@@ -2428,8 +2421,8 @@ BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im)
         res *= y;
         if(res.r() != 1) 
             {
-            x.print("x");
-            y.print("y");
+            Print(x);
+            Print(y);
             Error("Bad Dot, product not a complex scalar");
             }
         re = res(Index::IndReIm()(1));
@@ -2443,8 +2436,8 @@ BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im)
         res *= y;
         if(res.r() != 1) 
             {
-            x.print("x");
-            y.print("y");
+            Print(x);
+            Print(y);
             Error("Bad Dot, product not a complex scalar");
             }
         re = res(Index::IndReIm()(1));

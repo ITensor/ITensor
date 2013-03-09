@@ -407,12 +407,6 @@ shift(int j, Direction dir, const Tensor& A)
         setLHlim(j);
         setRHlim(j+nc_+1);
 
-#ifdef DEBUG
-        //std::cerr << boost::format("LocalMPO at (%d,%d) \n") % LHlim_ % RHlim_;
-        //PrintIndices(L());
-        //PrintIndices(R());
-#endif
-
         lop_.update(Op_->A(j+1),Op_->A(j+2),L(),R());
         }
     else //dir == Fromright

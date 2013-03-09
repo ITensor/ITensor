@@ -425,7 +425,7 @@ product(IQTensor T, IQTensor& res) const
             if(!T.hasindex(I))
                 {
                 std::cerr << "Could not find left IQIndex " << I << "\n";
-                T.printIndices("T");
+                Print(T.indices());
                 std::cerr << "Left indices\n";
                 for(size_t j = 0; j < left_.size(); ++j)
                     { 
@@ -439,7 +439,7 @@ product(IQTensor T, IQTensor& res) const
                 if(Global::checkArrows())
                     if(dir(T.indices(),I) == I.dir())
                         {
-                        PrintIndices(T);
+                        Print(T.indices());
                         Print((*this));
                         std::cerr << "(Left) IQIndex from IQCombiner = " << I << std::endl;
                         Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");

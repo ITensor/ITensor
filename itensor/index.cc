@@ -311,10 +311,6 @@ read(istream& s)
         }
     }
 
-void Index::
-print(const string& name) const
-    { cout << "\n" << name << " =\n" << *this << endl; }
-
 const Index& Index::
 Null()
     {

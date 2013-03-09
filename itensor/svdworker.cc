@@ -600,7 +600,7 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
 
     if(rho.r() != 2)
         {
-        rho.printIndices("rho");
+        Print(rho.indices());
         Error("Density matrix doesn't have rank 2");
         }
 
@@ -935,7 +935,7 @@ pseudoInverse(const IQTensor& C, Real cutoff)
     {
     if(C.r() != 1)
         {
-        C.printIndices("C");
+        Print(C.indices());
         Error("pseudoInverse only defined for rank 1 ITensors");
         }
     IQTensor res(C.index(1));
@@ -980,7 +980,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
     {
     if(rho.r() != 2)
         {
-        rho.printIndices("rho");
+        Print(rho.indices());
         Error("Density matrix doesn't have rank 2");
         }
 

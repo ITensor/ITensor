@@ -572,7 +572,7 @@ div() const
 	assert(!isNull());
 	if(dat().empty())
 	    {   
-	    this->printIndices("this");
+        Print(this->indices());
 	    Error("IQTensor has no blocks");
 	    }
 	const ITensor& t = *(dat().begin());
@@ -597,8 +597,8 @@ dir(const Index& in) const
 	int iqq = find_iqind(in);
 	if(iqq == 0) 
 	    {
-	    this->print("this IQTensor");
-	    in.print("in"); 
+        Print(this->indices());
+        Print(in);
 	    Error("IQTensor::dir(Index&): cant find Index in IQIndices");
 	    }
 	return is_->index(iqq).dir();
@@ -820,7 +820,7 @@ tieIndices(const boost::array<IQIndex,NMAX>& indices, int niqind,
 
     if(nmatched != niqind)
         {
-        PrintIndices((*this));
+        Print(this->indices());
         cout << "Indices to tie = " << endl;
         for(int j = 0; j < niqind; ++j)
             cout << indices[j] << endl;
@@ -896,7 +896,7 @@ trace(const boost::array<IQIndex,NMAX>& indices, int niqind)
 
     if(nmatched != niqind)
         {
-        PrintIndices((*this));
+        Print(this->indices());
         cout << "Indices to trace = " << endl;
         for(int j = 0; j < niqind; ++j)
             cout << indices[j] << endl;
@@ -1023,29 +1023,6 @@ randomize()
         }
 	}
 
-void IQTensor::
-print(std::string name,Printdat pdat) const 
-	{ 
-    bool savep = Global::printdat();
-    Global::printdat() = (pdat==ShowData); 
-	std::cerr << "\n" << name << " =\n" << *this << "\n"; 
-    Global::printdat() = savep;
-	}
-
-void IQTensor::
-printIndices(const std::string& name) const
-	{ 
-	cout << "\n" << name << " (IQIndices only) = \n";
-	cout << "/--------------------------------------\n" << endl;
-    if(this->isNull())
-        {
-        cout << "    [IQTensor is null]" << endl;
-        return;
-        }
-    cout << (*is_);
-	cout << "\\-------------------------------------\n" << endl;
-	}
-
 
 void IQTensor::
 conj()
@@ -1148,8 +1125,8 @@ operator*=(const IQTensor& other)
             if(Global::checkArrows())
                 if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
                     {
-                    this->printIndices("*this");
-                    other.printIndices("other");
+                    Print(this->indices());
+                    Print(other.indices());
                     cout << "IQIndex from *this = " << I << endl;
                     cout << "IQIndex from other = " << *f << endl;
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
@@ -1281,8 +1258,8 @@ operator/=(const IQTensor& other)
             if(Global::checkArrows())
                 if(f->dir() != I.dir() && f->type() != ReIm && I.type() != ReIm)
                     {
-                    this->printIndices("*this");
-                    other.printIndices("other");
+                    Print(this->indices());
+                    Print(other.indices());
                     cout << "IQIndex from *this = " << I << endl;
                     cout << "IQIndex from other = " << *f << endl;
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
@@ -1449,8 +1426,8 @@ operator+=(const IQTensor& other)
 
     if(fabs(This.uniqueReal()-other.uniqueReal()) > 1.0e-11) 
         {
-        PrintIndices(This);
-        PrintIndices(other);
+        Print(This.indices());
+        Print(other.indices());
         Print(This.uniqueReal());
         Print(other.uniqueReal());
         Error("Mismatched indices in IQTensor::operator+=");
@@ -1562,7 +1539,7 @@ checkQNs(const IQTensor& T)
             {
             std::cout << "\nqtot = " << qtot << "\n\n";
             std::cout << "Offending ITensor = " << t << "\n\n";
-            T.printIndices("T");
+            Print(T.indices());
             Error("checkQNs: inconsistent QN");
             }
         }
@@ -1573,7 +1550,7 @@ checkDiv(const IQTensor& T, QN expected)
 	{
 	if(T.blocks().empty())
 	    {   
-	    T.printIndices("this");
+        Print(T.indices());
 	    Error("IQTensor has no blocks");
 	    }
 
@@ -1586,7 +1563,7 @@ checkDiv(const IQTensor& T, QN expected)
             {
             Print(expected);
             Print(div_);
-            T.printIndices("This IQTensor:");
+            Print(T.indices());
             cout << "Incorrect block:\n";
             Print(t);
             Error("Block didn't match expected div");
