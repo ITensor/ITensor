@@ -80,10 +80,8 @@ nameint(const string& f, int n)
 // IndexDat
 // Storage for Index objects.
 //
-class IndexDat
+struct IndexDat
     {
-    public:
-
     //////////////
     //
     // Public Data Members
@@ -96,10 +94,6 @@ class IndexDat
     //
     //////////////
 
-    IndexDat(const string& name, int mm, IndexType it);
-
-    //For use with read/write functionality of Index class
-    //and static IndexDats
     IndexDat(const string& ss, int mm, IndexType it, Real ur);
 
     static const IndexDatPtr&
@@ -110,39 +104,12 @@ class IndexDat
 
     private:
 
-    //These constructors are not implemented
+    //These methods are not implemented
     //to disallow copying
     IndexDat(const IndexDat&);
     void operator=(const IndexDat&);
 
     }; //class IndexDat
-
-
-typedef boost::random::lagged_fibonacci1279 
-Generator;
-
-Real 
-generateUniqueReal()
-    {
-    static const char seed = 's';
-
-    //Construct rng and seed with address of seed
-    static Generator rng((uintptr_t)&seed);
-
-    return rng();
-    }
-
-IndexDat::
-IndexDat(const string& name, int m_, IndexType it) 
-    : 
-    type(it), 
-    m(m_), 
-    ur(generateUniqueReal()),
-    sname(name)
-    { 
-    if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
-    if(it == All) Error("Constructing Index with type All disallowed");
-    }
 
 IndexDat::
 IndexDat(const string& ss, int m_, IndexType it, Real ur_)
@@ -167,6 +134,25 @@ ReImDat()
     return ReImDat_;
     }
 
+//
+// class Index
+//
+
+typedef boost::random::lagged_fibonacci1279 
+Generator;
+
+Real 
+generateUniqueReal()
+    {
+    static const char seed = 's';
+
+    //Construct rng and seed with address of seed
+    static Generator rng((uintptr_t)&seed);
+
+    return rng();
+    }
+
+
 
 Index::
 Index() 
@@ -178,9 +164,12 @@ Index()
 Index::
 Index(const string& name, int mm, IndexType it, int plev) 
     : 
-    p(make_shared<IndexDat>(name,mm,it)), 
+    p(make_shared<IndexDat>(name,mm,it,generateUniqueReal())), 
     primelevel_(plev) 
-    { }
+    { 
+    if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
+    if(it == All) Error("Constructing Index with type All disallowed");
+    }
 
 Index::
 Index(const IndexDatPtr& p_, int plev) 

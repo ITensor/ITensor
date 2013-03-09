@@ -14,7 +14,7 @@
 enum IndexType { Link, Site, ReIm, All };
 
 //Forward declarations
-class IndexDat;
+struct IndexDat;
 struct IndexVal;
 
 typedef boost::shared_ptr<IndexDat>
