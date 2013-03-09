@@ -4,7 +4,7 @@
 //
 #include "index.h"
 #include "boost/make_shared.hpp"
-#include "boost/random/mersenne_twister.hpp"
+#include "boost/random/lagged_fibonacci.hpp"
 
 using namespace std;
 using boost::array;
@@ -118,18 +118,18 @@ class IndexDat
     }; //class IndexDat
 
 
-typedef boost::random::mt19937 
+typedef boost::random::lagged_fibonacci1279 
 Generator;
 
 Real 
-generateUniqueReal(IndexType type)
+generateUniqueReal()
     {
     static const char seed = 's';
 
     //Construct rng and seed with address of seed
     static Generator rng((uintptr_t)&seed);
 
-    return sin(rng() * sqrt(1.0/7.0) + ((int)type - (int)Site) * sqrt(1.0 / 13.0));
+    return rng();
     }
 
 IndexDat::
@@ -137,7 +137,7 @@ IndexDat(const string& name, int m_, IndexType it)
     : 
     type(it), 
     m(m_), 
-    ur(generateUniqueReal(it)),
+    ur(generateUniqueReal()),
     sname(name)
     { 
     if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
@@ -200,6 +200,9 @@ name() const  { return putprimes(rawname(),primelevel_); }
 
 const string& Index::
 rawname() const { return p->sname; }
+
+
+//static const Real real_min = std::numeric_limits<Real>::min();
 
 Real Index::
 uniqueReal() const { return p->ur*(1+(primelevel_/10.)); }

@@ -27,7 +27,7 @@ static const Real ISqrt2 = 1.0/sqrt(2);
 template <typename T>
 T sqr(T x) { return x*x; }
 
-static const Real ApproxReal_Accuracy = 1E-14;
+static const Real ApproxReal_Accuracy = 1E-15;
 
 struct ApproxReal
     {
@@ -57,7 +57,7 @@ struct ApproxReal
 
     };
 
-static Real maxlogdouble = log(std::numeric_limits<double>::max());
+static const Real maxlogdouble = log(std::numeric_limits<double>::max());
 
 static const Real LogNumber_Accuracy = 1E-12;
 
