@@ -164,10 +164,6 @@ class ITSparse
     findtype(IndexType t) const { return is_.findtype(t); }
 
     bool 
-    hasCommonIndex(const ITensor& other) const
-        { return is_.hasCommonIndex(other.is_); }
-    
-    bool 
     hasindex(const Index& I) const { return is_.hasindex(I); }
 
     bool 

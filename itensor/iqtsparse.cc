@@ -287,14 +287,6 @@ findtype(IndexType t) const
     }
 
 bool IQTSparse::
-hasCommonIndex(const IQTSparse& other) const
-    { 
-    if(is_ == 0) return false;
-
-    return is_->hasCommonIndex(*other.is_); 
-    }
-
-bool IQTSparse::
 hasindex(const IQIndex& I) const 
     { 
     if(is_ == 0) return false;

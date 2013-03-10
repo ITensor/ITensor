@@ -151,9 +151,6 @@ class IQTSparse
     findtype(IndexType t) const;
 
     bool 
-    hasCommonIndex(const IQTSparse& other) const;
-    
-    bool 
     hasindex(const IQIndex& I) const;
 
     //

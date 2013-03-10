@@ -108,9 +108,6 @@ class IndexSet
     finddir(Arrow dir) const;
 
     bool 
-    hasCommonIndex(const IndexSet& other) const;
-    
-    bool 
     hasindex(const IndexT& I) const;
 
     bool 
@@ -390,17 +387,6 @@ finddir(Arrow dir) const
     return IndexT::Null();
     }
 
-
-template <class IndexT>
-bool IndexSet<IndexT>::
-hasCommonIndex(const IndexSet& other) const
-    {
-    for(int j = 0; j < r_; ++j)
-    for(int k = 0; k < other.r_; ++k)
-    if(index_[j] == other.index_[k]) return true;
-
-    return false;
-    }
 
 template <class IndexT>
 bool IndexSet<IndexT>::

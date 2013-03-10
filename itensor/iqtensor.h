@@ -370,16 +370,8 @@ class IQTensor
     const IQIndex& 
     finddir(Arrow dir) const;
 
-    //true if other has any Index in common with this
-    bool 
-    hasCommonIndex(const IQTensor& other) const
-        { return is_->hasCommonIndex(*other.is_); }
-
     bool 
     hasindex(const IQIndex& I) const;
-
-    //void 
-    //addindex1(const IQIndex& I);
 
     void
     tieIndices(const boost::array<IQIndex,NMAX>& indices, int nind, const IQIndex& tied);
