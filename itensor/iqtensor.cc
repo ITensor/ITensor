@@ -762,18 +762,6 @@ clean(Real min_norm)
     dat.nc().clean(min_norm); 
     }
 
-/*
-void IQTensor::
-addindex1(const IQIndex& I)
-	{
-	if(I.m() != 1) 
-	    Error("IQTensor::operator*=(IQIndex): IQIndex must have m == 1.");    
-	solo(); 
-    Foreach(ITensor& t, dat.nc())
-        { t.addindex1(I.index(1)); }
-	is_->addindex(I);
-	}
-    */
 
 void IQTensor::
 tieIndices(const boost::array<IQIndex,NMAX>& indices, int niqind, 
@@ -1059,15 +1047,6 @@ conj()
         *this = r * IQTensor::Complex_1() + IQTensor::Complex_i() * i;
         }
     }
-
-/*
-void IQTensor::
-conj(const IQIndex& I)
-    {
-    soloIndex();
-    is_->conj(I);
-    }
-    */
 
 void IQTensor::
 swap(IQTensor& other)

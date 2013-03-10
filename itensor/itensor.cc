@@ -500,7 +500,7 @@ assignFrom(const ITensor& other)
     p = other.p;
 #else
     Permutation P; 
-    is_.getperm(other.is_,P);
+    getperm(is_,other.is_,P);
     scale_ = other.scale_;
     if(!p.unique())
         { 
@@ -1950,7 +1950,7 @@ operator+=(const ITensor& other)
         }
 
     Permutation P; 
-    is_.getperm(other.is_,P);
+    getperm(is_,other.is_,P);
     Counter c(other.is_);
 
     const int* j[NMAX+1];
@@ -2083,7 +2083,7 @@ toMatrix12NoScale(const Index& i1, const Index& i2,
              Index::Null(), Index::Null(), Index::Null() }};
 
     Permutation P; 
-    is_.getperm(reshuf,P);
+    getperm(is_,reshuf,P);
 
     Vector V;
     reshapeDat(P,V);
@@ -2127,7 +2127,8 @@ void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, cons
     if(ncol != res.Ncols()) Error("toMatrix22: wrong number of cols");
     res.ReDimension(nrow,ncol);
     const array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i4, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
-    Permutation P; getperm(reshuf,P);
+    Permutation P; 
+    getperm(is_,reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
     res *= scale_;
@@ -2156,7 +2157,8 @@ void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matr
     assert(hasindex(*this,i2));
     res.ReDimension(i1.m()*i2.m(),i3.m());
     const array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
-    Permutation P; getperm(reshuf,P);
+    Permutation P; 
+    getperm(is_,reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
     res *= scale_;
@@ -2170,7 +2172,8 @@ void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matr
     assert(hasindex(*this,i3));
     res.ReDimension(i1.m(),i2.m()*i3.m());
     const array<Index,NMAX+1> reshuf = {{ Index::Null(), i2, i3, i1, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
-    Permutation P; getperm(reshuf,P);
+    Permutation P; 
+    getperm(is_,reshuf,P);
     Vector V; reshapeDat(P,V);
     res.TreatAsVector() = V;
     res *= scale_;
@@ -2345,7 +2348,7 @@ commaInit(ITensor& T,
         ii[2] = i1;
         }
     try {
-        T_.is_.getperm(ii,P_);
+        getperm(T.is_,ii,P_);
         }
     catch(const ITError& e)
         {

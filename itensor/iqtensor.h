@@ -431,19 +431,8 @@ class IQTensor
     void 
     randomize();
 
-    //void 
-    //print(std::string name = "",Printdat pdat = HideData) const;
-
-    //void 
-    //printIndices(const std::string& name = "") const;
-    //inline void 
-    //printIndices(const boost::format& fname) const { printIndices(fname.str()); }
-
     void 
     conj();
-
-    void 
-    conj(const IQIndex& I);
 
     void
     swap(IQTensor& other);

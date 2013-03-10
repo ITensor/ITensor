@@ -450,9 +450,6 @@ class ITensor
     void 
     conj();
 
-    void 
-    conj(const Index& I) { }
-
     Real 
     sumels() const;
 

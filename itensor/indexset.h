@@ -104,13 +104,6 @@ class IndexSet
     const IndexT&
     finddir(Arrow dir) const;
 
-    void
-    getperm(const Array<IndexT,NMAX>& I, Permutation& P) const;
-
-    void
-    getperm(const IndexSet& other, Permutation& P) const
-        { getperm(other.index_,P); }
-
     int
     minM() const;
 
@@ -183,9 +176,6 @@ class IndexSet
 
     void
     conj();
-
-    //void
-    //conj(const IndexT& I);
 
     void
     read(std::istream& s);
@@ -361,34 +351,6 @@ finddir(Arrow dir) const
     }
 
 
-template <class IndexT>
-void IndexSet<IndexT>::
-getperm(const Array<IndexT,NMAX>& ind, Permutation& P) const
-	{
-	for(int j = 0; j < r_; ++j)
-	    {
-	    bool got_one = false;
-	    for(int k = 0; k < r_; ++k)
-            {
-            if(ind[j] == index_[k])
-                { 
-                P.from_to(j+1,k+1); 
-                got_one = true; 
-                break;
-                }
-            }
-	    if(!got_one)
-            {
-            Cout << "j = " << j << "\n";
-            Print(*this); 
-            Cout << "ind = \n";
-            for(int j = 0; j < r_; ++j) 
-                Cout << j << " " << ind[j] << "\n";
-            Cout << Endl;
-            Error("IndexSet::getperm: no matching index");
-            }
-	    }
-	}
 
 template <class IndexT>
 int IndexSet<IndexT>::
@@ -837,6 +799,35 @@ findtype(const IndexSet<IndexT>& iset, IndexType t)
     return IndexT::Null();
 	}
 
+template <class IndexT, class ArrayType>
+void
+getperm(const IndexSet<IndexT>& iset, const ArrayType& ind, 
+        Permutation& P)
+	{
+	for(int j = 0; j < iset.r(); ++j)
+	    {
+	    bool got_one = false;
+	    for(int k = 0; k < iset.r(); ++k)
+            {
+            if(ind[j] == iset[k])
+                { 
+                P.from_to(j+1,k+1); 
+                got_one = true; 
+                break;
+                }
+            }
+	    if(!got_one)
+            {
+            Cout << "j = " << j << "\n";
+            Print(iset); 
+            Cout << "ind = \n";
+            for(int j = 0; j < iset.r(); ++j) 
+                Cout << j << " " << ind[j] << "\n";
+            Cout << Endl;
+            Error("IndexSet::getperm: no matching index");
+            }
+	    }
+	}
 
 template <class IndexT>
 bool
