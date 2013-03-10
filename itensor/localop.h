@@ -477,7 +477,7 @@ diag() const
         found = false;
         Foreach(const IndexT& ll, L().indices())
             {
-            if(ll.primeLevel() == 0 && L().hasindex(primed(ll)))
+            if(ll.primeLevel() == 0 && hasindex(L(),primed(ll)))
                 {
                 toTie = ll;
                 found = true;
@@ -495,7 +495,7 @@ diag() const
         found = false;
         Foreach(const IndexT& rr, R().indices())
             {
-            if(rr.primeLevel() == 0 && R().hasindex(primed(rr)))
+            if(rr.primeLevel() == 0 && hasindex(R(),primed(rr)))
                 {
                 toTie = rr;
                 found = true;
@@ -545,8 +545,8 @@ size() const
                 }
             }
 
-        size_ *= Op1_->findtype(Site).m();
-        size_ *= Op2_->findtype(Site).m();
+        size_ *= findtype(*Op1_,Site).m();
+        size_ *= findtype(*Op2_,Site).m();
         }
     return size_;
     }
