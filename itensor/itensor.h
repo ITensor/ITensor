@@ -408,9 +408,6 @@ class ITensor
     int 
     vecSize() const;
 
-    int 
-    maxSize() const { return is_.dim(); }
-
     void 
     assignToVec(VectorRef v) const;
 
@@ -465,7 +462,9 @@ class ITensor
     void 
     scaleTo(const LogNumber& newscale);
 
-    friend class commaInit;
+    //
+    // Typedefs
+    //
 
     typedef Index 
     IndexT;
@@ -616,6 +615,8 @@ class ITensor
               const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
         const;
+
+    friend class commaInit;
 
     friend class ITSparse;
 
