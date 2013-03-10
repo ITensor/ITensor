@@ -776,6 +776,7 @@ clean(Real min_norm)
     dat.nc().clean(min_norm); 
     }
 
+/*
 void IQTensor::
 addindex1(const IQIndex& I)
 	{
@@ -786,6 +787,7 @@ addindex1(const IQIndex& I)
         { t.addindex1(I.index(1)); }
 	is_->addindex(I);
 	}
+    */
 
 void IQTensor::
 tieIndices(const boost::array<IQIndex,NMAX>& indices, int niqind, 
@@ -1050,12 +1052,14 @@ conj()
         }
     }
 
+/*
 void IQTensor::
 conj(const IQIndex& I)
     {
     soloIndex();
     is_->conj(I);
     }
+    */
 
 void IQTensor::
 swap(IQTensor& other)
@@ -1073,9 +1077,7 @@ operator<<(std::ostream & s, const IQTensor& T)
         s << "     (IQTensor is null)\n\n";
         return s;
         }
-    s << "IQIndices:\n";
-    for(int k = 1; k <= T.r(); ++k)
-        { s << " " << T.index(k) << std::endl; }
+    s << "IQIndices:\n" << T.indices();
     s << "ITensor Blocks:\n";
     Foreach(const ITensor& t, T.blocks())
         { s << "  " << t << std::endl; }

@@ -378,8 +378,8 @@ class IQTensor
     bool 
     hasindex(const IQIndex& I) const;
 
-    void 
-    addindex1(const IQIndex& I);
+    //void 
+    //addindex1(const IQIndex& I);
 
     void
     tieIndices(const boost::array<IQIndex,NMAX>& indices, int nind, const IQIndex& tied);

@@ -239,11 +239,6 @@ class ITensor
     hasAllIndex(const boost::array<Index,NMAX>& I, int nind) const
         { return is_.hasAllIndex(I,nind); }
 
-    //Add m==1 Index I to this, increasing rank by 1
-    void 
-    addindex1(const Index& I) { is_.addindex1(I); }
-
-
     //
     //Primelevel Methods
     //

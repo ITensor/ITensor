@@ -121,17 +121,6 @@ TEST(PrimeLevelMethods)
     CHECK(P->index(2) == primed(S1,3));
     CHECK(P->index(3) == S2);
     CHECK(P->index(4) == L2);
-
-    //
-    // indIncAllPrime
-    //
-    P = make_shared<IQIndexSet>(S1,primed(S1),S2,L2);
-
-    P->indIncAllPrime(S1,2);
-    CHECK(P->index(1) == primed(S1,2));
-    CHECK(P->index(2) == primed(S1,3));
-    CHECK(P->index(3) == S2);
-    CHECK(P->index(4) == L2);
     }
 
 TEST(PrimeIndex)

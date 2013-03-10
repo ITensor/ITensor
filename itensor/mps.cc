@@ -351,9 +351,10 @@ init_tensors(std::vector<ITensor>& A_, const InitState& initState)
     new_tensors(A_); 
     for(int i = 1; i <= N_; ++i) 
         {
-        A_[i] = ITensor(initState(i)); 
+        A_[i](initState(i)) = 1;
         }
 
+    /*
     std::vector<Index> a(N_+1);
     for(int i = 1; i <= N_; ++i)
         { a[i] = Index(nameint("l",i)); }
@@ -365,6 +366,7 @@ init_tensors(std::vector<ITensor>& A_, const InitState& initState)
         A_[i].addindex1(a[i]);
         }
     A_[N_].addindex1(a[N_-1]);
+    */
     }
 template
 void MPSt<ITensor>::
@@ -1043,15 +1045,16 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                 {
                 qD[q] = D;
 
+                IndexSet<Index> newinds(block.indices());
                 if(is_mpo) 
                     {
-                    block.addindex1(conj(model.si(s)(n).index()));
-                    block.addindex1(model.siP(s)(u).index());
+                    newinds.addindex1(conj(model.si(s)(n).index()));
+                    newinds.addindex1(model.siP(s)(u).index());
                     }
                 else 
-                    { block.addindex1(model.si(s)(n).index()); }
+                    { newinds.addindex1(model.si(s)(n).index()); }
 
-                qt[q].push_back(block);
+                qt[q].push_back(ITensor(newinds,block));
 
                 if(s==show_s)
                     {

@@ -857,23 +857,22 @@ expandIndex(const Index& small, const Index& big, int start)
     assert(small.m() <= big.m());
     assert(start < big.m());
 
-    vector<Index> indices; 
-    indices.reserve(is_.r());
-    int w = -1;
+    IndexSet<Index> indices; 
+    bool found = false;
     for(int j = 1; j <= r(); ++j)
         {
         if(is_.index(j) == small)
             {
-            w = j;
-            indices.push_back(big);
+            indices.addindex(big);
+            found = true;
             }
         else 
             {
-            indices.push_back(is_.index(j));
+            indices.addindex(is_.index(j));
             }
         }
 
-    if(w == -1)
+    if(!found)
         {
         Print(*this);
         Print(small);
@@ -883,21 +882,16 @@ expandIndex(const Index& small, const Index& big, int start)
     ITensor res(indices);
     res.scale_ = scale_;
 
-    //Big Index not guaranteed
-    //to remain at position w
-    //e.g. if some m==1 Indices
-    //get moved to the back
-    w = res.is_.findindex(big);
-
     array<int,NMAX+1> inc;
     //Make sure all other inc's are zero
     inc.assign(0);
+    const int w = 1+findindex(indices,big);
     inc.at(w) = start;
 
     Counter c(is_);
 
-    const Vector& thisdat = p->v;
-    Vector& resdat = res.p->v;
+    const Real* const thisdat = p->v.Store();
+    Real* const resdat = res.p->v.Store();
     for(; c.notDone(); ++c)
         {
         resdat[_ind(res.is_,c.i[1]+inc[1],c.i[2]+inc[2],

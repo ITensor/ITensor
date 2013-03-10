@@ -68,7 +68,7 @@ class IndexSet
     rn() const { return rn_; }
 
     const IndexT&
-    index(int j) const { return GET(index_,j-1); }
+    index(int j) const { return index_[j-1]; }
 
     const IndexT&
     operator[](int j) const { return index_[j]; }
@@ -106,15 +106,6 @@ class IndexSet
 
     const IndexT&
     finddir(Arrow dir) const;
-
-    int 
-    findindex(const IndexT& I) const;
-
-    int 
-    findindexn(const IndexT& I) const;
-
-    int 
-    findindex1(const IndexT& I) const;
 
     bool 
     hasCommonIndex(const IndexSet& other) const;
@@ -172,14 +163,6 @@ class IndexSet
     mapprimeind(const IndexT& I, int plevold, int plevnew, 
                 IndexType type = All);
 
-    // Increments primelevel of ALL copies of
-    // an index I, regardless of original primelevel.
-    // For example, if the original indices are 
-    // I, I', J, calling indIncPrime(I,2)
-    // results in I'', I''', J.
-    void
-    indIncAllPrime(const IndexT& I, int inc);
-
     //
     // Methods for Manipulating IndexSets
     //
@@ -202,14 +185,6 @@ class IndexSet
     void 
     addindex1(const IndexT& I);
 
-    //Removes the jth index as found by findindex
-    void 
-    removeindex1(int j);
-
-    void 
-    removeindex1(const IndexT& I) 
-        { removeindex1(findindex1(I)); }
-
     void
     setUniqueReal();
 
@@ -229,8 +204,8 @@ class IndexSet
     void
     conj();
 
-    void
-    conj(const IndexT& I);
+    //void
+    //conj(const IndexT& I);
 
     void
     read(std::istream& s);
@@ -415,32 +390,6 @@ finddir(Arrow dir) const
     return IndexT::Null();
     }
 
-template <class IndexT>
-int IndexSet<IndexT>::
-findindex(const IndexT& I) const
-    {
-    if(I.m() == 1) return findindex1(I);
-    else           return findindexn(I);
-    return 0;
-    }
-
-template <class IndexT>
-int IndexSet<IndexT>::
-findindexn(const IndexT& I) const
-	{
-    for(int j = 0; j < rn_; ++j)
-    if(index_[j] == I) return (j+1);
-    return 0;
-	}
-
-template <class IndexT>
-int IndexSet<IndexT>::
-findindex1(const IndexT& I) const
-	{
-    for(int j = rn_; j < r_; ++j)
-    if(index_[j] == I) return (j+1);
-    return 0;
-	}
 
 template <class IndexT>
 bool IndexSet<IndexT>::
@@ -683,56 +632,10 @@ mapprimeind(const IndexT& I, int plevold, int plevnew, IndexType type)
     Error("IndexSet::mapprimeind: index not found.");
 	}
 
-template <class IndexT>
-void IndexSet<IndexT>::
-indIncAllPrime(const IndexT& I, int inc)
-    {
-    bool got_one = false;
-    for(int j = 0; j < r_; ++j)
-        {
-        IndexT& J = index_[j];
-        if(J.noprimeEquals(I))
-            {
-            int p = J.primeLevel();
-            J.mapprime(p,p+inc);
-            got_one = true;
-            }
-        }
-    if(got_one) return;
-    //else, throw an error because we didn't find I
-    Cout << "index was " << I << "\n";
-    Error("indIncAllPrime: couldn't find index");
-    }
-
 
 //
 // Methods for Manipulating IndexSets
 //
-
-/*
-template <class IndexT>
-void IndexSet<IndexT>::
-mapindex(const IndexT& i1, const IndexT& i2)
-	{
-	assert(i1.m() == i2.m());
-    if(i2.m() != i1.m())
-        {
-        Print(i1);
-        Print(i2);
-        Error("mapIndex: index must have matching m");
-        }
-	for(int j = 0; j < r_; ++j) 
-	    if(index_[j] == i1) 
-		{
-		index_[j] = i2;
-        ur_ -= i1.uniqueReal();
-        ur_ += i2.uniqueReal();
-		return;
-		}
-	Print(i1);
-	Error("IndexSet::mapindex: couldn't find i1.");
-	}
-    */
 
 template <class IndexT>
 void IndexSet<IndexT>::
@@ -854,25 +757,6 @@ addindex1(const IndexT& I)
 
 template <class IndexT>
 void IndexSet<IndexT>::
-removeindex1(int j) 
-    { 
-#ifdef DEBUG
-    if(j >= r_ || j < rn_)
-        {
-        Print(j);
-        Print(r_);
-        Print(rn_);
-        Error("j out of range");
-        }
-#endif
-    ur_ -= index_.at(j-1).uniqueReal();
-    for(int k = j-1; k < r_-1; ++k) 
-        index_[k] = index_[k+1];
-    --r_;
-    }
-
-template <class IndexT>
-void IndexSet<IndexT>::
 setUniqueReal()
 	{
     ur_ = 0;
@@ -925,6 +809,7 @@ conj()
         index_[j].conj();
     }
 
+/*
 template <class IndexT>
 void IndexSet<IndexT>::
 conj(const IndexT& I)
@@ -938,6 +823,7 @@ conj(const IndexT& I)
             }
         }
     }
+    */
 
 template <class IndexT>
 void IndexSet<IndexT>::
@@ -1033,6 +919,29 @@ operator<<(std::ostream& s, const IndexSet<Index>& is)
     for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
     if(is.r() != 0) { s << is.index(i); } //print last one
     return s;
+    }
+
+//
+// Free helper methods
+//
+
+//
+// Given IndexSet<IndexT> iset and IndexT I,
+// return int j such that iset[j] == I.
+// If not found, throws an ITError.
+//
+template <class IndexT>
+int
+findindex(const IndexSet<IndexT>& iset, const IndexT& I)
+    {
+    int j = (I.m()==1 ? iset.rn() : 0);
+    for(; j < iset.r(); ++j)
+        {
+        if(iset[j] == I) return j;
+        }
+    Print(I);
+    Error("Index I not found");
+    return 0;
     }
 
 

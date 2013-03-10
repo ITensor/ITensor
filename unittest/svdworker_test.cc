@@ -96,7 +96,7 @@ struct SVDWorkerDefaults
 
         phi0 = Phi0.toITensor();
 
-        L = IQTensor(L1,S1,Mid10);
+        L = IQTensor(L1,S1,conj(Mid10));
             {
             ITensor zud(l10,s1u,mid10d);
             zud.randomize();
@@ -163,7 +163,6 @@ struct SVDWorkerDefaults
 
         Psi = L;
         //Psi /= V;
-        Psi.conj(Mid10);
         Psi *= R;
 
         psi = Psi.toITensor();
