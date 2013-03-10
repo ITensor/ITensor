@@ -82,9 +82,6 @@ class Combiner
          Arrow dir = Out,
          int primelevel = 0) const;
 
-    bool 
-    hasindex(const Index& I) const;
-
     void
     prime(int inc = 1);
 
@@ -185,15 +182,6 @@ init(std::string rname, IndexType type, Arrow dir, int primelevel) const
     initted = true;
     }
 
-
-bool inline Combiner::
-hasindex(const Index& I) const
-    {
-    for(int j = 1; j <= rl_; ++j) if(left_[j] == I) return true;
-    return false;
-    }
-
-
 void inline Combiner::
 prime(int inc)
     {
@@ -251,7 +239,7 @@ product(const ITensor& t, ITensor& res) const
     {
     init();
 
-    if(t.hasindex(right_))
+    if(hasindex(t,right_))
         {
         IndexSet<Index> nind;
         Foreach(const Index& I, t.indices())
@@ -281,6 +269,20 @@ uniqueReal() const
         ur += left_[j].uniqueReal();
     return ur;
     }
+
+//
+// Combiner helper method
+//
+
+bool inline
+hasindex(const Combiner& C, const Index& I)
+    {
+    for(int j = 1; j <= C.rl(); ++j) 
+        if(C.left(j) == I) return true;
+    return false;
+    }
+
+
 
 inline 
 std::ostream& 

@@ -276,24 +276,6 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
 	}
     */
 
-IQIndex IQTSparse::
-findtype(IndexType t) const 
-    { 
-    if(is_ == 0)
-        {
-        Error("IQTSparse is null");
-        }
-    return is_->findtype(t); 
-    }
-
-bool IQTSparse::
-hasindex(const IQIndex& I) const 
-    { 
-    if(is_ == 0) return false;
-
-    return is_->hasindex(I); 
-    }
-
 //
 // Primelevel Methods 
 //
@@ -362,7 +344,7 @@ prime(const IQIndex& I, int inc)
     for(std::vector<inqn>::const_iterator x = I.iq().begin(); 
             x != I.iq().end(); ++x)
         {
-        if(t.hasindex(x->index))
+        if(hasindex(t,x->index))
             t.prime(x->index,inc);
         }
     }
@@ -378,7 +360,7 @@ noprime(const IQIndex& I)
     for(std::vector<inqn>::const_iterator x = I.iq().begin(); 
             x != I.iq().end(); ++x)
         {
-        if(t.hasindex(x->index))
+        if(hasindex(t,x->index))
             t.noprime(x->index);
         }
     }
@@ -525,8 +507,8 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     if(T.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    if(S.hasindex(IQIndex::IndReIm()) && T.hasindex(IQIndex::IndReIm()) && !T.hasindex(IQIndex::IndReImP())
-	    && !T.hasindex(IQIndex::IndReImPP()) && !S.hasindex(IQIndex::IndReImP()) && !S.hasindex(IQIndex::IndReImPP()))
+    if(hasindex(S,IQIndex::IndReIm()) && hasindex(T,IQIndex::IndReIm()) && !hasindex(T,IQIndex::IndReImP())
+	    && !hasindex(T,IQIndex::IndReImPP()) && !hasindex(S,IQIndex::IndReImP()) && !hasindex(S,IQIndex::IndReImPP()))
         {
         Error("Complex IQTSparse not yet implemented");
         }

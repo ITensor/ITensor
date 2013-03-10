@@ -102,24 +102,7 @@ class IndexSet
     hastype(IndexType t) const;
 
     const IndexT&
-    findtype(IndexType t) const;
-
-    const IndexT&
     finddir(Arrow dir) const;
-
-    bool 
-    hasindex(const IndexT& I) const;
-
-    bool 
-    hasindexn(const IndexT& I) const;
-
-    bool 
-    hasindex1(const IndexT& I) const;
-
-    //Returns true if this IndexSet contains all the indices
-    //in Array I (from I[0] through I[nind-1])
-    bool
-    hasAllIndex(const Array<IndexT,NMAX>& I, int nind) const;
 
     void
     getperm(const Array<IndexT,NMAX>& I, Permutation& P) const;
@@ -369,16 +352,6 @@ hastype(IndexType t) const
 
 template <class IndexT>
 const IndexT& IndexSet<IndexT>::
-findtype(IndexType t) const
-	{
-    for(int j = 0; j < r_; ++j)
-        if(index_[j].type() == t) return index_[j];
-    Error("IndexSet::findtype failed."); 
-    return IndexT::Null();
-	}
-
-template <class IndexT>
-const IndexT& IndexSet<IndexT>::
 finddir(Arrow dir) const
     {
     for(int j = 0; j < r_; ++j)
@@ -386,66 +359,6 @@ finddir(Arrow dir) const
     Error("Couldn't find index with specified dir");
     return IndexT::Null();
     }
-
-
-template <class IndexT>
-bool IndexSet<IndexT>::
-hasindex(const IndexT& I) const
-	{
-    if(I.m() == 1) return hasindex1(I);
-    else           return hasindexn(I);
-    return false;
-	}
-
-template <class IndexT>
-bool IndexSet<IndexT>::
-hasindexn(const IndexT& I) const
-	{
-    for(int j = 0; j < rn_; ++j)
-    if(index_[j] == I) return true;
-    return false;
-	}
-
-template <class IndexT>
-bool IndexSet<IndexT>::
-hasindex1(const IndexT& I) const
-	{
-    for(int j = rn_; j < r_; ++j)
-    if(index_[j] == I) return true;
-    return false;
-	}
-
-template <class IndexT>
-bool IndexSet<IndexT>::
-hasAllIndex(const Array<IndexT,NMAX>& I, int nind) const
-    {
-    for(int n = 0; n < nind; ++n)
-        {
-        const IndexT& ii = I[n];
-        bool found = false;
-        if(ii.m() == 1)
-            {
-            for(int j = rn_; j < r_; ++j)
-                if(index_[j] == ii)
-                    {
-                    found = true;
-                    break;
-                    }
-            }
-        else
-            {
-            for(int j = 0; j < rn_; ++j)
-                if(index_[j] == ii)
-                    {
-                    found = true;
-                    break;
-                    }
-            }
-        if(!found) return false;
-        }
-    return true;
-    }
-
 
 
 template <class IndexT>
@@ -710,7 +623,6 @@ addindex1(const std::vector<IndexT>& indices)
     for(size_t j = 0; j < indices.size(); ++j)
         { 
         assert(indices[j].m() == 1);
-        assert(!hasindex1(indices[j]));
 
         index_[r_] = indices[j]; 
         ++r_;
@@ -728,12 +640,13 @@ addindex1(const IndexT& I)
         Print(I);
         Error("Index must have m==1.");
         }
-    if(hasindex1(I))
-        {
-        Print(*this);
-        Print(I);
-        Error("Adding Index twice");
-        }
+    for(int j = rn_; j < r_; ++j)
+        if(index_[j] == I)
+            {
+            Print(*this);
+            Print(I);
+            Error("Adding Index twice");
+            }
     if(r_ == NMAX) Error("Maximum number of indices reached");
 #endif
     index_[r_] = I;
@@ -794,22 +707,6 @@ conj()
     for(int j = 0; j < r_; ++j)
         index_[j].conj();
     }
-
-/*
-template <class IndexT>
-void IndexSet<IndexT>::
-conj(const IndexT& I)
-    {
-    for(int j = 0; j < r_; ++j)
-        {
-        if(index_[j] == I)
-            {
-            index_[j].conj();
-            return;
-            }
-        }
-    }
-    */
 
 template <class IndexT>
 void IndexSet<IndexT>::
@@ -908,7 +805,7 @@ operator<<(std::ostream& s, const IndexSet<Index>& is)
     }
 
 //
-// Free helper methods
+// IndexSet helper methods
 //
 
 //
@@ -929,6 +826,29 @@ findindex(const IndexSet<IndexT>& iset, const IndexT& I)
     Error("Index I not found");
     return 0;
     }
+
+template <class IndexT>
+const IndexT&
+findtype(const IndexSet<IndexT>& iset, IndexType t)
+	{
+    for(int j = 0; j < iset.r(); ++j)
+        if(iset[j].type() == t) return iset[j];
+    Error("findtype failed."); 
+    return IndexT::Null();
+	}
+
+
+template <class IndexT>
+bool
+hasindex(const IndexSet<IndexT>& iset, const IndexT& I)
+	{
+    int j = (I.m()==1 ? iset.rn() : 0);
+    for(; j < iset.r(); ++j)
+        {
+        if(iset[j] == I) return true;
+        }
+    return false;
+	}
 
 
 #undef Array

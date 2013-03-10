@@ -501,7 +501,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
         indices.reserve(nn);
         for(int j = 1; j <= nn; ++j) 
             {
-            if(!hasindex(iv[j].iqind)) 
+            if(!hasindex(*this,iv[j].iqind)) 
                 Error("IQTensor::operator(): IQIndex not found.");
             indices.push_back(iv[j].index());
             }
@@ -649,7 +649,7 @@ prime(const IQIndex& I, int inc)
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
-		if(t.hasindex(x->index)) 
+		if(hasindex(t,x->index)) 
 		    t.prime(x->index,inc);
         }
 	}
@@ -665,7 +665,7 @@ noprime(const IQIndex& I)
     for(std::vector<inqn>::const_iterator
         x = I.iq().begin(); x != I.iq().end(); ++x)
         {
-        if(t.hasindex(x->index)) 
+        if(hasindex(t,x->index)) 
             t.noprime(x->index);
         }
 	}
@@ -687,7 +687,7 @@ uses_ind(const Index& ii) const
     {
     Foreach(const ITensor& t, dat())
         {
-        if(t.hasindex(ii)) 
+        if(hasindex(t,ii)) 
             return true;
         }
     return false;
@@ -701,24 +701,10 @@ hastype(IndexType t) const
     }
 
 const IQIndex& IQTensor::
-findtype(IndexType t) const 
-    { 
-    if(!is_) Error("findtype failed, IQTensor is null");
-    return is_->findtype(t); 
-    }
-
-const IQIndex& IQTensor::
 finddir(Arrow dir) const 
     { 
     if(!is_) Error("finddir failed, IQTensor is null");
     return is_->finddir(dir); 
-    }
-
-bool IQTensor::
-hasindex(const IQIndex& I) const 
-    { 
-    if(!is_) return false;
-    return is_->hasindex(I); 
     }
 
 Real IQTensor::
@@ -837,10 +823,21 @@ tieIndices(const boost::array<IQIndex,NMAX>& indices, int niqind,
 
         Foreach(const ITensor& t, dat())
             {
-            if(!t.hasAllIndex(totie,niqind)) continue;
-            ITensor nt(t);
-            nt.tieIndices(totie,niqind,tied.index(i));
-            ndat.nc().insert_add(nt);
+            bool has_all = true;
+            for(int n = 0; n < niqind; ++n)
+                {
+                if(!hasindex(t,totie[n]))
+                    {
+                    has_all = false;
+                    break;
+                    }
+                }
+            if(has_all)
+                {
+                ITensor nt(t);
+                nt.tieIndices(totie,niqind,tied.index(i));
+                ndat.nc().insert_add(nt);
+                }
             }
         }
     dat.swap(ndat);
@@ -913,10 +910,21 @@ trace(const boost::array<IQIndex,NMAX>& indices, int niqind)
 
         Foreach(const ITensor& t, dat())
             {
-            if(!t.hasAllIndex(totrace,niqind)) continue;
-            ITensor tt(t);
-            tt.trace(totrace,niqind);
-            ndat.nc().insert_add(tt);
+            bool has_all = true;
+            for(int n = 0; n < niqind; ++n)
+                {
+                if(!hasindex(t,totrace[n]))
+                    {
+                    has_all = false;
+                    break;
+                    }
+                }
+            if(has_all)
+                {
+                ITensor tt(t);
+                tt.trace(totrace,niqind);
+                ndat.nc().insert_add(tt);
+                }
             }
         }
     dat.swap(ndat);
@@ -1101,8 +1109,8 @@ operator*=(const IQTensor& other)
     if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    if(hasindex(IQIndex::IndReIm()) && other.hasindex(IQIndex::IndReIm()) && !other.hasindex(IQIndex::IndReImP())
-	    && !other.hasindex(IQIndex::IndReImPP()) && !hasindex(IQIndex::IndReImP()) && !hasindex(IQIndex::IndReImPP()))
+    if(hasindex(*this,IQIndex::IndReIm()) && hasindex(other,IQIndex::IndReIm()) && !hasindex(other,IQIndex::IndReImP())
+	    && !hasindex(other,IQIndex::IndReImPP()) && !hasindex(*this,IQIndex::IndReImP()) && !hasindex(*this,IQIndex::IndReImPP()))
         {
         this->prime(ReIm);
         operator*=(ComplexProd() * primed(other,ReIm,2));
@@ -1234,9 +1242,9 @@ operator/=(const IQTensor& other)
     if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    if(hasindex(IQIndex::IndReIm())   && other.hasindex(IQIndex::IndReIm()) &&
-      !hasindex(IQIndex::IndReImP())  && !other.hasindex(IQIndex::IndReImP()) &&
-      !hasindex(IQIndex::IndReImPP()) && !other.hasindex(IQIndex::IndReImPP()))
+    if(hasindex(*this,IQIndex::IndReIm())   && hasindex(other,IQIndex::IndReIm()) &&
+      !hasindex(*this,IQIndex::IndReImP())  && !hasindex(other,IQIndex::IndReImP()) &&
+      !hasindex(*this,IQIndex::IndReImPP()) && !hasindex(other,IQIndex::IndReImPP()))
         {
         prime(ReIm,1);
         operator/=(primed(other,ReIm,2));
@@ -1413,8 +1421,8 @@ operator+=(const IQTensor& other)
 
     IQTensor& This = *this;
 
-    const bool complex_this = hasindex(IQIndex::IndReIm()); 
-    const bool complex_other = other.hasindex(IQIndex::IndReIm()); 
+    const bool complex_this = isComplex(*this);
+    const bool complex_other = isComplex(other);
     if(!complex_this && complex_other)
         {
         operator*=(IQComplex_1());

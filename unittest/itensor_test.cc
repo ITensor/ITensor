@@ -115,54 +115,54 @@ TEST(Constructors)
     ITensor t1(l1);
 
     CHECK_EQUAL(t1.r(),1);
-    CHECK(t1.hasindex(l1));
+    CHECK(hasindex(t1,l1));
     CHECK_CLOSE(t1.norm(),0,1E-10);
 
     ITensor t2(l1,l2);
 
     CHECK_EQUAL(t2.r(),2);
-    CHECK(t2.hasindex(l1));
-    CHECK(t2.hasindex(l2));
+    CHECK(hasindex(t2,l1));
+    CHECK(hasindex(t2,l2));
     CHECK_CLOSE(t2.norm(),0,1E-10);
 
     ITensor t3(l1,l2,l3);
 
     CHECK_EQUAL(t3.r(),3);
-    CHECK(t3.hasindex(l1));
-    CHECK(t3.hasindex(l2));
-    CHECK(t3.hasindex(l3));
+    CHECK(hasindex(t3,l1));
+    CHECK(hasindex(t3,l2));
+    CHECK(hasindex(t3,l3));
     CHECK_CLOSE(t3.norm(),0,1E-10);
 
     ITensor t4(a1,l1);
 
     CHECK_EQUAL(t4.r(),2);
-    CHECK(t4.hasindex(a1));
-    CHECK(t4.hasindex(l1));
+    CHECK(hasindex(t4,a1));
+    CHECK(hasindex(t4,l1));
     CHECK_CLOSE(t4.norm(),0,1E-10);
 
     ITensor t5(l1,a1,l2);
 
     CHECK_EQUAL(t5.r(),3);
-    CHECK(t5.hasindex(a1));
-    CHECK(t5.hasindex(l1));
-    CHECK(t5.hasindex(l2));
+    CHECK(hasindex(t5,a1));
+    CHECK(hasindex(t5,l1));
+    CHECK(hasindex(t5,l2));
     CHECK_CLOSE(t5.norm(),0,1E-10);
 
     ITensor t6(l1,a1,l2,a2);
 
     CHECK_EQUAL(t6.r(),4);
-    CHECK(t6.hasindex(l1));
-    CHECK(t6.hasindex(a1));
-    CHECK(t6.hasindex(l2));
-    CHECK(t6.hasindex(a2));
+    CHECK(hasindex(t6,l1));
+    CHECK(hasindex(t6,a1));
+    CHECK(hasindex(t6,l2));
+    CHECK(hasindex(t6,a2));
     CHECK_CLOSE(t6.norm(),0,1E-10);
 
     Real a = ran1();
     ITensor t7(l1,l2,a);
 
     CHECK_EQUAL(t7.r(),2);
-    CHECK(t7.hasindex(l1));
-    CHECK(t7.hasindex(l2));
+    CHECK(hasindex(t7,l1));
+    CHECK(hasindex(t7,l2));
     CHECK_CLOSE(t7(l1(1),l2(1)),a,1E-10);
     CHECK_CLOSE(t7(l1(1),l2(2)),0,1E-10);
     CHECK_CLOSE(t7(l1(2),l2(1)),0,1E-10);
@@ -175,8 +175,8 @@ TEST(Constructors)
     ITensor t8(l1,b3,M);
 
     CHECK_EQUAL(t8.r(),2);
-    CHECK(t8.hasindex(l1));
-    CHECK(t8.hasindex(b3));
+    CHECK(hasindex(t8,l1));
+    CHECK(hasindex(t8,b3));
     CHECK_CLOSE(t8(l1(1),b3(1)),11,1E-10);
     CHECK_CLOSE(t8(l1(1),b3(2)),12,1E-10);
     CHECK_CLOSE(t8(l1(1),b3(3)),13,1E-10);
@@ -189,8 +189,8 @@ TEST(Constructors)
     ITensor t85(b3,l1,M.t());
 
     CHECK_EQUAL(t85.r(),2);
-    CHECK(t85.hasindex(l1));
-    CHECK(t85.hasindex(b3));
+    CHECK(hasindex(t85,l1));
+    CHECK(hasindex(t85,b3));
     CHECK_CLOSE(t85(l1(1),b3(1)),11,1E-10);
     CHECK_CLOSE(t85(l1(1),b3(2)),12,1E-10);
     CHECK_CLOSE(t85(l1(1),b3(3)),13,1E-10);
@@ -205,8 +205,8 @@ TEST(Constructors)
     ITensor w1(a1,l2,W);
 
     CHECK_EQUAL(w1.r(),2);
-    CHECK(w1.hasindex(a1));
-    CHECK(w1.hasindex(l2));
+    CHECK(hasindex(w1,a1));
+    CHECK(hasindex(w1,l2));
     CHECK_CLOSE(w1(l2(1)),W(1,1),1E-10);
     CHECK_CLOSE(w1(l2(2)),W(1,2),1E-10);
     CHECK_CLOSE(w1.sumels(),W.TreatAsVector().sumels(),1E-10);
@@ -215,8 +215,8 @@ TEST(Constructors)
     ITensor w2(l2,a1,W.t());
 
     CHECK_EQUAL(w2.r(),2);
-    CHECK(w2.hasindex(a1));
-    CHECK(w2.hasindex(l2));
+    CHECK(hasindex(w2,a1));
+    CHECK(hasindex(w2,l2));
     CHECK_CLOSE(w2(l2(1)),W(1,1),1E-10);
     CHECK_CLOSE(w2(l2(2)),W(1,2),1E-10);
     CHECK_CLOSE(w2.sumels(),W.TreatAsVector().sumels(),1E-10);
@@ -233,7 +233,7 @@ TEST(Constructors)
     ITensor t10(linkind,V);
 
     CHECK_EQUAL(t10.r(),1);
-    CHECK(t10.hasindex(linkind));
+    CHECK(hasindex(t10,linkind));
     CHECK_CLOSE(t10.sumels(),V.sumels(),1E-10);
     CHECK_CLOSE(t10.norm(),Norm(V),1E-10);
 }
@@ -243,7 +243,7 @@ TEST(IndexValConstructors)
     ITensor t1(l1(2));
 
     CHECK_EQUAL(t1.r(),1);
-    CHECK(t1.hasindex(l1));
+    CHECK(hasindex(t1,l1));
     CHECK_CLOSE(t1(l1(1)),0,1E-10);
     CHECK_CLOSE(t1(l1(2)),1,1E-10);
     CHECK_CLOSE(t1.sumels(),1,1E-10);
@@ -252,8 +252,8 @@ TEST(IndexValConstructors)
     ITensor t2(l1(2),l2(1));
 
     CHECK_EQUAL(t2.r(),2);
-    CHECK(t2.hasindex(l1));
-    CHECK(t2.hasindex(l2));
+    CHECK(hasindex(t2,l1));
+    CHECK(hasindex(t2,l2));
     CHECK_CLOSE(t2(l1(1),l2(1)),0,1E-10);
     CHECK_CLOSE(t2(l1(1),l2(2)),0,1E-10);
     CHECK_CLOSE(t2(l1(2),l2(1)),1,1E-10);
@@ -264,8 +264,8 @@ TEST(IndexValConstructors)
     ITensor u2a(a1(1),l2(2));
 
     CHECK_EQUAL(u2a.r(),2);
-    CHECK(u2a.hasindex(a1));
-    CHECK(u2a.hasindex(l2));
+    CHECK(hasindex(u2a,a1));
+    CHECK(hasindex(u2a,l2));
     CHECK_CLOSE(u2a(l2(1)),0,1E-10);
     CHECK_CLOSE(u2a(l2(2)),1,1E-10);
     CHECK_CLOSE(u2a.sumels(),1,1E-10);
@@ -274,8 +274,8 @@ TEST(IndexValConstructors)
     ITensor u2b(l1(2),a2(1));
 
     CHECK_EQUAL(u2b.r(),2);
-    CHECK(u2b.hasindex(l1));
-    CHECK(u2b.hasindex(a2));
+    CHECK(hasindex(u2b,l1));
+    CHECK(hasindex(u2b,a2));
     CHECK_CLOSE(u2b(l1(1)),0,1E-10);
     CHECK_CLOSE(u2b(l1(2)),1,1E-10);
     CHECK_CLOSE(u2b.sumels(),1,1E-10);
@@ -284,9 +284,9 @@ TEST(IndexValConstructors)
     ITensor t3(l1(2),l3(1),l2(1));
 
     CHECK_EQUAL(t3.r(),3);
-    CHECK(t3.hasindex(l1));
-    CHECK(t3.hasindex(l2));
-    CHECK(t3.hasindex(l3));
+    CHECK(hasindex(t3,l1));
+    CHECK(hasindex(t3,l2));
+    CHECK(hasindex(t3,l3));
     CHECK_CLOSE(t3(l1(1),l3(1),l2(1)),0,1E-10);
     CHECK_CLOSE(t3(l1(2),l3(1),l2(1)),1,1E-10);
     CHECK_CLOSE(t3(l1(1),l3(2),l2(1)),0,1E-10);
@@ -301,9 +301,9 @@ TEST(IndexValConstructors)
     ITensor t4(a1(1),l3(2),l2(1));
 
     CHECK_EQUAL(t4.r(),3);
-    CHECK(t4.hasindex(a1));
-    CHECK(t4.hasindex(l2));
-    CHECK(t4.hasindex(l3));
+    CHECK(hasindex(t4,a1));
+    CHECK(hasindex(t4,l2));
+    CHECK(hasindex(t4,l3));
     CHECK_CLOSE(t4(l3(1),l2(1)),0,1E-10);
     CHECK_CLOSE(t4(l3(1),l2(2)),0,1E-10);
     CHECK_CLOSE(t4(l3(2),l2(1)),1,1E-10);
@@ -323,10 +323,10 @@ TEST(MultiIndexConstructors)
     ITensor t1(indices);
 
     CHECK_EQUAL(t1.r(),4);
-    CHECK(t1.hasindex(a2));
-    CHECK(t1.hasindex(l3));
-    CHECK(t1.hasindex(l1));
-    CHECK(t1.hasindex(a4));
+    CHECK(hasindex(t1,a2));
+    CHECK(hasindex(t1,l3));
+    CHECK(hasindex(t1,l1));
+    CHECK(hasindex(t1,a4));
     CHECK_CLOSE(t1.norm(),0,1E-10);
 
     Vector V(l1.m()*l3.m());
@@ -335,10 +335,10 @@ TEST(MultiIndexConstructors)
     ITensor t2(indices,V);
 
     CHECK_EQUAL(t2.r(),4);
-    CHECK(t2.hasindex(a2));
-    CHECK(t2.hasindex(l3));
-    CHECK(t2.hasindex(l1));
-    CHECK(t2.hasindex(a4));
+    CHECK(hasindex(t2,a2));
+    CHECK(hasindex(t2,l3));
+    CHECK(hasindex(t2,l1));
+    CHECK(hasindex(t2,a4));
     CHECK_CLOSE(t2.norm(),Norm(V),1E-10);
     CHECK_CLOSE(t2.sumels(),V.sumels(),1E-10);
 }
@@ -422,10 +422,10 @@ TEST(Copy)
     ITensor t1(indices,V);
 
     CHECK_EQUAL(t1.r(),4);
-    CHECK(t1.hasindex(a2));
-    CHECK(t1.hasindex(l3));
-    CHECK(t1.hasindex(l1));
-    CHECK(t1.hasindex(a4));
+    CHECK(hasindex(t1,a2));
+    CHECK(hasindex(t1,l3));
+    CHECK(hasindex(t1,l1));
+    CHECK(hasindex(t1,a4));
     CHECK_CLOSE(t1.norm(),Norm(V),1E-10);
     CHECK_CLOSE(t1.sumels(),V.sumels(),1E-10);
 
@@ -434,10 +434,10 @@ TEST(Copy)
     t1 = ITensor(); //destroy t1
 
     CHECK_EQUAL(t2.r(),4);
-    CHECK(t2.hasindex(a2));
-    CHECK(t2.hasindex(l3));
-    CHECK(t2.hasindex(l1));
-    CHECK(t2.hasindex(a4));
+    CHECK(hasindex(t2,a2));
+    CHECK(hasindex(t2,l3));
+    CHECK(hasindex(t2,l1));
+    CHECK(hasindex(t2,a4));
     CHECK_CLOSE(t2.norm(),Norm(V),1E-10);
     CHECK_CLOSE(t2.sumels(),V.sumels(),1E-10);
 
@@ -446,10 +446,10 @@ TEST(Copy)
     t2 = ITensor(); //destroy t2
 
     CHECK_EQUAL(t3.r(),4);
-    CHECK(t3.hasindex(a2));
-    CHECK(t3.hasindex(l3));
-    CHECK(t3.hasindex(l1));
-    CHECK(t3.hasindex(a4));
+    CHECK(hasindex(t3,a2));
+    CHECK(hasindex(t3,l3));
+    CHECK(hasindex(t3,l1));
+    CHECK(hasindex(t3,a4));
     CHECK_CLOSE(t3.norm(),Norm(V),1E-10);
     CHECK_CLOSE(t3.sumels(),V.sumels(),1E-10);
 }
@@ -649,12 +649,12 @@ TEST(ContractingProduct)
 
     ITensor res1 = Lf*Rf;
 
-    CHECK(res1.hasindex(b5));
-    CHECK(res1.hasindex(a2));
-    CHECK(!res1.hasindex(a1));
-    CHECK(!res1.hasindex(b2));
-    CHECK(!res1.hasindex(b3));
-    CHECK(!res1.hasindex(b4));
+    CHECK(hasindex(res1,b5));
+    CHECK(hasindex(res1,a2));
+    CHECK(!hasindex(res1,a1));
+    CHECK(!hasindex(res1,b2));
+    CHECK(!hasindex(res1,b3));
+    CHECK(!hasindex(res1,b4));
 
     CHECK_EQUAL(res1.r(),2);
 
@@ -672,12 +672,12 @@ TEST(ContractingProduct)
 
     ITensor res2 = R*L;
 
-    CHECK(res2.hasindex(b5));
-    CHECK(res2.hasindex(a2));
-    CHECK(!res2.hasindex(a1));
-    CHECK(!res2.hasindex(b2));
-    CHECK(!res2.hasindex(b3));
-    CHECK(!res2.hasindex(b4));
+    CHECK(hasindex(res2,b5));
+    CHECK(hasindex(res2,a2));
+    CHECK(!hasindex(res2,a1));
+    CHECK(!hasindex(res2,b2));
+    CHECK(!hasindex(res2,b3));
+    CHECK(!hasindex(res2,b4));
 
     CHECK_EQUAL(res2.r(),2);
 
@@ -703,11 +703,11 @@ TEST(ContractingProduct)
 
     ITensor res3 = Qf*Pf;
 
-    CHECK(res3.hasindex(b4));
-    CHECK(res3.hasindex(b2));
-    CHECK(res3.hasindex(a3));
-    CHECK(!res3.hasindex(a1));
-    CHECK(!res3.hasindex(a2));
+    CHECK(hasindex(res3,b4));
+    CHECK(hasindex(res3,b2));
+    CHECK(hasindex(res3,a3));
+    CHECK(!hasindex(res3,a1));
+    CHECK(!hasindex(res3,a2));
 
     CHECK_EQUAL(res3.r(),3);
 
@@ -720,11 +720,11 @@ TEST(ContractingProduct)
 
     ITensor res4 = Pf*Qf;
 
-    CHECK(res4.hasindex(b4));
-    CHECK(res4.hasindex(b2));
-    CHECK(res4.hasindex(a3));
-    CHECK(!res4.hasindex(a1));
-    CHECK(!res4.hasindex(a2));
+    CHECK(hasindex(res4,b4));
+    CHECK(hasindex(res4,b2));
+    CHECK(hasindex(res4,a3));
+    CHECK(!hasindex(res4,a1));
+    CHECK(!hasindex(res4,a2));
 
     CHECK_EQUAL(res4.r(),3);
 
@@ -742,12 +742,12 @@ TEST(ContractingProduct)
     ITensor Hpsi = mpoh * psi;
 
     CHECK_EQUAL(Hpsi.r(),4);
-    CHECK(Hpsi.hasindex(l2));
-    CHECK(Hpsi.hasindex(primed(a1)));
-    CHECK(Hpsi.hasindex(primed(a2)));
-    CHECK(Hpsi.hasindex(a3));
-    CHECK(!Hpsi.hasindex(a1));
-    CHECK(!Hpsi.hasindex(a2));
+    CHECK(hasindex(Hpsi,l2));
+    CHECK(hasindex(Hpsi,primed(a1)));
+    CHECK(hasindex(Hpsi,primed(a2)));
+    CHECK(hasindex(Hpsi,a3));
+    CHECK(!hasindex(Hpsi,a1));
+    CHECK(!hasindex(Hpsi,a2));
     }
 
 TEST(NonContractingProduct)
@@ -762,12 +762,12 @@ TEST(NonContractingProduct)
 
     ITensor res1 = Lf / Rf;
 
-    CHECK(res1.hasindex(b2));
-    CHECK(res1.hasindex(a2));
-    CHECK(res1.hasindex(b5));
-    CHECK(res1.hasindex(a1));
-    CHECK(res1.hasindex(b3));
-    CHECK(res1.hasindex(b4));
+    CHECK(hasindex(res1,b2));
+    CHECK(hasindex(res1,a2));
+    CHECK(hasindex(res1,b5));
+    CHECK(hasindex(res1,a1));
+    CHECK(hasindex(res1,b3));
+    CHECK(hasindex(res1,b4));
 
     CHECK_EQUAL(res1.r(),6);
 
@@ -782,12 +782,12 @@ TEST(NonContractingProduct)
 
     ITensor res2 = R/L;
 
-    CHECK(res2.hasindex(b2));
-    CHECK(res2.hasindex(a2));
-    CHECK(res2.hasindex(b5));
-    CHECK(res2.hasindex(a1));
-    CHECK(res2.hasindex(b3));
-    CHECK(res2.hasindex(b4));
+    CHECK(hasindex(res2,b2));
+    CHECK(hasindex(res2,a2));
+    CHECK(hasindex(res2,b5));
+    CHECK(hasindex(res2,a1));
+    CHECK(hasindex(res2,b3));
+    CHECK(hasindex(res2,b4));
 
     CHECK_EQUAL(res2.r(),6);
 
@@ -810,11 +810,11 @@ TEST(NonContractingProduct)
 
     ITensor res3 = Qf/Pf;
 
-    CHECK(res3.hasindex(b4));
-    CHECK(res3.hasindex(b2));
-    CHECK(res3.hasindex(a3));
-    CHECK(res3.hasindex(a1));
-    CHECK(res3.hasindex(a2));
+    CHECK(hasindex(res3,b4));
+    CHECK(hasindex(res3,b2));
+    CHECK(hasindex(res3,a3));
+    CHECK(hasindex(res3,a1));
+    CHECK(hasindex(res3,a2));
 
     CHECK_EQUAL(res3.r(),5);
 
@@ -827,11 +827,11 @@ TEST(NonContractingProduct)
 
     ITensor res4 = Pf/Qf;
 
-    CHECK(res4.hasindex(b4));
-    CHECK(res4.hasindex(b2));
-    CHECK(res4.hasindex(a3));
-    CHECK(res4.hasindex(a1));
-    CHECK(res4.hasindex(a2));
+    CHECK(hasindex(res4,b4));
+    CHECK(hasindex(res4,b2));
+    CHECK(hasindex(res4,a3));
+    CHECK(hasindex(res4,a1));
+    CHECK(hasindex(res4,a2));
 
     CHECK_EQUAL(res4.r(),5);
 
@@ -849,12 +849,12 @@ TEST(NonContractingProduct)
     ITensor Hpsi = mpoh / psi;
 
     CHECK_EQUAL(Hpsi.r(),6);
-    CHECK(Hpsi.hasindex(l2));
-    CHECK(Hpsi.hasindex(a1));
-    CHECK(Hpsi.hasindex(a2));
-    CHECK(Hpsi.hasindex(primed(a1)));
-    CHECK(Hpsi.hasindex(primed(a2)));
-    CHECK(Hpsi.hasindex(a3));
+    CHECK(hasindex(Hpsi,l2));
+    CHECK(hasindex(Hpsi,a1));
+    CHECK(hasindex(Hpsi,a2));
+    CHECK(hasindex(Hpsi,primed(a1)));
+    CHECK(hasindex(Hpsi,primed(a2)));
+    CHECK(hasindex(Hpsi,a3));
 
     for(int j2 = 1; j2 <= 2; ++j2)
     { CHECK_CLOSE(Hpsi(l2(j2)),psi()*mpoh(l2(j2)),1E-10); }
@@ -877,12 +877,12 @@ TEST(ComplexNonContractingProduct)
 
     Index ri = Index::IndReIm();
 
-    CHECK(res1.hasindex(b2));
-    CHECK(res1.hasindex(a2));
-    CHECK(res1.hasindex(b5));
-    CHECK(res1.hasindex(b3));
-    CHECK(res1.hasindex(b4));
-    CHECK(res1.hasindex(ri));
+    CHECK(hasindex(res1,b2));
+    CHECK(hasindex(res1,a2));
+    CHECK(hasindex(res1,b5));
+    CHECK(hasindex(res1,b3));
+    CHECK(hasindex(res1,b4));
+    CHECK(hasindex(res1,ri));
 
     CHECK_EQUAL(res1.r(),6);
 
@@ -907,7 +907,7 @@ TEST(TieIndices)
 
     CHECK_CLOSE(dX.norm(),0,1E-5);
     CHECK_EQUAL(dX.r(),1);
-    CHECK(dX.hasindex(t));
+    CHECK(hasindex(dX,t));
 
     ITensor dZ(Z);
     dZ.tieIndices(s1,s2,t);

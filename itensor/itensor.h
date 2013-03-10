@@ -57,7 +57,6 @@ class ITensor
     Real 
     uniqueReal() const { return is_.uniqueReal(); } 
 
-
     //
     //Constructors
     //
@@ -208,31 +207,6 @@ class ITensor
     ITensor& 
     operator-=(const ITensor& other);
 
-
-    //
-    //Index Methods
-    //
-
-    //Return first Index of matching type
-    const Index&
-    findtype(IndexType t) const { return is_.findtype(t); }
-
-    bool 
-    hasindex(const Index& I) const { return is_.hasindex(I); }
-
-    //true if has m!=1 Index I
-    bool 
-    hasindexn(const Index& I) const { return is_.hasindexn(I); }
-
-    //true if has m==1 Index I
-    bool 
-    hasindex1(const Index& I) const { return is_.hasindex1(I); }
-
-    //true if this tensor has the first nind Indices 
-    //in array I (starting from I[0])
-    bool
-    hasAllIndex(const boost::array<Index,NMAX>& I, int nind) const
-        { return is_.hasAllIndex(I,nind); }
 
     //
     //Primelevel Methods
@@ -850,8 +824,11 @@ commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
     IndexT;
     Foreach(const IndexT& I, A.indices())
         {
-        if(((t == All && I.type()!=ReIm) || I.type() == t) && B.hasindex(I)) 
+        if( ((t == All && I.type()!=ReIm) || I.type() == t)
+         && hasindex(B.indices(),I) ) 
+            {
             return I;
+            }
         }
     throw ITError("No common index found");
     return IndexT::Null();
@@ -866,11 +843,25 @@ index_in_common(const TensorA& A, const TensorB& B, IndexType t = All)
     return commonIndex(A,B,t);
     }
 
+template<class Tensor>
+const typename Tensor::IndexT&
+findtype(const Tensor& T, IndexType type)
+    {
+    return findtype(T.indices(),type);
+    }
+
+template<class Tensor>
+bool
+hasindex(const Tensor& T, const typename Tensor::IndexT& I)
+    {
+    return hasindex(T.indices(),I);
+    }
+
 template <class Tensor>
 bool 
 isComplex(const Tensor& T)
     { 
-    return T.hasindex(Tensor::ReImIndex());
+    return hasindex(T.indices(),Tensor::ReImIndex());
     }
 
 //

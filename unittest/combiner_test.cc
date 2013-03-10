@@ -55,9 +55,9 @@ TEST(Constructors)
     c2.init();
 
     CHECK(c2.isInit());
-    CHECK(c2.hasindex(l1));
-    CHECK(c2.hasindex(a1));
-    CHECK(c2.hasindex(l2));
+    CHECK(hasindex(c2,l1));
+    CHECK(hasindex(c2,a1));
+    CHECK(hasindex(c2,l2));
     CHECK_EQUAL(c2.right().m(),l1.m()*a1.m()*l2.m());
 
 }
@@ -71,10 +71,10 @@ TEST(addLeft)
     c1.addleft(l3);
     c1.addleft(l4);
 
-    CHECK(c1.hasindex(l2));
-    CHECK(c1.hasindex(l3));
-    CHECK(c1.hasindex(a2));
-    CHECK(c1.hasindex(l4));
+    CHECK(hasindex(c1,l2));
+    CHECK(hasindex(c1,l3));
+    CHECK(hasindex(c1,a2));
+    CHECK(hasindex(c1,l4));
 
     c1.init("cname");
 
@@ -99,12 +99,12 @@ TEST(Product)
 
     ITensor cA = c * A;
 
-    CHECK(cA.hasindex(l2));
-    CHECK(cA.hasindex(a4));
-    CHECK(cA.hasindex(r));
-    CHECK(!cA.hasindex(b3));
-    CHECK(!cA.hasindex(l3));
-    CHECK(!cA.hasindex(a1));
+    CHECK(hasindex(cA,l2));
+    CHECK(hasindex(cA,a4));
+    CHECK(hasindex(cA,r));
+    CHECK(!hasindex(cA,b3));
+    CHECK(!hasindex(cA,l3));
+    CHECK(!hasindex(cA,a1));
 
     CHECK_CLOSE(A(l2(1),l3(1),b3(1)),cA(l2(1),r(1)),1E-10);
     CHECK_CLOSE(A(l2(1),l3(1),b3(2)),cA(l2(1),r(2)),1E-10);
@@ -115,12 +115,12 @@ TEST(Product)
 
     ITensor ucA = c * cA;
 
-    CHECK(ucA.hasindex(a1));
-    CHECK(ucA.hasindex(b3));
-    CHECK(ucA.hasindex(l2));
-    CHECK(ucA.hasindex(a4));
-    CHECK(ucA.hasindex(l3));
-    CHECK(!ucA.hasindex(r));
+    CHECK(hasindex(ucA,a1));
+    CHECK(hasindex(ucA,b3));
+    CHECK(hasindex(ucA,l2));
+    CHECK(hasindex(ucA,a4));
+    CHECK(hasindex(ucA,l3));
+    CHECK(!hasindex(ucA,r));
 
     for(int k2 = 1; k2 <= 2; ++k2)
     for(int k3 = 1; k3 <= 2; ++k3)
@@ -140,12 +140,12 @@ TEST(Product)
 
     Index r2 = c2.right();
 
-    CHECK(cB.hasindex(b3));
-    CHECK(cB.hasindex(l2));
-    CHECK(cB.hasindex(a4));
-    CHECK(cB.hasindex(l3));
-    CHECK(!cB.hasindex(a3));
-    CHECK(!cB.hasindex(a1));
+    CHECK(hasindex(cB,b3));
+    CHECK(hasindex(cB,l2));
+    CHECK(hasindex(cB,a4));
+    CHECK(hasindex(cB,l3));
+    CHECK(!hasindex(cB,a3));
+    CHECK(!hasindex(cB,a1));
 
     for(int k2 = 1; k2 <= 2; ++k2)
     for(int k3 = 1; k3 <= 2; ++k3)

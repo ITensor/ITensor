@@ -1528,9 +1528,9 @@ operator/=(const ITensor& other)
         return operator/=(cp_oth);
         }
 
-    if(hasindexn(Index::IndReIm())   && other.hasindexn(Index::IndReIm()) &&
-      !hasindexn(Index::IndReImP())  && !other.hasindexn(Index::IndReImP()) &&
-      !hasindexn(Index::IndReImPP()) && !other.hasindexn(Index::IndReImPP()))
+    if(hasindex(*this,Index::IndReIm())   && hasindex(other,Index::IndReIm()) &&
+      !hasindex(*this,Index::IndReImP())  && !hasindex(other,Index::IndReImP()) &&
+      !hasindex(*this,Index::IndReImPP()) && !hasindex(other,Index::IndReImPP()))
         {
         prime(ReIm,1);
         operator/=(primed(other,ReIm,2));
@@ -1548,8 +1548,8 @@ operator/=(const ITensor& other)
         for(int j = other.is_.rn()+1; j <= other.r(); ++j)
             {
             const Index& J = other.is_.index(j);
-            if(!is_.hasindex1(J))
-                is_.addindex1(J);
+            if(!hasindex(is_,J))
+                is_.addindex(J);
             }
         return *this;
         }
@@ -1562,8 +1562,8 @@ operator/=(const ITensor& other)
         for(int j = 1; j <= r(); ++j) 
             {
             const Index& J = is_.index(j);
-            if(!new_is.hasindex1(J))
-                new_is.addindex1(J);
+            if(!hasindex(new_is,J))
+                new_is.addindex(J);
             }
         is_.swap(new_is);
         return *this;
@@ -1612,7 +1612,7 @@ operator/=(const ITensor& other)
     for(int j = other.is_.rn()+1; j <= other.r(); ++j)
         {
         const Index& J = other.is_.index(j);
-        if(!is_.hasindex1(J)) 
+        if(!hasindex(is_,J)) 
             new_index.addindex1(J);
         }
 
@@ -1729,9 +1729,9 @@ operator*=(const ITensor& other)
 
     //Complex types are treated as just another index, of type ReIm
     //Multiplication is handled automatically with these simple tensor helpers
-    if(hasindexn(Index::IndReIm()) && other.hasindexn(Index::IndReIm()) && 
-	    !other.hasindexn(Index::IndReImP()) && !other.hasindex(Index::IndReImPP()) 
-	    && !hasindex(Index::IndReImP()) && !hasindex(Index::IndReImPP()))
+    if(hasindex(*this,Index::IndReIm()) && hasindex(other,Index::IndReIm()) && 
+	    !hasindex(other,Index::IndReImP()) && !hasindex(other,Index::IndReImPP()) 
+	    && !hasindex(*this,Index::IndReImP()) && !hasindex(*this,Index::IndReImPP()))
         {
         this->prime(ReIm);
         operator*=(ComplexProd() * primed(other,ReIm,2));
@@ -1750,14 +1750,14 @@ operator*=(const ITensor& other)
     for(int k = is_.rn(); k < this->r(); ++k)
         {
         const Index& K = is_[k];
-        if(!other.is_.hasindex1(K))
+        if(!hasindex(other,K))
             new_index1_[++nr1_] = &K;
         }
 
     for(int j = other.is_.rn(); j < other.r(); ++j)
         {
         const Index& J = other.is_[j];
-        if(!is_.hasindex1(J))
+        if(!hasindex(*this,J))
             new_index1_[++nr1_] = &J;
         }
 
@@ -2026,8 +2026,8 @@ void ITensor::
 fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     {
     if(r() != 2) Error("fromMatrix11: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
+    assert(hasindex(*this,i1));
+    assert(hasindex(*this,i2));
     DO_IF_DEBUG(if(i1.m() != M.Nrows()) Error("fromMatrix11: wrong number of rows");)
     DO_IF_DEBUG(if(i2.m() != M.Ncols()) Error("fromMatrix11: wrong number of cols");)
 
@@ -2051,8 +2051,8 @@ void ITensor::
 toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
     {
     if(r() != 2) Error("toMatrix11: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
+    assert(hasindex(*this,i1));
+    assert(hasindex(*this,i2));
     res.ReDimension(i1.m(),i2.m());
 
     MatrixRef dref; 
@@ -2072,9 +2072,9 @@ toMatrix12NoScale(const Index& i1, const Index& i2,
                   const Index& i3, Matrix& res) const
     {
     if(r() != 3) Error("toMatrix11: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
-    assert(hasindex(i3));
+    assert(hasindex(*this,i1));
+    assert(hasindex(*this,i2));
+    assert(hasindex(*this,i3));
 
     res.ReDimension(i1.m(),i2.m()*i3.m());
 
@@ -2103,9 +2103,9 @@ fromMatrix12(const Index& i1, const Index& i2,
              const Index& i3, const Matrix& M)
     {
     if(r() != 3) Error("fromMatrix12: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
-    assert(hasindex(i3));
+    assert(hasindex(*this,i1));
+    assert(hasindex(*this,i2));
+    assert(hasindex(*this,i3));
 
     ITensor Q(i3,i1,i2);
     Q.p->v = M.TreatAsVector();
@@ -2118,10 +2118,10 @@ fromMatrix12(const Index& i1, const Index& i2,
 void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
 {
     if(r() != 4) Error("toMatrix22: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
-    assert(hasindex(i3));
-    assert(hasindex(i4));
+    assert(hasindex(*this,i1));
+    assert(hasindex(*this,i2));
+    assert(hasindex(*this,i3));
+    assert(hasindex(*this,i4));
     int nrow = i1.m() * i2.m(), ncol = i3.m() * i4.m();
     if(nrow != res.Nrows()) Error("toMatrix22: wrong number of rows");
     if(ncol != res.Ncols()) Error("toMatrix22: wrong number of cols");
@@ -2136,10 +2136,10 @@ void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, cons
 void ITensor::fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,const Matrix& M)
 {
     if(r() != 4) Error("fromMatrix22: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
-    assert(hasindex(i3));
-    assert(hasindex(i4));
+    assert(hasindex(*this,i1));
+    assert(hasindex(*this,i2));
+    assert(hasindex(*this,i3));
+    assert(hasindex(*this,i4));
     if(i3.m()*i4.m() != M.Ncols()) Error("fromMatrix22: wrong number of cols");
     if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix22: wrong number of rows");
     ITensor Q(i3,i4,i1,i2);
@@ -2152,8 +2152,8 @@ void ITensor::fromMatrix22(const Index& i1, const Index& i2, const Index& i3, co
 void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const
 {
     if(r() != 3) Error("toMatrix21: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
+    assert(hasindex(*this,i1));
+    assert(hasindex(*this,i2));
     res.ReDimension(i1.m()*i2.m(),i3.m());
     const array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; getperm(reshuf,P);
@@ -2165,9 +2165,9 @@ void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matr
 void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const
 {
     if(r() != 3) Error("toMatrix12: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
-    assert(hasindex(i3));
+    assert(hasindex(*this,i1));
+    assert(hasindex(*this,i2));
+    assert(hasindex(*this,i3));
     res.ReDimension(i1.m(),i2.m()*i3.m());
     const array<Index,NMAX+1> reshuf = {{ Index::Null(), i2, i3, i1, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; getperm(reshuf,P);
@@ -2179,9 +2179,9 @@ void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matr
 void ITensor::fromMatrix21(const Index& i1, const Index& i2, const Index& i3, const Matrix& M)
 {
     if(r() != 3) Error("fromMatrix21: incorrect rank");
-    assert(hasindex(i1));
-    assert(hasindex(i2));
-    assert(hasindex(i3));
+    assert(hasindex(*this,i1));
+    assert(hasindex(*this,i2));
+    assert(hasindex(*this,i3));
     if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix21: wrong number of rows");
     if(i3.m() != M.Ncols()) Error("fromMatrix21: wrong number of cols");
     ITensor Q(i3,i1,i2);
@@ -2192,7 +2192,7 @@ void ITensor::fromMatrix21(const Index& i1, const Index& i2, const Index& i3, co
 void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, const Matrix& M)
 {
     if(r() != 3) Error("fromMatrix12: incorrect rank");
-    assert(hasindex(i1) && hasindex(i2) && hasindex(i3));
+    assert(hasindex(*this,i1) && hasindex(*this,i2) && hasindex(*this,i3));
     if(i1.m() != M.Nrows()) Error("fromMatrix12: wrong number of rows");
     if(i3.m()*i2.m() != M.Ncols()) Error("fromMatrix12: wrong number of cols");
     ITensor Q(i2,i3,i1);

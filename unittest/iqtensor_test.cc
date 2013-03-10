@@ -117,10 +117,10 @@ TEST(ComplexNonContractingProduct)
 
     IQIndex ri = IQIndex::IndReIm();
 
-    CHECK(res1.hasindex(L1));
-    CHECK(res1.hasindex(S1));
-    CHECK(res1.hasindex(L2));
-    CHECK(res1.hasindex(ri));
+    CHECK(hasindex(res1,L1));
+    CHECK(hasindex(res1,S1));
+    CHECK(hasindex(res1,L2));
+    CHECK(hasindex(res1,ri));
 
     CHECK_EQUAL(res1.r(),4);
 

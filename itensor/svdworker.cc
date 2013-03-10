@@ -512,12 +512,12 @@ diag_denmat(ITensor rho, Vector& D, Index& newmid, ITensor& U)
         }
 #endif
 
-    Index active = deprimed(rho.findtype(Link));
+    Index active = deprimed(findtype(rho,Link));
 
     if(!doRelCutoff_) rho.scaleTo(refNorm_);
 
     //Do the diagonalization
-    Index ri = deprimed(rho.findtype(Link));
+    Index ri = deprimed(findtype(rho,Link));
     Matrix R,UU; 
     rho.toMatrix11NoScale(ri,primed(ri),R);
     R *= -1.0; 
@@ -814,7 +814,7 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
         if(this_m == 0) { ++itenind; continue; }
 
         Index nm("qlink",this_m);
-        Index act = deprimed(t.findtype(Link));
+        Index act = deprimed(findtype(t,Link));
         iq.push_back(inqn(nm,active.qn(act)));
 
         MatrixRef Utrunc = thisU.Columns(1,this_m);

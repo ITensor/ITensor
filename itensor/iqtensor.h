@@ -365,13 +365,7 @@ class IQTensor
     hastype(IndexType t) const;
 
     const IQIndex& 
-    findtype(IndexType t) const;
-
-    const IQIndex& 
     finddir(Arrow dir) const;
-
-    bool 
-    hasindex(const IQIndex& I) const;
 
     void
     tieIndices(const boost::array<IQIndex,NMAX>& indices, int nind, const IQIndex& tied);

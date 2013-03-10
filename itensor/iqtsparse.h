@@ -143,15 +143,6 @@ class IQTSparse
 	//           const IQIndexVal& iv7 = IQIndexVal::Null(), 
     //           const IQIndexVal& iv8 = IQIndexVal::Null());
 
-    //
-    // IQIndex Methods
-    //
-
-    IQIndex 
-    findtype(IndexType t) const;
-
-    bool 
-    hasindex(const IQIndex& I) const;
 
     //
     // Primelevel Methods 

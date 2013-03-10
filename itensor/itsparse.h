@@ -160,22 +160,6 @@ class ITSparse
     // Index Methods
     //
 
-    Index 
-    findtype(IndexType t) const { return is_.findtype(t); }
-
-    bool 
-    hasindex(const Index& I) const { return is_.hasindex(I); }
-
-    bool 
-    hasindexn(const Index& I) const { return is_.hasindexn(I); }
-
-    bool 
-    hasindex1(const Index& I) const { return is_.hasindex1(I); }
-
-    bool
-    hasAllIndex(const boost::array<Index,NMAX>& I, int nind) const
-        { return is_.hasAllIndex(I,nind); }
-
     void 
     addindex1(const std::vector<Index>& indices) { is_.addindex1(indices); }
 

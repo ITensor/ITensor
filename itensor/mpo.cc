@@ -433,7 +433,7 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
         comb.doCondense(false);
         Foreach(const IndexT& I, res.A(j).indices())
             {
-            if(res.A(j+1).hasindex(I) && I != IndexT::IndReIm())
+            if(hasindex(res.A(j+1),I) && I != IndexT::IndReIm())
                 comb.addleft(I);
             }
         comb.init(nameint("a",j));

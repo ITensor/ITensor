@@ -134,7 +134,7 @@ read(std::istream& s)
         A_.at(j).read(s);
     //Check that tensors read from disk were constructed
     //using the same model
-    IndexT s1 = A_.at(1).findtype(Site);
+    IndexT s1 = findtype(A_.at(1),Site);
     s1.noprime();
     if(s1 != IndexT(model_->si(1)))
         Error("Tensors read from disk not compatible with Model passed to constructor.");
@@ -883,7 +883,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
     {
     const int N = A.size()-1;
     qA.resize(A.size());
-    const bool is_mpo = A[1].hasindex(model.siP(1));
+    const bool is_mpo = hasindex(A[1],model.siP(1));
     const int Dim = model.si(1).m();
     if(model.si(2).m() != Dim)
         Error("convertToIQ assumes uniform site dimension");
