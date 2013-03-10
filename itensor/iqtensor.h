@@ -361,12 +361,6 @@ class IQTensor
     bool 
     uses_ind(const Index& i) const;
 
-    bool 
-    hastype(IndexType t) const;
-
-    const IQIndex& 
-    finddir(Arrow dir) const;
-
     void
     tieIndices(const boost::array<IQIndex,NMAX>& indices, int nind, const IQIndex& tied);
 

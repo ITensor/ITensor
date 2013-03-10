@@ -840,8 +840,15 @@ index_in_common(const TensorA& A, const TensorB& B, IndexType t = All)
     return commonIndex(A,B,t);
     }
 
-template<class Tensor>
-const typename Tensor::IndexT&
+template<class Tensor> typename
+Tensor::IndexT const&
+finddir(const Tensor& T, Arrow dir)
+    {
+    return finddir(T.indices(),dir);
+    }
+
+template<class Tensor> typename
+Tensor::IndexT const&
 findtype(const Tensor& T, IndexType type)
     {
     return findtype(T.indices(),type);

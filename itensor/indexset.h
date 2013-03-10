@@ -94,22 +94,6 @@ class IndexSet
     uniqueReal() const { return ur_; }
 
     //
-    // Index Analysis
-    //
-
-    bool 
-    hastype(IndexType t) const;
-
-    const IndexT&
-    finddir(Arrow dir) const;
-
-    int
-    minM() const;
-
-    int
-    maxM() const;
-
-    //
     // Primelevel Methods
     //
 
@@ -136,39 +120,17 @@ class IndexSet
                 IndexType type = All);
 
     //
-    // Methods for Manipulating IndexSets
+    // Other Methods
     //
 
     void 
     addindex(const IndexT& I);
-
-    void 
-    addindexn(const Array<IndexT,NMAX+1>& indices, int n);
-
-    void 
-    addindexn(const IndexT& I);
-
-    void 
-    addindex1(const Array<IndexT,NMAX+1>& indices, int n);
-
-    void 
-    addindex1(const std::vector<IndexT>& indices);
-
-    void 
-    addindex1(const IndexT& I);
 
     void
     swap(IndexSet& other);
 
     void
     clear();
-
-    //
-    // Other Methods
-    //
-
-    void
-    reset();
 
     void
     conj();
@@ -330,52 +292,7 @@ dim() const
     return d;
     }
 
-template <class IndexT>
-bool IndexSet<IndexT>::
-hastype(IndexType t) const
-	{
-    for(int j = 0; j < r_; ++j)
-        if(index_[j].type() == t) return true;
-    return false;
-	}
 
-template <class IndexT>
-const IndexT& IndexSet<IndexT>::
-finddir(Arrow dir) const
-    {
-    for(int j = 0; j < r_; ++j)
-        if(index_[j].dir() == dir) return index_[j];
-    Error("Couldn't find index with specified dir");
-    return IndexT::Null();
-    }
-
-
-
-template <class IndexT>
-int IndexSet<IndexT>::
-minM() const
-    {
-    if(rn_ < r_) return 1;
-
-    int mm = index_[0].m();
-    for(int j = 1; j < rn_; ++j)
-        mm = min(mm,index_[j].m());
-
-    return mm;
-    }
-
-template <class IndexT>
-int IndexSet<IndexT>::
-maxM() const
-    {
-    if(rn_ == 0) return 1;
-
-    int mm = index_[0].m();
-    for(int j = 1; j < rn_; ++j)
-        mm = max(mm,index_[j].m());
-
-    return mm;
-    }
 
 template <class IndexT>
 void IndexSet<IndexT>::
@@ -502,57 +419,38 @@ void IndexSet<IndexT>::
 addindex(const IndexT& I)
     {
 #ifdef DEBUG
+    if(r_ == NMAX) 
+        Error("Maximum number of indices reached");
     if(I == IndexT::Null())
         Error("Index is null");
+    for(int j = (I.m()==1?rn_:0); j < r_; ++j)
+        if(index_[j] == I)
+            {
+            Print(*this);
+            Print(I);
+            Error("Adding Index twice");
+            }
 #endif
     if(I.m() == 1)
-        addindex1(I);
+        {
+        index_[r_] = I;
+        }
     else
-        addindexn(I);
-    }
-
-template <class IndexT>
-void IndexSet<IndexT>::
-addindexn(const Array<IndexT,NMAX+1>& indices, int n) 
-    {
-#ifdef DEBUG
-    if(r_+n > NMAX) Error("Maximum number of indices reached");
-#endif
-    if(r_ != rn_)
         {
-        //Move all m==1's over by n-1
-        for(int k = r_+n-1; k >= rn_+n; --k)
-            index_[k] = index_[k-1];
-        }
-    for(int j = 1; j <= n; ++j)
-        {
-        const IndexT& J = indices[j];
-        index_[rn_] = J;
+        if(r_ != rn_)
+            {
+            //Move all m==1's over by 1
+            for(int k = r_; k > rn_; --k)
+                index_[k] = index_[k-1];
+            }
+        index_[rn_] = I;
         ++rn_;
-        ur_ += J.uniqueReal();
         }
-    r_ += n;
-    }
-
-template <class IndexT>
-void IndexSet<IndexT>::
-addindexn(const IndexT& I)
-    {
-#ifdef DEBUG
-    if(r_ == NMAX) Error("Maximum number of indices reached");
-#endif
-    if(r_ != rn_)
-        {
-        //Move all m==1's over by 1
-        for(int k = r_; k > rn_; --k)
-            index_[k] = index_[k-1];
-        }
-    index_[rn_] = I;
-    ++rn_;
     ++r_;
     ur_ += I.uniqueReal();
     }
 
+/*
 template <class IndexT>
 void IndexSet<IndexT>::
 addindex1(const Array<IndexT,NMAX+1>& indices, int n) 
@@ -568,7 +466,9 @@ addindex1(const Array<IndexT,NMAX+1>& indices, int n)
         ur_ += J.uniqueReal();
         }
     }
+    */
 
+/*
 template <class IndexT>
 void IndexSet<IndexT>::
 addindex1(const std::vector<IndexT>& indices) 
@@ -590,30 +490,7 @@ addindex1(const std::vector<IndexT>& indices)
         ur_ += indices[j].uniqueReal();
         }
     }
-
-template <class IndexT>
-void IndexSet<IndexT>::
-addindex1(const IndexT& I) 
-    { 
-#ifdef DEBUG
-    if(I.m() != 1)
-        {
-        Print(I);
-        Error("Index must have m==1.");
-        }
-    for(int j = rn_; j < r_; ++j)
-        if(index_[j] == I)
-            {
-            Print(*this);
-            Print(I);
-            Error("Adding Index twice");
-            }
-    if(r_ == NMAX) Error("Maximum number of indices reached");
-#endif
-    index_[r_] = I;
-    ++r_;
-    ur_ += I.uniqueReal();
-    }
+    */
 
 template <class IndexT>
 void IndexSet<IndexT>::
@@ -630,31 +507,22 @@ swap(IndexSet& other)
     {
     index_.swap(other.index_);
 
-    int si = r_;
+    int tmp = r_;
     r_ = other.r_;
-    other.r_ = si;
+    other.r_ = tmp;
 
-    si = rn_;
+    tmp = rn_;
     rn_ = other.rn_;
-    other.rn_ = si;
+    other.rn_ = tmp;
 
-    Real sr = ur_;
+    Real rtmp = ur_;
     ur_ = other.ur_;
-    other.ur_ = sr;
+    other.ur_ = rtmp;
     }
 
 template <class IndexT>
 void IndexSet<IndexT>::
 clear()
-    {
-    rn_ = 0;
-    r_ = 0;
-    ur_ = 0;
-    }
-
-template <class IndexT>
-void IndexSet<IndexT>::
-reset()
     {
     rn_ = 0;
     r_ = 0;
@@ -733,6 +601,12 @@ sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset)
         }
     }
 
+//
+//
+// IndexSet helper methods
+//
+//
+
 template<class IndexT>
 Arrow
 dir(const IndexSet<IndexT>& is, const IndexT& I)
@@ -746,28 +620,16 @@ dir(const IndexSet<IndexT>& is, const IndexT& I)
     return In;
     }
 
+
 template <class IndexT>
-std::ostream&
-operator<<(std::ostream& s, const IndexSet<IndexT>& is)
+const IndexT&
+finddir(const IndexSet<IndexT>& iset, Arrow dir)
     {
-    for(int i = 1; i <= is.r(); ++i) 
-        s << is.index(i) << "\n"; 
-    return s;
+    for(int j = 0; j < iset.r(); ++j)
+        if(iset[j].dir() == dir) return iset[j];
+    Error("Couldn't find index with specified dir");
+    return IndexT::Null();
     }
-
-template <> inline
-std::ostream&
-operator<<(std::ostream& s, const IndexSet<Index>& is)
-    {
-    int i = 1; 
-    for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
-    if(is.r() != 0) { s << is.index(i); } //print last one
-    return s;
-    }
-
-//
-// IndexSet helper methods
-//
 
 //
 // Given IndexSet<IndexT> iset and IndexT I,
@@ -844,6 +706,61 @@ hasindex(const IndexSet<IndexT>& iset, const IndexT& I)
         }
     return false;
 	}
+
+template <class IndexT>
+bool
+hastype(const IndexSet<IndexT>& iset, IndexType t)
+	{
+    for(int j = 0; j < iset.r(); ++j)
+        if(iset[j].type() == t) return true;
+    return false;
+	}
+
+template <class IndexT>
+int
+minM(const IndexSet<IndexT>& iset)
+    {
+    if(iset.rn() < iset.r()) return 1;
+
+    int mm = iset[0].m();
+    for(int j = 1; j < iset.rn(); ++j)
+        mm = min(mm,iset[j].m());
+
+    return mm;
+    }
+
+template <class IndexT>
+int
+maxM(const IndexSet<IndexT>& iset)
+    {
+    if(iset.rn() == 0) return 1;
+
+    int mm = iset[0].m();
+    for(int j = 1; j < iset.rn(); ++j)
+        mm = max(mm,iset[j].m());
+
+    return mm;
+    }
+
+template <class IndexT>
+std::ostream&
+operator<<(std::ostream& s, const IndexSet<IndexT>& is)
+    {
+    for(int i = 1; i <= is.r(); ++i) 
+        s << is.index(i) << "\n"; 
+    return s;
+    }
+
+template <> inline
+std::ostream&
+operator<<(std::ostream& s, const IndexSet<Index>& is)
+    {
+    int i = 1; 
+    for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
+    if(is.r() != 0) { s << is.index(i); } //print last one
+    return s;
+    }
+
 
 
 #undef Array

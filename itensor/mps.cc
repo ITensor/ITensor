@@ -359,13 +359,13 @@ init_tensors(std::vector<ITensor>& A_, const InitState& initState)
     for(int i = 1; i <= N_; ++i)
         { a[i] = Index(nameint("l",i)); }
 
-    A_[1].addindex1(a[1]);
+    A_[1].addindex(a[1]);
     for(int i = 2; i < N_; ++i)
         {
-        A_[i].addindex1(a[i-1]);
-        A_[i].addindex1(a[i]);
+        A_[i].addindex(a[i-1]);
+        A_[i].addindex(a[i]);
         }
-    A_[N_].addindex1(a[N_-1]);
+    A_[N_].addindex(a[N_-1]);
     */
     }
 template
@@ -1048,11 +1048,11 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                 IndexSet<Index> newinds(block.indices());
                 if(is_mpo) 
                     {
-                    newinds.addindex1(conj(model.si(s)(n).index()));
-                    newinds.addindex1(model.siP(s)(u).index());
+                    newinds.addindex(conj(model.si(s)(n).index()));
+                    newinds.addindex(model.siP(s)(u).index());
                     }
                 else 
-                    { newinds.addindex1(model.si(s)(n).index()); }
+                    { newinds.addindex(model.si(s)(n).index()); }
 
                 qt[q].push_back(ITensor(newinds,block));
 
@@ -1263,10 +1263,10 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
                 if(is_mpo) 
                 {
-                block.addindex1(conj(si(s)(n).index()));
-                block.addindex1(siP(s)(u).index());
+                block.addindex(conj(si(s)(n).index()));
+                block.addindex(siP(s)(u).index());
                 }
-                else { block.addindex1(si(s)(n).index()); }
+                else { block.addindex(si(s)(n).index()); }
 
                 qt[q].push_back(block);
 

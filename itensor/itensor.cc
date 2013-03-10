@@ -1594,26 +1594,26 @@ operator/=(const ITensor& other)
 
     for(int j = 0; j < is_.rn(); ++j)
         if(!props.contractedL[j+1]) 
-            new_index.addindexn(this->is_[j]);
+            new_index.addindex(this->is_[j]);
 
     for(int j = 0; j < other.is_.rn(); ++j)
         if(!props.contractedR[j+1]) 
-            new_index.addindexn(other.is_[j]);
+            new_index.addindex(other.is_[j]);
 
     for(int j = 0; j < is_.rn(); ++j)
         if(props.contractedL[j+1])  
-            new_index.addindexn(this->is_[j]);
+            new_index.addindex(this->is_[j]);
 
     //Handle m==1 indices
 
     for(int j = is_.rn(); j < r(); ++j) 
-        new_index.addindex1(is_[j]);
+        new_index.addindex(is_[j]);
 
     for(int j = other.is_.rn()+1; j <= other.r(); ++j)
         {
         const Index& J = other.is_.index(j);
         if(!hasindex(is_,J)) 
-            new_index.addindex1(J);
+            new_index.addindex(J);
         }
 
     is_.swap(new_index);
@@ -1662,7 +1662,7 @@ directMultiply(const ITensor& L,
             ++u.rn; //(++u.r);
             u.n[u.rn] = Lis[j].m();
             li[j] = &(u.i[u.rn]);
-            new_index.addindexn(Lis[j]);
+            new_index.addindex(Lis[j]);
             }
         else
             {
@@ -1688,7 +1688,7 @@ directMultiply(const ITensor& L,
             ++u.rn; //(++u.r);
             u.n[u.rn] = Ris[j].m();
             ri[j] = &(u.i[u.rn]);
-            new_index.addindexn(Ris[j]);
+            new_index.addindex(Ris[j]);
             }
         nr[j] = Ris[j].m();
         }
@@ -1778,10 +1778,10 @@ operator*=(const ITensor& other)
             }
 #endif
         for(int j = 1; j <= is_.rn(); ++j)
-            new_index.addindexn(is_.index(j));
+            new_index.addindex(is_.index(j));
         //Keep current m!=1 indices, overwrite m==1 indices
         for(int j = 1; j <= nr1_; ++j) 
-            new_index.addindex1( *(new_index1_[j]) );
+            new_index.addindex( *(new_index1_[j]) );
         is_.swap(new_index);
         return *this;
         }
@@ -1799,9 +1799,9 @@ operator*=(const ITensor& other)
             }
 #endif
         for(int j = 1; j <= other.is_.rn(); ++j) 
-            new_index.addindexn( other.is_.index(j) );
+            new_index.addindex( other.is_.index(j) );
         for(int j = 1; j <= nr1_; ++j) 
-            new_index.addindex1( *(new_index1_[j]) );
+            new_index.addindex( *(new_index1_[j]) );
         is_.swap(new_index);
         return *this;
         }
@@ -1843,10 +1843,10 @@ operator*=(const ITensor& other)
         //Handle m!=1 indices
         for(int j = 0; j < this->is_.rn(); ++j)
             if(!props.contractedL[j+1]) 
-                new_index.addindexn( is_[j] );
+                new_index.addindex( is_[j] );
         for(int j = 0; j < other.is_.rn(); ++j)
             if(!props.contractedR[j+1]) 
-                new_index.addindexn( other.is_[j] );
+                new_index.addindex( other.is_[j] );
         }
     else
         {
@@ -1858,7 +1858,7 @@ operator*=(const ITensor& other)
 
     //Put in m==1 indices
     for(int j = 1; j <= nr1_; ++j) 
-        new_index.addindex1( *(new_index1_.at(j)) );
+        new_index.addindex( *(new_index1_.at(j)) );
 
     is_.swap(new_index);
 

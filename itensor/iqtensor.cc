@@ -693,20 +693,6 @@ uses_ind(const Index& ii) const
     return false;
     }
 
-bool IQTensor::
-hastype(IndexType t) const 
-    { 
-    if(!is_) return false;
-    return is_->hastype(t); 
-    }
-
-const IQIndex& IQTensor::
-finddir(Arrow dir) const 
-    { 
-    if(!is_) Error("finddir failed, IQTensor is null");
-    return is_->finddir(dir); 
-    }
-
 Real IQTensor::
 uniqueReal() const 
     { 

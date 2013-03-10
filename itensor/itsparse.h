@@ -160,11 +160,11 @@ class ITSparse
     // Index Methods
     //
 
-    void 
-    addindex1(const std::vector<Index>& indices) { is_.addindex1(indices); }
+    //void 
+    //addindex1(const std::vector<Index>& indices) { is_.addindex1(indices); }
 
-    void 
-    addindex1(const Index& I) { is_.addindex1(I); }
+    //void 
+    //addindex1(const Index& I) { is_.addindex1(I); }
 
     //
     // Primelevel Methods 

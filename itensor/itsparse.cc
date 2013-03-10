@@ -63,10 +63,10 @@ ITSparse(const Index& i1, const Index& i2, const Vector& diag)
     scale_(1)
     { 
 #ifdef DEBUG
-    if(diag_.Length() != is_.minM())
+    if(diag_.Length() != minM(is_))
         {
         Print(is_);
-        Print(is_.minM());
+        Print(minM(is_));
         Print(diag_.Length());
         Error("Vector size must be same as smallest m (> 1)");
         }
@@ -91,10 +91,10 @@ ITSparse(const Index& i1, const Index& i2,
     scale_(1)
     {
 #ifdef DEBUG
-    if(diag_.Length() != is_.minM())
+    if(diag_.Length() != minM(is_))
         {
         Print(is_);
-        Print(is_.minM());
+        Print(minM(is_));
         Print(diag_.Length());
         Error("Vector size must be same as smallest m (> 1)");
         }
@@ -114,7 +114,7 @@ int ITSparse::
 diagSize() const
     {
     if(diagAllSame())
-        return is_.minM();
+        return minM(is_);
     else
         return diag_.Length();
     }
@@ -373,7 +373,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     for(int i = 1; i <= S.rn(); ++i)
         if(scon[i] == 0)
             {
-            res.is_.addindexn(S.index(i));
+            res.is_.addindex(S.index(i));
             alloc_size *= S.m(i);
             res_has_Sind = true;
 
@@ -386,7 +386,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     for(int i = 1; i <= T.is_.rn(); ++i)
         if(tcon[i] == 0)
             {
-            res.is_.addindexn(T.is_[i-1]);
+            res.is_.addindex(T.is_[i-1]);
             alloc_size *= T.is_[i-1].m();
 
             //Init appropriate elements
@@ -413,7 +413,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     for(int i = S.rn()+1; i <= S.r(); ++i)
         if(scon[i] == 0)
             {
-            res.is_.addindex1(S.index(i));
+            res.is_.addindex(S.index(i));
             }
 
     //Put uncontracted m == 1 Indices
@@ -421,7 +421,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     for(int i = T.is_.rn()+1; i <= T.r(); ++i)
         if(tcon[i] == 0)
             {
-            res.is_.addindex1(T.is_.index(i));
+            res.is_.addindex(T.is_.index(i));
             }
 
 #ifdef DEBUG
