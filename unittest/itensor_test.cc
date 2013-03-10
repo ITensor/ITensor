@@ -14,8 +14,9 @@ struct ITensorDefaults
 
     ITensor A,B,X,Z;
 
-    std::vector<Index> mixed_inds, reordered_mixed_inds;
+    IndexSet<Index> mixed_inds;
 
+    const
     int mixed_inds_dim;
 
     ITensorDefaults() :
@@ -43,9 +44,9 @@ struct ITensorDefaults
     b3(Index("b3",3)),
     b4(Index("b4",4)),
     b5(Index("b5",5)),
-    mixed_inds(6),
-    reordered_mixed_inds(6),
-    mixed_inds_dim(1)
+    mixed_inds(a2,b3,l1,l2,a4,l4),
+    //reordered_mixed_inds(6),
+    mixed_inds_dim(mixed_inds.dim())
     {
         {
         Matrix M(s1.m(),s2.m());
@@ -75,22 +76,12 @@ struct ITensorDefaults
         Z = ITensor(s1,s2,M);
         }
 
-        mixed_inds[0] = a2;
-        mixed_inds[1] = b3;
-        mixed_inds[2] = l1;
-        mixed_inds[3] = l2;
-        mixed_inds[4] = a4;
-        mixed_inds[5] = l4;
-
-        Foreach(const Index& I, mixed_inds)
-        { mixed_inds_dim *= I.m(); }
-
-        reordered_mixed_inds[0] = a2;
-        reordered_mixed_inds[1] = l1;
-        reordered_mixed_inds[2] = b3;
-        reordered_mixed_inds[3] = a4;
-        reordered_mixed_inds[4] = l4;
-        reordered_mixed_inds[5] = l2;
+        //reordered_mixed_inds[0] = a2;
+        //reordered_mixed_inds[1] = l1;
+        //reordered_mixed_inds[2] = b3;
+        //reordered_mixed_inds[3] = a4;
+        //reordered_mixed_inds[4] = l4;
+        //reordered_mixed_inds[5] = l2;
     }
 
     ~ITensorDefaults() { }
@@ -313,12 +304,9 @@ TEST(IndexValConstructors)
 }
 
 TEST(MultiIndexConstructors)
-{
-    std::vector<Index> indices(4);
-    indices[0] = a2;
-    indices[1] = l3;
-    indices[2] = l1;
-    indices[3] = a4;
+    {
+    const
+    IndexSet<Index> indices(a2,l3,l1,a4);
 
     ITensor t1(indices);
 
@@ -341,15 +329,12 @@ TEST(MultiIndexConstructors)
     CHECK(hasindex(t2,a4));
     CHECK_CLOSE(t2.norm(),Norm(V),1E-10);
     CHECK_CLOSE(t2.sumels(),V.sumels(),1E-10);
-}
+    }
 
 TEST(ITensorConstructors)
 {
     Index clink("clink",4);
-    std::vector<Index> indices1(3);
-    indices1.at(0) = l1;
-    indices1.at(1) = l2;
-    indices1.at(2) = clink;
+    IndexSet<Index> indices1(l1,l2,clink);
 
     Vector V(l1.m()*l2.m()*clink.m());
     V.Randomize();
@@ -361,11 +346,7 @@ TEST(ITensorConstructors)
     ITensor t2(t1);
     t2 *= f;
 
-    std::vector<Index> indices3(4);
-    indices3.at(0) = l1;
-    indices3.at(1) = l2;
-    indices3.at(2) = l3;
-    indices3.at(3) = l4;
+    IndexSet<Index> indices3(l1,l2,l3,l4);
 
     ITensor t3(indices3,t2);
 
@@ -385,11 +366,7 @@ TEST(ITensorConstructors)
     P.from_to(4,2);
     CHECK(P.check(4));
 
-    std::vector<Index> indices5(4);
-    indices5.at(0) = l1;
-    indices5.at(1) = l4;
-    indices5.at(2) = l3;
-    indices5.at(3) = l2;
+    IndexSet<Index> indices5(l1,l4,l3,l2);
 
     ITensor t4(t3);
     Real f2 = ran1();
@@ -410,11 +387,7 @@ TEST(ITensorConstructors)
 
 TEST(Copy)
 {
-    std::vector<Index> indices(4);
-    indices[0] = a2;
-    indices[1] = l3;
-    indices[2] = l1;
-    indices[3] = a4;
+    IndexSet<Index> indices(a2,l3,l1,a4);
 
     Vector V(l1.m()*l3.m());
     V.Randomize();
@@ -482,10 +455,7 @@ TEST(assignToVec)
     V.Randomize();
     Real f = -ran1();
 
-    std::vector<Index> indices; indices.reserve(3);
-    indices.push_back(l1);
-    indices.push_back(l2);
-    indices.push_back(l3);
+    IndexSet<Index> indices(l1,l2,l3);
 
     ITensor T(indices,V);
 
@@ -601,7 +571,7 @@ TEST(SumDifference)
     ZZ.Randomize();
 
     f1 = 1; f2 = 1;
-    ITensor yy(mixed_inds,YY), zz(reordered_mixed_inds,ZZ);
+    ITensor yy(mixed_inds,YY), zz(mixed_inds,ZZ);
     r = f1*yy + f2*zz;
     for(int j1 = 1; j1 <= 2; ++j1)
     for(int j2 = 1; j2 <= 2; ++j2)

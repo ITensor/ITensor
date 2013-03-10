@@ -120,16 +120,12 @@ class ITensor
     explicit 
     ITensor(const IndexSet<Index>& I);
 
-    explicit 
-    ITensor(const std::vector<Index>& I);
-
-    ITensor(const std::vector<Index>& I, const Vector& V);
-
-    ITensor(const std::vector<Index>& I, const ITensor& other);
+    ITensor(const IndexSet<Index>& I, const Vector& V);
 
     ITensor(const IndexSet<Index>& I, const ITensor& other);
 
-    ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P);
+    ITensor(const IndexSet<Index>& I, const ITensor& other, 
+            const Permutation& P);
 
     explicit
     ITensor(std::istream& s) { read(s); }

@@ -193,39 +193,18 @@ ITensor(const IndexSet<Index>& I)
 	}
 
 ITensor::
-ITensor(const std::vector<Index>& I) 
-    :
-    scale_(1)
-	{
-    int alloc_size = -1;
-    is_ = IndexSet<Index>(I,I.size(),alloc_size,0);
-	allocate(alloc_size);
-	}
-
-ITensor::
-ITensor(const std::vector<Index>& I, const Vector& V) 
+ITensor(const IndexSet<Index>& I, const Vector& V) 
     : 
     p(make_shared<ITDat>(V)),
+    is_(I),
     scale_(1)
 	{
-    int alloc_size = -1;
-    is_ = IndexSet<Index>(I,I.size(),alloc_size,0);
-	if(alloc_size != V.Length()) 
-	    { Error("incompatible Index and Vector sizes"); }
+#ifdef DEBUG
+    if(is_.dim() != V.Length())
+	    Error("incompatible Index and Vector sizes");
+#endif
 	}
 
-
-ITensor::
-ITensor(const std::vector<Index>& I, const ITensor& other) 
-    : 
-    p(other.p), 
-    scale_(other.scale_)
-	{
-    int alloc_size = -1;
-    is_ = IndexSet<Index>(I,I.size(),alloc_size,0);
-	if(alloc_size != other.vecSize()) 
-	    { Error("incompatible Index and ITensor sizes"); }
-	}
 
 ITensor::
 ITensor(const IndexSet<Index>& I, const ITensor& other) 
@@ -233,17 +212,23 @@ ITensor(const IndexSet<Index>& I, const ITensor& other)
     p(other.p), 
     is_(I),
     scale_(other.scale_)
-	{ }
+	{
+#ifdef DEBUG
+	if(is_.dim() != other.vecSize()) 
+	    { Error("incompatible Index and ITensor sizes"); }
+#endif
+	}
 
 ITensor::
-ITensor(const std::vector<Index>& I, const ITensor& other, Permutation P) 
+ITensor(const IndexSet<Index>& I, const ITensor& other, const Permutation& P) 
     : 
+    is_(I),
     scale_(other.scale_)
     {
-    int alloc_size = -1;
-    is_ = IndexSet<Index>(I,I.size(),alloc_size,0);
-    if(alloc_size != other.vecSize()) 
-        { Error("incompatible Index and ITensor sizes"); }
+#ifdef DEBUG
+    if(is_.dim() != other.vecSize()) 
+        Error("incompatible Index and ITensor sizes");
+#endif
     if(P.is_trivial()) { p = other.p; }
     else               { allocate(); other.reshapeDat(P,p->v); }
     }
@@ -555,8 +540,7 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
     //Compute rn_ of res
     const int res_rn_ = is_.rn() - nn + (nn == 0 ? 0 : 1);
 
-    vector<Index> nindices; 
-    nindices.reserve(r()-nind+1);
+    IndexSet<Index> nindices; 
     Permutation P;
     int nkept = 0; 
     for(int j = 1; j <= is_.rn(); ++j)
@@ -566,7 +550,7 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
             {
             //cerr << format("Kept index, setting P.from_to(%d,%d)\n") % j % (nkept+1);
             P.from_to(j,++nkept);
-            nindices.push_back(is_.index(j)); 
+            nindices.addindex(is_.index(j)); 
             }
         else
             {
@@ -575,10 +559,10 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
             }
         }
 
-    nindices.push_back(grouped);
+    nindices.addindex(grouped);
 
     for(int j = is_.rn()+1; j <= r(); ++j) 
-        if(isReplaced[j] == 0) nindices.push_back(is_.index(j));
+        if(isReplaced[j] == 0) nindices.addindex(is_.index(j));
 
     if(nn == 0) 
         res = ITensor(nindices,*this);

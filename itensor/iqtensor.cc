@@ -497,13 +497,12 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
 
     if(!dat().has_itensor(r))
         {
-        std::vector<Index> indices; 
-        indices.reserve(nn);
+        IndexSet<Index> indices; 
         for(int j = 1; j <= nn; ++j) 
             {
             if(!hasindex(*this,iv[j].iqind)) 
                 Error("IQTensor::operator(): IQIndex not found.");
-            indices.push_back(iv[j].index());
+            indices.addindex(iv[j].index());
             }
         ITensor t(indices);
         dat.nc().insert_add(r,t);
@@ -1427,10 +1426,10 @@ toITensor() const
     {
     //Resulting ITensor's indices are 
     //the Index versions of this's IQIndices
-    vector<Index> indices;
+    IndexSet<Index> indices;
     for(int j = 1; j <= is_->r(); ++j)
         {
-        indices.push_back(Index(is_->index(j)));
+        indices.addindex(Index(is_->index(j)));
         }
     ITensor res(indices);
 
