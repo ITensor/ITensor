@@ -49,9 +49,9 @@ class IndexSet
     //
 
     typedef Array<IndexT,NMAX>
-    StorageType;
+    Storage;
 
-    typedef typename StorageType::const_iterator 
+    typedef typename Storage::const_iterator 
     const_iterator;
 
     typedef typename boost::shared_ptr<IndexSet<IndexT> >
@@ -88,8 +88,7 @@ class IndexSet
     const_iterator
     end() const { return (index_.begin()+r_); }
 
-    const StorageType&
-    storage() const { return index_; }
+    operator const Storage&() const { return index_; }
 
     Real
     uniqueReal() const { return ur_; }
@@ -159,9 +158,6 @@ class IndexSet
     addindex1(const IndexT& I);
 
     void
-    setUniqueReal();
-
-    void
     swap(IndexSet& other);
 
     void
@@ -196,7 +192,7 @@ class IndexSet
     // Data Members
     //
 
-    StorageType index_;
+    Storage index_;
 
     int rn_,
         r_;
@@ -205,6 +201,9 @@ class IndexSet
 
     //
     /////////
+
+    void
+    setUniqueReal();
 
     template <class Iterable>
     void
@@ -799,9 +798,14 @@ findtype(const IndexSet<IndexT>& iset, IndexType t)
     return IndexT::Null();
 	}
 
-template <class IndexT, class ArrayType>
+//
+// Compute the permutation P taking an IndexSet iset
+// to oset (of type IndexSet or boost::array<IndexT,NMAX>)
+//
+template <class IndexT>
 void
-getperm(const IndexSet<IndexT>& iset, const ArrayType& ind, 
+getperm(const IndexSet<IndexT>& iset, 
+        const typename IndexSet<IndexT>::Storage& oset, 
         Permutation& P)
 	{
 	for(int j = 0; j < iset.r(); ++j)
@@ -809,7 +813,7 @@ getperm(const IndexSet<IndexT>& iset, const ArrayType& ind,
 	    bool got_one = false;
 	    for(int k = 0; k < iset.r(); ++k)
             {
-            if(ind[j] == iset[k])
+            if(oset[j] == iset[k])
                 { 
                 P.from_to(j+1,k+1); 
                 got_one = true; 
@@ -820,9 +824,9 @@ getperm(const IndexSet<IndexT>& iset, const ArrayType& ind,
             {
             Cout << "j = " << j << "\n";
             Print(iset); 
-            Cout << "ind = \n";
+            Cout << "oset = \n";
             for(int j = 0; j < iset.r(); ++j) 
-                Cout << j << " " << ind[j] << "\n";
+                Cout << j << " " << oset[j] << "\n";
             Cout << Endl;
             Error("IndexSet::getperm: no matching index");
             }

@@ -1004,7 +1004,7 @@ trace(Tensor T)
         }
     if(T.indices().rn() != 0) 
         {
-        T.trace(T.indices().storage(),T.indices().rn());
+        T.trace(T.indices(),T.indices().rn());
         }
     return T.toReal();
     }
