@@ -1108,6 +1108,19 @@ operator*=(const IQTensor& other)
         const IQIndex& I = other.is_->index(i);
         if(!common_inds.count(ApproxReal(I.uniqueReal())))
             { 
+#ifdef DEBUG
+            if(rholder >= NMAX)
+                {
+                Print(this->indices());
+                Print(other.indices());
+                cout << "Uncontracted IQIndices found so far:" << endl;
+                for(int n = 0; n < rholder; ++n)
+                    {
+                    cout << riqind_holder[n] << endl;
+                    }
+                Error("Too many indices (>= 8) on resulting IQTensor");
+                }
+#endif
             riqind_holder[rholder] = I;
             ++rholder;
             }
