@@ -230,7 +230,7 @@ TEST(Constructors)
 }
 
 TEST(IndexValConstructors)
-{
+    {
     ITensor t1(l1(2));
 
     CHECK_EQUAL(t1.r(),1);
@@ -301,7 +301,34 @@ TEST(IndexValConstructors)
     CHECK_CLOSE(t4(l3(2),l2(2)),0,1E-10);
     CHECK_CLOSE(t4.sumels(),1,1E-10);
     CHECK_CLOSE(t4.norm(),1,1E-10);
-}
+
+    ITensor r4(l1(1),l3(1),l2(2),l4(1));
+
+    CHECK_EQUAL(r4.r(),4);
+    CHECK(hasindex(r4,l1));
+    CHECK(hasindex(r4,l2));
+    CHECK(hasindex(r4,l3));
+    CHECK(hasindex(r4,l4));
+    CHECK_CLOSE(r4(l1(1),l3(1),l2(2),l4(1)),1,1E-10);
+    CHECK_CLOSE(r4.sumels(),1,1E-10);
+    CHECK_CLOSE(r4.norm(),1,1E-10);
+
+    ITensor t8(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2));
+
+    CHECK_EQUAL(t8.r(),8);
+    CHECK(hasindex(t8,l1));
+    CHECK(hasindex(t8,l2));
+    CHECK(hasindex(t8,l3));
+    CHECK(hasindex(t8,l4));
+    CHECK(hasindex(t8,l5));
+    CHECK(hasindex(t8,l6));
+    CHECK(hasindex(t8,l7));
+    CHECK(hasindex(t8,l8));
+
+    CHECK_CLOSE(t8(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2)),1,1E-10);
+    CHECK_CLOSE(t8.norm(),1,1E-10);
+
+    }
 
 TEST(MultiIndexConstructors)
     {
@@ -827,7 +854,7 @@ TEST(NonContractingProduct)
     CHECK(hasindex(Hpsi,a3));
 
     for(int j2 = 1; j2 <= 2; ++j2)
-    { CHECK_CLOSE(Hpsi(l2(j2)),psi()*mpoh(l2(j2)),1E-10); }
+        { CHECK_CLOSE(Hpsi(l2(j2)),psi(a1(1),a2(1),a3(1))*mpoh(l2(j2)),1E-10); }
     }
 
 TEST(ComplexNonContractingProduct)

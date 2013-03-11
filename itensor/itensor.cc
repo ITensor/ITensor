@@ -134,13 +134,13 @@ ITensor(const Index& i1, const Index& i2, const Index& i3,
 	}
 
 ITensor::
-ITensor(const IndexVal& iv, Real fac) 
+ITensor(const IndexVal& iv)
     :
     is_(iv.ind),
     scale_(1)
 	{ 
     allocate(iv.ind.m());
-	p->v(iv.i) = fac; 
+	p->v(iv.i) = 1; 
 	}
 
 ITensor::
@@ -164,23 +164,26 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
     //Construct ITensor
     array<Index,NMAX+1> ii = 
         {{ iv1.ind, iv2.ind, iv3.ind, iv4.ind, iv5.ind, 
-           iv6.ind, iv7.ind, iv8.ind }};
+           iv6.ind, iv7.ind, iv8.ind, IndexVal::Null().ind }};
     int size = 3; 
-    while(size < NMAX && ii[size+1] != IndexVal::Null().ind) ++size;
+    while(ii[size] != IndexVal::Null().ind) ++size;
     int alloc_size = -1;
     is_ = IndexSet<Index>(ii,size,alloc_size,0);
     allocate(alloc_size);
 
     //Assign specified element to 1
     array<int,NMAX+1> iv = 
-        {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i }};
-    array<int,NMAX+1> ja; 
+        {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i, 1 }};
+    array<int,NMAX> ja; 
     ja.assign(0);
-    for(int k = 1; k <= is_.rn(); ++k) //loop over indices of this ITensor
-        for(int j = 0; j < size; ++j)  // loop over the given indices
-    if(is_.index(k) == ii[j]) 
-        { ja[k] = iv[j]-1; break; }
-    p->v[_ind(is_,ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7],ja[8])] = 1;
+    for(int k = 0; k < is_.rn(); ++k) //loop over indices of this ITensor
+    for(int j = 0; j < size; ++j)      // loop over the given indices
+        {
+        if(is_[k] == ii[j]) 
+            { ja[k] = iv[j]-1; break; }
+        }
+
+    p->v[_ind(is_,ja[0],ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7])] = 1;
     }
 
 ITensor::
@@ -365,6 +368,7 @@ toComplex(Real& re, Real& im) const
         }
     }
 
+/*
 Real& ITensor::
 operator()()
 	{ 
@@ -389,6 +393,7 @@ operator()() const
         }
     return scale_.real()*p->v(1);
     }
+    */
 
 Real& ITensor::
 operator()(const IndexVal& iv1)

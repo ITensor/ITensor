@@ -64,45 +64,42 @@ class ITensor
     //Construct Null ITensor, isNull returns true
     ITensor();
 
-    //Construct rank 0 ITensor (scalar), value set to val
-    explicit
-    ITensor(Real val);
-
     //Construct rank 1 ITensor, all entries set to zero
     explicit 
     ITensor(const Index& i1);
 
-    //Construct rank 1 ITensor, all entries set to val
-    ITensor(const Index& i1, 
-            Real val);
-
-    //Construct rank 1 ITensor, entries set to those of V
-    ITensor(const Index& i1, 
-            const VectorRef& V);
-
     //Construct rank 2 ITensor, all entries set to zero
     ITensor(const Index& i1,const Index& i2);
 
-    //Construct rank 2 ITensor (a matrix) with 'a' on the diagonal
-    ITensor(const Index& i1, const Index& i2, 
-            Real a);
-
-    //Construct rank 2 ITensor, entries set to those of M
-    ITensor(const Index& i1,const Index& i2,const MatrixRef& M);
-
     //Construct ITensor up to rank 8, entries set to zero
     ITensor(const Index& i1, const Index& i2, const Index& i3,
-            const Index& i4 = Index::Null(), 
-            const Index& i5 = Index::Null(), 
+            const Index& i4 = Index::Null(),
+            const Index& i5 = Index::Null(),
             const Index& i6 = Index::Null(),
-            const Index& i7 = Index::Null(), 
+            const Index& i7 = Index::Null(),
             const Index& i8 = Index::Null());
+
+    //Construct rank 0 ITensor (scalar), value set to val
+    explicit
+    ITensor(Real val);
+
+    //Construct rank 1 ITensor, all entries set to val
+    ITensor(const Index& i1, Real val);
+
+    //Construct rank 1 ITensor, entries set to those of V
+    ITensor(const Index& i1, const VectorRef& V);
+
+    //Construct rank 2 ITensor, entries set to those of M
+    ITensor(const Index& i1, const Index& i2, const MatrixRef& M);
+
+    //Construct rank 2 ITensor (a matrix) with 'a' on the diagonal
+    ITensor(const Index& i1, const Index& i2, Real a);
 
     // Construct rank 1 tensor T from IndexVal iv = (I,n)
     // (I is an Index, n an int)
-    // such that T(I(n)) == val
+    // such that T(I(n)) == 1
     explicit 
-    ITensor(const IndexVal& iv, Real val = 1);
+    ITensor(const IndexVal& iv);
 
     // Construct rank 2 tensor T from IndexVals 
     // iv1 = (I1,n1), iv2 = (I2,n2)
@@ -261,15 +258,10 @@ class ITensor
     // Can be used to set components of ITensors
     // as well, for example, T(I1(2),I2(1)) = 3;
     Real& 
-    operator()();
-
-    Real 
-    operator()() const;
-
-    Real& 
     operator()(const IndexVal& iv1);
 
-    Real operator()(const IndexVal& iv1) const;
+    Real 
+    operator()(const IndexVal& iv1) const;
 
     Real& 
     operator()(const IndexVal& iv1, const IndexVal& iv2);
@@ -803,11 +795,11 @@ operator*(const IndexVal& iv1, const IndexVal& iv2)
 //
 ITensor inline
 operator*(const IndexVal& iv1, Real val) 
-    { return ITensor(iv1,val); }
+    { ITensor res(iv1); res *= val; return res; }
 
 ITensor inline
-operator*(Real fac, const IndexVal& iv) 
-    { return ITensor(iv,fac); }
+operator*(Real val, const IndexVal& iv) 
+    { ITensor res(iv); res *= val; return res; }
 
 
 template<class TensorA, class TensorB> typename 
