@@ -55,6 +55,18 @@ class Index
     int 
     m() const;
 
+    // Returns the prime level
+    int 
+    primeLevel() const;
+    // Sets the prime level to a specified value.
+    void 
+    primeLevel(int plev);
+
+    // Returns a unique Real number identifying this Index.
+    // Useful for efficiently checking that sets of indices match.
+    Real 
+    uniqueReal() const;
+
     // Returns the IndexType
     IndexType 
     type() const;
@@ -67,25 +79,35 @@ class Index
     const std::string&
     rawname() const;
 
-    // Returns a unique Real number identifying this Index.
-    // Useful for efficiently checking that sets of indices match.
-    Real 
-    uniqueReal() const;
-
     // Returns true if Index default initialized
     bool 
     isNull() const;
 
-    // Returns the prime level
-    int 
-    primeLevel() const;
-    // Sets the prime level to a specified value.
-    void 
-    primeLevel(int plev);
-
     // Returns the Arrow direction of this Index
     Arrow 
     dir() const { return Out; }
+
+    //
+    // Prime level methods
+    //
+
+    // Increase primelevel by 1 (or by optional amount inc)
+    void 
+    prime(int inc = 1);
+
+    // Increase primelevel by 1 (or optional amount inc)
+    // if type matches this Index or type==All
+    void 
+    prime(IndexType type, int inc = 1);
+
+    // Set primelevel to zero (optionally only if type matches)
+    void 
+    noprime(IndexType type = All) { prime(type,-primelevel_); }
+
+    // Switch primelevel from plevold to plevnew
+    // Has no effect if plevold doesn't match current primelevel
+    void 
+    mapprime(int plevold, int plevnew, IndexType type = All);
 
     //
     // Operators
@@ -112,28 +134,6 @@ class Index
     operator()(int i) const;
 
     //
-    // Prime methods
-    //
-
-    // Increase primelevel by 1 (or by optional amount inc)
-    void 
-    prime(int inc = 1);
-
-    // Increase primelevel by 1 (or optional amount inc)
-    // if type matches this Index or type==All
-    void 
-    prime(IndexType type, int inc = 1);
-
-    // Set primelevel to zero (optionally only if type matches)
-    void 
-    noprime(IndexType type = All) { prime(type,-primelevel_); }
-
-    // Switch primelevel from plevold to plevnew
-    // Has no effect if plevold doesn't match current primelevel
-    void 
-    mapprime(int plevold, int plevnew, IndexType type = All);
-
-    //
     // Other methods
     //
 
@@ -151,17 +151,25 @@ class Index
     void 
     conj() { } //for forward compatibility with arrows
 
+    //
+    // Static Index instances
+    //
 
-    static const Index& Null();
+    //Static default-constructed placeholder Index
+    static const 
+    Index& Null();
 
     // Static Index indexing real and imaginary parts of a complex ITensor
-    static const Index& IndReIm();
+    static const 
+    Index& IndReIm();
 
     // IndReIm with primeLevel 1
-    static const Index& IndReImP();
+    static const 
+    Index& IndReImP();
 
     // IndReIm with primeLevel 2
-    static const Index& IndReImPP();
+    static const 
+    Index& IndReImPP();
 
     private:
 
