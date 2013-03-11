@@ -320,9 +320,6 @@ class IQTensor
     //IQTensor quantum number methods
 
     QN 
-    div() const;
-
-    QN 
     qn(const Index& in) const;
 
     Arrow 
@@ -723,17 +720,13 @@ Dot(IQTensor x, const IQTensor& y);
 void 
 BraKet(IQTensor x, const IQTensor& y, Real& re, Real& im);
 
-//Checks if all IQTensor blocks have the same divergence
-void 
-checkQNs(const IQTensor& T);
-
-//ITensor version for compatibility
-void inline
-checkQNs(const ITensor& t) { }
-
-//ITensor version for compatibility
-void inline
-checkDiv(const ITensor& t, QN q = QN()) { } 
+//Compute divergence of IQTensor T
+//
+//If DEBUG defined and all blocks do not have
+//the same divergence, throws an exception
+//(since IQTensor is not correctly constructed).
+QN 
+div(const IQTensor& T);
 
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);

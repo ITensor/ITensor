@@ -564,21 +564,6 @@ at(const IQIndexVal& iv1, const IQIndexVal& iv2,
     }
 
 
-QN IQTensor::
-div() const
-	{
-	QN div_;
-	assert(!isNull());
-	if(dat().empty())
-	    {   
-        Print(this->indices());
-	    Error("IQTensor has no blocks");
-	    }
-	const ITensor& t = *(dat().begin());
-    Foreach(const Index& i, t.indices())
-        div_ += qn(i)*dir(i);
-	return div_;
-	}
 
 
 QN IQTensor::
@@ -973,7 +958,7 @@ randomize()
 
 	dat.solo(); 
 
-    const QN D = div();
+    const QN D = div(*this);
 
     QCounter C(*is_);
 
@@ -1499,48 +1484,45 @@ BraKet(IQTensor x, const IQTensor& y, Real& re, Real& im)
     x.toComplex(re,im);
     }
 
-void 
-checkQNs(const IQTensor& T)
-    {
-    QN qtot = T.div();
-    Foreach(const ITensor& t, T.blocks())
-        {
-        QN q;
-        Foreach(const Index& I, t.indices())
-            q += T.qn(I)*T.dir(I);
 
-        if(q != qtot) 
-            {
-            std::cout << "\nqtot = " << qtot << "\n\n";
-            std::cout << "Offending ITensor = " << t << "\n\n";
-            Print(T.indices());
-            Error("checkQNs: inconsistent QN");
-            }
-        }
-    }
-
-void 
-checkDiv(const IQTensor& T, QN expected)
+QN
+div(const IQTensor& T)
 	{
-	if(T.blocks().empty())
+	if(T.iten_empty())
 	    {   
-        Print(T.indices());
+        Print(T);
 	    Error("IQTensor has no blocks");
 	    }
 
-    Foreach(const ITensor& t, T.blocks())
-	    {
-	    QN div_;
-        Foreach(const Index& I, t.indices())
-            div_ += T.qn(I)*T.dir(I);
-	    if(div_ != expected)
+    //Calculate divergence of first block
+    QN div_;
+    IQTDat::const_iterator it = T.blocks().begin();
+    Foreach(const Index& i, it->indices())
+        {
+        div_ += T.qn(i)*T.dir(i);
+        }
+
+#ifdef DEBUG
+    //Check that remaining blocks have same divergence
+    for(++it; it != T.blocks().end(); ++it)
+        {
+        QN q;
+        Foreach(const Index& i, it->indices())
             {
-            Print(expected);
-            Print(div_);
-            Print(T.indices());
-            cout << "Incorrect block:\n";
-            Print(t);
-            Error("Block didn't match expected div");
+            q += T.qn(i)*T.dir(i);
             }
-	    }
+        if(q != div_)
+            {
+            cout << "\n-------------------------\n" << endl;
+            cout << "div = " << div_ << "\n" << endl;
+            cout << "div of this block = " << q << "\n" << endl;
+            cout << "Offending ITensor = \n" << *it << "\n" << endl;
+            Print(T.indices());
+            cout << "\n-------------------------\n" << endl;
+            Error("Inconsistent divergence of IQTensor block");
+            }
+        }
+#endif
+
+	return div_;
 	}

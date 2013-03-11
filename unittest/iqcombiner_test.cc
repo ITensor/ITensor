@@ -175,10 +175,6 @@ TEST(CondenseProduct)
 
     IQTensor phi(S1,S2,L2);
 
-    ITensor uu(s1u,s2u,l2dd);
-    uu.randomize();
-    phi += uu;
-
     ITensor ud(s1u,s2d,l20);
     ud.randomize();
     phi += ud;
@@ -187,7 +183,8 @@ TEST(CondenseProduct)
     du.randomize();
     phi += du;
 
-    checkDiv(phi);
+    const QN Zero;
+    CHECK(div(phi) == Zero);
 
     IQCombiner c;
     c.doCondense(true);

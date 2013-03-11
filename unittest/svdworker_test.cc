@@ -92,7 +92,9 @@ struct SVDWorkerDefaults
             Phi0 += zdduu;
             }
         Phi0 *= 1.0/Phi0.norm();
-        checkDiv(Phi0);
+
+        const QN Zero;
+        CHECK_EQUAL(div(Phi0),Zero);
 
         phi0 = Phi0.toITensor();
 

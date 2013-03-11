@@ -668,7 +668,7 @@ totalQN(const IQMPS& psi)
     int center = findCenter(psi);
     if(center == -1)
         Error("Could not find ortho. center");
-    return psi.A(center).div();
+    return div(psi.A(center));
     }
 
 //

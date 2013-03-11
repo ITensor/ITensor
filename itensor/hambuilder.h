@@ -275,7 +275,7 @@ putLinks(MPOt<IQTensor>& res) const
         {
         boost::format nm = boost::format("h%d-%d") % ver % i,
                       Nm = boost::format("H%d-%d") % ver % i;
-        q += res.A(i).div();
+        q += div(res.A(i));
         links.at(i) = IQIndex(Nm.str(),
                              Index(nm.str()),q);
         }

@@ -110,7 +110,7 @@ init(std::string rname, IndexType type,
     initted = true;
 	}
 
- IQCombiner::
+IQCombiner::
 operator IQTensor() const
     {
     if(!initted) Error("IQCombiner::operator IQTensor(): IQCombiner not initialized.");
@@ -126,9 +126,16 @@ operator IQTensor() const
         res.insert(co);
         }
 
+#ifdef DEBUG
     //Combiners should always have the 
     //structure of zero divergence IQTensors
-    DO_IF_DEBUG(checkQNs(res));
+    const QN Zero;
+    if(div(res) != Zero)
+        {
+        Print(res);
+        Error("IQTensor divergence not zero");
+        }
+#endif
 
     if(do_condense) 
         { 

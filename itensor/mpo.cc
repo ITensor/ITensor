@@ -182,7 +182,7 @@ checkQNs(const IQMPO& psi)
     {
     const int N = psi.N();
 
-    QN zero;
+    const QN Zero;
 
     int center = findCenter(psi);
     //std::cerr << boost::format("Found the OC at %d\n") % center;
@@ -201,18 +201,17 @@ checkQNs(const IQMPO& psi)
             Error("QNs not well defined");
             }
         try {
-            checkQNs(psi.A(i));
+            if(div(psi.A(i)) != Zero)
+                {
+                std::cerr << "At i = " << i << "\n";
+                Print(psi.A(i));
+                Error("Non-zero div IQTensor in IQMPO");
+                }
             }
         catch(const ITError& e)
             {
             std::cerr << "At i = " << i << "\n";
             throw e;
-            }
-        if(psi.A(i).div() != zero)
-            {
-            std::cerr << "At i = " << i << "\n";
-            Print(psi.A(i));
-            Error("Non-zero div IQTensor in IQMPO");
             }
         }
 

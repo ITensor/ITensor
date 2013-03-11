@@ -1407,7 +1407,7 @@ checkQNs(const IQMPS& psi)
             std::cerr << boost::format("A(%d) null, QNs not well defined\n")%i;
             return false;
             }
-        if(psi.A(i).div() != Zero)
+        if(div(psi.A(i)) != Zero)
             {
             std::cerr << "At i = " << i << "\n";
             Print(psi.A(i));

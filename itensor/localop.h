@@ -415,7 +415,7 @@ deltaPhi(const IQTensor& phi) const
     IQTensor delta(deltaL);
     delta *= 0;
 
-    QN targetQn = phi.div();
+    const QN targetQn = div(phi);
 
     Foreach(const ITensor& block, deltaL.blocks())
         {

@@ -118,15 +118,15 @@ TEST(SVDArrows)
     block.randomize();
     AA += block;
 
-    //PrintDat(AA);
-    checkDiv(AA);
+    const QN Zero;
+    CHECK_EQUAL(div(AA),Zero);
 
     IQTensor U(L),V(R);
     IQTSparse D;
     svd.svd(AA,U,D,V);
 
-    checkDiv(U);
-    checkDiv(V);
+    CHECK_EQUAL(div(U),Zero);
+    CHECK_EQUAL(div(V),Zero);
     }
 
 TEST(ExpandIndex)
