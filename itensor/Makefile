@@ -9,7 +9,7 @@ include ../options.mk
 ####################################
 
 SOURCES=index.cc itensor.cc itsparse.cc \
-        iqindex.cc iqtensor.cc iqtsparse.cc\
+        iqindex.cc iqtensor.cc iqcombiner.cc iqtsparse.cc\
         svdworker.cc mps.cc mpo.cc tevol.cc
 
 HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
