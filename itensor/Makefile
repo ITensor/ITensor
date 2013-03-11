@@ -106,6 +106,7 @@ iqtsparse.o: $(DEPHEADERS)
 .debug_objs/iqtsparse.o: $(DEPHEADERS)
 DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h
 iqcombiner.o: $(DEPHEADERS)
+.debug_objs/iqcombiner.o: $(DEPHEADERS)
 DEPHEADERS+= svdworker.h
 svdworker.o: $(DEPHEADERS)
 .debug_objs/svdworker.o: $(DEPHEADERS)
