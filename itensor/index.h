@@ -234,8 +234,9 @@ deprimed(Index I) { I.noprime(); return I; }
 
 //Return a copy of I with prime level changed to plevnew if
 //old prime level was plevold. Otherwise has no effect.
-Index 
-mapPrime(Index I, int plevold, int plevnew, IndexType type = All);
+Index inline
+mapPrime(Index I, int plevold, int plevnew, IndexType type = All)
+    { I.mapprime(plevold,plevnew,type); return I; }
 
 //Returns a string version of this Index's bond dimension.
 std::string

@@ -368,17 +368,6 @@ Null()
     return Null_;
     }
 
-Index 
-mapPrime(Index I, int plevold, int plevnew, IndexType type)
-    {
-    if(I.primeLevel() == plevold && 
-       ((type == All && I.type() != ReIm) || type == I.type()))
-        {
-        I.primeLevel(plevnew);
-        }
-    return I;
-    }
-
 string
 showm(const Index& I) { return nameint("m=",I.m()); }
 
