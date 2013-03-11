@@ -104,7 +104,9 @@ iqtensor.o: $(DEPHEADERS)
 DEPHEADERS+= iqtsparse.h
 iqtsparse.o: $(DEPHEADERS)
 .debug_objs/iqtsparse.o: $(DEPHEADERS)
-DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h svdworker.h
+DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h
+iqcombiner.o: $(DEPHEADERS)
+DEPHEADERS+= svdworker.h
 svdworker.o: $(DEPHEADERS)
 .debug_objs/svdworker.o: $(DEPHEADERS)
 DEPHEADERS+= mps.h
