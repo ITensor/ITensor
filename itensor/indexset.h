@@ -116,8 +116,7 @@ class IndexSet
     mapprime(int plevold, int plevnew, IndexType type = All);
 
     void 
-    mapprimeind(const IndexT& I, int plevold, int plevnew, 
-                IndexType type = All);
+    mapprimeind(const IndexT& I, int plevold, int plevnew);
 
     //
     // Other Methods
@@ -394,12 +393,12 @@ mapprime(int plevold, int plevnew, IndexType type)
 
 template <class IndexT>
 void IndexSet<IndexT>::
-mapprimeind(const IndexT& I, int plevold, int plevnew, IndexType type)
+mapprimeind(const IndexT& I, int plevold, int plevnew)
 	{
     for(int j = (I.m() == 1 ? rn_ : 0); j < r_; ++j) 
         if(index_[j] == I)
         {
-        index_[j].mapprime(plevold,plevnew,type);
+        index_[j].mapprime(plevold,plevnew);
         ur_ -= I.uniqueReal();
         ur_ += index_[j].uniqueReal();
         return;

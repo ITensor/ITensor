@@ -190,9 +190,8 @@ class ITSparse
         { is_.mapprime(plevold,plevnew,type); }
 
     void 
-    mapprimeind(const Index& I, int plevold, int plevnew, 
-                IndexType type = All)
-        { is_.mapprimeind(I,plevold,plevnew,type); }
+    mapprimeind(const Index& I, int plevold, int plevnew)
+        { is_.mapprimeind(I,plevold,plevnew); }
 
     //
     // Other Methods
