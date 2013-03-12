@@ -5,6 +5,13 @@
 using boost::format;
 using namespace std;
 
+//typedef SpinHalf
+//Spin;           //use S=1/2 degrees of freedom
+
+//Un-comment above typedef and comment this one to switch spin type
+typedef SpinOne
+Spin;             //use S=1 degrees of freedom
+
 int 
 main(int argc, char* argv[])
     {
@@ -13,8 +20,7 @@ main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    SpinOne model(N);    // make a chain of N spin 1's
-    //SpinHalf model(N); // make a chain of N spin 1/2's
+    Spin model(N);    // make a chain of N spins
 
     //
     // Create the Hamiltonian matrix product operator (MPO)
@@ -29,9 +35,9 @@ main(int argc, char* argv[])
     for(int i = 1; i <= N; ++i) 
         {
         if(i%2 == 1)
-            initState.set(i,&SpinOne::Up);
+            initState.set(i,&Spin::Up);
         else
-            initState.set(i,&SpinOne::Dn);
+            initState.set(i,&Spin::Dn);
         }
 
     MPS psi(model,initState);
