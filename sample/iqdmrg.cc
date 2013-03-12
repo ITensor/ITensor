@@ -5,7 +5,9 @@
 using boost::format;
 using namespace std;
 
-int main(int argc, char* argv[])
+
+int 
+main(int argc, char* argv[])
     {
     int N = 100;
 
@@ -26,9 +28,14 @@ int main(int argc, char* argv[])
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
     //
-    InitState initState(N);
+    InitState initState(model);
     for(int i = 1; i <= N; ++i) 
-        initState(i) = (i%2==1 ? model.Up(i) : model.Dn(i));
+        {
+        if(i%2 == 1)
+            initState.set(i,&SpinOne::Up);
+        else
+            initState.set(i,&SpinOne::Dn);
+        }
 
     IQMPS psi(model,initState);
 

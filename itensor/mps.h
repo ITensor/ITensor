@@ -6,6 +6,7 @@
 #define __ITENSOR_MPS_H
 #include "svdworker.h"
 #include "model.h"
+#include "boost/function.hpp"
 
 #define Cout std::cout
 #define Endl std::endl
@@ -17,47 +18,13 @@ class MPOt;
 template <class Tensor>
 class LocalMPO;
 
+class InitState;
+
 static const LogNumber DefaultRefScale(7.58273202392352185);
 
 void 
 convertToIQ(const Model& model, const std::vector<ITensor>& A, 
             std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
-
-class InitState
-    {
-    typedef IQIndexVal (*SetFuncPtr)(int);
-    public:
-
-    InitState(int nsite) 
-        : N_(nsite), 
-          state(N_+1) 
-        { }
-
-    InitState(int nsite,SetFuncPtr setter) 
-        : N_(nsite), 
-          state(N_+1) 
-        { set_all(setter); }
-
-    int N() const { return N_; }
-
-    void 
-    set_all(SetFuncPtr setter)
-        { 
-        for(int j = 1; j <= N_; ++j) GET(state,j-1) = (*setter)(j); 
-        }
-
-    IQIndexVal& 
-    operator()(int i) { return state.at(i-1); }
-    const IQIndexVal& 
-    operator()(int i) const { return state.at(i-1); }
-
-    operator std::vector<IQIndexVal>() const { return state; }
-
-    private:
-
-    int N_;
-    std::vector<IQIndexVal> state;
-    }; 
 
 //
 // class MPSt
@@ -533,6 +500,67 @@ class MPSt
     }; //class MPSt<Tensor>
 typedef MPSt<ITensor> MPS;
 typedef MPSt<IQTensor> IQMPS;
+
+class InitState
+    {
+    public:
+
+    typedef std::vector<IQIndexVal>
+    Storage;
+
+    typedef boost::function1<IQIndexVal,int>
+    Setter;
+
+    InitState(const Model& model)
+        : 
+        model_(model), 
+        state_(1+model.N())
+        { }
+
+    template<class MethodPtr>
+    InitState(const Model& model, MethodPtr m)
+        : 
+        model_(model), 
+        state_(1+model.N())
+        { 
+        const
+        Setter s = std::bind1st(std::mem_fun(m),&model_);
+        for(int n = 1; n <= model.N(); ++n)
+            {
+            state_[n] = s(n);
+            }
+        }
+
+    template<class MethodPtr>
+    InitState& 
+    set(int i, MethodPtr m)
+        { 
+        checkRange(i);
+        state_.at(i) = std::bind1st(std::mem_fun(m),&model_)(i);
+        return *this;
+        }
+
+    const IQIndexVal&
+    operator()(int i) const { checkRange(i); return state_.at(i); }
+
+    private:
+
+    const Model& model_;
+    Storage state_;
+
+    void
+    checkRange(int i) const
+        {
+        if(i > model_.N() || i < 1) 
+            {
+            Cout << "i = " << i << Endl;
+            Cout << "Valid range is 1 to " << model_.N() << Endl;
+            Error("i out of range");
+            }
+        }
+
+    }; 
+
 
 //
 // MPSt
