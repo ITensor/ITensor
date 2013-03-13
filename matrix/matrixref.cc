@@ -361,11 +361,23 @@ Real MatrixRef::zerofrac() const
 void 
 mult(const MatrixRef & M, const VectorRef & V, VectorRef & res,int noclear)
     {
+#if defined(i386) || defined(__x86_64)
+    char transM = (M.DoTranspose() ? 'N' : 'T');
+    int nc = M.ncols;
+    int nr = M.nrows;
+    Real sca = M.Scale() * V.Scale();
+    int ldM = M.rowstride;
+    int ldV = V.stride;
+    Real beta = (noclear ? 1. : 0.);
+    int ldr = res.stride;
+    dgemv_(&transM,&nc,&nr,&sca,M.Store(),&ldM,V.Store(),&ldV,&beta,res.Store(),&ldr);
+#else
     if(!noclear) res = 0.0;
     int i=1;
     ColumnIter mcol(M);
     while(mcol.inc())
 	res.addin(mcol,V(i++));
+#endif
     }
 
 void 
@@ -418,7 +430,7 @@ mult(const MatrixRef & M1, const MatrixRef & M2, MatrixRef & M3, int noclear)
     Real *pb = M1.Store();
     Real *pc = M3.Store();
 
-    static char pt[] = {'N','T'};
+    static const char pt[] = {'N','T'};
     char transb = pt[M1.DoTranspose()];
     char transa = pt[M2.DoTranspose()];
     dgemm_(&transa,&transb,&m,&n,&k,&sca,pa,&lda,pb,&ldb, &beta, pc, &ldc);
