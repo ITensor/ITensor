@@ -618,7 +618,7 @@ addNoOrth(const MPSt<Tensor>& other_)
 
     noprimelink();
 
-    //orthogonalize();
+    orthogonalize();
 
     return *this;
     }
