@@ -513,22 +513,17 @@ class InitState
 
     InitState(const Model& model)
         : 
-        model_(model), 
+        model_(&model), 
         state_(1+model.N())
         { }
 
     template<class MethodPtr>
     InitState(const Model& model, MethodPtr m)
         : 
-        model_(model), 
+        model_(&model), 
         state_(1+model.N())
         { 
-        const
-        Setter s = std::bind1st(std::mem_fun(m),&model_);
-        for(int n = 1; n <= model.N(); ++n)
-            {
-            state_[n] = s(n);
-            }
+        setAll(m);
         }
 
     template<class MethodPtr>
@@ -536,7 +531,20 @@ class InitState
     set(int i, MethodPtr m)
         { 
         checkRange(i);
-        state_.at(i) = std::bind1st(std::mem_fun(m),&model_)(i);
+        state_.at(i) = std::bind1st(std::mem_fun(m),model_)(i);
+        return *this;
+        }
+
+    template<class MethodPtr>
+    InitState& 
+    setAll(MethodPtr m)
+        { 
+        const
+        Setter s = std::bind1st(std::mem_fun(m),model_);
+        for(int n = 1; n <= model_->N(); ++n)
+            {
+            state_[n] = s(n);
+            }
         return *this;
         }
 
@@ -545,16 +553,16 @@ class InitState
 
     private:
 
-    const Model& model_;
+    const Model* model_;
     Storage state_;
 
     void
     checkRange(int i) const
         {
-        if(i > model_.N() || i < 1) 
+        if(i > model_->N() || i < 1) 
             {
             Cout << "i = " << i << Endl;
-            Cout << "Valid range is 1 to " << model_.N() << Endl;
+            Cout << "Valid range is 1 to " << model_->N() << Endl;
             Error("i out of range");
             }
         }
