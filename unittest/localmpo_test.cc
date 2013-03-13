@@ -12,13 +12,12 @@ struct LocalMPODefaults
 
     LocalMPODefaults() :
     shmodel(N),
-    shNeel(N),
-    shFerro(N)
+    shNeel(shmodel),
+    shFerro(shmodel,&SpinHalf::Up)
         {
         for(int j = 1; j <= N; ++j)
             {
-            shNeel(j) = (j%2==1 ? shmodel.Up(j) : shmodel.Dn(j));
-            shFerro(j) = shmodel.Up(j);
+            shNeel.set(j,j%2==1 ? &SpinHalf::Up : &SpinHalf::Dn);
             }
         }
 

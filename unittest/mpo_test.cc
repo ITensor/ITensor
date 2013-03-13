@@ -1,5 +1,4 @@
 #include "test.h"
-#include "hams.h"
 #include "model/spinone.h"
 #include "hams/heisenberg.h"
 #include <boost/test/unit_test.hpp>
@@ -28,8 +27,8 @@ BOOST_AUTO_TEST_CASE(Position)
     {
     MPO H = Heisenberg(s1model);
     H.position(1);
-    CHECK(H.is_ortho());
-    CHECK_EQUAL(H.ortho_center(),1);
+    CHECK(H.isOrtho());
+    CHECK_EQUAL(H.orthoCenter(),1);
     }
 
 BOOST_AUTO_TEST_SUITE_END()

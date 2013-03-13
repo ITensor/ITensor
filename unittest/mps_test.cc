@@ -8,17 +8,17 @@ struct MPSDefaults
     static const int N = 10;
     SpinHalf shmodel;
 
-    InitState shNeel, shFerro;
+    InitState shNeel, 
+              shFerro;
 
     MPSDefaults() :
     shmodel(N),
-    shNeel(N),
-    shFerro(N)
+    shNeel(shmodel),
+    shFerro(shmodel,&SpinHalf::Up)
         {
         for(int j = 1; j <= N; ++j)
             {
-            shNeel(j) = (j%2==1 ? shmodel.Up(j) : shmodel.Dn(j));
-            shFerro(j) = shmodel.Up(j);
+            shNeel.set(j,j%2==1 ? &SpinHalf::Up : &SpinHalf::Dn);
             }
         }
 

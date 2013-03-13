@@ -20,12 +20,36 @@ struct MatrixDefaults
 
 BOOST_FIXTURE_TEST_SUITE(MatrixTest,MatrixDefaults)
 
-TEST(Basic)
+TEST(MatrixVectorMultiply)
     {
-    //Declare a 10x10 matrix
-    Matrix M(10,10);
-    M = 1;
-    //cout << "M =\n" << M;
+    const int N = 10;
+
+    Matrix M(N,N);
+    M.Randomize();
+    M *= -0.23451;
+
+    Vector V(10);
+    V.Randomize();
+    V *= 1.83235;
+
+    Vector R1 = M * V;
+
+    const Real fac = -2.24;
+    Vector R2 = (fac*M.t()) * V;
+
+    for(int r = 1; r <= M.Nrows(); ++r)
+        {
+        Real val1 = 0,
+             val2 = 0;
+        for(int c = 1; c <= M.Ncols(); ++c)
+            {
+            val1 += M(r,c)*V(c);
+            val2 += fac*M(c,r)*V(c);
+            }
+        CHECK_CLOSE(val1,R1(r),1E-5);
+        CHECK_CLOSE(val2,R2(r),1E-5);
+        }
+
     }
 
 TEST(TestEigenValues)

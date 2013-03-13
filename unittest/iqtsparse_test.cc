@@ -111,8 +111,8 @@ TEST(Constructors)
     {
     IQTSparse B(L1,L2);
 
-    CHECK(B.hasindex(L1));
-    CHECK(B.hasindex(L2));
+    CHECK(hasindex(B,L1));
+    CHECK(hasindex(B,L2));
     }
 
 TEST(Addition)
