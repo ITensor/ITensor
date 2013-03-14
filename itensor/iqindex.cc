@@ -255,7 +255,7 @@ IQIndex(const string& name,
                  Arrow dir, 
                  int plev) 
     : 
-    index_(name,1,it,plev), 
+    Index(name,1,it,plev), 
     _dir(dir)
     { }
 
@@ -264,7 +264,7 @@ IQIndex(const string& name,
         const Index& i1, const QN& q1, 
         Arrow dir) 
     : 
-    index_(name,i1.m(),i1.type(),i1.primeLevel()), 
+    Index(name,i1.m(),i1.type(),i1.primeLevel()), 
     _dir(dir), 
     pd(make_shared<IQIndexDat>(i1,q1))
     {
@@ -276,7 +276,7 @@ IQIndex(const string& name,
         const Index& i2, const QN& q2,
         Arrow dir) 
     : 
-    index_(name,i1.m()+i2.m(),i1.type(),i1.primeLevel()), 
+    Index(name,i1.m()+i2.m(),i1.type(),i1.primeLevel()), 
     _dir(dir), 
     pd(make_shared<IQIndexDat>(i1,q1,i2,q2))
     {
@@ -291,7 +291,7 @@ IQIndex(const string& name,
         const Index& i3, const QN& q3,
         Arrow dir) 
     : 
-    index_(name,i1.m()+i2.m()+i3.m(),i1.type(),i1.primeLevel()), 
+    Index(name,i1.m()+i2.m()+i3.m(),i1.type(),i1.primeLevel()), 
     _dir(dir),
     pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3))
     {
@@ -308,7 +308,7 @@ IQIndex(const string& name,
         const Index& i4, const QN& q4,
         Arrow dir) 
     : 
-    index_(name,i1.m()+i2.m()+i3.m()+i4.m(),i1.type(),i1.primeLevel()), 
+    Index(name,i1.m()+i2.m()+i3.m()+i4.m(),i1.type(),i1.primeLevel()), 
     _dir(dir),
     pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3,i4,q4))
     {
@@ -327,7 +327,7 @@ IQIndex(const string& name,
         const Index& i5, const QN& q5,
         Arrow dir) 
     : 
-    index_(name,i1.m()+i2.m()+i3.m()+i4.m()+i5.m(),i1.type(),i1.primeLevel()), 
+    Index(name,i1.m()+i2.m()+i3.m()+i4.m()+i5.m(),i1.type(),i1.primeLevel()), 
     _dir(dir),
     pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4,i5,q5))
     {
@@ -338,40 +338,40 @@ IQIndex(const string& name,
         Error("Indices must have the same type");
     }
 
+int
+totalM(const IQIndexDat::StorageT& storage)
+    {
+    int tm = 0;
+    Foreach(const inqn& iq, storage)
+        {
+        tm += iq.index.m();
+#ifdef DEBUG
+        if(iq.index.type() != storage.front().index.type())
+            Error("Indices must have the same type");
+#endif
+        }
+    return tm;
+    }
+
 IQIndex::
 IQIndex(const string& name, 
         IQIndexDat::StorageT& ind_qn, 
         Arrow dir, int plev) 
     : 
+    Index(name,totalM(ind_qn),ind_qn.front().index.type(),plev),
     _dir(dir), 
     pd(new IQIndexDat(ind_qn))
     { 
-    int mm = 0;
-    Foreach(const inqn& iq, *pd)
-        {
-        mm += iq.index.m();
-        if(iq.index.type() != index(1).type())
-            Error("Indices must have the same type");
-        }
-    index_ = Index(name,mm,index(1).type(),plev);
     }
 
 IQIndex::
 IQIndex(const IQIndex& other, 
         IQIndexDat::StorageT& ind_qn)
     : 
+    Index(other.name(),totalM(ind_qn),other.type(),ind_qn.front().index.primeLevel()),
     _dir(other._dir), 
     pd(new IQIndexDat(ind_qn))
     { 
-    int mm = 0;
-    Foreach(const inqn& iq, *pd)
-        {
-        mm += iq.index.m();
-        if(iq.index.type() != index(1).type())
-            Error("Indices must have the same type");
-        }
-    index_ = Index(other.name(),mm,other.type(),
-                   pd->begin()->index.primeLevel()); 
     }
 
 IQIndex::
@@ -379,17 +379,17 @@ IQIndex(const Index& other,
         const Index& i1, const QN& q1, 
         Arrow dir) 
     : 
-    index_(other),
+    Index(other),
     _dir(dir), 
     pd(make_shared<IQIndexDat>(i1,q1))
     {
-    index_.primeLevel(i1.primeLevel());
+    Index::primeLevel(i1.primeLevel());
     }
 
 IQIndex::
 IQIndex(const Index& index, const IQIndexDatPtr& pdat)
     : 
-    index_(index),
+    Index(index),
     _dir(In),
     pd(pdat)
     { }
@@ -398,7 +398,7 @@ void IQIndex::
 write(ostream& s) const
     {
     IQINDEX_CHECK_NULL
-    index_.write(s);
+    Index::write(s);
     s.write((char*)&_dir,sizeof(_dir));
     pd->write(s);
     }
@@ -406,7 +406,7 @@ write(ostream& s) const
 void IQIndex::
 read(istream& s)
     {
-    index_.read(s);
+    Index::read(s);
     s.read((char*)&_dir,sizeof(_dir));
     pd = make_shared<IQIndexDat>();
     pd->read(s);
@@ -490,7 +490,7 @@ void IQIndex::
 primeLevel(int val)
     {
     solo();
-    index_.primeLevel(val);
+    Index::primeLevel(val);
     Foreach(inqn& iq, *pd)
         iq.index.primeLevel(val);
     }
@@ -499,7 +499,7 @@ void IQIndex::
 prime(int inc)
     {
     solo();
-    index_.prime(inc);
+    Index::prime(inc);
     Foreach(inqn& iq, *pd)
         iq.index.prime(inc);
     }
@@ -508,7 +508,7 @@ void IQIndex::
 prime(IndexType type, int inc)
     {
     solo();
-    index_.prime(type,inc);
+    Index::prime(type,inc);
     Foreach(inqn& iq, *pd)
         iq.index.prime(type,inc);
     }
@@ -517,7 +517,7 @@ void IQIndex::
 mapprime(int plevold, int plevnew, IndexType type)
     {
     solo();
-    index_.mapprime(plevold,plevnew,type);
+    Index::mapprime(plevold,plevnew,type);
     Foreach(inqn& iq, *pd)
         iq.index.mapprime(plevold,plevnew,type);
     }
@@ -526,7 +526,7 @@ void IQIndex::
 noprime(IndexType type)
     {
     solo();
-    index_.noprime(type);
+    Index::noprime(type);
     Foreach(inqn& iq, *pd)
         iq.index.noprime(type);
     }

@@ -19,12 +19,9 @@ IQIndexDatPtr;
 // IQIndex
 //
 
-class IQIndex
+class IQIndex : public Index
     {
     public:
-
-    int
-    m() const { return index_.m(); }
 
     const std::vector<inqn>& 
     iq() const;
@@ -38,25 +35,10 @@ class IQIndex
     const QN& 
     qn(int i) const;
 
-    IndexType 
-    type() const { return index_.type(); }
-
-    std::string 
-    name() const { return index_.name(); }
-
-    const std::string&
-    rawname() const { return index_.rawname(); }
-
-    Real 
-    uniqueReal() const { return index_.uniqueReal(); }
-
     int 
-    primeLevel() const { return index_.primeLevel(); }
+    primeLevel() const { return Index::primeLevel(); }
     void 
     primeLevel(int val);
-
-    bool
-    isNull() const { return index_.isNull(); }
 
     //------------------------------------------
     //IQIndex: Constructors
@@ -135,24 +117,6 @@ class IQIndex
     IQIndexVal 
     operator()(int n) const;
 
-    operator Index() const { return index_; }
-
-    bool 
-    operator==(const IQIndex& other) const
-        { return index_.operator==(other.index_); }
-
-    bool 
-    operator!=(const IQIndex& other) const
-        { return index_.operator!=(other.index_); }
-
-    bool 
-    operator<(const IQIndex& other) const
-        { return index_.operator<(other.index_); }
-
-    bool 
-    noprimeEquals(const IQIndex& other) const
-        { return index_.noprimeEquals(other.index_); }
-
     //------------------------------------------
     //IQIndex: quantum number methods
 
@@ -196,8 +160,6 @@ class IQIndex
     private:
 
     /////////////
-    Index index_;
-
     Arrow _dir;
 
     boost::shared_ptr<IQIndexDat> pd;
@@ -298,6 +260,12 @@ primed(IQIndex I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
 // Return a copy of this Index with primelevel set to zero.
 IQIndex inline
 deprimed(IQIndex I) { I.noprime();  return I; }
+
+//Return a copy of I with prime level changed to plevnew if
+//old prime level was plevold. Otherwise has no effect.
+IQIndex inline
+mapPrime(IQIndex I, int plevold, int plevnew, IndexType type = All)
+    { I.mapprime(plevold,plevnew,type); return I; }
 
 std::string 
 showm(const IQIndex& I);
