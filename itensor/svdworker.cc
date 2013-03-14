@@ -604,6 +604,15 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
         Error("Density matrix doesn't have rank 2");
         }
 
+#ifdef DEBUG
+    const QN Zero;
+    if(div(rho) != Zero)
+        { 
+        Print(rho); 
+        Error("Non-zero divergence of rho, QNs not conserved by Hamiltonian?");
+        }
+#endif
+
     vector<Matrix> mmatrix(rho.iten_size());
     vector<Vector> mvector(rho.iten_size());
     vector<Real> alleig;
@@ -643,14 +652,6 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
         const
         IndexSet<Index>::const_iterator i1 = t.indices().begin(),
                                         i2 = i1+1;
-#ifdef DEBUG
-        if(!i1->noprimeEquals(*i2))
-            { 
-            Print(rho); 
-            Print(t); 
-            Error("Non-symmetric ITensor in density matrix, perhaps QNs not conserved?");
-            }
-#endif
 
         Matrix &UU = mmatrix.at(itenind);
         Vector &d =  mvector.at(itenind);
