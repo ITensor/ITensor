@@ -23,6 +23,9 @@ class IQIndex
     {
     public:
 
+    int
+    m() const { return index_.m(); }
+
     const std::vector<inqn>& 
     iq() const;
 
@@ -151,15 +154,6 @@ class IQIndex
         { return index_.noprimeEquals(other.index_); }
 
     //------------------------------------------
-    //IQIndex: methods for querying m's
-
-    int
-    m() const { return index_.m(); }
-
-    int 
-    biggestm() const;
-
-    //------------------------------------------
     //IQIndex: quantum number methods
 
     QN 
@@ -184,9 +178,6 @@ class IQIndex
     bool 
     hasindex_noprime(const Index& i) const;
 
-    int 
-    offset(const Index& I) const;
-
     //------------------------------------------
     //IQIndex: prime methods
 
@@ -201,12 +192,6 @@ class IQIndex
 
     void 
     noprime(IndexType type = All);
-
-    friend std::ostream& 
-    operator<<(std::ostream &o, const IQIndex &I);
-
-    void 
-    print(std::string name = "") const;
 
     private:
 
@@ -224,20 +209,6 @@ class IQIndex
     solo();
 
     }; //class IQIndex
-
-
-IQIndex inline
-primed(IQIndex I, int inc = 1) { I.prime(inc); return I; }
-
-IQIndex inline
-primed(IQIndex I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
-
-// Return a copy of this Index with primelevel set to zero.
-IQIndex inline
-deprimed(IQIndex I) { I.noprime();  return I; }
-
-std::string 
-showm(const IQIndex& I);
 
 
 //
@@ -318,19 +289,30 @@ struct inqn
     };
 
 
-inline std::ostream& 
-operator<<(std::ostream &s, const inqn& x)
-    { 
-    return s << "inqn: " << x.index 
-             << " (" << x.qn << ")\n";
-    }
+IQIndex inline
+primed(IQIndex I, int inc = 1) { I.prime(inc); return I; }
 
-inline std::ostream& 
-operator<<(std::ostream& s, const IQIndexVal& iv)
-    { 
-    return s << "IQIndexVal: i = " << iv.i 
-             << ", iqind = " << iv.iqind << "\n"; 
-    }
+IQIndex inline
+primed(IQIndex I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
 
+// Return a copy of this Index with primelevel set to zero.
+IQIndex inline
+deprimed(IQIndex I) { I.noprime();  return I; }
+
+std::string 
+showm(const IQIndex& I);
+
+int 
+offset(const IQIndex& I, const Index& i);
+
+
+std::ostream& 
+operator<<(std::ostream &o, const IQIndex &I);
+
+std::ostream& 
+operator<<(std::ostream &s, const inqn& x);
+
+std::ostream& 
+operator<<(std::ostream& s, const IQIndexVal& iv);
 
 #endif

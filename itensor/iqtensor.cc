@@ -1450,7 +1450,7 @@ toITensor() const
                     big = &I;
                     break;
                     }
-            exp.expandIndex(small,*big,big->offset(small));
+            exp.expandIndex(small,*big,offset(*big,small));
             }
         //Once all Indices expanded, add to res
         res += exp;

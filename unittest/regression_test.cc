@@ -151,9 +151,9 @@ TEST(ExpandIndex)
     ITensor oo(l,occ,primed(occ));
     oo(l(1),occ(1),primed(occ)(1)) = 1;
 
-    oo.expandIndex(occ,S,S.offset(occ));
+    oo.expandIndex(occ,S,offset(S,occ));
 
-    oo.expandIndex(primed(occ),primed(S),primed(S).offset(primed(occ)));
+    oo.expandIndex(primed(occ),primed(S),offset(S,occ));
 
     CHECK_CLOSE(0,oo(S(1),primed(S)(1),l(1)),1E-5);
     CHECK_CLOSE(1,oo(S(2),primed(S)(2),l(1)),1E-5);

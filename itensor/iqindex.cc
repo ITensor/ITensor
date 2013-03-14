@@ -412,18 +412,6 @@ read(istream& s)
     pd->read(s);
     }
 
-int IQIndex::
-biggestm() const
-    {
-    IQINDEX_CHECK_NULL
-    int mm = 0;
-    Foreach(const inqn& iq, *pd)
-        { 
-        mm = max(mm,iq.index.m()); 
-        }
-    return mm;
-    }
-
 string
 showm(const IQIndex& I)
     {
@@ -498,21 +486,6 @@ hasindex_noprime(const Index& i) const
     return false;
     }
 
-int IQIndex::
-offset(const Index& I) const
-    {
-    int os = 0;
-    Foreach(const inqn& iq, *pd)
-        {
-        if(iq.index == I) return os;
-        os += iq.index.m();
-        }
-    Print(*this);
-    Print(I);
-    Error("Index not contained in IQIndex");
-    return 0;
-    }
-
 void IQIndex::
 primeLevel(int val)
     {
@@ -560,10 +533,6 @@ noprime(IndexType type)
 
 
 void IQIndex::
-print(string name) const
-    { cerr << "\n" << name << " =\n" << *this << "\n"; }
-
-void IQIndex::
 solo()
     {
     IQINDEX_CHECK_NULL
@@ -604,19 +573,6 @@ IndReImPP()
     }
 
 
-ostream& 
-operator<<(ostream &o, const IQIndex& I)
-    {
-    if(I.isNull()) 
-        { 
-        o << "IQIndex: (null)"; 
-        return o;
-        }
-    o << "IQIndex: " << I.index_ << " <" << I.dir() << ">" << endl;
-    for(int j = 1; j <= I.nindex(); ++j) 
-        o << " " << I.index(j) SP I.qn(j) << "\n";
-    return o;
-    }
 
 
 IQIndexVal::
@@ -704,4 +660,49 @@ calc_ind_ii(int& j, int& ii) const
 
 IQIndexVal IQIndex::
 operator()(int n) const 
-    { return IQIndexVal(*this,n); }
+    { 
+    return IQIndexVal(*this,n); 
+    }
+
+int
+offset(const IQIndex& I, const Index& i)
+    {
+    int os = 0;
+    Foreach(const inqn& iq, I.iq())
+        {
+        if(iq.index == i) return os;
+        os += iq.index.m();
+        }
+    Print(I);
+    Print(i);
+    Error("Index not contained in IQIndex");
+    return 0;
+    }
+
+ostream& 
+operator<<(ostream &o, const IQIndex& I)
+    {
+    if(I.isNull()) 
+        { 
+        o << "IQIndex: (null)"; 
+        return o;
+        }
+    o << "IQIndex: " << Index(I) << " <" << I.dir() << ">" << endl;
+    for(int j = 1; j <= I.nindex(); ++j) 
+        o << " " << I.index(j) SP I.qn(j) << "\n";
+    return o;
+    }
+
+std::ostream& 
+operator<<(std::ostream &s, const inqn& x)
+    { 
+    return s << "inqn: " << x.index 
+             << " (" << x.qn << ")\n";
+    }
+
+std::ostream& 
+operator<<(std::ostream& s, const IQIndexVal& iv)
+    { 
+    return s << "IQIndexVal: i = " << iv.i 
+             << ", iqind = " << iv.iqind << "\n"; 
+    }
