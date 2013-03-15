@@ -221,28 +221,33 @@ struct IndexVal
 
 
 //Return a copy of I, increasing primelevel.
-Index inline
-primed(Index I, int inc = 1) { I.prime(inc); return I; }
+template<class T>
+T
+primed(T I, int inc = 1) { I.prime(inc); return I; }
 
 //Return a copy of I, increasing primelevel if I.type() == type
-Index inline
-primed(Index I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
+template<class T>
+T 
+primed(T I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
 
 //Return a copy of I with primelevel set to zero.
-Index inline
-deprimed(Index I) { I.noprime(); return I; }
+template<class T>
+T
+deprimed(T I) { I.noprime(); return I; }
 
 //Return a copy of I with prime level changed to plevnew if
 //old prime level was plevold. Otherwise has no effect.
-Index inline
-mapPrime(Index I, int plevold, int plevnew, IndexType type = All)
+template<class T>
+T
+mapPrime(T I, int plevold, int plevnew, IndexType type = All)
     { I.mapprime(plevold,plevnew,type); return I; }
 
 //Returns a string version of this Index's bond dimension.
 std::string
 showm(const Index& I);
 
-template <class T> T 
+template <class T>
+T
 conj(T res) 
     { 
     res.conj(); 

@@ -866,29 +866,12 @@ multSiteOps(Tensor A, const Tensor& B)
     return A;
     }
 
-//Return copy of ITensor with primeLevel of all Indices increased by 1
-template <class Tensor>
-Tensor
-primed(Tensor A, int inc = 1)
-    { A.prime(All,inc); return A; }
-
-template <class Tensor>
-Tensor
-primed(Tensor A, IndexType type, int inc = 1)
-    { A.prime(type,inc); return A; }
-
 //Return copy of ITensor with primeLevel of Index I increased by 1
 //(or optional amount inc)
 template <class Tensor, class IndexT>
 Tensor
 primed(Tensor A, const IndexT& I, int inc = 1)
     { A.prime(I,inc); return A; }
-
-//Return copy of ITensor with primeLevel of all Indices set to zero
-template <class Tensor>
-Tensor
-deprimed(Tensor A) 
-    { A.noprime(); return A; }
 
 //
 //Return copy of a tensor with primeLevels plev1 and plev2 swapped

@@ -1253,4 +1253,14 @@ TEST(NoprimeTest)
         }
     }
 
+TEST(NormTest)
+    {
+    A.randomize();
+    CHECK_CLOSE(A.norm(),sqrt((A*A).toReal()),1E-5);
+
+    ITensor C = Complex_1()*A+Complex_i()*B;
+
+    CHECK_CLOSE(C.norm(),sqrt(realPart(conj(C)*C).toReal()),1E-5);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
