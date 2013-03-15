@@ -65,9 +65,6 @@ class QN
     std::string 
     toString() const;
 
-    void 
-    print(std::string name = "") const;
-
     QN(std::istream& s) { read(s); }
 
     void 
@@ -174,15 +171,8 @@ toString() const
 inline std::ostream& 
 operator<<(std::ostream &o, const QN &q)
     { 
-    return o << boost::format("sz = %d, Nf = %d, fp = %s") 
+    return o << boost::format("(sz=%d, Nf=%d, p%s)") 
                 % q.sz() % q.Nf() % (q.sign() < 0 ? "-" : "+"); 
-    }
-
-void inline QN::
-print(std::string name) const
-    { 
-    std::cout << "\n" << name << " =\n" 
-              << *this << std::endl; 
     }
 
 bool inline

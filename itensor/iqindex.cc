@@ -423,7 +423,7 @@ showm(const IQIndex& I)
     oh << I.m() << " | ";
     Foreach(const IndexQN& iq, I.indices())
         {
-        oh << boost::format("[%d,%d,%s]:%d ") % iq.qn.sz() % iq.qn.Nf() % (iq.qn.sign()==1?"+":"-") % iq.m(); 
+        oh << iq.qn << ":" << iq.m() << " ";
         }
     return oh.str();
     }
