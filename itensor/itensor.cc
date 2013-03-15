@@ -843,8 +843,20 @@ trace(const Index& i1, const Index& i2,
 void ITensor::
 expandIndex(const Index& small, const Index& big, int start)
     {
-    assert(small.m() <= big.m());
-    assert(start < big.m());
+#ifdef DEBUG
+    if(small.m() > big.m())
+        {
+        Print(small);
+        Print(big);
+        Error("small Index must have smaller m() than big Index");
+        }
+    if(start >= big.m())
+        {
+        Print(start);
+        Print(big.m());
+        Error("start must be less than big.m()");
+        }
+#endif
 
     IndexSet<Index> indices; 
     bool found = false;
@@ -868,26 +880,22 @@ expandIndex(const Index& small, const Index& big, int start)
         Error("couldn't find index");
         }
 
+    const int w = findindex(indices,big);
+    int inc = start;
+    for(int n = 0; n < w; ++n)
+        {
+        inc *= indices[n].m();
+        }
+
     ITensor res(indices);
     res.scale_ = scale_;
 
-    array<int,NMAX+1> inc;
-    //Make sure all other inc's are zero
-    inc.assign(0);
-    const int w = 1+findindex(indices,big);
-    inc.at(w) = start;
-
-    Counter c(is_);
-
+    const int tm = p->v.Length();
     const Real* const thisdat = p->v.Store();
     Real* const resdat = res.p->v.Store();
-    for(; c.notDone(); ++c)
+    for(int k = 0; k < tm; ++k)
         {
-        resdat[_ind(res.is_,c.i[1]+inc[1],c.i[2]+inc[2],
-                            c.i[3]+inc[3],c.i[4]+inc[4],
-                            c.i[5]+inc[5],c.i[6]+inc[6],
-                            c.i[7]+inc[7],c.i[8]+inc[8])]
-        = thisdat[c.ind];
+        resdat[k+inc] = thisdat[k];
         }
 
     this->swap(res);
