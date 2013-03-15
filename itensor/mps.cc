@@ -1450,6 +1450,15 @@ checkQNs(const IQMPS& psi)
     return true;
     }
 
+QN
+totalQN(const IQMPS& psi)
+    {
+    const int center = findCenter(psi);
+    if(center == -1)
+        Error("Could not find ortho. center");
+    return div(psi.A(center));
+    }
+
 void 
 fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
     {

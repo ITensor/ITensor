@@ -698,14 +698,8 @@ checkQNs(const MPS& psi) { return true; }
 bool 
 checkQNs(const IQMPS& psi);
 
-inline QN 
-totalQN(const IQMPS& psi)
-    {
-    int center = findCenter(psi);
-    if(center == -1)
-        Error("Could not find ortho. center");
-    return div(psi.A(center));
-    }
+QN
+totalQN(const IQMPS& psi);
 
 //
 // <psi | phi>
