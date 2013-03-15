@@ -29,32 +29,32 @@ class Sweeps
     //Accessor methods ----------
 
     int 
-    nsweep() const { return Nsweep_; }
+    nsweep() const { return nsweep_; }
     void 
     nsweep(int val);
 
     int 
-    minm(int sw) const { return Minm_.at(sw); }
+    minm(int sw) const { return minm_.at(sw); }
     void 
-    setMinm(int sw, int val) { Minm_.at(sw) = val; }
+    setminm(int sw, int val) { minm_.at(sw) = val; }
 
     //Use as sweeps.minm() = 20,20,10; (all remaining set to 10)
     SweepSetter<int> 
     minm();
 
     int 
-    maxm(int sw) const { return Maxm_.at(sw); }
+    maxm(int sw) const { return maxm_.at(sw); }
     void 
-    setMaxm(int sw, int val) { Maxm_.at(sw) = val; }
+    setmaxm(int sw, int val) { maxm_.at(sw) = val; }
 
     //Use as sweeps.maxm() = 50,50,100,100,500; (all remaining set to 500)
     SweepSetter<int> 
     maxm();
 
     Real 
-    cutoff(int sw) const { return Cutoff_.at(sw); }
+    cutoff(int sw) const { return cutoff_.at(sw); }
     void 
-    setCutoff(int sw, Real val) { Cutoff_.at(sw) = val; }
+    setcutoff(int sw, Real val) { cutoff_.at(sw) = val; }
 
     //Use as sweeps.cutoff() = 1E-8; (cutoff set to 1E-8 for all sweeps)
     //or as sweeps.cutoff() = 1E-4,1E-4,1E-5,1E-5,1E-10; (all remaining set to 1E-10)
@@ -62,11 +62,11 @@ class Sweeps
     cutoff();
 
     Real 
-    noise(int sw) const { return Noise_.at(sw); }
+    noise(int sw) const { return noise_.at(sw); }
     void 
-    setNoise(int sw, Real val) { Noise_.at(sw) = val; }
+    setnoise(int sw, Real val) { noise_.at(sw) = val; }
     void 
-    setNoise(Real val) { Noise_.assign(Nsweep_+1,val); }
+    setnoise(Real val) { noise_.assign(nsweep_+1,val); }
 
     //Use as sweeps.noise() = 1E-10; (noise set to 1E-10 for all sweeps)
     //or as sweeps.noise() = 1E-8,1E-9,1E-10,0.0; (all remaining set to 0)
@@ -74,11 +74,11 @@ class Sweeps
     noise();
 
     int 
-    niter(int sw) const { return Niter_.at(sw); }
+    niter(int sw) const { return niter_.at(sw); }
     void 
-    setNiter(int sw, int val) { Niter_.at(sw) = val; }
+    setniter(int sw, int val) { niter_.at(sw) = val; }
     void 
-    setNiter(int val) { Niter_.assign(Nsweep_+1,val); }
+    setniter(int val) { niter_.assign(nsweep_+1,val); }
 
     //Use as sweeps.niter() = 5,4,3,2; (all remaining set to 2)
     SweepSetter<int> 
@@ -87,17 +87,17 @@ class Sweeps
     private:
 
     void 
-    init(int _minm, int _maxm, Real _cut);
+    init(int min_m, int max_m, Real cut);
 
     void 
     tableInit(InputGroup& table);
 
-    std::vector<int> Maxm_,
-                     Minm_,
-                     Niter_;
-    std::vector<Real> Cutoff_,
-                      Noise_;
-    int Nsweep_;
+    std::vector<int> maxm_,
+                     minm_,
+                     niter_;
+    std::vector<Real> cutoff_,
+                      noise_;
+    int nsweep_;
     };
 
 //
@@ -260,63 +260,63 @@ struct ExpM
 inline Sweeps::
 Sweeps()
     :
-    Nsweep_(0)
+    nsweep_(0)
     { }
 
 inline Sweeps::
-Sweeps(int nsw, int _minm, int _maxm, Real _cut)
+Sweeps(int nsw, int min_m, int max_m, Real cut)
     :
-    Nsweep_(nsw)
+    nsweep_(nsw)
     {
-    init(_minm,_maxm,_cut);
+    init(min_m,max_m,cut);
     }
 
 inline Sweeps::
 Sweeps(int nsw, InputGroup& sweep_table)
     : 
-    Nsweep_(nsw)
+    nsweep_(nsw)
     {
     tableInit(sweep_table);
     }
 
 SweepSetter<int> inline Sweeps::
-minm() { return SweepSetter<int>(Minm_); }
+minm() { return SweepSetter<int>(minm_); }
 
 SweepSetter<int> inline Sweeps::
-maxm() { return SweepSetter<int>(Maxm_); }
+maxm() { return SweepSetter<int>(maxm_); }
 
 SweepSetter<Real> inline Sweeps::
-cutoff() { return SweepSetter<Real>(Cutoff_); }
+cutoff() { return SweepSetter<Real>(cutoff_); }
 
 SweepSetter<Real> inline Sweeps::
-noise() { return SweepSetter<Real>(Noise_); }
+noise() { return SweepSetter<Real>(noise_); }
 
 SweepSetter<int> inline Sweeps::
-niter() { return SweepSetter<int>(Niter_); }
+niter() { return SweepSetter<int>(niter_); }
 
 void inline Sweeps::
 nsweep(int val)
     { 
-    if(val > Nsweep_) 
+    if(val > nsweep_) 
         Error("Can't use nsweep accessor to increase number of sweeps.");
-    Nsweep_ = val; 
+    nsweep_ = val; 
     }
 
 
 void inline Sweeps::
-init(int _minm, int _maxm, Real _cut)
+init(int min_m, int max_m, Real cut)
     {
-    Minm_ = std::vector<int>(Nsweep_+1,_minm);
-    Maxm_ = std::vector<int>(Nsweep_+1,_maxm);
-    Niter_ = std::vector<int>(Nsweep_+1,2);
-    Cutoff_ = std::vector<Real>(Nsweep_+1,_cut);
-    Noise_ = std::vector<Real>(Nsweep_+1,0);
+    minm_ = std::vector<int>(nsweep_+1,min_m);
+    maxm_ = std::vector<int>(nsweep_+1,max_m);
+    cutoff_ = std::vector<Real>(nsweep_+1,cut);
+    niter_ = std::vector<int>(nsweep_+1,2);
+    noise_ = std::vector<Real>(nsweep_+1,0);
 
     //Set number of Davidson iterations
-    const int Max_Niter = 9;
-    for(int s = 1; s <= min(4,Nsweep_); ++s)
+    const int Max_niter = 9;
+    for(int s = 1; s <= min(4,nsweep_); ++s)
         {
-        Niter_.at(s) = max(Max_Niter-s+1,2);
+        niter_.at(s) = max(Max_niter-s+1,2);
         }
 
     } //Sweeps::init
@@ -327,16 +327,16 @@ tableInit(InputGroup& table)
     if(!table.GotoGroup()) 
         Error("Couldn't find table " + table.name);
 
-    Minm_ = std::vector<int>(Nsweep_+1);
-    Maxm_ = std::vector<int>(Nsweep_+1);
-    Cutoff_ = std::vector<Real>(Nsweep_+1);
-    Niter_ = std::vector<int>(Nsweep_+1);
-    Noise_ = std::vector<Real>(Nsweep_+1);
+    minm_ = std::vector<int>(nsweep_+1);
+    maxm_ = std::vector<int>(nsweep_+1);
+    cutoff_ = std::vector<Real>(nsweep_+1);
+    niter_ = std::vector<int>(nsweep_+1);
+    noise_ = std::vector<Real>(nsweep_+1);
 
     table.SkipLine(); //SkipLine so we can have a table key
-    for(int i = 1; i <= Nsweep_; i++)
+    for(int i = 1; i <= nsweep_; i++)
         {
-        table.infile.file >> Maxm_[i] >> Minm_[i] >> Cutoff_[i] >> Niter_[i] >> Noise_[i];
+        table.infile.file >> maxm_[i] >> minm_[i] >> cutoff_[i] >> niter_[i] >> noise_[i];
         }
 
     } //Sweeps::tableInit
