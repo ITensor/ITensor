@@ -858,18 +858,18 @@ expandIndex(const Index& small, const Index& big, int start)
         }
 #endif
 
-    IndexSet<Index> indices; 
+    IndexSet<Index> newinds; 
     bool found = false;
     for(int j = 1; j <= r(); ++j)
         {
         if(is_.index(j) == small)
             {
-            indices.addindex(big);
+            newinds.addindex(big);
             found = true;
             }
         else 
             {
-            indices.addindex(is_.index(j));
+            newinds.addindex(is_.index(j));
             }
         }
 
@@ -880,25 +880,50 @@ expandIndex(const Index& small, const Index& big, int start)
         Error("couldn't find index");
         }
 
-    const int w = findindex(indices,big);
+    shared_ptr<ITDat> oldp(p);
+    allocate(newinds.dim());
+
+    const int w = findindex(newinds,big);
     int inc = start;
     for(int n = 0; n < w; ++n)
         {
-        inc *= indices[n].m();
+        inc *= newinds[n].m();
         }
 
-    ITensor res(indices);
-    res.scale_ = scale_;
+    const Real* const olddat = oldp->v.Store();
+    Real* const newdat = p->v.Store();
 
-    const int tm = p->v.Length();
-    const Real* const thisdat = p->v.Store();
-    Real* const resdat = res.p->v.Store();
-    for(int k = 0; k < tm; ++k)
+
+    //Comparing nmax and omax determines whether
+    //old dat fits into new dat sequentially, in which
+    //case we can use std::copy
+    const
+	int nmax = 1+_ind(newinds,is_[0].m()-1,is_[1].m()-1, 
+                              is_[2].m()-1,is_[3].m()-1, 
+                              is_[4].m()-1,is_[5].m()-1, 
+                              is_[6].m()-1,is_[7].m()-1);
+
+    const
+    int omax = oldp->v.Length();
+
+	if(nmax == omax)
+	    {
+        std::copy(olddat,olddat+omax,newdat+inc);
+	    }
+    else
         {
-        resdat[k+inc] = thisdat[k];
+        Counter c(is_);
+        for(; c.notDone(); ++c)
+            {
+            newdat[inc+_ind(newinds,c.i[1],c.i[2],
+                                    c.i[3],c.i[4],
+                                    c.i[5],c.i[6],
+                                    c.i[7],c.i[8])]
+            = olddat[c.ind];
+            }
         }
 
-    this->swap(res);
+    is_.swap(newinds);
     }
 
 int ITensor::
