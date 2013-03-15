@@ -29,20 +29,21 @@
 //
 // For example: (if C.n[1] == C.n[2] == 2, say)
 // C.i[1]  C.i[2]   C.i[3]
-//   1       1        1
-//   2       1        1
-//   1       2        1
-//   2       2        1
-//   1       1        2
-//   2       1        2
+//   0       0        0
+//   1       0        0
+//   0       1        0
+//   1       1        0
+//   0       0        1
+//   1       0        1
 //   ...
 // 
 // Counters also keep a straight count of which
 // step they are on through the field C.ind
+// (which starts from 0).
 //
 // ITensor data is ordered and the method
 // ITensor::_ind is defined such that
-// v(C.ind) == v(_ind(C.i[1],C.i[2],...,C.i[8])
+// v[C.ind] == v[_ind(C.i[1],C.i[2],...,C.i[8]]
 // where v is the Vector in an ITDat.
 //
 
@@ -160,21 +161,6 @@ operator<<(std::ostream& s, const Counter& c)
     s << (c.i[c.r]+1) << ")";
     return s;
     }
-
-/*
-bool inline Counter::
-operator!=(const Counter& other) const
-    {
-    for(int j = 1; j <= NMAX; ++j)
-        { if(i[j] != other.i[j]) return true; }
-    return false;
-    }
-
-bool inline Counter::
-operator==(const Counter& other) const
-    { return !(*this != other); }
-    */
-
 
 #undef Array
 #undef Cout
