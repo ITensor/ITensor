@@ -81,7 +81,7 @@ init(std::string rname, IndexType type,
 
     //Construct individual Combiners
     QCounter c(left_);
-    std::vector<inqn> iq;
+    IQIndex::Storage iq;
     for( ; c.notDone(); ++c)
         {
         std::vector<Index> vind;
@@ -94,7 +94,7 @@ init(std::string rname, IndexType type,
         co.addleft(vind);
         co.init(rname+q.toString(),type,rdir,primelevel);
 
-        iq.push_back(inqn(co.right(),q));
+        iq.push_back(IndexQN(co.right(),q));
         }
     if(do_condense) 
         {

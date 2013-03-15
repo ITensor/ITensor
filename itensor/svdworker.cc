@@ -396,7 +396,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     //Truncate denmat eigenvalue vectors
     //Also form new Link index with appropriate m's for each block
-    vector<inqn> Liq,Riq;
+    IQIndex::Storage Liq, Riq;
     Liq.reserve(Nblock);
     Riq.reserve(Nblock);
 
@@ -440,10 +440,10 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
             swap(ui,vi);
 
         Index l("l",this_m);
-        Liq.push_back(inqn(l,uI.qn(*ui)));
+        Liq.push_back(IndexQN(l,uI.qn(*ui)));
 
         Index r("r",this_m);
-        Riq.push_back(inqn(r,vI.qn(*vi)));
+        Riq.push_back(IndexQN(r,vI.qn(*vi)));
 
         Dblock.push_back(ITSparse(l,r,thisD.SubVector(1,this_m)));
 
@@ -790,7 +790,7 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
     blocks.reserve(rho.iten_size());
 
     //Also form new Link IQIndex with appropriate m's for each block
-    vector<inqn> iq; 
+    IQIndex::Storage iq;
     iq.reserve(rho.iten_size());
 
     itenind = 0;
@@ -816,7 +816,7 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
 
         Index nm("qlink",this_m);
         Index act = deprimed(findtype(t,Link));
-        iq.push_back(inqn(nm,active.qn(act)));
+        iq.push_back(IndexQN(nm,active.qn(act)));
 
         MatrixRef Utrunc = thisU.Columns(1,this_m);
 
@@ -1163,7 +1163,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
 
     //Truncate denmat eigenvalue vectors
     //Also form new Link index with appropriate m's for each block
-    vector<inqn> iq; iq.reserve(rho.iten_size());
+    vector<IndexQN> iq; iq.reserve(rho.iten_size());
     itenind = 0;
     for(IQTensor::const_iten_it it = rho.const_iten_begin(); 
         it != rho.const_iten_end(); ++it)
@@ -1188,7 +1188,7 @@ diag_and_truncate(const IQTensor& rho, vector<Matrix>& mmatrix,
 
         Index nm("qlink",this_m);
         Index act = deprimed(t.index(1));
-        iq.push_back(inqn(nm,active.qn(act)));
+        iq.push_back(IndexQN(nm,active.qn(act)));
 
         ++itenind;
         }
@@ -1478,7 +1478,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
 
     //3. Construct orthogonalized IQTensor U
     vector<ITensor> terms; terms.reserve(rho.iten_size());
-    vector<inqn> iq; iq.reserve(rho.iten_size());
+    vector<IndexQN> iq; iq.reserve(rho.iten_size());
     itenind = 0;
     for(IQTensor::const_iten_it it = rho.const_iten_begin(); it != rho.const_iten_end(); ++it)
 	{
@@ -1504,7 +1504,7 @@ Real SVDWorker::diag_denmat_complex(const IQTensor& rho, Vector& D, IQIndex& new
         Index act = deprimed(t.index(1));
 	if(docomplex && act == Index::IndReIm())
 	    act = deprimed(t.index(2));
-        iq.push_back(inqn(nm,active.qn(act)));
+        iq.push_back(IndexQN(nm,active.qn(act)));
 
         Matrix Utruncre = GET(mmatrixre,itenind).Columns(1,this_m);
         Matrix Utruncim;

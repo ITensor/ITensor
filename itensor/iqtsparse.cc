@@ -327,11 +327,10 @@ prime(const IQIndex& I, int inc)
     is_->prime(I,inc);
 
     Foreach(ITSparse& t, ncblocks())
-    for(std::vector<inqn>::const_iterator x = I.iq().begin(); 
-            x != I.iq().end(); ++x)
+    Foreach(const Index& i, I.indices())
         {
-        if(hasindex(t,x->index))
-            t.prime(x->index,inc);
+        if(hasindex(t,i))
+            t.prime(i,inc);
         }
     }
 
@@ -343,11 +342,10 @@ noprime(const IQIndex& I)
     is_->noprime(I); 
 
     Foreach(ITSparse& t, ncblocks())
-    for(std::vector<inqn>::const_iterator x = I.iq().begin(); 
-            x != I.iq().end(); ++x)
+    Foreach(const Index& i, I.indices())
         {
-        if(hasindex(t,x->index))
-            t.noprime(x->index);
+        if(hasindex(t,i))
+            t.noprime(i);
         }
     }
 
@@ -522,8 +520,8 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
                     throw ArrowError("Incompatible arrow directions in IQTensor::operator*=.");
                     }
-            for(size_t n = 0; n < I.iq().size(); ++n) 
-                { common_inds.insert(ApproxReal(I.iq()[n].index.uniqueReal())); }
+            Foreach(const Index& i, I.indices())
+                { common_inds.insert(ApproxReal(i.uniqueReal())); }
 
             common_inds.insert(ApproxReal(I.uniqueReal()));
             }

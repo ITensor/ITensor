@@ -8,7 +8,7 @@
 #include "qn.h"
 
 // Forward declarations
-struct inqn;
+class IndexQN;
 class IQIndexDat;
 struct IQIndexVal;
 
@@ -23,8 +23,11 @@ class IQIndex : public Index
     {
     public:
 
-    const std::vector<inqn>& 
-    iq() const;
+    typedef std::vector<IndexQN>
+    Storage;
+
+    const Storage&
+    indices() const;
 
     int 
     nindex() const;
@@ -76,11 +79,11 @@ class IQIndex : public Index
             Arrow dir = Out);
 
     IQIndex(const std::string& name, 
-            std::vector<inqn>& ind_qn, 
+            std::vector<IndexQN>& ind_qn, 
             Arrow dir = Out, int plev = 0);
 
     IQIndex(const IQIndex& other, 
-            std::vector<inqn>& ind_qn);
+            std::vector<IndexQN>& ind_qn);
 
     IQIndex(const Index& other, 
             const Index& i1, const QN& q1, 
@@ -233,39 +236,25 @@ struct IQIndexVal
     };
 
 //
-// inqn
+// IndexQN
 //
 
-struct inqn
+class IndexQN : public Index
     {
-    Index index;
+    public:
+
     QN qn;
 
-    inqn() { }
-    inqn(const Index& i, QN q) : index(i), qn(q) { }
+    IndexQN() { }
+
+    IndexQN(const Index& i, const QN& q) : Index(i), qn(q) { }
 
     void 
-    write(std::ostream& s) const { index.write(s); qn.write(s); }
+    write(std::ostream& s) const { Index::write(s); qn.write(s); }
     void 
-    read(std::istream& s) { index.read(s); qn.read(s); }
+    read(std::istream& s) { Index::read(s); qn.read(s); }
     };
 
-
-IQIndex inline
-primed(IQIndex I, int inc = 1) { I.prime(inc); return I; }
-
-IQIndex inline
-primed(IQIndex I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
-
-// Return a copy of this Index with primelevel set to zero.
-IQIndex inline
-deprimed(IQIndex I) { I.noprime();  return I; }
-
-//Return a copy of I with prime level changed to plevnew if
-//old prime level was plevold. Otherwise has no effect.
-IQIndex inline
-mapPrime(IQIndex I, int plevold, int plevnew, IndexType type = All)
-    { I.mapprime(plevold,plevnew,type); return I; }
 
 std::string 
 showm(const IQIndex& I);
@@ -278,7 +267,7 @@ std::ostream&
 operator<<(std::ostream &o, const IQIndex &I);
 
 std::ostream& 
-operator<<(std::ostream &s, const inqn& x);
+operator<<(std::ostream &s, const IndexQN& x);
 
 std::ostream& 
 operator<<(std::ostream& s, const IQIndexVal& iv);

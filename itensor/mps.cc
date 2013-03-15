@@ -433,36 +433,32 @@ plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind,
          IQTensor& first, IQTensor& second)
     {
     map<Index,Index> l1map, l2map;
-    vector<inqn> iq;
-    Foreach(const inqn& x, l1.iq())
+    vector<IndexQN> iq;
+    Foreach(const IndexQN& x, l1.indices())
         {
-        Index ii = x.index;
-        Index jj(ii.name(),ii.m(),ii.type());
-        l1map[ii] = jj;
-        iq.push_back(inqn(jj,x.qn));
+        Index jj = deprimed(x);
+        l1map[x] = jj;
+        iq.push_back(IndexQN(jj,x.qn));
         }
-    Foreach(const inqn& x, l2.iq())
+    Foreach(const IndexQN& x, l2.indices())
         {
-        Index ii = x.index;
-        Index jj(ii.name(),ii.m(),ii.type());
-        l2map[ii] = jj;
-        iq.push_back(inqn(jj,x.qn));
+        Index jj = deprimed(x);
+        l2map[x] = jj;
+        iq.push_back(IndexQN(jj,x.qn));
         }
     sumind = IQIndex(sumind,iq);
     first = IQTensor(conj(l1),sumind);
-    Foreach(const inqn& x, l1.iq())
+    Foreach(const IndexQN& x, l1.indices())
         {
-        Index il1 = x.index;
-        Index s1 = l1map[il1];
-        ITensor t(il1,s1,1.0);
+        Index s1 = l1map[x];
+        ITensor t(x,s1,1.0);
         first += t;
         }
     second = IQTensor(conj(l2),sumind);
-    Foreach(const inqn& x, l2.iq())
+    Foreach(const Index& x, l2.indices())
         {
-        Index il2 = x.index;
-        Index s2 = l2map[il2];
-        ITensor t(il2,s2,1.0);
+        Index s2 = l2map[x];
+        ITensor t(x,s2,1.0);
         second += t;
         }
     }
@@ -485,8 +481,8 @@ MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
         {
         IQIndex l1 = this->LinkInd(b);
         IQIndex l2 = other.LinkInd(b);
-        vector<inqn> iq(l1.iq());
-        iq.insert(iq.begin(),l2.iq().begin(),l2.iq().end());
+        vector<IndexQN> iq(l1.indices());
+        iq.insert(iq.begin(),l2.indices().begin(),l2.indices().end());
         nlinks.at(b) = IQIndex(l2,iq);
         }
     //Create new A tensors
@@ -932,7 +928,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
 
     ITensor block;
     vector<ITensor> nblock;
-    vector<inqn> iq;
+    vector<IndexQN> iq;
 
     QN q;
 
@@ -1095,7 +1091,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                     Index qbond(qname,mm);
                     ITensor compressor(bond,qbond,M);
                     Foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
-                    iq.push_back(inqn(qbond,q));
+                    iq.push_back(IndexQN(qbond,q));
                     qC[q] = compressor;
                     }
                 }
@@ -1166,7 +1162,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
     map<QN,ITensor> qC; //Compressor ITensors by QN
     ITensor block;
     vector<ITensor> nblock;
-    vector<inqn> iq;
+    vector<IndexQN> iq;
 
     QN q;
 
@@ -1306,7 +1302,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                     Index qbond(qname,mm);
                     ITensor compressor(bond,qbond,M);
                     Foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
-                    iq.push_back(inqn(qbond,q));
+                    iq.push_back(IndexQN(qbond,q));
                     qC[q] = compressor;
                 }
             }

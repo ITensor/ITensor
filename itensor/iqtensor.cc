@@ -630,11 +630,10 @@ prime(const IQIndex& I, int inc)
     is_->prime(I,inc);
 
     Foreach(ITensor& t, dat.nc())
-    for(std::vector<inqn>::const_iterator
-        x = I.iq().begin(); x != I.iq().end(); ++x)
+    Foreach(const Index& i, I.indices())
         {
-		if(hasindex(t,x->index)) 
-		    t.prime(x->index,inc);
+		if(hasindex(t,i)) 
+		    t.prime(i,inc);
         }
 	}
 
@@ -646,11 +645,10 @@ noprime(const IQIndex& I)
     is_->noprime(I);
 
     Foreach(ITensor& t, dat.nc())
-    for(std::vector<inqn>::const_iterator
-        x = I.iq().begin(); x != I.iq().end(); ++x)
+    Foreach(const Index& i, I.indices())
         {
-        if(hasindex(t,x->index)) 
-            t.noprime(x->index);
+        if(hasindex(t,i)) 
+            t.noprime(i);
         }
 	}
 
@@ -1091,8 +1089,8 @@ operator*=(const IQTensor& other)
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
                     throw ArrowError("Incompatible arrow directions in IQTensor::operator*=.");
                     }
-            for(size_t n = 0; n < I.iq().size(); ++n) 
-                { common_inds.insert(ApproxReal(I.iq()[n].index.uniqueReal())); }
+            for(size_t n = 0; n < I.indices().size(); ++n) 
+                { common_inds.insert(ApproxReal(I.indices()[n].uniqueReal())); }
 
             common_inds.insert(ApproxReal(I.uniqueReal()));
             }
@@ -1237,8 +1235,8 @@ operator/=(const IQTensor& other)
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
                     throw ArrowError("Incompatible arrow directions in IQTensor::operator/=.");
                     }
-            for(size_t n = 0; n < I.iq().size(); ++n) 
-                { common_inds.insert(ApproxReal(I.iq()[n].index.uniqueReal())); }
+            for(size_t n = 0; n < I.indices().size(); ++n) 
+                { common_inds.insert(ApproxReal(I.indices()[n].uniqueReal())); }
 
             common_inds.insert(ApproxReal(I.uniqueReal()));
             }

@@ -18,7 +18,7 @@ class IQIndexDat
     {
     public:
 
-    typedef vector<inqn>
+    typedef vector<IndexQN>
     StorageT;
 
     typedef StorageT::iterator
@@ -39,18 +39,18 @@ class IQIndexDat
                const Index& i8 = Index::Null(), const QN& q8 = QN());
 
     explicit
-    IQIndexDat(vector<inqn>& ind_qn);
+    IQIndexDat(vector<IndexQN>& ind_qn);
 
     IQIndexDat(istream& s);
 
     const StorageT&
-    iq() const { return iq_; }
+    indices() const { return iq_; }
 
     int
     size() { return iq_.size(); }
 
     const Index&
-    index(int i) { return iq_[i-1].index; }
+    index(int i) { return iq_[i-1]; }
     const QN&
     qn(int i) { return iq_[i-1].qn; }
 
@@ -105,21 +105,21 @@ IQIndexDat(const Index& i1, const QN& q1,
            const Index& i7, const QN& q7,
            const Index& i8, const QN& q8)
     {
-    iq_.push_back(inqn(i1,q1));
+    iq_.push_back(IndexQN(i1,q1));
     if(i2 != Index::Null())
-        iq_.push_back(inqn(i2,q2));
+        iq_.push_back(IndexQN(i2,q2));
     if(i3 != Index::Null())
-        iq_.push_back(inqn(i3,q3));
+        iq_.push_back(IndexQN(i3,q3));
     if(i4 != Index::Null())
-        iq_.push_back(inqn(i4,q4));
+        iq_.push_back(IndexQN(i4,q4));
     if(i5 != Index::Null())
-        iq_.push_back(inqn(i5,q5));
+        iq_.push_back(IndexQN(i5,q5));
     if(i6 != Index::Null())
-        iq_.push_back(inqn(i6,q6));
+        iq_.push_back(IndexQN(i6,q6));
     if(i7 != Index::Null())
-        iq_.push_back(inqn(i7,q7));
+        iq_.push_back(IndexQN(i7,q7));
     if(i8 != Index::Null())
-        iq_.push_back(inqn(i8,q8));
+        iq_.push_back(IndexQN(i8,q8));
     }
 
 IQIndexDat::
@@ -143,7 +143,7 @@ write(ostream& s) const
     {
     size_t size = iq_.size();
     s.write((char*)&size,sizeof(size));
-    Foreach(const inqn& x, iq_)
+    Foreach(const IndexQN& x, iq_)
         { 
         x.write(s); 
         }
@@ -154,7 +154,7 @@ read(istream& s)
     {
     size_t size; s.read((char*)&size,sizeof(size));
     iq_.resize(size);
-    Foreach(inqn& x, iq_)
+    Foreach(IndexQN& x, iq_)
         { 
         x.read(s); 
         }
@@ -199,10 +199,10 @@ ReImDatPP()
 #endif
 
 const IQIndexDat::StorageT& IQIndex::
-iq() const 
+indices() const 
     { 
     IQINDEX_CHECK_NULL
-    return pd->iq();
+    return pd->indices();
     }
 
 int IQIndex::
@@ -342,11 +342,11 @@ int
 totalM(const IQIndexDat::StorageT& storage)
     {
     int tm = 0;
-    Foreach(const inqn& iq, storage)
+    Foreach(const IndexQN& iq, storage)
         {
-        tm += iq.index.m();
+        tm += iq.m();
 #ifdef DEBUG
-        if(iq.index.type() != storage.front().index.type())
+        if(iq.type() != storage.front().type())
             Error("Indices must have the same type");
 #endif
         }
@@ -358,7 +358,7 @@ IQIndex(const string& name,
         IQIndexDat::StorageT& ind_qn, 
         Arrow dir, int plev) 
     : 
-    Index(name,totalM(ind_qn),ind_qn.front().index.type(),plev),
+    Index(name,totalM(ind_qn),ind_qn.front().type(),plev),
     _dir(dir), 
     pd(new IQIndexDat(ind_qn))
     { 
@@ -368,7 +368,7 @@ IQIndex::
 IQIndex(const IQIndex& other, 
         IQIndexDat::StorageT& ind_qn)
     : 
-    Index(other.name(),totalM(ind_qn),other.type(),ind_qn.front().index.primeLevel()),
+    Index(other.name(),totalM(ind_qn),other.type(),ind_qn.front().primeLevel()),
     _dir(other._dir), 
     pd(new IQIndexDat(ind_qn))
     { 
@@ -421,9 +421,9 @@ showm(const IQIndex& I)
     string res = " ";
     ostringstream oh; 
     oh << I.m() << " | ";
-    Foreach(const inqn& iq, I.iq())
+    Foreach(const IndexQN& iq, I.indices())
         {
-        oh << boost::format("[%d,%d,%s]:%d ") % iq.qn.sz() % iq.qn.Nf() % (iq.qn.sign()==1?"+":"-") % iq.index.m(); 
+        oh << boost::format("[%d,%d,%s]:%d ") % iq.qn.sz() % iq.qn.Nf() % (iq.qn.sign()==1?"+":"-") % iq.m(); 
         }
     return oh.str();
     }
@@ -432,9 +432,9 @@ QN IQIndex::
 qn(const Index& i) const
     { 
     IQINDEX_CHECK_NULL
-    Foreach(const inqn& iq, *pd)
+    Foreach(const IndexQN& iq, *pd)
         { 
-        if(iq.index == i) 
+        if(iq == i) 
             return iq.qn; 
         }
     cerr << *this << "\n";
@@ -453,10 +453,10 @@ const Index& IQIndex::
 findbyqn(QN q) const
     { 
     IQINDEX_CHECK_NULL
-    Foreach(const inqn& iq, *pd)
+    Foreach(const IndexQN& iq, *pd)
         {
         if(iq.qn == q) 
-            return iq.index;
+            return iq;
         }
     Error("IQIndex::findbyqn: no Index had a matching QN.");
     return Index::Null();
@@ -466,9 +466,9 @@ bool IQIndex::
 hasindex(const Index& i) const
     { 
     IQINDEX_CHECK_NULL
-    Foreach(const inqn& iq, *pd)
+    Foreach(const IndexQN& iq, *pd)
         {
-        if(iq.index == i) 
+        if(iq == i) 
             return true;
         }
     return false;
@@ -478,9 +478,9 @@ bool IQIndex::
 hasindex_noprime(const Index& i) const
     { 
     IQINDEX_CHECK_NULL
-    Foreach(const inqn& iq, *pd)
+    Foreach(const IndexQN& iq, *pd)
         {
-        if(iq.index.noprimeEquals(i)) 
+        if(iq.noprimeEquals(i)) 
             return true;
         }
     return false;
@@ -491,8 +491,8 @@ primeLevel(int val)
     {
     solo();
     Index::primeLevel(val);
-    Foreach(inqn& iq, *pd)
-        iq.index.primeLevel(val);
+    Foreach(IndexQN& iq, *pd)
+        iq.primeLevel(val);
     }
 
 void IQIndex::
@@ -500,8 +500,8 @@ prime(int inc)
     {
     solo();
     Index::prime(inc);
-    Foreach(inqn& iq, *pd)
-        iq.index.prime(inc);
+    Foreach(IndexQN& iq, *pd)
+        iq.prime(inc);
     }
 
 void IQIndex::
@@ -509,8 +509,8 @@ prime(IndexType type, int inc)
     {
     solo();
     Index::prime(type,inc);
-    Foreach(inqn& iq, *pd)
-        iq.index.prime(type,inc);
+    Foreach(IndexQN& iq, *pd)
+        iq.prime(type,inc);
     }
 
 void IQIndex::
@@ -518,8 +518,8 @@ mapprime(int plevold, int plevnew, IndexType type)
     {
     solo();
     Index::mapprime(plevold,plevnew,type);
-    Foreach(inqn& iq, *pd)
-        iq.index.mapprime(plevold,plevnew,type);
+    Foreach(IndexQN& iq, *pd)
+        iq.mapprime(plevold,plevnew,type);
     }
 
 void IQIndex::
@@ -527,8 +527,8 @@ noprime(IndexType type)
     {
     solo();
     Index::noprime(type);
-    Foreach(inqn& iq, *pd)
-        iq.index.noprime(type);
+    Foreach(IndexQN& iq, *pd)
+        iq.noprime(type);
     }
 
 
@@ -668,10 +668,10 @@ int
 offset(const IQIndex& I, const Index& i)
     {
     int os = 0;
-    Foreach(const inqn& iq, I.iq())
+    Foreach(const IndexQN& iq, I.indices())
         {
-        if(iq.index == i) return os;
-        os += iq.index.m();
+        if(iq == i) return os;
+        os += iq.m();
         }
     Print(I);
     Print(i);
@@ -694,9 +694,10 @@ operator<<(ostream &o, const IQIndex& I)
     }
 
 std::ostream& 
-operator<<(std::ostream &s, const inqn& x)
+operator<<(std::ostream &s, const IndexQN& x)
     { 
-    return s << "inqn: " << x.index 
+    const Index& i = x;
+    return s << "IndexQN: " << i
              << " (" << x.qn << ")\n";
     }
 

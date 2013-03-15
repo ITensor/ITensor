@@ -141,33 +141,33 @@ init(const std::string& smallind_name)
     */
     static std::vector<QN> qns(1000);
     qns.resize(0);
-    Foreach(const inqn& x, bigind_.iq()) 
+    Foreach(const IndexQN& x, bigind_.indices()) 
         qns.push_back(x.qn);
 
     sort(qns.begin(),qns.end());
 
     std::vector<QN>::iterator ue = unique(qns.begin(),qns.end());
 
-    std::vector<inqn> iq;
+    IQIndex::Storage iq;
     for(std::vector<QN>::iterator qi = qns.begin(); qi != ue; ++qi)
         {
         const QN& q = *qi;
 
         int totm = 0;
-        Foreach(const inqn& x, bigind_.iq())
-            if(x.qn == q) totm += x.index.m();
+        Foreach(const IndexQN& x, bigind_.indices())
+            if(x.qn == q) totm += x.m();
 
         Index small_qind("condensed",totm);
         int start = 0;
-        Foreach(const inqn& x, bigind_.iq())
+        Foreach(const IndexQN& x, bigind_.indices())
             if(x.qn == q)
                 {
-                const Index &xi = x.index;
+                const Index &xi = x;
                 small_to_big[std::make_pair(small_qind,start)] = xi;
                 big_to_small[xi] = std::make_pair(small_qind,start);
                 start += xi.m();
                 }
-        iq.push_back(inqn(small_qind,q));
+        iq.push_back(IndexQN(small_qind,q));
         }
 
     smallind_ = IQIndex(smallind_name,iq,bigind_.dir(),bigind_.primeLevel());
