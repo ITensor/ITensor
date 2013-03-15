@@ -166,9 +166,6 @@ class IQTSparse
     void 
     mapprime(int plevold, int plevnew, IndexType type = All);
 
-    void 
-    mapprimeind(const IQIndex& I, int plevold, int plevnew);
-
     //
     // Other Methods
     //

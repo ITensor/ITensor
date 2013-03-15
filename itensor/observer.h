@@ -4,9 +4,10 @@
 //
 #ifndef __ITENSOR_OBSERVER_H
 #define __ITENSOR_OBSERVER_H
-#include "svdworker.h"
 
 // virtual base class
+
+class SVDWorker;
 
 class Observer 
     {

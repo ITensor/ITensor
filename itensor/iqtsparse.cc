@@ -320,19 +320,6 @@ mapprime(int plevold, int plevnew, IndexType type)
     }
 
 void IQTSparse::
-mapprimeind(const IQIndex& I, int plevold, int plevnew)
-    { 
-    solo();
-
-    is_->mapprimeind(I,plevold,plevnew); 
-
-    Foreach(ITSparse& t, ncblocks())
-        {
-        t.mapprimeind(I,plevold,plevnew);
-        }
-    }
-
-void IQTSparse::
 prime(const IQIndex& I, int inc)
     {
     solo();

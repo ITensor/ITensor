@@ -230,13 +230,6 @@ class ITensor
     mapprime(int plevold, int plevnew, IndexType type = All)
         { is_.mapprime(plevold,plevnew,type); }
 
-    //Change primeLevel of Index I from plevold to plevnew
-    //If I.primeLevel() != plevold, has no effect
-    void 
-    mapprimeind(const Index& I, int plevold, int plevnew)
-        { is_.mapprimeind(I,plevold,plevnew); }
-
-
     //
     //Element Access Methods
     //
