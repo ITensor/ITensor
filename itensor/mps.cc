@@ -436,29 +436,29 @@ plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind,
     vector<IndexQN> iq;
     Foreach(const IndexQN& x, l1.indices())
         {
-        Index jj = deprimed(x);
+        Index jj(x.rawname(),x.m(),x.type());
         l1map[x] = jj;
         iq.push_back(IndexQN(jj,x.qn));
         }
     Foreach(const IndexQN& x, l2.indices())
         {
-        Index jj = deprimed(x);
+        Index jj(x.rawname(),x.m(),x.type());
         l2map[x] = jj;
         iq.push_back(IndexQN(jj,x.qn));
         }
     sumind = IQIndex(sumind,iq);
     first = IQTensor(conj(l1),sumind);
-    Foreach(const IndexQN& x, l1.indices())
+    Foreach(const Index& il1, l1.indices())
         {
-        Index s1 = l1map[x];
-        ITensor t(x,s1,1.0);
+        Index s1 = l1map[il1];
+        ITensor t(il1,s1,1.0);
         first += t;
         }
     second = IQTensor(conj(l2),sumind);
-    Foreach(const Index& x, l2.indices())
+    Foreach(const Index& il2, l2.indices())
         {
-        Index s2 = l2map[x];
-        ITensor t(x,s2,1.0);
+        Index s2 = l2map[il2];
+        ITensor t(il2,s2,1.0);
         second += t;
         }
     }
@@ -1077,7 +1077,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                     if(s==show_s)
                         {
                         cerr << boost::format("Adding block, mm = %d\n")%mm;
-                        q.print("q");
+                        Print(q);
                         cerr << "qD[q] = " << qD[q] << "\n";
                         cerr << "M = \n" << M << "\n";
                         int count = 0;
