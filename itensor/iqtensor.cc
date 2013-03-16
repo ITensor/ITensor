@@ -311,7 +311,7 @@ IQTensor(std::vector<IQIndex>& iqinds_)
 IQTensor::
 IQTensor(const IQIndexVal& iv1) 
     : 
-    is_(make_shared<IndexSet<IQIndex> >(iv1.iqind))
+    is_(make_shared<IndexSet<IQIndex> >(IQIndex(iv1)))
 	{ 
 	operator()(iv1) = 1;
 	}
@@ -319,7 +319,7 @@ IQTensor(const IQIndexVal& iv1)
 IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2) 
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(iv1.iqind,iv2.iqind))
+    is_(make_shared<IndexSet<IQIndex> >(iv1,iv2))
 	{ 
     operator()(iv1,iv2) = 1;
 	}
@@ -328,7 +328,7 @@ IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
          const IQIndexVal& iv3)
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(iv1.iqind,iv2.iqind,iv3.iqind))
+    is_(make_shared<IndexSet<IQIndex> >(iv1,iv2,iv3))
 	{ 
     operator()(iv1,iv2,iv3) = 1;
 	}
@@ -337,7 +337,7 @@ IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
          const IQIndexVal& iv3, const IQIndexVal& iv4)
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(iv1.iqind,iv2.iqind,iv3.iqind,iv4.iqind))
+    is_(make_shared<IndexSet<IQIndex> >(iv1,iv2,iv3,iv4))
 	{ 
     operator()(iv1,iv2,iv3,iv4) = 1;
 	}
@@ -489,7 +489,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
 
     Real ur = 0; 
     int nn = 0; 
-    while(GET(iv,nn+1).iqind != IQIndexVal::Null().iqind) 
+    while(GET(iv,nn+1) != IQIndexVal::Null()) 
         ur += GET(iv,++nn).index().uniqueReal(); 
     if(nn != r()) 
         Error("Wrong number of IQIndexVals provided");
@@ -500,7 +500,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
         IndexSet<Index> indices; 
         for(int j = 1; j <= nn; ++j) 
             {
-            if(!hasindex(*this,iv[j].iqind)) 
+            if(!hasindex(*this,iv[j])) 
                 Error("IQTensor::operator(): IQIndex not found.");
             indices.addindex(iv[j].index());
             }
@@ -530,7 +530,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
 
     Real ur = 0; 
     int nn = 0; 
-    while(GET(iv,nn+1).iqind != IQIndexVal::Null().iqind) 
+    while(GET(iv,nn+1) != IQIndexVal::Null()) 
         ur += GET(iv,++nn).index().uniqueReal(); 
     if(nn != r()) 
         Error("Wrong number of IQIndexVals provided");

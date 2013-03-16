@@ -15,7 +15,7 @@ enum IndexType { Link, Site, ReIm, All };
 
 //Forward declarations
 struct IndexDat;
-struct IndexVal;
+class IndexVal;
 
 typedef boost::shared_ptr<IndexDat>
 IndexDatPtr;
@@ -193,30 +193,33 @@ class Index
 //
 // IndexVal
 //
-// Struct pairing an Index of dimension m
+// Class pairing an Index of dimension m
 // with a specific value i where 1 <= i <= m
 //
-struct IndexVal
+class IndexVal : public Index
     {
-    Index ind; 
+    public:
+
     int i;
 
     IndexVal();
 
     IndexVal(const Index& index, int i_);
 
-    bool 
-    operator==(const IndexVal& other) const; 
+    bool
+    operator==(const IndexVal& other) const
+        {
+        return (Index::operator==(other) && i == other.i);
+        }
 
-    void
-    prime(int inc = 1) { ind.prime(inc); }
-
-    void
-    prime(IndexType type, int inc = 1) { ind.prime(type,inc); }
+    bool
+    operator!=(const IndexVal& other) const
+        {
+        return !operator==(other);
+        }
 
     static const IndexVal& 
     Null();
-
     };
 
 

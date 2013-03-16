@@ -577,22 +577,26 @@ IndReImPP()
 
 IQIndexVal::
 IQIndexVal()
-    : iqind(IQIndex::Null()), i(1) 
+    : 
+    IQIndex(IQIndex::Null()), 
+    i(0) 
     { }
 
 
 IQIndexVal::
 IQIndexVal(const IQIndex& iqindex, int i_) 
     : 
-    iqind(iqindex),
+    IQIndex(iqindex),
     i(i_) 
     { 
-    if(i > iqind.m() || i < 1) 
+#ifdef DEBUG
+    if(i > m() || i < 1) 
         {
         Print(iqindex);
         Print(i);
         Error("IQIndexVal: i out of range");
         }
+#endif
     }
 
 
@@ -601,7 +605,7 @@ index() const
     { 
     int j,ii;
     calc_ind_ii(j,ii);
-    return iqind.index(j);
+    return IQIndex::index(j);
     }
 
 
@@ -610,19 +614,19 @@ qn() const
     { 
     int j,ii;
     calc_ind_ii(j,ii);
-    return iqind.qn(j);
+    return IQIndex::qn(j);
     }
 
 bool IQIndexVal::
 operator==(const IQIndexVal& other) const
     {
-    return (iqind == other.iqind && i == other.i);
+    return (IQIndex::operator==(other) && i == other.i);
     }
 
 IQIndexVal::
 operator IndexVal() const 
     { 
-    return IndexVal(Index(iqind),i); 
+    return IndexVal(Index(*this),i); 
     }
 
 
@@ -633,7 +637,7 @@ blockIndexVal() const
         return IndexVal::Null();
     int j,ii;
     calc_ind_ii(j,ii);
-    return IndexVal(iqind.index(j),ii); 
+    return IndexVal(this->index(j),ii); 
     }
 
 /*
@@ -651,9 +655,9 @@ calc_ind_ii(int& j, int& ii) const
     {
     j = 1;
     ii = i;
-    while(ii > iqind.index(j).m())
+    while(ii > this->index(j).m())
         {
-        ii -= iqind.index(j).m();
+        ii -= this->index(j).m();
         ++j;
         }
     }
@@ -704,6 +708,6 @@ operator<<(std::ostream &s, const IndexQN& x)
 std::ostream& 
 operator<<(std::ostream& s, const IQIndexVal& iv)
     { 
-    return s << "IQIndexVal: i = " << iv.i 
-             << ", iqind = " << iv.iqind << "\n"; 
+    const IQIndex& I = iv;
+    return s << "IQIndexVal: i = " << iv.i << ", " << I << "\n"; 
     }

@@ -10,7 +10,7 @@
 // Forward declarations
 class IndexQN;
 class IQIndexDat;
-struct IQIndexVal;
+class IQIndexVal;
 
 typedef boost::shared_ptr<IQIndexDat>
 IQIndexDatPtr;
@@ -180,9 +180,9 @@ class IQIndex : public Index
 // IQIndexVal
 //
 
-struct IQIndexVal
+class IQIndexVal : public IQIndex
     {
-    IQIndex iqind; 
+    public:
 
     int i;
 
@@ -192,16 +192,11 @@ struct IQIndexVal
 
     Index index() const;
 
+    using IQIndex::index;
+
     QN qn() const;
 
-    void
-    prime(int inc = 1) { iqind.prime(inc); }
-
-    void
-    prime(IndexType type, int inc = 1) { iqind.prime(type,inc); }
-
-    void 
-    conj() { iqind.conj(); }
+    using IQIndex::qn;
 
     bool
     operator==(const IQIndexVal& other) const;
@@ -210,21 +205,15 @@ struct IQIndexVal
 
     IndexVal blockIndexVal() const;
 
-    //operator ITensor() const;
-
     ITensor 
     operator*(const IndexVal& iv) const 
         { 
-        return IndexVal(Index(iqind),i) * iv; 
+        return IndexVal(Index(*this),i) * iv; 
         }
-
-    void 
-    print(std::string name = "") const
-        { std::cerr << "\n" << name << " =\n" << *this << "\n"; }
 
     static const IQIndexVal& Null()
         {
-        static const IQIndexVal Null_(IQIndex::Null(),1);
+        static const IQIndexVal Null_;
         return Null_;
         }
 

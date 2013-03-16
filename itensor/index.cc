@@ -339,27 +339,30 @@ operator<<(ostream& s, const Index& t)
 
 IndexVal::
 IndexVal() 
-    : ind(Index::Null()),
-      i(0) 
+    : 
+    i(0) 
     { }
 
 IndexVal::
 IndexVal(const Index& index, int i_) 
-    : ind(index),
-      i(i_)
+    : 
+    Index(index),
+    i(i_)
     { 
 #ifdef DEBUG
     if(index == Index::Null())
+        {
         Error("IndexVal initialized with null Index");
+        }
+    if(i_ < 1 || i_ > index.m())
+        {
+        cout << "i = " << i_ << endl;
+        cout << "index = " << index << endl;
+        Error("i out of range");
+        }
 #endif
-    assert(i <= ind.m()); 
     }
 
-bool IndexVal::
-operator==(const IndexVal& other) const 
-    { 
-    return (ind == other.ind && i == other.i); 
-    }
 
 const IndexVal& IndexVal::
 Null()
@@ -374,6 +377,7 @@ showm(const Index& I) { return nameint("m=",I.m()); }
 ostream& 
 operator<<(ostream& s, const IndexVal& iv)
     { 
-    return s << "IndexVal: i = " << iv.i << ", ind = " << iv.ind << "\n"; 
+    const Index& ii = iv;
+    return s << "IndexVal: i = " << iv.i << ", ind = " << ii << "\n"; 
     }
 
