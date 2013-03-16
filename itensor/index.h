@@ -236,7 +236,7 @@ primed(T I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
 //Return a copy of I with primelevel set to zero.
 template<class T>
 T
-deprimed(T I) { I.noprime(); return I; }
+deprimed(T I, IndexType type = All) { I.noprime(type); return I; }
 
 //Return a copy of I with prime level changed to plevnew if
 //old prime level was plevold. Otherwise has no effect.

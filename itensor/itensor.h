@@ -873,6 +873,12 @@ Tensor
 primed(Tensor A, const IndexT& I, int inc = 1)
     { A.prime(I,inc); return A; }
 
+//Return copy of ITensor with primeLevel of Index I set to zero
+template <class Tensor, class IndexT>
+Tensor
+deprimed(Tensor A, const IndexT& I)
+    { A.noprime(I); return A; }
+
 //
 //Return copy of a tensor with primeLevels plev1 and plev2 swapped
 //
