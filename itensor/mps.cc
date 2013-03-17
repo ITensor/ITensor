@@ -446,7 +446,7 @@ plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind,
         l2map[x] = jj;
         iq.push_back(IndexQN(jj,x.qn));
         }
-    sumind = IQIndex(sumind,iq);
+    sumind = IQIndex(sumind.rawname(),iq,sumind.dir(),sumind.primeLevel());
     first = IQTensor(conj(l1),sumind);
     Foreach(const Index& il1, l1.indices())
         {
@@ -520,7 +520,7 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
         {
         IndexT l1 = this->RightLinkInd(i);
         IndexT l2 = other.RightLinkInd(i);
-        IndexT r(l1.rawname());
+        IndexT r(l1);
         plussers(l1,l2,r,first[i],second[i]);
         }
 
@@ -600,7 +600,7 @@ addNoOrth(const MPSt<Tensor>& other_)
         {
         IndexT l1 = this->RightLinkInd(i);
         IndexT l2 = other_.RightLinkInd(i);
-        IndexT r(l1.rawname());
+        IndexT r(l1);
         plussers(l1,l2,r,first[i],second[i]);
         }
 

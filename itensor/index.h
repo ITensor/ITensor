@@ -137,6 +137,12 @@ class Index
     // Other methods
     //
 
+    // Conjugate this Index.
+    // Currently has no effect; exists for forward compatibility
+    // with Arrows and interface compatibility with class IQIndex.
+    void 
+    conj() { } //for forward compatibility with arrows
+
     // Write Index to binary output stream.
     void 
     write(std::ostream& s) const;
@@ -144,12 +150,6 @@ class Index
     // Read Index from binary input stream.
     void 
     read(std::istream& s);
-
-    // Conjugate this Index.
-    // Currently has no effect; exists for forward compatibility
-    // with Arrows and interface compatibility with class IQIndex.
-    void 
-    conj() { } //for forward compatibility with arrows
 
     //
     // Static Index instances
@@ -174,14 +174,9 @@ class Index
     private:
 
     /////////////
-    //
-    // Data Members
-
     IndexDatPtr p;
 
     int primelevel_; 
-
-    //
     /////////////
 
     explicit
@@ -245,17 +240,16 @@ T
 mapPrime(T I, int plevold, int plevnew, IndexType type = All)
     { I.mapprime(plevold,plevnew,type); return I; }
 
+template <class T>
+T
+conj(T res) { res.conj(); return res; }
+
 //Returns a string version of this Index's bond dimension.
 std::string
 showm(const Index& I);
 
-template <class T>
-T
-conj(T res) 
-    { 
-    res.conj(); 
-    return res; 
-    }
+std::string 
+nameint(const std::string& f, int n);
 
 std::ostream& 
 operator<<(std::ostream & s, const Index &t);
@@ -265,9 +259,6 @@ operator<<(std::ostream& s, const IndexVal& iv);
 
 std::ostream& 
 operator<<(std::ostream& s, const IndexType& it);
-
-std::string 
-nameint(const std::string& f, int n);
 
 #undef Cout
 #undef Format

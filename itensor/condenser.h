@@ -220,7 +220,7 @@ product(const IQTensor& t, IQTensor& res) const
             {
             Index sind;
             Foreach(const Index& I, b.indices())
-                if(smallind_.hasindex(I))
+                if(hasindex(smallind_,I))
                     {
                     sind = I;
                     break;
@@ -258,7 +258,7 @@ product(const IQTensor& t, IQTensor& res) const
             bool gotit = false;
 
             Foreach(const Index& K, tt.indices())
-                if(bigind_.hasindex(K))
+                if(hasindex(bigind_,K))
                     {
                     std::pair<Index,int> Ii = big_to_small[K];
                     tt.expandIndex(K,Ii.first,Ii.second);

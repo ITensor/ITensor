@@ -277,7 +277,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         IndexSet<Index>::const_iterator ui = t.indices().begin(),
                                         vi = ui+1;
-        if(!uI.hasindex(*ui))
+        if(!hasindex(uI,*ui))
             swap(ui,vi);
 
         Matrix M(ui->m(),vi->m());
@@ -436,14 +436,14 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         IndexSet<Index>::const_iterator ui = t.indices().begin(),
                                         vi = ui+1;
-        if(!uI.hasindex(*ui))
+        if(!hasindex(uI,*ui))
             swap(ui,vi);
 
         Index l("l",this_m);
-        Liq.push_back(IndexQN(l,uI.qn(*ui)));
+        Liq.push_back(IndexQN(l,qn(uI,*ui)));
 
         Index r("r",this_m);
-        Riq.push_back(IndexQN(r,vI.qn(*vi)));
+        Riq.push_back(IndexQN(r,qn(vI,*vi)));
 
         Dblock.push_back(ITSparse(l,r,thisD.SubVector(1,this_m)));
 
@@ -816,7 +816,7 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
 
         Index nm("qlink",this_m);
         Index act = deprimed(findtype(t,Link));
-        iq.push_back(IndexQN(nm,active.qn(act)));
+        iq.push_back(IndexQN(nm,qn(active,act)));
 
         MatrixRef Utrunc = thisU.Columns(1,this_m);
 

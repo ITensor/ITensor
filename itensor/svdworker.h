@@ -399,16 +399,16 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
         cutoff_ = -1;
         if(D.r() == 0)
             {
-            IndexT mid;
             try {
-                mid = commonIndex(U,V,Link);
+                IndexT mid = commonIndex(U,V,Link);
+                minm_ = mid.m();
+                maxm_ = mid.m();
                 }
             catch(const ITError& e)
                 {
-                mid = IndexT("mid");
+                minm_ = 1;
+                maxm_ = 1;
                 }
-            minm_ = mid.m();
-            maxm_ = mid.m();
             }
         else
             {
@@ -452,7 +452,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         }
     catch(const ITError& e)
         {
-        mid = IndexT("mid");
+        //continue, leaving mid default-initialized
         }
 
     //If dir==None, put the O.C. on the side
@@ -476,7 +476,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     //Apply combiner
     comb.doCondense(true);
-    comb.init(mid.rawname());
+    comb.init(mid.isNull() ? "mid" : mid.rawname());
 
     //Form density matrix
     Tensor AAc; 

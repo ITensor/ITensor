@@ -566,28 +566,6 @@ at(const IQIndexVal& iv1, const IQIndexVal& iv2,
 
 
 
-QN IQTensor::
-qn(const Index& in) const
-	{
-	int iqq = find_iqind(in);
-	if(iqq == 0) 
-	    Error("qn: cant find index");
-	return is_->index(iqq).qn(in);
-	} 
-
-Arrow IQTensor::
-dir(const Index& in) const
-	{
-	int iqq = find_iqind(in);
-	if(iqq == 0) 
-	    {
-        Print(this->indices());
-        Print(in);
-	    Error("IQTensor::dir(Index&): cant find Index in IQIndices");
-	    }
-	return is_->index(iqq).dir();
-	}
-
 
 void IQTensor::
 noprime(IndexType type)
@@ -653,16 +631,6 @@ noprime(const IQIndex& I)
 	}
 
 
-int IQTensor::
-find_iqind(const Index& ii) const
-    {
-    for(int j = 1; j <= is_->r(); ++j)
-        {
-        if(is_->index(j).hasindex(ii)) 
-            return j;
-        }
-    return 0;
-    }
 
 bool IQTensor::
 uses_ind(const Index& ii) const
@@ -1443,7 +1411,7 @@ toITensor() const
             //Find the IQIndex that contains 'small'
             const IQIndex* big = 0;
             Foreach(const IQIndex& I, this->indices())
-                if(I.hasindex(small))
+                if(hasindex(I,small))
                     {
                     big = &I;
                     break;
@@ -1510,7 +1478,7 @@ div(const IQTensor& T)
     IQTDat::const_iterator it = T.blocks().begin();
     Foreach(const Index& i, it->indices())
         {
-        div_ += T.qn(i)*T.dir(i);
+        div_ += qn(T,i)*dir(T,i);
         }
 
 #ifdef DEBUG
@@ -1520,7 +1488,7 @@ div(const IQTensor& T)
         QN q;
         Foreach(const Index& i, it->indices())
             {
-            q += T.qn(i)*T.dir(i);
+            q += qn(T,i)*dir(T,i);
             }
         if(q != div_)
             {
@@ -1536,4 +1504,30 @@ div(const IQTensor& T)
 #endif
 
 	return div_;
+	}
+
+const IQIndex&
+findIQInd(const IQTensor& T, const Index& i)
+    {
+    Foreach(const IQIndex& J, T.indices())
+        {
+        if(hasindex(J,i)) 
+            return J;
+        }
+    Print(T.indices());
+    Print(i);
+    Error("Index i not found in any of T's IQIndices");
+    return IQIndex::Null();
+    }
+
+QN
+qn(const IQTensor& T, const Index& i)
+	{
+	return qn(findIQInd(T,i),i);
+	} 
+
+Arrow
+dir(const IQTensor& T, const Index& i)
+	{
+    return findIQInd(T,i).dir();
 	}

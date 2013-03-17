@@ -243,7 +243,7 @@ product(IQTensor T, IQTensor& res) const
         Foreach(const ITensor& tt, T_.blocks())
         Foreach(const Index& K, tt.indices())
             {
-            if(r.hasindex(K))
+            if(hasindex(r,K))
                 { 
                 res += (*(rightcomb[K]) * tt); 
                 break;
@@ -359,7 +359,7 @@ bool
 hasindex(const IQCombiner& C, const Index& i)
     {
     Foreach(const IQIndex& J, C.left())
-        if(J.hasindex(i)) return true;
+        if(hasindex(J,i)) return true;
     return false;
     }
 

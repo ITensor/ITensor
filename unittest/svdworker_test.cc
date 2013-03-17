@@ -13,7 +13,7 @@ struct SVDWorkerDefaults
     const Index
         s1u,s1d,s2u,s2d,
         l1u,l10,l1d,
-        l2uu,l2u,l20,l2d,l2dd,
+        l2u,l20,l2d,
         mid,
         mid10u,mid10z,mid10d;
 
@@ -31,11 +31,9 @@ struct SVDWorkerDefaults
         l1u(Index("Link1 Up",10,Link)),
         l10(Index("Link1 Z0",20,Link)),
         l1d(Index("Link1 Dn",10,Link)),
-        l2uu(Index("Link2 UU",5,Link)),
-        l2u(Index("Link2 Up",10,Link)),
+        l2u(Index("Link2 Up",5,Link)),
         l20(Index("Link2 Z0",50,Link)),
-        l2d(Index("Link2 Dn",10,Link)),
-        l2dd(Index("Link2 DD",5,Link)),
+        l2d(Index("Link2 Dn",5,Link)),
         mid(Index("mid")),
         mid10u(Index("mid10u",2)),
         mid10z(Index("mid10z",5)),
@@ -53,11 +51,9 @@ struct SVDWorkerDefaults
                      l1d,QN(-1),
                      Out);
         L2 = IQIndex("L2",
-                     l2uu,QN(+2),
                      l2u,QN(+1),
                      l20,QN( 0),
                      l2d,QN(-1),
-                     l2dd,QN(-2),
                      Out);
 
         Mid = IQIndex("Mid",mid,QN(),Out);
@@ -82,14 +78,6 @@ struct SVDWorkerDefaults
             ITensor duud(l1d,s1u,s2u,l2d);
             duud.randomize();
             Phi0 += duud;
-
-            ITensor zuudd(l10,s1u,s2u,l2dd);
-            zuudd.randomize();
-            Phi0 += zuudd;
-
-            ITensor zdduu(l10,s1d,s2d,l2uu);
-            zdduu.randomize();
-            Phi0 += zdduu;
             }
         Phi0 *= 1.0/Phi0.norm();
 

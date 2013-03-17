@@ -9,7 +9,7 @@ struct IQTensorDefaults
     const Index
     s1u,s1d,s2u,s2d,
     l1u,l10,l1d,
-    l2uu,l2u,l20,l2d,l2dd;
+    l2uu,l20,l2dd;
 
     IQIndex S1,S2,L1,L2;
 
@@ -24,9 +24,7 @@ struct IQTensorDefaults
     l10(Index("Link1 Z0",2,Link)),
     l1d(Index("Link1 Dn",2,Link)),
     l2uu(Index("Link2 UU",2,Link)),
-    l2u(Index("Link2 Up",2,Link)),
     l20(Index("Link2 Z0",2,Link)),
-    l2d(Index("Link2 Dn",2,Link)),
     l2dd(Index("Link2 DD",2,Link))
         {
         S1 = IQIndex("S1",
@@ -42,9 +40,7 @@ struct IQTensorDefaults
                      Out);
         L2 = IQIndex("L2",
                      l2uu,QN(+2),
-                     l2u,QN(+1),
                      l20,QN( 0),
-                     l2d,QN(-1),
                      l2dd,QN(-2),
                      Out);
 

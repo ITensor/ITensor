@@ -22,29 +22,9 @@ IQIndexDatPtr;
 class IQIndex : public Index
     {
     public:
-
-    typedef std::vector<IndexQN>
-    Storage;
-
-    const Storage&
-    indices() const;
-
-    int 
-    nindex() const;
-
-    const Index& 
-    index(int i) const;
-
-    const QN& 
-    qn(int i) const;
-
-    int 
-    primeLevel() const { return Index::primeLevel(); }
-    void 
-    primeLevel(int val);
-
-    //------------------------------------------
-    //IQIndex: Constructors
+    //
+    //Constructors
+    //
 
     IQIndex();
 
@@ -71,82 +51,39 @@ class IQIndex : public Index
             Arrow dir = Out);
 
     IQIndex(const std::string& name, 
-            const Index& i1, const QN& q1, 
-            const Index& i2, const QN& q2,
-            const Index& i3, const QN& q3,
-            const Index& i4, const QN& q4,
-            const Index& i5, const QN& q5,
-            Arrow dir = Out);
-
-    IQIndex(const std::string& name, 
             std::vector<IndexQN>& ind_qn, 
             Arrow dir = Out, int plev = 0);
 
-    IQIndex(const IQIndex& other, 
-            std::vector<IndexQN>& ind_qn);
+    //
+    //Accessor Methods
+    //
 
-    IQIndex(const Index& other, 
-            const Index& i1, const QN& q1, 
-            Arrow dir = Out);
+    typedef std::vector<IndexQN>
+    Storage;
 
+    const Storage&
+    indices() const;
 
-    explicit 
-    IQIndex(const std::string& name,
-            IndexType it = Link, 
-            Arrow dir = Out, 
-            int plev = 0);
-
-
-    explicit 
-    IQIndex(std::istream& s) { read(s); }
-
-    void 
-    write(std::ostream& s) const;
-
-    void 
-    read(std::istream& s);
-
-    static const IQIndex& Null();
-
-    static const IQIndex& IndReIm();
-
-    static const IQIndex& IndReImP();
-
-    static const IQIndex& IndReImPP();
-
-    //------------------------------------------
-    //IQIndex: operators
-
-    IQIndexVal 
-    operator()(int n) const;
-
-    //------------------------------------------
-    //IQIndex: quantum number methods
-
-    QN 
-    qn(const Index& i) const;
-
-    Arrow 
-    dir() const;
-
-    void 
-    conj();
-
-    //------------------------------------------
-    //IQIndex: index container methods
-
+    int 
+    nindex() const;
 
     const Index& 
-    findbyqn(QN q) const;
+    index(int i) const;
 
-    bool 
-    hasindex(const Index& i) const;
+    const QN& 
+    qn(int i) const;
 
-    bool 
-    hasindex_noprime(const Index& i) const;
+    Arrow 
+    dir() const { return dir_; }
 
-    //------------------------------------------
-    //IQIndex: prime methods
+    int 
+    primeLevel() const { return Index::primeLevel(); }
+    void 
+    primeLevel(int val);
+
+    //
+    // Prime level methods
+    //
 
     void 
     prime(int inc = 1);
@@ -155,15 +92,51 @@ class IQIndex : public Index
     prime(IndexType type, int inc = 1);
 
     void 
-    mapprime(int plevold, int plevnew, IndexType type = All);
+    noprime(IndexType type = All);
 
     void 
-    noprime(IndexType type = All);
+    mapprime(int plevold, int plevnew, IndexType type = All);
+
+    //
+    // Operators
+    //
+
+    IQIndexVal 
+    operator()(int n) const;
+
+    //
+    // Other methods
+    //
+
+    void 
+    conj() { dir_ = -dir_; }
+
+    void 
+    write(std::ostream& s) const;
+
+    void 
+    read(std::istream& s);
+
+    //
+    // Static Index instances
+    //
+
+    static const 
+    IQIndex& Null();
+
+    static const 
+    IQIndex& IndReIm();
+
+    static const 
+    IQIndex& IndReImP();
+
+    static const 
+    IQIndex& IndReImPP();
 
     private:
 
     /////////////
-    Arrow _dir;
+    Arrow dir_;
 
     boost::shared_ptr<IQIndexDat> pd;
     /////////////
@@ -245,12 +218,17 @@ class IndexQN : public Index
     };
 
 
-std::string 
-showm(const IQIndex& I);
+bool
+hasindex(const IQIndex& I, const Index& i);
 
 int 
 offset(const IQIndex& I, const Index& i);
 
+QN 
+qn(const IQIndex& I, const Index& i);
+
+std::string 
+showm(const IQIndex& I);
 
 std::ostream& 
 operator<<(std::ostream &o, const IQIndex &I);

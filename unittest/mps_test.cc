@@ -66,5 +66,26 @@ TEST(MPSAddition)
     CHECK_EQUAL(totalQN(iqpsi),QN(0,1));
     }
 
+TEST(PositionTest)
+    {
+    Spinless model(10);
+
+    InitState init(model,&Spinless::Emp);
+    init.set(2,&Spinless::Occ);
+    init.set(4,&Spinless::Occ);
+    init.set(6,&Spinless::Occ);
+
+    IQMPS psi(model,init);
+    psi.cutoff(1E-8);
+    psi.noise(1E-8);
+    psi.Anc(1) *= IQComplex_i();
+
+    psi.position(1);
+    CHECK_EQUAL(findCenter(psi),1);
+
+    psi.position(4);
+    CHECK_EQUAL(findCenter(psi),4);
+    }
+
 
 BOOST_AUTO_TEST_SUITE_END()

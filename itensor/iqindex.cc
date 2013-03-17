@@ -245,19 +245,9 @@ qn(int i) const
 IQIndex::
 IQIndex() 
     : 
-    _dir(Neither)
+    dir_(Neither)
     { }
 
-
-IQIndex::
-IQIndex(const string& name,
-                 IndexType it, 
-                 Arrow dir, 
-                 int plev) 
-    : 
-    Index(name,1,it,plev), 
-    _dir(dir)
-    { }
 
 IQIndex::
 IQIndex(const string& name, 
@@ -265,7 +255,7 @@ IQIndex(const string& name,
         Arrow dir) 
     : 
     Index(name,i1.m(),i1.type(),i1.primeLevel()), 
-    _dir(dir), 
+    dir_(dir), 
     pd(make_shared<IQIndexDat>(i1,q1))
     {
     }
@@ -277,7 +267,7 @@ IQIndex(const string& name,
         Arrow dir) 
     : 
     Index(name,i1.m()+i2.m(),i1.type(),i1.primeLevel()), 
-    _dir(dir), 
+    dir_(dir), 
     pd(make_shared<IQIndexDat>(i1,q1,i2,q2))
     {
     if(i2.type() != i1.type())
@@ -292,7 +282,7 @@ IQIndex(const string& name,
         Arrow dir) 
     : 
     Index(name,i1.m()+i2.m()+i3.m(),i1.type(),i1.primeLevel()), 
-    _dir(dir),
+    dir_(dir),
     pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3))
     {
     if(i2.type() != i1.type() 
@@ -309,32 +299,12 @@ IQIndex(const string& name,
         Arrow dir) 
     : 
     Index(name,i1.m()+i2.m()+i3.m()+i4.m(),i1.type(),i1.primeLevel()), 
-    _dir(dir),
+    dir_(dir),
     pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3,i4,q4))
     {
     if(i2.type() != i1.type() 
     || i3.type() != i1.type()
     || i4.type() != i1.type())
-        Error("Indices must have the same type");
-    }
-
-IQIndex::
-IQIndex(const string& name, 
-        const Index& i1, const QN& q1, 
-        const Index& i2, const QN& q2,
-        const Index& i3, const QN& q3,
-        const Index& i4, const QN& q4,
-        const Index& i5, const QN& q5,
-        Arrow dir) 
-    : 
-    Index(name,i1.m()+i2.m()+i3.m()+i4.m()+i5.m(),i1.type(),i1.primeLevel()), 
-    _dir(dir),
-    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4,i5,q5))
-    {
-    if(i2.type() != i1.type() 
-    || i3.type() != i1.type()
-    || i4.type() != i1.type()
-    || i5.type() != i1.type())
         Error("Indices must have the same type");
     }
 
@@ -359,38 +329,17 @@ IQIndex(const string& name,
         Arrow dir, int plev) 
     : 
     Index(name,totalM(ind_qn),ind_qn.front().type(),plev),
-    _dir(dir), 
+    dir_(dir), 
     pd(new IQIndexDat(ind_qn))
     { 
     }
 
-IQIndex::
-IQIndex(const IQIndex& other, 
-        IQIndexDat::StorageT& ind_qn)
-    : 
-    Index(other.name(),totalM(ind_qn),other.type(),ind_qn.front().primeLevel()),
-    _dir(other._dir), 
-    pd(new IQIndexDat(ind_qn))
-    { 
-    }
-
-IQIndex::
-IQIndex(const Index& other, 
-        const Index& i1, const QN& q1, 
-        Arrow dir) 
-    : 
-    Index(other),
-    _dir(dir), 
-    pd(make_shared<IQIndexDat>(i1,q1))
-    {
-    Index::primeLevel(i1.primeLevel());
-    }
 
 IQIndex::
 IQIndex(const Index& index, const IQIndexDatPtr& pdat)
     : 
     Index(index),
-    _dir(In),
+    dir_(In),
     pd(pdat)
     { }
 
@@ -399,7 +348,7 @@ write(ostream& s) const
     {
     IQINDEX_CHECK_NULL
     Index::write(s);
-    s.write((char*)&_dir,sizeof(_dir));
+    s.write((char*)&dir_,sizeof(dir_));
     pd->write(s);
     }
 
@@ -407,7 +356,7 @@ void IQIndex::
 read(istream& s)
     {
     Index::read(s);
-    s.read((char*)&_dir,sizeof(_dir));
+    s.read((char*)&dir_,sizeof(dir_));
     pd = make_shared<IQIndexDat>();
     pd->read(s);
     }
@@ -428,63 +377,6 @@ showm(const IQIndex& I)
     return oh.str();
     }
 
-QN IQIndex::
-qn(const Index& i) const
-    { 
-    IQINDEX_CHECK_NULL
-    Foreach(const IndexQN& iq, *pd)
-        { 
-        if(iq == i) 
-            return iq.qn; 
-        }
-    cerr << *this << "\n";
-    cerr << "i = " << i << "\n";
-    Error("IQIndex::qn(Index): IQIndex does not contain given index.");
-    return QN();
-    }
-
-Arrow IQIndex::
-dir() const { return _dir; }
-
-void IQIndex::
-conj() { _dir = -_dir; }
-
-const Index& IQIndex::
-findbyqn(QN q) const
-    { 
-    IQINDEX_CHECK_NULL
-    Foreach(const IndexQN& iq, *pd)
-        {
-        if(iq.qn == q) 
-            return iq;
-        }
-    Error("IQIndex::findbyqn: no Index had a matching QN.");
-    return Index::Null();
-    }
-
-bool IQIndex::
-hasindex(const Index& i) const
-    { 
-    IQINDEX_CHECK_NULL
-    Foreach(const IndexQN& iq, *pd)
-        {
-        if(iq == i) 
-            return true;
-        }
-    return false;
-    }
-
-bool IQIndex::
-hasindex_noprime(const Index& i) const
-    { 
-    IQINDEX_CHECK_NULL
-    Foreach(const IndexQN& iq, *pd)
-        {
-        if(iq.noprimeEquals(i)) 
-            return true;
-        }
-    return false;
-    }
 
 void IQIndex::
 primeLevel(int val)
@@ -668,6 +560,16 @@ operator()(int n) const
     return IQIndexVal(*this,n); 
     }
 
+bool
+hasindex(const IQIndex& J, const Index& i)
+    { 
+    Foreach(const Index& j, J.indices())
+        {
+        if(j == i) return true;
+        }
+    return false;
+    }
+
 int
 offset(const IQIndex& I, const Index& i)
     {
@@ -681,6 +583,20 @@ offset(const IQIndex& I, const Index& i)
     Print(i);
     Error("Index not contained in IQIndex");
     return 0;
+    }
+
+QN
+qn(const IQIndex& I, const Index& i)
+    { 
+    Foreach(const IndexQN& jq, I.indices())
+        { 
+        if(jq == i) 
+            return jq.qn; 
+        }
+    cout << I << "\n";
+    cout << "i = " << i << endl;
+    Error("IQIndex does not contain given index.");
+    return QN();
     }
 
 ostream& 

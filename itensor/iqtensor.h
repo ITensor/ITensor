@@ -319,8 +319,8 @@ class IQTensor
     //----------------------------------------------------
     //IQTensor quantum number methods
 
-    QN 
-    qn(const Index& in) const;
+    //QN 
+    //qn(const Index& in) const;
 
     Arrow 
     dir(const Index& in) const;
@@ -350,9 +350,6 @@ class IQTensor
 
     //----------------------------------------------------
     //IQTensor index methods
-
-    int 
-    find_iqind(const Index& I) const;
 
     //Return true if one of the ITensors uses this Index
     bool 
@@ -727,6 +724,15 @@ BraKet(IQTensor x, const IQTensor& y, Real& re, Real& im);
 //(since IQTensor is not correctly constructed).
 QN 
 div(const IQTensor& T);
+
+const IQIndex&
+findIQInd(const IQTensor& T, const Index& i);
+
+QN
+qn(const IQTensor& T, const Index& i);
+
+Arrow
+dir(const IQTensor& T, const Index& i);
 
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);
