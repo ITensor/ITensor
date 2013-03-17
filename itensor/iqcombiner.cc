@@ -1,13 +1,16 @@
 #include "iqcombiner.h"
 
+using namespace std;
+using boost::format;
 
- IQCombiner::
+
+IQCombiner::
 IQCombiner() 
     : initted(false), 
       do_condense(false) 
     { }
 
- IQCombiner::
+IQCombiner::
 IQCombiner(
     const IQIndex& l1, const IQIndex& l2, 
     const IQIndex& l3, const IQIndex& l4, 
@@ -56,35 +59,39 @@ addleft(const IQIndex& l) 	// Include another left index
 
 
 void IQCombiner::
-init(std::string rname, IndexType type, 
+init(string rname, IndexType type, 
      Arrow dir, int primelevel) const 
     {
     if(initted) return;
     if(left_.size() == 0)
         Error("No left indices in IQCombiner.");
 
-    Arrow rdir; 
+    Arrow rdir = dir; 
     if(dir == Neither) //determine automatically
         {
-        rdir = -left_.back().dir();
-
         //Prefer to derive right Arrow from Link indices
-        for(size_t j = 0; j < left_.size(); ++j)
-        if(left_[j].type() == Link) 
-            { 
-            rdir = -left_[j].dir(); 
+        Foreach(const IQIndex& J, left_)
+            {
+            if(J.type() == ReIm) continue; 
+            rdir = -J.dir(); 
             break;
             }
         }
-    else
-        { rdir = dir; }
+
+    if(rdir == Neither)
+        {
+        cout << "left_ = " << endl;
+        Foreach(const IQIndex& J, left_)
+            cout << J << "\n" << endl;
+        Error("Failed to determine right IQIndex direction");
+        }
 
     //Construct individual Combiners
     QCounter c(left_);
     IQIndex::Storage iq;
     for( ; c.notDone(); ++c)
         {
-        std::vector<Index> vind;
+        vector<Index> vind;
         QN q;
         c.getVecInd(left_,vind, q); // updates vind and q
         q *= -rdir;
@@ -99,7 +106,7 @@ init(std::string rname, IndexType type,
     if(do_condense) 
         {
         ucright_ = IQIndex(rname,iq,rdir,primelevel);
-        std::string cname = "cond::" + rname;
+        string cname = "cond::" + rname;
         cond = Condenser(ucright_,cname);
         right_ = cond.smallind();
         }
@@ -115,7 +122,7 @@ operator IQTensor() const
     {
     if(!initted) Error("IQCombiner::operator IQTensor(): IQCombiner not initialized.");
 
-    std::vector<IQIndex> iqinds(left_);
+    vector<IQIndex> iqinds(left_);
     iqinds.push_back((do_condense ? ucright_ : right_));
     IQTensor res(iqinds);
 
@@ -198,7 +205,7 @@ void IQCombiner::
 product(IQTensor T, IQTensor& res) const
     {
     init();
-    std::vector<IQIndex> iqinds;
+    vector<IQIndex> iqinds;
 
     if(hasindex(T,right_))
         {
@@ -216,9 +223,9 @@ product(IQTensor T, IQTensor& res) const
         if(Global::checkArrows())
             if(dir(T_.indices(),r) == r.dir())
                 {
-                std::cerr << "IQTensor = " << T_ << std::endl;
-                std::cerr << "IQCombiner = " << *this << std::endl;
-                std::cerr << "(Right) IQIndex from IQCombiner = " << r << std::endl;
+                cout << "IQTensor = " << T_ << endl;
+                cout << "IQCombiner = " << *this << endl;
+                cout << "(Right) IQIndex from IQCombiner = " << r << endl;
                 Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
                 }
 
@@ -227,14 +234,14 @@ product(IQTensor T, IQTensor& res) const
         Foreach(const IQIndex& I, T_.indices())
             {
             if(I == r)
-                copy(left_.begin(),left_.end(),std::back_inserter(iqinds));
+                copy(left_.begin(),left_.end(),back_inserter(iqinds));
             else
                 iqinds.push_back(I);
             }
 
         res = IQTensor(iqinds);
 
-        std::map<Index, const Combiner*> rightcomb;
+        map<Index, const Combiner*> rightcomb;
         Foreach(const Combiner& co, combs)
             {
             rightcomb[co.right()] = &co;
@@ -275,12 +282,12 @@ product(IQTensor T, IQTensor& res) const
             {
             if(!hasindex(T,I))
                 {
-                std::cerr << "Could not find left IQIndex " << I << "\n";
+                cout << "Could not find left IQIndex " << I << "\n";
                 Print(T.indices());
-                std::cerr << "Left indices\n";
+                cout << "Left indices\n";
                 for(size_t j = 0; j < left_.size(); ++j)
                     { 
-                    std::cerr << j SP left_[j] << "\n"; 
+                    cout << j SP left_[j] << "\n"; 
                     }
                 Error("bad IQCombiner IQTensor product");
                 }
@@ -292,14 +299,14 @@ product(IQTensor T, IQTensor& res) const
                         {
                         Print(T.indices());
                         Print((*this));
-                        std::cerr << "(Left) IQIndex from IQCombiner = " << I << std::endl;
+                        cout << "(Left) IQIndex from IQCombiner = " << I << endl;
                         Error("Incompatible arrow directions in operator*(IQTensor,IQCombiner).");
                         }
                 }
             }
 
         //Create map of Combiners using uniqueReal as key
-        std::map<ApproxReal, const Combiner*> combmap;
+        map<ApproxReal, const Combiner*> combmap;
         Foreach(const Combiner& co, combs)
             {
             combmap[co.uniqueReal()] = &co;
@@ -320,18 +327,18 @@ product(IQTensor T, IQTensor& res) const
             if(combmap.count(block_ur) == 0)
                 {
                 Print(t);
-                std::cerr << "\nleft indices \n";
+                cout << "\nleft indices \n";
                 for(size_t j = 0; j < left_.size(); ++j)
-                    { std::cerr << j << " " << left_[j] << "\n"; }
-                std::cerr << "\n\n";
+                    { cout << j << " " << left_[j] << "\n"; }
+                cout << "\n" << endl;
 
-                typedef std::map<ApproxReal, const Combiner*>::const_iterator
+                typedef map<ApproxReal, const Combiner*>::const_iterator
                 combmap_const_it;
                 for(combmap_const_it uu = combmap.begin();
                     uu != combmap.end(); ++uu)
                     {
-                    std::cout << "Combiner: " << std::endl;
-                    std::cout << *(uu->second) << std::endl;
+                    cout << "Combiner: " << endl;
+                    cout << *(uu->second) << endl;
                     }
                 Error("no combmap entry for block_ur in IQCombiner prod");
                 }
@@ -363,14 +370,14 @@ hasindex(const IQCombiner& C, const Index& i)
     return false;
     }
 
-std::ostream& 
-operator<<(std::ostream & s, const IQCombiner & c)
+ostream& 
+operator<<(ostream & s, const IQCombiner & c)
     {
     if(c.isInit())
-        { s << std::endl << "Right index is " << c.right() << "\n"; }
+        { s << endl << "Right index is " << c.right() << "\n"; }
     else
-        { s << std::endl << "Right index is not initialized\n\n"; }
+        { s << endl << "Right index is not initialized\n\n"; }
     s << "Left indices: \n";
-    Foreach(const IQIndex& I, c.left_) s << I << std::endl;
+    Foreach(const IQIndex& I, c.left_) s << I << endl;
     return s << "\n\n";
     }
