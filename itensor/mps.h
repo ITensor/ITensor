@@ -367,26 +367,6 @@ class MPSt
         return s;
         }
 
-    void print(std::string name = "",Printdat pdat = HideData) const 
-        { 
-        bool savep = Global::printdat();
-        Global::printdat() = (pdat==ShowData); 
-        std::cerr << "\n" << name << " =\n" << *this << "\n"; 
-        Global::printdat() = savep;
-        }
-
-    void 
-    printIndices(const std::string& name = "") const
-        {
-        Cout << name << "=" << Endl;
-        for(int i = 1; i <= N(); ++i) 
-            A(i).printIndices(boost::format("A(%d)")%i);
-        }
-
-    void 
-    printIndices(const boost::format& fname) const
-        { printIndices(fname.str()); }
-
     void 
     toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
         {

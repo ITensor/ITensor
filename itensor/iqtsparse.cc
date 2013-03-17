@@ -399,28 +399,6 @@ scaleTo(const LogNumber& newscale) const
     blocks().scaleTo(newscale);
 	}
 
-void IQTSparse::
-print(std::string name,Printdat pdat) const 
-	{ 
-    bool savep = Global::printdat();
-    Global::printdat() = (pdat==ShowData); 
-	std::cerr << "\n" << name << " =\n" << *this << "\n"; 
-    Global::printdat() = savep;
-	}
-
-void IQTSparse::
-printIndices(const std::string& name) const
-	{ 
-	cout << "\n" << name << " (IQIndices only) = \n";
-    if(this->isNull())
-        {
-        cout << "    [IQTSparse is null]" << endl;
-        return;
-        }
-	for(int j = 1; j <= is_->r(); ++j)
-	    cout << is_->index(j) << "\n\n";
-	cout << "---------------------------\n" << endl;
-	}
 
 void IQTSparse::
 read(std::istream& s)

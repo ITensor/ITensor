@@ -673,10 +673,6 @@ class ITDat
     void 
     write(std::ostream& s) const;
     
-    //void 
-    //print() const { std::cout << "ITDat: v = " << v; }
-
-
 #ifdef ITENSOR_USE_ALLOCATOR
     void* operator 
     new(size_t) throw(std::bad_alloc)

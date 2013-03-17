@@ -182,9 +182,6 @@ class MPOt : private MPSt<Tensor>
         return s;
         }
 
-    using Parent::print;
-    using Parent::printIndices;
-
     void 
     toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
         {

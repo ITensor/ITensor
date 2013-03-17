@@ -188,17 +188,6 @@ class IQTSparse
     void 
     scaleTo(const LogNumber& newscale) const;
 
-    void 
-    print(std::string name = "",Printdat pdat = HideData) const;
-
-    void 
-    printIndices(const std::string& name = "") const;
-
-    inline void 
-    printIndices(const boost::format& fname) const
-        { printIndices(fname.str()); }
-
-
     void
     read(std::istream& s);
 

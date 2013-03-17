@@ -223,17 +223,6 @@ class ITSparse
     bool
     isNotNull() const { return (scale_ != LogNumber(0) || diag_.Length() != 0); }
 
-    void 
-    print(std::string name = "",Printdat pdat = HideData) const;
-
-    void 
-    printIndices(const std::string& name = "") const
-        { print(name,HideData); }
-
-    void 
-    printIndices(const boost::format& fname) const
-        { printIndices(fname.str()); }
-
     friend std::ostream&
     operator<<(std::ostream & s, const ITSparse & t);
 
