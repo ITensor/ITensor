@@ -51,8 +51,26 @@ class IQIndex : public Index
             Arrow dir = Out);
 
     IQIndex(const std::string& name, 
+            const Index& i1, const QN& q1, 
+            const Index& i2, const QN& q2,
+            const Index& i3, const QN& q3,
+            const Index& i4, const QN& q4,
+            const Index& i5, const QN& q5,
+            Arrow dir = Out);
+
+    IQIndex(const std::string& name, 
+            const Index& i1, const QN& q1, 
+            const Index& i2, const QN& q2,
+            const Index& i3, const QN& q3,
+            const Index& i4, const QN& q4,
+            const Index& i5, const QN& q5,
+            const Index& i6, const QN& q6,
+            Arrow dir = Out);
+
+    IQIndex(const std::string& name, 
             std::vector<IndexQN>& ind_qn, 
-            Arrow dir = Out, int plev = 0);
+            Arrow dir = Out, 
+            int plev = 0);
 
     //
     //Accessor Methods

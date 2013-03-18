@@ -270,8 +270,13 @@ IQIndex(const string& name,
     dir_(dir), 
     pd(make_shared<IQIndexDat>(i1,q1,i2,q2))
     {
+#ifdef DEBUG
     if(i2.type() != i1.type())
+        {
+        Print(i2);
         Error("Indices must have the same type");
+        }
+#endif
     }
 
 IQIndex::
@@ -285,9 +290,15 @@ IQIndex(const string& name,
     dir_(dir),
     pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3))
     {
+#ifdef DEBUG
     if(i2.type() != i1.type() 
     || i3.type() != i1.type())
+        {
+        Print(i2);
+        Print(i3);
         Error("Indices must have the same type");
+        }
+#endif
     }
 
 IQIndex::
@@ -302,10 +313,76 @@ IQIndex(const string& name,
     dir_(dir),
     pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3,i4,q4))
     {
+#ifdef DEBUG
     if(i2.type() != i1.type() 
     || i3.type() != i1.type()
     || i4.type() != i1.type())
+        {
+        Print(i2);
+        Print(i3);
+        Print(i4);
         Error("Indices must have the same type");
+        }
+#endif
+    }
+
+IQIndex::
+IQIndex(const string& name, 
+        const Index& i1, const QN& q1, 
+        const Index& i2, const QN& q2,
+        const Index& i3, const QN& q3,
+        const Index& i4, const QN& q4,
+        const Index& i5, const QN& q5,
+        Arrow dir) 
+    : 
+    Index(name,i1.m()+i2.m()+i3.m()+i4.m()+i5.m(),i1.type(),i1.primeLevel()), 
+    dir_(dir),
+    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4,i5,q5))
+    {
+#ifdef DEBUG
+    if(i2.type() != i1.type() 
+    || i3.type() != i1.type()
+    || i4.type() != i1.type()
+    || i5.type() != i1.type())
+        {
+        Print(i2);
+        Print(i3);
+        Print(i4);
+        Print(i5);
+        Error("Indices must have the same type");
+        }
+#endif
+    }
+
+IQIndex::
+IQIndex(const string& name, 
+        const Index& i1, const QN& q1, 
+        const Index& i2, const QN& q2,
+        const Index& i3, const QN& q3,
+        const Index& i4, const QN& q4,
+        const Index& i5, const QN& q5,
+        const Index& i6, const QN& q6,
+        Arrow dir) 
+    : 
+    Index(name,i1.m()+i2.m()+i3.m()+i4.m()+i5.m()+i6.m(),i1.type(),i1.primeLevel()), 
+    dir_(dir),
+    pd(new IQIndexDat(i1,q1,i2,q2,i3,q3,i4,q4,i5,q5,i6,q6))
+    {
+#ifdef DEBUG
+    if(i2.type() != i1.type() 
+    || i3.type() != i1.type()
+    || i4.type() != i1.type()
+    || i5.type() != i1.type()
+    || i6.type() != i1.type())
+        {
+        Print(i2);
+        Print(i3);
+        Print(i4);
+        Print(i5);
+        Print(i6);
+        Error("Indices must have the same type");
+        }
+#endif
     }
 
 int

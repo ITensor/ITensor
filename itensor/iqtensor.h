@@ -316,15 +316,6 @@ class IQTensor
 	   const IQIndexVal& iv7 = IQIndexVal::Null(), 
        const IQIndexVal& iv8 = IQIndexVal::Null()) const;
 
-    //----------------------------------------------------
-    //IQTensor quantum number methods
-
-    //QN 
-    //qn(const Index& in) const;
-
-    Arrow 
-    dir(const Index& in) const;
-
 
     //----------------------------------------------------
     //IQTensor: prime methods
