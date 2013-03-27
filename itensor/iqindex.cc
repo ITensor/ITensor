@@ -421,6 +421,9 @@ IQIndex(const Index& index, const IQIndexDatPtr& pdat)
     { }
 
 void IQIndex::
+conj() { dir_ = -dir_; }
+
+void IQIndex::
 write(ostream& s) const
     {
     IQINDEX_CHECK_NULL
@@ -674,6 +677,20 @@ qn(const IQIndex& I, const Index& i)
     cout << "i = " << i << endl;
     Error("IQIndex does not contain given index.");
     return QN();
+    }
+
+Index
+findByQN(const IQIndex& I, const QN& qn)
+    { 
+    Foreach(const IndexQN& jq, I.indices())
+        { 
+        if(jq.qn == qn) 
+            return jq;
+        }
+    cout << I << "\n";
+    cout << "qn = " << qn << endl;
+    Error("IQIndex does not contain given QN block.");
+    return Index();
     }
 
 ostream& 

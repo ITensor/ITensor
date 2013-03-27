@@ -127,7 +127,7 @@ class IQIndex : public Index
     //
 
     void 
-    conj() { dir_ = -dir_; }
+    conj();
 
     void 
     write(std::ostream& s) const;
@@ -244,6 +244,9 @@ offset(const IQIndex& I, const Index& i);
 
 QN 
 qn(const IQIndex& I, const Index& i);
+
+Index
+findByQN(const IQIndex& I, const QN& qn);
 
 std::string 
 showm(const IQIndex& I);
