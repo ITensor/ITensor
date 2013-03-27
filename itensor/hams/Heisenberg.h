@@ -122,8 +122,8 @@ init_()
         for(int q = 1; q <= nop*(max_mpo_dist-1); ++q)
             { W += model_.id(n) * row(1+nop+q) * col(1+q); }
 
-        //Periodic BC bond
-        if(y == 1 && Ny_ > 1)
+        //Periodic BC bond (only for width 3 ladders or greater)
+        if(y == 1 && Ny_ >= 3)
             {
             int mpo_dist = Ny_-1; 
             W += model_.sz(n) * row(k) * col(2+nop*(mpo_dist-1)) * J_;

@@ -11,6 +11,20 @@
 template <typename T>
 class SweepSetter;
 
+//
+// To use the InputGroup / table constructor,
+// the format required in the input file is:
+//
+// sweep_table_name
+//      {
+//      maxm   minm  cutoff  niter  noise
+//      20     20    1E-8    4      1E-8
+//      40     20    1E-8    3      1E-9
+//      80     20    1E-10   2      1E-10
+//      160    20    1E-12   2      0
+//      240    20    1E-12   2      0
+//      }
+//
 class Sweeps
     {
     public:
