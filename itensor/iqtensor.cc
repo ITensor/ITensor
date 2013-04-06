@@ -933,7 +933,7 @@ randomize()
         QN nd;
         for(int n = 1; n <= r(); ++n)
             {
-            nd += is_->index(n).qn(1+C.i[n]);
+            nd += is_->index(n).dir()*is_->index(n).qn(1+C.i[n]);
             }
         if(nd != D) continue;
 
