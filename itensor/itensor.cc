@@ -1194,6 +1194,18 @@ norm() const
     return fabs(Norm(p->v) * scale_.real0()); 
     }
 
+LogNumber ITensor::
+normLogNum() const 
+    { 
+    return LogNumber(log(Norm(p->v))+scale_.logNum(),+1);
+    }
+
+Real ITensor::
+normNoScale() const 
+    { 
+    return Norm(p->v);
+    }
+
 void ITensor::
 pseudoInvert(Real cutoff)
     {

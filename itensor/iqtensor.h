@@ -374,6 +374,9 @@ class IQTensor
     Real 
     norm() const;
 
+    LogNumber 
+    normLogNum() const;
+
     Real 
     sumels() const;
 

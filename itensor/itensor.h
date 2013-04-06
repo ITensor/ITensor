@@ -181,7 +181,7 @@ class ITensor
 
     //Multiplication with LogNumber (very large or very small Real)
     ITensor& 
-    operator*=(LogNumber lgnum) { scale_ *= lgnum; return *this; }
+    operator*=(const LogNumber& lgnum) { scale_ *= lgnum; return *this; }
 
     // Contract with IndexVal
     // If iv = (J,n), Index J is fixed to it's nth
@@ -433,6 +433,12 @@ class ITensor
 
     Real 
     norm() const;
+
+    LogNumber 
+    normLogNum() const;
+
+    Real 
+    normNoScale() const;
 
     template <typename Callable> 
     void

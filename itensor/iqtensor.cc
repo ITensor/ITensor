@@ -650,22 +650,40 @@ uniqueReal() const
     return is_->uniqueReal(); 
     }
 
+LogNumber IQTensor::
+normLogNum() const
+    {
+    if(dat().empty()) return LogNumber(0);
+
+    Real maxLogNum = -maxlogdouble;
+    Foreach(const ITensor& t, dat())
+        { 
+        if(t.scale().logNum() > maxLogNum)
+            maxLogNum = t.scale().logNum();
+        }
+
+    //Add sum of squares of the block norms with exp(2*maxLogNum) scaled out, 
+    //using lognorm as a temporary
+    Real lognorm = 0;
+    Foreach(const ITensor& t, dat())
+        { 
+        if(t.scale().sign() != 0)
+            {
+            lognorm += exp(2*(t.scale().logNum()-maxLogNum))*sqr(t.normNoScale()); 
+            }
+        }
+    //Take the sqrt (the 0.5 factor) and log of lognorm, then add maxLogNum back in
+    lognorm = maxLogNum + 0.5*log(lognorm);
+
+    return LogNumber(lognorm,+1);
+    }
+
 Real IQTensor::
 norm() const
     {
-    Real res = 0;
-    Foreach(const ITensor& t, dat())
-        { res += sqr(t.norm()); }
-
-    //Even if the ITensor norms aren't separately too
-    //large for Real, their sum may be
-    if(res > std::numeric_limits<Real>::max())
-        {
-        throw TooBigForReal("Norm too large for real in IQTensor::norm()");
-        }
-
-    return sqrt(res);
+    return normLogNum().real0();
     }
+
 
 Real IQTensor::
 sumels() const
@@ -679,9 +697,9 @@ sumels() const
 void IQTensor::
 scaleOutNorm()
     {
-    Real f = norm();
+    LogNumber newscale = normLogNum();
     Foreach(ITensor& t, dat.nc())
-        t.scaleTo(f);
+        t.scaleTo(newscale);
     }
 
 void IQTensor::
