@@ -350,4 +350,42 @@ TEST(ComplexAdd)
 
     }
 
+TEST(RandomizeTest)
+    {
+    IQTensor T(L1(1),S1(1),L2(4),S2(2));
+    const QN D = div(T);
+    T.randomize();
+    CHECK_EQUAL(D,div(T));
+    }
+
+TEST(Test_normLogNum)
+    {
+    IQTensor Z(conj(S1),primed(S1));
+    ITensor blk1(s1u(1),primed(s1u)(1)),
+            blk2(s1d(1),primed(s1d)(1));
+    blk1 *= 0.1234;
+    blk1 *= LogNumber(10,1);
+    Z += blk1; 
+    blk2 *= LogNumber(9,1);
+    Z += blk2; 
+
+    CHECK_CLOSE(Z.normLogNum().logNum(),log(sqrt(sqr(0.1234)*exp(20)+exp(18))),1E-5);
+
+    }
+
+TEST(BigNorm)
+    {
+    IQTensor Z(conj(S1),primed(S1));
+    ITensor blk1(s1u(1),primed(s1u)(1)),
+            blk2(s1d(1),primed(s1d)(1));
+    blk1 *= 0.1234;
+    blk1 *= LogNumber(1000,1);
+    Z += blk1; 
+    blk2 *= LogNumber(999,1);
+    Z += blk2; 
+
+    //Mainly want to check that Z.normLogNum() doesn't overflow in this case
+    CHECK_CLOSE(Z.normLogNum().logNum(),999.053,1E-4);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

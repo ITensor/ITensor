@@ -389,8 +389,8 @@ TEST(ITensorConstructors)
     }
 
     Permutation P;
-    P.from_to(2,4);
-    P.from_to(4,2);
+    P.fromTo(2,4);
+    P.fromTo(4,2);
     CHECK(P.check(4));
 
     IndexSet<Index> indices5(l1,l4,l3,l2);
@@ -524,8 +524,8 @@ TEST(MapElems)
 TEST(reshapeDat)
     {
     Permutation P;
-    P.from_to(1,2);
-    P.from_to(2,1);
+    P.fromTo(1,2);
+    P.fromTo(2,1);
 
     Real f = -5;
     A *= f;
@@ -544,8 +544,8 @@ TEST(reshape)
     {
     //cout << "Begin: reshape -------------" << endl;
     Permutation P;
-    P.from_to(1,2);
-    P.from_to(2,1);
+    P.fromTo(1,2);
+    P.fromTo(2,1);
 
     Real f = -5;
     A *= f;
