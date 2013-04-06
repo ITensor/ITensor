@@ -23,7 +23,7 @@ HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
         model/tj.h \
         eigensolver.h localop.h localmpo.h localmposet.h itsparse.h iqtsparse.h\
-        partition.h option.h hambuilder.h localmpo_mps.h tevol.h dmrg.h
+        partition.h option.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h
 
 ####################################
 
@@ -116,3 +116,6 @@ mps.o: $(DEPHEADERS)
 DEPHEADERS+= mpo.h
 mpo.o: $(DEPHEADERS)
 .debug_objs/mpo.o: $(DEPHEADERS)
+DEPHEADERS+= bondgate.h tevol.h
+tevol.o: $(DEPHEADERS)
+.debug_objs/tevol.o: $(DEPHEADERS)
