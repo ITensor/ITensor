@@ -656,7 +656,7 @@ getperm(const IndexSet<IndexT>& iset,
             {
             if(oset[j] == iset[k])
                 { 
-                P.from_to(j+1,k+1); 
+                P.fromTo(j+1,k+1); 
                 got_one = true; 
                 break;
                 }

@@ -232,7 +232,7 @@ ITensor(const IndexSet<Index>& I, const ITensor& other, const Permutation& P)
     if(is_.dim() != other.vecSize()) 
         Error("incompatible Index and ITensor sizes");
 #endif
-    if(P.is_trivial()) { p = other.p; }
+    if(P.isTrivial()) { p = other.p; }
     else               { allocate(); other.reshapeDat(P,p->v); }
     }
 
@@ -553,14 +553,14 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
         //cerr << format("isReplaced[%d] = %d\n") % j % isReplaced[j];
         if(isReplaced[j] == 0)
             {
-            //cerr << format("Kept index, setting P.from_to(%d,%d)\n") % j % (nkept+1);
-            P.from_to(j,++nkept);
+            //cerr << format("Kept index, setting P.fromTo(%d,%d)\n") % j % (nkept+1);
+            P.fromTo(j,++nkept);
             nindices.addindex(is_.index(j)); 
             }
         else
             {
-            //cerr << format("Replaced index, setting P.from_to(%d,%d)\n") % j % (res_rn_+isReplaced[j]-1);
-            P.from_to(j,res_rn_+isReplaced[j]-1);
+            //cerr << format("Replaced index, setting P.fromTo(%d,%d)\n") % j % (res_rn_+isReplaced[j]-1);
+            P.fromTo(j,res_rn_+isReplaced[j]-1);
             }
         }
 
@@ -968,7 +968,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
 
     const Vector& thisdat = p->v;
 
-    if(P.is_trivial())
+    if(P.isTrivial())
         {
         rdat = thisdat;
         return;
@@ -1139,7 +1139,7 @@ reshapeDat(const Permutation& P, Vector& rdat) const
 void ITensor::
 reshapeDat(const Permutation& P)
     {
-    if(P.is_trivial()) return;
+    if(P.isTrivial()) return;
     solo();
     Vector newdat;
     this->reshapeDat(P,newdat);
@@ -1430,27 +1430,27 @@ ProductProps(const ITensor& L, const ITensor& R)
         if(k < rcstart) rcstart = k;
 
 		++nsamen;
-		pl.from_to(j,nsamen);
-		pr.from_to(k,nsamen);
+		pl.fromTo(j,nsamen);
+		pr.fromTo(k,nsamen);
 
 		contractedL[j] = contractedR[k] = true;
 
         cdim *= L.is_.index(j).m();
 
-        //matchL.from_to(k,j-lcstart+1);
+        //matchL.fromTo(k,j-lcstart+1);
 		}
     //Finish making pl
     int q = nsamen;
     for(int j = 1; j <= L.is_.rn(); ++j)
-        if(!contractedL[j]) pl.from_to(j,++q);
+        if(!contractedL[j]) pl.fromTo(j,++q);
     //Finish making pr and matchL
     q = nsamen;
     for(int j = 1; j <= R.is_.rn(); ++j)
         if(!contractedR[j]) 
             {
             ++q;
-            pr.from_to(j,q);
-            //matchL.from_to(j,q);
+            pr.fromTo(j,q);
+            //matchL.fromTo(j,q);
             }
 
     odimL = L.p->v.Length()/cdim;
@@ -2269,7 +2269,7 @@ operator<<(ostream & s, const ITensor& t)
             {
             Real scale = 1.0;
             if(t.scale().isFiniteReal()) scale = t.scale().real();
-            else s << "\n(omitting too large scale factor)" << endl;
+            else s << "  (omitting too large scale factor)" << endl;
             const Real* pv = t.datStart();
             Counter c(t.indices());
             for(; c.notDone(); ++c)
