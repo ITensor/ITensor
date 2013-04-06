@@ -12,7 +12,7 @@ class SpinOne : public Model
 
     SpinOne();
 
-    SpinOne(int N, bool shalf_edge = false);
+    SpinOne(int N, const OptSet& opts = Global::opts());
 
     SpinOne(std::ifstream& s) { doRead(s); }
 
@@ -92,11 +92,11 @@ SpinOne()
     { }
 
 inline SpinOne::
-SpinOne(int N, bool shalf_edge)
+SpinOne(int N, const OptSet& oset)
     : N_(N),
       site_(N_+1)
     { 
-    constructSites(shalf_edge);
+    constructSites(oset.getBool("SHalfEdge",false));
     }
 
 inline void SpinOne::
