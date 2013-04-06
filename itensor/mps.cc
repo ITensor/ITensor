@@ -1044,11 +1044,11 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                 IndexSet<Index> newinds(block.indices());
                 if(is_mpo) 
                     {
-                    newinds.addindex(conj(model.si(s)(n).index()));
-                    newinds.addindex(model.siP(s)(u).index());
+                    newinds.addindex(conj(model.si(s)(n).indexqn()));
+                    newinds.addindex(model.siP(s)(u).indexqn());
                     }
                 else 
-                    { newinds.addindex(model.si(s)(n).index()); }
+                    { newinds.addindex(model.si(s)(n).indexqn()); }
 
                 qt[q].push_back(ITensor(newinds,block));
 

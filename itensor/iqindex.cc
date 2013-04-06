@@ -545,6 +545,17 @@ IndReImPP()
     }
 
 
+void
+calc_ind_ii(const IQIndexVal& iv, int& j, int& ii)
+    {
+    j = 1;
+    ii = iv.i;
+    while(ii > iv.index(j).m())
+        {
+        ii -= iv.index(j).m();
+        ++j;
+        }
+    }
 
 
 IQIndexVal::
@@ -572,20 +583,20 @@ IQIndexVal(const IQIndex& iqindex, int i_)
     }
 
 
-Index IQIndexVal::
-index() const 
+IndexQN IQIndexVal::
+indexqn() const 
     { 
     int j,ii;
-    calc_ind_ii(j,ii);
-    return IQIndex::index(j);
+    calc_ind_ii(*this,j,ii);
+    return IndexQN(IQIndex::index(j),IQIndex::qn(j));
     }
 
 
-QN IQIndexVal::
+const QN& IQIndexVal::
 qn() const 
     { 
     int j,ii;
-    calc_ind_ii(j,ii);
+    calc_ind_ii(*this,j,ii);
     return IQIndex::qn(j);
     }
 
@@ -608,7 +619,7 @@ blockIndexVal() const
     if(*this == IQIndexVal::Null())
         return IndexVal::Null();
     int j,ii;
-    calc_ind_ii(j,ii);
+    calc_ind_ii(*this,j,ii);
     return IndexVal(this->index(j),ii); 
     }
 
@@ -622,17 +633,6 @@ operator ITensor() const
 */
 
 
-void IQIndexVal::
-calc_ind_ii(int& j, int& ii) const
-    {
-    j = 1;
-    ii = i;
-    while(ii > this->index(j).m())
-        {
-        ii -= this->index(j).m();
-        ++j;
-        }
-    }
 
 IQIndexVal IQIndex::
 operator()(int n) const 

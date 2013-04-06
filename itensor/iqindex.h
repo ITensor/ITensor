@@ -166,55 +166,6 @@ class IQIndex : public Index
 
     }; //class IQIndex
 
-
-//
-// IQIndexVal
-//
-
-class IQIndexVal : public IQIndex
-    {
-    public:
-
-    int i;
-
-    IQIndexVal();
-
-    IQIndexVal(const IQIndex& iqindex, int i_);
-
-    Index index() const;
-
-    using IQIndex::index;
-
-    QN qn() const;
-
-    using IQIndex::qn;
-
-    bool
-    operator==(const IQIndexVal& other) const;
-
-    operator IndexVal() const;
-
-    IndexVal blockIndexVal() const;
-
-    ITensor 
-    operator*(const IndexVal& iv) const 
-        { 
-        return IndexVal(Index(*this),i) * iv; 
-        }
-
-    static const IQIndexVal& Null()
-        {
-        static const IQIndexVal Null_;
-        return Null_;
-        }
-
-    private:
-
-    void 
-    calc_ind_ii(int& j, int& ii) const;
-
-    };
-
 //
 // IndexQN
 //
@@ -233,6 +184,52 @@ class IndexQN : public Index
     write(std::ostream& s) const { Index::write(s); qn.write(s); }
     void 
     read(std::istream& s) { Index::read(s); qn.read(s); }
+    };
+
+
+//
+// IQIndexVal
+//
+
+class IQIndexVal : public IQIndex
+    {
+    public:
+
+    int i;
+
+    IQIndexVal();
+
+    IQIndexVal(const IQIndex& iqindex, int i_);
+
+    IndexQN
+    indexqn() const;
+
+    const QN&
+    qn() const;
+
+    const QN&
+    qn(int j) const { return IQIndex::qn(j); }
+
+    bool
+    operator==(const IQIndexVal& other) const;
+
+    operator IndexVal() const;
+
+    IndexVal 
+    blockIndexVal() const;
+
+    ITensor 
+    operator*(const IndexVal& iv) const 
+        { 
+        return IndexVal(Index(*this),i) * iv; 
+        }
+
+    static const IQIndexVal& Null()
+        {
+        static const IQIndexVal Null_;
+        return Null_;
+        }
+
     };
 
 
