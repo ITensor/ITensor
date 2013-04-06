@@ -6,7 +6,7 @@
 #include <math.h>
 #include <fstream>
 
-#include <Accelerate/Accelerate.h>
+#include "lapack_wrap.h"
 
 using namespace std;
 
@@ -736,20 +736,20 @@ Matrix Exp(const MatrixRef& M)
 void 
 EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
     {
-    __CLPK_integer N = A.Ncols();
+    LAPACK_INT N = A.Ncols();
     if (N != A.Nrows() || A.Nrows() < 1)
       _merror("EigenValues: Input Matrix must be square");
 
     char jobz = 'V';
     char uplo = 'U';
-    __CLPK_integer lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
-    __CLPK_doublereal work[lwork];
-    __CLPK_integer info;
+    LAPACK_INT lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
+    LAPACK_REAL work[lwork];
+    LAPACK_INT info;
     
     D.ReDimension(N);
     Z = A;
 
-    dsyev_(&jobz,&uplo,&N,Z.Store(),&N,D.Store(),work,&lwork,&info);
+    dsyev_wrapper(&jobz,&uplo,&N,Z.Store(),&N,D.Store(),work,&lwork,&info);
 
     if(info != 0)
 	{
@@ -775,16 +775,16 @@ EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 void 
 GeneralizedEV(const MatrixRef& A, const MatrixRef& B, Vector& D, Matrix& Z)
     {
-    __CLPK_integer N = A.Ncols();
+    LAPACK_INT N = A.Ncols();
     if (N != A.Nrows() || A.Nrows() < 1)
       _merror("EigenValues: Input Matrix must be square");
 
     int itype = 1; //A x = lambda B x type problem
     char jobz = 'V';
     char uplo = 'U';
-    __CLPK_integer lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
-    __CLPK_doublereal work[lwork];
-    __CLPK_integer info;
+    LAPACK_INT lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
+    LAPACK_REAL work[lwork];
+    LAPACK_INT info;
     
     D.ReDimension(N);
     Z = A;
@@ -1185,7 +1185,7 @@ inline Complex& CMHelper::operator[](int c) { return (*p)(r+1,c+1); }
 void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
 	                                Matrix& revecs, Matrix& ievecs)
     {
-    __CLPK_integer N = re.Ncols();
+    LAPACK_INT N = re.Ncols();
     if (N != re.Nrows() || re.Nrows() < 1)
       _merror("HermitianEigenValues: Input Matrix must be square");
     if(im.Ncols() != N || im.Nrows() != N)
@@ -1196,10 +1196,10 @@ void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
 
     char jobz = 'V';
     char uplo = 'U';
-    __CLPK_integer lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
+    LAPACK_INT lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
     __CLPK_doublecomplex work[lwork];
-    __CLPK_doublereal rwork[lwork];
-    __CLPK_integer info;
+    LAPACK_REAL rwork[lwork];
+    LAPACK_INT info;
     
     evals.ReDimension(N);
 
