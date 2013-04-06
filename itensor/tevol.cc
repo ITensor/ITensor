@@ -812,14 +812,7 @@ gateTEvol(const list<BondGate<Tensor> >& gatelist, Real ttotal, Real tstep,
           MPSt<Tensor>& psi, 
           const OptSet& opts)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
-    typedef typename Tensor::SparseT
-    SparseT;
-
     bool verbose = opts.getBool("Verbose",false);
-
-    //const int N = psi.N();
 
     const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
     if(fabs(nt*tstep-ttotal) > 1E-9)
@@ -828,17 +821,18 @@ gateTEvol(const list<BondGate<Tensor> >& gatelist, Real ttotal, Real tstep,
         }
 
     Real tsofar = 0;
+    if(verbose) cout << "Doing " << nt << " steps" << endl;
     for(int tt = 1; tt <= nt; ++tt)
         {
-        Foreach(const BondGate<Tensor> & gate, gatelist)
+        Foreach(const BondGate<Tensor> & G, gatelist)
             {
-            psi.position(gate.i());
-            psi.applygate(gate.op());
+            psi.position(G.i());
+            psi.applygate(G);
             }
 
         if(verbose)
             {
-            Real percentdone = 100*tt/(0.5*ttotal/tstep+1e-9);
+            Real percentdone = (100.*tt)/nt;
             if(percentdone < 99.5)
                 {
                 fprintf(stdout,"\b\b\b%2.f%%",percentdone);
