@@ -119,20 +119,36 @@ void SVDWorker::
 svdRank2(ITensor A, const Index& ui, const Index& vi,
          ITensor& U, ITSparse& D, ITensor& V, int b)
     {
-    if(A.r() != 2)
+    const bool cplx = isComplex(A);
+
+    if(A.r() != 2 + (cplx ? 1 : 0))
         {
-        Error("A.r() must be 2");
+        Error("A must be matrix-like");
         }
 
-    //const Index &ui = (U.hasindex(A.index(1)) ? A.index(1) : A.index(2)),
-    //            &vi = (V.hasindex(A.index(2)) ? A.index(2) : A.index(1));
-
-    Matrix M;
-    A.toMatrix11NoScale(ui,vi,M);
-
-    Matrix UU,VV;
+    Matrix UU,VV,
+           iUU,iVV;
     Vector& DD = eigsKept_.at(b);
-    SVD(M,UU,DD,VV);
+
+    if(!cplx)
+        {
+        Matrix M;
+        A.toMatrix11NoScale(ui,vi,M);
+
+        SVD(M,UU,DD,VV);
+        }
+    else
+        {
+        ITensor Are = realPart(A),
+                Aim = imagPart(A);
+        Are.scaleTo(A.scale());
+        Aim.scaleTo(A.scale());
+        Matrix Mre,Mim;
+        Are.toMatrix11NoScale(ui,vi,Mre);
+        Aim.toMatrix11NoScale(ui,vi,Mim);
+
+        SVDComplex(Mre,Mim,UU,iUU,DD,VV,iVV);
+        }
 
     //Truncate
     int m = DD.Length();
@@ -182,18 +198,18 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
             {
             Ds *= A.scale().real();
-            cout << "Eigs: ";
+            cout << "Singular values: ";
             }
         else
             {
-            cout << "Eigs (not including scale = " << A.scale() << "):";
+            cout << "Singular values (not including scale = " << A.scale() << "):";
             }
 
         for(int j = 1; j <= stop; ++j)
             {
-            const Real eig = sqr(Ds(j));
-            cout << format( (eig > 1E-3 && eig < 1000) ? ("%.3f") : ("%.3E")) 
-                    % eig;
+            const Real sval = Ds(j);
+            cout << format( ( sval > 1E-3 && sval < 1000) ? ("%.3f") : ("%.3E")) 
+                    % sval;
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -205,6 +221,14 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
     D *= A.scale();
     U = ITensor(ui,uL,UU.Columns(1,m));
     V = ITensor(vL,vi,VV.Rows(1,m));
+
+    if(cplx)
+        {
+        ITensor iU(ui,uL,iUU.Columns(1,m)),
+                iV(vL,vi,iVV.Rows(1,m));
+        U = U*Complex_1() + iU*Complex_i();
+        V = V*Complex_1() + iV*Complex_i();
+        }
 
     //Square all singular values
     //since convention is to report
@@ -231,17 +255,27 @@ void SVDWorker::
 svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
          IQTensor& U, IQTSparse& D, IQTensor& V, int b)
     {
-    if(A.r() != 2)
+    const bool cplx = isComplex(A);
+
+    if(A.r() != 2 + (cplx ? 1 : 0)) 
         {
-        Error("A.r() must be 2");
+        Error("A must be matrix-like");
         }
 
     const int Nblock = A.iten_size();
     if(Nblock == 0)
-        throw ResultIsZero("A.iten_size() == 0");
+        throw ResultIsZero("A has no blocks");
 
     vector<Matrix> Umatrix(Nblock),
-                   Vmatrix(Nblock);
+                   Vmatrix(Nblock),
+                   iUmatrix,
+                   iVmatrix;
+    if(cplx)
+        {
+        iUmatrix.resize(Nblock);
+        iVmatrix.resize(Nblock);
+        }
+
     vector<Vector> dvector(Nblock);
 
     vector<Real> alleig;
@@ -270,20 +304,54 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     int itenind = 0;
     Foreach(const ITensor& t, A.blocks())
         {
-
         Matrix &UU = Umatrix.at(itenind);
         Matrix &VV = Vmatrix.at(itenind);
         Vector &d =  dvector.at(itenind);
 
-        IndexSet<Index>::const_iterator ui = t.indices().begin(),
-                                        vi = ui+1;
+        const Index *ui,*vi;
+        bool gotui = false;
+        Foreach(const Index& I, t.indices())
+            {
+            if(I.type() == ReIm) continue;
+
+            if(!gotui) 
+                {
+                ui = &I;
+                gotui = true;
+                }
+            else       
+                {
+                vi = &I;
+                break;
+                }
+            }
+
         if(!hasindex(uI,*ui))
             swap(ui,vi);
 
-        Matrix M(ui->m(),vi->m());
-        t.toMatrix11NoScale(*ui,*vi,M);
+        if(!cplx)
+            {
+            Matrix M(ui->m(),vi->m());
+            t.toMatrix11NoScale(*ui,*vi,M);
 
-        SVD(M,UU,d,VV);
+            SVD(M,UU,d,VV);
+            }
+        else
+            {
+            ITensor ret = realPart(t),
+                    imt = imagPart(t);
+            ret.scaleTo(refNorm_);
+            imt.scaleTo(refNorm_);
+            Matrix Mre(ui->m(),vi->m()),
+                   Mim(ui->m(),vi->m());
+            ret.toMatrix11NoScale(*ui,*vi,Mre);
+            imt.toMatrix11NoScale(*ui,*vi,Mim);
+
+            SVDComplex(Mre,Mim,
+                       UU,iUmatrix.at(itenind),
+                       d,
+                       VV,iVmatrix.at(itenind));
+            }
 
         //Store the squared singular values
         //(denmat eigenvalues) in alleig
@@ -373,22 +441,23 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         if(fabs(orderMag) < 5 && refNorm_.isFiniteReal())
             {
             real_fac = refNorm_.real();
-            cout << "    Eigs: ";
+            cout << "    Singular values: ";
             }
         else
             {
-            cout << "    Eigs [omitting scale factor " << refNorm_ << "]: \n";
+            cout << "    Singular values [omitting scale factor " << refNorm_ << "]: \n";
             if(alleig.at(s-1) > 1.e10)
                 {
                 Error("bad alleig");
                 }
+            cout << "    ";
             }
 
-        cout << "    ";
         for(int j = s-1; j >= stop; --j)
             {
-            cout << format( (alleig.at(j) > 1E-6 && alleig.at(j) < 1E3) ? ("%.3f") : ("%.3E")) 
-                                % (alleig[j] * real_fac);
+            const Real sval = sqrt(alleig.at(j))*real_fac;
+            cout << format( (sval >= 1E-3 && sval < 1E3) ? ("%.3f") : ("%.3E")) 
+                    % sval;
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -401,9 +470,16 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     Riq.reserve(Nblock);
 
     vector<ITensor> Ublock,
-                    Vblock;
+                    Vblock,
+                    iUblock,
+                    iVblock;
     Ublock.reserve(Nblock);
     Vblock.reserve(Nblock);
+    if(cplx)
+        {
+        iUblock.reserve(Nblock);
+        iVblock.reserve(Nblock);
+        }
 
     vector<ITSparse> Dblock;
     Dblock.reserve(Nblock);
@@ -434,8 +510,24 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         if(this_m == 0) { ++itenind; continue; }
 
-        IndexSet<Index>::const_iterator ui = t.indices().begin(),
-                                        vi = ui+1;
+        const Index *ui,*vi;
+        bool gotui = false;
+        Foreach(const Index& I, t.indices())
+            {
+            if(I.type() == ReIm) continue;
+
+            if(!gotui) 
+                {
+                ui = &I;
+                gotui = true;
+                }
+            else       
+                {
+                vi = &I;
+                break;
+                }
+            }
+
         if(!hasindex(uI,*ui))
             swap(ui,vi);
 
@@ -449,6 +541,12 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         Ublock.push_back(ITensor(*ui,l,UU.Columns(1,this_m)));
         Vblock.push_back(ITensor(r,*vi,VV.Rows(1,this_m)));
+
+        if(cplx)
+            {
+            iUblock.push_back(ITensor(*ui,l,iUmatrix.at(itenind).Columns(1,this_m)));
+            iVblock.push_back(ITensor(r,*vi,iVmatrix.at(itenind).Rows(1,this_m)));
+            }
 
         ++itenind;
         }
@@ -468,6 +566,19 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         D += Dblock[j];
         U += Ublock[j];
         V += Vblock[j];
+        }
+
+    if(cplx)
+        {
+        IQTensor iU(uI,conj(L));
+        IQTensor iV(conj(R),vI);
+        for(size_t j = 0; j < Dblock.size(); ++j)
+            {
+            iU += iUblock[j];
+            iV += iVblock[j];
+            }
+        U = U*IQComplex_1() + iU*IQComplex_i();
+        V = V*IQComplex_1() + iV*IQComplex_i();
         }
 
     //Originally eigs were found by calling

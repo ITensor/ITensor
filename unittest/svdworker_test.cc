@@ -437,5 +437,33 @@ TEST(ComplexSVD)
     CHECK(diff.norm() < 1E-10);
     }
 
+TEST(ComplexDenmat)
+    {
+    Index r("r",4),c("c",4);
+    ITensor rr(r,c),ri(r,c);
+
+    rr(r(1),c(1)) = 0.2;
+    rr(r(2),c(2)) = 0.2;
+    rr(r(2),c(3)) = -0.00492164;
+    rr(r(3),c(2)) = -0.00492164;
+    rr(r(3),c(3)) = 0.2;
+    rr(r(4),c(4)) = 0.4;
+
+    ri(r(2),c(3)) = 0.0983495255;
+    ri(r(3),c(2)) = -0.0983495255; 
+
+    ITensor rho = rr*Complex_1()+ri*Complex_i();
+    rho.scaleTo(1);
+    PrintDat(rho);
+
+    ITensor U(r),V;
+    ITSparse D;
+
+    svd(rho,U,D,V);
+    PrintDat(U);
+    PrintDat(D);
+    PrintDat(V);
+    }
+
 
 BOOST_AUTO_TEST_SUITE_END()

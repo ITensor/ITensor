@@ -375,11 +375,7 @@ svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V,
               &Rcomb = (U.isNull() ? Ucomb : Vcomb);
     Foreach(const IndexT& I, AA.indices())
         { 
-        if(I == Tensor::ReImIndex()) 
-            {
-            Lcomb.addleft(I);
-            continue;
-            }
+        if(I.type() == ReIm) continue;
 
         if(hasindex(L,I))
             Lcomb.addleft(I);
