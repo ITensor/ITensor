@@ -27,4 +27,11 @@ void
 SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
     Real newThresh = 1E-4);
 
+void 
+SVDComplex(const MatrixRef& Are, const MatrixRef& Aim,
+           Matrix& Ure, Matrix& Uim, 
+           Vector& D, 
+           Matrix& Vre, Matrix& Vim);
+           
+
 #endif

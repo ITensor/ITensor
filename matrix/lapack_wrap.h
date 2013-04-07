@@ -32,18 +32,41 @@ LAPACK_COMPLEX;
 int inline
 dsyev_wrapper(char* jobz,
               char* uplo,
-              int* n, 
-              double* a,
-              int* lda, 
-              double* w, 
-              double* work, 
-              int* lwork,
-              int* info)
+              LAPACK_INT* n, 
+              LAPACK_REAL* a,
+              LAPACK_INT* lda, 
+              LAPACK_REAL* w, 
+              LAPACK_REAL* work, 
+              LAPACK_INT* lwork,
+              LAPACK_INT* info)
     {
 #ifdef PLATFORM_macos
     return dsyev_(jobz,uplo,n,a,lda,w,work,lwork,info);
 #elif PLATFORM_acml
     return dsyev_(jobz,uplo,n,a,lda,w,work,lwork,info,1,1);
+#endif
+    }
+
+int inline
+zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to compute
+                                     //choosing *jobz=='S' computes min(m,n) cols of U, V
+               LAPACK_INT *m,        //number of rows of input matrix *A
+               LAPACK_INT *n,        //number of cols of input matrix *A
+               LAPACK_COMPLEX *A,    //contents of input matrix A
+               LAPACK_INT *lda,      //typically lda==m
+               LAPACK_REAL *s,       //on return, singular values of A
+               LAPACK_COMPLEX *u,    //on return, unitary matrix U
+               LAPACK_INT *ldu,      //typically ldu==m
+               LAPACK_COMPLEX *vt,   //on return, unitary matrix V transpose
+               LAPACK_INT *ldvt,     //typically ldvt==n
+               LAPACK_COMPLEX *work, 
+               LAPACK_INT *lwork, 
+               LAPACK_REAL *rwork, 
+               LAPACK_INT *iwork, 
+               LAPACK_INT *info)
+    {
+#ifdef PLATFORM_macos
+    return zgesdd_(jobz,m,n,A,lda,s,u,ldu,vt,ldvt,work,lwork,rwork,iwork,info);
 #endif
     }
 

@@ -182,5 +182,30 @@ TEST(BadSVD)
 
     }
 
+TEST(TestSVDComplex)
+    {
+    const int n = 10,
+              m = 20;
+    Matrix Are(n,m),
+           Aim(n,m);
+
+    Are.Randomize();
+    Aim.Randomize();
+
+    Matrix Ure,Uim,Vre,Vim;
+    Vector D;
+    SVDComplex(Are,Aim,Ure,Uim,D,Vre,Vim);
+
+    Matrix DD(D.Length(),D.Length()); DD = 0;
+    for(int i = 1; i <= D.Length(); ++i) DD(i,i) = D(i);
+
+    Matrix ReDiff = Are-(Ure*DD*Vre-Uim*DD*Vim);
+    Matrix ImDiff = Aim-(Ure*DD*Vim+Uim*DD*Vre);
+
+    cout << Norm(ReDiff.TreatAsVector()) << endl;
+    CHECK(Norm(ReDiff.TreatAsVector()) < 1E-10);
+    CHECK(Norm(ImDiff.TreatAsVector()) < 1E-10);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
 

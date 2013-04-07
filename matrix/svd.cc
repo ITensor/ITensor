@@ -2,6 +2,8 @@
 
 #include <fstream>
 
+#include "lapack_wrap.h"
+
 using namespace std;
 
 
@@ -42,7 +44,8 @@ writeMatrix(const string& fname, const Matrix& M)
 // For the special value newThresh == 0 the algorithm does only one pass.
 //
 
-void checksvd(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V)
+void 
+checksvd(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V)
     {
     Matrix Ach = U;
     for(int i = 1; i <= D.Length(); i++)
@@ -51,7 +54,7 @@ void checksvd(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V)
     Ach -= A;
     Real nor = Norm(A.TreatAsVector());
     if(nor != 0.0)
-	cout << "relative error with sqrt is low level svd is " << Norm(Ach.TreatAsVector())/nor << endl;
+        cout << "relative error with sqrt in low level svd is " << Norm(Ach.TreatAsVector())/nor << endl;
     }
 
 void 
@@ -139,4 +142,78 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
 #endif
 
     return;
+    }
+
+
+void
+SVDComplex(const MatrixRef& Are, const MatrixRef& Aim, 
+           Matrix& Ure, Matrix& Uim, 
+           Vector& d, 
+           Matrix& Vre, Matrix& Vim)
+    {
+    LAPACK_INT m = Are.Nrows(), 
+               n = Are.Ncols(); 
+
+    if(m < n)
+        {
+        Matrix mret = Are.t(), 
+               mimt = -Aim.t(),
+               UUre,UUim,
+               VVre,VVim;
+        SVDComplex(mret,mimt, UUre, UUim, d, VVre, VVim);
+        Vre = UUre.t();
+        Vim = -UUim.t();
+        Ure = VVre.t();
+        Uim = -VVim.t();
+        return;
+        }
+
+    char jobz = 'S';
+
+    Matrix AA(n,2*m);
+    for(int i = 1; i <= n; i++)
+	for(int j = 1; j <= m; j++)
+        {
+	    AA(i,2*j-1) = Are(j,i); 
+        AA(i,2*j) = Aim(j,i);
+        }
+
+    Matrix UU(n,2*m), VV(n,2*n);
+    Ure.ReDimension(m,n);
+    Uim.ReDimension(m,n);
+    Vre.ReDimension(n,n);
+    Vim.ReDimension(n,n);
+    d.ReDimension(n);
+    LAPACK_INT lda = m, 
+               ldu = m, 
+               ldv = n, 
+               info = 0,
+               lwork = n*n+n+m+50;
+    Vector work(2*n*n+2*n+m+100), 
+           iwork(8*n), 
+           rwork(10*n*n+10 *n+1000);
+
+    zgesdd_wrapper(&jobz,&m,&n,
+                   (LAPACK_COMPLEX*)AA.Store(),&lda,
+                   d.Store(), 
+                   (LAPACK_COMPLEX*)UU.Store(), &ldu,
+                   (LAPACK_COMPLEX*)VV.Store(), &ldv, 
+                   (LAPACK_COMPLEX*)work.Store(), &lwork,
+                   rwork.Store(), (LAPACK_INT*)iwork.Store(), 
+                   &info);
+
+    if(info != 0) Error("Error condition in zgesdd");
+
+    for(int i = 1; i <= n; ++i)
+	for(int j = 1; j <= m; ++j)
+        {
+	    Ure(j,i) = UU(i,2*j-1); 
+        Uim(j,i) = UU(i,2*j);
+        }
+    for(int i = 1; i <= n; ++i)
+	for(int j = 1; j <= n; ++j)
+        {
+	    Vre(j,i) = VV(i,2*j-1); 
+        Vim(j,i) = VV(i,2*j);
+        }
     }
