@@ -490,7 +490,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     Real ur = 0; 
     int nn = 0; 
     while(GET(iv,nn+1) != IQIndexVal::Null()) 
-        ur += GET(iv,++nn).index().uniqueReal(); 
+        ur += GET(iv,++nn).indexqn().uniqueReal(); 
     if(nn != r()) 
         Error("Wrong number of IQIndexVals provided");
     ApproxReal r(ur);
@@ -502,7 +502,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
             {
             if(!hasindex(*this,iv[j])) 
                 Error("IQTensor::operator(): IQIndex not found.");
-            indices.addindex(iv[j].index());
+            indices.addindex(iv[j].indexqn());
             }
         ITensor t(indices);
         dat.nc().insert_add(r,t);
@@ -531,7 +531,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     Real ur = 0; 
     int nn = 0; 
     while(GET(iv,nn+1) != IQIndexVal::Null()) 
-        ur += GET(iv,++nn).index().uniqueReal(); 
+        ur += GET(iv,++nn).indexqn().uniqueReal(); 
     if(nn != r()) 
         Error("Wrong number of IQIndexVals provided");
     ApproxReal r(ur);
