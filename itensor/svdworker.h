@@ -210,11 +210,10 @@ class SVDWorker
     private:
 
     Real 
-    diag_denmat(ITensor rho, Vector& D, Index& newmid, ITensor& U);
+    diag_denmat(ITensor rho, Vector& D, ITensor& U);
 
     Real 
-    diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U);
-
+    diag_denmat(IQTensor rho, Vector& D, IQTensor& U);
 
 
     void 
@@ -500,10 +499,8 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         maxm_ = mid.m();
         }
 
-    IndexT newmid;
     Tensor U;
-
-    truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),newmid,U);
+    truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),U);
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 

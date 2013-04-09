@@ -608,7 +608,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
 
 Real SVDWorker::
-diag_denmat(ITensor rho, Vector& D, Index& newmid, ITensor& U)
+diag_denmat(ITensor rho, Vector& D, ITensor& U)
     {
     if(isComplex(rho))
         {
@@ -695,14 +695,14 @@ diag_denmat(ITensor rho, Vector& D, Index& newmid, ITensor& U)
         cout << endl;
         }
 
-    newmid = Index(active.rawname(),m,active.type());
+    Index newmid(active.rawname(),m,active.type());
     U = ITensor(active,newmid,UU.Columns(1,m));
     Global::lastd() = D;
     return svdtruncerr;
     }
 
 Real SVDWorker::
-diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
+diag_denmat(IQTensor rho, Vector& D, IQTensor& U)
     {
     if(isComplex(rho))
         {
@@ -945,7 +945,7 @@ diag_denmat(IQTensor rho, Vector& D, IQIndex& newmid, IQTensor& U)
         throw ResultIsZero("iq.size() == 0");
         }
 
-    newmid = IQIndex("qlink",iq, -active.dir());
+    IQIndex newmid("qlink",iq, -active.dir());
 
     U = IQTensor(active,newmid);
     Foreach(const ITensor& block, blocks)
