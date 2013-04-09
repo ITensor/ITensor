@@ -1197,13 +1197,13 @@ void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
     char jobz = 'V';
     char uplo = 'U';
     LAPACK_INT lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
-    __CLPK_doublecomplex work[lwork];
+    LAPACK_COMPLEX work[lwork];
     LAPACK_REAL rwork[lwork];
     LAPACK_INT info;
     
     evals.ReDimension(N);
 
-    zheev_(&jobz,&uplo,&N,(__CLPK_doublecomplex*)&(H.dat[0]),&N,evals.Store(),work,&lwork,rwork,&info);
+    zheev_(&jobz,&uplo,&N,(LAPACK_COMPLEX*)&(H.dat[0]),&N,evals.Store(),work,&lwork,rwork,&info);
     revecs = H.RealMat().t();
     ievecs = H.ImMat().t();
 

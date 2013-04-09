@@ -7,7 +7,7 @@
 #include "bigmatrix.h"		/* include file for BigMatrix type */
 #include "indent.h"
 #include <math.h>
-#include <malloc/malloc.h>
+#include "lapack_wrap.h"
 
 //extern void reportnew();
 
