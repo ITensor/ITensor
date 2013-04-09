@@ -24,30 +24,41 @@ LAPACK_REAL;
 typedef doublecomplex
 LAPACK_COMPLEX;
 
+#elif PLATFORM_mkl
+
+#include "mkl_lapack.h"
+typedef MKL_INT
+LAPACK_INT;
+typedef double
+LAPACK_REAL;
+typedef MKL_Complex16
+LAPACK_COMPLEX;
+
 #endif
+
 
 //
 // dsyev
 //
-int inline
-dsyev_wrapper(char* jobz,
-              char* uplo,
-              LAPACK_INT* n, 
-              LAPACK_REAL* a,
-              LAPACK_INT* lda, 
-              LAPACK_REAL* w, 
-              LAPACK_REAL* work, 
-              LAPACK_INT* lwork,
-              LAPACK_INT* info)
+void inline
+dsyev_wrapper(char* jobz,        //if jobz=='V', compute eigs and evecs
+              char* uplo,        //if uplo=='U', read from upper triangle of A
+              LAPACK_INT* n,     //number of cols of A
+              LAPACK_REAL* A,    //symmetric matrix A
+              LAPACK_INT* lda,   //size of A (usually same as n)
+              LAPACK_REAL* eigs, //eigenvalues on return
+              LAPACK_REAL* work, //workspace array
+              LAPACK_INT* lwork, //size of workspace array
+              LAPACK_INT* info)  //error info
     {
-#ifdef PLATFORM_macos
-    return dsyev_(jobz,uplo,n,a,lda,w,work,lwork,info);
-#elif PLATFORM_acml
-    return dsyev_(jobz,uplo,n,a,lda,w,work,lwork,info,1,1);
+#ifdef PLATFORM_acml
+    dsyev_(jobz,uplo,n,A,lda,eigs,work,lwork,info,1,1);
+#else
+    dsyev_(jobz,uplo,n,A,lda,eigs,work,lwork,info);
 #endif
     }
 
-int inline
+void inline
 zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to compute
                                      //choosing *jobz=='S' computes min(m,n) cols of U, V
                LAPACK_INT *m,        //number of rows of input matrix *A
@@ -65,9 +76,7 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
                LAPACK_INT *iwork, 
                LAPACK_INT *info)
     {
-#ifdef PLATFORM_macos
-    return zgesdd_(jobz,m,n,A,lda,s,u,ldu,vt,ldvt,work,lwork,rwork,iwork,info);
-#endif
+    zgesdd_(jobz,m,n,A,lda,s,u,ldu,vt,ldvt,work,lwork,rwork,iwork,info);
     }
 
 #endif

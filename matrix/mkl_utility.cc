@@ -6,9 +6,10 @@
 #include <math.h>
 #define CHANGE      0
 #include <fstream>
-#include "mkl_types.h"
 #include "error.h"
 #include <cstdlib>
+
+#include "lapack_wrap.h"
 
 using namespace std;
 
@@ -62,13 +63,13 @@ void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M
         }
     }
 
-extern "C" void dgeqrf_(MKL_INT *m, MKL_INT *n, double *a, MKL_INT *lda, 
-                        double *tau, double *work, MKL_INT *lwork, 
-                        MKL_INT *info );
+//extern "C" void dgeqrf_(MKL_INT *m, MKL_INT *n, double *a, MKL_INT *lda, 
+//                        double *tau, double *work, MKL_INT *lwork, 
+//                        MKL_INT *info );
 
-extern "C" void dorgqr_(MKL_INT *m, MKL_INT *n, MKL_INT *k, double *a, 
-                       MKL_INT *lda, double *tau, double *work, 
-                       MKL_INT *lwork, MKL_INT *info );
+//extern "C" void dorgqr_(MKL_INT *m, MKL_INT *n, MKL_INT *k, double *a, 
+//                       MKL_INT *lda, double *tau, double *work, 
+//                       MKL_INT *lwork, MKL_INT *info );
 
 void 
 QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R)
@@ -1437,8 +1438,8 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 
 //Following code written for greenplanet cluster at UC Irvine by E.M. Stoudenmire
 
-extern "C" void dsyevd_(char* jobz, char* uplo, MKL_INT* n, Real* a, MKL_INT* lda, Real* w, Real* work, MKL_INT* lwork, MKL_INT *iwork, MKL_INT* liwork, MKL_INT* info);
-extern "C" void    dgeev_( char *jobvl, char *jobvr, MKL_INT *n, double *a, MKL_INT *lda, double *wr, double *wi, double *vl, MKL_INT *ldvl, double *vr, MKL_INT *ldvr, double *work, MKL_INT *lwork, MKL_INT *info );
+//extern "C" void dsyevd_(char* jobz, char* uplo, MKL_INT* n, Real* a, MKL_INT* lda, Real* w, Real* work, MKL_INT* lwork, MKL_INT *iwork, MKL_INT* liwork, MKL_INT* info);
+//extern "C" void    dgeev_( char *jobvl, char *jobvr, MKL_INT *n, double *a, MKL_INT *lda, double *wr, double *wi, double *vl, MKL_INT *ldvl, double *vr, MKL_INT *ldvr, double *work, MKL_INT *lwork, MKL_INT *info );
 
 void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 {
@@ -1466,12 +1467,10 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 
     double QWORK[1];
     MKL_INT qlwork = -1;
-    MKL_INT QIWORK[1];
-    MKL_INT qliwork = -1;
 
     //Query work size
     MKL_INT info = 0;
-    dsyevd_(&jobz,&uplo,&n,Z.Store(),&n,D.Store(),QWORK,&qlwork,QIWORK,&qliwork,&info);
+    dsyev_wrapper(&jobz,&uplo,&n,Z.Store(),&n,D.Store(),QWORK,&qlwork,&info);
 	if(info != 0)
         {
         cerr << "info is " << info << endl;
@@ -1480,11 +1479,9 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 
     //Call routine
     MKL_INT lwork = (MKL_INT) QWORK[0];
-    MKL_INT liwork = QIWORK[0];
     double WORK[lwork];
-    MKL_INT IWORK[liwork];
     info = 0;
-    dsyevd_(&jobz,&uplo,&n,Z.Store(),&n,D.Store(),WORK,&lwork,IWORK,&liwork,&info);
+    dsyev_wrapper(&jobz,&uplo,&n,Z.Store(),&n,D.Store(),WORK,&lwork,&info);
 	if(info != 0)
         {
         cerr << "info is " << info << endl;
@@ -1495,8 +1492,8 @@ void EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 }
 
 //extern "C" void dsygv_(char* jobz, char* uplo, MKL_INT* n, Real* a, MKL_INT* lda, Real* w, Real* work, MKL_INT* lwork, MKL_INT *iwork, MKL_INT* liwork, MKL_INT* info);
-extern "C" void    dsygv( MKL_INT *itype, char *jobz, char *uplo, MKL_INT *n, double *a, MKL_INT *lda, double *b, MKL_INT *ldb, double *w, double *work, MKL_INT *lwork, MKL_INT *info );
-extern "C" void    dsygv_( MKL_INT *itype, char *jobz, char *uplo, MKL_INT *n, double *a, MKL_INT *lda, double *b, MKL_INT *ldb, double *w, double *work, MKL_INT *lwork, MKL_INT *info );
+//extern "C" void    dsygv( MKL_INT *itype, char *jobz, char *uplo, MKL_INT *n, double *a, MKL_INT *lda, double *b, MKL_INT *ldb, double *w, double *work, MKL_INT *lwork, MKL_INT *info );
+//extern "C" void    dsygv_( MKL_INT *itype, char *jobz, char *uplo, MKL_INT *n, double *a, MKL_INT *lda, double *b, MKL_INT *ldb, double *w, double *work, MKL_INT *lwork, MKL_INT *info );
 
 void 
 GeneralizedEV(const MatrixRef& A, const MatrixRef& B, Vector& D, Matrix& Z)
@@ -2222,10 +2219,10 @@ double dpythag_(double *a, double *b)
     } 
 
 
-typedef long int lint;
+//typedef long int lint;
 
-extern "C" lint dgesdd_(char*,lint*,lint*,double*,lint*,double*,
-	    double*,lint*,double*,lint*,double*,lint*,lint*,lint*);
+//extern "C" lint dgesdd_(char*,lint*,lint*,double*,lint*,double*,
+	    //double*,lint*,double*,lint*,double*,lint*,lint*,lint*);
 
 /*
 void newSVD(const MatrixRef& A, Matrix& U, Vector& d, Matrix& V)
@@ -3059,10 +3056,10 @@ void SVDcomplex(const Matrix& Mre, const Matrix& Mim, Matrix& Ure,
     Vim = -V.ImMat().t();
     }
 
-extern "C"
-void zheev_(char *jobz, char *uplo, MKL_INT *n, MKL_Complex16 *a, 
-            MKL_INT *lda, double *w, MKL_Complex16 *work, MKL_INT *lwork, 
-            double *rwork, MKL_INT *info );
+//extern "C"
+//void zheev_(char *jobz, char *uplo, MKL_INT *n, MKL_Complex16 *a, 
+//            MKL_INT *lda, double *w, MKL_Complex16 *work, MKL_INT *lwork, 
+//            double *rwork, MKL_INT *info );
 
 void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
 	                                Matrix& revecs, Matrix& ievecs)
