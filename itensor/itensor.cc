@@ -1944,13 +1944,6 @@ operator+=(const ITensor& other)
         return *this; 
         }
 
-    if(this->p == other.p) 
-        { 
-        Real fac = 1+(other.scale_/scale_).real();
-        scale_ *= fac;
-        return *this;
-        }
-
     solo();
 
     Vector& thisdat = p->v;

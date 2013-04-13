@@ -858,6 +858,16 @@ isComplex(const Tensor& T)
 // multiply them, automatically adjusting primeLevels
 // so that result is again an operator matrix C(site1',site1)
 //
+//              s'  t'
+//  s'  t'      |   |
+//  |   |       [-A-]
+//  [-C-]  =    |   |
+//  |   |       [-B-]
+//  s   t       |   |
+//              s   t
+//
+// (here s and t are indices of type Site)
+//
 template<class Tensor>
 Tensor
 multSiteOps(Tensor A, const Tensor& B) 
