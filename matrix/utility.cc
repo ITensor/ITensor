@@ -209,6 +209,54 @@ GeneralizedEV(const MatrixRef& A, Matrix B, Vector& D, Matrix& Z)
     Z = Z.t();
     }
 
+void 
+HermitianEigenvalues(const Matrix& re, const Matrix& im, 
+                     Vector& evals,
+                     Matrix& revecs, Matrix& ievecs)
+    {
+    LAPACK_INT N = re.Ncols();
+    if (N != re.Nrows() || re.Nrows() < 1)
+      _merror("HermitianEigenValues: Input Matrix must be square");
+    if(im.Ncols() != N || im.Nrows() != N)
+      _merror("HermitianEigenValues: im not same dimensions as re");
+
+    Matrix AA(N,2*N);
+    for(int i = 1; i <= N; ++i)
+	for(int j = 1; j <= N; ++j)
+        {
+	    AA(i,2*j-1) = re(j,i); 
+        AA(i,2*j) = im(j,i);
+        }
+
+    char jobz = 'V';
+    char uplo = 'U';
+    LAPACK_INT lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
+    LAPACK_COMPLEX work[lwork];
+    LAPACK_REAL rwork[lwork];
+    LAPACK_INT info;
+    
+    evals.ReDimension(N);
+
+    zheev_wrapper(&jobz,&uplo,&N,(LAPACK_COMPLEX*)AA.Store(),&N,evals.Store(),work,&lwork,rwork,&info);
+
+    if(info != 0)
+        {
+        cout << "info is " << info << endl;
+        _merror("HermitianEigenvalues: info bad");
+        }
+
+    revecs.ReDimension(N,N);
+    ievecs.ReDimension(N,N);
+
+    for(int i = 1; i <= N; ++i)
+    for(int j = 1; j <= N; ++j)
+        {
+        revecs(j,i) = AA(i,2*j-1); 
+        ievecs(j,i) = AA(i,2*j);
+        }
+
+    }
+
 
 #include <complex>
 #include <vector>
@@ -284,53 +332,60 @@ public:
     Complex& el(int r, int c) { return dat[index(r+1,c+1)-1]; }
     Complex el(int r, int c) const { return dat[index(r+1,c+1)-1]; }
 
-    Matrix RealMat()
-	{
-	Matrix re(nrow,ncol);
-	for(int i = 1; i <= nrow; i++)
-	    for(int j = 1; j <= ncol; j++)
-		re(i,j) = real(dat[index(i,j)-1]);
-	return re;
-	}
-    Matrix ImMat()
-	{
-	Matrix im(nrow,ncol);
-	for(int i = 1; i <= nrow; i++)
-	    for(int j = 1; j <= ncol; j++)
-		im(i,j) = imag(dat[index(i,j)-1]);
-	return im;
-	}
-    ComplexVector operator*(const ComplexVector& v)
-	{
-	ComplexMatrix &This(*this);
-	ComplexVector res(nrow);
-	for(int i = 1; i <= nrow; i++)
-	    for(int j = 1; j <= ncol; j++)
-		res(i) += This(i,j) * v(j);
-	return res;
-	}
-    ComplexMatrix Inverse()
-	{
-	if(nrow != ncol) error("bad nrow ncol in Inverse");
-	Matrix re = RealMat(), im = ImMat();
-	Matrix big(2*nrow,2*nrow);
-	big.SubMatrix(1,nrow,1,nrow) = re;
-	big.SubMatrix(nrow+1,2*nrow,nrow+1,2*nrow) = re;
-	big.SubMatrix(1,nrow,nrow+1,2*nrow) = im;
-	big.SubMatrix(nrow+1,2*nrow,1,nrow) = -im;
-	Matrix ibig = ::Inverse(big);
-	re = ibig.SubMatrix(1,nrow,1,nrow);
-	im = ibig.SubMatrix(1,nrow,nrow+1,2*nrow);
-	ComplexMatrix res(nrow,nrow);
-	for(int i = 1; i <= nrow; i++)
-	    for(int j = 1; j <= ncol; j++)
-		res(i,j) = Complex(re(i,j),im(i,j));
-	return res;
-	}
+    Matrix 
+    RealMat()
+        {
+        Matrix re(nrow,ncol);
+        for(int i = 1; i <= nrow; i++)
+            for(int j = 1; j <= ncol; j++)
+            re(i,j) = real(dat[index(i,j)-1]);
+        return re;
+        }
+    Matrix 
+    ImMat()
+        {
+        Matrix im(nrow,ncol);
+        for(int i = 1; i <= nrow; i++)
+            for(int j = 1; j <= ncol; j++)
+            im(i,j) = imag(dat[index(i,j)-1]);
+        return im;
+        }
+    ComplexVector 
+    operator*(const ComplexVector& v)
+        {
+        ComplexMatrix &This(*this);
+        ComplexVector res(nrow);
+        for(int i = 1; i <= nrow; i++)
+            for(int j = 1; j <= ncol; j++)
+            res(i) += This(i,j) * v(j);
+        return res;
+        }
+    ComplexMatrix 
+    Inverse()
+        {
+        if(nrow != ncol) error("bad nrow ncol in Inverse");
+        Matrix re = RealMat(), im = ImMat();
+        Matrix big(2*nrow,2*nrow);
+        big.SubMatrix(1,nrow,1,nrow) = re;
+        big.SubMatrix(nrow+1,2*nrow,nrow+1,2*nrow) = re;
+        big.SubMatrix(1,nrow,nrow+1,2*nrow) = im;
+        big.SubMatrix(nrow+1,2*nrow,1,nrow) = -im;
+        Matrix ibig = ::Inverse(big);
+        re = ibig.SubMatrix(1,nrow,1,nrow);
+        im = ibig.SubMatrix(1,nrow,nrow+1,2*nrow);
+        ComplexMatrix res(nrow,nrow);
+        for(int i = 1; i <= nrow; i++)
+            for(int j = 1; j <= ncol; j++)
+            res(i,j) = Complex(re(i,j),im(i,j));
+        return res;
+        }
     };
 
-inline Complex& CMHelper::operator[](int c) { return (*p)(r+1,c+1); }
+inline Complex& 
+CMHelper::operator[](int c) { return (*p)(r+1,c+1); }
 
+
+/*
 void 
 HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
                      Matrix& revecs, Matrix& ievecs)
@@ -359,20 +414,11 @@ HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
 
     if(info != 0)
         {
-        cerr << "info is " << info << endl;
         cout << "info is " << info << endl;
-        //cout << "redoing EigenValues " << endl;
-        //cerr << "redoing EigenValues " << endl;
-        //Matrix AA(A);
-        //for(int i = 1; i <= N; i++)
-        //for(int j = i+1; j <= N; j++)
-        //if(AA(i,j) != AA(j,i))
-            //cout << "Asym: " << i SP j SP AA(i,j) SP AA(j,i) << endl;
-        //BackupEigenValues(A,D,Z);
-        //return;
-        _merror("EigenValues: info bad");
+        _merror("HermitianEigenvalues: info bad");
         }
     }
+    */
 
 // Possibly extra stuff for EigenValues:
 // This is grabbed from evalue.cc:

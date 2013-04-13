@@ -205,15 +205,17 @@ SVDComplex(const MatrixRef& Are, const MatrixRef& Aim,
     if(info != 0) Error("Error condition in zgesdd");
 
     for(int i = 1; i <= n; ++i)
-	for(int j = 1; j <= m; ++j)
         {
-	    Ure(j,i) = UU(i,2*j-1); 
-        Uim(j,i) = UU(i,2*j);
-        }
-    for(int i = 1; i <= n; ++i)
-	for(int j = 1; j <= n; ++j)
-        {
-	    Vre(j,i) = VV(i,2*j-1); 
-        Vim(j,i) = VV(i,2*j);
+        for(int j = 1; j <= m; ++j)
+            {
+            Ure(j,i) = UU(i,2*j-1); 
+            Uim(j,i) = UU(i,2*j);
+            }
+
+        for(int j = 1; j <= n; ++j)
+            {
+            Vre(j,i) = VV(i,2*j-1); 
+            Vim(j,i) = VV(i,2*j);
+            }
         }
     }
