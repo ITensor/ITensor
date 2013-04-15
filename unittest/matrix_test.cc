@@ -202,7 +202,32 @@ TEST(TestSVDComplex)
     Matrix ReDiff = Are-(Ure*DD*Vre-Uim*DD*Vim);
     Matrix ImDiff = Aim-(Ure*DD*Vim+Uim*DD*Vre);
 
-    cout << Norm(ReDiff.TreatAsVector()) << endl;
+    CHECK(Norm(ReDiff.TreatAsVector()) < 1E-10);
+    CHECK(Norm(ImDiff.TreatAsVector()) < 1E-10);
+    }
+
+TEST(TestHermitianEigs)
+    {
+    const int n = 20;
+    Matrix Are(n,n),
+           Aim(n,n);
+
+    Are.Randomize();
+    Aim.Randomize();
+
+    Are = Are + Are.t();
+    Aim = Aim - Aim.t();
+
+    Matrix Ure,Uim;
+    Vector D;
+    HermitianEigenvalues(Are,Aim,D,Ure,Uim);
+
+    Matrix DD(D.Length(),D.Length()); DD = 0;
+    for(int i = 1; i <= D.Length(); ++i) DD(i,i) = D(i);
+
+    Matrix ReDiff = Are-(Ure*DD*Ure.t()+Uim*DD*Uim.t());
+    Matrix ImDiff = Aim-(-Ure*DD*Uim.t()+Uim*DD*Ure.t());
+
     CHECK(Norm(ReDiff.TreatAsVector()) < 1E-10);
     CHECK(Norm(ImDiff.TreatAsVector()) < 1E-10);
     }
