@@ -106,6 +106,26 @@ class SVDWorker
     svd(int b, Tensor AA, Tensor& U, SparseT& D, Tensor& V, 
         const LocalOpT& PH);
 
+    //
+    // Eigenvalue decomposition / diagonalization
+    // Assumes input is a Hermitian tensor with indices
+    // i,j,k,.... and i',j',k',...
+    // (tensor must be conjugate symmetric under
+    //  exchange primed and unprimed indices)
+    // Result is unitary tensor U and diagonal sparse tensor D
+    // such that M == U*D*primed(U)
+    //
+
+    template <class Tensor, class SparseT> 
+    void 
+    diagonalize(const Tensor& M, Tensor& U, SparseT& D)
+        { 
+        diagonalize<Tensor>(1,M,U,D); 
+        }
+
+    template <class Tensor, class SparseT> 
+    void 
+    diagonalize(int b, const Tensor& M, Tensor& U, SparseT& D);
 
     //
     // Accessor Methods
@@ -210,10 +230,12 @@ class SVDWorker
     private:
 
     Real 
-    diag_denmat(ITensor rho, Vector& D, ITensor& U);
+    diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, int b,
+                   const OptSet& opts = Global::opts());
 
     Real 
-    diag_denmat(IQTensor rho, Vector& D, IQTensor& U);
+    diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
+                   const OptSet& opts = Global::opts());
 
 
     void 
@@ -244,10 +266,11 @@ class SVDWorker
     Real cutoff_;
     int minm_;
     int maxm_;
-    bool use_orig_m_; 
-    bool showeigs_;
-    bool doRelCutoff_;
-    bool absoluteCutoff_;
+    bool use_orig_m_,
+         showeigs_,
+         doRelCutoff_,
+         absoluteCutoff_,
+         truncate_;
     LogNumber refNorm_;
     std::vector<Vector> eigsKept_;
     Real noise_;
@@ -302,13 +325,22 @@ csvd(const Tensor& T, Tensor& L, SparseT& V, Tensor& R,
     W.svd(T,L,V,R);
     }
 
-template <class Tensor,class SparseT>
+template <class Tensor>
 void
 denmatDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir,
              const OptSet& opts = Global::opts())
     {
     SVDWorker W(opts);
     W.denmatDecomp(T,A,B,dir);
+    }
+
+template <class Tensor,class SparseT>
+void
+diagonalize(const Tensor& T, Tensor& U, SparseT& D,
+            const OptSet& opts = Global::opts())
+    {
+    SVDWorker W(opts);
+    W.diagonalize(T,U,D);
     }
 
 //
@@ -473,10 +505,10 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     comb.doCondense(true);
     comb.init(mid.isNull() ? "mid" : mid.rawname());
 
-    //Form density matrix
     Tensor AAc; 
     comb.product(AA,AAc);
 
+    //Form density matrix
     Tensor AAcc = conj(AAc); 
     AAcc.prime(comb.right()); 
 
@@ -500,17 +532,76 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         }
 
     Tensor U;
-    truncerr_.at(b) = diag_denmat(rho,eigsKept_.at(b),U);
+    SparseT D;
+    truncerr_.at(b) = diag_hermitian(rho,U,D,b,Opt("TraceReIm",true));
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 
     maxm_ = saved_maxm; 
 
     comb.conj();
-    comb.product(U,to_orth);
-    newoc = conj(U) * AAc;
+    comb.product(conj(U),to_orth);
+    newoc = U * AAc;
 
     } //void SVDWorker::denmatDecomp
+
+template<class Tensor, class SparseT>
+void SVDWorker::
+diagonalize(int b, const Tensor& M, Tensor& U, SparseT& D)
+    {
+    typedef typename Tensor::IndexT 
+    IndexT;
+    typedef typename Tensor::CombinerT 
+    CombinerT;
+
+    if(M.vecSize() == 0) 
+        throw ResultIsZero("denmatDecomp: AA.vecSize == 0");
+
+    CombinerT comb;
+    Foreach(const IndexT& I, M.indices())
+        { 
+        if(I.type() == ReIm) continue;
+        if(I.primeLevel() == 0)
+            {
+            comb.addleft(I);
+            }
+        }
+
+    //Apply combiner
+    comb.doCondense(true);
+    comb.init("d");
+
+    bool samedir = false;
+    Foreach(const IndexT& I, M.indices())
+        {
+        if(I.type() == ReIm) continue;
+        if(I.primeLevel() != 0 && I.dir() == comb.right().dir())
+            {
+            samedir = true;
+            break;
+            }
+        }
+
+    Tensor Mc; 
+    comb.product(M,Mc);
+
+    CombinerT combP(comb);
+    combP.prime();
+    if(!samedir) combP.conj();
+
+    Mc = combP * Mc;
+    Print(Mc.indices());
+
+    const bool truncate_setting = truncate_;
+    truncate_ = false;
+    diag_hermitian(Mc,U,D,b);
+    truncate_ = truncate_setting;
+
+    //D = SparseT(conj(primed(newmid)),(samedir ? conj(newmid) : newmid),eigsKept_.at(b));
+
+    U = comb * U;
+
+    } //void SVDWorker::diagonalize
 
 #undef Cout
 #undef Format

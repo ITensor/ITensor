@@ -30,6 +30,9 @@ class IQTSparse
     //Set diagonal to a constant d. If d == 1 makes a Kronecker delta
     IQTSparse(const IQIndex& i1, const IQIndex& i2, Real d);
 
+    //Set diagonal to a vector D.
+    IQTSparse(const IQIndex& i1, const IQIndex& i2, const VectorRef& D);
+
     IQTSparse(const IQIndex& i1, const IQIndex& i2, 
                   const IQIndex& i3);
 

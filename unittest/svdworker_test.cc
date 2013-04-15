@@ -454,15 +454,55 @@ TEST(ComplexDenmat)
 
     ITensor rho = rr*Complex_1()+ri*Complex_i();
     rho.scaleTo(1);
-    PrintDat(rho);
+    //PrintDat(rho);
 
     ITensor U(r),V;
     ITSparse D;
 
     svd(rho,U,D,V);
-    PrintDat(U);
-    PrintDat(D);
-    PrintDat(V);
+    //PrintDat(U);
+    //PrintDat(D);
+    //PrintDat(V);
+    }
+
+TEST(Diagonalization)
+    {
+    /*
+    Index s1("s1",2,Site),s2("s2",2,Site);
+    ITensor M(s1,s2,primed(s1),primed(s2));
+    M.randomize();
+    M = M + swapPrime(M,0,1);
+    M *= 0.5;
+
+    ITensor U;
+    ITSparse D;
+    diagonalize(M,U,D);
+
+    CHECK((M-(primed(U)*D*conj(U))).norm() < 1E-14);
+    */
+
+    //////////////////////////
+
+    //IQTensor T(conj(S1)(1),conj(S2)(2),primed(S1)(1),primed(S2)(2));
+    //T.randomize();
+    //T = T + swapPrime(T,0,1);
+    //T *= 0.5;
+    IQTensor T(conj(S1),primed(S1));
+    T(conj(S1)(1),primed(S1)(1)) = 1;
+    T(conj(S1)(2),primed(S1)(2)) = -1;
+
+    IQTensor UU;
+    IQTSparse DD;
+    diagonalize(T,UU,DD);
+
+    Print(T.indices());
+    PrintDat(UU);
+    PrintDat(DD);
+
+    PrintDat(primed(UU)*DD*conj(UU));
+
+    Print((T-(primed(UU)*DD*conj(UU))).norm());
+    CHECK((T-(primed(UU)*DD*conj(UU))).norm() < 1E-14);
     }
 
 
