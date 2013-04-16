@@ -865,16 +865,26 @@ initWrite(const OptSet& opts)
         std::string global_write_dir = Global::opts().getString("WriteDir","./");
         writedir_ = mkTempDir("psi",global_write_dir);
 
+        //Write all null tensors to disk immediately because
+        //later logic assumes null means written to disk
+        for(int j = 1; j <= N_; ++j)
+            {
+            if(A_.at(j).isNull())
+                writeToFile(AFName(j),A_.at(j));
+            }
+
         if(opts.getBool("WriteAll",false))
             {
             writeToFile(writedir_+"/model",*model_);
             for(int j = 1; j <= N_; ++j)
                 {
+                if(A_.at(j).isNull()) continue;
                 writeToFile(AFName(j),A_.at(j));
                 if(j < atb_ || j > atb_+1)
                     A_[j] = Tensor();
                 }
             }
+
         do_write_ = true;
         }
     }
