@@ -140,6 +140,14 @@ operator=(const MPSt<ITensor>&);
 template MPSt<IQTensor>& MPSt<IQTensor>::
 operator=(const MPSt<IQTensor>&);
 
+template <class Tensor>
+MPSt<Tensor>::
+~MPSt()
+    {
+    cleanupWrite();
+    }
+template MPSt<ITensor>::~MPSt();
+template MPSt<IQTensor>::~MPSt();
 
 template <class Tensor>
 Tensor& MPSt<Tensor>::
@@ -852,20 +860,23 @@ template <class Tensor>
 void MPSt<Tensor>::
 initWrite(const OptSet& opts)
     {
-    std::string global_write_dir = Global::opts().getString("WriteDir","./");
-    writedir_ = mkTempDir("psi",global_write_dir);
-
-    if(opts.getBool("WriteAll",false))
+    if(!do_write_)
         {
-        writeToFile(writedir_+"/model",*model_);
-        for(int j = 1; j <= N_; ++j)
+        std::string global_write_dir = Global::opts().getString("WriteDir","./");
+        writedir_ = mkTempDir("psi",global_write_dir);
+
+        if(opts.getBool("WriteAll",false))
             {
-            writeToFile(AFName(j),A_.at(j));
-            if(j < atb_ || j > atb_+1)
-                A_[j] = Tensor();
+            writeToFile(writedir_+"/model",*model_);
+            for(int j = 1; j <= N_; ++j)
+                {
+                writeToFile(AFName(j),A_.at(j));
+                if(j < atb_ || j > atb_+1)
+                    A_[j] = Tensor();
+                }
             }
+        do_write_ = true;
         }
-    //std::cout << "Successfully created directory " + writedir_ << std::endl;
     }
 template
 void MPSt<ITensor>::initWrite(const OptSet&);
@@ -892,6 +903,22 @@ void MPSt<ITensor>::copyWriteDir();
 template
 void MPSt<IQTensor>::copyWriteDir();
 
+
+template <class Tensor>
+void MPSt<Tensor>::
+cleanupWrite()
+    {
+    if(do_write_)
+        {
+        const string cmdstr = "rm -fr " + writedir_;
+        system(cmdstr.c_str());
+        do_write_ = false;
+        }   
+    }
+template
+void MPSt<ITensor>::cleanupWrite();
+template
+void MPSt<IQTensor>::cleanupWrite();
 
 //Auxilary method for convertToIQ
 int 

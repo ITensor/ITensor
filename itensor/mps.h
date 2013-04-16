@@ -61,8 +61,7 @@ class MPSt
     MPSt&
     operator=(const MPSt& other);
 
-    virtual 
-    ~MPSt() { }
+    ~MPSt();
 
     //
     //MPSt Typedefs
@@ -195,14 +194,17 @@ class MPSt
     void
     doWrite(bool val, const OptSet& opts = Global::opts()) 
         { 
-        if(val != do_write_) //changing value of do_write_
+        if(val == do_write_) return;
+
+        if(val == true)
             {
-            if(val == true)
-                initWrite(opts); 
-            else
-                read(writedir_);
+            initWrite(opts); 
             }
-        do_write_ = val;
+        else
+            {
+            read(writedir_);
+            cleanupWrite();
+            }
         }
 
     const std::string&
@@ -461,6 +463,8 @@ class MPSt
     initWrite(const OptSet& opts = Global::opts());
     void
     copyWriteDir();
+    void
+    cleanupWrite();
 
 
     std::string
