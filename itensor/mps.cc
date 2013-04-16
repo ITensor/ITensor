@@ -96,6 +96,52 @@ template MPSt<IQTensor>::
 MPSt(const Model& model, std::istream& s);
 
 template <class Tensor>
+MPSt<Tensor>::
+MPSt(const MPSt& other)
+    : 
+    N_(other.N_),
+    A_(other.A_),
+    l_orth_lim_(other.l_orth_lim_),
+    r_orth_lim_(other.r_orth_lim_),
+    is_ortho_(other.is_ortho_),
+    model_(other.model_),
+    svd_(other.svd_),
+    atb_(other.atb_),
+    writedir_(other.writedir_),
+    do_write_(other.do_write_)
+    { 
+    copyWriteDir();
+    }
+template MPSt<ITensor>::
+MPSt(const MPSt<ITensor>&);
+template MPSt<IQTensor>::
+MPSt(const MPSt<IQTensor>&);
+
+template <class Tensor>
+MPSt<Tensor>& MPSt<Tensor>::
+operator=(const MPSt& other)
+    { 
+    N_ = other.N_;
+    A_ = other.A_;
+    l_orth_lim_ = other.l_orth_lim_;
+    r_orth_lim_ = other.r_orth_lim_;
+    is_ortho_ = other.is_ortho_;
+    model_ = other.model_;
+    svd_ = other.svd_;
+    atb_ = other.atb_;
+    writedir_ = other.writedir_;
+    do_write_ = other.do_write_;
+
+    copyWriteDir();
+    return *this;
+    }
+template MPSt<ITensor>& MPSt<ITensor>::
+operator=(const MPSt<ITensor>&);
+template MPSt<IQTensor>& MPSt<IQTensor>::
+operator=(const MPSt<IQTensor>&);
+
+
+template <class Tensor>
 Tensor& MPSt<Tensor>::
 Anc(int i)
     { 
@@ -176,7 +222,7 @@ read(const std::string& dirname)
         Error("Can't read to default constructed MPS, must specify model");
 
     l_orth_lim_ = 0;
-    r_orth_lim_ = N();
+    r_orth_lim_ = N_+1;
     is_ortho_ = false;
 
     //std::string dname_ = dirname;
@@ -184,20 +230,7 @@ read(const std::string& dirname)
     //    dname_ += "/";
 
     for(int j = 1; j <= N_; ++j)
-        {
-        std::string fname = (format("%s/A_%03d")%dirname%j).str();
-        std::ifstream s(fname.c_str());
-        if(s.good())
-            {
-            A_.at(j).read(s);
-            s.close();
-            }
-        else
-            {
-            std::cerr << boost::format("Tried read A_[%d]\n") % j;
-            Error("Missing file");
-            }
-        }
+        readFromFile(AFName(j,dirname),A_.at(j));
     }
 template
 void MPSt<ITensor>::read(const std::string& dirname);
@@ -207,14 +240,17 @@ void MPSt<IQTensor>::read(const std::string& dirname);
 
 template <class Tensor>
 string MPSt<Tensor>::
-AFName(int j) const
+AFName(int j, const string& dirname) const
     { 
-    return (format("%s/A_%03d")%writedir_%j).str();
+    if(dirname == "")
+        return (format("%s/A_%03d")%writedir_%j).str();
+    else
+        return (format("%s/A_%03d")%dirname%j).str();
     }
 template
-string MPSt<ITensor>::AFName(int j) const;
+string MPSt<ITensor>::AFName(int j, const string&) const;
 template
-string MPSt<IQTensor>::AFName(int j) const;
+string MPSt<IQTensor>::AFName(int j, const string&) const;
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -270,34 +306,14 @@ setBond(int b) const
     //
     if(A_.at(b).isNull())
         {
-        std::string fname = AFName(b);
-        std::ifstream s(fname.c_str());
-        if(s.good())
-            {
-            A_.at(b).read(s);
-            s.close();
-            }
-        else
-            {
-            std::cerr << boost::format("Tried to read file %s\n")%fname;
-            Error("Missing file");
-            }
+        readFromFile(AFName(b),A_.at(b));
         }
+
     if(A_.at(b+1).isNull())
         {
-        std::string fname = AFName(b+1);
-        std::ifstream s(fname.c_str());
-        if(s.good())
-            {
-            A_.at(b+1).read(s);
-            s.close();
-            }
-        else
-            {
-            std::cerr << boost::format("Tried read A_[%d]\n")%(b+1);
-            Error("Missing file");
-            }
+        readFromFile(AFName(b+1),A_.at(b+1));
         }
+
     if(b == 1)
         {
         writeToFile(writedir_+"/model",*model_);
@@ -834,19 +850,48 @@ void MPSt<IQTensor>::applygate(const IQTensor& gate,const OptSet& opts);
 
 template <class Tensor>
 void MPSt<Tensor>::
-initWrite()
+initWrite(const OptSet& opts)
     {
     std::string global_write_dir = Global::opts().getString("WriteDir","./");
     writedir_ = mkTempDir("psi",global_write_dir);
-    std::cout << "Successfully created directory " + writedir_ << std::endl;
 
-    //std::string mod_name = writedir_ + "/model";
-    //writeToFile(mod_name,(*model));
+    if(opts.getBool("WriteAll",false))
+        {
+        writeToFile(writedir_+"/model",*model_);
+        for(int j = 1; j <= N_; ++j)
+            {
+            writeToFile(AFName(j),A_.at(j));
+            if(j < atb_ || j > atb_+1)
+                A_[j] = Tensor();
+            }
+        }
+    //std::cout << "Successfully created directory " + writedir_ << std::endl;
     }
 template
-void MPSt<ITensor>::initWrite();
+void MPSt<ITensor>::initWrite(const OptSet&);
 template
-void MPSt<IQTensor>::initWrite();
+void MPSt<IQTensor>::initWrite(const OptSet&);
+
+template <class Tensor>
+void MPSt<Tensor>::
+copyWriteDir()
+    {
+    if(do_write_)
+        {
+        string old_writedir = writedir_;
+        std::string global_write_dir = Global::opts().getString("WriteDir","./");
+        writedir_ = mkTempDir("psi",global_write_dir);
+
+        string cmdstr = "cp -r " + old_writedir + "/* " + writedir_;
+        //cout << "Calling system(" << cmdstr << ")" << endl;
+        system(cmdstr.c_str());
+        }
+    }
+template
+void MPSt<ITensor>::copyWriteDir();
+template
+void MPSt<IQTensor>::copyWriteDir();
+
 
 //Auxilary method for convertToIQ
 int 
@@ -1483,3 +1528,4 @@ fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
     psi_to_fit = psi_basis;
     psi_to_fit.Anc(1) = A;
     }
+

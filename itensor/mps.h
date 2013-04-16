@@ -57,6 +57,10 @@ class MPSt
 
     MPSt(const Model& model, std::istream& s);
 
+    MPSt(const MPSt& other);
+    MPSt&
+    operator=(const MPSt& other);
+
     virtual 
     ~MPSt() { }
 
@@ -189,10 +193,15 @@ class MPSt
     bool
     doWrite() const { return do_write_; }
     void
-    doWrite(bool val) 
+    doWrite(bool val, const OptSet& opts = Global::opts()) 
         { 
-        if(!do_write_ && (val == true))
-            initWrite(); 
+        if(val != do_write_) //changing value of do_write_
+            {
+            if(val == true)
+                initWrite(opts); 
+            else
+                read(writedir_);
+            }
         do_write_ = val;
         }
 
@@ -359,13 +368,6 @@ class MPSt
     isComplex() const
         { return A_[l_orth_lim_+1].isComplex(); }
 
-    friend inline std::ostream& 
-    operator<<(std::ostream& s, const MPSt& M)
-        {
-        s << "\n";
-        for(int i = 1; i <= M.N(); ++i) s << M.A(i) << "\n";
-        return s;
-        }
 
     void 
     toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
@@ -437,10 +439,18 @@ class MPSt
             }
 
         if(j < atb_)
+            {
+            //Cout << Format("j=%d < atb_=%d, calling setBond(%d)")
+            //        % j % atb_ % j << Endl;
             setBond(j);
+            }
         else
         if(j > atb_+1)
+            {
+            //Cout << Format("j=%d > atb_+1=%d, calling setBond(%d)")
+            //        % j % (atb_+1) % (j-1) << Endl;
             setBond(j-1);
+            }
 
         //otherwise the set bond already
         //contains this site
@@ -448,10 +458,13 @@ class MPSt
 
 
     void
-    initWrite();
+    initWrite(const OptSet& opts = Global::opts());
+    void
+    copyWriteDir();
+
 
     std::string
-    AFName(int j) const;
+    AFName(int j, const std::string& dirname = "") const;
 
     //
     //Constructor Helpers
@@ -769,6 +782,16 @@ sum(const std::vector<MPSType>& terms, MPSType& res,
         //Recursively call sum again
         sum(newterms,res,cut,maxm);
         }
+    }
+
+template <class Tensor>
+std::ostream& 
+operator<<(std::ostream& s, const MPSt<Tensor>& M)
+    {
+    s << "\n";
+    for(int i = 1; i <= M.N(); ++i) 
+        s << M.A(i) << "\n";
+    return s;
     }
 
 #undef Cout
