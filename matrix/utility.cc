@@ -870,7 +870,7 @@ void BackupEigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 void ludcmp(Matrix& a,int* indx,Real* d)
     {
     const Real TINY = 1e-20;
-    int i, imax, j, k;
+    int i, imax=0, j, k;
     Real big, dum, sum, temp;
     Real *vv;
     int n = a.Nrows();
@@ -1343,7 +1343,7 @@ double dotprod(double *a,double *b, int l)
     register double s0 = 0, s1 = 0, s2 = 0, s3 = 0;	// 4
     register double t0 = 0, t1 = 0, t2 = 0, t3 = 0;	// 4
     register double a0,b0,a1,b1,a2,b2,a3,b3;
-    register double prea,preb;
+    register double prea=0,preb=0;
     int i,ll = l&3;
     for(i = l-ll; i < l; i++)
 	s3 += a[i] * b[i];
