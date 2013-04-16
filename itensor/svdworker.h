@@ -229,6 +229,9 @@ class SVDWorker
 
     private:
 
+    Real
+    truncate(Vector& D);
+
     Real 
     diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, int b,
                    const OptSet& opts = Global::opts());
@@ -469,6 +472,8 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     IndexT;
     typedef typename Tensor::CombinerT 
     CombinerT;
+    typedef typename Tensor::SparseT 
+    SparseT;
 
     if(AA.vecSize() == 0) 
         throw ResultIsZero("denmatDecomp: AA.vecSize == 0");

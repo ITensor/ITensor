@@ -66,10 +66,11 @@ SVDWorker(int N, Real cutoff, int minm, int maxm,
       showeigs_(false), 
       doRelCutoff_(doRelCutoff),
       absoluteCutoff_(false), 
+      truncate_(true),
       refNorm_(refNorm), 
       eigsKept_(N_+1),
       noise_(0)
-    { }
+    {  }
 
 
 template <class Tensor, class SparseT> 
@@ -115,6 +116,43 @@ void SVDWorker::
 svd(int b, const IQTensor& AA, IQTensor& U, IQTSparse& D, IQTensor& V);
 
 
+Real SVDWorker::
+truncate(Vector& D)
+    {
+    int m = D.Length();
+
+    Real truncerr = 0;
+
+    //Zero out any negative weight
+    for(int zerom = m; zerom > 0; --zerom)
+        {
+        if(D(zerom) >= 0) break;
+        D(zerom) = 0;
+        }
+
+    if(absoluteCutoff_)
+        {
+        for(;m > maxm_ || (D(m) < cutoff_ && m > minm_); --m)
+            {
+            truncerr += D(m);
+            }
+        }
+    else
+        {
+        const Real scale = doRelCutoff_ ? D(1) : 1.0;
+        for(;m > maxm_ || (truncerr+D(m) < cutoff_*scale && m > minm_); --m)
+            {
+            truncerr += D(m);
+            }
+        truncerr = (D(1) == 0 ? 0 : truncerr/scale);
+        }
+
+    D.ReduceDimension(m); 
+
+    return truncerr;
+    }
+
+
 
 void SVDWorker::
 svdRank2(ITensor A, const Index& ui, const Index& vi,
@@ -152,35 +190,22 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         }
 
     //Truncate
+
     int m = DD.Length();
-    Real& svdtruncerr = truncerr_.at(b);
-    svdtruncerr = 0;
-
-    //Zero out any negative weight
-    for(int zerom = m; zerom > 0; --zerom)
+    if(truncate_)
         {
-        if(DD(zerom) >= 0) break;
-        else              DD(zerom) = 0;
-        }
-
-    if(absoluteCutoff_)
-        {
-        while(m > maxm_ || (sqr(DD(m)) < cutoff_ && m > minm_))
-            {
-            svdtruncerr += sqr(DD(m--));
-            }
+        Vector sqrD(DD);
+        for(int j = 1; j <= sqrD.Length(); ++j)
+            sqrD(j) = sqr(DD(j));
+        truncerr_.at(b) = truncate(sqrD);
+        m = sqrD.Length();
+        DD.ReduceDimension(m);
         }
     else
         {
-        Real scale = doRelCutoff_ ? sqr(DD(1)) : 1.0;
-        while(m > maxm_ || (svdtruncerr+sqr(DD(m)) < cutoff_*scale && m > minm_))
-            {
-            svdtruncerr += sqr(DD(m--));
-            }
-        svdtruncerr = (DD(1) == 0 ? 0 : svdtruncerr/scale);
+        truncerr_.at(b) = 0;
         }
 
-    DD.ReduceDimension(m); 
 
     if(showeigs_)
         {
@@ -189,7 +214,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
                        %minm_%maxm_%cutoff_ << endl;
         cout << format("use_orig_m_ = %s")%(use_orig_m_?"true":"false")<<endl;
         cout << format("Kept m=%d states in svdRank2 line 169") % m << endl;
-        cout << format("svdtruncerr = %.3E")%svdtruncerr << endl;
+        cout << format("svdtruncerr = %.3E")%truncerr_.at(b) << endl;
 
 
         int stop = min(10,DD.Length());
@@ -614,17 +639,14 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, int b,
     {
     bool cplx = isComplex(rho);
 
-    if(cplx)
+    if(cplx && opts.getBool("TraceReIm",false))
         {
-        if(opts.getBool("TraceReIm",false))
-            {
-            rho = realPart(rho);
-            cplx = false;
-            }
+        rho = realPart(rho);
+        cplx = false;
         }
 
 #ifdef DEBUG
-    if(rho.r() != 2)
+    if(rho.r() != 2 + (cplx ? 1 : 0))
         {
         Print(rho.r());
         Print(rho);
@@ -651,12 +673,28 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, int b,
     if(!doRelCutoff_) rho.scaleTo(refNorm_);
 
     //Do the diagonalization
-    Matrix R,UU; 
-    Vector DD;
-    rho.toMatrix11NoScale(active,primed(active),R);
-    R *= -1.0; 
-    EigenValues(R,DD,UU); 
-    DD *= -1.0;
+    Vector& DD = eigsKept_.at(b);
+    Matrix UU,iUU;
+    if(!cplx)
+        {
+        Matrix R;
+        rho.toMatrix11NoScale(active,primed(active),R);
+        R *= -1.0; 
+        EigenValues(R,DD,UU); 
+        DD *= -1.0;
+        }
+    else
+        {
+        Matrix Mr,Mi;
+        ITensor rrho = realPart(rho),
+                irho = imagPart(rho);
+        rrho.toMatrix11NoScale(active,primed(active),Mr);
+        irho.toMatrix11NoScale(active,primed(active),Mi);
+        Mr *= -1.0; 
+        Mi *= -1.0; 
+        HermitianEigenvalues(Mr,Mi,DD,UU,iUU); 
+        DD *= -1.0;
+        }
 
 
     //Include rho's scale to get the actual eigenvalues kept
@@ -669,37 +707,29 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, int b,
     //    }
 
     //Truncate
-    int m = DD.Length();
     Real svdtruncerr = 0.0;
-
+    if(showeigs_)
+        cout << "Before truncating, m = " << DD.Length() << endl;
     if(truncate_)
         {
-        //Zero out any negative weight
-        for(int zerom = m; zerom > 0; --zerom)
-            {
-            if(DD(zerom) >= 0) break;
-            else              D(zerom) = 0;
-            }
-
-        if(absoluteCutoff_)
-            {
-            while(m > maxm_ || (DD(m) < cutoff_ && m > minm_))
-                {
-                svdtruncerr += DD(m--);
-                }
-            }
-        else
-            {
-            const Real scale = doRelCutoff_ ? DD(1) : 1.0;
-            while(m > maxm_ || (svdtruncerr+DD(m) < cutoff_*scale && m > minm_))
-                {
-                svdtruncerr += DD(m--);
-                }
-            svdtruncerr = (DD(1) == 0 ? 0 : svdtruncerr/scale);
-            }
-
-        DD.ReduceDimension(m); 
+        svdtruncerr = truncate(DD);
         }
+    int m = DD.Length();
+
+#ifdef DEBUG
+    if(m > maxm_)
+        {
+        cout << format("m > maxm_; m = %d, maxm_ = %d")
+                % m 
+                % maxm_ 
+             << endl;
+        Error("m > maxm_");
+        }
+    if(m > 20000)
+        {
+        cout << "WARNING: very large m = " << m << " in ITensor diag_hermitian" << endl;
+        }
+#endif
 
     if(showeigs_)
         {
@@ -727,6 +757,12 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, int b,
     D = ITSparse(primed(newmid),newmid,DD);
     D *= rho.scale();
 
+    if(cplx)
+        {
+        ITensor iU(active,newmid,iUU.Columns(1,m));
+        U = U*Complex_1() + iU*Complex_i();
+        }
+
     //Global::lastd() = D;
     return svdtruncerr;
     }
@@ -735,15 +771,15 @@ Real SVDWorker::
 diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b, 
                const OptSet& opts)
     {
-    const bool cplx = isComplex(rho);
+    bool cplx = isComplex(rho);
 
-    if(cplx)
+    if(cplx && opts.getBool("TraceReIm",false))
         {
-        if(opts.getBool("TraceReIm",false))
-            rho = realPart(rho);
+        rho = realPart(rho);
+        cplx = false;
         }
 
-    if(rho.r() != 2)
+    if(rho.r() != 2 + (cplx ? 1 : 0))
         {
         Print(rho.indices());
         Error("Density matrix doesn't have rank 2");
@@ -758,10 +794,14 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
         }
 #endif
 
-    vector<Matrix> mmatrix(rho.iten_size());
+    vector<Matrix> mmatrix(rho.iten_size()),
+                   imatrix;
     vector<Vector> mvector(rho.iten_size());
     vector<Real> alleig;
     alleig.reserve(rho.index(1).m());
+
+    if(cplx)
+        imatrix.resize(rho.iten_size());
 
     if(rho.index(1).m() == 0)
         throw ResultIsZero("rho.index(1).m()");
@@ -802,13 +842,30 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
         Vector &d =  mvector.at(itenind);
 
         //Diag ITensors within rho
-        int n = i1->m();
-        Matrix M(n,n);
-        t.toMatrix11NoScale(*i1,*i2,M);
-
-        M *= -1;
-        EigenValues(M,d,UU);
-        d *= -1;
+        const int n = i1->m();
+        if(!cplx)
+            {
+            Matrix M;
+            t.toMatrix11NoScale(*i1,*i2,M);
+            M *= -1;
+            EigenValues(M,d,UU);
+            d *= -1;
+            }
+        else
+            {
+            ITensor ret = realPart(t),
+                    imt = imagPart(t);
+            ret.scaleTo(refNorm_);
+            imt.scaleTo(refNorm_);
+            Matrix Mr,Mi;
+            Matrix &iUU = imatrix.at(itenind);
+            ret.toMatrix11NoScale(*i1,*i2,Mr);
+            imt.toMatrix11NoScale(*i1,*i2,Mi);
+            Mr *= -1;
+            Mi *= -1;
+            HermitianEigenvalues(Mr,Mi,d,UU,iUU);
+            d *= -1;
+            }
 
         for(int j = 1; j <= n; ++j) 
             alleig.push_back(d(j));
@@ -923,8 +980,20 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
         cout << endl;
         }
 
-    assert(m <= maxm_); 
-    assert(m < 20000);
+#ifdef DEBUG
+    if(m > maxm_)
+        {
+        cout << format("m > maxm_; m = %d, maxm_ = %d")
+                % m 
+                % maxm_ 
+             << endl;
+        Error("m > maxm_");
+        }
+    if(m > 20000)
+        {
+        cout << "WARNING: very large m = " << m << " in diag_hermitian" << endl;
+        }
+#endif
 
     IQIndex active = (rho.index(1).primeLevel() == 0 ? rho.index(1)
                                                      : rho.index(2));
@@ -934,8 +1003,12 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
     //
 
     //Build blocks for unitary diagonalizing rho
-    vector<ITensor> blocks; 
+    vector<ITensor> blocks,
+                    iblocks;
+    vector<ITSparse> Dblocks;
     blocks.reserve(rho.iten_size());
+    Dblocks.reserve(rho.iten_size());
+    if(cplx) iblocks.reserve(rho.iten_size());
 
     //Also form new Link IQIndex with appropriate m's for each block
     IQIndex::Storage iq;
@@ -979,6 +1052,13 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
         block.fromMatrix11(act,nm,Utrunc);
         blocks.push_back(block);
 
+        if(cplx)
+            {
+            iblocks.push_back(ITensor(act,nm,imatrix.at(itenind).Columns(1,this_m)));
+            }
+
+        Dblocks.push_back(ITSparse(primed(nm),nm,thisD.SubVector(1,this_m)));
+
         ++itenind;
         }
 
@@ -993,10 +1073,20 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
 
     U = IQTensor(conj(active),conj(newmid));
     D = IQTSparse(primed(newmid),newmid);
-    for(size_t j = 0; j < block.size(); ++j)
+    for(size_t j = 0; j < blocks.size(); ++j)
         {
-        D += Dblock[j];
-        U += block[j];
+        D += Dblocks[j];
+        U += blocks[j];
+        }
+
+    if(cplx)
+        {
+        IQTensor iU(conj(active),conj(newmid));
+        for(size_t j = 0; j < iblocks.size(); ++j)
+            {
+            iU += iblocks[j];
+            }
+        U = U*IQComplex_1() + iU*IQComplex_i();
         }
 
     D *= refNorm_;
