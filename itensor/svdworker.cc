@@ -152,6 +152,56 @@ truncate(Vector& D)
     return truncerr;
     }
 
+Real SVDWorker::
+truncate(vector<Real>& alleig, int& m, Real& docut)
+    {
+    m = (int)alleig.size();
+    int mdisc = 0;
+
+    Real truncerr = 0;
+
+    if(absoluteCutoff_)
+        {
+        while(m > maxm_ || ( (alleig[mdisc] < cutoff_ && m > minm_)
+            && mdisc < (int)alleig.size() ) )
+            {
+            if(alleig[mdisc] > 0)
+                truncerr += alleig[mdisc];
+            else
+                alleig[mdisc] = 0;
+
+            ++mdisc;
+            --m;
+            }
+        docut = (mdisc > 0 
+                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
+                : -1);
+        }
+    else
+        {
+        Real scale = doRelCutoff_ ? alleig.back() : 1.0;
+        while(m > maxm_ 
+            || ( (truncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
+            && mdisc < (int)alleig.size() ) )
+            {
+            if(alleig[mdisc] > 0)
+                truncerr += alleig[mdisc];
+            else
+                alleig[mdisc] = 0;
+
+            ++mdisc;
+            --m;
+            }
+        docut = (mdisc > 0 
+                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
+                : -1);
+        truncerr = (alleig.back() == 0 ? 0 : truncerr/scale);
+        }
+
+
+    return truncerr;
+    }
+
 
 
 void SVDWorker::
@@ -389,53 +439,19 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     //2. Truncate eigenvalues
 
-    //Sort all eigenvalues from smallest to largest
-    //irrespective of quantum numbers
-    sort(alleig.begin(),alleig.end());
-
     //Determine number of states to keep m
     int m = (int)alleig.size();
     Real svdtruncerr = 0;
     Real docut = -1;
-    int mdisc = 0; 
 
-    if(absoluteCutoff_)
+    if(truncate_)
         {
-        while(m > maxm_ || ( (alleig[mdisc] < cutoff_ && m > minm_)
-            && mdisc < (int)alleig.size() ) )
-            {
-            if(alleig[mdisc] > 0)
-                svdtruncerr += alleig[mdisc];
-            else
-                alleig[mdisc] = 0;
+        //Sort all eigenvalues from smallest to largest
+        //irrespective of quantum numbers
+        sort(alleig.begin(),alleig.end());
 
-            ++mdisc;
-            --m;
-            }
-        docut = (mdisc > 0 
-                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
-                : -1);
+        svdtruncerr = truncate(alleig,m,docut);
         }
-    else
-	    {
-	    Real scale = doRelCutoff_ ? alleig.back() : 1.0;
-        while(m > maxm_ 
-            || ( (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
-            && mdisc < (int)alleig.size() ) )
-            {
-            if(alleig[mdisc] > 0)
-                svdtruncerr += alleig[mdisc];
-            else
-                alleig[mdisc] = 0;
-
-            ++mdisc;
-            --m;
-            }
-        docut = (mdisc > 0 
-                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
-                : -1);
-        svdtruncerr = (alleig.back() == 0 ? 0 : svdtruncerr/scale);
-	    }
 
     if(showeigs_)
         {
@@ -445,8 +461,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
                        %minm_%maxm_%cutoff_ << endl;
         cout << format("    use_orig_m_ = %s")
                 %(use_orig_m_?"true":"false")<<endl;
-        cout << format("    Kept m = %d, discarded %d states in svdRank2")
-                                % m % mdisc << endl;
+        cout << format("    Kept m = %d states in svdRank2")
+                                % m << endl;
         cout << format("    svdtruncerr = %.2E")%svdtruncerr << endl;
         cout << format("    docut = %.2E")%docut << endl;
         cout << format("    cutoff=%.2E, minm=%d, maxm=%d")
@@ -903,10 +919,9 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
     //2. Truncate eigenvalues
 
     //Determine number of states to keep m
-    int m = (int)alleig.size();
     Real svdtruncerr = 0;
     Real docut = -1;
-    int mdisc = 0; 
+    int m = (int)alleig.size();
 
     if(truncate_)
         {
@@ -914,55 +929,19 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
         //irrespective of quantum numbers
         sort(alleig.begin(),alleig.end());
 
-        if(absoluteCutoff_)
-            {
-            while(m > maxm_ || ( (alleig[mdisc] < cutoff_ && m > minm_)
-                && mdisc < (int)alleig.size() ) )
-                {
-                if(alleig[mdisc] > 0)
-                    svdtruncerr += alleig[mdisc];
-                else
-                    alleig[mdisc] = 0;
-
-                ++mdisc;
-                --m;
-                }
-            docut = (mdisc > 0 
-                    ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
-                    : -1);
-            }
-        else
-            {
-            Real scale = doRelCutoff_ ? alleig.back() : 1.0;
-            while(m > maxm_ 
-                || ( (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
-                && mdisc < (int)alleig.size() ) )
-                {
-                if(alleig[mdisc] > 0)
-                    svdtruncerr += alleig[mdisc];
-                else
-                    alleig[mdisc] = 0;
-
-                ++mdisc;
-                --m;
-                }
-            docut = (mdisc > 0 
-                    ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
-                    : -1);
-            svdtruncerr = (alleig.back() == 0 ? 0 : svdtruncerr/scale);
-            }
+        svdtruncerr = truncate(alleig,m,docut);
         }
 
     if(showeigs_)
         {
         cout << endl;
-        cout << boost::format("use_orig_m_ = %s")
+        cout << format("use_orig_m_ = %s")
                 %(use_orig_m_?"true":"false")<<endl;
-        cout << boost::format("Kept %d, discarded %d states in diag_denmat line 721")
-                                % m % mdisc << endl;
-        cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
-        cout << boost::format("docut = %.2E")%docut << endl;
-        cout << boost::format("cutoff=%.2E, minm=%d, maxm=%d")
+        cout << format("Kept %d states in diag_denmat line 721")
+                                % m << endl;
+        cout << format("svdtruncerr = %.2E")%svdtruncerr << endl;
+        cout << format("docut = %.2E")%docut << endl;
+        cout << format("cutoff=%.2E, minm=%d, maxm=%d")
                 %cutoff_%minm_%maxm_ << endl;
         cout << "doRelCutoff is " << (doRelCutoff_ ? "true" : "false") << endl;
         cout << "absoluteCutoff is " << (absoluteCutoff_ ? "true" : "false") << endl;

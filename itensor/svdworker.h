@@ -230,7 +230,9 @@ class SVDWorker
     private:
 
     Real
-    truncate(Vector& D);
+    truncate(Vector& eigs);
+    Real
+    truncate(std::vector<Real>& eigs, int& m, Real& docut);
 
     Real 
     diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, int b,
