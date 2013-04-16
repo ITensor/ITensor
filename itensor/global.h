@@ -324,12 +324,14 @@ class Global
         static bool debug4_ = false;
         return debug4_;
         }
+    /*
     static Vector& 
     lastd()
         {
         static Vector lastd_(1);
         return lastd_;
         }
+        */
     static bool& 
     checkArrows()
         {

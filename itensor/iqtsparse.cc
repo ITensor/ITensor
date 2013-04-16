@@ -158,6 +158,34 @@ IQTSparse(const IQIndex& i1, const IQIndex& i2,
     }
 
 IQTSparse::
+IQTSparse(const IQIndex& i1, const IQIndex& i2,
+          const VectorRef& D)
+    :
+    is_(make_shared<IndexSet<IQIndex> >(i1,i2)),
+    d_(make_shared<IQTSDat>())
+    { 
+#ifdef DEBUG
+    if(i1.m() != i2.m() || i1.nindex() != i2.nindex())
+        {
+        Print(i1);
+        Print(i2);
+        Error("IQIndices must have same size and number of blocks");
+        }
+    if(D.Length() != i1.m())
+        {
+        Error("Incorrect size of Vector");
+        }
+#endif
+    int n = 1;
+    for(int j = 1; j <= i1.nindex(); ++j)
+        {
+        int bsize = i1.index(j).m();
+        operator+=(ITSparse(i1.index(j),i2.index(j),D.SubVector(n,n-1+bsize)));
+        n += bsize;
+        }
+    }
+
+IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
     :
     is_(make_shared<IndexSet<IQIndex> >(i1,i2,i3)),

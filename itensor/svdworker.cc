@@ -50,6 +50,7 @@ initOpts(const OptSet& opts)
     minm_ = opts.getInt("Minm",1);
     noise_ = opts.getReal("Noise",0.);
     showeigs_ = opts.getBool("ShowEigs",false);
+    truncate_ = opts.getBool("Truncate",true);
     use_orig_m_ = opts.getBool("UseOrigM",false);
     }
 
@@ -65,10 +66,11 @@ SVDWorker(int N, Real cutoff, int minm, int maxm,
       showeigs_(false), 
       doRelCutoff_(doRelCutoff),
       absoluteCutoff_(false), 
+      truncate_(true),
       refNorm_(refNorm), 
       eigsKept_(N_+1),
       noise_(0)
-    { }
+    {  }
 
 
 template <class Tensor, class SparseT> 
@@ -114,6 +116,93 @@ void SVDWorker::
 svd(int b, const IQTensor& AA, IQTensor& U, IQTSparse& D, IQTensor& V);
 
 
+Real SVDWorker::
+truncate(Vector& D)
+    {
+    int m = D.Length();
+
+    Real truncerr = 0;
+
+    //Zero out any negative weight
+    for(int zerom = m; zerom > 0; --zerom)
+        {
+        if(D(zerom) >= 0) break;
+        D(zerom) = 0;
+        }
+
+    if(absoluteCutoff_)
+        {
+        for(;m > maxm_ || (D(m) < cutoff_ && m > minm_); --m)
+            {
+            truncerr += D(m);
+            }
+        }
+    else
+        {
+        const Real scale = doRelCutoff_ ? D(1) : 1.0;
+        for(;m > maxm_ || (truncerr+D(m) < cutoff_*scale && m > minm_); --m)
+            {
+            truncerr += D(m);
+            }
+        truncerr = (D(1) == 0 ? 0 : truncerr/scale);
+        }
+
+    D.ReduceDimension(m); 
+
+    return truncerr;
+    }
+
+Real SVDWorker::
+truncate(vector<Real>& alleig, int& m, Real& docut)
+    {
+    m = (int)alleig.size();
+    int mdisc = 0;
+
+    Real truncerr = 0;
+
+    if(absoluteCutoff_)
+        {
+        while(m > maxm_ || ( (alleig[mdisc] < cutoff_ && m > minm_)
+            && mdisc < (int)alleig.size() ) )
+            {
+            if(alleig[mdisc] > 0)
+                truncerr += alleig[mdisc];
+            else
+                alleig[mdisc] = 0;
+
+            ++mdisc;
+            --m;
+            }
+        docut = (mdisc > 0 
+                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
+                : -1);
+        }
+    else
+        {
+        Real scale = doRelCutoff_ ? alleig.back() : 1.0;
+        while(m > maxm_ 
+            || ( (truncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
+            && mdisc < (int)alleig.size() ) )
+            {
+            if(alleig[mdisc] > 0)
+                truncerr += alleig[mdisc];
+            else
+                alleig[mdisc] = 0;
+
+            ++mdisc;
+            --m;
+            }
+        docut = (mdisc > 0 
+                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
+                : -1);
+        truncerr = (alleig.back() == 0 ? 0 : truncerr/scale);
+        }
+
+
+    return truncerr;
+    }
+
+
 
 void SVDWorker::
 svdRank2(ITensor A, const Index& ui, const Index& vi,
@@ -151,35 +240,22 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         }
 
     //Truncate
+
     int m = DD.Length();
-    Real& svdtruncerr = truncerr_.at(b);
-    svdtruncerr = 0;
-
-    //Zero out any negative weight
-    for(int zerom = m; zerom > 0; --zerom)
+    if(truncate_)
         {
-        if(DD(zerom) >= 0) break;
-        else              DD(zerom) = 0;
-        }
-
-    if(absoluteCutoff_)
-        {
-        while(m > maxm_ || (sqr(DD(m)) < cutoff_ && m > minm_))
-            {
-            svdtruncerr += sqr(DD(m--));
-            }
+        Vector sqrD(DD);
+        for(int j = 1; j <= sqrD.Length(); ++j)
+            sqrD(j) = sqr(DD(j));
+        truncerr_.at(b) = truncate(sqrD);
+        m = sqrD.Length();
+        DD.ReduceDimension(m);
         }
     else
         {
-        Real scale = doRelCutoff_ ? sqr(DD(1)) : 1.0;
-        while(m > maxm_ || (svdtruncerr+sqr(DD(m)) < cutoff_*scale && m > minm_))
-            {
-            svdtruncerr += sqr(DD(m--));
-            }
-        svdtruncerr = (DD(1) == 0 ? 0 : svdtruncerr/scale);
+        truncerr_.at(b) = 0;
         }
 
-    DD.ReduceDimension(m); 
 
     if(showeigs_)
         {
@@ -188,7 +264,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
                        %minm_%maxm_%cutoff_ << endl;
         cout << format("use_orig_m_ = %s")%(use_orig_m_?"true":"false")<<endl;
         cout << format("Kept m=%d states in svdRank2 line 169") % m << endl;
-        cout << format("svdtruncerr = %.3E")%svdtruncerr << endl;
+        cout << format("svdtruncerr = %.3E")%truncerr_.at(b) << endl;
 
 
         int stop = min(10,DD.Length());
@@ -238,16 +314,16 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         DD(j) *= DD(j);
         }
 
-    Global::lastd() = DD;
+    //Global::lastd() = DD;
 
     //Include A's scale to get the actual eigenvalues kept
     //as long as the leading eigenvalue is within a few orders
     //of magnitude of 1.0. Otherwise just report the scaled eigs.
-    Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
-    if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
-        {
-        Global::lastd() *= A.scale().real();
-        }
+    //Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
+    //if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
+    //    {
+    //    Global::lastd() *= A.scale().real();
+    //    }
 
     } // void SVDWorker::svdRank2
 
@@ -363,53 +439,19 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     //2. Truncate eigenvalues
 
-    //Sort all eigenvalues from smallest to largest
-    //irrespective of quantum numbers
-    sort(alleig.begin(),alleig.end());
-
     //Determine number of states to keep m
     int m = (int)alleig.size();
     Real svdtruncerr = 0;
     Real docut = -1;
-    int mdisc = 0; 
 
-    if(absoluteCutoff_)
+    if(truncate_)
         {
-        while(m > maxm_ || ( (alleig[mdisc] < cutoff_ && m > minm_)
-            && mdisc < (int)alleig.size() ) )
-            {
-            if(alleig[mdisc] > 0)
-                svdtruncerr += alleig[mdisc];
-            else
-                alleig[mdisc] = 0;
+        //Sort all eigenvalues from smallest to largest
+        //irrespective of quantum numbers
+        sort(alleig.begin(),alleig.end());
 
-            ++mdisc;
-            --m;
-            }
-        docut = (mdisc > 0 
-                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
-                : -1);
+        svdtruncerr = truncate(alleig,m,docut);
         }
-    else
-	    {
-	    Real scale = doRelCutoff_ ? alleig.back() : 1.0;
-        while(m > maxm_ 
-            || ( (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
-            && mdisc < (int)alleig.size() ) )
-            {
-            if(alleig[mdisc] > 0)
-                svdtruncerr += alleig[mdisc];
-            else
-                alleig[mdisc] = 0;
-
-            ++mdisc;
-            --m;
-            }
-        docut = (mdisc > 0 
-                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
-                : -1);
-        svdtruncerr = (alleig.back() == 0 ? 0 : svdtruncerr/scale);
-	    }
 
     if(showeigs_)
         {
@@ -419,8 +461,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
                        %minm_%maxm_%cutoff_ << endl;
         cout << format("    use_orig_m_ = %s")
                 %(use_orig_m_?"true":"false")<<endl;
-        cout << format("    Kept m = %d, discarded %d states in svdRank2")
-                                % m % mdisc << endl;
+        cout << format("    Kept m = %d states in svdRank2")
+                                % m << endl;
         cout << format("    svdtruncerr = %.2E")%svdtruncerr << endl;
         cout << format("    docut = %.2E")%docut << endl;
         cout << format("    cutoff=%.2E, minm=%d, maxm=%d")
@@ -593,7 +635,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     for(int i = 1; i <= L.m(); ++i) 
         DD(i) = alleig.at(alleig.size()-i);
 
-    Global::lastd() = DD;
+    //Global::lastd() = DD;
 
     /*
     {
@@ -608,14 +650,19 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
 
 Real SVDWorker::
-diag_denmat(ITensor rho, Vector& D, ITensor& U)
+diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, int b,
+               const OptSet& opts)
     {
-    if(isComplex(rho))
+    bool cplx = isComplex(rho);
+
+    if(cplx && opts.getBool("TraceReIm",false))
         {
         rho = realPart(rho);
+        cplx = false;
         }
+
 #ifdef DEBUG
-    if(rho.r() != 2)
+    if(rho.r() != 2 + (cplx ? 1 : 0))
         {
         Print(rho.r());
         Print(rho);
@@ -623,56 +670,84 @@ diag_denmat(ITensor rho, Vector& D, ITensor& U)
         }
 #endif
 
-    Index active = deprimed(findtype(rho,Link));
+    Index active;
+    Foreach(const Index& I, rho.indices())
+        {
+        if(I.primeLevel() == 0 && I.type() != ReIm)
+            {
+            active = I;
+            break;
+            }
+        }
+
+    if(active.isNull())
+        {
+        Print(rho.indices());
+        Error("Tensor must have one unprimed index");
+        }
 
     if(!doRelCutoff_) rho.scaleTo(refNorm_);
 
     //Do the diagonalization
-    Index ri = deprimed(findtype(rho,Link));
-    Matrix R,UU; 
-    rho.toMatrix11NoScale(ri,primed(ri),R);
-    R *= -1.0; 
-    EigenValues(R,D,UU); 
-    D *= -1.0;
+    Vector& DD = eigsKept_.at(b);
+    Matrix UU,iUU;
+    if(!cplx)
+        {
+        Matrix R;
+        rho.toMatrix11NoScale(active,primed(active),R);
+        R *= -1.0; 
+        EigenValues(R,DD,UU); 
+        DD *= -1.0;
+        }
+    else
+        {
+        Matrix Mr,Mi;
+        ITensor rrho = realPart(rho),
+                irho = imagPart(rho);
+        rrho.scaleTo(rho.scale());
+        irho.scaleTo(rho.scale());
+        rrho.toMatrix11NoScale(primed(active),active,Mr);
+        irho.toMatrix11NoScale(primed(active),active,Mi);
+        Mr *= -1.0; 
+        Mi *= -1.0; 
+        HermitianEigenvalues(Mr,Mi,DD,UU,iUU); 
+        DD *= -1.0;
+        }
+
 
     //Include rho's scale to get the actual eigenvalues kept
     //as long as the leading eigenvalue is within a few orders
     //of magnitude of 1.0. Otherwise just report the scaled eigs.
-    Real orderMag = log(fabs(D(1))) + rho.scale().logNum();
-    if(fabs(orderMag) < 5 && rho.scale().isFiniteReal())
-        {
-        D *= rho.scale().real();
-        }
+    //Real orderMag = log(fabs(DD(1))) + rho.scale().logNum();
+    //if(fabs(orderMag) < 5 && rho.scale().isFiniteReal())
+    //    {
+    //    DD *= rho.scale().real();
+    //    }
 
     //Truncate
-    int m = D.Length();
     Real svdtruncerr = 0.0;
-
-    //Zero out any negative weight
-    for(int zerom = m; zerom > 0; --zerom)
+    if(showeigs_)
+        cout << "Before truncating, m = " << DD.Length() << endl;
+    if(truncate_)
         {
-        if(D(zerom) >= 0) break;
-        else              D(zerom) = 0;
+        svdtruncerr = truncate(DD);
         }
+    int m = DD.Length();
 
-    if(absoluteCutoff_)
+#ifdef DEBUG
+    if(m > maxm_)
         {
-        while(m > maxm_ || (D(m) < cutoff_ && m > minm_))
-            {
-            svdtruncerr += D(m--);
-            }
+        cout << format("m > maxm_; m = %d, maxm_ = %d")
+                % m 
+                % maxm_ 
+             << endl;
+        Error("m > maxm_");
         }
-    else
+    if(m > 20000)
         {
-        Real scale = doRelCutoff_ ? D(1) : 1.0;
-        while(m > maxm_ || (svdtruncerr+D(m) < cutoff_*scale && m > minm_))
-            {
-            svdtruncerr += D(m--);
-            }
-        svdtruncerr = (D(1) == 0 ? 0 : svdtruncerr/scale);
+        cout << "WARNING: very large m = " << m << " in ITensor diag_hermitian" << endl;
         }
-
-    D.ReduceDimension(m); 
+#endif
 
     if(showeigs_)
         {
@@ -685,11 +760,11 @@ diag_denmat(ITensor rho, Vector& D, ITensor& U)
         //cout << "doRelCutoff is " << doRelCutoff_ << endl;
         //cout << "refNorm is " << refNorm_ << endl;
         //int stop = min(D.Length(),10);
-        int stop = D.Length();
+        int stop = DD.Length();
         cout << "Eigs: ";
         for(int j = 1; j <= stop; ++j)
             {
-            cout << format(D(j) > 1E-3 ? ("%.3f") : ("%.3E")) % D(j);
+            cout << format(DD(j) > 1E-3 ? ("%.3f") : ("%.3E")) % DD(j);
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -697,19 +772,32 @@ diag_denmat(ITensor rho, Vector& D, ITensor& U)
 
     Index newmid(active.rawname(),m,active.type());
     U = ITensor(active,newmid,UU.Columns(1,m));
-    Global::lastd() = D;
+    D = ITSparse(primed(newmid),newmid,DD);
+    D *= rho.scale();
+
+    if(cplx)
+        {
+        ITensor iU(active,newmid,iUU.Columns(1,m));
+        U = U*Complex_1() + iU*Complex_i();
+        }
+
+    //Global::lastd() = D;
     return svdtruncerr;
     }
 
 Real SVDWorker::
-diag_denmat(IQTensor rho, Vector& D, IQTensor& U)
+diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b, 
+               const OptSet& opts)
     {
-    if(isComplex(rho))
+    bool cplx = isComplex(rho);
+
+    if(cplx && opts.getBool("TraceReIm",false))
         {
         rho = realPart(rho);
+        cplx = false;
         }
 
-    if(rho.r() != 2)
+    if(rho.r() != 2 + (cplx ? 1 : 0))
         {
         Print(rho.indices());
         Error("Density matrix doesn't have rank 2");
@@ -724,10 +812,14 @@ diag_denmat(IQTensor rho, Vector& D, IQTensor& U)
         }
 #endif
 
-    vector<Matrix> mmatrix(rho.iten_size());
+    vector<Matrix> mmatrix(rho.iten_size()),
+                   imatrix;
     vector<Vector> mvector(rho.iten_size());
     vector<Real> alleig;
     alleig.reserve(rho.index(1).m());
+
+    if(cplx)
+        imatrix.resize(rho.iten_size());
 
     if(rho.index(1).m() == 0)
         throw ResultIsZero("rho.index(1).m()");
@@ -760,21 +852,45 @@ diag_denmat(IQTensor rho, Vector& D, IQTensor& U)
     int itenind = 0;
     Foreach(const ITensor& t, rho.blocks())
         {
-        const
-        IndexSet<Index>::const_iterator i1 = t.indices().begin(),
-                                        i2 = i1+1;
+        Index a;
+        Foreach(const Index& I, t.indices())
+            {
+            if(I.type() == ReIm) continue;
+            if(I.primeLevel() == 0)
+                {
+                a = I;
+                break;
+                }
+            }
 
         Matrix &UU = mmatrix.at(itenind);
         Vector &d =  mvector.at(itenind);
 
         //Diag ITensors within rho
-        int n = i1->m();
-        Matrix M(n,n);
-        t.toMatrix11NoScale(*i1,*i2,M);
-
-        M *= -1;
-        EigenValues(M,d,UU);
-        d *= -1;
+        const int n = a.m();
+        if(!cplx)
+            {
+            Matrix M;
+            t.toMatrix11NoScale(a,primed(a),M);
+            M *= -1;
+            EigenValues(M,d,UU);
+            d *= -1;
+            }
+        else
+            {
+            ITensor ret = realPart(t),
+                    imt = imagPart(t);
+            ret.scaleTo(refNorm_);
+            imt.scaleTo(refNorm_);
+            Matrix Mr,Mi;
+            Matrix &iUU = imatrix.at(itenind);
+            ret.toMatrix11NoScale(primed(a),a,Mr);
+            imt.toMatrix11NoScale(primed(a),a,Mi);
+            Mr *= -1;
+            Mi *= -1;
+            HermitianEigenvalues(Mr,Mi,d,UU,iUU);
+            d *= -1;
+            }
 
         for(int j = 1; j <= n; ++j) 
             alleig.push_back(d(j));
@@ -811,64 +927,30 @@ diag_denmat(IQTensor rho, Vector& D, IQTensor& U)
 
     //2. Truncate eigenvalues
 
-    //Sort all eigenvalues from smallest to largest
-    //irrespective of quantum numbers
-    sort(alleig.begin(),alleig.end());
-
     //Determine number of states to keep m
-    int m = (int)alleig.size();
     Real svdtruncerr = 0;
     Real docut = -1;
-    int mdisc = 0; 
+    int m = (int)alleig.size();
 
-    if(absoluteCutoff_)
+    if(truncate_)
         {
-        while(m > maxm_ || ( (alleig[mdisc] < cutoff_ && m > minm_)
-            && mdisc < (int)alleig.size() ) )
-            {
-            if(alleig[mdisc] > 0)
-                svdtruncerr += alleig[mdisc];
-            else
-                alleig[mdisc] = 0;
+        //Sort all eigenvalues from smallest to largest
+        //irrespective of quantum numbers
+        sort(alleig.begin(),alleig.end());
 
-            ++mdisc;
-            --m;
-            }
-        docut = (mdisc > 0 
-                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
-                : -1);
+        svdtruncerr = truncate(alleig,m,docut);
         }
-    else
-	    {
-	    Real scale = doRelCutoff_ ? alleig.back() : 1.0;
-        while(m > maxm_ 
-            || ( (svdtruncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
-            && mdisc < (int)alleig.size() ) )
-            {
-            if(alleig[mdisc] > 0)
-                svdtruncerr += alleig[mdisc];
-            else
-                alleig[mdisc] = 0;
-
-            ++mdisc;
-            --m;
-            }
-        docut = (mdisc > 0 
-                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
-                : -1);
-        svdtruncerr = (alleig.back() == 0 ? 0 : svdtruncerr/scale);
-	    }
 
     if(showeigs_)
         {
         cout << endl;
-        cout << boost::format("use_orig_m_ = %s")
+        cout << format("use_orig_m_ = %s")
                 %(use_orig_m_?"true":"false")<<endl;
-        cout << boost::format("Kept %d, discarded %d states in diag_denmat line 721")
-                                % m % mdisc << endl;
-        cout << boost::format("svdtruncerr = %.2E")%svdtruncerr << endl;
-        cout << boost::format("docut = %.2E")%docut << endl;
-        cout << boost::format("cutoff=%.2E, minm=%d, maxm=%d")
+        cout << format("Kept %d states in diag_denmat line 721")
+                                % m << endl;
+        cout << format("svdtruncerr = %.2E")%svdtruncerr << endl;
+        cout << format("docut = %.2E")%docut << endl;
+        cout << format("cutoff=%.2E, minm=%d, maxm=%d")
                 %cutoff_%minm_%maxm_ << endl;
         cout << "doRelCutoff is " << (doRelCutoff_ ? "true" : "false") << endl;
         cout << "absoluteCutoff is " << (absoluteCutoff_ ? "true" : "false") << endl;
@@ -886,19 +968,43 @@ diag_denmat(IQTensor rho, Vector& D, IQTensor& U)
         cout << endl;
         }
 
-    assert(m <= maxm_); 
-    assert(m < 20000);
+#ifdef DEBUG
+    if(m > maxm_)
+        {
+        cout << format("m > maxm_; m = %d, maxm_ = %d")
+                % m 
+                % maxm_ 
+             << endl;
+        Error("m > maxm_");
+        }
+    if(m > 20000)
+        {
+        cout << "WARNING: very large m = " << m << " in diag_hermitian" << endl;
+        }
+#endif
 
-    IQIndex active = (rho.index(1).primeLevel() == 0 ? rho.index(1)
-                                                     : rho.index(2));
+    IQIndex active;
+    Foreach(const IQIndex& I, rho.indices())
+        {
+        if(I.type() == ReIm) continue;
+        if(I.primeLevel() == 0)
+            {
+            active = I;
+            break;
+            }
+        }
 
     //
     //Truncate eigenvalues and eigenvectors of rho
     //
 
     //Build blocks for unitary diagonalizing rho
-    vector<ITensor> blocks; 
+    vector<ITensor> blocks,
+                    iblocks;
+    vector<ITSparse> Dblocks;
     blocks.reserve(rho.iten_size());
+    Dblocks.reserve(rho.iten_size());
+    if(cplx) iblocks.reserve(rho.iten_size());
 
     //Also form new Link IQIndex with appropriate m's for each block
     IQIndex::Storage iq;
@@ -911,22 +1017,40 @@ diag_denmat(IQTensor rho, Vector& D, IQTensor& U)
         Matrix& thisU = mmatrix.at(itenind);
 
         int this_m = 1;
-        while(this_m <= thisD.Length() && thisD(this_m) > docut) 
+        if(truncate_)
             {
-            if(thisD(this_m) < 0) thisD(this_m) = 0;
-            ++this_m;
+            while(this_m <= thisD.Length() && thisD(this_m) > docut) 
+                {
+                if(thisD(this_m) < 0) thisD(this_m) = 0;
+                ++this_m;
+                }
+            --this_m; //since the loop overshoots by 1
+
+            if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
+                { this_m = 1; m = 1; docut = 1; }
+
+            thisD.ReduceDimension(this_m);
             }
-        --this_m; //since the loop overshoots by 1
-
-        if(m == 0 && thisD.Length() >= 1) // zero mps, just keep one arb state
-            { this_m = 1; m = 1; docut = 1; }
-
-        thisD.ReduceDimension(this_m);
+        else
+            {
+            this_m = thisD.Length();
+            }
 
         if(this_m == 0) { ++itenind; continue; }
 
         Index nm("qlink",this_m);
-        Index act = deprimed(findtype(t,Link));
+
+        Index act;
+        Foreach(const Index& I, t.indices())
+            {
+            if(I.type() == ReIm) continue;
+            if(I.primeLevel() == 0)
+                {
+                act = I;
+                break;
+                }
+            }
+
         iq.push_back(IndexQN(nm,qn(active,act)));
 
         MatrixRef Utrunc = thisU.Columns(1,this_m);
@@ -934,6 +1058,13 @@ diag_denmat(IQTensor rho, Vector& D, IQTensor& U)
         ITensor block(act,nm);
         block.fromMatrix11(act,nm,Utrunc);
         blocks.push_back(block);
+
+        if(cplx)
+            {
+            iblocks.push_back(ITensor(act,nm,imatrix.at(itenind).Columns(1,this_m)));
+            }
+
+        Dblocks.push_back(ITSparse(primed(nm),nm,thisD.SubVector(1,this_m)));
 
         ++itenind;
         }
@@ -947,23 +1078,46 @@ diag_denmat(IQTensor rho, Vector& D, IQTensor& U)
 
     IQIndex newmid("qlink",iq, -active.dir());
 
-    U = IQTensor(active,newmid);
-    Foreach(const ITensor& block, blocks)
-        U += block;
+    U = IQTensor(conj(active),conj(newmid));
+    D = IQTSparse(primed(newmid),conj(newmid));
+    for(size_t j = 0; j < blocks.size(); ++j)
+        {
+        D += Dblocks[j];
+        U += blocks[j];
+        }
 
-    D.ReDimension(newmid.m());
+    if(cplx)
+        {
+        IQTensor iU(conj(active),conj(newmid));
+        for(size_t j = 0; j < iblocks.size(); ++j)
+            {
+            iU += iblocks[j];
+            }
+        U = U*IQComplex_1() + iU*IQComplex_i();
+        }
+
+    D *= refNorm_;
+
+    truncerr_.at(b) = svdtruncerr;
+
+    Vector& DD = eigsKept_.at(b);
+    DD.ReDimension(newmid.m());
+    const size_t aesize = alleig.size();
     for(int i = 1; i <= newmid.m(); ++i) 
-        D(i) = alleig.at(alleig.size()-i);
+        DD(i) = alleig.at(aesize-i);
 
-    Global::lastd() = D;
+
+    //Global::lastd() = D;
     //Include refNorm_ to get the actual eigenvalues kept
     //as long as the leading eigenvalue is within a few orders
     //of magnitude of 1.0. Otherwise just report the scaled eigs.
+    /*
     Real orderMag = log(fabs(D(1))) + refNorm_.logNum();
     if(fabs(orderMag) < 5 && refNorm_.isFiniteReal())
         {
         Global::lastd() *= refNorm_.real();
         }
+        */
 
     return svdtruncerr;
 
