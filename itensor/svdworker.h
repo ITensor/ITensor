@@ -578,33 +578,26 @@ diagonalize(int b, const Tensor& M, Tensor& U, SparseT& D)
     comb.doCondense(true);
     comb.init("d");
 
-    bool samedir = false;
-    Foreach(const IndexT& I, M.indices())
-        {
-        if(I.type() == ReIm) continue;
-        if(I.primeLevel() != 0 && I.dir() == comb.right().dir())
-            {
-            samedir = true;
-            break;
-            }
-        }
-
     Tensor Mc; 
     comb.product(M,Mc);
 
     CombinerT combP(comb);
     combP.prime();
-    if(!samedir) combP.conj();
+    combP.conj();
 
-    Mc = combP * Mc;
-    Print(Mc.indices());
+    try {
+        Mc = combP * Mc;
+        }
+    catch(const ITError& e)
+        {
+        Cout << "Diagonalize expects opposite arrow directions for primed and unprimed indices." << Endl;
+        throw e;
+        }
 
     const bool truncate_setting = truncate_;
     truncate_ = false;
     diag_hermitian(Mc,U,D,b);
     truncate_ = truncate_setting;
-
-    //D = SparseT(conj(primed(newmid)),(samedir ? conj(newmid) : newmid),eigsKept_.at(b));
 
     U = comb * U;
 

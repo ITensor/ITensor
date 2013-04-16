@@ -1051,7 +1051,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
     IQIndex newmid("qlink",iq, -active.dir());
 
     U = IQTensor(conj(active),conj(newmid));
-    D = IQTSparse(primed(newmid),newmid);
+    D = IQTSparse(primed(newmid),conj(newmid));
     for(size_t j = 0; j < blocks.size(); ++j)
         {
         D += Dblocks[j];
