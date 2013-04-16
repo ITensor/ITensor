@@ -467,9 +467,8 @@ TEST(ComplexDenmat)
 
 TEST(Diagonalization)
     {
-    /*
     Index s1("s1",2,Site),s2("s2",2,Site);
-    ITensor M(s1,s2,primed(s1),primed(s2));
+    ITensor M(s1,s2,primed(s2),primed(s1));
     M.randomize();
     M = M + swapPrime(M,0,1);
     M *= 0.5;
@@ -479,29 +478,55 @@ TEST(Diagonalization)
     diagonalize(M,U,D);
 
     CHECK((M-(primed(U)*D*conj(U))).norm() < 1E-14);
-    */
 
     //////////////////////////
 
-    //IQTensor T(conj(S1)(1),conj(S2)(2),primed(S1)(1),primed(S2)(2));
-    //T.randomize();
-    //T = T + swapPrime(T,0,1);
-    //T *= 0.5;
-    IQTensor T(conj(S1),primed(S1));
-    T(conj(S1)(1),primed(S1)(1)) = 1;
-    T(conj(S1)(2),primed(S1)(2)) = -1;
+    IQTensor T(conj(S2)(1),conj(S1)(2),primed(S1)(1),primed(S2)(2));
+    T.randomize();
+    T = T + swapPrime(T,0,1);
+    T *= 0.5;
+    //IQTensor T(conj(S1),primed(S1));
+    //T(conj(S1)(1),primed(S1)(1)) = 1;
+    //T(conj(S1)(2),primed(S1)(2)) = -1;
 
     IQTensor UU;
     IQTSparse DD;
     diagonalize(T,UU,DD);
 
-    Print(T.indices());
-    PrintDat(UU);
-    PrintDat(DD);
+    CHECK((T-(primed(UU)*DD*conj(UU))).norm() < 1E-14);
+    }
 
-    PrintDat(primed(UU)*DD*conj(UU));
+TEST(ComplexDiagonalization)
+    {
+    Index s1("s1",2,Site),s2("s2",2,Site);
+    ITensor Mr(s1,s2,primed(s2),primed(s1)),
+            Mi(s1,s2,primed(s2),primed(s1));
+    Mr.randomize();
+    Mi.randomize();
+    ITensor M = Complex_1()*Mr + Complex_i()*Mi;
+    M = M + conj(swapPrime(M,0,1));
+    M *= 0.5;
 
-    Print((T-(primed(UU)*DD*conj(UU))).norm());
+    ITensor U;
+    ITSparse D;
+    diagonalize(M,U,D);
+
+    CHECK((M-(primed(U)*D*conj(U))).norm() < 1E-14);
+
+    //////////////////////////
+
+    IQTensor Tr(conj(S2)(1),conj(S1)(2),primed(S1)(1),primed(S2)(2)),
+             Ti(conj(S2)(1),conj(S1)(2),primed(S1)(1),primed(S2)(2));
+    Tr.randomize();
+    Ti.randomize();
+    IQTensor T = IQComplex_1()*Tr + IQComplex_i()*Ti;
+    T = T + conj(swapPrime(T,0,1));
+    T *= 0.5;
+
+    IQTensor UU;
+    IQTSparse DD;
+    diagonalize(T,UU,DD);
+
     CHECK((T-(primed(UU)*DD*conj(UU))).norm() < 1E-14);
     }
 

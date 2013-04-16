@@ -704,8 +704,10 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, int b,
         Matrix Mr,Mi;
         ITensor rrho = realPart(rho),
                 irho = imagPart(rho);
-        rrho.toMatrix11NoScale(active,primed(active),Mr);
-        irho.toMatrix11NoScale(active,primed(active),Mi);
+        rrho.scaleTo(rho.scale());
+        irho.scaleTo(rho.scale());
+        rrho.toMatrix11NoScale(primed(active),active,Mr);
+        irho.toMatrix11NoScale(primed(active),active,Mi);
         Mr *= -1.0; 
         Mi *= -1.0; 
         HermitianEigenvalues(Mr,Mi,DD,UU,iUU); 
@@ -850,19 +852,26 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
     int itenind = 0;
     Foreach(const ITensor& t, rho.blocks())
         {
-        const
-        IndexSet<Index>::const_iterator i1 = t.indices().begin(),
-                                        i2 = i1+1;
+        Index a;
+        Foreach(const Index& I, t.indices())
+            {
+            if(I.type() == ReIm) continue;
+            if(I.primeLevel() == 0)
+                {
+                a = I;
+                break;
+                }
+            }
 
         Matrix &UU = mmatrix.at(itenind);
         Vector &d =  mvector.at(itenind);
 
         //Diag ITensors within rho
-        const int n = i1->m();
+        const int n = a.m();
         if(!cplx)
             {
             Matrix M;
-            t.toMatrix11NoScale(*i1,*i2,M);
+            t.toMatrix11NoScale(a,primed(a),M);
             M *= -1;
             EigenValues(M,d,UU);
             d *= -1;
@@ -875,8 +884,8 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
             imt.scaleTo(refNorm_);
             Matrix Mr,Mi;
             Matrix &iUU = imatrix.at(itenind);
-            ret.toMatrix11NoScale(*i1,*i2,Mr);
-            imt.toMatrix11NoScale(*i1,*i2,Mi);
+            ret.toMatrix11NoScale(primed(a),a,Mr);
+            imt.toMatrix11NoScale(primed(a),a,Mi);
             Mr *= -1;
             Mi *= -1;
             HermitianEigenvalues(Mr,Mi,d,UU,iUU);
@@ -974,8 +983,16 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
         }
 #endif
 
-    IQIndex active = (rho.index(1).primeLevel() == 0 ? rho.index(1)
-                                                     : rho.index(2));
+    IQIndex active;
+    Foreach(const IQIndex& I, rho.indices())
+        {
+        if(I.type() == ReIm) continue;
+        if(I.primeLevel() == 0)
+            {
+            active = I;
+            break;
+            }
+        }
 
     //
     //Truncate eigenvalues and eigenvectors of rho
@@ -1022,7 +1039,18 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
         if(this_m == 0) { ++itenind; continue; }
 
         Index nm("qlink",this_m);
-        Index act = deprimed(findtype(t,Link));
+
+        Index act;
+        Foreach(const Index& I, t.indices())
+            {
+            if(I.type() == ReIm) continue;
+            if(I.primeLevel() == 0)
+                {
+                act = I;
+                break;
+                }
+            }
+
         iq.push_back(IndexQN(nm,qn(active,act)));
 
         MatrixRef Utrunc = thisU.Columns(1,this_m);

@@ -208,13 +208,12 @@ TEST(TestSVDComplex)
 
 TEST(TestHermitianEigs)
     {
-    const int n = 20;
+    const int n = 40;
     Matrix Are(n,n),
            Aim(n,n);
 
     Are.Randomize();
     Aim.Randomize();
-
     Are = Are + Are.t();
     Aim = Aim - Aim.t();
 
@@ -222,8 +221,10 @@ TEST(TestHermitianEigs)
     Vector D;
     HermitianEigenvalues(Are,Aim,D,Ure,Uim);
 
-    Matrix DD(D.Length(),D.Length()); DD = 0;
-    for(int i = 1; i <= D.Length(); ++i) DD(i,i) = D(i);
+    Matrix DD(D.Length(),D.Length());
+    DD = 0;
+    for(int i = 1; i <= D.Length(); ++i) 
+        DD(i,i) = D(i);
 
     Matrix ReDiff = Are-(Ure*DD*Ure.t()+Uim*DD*Uim.t());
     Matrix ImDiff = Aim-(-Ure*DD*Uim.t()+Uim*DD*Ure.t());
