@@ -203,7 +203,14 @@ int Index::
 primeLevel() const { return primelevel_; }
 
 void Index::
-primeLevel(int plev) { primelevel_ = plev; }
+primeLevel(int plev) 
+    { 
+    primelevel_ = plev; 
+#ifdef DEBUG
+    if(primelevel_ < 0)
+        Error("Negative primeLevel");
+#endif
+    }
 
 bool Index::
 operator==(const Index& other) const 
@@ -230,12 +237,29 @@ mapprime(int plevold, int plevnew, IndexType type)
     if(primelevel_ == plevold)
         {
         if((type == All && this->type() != ReIm) || type == this->type())
+            {
             primelevel_ = plevnew;
+#ifdef DEBUG
+            if(primelevel_ < 0)
+                {
+                Error("Negative primeLevel");
+                }
+#endif
+            }
         }
     }
 
 void Index::
-prime(int inc) { primelevel_ += inc; }
+prime(int inc) 
+    { 
+    primelevel_ += inc; 
+#ifdef DEBUG
+    if(primelevel_ < 0)
+        {
+        Error("Negative primeLevel");
+        }
+#endif
+    }
 
 void Index::
 prime(IndexType type, int inc)
@@ -244,6 +268,12 @@ prime(IndexType type, int inc)
        (type == All && this->type() != ReIm))
         {
         primelevel_ += inc;
+#ifdef DEBUG
+        if(primelevel_ < 0)
+            {
+            Error("Increment led to negative primeLevel");
+            }
+#endif
         }
     }
 
@@ -271,6 +301,12 @@ void Index::
 read(istream& s)
     {
     s.read((char*) &primelevel_,sizeof(primelevel_));
+#ifdef DEBUG
+    if(primelevel_ < 0)
+        {
+        Error("Negative primeLevel");
+        }
+#endif
 
     int t; s.read((char*) &t,sizeof(t));
 

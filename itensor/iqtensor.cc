@@ -1066,6 +1066,7 @@ operator*=(const IQTensor& other)
             {
             //Check that arrow directions are compatible
             if(Global::checkArrows())
+                {
                 if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
                     {
                     Print(this->indices());
@@ -1075,8 +1076,12 @@ operator*=(const IQTensor& other)
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
                     throw ArrowError("Incompatible arrow directions in IQTensor::operator*=.");
                     }
+                }
+
             for(size_t n = 0; n < I.indices().size(); ++n) 
-                { common_inds.insert(ApproxReal(I.indices()[n].uniqueReal())); }
+                { 
+                common_inds.insert(ApproxReal(I.indices()[n].uniqueReal())); 
+                }
 
             common_inds.insert(ApproxReal(I.uniqueReal()));
             }
