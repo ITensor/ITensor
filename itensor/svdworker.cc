@@ -162,38 +162,38 @@ truncate(vector<Real>& alleig, int& m, Real& docut)
 
     if(absoluteCutoff_)
         {
-        while(m > maxm_ || ( (alleig[mdisc] < cutoff_ && m > minm_)
+        while(m > maxm_ || ( (alleig.at(mdisc) < cutoff_ && m > minm_)
             && mdisc < (int)alleig.size() ) )
             {
-            if(alleig[mdisc] > 0)
-                truncerr += alleig[mdisc];
+            if(alleig.at(mdisc) > 0)
+                truncerr += alleig.at(mdisc);
             else
-                alleig[mdisc] = 0;
+                alleig.at(mdisc) = 0;
 
             ++mdisc;
             --m;
             }
         docut = (mdisc > 0 
-                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
+                ? (alleig.at(mdisc-1) + alleig.at(mdisc))*0.5 - 1E-5*alleig.at(mdisc-1)
                 : -1);
         }
     else
         {
         Real scale = doRelCutoff_ ? alleig.back() : 1.0;
         while(m > maxm_ 
-            || ( (truncerr+alleig[mdisc] < cutoff_*scale && m > minm_)
+            || ( (truncerr+alleig.at(mdisc) < cutoff_*scale && m > minm_)
             && mdisc < (int)alleig.size() ) )
             {
-            if(alleig[mdisc] > 0)
-                truncerr += alleig[mdisc];
+            if(alleig.at(mdisc) > 0)
+                truncerr += alleig.at(mdisc);
             else
-                alleig[mdisc] = 0;
+                alleig.at(mdisc) = 0;
 
             ++mdisc;
             --m;
             }
         docut = (mdisc > 0 
-                ? (alleig[mdisc-1] + alleig[mdisc])*0.5 - 1E-5*alleig[mdisc-1]
+                ? (alleig.at(mdisc-1) + alleig.at(mdisc))*0.5 - 1E-5*alleig.at(mdisc-1)
                 : -1);
         truncerr = (alleig.back() == 0 ? 0 : truncerr/scale);
         }
@@ -605,9 +605,9 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     //Load blocks into D,U, and V
     for(size_t j = 0; j < Dblock.size(); ++j)
         {
-        D += Dblock[j];
-        U += Ublock[j];
-        V += Vblock[j];
+        D += Dblock.at(j);
+        U += Ublock.at(j);
+        V += Vblock.at(j);
         }
 
     if(cplx)
@@ -616,8 +616,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         IQTensor iV(conj(R),vI);
         for(size_t j = 0; j < Dblock.size(); ++j)
             {
-            iU += iUblock[j];
-            iV += iVblock[j];
+            iU += iUblock.at(j);
+            iV += iVblock.at(j);
             }
         U = U*IQComplex_1() + iU*IQComplex_i();
         V = V*IQComplex_1() + iV*IQComplex_i();
@@ -961,8 +961,8 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
         cout << "Eigs: ";
         for(int j = s-1; j >= stop; --j)
             {
-            cout << format(alleig[j] > 1E-3 ? ("%.3f") : ("%.3E")) 
-                           % alleig[j];
+            cout << format(alleig.at(j) > 1E-3 ? ("%.3f") : ("%.3E")) 
+                           % alleig.at(j);
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -1082,8 +1082,8 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
     D = IQTSparse(primed(newmid),conj(newmid));
     for(size_t j = 0; j < blocks.size(); ++j)
         {
-        D += Dblocks[j];
-        U += blocks[j];
+        D += Dblocks.at(j);
+        U += blocks.at(j);
         }
 
     if(cplx)
@@ -1091,7 +1091,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
         IQTensor iU(conj(active),conj(newmid));
         for(size_t j = 0; j < iblocks.size(); ++j)
             {
-            iU += iblocks[j];
+            iU += iblocks.at(j);
             }
         U = U*IQComplex_1() + iU*IQComplex_i();
         }
@@ -1149,7 +1149,7 @@ read(std::istream& s)
     s.read((char*) &N_,sizeof(N_));
     truncerr_.resize(N_+1);
     for(int j = 1; j <= N_; ++j)
-        s.read((char*)&truncerr_[j],sizeof(truncerr_[j]));
+        s.read((char*)&truncerr_.at(j),sizeof(truncerr_.at(j)));
     s.read((char*)&cutoff_,sizeof(cutoff_));
     s.read((char*)&minm_,sizeof(minm_));
     s.read((char*)&maxm_,sizeof(maxm_));
@@ -1168,7 +1168,7 @@ write(std::ostream& s) const
     {
     s.write((char*) &N_,sizeof(N_));
     for(int j = 1; j <= N_; ++j)
-        s.write((char*)&truncerr_[j],sizeof(truncerr_[j]));
+        s.write((char*)&truncerr_.at(j),sizeof(truncerr_.at(j)));
     s.write((char*)&cutoff_,sizeof(cutoff_));
     s.write((char*)&minm_,sizeof(minm_));
     s.write((char*)&maxm_,sizeof(maxm_));
@@ -1178,7 +1178,7 @@ write(std::ostream& s) const
     s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.write((char*)&refNorm_,sizeof(refNorm_));
     for(int j = 1; j <= N_; ++j)
-        writeVec(s,eigsKept_[j]);
+        writeVec(s,eigsKept_.at(j));
     }
 
 

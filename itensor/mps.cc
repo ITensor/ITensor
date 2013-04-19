@@ -847,7 +847,7 @@ void MPSt<Tensor>::
 applygate(const Tensor& gate,const OptSet& opts)
     {
     setBond(l_orth_lim_+1);
-    Tensor AA = A_[l_orth_lim_+1] * A_[l_orth_lim_+2] * gate;
+    Tensor AA = A_.at(l_orth_lim_+1) * A_.at(l_orth_lim_+2) * gate;
     AA.noprime();
     svdBond(l_orth_lim_+1,AA,Fromleft);
     }

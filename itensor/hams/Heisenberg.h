@@ -89,7 +89,7 @@ init_()
     for(int n = 1; n <= Ns; ++n)
         {
         ITensor& W = H.Anc(n);
-        Index &row = links[n-1], &col = links[n];
+        Index &row = links.at(n-1), &col = links.at(n);
 
         W = ITensor(model_.si(n),model_.siP(n),row,col);
 

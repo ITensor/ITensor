@@ -835,7 +835,7 @@ gateTEvol(const list<BondGate<Tensor> >& gatelist, Real ttotal, Real tstep,
             Real percentdone = (100.*tt)/nt;
             if(percentdone < 99.5)
                 {
-                fprintf(stdout,"\b\b\b%2.f%%",percentdone);
+                cout << format("\b\b\b%2.f%%") % percentdone;
                 cout.flush();
                 }
             }
@@ -846,8 +846,7 @@ gateTEvol(const list<BondGate<Tensor> >& gatelist, Real ttotal, Real tstep,
         }
     if(verbose) 
         {
-        cout << endl;
-        cout << format("Total time evolved = %.5f\n") % tsofar << endl;
+        cout << format("\nTotal time evolved = %.5f\n") % tsofar << endl;
         }
 
     } // gateTEvol

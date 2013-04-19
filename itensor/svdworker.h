@@ -118,14 +118,14 @@ class SVDWorker
 
     template <class Tensor, class SparseT> 
     void 
-    diagonalize(const Tensor& M, Tensor& U, SparseT& D)
+    diagHermitian(const Tensor& M, Tensor& U, SparseT& D)
         { 
-        diagonalize<Tensor>(1,M,U,D); 
+        diagHermitian<Tensor>(1,M,U,D); 
         }
 
     template <class Tensor, class SparseT> 
     void 
-    diagonalize(int b, const Tensor& M, Tensor& U, SparseT& D);
+    diagHermitian(int b, const Tensor& M, Tensor& U, SparseT& D);
 
     //
     // Accessor Methods
@@ -341,11 +341,11 @@ denmatDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir,
 
 template <class Tensor,class SparseT>
 void
-diagonalize(const Tensor& T, Tensor& U, SparseT& D,
+diagHermitian(const Tensor& T, Tensor& U, SparseT& D,
             const OptSet& opts = Global::opts())
     {
     SVDWorker W(opts);
-    W.diagonalize(T,U,D);
+    W.diagHermitian(T,U,D);
     }
 
 //
@@ -554,7 +554,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
 template<class Tensor, class SparseT>
 void SVDWorker::
-diagonalize(int b, const Tensor& M, Tensor& U, SparseT& D)
+diagHermitian(int b, const Tensor& M, Tensor& U, SparseT& D)
     {
     typedef typename Tensor::IndexT 
     IndexT;
@@ -601,7 +601,7 @@ diagonalize(int b, const Tensor& M, Tensor& U, SparseT& D)
 
     U = comb * U;
 
-    } //void SVDWorker::diagonalize
+    } //void SVDWorker::diagHermitian
 
 #undef Cout
 #undef Format
