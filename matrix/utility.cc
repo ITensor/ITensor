@@ -103,6 +103,9 @@ QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R)
 
 void BackupEigenValues(const MatrixRef& A, Vector& D, Matrix& Z);
 
+//
+// Eigenvalues and eigenvectors of a real, symmetric matrix A
+//
 void 
 EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
     {
@@ -175,6 +178,87 @@ GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
         cerr << "info is " << info << endl;
         _merror("Error condition in dgeev.");
         }
+    }
+
+//
+//Compute eigenvectors and eigenvalues of arbitrary real matrix A
+//
+// Convention is that columns of ReV and ImV contain the real and imag
+// parts of eigenvectors of A.
+//
+// If we formally define Q = ReV+i*ImV (where i*i = -1) and 
+// D a diagonal matrix containing Re+i*Im on its diagonal, then
+// A = Q*D*Q^{-1}
+//
+// Alternatively A*Q = Q*D
+//
+void 
+GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im, Matrix& ReV, Matrix& ImV)
+    {
+    if (A.Ncols() != A.Nrows() || A.Nrows() < 1)
+        _merror("GenEigenValues: Input Matrix must be square");
+
+    /*
+    if(A.Ncols() == 1)
+        {
+        Re = A.Column(1);
+        Im = Vector(1); Im(1) = 0.0;
+        ReV = A; ReV = 1.;
+        ImV = A; ImV = 0.;
+        return;
+        }
+        */
+
+    LAPACK_INT N = A.Ncols();
+
+    char jobvl = 'N'; //don't compute left evecs
+    char jobvr = 'V'; //compute right evecs
+
+    Matrix Z = A;
+    Z = Z.t();
+    Re = A.Column(1);
+    Im = Re;
+
+    Vector noLevecs(2); //place holder for left evecs (not computed)
+    LAPACK_INT info = 0;
+
+    Matrix evecs(N,N);
+
+    //Call routine
+    dgeev_wrapper(&jobvl,&jobvr,&N,Z.Store(),Re.Store(),Im.Store(),noLevecs.Store(),evecs.Store(),&info);
+	if(info != 0)
+        {
+        cout << "info is " << info << endl;
+        _merror("Error condition in dgeev.");
+        }
+
+
+    ReV.ReDimension(N,N);
+    ImV.ReDimension(N,N);
+
+    evecs = evecs.t();
+    //cout << "Evecs = \n" << evecs << endl;
+
+    int n = 1; //nth eigenvalue
+    while(n <= N)
+        {
+        //Check for complex eig pair
+        if(Im(n) > 0)
+            {
+            ReV.Column(n) = evecs.Column(n);
+            ReV.Column(n+1) = evecs.Column(n);
+            ImV.Column(n) = evecs.Column(n+1);
+            ImV.Column(n+1) = -evecs.Column(n+1);
+            n += 2;
+            }
+        else
+            {
+            ReV.Column(n) = evecs.Column(n);
+            ImV.Column(n) = 0.;
+            ++n;
+            }
+        }
+
     }
 
 //
@@ -2001,6 +2085,7 @@ Real check_complex_SVD(const Matrix& Mre, const Matrix& Mim, const Matrix& Ure,
     return Norm(Matrix(Mre-resre).TreatAsVector()) + Norm(Matrix(Mim-resim).TreatAsVector());
     }
 
+/*
 void newcomplexSVD(const Matrix& Are, const Matrix& Aim, Matrix& Ure, Matrix& Uim, 
 	Vector& d, Matrix& Vre, Matrix& Vim)
     {
@@ -2032,23 +2117,6 @@ void newcomplexSVD(const Matrix& Are, const Matrix& Aim, Matrix& Ure, Matrix& Ui
     Vector work(2*n*n+2*n+m+100), iwork(8*n), rwork(10*n*n+10 *n+1000);
     lwork = n*n+n+m+50;
 
-    /*
-    zgesdd_(&jobz,&m,&n,(LAPACK_COMPLEX*)AA.Store(), 
-	    &lda,d.Store(), (LAPACK_COMPLEX*)UU.Store(), 
-	    &ldu, (LAPACK_COMPLEX*)VV.Store(), &ldv, 
-	    (LAPACK_COMPLEX*)work.Store(), &lwork, (LAPACK_INT *)iwork.Store(), &info);
-     JOBZ, [M], [N], A, [LDA], S, U, [LDU], VT, [LDVT], 
-		  *       [WORK], [LWORK], [RWORK], [IWORK], [INFO])
-    int zgesdd_(char*, LAPACK_INT*, LAPACK_INT*, LAPACK_COMPLEX*,
-	    LAPACK_INT*, LAPACK_REAL*, LAPACK_COMPLEX*,
-	    LAPACK_INT*, LAPACK_COMPLEX*, LAPACK_INT*,
-	    LAPACK_COMPLEX*, LAPACK_INT*, LAPACK_REAL*,
-	    LAPACK_INT*, LAPACK_INT*)' 
-    lwork = (int)work(1);
-    //cout << "optimal size is " << work(1) << endl;
-    //cout << "m, n, lwork are " << m SP n SP lwork << endl;
-    work.ReDimension(lwork*2);
-    */
 
     zgesdd_wrapper(&jobz,&m,&n,(LAPACK_COMPLEX*)AA.Store(), &lda,d.Store(), (LAPACK_COMPLEX*)UU.Store(), &ldu,
 	    (LAPACK_COMPLEX*)VV.Store(), &ldv, (LAPACK_COMPLEX*)work.Store(), &lwork,
@@ -2153,6 +2221,7 @@ void newcomplexSVD(const Matrix& Are, const Matrix& Aim, Matrix& Ure, Matrix& Ui
 	    }
 	}
     }
+*/
 
 
 inline double abssq(Complex a)
