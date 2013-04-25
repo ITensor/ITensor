@@ -64,19 +64,18 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
                LAPACK_INT *m,        //number of rows of input matrix *A
                LAPACK_INT *n,        //number of cols of input matrix *A
                LAPACK_COMPLEX *A,    //contents of input matrix A
-               LAPACK_INT *lda,      //typically lda==m
                LAPACK_REAL *s,       //on return, singular values of A
                LAPACK_COMPLEX *u,    //on return, unitary matrix U
-               LAPACK_INT *ldu,      //typically ldu==m
                LAPACK_COMPLEX *vt,   //on return, unitary matrix V transpose
-               LAPACK_INT *ldvt,     //typically ldvt==n
-               LAPACK_COMPLEX *work, 
-               LAPACK_INT *lwork, 
-               LAPACK_REAL *rwork, 
-               LAPACK_INT *iwork, 
                LAPACK_INT *info)
     {
-    zgesdd_(jobz,m,n,A,lda,s,u,ldu,vt,ldvt,work,lwork,rwork,iwork,info);
+    LAPACK_INT l = min(*m,*n),
+               g = max(*m,*n);
+    LAPACK_INT lwork = l*l+2*l+g+100;
+    LAPACK_COMPLEX work[lwork];
+    LAPACK_REAL rwork[5*l*(1+l)];
+    LAPACK_INT iwork[8*l];
+    zgesdd_(jobz,m,n,A,m,s,u,m,vt,n,work,&lwork,rwork,iwork,info);
     }
 
 //
