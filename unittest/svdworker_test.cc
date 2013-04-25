@@ -528,6 +528,11 @@ TEST(ComplexDiagonalization)
     diagonalize(T,UU,DD);
 
     CHECK((T-(primed(UU)*DD*conj(UU))).norm() < 1E-14);
+
+    //Arrows the other way
+    diagonalize(conj(T),UU,DD);
+
+    CHECK((conj(T)-(primed(UU)*DD*conj(UU))).norm() < 1E-14);
     }
 
 

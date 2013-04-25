@@ -233,5 +233,114 @@ TEST(TestHermitianEigs)
     CHECK(Norm(ImDiff.TreatAsVector()) < 1E-10);
     }
 
+TEST(TestRealDiag)
+    {
+    const int N = 100;
+    Matrix A(N,N);
+
+    //A(1,1) = 0.979413;
+    //A(1,2) = 0.2018691;
+    //A(2,1) = -0.921685;
+    //A(2,2) = 0.387939;
+    //A *= 1./sqrt(2);
+    A.Randomize();
+
+    //cout << "A = \n" << A << endl;
+
+    Matrix Ure,Uim;
+    Vector Dre,Dim;
+    GenEigenValues(A,Dre,Dim,Ure,Uim);
+
+    //cout << "Dre = \n" << Dre << endl;
+    //cout << "Dim = \n" << Dim << endl;
+
+    //cout << "Ure = \n" << Ure << endl;
+    //cout << "Uim = \n" << Uim << endl;
+
+    Matrix DDr(N,N),
+           DDi(N,N);
+    DDr = 0;
+    DDi = 0;
+    for(int i = 1; i <= N; ++i) 
+        {
+        DDr(i,i) = Dre(i);
+        DDi(i,i) = Dim(i);
+        }
+
+    //Act A onto U and compare to D*U,
+    //separating real and imaginary pieces
+
+    //cout << "Re[A*U] = \n" <<  (A*Ure) << endl;
+    //cout << "Re[U*D] = \n" << (Ure*DDr-Uim*DDi) << endl;
+
+    Matrix ReDiff = A*Ure - (Ure*DDr-Uim*DDi);
+    Matrix ImDiff = A*Uim - (Ure*DDi+Uim*DDr);
+
+    //cout << (Norm(ReDiff.TreatAsVector())) << endl;
+    CHECK(Norm(ReDiff.TreatAsVector()) < 1E-12);
+    CHECK(Norm(ImDiff.TreatAsVector()) < 1E-12);
+    }
+
+TEST(TestNormalMatrixDiag)
+    {
+    //
+    // For a normal matrix A such that A.t()*A == A*A.t()
+    // the eigenvectors should be orthonormal such that
+    // U is unitary and
+    // A = U*D*U^\dagger
+    //
+    const int N = 3;
+    Matrix A(N,N);
+    A = 0;
+
+    //A(1,1) = 1.;
+    //A(1,2) = 1.;
+    //A(2,1) = -1.;
+    //A(2,2) = 1.;
+    //A *= 1./sqrt(2);
+
+    //
+    // Example of a matrix A that is normal i.e. A.t()*A == A*A.t()
+    // but is not unitary, symmetric, or anti-symmetric
+    //
+    A = 0;
+    A(1,1) = 1.;
+    A(1,2) = 1.;
+    A(2,2) = 1.;
+    A(2,3) = 1.;
+    A(3,1) = 1.;
+    A(3,3) = 1.;
+
+    //cout << "A = \n" << A << endl;
+
+    Matrix Ure,Uim;
+    Vector Dre,Dim;
+    GenEigenValues(A,Dre,Dim,Ure,Uim);
+
+    //cout << "Dre = \n" << Dre << endl;
+    //cout << "Dim = \n" << Dim << endl;
+
+    //cout << "Ure = \n" << Ure << endl;
+    //cout << "Uim = \n" << Uim << endl;
+
+    Matrix DDr(N,N),
+           DDi(N,N);
+    DDr = 0;
+    DDi = 0;
+    for(int i = 1; i <= N; ++i) 
+        {
+        DDr(i,i) = Dre(i);
+        DDi(i,i) = Dim(i);
+        }
+
+    Matrix ReDiff = A - (Ure*DDr*Ure.t()+Ure*DDi*Uim.t()+Uim*DDr*Uim.t()-Uim*DDi*Ure.t());
+    Matrix ImPart = -Ure*DDr*Uim.t()+Ure*DDi*Ure.t()+Uim*DDr*Ure.t()+Uim*DDi*Uim.t();
+
+    //cout << (Norm(ReDiff.TreatAsVector())) << endl;
+    //cout << (Norm(ImPart.TreatAsVector())) << endl;
+    CHECK(Norm(ReDiff.TreatAsVector()) < 1E-12);
+    CHECK(Norm(ImPart.TreatAsVector()) < 1E-12);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
 
