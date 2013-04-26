@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_DMRGOBSERVER_H
 #define __ITENSOR_DMRGOBSERVER_H
 #include "observer.h"
+#include "svdworker.h"
 
 #define Cout std::cout
 #define Endl std::endl

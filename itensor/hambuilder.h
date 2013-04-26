@@ -117,7 +117,7 @@ getMPO(int j1, const Tensor& op1,
     {
     initialize(res);
 #ifdef DEBUG
-    if(!op1.hasindex(mod_.si(j1)))
+    if(!hasindex(op1,mod_.si(j1)))
         {
         Print(j1);
         Print(op1.indices());
@@ -137,13 +137,13 @@ getMPO(int j1, const Tensor& op1,
     {
     initialize(res);
 #ifdef DEBUG
-    if(!op1.hasindex(mod_.si(j1)))
+    if(!hasindex(op1,mod_.si(j1)))
         {
         Print(j1);
         Print(op1.indices());
         Error("Tensor does not have correct Site index");
         }
-    if(!op2.hasindex(mod_.si(j2)))
+    if(!hasindex(op2,mod_.si(j2)))
         {
         Print(j2);
         Print(op2.indices());
@@ -165,19 +165,19 @@ getMPO(int j1, const Tensor& op1,
     {
     initialize(res);
 #ifdef DEBUG
-    if(!op1.hasindex(mod_.si(j1)))
+    if(!hasindex(op1,mod_.si(j1)))
         {
         Print(j1);
         Print(op1.indices());
         Error("Tensor does not have correct Site index");
         }
-    if(!op2.hasindex(mod_.si(j2)))
+    if(!hasindex(op2,mod_.si(j2)))
         {
         Print(j2);
         Print(op2.indices());
         Error("Tensor does not have correct Site index");
         }
-    if(!op3.hasindex(mod_.si(j3)))
+    if(!hasindex(op3,mod_.si(j3)))
         {
         Print(j3);
         Print(op3.indices());
@@ -201,25 +201,25 @@ getMPO(int j1, const Tensor& op1,
     {
     initialize(res);
 #ifdef DEBUG
-    if(!op1.hasindex(mod_.si(j1)))
+    if(!hasindex(op1,mod_.si(j1)))
         {
         Print(j1);
         Print(op1.indices());
         Error("Tensor does not have correct Site index");
         }
-    if(!op2.hasindex(mod_.si(j2)))
+    if(!hasindex(op2,mod_.si(j2)))
         {
         Print(j2);
         Print(op2.indices());
         Error("Tensor does not have correct Site index");
         }
-    if(!op3.hasindex(mod_.si(j3)))
+    if(!hasindex(op3,mod_.si(j3)))
         {
         Print(j3);
         Print(op3.indices());
         Error("Tensor does not have correct Site index");
         }
-    if(!op4.hasindex(mod_.si(j4)))
+    if(!hasindex(op4,mod_.si(j4)))
         {
         Print(j4);
         Print(op4.indices());
