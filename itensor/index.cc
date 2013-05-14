@@ -138,7 +138,8 @@ ReImDat()
 // class Index
 //
 
-typedef boost::random::lagged_fibonacci1279 
+//typedef boost::random::lagged_fibonacci1279 
+typedef boost::random::lagged_fibonacci2281 
 Generator;
 
 Real 
