@@ -6,6 +6,9 @@
 #define __ITENSOR_SPINONE_H
 #include "../model.h"
 
+#define Cout std::cout
+#define Endl std::endl
+
 class SpinOne : public Model
     {
     public:
@@ -76,7 +79,7 @@ class SpinOne : public Model
     doWrite(std::ostream& s) const;
 
     virtual void
-    constructSites(bool shalf_edge);
+    constructSites(const OptSet& opts);
         
     //Data members -----------------
 
@@ -92,20 +95,26 @@ SpinOne()
     { }
 
 inline SpinOne::
-SpinOne(int N, const OptSet& oset)
+SpinOne(int N, const OptSet& opts)
     : N_(N),
       site_(N_+1)
     { 
-    constructSites(oset.getBool("SHalfEdge",false));
+    constructSites(opts);
     }
 
 inline void SpinOne::
-constructSites(bool shalf_edge)
+constructSites(const OptSet& opts)
     {
     for(int j = 1; j <= N_; ++j)
         {
-        if(shalf_edge && (j == 1 || j == N_))
+        if((opts.getBool("SHalfEdge",false) && (j==1 || j == N_))
+           || (opts.getBool("SHalfLeftEdge",false) && j==1))
             {
+            if(opts.getBool("Verbose",false))
+                {
+                Cout << "Placing a S=1/2 at site " << j << Endl;
+                }
+
             site_.at(j) = IQIndex(nameint("S=1/2 site=",j),
                 Index(nameint("Up for site",j),1,Site),QN(+1,0),
                 Index(nameint("Dn for site",j),1,Site),QN(-1,0));
@@ -316,5 +325,8 @@ makeSy2(int i) const
     Sy2(Dn(i),UpP(i)) = -0.5;
     return Sy2;
     }
+
+#undef Cout
+#undef Endl
 
 #endif
