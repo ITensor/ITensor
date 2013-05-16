@@ -67,8 +67,7 @@ init()
 
     std::vector<IQIndex> iqlinks(N+1);
 
-    //The names of these indices refer to their Nf quantum numbers (plus or minus), 
-    //but they can have various sz quantum numbers depending on the type of site they follow
+    //The names of these indices refer to their Sz quantum numbers (plus or minus), 
     std::vector<Index> q0(N+1),
                        qP(N+1), 
                        qM(N+1);
