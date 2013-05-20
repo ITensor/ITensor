@@ -135,11 +135,116 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
 
     U.SubMatrix(1,n,start,n) = U.SubMatrix(1,n,start,n) * u;
 
-    V.SubMatrix(start,n,1,m) = v * Vt.t().SubMatrix(start,n,1,m);
+    V.SubMatrix(start,n,1,m) = v * V.SubMatrix(start,n,1,m);
 
 #ifdef CHKSVD
 	checksvd(A,U,D,V);
 #endif
+
+    return;
+    }
+
+void 
+SVD(const MatrixRef& Are, const MatrixRef& Aim, 
+    Matrix& Ure, Matrix& Uim, 
+    Vector& D, 
+    Matrix& Vre, Matrix& Vim,
+    Real newThresh)
+    {
+    const int n = Are.Nrows(), 
+              m = Are.Ncols();
+
+#ifdef DEBUG
+    if(Aim.Nrows() != n || Aim.Ncols() != m)
+        {
+        Error("Aim must have same dimensions as Are");
+        }
+#endif
+
+    if(n > m)
+        {
+        Matrix Aret = Are.t(),
+               Aimt = -Aim.t(),
+               Uret, Uimt,
+               Vret, Vimt;
+        SVD(Aret,Aimt,Vret,Vimt,D,Uret,Uimt,newThresh);
+        Ure = Uret.t();
+        Uim = -Uimt.t();
+        Vre = Vret.t();
+        Vim = -Vimt.t();
+        return;
+        }
+
+    //Form 'density matrix' rho
+    Matrix rhore = Are * Are.t() + Aim * Aim.t(),
+           rhoim = Aim * Are.t() - Are * Aim.t();
+
+
+    //Diagonalize rho
+    rhore *= -1; //Negative sign sorts evals from > to <
+    rhoim *= -1;
+    Vector evals;
+    HermitianEigenvalues(rhore,rhoim,evals,Ure,Uim);
+
+    //Form Vt and fix up its orthogonality
+    //(Vt is transpose of V)
+    Matrix Vret = Are.t() * Ure + Aim.t() * Uim,
+           Vimt = -Are.t() * Uim + Aim.t() * Ure;
+    Orthog(Vret,Vimt,n,2); //2 is the number of orthog passes
+
+    //B should be close to diagonal
+    //but may not be perfect - fix it up below
+    Matrix Bre = Ure.t()*Are*Vret + Ure.t()*Aim*Vimt + Uim.t()*Aim*Vret - Uim.t()*Are*Vimt,
+           Bim = Ure.t()*Aim*Vret - Ure.t()*Are*Vimt - Uim.t()*Are*Vret - Uim.t()*Aim*Vimt;
+
+    Vre = Vret.t();
+    Vim = Vimt.t();
+
+    D = Bre.Diagonal();
+
+    if(D(1) == 0 || newThresh == 0)
+        {
+        return;
+        }
+
+    int start = 2;
+    const Real D1 = D(1);
+    for(; start < n; ++start)
+        {
+        if(D(start)/D1 < newThresh) break;
+        }
+
+    if(start >= (n-1)) 
+        {
+        return;
+        }
+
+    //
+    //Recursively SVD part of B 
+    //for greater final accuracy
+    //
+
+    Matrix bre = Bre.SubMatrix(start,n,start,n),
+           bim = Bim.SubMatrix(start,n,start,n);
+
+    Matrix ure,uim,
+           vre,vim;
+    Vector d;
+    SVD(bre,bim,ure,uim,d,vre,vim,newThresh);
+
+    D.SubVector(start,n) = d;
+
+    //Need to copy U and V real part since first of each
+    //pair of lines below modified real part, which
+    //is used again
+    Matrix pUre(Ure),
+           pVre(Vre);
+
+    Ure.SubMatrix(1,n,start,n) = pUre.SubMatrix(1,n,start,n) * ure - Uim.SubMatrix(1,n,start,n) * uim;
+    Uim.SubMatrix(1,n,start,n) = Uim.SubMatrix(1,n,start,n) * ure + pUre.SubMatrix(1,n,start,n) * uim;
+
+    Vre.SubMatrix(start,n,1,m) = vre * pVre.SubMatrix(start,n,1,m) - vim * Vim.SubMatrix(start,n,1,m);
+    Vim.SubMatrix(start,n,1,m) = vim * pVre.SubMatrix(start,n,1,m) + vre * Vim.SubMatrix(start,n,1,m);
 
     return;
     }

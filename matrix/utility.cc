@@ -10,7 +10,14 @@
 
 using namespace std;
 
-void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M to num cols
+Real inline
+sqr(Real x) { return x*x; }
+
+//
+//Orthogonalize num columns of the real matrix M
+//
+void 
+Orthog(const MatrixRef& M,int num,int numpass)
     {
     //const Real tolerance = 1e-10;
 
@@ -60,6 +67,82 @@ void Orthog(const MatrixRef& M,int num,int numpass)	// Orthonormalize a Matrix M
         }
     }
 
+//
+//Orthogonalize num columns of the complex matrix Mre+i*Mim
+//
+void 
+Orthog(const MatrixRef& Mre, const MatrixRef& Mim,
+       int num, int numpass)
+    {
+    if (num > Mre.Nrows() || (num == 0 && Mre.Ncols() > Mre.Nrows()))
+        _merror("Ncols() > M.Nrows() in Orthog!");
+
+#ifdef DEBUG
+    if(Mre.Nrows() != Mim.Nrows() || Mre.Ncols() != Mre.Ncols())
+        {
+        _merror("Mre and Mim must have same dimensions");
+        }
+#endif
+
+    int nkeep = -1;	// Orthogonalize to at most the column dim 
+    if (num > 0 && num <= Mre.Ncols() && num <= Mre.Nrows())
+        nkeep = num;
+    else
+        nkeep = min(Mre.Nrows(), Mim.Ncols());
+
+    Vector redot(nkeep),
+           imdot(nkeep);
+    MatrixRef Mrecols,
+              Mimcols;
+    VectorRef dotsre,
+              dotsim,
+              recol,
+              imcol;
+    for(int i = 1; i <= nkeep; ++i)
+        {
+        recol << Mre.Column(i);
+        imcol << Mim.Column(i);
+        Real norm = sqrt(sqr(Norm(recol))+sqr(Norm(imcol)));
+        if(norm == 0.)
+            {
+            recol.Randomize();
+            imcol = 0.;
+            norm = Norm(recol);
+            }
+        recol /= norm;
+        imcol /= norm;
+
+        if (i == 1)
+            continue;
+
+        Mrecols << Mre.Columns(1,i-1);
+        Mimcols << Mim.Columns(1,i-1);
+        dotsre << redot.SubVector(1,i-1);
+        dotsim << imdot.SubVector(1,i-1);
+
+        for(int pass = 1; pass <= numpass; ++pass)
+            {
+            dotsre = Mrecols.t() * recol + Mimcols.t() * imcol;
+            dotsim = Mrecols.t() * imcol - Mimcols.t() * recol;
+            recol -= Mrecols * dotsre - Mimcols * dotsim;
+            imcol -= Mrecols * dotsim + Mimcols * dotsre;
+            norm = sqrt(sqr(Norm(recol))+sqr(Norm(imcol)));
+            if(norm < 1E-3)   // orthog is suspect
+                {
+                --pass;
+                }
+            if(norm < 1E-10)  // What if a subspace was zero in all vectors?
+                {
+                recol.Randomize();
+                imcol = 0.;
+                norm = Norm(recol);
+                }
+            recol /= norm;
+            imcol /= norm;
+            }
+        }
+    }
+
 void 
 QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R)
     {
@@ -67,6 +150,11 @@ QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R)
     int n = M.Ncols();
     int tlen = min(m,n);
     Vector Tau(tlen); Tau = 0;
+
+    if(m > n)
+        {
+        Error("Ncols < Nrows, but currently only Ncols >= Nrows case supported");
+        }
 
     Q = M.t();
 
@@ -84,20 +172,20 @@ QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R)
     if(info != 0) error("Error in call to dgeqrf_.");
 
     //Grab R
-    R = Matrix(tlen,tlen);
+    R = Matrix(m,n);
     R = 0;
     //Grab elements of R from Q
-    for(int i = 1; i <= tlen; ++i)      
-    for(int j = i; j <= tlen; ++j) 
+    for(int i = 1; i <= m; ++i)      
+    for(int j = i; j <= n; ++j) 
         {
         R(i,j) = Q(j,i);
         }       
 
     //Generate Q
-    dorgqr_wrapper(&m, &n, &tlen, Q.Store(), &m, Tau.Store(), &info);
+    dorgqr_wrapper(&tlen, &tlen, &tlen, Q.Store(), &m, Tau.Store(), &info);
     if(info != 0) error("Error in call to dorgqr_.");
 
-    Q = Q.t();
+    Q = Q.t().SubMatrix(1,tlen,1,tlen);
 
     } //void QRDecomp
 
@@ -346,7 +434,6 @@ HermitianEigenvalues(const Matrix& re, const Matrix& im,
 #include <vector>
 typedef std::complex<double> Complex;
 static Complex I(0.0,1.0), C1(1.0,0.0),C0(0.0,0.0);
-inline Real sqr(Real a) { return a*a; }
 
 class ComplexVector
     {

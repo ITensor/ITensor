@@ -83,6 +83,7 @@ Matrix Exp(const MatrixRef &);
 Matrix Solve(const MatrixRef &A, const MatrixRef &B);	// return A^-1 * B 
 
 void Orthog(const MatrixRef &, int nr = 0, int numpass = 2);
+void Orthog(const MatrixRef& Mre, const MatrixRef& Mim, int nr = 0, int numpass = 2);
 
 void 
 QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R);

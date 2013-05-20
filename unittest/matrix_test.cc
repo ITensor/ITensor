@@ -111,7 +111,6 @@ TEST(GeneralizedEigenValues)
     }
     */
 
-/*
 TEST(TestSVD)
     {
     int n = 200, m = 400;
@@ -133,9 +132,8 @@ TEST(TestSVD)
     Matrix err = A - U * DD * V;
     Real sumerrsq = Trace(err * err.t());
     //cout << format("Avg err is %.2E") % sqrt(sumerrsq/(n*m)) << endl;
-    CHECK(sumerrsq < 1E-10);
+    CHECK(sumerrsq < 1E-12);
     }
-*/
 
 TEST(BadSVD)
     {
@@ -204,6 +202,48 @@ TEST(TestSVDComplex)
 
     CHECK(Norm(ReDiff.TreatAsVector()) < 1E-10);
     CHECK(Norm(ImDiff.TreatAsVector()) < 1E-10);
+
+    //
+    // Check nrows > ncols case
+    //
+    Matrix Bre(m,n),
+           Bim(m,n);
+    Bre.Randomize();
+    Bim.Randomize();
+    SVDComplex(Bre,Bim,Ure,Uim,D,Vre,Vim);
+    DD = 0;
+    for(int i = 1; i <= D.Length(); ++i) DD(i,i) = D(i);
+
+    ReDiff = Bre-(Ure*DD*Vre-Uim*DD*Vim);
+    ImDiff = Bim-(Ure*DD*Vim+Uim*DD*Vre);
+
+    CHECK(Norm(ReDiff.TreatAsVector()) < 1E-10);
+    CHECK(Norm(ImDiff.TreatAsVector()) < 1E-10);
+    }
+
+TEST(TestRecursiveComplexSVD)
+    {
+    const int n = 100,
+              m = 300;
+    Matrix Are(n,m),
+           Aim(n,m);
+
+    Are.Randomize();
+    Aim.Randomize();
+
+    Matrix Ure,Uim,Vre,Vim;
+    Vector D;
+    SVD(Are,Aim,Ure,Uim,D,Vre,Vim,1E-4);
+
+    Matrix DD(n,n); 
+    DD = 0.0; 
+    DD.Diagonal() = D;
+
+    Matrix err_re = Are - (Ure*DD*Vre - Uim*DD*Vim);
+    Matrix err_im = Aim - (Ure*DD*Vim + Uim*DD*Vre);
+    Real sumerrsq = Trace(err_re * err_re.t() + err_im * err_im.t());
+    //cout << format("Avg err is %.2E") % sqrt(sumerrsq/(n*m)) << endl;
+    CHECK(sumerrsq < 1E-12);
     }
 
 TEST(TestHermitianEigs)
@@ -340,6 +380,85 @@ TEST(TestNormalMatrixDiag)
     //cout << (Norm(ImPart.TreatAsVector())) << endl;
     CHECK(Norm(ReDiff.TreatAsVector()) < 1E-12);
     CHECK(Norm(ImPart.TreatAsVector()) < 1E-12);
+    }
+
+TEST(ComplexOrthog)
+    {
+    //
+    // For a normal matrix A such that A.t()*A == A*A.t()
+    // the eigenvectors should be orthonormal such that
+    // U is unitary and
+    // A = U*D*U^\dagger
+    //
+    const int N = 40;
+    Matrix R(N,N),
+           I(N,N);
+
+    R.Randomize();
+    I.Randomize();
+
+    //cout << "R = \n" << R << endl;
+    //cout << "I = \n" << I << endl;
+
+    Orthog(R,I);
+
+    //cout << "R = \n" << R << endl;
+    //cout << "I = \n" << I << endl;
+
+    Matrix Ore = R.t()*R + I.t()*I;
+    //cout << "Ore = \n" << Ore << endl;
+
+    Matrix Oim = R.t()*I - I.t()*R;
+    //cout << "Oim = \n" << Oim << endl;
+
+    Real re_err = 0;
+    for(int r = 1; r <= N; ++r)
+    for(int c = r+1; c <= N; ++c)
+        {
+        re_err += fabs(Ore(r,c));
+        }
+
+    for(int j = 1; j <= N; ++j)
+        CHECK(fabs(Ore(j,j)-1) < 1E-12);
+
+
+    CHECK(re_err < 1E-12);
+    CHECK(Norm(Oim.TreatAsVector()) < 1E-12);
+    }
+
+TEST(RectQR)
+    {
+    const
+    int r = 4,
+        c = 10,
+        m = min(r,c);
+
+    Matrix M(r,c);
+    M.Randomize();
+
+    //cout << "M = \n" << M << endl;
+
+    Matrix Q,
+           R;
+    QRDecomp(M,Q,R);
+
+    Matrix I(m,m);
+    I = 0;
+    I.Diagonal() = 1;
+
+    //cout << "R = \n" << R << endl;
+    //cout << "Q = \n" << Q << endl;
+    //cout << "Q.t()*Q = \n" << Q.t()*Q << endl;
+    //cout << "Q*R-M = \n" << (Q*R-M) << endl;
+
+    //Check that diagonal elems of R are > 0
+    for(int j = 1; j <= m; ++j)
+        {
+        CHECK(R(j,j) > 0);
+        }
+
+    CHECK(Norm(Matrix(Q*R-M).TreatAsVector()) < 1E-14);
+    CHECK(Norm(Matrix(Q.t()*Q-I).TreatAsVector()) < 1E-14);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
