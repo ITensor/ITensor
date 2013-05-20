@@ -576,7 +576,7 @@ template <class Tensor>
 template <class LocalOpT>
 void MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, 
-            const LocalOpT& PH, const OptSet& opts)
+        const LocalOpT& PH, const OptSet& opts)
     {
     setBond(b);
     const bool use_orig_setting = svd_.useOrigM();
@@ -598,22 +598,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         Error("b+2 < r_orth_lim_");
         }
 
-    if(noise() > 0 || cutoff() > 1E-12)
-        {
-        //If we don't need extreme accuracy
-        //or need to use noise term
-        //use density matrix approach
-        svd_.denmatDecomp(b,AA,A_[b],A_[b+1],dir,PH);
-
-        //Normalize the ortho center if requested
-        if(opts.getBool("DoNormalize",false))
-            {
-            Tensor& oc = (dir == Fromleft ? A_[b+1] : A_[b]);
-            Real norm = oc.norm();
-            oc *= 1./norm;
-            }
-        }
-    else
+    if(opts.getBool("UseSVD",false) || (noise() == 0 && cutoff() < 1E-12))
         {
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
@@ -632,15 +617,36 @@ svdBond(int b, const Tensor& AA, Direction dir,
         else
             A_[b] *= D;
         }
+    else
+        {
+        //If we don't need extreme accuracy
+        //or need to use noise term
+        //use density matrix approach
+        svd_.denmatDecomp(b,AA,A_[b],A_[b+1],dir,PH);
+
+        //Normalize the ortho center if requested
+        if(opts.getBool("DoNormalize",false))
+            {
+            Tensor& oc = (dir == Fromleft ? A_[b+1] : A_[b]);
+            Real norm = oc.norm();
+            oc *= 1./norm;
+            }
+        }
 
     if(dir == Fromleft)
         {
         l_orth_lim_ = b;
-        if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
+        if(r_orth_lim_ < b+2) 
+            {
+            r_orth_lim_ = b+2;
+            }
         }
     else //dir == Fromright
         {
-        if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
+        if(l_orth_lim_ > b-1) 
+            {
+            l_orth_lim_ = b-1;
+            }
         r_orth_lim_ = b+1;
         }
 
