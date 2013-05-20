@@ -9,8 +9,8 @@
 using namespace std;
 using boost::array;
 using boost::format;
-using boost::shared_ptr;
-using boost::make_shared;
+//using boost::shared_ptr;
+//using boost::make_shared;
 
 
 ostream& 
@@ -123,14 +123,14 @@ IndexDat(const string& ss, int m_, IndexType it, Real ur_)
 const IndexDatPtr& IndexDat::
 Null()
     {
-    static IndexDatPtr Null_ = make_shared<IndexDat>("Null",1,Site,0.0);
+    static IndexDatPtr Null_ = boost::make_shared<IndexDat>("Null",1,Site,0.0);
     return Null_;
     }
 
 const IndexDatPtr& IndexDat::
 ReImDat()
     {
-    static IndexDatPtr ReImDat_ = make_shared<IndexDat>("ReIm",2,ReIm,1.0);
+    static IndexDatPtr ReImDat_ = boost::make_shared<IndexDat>("ReIm",2,ReIm,1.0);
     return ReImDat_;
     }
 
@@ -165,7 +165,7 @@ Index()
 Index::
 Index(const string& name, int mm, IndexType it, int plev) 
     : 
-    p(make_shared<IndexDat>(name,mm,it,generateUniqueReal())), 
+    p(boost::make_shared<IndexDat>(name,mm,it,generateUniqueReal())), 
     primelevel_(plev) 
     { 
     if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
@@ -333,7 +333,7 @@ read(istream& s)
         }
     else
         {
-        p = make_shared<IndexDat>(ss,mm,IntToIndexType(t),ur);
+        p = boost::make_shared<IndexDat>(ss,mm,IntToIndexType(t),ur);
         }
     }
 

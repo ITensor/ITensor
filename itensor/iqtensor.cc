@@ -8,8 +8,8 @@
 using namespace std;
 using boost::format;
 using boost::array;
-using boost::shared_ptr;
-using boost::make_shared;
+//using boost::shared_ptr;
+//using boost::make_shared;
 
 IQTensor::Data::
 Data()
@@ -29,7 +29,7 @@ solo()
 #endif
 	if(!p.unique())
         {
-        p = make_shared<IQTDat>(*p);
+        p = boost::make_shared<IQTDat>(*p);
         }
 	}
 
@@ -75,10 +75,10 @@ write(ostream& s) const
         { t.write(s); }
 	}
 
-const shared_ptr<IQTDat>& IQTDat::
+const boost::shared_ptr<IQTDat>& IQTDat::
 Null()
     {
-    static shared_ptr<IQTDat> Null_ = make_shared<IQTDat>();
+    static boost::shared_ptr<IQTDat> Null_ = boost::make_shared<IQTDat>();
     return Null_;
     }
 
@@ -226,7 +226,7 @@ IQTensor()
 IQTensor::
 IQTensor(Real val) 
     : 
-    is_(make_shared<IndexSet<IQIndex> >())
+    is_(boost::make_shared<IndexSet<IQIndex> >())
     { 
     operator+=(ITensor(val));
     }
@@ -234,21 +234,21 @@ IQTensor(Real val)
 IQTensor::
 IQTensor(const IQIndex& i1) 
     : 
-    is_(make_shared<IndexSet<IQIndex> >(i1))
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1))
     { 
     }
 
 IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2) 
     : 
-    is_(make_shared<IndexSet<IQIndex> >(i1,i2))
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2))
     { 
     }
 
 IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3) 
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(i1,i2,i3))
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2,i3))
     { 
     }
 
@@ -256,7 +256,7 @@ IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
          const IQIndex& i4) 
     : 
-    is_(make_shared<IndexSet<IQIndex> >(i1,i2,i3,i4))
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2,i3,i4))
     { 
     }
 
@@ -264,7 +264,7 @@ IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
          const IQIndex& i4,const IQIndex& i5) 
     : 
-    is_(make_shared<IndexSet<IQIndex> >(i1,i2,i3,i4,i5))
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2,i3,i4,i5))
     { 
     }
 
@@ -272,7 +272,7 @@ IQTensor::
 IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
          const IQIndex& i4,const IQIndex& i5,const IQIndex& i6)
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(i1,i2,i3,i4,i5,i6))
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2,i3,i4,i5,i6))
 	{ 
     }
 
@@ -281,7 +281,7 @@ IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
          const IQIndex& i4,const IQIndex& i5,const IQIndex& i6,
          const IQIndex& i7)
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(i1,i2,i3,i4,i5,i6,i7))
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2,i3,i4,i5,i6,i7))
 	{ 
     }
 
@@ -311,7 +311,7 @@ IQTensor(std::vector<IQIndex>& iqinds_)
 IQTensor::
 IQTensor(const IQIndexVal& iv1) 
     : 
-    is_(make_shared<IndexSet<IQIndex> >(IQIndex(iv1)))
+    is_(boost::make_shared<IndexSet<IQIndex> >(IQIndex(iv1)))
 	{ 
 	operator()(iv1) = 1;
 	}
@@ -319,7 +319,7 @@ IQTensor(const IQIndexVal& iv1)
 IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2) 
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(iv1,iv2))
+    is_(boost::make_shared<IndexSet<IQIndex> >(iv1,iv2))
 	{ 
     operator()(iv1,iv2) = 1;
 	}
@@ -328,7 +328,7 @@ IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
          const IQIndexVal& iv3)
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(iv1,iv2,iv3))
+    is_(boost::make_shared<IndexSet<IQIndex> >(iv1,iv2,iv3))
 	{ 
     operator()(iv1,iv2,iv3) = 1;
 	}
@@ -337,7 +337,7 @@ IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
          const IQIndexVal& iv3, const IQIndexVal& iv4)
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(iv1,iv2,iv3,iv4))
+    is_(boost::make_shared<IndexSet<IQIndex> >(iv1,iv2,iv3,iv4))
 	{ 
     operator()(iv1,iv2,iv3,iv4) = 1;
 	}
@@ -394,7 +394,7 @@ read(std::istream& s)
     s.read((char*) &null_,sizeof(null_));
     if(null_) 
         { *this = IQTensor(); return; }
-    is_ = make_shared<IndexSet<IQIndex> >();
+    is_ = boost::make_shared<IndexSet<IQIndex> >();
     is_->read(s);
     dat = Data();
     dat.nc().read(s);
@@ -731,7 +731,7 @@ tieIndices(const boost::array<IQIndex,NMAX>& indices, int niqind,
     const int nindex = indices[0].nindex();
 
     Data ndat;
-    shared_ptr<IndexSet<IQIndex> > nis_ = make_shared<IndexSet<IQIndex> >(tied);
+    boost::shared_ptr<IndexSet<IQIndex> > nis_ = boost::make_shared<IndexSet<IQIndex> >(tied);
 
     int nmatched = 0;
     for(int k = 1; k <= is_->r(); ++k)
@@ -818,7 +818,7 @@ trace(const boost::array<IQIndex,NMAX>& indices, int niqind)
     const int tm = indices[0].m();
 
     Data ndat;
-    shared_ptr<IndexSet<IQIndex> > nis_ = make_shared<IndexSet<IQIndex> >();
+    boost::shared_ptr<IndexSet<IQIndex> > nis_ = boost::make_shared<IndexSet<IQIndex> >();
 
     int nmatched = 0;
     for(int k = 1; k <= is_->r(); ++k)
@@ -1120,7 +1120,7 @@ operator*=(const IQTensor& other)
             }
         }
 
-    is_ = make_shared<IndexSet<IQIndex> >(riqind_holder,rholder,0);
+    is_ = boost::make_shared<IndexSet<IQIndex> >(riqind_holder,rholder,0);
 
     set<ApproxReal> keys;
 
@@ -1256,7 +1256,7 @@ operator/=(const IQTensor& other)
     //from current set
     if(inds_from_other)
         {
-        is_ = make_shared<IndexSet<IQIndex> >(riqind_holder,rholder,0);
+        is_ = boost::make_shared<IndexSet<IQIndex> >(riqind_holder,rholder,0);
         }
 
 
@@ -1466,7 +1466,7 @@ soloIndex()
         Error("IQTensor is null");
 
 	if(!is_.unique())
-        is_ = make_shared<IndexSet<IQIndex> >(*is_);
+        is_ = boost::make_shared<IndexSet<IQIndex> >(*is_);
     }
 
 

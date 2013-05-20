@@ -655,7 +655,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
         ii[j] = &zero;
     
     //Create the new dat
-    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
+    boost::shared_ptr<ITDat> np = boost::make_shared<ITDat>(alloc_size);
     Vector& resdat = np->v;
 
     const Vector& thisdat = p->v;
@@ -805,7 +805,7 @@ trace(const array<Index,NMAX>& indices, int nind)
         ii[j] = &zero;
     
     //Create the new dat
-    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
+    boost::shared_ptr<ITDat> np = boost::make_shared<ITDat>(alloc_size);
     Vector& resdat = np->v;
 
     const Vector& thisdat = p->v;
@@ -882,7 +882,7 @@ expandIndex(const Index& small, const Index& big, int start)
         Error("couldn't find index");
         }
 
-    shared_ptr<ITDat> oldp(p);
+    boost::shared_ptr<ITDat> oldp(p);
     allocate(newinds.dim());
 
     const int w = findindex(newinds,big);
@@ -958,7 +958,7 @@ assignFromVec(const VectorRef& v)
     scale_ = 1;
     if(!p.unique())
         { 
-        p = make_shared<ITDat>();
+        p = boost::make_shared<ITDat>();
         }
     p->v = v;
     }
@@ -1259,13 +1259,13 @@ scaleTo(const LogNumber& newscale)
 void ITensor::
 allocate(int dim) 
     { 
-    p = make_shared<ITDat>(dim); 
+    p = boost::make_shared<ITDat>(dim); 
     }
 
 void ITensor::
 allocate() 
     { 
-    p = make_shared<ITDat>(); 
+    p = boost::make_shared<ITDat>(); 
     }
 
 void ITensor::
@@ -1275,7 +1275,7 @@ solo()
     if(!p.unique())
         { 
         VectorRef oldv(p->v);
-        p = make_shared<ITDat>();
+        p = boost::make_shared<ITDat>();
         p->v = oldv;
         }
 	}

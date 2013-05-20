@@ -163,28 +163,28 @@ read(istream& s)
 const IQIndexDatPtr& IQIndexDat::
 Null()
     {
-    static IQIndexDatPtr Null_ = make_shared<IQIndexDat>(Index::Null(),QN());
+    static IQIndexDatPtr Null_ = boost::make_shared<IQIndexDat>(Index::Null(),QN());
     return Null_;
     }
 
 const IQIndexDatPtr& IQIndexDat::
 ReImDat()
     {
-    static IQIndexDatPtr ReImDat_ = make_shared<IQIndexDat>(Index::IndReIm(),QN());
+    static IQIndexDatPtr ReImDat_ = boost::make_shared<IQIndexDat>(Index::IndReIm(),QN());
     return ReImDat_;
     }
 
 const IQIndexDatPtr& IQIndexDat::
 ReImDatP()
     {
-    static IQIndexDatPtr ReImDatP_ = make_shared<IQIndexDat>(Index::IndReImP(),QN());
+    static IQIndexDatPtr ReImDatP_ = boost::make_shared<IQIndexDat>(Index::IndReImP(),QN());
     return ReImDatP_;
     }
 
 const IQIndexDatPtr& IQIndexDat::
 ReImDatPP()
     {
-    static IQIndexDatPtr ReImDatPP_ = make_shared<IQIndexDat>(Index::IndReImPP(),QN());
+    static IQIndexDatPtr ReImDatPP_ = boost::make_shared<IQIndexDat>(Index::IndReImPP(),QN());
     return ReImDatPP_;
     }
 
@@ -256,7 +256,7 @@ IQIndex(const string& name,
     : 
     Index(name,i1.m(),i1.type(),i1.primeLevel()), 
     dir_(dir), 
-    pd(make_shared<IQIndexDat>(i1,q1))
+    pd(boost::make_shared<IQIndexDat>(i1,q1))
     {
     }
 
@@ -268,7 +268,7 @@ IQIndex(const string& name,
     : 
     Index(name,i1.m()+i2.m(),i1.type(),i1.primeLevel()), 
     dir_(dir), 
-    pd(make_shared<IQIndexDat>(i1,q1,i2,q2))
+    pd(boost::make_shared<IQIndexDat>(i1,q1,i2,q2))
     {
 #ifdef DEBUG
     if(i2.type() != i1.type())
@@ -288,7 +288,7 @@ IQIndex(const string& name,
     : 
     Index(name,i1.m()+i2.m()+i3.m(),i1.type(),i1.primeLevel()), 
     dir_(dir),
-    pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3))
+    pd(boost::make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3))
     {
 #ifdef DEBUG
     if(i2.type() != i1.type() 
@@ -311,7 +311,7 @@ IQIndex(const string& name,
     : 
     Index(name,i1.m()+i2.m()+i3.m()+i4.m(),i1.type(),i1.primeLevel()), 
     dir_(dir),
-    pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3,i4,q4))
+    pd(boost::make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3,i4,q4))
     {
 #ifdef DEBUG
     if(i2.type() != i1.type() 
@@ -437,7 +437,7 @@ read(istream& s)
     {
     Index::read(s);
     s.read((char*)&dir_,sizeof(dir_));
-    pd = make_shared<IQIndexDat>();
+    pd = boost::make_shared<IQIndexDat>();
     pd->read(s);
     }
 
@@ -511,7 +511,7 @@ solo()
     if(!pd.unique())
         {
         const IQIndexDat& olddat = *pd;
-        pd = make_shared<IQIndexDat>();
+        pd = boost::make_shared<IQIndexDat>();
         pd->makeCopyOf(olddat);
         }
     }

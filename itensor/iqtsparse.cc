@@ -7,8 +7,8 @@
 using namespace std;
 using boost::format;
 using boost::array;
-using boost::shared_ptr;
-using boost::make_shared;
+//using boost::shared_ptr;
+//using boost::make_shared;
 
 //
 // IQTSDat
@@ -106,10 +106,10 @@ write(ostream& s) const
         { it->write(s); }
     }
 
-const shared_ptr<IQTSDat>& IQTSDat::
+const boost::shared_ptr<IQTSDat>& IQTSDat::
 Null()
     {
-    static shared_ptr<IQTSDat> Null_ = make_shared<IQTSDat>();
+    static boost::shared_ptr<IQTSDat> Null_ = boost::make_shared<IQTSDat>();
     return Null_;
     }
 
@@ -127,16 +127,16 @@ IQTSparse()
 IQTSparse::
 IQTSparse(const IQIndex& i1)
     :
-    is_(make_shared<IndexSet<IQIndex> >(i1)),
-    d_(make_shared<IQTSDat>())
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1)),
+    d_(boost::make_shared<IQTSDat>())
     { 
     }
 
 IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2)
     :
-    is_(make_shared<IndexSet<IQIndex> >(i1,i2)),
-    d_(make_shared<IQTSDat>())
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2)),
+    d_(boost::make_shared<IQTSDat>())
     { 
     }
 
@@ -144,8 +144,8 @@ IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2,
           Real r)
     :
-    is_(make_shared<IndexSet<IQIndex> >(i1,i2)),
-    d_(make_shared<IQTSDat>())
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2)),
+    d_(boost::make_shared<IQTSDat>())
     { 
     if(i1.nindex() != i2.nindex())
         {
@@ -161,8 +161,8 @@ IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2,
           const VectorRef& D)
     :
-    is_(make_shared<IndexSet<IQIndex> >(i1,i2)),
-    d_(make_shared<IQTSDat>())
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2)),
+    d_(boost::make_shared<IQTSDat>())
     { 
 #ifdef DEBUG
     if(i1.m() != i2.m() || i1.nindex() != i2.nindex())
@@ -188,8 +188,8 @@ IQTSparse(const IQIndex& i1, const IQIndex& i2,
 IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
     :
-    is_(make_shared<IndexSet<IQIndex> >(i1,i2,i3)),
-    d_(make_shared<IQTSDat>())
+    is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2,i3)),
+    d_(boost::make_shared<IQTSDat>())
     { 
     }
 
@@ -440,9 +440,9 @@ read(std::istream& s)
     s.read((char*) &null_,sizeof(null_));
     if(null_) 
         { *this = IQTSparse(); return; }
-    is_ = make_shared<IndexSet<IQIndex> >();
+    is_ = boost::make_shared<IndexSet<IQIndex> >();
     is_->read(s);
-    d_ = make_shared<IQTSDat>();
+    d_ = boost::make_shared<IQTSDat>();
     d_->read(s);
     }
 
@@ -467,7 +467,7 @@ soloDat()
     if(!d_.unique())
 	    {
         const IQTSDat& old_dat(*d_);
-        d_ = make_shared<IQTSDat>();
+        d_ = boost::make_shared<IQTSDat>();
         d_->makeCopyOf(old_dat);
 	    }
     }
@@ -481,7 +481,7 @@ soloIndex()
 	if(!is_.unique())
         {
         const IndexSet<IQIndex>& old_is(*is_);
-        is_ = make_shared<IndexSet<IQIndex> >();
+        is_ = boost::make_shared<IndexSet<IQIndex> >();
         *is_ = old_is;
         }
     }
