@@ -206,29 +206,29 @@ class ITensor
     //
 
     //Set primeLevel of Indices to zero
-    void 
-    noprime(IndexType type = All) { is_.noprime(type); }
+    ITensor& 
+    noprime(IndexType type = All) { is_.noprime(type); return *this; }
 
     //Set primeLevel of Index I to zero
-    void 
-    noprime(const Index& I) { is_.noprime(I); }
+    ITensor& 
+    noprime(const Index& I) { is_.noprime(I); return *this; }
 
     //Increase primeLevel of Indices by 1 (or optional amount inc)
-    void 
-    prime(int inc = 1) { prime(All,inc); }
+    ITensor& 
+    prime(int inc = 1) { prime(All,inc); return *this;}
 
     //Increase primeLevel of Indices by 1 (or optional amount inc)
-    void 
-    prime(IndexType type, int inc = 1) { is_.prime(type,inc); }
+    ITensor& 
+    prime(IndexType type, int inc = 1) { is_.prime(type,inc); return *this; }
 
     //Increase primeLevel of Index I by 1 (or optional amount inc)
-    void 
-    prime(const Index& I, int inc = 1) { is_.prime(I,inc); }
+    ITensor& 
+    prime(const Index& I, int inc = 1) { is_.prime(I,inc); return *this; }
 
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
-    void 
+    ITensor& 
     mapprime(int plevold, int plevnew, IndexType type = All)
-        { is_.mapprime(plevold,plevnew,type); }
+        { is_.mapprime(plevold,plevnew,type); return *this; }
 
     //
     //Element Access Methods
@@ -325,7 +325,7 @@ class ITensor
     // (which must all have the same dimension).
     //
     // Rik = Aijkml.trace(j,l,m) = \sum_t Aitktt
-    void
+    ITensor&
     trace(const Index& i1, 
           const Index& i2 = Index::Null(), 
           const Index& i3 = Index::Null(),
@@ -335,7 +335,7 @@ class ITensor
           const Index& i7 = Index::Null(),
           const Index& i8 = Index::Null());
 
-    void
+    ITensor&
     trace(const boost::array<Index,NMAX>& indices, int nind = -1);
 
 
@@ -366,12 +366,14 @@ class ITensor
                            Matrix& res) const;
 
     // group i1,i2; i3,i4
-    void toMatrix22(const Index& i1, const Index& i2, 
-                    const Index& i3, const Index& i4, Matrix& res) const;
-    /*
-    void fromMatrix22(const Index& i1, const Index& i2, 
-                      const Index& i3, const Index& i4,const Matrix& res);
+    void 
+    toMatrix22(const Index& i1, const Index& i2, 
+               const Index& i3, const Index& i4, Matrix& res) const;
+    void 
+    fromMatrix22(const Index& i1, const Index& i2, 
+                 const Index& i3, const Index& i4,const Matrix& res);
 
+    /*
     // group i1,i2; i3
     void toMatrix21(const Index& i1, const Index& i2, 
                     const Index& i3, Matrix& res) const;
@@ -441,7 +443,7 @@ class ITensor
     normNoScale() const;
 
     template <typename Callable> 
-    void
+    ITensor&
     mapElems(const Callable& f);
 
     void
@@ -739,13 +741,14 @@ ITensor inline
 operator-(ITensor A, const ITensor& B) { A -= B; return A; }
 
 template <typename Callable> 
-void ITensor::
+ITensor& ITensor::
 mapElems(const Callable& f)
     {
     solo();
     scaleTo(1);
     for(int j = 1; j <= p->v.Length(); ++j)
         p->v(j) = f(p->v(j));
+    return *this;
     }
 
 //

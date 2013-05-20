@@ -170,30 +170,31 @@ class ITSparse
     // Primelevel Methods 
     //
 
-    void 
-    prime(int inc = 1) { is_.prime(inc); }
+    ITSparse& 
+    prime(int inc = 1) { is_.prime(inc); return *this; }
 
-    void 
-    prime(IndexType type, int inc = 1) { is_.prime(type,inc); }
+    ITSparse& 
+    prime(IndexType type, int inc = 1) { is_.prime(type,inc); return *this; }
 
-    void 
-    prime(const Index& I, int inc = 1) { is_.prime(I,inc); }
+    ITSparse& 
+    prime(const Index& I, int inc = 1) { is_.prime(I,inc); return *this; }
 
-    void 
-    noprime(IndexType type = All) { is_.noprime(type); }
+    ITSparse& 
+    noprime(IndexType type = All) { is_.noprime(type); return *this; }
 
-    void 
-    noprime(const Index& I) { is_.noprime(I); }
+    ITSparse& 
+    noprime(const Index& I) { is_.noprime(I); return *this; }
 
-    void 
+    ITSparse& 
     mapprime(int plevold, int plevnew, IndexType type = All)
-        { is_.mapprime(plevold,plevnew,type); }
+        { is_.mapprime(plevold,plevnew,type); return *this; }
 
     //
     // Other Methods
     //
 
-    template <typename Callable> void
+    template <typename Callable> 
+    ITSparse&
     mapElems(const Callable& f);
 
     void
@@ -266,12 +267,14 @@ class ITSparse
 void 
 product(const ITSparse& S, const ITensor& T, ITensor& res);
 
-template <typename Callable> void ITSparse::
+template <typename Callable> 
+ITSparse& ITSparse::
 mapElems(const Callable& f)
     {
     scaleTo(1);
     for(int j = 1; j <= diag_.Length(); ++j)
         diag_(j) = f(diag_(j));
+    return *this;
     }
 
 #endif

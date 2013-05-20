@@ -308,7 +308,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
 // Primelevel Methods 
 //
 
-void IQTSparse::
+IQTSparse& IQTSparse::
 noprime(IndexType type)
     { 
     solo();
@@ -319,9 +319,10 @@ noprime(IndexType type)
         {
         t.noprime(type);
         }
+    return *this;
     }
 
-void IQTSparse::
+IQTSparse& IQTSparse::
 prime(IndexType type, int inc) 
     { 
     solo();
@@ -332,9 +333,10 @@ prime(IndexType type, int inc)
         {
         t.prime(type,inc);
         }
+    return *this;
     }
 
-void IQTSparse::
+IQTSparse& IQTSparse::
 mapprime(int plevold, int plevnew, IndexType type)
     { 
     solo();
@@ -345,9 +347,10 @@ mapprime(int plevold, int plevnew, IndexType type)
         {
         t.mapprime(plevold,plevnew,type);
         }
+    return *this;
     }
 
-void IQTSparse::
+IQTSparse& IQTSparse::
 prime(const IQIndex& I, int inc)
     {
     solo();
@@ -360,9 +363,10 @@ prime(const IQIndex& I, int inc)
         if(hasindex(t,i))
             t.prime(i,inc);
         }
+    return *this;
     }
 
-void IQTSparse::
+IQTSparse& IQTSparse::
 noprime(const IQIndex& I) 
     { 
     solo();
@@ -375,6 +379,7 @@ noprime(const IQIndex& I)
         if(hasindex(t,i))
             t.noprime(i);
         }
+    return *this;
     }
 
 void IQTSparse::

@@ -151,29 +151,30 @@ class IQTSparse
     // Primelevel Methods 
     //
 
-    void 
-    prime(int inc = 1) { prime(All,inc); }
+    IQTSparse& 
+    prime(int inc = 1) { prime(All,inc); return *this; }
 
-    void 
+    IQTSparse& 
     prime(const IQIndex& I, int inc = 1);
 
-    void 
+    IQTSparse& 
     prime(IndexType type, int inc = 1);
 
-    void 
+    IQTSparse& 
     noprime(IndexType type = All);
 
-    void 
+    IQTSparse& 
     noprime(const IQIndex& I);
 
-    void 
+    IQTSparse& 
     mapprime(int plevold, int plevnew, IndexType type = All);
 
     //
     // Other Methods
     //
 
-    template <typename Callable> void
+    template <typename Callable> 
+    IQTSparse&
     mapElems(const Callable& f); 
 
     void
@@ -339,7 +340,8 @@ class IQTSDat
 void 
 product(const IQTSparse& S, const IQTensor& T, IQTensor& res);
 
-template <typename Callable> void IQTSparse::
+template <typename Callable> 
+IQTSparse& IQTSparse::
 mapElems(const Callable& f)
     {
     soloDat();
@@ -348,6 +350,7 @@ mapElems(const Callable& f)
         { 
         s.mapElems(f);
         }
+    return *this;
     }
 
 

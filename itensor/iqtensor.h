@@ -320,23 +320,23 @@ class IQTensor
     //----------------------------------------------------
     //IQTensor: prime methods
 
-    void 
+    IQTensor& 
     noprime(IndexType type = All);
 
-    void 
+    IQTensor& 
     noprime(const IQIndex& I);
 
-    void 
-    prime(int inc = 1) { prime(All,inc); }
+    IQTensor& 
+    prime(int inc = 1) { prime(All,inc); return *this; }
 
-    void 
+    IQTensor& 
     prime(IndexType type, int inc = 1);
 
-    void 
+    IQTensor& 
     prime(const IQIndex& I, int inc = 1);
 
     //no need to keep prime level small
-    void 
+    IQTensor& 
     mapprime(int plevold, int plevnew, IndexType type = All);
 
     //----------------------------------------------------
@@ -352,10 +352,10 @@ class IQTensor
     void
     tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied);
 
-    void
+    IQTensor&
     trace(const boost::array<IQIndex,NMAX>& indices, int niqind = -1);
 
-    void
+    IQTensor&
     trace(const IQIndex& i1, 
           const IQIndex& i2 = IQIndex::Null(), 
           const IQIndex& i3 = IQIndex::Null(),
@@ -380,7 +380,8 @@ class IQTensor
     Real 
     sumels() const;
 
-    template <typename Callable> void
+    template <typename Callable> 
+    IQTensor&
     mapElems(const Callable& f);
 
     void 
@@ -675,12 +676,13 @@ class IQTDat : public boost::noncopyable
     }; //class IQTDat
 
 template <typename Callable> 
-void IQTensor::
+IQTensor& IQTensor::
 mapElems(const Callable& f)
     {
     solo();
     Foreach(ITensor& t, dat.nc()) 
         t.mapElems(f);
+    return *this;
     }
 
 

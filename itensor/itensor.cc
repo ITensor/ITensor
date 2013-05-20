@@ -712,7 +712,7 @@ tieIndices(const Index& i1, const Index& i2,
     tieIndices(inds,4,tied);
     }
 
-void ITensor::
+ITensor& ITensor::
 trace(const array<Index,NMAX>& indices, int nind)
     {
     if(nind < 0)
@@ -781,7 +781,7 @@ trace(const array<Index,NMAX>& indices, int nind)
     if(tm == 1)
         {
         is_.swap(new_is_);
-        return;
+        return *this;
         }
 
     Counter nc(new_is_);
@@ -826,10 +826,11 @@ trace(const array<Index,NMAX>& indices, int nind)
     is_.swap(new_is_);
     p.swap(np);
 
+    return *this;
     } //ITensor::trace
 
 
-void ITensor::
+ITensor& ITensor::
 trace(const Index& i1, const Index& i2,
       const Index& i3, const Index& i4,
       const Index& i5, const Index& i6,
@@ -838,6 +839,7 @@ trace(const Index& i1, const Index& i2,
     array<Index,NMAX> inds = {{ i1, i2, i3, i4,
                                 i5, i6, i7, i8 }};
     trace(inds);
+    return *this;
     }
 
 void ITensor::
@@ -1908,6 +1910,12 @@ operator*=(const ITensor& other)
 ITensor& ITensor::
 operator+=(const ITensor& other)
     {
+    if(this->isNull())
+        {
+        operator=(other);
+        return *this;
+        }
+
     if(this == &other) 
         { 
         scale_ *= 2; 
@@ -2052,14 +2060,12 @@ operator-=(const ITensor& other)
 void ITensor::
 fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     {
-    if(r() != 2) Error("fromMatrix11: incorrect rank");
-    assert(hasindex(*this,i1));
-    assert(hasindex(*this,i2));
     DO_IF_DEBUG(if(i1.m() != M.Nrows()) Error("fromMatrix11: wrong number of rows");)
     DO_IF_DEBUG(if(i2.m() != M.Ncols()) Error("fromMatrix11: wrong number of cols");)
 
     solo();
     scale_ = 1;
+    is_ = IndexSet<Index>(i1,i2);
 
     MatrixRef dref; 
     if(i1 == is_[0])
@@ -2129,54 +2135,46 @@ void ITensor::
 fromMatrix12(const Index& i1, const Index& i2, 
              const Index& i3, const Matrix& M)
     {
-    if(r() != 3) Error("fromMatrix12: incorrect rank");
-    assert(hasindex(*this,i1));
-    assert(hasindex(*this,i2));
-    assert(hasindex(*this,i3));
-
     ITensor Q(i3,i1,i2);
     Q.p->v = M.TreatAsVector();
-
     *this = Q;
     }
 
-/*
 // group i1,i2; i3,i4
 void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
-{
+    {
     if(r() != 4) Error("toMatrix22: incorrect rank");
     assert(hasindex(*this,i1));
     assert(hasindex(*this,i2));
     assert(hasindex(*this,i3));
     assert(hasindex(*this,i4));
-    int nrow = i1.m() * i2.m(), ncol = i3.m() * i4.m();
-    if(nrow != res.Nrows()) Error("toMatrix22: wrong number of rows");
-    if(ncol != res.Ncols()) Error("toMatrix22: wrong number of cols");
+    const 
+    int nrow = i1.m() * i2.m(), 
+        ncol = i3.m() * i4.m();
     res.ReDimension(nrow,ncol);
-    const array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i4, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
+    const array<Index,NMAX> reshuf = {{ i3, i4, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; 
     getperm(is_,reshuf,P);
-    Vector V; reshapeDat(P,V);
+    Vector V; 
+    reshapeDat(P,V);
     res.TreatAsVector() = V;
-    res *= scale_;
-}
+    res *= scale_.real0();
+    }
 
-void ITensor::fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,const Matrix& M)
-{
-    if(r() != 4) Error("fromMatrix22: incorrect rank");
-    assert(hasindex(*this,i1));
-    assert(hasindex(*this,i2));
-    assert(hasindex(*this,i3));
-    assert(hasindex(*this,i4));
+
+void ITensor::
+fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4, const Matrix& M)
+    {
     if(i3.m()*i4.m() != M.Ncols()) Error("fromMatrix22: wrong number of cols");
     if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix22: wrong number of rows");
     ITensor Q(i3,i4,i1,i2);
     Q.p->v = M.TreatAsVector();
-    assignFrom(Q);
-}
+    *this = Q;
+    }
 
 
 
+/*
 void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matrix& res) const
 {
     if(r() != 3) Error("toMatrix21: incorrect rank");

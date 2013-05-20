@@ -1104,6 +1104,25 @@ TEST(ToFromMatrix11)
 
     }
 
+TEST(ToFromMatrix22)
+    {
+    Index i1("i1",3),
+          i2("i2",4),
+          i3("i3",2),
+          i4("i4",4);
+
+    ITensor T(i1,i2,i3,i4);
+    T.randomize();
+    T *= -1.23235;
+
+    Matrix M;
+    T.toMatrix22(i2,i1,i4,i3,M);
+    ITensor V;
+    V.fromMatrix22(i2,i1,i4,i3,M);
+
+    CHECK((T-V).norm() < 1E-12);
+    }
+
 /*
 TEST(SymmetricDiag11)
     {

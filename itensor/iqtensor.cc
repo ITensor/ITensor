@@ -567,7 +567,7 @@ at(const IQIndexVal& iv1, const IQIndexVal& iv2,
 
 
 
-void IQTensor::
+IQTensor& IQTensor::
 noprime(IndexType type)
 	{
 	solo();
@@ -576,9 +576,10 @@ noprime(IndexType type)
 
     Foreach(ITensor& t, dat.nc())
         t.noprime(type); 
+    return *this;
 	} 
 
-void IQTensor::
+IQTensor& IQTensor::
 prime(IndexType type, int inc)
 	{
 	solo();
@@ -587,9 +588,10 @@ prime(IndexType type, int inc)
 
     Foreach(ITensor& t, dat.nc())
 	    t.prime(type,inc);
+    return *this;
 	}
 
-void IQTensor::
+IQTensor& IQTensor::
 mapprime(int plevold, int plevnew, IndexType type)
     {
     solo();
@@ -598,9 +600,10 @@ mapprime(int plevold, int plevnew, IndexType type)
 
     Foreach(ITensor& t, dat.nc())
 	    t.mapprime(plevold,plevnew,type);
+    return *this;
 	}
 
-void IQTensor::
+IQTensor& IQTensor::
 prime(const IQIndex& I, int inc)
 	{
 	solo();
@@ -613,9 +616,10 @@ prime(const IQIndex& I, int inc)
 		if(hasindex(t,i)) 
 		    t.prime(i,inc);
         }
+    return *this;
 	}
 
-void IQTensor::
+IQTensor& IQTensor::
 noprime(const IQIndex& I)
 	{
 	solo();
@@ -628,6 +632,7 @@ noprime(const IQIndex& I)
         if(hasindex(t,i)) 
             t.noprime(i);
         }
+    return *this;
 	}
 
 
@@ -798,7 +803,7 @@ tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied)
     tieIndices(inds,2,tied);
     }
 
-void IQTensor::
+IQTensor& IQTensor::
 trace(const boost::array<IQIndex,NMAX>& indices, int niqind)
     {
     if(niqind < 0)
@@ -871,9 +876,10 @@ trace(const boost::array<IQIndex,NMAX>& indices, int niqind)
         }
     dat.swap(ndat);
     is_.swap(nis_);
+    return *this;
     }
 
-void IQTensor::
+IQTensor& IQTensor::
 trace(const IQIndex& i1, const IQIndex& i2,
       const IQIndex& i3, const IQIndex& i4,
       const IQIndex& i5, const IQIndex& i6,
@@ -882,6 +888,7 @@ trace(const IQIndex& i1, const IQIndex& i2,
     array<IQIndex,NMAX> inds = {{ i1, i2, i3, i4,
                                 i5, i6, i7, i8 }};
     trace(inds);
+    return *this;
     }
 
 int IQTensor::
@@ -1097,7 +1104,6 @@ operator*=(const IQTensor& other)
         const IQIndex& I = other.is_->index(i);
         if(!common_inds.count(ApproxReal(I.uniqueReal())))
             { 
-#ifdef DEBUG
             if(rholder >= NMAX)
                 {
                 Print(this->indices());
@@ -1109,7 +1115,6 @@ operator*=(const IQTensor& other)
                     }
                 Error("Too many indices (>= 8) on resulting IQTensor");
                 }
-#endif
             riqind_holder[rholder] = I;
             ++rholder;
             }
@@ -1356,6 +1361,13 @@ IQTensor& IQTensor::
 operator+=(const IQTensor& other)
     {
     //TODO: account for fermion sign here
+
+    if(this->isNull())
+        {
+        operator=(other);
+        return *this;
+        }
+
     if(this == &other) 
         {
         operator*=(2);
