@@ -200,7 +200,7 @@ DMRGWorker(MPSt<Tensor>& psi,
     
     Eigensolver solver(opts);
 
-    const Opt doNorm = DoNormalize(true);
+    opts.add(DoNormalize(true));
     
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
         {
@@ -211,10 +211,10 @@ DMRGWorker(MPSt<Tensor>& psi,
         solver.maxIter(sweeps.niter(sw));
 
         if(!PH.doWrite() &&
-            Global::opts().defined("WriteM") &&
-            sweeps.maxm(sw) >= Global::opts().getInt("WriteM"))
+            opts.defined("WriteM") &&
+            sweeps.maxm(sw) >= opts.getInt("WriteM"))
             {
-            std::string write_dir = Global::opts().getString("WriteDir","./");
+            std::string write_dir = opts.getString("WriteDir","./");
 
             if(!quiet)
                 {
@@ -240,7 +240,7 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             energy = solver.davidson(PH,phi);
             
-            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,doNorm);
+            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,opts);
 
             if(!quiet)
                 { 
