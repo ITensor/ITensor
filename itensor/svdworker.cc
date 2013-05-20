@@ -236,7 +236,8 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         Are.toMatrix11NoScale(ui,vi,Mre);
         Aim.toMatrix11NoScale(ui,vi,Mim);
 
-        SVDComplex(Mre,Mim,UU,iUU,DD,VV,iVV);
+        //SVDComplex(Mre,Mim,UU,iUU,DD,VV,iVV);
+        SVD(Mre,Mim,UU,iUU,DD,VV,iVV);
         }
 
     //Truncate
@@ -423,10 +424,14 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
             ret.toMatrix11NoScale(*ui,*vi,Mre);
             imt.toMatrix11NoScale(*ui,*vi,Mim);
 
-            SVDComplex(Mre,Mim,
-                       UU,iUmatrix.at(itenind),
-                       d,
-                       VV,iVmatrix.at(itenind));
+            //SVDComplex(Mre,Mim,
+            //           UU,iUmatrix.at(itenind),
+            //           d,
+            //           VV,iVmatrix.at(itenind));
+            SVD(Mre,Mim,
+                UU,iUmatrix.at(itenind),
+                d,
+                VV,iVmatrix.at(itenind));
             }
 
         //Store the squared singular values
