@@ -660,12 +660,6 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, int b,
     {
     bool cplx = isComplex(rho);
 
-    if(cplx && opts.getBool("TraceReIm",false))
-        {
-        rho = realPart(rho);
-        cplx = false;
-        }
-
 #ifdef DEBUG
     if(rho.r() != 2 + (cplx ? 1 : 0))
         {
@@ -795,12 +789,6 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
                const OptSet& opts)
     {
     bool cplx = isComplex(rho);
-
-    if(cplx && opts.getBool("TraceReIm",false))
-        {
-        rho = realPart(rho);
-        cplx = false;
-        }
 
     if(rho.r() != 2 + (cplx ? 1 : 0))
         {

@@ -540,7 +540,7 @@ denmatDecomp(int b, const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     Tensor U;
     SparseT D;
-    truncerr_.at(b) = diag_hermitian(rho,U,D,b,Opt("TraceReIm",true));
+    truncerr_.at(b) = diag_hermitian(rho,U,D,b);
 
     cutoff_ = saved_cutoff; 
     minm_ = saved_minm; 
