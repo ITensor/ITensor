@@ -84,14 +84,22 @@ measure(int sw, int ha, int b, const SVDWorker& svd, Real energy,
             {
             Cout << "\n    Largest m during sweep " << sw << " was " << svd.maxEigsKept() << "\n";
             Cout << "    Largest truncation error: " << svd.maxTruncerr() << Endl;
-            Vector center_eigs = svd.eigsKept(svd.N()/2);
-            Cout << "    Eigs at center bond: ";
+            const int c = svd.N()/2;
+            Vector center_eigs = svd.eigsKept(c);
+            Real S = 0;
+            for(int j = 1; j <= center_eigs.Length(); ++j) 
+                {
+                S -= center_eigs(j)*log(fabs(center_eigs(j)));
+                }
+            Cout << Format("    vN Entropy at center bond b=%d = %.10f") % c % S << Endl;
+            Cout << Format("    Eigs at center bond b=%d: ") % c;
             for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                 {
-                Cout << Format(center_eigs(j) > 1E-2 ? ("%.2f") : ("%.2E")) % center_eigs(j);
-                Cout << ((j != min(center_eigs.Length(),10)) ? ", " : "");
+                const Real eig = center_eigs(j);
+                if(eig < 1E-3) break;
+                Cout << Format("%.4f ") % eig;
                 }
-            Cout << std::endl;
+            Cout << Endl;
             Cout << Format("    Energy after sweep %d is %f") % sw % energy << Endl;
             }
         }
