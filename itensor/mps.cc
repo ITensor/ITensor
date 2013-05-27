@@ -42,11 +42,13 @@ MPSt(const Model& mod_,int maxmm, Real cut)
     r_orth_lim_(mod_.N()+1),
     is_ortho_(false),
     model_(&mod_), 
-    svd_(N_,cut,1,maxmm,false,LogNumber(1)),
+    spectrum_(N_),
     atb_(1),
     writedir_("."),
     do_write_(false)
     { 
+    cutoff(cut);
+    maxm(maxmm);
     random_tensors(A_);
     }
 template MPSt<ITensor>::
@@ -64,11 +66,13 @@ MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut)
     r_orth_lim_(2),
     is_ortho_(true),
     model_(&mod_), 
-    svd_(N_,cut,1,maxmm,false,LogNumber(1)),
+    spectrum_(N_),
     atb_(1),
     writedir_("."),
     do_write_(false)
     { 
+    cutoff(cut);
+    maxm(maxmm);
     init_tensors(A_,initState);
     }
 template MPSt<ITensor>::
@@ -105,7 +109,7 @@ MPSt(const MPSt& other)
     r_orth_lim_(other.r_orth_lim_),
     is_ortho_(other.is_ortho_),
     model_(other.model_),
-    svd_(other.svd_),
+    spectrum_(other.spectrum_),
     atb_(other.atb_),
     writedir_(other.writedir_),
     do_write_(other.do_write_)
@@ -127,7 +131,7 @@ operator=(const MPSt& other)
     r_orth_lim_ = other.r_orth_lim_;
     is_ortho_ = other.is_ortho_;
     model_ = other.model_;
-    svd_ = other.svd_;
+    spectrum_ = other.spectrum_;
     atb_ = other.atb_;
     writedir_ = other.writedir_;
     do_write_ = other.do_write_;
@@ -194,7 +198,9 @@ read(std::istream& s)
         Error("Tensors read from disk not compatible with Model passed to constructor.");
     s.read((char*) &l_orth_lim_,sizeof(l_orth_lim_));
     s.read((char*) &r_orth_lim_,sizeof(r_orth_lim_));
-    svd_.read(s);
+    spectrum_.resize(N_);
+    Foreach(Spectrum& spec, spectrum_)
+        spec.read(s);
     }
 template
 void MPSt<ITensor>::read(std::istream& s);
@@ -215,7 +221,8 @@ write(std::ostream& s) const
         }
     s.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
     s.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
-    svd_.write(s);
+    Foreach(const Spectrum& spec, spectrum_)
+        spec.write(s);
     }
 template
 void MPSt<ITensor>::write(std::ostream& s) const;
@@ -741,7 +748,8 @@ orthogonalize(const OptSet& opts)
     //Do a half-sweep to the right, orthogonalizing each bond
     //but do not truncate since the basis to the right might not
     //be ortho (i.e. use the current m).
-    svd_.useOrigM(true);
+    Foreach(Spectrum& spec,spectrum_)
+        spec.useOrigM(true);
     position(N_);
     if(opts.getBool("Verbose",false))
         {
@@ -749,7 +757,8 @@ orthogonalize(const OptSet& opts)
                   << std::endl;
         }
     //Now basis is ortho, ok to truncate
-    svd_.useOrigM(false);
+    Foreach(Spectrum& spec,spectrum_)
+        spec.useOrigM(false);
     position(1);
 
     is_ortho_ = true;

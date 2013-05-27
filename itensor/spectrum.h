@@ -68,6 +68,11 @@ class Spectrum
     void 
     useOrigM(bool val) { use_orig_m_ = val; }
 
+    bool
+    truncate() const { return truncate_; }
+    void
+    truncate(bool val) { truncate_ = val; }
+
     // If doRelCutoff_ is false,
     // refNorm_ defines an overall scale factored
     // out of the denmat before truncating.
@@ -105,19 +110,16 @@ class Spectrum
 
     Real 
     truncerr() const { return truncerr_; }
+    void 
+    truncerr(Real val) { truncerr_ = val; }
 
     const Vector& 
-    eigsKept() const 
-        { return eigsKept_; }
+    eigsKept() const { return eigsKept_; }
+    void 
+    eigsKept(const Vector& val) { eigsKept_ = val; }
+
     int
-    numEigsKept() const 
-        { return eigsKept_.Length(); }
-
-    int 
-    maxEigsKept() const;
-
-    Real 
-    maxTruncerr() const;
+    numEigsKept() const { return eigsKept_.Length(); }
 
     //
     // Other Methods
@@ -170,16 +172,12 @@ Spectrum(const OptSet& opts)
 
 inline Spectrum::
 Spectrum(Real cutoff, int maxm, int minm, Real noise,
-         const OptSet& opts = Global::opts())
+         const OptSet& opts)
     : cutoff_(cutoff), 
       maxm_(maxm),
       minm_(minm), 
       noise_(0),
-      use_orig_m_(false), 
-      doRelCutoff_(doRelCutoff),
-      absoluteCutoff_(false), 
-      truncate_(true),
-      refNorm_(refNorm)
+      refNorm_(1)
     {  
     initOpts(opts);
     }
@@ -197,28 +195,6 @@ initOpts(const OptSet& opts)
     use_orig_m_ = opts.getBool("UseOrigM",false);
     }
 
-int inline Spectrum::
-maxEigsKept() const
-    {
-    int res = -1;
-    Foreach(const Vector& eigs,eigsKept_)
-        {
-        res = max(res,eigs.Length());
-        }
-    return res;
-    }
-
-Real inline Spectrum::
-maxTruncerr() const
-    {
-    Real res = -1;
-    Foreach(const Real& te,truncerr_)
-        {
-        res = max(res,te);
-        }
-    return res;
-    }
-
 void inline Spectrum::
 read(std::istream& s)
     {
@@ -227,7 +203,6 @@ read(std::istream& s)
     s.read((char*)&minm_,sizeof(minm_));
     s.read((char*)&maxm_,sizeof(maxm_));
     s.read((char*)&use_orig_m_,sizeof(use_orig_m_));
-    s.read((char*)&showeigs_,sizeof(showeigs_));
     s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
     s.read((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.read((char*)&refNorm_,sizeof(refNorm_));
@@ -242,7 +217,6 @@ write(std::ostream& s) const
     s.write((char*)&minm_,sizeof(minm_));
     s.write((char*)&maxm_,sizeof(maxm_));
     s.write((char*)&use_orig_m_,sizeof(use_orig_m_));
-    s.write((char*)&showeigs_,sizeof(showeigs_));
     s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
     s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.write((char*)&refNorm_,sizeof(refNorm_));
