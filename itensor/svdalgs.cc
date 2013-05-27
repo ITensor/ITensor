@@ -16,63 +16,6 @@ sqrt(Vector V)
     return V;
     }
 
-SVDWorker::
-SVDWorker(const OptSet& opts) 
-    : 
-    refNorm_(1)
-    { 
-    initOpts(opts);
-
-    N_ = opts.getInt("N",1);
-    
-    truncerr_ = vector<Real>(N_+1,NAN);
-    eigsKept_ = vector<Vector>(N_+1);
-    }
-
-SVDWorker::
-SVDWorker(int N, const OptSet& opts)
-    : 
-    N_(N), 
-    truncerr_(N_+1,NAN), 
-    refNorm_(1), 
-    eigsKept_(N_+1)
-    { 
-    initOpts(opts);
-    }
-
-void SVDWorker::
-initOpts(const OptSet& opts)
-    {
-    absoluteCutoff_ = opts.getBool("AbsoluteCutoff",false);
-    cutoff_ = opts.getReal("Cutoff",MIN_CUT);
-    doRelCutoff_ = opts.getBool("DoRelCutoff",false);
-    maxm_ = opts.getInt("Maxm",MAX_M);
-    minm_ = opts.getInt("Minm",1);
-    noise_ = opts.getReal("Noise",0.);
-    showeigs_ = opts.getBool("ShowEigs",false);
-    truncate_ = opts.getBool("Truncate",true);
-    use_orig_m_ = opts.getBool("UseOrigM",false);
-    }
-
-SVDWorker::
-SVDWorker(int N, Real cutoff, int minm, int maxm, 
-          bool doRelCutoff, const LogNumber& refNorm)
-    : N_(N), 
-      truncerr_(N_+1), 
-      cutoff_(cutoff), 
-      minm_(minm), 
-      maxm_(maxm),
-      use_orig_m_(false), 
-      showeigs_(false), 
-      doRelCutoff_(doRelCutoff),
-      absoluteCutoff_(false), 
-      truncate_(true),
-      refNorm_(refNorm), 
-      eigsKept_(N_+1),
-      noise_(0)
-    {  }
-
-
 template <class Tensor, class SparseT> 
 void SVDWorker::
 csvd(int b, const Tensor& AA, Tensor& L, SparseT& V, Tensor& R)
@@ -1115,65 +1058,6 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, int b,
     return svdtruncerr;
 
     } //void SVDWorker::diag_denmat
-
-
-int SVDWorker::
-maxEigsKept() const
-    {
-    int res = -1;
-    Foreach(const Vector& eigs,eigsKept_)
-        res = max(res,eigs.Length());
-    return res;
-    }
-
-Real SVDWorker::
-maxTruncerr() const
-    {
-    Real res = -1;
-    Foreach(const Real& te,truncerr_)
-        res = max(res,te);
-    return res;
-    }
-
-
-void SVDWorker::
-read(std::istream& s)
-    {
-    s.read((char*) &N_,sizeof(N_));
-    truncerr_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j)
-        s.read((char*)&truncerr_.at(j),sizeof(truncerr_.at(j)));
-    s.read((char*)&cutoff_,sizeof(cutoff_));
-    s.read((char*)&minm_,sizeof(minm_));
-    s.read((char*)&maxm_,sizeof(maxm_));
-    s.read((char*)&use_orig_m_,sizeof(use_orig_m_));
-    s.read((char*)&showeigs_,sizeof(showeigs_));
-    s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
-    s.read((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
-    s.read((char*)&refNorm_,sizeof(refNorm_));
-    eigsKept_.resize(N_+1);
-    for(int j = 1; j <= N_; ++j)
-        readVec(s,eigsKept_.at(j));
-    }
-
-void SVDWorker::
-write(std::ostream& s) const
-    {
-    s.write((char*) &N_,sizeof(N_));
-    for(int j = 1; j <= N_; ++j)
-        s.write((char*)&truncerr_.at(j),sizeof(truncerr_.at(j)));
-    s.write((char*)&cutoff_,sizeof(cutoff_));
-    s.write((char*)&minm_,sizeof(minm_));
-    s.write((char*)&maxm_,sizeof(maxm_));
-    s.write((char*)&use_orig_m_,sizeof(use_orig_m_));
-    s.write((char*)&showeigs_,sizeof(showeigs_));
-    s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
-    s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
-    s.write((char*)&refNorm_,sizeof(refNorm_));
-    for(int j = 1; j <= N_; ++j)
-        writeVec(s,eigsKept_.at(j));
-    }
-
 
 
 ITensor SVDWorker::

@@ -10,12 +10,12 @@ include ../options.mk
 
 SOURCES=index.cc itensor.cc itsparse.cc \
         iqindex.cc iqtensor.cc iqcombiner.cc iqtsparse.cc\
-        svdworker.cc mps.cc mpo.cc tevol.cc
+        svdalgs.cc mps.cc mpo.cc tevol.cc
 
 HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         indexset.h counter.h itensor.h qn.h iqindex.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
-        svdworker.h mps.h mpo.h core.h observer.h DMRGObserver.h \
+        spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h model.h\
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
         hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h \
@@ -107,9 +107,9 @@ iqtsparse.o: $(DEPHEADERS)
 DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h
 iqcombiner.o: $(DEPHEADERS)
 .debug_objs/iqcombiner.o: $(DEPHEADERS)
-DEPHEADERS+= svdworker.h
-svdworker.o: $(DEPHEADERS)
-.debug_objs/svdworker.o: $(DEPHEADERS)
+DEPHEADERS+= spectrum.h svdalgs.h
+svdalgs.o: $(DEPHEADERS)
+.debug_objs/svdalgs.o: $(DEPHEADERS)
 DEPHEADERS+= mps.h
 mps.o: $(DEPHEADERS)
 .debug_objs/mps.o: $(DEPHEADERS)
