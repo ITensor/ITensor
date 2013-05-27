@@ -231,7 +231,6 @@ read(std::istream& s)
     s.read((char*)&doRelCutoff_,sizeof(doRelCutoff_));
     s.read((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.read((char*)&refNorm_,sizeof(refNorm_));
-    //readVec(s,eigsKept_);
     eigsKept_.read(s);
     }
 
@@ -247,7 +246,6 @@ write(std::ostream& s) const
     s.write((char*)&doRelCutoff_,sizeof(doRelCutoff_));
     s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.write((char*)&refNorm_,sizeof(refNorm_));
-    //writeVec(s,eigsKept_);
     eigsKept_.write(s);
     }
 
