@@ -133,6 +133,8 @@ public:
     void assign(const VectorVectorRes &,int);
     void assign(const MatrixVectorRes &,int);
 
+    void write(std::ostream& s) const;
+
     virtual ~VectorRef () {}
 
     friend class Vector;
@@ -253,6 +255,8 @@ public:
     friend void AddOuter(const VectorRef &, const VectorRef &, MatrixRef &);
 		// add outer product of vectors into matrix
     Real zerofrac() const;		// Fraction of els which == 0.0
+
+    void write(std::ostream& s) const;
 
     friend void copybare(MatrixRef &, const MatrixRef &);
     void assign(const MatrixMatrixRes &,int);	// used in operator = and +=

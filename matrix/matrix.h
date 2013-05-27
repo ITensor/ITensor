@@ -45,6 +45,8 @@ public:
     inline int memory() const;		// return memory used in bytes 
     inline void MakeTemp();
 
+    void read(std::istream& s);
+
     inline static int GetNumMats();	// return the total number of mats 
     inline static void ResetNumMats();	// Reset matrix counter to zero 
     inline static int GetNumCon();	// return the total number of con 
@@ -153,6 +155,8 @@ public:
     inline int memory() const;		// return memory used in bytes 
     inline Vector ();
     inline ~Vector ();
+
+    void read(std::istream& s);
 
     friend class SparseVector;
 
