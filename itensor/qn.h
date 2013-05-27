@@ -171,8 +171,8 @@ toString() const
 inline std::ostream& 
 operator<<(std::ostream &o, const QN &q)
     { 
-    return o << boost::format("(sz=%d, Nf=%d, p%s)") 
-                % q.sz() % q.Nf() % (q.sign() < 0 ? "-" : "+"); 
+    return o << boost::format("(sz=%d, Nf=%d)") 
+                % q.sz() % q.Nf();
     }
 
 bool inline

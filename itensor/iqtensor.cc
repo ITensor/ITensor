@@ -1028,7 +1028,17 @@ operator<<(std::ostream & s, const IQTensor& T)
     s << "IQIndices:\n" << T.indices();
     s << "ITensor Blocks:\n";
     Foreach(const ITensor& t, T.blocks())
-        { s << "  " << t << std::endl; }
+        { 
+        s << "  ";
+        Foreach(const Index& i, t.indices())
+            {
+            if(i.type() == ReIm) continue;
+            const IQIndex& I = findIQInd(T,i);
+            s << i.name() << ":" << qn(I,i) << "<" << I.dir() << "> ";
+            }
+        s << endl;
+        s << "  " << t << endl; 
+        }
 	s << "\\------------------------------------\n\n";
     return s;
     }
