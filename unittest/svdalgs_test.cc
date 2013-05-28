@@ -527,5 +527,54 @@ TEST(ComplexDiagonalization)
     CHECK((conj(T)-(primed(UU)*DD*conj(UU))).norm() < 1E-14);
     }
 
+TEST(OrthoDecomp)
+    {
+    ITensor phi(Phi0);
+    ITensor cphi(phi);
+    phi.randomize();
+    cphi.randomize();
+    phi += Complex_i()*cphi;
+
+    ITensor A(L1,S1),B;
+    orthoDecomp(phi,A,B,Fromleft);
+
+    CHECK((phi-A*B).norm() < 1E-12);
+
+    //Check that A is orthogonal
+    CHECK(!isComplex(A));
+    Index mid = commonIndex(A,B);
+    ITensor Id(primed(mid),mid,1);
+    CHECK((Id-A*primed(A,mid)).norm() < 1E-12);
+
+
+    //Other direction
+
+    orthoDecomp(phi,A,B,Fromright);
+
+    CHECK((phi-A*B).norm() < 1E-12);
+
+    //Check that B is orthogonal
+    CHECK(!isComplex(B));
+    mid = commonIndex(A,B);
+    Id = ITensor(primed(mid),mid,1);
+    CHECK((Id-B*primed(B,mid)).norm() < 1E-12);
+
+
+    //
+    // IQTensor version
+    //
+
+    Phi0.randomize();
+    IQTensor cPhi0(Phi0);
+    cPhi0.randomize();
+    Phi0 += IQComplex_i()*cPhi0;
+    IQTensor C(L1,S1),D;
+    orthoDecomp(Phi0,C,D,Fromleft);
+
+    CHECK((Phi0-C*D).norm() < 1E-12);
+
+    CHECK(!isComplex(C));
+    }
+
 
 BOOST_AUTO_TEST_SUITE_END()

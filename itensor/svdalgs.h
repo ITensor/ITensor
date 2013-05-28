@@ -47,6 +47,13 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
 // Implementation is faster than SVD, though, and allows the
 // noise term to be used.
 //
+// To determine which indices end up on which factors (i.e. on A versus B),
+// the method examines the initial indices of A and B.
+// If a given index is present on, say, A, then it will on A 
+// upon return (although the elements of A will be overwritten and other indices
+// may be added to it). Any indices not initially present on A or B 
+// will end up on B if dir==Fromleft or on A if dir==Fromright.
+//
 template<class Tensor>
 Spectrum 
 denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
@@ -108,6 +115,34 @@ void
 diagHermitian(const Tensor& M, Tensor& U, SparseT& D, 
               Spectrum& spec,
               const OptSet& opts = Global::opts());
+
+
+
+
+//
+// Orthogonal decomposition
+//
+// Given a tensor T, decomposes it into two tensors A and B
+// such that T=A*B. If dir==Fromleft, A is guaranteed to be
+// real and orthogonal, similar for B if dir==Fromright.
+//
+template<class Tensor>
+Spectrum 
+orthoDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir, 
+            const OptSet& opts = Global::opts())
+    {
+    Spectrum spec;
+    orthoDecomp(T,A,B,dir,spec,opts);
+    return spec;
+    }
+
+template<class Tensor>
+void 
+orthoDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir, 
+            Spectrum& spec,
+            const OptSet& opts = Global::opts());
+
+
 
 
 //
@@ -227,7 +262,7 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
             }
         }
 
-    svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,spec);
+    svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,spec,opts);
 
     spec.cutoff(saved_cutoff);
     spec.minm(saved_minm);
@@ -342,9 +377,14 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         spec.maxm(mid.m());
         }
 
+    if(opts.getBool("TraceReIm",false))
+        {
+        rho = realPart(rho);
+        }
+
     Tensor U;
     SparseT D;
-    Real truncerr = diag_hermitian(rho,U,D,spec);
+    Real truncerr = diag_hermitian(rho,U,D,spec,opts);
     spec.truncerr(truncerr);
 
     spec.cutoff(saved_cutoff);
@@ -404,13 +444,28 @@ diagHermitian(const Tensor& M, Tensor& U, SparseT& D, Spectrum& spec,
 
     const bool truncate_setting = spec.truncate();
     spec.truncate(false);
-    diag_hermitian(Mc,U,D,spec);
+    diag_hermitian(Mc,U,D,spec,opts);
     spec.truncerr(0);
     spec.truncate(truncate_setting);
 
     U = comb * U;
 
     } //diagHermitian
+
+
+template<class Tensor>
+void 
+orthoDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir, 
+            Spectrum& spec,
+            const OptSet& opts)
+    {
+    const Real orig_noise = spec.noise();
+    spec.noise(0);
+
+    denmatDecomp(T,A,B,dir,spec,opts & Opt("TraceReIm"));
+
+    spec.noise(orig_noise);
+    } //orthoDecomp
 
 
 #undef Cout
