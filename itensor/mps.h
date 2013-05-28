@@ -131,6 +131,7 @@ class MPSt
 
     const Spectrum& 
     spectrum(int b) const { return spectrum_.at(b); }
+
     Spectrum& 
     spectrum(int b) { return spectrum_.at(b); }
 

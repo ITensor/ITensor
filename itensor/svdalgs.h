@@ -106,10 +106,11 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
          IQTensor& U, IQTSparse& D, IQTensor& V, Spectrum& spec,
          const OptSet& opts = Global::opts());
 
-template<class Tensor, class SparseT, class LocalOpT>
+template<class Tensor, class SparseT>
 void 
 svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V, 
-    Spectrum& spec, const OptSet& opts)
+    Spectrum& spec, 
+    const OptSet& opts)
     {
     typedef typename Tensor::IndexT 
     IndexT;
