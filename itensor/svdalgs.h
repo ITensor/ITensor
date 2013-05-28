@@ -14,6 +14,12 @@
 #define Format boost::format
 
 
+//
+// Singular value decomposition (SVD)
+//
+// Factors a tensor AA such that AA=U*D*V
+// with D diagonal, real, and non-negative.
+//
 template<class Tensor, class SparseT>
 Spectrum
 svd(const Tensor& AA, Tensor& U, SparseT& D, Tensor& V,
@@ -24,12 +30,93 @@ svd(const Tensor& AA, Tensor& U, SparseT& D, Tensor& V,
     return spec;
     }
 
+//SVD with Spectrum object controlling truncation
+//and storing eigs (squares of singular values) on return
 template<class Tensor, class SparseT>
 void 
 svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V, 
     Spectrum& spec,
     const OptSet& opts = Global::opts());
 
+//
+// Density Matrix Decomposition
+// 
+// Factors a tensor AA such that AA = A*B.
+// Result is equivalent to SVD such that AA = U*D*V where if
+// dir==Fromleft, A=U and B=(D*V) or, if dir==Fromright, A=(U*D) and B=V.
+// Implementation is faster than SVD, though, and allows the
+// noise term to be used.
+//
+template<class Tensor>
+Spectrum 
+denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
+             const OptSet& opts = Global::opts())
+    {
+    Spectrum spec;
+    denmatDecomp(AA,A,B,dir,spec,LocalOp<Tensor>::Null(),opts);
+    return spec;
+    }
+
+
+//Density matrix decomp with a Spectrum object controlling
+//the truncation parameters and storing the eigs on return.
+template<class Tensor>
+void 
+denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
+             Spectrum& spec,
+             const OptSet& opts = Global::opts())
+    {
+    denmatDecomp(AA,A,B,dir,spec,LocalOp<Tensor>::Null(),opts);
+    }
+
+//Density matrix decomp with a Spectrum object 
+//and LocalOpT object supporting the noise term
+//The LocalOpT argument PH has to provide the deltaRho method
+//to enable the noise term feature (see localop.h for example)
+template<class Tensor, class LocalOpT>
+void 
+denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
+             Spectrum& spec, const LocalOpT& PH,
+             const OptSet& opts = Global::opts());
+
+
+
+//
+// Hermitian eigenvalue decomposition / diagonalization
+//
+// Assumes input is a Hermitian tensor with indices
+// i,j,k,.... and i',j',k',...
+// (tensor must be conjugate symmetric under
+//  exchange primed and unprimed indices)
+// Result is unitary tensor U and diagonal sparse tensor D
+// such that M == U*D*primed(U)
+//
+template<class Tensor, class SparseT>
+Spectrum 
+diagHermitian(const Tensor& M, Tensor& U, SparseT& D,
+              const OptSet& opts = Global::opts())
+    {
+    Spectrum spec;
+    diagHermitian(M,U,D,spec,opts);
+    return spec;
+    }
+
+//Version accepting a Spectrum object which
+//stores eigs on return
+template<class Tensor, class SparseT>
+void 
+diagHermitian(const Tensor& M, Tensor& U, SparseT& D, 
+              Spectrum& spec,
+              const OptSet& opts = Global::opts());
+
+
+//
+// Inverse Canonical SVD
+//
+// Factors a tensor AA such that AA=L*V*R
+// where V is the inverse of the diagonal tensor
+// appearing in the SVD
+//
 template<class Tensor, class SparseT>
 Spectrum 
 csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R, 
@@ -47,51 +134,9 @@ csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R,
      const OptSet& opts = Global::opts());
 
 
-template<class Tensor>
-Spectrum 
-denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-             const OptSet& opts = Global::opts())
-    {
-    Spectrum spec;
-    denmatDecomp(AA,A,B,dir,spec,LocalOp<Tensor>::Null(),opts);
-    return spec;
-    }
-
-
-template<class Tensor>
-void 
-denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-             Spectrum& spec,
-             const OptSet& opts = Global::opts())
-    {
-    denmatDecomp(AA,A,B,dir,spec,LocalOp<Tensor>::Null(),opts);
-    }
-
-template<class Tensor, class LocalOpT>
-void 
-denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-             Spectrum& spec, const LocalOpT& PH,
-             const OptSet& opts = Global::opts());
-
-template<class Tensor, class SparseT>
-Spectrum 
-diagHermitian(const Tensor& M, Tensor& U, SparseT& D,
-              const OptSet& opts = Global::opts())
-    {
-    Spectrum spec;
-    diagHermitian(M,U,D,spec,opts);
-    return spec;
-    }
-
-template<class Tensor, class SparseT>
-void 
-diagHermitian(const Tensor& M, Tensor& U, SparseT& D, 
-              Spectrum& spec,
-              const OptSet& opts = Global::opts());
-
 ///////////////////////////
 //
-// Implementations
+// Implementation (non-template parts in svdalgs.cc)
 //
 //////////////////////////
 
@@ -223,12 +268,6 @@ Real
 diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
                const OptSet& opts = Global::opts());
 
-//
-// Density Matrix Decomposition
-// (weights in B for dir == Fromleft, weights in A for dir == Fromright)
-//
-//Object PH of type LocalOpT has to provide the deltaRho method
-//to use the noise term feature (see localop.h)
 template<class Tensor, class LocalOpT>
 void 
 denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
@@ -320,15 +359,6 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
 
 
-//
-// Eigenvalue decomposition / diagonalization
-// Assumes input is a Hermitian tensor with indices
-// i,j,k,.... and i',j',k',...
-// (tensor must be conjugate symmetric under
-//  exchange primed and unprimed indices)
-// Result is unitary tensor U and diagonal sparse tensor D
-// such that M == U*D*primed(U)
-//
 template<class Tensor, class SparseT>
 void 
 diagHermitian(const Tensor& M, Tensor& U, SparseT& D, Spectrum& spec,
