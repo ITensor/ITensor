@@ -41,16 +41,22 @@ orthogonalize(const OptSet& opts)
     //but do not truncate since the basis to the right might not
     //be ortho (i.e. use the current m).
     //svd_.useOrigM(true);
-    int orig_maxm = svd_.maxm();
-    Real orig_cutoff = svd_.cutoff();
-    svd_.maxm(MAX_M);
-    svd_.cutoff(MIN_CUT);
+    int orig_maxm = maxm();
+    Real orig_cutoff = cutoff();
+    Foreach(Spectrum& spec, spectrum_)
+        {
+        spec.maxm(MAX_M);
+        spec.cutoff(MIN_CUT);
+        }
 
     position(N_);
     //Now basis is ortho, ok to truncate
-    svd_.useOrigM(false);
-    svd_.maxm(orig_maxm);
-    svd_.cutoff(orig_cutoff);
+    Foreach(Spectrum& spec, spectrum_)
+        {
+        spec.useOrigM(false);
+        spec.maxm(orig_maxm);
+        spec.cutoff(orig_cutoff);
+        }
     position(1);
 
     is_ortho_ = true;
@@ -86,7 +92,7 @@ svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
         }
 
     SparseT D;
-    svd_.svd(b,AA,A_[b],D,A_[b+1]);
+    svd(AA,A_[b],D,A_[b+1],spectrum_.at(b),opts);
 
     //Push singular values/amplitudes
     //to the right or left as requested
@@ -260,9 +266,9 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
     int N = Borig.N();
     MPOType A(Aorig), B(Borig);
 
-    SVDWorker svd = A.svd();
-    svd.cutoff(cut);
-    svd.maxm(maxm);
+    Spectrum spec;
+    spec.cutoff(cut);
+    spec.maxm(maxm);
 
     A.position(1);
     B.position(1);
@@ -299,7 +305,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
             }
             */
 
-        svd.denmatDecomp(i,clust, res.Anc(i), nfork,Fromleft);
+        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,spec);
 
         IndexT mid = commonIndex(res.A(i),nfork,Link);
         mid.conj();
@@ -354,9 +360,9 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     if(!K.isOrtho() || K.orthoCenter() != 1)
         Error("Ortho center of K must be site 1");
 
-    SVDWorker svd = K.svd();
-    svd.cutoff(cutoff);
-    svd.maxm(maxm);
+    Spectrum spec;
+    spec.cutoff(cutoff);
+    spec.maxm(maxm);
 
     res = psi; 
     res.maxm(maxm); 
@@ -377,7 +383,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
         nfork = Tensor(psi.RightLinkInd(i),K.RightLinkInd(i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
-        svd.denmatDecomp(i,clust, res.Anc(i), nfork,Fromleft);
+        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,spec);
         IndexT mid = commonIndex(res.A(i),nfork,Link);
         //assert(mid.dir() == In);
         mid.conj();

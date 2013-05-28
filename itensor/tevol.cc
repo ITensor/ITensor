@@ -163,8 +163,7 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
 #endif
         Tensor U(*r.indices().begin()),V; 
         SparseT D;
-        SVDWorker W;
-        W.svd(r,U,D,V);
+        svd(r,U,D,V);
         D.pseudoInvert(1E-8);
         Tensor ri = V*D*U;
 
@@ -397,12 +396,12 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             psiv[g] = psi.A(j);
         }
 
-    SVDWorker W;
-    W.doRelCutoff(true);
-    W.absoluteCutoff(false);
-    W.minm(psi.minm());
-    W.maxm(psi.maxm());
-    W.cutoff(psi.cutoff());
+    Spectrum spec;
+    spec.doRelCutoff(true);
+    spec.absoluteCutoff(false);
+    spec.minm(psi.minm());
+    spec.maxm(psi.maxm());
+    spec.cutoff(psi.cutoff());
 
     int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
 
@@ -533,10 +532,9 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 IndexT lnk = commonIndex(B,psiv[g-1]);
                 Tensor overlap = conj(primed(B,lnk))*B;
 
-                SVDWorker W;
                 Tensor U(lnk),V;
                 SparseT D;
-                W.svd(overlap,U,D,V);
+                svd(overlap,U,D,V);
 
                 SqrtInv inv(1E-12);
                 D.mapElems(inv);
@@ -572,9 +570,9 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
 
         if(verbose) cout << "Regrouping sites" << endl;
 
-        const Real orig_cutoff = W.cutoff();
+        const Real orig_cutoff = spec.cutoff();
 
-        W.cutoff(1E-20);
+        spec.cutoff(1E-20);
         if(tt%2 == 1)
             { //Odd step, odd bonds grouped
             for(int g = 1, j = 1; g < Ng; ++g, j += 2)
@@ -585,7 +583,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 Tensor A, B(model.si(j+1),r);
                 SparseT D;
                 //cout << format("bond %d = \n") % g << bond << endl;
-                W.svd(bond,A,D,B);
+                svd(bond,A,D,B,spec);
                 //Print(A);
 
                 psiv[g] = A;
@@ -600,7 +598,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 //cout << format("bond %d = \n") % Ng << psiv[Ng] << endl;
                 Tensor A,B(model.si(N));
                 SparseT D;
-                W.svd(psiv[Ng],A,D,B);
+                svd(psiv[Ng],A,D,B,spec);
                 psiv[Ng] = A;
                 psiv[Ng+1] = D*B;
                 //Print(A);
@@ -632,7 +630,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
 
                 Tensor A(l,model.si(j)),B;
                 SparseT D;
-                W.svd(bond,A,D,B);
+                svd(bond,A,D,B,spec);
 
                 //Print(B);
                 psiv[g] = B;
@@ -643,7 +641,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 }
             oc = 1;
             }
-        W.cutoff(orig_cutoff);
+        spec.cutoff(orig_cutoff);
 
         //Real nm2 = Dot(psiv[oc],psiv[oc]);
         //cout << format("time = %.3f, nm2 = %.10f -> ") % tsofar % nm2;
@@ -719,7 +717,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                     }
                 SparseT D;
                 //cout << format("bond %d = \n") % g << bond << endl;
-                W.svd(bond,A,D,B);
+                svd(bond,A,D,B,spec);
                 //Print(A);
 
                 psi.Anc(j) = A;
@@ -771,7 +769,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                     }
                 SparseT D;
                 //cout << format("bond %d = \n") % g << bond << endl;
-                W.svd(bond,A,D,B);
+                svd(bond,A,D,B,spec);
                 //Print(A);
 
                 psi.Anc(j) = B;

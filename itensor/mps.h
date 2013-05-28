@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_MPS_H
 #define __ITENSOR_MPS_H
-#include "svdworker.h"
+#include "svdalgs.h"
 #include "model.h"
 #include "boost/function.hpp"
 
@@ -129,10 +129,11 @@ class MPSt
     const Model& 
     model() const { return *model_; }
 
-    const SVDWorker& 
-    svd() const { return svd_; }
-    SVDWorker& 
-    svd() { return svd_; }
+    const Spectrum& 
+    spectrum(int b) const { return spectrum_.at(b); }
+
+    Spectrum& 
+    spectrum(int b) { return spectrum_.at(b); }
 
 
     bool 
@@ -141,50 +142,73 @@ class MPSt
     isNotNull() const { return (model_!=0); }
 
     bool 
-    doRelCutoff() const { return svd_.doRelCutoff(); }
+    doRelCutoff() const { return spectrum_.front().doRelCutoff(); }
     void 
-    doRelCutoff(bool val) { svd_.doRelCutoff(val); }
+    doRelCutoff(bool val) 
+        { 
+        Foreach(Spectrum& spec, spectrum_)
+            spec.doRelCutoff(val); 
+        }
 
     bool 
-    absoluteCutoff() const { return svd_.absoluteCutoff(); }
+    absoluteCutoff() const { return spectrum_.front().absoluteCutoff(); }
     void 
-    absoluteCutoff(bool val) { svd_.absoluteCutoff(val); }
+    absoluteCutoff(bool val) 
+        { 
+        Foreach(Spectrum& spec, spectrum_)
+            spec.absoluteCutoff(val); 
+        }
 
     LogNumber 
-    refNorm() const { return svd_.refNorm(); }
+    refNorm() const { return spectrum_.front().refNorm(); }
     void 
-    refNorm(LogNumber val) { svd_.refNorm(val); }
+    refNorm(LogNumber val) 
+        { 
+        Foreach(Spectrum& spec, spectrum_)
+            spec.refNorm(val); 
+        }
 
     Real 
-    noise() const { return svd_.noise(); }
+    noise() const { return spectrum_.front().noise(); }
     void 
-    noise(Real val) { svd_.noise(val); }
+    noise(Real val) 
+        { 
+        Foreach(Spectrum& spec, spectrum_)
+            spec.noise(val); 
+        }
 
     Real 
-    cutoff() const { return svd_.cutoff(); }
+    cutoff() const { return spectrum_.front().cutoff(); }
     void 
-    cutoff(Real val) { svd_.cutoff(val); }
+    cutoff(Real val) 
+        { 
+        Foreach(Spectrum& spec, spectrum_)
+            spec.cutoff(val); 
+        }
 
     int 
-    minm() const { return svd_.minm(); }
+    minm() const { return spectrum_.front().minm(); }
     void 
-    minm(int val) { svd_.minm(val); }
+    minm(int val)
+        { 
+        Foreach(Spectrum& spec, spectrum_)
+            spec.minm(val); 
+        }
 
     int 
-    maxm() const { return svd_.maxm(); }
+    maxm() const { return spectrum_.front().maxm(); }
     void 
-    maxm(int val) { svd_.maxm(val); }
+    maxm(int val)
+        { 
+        Foreach(Spectrum& spec, spectrum_)
+            spec.maxm(val); 
+        }
 
     Real 
-    truncerr(int b) const { return svd_.truncerr(b); }
+    truncerr(int b) const { return spectrum_.at(b).truncerr(); }
 
     const Vector& 
-    eigsKept(int b) const { return svd_.eigsKept(b); }
-
-    bool 
-    showeigs() const { return svd_.showeigs(); }
-    void 
-    showeigs(bool val) { svd_.showeigs(val); }
+    eigsKept(int b) const { return spectrum_.at(b).eigsKept(b); }
 
     Tensor 
     bondTensor(int b) const;
@@ -375,7 +399,7 @@ class MPSt
     toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
         {
         iqpsi = MPSt<IQTensor>(*model_,maxm(),cutoff());
-        iqpsi.svd_ = svd_;
+        iqpsi.spectrum_ = spectrum_;
         convertToIQ(*model_,A_,iqpsi.A_,totalq,cut);
         }
 
@@ -407,7 +431,7 @@ class MPSt
 
     const Model* model_;
 
-    SVDWorker svd_;
+    std::vector<Spectrum> spectrum_;
 
     mutable
     int atb_;
@@ -579,10 +603,10 @@ svdBond(int b, const Tensor& AA, Direction dir,
         const LocalOpT& PH, const OptSet& opts)
     {
     setBond(b);
-    const bool use_orig_setting = svd_.useOrigM();
+    const bool use_orig_setting = spectrum_.at(b).useOrigM();
     if(opts.getBool("UseOrigM",false)) 
         {
-        svd_.useOrigM(true);
+        spectrum_.at(b).useOrigM(true);
         }
 
     if(dir == Fromleft && b-1 > l_orth_lim_)
@@ -603,7 +627,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
         SparseT D;
-        svd_.svd(b,AA,A_[b],D,A_[b+1]);
+        svd(AA,A_[b],D,A_[b+1],spectrum_.at(b),opts);
 
         //Normalize the ortho center if requested
         if(opts.getBool("DoNormalize",false))
@@ -622,7 +646,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //If we don't need extreme accuracy
         //or need to use noise term
         //use density matrix approach
-        svd_.denmatDecomp(b,AA,A_[b],A_[b+1],dir,PH);
+        denmatDecomp(AA,A_[b],A_[b+1],dir,spectrum_.at(b),PH,opts);
 
         //Normalize the ortho center if requested
         if(opts.getBool("DoNormalize",false))
@@ -650,7 +674,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         r_orth_lim_ = b+1;
         }
 
-    svd_.useOrigM(use_orig_setting);
+    spectrum_.at(b).useOrigM(use_orig_setting);
     }
 
 //

@@ -84,8 +84,7 @@ class MPOt : private MPSt<Tensor>
     using Parent::maxm;
     using Parent::truncerr;
     using Parent::eigsKept;
-    using Parent::showeigs;
-    using Parent::svd;
+    using Parent::spectrum;
 
 
     using Parent::read;
@@ -118,7 +117,7 @@ class MPOt : private MPSt<Tensor>
     operator MPOt<IQTensor>()
         { 
         MPOt<IQTensor> res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm()); 
-        res.svd_ = svd_;
+        res.spectrum_ = spectrum_;
         convertToIQ(*model_,A_,res.A_);
         return res; 
         }
@@ -186,7 +185,7 @@ class MPOt : private MPSt<Tensor>
     toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
         {
         res = MPOt<IQTensor>(*model_,maxm(),cutoff());
-        res.svd_ = svd_;
+        res.spectrum_ = spectrum_;
         convertToIQ(*model_,A_,res.A_,totalq,cut);
         }
 
@@ -196,7 +195,7 @@ private:
     using Parent::l_orth_lim_;
     using Parent::r_orth_lim_;
     using Parent::model_;
-    using Parent::svd_;
+    using Parent::spectrum_;
     using Parent::is_ortho_;
 
     friend class MPOt<ITensor>;
@@ -210,7 +209,7 @@ MPO MPOt<IQTensor>::
 toMPO() const
     {
     MPO res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm());
-    res.svd_ = svd_;
+    res.spectrum_ = spectrum_;
     for(int j = 1; j <= N(); ++j)
         {
         res.A_.at(j) = A(j).toITensor();

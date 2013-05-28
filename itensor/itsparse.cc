@@ -280,7 +280,7 @@ scaleTo(LogNumber newscale) const
 void ITSparse::
 read(std::istream& s)
     {
-    readVec(s,diag_);
+    diag_.read(s);
     is_.read(s);
     scale_.read(s);
     }
@@ -288,7 +288,7 @@ read(std::istream& s)
 void ITSparse::
 write(std::ostream& s) const
     {
-    writeVec(s,diag_);
+    diag_.write(s);
     is_.write(s);
     scale_.write(s);
     }
