@@ -193,7 +193,7 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
 
     } //svd
 
-template<class Tensor, class SparseT, class LocalOpT>
+template<class Tensor, class SparseT>
 void 
 csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R, 
      Spectrum& spec, 
