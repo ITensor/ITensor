@@ -256,11 +256,11 @@ DMRGWorker(MPSt<Tensor>& psi,
                         << Endl;
                 }
 
-            obs.measure(N,sw,ha,b,psi.spectrum(b),energy);
+            obs.measure(N,sw,ha,b,psi.spectrum(b),energy,opts);
 
             } //for loop over b
         
-        if(obs.checkDone(sw,energy)) break;
+        if(obs.checkDone(sw,energy,opts)) break;
     
         } //for loop over sw
     
