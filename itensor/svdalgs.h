@@ -138,7 +138,7 @@ orthoDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir,
 
 template<class Tensor>
 void 
-orthoDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir, 
+orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir, 
             Spectrum& spec,
             const OptSet& opts = Global::opts());
 
@@ -216,6 +216,7 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
     CombinerT Ucomb, Vcomb;
     Ucomb.doCondense(true);
     Vcomb.doCondense(true);
+
 
     //Divide up indices based on U
     //If U is null, use V instead
@@ -455,14 +456,69 @@ diagHermitian(const Tensor& M, Tensor& U, SparseT& D, Spectrum& spec,
 
 template<class Tensor>
 void 
-orthoDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir, 
+orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir, 
             Spectrum& spec,
             const OptSet& opts)
     {
+    typedef typename Tensor::IndexT 
+    IndexT;
+    typedef typename Tensor::CombinerT 
+    CombinerT;
+    typedef typename Tensor::SparseT
+    SparseT;
+
+    if(T.vecSize() == 0) 
+        throw ResultIsZero("orthoDecomp: T.vecSize == 0");
+
     const Real orig_noise = spec.noise();
     spec.noise(0);
 
-    denmatDecomp(T,A,B,dir,spec,opts & Opt("TraceReIm"));
+    const
+    bool usedenmat = false;
+
+    if(usedenmat)
+        {
+        denmatDecomp(T,A,B,dir,spec,opts & Opt("TraceReIm"));
+        }
+    else //use svd
+        {
+        //Combiners which transform T
+        //into a rank 2 tensor
+        CombinerT Acomb, Bcomb;
+        Acomb.doCondense(true);
+        Bcomb.doCondense(true);
+
+        //Divide up indices based on U
+        //If U is null, use V instead
+        const Tensor &L = (A.isNull() ? B : A);
+        CombinerT &Lcomb = (A.isNull() ? Bcomb : Acomb),
+                  &Rcomb = (A.isNull() ? Acomb : Bcomb);
+        Foreach(const IndexT& I, T.indices())
+            { 
+            if(I.type() == ReIm)
+                {
+                (dir==Fromleft ? Rcomb : Lcomb).addleft(I);
+                }
+            else
+                {
+                if(hasindex(L,I))
+                    Lcomb.addleft(I);
+                else
+                    Rcomb.addleft(I);
+                }
+            }
+
+        T = Acomb * T * Bcomb;
+
+        SparseT D;
+        svdRank2(T,Acomb.right(),Bcomb.right(),A,D,B,spec,opts);
+
+        A = conj(Acomb) * A;
+        B = B * conj(Bcomb);
+
+        if(dir==Fromleft) B *= D;
+        else              A *= D;
+        }
 
     spec.noise(orig_noise);
     } //orthoDecomp
