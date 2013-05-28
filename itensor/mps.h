@@ -335,6 +335,9 @@ class MPSt
     void 
     orthogonalize(const OptSet& opts = Global::opts());
 
+    void 
+    makeRealBasis(int j, const OptSet& opts = Global::opts());
+
     //Checks if A_[i] is left (left == true) 
     //or right (left == false) orthogonalized
     bool 
@@ -392,8 +395,13 @@ class MPSt
 
     bool 
     isComplex() const
-        { return A_[l_orth_lim_+1].isComplex(); }
-
+        { 
+        for(int j = 1; j <= N_; ++j)
+            {
+            if(isComplex(A_[j])) return true;
+            }
+        return false;
+        }
 
     void 
     toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const

@@ -761,6 +761,34 @@ void MPSt<ITensor>::orthogonalize(const OptSet& opts);
 template
 void MPSt<IQTensor>::orthogonalize(const OptSet& opts);
 
+template <class Tensor>
+void MPSt<Tensor>::
+makeRealBasis(int j, const OptSet& opts)
+    {
+    if(isNull()) Error("position: MPS is null");
+    l_orth_lim_ = 0;
+    while(l_orth_lim_ < j-1)
+        {
+        setBond(l_orth_lim_+1);
+        Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
+        orthoDecomp(WF,A_[l_orth_lim_+1],A_[l_orth_lim_+2],Fromleft,opts);
+        ++l_orth_lim_;
+        }
+    r_orth_lim_ = N_+1;
+    while(r_orth_lim_ > j+1)
+        {
+        setBond(r_orth_lim_-2);
+        Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
+        orthoDecomp(WF,A_[r_orth_lim_-2],A_[r_orth_lim_-1],Fromright,opts);
+        --r_orth_lim_;
+        }
+    is_ortho_ = true;
+    }
+template
+void MPSt<ITensor>::makeRealBasis(int j, const OptSet& opts);
+template
+void MPSt<IQTensor>::makeRealBasis(int j, const OptSet& opts);
+
 //Methods for use internally by checkOrtho
 ITensor
 makeKroneckerDelta(const Index& i, int plev)
