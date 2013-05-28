@@ -994,18 +994,12 @@ conj()
         }
     else
         {
-        dat.solo();
-
-        //IQTensor r,i;
-        //splitReIm(r,i);
-        IQTensor r(realPart(*this)),
-                i(imagPart(*this));
-
-        r.is_->conj();
-        i.is_->conj();
-
-        i *= -1.0;
-        *this = r * IQTensor::Complex_1() + IQTensor::Complex_i() * i;
+        solo();
+        is_->conj();
+        Foreach(ITensor& t, dat.nc())
+            {
+            t.conj();
+            }
         }
     }
 
