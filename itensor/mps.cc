@@ -748,19 +748,12 @@ orthogonalize(const OptSet& opts)
     //Do a half-sweep to the right, orthogonalizing each bond
     //but do not truncate since the basis to the right might not
     //be ortho (i.e. use the current m).
-    Foreach(Spectrum& spec,spectrum_)
-        spec.useOrigM(true);
+    const Real orig_cut = cutoff();
+    cutoff(0.1*orig_cut);
     position(N_);
-    if(opts.getBool("Verbose",false))
-        {
-        std::cout << "Done orthogonalizing, starting truncation." 
-                  << std::endl;
-        }
     //Now basis is ortho, ok to truncate
-    Foreach(Spectrum& spec,spectrum_)
-        spec.useOrigM(false);
+    cutoff(orig_cut);
     position(1);
-
     is_ortho_ = true;
     }
 template
