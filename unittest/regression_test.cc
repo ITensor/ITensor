@@ -1,6 +1,6 @@
 #include "test.h"
 #include <boost/test/unit_test.hpp>
-#include "svdworker.h"
+#include "svdalgs.h"
 
 using namespace std;
 using boost::format;
@@ -56,8 +56,6 @@ TEST(SVDIndexOrder)
     z(c(1),a(2),b(1)) = 1;
     z(c(1),a(1),b(1)) = 1;
 
-    SVDWorker svd;
-    //svd.showeigs(true);
 
     ITensor V(b);
 
@@ -66,7 +64,7 @@ TEST(SVDIndexOrder)
 
     ITSparse D;
     //Globals::debug2() = true;
-    svd.svd(z,U,D,V);
+    svd(z,U,D,V);
     //Globals::debug2() = false;
 
     //PrintDat(U);
@@ -107,8 +105,6 @@ TEST(SVDIndexOrder)
 
 TEST(SVDArrows)
     {
-    SVDWorker svd;
-
     Index l("l",2),r("r",2);
     IQIndex L("L",l,QN(1,1),In),R("R",r,QN(1,1),Out);
 
@@ -123,7 +119,7 @@ TEST(SVDArrows)
 
     IQTensor U(L),V(R);
     IQTSparse D;
-    svd.svd(AA,U,D,V);
+    svd(AA,U,D,V);
 
     CHECK_EQUAL(div(U),Zero);
     CHECK_EQUAL(div(V),Zero);

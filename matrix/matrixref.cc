@@ -111,6 +111,18 @@ VectorRef::addin(const VectorRef &other,Real extrafac)
     	}
     }
 
+void VectorRef::
+write(std::ostream& s) const
+    {
+    s.write((char*)&length,sizeof(length));
+    Real val;
+    for(int k = 0; k < length; ++k)
+        {
+        val = el(k);
+        s.write((char*)&val,sizeof(val));
+        }
+    }
+
 VectorRef &
 VectorRef::operator += (const VectorRef &other)
     {
@@ -588,6 +600,13 @@ MatrixRef::assign(const MatrixMatrixRes & R,int noclear)
     default:
 	_merror("MatrixRef: bad R.op in assign");
 	}
+    }
+
+void MatrixRef::
+write(std::ostream& s) const
+    {
+    s.write((char*)&nrows,sizeof(nrows));
+    TreatAsVector().write(s);
     }
 
 ostream & operator << (ostream & s, const VectorRef & V)

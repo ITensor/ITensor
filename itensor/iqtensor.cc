@@ -994,18 +994,12 @@ conj()
         }
     else
         {
-        dat.solo();
-
-        //IQTensor r,i;
-        //splitReIm(r,i);
-        IQTensor r(realPart(*this)),
-                i(imagPart(*this));
-
-        r.is_->conj();
-        i.is_->conj();
-
-        i *= -1.0;
-        *this = r * IQTensor::Complex_1() + IQTensor::Complex_i() * i;
+        solo();
+        is_->conj();
+        Foreach(ITensor& t, dat.nc())
+            {
+            t.conj();
+            }
         }
     }
 
@@ -1028,7 +1022,17 @@ operator<<(std::ostream & s, const IQTensor& T)
     s << "IQIndices:\n" << T.indices();
     s << "ITensor Blocks:\n";
     Foreach(const ITensor& t, T.blocks())
-        { s << "  " << t << std::endl; }
+        { 
+        s << "  ";
+        Foreach(const Index& i, t.indices())
+            {
+            if(i.type() == ReIm) continue;
+            const IQIndex& I = findIQInd(T,i);
+            s << i.name() << ":" << qn(I,i) << "<" << I.dir() << "> ";
+            }
+        s << endl;
+        s << "  " << t << endl; 
+        }
 	s << "\\------------------------------------\n\n";
     return s;
     }

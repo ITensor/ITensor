@@ -21,7 +21,7 @@ SOURCES+= mps_test.cc
 SOURCES+= mpo_test.cc
 SOURCES+= eigensolver_test.cc
 SOURCES+= regression_test.cc
-SOURCES+= svdworker_test.cc
+SOURCES+= svdalgs_test.cc
 SOURCES+= iqtsparse_test.cc
 SOURCES+= webpage_test.cc
 SOURCES+= localmpo_test.cc
@@ -119,8 +119,8 @@ LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/mpo.h
 mpo_test.o: $(LIBHEADERS)
 .debug_objs/mpo_test.o: $(LIBHEADERS)
 
-LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/svdworker.h
-svdworker_test.o: $(LIBHEADERS)
+LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/svdalgs.h
+svdalgs_test.o: $(LIBHEADERS)
 .debug_objs/svdworker_test.o: $(LIBHEADERS)
 
 regression_test.o: $(LIBHEADERS)

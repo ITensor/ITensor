@@ -1,11 +1,11 @@
 #include "test.h"
-#include "svdworker.h"
+#include "svdalgs.h"
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
 using boost::format;
 
-struct SVDWorkerDefaults
+struct SVDAlgsDefaults
     {
 
     IQIndex S1,S2,L1,L2,Mid,Mid10;
@@ -22,7 +22,7 @@ struct SVDWorkerDefaults
     ITensor phi0,l,r,psi;
     ITSparse v;
 
-    SVDWorkerDefaults()
+    SVDAlgsDefaults()
         :
         s1u(Index("Site1 Up",1,Site)),
         s1d(Index("Site1 Dn",1,Site)),
@@ -161,26 +161,23 @@ struct SVDWorkerDefaults
 
     };
 
-BOOST_FIXTURE_TEST_SUITE(SVDWorkerTest,SVDWorkerDefaults)
+BOOST_FIXTURE_TEST_SUITE(SVDAlgsTest,SVDAlgsDefaults)
 
 TEST(SiteSVD)
     {
-    SVDWorker svd;
-
     //
     //ITensor version
     //
-
     ITensor a(L1,S1),b(S2,L2);
 
     //svd.showeigs(true);
     phi0 *= -1.2324;
-    svd.denmatDecomp(phi0,a,b,Fromleft);
+    Spectrum spec = denmatDecomp(phi0,a,b,Fromleft);
 
     //Print(((a*b)-phi0).norm());
     CHECK(((a*b)-phi0).norm() < 1E-12 );
 
-    CHECK(svd.truncerr() < 1E-12);
+    CHECK(spec.truncerr() < 1E-12);
 
     //
     //IQTensor version
@@ -189,18 +186,16 @@ TEST(SiteSVD)
     IQTensor A(L1,S1),B(S2,L2);
 
     Phi0 *= -10.23432;
-    svd.denmatDecomp(Phi0,A,B,Fromleft);
+    spec = denmatDecomp(Phi0,A,B,Fromleft);
 
     //Print(((A*B)-Phi0).norm());
     CHECK(((A*B)-Phi0).norm() < 1E-12 );
 
-    CHECK(svd.truncerr() < 1E-12);
+    CHECK(spec.truncerr() < 1E-12);
     }
 
 TEST(BondSVD)
     {
-    SVDWorker svd;
-
     //
     //ITensor version
     //
@@ -210,13 +205,13 @@ TEST(BondSVD)
 
     phi0 *= -0.235;
 
-    svd.csvd(phi0,l,v,r);
+    Spectrum spec = csvd(phi0,l,v,r);
 
     //Print(((l*v*r)-phi0).norm());
     CHECK(((l*v*r)-phi0).norm() < 1E-12 );
 
 
-    CHECK(svd.truncerr() < 1E-12);
+    CHECK(spec.truncerr() < 1E-12);
 
     //
     //IQTensor version
@@ -225,20 +220,18 @@ TEST(BondSVD)
     IQTensor L(L1,S1,Mid),R(Mid,S2,L2);
     IQTSparse V(Mid);
 
-    svd.csvd(Phi0,L,V,R);
+    spec = csvd(Phi0,L,V,R);
     
     IQTensor nPhi = L*V*R;
 
     CHECK((nPhi-Phi0).norm() < 1E-12 );
 
-    CHECK(svd.truncerr() < 1E-12);
+    CHECK(spec.truncerr() < 1E-12);
     
     }
 
 TEST(CSVDNorm)
     {
-    SVDWorker svd;
-
     //
     //ITensor version
     //
@@ -254,7 +247,7 @@ TEST(CSVDNorm)
     phi0(s1(1),s2(3),rr(1)) = -0.88765;
     phi0.scaleTo(-2.127145);
 
-    svd.svd(phi0,l,v,r);
+    svd(phi0,l,v,r);
     Index nmr = commonIndex(r,v,Link);
     //ITensor rhoRsvd1 = r * conj(primeind(r,rr));
     //ITensor rhoRsvd2 = r * conj(primeind(r,nmr));
@@ -263,7 +256,7 @@ TEST(CSVDNorm)
     //PrintDat(rhoRsvd2);
 
 
-    svd.csvd(phi0,l,v,r);
+    csvd(phi0,l,v,r);
 
     CHECK_CLOSE(1,l.norm(),1E-2);
     CHECK_CLOSE(1,r.norm(),1E-2);
@@ -284,9 +277,8 @@ TEST(CSVDNorm)
 
 TEST(AbsoluteCutoff)
     {
-    SVDWorker svd;
-
-    svd.absoluteCutoff(true);
+    Spectrum spec;
+    spec.absoluteCutoff(true);
 
     //
     //ITensor version
@@ -296,19 +288,19 @@ TEST(AbsoluteCutoff)
     ITSparse c(Mid);
 
     Real cutoff = 1E-3;
-    svd.cutoff(cutoff);
-    svd.csvd(phi0,a,c,b);
-    CHECK(svd.eigsKept()(svd.numEigsKept()) > cutoff);
+    spec.cutoff(cutoff);
+    csvd(phi0,a,c,b,spec);
+    CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
 
     cutoff = 1E-5;
-    svd.cutoff(cutoff);
-    svd.csvd(phi0,a,c,b);
-    CHECK(svd.eigsKept()(svd.numEigsKept()) > cutoff);
+    spec.cutoff(cutoff);
+    csvd(phi0,a,c,b,spec);
+    CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
 
     cutoff = 1E-7;
-    svd.cutoff(cutoff);
-    svd.csvd(phi0,a,c,b);
-    CHECK(svd.eigsKept()(svd.numEigsKept()) > cutoff);
+    spec.cutoff(cutoff);
+    csvd(phi0,a,c,b,spec);
+    CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
 
     //
     //IQTensor version
@@ -318,19 +310,19 @@ TEST(AbsoluteCutoff)
     IQTSparse C(Mid);
 
     cutoff = 1E-3;
-    svd.cutoff(cutoff);
-    svd.csvd(Phi0,A,C,B);
-    CHECK(svd.eigsKept()(svd.numEigsKept()) > cutoff);
+    spec.cutoff(cutoff);
+    csvd(Phi0,A,C,B,spec);
+    CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
 
     cutoff = 1E-5;
-    svd.cutoff(cutoff);
-    svd.csvd(Phi0,A,C,B);
-    CHECK(svd.eigsKept()(svd.numEigsKept()) > cutoff);
+    spec.cutoff(cutoff);
+    csvd(Phi0,A,C,B,spec);
+    CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
 
     cutoff = 1E-7;
-    svd.cutoff(cutoff);
-    svd.csvd(Phi0,A,C,B);
-    CHECK(svd.eigsKept()(svd.numEigsKept()) > cutoff);
+    spec.cutoff(cutoff);
+    csvd(Phi0,A,C,B,spec);
+    CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
     }
 
 /*
@@ -475,7 +467,7 @@ TEST(Diagonalization)
 
     ITensor U;
     ITSparse D;
-    diagonalize(M,U,D);
+    diagHermitian(M,U,D);
 
     CHECK((M-(primed(U)*D*conj(U))).norm() < 1E-14);
 
@@ -491,7 +483,7 @@ TEST(Diagonalization)
 
     IQTensor UU;
     IQTSparse DD;
-    diagonalize(T,UU,DD);
+    diagHermitian(T,UU,DD);
 
     CHECK((T-(primed(UU)*DD*conj(UU))).norm() < 1E-14);
     }
@@ -509,7 +501,7 @@ TEST(ComplexDiagonalization)
 
     ITensor U;
     ITSparse D;
-    diagonalize(M,U,D);
+    diagHermitian(M,U,D);
 
     CHECK((M-(primed(U)*D*conj(U))).norm() < 1E-14);
 
@@ -525,12 +517,12 @@ TEST(ComplexDiagonalization)
 
     IQTensor UU;
     IQTSparse DD;
-    diagonalize(T,UU,DD);
+    diagHermitian(T,UU,DD);
 
     CHECK((T-(primed(UU)*DD*conj(UU))).norm() < 1E-14);
 
     //Arrows the other way
-    diagonalize(conj(T),UU,DD);
+    diagHermitian(conj(T),UU,DD);
 
     CHECK((conj(T)-(primed(UU)*DD*conj(UU))).norm() < 1E-14);
     }

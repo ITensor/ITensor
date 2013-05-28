@@ -251,16 +251,16 @@ DMRGWorker(MPSt<Tensor>& psi,
                         % sweeps.maxm(sw) 
                         << Endl;
                 Cout << Format("    Trunc. err=%.1E, States kept=%s")
-                        % psi.svd().truncerr(b) 
+                        % psi.spectrum(b).truncerr() 
                         % showm(psi.LinkInd(b)) 
                         << Endl;
                 }
 
-            obs.measure(sw,ha,b,psi.svd(),energy);
+            obs.measure(N,sw,ha,b,psi.spectrum(b),energy);
 
             } //for loop over b
         
-        if(obs.checkDone(sw,psi.svd(),energy)) break;
+        if(obs.checkDone(sw,energy)) break;
     
         } //for loop over sw
     

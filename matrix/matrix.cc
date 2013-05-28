@@ -225,6 +225,20 @@ Vector::Enlarge(int n)
     copytransfer(temp);
     }
 
+void Vector::
+read(std::istream& s)
+    {
+    int L;
+    s.read((char*)&L,sizeof(L));
+    ReDimension(L);
+    Real val;
+    for(int k = 0; k < L; ++k)
+        {
+        s.read((char*)&val,sizeof(val));
+        el(k) = val;
+        }
+    }
+
 ostream & operator << (ostream & s, const Vector & V)
     {
     int w = s.width();
@@ -235,4 +249,16 @@ ostream & operator << (ostream & s, const Vector & V)
     s << "\n" << iendl;
     //s.flags(f);
     return s;
+    }
+
+void Matrix::
+read(std::istream& s)
+    {
+    int nr;
+    Vector v;
+    s.read((char*)&nr,sizeof(nr));
+    v.read(s);
+    int nc = v.Length()/nr;
+    ReDimension(nr,nc);
+    this->TreatAsVector() = v;
     }
