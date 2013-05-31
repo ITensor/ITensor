@@ -84,7 +84,8 @@ init_()
     const int Ns = model_.N(),
               kpm = Ny_,
               kd = Ny_+2,
-              k = kd+2*kpm;
+              //k = kd+2*kpm,
+              start = 2;
 
     std::vector<IQIndex> links(Ns+1);
 
@@ -121,21 +122,21 @@ init_()
         //
         W += model_.sz(n) * row(3) * col(1);
         //Horizontal bonds
-        W += model_.sz(n) * row(2) * col(kd) * Jz_;
+        W += model_.sz(n) * row(start) * col(kd) * Jz_;
 
         //
         //S+ S- terms
         //
         W += model_.sm(n) * row(kd+1) * col(1);
         //Horizontal bonds
-        W += model_.sp(n) * row(2) * col(kd+kpm) * J_/2;
+        W += model_.sp(n) * row(start) * col(kd+kpm) * J_/2;
 
         //
         //S- S+ terms
         //
         W += model_.sp(n) * row(kd+kpm+1) * col(1);
         //Horizontal bonds
-        W += model_.sm(n) * row(2) * col(kd+2*kpm) * J_/2;
+        W += model_.sm(n) * row(start) * col(kd+2*kpm) * J_/2;
 
         //Add boundary field if requested
         const int x = (n-1)/Ny_+1, y = (n-1)%Ny_+1;
@@ -144,7 +145,7 @@ init_()
             Real eff_h = Boundary_h_;
             if(J_ > 0) eff_h *= (x%2==1 ? -1 : 1)*(y%2==1 ? -1 : 1);
             //cerr << format("Doing a staggered bf of %.2f at site %d (%d,%d)\n")%eff_h%n%x%y;
-            W += model_.sz(n) * ITensor(row(k),col(1)) * eff_h;
+            W += model_.sz(n) * row(start) * col(1) * eff_h;
             }
 
         //The following only apply if Ny_ > 1:
@@ -160,21 +161,21 @@ init_()
         //Periodic BC bond (only for width 3 ladders or greater)
         if(y == 1 && Ny_ >= 3)
             {
-            W += model_.sz(n) * row(k) * col(kd-1) * J_;
-            W += model_.sm(n) * row(k) * col(kd+kpm-1) * J_/2;
-            W += model_.sp(n) * row(k) * col(kd+2*kpm-1) * J_/2;
+            W += model_.sz(n) * row(start) * col(kd-1) * Jz_;
+            W += model_.sp(n) * row(start) * col(kd+kpm-1) * J_/2;
+            W += model_.sm(n) * row(start) * col(kd+2*kpm-1) * J_/2;
             }
 
         //N.N. bond along column
         if(y != Ny_)
             {
-            W += model_.sz(n) * row(k) * col(3) * J_;
-            W += model_.sm(n) * row(k) * col(kd+1) * J_/2;
-            W += model_.sp(n) * row(k) * col(kd+kpm+1) * J_/2;
+            W += model_.sz(n) * row(start) * col(3) * J_;
+            W += model_.sp(n) * row(start) * col(kd+1) * J_/2;
+            W += model_.sm(n) * row(start) * col(kd+kpm+1) * J_/2;
             }
         }
 
-    H.Anc(1) *= IQTensor(links.at(0)(2));
+    H.Anc(1) *= IQTensor(links.at(0)(start));
     H.Anc(Ns) *= IQTensor(conj(links.at(Ns))(1));
 
     initted_ = true;
