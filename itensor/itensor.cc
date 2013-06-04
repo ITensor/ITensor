@@ -1856,8 +1856,13 @@ operator*=(const ITensor& other)
         }
 #endif
 
+    //Using a long int here because int was overflowing
+    long int complexity = props.odimL;
+    complexity *= props.cdim;
+    complexity *= props.odimR;
+    
     const
-    bool do_matrix_multiply = (props.odimL*props.cdim*props.odimR) > 1000;
+    bool do_matrix_multiply = (complexity > 1000);
 
     MatrixRefNoLink lref, rref;
     bool L_is_matrix,R_is_matrix;
