@@ -169,4 +169,30 @@ TEST(AddIndex)
     CHECK_EQUAL(P->r(),3);
     }
 
+TEST(Contraction)
+    {
+    IQIndexSet is1(S1,L1,L3),
+               is2(L1,L2,L3,S2);
+
+    IQIndexSet res = is1 * is2;
+
+    CHECK(hasindex(res,S1));
+    CHECK(!hasindex(res,L1));
+    CHECK(!hasindex(res,L3));
+    CHECK(hasindex(res,L2));
+    CHECK(hasindex(res,S2));
+
+    IndexSet<Index> is3(s1u,l1u,l2uu,s1d),
+                    is4(s1d,s2u,l2dd,l1u);
+
+    IndexSet<Index> res2 = is3 * is4;
+
+    CHECK(hasindex(res2,s1u));
+    CHECK(!hasindex(res2,l1u));
+    CHECK(hasindex(res2,l2uu));
+    CHECK(!hasindex(res2,s1d));
+    CHECK(hasindex(res2,s2u));
+    CHECK(hasindex(res2,l2dd));
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

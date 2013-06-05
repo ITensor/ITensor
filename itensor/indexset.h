@@ -116,6 +116,16 @@ class IndexSet
     mapprime(int plevold, int plevnew, IndexType type = All);
 
     //
+    // Operators
+    //
+
+    //Contraction - just like tensor contraction but only the indices,
+    //no data involved. Result is disjoint union of this and other
+    //(this U other - this N other, where N is intersection).
+    IndexSet
+    operator*(const IndexSet& other) const;
+
+    //
     // Other Methods
     //
 
@@ -415,6 +425,88 @@ mapprime(int plevold, int plevnew, IndexType type)
         }
 	}
 
+template <class IndexT>
+IndexSet<IndexT> inline IndexSet<IndexT>::
+operator*(const IndexSet& other) const
+    {
+    IndexSet<IndexT> res;
+
+    //Loop over m!=1 indices of this
+    for(int i = 0; i < rn_; ++i)
+        {
+        const IndexT& I = index_[i];
+        //Loop over m!=1 indices of other
+        bool found = false;
+        for(int j = 0; j < other.rn_; ++j)
+            {
+            if(I == other.index_[j])
+                {
+                found = true;
+                break;
+                }
+            }
+        if(!found) 
+            res.addindex(I);
+        }
+
+    //Loop over m!=1 indices of other
+    for(int j = 0; j < other.rn_; ++j)
+        {
+        const IndexT& J = other.index_[j];
+        //Loop over m!=1 indices of other
+        bool found = false;
+        for(int i = 0; i < rn_; ++i)
+            {
+            if(J == index_[i])
+                {
+                found = true;
+                break;
+                }
+            }
+        if(!found) 
+            res.addindex(J);
+        }
+
+    //Loop over m==1 indices of this
+    for(int i = rn_; i < r_; ++i)
+        {
+        const IndexT& I = index_[i];
+        //Loop over m==1 indices of other
+        bool found = false;
+        for(int j = other.rn_; j < other.r_; ++j)
+            {
+            if(I == other.index_[j])
+                {
+                found = true;
+                break;
+                }
+            }
+        if(!found) 
+            res.addindex(I);
+        }
+
+    //Loop over m!=1 indices of other
+    for(int j = other.rn_; j < other.r_; ++j)
+        {
+        const IndexT& J = other.index_[j];
+        //Loop over m!=1 indices of other
+        bool found = false;
+        for(int i = rn_; i < r_; ++i)
+            {
+            if(J == index_[i])
+                {
+                found = true;
+                break;
+                }
+            }
+        //Cout << (found ? "found" : "did not find") << "J = " << J << Endl;
+        if(!found) 
+            res.addindex(J);
+        }
+
+    return res;
+    }
+
 
 //
 // Methods for Manipulating IndexSets
@@ -429,13 +521,15 @@ addindex(const IndexT& I)
         Error("Maximum number of indices reached");
     if(I == IndexT::Null())
         Error("Index is null");
-    for(int j = (I.m()==1?rn_:0); j < r_; ++j)
+    for(int j = (I.m()==1 ? rn_ : 0); j < r_; ++j)
+        {
         if(index_[j] == I)
             {
             Print(*this);
             Print(I);
             Error("Adding Index twice");
             }
+        }
 #endif
     if(I.m() == 1)
         {
