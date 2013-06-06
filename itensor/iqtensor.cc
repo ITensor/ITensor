@@ -1430,6 +1430,16 @@ solo()
     dat.solo();
     }
 
+IQTensor
+realPart(const IQTensor& T)
+    {
+    }
+
+IQTensor
+imagPart(const IQTensor& T)
+    {
+    }
+
 
 Real 
 Dot(IQTensor x, const IQTensor& y)

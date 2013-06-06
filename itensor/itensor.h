@@ -41,7 +41,7 @@ class ITensor
 
     //true if ITensor is default constructed
     bool 
-    isNull() const { return !bool(p); }
+    isNull() const { return !bool(r_); }
 
     //Enables looping over Indices in a Foreach
     //e.g. Foreach(const Index& I, t.index() ) { ... }
@@ -224,8 +224,8 @@ class ITensor
 
     //Get scalar value of rank 0 ITensor
     //Throws ITError if r() != 0
-    void
-    toComplex(Real& re, Real& im) const;
+    Complex
+    toComplex() const;
 
     // IndexVal element access
     // Given iv1 = (I1,n1), iv2 = (I2,n2), ...
@@ -549,7 +549,8 @@ class ITensor
     //
 
     //Pointer to ITDat containing tensor data
-    boost::shared_ptr<ITDat> p; 
+    boost::shared_ptr<ITDat> r_, //real part
+                             i_; //imag part
 
     //Indices, maximum of 8
     IndexSet<Index> is_;
@@ -587,6 +588,9 @@ class ITensor
               const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
         const;
+
+    friend ITensor realPart(const ITensor& T);
+    friend ITensor imagPart(const ITensor& T);
 
     friend class commaInit;
 
@@ -742,8 +746,8 @@ Dot(const ITensor& x, const ITensor& y);
 // (except it yields two real numbers, re and im,
 // instead of a rank 0 ITensor).
 //
-void 
-BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im);
+Complex 
+BraKet(const ITensor& x, const ITensor& y);
 
 //
 // Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
@@ -918,33 +922,26 @@ tieIndices(Tensor T,
     return T; 
     }
 
-template<class Tensor>
-Tensor
-realPart(const Tensor& T)
+ITensor
+realPart(const ITensor& T)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
     if(!T.isComplex())
         return T;
     //else
-    Tensor re(T);
-    re.prime(ReIm);
-	re *= primed(Tensor::ReImIndex()(1),ReIm);
+    ITensor re(T);
+    re.i_.reset();
     return re;
     }
 
-template<class Tensor>
-Tensor
-imagPart(const Tensor& T)
+ITensor
+imagPart(const ITensor& T)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
     if(!T.isComplex())
         return (0*T);
     //else
-    Tensor im(T);
-    im.prime(ReIm);
-	im *= primed(Tensor::ReImIndex()(2),ReIm);
+    ITensor im(T);
+    im.r_.swap(im.i_);
+    im.i_.reset();
     return im;
     }
 

@@ -660,6 +660,11 @@ mapElems(const Callable& f)
     return *this;
     }
 
+IQTensor
+realPart(const IQTensor& T);
+
+IQTensor
+imagPart(const IQTensor& T);
 
 //
 // Computes the scalar/inner/dot product of two
