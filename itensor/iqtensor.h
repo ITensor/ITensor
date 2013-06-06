@@ -390,9 +390,6 @@ class IQTensor
     void 
     assignToVec(VectorRef v) const;
 
-    void 
-    assignFromVec(VectorRef v);
-
     Real
     toReal() const;
 

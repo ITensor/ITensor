@@ -1030,24 +1030,7 @@ assignToVec(VectorRef v) const
     v *= scale_.real();
     }
 
-void ITensor::
-assignFromVec(const VectorRef& v)
-    {
-    ITENSOR_CHECK_NULL
-    if(r_->v.Length() != v.Length()) 
-        Error("ITensor::assignToVec bad size");
-    if(this->isComplex())
-        Error("assignFromVec not defined for complex ITensor");
-    scale_ = 1;
-    if(!r_.unique())
-        { 
-        r_ = boost::make_shared<ITDat>();
-        }
-    r_->v = v;
-    }
-
-void ITensor::
-reshapeDat(const Permutation& P, const Vector& dat, Vector& res) const
+reshapeDat(const Permutation& P, Vector& rdat) const
     {
     ITENSOR_CHECK_NULL
 

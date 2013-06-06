@@ -894,21 +894,6 @@ assignToVec(VectorRef v) const
 	}
 
 void IQTensor::
-assignFromVec(VectorRef v)
-	{
-	dat.solo();
-	if(vecSize() != v.Length())
-	    Error("bad size");
-	int off = 1;
-    Foreach(ITensor& t, dat.nc())
-	    {
-	    int d = t.vecSize();
-	    t.assignFromVec(v.SubVector(off,off+d-1));
-	    off += d;
-	    }
-	}
-
-void IQTensor::
 randomize() 
 	{ 
     if(isNull())
