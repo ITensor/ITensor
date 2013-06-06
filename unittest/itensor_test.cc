@@ -1084,7 +1084,10 @@ TEST(ToFromMatrix11)
     Index link("link",4);
 
     ITensor T(link,a1);
-    T.assignFromVec(V);
+    T(link(1),a1(1)) = V(1);
+    T(link(2),a1(1)) = V(2);
+    T(link(3),a1(1)) = V(3);
+    T(link(4),a1(1)) = V(4);
 
     Matrix M41(4,1), M14(1,4);
     

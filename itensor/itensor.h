@@ -399,9 +399,6 @@ class ITensor
     assignToVec(VectorRef v) const;
 
     void 
-    assignFromVec(const VectorRef& v);
-
-    void 
     reshapeDat(const Permutation& p, Vector& rdat) const;
 
     //In-place version of reshapeDat. Does not re-order indices
@@ -476,6 +473,9 @@ class ITensor
     ReImIndex() { return Index::IndReIm(); }
 
     //Deprecated methods --------------------------
+
+    //void 
+    //assignFromVec(const VectorRef& v);
 
     // Iterate over ITensor::indices() instead
     // Or use iterators indices().begin() and indices().end()

@@ -950,20 +950,6 @@ assignToVec(VectorRef v) const
     }
 
 void ITensor::
-assignFromVec(const VectorRef& v)
-    {
-    ITENSOR_CHECK_NULL
-    if(p->v.Length() != v.Length()) 
-	Error("ITensor::assignToVec bad size");
-    scale_ = 1;
-    if(!p.unique())
-        { 
-        p = boost::make_shared<ITDat>();
-        }
-    p->v = v;
-    }
-
-void ITensor::
 reshapeDat(const Permutation& P, Vector& rdat) const
     {
     ITENSOR_CHECK_NULL
