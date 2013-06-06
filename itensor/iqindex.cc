@@ -72,12 +72,6 @@ class IQIndexDat
 
     static const IQIndexDatPtr& Null();
 
-    static const IQIndexDatPtr& ReImDat();
-
-    static const IQIndexDatPtr& ReImDatP();
-
-    static const IQIndexDatPtr& ReImDatPP();
-
     void
     makeCopyOf(const IQIndexDat& other);
 
@@ -165,27 +159,6 @@ Null()
     {
     static IQIndexDatPtr Null_ = boost::make_shared<IQIndexDat>(Index::Null(),QN());
     return Null_;
-    }
-
-const IQIndexDatPtr& IQIndexDat::
-ReImDat()
-    {
-    static IQIndexDatPtr ReImDat_ = boost::make_shared<IQIndexDat>(Index::IndReIm(),QN());
-    return ReImDat_;
-    }
-
-const IQIndexDatPtr& IQIndexDat::
-ReImDatP()
-    {
-    static IQIndexDatPtr ReImDatP_ = boost::make_shared<IQIndexDat>(Index::IndReImP(),QN());
-    return ReImDatP_;
-    }
-
-const IQIndexDatPtr& IQIndexDat::
-ReImDatPP()
-    {
-    static IQIndexDatPtr ReImDatPP_ = boost::make_shared<IQIndexDat>(Index::IndReImPP(),QN());
-    return ReImDatPP_;
     }
 
 //
@@ -522,28 +495,6 @@ Null()
     static const IQIndex Null_(Index::Null(),IQIndexDat::Null());
     return Null_;
     }
-
-const IQIndex& IQIndex::
-IndReIm()
-    {
-    static const IQIndex IndReIm_(Index::IndReIm(),IQIndexDat::ReImDat());
-    return IndReIm_;
-    }
-
-const IQIndex& IQIndex::
-IndReImP()
-    {
-    static const IQIndex IndReImP_(Index::IndReImP(),IQIndexDat::ReImDatP());
-    return IndReImP_;
-    }
-
-const IQIndex& IQIndex::
-IndReImPP()
-    {
-    static const IQIndex IndReImPP_(Index::IndReImPP(),IQIndexDat::ReImDatPP());
-    return IndReImPP_;
-    }
-
 
 void
 calc_ind_ii(const IQIndexVal& iv, int& j, int& ii)

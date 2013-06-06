@@ -122,6 +122,9 @@ class IQTensor
     bool 
     isNull() const;
 
+    bool
+    isComplex() const;
+
     //Returns object containing ITensor blocks
     //The ITensors can be iterated over using a Foreach
     //For example, given an IQTensor T,
@@ -131,6 +134,12 @@ class IQTensor
     
     const IndexSet<IQIndex>& 
     indices() const { return *is_; }
+
+    IQTensor&
+    takeRealPart();
+
+    IQTensor&
+    takeImagPart();
 
 
     //----------------------------------------------------
@@ -393,8 +402,8 @@ class IQTensor
     Real
     toReal() const;
 
-    void 
-    toComplex(Real& re, Real& im) const;
+    Complex 
+    toComplex() const;
     
     void 
     randomize();
@@ -657,11 +666,6 @@ mapElems(const Callable& f)
     return *this;
     }
 
-IQTensor
-realPart(const IQTensor& T);
-
-IQTensor
-imagPart(const IQTensor& T);
 
 //
 // Computes the scalar/inner/dot product of two
@@ -687,8 +691,8 @@ Dot(IQTensor x, const IQTensor& y);
 // (except it yields two real numbers, re and im,
 // instead of a rank 0 IQTensor).
 //
-void 
-BraKet(IQTensor x, const IQTensor& y, Real& re, Real& im);
+Complex 
+BraKet(IQTensor x, const IQTensor& y);
 
 //Compute divergence of IQTensor T
 //

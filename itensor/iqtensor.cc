@@ -192,7 +192,20 @@ scaleTo(const LogNumber& newscale)
 //
 
 bool IQTensor::
-isNull() const { return &dat() == IQTDat::Null().get(); }
+isNull() const 
+    { 
+    return &dat() == IQTDat::Null().get(); 
+    }
+
+bool IQTensor::
+isComplex() const
+    {
+    Foreach(const ITensor& t, dat())
+        {
+        if(t.isComplex()) return true;
+        }
+    return false;
+    }
 
 int IQTensor::
 r() const 
@@ -940,7 +953,7 @@ randomize()
 void IQTensor::
 conj()
     {
-    if(!isComplex(*this))
+    if(!this->isComplex())
         {
         soloIndex();
         is_->conj();
@@ -1265,19 +1278,16 @@ operator/=(const IQTensor& other)
 
 //Extracts the real and imaginary parts of the 
 //component of a rank 0 tensor (scalar)
-void IQTensor::
-toComplex(Real& re, Real& im) const
+Complex IQTensor::
+toComplex() const
     {
-    if(isComplex(*this))
+    if(this->isComplex())
         {
-        re = realPart(*this).toReal();
-        im = imagPart(*this).toReal();
+        Real re = realPart(*this).toReal();
+        Real im = imagPart(*this).toReal();
+        return Complex(re,im);
         }
-    else
-        {
-        re = toReal();
-        im = 0;
-        }
+    return Complex(toReal(),0);
     }
 
 Real IQTensor::
@@ -1321,19 +1331,6 @@ operator+=(const IQTensor& other)
         */
 
     IQTensor& This = *this;
-
-    const bool complex_this = isComplex(*this);
-    const bool complex_other = isComplex(other);
-    if(!complex_this && complex_other)
-        {
-        operator*=(IQComplex_1());
-        return operator+=(other);
-        }
-    else
-    if(complex_this && !complex_other)
-        {
-        return operator+=(other * IQComplex_1());
-        }
 
     if(fabs(This.uniqueReal()-other.uniqueReal()) > 1.0e-11) 
         {
@@ -1415,14 +1412,26 @@ solo()
     dat.solo();
     }
 
-IQTensor
-realPart(const IQTensor& T)
+IQTensor& IQTensor::
+takeRealPart(const IQTensor& T)
     {
+    dat.solo();
+    Foreach(ITensor& t, dat.nc())
+        {
+        t.takeRealPart();
+        }
+    return *this;
     }
 
-IQTensor
-imagPart(const IQTensor& T)
+IQTensor& IQTensor::
+takeImagPart(const IQTensor& T)
     {
+    dat.solo();
+    Foreach(ITensor& t, dat.nc())
+        {
+        t.takeImagPart();
+        }
+    return *this;
     }
 
 
@@ -1438,12 +1447,12 @@ Dot(IQTensor x, const IQTensor& y)
     return x.toReal();
     }
 
-void 
-BraKet(IQTensor x, const IQTensor& y, Real& re, Real& im)
+Complex 
+BraKet(IQTensor x, const IQTensor& y)
     {
     x.conj();
     x *= y;
-    x.toComplex(re,im);
+    return x.toComplex();
     }
 
 
