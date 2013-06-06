@@ -355,37 +355,6 @@ IQTensor(std::istream& s)
     read(s); 
     }
 
-const IQTensor& IQTensor::
-Complex_1()
-    {
-    static const IQTensor Complex_1_(IQIndex::IndReIm()(1));
-    return Complex_1_;
-    }
-
-const IQTensor& IQTensor::
-Complex_i()
-    {
-    static const IQTensor Complex_i_(IQIndex::IndReIm()(2));
-    return Complex_i_;
-    }
-
-IQTensor
-IQmakeComplexProd()
-    {
-    IQTensor iqprod(IQIndex::IndReIm(),
-                    IQIndex::IndReImP(),
-                    IQIndex::IndReImPP());
-
-    iqprod += ITensor::ComplexProd();
-    return iqprod;
-    }
-
-const IQTensor& IQTensor::
-ComplexProd()
-    {
-    static const IQTensor ComplexProd_(IQmakeComplexProd());
-    return ComplexProd_;
-    }
 
 void IQTensor::
 read(std::istream& s)
@@ -1026,7 +995,6 @@ operator<<(std::ostream & s, const IQTensor& T)
         s << "  ";
         Foreach(const Index& i, t.indices())
             {
-            if(i.type() == ReIm) continue;
             const IQIndex& I = findIQInd(T,i);
             s << i.name() << ":" << qn(I,i) << "<" << I.dir() << "> ";
             }
@@ -1053,14 +1021,6 @@ operator*=(const IQTensor& other)
     if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    if(hasindex(*this,IQIndex::IndReIm()) && hasindex(other,IQIndex::IndReIm()) && !hasindex(other,IQIndex::IndReImP())
-	    && !hasindex(other,IQIndex::IndReImPP()) && !hasindex(*this,IQIndex::IndReImP()) && !hasindex(*this,IQIndex::IndReImPP()))
-        {
-        this->prime(ReIm);
-        operator*=(ComplexProd() * primed(other,ReIm,2));
-        return *this;
-        }
-
     solo();
 
     set<ApproxReal> common_inds;
@@ -1078,7 +1038,7 @@ operator*=(const IQTensor& other)
             //Check that arrow directions are compatible
             if(Global::checkArrows())
                 {
-                if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
+                if(f->dir() == I.dir())
                     {
                     Print(this->indices());
                     Print(other.indices());
@@ -1202,17 +1162,6 @@ operator/=(const IQTensor& other)
     if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    if(hasindex(*this,IQIndex::IndReIm())   && hasindex(other,IQIndex::IndReIm()) &&
-      !hasindex(*this,IQIndex::IndReImP())  && !hasindex(other,IQIndex::IndReImP()) &&
-      !hasindex(*this,IQIndex::IndReImPP()) && !hasindex(other,IQIndex::IndReImPP()))
-        {
-        prime(ReIm,1);
-        operator/=(primed(other,ReIm,2));
-        operator*=(ComplexProd());
-        return *this;
-        }
-
-
     set<ApproxReal> common_inds;
     
     array<IQIndex,NMAX> riqind_holder;
@@ -1226,7 +1175,7 @@ operator/=(const IQTensor& other)
             {
             //Check that arrow directions are compatible
             if(Global::checkArrows())
-                if(f->dir() != I.dir() && f->type() != ReIm && I.type() != ReIm)
+                if(f->dir() != I.dir())
                     {
                     Print(this->indices());
                     Print(other.indices());

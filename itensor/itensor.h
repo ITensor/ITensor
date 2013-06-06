@@ -127,23 +127,6 @@ class ITensor
     explicit
     ITensor(std::istream& s) { read(s); }
 
-    static 
-    const ITensor& 
-    Complex_1();
-
-    static 
-    const ITensor& 
-    Complex_i();
-
-    static 
-    const ITensor& 
-    ConjTensor();
-
-    static 
-    const ITensor&
-    ComplexProd();
-
-        
     //Read in ITensor from binary stream s
     void 
     read(std::istream& s);
@@ -471,10 +454,6 @@ class ITensor
     typedef ITSparse
     SparseT;
 
-    static 
-    const Index& 
-    ReImIndex() { return Index::IndReIm(); }
-
     //Deprecated methods --------------------------
 
     // Iterate over ITensor::indices() instead
@@ -618,14 +597,6 @@ class ITensor
 
     }; // class ITensor
 
-
-inline
-const ITensor&
-Complex_1() { return ITensor::Complex_1(); }
-
-inline
-const ITensor&
-Complex_i() { return ITensor::Complex_i(); }
 
 
 class commaInit
@@ -848,13 +819,6 @@ hasindex(const Tensor& T, const typename Tensor::IndexT& I)
     return hasindex(T.indices(),I);
     }
 
-template <class Tensor>
-bool 
-isComplex(const Tensor& T)
-    { 
-    return hasindex(T.indices(),Tensor::ReImIndex());
-    }
-
 //
 // Given Tensors which represent operator matrices
 // (e.g. A(site1',site1), B(site1',site1) )
@@ -960,7 +924,7 @@ realPart(const Tensor& T)
     {
     typedef typename Tensor::IndexT
     IndexT;
-    if(!isComplex(T))
+    if(!T.isComplex())
         return T;
     //else
     Tensor re(T);
@@ -975,7 +939,7 @@ imagPart(const Tensor& T)
     {
     typedef typename Tensor::IndexT
     IndexT;
-    if(!isComplex(T))
+    if(!T.isComplex())
         return (0*T);
     //else
     Tensor im(T);
@@ -991,7 +955,7 @@ template <class Tensor>
 Real
 trace(Tensor T)
     {
-    if(isComplex(T))
+    if(T.isComplex())
         {
         Error("ITensor is complex, use trace(T,re,im)");
         }
@@ -1006,7 +970,7 @@ template<class Tensor>
 void
 trace(const Tensor& T, Real& re, Real& im)
     {
-    if(!isComplex(T))
+    if(!T.isComplex())
         {
         re = trace(T);
         im = 0;

@@ -101,18 +101,6 @@ class IQTensor
     explicit 
     IQTensor(std::istream& s);
 
-    static 
-    const IQTensor& 
-    Complex_1();
-
-    static 
-    const IQTensor& 
-    Complex_i();
-
-    static 
-    const IQTensor& 
-    ComplexProd();
-
     //Accessor Methods ------------------------------------------
 
     //Rank of this IQTensor (number of IQIndices)
@@ -443,10 +431,6 @@ class IQTensor
     void 
     write(std::ostream& s) const;
 
-    static 
-    const IQIndex& 
-    ReImIndex() { return IQIndex::IndReIm(); }
-
     //Deprecated methods --------------------------
 
     //Use realPart(T) and imagPart(T) instead
@@ -523,15 +507,6 @@ class IQTensor
     solo();
 
     }; //class IQTensor
-
-inline
-const IQTensor&
-IQComplex_1() { return IQTensor::Complex_1(); }
-
-inline
-const IQTensor&
-IQComplex_i() { return IQTensor::Complex_i(); }
-
 
 class IQTDat : public boost::noncopyable
     {
