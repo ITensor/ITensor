@@ -820,11 +820,9 @@ checkOrtho(int i, bool left) const
 
     Tensor Diff = rho - Delta;
 
-    Vector diff(Diff.vecSize());
-    Diff.assignToVec(diff);
-
+    const
     Real threshold = 1E-13;
-    if(Norm(diff) < threshold) return true;
+    if(Diff.norm() < threshold) return true;
 
     //Print any helpful debugging info here:
     std::cerr << "checkOrtho: on line " << __LINE__ 
@@ -832,8 +830,8 @@ checkOrtho(int i, bool left) const
     std::cerr << "checkOrtho: Tensor at position " << i 
               << " failed to be " << (left ? "left" : "right") 
               << " ortho." << std::endl;
-    std::cerr << "checkOrtho: Norm(diff) = " << boost::format("%E") 
-              % Norm(diff) << std::endl;
+    std::cerr << "checkOrtho: Diff.norm() = " << boost::format("%E") 
+              % Diff.norm() << std::endl;
     std::cerr << "checkOrtho: Error threshold set to " 
               << boost::format("%E") % threshold << std::endl;
     //-----------------------------
