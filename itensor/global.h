@@ -278,10 +278,47 @@ class Global
         static bool checkArrows_ = true;
         return checkArrows_;
         }
+    //Global option set
     static OptSet&
     opts()
         {
         return OptSet::GlobalOpts();
+        }
+    //Shortcut for adding global Opts,
+    //so you don't have to write Global::opts().add(Opt("MyOption",3));
+    //but just Global::opts(Opt("MyOption",3));
+    //Also see name,val shortcuts below.
+    void static
+    opts(const Opt& o)
+        {
+        OptSet::GlobalOpts().add(o);
+        }
+    //Get a global Opt by just providing its name
+    Opt static
+    opts(const Opt::Name& name)
+        {
+        return OptSet::GlobalOpts().get(name);
+        }
+    //Set global opts by providing their name and value
+    void static
+    opts(const Opt::Name& name, bool bval)
+        {
+        OptSet::GlobalOpts().add(name,bval);
+        }
+    void static
+    opts(const Opt::Name& name, int ival)
+        {
+        OptSet::GlobalOpts().add(name,ival);
+        }
+    void static
+    opts(const Opt::Name& name, Real rval)
+        {
+        OptSet::GlobalOpts().add(name,rval);
+        }
+    void static
+    opts(const Opt::Name& name, const std::string& sval)
+        {
+        OptSet::GlobalOpts().add(name,sval);
         }
     };
 
