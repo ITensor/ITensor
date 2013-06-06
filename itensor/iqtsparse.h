@@ -63,9 +63,6 @@ class IQTSparse
     isNull() const;
 
     bool
-    isNotNull() const;
-
-    bool
     isDiag() const { return true; }
 
     const IQTSDat&
@@ -73,6 +70,9 @@ class IQTSparse
 
     const IndexSet<IQIndex>& 
     indices() const { return *is_; }
+
+    bool
+    isComplex() const;
 
     //
     // Operators
@@ -209,10 +209,6 @@ class IQTSparse
 
     typedef Combiner 
     CombinerT;
-
-    static 
-    const IQIndex& 
-    ReImIndex() { return IQIndex::IndReIm(); }
 
     private:
 

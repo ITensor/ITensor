@@ -1126,15 +1126,14 @@ expandIndex(const Index& small, const Index& big, int start)
                               is_[4].m()-1,is_[5].m()-1, 
                               is_[6].m()-1,is_[7].m()-1);
 
-    boost::shared_ptr<ITDat> oldp(p);
+    boost::shared_ptr<ITDat> oldr(r_);
     allocate(newinds.dim());
 
     const
-    int omax = oldp->v.Length();
+    int omax = oldr->v.Length();
 
-    const Real* const olddat = oldp->v.Store();
-    Real* const newdat = p->v.Store();
-
+    const Real* const olddat = oldr->v.Store();
+    Real* const newdat = r_->v.Store();
 
 	if(nmax == omax)
 	    {
@@ -1150,6 +1149,30 @@ expandIndex(const Index& small, const Index& big, int start)
                                     c.i[5],c.i[6],
                                     c.i[7],c.i[8])]
             = olddat[c.ind];
+            }
+        }
+
+    if(this->isComplex())
+        {
+        boost::shared_ptr<ITDat> oldi(i_);
+        allocateImag(newinds.dim());
+        const Real* const oldidat = oldi->v.Store();
+        Real* const newidat = i_->v.Store();
+        if(nmax == omax)
+            {
+            std::copy(oldidat,oldidat+omax,newidat+inc);
+            }
+        else
+            {
+            Counter c(is_);
+            for(; c.notDone(); ++c)
+                {
+                newidat[inc+_ind(newinds,c.i[1],c.i[2],
+                                         c.i[3],c.i[4],
+                                         c.i[5],c.i[6],
+                                         c.i[7],c.i[8])]
+                = oldidat[c.ind];
+                }
             }
         }
 
@@ -1679,30 +1702,53 @@ operator/=(const ITensor& other)
         if(other.isComplex())
             {
             //Both complex
-            TODO need to handle scale factors
+            ITensor rt(*this),
+                    it(*this),
+                    ro(other),
+                    io(other);
+            rt.takeRealPart();
+            it.takeImagPart();
+            ro.takeRealPart();
+            io.takeImagPart();
+
+            ITensor rr = rt / ro;
+            rr -= it / io;
+
+            ITensor ir = rt / io;
+            ir += it / ro;
+
+            ir.scaleTo(rr.scale_);
+            scale_ = rr.scale_;
+
+            r_.swap(rr.r_);
+            i_.swap(ir.r_);
+
             return *this;
             }
         else
             {
-            //Only this complex
-            ITensor rr = realPart(*this);
+            //This complex, other real
+            ITensor rr(*this);
+            rr.takeRealPart();
             rr /= other;
-            ITensor ir = imagPart(*this);
+            ITensor ir(*this);
+            ir.takeImagPart();
             ir /= other;
+            ir.scaleTo(rr.scale_);
+            scale_ = rr.scale_;
             r_.swap(rr.r_);
             i_.swap(ir.r_);
-            TODO need to handle scale factors
             return *this;
             }
         }
     else
     if(other.isComplex())
         {
-        //Only other complex
+        //This real, other complex
+        ITensor ri = operator/(*this,imagPart(other));
         operator/=(realPart(other));
-        ITensor ri = (*this)*imagPart(other);
+        ri.scaleTo(scale_);
         i_.swap(ri.r_);
-        TODO need to handle scale factors
         return *this;
         }
 
@@ -1900,30 +1946,53 @@ operator*=(const ITensor& other)
         if(other.isComplex())
             {
             //Both complex
-            TODO need to handle scale factors
+            ITensor rt(*this),
+                    it(*this),
+                    ro(other),
+                    io(other);
+            rt.takeRealPart();
+            it.takeImagPart();
+            ro.takeRealPart();
+            io.takeImagPart();
+
+            ITensor rr = rt * ro;
+            rr -= it * io;
+
+            ITensor ir = rt * io;
+            ir += it * ro;
+
+            ir.scaleTo(rr.scale_);
+            scale_ = rr.scale_;
+
+            r_.swap(rr.r_);
+            i_.swap(ir.r_);
+
             return *this;
             }
         else
             {
-            //Only this complex
-            ITensor rr = realPart(*this);
-            rr /= other;
-            ITensor ir = imagPart(*this);
-            ir /= other;
+            //This complex, other real
+            ITensor rr(*this);
+            rr.takeRealPart();
+            rr *= other;
+            ITensor ir(*this);
+            ir.takeImagPart();
+            ir *= other;
+            ir.scaleTo(rr.scale_);
+            scale_ = rr.scale_;
             r_.swap(rr.r_);
             i_.swap(ir.r_);
-            TODO need to handle scale factors
             return *this;
             }
         }
     else
     if(other.isComplex())
         {
-        //Only other complex
-        operator/=(realPart(other));
-        ITensor ri = (*this)*imagPart(other);
+        //This real, other complex
+        ITensor ri = operator*(*this,imagPart(other));
+        operator*=(realPart(other));
+        ri.scaleTo(scale_);
         i_.swap(ri.r_);
-        TODO need to handle scale factors
         return *this;
         }
 

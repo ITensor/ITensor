@@ -87,6 +87,9 @@ class ITSparse
     const IndexSet<Index>&
     indices() const { return is_; }
 
+    bool
+    isComplex() const { return false; }
+
     //
     // Operators
     //

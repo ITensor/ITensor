@@ -404,7 +404,7 @@ class IQTensor
 
     Complex 
     toComplex() const;
-    
+
     void 
     randomize();
 

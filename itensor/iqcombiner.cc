@@ -72,7 +72,6 @@ init(string rname, IndexType type,
         //Prefer to derive right Arrow from Link indices
         Foreach(const IQIndex& J, left_)
             {
-            if(J.type() == ReIm) continue; 
             rdir = -J.dir(); 
             break;
             }

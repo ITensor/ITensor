@@ -1413,7 +1413,7 @@ solo()
     }
 
 IQTensor& IQTensor::
-takeRealPart(const IQTensor& T)
+takeRealPart()
     {
     dat.solo();
     Foreach(ITensor& t, dat.nc())
@@ -1424,7 +1424,7 @@ takeRealPart(const IQTensor& T)
     }
 
 IQTensor& IQTensor::
-takeImagPart(const IQTensor& T)
+takeImagPart()
     {
     dat.solo();
     Foreach(ITensor& t, dat.nc())
