@@ -599,6 +599,9 @@ class ITensor
 
     void 
     soloImag();
+
+    void
+    equalizeScales(ITensor& other);
     
     friend struct ProductProps;
 

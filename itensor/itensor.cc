@@ -435,8 +435,13 @@ takeRealPart()
 ITensor& ITensor::
 takeImagPart()
     {
+    ITENSOR_CHECK_NULL
     //TODO: account for complex scale fac
     r_.swap(i_);
+    if(!r_)
+        {
+        allocate(i_->v.Length());
+        }
     i_.reset();
     return *this;
     }
@@ -1271,6 +1276,7 @@ sumels() const
 Real ITensor::
 normNoScale() const 
     { 
+    ITENSOR_CHECK_NULL
     if(!this->isComplex())
         {
         return Norm(r_->v);
@@ -1339,9 +1345,9 @@ scaleOutNorm()
         if(i_) i_->v *= 1./f;
         scale_ *= f; 
         }
-    else
+    else //norm == zero
         {
-        scale_ = LogNumber(0.0);
+        scale_ = LogNumber(1.);
         i_.reset();
         }
     }
@@ -1414,6 +1420,21 @@ solo()
     {
     soloReal();
     soloImag();
+    }
+
+void ITensor::
+equalizeScales(ITensor& other)
+    {
+    if(scale_.sign() != 0)
+        {
+        other.scaleTo(scale_);
+        }
+    else //*this is equivalent to zero
+        {
+        soloReal();
+        r_->v *= 0;
+        scale_ = other.scale_;
+        }
     }
 
 ITensor& ITensor::
@@ -1749,7 +1770,7 @@ operator/=(const ITensor& other)
             ITensor ir = rt / io;
             ir += it / ro;
 
-            ir.scaleTo(scale_);
+            equalizeScales(ir);
 
             i_.swap(ir.r_);
 
@@ -1764,10 +1785,10 @@ operator/=(const ITensor& other)
             ITensor ir(*this);
             ir.takeImagPart();
             ir /= other;
-            ir.scaleTo(rr.scale_);
-            scale_ = rr.scale_;
+            rr.equalizeScales(ir);
             r_.swap(rr.r_);
             i_.swap(ir.r_);
+            scale_ = rr.scale_;
             is_.swap(rr.is_);
             return *this;
             }
@@ -1777,8 +1798,9 @@ operator/=(const ITensor& other)
         {
         //This real, other complex
         ITensor ri = operator/(*this,imagPart(other));
+        ITensor rp = realPart(other);
         operator/=(realPart(other));
-        ri.scaleTo(scale_);
+        equalizeScales(ri);
         i_.swap(ri.r_);
         return *this;
         }
@@ -1969,6 +1991,11 @@ operator*=(const ITensor& other)
         return operator*=(cp_oth);
         }
 
+    //if(scale_.sign() == 0)
+    //    {
+    //    return *this;
+    //    }
+
     if(this->isNull() || other.isNull())
         Error("Null ITensor in product");
 
@@ -1992,7 +2019,7 @@ operator*=(const ITensor& other)
             ITensor ir = rt * io;
             ir += it * ro;
 
-            ir.scaleTo(scale_);
+            equalizeScales(ir);
 
             i_.swap(ir.r_);
 
@@ -2007,10 +2034,10 @@ operator*=(const ITensor& other)
             ITensor ir(*this);
             ir.takeImagPart();
             ir *= other;
-            ir.scaleTo(rr.scale_);
-            scale_ = rr.scale_;
+            rr.equalizeScales(ir);
             r_.swap(rr.r_);
             i_.swap(ir.r_);
+            scale_ = rr.scale_;
             is_.swap(rr.is_);
             return *this;
             }
@@ -2020,8 +2047,9 @@ operator*=(const ITensor& other)
         {
         //This real, other complex
         ITensor ri = operator*(*this,imagPart(other));
+        ITensor rp = realPart(other);
         operator*=(realPart(other));
-        ri.scaleTo(scale_);
+        equalizeScales(ri);
         i_.swap(ri.r_);
         return *this;
         }

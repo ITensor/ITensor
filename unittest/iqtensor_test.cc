@@ -106,19 +106,16 @@ TEST(ComplexNonContractingProduct)
     Rr.randomize();
     Ri.randomize();
 
-    IQTensor L = IQComplex_1()*Lr + IQComplex_i()*Li;
-    IQTensor R = IQComplex_1()*Rr + IQComplex_i()*Ri;
+    IQTensor L = Complex_1*Lr + Complex_i*Li;
+    IQTensor R = Complex_1*Rr + Complex_i*Ri;
 
     IQTensor res1 = L / R;
-
-    IQIndex ri = IQIndex::IndReIm();
 
     CHECK(hasindex(res1,L1));
     CHECK(hasindex(res1,S1));
     CHECK(hasindex(res1,L2));
-    CHECK(hasindex(res1,ri));
 
-    CHECK_EQUAL(res1.r(),4);
+    CHECK_EQUAL(res1.r(),3);
 
     ITensor resR(realPart(res1)),
             resI(imagPart(res1));
@@ -219,22 +216,21 @@ TEST(BraKetTest)
     const Real rr = sqr(R.norm());
     const Real ii = sqr(I.norm());
 
-    Real re=NAN,im=NAN;
-    BraKet(R,R,re,im);
-    CHECK_CLOSE(re,rr,1E-5);
+    Complex z = BraKet(R,R);
+    CHECK_CLOSE(z.real(),rr,1E-5);
 
-    IQTensor T = IQComplex_1()*R + IQComplex_i()*I;
-    BraKet(T,T,re,im);
-    CHECK_CLOSE(re,rr+ii,1E-5);
-    CHECK(fabs(im) < 1E-12);
+    IQTensor T = Complex_1*R + Complex_i*I;
+    z = BraKet(T,T);
+    CHECK_CLOSE(z.real(),rr+ii,1E-5);
+    CHECK(fabs(z.imag()) < 1E-12);
 
-    BraKet(T,R,re,im);
-    CHECK_CLOSE(re,rr,1E-5);
-    CHECK_CLOSE(im,-Dot(I,R),1E-5);
+    z = BraKet(T,R);
+    CHECK_CLOSE(z.real(),rr,1E-5);
+    CHECK_CLOSE(z.imag(),-Dot(I,R),1E-5);
 
-    BraKet(T,IQComplex_i()*I,re,im);
-    CHECK_CLOSE(re,ii,1E-5);
-    CHECK_CLOSE(im,Dot(I,R),1E-5);
+    z = BraKet(T,Complex_i*I);
+    CHECK_CLOSE(z.real(),ii,1E-5);
+    CHECK_CLOSE(z.imag(),Dot(I,R),1E-5);
     }
 
 TEST(Trace)
@@ -290,7 +286,7 @@ TEST(RealImagPart)
     X(S1(1),primed(S1)(2)) = 1;
     X(S1(2),primed(S1)(1)) = 1;
 
-    IQTensor ZiX = IQComplex_1()*Z + IQComplex_i()*X;
+    IQTensor ZiX = Complex_1*Z + Complex_i*X;
     IQTensor R(realPart(ZiX)),
              I(imagPart(ZiX));
     //PrintDat(R);
@@ -320,7 +316,7 @@ TEST(ComplexMult)
     IQTensor Y(conj(S1),primed(S1));
     Y(S1(1),primed(S1)(2)) =  1;
     Y(S1(2),primed(S1)(1)) = -1;
-    Y *= IQComplex_i();
+    Y *= Complex_i;
 
     //PrintDat(Y);
 
@@ -341,7 +337,7 @@ TEST(ComplexAdd)
     X(S1(1),primed(S1)(2)) = +1;
     X(S1(2),primed(S1)(1)) = +1;
 
-    IQTensor iX = X * IQComplex_i();
+    IQTensor iX = X * Complex_i;
 
     IQTensor R = Z + iX;
 
