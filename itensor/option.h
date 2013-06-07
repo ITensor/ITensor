@@ -155,6 +155,14 @@ class OptSet
 
     void
     add(const Opt& opt) { if(opt.isNotNull()) opts_[opt.name()] = opt; }
+    void
+    add(const Name& name, bool bval) { add(Opt(name,bval)); }
+    void
+    add(const Name& name, int ival) { add(Opt(name,ival)); }
+    void
+    add(const Name& name, const std::string& sval) { add(Opt(name,sval)); }
+    void
+    add(const Name& name, Real rval) { add(Opt(name,rval)); }
 
     void
     add(const Opt& opt1, 
@@ -164,8 +172,6 @@ class OptSet
 
     const Opt&
     get(const Name& name) const;
-    const Opt&
-    get(const Opt& opt) const;
 
     //
     // Methods for getting fields of a specific Opt
@@ -174,28 +180,20 @@ class OptSet
     bool
     getBool(const Name& name) const;
     bool
-    getBool(const Opt& opt) const;
-    bool
     getBool(const Name& name, bool default_val) const;
 
     const std::string&
     getString(const Name& name) const;
-    const std::string&
-    getString(const Opt& opt) const;
     const std::string&
     getString(const Name& name, const std::string& default_val) const;
 
     int
     getInt(const Name& name) const;
     int
-    getInt(const Opt& opt) const;
-    int
     getInt(const Name& name, int default_val) const;
 
     Real
     getReal(const Name& name) const;
-    Real
-    getReal(const Opt& opt) const;
     Real
     getReal(const Name& name, Real default_val) const;
 
@@ -389,12 +387,6 @@ defined(const Opt::Name& name) const
     return GlobalOpts().defined(name);
     }
 
-bool inline OptSet::
-defined(const Opt& opt) const
-    {
-    return defined(opt.name());
-    }
-
 void inline OptSet::
 add(const Opt& opt1, const Opt& opt2,
     const Opt& opt3, const Opt& opt4)
@@ -415,13 +407,6 @@ add(const Opt& opt1, const Opt& opt2,
 
 inline 
 const Opt& OptSet::
-get(const Opt& opt) const
-    {
-    return get(opt.name());
-    }
-
-inline 
-const Opt& OptSet::
 get(const Opt::Name& name) const
     {
     const_iterator it = opts_.find(name);
@@ -434,11 +419,6 @@ get(const Opt::Name& name) const
     return GlobalOpts().get(name);
     }
 
-bool inline OptSet::
-getBool(const Opt& opt) const
-    {
-    return get(opt).boolVal();
-    }
 bool inline OptSet::
 getBool(const Opt::Name& name) const
     {
@@ -456,12 +436,6 @@ getBool(const Opt::Name& name, bool default_value) const
 
 inline 
 const std::string& OptSet::
-getString(const Opt& opt) const
-    {
-    return get(opt).stringVal();
-    }
-inline 
-const std::string& OptSet::
 getString(const Opt::Name& name) const
     {
     return get(name).stringVal();
@@ -477,11 +451,6 @@ getString(const Opt::Name& name, const std::string& default_value) const
     }
 
 int inline OptSet::
-getInt(const Opt& opt) const
-    {
-    return get(opt).intVal();
-    }
-int inline OptSet::
 getInt(const Opt::Name& name) const
     {
     return get(name).intVal();
@@ -496,11 +465,6 @@ getInt(const Opt::Name& name, int default_value) const
         return default_value;
     }
 
-Real inline OptSet::
-getReal(const Opt& opt) const
-    {
-    return get(opt).realVal();
-    }
 Real inline OptSet::
 getReal(const Opt::Name& name) const
     {
