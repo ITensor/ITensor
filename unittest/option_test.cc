@@ -50,7 +50,6 @@ TEST(TestOptSet)
     //cout << opts1 << endl;
 
     CHECK(opts1.defined("Quiet"));
-    CHECK(opts1.defined(Quiet()));
     CHECK(opts1.get("Quiet").name() == "Quiet");
     CHECK(opts1.getBool("Quiet") == false);
 
