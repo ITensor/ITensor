@@ -33,35 +33,6 @@ TEST(Primes)
     CHECK_EQUAL(I.primeLevel(),2);
     }
 
-TEST(Complex)
-    {
-    Index I = Index::IndReIm();
-
-    I.prime(All);
-    CHECK_EQUAL(I.primeLevel(),0);
-
-    I.prime();
-    CHECK_EQUAL(I.primeLevel(),1);
-    CHECK_EQUAL(I,Index::IndReImP());
-
-    I.prime();
-    CHECK_EQUAL(I.primeLevel(),2);
-    CHECK_EQUAL(I,Index::IndReImPP());
-
-    Index J = primed(Index::IndReIm());
-    CHECK_EQUAL(J.primeLevel(),1);
-
-    Index K = primed(Index::IndReIm(),All);
-    CHECK_EQUAL(K.primeLevel(),0);
-
-    Index L = Index::IndReIm();
-    L.prime(All);
-    CHECK_EQUAL(L.primeLevel(),0);
-
-    CHECK_EQUAL(Index::IndReIm().primeLevel(),0);
-    CHECK_EQUAL(Index::IndReImP().primeLevel(),1);
-    CHECK_EQUAL(Index::IndReImPP().primeLevel(),2);
-    }
 
 BOOST_AUTO_TEST_SUITE_END()
 

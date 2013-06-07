@@ -111,7 +111,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
     {
     const bool cplx = A.isComplex();
 
-    if(A.r() != 2 + (cplx ? 1 : 0))
+    if(A.r() != 2)
         {
         Error("A must be matrix-like");
         }
@@ -236,7 +236,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     {
     const bool cplx = A.isComplex();
 
-    if(A.r() != 2 + (cplx ? 1 : 0)) 
+    if(A.r() != 2)
         {
         Error("A must be matrix-like");
         }
@@ -555,7 +555,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, Spectrum& spec,
     bool cplx = rho.isComplex();
 
 #ifdef DEBUG
-    if(rho.r() != 2 + (cplx ? 1 : 0))
+    if(rho.r() != 2)
         {
         Print(rho.r());
         Print(rho);
@@ -686,7 +686,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
     {
     bool cplx = rho.isComplex();
 
-    if(rho.r() != 2 + (cplx ? 1 : 0))
+    if(rho.r() != 2)
         {
         Print(rho.indices());
         Error("Density matrix doesn't have rank 2");

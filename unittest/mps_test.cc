@@ -78,7 +78,7 @@ TEST(PositionTest)
     IQMPS psi(model,init);
     psi.cutoff(1E-8);
     psi.noise(1E-8);
-    psi.Anc(1) *= IQComplex_i();
+    psi.Anc(1) *= Complex_i;
 
     psi.position(1);
     CHECK_EQUAL(findCenter(psi),1);

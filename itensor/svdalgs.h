@@ -491,7 +491,7 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
         const
         IndexT reim = IQIndex("ReIm",Index("reim",2),QN());
         
-        Tensor nT = realPart(T)*reim(1) + imagPart(T)*reim(2);
+        T = realPart(T)*reim(1) + imagPart(T)*reim(2);
 
         //Divide up indices based on U
         //If U is null, use V instead
