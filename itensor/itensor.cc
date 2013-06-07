@@ -1253,12 +1253,9 @@ randomize()
 void ITensor::
 conj() 
     { 
-    if(!this->isComplex()) return; 
-    if(!i_.unique())
+    if(i_)
         {
-        VectorRef oldv(i_->v);
-        i_ = boost::make_shared<ITDat>();
-        i_->v = oldv;
+        soloImag();
         i_->v *= -1;
         }
     }
@@ -1426,7 +1423,8 @@ operator*=(Complex z)
         {
         r_.swap(i_);
         if(!r_) allocate(i_->v.Length());
-        i_->v *= -1;
+        soloReal();
+        r_->v *= -1;
         scale_ *= z.imag();
         return *this;
         }
@@ -1745,16 +1743,14 @@ operator/=(const ITensor& other)
             ro.takeRealPart();
             io.takeImagPart();
 
-            ITensor rr = rt / ro;
-            rr -= it / io;
+            *this = rt / ro;
+            *this -= it / io;
 
             ITensor ir = rt / io;
             ir += it / ro;
 
-            ir.scaleTo(rr.scale_);
-            scale_ = rr.scale_;
+            ir.scaleTo(scale_);
 
-            r_.swap(rr.r_);
             i_.swap(ir.r_);
 
             return *this;
@@ -1772,6 +1768,7 @@ operator/=(const ITensor& other)
             scale_ = rr.scale_;
             r_.swap(rr.r_);
             i_.swap(ir.r_);
+            is_.swap(rr.is_);
             return *this;
             }
         }
@@ -1989,16 +1986,14 @@ operator*=(const ITensor& other)
             ro.takeRealPart();
             io.takeImagPart();
 
-            ITensor rr = rt * ro;
-            rr -= it * io;
+            *this = rt * ro;
+            *this -= it * io;
 
             ITensor ir = rt * io;
             ir += it * ro;
 
-            ir.scaleTo(rr.scale_);
-            scale_ = rr.scale_;
+            ir.scaleTo(scale_);
 
-            r_.swap(rr.r_);
             i_.swap(ir.r_);
 
             return *this;
@@ -2016,6 +2011,7 @@ operator*=(const ITensor& other)
             scale_ = rr.scale_;
             r_.swap(rr.r_);
             i_.swap(ir.r_);
+            is_.swap(rr.is_);
             return *this;
             }
         }
@@ -2187,12 +2183,38 @@ operator+=(const ITensor& other)
     const bool complex_other = other.isComplex();
     if(!complex_this && complex_other)
         {
-        //return (*this = (*this * ITensor::Complex_1()) + other);
+        operator+=(realPart(other));
+        i_ = other.i_;
+        if(scale_ != other.scale_)
+            {
+            const LogNumber nscale = other.scale_/scale_;
+            soloImag();
+            i_->v *= nscale.real0();
+            }
+        return *this;
         }
+    else
     if(complex_this && !complex_other) 
         {
-        //return operator+=(other * ITensor::Complex_1());
+        ITensor rr(*this);
+        rr.takeRealPart();
+        rr += other;
+        rr.scaleTo(scale_);
+        r_.swap(rr.r_);
+        return *this;
         }
+    else
+    if(complex_this && complex_other)
+        {
+        ITensor r = realPart(*this) + realPart(other);
+        ITensor i = imagPart(*this) + imagPart(other);
+        i.scaleTo(r.scale_);
+        scale_ = r.scale_;
+        r_.swap(r.r_);
+        i_.swap(i.r_);
+        return *this;
+        }
+
 
     if(fabs(is_.uniqueReal() - other.is_.uniqueReal()) > 1E-12)
         {

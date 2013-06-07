@@ -867,21 +867,18 @@ TEST(ComplexNonContractingProduct)
     Rr.randomize();
     Ri.randomize();
 
-    ITensor L = Complex_1()*Lr + Complex_i()*Li;
-    ITensor R = Complex_1()*Rr + Complex_i()*Ri;
+    ITensor L = Complex_1*Lr + Complex_i*Li;
+    ITensor R = Complex_1*Rr + Complex_i*Ri;
 
     ITensor res1 = L / R;
-
-    Index ri = Index::IndReIm();
 
     CHECK(hasindex(res1,b2));
     CHECK(hasindex(res1,a2));
     CHECK(hasindex(res1,b5));
     CHECK(hasindex(res1,b3));
     CHECK(hasindex(res1,b4));
-    CHECK(hasindex(res1,ri));
 
-    CHECK_EQUAL(res1.r(),6);
+    CHECK_EQUAL(res1.r(),5);
 
     ITensor resR(realPart(res1)),
             resI(imagPart(res1));
@@ -1219,11 +1216,13 @@ TEST(CommaAssignment)
 
 TEST(RealImagPart)
     {
-    ITensor ZiX = Complex_1()*Z + Complex_i()*X;
+    const Real f1 = 2.124,
+               f2 = 1.113;
+    ITensor ZiX = f1*Complex_1*Z + f2*Complex_i*X;
     ITensor R(realPart(ZiX)),
             I(imagPart(ZiX));
-    R -= Z;
-    I -= X;
+    R -= f1*Z;
+    I -= f2*X;
     CHECK_CLOSE(R.norm(),0,1E-5);
     CHECK_CLOSE(I.norm(),0,1E-5);
 
@@ -1232,8 +1231,8 @@ TEST(RealImagPart)
     ZiX.conj();
     R = realPart(ZiX);
     I = imagPart(ZiX);
-    R -= Z;
-    I += X;
+    R -= f1*Z;
+    I += f2*X;
     CHECK_CLOSE(R.norm(),0,1E-5);
     CHECK_CLOSE(I.norm(),0,1E-5);
     }
@@ -1280,9 +1279,34 @@ TEST(NormTest)
     A.randomize();
     CHECK_CLOSE(A.norm(),sqrt((A*A).toReal()),1E-5);
 
-    ITensor C = Complex_1()*A+Complex_i()*B;
+    ITensor C = Complex_1*A+Complex_i*B;
 
     CHECK_CLOSE(C.norm(),sqrt(realPart(conj(C)*C).toReal()),1E-5);
+    }
+
+TEST(CR_ComplexAddition)
+    {
+    const Real f1 = 1.234,
+               f2 = 2.456;
+    ITensor iZX = f1*Complex_i*Z + f2*Complex_1*X;
+    ITensor R(realPart(iZX)),
+            I(imagPart(iZX));
+    R -= f2*X;
+    I -= f1*Z;
+    CHECK_CLOSE(R.norm(),0,1E-5);
+    CHECK_CLOSE(I.norm(),0,1E-5);
+    }
+
+TEST(CC_ComplexAddition)
+    {
+    const Real f1 = 1.234,
+               f2 = 2.456;
+    ITensor iZiX = f1*Complex_i*Z + f2*Complex_i*X;
+    ITensor R(realPart(iZiX)),
+            I(imagPart(iZiX));
+    I -= f1*Z+f2*X;
+    CHECK_CLOSE(R.norm(),0,1E-5);
+    CHECK_CLOSE(I.norm(),0,1E-5);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
