@@ -1182,7 +1182,8 @@ expandIndex(const Index& small, const Index& big, int start)
 int ITensor::
 vecSize() const 
     { 
-    return (bool(r_) ? 0 : r_->v.Length()); 
+    if(isNull()) return 0;
+    return r_->v.Length(); 
     }
 
 void ITensor::
@@ -1233,6 +1234,13 @@ datStart() const
     {
     if(!r_) Error("ITensor is null");
     return r_->v.Store();
+    }
+
+const Real* ITensor::
+imagDatStart() const
+    {
+    if(!i_) Error("ITensor is real");
+    return i_->v.Store();
     }
 
 void ITensor::
@@ -1409,6 +1417,28 @@ solo()
     {
     soloReal();
     soloImag();
+    }
+
+ITensor& ITensor::
+operator*=(Complex z)
+    {
+    if(z.real() == 0)
+        {
+        r_.swap(i_);
+        if(!r_) allocate(i_->v.Length());
+        i_->v *= -1;
+        scale_ *= z.imag();
+        return *this;
+        }
+    else
+    if(z.imag() == 0)
+        {
+        scale_ *= z.real();
+        return *this;
+        }
+    //else
+    Error("Multiplication by general Complex not yet supported.");
+    return *this;
     }
 
 
@@ -1598,8 +1628,12 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
              MatrixRefNoLink& lref, MatrixRefNoLink& rref, 
              bool& L_is_matrix, bool& R_is_matrix, bool doReshape)
     {
-    assert(L.p != 0);
-    assert(R.p != 0);
+#ifdef DEBUG
+    if(L.isNull())
+        Error("L null in toMatrixProd");
+    if(R.isNull())
+        Error("R null in toMatrixProd");
+#endif
     const Vector &Ldat = L.r_->v, 
                  &Rdat = R.r_->v;
 
@@ -2495,13 +2529,32 @@ operator<<(ostream & s, const ITensor& t)
             Real scale = 1.0;
             if(t.scale().isFiniteReal()) scale = t.scale().real();
             else s << "  (omitting too large scale factor)" << endl;
-            const Real* pv = t.datStart();
-            Counter c(t.indices());
-            for(; c.notDone(); ++c)
+            if(!t.isComplex())
                 {
-                Real val = pv[c.ind]*scale;
-                if(fabs(val) > Global::printScale())
-                    { s << "  " << c << (format(" %.10f\n") % val); }
+                const Real* pv = t.datStart();
+                Counter c(t.indices());
+                for(; c.notDone(); ++c)
+                    {
+                    Real val = pv[c.ind]*scale;
+                    if(fabs(val) > Global::printScale())
+                        { s << "  " << c << (format(" %.10f\n") % val); }
+                    }
+                }
+            else //t is complex
+                {
+                const Real* pr = t.datStart();
+                const Real* pi = t.imagDatStart();
+                Counter c(t.indices());
+                for(; c.notDone(); ++c)
+                    {
+                    Real rval = pr[c.ind]*scale;
+                    Real ival = pi[c.ind]*scale;
+                    const char sgn = (ival > 0 ? '+' : '-');
+                    if(sqrt(sqr(rval)+sqr(ival)) > Global::printScale())
+                        { 
+                        s << "  " << c << (format(" %.10f%s%.10fi\n") % rval % sgn % fabs(ival)); 
+                        }
+                    }
                 }
             }
         else 

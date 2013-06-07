@@ -757,7 +757,9 @@ psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
         }
     L = L * phi.A(N);
 
-    BraKet(primed(psi.A(N),psi.LinkInd(N-1)),L,re,im);
+    Complex z = BraKet(primed(psi.A(N),psi.LinkInd(N-1)),L);
+    re = z.real();
+    im = z.imag();
     }
 
 template <class MPSType>

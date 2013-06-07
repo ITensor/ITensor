@@ -174,6 +174,10 @@ class ITensor
     ITensor
     operator-() const { ITensor T(*this); T.scale_ *= -1; return T; }
 
+    //Multiplication by Complex scalar
+    ITensor&
+    operator*=(Complex z);
+
     //Multiplication with LogNumber (very large or very small Real)
     ITensor& 
     operator*=(const LogNumber& lgnum) { scale_ *= lgnum; return *this; }
@@ -413,6 +417,9 @@ class ITensor
     const Real*
     datStart() const;
 
+    const Real*
+    imagDatStart() const;
+
     void 
     randomize();
 
@@ -608,9 +615,6 @@ class ITensor
               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
         const;
 
-    friend ITensor realPart(const ITensor& T);
-    friend ITensor imagPart(const ITensor& T);
-
     friend class commaInit;
 
     friend class ITSparse;
@@ -718,6 +722,12 @@ operator*(Real fac, ITensor T) { T *= fac; return T; }
 
 ITensor inline
 operator/(ITensor T, Real fac) { T /= fac; return T; }
+
+ITensor inline
+operator*(ITensor T, Complex z) { T *= z; return T; }
+
+ITensor inline
+operator*(Complex z, ITensor T) { T *= z; return T; }
 
 ITensor inline
 operator*(ITensor T, LogNumber lgnum) { T *= lgnum; return T; }
@@ -989,10 +999,9 @@ trace(Tensor T)
     }
 
 template<class Tensor>
-Complex
-trace(const Tensor& T)
+void
+trace(const Tensor& T, Real& re, Real& im)
     {
-    Real re,im;
     if(!T.isComplex())
         {
         re = trace(T);
@@ -1003,7 +1012,6 @@ trace(const Tensor& T)
         re = trace(realPart(T));
         im = trace(imagPart(T));
         }
-    return Complex(re,im);
     }
 
 template<class Tensor, class IndexT>

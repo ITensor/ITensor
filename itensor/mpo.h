@@ -257,7 +257,9 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real
         }
     L *= phi.A(N); L *= H.A(N);
 
-    BraKet(primed(psi.A(N)),L,re,im);
+    Complex z = BraKet(primed(psi.A(N)),L);
+    re = z.real();
+    im = z.imag();
     }
 template <class MPSType, class MPOType>
 Real 
@@ -287,19 +289,12 @@ psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, cons
         }
 
     if(!RB.isNull()) L *= RB;
-    if(isComplex(L))
-        {
-        if(L.vecSize() != 2) Error("Non-scalar result in psiHphi.");
-        re = L(Index::IndReIm()(1));
-        im = L(Index::IndReIm()(2));
-        }
-    else 
-        {
-        if(L.vecSize() != 1) Error("Non-scalar result in psiHphi.");
-        re = L.toReal();
-        im = 0;
-        }
+
+    Complex z = L.toComplex();
+    re = z.real();
+    im = z.imag();
     }
+
 Real inline
 psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi) //Re[<psi|H|phi>]
     {
@@ -334,7 +329,9 @@ psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real
     //scales as m^2 k^2 d
     L = ((((L * phi.A(N)) * H.A(N)) * Kp.A(N)) * psiconj.A(N));
     //cout << "in psiHKpsi, L is "; PrintDat(L);
-    L.toComplex(re,im);
+    Complex z = L.toComplex();
+    re = z.real();
+    im = z.imag();
     }
 
 Real inline 

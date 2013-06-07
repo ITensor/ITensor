@@ -203,11 +203,8 @@ davidson(const LocalT& A, Tensor& phi) const
     V[0] = phi;
     A.product(V[0],AV[0]);
 
-    Real re = NAN,
-         im = NAN;
-
-    BraKet(V[0],AV[0],re,im);
-    const Real initEn = re;
+    Complex z = BraKet(V[0],AV[0]);
+    const Real initEn = z.real();
 
     if(debug_level_ > 2)
         Cout << Format("Initial Davidson energy = %.10f") % initEn << Endl;
@@ -247,14 +244,12 @@ davidson(const LocalT& A, Tensor& phi) const
                 //Compute corresponding eigenvector
                 //phi of A from the min evec of M
                 //(and start calculating residual q)
-                const Tensor& C1 = Tensor::Complex_1();
-                const Tensor& Ci = Tensor::Complex_i();
 
-                phi = (UR(1,1)*C1+UI(1,1)*Ci)*V[0];
-                q   = (UR(1,1)*C1+UI(1,1)*Ci)*AV[0];
+                phi = (UR(1,1)*Complex_1+UI(1,1)*Complex_i)*V[0];
+                q   = (UR(1,1)*Complex_1+UI(1,1)*Complex_i)*AV[0];
                 for(int k = 1; k <= ii; ++k)
                     {
-                    const Tensor cfac = (UR(k+1,1)*C1+UI(k+1,1)*Ci);
+                    const Complex cfac = (UR(k+1,1)*Complex_1+UI(k+1,1)*Complex_i);
                     phi += cfac*V[k];
                     q   += cfac*AV[k];
                     }
@@ -359,8 +354,7 @@ davidson(const LocalT& A, Tensor& phi) const
             //Do Gram-Schmidt on d (Npass times)
             //to include it in the subbasis
             const int Npass = 2;
-            std::vector<Real> rVq(ni,NAN),
-                              iVq(ni,NAN);
+            std::vector<Complex> Vq(ni);
 
             int count = 0;
             for(int pass = 1; pass <= Npass; ++pass)
@@ -368,15 +362,15 @@ davidson(const LocalT& A, Tensor& phi) const
                 ++count;
                 for(int k = 0; k < ni; ++k)
                     {
-                    BraKet(V[k],q,rVq[k],iVq[k]);
+                    Vq[k] = BraKet(V[k],q);
                     }
 
                 for(int k = 0; k < ni; ++k)
                     {
-                    q += (-rVq[k])*V[k];
-                    if(iVq[k] != 0)
+                    q += (-Vq[k].real())*V[k];
+                    if(Vq[k].imag() != 0)
                         {
-                        q += (-iVq[k]*Tensor::Complex_i())*V[k];
+                        q += (-Vq[k].imag()*Complex_i)*V[k];
                         }
                     }
 
@@ -393,8 +387,7 @@ davidson(const LocalT& A, Tensor& phi) const
 
                     //Don't want to count real and imaginary parts as independent
                     //from the point of view of orthogonalization
-                    const int cplxVecSize = q.vecSize() / (isComplex(q) ? 2 : 1);
-                    if(cplxVecSize <= ni)
+                    if(q.vecSize() <= ni)
                         {
                         //Not be possible to orthogonalize if
                         //max size of q (vecSize after randomize)
@@ -441,9 +434,9 @@ davidson(const LocalT& A, Tensor& phi) const
                    newColI(ni+1);
             for(int k = 0; k <= ni; ++k)
                 {
-                BraKet(V.at(k),AV.at(ni),
-                       newColR(k+1),
-                       newColI(k+1));
+                z = BraKet(V.at(k),AV.at(ni));
+                newColR(k+1) = z.real();
+                newColI(k+1) = z.imag();
                 }
             newColR(ni+1) -= enshift;
 
@@ -472,8 +465,8 @@ davidson(const LocalT& A, Tensor& phi) const
         for(int r = 1; r <= iter+1; ++r)
         for(int c = r; c <= iter+1; ++c)
             {
-            BraKet(V[r-1],V[c-1],re,im);
-            Vo_final(r,c) = re;
+            z = BraKet(V[r-1],V[c-1]);
+            Vo_final(r,c) = z.real();
             Vo_final(c,r) = Vo_final(r,c);
             }
         Print(Vo_final);

@@ -109,7 +109,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
          ITensor& U, ITSparse& D, ITensor& V, Spectrum& spec,
          const OptSet& opts)
     {
-    const bool cplx = isComplex(A);
+    const bool cplx = A.isComplex();
 
     if(A.r() != 2 + (cplx ? 1 : 0))
         {
@@ -202,8 +202,8 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         {
         ITensor iU(ui,uL,iUU.Columns(1,m)),
                 iV(vL,vi,iVV.Rows(1,m));
-        U = U*Complex_1() + iU*Complex_i();
-        V = V*Complex_1() + iV*Complex_i();
+        U = U*Complex_1 + iU*Complex_i;
+        V = V*Complex_1 + iV*Complex_i;
         }
 
     //Square all singular values
@@ -234,7 +234,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
          IQTensor& U, IQTSparse& D, IQTensor& V, Spectrum& spec,
          const OptSet& opts)
     {
-    const bool cplx = isComplex(A);
+    const bool cplx = A.isComplex();
 
     if(A.r() != 2 + (cplx ? 1 : 0)) 
         {
@@ -291,8 +291,6 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         bool gotui = false;
         Foreach(const Index& I, t.indices())
             {
-            if(I.type() == ReIm) continue;
-
             if(!gotui) 
                 {
                 ui = &I;
@@ -461,8 +459,6 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         bool gotui = false;
         Foreach(const Index& I, t.indices())
             {
-            if(I.type() == ReIm) continue;
-
             if(!gotui) 
                 {
                 ui = &I;
@@ -524,8 +520,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
             iU += iUblock.at(j);
             iV += iVblock.at(j);
             }
-        U = U*IQComplex_1() + iU*IQComplex_i();
-        V = V*IQComplex_1() + iV*IQComplex_i();
+        U = U*Complex_1 + iU*Complex_i;
+        V = V*Complex_1 + iV*Complex_i;
         }
 
     //Originally eigs were found by calling
@@ -556,7 +552,7 @@ Real
 diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, Spectrum& spec,
                const OptSet& opts)
     {
-    bool cplx = isComplex(rho);
+    bool cplx = rho.isComplex();
 
 #ifdef DEBUG
     if(rho.r() != 2 + (cplx ? 1 : 0))
@@ -570,7 +566,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, Spectrum& spec,
     Index active;
     Foreach(const Index& I, rho.indices())
         {
-        if(I.primeLevel() == 0 && I.type() != ReIm)
+        if(I.primeLevel() == 0)
             {
             active = I;
             break;
@@ -676,7 +672,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, Spectrum& spec,
     if(cplx)
         {
         ITensor iU(active,newmid,iUU.Columns(1,m));
-        U = U*Complex_1() + iU*Complex_i();
+        U = U*Complex_1 + iU*Complex_i;
         }
 
     spec.eigsKept(DD);
@@ -688,7 +684,7 @@ Real
 diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
                const OptSet& opts)
     {
-    bool cplx = isComplex(rho);
+    bool cplx = rho.isComplex();
 
     if(rho.r() != 2 + (cplx ? 1 : 0))
         {
@@ -748,7 +744,6 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
         Index a;
         Foreach(const Index& I, t.indices())
             {
-            if(I.type() == ReIm) continue;
             if(I.primeLevel() == 0)
                 {
                 a = I;
@@ -880,7 +875,6 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
     IQIndex active;
     Foreach(const IQIndex& I, rho.indices())
         {
-        if(I.type() == ReIm) continue;
         if(I.primeLevel() == 0)
             {
             active = I;
@@ -937,7 +931,6 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
         Index act;
         Foreach(const Index& I, t.indices())
             {
-            if(I.type() == ReIm) continue;
             if(I.primeLevel() == 0)
                 {
                 act = I;
@@ -987,7 +980,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
             {
             iU += iblocks.at(j);
             }
-        U = U*IQComplex_1() + iU*IQComplex_i();
+        U = U*Complex_1 + iU*Complex_i;
         }
 
     D *= spec.refNorm();

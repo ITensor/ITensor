@@ -306,18 +306,17 @@ product(const Tensor& phi, Tensor& phip) const
         if(!R().isNull()) 
             othr *= R();
 
-        Real re = 0, im = 0;
-        BraKet(othr,phi,re,im);
+        Complex z = BraKet(othr,phi);
 
         phip = othr;
         phip.mapprime(1,0);
-        if(fabs(im) < 1E-10) 
+        if(fabs(z.imag()) < 1E-12) 
             {
-            phip *= re;
+            phip *= z.real();
             }
         else
             {
-            phip *= (re*Tensor::Complex_1() + im*Tensor::Complex_i());
+            phip *= z;
             }
         }
     else

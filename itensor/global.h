@@ -28,6 +28,9 @@ static const int MAX_M = 5000;
 typedef std::complex<Real>
 Complex;
 
+static const Complex Complex_1 = Complex(1,0);
+static const Complex Complex_i = Complex(0,1);
+
 // The PAUSE macro is useful for debugging. 
 // Prints the current line number and pauses
 // execution until the enter key is pressed.

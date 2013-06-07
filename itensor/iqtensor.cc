@@ -425,6 +425,25 @@ operator/=(Real fac)
     }
 
 IQTensor& IQTensor::
+operator*=(Complex z) 
+    { 
+    dat.solo();
+
+    if(z.real() == 0 && z.imag() == 0) 
+        { 
+        dat.nc().clear(); 
+        return *this; 
+        }
+
+    Foreach(ITensor& t, dat.nc())
+        {
+        t *= z;
+        }
+
+    return *this; 
+    }
+
+IQTensor& IQTensor::
 operator*=(const LogNumber& lgnum) 
     { 
     dat.solo();

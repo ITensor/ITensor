@@ -199,8 +199,7 @@ class IQTensor
         { IQTensor res(*this); res *= fac; return res; }
 
     friend inline IQTensor 
-    operator*(Real fac, IQTensor T) 
-        { T *= fac; return T; }
+    operator*(Real fac, IQTensor T) { T *= fac; return T; }
 
     IQTensor& 
     operator/=(Real fac);
@@ -210,8 +209,7 @@ class IQTensor
         { IQTensor res(*this); res /= fac; return res; }
 
     friend inline IQTensor 
-    operator/(Real fac, IQTensor t) 
-        { return (t /= fac); }
+    operator/(Real fac, IQTensor t) { return (t /= fac); }
 
     IQTensor
     operator-() const { IQTensor T(*this); T *= -1; return T; }
@@ -226,6 +224,16 @@ class IQTensor
     friend inline IQTensor 
     operator*(const LogNumber& lgnum, IQTensor T) 
         { T *= lgnum; return T; }
+
+    IQTensor& 
+    operator*=(Complex z);
+
+    IQTensor 
+    operator*(Complex z) const
+        { IQTensor res(*this); res *= z; return res; }
+
+    friend inline IQTensor 
+    operator*(Complex z, IQTensor T) { T *= z; return T; }
 
     //
     // Contracting product with an ITensor
