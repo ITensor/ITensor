@@ -166,7 +166,7 @@ class ITensor
 
     //Multiplication and division by scalar
     ITensor& 
-    operator*=(Real fac) { scale_ *= fac; return *this; }
+    operator*=(Real fac);
 
     ITensor& 
     operator/=(Real fac) { scale_ /= fac; return *this; }
@@ -975,9 +975,6 @@ template <class Tensor>
 Tensor
 imagPart(const Tensor& T)
     {
-    if(!T.isComplex())
-        return (0*T);
-    //else
     Tensor im(T);
     im.takeImagPart();
     return im;

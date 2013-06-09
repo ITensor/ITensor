@@ -441,7 +441,8 @@ takeImagPart()
     r_.swap(i_);
     if(!r_)
         {
-        allocate(i_->v.Length());
+        const int alloc_size = i_->v.Length();
+        allocate(alloc_size);
         }
     i_.reset();
     return *this;
@@ -1437,6 +1438,21 @@ equalizeScales(ITensor& other)
         r_->v *= 0;
         scale_ = other.scale_;
         }
+    }
+
+ITensor& ITensor::
+operator*=(Real fac)
+    {
+    if(fac == 0)
+        {
+        solo();
+        r_->v *= 0;
+        if(i_) i_->v *= 0;
+        return *this;
+        }
+
+    scale_ *= fac;
+    return *this;
     }
 
 ITensor& ITensor::
