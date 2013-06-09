@@ -317,8 +317,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
             {
             ITensor ret = realPart(t),
                     imt = imagPart(t);
-            ret.scaleTo(spec.refNorm());
-            imt.scaleTo(spec.refNorm());
+            //ret.scaleTo(spec.refNorm());
+            //imt.scaleTo(spec.refNorm());
             Matrix Mre(ui->m(),vi->m()),
                    Mim(ui->m(),vi->m());
             ret.toMatrix11NoScale(*ui,*vi,Mre);
@@ -520,8 +520,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
             iU += iUblock.at(j);
             iV += iVblock.at(j);
             }
-        U = U*Complex_1 + iU*Complex_i;
-        V = V*Complex_1 + iV*Complex_i;
+        U = U + iU*Complex_i;
+        V = V + iV*Complex_i;
         }
 
     //Originally eigs were found by calling

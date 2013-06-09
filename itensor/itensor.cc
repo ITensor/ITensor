@@ -427,6 +427,7 @@ ITensor(const IndexSet<Index>& I, const ITensor& other, const Permutation& P)
 ITensor& ITensor::
 takeRealPart()
     {
+    ITENSOR_CHECK_NULL
     //TODO: account for complex scale fac
     i_.reset();
     return *this;
@@ -1253,6 +1254,7 @@ randomize()
     { 
     solo(); 
     r_->v.Randomize(); 
+    if(i_) i_->v.Randomize();
     }
 
 void ITensor::
