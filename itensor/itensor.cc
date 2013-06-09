@@ -1470,7 +1470,7 @@ operator*=(Complex z)
     else
     if(z.imag() == 0)
         {
-        scale_ *= z.real();
+        operator*=(z.real());
         return *this;
         }
     //else
