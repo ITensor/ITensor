@@ -490,8 +490,6 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
 
         const
         IndexT reim = IQIndex("ReIm",Index("reim",2),QN());
-        
-        T = realPart(T)*reim(1) + imagPart(T)*reim(2);
 
         //Divide up indices based on U
         //If U is null, use V instead
@@ -511,7 +509,10 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
         else
             Lcomb.addleft(reim);
 
+        T = realPart(T)*reim(1) + imagPart(T)*reim(2);
+
         T = Acomb * T * Bcomb;
+
 
         SparseT D;
         svdRank2(T,Acomb.right(),Bcomb.right(),A,D,B,spec,opts);
@@ -519,8 +520,16 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
         A = conj(Acomb) * A;
         B = B * conj(Bcomb);
 
-        if(dir==Fromleft) B *= D;
-        else              A *= D;
+        if(dir==Fromleft) 
+            {
+            B *= D;
+            B = B*conj(reim)(1) + Complex_i*B*conj(reim)(2);
+            }
+        else              
+            {
+            A *= D;
+            A = A*conj(reim)(1) + Complex_i*A*conj(reim)(2);
+            }
         }
 
     spec.noise(orig_noise);
