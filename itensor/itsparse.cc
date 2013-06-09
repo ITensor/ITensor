@@ -299,6 +299,25 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     if(!S.isDiag()) 
         Error("product only implemented for diagonal ITSparses");
 
+    if(T.isComplex())
+        {
+        ITensor ri;
+        product(S,imagPart(T),ri);
+        product(S,realPart(T),res);
+        if(res.scale_.sign() != 0)
+            {
+            ri.scaleTo(res.scale_);
+            }
+        else
+            {
+            res.soloReal();
+            res.r_->v *= 0;
+            res.scale_ = ri.scale_;
+            }
+        res.i_.swap(ri.r_);
+        return;
+        }
+
     //This is set to true if some of the indices
     //of res come from S.
     //If false, there is an extra loop in the sum

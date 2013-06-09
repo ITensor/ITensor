@@ -1816,7 +1816,6 @@ operator/=(const ITensor& other)
         {
         //This real, other complex
         ITensor ri = operator/(*this,imagPart(other));
-        ITensor rp = realPart(other);
         operator/=(realPart(other));
         equalizeScales(ri);
         i_.swap(ri.r_);
@@ -2065,7 +2064,6 @@ operator*=(const ITensor& other)
         {
         //This real, other complex
         ITensor ri = operator*(*this,imagPart(other));
-        ITensor rp = realPart(other);
         operator*=(realPart(other));
         equalizeScales(ri);
         i_.swap(ri.r_);
