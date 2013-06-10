@@ -1473,8 +1473,32 @@ operator*=(Complex z)
         operator*=(z.real());
         return *this;
         }
-    //else
-    Error("Multiplication by general Complex not yet supported.");
+    else
+    if(!this->isComplex())
+        {
+        allocateImag();
+        i_->v = r_->v;
+        if(fabs(z.real()) > fabs(z.imag()))
+            {
+            scale_ *= z.real();
+            i_->v *= (z.imag()/z.real());
+            }
+        else
+            {
+            soloReal();
+            r_->v *= (z.real()/z.imag());
+            scale_ *= z.imag();
+            }
+        return *this;
+        }
+
+    //Else this is complex
+    solo();
+    Vector newr = r_->v*z.real() - i_->v*z.imag();
+    Vector newi = r_->v*z.imag() + i_->v*z.real();
+    r_->v = newr;
+    i_->v = newi;
+
     return *this;
     }
 
