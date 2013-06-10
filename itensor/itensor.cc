@@ -868,7 +868,6 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
                          *ii[7],*ii[8])];
         }
 
-    is_.swap(new_is_);
     r_.swap(np);
 
     if(this->isComplex())
@@ -884,6 +883,8 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
             }
         i_.swap(np);
         }
+
+    is_.swap(new_is_);
 
     } //ITensor::tieIndices
 
