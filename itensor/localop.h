@@ -6,6 +6,9 @@
 #define __ITENSOR_LOCAL_OP
 #include "iqtensor.h"
 
+#define Cout std::cout
+#define Endl std::endl
+
 //
 // The LocalOp class represents
 // an MPO or other operator that
@@ -562,5 +565,7 @@ makeBond() const
         }
     }
 
+#undef Cout
+#undef Endl
 
 #endif

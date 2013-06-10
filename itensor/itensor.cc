@@ -872,6 +872,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
 
     if(this->isComplex())
         {
+        np = boost::make_shared<ITDat>(alloc_size);
         const Vector& thisidat = i_->v;
         for(nc.reset(); nc.notDone(); ++nc)
             {
@@ -2596,6 +2597,8 @@ operator<<(ostream & s, const ITensor& t)
 
     s << "  {log(scale)[incl in elems]=" << t.scale().logNum();
 
+    const
+    bool iscplx = t.isComplex();
 
     if(t.isNull()) s << ", dat is null}\n";
     else 
@@ -2606,9 +2609,17 @@ operator<<(ostream & s, const ITensor& t)
             {
             Real nrm = t.norm();
             if(nrm >= 1E-2 && nrm < 1E5)
-                s << format(", N=%.2f}\n") % nrm;
+                {
+                s << format(", N=%.2f%s}\n") 
+                     % nrm
+                     % (iscplx ? ",C" : "");
+                }
             else
-                s << format(", N=%.1E}\n") % nrm;
+                {
+                s << format(", N=%.1E%s}\n") 
+                     % nrm
+                     % (iscplx ? ",C" : "");
+                }
             }
         else
             {
@@ -2620,7 +2631,7 @@ operator<<(ostream & s, const ITensor& t)
             Real scale = 1.0;
             if(t.scale().isFiniteReal()) scale = t.scale().real();
             else s << "  (omitting too large scale factor)" << endl;
-            if(!t.isComplex())
+            if(!iscplx)
                 {
                 const Real* pv = t.datStart();
                 Counter c(t.indices());
