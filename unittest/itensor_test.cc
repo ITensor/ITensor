@@ -1309,4 +1309,43 @@ TEST(CC_ComplexAddition)
     CHECK_CLOSE(I.norm(),0,1E-5);
     }
 
+TEST(ComplexScalar)
+    {
+    ITensor A(b4,s1),
+            B(b4,s1);
+    A.randomize();
+    B.randomize();
+    
+    const Real f1 = 2.1324,
+               f2 = -5.2235;
+
+    ITensor T1 = Complex(f1,0)*A;
+
+    CHECK((realPart(T1)-(f1*A)).norm() < 1E-12);
+    CHECK(imagPart(T1).norm() < 1E-12);
+
+    ITensor T2 = Complex(0,f2)*A;
+
+    CHECK(realPart(T2).norm() < 1E-12);
+    CHECK((imagPart(T2)-f2*A).norm() < 1E-12);
+
+    ITensor T3 = Complex(f1,f2)*A;
+    CHECK((realPart(T3)-f1*A).norm() < 1E-12);
+    CHECK((imagPart(T3)-f2*A).norm() < 1E-12);
+
+    ITensor T4 = Complex(f2,f1)*A;
+    CHECK((realPart(T4)-f2*A).norm() < 1E-12);
+    CHECK((imagPart(T4)-f1*A).norm() < 1E-12);
+
+    ITensor T5 = A+Complex_i*B;
+    T5 *= Complex(f1,f2);
+    CHECK((realPart(T5)-(f1*A-f2*B)).norm() < 1E-12);
+    CHECK((imagPart(T5)-(f2*A+f1*B)).norm() < 1E-12);
+
+    ITensor T6 = A+Complex_i*B;
+    T6 *= Complex(f2,f1);
+    CHECK((realPart(T6)-(f2*A-f1*B)).norm() < 1E-12);
+    CHECK((imagPart(T6)-(f1*A+f2*B)).norm() < 1E-12);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
