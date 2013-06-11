@@ -142,15 +142,6 @@ class IQIndex : public Index
     static const 
     IQIndex& Null();
 
-    static const 
-    IQIndex& IndReIm();
-
-    static const 
-    IQIndex& IndReImP();
-
-    static const 
-    IQIndex& IndReImPP();
-
     private:
 
     /////////////

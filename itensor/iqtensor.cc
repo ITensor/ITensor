@@ -192,7 +192,20 @@ scaleTo(const LogNumber& newscale)
 //
 
 bool IQTensor::
-isNull() const { return &dat() == IQTDat::Null().get(); }
+isNull() const 
+    { 
+    return &dat() == IQTDat::Null().get(); 
+    }
+
+bool IQTensor::
+isComplex() const
+    {
+    Foreach(const ITensor& t, dat())
+        {
+        if(t.isComplex()) return true;
+        }
+    return false;
+    }
 
 int IQTensor::
 r() const 
@@ -355,37 +368,6 @@ IQTensor(std::istream& s)
     read(s); 
     }
 
-const IQTensor& IQTensor::
-Complex_1()
-    {
-    static const IQTensor Complex_1_(IQIndex::IndReIm()(1));
-    return Complex_1_;
-    }
-
-const IQTensor& IQTensor::
-Complex_i()
-    {
-    static const IQTensor Complex_i_(IQIndex::IndReIm()(2));
-    return Complex_i_;
-    }
-
-IQTensor
-IQmakeComplexProd()
-    {
-    IQTensor iqprod(IQIndex::IndReIm(),
-                    IQIndex::IndReImP(),
-                    IQIndex::IndReImPP());
-
-    iqprod += ITensor::ComplexProd();
-    return iqprod;
-    }
-
-const IQTensor& IQTensor::
-ComplexProd()
-    {
-    static const IQTensor ComplexProd_(IQmakeComplexProd());
-    return ComplexProd_;
-    }
 
 void IQTensor::
 read(std::istream& s)
@@ -437,6 +419,25 @@ operator/=(Real fac)
     Foreach(ITensor& t, dat.nc())
         {
         t /= fac;
+        }
+
+    return *this; 
+    }
+
+IQTensor& IQTensor::
+operator*=(Complex z) 
+    { 
+    dat.solo();
+
+    if(z.real() == 0 && z.imag() == 0) 
+        { 
+        dat.nc().clear(); 
+        return *this; 
+        }
+
+    Foreach(ITensor& t, dat.nc())
+        {
+        t *= z;
         }
 
     return *this; 
@@ -971,7 +972,7 @@ randomize()
 void IQTensor::
 conj()
     {
-    if(!isComplex(*this))
+    if(!this->isComplex())
         {
         soloIndex();
         is_->conj();
@@ -1011,7 +1012,6 @@ operator<<(std::ostream & s, const IQTensor& T)
         s << "  ";
         Foreach(const Index& i, t.indices())
             {
-            if(i.type() == ReIm) continue;
             const IQIndex& I = findIQInd(T,i);
             s << i.name() << ":" << qn(I,i) << "<" << I.dir() << "> ";
             }
@@ -1038,14 +1038,6 @@ operator*=(const IQTensor& other)
     if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    if(hasindex(*this,IQIndex::IndReIm()) && hasindex(other,IQIndex::IndReIm()) && !hasindex(other,IQIndex::IndReImP())
-	    && !hasindex(other,IQIndex::IndReImPP()) && !hasindex(*this,IQIndex::IndReImP()) && !hasindex(*this,IQIndex::IndReImPP()))
-        {
-        this->prime(ReIm);
-        operator*=(ComplexProd() * primed(other,ReIm,2));
-        return *this;
-        }
-
     solo();
 
     set<ApproxReal> common_inds;
@@ -1063,7 +1055,7 @@ operator*=(const IQTensor& other)
             //Check that arrow directions are compatible
             if(Global::checkArrows())
                 {
-                if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
+                if(f->dir() == I.dir())
                     {
                     Print(this->indices());
                     Print(other.indices());
@@ -1187,17 +1179,6 @@ operator/=(const IQTensor& other)
     if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    if(hasindex(*this,IQIndex::IndReIm())   && hasindex(other,IQIndex::IndReIm()) &&
-      !hasindex(*this,IQIndex::IndReImP())  && !hasindex(other,IQIndex::IndReImP()) &&
-      !hasindex(*this,IQIndex::IndReImPP()) && !hasindex(other,IQIndex::IndReImPP()))
-        {
-        prime(ReIm,1);
-        operator/=(primed(other,ReIm,2));
-        operator*=(ComplexProd());
-        return *this;
-        }
-
-
     set<ApproxReal> common_inds;
     
     array<IQIndex,NMAX> riqind_holder;
@@ -1211,7 +1192,7 @@ operator/=(const IQTensor& other)
             {
             //Check that arrow directions are compatible
             if(Global::checkArrows())
-                if(f->dir() != I.dir() && f->type() != ReIm && I.type() != ReIm)
+                if(f->dir() != I.dir())
                     {
                     Print(this->indices());
                     Print(other.indices());
@@ -1316,19 +1297,16 @@ operator/=(const IQTensor& other)
 
 //Extracts the real and imaginary parts of the 
 //component of a rank 0 tensor (scalar)
-void IQTensor::
-toComplex(Real& re, Real& im) const
+Complex IQTensor::
+toComplex() const
     {
-    if(isComplex(*this))
+    if(this->isComplex())
         {
-        re = realPart(*this).toReal();
-        im = imagPart(*this).toReal();
+        Real re = realPart(*this).toReal();
+        Real im = imagPart(*this).toReal();
+        return Complex(re,im);
         }
-    else
-        {
-        re = toReal();
-        im = 0;
-        }
+    return Complex(toReal(),0);
     }
 
 Real IQTensor::
@@ -1372,19 +1350,6 @@ operator+=(const IQTensor& other)
         */
 
     IQTensor& This = *this;
-
-    const bool complex_this = isComplex(*this);
-    const bool complex_other = isComplex(other);
-    if(!complex_this && complex_other)
-        {
-        operator*=(IQComplex_1());
-        return operator+=(other);
-        }
-    else
-    if(complex_this && !complex_other)
-        {
-        return operator+=(other * IQComplex_1());
-        }
 
     if(fabs(This.uniqueReal()-other.uniqueReal()) > 1.0e-11) 
         {
@@ -1466,6 +1431,28 @@ solo()
     dat.solo();
     }
 
+IQTensor& IQTensor::
+takeRealPart()
+    {
+    dat.solo();
+    Foreach(ITensor& t, dat.nc())
+        {
+        t.takeRealPart();
+        }
+    return *this;
+    }
+
+IQTensor& IQTensor::
+takeImagPart()
+    {
+    dat.solo();
+    Foreach(ITensor& t, dat.nc())
+        {
+        t.takeImagPart();
+        }
+    return *this;
+    }
+
 
 Real 
 Dot(IQTensor x, const IQTensor& y)
@@ -1479,12 +1466,12 @@ Dot(IQTensor x, const IQTensor& y)
     return x.toReal();
     }
 
-void 
-BraKet(IQTensor x, const IQTensor& y, Real& re, Real& im)
+Complex 
+BraKet(IQTensor x, const IQTensor& y)
     {
     x.conj();
     x *= y;
-    x.toComplex(re,im);
+    return x.toComplex();
     }
 
 

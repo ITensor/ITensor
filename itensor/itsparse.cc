@@ -299,6 +299,25 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     if(!S.isDiag()) 
         Error("product only implemented for diagonal ITSparses");
 
+    if(T.isComplex())
+        {
+        ITensor ri;
+        product(S,imagPart(T),ri);
+        product(S,realPart(T),res);
+        if(res.scale_.sign() != 0)
+            {
+            ri.scaleTo(res.scale_);
+            }
+        else
+            {
+            res.soloReal();
+            res.r_->v *= 0;
+            res.scale_ = ri.scale_;
+            }
+        res.i_.swap(ri.r_);
+        return;
+        }
+
     //This is set to true if some of the indices
     //of res come from S.
     //If false, there is an extra loop in the sum
@@ -434,21 +453,22 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     //Indices than T, though.
     if(S.rn() == 0)
         {
-        res.p = T.p;
+        res.r_ = T.r_;
+        res.i_ = T.i_;
         if(!S.diagAllSame())
             res *= S.diag_(1);
         return;
         }
 
     //Allocate a new dat for res if necessary
-    if(res.isNull() || !res.p.unique())
+    if(res.isNull() || !res.r_.unique())
         { 
-        res.p = boost::make_shared<ITDat>(alloc_size); 
+        res.r_ = boost::make_shared<ITDat>(alloc_size); 
         }
     else
         {
-        res.p->v.ReDimension(alloc_size);
-        res.p->v *= 0;
+        res.r_->v.ReDimension(alloc_size);
+        res.r_->v *= 0;
         }
 
     //Finish initting Counter tc
@@ -458,8 +478,8 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
         }
 
 
-    const Vector& Tdat = T.p->v;
-    Vector& resdat = res.p->v;
+    const Vector& Tdat = T.r_->v;
+    Vector& resdat = res.r_->v;
 
     if(S.diagAllSame())
         {

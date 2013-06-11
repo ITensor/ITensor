@@ -11,7 +11,7 @@
 #define Endl std::endl
 #define Format boost::format
 
-enum IndexType { Link, Site, ReIm, All };
+enum IndexType { Link, Site, All };
 
 //Forward declarations
 struct IndexDat;
@@ -158,18 +158,6 @@ class Index
     //Static default-constructed placeholder Index
     static const 
     Index& Null();
-
-    // Static Index indexing real and imaginary parts of a complex ITensor
-    static const 
-    Index& IndReIm();
-
-    // IndReIm with primeLevel 1
-    static const 
-    Index& IndReImP();
-
-    // IndReIm with primeLevel 2
-    static const 
-    Index& IndReImPP();
 
     private:
 

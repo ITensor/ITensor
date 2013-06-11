@@ -101,18 +101,6 @@ class IQTensor
     explicit 
     IQTensor(std::istream& s);
 
-    static 
-    const IQTensor& 
-    Complex_1();
-
-    static 
-    const IQTensor& 
-    Complex_i();
-
-    static 
-    const IQTensor& 
-    ComplexProd();
-
     //Accessor Methods ------------------------------------------
 
     //Rank of this IQTensor (number of IQIndices)
@@ -134,6 +122,9 @@ class IQTensor
     bool 
     isNull() const;
 
+    bool
+    isComplex() const;
+
     //Returns object containing ITensor blocks
     //The ITensors can be iterated over using a Foreach
     //For example, given an IQTensor T,
@@ -143,6 +134,12 @@ class IQTensor
     
     const IndexSet<IQIndex>& 
     indices() const { return *is_; }
+
+    IQTensor&
+    takeRealPart();
+
+    IQTensor&
+    takeImagPart();
 
 
     //----------------------------------------------------
@@ -202,8 +199,7 @@ class IQTensor
         { IQTensor res(*this); res *= fac; return res; }
 
     friend inline IQTensor 
-    operator*(Real fac, IQTensor T) 
-        { T *= fac; return T; }
+    operator*(Real fac, IQTensor T) { T *= fac; return T; }
 
     IQTensor& 
     operator/=(Real fac);
@@ -213,8 +209,7 @@ class IQTensor
         { IQTensor res(*this); res /= fac; return res; }
 
     friend inline IQTensor 
-    operator/(Real fac, IQTensor t) 
-        { return (t /= fac); }
+    operator/(Real fac, IQTensor t) { return (t /= fac); }
 
     IQTensor
     operator-() const { IQTensor T(*this); T *= -1; return T; }
@@ -229,6 +224,16 @@ class IQTensor
     friend inline IQTensor 
     operator*(const LogNumber& lgnum, IQTensor T) 
         { T *= lgnum; return T; }
+
+    IQTensor& 
+    operator*=(Complex z);
+
+    IQTensor 
+    operator*(Complex z) const
+        { IQTensor res(*this); res *= z; return res; }
+
+    friend inline IQTensor 
+    operator*(Complex z, IQTensor T) { T *= z; return T; }
 
     //
     // Contracting product with an ITensor
@@ -405,9 +410,9 @@ class IQTensor
     Real
     toReal() const;
 
-    void 
-    toComplex(Real& re, Real& im) const;
-    
+    Complex 
+    toComplex() const;
+
     void 
     randomize();
 
@@ -439,10 +444,6 @@ class IQTensor
 
     void 
     write(std::ostream& s) const;
-
-    static 
-    const IQIndex& 
-    ReImIndex() { return IQIndex::IndReIm(); }
 
     //Deprecated methods --------------------------
 
@@ -520,15 +521,6 @@ class IQTensor
     solo();
 
     }; //class IQTensor
-
-inline
-const IQTensor&
-IQComplex_1() { return IQTensor::Complex_1(); }
-
-inline
-const IQTensor&
-IQComplex_i() { return IQTensor::Complex_i(); }
-
 
 class IQTDat : public boost::noncopyable
     {
@@ -707,8 +699,8 @@ Dot(IQTensor x, const IQTensor& y);
 // (except it yields two real numbers, re and im,
 // instead of a rank 0 IQTensor).
 //
-void 
-BraKet(IQTensor x, const IQTensor& y, Real& re, Real& im);
+Complex 
+BraKet(IQTensor x, const IQTensor& y);
 
 //Compute divergence of IQTensor T
 //

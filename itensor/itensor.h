@@ -41,7 +41,19 @@ class ITensor
 
     //true if ITensor is default constructed
     bool 
-    isNull() const { return !bool(p); }
+    isNull() const { return !bool(r_); }
+
+    bool
+    isComplex() const { return bool(i_); }
+
+    //Sets this ITensor to its real part only
+    ITensor&
+    takeRealPart();
+
+    //Sets this ITensor to its imaginary part only
+    //(will be real afterward)
+    ITensor&
+    takeImagPart();
 
     //Enables looping over Indices in a Foreach
     //e.g. Foreach(const Index& I, t.index() ) { ... }
@@ -127,23 +139,6 @@ class ITensor
     explicit
     ITensor(std::istream& s) { read(s); }
 
-    static 
-    const ITensor& 
-    Complex_1();
-
-    static 
-    const ITensor& 
-    Complex_i();
-
-    static 
-    const ITensor& 
-    ConjTensor();
-
-    static 
-    const ITensor&
-    ComplexProd();
-
-        
     //Read in ITensor from binary stream s
     void 
     read(std::istream& s);
@@ -171,13 +166,17 @@ class ITensor
 
     //Multiplication and division by scalar
     ITensor& 
-    operator*=(Real fac) { scale_ *= fac; return *this; }
+    operator*=(Real fac);
 
     ITensor& 
     operator/=(Real fac) { scale_ /= fac; return *this; }
 
     ITensor
     operator-() const { ITensor T(*this); T.scale_ *= -1; return T; }
+
+    //Multiplication by Complex scalar
+    ITensor&
+    operator*=(Complex z);
 
     //Multiplication with LogNumber (very large or very small Real)
     ITensor& 
@@ -241,8 +240,8 @@ class ITensor
 
     //Get scalar value of rank 0 ITensor
     //Throws ITError if r() != 0
-    void
-    toComplex(Real& re, Real& im) const;
+    Complex
+    toComplex() const;
 
     // IndexVal element access
     // Given iv1 = (I1,n1), iv2 = (I2,n2), ...
@@ -398,9 +397,6 @@ class ITensor
     void 
     assignToVec(VectorRef v) const;
 
-    void 
-    reshapeDat(const Permutation& p, Vector& rdat) const;
-
     //In-place version of reshapeDat. Does not re-order indices
     //so resulting ITensor is *not* equivalent to original.
     void 
@@ -420,6 +416,9 @@ class ITensor
 
     const Real*
     datStart() const;
+
+    const Real*
+    imagDatStart() const;
 
     void 
     randomize();
@@ -467,10 +466,6 @@ class ITensor
 
     typedef ITSparse
     SparseT;
-
-    static 
-    const Index& 
-    ReImIndex() { return Index::IndReIm(); }
 
     //Deprecated methods --------------------------
 
@@ -570,7 +565,8 @@ class ITensor
     //
 
     //Pointer to ITDat containing tensor data
-    boost::shared_ptr<ITDat> p; 
+    boost::shared_ptr<ITDat> r_, //real part
+                             i_; //imag part
 
     //Indices, maximum of 8
     IndexSet<Index> is_;
@@ -584,15 +580,28 @@ class ITensor
 
     void 
     allocate(int dim);
-
     void 
     allocate();
+
+    void 
+    allocateImag(int dim);
+    void 
+    allocateImag();
 
     //Disattach self from current ITDat and create own copy instead.
     //Necessary because ITensors logically represent distinct
     //objects even though they may share data
     void 
     solo();
+
+    void 
+    soloReal();
+
+    void 
+    soloImag();
+
+    void
+    equalizeScales(ITensor& other);
     
     friend struct ProductProps;
 
@@ -618,14 +627,6 @@ class ITensor
 
     }; // class ITensor
 
-
-inline
-const ITensor&
-Complex_1() { return ITensor::Complex_1(); }
-
-inline
-const ITensor&
-Complex_i() { return ITensor::Complex_i(); }
 
 
 class commaInit
@@ -726,6 +727,12 @@ ITensor inline
 operator/(ITensor T, Real fac) { T /= fac; return T; }
 
 ITensor inline
+operator*(ITensor T, Complex z) { T *= z; return T; }
+
+ITensor inline
+operator*(Complex z, ITensor T) { T *= z; return T; }
+
+ITensor inline
 operator*(ITensor T, LogNumber lgnum) { T *= lgnum; return T; }
 
 ITensor inline
@@ -746,8 +753,13 @@ mapElems(const Callable& f)
     {
     solo();
     scaleTo(1);
-    for(int j = 1; j <= p->v.Length(); ++j)
-        p->v(j) = f(p->v(j));
+    for(int j = 1; j <= r_->v.Length(); ++j)
+        r_->v(j) = f(r_->v(j));
+    if(i_)
+        {
+        for(int j = 1; j <= i_->v.Length(); ++j)
+            i_->v(j) = f(i_->v(j));
+        }
     return *this;
     }
 
@@ -771,8 +783,8 @@ Dot(const ITensor& x, const ITensor& y);
 // (except it yields two real numbers, re and im,
 // instead of a rank 0 ITensor).
 //
-void 
-BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im);
+Complex 
+BraKet(const ITensor& x, const ITensor& y);
 
 //
 // Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
@@ -808,7 +820,7 @@ commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
     IndexT;
     Foreach(const IndexT& I, A.indices())
         {
-        if( ((t == All && I.type()!=ReIm) || I.type() == t)
+        if( (t == All || I.type() == t)
          && hasindex(B.indices(),I) ) 
             {
             return I;
@@ -846,13 +858,6 @@ bool
 hasindex(const Tensor& T, const typename Tensor::IndexT& I)
     {
     return hasindex(T.indices(),I);
-    }
-
-template <class Tensor>
-bool 
-isComplex(const Tensor& T)
-    { 
-    return hasindex(T.indices(),Tensor::ReImIndex());
     }
 
 //
@@ -954,33 +959,24 @@ tieIndices(Tensor T,
     return T; 
     }
 
-template<class Tensor>
+template <class Tensor>
 Tensor
 realPart(const Tensor& T)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
-    if(!isComplex(T))
+    if(!T.isComplex())
         return T;
     //else
     Tensor re(T);
-    re.prime(ReIm);
-	re *= primed(Tensor::ReImIndex()(1),ReIm);
+    re.takeRealPart();
     return re;
     }
 
-template<class Tensor>
+template <class Tensor>
 Tensor
 imagPart(const Tensor& T)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
-    if(!isComplex(T))
-        return (0*T);
-    //else
     Tensor im(T);
-    im.prime(ReIm);
-	im *= primed(Tensor::ReImIndex()(2),ReIm);
+    im.takeImagPart();
     return im;
     }
 
@@ -991,7 +987,7 @@ template <class Tensor>
 Real
 trace(Tensor T)
     {
-    if(isComplex(T))
+    if(T.isComplex())
         {
         Error("ITensor is complex, use trace(T,re,im)");
         }
@@ -1006,14 +1002,16 @@ template<class Tensor>
 void
 trace(const Tensor& T, Real& re, Real& im)
     {
-    if(!isComplex(T))
+    if(!T.isComplex())
         {
         re = trace(T);
         im = 0;
-        return;
         }
-    re = trace(realPart(T));
-    im = trace(imagPart(T));
+    else
+        {
+        re = trace(realPart(T));
+        im = trace(imagPart(T));
+        }
     }
 
 template<class Tensor, class IndexT>

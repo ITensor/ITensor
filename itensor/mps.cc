@@ -1475,7 +1475,6 @@ findCenter(const IQMPS& psi)
         Arrow dir = A.index(1).dir();
         for(int i = 2; i <= A.r(); ++i)
             {
-            if(A.index(i).type() == ReIm) continue;
             if(A.index(i).dir() != dir)
                 {
                 allSameDir = false;

@@ -225,8 +225,6 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
               &Rcomb = (U.isNull() ? Ucomb : Vcomb);
     Foreach(const IndexT& I, AA.indices())
         { 
-        if(I.type() == ReIm) continue;
-
         if(hasindex(L,I))
             Lcomb.addleft(I);
         else
@@ -318,7 +316,10 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     SparseT;
 
     if(AA.vecSize() == 0) 
+        {
+        PrintDat(AA);
         throw ResultIsZero("denmatDecomp: AA.vecSize == 0");
+        }
 
     IndexT mid; 
     try {
@@ -344,7 +345,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     Foreach(const IndexT& I, to_orth.indices())
         { 
-        if(!(hasindex(newoc,I) || I == Tensor::ReImIndex() ))
+        if(!hasindex(newoc,I))
             comb.addleft(I);
         }
 
@@ -416,7 +417,6 @@ diagHermitian(const Tensor& M, Tensor& U, SparseT& D, Spectrum& spec,
     CombinerT comb;
     Foreach(const IndexT& I, M.indices())
         { 
-        if(I.type() == ReIm) continue;
         if(I.primeLevel() == 0)
             {
             comb.addleft(I);
@@ -488,6 +488,9 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
         Acomb.doCondense(true);
         Bcomb.doCondense(true);
 
+        const
+        IndexT reim = IQIndex("ReIm",Index("reim",2),QN());
+
         //Divide up indices based on U
         //If U is null, use V instead
         const Tensor &L = (A.isNull() ? B : A);
@@ -495,20 +498,21 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
                   &Rcomb = (A.isNull() ? Acomb : Bcomb);
         Foreach(const IndexT& I, T.indices())
             { 
-            if(I.type() == ReIm)
-                {
-                (dir==Fromleft ? Rcomb : Lcomb).addleft(I);
-                }
+            if(hasindex(L,I))
+                Lcomb.addleft(I);
             else
-                {
-                if(hasindex(L,I))
-                    Lcomb.addleft(I);
-                else
-                    Rcomb.addleft(I);
-                }
+                Rcomb.addleft(I);
             }
 
+        if(dir == Fromleft)
+            Rcomb.addleft(reim);
+        else
+            Lcomb.addleft(reim);
+
+        T = realPart(T)*reim(1) + imagPart(T)*reim(2);
+
         T = Acomb * T * Bcomb;
+
 
         SparseT D;
         svdRank2(T,Acomb.right(),Bcomb.right(),A,D,B,spec,opts);
@@ -516,8 +520,16 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
         A = conj(Acomb) * A;
         B = B * conj(Bcomb);
 
-        if(dir==Fromleft) B *= D;
-        else              A *= D;
+        if(dir==Fromleft) 
+            {
+            B *= D;
+            B = B*conj(reim)(1) + Complex_i*B*conj(reim)(2);
+            }
+        else              
+            {
+            A *= D;
+            A = A*conj(reim)(1) + Complex_i*A*conj(reim)(2);
+            }
         }
 
     spec.noise(orig_noise);

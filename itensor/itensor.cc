@@ -10,10 +10,181 @@ using boost::shared_ptr;
 using boost::make_shared;
 
 #ifdef DEBUG
-#define ITENSOR_CHECK_NULL if(!p) Error("ITensor is null");
+#define ITENSOR_CHECK_NULL if(!r_) Error("ITensor is null");
 #else
 #define ITENSOR_CHECK_NULL
 #endif
+
+void
+reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vector& res)
+    {
+    if(P.isTrivial())
+        {
+        res = dat;
+        return;
+        }
+
+    res.ReDimension(dat.Length());
+    res = 0;
+
+    const Permutation::int9& ind = P.ind();
+
+    //Make a counter for dat
+    Counter c(is);
+    array<int,NMAX+1> n;
+    for(int j = 1; j <= c.rn; ++j) n[ind[j]] = c.n[j];
+
+    //Special case loops
+#define Loop6(q,z,w,k,y,s) {for(int i1 = 0; i1 < n[1]; ++i1) for(int i2 = 0; i2 < n[2]; ++i2)\
+	for(int i3 = 0; i3 < n[3]; ++i3) for(int i4 = 0; i4 < n[4]; ++i4) for(int i5 = 0; i5 < n[5]; ++i5)\
+    for(int i6 = 0; i6 < n[6]; ++i6)\
+    res[ (((((i6)*n[5]+i5)*n[4]+i4)*n[3]+i3)*n[2]+i2)*n[1]+i1 ] =\
+    dat[ (((((s)*c.n[5]+y)*c.n[4]+k)*c.n[3]+w)*c.n[2]+z)*c.n[1]+q ]; return; }
+
+#define Loop5(q,z,w,k,y) {for(int i1 = 0; i1 < n[1]; ++i1) for(int i2 = 0; i2 < n[2]; ++i2)\
+	for(int i3 = 0; i3 < n[3]; ++i3) for(int i4 = 0; i4 < n[4]; ++i4) for(int i5 = 0; i5 < n[5]; ++i5)\
+    res[ ((((i5)*n[4]+i4)*n[3]+i3)*n[2]+i2)*n[1]+i1 ] = dat[ ((((y)*c.n[4]+k)*c.n[3]+w)*c.n[2]+z)*c.n[1]+q ]; return; }
+
+#define Loop4(q,z,w,k) {for(int i1 = 0; i1 < n[1]; ++i1)  for(int i2 = 0; i2 < n[2]; ++i2)\
+	for(int i3 = 0; i3 < n[3]; ++i3) for(int i4 = 0; i4 < n[4]; ++i4)\
+	res[ (((i4)*n[3]+i3)*n[2]+i2)*n[1]+i1 ] = dat[ (((k)*c.n[3]+w)*c.n[2]+z)*c.n[1]+q ]; return; }
+
+#define Loop3(q,z,w) {for(int i1 = 0; i1 < n[1]; ++i1)  for(int i2 = 0; i2 < n[2]; ++i2)\
+	for(int i3 = 0; i3 < n[3]; ++i3) res[ ((i3)*n[2]+i2)*n[1]+i1 ] = dat[ ((w)*c.n[2]+z)*c.n[1]+q ]; return; }
+
+#define Bif3(a,b,c) if(ind[1] == a && ind[2] == b && ind[3] == c)
+
+#define Bif4(a,b,c,d) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4] == d)
+
+#define Bif5(a,b,c,d,e) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e)
+
+#define Bif6(a,b,c,d,e,g) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e && ind[6] == g)
+
+    if(is.rn() == 2 && ind[1] == 2 && ind[2] == 1)
+        {
+        MatrixRef xref; 
+        dat.TreatAsMatrix(xref,c.n[2],c.n[1]);
+        res = Matrix(xref.t()).TreatAsVector();
+        return; 
+        }
+    else if(is.rn() == 3)
+        {
+        DO_IF_PS(int idx = ((ind[1])*3+ind[2])*3+ind[3]; Prodstats::stats().perms_of_3[idx] += 1; )
+        //Arranged loosely in order of frequency of occurrence
+        Bif3(2,1,3) Loop3(i2,i1,i3)
+        Bif3(2,3,1) Loop3(i2,i3,i1) //cyclic
+        Bif3(3,1,2) Loop3(i3,i1,i2)
+        //Bif3(1,3,2) Loop3(i1,i3,i2)
+        //Bif3(3,2,1) Loop3(i3,i2,i1)
+        }
+    else if(is.rn() == 4)
+        {
+        DO_IF_PS(int idx = (((ind[1])*4+ind[2])*4+ind[3])*4+ind[4]; Prodstats::stats().perms_of_4[idx] += 1; )
+        //Arranged loosely in order of frequency of occurrence
+        Bif4(1,2,4,3) Loop4(i1,i2,i4,i3)
+        Bif4(1,3,2,4) Loop4(i1,i3,i2,i4)
+        Bif4(2,3,1,4) Loop4(i2,i3,i1,i4)
+        Bif4(2,3,4,1) Loop4(i2,i3,i4,i1) //cyclic
+        Bif4(1,4,2,3) Loop4(i1,i4,i2,i3)
+        Bif4(2,1,3,4) Loop4(i2,i1,i3,i4)
+        Bif4(2,1,4,3) Loop4(i2,i1,i4,i3)
+        Bif4(3,4,1,2) Loop4(i3,i4,i1,i2)
+        }
+    else if(is.rn() == 5)
+        {
+        DO_IF_PS(int idx = ((((ind[1])*5+ind[2])*5+ind[3])*5+ind[4])*5+ind[5]; Prodstats::stats().perms_of_5[idx] += 1; )
+        //Arranged loosely in order of frequency of occurrence
+        Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
+        Bif5(1,4,2,5,3) Loop5(i1,i4,i2,i5,i3)
+        Bif5(1,4,2,3,5) Loop5(i1,i4,i2,i3,i5)
+        Bif5(3,1,4,2,5) Loop5(i3,i1,i4,i2,i5)
+        Bif5(2,4,1,3,5) Loop5(i2,i4,i1,i3,i5)
+        Bif5(2,4,3,5,1) Loop5(i2,i4,i3,i5,i1)
+        Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
+        Bif5(3,4,1,2,5) Loop5(i3,i4,i1,i2,i5)
+        Bif5(2,1,3,4,5) Loop5(i2,i1,i3,i4,i5)
+        Bif5(2,3,4,5,1) Loop5(i2,i3,i4,i5,i1)
+        Bif5(2,3,4,1,5) Loop5(i2,i3,i4,i1,i5)
+        Bif5(2,3,1,4,5) Loop5(i2,i3,i1,i4,i5)
+        Bif5(2,3,4,1,5) Loop5(i2,i3,i4,i1,i5)
+        Bif5(3,4,1,5,2) Loop5(i3,i4,i1,i5,i2)
+        Bif5(5,1,4,2,3) Loop5(i5,i1,i4,i2,i3)
+        }
+    else if(is.rn() == 6)
+        {
+        DO_IF_PS(int idx = (((((ind[1])*6+ind[2])*6+ind[3])*6+ind[4])*6+ind[5])*6+ind[6]; Prodstats::stats().perms_of_6[idx] += 1; )
+        //Arranged loosely in order of frequency of occurrence
+        Bif6(2,4,1,3,5,6) Loop6(i2,i4,i1,i3,i5,i6)
+        Bif6(1,4,2,3,5,6) Loop6(i1,i4,i2,i3,i5,i6)
+        Bif6(2,4,1,5,3,6) Loop6(i2,i4,i1,i5,i3,i6)
+        Bif6(1,2,4,5,3,6) Loop6(i1,i2,i4,i5,i3,i6)
+        Bif6(3,4,1,5,6,2) Loop6(i3,i4,i1,i5,i6,i2)
+        }
+    DO_IF_PS(Prodstats::stats().c4 += 1;)
+
+    //The j's are pointers to the i's of xdat's Counter,
+    //but reordered in a way appropriate for res
+    array<int*,NMAX+1> j;
+    for(int k = 1; k <= NMAX; ++k) 
+        { 
+        j[ind[k]] = &(c.i[k]); 
+        }
+
+    //Catch-all loops that work for any tensor
+    switch(c.rn)
+    {
+    case 2:
+        for(; c.notDone(); ++c)
+            {
+            res[(*j[2])*n[1]+*j[1]]
+                = dat[c.ind];
+            }
+        return;
+    case 3:
+        for(; c.notDone(); ++c)
+            {
+            res[((*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = dat[c.ind];
+            }
+        return;
+    case 4:
+        for(; c.notDone(); ++c)
+            {
+            res[(((*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = dat[c.ind];
+            }
+        return;
+    case 5:
+        for(; c.notDone(); ++c)
+            {
+            res[((((*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = dat[c.ind];
+            }
+        return;
+    case 6:
+        for(; c.notDone(); ++c)
+            {
+            res[(((((*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = dat[c.ind];
+            }
+        return;
+    case 7:
+        for(; c.notDone(); ++c)
+            {
+            res[((((((*j[7])*n[6]+*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = dat[c.ind];
+            }
+        return;
+    default:
+        for(; c.notDone(); ++c)
+            {
+            res[(((((((*j[8])*n[7]+*j[7])*n[6]+*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
+                = dat[c.ind];
+            }
+        return;
+    } //switch(c.rn)
+
+    } // reshape
 
 //
 // ITensor
@@ -36,7 +207,7 @@ ITensor(Real val)
     scale_(1)
     { 
     allocate(1);
-    p->v = val;
+    r_->v = val;
     }
 
 ITensor::
@@ -55,13 +226,13 @@ ITensor(const Index& i1, Real val)
     scale_(1)
 	{ 
     allocate(i1.m());
-    p->v = val; 
+    r_->v = val; 
     }
 
 ITensor::
 ITensor(const Index& i1, const VectorRef& V) 
     : 
-    p(make_shared<ITDat>(V)),
+    r_(make_shared<ITDat>(V)),
     is_(i1),
     scale_(1)
 	{ 
@@ -90,10 +261,12 @@ ITensor(const Index& i1,const Index& i2,Real a)
 	    {
 	    const int nn = min(i1.m(),i2.m());
 	    for(int i = 1; i <= nn; ++i) 
-		p->v((i-1)*i1.m()+i) = a;
+		r_->v((i-1)*i1.m()+i) = a;
 	    }
 	else 
-	    p->v(1) = a;
+        {
+	    r_->v(1) = a;
+        }
 	}
 
 ITensor::
@@ -106,7 +279,7 @@ ITensor(const Index& i1,const Index& i2,const MatrixRef& M)
 	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
 	    Error("Mismatch of Index sizes and matrix.");
 	MatrixRef dref; 
-	p->v.TreatAsMatrix(dref,i2.m(),i1.m()); 
+	r_->v.TreatAsMatrix(dref,i2.m(),i1.m()); 
 	dref = M.t();
 	}
 
@@ -140,7 +313,7 @@ ITensor(const IndexVal& iv)
     scale_(1)
 	{ 
     allocate(iv.m());
-	p->v(iv.i) = 1; 
+	r_->v(iv.i) = 1; 
 	}
 
 ITensor::
@@ -150,7 +323,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2)
     scale_(1)
 	{ 
     allocate(iv1.m()*iv2.m());
-	p->v((iv2.i-1)*iv1.m()+iv1.i) = 1; 
+	r_->v((iv2.i-1)*iv1.m()+iv1.i) = 1; 
 	}
 
 ITensor::
@@ -183,7 +356,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
             { ja[k] = iv[j]-1; break; }
         }
 
-    p->v[_ind(is_,ja[0],ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7])] = 1;
+    r_->v[_ind(is_,ja[0],ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7])] = 1;
     }
 
 ITensor::
@@ -198,7 +371,7 @@ ITensor(const IndexSet<Index>& I)
 ITensor::
 ITensor(const IndexSet<Index>& I, const Vector& V) 
     : 
-    p(make_shared<ITDat>(V)),
+    r_(make_shared<ITDat>(V)),
     is_(I),
     scale_(1)
 	{
@@ -212,7 +385,8 @@ ITensor(const IndexSet<Index>& I, const Vector& V)
 ITensor::
 ITensor(const IndexSet<Index>& I, const ITensor& other) 
     : 
-    p(other.p), 
+    r_(other.r_), 
+    i_(other.i_), 
     is_(I),
     scale_(other.scale_)
 	{
@@ -232,63 +406,46 @@ ITensor(const IndexSet<Index>& I, const ITensor& other, const Permutation& P)
     if(is_.dim() != other.vecSize()) 
         Error("incompatible Index and ITensor sizes");
 #endif
-    if(P.isTrivial()) { p = other.p; }
-    else               { allocate(); other.reshapeDat(P,p->v); }
+    if(P.isTrivial()) 
+        { 
+        r_ = other.r_; 
+        i_ = other.i_; 
+        }
+    else               
+        { 
+        allocate(); 
+        reshape(P,other.is_,other.r_->v,r_->v); 
+
+        if(other.i_)
+            {
+            allocateImag();
+            reshape(P,other.is_,other.i_->v,i_->v); 
+            }
+        }
     }
 
-const ITensor& ITensor::
-Complex_1()
+ITensor& ITensor::
+takeRealPart()
     {
-    static const ITensor Complex_1_(Index::IndReIm()(1));
-    return Complex_1_;
+    ITENSOR_CHECK_NULL
+    //TODO: account for complex scale fac
+    i_.reset();
+    return *this;
     }
 
-const ITensor& ITensor::
-Complex_i()
+ITensor& ITensor::
+takeImagPart()
     {
-    static const ITensor Complex_i_(Index::IndReIm()(2));
-    return Complex_i_;
-    }
-
-ITensor
-makeConjTensor()
-    {
-    ITensor ct(Index::IndReImP());
-    ct(Index::IndReImP()(1)) =  1;
-    ct(Index::IndReImP()(2)) = -1;
-    return ct;
-    }
-
-const ITensor& ITensor::
-ConjTensor()
-    {
-    static const ITensor ConjTensor_(makeConjTensor());
-    return ConjTensor_;
-    }
-
-ITensor
-makeComplexProd()
-    {
-    ITensor prod(Index::IndReIm(),
-                 Index::IndReImP(),
-                 Index::IndReImPP());
-
-    IndexVal iv0(Index::IndReIm(),1), 
-             iv1(Index::IndReImP(),1), 
-             iv2(Index::IndReImPP(),1);
-
-    iv0.i = 1; iv1.i = 1; iv2.i = 1; prod(iv0,iv1,iv2) =  1;
-    iv0.i = 1; iv1.i = 2; iv2.i = 2; prod(iv0,iv1,iv2) = -1;
-    iv0.i = 2; iv1.i = 2; iv2.i = 1; prod(iv0,iv1,iv2) =  1;
-    iv0.i = 2; iv1.i = 1; iv2.i = 2; prod(iv0,iv1,iv2) =  1;
-    return prod;
-    }
-
-const ITensor& ITensor::
-ComplexProd()
-    {
-    static const ITensor ComplexProd_(makeComplexProd());
-    return ComplexProd_;
+    ITENSOR_CHECK_NULL
+    //TODO: account for complex scale fac
+    r_.swap(i_);
+    if(!r_)
+        {
+        const int alloc_size = i_->v.Length();
+        allocate(alloc_size);
+        }
+    i_.reset();
+    return *this;
     }
 
 void ITensor::
@@ -300,8 +457,15 @@ read(std::istream& s)
 
     is_.read(s);
     scale_.read(s);
-    p = make_shared<ITDat>();
-    p->read(s);
+    r_ = make_shared<ITDat>();
+    r_->read(s);
+    bool is_cplx = false;
+    s.read((char*)&is_cplx,sizeof(is_cplx));
+    if(is_cplx)
+        {
+        i_ = make_shared<ITDat>();
+        i_->read(s);
+        }
     }
 
 void ITensor::
@@ -313,7 +477,10 @@ write(std::ostream& s) const
 
     is_.write(s);
     scale_.write(s);
-    p->write(s);
+    r_->write(s);
+    bool is_cplx = isComplex();
+    s.write((char*)&is_cplx,sizeof(is_cplx));
+    if(is_cplx) i_->write(s);
     }
 
 
@@ -324,48 +491,81 @@ toReal() const
     if(this->isNull())
         Error("ITensor is null");
 #endif
+
+    if(isComplex())
+        Error("ITensor is complex");
+
     if(is_.rn() != 0)
         {
         Print(*this);
-        Error("ITensor is not a real scalar");
+        Error("ITensor not a scalar");
         }
 
 	try {
-	    return p->v(1)*scale_.real(); 
+	    return r_->v(1)*scale_.real(); 
 	    }
 	catch(const TooBigForReal& e)
 	    {
 	    cout << "too big for real() in toReal" << endl;
 	    cerr << "too big for real() in toReal" << endl;
-	    cout << "p->v(1) is " << p->v(1) << endl;
+	    cout << "r_->v(1) is " << r_->v(1) << endl;
 	    cout << "scale is " << scale() << endl;
 	    cout << "rethrowing" << endl;
 	    throw e;
 	    }
 	catch(TooSmallForReal)
 	    {
-	    cout << "warning: too small for real() in toReal" << endl;
-	    cerr << "warning: too small for real() in toReal" << endl;
-	    cout << "p->v(1) is " << p->v(1) << endl;
-	    cout << "scale is " << scale() << endl;
-	    return 0.0;
+	    //cout << "warning: too small for real() in toReal" << endl;
+	    //cerr << "warning: too small for real() in toReal" << endl;
+	    //cout << "r_->v(1) is " << r_->v(1) << endl;
+	    //cout << "scale is " << scale() << endl;
+	    return 0.;
 	    }
 	return NAN; //shouldn't reach this line
 	}
 
-void ITensor::
-toComplex(Real& re, Real& im) const 
+Complex ITensor::
+toComplex() const
 	{ 
-    if(isComplex(*this))
+    if(this->isComplex())
         {
-        re = operator()(Index::IndReIm()(1));
-        im = operator()(Index::IndReIm()(2));
+        Real re, im;
+        try {
+            re = r_->v(1)*scale_.real(); 
+            }
+        catch(const TooBigForReal& e)
+            {
+            cout << "too big for real() in toReal" << endl;
+            cerr << "too big for real() in toReal" << endl;
+            cout << "r_->v(1) is " << r_->v(1) << endl;
+            cout << "scale is " << scale() << endl;
+            cout << "rethrowing" << endl;
+            throw e;
+            }
+        catch(TooSmallForReal)
+            {
+            re = 0.;
+            }
+
+        try {
+            im = i_->v(1)*scale_.real(); 
+            }
+        catch(const TooBigForReal& e)
+            {
+            cout << "too big for real() in toReal" << endl;
+            cerr << "too big for real() in toReal" << endl;
+            cout << "r_->v(1) is " << r_->v(1) << endl;
+            cout << "scale is " << scale() << endl;
+            cout << "rethrowing" << endl;
+            throw e;
+            }
+        catch(TooSmallForReal)
+            {
+            im = 0.0;
+            }
+        return Complex(re,im);
         }
-    else
-        {
-        re = toReal();
-        im = 0;
-        }
+    return Complex(toReal(),0.);
     }
 
 /*
@@ -379,7 +579,7 @@ operator()()
         }
     solo(); 
     scaleTo(1);
-    return p->v(1);
+    return r_->v(1);
     }
 
 Real ITensor::
@@ -391,7 +591,7 @@ operator()() const
         std::cerr << format("# given = 0, rn_ = %d\n")%is_.rn();
         Error("Not enough indices (requires all having m!=1)");
         }
-    return scale_.real()*p->v(1);
+    return scale_.real()*r_->v(1);
     }
     */
 
@@ -413,7 +613,7 @@ operator()(const IndexVal& iv1)
 #endif
     solo(); 
     scaleTo(1);
-    return p->v(iv1.i);
+    return r_->v(iv1.i);
 	}
 
 Real ITensor::
@@ -433,7 +633,7 @@ operator()(const IndexVal& iv1) const
         Error("Incorrect IndexVal argument to ITensor");
         }
 #endif
-    return scale_.real()*p->v(iv1.i);
+    return scale_.real()*r_->v(iv1.i);
 	}
 
 Real& ITensor::
@@ -441,14 +641,14 @@ operator()(const IndexVal& iv1, const IndexVal& iv2)
     {
     solo(); 
     scaleTo(1);
-    return p->v[_ind2(iv1,iv2)];
+    return r_->v[_ind2(iv1,iv2)];
     }
 
 Real ITensor::
 operator()(const IndexVal& iv1, const IndexVal& iv2) const
     {
     ITENSOR_CHECK_NULL
-    return scale_.real()*p->v[_ind2(iv1,iv2)];
+    return scale_.real()*r_->v[_ind2(iv1,iv2)];
     }
 
 Real& ITensor::
@@ -459,7 +659,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2,
     {
     solo(); 
     scaleTo(1);
-    return p->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
+    return r_->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
     }
 
 Real ITensor::
@@ -469,7 +669,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2,
            const IndexVal& iv7,const IndexVal& iv8) const
     {
     ITENSOR_CHECK_NULL
-    return scale_.real()*p->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
+    return scale_.real()*r_->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
     }
 
 //#define DO_REWRITE_ASSIGN
@@ -496,7 +696,7 @@ assignFrom(const ITensor& other)
         { 
         p = make_shared<ITDat>(); 
         }
-    other.reshapeDat(P,p->v);
+    reshape(P,other.r_->v,r_->v);
     DO_IF_PS(++Prodstats::stats().c1;)
 #endif
     }
@@ -658,7 +858,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
     boost::shared_ptr<ITDat> np = boost::make_shared<ITDat>(alloc_size);
     Vector& resdat = np->v;
 
-    const Vector& thisdat = p->v;
+    const Vector& thisdat = r_->v;
     for(; nc.notDone(); ++nc)
         {
         resdat[nc.ind] =
@@ -668,8 +868,24 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
                          *ii[7],*ii[8])];
         }
 
+    r_.swap(np);
+
+    if(this->isComplex())
+        {
+        np = boost::make_shared<ITDat>(alloc_size);
+        const Vector& thisidat = i_->v;
+        for(nc.reset(); nc.notDone(); ++nc)
+            {
+            resdat[nc.ind] =
+            thisidat[_ind(is_,*ii[1],*ii[2],
+                              *ii[3],*ii[4],
+                              *ii[5],*ii[6],
+                              *ii[7],*ii[8])];
+            }
+        i_.swap(np);
+        }
+
     is_.swap(new_is_);
-    p.swap(np);
 
     } //ITensor::tieIndices
 
@@ -808,7 +1024,7 @@ trace(const array<Index,NMAX>& indices, int nind)
     boost::shared_ptr<ITDat> np = boost::make_shared<ITDat>(alloc_size);
     Vector& resdat = np->v;
 
-    const Vector& thisdat = p->v;
+    const Vector& thisdat = r_->v;
     for(; nc.notDone(); ++nc)
         {
         Real newval = 0;
@@ -824,7 +1040,27 @@ trace(const array<Index,NMAX>& indices, int nind)
         }
 
     is_.swap(new_is_);
-    p.swap(np);
+    r_.swap(np);
+
+    if(this->isComplex())
+        {
+        const Vector& thisidat = i_->v;
+        for(nc.reset(); nc.notDone(); ++nc)
+            {
+            Real newval = 0;
+            for(trace_ind = 0; trace_ind < tm; ++trace_ind)
+                {
+                newval += 
+                thisidat[_ind(is_,*ii[1],*ii[2],
+                                  *ii[3],*ii[4],
+                                  *ii[5],*ii[6],
+                                  *ii[7],*ii[8])];
+                }
+            resdat[nc.ind] = newval;
+            }
+
+        i_.swap(np);
+        }
 
     return *this;
     } //ITensor::trace
@@ -882,8 +1118,6 @@ expandIndex(const Index& small, const Index& big, int start)
         Error("couldn't find index");
         }
 
-    boost::shared_ptr<ITDat> oldp(p);
-    allocate(newinds.dim());
 
     const int w = findindex(newinds,big);
     int inc = start;
@@ -891,10 +1125,6 @@ expandIndex(const Index& small, const Index& big, int start)
         {
         inc *= newinds[n].m();
         }
-
-    const Real* const olddat = oldp->v.Store();
-    Real* const newdat = p->v.Store();
-
 
     //Comparing nmax and omax determines whether
     //old dat fits into new dat sequentially, in which
@@ -905,8 +1135,14 @@ expandIndex(const Index& small, const Index& big, int start)
                               is_[4].m()-1,is_[5].m()-1, 
                               is_[6].m()-1,is_[7].m()-1);
 
+    boost::shared_ptr<ITDat> oldr(r_);
+    allocate(newinds.dim());
+
     const
-    int omax = oldp->v.Length();
+    int omax = oldr->v.Length();
+
+    const Real* const olddat = oldr->v.Store();
+    Real* const newdat = r_->v.Store();
 
 	if(nmax == omax)
 	    {
@@ -925,204 +1161,57 @@ expandIndex(const Index& small, const Index& big, int start)
             }
         }
 
+    if(this->isComplex())
+        {
+        boost::shared_ptr<ITDat> oldi(i_);
+        allocateImag(newinds.dim());
+        const Real* const oldidat = oldi->v.Store();
+        Real* const newidat = i_->v.Store();
+        if(nmax == omax)
+            {
+            std::copy(oldidat,oldidat+omax,newidat+inc);
+            }
+        else
+            {
+            Counter c(is_);
+            for(; c.notDone(); ++c)
+                {
+                newidat[inc+_ind(newinds,c.i[1],c.i[2],
+                                         c.i[3],c.i[4],
+                                         c.i[5],c.i[6],
+                                         c.i[7],c.i[8])]
+                = oldidat[c.ind];
+                }
+            }
+        }
+
     is_.swap(newinds);
     }
 
 int ITensor::
 vecSize() const 
     { 
-    return (p.get() == 0 ? 0 : p->v.Length()); 
+    if(isNull()) return 0;
+    return r_->v.Length(); 
     }
 
 void ITensor::
 assignToVec(VectorRef v) const
     {
-    if(p->v.Length() != v.Length()) 
+    if(r_->v.Length() != v.Length()) 
         Error("ITensor::assignToVec bad size");
+    if(this->isComplex())
+        Error("assignToVec defined only for real ITensor");
     if(scale_.isRealZero()) 
         {
         v *= 0;
         return;
         }
     ITENSOR_CHECK_NULL
-    v = p->v;
+    v = r_->v;
     v *= scale_.real();
     }
 
-void ITensor::
-reshapeDat(const Permutation& P, Vector& rdat) const
-    {
-    ITENSOR_CHECK_NULL
-
-    const Vector& thisdat = p->v;
-
-    if(P.isTrivial())
-        {
-        rdat = thisdat;
-        return;
-        }
-
-    rdat.ReDimension(thisdat.Length());
-    rdat = 0;
-
-    const Permutation::int9& ind = P.ind();
-
-    //Make a counter for thisdat
-    Counter c(is_);
-    array<int,NMAX+1> n;
-    for(int j = 1; j <= c.rn; ++j) n[ind[j]] = c.n[j];
-
-    //Special case loops
-#define Loop6(q,z,w,k,y,s) {for(int i1 = 0; i1 < n[1]; ++i1) for(int i2 = 0; i2 < n[2]; ++i2)\
-	for(int i3 = 0; i3 < n[3]; ++i3) for(int i4 = 0; i4 < n[4]; ++i4) for(int i5 = 0; i5 < n[5]; ++i5)\
-    for(int i6 = 0; i6 < n[6]; ++i6)\
-    rdat[ (((((i6)*n[5]+i5)*n[4]+i4)*n[3]+i3)*n[2]+i2)*n[1]+i1 ] =\
-    thisdat[ (((((s)*c.n[5]+y)*c.n[4]+k)*c.n[3]+w)*c.n[2]+z)*c.n[1]+q ]; return; }
-
-#define Loop5(q,z,w,k,y) {for(int i1 = 0; i1 < n[1]; ++i1) for(int i2 = 0; i2 < n[2]; ++i2)\
-	for(int i3 = 0; i3 < n[3]; ++i3) for(int i4 = 0; i4 < n[4]; ++i4) for(int i5 = 0; i5 < n[5]; ++i5)\
-    rdat[ ((((i5)*n[4]+i4)*n[3]+i3)*n[2]+i2)*n[1]+i1 ] = thisdat[ ((((y)*c.n[4]+k)*c.n[3]+w)*c.n[2]+z)*c.n[1]+q ]; return; }
-
-#define Loop4(q,z,w,k) {for(int i1 = 0; i1 < n[1]; ++i1)  for(int i2 = 0; i2 < n[2]; ++i2)\
-	for(int i3 = 0; i3 < n[3]; ++i3) for(int i4 = 0; i4 < n[4]; ++i4)\
-	rdat[ (((i4)*n[3]+i3)*n[2]+i2)*n[1]+i1 ] = thisdat[ (((k)*c.n[3]+w)*c.n[2]+z)*c.n[1]+q ]; return; }
-
-#define Loop3(q,z,w) {for(int i1 = 0; i1 < n[1]; ++i1)  for(int i2 = 0; i2 < n[2]; ++i2)\
-	for(int i3 = 0; i3 < n[3]; ++i3) rdat[ ((i3)*n[2]+i2)*n[1]+i1 ] = thisdat[ ((w)*c.n[2]+z)*c.n[1]+q ]; return; }
-
-#define Bif3(a,b,c) if(ind[1] == a && ind[2] == b && ind[3] == c)
-
-#define Bif4(a,b,c,d) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4] == d)
-
-#define Bif5(a,b,c,d,e) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e)
-
-#define Bif6(a,b,c,d,e,g) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e && ind[6] == g)
-
-    if(is_.rn() == 2 && ind[1] == 2 && ind[2] == 1)
-        {
-        MatrixRef xref; 
-        thisdat.TreatAsMatrix(xref,c.n[2],c.n[1]);
-        rdat = Matrix(xref.t()).TreatAsVector();
-        return; 
-        }
-    else if(is_.rn() == 3)
-        {
-        DO_IF_PS(int idx = ((ind[1])*3+ind[2])*3+ind[3]; Prodstats::stats().perms_of_3[idx] += 1; )
-        //Arranged loosely in order of frequency of occurrence
-        Bif3(2,1,3) Loop3(i2,i1,i3)
-        Bif3(2,3,1) Loop3(i2,i3,i1) //cyclic
-        Bif3(3,1,2) Loop3(i3,i1,i2)
-        //Bif3(1,3,2) Loop3(i1,i3,i2)
-        //Bif3(3,2,1) Loop3(i3,i2,i1)
-        }
-    else if(is_.rn() == 4)
-        {
-        DO_IF_PS(int idx = (((ind[1])*4+ind[2])*4+ind[3])*4+ind[4]; Prodstats::stats().perms_of_4[idx] += 1; )
-        //Arranged loosely in order of frequency of occurrence
-        Bif4(1,2,4,3) Loop4(i1,i2,i4,i3)
-        Bif4(1,3,2,4) Loop4(i1,i3,i2,i4)
-        Bif4(2,3,1,4) Loop4(i2,i3,i1,i4)
-        Bif4(2,3,4,1) Loop4(i2,i3,i4,i1) //cyclic
-        Bif4(1,4,2,3) Loop4(i1,i4,i2,i3)
-        Bif4(2,1,3,4) Loop4(i2,i1,i3,i4)
-        Bif4(2,1,4,3) Loop4(i2,i1,i4,i3)
-        Bif4(3,4,1,2) Loop4(i3,i4,i1,i2)
-        }
-    else if(is_.rn() == 5)
-        {
-        DO_IF_PS(int idx = ((((ind[1])*5+ind[2])*5+ind[3])*5+ind[4])*5+ind[5]; Prodstats::stats().perms_of_5[idx] += 1; )
-        //Arranged loosely in order of frequency of occurrence
-        Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
-        Bif5(1,4,2,5,3) Loop5(i1,i4,i2,i5,i3)
-        Bif5(1,4,2,3,5) Loop5(i1,i4,i2,i3,i5)
-        Bif5(3,1,4,2,5) Loop5(i3,i1,i4,i2,i5)
-        Bif5(2,4,1,3,5) Loop5(i2,i4,i1,i3,i5)
-        Bif5(2,4,3,5,1) Loop5(i2,i4,i3,i5,i1)
-        Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
-        Bif5(3,4,1,2,5) Loop5(i3,i4,i1,i2,i5)
-        Bif5(2,1,3,4,5) Loop5(i2,i1,i3,i4,i5)
-        Bif5(2,3,4,5,1) Loop5(i2,i3,i4,i5,i1)
-        Bif5(2,3,4,1,5) Loop5(i2,i3,i4,i1,i5)
-        Bif5(2,3,1,4,5) Loop5(i2,i3,i1,i4,i5)
-        Bif5(2,3,4,1,5) Loop5(i2,i3,i4,i1,i5)
-        Bif5(3,4,1,5,2) Loop5(i3,i4,i1,i5,i2)
-        Bif5(5,1,4,2,3) Loop5(i5,i1,i4,i2,i3)
-        }
-    else if(is_.rn() == 6)
-        {
-        DO_IF_PS(int idx = (((((ind[1])*6+ind[2])*6+ind[3])*6+ind[4])*6+ind[5])*6+ind[6]; Prodstats::stats().perms_of_6[idx] += 1; )
-        //Arranged loosely in order of frequency of occurrence
-        Bif6(2,4,1,3,5,6) Loop6(i2,i4,i1,i3,i5,i6)
-        Bif6(1,4,2,3,5,6) Loop6(i1,i4,i2,i3,i5,i6)
-        Bif6(2,4,1,5,3,6) Loop6(i2,i4,i1,i5,i3,i6)
-        Bif6(1,2,4,5,3,6) Loop6(i1,i2,i4,i5,i3,i6)
-        Bif6(3,4,1,5,6,2) Loop6(i3,i4,i1,i5,i6,i2)
-        }
-    DO_IF_PS(Prodstats::stats().c4 += 1;)
-
-    //The j's are pointers to the i's of xdat's Counter,
-    //but reordered in a way appropriate for rdat
-    array<int*,NMAX+1> j;
-    for(int k = 1; k <= NMAX; ++k) 
-        { 
-        j[ind[k]] = &(c.i[k]); 
-        }
-
-    //Catch-all loops that work for any tensor
-    switch(c.rn)
-    {
-    case 2:
-        for(; c.notDone(); ++c)
-            {
-            rdat[(*j[2])*n[1]+*j[1]]
-                = thisdat[c.ind];
-            }
-        return;
-    case 3:
-        for(; c.notDone(); ++c)
-            {
-            rdat[((*j[3])*n[2]+*j[2])*n[1]+*j[1]]
-                = thisdat[c.ind];
-            }
-        return;
-    case 4:
-        for(; c.notDone(); ++c)
-            {
-            rdat[(((*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
-                = thisdat[c.ind];
-            }
-        return;
-    case 5:
-        for(; c.notDone(); ++c)
-            {
-            rdat[((((*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
-                = thisdat[c.ind];
-            }
-        return;
-    case 6:
-        for(; c.notDone(); ++c)
-            {
-            rdat[(((((*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
-                = thisdat[c.ind];
-            }
-        return;
-    case 7:
-        for(; c.notDone(); ++c)
-            {
-            rdat[((((((*j[7])*n[6]+*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
-                = thisdat[c.ind];
-            }
-        return;
-    default:
-        for(; c.notDone(); ++c)
-            {
-            rdat[(((((((*j[8])*n[7]+*j[7])*n[6]+*j[6])*n[5]+*j[5])*n[4]+*j[4])*n[3]+*j[3])*n[2]+*j[2])*n[1]+*j[1]]
-                = thisdat[c.ind];
-            }
-        return;
-    } //switch(c.rn)
-
-    } // ITensor::reshapeDat
 
 void ITensor::
 reshapeDat(const Permutation& P)
@@ -1130,15 +1219,21 @@ reshapeDat(const Permutation& P)
     if(P.isTrivial()) return;
     solo();
     Vector newdat;
-    this->reshapeDat(P,newdat);
-    p->v = newdat;
+    reshape(P,is_,r_->v,newdat);
+    r_->v = newdat;
+    if(i_)
+        {
+        reshape(P,is_,i_->v,newdat);
+        i_->v = newdat;
+        }
     }
 
 
 void ITensor::
 swap(ITensor& other)
     {
-    p.swap(other.p);
+    r_.swap(other.r_);
+    i_.swap(other.i_);
     is_.swap(other.is_);
     scale_.swap(other.scale_);
     }
@@ -1146,29 +1241,56 @@ swap(ITensor& other)
 const Real* ITensor::
 datStart() const
     {
-    if(!p) Error("ITensor is null");
-    return p->v.Store();
+    if(!r_) Error("ITensor is null");
+    return r_->v.Store();
+    }
+
+const Real* ITensor::
+imagDatStart() const
+    {
+    if(!i_) Error("ITensor is real");
+    return i_->v.Store();
     }
 
 void ITensor::
 randomize() 
     { 
     solo(); 
-    p->v.Randomize(); 
+    r_->v.Randomize(); 
+    if(i_) i_->v.Randomize();
     }
 
 void ITensor::
 conj() 
     { 
-    if(!isComplex(*this)) return; 
-    prime(ReIm,1);
-    operator/=(ITensor::ConjTensor()); 
-    prime(ReIm,-1);
+    if(i_)
+        {
+        soloImag();
+        i_->v *= -1;
+        }
     }
 
 Real ITensor::
 sumels() const 
-    { return p->v.sumels() * scale_.real0(); }
+    { 
+    if(this->isComplex())
+        Error("sumels defined only for real ITensor");
+    return r_->v.sumels() * scale_.real0(); 
+    }
+
+Real ITensor::
+normNoScale() const 
+    { 
+    ITENSOR_CHECK_NULL
+    if(!this->isComplex())
+        {
+        return Norm(r_->v);
+        }
+    else
+        {
+        return sqrt(sqr(Norm(r_->v))+sqr(Norm(i_->v)));
+        }
+    }
 
 Real ITensor::
 norm() const 
@@ -1179,20 +1301,15 @@ norm() const
         }
     //If scale_ is too small to be converted to Real,
     //real0 method will return 0.0
-    return fabs(Norm(p->v) * scale_.real0()); 
+    return fabs(scale_.real0())*normNoScale();
     }
 
 LogNumber ITensor::
 normLogNum() const 
     { 
-    return LogNumber(log(Norm(p->v))+scale_.logNum(),+1);
+    return LogNumber(log(normNoScale())+scale_.logNum(),+1);
     }
 
-Real ITensor::
-normNoScale() const 
-    { 
-    return Norm(p->v);
-    }
 
 void ITensor::
 pseudoInvert(Real cutoff)
@@ -1202,17 +1319,26 @@ pseudoInvert(Real cutoff)
     scale_.pow(-1);
 
     //Invert elems
-    for(int j = 1; j <= p->v.Length(); ++j)
+    for(int j = 1; j <= r_->v.Length(); ++j)
         {
-        Real elem = p->v(j);
-        p->v(j) = (fabs(elem) <= cutoff ? 0 : 1./elem);
+        Real elem = r_->v(j);
+        r_->v(j) = (fabs(elem) <= cutoff ? 0 : 1./elem);
+        }
+
+    if(i_)
+        {
+        for(int j = 1; j <= i_->v.Length(); ++j)
+            {
+            Real elem = i_->v(j);
+            i_->v(j) = (fabs(elem) <= cutoff ? 0 : 1./elem);
+            }
         }
     }
 
 void ITensor::
 scaleOutNorm()
     {
-    Real f = Norm(p->v);
+    Real f = normNoScale();
     //If norm already 1 return so
     //we don't have to call solo()
     if(fabs(f-1) < 1E-12) return;
@@ -1220,12 +1346,14 @@ scaleOutNorm()
     if(f != 0) 
         { 
         solo();
-        p->v *= 1./f; 
+        r_->v *= 1./f; 
+        if(i_) i_->v *= 1./f;
         scale_ *= f; 
         }
-    else
+    else //norm == zero
         {
-        scale_ = LogNumber(0.0);
+        scale_ = LogNumber(1.);
+        i_.reset();
         }
     }
 
@@ -1237,7 +1365,8 @@ scaleTo(const LogNumber& newscale)
     if(scale_ == newscale) return;
     solo();
     scale_ /= newscale;
-    p->v *= scale_.real0();
+    r_->v *= scale_.real0();
+    if(i_) i_->v *= scale_.real0();
     scale_ = newscale;
     }
 
@@ -1245,26 +1374,136 @@ scaleTo(const LogNumber& newscale)
 void ITensor::
 allocate(int dim) 
     { 
-    p = boost::make_shared<ITDat>(dim); 
+    r_ = boost::make_shared<ITDat>(dim); 
     }
 
 void ITensor::
 allocate() 
     { 
-    p = boost::make_shared<ITDat>(); 
+    r_ = boost::make_shared<ITDat>(); 
     }
 
 void ITensor::
-solo()
+allocateImag(int dim) 
+    { 
+    i_ = boost::make_shared<ITDat>(dim); 
+    }
+
+void ITensor::
+allocateImag() 
+    { 
+    i_ = boost::make_shared<ITDat>(); 
+    }
+
+void ITensor::
+soloReal()
 	{
     ITENSOR_CHECK_NULL
-    if(!p.unique())
+    if(!r_.unique())
         { 
-        VectorRef oldv(p->v);
-        p = boost::make_shared<ITDat>();
-        p->v = oldv;
+        VectorRef oldv(r_->v);
+        r_ = boost::make_shared<ITDat>();
+        r_->v = oldv;
+        }
+    }
+
+void ITensor::
+soloImag()
+    {
+    if(!i_) return;
+
+    if(!i_.unique())
+        { 
+        VectorRef oldv(i_->v);
+        i_ = boost::make_shared<ITDat>();
+        i_->v = oldv;
         }
 	}
+
+void ITensor::
+solo()
+    {
+    soloReal();
+    soloImag();
+    }
+
+void ITensor::
+equalizeScales(ITensor& other)
+    {
+    if(scale_.sign() != 0)
+        {
+        other.scaleTo(scale_);
+        }
+    else //*this is equivalent to zero
+        {
+        soloReal();
+        r_->v *= 0;
+        scale_ = other.scale_;
+        }
+    }
+
+ITensor& ITensor::
+operator*=(Real fac)
+    {
+    if(fac == 0)
+        {
+        solo();
+        r_->v *= 0;
+        if(i_) i_->v *= 0;
+        return *this;
+        }
+
+    scale_ *= fac;
+    return *this;
+    }
+
+ITensor& ITensor::
+operator*=(Complex z)
+    {
+    if(z.real() == 0)
+        {
+        r_.swap(i_);
+        if(!r_) allocate(i_->v.Length());
+        soloReal();
+        r_->v *= -1;
+        scale_ *= z.imag();
+        return *this;
+        }
+    else
+    if(z.imag() == 0)
+        {
+        operator*=(z.real());
+        return *this;
+        }
+    else
+    if(!this->isComplex())
+        {
+        allocateImag();
+        i_->v = r_->v;
+        if(fabs(z.real()) > fabs(z.imag()))
+            {
+            scale_ *= z.real();
+            i_->v *= (z.imag()/z.real());
+            }
+        else
+            {
+            soloReal();
+            r_->v *= (z.real()/z.imag());
+            scale_ *= z.imag();
+            }
+        return *this;
+        }
+
+    //Else this is complex
+    solo();
+    Vector newr = r_->v*z.real() - i_->v*z.imag();
+    Vector newi = r_->v*z.imag() + i_->v*z.real();
+    r_->v = newr;
+    i_->v = newi;
+
+    return *this;
+    }
+
 
 int
 _ind(const IndexSet<Index>& is,
@@ -1441,8 +1680,8 @@ ProductProps(const ITensor& L, const ITensor& R)
             //matchL.fromTo(j,q);
             }
 
-    odimL = L.p->v.Length()/cdim;
-    odimR = R.p->v.Length()/cdim;
+    odimL = L.r_->v.Length()/cdim;
+    odimR = R.r_->v.Length()/cdim;
     }
 
 //Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref
@@ -1452,9 +1691,14 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
              MatrixRefNoLink& lref, MatrixRefNoLink& rref, 
              bool& L_is_matrix, bool& R_is_matrix, bool doReshape)
     {
-    assert(L.p != 0);
-    assert(R.p != 0);
-    const Vector &Ldat = L.p->v, &Rdat = R.p->v;
+#ifdef DEBUG
+    if(L.isNull())
+        Error("L null in toMatrixProd");
+    if(R.isNull())
+        Error("R null in toMatrixProd");
+#endif
+    const Vector &Ldat = L.r_->v, 
+                 &Rdat = R.r_->v;
 
     //Initially, assume both L & R are matrix-like
     L_is_matrix = true, 
@@ -1507,7 +1751,7 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
         }
     else //L not matrix, need to reshape to make lref
         {
-        Vector lv; L.reshapeDat(props.pl,lv);
+        Vector lv; reshape(props.pl,L.is_,L.r_->v,lv);
         lv.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
         }
 
@@ -1520,7 +1764,7 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
         }
     else //R not matrix, need to reshape to make rref
         {
-        Vector rv; R.reshapeDat(props.pr,rv);
+        Vector rv; reshape(props.pr,R.is_,R.r_->v,rv);
         rv.TreatAsMatrix(rref,props.odimR,props.cdim);
         }
 
@@ -1550,13 +1794,57 @@ operator/=(const ITensor& other)
         return operator/=(cp_oth);
         }
 
-    if(hasindex(*this,Index::IndReIm())   && hasindex(other,Index::IndReIm()) &&
-      !hasindex(*this,Index::IndReImP())  && !hasindex(other,Index::IndReImP()) &&
-      !hasindex(*this,Index::IndReImPP()) && !hasindex(other,Index::IndReImPP()))
+    if(this->isComplex())
         {
-        prime(ReIm,1);
-        operator/=(primed(other,ReIm,2));
-        operator*=(ComplexProd());
+        if(other.isComplex())
+            {
+            //Both complex
+            ITensor rt(*this),
+                    it(*this),
+                    ro(other),
+                    io(other);
+            rt.takeRealPart();
+            it.takeImagPart();
+            ro.takeRealPart();
+            io.takeImagPart();
+
+            *this = rt / ro;
+            *this -= it / io;
+
+            ITensor ir = rt / io;
+            ir += it / ro;
+
+            equalizeScales(ir);
+
+            i_.swap(ir.r_);
+
+            return *this;
+            }
+        else
+            {
+            //This complex, other real
+            ITensor rr(*this);
+            rr.takeRealPart();
+            rr /= other;
+            ITensor ir(*this);
+            ir.takeImagPart();
+            ir /= other;
+            rr.equalizeScales(ir);
+            r_.swap(rr.r_);
+            i_.swap(ir.r_);
+            scale_ = rr.scale_;
+            is_.swap(rr.is_);
+            return *this;
+            }
+        }
+    else
+    if(other.isComplex())
+        {
+        //This real, other complex
+        ITensor ri = operator/(*this,imagPart(other));
+        operator/=(realPart(other));
+        equalizeScales(ri);
+        i_.swap(ri.r_);
         return *this;
         }
 
@@ -1566,7 +1854,7 @@ operator/=(const ITensor& other)
     if(other.is_.rn() == 0)
         {
         scale_ *= other.scale_;
-        scale_ *= other.p->v(1);
+        scale_ *= other.r_->v(1);
         for(int j = other.is_.rn()+1; j <= other.r(); ++j)
             {
             const Index& J = other.is_.index(j);
@@ -1578,8 +1866,8 @@ operator/=(const ITensor& other)
     else if(is_.rn() == 0)
         {
         scale_ *= other.scale_;
-        scale_ *= p->v(1);
-        p = other.p;
+        scale_ *= r_->v(1);
+        r_ = other.r_;
         IndexSet<Index> new_is(other.is_);
         for(int j = 1; j <= r(); ++j) 
             {
@@ -1596,9 +1884,9 @@ operator/=(const ITensor& other)
     bool L_is_matrix,R_is_matrix;
     toMatrixProd(*this,other,props,lref,rref,L_is_matrix,R_is_matrix);
 
-    if(!p.unique()) allocate();
+    if(!r_.unique()) allocate();
 
-    Vector& thisdat = p->v; 
+    Vector& thisdat = r_->v; 
     
     const int ni = lref.Ncols(), nj = lref.Nrows(), nk = rref.Nrows();
     Matrix L(lref), R(rref);
@@ -1746,17 +2034,65 @@ operator*=(const ITensor& other)
         return operator*=(cp_oth);
         }
 
+    //if(scale_.sign() == 0)
+    //    {
+    //    return *this;
+    //    }
+
     if(this->isNull() || other.isNull())
         Error("Null ITensor in product");
 
-    //Complex types are treated as just another index, of type ReIm
-    //Multiplication is handled automatically with these simple tensor helpers
-    if(hasindex(*this,Index::IndReIm()) && hasindex(other,Index::IndReIm()) && 
-	    !hasindex(other,Index::IndReImP()) && !hasindex(other,Index::IndReImPP()) 
-	    && !hasindex(*this,Index::IndReImP()) && !hasindex(*this,Index::IndReImPP()))
+    if(this->isComplex())
         {
-        this->prime(ReIm);
-        operator*=(ComplexProd() * primed(other,ReIm,2));
+        if(other.isComplex())
+            {
+            //Both complex
+            ITensor rt(*this),
+                    it(*this),
+                    ro(other),
+                    io(other);
+            rt.takeRealPart();
+            it.takeImagPart();
+            ro.takeRealPart();
+            io.takeImagPart();
+
+            *this = rt * ro;
+            *this -= it * io;
+
+            ITensor ir = rt * io;
+            ir += it * ro;
+
+            equalizeScales(ir);
+
+            i_.swap(ir.r_);
+
+            return *this;
+            }
+        else
+            {
+            //This complex, other real
+            ITensor rr(*this);
+            rr.takeRealPart();
+            rr *= other;
+            ITensor ir(*this);
+            ir.takeImagPart();
+            ir *= other;
+            rr.equalizeScales(ir);
+            r_.swap(rr.r_);
+            i_.swap(ir.r_);
+            scale_ = rr.scale_;
+            is_.swap(rr.is_);
+            return *this;
+            }
+        }
+    else
+    if(other.isComplex())
+        {
+        //This real, other complex
+        ITensor ri = operator*(*this,imagPart(other));
+        operator*=(realPart(other));
+        equalizeScales(ri);
+        i_.swap(ri.r_);
         return *this;
         }
 
@@ -1790,7 +2126,7 @@ operator*=(const ITensor& other)
     if(other.is_.rn() == 0)
         {
         scale_ *= other.scale_;
-        scale_ *= other.p->v(1);
+        scale_ *= other.r_->v(1);
 #ifdef DEBUG
         if((is_.rn()+nr1_) > NMAX) 
             {
@@ -1810,8 +2146,8 @@ operator*=(const ITensor& other)
     else if(is_.rn() == 0)
         {
         scale_ *= other.scale_;
-        scale_ *= p->v(1);
-        p = other.p;
+        scale_ *= r_->v(1);
+        r_ = other.r_;
 #ifdef DEBUG
         if((is_.rn()+nr1_) > NMAX) 
             {
@@ -1860,11 +2196,11 @@ operator*=(const ITensor& other)
         DO_IF_PS(++Prodstats::stats().c2;)
 
         //Do the matrix multiplication
-        if(!p.unique()) allocate();
+        if(!r_.unique()) allocate();
 
-        p->v.ReDimension(rref.Nrows()*lref.Ncols());
+        r_->v.ReDimension(rref.Nrows()*lref.Ncols());
         MatrixRef nref; 
-        p->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
+        r_->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
         nref = rref*lref;
 
         //Handle m!=1 indices
@@ -1879,8 +2215,8 @@ operator*=(const ITensor& other)
         {
         Vector newdat;
         directMultiply(*this,other,props,newdat,new_index);
-        if(!p.unique()) allocate();
-        p->v = newdat;
+        if(!r_.unique()) allocate();
+        r_->v = newdat;
         }
 
     //Put in m==1 indices
@@ -1913,16 +2249,42 @@ operator+=(const ITensor& other)
         return *this; 
         }
 
-    const bool complex_this = isComplex(*this);
-    const bool complex_other = isComplex(other);
+    const bool complex_this = this->isComplex();
+    const bool complex_other = other.isComplex();
     if(!complex_this && complex_other)
         {
-        return (*this = (*this * ITensor::Complex_1()) + other);
+        operator+=(realPart(other));
+        i_ = other.i_;
+        if(scale_ != other.scale_)
+            {
+            const LogNumber nscale = other.scale_/scale_;
+            soloImag();
+            i_->v *= nscale.real0();
+            }
+        return *this;
         }
+    else
     if(complex_this && !complex_other) 
         {
-        return operator+=(other * ITensor::Complex_1());
+        ITensor rr(*this);
+        rr.takeRealPart();
+        rr += other;
+        rr.scaleTo(scale_);
+        r_.swap(rr.r_);
+        return *this;
         }
+    else
+    if(complex_this && complex_other)
+        {
+        ITensor r = realPart(*this) + realPart(other);
+        ITensor i = imagPart(*this) + imagPart(other);
+        i.scaleTo(r.scale_);
+        scale_ = r.scale_;
+        r_.swap(r.r_);
+        i_.swap(i.r_);
+        return *this;
+        }
+
 
     if(fabs(is_.uniqueReal() - other.is_.uniqueReal()) > 1E-12)
         {
@@ -1945,8 +2307,8 @@ operator+=(const ITensor& other)
 
     solo();
 
-    Vector& thisdat = p->v;
-    const Vector& othrdat = other.p->v;
+    Vector& thisdat = r_->v;
+    const Vector& othrdat = other.r_->v;
 
     Real scalefac = 1;
     if(scale_.magnitudeLessThan(other.scale_)) 
@@ -2061,26 +2423,29 @@ fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     MatrixRef dref; 
     if(i1 == is_[0])
         {
-        p->v.TreatAsMatrix(dref,i2.m(),i1.m());
+        r_->v.TreatAsMatrix(dref,i2.m(),i1.m());
         dref = M.t();
         }
     else
         {
-        p->v.TreatAsMatrix(dref,i1.m(),i2.m());
+        r_->v.TreatAsMatrix(dref,i1.m(),i2.m());
         dref = M;
         }
+    i_.reset();
     }
 
 void ITensor::
 toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
     {
     if(r() != 2) Error("toMatrix11: incorrect rank");
+    if(this->isComplex())
+        Error("toMatrix11 defined only for real ITensor");
     assert(hasindex(*this,i1));
     assert(hasindex(*this,i2));
     res.ReDimension(i1.m(),i2.m());
 
     MatrixRef dref; 
-    p->v.TreatAsMatrix(dref,is_[1].m(),is_[0].m());
+    r_->v.TreatAsMatrix(dref,is_[1].m(),is_[0].m());
     res = dref.t(i1==is_[0]); 
     }
 
@@ -2096,6 +2461,8 @@ toMatrix12NoScale(const Index& i1, const Index& i2,
                   const Index& i3, Matrix& res) const
     {
     if(r() != 3) Error("toMatrix11: incorrect rank");
+    if(this->isComplex())
+        Error("toMatrix12 defined only for real ITensor");
     assert(hasindex(*this,i1));
     assert(hasindex(*this,i2));
     assert(hasindex(*this,i3));
@@ -2110,7 +2477,7 @@ toMatrix12NoScale(const Index& i1, const Index& i2,
     getperm(is_,reshuf,P);
 
     Vector V;
-    reshapeDat(P,V);
+    reshape(P,is_,r_->v,V);
     res.TreatAsVector() = V;
     }
 
@@ -2127,7 +2494,7 @@ fromMatrix12(const Index& i1, const Index& i2,
              const Index& i3, const Matrix& M)
     {
     ITensor Q(i3,i1,i2);
-    Q.p->v = M.TreatAsVector();
+    Q.r_->v = M.TreatAsVector();
     *this = Q;
     }
 
@@ -2135,6 +2502,8 @@ fromMatrix12(const Index& i1, const Index& i2,
 void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
     {
     if(r() != 4) Error("toMatrix22: incorrect rank");
+    if(this->isComplex())
+        Error("toMatrix22 defined only for real ITensor");
     assert(hasindex(*this,i1));
     assert(hasindex(*this,i2));
     assert(hasindex(*this,i3));
@@ -2147,7 +2516,7 @@ void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, cons
     Permutation P; 
     getperm(is_,reshuf,P);
     Vector V; 
-    reshapeDat(P,V);
+    reshape(P,is_,r_->v,V);
     res.TreatAsVector() = V;
     res *= scale_.real0();
     }
@@ -2159,7 +2528,7 @@ fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,
     if(i3.m()*i4.m() != M.Ncols()) Error("fromMatrix22: wrong number of cols");
     if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix22: wrong number of rows");
     ITensor Q(i3,i4,i1,i2);
-    Q.p->v = M.TreatAsVector();
+    Q.r_->v = M.TreatAsVector();
     *this = Q;
     }
 
@@ -2228,6 +2597,8 @@ operator<<(ostream & s, const ITensor& t)
 
     s << "  {log(scale)[incl in elems]=" << t.scale().logNum();
 
+    const
+    bool iscplx = t.isComplex();
 
     if(t.isNull()) s << ", dat is null}\n";
     else 
@@ -2238,9 +2609,17 @@ operator<<(ostream & s, const ITensor& t)
             {
             Real nrm = t.norm();
             if(nrm >= 1E-2 && nrm < 1E5)
-                s << format(", N=%.2f}\n") % nrm;
+                {
+                s << format(", N=%.2f%s}\n") 
+                     % nrm
+                     % (iscplx ? ",C" : "");
+                }
             else
-                s << format(", N=%.1E}\n") % nrm;
+                {
+                s << format(", N=%.1E%s}\n") 
+                     % nrm
+                     % (iscplx ? ",C" : "");
+                }
             }
         else
             {
@@ -2252,13 +2631,32 @@ operator<<(ostream & s, const ITensor& t)
             Real scale = 1.0;
             if(t.scale().isFiniteReal()) scale = t.scale().real();
             else s << "  (omitting too large scale factor)" << endl;
-            const Real* pv = t.datStart();
-            Counter c(t.indices());
-            for(; c.notDone(); ++c)
+            if(!iscplx)
                 {
-                Real val = pv[c.ind]*scale;
-                if(fabs(val) > Global::printScale())
-                    { s << "  " << c << (format(" %.10f\n") % val); }
+                const Real* pv = t.datStart();
+                Counter c(t.indices());
+                for(; c.notDone(); ++c)
+                    {
+                    Real val = pv[c.ind]*scale;
+                    if(fabs(val) > Global::printScale())
+                        { s << "  " << c << (format(" %.10f\n") % val); }
+                    }
+                }
+            else //t is complex
+                {
+                const Real* pr = t.datStart();
+                const Real* pi = t.imagDatStart();
+                Counter c(t.indices());
+                for(; c.notDone(); ++c)
+                    {
+                    Real rval = pr[c.ind]*scale;
+                    Real ival = pi[c.ind]*scale;
+                    const char sgn = (ival > 0 ? '+' : '-');
+                    if(sqrt(sqr(rval)+sqr(ival)) > Global::printScale())
+                        { 
+                        s << "  " << c << (format(" %.10f%s%.10fi\n") % rval % sgn % fabs(ival)); 
+                        }
+                    }
                 }
             }
         else 
@@ -2391,7 +2789,7 @@ operator,(Real r)
         Error("commaInit notation is T << #, #, #, ... ;");
         }
     if(c_.notDone()) 
-        { T_.p->v[c_.ind] = r; ++c_; }
+        { T_.r_->v[c_.ind] = r; ++c_; }
     else 
         { Error("Comma assignment list too long.\n"); }
     return *this;
@@ -2416,7 +2814,7 @@ Dot(const ITensor& x, const ITensor& y)
         { 
         Print(x);
         Print(y);
-        if(isComplex(x) || isComplex(y))
+        if(x.isComplex() || y.isComplex())
             {
             Error("Must use BraKet, not Dot, for complex ITensors");
             }
@@ -2425,40 +2823,35 @@ Dot(const ITensor& x, const ITensor& y)
     return res.toReal();
     }
 
-void 
-BraKet(const ITensor& x, const ITensor& y, Real& re, Real& im)
+Complex 
+BraKet(const ITensor& x, const ITensor& y)
     {
-    if(isComplex(x))
+    if(x.isComplex())
         {
         ITensor res = conj(x);
         res *= y;
-        if(res.r() != 1) 
+        if(res.r() != 0) 
             {
             Print(x);
             Print(y);
-            Error("Bad Dot, product not a complex scalar");
+            Error("Bad Dot, product not a scalar");
             }
-        re = res(Index::IndReIm()(1));
-        im = res(Index::IndReIm()(2));
-        return;
+        return res.toComplex();
         }
     else
-    if(isComplex(y))
+    if(y.isComplex())
         {
         ITensor res = x;
         res *= y;
-        if(res.r() != 1) 
+        if(res.r() != 0) 
             {
             Print(x);
             Print(y);
-            Error("Bad Dot, product not a complex scalar");
+            Error("Bad Dot, product not a scalar");
             }
-        re = res(Index::IndReIm()(1));
-        im = res(Index::IndReIm()(2));
-        return;
+        return res.toComplex();
         }
 
-    re = Dot(x,y);
-    im = 0;
+    return Complex(Dot(x,y),0.);
     }
 

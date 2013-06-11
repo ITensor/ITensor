@@ -416,7 +416,7 @@ TEST(ComplexSVD)
     {
     IQTensor TR(L1(1),primed(L1(31))),
              TI(L1(1),primed(L1(31)));
-    IQTensor T = IQComplex_1()*TR+IQComplex_i()*TI;
+    IQTensor T = Complex_1*TR+Complex_i*TI;
     T.randomize();
     T *= 1.0/T.norm();
 
@@ -444,7 +444,7 @@ TEST(ComplexDenmat)
     ri(r(2),c(3)) = 0.0983495255;
     ri(r(3),c(2)) = -0.0983495255; 
 
-    ITensor rho = rr*Complex_1()+ri*Complex_i();
+    ITensor rho = rr*Complex_1+ri*Complex_i;
     rho.scaleTo(1);
     //PrintDat(rho);
 
@@ -495,7 +495,7 @@ TEST(ComplexDiagonalization)
             Mi(s1,s2,primed(s2),primed(s1));
     Mr.randomize();
     Mi.randomize();
-    ITensor M = Complex_1()*Mr + Complex_i()*Mi;
+    ITensor M = Complex_1*Mr + Complex_i*Mi;
     M = M + conj(swapPrime(M,0,1));
     M *= 0.5;
 
@@ -511,7 +511,7 @@ TEST(ComplexDiagonalization)
              Ti(conj(S2)(1),conj(S1)(2),primed(S1)(1),primed(S2)(2));
     Tr.randomize();
     Ti.randomize();
-    IQTensor T = IQComplex_1()*Tr + IQComplex_i()*Ti;
+    IQTensor T = Complex_1*Tr + Complex_i*Ti;
     T = T + conj(swapPrime(T,0,1));
     T *= 0.5;
 
@@ -533,7 +533,7 @@ TEST(OrthoDecomp)
     ITensor cphi(phi);
     phi.randomize();
     cphi.randomize();
-    phi += Complex_i()*cphi;
+    phi += Complex_i*cphi;
 
     ITensor A(L1,S1),B;
     orthoDecomp(phi,A,B,Fromleft);
@@ -541,7 +541,7 @@ TEST(OrthoDecomp)
     CHECK((phi-A*B).norm() < 1E-12);
 
     //Check that A is orthogonal
-    CHECK(!isComplex(A));
+    CHECK(!A.isComplex());
     Index mid = commonIndex(A,B);
     ITensor Id(primed(mid),mid,1);
     CHECK((Id-A*primed(A,mid)).norm() < 1E-12);
@@ -554,7 +554,7 @@ TEST(OrthoDecomp)
     CHECK((phi-A*B).norm() < 1E-12);
 
     //Check that B is orthogonal
-    CHECK(!isComplex(B));
+    CHECK(!B.isComplex());
     mid = commonIndex(A,B);
     Id = ITensor(primed(mid),mid,1);
     CHECK((Id-B*primed(B,mid)).norm() < 1E-12);
@@ -567,13 +567,13 @@ TEST(OrthoDecomp)
     Phi0.randomize();
     IQTensor cPhi0(Phi0);
     cPhi0.randomize();
-    Phi0 += IQComplex_i()*cPhi0;
+    Phi0 += Complex_i*cPhi0;
     IQTensor C(L1,S1),D;
     orthoDecomp(Phi0,C,D,Fromleft);
 
     CHECK((Phi0-C*D).norm() < 1E-12);
 
-    CHECK(!isComplex(C));
+    CHECK(!C.isComplex());
     }
 
 

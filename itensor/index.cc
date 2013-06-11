@@ -18,7 +18,6 @@ operator<<(ostream& s, const IndexType& it)
     { 
     if(it == Link) s << "Link"; 
     else if(it == Site) s << "Site"; 
-    else if(it == ReIm) s << "ReIm"; 
     else if(it == All) s << "All"; 
     return s; 
     }
@@ -28,8 +27,7 @@ IndexTypeToInt(IndexType it)
     {
     if(it == Link) return 1;
     if(it == Site) return 2;
-    if(it == ReIm) return 3;
-    if(it == All) return 4;
+    if(it == All) return 3;
     Error("No integer value defined for IndexType.");
     return -1;
     }
@@ -39,8 +37,7 @@ IntToIndexType(int i)
     {
     if(i == 1) return Link;
     if(i == 2) return Site;
-    if(i == 3) return ReIm;
-    if(i == 4) return All;
+    if(i == 3) return All;
     cout << format("No IndexType value defined for i=%d\n")%i 
               << endl;
     Error("Undefined IntToIndexType value");
@@ -58,8 +55,8 @@ putprimes(string s, int plev)
 string 
 nameindex(IndexType it, int plev)
     { 
-    static const array<string,4>
-    indextypename = {{ "Link","Site","ReIm", "All" }};
+    static const array<string,3>
+    indextypename = {{ "Link","Site", "All" }};
 #ifdef DEBUG
     return putprimes(indextypename.at(int(it)),plev);
 #else
@@ -99,9 +96,6 @@ struct IndexDat
     static const IndexDatPtr&
     Null();
 
-    static const IndexDatPtr&
-    ReImDat();
-
     private:
 
     //These methods are not implemented
@@ -125,13 +119,6 @@ Null()
     {
     static IndexDatPtr Null_ = boost::make_shared<IndexDat>("Null",1,Site,0.0);
     return Null_;
-    }
-
-const IndexDatPtr& IndexDat::
-ReImDat()
-    {
-    static IndexDatPtr ReImDat_ = boost::make_shared<IndexDat>("ReIm",2,ReIm,1.0);
-    return ReImDat_;
     }
 
 //
@@ -168,7 +155,6 @@ Index(const string& name, int mm, IndexType it, int plev)
     p(boost::make_shared<IndexDat>(name,mm,it,generateUniqueReal())), 
     primelevel_(plev) 
     { 
-    if(it == ReIm) Error("Constructing Index with type ReIm disallowed");
     if(it == All) Error("Constructing Index with type All disallowed");
     }
 
@@ -237,7 +223,7 @@ mapprime(int plevold, int plevnew, IndexType type)
     {
     if(primelevel_ == plevold)
         {
-        if((type == All && this->type() != ReIm) || type == this->type())
+        if(type == All || type == this->type())
             {
             primelevel_ = plevnew;
 #ifdef DEBUG
@@ -265,8 +251,7 @@ prime(int inc)
 void Index::
 prime(IndexType type, int inc)
     {
-    if(type == this->type() ||
-       (type == All && this->type() != ReIm))
+    if(type == this->type() || type == All)
         {
         primelevel_ += inc;
 #ifdef DEBUG
@@ -325,16 +310,7 @@ read(istream& s)
     string ss(newname); 
     delete newname;
 
-    if(IntToIndexType(t) == ReIm)
-        {
-        p = IndexDat::ReImDat();
-        if(primelevel_ > 2)
-            Error("Illegal primelevel for Index of ReIm type");
-        }
-    else
-        {
-        p = boost::make_shared<IndexDat>(ss,mm,IntToIndexType(t),ur);
-        }
+    p = boost::make_shared<IndexDat>(ss,mm,IntToIndexType(t),ur);
     }
 
 const Index& Index::
@@ -342,27 +318,6 @@ Null()
     {
     static const Index Null_;
     return Null_;
-    }
-
-const Index& Index::
-IndReIm()
-    {
-    static const Index IndReIm_(IndexDat::ReImDat(),0);
-    return IndReIm_;
-    }
-
-const Index& Index::
-IndReImP()
-    {
-    static const Index IndReImP_(IndexDat::ReImDat(),1);
-    return IndReImP_;
-    }
-
-const Index& Index::
-IndReImPP()
-    {
-    static const Index IndReImPP_(IndexDat::ReImDat(),2);
-    return IndReImPP_;
     }
 
 ostream& 

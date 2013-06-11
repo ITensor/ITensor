@@ -197,7 +197,14 @@ bool IQTSparse::
 isNull() const { return (d_ == IQTSDat::Null() || is_ == IndexSet<IQIndex>::Null()); }
 
 bool IQTSparse::
-isNotNull() const { return !(d_ == IQTSDat::Null() || is_ == IndexSet<IQIndex>::Null()); }
+isComplex() const
+    {
+    Foreach(const ITSparse& t, blocks())
+        {
+        if(t.isComplex()) return true;
+        }
+    return false;
+    }
 
 
 IQTSparse& IQTSparse::
@@ -385,7 +392,7 @@ noprime(const IQIndex& I)
 void IQTSparse::
 conj()
     {
-    if(!isComplex(*this))
+    if(!this->isComplex())
         {
         soloIndex();
         is_->conj();
@@ -502,12 +509,6 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     if(T.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    if(hasindex(S,IQIndex::IndReIm()) && hasindex(T,IQIndex::IndReIm()) && !hasindex(T,IQIndex::IndReImP())
-	    && !hasindex(T,IQIndex::IndReImPP()) && !hasindex(S,IQIndex::IndReImP()) && !hasindex(S,IQIndex::IndReImPP()))
-        {
-        Error("Complex IQTSparse not yet implemented");
-        }
-
     set<ApproxReal> common_inds;
     
     //Load iqindex_ with those IQIndex's *not* common to *this and other
@@ -522,7 +523,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
             {
             //Check that arrow directions are compatible
             if(Global::checkArrows())
-                if(f->dir() == I.dir() && f->type() != ReIm && I.type() != ReIm)
+                if(f->dir() == I.dir())
                     {
                     Print(S.indices());
                     Print(T.indices());
