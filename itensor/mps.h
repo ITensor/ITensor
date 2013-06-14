@@ -208,7 +208,7 @@ class MPSt
     truncerr(int b) const { return spectrum_.at(b).truncerr(); }
 
     const Vector& 
-    eigsKept(int b) const { return spectrum_.at(b).eigsKept(b); }
+    eigsKept(int b) const { return spectrum_.at(b).eigsKept(); }
 
     Tensor 
     bondTensor(int b) const;
