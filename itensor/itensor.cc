@@ -428,7 +428,6 @@ ITensor& ITensor::
 takeRealPart()
     {
     ITENSOR_CHECK_NULL
-    //TODO: account for complex scale fac
     i_.reset();
     return *this;
     }
@@ -437,13 +436,19 @@ ITensor& ITensor::
 takeImagPart()
     {
     ITENSOR_CHECK_NULL
-    //TODO: account for complex scale fac
+    if(!i_)
+        {
+        scale_ *= 0;
+        return *this;
+        }
     r_.swap(i_);
+    /*
     if(!r_)
         {
         const int alloc_size = i_->v.Length();
         allocate(alloc_size);
         }
+        */
     i_.reset();
     return *this;
     }
