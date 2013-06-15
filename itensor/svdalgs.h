@@ -197,8 +197,8 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
     typedef typename Tensor::CombinerT 
     CombinerT;
     
-    if(AA.vecSize() == 0) 
-        throw ResultIsZero("denmatDecomp: AA.vecSize == 0");
+    if(isZero(AA,Opt("Fast"))) 
+        throw ResultIsZero("denmatDecomp: AA is zero");
 
     if(spec.noise() > 0)
         Error("Noise term not implemented for svd");
@@ -315,10 +315,9 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     typedef typename Tensor::SparseT 
     SparseT;
 
-    if(AA.vecSize() == 0) 
+    if(isZero(AA,Opt("Fast"))) 
         {
-        PrintDat(AA);
-        throw ResultIsZero("denmatDecomp: AA.vecSize == 0");
+        throw ResultIsZero("denmatDecomp: AA is zero");
         }
 
     IndexT mid; 
@@ -411,8 +410,8 @@ diagHermitian(const Tensor& M, Tensor& U, SparseT& D, Spectrum& spec,
     typedef typename Tensor::CombinerT 
     CombinerT;
 
-    if(M.vecSize() == 0) 
-        throw ResultIsZero("denmatDecomp: AA.vecSize == 0");
+    if(isZero(M,Opt("Fast"))) 
+        throw ResultIsZero("denmatDecomp: M is zero");
 
     CombinerT comb;
     Foreach(const IndexT& I, M.indices())
@@ -467,8 +466,8 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
     typedef typename Tensor::SparseT
     SparseT;
 
-    if(T.vecSize() == 0) 
-        throw ResultIsZero("orthoDecomp: T.vecSize == 0");
+    if(isZero(T,Opt("Fast"))) 
+        throw ResultIsZero("orthoDecomp: T is zero");
 
     const Real orig_noise = spec.noise();
     spec.noise(0);

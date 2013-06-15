@@ -88,7 +88,7 @@ init_rmap() const
 	if(rmap_init) return;
 
     for(iterator it = itensor.begin(); it != itensor.end(); ++it)
-	    rmap[ApproxReal(it->uniqueReal())] = it;
+	    rmap[ApproxReal(it->indices().uniqueReal())] = it;
 
 	rmap_init = true;
 	}
@@ -134,7 +134,7 @@ insert(const ApproxReal& r, const ITensor& t)
 void IQTDat::
 insert(const ITensor& t)
     {
-    ApproxReal r(t.uniqueReal());
+    ApproxReal r(t.indices().uniqueReal());
     insert(r,t);
     }
 
@@ -157,7 +157,7 @@ insert_add(const ApproxReal& r, const ITensor& t)
 void IQTDat::
 insert_add(const ITensor& t)
     {
-    ApproxReal r(t.uniqueReal());
+    ApproxReal r(t.indices().uniqueReal());
     insert_add(r,t);
     }
 
@@ -361,13 +361,6 @@ IQTensor(IndexType type,const IQTensor& other)
     is_(other.is_),
     dat(other.dat)
     { prime(type); }
-
-IQTensor::
-IQTensor(std::istream& s)
-    { 
-    read(s); 
-    }
-
 
 void IQTensor::
 read(std::istream& s)
@@ -638,23 +631,6 @@ noprime(const IQIndex& I)
 
 
 
-bool IQTensor::
-uses_ind(const Index& ii) const
-    {
-    Foreach(const ITensor& t, dat())
-        {
-        if(hasindex(t,ii)) 
-            return true;
-        }
-    return false;
-    }
-
-Real IQTensor::
-uniqueReal() const 
-    { 
-    if(!is_) Error("IQTensor is null");
-    return is_->uniqueReal(); 
-    }
 
 LogNumber IQTensor::
 normLogNum() const
@@ -892,6 +868,7 @@ trace(const IQIndex& i1, const IQIndex& i2,
     return *this;
     }
 
+/*
 int IQTensor::
 vecSize() const
 	{
@@ -901,7 +878,10 @@ vecSize() const
 	    s += t.vecSize();
 	return s;
 	}
+    */
 
+/*
+//Redundant: use indices().dim() instead
 int IQTensor::
 maxSize() const
 	{
@@ -910,7 +890,9 @@ maxSize() const
 	    ms *= is_->m(j);
     return ms;
     }
+*/
 
+/*
 void IQTensor::
 assignToVec(VectorRef v) const
 	{
@@ -924,6 +906,7 @@ assignToVec(VectorRef v) const
 	    off += d;
 	    }
 	}
+    */
 
 void IQTensor::
 randomize() 
@@ -1351,12 +1334,12 @@ operator+=(const IQTensor& other)
 
     IQTensor& This = *this;
 
-    if(fabs(This.uniqueReal()-other.uniqueReal()) > 1.0e-11) 
+    if(fabs(This.is_->uniqueReal()-other.is_->uniqueReal()) > 1.0e-11) 
         {
         Print(This.indices());
         Print(other.indices());
-        Print(This.uniqueReal());
-        Print(other.uniqueReal());
+        Print(This.is_->uniqueReal());
+        Print(other.is_->uniqueReal());
         Error("Mismatched indices in IQTensor::operator+=");
         }
 
@@ -1542,3 +1525,27 @@ dir(const IQTensor& T, const Index& i)
 	{
     return findIQInd(T,i).dir();
 	}
+
+bool
+uses_ind(const IQTensor& T, const Index& ii)
+    {
+    Foreach(const ITensor& t, T.blocks())
+        {
+        if(hasindex(t,ii)) 
+            return true;
+        }
+    return false;
+    }
+
+bool
+isZero(const IQTensor& T, const OptSet& opts)
+    {
+    if(T.iten_empty()) return true;
+    //done with all fast checks
+    if(opts.getBool("Fast",false)) return false;
+    Foreach(const ITensor& t, T.blocks())
+        {
+        if(!isZero(t)) return false;
+        }
+    return true;
+    }

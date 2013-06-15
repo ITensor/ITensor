@@ -1008,6 +1008,21 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
     } //void diag_hermitian
 
 
+struct PseudoInvert
+    {
+
+    PseudoInvert(Real cutoff) : cutoff_(cutoff) { }
+
+    Real
+    operator()(Real x) const
+        {
+        return (fabs(x) <= cutoff_ ? 0 : 1./x);
+        }
+
+    private:
+    const Real cutoff_;
+    };
+
 ITensor
 pseudoInverse(const ITensor& C, Real cutoff)
     {
@@ -1017,7 +1032,7 @@ pseudoInverse(const ITensor& C, Real cutoff)
         Error("pseudoInverse only defined for rank 1 ITensors");
         }
     ITensor res(C);
-    res.pseudoInvert(cutoff);
+    res.mapElems(PseudoInvert(cutoff));
     return res;
     }
 

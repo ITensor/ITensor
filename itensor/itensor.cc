@@ -391,8 +391,8 @@ ITensor(const IndexSet<Index>& I, const ITensor& other)
     scale_(other.scale_)
 	{
 #ifdef DEBUG
-	if(is_.dim() != other.vecSize()) 
-	    { Error("incompatible Index and ITensor sizes"); }
+	if(is_.dim() != other.is_.dim()) 
+	    { Error("incompatible dimensions"); }
 #endif
 	}
 
@@ -403,8 +403,8 @@ ITensor(const IndexSet<Index>& I, const ITensor& other, const Permutation& P)
     scale_(other.scale_)
     {
 #ifdef DEBUG
-    if(is_.dim() != other.vecSize()) 
-        Error("incompatible Index and ITensor sizes");
+    if(is_.dim() != other.is_.dim()) 
+        Error("incompatible dimensions");
 #endif
     if(P.isTrivial()) 
         { 
@@ -1188,12 +1188,14 @@ expandIndex(const Index& small, const Index& big, int start)
     is_.swap(newinds);
     }
 
+/*
 int ITensor::
 vecSize() const 
     { 
     if(isNull()) return 0;
     return r_->v.Length(); 
     }
+    */
 
 void ITensor::
 assignToVec(VectorRef v) const
@@ -1310,30 +1312,6 @@ normLogNum() const
     return LogNumber(log(normNoScale())+scale_.logNum(),+1);
     }
 
-
-void ITensor::
-pseudoInvert(Real cutoff)
-    {
-    solo();
-    //Invert scale_
-    scale_.pow(-1);
-
-    //Invert elems
-    for(int j = 1; j <= r_->v.Length(); ++j)
-        {
-        Real elem = r_->v(j);
-        r_->v(j) = (fabs(elem) <= cutoff ? 0 : 1./elem);
-        }
-
-    if(i_)
-        {
-        for(int j = 1; j <= i_->v.Length(); ++j)
-            {
-            Real elem = i_->v(j);
-            i_->v(j) = (fabs(elem) <= cutoff ? 0 : 1./elem);
-            }
-        }
-    }
 
 void ITensor::
 scaleOutNorm()
@@ -2603,7 +2581,7 @@ operator<<(ostream & s, const ITensor& t)
     if(t.isNull()) s << ", dat is null}\n";
     else 
         {
-        s << ", L=" << t.vecSize();
+        s << ", L=" << t.indices().dim();
 
         if(t.scale().isFiniteReal())
             {
@@ -2855,3 +2833,13 @@ BraKet(const ITensor& x, const ITensor& y)
     return Complex(Dot(x,y),0.);
     }
 
+bool
+isZero(const ITensor& T, const OptSet& opts)
+    {
+    if(T.scale().sign() == 0 || T.scale().logNum() == 0)
+        return true;
+    //done with all fast checks
+    if(opts.getBool("Fast",false)) return false;
+    if(T.normNoScale() == 0) return false;
+    return false;
+    }

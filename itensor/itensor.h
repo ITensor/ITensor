@@ -64,11 +64,6 @@ class ITensor
     const LogNumber&
     scale() const { return scale_; }
 
-    //Real number that uniquely identifies this
-    //ITensor's set of Indices (independent of their order)
-    Real 
-    uniqueReal() const { return is_.uniqueReal(); } 
-
     //
     //Constructors
     //
@@ -135,9 +130,6 @@ class ITensor
 
     ITensor(const IndexSet<Index>& I, const ITensor& other, 
             const Permutation& P);
-
-    explicit
-    ITensor(std::istream& s) { read(s); }
 
     //Read in ITensor from binary stream s
     void 
@@ -277,7 +269,6 @@ class ITensor
                const IndexVal& iv7 = IndexVal::Null(),
                const IndexVal& iv8 = IndexVal::Null()) const;
 
-
     //
     //Methods for Mapping to Other Objects
     //
@@ -391,16 +382,7 @@ class ITensor
     void fromMatrix12(const Index& i1, const Index& i2, 
                       const Index& i3, const Matrix& M);
 
-    int 
-    vecSize() const;
 
-    void 
-    assignToVec(VectorRef v) const;
-
-    //In-place version of reshapeDat. Does not re-order indices
-    //so resulting ITensor is *not* equivalent to original.
-    void 
-    reshapeDat(const Permutation& P);
 
     //
     // Swap can be used for similar purposes
@@ -442,14 +424,14 @@ class ITensor
     ITensor&
     mapElems(const Callable& f);
 
-    void
-    pseudoInvert(Real cutoff = 0);
-
     void 
     scaleOutNorm();
 
     void 
     scaleTo(const LogNumber& newscale);
+
+    void 
+    assignToVec(VectorRef v) const;
 
     //
     // Typedefs
@@ -469,93 +451,13 @@ class ITensor
 
     //Deprecated methods --------------------------
 
+    //Use indices().dim() instead of vecSize
+    //int 
+    //vecSize() const;
+
     //void 
     //assignFromVec(const VectorRef& v);
 
-    // Iterate over ITensor::indices() instead
-    // Or use iterators indices().begin() and indices().end()
-    //
-    //Get the jth Index of this ITensor, j = 1,2,..,r()
-    //const Index& 
-    //index(int j) const { return is_.index(j); }
-
-    //Bond dimension of jth Index, j = 1,2,..,r()
-    //int 
-    //m(int j) const { return is_.m(j); }
-
-    //Use toReal() instead
-    //
-    //Get scalar value of rank 0 ITensor
-    //Throws ITError if r() != 0
-    //Real 
-    //val0() const;
-
-    //Deprecated: ITensor interface shouldn't depend on index order
-    //
-    //Return position of matching Index, 0 if not found
-    //int 
-    //findindex(const Index& I) const { return is_.findindex(I); }
-
-    //Removed because difficult to implement for IQTensor and of
-    //questionable value.
-    //
-    //Modify desired index in-place instead.
-    //
-    //Replace Index i1 with Index i2, throws ITError if i1.m() != i2.m()
-    //void 
-    //mapindex(const Index& i1, const Index& i2) { is_.mapindex(i1,i2); }
-
-
-    //Use realPart(T) and imagPart(T) instead
-    //
-    //void 
-    //splitReIm(ITensor& re, ITensor& im) const;
-    //void
-    //SplitReIm(ITensor& re, ITensor& im) const;
-
-    //
-    //No longer used and difficult to maintain.
-    //Instead just overwrite tensors and allow index
-    //order to change.
-    //
-    //void 
-    //assignFrom(const ITensor& other);
-
-
-    //
-    //Renamed to randomize in keeping with code conventions
-    //
-    //void 
-    //Randomize();
-
-    //Use prime(All) instead
-    //void 
-    //primeall() { prime(All); }
-
-    //Use prime(Site) or prime(Site,inc) instead
-    //void 
-    //primesite(int inc = 1) { prime(Site,inc); }
-
-    //Use prime(Link) or prime(Link,inc) instead
-    //void 
-    //primelink(int inc = 1) { prime(Link,inc); }
-
-    //Renamed to prime
-    //void 
-    //primeind(const Index& I, int inc = 1)
-    //    { mapindex(I,primed(I,inc)); }
-
-    //Renamed to noprime(const Index& I)
-    //void 
-    //noprimeind(const Index& I) { mapindex(I,deprimed(I)); }
-
-    //Use primed(A,Site) instead
-    //ITensor friend inline
-    //primesite(ITensor A, int inc = 1) { A.prime(Site,inc); return A; }
-
-    //Use primed(A,Link) instead
-    //ITensor friend inline
-    //primelink(ITensor A, int inc = 1) { A.prime(Link,inc); return A; }
 
     private:
 
@@ -602,6 +504,9 @@ class ITensor
 
     void
     equalizeScales(ITensor& other);
+
+    void
+    reshapeDat(const Permutation& P);
     
     friend struct ProductProps;
 
@@ -979,6 +884,16 @@ imagPart(const Tensor& T)
     im.takeImagPart();
     return im;
     }
+
+//Returns true if T is exactly zero.
+//
+//If passed the option Opt("Fast",true),
+//only performs fast operations such as checking
+//the scale of T, but skips computing T's norm.
+//This can cause the return value to be true even
+//if T is actually zero.
+bool
+isZero(const ITensor& T, const OptSet& opts = Global::opts());
 
 //
 // Tracing over all indices results in a Real

@@ -103,9 +103,6 @@ class LogNumber
         { return (sign_ == 0 || lognum_ < -maxlogdouble); }
 
     bool 
-    isOne() const { return (lognum_ == 0 && sign_ == 1); }
-
-    bool 
     isFiniteReal() const 
         { return (lognum_ < maxlogdouble && lognum_ > -maxlogdouble); }
 

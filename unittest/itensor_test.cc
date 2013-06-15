@@ -476,6 +476,7 @@ TEST(ScalarMultiply)
     CHECK_CLOSE(B(s1(2),s2(2)),220/f,1E-10);
 }
 
+/*
 TEST(assignToVec)
 {
     Vector V(l1.m()*l2.m()*l3.m());
@@ -488,7 +489,7 @@ TEST(assignToVec)
 
     T *= f;
 
-    Vector U(T.vecSize()); T.assignToVec(U);
+    Vector U(T.indices().dim()); T.assignToVec(U);
 
     CHECK_EQUAL(U.Length(),V.Length());
 
@@ -496,6 +497,7 @@ TEST(assignToVec)
     { CHECK_CLOSE(U(j),V(j)*f,1E-10); }
 
 }
+*/
 
 TEST(MapElems)
     {
@@ -521,6 +523,7 @@ TEST(MapElems)
         }
     }
 
+/*
 TEST(reshapeDat)
     {
     Permutation P;
@@ -538,6 +541,7 @@ TEST(reshapeDat)
     CHECK_CLOSE(A(s1(2),s2(2)),22*f,1E-10);
 
     }
+    */
 
 /*
 TEST(reshape)
@@ -584,12 +588,12 @@ TEST(SumDifference)
     Real f1 = -ran1(), f2 = 0.1*f1;
 
     ITensor r = f1*v + w/f2; 
-    Vector R(r.vecSize()); r.assignToVec(R);
+    Vector R(r.indices().dim()); r.assignToVec(R);
     for(int j = 1; j < R.Length(); ++j)
     { CHECK_CLOSE(R(j),f1*V(j)+W(j)/f2,1E-10); }
 
     ITensor d(v); d -= w;
-    Vector D(d.vecSize()); d.assignToVec(D);
+    Vector D(d.indices().dim()); d.assignToVec(D);
     for(int j = 1; j < D.Length(); ++j)
     { CHECK_CLOSE(D(j),V(j)-W(j),1E-10); }
 

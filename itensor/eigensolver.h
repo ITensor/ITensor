@@ -385,9 +385,7 @@ davidson(const LocalT& A, Tensor& phi) const
                     q = V.at(ni-1);
                     q.randomize();
 
-                    //Don't want to count real and imaginary parts as independent
-                    //from the point of view of orthogonalization
-                    if(q.vecSize() <= ni)
+                    if(q.indices().dim() <= ni)
                         {
                         //Not be possible to orthogonalize if
                         //max size of q (vecSize after randomize)
