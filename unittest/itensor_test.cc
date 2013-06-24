@@ -1267,15 +1267,7 @@ TEST(NoprimeTest)
     //Check that T.noprime()
     //throws an exception since it would
     //lead to duplicate indices
-    try {
-        T.noprime();
-        CHECK(false); //shouldn't reach here because
-                      //T.noprime() should throw
-        }
-    catch(const ITError& e)
-        {
-        CHECK(true);
-        }
+    CHECK_THROW(T.noprime(),ITError);
     }
 
 TEST(NormTest)

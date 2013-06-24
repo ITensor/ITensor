@@ -3,9 +3,10 @@
 
 #define CHECK_CLOSE BOOST_CHECK_CLOSE 
 #define CHECK_EQUAL BOOST_CHECK_EQUAL 
+#define CHECK_THROW BOOST_CHECK_THROW
 #define CHECK       BOOST_CHECK
 
-#define TEST   BOOST_AUTO_TEST_CASE
+#define TEST BOOST_AUTO_TEST_CASE
 
 inline double 
 Func(double x)

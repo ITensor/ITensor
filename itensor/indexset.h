@@ -301,11 +301,18 @@ noprime(IndexType type)
 #ifdef DEBUG
         //Check if calling noprime is ok
         //Error if it causes duplicate indices
-        for(int k = 0; k < r_; ++k)
+        if(type == All || J.type() == type)
             {
-            if(k != j && index_[j].noprimeEquals(index_[k]))
+            for(int k = 0; k < r_; ++k)
                 {
-                throw ITError("Calling noprime leads to duplicate indices");
+                const IndexT& K = index_[k];
+                if(type != All && K.type() != type) continue;
+                if(k != j && index_[j].noprimeEquals(index_[k]))
+                    {
+                    //Print(*this);
+                    //Cout << "Calling noprime would lead to duplicate indices" << Endl;
+                    throw ITError("Calling noprime would lead to duplicate indices");
+                    }
                 }
             }
 #endif

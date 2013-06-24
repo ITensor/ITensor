@@ -145,6 +145,16 @@ TEST(NoPrimeIndex)
     CHECK_EQUAL(P->index(2).dir(),S2.dir());
     }
 
+TEST(NoPrimeType)
+    {
+    IQIndexSet I1(S1,primed(S2),primed(L1),primed(L2)),
+               I2(S1,primed(S2),L1,primed(L1));
+
+    I1.noprime(Link);
+
+    CHECK_THROW(I2.noprime(Link),ITError);
+    }
+
 TEST(AddIndex)
     {
     shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>();
