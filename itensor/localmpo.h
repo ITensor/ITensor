@@ -134,6 +134,14 @@ class LocalMPO
     void
     R(int j, const Tensor& nR);
 
+    const MPOt<Tensor>&
+    H() const 
+        { 
+        if(Op_ == 0)
+            Error("LocalMPO is null or contains an MPS");
+        return *Op_;
+        }
+
 
     const Tensor&
     bondTensor() const { return lop_.bondTensor(); }
