@@ -713,26 +713,125 @@ template void MPSt<IQTensor>::
 svdBond(int b, const IQTensor& AA, Direction dir, const OptSet& opts);
 
 
+struct SqrtInv
+    {
+    Real
+    operator()(Real val) const 
+        { 
+        if(val == 0) return 0;
+        return 1./sqrt(fabs(val)); 
+        }
+    };
+
+struct Sqrt
+    {
+    Real
+    operator()(Real val) const { return sqrt(fabs(val)); }
+    };
+
+template<class Tensor>
+void
+orthMPS(Tensor& A1, Tensor& A2, Spectrum& spec, Direction dir, const OptSet& opts)
+    {
+    typedef typename Tensor::IndexT
+    IndexT;
+    typedef typename Tensor::SparseT
+    SparseT;
+
+    Tensor& L = (dir == Fromleft ? A1 : A2);
+    Tensor& R = (dir == Fromleft ? A2 : A1);
+
+    const
+    IndexT bnd = commonIndex(L,R,Link);
+
+    if(opts.getBool("Verbose",false))
+        {
+        Print(L.indices());
+        }
+
+    Tensor A,B(bnd);
+    SparseT D;
+    svd(L,A,D,B);
+
+    L = A;
+    R *= (D*B);
+
+    //Older density matrix implementation
+    //Doesn't flip arrows appropriately
+
+    //Tensor rho = primed(L,bnd)*conj(L);
+
+    //Tensor U;
+    //SparseT D;
+    //diagHermitian(rho,U,D,spec,opts);
+
+
+    //SparseT Di = D;
+    //Di.mapElems(SqrtInv());
+    //D.mapElems(Sqrt());
+
+    //const
+    //Tensor siRho = conj(U)*Di*primed(U),
+    //       sRho = conj(U)*D*primed(U);
+
+    //L *= siRho;
+    //L.noprime();
+
+    //R = primed(R,bnd)*sRho;
+    }
+template void
+orthMPS(ITensor& A1, ITensor& A2, Spectrum& spec, Direction dir, const OptSet& opts);
+template void
+orthMPS(IQTensor& A1, IQTensor& A2, Spectrum& spec, Direction dir, const OptSet& opts);
+
+
 template<class Tensor> void
 MPSt<Tensor>::
 position(int i, const OptSet& opts)
     {
     if(isNull()) Error("position: MPS is null");
-    while(l_orth_lim_ < i-1)
+
+    if(opts.getBool("DoSVDBond",false))
         {
-        if(l_orth_lim_ < 0) l_orth_lim_ = 0;
-        setBond(l_orth_lim_+1);
-        Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
-        //cout << format("In position, SVDing bond %d\n") % (l_orth_lim_+1) << endl;
-        svdBond(l_orth_lim_+1,WF,Fromleft,opts);
+        while(l_orth_lim_ < i-1)
+            {
+            if(l_orth_lim_ < 0) l_orth_lim_ = 0;
+            setBond(l_orth_lim_+1);
+            Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
+            //cout << format("In position, SVDing bond %d\n") % (l_orth_lim_+1) << endl;
+            svdBond(l_orth_lim_+1,WF,Fromleft,opts);
+            }
+        while(r_orth_lim_ > i+1)
+            {
+            if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
+            setBond(r_orth_lim_-2);
+            Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
+            //cout << format("In position, SVDing bond %d\n") % (r_orth_lim_-2) << endl;
+            svdBond(r_orth_lim_-2,WF,Fromright,opts);
+            }
         }
-    while(r_orth_lim_ > i+1)
+    else //use orthMPS
         {
-        if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
-        setBond(r_orth_lim_-2);
-        Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
-        //cout << format("In position, SVDing bond %d\n") % (r_orth_lim_-2) << endl;
-        svdBond(r_orth_lim_-2,WF,Fromright,opts);
+        while(l_orth_lim_ < i-1)
+            {
+            if(l_orth_lim_ < 0) l_orth_lim_ = 0;
+            setBond(l_orth_lim_+1);
+            //cout << format("In position, SVDing bond %d\n") % (l_orth_lim_+1) << endl;
+            orthMPS(Anc(l_orth_lim_+1),Anc(l_orth_lim_+2),spectrum_.at(l_orth_lim_+1),
+                    Fromleft,opts);
+            ++l_orth_lim_;
+            if(r_orth_lim_ < l_orth_lim_+2) r_orth_lim_ = l_orth_lim_+2;
+            }
+        while(r_orth_lim_ > i+1)
+            {
+            if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
+            setBond(r_orth_lim_-2);
+            //cout << format("In position, SVDing bond %d\n") % (r_orth_lim_-2) << endl;
+            orthMPS(Anc(r_orth_lim_-2),Anc(r_orth_lim_-1),spectrum_.at(r_orth_lim_-2),
+                    Fromright,opts);
+            --r_orth_lim_;
+            if(l_orth_lim_ > r_orth_lim_-2) l_orth_lim_ = r_orth_lim_-2;
+            }
         }
     is_ortho_ = true;
     }
@@ -814,7 +913,7 @@ checkOrtho(int i, bool left) const
     setSite(i);
     IndexT link = (left ? RightLinkInd(i) : LeftLinkInd(i));
 
-    Tensor rho = A(i) * conj(primed(A(i),Link,4));
+    Tensor rho = A(i) * conj(primed(A(i),link,4));
 
     Tensor Delta = makeKroneckerDelta(link,4);
 
@@ -822,18 +921,25 @@ checkOrtho(int i, bool left) const
 
     const
     Real threshold = 1E-13;
-    if(Diff.norm() < threshold) return true;
+    //cout << format("i = %d, Diff.norm() = %.4E")
+    //        % i
+    //        % Diff.norm()
+    //        << endl;
+    if(Diff.norm() < threshold) 
+        {
+        return true;
+        }
 
     //Print any helpful debugging info here:
-    std::cerr << "checkOrtho: on line " << __LINE__ 
-              << " of mps.h," << std::endl;
-    std::cerr << "checkOrtho: Tensor at position " << i 
-              << " failed to be " << (left ? "left" : "right") 
-              << " ortho." << std::endl;
-    std::cerr << "checkOrtho: Diff.norm() = " << boost::format("%E") 
-              % Diff.norm() << std::endl;
-    std::cerr << "checkOrtho: Error threshold set to " 
-              << boost::format("%E") % threshold << std::endl;
+    cout << "checkOrtho: on line " << __LINE__ 
+         << " of mps.h," << endl;
+    cout << "checkOrtho: Tensor at position " << i 
+         << " failed to be " << (left ? "left" : "right") 
+         << " ortho." << endl;
+    cout << "checkOrtho: Diff.norm() = " << boost::format("%E") 
+         % Diff.norm() << endl;
+    cout << "checkOrtho: Error threshold set to " 
+              << format("%E") % threshold << endl;
     //-----------------------------
 
     return false;

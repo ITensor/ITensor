@@ -98,6 +98,9 @@ class LogNumber
     int 
     sign() const { return sign_; }
 
+    bool
+    isZero() const { return sign_ == 0; }
+
     bool 
     isRealZero() const
         { return (sign_ == 0 || lognum_ < -maxlogdouble); }

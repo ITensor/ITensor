@@ -438,17 +438,10 @@ takeImagPart()
     ITENSOR_CHECK_NULL
     if(!i_)
         {
-        scale_ *= 0;
+        scale_ = 0;
         return *this;
         }
     r_.swap(i_);
-    /*
-    if(!r_)
-        {
-        const int alloc_size = i_->v.Length();
-        allocate(alloc_size);
-        }
-        */
     i_.reset();
     return *this;
     }
@@ -1777,6 +1770,12 @@ operator/=(const ITensor& other)
         return operator/=(cp_oth);
         }
 
+    if(scale_.isZero() || other.scale_.isZero())
+        {
+        scale_ = 0;
+        return *this;
+        }
+
     if(this->isComplex())
         {
         if(other.isComplex())
@@ -2017,10 +2016,11 @@ operator*=(const ITensor& other)
         return operator*=(cp_oth);
         }
 
-    //if(scale_.sign() == 0)
-    //    {
-    //    return *this;
-    //    }
+    if(scale_.isZero() || other.scale_.isZero())
+        {
+        scale_ = 0;
+        return *this;
+        }
 
     if(this->isNull() || other.isNull())
         Error("Null ITensor in product");
@@ -2232,6 +2232,17 @@ operator+=(const ITensor& other)
         return *this; 
         }
 
+    if(this->scale_.isZero())
+        {
+        *this = other;
+        return *this;
+        }
+
+    if((other.scale_/scale_).isRealZero()) 
+        { 
+        return *this; 
+        }
+
     const bool complex_this = this->isComplex();
     const bool complex_other = other.isComplex();
     if(!complex_this && complex_other)
@@ -2277,16 +2288,6 @@ operator+=(const ITensor& other)
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
         }
 
-    if(this->scale_.sign() == 0)
-        {
-        *this = other;
-        return *this;
-        }
-
-    if((other.scale_/scale_).isRealZero()) 
-        { 
-        return *this; 
-        }
 
     solo();
 
@@ -2384,7 +2385,8 @@ ITensor& ITensor::
 operator-=(const ITensor& other)
     {
     if(this == &other) 
-        { scale_ = 0; 
+        { 
+        scale_ = 0; 
         return *this; 
         }
     scale_.negate();

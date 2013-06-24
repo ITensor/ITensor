@@ -96,7 +96,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 // (tensor must be conjugate symmetric under
 //  exchange primed and unprimed indices)
 // Result is unitary tensor U and diagonal sparse tensor D
-// such that M == U*D*primed(U)
+// such that M == conj(U)*D*primed(U)
 //
 template<class Tensor, class SparseT>
 Spectrum 
