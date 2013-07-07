@@ -385,7 +385,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
         if(scon[i] == 0)
             {
             res.is_.addindex(S.index(i));
-            alloc_size *= S.m(i);
+            alloc_size *= S.index(i).m();
             res_has_Sind = true;
 
             //Link ri pointer to diagonal of S

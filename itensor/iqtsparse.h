@@ -52,9 +52,6 @@ class IQTSparse
     int 
     r() const { return is_->r(); }
 
-    int 
-    m(int j) const { return is_->m(j); }
-
     //uniqueReal depends on indices only, unordered:
     Real 
     uniqueReal() const { return is_->uniqueReal(); } 

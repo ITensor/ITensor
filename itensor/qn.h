@@ -46,9 +46,6 @@ class QN
     int 
     Nfp() const { return Nfp_; }
 
-    int 
-    sign() const { return (Nfp_ == 0 ? +1 : -1); }
-
     QN& 
     operator+=(const QN &other);
 
@@ -64,8 +61,6 @@ class QN
 
     std::string 
     toString() const;
-
-    QN(std::istream& s) { read(s); }
 
     void 
     write(std::ostream& s) const;
