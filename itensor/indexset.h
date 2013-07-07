@@ -74,9 +74,6 @@ class IndexSet
     operator[](int j) const { return index_[j]; }
 
     int
-    size() const { return r_; }
-
-    int
     m(int j) const { return GET(index_,j-1).m(); }
 
     int
