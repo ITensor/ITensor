@@ -184,13 +184,13 @@ findCenter(const IQMPO& psi)
     }
 
 void
-checkQNs(const IQMPO& psi)
+checkQNs(const IQMPO& H)
     {
-    const int N = psi.N();
+    const int N = H.N();
 
     const QN Zero;
 
-    int center = findCenter(psi);
+    int center = findCenter(H);
     //std::cerr << boost::format("Found the OC at %d\n") % center;
     if(center == -1)
         {
@@ -201,16 +201,16 @@ checkQNs(const IQMPO& psi)
     //including the ortho. center
     for(int i = 1; i <= N; ++i) 
         {
-        if(psi.A(i).isNull())
+        if(H.A(i).isNull())
             {
             std::cerr << boost::format("A(%d) null, QNs not well defined\n")%i;
             Error("QNs not well defined");
             }
         try {
-            if(div(psi.A(i)) != Zero)
+            if(div(H.A(i)) != Zero)
                 {
                 std::cerr << "At i = " << i << "\n";
-                Print(psi.A(i));
+                Print(H.A(i));
                 Error("Non-zero div IQTensor in IQMPO");
                 }
             }
@@ -224,14 +224,14 @@ checkQNs(const IQMPO& psi)
     //Check arrows from left edge
     for(int i = 1; i < center; ++i)
         {
-        if(psi.RightLinkInd(i).dir() != In) 
+        if(H.RightLinkInd(i).dir() != In) 
             {
             std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
             Error("Incorrect Arrow in IQMPO");
             }
         if(i > 1)
             {
-            if(psi.LeftLinkInd(i).dir() != Out) 
+            if(H.LeftLinkInd(i).dir() != Out) 
                 {
                 std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
                 Error("Incorrect Arrow in IQMPO");
@@ -243,12 +243,12 @@ checkQNs(const IQMPO& psi)
     for(int i = N; i > center; --i)
         {
         if(i < N)
-        if(psi.RightLinkInd(i).dir() != Out) 
+        if(H.RightLinkInd(i).dir() != Out) 
             {
             std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
             Error("Incorrect Arrow in IQMPO");
             }
-        if(psi.LeftLinkInd(i).dir() != In) 
+        if(H.LeftLinkInd(i).dir() != In) 
             {
             std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
             Error("Incorrect Arrow in IQMPO");
@@ -360,6 +360,18 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
 
     if(!allow_arb_position && (!K.isOrtho() || K.orthoCenter() != 1))
         Error("Ortho center of K must be site 1");
+
+    checkQNs(psi);
+    checkQNs(K);
+    /*
+    cout << "Checking divergence in zip" << endl;
+    for(int i = 1; i <= N; i++)
+	div(psi.A(i));
+    for(int i = 1; i <= N; i++)
+	div(K.A(i));
+    cout << "Done Checking divergence in zip" << endl;
+    */
+
 
     Spectrum spec;
     spec.cutoff(cutoff);
