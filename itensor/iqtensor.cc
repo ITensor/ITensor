@@ -1492,6 +1492,9 @@ div(const IQTensor& T)
             cout << "Offending ITensor = \n" << *it << "\n" << endl;
             Print(T.indices());
             cout << "\n-------------------------\n" << endl;
+	    T.blocks().begin();
+            cout << "First ITensor = \n" << *it << "\n" << endl;
+	    abort();
             Error("Inconsistent divergence of IQTensor block");
             }
         }

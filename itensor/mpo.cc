@@ -339,7 +339,8 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
 
 template <class Tensor>
 void 
-zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff, int maxm)
+zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff, int maxm,
+					bool allow_arb_position)
     {
     typedef typename Tensor::IndexT
     IndexT;
@@ -357,7 +358,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     if(!psi.isOrtho() || psi.orthoCenter() != 1)
         Error("Ortho center of psi must be site 1");
 
-    if(!K.isOrtho() || K.orthoCenter() != 1)
+    if(!allow_arb_position && (!K.isOrtho() || K.orthoCenter() != 1))
         Error("Ortho center of K must be site 1");
 
     Spectrum spec;
@@ -405,10 +406,10 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     } //void zipUpApplyMPO
 template
 void 
-zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, Real cutoff, int maxm);
+zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, Real cutoff, int maxm,bool allow_arb_position);
 template
 void 
-zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm);
+zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position);
 
 //Expensive: scales as m^3 k^3!
 template<class Tensor>
