@@ -7,6 +7,7 @@
 using namespace std;
 using boost::format;
 
+/*
 template<class Tensor> 
 void MPOt<Tensor>::
 position(int i, const OptSet& opts)
@@ -32,7 +33,9 @@ template void MPOt<ITensor>::
 position(int b, const OptSet& opts);
 template void MPOt<IQTensor>::
 position(int b, const OptSet& opts);
+*/
 
+/*
 template <class Tensor>
 void MPOt<Tensor>::
 orthogonalize(const OptSet& opts)
@@ -49,7 +52,9 @@ orthogonalize(const OptSet& opts)
         spec.cutoff(MIN_CUT);
         }
 
+    position(1);
     position(N_);
+
     //Now basis is ortho, ok to truncate
     Foreach(Spectrum& spec, spectrum_)
         {
@@ -65,7 +70,9 @@ template
 void MPOt<ITensor>::orthogonalize(const OptSet& opts);
 template
 void MPOt<IQTensor>::orthogonalize(const OptSet& opts);
+*/
 
+/*
 template <class Tensor>
 void MPOt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
@@ -116,6 +123,7 @@ template void MPOt<ITensor>::
 svdBond(int b, const ITensor& AA, Direction dir, const OptSet& opts);
 template void MPOt<IQTensor>::
 svdBond(int b, const IQTensor& AA, Direction dir, const OptSet& opts);
+*/
 
 template <class Tensor>
 MPOt<Tensor>& MPOt<Tensor>::
@@ -147,10 +155,10 @@ operator+=(const MPOt<Tensor>& other_)
             { 
             return *this;
             }
-        return addNoOrth(other);
+        return addAssumeOrth(other);
         }
 
-    return addNoOrth(other_);
+    return addAssumeOrth(other_);
     }
 template
 MPOt<ITensor>& MPOt<ITensor>::operator+=(const MPOt<ITensor>& other);

@@ -574,7 +574,8 @@ MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
 
 #else
 template <class Tensor>
-MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other_)
+MPSt<Tensor>& MPSt<Tensor>::
+operator+=(const MPSt<Tensor>& other_)
     {
     if(do_write_)
         Error("operator+= not supported if doWrite(true)");
@@ -602,10 +603,10 @@ MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other_)
             { 
             return *this;
             }
-        return addNoOrth(other);
+        return addAssumeOrth(other);
         }
 
-    return addNoOrth(other_);
+    return addAssumeOrth(other_);
     }
 template
 MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
@@ -614,15 +615,16 @@ MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
 #endif
 
 //
-// Adds two MPOs but doesn't attempt to
+// Adds two MPSs but doesn't attempt to
 // orthogonalize them first
 //
 template <class Tensor>
 MPSt<Tensor>& MPSt<Tensor>::
-addNoOrth(const MPSt<Tensor>& other_)
+addAssumeOrth(const MPSt<Tensor>& other_,
+              const OptSet& opts)
     {
     if(do_write_)
-        Error("addNoOrth not supported if doWrite(true)");
+        Error("addAssumeOrth not supported if doWrite(true)");
 
     primelinks(0,4);
 
@@ -645,14 +647,14 @@ addNoOrth(const MPSt<Tensor>& other_)
 
     noprimelink();
 
-    orthogonalize();
+    orthogonalize(opts);
 
     return *this;
     }
 template
-MPSt<ITensor>& MPSt<ITensor>::addNoOrth(const MPSt<ITensor>& other);
+MPSt<ITensor>& MPSt<ITensor>::addAssumeOrth(const MPSt<ITensor>& other, const OptSet& opts);
 template
-MPSt<IQTensor>& MPSt<IQTensor>::addNoOrth(const MPSt<IQTensor>& other);
+MPSt<IQTensor>& MPSt<IQTensor>::addAssumeOrth(const MPSt<IQTensor>& other, const OptSet& opts);
 
 
 //
@@ -851,14 +853,16 @@ void MPSt<Tensor>::
 orthogonalize(const OptSet& opts)
     {
     //Do a half-sweep to the right, orthogonalizing each bond
-    //but do not truncate since the basis to the right might not
-    //be ortho (i.e. use the current m).
+    //but lower the cutoff since the basis to the right
+    //might not be ortho: don't want to over truncate
     const Real orig_cut = cutoff();
     cutoff(0.1*orig_cut);
-    position(N_);
+    l_orth_lim_ = 0;
+    r_orth_lim_ = N()+1;
+    position(N_,opts);
     //Now basis is ortho, ok to truncate
     cutoff(orig_cut);
-    position(1);
+    position(1,opts);
     is_ortho_ = true;
     }
 template

@@ -270,7 +270,7 @@ class MPSt
     MPSt& 
     operator+=(const MPSt& oth);
     MPSt& 
-    addNoOrth(const MPSt& oth);
+    addAssumeOrth(const MPSt& oth, const OptSet& opts = Global::opts());
 
     inline MPSt 
     operator+(MPSt res) const { res += *this; return res; }
@@ -635,6 +635,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
         SparseT D;
+        //Cout << "Calling svdBond SVD" << Endl;
         svd(AA,A_[b],D,A_[b+1],spectrum_.at(b),opts);
 
         //Normalize the ortho center if requested
@@ -654,6 +655,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //If we don't need extreme accuracy
         //or need to use noise term
         //use density matrix approach
+        //Cout << "Calling svdBond denmatDecomp" << Endl;
         denmatDecomp(AA,A_[b],A_[b+1],dir,spectrum_.at(b),PH,opts);
 
         //Normalize the ortho center if requested

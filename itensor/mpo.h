@@ -6,6 +6,10 @@
 #define __ITENSOR_MPO_H
 #include "mps.h"
 
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
+
 //
 // class MPOt
 //
@@ -102,7 +106,8 @@ class MPOt : private MPSt<Tensor>
     operator*(Real r, MPOt res) { res *= r; return res; }
 
     MPOt&
-    addNoOrth(const MPOt& oth) { Parent::addNoOrth(oth); return *this; }
+    addAssumeOrth(const MPOt& oth, const OptSet& opts = Global::opts()) 
+        { Parent::addAssumeOrth(oth,opts & Opt("UseSVD")); return *this; }
 
     MPOt& 
     operator+=(const MPOt& oth);
@@ -147,25 +152,19 @@ class MPOt : private MPSt<Tensor>
         }
 
     void 
-    svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts = Global::opts());
-
-    void
-    doSVD(int b, const Tensor& AA, Direction dir, const OptSet& opts = Global::opts())
-        { 
-        svdBond(b,AA,dir,opts); 
-        }
+    svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts = Global::opts())
+        { Parent::svdBond(b,AA,dir,opts & Opt("UseSVD")); }
 
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
     void 
-    position(int i, const OptSet& opts = Global::opts());
+    position(int i, const OptSet& opts = Global::opts()) { Parent::position(i,opts & Opt("UseSVD")); }
 
     void 
-    orthogonalize(const OptSet& opts = Global::opts());
+    orthogonalize(const OptSet& opts = Global::opts()) { Parent::orthogonalize(opts & Opt("UseSVD")); }
 
     using Parent::isOrtho;
     using Parent::orthoCenter;
-    using Parent::orthogonalize;
 
     using Parent::isComplex;
 
@@ -385,5 +384,9 @@ template<class Tensor>
 void 
 expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
      Real Kcutoff, int ndoub);
+
+#undef Cout
+#undef Endl
+#undef Format
 
 #endif
