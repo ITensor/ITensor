@@ -993,10 +993,15 @@ operator<<(std::ostream & s, const IQTensor& T)
     Foreach(const ITensor& t, T.blocks())
         { 
         s << "  ";
-        Foreach(const Index& i, t.indices())
+        //Treat first Index specially in order to add trailing commas
+        IndexSet<Index>::const_iterator it = t.indices().begin();
+        const IQIndex& I1 = findIQInd(T,*it);
+        s << it->name() << ":" << qn(I1,*it) << "<" << I1.dir() << ">";
+        for(++it; it != t.indices().end(); ++it)
             {
-            const IQIndex& I = findIQInd(T,i);
-            s << i.name() << ":" << qn(I,i) << "<" << I.dir() << "> ";
+            s << ", ";
+            const IQIndex& I = findIQInd(T,*it);
+            s << it->name() << ":" << qn(I,*it) << "<" << I.dir() << ">";
             }
         s << endl;
         s << "  " << t << endl; 
