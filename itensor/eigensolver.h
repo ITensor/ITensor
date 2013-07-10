@@ -33,13 +33,13 @@ class Eigensolver
     //
     // Uses the Davidson algorithm to find the 
     // minimal eigenvector of the sparse matrix A.
-    // (LocalT objects must implement the methods product, size and diag.)
+    // (BigMatrixT objects must implement the methods product, size and diag.)
     // Returns the minimal eigenvalue lambda such that
     // A phi = lambda phi.
     //
-    template <class LocalT, class Tensor> 
+    template <class BigMatrixT, class Tensor> 
     Real 
-    davidson(const LocalT& A, Tensor& phi) const;
+    davidson(const BigMatrixT& A, Tensor& phi) const;
 
     //
     // Uses the Davidson algorithm to find the minimal
@@ -47,9 +47,9 @@ class Eigensolver
     // A phi = lambda B phi.
     // (B should have positive definite eigenvalues.)
     //
-    template <class LocalTA, class LocalTB, class Tensor> 
+    template <class BigMatrixTA, class BigMatrixTB, class Tensor> 
     Real
-    genDavidson(const LocalTA& A, const LocalTB& B, Tensor& phi) const;
+    genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi) const;
 
     //Accessor methods ------------
 
@@ -161,14 +161,17 @@ Eigensolver(const OptSet& opts)
     debug_level_ = opts.getInt("DebugLevel",-1);
     }
 
-template <class LocalT, class Tensor> 
+template <class BigMatrixT, class Tensor> 
 Real inline Eigensolver::
-davidson(const LocalT& A, Tensor& phi) const
+davidson(const BigMatrixT& A, Tensor& phi) const
     {
     typedef typename Tensor::SparseT
     SparseT;
 
-    phi *= 1.0/phi.norm();
+    Real phinorm = phi.norm();
+    if(phinorm == 0.0)
+	error("phi has norm of 0 in davidson");
+    phi *= 1.0/phinorm;
 
     bool complex_diag = false;
 
@@ -395,6 +398,13 @@ davidson(const LocalT& A, Tensor& phi) const
                         goto done;
                         }
 
+		    if(count > Npass * 3)
+			{
+			// Maybe the size of the matrix is only 1?
+                        if(debug_level_ >= 3)
+                            Cout << "Breaking out of Davidson: count too big" << Endl;
+			goto done;
+			}
                     qn = q.norm();
                     --pass;
                     }
@@ -484,9 +494,9 @@ davidson(const LocalT& A, Tensor& phi) const
 
     } //Eigensolver::davidson
 
-template <class LocalTA, class LocalTB, class Tensor> 
+template <class BigMatrixTA, class BigMatrixTB, class Tensor> 
 inline Real Eigensolver::
-genDavidson(const LocalTA& A, const LocalTB& B, Tensor& phi) const
+genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi) const
     {
     typedef typename Tensor::SparseT
     SparseT;

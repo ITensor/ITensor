@@ -198,8 +198,13 @@ void
 EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
     {
     LAPACK_INT N = A.Ncols();
+    if(N == 0)
+      _merror("EigenValues: 0 dimensions matrix");
     if (N != A.Nrows() || A.Nrows() < 1)
-      _merror("EigenValues: Input Matrix must be square");
+	{
+	cout << A.Nrows() << " " << A.Ncols() << endl;
+	_merror("EigenValues: Input Matrix must be square");
+	}
 
     char jobz = 'V';
     char uplo = 'U';
@@ -237,6 +242,8 @@ EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 void 
 GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
     {
+    if(A.Nrows() < 1)
+      _merror("GenEigenValues: 0 dimensions matrix");
     if (A.Ncols() != A.Nrows() || A.Nrows() < 1)
         _merror("GenEigenValues: Input Matrix must be square");
 
@@ -283,6 +290,8 @@ GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im)
 void 
 GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im, Matrix& ReV, Matrix& ImV)
     {
+    if(A.Nrows() < 1)
+      _merror("GenEigenValues: 0 dimensions matrix");
     if (A.Ncols() != A.Nrows() || A.Nrows() < 1)
         _merror("GenEigenValues: Input Matrix must be square");
 
@@ -357,8 +366,10 @@ void
 GeneralizedEV(const MatrixRef& A, Matrix B, Vector& D, Matrix& Z)
     {
     LAPACK_INT N = A.Ncols();
+    if(A.Nrows() < 1)
+      _merror("GeneralizedEV: 0 dimensions matrix");
     if (N != A.Nrows() || A.Nrows() < 1)
-      _merror("EigenValues: Input Matrix must be square");
+      _merror("GeneralizedEV: Input Matrix must be square");
 
     char jobz = 'V';
     char uplo = 'U';
@@ -387,6 +398,8 @@ HermitianEigenvalues(const Matrix& re, const Matrix& im,
                      Matrix& revecs, Matrix& ievecs)
     {
     LAPACK_INT N = re.Ncols();
+    if(re.Nrows() < 1)
+      _merror("HermitianEigenvalues: 0 dimensions re matrix");
     if (N != re.Nrows() || re.Nrows() < 1)
       _merror("HermitianEigenValues: Input Matrix must be square");
     if(im.Ncols() != N || im.Nrows() != N)
@@ -1029,6 +1042,8 @@ static void tql1(Vector& D, Vector& E)
 
 void BackupEigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
 {
+    if(A.Nrows() == 0)
+      _merror("BackupEigenValues: 0 dimensions matrix");
     if (A.Ncols() != A.Nrows() || A.Nrows() < 1)
       _merror("BackupEigenValues: Input Matrix must be square");
     Vector E; tred2(A, D, E, Z); tql2(D, E, Z);
@@ -1149,7 +1164,13 @@ void lubksb(Matrix& a,int* indx,Vector& b)
 Matrix Inverse(const MatrixRef& M)
 {
     int n = M.Nrows();
-    if (M.Ncols() != n) _merror("Inverse: Input matrix must be square");
+    if(n == 0)
+      _merror("Inverse: 0 dimensions matrix");
+    if (M.Ncols() != n) 
+	{
+	cout << "ncols, nrows are " << M.Ncols() SP n << endl;
+	_merror("Inverse: Input matrix must be square");
+	}
 
     Matrix a = M;
     Matrix result(n,n);
