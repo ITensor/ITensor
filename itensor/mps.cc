@@ -286,13 +286,13 @@ setBond(int b) const
         {
         if(!A_.at(atb_).isNull())
             {
-            //std::cerr << boost::format("Writing A(%d) to %s\n")%atb_%writedir_;
+            //cout << format("Writing A(%d) to %s\n")%atb_%writedir_;
             writeToFile(AFName(atb_),A_.at(atb_));
             A_.at(atb_) = Tensor();
             }
         if(!A_.at(atb_+1).isNull())
             {
-            //std::cerr << boost::format("Writing A(%d) to %s\n")%(atb_+1)%writedir_;
+            //cout << format("Writing A(%d) to %s\n")%(atb_+1)%writedir_;
             writeToFile(AFName(atb_+1),A_.at(atb_+1));
             if(atb_+1 != b) A_.at(atb_+1) = Tensor();
             }
@@ -302,13 +302,13 @@ setBond(int b) const
         {
         if(!A_.at(atb_).isNull())
             {
-            //std::cerr << boost::format("Writing A(%d) to %s\n")%atb_%writedir_;
+            //cerr << format("Writing A(%d) to %s\n")%atb_%writedir_;
             writeToFile(AFName(atb_),A_.at(atb_));
             if(atb_ != b+1) A_.at(atb_) = Tensor();
             }
         if(!A_.at(atb_+1).isNull())
             {
-            //std::cerr << boost::format("Writing A(%d) to %s\n")%(atb_+1)%writedir_;
+            //cerr << format("Writing A(%d) to %s\n")%(atb_+1)%writedir_;
             writeToFile(AFName(atb_+1),A_.at(atb_+1));
             A_.at(atb_+1) = Tensor();
             }
@@ -332,7 +332,7 @@ setBond(int b) const
     if(b == 1)
         {
         writeToFile(writedir_+"/model",*model_);
-        //std::ofstream inf((boost::format("%s/info")%writedir_).str().c_str());
+        //std::ofstream inf((format("%s/info")%writedir_).str().c_str());
         //    inf.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
         //    inf.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
         //    svd_.write(inf);
@@ -946,7 +946,7 @@ checkOrtho(int i, bool left) const
     cout << "checkOrtho: Tensor at position " << i 
          << " failed to be " << (left ? "left" : "right") 
          << " ortho." << endl;
-    cout << "checkOrtho: Diff.norm() = " << boost::format("%E") 
+    cout << "checkOrtho: Diff.norm() = " << format("%E") 
          % Diff.norm() << endl;
     cout << "checkOrtho: Error threshold set to " 
               << format("%E") % threshold << endl;
@@ -966,16 +966,16 @@ checkOrtho() const
     for(int i = 1; i <= l_orth_lim_; ++i)
     if(!checkLeftOrtho(i))
         {
-        std::cerr << "checkOrtho: A_[i] not left orthogonal at site i=" 
-                  << i << std::endl;
+        cout << "checkOrtho: A_[i] not left orthogonal at site i=" 
+                  << i << endl;
         return false;
         }
 
     for(int i = N(); i >= r_orth_lim_; --i)
     if(!checkRightOrtho(i))
         {
-        std::cerr << "checkOrtho: A_[i] not right orthogonal at site i=" 
-                  << i << std::endl;
+        cout << "checkOrtho: A_[i] not right orthogonal at site i=" 
+                  << i << endl;
         return false;
         }
     return true;
@@ -1126,7 +1126,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
             if(A.at(periodicWrap(j-1,N)).r() < fullrank) 
                 {
                 start = periodicWrap(j-1,N);
-                //cerr << "Got start at " << start << "\n";
+                //cout << "Got start at " << start << "\n";
                 break;
                 }
 
@@ -1135,7 +1135,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
             if(A.at(periodicWrap(j+1,N)).r() < fullrank) 
                 {
                 end = periodicWrap(j+1,N);
-                //cerr << "Got end at " << end << "\n";
+                //cout << "Got end at " << end << "\n";
                 break;
                 }
 
@@ -1170,7 +1170,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
         int s = periodicWrap(S,N);
         int sprev = periodicWrap(S-1,N);
         int snext = periodicWrap(S+1,N);
-        //cerr << format("S = %d, s = %d, sprev = %d, snext = %d\n")%S%s%sprev%snext;
+        //cout << format("S = %d, s = %d, sprev = %d, snext = %d\n")%S%s%sprev%snext;
 
         qD.clear(); 
         qt.clear();
@@ -1211,9 +1211,9 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
 
             if(s == show_s)
                 {
-                cerr << boost::format("For n = %d\n")%n;
-                cerr << boost::format("Got a block with norm %.10f\n")%block.norm();
-                cerr << boost::format("bond.m() = %d\n")%bond.m();
+                cout << format("For n = %d\n")%n;
+                cout << format("Got a block with norm %.10f\n")%block.norm();
+                cout << format("bond.m() = %d\n")%bond.m();
                 PrintDat(block);
                 if(s != 1) PrintDat(comp);
                 }
@@ -1239,7 +1239,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                         const Index& new_ind = (*ci==prev_bond ? *(ci+1) : *ci);
                         summed_block = ITensor(new_ind,1) * block;
                         }
-                    //cerr << boost::format("s = %d, bond=")%s << bond << "\n";
+                    //cout << format("s = %d, bond=")%s << bond << "\n";
                     //summed_block.print("summed_block");
 
                     Real rel_cut = -1;
@@ -1249,7 +1249,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                     assert(rel_cut >= 0);
                     //Real rel_cut = summed_block.norm()/summed_block.vecSize();
                     rel_cut *= cut;
-                    //cerr << "rel_cut == " << rel_cut << "\n";
+                    //cout << "rel_cut == " << rel_cut << "\n";
 
                     if(rel_cut > 0)
                     for(int j = 1; j <= bond.m(); ++j)
@@ -1281,7 +1281,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                 if(s==show_s)
                     {
                     PrintDat(block);
-                    cerr << "D = " << D << "\n";
+                    cout << "D = " << D << "\n";
                     }
                 }
             }
@@ -1302,18 +1302,18 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                     int mm = collapseCols(qD[q],M);
                     if(s==show_s)
                         {
-                        cerr << boost::format("Adding block, mm = %d\n")%mm;
+                        cout << format("Adding block, mm = %d\n")%mm;
                         Print(q);
-                        cerr << "qD[q] = " << qD[q] << "\n";
-                        cerr << "M = \n" << M << "\n";
+                        cout << "qD[q] = " << qD[q] << "\n";
+                        cout << "M = \n" << M << "\n";
                         int count = 0;
                         Foreach(const ITensor& t, blks) 
                             {
                             cout << format("t%02d") % (++count) << t << endl;
                             }
                         }
-                    //string qname = (boost::format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
-                    string qname = (boost::format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
+                    //string qname = (format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
+                    string qname = (format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
                     Index qbond(qname,mm);
                     ITensor compressor(bond,qbond,M);
                     Foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
@@ -1327,7 +1327,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
             { 
             if(iq.empty()) 
                 {
-                cerr << "At site " << s << "\n";
+                cout << "At site " << s << "\n";
                 Error("convertToIQ: no compatible QNs to put into Link.");
                 }
             linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
@@ -1435,9 +1435,9 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
             if(s == show_s)
             {
-                cerr << boost::format("For n = %d\n")%n;
-                cerr << boost::format("Got a block with norm %.10f\n")%block.norm();
-                cerr << boost::format("bond.m() = %d\n")%bond.m();
+                cout << format("For n = %d\n")%n;
+                cout << format("Got a block with norm %.10f\n")%block.norm();
+                cout << format("bond.m() = %d\n")%bond.m();
                 PrintDat(block);
                 if(s != 1) PrintDat(comp);
             }
@@ -1459,7 +1459,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                         Index new_ind = (comp.index(1)==prev_bond ? comp.index(2) : comp.index(1));
                         summed_block = ITensor(new_ind,1) * block;
                     }
-                    //cerr << boost::format("s = %d, bond=")%s << bond << "\n";
+                    //cout << format("s = %d, bond=")%s << bond << "\n";
                     //summed_block.print("summed_block");
 
                     Real rel_cut = -1;
@@ -1468,7 +1468,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                     assert(rel_cut >= 0);
                     //Real rel_cut = summed_block.norm()/summed_block.vecSize();
                     rel_cut *= cut;
-                    //cerr << "rel_cut == " << rel_cut << "\n";
+                    //cout << "rel_cut == " << rel_cut << "\n";
 
                     if(rel_cut > 0)
                     for(int j = 1; j <= bond.m(); ++j)
@@ -1495,7 +1495,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                 if(s==show_s)
                 {
                 block.print("Kept block",ShowData);
-                cerr << "D = " << D << "\n";
+                cout << "D = " << D << "\n";
                 }
             }
         }}
@@ -1515,16 +1515,16 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                     Matrix M; int mm = collapseCols(qD[q],M);
                     if(s==show_s)
                     {
-                        cerr << boost::format("Adding block, mm = %d\n")%mm;
+                        cout << format("Adding block, mm = %d\n")%mm;
                         q.print("q");
-                        cerr << "qD[q] = " << qD[q] << "\n";
-                        cerr << "M = \n" << M << "\n";
+                        cout << "qD[q] = " << qD[q] << "\n";
+                        cout << "M = \n" << M << "\n";
                         int count = 0;
                         Foreach(const ITensor& t, blks) 
-                        t.print((boost::format("t%02d")%(++count)).str(),ShowData);
+                        t.print((format("t%02d")%(++count)).str(),ShowData);
                     }
-                    //string qname = (boost::format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
-                    string qname = (boost::format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
+                    //string qname = (format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
+                    string qname = (format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
                     Index qbond(qname,mm);
                     ITensor compressor(bond,qbond,M);
                     Foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
@@ -1538,7 +1538,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
         { 
             if(iq.empty()) 
             {
-                cerr << "At site " << s << "\n";
+                cout << "At site " << s << "\n";
                 Error("convertToIQ: no compatible QNs to put into Link.");
             }
             linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
@@ -1569,7 +1569,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
         if(s==show_s)
         {
-        iqpsi.A(s).print((boost::format("qA[%d]")%s).str(),ShowData);
+        iqpsi.A(s).print((format("qA[%d]")%s).str(),ShowData);
         Error("Stopping");
         }
 
@@ -1614,7 +1614,7 @@ checkQNs(const IQMPS& psi)
     int center = findCenter(psi);
     if(center == -1)
         {
-        std::cerr << "Did not find an ortho. center\n";
+        cout << "Did not find an ortho. center\n";
         return false;
         }
 
@@ -1625,14 +1625,14 @@ checkQNs(const IQMPS& psi)
         if(i == center) continue;
         if(psi.A(i).isNull())
             {
-            std::cerr << boost::format("A(%d) null, QNs not well defined\n")%i;
+            cout << format("A(%d) null, QNs not well defined\n")%i;
             return false;
             }
         if(div(psi.A(i)) != Zero)
             {
-            std::cerr << "At i = " << i << "\n";
+            cout << "At i = " << i << "\n";
             Print(psi.A(i));
-            std::cerr << "IQTensor other than the ortho center had non-zero divergence\n";
+            cout << "IQTensor other than the ortho center had non-zero divergence\n";
             return false;
             }
         }
@@ -1642,14 +1642,14 @@ checkQNs(const IQMPS& psi)
         {
         if(psi.RightLinkInd(i).dir() != In) 
             {
-            std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            cout << format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
             return false;
             }
         if(i > 1)
             {
             if(psi.LeftLinkInd(i).dir() != Out) 
                 {
-                std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                cout << format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
                 return false;
                 }
             }
@@ -1661,12 +1661,12 @@ checkQNs(const IQMPS& psi)
         if(i < N)
         if(psi.RightLinkInd(i).dir() != Out) 
             {
-            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            cout << format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
             return false;
             }
         if(psi.LeftLinkInd(i).dir() != In) 
             {
-            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            cout << format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
             return false;
             }
         }

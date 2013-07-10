@@ -348,10 +348,13 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
 template <class Tensor>
 void 
 zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff, int maxm,
-					bool allow_arb_position)
+              const OptSet& opts)
     {
     typedef typename Tensor::IndexT
     IndexT;
+
+    const
+    bool allow_arb_position = opts.getBool("AllowArbPosition",false);
 
     if(&psi == &res)
         Error("psi and res must be different MPS instances");
@@ -369,6 +372,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     if(!allow_arb_position && (!K.isOrtho() || K.orthoCenter() != 1))
         Error("Ortho center of K must be site 1");
 
+#ifdef DEBUG
     checkQNs(psi);
     checkQNs(K);
     /*
@@ -379,7 +383,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
 	div(K.A(i));
     cout << "Done Checking divergence in zip" << endl;
     */
-
+#endif
 
     Spectrum spec;
     spec.cutoff(cutoff);
@@ -426,10 +430,10 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     } //void zipUpApplyMPO
 template
 void 
-zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, Real cutoff, int maxm,bool allow_arb_position);
+zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, Real cutoff, int maxm, const OptSet& opts);
 template
 void 
-zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, bool allow_arb_position);
+zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, const OptSet& opts);
 
 //Expensive: scales as m^3 k^3!
 template<class Tensor>

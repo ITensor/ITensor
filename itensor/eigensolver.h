@@ -168,9 +168,9 @@ davidson(const BigMatrixT& A, Tensor& phi) const
     typedef typename Tensor::SparseT
     SparseT;
 
-    Real phinorm = phi.norm();
+    const Real phinorm = phi.norm();
     if(phinorm == 0.0)
-	error("phi has norm of 0 in davidson");
+        Error("phi has norm of 0 in davidson");
     phi *= 1.0/phinorm;
 
     bool complex_diag = false;

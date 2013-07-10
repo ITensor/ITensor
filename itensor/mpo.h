@@ -360,7 +360,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
 template<class Tensor>
 void 
 zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff = -1, int maxm = -1,
-	bool allow_arb_position = false);
+              const OptSet& opts = Global::opts());
 
 template<class Tensor>
 void 
