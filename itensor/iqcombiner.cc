@@ -69,11 +69,15 @@ init(string rname, IndexType type,
     Arrow rdir = dir; 
     if(dir == Neither) //determine automatically
         {
+        rdir = -left_.back().dir();
         //Prefer to derive right Arrow from Link indices
         Foreach(const IQIndex& J, left_)
             {
-            rdir = -J.dir(); 
-            break;
+            if(J.type() == Link)
+                {
+                rdir = -J.dir(); 
+                break;
+                }
             }
         }
 
