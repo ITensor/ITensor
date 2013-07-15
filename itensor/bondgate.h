@@ -73,8 +73,7 @@ BondGate(const Model& model, int i, int j,
     Tensor unit = model.id(i)*model.id(j);
     if(type_ == tReal)
         {
-        bondH *= Tensor::Complex_i();
-        unit  *= Tensor::Complex_1();
+        bondH *= Complex_i;
         }
     Tensor term = bondH;
     bondH.mapprime(1,2);

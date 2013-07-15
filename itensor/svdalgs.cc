@@ -533,7 +533,9 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     Vector DD(L.m());
     for(int i = 1; i <= L.m(); ++i) 
+        {
         DD(i) = alleig.at(alleig.size()-i);
+        }
     spec.eigsKept(DD);
 
     /*

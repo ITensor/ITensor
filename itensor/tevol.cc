@@ -3,9 +3,23 @@
 //    (See accompanying LICENSE file.)
 //
 #include "tevol.h"
+#include "integrators.h"
 
 using namespace std;
 using boost::format;
+
+struct SqrtInv
+    {
+    const Real cut;
+
+    SqrtInv(Real cut_ = 0) : cut(cut_) { }
+
+    Real
+    operator()(Real r) const
+        {
+        return (r < cut ? 0 : 1./sqrt(r));
+        }
+    };
 
 //
 // Helper struct for derivMPS
@@ -22,13 +36,15 @@ struct SiteReverser
         { }
 
     int
-    operator()(int i) { return (reverse ? (N-i+1) : i); }
+    operator()(int i) const { return (reverse ? (N-i+1) : i); }
     };
 
+//
+// DerivMPS operator() method
+//
 template <class Tensor>
-void
-derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H, 
-         vector<Tensor>& dpsi, Direction dir)
+vector<Tensor> DerivMPS<Tensor>::
+operator()(const vector<Tensor>& psi) const
     {
     typedef typename Tensor::IndexT
     IndexT;
@@ -37,18 +53,17 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
 
     //psi tensors may have 1 or 2 sites,
     //so N is number of (non-null) psi tensors 
-    int N = psi.size()-1;
-    while(psi[N].isNull() && N > 1) --N;
+    int N = int(psi.size())-1;
+    while(psi.at(N).isNull() && N > 1) --N;
 
-    if(dpsi.size() != psi.size())
-        dpsi.resize(psi.size());
+    vector<Tensor> dpsi(psi.size());
 
 
     vector<Tensor> LH(N+1),
-                        RH(N+1),
-                        rho(N+1);
+                   RH(N+1),
+                   rho(N+1);
 
-    SiteReverser s(N,dir==Fromright);
+    SiteReverser s(N,dir_==Fromright);
 
     //
     // Record how many site indices
@@ -58,25 +73,25 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
     int Ns = 0; //total number of site indices of psi tensors
     for(int j = 1; j <= N; ++j)
         {
-        const Tensor& B = psi[s(j)];
+        const Tensor& B = psi.at(s(j));
         Foreach(const Index& I, B.indices())
             {
             if(I.type() == Site)
                 {
-                ++nsite[j];
+                ++nsite.at(j);
                 ++Ns;
                 }
             }
-        if(nsite[j] > 2) Error("Max # of combined sites is 2");
+        if(nsite.at(j) > 2) Error("Max # of combined sites is 2");
         }
-    if(Ns != H.N())
+    if(Ns != H_.N())
         {
         cout << format("psi tensors only had %d total sites \
-                        whereas H has %d sites") % Ns % H.N() << endl;
+                        whereas H has %d sites") % Ns % H_.N() << endl;
         Error("Mismatch in number of sites between psi and H");
         }
 
-    SiteReverser ps(Ns,dir==Fromright);
+    SiteReverser ps(Ns,dir_==Fromright);
 
     //
     // Create tensors representing H projected 
@@ -85,34 +100,34 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
     int j = N; //effective/super-site we're on
     int pj = Ns; //physical (ungrouped) site we're on
 
-    RH.at(j-1) = psi[s(j)] * H.A(ps(pj--)); 
-    if(nsite[j] == 2)
-        RH.at(j-1) *= H.A(ps(pj--));
-    RH.at(j-1) *= conj(primed(psi[s(j)]));
+    RH.at(j-1) = psi.at(s(j)) * H_.A(ps(pj--)); 
+    if(nsite.at(j) == 2)
+        RH.at(j-1) *= H_.A(ps(pj--));
+    RH.at(j-1) *= conj(primed(psi.at(s(j))));
 
     for(--j; j > 1; --j)
         {
-        RH.at(j-1) = RH.at(j) * psi[s(j)];
-        RH[j-1] *= H.A(ps(pj--));
-        if(nsite[j] == 2)
-            RH[j-1] *= H.A(ps(pj--));
-        RH[j-1] *= conj(primed(psi[s(j)]));
+        RH.at(j-1) = RH.at(j) * psi.at(s(j));
+        RH.at(j-1) *= H_.A(ps(pj--));
+        if(nsite.at(j) == 2)
+            RH.at(j-1) *= H_.A(ps(pj--));
+        RH.at(j-1) *= conj(primed(psi.at(s(j))));
         }
 
     pj = 1;
 
     //Begin applying H to psi
-    dpsi[s(1)] = psi[s(1)] * H.A(ps(pj++));
-    if(nsite[1] == 2)
-        dpsi[s(1)] *= H.A(ps(pj++));
+    dpsi.at(s(1)) = psi.at(s(1)) * H_.A(ps(pj++));
+    if(nsite.at(1) == 2)
+        dpsi.at(s(1)) *= H_.A(ps(pj++));
 
     //Use partial result to build LH
-    LH.at(2) = dpsi[s(1)] * conj(primed(psi[s(1)]));
-    rho[2] = psi[s(1)] * conj(primed(psi[s(1)],Link));
+    LH.at(2) = dpsi.at(s(1)) * conj(primed(psi.at(s(1))));
+    rho.at(2) = psi.at(s(1)) * conj(primed(psi.at(s(1)),Link));
 
     //Continue applying H to psi
-    dpsi[s(1)] *= RH[1];
-    dpsi[s(1)].noprime();
+    dpsi.at(s(1)) *= RH.at(1);
+    dpsi.at(s(1)).noprime();
     dpsi[s(1)] *= -1; //Minus sign appearing in Schrodinger eqn
 
     //Orthogonalize
@@ -130,9 +145,9 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
         Tensor& Bd = dpsi[s(j)];
 
         //Begin applying H to psi
-        Bd = LH[j] * B * H.A(ps(pj++));
+        Bd = LH[j] * B * H_.A(ps(pj++));
         if(nsite[j] == 2)
-            Bd *= H.A(ps(pj++));
+            Bd *= H_.A(ps(pj++));
 
         //Use partial result to build LH
         if(j < N)
@@ -172,133 +187,123 @@ derivMPS(const vector<Tensor>& psi, const MPOt<Tensor>& H,
         Bd.noprime();
         }
 
-    } //derivMPS
-template void
-derivMPS(const vector<ITensor>& psi, const MPO& H, 
-         vector<ITensor>& dpsi, Direction dir);
-template void
-derivMPS(const vector<IQTensor>& psi, const IQMPO& H, 
-         vector<IQTensor>& dpsi, Direction dir);
+    return dpsi;
+
+    } //DerivMPS::operator()
+template 
+vector<ITensor> DerivMPS<ITensor>::
+operator()(const vector<ITensor>& psi) const;
+template 
+vector<IQTensor> DerivMPS<IQTensor>::
+operator()(const vector<IQTensor>& psi) const;
 
 
+//
+// Factorize grouped tensors back into single sites
+// and load back into original MPS
+//
 template <class Tensor>
-Real
-expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
+void
+ungroupMPS(vector<Tensor>& psig,
+           Spectrum& spec,
+           MPSt<Tensor>& psi, 
+           Direction dir = Fromleft,
+           const OptSet& opts = Global::opts())
     {
-    const int size = psi.size();
+    typedef typename Tensor::IndexT
+    IndexT;
+    typedef typename Tensor::SparseT
+    SparseT;
+    typedef MPSt<Tensor>
+    MPST;
 
-    Tensor L;
-    int s = 1;
-    for(int j = 1; j < size; ++j)
+    if(psig.size() == 0)
+        Error("Empty psig vector");
+
+    int Ng = int(psig.size())-1;
+    while(psig.at(Ng).isNull() && Ng > 1) --Ng;
+
+    const int N = psi.N();
+    const Model& model = psi.model();
+
+    const int 
+          d      = (dir==Fromleft ? +1 : -1),
+          start  = (dir==Fromleft ? 1 : N),
+          end    = (dir==Fromleft ? N : 1),
+          gstart = (dir==Fromleft ? 1 : Ng),
+          gend   = (dir==Fromleft ? Ng : 1);
+
+    int j = start;
+    //cout << format("  Ng = %d, gstart = %d, gend = %d")
+    //        % Ng % gstart % gend
+    //        << endl;
+    for(int g = gstart; g != (gend+d); g += d)
         {
-        const Tensor& t = psi.at(j);
-
-        bool last = false;
-        if(j == size-1)
-            last = true;
-        else
-        if(psi.at(j+1).isNull())
-            last = true;
+        //cout << "  g = " << g << endl;
+        Tensor& bond = psig.at(g);
 
         int nsite = 0;
-        Foreach(const Index& I, t.indices())
+        Foreach(const Index& I, bond.indices())
             {
             if(I.type() == Site)
                 ++nsite;
             }
 
-        if(j == 1)
+        for(int n = 1; n < nsite; ++n)
             {
-            L = t;
-            for(int n = 1; n <= nsite; ++n)
-                L *= H.A(s++);
-            L *= conj(primed(t));
+            IndexT sj = model.si(j);
+            if(j == start)
+                {
+                psi.Anc(j) = Tensor(sj);
+                }
+            else
+                {
+                IndexT l = commonIndex(bond,psi.A(j-d));
+                psi.Anc(j) = Tensor(conj(l),sj);
+                }
+
+            SparseT D;
+            Tensor U;
+
+            if(dir == Fromleft)
+                svd(bond,psi.Anc(j),D,U,spec);
+            else
+                svd(bond,U,D,psi.Anc(j),spec);
+
+            //cout << format("psi.A(%d).indices() (r = %d) = \n")
+            //        % j
+            //        % psi.A(j).r()
+            //        << psi.A(j).indices() << endl;
+
+            j += d;
+
+            bond = U*D;
+
+            //Print(bond.norm());
+            }
+
+        if(g == gend)
+            {
+            psi.Anc(j) = bond;
+            //Print(psi.A(j).norm());
+            psi.leftLim(end-1);
+            psi.rightLim(end+1);
             }
         else
-        if(last)
             {
-            L *= t;
-            for(int n = 1; n <= nsite; ++n)
-                L *= H.A(s++);
-            return Dot(conj(primed(t)),L);
-            }
-        else
-            {
-            L *= t;
-            for(int n = 1; n <= nsite; ++n)
-                L *= H.A(s++);
-            L *= conj(primed(t));
+            //cout << format("Multiplying bond (rank %d) into psig[%d]")
+            //        % bond.r()
+            //        % (g+d)
+            //        << endl;
+            //Print(bond.indices());
+            psig.at(g+d) *= bond;
             }
         }
-    return NAN;
     }
-template
-Real
-expect(const vector<ITensor>& psi, const MPO& H);
-template
-Real
-expect(const vector<IQTensor>& psi, const IQMPO& H);
-
-template <class Tensor>
-Real
-norm(const vector<Tensor>& psi)
-    {
-    const int size = psi.size();
-
-    Tensor L;
-    for(int j = 1; j < size; ++j)
-        {
-        const Tensor& t = psi.at(j);
-
-        bool last = false;
-        if(j == size-1)
-            last = true;
-        else
-        if(psi.at(j+1).isNull())
-            last = true;
-
-        if(j == 1)
-            {
-            L = t;
-            L *= conj(primed(t,Link));
-            }
-        else
-        if(last)
-            {
-            L *= t;
-            return Dot(conj(primed(t,Link)),L);
-            }
-        else
-            {
-            L *= t;
-            L *= conj(primed(t,Link));
-            }
-        }
-    return NAN;
-    }
-template
-Real
-norm(const vector<ITensor>& psi);
-template
-Real
-norm(const vector<IQTensor>& psi);
-
-struct SqrtInv
-    {
-    SqrtInv(Real cut = 0)
-        :
-        cut_(cut)
-        { }
-
-    Real
-    operator()(Real r) const
-        {
-        return (r < cut_ ? 0 : 1./sqrt(r));
-        }
-
-    private:
-    Real cut_;
-    };
+template void ungroupMPS(vector<ITensor>& psig, Spectrum& spec, 
+              MPSt<ITensor>& psi, Direction dir, const OptSet& opts);
+template void ungroupMPS(vector<IQTensor>& psig, Spectrum& spec, 
+              MPSt<IQTensor>& psi, Direction dir, const OptSet& opts);
 
 template <class Tensor>
 void
@@ -313,11 +318,10 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
     typedef MPSt<Tensor>
     MPST;
 
+    const
     bool verbose = opts.getBool("Verbose",false);
 
     const int N = H.N();
-
-    const Model& model = psi.model();
 
     if(psi.N() != N)
         {
@@ -339,6 +343,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             }
         }
 
+    /*
     if(doUnprojStep)
         {
         const int nexact = 1;
@@ -383,26 +388,31 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             cout << endl;
             }
         }
+        */
 
 
     //Group pairs of adjacent site tensors
-    const int Ng = N/2+N%2;
+    const int Ng = N/2+N%2; //Ng is # groups on odd steps
+                            //If N even, actual number of groups
+                            //is Ng+1 on even steps
     vector<Tensor> psiv(Ng+2);
     for(int j = 1, g = 1; j <= N; j += 2, ++g)
         {
         if(j != N)
-            psiv[g] = psi.A(j)*psi.A(j+1);
+            psiv.at(g) = psi.A(j)*psi.A(j+1);
         else
-            psiv[g] = psi.A(j);
+            psiv.at(g) = psi.A(j);
         }
 
     Spectrum spec;
-    spec.doRelCutoff(true);
-    spec.absoluteCutoff(false);
+    //spec.doRelCutoff(true);
+    //spec.absoluteCutoff(false);
     spec.minm(psi.minm());
     spec.maxm(psi.maxm());
     spec.cutoff(psi.cutoff());
+    Print(spec);
 
+    const
     int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
 
     if(fabs(nt*tstep-ttotal) > 1E-9)
@@ -410,107 +420,16 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
         Error("Timestep not commensurate with total time");
         }
 
-    int oc = 1;
+
     for(int tt = 1; tt <= nt; ++tt)
         {
-        Direction dir = (tt%2==1 ? Fromleft : Fromright);
-        const int groups = Ng + (N%2==0 && tt%2==0 ? 1 : 0);
+        const Direction dir = (tt%2==1 ? Fromleft : Fromright);
+        const int Ngroups = Ng + ((N%2==0 && tt%2==0) ? 1 : 0);
 
         if(verbose) cout << "\nTaking step" << endl;
 
-        const string type = "second";
-
-        if(type == "second")
-            {
-            //
-            // 2nd Order Runge-Kutta
-            // (Midpoint method)
-            //
-
-            vector<Tensor> d1(psiv);
-            derivMPS(psiv,H,d1,dir);
-
-            vector<Tensor> p1(psiv);
-            for(int j = 1; j <= Ng; ++j)
-                p1[j] += (tstep/2.)*d1[j];
-
-            vector<Tensor> d2(psiv);
-            derivMPS(p1,H,d2,dir);
-
-            for(int g = 1; g <= groups; ++g)
-                {
-                psiv[g] += (tstep)*d2[g];
-                }
-            }
-        else
-        if(type == "third")
-            {
-            //
-            // 3rd Order Runge-Kutta
-            //
-
-            vector<Tensor> d1(psiv);
-            derivMPS(psiv,H,d1,dir);
-
-            vector<Tensor> p1(psiv);
-            for(int j = 1; j <= Ng; ++j)
-                p1[j] += (tstep/3.)*d1[j];
-
-            vector<Tensor> d2(psiv);
-            derivMPS(p1,H,d2,dir);
-
-            vector<Tensor> p2(psiv);
-            for(int j = 1; j <= Ng; ++j)
-                p2[j] += (2.*tstep/3.)*d2[j];
-
-            vector<Tensor> d3(psiv);
-            derivMPS(p2,H,d3,dir);
-
-            for(int g = 1; g <= groups; ++g)
-                {
-                psiv[g] += (tstep/4.)*(d1[g]+3*d3[g]);
-                }
-            }
-        else
-        if(type == "fourth")
-            {
-            //
-            // 4th Order Runge-Kutta
-            //
-
-            vector<Tensor> d1(psiv);
-            derivMPS(psiv,H,d1,dir);
-
-            vector<Tensor> d2(psiv);
-                vector<Tensor> p1(psiv);
-                for(int j = 1; j <= Ng; ++j)
-                    p1[j] += (tstep/2.)*d1[j];
-                derivMPS(p1,H,d2,dir);
-
-            vector<Tensor> d3(psiv);
-                vector<Tensor> p2(psiv);
-                for(int j = 1; j <= Ng; ++j)
-                    p2[j] += (tstep/2.)*d2[j];
-                //derivMPS(p2,H,d3,dir);
-                derivMPS(p1,H,d3,dir);
-
-            vector<Tensor> d4(psiv);
-                vector<Tensor> p3(psiv);
-                for(int j = 1; j <= Ng; ++j)
-                    p3[j] += (tstep)*d3[j];
-                derivMPS(p3,H,d4,dir);
-
-            for(int g = 1; g <= groups; ++g)
-                {
-                //cout << format("Taking time step for group %d") % g << endl;
-                psiv[g] += (tstep/6.)*(d1[g]+2*d2[g]+2*d3[g]+d4[g]);
-                }
-            }
-        else
-            {
-            cout << "Type " << type << " not recognized" << endl;
-            exit(0);
-            }
+        //rungeKutta4(DerivMPS<Tensor>(H,dir),tstep,psiv);
+        midpointMethod(DerivMPS<Tensor>(H,dir),tstep,psiv);
 
         //Record time step
         tsofar += tstep;
@@ -523,13 +442,13 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 {
                 Real nbefore = norm(psiv);
                 cout << format("Norm before orth = %.10f") % nbefore << endl;
-                cout << format("Energy before orth = %.10f") % (expect(psiv,H)/nbefore) << endl;
+                cout << format("Energy before orth = %.10f") % (expect(psiv,H)/sqr(nbefore)) << endl;
                 }
 
-            for(int g = groups; g > 1; --g)
+            for(int g = Ngroups; g > 1; --g)
                 {
-                Tensor& B = psiv[g];
-                IndexT lnk = commonIndex(B,psiv[g-1]);
+                Tensor& B = psiv.at(g);
+                IndexT lnk = commonIndex(B,psiv.at(g-1));
                 Tensor overlap = conj(primed(B,lnk))*B;
 
                 Tensor U(lnk),V;
@@ -545,39 +464,111 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 }
             }
 
-
-        if(tt == nt) break;
-
-        /*
-        cout << format("Step %d, Before regrouping, psiv =") % tt << endl;
-        for(int j = 1; j <= Ng+1; ++j)
-            {
-            if(psiv.at(j).isNull())
-                {
-                cout << format("psiv[%d] is Null") % j << endl;
-                continue;
-                }
-
-            cout << format("psiv[%d] =") % j << psiv.at(j) << endl << endl;
-            }
-        */
         if(verbose)
             {
             Real nbefore = norm(psiv);
-            cout << format("Norm before regroup = %.10f") % nbefore << endl;
-            cout << format("Energy before regroup = %.10f") % (expect(psiv,H)/nbefore) << endl;
+            cout << format("Norm before ungroup = %.10f") % nbefore << endl;
+            cout << format("Energy before ungroup = %.10f") % (expect(psiv,H)/sqr(nbefore)) << endl;
             }
+
+        if(verbose) cout << "Ungrouping sites" << endl;
+
+        ungroupMPS(psiv,spec,psi,dir,opts);
+
+        if(verbose)
+            {
+            cout << "After ungroup, m values = " << endl;
+            for(int b = 1; b < N; ++b)
+                {
+                int m = psi.LinkInd(b).m();
+                cout << m << " ";
+                }
+            cout << endl;
+
+            const Real nrm2 = psiphi(psi,psi);
+            cout << format("Norm after ungroup = %.10f") % sqrt(nrm2) << endl;
+            cout << format("%.5f %.10f") % tsofar % (psiHphi(psi,H,psi)/nrm2) << endl;
+            }
+
+        if(tt == nt) break;
 
         if(verbose) cout << "Regrouping sites" << endl;
 
-        const Real orig_cutoff = spec.cutoff();
+        if(tt%2==1) //tt odd, next step even
+            {
+            int g = 1;
+            for(int j = 1; j <= N; ++g)
+                {
+                if(j == 1 || j == N)
+                    {
+                    psiv.at(g) = psi.A(j);
+                    j += 1;
+                    }
+                else
+                    {
+                    psiv.at(g) = psi.A(j)*psi.A(j+1);
+                    j += 2;
+                    }
+                }
 
-        spec.cutoff(1E-20);
+            for(; g < int(psiv.size()); ++g)
+                {
+                psiv.at(g) = Tensor();
+                }
+            }
+        else //tt even, next step odd
+            {
+            int g = 1;
+            for(int j = 1; j <= N; ++g)
+                {
+                if(j == N)
+                    {
+                    psiv.at(g) = psi.A(j);
+                    j += 1;
+                    }
+                else
+                    {
+                    psiv.at(g) = psi.A(j)*psi.A(j+1);
+                    j += 2;
+                    }
+                }
+
+            for(; g < int(psiv.size()); ++g)
+                {
+                psiv.at(g) = Tensor();
+                }
+            }
+
+        if(verbose)
+            {
+            const Real nafter = norm(psiv);
+            cout << format("Norm after regroup = %.10f") % nafter << endl;
+            const Real enafter = expect(psiv,H)/sqr(nafter);
+            cout << format("Energy after regroup = %.10f") % enafter << endl;
+            }
+
+
+        } // for loop over tt
+
+    if(verbose)
+        cout << format("Total time evolved = %.5f") % tsofar << endl;
+
+    } // imagTEvol
+template
+void
+imagTEvol(const MPOt<ITensor>& H, Real ttotal, Real tstep, 
+          MPSt<ITensor>& psi, const OptSet& opts);
+template
+void
+imagTEvol(const MPOt<IQTensor>& H, Real ttotal, Real tstep, 
+          MPSt<IQTensor>& psi, const OptSet& opts);
+
+        /*
         if(tt%2 == 1)
             { //Odd step, odd bonds grouped
             for(int g = 1, j = 1; g < Ng; ++g, j += 2)
                 {
-                const Tensor& bond = psiv[g];
+                const Tensor& bond = psiv.at(g);
                 IndexT r = commonIndex(bond,psiv.at(g+1));
 
                 Tensor A, B(model.si(j+1),r);
@@ -586,11 +577,11 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 svd(bond,A,D,B,spec);
                 //Print(A);
 
-                psiv[g] = A;
+                psiv.at(g) = A;
 
                 B *= D;
                 //Print(B);
-                psiv[g+1] *= B;
+                psiv.at(g+1) *= B;
                 }
 
             if(N%2==0)
@@ -598,9 +589,9 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 //cout << format("bond %d = \n") % Ng << psiv[Ng] << endl;
                 Tensor A,B(model.si(N));
                 SparseT D;
-                svd(psiv[Ng],A,D,B,spec);
-                psiv[Ng] = A;
-                psiv[Ng+1] = D*B;
+                svd(psiv.at(Ng),A,D,B,spec);
+                psiv.at(Ng) = A;
+                psiv.at(Ng+1) = D*B;
                 //Print(A);
                 //Print(psiv[Ng+1]);
                 oc = Ng+1;
@@ -614,8 +605,8 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             { //Even step, even bonds grouped
             if(N%2==0)
                 {
-                psiv[Ng] *= psiv[Ng+1];
-                psiv[Ng+1] = Tensor();
+                psiv.at(Ng) *= psiv.at(Ng+1);
+                psiv.at(Ng+1) = Tensor();
                 //cout << format("Now psiv[%d] = \n") % Ng << psiv[Ng] << endl;
                 }
 
@@ -623,7 +614,7 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
 
             for(int g = Ng, j = jstart; g > 1; --g, j -= 2)
                 {
-                const Tensor& bond = psiv[g];
+                const Tensor& bond = psiv.at(g);
                 IndexT l = commonIndex(bond,psiv.at(g-1));
 
                 //cout << format("bond %d = \n") % g << bond << endl;
@@ -633,176 +624,113 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 svd(bond,A,D,B,spec);
 
                 //Print(B);
-                psiv[g] = B;
+                psiv.at(g) = B;
 
                 A *= D;
                 //Print(A);
-                psiv[g-1] *= A;
+                psiv.at(g-1) *= A;
                 }
             oc = 1;
             }
-        spec.cutoff(orig_cutoff);
+            */
 
-        //Real nm2 = Dot(psiv[oc],psiv[oc]);
-        //cout << format("time = %.3f, nm2 = %.10f -> ") % tsofar % nm2;
-        //psiv[oc] *= 1./sqrt(nm2);
-        //nm2 = Dot(psiv[oc],psiv[oc]);
-        //cout << format("%.10f") % nm2 << endl;
+template <class Tensor>
+Real
+expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
+    {
+    if(psi.size() == 0)
+        Error("Empty psi vector");
 
-        /*
-        cout << format("Step %d, After regrouping, psiv =") % tt << endl;
-        for(int j = 1; j <= Ng+1; ++j)
-            {
-            if(psiv.at(j).isNull())
-                {
-                cout << format("psiv[%d] is Null") % j << endl;
-                continue;
-                }
+    int N = int(psi.size())-1;
+    while(psi.at(N).isNull() && N > 1) --N;
 
-            cout << format("psiv[%d] =") % j << psiv.at(j) << endl << endl;
-            }
-        */
-        if(verbose)
-            {
-            Real nafter = norm(psiv);
-            cout << format("Norm after regroup = %.10f") % nafter << endl;
-            Real enafter = expect(psiv,H)/nafter;
-            cout << format("Energy after regroup = %.10f") % enafter << endl;
-            cout << format("%.5f %.10f") % tsofar % enafter << endl;
-
-            cout << "After step, m values = " << endl;
-            for(int b = 1; b < N; ++b)
-                {
-                int m = psi.LinkInd(b).m();
-                cout << m << " ";
-                }
-            cout << endl;
-            }
-
-        } // for loop over tt
-
-    if(verbose)
-        cout << format("Total time evolved = %.5f") % tsofar << endl;
-
-    //
-    // Factorize grouped tensors back into single sites
-    // and load back into original MPS
-    //
-    if(oc == 1)
+    Tensor L;
+    int s = 1;
+    for(int j = 1; j <= N; ++j)
         {
-        int j = 1;
-        for(int g = 1; g <= Ng; ++g)
+        const Tensor& t = psi.at(j);
+
+        int nsite = 0;
+        Foreach(const Index& I, t.indices())
             {
-            Tensor& bond = psiv[g];
-
-            int nsite = 0;
-            Foreach(const Index& I, bond.indices())
-                {
-                if(I.type() == Site)
-                    ++nsite;
-                }
-
-            for(int n = 1; n < nsite; ++n)
-                {
-                IndexT sj = model.si(j);
-                Tensor A,B;
-                if(j > 1)
-                    {
-                    IndexT l = commonIndex(bond,psi.A(j-1));
-                    A = Tensor(l,sj);
-                    }
-                else
-                    {
-                    A = Tensor(sj);
-                    }
-                SparseT D;
-                //cout << format("bond %d = \n") % g << bond << endl;
-                svd(bond,A,D,B,spec);
-                //Print(A);
-
-                psi.Anc(j) = A;
-                ++j;
-
-                bond = D*B;
-                }
-
-            if(g == Ng)
-                {
-                psi.Anc(j) = bond;
-                psi.leftLim(N-1);
-                psi.rightLim(N+1);
-                }
-            else
-                {
-                psiv.at(g+1) *= bond;
-                }
+            if(I.type() == Site)
+                ++nsite;
             }
-        //Real nm2 = Dot(psi.A(N),psi.A(N));
-        //psi.Anc(N) *= 1./sqrt(nm2);
+
+        if(j == 1)
+            {
+            L = t;
+            for(int n = 1; n <= nsite; ++n)
+                L *= H.A(s++);
+            L *= conj(primed(t));
+            }
+        else
+        if(j == N)
+            {
+            L *= t;
+            for(int n = 1; n <= nsite; ++n)
+                L *= H.A(s++);
+            return Dot(conj(primed(t)),L);
+            }
+        else
+            {
+            L *= t;
+            for(int n = 1; n <= nsite; ++n)
+                L *= H.A(s++);
+            L *= conj(primed(t));
+            }
         }
-    else
+    return NAN;
+    }
+template
+Real
+expect(const vector<ITensor>& psi, const MPO& H);
+template
+Real
+expect(const vector<IQTensor>& psi, const IQMPO& H);
+
+template <class Tensor>
+Real
+norm(const vector<Tensor>& psi)
+    {
+    if(psi.size() == 0)
+        Error("Empty psi vector");
+
+    int N = int(psi.size())-1;
+    while(psi.at(N).isNull() && N > 1) --N;
+
+    cout << format("In norm, counted %d groups") % N << endl;
+
+    Tensor L;
+    for(int j = 1; j <= N; ++j)
         {
-        int j = N;
-        for(int g = oc; g >= 1; --g)
+        const Tensor& t = psi.at(j);
+
+        if(j == 1)
             {
-            Tensor& bond = psiv[g];
-
-            int nsite = 0;
-            Foreach(const Index& I, bond.indices())
-                {
-                if(I.type() == Site)
-                    ++nsite;
-                }
-
-            for(int n = 1; n < nsite; ++n)
-                {
-                IndexT sj = model.si(j);
-                Tensor A,B;
-                if(j < N)
-                    {
-                    IndexT r = commonIndex(bond,psi.A(j+1));
-                    B = Tensor(sj,r);
-                    }
-                else
-                    {
-                    B = Tensor(sj);
-                    }
-                SparseT D;
-                //cout << format("bond %d = \n") % g << bond << endl;
-                svd(bond,A,D,B,spec);
-                //Print(A);
-
-                psi.Anc(j) = B;
-                --j;
-
-                bond = A*D;
-                }
-
-            if(g == 1)
-                {
-                psi.Anc(j) = bond;
-                psi.leftLim(0);
-                psi.rightLim(2);
-                }
-            else
-                {
-                psiv.at(g-1) *= bond;
-                }
+            L = t;
+            L *= conj(primed(t,Link));
             }
-        //Real nm2 = Dot(psi.A(1),psi.A(1));
-        //psi.Anc(1) *= 1./sqrt(nm2);
+        else
+        if(j == N)
+            {
+            L *= t;
+            return sqrt(fabs(Dot(conj(primed(t,Link)),L)));
+            }
+        else
+            {
+            L *= t;
+            L *= conj(primed(t,Link));
+            }
         }
-
-    } // imagTEvol
+    return NAN;
+    }
 template
-void
-imagTEvol(const MPOt<ITensor>& H, Real ttotal, Real tstep, 
-          MPSt<ITensor>& psi, const OptSet& opts);
+Real
+norm(const vector<ITensor>& psi);
 template
-void
-imagTEvol(const MPOt<IQTensor>& H, Real ttotal, Real tstep, 
-          MPSt<IQTensor>& psi, const OptSet& opts);
-
+Real
+norm(const vector<IQTensor>& psi);
 
 template <class Tensor>
 void

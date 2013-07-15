@@ -177,7 +177,8 @@ Spectrum(Real cutoff, int maxm, int minm, Real noise,
       maxm_(maxm),
       minm_(minm), 
       noise_(0),
-      refNorm_(1)
+      refNorm_(1),
+      truncerr_(NAN)
     {  
     initOpts(opts);
     }
@@ -221,6 +222,35 @@ write(std::ostream& s) const
     s.write((char*)&absoluteCutoff_,sizeof(absoluteCutoff_));
     s.write((char*)&refNorm_,sizeof(refNorm_));
     eigsKept_.write(s);
+    }
+
+inline std::ostream& 
+operator<<(std::ostream & s, const Spectrum& spec)
+    {
+    s << Format("  cutoff = %.2E\n  maxm = %d\n  minm = %d\n  noise = %.2E\n")
+         % spec.cutoff()
+         % spec.maxm()
+         % spec.minm()
+         % spec.noise();
+
+    const Vector& eigs = spec.eigsKept();
+    const int N = eigs.Length();
+    if(N > 0)
+        {
+        const int max_show = 20;
+        int stop = min(N,max_show);
+        s << "  Eigs kept: ";
+        for(int j = 1; j <= stop; ++j)
+            {
+            s << Format(eigs(j) > 1E-3 ? ("%.3f") : ("%.3E")) 
+                           % eigs(j);
+            s << ((j != stop) ? ", " : "\n");
+            }
+        s << Format("  Trunc. error = %.3E")
+             % spec.truncerr()
+             << Endl;
+        }
+    return s;
     }
 
 #undef Cout
