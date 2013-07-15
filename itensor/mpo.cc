@@ -173,12 +173,12 @@ findCenter(const IQMPO& psi)
         const IQTensor& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in IQMPO");
         bool allOut = true;
-        for(int i = 1; i <= A.r(); ++i)
+        Foreach(const IQIndex& I, A.indices())
             {
             //Only look at Link IQIndices
-            if(A.index(i).type() != Link) continue;
+            if(I.type() != Link) continue;
 
-            if(A.index(i).dir() != Out)
+            if(I.dir() != Out)
                 {
                 allOut = false;
                 break;

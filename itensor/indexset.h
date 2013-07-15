@@ -76,6 +76,12 @@ class IndexSet
     int
     dim() const;
 
+    const IndexT&
+    front() const;
+
+    const IndexT&
+    back() const;
+
     const_iterator
     begin() const { return index_.begin(); }
 
@@ -282,7 +288,27 @@ dim() const
     return d;
     }
 
+template <class IndexT>
+const IndexT& IndexSet<IndexT>::
+front() const
+    {
+#ifdef DEBUG
+    if(r_ == 0)
+        Error("Empty IndexSet");
+#endif
+    return index_.front();
+    }
 
+template <class IndexT>
+const IndexT& IndexSet<IndexT>::
+back() const
+    {
+#ifdef DEBUG
+    if(r_ == 0)
+        Error("Empty IndexSet");
+#endif
+    return index_.back();
+    }
 
 template <class IndexT>
 void IndexSet<IndexT>::

@@ -705,12 +705,12 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
                    imatrix;
     vector<Vector> mvector(rho.iten_size());
     vector<Real> alleig;
-    alleig.reserve(rho.index(1).m());
+    alleig.reserve(rho.indices().front().m());
 
     if(cplx)
         imatrix.resize(rho.iten_size());
 
-    if(rho.index(1).m() == 0)
+    if(rho.indices().front().m() == 0)
         throw ResultIsZero("rho.index(1).m()");
     if(rho.iten_empty())
         throw ResultIsZero("rho.iten_empty()");
@@ -1044,7 +1044,7 @@ pseudoInverse(const IQTensor& C, Real cutoff)
         Print(C.indices());
         Error("pseudoInverse only defined for rank 1 ITensors");
         }
-    IQTensor res(C.index(1));
+    IQTensor res(C.indices().front());
     Foreach(const ITensor& t, C.blocks())
         { res += pseudoInverse(t,cutoff); }
     return res;

@@ -1588,10 +1588,11 @@ findCenter(const IQMPS& psi)
         const IQTensor& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in MPS");
         bool allSameDir = true;
-        Arrow dir = A.index(1).dir();
-        for(int i = 2; i <= A.r(); ++i)
+        IndexSet<IQIndex>::const_iterator it = A.indices().begin();
+        Arrow dir = it->dir();
+        for(++it; it != A.indices().end(); ++it)
             {
-            if(A.index(i).dir() != dir)
+            if(it->dir() != dir)
                 {
                 allSameDir = false;
                 break;

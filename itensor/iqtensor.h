@@ -90,10 +90,6 @@ class IQTensor
     int 
     r() const;
 
-    //Get the jth IQIndex of this ITensor, j = 1,2,..,r()
-    const IQIndex& 
-    index(int j) const;
-
     //Number of ITensor blocks
     int 
     iten_size() const;
@@ -363,6 +359,10 @@ class IQTensor
     const_iqind_it;
 
     //Deprecated methods
+
+    //Get the jth IQIndex of this ITensor, j = 1,2,..,r()
+    //const IQIndex& 
+    //index(int j) const;
 
     //Copy IQTensor, incrementing IQIndices of matching IndexType by 1
     //IQTensor(IndexType type, const IQTensor& other);

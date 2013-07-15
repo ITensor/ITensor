@@ -186,9 +186,12 @@ product(const IQTensor& t, IQTensor& res) const
 
     int smallind_pos = -2;
     int bigind_pos   = -2;
-    for(int j = 1; j <= t.r(); ++j)
+    //for(int j = 1; j <= t.r(); ++j)
+    int j = 0;
+    Foreach(const IQIndex& J, t.indices())
         {
-        iqinds.push_back(t.index(j));
+        //iqinds.push_back(t.index(j));
+        iqinds.push_back(J);
 
         if(iqinds.back() == smallind_) 
             {
@@ -197,7 +200,7 @@ product(const IQTensor& t, IQTensor& res) const
                 Print(smallind_);
                 Error("Incompatible Arrow for smallind");
                 }
-            smallind_pos = (j-1);
+            smallind_pos = j;
             }
         else if(iqinds.back() == bigind_) 
             {
@@ -206,8 +209,9 @@ product(const IQTensor& t, IQTensor& res) const
                 Print(bigind_);
                 Error("Incompatible Arrow for bigind");
                 }
-            bigind_pos = (j-1);
+            bigind_pos = j;
             }
+        ++j;
         }
 
     if(smallind_pos != -2) //expand condensed form into uncondensed
