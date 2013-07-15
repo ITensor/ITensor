@@ -84,9 +84,6 @@ class IQTensor
     IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
              const IQIndexVal& iv3, const IQIndexVal& iv4);
 
-    //Copy IQTensor, incrementing IQIndices of matching IndexType by 1
-    IQTensor(IndexType type, const IQTensor& other);
-
     //Accessor Methods ------------------------------------------
 
     //Rank of this IQTensor (number of IQIndices)
@@ -364,6 +361,12 @@ class IQTensor
 
     typedef IndexSet<IQIndex>::const_iterator
     const_iqind_it;
+
+    //Deprecated methods
+
+    //Copy IQTensor, incrementing IQIndices of matching IndexType by 1
+    //IQTensor(IndexType type, const IQTensor& other);
+
 
     private:
 

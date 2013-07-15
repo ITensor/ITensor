@@ -355,12 +355,14 @@ IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
     operator()(iv1,iv2,iv3,iv4) = 1;
 	}
 
+/* Deprecated (Jul 15, 2013 EMS)
 IQTensor::
 IQTensor(IndexType type,const IQTensor& other) 
     : 
     is_(other.is_),
     dat(other.dat)
     { prime(type); }
+*/
 
 void IQTensor::
 read(std::istream& s)
