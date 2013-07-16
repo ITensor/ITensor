@@ -2843,7 +2843,7 @@ BraKet(const ITensor& x, const ITensor& y)
 bool
 isZero(const ITensor& T, const OptSet& opts)
     {
-    if(T.scale().sign() == 0 || T.scale().logNum() == 0)
+    if(T.scale().isZero())
         return true;
     //done with all fast checks
     if(opts.getBool("Fast",false)) return false;
