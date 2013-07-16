@@ -384,4 +384,18 @@ TEST(BigNorm)
     CHECK_CLOSE(Z.normLogNum().logNum(),999.053,1E-4);
     }
 
+TEST(AddBlock)
+    {
+    ITensor b1(L1(4).indexqn(),L2(2).indexqn()),
+            b2(L1(L1.m()).indexqn(),L2(2).indexqn());
+
+    b1.randomize();
+    b2.randomize();
+
+    B += b1; //shouldn't throw
+
+    CHECK_THROW(B += b2,ITError);
+    
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -88,9 +88,9 @@ struct SVDAlgsDefaults
 
         L = IQTensor(L1,S1,conj(Mid10));
             {
-            ITensor zud(l10,s1u,mid10d);
-            zud.randomize();
-            L += zud;
+            ITensor zuu(l10,s1u,mid10u);
+            zuu.randomize();
+            L += zuu;
 
             ITensor udz(l1u,s1d,mid10z);
             udz.randomize();
@@ -100,9 +100,9 @@ struct SVDAlgsDefaults
             duz.randomize();
             L += duz;
 
-            ITensor zdu(l10,s1d,mid10u);
-            zdu.randomize();
-            L += zdu;
+            ITensor zdd(l10,s1d,mid10d);
+            zdd.randomize();
+            L += zdd;
             }
         L *= 1./L.norm();
         l = L.toITensor();
