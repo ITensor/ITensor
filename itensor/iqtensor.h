@@ -197,12 +197,12 @@ class IQTensor
     //Inserts an ITensor block or adds it to
     //existing one if already present and QNs match
     IQTensor& 
-    operator+=(const ITensor& t);
+    operator+=(const ITensor& block);
 
     //Like operator+=(ITensor) but
     //demands that the block is zero/absent
     //before inserting
-    void insert(const ITensor& t);
+    void insert(const ITensor& block);
 
     //Non-const element access
     Real& 
@@ -236,6 +236,12 @@ class IQTensor
        const IQIndexVal& iv6 = IQIndexVal::Null(),
 	   const IQIndexVal& iv7 = IQIndexVal::Null(), 
        const IQIndexVal& iv8 = IQIndexVal::Null()) const;
+
+    Real
+    toReal() const;
+
+    Complex 
+    toComplex() const;
 
 
     //----------------------------------------------------
@@ -314,16 +320,10 @@ class IQTensor
     void 
     clean(Real min_norm = MIN_CUT);
 
-    Real
-    toReal() const;
-
-    Complex 
-    toComplex() const;
-
     void 
     randomize();
 
-    void 
+    IQTensor& 
     conj();
 
     void

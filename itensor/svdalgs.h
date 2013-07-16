@@ -198,7 +198,7 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
     CombinerT;
     
     if(isZero(AA,Opt("Fast"))) 
-        throw ResultIsZero("denmatDecomp: AA is zero");
+        throw ResultIsZero("svd: AA is zero");
 
     if(spec.noise() > 0)
         Error("Noise term not implemented for svd");

@@ -466,6 +466,24 @@ insert(const ITensor& t)
 IQTensor& IQTensor::
 operator+=(const ITensor& t) 
     { 
+#ifdef DEBUG
+    if(!this->iten_empty())
+        {
+        const
+        QN d = div(*this);
+        QN q;
+        Foreach(const Index& i, t.indices())
+            {
+            q += qn(*this,i)*dir(*this,i);
+            }
+        if(q != d)
+            {
+            //Print(d);
+            //Print(q);
+            throw ITError("New ITensor block has different divergence from IQTensor.");
+            }
+        }
+#endif
     if(t.scale().sign() != 0)
         {
         dat.solo();
@@ -956,14 +974,14 @@ randomize()
 	}
 
 
-void IQTensor::
+IQTensor& IQTensor::
 conj()
     {
     if(!this->isComplex())
         {
         soloIndex();
         is_->conj();
-        return;
+        return *this;
         }
     else
         {
@@ -974,6 +992,7 @@ conj()
             t.conj();
             }
         }
+    return *this;
     }
 
 void IQTensor::
