@@ -202,8 +202,10 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         {
         ITensor iU(ui,uL,iUU.Columns(1,m)),
                 iV(vL,vi,iVV.Rows(1,m));
-        U = U*Complex_1 + iU*Complex_i;
-        V = V*Complex_1 + iV*Complex_i;
+        if(iU.norm() > 1E-14)
+            U = U + iU*Complex_i;
+        if(iV.norm() > 1E-14)
+            V = V + iV*Complex_i;
         }
 
     //Square all singular values
@@ -317,8 +319,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
             {
             ITensor ret = realPart(t),
                     imt = imagPart(t);
-            //ret.scaleTo(spec.refNorm());
-            //imt.scaleTo(spec.refNorm());
+            ret.scaleTo(spec.refNorm());
+            imt.scaleTo(spec.refNorm());
             Matrix Mre(ui->m(),vi->m()),
                    Mim(ui->m(),vi->m());
             ret.toMatrix11NoScale(*ui,*vi,Mre);
@@ -517,11 +519,23 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         IQTensor iV(conj(R),vI);
         for(size_t j = 0; j < Dblock.size(); ++j)
             {
-            iU += iUblock.at(j);
-            iV += iVblock.at(j);
+            if(iUblock.at(j).norm() > 1E-14)
+                {
+                iU += iUblock.at(j);
+                }
+            if(iVblock.at(j).norm() > 1E-14)
+                {
+                iV += iVblock.at(j);
+                }
             }
-        U = U + iU*Complex_i;
-        V = V + iV*Complex_i;
+        if(!iU.blocks().empty())
+            {
+            U = U + iU*Complex_i;
+            }
+        if(!iV.blocks().empty())
+            {
+            V = V + iV*Complex_i;
+            }
         }
 
     //Originally eigs were found by calling
@@ -980,9 +994,11 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
         IQTensor iU(conj(active),conj(newmid));
         for(size_t j = 0; j < iblocks.size(); ++j)
             {
-            iU += iblocks.at(j);
+            if(iblocks.at(j).norm() > 1E-14)
+                iU += iblocks.at(j);
             }
-        U = U*Complex_1 + iU*Complex_i;
+        if(!iU.blocks().empty())
+            U = U + iU*Complex_i;
         }
 
     D *= spec.refNorm();
