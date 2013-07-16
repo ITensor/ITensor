@@ -57,46 +57,26 @@ struct IQTSparseDefaults
         phi += du;
         }
 
-        A = IQTensor(L1,S1,L2,S2);
-        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
-        for(int n2 = 1; n2 <= L2.nindex(); ++n2)
-        for(int p1 = 1; p1 <= S1.nindex(); ++p1)
-        for(int p2 = 1; p2 <= S2.nindex(); ++p2)
-            {
-            ITensor T(L1.index(n1),L2.index(n2),S1.index(p1),S2.index(p2));
-            T.randomize();
-            A += T;
-            }
+        A = IQTensor(L1(1),S1(1),L2(1),S2(1));
+        A.randomize();
 
-        B = IQTensor(L1,L2);
-        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
-        for(int n2 = 1; n2 <= L2.nindex(); ++n2)
-            {
-            ITensor T(L1.index(n1),L2.index(n2));
-            T.randomize();
-            B += T;
-            }
+        B = IQTensor(L1(l1u.m()+1),L2(l2uu.m()+1));
+        B.randomize();
 
-        C = IQTensor(conj(L1),primed(L1));
-        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
-            {
-            Matrix U(L1.index(n1).m(),L1.index(n1).m());
-            U.Randomize();
-            U += U.t();
-            ITensor T(L1.index(n1),primed(L1).index(n1),U);
-            C += T;
-            }
+        C = IQTensor(conj(L1)(l1u.m()+1),primed(L1)(l1u.m()+1));
+        C.randomize();
 
-        D = IQTensor(conj(L1),S1,primed(L1),primed(L1,2));
-        for(int n1 = 1; n1 <= L1.nindex(); ++n1)
-        for(int n2 = 1; n2 <= S1.nindex(); ++n2)
-        for(int n3 = 1; n3 <= L1.nindex(); ++n3)
-        for(int n4 = 1; n4 <= S1.nindex(); ++n4)
-            {
-            ITensor T(L1.index(n1),S1.index(n2),primed(L1).index(n3),primed(L1,2).index(n4));
-            T.randomize();
-            D += T;
-            }
+        D = IQTensor(conj(L1)(l1u.m()-1),S1(2),primed(L1)(l1u.m()+1),primed(L1,2)(l1u.m()+1));
+        D.randomize();
+        }
+
+    void
+    test1()
+        {
+        IQTSparse B(L1,L2);
+
+        Print(hasindex(B,L1));
+        Print(hasindex(B,L2));
         }
 
     };
