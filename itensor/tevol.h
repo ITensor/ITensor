@@ -46,6 +46,16 @@ class DerivMPS
 
     };
 
+template <class Tensor>
+void inline
+derivMPS(const std::vector<Tensor>& psi, const MPOt<Tensor>& H, 
+         std::vector<Tensor>& d, 
+         Direction dir = Fromleft)
+    {
+    DerivMPS<Tensor> D(H,dir);
+    d = D(psi);
+    }
+
 //
 // Compute the norm (= sqrt(|<psi|psi>|)) of an
 // MPS-like vector of tensors
