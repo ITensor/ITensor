@@ -1685,8 +1685,9 @@ totalQN(const IQMPS& psi)
     return div(psi.A(center));
     }
 
+template <class Tensor>
 void 
-fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
+fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit)
     {
     if(!psi_basis.isOrtho()) 
         Error("psi_basis must be orthogonolized.");
@@ -1697,7 +1698,7 @@ fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
     if(psi_to_fit.N() != N) 
         Error("Wavefunctions must have same number of sites.");
 
-    IQTensor A = psi_to_fit.A(N) * conj(primed(psi_basis.A(N),Link));
+    Tensor A = psi_to_fit.A(N) * conj(primed(psi_basis.A(N),Link));
     for(int n = N-1; n > 1; --n)
         {
         A *= conj(primed(psi_basis.A(n),Link));
@@ -1706,7 +1707,13 @@ fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit)
     A = psi_to_fit.A(1) * A;
     A.noprime();
 
+    const Real nrm = A.norm();
+    if(nrm == 0) Error("Zero overlap of psi_to_fit and psi_basis");
+    A /= nrm;
+
     psi_to_fit = psi_basis;
     psi_to_fit.Anc(1) = A;
     }
+template void fitWF(const MPSt<ITensor>& psi_basis, MPSt<ITensor>& psi_to_fit);
+template void fitWF(const MPSt<IQTensor>& psi_basis, MPSt<IQTensor>& psi_to_fit);
 

@@ -398,13 +398,14 @@ davidson(const BigMatrixT& A, Tensor& phi) const
                         goto done;
                         }
 
-		    if(count > Npass * 3)
-			{
-			// Maybe the size of the matrix is only 1?
+                    if(count > Npass * 3)
+                        {
+                        // Maybe the size of the matrix is only 1?
                         if(debug_level_ >= 3)
                             Cout << "Breaking out of Davidson: count too big" << Endl;
-			goto done;
-			}
+                        goto done;
+                        }
+
                     qn = q.norm();
                     --pass;
                     }

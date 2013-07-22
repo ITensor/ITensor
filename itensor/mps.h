@@ -778,8 +778,9 @@ psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
 //Computes an MPS which has the same overlap with psi_basis as psi_to_fit,
 //but which differs from psi_basis only on the first site, and has same index
 //structure as psi_basis. Result is stored to psi_to_fit on return.
+template <class Tensor>
 void 
-fitWF(const IQMPS& psi_basis, IQMPS& psi_to_fit);
+fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit);
 
 //
 // Template method for efficiently summing 
