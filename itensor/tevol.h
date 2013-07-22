@@ -23,7 +23,7 @@
 //     Verbose - print useful information to stdout
 //
 template <class Tensor>
-void
+Real
 imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep, 
           MPSt<Tensor>& psi, 
           const OptSet& opts = Global::opts());
@@ -89,7 +89,7 @@ expect(const std::vector<Tensor>& psi, const MPOt<Tensor>& H);
 //     Verbose - print useful information to stdout
 //
 template <class Tensor>
-void
+Real
 gateTEvol(const std::list<BondGate<Tensor> >& gatelist, 
           Real ttotal, Real tstep, 
           MPSt<Tensor>& psi, 
