@@ -537,8 +537,8 @@ class InitState
     typedef std::vector<IQIndexVal>
     Storage;
 
-    typedef boost::function1<IQIndexVal,int>
-    Setter;
+    typedef std::string
+    String;
 
     InitState(const Model& model)
         : 
@@ -546,33 +546,28 @@ class InitState
         state_(1+model.N())
         { }
 
-    template<class MethodPtr>
-    InitState(const Model& model, MethodPtr m)
+    InitState(const Model& model, const String& state)
         : 
         model_(&model), 
         state_(1+model.N())
         { 
-        setAll(m);
+        setAll(state);
         }
 
-    template<class MethodPtr>
     InitState& 
-    set(int i, MethodPtr m)
+    set(int i, const String& state)
         { 
         checkRange(i);
-        state_.at(i) = std::bind1st(std::mem_fun(m),model_)(i);
+        state_.at(i) = model_->st(i,state);
         return *this;
         }
 
-    template<class MethodPtr>
     InitState& 
-    setAll(MethodPtr m)
+    setAll(const String& state)
         { 
-        const
-        Setter s = std::bind1st(std::mem_fun(m),model_);
         for(int n = 1; n <= model_->N(); ++n)
             {
-            state_[n] = s(n);
+            state_[n] = model_->st(n,state);
             }
         return *this;
         }
