@@ -1115,7 +1115,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
     if(is_mpo)
         {
         for(int j = 1; j <= N; ++j)
-            qA.at(j) = model.id(j);
+            qA.at(j) = model.op("Id",j);
         }
 
     const int fullrank = (is_mpo ? 4 : 3);
