@@ -26,9 +26,9 @@ TEST(FourSite)
 
     InitState initState(model);
     for(int i = 1; i <= N; ++i)
-        initState.set(i,i%2==1 ? &SpinHalf::Up : &SpinHalf::Dn);
+        initState.set(i,i%2==1 ? "Up" : "Dn");
 
-    MPS psi(model,initState);
+    MPS psi(initState);
 
     LocalMPO<ITensor> PH(H);
 
@@ -126,9 +126,9 @@ TEST(IQFourSite)
 
     InitState initState(model);
     for(int i = 1; i <= N; ++i)
-        initState.set(i,i%2==1 ? &SpinHalf::Up : &SpinHalf::Dn);
+        initState.set(i,i%2==1 ? "Up" : "Dn");
 
-    IQMPS psi(model,initState);
+    IQMPS psi(initState);
 
     LocalMPO<IQTensor> PH(H);
 

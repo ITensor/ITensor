@@ -94,26 +94,26 @@ init()
         W = IQTensor(conj(model_.si(j)),model_.siP(j),row,col);
 
         //Identity string operators
-        W += model_.id(j) * row(ds) * col(ds);
-        W += model_.id(j) * row(k) * col(k);
+        W += model_.op("Id",j) * row(ds) * col(ds);
+        W += model_.op("Id",j) * row(k) * col(k);
 
         //S+ S- terms
-        W += model_.sp(j) * row(k) * col(1) * (J1_/2.);
-        W += model_.sp(j) * row(k) * col(2) * (J2_/2.);
-        W += model_.id(j) * row(2) * col(1);
-        W += model_.sm(j) * row(1) * col(ds);
+        W += model_.op("Sp",j) * row(k) * col(1) * (J1_/2.);
+        W += model_.op("Sp",j) * row(k) * col(2) * (J2_/2.);
+        W += model_.op("Id",j) * row(2) * col(1);
+        W += model_.op("Sm",j) * row(1) * col(ds);
 
         //S- S+ terms
-        W += model_.sm(j) * row(k) * col(3) * (J1_/2.);
-        W += model_.sm(j) * row(k) * col(4) * (J2_/2.);
-        W += model_.id(j) * row(4) * col(3);
-        W += model_.sp(j) * row(3) * col(ds);
+        W += model_.op("Sm",j) * row(k) * col(3) * (J1_/2.);
+        W += model_.op("Sm",j) * row(k) * col(4) * (J2_/2.);
+        W += model_.op("Id",j) * row(4) * col(3);
+        W += model_.op("Sp",j) * row(3) * col(ds);
 
         //Sz Sz terms
-        W += model_.sz(j) * row(k) * col(6) * J1_;
-        W += model_.sz(j) * row(k) * col(7) * J2_;
-        W += model_.id(j) * row(7) * col(6);
-        W += model_.sz(j) * row(6) * col(ds);
+        W += model_.op("Sz",j) * row(k) * col(6) * J1_;
+        W += model_.op("Sz",j) * row(k) * col(7) * J2_;
+        W += model_.op("Id",j) * row(7) * col(6);
+        W += model_.op("Sz",j) * row(6) * col(ds);
         }
 
     H.Anc(1) *= IQTensor(iqlinks.at(0)(k));

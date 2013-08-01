@@ -28,7 +28,7 @@ class SpinHalf : public Model
     getState(int i, const String& state) const;
 
     virtual IQTensor
-    getOp(int i, const String& opname) const;
+    getOp(int i, const String& opname, const OptSet& opts) const;
 
     virtual void
     doRead(std::istream& s);
@@ -116,7 +116,7 @@ getState(int i, const String& state) const
     }
 
 inline IQTensor SpinHalf::
-getOp(int i, const String& opname) const
+getOp(int i, const String& opname, const OptSet& opts) const
     {
     const
     IQIndex s(si(i));
@@ -156,6 +156,16 @@ getOp(int i, const String& opname) const
     if(opname == "Sm")
         {
         Op(Up,DnP) = 1;
+        }
+    else
+    if(opname == "projUp")
+        {
+        Op(Up,UpP) = 1; 
+        }
+    else
+    if(opname == "projDn")
+        {
+        Op(Dn,DnP) = 1; 
         }
     else
         {

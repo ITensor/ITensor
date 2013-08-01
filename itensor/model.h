@@ -77,7 +77,8 @@ class Model
     //Get the operator indicated by
     //"opname" located at site i
     IQTensor
-    op(const String& opname, int i) const;
+    op(const String& opname, int i,
+       const OptSet& opts = Global::opts()) const;
 
     void 
     read(std::istream& s) { doRead(s); }
@@ -102,7 +103,7 @@ class Model
     getState(int i, const String& state) const = 0;
 
     virtual IQTensor
-    getOp(int i, const String& opname) const = 0;
+    getOp(int i, const String& opname, const OptSet& opts) const = 0;
 
     protected:
 
@@ -208,7 +209,8 @@ class Model
     };
 
 inline IQTensor Model::
-op(const String& opname, int i) const
+op(const String& opname, int i, 
+   const OptSet& opts) const
     { 
     if(opname == "Id")
         {
@@ -223,7 +225,7 @@ op(const String& opname, int i) const
         }
     else
         {
-        return getOp(i,opname);
+        return getOp(i,opname,opts);
         }
     }
 

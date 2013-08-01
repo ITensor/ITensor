@@ -58,14 +58,14 @@ MPSt(const Model& mod_,int maxmm, Real cut);
 
 template <class Tensor>
 MPSt<Tensor>::
-MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut)
+MPSt(const InitState& initState,int maxmm, Real cut)
     : 
-    N_(mod_.N()),
-    A_(mod_.N()+1),
+    N_(initState.model().N()),
+    A_(initState.model().N()+1),
     l_orth_lim_(0),
     r_orth_lim_(2),
     is_ortho_(true),
-    model_(&mod_), 
+    model_(&(initState.model())), 
     spectrum_(N_),
     atb_(1),
     writedir_("."),
@@ -76,9 +76,9 @@ MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut)
     init_tensors(A_,initState);
     }
 template MPSt<ITensor>::
-MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut);
+MPSt(const InitState& initState,int maxmm, Real cut);
 template MPSt<IQTensor>::
-MPSt(const Model& mod_,const InitState& initState,int maxmm, Real cut);
+MPSt(const InitState& initState,int maxmm, Real cut);
 
 template <class Tensor>
 MPSt<Tensor>::
