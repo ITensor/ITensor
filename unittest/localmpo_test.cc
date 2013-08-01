@@ -13,11 +13,11 @@ struct LocalMPODefaults
     LocalMPODefaults() :
     shmodel(N),
     shNeel(shmodel),
-    shFerro(shmodel,&SpinHalf::Up)
+    shFerro(shmodel,"Up");
         {
         for(int j = 1; j <= N; ++j)
             {
-            shNeel.set(j,j%2==1 ? &SpinHalf::Up : &SpinHalf::Dn);
+            shNeel.set(j,j%2==1 ? "Up" : "Dn");
             }
         }
 
@@ -29,8 +29,8 @@ BOOST_FIXTURE_TEST_SUITE(LocalMPOTest,LocalMPODefaults)
 
 BOOST_AUTO_TEST_CASE(LocalMPOAsMPS)
     {
-    IQMPS psiNeel(shmodel,shNeel),
-          psiFerro(shmodel,shFerro);
+    IQMPS psiNeel(shNeel),
+          psiFerro(shFerro);
 
     LocalMPO<IQTensor> lmps(psiNeel);
     lmps.position(3,psiFerro);

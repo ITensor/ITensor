@@ -15,11 +15,11 @@ struct MPSDefaults
     MPSDefaults() :
     shmodel(N),
     shNeel(shmodel),
-    shFerro(shmodel,&SpinHalf::Up)
+    shFerro(shmodel,"Up")
         {
         for(int j = 1; j <= N; ++j)
             {
-            shNeel.set(j,j%2==1 ? &SpinHalf::Up : &SpinHalf::Dn);
+            shNeel.set(j,j%2==1 ? "Up" : "Dn");
             }
         }
 
@@ -35,12 +35,12 @@ TEST(Constructors)
 
 TEST(QNCheck)
     {
-    IQMPS psiNeel(shmodel,shNeel);
+    IQMPS psiNeel(shNeel);
     CHECK(checkQNs(psiNeel));
 
     CHECK_EQUAL(totalQN(psiNeel),QN(0));
 
-    IQMPS psiFerro(shmodel,shFerro);
+    IQMPS psiFerro(shFerro);
     CHECK(checkQNs(psiFerro));
 
     CHECK_EQUAL(totalQN(psiFerro),QN(10));

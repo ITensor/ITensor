@@ -43,7 +43,7 @@ main(int argc, char* argv[])
             initState.set(i,"Dn");
         }
 
-    IQMPS psi(model,initState);
+    IQMPS psi(initState);
 
     //
     // psiHphi calculates matrix elements of MPO's with respect to MPS's

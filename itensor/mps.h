@@ -52,7 +52,7 @@ class MPSt
 
     MPSt(const Model& mod_,int maxmm = MAX_M, Real cut = MIN_CUT);
 
-    MPSt(const Model& mod_,const InitState& initState,
+    MPSt(const InitState& initState,
          int maxmm = MAX_M, Real cut = MIN_CUT);
 
     MPSt(const Model& model, std::istream& s);
@@ -574,6 +574,9 @@ class InitState
 
     const IQIndexVal&
     operator()(int i) const { checkRange(i); return state_.at(i); }
+
+    const Model&
+    model() const { return *model_; }
 
     private:
 
