@@ -206,6 +206,8 @@ class IQIndexVal : public IQIndex
 
     operator IndexVal() const;
 
+    operator ITensor() const { return ITensor(IndexVal(*this)); }
+
     IndexVal 
     blockIndexVal() const;
 
