@@ -42,6 +42,10 @@ class BondGate
     Tensor gate_;
 
     };
+typedef BondGate<ITensor>
+Gate;
+typedef BondGate<IQTensor>
+IQGate;
 
 template <class Tensor>
 BondGate<Tensor>::
