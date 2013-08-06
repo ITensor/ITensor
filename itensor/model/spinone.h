@@ -119,19 +119,19 @@ inline IQIndexVal SpinOne::
 getState(int i, const String& state) const
     {
     int st = -1;
-    if(state == "Up") 
+    if(state == "Up" || state == "+") 
         {
         st = 1;
         }
     else
-    if(state == "Z0")
+    if(state == "Z0" || state == "0")
         {
         if(getSi(i).m() == 2)
             Error("Z0 not defined for spin 1/2 site");
         st = 2;
         }
     else
-    if(state == "Dn")
+    if(state == "Dn" || state == "-")
         {
         st = getSi(i).m();
         }
@@ -272,6 +272,32 @@ getOp(int i, const String& opname, const OptSet& opts) const
     if(opname == "projDn")
         {
         Op(Dn,DnP) = 1; 
+        }
+    else
+    if(opname == "XUp")
+        {
+        //m = +1 state along x axis
+        Op = IQTensor(s);
+        Op(Up) = 0.5;
+        Op(Z0) = ISqrt2;
+        Op(Dn) = 0.5;
+        }
+    else
+    if(opname == "XZ0")
+        {
+        //m = 0 state along x axis
+        Op = IQTensor(s);
+        Op(Up) = ISqrt2;
+        Op(Dn) = -ISqrt2;
+        }
+    else
+    if(opname == "XDn")
+        {
+        //m = -1 state along x axis
+        Op = IQTensor(s);
+        Op(Up) = 0.5;
+        Op(Z0) = -ISqrt2;
+        Op(Dn) = 0.5;
         }
     else
         {
