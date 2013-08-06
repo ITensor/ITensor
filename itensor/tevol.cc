@@ -17,7 +17,7 @@ struct SqrtInv
     Real
     operator()(Real r) const
         {
-        return (r < cut ? 0 : 1./sqrt(r));
+        return (r < cut ? 0 : 1./sqrt(fabs(r)));
         }
     };
 
@@ -46,6 +46,14 @@ struct SiteReverser
 
     int
     operator()(int i) const { return (reverse ? (N-i+1) : i); }
+    };
+
+struct SwapOneZero
+    {
+    SwapOneZero() { }
+
+    Real
+    operator()(Real r) const { return (r > 0.5 ? 0 : 1); }
     };
 
 //
@@ -140,7 +148,7 @@ operator()(const vector<Tensor>& psi) const
     dpsi.at(s(1)).noprime();
     dpsi[s(1)] *= -1; //Minus sign appearing in Schrodinger eqn
 
-    const int Npass = 40;
+    const int Npass = 60;
 
     //Orthogonalize
     for(int pass = 1; pass <= Npass; ++pass)
@@ -148,15 +156,14 @@ operator()(const vector<Tensor>& psi) const
         dpsi[s(1)] += psi[s(1)]*(-Dot(psi[s(1)],dpsi[s(1)]));
         const
         Real olap = Dot(psi[s(1)],dpsi[s(1)]);
-        if(pass == Npass)
-            cout << format("pass %d: psi1*dpsi1 = %.3E")
-                    % pass
-                    % olap
-                    << endl;
         if(pass > 1 && olap < 1E-10) break;
 
         if(pass == Npass)
             {
+            cout << format("pass %d: psi1*dpsi1 = %.3E")
+                    % pass
+                    % olap
+                    << endl;
             PAUSE
             }
         }
@@ -204,30 +211,132 @@ operator()(const vector<Tensor>& psi) const
         dB.noprime();
 
         //Orthogonalize
-        const
-        IndexT plink = commonIndex(B,psi[s(j-1)]);
-        for(int pass = 1; pass <= Npass; ++pass)
+        int method = 1;
+
+        if(method == 1)
             {
-            //Compute component of dB along B
-            Tensor comp = B*(conj(B)*primed(dB,plink));
-            comp.noprime();
-            dB -= comp;
             const
-            Real nrm = (conj(B)*primed(dB,plink)).norm();
-            if(pass == Npass)
-                cout << format("pass %d: psi%.02d*dpsi%.02d = %.3E")
-                        % pass
-                        % j
-                        % j
-                        % nrm
-                        << endl;
-            if(pass > 1 && nrm < 1E-10) break;
-            if(pass == Npass)
+            IndexT plink = commonIndex(B,psi[s(j-1)]);
+
+            //TODO
+            //Possible optimization: only compute nB
+            //if olap is far from the identity (i.e.
+            //B is far from being left/right ortho)
+            //Perhaps do first pass using B then if 
+            //B*dB is not small compute nB and switch to it.
+            Tensor olap = primed(B,plink)*conj(B);
+            Tensor U;
+            SparseT D;
+            diagHermitian(olap,U,D);
+            D.mapElems(SqrtInv());
+
+            //Tensor nB = (primed(U)*D*conj(U))*B;
+            Tensor nB = (D*conj(U))*B;
+            nB.noprime(Link);
+
+            for(int pass = 1; pass <= Npass; ++pass)
                 {
-                //PAUSE
+                //Compute component of dB along B
+                Tensor comp = nB*(conj(nB)*primed(dB,plink));
+                comp.noprime();
+                dB -= comp;
+                if(pass == 1) continue; //always do at least 2
+
+                const Real nrm = (conj(nB)*primed(dB,plink)).norm();
+                if(nrm < 1E-11) break;
+
+                if(pass == Npass)
+                    {
+                    cout << format("pass %d: psi%.02d*dpsi%.02d = %.3E")
+                            % pass
+                            % j
+                            % j
+                            % nrm
+                            << endl;
+                    const IndexT nlink = commonIndex(D,U);
+                    Tensor nOlap = primed(nB,nlink)*conj(nB);
+                    PrintDat(nOlap);
+                    PAUSE
+                    /*
+                    if(nrm > 1)
+                        {
+                        writeToFile("plink",plink);
+                        writeToFile("B",origB);
+                        writeToFile("dB",origdB);
+                        }
+                        */
+                    }
                 }
             }
-        }
+        else
+        if(method == 2)
+            {
+            const
+            IndexT plink = commonIndex(B,psi[s(j-1)]);
+            Tensor Bp(B);
+            Foreach(const IndexT& I, B.indices())
+                {
+                if(I == plink) continue;
+                Bp.prime(I);
+                }
+            const Tensor P = Bp*conj(B); //contract over plink
+            Tensor U;
+            SparseT D;
+            diagHermitian(P,U,D);
+            SparseT sD(D);
+            sD.mapElems(SwapOneZero());
+            dB = primed(U)*sD*conj(U)*dB;
+            dB.noprime();
+
+            const
+            Real nrm = (conj(B)*primed(dB,plink)).norm();
+            cout << format("psi%.02d*dpsi%.02d = %.3E")
+                    % j
+                    % j
+                    % nrm
+                    << endl;
+
+            if(nrm > 1E-12)
+                {
+                PrintDat(D);
+                cout << "Large nrm using method 2" << endl;
+                PAUSE
+
+                const
+                IndexT plink = commonIndex(B,psi[s(j-1)]);
+                for(int pass = 1; pass <= Npass; ++pass)
+                    {
+                    //Compute component of dB along B
+                    Tensor comp = B*(conj(B)*primed(dB,plink));
+                    comp.noprime();
+                    dB -= comp;
+                    const
+                    Real nrm = (conj(B)*primed(dB,plink)).norm();
+                    if(pass == Npass)
+                        cout << format("pass %d: psi%.02d*dpsi%.02d = %.3E")
+                                % pass
+                                % j
+                                % j
+                                % nrm
+                                << endl;
+                    if(pass > 1 && nrm < 1E-10) break;
+                    if(pass == Npass)
+                        {
+                        //PAUSE
+                        }
+                    }
+
+                    const
+                    Real nrm = (conj(B)*primed(dB,plink)).norm();
+                    cout << format("psi%.02d*dpsi%.02d = %.3E")
+                            % j
+                            % j
+                            % nrm
+                            << endl;
+                }
+            }
+
+        } //for loop over j
 
     //Orthogonalize
     //dpsi[s(1)] += psi[s(1)]*(-Dot(psi[s(1)],psi[s(1)]));
@@ -324,32 +433,26 @@ ungroupMPS(vector<Tensor>& psig,
             else
                 svd(bond,U,D,psi.Anc(j),spec);
 
-            //cout << format("psi.A(%d).indices() (r = %d) = \n")
-            //        % j
-            //        % psi.A(j).r()
-            //        << psi.A(j).indices() << endl;
-
             j += d;
 
             bond = U*D;
-
-            //Print(bond.norm());
             }
+
+        //TODO
+        //Possible optimization: do one last SVD on "bond" to extract
+        //just the singular values with no attached site index.
+        //Then only multiply this into the next grouped tensor.
+        //Could reduce overall scaling with site dimension "d".
+        //
 
         if(g == gend)
             {
             psi.Anc(j) = bond;
-            //Print(psi.A(j).norm());
             psi.leftLim(end-1);
             psi.rightLim(end+1);
             }
         else
             {
-            //cout << format("Multiplying bond (rank %d) into psig[%d]")
-            //        % bond.r()
-            //        % (g+d)
-            //        << endl;
-            //Print(bond.indices());
             psig.at(g+d) *= bond;
             }
         }
@@ -358,6 +461,56 @@ template void ungroupMPS(vector<ITensor>& psig, Spectrum& spec,
               MPSt<ITensor>& psi, Direction dir, const OptSet& opts);
 template void ungroupMPS(vector<IQTensor>& psig, Spectrum& spec, 
               MPSt<IQTensor>& psi, Direction dir, const OptSet& opts);
+
+
+template <class Tensor>
+class OrthVec
+    {
+    public:
+
+    OrthVec(Direction dir = Fromleft)
+        : dir_(dir) { }
+
+    typedef typename Tensor::IndexT
+    IndexT;
+    typedef typename Tensor::SparseT
+    SparseT;
+    
+    void
+    operator()(std::vector<Tensor>& psi) const
+        {
+        if(dir_ == None) return;
+        int N = int(psi.size())-1;
+        while(psi.at(N).isNull() && N > 1) --N;
+
+        const int start = (dir_==Fromleft ? 2 : N-1),
+                  end   = (dir_==Fromleft ? N : 1),
+                  step  = (dir_==Fromleft ? +1 : -1);
+        for(int j = start; j <= end; j += step)
+            {
+            IndexT lnk = commonIndex(psi.at(j-step),psi.at(j),Link);
+            orth_(lnk,psi.at(j));
+            }
+        }
+
+    private:
+
+    const Direction dir_;
+
+    void
+    orth_(const IndexT& lnk, Tensor& B) const
+        {
+        const Tensor olap = primed(B,lnk)*conj(B);
+        Tensor U;
+        SparseT D;
+        diagHermitian(olap,U,D);
+        D.mapElems(SqrtInv());
+
+        B = (primed(U)*D*conj(U))*B;
+        B.noprime(Link);
+        }
+
+    };
 
 template <class Tensor>
 Real
@@ -499,6 +652,10 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
 
         DerivMPS<Tensor> D(H,dir);
 
+        //if(verbose) cout << "*Skipping* orth step" << endl;
+        //OrthVec<Tensor> O(None);
+        //OrthVec<Tensor> O(dir);
+
         rungeKutta4(D,tstep,psiv);
         //midpointMethod(D,tstep,psiv);
 
@@ -539,18 +696,32 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             cout << endl;
 
             const Real nrm2 = psiphi(psi,psi);
-            cout << format("Norm after ungroup = %.10f") % sqrt(nrm2) << endl;
+            //cout << format("Norm after ungroup = %.10f") % sqrt(nrm2) << endl;
             cout << format("%.5f %.10f") % tsofar % (psiHphi(psi,H,psi)/nrm2) << endl;
             }
 
-        if(verbose)
-            cout << "Normalizing" << endl;
-
         totnorm *= psi.normalize();
+
+        //psi.orthogonalize();
+        //psi.position(dir == Fromleft ? N : 1);
+
+        /*
+        if(verbose)
+            {
+            psi.checkOrtho();
+
+            const Real nrm2 = psiphi(psi,psi);
+            cout << format("Norm after orthog = %.10f") % sqrt(nrm2) << endl;
+            cout << format("Energy after orthog = %.10f") % (psiHphi(psi,H,psi)/nrm2) << endl;
+            }
+            */
+
 
         if(tt == nt) break;
 
-        if(verbose) cout << "Regrouping sites" << endl;
+        //if(verbose) cout << "Regrouping sites" << endl;
+
+        psiv = vector<Tensor>(Ng+2);
 
         if(tt%2==1) //tt odd, next step even
             {
@@ -597,19 +768,17 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 }
             }
 
+        /*
         if(verbose)
             {
-            //const Real nafter = norm(psiv);
-            //cout << format("Norm after regroup = %.10f") % nafter << endl;
-            //const Real enafter = expect(psiv,H)/sqr(nafter);
-            //cout << format("Energy after regroup = %.10f") % enafter << endl;
+            const Real nafter = norm(psiv);
+            cout << format("Norm after regroup = %.10f") % nafter << endl;
+            const Real enafter = expect(psiv,H)/sqr(nafter);
+            cout << format("Energy after regroup = %.10f") % enafter << endl;
             }
-
+            */
 
         } // for loop over tt
-
-    if(verbose)
-        cout << format("Total time evolved = %.5f") % tsofar << endl;
 
     return totnorm;
 

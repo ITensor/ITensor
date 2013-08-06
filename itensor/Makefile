@@ -116,6 +116,6 @@ mps.o: $(DEPHEADERS)
 DEPHEADERS+= mpo.h
 mpo.o: $(DEPHEADERS)
 .debug_objs/mpo.o: $(DEPHEADERS)
-DEPHEADERS+= bondgate.h tevol.h
+DEPHEADERS+= bondgate.h tevol.h integrators.h
 tevol.o: $(DEPHEADERS)
 .debug_objs/tevol.o: $(DEPHEADERS)
