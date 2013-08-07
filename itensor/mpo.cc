@@ -7,6 +7,49 @@
 using namespace std;
 using boost::format;
 
+template <class Tensor>
+MPOt<Tensor>::
+MPOt() 
+    : 
+    Parent() 
+    { 
+    doRelCutoff(true); 
+    }
+template MPOt<ITensor>::MPOt();
+template MPOt<IQTensor>::MPOt();
+
+template <class Tensor>
+MPOt<Tensor>::
+MPOt(const Model& model, int maxm_, Real cutoff_, 
+     bool _doRelCutoff, LogNumber _refNorm) 
+    : 
+    Parent(model,maxm_,cutoff_)
+    { 
+    doRelCutoff(_doRelCutoff);
+    refNorm(_refNorm);
+
+    // Norm of psi^2 = 1 = norm = sum of denmat evals. 
+    // This translates to Tr{Adag A} = norm.  
+    // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
+    if(_refNorm == DefaultRefScale) 
+        refNorm(exp(model.N()));
+
+    //Set all tensors to identity ops
+    for(int j = 1; j <= N(); ++j)
+        {
+        Anc(j) = model.op("Id",j);
+        }
+    putMPOLinks(*this);
+    }
+template
+MPOt<ITensor>::
+MPOt(const Model& model, int maxm_, Real cutoff_, 
+     bool _doRelCutoff, LogNumber _refNorm);
+template
+MPOt<IQTensor>::
+MPOt(const Model& model, int maxm_, Real cutoff_, 
+     bool _doRelCutoff, LogNumber _refNorm);
+
 /*
 template<class Tensor> 
 void MPOt<Tensor>::
@@ -490,15 +533,13 @@ expsmallH(const MPOt<Tensor>& H, MPOt<Tensor>& K,
     {
     const int maxm = 400;
 
-    HamBuilder hb(H.model());
-
-    MPOt<Tensor> Hshift;
-    hb.getMPO(Hshift,-Etot);
+    MPOt<Tensor> Hshift(H.model());
+    Hshift.Anc(1) *= -Etot;
     Hshift += H;
     Hshift.Anc(1) *= -tau;
 
     vector<MPOt<Tensor> > xx(2);
-    hb.getMPO(xx.at(0),1.0);
+    xx.at(0) = MPOt<Tensor>(H.model());
     xx.at(1) = Hshift;
 
     //
@@ -565,3 +606,47 @@ template
 void 
 expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub);
 
+void
+putMPOLinks(MPO& W, const OptSet& opts)
+    {
+    const string pfix = opts.getString("Prefix","l");
+    vector<Index> links(W.N());
+    for(int b = 1; b < W.N(); ++b)
+        {
+        format nm = format("%s%d") % pfix % b;
+        links.at(b) = Index(nm.str());
+        }
+    W.Anc(1) *= links.at(1)(1);
+    for(int b = 1; b < W.N(); ++b)
+        {
+        W.Anc(b) *= links.at(b-1)(1);
+        W.Anc(b) *= links.at(b)(1);
+        }
+    W.Anc(W.N()) *= links.at(W.N()-1)(1);
+    }
+
+void
+putMPOLinks(IQMPO& W, const OptSet& opts)
+    {
+    QN q;
+    const int N = W.N();
+    const string pfix = opts.getString("Prefix","l");
+
+    vector<IQIndex> links(N);
+    for(int b = 1; b < N; ++b)
+        {
+        format nm = format("%s%d") % pfix % b;
+               
+        q += div(W.A(b));
+        links.at(b) = IQIndex(nm.str(),
+                             Index(nm.str()),q);
+        }
+
+    W.Anc(1) *= links.at(1)(1);
+    for(int b = 2; b < N; ++b)
+        {
+        W.Anc(b) *= conj(links.at(b-1)(1));
+        W.Anc(b) *= links.at(b)(1);
+        }
+    W.Anc(N) *= conj(links.at(N-1)(1));
+    }

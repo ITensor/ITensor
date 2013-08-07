@@ -40,27 +40,14 @@ class MPOt : private MPSt<Tensor>
 
     //MPOt: Constructors -----------------------------------------
 
-    MPOt() 
-        : 
-        Parent() 
-        { doRelCutoff(true); }
+    MPOt();
 
-    MPOt(const Model& model, int maxm_ = MAX_M, Real cutoff_ = MIN_CUT, 
-         bool _doRelCutoff = true, LogNumber _refNorm = DefaultRefScale) 
-        : 
-        Parent(model,maxm_,cutoff_)
-        { 
-        doRelCutoff(_doRelCutoff);
-        refNorm(_refNorm);
+    MPOt(const Model& model, 
+         int maxm_ = MAX_M, 
+         Real cutoff_ = MIN_CUT, 
+         bool _doRelCutoff = true, 
+         LogNumber _refNorm = DefaultRefScale);
 
-        // Norm of psi^2 = 1 = norm = sum of denmat evals. 
-        // This translates to Tr{Adag A} = norm.  
-        // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
-        if(_refNorm == DefaultRefScale) 
-            refNorm(exp(model.N()));
-        }
-
-    MPOt(Model& model, std::istream& s) { read(model,s); }
 
     //Accessor Methods ------------------------------
 
@@ -385,6 +372,14 @@ template<class Tensor>
 void 
 expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
      Real Kcutoff, int ndoub);
+
+//Given an MPO with no Link indices between site operators,
+//put in links (of bond dimension 1).
+//In the IQMPO case ensure that links carry the proper QNs.
+void
+putMPOLinks(MPO& W, const OptSet& opts = Global::opts());
+void
+putMPOLinks(IQMPO& W, const OptSet& opts = Global::opts());
 
 #undef Cout
 #undef Endl
