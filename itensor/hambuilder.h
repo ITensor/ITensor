@@ -6,6 +6,8 @@
 #define __ITENSOR_HAMBUILDER_H
 #include "mpo.h"
 
+#define String std::string
+
 //
 //
 // HamBuilder
@@ -19,48 +21,39 @@ class HamBuilder
     {
     public:
 
+    HamBuilder() { };
+
     HamBuilder(const Model& mod);
 
-    int
-    N() const { return N_; }
+    HamBuilder(const Model& mod,
+               const String& opname1, int j1,
+               const String& opname2 = "", int j2 = 0,
+               const String& opname3 = "", int j3 = 0,
+               const String& opname4 = "", int j4 = 0);
 
-    //Sets res to an identity MPO
-    template <class Tensor>
-    void
-    getMPO(MPOt<Tensor>& res, Real fac=1) const;
+    HamBuilder(const Model& mod,
+               const IQTensor& op1, int j1,
+               const IQTensor& op2 = IQTensor(), int j2 = 0,
+               const IQTensor& op3 = IQTensor(), int j3 = 0,
+               const IQTensor& op4 = IQTensor(), int j4 = 0);
 
-    //Sets the j1'th operator of res to op1
-    //and the rest to the identity
-    template <class Tensor>
-    void
-    getMPO(int j1, const Tensor& op1, 
-           MPOt<Tensor>& res, Real fac=1) const;
+    HamBuilder&
+    set(const String& opname1, int j1,
+        const String& opname2 = "", int j2 = 0,
+        const String& opname3 = "", int j3 = 0,
+        const String& opname4 = "", int j4 = 0);
 
-    //Sets the j1'th operator of res to op1,
-    //the j2'th operator of res to op2,
-    //and the rest to the identity
-    template <class Tensor>
-    void
-    getMPO(int j1, const Tensor& op1,
-           int j2, const Tensor& op2,
-           MPOt<Tensor>& res, Real fac=1) const;
+    HamBuilder&
+    set(const IQTensor& op1, int j1,
+        const IQTensor& op2 = IQTensor(), int j2 = 0,
+        const IQTensor& op3 = IQTensor(), int j3 = 0,
+        const IQTensor& op4 = IQTensor(), int j4 = 0);
 
-    // etc.
+    operator MPO() const { putlinks_(); return W_.toMPO(); }
+    operator IQMPO() const { putlinks_(); return W_; }
 
-    template <class Tensor>
-    void
-    getMPO(int j1, const Tensor& op1,
-           int j2, const Tensor& op2,
-           int j3, const Tensor& op3,
-           MPOt<Tensor>& res, Real fac=1) const;
-
-    template <class Tensor>
-    void
-    getMPO(int j1, const Tensor& op1,
-           int j2, const Tensor& op2,
-           int j3, const Tensor& op3,
-           int j4, const Tensor& op4,
-           MPOt<Tensor>& res, Real fac=1) const;
+    HamBuilder&
+    operator*=(Real val) { W_ *= val; return *this; }
 
     private:
 
@@ -68,20 +61,18 @@ class HamBuilder
     //
     // Data Members
 
-    const Model& mod_;
-    const int N_;
+    const Model* mod_;
+    mutable IQMPO W_;
+    mutable bool initted_;
 
     //
     /////////////////
 
     void
-    putLinks(MPOt<ITensor>& res) const;
-    void
-    putLinks(MPOt<IQTensor>& res) const;
+    putlinks_() const;
 
-    template <class Tensor>
     void
-    initialize(MPOt<Tensor>& res) const;
+    setident_() const;
 
     static int
     hamNumber()
@@ -91,202 +82,119 @@ class HamBuilder
         return num_;
         }
 
-
     };
+
+HamBuilder
+operator*(HamBuilder hb, Real x)
+    {
+    hb *= x;
+    return hb;
+    }
+
+HamBuilder
+operator*(Real x, HamBuilder hb)
+    {
+    hb *= x;
+    return hb;
+    }
 
 inline HamBuilder::
 HamBuilder(const Model& mod)
     :
-    mod_(mod),
-    N_(mod.N())
-    { }
-
-template <class Tensor>
-void HamBuilder::
-getMPO(MPOt<Tensor>& res, Real fac) const
-    {
-    initialize(res);
-    putLinks(res);
-    res.Anc(1) *= fac;
+    mod_(&mod),
+    W_(mod),
+    initted_(false)
+    { 
+    setident_();
     }
 
-template <class Tensor>
-void HamBuilder::
-getMPO(int j1, const Tensor& op1, 
-       MPOt<Tensor>& res, Real fac) const
-    {
-    initialize(res);
-#ifdef DEBUG
-    if(!hasindex(op1,mod_.si(j1)))
-        {
-        Print(j1);
-        Print(op1.indices());
-        Error("Tensor does not have correct Site index");
-        }
-#endif
-    res.Anc(j1) = op1;
-    res.Anc(j1) *= fac;
-    putLinks(res);
+inline HamBuilder::
+HamBuilder(const Model& mod,
+           const String& opname1, int j1,
+           const String& opname2, int j2,
+           const String& opname3, int j3,
+           const String& opname4, int j4)
+    :
+    mod_(&mod),
+    W_(mod),
+    initted_(false)
+    { 
+    setident_();
+    set(opname1,j1,opname2,j2,opname3,j3,opname4,j4);
     }
 
-template <class Tensor>
-void HamBuilder::
-getMPO(int j1, const Tensor& op1,
-       int j2, const Tensor& op2,
-       MPOt<Tensor>& res, Real fac) const
-    {
-    initialize(res);
-#ifdef DEBUG
-    if(!hasindex(op1,mod_.si(j1)))
-        {
-        Print(j1);
-        Print(op1.indices());
-        Error("Tensor does not have correct Site index");
-        }
-    if(!hasindex(op2,mod_.si(j2)))
-        {
-        Print(j2);
-        Print(op2.indices());
-        Error("Tensor does not have correct Site index");
-        }
-#endif
-    res.Anc(j1) = op1;
-    res.Anc(j2) = op2;
-    res.Anc(j1) *= fac;
-    putLinks(res);
+inline HamBuilder::
+HamBuilder(const Model& mod,
+           const IQTensor& op1, int j1,
+           const IQTensor& op2, int j2,
+           const IQTensor& op3, int j3,
+           const IQTensor& op4, int j4)
+    :
+    mod_(&mod),
+    W_(mod),
+    initted_(false)
+    { 
+    setident_();
+    set(op1,j1,op2,j2,op3,j3,op4,j4);
     }
 
-template <class Tensor>
-void HamBuilder::
-getMPO(int j1, const Tensor& op1,
-       int j2, const Tensor& op2,
-       int j3, const Tensor& op3,
-       MPOt<Tensor>& res, Real fac) const
+inline 
+HamBuilder& HamBuilder::
+set(const String& opname1, int j1,
+    const String& opname2, int j2,
+    const String& opname3, int j3,
+    const String& opname4, int j4)
     {
-    initialize(res);
-#ifdef DEBUG
-    if(!hasindex(op1,mod_.si(j1)))
+    if(initted_)
         {
-        Print(j1);
-        Print(op1.indices());
-        Error("Tensor does not have correct Site index");
+        Error("Cannot set additional site operators once MPO has been retrieved from HamBuilder.");
         }
-    if(!hasindex(op2,mod_.si(j2)))
-        {
-        Print(j2);
-        Print(op2.indices());
-        Error("Tensor does not have correct Site index");
-        }
-    if(!hasindex(op3,mod_.si(j3)))
-        {
-        Print(j3);
-        Print(op3.indices());
-        Error("Tensor does not have correct Site index");
-        }
-#endif
-    res.Anc(j1) = op1;
-    res.Anc(j2) = op2;
-    res.Anc(j3) = op3;
-    res.Anc(j1) *= fac;
-    putLinks(res);
+    W_.Anc(j1) = mod_->op(opname1,j1);
+    if(j2 != 0)
+        W_.Anc(j2) = mod_->op(opname2,j2);
+    if(j3 != 0)
+        W_.Anc(j3) = mod_->op(opname3,j3);
+    if(j4 != 0)
+        W_.Anc(j4) = mod_->op(opname4,j4);
+    return *this;
     }
 
-template <class Tensor>
-void HamBuilder::
-getMPO(int j1, const Tensor& op1,
-       int j2, const Tensor& op2,
-       int j3, const Tensor& op3,
-       int j4, const Tensor& op4,
-       MPOt<Tensor>& res, Real fac) const
+inline 
+HamBuilder& HamBuilder::
+set(const IQTensor& op1, int j1,
+    const IQTensor& op2, int j2,
+    const IQTensor& op3, int j3,
+    const IQTensor& op4, int j4)
     {
-    initialize(res);
-#ifdef DEBUG
-    if(!hasindex(op1,mod_.si(j1)))
+    if(initted_)
         {
-        Print(j1);
-        Print(op1.indices());
-        Error("Tensor does not have correct Site index");
+        Error("Cannot set additional site operators once MPO has been retrieved from HamBuilder.");
         }
-    if(!hasindex(op2,mod_.si(j2)))
-        {
-        Print(j2);
-        Print(op2.indices());
-        Error("Tensor does not have correct Site index");
-        }
-    if(!hasindex(op3,mod_.si(j3)))
-        {
-        Print(j3);
-        Print(op3.indices());
-        Error("Tensor does not have correct Site index");
-        }
-    if(!hasindex(op4,mod_.si(j4)))
-        {
-        Print(j4);
-        Print(op4.indices());
-        Error("Tensor does not have correct Site index");
-        }
-#endif
-    res.Anc(j1) = op1;
-    res.Anc(j2) = op2;
-    res.Anc(j3) = op3;
-    res.Anc(j4) = op4;
-    res.Anc(j1) *= fac;
-    putLinks(res);
-    }
-
-
-template <class Tensor>
-void HamBuilder::
-initialize(MPOt<Tensor>& res) const
-    {
-    res = MPOt<Tensor>(mod_);
-    for(int j = 1; j <= N_; ++j)
-        res.Anc(j) = mod_.op("Id",j);
-    }
-
-
-void inline HamBuilder::
-putLinks(MPOt<ITensor>& res) const
-    {
-    int ver = hamNumber();
-    std::vector<Index> links(N_);
-    for(int i = 1; i < N_; ++i)
-        {
-        boost::format nm = boost::format("h%d-%d") % ver % i;
-        links.at(i) = Index(nm.str());
-        }
-    res.Anc(1) *= links.at(1)(1);
-    for(int i = 1; i < N_; ++i)
-        {
-        res.Anc(i) *= links.at(i-1)(1);
-        res.Anc(i) *= links.at(i)(1);
-        }
-    res.Anc(N_) *= links.at(N_-1)(1);
+    W_.Anc(j1) = op1;
+    if(j2 != 0)
+        W_.Anc(j2) = op2;
+    if(j3 != 0)
+        W_.Anc(j3) = op3;
+    if(j4 != 0)
+        W_.Anc(j4) = op4;
+    return *this;
     }
 
 void inline HamBuilder::
-putLinks(MPOt<IQTensor>& res) const
+putlinks_() const
     {
-    QN q;
-
-    int ver = hamNumber();
-    std::vector<IQIndex> links(N_);
-    for(int i = 1; i < N_; ++i)
-        {
-        boost::format nm = boost::format("h%d-%d") % ver % i,
-                      Nm = boost::format("H%d-%d") % ver % i;
-        q += div(res.A(i));
-        links.at(i) = IQIndex(Nm.str(),
-                             Index(nm.str()),q);
-        }
-
-    res.Anc(1) *= links.at(1)(1);
-    for(int i = 2; i < N_; ++i)
-        {
-        res.Anc(i) *= conj(links.at(i-1)(1));
-        res.Anc(i) *= links.at(i)(1);
-        }
-    res.Anc(N_) *= conj(links.at(N_-1)(1));
+    if(initted_) return;
+    putMPOLinks(W_);
+    initted_ = true;
     }
+
+void inline HamBuilder::
+setident_() const
+    {
+    for(int j = 1; j <= mod_->N(); ++j)
+        W_.Anc(j) = mod_->op("Id",j);
+    }
+
+#undef String
 
 #endif
