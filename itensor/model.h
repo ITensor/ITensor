@@ -113,6 +113,14 @@ class Model
     virtual void
     doWrite(std::ostream& s) const = 0;
 
+    private:
+
+    std::string
+    op1(const std::string& opname, size_t n) const;
+
+    std::string
+    op2(const std::string& opname, size_t n) const;
+
     };
 
 inline IQTensor Model::
@@ -132,8 +140,38 @@ op(const String& opname, int i,
         }
     else
         {
+        //If opname of the form "Name1*Name2",
+        //return product of Name1 operator times Name2 operator
+        const
+        std::size_t found = opname.find_first_of('*');
+        if(found != std::string::npos)
+            {
+            try {
+            return multSiteOps(getOp(i,op1(opname,found),opts),
+                               getOp(i,op2(opname,found),opts));
+                }
+            catch(ITError e)
+                {
+                Print(opname);
+                Print(found);
+                Error("More than one * in operator name string?");
+                }
+            }
+
         return getOp(i,opname,opts);
         }
+    }
+
+std::string inline Model::
+op1(const std::string& opname, size_t n) const
+    {
+    return opname.substr(0,n);
+    }
+
+std::string inline Model::
+op2(const std::string& opname, size_t n) const
+    {
+    return opname.substr(n+1);
     }
 
 inline std::ostream& 
