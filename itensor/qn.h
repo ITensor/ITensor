@@ -5,10 +5,12 @@
 #ifndef __ITENSOR_QN_H
 #define __ITENSOR_QN_H
 
+#define DEF_NMAX 2
+
 //
 // QN
 //
-// Quantum number label for IQIndex's.
+// Quantum number label for IQIndexes.
 // 
 // For a QN "q", 
 //
@@ -21,7 +23,10 @@
 // q.Nfp() tracks the fermion parity, which is
 // just the particle number mod 2 (always 0 or 1).
 // This is useful e.g. for superconductors which
-// respect parity but do not conserve Nf
+// respect parity but do not conserve Nf.
+// If Nmax is set > 2, then Nfp runs from 0 up to Nmax-1;
+// this is useful for conserving charge mod Nmax as in a 
+// Potts/parafermion model.
 //
 
 class QN
@@ -43,6 +48,7 @@ class QN
 
     //Fermion parity
     //Nfp is either 0 or 1
+    //(or can range up to Nmax-1 if Nmax > 2)
     int 
     Nfp() const { return Nfp_; }
 
@@ -68,6 +74,13 @@ class QN
     void 
     read(std::istream& s);
 
+    static int&
+    Nmax()
+        {
+        static int Nmax_ = 2;
+        return Nmax_;
+        }
+
     private:
 
     int sz_, 
@@ -83,20 +96,21 @@ QN(int sz, int Nf)
     :
     sz_(sz),
     Nf_(Nf),
-    Nfp_(abs(Nf%2))
+    Nfp_(abs(Nf%DEF_NMAX))
     { }
 
 inline QN::
-QN(int sz, int Nf, int Nfp) 
+QN(int sz, int Nf, int Nfp)
     : 
     sz_(sz), 
     Nf_(Nf), 
-    Nfp_(abs(Nfp%2))
+    Nfp_(abs(Nfp%Nmax()))
     { 
 #ifdef DEBUG
-    if(Nf_ != 0 && abs(Nf_%2) != Nfp_)
+    if(Nf_ != 0 && abs(Nf_%Nmax()) != Nfp_)
         {
-        Error("Nfp should equal abs(Nf%2)");
+        Print(Nmax());
+        Error("Nfp should equal abs(Nf%Nmax)");
         }
 #endif
     }
@@ -113,7 +127,7 @@ operator+=(const QN &other)
     {
     sz_ += other.sz_; 
     Nf_ += other.Nf_; 
-    Nfp_ = abs(Nfp_+other.Nfp_)%2;
+    Nfp_ = abs(Nfp_+other.Nfp_)%Nmax();
     return *this;
     }
 
@@ -123,12 +137,15 @@ operator-=(const QN &other)
     {
     sz_ -= other.sz_; 
     Nf_ -= other.Nf_; 
-    Nfp_ = abs(Nfp_-other.Nfp_)%2;
+    Nfp_ = abs(Nfp_-other.Nfp_)%Nmax();
     return *this;
     }
 
 QN inline QN::
-operator-() const { return QN(-sz_,-Nf_,Nfp_); }
+operator-() const 
+    { 
+    return QN(-sz_,-Nf_,(Nmax()-Nfp_)%Nmax()); 
+    }
 
 inline
 QN& QN::
@@ -137,6 +154,7 @@ operator*=(Arrow dir)
     const int i = dir;
     sz_*=i; 
     Nf_*=i; 
+    if(i == -1) Nfp_ = (Nmax()-Nfp_)%Nmax();
     return *this; 
     }
 
@@ -166,8 +184,10 @@ toString() const
 inline std::ostream& 
 operator<<(std::ostream &o, const QN &q)
     { 
-    return o << boost::format("(sz=%d, Nf=%d)") 
-                % q.sz() % q.Nf();
+    return o << boost::format("(sz=%d, Nf=%d, p=%d)") 
+                % q.sz() 
+                % q.Nf()
+                % q.Nfp();
     }
 
 bool inline
@@ -202,5 +222,6 @@ operator*(Arrow dir, QN q)
     }
 
 
+#undef DEF_NMAX
 
 #endif

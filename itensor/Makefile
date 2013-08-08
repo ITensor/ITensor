@@ -21,9 +21,10 @@ HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h \
         hams/tJChain.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
-        model/tj.h \
+        model/tj.h model/Z3.h\
         eigensolver.h localop.h localmpo.h localmposet.h itsparse.h iqtsparse.h\
-        partition.h option.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h
+        partition.h option.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h\
+        integrators.h
 
 ####################################
 
