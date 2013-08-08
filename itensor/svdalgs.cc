@@ -289,7 +289,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         Matrix &VV = Vmatrix.at(itenind);
         Vector &d =  dvector.at(itenind);
 
-        const Index *ui,*vi;
+        const Index *ui=0,*vi=0;
         bool gotui = false;
         Foreach(const Index& I, t.indices())
             {
@@ -457,7 +457,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         if(this_m == 0) { ++itenind; continue; }
 
-        const Index *ui,*vi;
+        const Index *ui=0,*vi=0;
         bool gotui = false;
         Foreach(const Index& I, t.indices())
             {
