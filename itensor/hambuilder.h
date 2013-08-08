@@ -84,14 +84,14 @@ class HamBuilder
 
     };
 
-HamBuilder
+HamBuilder inline
 operator*(HamBuilder hb, Real x)
     {
     hb *= x;
     return hb;
     }
 
-HamBuilder
+HamBuilder inline
 operator*(Real x, HamBuilder hb)
     {
     hb *= x;
