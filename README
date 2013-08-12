@@ -7,4 +7,4 @@ Contracting ITensors is no harder than multiplying scalars: matching indices
 automatically find each other and contract. This makes it easy to transcribe 
 tensor network diagrams into correct, efficient code.
 
-Installation instructions can be found in the [INSTALL](INSTALL) file.
+Installation instructions can be found in the INSTALL file.
