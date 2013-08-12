@@ -260,7 +260,9 @@ struct ExpM
     int
     operator()(int sw, int nsweep) const 
         { 
-        return min((int) (start_m_*pow(exp_base_,sw-1)),end_m_);
+        int expm = start_m_*pow(exp_base_,sw-1);
+        if(expm <= 0) return end_m_; //catch overflow
+        return min(expm,end_m_);
         }
 
     private:
