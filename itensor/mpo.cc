@@ -617,7 +617,7 @@ putMPOLinks(MPO& W, const OptSet& opts)
         links.at(b) = Index(nm.str());
         }
     W.Anc(1) *= links.at(1)(1);
-    for(int b = 1; b < W.N(); ++b)
+    for(int b = 2; b < W.N(); ++b)
         {
         W.Anc(b) *= links.at(b-1)(1);
         W.Anc(b) *= links.at(b)(1);
