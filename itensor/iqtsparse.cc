@@ -422,7 +422,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     for(int i = 1; i <= S.is_->r(); ++i)
         {
         const IQIndex& I = S.is_->index(i);
-        IQTensor::const_iqind_it f = find(T.is_->begin(),T.is_->end(),I);
+        IndexSet<IQIndex>::const_iterator f = find(T.is_->begin(),T.is_->end(),I);
         if(f != T.is_->end()) //I is an element of other.iqindex_
             {
             //Check that arrow directions are compatible

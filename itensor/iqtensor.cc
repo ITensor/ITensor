@@ -910,6 +910,9 @@ operator*=(const IQTensor& other)
     array<IQIndex,NMAX> riqind_holder;
     int rholder = 0;
 
+    typedef IndexSet<IQIndex>::const_iterator
+    const_iqind_it;
+
     for(int i = 1; i <= is_->r(); ++i)
         {
         const IQIndex& I = is_->index(i);
@@ -1034,6 +1037,9 @@ operator/=(const IQTensor& other)
     
     array<IQIndex,NMAX> riqind_holder;
     int rholder = 0;
+
+    typedef IndexSet<IQIndex>::const_iterator
+    const_iqind_it;
 
     for(int i = 1; i <= is_->r(); ++i)
         {
