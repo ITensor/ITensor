@@ -3,12 +3,9 @@
 //    (See accompanying LICENSE file.)
 //
 #include "iqtsparse.h"
-#include <set>
 using namespace std;
 using boost::format;
 using boost::array;
-//using boost::shared_ptr;
-//using boost::make_shared;
 
 //
 // IQTSparse
@@ -397,6 +394,16 @@ solo()
     soloDat();
     }
 
+bool static
+vectorARContains(const vector<ApproxReal>& v, ApproxReal r)
+    {
+    Foreach(const ApproxReal& x, v)
+        {
+        if(r == x) return true;
+        }
+    return false;
+    }
+
 void
 product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     {
@@ -406,7 +413,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     if(T.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    set<ApproxReal> common_inds;
+    vector<ApproxReal> common_inds;
     
     //Load iqindex_ with those IQIndex's *not* common to *this and other
     static vector<IQIndex> riqind_holder;
@@ -429,10 +436,11 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
                     throw ArrowError("Incompatible arrow directions in IQTensor::operator*=.");
                     }
-            Foreach(const Index& i, I.indices())
-                { common_inds.insert(ApproxReal(i.uniqueReal())); }
 
-            common_inds.insert(ApproxReal(I.uniqueReal()));
+            Foreach(const Index& i, I.indices())
+                { common_inds.push_back(i.uniqueReal()); }
+
+            common_inds.push_back(I.uniqueReal());
             }
         else 
             { 
@@ -443,7 +451,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     for(int i = 1; i <= T.is_->r(); ++i)
         {
         const IQIndex& I = T.is_->index(i);
-        if(!common_inds.count(ApproxReal(I.uniqueReal())))
+        if(!vectorARContains(common_inds,I.uniqueReal()))
             { 
             riqind_holder.push_back(I); 
             }
@@ -451,62 +459,43 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
 
     res = IQTensor(riqind_holder);
 
-    set<ApproxReal> keys;
+    typedef IQTDat<ITSparse>::const_iterator
+    cbit;
 
-    IQTDat<ITensor>::StorageT old_itensor; 
-    res.dat.nc().swap(old_itensor);
+    typedef pair<ApproxReal,cbit>
+    blockpair;
 
-    multimap<ApproxReal,IQTDat<ITSparse>::const_iterator> com_S;
-    for(IQTDat<ITSparse>::const_iterator tt = S.blocks().begin(); tt != S.blocks().end(); ++tt)
-        {
-        Real r = 0.0;
-        for(int a = 1; a <= tt->r(); ++a)
-            {
-            if(common_inds.count(ApproxReal(tt->index(a).uniqueReal())))
-                { r += tt->index(a).uniqueReal(); }
-            }
-        com_S.insert(make_pair(ApproxReal(r),tt));
-        keys.insert(ApproxReal(r));
-        }
+    vector<blockpair> Sblock;
+    Sblock.reserve(S.blocks().size());
 
-    multimap<ApproxReal,IQTDat<ITensor>::const_iterator> com_T;
-    for(IQTDat<ITensor>::const_iterator ot = T.blocks().begin(); ot != T.blocks().end(); ++ot)
+    for(cbit ot = S.blocks().begin(); ot != S.blocks().end(); ++ot)
         {
         Real r = 0.0;
         Foreach(const Index& I, ot->indices())
             {
-            if(common_inds.count(ApproxReal(I.uniqueReal())))
-                { r += I.uniqueReal(); }
+            if(vectorARContains(common_inds,I.uniqueReal()))
+                r += I.uniqueReal(); 
             }
-        com_T.insert(make_pair(ApproxReal(r),ot));
-        keys.insert(ApproxReal(r));
+        Sblock.push_back(make_pair(ApproxReal(r),ot));
         }
 
-    typedef multimap<ApproxReal,IQTensor::const_iten_it>::iterator 
-    rit;
-    pair<rit,rit> rrange;
+    ITensor prod;
 
-    typedef multimap<ApproxReal,IQTDat<ITSparse>::const_iterator>::iterator 
-    lit;
-    pair<lit,lit> lrange;
-
-    ITensor tt;
-    for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
+    Foreach(const ITensor& t, T.blocks())
         {
-        //Equal range returns the begin and end iterators for the sequence
-        //corresponding to multimap[key] as a pair
-        lrange = com_S.equal_range(*k);
-        rrange = com_T.equal_range(*k);
-
-        //Iterate over all ITensors in *this and other sharing
-        //the set of contracted Index's corresponding to k
-        for(lit ll = lrange.first; ll != lrange.second; ++ll)
-        for(rit rr = rrange.first; rr != rrange.second; ++rr)
+        ApproxReal r(0);
+        Foreach(const Index& I, t.indices())
             {
-            //Multiply the ITensors and add into res
-            tt = *(ll->second) * *(rr->second);
-            if(tt.scale().sign() != 0)
-                res.dat.nc().insert_add(tt);
+            if(vectorARContains(common_inds,I.uniqueReal()))
+                r += I.uniqueReal();
+            }
+        Foreach(const blockpair& p, Sblock)
+            {
+            if(r != p.first) continue;
+            prod = t;
+            prod *= *(p.second);
+            if(prod.scale().sign() != 0)
+                res.dat.nc().insert_add(prod);
             }
         }
 
