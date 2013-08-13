@@ -39,13 +39,17 @@ struct ApproxReal
 
     ApproxReal(Real _r) : r(_r) {}
 
-    bool friend inline
-    operator==(const ApproxReal &a,const ApproxReal &b)
-        { return fabs(a.r-b.r) < ApproxReal_Accuracy; }
+    bool 
+    operator==(const ApproxReal& other) const
+        { return fabs(r-other.r) <= ApproxReal_Accuracy; }
 
-    bool friend inline 
-    operator<(const ApproxReal &a,const ApproxReal &b)
-        { return b.r-a.r > ApproxReal_Accuracy; }
+    bool 
+    operator!=(const ApproxReal& other) const
+        { return fabs(r-other.r) > ApproxReal_Accuracy; }
+
+    bool
+    operator<(const ApproxReal& other) const
+        { return other.r-r > ApproxReal_Accuracy; }
 
     ApproxReal& 
     operator+=(const ApproxReal &A)
