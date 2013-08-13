@@ -1,0 +1,6 @@
+* Toward v0.2.0
+
+  - Finish converting model classes to new format:
+    - Spinless
+    - Hubbard
+    - tJ
