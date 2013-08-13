@@ -10,10 +10,11 @@ struct LocalMPODefaults
 
     InitState shNeel, shFerro;
 
-    LocalMPODefaults() :
-    shmodel(N),
-    shNeel(shmodel),
-    shFerro(shmodel,"Up");
+    LocalMPODefaults() 
+        :
+        shmodel(N),
+        shNeel(shmodel),
+        shFerro(shmodel,"Up")
         {
         for(int j = 1; j <= N; ++j)
             {
