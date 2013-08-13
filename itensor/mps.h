@@ -398,7 +398,7 @@ class MPSt
         { 
         for(int j = 1; j <= N_; ++j)
             {
-            if(isComplex(A_[j])) return true;
+            if(A_[j].isComplex()) return true;
             }
         return false;
         }
