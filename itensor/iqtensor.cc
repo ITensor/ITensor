@@ -35,32 +35,55 @@ solo()
 
 IQTDat::
 IQTDat() 
-    :
-    rmap_init(false)
     { }
 
 IQTDat::
 IQTDat(const IQTDat& other) 
     : 
-    itensor(other.itensor), 
-    rmap_init(false)
+    blocks_(other.blocks_)
 	{ }
 
-IQTDat::
-IQTDat(istream& s) 
+bool IQTDat::
+hasBlock(const IndexSet<Index>& is) const
     {
-    read(s);
+    const_iterator it = findBlock(is);
+    if(validBlock(it))
+        {
+        return true;
+        }
+    return false;
     }
 
+ITensor& IQTDat::
+get(const IndexSet<Index>& is) 
+    { 
+    iterator it = findBlock(is);
+    if(!validBlock(it))
+        {
+        blocks_.push_back(ITensor(is));
+        return blocks_.back();
+        }
+    return *it;
+   }
+
+const ITensor& IQTDat::
+get(const IndexSet<Index>& is) const 
+    { 
+    const_iterator it = findBlock(is);
+    if(!validBlock(it))
+        {
+        Error("Block not found");
+        }
+    return *it;
+    }
 
 void IQTDat::
 read(istream& s)
     { 
-    rmap_init = false;
 	size_t size;
 	s.read((char*) &size,sizeof(size));
-	itensor.resize(size);
-    Foreach(ITensor& t, itensor)
+	blocks_.resize(size);
+    Foreach(ITensor& t, blocks_)
         { 
         t.read(s); 
         }
@@ -69,10 +92,12 @@ read(istream& s)
 void IQTDat::
 write(ostream& s) const
 	{
-	size_t size = itensor.size();
+	size_t size = blocks_.size();
 	s.write((char*) &size,sizeof(size));
-    Foreach(const ITensor& t, itensor)
-        { t.write(s); }
+    Foreach(const ITensor& t, blocks_)
+        { 
+        t.write(s); 
+        }
 	}
 
 const boost::shared_ptr<IQTDat>& IQTDat::
@@ -83,89 +108,39 @@ Null()
     }
 
 void IQTDat::
-init_rmap() const
-	{
-	if(rmap_init) return;
-
-    for(iterator it = itensor.begin(); it != itensor.end(); ++it)
-	    rmap[ApproxReal(it->indices().uniqueReal())] = it;
-
-	rmap_init = true;
-	}
-
-void IQTDat::
-uninit_rmap() const 
-	{ 
-	rmap.clear();
-	rmap_init = false; 
-	}
-
-bool IQTDat::
-has_itensor(const ApproxReal& r) const
-	{ 
-	init_rmap();
-	return rmap.count(r) == 1; 
-	}
-
-void IQTDat::
-clear()
-    {
-    uninit_rmap();
-    itensor.clear();
-    }
-
-void IQTDat::
-insert(const ApproxReal& r, const ITensor& t)
-    {
-    init_rmap();
-    if(rmap.count(r) == 1)
-        {
-        Print((*rmap[r])); 
-        Print(t);
-        Error("Can't insert ITensor with identical structure twice, use operator+=.");
-        }
-    else
-        {
-        itensor.push_front(t);
-        rmap[r] = itensor.begin();
-        }
-    }
-
-void IQTDat::
 insert(const ITensor& t)
     {
-    ApproxReal r(t.indices().uniqueReal());
-    insert(r,t);
-    }
-
-void IQTDat::
-insert_add(const ApproxReal& r, const ITensor& t)
-    {
-    init_rmap();
-    if(rmap.count(r) == 1)
+    iterator it = find(blocks_.begin(),blocks_.end(),t.indices());
+    if(it == blocks_.end())
         {
-        *rmap[r] += t;
-        return;
+        blocks_.push_back(t);
         }
     else
         {
-        itensor.push_front(t);
-        rmap[r] = itensor.begin();
+        Error("Can not insert block with identical indices twice.");
         }
     }
 
 void IQTDat::
 insert_add(const ITensor& t)
     {
-    ApproxReal r(t.indices().uniqueReal());
-    insert_add(r,t);
+    iterator it = findBlock(t.indices());
+    if(validBlock(it))
+        {
+        *it += t;
+        return;
+        }
+    else
+        {
+        blocks_.push_back(t);
+        }
     }
 
 void IQTDat::
 clean(Real min_norm)
     {
     IQTDat::StorageT nitensor;
-    Foreach(const ITensor& t, itensor)
+    Foreach(const ITensor& t, blocks_)
         {
         if(t.norm() >= min_norm)
             nitensor.push_back(t);
@@ -174,16 +149,15 @@ clean(Real min_norm)
     }
 
 void IQTDat::
-swap(StorageT& new_itensor)
+swap(StorageT& new_blocks)
     {
-    uninit_rmap();
-    itensor.swap(new_itensor);
+    blocks_.swap(new_blocks);
     }
 
 void IQTDat::
 scaleTo(const LogNumber& newscale)
     {
-    Foreach(ITensor& t, itensor)
+    Foreach(ITensor& t, blocks_)
         t.scaleTo(newscale);
     }
 
@@ -503,28 +477,21 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     boost::array<IQIndexVal,NMAX+1> iv 
         = {{ IQIndexVal::Null(), iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
 
-    Real ur = 0; 
     int nn = 0; 
+    IndexSet<Index> is;
     while(GET(iv,nn+1) != IQIndexVal::Null()) 
-        ur += GET(iv,++nn).indexqn().uniqueReal(); 
-    if(nn != r()) 
-        Error("Wrong number of IQIndexVals provided");
-    ApproxReal r(ur);
-
-    if(!dat().has_itensor(r))
         {
-        IndexSet<Index> indices; 
-        for(int j = 1; j <= nn; ++j) 
-            {
-            if(!hasindex(*this,iv[j])) 
-                Error("IQTensor::operator(): IQIndex not found.");
-            indices.addindex(iv[j].indexqn());
-            }
-        ITensor t(indices);
-        dat.nc().insert_add(r,t);
+        ++nn;
+        if(!hasindex(*this,iv.at(nn))) 
+            Error("IQTensor::operator(): IQIndex not found.");
+        is.addindex(iv[nn].indexqn());
+        }
+    if(nn != r()) 
+        {
+        Error("Wrong number of IQIndexVals provided");
         }
 
-    return (dat.nc().get(r)).operator()(iv1.blockIndexVal(),
+    return (dat.nc().get(is)).operator()(iv1.blockIndexVal(),
                                        iv2.blockIndexVal(),
                                        iv3.blockIndexVal(),
                                        iv4.blockIndexVal(),
@@ -544,21 +511,25 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     boost::array<IQIndexVal,NMAX+1> iv 
         = {{ IQIndexVal::Null(), iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
 
-    Real ur = 0; 
     int nn = 0; 
+    IndexSet<Index> is;
     while(GET(iv,nn+1) != IQIndexVal::Null()) 
-        ur += GET(iv,++nn).indexqn().uniqueReal(); 
+        {
+        //ur += GET(iv,++nn).indexqn().uniqueReal(); 
+        if(!hasindex(*this,iv.at(nn))) 
+            Error("IQTensor::operator(): IQIndex not found.");
+        is.addindex(iv[nn].indexqn());
+        }
     if(nn != r()) 
         Error("Wrong number of IQIndexVals provided");
-    ApproxReal r(ur);
 
-    if(!dat().has_itensor(r))
+    if(!dat().hasBlock(is))
         {
         return 0.;
         }
     else
         {
-        return (dat().get(r)).operator()(iv1.blockIndexVal(),
+        return (dat().get(is)).operator()(iv1.blockIndexVal(),
                                          iv2.blockIndexVal(),
                                          iv3.blockIndexVal(),
                                          iv4.blockIndexVal(),
@@ -959,16 +930,15 @@ randomize()
             nset.addindex(is_->index(n).index(1+C.i[n]));
             }
 
-        ApproxReal r(nset.uniqueReal());
-        if(dat().has_itensor(r))
+        if(dat().hasBlock(nset))
             {
-            dat.nc().get(r).randomize();
+            dat.nc().get(nset).randomize();
             }
         else
             {
             ITensor t(nset);
             t.randomize();
-            dat.nc().insert_add(r,t);
+            dat.nc().insert_add(t);
             }
         }
 	}
@@ -1148,7 +1118,7 @@ operator*=(const IQTensor& other)
         keys.insert(ApproxReal(r));
         }
 
-    typedef multimap<ApproxReal,const_iten_it>::iterator mit;
+    typedef multimap<ApproxReal,IQTDat::const_iterator>::iterator mit;
     pair<mit,mit> lrange,rrange;
     ITensor tt;
     for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
@@ -1280,7 +1250,7 @@ operator/=(const IQTensor& other)
         keys.insert(ApproxReal(r));
         }
 
-    typedef multimap<ApproxReal,const_iten_it>::iterator mit;
+    typedef multimap<ApproxReal,IQTDat::const_iterator>::iterator mit;
     pair<mit,mit> lrange,rrange;
     ITensor tt;
     for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)

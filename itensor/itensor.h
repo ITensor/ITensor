@@ -652,6 +652,18 @@ operator+(ITensor A, const ITensor& B) { A += B; return A; }
 ITensor inline
 operator-(ITensor A, const ITensor& B) { A -= B; return A; }
 
+bool inline
+operator==(const IndexSet<Index>& is, const ITensor& t)
+    { return fabs(is.uniqueReal()-t.indices().uniqueReal()) < ApproxReal_Accuracy; }
+
+bool inline
+operator==(const ITensor& t, const IndexSet<Index>& is)
+    { return fabs(is.uniqueReal()-t.indices().uniqueReal()) < ApproxReal_Accuracy; }
+
+bool inline
+operator<(const ITensor& t, const IndexSet<Index>& is)
+    { return (is.uniqueReal()-t.indices().uniqueReal()) > ApproxReal_Accuracy; }
+
 template <typename Callable> 
 ITensor& ITensor::
 mapElems(const Callable& f)

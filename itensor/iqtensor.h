@@ -349,10 +349,10 @@ class IQTensor
     typedef IQTSparse
     SparseT;
 
-    typedef std::list<ITensor>::iterator 
+    typedef std::vector<ITensor>::iterator 
     iten_it;
 
-    typedef std::list<ITensor>::const_iterator 
+    typedef std::vector<ITensor>::const_iterator 
     const_iten_it;
 
     typedef IndexSet<IQIndex>::const_iterator
@@ -481,7 +481,7 @@ class IQTDat : public boost::noncopyable
     {
     public:
 
-    typedef std::list<ITensor>
+    typedef std::vector<ITensor>
     StorageT;
 
     typedef StorageT::const_iterator
@@ -499,60 +499,46 @@ class IQTDat : public boost::noncopyable
     explicit 
     IQTDat(const IQTDat& other);
 
-    explicit 
-    IQTDat(std::istream& s);
-
     //
     // Accessors
     //
 
     const_iterator
-    begin() const { return itensor.begin(); }
-
-    iterator
-    begin() { uninit_rmap(); return itensor.begin(); }
-
+    begin() const { return blocks_.begin(); }
     const_iterator
-    end() const { return itensor.end(); }
+    end() const { return blocks_.end(); }
 
     iterator
-    end() { uninit_rmap(); return itensor.end(); }
+    begin() { return blocks_.begin(); }
+    iterator
+    end() { return blocks_.end(); }
 
-    const ITensor&
-    get(const ApproxReal& r) const { return *rmap[r]; }
+    bool 
+    hasBlock(const IndexSet<Index>& is) const;
 
     ITensor&
-    get(const ApproxReal& r) { return *rmap[r]; }
+    get(const IndexSet<Index>& is);
+
+    const ITensor&
+    get(const IndexSet<Index>& is) const;
 
     int
-    size() const { return itensor.size(); }
+    size() const { return blocks_.size(); }
 
     bool
-    empty() const { return itensor.empty(); }
+    empty() const { return blocks_.empty(); }
 
     void
-    clear();
-
-    void 
-    insert(const ApproxReal& r, const ITensor& t);
+    clear() { blocks_.clear(); }
 
     void 
     insert(const ITensor& t);
 
     void 
-    insert_add(const ApproxReal& r, const ITensor& t);
-
-    void 
     insert_add(const ITensor& t);
-
-    //void 
-    //insert_assign(const ITensor& t);
 
     void 
     clean(Real min_norm);
-
-    bool 
-    has_itensor(const ApproxReal& r) const;
 
     void
     swap(StorageT& new_itensor);
@@ -570,6 +556,9 @@ class IQTDat : public boost::noncopyable
     void 
     write(std::ostream& s) const;
 
+    static const boost::shared_ptr<IQTDat>& 
+    Null();
+
     //void* operator 
     //new(size_t size) 
     //    throw(std::bad_alloc)
@@ -580,9 +569,6 @@ class IQTDat : public boost::noncopyable
     //    throw()
     //    { return allocator().dealloc(p); }
 
-    static const boost::shared_ptr<IQTDat>& 
-    Null();
-
     private:
 
     //////////////
@@ -590,23 +576,28 @@ class IQTDat : public boost::noncopyable
     // Data Members
     //
 
-    mutable
-    StorageT itensor;
-
-    mutable std::map<ApproxReal,iterator>
-    rmap; //mutable so that const IQTensor methods can use rmap
-
-    mutable 
-    bool rmap_init;
+    StorageT blocks_;
 
     //
     //////////////
 
-    void 
-    init_rmap() const;
+    iterator
+    findBlock(const IndexSet<Index>& is)
+        {
+        return find(blocks_.begin(),blocks_.end(),is);
+        }
 
-    void 
-    uninit_rmap() const;
+    const_iterator
+    findBlock(const IndexSet<Index>& is) const
+        {
+        return find(blocks_.begin(),blocks_.end(),is);
+        }
+
+    bool
+    validBlock(const_iterator it) const 
+        { 
+        return it != blocks_.end(); 
+        }
 
     //Not copyable with =
     void operator=(const IQTDat&);
