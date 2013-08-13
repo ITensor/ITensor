@@ -5,14 +5,13 @@
 #ifndef __ITENSOR_IQTENSOR_H
 #define __ITENSOR_IQTENSOR_H
 #include "iqindex.h"
-#include <list>
-#include <map>
 
+template <class Tensor>
 class IQTDat;
 class IQCombiner;
 class IQTSparse;
 
-typedef boost::shared_ptr<IQTDat>
+typedef boost::shared_ptr<IQTDat<ITensor> >
 IQTDatPtr;
 
 
@@ -108,7 +107,7 @@ class IQTensor
     //The ITensors can be iterated over using a Foreach
     //For example, given an IQTensor T,
     //Foreach(const ITensor& t, T.blocks()) { ... }
-    const IQTDat&
+    const IQTDat<ITensor>&
     blocks() const { return dat(); }
     
     const IndexSet<IQIndex>& 
@@ -379,11 +378,11 @@ class IQTensor
         Data(const IQTDatPtr& p_);
 
         //Const access
-        const IQTDat&
+        const IQTDat<ITensor>&
         operator()() const { return *p; }
 
         //Non-const access
-        IQTDat&
+        IQTDat<ITensor>&
         nc() { return *p; }
 
         void inline
@@ -469,39 +468,28 @@ operator*(const IndexVal& iv, const IQTensor& T)
     return ITensor(iv) * T.toITensor(); 
     }
 
-//
-// Contracting product with an ITensor
-// Result is an ITensor
-//
-//ITensor inline
-//operator*(const ITensor& t) const
-//    { ITensor res = this->toITensor(); res *= t; return res; }
 
+
+template <class Tensor>
 class IQTDat : public boost::noncopyable
     {
     public:
 
-    typedef std::vector<ITensor>
+    IQTDat() { }
+
+    IQTDat(const IQTDat& other) { blocks_ = other.blocks_; }
+
+    typedef std::vector<Tensor>
     StorageT;
 
-    typedef StorageT::const_iterator
+    typedef typename StorageT::const_iterator
     const_iterator;
 
-    typedef StorageT::iterator
+    typedef typename StorageT::iterator
     iterator;
 
-    //
-    // Constructors
-    //
-
-    IQTDat();
-
-    explicit 
-    IQTDat(const IQTDat& other);
-
-    //
-    // Accessors
-    //
+    typedef typename Tensor::IndexT
+    IndexT;
 
     const_iterator
     begin() const { return blocks_.begin(); }
@@ -514,14 +502,29 @@ class IQTDat : public boost::noncopyable
     end() { return blocks_.end(); }
 
     bool 
-    hasBlock(const IndexSet<Index>& is) const;
+    hasBlock(const IndexSet<IndexT>& is) const { return validBlock(findBlock(is)); }
 
-    ITensor&
-    get(const IndexSet<Index>& is);
-
-    const ITensor&
-    get(const IndexSet<Index>& is) const;
-
+    Tensor&
+    get(const IndexSet<IndexT>& is)
+        { 
+        iterator it = findBlock(is);
+        if(!validBlock(it))
+            {
+            blocks_.push_back(ITensor(is));
+            return blocks_.back();
+            }
+        return *it;
+       }
+    const Tensor&
+    get(const IndexSet<IndexT>& is) const
+        { 
+        const_iterator it = findBlock(is);
+        if(!validBlock(it))
+            {
+            Error("Block not found");
+            }
+        return *it;
+        }
     int
     size() const { return blocks_.size(); }
 
@@ -532,32 +535,83 @@ class IQTDat : public boost::noncopyable
     clear() { blocks_.clear(); }
 
     void 
-    insert(const ITensor& t);
+    insert(const Tensor& t)
+        {
+        iterator it = find(blocks_.begin(),blocks_.end(),t.indices());
+        if(it == blocks_.end())
+            blocks_.push_back(t);
+        else
+            Error("Can not insert block with identical indices twice.");
+        }
 
     void 
-    insert_add(const ITensor& t);
+    insert_add(const Tensor& t)
+        {
+        iterator it = findBlock(t.indices());
+        if(validBlock(it))
+            *it += t;
+        else
+            blocks_.push_back(t);
+        }
 
     void 
-    clean(Real min_norm);
+    clean(Real min_norm)
+        {
+        IQTDat::StorageT nblocks;
+        Foreach(const ITensor& t, blocks_)
+            {
+            if(t.norm() >= min_norm)
+                nblocks.push_back(t);
+            }
+        swap(nblocks);
+        }
 
     void
-    swap(StorageT& new_itensor);
+    swap(StorageT& new_blocks) { blocks_.swap(new_blocks); }
 
     //
     // Other Methods
     //
 
     void
-    scaleTo(const LogNumber& newscale);
+    scaleTo(const LogNumber& newscale)
+        {
+        Foreach(Tensor& t, blocks_)
+            t.scaleTo(newscale);
+        }
+
+    void
+    makeCopyOf(const IQTDat& other) { blocks_ = other.blocks_; }
 
     void 
-    read(std::istream& s);
+    read(std::istream& s)
+        { 
+        size_t size;
+        s.read((char*) &size,sizeof(size));
+        blocks_.resize(size);
+        Foreach(Tensor& t, blocks_)
+            { 
+            t.read(s); 
+            }
+        }
 
     void 
-    write(std::ostream& s) const;
+    write(std::ostream& s) const
+        {
+        size_t size = blocks_.size();
+        s.write((char*) &size,sizeof(size));
+        Foreach(const Tensor& t, blocks_)
+            { 
+            t.write(s); 
+            }
+        }
 
     static const boost::shared_ptr<IQTDat>& 
-    Null();
+    Null()
+        {
+        static boost::shared_ptr<IQTDat> Null_ = boost::make_shared<IQTDat>();
+        return Null_;
+        }
 
     //void* operator 
     //new(size_t size) 
@@ -582,13 +636,13 @@ class IQTDat : public boost::noncopyable
     //////////////
 
     iterator
-    findBlock(const IndexSet<Index>& is)
+    findBlock(const IndexSet<IndexT>& is)
         {
         return find(blocks_.begin(),blocks_.end(),is);
         }
 
     const_iterator
-    findBlock(const IndexSet<Index>& is) const
+    findBlock(const IndexSet<IndexT>& is) const
         {
         return find(blocks_.begin(),blocks_.end(),is);
         }
@@ -609,6 +663,10 @@ class IQTDat : public boost::noncopyable
     //    };
 
     }; //class IQTDat
+
+
+
+
 
 template <typename Callable> 
 IQTensor& IQTensor::

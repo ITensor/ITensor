@@ -13,7 +13,7 @@ using boost::array;
 
 IQTensor::Data::
 Data()
-    : p(boost::make_shared<IQTDat>())
+    : p(boost::make_shared<IQTDat<ITensor> >())
     { }
 
 IQTensor::Data::
@@ -29,137 +29,10 @@ solo()
 #endif
 	if(!p.unique())
         {
-        p = boost::make_shared<IQTDat>(*p);
+        p = boost::make_shared<IQTDat<ITensor> >(*p);
         }
 	}
 
-IQTDat::
-IQTDat() 
-    { }
-
-IQTDat::
-IQTDat(const IQTDat& other) 
-    : 
-    blocks_(other.blocks_)
-	{ }
-
-bool IQTDat::
-hasBlock(const IndexSet<Index>& is) const
-    {
-    const_iterator it = findBlock(is);
-    if(validBlock(it))
-        {
-        return true;
-        }
-    return false;
-    }
-
-ITensor& IQTDat::
-get(const IndexSet<Index>& is) 
-    { 
-    iterator it = findBlock(is);
-    if(!validBlock(it))
-        {
-        blocks_.push_back(ITensor(is));
-        return blocks_.back();
-        }
-    return *it;
-   }
-
-const ITensor& IQTDat::
-get(const IndexSet<Index>& is) const 
-    { 
-    const_iterator it = findBlock(is);
-    if(!validBlock(it))
-        {
-        Error("Block not found");
-        }
-    return *it;
-    }
-
-void IQTDat::
-read(istream& s)
-    { 
-	size_t size;
-	s.read((char*) &size,sizeof(size));
-	blocks_.resize(size);
-    Foreach(ITensor& t, blocks_)
-        { 
-        t.read(s); 
-        }
-    }
-
-void IQTDat::
-write(ostream& s) const
-	{
-	size_t size = blocks_.size();
-	s.write((char*) &size,sizeof(size));
-    Foreach(const ITensor& t, blocks_)
-        { 
-        t.write(s); 
-        }
-	}
-
-const boost::shared_ptr<IQTDat>& IQTDat::
-Null()
-    {
-    static boost::shared_ptr<IQTDat> Null_ = boost::make_shared<IQTDat>();
-    return Null_;
-    }
-
-void IQTDat::
-insert(const ITensor& t)
-    {
-    iterator it = find(blocks_.begin(),blocks_.end(),t.indices());
-    if(it == blocks_.end())
-        {
-        blocks_.push_back(t);
-        }
-    else
-        {
-        Error("Can not insert block with identical indices twice.");
-        }
-    }
-
-void IQTDat::
-insert_add(const ITensor& t)
-    {
-    iterator it = findBlock(t.indices());
-    if(validBlock(it))
-        {
-        *it += t;
-        return;
-        }
-    else
-        {
-        blocks_.push_back(t);
-        }
-    }
-
-void IQTDat::
-clean(Real min_norm)
-    {
-    IQTDat::StorageT nitensor;
-    Foreach(const ITensor& t, blocks_)
-        {
-        if(t.norm() >= min_norm)
-            nitensor.push_back(t);
-        }
-    swap(nitensor);
-    }
-
-void IQTDat::
-swap(StorageT& new_blocks)
-    {
-    blocks_.swap(new_blocks);
-    }
-
-void IQTDat::
-scaleTo(const LogNumber& newscale)
-    {
-    Foreach(ITensor& t, blocks_)
-        t.scaleTo(newscale);
-    }
 
 //
 // IQTensor
@@ -168,7 +41,7 @@ scaleTo(const LogNumber& newscale)
 bool IQTensor::
 isNull() const 
     { 
-    return &dat() == IQTDat::Null().get(); 
+    return &dat() == IQTDat<ITensor>::Null().get(); 
     }
 
 bool IQTensor::
@@ -209,7 +82,7 @@ IQTensor::
 IQTensor() 
     : 
     is_(IndexSet<IQIndex>::Null()),
-    dat(IQTDat::Null()) 
+    dat(IQTDat<ITensor>::Null()) 
     { }
 
 IQTensor::
@@ -1086,13 +959,13 @@ operator*=(const IQTensor& other)
 
     set<ApproxReal> keys;
 
-    IQTDat::StorageT old_itensor; 
+    IQTDat<ITensor>::StorageT old_itensor; 
     dat.nc().swap(old_itensor);
 
     //com_this maps the uniqueReal of a set of Index's to be contracted over together
     //to those ITensors in *this.itensor having all Index's in that set
-    multimap<ApproxReal,IQTDat::const_iterator> com_this;
-    for(IQTDat::const_iterator tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
+    multimap<ApproxReal,IQTDat<ITensor>::const_iterator> com_this;
+    for(IQTDat<ITensor>::const_iterator tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
         {
         Real r = 0.0;
         Foreach(const Index& I, tt->indices())
@@ -1105,8 +978,8 @@ operator*=(const IQTensor& other)
         }
 
     //com_other is the same as com_this but for other
-    multimap<ApproxReal,IQTDat::const_iterator> com_other;
-    for(IQTDat::const_iterator ot = other.dat().begin(); ot != other.dat().end(); ++ot)
+    multimap<ApproxReal,IQTDat<ITensor>::const_iterator> com_other;
+    for(IQTDat<ITensor>::const_iterator ot = other.dat().begin(); ot != other.dat().end(); ++ot)
         {
         Real r = 0.0;
         Foreach(const Index& I, ot->indices())
@@ -1118,7 +991,7 @@ operator*=(const IQTensor& other)
         keys.insert(ApproxReal(r));
         }
 
-    typedef multimap<ApproxReal,IQTDat::const_iterator>::iterator mit;
+    typedef multimap<ApproxReal,IQTDat<ITensor>::const_iterator>::iterator mit;
     pair<mit,mit> lrange,rrange;
     ITensor tt;
     for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
@@ -1213,15 +1086,15 @@ operator/=(const IQTensor& other)
 
     dat.solo();
 
-    IQTDat::StorageT old_itensor; 
+    IQTDat<ITensor>::StorageT old_itensor; 
     dat.nc().swap(old_itensor);
 
     set<ApproxReal> keys;
 
     //com_this maps the uniqueReal of a set of Index's to be summed over together
     //to those ITensors in *this.itensor having all Index's in that set
-    multimap<ApproxReal,IQTDat::const_iterator> com_this;
-    for(IQTDat::const_iterator tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
+    multimap<ApproxReal,IQTDat<ITensor>::const_iterator> com_this;
+    for(IQTDat<ITensor>::const_iterator tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
         {
         Real r = 0.0;
         Foreach(const Index& I, tt->indices())
@@ -1236,8 +1109,8 @@ operator/=(const IQTensor& other)
 
     //com_other is the same as com_this but for other
     //Cheaper just to store IQTensors? (since they are just two pointers?)
-    multimap<ApproxReal,IQTDat::const_iterator> com_other;
-    for(IQTDat::const_iterator ot = other.dat().begin(); ot != other.dat().end(); ++ot)
+    multimap<ApproxReal,IQTDat<ITensor>::const_iterator> com_other;
+    for(IQTDat<ITensor>::const_iterator ot = other.dat().begin(); ot != other.dat().end(); ++ot)
         {
         Real r = 0.0;
         Foreach(const Index& I, ot->indices())
@@ -1250,7 +1123,7 @@ operator/=(const IQTensor& other)
         keys.insert(ApproxReal(r));
         }
 
-    typedef multimap<ApproxReal,IQTDat::const_iterator>::iterator mit;
+    typedef multimap<ApproxReal,IQTDat<ITensor>::const_iterator>::iterator mit;
     pair<mit,mit> lrange,rrange;
     ITensor tt;
     for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
@@ -1467,7 +1340,7 @@ div(const IQTensor& T)
 
     //Calculate divergence of first block
     QN div_;
-    IQTDat::const_iterator it = T.blocks().begin();
+    IQTDat<ITensor>::const_iterator it = T.blocks().begin();
     Foreach(const Index& i, it->indices())
         {
         div_ += qn(T,i)*dir(T,i);

@@ -652,16 +652,19 @@ operator+(ITensor A, const ITensor& B) { A += B; return A; }
 ITensor inline
 operator-(ITensor A, const ITensor& B) { A -= B; return A; }
 
+template <class Tensor, class IndexT>
 bool inline
-operator==(const IndexSet<Index>& is, const ITensor& t)
+operator==(const IndexSet<IndexT>& is, const Tensor& t)
     { return fabs(is.uniqueReal()-t.indices().uniqueReal()) < ApproxReal_Accuracy; }
 
+template <class Tensor, class IndexT>
 bool inline
-operator==(const ITensor& t, const IndexSet<Index>& is)
+operator==(const Tensor& t, const IndexSet<IndexT>& is)
     { return fabs(is.uniqueReal()-t.indices().uniqueReal()) < ApproxReal_Accuracy; }
 
+template <class Tensor, class IndexT>
 bool inline
-operator<(const ITensor& t, const IndexSet<Index>& is)
+operator<(const Tensor& t, const IndexSet<IndexT>& is)
     { return (is.uniqueReal()-t.indices().uniqueReal()) > ApproxReal_Accuracy; }
 
 template <typename Callable> 
