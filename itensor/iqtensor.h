@@ -90,12 +90,9 @@ class IQTensor
     int 
     r() const;
 
-    //Number of ITensor blocks
-    int 
-    iten_size() const;
-
+    //true if IQTensor has no blocks
     bool 
-    iten_empty() const;
+    empty() const;
 
     //true if IQTensor is default constructed
     bool 
@@ -469,13 +466,8 @@ operator*(const IndexVal& iv, const IQTensor& T)
     return ITensor(iv) * T.toITensor(); 
     }
 
-//
-// Contracting product with an ITensor
-// Result is an ITensor
-//
-//ITensor inline
-//operator*(const ITensor& t) const
-//    { ITensor res = this->toITensor(); res *= t; return res; }
+
+
 
 class IQTDat : public boost::noncopyable
     {
@@ -518,7 +510,6 @@ class IQTDat : public boost::noncopyable
 
     ITensor&
     get(const IndexSet<Index>& is);
-
     const ITensor&
     get(const IndexSet<Index>& is) const;
 

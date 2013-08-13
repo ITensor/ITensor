@@ -128,7 +128,6 @@ insert_add(const ITensor& t)
     if(validBlock(it))
         {
         *it += t;
-        return;
         }
     else
         {
@@ -196,11 +195,8 @@ index(int j) const
     }
     */
 
-int IQTensor::
-iten_size() const { return dat().size(); }
-
 bool IQTensor::
-iten_empty() const { return dat().empty(); }
+empty() const { return dat().empty(); }
 
 //----------------------------------------------------
 //IQTensor: Constructors 
@@ -441,7 +437,7 @@ IQTensor& IQTensor::
 operator+=(const ITensor& t) 
     { 
 #ifdef DEBUG
-    if(!this->iten_empty())
+    if(!this->empty())
         {
         const
         QN d = div(*this);
@@ -1296,10 +1292,10 @@ toReal() const
     if(is_->r() != 0)
         Error("IQTensor not a real scalar");
 #ifdef DEBUG
-    if(iten_size() > 1)
+    if(blocks().size() > 1)
         Error("Too many blocks");
 #endif
-    if(iten_empty())
+    if(empty())
         return 0;
     else
         return dat().begin()->toReal();
@@ -1459,7 +1455,7 @@ BraKet(IQTensor x, const IQTensor& y)
 QN
 div(const IQTensor& T)
 	{
-	if(T.iten_empty())
+	if(T.empty())
 	    {   
         Print(T);
 	    Error("IQTensor has no blocks");
@@ -1540,7 +1536,7 @@ uses_ind(const IQTensor& T, const Index& ii)
 bool
 isZero(const IQTensor& T, const OptSet& opts)
     {
-    if(T.iten_empty()) return true;
+    if(T.empty()) return true;
     //done with all fast checks
     if(opts.getBool("Fast",false)) return false;
     Foreach(const ITensor& t, T.blocks())

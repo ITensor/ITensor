@@ -243,7 +243,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         Error("A must be matrix-like");
         }
 
-    const int Nblock = A.iten_size();
+    const int Nblock = A.blocks().size();
     if(Nblock == 0)
         throw ResultIsZero("A has no blocks");
 
@@ -717,19 +717,19 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
         }
 #endif
 
-    vector<Matrix> mmatrix(rho.iten_size()),
+    vector<Matrix> mmatrix(rho.blocks().size()),
                    imatrix;
-    vector<Vector> mvector(rho.iten_size());
+    vector<Vector> mvector(rho.blocks().size());
     vector<Real> alleig;
     alleig.reserve(rho.indices().front().m());
 
     if(cplx)
-        imatrix.resize(rho.iten_size());
+        imatrix.resize(rho.blocks().size());
 
     if(rho.indices().front().m() == 0)
         throw ResultIsZero("rho.index(1).m()");
-    if(rho.iten_empty())
-        throw ResultIsZero("rho.iten_empty()");
+    if(rho.empty())
+        throw ResultIsZero("rho.empty()");
 
     if(spec.doRelCutoff())
         {
@@ -906,13 +906,13 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
     vector<ITensor> blocks,
                     iblocks;
     vector<ITSparse> Dblocks;
-    blocks.reserve(rho.iten_size());
-    Dblocks.reserve(rho.iten_size());
-    if(cplx) iblocks.reserve(rho.iten_size());
+    blocks.reserve(rho.blocks().size());
+    Dblocks.reserve(rho.blocks().size());
+    if(cplx) iblocks.reserve(rho.blocks().size());
 
     //Also form new Link IQIndex with appropriate m's for each block
     IQIndex::Storage iq;
-    iq.reserve(rho.iten_size());
+    iq.reserve(rho.blocks().size());
 
     itenind = 0;
     Foreach(const ITensor& t, rho.blocks())
