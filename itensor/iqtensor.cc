@@ -874,7 +874,7 @@ operator<<(std::ostream & s, const IQTensor& T)
     }
 
 //Helper method for operator*= and operator/=
-bool
+bool static
 vectorARContains(const vector<ApproxReal>& v, ApproxReal r)
     {
     Foreach(const ApproxReal& x, v)
