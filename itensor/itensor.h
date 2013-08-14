@@ -746,7 +746,6 @@ commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
             return I;
             }
         }
-    throw ITError("No common index found");
     return IndexT::Null();
     }
 template<class TensorA, class TensorB> typename 

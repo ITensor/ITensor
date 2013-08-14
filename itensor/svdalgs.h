@@ -243,12 +243,13 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
         spec.cutoff(-1);
         if(D.r() == 0)
             {
-            try {
-                IndexT mid = commonIndex(U,V,Link);
+            IndexT mid = commonIndex(U,V,Link);
+            if(!mid.isNull())
+                {
                 spec.minm(mid.m());
                 spec.maxm(mid.m());
                 }
-            catch(const ITError& e)
+            else
                 {
                 spec.minm(1);
                 spec.maxm(1);
@@ -320,14 +321,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         throw ResultIsZero("denmatDecomp: AA is zero");
         }
 
-    IndexT mid; 
-    try {
-        mid = commonIndex(A,B,Link);
-        }
-    catch(const ITError& e)
-        {
-        //continue, leaving mid default-initialized
-        }
+    IndexT mid = commonIndex(A,B,Link);
 
     //If dir==None, put the O.C. on the side
     //that keeps mid's arrow the same
