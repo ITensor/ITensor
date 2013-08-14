@@ -748,15 +748,6 @@ commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
         }
     return IndexT::Null();
     }
-template<class TensorA, class TensorB> typename 
-TensorA::IndexT
-index_in_common(const TensorA& A, const TensorB& B, IndexType t = All)
-    {
-    static int depcount = 0;
-    if(++depcount < 5) 
-        Cout << "WARNING: index_in_common deprecated, use commonIndex instead" << Endl;
-    return commonIndex(A,B,t);
-    }
 
 template<class Tensor> typename
 Tensor::IndexT const&
