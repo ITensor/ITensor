@@ -47,6 +47,14 @@ Gate;
 typedef BondGate<IQTensor>
 IQGate;
 
+template<class Tensor>
+Tensor
+operator*(const BondGate<Tensor>& G, Tensor T) { T *= G.gate(); return T; }
+
+template<class Tensor>
+Tensor
+operator*(Tensor T, const BondGate<Tensor>& G) { T *= G.gate(); return T; }
+
 template <class Tensor>
 BondGate<Tensor>::
 BondGate(const Model& model, int i, int j)
