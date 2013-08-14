@@ -162,11 +162,14 @@ class Spectrum
 
 inline Spectrum::
 Spectrum(const OptSet& opts) 
-    : 
-    refNorm_(1)
+    : cutoff_(MIN_CUT),
+      maxm_(MAX_M),
+      minm_(1),
+      noise_(0),
+      refNorm_(1),
+      truncerr_(NAN)
     { 
     initOpts(opts);
-    truncerr_ = NAN;
     }
 
 
@@ -187,11 +190,11 @@ void inline Spectrum::
 initOpts(const OptSet& opts)
     {
     absoluteCutoff_ = opts.getBool("AbsoluteCutoff",false);
-    cutoff_ = opts.getReal("Cutoff",MIN_CUT);
+    cutoff_ = opts.getReal("Cutoff",cutoff_);
     doRelCutoff_ = opts.getBool("DoRelCutoff",false);
-    maxm_ = opts.getInt("Maxm",MAX_M);
-    minm_ = opts.getInt("Minm",1);
-    noise_ = opts.getReal("Noise",0.);
+    maxm_ = opts.getInt("Maxm",maxm_);
+    minm_ = opts.getInt("Minm",minm_);
+    noise_ = opts.getReal("Noise",noise_);
     truncate_ = opts.getBool("Truncate",true);
     use_orig_m_ = opts.getBool("UseOrigM",false);
     }
