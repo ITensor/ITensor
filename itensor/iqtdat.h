@@ -197,7 +197,7 @@ template<class Tensor>
 void IQTDat<Tensor>::
 clean(Real min_norm)
     {
-    IQTDat::StorageT nblocks;
+    StorageT nblocks;
     Foreach(const ITensor& t, blocks_)
         {
         if(t.norm() >= min_norm)
