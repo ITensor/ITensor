@@ -1344,4 +1344,19 @@ TEST(ComplexScalar)
     CHECK((imagPart(T6)-(f1*A+f2*B)).norm() < 1E-12);
     }
 
+TEST(CommonIndex)
+    {
+    ITensor T1(s1,s2,l1,l2),
+            T2(s1,l3),
+            T3(s3,l4);
+
+    CHECK(hasCommonIndex(T1,T2));
+    CHECK(!hasCommonIndex(T1,T3));
+    CHECK(!hasCommonIndex(T2,T3));
+    CHECK(!hasCommonIndex(T1,T2,Link));
+
+    CHECK(commonIndex(T1,T2) == s1);
+    CHECK(commonIndex(T1,T2,Site) == s1);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

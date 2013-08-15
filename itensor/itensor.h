@@ -749,6 +749,13 @@ commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
     return IndexT::Null();
     }
 
+template<class TensorA, class TensorB>
+bool
+hasCommonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
+    {
+    return !(commonIndex(A,B,t).isNull());
+    }
+
 template<class Tensor> typename
 Tensor::IndexT const&
 finddir(const Tensor& T, Arrow dir)
