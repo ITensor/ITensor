@@ -7,6 +7,10 @@
 #include "mpo.h"
 #include "localop.h"
 
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
+
 //
 // The LocalMPO class projects an MPO 
 // into the reduced Hilbert space of
@@ -581,5 +585,9 @@ initWrite()
     writedir_ = mkTempDir("PH",global_write_dir);
     //std::cout << "Successfully created directory " + writedir_ << std::endl;
     }
+
+#undef Cout
+#undef Format
+#undef Endl
 
 #endif

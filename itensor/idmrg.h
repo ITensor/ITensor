@@ -11,6 +11,25 @@
 #define Endl std::endl
 #define Format boost::format
 
+template <class Tensor>
+Real
+idmrg(MPSt<Tensor>& psi, 
+      const MPOt<Tensor>& H, 
+      const Tensor& HL, 
+      const Tensor& HR,
+      const Sweeps& sweeps, 
+      const OptSet& opts = Global::opts());
+
+template <class Tensor>
+Real
+idmrg(MPSt<Tensor>& psi, 
+      MPOt<Tensor> H,
+      Tensor HL, 
+      Tensor HR,
+      const Sweeps& sweeps,
+      Observer& obs,
+      OptSet opts = Global::opts());
+
 
 //Given an MPS (or MPO) A1 A2 A3 | A4 A5 A6,
 //modifies it to A4 A5 A6 | A1 A2 A3
@@ -28,6 +47,10 @@ swapUnitCells(MPSType& psi)
         }
     }
 
+//
+// Implementations
+//
+
 
 template <class Tensor>
 Real
@@ -36,7 +59,7 @@ idmrg(MPSt<Tensor>& psi,
       Tensor HL, Tensor HR,
       const Sweeps& sweeps,
       Observer& obs,
-      OptSet opts = Global::opts())
+      OptSet opts)
     {
     typedef typename Tensor::IndexT
     IndexT;
@@ -145,7 +168,8 @@ idmrg(MPSt<Tensor>& psi,
         const MPSt<Tensor> initPsi(psi);
 
         lastenergy = energy;
-        energy = dmrg(psi,H,HL,HR,ucsweeps,obs,opts & Quiet(vlevel < 3));
+        LocalMPO<Tensor> PH(H,HL,HR,opts);
+        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts & Quiet(vlevel < 3));
 
 
         Real ovrlap, im;
@@ -176,16 +200,19 @@ idmrg(MPSt<Tensor>& psi,
         if(obs.checkDone(sw,sub_en_per_site)) break;
 
         //Prepare MPO for next step
-        for(int j = 1; j <= Nuc; ++j)
-            {
-            HL *= psi.A(j);
-            HL *= H.A(j);
-            HL *= conj(primed(psi.A(j)));
 
-            HR *= psi.A(N0-j+1);
-            HR *= H.A(N0-j+1);
-            HR *= conj(primed(psi.A(N0-j+1)));
-            }
+        PH.position(Nuc,psi);
+
+        HR = PH.R();
+        HR *= psi.A(Nuc+1);
+        HR *= H.A(Nuc+1);
+        HR *= conj(primed(psi.A(Nuc+1)));
+
+        HL = PH.L();
+        HL *= psi.A(Nuc);
+        HL *= H.A(Nuc);
+        HL *= conj(primed(psi.A(Nuc)));
+
         swapUnitCells(H);
 
         //Prepare MPS for next step
@@ -212,7 +239,7 @@ Real
 idmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, 
       const Tensor& HL, const Tensor& HR,
       const Sweeps& sweeps, 
-      const OptSet& opts = Global::opts())
+      const OptSet& opts)
     {
     DMRGObserver obs;
     return idmrg(psi,H,HL,HR,sweeps,obs,opts);
