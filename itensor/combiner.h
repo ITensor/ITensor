@@ -77,7 +77,7 @@ class Combiner
 
     //Initialize after all lefts are added and before being used
     void 
-    init(std::string rname = "combined", 
+    init(std::string rname = "cmb", 
          IndexType type = Link, 
          Arrow dir = Out,
          int primelevel = 0) const;
@@ -107,10 +107,6 @@ class Combiner
 
     void 
     product(const ITensor& t, ITensor& res) const;
-
-    //For interface compatibility with IQCombiner
-    void 
-    doCondense(bool) { } 
 
 private:
 

@@ -54,7 +54,7 @@ class IQCombiner
 
     // Initialize after all lefts are there and before being used
     void 
-    init(std::string rname = "combined", IndexType type = Link, 
+    init(std::string rname = "cmb", IndexType type = Link, 
          Arrow dir = Neither, int primelevel = 0) const;
     
     operator IQTensor() const;

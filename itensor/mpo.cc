@@ -503,7 +503,6 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
 
         //Add common IQIndices to IQCombiner
         CombinerT comb; 
-        comb.doCondense(false);
         Foreach(const IndexT& I, res.A(j).indices())
             {
             if(hasindex(res.A(j+1),I))

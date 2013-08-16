@@ -214,8 +214,6 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
     //Combiners which transform AA
     //into a rank 2 tensor
     CombinerT Ucomb, Vcomb;
-    Ucomb.doCondense(true);
-    Vcomb.doCondense(true);
 
 
     //Divide up indices based on U
@@ -343,7 +341,6 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         }
 
     //Apply combiner
-    comb.doCondense(true);
     comb.init(mid.isNull() ? "mid" : mid.rawname());
 
     Tensor AAc; 
@@ -417,7 +414,6 @@ diagHermitian(const Tensor& M, Tensor& U, SparseT& D, Spectrum& spec,
         }
 
     //Apply combiner
-    comb.doCondense(true);
     comb.init("d");
 
     Tensor Mc; 
@@ -478,8 +474,6 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
         //Combiners which transform T
         //into a rank 2 tensor
         CombinerT Acomb, Bcomb;
-        Acomb.doCondense(true);
-        Bcomb.doCondense(true);
 
         const
         IndexT reim = IQIndex("ReIm",Index("reim",2),QN());

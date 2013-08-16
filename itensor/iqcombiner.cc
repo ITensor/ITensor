@@ -7,7 +7,7 @@ using boost::format;
 IQCombiner::
 IQCombiner() 
     : initted(false), 
-      do_condense(false) 
+      do_condense(true) 
     { }
 
 IQCombiner::
@@ -16,7 +16,7 @@ IQCombiner(
     const IQIndex& l3, const IQIndex& l4, 
     const IQIndex& l5, const IQIndex& l6)
     : initted(false), 
-      do_condense(false)
+      do_condense(true)
     {
     if(l1 == IQIndex::Null()) Error("Null IQIndex");
     if(l1 != IQIndex::Null()) left_.push_back(l1); 
@@ -135,7 +135,7 @@ init(string rname, IndexType type,
     if(do_condense) 
         {
         ucright_ = IQIndex(rname,iq,rdir,primelevel);
-        string cname = "cond::" + rname;
+        string cname = "cnd:" + rname;
         cond = Condenser(ucright_,cname);
         right_ = cond.smallind();
         }
