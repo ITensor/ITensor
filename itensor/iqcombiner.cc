@@ -28,6 +28,32 @@ IQCombiner(
     Foreach(IQIndex& L, left_) L.conj();
     }
 
+IQCombiner::
+IQCombiner(const IQCombiner& other)
+    {
+    other.init();
+    left_ = other.left_;
+    right_ = other.right_;
+    combs = other.combs;
+    initted = other.initted;
+    cond = other.cond;
+    ucright_ = other.ucright_;
+    do_condense = other.do_condense;
+    }
+
+IQCombiner& IQCombiner::
+operator=(const IQCombiner& other)
+    {
+    other.init();
+    left_ = other.left_;
+    right_ = other.right_;
+    combs = other.combs;
+    initted = other.initted;
+    cond = other.cond;
+    ucright_ = other.ucright_;
+    do_condense = other.do_condense;
+    return *this;
+    }
 
 void IQCombiner::
 doCondense(bool val)
@@ -181,14 +207,6 @@ prime(IndexType type, int inc)
             }
         }
     }
-
-IQCombiner 
-primed(IQCombiner C, int inc)
-    {
-    C.prime(All,inc);
-    return C;
-    }
-
 
 
 void IQCombiner::
@@ -381,6 +399,6 @@ operator<<(ostream & s, const IQCombiner & c)
     else
         { s << endl << "Right index is not initialized\n\n"; }
     s << "Left indices: \n";
-    Foreach(const IQIndex& I, c.left_) s << I << endl;
+    Foreach(const IQIndex& I, c.left()) s << I << endl;
     return s << "\n\n";
     }

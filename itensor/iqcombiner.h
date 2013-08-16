@@ -33,6 +33,8 @@ class IQCombiner
         const IQIndex& l3 = IQIndex::Null(), const IQIndex& l4 = IQIndex::Null(), 
 	    const IQIndex& l5 = IQIndex::Null(), const IQIndex& l6 = IQIndex::Null());
 
+    IQCombiner(const IQCombiner& other);
+
     bool 
     doCondense() const { return do_condense; }
     void 
@@ -44,11 +46,8 @@ class IQCombiner
     void 
     addleft(const IQIndex& l); 	// Include another left index
 
-    const std::pair<left_it,left_it> 
-    left() const 
-        { 
-        return std::make_pair(left_.begin(),left_.end()); 
-        }
+    const std::vector<IQIndex>&
+    left() const { return left_; }
 
     inline bool 
     isInit() const { return initted; }
@@ -72,20 +71,14 @@ class IQCombiner
     void
     prime(IndexType type, int inc = 1);
 
-    friend IQCombiner
-    primed(IQCombiner C, int inc = 1);
-
     void 
     conj();
-
-    friend std::ostream& 
-    operator<<(std::ostream & s, const IQCombiner & c);
 
     IQTensor 
     operator*(const IQTensor& t) const { IQTensor res; product(t,res); return res; }
 
-    friend inline IQTensor 
-    operator*(const IQTensor& t, const IQCombiner& c) { return c.operator*(t); }
+    IQCombiner&
+    operator=(const IQCombiner& other);
 
     void 
     product(IQTensor t, IQTensor& res) const;
@@ -123,6 +116,9 @@ class IQCombiner
 // IQCombiner helper methods
 //
 
+IQTensor inline
+operator*(const IQTensor& t, const IQCombiner& c) { return c.operator*(t); }
+
 bool
 hasindex(const IQCombiner& C, const IQIndex& I);
 
@@ -131,7 +127,6 @@ hasindex(const IQCombiner& C, const Index& i);
 
 std::ostream& 
 operator<<(std::ostream & s, const IQCombiner & c);
-
 
 
 #endif
