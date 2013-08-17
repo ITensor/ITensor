@@ -696,7 +696,7 @@ getperm(const IndexSet<IndexT>& iset,
             for(int j = 0; j < iset.r(); ++j) 
                 Cout << j << " " << oset[j] << "\n";
             Cout << Endl;
-            Error("IndexSet::getperm: no matching index");
+            throw ITError("IndexSet::getperm: no matching index");
             }
 	    }
 	}

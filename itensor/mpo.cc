@@ -257,18 +257,11 @@ checkQNs(const IQMPO& H)
             std::cerr << boost::format("A(%d) null, QNs not well defined\n")%i;
             Error("QNs not well defined");
             }
-        try {
-            if(div(H.A(i)) != Zero)
-                {
-                std::cerr << "At i = " << i << "\n";
-                Print(H.A(i));
-                Error("Non-zero div IQTensor in IQMPO");
-                }
-            }
-        catch(const ITError& e)
+        if(div(H.A(i)) != Zero)
             {
-            std::cerr << "At i = " << i << "\n";
-            throw e;
+            cout << "At i = " << i << endl;
+            Print(H.A(i));
+            Error("Non-zero div IQTensor in IQMPO");
             }
         }
 

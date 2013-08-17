@@ -83,22 +83,25 @@ TEST(Constructors)
 
 TEST(addLeft)
     {
-    IQCombiner c1;
+    IQCombiner c1,
+               c1s;
 
     c1.addleft(L2);
     c1.addleft(S2);
     c1.addleft(L1);
     c1.addleft(S1);
+    c1.init("cname");
+
+    c1s.addleft(L2);
+    c1s.addleft(S2);
+    c1s.addleft(L1);
+    c1s.addleft(S1);
+    c1s.init("cname",Site);
 
     CHECK(hasindex(c1,L2));
     CHECK(hasindex(c1,S2));
     CHECK(hasindex(c1,L1));
     CHECK(hasindex(c1,S1));
-
-    IQCombiner c1s(c1);
-
-    c1.init("cname");
-    c1s.init("cname",Site);
 
     CHECK_EQUAL(c1.right().name(),"cname");
     CHECK_EQUAL(c1s.right().name(),"cname");

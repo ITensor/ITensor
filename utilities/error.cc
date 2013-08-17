@@ -29,6 +29,6 @@ error(const string& s, int line, const char* file = 0)
     cout << endl << s << endl;
     cout.flush();
     cerr.flush();
-    throw ITError(s);
+    abort();
     }
 
