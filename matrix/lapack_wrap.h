@@ -187,4 +187,29 @@ dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
     dgeev_(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work,&lwork,info);
     }
 
+//
+// zgeev
+//
+// Eigenvalues and eigenvectors of complex, square matrix A
+// A can be a general complex matrix, not assumed symmetric
+//
+void inline
+zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N'
+              char* jobvr,          //if 'V', compute right eigenvectors, else 'N'
+              LAPACK_INT* n,        //number of rows/cols of A
+              LAPACK_COMPLEX* A,    //matrix A, on return contains eigenvectors
+              LAPACK_COMPLEX* d,    //eigenvalues
+              LAPACK_COMPLEX* vl,   //left eigenvectors on return
+              LAPACK_COMPLEX* vr,   //right eigenvectors on return
+              LAPACK_INT* info)  //error info
+    {
+    int nevecl = (*jobvl == 'V' ? *n : 1);
+    int nevecr = (*jobvr == 'V' ? *n : 1);
+    LAPACK_INT lwork = max(1,4*(*n));
+    LAPACK_COMPLEX work[lwork];
+    LAPACK_INT lrwork = max(1,2*(*n));
+    LAPACK_REAL rwork[lrwork];
+    zgeev_(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info);
+    }
+
 #endif

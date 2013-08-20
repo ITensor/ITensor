@@ -6,6 +6,9 @@
 
 #include <fstream>
 
+Real
+sqr(Real x) { return x*x; }
+
 using namespace std;
 using boost::format;
 
@@ -459,6 +462,50 @@ TEST(RectQR)
 
     CHECK(Norm(Matrix(Q*R-M).TreatAsVector()) < 1E-14);
     CHECK(Norm(Matrix(Q.t()*Q-I).TreatAsVector()) < 1E-14);
+    }
+
+TEST(ComplexEV)
+    {
+    const int N = 40;
+    Matrix R(N,N),
+           I(N,N);
+
+    R.Randomize();
+    I.Randomize();
+
+    Matrix VR(N,N),
+           VI(N,N);
+
+    Vector eR(N),
+           eI(N);
+
+    ComplexEigenvalues(R,I,eR,eI,VR,VI);
+
+    Matrix PR = R*VR - I*VI,
+           PI = R*VI + I*VR;
+
+    for(int j = 1; j <= N; ++j)
+        {
+        //jth eigenvector
+        VectorRef vR = VR.Column(j),
+                  vI = VI.Column(j);
+
+        //Matrix times eigenvector
+        Vector pR = R*vR-I*vI,
+               pI = R*vI+I*vR;
+
+        //Eigenvalue time eigenvector
+        Vector zR = eR(j)*vR - eI(j)*vI,
+               zI = eR(j)*vI + eI(j)*vR;
+
+        //Should be the same
+        Real nrm = 0;
+        nrm += sqr(Norm(pR-zR));
+        nrm += sqr(Norm(pI-zI));
+        nrm = sqrt(nrm);
+
+        CHECK(nrm < 1E-12);
+        }
     }
 
 BOOST_AUTO_TEST_SUITE_END()

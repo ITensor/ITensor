@@ -95,8 +95,13 @@ QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R);
 void EigenValues(const MatrixRef &, Vector &, Matrix &);
 void GenEigenValues(const MatrixRef&, Vector&, Vector&);
 void GenEigenValues(const MatrixRef& A, Vector& Re, Vector& Im, Matrix& ReV, Matrix& ImV);
-void HermitianEigenvalues(const Matrix& re, const Matrix& im, Vector& evals,
-	                                Matrix& revecs, Matrix& ievecs);
+void HermitianEigenvalues(const Matrix& re, const Matrix& im, 
+                          Vector& evals,
+	                      Matrix& revecs, Matrix& ievecs);
+void
+ComplexEigenvalues(const MatrixRef& Mre, const MatrixRef& Mim,
+                   Vector& revals, Vector& ievals,
+                   Matrix& revecs, Matrix& ievecs);
 void
 GeneralizedEV(const MatrixRef& A, const MatrixRef& B, Vector& D, Matrix& Z);
 

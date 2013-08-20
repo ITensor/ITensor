@@ -392,6 +392,64 @@ GeneralizedEV(const MatrixRef& A, Matrix B, Vector& D, Matrix& Z)
     Z = Z.t();
     }
 
+void
+ComplexEigenvalues(const MatrixRef& Mre, const MatrixRef& Mim,
+                   Vector& revals, Vector& ievals,
+                   Matrix& revecs, Matrix& ievecs)
+    {
+    LAPACK_INT N = Mre.Nrows();
+#ifdef DEBUG
+    if(Mre.Ncols() != N)
+        Error("Mre must be square");
+    if(Mim.Nrows() != N || Mim.Ncols() != N)
+        Error("Mim must have same dimensions as Mre");
+#endif
+
+    Matrix M(N,2*N);
+    for(int i = 1; i <= N; ++i)
+	for(int j = 1; j <= N; ++j)
+        {
+	    M(i,2*j-1) = Mre(j,i); 
+        M(i,2*j) = Mim(j,i);
+        }
+
+    char jobvl = 'N';
+    char jobvr = 'V';
+    int info = 0;
+    
+    Vector evals(2*N);
+    Matrix evecs(N,2*N);
+    LAPACK_COMPLEX l;
+
+    zgeev_wrapper(&jobvl,&jobvr,&N,(LAPACK_COMPLEX*)M.Store(),(LAPACK_COMPLEX*)evals.Store(),&l,
+                  (LAPACK_COMPLEX*)evecs.Store(),&info);
+
+    if(info != 0)
+        {
+        cout << "info is " << info << endl;
+        _merror("Error in ComplexEigenvalues");
+        }
+
+    revals.ReDimension(N);
+    ievals.ReDimension(N);
+
+    revecs.ReDimension(N,N);
+    ievecs.ReDimension(N,N);
+
+    for(int i = 1; i <= N; ++i)
+        {
+        revals(i) = evals(2*i-1);
+        ievals(i) = evals(2*i);
+
+        for(int j = 1; j <= N; ++j)
+            {
+            revecs(j,i) = evecs(i,2*j-1); 
+            ievecs(j,i) = evecs(i,2*j);
+            }
+        }
+    }
+
+
 void 
 HermitianEigenvalues(const Matrix& re, const Matrix& im, 
                      Vector& evals,
