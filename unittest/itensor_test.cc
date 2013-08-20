@@ -949,6 +949,31 @@ TEST(TieIndices)
 
     } //TieIndices
 
+TEST(ComplexTieIndices)
+    {
+    ITensor Tr(l1,l2,a1,s2,s1),
+            Ti(l1,l2,a1,s2,s1);
+    Tr.randomize();
+    Ti.randomize();
+
+    ITensor T = Tr + Complex_i*Ti;
+
+    ITensor TT(T);
+    TT.tieIndices(l2,l1,s1,l2);
+
+    CHECK_EQUAL(TT.r(),3);
+
+    ITensor TTr(realPart(TT)),
+            TTi(imagPart(TT));
+
+    for(int j = 1; j <= 2; ++j)
+    for(int k = 1; k <= 2; ++k)
+        {
+        CHECK_CLOSE(Tr(l1(j),l2(j),a1(1),s2(k),s1(j)),TTr(l2(j),s2(k),a1(1)),1E-5);
+        CHECK_CLOSE(Ti(l1(j),l2(j),a1(1),s2(k),s1(j)),TTi(l2(j),s2(k),a1(1)),1E-5);
+        }
+    }
+
 TEST(Trace)
     {
 
