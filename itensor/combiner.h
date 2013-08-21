@@ -49,16 +49,17 @@ class Combiner
              const Index& l3 = Index::Null(), const Index& l4 = Index::Null(), 
              const Index& l5 = Index::Null(), const Index& l6 = Index::Null(), 
              const Index& l7 = Index::Null(), const Index& l8 = Index::Null() );
-    
+
+    Combiner(const Combiner& other) { operator=(other); }
+
     //Operators -----------------------------------------------------
 
     ITensor 
     operator*(const ITensor& t) const 
         { ITensor res; product(t,res); return res; }
 
-    friend inline ITensor 
-    operator*(const ITensor& t, const Combiner& c) 
-        { return c.operator*(t); }
+    Combiner&
+    operator=(const Combiner& other);
 
     //Index Methods -------------------------------------------------
 
@@ -108,16 +109,35 @@ class Combiner
     void 
     product(const ITensor& t, ITensor& res) const;
 
-private:
+    private:
+
+    /////////
 
     boost::array<Index,NMAX+1> left_; // max dim is 8
     mutable Index right_;
     int rl_; //Number of m>1 'left' indices (indices to be combined into one)
     mutable bool initted;
 
-}; //class Combiner
+    ///////
+
+    }; //class Combiner
 
 
+
+ITensor inline
+operator*(const ITensor& t, const Combiner& c) { return c*t; }
+
+inline
+Combiner& Combiner::
+operator=(const Combiner& other)
+    {
+    other.init();
+    left_ = other.left_;
+    right_ = other.right_;
+    rl_ = other.rl_;
+    initted = other.initted;
+    return *this;
+    }
 
 inline
 Combiner::
