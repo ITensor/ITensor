@@ -8,7 +8,7 @@ include ../options.mk
 
 ####################################
 
-SOURCES=index.cc itensor.cc itsparse.cc \
+SOURCES=option.cc index.cc itensor.cc itsparse.cc \
         iqindex.cc iqtensor.cc iqcombiner.cc iqtsparse.cc\
         svdalgs.cc mps.cc mpo.cc tevol.cc
 
@@ -84,7 +84,10 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-DEPHEADERS=global.h real.h permutation.h index.h option.h
+DEPHEADERS=real.h option.h
+option.o: $(DEPHEADERS)
+.debug_objs/option.o: $(DEPHEADERS)
+DEPHEADERS+= global.h index.h permutation.h
 index.o: $(DEPHEADERS)
 .debug_objs/index.o: $(DEPHEADERS)
 DEPHEADERS+= indexset.h

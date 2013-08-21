@@ -354,7 +354,6 @@ class ArrowError : public ITError
         { }
     };
 
-Real ran1();
 
 //void reportnew() { }
 

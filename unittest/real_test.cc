@@ -135,18 +135,5 @@ TEST(Comparison)
     CHECK(zero < one);
     }
 
-TEST(ReadWrite)
-    {
-    Real a = ran1();
-    LogNumber la(a); 
-
-    writeToFile(".read_write/LogNumber",la);
-
-    LogNumber laR;
-    readFromFile(".read_write/LogNumber",laR);
-
-    CHECK(laR == la);
-    }
-
 BOOST_AUTO_TEST_SUITE_END()
 

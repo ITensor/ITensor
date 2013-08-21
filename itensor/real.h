@@ -7,7 +7,7 @@
 #include "matrix.h"
 #include <limits>
 #include "math.h"
-#include "global.h"
+#include <cmath>
 
 #define Cout std::cout
 #define Endl std::endl
@@ -17,6 +17,7 @@
 #define NAN (std::numeric_limits<Real>::quiet_NaN())
 #endif
 
+Real ran1();
 
 static const Real Pi = M_PI;
 static const Real Sqrt2 = sqrt(2);
