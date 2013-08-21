@@ -67,7 +67,7 @@ class ITSparse
     isDiag() const { return true; }
 
     bool
-    diagAllSame() const { return diag_.Length() == 0; }
+    diagAllSame() const { return r_.Length() == 0; }
 
     int
     diagSize() const;
@@ -85,7 +85,7 @@ class ITSparse
     indices() const { return is_; }
 
     bool
-    isComplex() const { return false; }
+    isComplex() const { return i_.Length() != 0; }
 
     //
     // Operators
@@ -96,14 +96,6 @@ class ITSparse
     ITensor
     operator*(const ITensor& T) const
         { ITensor res; product(*this,T,res); return res; }
-
-    friend inline ITensor&
-    operator*=(ITensor& T, const ITSparse& S)
-        { ITensor res; product(S,T,res); T.swap(res); return T; }
-
-    ITensor friend inline
-    operator*(const ITensor& T, const ITSparse& S)
-        { ITensor res; product(S,T,res); return res; }
 
     // Addition and subtraction
 
@@ -130,20 +122,12 @@ class ITSparse
     operator*(Real fac) const 
         { ITSparse res(*this); res *= fac; return res; }
 
-    friend inline ITSparse 
-    operator*(Real fac, ITSparse s) 
-        { return (s *= fac); }
-
     ITSparse& 
     operator/=(Real fac) { scale_ /= fac; return *this; }
 
     ITSparse 
     operator/(Real fac) const 
         { ITSparse res(*this); res /= fac; return res; }
-
-    friend inline ITSparse 
-    operator/(Real fac, ITSparse s) 
-        { return (s /= fac); }
 
     ITSparse& 
     operator*=(const LogNumber& fac) { scale_ *= fac; return *this; }
@@ -152,19 +136,6 @@ class ITSparse
     operator*(const LogNumber& fac) const 
         { ITSparse res(*this); res *= fac; return res; }
 
-    friend inline ITSparse 
-    operator*(const LogNumber& fac, ITSparse s) 
-        { return (s *= fac); }
-
-    //
-    // Index Methods
-    //
-
-    //void 
-    //addindex1(const std::vector<Index>& indices) { is_.addindex1(indices); }
-
-    //void 
-    //addindex1(const Index& I) { is_.addindex1(I); }
 
     //
     // Primelevel Methods 
@@ -204,10 +175,10 @@ class ITSparse
     norm() const;
 
     void 
-    scaleOutNorm() const;
+    scaleOutNorm();
 
     void 
-    scaleTo(LogNumber newscale) const;
+    scaleTo(LogNumber newscale);
 
     void
     read(std::istream& s);
@@ -219,10 +190,7 @@ class ITSparse
     conj() { }
 
     bool
-    isNull() const { return (scale_ == LogNumber(0) && diag_.Length() == 0); }
-
-    bool
-    isNotNull() const { return (scale_ != LogNumber(0) || diag_.Length() != 0); }
+    isNull() const { return (scale_ == LogNumber(0) && r_.Length() == 0); }
 
     friend std::ostream&
     operator<<(std::ostream & s, const ITSparse & t);
@@ -243,12 +211,12 @@ class ITSparse
     // Data members
     //
 
-    //diagonal elements
-    mutable Vector diag_;
+    Vector r_,
+           i_;
 
     IndexSet<Index> is_;
 
-    mutable LogNumber scale_;
+    LogNumber scale_;
 
     //
     //////////////
@@ -264,6 +232,23 @@ class ITSparse
 
     }; // class ITSparse
 
+inline
+ITensor& 
+operator*=(ITensor& T, const ITSparse& S) { ITensor res; product(S,T,res); T.swap(res); return T; }
+
+ITensor inline
+operator*(const ITensor& T, const ITSparse& S) 
+    { ITensor res; product(S,T,res); return res; }
+
+ITSparse inline
+operator*(const LogNumber& fac, ITSparse s) { return (s *= fac); }
+
+ITSparse inline
+operator/(Real fac, ITSparse s) { return (s /= fac); }
+
+ITSparse inline
+operator*(Real fac, ITSparse s) { return (s *= fac); }
+
 void 
 product(const ITSparse& S, const ITensor& T, ITensor& res);
 
@@ -272,8 +257,8 @@ ITSparse& ITSparse::
 mapElems(const Callable& f)
     {
     scaleTo(1);
-    for(int j = 1; j <= diag_.Length(); ++j)
-        diag_(j) = f(diag_(j));
+    for(int j = 1; j <= r_.Length(); ++j)
+        r_(j) = f(r_(j));
     return *this;
     }
 

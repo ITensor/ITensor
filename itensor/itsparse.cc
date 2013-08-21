@@ -33,15 +33,15 @@ ITSparse(const Index& i1, Real d)
 ITSparse::
 ITSparse(const Index& i1, const Vector& diag)
     :
-    diag_(diag),
+    r_(diag),
     is_(i1),
     scale_(1)
     { 
 #ifdef DEBUG
-    if(diag_.Length() != i1.m())
+    if(r_.Length() != i1.m())
         {
         Print(i1);
-        Print(diag_.Length());
+        Print(r_.Length());
         Error("Mismatched Index and Vector size");
         }
 #endif
@@ -58,16 +58,16 @@ ITSparse(const Index& i1, const Index& i2, Real d)
 ITSparse::
 ITSparse(const Index& i1, const Index& i2, const Vector& diag)
     :
-    diag_(diag),
+    r_(diag),
     is_(i1,i2),
     scale_(1)
     { 
 #ifdef DEBUG
-    if(diag_.Length() != minM(is_))
+    if(r_.Length() != minM(is_))
         {
         Print(is_);
         Print(minM(is_));
-        Print(diag_.Length());
+        Print(r_.Length());
         Error("Vector size must be same as smallest m (> 1)");
         }
 #endif
@@ -86,16 +86,16 @@ ITSparse::
 ITSparse(const Index& i1, const Index& i2, 
               const Index& i3, const Vector& diag)
     :
-    diag_(diag),
+    r_(diag),
     is_(i1,i2,i3),
     scale_(1)
     {
 #ifdef DEBUG
-    if(diag_.Length() != minM(is_))
+    if(r_.Length() != minM(is_))
         {
         Print(is_);
         Print(minM(is_));
-        Print(diag_.Length());
+        Print(r_.Length());
         Error("Vector size must be same as smallest m (> 1)");
         }
 #endif
@@ -116,7 +116,7 @@ diagSize() const
     if(diagAllSame())
         return minM(is_);
     else
-        return diag_.Length();
+        return r_.Length();
     }
 
 Vector ITSparse::
@@ -130,14 +130,14 @@ diag() const
         }
     else
         {
-        return diag_*scale_.real();
+        return r_*scale_.real();
         }
     }
 
 void ITSparse::
 diag(VectorRef v)
     {
-    diag_ = v;
+    r_ = v;
     scale_ = 1;
     }
 
@@ -194,18 +194,18 @@ operator+=(const ITSparse& other)
     //Already checked both diagAllSame case
     if(this_allsame)
         {
-        diag_.ReDimension(other.diag_.Length());
-        diag_ = 1;
-        diag_ += scalefac*other.diag_;
+        r_.ReDimension(other.r_.Length());
+        r_ = 1;
+        r_ += scalefac*other.r_;
         }
     else
     if(othr_allsame)
         {
-        diag_ += scalefac;
+        r_ += scalefac;
         }
     else
         {
-        diag_ += scalefac*other.diag_;
+        r_ += scalefac*other.r_;
         }
         
     return *this;
@@ -217,7 +217,7 @@ operator-=(const ITSparse& other)
     if(this == &other) 
         { 
         scale_ = 0; 
-        diag_.ReDimension(0); 
+        r_.ReDimension(0); 
         return *this; 
         }
     operator*=(-1); 
@@ -230,12 +230,12 @@ void ITSparse::
 pseudoInvert(Real cutoff)
     {
     scale_.pow(-1); //succeeds even if scale_ == 0
-    for(int j = 1; j <= diag_.Length(); ++j)
+    for(int j = 1; j <= r_.Length(); ++j)
         {
-        if(diag_(j) > cutoff)
-            diag_(j) = 1./diag_(j);
+        if(r_(j) > cutoff)
+            r_(j) = 1./r_(j);
         else
-            diag_(j) = 0;
+            r_(j) = 0;
         }
     }
 
@@ -245,27 +245,27 @@ norm() const
     if(diagAllSame())
         return sqrt(diagSize())*fabs(scale_.real());
     else
-        return fabs(Norm(diag_) * scale_.real());
+        return fabs(Norm(r_) * scale_.real());
     }
 
 void ITSparse::
-scaleOutNorm() const
+scaleOutNorm()
 	{
-    if(diag_.Length() == 0) return;
+    if(r_.Length() == 0) return;
 
-    Real f = Norm(diag_);
+    Real f = Norm(r_);
     if(fabs(f-1) < 1E-12) return;
     //solo();
-    if(f != 0) { diag_ = 1.0/f; scale_ *= f; }
+    if(f != 0) { r_ = 1.0/f; scale_ *= f; }
 	}
 
 void ITSparse::
-scaleTo(LogNumber newscale) const
+scaleTo(LogNumber newscale)
     {
     if(newscale.sign() == 0) 
 	Error("Trying to scale to a 0 lognumber in ITSparse");
     //If diag is all same no need to rescale
-    if(diag_.Length() == 0) 
+    if(r_.Length() == 0) 
         { 
         Error("Cannot call scaleTo on ITSparse with allsame diag");
         return; 
@@ -273,14 +273,14 @@ scaleTo(LogNumber newscale) const
     if(scale_ == newscale) return;
     //solo();
     scale_ /= newscale;
-    diag_ *= scale_.real0();
+    r_ *= scale_.real0();
     scale_ = newscale;
     }
 
 void ITSparse::
 read(std::istream& s)
     {
-    diag_.read(s);
+    r_.read(s);
     is_.read(s);
     scale_.read(s);
     }
@@ -288,7 +288,7 @@ read(std::istream& s)
 void ITSparse::
 write(std::ostream& s) const
     {
-    diag_.write(s);
+    r_.write(s);
     is_.write(s);
     scale_.write(s);
     }
@@ -456,7 +456,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
         res.r_ = T.r_;
         res.i_ = T.i_;
         if(!S.diagAllSame())
-            res *= S.diag_(1);
+            res *= S.r_(1);
         return;
         }
 
@@ -524,7 +524,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
                 }
             }
         }
-    else //!diag_allsame, use diag_ weights
+    else //!diag_allsame, use r_ weights
         {
 
         if(res_has_Sind)
@@ -537,7 +537,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
                                     *ri[3],*ri[4],
                                     *ri[5],*ri[6],
                                     *ri[7],*ri[8])]
-                 = S.diag_[diag_ind] 
+                 = S.r_[diag_ind] 
                    * Tdat[_ind(T.is_,*ti[1],*ti[2],
                                      *ti[3],*ti[4],
                                      *ti[5],*ti[6],
@@ -553,7 +553,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
                 for(diag_ind = 0; diag_ind < dsize; ++diag_ind)
                     {
                     val +=
-                    S.diag_[diag_ind] 
+                    S.r_[diag_ind] 
                     * Tdat[_ind(T.is_,*ti[1],*ti[2],
                                       *ti[3],*ti[4],
                                       *ti[5],*ti[6],
@@ -597,7 +597,7 @@ operator<<(ostream & s, const ITSparse& t)
         bool finite_scale = t.scale_.isFiniteReal();
         Real scale = (finite_scale ? t.scale_.real() : 1);
 
-        if(t.diag_.Length() == 0)
+        if(t.r_.Length() == 0)
             {
             if(finite_scale)
                 s << format("Diag = %.5f (all same, %d elements)\n")
@@ -612,7 +612,7 @@ operator<<(ostream & s, const ITSparse& t)
 
             for(int j = 1; j <= t.diagSize(); ++j)
                 {
-                Real val = t.diag_(j)*scale;
+                Real val = t.r_(j)*scale;
                 if(fabs(val) > Global::printScale())
                     { s << j << " " << val << "\n"; }
                 }
