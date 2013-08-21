@@ -227,10 +227,10 @@ OptSet
 operator&(const Opt& opt1, const Opt& opt2);
 
 OptSet
-operator&(OptSet oset, const Opt& opt);
+operator&(const OptSet& oset, const Opt& opt);
 
 OptSet
-operator&(const Opt& opt, OptSet oset);
+operator&(const Opt& opt, const OptSet& oset);
 
 std::ostream& 
 operator<<(std::ostream & s, const Opt& opt);

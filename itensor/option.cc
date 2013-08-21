@@ -320,17 +320,19 @@ operator&(const Opt& opt1, const Opt& opt2)
     }
 
 OptSet 
-operator&(OptSet oset, const Opt& opt)
+operator&(const OptSet& oset, const Opt& opt)
     {
-    oset.add(opt);
-    return oset;
+    OptSet res(oset);
+    res.add(opt);
+    return res;
     }
 
 OptSet 
-operator&(const Opt& opt, OptSet oset)
+operator&(const Opt& opt, const OptSet& oset)
     {
-    oset.add(opt);
-    return oset;
+    OptSet res(oset);
+    res.add(opt);
+    return res;
     }
  
 ostream& 
