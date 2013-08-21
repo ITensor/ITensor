@@ -11,8 +11,8 @@ using namespace std;
 Opt::
 Opt()
     :
-    name_("NullOpt"),
-    bval_(false),
+    name_("Null"),
+    type_(None),
     rval_(NAN)
     { }
 
@@ -20,15 +20,24 @@ Opt::
 Opt(const Name& name)
     :
     name_(name),
-    bval_(true),
-    rval_(NAN)
+    type_(Boolean),
+    rval_(1.0)
     { }
 
 Opt::
 Opt(const Name& name, bool bval)
     :
     name_(name),
-    bval_(bval),
+    type_(Boolean),
+    rval_((bval ? 1.0 : 0.0))
+    { }
+
+Opt::
+Opt(const Name& name, const char* sval)
+    :
+    name_(name),
+    type_(String),
+    sval_(sval),
     rval_(NAN)
     { }
 
@@ -36,7 +45,7 @@ Opt::
 Opt(const Name& name, const string& sval)
     :
     name_(name),
-    bval_(true),
+    type_(String),
     sval_(sval),
     rval_(NAN)
     { }
@@ -45,7 +54,7 @@ Opt::
 Opt(const Name& name, int ival)
     :
     name_(name),
-    bval_(true),
+    type_(Numeric),
     rval_(ival)
     { }
 
@@ -53,30 +62,40 @@ Opt::
 Opt(const Name& name, Real rval)
     :
     name_(name),
-    bval_(true),
+    type_(Numeric),
     rval_(rval)
     { }
 
-Opt::
-Opt(const Name& name, 
-       bool bval,
-       const string& sval, 
-       Real rval)
-    :
-    name_(name),
-    bval_(bval),
-    sval_(sval),
-    rval_(rval)
-    { }
+void Opt::
+assertType(Type t) const
+    {
+    if(t != type_)
+        throw ITError("Attempt to access Opt by wrong type");
+    }
 
 ostream& 
 operator<<(ostream & s, const Opt& opt)
     {
-    s << "Opt \"" << opt.name() << "\"\n";
-    s << "  boolVal   = " << (opt.boolVal() ? "true" : "false") << "\n";
-    s << "  realVal   = " << opt.realVal() << "\n";
-    s << "  stringVal = \"" << opt.stringVal() << "\"" 
-      << endl;
+    s << "Opt(\"" << opt.name() << "\",";
+    if(opt.type() == Opt::Boolean)
+        {
+        s << (opt.boolVal() ? "true" : "false");
+        }
+    else
+    if(opt.type() == Opt::Numeric)
+        {
+        s << opt.realVal();
+        }
+    else
+    if(opt.type() == Opt::String)
+        {
+        s << "\"" << opt.stringVal() << "\"";
+        }
+    else
+        {
+        s << "*Null*";
+        }
+    s << ")";
     return s;
     }
 
@@ -342,9 +361,9 @@ operator<<(ostream & s, const OptSet& oset)
     const_it;
 
     if(oset.is_global_)
-        s << "/- Global OptSet -------\n\n";
+        s << "/- Global OptSet -------\n";
     else
-        s << "/- OptSet (only showing overrides of global opts) -------\n\n";
+        s << "/- OptSet --- (showing overrides of global opts) \n";
 
     for(const_it it = oset.opts_.begin();
         it != oset.opts_.end(); ++it)
@@ -352,6 +371,6 @@ operator<<(ostream & s, const OptSet& oset)
         s << it->second << "\n";
         }
 
-    s << "\\------------------" << endl;
+    s << "\\-------------------------" << endl;
     return s;
     }

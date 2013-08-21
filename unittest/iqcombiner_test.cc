@@ -142,7 +142,7 @@ TEST(Product)
     CHECK(hasindex(ucphi,L2));
 
     IQTensor diff = phi - ucphi;
-    CHECK_CLOSE(diff.norm(),0,1E-10);
+    CHECK(diff.norm() < 1E-12);
     }
 
 TEST(Primes)

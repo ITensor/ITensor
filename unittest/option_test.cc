@@ -25,13 +25,28 @@ TEST(BasicUsage)
     CHECK(o1 == o3);
     CHECK(o2 == o3);
 
-    CHECK(Weight() == Weight());
-    CHECK(Weight(1.1) == Weight(1.1));
-    CHECK(Weight(0.3) == Weight(0.2));
-    CHECK(Weight(0.3) == Weight(0.3+1E-20));
+    Opt o4("Weight",0.3);
+    CHECK_EQUAL(o4.name(),"Weight");
+    CHECK_EQUAL(o4.type(),Opt::Numeric);
+    CHECK_CLOSE(o4.realVal(),0.3,1E-5);
 
-    //cout << Quiet() << endl;
-    //cout << Pinning(-0.42) << endl;
+    Opt o5("UseSVD",true);
+    CHECK_EQUAL(o5.name(),"UseSVD");
+    CHECK_EQUAL(o5.type(),Opt::Boolean);
+    CHECK_EQUAL(o5.boolVal(),true);
+    CHECK_THROW(o5.intVal(),ITError);
+
+    Opt o6("UseSVD",false);
+    CHECK_EQUAL(o6.name(),"UseSVD");
+    CHECK_EQUAL(o6.type(),Opt::Boolean);
+    CHECK_EQUAL(o6.boolVal(),false);
+    CHECK_THROW(o6.realVal(),ITError);
+
+    Opt o7("Name","index");
+    CHECK_EQUAL(o7.name(),"Name");
+    CHECK_EQUAL(o7.type(),Opt::String);
+    CHECK_EQUAL(o7.stringVal(),"index");
+    CHECK_THROW(o7.boolVal(),ITError);
     }
 
 TEST(TestOptSet)

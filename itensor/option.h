@@ -15,6 +15,8 @@ class Opt
     typedef std::string
     Name;
 
+    enum Type { Boolean, Numeric, String, None };
+
     Opt();
 
     explicit
@@ -22,16 +24,12 @@ class Opt
 
     Opt(const Name& name, bool bval);
 
+    Opt(const Name& name, const char* sval);
     Opt(const Name& name, const std::string& sval);
 
     Opt(const Name& name, int ival);
 
     Opt(const Name& name, Real rval);
-
-    Opt(const Name& name, 
-           bool bval,
-           const std::string& sval, 
-           Real rval);
 
     //
     // Operators for comparison and sorting
@@ -58,24 +56,27 @@ class Opt
     //
 
     bool
-    boolVal() const { return bval_; }
+    boolVal() const { assertType(Boolean); return bool(rval_); }
 
     const std::string&
-    stringVal() const { return sval_; }
+    stringVal() const { assertType(String); return sval_; }
 
     int
-    intVal() const { return int(rval_); }
+    intVal() const { assertType(Numeric); return int(rval_); }
 
     Real
-    realVal() const { return rval_; }
+    realVal() const { assertType(Numeric); return rval_; }
 
     bool
-    isNull() const { return name_ == "NullOpt"; }
+    isNull() const { return type_ == None; }
     bool
-    isNotNull() const { return name_ != "NullOpt"; }
+    isNotNull() const { return type_ != None; }
 
     const Name&
     name() const { return name_; }
+
+    Type
+    type() const { return type_; }
 
     //operator const Name&() const { return name_; }
 
@@ -93,12 +94,16 @@ class Opt
 
     Name name_;
 
-    bool bval_;
+    Type type_;
+
     std::string sval_;
     Real rval_;
 
     //
     /////////////////////
+
+    void
+    assertType(Type t) const;
 
     };
 
