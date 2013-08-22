@@ -688,7 +688,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D, Spectrum& spec,
     if(cplx)
         {
         ITensor iU(active,newmid,iUU.Columns(1,m));
-        U = U*Complex_1 + iU*Complex_i;
+        U = U + iU*Complex_i;
         }
 
     spec.eigsKept(DD);
@@ -1024,6 +1024,211 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D, Spectrum& spec,
     return svdtruncerr;
 
     } //void diag_hermitian
+
+void 
+eig_decomp(ITensor T, ITensor& V, ITensor& D, Spectrum& spec,
+           const OptSet& opts)
+    {
+    bool cplx = T.isComplex();
+
+#ifdef DEBUG
+    if(T.r() != 2)
+        {
+        Print(T.r());
+        Print(T);
+        Error("eig_decomp requires rank 2 tensor as input");
+        }
+#endif
+
+    Index ti = T.indices().front().noprime();
+    Index tiP = primed(ti);
+
+    if(!hasindex(T,tiP))
+        {
+        Error("eig_decomp: tensor must have indices i,i'"); 
+        }
+
+    if(!spec.doRelCutoff()) T.scaleTo(spec.refNorm());
+
+    //Do the diagonalization
+    Vector Dr,Di;
+    Matrix Ur,Ui;
+    if(!cplx)
+        {
+        Matrix M;
+        T.toMatrix11NoScale(tiP,ti,M);
+        GenEigenValues(M,Dr,Di,Ur,Ui); 
+        }
+    else
+        {
+        Matrix Mr,Mi;
+        ITensor rT = realPart(T),
+                iT = imagPart(T);
+        rT.scaleTo(T.scale());
+        iT.scaleTo(T.scale());
+        rT.toMatrix11NoScale(tiP,ti,Mr);
+        iT.toMatrix11NoScale(tiP,ti,Mi);
+        ComplexEigenvalues(Mr,Mi,Dr,Di,Ur,Ui); 
+        }
+
+
+    Index newmid("d",ti.m(),ti.type());
+    V = ITensor(ti,newmid,Ur);
+    D = ITensor(newmid,Dr);
+
+    if(Norm(Ui.TreatAsVector()) > 1E-12)
+        {
+        V += ITensor(ti,newmid,Ui)*Complex_i;
+        }
+
+    if(Norm(Di) > 1E-12)
+        {
+        D += ITensor(newmid,Di)*Complex_i;
+        }
+
+    D *= T.scale();
+    }
+
+void 
+eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
+           const OptSet& opts)
+    {
+    bool cplx = T.isComplex();
+
+#ifdef DEBUG
+    if(T.r() != 2)
+        {
+        Print(T.r());
+        Print(T);
+        Error("eig_decomp requires rank 2 tensor as input");
+        }
+#endif
+
+    IQIndex ti = T.indices().front().noprime();
+    IQIndex tiP = primed(ti);
+
+    if(!hasindex(T,tiP))
+        {
+        Error("eig_decomp: tensor must have indices i,i'"); 
+        }
+
+    const int nblocks = T.blocks().size();
+
+    vector<Matrix> rmatrix(nblocks),
+                   imatrix(nblocks);
+    vector<Vector> reigs(nblocks),
+                   ieigs(nblocks);
+
+    if(T.empty())
+        throw ResultIsZero("T has no blocks");
+
+    if(spec.doRelCutoff())
+        {
+        Real maxLogNum = -200;
+        T.scaleOutNorm();
+        Foreach(const ITensor& t, T.blocks())
+            {
+            maxLogNum = max(maxLogNum,t.scale().logNum());
+            }
+        spec.refNorm() = LogNumber(maxLogNum,1);
+        }
+
+    T.scaleTo(spec.refNorm());
+
+    //1. Diagonalize each ITensor within rho.
+    //   Store results in mmatrix and mvector.
+    int itenind = 0;
+    Foreach(const ITensor& t, T.blocks())
+        {
+        Index a = t.indices().front().noprime();
+        Index aP = primed(a);
+
+        Matrix &Ur = rmatrix.at(itenind),
+               &Ui = imatrix.at(itenind);
+        Vector &dr = reigs.at(itenind),
+               &di = ieigs.at(itenind);
+
+        //Diag ITensors within rho
+        if(!cplx)
+            {
+            Matrix M;
+            t.toMatrix11NoScale(aP,a,M);
+            GenEigenValues(M,dr,di,Ur,Ui);
+            }
+        else
+            {
+            ITensor ret = realPart(t),
+                    imt = imagPart(t);
+            ret.scaleTo(spec.refNorm());
+            imt.scaleTo(spec.refNorm());
+            Matrix Mr,Mi;
+            ret.toMatrix11NoScale(aP,a,Mr);
+            imt.toMatrix11NoScale(aP,a,Mi);
+            ComplexEigenvalues(Mr,Mi,dr,di,Ur,Ui);
+            }
+
+        ++itenind;
+        }
+
+
+    //Build blocks for unitary diagonalizing rho
+    vector<ITensor> Vblocks,
+                    Dblocks;
+
+    //Also form new Link IQIndex with appropriate m's for each block
+    IQIndex::Storage iq;
+    iq.reserve(T.blocks().size());
+
+    itenind = 0;
+    Foreach(const ITensor& t, T.blocks())
+        {
+        Vector &dr = reigs.at(itenind),
+               &di = ieigs.at(itenind);
+        Matrix &Ur = rmatrix.at(itenind),
+               &Ui = imatrix.at(itenind);
+
+        Index nm("d",dr.Length());
+
+        Index act = t.indices().front().noprime();
+
+        iq.push_back(IndexQN(nm,qn(ti,act)));
+
+        ITensor blk(act,nm,Ur);
+        if(Norm(Ui.TreatAsVector()) > 1E-12)
+            {
+            blk += Complex_i*ITensor(act,nm,Ui);
+            }
+        Vblocks.push_back(blk);
+
+        //ITensor Dblk(primed(nm),nm,dr);
+        ITensor Dblk(nm,dr);
+        if(Norm(di) > 1E-12)
+            {
+            Dblk += Complex_i*ITensor(nm,dr);
+            }
+        Dblocks.push_back(Dblk);
+
+        ++itenind;
+        }
+
+    if(iq.size() == 0)
+        {
+        throw ResultIsZero("iq.size() == 0");
+        }
+
+    IQIndex newmid("L",iq,-ti.dir());
+
+    V = IQTensor(conj(ti),conj(newmid));
+    D = IQTensor(primed(newmid),newmid);
+    for(size_t j = 0; j < nblocks; ++j)
+        {
+        D += Dblocks.at(j);
+        V += Vblocks.at(j);
+        }
+
+    D *= spec.refNorm();
+
+    }
 
 
 struct PseudoInvert
