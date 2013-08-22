@@ -37,15 +37,9 @@ class IQTSparse
     IQTSparse(const IQIndex& i1, const IQIndex& i2, 
                   const IQIndex& i3, const IQIndex& i4);
 
-    explicit
-    IQTSparse(std::istream& s) { read(s); }
-
     //
     // Accessor Methods
     //
-
-    const IQIndex& 
-    index(int j) const { return is_->index(j); }
 
     int 
     r() const { return is_->r(); }
