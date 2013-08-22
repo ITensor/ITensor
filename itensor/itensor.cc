@@ -1377,9 +1377,9 @@ soloReal()
     ITENSOR_CHECK_NULL
     if(!r_.unique())
         { 
-        VectorRef oldv(r_->v);
-        r_ = boost::make_shared<ITDat>();
-        r_->v = oldv;
+        boost::shared_ptr<ITDat> newr = boost::make_shared<ITDat>();
+        newr->v = r_->v;
+        r_.swap(newr);
         }
     }
 
@@ -1390,9 +1390,9 @@ soloImag()
 
     if(!i_.unique())
         { 
-        VectorRef oldv(i_->v);
-        i_ = boost::make_shared<ITDat>();
-        i_->v = oldv;
+        boost::shared_ptr<ITDat> newi = boost::make_shared<ITDat>();
+        newi->v = i_->v;
+        i_.swap(newi);
         }
 	}
 

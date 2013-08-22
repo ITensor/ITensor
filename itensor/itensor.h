@@ -581,6 +581,9 @@ class ITDat
     explicit 
     ITDat(const ITDat& other);
 
+    int
+    size() const { return v.Length(); }
+
     void
     read(std::istream& s);
 
@@ -671,15 +674,19 @@ template <typename Callable>
 ITensor& ITensor::
 mapElems(const Callable& f)
     {
+    if(isComplex())
+        Error("mapElems only works for real ITensor");
     solo();
     scaleTo(1);
-    for(int j = 1; j <= r_->v.Length(); ++j)
+    for(int j = 1; j <= r_->size(); ++j)
         r_->v(j) = f(r_->v(j));
+    /*
     if(i_)
         {
-        for(int j = 1; j <= i_->v.Length(); ++j)
+        for(int j = 1; j <= i_->size(); ++j)
             i_->v(j) = f(i_->v(j));
         }
+        */
     return *this;
     }
 
