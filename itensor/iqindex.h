@@ -96,23 +96,23 @@ class IQIndex : public Index
 
     int 
     primeLevel() const { return Index::primeLevel(); }
-    void 
+    IQIndex& 
     primeLevel(int val);
 
     //
     // Prime level methods
     //
 
-    void 
+    IQIndex& 
     prime(int inc = 1);
 
-    void 
+    IQIndex& 
     prime(IndexType type, int inc = 1);
 
-    void 
+    IQIndex& 
     noprime(IndexType type = All);
 
-    void 
+    IQIndex& 
     mapprime(int plevold, int plevnew, IndexType type = All);
 
     //
@@ -126,13 +126,13 @@ class IQIndex : public Index
     // Other methods
     //
 
-    void 
+    IQIndex& 
     conj();
 
     void 
     write(std::ostream& s) const;
 
-    void 
+    IQIndex& 
     read(std::istream& s);
 
     //

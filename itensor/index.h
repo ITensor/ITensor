@@ -59,7 +59,7 @@ class Index
     int 
     primeLevel() const;
     // Sets the prime level to a specified value.
-    void 
+    Index& 
     primeLevel(int plev);
 
     // Returns a unique Real number identifying this Index.
@@ -92,21 +92,21 @@ class Index
     //
 
     // Increase primelevel by 1 (or by optional amount inc)
-    void 
+    Index& 
     prime(int inc = 1);
 
     // Increase primelevel by 1 (or optional amount inc)
     // if type matches this Index or type==All
-    void 
+    Index& 
     prime(IndexType type, int inc = 1);
 
     // Set primelevel to zero (optionally only if type matches)
-    void 
-    noprime(IndexType type = All) { prime(type,-primelevel_); }
+    Index& 
+    noprime(IndexType type = All) { prime(type,-primelevel_); return *this; }
 
     // Switch primelevel from plevold to plevnew
     // Has no effect if plevold doesn't match current primelevel
-    void 
+    Index& 
     mapprime(int plevold, int plevnew, IndexType type = All);
 
     //
@@ -148,7 +148,7 @@ class Index
     write(std::ostream& s) const;
 
     // Read Index from binary input stream.
-    void 
+    Index& 
     read(std::istream& s);
 
     //

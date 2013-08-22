@@ -189,7 +189,7 @@ isNull() const { return (p == IndexDat::Null()); }
 int Index::
 primeLevel() const { return primelevel_; }
 
-void Index::
+Index& Index::
 primeLevel(int plev) 
     { 
     primelevel_ = plev; 
@@ -197,6 +197,7 @@ primeLevel(int plev)
     if(primelevel_ < 0)
         Error("Negative primeLevel");
 #endif
+    return *this;
     }
 
 bool Index::
@@ -218,7 +219,7 @@ operator<(const Index& other) const
 IndexVal Index::
 operator()(int i) const { return IndexVal(*this,i); }
 
-void Index::
+Index& Index::
 mapprime(int plevold, int plevnew, IndexType type)
     {
     if(primelevel_ == plevold)
@@ -234,9 +235,10 @@ mapprime(int plevold, int plevnew, IndexType type)
 #endif
             }
         }
+    return *this;
     }
 
-void Index::
+Index& Index::
 prime(int inc) 
     { 
     primelevel_ += inc; 
@@ -246,9 +248,10 @@ prime(int inc)
         Error("Negative primeLevel");
         }
 #endif
+    return *this;
     }
 
-void Index::
+Index& Index::
 prime(IndexType type, int inc)
     {
     if(type == this->type() || type == All)
@@ -261,6 +264,7 @@ prime(IndexType type, int inc)
             }
 #endif
         }
+    return *this;
     }
 
 void Index::
@@ -283,7 +287,7 @@ write(ostream& s) const
     s.write(p->sname.data(),nlength+1);
     }
 
-void Index::
+Index& Index::
 read(istream& s)
     {
     s.read((char*) &primelevel_,sizeof(primelevel_));
@@ -311,6 +315,8 @@ read(istream& s)
     delete newname;
 
     p = boost::make_shared<IndexDat>(ss,mm,IntToIndexType(t),ur);
+
+    return *this;
     }
 
 const Index& Index::
