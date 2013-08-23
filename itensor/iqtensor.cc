@@ -1305,6 +1305,16 @@ takeImagPart()
     return *this;
     }
 
+void IQTensor::
+pseudoInvert(Real cutoff)
+    {
+    dat.solo();
+    Foreach(ITensor& t, dat.nc())
+        {
+        t.pseudoInvert();
+        }
+    }
+
 
 Real 
 Dot(IQTensor x, const IQTensor& y)

@@ -11,19 +11,16 @@ include ../options.mk
 SOURCES=option.cc 
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
-#SOURCES+= itsparse.cc
-#SOURCES+= iqindex.cc 
-#SOURCES+= iqtensor.cc 
-#SOURCES+= iqcombiner.cc 
-#SOURCES+= iqtsparse.cc
-#SOURCES+= svdalgs.cc 
-#SOURCES+= mps.cc 
-#SOURCES+= mpo.cc 
-#SOURCES+= tevol.cc
+SOURCES+= iqindex.cc 
+SOURCES+= iqtensor.cc 
+SOURCES+= iqcombiner.cc 
+SOURCES+= svdalgs.cc 
+SOURCES+= mps.cc 
+SOURCES+= mpo.cc 
+SOURCES+= tevol.cc
 
 HEADERS=option.h global.h allocator.h real.h permutation.h index.h prodstats.h \
-        indexset.h counter.h itensor.h 
-#HEADERS+= qn.h iqindex.h iqtdat.h iqtensor.h \
+        indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h model.h\
@@ -32,7 +29,7 @@ HEADERS=option.h global.h allocator.h real.h permutation.h index.h prodstats.h \
         hams/tJChain.h \
         model/spinhalf.h model/spinone.h model/hubbard.h model/spinless.h\
         model/tj.h model/Z3.h\
-        eigensolver.h localop.h localmpo.h localmposet.h itsparse.h iqtsparse.h\
+        eigensolver.h localop.h localmpo.h localmposet.h \
         partition.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h\
         integrators.h idmrg.h
 
@@ -106,18 +103,12 @@ indexset.o: $(DEPHEADERS)
 DEPHEADERS+= allocator.h itensor.h counter.h
 itensor.o: $(DEPHEADERS)
 .debug_objs/itensor.o: $(DEPHEADERS)
-DEPHEADERS+= itsparse.h
-itsparse.o: $(DEPHEADERS)
-.debug_objs/itsparse.o: $(DEPHEADERS)
 DEPHEADERS+= qn.h iqindex.h
 iqindex.o: $(DEPHEADERS)
 .debug_objs/iqindex.o: $(DEPHEADERS)
 DEPHEADERS+= iqtdat.h iqtensor.h qcounter.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
-DEPHEADERS+= iqtsparse.h
-iqtsparse.o: $(DEPHEADERS)
-.debug_objs/iqtsparse.o: $(DEPHEADERS)
 DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h
 iqcombiner.o: $(DEPHEADERS)
 .debug_objs/iqcombiner.o: $(DEPHEADERS)

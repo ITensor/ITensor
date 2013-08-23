@@ -22,7 +22,6 @@
 struct ProductProps;
 class Combiner;
 class ITDat;
-class ITSparse;
 
 //
 // ITensor
@@ -441,6 +440,9 @@ class ITensor
     void 
     assignToVec(VectorRef v) const;
 
+    void
+    pseudoInvert(Real cutoff = 0.);
+
     //
     // Typedefs
     //
@@ -453,9 +455,6 @@ class ITensor
 
     typedef Combiner 
     CombinerT;
-
-    typedef ITSparse
-    SparseT;
 
     //Deprecated methods --------------------------
 
@@ -545,10 +544,8 @@ class ITensor
 
     friend class commaInit;
 
-    friend class ITSparse;
-
     friend void 
-    product(const ITSparse& S, const ITensor& T, ITensor& res);
+    contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res);
 
     friend std::ostream& 
     operator<<(std::ostream & s, const ITensor& T);
@@ -986,11 +983,6 @@ trace(Tensor T,
     T.trace(i1,i2,i3,i4,i5,i6,i7,i8); 
     return T; 
     }
-
-int
-_ind(const IndexSet<Index>& is,
-     int i1, int i2, int i3, int i4, 
-     int i5, int i6, int i7, int i8);
 
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);

@@ -141,7 +141,7 @@ svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
         Error("b+2 < r_orth_lim_");
         }
 
-    SparseT D;
+    Tensor D;
     svd(AA,A_[b],D,A_[b+1],spectrum_.at(b),opts);
 
     //Push singular values/amplitudes

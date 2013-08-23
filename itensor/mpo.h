@@ -29,9 +29,6 @@ class MPOt : private MPSt<Tensor>
     typedef typename Tensor::IndexT 
     IndexT;
 
-    typedef typename Tensor::SparseT
-    SparseT;
-
     typedef typename Tensor::IndexValT 
     IndexValT;
 

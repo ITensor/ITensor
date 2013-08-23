@@ -13,7 +13,6 @@ SOURCES+= real_test.cc
 SOURCES+= option_test.cc
 SOURCES+= index_test.cc
 SOURCES+= itensor_test.cc
-SOURCES+= itsparse_test.cc
 SOURCES+= combiner_test.cc
 SOURCES+= iqindex_test.cc
 SOURCES+= iqcombiner_test.cc
@@ -23,7 +22,6 @@ SOURCES+= mpo_test.cc
 SOURCES+= eigensolver_test.cc
 SOURCES+= regression_test.cc
 SOURCES+= svdalgs_test.cc
-SOURCES+= iqtsparse_test.cc
 SOURCES+= webpage_test.cc
 SOURCES+= localmpo_test.cc
 SOURCES+= indexset_test.cc
@@ -91,10 +89,6 @@ LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/itensor.h
 itensor_test.o: $(LIBHEADERS)
 .debug_objs/itensor_test.o: $(LIBHEADERS)
 
-LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/itsparse.h
-itsparse_test.o: $(LIBHEADERS)
-.debug_objs/itsparse_test.o: $(LIBHEADERS)
-
 LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/combiner.h
 combiner_test.o: $(LIBHEADERS)
 .debug_objs/combiner_test.o: $(LIBHEADERS)
@@ -102,14 +96,6 @@ combiner_test.o: $(LIBHEADERS)
 LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/iqcombiner.h
 iqcombiner_test.o: $(LIBHEADERS)
 .debug_objs/iqcombiner_test.o: $(LIBHEADERS)
-
-LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/iqtsparse.h
-iqtensor_test.o: $(LIBHEADERS)
-.debug_objs/iqtensor_test.o: $(LIBHEADERS)
-
-LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/iqtsparse.h
-iqtsparse_test.o: $(LIBHEADERS)
-.debug_objs/iqtsparse_test.o: $(LIBHEADERS)
 
 LIBHEADERS+= $(ITENSOR_INCLUDEDIR)/mps.h
 mps_test.o: $(LIBHEADERS)

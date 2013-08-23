@@ -148,17 +148,17 @@ TEST(Constructors)
     CHECK(hasindex(t6,a2));
     CHECK_CLOSE(t6.norm(),0,1E-10);
 
-    Real a = ran1();
+    const Real a = -0.83;
     ITensor t7(l1,l2,a);
 
     CHECK_EQUAL(t7.r(),2);
     CHECK(hasindex(t7,l1));
     CHECK(hasindex(t7,l2));
-    CHECK_CLOSE(t7(l1(1),l2(1)),a,1E-10);
-    CHECK_CLOSE(t7(l1(1),l2(2)),0,1E-10);
-    CHECK_CLOSE(t7(l1(2),l2(1)),0,1E-10);
-    CHECK_CLOSE(t7(l1(2),l2(2)),a,1E-10);
-    CHECK_CLOSE(t7.norm(),sqrt(min(l1.m(),l2.m()))*fabs(a),1E-10);
+    CHECK_CLOSE(t7(l1(1),l2(1)),a,1E-5);
+    CHECK_CLOSE(t7(l1(1),l2(2)),0,1E-5);
+    CHECK_CLOSE(t7(l1(2),l2(1)),0,1E-5);
+    CHECK_CLOSE(t7(l1(2),l2(2)),a,1E-5);
+    CHECK_CLOSE(t7.norm(),sqrt(min(l1.m(),l2.m()))*fabs(a),1E-5);
 
     Matrix M(l1.m(),b3.m()); 
     M(1,1) = 11; M(1,2) = 12; M(1,3) = 13;

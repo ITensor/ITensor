@@ -106,7 +106,7 @@ truncate(vector<Real>& alleig, int& m, Real& docut, const Spectrum& spec)
 
 void 
 svdRank2(ITensor A, const Index& ui, const Index& vi,
-         ITensor& U, ITSparse& D, ITensor& V, Spectrum& spec,
+         ITensor& U, ITensor& D, ITensor& V, Spectrum& spec,
          const OptSet& opts)
     {
     const bool cplx = A.isComplex();
@@ -193,7 +193,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
     
     Index uL("ul",m,Link),vL("vl",m,Link);
 
-    D = ITSparse(uL,vL,DD);
+    D = ITensor(uL,vL,DD);
     D *= A.scale();
     U = ITensor(ui,uL,UU.Columns(1,m));
     V = ITensor(vL,vi,VV.Rows(1,m));
@@ -233,7 +233,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
 
 void
 svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
-         IQTensor& U, IQTSparse& D, IQTensor& V, Spectrum& spec,
+         IQTensor& U, IQTensor& D, IQTensor& V, Spectrum& spec,
          const OptSet& opts)
     {
     const bool cplx = A.isComplex();
@@ -428,7 +428,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         iVblock.reserve(Nblock);
         }
 
-    vector<ITSparse> Dblock;
+    vector<ITensor> Dblock;
     Dblock.reserve(Nblock);
 
     itenind = 0;
@@ -482,7 +482,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         Index r("r",this_m);
         Riq.push_back(IndexQN(r,qn(vI,*vi)));
 
-        Dblock.push_back(ITSparse(l,r,thisD.SubVector(1,this_m)));
+        Dblock.push_back(ITensor(l,r,thisD.SubVector(1,this_m)));
 
         Ublock.push_back(ITensor(*ui,l,UU.Columns(1,this_m)));
         Vblock.push_back(ITensor(r,*vi,VV.Rows(1,this_m)));
@@ -501,7 +501,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     IQIndex L("L",Liq,uI.dir()), R("R",Riq,vI.dir());
 
-    D = IQTSparse(L,R);
+    D = IQTensor(L,R);
     U = IQTensor(uI,conj(L));
     V = IQTensor(conj(R),vI);
 
@@ -565,7 +565,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
 
 Real
-diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, Spectrum& spec,
+diag_hermitian(ITensor rho, ITensor& U, ITensor& D, Spectrum& spec,
                const OptSet& opts)
     {
     bool cplx = rho.isComplex();
@@ -682,7 +682,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, Spectrum& spec,
 
     Index newmid(active.rawname(),m,active.type());
     U = ITensor(active,newmid,UU.Columns(1,m));
-    D = ITSparse(primed(newmid),newmid,DD);
+    D = ITensor(primed(newmid),newmid,DD);
     D *= rho.scale();
 
     if(cplx)
@@ -697,7 +697,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, Spectrum& spec,
     }
 
 Real
-diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
+diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D, Spectrum& spec,
                const OptSet& opts)
     {
     bool cplx = rho.isComplex();
@@ -905,7 +905,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
     //Build blocks for unitary diagonalizing rho
     vector<ITensor> blocks,
                     iblocks;
-    vector<ITSparse> Dblocks;
+    vector<ITensor> Dblocks;
     blocks.reserve(rho.blocks().size());
     Dblocks.reserve(rho.blocks().size());
     if(cplx) iblocks.reserve(rho.blocks().size());
@@ -967,7 +967,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
             iblocks.push_back(ITensor(act,nm,imatrix.at(itenind).Columns(1,this_m)));
             }
 
-        Dblocks.push_back(ITSparse(primed(nm),nm,thisD.SubVector(1,this_m)));
+        Dblocks.push_back(ITensor(primed(nm),nm,thisD.SubVector(1,this_m)));
 
         ++itenind;
         }
@@ -982,7 +982,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
     IQIndex newmid("qlink",iq, -active.dir());
 
     U = IQTensor(conj(active),conj(newmid));
-    D = IQTSparse(primed(newmid),conj(newmid));
+    D = IQTensor(primed(newmid),conj(newmid));
     for(size_t j = 0; j < blocks.size(); ++j)
         {
         D += Dblocks.at(j);

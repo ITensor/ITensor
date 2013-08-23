@@ -20,9 +20,9 @@
 // Factors a tensor AA such that AA=U*D*V
 // with D diagonal, real, and non-negative.
 //
-template<class Tensor, class SparseT>
+template<class Tensor>
 Spectrum
-svd(const Tensor& AA, Tensor& U, SparseT& D, Tensor& V,
+svd(const Tensor& AA, Tensor& U, Tensor& D, Tensor& V,
     const OptSet& opts = Global::opts())
     {
     Spectrum spec;
@@ -32,9 +32,9 @@ svd(const Tensor& AA, Tensor& U, SparseT& D, Tensor& V,
 
 //SVD with Spectrum object controlling truncation
 //and storing eigs (squares of singular values) on return
-template<class Tensor, class SparseT>
+template<class Tensor>
 void 
-svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V, 
+svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
     Spectrum& spec,
     const OptSet& opts = Global::opts());
 
@@ -98,9 +98,9 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 // Result is unitary tensor U and diagonal sparse tensor D
 // such that M == conj(U)*D*primed(U)
 //
-template<class Tensor, class SparseT>
+template<class Tensor>
 Spectrum 
-diagHermitian(const Tensor& M, Tensor& U, SparseT& D,
+diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
               const OptSet& opts = Global::opts())
     {
     Spectrum spec;
@@ -110,9 +110,9 @@ diagHermitian(const Tensor& M, Tensor& U, SparseT& D,
 
 //Version accepting a Spectrum object which
 //stores eigs on return
-template<class Tensor, class SparseT>
+template<class Tensor>
 void 
-diagHermitian(const Tensor& M, Tensor& U, SparseT& D, 
+diagHermitian(const Tensor& M, Tensor& U, Tensor& D, 
               Spectrum& spec,
               const OptSet& opts = Global::opts());
 
@@ -152,9 +152,9 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
 // where V is the inverse of the diagonal tensor
 // appearing in the SVD
 //
-template<class Tensor, class SparseT>
+template<class Tensor>
 Spectrum 
-csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R, 
+csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
      const OptSet& opts = Global::opts())
     {
     Spectrum spec;
@@ -162,9 +162,9 @@ csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R,
     return spec;
     }
 
-template<class Tensor, class SparseT>
+template<class Tensor>
 void 
-csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R, 
+csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
      Spectrum& spec, 
      const OptSet& opts = Global::opts());
 
@@ -178,17 +178,17 @@ csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R,
 
 void 
 svdRank2(ITensor A, const Index& ui, const Index& vi,
-         ITensor& U, ITSparse& D, ITensor& V, Spectrum& spec,
+         ITensor& U, ITensor& D, ITensor& V, Spectrum& spec,
          const OptSet& opts = Global::opts());
 
 void 
 svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
-         IQTensor& U, IQTSparse& D, IQTensor& V, Spectrum& spec,
+         IQTensor& U, IQTensor& D, IQTensor& V, Spectrum& spec,
          const OptSet& opts = Global::opts());
 
-template<class Tensor, class SparseT>
+template<class Tensor>
 void 
-svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V, 
+svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
     Spectrum& spec, 
     const OptSet& opts)
     {
@@ -255,8 +255,8 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
             }
         else
             {
-            spec.minm(D.index(1).m());
-            spec.maxm(D.index(1).m());
+            spec.minm(D.indices().front().m());
+            spec.maxm(D.indices().front().m());
             }
         }
 
@@ -271,9 +271,9 @@ svd(Tensor AA, Tensor& U, SparseT& D, Tensor& V,
 
     } //svd
 
-template<class Tensor, class SparseT>
+template<class Tensor>
 void 
-csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R, 
+csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
      Spectrum& spec, 
      const OptSet& opts)
     {
@@ -283,7 +283,7 @@ csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R,
     CombinerT;
 
     Tensor UU(L),VV(R);
-    SparseT D(V);
+    Tensor D(V);
     svd(AA,UU,D,VV,spec,opts);
 
     L = UU*D;
@@ -294,11 +294,11 @@ csvd(const Tensor& AA, Tensor& L, SparseT& V, Tensor& R,
     }
 
 Real 
-diag_hermitian(ITensor rho, ITensor& U, ITSparse& D, Spectrum& spec,
+diag_hermitian(ITensor rho, ITensor& U, ITensor& D, Spectrum& spec,
                const OptSet& opts = Global::opts());
 
 Real 
-diag_hermitian(IQTensor rho, IQTensor& U, IQTSparse& D, Spectrum& spec,
+diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D, Spectrum& spec,
                const OptSet& opts = Global::opts());
 
 template<class Tensor, class LocalOpT>
@@ -311,8 +311,6 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     IndexT;
     typedef typename Tensor::CombinerT 
     CombinerT;
-    typedef typename Tensor::SparseT 
-    SparseT;
 
     if(isZero(AA,Opt("Fast"))) 
         {
@@ -375,7 +373,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
         }
 
     Tensor U;
-    SparseT D;
+    Tensor D;
     Real truncerr = diag_hermitian(rho,U,D,spec,opts);
     spec.truncerr(truncerr);
 
@@ -391,9 +389,9 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
 
 
-template<class Tensor, class SparseT>
+template<class Tensor>
 void 
-diagHermitian(const Tensor& M, Tensor& U, SparseT& D, Spectrum& spec,
+diagHermitian(const Tensor& M, Tensor& U, Tensor& D, Spectrum& spec,
               const OptSet& opts)
     {
     typedef typename Tensor::IndexT 
@@ -453,8 +451,6 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
     IndexT;
     typedef typename Tensor::CombinerT 
     CombinerT;
-    typedef typename Tensor::SparseT
-    SparseT;
 
     if(isZero(T,Opt("Fast"))) 
         throw ResultIsZero("orthoDecomp: T is zero");
@@ -501,7 +497,7 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
         T = Acomb * T * Bcomb;
 
 
-        SparseT D;
+        Tensor D;
         svdRank2(T,Acomb.right(),Bcomb.right(),A,D,B,spec,opts);
 
         A = conj(Acomb) * A;

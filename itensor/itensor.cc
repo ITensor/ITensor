@@ -15,6 +15,12 @@ using boost::make_shared;
 #define ITENSOR_CHECK_NULL
 #endif
 
+int
+_ind(const IndexSet<Index>& is,
+     int i1, int i2, int i3, int i4, 
+     int i5, int i6, int i7, int i8);
+
+
 int static
 IT_TypeToInt(ITensor::Type t)
     {
@@ -714,7 +720,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2)
     solo(); 
     scaleTo(1);
 
-    if(type_ == Diag && iv1.m() != iv2.m())
+    if(type_ == Diag && iv1.i != iv2.i)
         {
         convertToDense();
         }
@@ -733,7 +739,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2) const
     ITENSOR_CHECK_NULL
     if(type_ == Diag)
         {
-        if(iv1.m() != iv2.m()) return 0;
+        if(iv1.i != iv2.i) return 0;
         return r_->v(iv1.i);
         }
     return scale_.real()*r_->v[_ind2(iv1,iv2)];
@@ -772,6 +778,31 @@ operator()(const IndexVal& iv1, const IndexVal& iv2,
         return scale_.real()*r_->v(di);
         }
     return scale_.real()*r_->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
+    }
+
+//Process IndexVals for element access when ITensor
+//has type_ == Diag
+int ITensor::
+_diag_ind8(const IndexVal& iv1, const IndexVal& iv2, 
+           const IndexVal& iv3, const IndexVal& iv4,
+           const IndexVal& iv5, const IndexVal& iv6,
+           const IndexVal& iv7, const IndexVal& iv8) const
+    {
+    if(iv1 == IndexVal::Null())
+        Error("Null IndexVal argument");
+
+    array<const IndexVal*,NMAX> iv = 
+        {{ &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
+
+    //Loop over the given IndexVals
+    for(int j = 1; j < is_.r(); ++j)
+        {
+        const IndexVal& J = *iv[j];
+        if(J == IndexVal::Null()) break;
+        if(J.i != iv1.i) return -1; //off-diagonal, signal with a -1
+        //otherwise J.i == iv1.i, continue checking all non-Null IndexVals
+        }
+    return iv1.i;
     }
 
 
@@ -1306,6 +1337,24 @@ assignToVec(VectorRef v) const
     v *= scale_.real();
     }
 
+void ITensor::
+pseudoInvert(Real cutoff)
+    {
+    if(type_ != Diag)
+        Error("pseudoInvert only defined for ITensor of type()==ITensor::Diag");
+    if(this->isComplex())
+        Error("pseudoInvert currently only defined for real ITensor");
+    solo();
+    scale_.pow(-1); //succeeds even if scale_ == 0
+    for(int j = 1; j <= r_->size(); ++j)
+        {
+        if(r_->v(j) > cutoff)
+            r_->v(j) = 1./r_->v(j);
+        else
+            r_->v(j) = 0;
+        }
+    }
+
 
 void ITensor::
 reshapeDat(const Permutation& P)
@@ -1684,30 +1733,6 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
     return _ind(is_,ja[0],ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7]);
     }
 
-//Process IndexVals for element access when ITensor
-//has type_ == Diag
-int ITensor::
-_diag_ind8(const IndexVal& iv1, const IndexVal& iv2, 
-           const IndexVal& iv3, const IndexVal& iv4,
-           const IndexVal& iv5, const IndexVal& iv6,
-           const IndexVal& iv7, const IndexVal& iv8) const
-    {
-    if(iv1 == IndexVal::Null())
-        Error("Null IndexVal argument");
-
-    array<const IndexVal*,NMAX> iv = 
-        {{ &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
-
-    //Loop over the given IndexVals
-    for(int j = 1; j < is_.r(); ++j)
-        {
-        const IndexVal& J = *iv[j];
-        if(J == IndexVal::Null()) break;
-        if(J.i != iv1.i) return -1; //off-diagonal, signal with a -1
-        //otherwise J.i == iv1.i, continue checking all non-Null IndexVals
-        }
-    return iv1.i;
-    }
 
 
 //
@@ -2144,14 +2169,247 @@ directMultiply(const ITensor& L,
     } //directMultiply
 
 
+void
+contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
+    {
+#ifdef DEBUG
+    if(!(S.type_ == ITensor::Diag && T.type_ == ITensor::Dense))
+        Error("contractDiagDense assumes first argument Diag, second Dense");
+#endif
+
+    res.type_ = ITensor::Dense;
+
+    /*
+    if(T.isComplex())
+        {
+        ITensor ri;
+        product(S,imagPart(T),ri);
+        product(S,realPart(T),res);
+        if(res.scale_.sign() != 0)
+            {
+            ri.scaleTo(res.scale_);
+            }
+        else
+            {
+            res.soloReal();
+            res.r_->v *= 0;
+            res.scale_ = ri.scale_;
+            }
+        res.i_.swap(ri.r_);
+        return;
+        }
+        */
+
+    //This is set to true if some of the indices
+    //of res come from S.
+    //If false, there is an extra loop in the sum
+    //tracing over the elements of S.
+    bool res_has_Sind = false; 
+
+    //The ti pointers connect
+    //the indices of T to either
+    //the Counter created below 
+    //or the diagonal index of S
+    //
+    //The ri pointer does the same
+    //but for res
+    const int zero = 0;
+    array<const int*,NMAX+1> ti,
+                             ri; 
+
+    for(int n = 0; n <= NMAX; ++n)
+        {
+        ti[n] = &zero;
+        ri[n] = &zero;
+        }
+
+    //Index that will loop over 
+    //the diagonal elems of S
+    int diag_ind = 0;
+    const int dsize = S.r_->size();
+
+    //Create a Counter that only loops
+    //over the free Indices of T
+    Counter tc;
+
+    res.is_.clear();
+    int alloc_size = 1;
+
+    //
+    // tcon[j] = i means that the 
+    // jth Index of T is contracted
+    // with the ith Index of S
+    //
+    // tcon[j] = 0 means not contracted
+    //
+    // (scon is similar but for S)
+    //
+    array<int,NMAX+1> tcon,
+                      scon;
+    tcon.assign(0);
+    scon.assign(0);
+    int ncon = 0; //number contracted
+
+    //Analyze contracted Indices
+    for(int i = 1; i <= S.r(); ++i)
+    for(int j = 1; j <= T.r(); ++j)
+        if(S.is_.index(i) == T.is_.index(j))
+            {
+            scon[i] = j;
+            tcon[j] = i;
+
+            ++ncon;
+            }
+
+    //Put uncontracted m != 1 Indices
+    //of S into res
+    for(int i = 1; i <= S.is_.rn(); ++i)
+        if(scon[i] == 0)
+            {
+            res.is_.addindex(S.is_[i-1]);
+            alloc_size *= S.is_[i-1].m();
+            res_has_Sind = true;
+
+            //Link ri pointer to diagonal of S
+            ri[res.is_.r()] = &(diag_ind);
+            }
+
+    //Put uncontracted m != 1 Indices
+    //of T into res
+    for(int i = 1; i <= T.is_.rn(); ++i)
+        if(tcon[i] == 0)
+            {
+            res.is_.addindex(T.is_[i-1]);
+            alloc_size *= T.is_[i-1].m();
+
+            //Init appropriate elements
+            //of Counter tc
+            tc.n[++tc.rn] = T.is_[i-1].m();
+            ++tc.r;
+            //Link up ti pointer
+            //cerr << format("Linking ti[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % i % tc.rn % tc.rn % (tc.n[tc.rn]);
+            ti[i] = &(tc.i[tc.rn]);
+
+            //Link ri pointer to free index of T
+            //cerr << format("Linking ri[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % res.is_.r() % tc.rn % tc.rn % (tc.n[tc.rn]);
+            ri[res.is_.r()] = &(tc.i[tc.rn]);
+            }
+        else
+            {
+            //If contracted, will
+            //be summed with diag of S
+            ti[i] = &(diag_ind);
+            }
+
+    //Put uncontracted m == 1 Indices
+    //of S into res
+    for(int i = S.is_.rn()+1; i <= S.r(); ++i)
+        if(scon[i] == 0)
+            {
+            res.is_.addindex(S.is_[i-1]);
+            }
+
+    //Put uncontracted m == 1 Indices
+    //of T into res
+    for(int i = T.is_.rn()+1; i <= T.r(); ++i)
+        if(tcon[i] == 0)
+            {
+            res.is_.addindex(T.is_.index(i));
+            }
+
+#ifdef DEBUG
+    if(res.is_.r() != (S.r()+T.r() - 2*ncon))
+        {
+        Print(res.is_);
+        cout << format("res.is_.r() = %d != (S.r()+T.r()-2*ncon) = %d")
+            % res.is_.r() % (S.r()+T.r()-2*ncon) << endl;
+        Error("Incorrect rank");
+        }
+#endif
+
+    res.scale_ = S.scale_ * T.scale_;
+
+    //If S has dimension 1
+    //it is just a scalar.
+    //res may have different m==1 
+    //Indices than T, though.
+    if(S.is_.rn() == 0)
+        {
+        res.r_ = T.r_;
+        res.i_ = T.i_;
+        res *= S.r_->v(1);
+        return;
+        }
+
+    //Allocate a new dat for res if necessary
+    if(res.isNull() || !res.r_.unique())
+        { 
+        res.r_ = boost::make_shared<ITDat>(alloc_size); 
+        }
+    else
+        {
+        res.r_->v.ReDimension(alloc_size);
+        res.r_->v *= 0;
+        }
+
+    //Finish initting Counter tc
+    for(int k = tc.rn+1; k <= NMAX; ++k)
+        {
+        tc.n[k] = 1;
+        }
+
+
+    const Vector& Tdat = T.r_->v;
+    Vector& resdat = res.r_->v;
+
+    if(res_has_Sind)
+        {
+        //cout << "Case III\n";
+        for(tc.reset(); tc.notDone(); ++tc)
+        for(diag_ind = 0; diag_ind < dsize; ++diag_ind)
+            {
+            resdat[_ind(res.is_,*ri[1],*ri[2],
+                                *ri[3],*ri[4],
+                                *ri[5],*ri[6],
+                                *ri[7],*ri[8])]
+             = S.r_->v[diag_ind] 
+               * Tdat[_ind(T.is_,*ti[1],*ti[2],
+                                 *ti[3],*ti[4],
+                                 *ti[5],*ti[6],
+                                 *ti[7],*ti[8])];
+            }
+        }
+    else
+        {
+        //cout << "Case IV\n";
+        for(tc.reset(); tc.notDone(); ++tc)
+            {
+            Real val = 0;
+            for(diag_ind = 0; diag_ind < dsize; ++diag_ind)
+                {
+                val +=
+                S.r_->v[diag_ind] 
+                * Tdat[_ind(T.is_,*ti[1],*ti[2],
+                                  *ti[3],*ti[4],
+                                  *ti[5],*ti[6],
+                                  *ti[7],*ti[8])];
+                }
+            resdat[_ind(res.is_,*ri[1],*ri[2],
+                                *ri[3],*ri[4],
+                                *ri[5],*ri[6],
+                                *ri[7],*ri[8])]
+            = val;
+            }
+        }
+
+    } // contractDiagDense
+
+
 ITensor& ITensor::
 operator*=(const ITensor& other)
     {
-    //TODO
-    if(type_ == Diag)
-        Error("Contracting product not yet implemented for type Diag (this)");
-    if(other.type_ == Diag)
-        Error("Contracting product not yet implemented for type Diag (other)");
+    if(this->isNull() || other.isNull())
+        Error("Null ITensor in product");
 
     if(this == &other)
         {
@@ -2159,14 +2417,13 @@ operator*=(const ITensor& other)
         return operator*=(cp_oth);
         }
 
+    /* Error? Doesn't modify indices...
     if(scale_.isZero() || other.scale_.isZero())
         {
         scale_ = 0;
         return *this;
         }
-
-    if(this->isNull() || other.isNull())
-        Error("Null ITensor in product");
+        */
 
     if(this->isComplex())
         {
@@ -2220,6 +2477,28 @@ operator*=(const ITensor& other)
         equalizeScales(ri);
         i_.swap(ri.r_);
         return *this;
+        }
+
+    //Handle Diag/Dense cases requiring conversion
+    if(type_==Diag && other.type_==Dense)
+        {
+        ITensor res;
+        contractDiagDense(*this,other,res);
+        this->swap(res);
+        return *this;
+        }
+    else
+    if(type_==Dense && other.type_==Diag)
+        {
+        ITensor res;
+        contractDiagDense(other,*this,res);
+        this->swap(res);
+        return *this;
+        }
+    else
+    if(type_==Diag && other.type_==Diag)
+        {
+        Error("ITensor Diag*Diag not implemented");
         }
 
     //These hold  regular new indices and the m==1 indices that appear in the result
@@ -2359,16 +2638,22 @@ operator*=(const ITensor& other)
     } //ITensor::operator*=(ITensor)
 
 
+bool static
+checkSameIndOrder(const IndexSet<Index> is1,
+                  const IndexSet<Index> is2)
+    {
+    for(int j = 0; j < is1.rn(); ++j)
+    if(is1[j] != is2[j])
+        { 
+        return false;
+        }
+    return true;
+    }
+
 
 ITensor& ITensor::
 operator+=(const ITensor& other)
     {
-    //TODO
-    if(type_ == Diag)
-        Error("Addition/subtraction not yet implemented for type Diag (this)");
-    if(other.type_ == Diag)
-        Error("Addition/subtraction not yet implemented for type Diag (other)");
-
     if(this->isNull())
         {
         operator=(other);
@@ -2381,15 +2666,18 @@ operator+=(const ITensor& other)
         return *this; 
         }
 
-    if(this->scale_.isZero())
+    //Handle Diag/Dense cases requiring conversion
+    if(type_==Dense && other.type_==Diag)
         {
-        *this = other;
+        ITensor cp_o(other);
+        cp_o += *this;
+        swap(cp_o);
         return *this;
         }
-
-    if((other.scale_/scale_).isRealZero()) 
-        { 
-        return *this; 
+    else
+    if(type_==Diag && other.type_==Dense)
+        {
+        convertToDense();
         }
 
     const bool complex_this = this->isComplex();
@@ -2437,11 +2725,10 @@ operator+=(const ITensor& other)
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
         }
 
+    const bool bothDiag = (type_==Diag && other.type_==Diag);
 
-    solo();
-
-    Vector& thisdat = r_->v;
-    const Vector& othrdat = other.r_->v;
+    const
+    bool same_ind_order = (bothDiag || checkSameIndOrder(is_,other.is_));
 
     Real scalefac = 1;
     if(scale_.magnitudeLessThan(other.scale_)) 
@@ -2453,13 +2740,10 @@ operator+=(const ITensor& other)
         scalefac = (other.scale_/scale_).real();
         }
 
-    bool same_ind_order = true;
-    for(int j = 0; j < is_.rn(); ++j)
-    if(is_[j] != other.is_[j])
-        { 
-        same_ind_order = false; 
-        break; 
-        }
+    solo();
+
+    Vector& thisdat = r_->v;
+    const Vector& othrdat = other.r_->v;
 
     if(same_ind_order) 
         { 
@@ -2731,7 +3015,30 @@ void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, co
 void ITensor::
 convertToDense()
     {
-    Error("convertToDense not implemented");
+    ITENSOR_CHECK_NULL
+    if(type_ == Diag)
+        {
+        solo();
+        const int dim = is_.dim(); //dense dimension
+        boost::shared_ptr<ITDat> oldr = r_;
+        allocate(dim);
+        const int ds = oldr->size();
+        for(int j = 0; j < ds; ++j)
+            {
+            r_->v[_ind(is_,j,j,j,j,j,j,j,j)] = oldr->v[j];
+            }
+
+        if(this->isComplex())
+            {
+            boost::shared_ptr<ITDat> oldi = i_;
+            allocateImag(dim);
+            for(int j = 0; j < ds; ++j)
+                {
+                i_->v[_ind(is_,j,j,j,j,j,j,j,j)] = oldi->v[j];
+                }
+            }
+        }
+    type_ = Dense;
     }
 
 ostream& 

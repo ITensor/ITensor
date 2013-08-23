@@ -737,8 +737,6 @@ orthMPS(Tensor& A1, Tensor& A2, Spectrum& spec, Direction dir, const OptSet& opt
     {
     typedef typename Tensor::IndexT
     IndexT;
-    typedef typename Tensor::SparseT
-    SparseT;
 
     Tensor& L = (dir == Fromleft ? A1 : A2);
     Tensor& R = (dir == Fromleft ? A2 : A1);
@@ -752,7 +750,7 @@ orthMPS(Tensor& A1, Tensor& A2, Spectrum& spec, Direction dir, const OptSet& opt
         }
 
     Tensor A,B(bnd);
-    SparseT D;
+    Tensor D;
     svd(L,A,D,B);
 
     L = A;
@@ -764,11 +762,11 @@ orthMPS(Tensor& A1, Tensor& A2, Spectrum& spec, Direction dir, const OptSet& opt
     //Tensor rho = primed(L,bnd)*conj(L);
 
     //Tensor U;
-    //SparseT D;
+    //Tensor D;
     //diagHermitian(rho,U,D,spec,opts);
 
 
-    //SparseT Di = D;
+    //Tensor Di = D;
     //Di.mapElems(SqrtInv());
     //D.mapElems(Sqrt());
 
