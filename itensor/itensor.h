@@ -64,6 +64,11 @@ class ITensor
     const LogNumber&
     scale() const { return scale_; }
 
+    enum Type { Null, Dense, Diag };
+
+    Type
+    type() const { return type_; }
+
     //
     //Constructors
     //
@@ -101,6 +106,9 @@ class ITensor
 
     //Construct rank 2 ITensor (a matrix) with 'a' on the diagonal
     ITensor(const Index& i1, const Index& i2, Real a);
+
+    //Construct rank 2 ITensor (matrix), diagonal entries set to those of V
+    ITensor(const Index& i1, const Index& i2, const VectorRef& V);
 
     // Construct rank 1 tensor T from IndexVal iv = (I,n)
     // (I is an Index, n an int)
@@ -466,6 +474,8 @@ class ITensor
     // Data Members
     //
 
+    Type type_;
+
     //Pointer to ITDat containing tensor data
     boost::shared_ptr<ITDat> r_, //real part
                              i_; //imag part
@@ -517,11 +527,21 @@ class ITensor
 
     int _ind2(const IndexVal& iv1, const IndexVal& iv2) const;
 
-    int _ind8(const IndexVal& iv1, const IndexVal& iv2, 
-              const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
-              const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
-              const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
+    int 
+    _ind8(const IndexVal& iv1, const IndexVal& iv2, 
+          const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
+          const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
+          const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
         const;
+    int 
+    _diag_ind8(const IndexVal& iv1, const IndexVal& iv2, 
+               const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
+               const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
+               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
+        const;
+
+    void
+    convertToDense();
 
     friend class commaInit;
 
@@ -529,6 +549,9 @@ class ITensor
 
     friend void 
     product(const ITSparse& S, const ITensor& T, ITensor& res);
+
+    friend std::ostream& 
+    operator<<(std::ostream & s, const ITensor& T);
 
     }; // class ITensor
 
