@@ -137,7 +137,11 @@ checkDone(int sw, Real energy,
         Real dE = fabs(energy-last_energy);
         if(dE < energy_errgoal)
             {
-            Cout << Format("    Energy error goal met (dE = %E); returning after %d sweeps.\n") % dE % sw;
+            Cout << Format("    Energy error goal met (dE = %.3E < %.3E); returning after %d sweeps.") 
+                    % dE
+                    % energy_errgoal
+                    % sw
+                 << Endl;
             return true;
             }
         }

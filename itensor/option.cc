@@ -76,7 +76,7 @@ assertType(Type t) const
 ostream& 
 operator<<(ostream & s, const Opt& opt)
     {
-    s << "Opt(\"" << opt.name() << "\",";
+    s << opt.name() << "=";
     if(opt.type() == Opt::Boolean)
         {
         s << (opt.boolVal() ? "true" : "false");
@@ -93,9 +93,8 @@ operator<<(ostream & s, const Opt& opt)
         }
     else
         {
-        s << "*Null*";
+        s << "(Null)";
         }
-    s << ")";
     return s;
     }
 
@@ -361,9 +360,14 @@ operator<<(ostream & s, const OptSet& oset)
     const_it;
 
     if(oset.is_global_)
+        {
         s << "/- Global OptSet -------\n";
+        }
     else
-        s << "/- OptSet --- (showing overrides of global opts) \n";
+        {
+        s << "/- OptSet --------------\n";
+        s << "(only showing overrides of global opts)\n";
+        }
 
     for(const_it it = oset.opts_.begin();
         it != oset.opts_.end(); ++it)
@@ -371,6 +375,6 @@ operator<<(ostream & s, const OptSet& oset)
         s << it->second << "\n";
         }
 
-    s << "\\-------------------------" << endl;
+    s <<    "\\-----------------------" << endl;
     return s;
     }

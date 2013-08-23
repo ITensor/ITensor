@@ -14,7 +14,14 @@ class Z3 : public Model
 
     Z3(int N);
 
-    Z3(std::ifstream& s) { doRead(s); }
+
+    Complex static
+    Omega()
+        {
+        static Complex w(cos(2.*Pi/3.),sin(2.*Pi/3.));
+        return w;
+        }
+
 
     //Operators
 
