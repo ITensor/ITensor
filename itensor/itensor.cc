@@ -2417,7 +2417,7 @@ operator*=(const ITensor& other)
         return operator*=(cp_oth);
         }
 
-    /* Error? Doesn't modify indices...
+    /* Following code suspicious: doesn't modify indices...
     if(scale_.isZero() || other.scale_.isZero())
         {
         scale_ = 0;
@@ -2454,17 +2454,12 @@ operator*=(const ITensor& other)
         else
             {
             //This complex, other real
-            ITensor rr(*this);
-            rr.takeRealPart();
-            rr *= other;
-            ITensor ir(*this);
-            ir.takeImagPart();
+            ITensor ir(imagPart(*this));
             ir *= other;
-            rr.equalizeScales(ir);
-            r_.swap(rr.r_);
+            takeRealPart();
+            operator*=(other);
+            equalizeScales(ir);
             i_.swap(ir.r_);
-            scale_ = rr.scale_;
-            is_.swap(rr.is_);
             return *this;
             }
         }
@@ -2472,10 +2467,11 @@ operator*=(const ITensor& other)
     if(other.isComplex())
         {
         //This real, other complex
-        ITensor ri = operator*(*this,imagPart(other));
+        ITensor oi(imagPart(other));
+        oi *= (*this);
         operator*=(realPart(other));
-        equalizeScales(ri);
-        i_.swap(ri.r_);
+        equalizeScales(oi);
+        i_.swap(oi.r_);
         return *this;
         }
 
