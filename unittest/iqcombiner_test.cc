@@ -103,10 +103,10 @@ TEST(addLeft)
     CHECK(hasindex(c1,L1));
     CHECK(hasindex(c1,S1));
 
-    CHECK_EQUAL(c1.right().name(),"cname");
-    CHECK_EQUAL(c1s.right().name(),"cname");
-    CHECK_EQUAL(c1.right().type(),Link);
-    CHECK_EQUAL(c1s.right().type(),Site);
+    //CHECK_EQUAL(c1.right().name(),"cname");
+    //CHECK_EQUAL(c1s.right().name(),"cname");
+    //CHECK_EQUAL(c1.right().type(),Link);
+    //CHECK_EQUAL(c1s.right().type(),Site);
     CHECK_EQUAL(c1.right().m(),L2.m()*S2.m()*L1.m()*S1.m());
     CHECK_EQUAL(c1s.right().m(),L2.m()*S2.m()*L1.m()*S1.m());
 

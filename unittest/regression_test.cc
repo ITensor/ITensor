@@ -62,7 +62,7 @@ TEST(SVDIndexOrder)
     //ITensor U(c,a); //This order succeeds
     ITensor U(a,c); //This order was failing
 
-    ITSparse D;
+    ITensor D;
     //Globals::debug2() = true;
     svd(z,U,D,V);
     //Globals::debug2() = false;
@@ -118,7 +118,7 @@ TEST(SVDArrows)
     CHECK_EQUAL(div(AA),Zero);
 
     IQTensor U(L),V(R);
-    IQTSparse D;
+    IQTensor D;
     svd(AA,U,D,V);
 
     CHECK_EQUAL(div(U),Zero);
