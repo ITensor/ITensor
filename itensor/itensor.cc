@@ -3077,7 +3077,7 @@ operator<<(ostream & s, const ITensor& t)
              % (iscplx ? ",C" : "");
 
 
-        if(Global::printdat())
+        if(Global::printdat() && t.r() != 0)
             {
             Real scale = 1.0;
             if(t.scale().isFiniteReal()) scale = t.scale().real();
@@ -3085,9 +3085,26 @@ operator<<(ostream & s, const ITensor& t)
 
             if(t.type() == ITensor::Diag)
                 {
-                s << "r_ = " << t.r_->v;
-                if(iscplx)
-                    s << "i_ = " << t.i_->v << endl;
+                const int ds = t.indices().front().m();
+                for(int j = 1; j <= ds; ++j)
+                    {
+                    const Real rval = t.r_->v(j)*scale;
+                    s << "  (" << j;
+                    for(int n = 2; n <= t.r(); ++n)
+                        {
+                        s << "," << j;
+                        }
+                    if(!iscplx)
+                        {
+                        s << format(") %.10f\n") % rval;
+                        }
+                    else
+                        {
+                        const Real ival = t.i_->v(j)*scale;
+                        const char sgn = (ival > 0 ? '+' : '-');
+                        s << format(") %.10f%s%.10fi\n") % rval % sgn % fabs(ival);
+                        }
+                    }
                 }
             else
             if(t.type() == ITensor::Dense)
