@@ -218,4 +218,52 @@ TEST(IndexOrder)
     }
     */
 
+TEST(IdentComplexMult)
+    {
+    //
+    // Aug 25, 2013: contracting product working incorrectly
+    // for 2x2 identity-type ITensor contracted with 2x2 complex
+    // ITensor
+    //
+    // Problem appears to be that the complex ITensor helper code at
+    // the top of ITensor::operator*= *assumes* same resulting index
+    // order for separate real- and imaginary-part contractions
+    //
+
+    Index d("d",2),
+          l("l",2),
+          c("c",2);
+
+    ITensor br(c,l),
+            bi(c,l);
+
+    commaInit(br,c,l) << 11,12,
+                         0 ,0 ;
+    commaInit(bi,c,l) << 11,12,
+                         0 ,0 ;
+
+    ITensor b = br+Complex_i*bi;
+
+
+    Matrix C(2,2);
+    C = 0;
+    C.Diagonal() = 1;
+
+    ITensor conv(d,c,C);
+
+    ITensor rr(d,l),
+            ri(d,l);
+
+    commaInit(rr,d,l) << 11,12,
+                         0 ,0 ;
+    commaInit(ri,d,l) << 11,12,
+                         0 ,0 ;
+
+    ITensor res = rr + Complex_i*ri;
+
+    ITensor Diff = conv*b-res;
+
+    CHECK(Diff.norm() < 1E-10);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

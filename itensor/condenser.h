@@ -182,15 +182,14 @@ product(const IQTensor& t, IQTensor& res) const
     if(&t == &res)
         Error("Cannot condense into same IQTensor");
 
-    std::vector<IQIndex> iqinds; iqinds.reserve(t.r());
+    std::vector<IQIndex> iqinds; 
+    iqinds.reserve(t.r());
 
     int smallind_pos = -2;
     int bigind_pos   = -2;
-    //for(int j = 1; j <= t.r(); ++j)
     int j = 0;
     Foreach(const IQIndex& J, t.indices())
         {
-        //iqinds.push_back(t.index(j));
         iqinds.push_back(J);
 
         if(iqinds.back() == smallind_) 
@@ -233,7 +232,8 @@ product(const IQTensor& t, IQTensor& res) const
             for(int start = 0; start < sind.m(); )
                 {
                 Index bind = small_to_big[std::make_pair(sind,start)];
-                Matrix C(sind.m(),bind.m()); C = 0;
+                Matrix C(sind.m(),bind.m()); 
+                C = 0;
                 for(int kk = 1; kk <= bind.m(); ++kk) 
                     { 
                     C(start+kk,kk) = 1; 

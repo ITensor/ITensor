@@ -2468,10 +2468,11 @@ operator*=(const ITensor& other)
         {
         //This real, other complex
         ITensor oi(imagPart(other));
-        oi *= (*this);
+        ITensor cp_this(*this);
+        cp_this *= oi;
         operator*=(realPart(other));
-        equalizeScales(oi);
-        i_.swap(oi.r_);
+        equalizeScales(cp_this);
+        i_.swap(cp_this.r_);
         return *this;
         }
 
@@ -3249,7 +3250,7 @@ commaInit(ITensor& T,
         }
     catch(const ITError& e)
         {
-        Error("Not enough/wrong indices passed to commaInit");
+        Error("Not enough and/or wrong indices passed to commaInit");
         }
 
     T_.solo();
