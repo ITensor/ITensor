@@ -530,13 +530,15 @@ norm() const
     }
 
 
-Real IQTensor::
-sumels() const
+Real 
+sumels(const IQTensor& T)
     {
-    Real res = 0;
-    Foreach(const ITensor& t, dat())
-        { res += t.sumels(); }
-    return res;
+    Real sum = 0;
+    Foreach(const ITensor& t, T.blocks())
+        { 
+        sum += sumels(t); 
+        }
+    return sum;
     }
 
 void IQTensor::

@@ -174,7 +174,7 @@ TEST(Constructors)
     CHECK_CLOSE(t8(l1(2),b3(1)),21,1E-10);
     CHECK_CLOSE(t8(l1(2),b3(2)),22,1E-10);
     CHECK_CLOSE(t8(l1(2),b3(3)),23,1E-10);
-    CHECK_CLOSE(t8.sumels(),M.TreatAsVector().sumels(),1E-10);
+    CHECK_CLOSE(sumels(t8),M.TreatAsVector().sumels(),1E-10);
     CHECK_CLOSE(t8.norm(),Norm(M.TreatAsVector()),1E-10);
 
     ITensor t85(b3,l1,M.t());
@@ -188,7 +188,7 @@ TEST(Constructors)
     CHECK_CLOSE(t85(l1(2),b3(1)),21,1E-10);
     CHECK_CLOSE(t85(l1(2),b3(2)),22,1E-10);
     CHECK_CLOSE(t85(l1(2),b3(3)),23,1E-10);
-    CHECK_CLOSE(t85.sumels(),M.TreatAsVector().sumels(),1E-10);
+    CHECK_CLOSE(sumels(t85),M.TreatAsVector().sumels(),1E-10);
     CHECK_CLOSE(t85.norm(),Norm(M.TreatAsVector()),1E-10);
 
     Matrix W(a1.m(),l2.m()); 
@@ -200,7 +200,7 @@ TEST(Constructors)
     CHECK(hasindex(w1,l2));
     CHECK_CLOSE(w1(l2(1)),W(1,1),1E-10);
     CHECK_CLOSE(w1(l2(2)),W(1,2),1E-10);
-    CHECK_CLOSE(w1.sumels(),W.TreatAsVector().sumels(),1E-10);
+    CHECK_CLOSE(sumels(w1),W.TreatAsVector().sumels(),1E-10);
     CHECK_CLOSE(w1.norm(),Norm(W.TreatAsVector()),1E-10);
 
     ITensor w2(l2,a1,W.t());
@@ -210,13 +210,13 @@ TEST(Constructors)
     CHECK(hasindex(w2,l2));
     CHECK_CLOSE(w2(l2(1)),W(1,1),1E-10);
     CHECK_CLOSE(w2(l2(2)),W(1,2),1E-10);
-    CHECK_CLOSE(w2.sumels(),W.TreatAsVector().sumels(),1E-10);
+    CHECK_CLOSE(sumels(w2),W.TreatAsVector().sumels(),1E-10);
     CHECK_CLOSE(w2.norm(),Norm(W.TreatAsVector()),1E-10);
 
     Real b = ran1();
     ITensor t9(b);
 
-    CHECK_CLOSE(t9.sumels(),b,1E-10);
+    CHECK_CLOSE(sumels(t9),b,1E-10);
     CHECK_CLOSE(t9.norm(),fabs(b),1E-10);
 
     Index linkind("linkind",10);
@@ -225,7 +225,7 @@ TEST(Constructors)
 
     CHECK_EQUAL(t10.r(),1);
     CHECK(hasindex(t10,linkind));
-    CHECK_CLOSE(t10.sumels(),V.sumels(),1E-10);
+    CHECK_CLOSE(sumels(t10),V.sumels(),1E-10);
     CHECK_CLOSE(t10.norm(),Norm(V),1E-10);
 }
 
@@ -237,7 +237,7 @@ TEST(IndexValConstructors)
     CHECK(hasindex(t1,l1));
     CHECK_CLOSE(t1(l1(1)),0,1E-10);
     CHECK_CLOSE(t1(l1(2)),1,1E-10);
-    CHECK_CLOSE(t1.sumels(),1,1E-10);
+    CHECK_CLOSE(sumels(t1),1,1E-10);
     CHECK_CLOSE(t1.norm(),1,1E-10);
 
     ITensor t2(l1(2),l2(1));
@@ -249,7 +249,7 @@ TEST(IndexValConstructors)
     CHECK_CLOSE(t2(l1(1),l2(2)),0,1E-10);
     CHECK_CLOSE(t2(l1(2),l2(1)),1,1E-10);
     CHECK_CLOSE(t2(l1(2),l2(2)),0,1E-10);
-    CHECK_CLOSE(t2.sumels(),1,1E-10);
+    CHECK_CLOSE(sumels(t2),1,1E-10);
     CHECK_CLOSE(t2.norm(),1,1E-10);
 
     ITensor u2a(a1(1),l2(2));
@@ -259,7 +259,7 @@ TEST(IndexValConstructors)
     CHECK(hasindex(u2a,l2));
     CHECK_CLOSE(u2a(l2(1)),0,1E-10);
     CHECK_CLOSE(u2a(l2(2)),1,1E-10);
-    CHECK_CLOSE(u2a.sumels(),1,1E-10);
+    CHECK_CLOSE(sumels(u2a),1,1E-10);
     CHECK_CLOSE(u2a.norm(),1,1E-10);
 
     ITensor u2b(l1(2),a2(1));
@@ -269,7 +269,7 @@ TEST(IndexValConstructors)
     CHECK(hasindex(u2b,a2));
     CHECK_CLOSE(u2b(l1(1)),0,1E-10);
     CHECK_CLOSE(u2b(l1(2)),1,1E-10);
-    CHECK_CLOSE(u2b.sumels(),1,1E-10);
+    CHECK_CLOSE(sumels(u2b),1,1E-10);
     CHECK_CLOSE(u2b.norm(),1,1E-10);
 
     ITensor t3(l1(2),l3(1),l2(1));
@@ -286,7 +286,7 @@ TEST(IndexValConstructors)
     CHECK_CLOSE(t3(l1(2),l3(1),l2(2)),0,1E-10);
     CHECK_CLOSE(t3(l1(1),l3(2),l2(2)),0,1E-10);
     CHECK_CLOSE(t3(l1(2),l3(2),l2(2)),0,1E-10);
-    CHECK_CLOSE(t3.sumels(),1,1E-10);
+    CHECK_CLOSE(sumels(t3),1,1E-10);
     CHECK_CLOSE(t3.norm(),1,1E-10);
 
     ITensor t4(a1(1),l3(2),l2(1));
@@ -299,7 +299,7 @@ TEST(IndexValConstructors)
     CHECK_CLOSE(t4(l3(1),l2(2)),0,1E-10);
     CHECK_CLOSE(t4(l3(2),l2(1)),1,1E-10);
     CHECK_CLOSE(t4(l3(2),l2(2)),0,1E-10);
-    CHECK_CLOSE(t4.sumels(),1,1E-10);
+    CHECK_CLOSE(sumels(t4),1,1E-10);
     CHECK_CLOSE(t4.norm(),1,1E-10);
 
     ITensor r4(l1(1),l3(1),l2(2),l4(1));
@@ -310,7 +310,7 @@ TEST(IndexValConstructors)
     CHECK(hasindex(r4,l3));
     CHECK(hasindex(r4,l4));
     CHECK_CLOSE(r4(l1(1),l3(1),l2(2),l4(1)),1,1E-10);
-    CHECK_CLOSE(r4.sumels(),1,1E-10);
+    CHECK_CLOSE(sumels(r4),1,1E-10);
     CHECK_CLOSE(r4.norm(),1,1E-10);
 
     ITensor t8(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2));
@@ -355,7 +355,7 @@ TEST(MultiIndexConstructors)
     CHECK(hasindex(t2,l1));
     CHECK(hasindex(t2,a4));
     CHECK_CLOSE(t2.norm(),Norm(V),1E-10);
-    CHECK_CLOSE(t2.sumels(),V.sumels(),1E-10);
+    CHECK_CLOSE(sumels(t2),V.sumels(),1E-10);
     }
 
 TEST(ITensorConstructors)
@@ -427,7 +427,7 @@ TEST(Copy)
     CHECK(hasindex(t1,l1));
     CHECK(hasindex(t1,a4));
     CHECK_CLOSE(t1.norm(),Norm(V),1E-10);
-    CHECK_CLOSE(t1.sumels(),V.sumels(),1E-10);
+    CHECK_CLOSE(sumels(t1),V.sumels(),1E-10);
 
     //Use copy constructor
     ITensor t2(t1);
@@ -439,7 +439,7 @@ TEST(Copy)
     CHECK(hasindex(t2,l1));
     CHECK(hasindex(t2,a4));
     CHECK_CLOSE(t2.norm(),Norm(V),1E-10);
-    CHECK_CLOSE(t2.sumels(),V.sumels(),1E-10);
+    CHECK_CLOSE(sumels(t2),V.sumels(),1E-10);
 
     //Use operator=
     ITensor t3 = t2;
@@ -451,7 +451,7 @@ TEST(Copy)
     CHECK(hasindex(t3,l1));
     CHECK(hasindex(t3,a4));
     CHECK_CLOSE(t3.norm(),Norm(V),1E-10);
-    CHECK_CLOSE(t3.sumels(),V.sumels(),1E-10);
+    CHECK_CLOSE(sumels(t3),V.sumels(),1E-10);
 }
 
 TEST(ScalarMultiply)
@@ -588,12 +588,12 @@ TEST(SumDifference)
     Real f1 = -ran1(), f2 = 0.1*f1;
 
     ITensor r = f1*v + w/f2; 
-    Vector R(r.indices().dim()); r.assignToVec(R);
+    VectorRef R = r.assignToVec();
     for(int j = 1; j < R.Length(); ++j)
     { CHECK_CLOSE(R(j),f1*V(j)+W(j)/f2,1E-10); }
 
     ITensor d(v); d -= w;
-    Vector D(d.indices().dim()); d.assignToVec(D);
+    VectorRef D = d.assignToVec();
     for(int j = 1; j < D.Length(); ++j)
     { CHECK_CLOSE(D(j),V(j)-W(j),1E-10); }
 

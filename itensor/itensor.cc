@@ -1320,21 +1320,21 @@ vecSize() const
     }
     */
 
-void ITensor::
-assignToVec(VectorRef v) const
+VectorRef ITensor::
+assignToVec() const
     {
-    if(r_->v.Length() != v.Length()) 
-        Error("ITensor::assignToVec bad size");
+    ITENSOR_CHECK_NULL
     if(this->isComplex())
         Error("assignToVec defined only for real ITensor");
+    VectorRef rv;
+    rv << r_->v;
     if(scale_.isRealZero()) 
         {
-        v *= 0;
-        return;
+        rv *= 0;
+        return rv;
         }
-    ITENSOR_CHECK_NULL
-    v = r_->v;
-    v *= scale_.real();
+    rv *= scale_.real();
+    return rv;
     }
 
 void ITensor::
@@ -1422,12 +1422,12 @@ conj()
         }
     }
 
-Real ITensor::
-sumels() const 
+Real
+sumels(const ITensor& t)
     { 
-    if(this->isComplex())
+    if(t.isComplex())
         Error("sumels defined only for real ITensor");
-    return r_->v.sumels() * scale_.real0(); 
+    return t.assignToVec().sumels();
     }
 
 Real ITensor::

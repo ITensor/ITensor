@@ -298,9 +298,6 @@ class IQTensor
     LogNumber 
     normLogNum() const;
 
-    Real 
-    sumels() const;
-
     template <typename Callable> 
     IQTensor&
     mapElems(const Callable& f);
@@ -458,6 +455,9 @@ mapElems(const Callable& f)
         t.mapElems(f);
     return *this;
     }
+
+Real
+sumels(const IQTensor& T);
 
 
 //

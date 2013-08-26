@@ -416,9 +416,6 @@ class ITensor
     conj();
 
     Real 
-    sumels() const;
-
-    Real 
     norm() const;
 
     LogNumber 
@@ -437,8 +434,8 @@ class ITensor
     void 
     scaleTo(const LogNumber& newscale);
 
-    void 
-    assignToVec(VectorRef v) const;
+    VectorRef 
+    assignToVec() const;
 
     void
     pseudoInvert(Real cutoff = 0.);
@@ -709,6 +706,9 @@ mapElems(const Callable& f)
         */
     return *this;
     }
+
+Real
+sumels(const ITensor& t);
 
 //
 // Computes the scalar/inner/dot product of two
