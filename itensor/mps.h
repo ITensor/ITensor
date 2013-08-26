@@ -76,9 +76,6 @@ class MPSt
     typedef typename Tensor::IndexValT 
     IndexValT;
 
-    typedef typename Tensor::SparseT
-    SparseT;
-
     typedef MPOt<Tensor>
     MPOType;
 
@@ -632,7 +629,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         {
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
-        SparseT D;
+        Tensor D;
         //Cout << "Calling svdBond SVD" << Endl;
         svd(AA,A_[b],D,A_[b+1],spectrum_.at(b),opts);
 

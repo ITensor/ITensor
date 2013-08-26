@@ -22,7 +22,6 @@
 struct ProductProps;
 class Combiner;
 class ITDat;
-class ITSparse;
 
 //
 // ITensor
@@ -64,6 +63,11 @@ class ITensor
     const LogNumber&
     scale() const { return scale_; }
 
+    enum Type { Null, Dense, Diag };
+
+    Type
+    type() const { return type_; }
+
     //
     //Constructors
     //
@@ -101,6 +105,9 @@ class ITensor
 
     //Construct rank 2 ITensor (a matrix) with 'a' on the diagonal
     ITensor(const Index& i1, const Index& i2, Real a);
+
+    //Construct rank 2 ITensor (matrix), diagonal entries set to those of V
+    ITensor(const Index& i1, const Index& i2, const VectorRef& V);
 
     // Construct rank 1 tensor T from IndexVal iv = (I,n)
     // (I is an Index, n an int)
@@ -433,6 +440,9 @@ class ITensor
     void 
     assignToVec(VectorRef v) const;
 
+    void
+    pseudoInvert(Real cutoff = 0.);
+
     //
     // Typedefs
     //
@@ -445,9 +455,6 @@ class ITensor
 
     typedef Combiner 
     CombinerT;
-
-    typedef ITSparse
-    SparseT;
 
     //Deprecated methods --------------------------
 
@@ -465,6 +472,8 @@ class ITensor
     //
     // Data Members
     //
+
+    Type type_;
 
     //Pointer to ITDat containing tensor data
     boost::shared_ptr<ITDat> r_, //real part
@@ -517,18 +526,29 @@ class ITensor
 
     int _ind2(const IndexVal& iv1, const IndexVal& iv2) const;
 
-    int _ind8(const IndexVal& iv1, const IndexVal& iv2, 
-              const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
-              const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
-              const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
+    int 
+    _ind8(const IndexVal& iv1, const IndexVal& iv2, 
+          const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
+          const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
+          const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
         const;
+    int 
+    _diag_ind8(const IndexVal& iv1, const IndexVal& iv2, 
+               const IndexVal& iv3, const IndexVal& iv4 = IndexVal::Null(), 
+               const IndexVal& iv5 = IndexVal::Null(),const IndexVal& iv6 = IndexVal::Null(),
+               const IndexVal& iv7 = IndexVal::Null(),const IndexVal& iv8 = IndexVal::Null())
+        const;
+
+    void
+    convertToDense();
 
     friend class commaInit;
 
-    friend class ITSparse;
-
     friend void 
-    product(const ITSparse& S, const ITensor& T, ITensor& res);
+    contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res);
+
+    friend std::ostream& 
+    operator<<(std::ostream & s, const ITensor& T);
 
     }; // class ITensor
 
@@ -580,6 +600,9 @@ class ITDat
 
     explicit 
     ITDat(const ITDat& other);
+
+    int
+    size() const { return v.Length(); }
 
     void
     read(std::istream& s);
@@ -671,15 +694,19 @@ template <typename Callable>
 ITensor& ITensor::
 mapElems(const Callable& f)
     {
+    if(isComplex())
+        Error("mapElems only works for real ITensor");
     solo();
     scaleTo(1);
-    for(int j = 1; j <= r_->v.Length(); ++j)
+    for(int j = 1; j <= r_->size(); ++j)
         r_->v(j) = f(r_->v(j));
+    /*
     if(i_)
         {
-        for(int j = 1; j <= i_->v.Length(); ++j)
+        for(int j = 1; j <= i_->size(); ++j)
             i_->v(j) = f(i_->v(j));
         }
+        */
     return *this;
     }
 
@@ -956,11 +983,6 @@ trace(Tensor T,
     T.trace(i1,i2,i3,i4,i5,i6,i7,i8); 
     return T; 
     }
-
-int
-_ind(const IndexSet<Index>& is,
-     int i1, int i2, int i3, int i4, 
-     int i5, int i6, int i7, int i8);
 
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);

@@ -63,8 +63,6 @@ idmrg(MPSt<Tensor>& psi,
     {
     typedef typename Tensor::IndexT
     IndexT;
-    typedef typename Tensor::SparseT
-    SparseT;
 
     const int vlevel = opts.getInt("Verbose",0);
     const bool quiet = opts.getBool("Quiet",vlevel == 0);
@@ -84,8 +82,8 @@ idmrg(MPSt<Tensor>& psi,
     Real energy = NAN,
          lastenergy = 0;
 
-    SparseT lastV,
-            D;
+    Tensor lastV,
+           D;
 
     int sw = 1;
 
@@ -190,7 +188,7 @@ idmrg(MPSt<Tensor>& psi,
         lastV.pseudoInvert(0);
 
         //Calculate new center matrix
-        D = SparseT();
+        D = Tensor();
         psi.position(Nuc);
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1),spec);
         D /= D.norm();

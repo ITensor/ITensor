@@ -8,7 +8,6 @@
 #include "iqtdat.h"
 
 class IQCombiner;
-class IQTSparse;
 
 typedef boost::shared_ptr<IQTDat<ITensor> >
 IQTDatPtr;
@@ -322,6 +321,9 @@ class IQTensor
     conj();
 
     void
+    pseudoInvert(Real cutoff = 0.);
+
+    void
     swap(IQTensor& other);
 
     void 
@@ -340,9 +342,6 @@ class IQTensor
 
     typedef IQCombiner 
     CombinerT;
-
-    typedef IQTSparse
-    SparseT;
 
     //Deprecated methods
 
@@ -398,12 +397,6 @@ class IQTensor
 
     void 
     solo();
-
-    friend class IQTSparse;
-
-    friend void 
-    product(const IQTSparse& S, const IQTensor& T, IQTensor& res);
-
 
     }; //class IQTensor
 

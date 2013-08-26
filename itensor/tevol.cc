@@ -65,8 +65,6 @@ operator()(const vector<Tensor>& psi) const
     {
     typedef typename Tensor::IndexT
     IndexT;
-    typedef typename Tensor::SparseT
-    SparseT;
 
     //psi tensors may have 1 or 2 sites,
     //so N is number of (non-null) psi tensors 
@@ -199,7 +197,7 @@ operator()(const vector<Tensor>& psi) const
         if(r.r() != 2) Error("Expected rank of r is 2");
 #endif
         Tensor U(r.indices().front()),V; 
-        SparseT D;
+        Tensor D;
         svd(r,U,D,V);
         D.pseudoInvert(0);
         Tensor ri = V*D*U;
@@ -226,7 +224,7 @@ operator()(const vector<Tensor>& psi) const
             //B*dB is not small compute nB and switch to it.
             Tensor olap = primed(B,plink)*conj(B);
             Tensor U;
-            SparseT D;
+            Tensor D;
             diagHermitian(olap,U,D);
             D.mapElems(SqrtInv());
 
@@ -281,9 +279,9 @@ operator()(const vector<Tensor>& psi) const
                 }
             const Tensor P = Bp*conj(B); //contract over plink
             Tensor U;
-            SparseT D;
+            Tensor D;
             diagHermitian(P,U,D);
-            SparseT sD(D);
+            Tensor sD(D);
             sD.mapElems(SwapOneZero());
             dB = primed(U)*sD*conj(U)*dB;
             dB.noprime();
@@ -375,8 +373,6 @@ ungroupMPS(vector<Tensor>& psig,
     {
     typedef typename Tensor::IndexT
     IndexT;
-    typedef typename Tensor::SparseT
-    SparseT;
     typedef MPSt<Tensor>
     MPST;
 
@@ -425,7 +421,7 @@ ungroupMPS(vector<Tensor>& psig,
                 psi.Anc(j) = Tensor(conj(l),sj);
                 }
 
-            SparseT D;
+            Tensor D;
             Tensor U;
 
             if(dir == Fromleft)
@@ -473,8 +469,6 @@ class OrthVec
 
     typedef typename Tensor::IndexT
     IndexT;
-    typedef typename Tensor::SparseT
-    SparseT;
     
     void
     operator()(std::vector<Tensor>& psi) const
@@ -502,7 +496,7 @@ class OrthVec
         {
         const Tensor olap = primed(B,lnk)*conj(B);
         Tensor U;
-        SparseT D;
+        Tensor D;
         diagHermitian(olap,U,D);
         D.mapElems(SqrtInv());
 
@@ -520,8 +514,6 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
     {
     typedef typename Tensor::IndexT
     IndexT;
-    typedef typename Tensor::SparseT
-    SparseT;
     typedef MPSt<Tensor>
     MPST;
 

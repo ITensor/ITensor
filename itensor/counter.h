@@ -154,11 +154,12 @@ std::ostream&
 operator<<(std::ostream& s, const Counter& c)
     {
     s << "("; 
-    for(int i = 1; i < c.r; ++i)
+    if(c.r >= 1) s << (c.i[1]+1);
+    for(int i = 2; i <= c.r; ++i)
         {
-        s << (c.i[i]+1) << " ";
+        s << "," << (c.i[i]+1);
         }
-    s << (c.i[c.r]+1) << ")";
+    s << ")";
     return s;
     }
 

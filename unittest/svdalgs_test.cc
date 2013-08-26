@@ -18,9 +18,9 @@ struct SVDAlgsDefaults
         mid10u,mid10z,mid10d;
 
     IQTensor Phi0,L,R,Psi;
-    IQTSparse V;
+    IQTensor V;
     ITensor phi0,l,r,psi;
-    ITSparse v;
+    ITensor v;
 
     SVDAlgsDefaults()
         :
@@ -129,24 +129,24 @@ struct SVDAlgsDefaults
         r = R.toITensor();
 
         /*
-        V = IQTSparse(Mid10);
+        V = IQTensor(Mid10);
             {
             Vector diag;
 
             diag.ReDimension(mid10u.m());
             for(int j = 1; j <= mid10u.m(); ++j)
                 diag(j) = 0.5*sqrt(1.*j);
-            V += ITSparse(mid10u,diag);
+            V += ITensor(mid10u,diag);
 
             diag.ReDimension(mid10z.m());
             for(int j = 1; j <= mid10z.m(); ++j)
                 diag(j) = 2.121*sqrt(1.*j+7);
-            V += ITSparse(mid10z,diag);
+            V += ITensor(mid10z,diag);
 
             diag.ReDimension(mid10d);
             for(int j = 1; j <= mid10d.m(); ++j)
                 diag(j) = 4.323*sqrt(1.*j+10);
-            V += ITSparse(mid10d,diag);
+            V += ITensor(mid10d,diag);
             }
         v = V;
         */
@@ -201,7 +201,7 @@ TEST(BondSVD)
     //
 
     ITensor l(L1,S1,Mid),r(Mid,S2,L2);
-    ITSparse v(Mid);
+    ITensor v(Mid);
 
     phi0 *= -0.235;
 
@@ -218,7 +218,7 @@ TEST(BondSVD)
     //
 
     IQTensor L(L1,S1,Mid),R(Mid,S2,L2);
-    IQTSparse V(Mid);
+    IQTensor V(Mid);
 
     spec = csvd(Phi0,L,V,R);
     
@@ -240,7 +240,7 @@ TEST(CSVDNorm)
     phi0 = ITensor(s1,s2,rr);
 
     ITensor l(s1,Mid),r(Mid,s2,rr);
-    ITSparse v(Mid);
+    ITensor v(Mid);
 
     phi0(s1(3),s2(1),rr(1)) = -0.172148;
     phi0(s1(2),s2(2),rr(1)) = 0.427132;
@@ -285,7 +285,7 @@ TEST(AbsoluteCutoff)
     //
 
     ITensor a(L1,S1,Mid),b(Mid,S2,L2);
-    ITSparse c(Mid);
+    ITensor c(Mid);
 
     Real cutoff = 1E-3;
     spec.cutoff(cutoff);
@@ -307,7 +307,7 @@ TEST(AbsoluteCutoff)
     //
 
     IQTensor A(L1,S1,Mid),B(Mid,S2,L2);
-    IQTSparse C(Mid);
+    IQTensor C(Mid);
 
     cutoff = 1E-3;
     spec.cutoff(cutoff);
@@ -390,7 +390,7 @@ TEST(SvdRank2)
     SVDWorker svd;
     svd.showeigs(true);
 
-    ITSparse D;
+    ITensor D;
     svd.svdRank2(T,U,D,V);
     ITensor nT = U * D * V;
 
@@ -405,7 +405,7 @@ TEST(SvdRank2)
     TT += T;
 
     IQTensor UU(uI), VV(vI);
-    IQTSparse DD;
+    IQTensor DD;
 
     svd.svdRank2(TT,UU,DD,VV);
 
@@ -420,8 +420,7 @@ TEST(ComplexSVD)
     T.randomize();
     T *= 1.0/T.norm();
 
-    IQTensor U(L1),V;
-    IQTSparse D;
+    IQTensor U(L1),D,V;
     svd(T,U,D,V);
 
     IQTensor diff = T-U*D*V;
@@ -449,7 +448,7 @@ TEST(ComplexDenmat)
     //PrintDat(rho);
 
     ITensor U(r),V;
-    ITSparse D;
+    ITensor D;
 
     svd(rho,U,D,V);
     //PrintDat(U);
@@ -466,7 +465,7 @@ TEST(Diagonalization)
     M *= 0.5;
 
     ITensor U;
-    ITSparse D;
+    ITensor D;
     diagHermitian(M,U,D);
 
     CHECK((M-(primed(U)*D*conj(U))).norm() < 1E-14);
@@ -482,7 +481,7 @@ TEST(Diagonalization)
     //T(conj(S1)(2),primed(S1)(2)) = -1;
 
     IQTensor UU;
-    IQTSparse DD;
+    IQTensor DD;
     diagHermitian(T,UU,DD);
 
     CHECK((T-(primed(UU)*DD*conj(UU))).norm() < 1E-14);
@@ -500,7 +499,7 @@ TEST(ComplexDiagonalization)
     M *= 0.5;
 
     ITensor U;
-    ITSparse D;
+    ITensor D;
     diagHermitian(M,U,D);
 
     CHECK((M-(primed(U)*D*conj(U))).norm() < 1E-14);
@@ -516,7 +515,7 @@ TEST(ComplexDiagonalization)
     T *= 0.5;
 
     IQTensor UU;
-    IQTSparse DD;
+    IQTensor DD;
     diagHermitian(T,UU,DD);
 
     CHECK((T-(primed(UU)*DD*conj(UU))).norm() < 1E-14);

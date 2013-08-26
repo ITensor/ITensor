@@ -148,17 +148,17 @@ TEST(Constructors)
     CHECK(hasindex(t6,a2));
     CHECK_CLOSE(t6.norm(),0,1E-10);
 
-    Real a = ran1();
+    const Real a = -0.83;
     ITensor t7(l1,l2,a);
 
     CHECK_EQUAL(t7.r(),2);
     CHECK(hasindex(t7,l1));
     CHECK(hasindex(t7,l2));
-    CHECK_CLOSE(t7(l1(1),l2(1)),a,1E-10);
-    CHECK_CLOSE(t7(l1(1),l2(2)),0,1E-10);
-    CHECK_CLOSE(t7(l1(2),l2(1)),0,1E-10);
-    CHECK_CLOSE(t7(l1(2),l2(2)),a,1E-10);
-    CHECK_CLOSE(t7.norm(),sqrt(min(l1.m(),l2.m()))*fabs(a),1E-10);
+    CHECK_CLOSE(t7(l1(1),l2(1)),a,1E-5);
+    CHECK_CLOSE(t7(l1(1),l2(2)),0,1E-5);
+    CHECK_CLOSE(t7(l1(2),l2(1)),0,1E-5);
+    CHECK_CLOSE(t7(l1(2),l2(2)),a,1E-5);
+    CHECK_CLOSE(t7.norm(),sqrt(min(l1.m(),l2.m()))*fabs(a),1E-5);
 
     Matrix M(l1.m(),b3.m()); 
     M(1,1) = 11; M(1,2) = 12; M(1,3) = 13;
@@ -1357,6 +1357,83 @@ TEST(CommonIndex)
 
     CHECK(commonIndex(T1,T2) == s1);
     CHECK(commonIndex(T1,T2,Site) == s1);
+    }
+
+TEST(DiagITensorBasicContraction)
+    {
+    Vector v(3);
+    v(1) = -0.8;
+    v(2) = 1.7;
+    v(3) = 4.9;
+
+    Vector vb(2);
+    vb(1) = 1;
+    vb(2) = -1;
+
+    const Real f1 = ran1(),
+               f2 = ran1();
+
+    ITensor op1(s1,primed(s1),f1),
+            op2(s1,primed(s1),f2),
+            opa(s1,a1,3.1),
+            psi(s1,l1,-1),
+            opb(s1,b2,vb),
+            r1(s1,primed(s1,2)),
+            r2(s1,primed(s1,2));
+
+    r1.randomize();
+    r2.randomize();
+
+    CHECK(op1.type() == ITensor::Diag);
+    CHECK(op2.type() == ITensor::Diag);
+    CHECK(opa.type() == ITensor::Diag);
+    CHECK(opb.type() == ITensor::Diag);
+    CHECK(psi.type() == ITensor::Diag);
+
+    CHECK(r1.type() == ITensor::Dense);
+    CHECK(r2.type() == ITensor::Dense);
+    
+    ITensor op3 = op1 + Complex_i*op2;
+
+    CHECK(op3.type() == ITensor::Diag);
+
+    ITensor res1 = op1*r1;
+    CHECK(res1.type() == ITensor::Dense);
+    res1.mapprime(1,0);
+    ITensor diff1 = res1-f1*r1;
+    CHECK(diff1.norm() < 1E-10);
+
+    ITensor res2 = r1*op1;
+    CHECK(res2.type() == ITensor::Dense);
+    res2.mapprime(1,0);
+    ITensor diff2 = res2-f1*r1;
+    CHECK(diff2.norm() < 1E-10);
+
+    ITensor rc = r1+Complex_i*r2;
+
+    ITensor res3 = rc*op1;
+    res3.mapprime(1,0);
+    CHECK(res3.type() == ITensor::Dense);
+    CHECK(res3.isComplex());
+    ITensor diff3 = res3-f1*rc;
+    CHECK(diff3.norm() < 1E-10);
+
+    ITensor res4 = op1*rc;
+    res4.mapprime(1,0);
+    CHECK(res4.type() == ITensor::Dense);
+    CHECK(res4.isComplex());
+    ITensor diff4 = res4-f1*rc;
+    CHECK(diff4.norm() < 1E-10);
+
+    ITensor res5 = rc*op3;
+    CHECK(res5.type() == ITensor::Dense);
+    CHECK(res5.isComplex());
+    ITensor rres5(realPart(res5)),
+            ires5(imagPart(res5));
+    ITensor rdiff5 = rres5-(r1*op1-r2*op2),
+            idiff5 = ires5-(r1*op2+r2*op1);
+    CHECK(rdiff5.norm() < 1E-10);
+    CHECK(idiff5.norm() < 1E-10);
     }
 
 BOOST_AUTO_TEST_SUITE_END()

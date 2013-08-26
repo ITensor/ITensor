@@ -165,8 +165,6 @@ template <class BigMatrixT, class Tensor>
 Real inline Eigensolver::
 davidson(const BigMatrixT& A, Tensor& phi) const
     {
-    typedef typename Tensor::SparseT
-    SparseT;
 
     const Real phinorm = phi.norm();
     if(phinorm == 0.0)
@@ -499,8 +497,6 @@ template <class BigMatrixTA, class BigMatrixTB, class Tensor>
 inline Real Eigensolver::
 genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi) const
     {
-    typedef typename Tensor::SparseT
-    SparseT;
 
     //B-normalize phi
     {

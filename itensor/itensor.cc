@@ -10,10 +10,64 @@ using boost::shared_ptr;
 using boost::make_shared;
 
 #ifdef DEBUG
-#define ITENSOR_CHECK_NULL if(!r_) Error("ITensor is null");
+#define ITENSOR_CHECK_NULL if(type_ == Null) Error("ITensor is null");
 #else
 #define ITENSOR_CHECK_NULL
 #endif
+
+int
+_ind(const IndexSet<Index>& is,
+     int i1, int i2, int i3, int i4, 
+     int i5, int i6, int i7, int i8);
+
+
+int static
+IT_TypeToInt(ITensor::Type t)
+    {
+    if(t == ITensor::Null)
+        {
+        return 0;
+        }
+    else
+    if(t == ITensor::Dense)
+        {
+        return 1;
+        }
+    else
+    if(t == ITensor::Diag)
+        {
+        return 2;
+        }
+    else
+        {
+        Error("Unrecognized value of ITensor::Type enum");
+        }
+    return 0;
+    }
+
+ITensor::Type static
+IT_IntToType(int n)
+    {
+    if(n == 0)
+        {
+        return ITensor::Null;
+        }
+    else
+    if(n == 1)
+        {
+        return ITensor::Dense;
+        }
+    else
+    if(n == 2)
+        {
+        return ITensor::Diag;
+        }
+    else
+        {
+        Error("Unrecognized integer for conversion to ITensor::Type.");
+        }
+    return ITensor::Null;
+    }
 
 void
 reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vector& res)
@@ -197,6 +251,7 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
 ITensor::
 ITensor()  
     : 
+    type_(Null),
     scale_(1)
     { }
 
@@ -204,6 +259,7 @@ ITensor()
 ITensor::
 ITensor(Real val) 
     :
+    type_(Dense),
     scale_(1)
     { 
     allocate(1);
@@ -213,6 +269,7 @@ ITensor(Real val)
 ITensor::
 ITensor(const Index& i1) 
     :
+    type_(Dense),
     is_(i1),
     scale_(1)
 	{ 
@@ -222,6 +279,7 @@ ITensor(const Index& i1)
 ITensor::
 ITensor(const Index& i1, Real val) 
     :
+    type_(Dense),
     is_(i1),
     scale_(1)
 	{ 
@@ -232,6 +290,7 @@ ITensor(const Index& i1, Real val)
 ITensor::
 ITensor(const Index& i1, const VectorRef& V) 
     : 
+    type_(Dense),
     r_(make_shared<ITDat>(V)),
     is_(i1),
     scale_(1)
@@ -243,6 +302,7 @@ ITensor(const Index& i1, const VectorRef& V)
 ITensor::
 ITensor(const Index& i1,const Index& i2) 
     :
+    type_(Dense),
     is_(i1,i2),
     scale_(1)
 	{ 
@@ -256,22 +316,32 @@ ITensor(const Index& i1,const Index& i2,Real a)
     is_(i1,i2),
     scale_(1)
 	{
-    allocate(i1.m()*i2.m());
-	if(is_.rn() == 2) //then index order is i1, i2
-	    {
-	    const int nn = min(i1.m(),i2.m());
-	    for(int i = 1; i <= nn; ++i) 
-		r_->v((i-1)*i1.m()+i) = a;
-	    }
-	else 
-        {
-	    r_->v(1) = a;
-        }
+    type_ = Diag;
+    const int dim = min(i1.m(),i2.m());
+    allocate(dim);
+    r_->v = a;
+	}
+
+ITensor::
+ITensor(const Index& i1,const Index& i2, const VectorRef& V) 
+    :
+    is_(i1,i2),
+    scale_(1)
+	{
+    type_ = Diag;
+    const int dim = min(i1.m(),i2.m());
+    allocate();
+    r_->v = V;
+#ifdef DEBUG
+    if(V.Length() != dim)
+        Error("Diagonal vector must have length == min(i1.m(),i2.m())");
+#endif
 	}
 
 ITensor::
 ITensor(const Index& i1,const Index& i2,const MatrixRef& M) 
     :
+    type_(Dense),
     is_(i1,i2),
     scale_(1)
 	{
@@ -288,6 +358,7 @@ ITensor(const Index& i1, const Index& i2, const Index& i3,
         const Index& i4, const Index& i5, const Index& i6,
         const Index& i7, const Index& i8)
     :
+    type_(Dense),
     scale_(1)
 	{
 #ifdef DEBUG
@@ -309,6 +380,7 @@ ITensor(const Index& i1, const Index& i2, const Index& i3,
 ITensor::
 ITensor(const IndexVal& iv)
     :
+    type_(Dense),
     is_(Index(iv)),
     scale_(1)
 	{ 
@@ -319,6 +391,7 @@ ITensor(const IndexVal& iv)
 ITensor::
 ITensor(const IndexVal& iv1, const IndexVal& iv2) 
     :
+    type_(Dense),
     is_(iv1,iv2),
     scale_(1)
 	{ 
@@ -332,6 +405,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
         const IndexVal& iv5, const IndexVal& iv6, 
         const IndexVal& iv7, const IndexVal& iv8)
     :
+    type_(Dense),
     scale_(1)
 	{
     //Construct ITensor
@@ -362,6 +436,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
 ITensor::
 ITensor(const IndexSet<Index>& I) 
     :
+    type_(Dense),
     is_(I),
     scale_(1)
 	{
@@ -371,6 +446,7 @@ ITensor(const IndexSet<Index>& I)
 ITensor::
 ITensor(const IndexSet<Index>& I, const Vector& V) 
     : 
+    type_(Dense),
     r_(make_shared<ITDat>(V)),
     is_(I),
     scale_(1)
@@ -385,6 +461,7 @@ ITensor(const IndexSet<Index>& I, const Vector& V)
 ITensor::
 ITensor(const IndexSet<Index>& I, const ITensor& other) 
     : 
+    type_(other.type_),
     r_(other.r_), 
     i_(other.i_), 
     is_(I),
@@ -399,6 +476,7 @@ ITensor(const IndexSet<Index>& I, const ITensor& other)
 ITensor::
 ITensor(const IndexSet<Index>& I, const ITensor& other, const Permutation& P) 
     : 
+    type_(other.type_),
     is_(I),
     scale_(other.scale_)
     {
@@ -449,9 +527,11 @@ takeImagPart()
 void ITensor::
 read(std::istream& s)
     { 
-    bool isNull_;
-    s.read((char*) &isNull_,sizeof(isNull_));
-    if(isNull_) { *this = ITensor(); return; }
+    int tint = 0;
+    s.read((char*) &tint,sizeof(tint));
+    type_ = IT_IntToType(tint);
+
+    if(type_ == Null) { *this = ITensor(); return; }
 
     is_.read(s);
     scale_.read(s);
@@ -469,9 +549,10 @@ read(std::istream& s)
 void ITensor::
 write(std::ostream& s) const 
     { 
-    bool isNull_ = isNull();
-    s.write((char*) &isNull_,sizeof(isNull_));
-    if(isNull_) return;
+    int tint = IT_TypeToInt(type_);
+    s.write((char*) &tint,sizeof(tint));
+
+    if(type_ == Null) return;
 
     is_.write(s);
     scale_.write(s);
@@ -617,7 +698,6 @@ operator()(const IndexVal& iv1)
 Real ITensor::
 operator()(const IndexVal& iv1) const
 	{
-    ITENSOR_CHECK_NULL
 #ifdef DEBUG
     if(is_.rn() > 1) 
         {
@@ -639,6 +719,17 @@ operator()(const IndexVal& iv1, const IndexVal& iv2)
     {
     solo(); 
     scaleTo(1);
+
+    if(type_ == Diag && iv1.i != iv2.i)
+        {
+        convertToDense();
+        }
+
+    if(type_ == Diag)
+        {
+        return r_->v(iv1.i);
+        }
+
     return r_->v[_ind2(iv1,iv2)];
     }
 
@@ -646,17 +737,30 @@ Real ITensor::
 operator()(const IndexVal& iv1, const IndexVal& iv2) const
     {
     ITENSOR_CHECK_NULL
+    if(type_ == Diag)
+        {
+        if(iv1.i != iv2.i) return 0;
+        return r_->v(iv1.i);
+        }
     return scale_.real()*r_->v[_ind2(iv1,iv2)];
     }
 
 Real& ITensor::
 operator()(const IndexVal& iv1, const IndexVal& iv2, 
            const IndexVal& iv3, const IndexVal& iv4, 
-           const IndexVal& iv5,const IndexVal& iv6,
-           const IndexVal& iv7,const IndexVal& iv8)
+           const IndexVal& iv5, const IndexVal& iv6,
+           const IndexVal& iv7, const IndexVal& iv8)
     {
     solo(); 
     scaleTo(1);
+    if(type_ == Diag)
+        {
+        const int di = _diag_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8);
+        if(di == -1)
+            convertToDense();
+        else
+            return r_->v(di);
+        }
     return r_->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
     }
 
@@ -667,44 +771,50 @@ operator()(const IndexVal& iv1, const IndexVal& iv2,
            const IndexVal& iv7,const IndexVal& iv8) const
     {
     ITENSOR_CHECK_NULL
+    if(type_ == Diag)
+        {
+        const int di = _diag_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8);
+        if(di == -1) return 0;
+        return scale_.real()*r_->v(di);
+        }
     return scale_.real()*r_->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
     }
 
-//#define DO_REWRITE_ASSIGN
-
-/*
-void ITensor::
-assignFrom(const ITensor& other)
+//Process IndexVals for element access when ITensor
+//has type_ == Diag
+int ITensor::
+_diag_ind8(const IndexVal& iv1, const IndexVal& iv2, 
+           const IndexVal& iv3, const IndexVal& iv4,
+           const IndexVal& iv5, const IndexVal& iv6,
+           const IndexVal& iv7, const IndexVal& iv8) const
     {
-    if(this == &other) return;
-    if(fabs(other.is_.uniqueReal() - is_.uniqueReal()) > 1E-12)
+    if(iv1 == IndexVal::Null())
+        Error("Null IndexVal argument");
+
+    array<const IndexVal*,NMAX> iv = 
+        {{ &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
+
+    //Loop over the given IndexVals
+    for(int j = 1; j < is_.r(); ++j)
         {
-        Print(*this); Print(other);
-        Error("assignFrom: unique Real not the same"); 
+        const IndexVal& J = *iv[j];
+        if(J == IndexVal::Null()) break;
+        if(J.i != iv1.i) return -1; //off-diagonal, signal with a -1
+        //otherwise J.i == iv1.i, continue checking all non-Null IndexVals
         }
-#ifdef DO_REWRITE_ASSIGN
-    is_ = other.is_;
-    scale_ = other.scale_;
-    p = other.p;
-#else
-    Permutation P; 
-    getperm(is_,other.is_,P);
-    scale_ = other.scale_;
-    if(!p.unique())
-        { 
-        p = make_shared<ITDat>(); 
-        }
-    reshape(P,other.r_->v,r_->v);
-    DO_IF_PS(++Prodstats::stats().c1;)
-#endif
+    return iv1.i;
     }
-    */
 
 
 void ITensor::
 groupIndices(const array<Index,NMAX+1>& indices, int nind, 
              const Index& grouped, ITensor& res) const
     {
+    if(type_ == Diag)
+        {
+        Error("groupIndices not yet defined for type() == Diag");
+        }
+
     array<int,NMAX+1> isReplaced; 
     isReplaced.assign(0);
 
@@ -777,6 +887,11 @@ void ITensor::
 tieIndices(const array<Index,NMAX>& indices, int nind,
            const Index& tied)
     {
+    if(type_ == Diag)
+        {
+        Error("tieIndices not yet defined for type() == Diag");
+        }
+
     if(nind == 0) Error("No indices given");
 
     const int tm = tied.m();
@@ -929,6 +1044,11 @@ tieIndices(const Index& i1, const Index& i2,
 ITensor& ITensor::
 trace(const array<Index,NMAX>& indices, int nind)
     {
+    if(type_ == Diag)
+        {
+        Error("trace not yet defined for type() == Diag");
+        }
+
     if(nind < 0)
         {
         nind = 0;
@@ -1079,6 +1199,11 @@ trace(const Index& i1, const Index& i2,
 void ITensor::
 expandIndex(const Index& small, const Index& big, int start)
     {
+    if(type_ == Diag)
+        {
+        Error("expandIndex not yet defined for type() == Diag");
+        }
+
 #ifdef DEBUG
     if(small.m() > big.m())
         {
@@ -1212,10 +1337,32 @@ assignToVec(VectorRef v) const
     v *= scale_.real();
     }
 
+void ITensor::
+pseudoInvert(Real cutoff)
+    {
+    if(type_ != Diag)
+        Error("pseudoInvert only defined for ITensor of type()==ITensor::Diag");
+    if(this->isComplex())
+        Error("pseudoInvert currently only defined for real ITensor");
+    solo();
+    scale_.pow(-1); //succeeds even if scale_ == 0
+    for(int j = 1; j <= r_->size(); ++j)
+        {
+        if(r_->v(j) > cutoff)
+            r_->v(j) = 1./r_->v(j);
+        else
+            r_->v(j) = 0;
+        }
+    }
+
 
 void ITensor::
 reshapeDat(const Permutation& P)
     {
+    if(type_ == Diag)
+        {
+        Error("reshapeDat not yet defined for type() == Diag");
+        }
     if(P.isTrivial()) return;
     solo();
     Vector newdat;
@@ -1232,6 +1379,10 @@ reshapeDat(const Permutation& P)
 void ITensor::
 swap(ITensor& other)
     {
+    const Type tmp = type_;
+    type_ = other.type_;
+    other.type_ = tmp;
+
     r_.swap(other.r_);
     i_.swap(other.i_);
     is_.swap(other.is_);
@@ -1256,6 +1407,7 @@ void ITensor::
 randomize() 
     { 
     solo(); 
+    convertToDense();
     r_->v.Randomize(); 
     if(i_) i_->v.Randomize();
     }
@@ -1377,9 +1529,9 @@ soloReal()
     ITENSOR_CHECK_NULL
     if(!r_.unique())
         { 
-        VectorRef oldv(r_->v);
-        r_ = boost::make_shared<ITDat>();
-        r_->v = oldv;
+        boost::shared_ptr<ITDat> newr = boost::make_shared<ITDat>();
+        newr->v = r_->v;
+        r_.swap(newr);
         }
     }
 
@@ -1390,9 +1542,9 @@ soloImag()
 
     if(!i_.unique())
         { 
-        VectorRef oldv(i_->v);
-        i_ = boost::make_shared<ITDat>();
-        i_->v = oldv;
+        boost::shared_ptr<ITDat> newi = boost::make_shared<ITDat>();
+        newi->v = i_->v;
+        i_.swap(newi);
         }
 	}
 
@@ -1582,6 +1734,7 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
     }
 
 
+
 //
 // Analyzes two ITensors to determine
 // how they should be multiplied:
@@ -1668,6 +1821,10 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
              bool& L_is_matrix, bool& R_is_matrix, bool doReshape)
     {
 #ifdef DEBUG
+    if(L.type() == ITensor::Diag)
+        Error("toMatrixProd not implemented for ITensor of type Diag (L)");
+    if(R.type() == ITensor::Diag)
+        Error("toMatrixProd not implemented for ITensor of type Diag (R)");
     if(L.isNull())
         Error("L null in toMatrixProd");
     if(R.isNull())
@@ -1764,6 +1921,11 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
 ITensor& ITensor::
 operator/=(const ITensor& other)
     {
+    if(type_ == Diag)
+        Error("Non-contracting product not yet implemented for type Diag (this)");
+    if(other.type_ == Diag)
+        Error("Non-contracting product not yet implemented for type Diag (other)");
+
     if(this == &other)
         {
         ITensor cp_oth(other);
@@ -1918,7 +2080,7 @@ operator/=(const ITensor& other)
     }
 
 
-void
+void static
 directMultiply(const ITensor& L,
                const ITensor& R, 
                ProductProps& props, 
@@ -2004,26 +2166,264 @@ directMultiply(const ITensor& L,
             }
         }
 
-    } //ITensor::directMultiply
+    } //directMultiply
+
+
+void
+contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
+    {
+#ifdef DEBUG
+    if(!(S.type_ == ITensor::Diag && T.type_ == ITensor::Dense))
+        Error("contractDiagDense assumes first argument Diag, second Dense");
+#endif
+
+    res.type_ = ITensor::Dense;
+
+    /*
+    if(T.isComplex())
+        {
+        ITensor ri;
+        product(S,imagPart(T),ri);
+        product(S,realPart(T),res);
+        if(res.scale_.sign() != 0)
+            {
+            ri.scaleTo(res.scale_);
+            }
+        else
+            {
+            res.soloReal();
+            res.r_->v *= 0;
+            res.scale_ = ri.scale_;
+            }
+        res.i_.swap(ri.r_);
+        return;
+        }
+        */
+
+    //This is set to true if some of the indices
+    //of res come from S.
+    //If false, there is an extra loop in the sum
+    //tracing over the elements of S.
+    bool res_has_Sind = false; 
+
+    //The ti pointers connect
+    //the indices of T to either
+    //the Counter created below 
+    //or the diagonal index of S
+    //
+    //The ri pointer does the same
+    //but for res
+    const int zero = 0;
+    array<const int*,NMAX+1> ti,
+                             ri; 
+
+    for(int n = 0; n <= NMAX; ++n)
+        {
+        ti[n] = &zero;
+        ri[n] = &zero;
+        }
+
+    //Index that will loop over 
+    //the diagonal elems of S
+    int diag_ind = 0;
+    const int dsize = S.r_->size();
+
+    //Create a Counter that only loops
+    //over the free Indices of T
+    Counter tc;
+
+    res.is_.clear();
+    int alloc_size = 1;
+
+    //
+    // tcon[j] = i means that the 
+    // jth Index of T is contracted
+    // with the ith Index of S
+    //
+    // tcon[j] = 0 means not contracted
+    //
+    // (scon is similar but for S)
+    //
+    array<int,NMAX+1> tcon,
+                      scon;
+    tcon.assign(0);
+    scon.assign(0);
+    int ncon = 0; //number contracted
+
+    //Analyze contracted Indices
+    for(int i = 1; i <= S.r(); ++i)
+    for(int j = 1; j <= T.r(); ++j)
+        if(S.is_.index(i) == T.is_.index(j))
+            {
+            scon[i] = j;
+            tcon[j] = i;
+
+            ++ncon;
+            }
+
+    //Put uncontracted m != 1 Indices
+    //of S into res
+    for(int i = 1; i <= S.is_.rn(); ++i)
+        if(scon[i] == 0)
+            {
+            res.is_.addindex(S.is_[i-1]);
+            alloc_size *= S.is_[i-1].m();
+            res_has_Sind = true;
+
+            //Link ri pointer to diagonal of S
+            ri[res.is_.r()] = &(diag_ind);
+            }
+
+    //Put uncontracted m != 1 Indices
+    //of T into res
+    for(int i = 1; i <= T.is_.rn(); ++i)
+        if(tcon[i] == 0)
+            {
+            res.is_.addindex(T.is_[i-1]);
+            alloc_size *= T.is_[i-1].m();
+
+            //Init appropriate elements
+            //of Counter tc
+            tc.n[++tc.rn] = T.is_[i-1].m();
+            ++tc.r;
+            //Link up ti pointer
+            //cerr << format("Linking ti[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % i % tc.rn % tc.rn % (tc.n[tc.rn]);
+            ti[i] = &(tc.i[tc.rn]);
+
+            //Link ri pointer to free index of T
+            //cerr << format("Linking ri[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % res.is_.r() % tc.rn % tc.rn % (tc.n[tc.rn]);
+            ri[res.is_.r()] = &(tc.i[tc.rn]);
+            }
+        else
+            {
+            //If contracted, will
+            //be summed with diag of S
+            ti[i] = &(diag_ind);
+            }
+
+    //Put uncontracted m == 1 Indices
+    //of S into res
+    for(int i = S.is_.rn()+1; i <= S.r(); ++i)
+        if(scon[i] == 0)
+            {
+            res.is_.addindex(S.is_[i-1]);
+            }
+
+    //Put uncontracted m == 1 Indices
+    //of T into res
+    for(int i = T.is_.rn()+1; i <= T.r(); ++i)
+        if(tcon[i] == 0)
+            {
+            res.is_.addindex(T.is_.index(i));
+            }
+
+#ifdef DEBUG
+    if(res.is_.r() != (S.r()+T.r() - 2*ncon))
+        {
+        Print(res.is_);
+        cout << format("res.is_.r() = %d != (S.r()+T.r()-2*ncon) = %d")
+            % res.is_.r() % (S.r()+T.r()-2*ncon) << endl;
+        Error("Incorrect rank");
+        }
+#endif
+
+    res.scale_ = S.scale_ * T.scale_;
+
+    //If S has dimension 1
+    //it is just a scalar.
+    //res may have different m==1 
+    //Indices than T, though.
+    if(S.is_.rn() == 0)
+        {
+        res.r_ = T.r_;
+        res.i_ = T.i_;
+        res *= S.r_->v(1);
+        return;
+        }
+
+    //Allocate a new dat for res if necessary
+    if(res.isNull() || !res.r_.unique())
+        { 
+        res.r_ = boost::make_shared<ITDat>(alloc_size); 
+        }
+    else
+        {
+        res.r_->v.ReDimension(alloc_size);
+        res.r_->v *= 0;
+        }
+
+    //Finish initting Counter tc
+    for(int k = tc.rn+1; k <= NMAX; ++k)
+        {
+        tc.n[k] = 1;
+        }
+
+
+    const Vector& Tdat = T.r_->v;
+    Vector& resdat = res.r_->v;
+
+    if(res_has_Sind)
+        {
+        //cout << "Case III\n";
+        for(tc.reset(); tc.notDone(); ++tc)
+        for(diag_ind = 0; diag_ind < dsize; ++diag_ind)
+            {
+            resdat[_ind(res.is_,*ri[1],*ri[2],
+                                *ri[3],*ri[4],
+                                *ri[5],*ri[6],
+                                *ri[7],*ri[8])]
+             = S.r_->v[diag_ind] 
+               * Tdat[_ind(T.is_,*ti[1],*ti[2],
+                                 *ti[3],*ti[4],
+                                 *ti[5],*ti[6],
+                                 *ti[7],*ti[8])];
+            }
+        }
+    else
+        {
+        //cout << "Case IV\n";
+        for(tc.reset(); tc.notDone(); ++tc)
+            {
+            Real val = 0;
+            for(diag_ind = 0; diag_ind < dsize; ++diag_ind)
+                {
+                val +=
+                S.r_->v[diag_ind] 
+                * Tdat[_ind(T.is_,*ti[1],*ti[2],
+                                  *ti[3],*ti[4],
+                                  *ti[5],*ti[6],
+                                  *ti[7],*ti[8])];
+                }
+            resdat[_ind(res.is_,*ri[1],*ri[2],
+                                *ri[3],*ri[4],
+                                *ri[5],*ri[6],
+                                *ri[7],*ri[8])]
+            = val;
+            }
+        }
+
+    } // contractDiagDense
 
 
 ITensor& ITensor::
 operator*=(const ITensor& other)
     {
+    if(this->isNull() || other.isNull())
+        Error("Null ITensor in product");
+
     if(this == &other)
         {
         ITensor cp_oth(other);
         return operator*=(cp_oth);
         }
 
+    /* Following code suspicious: doesn't modify indices...
     if(scale_.isZero() || other.scale_.isZero())
         {
         scale_ = 0;
         return *this;
         }
-
-    if(this->isNull() || other.isNull())
-        Error("Null ITensor in product");
+        */
 
     if(this->isComplex())
         {
@@ -2054,17 +2454,12 @@ operator*=(const ITensor& other)
         else
             {
             //This complex, other real
-            ITensor rr(*this);
-            rr.takeRealPart();
-            rr *= other;
-            ITensor ir(*this);
-            ir.takeImagPart();
+            ITensor ir(imagPart(*this));
             ir *= other;
-            rr.equalizeScales(ir);
-            r_.swap(rr.r_);
+            takeRealPart();
+            operator*=(other);
+            equalizeScales(ir);
             i_.swap(ir.r_);
-            scale_ = rr.scale_;
-            is_.swap(rr.is_);
             return *this;
             }
         }
@@ -2072,11 +2467,35 @@ operator*=(const ITensor& other)
     if(other.isComplex())
         {
         //This real, other complex
-        ITensor ri = operator*(*this,imagPart(other));
+        ITensor oi(imagPart(other));
+        ITensor cp_this(*this);
+        cp_this *= oi;
         operator*=(realPart(other));
-        equalizeScales(ri);
-        i_.swap(ri.r_);
+        equalizeScales(cp_this);
+        i_.swap(cp_this.r_);
         return *this;
+        }
+
+    //Handle Diag/Dense cases requiring conversion
+    if(type_==Diag && other.type_==Dense)
+        {
+        ITensor res;
+        contractDiagDense(*this,other,res);
+        this->swap(res);
+        return *this;
+        }
+    else
+    if(type_==Dense && other.type_==Diag)
+        {
+        ITensor res;
+        contractDiagDense(other,*this,res);
+        this->swap(res);
+        return *this;
+        }
+    else
+    if(type_==Diag && other.type_==Diag)
+        {
+        Error("ITensor Diag*Diag not implemented");
         }
 
     //These hold  regular new indices and the m==1 indices that appear in the result
@@ -2216,6 +2635,18 @@ operator*=(const ITensor& other)
     } //ITensor::operator*=(ITensor)
 
 
+bool static
+checkSameIndOrder(const IndexSet<Index> is1,
+                  const IndexSet<Index> is2)
+    {
+    for(int j = 0; j < is1.rn(); ++j)
+    if(is1[j] != is2[j])
+        { 
+        return false;
+        }
+    return true;
+    }
+
 
 ITensor& ITensor::
 operator+=(const ITensor& other)
@@ -2232,15 +2663,18 @@ operator+=(const ITensor& other)
         return *this; 
         }
 
-    if(this->scale_.isZero())
+    //Handle Diag/Dense cases requiring conversion
+    if(type_==Dense && other.type_==Diag)
         {
-        *this = other;
+        ITensor cp_o(other);
+        cp_o += *this;
+        swap(cp_o);
         return *this;
         }
-
-    if((other.scale_/scale_).isRealZero()) 
-        { 
-        return *this; 
+    else
+    if(type_==Diag && other.type_==Dense)
+        {
+        convertToDense();
         }
 
     const bool complex_this = this->isComplex();
@@ -2288,11 +2722,10 @@ operator+=(const ITensor& other)
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
         }
 
+    const bool bothDiag = (type_==Diag && other.type_==Diag);
 
-    solo();
-
-    Vector& thisdat = r_->v;
-    const Vector& othrdat = other.r_->v;
+    const
+    bool same_ind_order = (bothDiag || checkSameIndOrder(is_,other.is_));
 
     Real scalefac = 1;
     if(scale_.magnitudeLessThan(other.scale_)) 
@@ -2304,13 +2737,10 @@ operator+=(const ITensor& other)
         scalefac = (other.scale_/scale_).real();
         }
 
-    bool same_ind_order = true;
-    for(int j = 0; j < is_.rn(); ++j)
-    if(is_[j] != other.is_[j])
-        { 
-        same_ind_order = false; 
-        break; 
-        }
+    solo();
+
+    Vector& thisdat = r_->v;
+    const Vector& othrdat = other.r_->v;
 
     if(same_ind_order) 
         { 
@@ -2337,11 +2767,6 @@ operator+=(const ITensor& other)
         n[P.dest(k)] = c.n[k];
         }
 
-//#ifdef STRONG_DEBUG
-    //Real tot_this = thisdat.sumels();
-    //Real tot_othr = othrdat.sumels();
-//#endif
-
     if(scalefac == 1)
         {
         for(; c.notDone(); ++c)
@@ -2363,21 +2788,6 @@ operator+=(const ITensor& other)
             }
         }
 
-
-    /*
-#ifdef STRONG_DEBUG
-    Real new_tot = thisdat.sumels();
-    Real compare = tot_this + scalefac*tot_othr;
-    Real ref = Norm(thisdat);
-    if(fabs(compare) > 1E-12 && fabs(new_tot-compare) > 1E-12 * ref)
-	{
-	Real di = new_tot - compare;
-	cerr << format("new_tot = %f, compare = %f, dif = %f\n")%new_tot%compare%di;
-	Error("Incorrect sum");
-	}
-#endif
-    */
-
     return *this;
     } 
 
@@ -2398,6 +2808,9 @@ operator-=(const ITensor& other)
 void ITensor::
 fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     {
+    if(type_ == Diag)
+        Error("fromMatrix not implemented for ITensor type Diag");
+
     DO_IF_DEBUG(if(i1.m() != M.Nrows()) Error("fromMatrix11: wrong number of rows");)
     DO_IF_DEBUG(if(i2.m() != M.Ncols()) Error("fromMatrix11: wrong number of cols");)
 
@@ -2422,6 +2835,9 @@ fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
 void ITensor::
 toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
     {
+    if(type_ == Diag)
+        Error("toMatrix not implemented for ITensor type Diag");
+
     if(r() != 2) Error("toMatrix11: incorrect rank");
     if(this->isComplex())
         Error("toMatrix11 defined only for real ITensor");
@@ -2437,6 +2853,9 @@ toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
 void ITensor::
 toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
     { 
+    if(type_ == Diag)
+        Error("toMatrix not implemented for ITensor type Diag");
+
     toMatrix11NoScale(i1,i2,res); 
     res *= scale_.real(); 
     }
@@ -2445,6 +2864,9 @@ void ITensor::
 toMatrix12NoScale(const Index& i1, const Index& i2, 
                   const Index& i3, Matrix& res) const
     {
+    if(type_ == Diag)
+        Error("toMatrix not implemented for ITensor type Diag");
+
     if(r() != 3) Error("toMatrix11: incorrect rank");
     if(this->isComplex())
         Error("toMatrix12 defined only for real ITensor");
@@ -2470,6 +2892,9 @@ void ITensor::
 toMatrix12(const Index& i1, const Index& i2, 
            const Index& i3, Matrix& res) const
     { 
+    if(type_ == Diag)
+        Error("toMatrix not implemented for ITensor type Diag");
+
     toMatrix12NoScale(i1,i2,i3,res); 
     res *= scale_.real(); 
     }
@@ -2478,14 +2903,21 @@ void ITensor::
 fromMatrix12(const Index& i1, const Index& i2, 
              const Index& i3, const Matrix& M)
     {
+    if(type_ == Diag)
+        Error("fromMatrix not implemented for ITensor type Diag");
+
     ITensor Q(i3,i1,i2);
     Q.r_->v = M.TreatAsVector();
     *this = Q;
     }
 
 // group i1,i2; i3,i4
-void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
+void ITensor::
+toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
     {
+    if(type_ == Diag)
+        Error("toMatrix not implemented for ITensor type Diag");
+
     if(r() != 4) Error("toMatrix22: incorrect rank");
     if(this->isComplex())
         Error("toMatrix22 defined only for real ITensor");
@@ -2510,6 +2942,9 @@ void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, cons
 void ITensor::
 fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4, const Matrix& M)
     {
+    if(type_ == Diag)
+        Error("fromMatrix not implemented for ITensor type Diag");
+
     if(i3.m()*i4.m() != M.Ncols()) Error("fromMatrix22: wrong number of cols");
     if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix22: wrong number of rows");
     ITensor Q(i3,i4,i1,i2);
@@ -2574,6 +3009,35 @@ void ITensor::fromMatrix12(const Index& i1, const Index& i2, const Index& i3, co
 }
 */
 
+void ITensor::
+convertToDense()
+    {
+    ITENSOR_CHECK_NULL
+    if(type_ == Diag)
+        {
+        solo();
+        const int dim = is_.dim(); //dense dimension
+        boost::shared_ptr<ITDat> oldr = r_;
+        allocate(dim);
+        const int ds = oldr->size();
+        for(int j = 0; j < ds; ++j)
+            {
+            r_->v[_ind(is_,j,j,j,j,j,j,j,j)] = oldr->v[j];
+            }
+
+        if(this->isComplex())
+            {
+            boost::shared_ptr<ITDat> oldi = i_;
+            allocateImag(dim);
+            for(int j = 0; j < ds; ++j)
+                {
+                i_->v[_ind(is_,j,j,j,j,j,j,j,j)] = oldi->v[j];
+                }
+            }
+        }
+    type_ = Dense;
+    }
+
 ostream& 
 operator<<(ostream & s, const ITensor& t)
     {
@@ -2584,6 +3048,8 @@ operator<<(ostream & s, const ITensor& t)
 
     const
     bool iscplx = t.isComplex();
+    const 
+    bool isdiag = (t.type() == ITensor::Diag);
 
     if(t.isNull()) s << ", dat is null}\n";
     else 
@@ -2595,51 +3061,80 @@ operator<<(ostream & s, const ITensor& t)
             Real nrm = t.norm();
             if(nrm >= 1E-2 && nrm < 1E5)
                 {
-                s << format(", N=%.2f%s}\n") 
-                     % nrm
-                     % (iscplx ? ",C" : "");
+                s << format(",N=%.2f") % nrm;
                 }
             else
                 {
-                s << format(", N=%.1E%s}\n") 
-                     % nrm
-                     % (iscplx ? ",C" : "");
+                s << format(",N=%.1E") % nrm;
                 }
             }
         else
             {
-            s << ", N=too big} scale=" << t.scale() << "\n";
+            s << ",N=too big,scale=" << t.scale();
             }
 
-        if(Global::printdat())
+        s << format("%s%s}\n") 
+             % (isdiag ? ",D" : "")
+             % (iscplx ? ",C" : "");
+
+
+        if(Global::printdat() && t.r() != 0)
             {
             Real scale = 1.0;
             if(t.scale().isFiniteReal()) scale = t.scale().real();
             else s << "  (omitting too large scale factor)" << endl;
-            if(!iscplx)
+
+            if(t.type() == ITensor::Diag)
                 {
-                const Real* pv = t.datStart();
-                Counter c(t.indices());
-                for(; c.notDone(); ++c)
+                const int ds = t.indices().front().m();
+                for(int j = 1; j <= ds; ++j)
                     {
-                    Real val = pv[c.ind]*scale;
-                    if(fabs(val) > Global::printScale())
-                        { s << "  " << c << (format(" %.10f\n") % val); }
+                    const Real rval = t.r_->v(j)*scale;
+                    s << "  (" << j;
+                    for(int n = 2; n <= t.r(); ++n)
+                        {
+                        s << "," << j;
+                        }
+                    if(!iscplx)
+                        {
+                        s << format(") %.10f\n") % rval;
+                        }
+                    else
+                        {
+                        const Real ival = t.i_->v(j)*scale;
+                        const char sgn = (ival > 0 ? '+' : '-');
+                        s << format(") %.10f%s%.10fi\n") % rval % sgn % fabs(ival);
+                        }
                     }
                 }
-            else //t is complex
+            else
+            if(t.type() == ITensor::Dense)
                 {
-                const Real* pr = t.datStart();
-                const Real* pi = t.imagDatStart();
-                Counter c(t.indices());
-                for(; c.notDone(); ++c)
+                if(!iscplx)
                     {
-                    Real rval = pr[c.ind]*scale;
-                    Real ival = pi[c.ind]*scale;
-                    const char sgn = (ival > 0 ? '+' : '-');
-                    if(sqrt(sqr(rval)+sqr(ival)) > Global::printScale())
-                        { 
-                        s << "  " << c << (format(" %.10f%s%.10fi\n") % rval % sgn % fabs(ival)); 
+                    const Real* pv = t.datStart();
+                    Counter c(t.indices());
+                    for(; c.notDone(); ++c)
+                        {
+                        Real val = pv[c.ind]*scale;
+                        if(fabs(val) > Global::printScale())
+                            { s << "  " << c << (format(" %.10f\n") % val); }
+                        }
+                    }
+                else //t is complex
+                    {
+                    const Real* pr = t.datStart();
+                    const Real* pi = t.imagDatStart();
+                    Counter c(t.indices());
+                    for(; c.notDone(); ++c)
+                        {
+                        Real rval = pr[c.ind]*scale;
+                        Real ival = pi[c.ind]*scale;
+                        const char sgn = (ival > 0 ? '+' : '-');
+                        if(sqrt(sqr(rval)+sqr(ival)) > Global::printScale())
+                            { 
+                            s << "  " << c << (format(" %.10f%s%.10fi\n") % rval % sgn % fabs(ival)); 
+                            }
                         }
                     }
                 }
@@ -2727,6 +3222,10 @@ commaInit(ITensor& T,
     if(T_.isNull()) 
         Error("Can't assign to null ITensor");
 
+    if(T.type() == ITensor::Diag)
+        Error("commaInit not yet implemented for ITensor type Diag");
+
+
     boost::array<Index,NMAX> ii;
     ii.assign(Index::Null());
 
@@ -2751,7 +3250,7 @@ commaInit(ITensor& T,
         }
     catch(const ITError& e)
         {
-        Error("Not enough/wrong indices passed to commaInit");
+        Error("Not enough and/or wrong indices passed to commaInit");
         }
 
     T_.solo();
