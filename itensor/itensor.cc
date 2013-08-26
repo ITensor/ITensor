@@ -1407,7 +1407,7 @@ void ITensor::
 randomize() 
     { 
     solo(); 
-    if(type_ == Diag) convertToDense();
+    convertToDense();
     r_->v.Randomize(); 
     if(i_) i_->v.Randomize();
     }
