@@ -450,17 +450,24 @@ int MPSt<IQTensor>::averageM() const;
 
 
 void 
-plussers(const Index& l1, const Index& l2, Index& sumind, 
-          ITensor& first, ITensor& second)
+plussers(const Index& l1, const Index& l2, 
+         Index& sumind, 
+         ITensor& first, ITensor& second)
     {
     sumind = Index(sumind.rawname(),l1.m()+l2.m(),sumind.type());
     first = ITensor(l1,sumind,1);
-    second = ITensor(l2,sumind);
-    for(int i = 1; i <= l2.m(); ++i) second(l2(i),sumind(l1.m()+i)) = 1;
+    Matrix S(l2.m(),sumind.m());
+    S = 0;
+    for(int i = 1; i <= l2.m(); ++i) 
+        {
+        S(i,l1.m()+i) = 1;
+        }
+    second = ITensor(l2,sumind,S);
     }
 
 void 
-plussers(const IQIndex& l1, const IQIndex& l2, IQIndex& sumind, 
+plussers(const IQIndex& l1, const IQIndex& l2, 
+         IQIndex& sumind, 
          IQTensor& first, IQTensor& second)
     {
     map<Index,Index> l1map, l2map;
