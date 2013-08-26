@@ -170,20 +170,21 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
 
 
 //
+//
 // Eigen decomposition
 //
 // Computes eigenvalues V and eigenvectors D of an arbitrary tensor T.
-// T must be "square-matrix-like" in the sense that if it has indices i,j,k,...
-// it must also have indices i',j',k',...
-// D is a rank 1 tensor (vector) containing the eigenvalues.
-// On return, V has the unprimed indices of T and a new index shared with D.
-//
-// For fixed j:
-//    _     _            _
-// '-| |- -| |        '-| |     
-//   |T|   |V|- j  ==   |V|- j * j -|D| 
-// '-|_|- -|_|        '-|_|    
+// T must be "square-matrix-like" in the sense that if it has indices I,J,K,...
+// it must also have indices I',J',K',...
+// D is a diagonal rank 2 tensor (matrix) containing the eigenvalues.
+// On return, V has the unprimed indices of T and a new index shared with D
+// (the index labeled "C" below).
+//       __         __               __
+// I'-<-|  |-<-I-<-|  |        I'-<-|  |     
+//      |T |       |V |-<-C ==      |V'|-<-C'-<-(D)-<-C
+// J'-<-|__|-<-J-<-|__|        J'-<-|__|    
 // 
+//
 template<class Tensor>
 Spectrum 
 eigDecomp(const Tensor& T, Tensor& V, Tensor& D,

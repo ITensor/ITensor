@@ -1074,7 +1074,7 @@ eig_decomp(ITensor T, ITensor& V, ITensor& D, Spectrum& spec,
 
     Index newmid("d",ti.m(),ti.type());
     V = ITensor(ti,newmid,Ur);
-    D = ITensor(newmid,Dr);
+    D = ITensor(primed(newmid),newmid,Dr);
 
     if(Norm(Ui.TreatAsVector()) > 1E-12)
         {
@@ -1083,7 +1083,7 @@ eig_decomp(ITensor T, ITensor& V, ITensor& D, Spectrum& spec,
 
     if(Norm(Di) > 1E-12)
         {
-        D += ITensor(newmid,Di)*Complex_i;
+        D += ITensor(primed(newmid),newmid,Di)*Complex_i;
         }
 
     D *= T.scale();
@@ -1104,7 +1104,15 @@ eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
         }
 #endif
 
-    IQIndex ti = T.indices().front().noprime();
+    IQIndex ti; 
+    Foreach(const IQIndex& I, T.indices())
+        {
+        if(I.primeLevel() == 0)
+            {
+            ti = I;
+            break;
+            }
+        }
     IQIndex tiP = primed(ti);
 
     if(!hasindex(T,tiP))
@@ -1200,11 +1208,10 @@ eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
             }
         Vblocks.push_back(blk);
 
-        //ITensor Dblk(primed(nm),nm,dr);
-        ITensor Dblk(nm,dr);
+        ITensor Dblk(primed(nm),nm,dr);
         if(Norm(di) > 1E-12)
             {
-            Dblk += Complex_i*ITensor(nm,dr);
+            Dblk += Complex_i*ITensor(primed(nm),nm,di);
             }
         Dblocks.push_back(Dblk);
 
@@ -1219,56 +1226,16 @@ eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
     IQIndex newmid("L",iq,-ti.dir());
 
     V = IQTensor(conj(ti),conj(newmid));
-    D = IQTensor(primed(newmid),newmid);
-    for(size_t j = 0; j < nblocks; ++j)
+    Foreach(const ITensor& t, Vblocks)
         {
-        D += Dblocks.at(j);
-        V += Vblocks.at(j);
+        V += t;
+        }
+
+    D = IQTensor(primed(newmid),conj(newmid));
+    Foreach(const ITensor& t, Dblocks)
+        {
+        D += t;
         }
 
     D *= spec.refNorm();
-
-    }
-
-
-struct PseudoInvert
-    {
-
-    PseudoInvert(Real cutoff) : cutoff_(cutoff) { }
-
-    Real
-    operator()(Real x) const
-        {
-        return (fabs(x) <= cutoff_ ? 0 : 1./x);
-        }
-
-    private:
-    const Real cutoff_;
-    };
-
-ITensor
-pseudoInverse(const ITensor& C, Real cutoff)
-    {
-    if(C.r() != 1)
-        {
-        Print(C);
-        Error("pseudoInverse only defined for rank 1 ITensors");
-        }
-    ITensor res(C);
-    res.mapElems(PseudoInvert(cutoff));
-    return res;
-    }
-
-IQTensor
-pseudoInverse(const IQTensor& C, Real cutoff)
-    {
-    if(C.r() != 1)
-        {
-        Print(C.indices());
-        Error("pseudoInverse only defined for rank 1 ITensors");
-        }
-    IQTensor res(C.indices().front());
-    Foreach(const ITensor& t, C.blocks())
-        { res += pseudoInverse(t,cutoff); }
-    return res;
     }

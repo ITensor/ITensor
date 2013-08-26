@@ -576,4 +576,52 @@ TEST(OrthoDecomp)
     }
 
 
+TEST(EigDecomp)
+    {
+    Index i("i",4),
+          j("j",10);
+
+    ITensor Mr(i,j,primed(i),primed(j)),
+            Mi(i,j,primed(i),primed(j));
+
+    Mr.randomize();
+    Mi.randomize();
+
+    ITensor V,D;
+    eigDecomp(Mr,V,D);
+
+    CHECK((Mr*V - primed(V)*D).norm() < 1E-11);
+
+    ITensor M = Mr+Complex_i*Mi;
+    eigDecomp(M,V,D);
+
+    CHECK((M*V - primed(V)*D).norm() < 1E-11);
+    }
+
+TEST(IQEigDecomp)
+    {
+    IQIndex I("J",Index("I-",2),QN(-1),
+                  Index("I0",2),QN(+0),
+                  Index("I+",2),QN(+1));
+    IQIndex J("J",Index("J-",2),QN(-1),
+                  Index("J0",2),QN(+0),
+                  Index("J+",2),QN(+1));
+
+    IQTensor Mr(conj(I)(1),conj(J)(J.m()),primed(I(1)),primed(J(J.m()))),
+             Mi(conj(I)(1),conj(J)(J.m()),primed(I(1)),primed(J(J.m())));
+
+    Mr.randomize();
+    Mi.randomize();
+
+    IQTensor V,D;
+    eigDecomp(Mr,V,D);
+
+    CHECK((Mr*V - primed(V)*D).norm() < 1E-11);
+
+    IQTensor M = Mr+Complex_i*Mi;
+    eigDecomp(M,V,D);
+
+    CHECK((M*V - primed(V)*D).norm() < 1E-11);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
