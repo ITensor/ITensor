@@ -169,6 +169,39 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
      const OptSet& opts = Global::opts());
 
 
+//
+//
+// Eigen decomposition
+//
+// Computes eigenvalues V and eigenvectors D of an arbitrary tensor T.
+// T must be "square-matrix-like" in the sense that if it has indices I,J,K,...
+// it must also have indices I',J',K',...
+// D is a diagonal rank 2 tensor (matrix) containing the eigenvalues.
+// On return, V has the unprimed indices of T and a new index shared with D
+// (the index labeled "C" below).
+//       __         __               __
+// I'-<-|  |-<-I-<-|  |        I'-<-|  |     
+//      |T |       |V |-<-C ==      |V'|-<-C'-<-(D)-<-C
+// J'-<-|__|-<-J-<-|__|        J'-<-|__|    
+// 
+//
+template<class Tensor>
+Spectrum 
+eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
+     const OptSet& opts = Global::opts())
+    {
+    Spectrum spec;
+    eigDecomp(T,V,D,spec,opts);
+    return spec;
+    }
+
+template<class Tensor>
+void 
+eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
+     Spectrum& spec, 
+     const OptSet& opts = Global::opts());
+
+
 ///////////////////////////
 //
 // Implementation (non-template parts in svdalgs.cc)
@@ -518,6 +551,50 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
     spec.noise(orig_noise);
     } //orthoDecomp
 
+void 
+eig_decomp(ITensor T, ITensor& V, ITensor& D, Spectrum& spec,
+           const OptSet& opts = Global::opts());
+
+void 
+eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
+           const OptSet& opts = Global::opts());
+
+template<class Tensor>
+void 
+eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
+     Spectrum& spec, 
+     const OptSet& opts)
+    {
+    typedef typename Tensor::IndexT 
+    IndexT;
+    typedef typename Tensor::CombinerT 
+    CombinerT;
+
+    if(isZero(T,Opt("Fast"))) 
+        throw ResultIsZero("eigDecomp: T is zero");
+
+    CombinerT comb; //common combiner
+    Foreach(const IndexT& I, T.indices())
+        { 
+        if(I.primeLevel() == 0)
+            comb.addleft(I);
+        }
+
+    CombinerT combP(comb);
+    combP.prime();
+    combP.conj();
+
+    Tensor Tc = combP * T * comb; 
+
+    if(Tc.r() != 2)
+        {
+        Error("Tensor not square-matrix-like in eigDecomp");
+        }
+
+    eig_decomp(Tc,V,D,spec,opts);
+
+    V = V * comb;
+    }
 
 #undef Cout
 #undef Format

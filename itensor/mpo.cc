@@ -629,7 +629,7 @@ putMPOLinks(IQMPO& W, const OptSet& opts)
         {
         format nm = format("%s%d") % pfix % b;
                
-        q += div(W.A(b));
+        q += div(W.A(b),Opt("Fast"));
         links.at(b) = IQIndex(nm.str(),
                              Index(nm.str()),q);
         }

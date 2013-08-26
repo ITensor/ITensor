@@ -76,10 +76,10 @@ class IndexSet
     int
     dim() const;
 
-    const IndexT&
+    IndexT
     front() const;
 
-    const IndexT&
+    IndexT
     back() const;
 
     const_iterator
@@ -289,7 +289,7 @@ dim() const
     }
 
 template <class IndexT>
-const IndexT& IndexSet<IndexT>::
+IndexT IndexSet<IndexT>::
 front() const
     {
 #ifdef DEBUG
@@ -300,7 +300,7 @@ front() const
     }
 
 template <class IndexT>
-const IndexT& IndexSet<IndexT>::
+IndexT IndexSet<IndexT>::
 back() const
     {
 #ifdef DEBUG

@@ -493,7 +493,7 @@ BraKet(IQTensor x, const IQTensor& y);
 //the same divergence, throws an exception
 //(since IQTensor is not correctly constructed).
 QN 
-div(const IQTensor& T);
+div(const IQTensor& T, const OptSet& opts = Global::opts());
 
 const IQIndex&
 findIQInd(const IQTensor& T, const Index& i);

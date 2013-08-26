@@ -393,8 +393,12 @@ IQIndex(const Index& index, const IQIndexDatPtr& pdat)
     pd(pdat)
     { }
 
-void IQIndex::
-conj() { dir_ = -dir_; }
+IQIndex& IQIndex::
+conj() 
+    { 
+    dir_ = -dir_; 
+    return *this;
+    }
 
 void IQIndex::
 write(ostream& s) const
@@ -405,13 +409,14 @@ write(ostream& s) const
     pd->write(s);
     }
 
-void IQIndex::
+IQIndex& IQIndex::
 read(istream& s)
     {
     Index::read(s);
     s.read((char*)&dir_,sizeof(dir_));
     pd = boost::make_shared<IQIndexDat>();
     pd->read(s);
+    return *this;
     }
 
 string
@@ -431,49 +436,56 @@ showm(const IQIndex& I)
     }
 
 
-void IQIndex::
+IQIndex& IQIndex::
 primeLevel(int val)
     {
     solo();
     Index::primeLevel(val);
     Foreach(IndexQN& iq, *pd)
+        {
         iq.primeLevel(val);
+        }
+    return *this;
     }
 
-void IQIndex::
+IQIndex& IQIndex::
 prime(int inc)
     {
     solo();
     Index::prime(inc);
     Foreach(IndexQN& iq, *pd)
         iq.prime(inc);
+    return *this;
     }
 
-void IQIndex::
+IQIndex& IQIndex::
 prime(IndexType type, int inc)
     {
     solo();
     Index::prime(type,inc);
     Foreach(IndexQN& iq, *pd)
         iq.prime(type,inc);
+    return *this;
     }
 
-void IQIndex::
+IQIndex& IQIndex::
 mapprime(int plevold, int plevnew, IndexType type)
     {
     solo();
     Index::mapprime(plevold,plevnew,type);
     Foreach(IndexQN& iq, *pd)
         iq.mapprime(plevold,plevnew,type);
+    return *this;
     }
 
-void IQIndex::
+IQIndex& IQIndex::
 noprime(IndexType type)
     {
     solo();
     Index::noprime(type);
     Foreach(IndexQN& iq, *pd)
         iq.noprime(type);
+    return *this;
     }
 
 
