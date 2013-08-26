@@ -1340,7 +1340,7 @@ BraKet(IQTensor x, const IQTensor& y)
 
 
 QN
-div(const IQTensor& T)
+div(const IQTensor& T, const OptSet& opts)
 	{
 	if(T.empty())
 	    {   
@@ -1356,7 +1356,12 @@ div(const IQTensor& T)
         div_ += qn(T,i)*dir(T,i);
         }
 
+    bool fast = opts.getBool("Fast",false);
 #ifdef DEBUG
+    fast = false;
+#endif
+    if(fast) return div_;
+
     //Check that remaining blocks have same divergence
     for(++it; it != T.blocks().end(); ++it)
         {
@@ -1378,7 +1383,6 @@ div(const IQTensor& T)
             Error("Inconsistent divergence of IQTensor block");
             }
         }
-#endif
 
 	return div_;
 	}
