@@ -857,18 +857,21 @@ operator<<(std::ostream & s, const IQTensor& T)
     s << "ITensor Blocks:\n";
     Foreach(const ITensor& t, T.blocks())
         { 
-        s << "  ";
-        //Treat first Index specially in order to add trailing commas
-        IndexSet<Index>::const_iterator it = t.indices().begin();
-        const IQIndex& I1 = findIQInd(T,*it);
-        s << it->name() << ":" << qn(I1,*it) << "<" << I1.dir() << ">";
-        for(++it; it != t.indices().end(); ++it)
+        if(t.r() > 0)
             {
-            s << ", ";
-            const IQIndex& I = findIQInd(T,*it);
-            s << it->name() << ":" << qn(I,*it) << "<" << I.dir() << ">";
+            s << "  ";
+            //Treat first Index specially in order to add trailing commas
+            IndexSet<Index>::const_iterator it = t.indices().begin();
+            const IQIndex& I1 = findIQInd(T,*it);
+            s << it->name() << ":" << qn(I1,*it) << "<" << I1.dir() << ">";
+            for(++it; it != t.indices().end(); ++it)
+                {
+                s << ", ";
+                const IQIndex& I = findIQInd(T,*it);
+                s << it->name() << ":" << qn(I,*it) << "<" << I.dir() << ">";
+                }
+            s << endl;
             }
-        s << endl;
         s << "  " << t << endl; 
         }
 	s << "\\------------------------------------\n\n";

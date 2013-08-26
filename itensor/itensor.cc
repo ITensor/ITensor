@@ -3078,11 +3078,27 @@ operator<<(ostream & s, const ITensor& t)
              % (iscplx ? ",C" : "");
 
 
-        if(Global::printdat() && t.r() != 0)
+        if(Global::printdat())
             {
             Real scale = 1.0;
             if(t.scale().isFiniteReal()) scale = t.scale().real();
             else s << "  (omitting too large scale factor)" << endl;
+
+            if(t.r() == 0)
+                {
+                const Real rval = t.r_->v(1)*scale;
+                if(!iscplx)
+                    {
+                    s << format("  %.10f\n") % rval;
+                    }
+                else
+                    {
+                    const Real ival = t.i_->v(1)*scale;
+                    const char sgn = (ival > 0 ? '+' : '-');
+                    s << format("  %.10f%s%.10fi\n") % rval % sgn % fabs(ival);
+                    }
+                return s;
+                }
 
             if(t.type() == ITensor::Diag)
                 {
@@ -3138,10 +3154,6 @@ operator<<(ostream & s, const ITensor& t)
                         }
                     }
                 }
-            }
-        else 
-            {
-            s << "\n";
             }
         }
     return s;
