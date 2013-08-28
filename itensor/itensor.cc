@@ -2663,6 +2663,12 @@ operator+=(const ITensor& other)
         return *this; 
         }
 
+    if(this->scale_.isZero())
+        {
+        *this = other;
+        return *this;
+        }
+
     //Handle Diag/Dense cases requiring conversion
     if(type_==Dense && other.type_==Diag)
         {

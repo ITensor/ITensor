@@ -512,6 +512,7 @@ diag() const
         }
 
     Diag.conj();
+    Diag.takeRealPart(); //Diag must be real since operator assumed Hermitian
     return Diag;
     }
 

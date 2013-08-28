@@ -692,18 +692,11 @@ ITensor& ITensor::
 mapElems(const Callable& f)
     {
     if(isComplex())
-        Error("mapElems only works for real ITensor");
+        throw ITError("mapElems only works for real ITensor");
     solo();
     scaleTo(1);
     for(int j = 1; j <= r_->size(); ++j)
         r_->v(j) = f(r_->v(j));
-    /*
-    if(i_)
-        {
-        for(int j = 1; j <= i_->size(); ++j)
-            i_->v(j) = f(i_->v(j));
-        }
-        */
     return *this;
     }
 
