@@ -135,8 +135,8 @@ init(string rname, IndexType type,
     if(do_condense) 
         {
         ucright_ = IQIndex(rname,iq,rdir,primelevel);
-        string cname = "cnd:" + rname;
-        cond = Condenser(ucright_,cname);
+        //string cname = "cnd:" + rname;
+        cond = Condenser(ucright_,rname);
         right_ = cond.smallind();
         }
     else 
