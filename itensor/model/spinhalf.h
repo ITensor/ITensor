@@ -14,8 +14,6 @@ class SpinHalf : public Model
 
     SpinHalf(int N);
 
-    SpinHalf(std::ifstream& s) { doRead(s); }
-
     private:
 
     virtual int
