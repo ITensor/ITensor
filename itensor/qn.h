@@ -60,6 +60,9 @@ class QN
 
     QN 
     operator-() const;
+
+    const QN&
+    operator+() const { return *this; }
     
     // Multiplication by Arrows can change QN sign
     QN& 

@@ -541,7 +541,12 @@ class InitState
         : 
         model_(&model), 
         state_(1+model.N())
-        { }
+        { 
+        for(int n = 1; n <= model_->N(); ++n)
+            {
+            state_[n] = model_->si(n)(1);
+            }
+        }
 
     InitState(const Model& model, const String& state)
         : 
@@ -835,6 +840,9 @@ operator<<(std::ostream& s, const MPSt<Tensor>& M)
         s << M.A(i) << "\n";
     return s;
     }
+
+std::ostream& 
+operator<<(std::ostream& s, const InitState& state);
 
 #undef Cout
 #undef Endl

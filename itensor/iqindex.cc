@@ -666,7 +666,7 @@ operator<<(ostream &o, const IQIndex& I)
         }
     o << "IQIndex: " << Index(I) << " <" << I.dir() << ">" << endl;
     for(int j = 1; j <= I.nindex(); ++j) 
-        o << " " << I.index(j) SP I.qn(j) << "\n";
+        o << "  " << I.index(j) SP I.qn(j) << "\n";
     return o;
     }
 
@@ -682,5 +682,5 @@ std::ostream&
 operator<<(std::ostream& s, const IQIndexVal& iv)
     { 
     const IQIndex& I = iv;
-    return s << "IQIndexVal: i = " << iv.i << ", " << I << "\n"; 
+    return s << "IQIndexVal: i = " << iv.i << " for IQIndex:\n  " << I << "\n"; 
     }

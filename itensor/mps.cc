@@ -1716,3 +1716,11 @@ fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit)
 template void fitWF(const MPSt<ITensor>& psi_basis, MPSt<ITensor>& psi_to_fit);
 template void fitWF(const MPSt<IQTensor>& psi_basis, MPSt<IQTensor>& psi_to_fit);
 
+std::ostream& 
+operator<<(std::ostream& s, const InitState& state)
+    {
+    s << "\n";
+    for(int i = 1; i <= state.model().N(); ++i) 
+        s << state(i) << "\n";
+    return s;
+    }

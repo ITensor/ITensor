@@ -157,7 +157,7 @@ init(const std::string& smallind_name)
         Foreach(const IndexQN& x, bigind_.indices())
             if(x.qn == q) totm += x.m();
 
-        Index small_qind("condensed",totm);
+        Index small_qind(smallind_name,totm);
         int start = 0;
         Foreach(const IndexQN& x, bigind_.indices())
             if(x.qn == q)
