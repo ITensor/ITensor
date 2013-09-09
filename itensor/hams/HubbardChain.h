@@ -80,21 +80,21 @@ init_()
         W = ITensor(model_.si(n),model_.siP(n),row,col);
 
         //Identity strings
-        W += model_.id(n) * row(1) * col(1);
-        W += model_.id(n) * row(k) * col(k);
+        W += model_.op("Id",n) * row(1) * col(1);
+        W += model_.op("Id",n) * row(k) * col(k);
 
         //Hubbard U
-        W += model_.Nupdn(n) * row(k) * col(1) * U_;
+        W += model_.op("Nupdn",n) * row(k) * col(1) * U_;
 
         //Kinetic energy/hopping terms, defined as -t_*(c^d_i c_{i+1} + h.c.)
-        W += multSiteOps(model_.fermiPhase(n),model_.Cup(n)) * row(k) * col(2) * t_;
-        W += multSiteOps(model_.fermiPhase(n),model_.Cdn(n)) * row(k) * col(3) * t_;
-        W += multSiteOps(model_.Cdagup(n),model_.fermiPhase(n)) * row(k) * col(4) * t_;
-        W += multSiteOps(model_.Cdagdn(n),model_.fermiPhase(n)) * row(k) * col(5) * t_;
-        W += model_.Cdagup(n) * row(2) * col(1) * (-1.0);
-        W += model_.Cdagdn(n) * row(3) * col(1) * (-1.0);
-        W += model_.Cup(n) * row(4) * col(1) * (-1.0);
-        W += model_.Cdn(n) * row(5) * col(1) * (-1.0);
+        W += model_.op("F*Cup",n) * row(k) * col(2) * t_;
+        W += model_.op("F*Cdn",n) * row(k) * col(3) * t_;
+        W += model_.op("Cdagup*F",n) * row(k) * col(4) * t_;
+        W += model_.op("Cdagdn*F",n) * row(k) * col(5) * t_;
+        W += model_.op("Cdagup",n) * row(2) * col(1) * (-1.0);
+        W += model_.op("Cdagdn",n) * row(3) * col(1) * (-1.0);
+        W += model_.op("Cup",n) * row(4) * col(1) * (-1.0);
+        W += model_.op("Cdn",n) * row(5) * col(1) * (-1.0);
         }
 
     H.Anc(1) *= ITensor(links.at(0)(k));

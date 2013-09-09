@@ -17,8 +17,6 @@ class SpinOne : public Model
 
     SpinOne(int N, const OptSet& opts = Global::opts());
 
-    SpinOne(std::ifstream& s) { doRead(s); }
-
     private:
 
     virtual int
