@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_SVDALGS_H
 #define __ITENSOR_SVDALGS_H
 #include "iqcombiner.h"
-#include "iqtsparse.h"
 #include "localop.h"
 #include "spectrum.h"
 
