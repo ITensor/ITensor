@@ -1026,7 +1026,9 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D, Spectrum& spec,
     } //void diag_hermitian
 
 void 
-eig_decomp(ITensor T, ITensor& V, ITensor& D, Spectrum& spec,
+eig_decomp(ITensor T, 
+           const Index& L, const Index& R,
+           ITensor& V, ITensor& D, Spectrum& spec,
            const OptSet& opts)
     {
     bool cplx = T.isComplex();
@@ -1040,13 +1042,6 @@ eig_decomp(ITensor T, ITensor& V, ITensor& D, Spectrum& spec,
         }
 #endif
 
-    Index ti = T.indices().front().noprime();
-    Index tiP = primed(ti);
-
-    if(!hasindex(T,tiP))
-        {
-        Error("eig_decomp: tensor must have indices i,i'"); 
-        }
 
     if(!spec.doRelCutoff()) T.scaleTo(spec.refNorm());
 
@@ -1056,7 +1051,7 @@ eig_decomp(ITensor T, ITensor& V, ITensor& D, Spectrum& spec,
     if(!cplx)
         {
         Matrix M;
-        T.toMatrix11NoScale(tiP,ti,M);
+        T.toMatrix11NoScale(L,R,M);
         GenEigenValues(M,Dr,Di,Ur,Ui); 
         }
     else
@@ -1066,19 +1061,19 @@ eig_decomp(ITensor T, ITensor& V, ITensor& D, Spectrum& spec,
                 iT = imagPart(T);
         rT.scaleTo(T.scale());
         iT.scaleTo(T.scale());
-        rT.toMatrix11NoScale(tiP,ti,Mr);
-        iT.toMatrix11NoScale(tiP,ti,Mi);
+        rT.toMatrix11NoScale(L,R,Mr);
+        iT.toMatrix11NoScale(L,R,Mi);
         ComplexEigenvalues(Mr,Mi,Dr,Di,Ur,Ui); 
         }
 
 
-    Index newmid("d",ti.m(),ti.type());
-    V = ITensor(ti,newmid,Ur);
+    Index newmid("d",R.m(),R.type());
+    V = ITensor(R,newmid,Ur);
     D = ITensor(primed(newmid),newmid,Dr);
 
     if(Norm(Ui.TreatAsVector()) > 1E-12)
         {
-        V += ITensor(ti,newmid,Ui)*Complex_i;
+        V += ITensor(R,newmid,Ui)*Complex_i;
         }
 
     if(Norm(Di) > 1E-12)
@@ -1090,7 +1085,9 @@ eig_decomp(ITensor T, ITensor& V, ITensor& D, Spectrum& spec,
     }
 
 void 
-eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
+eig_decomp(IQTensor T, 
+           const IQIndex& L, const IQIndex& R,
+           IQTensor& V, IQTensor& D, Spectrum& spec,
            const OptSet& opts)
     {
     bool cplx = T.isComplex();
@@ -1103,22 +1100,6 @@ eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
         Error("eig_decomp requires rank 2 tensor as input");
         }
 #endif
-
-    IQIndex ti; 
-    Foreach(const IQIndex& I, T.indices())
-        {
-        if(I.primeLevel() == 0)
-            {
-            ti = I;
-            break;
-            }
-        }
-    IQIndex tiP = primed(ti);
-
-    if(!hasindex(T,tiP))
-        {
-        Error("eig_decomp: tensor must have indices i,i'"); 
-        }
 
     const int nblocks = T.blocks().size();
 
@@ -1148,8 +1129,11 @@ eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
     int itenind = 0;
     Foreach(const ITensor& t, T.blocks())
         {
-        Index a = t.indices().front().noprime();
-        Index aP = primed(a);
+        Index li = t.indices().front(),
+              ri = t.indices().back();
+
+        if(!hasindex(L,li))
+            swap(li,ri);
 
         Matrix &Ur = rmatrix.at(itenind),
                &Ui = imatrix.at(itenind);
@@ -1160,7 +1144,7 @@ eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
         if(!cplx)
             {
             Matrix M;
-            t.toMatrix11NoScale(aP,a,M);
+            t.toMatrix11NoScale(li,ri,M);
             GenEigenValues(M,dr,di,Ur,Ui);
             }
         else
@@ -1170,8 +1154,8 @@ eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
             ret.scaleTo(spec.refNorm());
             imt.scaleTo(spec.refNorm());
             Matrix Mr,Mi;
-            ret.toMatrix11NoScale(aP,a,Mr);
-            imt.toMatrix11NoScale(aP,a,Mi);
+            ret.toMatrix11NoScale(li,ri,Mr);
+            imt.toMatrix11NoScale(li,ri,Mi);
             ComplexEigenvalues(Mr,Mi,dr,di,Ur,Ui);
             }
 
@@ -1197,9 +1181,11 @@ eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
 
         Index nm("d",dr.Length());
 
-        Index act = t.indices().front().noprime();
+        Index act = t.indices().front();
+        if(!hasindex(R,act))
+            act = t.indices().back();
 
-        iq.push_back(IndexQN(nm,qn(ti,act)));
+        iq.push_back(IndexQN(nm,qn(R,act)));
 
         ITensor blk(act,nm,Ur);
         if(Norm(Ui.TreatAsVector()) > 1E-12)
@@ -1223,9 +1209,9 @@ eig_decomp(IQTensor T, IQTensor& V, IQTensor& D, Spectrum& spec,
         throw ResultIsZero("iq.size() == 0");
         }
 
-    IQIndex newmid("L",iq,-ti.dir());
+    IQIndex newmid("L",iq,-R.dir());
 
-    V = IQTensor(conj(ti),conj(newmid));
+    V = IQTensor(conj(R),conj(newmid));
     Foreach(const ITensor& t, Vblocks)
         {
         V += t;
