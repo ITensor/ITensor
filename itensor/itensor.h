@@ -544,6 +544,10 @@ class ITensor
     friend void 
     contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res);
 
+    friend void 
+    contractDiagDiag(const ITensor& A, const ITensor& B, ITensor& res);
+
+
     friend std::ostream& 
     operator<<(std::ostream & s, const ITensor& T);
 

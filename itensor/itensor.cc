@@ -2179,27 +2179,6 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
 
     res.type_ = ITensor::Dense;
 
-    /*
-    if(T.isComplex())
-        {
-        ITensor ri;
-        product(S,imagPart(T),ri);
-        product(S,realPart(T),res);
-        if(res.scale_.sign() != 0)
-            {
-            ri.scaleTo(res.scale_);
-            }
-        else
-            {
-            res.soloReal();
-            res.r_->v *= 0;
-            res.scale_ = ri.scale_;
-            }
-        res.i_.swap(ri.r_);
-        return;
-        }
-        */
-
     //This is set to true if some of the indices
     //of res come from S.
     //If false, there is an extra loop in the sum
@@ -2404,6 +2383,52 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
 
     } // contractDiagDense
 
+void
+contractDiagDiag(const ITensor& A, const ITensor& B, ITensor& res)
+    {
+#ifdef DEBUG
+    if(!(A.type_ == ITensor::Diag && B.type_ == ITensor::Diag))
+        Error("contractDiagDense assumes both arguments Diag");
+#endif
+
+    res.is_ = A.is_*B.is_;
+
+    const bool has_common_inds = (res.r() < (A.r()+B.r()));
+
+    res.scale_ = A.scale_*B.scale_;
+
+    if(has_common_inds)
+        {
+        res.type_ = ITensor::Diag;
+        res.allocate();
+        Vector& rdat = res.r_->v;
+        const Vector& Adat = A.r_->v;
+        const Vector& Bdat = B.r_->v;
+        rdat = Adat;
+        for(int j = 0; j < rdat.Length(); ++j)
+            {
+            rdat[j] *= Bdat[j];
+            }
+        }
+    else //no indices in common
+        {
+        res.type_ = ITensor::Dense;
+        Error("Diag*Diag product not yet implemented for case of no common indices");
+        /*
+        const Vector& Adat = A.r_->v;
+        const Vector& Bdat = B.r_->v;
+        res.allocate(A.is_.dim()*B.is_.dim());
+        Vector& rdat = res.r_->v;
+        for(int i = 0; i < Adat.Length(); ++i)
+        for(int j = 0; j < Bdat.Length(); ++j)
+            {
+            rdat[j*Adim+i] = Adat[i]*Bdat[j];
+            }
+            */
+        }
+
+    } // contractDiagDiag
+
 
 ITensor& ITensor::
 operator*=(const ITensor& other)
@@ -2495,7 +2520,10 @@ operator*=(const ITensor& other)
     else
     if(type_==Diag && other.type_==Diag)
         {
-        Error("ITensor Diag*Diag not implemented");
+        ITensor res;
+        contractDiagDiag(*this,other,res);
+        this->swap(res);
+        return *this;
         }
 
     //These hold  regular new indices and the m==1 indices that appear in the result
@@ -2847,8 +2875,18 @@ toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
     if(r() != 2) Error("toMatrix11: incorrect rank");
     if(this->isComplex())
         Error("toMatrix11 defined only for real ITensor");
-    assert(hasindex(*this,i1));
-    assert(hasindex(*this,i2));
+#ifdef DEBUG
+    if(!hasindex(*this,i1))
+        {
+        Print(i1);
+        Error("ITensor does not have row Index provided.");
+        }
+    if(!hasindex(*this,i2))
+        {
+        Print(i2);
+        Error("ITensor does not have column Index provided.");
+        }
+#endif
     res.ReDimension(i1.m(),i2.m());
 
     MatrixRef dref; 
@@ -3112,20 +3150,27 @@ operator<<(ostream & s, const ITensor& t)
                 for(int j = 1; j <= ds; ++j)
                     {
                     const Real rval = t.r_->v(j)*scale;
-                    s << "  (" << j;
-                    for(int n = 2; n <= t.r(); ++n)
-                        {
-                        s << "," << j;
-                        }
                     if(!iscplx)
                         {
-                        s << format(") %.10f\n") % rval;
+                        if(fabs(rval) > Global::printScale())
+                            {
+                            s << "  (" << j;
+                            for(int n = 2; n <= t.r(); ++n)
+                                s << "," << j;
+                            s << format(") %.10f\n") % rval;
+                            }
                         }
                     else
                         {
                         const Real ival = t.i_->v(j)*scale;
-                        const char sgn = (ival > 0 ? '+' : '-');
-                        s << format(") %.10f%s%.10fi\n") % rval % sgn % fabs(ival);
+                        if(sqrt(sqr(rval)+sqr(ival)) > Global::printScale())
+                            {
+                            const char sgn = (ival > 0 ? '+' : '-');
+                            s << "  (" << j;
+                            for(int n = 2; n <= t.r(); ++n)
+                                s << "," << j;
+                            s << format(") %.10f%s%.10fi\n") % rval % sgn % fabs(ival);
+                            }
                         }
                     }
                 }
