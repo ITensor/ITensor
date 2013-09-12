@@ -306,7 +306,7 @@ front() const
     if(r_ == 0)
         Error("Empty IndexSet");
 #endif
-    return index_.front();
+    return index_[0];
     }
 
 template <class IndexT>
@@ -317,7 +317,7 @@ back() const
     if(r_ == 0)
         Error("Empty IndexSet");
 #endif
-    return index_.back();
+    return index_[r_-1];
     }
 
 template <class IndexT>
@@ -399,6 +399,12 @@ template <class IndexT>
 void IndexSet<IndexT>::
 prime(const IndexT& I, int inc)
     {
+#ifdef DEBUG
+    if(I.isNull())
+        {
+        Error("Request to prime null index");
+        }
+#endif
     for(int j = (I.m() == 1 ? rn_ : 0); j < r_; ++j) 
         if(index_[j] == I)
         {
