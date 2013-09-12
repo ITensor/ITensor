@@ -747,11 +747,18 @@ psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
     {
     typedef typename MPSType::TensorT
     Tensor;
+    typedef typename Tensor::IndexT
+    IndexT;
 
     const int N = psi.N();
     if(N != phi.N()) Error("psiphi: mismatched N");
 
-    Tensor L = phi.A(1) * conj(primed(psi.A(1),psi.LinkInd(1))); 
+    IndexT l1 = psi.LinkInd(1);
+    Tensor L = phi.A(1);
+    if(l1.isNull())
+        L *= conj(psi.A(1));
+    else
+        L *= conj(primed(psi.A(1),l1)); 
 
     for(int i = 2; i < N; ++i) 
         { 
@@ -759,7 +766,14 @@ psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
         }
     L = L * phi.A(N);
 
-    Complex z = BraKet(primed(psi.A(N),psi.LinkInd(N-1)),L);
+    Complex z;
+
+    IndexT lNm = psi.LinkInd(N-1);
+    if(lNm.isNull())
+        z = BraKet(psi.A(N),L);
+    else
+        z = BraKet(primed(psi.A(N),lNm),L);
+
     re = z.real();
     im = z.imag();
     }
