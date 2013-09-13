@@ -253,10 +253,10 @@ operator()(const vector<Tensor>& psi) const
                             % j
                             % nrm
                             << endl;
-                    const IndexT nlink = commonIndex(D,U);
-                    Tensor nOlap = primed(nB,nlink)*conj(nB);
-                    PrintDat(nOlap);
-                    PAUSE
+                    //const IndexT nlink = commonIndex(D,U);
+                    //Tensor nOlap = primed(nB,nlink)*conj(nB);
+                    //PrintDat(nOlap);
+                    //PAUSE
                     /*
                     if(nrm > 1)
                         {
