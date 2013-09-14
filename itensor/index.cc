@@ -132,12 +132,16 @@ Generator;
 Real 
 generateUniqueReal()
     {
-    static const char seed = 's';
+    //static const char seed = 's';
 
     //Construct rng and seed with address of seed
-    static Generator rng((uintptr_t)&seed);
+    //static Generator rng((uintptr_t)&seed);
+    static Generator rng(std::time(NULL) + getpid());
+    static int sgn = -1;
 
-    return rng();
+    sgn *= -1;
+
+    return sgn*rng();
     }
 
 
