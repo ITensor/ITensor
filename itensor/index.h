@@ -65,7 +65,7 @@ class Index
     // Returns a unique Real number identifying this Index.
     // Useful for efficiently checking that sets of indices match.
     Real 
-    uniqueReal() const;
+    uniqueReal() const { return ur_; }
 
     // Returns the IndexType
     IndexType 
@@ -162,13 +162,15 @@ class Index
     private:
 
     /////////////
+    Real ur_;
+
     IndexDatPtr p;
 
     int primelevel_; 
     /////////////
 
-    explicit
-    Index(const IndexDatPtr& p, int plev);
+    void
+    setUniqueReal();
 
     }; //class Index
 

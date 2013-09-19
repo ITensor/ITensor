@@ -4,14 +4,18 @@
 //
 #include "index.h"
 #include "boost/make_shared.hpp"
-#include "boost/random/lagged_fibonacci.hpp"
+//#include "boost/random/lagged_fibonacci.hpp"
+#include "boost/random/mersenne_twister.hpp"
 
 using namespace std;
 using boost::array;
 using boost::format;
-//using boost::shared_ptr;
-//using boost::make_shared;
 
+typedef uint32_t
+IDType;
+
+static const Real K1 = 1./sqrt(7.);
+static const Real K2 = 1./sqrt(11.);
 
 ostream& 
 operator<<(ostream& s, const IndexType& it)
@@ -85,13 +89,13 @@ struct IndexDat
 
     const IndexType type;
     const int m;
-    const Real ur;
+    const IDType id;
     const string sname;
 
     //
     //////////////
 
-    IndexDat(const string& ss, int mm, IndexType it, Real ur);
+    IndexDat(const string& ss, int mm, IndexType it, IDType id);
 
     static const IndexDatPtr&
     Null();
@@ -106,11 +110,11 @@ struct IndexDat
     }; //class IndexDat
 
 IndexDat::
-IndexDat(const string& ss, int m_, IndexType it, Real ur_)
+IndexDat(const string& ss, int m_, IndexType it, IDType id_)
     : 
     type(it), 
     m(m_), 
-    ur(ur_),
+    id(id_),
     sname(ss)
     { }
 
@@ -126,22 +130,20 @@ Null()
 //
 
 //typedef boost::random::lagged_fibonacci1279 
-typedef boost::random::lagged_fibonacci2281 
+//Generator;
+//typedef boost::random::lagged_fibonacci2281 
+//Generator;
+typedef boost::random::mt19937 
 Generator;
 
-Real 
-generateUniqueReal()
+IDType 
+generateID()
     {
-    //static const char seed = 's';
-
-    //Construct rng and seed with address of seed
-    //static Generator rng((uintptr_t)&seed);
     static Generator rng(std::time(NULL) + getpid());
-    static int sgn = -1;
-
-    sgn *= -1;
-
-    return sgn*rng();
+    return rng();
+    //static IDType nextid = 0;
+    //++nextid;
+    //return nextid;
     }
 
 
@@ -151,23 +153,20 @@ Index()
     : 
     p(IndexDat::Null()), 
     primelevel_(0) 
-    { }
+    { 
+    setUniqueReal();
+    }
 
 Index::
 Index(const string& name, int mm, IndexType it, int plev) 
     : 
-    p(boost::make_shared<IndexDat>(name,mm,it,generateUniqueReal())), 
+    p(boost::make_shared<IndexDat>(name,mm,it,generateID())), 
     primelevel_(plev) 
     { 
     if(it == All) Error("Constructing Index with type All disallowed");
+    setUniqueReal();
     }
 
-Index::
-Index(const IndexDatPtr& p_, int plev) 
-    : 
-    p(p_),
-    primelevel_(plev) 
-    { }
 
 int Index::
 m() const { return p->m; }
@@ -181,11 +180,8 @@ name() const  { return putprimes(rawname(),primelevel_); }
 const string& Index::
 rawname() const { return p->sname; }
 
-
-//static const Real real_min = std::numeric_limits<Real>::min();
-
-Real Index::
-uniqueReal() const { return p->ur*(1+(primelevel_/10.)); }
+void Index::
+setUniqueReal() { ur_ = sin(K1*p->id + K2*primelevel_); }
 
 bool Index::
 isNull() const { return (p == IndexDat::Null()); }
@@ -201,18 +197,19 @@ primeLevel(int plev)
     if(primelevel_ < 0)
         Error("Negative primeLevel");
 #endif
+    setUniqueReal();
     }
 
 bool Index::
 operator==(const Index& other) const 
     { 
-    return (p->ur == other.p->ur && primelevel_ == other.primelevel_); 
+    return (uniqueReal() == other.uniqueReal() && primelevel_ == other.primelevel_); 
     }
 
 bool Index::
 noprimeEquals(const Index& other) const
     { 
-    return (p->ur == other.p->ur); 
+    return (uniqueReal() == other.uniqueReal()); 
     }
 
 bool Index::
@@ -238,6 +235,7 @@ mapprime(int plevold, int plevnew, IndexType type)
 #endif
             }
         }
+    setUniqueReal();
     }
 
 void Index::
@@ -250,6 +248,7 @@ prime(int inc)
         Error("Negative primeLevel");
         }
 #endif
+    setUniqueReal();
     }
 
 void Index::
@@ -265,6 +264,7 @@ prime(IndexType type, int inc)
             }
 #endif
         }
+    setUniqueReal();
     }
 
 void Index::
@@ -277,7 +277,7 @@ write(ostream& s) const
     const int t = IndexTypeToInt(p->type);
     s.write((char*) &t,sizeof(t));
 
-    s.write((char*) &(p->ur),sizeof(p->ur));
+    s.write((char*) &(p->id),sizeof(p->id));
 
     s.write((char*) &(p->m),sizeof(p->m));
 
@@ -298,10 +298,11 @@ read(istream& s)
         }
 #endif
 
-    int t; s.read((char*) &t,sizeof(t));
+    int t; 
+    s.read((char*) &t,sizeof(t));
 
-    Real ur;
-    s.read((char*) &ur, sizeof(ur));
+    IDType id;
+    s.read((char*) &id, sizeof(id));
 
     int mm; 
     s.read((char*) &mm,sizeof(mm));
@@ -314,7 +315,8 @@ read(istream& s)
     string ss(newname); 
     delete newname;
 
-    p = boost::make_shared<IndexDat>(ss,mm,IntToIndexType(t),ur);
+    p = boost::make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
+    setUniqueReal();
     }
 
 const Index& Index::
