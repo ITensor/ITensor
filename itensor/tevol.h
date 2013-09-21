@@ -7,6 +7,7 @@
 
 #include "mpo.h"
 #include "bondgate.h"
+#include <list>
 
 #define Cout std::cout
 #define Endl std::endl

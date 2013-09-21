@@ -5,14 +5,12 @@
 #ifndef __ITENSOR_IQTENSOR_H
 #define __ITENSOR_IQTENSOR_H
 #include "iqindex.h"
-#include <list>
-#include <map>
+#include "iqtdat.h"
 
-class IQTDat;
 class IQCombiner;
 class IQTSparse;
 
-typedef boost::shared_ptr<IQTDat>
+typedef boost::shared_ptr<IQTDat<ITensor> >
 IQTDatPtr;
 
 
@@ -108,7 +106,7 @@ class IQTensor
     //The ITensors can be iterated over using a Foreach
     //For example, given an IQTensor T,
     //Foreach(const ITensor& t, T.blocks()) { ... }
-    const IQTDat&
+    const IQTDat<ITensor>&
     blocks() const { return dat(); }
     
     const IndexSet<IQIndex>& 
@@ -349,15 +347,6 @@ class IQTensor
     typedef IQTSparse
     SparseT;
 
-    typedef std::list<ITensor>::iterator 
-    iten_it;
-
-    typedef std::list<ITensor>::const_iterator 
-    const_iten_it;
-
-    typedef IndexSet<IQIndex>::const_iterator
-    const_iqind_it;
-
     //Deprecated methods
 
     //Get the jth IQIndex of this ITensor, j = 1,2,..,r()
@@ -379,11 +368,11 @@ class IQTensor
         Data(const IQTDatPtr& p_);
 
         //Const access
-        const IQTDat&
+        const IQTDat<ITensor>&
         operator()() const { return *p; }
 
         //Non-const access
-        IQTDat&
+        IQTDat<ITensor>&
         nc() { return *p; }
 
         void inline
@@ -468,156 +457,6 @@ operator*(const IndexVal& iv, const IQTensor& T)
     { 
     return ITensor(iv) * T.toITensor(); 
     }
-
-//
-// Contracting product with an ITensor
-// Result is an ITensor
-//
-//ITensor inline
-//operator*(const ITensor& t) const
-//    { ITensor res = this->toITensor(); res *= t; return res; }
-
-class IQTDat : public boost::noncopyable
-    {
-    public:
-
-    typedef std::list<ITensor>
-    StorageT;
-
-    typedef StorageT::const_iterator
-    const_iterator;
-
-    typedef StorageT::iterator
-    iterator;
-
-    //
-    // Constructors
-    //
-
-    IQTDat();
-
-    explicit 
-    IQTDat(const IQTDat& other);
-
-    explicit 
-    IQTDat(std::istream& s);
-
-    //
-    // Accessors
-    //
-
-    const_iterator
-    begin() const { return itensor.begin(); }
-
-    iterator
-    begin() { uninit_rmap(); return itensor.begin(); }
-
-    const_iterator
-    end() const { return itensor.end(); }
-
-    iterator
-    end() { uninit_rmap(); return itensor.end(); }
-
-    const ITensor&
-    get(const ApproxReal& r) const { return *rmap[r]; }
-
-    ITensor&
-    get(const ApproxReal& r) { return *rmap[r]; }
-
-    int
-    size() const { return itensor.size(); }
-
-    bool
-    empty() const { return itensor.empty(); }
-
-    void
-    clear();
-
-    void 
-    insert(const ApproxReal& r, const ITensor& t);
-
-    void 
-    insert(const ITensor& t);
-
-    void 
-    insert_add(const ApproxReal& r, const ITensor& t);
-
-    void 
-    insert_add(const ITensor& t);
-
-    //void 
-    //insert_assign(const ITensor& t);
-
-    void 
-    clean(Real min_norm);
-
-    bool 
-    has_itensor(const ApproxReal& r) const;
-
-    void
-    swap(StorageT& new_itensor);
-
-    //
-    // Other Methods
-    //
-
-    void
-    scaleTo(const LogNumber& newscale);
-
-    void 
-    read(std::istream& s);
-
-    void 
-    write(std::ostream& s) const;
-
-    //void* operator 
-    //new(size_t size) 
-    //    throw(std::bad_alloc)
-    //    { return allocator().alloc(); }
-
-    //void operator 
-    //delete(void* p) 
-    //    throw()
-    //    { return allocator().dealloc(p); }
-
-    static const boost::shared_ptr<IQTDat>& 
-    Null();
-
-    private:
-
-    //////////////
-    //
-    // Data Members
-    //
-
-    mutable
-    StorageT itensor;
-
-    mutable std::map<ApproxReal,iterator>
-    rmap; //mutable so that const IQTensor methods can use rmap
-
-    mutable 
-    bool rmap_init;
-
-    //
-    //////////////
-
-    void 
-    init_rmap() const;
-
-    void 
-    uninit_rmap() const;
-
-    //Not copyable with =
-    void operator=(const IQTDat&);
-
-    //static DatAllocator<IQTDat>& allocator()
-    //    {
-    //    static DatAllocator<IQTDat> allocator_;
-    //    return allocator_;
-    //    };
-
-    }; //class IQTDat
 
 template <typename Callable> 
 IQTensor& IQTensor::
