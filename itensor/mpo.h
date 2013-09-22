@@ -60,7 +60,10 @@ class MPOt : private MPSt<Tensor>
             refNorm(exp(model.N()));
         }
 
-    MPOt(Model& model, std::istream& s) { read(model,s); }
+    MPOt(Model& model, std::istream& s) 
+        : 
+        Parent(model,s) 
+        { }
 
     //Accessor Methods ------------------------------
 
