@@ -91,9 +91,9 @@ struct IndexDat
     //////////////
     // Public Data Members
 
-    const IndexType type;
-    const int m;
     const IDType id;
+    const int m;
+    const IndexType type;
     const string sname;
 
     //
@@ -116,9 +116,9 @@ struct IndexDat
 IndexDat::
 IndexDat(const string& ss, int m_, IndexType it, IDType id_)
     : 
-    type(it), 
-    m(m_), 
     id(id_),
+    m(m_), 
+    type(it), 
     sname(ss)
     { }
 
@@ -204,7 +204,7 @@ uniqueReal() const
 bool Index::
 operator==(const Index& other) const 
     { 
-    return fabs(uniqueReal() == other.uniqueReal()) < UniqueRealAccuracy; 
+    return fabs(uniqueReal() - other.uniqueReal()) < UniqueRealAccuracy; 
     }
 
 bool Index::
