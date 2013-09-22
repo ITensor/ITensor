@@ -59,15 +59,6 @@ r() const
     return is_->r(); 
     }
 
-/*
-const IQIndex& IQTensor::
-index(int j) const 
-    { 
-    if(!is_) Error("IQTensor is null");
-    return is_->index(j); 
-    }
-    */
-
 int IQTensor::
 iten_size() const { return dat().size(); }
 

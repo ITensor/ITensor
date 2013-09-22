@@ -65,7 +65,7 @@ class Index
     // Returns a unique Real number identifying this Index.
     // Useful for efficiently checking that sets of indices match.
     Real 
-    uniqueReal() const { return ur_; }
+    uniqueReal() const;
 
     // Returns the IndexType
     IndexType 
@@ -162,15 +162,10 @@ class Index
     private:
 
     /////////////
-    Real ur_;
-
     IndexDatPtr p;
 
     int primelevel_; 
     /////////////
-
-    void
-    setUniqueReal();
 
     }; //class Index
 
@@ -249,6 +244,8 @@ operator<<(std::ostream& s, const IndexVal& iv);
 
 std::ostream& 
 operator<<(std::ostream& s, const IndexType& it);
+
+static const Real UniqueRealAccuracy = 1E-13;
 
 #undef Cout
 #undef Format

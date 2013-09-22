@@ -13,6 +13,7 @@
 #define Endl std::endl
 #define Format boost::format
 
+
 //
 // IndexSet
 //
@@ -93,6 +94,17 @@ class IndexSet
 
     Real
     uniqueReal() const { return ur_; }
+
+    bool
+    operator==(const IndexSet& other) const
+        { return fabs(ur_ - other.ur_) <= UniqueRealAccuracy; }
+
+    bool
+    operator!=(const IndexSet& other) const
+        { return fabs(ur_ - other.ur_) > UniqueRealAccuracy; }
+
+    bool
+    operator<(const IndexSet& other) const { return ur_ < other.ur_; }
 
     //
     // Primelevel Methods

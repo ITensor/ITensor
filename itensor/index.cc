@@ -4,18 +4,23 @@
 //
 #include "index.h"
 #include "boost/make_shared.hpp"
-//#include "boost/random/lagged_fibonacci.hpp"
-#include "boost/random/mersenne_twister.hpp"
+#include "boost/random/lagged_fibonacci.hpp"
+//#include "boost/random/mersenne_twister.hpp"
 
 using namespace std;
 using boost::array;
 using boost::format;
 
-typedef uint32_t
+//typedef boost::random::mt19937 
+//Generator;
+typedef boost::random::lagged_fibonacci2281 
+Generator;
+
+typedef Generator::result_type
 IDType;
 
-static const Real K1 = 1./sqrt(7.);
-static const Real K2 = 1./sqrt(11.);
+//static const Real K1 = 1./sqrt(7.);
+//static const Real K2 = 1./sqrt(11.);
 
 ostream& 
 operator<<(ostream& s, const IndexType& it)
@@ -84,7 +89,6 @@ nameint(const string& f, int n)
 struct IndexDat
     {
     //////////////
-    //
     // Public Data Members
 
     const IndexType type;
@@ -121,7 +125,7 @@ IndexDat(const string& ss, int m_, IndexType it, IDType id_)
 const IndexDatPtr& IndexDat::
 Null()
     {
-    static IndexDatPtr Null_ = boost::make_shared<IndexDat>("Null",1,Site,0.0);
+    static IndexDatPtr Null_ = boost::make_shared<IndexDat>("Null",1,Site,0);
     return Null_;
     }
 
@@ -129,23 +133,17 @@ Null()
 // class Index
 //
 
-//typedef boost::random::lagged_fibonacci1279 
-//Generator;
-//typedef boost::random::lagged_fibonacci2281 
-//Generator;
-typedef boost::random::mt19937 
-Generator;
 
 IDType 
 generateID()
     {
     static Generator rng(std::time(NULL) + getpid());
     return rng();
+
     //static IDType nextid = 0;
     //++nextid;
     //return nextid;
     }
-
 
 
 Index::
@@ -154,7 +152,7 @@ Index()
     p(IndexDat::Null()), 
     primelevel_(0) 
     { 
-    setUniqueReal();
+    //setUniqueReal();
     }
 
 Index::
@@ -164,7 +162,7 @@ Index(const string& name, int mm, IndexType it, int plev)
     primelevel_(plev) 
     { 
     if(it == All) Error("Constructing Index with type All disallowed");
-    setUniqueReal();
+    //setUniqueReal();
     }
 
 
@@ -180,9 +178,6 @@ name() const  { return putprimes(rawname(),primelevel_); }
 const string& Index::
 rawname() const { return p->sname; }
 
-void Index::
-setUniqueReal() { ur_ = sin(K1*p->id + K2*primelevel_); }
-
 bool Index::
 isNull() const { return (p == IndexDat::Null()); }
 
@@ -197,24 +192,32 @@ primeLevel(int plev)
     if(primelevel_ < 0)
         Error("Negative primeLevel");
 #endif
-    setUniqueReal();
+    //setUniqueReal();
+    }
+
+Real Index::
+uniqueReal() const
+    {
+    return p->id*(1.0+(primelevel_/10.));
     }
 
 bool Index::
 operator==(const Index& other) const 
     { 
-    return (uniqueReal() == other.uniqueReal() && primelevel_ == other.primelevel_); 
+    return fabs(uniqueReal() == other.uniqueReal()) < UniqueRealAccuracy; 
     }
 
 bool Index::
 noprimeEquals(const Index& other) const
     { 
-    return (uniqueReal() == other.uniqueReal()); 
+    return fabs(p->id - other.p->id) < UniqueRealAccuracy;
     }
 
 bool Index::
 operator<(const Index& other) const 
-    { return (uniqueReal() < other.uniqueReal()); }
+    { 
+    return (uniqueReal() < other.uniqueReal()); 
+    }
 
 IndexVal Index::
 operator()(int i) const { return IndexVal(*this,i); }
@@ -235,7 +238,7 @@ mapprime(int plevold, int plevnew, IndexType type)
 #endif
             }
         }
-    setUniqueReal();
+    //setUniqueReal();
     }
 
 void Index::
@@ -248,7 +251,7 @@ prime(int inc)
         Error("Negative primeLevel");
         }
 #endif
-    setUniqueReal();
+    //setUniqueReal();
     }
 
 void Index::
@@ -264,7 +267,7 @@ prime(IndexType type, int inc)
             }
 #endif
         }
-    setUniqueReal();
+    //setUniqueReal();
     }
 
 void Index::
@@ -316,7 +319,7 @@ read(istream& s)
     delete newname;
 
     p = boost::make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
-    setUniqueReal();
+    //setUniqueReal();
     }
 
 const Index& Index::

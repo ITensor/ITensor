@@ -2280,12 +2280,12 @@ operator+=(const ITensor& other)
         }
 
 
-    if(fabs(is_.uniqueReal() - other.is_.uniqueReal()) > 1E-12)
+    if(is_ != other.is_)
         {
         cerr << format("this ur = %.10f, other.ur = %.10f\n")%is_.uniqueReal()%other.is_.uniqueReal();
         Print(*this);
         Print(other);
-        Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
+        Error("ITensor::operator+=: different Index structure");
         }
 
 
