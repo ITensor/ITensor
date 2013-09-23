@@ -395,11 +395,11 @@ solo()
     }
 
 bool static
-vectorARContains(const vector<ApproxReal>& v, ApproxReal r)
+vectoruRContains(const vector<Real>& v, Real r)
     {
-    Foreach(const ApproxReal& x, v)
+    Foreach(const Real& x, v)
         {
-        if(r == x) return true;
+        if(fabs(r - x) <= UniqueRealAccuracy) return true;
         }
     return false;
     }
@@ -413,7 +413,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     if(T.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    vector<ApproxReal> common_inds;
+    vector<Real> common_inds;
     
     //Load iqindex_ with those IQIndex's *not* common to *this and other
     static vector<IQIndex> riqind_holder;
@@ -451,7 +451,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     for(int i = 1; i <= T.is_->r(); ++i)
         {
         const IQIndex& I = T.is_->index(i);
-        if(!vectorARContains(common_inds,I.uniqueReal()))
+        if(!vectoruRContains(common_inds,I.uniqueReal()))
             { 
             riqind_holder.push_back(I); 
             }
@@ -462,7 +462,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     typedef IQTDat<ITSparse>::const_iterator
     cbit;
 
-    typedef pair<ApproxReal,cbit>
+    typedef pair<Real,cbit>
     blockpair;
 
     vector<blockpair> Sblock;
@@ -473,25 +473,25 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
         Real r = 0.0;
         Foreach(const Index& I, ot->indices())
             {
-            if(vectorARContains(common_inds,I.uniqueReal()))
+            if(vectoruRContains(common_inds,I.uniqueReal()))
                 r += I.uniqueReal(); 
             }
-        Sblock.push_back(make_pair(ApproxReal(r),ot));
+        Sblock.push_back(make_pair(r,ot));
         }
 
     ITensor prod;
 
     Foreach(const ITensor& t, T.blocks())
         {
-        ApproxReal r(0);
+        Real r = 0;
         Foreach(const Index& I, t.indices())
             {
-            if(vectorARContains(common_inds,I.uniqueReal()))
+            if(vectoruRContains(common_inds,I.uniqueReal()))
                 r += I.uniqueReal();
             }
         Foreach(const blockpair& p, Sblock)
             {
-            if(r != p.first) continue;
+            if(fabs(r - p.first) > UniqueRealAccuracy) continue;
             prod = t;
             prod *= *(p.second);
             if(prod.scale().sign() != 0)
