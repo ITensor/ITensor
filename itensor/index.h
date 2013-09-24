@@ -245,7 +245,7 @@ operator<<(std::ostream& s, const IndexVal& iv);
 std::ostream& 
 operator<<(std::ostream& s, const IndexType& it);
 
-static const Real UniqueRealAccuracy = 1E-13;
+static const Real UniqueRealAccuracy = 1E-14;
 
 #undef Cout
 #undef Format

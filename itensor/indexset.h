@@ -375,8 +375,7 @@ noprime(const IndexT& I)
                 }
 #endif
             index_[j].noprime();
-            ur_ -= I.uniqueReal();
-            ur_ += index_[j].uniqueReal();
+            setUniqueReal();
             return;
             }
         }
@@ -406,8 +405,7 @@ prime(const IndexT& I, int inc)
         if(index_[j] == I)
         {
         index_[j].prime(inc);
-        ur_ -= I.uniqueReal();
-        ur_ += index_[j].uniqueReal();
+        setUniqueReal();
         return;
         }
     Print(*this);
