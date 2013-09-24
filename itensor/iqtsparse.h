@@ -7,8 +7,6 @@
 #include "itsparse.h"
 #include "iqtensor.h"
 
-class IQTSDat;
-
 //
 // IQTSparse
 //
@@ -62,7 +60,7 @@ class IQTSparse
     bool
     isDiag() const { return true; }
 
-    const IQTSDat&
+    const IQTDat<ITSparse>&
     blocks() const { return *d_; }
 
     const IndexSet<IQIndex>& 
@@ -184,10 +182,10 @@ class IQTSparse
     norm() const;
 
     void 
-    scaleOutNorm() const;
+    scaleOutNorm();
 
     void 
-    scaleTo(const LogNumber& newscale) const;
+    scaleTo(const LogNumber& newscale);
 
     void
     read(std::istream& s);
@@ -216,7 +214,7 @@ class IQTSparse
 
     boost::shared_ptr<IndexSet<IQIndex> > is_;
 
-    boost::shared_ptr<IQTSDat> d_;
+    boost::shared_ptr<IQTDat<ITSparse> > d_;
 
     //
     //////////////
@@ -231,7 +229,7 @@ class IQTSparse
     solo();
 
 
-    IQTSDat&
+    IQTDat<ITSparse>&
     ncblocks() { return *d_; }
 
     friend void 
@@ -239,96 +237,6 @@ class IQTSparse
 
     }; // class IQTSparse
 
-//
-// IQTSDat (Storage for IQTSparse)
-//
-
-class IQTSDat
-    {
-    public:
-
-    typedef std::list<ITSparse>
-    StorageT;
-
-    typedef StorageT::const_iterator
-    const_iterator;
-
-    typedef StorageT::iterator
-    iterator;
-
-    //
-    // Constructors
-    //
-
-    IQTSDat();
-
-    explicit
-    IQTSDat(std::istream& s);
-
-    //
-    // Accessors
-    //
-
-    const_iterator
-    begin() const { return its_.begin(); }
-
-    iterator
-    begin() { uninit_rmap(); return its_.begin(); }
-
-    const_iterator
-    end() const { return its_.end(); }
-
-    iterator
-    end() { uninit_rmap(); return its_.end(); }
-
-    void
-    insert_add(const ITSparse& s);
-
-    void
-    clear();
-
-    //
-    // Other Methods
-    //
-
-    void 
-    makeCopyOf(const IQTSDat& other);
-
-    void 
-    scaleTo(const LogNumber& newscale) const;
-
-    void
-    read(std::istream& s);
-
-    void
-    write(std::ostream& s) const;
-
-    static const boost::shared_ptr<IQTSDat>& Null();
-
-    private:
-
-    //////////////
-    //
-    // Data members
-    //
-
-    mutable bool init;
-
-    mutable StorageT its_;
-
-    mutable std::map<ApproxReal,iterator>
-    rmap;
-
-    //
-    //////////////
-
-    void
-    uninit_rmap() const;
-
-    void
-    init_rmap() const;
-
-    };
 
 void 
 product(const IQTSparse& S, const IQTensor& T, IQTensor& res);

@@ -13,6 +13,7 @@
 #define Endl std::endl
 #define Format boost::format
 
+
 //
 // IndexSet
 //
@@ -93,6 +94,17 @@ class IndexSet
 
     Real
     uniqueReal() const { return ur_; }
+
+    bool
+    operator==(const IndexSet& other) const
+        { return fabs(ur_ - other.ur_) <= UniqueRealAccuracy; }
+
+    bool
+    operator!=(const IndexSet& other) const
+        { return fabs(ur_ - other.ur_) > UniqueRealAccuracy; }
+
+    bool
+    operator<(const IndexSet& other) const { return ur_ < other.ur_; }
 
     //
     // Primelevel Methods
@@ -363,8 +375,7 @@ noprime(const IndexT& I)
                 }
 #endif
             index_[j].noprime();
-            ur_ -= I.uniqueReal();
-            ur_ += index_[j].uniqueReal();
+            setUniqueReal();
             return;
             }
         }
@@ -394,8 +405,7 @@ prime(const IndexT& I, int inc)
         if(index_[j] == I)
         {
         index_[j].prime(inc);
-        ur_ -= I.uniqueReal();
-        ur_ += index_[j].uniqueReal();
+        setUniqueReal();
         return;
         }
     Print(*this);
@@ -699,14 +709,14 @@ getperm(const IndexSet<IndexT>& iset,
             for(int j = 0; j < iset.r(); ++j)
                 Cout << j << " " << oset[j] << Format(" | %.10E\n") % oset[j].uniqueReal();
             Cout << Endl;
-            Cout << Format("iset uniqueReal = %.10E") % iset.uniqueReal() << Endl;
+            Cout << Format("iset uniqueReal = %.15E") % iset.uniqueReal() << Endl;
             Real our = 0;
             for(int i = 0; i < iset.r(); ++i)
                 {
                 our += oset[i].uniqueReal();
                 }
-            Cout << Format("oset uniqueReal = %.10E") % our << Endl;
-            Cout << Format("uniqueReal diff = %.10E") % fabs(our-iset.uniqueReal()) << Endl;
+            Cout << Format("oset uniqueReal = %.15E") % our << Endl;
+            Cout << Format("uniqueReal diff = %.15E") % fabs(our-iset.uniqueReal()) << Endl;
             throw ITError("IndexSet::getperm: no matching index");
             }
 	    }

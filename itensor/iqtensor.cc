@@ -4,7 +4,6 @@
 //
 #include "iqtensor.h"
 #include "qcounter.h"
-#include <set>
 using namespace std;
 using boost::format;
 using boost::array;
@@ -13,7 +12,7 @@ using boost::array;
 
 IQTensor::Data::
 Data()
-    : p(boost::make_shared<IQTDat>())
+    : p(boost::make_shared<IQTDat<ITensor> >())
     { }
 
 IQTensor::Data::
@@ -29,163 +28,10 @@ solo()
 #endif
 	if(!p.unique())
         {
-        p = boost::make_shared<IQTDat>(*p);
+        p = boost::make_shared<IQTDat<ITensor> >(*p);
         }
 	}
 
-IQTDat::
-IQTDat() 
-    :
-    rmap_init(false)
-    { }
-
-IQTDat::
-IQTDat(const IQTDat& other) 
-    : 
-    itensor(other.itensor), 
-    rmap_init(false)
-	{ }
-
-IQTDat::
-IQTDat(istream& s) 
-    {
-    read(s);
-    }
-
-
-void IQTDat::
-read(istream& s)
-    { 
-    rmap_init = false;
-	size_t size;
-	s.read((char*) &size,sizeof(size));
-	itensor.resize(size);
-    Foreach(ITensor& t, itensor)
-        { 
-        t.read(s); 
-        }
-    }
-
-void IQTDat::
-write(ostream& s) const
-	{
-	size_t size = itensor.size();
-	s.write((char*) &size,sizeof(size));
-    Foreach(const ITensor& t, itensor)
-        { t.write(s); }
-	}
-
-const boost::shared_ptr<IQTDat>& IQTDat::
-Null()
-    {
-    static boost::shared_ptr<IQTDat> Null_ = boost::make_shared<IQTDat>();
-    return Null_;
-    }
-
-void IQTDat::
-init_rmap() const
-	{
-	if(rmap_init) return;
-
-    for(iterator it = itensor.begin(); it != itensor.end(); ++it)
-	    rmap[ApproxReal(it->indices().uniqueReal())] = it;
-
-	rmap_init = true;
-	}
-
-void IQTDat::
-uninit_rmap() const 
-	{ 
-	rmap.clear();
-	rmap_init = false; 
-	}
-
-bool IQTDat::
-has_itensor(const ApproxReal& r) const
-	{ 
-	init_rmap();
-	return rmap.count(r) == 1; 
-	}
-
-void IQTDat::
-clear()
-    {
-    uninit_rmap();
-    itensor.clear();
-    }
-
-void IQTDat::
-insert(const ApproxReal& r, const ITensor& t)
-    {
-    init_rmap();
-    if(rmap.count(r) == 1)
-        {
-        Print((*rmap[r])); 
-        Print(t);
-        Error("Can't insert ITensor with identical structure twice, use operator+=.");
-        }
-    else
-        {
-        itensor.push_front(t);
-        rmap[r] = itensor.begin();
-        }
-    }
-
-void IQTDat::
-insert(const ITensor& t)
-    {
-    ApproxReal r(t.indices().uniqueReal());
-    insert(r,t);
-    }
-
-void IQTDat::
-insert_add(const ApproxReal& r, const ITensor& t)
-    {
-    init_rmap();
-    if(rmap.count(r) == 1)
-        {
-        *rmap[r] += t;
-        return;
-        }
-    else
-        {
-        itensor.push_front(t);
-        rmap[r] = itensor.begin();
-        }
-    }
-
-void IQTDat::
-insert_add(const ITensor& t)
-    {
-    ApproxReal r(t.indices().uniqueReal());
-    insert_add(r,t);
-    }
-
-void IQTDat::
-clean(Real min_norm)
-    {
-    IQTDat::StorageT nitensor;
-    Foreach(const ITensor& t, itensor)
-        {
-        if(t.norm() >= min_norm)
-            nitensor.push_back(t);
-        }
-    swap(nitensor);
-    }
-
-void IQTDat::
-swap(StorageT& new_itensor)
-    {
-    uninit_rmap();
-    itensor.swap(new_itensor);
-    }
-
-void IQTDat::
-scaleTo(const LogNumber& newscale)
-    {
-    Foreach(ITensor& t, itensor)
-        t.scaleTo(newscale);
-    }
 
 //
 // IQTensor
@@ -194,7 +40,7 @@ scaleTo(const LogNumber& newscale)
 bool IQTensor::
 isNull() const 
     { 
-    return &dat() == IQTDat::Null().get(); 
+    return &dat() == IQTDat<ITensor>::Null().get(); 
     }
 
 bool IQTensor::
@@ -213,15 +59,6 @@ r() const
     return is_->r(); 
     }
 
-/*
-const IQIndex& IQTensor::
-index(int j) const 
-    { 
-    if(!is_) Error("IQTensor is null");
-    return is_->index(j); 
-    }
-    */
-
 int IQTensor::
 iten_size() const { return dat().size(); }
 
@@ -235,7 +72,7 @@ IQTensor::
 IQTensor() 
     : 
     is_(IndexSet<IQIndex>::Null()),
-    dat(IQTDat::Null()) 
+    dat(IQTDat<ITensor>::Null()) 
     { }
 
 IQTensor::
@@ -503,28 +340,21 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     boost::array<IQIndexVal,NMAX+1> iv 
         = {{ IQIndexVal::Null(), iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
 
-    Real ur = 0; 
     int nn = 0; 
+    IndexSet<Index> is;
     while(GET(iv,nn+1) != IQIndexVal::Null()) 
-        ur += GET(iv,++nn).indexqn().uniqueReal(); 
-    if(nn != r()) 
-        Error("Wrong number of IQIndexVals provided");
-    ApproxReal r(ur);
-
-    if(!dat().has_itensor(r))
         {
-        IndexSet<Index> indices; 
-        for(int j = 1; j <= nn; ++j) 
-            {
-            if(!hasindex(*this,iv[j])) 
-                Error("IQTensor::operator(): IQIndex not found.");
-            indices.addindex(iv[j].indexqn());
-            }
-        ITensor t(indices);
-        dat.nc().insert_add(r,t);
+        ++nn;
+        if(!hasindex(*this,iv.at(nn))) 
+            Error("IQTensor::operator(): IQIndex not found.");
+        is.addindex(iv[nn].indexqn());
+        }
+    if(nn != r()) 
+        {
+        Error("Wrong number of IQIndexVals provided");
         }
 
-    return (dat.nc().get(r)).operator()(iv1.blockIndexVal(),
+    return (dat.nc().get(is)).operator()(iv1.blockIndexVal(),
                                        iv2.blockIndexVal(),
                                        iv3.blockIndexVal(),
                                        iv4.blockIndexVal(),
@@ -544,21 +374,25 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     boost::array<IQIndexVal,NMAX+1> iv 
         = {{ IQIndexVal::Null(), iv1, iv2, iv3, iv4, iv5, iv6, iv7, iv8 }};
 
-    Real ur = 0; 
     int nn = 0; 
+    IndexSet<Index> is;
     while(GET(iv,nn+1) != IQIndexVal::Null()) 
-        ur += GET(iv,++nn).indexqn().uniqueReal(); 
+        {
+        //ur += GET(iv,++nn).indexqn().uniqueReal(); 
+        if(!hasindex(*this,iv.at(nn))) 
+            Error("IQTensor::operator(): IQIndex not found.");
+        is.addindex(iv[nn].indexqn());
+        }
     if(nn != r()) 
         Error("Wrong number of IQIndexVals provided");
-    ApproxReal r(ur);
 
-    if(!dat().has_itensor(r))
+    if(!dat().hasBlock(is))
         {
         return 0.;
         }
     else
         {
-        return (dat().get(r)).operator()(iv1.blockIndexVal(),
+        return (dat().get(is)).operator()(iv1.blockIndexVal(),
                                          iv2.blockIndexVal(),
                                          iv3.blockIndexVal(),
                                          iv4.blockIndexVal(),
@@ -959,16 +793,15 @@ randomize()
             nset.addindex(is_->index(n).index(1+C.i[n]));
             }
 
-        ApproxReal r(nset.uniqueReal());
-        if(dat().has_itensor(r))
+        if(dat().hasBlock(nset))
             {
-            dat.nc().get(r).randomize();
+            dat.nc().get(nset).randomize();
             }
         else
             {
             ITensor t(nset);
             t.randomize();
-            dat.nc().insert_add(r,t);
+            dat.nc().insert_add(t);
             }
         }
 	}
@@ -1033,6 +866,17 @@ operator<<(std::ostream & s, const IQTensor& T)
     return s;
     }
 
+//Helper method for operator*= and operator/=
+bool static
+vectoruRContains(const vector<Real>& v, Real r)
+    {
+    Foreach(const Real& x, v)
+        {
+        if(fabs(r-x) <= UniqueRealAccuracy) return true;
+        }
+    return false;
+    }
+
 IQTensor& IQTensor::
 operator*=(const IQTensor& other)
     {
@@ -1051,11 +895,14 @@ operator*=(const IQTensor& other)
 
     solo();
 
-    set<ApproxReal> common_inds;
+    vector<Real> common_inds;
     
     //Load iqindex_ with those IQIndex's *not* common to *this and other
     array<IQIndex,NMAX> riqind_holder;
     int rholder = 0;
+
+    typedef IndexSet<IQIndex>::const_iterator
+    const_iqind_it;
 
     for(int i = 1; i <= is_->r(); ++i)
         {
@@ -1077,12 +924,12 @@ operator*=(const IQTensor& other)
                     }
                 }
 
-            for(size_t n = 0; n < I.indices().size(); ++n) 
+            Foreach(const Index& i, I.indices())
                 { 
-                common_inds.insert(ApproxReal(I.indices()[n].uniqueReal())); 
+                common_inds.push_back(i.uniqueReal()); 
                 }
 
-            common_inds.insert(ApproxReal(I.uniqueReal()));
+            common_inds.push_back(I.uniqueReal());
             }
         else 
             { 
@@ -1094,7 +941,7 @@ operator*=(const IQTensor& other)
     for(int i = 1; i <= other.is_->r(); ++i)
         {
         const IQIndex& I = other.is_->index(i);
-        if(!common_inds.count(ApproxReal(I.uniqueReal())))
+        if(!vectoruRContains(common_inds,I.uniqueReal()))
             { 
             if(rholder >= NMAX)
                 {
@@ -1114,59 +961,46 @@ operator*=(const IQTensor& other)
 
     is_ = boost::make_shared<IndexSet<IQIndex> >(riqind_holder,rholder,0);
 
-    set<ApproxReal> keys;
-
-    IQTDat::StorageT old_itensor; 
+    IQTDat<ITensor>::StorageT old_itensor; 
     dat.nc().swap(old_itensor);
 
-    //com_this maps the uniqueReal of a set of Index's to be contracted over together
-    //to those ITensors in *this.itensor having all Index's in that set
-    multimap<ApproxReal,IQTDat::const_iterator> com_this;
-    for(IQTDat::const_iterator tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
-        {
-        Real r = 0.0;
-        Foreach(const Index& I, tt->indices())
-            {
-            if(common_inds.count(ApproxReal(I.uniqueReal())))
-                { r += I.uniqueReal(); }
-            }
-        com_this.insert(make_pair(ApproxReal(r),tt));
-        keys.insert(ApproxReal(r));
-        }
+    typedef IQTDat<ITensor>::const_iterator
+    cbit;
 
-    //com_other is the same as com_this but for other
-    multimap<ApproxReal,IQTDat::const_iterator> com_other;
-    for(IQTDat::const_iterator ot = other.dat().begin(); ot != other.dat().end(); ++ot)
+    typedef pair<Real,cbit>
+    blockpair;
+
+    vector<blockpair> other_block;
+    other_block.reserve(other.dat().size());
+
+    for(cbit ot = other.dat().begin(); ot != other.dat().end(); ++ot)
         {
         Real r = 0.0;
         Foreach(const Index& I, ot->indices())
             {
-            if(common_inds.count(ApproxReal(I.uniqueReal())))
-                { r += I.uniqueReal(); }
+            if(vectoruRContains(common_inds,I.uniqueReal()))
+                r += I.uniqueReal(); 
             }
-        com_other.insert(make_pair(ApproxReal(r),ot));
-        keys.insert(ApproxReal(r));
+        other_block.push_back(make_pair(r,ot));
         }
 
-    typedef multimap<ApproxReal,const_iten_it>::iterator mit;
-    pair<mit,mit> lrange,rrange;
-    ITensor tt;
-    for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
-        {
-        //Equal range returns the begin and end iterators for the sequence
-        //corresponding to multimap[key] as a pair
-        lrange = com_this.equal_range(*k);
-        rrange = com_other.equal_range(*k);
+    ITensor prod;
 
-        //Iterate over all ITensors in *this and other sharing
-        //the set of contracted Index's corresponding to k
-        for(mit ll = lrange.first; ll != lrange.second; ++ll)
-        for(mit rr = rrange.first; rr != rrange.second; ++rr)
+    Foreach(const ITensor& t, old_itensor)
+        {
+        Real r = 0;
+        Foreach(const Index& I, t.indices())
             {
-            //Multiply the ITensors and add into res
-            tt = *(ll->second); tt *= *(rr->second);
-            if(tt.scale().sign() != 0)
-                dat.nc().insert_add(tt);
+            if(vectoruRContains(common_inds,I.uniqueReal()))
+                r += I.uniqueReal();
+            }
+        Foreach(const blockpair& p, other_block)
+            {
+            if(fabs(r - p.first) > UniqueRealAccuracy) continue;
+            prod = t;
+            prod *= *(p.second);
+            if(prod.scale().sign() != 0)
+                dat.nc().insert_add(prod);
             }
         }
 
@@ -1190,10 +1024,13 @@ operator/=(const IQTensor& other)
     if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    set<ApproxReal> common_inds;
+    vector<Real> common_inds;
     
     array<IQIndex,NMAX> riqind_holder;
     int rholder = 0;
+
+    typedef IndexSet<IQIndex>::const_iterator
+    const_iqind_it;
 
     for(int i = 1; i <= is_->r(); ++i)
         {
@@ -1212,10 +1049,13 @@ operator/=(const IQTensor& other)
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
                     throw ArrowError("Incompatible arrow directions in IQTensor::operator/=.");
                     }
-            for(size_t n = 0; n < I.indices().size(); ++n) 
-                { common_inds.insert(ApproxReal(I.indices()[n].uniqueReal())); }
 
-            common_inds.insert(ApproxReal(I.uniqueReal()));
+            Foreach(const Index& i, I.indices())
+                { 
+                common_inds.push_back(i.uniqueReal()); 
+                }
+
+            common_inds.push_back(I.uniqueReal());
             }
         riqind_holder[rholder] = I;
         ++rholder;
@@ -1225,8 +1065,19 @@ operator/=(const IQTensor& other)
     for(int i = 1; i <= other.is_->r(); ++i)
         {
         const IQIndex& I = other.is_->index(i);
-        if(!common_inds.count(ApproxReal(I.uniqueReal())))
+        if(!vectoruRContains(common_inds,I.uniqueReal()))
             { 
+            if(rholder >= NMAX)
+                {
+                Print(this->indices());
+                Print(other.indices());
+                cout << "Uncontracted IQIndices found so far:" << endl;
+                for(int n = 0; n < rholder; ++n)
+                    {
+                    cout << riqind_holder[n] << endl;
+                    }
+                Error("Too many indices (>= 8) on resulting IQTensor");
+                }
             riqind_holder[rholder] = I;
             ++rholder;
             inds_from_other = true;
@@ -1240,65 +1091,48 @@ operator/=(const IQTensor& other)
         is_ = boost::make_shared<IndexSet<IQIndex> >(riqind_holder,rholder,0);
         }
 
-
     dat.solo();
 
-    IQTDat::StorageT old_itensor; 
+    IQTDat<ITensor>::StorageT old_itensor; 
     dat.nc().swap(old_itensor);
 
-    set<ApproxReal> keys;
+    typedef IQTDat<ITensor>::const_iterator
+    cbit;
 
-    //com_this maps the uniqueReal of a set of Index's to be summed over together
-    //to those ITensors in *this.itensor having all Index's in that set
-    multimap<ApproxReal,IQTDat::const_iterator> com_this;
-    for(IQTDat::const_iterator tt = old_itensor.begin(); tt != old_itensor.end(); ++tt)
-        {
-        Real r = 0.0;
-        Foreach(const Index& I, tt->indices())
-            {
-            const Real ur = I.uniqueReal();
-            if(common_inds.count(ApproxReal(ur)))
-                r += ur;
-            }
-        com_this.insert(make_pair(ApproxReal(r),tt));
-        keys.insert(ApproxReal(r));
-        }
+    typedef pair<Real,cbit>
+    blockpair;
 
-    //com_other is the same as com_this but for other
-    //Cheaper just to store IQTensors? (since they are just two pointers?)
-    multimap<ApproxReal,IQTDat::const_iterator> com_other;
-    for(IQTDat::const_iterator ot = other.dat().begin(); ot != other.dat().end(); ++ot)
+    vector<blockpair> other_block;
+    other_block.reserve(other.dat().size());
+
+    for(cbit ot = other.dat().begin(); ot != other.dat().end(); ++ot)
         {
         Real r = 0.0;
         Foreach(const Index& I, ot->indices())
             {
-            const Real ur = I.uniqueReal();
-            if(common_inds.count(ApproxReal(ur)))
-                r += ur;
+            if(vectoruRContains(common_inds,I.uniqueReal()))
+                r += I.uniqueReal(); 
             }
-        com_other.insert(make_pair(ApproxReal(r),ot));
-        keys.insert(ApproxReal(r));
+        other_block.push_back(make_pair(r,ot));
         }
 
-    typedef multimap<ApproxReal,const_iten_it>::iterator mit;
-    pair<mit,mit> lrange,rrange;
-    ITensor tt;
-    for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
-        {
-        //Equal range returns the begin and end iterators for the sequence
-        //corresponding to multimap[key] as a pair
-        lrange = com_this.equal_range(*k);
-        rrange = com_other.equal_range(*k);
+    ITensor prod;
 
-        //Iterate over all ITensors in *this and other sharing
-        //the set of contracted Index's corresponding to k
-        for(mit ll = lrange.first; ll != lrange.second; ++ll)
-        for(mit rr = rrange.first; rr != rrange.second; ++rr)
+    Foreach(const ITensor& t, old_itensor)
+        {
+        Real r = 0;
+        Foreach(const Index& I, t.indices())
             {
-            //Multiply the ITensors and add into res
-            tt = *(ll->second); tt /= *(rr->second);
-            if(tt.scale().sign() != 0)
-                dat.nc().insert_add(tt);
+            if(vectoruRContains(common_inds,I.uniqueReal()))
+                r += I.uniqueReal();
+            }
+        Foreach(const blockpair& p, other_block)
+            {
+            if(fabs(r - p.first) > UniqueRealAccuracy) continue;
+            prod = t;
+            prod /= *(p.second);
+            if(prod.scale().sign() != 0)
+                dat.nc().insert_add(prod);
             }
         }
 
@@ -1497,7 +1331,7 @@ div(const IQTensor& T)
 
     //Calculate divergence of first block
     QN div_;
-    IQTDat::const_iterator it = T.blocks().begin();
+    IQTDat<ITensor>::const_iterator it = T.blocks().begin();
     Foreach(const Index& i, it->indices())
         {
         div_ += qn(T,i)*dir(T,i);

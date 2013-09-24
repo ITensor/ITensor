@@ -3,115 +3,9 @@
 //    (See accompanying LICENSE file.)
 //
 #include "iqtsparse.h"
-#include <set>
 using namespace std;
 using boost::format;
 using boost::array;
-//using boost::shared_ptr;
-//using boost::make_shared;
-
-//
-// IQTSDat
-//
-
-IQTSDat::
-IQTSDat()
-    :
-    init(false)
-    {
-    }
-
-void IQTSDat::
-makeCopyOf(const IQTSDat& other)
-    {
-    init = false;
-    its_ = other.its_;
-    }
-
-IQTSDat::
-IQTSDat(istream& s)
-    :
-    init(false)
-    {
-    read(s);
-    }
-
-void IQTSDat::
-insert_add(const ITSparse& s)
-    {
-    init_rmap();
-
-    ApproxReal r(s.uniqueReal());
-    if(rmap.count(r) == 1)
-        {
-        *rmap[r] += s;
-        return;
-        }
-    else
-        {
-        its_.push_front(s);
-        rmap[r] = its_.begin();
-        }
-    }
-
-void IQTSDat::
-clear()
-    {
-    rmap.clear();
-    its_.clear();
-    }
-
-void IQTSDat::
-init_rmap() const
-    {
-    if(init) return;
-
-    for(iterator it = its_.begin(); it != its_.end(); ++it)
-        rmap[ApproxReal(it->uniqueReal())] = it;
-
-    init = true;
-    }
-
-void IQTSDat::
-uninit_rmap() const
-    {
-    rmap.clear();
-    init = false;
-    }
-
-void IQTSDat::
-scaleTo(const LogNumber& newscale) const
-    {
-    Foreach(ITSparse& s, its_)
-        s.scaleTo(newscale);
-    }
-
-void IQTSDat::
-read(istream& s)
-    {
-    uninit_rmap();
-	size_t size;
-	s.read((char*) &size,sizeof(size));
-	its_.resize(size);
-    for(iterator it = its_.begin(); it != its_.end(); ++it)
-        { it->read(s); }
-    }
-
-void IQTSDat::
-write(ostream& s) const
-    {
-	size_t size = its_.size();
-	s.write((char*) &size,sizeof(size));
-    for(const_iterator it = its_.begin(); it != its_.end(); ++it)
-        { it->write(s); }
-    }
-
-const boost::shared_ptr<IQTSDat>& IQTSDat::
-Null()
-    {
-    static boost::shared_ptr<IQTSDat> Null_ = boost::make_shared<IQTSDat>();
-    return Null_;
-    }
 
 //
 // IQTSparse
@@ -121,14 +15,14 @@ IQTSparse::
 IQTSparse()
     :
     is_(IndexSet<IQIndex>::Null()),
-    d_(IQTSDat::Null())
+    d_(IQTDat<ITSparse>::Null())
     { }
 
 IQTSparse::
 IQTSparse(const IQIndex& i1)
     :
     is_(boost::make_shared<IndexSet<IQIndex> >(i1)),
-    d_(boost::make_shared<IQTSDat>())
+    d_(boost::make_shared<IQTDat<ITSparse> >())
     { 
     }
 
@@ -136,7 +30,7 @@ IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2)
     :
     is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2)),
-    d_(boost::make_shared<IQTSDat>())
+    d_(boost::make_shared<IQTDat<ITSparse> >())
     { 
     }
 
@@ -145,7 +39,7 @@ IQTSparse(const IQIndex& i1, const IQIndex& i2,
           Real r)
     :
     is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2)),
-    d_(boost::make_shared<IQTSDat>())
+    d_(boost::make_shared<IQTDat<ITSparse> >())
     { 
     if(i1.nindex() != i2.nindex())
         {
@@ -162,7 +56,7 @@ IQTSparse(const IQIndex& i1, const IQIndex& i2,
           const VectorRef& D)
     :
     is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2)),
-    d_(boost::make_shared<IQTSDat>())
+    d_(boost::make_shared<IQTDat<ITSparse> >())
     { 
 #ifdef DEBUG
     if(i1.m() != i2.m() || i1.nindex() != i2.nindex())
@@ -189,12 +83,12 @@ IQTSparse::
 IQTSparse(const IQIndex& i1, const IQIndex& i2, const IQIndex& i3)
     :
     is_(boost::make_shared<IndexSet<IQIndex> >(i1,i2,i3)),
-    d_(boost::make_shared<IQTSDat>())
+    d_(boost::make_shared<IQTDat<ITSparse> >())
     { 
     }
 
 bool IQTSparse::
-isNull() const { return (d_ == IQTSDat::Null() || is_ == IndexSet<IQIndex>::Null()); }
+isNull() const { return (d_ == IQTDat<ITSparse>::Null() || is_ == IndexSet<IQIndex>::Null()); }
 
 bool IQTSparse::
 isComplex() const
@@ -427,16 +321,16 @@ norm() const
     }
 
 void IQTSparse::
-scaleOutNorm() const
+scaleOutNorm() 
 	{
     Real nrm = norm();
-    blocks().scaleTo(nrm);
+    ncblocks().scaleTo(nrm);
 	}
 
 void IQTSparse::
-scaleTo(const LogNumber& newscale) const
+scaleTo(const LogNumber& newscale)
 	{
-    blocks().scaleTo(newscale);
+    ncblocks().scaleTo(newscale);
 	}
 
 
@@ -449,7 +343,7 @@ read(std::istream& s)
         { *this = IQTSparse(); return; }
     is_ = boost::make_shared<IndexSet<IQIndex> >();
     is_->read(s);
-    d_ = boost::make_shared<IQTSDat>();
+    d_ = boost::make_shared<IQTDat<ITSparse> >();
     d_->read(s);
     }
 
@@ -473,8 +367,8 @@ soloDat()
 
     if(!d_.unique())
 	    {
-        const IQTSDat& old_dat(*d_);
-        d_ = boost::make_shared<IQTSDat>();
+        const IQTDat<ITSparse>& old_dat(*d_);
+        d_ = boost::make_shared<IQTDat<ITSparse> >();
         d_->makeCopyOf(old_dat);
 	    }
     }
@@ -500,6 +394,16 @@ solo()
     soloDat();
     }
 
+bool static
+vectoruRContains(const vector<Real>& v, Real r)
+    {
+    Foreach(const Real& x, v)
+        {
+        if(fabs(r - x) <= UniqueRealAccuracy) return true;
+        }
+    return false;
+    }
+
 void
 product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     {
@@ -509,7 +413,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     if(T.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    set<ApproxReal> common_inds;
+    vector<Real> common_inds;
     
     //Load iqindex_ with those IQIndex's *not* common to *this and other
     static vector<IQIndex> riqind_holder;
@@ -518,7 +422,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     for(int i = 1; i <= S.is_->r(); ++i)
         {
         const IQIndex& I = S.is_->index(i);
-        IQTensor::const_iqind_it f = find(T.is_->begin(),T.is_->end(),I);
+        IndexSet<IQIndex>::const_iterator f = find(T.is_->begin(),T.is_->end(),I);
         if(f != T.is_->end()) //I is an element of other.iqindex_
             {
             //Check that arrow directions are compatible
@@ -532,10 +436,11 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
                     throw ArrowError("Incompatible arrow directions in IQTensor::operator*=.");
                     }
-            Foreach(const Index& i, I.indices())
-                { common_inds.insert(ApproxReal(i.uniqueReal())); }
 
-            common_inds.insert(ApproxReal(I.uniqueReal()));
+            Foreach(const Index& i, I.indices())
+                { common_inds.push_back(i.uniqueReal()); }
+
+            common_inds.push_back(I.uniqueReal());
             }
         else 
             { 
@@ -546,7 +451,7 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
     for(int i = 1; i <= T.is_->r(); ++i)
         {
         const IQIndex& I = T.is_->index(i);
-        if(!common_inds.count(ApproxReal(I.uniqueReal())))
+        if(!vectoruRContains(common_inds,I.uniqueReal()))
             { 
             riqind_holder.push_back(I); 
             }
@@ -554,62 +459,43 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
 
     res = IQTensor(riqind_holder);
 
-    set<ApproxReal> keys;
+    typedef IQTDat<ITSparse>::const_iterator
+    cbit;
 
-    IQTDat::StorageT old_itensor; 
-    res.dat.nc().swap(old_itensor);
+    typedef pair<Real,cbit>
+    blockpair;
 
-    multimap<ApproxReal,IQTSDat::const_iterator> com_S;
-    for(IQTSDat::const_iterator tt = S.blocks().begin(); tt != S.blocks().end(); ++tt)
-        {
-        Real r = 0.0;
-        for(int a = 1; a <= tt->r(); ++a)
-            {
-            if(common_inds.count(ApproxReal(tt->index(a).uniqueReal())))
-                { r += tt->index(a).uniqueReal(); }
-            }
-        com_S.insert(make_pair(ApproxReal(r),tt));
-        keys.insert(ApproxReal(r));
-        }
+    vector<blockpair> Sblock;
+    Sblock.reserve(S.blocks().size());
 
-    multimap<ApproxReal,IQTDat::const_iterator> com_T;
-    for(IQTDat::const_iterator ot = T.blocks().begin(); ot != T.blocks().end(); ++ot)
+    for(cbit ot = S.blocks().begin(); ot != S.blocks().end(); ++ot)
         {
         Real r = 0.0;
         Foreach(const Index& I, ot->indices())
             {
-            if(common_inds.count(ApproxReal(I.uniqueReal())))
-                { r += I.uniqueReal(); }
+            if(vectoruRContains(common_inds,I.uniqueReal()))
+                r += I.uniqueReal(); 
             }
-        com_T.insert(make_pair(ApproxReal(r),ot));
-        keys.insert(ApproxReal(r));
+        Sblock.push_back(make_pair(r,ot));
         }
 
-    typedef multimap<ApproxReal,IQTensor::const_iten_it>::iterator 
-    rit;
-    pair<rit,rit> rrange;
+    ITensor prod;
 
-    typedef multimap<ApproxReal,IQTSDat::const_iterator>::iterator 
-    lit;
-    pair<lit,lit> lrange;
-
-    ITensor tt;
-    for(set<ApproxReal>::iterator k = keys.begin(); k != keys.end(); ++k)
+    Foreach(const ITensor& t, T.blocks())
         {
-        //Equal range returns the begin and end iterators for the sequence
-        //corresponding to multimap[key] as a pair
-        lrange = com_S.equal_range(*k);
-        rrange = com_T.equal_range(*k);
-
-        //Iterate over all ITensors in *this and other sharing
-        //the set of contracted Index's corresponding to k
-        for(lit ll = lrange.first; ll != lrange.second; ++ll)
-        for(rit rr = rrange.first; rr != rrange.second; ++rr)
+        Real r = 0;
+        Foreach(const Index& I, t.indices())
             {
-            //Multiply the ITensors and add into res
-            tt = *(ll->second) * *(rr->second);
-            if(tt.scale().sign() != 0)
-                res.dat.nc().insert_add(tt);
+            if(vectoruRContains(common_inds,I.uniqueReal()))
+                r += I.uniqueReal();
+            }
+        Foreach(const blockpair& p, Sblock)
+            {
+            if(fabs(r - p.first) > UniqueRealAccuracy) continue;
+            prod = t;
+            prod *= *(p.second);
+            if(prod.scale().sign() != 0)
+                res.dat.nc().insert_add(prod);
             }
         }
 

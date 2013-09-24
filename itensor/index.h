@@ -167,9 +167,6 @@ class Index
     int primelevel_; 
     /////////////
 
-    explicit
-    Index(const IndexDatPtr& p, int plev);
-
     }; //class Index
 
 
@@ -247,6 +244,8 @@ operator<<(std::ostream& s, const IndexVal& iv);
 
 std::ostream& 
 operator<<(std::ostream& s, const IndexType& it);
+
+static const Real UniqueRealAccuracy = 1E-14;
 
 #undef Cout
 #undef Format
