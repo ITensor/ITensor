@@ -103,7 +103,8 @@ class Model
     getState(int i, const String& state) const = 0;
 
     virtual IQTensor
-    getOp(int i, const String& opname, const OptSet& opts) const = 0;
+    getOp(int i, const String& opname, 
+          const OptSet& opts = Global::opts()) const = 0;
 
     protected:
 
@@ -230,7 +231,7 @@ op(const String& opname, int i,
     }
 
 IQTensor inline Model::
-proj(int i, int n)
+proj(int i, int n) const
     {
     IQIndex s = conj(si(i));
     IQIndex sP = siP(i);

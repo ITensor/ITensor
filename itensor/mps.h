@@ -618,6 +618,14 @@ class InitState
         setAll(m);
         }
 
+    InitState(const Model& model, const char* state)
+        : 
+        model_(&model), 
+        state_(1+model.N())
+        { 
+        setAll(String(state));
+        }
+
     template<class MethodPtr>
     InitState& 
     set(int i, MethodPtr m)
@@ -626,6 +634,10 @@ class InitState
         state_.at(i) = std::bind1st(std::mem_fun(m),model_)(i);
         return *this;
         }
+
+    //This method required to override above template in case of string argument
+    InitState& 
+    set(int i, const char *state) { return set(i,String(state)); }
 
     template<class MethodPtr>
     InitState& 
