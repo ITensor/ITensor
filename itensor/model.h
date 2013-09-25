@@ -112,6 +112,99 @@ class Model
     virtual void
     doWrite(std::ostream& s) const = 0;
 
+    //
+    // Older interface (deprecated)
+    //
+
+    public:
+
+    IQTensor 
+    id(int i) const { return getOp(i,"Id"); }
+
+    IQTensor 
+    proj(int i,int n) const;
+
+    IQTensor
+    tReverse(int i) const { return getOp(i,"tReverse"); }
+
+    IQTensor 
+    sx(int i) const { return getOp(i,"Sx"); }
+
+    IQTensor 
+    isy(int i) const { return getOp(i,"ISy"); }
+
+    IQTensor 
+    sz(int i) const { return getOp(i,"Sz"); }
+
+    IQTensor 
+    sp(int i) const { return getOp(i,"Sp"); }
+
+    IQTensor 
+    sm(int i) const { return getOp(i,"Sm"); }
+
+    IQTensor
+    sz2(int i) const { return getOp(i,"Sz2"); }
+
+    IQTensor
+    sx2(int i) const { return getOp(i,"Sx2"); }
+
+    IQTensor
+    sy2(int i) const { return getOp(i,"Sy2"); }
+
+    IQTensor
+    n(int i) const { return getOp(i,"n"); }
+
+    IQTensor
+    C(int i) const { return getOp(i,"C"); }
+
+    IQTensor
+    Cdag(int i) const { return getOp(i,"Cdag"); }
+
+    IQTensor
+    A(int i) const { return getOp(i,"A"); }
+
+    IQTensor
+    Adag(int i) const { return getOp(i,"Adag"); }
+
+    IQTensor
+    fermiPhase(int i) const { return getOp(i,"fermiPhase"); }
+
+    IQTensor
+    Nup(int i) const { return getOp(i,"Nup"); }
+
+    IQTensor
+    Ndn(int i) const { return getOp(i,"Ndn"); }
+
+    IQTensor
+    Nupdn(int i) const { return getOp(i,"Nupdn"); }
+
+    IQTensor
+    Ntot(int i) const { return getOp(i,"Ntot"); }
+
+    IQTensor
+    Cup(int i) const { return getOp(i,"Cup"); }
+
+    IQTensor
+    Cdagup(int i) const { return getOp(i,"Cdagup"); }
+
+    IQTensor
+    Cdn(int i) const { return getOp(i,"Cdn"); }
+
+    IQTensor
+    Cdagdn(int i) const { return getOp(i,"Cdagdn"); }
+
+    IQTensor
+    Aup(int i) const { return getOp(i,"Aup"); }
+
+    IQTensor
+    Adagup(int i) const { return getOp(i,"Adagup"); }
+
+    IQTensor
+    Adn(int i) const { return getOp(i,"Adn"); }
+
+    IQTensor
+    Adagdn(int i) const { return getOp(i,"Adagdn"); }
+
     };
 
 inline IQTensor Model::
@@ -132,6 +225,16 @@ op(const String& opname, int i) const
         {
         return getOp(i,opname);
         }
+    }
+
+IQTensor inline Model::
+proj(int i, int n)
+    {
+    IQIndex s = conj(si(i));
+    IQIndex sP = siP(i);
+    IQTensor proj_(s,sP);
+    proj_(s(n),sP(n)) = 1;
+    return proj_;
     }
 
 inline std::ostream& 

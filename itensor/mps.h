@@ -591,6 +591,46 @@ class InitState
             }
         }
 
+    public:
+
+    //
+    // Older InitState interface (deprecated)
+    //
+
+    typedef boost::function1<IQIndexVal,int>
+    Setter;
+
+    template<class MethodPtr>
+    InitState(const Model& model, MethodPtr m)
+        : 
+        model_(&model), 
+        state_(1+model.N())
+        { 
+        setAll(m);
+        }
+
+    template<class MethodPtr>
+    InitState& 
+    set(int i, MethodPtr m)
+        { 
+        checkRange(i);
+        state_.at(i) = std::bind1st(std::mem_fun(m),model_)(i);
+        return *this;
+        }
+
+    template<class MethodPtr>
+    InitState& 
+    setAll(MethodPtr m)
+        { 
+        const
+        Setter s = std::bind1st(std::mem_fun(m),model_);
+        for(int n = 1; n <= model_->N(); ++n)
+            {
+            state_[n] = s(n);
+            }
+        return *this;
+        }
+
     }; 
 
 
