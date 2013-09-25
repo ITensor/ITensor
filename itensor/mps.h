@@ -421,6 +421,12 @@ class MPSt
     //Renamed to Anc
     //Tensor& AAnc(int i);
 
+    //This constructor is deprecated: use version
+    //with no Model argument instead (model is already
+    //referenced in InitState object)
+    MPSt(const Model& mod_,const InitState& initState,
+         int maxmm = MAX_M, Real cut = MIN_CUT);
+
     protected:
 
     //////////////////////////
