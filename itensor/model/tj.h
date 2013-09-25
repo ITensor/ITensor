@@ -45,57 +45,6 @@ class tJ : public Model
     virtual IQIndex
     getSiP(int i) const;
 
-    virtual IQTensor
-    makeTReverse(int i) const;
-
-    virtual IQTensor
-    makeNup(int i) const;
-
-    virtual IQTensor
-    makeNdn(int i) const;
-
-    virtual IQTensor
-    makeNtot(int i) const;
-
-    virtual IQTensor
-    makeCup(int i) const;
-
-    virtual IQTensor
-    makeCdagup(int i) const;
-
-    virtual IQTensor
-    makeCdn(int i) const;
-
-    virtual IQTensor
-    makeCdagdn(int i) const;
-
-    virtual IQTensor
-    makeAup(int i) const;
-
-    virtual IQTensor
-    makeAdagup(int i) const;
-
-    virtual IQTensor
-    makeAdn(int i) const;
-
-    virtual IQTensor
-    makeAdagdn(int i) const;
-
-    virtual IQTensor
-    makeFermiPhase(int i) const;
-
-    virtual IQTensor
-    makeSz(int i) const;
-
-    virtual IQTensor
-    makeSp(int i) const;
-
-    virtual IQTensor
-    makeSm(int i) const;
-
-    virtual IQTensor
-    makeSx(int i) const;
-
     virtual void
     doRead(std::istream& s);
 
@@ -161,9 +110,29 @@ inline const IQIndex& tJ::
 getSi(int i) const
     { return site_.at(i); }
 
-inline IQIndex tJ::
-getSiP(int i) const
-    { return primed(site_.at(i)); }
+IQIndexVal inline tJ::
+getState(int i, const String& state) const
+    {
+    if(state == "0" || state == "Emp") 
+        {
+        return getSi(i)(1);
+        }
+    else 
+    if(state == "+" || state == "Up") 
+        {
+        return getSi(i)(2);
+        }
+    else 
+    if(state == "-" || state == "Dn") 
+        {
+        return getSi(i)(3);
+        }
+    else
+        {
+        Error("State " + state + " not recognized");
+        return IQIndexVal();
+        }
+    }
 
 inline IQIndexVal tJ::
 Emp(int i) const
@@ -186,163 +155,135 @@ Dn(int i) const
 inline IQIndexVal tJ::
 EmpP(int i) const
     {
-    return getSiP(i)(1);
+    return primed(getSi(i))(1);
     }
 
 inline IQIndexVal tJ::
 UpP(int i) const
     {
-    return getSiP(i)(2);
+    return primed(getSi(i))(2);
     }
 
 inline IQIndexVal tJ::
 DnP(int i) const
     {
-    return getSiP(i)(3);
+    return primed(getSiP(i))(3);
     }
 
 inline IQTensor tJ::
-makeTReverse(int i) const
-    { 
-    IQTensor tr(conj(si(i)),siP(i));
-    //tr(Dn(i),UpP(i)) = -1;
-    tr(Dn(i),UpP(i)) = +1;
-    tr(Up(i),DnP(i)) = 1;
-    tr(Emp(i),EmpP(i)) = 1;
-    return tr;
-    }
-
-inline IQTensor tJ::
-makeNup(int i) const
+getOp(int i, const String& opname, const OptSet& opts) const
     {
-    IQTensor Nup(conj(si(i)),siP(i));
-    Nup(Up(i),UpP(i)) = 1;
-    return Nup;
-    }
+    const
+    IQIndex s(si(i));
+    const
+    IQIndex sP = primed(s);
 
-inline IQTensor tJ::
-makeNdn(int i) const
-    {
-    IQTensor Ndn(conj(si(i)),siP(i));
-    Ndn(Dn(i),DnP(i)) = 1;
-    return Ndn;
-    }
+    IQIndexVal Em(s(1)),
+               EmP(sP(1)),
+               Up(s(2)),
+               UpP(sP(2)),
+               Dn(s(3)),
+               DnP(sP(3));
 
-inline IQTensor tJ::
-makeNtot(int i) const
-    {
-    IQTensor Ntot(conj(si(i)),siP(i));
-    Ntot(Up(i),UpP(i)) = 1;
-    Ntot(Dn(i),DnP(i)) = 1;
-    return Ntot;
-    }
+    IQTensor Op(conj(s),sP);
 
-inline IQTensor tJ::
-makeCup(int i) const
-    {
-    IQTensor Cup(conj(si(i)),siP(i));
-    Cup(Up(i),EmpP(i)) = 1;
-    return Cup;
-    }
+    if(opname == "TReverse")
+        {
+        Op(Em,EmP) = +1;
+        Op(Dn,UpP) = -1; //correct?
+        Op(Up,DnP) = +1;
+        }
+    else
+    if(opname == "Nup")
+        {
+        Op(Up,UpP) = 1;
+        }
+    else
+    if(opname == "Ndn")
+        {
+        Op(Dn,DnP) = 1;
+        }
+    else
+    if(opname == "Ntot")
+        {
+        Op(Up,UpP) = 1;
+        Op(Dn,DnP) = 1;
+        }
+    else
+    if(opname == "Cup")
+        {
+        Op(Up,EmP) = 1; 
+        }
+    else
+    if(opname == "Cdagup")
+        {
+        Op(Em,UpP) = 1; 
+        }
+    else
+    if(opname == "Cdn")
+        {
+        Op(Dn,EmP) = 1; 
+        }
+    else
+    if(opname == "Cdagdn")
+        {
+        Op(Em,DnP) = 1; 
+        }
+    else
+    if(opname == "Aup")
+        {
+        Op(Up,EmP) = 1; 
+        }
+    else
+    if(opname == "Adagup")
+        {
+        Op(Em,UpP) = 1; 
+        }
+    else
+    if(opname == "Adn")
+        {
+        Op(Dn,EmP) = 1; 
+        }
+    else
+    if(opname == "Adagdn")
+        {
+        Op(Em,DnP) = 1; 
+        }
+    else
+    if(opname == "FermiPhase" || opname == "F")
+        {
+        Op(Em,EmP) = +1; 
+        Op(Up,UpP) = -1;
+        Op(Dn,DnP) = -1;
+        }
+    else
+    if(opname == "Sz")
+        {
+        Op(Up,UpP) = +0.5; 
+        Op(Dn,DnP) = -0.5;
+        }
+    else
+    if(opname == "Sx")
+        {
+        Op(Up,DnP) = 1; 
+        Op(Dn,UpP) = 1;
+        }
+    else
+    if(opname == "Sp")
+        {
+        Op(Dn,UpP) = 1;
+        }
+    else
+    if(opname == "Sm")
+        {
+        Op(Up,DnP) = 1;
+        }
+    else
+        {
+        Error("Operator " + opname + " name not recognized");
+        }
 
-inline IQTensor tJ::
-makeCdagup(int i) const
-    {
-    IQTensor Cdagup(conj(si(i)),siP(i));
-    Cdagup(Emp(i),UpP(i)) = 1;
-    return Cdagup;
-    }
-
-inline IQTensor tJ::
-makeCdn(int i) const
-    {
-    IQTensor Cdn(conj(si(i)),siP(i));
-    Cdn(Dn(i),EmpP(i)) = 1;
-    return Cdn;
-    }
-
-inline IQTensor tJ::
-makeCdagdn(int i) const
-    {
-    IQTensor Cdagdn(conj(si(i)),siP(i));
-    Cdagdn(Emp(i),DnP(i)) = 1;
-    return Cdagdn;
-    }
-
-inline IQTensor tJ::
-makeAup(int i) const
-    {
-    IQTensor Aup(conj(si(i)),siP(i));
-    Aup(Up(i),EmpP(i)) = 1;
-    return Aup;
-    }
-
-inline IQTensor tJ::
-makeAdagup(int i) const
-    {
-    IQTensor Adagup(conj(si(i)),siP(i));
-    Adagup(Emp(i),UpP(i)) = 1;
-    return Adagup;
-    }
-
-inline IQTensor tJ::
-makeAdn(int i) const
-    {
-    IQTensor Adn(conj(si(i)),siP(i));
-    Adn(Dn(i),EmpP(i)) = 1;
-    return Adn;
-    }
-
-inline IQTensor tJ::
-makeAdagdn(int i) const
-    {
-    IQTensor Adagdn(conj(si(i)),siP(i));
-    Adagdn(Emp(i),DnP(i)) = 1;
-    return Adagdn;
-    }
-
-inline IQTensor tJ::
-makeFermiPhase(int i) const
-    {
-    IQTensor fermiPhase(conj(si(i)),siP(i));
-    fermiPhase(Emp(i),EmpP(i)) = +1;
-    fermiPhase(Up(i),UpP(i)) = -1;
-    fermiPhase(Dn(i),DnP(i)) = -1;
-    return fermiPhase;
-    }
-
-inline IQTensor tJ::
-makeSz(int i) const
-    {
-    IQTensor Sz(conj(si(i)),siP(i));
-    Sz(Up(i),UpP(i)) = +0.5; 
-    Sz(Dn(i),DnP(i)) = -0.5;
-    return Sz;
-    }
-
-inline IQTensor tJ::
-makeSp(int i) const
-    {
-    IQTensor Sp(conj(si(i)),siP(i));
-    Sp(Dn(i),UpP(i)) = 1;
-    return Sp;
-    }
-
-inline IQTensor tJ::
-makeSm(int i) const
-    {
-    IQTensor Sp(conj(si(i)),siP(i));
-    Sp(Up(i),DnP(i)) = 1;
-    return Sp;
-    }
-
-inline IQTensor tJ::
-makeSx(int i) const
-    {
-    IQTensor Sx(conj(si(i)),siP(i));
-    Sx(Up(i),DnP(i)) = 1;
-    Sx(Dn(i),UpP(i)) = 1;
-    return Sx;
+    return Op;
     }
 
 #endif

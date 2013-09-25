@@ -27,10 +27,10 @@ class Spinless : public Model
     OccP(int i) const;
 
     IQTensor
-    projEmp(int i) const { return makeProjEmp(i); }
+    projEmp(int i) const { return getOp(i,"ProjEmp"); }
 
     IQTensor
-    projOcc(int i) const { return makeProjOcc(i); }
+    projOcc(int i) const { return getOp(i,"ProjOcc"); }
 
     private:
 
@@ -45,30 +45,6 @@ class Spinless : public Model
 
     virtual IQTensor
     getOp(int i, const String& opname, const OptSet& opts = Global::opts()) const;
-
-    IQTensor
-    makeN(int i) const { return getOp(i,"N"); }
-
-    IQTensor
-    makeC(int i) const { return getOp(i,"C"); }
-
-    IQTensor
-    makeA(int i) const { return getOp(i,"A"); }
-
-    IQTensor
-    makeCdag(int i) const { return getOp(i,"Cdag"); }
-
-    IQTensor
-    makeAdag(int i) const { return getOp(i,"Adag"); }
-
-    IQTensor
-    makeFermiPhase(int i) const { return getOp(i,"F"); }
-
-    IQTensor
-    makeProjEmp(int i) const { return getOp(i,"projEmp"); }
-
-    IQTensor
-    makeProjOcc(int i) const { return getOp(i,"projOcc"); }
 
     void
     doRead(std::istream& s);

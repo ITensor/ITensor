@@ -56,54 +56,6 @@ class Hubbard : public Model
     virtual IQTensor
     getOp(int i, const String& opname, const OptSet& opts = Global::opts()) const;
 
-    IQTensor
-    makeTReverse(int i) const { return getOp(i,"TReverse"); }
-
-    IQTensor
-    makeNup(int i) const { return getOp(i,"Nup"); }
-
-    IQTensor
-    makeNdn(int i) const { return getOp(i,"Ndn"); }
-
-    IQTensor
-    makeNupdn(int i) const { return getOp(i,"Nupdn"); }
-
-    IQTensor
-    makeNtot(int i) const { return getOp(i,"Ntot"); }
-
-    IQTensor
-    makeCup(int i) const { return getOp(i,"Cup"); }
-
-    IQTensor
-    makeCdagup(int i) const { return getOp(i,"Cdagup"); }
-
-    IQTensor
-    makeCdn(int i) const { return getOp(i,"Cdn"); }
-
-    IQTensor
-    makeCdagdn(int i) const { return getOp(i,"Cdagdn"); }
-
-    IQTensor
-    makeAup(int i) const { return getOp(i,"Aup"); }
-
-    IQTensor
-    makeAdagup(int i) const { return getOp(i,"Adagup"); }
-
-    IQTensor
-    makeAdn(int i) const { return getOp(i,"Adn"); }
-
-    IQTensor
-    makeAdagdn(int i) const { return getOp(i,"Adagdn"); }
-
-    IQTensor
-    makeFermiPhase(int i) const { return getOp(i,"F"); }
-
-    IQTensor
-    makeSz(int i) const { return getOp(i,"Sz"); }
-
-    IQTensor
-    makeSx(int i) const { return getOp(i,"Sx"); }
-
     virtual void
     doRead(std::istream& s);
 
@@ -206,7 +158,7 @@ getState(int i, const String& state) const
     else
         {
         Error("State " + state + " not recognized");
-        return getSi(i)(1);
+        return IQIndexVal();
         }
     }
 

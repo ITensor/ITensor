@@ -100,11 +100,11 @@ class Model
     getSi(int i) const = 0;
 
     virtual IQIndexVal
-    getState(int i, const String& state) const = 0;
+    getState(int i, const String& state) const;
 
     virtual IQTensor
     getOp(int i, const String& opname, 
-          const OptSet& opts = Global::opts()) const = 0;
+          const OptSet& opts = Global::opts()) const;
 
     protected:
 
@@ -115,97 +115,191 @@ class Model
     doWrite(std::ostream& s) const = 0;
 
     //
+    //
     // Older interface (deprecated)
+    // Can safely ignore everything below;
+    // present only for backwards compatibility.
+    //
     //
 
     public:
 
     IQTensor 
-    id(int i) const { return getOp(i,"Id"); }
+    id(int i) const { return op("Id",i); }
 
     IQTensor 
     proj(int i,int n) const;
 
     IQTensor
-    tReverse(int i) const { return getOp(i,"tReverse"); }
+    tReverse(int i) const { return makeTReverse(i); }
 
     IQTensor 
-    sx(int i) const { return getOp(i,"Sx"); }
+    sx(int i) const { return makeSx(i); }
 
     IQTensor 
-    isy(int i) const { return getOp(i,"ISy"); }
+    isy(int i) const { return makeISy(i); }
 
     IQTensor 
-    sz(int i) const { return getOp(i,"Sz"); }
+    sz(int i) const { return makeSz(i); }
 
     IQTensor 
-    sp(int i) const { return getOp(i,"Sp"); }
+    sp(int i) const { return makeSp(i); }
 
     IQTensor 
-    sm(int i) const { return getOp(i,"Sm"); }
+    sm(int i) const { return makeSm(i); }
 
     IQTensor
-    sz2(int i) const { return getOp(i,"Sz2"); }
+    sz2(int i) const { return makeSz2(i); }
 
     IQTensor
-    sx2(int i) const { return getOp(i,"Sx2"); }
+    sx2(int i) const { return makeSx2(i); }
 
     IQTensor
-    sy2(int i) const { return getOp(i,"Sy2"); }
+    sy2(int i) const { return makeSy2(i); }
 
     IQTensor
-    n(int i) const { return getOp(i,"n"); }
+    n(int i) const { return makeN(i); }
 
     IQTensor
-    C(int i) const { return getOp(i,"C"); }
+    C(int i) const { return makeC(i); }
 
     IQTensor
-    Cdag(int i) const { return getOp(i,"Cdag"); }
+    Cdag(int i) const { return makeCdag(i); }
 
     IQTensor
-    A(int i) const { return getOp(i,"A"); }
+    A(int i) const { return makeA(i); }
 
     IQTensor
-    Adag(int i) const { return getOp(i,"Adag"); }
+    Adag(int i) const { return makeAdag(i); }
 
     IQTensor
-    fermiPhase(int i) const { return getOp(i,"fermiPhase"); }
+    fermiPhase(int i) const { return makeFermiPhase(i); }
 
     IQTensor
-    Nup(int i) const { return getOp(i,"Nup"); }
+    Nup(int i) const { return makeNup(i); }
 
     IQTensor
-    Ndn(int i) const { return getOp(i,"Ndn"); }
+    Ndn(int i) const { return makeNdn(i); }
 
     IQTensor
-    Nupdn(int i) const { return getOp(i,"Nupdn"); }
+    Nupdn(int i) const { return makeNupdn(i); }
 
     IQTensor
-    Ntot(int i) const { return getOp(i,"Ntot"); }
+    Ntot(int i) const { return makeNtot(i); }
 
     IQTensor
-    Cup(int i) const { return getOp(i,"Cup"); }
+    Cup(int i) const { return makeCup(i); }
 
     IQTensor
-    Cdagup(int i) const { return getOp(i,"Cdagup"); }
+    Cdagup(int i) const { return makeCdagup(i); }
 
     IQTensor
-    Cdn(int i) const { return getOp(i,"Cdn"); }
+    Cdn(int i) const { return makeCdn(i); }
 
     IQTensor
-    Cdagdn(int i) const { return getOp(i,"Cdagdn"); }
+    Cdagdn(int i) const { return makeCdagdn(i); }
 
     IQTensor
-    Aup(int i) const { return getOp(i,"Aup"); }
+    Aup(int i) const { return makeAup(i); }
 
     IQTensor
-    Adagup(int i) const { return getOp(i,"Adagup"); }
+    Adagup(int i) const { return makeAdagup(i); }
 
     IQTensor
-    Adn(int i) const { return getOp(i,"Adn"); }
+    Adn(int i) const { return makeAdn(i); }
 
     IQTensor
-    Adagdn(int i) const { return getOp(i,"Adagdn"); }
+    Adagdn(int i) const { return makeAdagdn(i); }
+
+    //
+    // Implementations for older interface (deprecated)
+    //
+    private:
+
+    virtual IQTensor 
+    makeProj(int i, int n) const { return proj(i,n); }
+
+    virtual IQTensor 
+    makeTReverse(int i) const { return getOp(i,"tReverse"); }
+
+    virtual IQTensor 
+    makeSx(int i) const { return getOp(i,"Sx"); }
+
+    virtual IQTensor 
+    makeISy(int i) const { return getOp(i,"ISy"); }
+
+    virtual IQTensor 
+    makeSz(int i) const { return getOp(i,"Sz"); }
+
+    virtual IQTensor 
+    makeSp(int i) const { return getOp(i,"Sp"); }
+
+    virtual IQTensor 
+    makeSm(int i) const { return getOp(i,"Sm"); }
+
+    virtual IQTensor
+    makeSz2(int i) const { return getOp(i,"Sz2"); }
+
+    virtual IQTensor
+    makeSx2(int i) const { return getOp(i,"Sx2"); }
+
+    virtual IQTensor
+    makeSy2(int i) const { return getOp(i,"Sy2"); }
+
+    virtual IQTensor 
+    makeN(int i) const { return getOp(i,"N"); }
+
+    virtual IQTensor 
+    makeC(int i) const { return getOp(i,"C"); }
+
+    virtual IQTensor 
+    makeCdag(int i) const { return getOp(i,"Cdag"); }
+
+    virtual IQTensor 
+    makeA(int i) const { return getOp(i,"A"); }
+
+    virtual IQTensor 
+    makeAdag(int i) const { return getOp(i,"Adag"); }
+
+    virtual IQTensor 
+    makeFermiPhase(int i) const { return getOp(i,"FermiPhase"); }
+
+    virtual IQTensor 
+    makeNup(int i) const { return getOp(i,"Nup"); }
+
+    virtual IQTensor 
+    makeNdn(int i) const { return getOp(i,"Ndn"); }
+
+    virtual IQTensor 
+    makeNupdn(int i) const { return getOp(i,"Nupdn"); }
+
+    virtual IQTensor 
+    makeNtot(int i) const { return getOp(i,"Ntot"); }
+
+    virtual IQTensor 
+    makeCup(int i) const { return getOp(i,"Cup"); }
+
+    virtual IQTensor 
+    makeCdagup(int i) const { return getOp(i,"Cdagup"); }
+
+    virtual IQTensor 
+    makeCdn(int i) const { return getOp(i,"Cdn"); }
+
+    virtual IQTensor 
+    makeCdagdn(int i) const { return getOp(i,"Cdagdn"); }
+
+    virtual IQTensor 
+    makeAup(int i) const { return getOp(i,"Aup"); }
+
+    virtual IQTensor 
+    makeAdagup(int i) const { return getOp(i,"Adagup"); }
+
+    virtual IQTensor 
+    makeAdn(int i) const { return getOp(i,"Adn"); }
+
+    virtual IQTensor 
+    makeAdagdn(int i) const { return getOp(i,"Adagdn"); }
+
 
     };
 
@@ -228,6 +322,21 @@ op(const String& opname, int i,
         {
         return getOp(i,opname,opts);
         }
+    }
+
+IQIndexVal inline Model::
+getState(int i, const String& state) const
+    {
+    Error("This Model class only supports older interface - getState not defined.");
+    return IQIndexVal();
+    }
+
+IQTensor inline Model::
+getOp(int i, const String& opname, 
+      const OptSet& opts) const
+    {
+    Error("This Model class only supports older interface - getOp not defined.");
+    return IQTensor();
     }
 
 IQTensor inline Model::
