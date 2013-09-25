@@ -21,7 +21,7 @@ class DMRGObserver : public Observer
     {
     public:
     
-    DMRGObserver();
+    DMRGObserver(const OptSet& opts = Global::opts());
 
     virtual ~DMRGObserver() { }
 
@@ -67,14 +67,15 @@ class DMRGObserver : public Observer
     }; // class DMRGObserver
 
 inline DMRGObserver::
-DMRGObserver() 
+DMRGObserver(const OptSet& opts) 
     : 
-    energy_errgoal(-1), 
-    orth_weight(1),
-    printeigs(true),
+    energy_errgoal(opts.getReal("EnergyErrgoal",-1)), 
+    orth_weight(opts.getReal("OrthWeight",1)),
+    printeigs(opts.getBool("PrintEigs",true)),
     max_eigs(-1),
     max_te(-1)
-    { }
+    { 
+    }
 
 
 void inline DMRGObserver::

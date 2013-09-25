@@ -52,7 +52,7 @@ class MPSt
 
     MPSt(const Model& mod_,int maxmm = MAX_M, Real cut = MIN_CUT);
 
-    MPSt(const Model& mod_,const InitState& initState,
+    MPSt(const InitState& initState,
          int maxmm = MAX_M, Real cut = MIN_CUT);
 
     MPSt(const Model& model, std::istream& s);
@@ -421,6 +421,12 @@ class MPSt
     //Renamed to Anc
     //Tensor& AAnc(int i);
 
+    //This constructor is deprecated: use version
+    //with no Model argument instead (model is already
+    //referenced in InitState object)
+    MPSt(const Model& mod_,const InitState& initState,
+         int maxmm = MAX_M, Real cut = MIN_CUT);
+
     protected:
 
     //////////////////////////
@@ -537,8 +543,8 @@ class InitState
     typedef std::vector<IQIndexVal>
     Storage;
 
-    typedef boost::function1<IQIndexVal,int>
-    Setter;
+    typedef std::string
+    String;
 
     InitState(const Model& model)
         : 
@@ -546,39 +552,37 @@ class InitState
         state_(1+model.N())
         { }
 
-    template<class MethodPtr>
-    InitState(const Model& model, MethodPtr m)
+    InitState(const Model& model, const String& state)
         : 
         model_(&model), 
         state_(1+model.N())
         { 
-        setAll(m);
+        setAll(state);
         }
 
-    template<class MethodPtr>
     InitState& 
-    set(int i, MethodPtr m)
+    set(int i, const String& state)
         { 
         checkRange(i);
-        state_.at(i) = std::bind1st(std::mem_fun(m),model_)(i);
+        state_.at(i) = model_->st(i,state);
         return *this;
         }
 
-    template<class MethodPtr>
     InitState& 
-    setAll(MethodPtr m)
+    setAll(const String& state)
         { 
-        const
-        Setter s = std::bind1st(std::mem_fun(m),model_);
         for(int n = 1; n <= model_->N(); ++n)
             {
-            state_[n] = s(n);
+            state_[n] = model_->st(n,state);
             }
         return *this;
         }
 
     const IQIndexVal&
     operator()(int i) const { checkRange(i); return state_.at(i); }
+
+    const Model&
+    model() const { return *model_; }
 
     private:
 
@@ -594,6 +598,58 @@ class InitState
             Cout << "Valid range is 1 to " << model_->N() << Endl;
             Error("i out of range");
             }
+        }
+
+    public:
+
+    //
+    // Older InitState interface (deprecated)
+    //
+
+    typedef boost::function1<IQIndexVal,int>
+    Setter;
+
+    template<class MethodPtr>
+    InitState(const Model& model, MethodPtr m)
+        : 
+        model_(&model), 
+        state_(1+model.N())
+        { 
+        setAll(m);
+        }
+
+    InitState(const Model& model, const char* state)
+        : 
+        model_(&model), 
+        state_(1+model.N())
+        { 
+        setAll(String(state));
+        }
+
+    template<class MethodPtr>
+    InitState& 
+    set(int i, MethodPtr m)
+        { 
+        checkRange(i);
+        state_.at(i) = std::bind1st(std::mem_fun(m),model_)(i);
+        return *this;
+        }
+
+    //This method required to override above template in case of string argument
+    InitState& 
+    set(int i, const char *state) { return set(i,String(state)); }
+
+    template<class MethodPtr>
+    InitState& 
+    setAll(MethodPtr m)
+        { 
+        const
+        Setter s = std::bind1st(std::mem_fun(m),model_);
+        for(int n = 1; n <= model_->N(); ++n)
+            {
+            state_[n] = s(n);
+            }
+        return *this;
         }
 
     }; 

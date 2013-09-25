@@ -70,7 +70,7 @@ BondGate(const Model& model, int i, int j,
         Error("When providing bondH, type must be tReal or tImag");
         }
     bondH *= -tau;
-    Tensor unit = model.id(i)*model.id(j);
+    Tensor unit = model.op("Id",i)*model.op("Id",j);
     if(type_ == tReal)
         {
         bondH *= Complex_i;

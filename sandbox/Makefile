@@ -31,6 +31,12 @@ debug: dmrg-g iqdmrg-g
 
 all: dmrg iqdmrg dmrgj1j2
 
+test: test.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) test.o -o test $(LIBFLAGS)
+
+test-g: mkdebugdir .debug_objs/test.o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/test.o -o test-g $(LIBGFLAGS)
+
 dmrg: dmrg.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
 

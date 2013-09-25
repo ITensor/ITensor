@@ -170,7 +170,7 @@ DMRGWorker(MPSt<Tensor>& psi,
            const OptSet& opts = Global::opts())
     {
     //Default Observer type is DMRGObserver
-    DMRGObserver obs;
+    DMRGObserver obs(opts);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
     return energy;
     }

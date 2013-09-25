@@ -114,29 +114,29 @@ init_()
 
         W = IQTensor(conj(model_.si(n)),model_.siP(n),conj(row),col);
 
-        W += model_.id(n) * row(1) * col(1); //ending state
-        W += model_.id(n) * row(2) * col(2); //starting state
+        W += model_.op("Id",n) * row(1) * col(1); //ending state
+        W += model_.op("Id",n) * row(2) * col(2); //starting state
 
         //
         //Sz Sz terms
         //
-        W += model_.sz(n) * row(3) * col(1);
+        W += model_.op("Sz",n) * row(3) * col(1);
         //Horizontal bonds
-        W += model_.sz(n) * row(start) * col(kd) * Jz_;
+        W += model_.op("Sz",n) * row(start) * col(kd) * Jz_;
 
         //
         //S+ S- terms
         //
-        W += model_.sm(n) * row(kd+1) * col(1);
+        W += model_.op("Sm",n) * row(kd+1) * col(1);
         //Horizontal bonds
-        W += model_.sp(n) * row(start) * col(kd+kpm) * J_/2;
+        W += model_.op("Sp",n) * row(start) * col(kd+kpm) * J_/2;
 
         //
         //S- S+ terms
         //
-        W += model_.sp(n) * row(kd+kpm+1) * col(1);
+        W += model_.op("Sp",n) * row(kd+kpm+1) * col(1);
         //Horizontal bonds
-        W += model_.sm(n) * row(start) * col(kd+2*kpm) * J_/2;
+        W += model_.op("Sm",n) * row(start) * col(kd+2*kpm) * J_/2;
 
         //Add boundary field if requested
         const int x = (n-1)/Ny_+1, y = (n-1)%Ny_+1;
@@ -145,7 +145,7 @@ init_()
             Real eff_h = Boundary_h_;
             if(J_ > 0) eff_h *= (x%2==1 ? -1 : 1)*(y%2==1 ? -1 : 1);
             //cerr << format("Doing a staggered bf of %.2f at site %d (%d,%d)\n")%eff_h%n%x%y;
-            W += model_.sz(n) * row(start) * col(1) * eff_h;
+            W += model_.op("Sz",n) * row(start) * col(1) * eff_h;
             }
 
         //The following only apply if Ny_ > 1:
@@ -153,25 +153,25 @@ init_()
         //Strings of off-diagonal identity ops
         for(int q = 1; q <= Ny_-1; ++q)
             { 
-            W += model_.id(n) * row(3+q) * col(2+q); 
-            W += model_.id(n) * row(kd+1+q) * col(kd+q); 
-            W += model_.id(n) * row(kd+kpm+1+q) * col(kd+kpm+q); 
+            W += model_.op("Id",n) * row(3+q) * col(2+q); 
+            W += model_.op("Id",n) * row(kd+1+q) * col(kd+q); 
+            W += model_.op("Id",n) * row(kd+kpm+1+q) * col(kd+kpm+q); 
             }
 
         //Periodic BC bond (only for width 3 ladders or greater)
         if(y == 1 && Ny_ >= 3)
             {
-            W += model_.sz(n) * row(start) * col(kd-1) * Jz_;
-            W += model_.sp(n) * row(start) * col(kd+kpm-1) * J_/2;
-            W += model_.sm(n) * row(start) * col(kd+2*kpm-1) * J_/2;
+            W += model_.op("Sz",n) * row(start) * col(kd-1) * Jz_;
+            W += model_.op("Sp",n) * row(start) * col(kd+kpm-1) * J_/2;
+            W += model_.op("Sm",n) * row(start) * col(kd+2*kpm-1) * J_/2;
             }
 
         //N.N. bond along column
         if(y != Ny_)
             {
-            W += model_.sz(n) * row(start) * col(3) * J_;
-            W += model_.sp(n) * row(start) * col(kd+1) * J_/2;
-            W += model_.sm(n) * row(start) * col(kd+kpm+1) * J_/2;
+            W += model_.op("Sz",n) * row(start) * col(3) * J_;
+            W += model_.op("Sp",n) * row(start) * col(kd+1) * J_/2;
+            W += model_.op("Sm",n) * row(start) * col(kd+kpm+1) * J_/2;
             }
         }
 

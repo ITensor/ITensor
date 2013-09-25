@@ -12,9 +12,7 @@ class Spinless : public Model
 
     Spinless();
 
-    Spinless(int N, bool odd_even_up_down = false, bool conserve_Nf = true);
-
-    Spinless(std::ifstream& s) { doRead(s); }
+    Spinless(int N, const OptSet& opts = Global::opts());
 
     IQIndexVal
     Emp(int i) const;
@@ -41,33 +39,36 @@ class Spinless : public Model
 
     const IQIndex&
     getSi(int i) const;
+    
+    virtual IQIndexVal
+    getState(int i, const String& state) const;
 
-    IQIndex
-    getSiP(int i) const;
-
-    IQTensor
-    makeN(int i) const;
-
-    IQTensor
-    makeC(int i) const;
+    virtual IQTensor
+    getOp(int i, const String& opname, const OptSet& opts = Global::opts()) const;
 
     IQTensor
-    makeA(int i) const { return makeC(i); }
+    makeN(int i) const { return getOp(i,"N"); }
 
     IQTensor
-    makeCdag(int i) const;
+    makeC(int i) const { return getOp(i,"C"); }
 
     IQTensor
-    makeAdag(int i) const { return makeCdag(i); }
+    makeA(int i) const { return getOp(i,"A"); }
 
     IQTensor
-    makeFermiPhase(int i) const;
+    makeCdag(int i) const { return getOp(i,"Cdag"); }
 
     IQTensor
-    makeProjEmp(int i) const;
+    makeAdag(int i) const { return getOp(i,"Adag"); }
 
     IQTensor
-    makeProjOcc(int i) const;
+    makeFermiPhase(int i) const { return getOp(i,"F"); }
+
+    IQTensor
+    makeProjEmp(int i) const { return getOp(i,"projEmp"); }
+
+    IQTensor
+    makeProjOcc(int i) const { return getOp(i,"projOcc"); }
 
     void
     doRead(std::istream& s);
@@ -99,12 +100,12 @@ Spinless()
     }
 
 inline Spinless::
-Spinless(int N, bool odd_even_up_down, bool conserve_Nf)
+Spinless(int N, const OptSet& opts)
     : N_(N),
-      odd_even_up_down_(odd_even_up_down),
-      conserve_Nf_(conserve_Nf),
       site_(N_+1)
     { 
+    odd_even_up_down_ = opts.getBool("OddEvenUpDown",false);
+    conserve_Nf_ = opts.getBool("ConserveNf",true);
     constructSites();
     }
 
@@ -171,9 +172,6 @@ const IQIndex& Spinless::
 getSi(int i) const
     { return site_.at(i); }
 
-IQIndex inline Spinless::
-getSiP(int i) const
-    { return primed(site_.at(i)); }
 
 IQIndexVal inline Spinless::
 Emp(int i) const
@@ -190,62 +188,95 @@ Occ(int i) const
 IQIndexVal inline Spinless::
 EmpP(int i) const
     {
-    return getSiP(i)(1);
+    return primed(getSi(i))(1);
     }
 
 IQIndexVal inline Spinless::
 OccP(int i) const
     {
-    return getSiP(i)(2);
+    return primed(getSi(i))(2);
     }
 
-IQTensor inline Spinless::
-makeN(int i) const
+inline IQIndexVal Spinless::
+getState(int i, const String& state) const
     {
-    IQTensor N(conj(si(i)),siP(i));
-    N(Occ(i),OccP(i)) = 1;
-    return N;
+    if(state == "Emp" || state == "0") 
+        {
+        return getSi(i)(1);
+        }
+    else 
+    if(state == "Occ" || state == "1") 
+        {
+        return getSi(i)(2);
+        }
+    else
+        {
+        Error("State " + state + " not recognized");
+        return getSi(i)(1);
+        }
     }
 
-IQTensor inline Spinless::
-makeC(int i) const
+inline IQTensor Spinless::
+getOp(int i, const String& opname, const OptSet& opts) const
     {
-    IQTensor C(conj(si(i)),siP(i));
-    C(Occ(i),EmpP(i)) = 1;
-    return C;
-    }
+    const
+    IQIndex s(si(i));
+    const
+    IQIndex sP = primed(s);
 
-IQTensor inline Spinless::
-makeCdag(int i) const
-    {
-    IQTensor Cdag(conj(si(i)),siP(i));
-    Cdag(Emp(i),OccP(i)) = 1;
-    return Cdag;
-    }
+    IQIndexVal Emp(s(1)),
+               EmpP(sP(1)),
+               Occ(s(2)),
+               OccP(sP(2));
 
-IQTensor inline Spinless::
-makeFermiPhase(int i) const
-    {
-    IQTensor fermiPhase(conj(si(i)),siP(i));
-    fermiPhase(Emp(i),EmpP(i)) = +1;
-    fermiPhase(Occ(i),OccP(i)) = -1;
-    return fermiPhase;
-    }
+    IQTensor Op(conj(s),sP);
 
-IQTensor inline Spinless::
-makeProjEmp(int i) const
-    {
-    IQTensor projEmp(conj(si(i)),siP(i));
-    projEmp(Emp(i),EmpP(i)) = 1;
-    return projEmp;
-    }
+    if(opname == "N" || opname == "n")
+        {
+        Op(Occ,OccP) = 1;
+        }
+    else
+    if(opname == "C")
+        {
+        Op(Occ,EmpP) = 1;
+        }
+    else
+    if(opname == "Cdag")
+        {
+        Op(Emp,OccP) = 1;
+        }
+    else
+    if(opname == "A")
+        {
+        Op(Occ,EmpP) = 1;
+        }
+    else
+    if(opname == "Adag")
+        {
+        Op(Emp,OccP) = 1;
+        }
+    else
+    if(opname == "F" || opname == "FermiPhase")
+        {
+        Op(Emp,EmpP) = 1;
+        Op(Occ,OccP) = -1;
+        }
+    else
+    if(opname == "projEmp")
+        {
+        Op(Emp,EmpP) = 1;
+        }
+    else
+    if(opname == "projOcc")
+        {
+        Op(Occ,OccP) = 1; 
+        }
+    else
+        {
+        Error("Operator " + opname + " name not recognized");
+        }
 
-IQTensor inline Spinless::
-makeProjOcc(int i) const
-    {
-    IQTensor projOcc(conj(si(i)),siP(i));
-    projOcc(Occ(i),OccP(i)) = 1;
-    return projOcc;
+    return Op;
     }
 
 #endif

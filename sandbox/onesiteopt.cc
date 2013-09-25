@@ -6,7 +6,7 @@ using boost::format;
 using namespace std;
 
 int main(int argc, char* argv[])
-{
+    {
     int N = 100;
     int nsweep = 5; 
     int minm = 50;
@@ -18,20 +18,28 @@ int main(int argc, char* argv[])
 
     MPO H = Heisenberg(model);
 
-    InitState initState(N);
+    InitState initState(model);
     for(int i = 1; i <= N; ++i) 
-        initState(i) = (i%2==1 ? model.Up(i) : model.Dn(i));
+        initState.set(i,(i%2==1 ? "Up" : "Dn"));
 
-    MPS psi(model,initState);
+    MPS psi(initState);
 
     cout << format("Initial energy = %.5f\n")%psiHphi(psi,H,psi);
 
-    Sweeps sweeps(Sweeps::exp_m,nsweep,minm,maxm,cutoff);
-    DMRGOpts opts; 
-        opts.quiet(true);
-    Real En = onesitedmrg(psi,H,sweeps,opts);
+    //
+    // Set the parameters controlling the accuracy of the DMRG
+    // calculation for each DMRG sweep. Here less than 10 maxm
+    // values are provided, so all remaining sweeps will use the
+    // last maxm (= 200).
+    //
+    Sweeps sweeps(5);
+    sweeps.maxm() = 50,50,100,100,200;
+    sweeps.cutoff() = 1E-8;
+    cout << sweeps;
+
+    Real En = onesitedmrg(psi,H,sweeps,Quiet());
 
     cout << format("\nGround State Energy = %.10f\n")%En;
 
     return 0;
-}
+    }

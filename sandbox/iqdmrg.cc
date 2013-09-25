@@ -38,12 +38,12 @@ main(int argc, char* argv[])
     for(int i = 1; i <= N; ++i) 
         {
         if(i%2 == 1)
-            initState.set(i,&Spin::Up);
+            initState.set(i,"Up");
         else
-            initState.set(i,&Spin::Dn);
+            initState.set(i,"Dn");
         }
 
-    IQMPS psi(model,initState);
+    IQMPS psi(initState);
 
     //
     // psiHphi calculates matrix elements of MPO's with respect to MPS's
