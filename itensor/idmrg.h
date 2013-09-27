@@ -239,7 +239,7 @@ idmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H,
       const Sweeps& sweeps, 
       const OptSet& opts)
     {
-    DMRGObserver obs;
+    DMRGObserver<Tensor> obs(psi);
     return idmrg(psi,H,HL,HR,sweeps,obs,opts);
     }
 

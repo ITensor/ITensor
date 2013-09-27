@@ -16,17 +16,20 @@ class SpinHalf : public Model
 
     private:
 
-    virtual int
+    int
     getN() const;
 
-    virtual const IQIndex&
+    const IQIndex&
     getSi(int i) const;
 
-    virtual IQIndexVal
+    IQIndexVal
     getState(int i, const String& state) const;
 
-    virtual IQTensor
+    IQTensor
     getOp(int i, const String& opname, const OptSet& opts) const;
+
+    DefaultOpsT
+    getDefaultOps(const OptSet& opts) const;
 
     virtual void
     doRead(std::istream& s);
@@ -42,6 +45,14 @@ class SpinHalf : public Model
     int N_;
 
     std::vector<IQIndex> site_;
+
+    static DefaultOpsT
+    initDefaultOps()
+        {
+        DefaultOpsT dops;
+        dops.push_back("Sz");
+        return dops;
+        }
         
     };
 
@@ -173,5 +184,11 @@ getOp(int i, const String& opname, const OptSet& opts) const
     return Op;
     }
 
+SpinHalf::DefaultOpsT inline SpinHalf::
+getDefaultOps(const OptSet& opts) const
+    {
+    static const std::vector<String> dops_(initDefaultOps());
+    return dops_;
+    }
 
 #endif

@@ -36,6 +36,9 @@ class Model
     typedef std::string
     String;
 
+    typedef std::vector<String>
+    DefaultOpsT;
+
     Model() { }
 
     Model(std::ifstream& s) { }
@@ -80,6 +83,10 @@ class Model
     op(const String& opname, int i,
        const OptSet& opts = Global::opts()) const;
 
+    DefaultOpsT
+    defaultOps(const OptSet& opts = Global::opts()) const 
+        { return getDefaultOps(opts); }
+
     void 
     read(std::istream& s) { doRead(s); }
 
@@ -104,6 +111,9 @@ class Model
 
     virtual IQTensor
     getOp(int i, const String& opname, const OptSet& opts) const = 0;
+
+    virtual DefaultOpsT
+    getDefaultOps(const OptSet& opts) const { return DefaultOpsT(); }
 
     protected:
 

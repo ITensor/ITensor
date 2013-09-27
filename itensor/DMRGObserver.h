@@ -17,11 +17,13 @@
 // derived class.
 //
 
+template<class Tensor>
 class DMRGObserver : public Observer
     {
     public:
     
-    DMRGObserver(const OptSet& opts = Global::opts());
+    DMRGObserver(const MPSt<Tensor>& psi, 
+                 const OptSet& opts = Global::opts());
 
     virtual ~DMRGObserver() { }
 
@@ -54,6 +56,8 @@ class DMRGObserver : public Observer
     //
     // Data Members
 
+    const MPSt<Tensor>& psi_;
+
     Vector center_eigs;
     Real energy_errgoal; //Stop DMRG once energy has converged to this precision
     Real orth_weight;    //How much to penalize non-orthogonality in multiple-state DMRG
@@ -61,24 +65,30 @@ class DMRGObserver : public Observer
     int max_eigs;
     Real max_te;
 
+    Model::DefaultOpsT default_ops_;
+
     //
     /////////////
 
     }; // class DMRGObserver
 
-inline DMRGObserver::
-DMRGObserver(const OptSet& opts) 
+template<class Tensor>
+inline DMRGObserver<Tensor>::
+DMRGObserver(const MPSt<Tensor>& psi, const OptSet& opts) 
     : 
+    psi_(psi),
     energy_errgoal(opts.getReal("EnergyErrgoal",-1)), 
     orth_weight(opts.getReal("OrthWeight",1)),
     printeigs(opts.getBool("PrintEigs",true)),
     max_eigs(-1),
-    max_te(-1)
+    max_te(-1),
+    default_ops_(psi.model().defaultOps())
     { 
     }
 
 
-void inline DMRGObserver::
+template<class Tensor>
+void inline DMRGObserver<Tensor>::
 measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
         const OptSet& opts)
     {
@@ -122,10 +132,25 @@ measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
             }
         Cout << Format("    Energy after sweep %d is %f") % sw % energy << Endl;
         }
+
+    if(!opts.getBool("Quiet",false))
+        {
+        for(size_t j = 0; j < default_ops_.size(); ++j)
+            {
+            const std::string opname = default_ops_.at(j);
+            Complex z = 
+                BraKet(conj(primed(psi_.A(b),Site)),psi_.model().op(opname,b)*psi_.A(b));
+            if(fabs(z.imag()) < 1E-14)
+                Cout << Format("<%s>(%d) = %.10E") % opname % b % z.real() << Endl;
+            else
+                Cout << Format("<%s>(%d) = (%.10E,%.10E)") % opname % b % z.real() % z.imag() << Endl;
+            }
+        }
     }
 
 
-bool inline DMRGObserver::
+template<class Tensor>
+bool inline DMRGObserver<Tensor>::
 checkDone(int sw, Real energy,
           const OptSet& opts)
     {
