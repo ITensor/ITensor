@@ -167,7 +167,7 @@ idmrg(MPSt<Tensor>& psi,
 
         lastenergy = energy;
         LocalMPO<Tensor> PH(H,HL,HR,opts);
-        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts & Quiet(vlevel < 3));
+        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts & Quiet(vlevel < 3) & Opt("NoMeasure",sw%2==0));
 
 
         Real ovrlap, im;
@@ -193,7 +193,7 @@ idmrg(MPSt<Tensor>& psi,
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1),spec);
         D /= D.norm();
 
-        obs.measure(N,sw,1,Nuc,spec,sub_en_per_site,opts&Opt("AtCenter"));
+        obs.measure(N,sw,1,Nuc,spec,sub_en_per_site,opts&Opt("AtCenter")&Opt("NoMeasure"));
 
         if(obs.checkDone(sw,sub_en_per_site)) break;
 

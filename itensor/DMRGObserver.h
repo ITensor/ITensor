@@ -133,13 +133,13 @@ measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
         Cout << Format("    Energy after sweep %d is %f") % sw % energy << Endl;
         }
 
-    if(!opts.getBool("Quiet",false))
+    if(!opts.getBool("Quiet",false) && !opts.getBool("NoMeasure",false))
         {
         for(size_t j = 0; j < default_ops_.size(); ++j)
             {
             const std::string opname = default_ops_.at(j);
             Complex z = 
-                BraKet(conj(primed(psi_.A(b),Site)),psi_.model().op(opname,b)*psi_.A(b));
+                BraKet(primed(psi_.A(b),Site),psi_.model().op(opname,b)*psi_.A(b));
             if(fabs(z.imag()) < 1E-14)
                 Cout << Format("<%s>(%d) = %.10E") % opname % b % z.real() << Endl;
             else
