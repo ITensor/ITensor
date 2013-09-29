@@ -65,7 +65,7 @@ class IQCombiner
     right() const;
 
     int 
-    num_left() const { return int(left_.size()); }
+    numLeft() const { return int(left_.size()); }
 
     void
     prime(int inc = 1) { prime(All,inc); }
@@ -84,6 +84,18 @@ class IQCombiner
 
     void 
     product(IQTensor t, IQTensor& res) const;
+
+    //
+    // Deprecated methods
+    //
+
+    int 
+    num_left() const 
+        {
+        Global::warnDeprecated("IQCombiner::num_left() deprecated: use numLeft() instead.");
+        return int(left_.size()); 
+        }
+
 
     private:
 

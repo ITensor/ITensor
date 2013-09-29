@@ -327,6 +327,16 @@ class Global
         {
         OptSet::GlobalOpts().add(name,sval);
         }
+    void static
+    warnDeprecated(const std::string& message)
+        {
+        static int depcount = 1;
+        if(depcount <= 10)
+            {
+            std::cout << "\n\n" << message << "\n" << std::endl;
+            ++depcount;
+            }
+        }
     };
 
 

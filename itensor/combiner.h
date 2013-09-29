@@ -30,7 +30,7 @@ class Combiner
         { init(); return right_; }
 
     int 
-    rl() const { return rl_; }
+    numLeft() const { return rl_; }
 
     const Index& 
     left(int j) const { return GET(left_,j); }
@@ -113,6 +113,16 @@ class Combiner
     void 
     doCondense(bool) { } 
 
+    //
+    //Deprecated methods
+    //
+
+    int 
+    rl() const 
+        { 
+        Global::warnDeprecated("Combiner::rl() deprecated: use numLeft() instead.");
+        return rl_; 
+        }
 
 
     private:
@@ -181,7 +191,8 @@ addleft(const Index& l)// Include another left index
     initted = false;
     if(rl_ == NMAX) 
         Error("Combiner: already reached max number of left indices.");
-    left_[++rl_] = l; 
+    ++rl_;
+    left_[rl_] = l; 
     }
 
 void inline Combiner::
