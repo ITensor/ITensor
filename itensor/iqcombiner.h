@@ -65,7 +65,7 @@ class IQCombiner
     right() const;
 
     int 
-    num_left() const { return int(left_.size()); }
+    numLeft() const { return int(left_.size()); }
 
     void
     prime(int inc = 1) { prime(All,inc); }
