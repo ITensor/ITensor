@@ -535,7 +535,8 @@ sumels() const
 void IQTensor::
 scaleOutNorm()
     {
-    LogNumber newscale = normLogNum();
+    dat.solo(); 
+    const LogNumber newscale = normLogNum();
     Foreach(ITensor& t, dat.nc())
         t.scaleTo(newscale);
     }
@@ -543,6 +544,7 @@ scaleOutNorm()
 void IQTensor::
 scaleTo(const LogNumber& newscale)
     {
+    dat.solo(); 
     Foreach(ITensor& t, dat.nc())
         t.scaleTo(newscale);
     }
