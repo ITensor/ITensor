@@ -373,10 +373,12 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     Tensor& to_orth = (dir==Fromleft ? A : B);
     Tensor& newoc   = (dir==Fromleft ? B : A);
-
+    
     CombinerT comb;
 
-    Foreach(const IndexT& I, to_orth.indices())
+    const IndexSet<IndexT>& activeInds = (to_orth.isNull() ? AA : to_orth).indices();
+
+    Foreach(const IndexT& I, activeInds)
         { 
         if(!hasindex(newoc,I))
             comb.addleft(I);
