@@ -110,10 +110,12 @@ class IQCombiner
     };
 
 
-
 //
 // IQCombiner helper methods
 //
+
+IQCombiner inline
+conj(IQCombiner res) { res.conj(); return res; }
 
 IQTensor inline
 operator*(const IQTensor& t, const IQCombiner& c) { return c.operator*(t); }

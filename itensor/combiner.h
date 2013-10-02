@@ -123,6 +123,8 @@ class Combiner
     }; //class Combiner
 
 
+Combiner inline
+conj(Combiner res) { res.conj(); return res; }
 
 ITensor inline
 operator*(const ITensor& t, const Combiner& c) { return c*t; }

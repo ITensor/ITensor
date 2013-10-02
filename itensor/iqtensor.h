@@ -459,6 +459,8 @@ mapElems(const Callable& f)
 Real
 sumels(const IQTensor& T);
 
+IQTensor inline
+conj(IQTensor res) { res.conj(); return res; }
 
 //
 // Computes the scalar/inner/dot product of two

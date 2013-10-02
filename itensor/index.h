@@ -205,6 +205,11 @@ class IndexVal : public Index
     Null();
     };
 
+Index inline
+conj(Index res) { res.conj(); return res; }
+
+IndexVal inline
+conj(IndexVal res) { res.conj(); return res; }
 
 //Return a copy of I, increasing primelevel.
 template<class T>
@@ -228,9 +233,6 @@ T
 mapPrime(T I, int plevold, int plevnew, IndexType type = All)
     { I.mapprime(plevold,plevnew,type); return I; }
 
-template <class T>
-T
-conj(T res) { res.conj(); return res; }
 
 //Returns a string version of this Index's bond dimension.
 std::string
