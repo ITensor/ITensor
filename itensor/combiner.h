@@ -296,7 +296,7 @@ uniqueReal() const
 bool inline
 hasindex(const Combiner& C, const Index& I)
     {
-    for(int j = 1; j <= C.rl(); ++j) 
+    for(int j = 1; j <= C.numLeft(); ++j) 
         if(C.left(j) == I) return true;
     return false;
     }
