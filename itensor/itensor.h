@@ -683,6 +683,9 @@ mapElems(const Callable& f)
     return *this;
     }
 
+ITensor inline
+conj(ITensor res) { res.conj(); return res; }
+
 //
 // Computes the scalar/inner/dot product of two
 // real-valued ITensors.

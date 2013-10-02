@@ -225,6 +225,15 @@ class IQIndexVal : public IQIndex
 
     };
 
+IndexQN inline
+conj(IndexQN res) { res.conj(); return res; }
+
+IQIndex inline
+conj(IQIndex res) { res.conj(); return res; }
+
+IQIndexVal inline
+conj(IQIndexVal res) { res.conj(); return res; }
+
 
 bool
 hasindex(const IQIndex& I, const Index& i);

@@ -241,6 +241,9 @@ class IQTSparse
 void 
 product(const IQTSparse& S, const IQTensor& T, IQTensor& res);
 
+IQTSparse inline
+conj(IQTSparse res) { res.conj(); return res; }
+
 template <typename Callable> 
 IQTSparse& IQTSparse::
 mapElems(const Callable& f)

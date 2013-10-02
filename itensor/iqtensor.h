@@ -468,6 +468,8 @@ mapElems(const Callable& f)
     return *this;
     }
 
+IQTensor inline
+conj(IQTensor res) { res.conj(); return res; }
 
 //
 // Computes the scalar/inner/dot product of two

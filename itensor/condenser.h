@@ -281,6 +281,9 @@ product(const IQTensor& t, IQTensor& res) const
         }
     }
 
+Condenser inline
+conj(Condenser res) { res.conj(); return res; }
+
 inline
 std::ostream& 
 operator<<(std::ostream & s, const Condenser & c)

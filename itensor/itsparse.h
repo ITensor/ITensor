@@ -267,6 +267,9 @@ class ITSparse
 void 
 product(const ITSparse& S, const ITensor& T, ITensor& res);
 
+ITSparse inline
+conj(ITSparse res) { res.conj(); return res; }
+
 template <typename Callable> 
 ITSparse& ITSparse::
 mapElems(const Callable& f)
