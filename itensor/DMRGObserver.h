@@ -92,6 +92,20 @@ void inline DMRGObserver<Tensor>::
 measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
         const OptSet& opts)
     {
+    if(!opts.getBool("Quiet",false) && !opts.getBool("NoMeasure",false))
+        {
+        for(size_t j = 0; j < default_ops_.size(); ++j)
+            {
+            const std::string opname = default_ops_.at(j);
+            Complex z = 
+                BraKet(primed(psi_.A(b),Site),psi_.model().op(opname,b)*psi_.A(b));
+            if(fabs(z.imag()) < 1E-14)
+                Cout << Format("<%s>(%d) = %.10E") % opname % b % z.real() << Endl;
+            else
+                Cout << Format("<%s>(%d) = (%.10E,%.10E)") % opname % b % z.real() % z.imag() << Endl;
+            }
+        }
+
     if(printeigs)
         {
         if(b == N/2 && ha == 2)
@@ -133,19 +147,6 @@ measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
         Cout << Format("    Energy after sweep %d is %f") % sw % energy << Endl;
         }
 
-    if(!opts.getBool("Quiet",false) && !opts.getBool("NoMeasure",false))
-        {
-        for(size_t j = 0; j < default_ops_.size(); ++j)
-            {
-            const std::string opname = default_ops_.at(j);
-            Complex z = 
-                BraKet(primed(psi_.A(b),Site),psi_.model().op(opname,b)*psi_.A(b));
-            if(fabs(z.imag()) < 1E-14)
-                Cout << Format("<%s>(%d) = %.10E") % opname % b % z.real() << Endl;
-            else
-                Cout << Format("<%s>(%d) = (%.10E,%.10E)") % opname % b % z.real() % z.imag() << Endl;
-            }
-        }
     }
 
 
