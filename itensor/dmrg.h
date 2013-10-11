@@ -198,8 +198,6 @@ DMRGWorker(MPSt<Tensor>& psi,
 
     opts.add(Opt("DebugLevel",debug_level));
     
-    Eigensolver solver(opts);
-
     opts.add(DoNormalize(true));
     
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
@@ -208,7 +206,7 @@ DMRGWorker(MPSt<Tensor>& psi,
         psi.minm(sweeps.minm(sw)); 
         psi.maxm(sweeps.maxm(sw));
         psi.noise(sweeps.noise(sw));
-        solver.maxIter(sweeps.niter(sw));
+        opts.add("MaxIter",sweeps.niter(sw));
 
         if(!PH.doWrite() &&
             opts.defined("WriteM") &&
@@ -238,7 +236,7 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             Tensor phi = psi.bondTensor(b);
 
-            energy = solver.davidson(PH,phi);
+            energy = davidson(PH,phi,opts);
             
             psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,opts);
 

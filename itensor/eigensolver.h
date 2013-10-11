@@ -10,161 +10,99 @@
 #define Endl std::endl
 #define Format boost::format
 
-/*
-template<class Tensor>
-void
-orthog(std::vector<Tensor>& T, int num, int numpass, int start = 1);
-*/
+//
+// Uses the Davidson algorithm to find the 
+// minimal eigenvector of the sparse matrix A.
+// (BigMatrixT objects must implement the methods product, size and diag.)
+// Returns the minimal eigenvalue lambda such that
+// A phi = lambda phi.
+//
+template <class BigMatrixT, class Tensor> 
+Real 
+davidson(const BigMatrixT& A, Tensor& phi,
+         const OptSet& opts = Global::opts());
+
+//
+// Uses the Davidson algorithm to find the minimal
+// eigenvector of the generalized eigenvalue problem
+// A phi = lambda B phi.
+// (B should have positive definite eigenvalues.)
+//
+template <class BigMatrixTA, class BigMatrixTB, class Tensor> 
+Real
+genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi, 
+            const OptSet& opts = Global::opts());
 
 
-/* Notes on optimization
- * 
- * - May be faster to do a direct solution
- *   for small sizes.
- *
- */
-
-class Eigensolver
+//Function object which applies the mapping
+// f(x,theta) = 1/(theta - x)
+class DavidsonPrecond
     {
     public:
-
-    Eigensolver(const OptSet& opts = Global::opts());
-
-    //
-    // Uses the Davidson algorithm to find the 
-    // minimal eigenvector of the sparse matrix A.
-    // (BigMatrixT objects must implement the methods product, size and diag.)
-    // Returns the minimal eigenvalue lambda such that
-    // A phi = lambda phi.
-    //
-    template <class BigMatrixT, class Tensor> 
-    Real 
-    davidson(const BigMatrixT& A, Tensor& phi) const;
-
-    //
-    // Uses the Davidson algorithm to find the minimal
-    // eigenvector of the generalized eigenvalue problem
-    // A phi = lambda B phi.
-    // (B should have positive definite eigenvalues.)
-    //
-    template <class BigMatrixTA, class BigMatrixTB, class Tensor> 
-    Real
-    genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi) const;
-
-    //Accessor methods ------------
-
-    Real 
-    errgoal() const { return errgoal_; }
-    void 
-    errgoal(Real val) { errgoal_ = val; }
-
-    int 
-    numGet() const { return numget_; }
-    void 
-    numGet(int val) { numget_ = val; }
-
-    int 
-    maxIter() const { return maxiter_; }
-    void 
-    maxIter(int val) { maxiter_ = val; }
-
-    int 
-    minIter() const { return miniter_; }
-    void 
-    minIter(int val) { miniter_ = val; }
-
-    int 
-    debugLevel() const { return debug_level_; }
-    void 
-    debugLevel(int val) { debug_level_ = val; }
-
-    //Other methods ------------
-
+        DavidsonPrecond(Real theta)
+            : theta_(theta)
+            { }
+        Real
+        operator()(Real val) const
+            {
+            if(theta_ == val)
+                return 0;
+            else
+                return 1.0/(theta_-val);
+            }
     private:
+        Real theta_;
+    };
 
-    //Function object which applies the mapping
-    // f(x,theta) = 1/(theta - x)
-    class DavidsonPrecond
-        {
-        public:
-            DavidsonPrecond(Real theta)
-                : theta_(theta)
-                { }
-            Real
-            operator()(Real val) const
-                {
-                if(theta_ == val)
-                    return 0;
-                else
-                    return 1.0/(theta_-val);
-                }
-        private:
-            Real theta_;
-        };
+//Function object which applies the mapping
+// f(x,theta) = 1/(theta - 1)
+class LanczosPrecond
+    {
+    public:
+        LanczosPrecond(Real theta)
+            : theta_(theta)
+            { }
+        Real
+        operator()(Real val) const
+            {
+            return 1.0/(theta_-1+1E-33);
+            }
+    private:
+        Real theta_;
+    };
 
-    //Function object which applies the mapping
-    // f(x,theta) = 1/(theta - 1)
-    class LanczosPrecond
-        {
-        public:
-            LanczosPrecond(Real theta)
-                : theta_(theta)
-                { }
-            Real
-            operator()(Real val) const
-                {
-                return 1.0/(theta_-1+1E-33);
-                }
-        private:
-            Real theta_;
-        };
+//Function object which applies the mapping
+// f(x) = (x < cut ? 0 : 1/x);
+class PseudoInverter
+    {
+    public:
+        PseudoInverter(Real cut = MIN_CUT)
+            :
+            cut_(cut)
+            { }
 
-    //Function object which applies the mapping
-    // f(x) = (x < cut ? 0 : 1/x);
-    class PseudoInverter
-        {
-        public:
-            PseudoInverter(Real cut = MIN_CUT)
-                :
-                cut_(cut)
-                { }
-
-            Real
-            operator()(Real val) const
-                {
-                if(fabs(val) < cut_)
-                    return 0;
-                else
-                    return 1./val;
-                }
-        private:
-            Real cut_;
-        };
-
-    int maxiter_;
-    int miniter_;
-    Real errgoal_;
-    int numget_;
-    int debug_level_;
-
-    }; //class Eigensolver
-
-
-inline Eigensolver::
-Eigensolver(const OptSet& opts)
-    : 
-    miniter_(1)
-    { 
-    maxiter_ = opts.getInt("MaxIter",2);
-    errgoal_ = opts.getReal("ErrGoal",1E-4);
-    numget_ = opts.getInt("NumGet",1);
-    debug_level_ = opts.getInt("DebugLevel",-1);
-    }
+        Real
+        operator()(Real val) const
+            {
+            if(fabs(val) < cut_)
+                return 0;
+            else
+                return 1./val;
+            }
+    private:
+        Real cut_;
+    };
 
 template <class BigMatrixT, class Tensor> 
-Real inline Eigensolver::
-davidson(const BigMatrixT& A, Tensor& phi) const
+Real
+davidson(const BigMatrixT& A, Tensor& phi,
+         const OptSet& opts)
     {
+    int maxiter_ = opts.getInt("MaxIter",2);
+    Real errgoal_ = opts.getReal("ErrGoal",1E-4);
+    int numget_ = opts.getInt("NumGet",1);
+    int debug_level_ = opts.getInt("DebugLevel",-1);
+    int miniter_ = opts.getInt("MinIter",1);
 
     const Real phinorm = phi.norm();
     if(phinorm == 0.0)
@@ -345,12 +283,13 @@ davidson(const BigMatrixT& A, Tensor& phi) const
             //other vectors
 
             //Apply Davidson preconditioner
-            {
-            DavidsonPrecond dp(lambda);
-            Tensor cond(Adiag);
-            cond.mapElems(dp);
-            q /= cond;
-            }
+            if(!Adiag.isNull())
+                {
+                DavidsonPrecond dp(lambda);
+                Tensor cond(Adiag);
+                cond.mapElems(dp);
+                q /= cond;
+                }
 
             //Do Gram-Schmidt on d (Npass times)
             //to include it in the subbasis
@@ -491,12 +430,18 @@ davidson(const BigMatrixT& A, Tensor& phi) const
 
     return lambda;
 
-    } //Eigensolver::davidson
+    } //davidson
 
 template <class BigMatrixTA, class BigMatrixTB, class Tensor> 
-inline Real Eigensolver::
-genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi) const
+Real
+genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi, 
+            const OptSet& opts)
     {
+    int maxiter_ = opts.getInt("MaxIter",2);
+    Real errgoal_ = opts.getReal("ErrGoal",1E-4);
+    int numget_ = opts.getInt("NumGet",1);
+    int debug_level_ = opts.getInt("DebugLevel",-1);
+    int miniter_ = opts.getInt("MinIter",1);
 
     //B-normalize phi
     {
@@ -731,7 +676,7 @@ genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi) const
 
     return lambda;
 
-    } //Eigensolver::genDavidson
+    } //genDavidson
 
 /*
 template<class Tensor>
