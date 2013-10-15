@@ -346,9 +346,9 @@ UseWF()
     }
 
 Opt inline
-Verbose(int val = 1)
+Verbose(bool val = true)
     {
-    return Opt("Verbose",val);
+    return Opt("Verbose",true);
     }
 
 Opt inline
