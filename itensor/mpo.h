@@ -255,13 +255,14 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|ph
     return re;
     }
 
-void inline
-psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi, Real& re, Real& im) //<psi|H|phi>
+template<class Tensor>
+void
+psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Tensor& LB, const Tensor& RB, const MPSt<Tensor>& phi, Real& re, Real& im) //<psi|H|phi>
     {
     int N = psi.N();
     if(N != phi.N() || H.N() < N) Error("mismatched N in psiHphi");
 
-    ITensor L = (LB.isNull() ? phi.A(1) : LB * phi.A(1));
+    Tensor L = (LB.isNull() ? phi.A(1) : LB * phi.A(1));
     L *= H.A(1); 
     L *= conj(primed(psi.A(1)));
     for(int i = 2; i <= N; ++i)
@@ -278,32 +279,34 @@ psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, cons
     im = z.imag();
     }
 
-Real inline
-psiHphi(const MPS& psi, const MPO& H, const ITensor& LB, const ITensor& RB, const MPS& phi) //Re[<psi|H|phi>]
+template <class Tensor>
+Real
+psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Tensor& LB, const Tensor& RB, const MPSt<Tensor>& phi) //Re[<psi|H|phi>]
     {
     Real re,im; psiHphi(psi,H,LB,RB,phi,re,im);
     if(fabs(im) > 1.0e-12 * fabs(re))
-	std::cerr << "Real psiHphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
+	std::cout << "Real psiHphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
     return re;
     }
 
-void inline 
-psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real& re, Real& im) //<psi|H K|phi>
+template <class Tensor>
+void
+psiHKphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPOt<Tensor>& K,const MPSt<Tensor>& phi, Real& re, Real& im) //<psi|H K|phi>
     {
     if(psi.N() != phi.N() || psi.N() != H.N() || psi.N() != K.N()) Error("Mismatched N in psiHKphi");
     int N = psi.N();
-    IQMPS psiconj(psi);
+    MPSt<Tensor> psiconj(psi);
     for(int i = 1; i <= N; i++)
         {
         psiconj.Anc(i) = conj(psi.A(i));
         psiconj.Anc(i).mapprime(0,2);
         }
-    IQMPO Kp(K);
+    MPOt<Tensor> Kp(K);
     Kp.mapprime(1,2);
     Kp.mapprime(0,1);
 
     //scales as m^2 k^2 d
-    IQTensor L = (((phi.A(1) * H.A(1)) * Kp.A(1)) * psiconj.A(1));
+    Tensor L = (((phi.A(1) * H.A(1)) * Kp.A(1)) * psiconj.A(1));
     for(int i = 2; i < N; i++)
         {
         //scales as m^3 k^2 d + m^2 k^3 d^2
@@ -317,8 +320,9 @@ psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi, Real
     im = z.imag();
     }
 
-Real inline 
-psiHKphi(const IQMPS& psi, const IQMPO& H, const IQMPO& K,const IQMPS& phi) //<psi|H K|phi>
+template <class Tensor>
+Real
+psiHKphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPOt<Tensor>& K,const MPSt<Tensor>& phi) //<psi|H K|phi>
     {
     Real re,im;
     psiHKphi(psi,H,K,phi,re,im);
