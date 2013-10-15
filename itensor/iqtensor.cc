@@ -1322,6 +1322,14 @@ pseudoInvert(Real cutoff)
         }
     }
 
+void IQTensor::
+replaceIndex(const IQIndex& oind,
+             const IQIndex& nind)
+    { 
+    soloIndex(); 
+    is_->replaceIndex(oind,nind); 
+    }
+
 
 Real 
 Dot(IQTensor x, const IQTensor& y)

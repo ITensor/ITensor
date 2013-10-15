@@ -321,6 +321,10 @@ class IQTensor
     pseudoInvert(Real cutoff = 0.);
 
     void
+    replaceIndex(const IQIndex& oind,
+                 const IQIndex& nind);
+
+    void
     swap(IQTensor& other);
 
     void 

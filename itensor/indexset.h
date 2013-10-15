@@ -133,6 +133,9 @@ class IndexSet
     addindex(const IndexT& I);
 
     void
+    replaceIndex(const IndexT& oind, const IndexT& nind);
+
+    void
     swap(IndexSet& other);
 
     void
@@ -554,6 +557,27 @@ addindex(const IndexT& I)
         }
     ++r_;
     ur_ += I.uniqueReal();
+    }
+
+template <class IndexT>
+void IndexSet<IndexT>::
+replaceIndex(const IndexT& oind, const IndexT& nind)
+    {
+    if(nind.m() != oind.m())
+        {
+        Print(nind);
+        Print(oind);
+        Error("replaceIndex: new index must have same dimension as old.");
+        }
+    for(int j = 0; j < r_; ++j) 
+        {
+        if(index_[j] == oind)
+            {
+            index_[j] = nind;
+            return;
+            }
+        }
+    Error("replaceIndex: index not found");
     }
 
 /*

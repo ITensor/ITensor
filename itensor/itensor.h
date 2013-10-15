@@ -440,6 +440,11 @@ class ITensor
     void
     pseudoInvert(Real cutoff = 0.);
 
+    void
+    replaceIndex(const Index& oind,
+                 const Index& nind)
+        { is_.replaceIndex(oind,nind); }
+
     //
     // Typedefs
     //
