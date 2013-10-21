@@ -49,6 +49,9 @@ class DMRGObserver : public Observer
     printEigs() const { return printeigs; }
     void 
     printEigs(bool val) { printeigs = val; }
+
+    const MPSt<Tensor>& 
+    psi() const { return psi_; }
     
     private:
 
@@ -64,6 +67,7 @@ class DMRGObserver : public Observer
     bool printeigs;      //Print slowest decaying eigenvalues after every sweep
     int max_eigs;
     Real max_te;
+    bool done_;
 
     Model::DefaultOpsT default_ops_;
 
@@ -82,6 +86,7 @@ DMRGObserver(const MPSt<Tensor>& psi, const OptSet& opts)
     printeigs(opts.getBool("PrintEigs",true)),
     max_eigs(-1),
     max_te(-1),
+    done_(false),
     default_ops_(psi.model().defaultOps())
     { 
     }
@@ -168,19 +173,31 @@ checkDone(int sw, Real energy,
                     % energy_errgoal
                     % sw
                  << Endl;
-            return true;
+            done_ = true;
+            return done_;
             }
         }
     last_energy = energy;
 
+    //If STOP_DMRG found, will return true (i.e. done) once, but 
+    //outer calling using same Observer may continue running e.g. infinite dmrg calling finite dmrg.
     if(fileExists("STOP_DMRG"))
         {
         Cout << "File STOP_DMRG found: stopping this DMRG run after sweep " << sw << Endl;
         system("rm -f STOP_DMRG");
         return true;
         }
+
+    //Set done_ flag to true so any outer callers using this Observer will also terminate.
+    if(fileExists("STOP_DMRG_ALL"))
+        {
+        Cout << "File STOP_DMRG_ALL found: stopping this run after sweep " << sw << Endl;
+        system("rm -f STOP_DMRG_ALL");
+        done_ = true;
+        return done_;
+        }
     
-    return false;
+    return done_;
     }
 
 #undef Cout
