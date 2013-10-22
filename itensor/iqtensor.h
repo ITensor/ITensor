@@ -322,7 +322,8 @@ class IQTensor
 
     void
     replaceIndex(const IQIndex& oind,
-                 const IQIndex& nind);
+                 const IQIndex& nind,
+                 const OptSet& opts = Global::opts());
 
     void
     swap(IQTensor& other);
@@ -509,6 +510,9 @@ qn(const IQTensor& T, const Index& i);
 
 Arrow
 dir(const IQTensor& T, const Index& i);
+
+Arrow
+dir(const IQTensor& T, const IQIndex& i);
 
 //Return true if one of the ITensor blocks of
 //T uses this Index

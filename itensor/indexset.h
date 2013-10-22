@@ -569,15 +569,19 @@ replaceIndex(const IndexT& oind, const IndexT& nind)
         Print(oind);
         Error("replaceIndex: new index must have same dimension as old.");
         }
+    bool found = false;
+    ur_ = 0;
     for(int j = 0; j < r_; ++j) 
         {
         if(index_[j] == oind)
             {
             index_[j] = nind;
-            return;
+            found = true;
             }
+        ur_ += index_[j].uniqueReal();
         }
-    Error("replaceIndex: index not found");
+    if(!found)
+        Error("replaceIndex: index not found");
     }
 
 /*

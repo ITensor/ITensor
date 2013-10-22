@@ -1324,10 +1324,33 @@ pseudoInvert(Real cutoff)
 
 void IQTensor::
 replaceIndex(const IQIndex& oind,
-             const IQIndex& nind)
+             const IQIndex& nind,
+             const OptSet& opts)
     { 
-    soloIndex(); 
+    if(opts.getBool("CheckArrows",true))
+        {
+        if(nind.dir() != dir(*this,oind))
+            {
+            Error("replaceIndex: arrow dir's don't match.");
+            }
+        }
+    if(nind.nindex() != oind.nindex())
+        {
+        Error("replaceIndex: different number of blocks.");
+        }
+    solo(); 
     is_->replaceIndex(oind,nind); 
+    Foreach(ITensor& t, dat.nc())
+        {
+        Foreach(const Index& i, t.indices())
+            {
+            const int j = findindex(oind,i);
+            if(j != 0)
+                {
+                t.replaceIndex(i,nind.index(j));
+                }
+            }
+        }
     }
 
 
@@ -1424,6 +1447,17 @@ Arrow
 dir(const IQTensor& T, const Index& i)
 	{
     return findIQInd(T,i).dir();
+	}
+
+Arrow
+dir(const IQTensor& T, const IQIndex& I)
+	{
+    Foreach(const IQIndex& J, T.indices())
+        {
+        if(I == J) return J.dir();
+        }
+    Error("dir: IQIndex not found");
+    return Out;
 	}
 
 bool

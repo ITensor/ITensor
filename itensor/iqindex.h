@@ -93,6 +93,8 @@ class IQIndex : public Index
 
     Arrow 
     dir() const { return dir_; }
+    void 
+    dir(Arrow ndir) { dir_ = ndir; }
 
     int 
     primeLevel() const { return Index::primeLevel(); }
@@ -237,6 +239,9 @@ conj(IQIndexVal res) { res.conj(); return res; }
 
 bool
 hasindex(const IQIndex& I, const Index& i);
+
+int
+findindex(const IQIndex& I, const Index& i);
 
 int 
 offset(const IQIndex& I, const Index& i);

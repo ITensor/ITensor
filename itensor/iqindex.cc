@@ -614,6 +614,16 @@ hasindex(const IQIndex& J, const Index& i)
     }
 
 int
+findindex(const IQIndex& J, const Index& i)
+    { 
+    for(int j = 1; j <= J.nindex(); ++j)
+        {
+        if(J.index(j) == i) return j;
+        }
+    return 0;
+    }
+
+int
 offset(const IQIndex& I, const Index& i)
     {
     int os = 0;
