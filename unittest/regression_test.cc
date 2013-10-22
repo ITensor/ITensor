@@ -218,4 +218,31 @@ TEST(IndexOrder)
     }
     */
 
+TEST(ComplexAddition)
+    {
+    //EMS Oct 21, 2013
+    //Bug was happening because a below has different
+    //Index order from b but complex addition code 
+    //did not account for this!
+    Index L1("L1",6),
+          S1("S1",2);
+
+    ITensor a(L1,S1);
+    a(L1(1),S1(2)) = 21;
+    a(L1(2),S1(2)) = 22;
+    a.scaleTo(-1.2243);
+
+    ITensor ca = a*Complex_i;
+
+    ITensor b(S1,L1);
+    b(S1(1),L1(3)) = 13;
+    b(S1(1),L1(4)) = 14;
+    b.scaleTo(9.3435);
+
+    ITensor r = b + ca;
+
+    CHECK((realPart(r)-b).norm() < 1E-12);
+    CHECK((imagPart(r)-a).norm() < 1E-12);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

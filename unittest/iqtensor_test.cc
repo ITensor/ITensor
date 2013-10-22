@@ -398,4 +398,27 @@ TEST(AddBlock)
     
     }
 
+TEST(ComplexConvert)
+    {
+    IQTensor R(S1(1),L1(3)),
+             I(S1(2),L1(1));
+    R.randomize();
+    I.randomize();
+    R *= 0.1242;
+    I *= -2.333;
+    IQTensor T = R+Complex_i*I;
+
+    Global::debug1() = true;
+
+    ITensor r = R.toITensor(),
+            i = I.toITensor();
+    ITensor t = T.toITensor();
+
+    Global::debug1() = false;
+
+
+    CHECK((realPart(t)-r).norm() < 1E-12);
+    CHECK((imagPart(t)-i).norm() < 1E-12);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
