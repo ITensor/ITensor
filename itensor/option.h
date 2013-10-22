@@ -158,6 +158,9 @@ class OptSet
         const Opt& opt3 = Opt::Null(), 
         const Opt& opt4 = Opt::Null());
 
+    void
+    add(const char* ostring);
+
     const Opt&
     get(const Name& name) const;
 
@@ -236,6 +239,18 @@ operator&(const OptSet& oset, const Opt& opt);
 
 OptSet
 operator&(const Opt& opt, const OptSet& oset);
+
+OptSet
+operator&(const Opt& opt, const char* ostring);
+
+OptSet
+operator&(const char* ostring, const Opt& opt);
+
+OptSet
+operator&(OptSet oset, const char* ostring);
+
+OptSet
+operator&(const char* ostring, OptSet oset);
 
 std::ostream& 
 operator<<(std::ostream & s, const Opt& opt);

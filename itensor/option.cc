@@ -184,6 +184,12 @@ add(const Opt& opt1, const Opt& opt2,
         opts_[opt4.name()] = opt4;
     }
 
+void OptSet::
+add(const char* ostring)
+    {
+    processString(std::string(ostring));
+    }
+
  
 const Opt& OptSet::
 get(const Opt::Name& name) const
@@ -351,6 +357,36 @@ operator&(const Opt& opt, const OptSet& oset)
     OptSet res(oset);
     res.add(opt);
     return res;
+    }
+
+OptSet 
+operator&(const Opt& opt, const char* ostring)
+    {
+    OptSet res(ostring);
+    res.add(opt);
+    return res;
+    }
+
+OptSet 
+operator&(const char* ostring, const Opt& opt)
+    {
+    OptSet res(ostring);
+    res.add(opt);
+    return res;
+    }
+
+OptSet 
+operator&(OptSet oset, const char* ostring)
+    {
+    oset.add(ostring);
+    return oset;
+    }
+
+OptSet 
+operator&(const char* ostring, OptSet oset)
+    {
+    oset.add(ostring);
+    return oset;
     }
  
 ostream& 
