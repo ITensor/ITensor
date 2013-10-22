@@ -1204,6 +1204,19 @@ expandIndex(const Index& small, const Index& big, int start)
         Error("expandIndex not yet defined for type() == Diag");
         }
 
+    if(this->isComplex())
+        {
+        ITensor r(*this),
+                i(*this);
+        r.takeRealPart();
+        i.takeImagPart();
+        r.expandIndex(small,big,start);
+        i.expandIndex(small,big,start);
+        i *= Complex_i;
+        *this = r+i;
+        return;
+        }
+
 #ifdef DEBUG
     if(small.m() > big.m())
         {
@@ -1281,30 +1294,6 @@ expandIndex(const Index& small, const Index& big, int start)
                                     c.i[5],c.i[6],
                                     c.i[7],c.i[8])]
             = olddat[c.ind];
-            }
-        }
-
-    if(this->isComplex())
-        {
-        boost::shared_ptr<ITDat> oldi(i_);
-        allocateImag(newinds.dim());
-        const Real* const oldidat = oldi->v.Store();
-        Real* const newidat = i_->v.Store();
-        if(nmax == omax)
-            {
-            std::copy(oldidat,oldidat+omax,newidat+inc);
-            }
-        else
-            {
-            Counter c(is_);
-            for(; c.notDone(); ++c)
-                {
-                newidat[inc+_ind(newinds,c.i[1],c.i[2],
-                                         c.i[3],c.i[4],
-                                         c.i[5],c.i[6],
-                                         c.i[7],c.i[8])]
-                = oldidat[c.ind];
-                }
             }
         }
 
@@ -2711,16 +2700,30 @@ operator+=(const ITensor& other)
         convertToDense();
         }
 
+    const bool bothDiag = (type_==Diag && other.type_==Diag);
+
+    const
+    bool same_ind_order = (bothDiag || checkSameIndOrder(is_,other.is_));
+
     const bool complex_this = this->isComplex();
     const bool complex_other = other.isComplex();
     if(!complex_this && complex_other)
         {
         operator+=(realPart(other));
-        i_ = other.i_;
+        if(same_ind_order)
+            {
+            i_ = other.i_;
+            }
+        else
+            {
+            Permutation P; 
+            getperm(is_,other.is_,P);
+            allocateImag();
+            reshape(P,other.is_,other.i_->v,i_->v);
+            }
         if(scale_ != other.scale_)
             {
             const LogNumber nscale = other.scale_/scale_;
-            soloImag();
             i_->v *= nscale.real0();
             }
         return *this;
@@ -2756,10 +2759,7 @@ operator+=(const ITensor& other)
         Error("ITensor::operator+=: unique Reals don't match (different Index structure).");
         }
 
-    const bool bothDiag = (type_==Diag && other.type_==Diag);
 
-    const
-    bool same_ind_order = (bothDiag || checkSameIndOrder(is_,other.is_));
 
     Real scalefac = 1;
     if(scale_.magnitudeLessThan(other.scale_)) 
