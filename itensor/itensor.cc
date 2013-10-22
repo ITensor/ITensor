@@ -2721,6 +2721,7 @@ operator+=(const ITensor& other)
             }
         if(scale_ != other.scale_)
             {
+            soloImag();
             const LogNumber nscale = other.scale_/scale_;
             i_->v *= nscale.real0();
             }
