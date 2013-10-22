@@ -38,8 +38,7 @@ TEST(FourSite)
 
     ITensor phi1 = psi.A(2) * psi.A(3);
 
-    Eigensolver d(Opt("MaxIter",9));
-    Real En1 = d.davidson(PH,phi1);
+    Real En1 = davidson(PH,phi1,"MaxIter=9");
     CHECK_CLOSE(En1,-0.95710678118,1E-4);
 
     cout << endl << endl;
@@ -138,8 +137,7 @@ TEST(IQFourSite)
 
     IQTensor phi1 = psi.A(2) * psi.A(3);
 
-    Eigensolver d(Opt("MaxIter",9));
-    Real En1 = d.davidson(PH,phi1);
+    Real En1 = davidson(PH,phi1,"MaxIter=9");
     //cout << format("Energy from tensor Davidson (b=2) = %.20f")%En1 << endl;
     CHECK_CLOSE(En1,-0.95710678118,1E-4);
 

@@ -50,18 +50,18 @@ TEST(MPSAddition)
     {
     Spinless model(10);
 
-    InitState i1(model,&Spinless::Emp),
-              i2(model,&Spinless::Emp);
+    InitState i1(model,"Emp"),
+              i2(model,"Emp");
 
-    i1.set(1,&Spinless::Occ);
-    i2.set(2,&Spinless::Occ);
+    i1.set(1,"Occ");
+    i2.set(2,"Occ");
 
     //"Valence bond" between sites 1 and 2
-    MPS psi = ISqrt2*(MPS(model,i1) + MPS(model,i2));
+    MPS psi = ISqrt2*(MPS(i1) + MPS(i2));
 
     CHECK_CLOSE(psi.norm(),1,1E-5);
 
-    IQMPS iqpsi = ISqrt2*(IQMPS(model,i1) + IQMPS(model,i2));
+    IQMPS iqpsi = ISqrt2*(IQMPS(i1) + IQMPS(i2));
 
     CHECK_EQUAL(totalQN(iqpsi),QN(0,1));
     }
@@ -70,12 +70,12 @@ TEST(PositionTest)
     {
     Spinless model(10);
 
-    InitState init(model,&Spinless::Emp);
-    init.set(2,&Spinless::Occ);
-    init.set(4,&Spinless::Occ);
-    init.set(6,&Spinless::Occ);
+    InitState init(model,"Emp");
+    init.set(2,"Occ");
+    init.set(4,"Occ");
+    init.set(6,"Occ");
 
-    IQMPS psi(model,init);
+    IQMPS psi(init);
     psi.cutoff(1E-8);
     psi.noise(1E-8);
     psi.Anc(1) *= Complex_i;
