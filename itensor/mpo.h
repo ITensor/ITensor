@@ -172,7 +172,9 @@ class MPOt : private MPSt<Tensor>
         convertToIQ(*model_,A_,res.A_,totalq,cut);
         }
 
-private:
+    private:
+
+    ///////////
     using Parent::N_;
     using Parent::A_;
     using Parent::l_orth_lim_;
@@ -180,10 +182,13 @@ private:
     using Parent::model_;
     using Parent::spectrum_;
     using Parent::is_ortho_;
+    ///////////
 
     friend class MPOt<ITensor>;
     friend class MPOt<IQTensor>;
+
     }; //class MPOt<Tensor>
+
 typedef MPOt<ITensor> MPO;
 typedef MPOt<IQTensor> IQMPO;
 
@@ -193,7 +198,7 @@ toMPO() const
     {
     MPO res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm());
     res.spectrum_ = spectrum_;
-    for(int j = 1; j <= N(); ++j)
+    for(int j = 0; j <= N()+1; ++j)
         {
         res.A_.at(j) = A(j).toITensor();
         }
@@ -230,7 +235,8 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real
     if(phi.N() != N || psi.N() != N) Error("psiHphi: mismatched N");
 
     Tensor L = phi.A(1); 
-    L *= H.A(1); 
+    //Some Hamiltonians may store edge tensors in H.A(0) and H.A(N+1)
+    L *= (H.A(0).isNull() ? H.A(1) : H.A(0)*H.A(1));
     L *= conj(primed(psi.A(1)));
     for(int i = 2; i < N; ++i) 
         { 
@@ -238,7 +244,9 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real
         L *= H.A(i); 
         L *= conj(primed(psi.A(i))); 
         }
-    L *= phi.A(N); L *= H.A(N);
+    L *= phi.A(N); 
+    L *= H.A(N);
+    if(!H.A(N+1).isNull()) L *= H.A(N+1);
 
     Complex z = BraKet(primed(psi.A(N)),L);
     re = z.real();
@@ -257,7 +265,13 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|ph
 
 template<class Tensor>
 void
-psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Tensor& LB, const Tensor& RB, const MPSt<Tensor>& phi, Real& re, Real& im) //<psi|H|phi>
+psiHphi(const MPSt<Tensor>& psi, 
+        const MPOt<Tensor>& H, 
+        const Tensor& LB, 
+        const Tensor& RB, 
+        const MPSt<Tensor>& phi, 
+        Real& re, 
+        Real& im) //<psi|H|phi>
     {
     int N = psi.N();
     if(N != phi.N() || H.N() < N) Error("mismatched N in psiHphi");

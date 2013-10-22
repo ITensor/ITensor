@@ -112,11 +112,7 @@ class MPSt
 
     //Read-only access to i'th MPS tensor
     const Tensor& 
-    A(int i) const 
-        { 
-        setSite(i);
-        return A_.at(i); 
-        }
+    A(int i) const;
 
     //Returns reference to i'th MPS tensor
     //which allows reading and writing
@@ -213,20 +209,7 @@ class MPSt
     bool
     doWrite() const { return do_write_; }
     void
-    doWrite(bool val, const OptSet& opts = Global::opts()) 
-        { 
-        if(val == do_write_) return;
-
-        if(val == true)
-            {
-            initWrite(opts); 
-            }
-        else
-            {
-            read(writedir_);
-            cleanupWrite();
-            }
-        }
+    doWrite(bool val, const OptSet& opts = Global::opts());
 
     const std::string&
     writeDir() const { return writedir_; }
@@ -366,17 +349,7 @@ class MPSt
     applygate(const Tensor& gate, const OptSet& opts = Global::opts());
 
     Real 
-    norm() const 
-        { 
-        if(isOrtho())
-            {
-            return A(orthoCenter()).norm();
-            }
-        else
-            {
-            return sqrt(psiphi(*this,*this)); 
-            }
-        }
+    norm() const;
 
     int
     averageM() const;
@@ -456,36 +429,11 @@ class MPSt
     //setBond(b) loads bond b
     //from disk, keeping all other
     //tensors written to disk
-
     void
     setBond(int b) const;
 
     void
-    setSite(int j) const
-        {
-        if(!do_write_)
-            {
-            atb_ = (j > atb_ ? j-1 : j);
-            return;
-            }
-
-        if(j < atb_)
-            {
-            //Cout << Format("j=%d < atb_=%d, calling setBond(%d)")
-            //        % j % atb_ % j << Endl;
-            setBond(j);
-            }
-        else
-        if(j > atb_+1)
-            {
-            //Cout << Format("j=%d > atb_+1=%d, calling setBond(%d)")
-            //        % j % (atb_+1) % (j-1) << Endl;
-            setBond(j-1);
-            }
-
-        //otherwise the set bond already
-        //contains this site
-        }
+    setSite(int j) const;
 
 
     void

@@ -18,21 +18,6 @@ class Heisenberg
     Heisenberg(const Model& model, 
                const OptSet& opts = Global::opts());
 
-    Real
-    J() const { return J_; }
-    void
-    J(Real val) { initted_ = false; J_ = val; }
-
-    int
-    Ny() const { return Ny_; }
-    void
-    Ny(int val) { initted_ = false; Ny_ = val; }
-
-    Real
-    Boundary_h() const { return Boundary_h_; }
-    void
-    Boundary_h(Real val) { initted_ = false; Boundary_h_ = val; }
-
     operator MPO() { init_(); return H.toMPO(); }
 
     operator IQMPO() { init_(); return H; }
@@ -50,6 +35,7 @@ class Heisenberg
          Boundary_h_,
          Jz_;
     bool initted_;
+    bool infinite_;
     IQMPO H;
 
     //
@@ -71,6 +57,7 @@ Heisenberg(const Model& model, const OptSet& opts)
     J_ = opts.getReal("J",1.);
     Boundary_h_ = opts.getReal("Boundary_h",0.);
     Jz_ = opts.getReal("Jz",J_);
+    infinite_ = opts.getBool("Infinite",false);
     }
 
 
@@ -106,11 +93,14 @@ init_()
                               qM[l],QN(+2),Out);
         }
 
+    const IQIndex& last = (infinite_ ? links.at(0) : links.at(Ns));
+
     for(int n = 1; n <= Ns; ++n)
         {
         IQTensor& W = H.Anc(n);
+        const
         IQIndex &row = links.at(n-1), 
-                &col = links.at(n);
+                &col = (n==Ns ? last : links.at(n));
 
         W = IQTensor(conj(model_.si(n)),model_.siP(n),conj(row),col);
 
@@ -175,8 +165,19 @@ init_()
             }
         }
 
-    H.Anc(1) *= IQTensor(links.at(0)(start));
-    H.Anc(Ns) *= IQTensor(conj(links.at(Ns))(1));
+    const IQTensor LH(links.at(0)(start)),
+                   RH(conj(last)(1));
+
+    if(infinite_)
+        {
+        H.Anc(0) = LH;
+        H.Anc(Ns+1) = RH;
+        }
+    else
+        {
+        H.Anc(1) *= LH;
+        H.Anc(Ns) *= RH;
+        }
 
     initted_ = true;
     }

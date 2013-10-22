@@ -15,8 +15,6 @@ template <class Tensor>
 Real
 idmrg(MPSt<Tensor>& psi, 
       const MPOt<Tensor>& H, 
-      const Tensor& HL, 
-      const Tensor& HR,
       const Sweeps& sweeps, 
       const OptSet& opts = Global::opts());
 
@@ -24,8 +22,6 @@ template <class Tensor>
 Real
 idmrg(MPSt<Tensor>& psi, 
       MPOt<Tensor> H,
-      Tensor HL, 
-      Tensor HR,
       const Sweeps& sweeps,
       Observer& obs,
       OptSet opts = Global::opts());
@@ -56,7 +52,6 @@ template <class Tensor>
 Real
 idmrg(MPSt<Tensor>& psi, 
       MPOt<Tensor> H,        //Copies H since algorithm swaps tensors in-place
-      Tensor HL, Tensor HR,
       const Sweeps& sweeps,
       Observer& obs,
       OptSet opts)
@@ -64,8 +59,9 @@ idmrg(MPSt<Tensor>& psi,
     typedef typename Tensor::IndexT
     IndexT;
 
-    const int vlevel = opts.getInt("Verbose",0);
-    const bool quiet = opts.getBool("Quiet",vlevel == 0);
+    const int olevel = opts.getInt("OutputLevel",0);
+    const bool quiet = opts.getBool("Quiet",olevel == 0);
+    const bool measure_xi = opts.getBool("MeasureCorrLen",false);
 
     const Real orig_cutoff = psi.cutoff(),
                orig_noise  = psi.noise();
@@ -84,6 +80,13 @@ idmrg(MPSt<Tensor>& psi,
 
     Tensor lastV,
            D;
+
+    const int Nteig = 2;
+    std::vector<Tensor> vv(Nteig);
+    std::vector<Real>   ee(Nteig,1.);
+
+    Tensor HL(H.A(0)),
+           HR(H.A(N0+1));
 
     int sw = 1;
 
@@ -106,7 +109,7 @@ idmrg(MPSt<Tensor>& psi,
         HL *= fac;
         HR *= fac;
 
-        energy = dmrg(psi,H,HL,HR,ucsweeps,obs,opts & Quiet(vlevel < 3));
+        energy = dmrg(psi,H,HL,HR,ucsweeps,obs,opts & Quiet(olevel < 3));
 
         psi.position(Nuc);
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1));
@@ -125,6 +128,15 @@ idmrg(MPSt<Tensor>& psi,
             }
         swapUnitCells(H);
 
+        if(measure_xi)
+            {
+            vv[0] = psi.A(1)*conj(primed(psi.A(1),Link));
+            for(int j = 2; j <= Nuc; ++j)
+                {
+                vv[0] *= psi.A(j);
+                vv[0] *= conj(primed(psi.A(j),Link));
+                }
+            }
 
         //Prepare MPS for next step
         swapUnitCells(psi);
@@ -133,6 +145,23 @@ idmrg(MPSt<Tensor>& psi,
         psi.position(1);
 
         ++sw;
+        }
+
+
+    //Orthonormalize vv tensors
+    if(measure_xi)
+        {
+        vv[0] /= vv[0].norm();
+        for(int j = 1; j < Nteig; ++j)
+            {
+            vv[j] = vv[0];
+            vv[j].randomize();
+            for(int k = 0; k < j; ++k)
+                {
+                vv[j] += vv[k]*(-BraKet(vv[k],vv[j]));
+                }
+            vv[j] /= vv[j].norm();
+            }
         }
 
 
@@ -167,7 +196,7 @@ idmrg(MPSt<Tensor>& psi,
 
         lastenergy = energy;
         LocalMPO<Tensor> PH(H,HL,HR,opts);
-        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts & Quiet(vlevel < 3) & Opt("NoMeasure",sw%2==0));
+        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts & Quiet(olevel < 3) & Opt("NoMeasure",sw%2==0));
 
 
         Real ovrlap, im;
@@ -188,14 +217,13 @@ idmrg(MPSt<Tensor>& psi,
         lastV.pseudoInvert(0);
 
         //Calculate new center matrix
-        D = Tensor();
         psi.position(Nuc);
+        obs.measure(N,sw,1,Nuc,spec,sub_en_per_site,opts&Opt("AtCenter")&Opt("NoMeasure"));
+
+        D = Tensor();
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1),spec);
         D /= D.norm();
 
-        obs.measure(N,sw,1,Nuc,spec,sub_en_per_site,opts&Opt("AtCenter")&Opt("NoMeasure"));
-
-        if(obs.checkDone(sw,sub_en_per_site)) break;
 
         //Prepare MPO for next step
 
@@ -213,6 +241,43 @@ idmrg(MPSt<Tensor>& psi,
 
         swapUnitCells(H);
 
+        if(measure_xi)
+            {
+            //Update correlation length estimate
+            Real xi = NAN;
+            for(int j = 0; j < Nteig; ++j)
+                {
+                for(int i = 1; i <= Nuc; ++i)
+                    {
+                    vv[j] *= psi.A(i);
+                    vv[j] *= conj(primed(psi.A(i),Link));
+                    }
+                for(int k = 0; k < j; ++k)
+                    {
+                    vv[j] += vv[k]*(-BraKet(vv[k],vv[j]));
+                    }
+                ee[j] = vv[j].norm();
+                const Real eig = ee[j];
+                if(eig == 0)
+                    {
+                    Error("Zero norm of transfer matrix eigenvector");
+                    }
+                vv[j] /= eig;
+//#ifdef DEBUG
+                Cout << Format("    T eig(%d) = %.14f\n") % (1+j) % eig << Endl;
+                if(j == 0 && fabs(eig-1.) > 1E-4)
+                    {
+                    Cout << Format("    Leading transfer eigenvalue = %.14f\n") % eig << Endl;
+                    }
+//#endif
+                if(j > 0 && eig > 1E-12)
+                    {
+                    xi = -1.*Nuc/log(eig);
+                    }
+                }
+            Cout << Format("    Correlation length = %.14f\n") % xi << Endl;
+            }
+
         //Prepare MPS for next step
         swapUnitCells(psi);
         psi.Anc(1) *= D;
@@ -221,6 +286,11 @@ idmrg(MPSt<Tensor>& psi,
 
         psi.orthogonalize();
         psi.normalize();
+
+        if(obs.checkDone(sw,sub_en_per_site) && sw%2==0) 
+            {
+            break;
+            }
 
         } //for loop over sw
     
@@ -235,12 +305,11 @@ idmrg(MPSt<Tensor>& psi,
 template <class Tensor>
 Real
 idmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, 
-      const Tensor& HL, const Tensor& HR,
       const Sweeps& sweeps, 
       const OptSet& opts)
     {
     DMRGObserver<Tensor> obs(psi);
-    return idmrg(psi,H,HL,HR,sweeps,obs,opts);
+    return idmrg(psi,H,sweeps,obs,opts);
     }
 
 #undef Cout

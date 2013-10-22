@@ -37,7 +37,7 @@ MPSt<Tensor>::
 MPSt(const Model& mod_,int maxmm, Real cut) 
     : 
     N_(mod_.N()), 
-    A_(mod_.N()+1),
+    A_(mod_.N()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(mod_.N()+1),
     is_ortho_(false),
@@ -61,7 +61,7 @@ MPSt<Tensor>::
 MPSt(const InitState& initState,int maxmm, Real cut)
     : 
     N_(initState.model().N()),
-    A_(initState.model().N()+1),
+    A_(initState.model().N()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(2),
     is_ortho_(true),
@@ -85,7 +85,7 @@ MPSt<Tensor>::
 MPSt(const Model& model, std::istream& s)
     : 
     N_(model.N()), 
-    A_(model.N()+1), 
+    A_(model.N()+2), //idmrg may use A_[0] and A[N+1]
     is_ortho_(false),
     model_(&model),
     atb_(1),
@@ -154,6 +154,18 @@ template MPSt<ITensor>::~MPSt();
 template MPSt<IQTensor>::~MPSt();
 
 template <class Tensor>
+const Tensor& MPSt<Tensor>::
+A(int i) const
+    { 
+    setSite(i);
+    return A_.at(i); 
+    }
+template
+const ITensor& MPSt<ITensor>::A(int i) const;
+template
+const IQTensor& MPSt<IQTensor>::A(int i) const;
+
+template <class Tensor>
 Tensor& MPSt<Tensor>::
 Anc(int i)
     { 
@@ -180,6 +192,27 @@ template
 ITensor MPSt<ITensor>::bondTensor(int b) const;
 template
 IQTensor MPSt<IQTensor>::bondTensor(int b) const;
+
+template <class Tensor>
+void MPSt<Tensor>::
+doWrite(bool val, const OptSet& opts) 
+    { 
+    if(val == do_write_) return;
+
+    if(val == true)
+        {
+        initWrite(opts); 
+        }
+    else
+        {
+        read(writedir_);
+        cleanupWrite();
+        }
+    }
+template void MPSt<ITensor>::
+doWrite(bool val, const OptSet& opts);
+template void MPSt<IQTensor>::
+doWrite(bool val, const OptSet& opts);
 
 
 template <class Tensor>
@@ -277,6 +310,8 @@ setBond(int b) const
         atb_ = b;
         return;
         }
+    if(b < 1 || b >= N_) return;
+
     //
     //Shift atb_ (location of bond that is loaded into RAM)
     //to requested value b, writing any non-Null tensors to
@@ -329,20 +364,53 @@ setBond(int b) const
         readFromFile(AFName(b+1),A_.at(b+1));
         }
 
-    if(b == 1)
-        {
-        writeToFile(writedir_+"/model",*model_);
+    //if(b == 1)
+        //{
+        //writeToFile(writedir_+"/model",*model_);
         //std::ofstream inf((format("%s/info")%writedir_).str().c_str());
         //    inf.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
         //    inf.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
         //    svd_.write(inf);
         //inf.close();
-        }
+        //}
     }
 template
 void MPSt<ITensor>::setBond(int b) const;
 template
 void MPSt<IQTensor>::setBond(int b) const;
+
+template <class Tensor>
+void MPSt<Tensor>::
+setSite(int j) const
+    {
+    if(!do_write_)
+        {
+        atb_ = (j > atb_ ? j-1 : j);
+        return;
+        }
+    if(j < 1 || j > N_) return;
+
+    if(j < atb_)
+        {
+        //Cout << Format("j=%d < atb_=%d, calling setBond(%d)")
+        //        % j % atb_ % j << Endl;
+        setBond(j);
+        }
+    else
+    if(j > atb_+1)
+        {
+        //Cout << Format("j=%d > atb_+1=%d, calling setBond(%d)")
+        //        % j % (atb_+1) % (j-1) << Endl;
+        setBond(j-1);
+        }
+
+    //otherwise the set bond already
+    //contains this site
+    }
+template
+void MPSt<ITensor>::setSite(int j) const;
+template
+void MPSt<IQTensor>::setSite(int j) const;
 
 
 template <class Tensor>
@@ -1000,6 +1068,24 @@ template
 void MPSt<IQTensor>::applygate(const IQTensor& gate,const OptSet& opts);
 
 template <class Tensor>
+Real MPSt<Tensor>::
+norm() const 
+    { 
+    if(isOrtho())
+        {
+        return A(orthoCenter()).norm();
+        }
+    else
+        {
+        return sqrt(psiphi(*this,*this)); 
+        }
+    }
+template Real MPSt<ITensor>::
+norm() const;
+template Real MPSt<IQTensor>::
+norm() const;
+
+template <class Tensor>
 void MPSt<Tensor>::
 initWrite(const OptSet& opts)
     {
@@ -1018,7 +1104,6 @@ initWrite(const OptSet& opts)
 
         if(opts.getBool("WriteAll",false))
             {
-            writeToFile(writedir_+"/model",*model_);
             for(int j = 1; j <= N_; ++j)
                 {
                 if(A_.at(j).isNull()) continue;
@@ -1027,6 +1112,8 @@ initWrite(const OptSet& opts)
                     A_[j] = Tensor();
                 }
             }
+
+        writeToFile(writedir_+"/model",*model_);
 
         do_write_ = true;
         }

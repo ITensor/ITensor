@@ -1236,6 +1236,8 @@ operator+=(const IQTensor& other)
 ITensor IQTensor::
 toITensor() const
     {
+    if(this->isNull()) return ITensor();
+
     //Resulting ITensor's indices are 
     //the Index versions of this's IQIndices
     IndexSet<Index> indices;
