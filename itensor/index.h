@@ -86,6 +86,8 @@ class Index
     // Returns the Arrow direction of this Index
     Arrow 
     dir() const { return Out; }
+    void 
+    dir(Arrow ndir) const {  }
 
     //
     // Prime level methods
