@@ -969,12 +969,10 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
     
     //Create the new dat
     boost::shared_ptr<ITDat> np = boost::make_shared<ITDat>(alloc_size);
-    Vector& resdat = np->v;
-
     const Vector& thisdat = r_->v;
     for(; nc.notDone(); ++nc)
         {
-        resdat[nc.ind] =
+        np->v[nc.ind] =
         thisdat[_ind(is_,*ii[1],*ii[2],
                          *ii[3],*ii[4],
                          *ii[5],*ii[6],
@@ -989,7 +987,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
         const Vector& thisidat = i_->v;
         for(nc.reset(); nc.notDone(); ++nc)
             {
-            resdat[nc.ind] =
+            np->v[nc.ind] =
             thisidat[_ind(is_,*ii[1],*ii[2],
                               *ii[3],*ii[4],
                               *ii[5],*ii[6],
