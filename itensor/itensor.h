@@ -764,6 +764,8 @@ operator*(Real val, const IndexVal& iv)
     { ITensor res(iv); res *= val; return res; }
 
 
+//Find index of tensor A (of optional type t) 
+//which is shared with tensor B
 template<class TensorA, class TensorB> typename 
 TensorA::IndexT
 commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
@@ -786,6 +788,27 @@ bool
 hasCommonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
     {
     return !(commonIndex(A,B,t).isNull());
+    }
+
+//Find index of tensor A (of optional type t) 
+//which is NOT shared by tensor B
+template<class TensorA, class TensorB> typename 
+TensorA::IndexT
+uniqueIndex(const TensorA& A, 
+            const TensorB& B, 
+            IndexType t = All)
+    {
+    typedef typename TensorA::IndexT
+    IndexT;
+    Foreach(const IndexT& I, A.indices())
+        {
+        if( (t == All || I.type() == t)
+         && !hasindex(B.indices(),I) ) 
+            {
+            return I;
+            }
+        }
+    return IndexT::Null();
     }
 
 template<class Tensor> typename
