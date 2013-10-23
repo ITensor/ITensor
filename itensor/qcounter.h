@@ -8,7 +8,6 @@
 #include "counter.h"
 #include "iqindex.h"
 
-#define Array boost::array
 #define Cout std::cout
 #define Endl std::endl
 
@@ -61,7 +60,6 @@ class QCounter : public Counter
         }
     };
 
-#undef Array
 #undef Cout
 #undef Endl
 

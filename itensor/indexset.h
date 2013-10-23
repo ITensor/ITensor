@@ -8,7 +8,6 @@
 #include "permutation.h"
 #include "boost/make_shared.hpp"
 
-#define Array boost::array
 #define Cout std::cout
 #define Endl std::endl
 
@@ -897,7 +896,6 @@ operator<<(std::ostream& s, const IndexSet<Index>& is)
 
 
 
-#undef Array
 #undef Cout
 #undef Endl
 

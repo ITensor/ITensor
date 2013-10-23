@@ -7,7 +7,6 @@
 #include "boost/random/lagged_fibonacci.hpp"
 
 using namespace std;
-using boost::array;
 using boost::format;
 //using boost::shared_ptr;
 //using boost::make_shared;
@@ -55,7 +54,7 @@ putprimes(string s, int plev)
 string 
 nameindex(IndexType it, int plev)
     { 
-    static const array<string,3>
+    static const Array<string,3>
     indextypename = {{ "Link","Site", "All" }};
 #ifdef DEBUG
     return putprimes(indextypename.at(int(it)),plev);

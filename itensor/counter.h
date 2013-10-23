@@ -7,7 +7,6 @@
 
 #include "indexset.h"
 
-#define Array boost::array
 #define Cout std::cout
 #define Endl std::endl
 
@@ -163,7 +162,6 @@ operator<<(std::ostream& s, const Counter& c)
     return s;
     }
 
-#undef Array
 #undef Cout
 #undef Endl
 #endif
