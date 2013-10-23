@@ -5,7 +5,6 @@
 #include "itsparse.h"
 using namespace std;
 using boost::format;
-using boost::array;
 using boost::make_shared;
 
 ITSparse::
@@ -332,7 +331,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     //The ri pointer does the same
     //but for res
     const int zero = 0;
-    array<const int*,NMAX+1> ti,
+    Array<const int*,NMAX+1> ti,
                              ri; 
 
     for(int n = 0; n <= NMAX; ++n)
@@ -362,7 +361,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     //
     // (scon is similar but for S)
     //
-    array<int,NMAX+1> tcon,
+    Array<int,NMAX+1> tcon,
                       scon;
     tcon.assign(0);
     scon.assign(0);

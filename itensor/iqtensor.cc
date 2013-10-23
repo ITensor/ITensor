@@ -597,7 +597,7 @@ tieIndices(const boost::array<IQIndex,NMAX>& indices, int niqind,
         Error("Couldn't find IQIndex to tie");
         }
 
-    array<Index,NMAX> totie;
+    boost::array<Index,NMAX> totie;
     for(int i = 1; i <= nindex; ++i)
         {
         for(int n = 0; n < niqind; ++n)
@@ -684,7 +684,7 @@ trace(const boost::array<IQIndex,NMAX>& indices, int niqind)
         Error("Couldn't find IQIndex to trace");
         }
 
-    array<Index,NMAX> totrace;
+    boost::array<Index,NMAX> totrace;
     for(int i = 1; i <= nindex; ++i)
         {
         for(int n = 0; n < niqind; ++n)
@@ -720,7 +720,7 @@ trace(const IQIndex& i1, const IQIndex& i2,
       const IQIndex& i5, const IQIndex& i6,
       const IQIndex& i7, const IQIndex& i8)
     {
-    array<IQIndex,NMAX> inds = {{ i1, i2, i3, i4,
+    boost::array<IQIndex,NMAX> inds = {{ i1, i2, i3, i4,
                                 i5, i6, i7, i8 }};
     trace(inds);
     return *this;
@@ -900,7 +900,7 @@ operator*=(const IQTensor& other)
     vector<Real> common_inds;
     
     //Load iqindex_ with those IQIndex's *not* common to *this and other
-    array<IQIndex,NMAX> riqind_holder;
+    boost::array<IQIndex,NMAX> riqind_holder;
     int rholder = 0;
 
     typedef IndexSet<IQIndex>::const_iterator
@@ -1028,7 +1028,7 @@ operator/=(const IQTensor& other)
 
     vector<Real> common_inds;
     
-    array<IQIndex,NMAX> riqind_holder;
+    boost::array<IQIndex,NMAX> riqind_holder;
     int rholder = 0;
 
     typedef IndexSet<IQIndex>::const_iterator

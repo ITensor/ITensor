@@ -5,7 +5,6 @@
 #include "itensor.h"
 using namespace std;
 using boost::format;
-using boost::array;
 using boost::shared_ptr;
 using boost::make_shared;
 
@@ -31,7 +30,7 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
 
     //Make a counter for dat
     Counter c(is);
-    array<int,NMAX+1> n;
+    Array<int,NMAX+1> n;
     for(int j = 1; j <= c.rn; ++j) n[ind[j]] = c.n[j];
 
     //Special case loops
@@ -124,7 +123,7 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
 
     //The j's are pointers to the i's of xdat's Counter,
     //but reordered in a way appropriate for res
-    array<int*,NMAX+1> j;
+    Array<int*,NMAX+1> j;
     for(int k = 1; k <= NMAX; ++k) 
         { 
         j[ind[k]] = &(c.i[k]); 
@@ -298,7 +297,7 @@ ITensor(const Index& i1, const Index& i2, const Index& i3,
     if(i3 == Index::Null())
         Error("i3 is null");
 #endif
-	array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
+	Array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
 	int size = 3;
 	while(ii[size] != Index::Null()) ++size;
 	int alloc_size = -1; 
@@ -335,7 +334,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
     scale_(1)
 	{
     //Construct ITensor
-    array<Index,NMAX+1> ii = 
+    Array<Index,NMAX+1> ii = 
         {{ iv1, iv2, iv3, iv4, iv5, 
            iv6, iv7, iv8, IndexVal::Null()}};
     int size = 3; 
@@ -345,9 +344,9 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
     allocate(alloc_size);
 
     //Assign specified element to 1
-    array<int,NMAX+1> iv = 
+    Array<int,NMAX+1> iv = 
         {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i, 1 }};
-    array<int,NMAX> ja; 
+    Array<int,NMAX> ja; 
     ja.assign(0);
     for(int k = 0; k < is_.rn(); ++k) //loop over indices of this ITensor
     for(int j = 0; j < size; ++j)      // loop over the given indices
@@ -702,10 +701,10 @@ assignFrom(const ITensor& other)
 
 
 void ITensor::
-groupIndices(const array<Index,NMAX+1>& indices, int nind, 
+groupIndices(const Array<Index,NMAX+1>& indices, int nind, 
              const Index& grouped, ITensor& res) const
     {
-    array<int,NMAX+1> isReplaced; 
+    Array<int,NMAX+1> isReplaced; 
     isReplaced.assign(0);
 
     //Print(*this);
@@ -774,20 +773,20 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
     }
 
 void ITensor::
-tieIndices(const array<Index,NMAX>& indices, int nind,
+tieIndices(const Array<Index,NMAX>& indices, int nind,
            const Index& tied)
     {
     if(nind == 0) Error("No indices given");
 
     const int tm = tied.m();
     
-    array<Index,NMAX+1> new_index_;
+    Array<Index,NMAX+1> new_index_;
     new_index_[1] = tied;
     //will count these up below
     int new_r_ = 1;
     int alloc_size = tm;
 
-    array<bool,NMAX+1> is_tied;
+    Array<bool,NMAX+1> is_tied;
     is_tied.assign(false);
 
     int nmatched = 0;
@@ -838,7 +837,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
     //Set up ii pointers to link
     //elements of res to appropriate
     //elements of *this
-    array<const int*,NMAX+1> ii;
+    Array<const int*,NMAX+1> ii;
     int n = 2;
     for(int j = 1; j <= r(); ++j)
         {
@@ -889,7 +888,7 @@ void ITensor::
 tieIndices(const Index& i1, const Index& i2,
            const Index& tied)
     {
-    array<Index,NMAX> inds =
+    Array<Index,NMAX> inds =
         {{ i1, i2, 
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null(), 
@@ -903,7 +902,7 @@ tieIndices(const Index& i1, const Index& i2,
            const Index& i3,
            const Index& tied)
     {
-    array<Index,NMAX> inds =
+    Array<Index,NMAX> inds =
         {{ i1, i2, i3,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null(), Index::Null() }};
@@ -916,7 +915,7 @@ tieIndices(const Index& i1, const Index& i2,
            const Index& i3, const Index& i4,
            const Index& tied)
     {
-    array<Index,NMAX> inds =
+    Array<Index,NMAX> inds =
         {{ i1, i2, i3, i4,
            Index::Null(), Index::Null(), 
            Index::Null(), Index::Null() }};
@@ -925,7 +924,7 @@ tieIndices(const Index& i1, const Index& i2,
     }
 
 ITensor& ITensor::
-trace(const array<Index,NMAX>& indices, int nind)
+trace(const Array<Index,NMAX>& indices, int nind)
     {
     if(nind < 0)
         {
@@ -937,13 +936,13 @@ trace(const array<Index,NMAX>& indices, int nind)
 
     const int tm = indices[0].m();
     
-    array<Index,NMAX+1> new_index_;
+    Array<Index,NMAX+1> new_index_;
 
     //will count these up below
     int new_r_ = 0;
     int alloc_size = 1;
 
-    array<bool,NMAX+1> traced;
+    Array<bool,NMAX+1> traced;
     traced.assign(false);
 
     int nmatched = 0;
@@ -1002,7 +1001,7 @@ trace(const array<Index,NMAX>& indices, int nind)
     //elements of res to appropriate
     //elements of *this
     int trace_ind = 0;
-    array<const int*,NMAX+1> ii;
+    Array<const int*,NMAX+1> ii;
     int n = 1;
     for(int j = 1; j <= r(); ++j)
         {
@@ -1068,7 +1067,7 @@ trace(const Index& i1, const Index& i2,
       const Index& i5, const Index& i6,
       const Index& i7, const Index& i8)
     {
-    array<Index,NMAX> inds = {{ i1, i2, i3, i4,
+    Array<Index,NMAX> inds = {{ i1, i2, i3, i4,
                                 i5, i6, i7, i8 }};
     trace(inds);
     return *this;
@@ -1532,9 +1531,9 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
       const IndexVal& iv5,const IndexVal& iv6,
       const IndexVal& iv7,const IndexVal& iv8) const
     {
-    array<const IndexVal*,NMAX> iv = 
+    Array<const IndexVal*,NMAX> iv = 
         {{ &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
-    array<int,NMAX> ja; 
+    Array<int,NMAX> ja; 
     ja.assign(0);
     //Loop over the given IndexVals
     int nn = 0;
@@ -1581,7 +1580,7 @@ struct ProductProps
     ProductProps(const ITensor& L, const ITensor& R);
 
     //arrays specifying which indices match
-    array<bool,NMAX+1> contractedL, contractedR; 
+    Array<bool,NMAX+1> contractedL, contractedR; 
 
     int nsamen, //number of m !=1 indices that match
         cdim,   //total dimension of contracted inds
@@ -1992,7 +1991,7 @@ directMultiply(const ITensor& L,
             }
         }
 
-    } //ITensor::directMultiply
+    } //directMultiply
 
 
 ITensor& ITensor::
@@ -2070,7 +2069,7 @@ operator*=(const ITensor& other)
     //These hold  regular new indices and the m==1 indices that appear in the result
     IndexSet<Index> new_index;
 
-    array<const Index*,NMAX+1> new_index1_;
+    Array<const Index*,NMAX+1> new_index1_;
     int nr1_ = 0;
 
     //
@@ -2453,7 +2452,7 @@ toMatrix12NoScale(const Index& i1, const Index& i2,
 
     res.ReDimension(i1.m(),i2.m()*i3.m());
 
-    const array<Index,NMAX> reshuf 
+    const Array<Index,NMAX> reshuf 
         = {{ i2, i3, i1,    Index::Null(), Index::Null(), 
              Index::Null(), Index::Null(), Index::Null() }};
 
@@ -2496,7 +2495,7 @@ void ITensor::toMatrix22(const Index& i1, const Index& i2, const Index& i3, cons
     int nrow = i1.m() * i2.m(), 
         ncol = i3.m() * i4.m();
     res.ReDimension(nrow,ncol);
-    const array<Index,NMAX> reshuf = {{ i3, i4, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
+    const Array<Index,NMAX> reshuf = {{ i3, i4, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; 
     getperm(is_,reshuf,P);
     Vector V; 
@@ -2525,7 +2524,7 @@ void ITensor::toMatrix21(const Index& i1, const Index& i2, const Index& i3, Matr
     assert(hasindex(*this,i1));
     assert(hasindex(*this,i2));
     res.ReDimension(i1.m()*i2.m(),i3.m());
-    const array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
+    const Array<Index,NMAX+1> reshuf = {{ Index::Null(), i3, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; 
     getperm(is_,reshuf,P);
     Vector V; reshapeDat(P,V);
@@ -2540,7 +2539,7 @@ void ITensor::toMatrix12(const Index& i1, const Index& i2, const Index& i3, Matr
     assert(hasindex(*this,i2));
     assert(hasindex(*this,i3));
     res.ReDimension(i1.m(),i2.m()*i3.m());
-    const array<Index,NMAX+1> reshuf = {{ Index::Null(), i2, i3, i1, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
+    const Array<Index,NMAX+1> reshuf = {{ Index::Null(), i2, i3, i1, Index::Null(), Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
     Permutation P; 
     getperm(is_,reshuf,P);
     Vector V; reshapeDat(P,V);

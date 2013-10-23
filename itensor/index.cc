@@ -8,7 +8,6 @@
 //#include "boost/random/mersenne_twister.hpp"
 
 using namespace std;
-using boost::array;
 using boost::format;
 
 //typedef boost::random::mt19937 
@@ -64,7 +63,7 @@ putprimes(string s, int plev)
 string 
 nameindex(IndexType it, int plev)
     { 
-    static const array<string,3>
+    static const Array<string,3>
     indextypename = {{ "Link","Site", "All" }};
 #ifdef DEBUG
     return putprimes(indextypename.at(int(it)),plev);
