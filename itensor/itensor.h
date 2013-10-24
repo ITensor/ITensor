@@ -68,6 +68,10 @@ class ITensor
     Type
     type() const { return type_; }
 
+    //Return diagonal components
+    Vector
+    diag() const;
+
     //
     //Constructors
     //

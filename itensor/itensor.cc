@@ -14,6 +14,8 @@ using boost::make_shared;
 #define ITENSOR_CHECK_NULL
 #endif
 
+//Both arguments and return value of _ind
+//are zero-indexed
 int
 _ind(const IndexSet<Index>& is,
      int i1, int i2, int i3, int i4, 
@@ -521,6 +523,37 @@ takeImagPart()
     r_.swap(i_);
     i_.reset();
     return *this;
+    }
+
+Vector ITensor::
+diag() const
+    {
+    if(this->isComplex()) 
+        Error("diag() may only be called on real ITensors - try taking real or imaginary part first");
+    Vector res;
+    if(type_ == Diag)
+        {
+        res = r_->v;
+        }
+    else
+    if(type_ == Dense)
+        {
+        res = Vector(minM(is_));
+        for(int i = 0; i < res.Length(); ++i)
+            {
+            res(1+i) = r_->v[_ind(is_,i,i,i,i,i,i,i,i)];
+            }
+        }
+    else
+        {
+        Error("diag: null ITensor");
+        }
+
+    if(scale_.isTooBigForReal())
+        throw TooBigForReal("Scale too large for real in ITensor::diag()");
+    res *= scale_.real0();
+
+    return res;
     }
 
 void ITensor::

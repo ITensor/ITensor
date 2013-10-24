@@ -1461,4 +1461,25 @@ TEST(DiagITensorBasicContraction)
     CHECK(idiff5.norm() < 1E-10);
     }
 
+TEST(DiagMethod)
+    {
+    ITensor t1(b3,b4);
+    t1.randomize();
+    t1 *= -8.232244;
+    Vector d1 = t1.diag();
+    for(int i = 1; i <= minM(t1.indices()); ++i)
+        {
+        CHECK(fabs(d1(i)-t1(b3(i),b4(i))) < 1E-12);
+        }
+
+    Vector v(4);
+    v(1) = -2.2442;
+    v(2) = 1.34834;
+    v(3) = 0.0;
+    v(4) = 8.38457;
+    ITensor t2(primed(b4),b4,v);
+    CHECK(t2.type() == ITensor::Diag);
+    CHECK(Norm(v-t2.diag()) < 1E-12);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()
