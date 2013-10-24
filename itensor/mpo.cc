@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "hambuilder.h"
+#include "sweeps.h"
 
 using namespace std;
 using boost::format;
@@ -400,7 +401,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
 
     const int N = psi.N();
     if(K.N() != N) 
-        Error("Mismatched N in napplyMPO");
+        Error("Mismatched N in zipUpApplyMPO");
 
     if(!psi.isOrtho() || psi.orthoCenter() != 1)
         Error("Ortho center of psi must be site 1");
@@ -517,6 +518,207 @@ template
 void 
 exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
 
+template<class Tensor>
+void
+fitApplyMPO(const MPOt<Tensor>& K,
+            const MPSt<Tensor>& psi,
+            MPSt<Tensor>& res,
+            const OptSet& opts)
+    {
+    fitApplyMPO(1.,K,psi,res,opts);
+    }
+template
+void fitApplyMPO(const MPOt<ITensor>& K, const MPSt<ITensor>& psi, MPSt<ITensor>& res, const OptSet& opts);
+template
+void fitApplyMPO(const MPOt<IQTensor>& K, const MPSt<IQTensor>& psi, MPSt<IQTensor>& res, const OptSet& opts);
+
+template<class Tensor>
+void
+fitApplyMPO(Real fac,
+            const MPOt<Tensor>& K,
+            const MPSt<Tensor>& psi,
+            MPSt<Tensor>& res,
+            const OptSet& opts)
+    {
+    if(&psi == &res)
+        Error("fitApplyMPO: Result MPS cannot be same as input MPS");
+    const int N = psi.N();
+    const Real cutoff = opts.getReal("Cutoff",res.cutoff());
+    const int maxm = opts.getInt("Maxm",res.maxm());
+    const int minm = opts.getInt("Minm",res.minm());
+    const int nsweep = opts.getInt("Nsweep",1);
+
+    vector<Tensor> LK(N+2),
+                   RK(N+2);
+
+    RK.at(N-1) = psi.A(N)*K.A(N)*conj(primed(res.A(N)));
+    for(int n = N-2; n >= 2; --n)
+        {
+        RK.at(n) = RK.at(n+1)*psi.A(n+1)*K.A(n+1)*conj(primed(res.A(n+1)));
+        }
+
+    const Real orig_cut = res.cutoff();
+    const int orig_minm = res.minm();
+    const int orig_maxm = res.maxm();
+
+    res.cutoff(cutoff);
+    res.minm(minm);
+    res.maxm(maxm);
+
+    for(int sw = 1; sw <= nsweep; ++sw)
+        {
+        for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
+            {
+            Tensor wfK = (LK.at(b).isNull() ? psi.A(b) : LK.at(b)*psi.A(b));
+            wfK *= K.A(b);
+            wfK *= psi.A(b+1);
+            wfK *= K.A(b+1);
+            if(!RK.at(b+1).isNull())
+                {
+                wfK *= RK.at(b+1);
+                }
+            wfK.noprime();
+
+            wfK *= fac;
+
+            res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
+
+            if(ha == 1)
+                {
+                LK.at(b+1) = (LK.at(b).isNull() ? psi.A(b) : LK.at(b)*psi.A(b))
+                             * K.A(b) * conj(primed(res.A(b)));
+                }
+            else
+                {
+                RK.at(b) = (RK.at(b+1).isNull() ? psi.A(b+1) : RK.at(b+1)*psi.A(b+1))
+                           * K.A(b+1) * conj(primed(res.A(b+1)));
+                }
+            }
+        }
+
+    res.cutoff(orig_cut);
+    res.minm(orig_minm);
+    res.maxm(orig_maxm);
+    }
+template
+void
+fitApplyMPO(Real fac,const MPOt<ITensor>& K,const MPSt<ITensor>& psi,MPSt<ITensor>& res,const OptSet& opts);
+template
+void
+fitApplyMPO(Real fac,const MPOt<IQTensor>& K,const MPSt<IQTensor>& psi,MPSt<IQTensor>& res,const OptSet& opts);
+
+template<class Tensor>
+void
+fitApplyMPO(const MPSt<Tensor>& psiA, 
+            Real mpofac,
+            const MPOt<Tensor>& K,
+            const MPSt<Tensor>& psiB,
+            MPSt<Tensor>& res,
+            const OptSet& opts)
+    {
+    fitApplyMPO(1.,psiA,mpofac,K,psiB,res,opts);
+    }
+template
+void
+fitApplyMPO(const MPSt<ITensor>& psiA, Real mpofac,const MPOt<ITensor>& K,const MPSt<ITensor>& psiB,MPSt<ITensor>& res,const OptSet& opts);
+template
+void
+fitApplyMPO(const MPSt<IQTensor>& psiA, Real mpofac,const MPOt<IQTensor>& K,const MPSt<IQTensor>& psiB,MPSt<IQTensor>& res,const OptSet& opts);
+
+template<class Tensor>
+void
+fitApplyMPO(Real mpsfac,
+            const MPSt<Tensor>& psiA, 
+            Real mpofac,
+            const MPOt<Tensor>& K,
+            const MPSt<Tensor>& psiB,
+            MPSt<Tensor>& res,
+            const OptSet& opts)
+    {
+    if(&psiA == &res || &psiB == &res)
+        {
+        Error("fitApplyMPO: Result MPS cannot be same as an input MPS");
+        }
+    const int N = psiA.N();
+    const Real cutoff = opts.getReal("Cutoff",res.cutoff());
+    const int maxm = opts.getInt("Maxm",res.maxm());
+    const int minm = opts.getInt("Minm",res.minm());
+    const int nsweep = opts.getInt("Nsweep",1);
+
+    vector<Tensor> L(N+2),
+                   R(N+2),
+                   LK(N+2),
+                   RK(N+2);
+
+    R.at(N-1) = psiA.A(N)*conj(primed(res.A(N),Link));
+    RK.at(N-1) = psiB.A(N)*K.A(N)*conj(primed(res.A(N)));
+    for(int n = N-2; n >= 2; --n)
+        {
+        R.at(n) = R.at(n+1)*psiA.A(n+1)*conj(primed(res.A(n+1),Link));
+        RK.at(n) = RK.at(n+1)*psiB.A(n+1)*K.A(n+1)*conj(primed(res.A(n+1)));
+        }
+
+    const Real orig_cut = res.cutoff();
+    const int orig_minm = res.minm();
+    const int orig_maxm = res.maxm();
+
+    res.cutoff(cutoff);
+    res.minm(minm);
+    res.maxm(maxm);
+
+    for(int sw = 1; sw <= nsweep; ++sw)
+        {
+        for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
+            {
+            Tensor wf = (L.at(b).isNull() ? psiA.A(b) : L.at(b)*psiA.A(b));
+            wf *= psiA.A(b+1);
+            if(!R.at(b+1).isNull())
+                {
+                wf *= R.at(b+1);
+                }
+            wf.noprime();
+
+            Tensor wfK = (LK.at(b).isNull() ? psiB.A(b) : LK.at(b)*psiB.A(b));
+            wfK *= K.A(b);
+            wfK *= psiB.A(b+1);
+            wfK *= K.A(b+1);
+            if(!RK.at(b+1).isNull())
+                {
+                wfK *= RK.at(b+1);
+                }
+            wfK.noprime();
+
+            wf = mpsfac*wf + mpofac*wfK;
+
+            res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
+
+            if(ha == 1)
+                {
+                L.at(b+1) = (L.at(b).isNull() ? psiA.A(b) : L.at(b)*psiA.A(b))
+                            * conj(primed(res.A(b),Link));
+                LK.at(b+1) = (LK.at(b).isNull() ? psiB.A(b) : LK.at(b)*psiB.A(b))
+                             * K.A(b) * conj(primed(res.A(b)));
+                }
+            else
+                {
+                R.at(b) = (R.at(b+1).isNull() ? psiA.A(b+1) : R.at(b+1)*psiA.A(b+1))
+                          * conj(primed(res.A(b+1),Link));
+                RK.at(b) = (RK.at(b+1).isNull() ? psiB.A(b+1) : RK.at(b+1)*psiB.A(b+1))
+                           * K.A(b+1) * conj(primed(res.A(b+1)));
+                }
+            }
+        }
+
+    res.cutoff(orig_cut);
+    res.minm(orig_minm);
+    res.maxm(orig_maxm);
+    }
+template
+void
+fitApplyMPO(Real mpsfac,const MPSt<ITensor>& psiA, Real mpofac,const MPOt<ITensor>& K,const MPSt<ITensor>& psiB,MPSt<ITensor>& res,const OptSet& opts);
+template
+void
+fitApplyMPO(Real mpsfac,const MPSt<IQTensor>& psiA, Real mpofac,const MPOt<IQTensor>& K,const MPSt<IQTensor>& psiB,MPSt<IQTensor>& res,const OptSet& opts);
 
 template<class Tensor>
 void 
@@ -597,6 +799,129 @@ expH(const MPO& H, MPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub);
 template
 void 
 expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub);
+
+template<class Tensor>
+void
+applyExpH(const MPOt<Tensor>& H, 
+          Real tau, 
+          const MPSt<Tensor>& psi, 
+          MPSt<Tensor>& res, 
+          const OptSet& opts)
+    {
+    typedef typename Tensor::IndexT
+    IndexT;
+
+    if(&res == &psi)
+        Error("MPS arguments must be different in applyExpH");
+
+    const int N = res.N();
+    const Real cutoff = opts.getReal("Cutoff",res.cutoff());
+    const int maxm = opts.getInt("Maxm",res.maxm());
+    const int minm = opts.getInt("Minm",res.minm());
+    const int nsweep = opts.getInt("Nsweep",1);
+    const int order = opts.getInt("Order",4);
+
+    const Real orig_cut = res.cutoff();
+    const int orig_minm = res.minm();
+    const int orig_maxm = res.maxm();
+    res.cutoff(cutoff);
+    res.minm(minm);
+    res.maxm(maxm);
+
+    vector<Tensor> lastR(N+2),
+                   L(N+2),
+                   R(N+2),
+                   LH(N+2),
+                   RH(N+2);
+
+    lastR.at(N-1) = psi.A(N)*conj(primed(psi.A(N),Link));
+    R.at(N-1) = psi.A(N)*conj(primed(res.A(N),Link));
+    RH.at(N-1) = psi.A(N)*H.A(N)*conj(primed(res.A(N)));
+    for(int n = N-2; n >= 2; --n)
+        {
+        lastR.at(n) = lastR.at(n+1)*psi.A(n+1)*conj(primed(psi.A(n+1),Link));
+        R.at(n) = R.at(n+1)*psi.A(n+1)*conj(primed(res.A(n+1),Link));
+        RH.at(n) = RH.at(n+1)*psi.A(n+1)*H.A(n+1)*conj(primed(res.A(n+1)));
+        }
+
+    MPSt<Tensor> last(psi);
+
+    for(int ord = order; ord >= 1; --ord)
+        {
+        const Real mpofac = -tau/(1.*ord);
+
+        lastR.swap(R);
+
+        for(int n = 2; n < N; ++n)
+            {
+            RH.at(n) = swapPrime(RH.at(n),0,1);
+            RH.at(n).conj();
+            const IndexT hl = commonIndex(H.A(n),H.A(n+1));
+            RH.at(n).noprime(primed(hl));
+            }
+
+        //Just in case
+        L.at(1) = Tensor();
+        LH.at(1) = Tensor();
+
+        for(int sw = 1; sw <= nsweep; ++sw)
+            {
+            for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
+                {
+                Tensor wf = (L.at(b).isNull() ? psi.A(b) : L.at(b)*psi.A(b));
+                wf *= psi.A(b+1);
+                if(!R.at(b+1).isNull())
+                    {
+                    wf *= R.at(b+1);
+                    }
+                wf.noprime();
+
+                Tensor wfH = (LH.at(b).isNull() ? last.A(b) : LH.at(b)*last.A(b));
+                wfH *= H.A(b);
+                wfH *= last.A(b+1);
+                wfH *= H.A(b+1);
+                if(!RH.at(b+1).isNull())
+                    {
+                    wfH *= RH.at(b+1);
+                    }
+                wfH.noprime();
+
+
+                wf = wf + mpofac*wfH;
+
+                res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
+
+                if(ha == 1)
+                    {
+                    L.at(b+1) = (L.at(b).isNull() ? psi.A(b) : L.at(b)*psi.A(b))
+                                * conj(primed(res.A(b),Link));
+                    LH.at(b+1) = (LH.at(b).isNull() ? last.A(b) : LH.at(b)*last.A(b))
+                                 * H.A(b) * conj(primed(res.A(b)));
+                    }
+                else
+                    {
+                    R.at(b) = (R.at(b+1).isNull() ? psi.A(b+1) : R.at(b+1)*psi.A(b+1))
+                              * conj(primed(res.A(b+1),Link));
+                    RH.at(b) = (RH.at(b+1).isNull() ? last.A(b+1) : RH.at(b+1)*last.A(b+1))
+                               * H.A(b+1) * conj(primed(res.A(b+1)));
+                    }
+                }
+            }
+
+        last = res;
+
+        } // for ord
+
+    res.cutoff(orig_cut);
+    res.minm(orig_minm);
+    res.maxm(orig_maxm);
+    }
+template
+void
+applyExpH(const MPOt<ITensor>& H, Real tau, const MPSt<ITensor>& psi, MPSt<ITensor>& res, const OptSet& opts);
+template
+void
+applyExpH(const MPOt<IQTensor>& H, Real tau, const MPSt<IQTensor>& psi, MPSt<IQTensor>& res, const OptSet& opts);
 
 void
 putMPOLinks(MPO& W, const OptSet& opts)

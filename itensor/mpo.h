@@ -364,17 +364,6 @@ void
 zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff = -1, int maxm = -1,
               const OptSet& opts = Global::opts());
 
-template<class Tensor>
-void 
-napplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, 
-          Real cutoff = -1, int maxm = -1, bool allow_arb_position = false)
-    {
-    static int count = 0;
-    if(count++ < 10)
-        std::cout << "\n\n\nWarning: function name napplyMPO deprecated, use zipUpApplyMPO instead\n\n\n" << std::endl;
-    zipUpApplyMPO(psi,K,res,cutoff,maxm);
-    }
-
 //Applies an MPO K to an MPS x with no approximation (|res>=K|x>)
 //The bond dimension of res will be the product of bond dimensions
 //of x and K.
@@ -382,11 +371,65 @@ template<class Tensor>
 void 
 exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res);
 
+template<class Tensor>
+void
+fitApplyMPO(const MPOt<Tensor>& K,
+            const MPSt<Tensor>& psi,
+            MPSt<Tensor>& res,
+            const OptSet& opts = Global::opts());
+
+template<class Tensor>
+void
+fitApplyMPO(Real fac,
+            const MPOt<Tensor>& K,
+            const MPSt<Tensor>& psi,
+            MPSt<Tensor>& res,
+            const OptSet& opts = Global::opts());
+
+template<class Tensor>
+void
+fitApplyMPO(const MPSt<Tensor>& psiA, 
+            Real mpofac,
+            const MPOt<Tensor>& H,
+            const MPSt<Tensor>& psiB,
+            MPSt<Tensor>& res,
+            const OptSet& opts = Global::opts());
+
+template<class Tensor>
+void
+fitApplyMPO(Real mpsfac,
+            const MPSt<Tensor>& psiA, 
+            Real mpofac,
+            const MPOt<Tensor>& H,
+            const MPSt<Tensor>& psiB,
+            MPSt<Tensor>& res,
+            const OptSet& opts = Global::opts());
+
 //Computes the exponential of the MPO H: K=exp(-tau*(H-Etot))
 template<class Tensor>
 void 
 expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
      Real Kcutoff, int ndoub);
+
+//
+//Approximately computes |res> = exp(-tau*H)|psi>.
+//Works by expanding the exponential to order n.
+//The default order is n=4 but can be increased via the "Order" Opt.
+//E.g. applyExpH(H,tau,psi,res,opts&Opt("Order",n));
+//List of options recognized:
+//   Order  - order of Taylor series expansion of exp(-tau*H)
+//   Cutoff - maximum truncation error allowed
+//   Maxm   - maximum number of states after truncation
+//   Minm   - minimum number of states after truncation
+//   Nsweep - number of sweeps used to apply H MPO to intermediate MPS
+//
+template<class Tensor>
+void
+applyExpH(const MPOt<Tensor>& H, 
+          Real tau, 
+          const MPSt<Tensor>& psi, 
+          MPSt<Tensor>& res, 
+          const OptSet& opts = Global::opts());
 
 //Given an MPO with no Link indices between site operators,
 //put in links (of bond dimension 1).
