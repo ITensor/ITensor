@@ -4,9 +4,69 @@
 //
 #include "tevol.h"
 #include "integrators.h"
+#include "sweeps.h"
 
 using namespace std;
 using boost::format;
+
+template <class Tensor>
+class DerivMPS
+    {
+    public:
+
+    DerivMPS(const MPOt<Tensor>& H, Direction dir = Fromleft)
+        : H_(H), dir_(dir) { }
+    
+    std::vector<Tensor>
+    operator()(const std::vector<Tensor>& psi) const;
+
+    private:
+
+    const MPOt<Tensor>& H_;
+    const Direction dir_;
+
+    };
+
+template <class Tensor>
+void
+derivMPS(const std::vector<Tensor>& psi, const MPOt<Tensor>& H, 
+         std::vector<Tensor>& d, 
+         Direction dir = Fromleft)
+    {
+    DerivMPS<Tensor> D(H,dir);
+    d = D(psi);
+    }
+template
+void derivMPS(const std::vector<ITensor>& psi, const MPOt<ITensor>& H, 
+         std::vector<ITensor>& d, Direction dir);
+template
+void derivMPS(const std::vector<IQTensor>& psi, const MPOt<IQTensor>& H, 
+         std::vector<IQTensor>& d, Direction dir);
+
+//
+// Compute the norm (= sqrt(|<psi|psi>|)) of an
+// MPS-like vector of tensors
+// 
+// vector psi is 1-indexed
+// Automatically determines size by counting number
+// of non-Null tensors
+//
+template <class Tensor>
+Real
+norm(const std::vector<Tensor>& psi);
+
+//
+// Compute the expectation value (= <psi|H|psi>)
+// of an MPS-like vector of tensors with respect 
+// to an MPO H
+//
+// vector psi is 1-indexed
+// Automatically determines size by counting number
+// of non-Null tensors
+//
+template <class Tensor>
+Real
+expect(const std::vector<Tensor>& psi, const MPOt<Tensor>& H);
 
 struct SqrtInv
     {
@@ -506,9 +566,10 @@ class OrthVec
 
     };
 
+/*
 template <class Tensor>
 Real
-imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep, 
+oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep, 
           MPSt<Tensor>& psi, 
           const OptSet& opts)
     {
@@ -538,19 +599,17 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
     Real tsofar = 0;
 
     //Determine if some exact timesteps needed
-    /*
-    const int m_threshold = 5;
-    bool doUnprojStep = false;
-    for(int b = 1; b < N; ++b)
-        {
-        int m = psi.LinkInd(b).m();
-        if(m < m_threshold) 
-            {
-            doUnprojStep = true;
-            break;
-            }
-        }
-        */
+    //const int m_threshold = 5;
+    //bool doUnprojStep = false;
+    //for(int b = 1; b < N; ++b)
+    //    {
+    //    int m = psi.LinkInd(b).m();
+    //    if(m < m_threshold) 
+    //        {
+    //        doUnprojStep = true;
+    //        break;
+    //        }
+    //    }
 
     const int nexact = opts.getInt("NExact",0);
     const int Order = opts.getInt("ExactOrder",4);
@@ -697,16 +756,14 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
         //psi.orthogonalize();
         //psi.position(dir == Fromleft ? N : 1);
 
-        /*
-        if(verbose)
-            {
-            psi.checkOrtho();
-
-            const Real nrm2 = psiphi(psi,psi);
-            cout << format("Norm after orthog = %.10f") % sqrt(nrm2) << endl;
-            cout << format("Energy after orthog = %.10f") % (psiHphi(psi,H,psi)/nrm2) << endl;
-            }
-            */
+        //if(verbose)
+        //    {
+        //    psi.checkOrtho();
+        //
+        //    const Real nrm2 = psiphi(psi,psi);
+        //    cout << format("Norm after orthog = %.10f") % sqrt(nrm2) << endl;
+        //    cout << format("Energy after orthog = %.10f") % (psiHphi(psi,H,psi)/nrm2) << endl;
+        //    }
 
 
         if(tt == nt) break;
@@ -760,27 +817,97 @@ imagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
                 }
             }
 
-        /*
-        if(verbose)
-            {
-            const Real nafter = norm(psiv);
-            cout << format("Norm after regroup = %.10f") % nafter << endl;
-            const Real enafter = expect(psiv,H)/sqr(nafter);
-            cout << format("Energy after regroup = %.10f") % enafter << endl;
-            }
-            */
+        //if(verbose)
+        //    {
+        //    const Real nafter = norm(psiv);
+        //    cout << format("Norm after regroup = %.10f") % nafter << endl;
+        //    const Real enafter = expect(psiv,H)/sqr(nafter);
+        //    cout << format("Energy after regroup = %.10f") % enafter << endl;
+        //    }
 
         } // for loop over tt
 
     return totnorm;
 
-    } // imagTEvol
+    } // oldImagTEvol
 template
 Real
-imagTEvol(const MPOt<ITensor>& H, Real ttotal, Real tstep, 
+oldImagTEvol(const MPOt<ITensor>& H, Real ttotal, Real tstep, 
           MPSt<ITensor>& psi, const OptSet& opts);
 template
 Real
+oldImagTEvol(const MPOt<IQTensor>& H, Real ttotal, Real tstep, 
+          MPSt<IQTensor>& psi, const OptSet& opts);
+*/
+
+
+template <class Tensor>
+void
+imagTEvol(const MPOt<Tensor>& H, 
+          Real ttotal, 
+          Real tstep, 
+          MPSt<Tensor>& psi, 
+          const OptSet& opts)
+    {
+    typedef typename Tensor::IndexT
+    IndexT;
+    typedef MPSt<Tensor>
+    MPST;
+
+    const bool verbose = opts.getBool("Verbose",false);
+    const int order = opts.getInt("Order",4);
+
+    const string method = opts.getString("Method","default");
+    
+    const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
+    if(fabs(nt*tstep-ttotal) > 1E-9)
+        {
+        Error("Timestep not commensurate with total time");
+        }
+
+    if(verbose) 
+        {
+        cout << format("Taking %d steps of timestep %.5f, total time %.5f, using order %d method")
+                % nt
+                % tstep
+                % ttotal
+                % order
+                << endl;
+        }
+
+    Real tsofar = 0;
+    MPST psi1(psi);
+    for(int tt = 1; tt <= nt; ++tt)
+        {
+        applyExpH(H,tstep,psi,psi1,opts);
+
+        psi1.position(1);
+        psi1.normalize();
+
+        if(verbose)
+            {
+            Real percentdone = (100.*tt)/nt;
+            if(percentdone < 99.5 || (tt==nt))
+                {
+                cout << format("\b\b\b%2.f%%") % percentdone;
+                cout.flush();
+                }
+            }
+
+        psi = psi1;
+        tsofar += tstep;
+        }
+    if(verbose) 
+        {
+        cout << format("\nTotal time evolved = %.5f\n") % tsofar << endl;
+        }
+    }
+template
+void
+imagTEvol(const MPOt<ITensor>& H, Real ttotal, Real tstep, 
+          MPSt<ITensor>& psi, const OptSet& opts);
+template
+void
 imagTEvol(const MPOt<IQTensor>& H, Real ttotal, Real tstep, 
           MPSt<IQTensor>& psi, const OptSet& opts);
 
