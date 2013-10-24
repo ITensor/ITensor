@@ -1160,6 +1160,27 @@ void MPSt<ITensor>::cleanupWrite();
 template
 void MPSt<IQTensor>::cleanupWrite();
 
+template<class Tensor>
+void MPSt<Tensor>::
+swap(MPSt<Tensor>& other)
+    {
+    if(N_ != other.N_)
+        Error("Require same system size to swap MPS");
+    A_.swap(other.A_);
+    std::swap(l_orth_lim_,other.l_orth_lim_);
+    std::swap(r_orth_lim_,other.r_orth_lim_);
+    std::swap(is_ortho_,other.is_ortho_);
+    std::swap(model_,other.model_);
+    spectrum_.swap(other.spectrum_);
+    std::swap(atb_,other.atb_);
+    std::swap(writedir_,other.writedir_);
+    std::swap(do_write_,other.do_write_);
+    }
+template
+void MPSt<ITensor>::swap(MPSt<ITensor>& other);
+template
+void MPSt<IQTensor>::swap(MPSt<IQTensor>& other);
+
 //Auxilary method for convertToIQ
 int 
 collapseCols(const Vector& Diag, Matrix& M)

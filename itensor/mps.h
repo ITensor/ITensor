@@ -381,6 +381,9 @@ class MPSt
         convertToIQ(*model_,A_,iqpsi.A_,totalq,cut);
         }
 
+    void
+    swap(MPSt& other);
+
     //
     // Deprecated methods
     // 
