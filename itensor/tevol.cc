@@ -856,6 +856,7 @@ imagTEvol(const MPOt<Tensor>& H,
 
     const bool verbose = opts.getBool("Verbose",false);
     const int order = opts.getInt("Order",4);
+    const bool showm = opts.getBool("ShowM",false);
 
     const string method = opts.getString("Method","default");
     
@@ -879,7 +880,14 @@ imagTEvol(const MPOt<Tensor>& H,
     MPST psi1(psi);
     for(int tt = 1; tt <= nt; ++tt)
         {
-        applyExpH(H,tstep,psi,psi1,opts);
+        //applyExpH(H,tstep,psi,psi1,opts);
+
+        MPST last(psi1);
+        for(int ord = order; ord >= 1; --ord)
+            {
+            fitApplyMPO(psi,-tstep/(1.*ord),H,last,psi1,opts&Opt("DoRelCutoff"));
+            last = psi1;
+            }
 
         psi1.position(1);
         psi1.normalize();
@@ -893,6 +901,17 @@ imagTEvol(const MPOt<Tensor>& H,
                 cout.flush();
                 }
             }
+
+        if(showm)
+            {
+            for(int b = 1; b < psi.N(); ++b)
+                {
+                int m = psi.LinkInd(b).m();
+                cout << m << " ";
+                }
+            cout << endl;
+            }
+
 
         psi = psi1;
         tsofar += tstep;

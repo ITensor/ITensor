@@ -267,7 +267,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     if(vI.m() == 0)
         throw ResultIsZero("vI.m() == 0");
 
-    if(spec.doRelCutoff())
+    if(spec.doRelCutoff() || opts.getBool("DoRelCutoff",false))
         {
         Real maxLogNum = -200;
         A.scaleOutNorm();

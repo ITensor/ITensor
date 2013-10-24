@@ -1238,6 +1238,12 @@ toITensor() const
     {
     if(this->isNull()) return ITensor();
 
+    //if(Global::debug1())
+    //    {
+    //    cout << "Converting an IQTensor to ITensor" << endl;
+    //    PAUSE
+    //    }
+
     //Resulting ITensor's indices are 
     //the Index versions of this's IQIndices
     IndexSet<Index> indices;

@@ -556,10 +556,10 @@ class InitState
 //
 
 template <class Tensor>
-template <class LocalOpT>
+template <class BigMatrixT>
 void MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, 
-        const LocalOpT& PH, const OptSet& opts)
+        const BigMatrixT& PH, const OptSet& opts)
     {
     setBond(b);
     const bool use_orig_setting = spectrum_.at(b).useOrigM();
@@ -586,7 +586,13 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
         Tensor D;
-        //Cout << "Calling svdBond SVD" << Endl;
+        /*
+        if(Global::debug1())
+            {
+            Cout << "Calling svdBond SVD" << Endl;
+            Cout << "with spectrum:\n" << spectrum_.at(b) << Endl;
+            }
+            */
         svd(AA,A_[b],D,A_[b+1],spectrum_.at(b),opts);
 
         //Normalize the ortho center if requested
