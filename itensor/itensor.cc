@@ -124,7 +124,7 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
         }
     else if(is.rn() == 3)
         {
-        DO_IF_PS(int idx = ((ind[1])*3+ind[2])*3+ind[3]; Prodstats::stats().perms_of_3[idx] += 1; )
+        //DO_IF_PS(int idx = ((ind[1])*3+ind[2])*3+ind[3]; Prodstats::stats().perms_of_3[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif3(2,1,3) Loop3(i2,i1,i3)
         Bif3(2,3,1) Loop3(i2,i3,i1) //cyclic
@@ -134,7 +134,7 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
         }
     else if(is.rn() == 4)
         {
-        DO_IF_PS(int idx = (((ind[1])*4+ind[2])*4+ind[3])*4+ind[4]; Prodstats::stats().perms_of_4[idx] += 1; )
+        //DO_IF_PS(int idx = (((ind[1])*4+ind[2])*4+ind[3])*4+ind[4]; Prodstats::stats().perms_of_4[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif4(1,2,4,3) Loop4(i1,i2,i4,i3)
         Bif4(1,3,2,4) Loop4(i1,i3,i2,i4)
@@ -147,7 +147,7 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
         }
     else if(is.rn() == 5)
         {
-        DO_IF_PS(int idx = ((((ind[1])*5+ind[2])*5+ind[3])*5+ind[4])*5+ind[5]; Prodstats::stats().perms_of_5[idx] += 1; )
+        //DO_IF_PS(int idx = ((((ind[1])*5+ind[2])*5+ind[3])*5+ind[4])*5+ind[5]; Prodstats::stats().perms_of_5[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif5(3,1,4,5,2) Loop5(i3,i1,i4,i5,i2)
         Bif5(1,4,2,5,3) Loop5(i1,i4,i2,i5,i3)
@@ -167,7 +167,7 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
         }
     else if(is.rn() == 6)
         {
-        DO_IF_PS(int idx = (((((ind[1])*6+ind[2])*6+ind[3])*6+ind[4])*6+ind[5])*6+ind[6]; Prodstats::stats().perms_of_6[idx] += 1; )
+        //DO_IF_PS(int idx = (((((ind[1])*6+ind[2])*6+ind[3])*6+ind[4])*6+ind[5])*6+ind[6]; Prodstats::stats().perms_of_6[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
         Bif6(2,4,1,3,5,6) Loop6(i2,i4,i1,i3,i5,i6)
         Bif6(1,4,2,3,5,6) Loop6(i1,i4,i2,i3,i5,i6)
@@ -175,7 +175,7 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
         Bif6(1,2,4,5,3,6) Loop6(i1,i2,i4,i5,i3,i6)
         Bif6(3,4,1,5,6,2) Loop6(i3,i4,i1,i5,i6,i2)
         }
-    DO_IF_PS(Prodstats::stats().c4 += 1;)
+    //DO_IF_PS(Prodstats::stats().c4 += 1;)
 
     //The j's are pointers to the i's of xdat's Counter,
     //but reordered in a way appropriate for res
@@ -1921,6 +1921,7 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
         }
 
 #ifdef COLLECT_PRODSTATS
+    /*
     if(L.is_.rn() > R.is_.rn()) 
         {
         ++(Prodstats::stats().global[std::make_pair(L.is_.rn(),R.is_.rn())]);
@@ -1932,6 +1933,7 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
     ++Prodstats::stats().total;
     if(L_is_matrix) ++Prodstats::stats().did_matrix;
     if(R_is_matrix) ++Prodstats::stats().did_matrix;
+    */
 #endif
     }
 
@@ -2642,7 +2644,7 @@ operator*=(const ITensor& other)
 
     if(do_matrix_multiply || (L_is_matrix && R_is_matrix))
         {
-        DO_IF_PS(++Prodstats::stats().c2;)
+        //DO_IF_PS(++Prodstats::stats().c2;)
 
         //Do the matrix multiplication
         if(!r_.unique()) allocate();

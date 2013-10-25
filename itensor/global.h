@@ -4,6 +4,7 @@
 //
 #ifndef __ITENSOR_GLOBAL_H
 #define __ITENSOR_GLOBAL_H
+#include "prodstats.h"
 #include <cmath>
 #include <cstdlib>
 #include <vector>
