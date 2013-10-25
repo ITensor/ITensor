@@ -569,9 +569,9 @@ fitApplyMPO(Real fac,
         {
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
-            Tensor wfK = (LK.at(b).isNull() ? psiB.A(b) : LK.at(b)*psiB.A(b));
+            Tensor wfK = (LK.at(b).isNull() ? psi.A(b) : LK.at(b)*psi.A(b));
             wfK *= K.A(b);
-            Tensor rwfK = (RK.at(b+1).isNull() ? psiB.A(b+1) : RK.at(b+1)*psiB.A(b+1));
+            Tensor rwfK = (RK.at(b+1).isNull() ? psi.A(b+1) : RK.at(b+1)*psi.A(b+1));
             rwfK *= K.A(b+1);
             wfK *= rwfK;
             wfK.noprime();
