@@ -883,11 +883,13 @@ imagTEvol(const MPOt<Tensor>& H,
         //applyExpH(H,tstep,psi,psi1,opts);
 
         MPST last(psi1);
+        START_TIMER(1)
         for(int ord = order; ord >= 1; --ord)
             {
             fitApplyMPO(psi,-tstep/(1.*ord),H,last,psi1,opts&Opt("DoRelCutoff"));
             last = psi1;
             }
+        STOP_TIMER(1)
 
         psi1.position(1);
         psi1.normalize();

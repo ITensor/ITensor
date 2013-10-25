@@ -650,6 +650,7 @@ fitApplyMPO(Real mpsfac,
                    LK(N+2),
                    RK(N+2);
 
+    START_TIMER(2)
     R.at(N-1) = psiA.A(N)*conj(primed(res.A(N),Link));
     RK.at(N-1) = psiB.A(N)*K.A(N)*conj(primed(res.A(N)));
     for(int n = N-2; n >= 2; --n)
@@ -657,6 +658,7 @@ fitApplyMPO(Real mpsfac,
         R.at(n) = R.at(n+1)*psiA.A(n+1)*conj(primed(res.A(n+1),Link));
         RK.at(n) = RK.at(n+1)*psiB.A(n+1)*K.A(n+1)*conj(primed(res.A(n+1)));
         }
+    STOP_TIMER(2)
 
     const Real orig_cut = res.cutoff();
     const int orig_minm = res.minm();
@@ -670,6 +672,7 @@ fitApplyMPO(Real mpsfac,
         {
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
+            START_TIMER(3)
             Tensor wf = (L.at(b).isNull() ? psiA.A(b) : L.at(b)*psiA.A(b));
             wf *= psiA.A(b+1);
             if(!R.at(b+1).isNull())
@@ -677,21 +680,37 @@ fitApplyMPO(Real mpsfac,
                 wf *= R.at(b+1);
                 }
             wf.noprime();
+            STOP_TIMER(3)
 
+            START_TIMER(4)
+            START_TIMER(10)
             Tensor wfK = (LK.at(b).isNull() ? psiB.A(b) : LK.at(b)*psiB.A(b));
+            STOP_TIMER(10)
+            START_TIMER(11)
             wfK *= K.A(b);
+            STOP_TIMER(11)
+            START_TIMER(12)
             wfK *= psiB.A(b+1);
+            STOP_TIMER(12)
+            START_TIMER(13)
             wfK *= K.A(b+1);
+            STOP_TIMER(13)
             if(!RK.at(b+1).isNull())
                 {
+                START_TIMER(14)
                 wfK *= RK.at(b+1);
+                STOP_TIMER(14)
                 }
             wfK.noprime();
+            STOP_TIMER(4)
 
             wf = mpsfac*wf + mpofac*wfK;
 
+            START_TIMER(5)
             res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
+            STOP_TIMER(5)
 
+            START_TIMER(6)
             if(ha == 1)
                 {
                 L.at(b+1) = (L.at(b).isNull() ? psiA.A(b) : L.at(b)*psiA.A(b))
@@ -706,6 +725,7 @@ fitApplyMPO(Real mpsfac,
                 RK.at(b) = (RK.at(b+1).isNull() ? psiB.A(b+1) : RK.at(b+1)*psiB.A(b+1))
                            * K.A(b+1) * conj(primed(res.A(b+1)));
                 }
+            STOP_TIMER(6)
             }
         }
 
