@@ -569,14 +569,11 @@ fitApplyMPO(Real fac,
         {
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
-            Tensor wfK = (LK.at(b).isNull() ? psi.A(b) : LK.at(b)*psi.A(b));
+            Tensor wfK = (LK.at(b).isNull() ? psiB.A(b) : LK.at(b)*psiB.A(b));
             wfK *= K.A(b);
-            wfK *= psi.A(b+1);
-            wfK *= K.A(b+1);
-            if(!RK.at(b+1).isNull())
-                {
-                wfK *= RK.at(b+1);
-                }
+            Tensor rwfK = (RK.at(b+1).isNull() ? psiB.A(b+1) : RK.at(b+1)*psiB.A(b+1));
+            rwfK *= K.A(b+1);
+            wfK *= rwfK;
             wfK.noprime();
 
             wfK *= fac;
@@ -683,24 +680,11 @@ fitApplyMPO(Real mpsfac,
             STOP_TIMER(3)
 
             START_TIMER(4)
-            START_TIMER(10)
             Tensor wfK = (LK.at(b).isNull() ? psiB.A(b) : LK.at(b)*psiB.A(b));
-            STOP_TIMER(10)
-            START_TIMER(11)
             wfK *= K.A(b);
-            STOP_TIMER(11)
-            START_TIMER(12)
-            wfK *= psiB.A(b+1);
-            STOP_TIMER(12)
-            START_TIMER(13)
-            wfK *= K.A(b+1);
-            STOP_TIMER(13)
-            if(!RK.at(b+1).isNull())
-                {
-                START_TIMER(14)
-                wfK *= RK.at(b+1);
-                STOP_TIMER(14)
-                }
+            Tensor rwfK = (RK.at(b+1).isNull() ? psiB.A(b+1) : RK.at(b+1)*psiB.A(b+1));
+            rwfK *= K.A(b+1);
+            wfK *= rwfK;
             wfK.noprime();
             STOP_TIMER(4)
 
