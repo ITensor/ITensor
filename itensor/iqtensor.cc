@@ -1416,6 +1416,7 @@ div(const IQTensor& T, const OptSet& opts)
             }
         if(q != div_)
             {
+            Global::printdat() = true;
             cout << "\n-------------------------\n" << endl;
             cout << "div = " << div_ << "\n" << endl;
             cout << "div of this block = " << q << "\n" << endl;

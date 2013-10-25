@@ -56,6 +56,9 @@ class Hubbard : public Model
     virtual IQTensor
     getOp(int i, const String& opname, const OptSet& opts = Global::opts()) const;
 
+    DefaultOpsT
+    getDefaultOps(const OptSet& opts) const;
+
     IQTensor
     makeTReverse(int i) const { return getOp(i,"TReverse"); }
 
@@ -119,6 +122,16 @@ class Hubbard : public Model
     bool conserveNf_;
 
     std::vector<IQIndex> site_;
+
+    static DefaultOpsT
+    initDefaultOps()
+        {
+        DefaultOpsT dops;
+        dops.push_back("Ntot");
+        dops.push_back("Nup");
+        dops.push_back("Ndn");
+        return dops;
+        }
 
     };
 
@@ -383,6 +396,13 @@ getOp(int i, const String& opname, const OptSet& opts) const
         }
 
     return Op;
+    }
+
+Hubbard::DefaultOpsT inline Hubbard::
+getDefaultOps(const OptSet& opts) const
+    {
+    static const std::vector<String> dops_(initDefaultOps());
+    return dops_;
     }
 
 #endif

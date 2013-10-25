@@ -255,7 +255,7 @@ checkQNs(const IQMPO& H)
         {
         if(H.A(i).isNull())
             {
-            std::cerr << boost::format("A(%d) null, QNs not well defined\n")%i;
+            std::cout << boost::format("A(%d) null, QNs not well defined\n")%i;
             Error("QNs not well defined");
             }
         if(div(H.A(i)) != Zero)
@@ -271,14 +271,14 @@ checkQNs(const IQMPO& H)
         {
         if(H.RightLinkInd(i).dir() != In) 
             {
-            std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            std::cout << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
             Error("Incorrect Arrow in IQMPO");
             }
         if(i > 1)
             {
             if(H.LeftLinkInd(i).dir() != Out) 
                 {
-                std::cerr << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                std::cout << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
                 Error("Incorrect Arrow in IQMPO");
                 }
             }
@@ -290,12 +290,12 @@ checkQNs(const IQMPO& H)
         if(i < N)
         if(H.RightLinkInd(i).dir() != Out) 
             {
-            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            std::cout << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
             Error("Incorrect Arrow in IQMPO");
             }
         if(H.LeftLinkInd(i).dir() != In) 
             {
-            std::cerr << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            std::cout << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
             Error("Incorrect Arrow in IQMPO");
             }
         }

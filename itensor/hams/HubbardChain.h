@@ -7,6 +7,10 @@
 #include "../mpo.h"
 #include "../model/hubbard.h"
 
+#define Cout std::cout
+#define Endl std::endl
+#define Format boost::format
+
 class HubbardChain
     {
     public:
@@ -24,7 +28,7 @@ class HubbardChain
     void
     U(Real val) { initted_ = false; U_ = val; }
 
-    operator MPO() { init_(); return H; }
+    operator MPO() { init_(); return H.toMPO(); }
 
     operator IQMPO() { init_(); return H; }
 
@@ -37,7 +41,8 @@ class HubbardChain
     const Hubbard& model_;
     Real t_,U_;
     bool initted_;
-    MPO H;
+    bool infinite_;
+    IQMPO H;
 
     //
     //////////////////
@@ -56,6 +61,7 @@ HubbardChain(const Hubbard& model,
     { 
     U_ = opts.getReal("U",0);
     t_ = opts.getReal("t",1);
+    infinite_ = opts.getBool("Infinite",false);
     }
 
 void inline HubbardChain::
@@ -63,44 +69,73 @@ init_()
     {
     if(initted_) return;
 
-    H = MPO(model_);
+    H = IQMPO(model_);
 
     const int Ns = model_.N();
-    const int k = 6;
 
-    std::vector<Index> links(Ns+1);
-    for(int l = 0; l <= Ns; ++l) links.at(l) = Index(nameint("hl",l),k);
+    std::vector<IQIndex> links(Ns+1);
+    for(int l = 0; l <= Ns; ++l) 
+        {
+        links.at(l) = IQIndex(nameint("Hl",l),
+                              Index(nameint("h00_",l),2),QN( 0, 0),
+                              Index(nameint("hup_",l),1),QN(+1,+1),
+                              Index(nameint("hum_",l),1),QN(+1,-1),
+                              Index(nameint("hdp_",l),1),QN(-1,+1),
+                              Index(nameint("hdp_",l),1),QN(-1,-1)
+                              );
+        }
 
-    ITensor W;
+    const
+    IQIndex last = (infinite_ ? links.at(0) : links.at(Ns));
+
     for(int n = 1; n <= Ns; ++n)
         {
-        ITensor& W = H.Anc(n);
-        Index &row = links[n-1], &col = links[n];
+        IQTensor& W = H.Anc(n);
+        const
+        IQIndex row = conj(links[n-1]), 
+                col = (n==Ns ? last : links[n]);
 
-        W = ITensor(model_.si(n),model_.siP(n),row,col);
+        W = IQTensor(conj(model_.si(n)),model_.siP(n),row,col);
 
         //Identity strings
         W += model_.op("Id",n) * row(1) * col(1);
-        W += model_.op("Id",n) * row(k) * col(k);
+        W += model_.op("Id",n) * row(2) * col(2);
 
         //Hubbard U
-        W += model_.op("Nupdn",n) * row(k) * col(1) * U_;
+        W += model_.op("Nupdn",n) * row(2) * col(1) * U_;
 
         //Kinetic energy/hopping terms, defined as -t_*(c^d_i c_{i+1} + h.c.)
-        W += model_.op("F*Cup",n) * row(k) * col(2) * t_;
-        W += model_.op("F*Cdn",n) * row(k) * col(3) * t_;
-        W += model_.op("Cdagup*F",n) * row(k) * col(4) * t_;
-        W += model_.op("Cdagdn*F",n) * row(k) * col(5) * t_;
-        W += model_.op("Cdagup",n) * row(2) * col(1) * (-1.0);
-        W += model_.op("Cdagdn",n) * row(3) * col(1) * (-1.0);
-        W += model_.op("Cup",n) * row(4) * col(1) * (-1.0);
-        W += model_.op("Cdn",n) * row(5) * col(1) * (-1.0);
+        W += model_.op("Aup*F",n)    *row(2)*col(3)*(+t_);
+        W += model_.op("Adagdn",n)   *row(2)*col(4)*(-t_);
+        W += model_.op("Adn",n)      *row(2)*col(5)*(+t_);
+        W += model_.op("Adagup*F",n) *row(2)*col(6)*(-t_);
+
+        W += model_.op("Adagup",n)  *row(3)*col(1);
+        W += model_.op("F*Adn",n)   *row(4)*col(1);
+        W += model_.op("F*Adagdn",n)*row(5)*col(1);
+        W += model_.op("Aup",n)     *row(6)*col(1);
         }
 
-    H.Anc(1) *= ITensor(links.at(0)(k));
-    H.Anc(Ns) *= ITensor(links.at(Ns)(1));
+    const
+    IQTensor LH(links.at(0)(2)),
+             RH(conj(last)(1)); 
+
+    if(infinite_)
+        {
+        H.Anc(0) = LH;
+        H.Anc(Ns+1) = RH;
+        }
+    else
+        {
+        H.Anc(1) *= LH;
+        H.Anc(Ns) *= RH;
+        }
 
     initted_ = true;
     }
+
+#undef Cout
+#undef Endl
+#undef Format
 
 #endif
