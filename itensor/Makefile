@@ -8,11 +8,7 @@ include ../options.mk
 
 ####################################
 
-SOURCES=index.cc itensor.cc itsparse.cc \
-        iqindex.cc iqtensor.cc iqcombiner.cc iqtsparse.cc\
-        svdalgs.cc mps.cc mpo.cc tevol.cc
-
-HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
+HEADERS=option.h global.h allocator.h real.h permutation.h index.h prodstats.h \
         indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
@@ -24,6 +20,18 @@ HEADERS=global.h allocator.h real.h permutation.h index.h prodstats.h \
         model/tj.h \
         eigensolver.h localop.h localmpo.h localmposet.h itsparse.h iqtsparse.h\
         partition.h option.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h
+
+SOURCES= index.cc 
+SOURCES+= itensor.cc 
+SOURCES+= iqindex.cc 
+SOURCES+= iqtensor.cc 
+SOURCES+= condenser.cc
+SOURCES+= iqcombiner.cc 
+SOURCES+= svdalgs.cc 
+SOURCES+= mps.cc 
+SOURCES+= mpo.cc 
+SOURCES+= tevol.cc
+
 
 ####################################
 
