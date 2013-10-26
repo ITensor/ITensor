@@ -222,6 +222,21 @@ conj()
     right_.conj();
     }
 
+
+static const Combiner&
+findcomb(const Index& K, const vector<Combiner>& combs)
+    {
+    Foreach(const Combiner& co, combs)
+        {
+        if(K==co.right())
+            {
+            return co;
+            }
+        }
+    Error("Combiner not found");
+    return combs.front();
+    }
+
 void IQCombiner::
 product(IQTensor T, IQTensor& res) const
     {
@@ -262,18 +277,12 @@ product(IQTensor T, IQTensor& res) const
 
         res = IQTensor(iqinds);
 
-        map<Index, const Combiner*> rightcomb;
-        Foreach(const Combiner& co, combs)
-            {
-            rightcomb[co.right()] = &co;
-            }
-
         Foreach(const ITensor& tt, T_.blocks())
         Foreach(const Index& K, tt.indices())
             {
             if(hasindex(r,K))
                 { 
-                res += (*(rightcomb[K]) * tt); 
+                res += (findcomb(K,combs) * tt); 
                 break;
                 }
             } //end for

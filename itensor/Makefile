@@ -13,6 +13,7 @@ SOURCES+= index.cc
 SOURCES+= itensor.cc 
 SOURCES+= iqindex.cc 
 SOURCES+= iqtensor.cc 
+SOURCES+= condenser.cc
 SOURCES+= iqcombiner.cc 
 SOURCES+= svdalgs.cc 
 SOURCES+= mps.cc 
