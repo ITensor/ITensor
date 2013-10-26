@@ -326,13 +326,6 @@ product(IQTensor T, IQTensor& res) const
                 }
             }
 
-        //Create map of Combiners using uniqueReal as key
-        map<ApproxReal, const Combiner*> combmap;
-        Foreach(const Combiner& co, combs)
-            {
-            combmap[co.uniqueReal()] = &co;
-            }
-
         //Loop over each block in T and apply appropriate
         //Combiner (determined by the uniqueReal of the 
         //combined Indices)
@@ -345,26 +338,27 @@ product(IQTensor T, IQTensor& res) const
                     block_ur += K.uniqueReal();
                 }
 
-            if(combmap.count(block_ur) == 0)
+            size_t cc = 0;
+            for(; cc < combs.size(); ++cc)
+                {
+                if(fabs(combs[cc].uniqueReal()-block_ur) < UniqueRealAccuracy)
+                    break;
+                }
+
+            if(cc == combs.size())
                 {
                 Print(t);
                 cout << "\nleft indices \n";
                 for(size_t j = 0; j < left_.size(); ++j)
-                    { cout << j << " " << left_[j] << "\n"; }
+                    { 
+                    cout << j << " " << left_[j] << "\n"; 
+                    }
                 cout << "\n" << endl;
 
-                typedef map<ApproxReal, const Combiner*>::const_iterator
-                combmap_const_it;
-                for(combmap_const_it uu = combmap.begin();
-                    uu != combmap.end(); ++uu)
-                    {
-                    cout << "Combiner: " << endl;
-                    cout << *(uu->second) << endl;
-                    }
-                Error("no combmap entry for block_ur in IQCombiner prod");
+                Error("no Combiner with matching indices in IQCombiner prod");
                 }
 
-            res += (*combmap[block_ur] * t);
+            res += (combs[cc] * t);
             }
 
         if(do_condense) 

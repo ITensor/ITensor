@@ -75,7 +75,12 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
     LAPACK_COMPLEX work[lwork];
     LAPACK_REAL rwork[5*l*(1+l)];
     LAPACK_INT iwork[8*l];
+#ifdef PLATFORM_acml
+    LAPACK_INT jobz_len = 1;
+    zgesdd_(jobz,m,n,A,m,s,u,m,vt,n,work,&lwork,rwork,iwork,info,jobz_len);
+#else
     zgesdd_(jobz,m,n,A,m,s,u,m,vt,n,work,&lwork,rwork,iwork,info);
+#endif
     }
 
 //
@@ -136,7 +141,13 @@ zheev_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
               LAPACK_REAL* rwork,   //real workspace array
               LAPACK_INT* info)  //error info
     {
+#ifdef PLATFORM_acml
+    LAPACK_INT jobz_len = 1;
+    LAPACK_INT uplo_len = 1;
+    zheev_(jobz,uplo,n,A,lda,d,work,lwork,rwork,info,jobz_len,uplo_len);
+#else
     zheev_(jobz,uplo,n,A,lda,d,work,lwork,rwork,info);
+#endif
     }
 
 //
@@ -160,7 +171,13 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
     int itype = 1;
     LAPACK_INT lwork = max(1,3*(*n)-1);//max(1, 1+6*N+2*N*N);
     LAPACK_REAL work[lwork];
+#ifdef PLATFORM_acml
+    LAPACK_INT jobz_len = 1;
+    LAPACK_INT uplo_len = 1;
+    dsygv_(&itype,jobz,uplo,n,A,n,B,n,d,work,&lwork,info,jobz_len,uplo_len);
+#else
     dsygv_(&itype,jobz,uplo,n,A,n,B,n,d,work,&lwork,info);
+#endif
     }
 
 //
@@ -184,7 +201,13 @@ dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
     int nevecr = (*jobvr == 'V' ? *n : 1);
     LAPACK_INT lwork = max(1,4*(*n));
     LAPACK_REAL work[lwork];
+#ifdef PLATFORM_acml
+    LAPACK_INT jobvl_len = 1;
+    LAPACK_INT jobvr_len = 1;
+    dgeev_(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work,&lwork,info,jobvl_len,jobvr_len);
+#else
     dgeev_(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work,&lwork,info);
+#endif
     }
 
 //

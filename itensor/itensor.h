@@ -687,17 +687,17 @@ operator-(ITensor A, const ITensor& B) { A -= B; return A; }
 template <class Tensor, class IndexT>
 bool inline
 operator==(const IndexSet<IndexT>& is, const Tensor& t)
-    { return fabs(is.uniqueReal()-t.indices().uniqueReal()) < ApproxReal_Accuracy; }
+    { return is == t.indices(); }
 
 template <class Tensor, class IndexT>
 bool inline
 operator==(const Tensor& t, const IndexSet<IndexT>& is)
-    { return fabs(is.uniqueReal()-t.indices().uniqueReal()) < ApproxReal_Accuracy; }
+    { return t.indices() == is; }
 
 template <class Tensor, class IndexT>
 bool inline
 operator<(const Tensor& t, const IndexSet<IndexT>& is)
-    { return (is.uniqueReal()-t.indices().uniqueReal()) > ApproxReal_Accuracy; }
+    { return t.indices() < is; }
 
 template <typename Callable> 
 ITensor& ITensor::

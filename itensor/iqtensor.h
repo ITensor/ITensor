@@ -450,7 +450,6 @@ operator*(const IndexVal& iv, const IQTensor& T)
     return ITensor(iv) * T.toITensor(); 
     }
 
-
 template <typename Callable> 
 IQTensor& IQTensor::
 mapElems(const Callable& f)

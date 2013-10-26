@@ -122,9 +122,23 @@ class Combiner
 
     }; //class Combiner
 
-
 Combiner inline
 conj(Combiner res) { res.conj(); return res; }
+
+ITensor inline
+operator*(const ITensor& t, const Combiner& c) { return c*t; }
+
+inline
+Combiner& Combiner::
+operator=(const Combiner& other)
+    {
+    other.init();
+    left_ = other.left_;
+    right_ = other.right_;
+    rl_ = other.rl_;
+    initted = other.initted;
+    return *this;
+    }
 
 ITensor inline
 operator*(const ITensor& t, const Combiner& c) { return c*t; }

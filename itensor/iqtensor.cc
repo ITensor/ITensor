@@ -33,7 +33,6 @@ solo()
 	}
 
 
-
 //
 // IQTensor
 //
@@ -60,14 +59,8 @@ r() const
     return is_->r(); 
     }
 
-/*
-const IQIndex& IQTensor::
-index(int j) const 
-    { 
-    if(!is_) Error("IQTensor is null");
-    return is_->index(j); 
-    }
-    */
+int IQTensor::
+iten_size() const { return dat().size(); }
 
 bool IQTensor::
 empty() const { return dat().empty(); }
@@ -882,11 +875,11 @@ operator<<(std::ostream & s, const IQTensor& T)
 
 //Helper method for operator*= and operator/=
 bool static
-vectorARContains(const vector<ApproxReal>& v, ApproxReal r)
+vectoruRContains(const vector<Real>& v, Real r)
     {
-    Foreach(const ApproxReal& x, v)
+    Foreach(const Real& x, v)
         {
-        if(r == x) return true;
+        if(fabs(r-x) <= UniqueRealAccuracy) return true;
         }
     return false;
     }
@@ -909,7 +902,7 @@ operator*=(const IQTensor& other)
 
     solo();
 
-    vector<ApproxReal> common_inds;
+    vector<Real> common_inds;
     
     //Load iqindex_ with those IQIndex's *not* common to *this and other
     boost::array<IQIndex,NMAX> riqind_holder;
@@ -955,7 +948,7 @@ operator*=(const IQTensor& other)
     for(int i = 1; i <= other.is_->r(); ++i)
         {
         const IQIndex& I = other.is_->index(i);
-        if(!vectorARContains(common_inds,I.uniqueReal()))
+        if(!vectoruRContains(common_inds,I.uniqueReal()))
             { 
             if(rholder >= NMAX)
                 {
@@ -980,8 +973,7 @@ operator*=(const IQTensor& other)
 
     typedef IQTDat<ITensor>::const_iterator
     cbit;
-
-    typedef pair<ApproxReal,cbit>
+    typedef pair<Real,cbit>
     blockpair;
 
     vector<blockpair> other_block;
@@ -992,25 +984,25 @@ operator*=(const IQTensor& other)
         Real r = 0.0;
         Foreach(const Index& I, ot->indices())
             {
-            if(vectorARContains(common_inds,I.uniqueReal()))
+            if(vectoruRContains(common_inds,I.uniqueReal()))
                 r += I.uniqueReal(); 
             }
-        other_block.push_back(make_pair(ApproxReal(r),ot));
+        other_block.push_back(make_pair(r,ot));
         }
 
     ITensor prod;
 
     Foreach(const ITensor& t, old_itensor)
         {
-        ApproxReal r(0);
+        Real r = 0;
         Foreach(const Index& I, t.indices())
             {
-            if(vectorARContains(common_inds,I.uniqueReal()))
+            if(vectoruRContains(common_inds,I.uniqueReal()))
                 r += I.uniqueReal();
             }
         Foreach(const blockpair& p, other_block)
             {
-            if(r != p.first) continue;
+            if(fabs(r - p.first) > UniqueRealAccuracy) continue;
             prod = t;
             prod *= *(p.second);
             if(prod.scale().sign() != 0)
@@ -1038,7 +1030,7 @@ operator/=(const IQTensor& other)
     if(other.isNull()) 
         Error("Multiplying by null IQTensor");
 
-    vector<ApproxReal> common_inds;
+    vector<Real> common_inds;
     
     boost::array<IQIndex,NMAX> riqind_holder;
     int rholder = 0;
@@ -1079,7 +1071,7 @@ operator/=(const IQTensor& other)
     for(int i = 1; i <= other.is_->r(); ++i)
         {
         const IQIndex& I = other.is_->index(i);
-        if(!vectorARContains(common_inds,I.uniqueReal()))
+        if(!vectoruRContains(common_inds,I.uniqueReal()))
             { 
             if(rholder >= NMAX)
                 {
@@ -1113,7 +1105,7 @@ operator/=(const IQTensor& other)
     typedef IQTDat<ITensor>::const_iterator
     cbit;
 
-    typedef pair<ApproxReal,cbit>
+    typedef pair<Real,cbit>
     blockpair;
 
     vector<blockpair> other_block;
@@ -1124,25 +1116,25 @@ operator/=(const IQTensor& other)
         Real r = 0.0;
         Foreach(const Index& I, ot->indices())
             {
-            if(vectorARContains(common_inds,I.uniqueReal()))
+            if(vectoruRContains(common_inds,I.uniqueReal()))
                 r += I.uniqueReal(); 
             }
-        other_block.push_back(make_pair(ApproxReal(r),ot));
+        other_block.push_back(make_pair(r,ot));
         }
 
     ITensor prod;
 
     Foreach(const ITensor& t, old_itensor)
         {
-        ApproxReal r(0);
+        Real r = 0;
         Foreach(const Index& I, t.indices())
             {
-            if(vectorARContains(common_inds,I.uniqueReal()))
+            if(vectoruRContains(common_inds,I.uniqueReal()))
                 r += I.uniqueReal();
             }
         Foreach(const blockpair& p, other_block)
             {
-            if(r != p.first) continue;
+            if(fabs(r - p.first) > UniqueRealAccuracy) continue;
             prod = t;
             prod /= *(p.second);
             if(prod.scale().sign() != 0)
