@@ -59,9 +59,6 @@ r() const
     return is_->r(); 
     }
 
-int IQTensor::
-iten_size() const { return dat().size(); }
-
 bool IQTensor::
 empty() const { return dat().empty(); }
 
