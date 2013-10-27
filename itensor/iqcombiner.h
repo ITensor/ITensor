@@ -104,9 +104,6 @@ class IQCombiner
     //
     /////////////
 
-    typedef std::map<Index, Combiner>::iterator
-    rightcomb_it;
-
     };
 
 
