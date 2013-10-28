@@ -62,6 +62,7 @@ idmrg(MPSt<Tensor>& psi,
     const int olevel = opts.getInt("OutputLevel",0);
     const bool quiet = opts.getBool("Quiet",olevel == 0);
     const bool measure_xi = opts.getBool("MeasureCorrLen",false);
+    const int nucsweeps = opts.getInt("NUCSweeps",1);
 
     const Real orig_cutoff = psi.cutoff(),
                orig_noise  = psi.noise();
@@ -97,7 +98,7 @@ idmrg(MPSt<Tensor>& psi,
             Cout << Format("\niDMRG Step = %d, N=%d sites") % sw % N << Endl;
             }
 
-        Sweeps ucsweeps(sweeps.niter(sw));
+        Sweeps ucsweeps(nucsweeps+1);
         ucsweeps.minm() = sweeps.minm(sw);
         ucsweeps.maxm() = sweeps.maxm(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
@@ -171,7 +172,7 @@ idmrg(MPSt<Tensor>& psi,
 
     for(; sw <= sweeps.nsweep(); ++sw)
         {
-        Sweeps ucsweeps(sweeps.niter(sw));
+        Sweeps ucsweeps(nucsweeps);
         ucsweeps.minm() = sweeps.minm(sw);
         ucsweeps.maxm() = sweeps.maxm(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
