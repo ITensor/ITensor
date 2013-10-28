@@ -280,17 +280,30 @@ idmrg(MPSt<Tensor>& psi,
 
         //Prepare MPS for next step
         swapUnitCells(psi);
-        psi.Anc(1) *= D;
-        psi.Anc(Nuc) *= lastV;
+
         psi.Anc(N0) *= D;
+
+        if((obs.checkDone(sw,sub_en_per_site) && sw%2==0)
+           || sw == sweeps.nsweep()) 
+            {
+            //Convert A's (left-ortho) to B's by moving D (center matrix)
+            //through until last V*A_j*D == B_j
+            for(int b = N0-1; b >= Nuc+1; --b)
+                {
+                Tensor d;
+                svd(psi.A(b)*psi.A(b+1),psi.Anc(b),d,psi.Anc(b+1));
+                psi.Anc(b) *= d;
+                }
+            psi.Anc(Nuc+1) *= lastV;
+            psi.Anc(0) = D;
+            break;
+            }
+
+        psi.Anc(Nuc+1) *= lastV;
+        psi.Anc(1) *= D;
 
         psi.orthogonalize();
         psi.normalize();
-
-        if(obs.checkDone(sw,sub_en_per_site) && sw%2==0) 
-            {
-            break;
-            }
 
         } //for loop over sw
     
