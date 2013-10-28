@@ -221,7 +221,7 @@ read(std::istream& s)
     {
     if(model_ == 0)
         Error("Can't read to default constructed MPS");
-    for(int j = 1; j <= N_; ++j) 
+    for(size_t j = 0; j < A_.size(); ++j) 
         A_.at(j).read(s);
     //Check that tensors read from disk were constructed
     //using the same model
@@ -248,7 +248,7 @@ write(std::ostream& s) const
     if(do_write_)
         Error("MPSt::write not yet supported if doWrite(true)");
 
-    for(int j = 1; j <= N_; ++j) 
+    for(size_t j = 0; j < A_.size(); ++j) 
         {
         A_.at(j).write(s);
         }
@@ -277,7 +277,7 @@ read(const std::string& dirname)
     //if(dname_[dname_.length()-1] != '/')
     //    dname_ += "/";
 
-    for(int j = 1; j <= N_; ++j)
+    for(size_t j = 0; j < A_.size(); ++j) 
         readFromFile(AFName(j,dirname),A_.at(j));
     }
 template
