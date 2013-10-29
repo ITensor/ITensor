@@ -327,7 +327,7 @@ int InputGroup::
 getInt(std::string s, int def, const char* c)
     {
     int res = 0;
-    int got = getInt(s,res,c);
+    int got = GetInt(s,res,c);
     if(!got) return def;
     return res;
     }
