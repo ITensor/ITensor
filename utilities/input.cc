@@ -306,6 +306,15 @@ int InputGroup::GetYesNo(string s, int& yes,const char* c)
     return 0;
     }
 
+int InputGroup::
+GetYesNo(string s, bool& yes,const char* c)
+    {
+    int resi = 0;
+    int got = GetYesNo(s,resi,c);
+    yes = (resi==1);
+    return got;
+    }
+
 void InputGroup::SkipLine()
     {
     char c = '\0';
