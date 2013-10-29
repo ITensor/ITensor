@@ -13,9 +13,15 @@
 #include <string>
 //#include "String.h"
 #include <cctype>
+#include "math.h"
+#include <cmath>
 #define SP << " " <<
 typedef double Real;
 void error(const std::string& s);
+
+#ifndef NAN
+#define NAN (std::numeric_limits<Real>::quiet_NaN())
+#endif
 
 class InputFile
     {
@@ -63,6 +69,13 @@ public:
     int GetReal(std::string s, Real& r,const char* c = 0);	
     int GetString(std::string s, std::string& t,const char* c = 0);
     int GetYesNo(std::string s, int& yes,const char* c = 0);	 // understands yes/no
+    int GetYesNo(std::string s, bool& yes,const char* c = 0);	 // understands yes/no
+
+    //These versions return their value
+    int getInt(std::string s, int def = 0, const char* c = 0);
+    Real getReal(std::string s, Real def = NAN, const char* c = 0);
+    std::string getString(std::string s, std::string def = "", const char* c = 0);
+    bool getYesNo(std::string s, bool def = false, const char* c = 0);
 
 // The following are mandatory versions; if they doesn't get it, we quit
     void GetIntM(std::string s, int& i,const char* c = 0);	
