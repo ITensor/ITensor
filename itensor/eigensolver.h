@@ -23,6 +23,26 @@ davidson(const BigMatrixT& A, Tensor& phi,
          const OptSet& opts = Global::opts());
 
 //
+// Uses Davidson to find the N smallest eigenvectors
+// of the sparse matrix A, given a vector of N initial
+// guesses (zero indexed).
+// (BigMatrixT objects must implement the methods product, size and diag.)
+// Returns a vector of the N smallest eigenvalues corresponding
+// to the set of eigenvectors phi.
+//
+template <class BigMatrixT, class Tensor> 
+std::vector<Real>
+davidson(const BigMatrixT& A, 
+         std::vector<Tensor>& phi,
+         const OptSet& opts = Global::opts());
+
+template <class BigMatrixT, class Tensor> 
+std::vector<Complex>
+complexDavidson(const BigMatrixT& A, 
+                std::vector<Tensor>& phi,
+                const OptSet& opts = Global::opts());
+
+//
 // Uses the Davidson algorithm to find the minimal
 // eigenvector of the generalized eigenvalue problem
 // A phi = lambda B phi.
@@ -30,8 +50,10 @@ davidson(const BigMatrixT& A, Tensor& phi,
 //
 template <class BigMatrixTA, class BigMatrixTB, class Tensor> 
 Real
-genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi, 
-            const OptSet& opts = Global::opts());
+nonOrthDavidson(const BigMatrixTA& A, 
+                const BigMatrixTB& B, 
+                Tensor& phi, 
+                const OptSet& opts = Global::opts());
 
 
 //Function object which applies the mapping
@@ -93,20 +115,71 @@ class PseudoInverter
         Real cut_;
     };
 
+
 template <class BigMatrixT, class Tensor> 
 Real
 davidson(const BigMatrixT& A, Tensor& phi,
          const OptSet& opts)
     {
-    int maxiter_ = opts.getInt("MaxIter",2);
-    Real errgoal_ = opts.getReal("ErrGoal",1E-4);
-    int debug_level_ = opts.getInt("DebugLevel",-1);
-    int miniter_ = opts.getInt("MinIter",1);
+    std::vector<Tensor> v(1);
+    v.front() = phi;
+    std::vector<Real> eigs = davidson(A,v,opts);
+    phi = v.front();
+    return eigs.front();
+    }
 
-    const Real phinorm = phi.norm();
-    if(phinorm == 0.0)
-        Error("phi has norm of 0 in davidson");
-    phi *= 1.0/phinorm;
+template <class BigMatrixT, class Tensor> 
+std::vector<Real>
+davidson(const BigMatrixT& A, 
+         std::vector<Tensor>& phi,
+         const OptSet& opts)
+    {
+    const int debug_level_ = opts.getInt("DebugLevel",-1);
+    const Real Approx0 = 1E-12;
+    std::vector<Complex> ceigs = complexDavidson(A,phi,opts);
+    std::vector<Real> eigs(ceigs.size());
+    for(size_t j = 0; j < ceigs.size(); ++j)
+        {
+        eigs.at(j) = ceigs.at(j).real();
+        if(debug_level_ > 2 && ceigs.at(j).imag() > Approx0)
+            {
+            Cout << Format("Warning: dropping imaginary part of eigs[%d] = (%.4E,%.4E).")
+                    % j
+                    % ceigs.at(j).real()
+                    % ceigs.at(j).imag()
+                 << Endl;
+            }
+        }
+    return eigs;
+    }
+
+template <class BigMatrixT, class Tensor> 
+std::vector<Complex>
+complexDavidson(const BigMatrixT& A, 
+                std::vector<Tensor>& phi,
+                const OptSet& opts)
+    {
+    const int maxiter_ = opts.getInt("MaxIter",2);
+    const Real errgoal_ = opts.getReal("ErrGoal",1E-4);
+    const int debug_level_ = opts.getInt("DebugLevel",-1);
+    const int miniter_ = opts.getInt("MinIter",1);
+    const bool hermitian = opts.getBool("Hermitian",true);
+
+    const Real Approx0 = 1E-12;
+
+    const size_t nget = phi.size();
+    if(nget == 0)
+        {
+        Error("No initial vectors passed to davidson.");
+        }
+
+    for(size_t j = 0; j < nget; ++j)
+        {
+        const Real nrm = phi[j].norm();
+        if(nrm == 0.0)
+            Error("norm of 0 in davidson");
+        phi[j] *= 1.0/nrm;
+        }
 
     bool complex_diag = false;
 
@@ -116,6 +189,13 @@ davidson(const BigMatrixT& A, Tensor& phi,
         {
         Cout << Format("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d") 
                 % (maxsize-1) % maxiter_ % actual_maxiter << Endl;
+        }
+
+    if(phi.front().indices().dim() != maxsize)
+        {
+        Print(phi.front().indices().dim());
+        Print(A.size());
+        Error("davidson: size of initial vector should match linear matrix size");
         }
 
     std::vector<Tensor> V(actual_maxiter+2),
@@ -134,11 +214,11 @@ davidson(const BigMatrixT& A, Tensor& phi,
     //Get diagonal of A to use later
     const Tensor Adiag = A.diag();
 
-    Real lambda = NAN, //current lowest eigenvalue
-         last_lambda = NAN,
-         qnorm = NAN; //norm of residual, primary convergence criterion
+    Complex last_lambda(1000,0);
 
-    V[0] = phi;
+    Real qnorm = NAN;
+
+    V[0] = phi.front();
     A.product(V[0],AV[0]);
 
     Complex z = BraKet(V[0],AV[0]);
@@ -147,8 +227,11 @@ davidson(const BigMatrixT& A, Tensor& phi,
     if(debug_level_ > 2)
         Cout << Format("Initial Davidson energy = %.10f") % initEn << Endl;
 
-    const Real enshift = 0;
-    //const Real enshift = initEn;
+    size_t t = 0; //which eigenvector we are currently targeting
+    Vector D,DI;
+    Matrix UR,UI;
+
+    std::vector<Complex> eigs(nget,Complex(NAN,NAN));
 
     int iter = 0;
     for(int ii = 0; ii <= actual_maxiter; ++ii)
@@ -158,66 +241,101 @@ davidson(const BigMatrixT& A, Tensor& phi,
 
         const int ni = ii+1; 
         Tensor& q = V.at(ni);
+        Tensor& phi_t = phi.at(t);
+        Complex& lambda = eigs.at(t);
 
+        //Step A (or I) of Davidson (1975)
         if(ii == 0)
             {
-            lambda = initEn;
-            MrefR = lambda-enshift;
+            lambda = Complex(initEn,0.);
+            MrefR = lambda.real();
             MrefI = 0;
             //Calculate residual q
             q = V[0];
-            q *= -lambda;
+            q *= -lambda.real();
             q += AV[0]; 
             }
         else // ii != 0
             {
             //Diagonalize M
-            Vector D;
-            Matrix UR;
             if(complex_diag)
                 {
-                Matrix UI;
-                HermitianEigenvalues(MrefR,MrefI,D,UR,UI);
+                if(hermitian)
+                    {
+                    HermitianEigenvalues(MrefR,MrefI,D,UR,UI);
+                    DI.ReDimension(D.Length());
+                    DI = 0;
+                    }
+                else
+                    {
+                    ComplexEigenvalues(MrefR,MrefI,D,DI,UR,UI);
+                    }
 
                 //Compute corresponding eigenvector
-                //phi of A from the min evec of M
+                //phi_t of A from the min evec of M
                 //(and start calculating residual q)
 
-                phi = (UR(1,1)*Complex_1+UI(1,1)*Complex_i)*V[0];
-                q   = (UR(1,1)*Complex_1+UI(1,1)*Complex_i)*AV[0];
+                phi_t = (UR(1,1+t)*Complex_1+UI(1,1+t)*Complex_i)*V[0];
+                q   = (UR(1,1+t)*Complex_1+UI(1,1+t)*Complex_i)*AV[0];
                 for(int k = 1; k <= ii; ++k)
                     {
-                    const Complex cfac = (UR(k+1,1)*Complex_1+UI(k+1,1)*Complex_i);
-                    phi += cfac*V[k];
+                    const Complex cfac = (UR(k+1,1+t)*Complex_1+UI(k+1,1+t)*Complex_i);
+                    phi_t += cfac*V[k];
                     q   += cfac*AV[k];
                     }
                 }
             else
                 {
-                EigenValues(MrefR,D,UR);
+                bool complex_evec = false;
+                if(hermitian)
+                    {
+                    EigenValues(MrefR,D,UR);
+                    DI.ReDimension(D.Length());
+                    DI = 0;
+                    }
+                else
+                    {
+                    GenEigenValues(MrefR,D,DI,UR,UI);
+                    if(Norm(UI.Column(1+t)) > Approx0)
+                        complex_evec = true;
+                    }
 
                 //Compute corresponding eigenvector
-                //phi of A from the min evec of M
+                //phi_t of A from the min evec of M
                 //(and start calculating residual q)
-                phi = UR(1,1)*V[0];
-                q   = UR(1,1)*AV[0];
+                phi_t = UR(1,1+t)*V[0];
+                q   = UR(1,1+t)*AV[0];
                 for(int k = 1; k <= ii; ++k)
                     {
-                    phi += UR(k+1,1)*V[k];
-                    q   += UR(k+1,1)*AV[k];
+                    phi_t += UR(k+1,1+t)*V[k];
+                    q   += UR(k+1,1+t)*AV[k];
+                    }
+                if(complex_evec)
+                    {
+                    phi_t += Complex_i*UI(1,1+t)*V[0];
+                    q   += Complex_i*UI(1,1+t)*AV[0];
+                    for(int k = 1; k <= ii; ++k)
+                        {
+                        phi_t += Complex_i*UI(k+1,1+t)*V[k];
+                        q   += Complex_i*UI(k+1,1+t)*AV[k];
+                        }
                     }
                 }
 
-            //lambda is the minimum eigenvalue of M
-            lambda = D(1)+enshift;
+            //lambda is the t^th eigenvalue of M
+            lambda = Complex(D(1+t),DI(1+t));
 
+            //Step B of Davidson (1975)
             //Calculate residual q
-            q += (-lambda)*phi;
+            if(lambda.imag() <= Approx0)
+                q += (-lambda.real())*phi_t;
+            else
+                q += (-lambda)*phi_t;
 
             //Fix sign
-            if(UR(1,1) < 0)
+            if(UR(1,1+t) < 0)
                 {
-                phi *= -1;
+                phi_t *= -1;
                 q *= -1;
                 }
 
@@ -226,181 +344,227 @@ davidson(const BigMatrixT& A, Tensor& phi,
                 Cout << "complex_diag = " 
                      << (complex_diag ? "true" : "false") << Endl;
                 Cout << "D = " << D;
-                Cout << Format("lambda = %.10f") % (D(1)+enshift) << Endl;
+                Cout << Format("lambda = %.10f") % D(1) << Endl;
                 }
 
             }
 
+        //Step C of Davidson (1975)
         //Check convergence
         qnorm = q.norm();
 
-        if(qnorm < 1E-20)
-            {
-            if(debug_level_ >= 3) //Explain why breaking out of Davidson loop early
-                {
-                Cout << Format("Breaking out of Davidson because qnorm = %.2E < 1E-20") 
-                        % qnorm 
-                        << Endl;
-                }
-            goto done;
-            }
+        const bool converged = (qnorm < errgoal_ && abs(lambda-last_lambda) < errgoal_) 
+                               || qnorm < max(Approx0,errgoal_ * 1E-3);
 
-        const bool converged = (qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_) 
-                               || qnorm < max(1E-12,errgoal_ * 1.0e-3);
+        last_lambda = lambda;
 
-        if((converged && ii >= miniter_) || (ii == actual_maxiter))
+        if((qnorm < 1E-20) || (converged && ii >= miniter_) || (ii == actual_maxiter))
             {
-            if(debug_level_ >= 3) //Explain why breaking out of Davidson loop early
+            if(t < (nget-1) && ii < actual_maxiter) 
                 {
-                if((qnorm < errgoal_ && fabs(lambda-last_lambda) < errgoal_))
-                    Cout << "Breaking out of Davidson because errgoal reached" << Endl;
-                else
-                if(qnorm < max(1E-12,errgoal_ * 1.0e-3) && ii >= miniter_)
-                    Cout << "Breaking out of Davidson because small errgoal obtained" << Endl;
-                else
-                if(ii == actual_maxiter)
-                    Cout << "Breaking out of Davidson because ii == actual_maxiter" << Endl;
+                ++t;
+                last_lambda = Complex(1000,0);
                 }
-            goto done;
+            else
+                {
+                if(debug_level_ >= 3) //Explain why breaking out of Davidson loop early
+                    {
+                    if((qnorm < errgoal_ && abs(lambda-last_lambda) < errgoal_))
+                        {
+                        Cout << Format("Exiting Davidson because errgoal=%.0E reached") % errgoal_ << Endl;
+                        }
+                    else
+                    if(ii < miniter_ || qnorm < max(Approx0,errgoal_ * 1.0e-3))
+                        {
+                        Cout << Format("Exiting Davidson because small residual=%.0E obtained") % qnorm << Endl;
+                        }
+                    else
+                    if(ii == actual_maxiter)
+                        {
+                        Cout << "Exiting Davidson because ii == actual_maxiter" << Endl;
+                        }
+                    }
+
+                goto done;
+                }
             }
         
         if(debug_level_ >= 2 || (ii == 0 && debug_level_ >= 1))
             {
-            Cout << Format("I %d q %.0E E %.10f")
-                           % ii
-                           % qnorm
-                           % lambda 
-                           << Endl;
+            Cout << Format("I %d q %.0E E") % iter % qnorm;
+            for(size_t j = 0; j < eigs.size(); ++j)
+                {
+                if(std::isnan(eigs[j].real())) break;
+                if(fabs(eigs[j].imag()) > Approx0)
+                    Cout << Format(" (%.10f,%.10f)") % eigs[j].real() % eigs[j].imag();
+                else
+                    Cout << Format(" %.10f") % eigs[j].real();
+                }
+            Cout << Endl;
             }
 
-        if(ii < actual_maxiter)
+        //Compute next trial vector by
+        //first applying Davidson preconditioner
+        //formula then orthogonalizing against
+        //other vectors
+
+        //Step D of Davidson (1975)
+        //Apply Davidson preconditioner
+        if(!Adiag.isNull())
             {
-            //On all but last step,
-            //compute next Krylov/trial vector by
-            //first applying Davidson preconditioner
-            //formula then orthogonalizing against
-            //other vectors
+            DavidsonPrecond dp(lambda.real());
+            Tensor cond(Adiag);
+            cond.mapElems(dp);
+            q /= cond;
+            }
 
-            //Apply Davidson preconditioner
-            if(!Adiag.isNull())
+        //Step E and F of Davidson (1975)
+        //Do Gram-Schmidt on d (Npass times)
+        //to include it in the subbasis
+        const int Npass = 1;
+        std::vector<Complex> Vq(ni);
+
+        int count = 0;
+        for(int pass = 1; pass <= Npass; ++pass)
+            {
+            ++count;
+            for(int k = 0; k < ni; ++k)
                 {
-                DavidsonPrecond dp(lambda);
-                Tensor cond(Adiag);
-                cond.mapElems(dp);
-                q /= cond;
+                Vq[k] = BraKet(V[k],q);
                 }
 
-            //Do Gram-Schmidt on d (Npass times)
-            //to include it in the subbasis
-            const int Npass = 2;
-            std::vector<Complex> Vq(ni);
-
-            int count = 0;
-            for(int pass = 1; pass <= Npass; ++pass)
+            for(int k = 0; k < ni; ++k)
                 {
-                ++count;
-                for(int k = 0; k < ni; ++k)
+                q += (-Vq[k].real())*V[k];
+                if(Vq[k].imag() != 0)
                     {
-                    Vq[k] = BraKet(V[k],q);
+                    q += (-Vq[k].imag()*Complex_i)*V[k];
                     }
-
-                for(int k = 0; k < ni; ++k)
-                    {
-                    q += (-Vq[k].real())*V[k];
-                    if(Vq[k].imag() != 0)
-                        {
-                        q += (-Vq[k].imag()*Complex_i)*V[k];
-                        }
-                    }
-
-                Real qn = q.norm();
-
-                if(qn < 1E-10)
-                    {
-                    //Orthogonalization failure,
-                    //try randomizing
-                    if(debug_level_ >= 2)
-                        Cout << "Vector not independent, randomizing" << Endl;
-                    q = V.at(ni-1);
-                    q.randomize();
-
-                    if(q.indices().dim() <= ni)
-                        {
-                        //Not be possible to orthogonalize if
-                        //max size of q (vecSize after randomize)
-                        //is size of current basis
-                        if(debug_level_ >= 3)
-                            Cout << "Breaking out of Davidson: max Hilbert space size reached" << Endl;
-                        goto done;
-                        }
-
-                    if(count > Npass * 3)
-                        {
-                        // Maybe the size of the matrix is only 1?
-                        if(debug_level_ >= 3)
-                            Cout << "Breaking out of Davidson: count too big" << Endl;
-                        goto done;
-                        }
-
-                    qn = q.norm();
-                    --pass;
-                    }
-
-                q *= 1./qn;
                 }
 
+            Real qn = q.norm();
 
-            /*
-            if(debug_level_ >= 4)
+            if(qn < 1E-10)
                 {
-                //Check V's are orthonormal
-                Matrix Vo(ni+1,ni+1); 
-                Vo = NAN;
-                for(int r = 1; r <= ni+1; ++r)
-                for(int c = r; c <= ni+1; ++c)
+                //Orthogonalization failure,
+                //try randomizing
+                if(debug_level_ >= 2)
+                    Cout << "Vector not independent, randomizing" << Endl;
+                q = V.at(ni-1);
+                q.randomize();
+
+                if(ni >= maxsize)
                     {
-                    Vo(r,c) = Dot(conj(V[r-1]),V[c-1]);
-                    Vo(c,r) = Vo(r,c);
+                    //Not be possible to orthogonalize if
+                    //max size of q (vecSize after randomize)
+                    //is size of current basis
+                    if(debug_level_ >= 3)
+                        Cout << "Breaking out of Davidson: max Hilbert space size reached" << Endl;
+                    goto done;
                     }
-                Print(Vo);
+
+                if(count > Npass * 3)
+                    {
+                    // Maybe the size of the matrix is only 1?
+                    if(debug_level_ >= 3)
+                        Cout << "Breaking out of Davidson: count too big" << Endl;
+                    goto done;
+                    }
+
+                qn = q.norm();
+                --pass;
                 }
-            */
 
-            last_lambda = lambda;
+            q *= 1./qn;
+            }
 
-            //Expand AV and M
-            //for next step
-            A.product(V[ni],AV[ni]);
-
-            //Add new row and column to M
-            MrefR << MR.SubMatrix(1,ni+1,1,ni+1);
-            MrefI << MI.SubMatrix(1,ni+1,1,ni+1);
-            Vector newColR(ni+1),
-                   newColI(ni+1);
-            for(int k = 0; k <= ni; ++k)
+        if(debug_level_ >= 3)
+            {
+            if(fabs(q.norm()-1.0) > 1E-10)
                 {
-                z = BraKet(V.at(k),AV.at(ni));
-                newColR(k+1) = z.real();
-                newColI(k+1) = z.imag();
+                Print(q.norm());
+                Error("q not normalized after Gram Schmidt.");
                 }
-            newColR(ni+1) -= enshift;
+            }
 
-            MrefR.Column(ni+1) = newColR;
+
+        //Step G of Davidson (1975)
+        //Expand AV and M
+        //for next step
+        A.product(V[ni],AV[ni]);
+
+        //Step H of Davidson (1975)
+        //Add new row and column to M
+        MrefR << MR.SubMatrix(1,ni+1,1,ni+1);
+        MrefI << MI.SubMatrix(1,ni+1,1,ni+1);
+        Vector newColR(ni+1),
+               newColI(ni+1);
+        for(int k = 0; k <= ni; ++k)
+            {
+            z = BraKet(V.at(k),AV.at(ni));
+            newColR(k+1) = z.real();
+            newColI(k+1) = z.imag();
+            }
+        MrefR.Column(ni+1) = newColR;
+        MrefI.Column(ni+1) = newColI;
+
+        if(hermitian)
+            {
             MrefR.Row(ni+1) = newColR;
-
-            if(!complex_diag && Norm(newColI) > errgoal_)
-                { complex_diag = true; }
-
-            MrefI.Column(ni+1) = newColI;
             MrefI.Row(ni+1) = -newColI;
+            }
+        else
+            {
+            Vector newRowR(ni+1),
+                   newRowI(ni+1);
+            for(int k = 0; k < ni; ++k)
+                {
+                z = BraKet(V.at(ni),AV.at(k));
+                newRowR(k+1) = z.real();
+                newRowI(k+1) = z.imag();
+                }
+            newRowR(ni+1) = newColR(ni+1);
+            newRowI(ni+1) = newColI(ni+1);
+            MrefR.Row(ni+1) = newRowR;
+            MrefI.Row(ni+1) = newRowI;
+            }
 
-            } //if ii < actual_maxiter
+        if(!complex_diag && Norm(newColI) > errgoal_)
+            {
+            complex_diag = true;
+            }
 
         ++iter;
 
         } //for(ii)
 
     done:
+
+    //Compute any remaining eigenvalues and eigenvectors requested
+    //(zero indexed) value of t indicates how many have been "targeted" so far
+    for(size_t j = t+1; j < nget; ++j)
+        {
+        eigs.at(j) = Complex(D(1+j),DI(1+j));
+
+        Tensor& phi_j = phi.at(j);
+        const bool complex_evec = (Norm(UI.Column(1+t)) > Approx0);
+
+        const int Nr = UR.Nrows();
+
+        phi_j = UR(1,1+t)*V[0];
+        for(int k = 1; k < Nr; ++k)
+            {
+            phi_j += UR(1+k,1+t)*V[k];
+            }
+        if(complex_evec)
+            {
+            phi_j += Complex_i*UI(1,1+t)*V[0];
+            for(int k = 1; k < Nr; ++k)
+                {
+                phi_j += Complex_i*UI(1+k,1+t)*V[k];
+                }
+            }
+        }
 
     if(debug_level_ >= 3)
         {
@@ -411,30 +575,37 @@ davidson(const BigMatrixT& A, Tensor& phi,
         for(int c = r; c <= iter+1; ++c)
             {
             z = BraKet(V[r-1],V[c-1]);
-            Vo_final(r,c) = z.real();
+            Vo_final(r,c) = abs(z);
             Vo_final(c,r) = Vo_final(r,c);
             }
-        Print(Vo_final);
+        Cout << "Vo_final = " << Endl;
+        Cout << Vo_final;
         }
-
 
     if(debug_level_ > 0)
         {
-        Cout << Format("I %d q %.0E E %.10f")
-                       % iter
-                       % qnorm
-                       % lambda 
-                       << Endl;
+        Cout << Format("I %d q %.0E E") % iter % qnorm;
+        for(size_t j = 0; j < eigs.size(); ++j)
+            {
+            if(std::isnan(eigs[j].real())) break;
+            if(fabs(eigs[j].imag()) > Approx0)
+                Cout << Format(" (%.10f,%.10f)") % eigs[j].real() % eigs[j].imag();
+            else
+                Cout << Format(" %.10f") % eigs[j].real();
+            }
+        Cout << Endl;
         }
 
-    return lambda;
+    return eigs;
 
-    } //davidson
+    } //complexDavidson
 
 template <class BigMatrixTA, class BigMatrixTB, class Tensor> 
 Real
-genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi, 
-            const OptSet& opts)
+nonOrthDavidson(const BigMatrixTA& A, 
+                const BigMatrixTB& B, 
+                Tensor& phi, 
+                const OptSet& opts)
     {
     int maxiter_ = opts.getInt("MaxIter",2);
     Real errgoal_ = opts.getReal("ErrGoal",1E-4);
@@ -675,7 +846,7 @@ genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi,
 
     return lambda;
 
-    } //genDavidson
+    } //nonOrthDavidson
 
 /*
 template<class Tensor>
