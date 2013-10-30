@@ -173,7 +173,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
         if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
             {
-            Ds *= A.scale().real();
+            Ds *= fabs(A.scale().real0());
             cout << "Singular values: ";
             }
         else
@@ -215,6 +215,9 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         {
         DD(j) *= DD(j);
         }
+
+    if(A.scale().isFiniteReal())
+        DD *= sqr(A.scale().real0());
 
     spec.eigsKept(DD);
 
