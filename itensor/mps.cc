@@ -1060,7 +1060,7 @@ applygate(const Tensor& gate,const OptSet& opts)
     setBond(l_orth_lim_+1);
     Tensor AA = A_.at(l_orth_lim_+1) * A_.at(l_orth_lim_+2) * gate;
     AA.noprime();
-    svdBond(l_orth_lim_+1,AA,Fromleft);
+    svdBond(l_orth_lim_+1,AA,Fromleft,opts);
     }
 template
 void MPSt<ITensor>::applygate(const ITensor& gate,const OptSet& opts);
