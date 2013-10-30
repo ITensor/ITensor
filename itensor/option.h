@@ -235,10 +235,10 @@ OptSet
 operator&(const Opt& opt1, const Opt& opt2);
 
 OptSet
-operator&(const OptSet& oset, const Opt& opt);
+operator&(OptSet oset, const Opt& opt);
 
 OptSet
-operator&(const Opt& opt, const OptSet& oset);
+operator&(const Opt& opt, OptSet oset);
 
 OptSet
 operator&(const Opt& opt, const char* ostring);

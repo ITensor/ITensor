@@ -344,19 +344,17 @@ operator&(const Opt& opt1, const Opt& opt2)
     }
 
 OptSet 
-operator&(const OptSet& oset, const Opt& opt)
+operator&(OptSet oset, const Opt& opt)
     {
-    OptSet res(oset);
-    res.add(opt);
-    return res;
+    oset.add(opt);
+    return oset;
     }
 
 OptSet 
-operator&(const Opt& opt, const OptSet& oset)
+operator&(const Opt& opt, OptSet oset)
     {
-    OptSet res(oset);
-    res.add(opt);
-    return res;
+    oset.add(opt);
+    return oset;
     }
 
 OptSet 
