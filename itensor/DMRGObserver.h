@@ -28,27 +28,10 @@ class DMRGObserver : public Observer
     virtual ~DMRGObserver() { }
 
     void virtual
-    measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
-            const OptSet& opts = Global::opts());
+    measure(const OptSet& opts = Global::opts());
     
     bool virtual
-    checkDone(int sw, Real energy,
-              const OptSet& opts = Global::opts());
-
-    Real 
-    energyErrgoal() const { return energy_errgoal; }
-    void 
-    energyErrgoal(Real val) { energy_errgoal = val; }
-    
-    Real 
-    orthWeight() const { return orth_weight; }
-    void 
-    orthWeight(Real val) { orth_weight = val; }
-    
-    bool 
-    printEigs() const { return printeigs; }
-    void 
-    printEigs(bool val) { printeigs = val; }
+    checkDone(const OptSet& opts = Global::opts());
 
     const MPSt<Tensor>& 
     psi() const { return psi_; }
@@ -63,11 +46,11 @@ class DMRGObserver : public Observer
 
     Vector center_eigs;
     Real energy_errgoal; //Stop DMRG once energy has converged to this precision
-    Real orth_weight;    //How much to penalize non-orthogonality in multiple-state DMRG
     bool printeigs;      //Print slowest decaying eigenvalues after every sweep
     int max_eigs;
     Real max_te;
     bool done_;
+    Real last_energy_;
 
     Model::DefaultOpsT default_ops_;
 
@@ -82,21 +65,27 @@ DMRGObserver(const MPSt<Tensor>& psi, const OptSet& opts)
     : 
     psi_(psi),
     energy_errgoal(opts.getReal("EnergyErrgoal",-1)), 
-    orth_weight(opts.getReal("OrthWeight",1)),
     printeigs(opts.getBool("PrintEigs",true)),
     max_eigs(-1),
     max_te(-1),
     done_(false),
-    default_ops_(psi.model().defaultOps())
+    default_ops_(psi.model().defaultOps()),
+    last_energy_(1000)
     { 
     }
 
 
 template<class Tensor>
 void inline DMRGObserver<Tensor>::
-measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
+measure(//int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
         const OptSet& opts)
     {
+    const int N = psi_.N();
+    const int b = opts.getInt("AtBond");
+    const int sw = opts.getInt("Sweep");
+    const int ha = opts.getInt("HalfSweep");
+    const Real energy = opts.getReal("Energy");
+
     if(!opts.getBool("Quiet",false) && !opts.getBool("NoMeasure",false))
         {
         for(size_t j = 0; j < default_ops_.size(); ++j)
@@ -116,7 +105,7 @@ measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
         if(b == N/2 && ha == 2)
             {
             Cout << Endl;
-            Vector center_eigs = spec.eigsKept();
+            Vector center_eigs = psi_.eigsKept(b);
             Real S = 0;
             for(int j = 1; j <= center_eigs.Length(); ++j) 
                 {
@@ -134,8 +123,8 @@ measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
             }
         }
 
-    max_eigs = max(max_eigs,spec.numEigsKept());
-    max_te = max(max_te,spec.truncerr());
+    max_eigs = max(max_eigs,psi_.spectrum(b).numEigsKept());
+    max_te = max(max_te,psi_.spectrum(b).truncerr());
     if(b == 1 && ha == 2) 
         {
         if(!printeigs) Cout << Endl;
@@ -157,15 +146,15 @@ measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
 
 template<class Tensor>
 bool inline DMRGObserver<Tensor>::
-checkDone(int sw, Real energy,
-          const OptSet& opts)
+checkDone(const OptSet& opts)
     {
-    static Real last_energy;
+    const int sw = opts.getInt("Sweep");
+    const Real energy = opts.getReal("Energy");
     
-    if(sw == 1) last_energy = 1000;
+    if(sw == 1) last_energy_ = 1000;
     if(energy_errgoal > 0 && sw%2 == 0)
         {
-        Real dE = fabs(energy-last_energy);
+        Real dE = fabs(energy-last_energy_);
         if(dE < energy_errgoal)
             {
             Cout << Format("    Energy error goal met (dE = %.3E < %.3E); returning after %d sweeps.") 
@@ -177,7 +166,7 @@ checkDone(int sw, Real energy,
             return done_;
             }
         }
-    last_energy = energy;
+    last_energy_ = energy;
 
     //If STOP_DMRG found, will return true (i.e. done) once, but 
     //outer calling using same Observer may continue running e.g. infinite dmrg calling finite dmrg.

@@ -202,6 +202,8 @@ DMRGWorker(MPSt<Tensor>& psi,
     
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
         {
+        opts.add("Sweep",sw);
+
         psi.cutoff(sweeps.cutoff(sw)); 
         psi.minm(sweeps.minm(sw)); 
         psi.maxm(sweeps.maxm(sw));
@@ -254,11 +256,15 @@ DMRGWorker(MPSt<Tensor>& psi,
                         << Endl;
                 }
 
-            obs.measure(N,sw,ha,b,psi.spectrum(b),energy,opts);
+            opts.add("AtBond",b);
+            opts.add("HalfSweep",ha);
+            opts.add("Energy",energy); 
+
+            obs.measure(opts);
 
             } //for loop over b
-        
-        if(obs.checkDone(sw,energy,opts)) break;
+
+        if(obs.checkDone(opts)) break;
     
         } //for loop over sw
     

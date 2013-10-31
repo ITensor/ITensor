@@ -219,7 +219,13 @@ idmrg(MPSt<Tensor>& psi,
 
         //Calculate new center matrix
         psi.position(Nuc);
-        obs.measure(N,sw,1,Nuc,spec,sub_en_per_site,opts&Opt("AtCenter")&Opt("NoMeasure"));
+
+        opts.add("AtCenter");
+        opts.add("NoMeasure");
+        opts.add("Sweep",sw);
+        opts.add("AtBond",Nuc);
+        opts.add("Energy",sub_en_per_site);
+        obs.measure(opts&Opt("AtCenter")&Opt("NoMeasure"));
 
         D = Tensor();
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1),spec);
@@ -284,7 +290,7 @@ idmrg(MPSt<Tensor>& psi,
 
         psi.Anc(N0) *= D;
 
-        if((obs.checkDone(sw,sub_en_per_site) && sw%2==0)
+        if((obs.checkDone(opts) && sw%2==0)
            || sw == sweeps.nsweep()) 
             {
             //Convert A's (left-ortho) to B's by moving D (center matrix)

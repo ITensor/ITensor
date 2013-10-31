@@ -100,7 +100,6 @@ davidson(const BigMatrixT& A, Tensor& phi,
     {
     int maxiter_ = opts.getInt("MaxIter",2);
     Real errgoal_ = opts.getReal("ErrGoal",1E-4);
-    int numget_ = opts.getInt("NumGet",1);
     int debug_level_ = opts.getInt("DebugLevel",-1);
     int miniter_ = opts.getInt("MinIter",1);
 
@@ -439,9 +438,9 @@ genDavidson(const BigMatrixTA& A, const BigMatrixTB& B, Tensor& phi,
     {
     int maxiter_ = opts.getInt("MaxIter",2);
     Real errgoal_ = opts.getReal("ErrGoal",1E-4);
-    int numget_ = opts.getInt("NumGet",1);
+    //int numget_ = opts.getInt("NumGet",1);
     int debug_level_ = opts.getInt("DebugLevel",-1);
-    int miniter_ = opts.getInt("MinIter",1);
+    //int miniter_ = opts.getInt("MinIter",1);
 
     //B-normalize phi
     {

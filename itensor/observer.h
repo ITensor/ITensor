@@ -7,21 +7,19 @@
 
 #include "spectrum.h"
 
-// virtual base class
-
 class SVDWorker;
 
 class Observer 
     {
     public:
+
+    Observer() { }
     
     void virtual
-    measure(int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
-            const OptSet& opts = Global::opts()) = 0;
+    measure(const OptSet& opts = Global::opts()) { }
     
     bool virtual
-    checkDone(int sw, Real energy, 
-              const OptSet& opts = Global::opts()) = 0;
+    checkDone(const OptSet& opts = Global::opts()) { return false; }
 
     virtual ~Observer() { }
 
