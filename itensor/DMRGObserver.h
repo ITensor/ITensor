@@ -77,14 +77,13 @@ DMRGObserver(const MPSt<Tensor>& psi, const OptSet& opts)
 
 template<class Tensor>
 void inline DMRGObserver<Tensor>::
-measure(//int N, int sw, int ha, int b, const Spectrum& spec, Real energy,
-        const OptSet& opts)
+measure(const OptSet& opts)
     {
     const int N = psi_.N();
-    const int b = opts.getInt("AtBond");
-    const int sw = opts.getInt("Sweep");
-    const int ha = opts.getInt("HalfSweep");
-    const Real energy = opts.getReal("Energy");
+    const int b = opts.getInt("AtBond",1);
+    const int sw = opts.getInt("Sweep",0);
+    const int ha = opts.getInt("HalfSweep",0);
+    const Real energy = opts.getReal("Energy",0);
 
     if(!opts.getBool("Quiet",false) && !opts.getBool("NoMeasure",false))
         {
@@ -148,8 +147,8 @@ template<class Tensor>
 bool inline DMRGObserver<Tensor>::
 checkDone(const OptSet& opts)
     {
-    const int sw = opts.getInt("Sweep");
-    const Real energy = opts.getReal("Energy");
+    const int sw = opts.getInt("Sweep",0);
+    const Real energy = opts.getReal("Energy",0);
     
     if(sw == 1) last_energy_ = 1000;
     if(energy_errgoal > 0 && sw%2 == 0)
