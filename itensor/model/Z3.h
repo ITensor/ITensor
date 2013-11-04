@@ -160,16 +160,16 @@ getOp(int i, const String& opname, const OptSet& opts) const
     else
     if(opname == "Sig")
         {
-        Op(Two,ZerP) = 1;
-        Op(Zer,OneP) = 1;
-        Op(One,TwoP) = 1;
+        Op(Zer,TwoP) = 1;
+        Op(One,ZerP) = 1;
+        Op(Two,OneP) = 1;
         }
     else
     if(opname == "SigDag")
         {
-        Op(Zer,TwoP) = 1;
-        Op(One,ZerP) = 1;
-        Op(Two,OneP) = 1;
+        Op(Two,ZerP) = 1;
+        Op(Zer,OneP) = 1;
+        Op(One,TwoP) = 1;
         }
     else
     if(opname == "Tau")
