@@ -330,10 +330,10 @@ ITensor(const Index& i1,const Index& i2, const VectorRef& V)
     scale_(1)
 	{
     type_ = Diag;
-    const int dim = min(i1.m(),i2.m());
     allocate();
     r_->v = V;
 #ifdef DEBUG
+    const int dim = min(i1.m(),i2.m());
     if(V.Length() != dim)
         Error("Diagonal vector must have length == min(i1.m(),i2.m())");
 #endif
