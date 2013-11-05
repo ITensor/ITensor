@@ -69,8 +69,8 @@ DMRGObserver(const MPSt<Tensor>& psi, const OptSet& opts)
     max_eigs(-1),
     max_te(-1),
     done_(false),
-    default_ops_(psi.model().defaultOps()),
-    last_energy_(1000)
+    last_energy_(1000),
+    default_ops_(psi.model().defaultOps())
     { 
     }
 
