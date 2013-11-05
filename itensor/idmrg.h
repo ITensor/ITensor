@@ -220,8 +220,6 @@ idmrg(MPSt<Tensor>& psi,
         //Calculate new center matrix
         psi.position(Nuc);
 
-        opts.add("AtCenter");
-        opts.add("NoMeasure");
         opts.add("Sweep",sw);
         opts.add("AtBond",Nuc);
         opts.add("Energy",sub_en_per_site);
