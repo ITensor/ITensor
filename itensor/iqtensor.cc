@@ -766,7 +766,7 @@ assignToVec(VectorRef v) const
     */
 
 void IQTensor::
-randomize() 
+randomize(const OptSet& opts) 
 	{ 
     if(isNull())
         Error("Can't randomize default constructed IQTensor.");
@@ -796,12 +796,12 @@ randomize()
 
         if(dat().hasBlock(nset))
             {
-            dat.nc().get(nset).randomize();
+            dat.nc().get(nset).randomize(opts);
             }
         else
             {
             ITensor t(nset);
-            t.randomize();
+            t.randomize(opts);
             dat.nc().insert_add(t);
             }
         }
