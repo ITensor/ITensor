@@ -12,7 +12,7 @@ using boost::format;
 
 //typedef boost::random::mt19937 
 //Generator;
-typedef boost::random::lagged_fibonacci2281 
+typedef boost::lagged_fibonacci2281 
 Generator;
 
 typedef Generator::result_type
