@@ -1240,11 +1240,15 @@ imagDatStart() const
     }
 
 void ITensor::
-randomize() 
+randomize(const OptSet& opts) 
     { 
     solo(); 
     r_->v.Randomize(); 
-    if(i_) i_->v.Randomize();
+    if(i_ || opts.getBool("Complex",false))
+        {
+        allocateImag(r_->v.Length());
+        i_->v.Randomize();
+        }
     }
 
 void ITensor::

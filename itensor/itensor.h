@@ -403,7 +403,7 @@ class ITensor
     imagDatStart() const;
 
     void 
-    randomize();
+    randomize(const OptSet& opts = Global::opts());
 
     void 
     conj();

@@ -319,7 +319,7 @@ class IQTensor
     clean(Real min_norm = MIN_CUT);
 
     void 
-    randomize();
+    randomize(const OptSet& opts = Global::opts());
 
     IQTensor& 
     conj();
