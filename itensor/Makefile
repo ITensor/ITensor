@@ -31,6 +31,8 @@ SOURCES+= svdalgs.cc
 SOURCES+= mps.cc 
 SOURCES+= mpo.cc 
 SOURCES+= tevol.cc
+SOURCES+= itsparse.cc
+SOURCES+= iqtsparse.cc
 
 
 ####################################
