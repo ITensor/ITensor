@@ -50,7 +50,7 @@ init(const std::string& smallind_name)
         Foreach(const IndexQN& x, bigind_.indices())
             if(x.qn == q) totm += x.m();
 
-        Index small_qind(smallind_name,totm);
+        Index small_qind(smallind_name,totm,bigind_.type(),bigind_.primeLevel());
         int start = 0;
         Foreach(const IndexQN& x, bigind_.indices())
             if(x.qn == q)
@@ -75,6 +75,7 @@ prime(IndexType type, int inc)
     Foreach(IndexMap& m, maps_)
         {
         m.big.prime(type,inc);
+        m.small.prime(type,inc);
         }
     }
 
