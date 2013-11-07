@@ -58,18 +58,18 @@ BOOST_FIXTURE_TEST_SUITE(IndexSetTest,IndexSetDefaults)
 
 TEST(Constructors)
     {
-    shared_ptr<IQIndexSet> p1(new IQIndexSet(S1));
+    boost::shared_ptr<IQIndexSet> p1(new IQIndexSet(S1));
     CHECK_EQUAL(p1->index(1),S1);
     CHECK_CLOSE(p1->uniqueReal(),S1.uniqueReal(),1E-10);
 
-    shared_ptr<IQIndexSet> p2(new IQIndexSet(S1,L1));
+    boost::shared_ptr<IQIndexSet> p2(new IQIndexSet(S1,L1));
     CHECK_EQUAL(p2->index(1),S1);
     CHECK_EQUAL(p2->index(2),L1);
     const Real ur2 = S1.uniqueReal()
                    + L1.uniqueReal();
     CHECK_CLOSE(p2->uniqueReal(),ur2,1E-10);
 
-    shared_ptr<IQIndexSet> p3(new IQIndexSet(S1,L1,S2));
+    boost::shared_ptr<IQIndexSet> p3(new IQIndexSet(S1,L1,S2));
     CHECK_EQUAL(p3->index(1),S1);
     CHECK_EQUAL(p3->index(2),L1);
     CHECK_EQUAL(p3->index(3),S2);
@@ -78,7 +78,7 @@ TEST(Constructors)
                    + S2.uniqueReal();
     CHECK_CLOSE(p3->uniqueReal(),ur3,1E-10);
 
-    shared_ptr<IQIndexSet> p4(new IQIndexSet(S1,L1,S2,L2));
+    boost::shared_ptr<IQIndexSet> p4(new IQIndexSet(S1,L1,S2,L2));
     CHECK_EQUAL(p4->index(1), S1);
     CHECK_EQUAL(p4->index(2), L1);
     CHECK_EQUAL(p4->index(3), S2);
@@ -93,7 +93,7 @@ TEST(Constructors)
 
     CHECK_EQUAL(L3.m(),1);
 
-    shared_ptr<IQIndexSet> p5(new IQIndexSet(S1,L3,S2,L2));
+    boost::shared_ptr<IQIndexSet> p5(new IQIndexSet(S1,L3,S2,L2));
     CHECK_EQUAL(p5->index(1),S1);
     CHECK_EQUAL(p5->index(2),S2);
     CHECK_EQUAL(p5->index(3),L2);
@@ -110,7 +110,7 @@ TEST(PrimeLevelMethods)
     //
     // prime a specific IQIndex
     //
-    shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>(S1,primed(S1),S2,L2);
+    boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>(S1,primed(S1),S2,L2);
 
     P->prime(primed(S1),2);
     CHECK(P->index(1) == S1);
@@ -121,7 +121,7 @@ TEST(PrimeLevelMethods)
 
 TEST(PrimeIndex)
     {
-    shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>(S1,primed(S2));
+    boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>(S1,primed(S2));
 
     P->prime(conj(S1));
 
@@ -134,7 +134,7 @@ TEST(PrimeIndex)
 
 TEST(NoPrimeIndex)
     {
-    shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>(S1,primed(S2));
+    boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>(S1,primed(S2));
 
     P->noprime(conj(primed(S2)));
 
@@ -157,7 +157,7 @@ TEST(NoPrimeType)
 
 TEST(AddIndex)
     {
-    shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>();
+    boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>();
 
     P->addindex(S1);
     P->addindex(primed(S1));
