@@ -8,6 +8,15 @@
 #include "iqtensor.h"
 
 template <class Tensor>
+class BondGate;
+
+typedef BondGate<ITensor>
+Gate;
+
+typedef BondGate<IQTensor>
+IQGate;
+
+template <class Tensor>
 class BondGate
     {
     public:
