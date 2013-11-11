@@ -268,6 +268,8 @@ getReal(const Opt::Name& name, Real default_value) const
 void OptSet::
 processString(string ostring)
     {
+    ostring.erase(std::remove(ostring.begin(), ostring.end(), ' '), ostring.end());
+
     size_t found = ostring.find_first_of(',');
     while(found != std::string::npos)
         {
@@ -289,6 +291,8 @@ addByString(string ostring)
 
     if(found == std::string::npos)
         {
+        //if no '=' found, just create an Opt by name only
+        //which is the same as name=true
         add(Opt(ostring));
         }
     else
