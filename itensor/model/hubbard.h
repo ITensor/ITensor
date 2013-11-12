@@ -119,7 +119,8 @@ class Hubbard : public Model
     //Data members -----------------
 
     int N_;
-    bool conserveNf_;
+    bool conserveNf_,
+         conserveSz_;
 
     std::vector<IQIndex> site_;
 
@@ -138,7 +139,8 @@ class Hubbard : public Model
 inline Hubbard::
 Hubbard()
     : N_(-1),
-    conserveNf_(true)
+    conserveNf_(true),
+    conserveSz_(true)
     { }
 
 inline Hubbard::
@@ -147,20 +149,23 @@ Hubbard(int N, const OptSet& opts)
       site_(N_+1)
     { 
     conserveNf_ = opts.getBool("ConserveNf",true);
+    conserveSz_ = opts.getBool("ConserveSz",true);
     constructSites();
     }
 
 void inline Hubbard::
 constructSites()
     {
-    const int One = (conserveNf_ ? 1 : 0);
-    const int Two = 2*One;
+    const int One = (conserveNf_ ? 1 : 0),
+              Two = 2*One,
+              Up = (conserveSz_ ? +1 : 0),
+              Dn = -Up;
     for(int j = 1; j <= N_; ++j)
         {
         site_.at(j) = IQIndex(nameint("Hubbard site=",j),
             Index(nameint("Emp for site ",j),1,Site),  QN( 0,0,0),
-            Index(nameint("Up for site ",j),1,Site),   QN(+1,One,1),
-            Index(nameint("Dn for site ",j),1,Site),   QN(-1,One,1),
+            Index(nameint("Up for site ",j),1,Site),   QN(Up,One,1),
+            Index(nameint("Dn for site ",j),1,Site),   QN(Dn,One,1),
             Index(nameint("UpDn for site ",j),1,Site), QN( 0,Two,0));
         }
     }
