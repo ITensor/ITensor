@@ -132,6 +132,7 @@ class Hubbard : public Model
         dops.push_back("Nup");
         dops.push_back("Ndn");
         dops.push_back("Nupdn");
+        dops.push_back("S2");
         return dops;
         }
 
