@@ -4,6 +4,7 @@
 //
 #include "option.h"
 #include <cerrno>
+#include <algorithm>
 
 using namespace std;
 
@@ -268,7 +269,7 @@ getReal(const Opt::Name& name, Real default_value) const
 void OptSet::
 processString(string ostring)
     {
-    ostring.erase(std::remove(ostring.begin(), ostring.end(), ' '), ostring.end());
+    ostring.erase(std::remove(ostring.begin(), ostring.end(),' '), ostring.end());
 
     size_t found = ostring.find_first_of(',');
     while(found != std::string::npos)
