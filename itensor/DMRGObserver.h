@@ -87,15 +87,18 @@ measure(const OptSet& opts)
 
     if(!opts.getBool("Quiet",false) && !opts.getBool("NoMeasure",false))
         {
-        for(size_t j = 0; j < default_ops_.size(); ++j)
+        if(b < N && b > 0)
             {
-            const std::string opname = default_ops_.at(j);
-            Complex z = 
-                BraKet(primed(psi_.A(b),Site),psi_.model().op(opname,b)*psi_.A(b));
-            if(fabs(z.imag()) < 1E-14)
-                Cout << Format("<%s>(%d) = %.10E") % opname % b % z.real() << Endl;
-            else
-                Cout << Format("<%s>(%d) = (%.10E,%.10E)") % opname % b % z.real() % z.imag() << Endl;
+            const Tensor wfb = psi_.A(b)*psi_.A(b+1);
+            Foreach(const std::string& opname, default_ops_)
+                {
+                Complex z = 
+                    BraKet(primed(wfb,psi_.model()(b)),psi_.model().op(opname,b)*wfb);
+                if(fabs(z.imag()) < 1E-14)
+                    Cout << Format("<%s>(%d) = %.10E") % opname % b % z.real() << Endl;
+                else
+                    Cout << Format("<%s>(%d) = (%.10E,%.10E)") % opname % b % z.real() % z.imag() << Endl;
+                }
             }
         }
 
