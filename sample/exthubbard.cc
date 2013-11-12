@@ -64,23 +64,23 @@ int main(int argc, char* argv[])
         if(p > i)
             {
             cout << "Doubly occupying site " << i << endl;
-            initState.set(i,&Hubbard::UpDn);
+            initState.set(i,"UpDn");
             p -= 2;
             }
         else
         if(p > 0)
             {
             cout << "Singly occupying site " << i << endl;
-            initState.set(i,(i%2==1 ? &Hubbard::Up : &Hubbard::Dn));
+            initState.set(i,(i%2==1 ? "Up" : "Dn"));
             p -= 1;
             }
         else
             {
-            initState.set(i,&Hubbard::Emp);
+            initState.set(i,"Emp");
             }
         }
 
-    IQMPS psi(model,initState);
+    IQMPS psi(initState);
 
     cout << totalQN(psi) << endl;
 
@@ -96,8 +96,8 @@ int main(int argc, char* argv[])
     for(int j = 1; j <= N; ++j)
         {
         psi.position(j);
-        upd(j) = Dot(conj(primed(psi.A(j),Site)),model.Nup(j)*psi.A(j));
-        dnd(j) = Dot(conj(primed(psi.A(j),Site)),model.Ndn(j)*psi.A(j));
+        upd(j) = Dot(conj(primed(psi.A(j),Site)),model.op("Nup",j)*psi.A(j));
+        dnd(j) = Dot(conj(primed(psi.A(j),Site)),model.op("Ndn",j)*psi.A(j));
         }
 
     cout << "Up Density:" << endl;
