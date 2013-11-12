@@ -131,6 +131,7 @@ class Hubbard : public Model
         dops.push_back("Ntot");
         dops.push_back("Nup");
         dops.push_back("Ndn");
+        dops.push_back("Nupdn");
         return dops;
         }
 
@@ -394,6 +395,13 @@ getOp(int i, const String& opname, const OptSet& opts) const
         {
         Op(Up,DnP) = 1; 
         Op(Dn,UpP) = 1;
+        }
+    else
+    if(opname == "S2")
+        {
+        //S dot S on-site
+        Op(Up,UpP) = 0.75; 
+        Op(Dn,DnP) = 0.75;
         }
     else
         {
