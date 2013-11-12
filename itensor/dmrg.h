@@ -198,7 +198,7 @@ DMRGWorker(MPSt<Tensor>& psi,
 
     opts.add(Opt("DebugLevel",debug_level));
     
-    opts.add(DoNormalize(true));
+    opts.add(Opt("DoNormalize",true));
     
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
         {
