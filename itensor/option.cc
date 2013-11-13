@@ -6,7 +6,11 @@
 #include <cerrno>
 #include <algorithm>
 
-using namespace std;
+using std::string;
+using std::cout;
+using std::endl;
+using std::ostream;
+using std::istream;
 
 
 Opt::
