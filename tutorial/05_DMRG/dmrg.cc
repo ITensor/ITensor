@@ -32,8 +32,6 @@ main(int argc, char* argv[])
     //to solve local
     //eigenvalue problem
     LocalMPO<ITensor> Heff(H);
-    Eigensolver solver;
-    solver.debugLevel(1);
 
     Real energy = NAN;
 
@@ -56,20 +54,20 @@ main(int argc, char* argv[])
 
             //Solve effective eigenvalue problem
             ITensor phi = psi.A(b)*psi.A(b+1);
-            energy = solver.davidson(Heff,phi);
+            energy = davidson(Heff,phi);
 
-            //Construct SVDWorker and set
-            //accuracy parameters
-            SVDWorker W;
-            W.cutoff(sweeps.cutoff(sw)); 
-            W.minm(sweeps.minm(sw)); 
-            W.maxm(sweeps.maxm(sw));
+            //Construct 'Spectrum' object to pass
+            //accuracy parameters to svd
+            Spectrum spec;
+            spec.cutoff(sweeps.cutoff(sw)); 
+            spec.minm(sweeps.minm(sw)); 
+            spec.maxm(sweeps.maxm(sw));
 
             //Define tensor (references)
             //to hold SVD results
             ITensor& A = psi.Anc(b);   //nc means 'non-const'
             ITensor& B = psi.Anc(b+1); //nc means 'non-const'
-            ITSparse D;
+            ITensor D;
 
             //Add code:
             //

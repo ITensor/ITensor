@@ -131,12 +131,9 @@ main(int argc, char* argv[])
             % En
             << endl;
 
-    SVDWorker W;
+    ITensor A(s1),B(s2),D;
 
-    ITensor A(s1),B(s2);
-    ITSparse D;
-
-    W.svd(psi_beta,A,D,B);
+    svd(psi_beta,A,D,B);
 
     PrintDat(D);
 

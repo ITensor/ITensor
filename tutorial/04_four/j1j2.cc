@@ -6,9 +6,9 @@ using boost::format;
 ITensor
 B(const Model& model, int b)
     {
-    ITensor B_ = model.sz(b)*model.sz(b+1)
-              + 0.5*model.sp(b)*model.sm(b+1)
-              + 0.5*model.sm(b)*model.sp(b+1);
+    ITensor B_ = model.op("Sz",b)*model.op("Sz",b+1)
+              + 0.5*model.op("Sp",b)*model.op("Sm",b+1)
+              + 0.5*model.op("Sm",b)*model.op("Sp",b+1);
     return B_;
     }
 
