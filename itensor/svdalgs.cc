@@ -4,7 +4,16 @@
 //
 #include "svdalgs.h"
 
-using namespace std;
+using std::swap;
+using std::istream;
+using std::ostream;
+using std::cout;
+using std::endl;
+using std::vector;
+using std::find;
+using std::pair;
+using std::make_pair;
+using std::string;
 using boost::format;
 
 Vector

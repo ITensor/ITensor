@@ -3,7 +3,10 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor.h"
-using namespace std;
+using std::ostream;
+using std::cout;
+using std::cerr;
+using std::endl;
 using boost::format;
 using boost::shared_ptr;
 using boost::make_shared;
