@@ -4,7 +4,13 @@
 //
 #include "iqindex.h"
 
-using namespace std;
+using std::istream;
+using std::ostream;
+using std::cout;
+using std::endl;
+using std::vector;
+using std::string;
+using std::ostringstream;
 using boost::format;
 using boost::array;
 using boost::shared_ptr;

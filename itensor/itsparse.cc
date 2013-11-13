@@ -3,7 +3,15 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itsparse.h"
-using namespace std;
+using std::istream;
+using std::ostream;
+using std::cout;
+using std::endl;
+using std::vector;
+using std::find;
+using std::pair;
+using std::make_pair;
+using std::string;
 using boost::format;
 using boost::make_shared;
 
@@ -151,7 +159,7 @@ operator+=(const ITSparse& other)
 
     if(fabs(is_.uniqueReal() - other.is_.uniqueReal()) > 1E-12)
         {
-        cerr << format("this ur = %.10f, other.ur = %.10f\n")%is_.uniqueReal()%other.is_.uniqueReal();
+        cout << format("this ur = %.10f, other.ur = %.10f\n")%is_.uniqueReal()%other.is_.uniqueReal();
         Print(*this);
         Print(other);
         Error("ITSparse::operator+=: unique Reals don't match (different Index structure).");
@@ -404,11 +412,11 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
             tc.n[++tc.rn] = T.is_[i-1].m();
             ++tc.r;
             //Link up ti pointer
-            //cerr << format("Linking ti[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % i % tc.rn % tc.rn % (tc.n[tc.rn]);
+            //cout << format("Linking ti[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % i % tc.rn % tc.rn % (tc.n[tc.rn]);
             ti[i] = &(tc.i[tc.rn]);
 
             //Link ri pointer to free index of T
-            //cerr << format("Linking ri[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % res.is_.r() % tc.rn % tc.rn % (tc.n[tc.rn]);
+            //cout << format("Linking ri[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % res.is_.r() % tc.rn % tc.rn % (tc.n[tc.rn]);
             ri[res.is_.r()] = &(tc.i[tc.rn]);
             }
         else

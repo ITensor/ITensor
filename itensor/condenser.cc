@@ -1,6 +1,10 @@
 #include "condenser.h"
 
-using namespace std;
+using std::ostream;
+using std::cout;
+using std::endl;
+using std::vector;
+using std::map;
 using boost::format;
 
 

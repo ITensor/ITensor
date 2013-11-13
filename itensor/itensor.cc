@@ -3,7 +3,6 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor.h"
-// using namespace std;
 using std::ostream;
 using std::cout;
 using std::cerr;

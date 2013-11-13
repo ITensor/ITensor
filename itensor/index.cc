@@ -7,7 +7,13 @@
 #include "boost/random/lagged_fibonacci.hpp"
 //#include "boost/random/mersenne_twister.hpp"
 
-using namespace std;
+using std::istream;
+using std::ostream;
+using std::cout;
+using std::endl;
+using std::vector;
+using std::string;
+using std::stringstream;
 using boost::format;
 
 //typedef boost::random::mt19937 

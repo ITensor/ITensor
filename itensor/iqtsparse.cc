@@ -3,7 +3,15 @@
 //    (See accompanying LICENSE file.)
 //
 #include "iqtsparse.h"
-using namespace std;
+using std::istream;
+using std::ostream;
+using std::cout;
+using std::endl;
+using std::vector;
+using std::find;
+using std::pair;
+using std::make_pair;
+using std::string;
 using boost::format;
 using boost::array;
 
@@ -431,8 +439,8 @@ product(const IQTSparse& S, const IQTensor& T, IQTensor& res)
                     {
                     Print(S.indices());
                     Print(T.indices());
-                    cerr << "IQIndex from S = " << I << endl;
-                    cerr << "IQIndex from T = " << *f << endl;
+                    cout << "IQIndex from S = " << I << endl;
+                    cout << "IQIndex from T = " << *f << endl;
                     cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
                     throw ArrowError("Incompatible arrow directions in IQTensor::operator*=.");
                     }
