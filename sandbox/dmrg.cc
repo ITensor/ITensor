@@ -65,7 +65,7 @@ main(int argc, char* argv[])
     // Begin the DMRG calculation
     //
 
-    Real En = dmrg(psi,H,sweeps,Quiet());
+    Real En = dmrg(psi,H,sweeps,"Quiet");
 
     //
     // Print the final energy reported by DMRG

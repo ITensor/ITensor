@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 
     cout << format("Initial energy = %.5f")%psiHphi(psi,H,psi) << endl;
 
-    Real En = dmrg(psi,H,sweeps,Quiet(quiet));
+    Real En = dmrg(psi,H,sweeps,Opt("Quiet",quiet));
 
     cout << format("\nGround State Energy = %.10f")%En << endl;
 

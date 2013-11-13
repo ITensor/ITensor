@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     sweeps.cutoff() = 1E-8;
     cout << sweeps;
 
-    Real En = onesitedmrg(psi,H,sweeps,Quiet());
+    Real En = onesitedmrg(psi,H,sweeps,"Quiet");
 
     cout << format("\nGround State Energy = %.10f\n")%En;
 
