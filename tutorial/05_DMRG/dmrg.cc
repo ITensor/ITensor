@@ -58,12 +58,12 @@ main(int argc, char* argv[])
             ITensor phi = psi.A(b)*psi.A(b+1);
             energy = solver.davidson(Heff,phi);
 
-            //Construct SVDWorker and set
-            //accuracy parameters
-            SVDWorker W;
-            W.cutoff(sweeps.cutoff(sw)); 
-            W.minm(sweeps.minm(sw)); 
-            W.maxm(sweeps.maxm(sw));
+            //Construct 'Spectrum' object for 
+            //passing accuracy parameters to svd method later
+            Spectrum spec;
+            spec.cutoff(sweeps.cutoff(sw)); 
+            spec.minm(sweeps.minm(sw)); 
+            spec.maxm(sweeps.maxm(sw));
 
             //Define tensor (references)
             //to hold SVD results

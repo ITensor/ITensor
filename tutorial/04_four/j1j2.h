@@ -24,7 +24,7 @@ computeGroundState(const SpinHalf& model, Real J2)
     Cout << Format("Starting ground state calculation for J2 = %.3f")  
             % J2 << Endl;
 
-    dmrg(psi,H,sweeps,Quiet());
+    dmrg(psi,H,sweeps,Opt("Quiet"));
 
     Cout << "Done with ground state calculation." << Endl;
 
