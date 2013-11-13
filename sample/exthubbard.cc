@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
     //
     // Begin the DMRG calculation
     //
-    Real En = dmrg(psi,H,sweeps,Quiet());
+    Real En = dmrg(psi,H,sweeps,"Quiet");
 
     //
     // Measure spin densities
