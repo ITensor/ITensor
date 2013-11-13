@@ -18,16 +18,6 @@ class HubbardChain
     HubbardChain(const Hubbard& model,
                  const OptSet& opts = Global::opts());
 
-    Real
-    t() const { return t_; }
-    void
-    t(Real val) { initted_ = false; t_ = val; }
-
-    Real
-    U() const { return U_; }
-    void
-    U(Real val) { initted_ = false; U_ = val; }
-
     operator MPO() { init_(); return H.toMPO(); }
 
     operator IQMPO() { init_(); return H; }
