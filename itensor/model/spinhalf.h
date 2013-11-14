@@ -146,12 +146,12 @@ getOp(int i, const String& opname, const OptSet& opts) const
         Op(Dn,UpP) = +0.5;
         }
     else
-    if(opname == "Sp")
+    if(opname == "Sp" || opname == "S-")
         {
         Op(Dn,UpP) = 1;
         }
     else
-    if(opname == "Sm")
+    if(opname == "Sm" || opname == "S+")
         {
         Op(Up,DnP) = 1;
         }
@@ -164,6 +164,12 @@ getOp(int i, const String& opname, const OptSet& opts) const
     if(opname == "projDn")
         {
         Op(Dn,DnP) = 1; 
+        }
+    else
+    if(opname == "S2")
+        {
+        Op(Up,UpP) = 0.75; 
+        Op(Dn,DnP) = 0.75; 
         }
     else
         {
