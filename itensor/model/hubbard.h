@@ -64,6 +64,40 @@ class Hubbard : public Model
 
     virtual void
     constructSites();
+
+    IQTensor
+    makeTReverse(int i) const;
+    IQTensor
+    makeNup(int i) const;
+    IQTensor
+    makeNdn(int i) const;
+    IQTensor
+    makeNupdn(int i) const;
+    IQTensor
+    makeNtot(int i) const;
+    IQTensor
+    makeCup(int i) const;
+    IQTensor
+    makeCdagup(int i) const;
+    IQTensor
+    makeCdn(int i) const;
+    IQTensor
+    makeCdagdn(int i) const;
+    IQTensor
+    makeAup(int i) const;
+    IQTensor
+    makeAdagup(int i) const;
+    IQTensor
+    makeAdn(int i) const;
+    IQTensor
+    makeAdagdn(int i) const;
+    IQTensor
+    makeFermiPhase(int i) const;
+    IQTensor
+    makeSz(int i) const;
+    IQTensor
+    makeSx(int i) const;
+
         
     //Data members -----------------
 
@@ -335,6 +369,161 @@ getOp(int i, const String& opname, const OptSet& opts) const
         }
 
     return Op;
+    }
+
+
+//
+// The following methods are deprecated but included for 
+// backwards compatibility with older Model interface.
+//
+
+IQTensor inline Hubbard::
+makeTReverse(int i) const
+    { 
+    IQTensor tr(conj(si(i)),siP(i));
+    tr(UpDn(i),UpDnP(i)) = -1;
+    //tr(Dn(i),UpP(i)) = -1;
+    tr(Dn(i),UpP(i)) = +1;
+    tr(Up(i),DnP(i)) = 1;
+    tr(Emp(i),EmpP(i)) = 1;
+    return tr;
+    }
+
+IQTensor inline Hubbard::
+makeNup(int i) const
+    {
+    IQTensor Nup(conj(si(i)),siP(i));
+    Nup(Up(i),UpP(i)) = 1;
+    Nup(UpDn(i),UpDnP(i)) = 1;
+    return Nup;
+    }
+
+IQTensor inline Hubbard::
+makeNdn(int i) const
+    {
+    IQTensor Ndn(conj(si(i)),siP(i));
+    Ndn(Dn(i),DnP(i)) = 1;
+    Ndn(UpDn(i),UpDnP(i)) = 1;
+    return Ndn;
+    }
+
+IQTensor inline Hubbard::
+makeNupdn(int i) const
+    {
+    IQTensor Nupdn(conj(si(i)),siP(i));
+    Nupdn(UpDn(i),UpDnP(i)) = 1;
+    return Nupdn;
+    }
+
+IQTensor inline Hubbard::
+makeNtot(int i) const
+    {
+    IQTensor Ntot(conj(si(i)),siP(i));
+    Ntot(Up(i),UpP(i)) = 1;
+    Ntot(Dn(i),DnP(i)) = 1;
+    Ntot(UpDn(i),UpDnP(i)) = 2;
+    return Ntot;
+    }
+
+IQTensor inline Hubbard::
+makeCup(int i) const
+    {
+    IQTensor Cup(conj(si(i)),siP(i));
+    Cup(Up(i),EmpP(i)) = 1;
+    Cup(UpDn(i),DnP(i)) = 1;
+    return Cup;
+    }
+
+IQTensor inline Hubbard::
+makeCdagup(int i) const
+    {
+    IQTensor Cdagup(conj(si(i)),siP(i));
+    Cdagup(Emp(i),UpP(i)) = 1;
+    Cdagup(Dn(i),UpDnP(i)) = 1;
+    return Cdagup;
+    }
+
+IQTensor inline Hubbard::
+makeCdn(int i) const
+    {
+    IQTensor Cdn(conj(si(i)),siP(i));
+    Cdn(Dn(i),EmpP(i)) = 1;
+    Cdn(UpDn(i),UpP(i)) = -1;
+    return Cdn;
+    }
+
+IQTensor inline Hubbard::
+makeCdagdn(int i) const
+    {
+    IQTensor Cdagdn(conj(si(i)),siP(i));
+    Cdagdn(Emp(i),DnP(i)) = 1;
+    Cdagdn(Up(i),UpDnP(i)) = -1;
+    return Cdagdn;
+    }
+
+IQTensor inline Hubbard::
+makeAup(int i) const
+    {
+    IQTensor Aup(conj(si(i)),siP(i));
+    Aup(Up(i),EmpP(i)) = 1;
+    Aup(UpDn(i),DnP(i)) = 1;
+    return Aup;
+    }
+
+IQTensor inline Hubbard::
+makeAdagup(int i) const
+    {
+    IQTensor Adagup(conj(si(i)),siP(i));
+    Adagup(Emp(i),UpP(i)) = 1;
+    Adagup(Dn(i),UpDnP(i)) = 1;
+    return Adagup;
+    }
+
+IQTensor inline Hubbard::
+makeAdn(int i) const
+    {
+    IQTensor Adn(conj(si(i)),siP(i));
+    Adn(Dn(i),EmpP(i)) = 1;
+    Adn(UpDn(i),UpP(i)) = 1;
+    return Adn;
+    }
+
+IQTensor inline Hubbard::
+makeAdagdn(int i) const
+    {
+    IQTensor Adagdn(conj(si(i)),siP(i));
+    Adagdn(Emp(i),DnP(i)) = 1;
+    Adagdn(Up(i),UpDnP(i)) = 1;
+    return Adagdn;
+    }
+
+IQTensor inline Hubbard::
+makeFermiPhase(int i) const
+    {
+    IQTensor fermiPhase(conj(si(i)),siP(i));
+    fermiPhase(Emp(i),EmpP(i)) = +1;
+    fermiPhase(Up(i),UpP(i)) = -1;
+    fermiPhase(Dn(i),DnP(i)) = -1;
+    fermiPhase(UpDn(i),UpDnP(i)) = +1;
+    return fermiPhase;
+    }
+
+IQTensor inline Hubbard::
+makeSz(int i) const
+    {
+    IQTensor Sz(conj(si(i)),siP(i));
+    Sz(Up(i),UpP(i)) = +0.5; 
+    Sz(Dn(i),DnP(i)) = -0.5;
+    return Sz;
+    }
+
+IQTensor inline Hubbard::
+makeSx(int i) const
+    {
+    IQTensor Sx(conj(si(i)),siP(i));
+    Sx(Up(i),DnP(i)) = 1;
+    Sx(Dn(i),UpP(i)) = 1;
+    return Sx;
     }
 
 #endif
