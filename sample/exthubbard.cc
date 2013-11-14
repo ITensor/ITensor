@@ -64,30 +64,30 @@ int main(int argc, char* argv[])
         if(p > i)
             {
             cout << "Doubly occupying site " << i << endl;
-            initState.set(i,&Hubbard::UpDn);
+            initState.set(i,"UpDn");
             p -= 2;
             }
         else
         if(p > 0)
             {
             cout << "Singly occupying site " << i << endl;
-            initState.set(i,(i%2==1 ? &Hubbard::Up : &Hubbard::Dn));
+            initState.set(i,(i%2==1 ? "Up" : "Dn"));
             p -= 1;
             }
         else
             {
-            initState.set(i,&Hubbard::Emp);
+            initState.set(i,"Emp");
             }
         }
 
-    IQMPS psi(model,initState);
+    IQMPS psi(initState);
 
     cout << totalQN(psi) << endl;
 
     //
     // Begin the DMRG calculation
     //
-    Real En = dmrg(psi,H,sweeps,Quiet());
+    Real En = dmrg(psi,H,sweeps,Opt("Quiet"));
 
     //
     // Measure spin densities
