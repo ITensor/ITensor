@@ -54,6 +54,20 @@ class Spinless : public Model
 
     void
     constructSites();
+
+    IQTensor
+    makeN(int i) const;
+    IQTensor
+    makeC(int i) const;
+    IQTensor
+    makeCdag(int i) const;
+    IQTensor
+    makeFermiPhase(int i) const;
+    IQTensor
+    makeProjEmp(int i) const;
+    IQTensor
+    makeProjOcc(int i) const;
+
         
     //Data members -----------------
 
@@ -253,6 +267,55 @@ getOp(int i, const String& opname, const OptSet& opts) const
         }
 
     return Op;
+    }
+
+IQTensor inline Spinless::
+makeN(int i) const
+    {
+    IQTensor N(conj(si(i)),siP(i));
+    N(Occ(i),OccP(i)) = 1;
+    return N;
+    }
+
+IQTensor inline Spinless::
+makeC(int i) const
+    {
+    IQTensor C(conj(si(i)),siP(i));
+    C(Occ(i),EmpP(i)) = 1;
+    return C;
+    }
+
+IQTensor inline Spinless::
+makeCdag(int i) const
+    {
+    IQTensor Cdag(conj(si(i)),siP(i));
+    Cdag(Emp(i),OccP(i)) = 1;
+    return Cdag;
+    }
+
+IQTensor inline Spinless::
+makeFermiPhase(int i) const
+    {
+    IQTensor fermiPhase(conj(si(i)),siP(i));
+    fermiPhase(Emp(i),EmpP(i)) = +1;
+    fermiPhase(Occ(i),OccP(i)) = -1;
+    return fermiPhase;
+    }
+
+IQTensor inline Spinless::
+makeProjEmp(int i) const
+    {
+    IQTensor projEmp(conj(si(i)),siP(i));
+    projEmp(Emp(i),EmpP(i)) = 1;
+    return projEmp;
+    }
+
+IQTensor inline Spinless::
+makeProjOcc(int i) const
+    {
+    IQTensor projOcc(conj(si(i)),siP(i));
+    projOcc(Occ(i),OccP(i)) = 1;
+    return projOcc;
     }
 
 #endif

@@ -40,6 +40,38 @@ class SpinOne : public Model
     virtual void
     constructSites(const OptSet& opts);
         
+    //Older interface for backwards compatibility
+    public:
+    IQIndexVal
+    Up(int i) const;
+    IQIndexVal
+    Z0(int i) const;
+    IQIndexVal
+    Dn(int i) const;
+    IQIndexVal
+    UpP(int i) const;
+    IQIndexVal
+    Z0P(int i) const;
+    IQIndexVal
+    DnP(int i) const;
+    private:
+    IQTensor
+    makeSz(int i) const;
+    IQTensor
+    makeSx(int i) const;
+    IQTensor
+    makeISy(int i) const;
+    IQTensor
+    makeSp(int i) const;
+    IQTensor
+    makeSm(int i) const;
+    IQTensor
+    makeSz2(int i) const;
+    IQTensor
+    makeSx2(int i) const;
+    IQTensor
+    makeSy2(int i) const;
+
     //Data members -----------------
 
     int N_;
@@ -203,6 +235,23 @@ getOp(int i, const String& opname, const OptSet& opts) const
             }
         }
     else
+    if(opname == "Sy")
+        {
+        if(s.m() == 2)
+            {
+            Op(Up,DnP) = +0.5;
+            Op(Dn,UpP) = -0.5;
+            }
+        else
+            {
+            Op(Up,Z0P) = -ISqrt2; 
+            Op(Z0,UpP) = +ISqrt2;
+            Op(Z0,DnP) = -ISqrt2; 
+            Op(Dn,Z0P) = +ISqrt2;
+            }
+        Op *= Complex_i;
+        }
+    else
     if(opname == "Sp" || opname == "S+")
         {
         if(s.m() == 2)
@@ -312,6 +361,179 @@ getOp(int i, const String& opname, const OptSet& opts) const
         }
 
     return Op;
+    }
+
+//
+// Older interface (deprecated)
+// included for backwards compatibility
+//
+
+inline IQIndexVal SpinOne::
+Up(int i) const
+    {
+    return getSi(i)(1);
+    }
+
+inline IQIndexVal SpinOne::
+Z0(int i) const
+    {
+    IQIndex ind = getSi(i);
+    if(ind.m() == 2)
+        Error("Z0 not defined for spin 1/2 site");
+    return ind(2);
+    }
+
+inline IQIndexVal SpinOne::
+Dn(int i) const
+    {
+    IQIndex ind = getSi(i);
+    return ind(ind.m());
+    }
+
+inline IQIndexVal SpinOne::
+UpP(int i) const
+    {
+    return primed(getSi(i))(1);
+    }
+
+inline IQIndexVal SpinOne::
+Z0P(int i) const
+    {
+    IQIndex ind = primed(getSi(i));
+    if(ind.m() == 2)
+        Error("Z0 not defined for spin 1/2 site");
+    return ind(2);
+    }
+
+inline IQIndexVal SpinOne::
+DnP(int i) const
+    {
+    IQIndex ind = primed(getSi(i));
+    return ind(ind.m());
+    }
+
+IQTensor inline SpinOne::
+makeSz(int i) const
+    {
+    IQTensor Sz(conj(si(i)),siP(i));
+    if(si(i).m() == 2)
+        {
+        Sz(Up(i),UpP(i)) = +0.5;
+        Sz(Dn(i),DnP(i)) = -0.5;
+        }
+    else
+        {
+        Sz(Up(i),UpP(i)) = +1.;
+        Sz(Dn(i),DnP(i)) = -1.;
+        }
+    return Sz;
+    }
+
+IQTensor inline SpinOne::
+makeSx(int i) const
+    {
+    IQTensor Sx(conj(si(i)),siP(i));
+    if(si(i).m() == 2)
+        {
+        Sx(Up(i),DnP(i)) = +0.5;
+        Sx(Dn(i),UpP(i)) = +0.5;
+        }
+    else
+        {
+        Sx(Up(i),Z0P(i)) = ISqrt2; 
+        Sx(Z0(i),UpP(i)) = ISqrt2;
+        Sx(Z0(i),DnP(i)) = ISqrt2; 
+        Sx(Dn(i),Z0P(i)) = ISqrt2;
+        }
+    return Sx;
+    }
+
+IQTensor inline SpinOne::
+makeISy(int i) const
+    {
+    IQTensor ISy(conj(si(i)),siP(i));
+    if(si(i).m() == 2)
+        {
+        ISy(Up(i),DnP(i)) = -0.5;
+        ISy(Dn(i),UpP(i)) = +0.5;
+        }
+    else
+        {
+        ISy(Up(i),Z0P(i)) = +ISqrt2; 
+        ISy(Z0(i),UpP(i)) = -ISqrt2;
+        ISy(Z0(i),DnP(i)) = +ISqrt2; 
+        ISy(Dn(i),Z0P(i)) = -ISqrt2;
+        }
+    return ISy;
+    }
+
+IQTensor inline SpinOne::
+makeSp(int i) const
+    {
+    IQTensor Sp(conj(si(i)),siP(i));
+    if(si(i).m() == 2)
+        {
+        Sp(Dn(i),UpP(i)) = 1;
+        }
+    else
+        {
+        Sp(Dn(i),Z0P(i)) = Sqrt2; 
+        Sp(Z0(i),UpP(i)) = Sqrt2;
+        }
+    return Sp;
+    }
+
+IQTensor inline SpinOne::
+makeSm(int i) const
+    {
+    IQTensor Sm(conj(si(i)),siP(i));
+    if(si(i).m() == 2)
+        {
+        Sm(Up(i),DnP(i)) = 1;
+        }
+    else
+        {
+        Sm(Up(i),Z0P(i)) = Sqrt2; 
+        Sm(Z0(i),DnP(i)) = Sqrt2;
+        }
+    return Sm;
+    }
+
+
+IQTensor inline SpinOne::
+makeSz2(int i) const
+    {
+    if(si(i).m() == 2) Error("Sz^2 only non-trivial for S=1 sites");
+    IQTensor Sz2(conj(si(i)),siP(i));
+    Sz2(Up(i),UpP(i)) = 1; 
+    Sz2(Dn(i),DnP(i)) = 1;
+    return Sz2;
+    }
+
+IQTensor inline SpinOne::
+makeSx2(int i) const
+    {
+    if(si(i).m() == 2) Error("Sx^2 only non-trivial for S=1 sites");
+    IQTensor Sx2(conj(si(i)),siP(i));
+    Sx2(Up(i),UpP(i)) = 0.5; 
+    Sx2(Up(i),DnP(i)) = 0.5;
+    Sx2(Z0(i),Z0P(i)) = 1;
+    Sx2(Dn(i),DnP(i)) = 0.5; 
+    Sx2(Dn(i),UpP(i)) = 0.5;
+    return Sx2;
+    }
+
+IQTensor inline SpinOne::
+makeSy2(int i) const
+    {
+    if(si(i).m() == 2) Error("Sy^2 only non-trivial for S=1 sites");
+    IQTensor Sy2(conj(si(i)),siP(i));
+    Sy2(Up(i),UpP(i)) = 0.5; 
+    Sy2(Up(i),DnP(i)) = -0.5;
+    Sy2(Z0(i),Z0P(i)) = 1;
+    Sy2(Dn(i),DnP(i)) = 0.5; 
+    Sy2(Dn(i),UpP(i)) = -0.5;
+    return Sy2;
     }
 
 #undef Cout

@@ -27,6 +27,7 @@ SOURCES+= webpage_test.cc
 SOURCES+= localmpo_test.cc
 SOURCES+= option_test.cc
 SOURCES+= indexset_test.cc
+SOURCES+= model_test.cc
 
 ##################################################################
 

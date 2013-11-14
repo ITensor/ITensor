@@ -37,6 +37,28 @@ class SpinHalf : public Model
     virtual void
     constructSites();
 
+    //Older interface included for backwards compatibility
+    public:
+    IQIndexVal
+    Up(int i) const;
+    IQIndexVal
+    Dn(int i) const;
+    IQIndexVal
+    UpP(int i) const;
+    IQIndexVal
+    DnP(int i) const;
+    private:
+    IQTensor
+    makeSz(int i) const;
+    IQTensor
+    makeSx(int i) const;
+    IQTensor
+    makeISy(int i) const;
+    IQTensor
+    makeSp(int i) const;
+    IQTensor
+    makeSm(int i) const;
+
     //Data members -----------------
 
     int N_;
@@ -146,6 +168,13 @@ getOp(int i, const String& opname, const OptSet& opts) const
         Op(Dn,UpP) = +0.5;
         }
     else
+    if(opname == "Sy")
+        {
+        Op(Up,DnP) = +0.5;
+        Op(Dn,UpP) = -0.5;
+        Op *= Complex_i;
+        }
+    else
     if(opname == "Sp" || opname == "S-")
         {
         Op(Dn,UpP) = 1;
@@ -179,5 +208,79 @@ getOp(int i, const String& opname, const OptSet& opts) const
     return Op;
     }
 
+
+//
+// Older interface (deprecated)
+// included for backwards compatibility
+//
+
+
+inline IQIndexVal SpinHalf::
+Up(int i) const
+    {
+    return getSi(i)(1);
+    }
+
+inline IQIndexVal SpinHalf::
+Dn(int i) const
+    {
+    return getSi(i)(2);
+    }
+
+inline IQIndexVal SpinHalf::
+UpP(int i) const
+    {
+    return primed(getSi(i))(1);
+    }
+
+inline IQIndexVal SpinHalf::
+DnP(int i) const
+    {
+    return primed(getSi(i))(2);
+    }
+
+
+IQTensor inline SpinHalf::
+makeSz(int i) const
+    {
+    IQTensor Sz(conj(si(i)),siP(i));
+    Sz(Up(i),UpP(i)) = +0.5;
+    Sz(Dn(i),DnP(i)) = -0.5;
+    return Sz;
+    }
+
+IQTensor inline SpinHalf::
+makeSx(int i) const
+    {
+    IQTensor Sx(conj(si(i)),siP(i));
+    Sx(Up(i),DnP(i)) = +0.5;
+    Sx(Dn(i),UpP(i)) = +0.5;
+    return Sx;
+    }
+
+IQTensor inline SpinHalf::
+makeISy(int i) const
+    {
+    IQTensor ISy(conj(si(i)),siP(i));
+    ISy(Up(i),DnP(i)) = -0.5;
+    ISy(Dn(i),UpP(i)) = +0.5;
+    return ISy;
+    }
+
+IQTensor inline SpinHalf::
+makeSp(int i) const
+    {
+    IQTensor Sp(conj(si(i)),siP(i));
+    Sp(Dn(i),UpP(i)) = 1;
+    return Sp;
+    }
+
+IQTensor inline SpinHalf::
+makeSm(int i) const
+    {
+    IQTensor Sm(conj(si(i)),siP(i));
+    Sm(Up(i),DnP(i)) = 1;
+    return Sm;
+    }
 
 #endif
