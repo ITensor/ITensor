@@ -203,7 +203,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
             }
         }
     else
-    if(opname == "Sp")
+    if(opname == "Sp" || opname == "S+")
         {
         if(s.m() == 2)
             {
@@ -216,7 +216,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
             }
         }
     else
-    if(opname == "Sm")
+    if(opname == "Sm" || opname == "S-")
         {
         if(s.m() == 2)
             {
@@ -296,6 +296,15 @@ getOp(int i, const String& opname, const OptSet& opts) const
         Op(Up) = 0.5;
         Op(Z0) = -ISqrt2;
         Op(Dn) = 0.5;
+        }
+    else
+    if(opname == "S2")
+        {
+        const Real ssp1 = (s.m()==2 ? 0.75 : 2.);
+        Op(Up,UpP) = ssp1; 
+        Op(Dn,DnP) = ssp1;
+        if(s.m() > 2)
+            Op(Z0,Z0P) = ssp1;
         }
     else
         {
