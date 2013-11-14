@@ -30,7 +30,8 @@ class J1J2Chain
 
     IQMPO H;
 
-    bool initted_;
+    bool initted_,
+         infinite_;
 
     //
     /////////////
@@ -49,6 +50,7 @@ J1J2Chain(const Model& model,
     {
     J1_ = opts.getReal("J1",1.);
     J2_ = opts.getReal("J2",0.);
+    infinite_ = opts.getBool("Infinite",false);
     }
     
 
@@ -84,12 +86,14 @@ init()
                                 q0[i],QN( 0));
         }
 
+    const IQIndex& last = (infinite_ ? iqlinks.at(0) : iqlinks.at(N));
+
     for(int j = 1; j <= N; ++j)
         {
         //Create j^th A (an IQTensor)
         IQTensor &W = H.Anc(j);
         IQIndex row = conj(iqlinks.at(j-1)),
-                col = iqlinks.at(j);
+                col = (j==N ? last : iqlinks.at(j));
 
         W = IQTensor(conj(model_.si(j)),model_.siP(j),row,col);
 
@@ -116,8 +120,19 @@ init()
         W += model_.op("Sz",j) * row(6) * col(ds);
         }
 
-    H.Anc(1) *= IQTensor(iqlinks.at(0)(k));
-    H.Anc(N) *= IQTensor(conj(iqlinks.at(N)(ds)));
+    const IQTensor LH(iqlinks.at(0)(k)),
+                   RH(conj(last)(ds));
+
+    if(infinite_)
+        {
+        H.Anc(0) = LH;
+        H.Anc(N+1) = RH;
+        }
+    else
+        {
+        H.Anc(1) *= LH;
+        H.Anc(N) *= RH;
+        }
 
     initted_ = true;
     }
