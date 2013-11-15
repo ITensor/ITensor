@@ -10,6 +10,12 @@ OPTIMIZATIONS=-O2 -DNDEBUG -Wall -DBOOST_DISABLE_ASSERTS
 DEBUGFLAGS=-DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall
 ###BLAS/LAPACK Related Options
 
+##Example using a C interface to LAPACK on GNU/LINUX systems
+##make sure to install LAPACKE development header needed by lapack_wrap.h
+PLATFORM=lapack
+BLAS_LAPACK_INCLUDEFLAGS=-I/usr/include
+BLAS_LAPACK_LIBFLAGS=-L/usr/lib -lblas -llapack 
+
 ##For a recent Mac OSX system (include flags intentionally left blank)
 PLATFORM=macos
 BLAS_LAPACK_LIBFLAGS=-framework Accelerate
