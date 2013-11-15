@@ -500,6 +500,8 @@ HermitianEigenvalues(const Matrix& re, const Matrix& im,
 
     }
 
+#ifdef I
+#undef I
 
 #include <complex>
 #include <vector>
@@ -2739,4 +2741,5 @@ void SVDcomplex(const Matrix& Mre, const Matrix& Mim, Matrix& Ure,
     Vim = -V.ImMat().t();
     }
 
+#endif
 
