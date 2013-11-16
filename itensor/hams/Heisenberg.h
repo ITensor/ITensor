@@ -34,8 +34,9 @@ class Heisenberg
     Real J_, 
          Boundary_h_,
          Jz_;
-    bool initted_;
-    bool infinite_;
+    bool initted_,
+         infinite_,
+         open_;
     IQMPO H;
 
     //
@@ -58,6 +59,7 @@ Heisenberg(const Model& model, const OptSet& opts)
     Boundary_h_ = opts.getReal("Boundary_h",0.);
     Jz_ = opts.getReal("Jz",J_);
     infinite_ = opts.getBool("Infinite",false);
+    open_ = opts.getBool("Open",false);
     }
 
 
@@ -149,7 +151,7 @@ init_()
             }
 
         //Periodic BC bond (only for width 3 ladders or greater)
-        if(y == 1 && Ny_ >= 3)
+        if(!open_ && y == 1 && Ny_ >= 3)
             {
             W += model_.op("Sz",n) * row(start) * col(kd-1) * Jz_;
             W += model_.op("Sp",n) * row(start) * col(kd+kpm-1) * J_/2;
