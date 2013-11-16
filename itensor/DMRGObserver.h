@@ -113,7 +113,7 @@ measure(const OptSet& opts)
                 {
                 S -= center_eigs(j)*log(fabs(center_eigs(j)));
                 }
-            Cout << Format("    vN Entropy at center bond b=%d = %.10f") % (N/2) % S << Endl;
+            Cout << Format("    vN Entropy at center bond b=%d = %.12f") % (N/2) % S << Endl;
             Cout << Format("    Eigs at center bond b=%d: ") % (N/2);
             for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                 {
@@ -140,7 +140,7 @@ measure(const OptSet& opts)
             Cout << "    Largest truncation error: " << max_te << Endl;
             max_te = -1;
             }
-        Cout << Format("    Energy after sweep %d is %f") % sw % energy << Endl;
+        Cout << Format("    Energy after sweep %d is %.12f") % sw % energy << Endl;
         }
 
     }
