@@ -613,7 +613,7 @@ void
 fitApplyMPO(Real fac,const MPOt<IQTensor>& K,const MPSt<IQTensor>& psi,MPSt<IQTensor>& res,const OptSet& opts);
 
 template<class Tensor>
-void
+Real
 fitApplyMPO(const MPSt<Tensor>& psiA, 
             Real mpofac,
             const MPOt<Tensor>& K,
@@ -621,17 +621,17 @@ fitApplyMPO(const MPSt<Tensor>& psiA,
             MPSt<Tensor>& res,
             const OptSet& opts)
     {
-    fitApplyMPO(1.,psiA,mpofac,K,psiB,res,opts);
+    return fitApplyMPO(1.,psiA,mpofac,K,psiB,res,opts);
     }
 template
-void
+Real
 fitApplyMPO(const MPSt<ITensor>& psiA, Real mpofac,const MPOt<ITensor>& K,const MPSt<ITensor>& psiB,MPSt<ITensor>& res,const OptSet& opts);
 template
-void
+Real
 fitApplyMPO(const MPSt<IQTensor>& psiA, Real mpofac,const MPOt<IQTensor>& K,const MPSt<IQTensor>& psiB,MPSt<IQTensor>& res,const OptSet& opts);
 
 template<class Tensor>
-void
+Real
 fitApplyMPO(Real mpsfac,
             const MPSt<Tensor>& psiA, 
             Real mpofac,
@@ -655,7 +655,6 @@ fitApplyMPO(Real mpsfac,
                    LK(N+2),
                    RK(N+2);
 
-    START_TIMER(2)
     R.at(N-1) = psiA.A(N)*conj(primed(res.A(N),Link));
     RK.at(N-1) = psiB.A(N)*K.A(N)*conj(primed(res.A(N)));
     for(int n = N-2; n >= 2; --n)
@@ -663,7 +662,6 @@ fitApplyMPO(Real mpsfac,
         R.at(n) = R.at(n+1)*psiA.A(n+1)*conj(primed(res.A(n+1),Link));
         RK.at(n) = RK.at(n+1)*psiB.A(n+1)*K.A(n+1)*conj(primed(res.A(n+1)));
         }
-    STOP_TIMER(2)
 
     const Real orig_cut = res.cutoff();
     const int orig_minm = res.minm();
@@ -677,32 +675,26 @@ fitApplyMPO(Real mpsfac,
         {
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
-            START_TIMER(3)
             Tensor wf = (L.at(b).isNull() ? psiA.A(b) : L.at(b)*psiA.A(b));
-            wf *= psiA.A(b+1);
-            if(!R.at(b+1).isNull())
-                {
-                wf *= R.at(b+1);
-                }
+            wf *= (R.at(b+1).isNull() ? psiA.A(b+1) : psiA.A(b+1)*R.at(b+1));
             wf.noprime();
-            STOP_TIMER(3)
 
-            START_TIMER(4)
             Tensor wfK = (LK.at(b).isNull() ? psiB.A(b) : LK.at(b)*psiB.A(b));
             wfK *= K.A(b);
             Tensor rwfK = (RK.at(b+1).isNull() ? psiB.A(b+1) : RK.at(b+1)*psiB.A(b+1));
             rwfK *= K.A(b+1);
             wfK *= rwfK;
             wfK.noprime();
-            STOP_TIMER(4)
 
             wf = mpsfac*wf + mpofac*wfK;
 
-            START_TIMER(5)
             res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
-            STOP_TIMER(5)
 
-            START_TIMER(6)
+            //if(!res.isOrtho()) cout << format("res not ortho at b=%d, dir==%s")
+            //                           % b
+            //                           % (ha==1 ? "Fromleft" : "Fromright")
+            //                        << endl;
+
             if(ha == 1)
                 {
                 L.at(b+1) = (L.at(b).isNull() ? psiA.A(b) : L.at(b)*psiA.A(b))
@@ -717,19 +709,26 @@ fitApplyMPO(Real mpsfac,
                 RK.at(b) = (RK.at(b+1).isNull() ? psiB.A(b+1) : RK.at(b+1)*psiB.A(b+1))
                            * K.A(b+1) * conj(primed(res.A(b+1)));
                 }
-            STOP_TIMER(6)
             }
         }
 
     res.cutoff(orig_cut);
     res.minm(orig_minm);
     res.maxm(orig_maxm);
+
+    Tensor olp = R.at(2);
+    olp *= psiA.A(2);
+    olp *= conj(primed(res.A(2),Link));
+    olp *= psiA.A(1);
+    olp *= conj(primed(res.A(1),Link));
+
+    return olp.toComplex().real();
     }
 template
-void
+Real
 fitApplyMPO(Real mpsfac,const MPSt<ITensor>& psiA, Real mpofac,const MPOt<ITensor>& K,const MPSt<ITensor>& psiB,MPSt<ITensor>& res,const OptSet& opts);
 template
-void
+Real
 fitApplyMPO(Real mpsfac,const MPSt<IQTensor>& psiA, Real mpofac,const MPOt<IQTensor>& K,const MPSt<IQTensor>& psiB,MPSt<IQTensor>& res,const OptSet& opts);
 
 template<class Tensor>
