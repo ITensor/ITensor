@@ -30,7 +30,6 @@ MPSt<Tensor>::
 MPSt() 
     : 
     N_(0), 
-    is_ortho_(false),
     model_(0),
     atb_(1),
     writedir_("."),
@@ -49,7 +48,6 @@ MPSt(const Model& mod_,int maxmm, Real cut)
     A_(mod_.N()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(mod_.N()+1),
-    is_ortho_(false),
     model_(&mod_), 
     spectrum_(N_),
     atb_(1),
@@ -73,7 +71,6 @@ MPSt(const InitState& initState,int maxmm, Real cut)
     A_(initState.model().N()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(2),
-    is_ortho_(true),
     model_(&(initState.model())), 
     spectrum_(N_),
     atb_(1),
@@ -95,7 +92,6 @@ MPSt(const Model& model, std::istream& s)
     : 
     N_(model.N()), 
     A_(model.N()+2), //idmrg may use A_[0] and A[N+1]
-    is_ortho_(false),
     model_(&model),
     atb_(1),
     writedir_("."),
@@ -116,7 +112,6 @@ MPSt(const MPSt& other)
     A_(other.A_),
     l_orth_lim_(other.l_orth_lim_),
     r_orth_lim_(other.r_orth_lim_),
-    is_ortho_(other.is_ortho_),
     model_(other.model_),
     spectrum_(other.spectrum_),
     atb_(other.atb_),
@@ -138,7 +133,6 @@ operator=(const MPSt& other)
     A_ = other.A_;
     l_orth_lim_ = other.l_orth_lim_;
     r_orth_lim_ = other.r_orth_lim_;
-    is_ortho_ = other.is_ortho_;
     model_ = other.model_;
     spectrum_ = other.spectrum_;
     atb_ = other.atb_;
@@ -181,7 +175,6 @@ Anc(int i)
     setSite(i);
     if(i <= l_orth_lim_) l_orth_lim_ = i-1;
     if(i >= r_orth_lim_) r_orth_lim_ = i+1;
-    is_ortho_ = false;
     return A_.at(i); 
     }
 template
@@ -280,7 +273,6 @@ read(const std::string& dirname)
 
     l_orth_lim_ = 0;
     r_orth_lim_ = N_+1;
-    is_ortho_ = false;
 
     //std::string dname_ = dirname;
     //if(dname_[dname_.length()-1] != '/')
@@ -917,7 +909,6 @@ position(int i, const OptSet& opts)
             if(l_orth_lim_ > r_orth_lim_-2) l_orth_lim_ = r_orth_lim_-2;
             }
         }
-    is_ortho_ = true;
     }
 template void MPSt<ITensor>::
 position(int b, const OptSet& opts);
@@ -939,7 +930,6 @@ orthogonalize(const OptSet& opts)
     //Now basis is ortho, ok to truncate
     cutoff(orig_cut);
     position(1,opts);
-    is_ortho_ = true;
     }
 template
 void MPSt<ITensor>::orthogonalize(const OptSet& opts);
@@ -967,7 +957,6 @@ makeRealBasis(int j, const OptSet& opts)
         orthoDecomp(WF,A_[r_orth_lim_-2],A_[r_orth_lim_-1],Fromright,opts);
         --r_orth_lim_;
         }
-    is_ortho_ = true;
     }
 template
 void MPSt<ITensor>::makeRealBasis(int j, const OptSet& opts);
@@ -1095,6 +1084,22 @@ template Real MPSt<IQTensor>::
 norm() const;
 
 template <class Tensor>
+Real MPSt<Tensor>::
+normalize()
+    {
+    Real norm_ = norm();
+    if(fabs(norm_) < 1E-20) Error("Zero norm");
+    operator/=(norm_);
+    return norm_;
+    }
+template
+Real MPSt<ITensor>::
+normalize();
+template
+Real MPSt<IQTensor>::
+normalize();
+
+template <class Tensor>
 void MPSt<Tensor>::
 initWrite(const OptSet& opts)
     {
@@ -1178,7 +1183,6 @@ swap(MPSt<Tensor>& other)
     A_.swap(other.A_);
     std::swap(l_orth_lim_,other.l_orth_lim_);
     std::swap(r_orth_lim_,other.r_orth_lim_);
-    std::swap(is_ortho_,other.is_ortho_);
     std::swap(model_,other.model_);
     spectrum_.swap(other.spectrum_);
     std::swap(atb_,other.atb_);

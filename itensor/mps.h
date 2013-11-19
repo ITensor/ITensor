@@ -215,12 +215,7 @@ class MPSt
     writeDir() const { return writedir_; }
 
     bool 
-    isOrtho() const { return is_ortho_; }
-    //Only use the following method if
-    //you are sure of what you are doing!
-    void 
-    isOrtho(bool val) { is_ortho_ = val; }
-
+    isOrtho() const { return (l_orth_lim_+1) == (r_orth_lim_-1); }
 
     void 
     read(std::istream& s);
@@ -355,13 +350,7 @@ class MPSt
     averageM() const;
 
     Real 
-    normalize()
-        {
-        Real norm_ = norm();
-        if(fabs(norm_) < 1E-20) Error("Zero norm");
-        operator/=(norm_);
-        return norm_;
-        }
+    normalize();
 
     bool 
     isComplex() const
@@ -407,8 +396,6 @@ class MPSt
 
     int l_orth_lim_,
         r_orth_lim_;
-
-    bool is_ortho_;
 
     const Model* model_;
 

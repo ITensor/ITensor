@@ -181,7 +181,6 @@ class MPOt : private MPSt<Tensor>
     using Parent::r_orth_lim_;
     using Parent::model_;
     using Parent::spectrum_;
-    using Parent::is_ortho_;
     ///////////
 
     friend class MPOt<ITensor>;
@@ -387,7 +386,7 @@ fitApplyMPO(Real fac,
             const OptSet& opts = Global::opts());
 
 template<class Tensor>
-void
+Real
 fitApplyMPO(const MPSt<Tensor>& psiA, 
             Real mpofac,
             const MPOt<Tensor>& H,
@@ -396,7 +395,7 @@ fitApplyMPO(const MPSt<Tensor>& psiA,
             const OptSet& opts = Global::opts());
 
 template<class Tensor>
-void
+Real
 fitApplyMPO(Real mpsfac,
             const MPSt<Tensor>& psiA, 
             Real mpofac,
