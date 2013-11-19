@@ -869,14 +869,9 @@ imagTEvol(const MPOt<Tensor>& H,
 
     const string method = opts.getString("Method","default");
     
-    const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
-    if(fabs(nt*tstep-ttotal) > 1E-9)
-        {
-        Error("Timestep not commensurate with total time");
-        }
-
     if(verbose) 
         {
+        const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
         cout << format("Taking %d steps of timestep %.5f, total time %.5f, using order %d method")
                 % nt
                 % tstep
@@ -886,16 +881,20 @@ imagTEvol(const MPOt<Tensor>& H,
         }
 
     Real tsofar = 0;
+    Real this_step = tstep;
     MPST psi1(psi);
-    for(int tt = 1; tt <= nt; ++tt)
+    while((ttotal-tsofar) > 1E-12)
         {
+        if(fabs(ttotal-tsofar) < this_step)
+            this_step = fabs(ttotal-tsofar);
+
         //applyExpH(H,tstep,psi,psi1,opts);
 
         MPST last(psi1);
         START_TIMER(1)
         for(int ord = order; ord >= 1; --ord)
             {
-            fitApplyMPO(psi,-tstep/(1.*ord),H,last,psi1,opts&Opt("DoRelCutoff"));
+            fitApplyMPO(psi,-this_step/(1.*ord),H,last,psi1,opts&Opt("DoRelCutoff"));
             last = psi1;
             }
         STOP_TIMER(1)
@@ -905,8 +904,8 @@ imagTEvol(const MPOt<Tensor>& H,
 
         if(verbose)
             {
-            Real percentdone = (100.*tt)/nt;
-            if(percentdone < 99.5 || (tt==nt))
+            Real percentdone = 100.*(tsofar/ttotal);
+            if(percentdone < 99.8)
                 {
                 cout << format("\b\b\b%2.f%%") % percentdone;
                 cout.flush();
@@ -925,7 +924,7 @@ imagTEvol(const MPOt<Tensor>& H,
 
 
         psi = psi1;
-        tsofar += tstep;
+        tsofar += this_step;
         }
     if(verbose) 
         {
