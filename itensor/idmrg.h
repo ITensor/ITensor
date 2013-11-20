@@ -110,7 +110,7 @@ idmrg(MPSt<Tensor>& psi,
         HL *= fac;
         HR *= fac;
 
-        energy = dmrg(psi,H,HL,HR,ucsweeps,obs,opts & Quiet(olevel < 3));
+        energy = dmrg(psi,H,HL,HR,ucsweeps,obs,opts & Opt("Quiet",olevel < 3));
 
         psi.position(Nuc);
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1));
@@ -197,7 +197,7 @@ idmrg(MPSt<Tensor>& psi,
 
         lastenergy = energy;
         LocalMPO<Tensor> PH(H,HL,HR,opts);
-        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts & Quiet(olevel < 3) & Opt("NoMeasure",sw%2==0));
+        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts & Opt("Quiet",olevel < 3) & Opt("NoMeasure",sw%2==0));
 
 
         Real ovrlap, im;
