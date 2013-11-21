@@ -19,7 +19,8 @@ class Opt
 
     Opt();
 
-    explicit
+    Opt(const char* name);
+
     Opt(const Name& name);
 
     Opt(const Name& name, bool bval);
@@ -55,6 +56,9 @@ class Opt
     // Accessor methods
     //
 
+    const Name&
+    name() const { return name_; }
+
     bool
     boolVal() const { assertType(Boolean); return bool(rval_); }
 
@@ -71,9 +75,6 @@ class Opt
     isNull() const { return type_ == None; }
     bool
     isNotNull() const { return type_ != None; }
-
-    const Name&
-    name() const { return name_; }
 
     Type
     type() const { return type_; }
@@ -136,8 +137,6 @@ class OptSet
     // Methods for accessing Opts
     //
 
-    bool
-    defined(const Name& name) const;
     bool
     defined(const Opt& opt) const;
 
@@ -236,6 +235,9 @@ operator&(const Opt& opt1, const Opt& opt2);
 
 OptSet
 operator&(OptSet oset, const Opt& opt);
+
+OptSet&
+operator&=(OptSet& oset, const Opt& opt);
 
 OptSet
 operator&(const Opt& opt, OptSet oset);

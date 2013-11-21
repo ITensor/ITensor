@@ -16,12 +16,12 @@ BOOST_AUTO_TEST_SUITE(OptTest)
 
 TEST(BasicUsage)
     {
-    Opt o1 = Quiet();
-    Opt o2 = Quiet();
+    Opt o1("Quiet");
+    Opt o2("Quiet");
 
     CHECK(o1 == o2);
 
-    Opt o3 = Quiet(false);
+    Opt o3("Quiet",false);
     CHECK(o1 == o3);
     CHECK(o2 == o3);
 
@@ -53,9 +53,9 @@ TEST(TestOptSet)
     {
     OptSet& gopts = OptSet::GlobalOpts();
 
-    Opt o1 = Quiet();
-    Opt o2 = Pinning(0.4);
-    Opt o3 = Auto(false);
+    Opt o1("Quiet");
+    Opt o2 = Opt("Pinning",0.4);
+    Opt o3("Auto",false);
     Opt o4 = Opt();
 
     gopts.add(o1,o2);
@@ -65,7 +65,7 @@ TEST(TestOptSet)
     //cout << "Global opts: " << endl;
     //cout << gopts << endl;
 
-    OptSet opts1(Quiet(false));
+    OptSet opts1(Opt("Quiet",false));
 
     //cout << "opts1: " << endl;
     //cout << opts1 << endl;
@@ -90,11 +90,13 @@ TEST(TestOptSet)
 
 TEST(Operator)
     {
-    OptSet oset1 = Quiet() & Auto();
+    OptSet oset1; 
+    oset1 &= "Quiet";
+    oset1 &= "Auto";
     CHECK(oset1.defined("Quiet"));
     CHECK(oset1.defined("Auto"));
 
-    OptSet oset2 = Quiet() & Auto() & Pinning(1);
+    OptSet oset2 = Opt("Pinning",1) & "Quiet" & "Auto";
     CHECK(oset1.defined("Quiet"));
     CHECK(oset1.defined("Auto"));
     CHECK(oset1.defined("Pinning"));

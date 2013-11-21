@@ -22,6 +22,14 @@ Opt()
     { }
 
 Opt::
+Opt(const char* name)
+    :
+    name_(name),
+    type_(Boolean),
+    rval_(1.0)
+    { }
+
+Opt::
 Opt(const Name& name)
     :
     name_(name),
@@ -159,16 +167,28 @@ OptSet(const OptSet& other)
         opts_ = other.opts_;
     }
 
+//bool OptSet::
+//defined(const Opt::Name& name) const
+//    {
+//    if(opts_.count(name) > 0)
+//        return true;
+//
+//    if(is_global_) 
+//        return false;
+//    //else see if GlobalOpts contains it
+//    return GlobalOpts().defined(name);
+//    }
+
 bool OptSet::
-defined(const Opt::Name& name) const
+defined(const Opt& opt) const
     {
-    if(opts_.count(name) > 0)
+    if(opts_.count(opt.name()) > 0)
         return true;
 
     if(is_global_) 
         return false;
     //else see if GlobalOpts contains it
-    return GlobalOpts().defined(name);
+    return GlobalOpts().defined(opt.name());
     }
 
 void OptSet::
@@ -354,6 +374,13 @@ operator&(const Opt& opt1, const Opt& opt2)
 
 OptSet 
 operator&(OptSet oset, const Opt& opt)
+    {
+    oset.add(opt);
+    return oset;
+    }
+
+OptSet&
+operator&=(OptSet& oset, const Opt& opt)
     {
     oset.add(opt);
     return oset;
