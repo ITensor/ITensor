@@ -153,6 +153,46 @@ davidson(const BigMatrixT& A,
     return eigs;
     }
 
+int inline
+findEig(int num,          //zero-indexed; so is return value
+        const Vector& DR, //real part of eigenvalues
+        const Vector& DI) //imag part of eigenvalues
+    {
+    const int L = DR.Length();
+#ifdef DEBUG
+    if(DI.Length() != L) Error("Vectors must have same length in findEig");
+#endif
+    Vector A2(L);
+    Real maxj = -1;
+    int w = -1;
+    for(int ii = 1; ii <= L; ++ii) 
+        {
+        A2(ii) = sqr(DR(ii))+sqr(DI(ii));
+        if(A2(ii) > maxj) 
+            {
+            maxj = A2(ii);
+            w = ii;
+            }
+        }
+    for(int j = 1; j <= num; ++j)
+        {
+        Real nmax = -1;
+        for(int ii = 1; ii <= L; ++ii)
+            {
+            if(A2(ii) > nmax && A2(ii) < maxj)
+                {
+                nmax = A2(ii);
+                w = ii;
+                }
+            }
+        maxj = nmax;
+        }
+    //Cout << "DR = " << DR;
+    //Cout << Format("Eig %d (%f) at position %d") % num % DR(w) % w << Endl;
+    return (w-1);
+    }
+
+
 template <class BigMatrixT, class Tensor> 
 std::vector<Complex>
 complexDavidson(const BigMatrixT& A, 
@@ -258,6 +298,9 @@ complexDavidson(const BigMatrixT& A,
         else // ii != 0
             {
             //Diagonalize M
+            int w = t; //w 'which' variable needed because
+                       //eigs returned by ComplexEigenValues and
+                       //GenEigenvalues aren't sorted
             if(complex_diag)
                 {
                 if(hermitian)
@@ -269,17 +312,18 @@ complexDavidson(const BigMatrixT& A,
                 else
                     {
                     ComplexEigenvalues(MrefR,MrefI,D,DI,UR,UI);
+                    w = findEig(t,D,DI);
                     }
 
                 //Compute corresponding eigenvector
                 //phi_t of A from the min evec of M
                 //(and start calculating residual q)
 
-                phi_t = (UR(1,1+t)*Complex_1+UI(1,1+t)*Complex_i)*V[0];
-                q   = (UR(1,1+t)*Complex_1+UI(1,1+t)*Complex_i)*AV[0];
+                phi_t = (UR(1,1+w)*Complex_1+UI(1,1+w)*Complex_i)*V[0];
+                q   = (UR(1,1+w)*Complex_1+UI(1,1+w)*Complex_i)*AV[0];
                 for(int k = 1; k <= ii; ++k)
                     {
-                    const Complex cfac = (UR(k+1,1+t)*Complex_1+UI(k+1,1+t)*Complex_i);
+                    const Complex cfac = (UR(k+1,1+w)*Complex_1+UI(k+1,1+w)*Complex_i);
                     phi_t += cfac*V[k];
                     q   += cfac*AV[k];
                     }
@@ -296,34 +340,35 @@ complexDavidson(const BigMatrixT& A,
                 else
                     {
                     GenEigenValues(MrefR,D,DI,UR,UI);
-                    if(Norm(UI.Column(1+t)) > Approx0)
+                    w = findEig(t,D,DI);
+                    if(Norm(UI.Column(1+w)) > Approx0)
                         complex_evec = true;
                     }
 
                 //Compute corresponding eigenvector
                 //phi_t of A from the min evec of M
                 //(and start calculating residual q)
-                phi_t = UR(1,1+t)*V[0];
-                q   = UR(1,1+t)*AV[0];
+                phi_t = UR(1,1+w)*V[0];
+                q   = UR(1,1+w)*AV[0];
                 for(int k = 1; k <= ii; ++k)
                     {
-                    phi_t += UR(k+1,1+t)*V[k];
-                    q   += UR(k+1,1+t)*AV[k];
+                    phi_t += UR(k+1,1+w)*V[k];
+                    q   += UR(k+1,1+w)*AV[k];
                     }
                 if(complex_evec)
                     {
-                    phi_t += Complex_i*UI(1,1+t)*V[0];
-                    q   += Complex_i*UI(1,1+t)*AV[0];
+                    phi_t += Complex_i*UI(1,1+w)*V[0];
+                    q   += Complex_i*UI(1,1+w)*AV[0];
                     for(int k = 1; k <= ii; ++k)
                         {
-                        phi_t += Complex_i*UI(k+1,1+t)*V[k];
-                        q   += Complex_i*UI(k+1,1+t)*AV[k];
+                        phi_t += Complex_i*UI(k+1,1+w)*V[k];
+                        q   += Complex_i*UI(k+1,1+w)*AV[k];
                         }
                     }
                 }
 
-            //lambda is the t^th eigenvalue of M
-            lambda = Complex(D(1+t),DI(1+t));
+            //lambda is the w^th eigenvalue of M
+            lambda = Complex(D(1+w),DI(1+w));
 
             //Step B of Davidson (1975)
             //Calculate residual q
@@ -333,7 +378,7 @@ complexDavidson(const BigMatrixT& A,
                 q += (-lambda)*phi_t;
 
             //Fix sign
-            if(UR(1,1+t) < 0)
+            if(UR(1,1+w) < 0)
                 {
                 phi_t *= -1;
                 q *= -1;
