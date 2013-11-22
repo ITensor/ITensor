@@ -11,6 +11,18 @@
 #define Format boost::format
 
 //
+// Use basic power method to find first n==vecs.size()
+// eigenvalues and eigenvectors of the matrix A.
+// (A must provide the .product(Tensor in,Tensor& out) method)
+// Returns the eigenvalues and vecs are equal to the eigenvectors on return.
+//
+template <typename BigMatrixT, typename Tensor>
+std::vector<Real>
+powerMethod(const BigMatrixT& A, 
+            std::vector<Tensor>& vecs,
+            const OptSet& opts = Global::opts());
+
+//
 // Uses the Davidson algorithm to find the 
 // minimal eigenvector of the sparse matrix A.
 // (BigMatrixT objects must implement the methods product, size and diag.)
@@ -54,6 +66,57 @@ nonOrthDavidson(const BigMatrixTA& A,
                 const BigMatrixTB& B, 
                 Tensor& phi, 
                 const OptSet& opts = Global::opts());
+
+
+
+//
+//
+// Implementations
+//
+//
+
+
+
+template <typename BigMatrixT, typename Tensor>
+std::vector<Real>
+powerMethod(const BigMatrixT& A, 
+            std::vector<Tensor>& vecs,
+            const OptSet& opts)
+    {
+    const size_t nget = vecs.size();
+    const int maxiter = 1000;
+    const Real errgoal_ = opts.getReal("ErrGoal",1E-4);
+    const int dlevel = opts.getInt("DebugLevel",0);
+    std::vector<Real> eigs(nget,1000);
+    for(size_t t = 0; t < nget; ++t)
+        {
+        Tensor& v = vecs.at(t);
+        Tensor vp;
+        Real& lambda = eigs.at(t);
+        Real last_lambda = 1000;
+
+        v /= v.norm();
+        for(int ii = 1; ii <= maxiter; ++ii)
+            {
+            A.product(v,vp);
+            v = vp;
+            for(size_t j = 0; j < t; ++j)
+                {
+                v += (-eigs.at(j)*vecs.at(j)*BraKet(vecs.at(j),v));
+                }
+            last_lambda = lambda;
+            lambda = v.norm();
+            v /= lambda;
+            if(dlevel >= 1)
+                Cout << Format("%d %d %.10f") % t % ii % lambda << Endl;
+            if(fabs(lambda-last_lambda) < errgoal_)
+                {
+                break;
+                }
+            }
+        }
+    return eigs;
+    }
 
 
 //Function object which applies the mapping
