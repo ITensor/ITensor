@@ -392,7 +392,9 @@ void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int m
 
 template <class Tensor>
 void 
-zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff, int maxm,
+zipUpApplyMPO(const MPSt<Tensor>& psi, 
+              const MPOt<Tensor>& K, 
+              MPSt<Tensor>& res,
               const OptSet& opts)
     {
     typedef typename Tensor::IndexT
@@ -404,8 +406,8 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     if(&psi == &res)
         Error("psi and res must be different MPS instances");
 
-    if(cutoff < 0) cutoff = psi.cutoff();
-    if(maxm < 0) maxm = psi.maxm();
+    Real cutoff = opts.getReal("Cutoff",psi.cutoff());
+    int maxm = opts.getInt("Maxm",psi.maxm());
 
     const int N = psi.N();
     if(K.N() != N) 
@@ -475,10 +477,10 @@ zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res,
     } //void zipUpApplyMPO
 template
 void 
-zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, Real cutoff, int maxm, const OptSet& opts);
+zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, const OptSet& opts);
 template
 void 
-zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, Real cutoff, int maxm, const OptSet& opts);
+zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const OptSet& opts);
 
 //Expensive: scales as m^3 k^3!
 template<class Tensor>

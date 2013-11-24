@@ -360,7 +360,9 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
 //
 template<class Tensor>
 void 
-zipUpApplyMPO(const MPSt<Tensor>& psi, const MPOt<Tensor>& K, MPSt<Tensor>& res, Real cutoff = -1, int maxm = -1,
+zipUpApplyMPO(const MPSt<Tensor>& psi, 
+              const MPOt<Tensor>& K, 
+              MPSt<Tensor>& res, 
               const OptSet& opts = Global::opts());
 
 //Applies an MPO K to an MPS x with no approximation (|res>=K|x>)
