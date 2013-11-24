@@ -21,7 +21,7 @@ SOURCES= matrix.cc utility.cc sparse.cc david.cc hpsortir.cc \
 	conjugate_gradient.cc sparseref.cc\
 	daxpy.cc svd.cc
 
-GOBJECTS= $(patsubst %,g_objs/%, $(OBJECTS))
+GOBJECTS= $(patsubst %,.debug_objs/%, $(OBJECTS))
 
 CCFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -DPLATFORM_$(PLATFORM)
 CCGFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS) -DPLATFORM_$(PLATFORM)
@@ -34,7 +34,7 @@ LIBGFILE= libmatrix-g.a
 %.o: %.cc
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-g_objs/%.o: %.cc
+.debug_objs/%.o: %.cc
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 install: libmatrix-g.a libmatrix.a
@@ -56,7 +56,7 @@ libmatrix-g.a: mkgdir $(GOBJECTS) $(HEADERS)
 	touch libmatrix-g.a
 
 mkgdir:
-	mkdir -p g_objs
+	mkdir -p .debug_objs
 
 timeit:	timeit.o $(LIBFILE)
 	$(CCCOM) $(CCFLAGS) -o timeit timeit.o $(ITENSOR_LIBFLAGS)
@@ -70,16 +70,16 @@ testsref: testsref.o sparseref.o $(LIBFILE)
 	$(CCCOM) $(CCGFLAGS) -o testsref testsref.o sparseref.o $(ITENSOR_LIBGFLAGS)
 	touch testsref
 
-testmem: g_objs/testmem.o $(LIBGFILE)
-	$(CCCOM) $(CCGFLAGS) -o testmem g_objs/testmem.o $(ITENSOR_LIBGFLAGS)
+testmem: .debug_objs/testmem.o $(LIBGFILE)
+	$(CCCOM) $(CCGFLAGS) -o testmem .debug_objs/testmem.o $(ITENSOR_LIBGFLAGS)
 	touch testmem
 
-testmat:	g_objs/testmat.o $(LIBGFILE)
-	$(CCCOM) $(CCGFLAGS) -o testmat g_objs/testmat.o $(ITENSOR_LIBGFLAGS)
+testmat:	.debug_objs/testmat.o $(LIBGFILE)
+	$(CCCOM) $(CCGFLAGS) -o testmat .debug_objs/testmat.o $(ITENSOR_LIBGFLAGS)
 
 clean:	
 	rm -f *.o libmatrix.a libmatrix-g.a
-	rm -fr g_objs
+	rm -fr .debug_objs
 	rm -f test testsparse testsparse2 testsparse3 davidtest pbf testmat timeit
 	rm -f subtest *.tar *.tar.gz
 
@@ -97,16 +97,16 @@ david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
 sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 svd.o: svd.h matrixref.h
 
-g_objs/conjugate_gradient.o: matrix.h bigmatrix.h
-g_objs/sparseref.o: sparseref.h
-g_objs/storelink.o: storelink.h
-g_objs/matrixref.o: matrix.h matrixref.h storelink.h
-g_objs/matrix.o: matrix.h matrixref.h storelink.h
-g_objs/utility.o: matrix.h matrixref.h storelink.h
-g_objs/test.o: matrix.h matrixref.h storelink.h
-g_objs/testsparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
-g_objs/davidtest.o: matrix.h sparse.h bigmatrix.h davidson.h precisio.h\
+.debug_objs/conjugate_gradient.o: matrix.h bigmatrix.h
+.debug_objs/sparseref.o: sparseref.h
+.debug_objs/storelink.o: storelink.h
+.debug_objs/matrixref.o: matrix.h matrixref.h storelink.h
+.debug_objs/matrix.o: matrix.h matrixref.h storelink.h
+.debug_objs/utility.o: matrix.h matrixref.h storelink.h
+.debug_objs/test.o: matrix.h matrixref.h storelink.h
+.debug_objs/testsparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
+.debug_objs/davidtest.o: matrix.h sparse.h bigmatrix.h davidson.h precisio.h\
 	matrixref.h storelink.h
-g_objs/david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
-g_objs/sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
-g_objs/svd.o: svd.h matrixref.h
+.debug_objs/david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
+.debug_objs/sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
+.debug_objs/svd.o: svd.h matrixref.h
