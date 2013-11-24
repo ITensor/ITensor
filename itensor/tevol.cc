@@ -867,8 +867,6 @@ imagTEvol(const MPOt<Tensor>& H,
     const int order = opts.getInt("Order",4);
     const bool showm = opts.getBool("ShowM",false);
 
-    const string method = opts.getString("Method","default");
-    
     if(verbose) 
         {
         cout << format("Timestep %.5f, total time %.5f, using order %d method")
