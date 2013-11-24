@@ -884,14 +884,14 @@ imagTEvol(const MPOt<Tensor>& H,
         if(fabs(ttotal-tsofar) < this_step)
             this_step = fabs(ttotal-tsofar);
 
-        //applyExpH(H,this_step,psi,psi1,opts&Opt("DoRelCutoff"));
+        applyExpH(psi,H,this_step,psi1,opts&Opt("DoRelCutoff"));
 
-        MPST last(psi1);
-        for(int ord = order; ord >= 1; --ord)
-            {
-            fitApplyMPO(psi,-this_step/(1.*ord),H,last,psi1,opts&Opt("DoRelCutoff"));
-            if(ord != 1) last = psi1;
-            }
+        //MPST last(psi1);
+        //for(int ord = order; ord >= 1; --ord)
+        //    {
+        //    fitApplyMPO(psi,-this_step/(1.*ord),last,H,psi1,opts&Opt("DoRelCutoff"));
+        //    if(ord != 1) last = psi1;
+        //    }
 
         psi1.position(1);
         psi1.normalize();
