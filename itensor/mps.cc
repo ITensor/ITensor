@@ -827,7 +827,7 @@ orthMPS(Tensor& A1, Tensor& A2, Spectrum& spec, Direction dir, const OptSet& opt
 
     Tensor A,B(bnd);
     Tensor D;
-    svd(L,A,D,B);
+    svd(L,A,D,B,spec,opts);
 
     L = A;
     R *= (D*B);
