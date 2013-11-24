@@ -6,6 +6,17 @@
 #define __ITENSOR_PRODSTATS_H
 
 
+//
+// Usage of Timers feature:
+// 1. Uncomment #define COLLECT_PRODSTATS line below and recompile library.
+// 2. In either library or client code, start and stop timers around sections
+//    of code using START_TIMER(#); ... STOP_TIMER(#); where # is any integer
+//    from 1 to 100.
+// 3. At end of main function of client code, add the line PRINT_TIMERS to see
+//    a printout of the times of each section.
+//
+
+
 //#define COLLECT_PRODSTATS
 
 #ifdef COLLECT_PRODSTATS
@@ -39,7 +50,7 @@
 #include "error.h"
 #include "boost/format.hpp"
 
-#define NTIMERS 70
+#define NTIMERS 100
 
 class Timers
         {
