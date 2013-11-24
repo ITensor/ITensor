@@ -871,9 +871,7 @@ imagTEvol(const MPOt<Tensor>& H,
     
     if(verbose) 
         {
-        const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
-        cout << format("Taking %d steps of timestep %.5f, total time %.5f, using order %d method")
-                % nt
+        cout << format("Timestep %.5f, total time %.5f, using order %d method")
                 % tstep
                 % ttotal
                 % order
@@ -888,16 +886,14 @@ imagTEvol(const MPOt<Tensor>& H,
         if(fabs(ttotal-tsofar) < this_step)
             this_step = fabs(ttotal-tsofar);
 
-        //applyExpH(H,tstep,psi,psi1,opts);
+        //applyExpH(H,this_step,psi,psi1,opts&Opt("DoRelCutoff"));
 
         MPST last(psi1);
-        START_TIMER(1)
         for(int ord = order; ord >= 1; --ord)
             {
             fitApplyMPO(psi,-this_step/(1.*ord),H,last,psi1,opts&Opt("DoRelCutoff"));
-            last = psi1;
+            if(ord != 1) last = psi1;
             }
-        STOP_TIMER(1)
 
         psi1.position(1);
         psi1.normalize();
@@ -921,7 +917,6 @@ imagTEvol(const MPOt<Tensor>& H,
                 }
             cout << endl;
             }
-
 
         psi = psi1;
         tsofar += this_step;
