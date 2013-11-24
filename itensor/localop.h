@@ -119,14 +119,8 @@ class LocalOp
     const Tensor&
     bondTensor() const 
         { 
-        makeBond();
-        return bond_;
+        return (*Op1_) * (*Op2_);
         }
-
-    bool
-    combineMPO() const { return combine_mpo_; }
-    void
-    combineMPO(bool val) { combine_mpo_ = val; }
 
     bool
     isNull() const { return Op1_ == 0; }
@@ -150,7 +144,6 @@ class LocalOp
         Op2_ = other.Op2_;
         L_ = other.L_;
         R_ = other.R_;
-        combine_mpo_ = other.combine_mpo_;
         bond_ = other.bond_;
         }
 
@@ -163,7 +156,6 @@ class LocalOp
 
     const Tensor *Op1_, *Op2_; 
     const Tensor *L_, *R_; 
-    bool combine_mpo_;
     mutable int size_;
     mutable Tensor bond_;
 
@@ -172,12 +164,6 @@ class LocalOp
 
     void
     makeBond() const;
-
-    void
-    processOpts(const OptSet& opts)
-        {
-        combine_mpo_ = opts.getBool("CombineMPO",true);
-        }
 
     };
 
@@ -189,10 +175,8 @@ LocalOp(const OptSet& opts)
     Op2_(0),
     L_(0),
     R_(0),
-    combine_mpo_(true),
     size_(-1)
     { 
-    processOpts(opts);
     }
 
 template <class Tensor>
@@ -204,10 +188,8 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
     Op2_(0),
     L_(0),
     R_(0),
-    combine_mpo_(true),
     size_(-1)
     {
-    processOpts(opts);
     update(Op1,Op2);
     }
 
@@ -221,10 +203,8 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
     Op2_(0),
     L_(0),
     R_(0),
-    combine_mpo_(true),
     size_(-1)
     {
-    processOpts(opts);
     update(Op1,Op2,L,R);
     }
 
@@ -282,29 +262,15 @@ product(const Tensor& phi, Tensor& phip) const
         if(!RIsNull()) 
             phip *= R(); //m^3 k d
 
-        if(combine_mpo_)
-            {
-            phip *= bondTensor();
-            }
-        else
-            {
-            phip *= Op2; //m^2 k^2
-            phip *= Op1; //m^2 k^2
-            }
+        phip *= Op2; //m^2 k^2
+        phip *= Op1; //m^2 k^2
         }
     else
         {
         phip = phi * L(); //m^3 k d
 
-        if(combine_mpo_)
-            {
-            phip *= bondTensor();
-            }
-        else
-            {
-            phip *= Op1; //m^2 k^2
-            phip *= Op2; //m^2 k^2
-            }
+        phip *= Op1; //m^2 k^2
+        phip *= Op2; //m^2 k^2
 
         if(!RIsNull()) 
             phip *= R();
@@ -553,17 +519,6 @@ size() const
         size_ *= findtype(*Op2_,Site).m();
         }
     return size_;
-    }
-
-template <class Tensor>
-void inline LocalOp<Tensor>::
-makeBond() const
-    {
-    if(bond_.isNull()) 
-        {
-        if(!combine_mpo_) Error("combineMPO is false");
-        bond_ = (*Op1_) * (*Op2_);
-        }
     }
 
 #undef Cout
