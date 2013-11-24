@@ -374,16 +374,16 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res);
 
 template<class Tensor>
 void
-fitApplyMPO(const MPOt<Tensor>& K,
-            const MPSt<Tensor>& psi,
+fitApplyMPO(const MPSt<Tensor>& psi,
+            const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
             const OptSet& opts = Global::opts());
 
 template<class Tensor>
 void
 fitApplyMPO(Real fac,
-            const MPOt<Tensor>& K,
             const MPSt<Tensor>& psi,
+            const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
             const OptSet& opts = Global::opts());
 
@@ -391,8 +391,8 @@ template<class Tensor>
 Real
 fitApplyMPO(const MPSt<Tensor>& psiA, 
             Real mpofac,
-            const MPOt<Tensor>& H,
             const MPSt<Tensor>& psiB,
+            const MPOt<Tensor>& H,
             MPSt<Tensor>& res,
             const OptSet& opts = Global::opts());
 
@@ -401,8 +401,8 @@ Real
 fitApplyMPO(Real mpsfac,
             const MPSt<Tensor>& psiA, 
             Real mpofac,
-            const MPOt<Tensor>& H,
             const MPSt<Tensor>& psiB,
+            const MPOt<Tensor>& H,
             MPSt<Tensor>& res,
             const OptSet& opts = Global::opts());
 
@@ -426,9 +426,9 @@ expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
 //
 template<class Tensor>
 void
-applyExpH(const MPOt<Tensor>& H, 
+applyExpH(const MPSt<Tensor>& psi, 
+          const MPOt<Tensor>& H, 
           Real tau, 
-          const MPSt<Tensor>& psi, 
           MPSt<Tensor>& res, 
           const OptSet& opts = Global::opts());
 

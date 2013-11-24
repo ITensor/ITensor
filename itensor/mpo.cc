@@ -531,23 +531,23 @@ exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
 
 template<class Tensor>
 void
-fitApplyMPO(const MPOt<Tensor>& K,
-            const MPSt<Tensor>& psi,
+fitApplyMPO(const MPSt<Tensor>& psi,
+            const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
             const OptSet& opts)
     {
-    fitApplyMPO(1.,K,psi,res,opts);
+    fitApplyMPO(1.,psi,K,res,opts);
     }
 template
-void fitApplyMPO(const MPOt<ITensor>& K, const MPSt<ITensor>& psi, MPSt<ITensor>& res, const OptSet& opts);
+void fitApplyMPO(const MPSt<ITensor>& psi, const MPOt<ITensor>& K, MPSt<ITensor>& res, const OptSet& opts);
 template
-void fitApplyMPO(const MPOt<IQTensor>& K, const MPSt<IQTensor>& psi, MPSt<IQTensor>& res, const OptSet& opts);
+void fitApplyMPO(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& K, MPSt<IQTensor>& res, const OptSet& opts);
 
 template<class Tensor>
 void
 fitApplyMPO(Real fac,
-            const MPOt<Tensor>& K,
             const MPSt<Tensor>& psi,
+            const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
             const OptSet& opts)
     {
@@ -559,13 +559,12 @@ fitApplyMPO(Real fac,
     const int minm = opts.getInt("Minm",res.minm());
     const int nsweep = opts.getInt("Nsweep",1);
 
-    vector<Tensor> LK(N+2),
-                   RK(N+2);
+    vector<Tensor> BK(N+2);
 
-    RK.at(N-1) = psi.A(N)*K.A(N)*conj(primed(res.A(N)));
-    for(int n = N-2; n >= 2; --n)
+    BK.at(N) = psi.A(N)*K.A(N)*conj(primed(res.A(N)));
+    for(int n = N-1; n > 2; --n)
         {
-        RK.at(n) = RK.at(n+1)*psi.A(n+1)*K.A(n+1)*conj(primed(res.A(n+1)));
+        BK.at(n) = BK.at(n+1)*psi.A(n)*K.A(n)*conj(primed(res.A(n)));
         }
 
     const Real orig_cut = res.cutoff();
@@ -576,31 +575,27 @@ fitApplyMPO(Real fac,
     res.minm(minm);
     res.maxm(maxm);
 
+    res.position(1);
+
     for(int sw = 1; sw <= nsweep; ++sw)
         {
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
-            Tensor wfK = (LK.at(b).isNull() ? psi.A(b) : LK.at(b)*psi.A(b));
-            wfK *= K.A(b);
-            Tensor rwfK = (RK.at(b+1).isNull() ? psi.A(b+1) : RK.at(b+1)*psi.A(b+1));
+            Tensor lwfK = (BK.at(b-1).isNull() ? psi.A(b) : BK.at(b-1)*psi.A(b));
+            lwfK *= K.A(b);
+            Tensor rwfK = (BK.at(b+2).isNull() ? psi.A(b+1) : BK.at(b+2)*psi.A(b+1));
             rwfK *= K.A(b+1);
-            wfK *= rwfK;
-            wfK.noprime();
 
+            Tensor wfK = lwfK*rwfK;
+            wfK.noprime();
             wfK *= fac;
 
             res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
 
             if(ha == 1)
-                {
-                LK.at(b+1) = (LK.at(b).isNull() ? psi.A(b) : LK.at(b)*psi.A(b))
-                             * K.A(b) * conj(primed(res.A(b)));
-                }
+                BK.at(b) = lwfK * conj(primed(res.A(b)));
             else
-                {
-                RK.at(b) = (RK.at(b+1).isNull() ? psi.A(b+1) : RK.at(b+1)*psi.A(b+1))
-                           * K.A(b+1) * conj(primed(res.A(b+1)));
-                }
+                BK.at(b+1) = rwfK * conj(primed(res.A(b+1)));
             }
         }
 
@@ -610,36 +605,36 @@ fitApplyMPO(Real fac,
     }
 template
 void
-fitApplyMPO(Real fac,const MPOt<ITensor>& K,const MPSt<ITensor>& psi,MPSt<ITensor>& res,const OptSet& opts);
+fitApplyMPO(Real fac,const MPSt<ITensor>& psi,const MPOt<ITensor>& K,MPSt<ITensor>& res,const OptSet& opts);
 template
 void
-fitApplyMPO(Real fac,const MPOt<IQTensor>& K,const MPSt<IQTensor>& psi,MPSt<IQTensor>& res,const OptSet& opts);
+fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const OptSet& opts);
 
 template<class Tensor>
 Real
 fitApplyMPO(const MPSt<Tensor>& psiA, 
             Real mpofac,
-            const MPOt<Tensor>& K,
             const MPSt<Tensor>& psiB,
+            const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
             const OptSet& opts)
     {
-    return fitApplyMPO(1.,psiA,mpofac,K,psiB,res,opts);
+    return fitApplyMPO(1.,psiA,mpofac,psiB,K,res,opts);
     }
 template
 Real
-fitApplyMPO(const MPSt<ITensor>& psiA, Real mpofac,const MPOt<ITensor>& K,const MPSt<ITensor>& psiB,MPSt<ITensor>& res,const OptSet& opts);
+fitApplyMPO(const MPSt<ITensor>& psiA, Real mpofac,const MPSt<ITensor>& psiB,const MPOt<ITensor>& K,MPSt<ITensor>& res,const OptSet& opts);
 template
 Real
-fitApplyMPO(const MPSt<IQTensor>& psiA, Real mpofac,const MPOt<IQTensor>& K,const MPSt<IQTensor>& psiB,MPSt<IQTensor>& res,const OptSet& opts);
+fitApplyMPO(const MPSt<IQTensor>& psiA, Real mpofac,const MPSt<IQTensor>& psiB,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const OptSet& opts);
 
 template<class Tensor>
 Real
 fitApplyMPO(Real mpsfac,
             const MPSt<Tensor>& psiA, 
             Real mpofac,
-            const MPOt<Tensor>& K,
             const MPSt<Tensor>& psiB,
+            const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
             const OptSet& opts)
     {
@@ -672,38 +667,34 @@ fitApplyMPO(Real mpsfac,
     res.minm(minm);
     res.maxm(maxm);
 
+    res.position(1);
+
     for(int sw = 1; sw <= nsweep; ++sw)
         {
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
-            Tensor wf = (B.at(b-1).isNull() ? psiA.A(b) : B.at(b-1)*psiA.A(b));
-            wf *= (B.at(b+2).isNull() ? psiA.A(b+1) : psiA.A(b+1)*B.at(b+2));
-            wf.noprime();
+            Tensor lwf = (B.at(b-1).isNull() ? psiA.A(b) : B.at(b-1)*psiA.A(b));
+            Tensor rwf = (B.at(b+2).isNull() ? psiA.A(b+1) : psiA.A(b+1)*B.at(b+2));
 
-            Tensor wfK = (BK.at(b-1).isNull() ? psiB.A(b) : BK.at(b-1)*psiB.A(b));
-            wfK *= K.A(b);
+            Tensor lwfK = (BK.at(b-1).isNull() ? psiB.A(b) : BK.at(b-1)*psiB.A(b));
+            lwfK *= K.A(b);
             Tensor rwfK = (BK.at(b+2).isNull() ? psiB.A(b+1) : BK.at(b+2)*psiB.A(b+1));
             rwfK *= K.A(b+1);
-            wfK *= rwfK;
-            wfK.noprime();
 
-            wf = mpsfac*wf + mpofac*wfK;
+            Tensor wf = mpsfac*deprimed(lwf*rwf) + mpofac*deprimed(lwfK*rwfK);
+            wf.noprime();
 
             res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
 
             if(ha == 1)
                 {
-                B.at(b) = (B.at(b-1).isNull() ? psiA.A(b) : B.at(b-1)*psiA.A(b))
-                            * conj(primed(res.A(b),Link));
-                BK.at(b) = (BK.at(b-1).isNull() ? psiB.A(b) : BK.at(b-1)*psiB.A(b))
-                             * K.A(b) * conj(primed(res.A(b)));
+                B.at(b) = lwf * conj(primed(res.A(b),Link));
+                BK.at(b) = lwfK * conj(primed(res.A(b)));
                 }
             else
                 {
-                B.at(b+1) = (B.at(b+2).isNull() ? psiA.A(b+1) : B.at(b+2)*psiA.A(b+1))
-                          * conj(primed(res.A(b+1),Link));
-                BK.at(b+1) = (BK.at(b+2).isNull() ? psiB.A(b+1) : BK.at(b+2)*psiB.A(b+1))
-                           * K.A(b+1) * conj(primed(res.A(b+1)));
+                B.at(b+1) = rwf * conj(primed(res.A(b+1),Link));
+                BK.at(b+1) = rwfK * conj(primed(res.A(b+1)));
                 }
             }
         }
@@ -722,15 +713,18 @@ fitApplyMPO(Real mpsfac,
     }
 template
 Real
-fitApplyMPO(Real mpsfac,const MPSt<ITensor>& psiA, Real mpofac,const MPOt<ITensor>& K,const MPSt<ITensor>& psiB,MPSt<ITensor>& res,const OptSet& opts);
+fitApplyMPO(Real mpsfac,const MPSt<ITensor>& psiA, Real mpofac,const MPSt<ITensor>& psiB,const MPOt<ITensor>& K,MPSt<ITensor>& res,const OptSet& opts);
 template
 Real
-fitApplyMPO(Real mpsfac,const MPSt<IQTensor>& psiA, Real mpofac,const MPOt<IQTensor>& K,const MPSt<IQTensor>& psiB,MPSt<IQTensor>& res,const OptSet& opts);
+fitApplyMPO(Real mpsfac,const MPSt<IQTensor>& psiA, Real mpofac,const MPSt<IQTensor>& psiB,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const OptSet& opts);
 
 template<class Tensor>
 void 
-expsmallH(const MPOt<Tensor>& H, MPOt<Tensor>& K, 
-          Real tau, Real Etot, Real Kcutoff)
+expsmallH(const MPOt<Tensor>& H, 
+          MPOt<Tensor>& K, 
+          Real tau, 
+          Real Etot, 
+          Real Kcutoff)
     {
     const int maxm = 400;
 
@@ -809,87 +803,128 @@ expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub);
 
 template<class Tensor>
 void
-applyExpH(const MPOt<Tensor>& H, 
+applyExpH(const MPSt<Tensor>& psi, 
+          const MPOt<Tensor>& H, 
           Real tau, 
-          const MPSt<Tensor>& psi, 
           MPSt<Tensor>& res, 
           const OptSet& opts)
     {
     typedef typename Tensor::IndexT
     IndexT;
 
-    if(&res == &psi)
-        Error("MPS arguments must be different in applyExpH");
+    typedef MPSt<Tensor>
+    MPST;
+
+    if(&psi == &res) Error("Must pass distinct MPS arguments to applyExpH");
+
+    const int order = opts.getInt("Order",10);
 
     const int N = res.N();
     const Real cutoff = opts.getReal("Cutoff",res.cutoff());
     const int maxm = opts.getInt("Maxm",res.maxm());
     const int minm = opts.getInt("Minm",res.minm());
     const int nsweep = opts.getInt("Nsweep",1);
-    const int order = opts.getInt("Order",4);
 
     const Real orig_cut = res.cutoff();
     const int orig_minm = res.minm();
     const int orig_maxm = res.maxm();
+
+    res.position(1);
+
     res.cutoff(cutoff);
     res.minm(minm);
     res.maxm(maxm);
 
-    MPSt<Tensor> psiB(psi);
+    vector<Tensor> lastB(N+2),
+                   B(N+2),
+                   BH(N+2);
 
-    for(int ord = order; ord >= 1; --ord)
+    B.at(N) = psi.A(N)*conj(primed(psi.A(N),Link));
+    BH.at(N) = psi.A(N)*H.A(N)*conj(primed(psi.A(N)));
+    for(int n = N-1; n > 2; --n)
         {
+        B.at(n) = B.at(n+1)*psi.A(n)*conj(primed(psi.A(n),Link));
+        BH.at(n) = BH.at(n+1)*psi.A(n)*H.A(n)*conj(primed(psi.A(n)));
+        }
+
+    lastB = B;
+
+    MPST last(psi);
+
+    bool up = true;
+
+    for(int ord = order, n = 0; ord >= 1; --ord, ++n)
+        {
+        //cout << format("Computing psi-tau/%d*H*psi%d (up == %s)") % ord % n % (up?"true":"false") << endl;
         const Real mpofac = -tau/(1.*ord);
 
-        vector<Tensor> B(N+2),
-                       BH(N+2);
-
-        B.at(N) = psi.A(N)*conj(primed(res.A(N),Link));
-        BH.at(N) = psiB.A(N)*H.A(N)*conj(primed(res.A(N)));
-        for(int n = N-1; n > 2; --n)
-            {
-            B.at(n) = B.at(n+1)*psi.A(n)*conj(primed(res.A(n),Link));
-            BH.at(n) = BH.at(n+1)*psiB.A(n)*H.A(n)*conj(primed(res.A(n)));
-            }
+        if(n > 0) lastB.swap(B);
 
         for(int sw = 1; sw <= nsweep; ++sw)
             {
             for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
                 {
-                Tensor wf = (B.at(b-1).isNull() ? psi.A(b) : B.at(b-1)*psi.A(b));
-                wf *= (B.at(b+2).isNull() ? psi.A(b+1) : psi.A(b+1)*B.at(b+2));
-                wf.noprime();
+                Tensor lwf,rwf,
+                       lwfH,rwfH;
 
-                Tensor wfH = (BH.at(b-1).isNull() ? psiB.A(b) : BH.at(b-1)*psiB.A(b));
-                wfH *= H.A(b);
-                Tensor rwfH = (BH.at(b+2).isNull() ? psiB.A(b+1) : BH.at(b+2)*psiB.A(b+1));
-                rwfH *= H.A(b+1);
-                wfH *= rwfH;
-                wfH.noprime();
+                if(up)
+                    {
+                    lwf = (B.at(b-1).isNull() ? psi.A(b) : B.at(b-1)*psi.A(b));
+                    rwf = (B.at(b+2).isNull() ? psi.A(b+1) : B.at(b+2)*psi.A(b+1));
 
-                wf = wf + mpofac*wfH;
+                    lwfH = (BH.at(b-1).isNull() ? last.A(b) : BH.at(b-1)*last.A(b));
+                    lwfH *= H.A(b);
+                    rwfH = (BH.at(b+2).isNull() ? last.A(b+1) : BH.at(b+2)*last.A(b+1));
+                    rwfH *= H.A(b+1);
+                    }
+                else //dn
+                    {
+                    lwf = (B.at(b-1).isNull() ? conj(primed(psi.A(b),Link)) : B.at(b-1)*conj(primed(psi.A(b),Link)));
+                    rwf = (B.at(b+2).isNull() ? conj(primed(psi.A(b+1),Link)) : B.at(b+2)*conj(primed(psi.A(b+1),Link)));
+
+                    lwfH = (BH.at(b-1).isNull() ? conj(primed(last.A(b))) : BH.at(b-1)*conj(primed(last.A(b))));
+                    lwfH *= H.A(b);
+                    rwfH = (BH.at(b+2).isNull() ? conj(primed(last.A(b+1))) : BH.at(b+2)*conj(primed(last.A(b+1))));
+                    rwfH *= H.A(b+1);
+                    }
+
+                Tensor wf = deprimed(lwf*rwf) + mpofac*deprimed(lwfH*rwfH);
+                if(!up) wf.conj();
 
                 res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
 
-                if(ha == 1)
+                if(up)
                     {
-                    B.at(b) = (B.at(b-1).isNull() ? psi.A(b) : B.at(b-1)*psi.A(b))
-                                * conj(primed(res.A(b),Link));
-                    BH.at(b) = (BH.at(b-1).isNull() ? psiB.A(b) : BH.at(b-1)*psiB.A(b))
-                                 * H.A(b) * conj(primed(res.A(b)));
+                    if(ha == 1)
+                        {
+                        B.at(b) = lwf * conj(primed(res.A(b),Link));
+                        BH.at(b) = lwfH * conj(primed(res.A(b)));
+                        }
+                    else
+                        {
+                        B.at(b+1) = rwf * conj(primed(res.A(b+1),Link));
+                        BH.at(b+1) = rwfH * conj(primed(res.A(b+1)));
+                        }
                     }
-                else
+                else //dn
                     {
-                    B.at(b+1) = (B.at(b+2).isNull() ? psi.A(b+1) : B.at(b+2)*psi.A(b+1))
-                              * conj(primed(res.A(b+1),Link));
-                    BH.at(b+1) = (BH.at(b+2).isNull() ? psiB.A(b+1) : BH.at(b+2)*psiB.A(b+1))
-                               * H.A(b+1) * conj(primed(res.A(b+1)));
+                    if(ha == 1)
+                        {
+                        B.at(b) = lwf * res.A(b);
+                        BH.at(b) = lwfH * res.A(b);
+                        }
+                    else
+                        {
+                        B.at(b+1) = rwf * res.A(b+1);
+                        BH.at(b+1) = rwfH * res.A(b+1);
+                        }
                     }
                 }
             }
 
-        if(ord > 1)
-            psiB = res;
+        last = res;
+
+        up = !up;
 
         } // for ord
 
@@ -899,10 +934,10 @@ applyExpH(const MPOt<Tensor>& H,
     }
 template
 void
-applyExpH(const MPOt<ITensor>& H, Real tau, const MPSt<ITensor>& psi, MPSt<ITensor>& res, const OptSet& opts);
+applyExpH(const MPSt<ITensor>& psi, const MPOt<ITensor>& H, Real tau, MPSt<ITensor>& res, const OptSet& opts);
 template
 void
-applyExpH(const MPOt<IQTensor>& H, Real tau, const MPSt<IQTensor>& psi, MPSt<IQTensor>& res, const OptSet& opts);
+applyExpH(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& H, Real tau, MPSt<IQTensor>& res, const OptSet& opts);
 
 void
 putMPOLinks(MPO& W, const OptSet& opts)
