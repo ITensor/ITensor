@@ -28,6 +28,7 @@ SOURCES+= localmpo_test.cc
 SOURCES+= option_test.cc
 SOURCES+= indexset_test.cc
 SOURCES+= model_test.cc
+SOURCES+= bondgate_test.cc
 
 ##################################################################
 
