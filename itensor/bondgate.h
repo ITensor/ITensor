@@ -6,6 +6,7 @@
 #define __ITENSOR_BONDGATE_H
 
 #include "iqtensor.h"
+#include "model.h"
 
 template <class Tensor>
 class BondGate;
@@ -25,9 +26,9 @@ class BondGate
                 tImag,  //imaginary-time gate
                 Swap }; //exchange states of site i and j
 
-    BondGate(const Model& model, int i, int j);
+    BondGate(const Model& sites, int i, int j);
 
-    BondGate(const Model& model, int i, int j, 
+    BondGate(const Model& sites, int i, int j, 
              Type type, Real tau, Tensor bondH);
 
     operator const Tensor&() const { return gate_; }
@@ -50,24 +51,25 @@ class BondGate
     int i_,j_; // The left, right indices of bond
     Tensor gate_;
 
+    void
+    makeSwapGate(const Model& sites);
+
     };
 
 template <class Tensor>
 BondGate<Tensor>::
-BondGate(const Model& model, int i, int j)
+BondGate(const Model& sites, int i, int j)
     : 
     type_(Swap), 
     i_(i), 
     j_(j)
     {
-    Tensor a(model.si(i),primed(model.si(j)),1);
-    Tensor b(model.si(j),primed(model.si(i)),1);
-    gate_ = a*b;
+    makeSwapGate(sites);
     }
 
 template <class Tensor>
 BondGate<Tensor>::
-BondGate(const Model& model, int i, int j, 
+BondGate(const Model& sites, int i, int j, 
          Type type, Real tau, Tensor bondH)
     : 
     type_(type), 
@@ -79,7 +81,7 @@ BondGate(const Model& model, int i, int j,
         Error("When providing bondH, type must be tReal or tImag");
         }
     bondH *= -tau;
-    Tensor unit = model.op("Id",i)*model.op("Id",j);
+    Tensor unit = sites.op("Id",i)*sites.op("Id",j);
     if(type_ == tReal)
         {
         bondH *= Complex_i;
@@ -98,6 +100,31 @@ BondGate(const Model& model, int i, int j,
         term = gate_ * bondH;
         term.mapprime(2,1);
         }
+    }
+
+template <class Tensor>
+void BondGate<Tensor>::
+makeSwapGate(const Model& sites)
+    {
+    Tensor a(sites(i_),primed(sites(j_)),1);
+    Tensor b(sites(j_),primed(sites(i_)),1);
+    gate_ = a*b;
+    }
+
+template<>
+void BondGate<IQTensor>::
+makeSwapGate(const Model& sites)
+    {
+    IQTensor a(conj(sites(i_)),primed(sites(j_))),
+             b(conj(sites(j_)),primed(sites(i_)));
+    for(int n = 1; n <= sites(i_).nindex(); ++n)
+        {
+        const Index &iind(sites(i_).index(n)),
+                    &jind(sites(j_).index(n));
+        a += ITensor(iind,primed(jind),1);
+        b += ITensor(jind,primed(iind),1);
+        }
+    gate_ = a*b;
     }
 
 #endif
