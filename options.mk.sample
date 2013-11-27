@@ -1,6 +1,9 @@
 ### User Configurable Options
 
+##GNU GCC compiler
 CCCOM=g++ -m64
+##Intel C++ compiler
+#CCCOM=icpc -I/usr/include/x86_64-linux-gnu/c++/4.8/
 
 PREFIX=$(THIS_DIR)
 ITENSOR_LIBDIR=$(PREFIX)/lib
@@ -23,6 +26,10 @@ BLAS_LAPACK_INCLUDEFLAGS=
 
 ##Example using the Intel MKL library
 #PLATFORM=mkl
+##on GNU/Linux systems (recommended with Intel C++ compiler icpc for performance on Intel CPUs)
+#BLAS_LAPACK_INCLUDEFLAGS=-I/opt/intel/composer_xe_2013_sp1.1.106/mkl/include
+#BLAS_LAPACK_LIBFLAGS=-L/opt/intel/composer_xe_2013_sp1.1.106/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_rt -lmkl_core -liomp5 -lpthread
+#other UNIX flavours
 #BLAS_LAPACK_INCLUDEFLAGS=-I/sopt/intel/mkl/10.1.0.015/include
 #BLAS_LAPACK_LIBFLAGS=-L/sopt/intel/mkl/10.1.0.015/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lgfortran -lpthread
 
