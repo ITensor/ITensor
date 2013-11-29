@@ -1,9 +1,11 @@
 ### User Configurable Options
 
 ##GNU GCC compiler
-CCCOM=g++ -m64
-##Intel C++ compiler
-#CCCOM=icpc -I/usr/include/x86_64-linux-gnu/c++/4.8/
+CCCOM=g++ -m64 -std=c++11
+##Clang compiler (good to use on Mac OS)
+#CCCOM=clang++ -std=c++11
+##Intel C++ compiler (good to use with Intel MKL)
+#CCCOM=icpc -std=c++0x
 
 PREFIX=$(THIS_DIR)
 ITENSOR_LIBDIR=$(PREFIX)/lib
