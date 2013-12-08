@@ -82,12 +82,17 @@ class MPOt : private MPSt<Tensor>
 
     MPOt& 
     operator*=(Real a) { Parent::operator*=(a); return *this; }
-
     MPOt
     operator*(Real r) const { MPOt res(*this); res *= r; return res; }
-
     friend MPOt inline
     operator*(Real r, MPOt res) { res *= r; return res; }
+
+    MPOt& 
+    operator*=(Complex z) { Parent::operator*=(z); return *this; }
+    MPOt
+    operator*(Complex z) const { MPOt res(*this); res *= z; return res; }
+    friend MPOt inline
+    operator*(Complex z, MPOt res) { res *= z; return res; }
 
     MPOt&
     addAssumeOrth(const MPOt& oth, const OptSet& opts = Global::opts()) 

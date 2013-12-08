@@ -235,12 +235,20 @@ class MPSt
     operator*=(Real a) { Anc(l_orth_lim_+1) *= a; return *this; }
     MPSt& 
     operator/=(Real a) { Anc(l_orth_lim_+1) /= a; return *this; }
-
     MPSt 
     operator*(Real r) const { MPSt res(*this); res *= r; return res; }
-
     friend inline MPSt 
     operator*(Real r, MPSt res) { res *= r; return res; }
+
+    MPSt& 
+    operator*=(Complex z) { Anc(l_orth_lim_+1) *= z; return *this; }
+    MPSt& 
+    operator/=(Complex z) { Anc(l_orth_lim_+1) /= z; return *this; }
+    MPSt 
+    operator*(Complex z) const { MPSt res(*this); res *= z; return res; }
+    friend inline MPSt 
+    operator*(Complex z, MPSt res) { res *= z; return res; }
+
 
     MPSt& 
     operator+=(const MPSt& oth);

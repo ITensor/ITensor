@@ -55,6 +55,9 @@ class HamBuilder
     HamBuilder&
     operator*=(Real val) { W_ *= val; return *this; }
 
+    HamBuilder&
+    operator*=(Complex z) { W_ *= z; return *this; }
+
     private:
 
     /////////////////
@@ -95,6 +98,20 @@ HamBuilder inline
 operator*(Real x, HamBuilder hb)
     {
     hb *= x;
+    return hb;
+    }
+
+HamBuilder inline
+operator*(HamBuilder hb, Complex z)
+    {
+    hb *= z;
+    return hb;
+    }
+
+HamBuilder inline
+operator*(Complex z, HamBuilder hb)
+    {
+    hb *= z;
     return hb;
     }
 
