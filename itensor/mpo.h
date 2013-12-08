@@ -372,6 +372,14 @@ template<class Tensor>
 void 
 exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res);
 
+//Applies an MPO K to an MPS psi (|res>=K|psi>) using a sweeping/DMRG-like
+//fitting approach. Warning: this method can get stuck i.e. fail to converge
+//if the initial value of res is too different from the product K|psi>.
+//List of options recognized:
+//   Nsweep (default: 1) - number of sweeps to use
+//   Maxm (default: res.maxm()) - maximum number of states to keep
+//   Minm (default: res.minm()) - minimum number of states to keep
+//   Cutoff (default: res.cutoff()) - maximum truncation error goal
 template<class Tensor>
 void
 fitApplyMPO(const MPSt<Tensor>& psi,
@@ -379,6 +387,14 @@ fitApplyMPO(const MPSt<Tensor>& psi,
             MPSt<Tensor>& res,
             const OptSet& opts = Global::opts());
 
+//Applies an MPO K to an MPS psi including an overall scalar factor (|res>=fac*K|psi>) 
+//using a sweeping/DMRG-like fitting approach. 
+//Warning: this method can get stuck i.e. fail to converge
+//if the initial value of res is too different from the product fac*K|psi>.
+//   Nsweep (default: 1) - number of sweeps to use
+//   Maxm (default: res.maxm()) - maximum number of states to keep
+//   Minm (default: res.minm()) - minimum number of states to keep
+//   Cutoff (default: res.cutoff()) - maximum truncation error goal
 template<class Tensor>
 void
 fitApplyMPO(Real fac,
@@ -387,6 +403,14 @@ fitApplyMPO(Real fac,
             MPSt<Tensor>& res,
             const OptSet& opts = Global::opts());
 
+//Computes |res> = |psiA> + mpofac*H*|psiB>
+//using a sweeping/DMRG-like fitting approach. 
+//Warning: this method can get stuck i.e. fail to converge
+//if the initial value of res is too different from desired exact result.
+//   Nsweep (default: 1) - number of sweeps to use
+//   Maxm (default: res.maxm()) - maximum number of states to keep
+//   Minm (default: res.minm()) - minimum number of states to keep
+//   Cutoff (default: res.cutoff()) - maximum truncation error goal
 template<class Tensor>
 Real
 fitApplyMPO(const MPSt<Tensor>& psiA, 
@@ -396,6 +420,14 @@ fitApplyMPO(const MPSt<Tensor>& psiA,
             MPSt<Tensor>& res,
             const OptSet& opts = Global::opts());
 
+//Computes |res> = mpsfac*|psiA> + mpofac*H*|psiB>
+//using a sweeping/DMRG-like fitting approach. 
+//Warning: this method can get stuck i.e. fail to converge
+//if the initial value of res is too different from desired exact result.
+//   Nsweep (default: 1) - number of sweeps to use
+//   Maxm (default: res.maxm()) - maximum number of states to keep
+//   Minm (default: res.minm()) - minimum number of states to keep
+//   Cutoff (default: res.cutoff()) - maximum truncation error goal
 template<class Tensor>
 Real
 fitApplyMPO(Real mpsfac,
