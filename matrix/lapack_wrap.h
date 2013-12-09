@@ -262,7 +262,11 @@ zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
     LAPACK_COMPLEX work[lwork];
     LAPACK_INT lrwork = max(1,2*(*n));
     LAPACK_REAL rwork[lrwork];
+#ifdef PLATFORM_acml
+    zgeev_(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info,1,1);
+#else
     zgeev_(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info);
+#endif
     }
 
 #endif
