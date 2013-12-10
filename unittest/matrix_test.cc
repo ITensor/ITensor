@@ -138,51 +138,6 @@ TEST(TestSVD)
     CHECK(sumerrsq < 1E-12);
     }
 
-TEST(BadSVD)
-    {
-    int n = 4, m = 4;
-
-    Matrix A(n,m);
-
-    A = 0;
-    A(1,3) = 3.3443453;
-    A(3,3) = 3.3443453;
-
-    //Matrix U,V; Vector D;
-    //SVD(A,U,D,V);
-    //cout << "D = " << endl;
-    //cout << D;
-
-
-    std::ifstream s("Vt");
-
-    int nr;
-    int nc;
-    s.read((char*)&nr,sizeof(nr));
-    s.read((char*)&nc,sizeof(nc));
-
-    Matrix Vt(nr,nc);
-
-    Real val;
-    for(int j = 1; j <= nr; ++j)
-    for(int k = 1; k <= nc; ++k)
-        {
-        s.read((char*)&val,sizeof(val));
-        Vt(j,k) = val;
-        }
-    s.close();
-
-    //cout << Vt;
-
-    Orthog(Vt,4,2);
-
-    //cout << Vt;
-    //cout << Vt*Vt.t();
-
-    //cout << "SVD went ok" << endl;
-
-    }
-
 TEST(TestSVDComplex)
     {
     const int n = 10,
