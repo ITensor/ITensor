@@ -1,48 +1,70 @@
 ### User Configurable Options
 
+## Set which compiler to use:
+
 ##GNU GCC compiler
-CCCOM=g++ -m64 -std=c++11
+CCCOM=g++ -m64
 ##Clang compiler (good to use on Mac OS)
-#CCCOM=clang++ -std=c++11
-##Intel C++ compiler (good to use with Intel MKL)
-#CCCOM=icpc -std=c++0x
+#CCCOM=clang++
+##Intel C++ compiler (good to use with Intel MKL if available)
+#CCCOM=icpc
 
-PREFIX=$(THIS_DIR)
-ITENSOR_LIBDIR=$(PREFIX)/lib
-ITENSOR_INCLUDEDIR=$(PREFIX)/include
+## Location of boost (this folder should have another one called 'boost' inside it)
 BOOST_DIR=$(HOME)/boost
-OPTIMIZATIONS=-O2 -DNDEBUG -Wall -DBOOST_DISABLE_ASSERTS
-DEBUGFLAGS=-DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall
-###BLAS/LAPACK Related Options
 
+## Flags to give the compiler for "release mode"
+OPTIMIZATIONS=-O2 -DNDEBUG -Wall -DBOOST_DISABLE_ASSERTS
+
+## Flags to give the compiler for "debug mode"
+DEBUGFLAGS=-DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall
+
+###
+###BLAS/LAPACK Related Options
+###
+
+##
 ##For a recent Mac OSX system (include flags intentionally left blank)
+##
 PLATFORM=macos
 BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 BLAS_LAPACK_INCLUDEFLAGS=
 
+##
 ##Example using a C interface to LAPACK on GNU/LINUX systems
 ##make sure to install LAPACKE development header needed by lapack_wrap.h
+##
 #PLATFORM=lapack
 #BLAS_LAPACK_INCLUDEFLAGS=-I/usr/include
 #BLAS_LAPACK_LIBFLAGS=-L/usr/lib -lblas -llapack 
 
+##
 ##Example using the Intel MKL library
+##
 #PLATFORM=mkl
-##on GNU/Linux systems (recommended with Intel C++ compiler icpc for performance on Intel CPUs)
+## MKL example for GNU/Linux systems (recommended with Intel C++ compiler icpc for performance on Intel CPUs)
 #BLAS_LAPACK_INCLUDEFLAGS=-I/opt/intel/composer_xe_2013_sp1.1.106/mkl/include
 #BLAS_LAPACK_LIBFLAGS=-L/opt/intel/composer_xe_2013_sp1.1.106/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_rt -lmkl_core -liomp5 -lpthread
-#other UNIX flavours
+## MKL example for other UNIX flavours
 #BLAS_LAPACK_INCLUDEFLAGS=-I/sopt/intel/mkl/10.1.0.015/include
 #BLAS_LAPACK_LIBFLAGS=-L/sopt/intel/mkl/10.1.0.015/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lgfortran -lpthread
 
+##
 ##Example using the AMD ACML library
+##
 #PLATFORM=acml
 #BLAS_LAPACK_INCLUDEFLAGS=-I/opt/acml5.1.0/gfortran64/include
 #BLAS_LAPACK_LIBFLAGS=-L/opt/acml5.1.0/gfortran64/lib -lacml -lgfortran -lpthread
 
+###
 ###End BLAS/LAPACK Related Options
+###
 
 ###Other variables defined for convenience
+
+PREFIX=$(THIS_DIR)
+
+ITENSOR_LIBDIR=$(PREFIX)/lib
+ITENSOR_INCLUDEDIR=$(PREFIX)/include
 
 ITENSOR_LIBNAMES=itensor matrix utilities
 ITENSOR_LIBFLAGS=$(patsubst %,-l%, $(ITENSOR_LIBNAMES))
