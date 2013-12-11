@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_EIGENSOLVER_H
 #define __ITENSOR_EIGENSOLVER_H
 #include "iqcombiner.h"
+#include "matrix.h"
 
 #define Cout std::cout
 #define Endl std::endl
