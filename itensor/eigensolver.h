@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_EIGENSOLVER_H
 #define __ITENSOR_EIGENSOLVER_H
 #include "iqcombiner.h"
-#include "matrix.h"
 
 #define Cout std::cout
 #define Endl std::endl
@@ -24,8 +23,22 @@ powerMethod(const BigMatrixT& A,
             const OptSet& opts = Global::opts());
 
 //
-// Uses the Davidson algorithm to find the 
-// minimal eigenvector of the sparse matrix A.
+// Use Arnoldi iteration to find the N eigenvectors
+// of the general matrix A having the largest-magnitude eigenvalues
+// given a vector of N initial guesses (zero indexed).
+// (BigMatrixT objects must implement the methods product, size and diag.)
+// Returns a vector of the N largest eigenvalues corresponding
+// to the set of eigenvectors phi.
+//
+template <class BigMatrixT, class Tensor> 
+std::vector<Complex>
+arnoldi(const BigMatrixT& A, 
+        std::vector<Tensor>& phi,
+        const OptSet& opts = Global::opts());
+
+//
+// Use the Davidson algorithm to find the 
+// eigenvector of the Hermitian matrix A with minimal eigenvalue.
 // (BigMatrixT objects must implement the methods product, size and diag.)
 // Returns the minimal eigenvalue lambda such that
 // A phi = lambda phi.
@@ -36,9 +49,9 @@ davidson(const BigMatrixT& A, Tensor& phi,
          const OptSet& opts = Global::opts());
 
 //
-// Uses Davidson to find the N smallest eigenvectors
-// of the sparse matrix A, given a vector of N initial
-// guesses (zero indexed).
+// Use Davidson to find the N eigenvectors with smallest 
+// eigenvalues of the Hermitian matrix A, given a vector of N 
+// initial guesses (zero indexed).
 // (BigMatrixT objects must implement the methods product, size and diag.)
 // Returns a vector of the N smallest eigenvalues corresponding
 // to the set of eigenvectors phi.
@@ -63,7 +76,7 @@ complexDavidson(const BigMatrixT& A,
 //
 template <class BigMatrixTA, class BigMatrixTB, class Tensor> 
 Real
-nonOrthDavidson(const BigMatrixTA& A, 
+genDavidson(const BigMatrixTA& A, 
                 const BigMatrixTB& B, 
                 Tensor& phi, 
                 const OptSet& opts = Global::opts());
@@ -116,6 +129,223 @@ powerMethod(const BigMatrixT& A,
                 }
             }
         }
+    return eigs;
+    }
+
+int inline
+findEig(int which,        //zero-indexed; so is return value
+        const Vector& DR, //real part of eigenvalues
+        const Vector& DI) //imag part of eigenvalues
+    {
+    const int L = DR.Length();
+#ifdef DEBUG
+    if(DI.Length() != L) Error("Vectors must have same length in findEig");
+#endif
+    Vector A2(L);
+    int n = -1;
+
+    //Find maximum norm2 of all the eigs
+    Real maxj = -1;
+    for(int ii = 1; ii <= L; ++ii) 
+        {
+        A2(ii) = sqr(DR(ii))+sqr(DI(ii));
+        if(A2(ii) > maxj) 
+            {
+            maxj = A2(ii);
+            n = ii;
+            }
+        }
+
+    //if which > 0, find next largest norm2, etc.
+    for(int j = 1; j <= which; ++j)
+        {
+        Real nextmax = -1;
+        for(int ii = 1; ii <= L; ++ii)
+            {
+            if(maxj > A2(ii) && A2(ii) > nextmax)
+                {
+                nextmax = A2(ii);
+                n = ii;
+                }
+            }
+        maxj = nextmax;
+        }
+    //Cout << "DR = " << DR;
+    //Cout << Format("Eig %d (%f) at position %d") % which % DR(n) % n << Endl;
+    return (n-1);
+    }
+
+template <class BigMatrixT, class Tensor> 
+std::vector<Complex>
+arnoldi(const BigMatrixT& A, 
+        std::vector<Tensor>& phi,
+        const OptSet& opts)
+    {
+    int maxiter_ = opts.getInt("MaxIter",10);
+    int maxrestart_ = opts.getInt("MaxRestart",1);
+    const Real errgoal_ = opts.getReal("ErrGoal",1E-6);
+    const int debug_level_ = opts.getInt("DebugLevel",-1);
+
+    if(maxiter_ < 1) maxiter_ = 1;
+    if(maxrestart_ < 1) maxrestart_ = 1;
+
+    const Real Approx0 = 1E-12;
+    const int Npass = 2; // number of Gram-Schmidt passes
+
+    const size_t nget = phi.size();
+    if(nget == 0) Error("No initial vectors passed to arnoldi.");
+
+    if(nget > 1) Error("arnoldi currently only supports nget == 1");
+
+    for(size_t j = 0; j < nget; ++j)
+        {
+        const Real nrm = phi[j].norm();
+        if(nrm == 0.0)
+            Error("norm of 0 in davidson");
+        phi[j] *= 1.0/nrm;
+        }
+
+    const int maxsize = A.size();
+    const int actual_maxiter = min(maxiter_,maxsize-1);
+    if(debug_level_ >= 2)
+        {
+        Cout << Format("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d") 
+                % (maxsize-1) % maxiter_ % actual_maxiter << Endl;
+        }
+
+    if(phi.front().indices().dim() != maxsize)
+        {
+        Print(phi.front().indices().dim());
+        Print(A.size());
+        Error("davidson: size of initial vector should match linear matrix size");
+        }
+
+    //Storage for Matrix that gets diagonalized 
+    Matrix HR(actual_maxiter+2,actual_maxiter+2),
+           HI(actual_maxiter+2,actual_maxiter+2);
+    HR = 0;
+    HI = 0;
+
+    std::vector<Tensor> V(actual_maxiter+2);
+
+    std::vector<Complex> eigs(nget);
+
+    for(int w = 0; w < nget; ++w)
+    {
+
+    for(int r = 0; r < maxrestart_; ++r)
+        {
+        Real err = 1000;
+        Matrix YR,YI;
+        int n = 0; //which column of Y holds the w^th eigenvector
+        int niter = 0;
+
+        //Mref holds current projection of A into V's
+        MatrixRef HrefR(HR.SubMatrix(1,1,1,1)),
+                  HrefI(HI.SubMatrix(1,1,1,1));
+
+        Tensor oldphi(phi.at(w));
+
+        V.at(0) = phi.at(w);
+
+        for(int j = 0; j < actual_maxiter; ++j)
+            {
+            A.product(V.at(j),V.at(j+1)); // V[j+1] = A*V[j]
+
+            //Do Gram-Schmidt orthogonalization Npass times
+            //Build H matrix only on the first pass
+            Real nh;
+            for(int pass = 1; pass <= Npass; ++pass)
+                {
+                for(int i = 0; i <= j; ++i)
+                    {
+                    Complex h = BraKet(V.at(i),V.at(j+1));
+                    if(pass == 1)
+                        {
+                        HR.el(i,j) = h.real();
+                        HI.el(i,j) = h.imag();
+                        }
+                    V.at(j+1) -= h*V.at(i);
+                    }
+                Real nrm = V.at(j+1).norm();
+                if(pass == 1) nh = nrm;
+
+                if(nrm != 0) V.at(j+1) /= nrm;
+                else         V.at(j+1).randomize();
+                }
+            
+            //Diagonalize projected form of A to
+            //obtain the w^th eigenvalue and eigenvector
+            Vector D(1+j),DI(1+j);
+            ComplexEigenvalues(HrefR,HrefI,D,DI,YR,YI);
+            n = findEig(w,D,DI);
+            eigs.at(w) = Complex(D.el(n),DI.el(n));
+
+            HrefR << HR.SubMatrix(1,j+2,1,j+2);
+            HrefI << HI.SubMatrix(1,j+2,1,j+2);
+
+            HR(2+j,1+j) = nh;
+
+            //Estimate error || (A-l_j*I)*p_j || = h_{j+1,j}*[last entry of Y_j]
+            //See http://web.eecs.utk.edu/~dongarra/etemplates/node216.html
+            assert(YR.Nrows() == 1+j);
+            err = nh*abs(Complex(YR(1+j,1+n),YI(1+j,1+n)));
+            assert(err >= 0);
+
+            if(r == 0)
+                Cout << Format("I %d e %.0E E") % (1+j) % err;
+            else
+                Cout << Format("R %d I %d e %.0E E") % r % (1+j) % err;
+
+            for(int j = 0; j <= w; ++j)
+                {
+                if(fabs(eigs[j].imag()) > Approx0)
+                    Cout << Format(" (%.10f,%.10f)") % eigs[j].real() % eigs[j].imag();
+                else
+                    Cout << Format(" %.10f") % eigs[j].real();
+                }
+            Cout << Endl;
+
+            ++niter;
+
+            if(err < errgoal_) break;
+
+            } // for loop over j
+
+        //Cout << Endl;
+        //for(int i = 0; i < niter; ++i)
+        //for(int j = 0; j < niter; ++j)
+        //    Cout << Format("<V[%d]|V[%d]> = %.5E") % i % j % BraKet(V.at(i),V.at(j)) << Endl;
+        //Cout << Endl;
+
+        //Compute w^th eigenvector of A
+        phi.at(w) = Complex(YR(1,1+n),YI(1,1+n))*V.at(0);
+        for(int j = 1; j < niter; ++j)
+            {
+            phi.at(w) += Complex(YR(1+j,1+n),YI(1+j,1+n))*V.at(j);
+            }
+
+        //Print(YR.Column(1+n));
+        //Print(YI.Column(1+n));
+
+        const Real nrm = phi.at(w).norm();
+        if(nrm != 0)
+            phi.at(w) /= nrm;
+        else
+            phi.at(w).randomize();
+
+        //Cout << Format("<oldphi|V[%d]> = %.5E") % 0 % BraKet(oldphi,V.at(0)) << Endl;
+        //Cout << Format("<oldphi|V[%d]> = %.5E") % 1 % BraKet(oldphi,V.at(1)) << Endl;
+        //Cout << Format("<oldphi|phi_r%d> = %.5E") % r % BraKet(oldphi,phi.at(w)) << Endl;
+
+        if(err < errgoal_) break;
+        
+        //otherwise restart using the phi.at(w) computed above
+
+        } // for loop over r
+
+    } // for loop over w
+
     return eigs;
     }
 
@@ -217,44 +447,6 @@ davidson(const BigMatrixT& A,
     return eigs;
     }
 
-int inline
-findEig(int num,          //zero-indexed; so is return value
-        const Vector& DR, //real part of eigenvalues
-        const Vector& DI) //imag part of eigenvalues
-    {
-    const int L = DR.Length();
-#ifdef DEBUG
-    if(DI.Length() != L) Error("Vectors must have same length in findEig");
-#endif
-    Vector A2(L);
-    Real maxj = -1;
-    int w = -1;
-    for(int ii = 1; ii <= L; ++ii) 
-        {
-        A2(ii) = sqr(DR(ii))+sqr(DI(ii));
-        if(A2(ii) > maxj) 
-            {
-            maxj = A2(ii);
-            w = ii;
-            }
-        }
-    for(int j = 1; j <= num; ++j)
-        {
-        Real nmax = -1;
-        for(int ii = 1; ii <= L; ++ii)
-            {
-            if(A2(ii) > nmax && A2(ii) < maxj)
-                {
-                nmax = A2(ii);
-                w = ii;
-                }
-            }
-        maxj = nmax;
-        }
-    //Cout << "DR = " << DR;
-    //Cout << Format("Eig %d (%f) at position %d") % num % DR(w) % w << Endl;
-    return (w-1);
-    }
 
 
 template <class BigMatrixT, class Tensor> 
@@ -711,7 +903,7 @@ complexDavidson(const BigMatrixT& A,
 
 template <class BigMatrixTA, class BigMatrixTB, class Tensor> 
 Real
-nonOrthDavidson(const BigMatrixTA& A, 
+genDavidson(const BigMatrixTA& A, 
                 const BigMatrixTB& B, 
                 Tensor& phi, 
                 const OptSet& opts)
@@ -721,6 +913,8 @@ nonOrthDavidson(const BigMatrixTA& A,
     //int numget_ = opts.getInt("NumGet",1);
     int debug_level_ = opts.getInt("DebugLevel",-1);
     //int miniter_ = opts.getInt("MinIter",1);
+
+    Error("genDavidson still in development");
 
     //B-normalize phi
     {
@@ -955,7 +1149,7 @@ nonOrthDavidson(const BigMatrixTA& A,
 
     return lambda;
 
-    } //nonOrthDavidson
+    } //genDavidson
 
 /*
 template<class Tensor>
