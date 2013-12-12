@@ -321,11 +321,6 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
      Spectrum& spec, 
      const OptSet& opts)
     {
-    typedef typename Tensor::IndexT 
-    IndexT;
-    typedef typename Tensor::CombinerT 
-    CombinerT;
-
     Tensor UU(L),VV(R);
     Tensor D(V);
     svd(AA,UU,D,VV,spec,opts);
