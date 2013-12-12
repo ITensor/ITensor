@@ -190,12 +190,12 @@ arnoldi(const BigMatrixT& A,
         const OptSet& opts)
     {
     int maxiter_ = opts.getInt("MaxIter",10);
-    int maxrestart_ = opts.getInt("MaxRestart",1);
+    int maxrestart_ = opts.getInt("MaxRestart",0);
     const Real errgoal_ = opts.getReal("ErrGoal",1E-6);
     const int debug_level_ = opts.getInt("DebugLevel",-1);
 
     if(maxiter_ < 1) maxiter_ = 1;
-    if(maxrestart_ < 1) maxrestart_ = 1;
+    if(maxrestart_ < 0) maxrestart_ = 0;
 
     const Real Approx0 = 1E-12;
     const int Npass = 2; // number of Gram-Schmidt passes
@@ -203,7 +203,7 @@ arnoldi(const BigMatrixT& A,
     const size_t nget = phi.size();
     if(nget == 0) Error("No initial vectors passed to arnoldi.");
 
-    if(nget > 1) Error("arnoldi currently only supports nget == 1");
+    //if(nget > 1) Error("arnoldi currently only supports nget == 1");
 
     for(size_t j = 0; j < nget; ++j)
         {
@@ -256,7 +256,7 @@ arnoldi(const BigMatrixT& A,
     for(int w = 0; w < nget; ++w)
     {
 
-    for(int r = 0; r < maxrestart_; ++r)
+    for(int r = 0; r <= maxrestart_; ++r)
         {
         Real err = 1000;
         Matrix YR,YI;
@@ -267,13 +267,17 @@ arnoldi(const BigMatrixT& A,
         MatrixRef HrefR(HR.SubMatrix(1,1,1,1)),
                   HrefI(HI.SubMatrix(1,1,1,1));
 
-        Tensor oldphi(phi.at(w));
-
         V.at(0) = phi.at(w);
 
-        for(int j = 0; j < actual_maxiter; ++j)
+        for(int it = 0; it < actual_maxiter; ++it)
             {
+            const int j = it;
             A.product(V.at(j),V.at(j+1)); // V[j+1] = A*V[j]
+            // "Deflate" previous eigenpairs:
+            for(int o = 0; o < w; ++o)
+                {
+                V[j+1] += (-eigs.at(o)*phi[o]*BraKet(phi[o],V[j+1]));
+                }
 
             //Do Gram-Schmidt orthogonalization Npass times
             //Build H matrix only on the first pass
@@ -301,7 +305,8 @@ arnoldi(const BigMatrixT& A,
             //obtain the w^th eigenvalue and eigenvector
             Vector D(1+j),DI(1+j);
             ComplexEigenvalues(HrefR,HrefI,D,DI,YR,YI);
-            n = findEig(w,D,DI);
+            n = findEig(0,D,DI); //continue to target the largest eig 
+                                 //since we have 'deflated' the previous ones
             eigs.at(w) = Complex(D.el(n),DI.el(n));
 
             HrefR << HR.SubMatrix(1,j+2,1,j+2);
@@ -356,10 +361,6 @@ arnoldi(const BigMatrixT& A,
             phi.at(w) /= nrm;
         else
             phi.at(w).randomize();
-
-        //Cout << Format("<oldphi|V[%d]> = %.5E") % 0 % BraKet(oldphi,V.at(0)) << Endl;
-        //Cout << Format("<oldphi|V[%d]> = %.5E") % 1 % BraKet(oldphi,V.at(1)) << Endl;
-        //Cout << Format("<oldphi|phi_r%d> = %.5E") % r % BraKet(oldphi,phi.at(w)) << Endl;
 
         if(err < errgoal_) break;
         
