@@ -69,7 +69,7 @@ putprimes(string s, int plev)
 string 
 nameindex(IndexType it, int plev)
     { 
-    static const Array<string,3>
+    static const boost::array<string,3>
     indextypename = {{ "Link","Site", "All" }};
 #ifdef DEBUG
     return putprimes(indextypename.at(int(it)),plev);

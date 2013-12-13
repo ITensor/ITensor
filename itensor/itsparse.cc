@@ -14,6 +14,7 @@ using std::make_pair;
 using std::string;
 using boost::format;
 using boost::make_shared;
+using boost::array;
 
 ITSparse::
 ITSparse()
@@ -339,7 +340,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     //The ri pointer does the same
     //but for res
     const int zero = 0;
-    Array<const int*,NMAX+1> ti,
+    array<const int*,NMAX+1> ti,
                              ri; 
 
     for(int n = 0; n <= NMAX; ++n)
@@ -369,7 +370,7 @@ product(const ITSparse& S, const ITensor& T, ITensor& res)
     //
     // (scon is similar but for S)
     //
-    Array<int,NMAX+1> tcon,
+    array<int,NMAX+1> tcon,
                       scon;
     tcon.assign(0);
     scon.assign(0);

@@ -50,7 +50,7 @@ class Counter
     {
     public:
 
-    Array<int,NMAX+1> n, 
+    boost::array<int,NMAX+1> n, 
                       i;
     int ind,
         rn,
@@ -59,7 +59,7 @@ class Counter
     Counter();
 
     template <class IndexT>
-    Counter(const Array<IndexT,NMAX+1>& ii,int rn,int r);
+    Counter(const boost::array<IndexT,NMAX+1>& ii,int rn,int r);
 
     template <class IndexT> 
     explicit
@@ -99,7 +99,7 @@ reset()
 
 template <class IndexT>
 Counter::
-Counter(const Array<IndexT,NMAX+1>& ii, int rn_, int r_)
+Counter(const boost::array<IndexT,NMAX+1>& ii, int rn_, int r_)
     {
     rn = rn_;
     r = r_;
