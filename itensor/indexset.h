@@ -49,7 +49,7 @@ class IndexSet
     // Type definitions
     //
 
-    typedef Array<IndexT,NMAX>
+    typedef boost::array<IndexT,NMAX>
     Storage;
 
     typedef typename Storage::const_iterator 
@@ -261,7 +261,7 @@ IndexSet(IndexT i1, IndexT i2, IndexT i3,
     if(i3 == IndexT::Null())
         Error("i3 is null");
 #endif
-	Array<IndexT,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
+    boost::array<IndexT,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
 	while(r_ < NMAX && ii[r_] != IndexT::Null()) ++r_;
     int alloc_size;
     sortIndices(ii,r_,alloc_size,0);
@@ -597,7 +597,7 @@ replaceIndex(const IndexT& oind, const IndexT& nind)
 /*
 template <class IndexT>
 void IndexSet<IndexT>::
-addindex1(const Array<IndexT,NMAX+1>& indices, int n) 
+addindex1(const boost::array<IndexT,NMAX+1>& indices, int n) 
     {
 #ifdef DEBUG
     if(r_+n > NMAX) Error("Maximum number of indices reached");
@@ -719,7 +719,7 @@ sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset)
     alloc_size = 1;
 
     int r1_ = 0;
-    Array<const IndexT*,NMAX> index1_;
+    boost::array<const IndexT*,NMAX> index1_;
 
     for(int n = offset; n < ninds+offset; ++n)
         {

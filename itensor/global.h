@@ -29,8 +29,6 @@ static const int MAX_M = 5000;
 typedef std::complex<Real>
 Complex;
 
-#define Array boost::array
-
 static const Complex Complex_1 = Complex(1,0);
 static const Complex Complex_i = Complex(0,1);
 
