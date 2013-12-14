@@ -123,6 +123,11 @@ dmrg(MPSt<Tensor>& psi,
 //DMRG with a single Hamiltonian MPO and a set of 
 //MPS to orthogonalize against
 //(psis vector is 0-indexed)
+//Options recognized:
+// Weight - real number w > 0; calling dmrg(psi,H,psis,sweeps,Opt("Weight",w))
+//          sets the effective Hamiltonian to be
+//          H + w * (|0><0| + |1><1| + ...) where |0> = psis[0], |1> = psis[1]
+//          etc.
 //
 template <class Tensor>
 Real
@@ -142,6 +147,11 @@ dmrg(MPSt<Tensor>& psi,
 //a set of MPS to orthogonalize against, 
 //and a custom Observer.
 //(psis vector is 0-indexed)
+//Options recognized:
+// Weight - real number w > 0; calling dmrg(psi,H,psis,sweeps,Opt("Weight",w))
+//          sets the effective Hamiltonian to be
+//          H + w * (|0><0| + |1><1| + ...) where |0> = psis[0], |1> = psis[1]
+//          etc.
 //
 template <class Tensor>
 Real
