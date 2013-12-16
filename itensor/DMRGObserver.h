@@ -130,16 +130,10 @@ measure(const OptSet& opts)
     if(b == 1 && ha == 2) 
         {
         if(!printeigs) Cout << Endl;
-        if(max_eigs > 0)
-            {
-            Cout << "    Largest m during sweep " << sw << " was " << max_eigs << "\n";
-            max_eigs = -1;
-            }
-        if(max_te > 0)
-            {
-            Cout << "    Largest truncation error: " << max_te << Endl;
-            max_te = -1;
-            }
+        Cout << "    Largest m during sweep " << sw << " was " << (max_eigs > 1 ? max_eigs : 1)  << "\n";
+        max_eigs = -1;
+        Cout << "    Largest truncation error: " << (max_te > 0 ? max_te : 0.) << Endl;
+        max_te = -1;
         Cout << Format("    Energy after sweep %d is %.12f") % sw % energy << Endl;
         }
 
