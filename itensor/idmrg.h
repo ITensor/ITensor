@@ -98,12 +98,12 @@ idmrg(MPSt<Tensor>& psi,
             Cout << Format("\niDMRG Step = %d, N=%d sites") % sw % N << Endl;
             }
 
-        Sweeps ucsweeps(nucsweeps+1);
+        Sweeps ucsweeps(nucsweeps);
         ucsweeps.minm() = sweeps.minm(sw);
         ucsweeps.maxm() = sweeps.maxm(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
         ucsweeps.noise() = sweeps.noise(sw);
-        ucsweeps.niter() = 2;
+        ucsweeps.niter() = sweeps.niter(sw);
         Cout << ucsweeps;
 
         const Real fac = sqrt(1./N0);
@@ -177,7 +177,7 @@ idmrg(MPSt<Tensor>& psi,
         ucsweeps.maxm() = sweeps.maxm(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
         ucsweeps.noise() = sweeps.noise(sw);
-        ucsweeps.niter() = 2;
+        ucsweeps.niter() = sweeps.niter(sw);
         spec.maxm(sweeps.maxm(sw));
 
         Cout << ucsweeps;
