@@ -119,6 +119,18 @@ class OptSet
     typedef Opt::Name
     Name;
 
+    typedef std::map<Name,Opt>
+    storage_type;
+
+    typedef storage_type::value_type
+    value_type;
+
+    typedef storage_type::iterator
+    iterator;
+
+    typedef storage_type::const_iterator
+    const_iterator;
+
     OptSet();
 
     OptSet(const Opt& opt1);
@@ -187,6 +199,28 @@ class OptSet
     Real
     getReal(const Name& name, Real default_val) const;
 
+    //
+    // Iteration
+    //
+
+    iterator
+    begin() { return opts_.begin(); }
+    iterator
+    end() { return opts_.end(); }
+
+    const_iterator
+    begin() const { return opts_.begin(); }
+    const_iterator
+    end() const { return opts_.end(); }
+
+    const_iterator
+    cbegin() const { return opts_.begin(); }
+    const_iterator
+    cend() const { return opts_.end(); }
+
+    OptSet&
+    operator&(const OptSet& other);
+
     friend std::ostream& 
     operator<<(std::ostream & s, const OptSet& oset);
 
@@ -200,14 +234,6 @@ class OptSet
 
     private:
 
-    typedef std::map<Name,Opt>
-    storage_type;
-
-    typedef storage_type::iterator
-    iterator;
-
-    typedef storage_type::const_iterator
-    const_iterator;
 
     ///////////////
     //
@@ -229,6 +255,7 @@ class OptSet
     addByString(std::string ostring);
 
     };
+
 
 OptSet
 operator&(const Opt& opt1, const Opt& opt2);

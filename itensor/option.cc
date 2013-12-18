@@ -364,6 +364,15 @@ addByString(string ostring)
     }
 
 
+OptSet& OptSet::
+operator&(const OptSet& oset)
+    {
+    for(const_iterator it = oset.cbegin(); it != oset.end(); ++it)
+        {
+        opts_.insert(*it);
+        }
+    return *this;
+    }
 
 
 OptSet
