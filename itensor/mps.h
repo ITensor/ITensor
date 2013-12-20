@@ -762,13 +762,14 @@ sum(const std::vector<MPSType>& terms, MPSType& res,
         {
         //Add all MPS's in pairs
         const int nsize = (Nt%2==0 ? Nt/2 : (Nt-1)/2+1);
-        std::vector<MPSType> tpair(2), 
-                             newterms(nsize); 
+        std::vector<MPSType> newterms(nsize); 
         for(int n = 0, np = 0; n < Nt-1; n += 2, ++np)
             {
-            tpair[0] = terms.at(n); 
-            tpair[1] = terms.at(n+1);
-            sum(tpair,newterms.at(np),cut,maxm);
+            MPSType& nt = newterms.at(np);
+            nt = terms.at(n);
+            nt.cutoff(cut);
+            nt.maxm(maxm);
+            nt += terms.at(n+1);
             }
         if(Nt%2 == 1) newterms.at(nsize-1) = terms.back();
 
