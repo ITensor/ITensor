@@ -246,7 +246,7 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             PH.position(b,psi);
 
-            Tensor phi = psi.bondTensor(b);
+            Tensor phi = psi.A(b)*psi.A(b+1);
 
             energy = davidson(PH,phi,opts);
             
