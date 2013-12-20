@@ -183,19 +183,6 @@ template
 IQTensor& MPSt<IQTensor>::Anc(int i);
 
 template <class Tensor>
-Tensor MPSt<Tensor>::
-bondTensor(int b) const 
-    { 
-    setBond(b);
-    Tensor res = A_.at(b) * A_.at(b+1); 
-    return res; 
-    }
-template
-ITensor MPSt<ITensor>::bondTensor(int b) const;
-template
-IQTensor MPSt<IQTensor>::bondTensor(int b) const;
-
-template <class Tensor>
 void MPSt<Tensor>::
 doWrite(bool val, const OptSet& opts) 
     { 

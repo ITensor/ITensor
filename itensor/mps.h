@@ -203,9 +203,6 @@ class MPSt
     const Vector& 
     eigsKept(int b) const { return spectrum_.at(b).eigsKept(); }
 
-    Tensor 
-    bondTensor(int b) const;
-
     bool
     doWrite() const { return do_write_; }
     void
@@ -297,12 +294,6 @@ class MPSt
     svdBond(int b, const Tensor& AA, Direction dir, 
                 const LocalOpT& PH, const OptSet& opts = Global::opts());
 
-    void
-    doSVD(int b, const Tensor& AA, Direction dir, const OptSet& opts = Global::opts())
-        { 
-        svdBond(b,AA,dir,opts); 
-        }
-
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
     void 
@@ -380,16 +371,6 @@ class MPSt
 
     void
     swap(MPSt& other);
-
-    //
-    // Deprecated methods
-    // 
-
-    //Renamed to A
-    //const Tensor& AA(int i) const;
-
-    //Renamed to Anc
-    //Tensor& AAnc(int i);
 
     protected:
 
@@ -767,7 +748,6 @@ sum(const std::vector<MPSType>& terms, MPSType& res,
         res = terms.at(0);
         res.cutoff(cut); 
         res.maxm(maxm);
-        //std::cerr << boost::format("Before +=, cutoff = %.1E, maxm = %d\n")%(res.cutoff())%(res.maxm());
         res += terms.at(1);
         }
     else 

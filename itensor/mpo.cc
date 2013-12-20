@@ -468,7 +468,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
     //if(nfork.iten_size() == 0)	// this product gives 0 !!
 	//throw ResultIsZero("nfork.iten size == 0");
 
-    res.doSVD(N-1,nfork,Fromright);
+    res.svdBond(N-1,nfork,Fromright,opts);
     res.noprimelink();
     res.mapprime(1,0,Site);
     res.position(1);

@@ -62,7 +62,6 @@ class MPOt : private MPSt<Tensor>
 
     using Parent::A;
     using Parent::Anc;
-    using Parent::bondTensor;
 
     using Parent::doWrite;
     using Parent::doRelCutoff;
