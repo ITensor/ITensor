@@ -160,6 +160,7 @@ template <class Tensor>
 const Tensor& MPSt<Tensor>::
 A(int i) const
     { 
+    if(i < 0) i = N_+i+1;
     setSite(i);
     return A_.at(i); 
     }
@@ -172,6 +173,7 @@ template <class Tensor>
 Tensor& MPSt<Tensor>::
 Anc(int i)
     { 
+    if(i < 0) i = N_+i+1;
     setSite(i);
     if(i <= l_orth_lim_) l_orth_lim_ = i-1;
     if(i >= r_orth_lim_) r_orth_lim_ = i+1;
