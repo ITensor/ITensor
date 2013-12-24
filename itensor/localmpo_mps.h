@@ -21,6 +21,14 @@ class LocalMPO_MPS
                  const std::vector<MPSt<Tensor> >& psis,
                  const OptSet& opts = Global::opts());
 
+    LocalMPO_MPS(const MPOt<Tensor>& Op, 
+                 const Tensor& LOp,
+                 const Tensor& ROp,
+                 const std::vector<MPSt<Tensor> >& psis,
+                 const std::vector<Tensor>& Lpsi,
+                 const std::vector<Tensor>& Rpsi,
+                 const OptSet& opts = Global::opts());
+
     //
     // Typedefs
     //
@@ -120,6 +128,34 @@ LocalMPO_MPS(const MPOt<Tensor>& Op,
 
     for(size_t j = 0; j < lmps_.size(); ++j)
         lmps_[j] = LocalMPOType(psis[j]);
+
+    if(opts.defined("Weight"))
+        weight(opts.getReal("Weight"));
+    }
+
+template <class Tensor>
+inline LocalMPO_MPS<Tensor>::
+LocalMPO_MPS(const MPOt<Tensor>& Op, 
+             const Tensor& LOp,
+             const Tensor& ROp,
+             const std::vector<MPSt<Tensor> >& psis,
+             const std::vector<Tensor>& Lpsi,
+             const std::vector<Tensor>& Rpsi,
+             const OptSet& opts)
+    : 
+    Op_(&Op),
+    psis_(&psis),
+    lmps_(psis.size()),
+    weight_(1)
+    { 
+    lmpo_ = LocalMPOType(Op,LOp,ROp);
+#ifdef DEBUG
+    if(Lpsi.size() != psis.size()) Error("Lpsi must have same number of elements as psis");
+    if(Rpsi.size() != psis.size()) Error("Lpsi must have same number of elements as psis");
+#endif
+
+    for(size_t j = 0; j < lmps_.size(); ++j)
+        lmps_[j] = LocalMPOType(psis[j],Lpsi[j],Rpsi[j]);
 
     if(opts.defined("Weight"))
         weight(opts.getReal("Weight"));
