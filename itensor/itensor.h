@@ -799,7 +799,7 @@ template<class TensorA, class TensorB> typename
 TensorA::IndexT
 uniqueIndex(const TensorA& A, 
             const TensorB& B, 
-            IndexType t = All)
+            IndexType t)
     {
     typedef typename TensorA::IndexT
     IndexT;
