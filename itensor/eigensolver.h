@@ -33,7 +33,15 @@ powerMethod(const BigMatrixT& A,
 template <class BigMatrixT, class Tensor> 
 std::vector<Complex>
 arnoldi(const BigMatrixT& A, 
-        std::vector<Tensor>& phi,
+        std::vector<Tensor>& vecs,
+        const OptSet& opts = Global::opts());
+
+//Arnoldi wrapper for just obtaining the single dominant
+//eigenvalue/eigenvector pair
+template <class BigMatrixT, class Tensor> 
+Complex
+arnoldi(const BigMatrixT& A, 
+        Tensor& vec,
         const OptSet& opts = Global::opts());
 
 //
@@ -205,7 +213,23 @@ arnoldi(const BigMatrixT& A,
         phi[j] *= 1.0/nrm;
         }
 
+    std::vector<Complex> eigs(nget);
+
     const int maxsize = A.size();
+
+    if(phi.size() > maxsize)
+        Error("arnoldi: requested more eigenvectors (phi.size()) than size of matrix (A.size())");
+
+    if(maxsize == 1)
+        {
+        if(phi.front().norm() == 0) phi.front().randomize();
+        phi.front() /= phi.front().norm();
+        Tensor Aphi(phi.front());
+        A.product(phi.front(),Aphi);
+        eigs.front() = BraKet(Aphi,phi.front()); 
+        return eigs;
+        }
+
     const int actual_maxiter = min(maxiter_,maxsize-1);
     if(debug_level_ >= 2)
         {
@@ -217,7 +241,7 @@ arnoldi(const BigMatrixT& A,
         {
         Print(phi.front().indices().dim());
         Print(A.size());
-        Error("davidson: size of initial vector should match linear matrix size");
+        Error("arnoldi: size of initial vector should match linear matrix size");
         }
 
     //Storage for Matrix that gets diagonalized 
@@ -228,7 +252,6 @@ arnoldi(const BigMatrixT& A,
 
     std::vector<Tensor> V(actual_maxiter+2);
 
-    std::vector<Complex> eigs(nget);
 
     for(int w = 0; w < nget; ++w)
     {
@@ -347,6 +370,18 @@ arnoldi(const BigMatrixT& A,
     } // for loop over w
 
     return eigs;
+    }
+
+template <class BigMatrixT, class Tensor> 
+Complex
+arnoldi(const BigMatrixT& A, 
+        Tensor& vec,
+        const OptSet& opts)
+    {
+    std::vector<Tensor> phi(1,vec);
+    Complex res = arnoldi(A,phi,opts).front();
+    vec = phi.front();
+    return res;
     }
 
 
