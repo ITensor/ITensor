@@ -62,7 +62,18 @@ class LocalMPO
     //tensors are default-constructed.
     //
     LocalMPO(const MPOt<Tensor>& H, 
-             const Tensor& LH, const Tensor& RH,
+             const Tensor& LH, 
+             const Tensor& RH,
+             const OptSet& opts = Global::opts());
+
+    //
+    //Use an MPS with boundary indices capped off by left and right
+    //boundary tensors LP and RP. Ok if one or both boundary tensors 
+    //are default-constructed.
+    //
+    LocalMPO(const MPSt<Tensor>& Psi, 
+             const Tensor& LP,
+             const Tensor& RP,
              const OptSet& opts = Global::opts());
 
     //
@@ -293,6 +304,30 @@ LocalMPO(const MPOt<Tensor>& H,
     { 
     PH_[0] = LH;
     PH_[H.N()+1] = RH;
+    if(H.N()==2)
+        lop_.update(Op_->A(1),Op_->A(2),L(),R());
+    if(opts.defined("NumCenter"))
+        numCenter(opts.getInt("NumCenter"));
+    }
+
+template <class Tensor>
+inline LocalMPO<Tensor>::
+LocalMPO(const MPSt<Tensor>& Psi, 
+         const Tensor& LP,
+         const Tensor& RP,
+         const OptSet& opts)
+    : Op_(0),
+      PH_(Psi.N()+2),
+      LHlim_(0),
+      RHlim_(Psi.N()+1),
+      nc_(2),
+      lop_(opts),
+      do_write_(false),
+      writedir_("."),
+      Psi_(&Psi)
+    { 
+    PH_[0] = LP;
+    PH_[Psi.N()+1] = RP;
     if(opts.defined("NumCenter"))
         numCenter(opts.getInt("NumCenter"));
     }
@@ -309,23 +344,14 @@ product(const Tensor& phi, Tensor& phip) const
     if(Psi_ != 0)
         {
         int b = position();
-        Tensor othr = (L().isNull() ? primed(Psi_->A(b),Link) : L()*primed(Psi_->A(b),Link));
-        othr *= primed(Psi_->A(b+1),Link);
-        if(!R().isNull()) 
-            othr *= R();
+        Tensor othr = (L().isNull() ? conj(primed(Psi_->A(b),Link)) : L()*conj(primed(Psi_->A(b),Link)));
+        Tensor othrR = (R().isNull() ? conj(primed(Psi_->A(b+1),Link)) : R()*conj(primed(Psi_->A(b+1),Link)));
+        othr *= othrR;
 
-        Complex z = BraKet(othr,phi);
+        Complex z = (othr*phi).toComplex();
 
-        phip = othr;
-        phip.mapprime(1,0);
-        if(fabs(z.imag()) < 1E-12) 
-            {
-            phip *= z.real();
-            }
-        else
-            {
-            phip *= z;
-            }
+        phip = conj(othr);
+        phip *= z;
         }
     else
         {
@@ -447,8 +473,8 @@ makeL(const MPSType& psi, int k)
             while(LHlim_ < k)
                 {
                 const int ll = LHlim_;
-                PH_.at(ll+1) = (PH_.at(ll).isNull() ? conj(psi.A(ll+1)) : PH_[ll]*conj(psi.A(ll+1)));
-                PH_[ll+1] *= primed(Psi_->A(ll+1),Link);
+                PH_.at(ll+1) = (PH_.at(ll).isNull() ? psi.A(ll+1) : PH_[ll]*psi.A(ll+1));
+                PH_[ll+1] *= conj(primed(Psi_->A(ll+1),Link));
                 setLHlim(LHlim_+1);
                 }
             }
@@ -476,8 +502,8 @@ makeR(const MPSType& psi, int k)
             while(RHlim_ > k)
                 {
                 const int rl = RHlim_;
-                PH_.at(rl-1) = (PH_.at(rl).isNull() ? conj(psi.A(rl-1)) : PH_[rl]*conj(psi.A(rl-1)));
-                PH_[rl-1] *= primed(Psi_->A(rl-1),Link);
+                PH_.at(rl-1) = (PH_.at(rl).isNull() ? psi.A(rl-1) : PH_[rl]*psi.A(rl-1));
+                PH_[rl-1] *= conj(primed(Psi_->A(rl-1),Link));
                 setRHlim(RHlim_-1);
                 }
             }
