@@ -338,7 +338,7 @@ ostream&
 operator<<(ostream& s, const Index& t)
     {
     if(t.name() != "" && t.name() != " ") s << t.name();
-    const int iur = (int) abs(10000*deprimed(t).uniqueReal());
+    const int iur = (int) fabs(10000*deprimed(t).uniqueReal());
     return s << "(" << nameindex(t.type(),t.primeLevel()) 
              << "," << iur << "):" << t.m();
     }
