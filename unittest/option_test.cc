@@ -65,6 +65,11 @@ TEST(TestOptSet)
 
     CHECK(opts2.defined("Auto"));
     CHECK(opts2.getBool("Auto") == false);
+
+    OptSet opts3 = opts1 & opts2;
+
+    CHECK(opts3.defined("Quiet"));
+    CHECK(opts3.defined("Auto"));
     }
 
 TEST(Operator)
