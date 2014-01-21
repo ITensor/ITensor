@@ -158,8 +158,8 @@ checkDone(const OptSet& opts)
                     % energy_errgoal
                     % sw
                  << Endl;
-            done_ = true;
-            return done_;
+            last_energy_ = 1000;
+            return true;
             }
         }
     last_energy_ = energy;
