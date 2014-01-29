@@ -112,7 +112,7 @@ makeSwapGate(const Model& sites)
     }
 
 template<>
-void BondGate<IQTensor>::
+void inline BondGate<IQTensor>::
 makeSwapGate(const Model& sites)
     {
     IQTensor a(conj(sites(i_)),primed(sites(j_))),
