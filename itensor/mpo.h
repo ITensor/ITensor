@@ -262,7 +262,7 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|ph
     Real re, im;
     psiHphi(psi,H,phi,re,im);
     if(fabs(im) > 1.0e-12 * fabs(re))
-	std::cerr << boost::format("\nReal psiHphi: WARNING, dropping non-zero (im = %.5f) imaginary part of expectation value.\n")%im;
+        Cerr << Format("\nReal psiHphi: WARNING, dropping non-zero (=%.5E) imaginary part of expectation value.")%im << Endl;
     return re;
     }
 
@@ -302,7 +302,7 @@ psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Tensor& LB, const 
     {
     Real re,im; psiHphi(psi,H,LB,RB,phi,re,im);
     if(fabs(im) > 1.0e-12 * fabs(re))
-	std::cout << "Real psiHphi: WARNING, dropping non-zero imaginary part of expectation value.\n";
+        Cout << Format("Real psiHphi: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.") % im << Endl;
     return re;
     }
 

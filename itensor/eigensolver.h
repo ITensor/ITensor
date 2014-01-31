@@ -471,7 +471,7 @@ davidson(const BigMatrixT& A,
     for(size_t j = 0; j < ceigs.size(); ++j)
         {
         eigs.at(j) = ceigs.at(j).real();
-        if(debug_level_ > 2 && ceigs.at(j).imag() > Approx0)
+        if(debug_level_ > 2 && ceigs.at(j).imag() > Approx0*ceigs.at(j).real())
             {
             Cout << Format("Warning: dropping imaginary part of eigs[%d] = (%.4E,%.4E).")
                     % j
