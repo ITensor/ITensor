@@ -157,12 +157,12 @@ getOp(int i, const String& opname, const OptSet& opts) const
         Op(Dn,UpP) = +0.5;
         }
     else
-    if(opname == "Sp" || opname == "S-")
+    if(opname == "Sp" || opname == "S+")
         {
         Op(Dn,UpP) = 1;
         }
     else
-    if(opname == "Sm" || opname == "S+")
+    if(opname == "Sm" || opname == "S-")
         {
         Op(Up,DnP) = 1;
         }
