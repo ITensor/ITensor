@@ -262,7 +262,7 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|ph
     Real re, im;
     psiHphi(psi,H,phi,re,im);
     if(fabs(im) > 1.0e-12 * fabs(re))
-        Cerr << Format("\nReal psiHphi: WARNING, dropping non-zero (=%.5E) imaginary part of expectation value.")%im << Endl;
+        Cout << Format("\nReal psiHphi: WARNING, dropping non-zero (=%.5E) imaginary part of expectation value.")%im << Endl;
     return re;
     }
 
