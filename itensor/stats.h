@@ -12,32 +12,50 @@ class Stats
     public:
 
     std::vector<Real> dat;
-    Stats() { dat.reserve(100); }
 
-    void putin(Real x) { dat.push_back(x); }
+    Real tot,
+         tot2;
+
+    Stats() 
+        :
+        tot(0),
+        tot2(0)
+        { 
+        dat.reserve(100); 
+        }
+
+    void 
+    putin(Real x) 
+        { 
+        dat.push_back(x); 
+        tot += x;
+        tot2 += x*x;
+        }
 
     Real 
     avg() const
         {
         if(dat.empty()) return 0;
-        Real s = 0;
-        for(size_t j = 0; j < dat.size(); ++j) s += dat.at(j);
-        return s/dat.size();
+        //Real s = 0;
+        //for(size_t j = 0; j < dat.size(); ++j) s += dat.at(j);
+        return tot/dat.size();
         }
 
     Real 
     sigma() const
         {
         if(dat.size() < 2) return 0;
-        Real av = avg(), s = 0;
-        for(size_t j = 0; j < dat.size(); ++j) s += sqr(dat.at(j)-av);
-        return sqrt(s/dat.size());
+        Real av = avg(); 
+        //Real s = 0;
+        //for(size_t j = 0; j < dat.size(); ++j) s += sqr(dat.at(j)-av);
+        Real av2 = tot2/dat.size();
+        return sqrt(av2-av*av);
         }
 
     Real 
     err() const
         {
-        Real n = dat.size();
+        const Real n = dat.size();
         if(n > 1) return sigma()/sqrt(n-1);
         else return sigma()/sqrt(n);
         }
@@ -45,7 +63,7 @@ class Stats
     Real 
     binerr(int bs) const
         {
-        int n = dat.size();
+        const int n = dat.size();
         if(n < bs) return 0;
         int nbin = n / bs;
         Vector bin(nbin);
