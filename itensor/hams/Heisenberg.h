@@ -161,7 +161,7 @@ init_()
         //N.N. bond along column
         if(y != Ny_)
             {
-            W += model_.op("Sz",n) * row(start) * col(3) * J_;
+            W += model_.op("Sz",n) * row(start) * col(3) * Jz_;
             W += model_.op("Sp",n) * row(start) * col(kd+1) * J_/2;
             W += model_.op("Sm",n) * row(start) * col(kd+kpm+1) * J_/2;
             }
