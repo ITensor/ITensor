@@ -321,8 +321,8 @@ operator+=(const ITensor& t)
             }
         if(q != d)
             {
-            //Print(d);
-            //Print(q);
+            Print(d);
+            Print(q);
             throw ITError("New ITensor block has different divergence from IQTensor.");
             }
         }
@@ -520,6 +520,42 @@ normLogNum() const
     lognorm = maxLogNum + 0.5*log(lognorm);
 
     return LogNumber(lognorm,+1);
+    }
+
+Vector IQTensor::
+diag() const
+    {
+    if(this->isComplex()) 
+        Error("diag() may only be called on real IQTensors - try taking real or imaginary part first");
+    int nb = this->indices().front().nindex();
+    Foreach(const IQIndex& I, this->indices())
+        nb = min(nb,I.nindex());
+    vector<Real> els;
+    for(int n = 1; n <= nb; ++n)
+        {
+        IndexSet<Index> is;
+        int bsize = this->indices().front().index(n).m();
+        Foreach(const IQIndex& I, this->indices())
+            {
+            is.addindex(I.index(n));
+            bsize = min(bsize,I.index(n).m());
+            }
+        Vector d;
+        if(dat().hasBlock(is))
+            d = dat().get(is).diag();
+        else
+            d = Vector(bsize,0);
+        for(int j = 1; j <= d.Length(); ++j)
+            {
+            els.push_back(d(j));
+            }
+        }
+    Vector D(els.size());
+    for(int j = 0; j < D.Length(); ++j)
+        {
+        D[j] = els[j];
+        }
+    return D;
     }
 
 Real IQTensor::

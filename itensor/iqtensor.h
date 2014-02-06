@@ -292,6 +292,9 @@ class IQTensor
     IQTensor&
     takeImagPart();
 
+    Vector
+    diag() const;
+
     Real 
     norm() const;
 
