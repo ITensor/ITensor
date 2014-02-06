@@ -60,6 +60,7 @@ inline Z3::
 Z3()
     : N_(-1)
     { 
+    QN::Nmax() = 3;
     }
 
 inline Z3::
@@ -68,6 +69,7 @@ Z3(int N)
     N_(N),
     site_(N_+1)
     { 
+    QN::Nmax() = 3;
     constructSites();
     }
 
