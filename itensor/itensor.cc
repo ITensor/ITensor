@@ -1431,11 +1431,17 @@ randomize(const OptSet& opts)
     { 
     solo(); 
     convertToDense();
-    r_->v.Randomize(); 
+    for(int j = 0; j < r_->v.Length(); ++j)
+        {
+        r_->v[j] = Global::random();
+        }
     if(i_ || opts.getBool("Complex",false))
         {
         allocateImag(r_->v.Length());
-        i_->v.Randomize();
+        for(int j = 0; j < i_->v.Length(); ++j)
+            {
+            i_->v[j] = Global::random();
+            }
         }
     }
 

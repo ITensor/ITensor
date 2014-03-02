@@ -16,6 +16,8 @@
 #include "assert.h"
 #include "boost/array.hpp"
 #include "boost/format.hpp"
+#include "boost/random/mersenne_twister.hpp"
+#include "boost/random/uniform_real_distribution.hpp"
 
 #include "boost/foreach.hpp"
 #define Foreach BOOST_FOREACH
@@ -235,18 +237,19 @@ operator<<(std::ostream& s, Arrow D)
 class Global
     {
     public:
-
-    static bool& 
-    printdat()
+    /*
+    static Vector& 
+    lastd()
         {
-        static bool printdat_ = false;
-        return printdat_;
+        static Vector lastd_(1);
+        return lastd_;
         }
-    static Real& 
-    printScale()
+        */
+    static bool& 
+    checkArrows()
         {
-        static Real printScale_ = 1E-10;
-        return printScale_;
+        static bool checkArrows_ = true;
+        return checkArrows_;
         }
     static bool& 
     debug1()
@@ -271,20 +274,6 @@ class Global
         {
         static bool debug4_ = false;
         return debug4_;
-        }
-    /*
-    static Vector& 
-    lastd()
-        {
-        static Vector lastd_(1);
-        return lastd_;
-        }
-        */
-    static bool& 
-    checkArrows()
-        {
-        static bool checkArrows_ = true;
-        return checkArrows_;
         }
     //Global option set
     static OptSet&
@@ -327,6 +316,36 @@ class Global
     opts(const Opt::Name& name, const std::string& sval)
         {
         OptSet::GlobalOpts().add(name,sval);
+        }
+    static bool& 
+    printdat()
+        {
+        static bool printdat_ = false;
+        return printdat_;
+        }
+    static Real& 
+    printScale()
+        {
+        static Real printScale_ = 1E-10;
+        return printScale_;
+        }
+    static Real
+    random(int seed = 0)
+        {
+        typedef boost::random::mt19937 
+        Generator;
+        typedef boost::random::uniform_real_distribution<Real>
+        Distribution;
+
+        static Generator rng(std::time(NULL)+getpid());
+        static Distribution dist(0,1);
+
+        if(seed != 0)  //reseed rng
+            {
+            rng = Generator(seed);
+            }
+
+        return dist(rng);
         }
     void static
     warnDeprecated(const std::string& message)
