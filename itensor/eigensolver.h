@@ -209,7 +209,7 @@ arnoldi(const BigMatrixT& A,
         {
         const Real nrm = phi[j].norm();
         if(nrm == 0.0)
-            Error("norm of 0 in davidson");
+            Error("norm of 0 in arnoldi");
         phi[j] *= 1.0/nrm;
         }
 
