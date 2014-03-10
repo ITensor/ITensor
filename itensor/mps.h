@@ -675,8 +675,8 @@ totalQN(const IQMPS& psi);
 // <psi | phi>
 //
 template <class MPSType>
-void 
-psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
+Complex 
+psiphiC(const MPSType& psi, const MPSType& phi)
     {
     typedef typename MPSType::TensorT
     Tensor;
@@ -707,6 +707,14 @@ psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
     else
         z = BraKet(primed(psi.A(N),lNm),L);
 
+    return z;
+    }
+
+template <class MPSType>
+void 
+psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
+    {
+    Complex z = psiphiC(psi,phi);
     re = z.real();
     im = z.imag();
     }
