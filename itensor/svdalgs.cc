@@ -29,6 +29,7 @@ Real
 truncate(Vector& D, const Spectrum& spec)
     {
     int m = D.Length();
+    if(m == 1) return 0;
 
     Real truncerr = 0;
 
@@ -65,6 +66,11 @@ Real
 truncate(vector<Real>& alleig, int& m, Real& docut, const Spectrum& spec)
     {
     m = (int)alleig.size();
+    if(m == 1)
+        {
+        docut = alleig.front()/2.;
+        return 0;
+        }
     int mdisc = 0;
 
     Real truncerr = 0;
@@ -89,9 +95,9 @@ truncate(vector<Real>& alleig, int& m, Real& docut, const Spectrum& spec)
     else
         {
         Real scale = spec.doRelCutoff() ? alleig.back() : 1.0;
-        while(m > spec.maxm() 
-            || ( (truncerr+alleig.at(mdisc) < spec.cutoff()*scale && m > spec.minm())
-            && mdisc < (int)alleig.size() ) )
+        while(   m > spec.maxm() 
+             || ( (mdisc < (int)alleig.size()) && (truncerr+alleig.at(mdisc) < spec.cutoff()*scale && m > spec.minm()))
+             )
             {
             if(alleig.at(mdisc) > 0)
                 truncerr += alleig.at(mdisc);
@@ -101,6 +107,9 @@ truncate(vector<Real>& alleig, int& m, Real& docut, const Spectrum& spec)
             ++mdisc;
             --m;
             }
+        if(mdisc >= alleig.size()) mdisc = alleig.size() - 1;
+        //cout << "mdisc = " << mdisc << "; alleig.size() = " << alleig.size() << endl;
+        //for(auto val : alleig) cout << val << endl;
         docut = (mdisc > 0 
                 ? (alleig.at(mdisc-1) + alleig.at(mdisc))*0.5 - 1E-5*alleig.at(mdisc-1)
                 : -1);
