@@ -200,6 +200,21 @@ getOp(int i, const String& opname, const OptSet& opts) const
         Op += TauI*Complex_i;
         }
     else
+    if(opname == "Proj0")
+        {
+        Op(Zer,ZerP) = 1;
+        }
+    else
+    if(opname == "Proj1")
+        {
+        Op(One,OneP) = 1;
+        }
+    else
+    if(opname == "Proj2")
+        {
+        Op(Two,TwoP) = 1;
+        }
+    else
         {
         Error("Operator " + opname + " name not recognized");
         }
