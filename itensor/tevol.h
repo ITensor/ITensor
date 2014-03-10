@@ -7,7 +7,8 @@
 
 #include "mpo.h"
 #include "bondgate.h"
-#include <list>
+//#include <list>
+#include "observer.h"
 
 #define Cout std::cout
 #define Endl std::endl
@@ -44,10 +45,19 @@ imagTEvol(const MPOt<Tensor>& H,
 template <class Iterable, class Tensor>
 Real
 gateTEvol(const Iterable& gatelist, 
-          Real ttotal, Real tstep, 
+          Real ttotal, 
+          Real tstep, 
           MPSt<Tensor>& psi, 
           const OptSet& opts = Global::opts());
 
+template <class Iterable, class Tensor>
+Real
+gateTEvol(const Iterable& gatelist, 
+          Real ttotal, 
+          Real tstep, 
+          MPSt<Tensor>& psi, 
+          Observer& obs,
+          OptSet opts = Global::opts());
 
 
 //
@@ -58,9 +68,12 @@ gateTEvol(const Iterable& gatelist,
 
 template <class Iterable, class Tensor>
 Real
-gateTEvol(const Iterable& gatelist, Real ttotal, Real tstep, 
+gateTEvol(const Iterable& gatelist, 
+          Real ttotal, 
+          Real tstep, 
           MPSt<Tensor>& psi, 
-          const OptSet& opts)
+          Observer& obs,
+          OptSet opts)
     {
     bool verbose = opts.getBool("Verbose",false);
 
@@ -101,6 +114,10 @@ gateTEvol(const Iterable& gatelist, Real ttotal, Real tstep,
         tot_norm *= psi.normalize();
 
         tsofar += tstep;
+
+        opts.add("TimeStep",tt);
+        opts.add("Time",tsofar);
+        obs.measure(opts);
         }
     if(verbose) 
         {
@@ -110,6 +127,18 @@ gateTEvol(const Iterable& gatelist, Real ttotal, Real tstep,
     return tot_norm;
 
     } // gateTEvol
+
+template <class Iterable, class Tensor>
+Real
+gateTEvol(const Iterable& gatelist, 
+          Real ttotal, 
+          Real tstep, 
+          MPSt<Tensor>& psi, 
+          const OptSet& opts)
+    {
+    Observer obs;
+    return gateTEvol(gatelist,ttotal,tstep,psi,obs,opts);
+    }
 
 #undef Cout
 #undef Endl
