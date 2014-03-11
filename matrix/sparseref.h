@@ -5,6 +5,7 @@
 
 #include "sparse.h"
 
+
 class SparseMatBase : private Array1<SparseVector>
     {
 
@@ -35,6 +36,14 @@ class SparseMatBase : private Array1<SparseVector>
     };
 
 enum ClearFlag { Clear, NoClear};
+
+class SparseRef;
+
+void mult(const SparseRef &, const MatrixRef &,
+          MatrixRef &,ClearFlag cf = NoClear);
+void mult(const MatrixRef &, const SparseRef &,
+          MatrixRef &,ClearFlag cf = NoClear);
+
 class SparseRef
     {
     SparseMatBase * base;
@@ -111,9 +120,9 @@ public:
     SparseRef& operator+=(const MatrixRef&);
     void PutInMatrix(Matrix&) const;
     friend void mult(const SparseRef &, const MatrixRef &,
-		      MatrixRef &,ClearFlag cf = NoClear);
+		      MatrixRef &,ClearFlag cf);
     friend void mult(const MatrixRef &, const SparseRef &,
-		      MatrixRef &,ClearFlag cf = NoClear);
+		      MatrixRef &,ClearFlag cf);
     void write(std::ostream& s) const;
     void read(std::istream& s);
     void  RemoveElement(int row,int i)
