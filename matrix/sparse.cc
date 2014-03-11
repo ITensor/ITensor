@@ -135,10 +135,10 @@ dot(const SparseVector & S1, const SparseVector & S2)
     {
     if(!S1.sorted || !S2.sorted)
 	_merror("S1 or S2 not sorted in dot");
-    register int l1 = S1.Length(), l2 = S2.Length();
+     int l1 = S1.Length(), l2 = S2.Length();
     if(l1 < 1 || l2 < 1) return 0.0;
     Real res = 0.0;
-    register int si1,si2,i1=1,i2=1;
+     int si1,si2,i1=1,i2=1;
     while(1)
 	{
 	if((si1=S1.index(i1)) == (si2=S2.index(i2)))

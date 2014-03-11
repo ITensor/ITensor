@@ -1,9 +1,9 @@
     /* y += a * x; */
-void daxpy(register int n,register double a,register double *x,
-	register int incx, register double *y,register int incy)
+void daxpy( int n, double a, double *x,
+	 int incx,  double *y, int incy)
     {
-    register int m,i,n7 = n - 7;
-    register double *yy,t0,t1,t2,t3,x0,x1,x2,x3,y0,y1,y2,y3,y4,y5,y6,y7;
+     int m,i,n7 = n - 7;
+     double *yy,t0,t1,t2,t3,x0,x1,x2,x3,y0,y1,y2,y3,y4,y5,y6,y7;
     if(n <= 0) return;
     if(a == 0.0) return;
     m = n%8;
@@ -48,11 +48,11 @@ void daxpy(register int n,register double a,register double *x,
 	}
     }
 
-void dscal(int n,double a,register double *x,register int incx)
+void dscal(int n,double a, double *x, int incx)
     {
-    register int m,i,n7 = n - 7,ii;//,inc2 = incx+incx;
-    register double t0,t1,t2,t3,t4,x0,x1,x2,x3,x4;
-    register double aa = a;
+     int m,i,n7 = n - 7,ii;//,inc2 = incx+incx;
+     double t0,t1,t2,t3,t4,x0,x1,x2,x3,x4;
+     double aa = a;
     if(n <= 0) return;
     if(a == 0.0)
 	{
@@ -71,7 +71,7 @@ void dscal(int n,double a,register double *x,register int incx)
 	    *x = t2; x += incx;
 	    }
 	}
-    register double *xx = x;
+     double *xx = x;
     for(i = 0; i < n7; i += 8)
 	{
 			x0 = *x; 		x += incx;
@@ -93,11 +93,11 @@ void dscal(int n,double a,register double *x,register int incx)
 	}
     }
 
-void dcopy(register int n,register double *x,
-	register int incx,register double *y,register int incy)
+void dcopy( int n, double *x,
+	 int incx, double *y, int incy)
     {
-    register int m,i,n7 = n - 7;
-    register double x0,x1,x2,x3,t1;
+     int m,i,n7 = n - 7;
+     double x0,x1,x2,x3,t1;
     if(n <= 0) return;
     m = n%8;
     if(m != 0)
@@ -108,7 +108,7 @@ void dcopy(register int n,register double *x,
 	    *y = t1; y += incy;
 	    }
 	}
-    //register double *xx = x;
+    // double *xx = x;
     for(i = 0; i < n7; i += 8)
 	{
 	x0 = *x; 		x += incx;
@@ -130,11 +130,11 @@ void dcopy(register int n,register double *x,
 	}
     }
 
-void copyscale(register int n,register double a,register double *x,
-	register int incx, register double *y,register int incy)
+void copyscale( int n, double a, double *x,
+	 int incx,  double *y, int incy)
     {
-    register int m,i,n7 = n - 7;
-    register double t0,t1,t2,t3,t4,x0,x1,x2,x3,x4;
+     int m,i,n7 = n - 7;
+     double t0,t1,t2,t3,t4,x0,x1,x2,x3,x4;
     if(n <= 0) return;
     m = n%8;
     if(m != 0)

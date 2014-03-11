@@ -81,19 +81,19 @@ void matmuldot(double *a,int ars,double *b,int brs,double *c,
 for(i = ii; i < ilim; i += 4)
     for(k = kk; k < klim; k += 4)
 	{
-	register double c11,c12,c13,c14,c21,c22,c23,c24;
-	register double c31,c32,c33,c34,c41,c42,c43,c44;
-	register double t1,t2,t3,t4,t5;
-	register double a1,a2,a3,a4,b1,b2,b3,b4;
-	register double extra1=0,extra2=0;
-	register double* pa1 = a+i*ars;
-	register double* pa2 = pa1+ars;
-	register double* pa3 = pa2+ars;
-	register double* pa4 = pa3+ars;
-	register double* pb1 = b+k*brs;
-	register double* pb2 = pb1+brs;
-	register double* pb3 = pb2+brs;
-	register double* pb4 = pb3+brs;
+	 double c11,c12,c13,c14,c21,c22,c23,c24;
+	 double c31,c32,c33,c34,c41,c42,c43,c44;
+	 double t1,t2,t3,t4,t5;
+	 double a1,a2,a3,a4,b1,b2,b3,b4;
+	 double extra1=0,extra2=0;
+	 double* pa1 = a+i*ars;
+	 double* pa2 = pa1+ars;
+	 double* pa3 = pa2+ars;
+	 double* pa4 = pa3+ars;
+	 double* pb1 = b+k*brs;
+	 double* pb2 = pb1+brs;
+	 double* pb3 = pb2+brs;
+	 double* pb4 = pb3+brs;
 	c11 = c12 = c13 = c14 = c21 = c22 = c23 = c24 = 0;
 	c31 = c32 = c33 = c34 = c41 = c42 = c43 = c44 = 0;
 
@@ -294,10 +294,10 @@ for(i = ii; i < ilim; i += 4)
 				c34 += t5;      a4 = *pa4;
 				c44 += t1;
 	    }
-	register double* pc1 = c+i*crs+k;
-	register double* pc2 = pc1+crs;
-	register double* pc3 = pc2+crs;
-	register double* pc4 = pc3+crs;
+	 double* pc1 = c+i*crs+k;
+	 double* pc2 = pc1+crs;
+	 double* pc3 = pc2+crs;
+	 double* pc4 = pc3+crs;
 	*pc1++ += c11;
 	*pc2++ += c21;
 	*pc3++ += c31;
