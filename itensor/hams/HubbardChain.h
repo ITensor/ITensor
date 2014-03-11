@@ -71,7 +71,7 @@ init_()
                               Index(nameint("hup_",l),1),QN(+1,+1),
                               Index(nameint("hum_",l),1),QN(+1,-1),
                               Index(nameint("hdp_",l),1),QN(-1,+1),
-                              Index(nameint("hdp_",l),1),QN(-1,-1)
+                              Index(nameint("hdm_",l),1),QN(-1,-1)
                               );
         }
 
