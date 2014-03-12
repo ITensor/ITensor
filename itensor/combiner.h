@@ -16,6 +16,12 @@ Combine several indices into one, use * to convert tensors efficiently
    /
 
 */
+
+class Combiner;
+
+Combiner
+primed(Combiner C, int inc = 1);
+
 class Combiner
     {
     public:
@@ -90,7 +96,7 @@ class Combiner
     prime(IndexType type, int inc = 1);
 
     friend Combiner
-    primed(Combiner C, int inc = 1);
+    primed(Combiner C, int inc);
 
 
     //Other Methods -------------------------------------------------

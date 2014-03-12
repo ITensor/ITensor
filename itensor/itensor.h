@@ -21,6 +21,12 @@
 struct ProductProps;
 class Combiner;
 class ITDat;
+class ITensor;
+
+void toMatrixProd(const ITensor& L, const ITensor& R, 
+                  ProductProps& pp,
+                  MatrixRefNoLink& lref, MatrixRefNoLink& rref,
+                  bool& L_is_matrix, bool& R_is_matrix, bool doReshape = true);
 
 //
 // ITensor
@@ -527,7 +533,7 @@ class ITensor
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
                              ProductProps& pp,
                              MatrixRefNoLink& lref, MatrixRefNoLink& rref,
-                             bool& L_is_matrix, bool& R_is_matrix, bool doReshape = true);
+                             bool& L_is_matrix, bool& R_is_matrix, bool doReshape);
 
     int _ind2(const IndexVal& iv1, const IndexVal& iv2) const;
 
