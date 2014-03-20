@@ -10,7 +10,7 @@
 
 #include <iostream>
 //#define BOUNDS		/* Define this if you want bounds checking */
-#include <tarray1.h>
+#include "tarray1.h"
 
 class IntArray2 
     {
