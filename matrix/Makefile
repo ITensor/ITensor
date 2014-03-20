@@ -9,7 +9,7 @@ include ../options.mk
 ####################################################################
 
 HEADERS=matrixref.h matrix.h precisio.h sparse.h bigmatrix.h davidson.h\
-	storelink.h matrixref.ih matrix.ih conjugate_gradient.h sparseref.h\
+	storelink.h conjugate_gradient.h sparseref.h\
     svd.h
 
 OBJECTS=  matrix.o  utility.o  sparse.o  david.o sparseref.o\
@@ -44,7 +44,7 @@ install: libmatrix-g.a libmatrix.a
 	cp libmatrix-g.a $(ITENSOR_LIBDIR)
 	ranlib $(ITENSOR_LIBDIR)/libmatrix-g.a
 	ranlib ./libmatrix-g.a
-	cp *.h *.ih $(ITENSOR_INCLUDEDIR)
+	cp *.h $(ITENSOR_INCLUDEDIR)
 
 libmatrix.a: $(OBJECTS) $(HEADERS)
 	ar rv libmatrix.a $(OBJECTS)
