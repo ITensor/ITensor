@@ -11,7 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <complex>
-#include <error.h> //utilities
+#include "error.h" //utilities
 #include "option.h"
 #include "assert.h"
 #include "boost/array.hpp"
