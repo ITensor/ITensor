@@ -203,7 +203,7 @@ primeLevel(int plev)
 Real Index::
 uniqueReal() const
     {
-    return p->id*(1.0+(primelevel_/10.));
+    return p->id*(1.0+(sin(primelevel_)/10.));
     }
 
 bool Index::
