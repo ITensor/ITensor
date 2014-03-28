@@ -4,6 +4,7 @@
 #define _matrix_h
 
 #include "matrixref.h"
+#include <vector>
 
 class Vector;			// Defined later 
 class SparseMatrix;
@@ -138,6 +139,7 @@ public:
 // Making and resizing:
     inline Vector (int);
     inline Vector (int, Real);
+    inline explicit Vector (const std::vector<Real>& v);
     inline void ReDimension(int);
     void ReduceDimension(int);
     void Enlarge(int);			// Change size while keeping contents
@@ -325,6 +327,16 @@ inline Vector::Vector (int s)
 
 inline Vector::Vector (int s, Real val)
     { init(); makevector(s); operator=(val); }
+
+inline Vector::Vector (const std::vector<Real>& v)
+    { 
+    init(); 
+    makevector(v.size()); 
+    for(size_t j = 0; j < v.size(); ++j)
+        {
+        operator[](j) = v[j];
+        }
+    }
 
 inline Vector::Vector (const VectorRef &V)
     { init(); makevector(V.Length()); VectorRef::operator=(V); }
