@@ -107,7 +107,7 @@ truncate(vector<Real>& alleig, int& m, Real& docut, const Spectrum& spec)
             ++mdisc;
             --m;
             }
-        if(mdisc >= alleig.size()) mdisc = alleig.size() - 1;
+        if(mdisc >= int(alleig.size())) mdisc = alleig.size() - 1;
         //cout << "mdisc = " << mdisc << "; alleig.size() = " << alleig.size() << endl;
         //for(auto val : alleig) cout << val << endl;
         docut = (mdisc > 0 
