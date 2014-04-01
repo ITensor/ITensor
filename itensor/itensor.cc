@@ -315,6 +315,7 @@ ITensor(const IndexVal& iv)
     is_(Index(iv)),
     scale_(1)
 	{ 
+    //cout << format("Calling ITensor IndexVal constructor with iv.i=%d") % iv.i << endl;
     allocate(iv.m());
 	r_->v(iv.i) = 1; 
 	}
@@ -1935,8 +1936,8 @@ directMultiply(const ITensor& L,
 
     boost::array<int,NMAX> nl,
                            nr;
-    nl.fill(0);
-    nr.fill(0);
+    std::fill(nl.begin(),nl.end(),0);
+    std::fill(nr.begin(),nr.end(),0);
 
 
     const IndexSet<Index>& Lis = L.indices();
