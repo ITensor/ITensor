@@ -2135,8 +2135,11 @@ directMultiply(const ITensor& L,
         ri[n] = &zero;
         }
 
-    int nl[NMAX];
-    int nr[NMAX];
+    boost::array<int,NMAX> nl,
+                           nr;
+    nl.fill(0);
+    nr.fill(0);
+
 
     const IndexSet<Index>& Lis = L.indices();
     const IndexSet<Index>& Ris = R.indices();
