@@ -2451,19 +2451,10 @@ contractDiagDiag(const ITensor& A, const ITensor& B, ITensor& res)
         }
     else //no indices in common
         {
-        res.type_ = ITensor::Dense;
-        Error("Diag*Diag product not yet implemented for case of no common indices");
-        /*
-        const Vector& Adat = A.r_->v;
-        const Vector& Bdat = B.r_->v;
-        res.allocate(A.is_.dim()*B.is_.dim());
-        Vector& rdat = res.r_->v;
-        for(int i = 0; i < Adat.Length(); ++i)
-        for(int j = 0; j < Bdat.Length(); ++j)
-            {
-            rdat[j*Adim+i] = Adat[i]*Bdat[j];
-            }
-            */
+        //TODO: can this be made more efficient, taking advantage of sparsity?
+        res = A;
+        res.convertToDense();
+        res *= B;
         }
 
     } // contractDiagDiag
