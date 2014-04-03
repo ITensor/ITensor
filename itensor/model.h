@@ -149,6 +149,13 @@ op(const String& opname, int i,
         return id_;
         }
     else
+    if(opname == "Proj")
+        {
+        const int n = opts.getInt("State");
+        IQIndexVal v = si(i)(n);
+        return IQTensor(conj(v),primed(v));
+        }
+    else
         {
         //If opname of the form "Name1*Name2",
         //return product of Name1 operator times Name2 operator
