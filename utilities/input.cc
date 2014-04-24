@@ -277,33 +277,42 @@ int InputGroup::GetYesNo(string s, int& yes,const char* c)
     {
     string res;
     if(!GotoToken(s) || !(infile.file >> res)) 
-	{
-	if(!quiet) 
-    {
-    cout << "Couldnt get " << name << "." << s;
-	if(c) cout  << ": " << c;
-	cout << endl;
-    }
-	return 0;
-	}
+        {
+        if(!quiet) 
+            {
+            cout << "Couldnt get " << name << "." << s;
+            if(c) cout  << ": " << c;
+            cout << endl;
+            }
+        return 0;
+        }
     if(!quiet) 
-    {
-    cout << "Got " << name << "." << s << " = " << res;
-    if(c) cout  << ": " << c;
-    cout << endl;
-    }
+        {
+        cout << "Got " << name << "." << s << " = " << res;
+        if(c) cout  << ": " << c;
+        cout << endl;
+        }
     transform(res.begin(),res.end(),res.begin(),mydolower);
     if(res == "yes" || res == "y")
-	{
-	yes = 1;
-	return 1;
-	}
+        {
+        yes = 1;
+        return 1;
+        }
     if(res == "no" || res == "n")
-	{
-	yes = 0;
-	return 1;
-	}
+        {
+        yes = 0;
+        return 1;
+        }
     return 0;
+    }
+
+int InputGroup::
+GetYesNo(string s, bool& yes,const char* c)
+    {
+    int resi = 0;
+    int got = GetYesNo(s,resi,c);
+    yes = (resi==1);
+    return got;
     }
 
 void InputGroup::SkipLine()
@@ -312,6 +321,42 @@ void InputGroup::SkipLine()
     while(c != '\n')
 	infile.file.get(c);
     eatwhite(infile.file);
+    }
+
+int InputGroup::
+getInt(std::string s, int def, const char* c)
+    {
+    int res = 0;
+    int got = GetInt(s,res,c);
+    if(!got) return def;
+    return res;
+    }
+
+Real InputGroup::
+getReal(std::string s, Real def, const char* c)
+    {
+    Real res = 0;
+    int got = GetReal(s,res,c);
+    if(!got) return def;
+    return res;
+    }
+
+std::string  InputGroup::
+getString(std::string s, std::string def, const char* c)
+    {
+    std::string res;
+    int got = GetString(s,res,c);
+    if(!got) return def;
+    return res;
+    }
+
+bool  InputGroup::
+getYesNo(std::string s, bool def, const char* c)
+    {
+    bool res = false;
+    int got = GetYesNo(s,res,c);
+    if(!got) return def;
+    return res;
     }
 
 void InputGroup::GetIntM(string s, int& res,const char* c)
