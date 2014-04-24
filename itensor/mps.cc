@@ -46,7 +46,7 @@ MPSt<Tensor>::
 MPSt(const Model& mod_,int maxmm, Real cut) 
     : 
     N_(mod_.N()), 
-    A_(mod_.N()+1),
+    A_(mod_.N()+2),  //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(mod_.N()+1),
     is_ortho_(false),
@@ -70,7 +70,7 @@ MPSt<Tensor>::
 MPSt(const InitState& initState,int maxmm, Real cut)
     : 
     N_(initState.model().N()),
-    A_(initState.model().N()+1),
+    A_(initState.model().N()+2),
     l_orth_lim_(0),
     r_orth_lim_(2),
     is_ortho_(true),
@@ -95,7 +95,7 @@ MPSt<Tensor>::
 MPSt(const Model& mod_, const InitState& initState,int maxmm, Real cut)
     : 
     N_(initState.model().N()),
-    A_(initState.model().N()+1),
+    A_(initState.model().N()+2),
     l_orth_lim_(0),
     r_orth_lim_(2),
     is_ortho_(true),
@@ -119,7 +119,7 @@ MPSt<Tensor>::
 MPSt(const Model& model, std::istream& s)
     : 
     N_(model.N()), 
-    A_(model.N()+1), 
+    A_(model.N()+2), 
     is_ortho_(false),
     model_(&model),
     atb_(1),
