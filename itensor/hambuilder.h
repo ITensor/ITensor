@@ -17,6 +17,7 @@
 // MPO such as a Hamiltonian.
 //
 
+template <class Tensor>
 class HamBuilder
     {
     public:
@@ -32,10 +33,10 @@ class HamBuilder
                const String& opname4 = "", int j4 = 0);
 
     HamBuilder(const Model& mod,
-               const IQTensor& op1, int j1,
-               const IQTensor& op2 = IQTensor(), int j2 = 0,
-               const IQTensor& op3 = IQTensor(), int j3 = 0,
-               const IQTensor& op4 = IQTensor(), int j4 = 0);
+               const Tensor& op1, int j1,
+               const Tensor& op2 = Tensor(), int j2 = 0,
+               const Tensor& op3 = Tensor(), int j3 = 0,
+               const Tensor& op4 = Tensor(), int j4 = 0);
 
     HamBuilder&
     set(const String& opname1, int j1,
@@ -44,13 +45,12 @@ class HamBuilder
         const String& opname4 = "", int j4 = 0);
 
     HamBuilder&
-    set(const IQTensor& op1, int j1,
-        const IQTensor& op2 = IQTensor(), int j2 = 0,
-        const IQTensor& op3 = IQTensor(), int j3 = 0,
-        const IQTensor& op4 = IQTensor(), int j4 = 0);
+    set(const Tensor& op1, int j1,
+        const Tensor& op2 = Tensor(), int j2 = 0,
+        const Tensor& op3 = Tensor(), int j3 = 0,
+        const Tensor& op4 = Tensor(), int j4 = 0);
 
-    operator MPO() const { putlinks_(); return W_.toMPO(); }
-    operator IQMPO() const { putlinks_(); return W_; }
+    operator MPOt<Tensor>() const { putlinks_(); return W_; }
 
     HamBuilder&
     operator*=(Real val) { W_ *= val; return *this; }
@@ -65,7 +65,7 @@ class HamBuilder
     // Data Members
 
     const Model* mod_;
-    mutable IQMPO W_;
+    mutable MPOt<Tensor> W_;
     mutable bool initted_;
 
     //
@@ -87,35 +87,40 @@ class HamBuilder
 
     };
 
-HamBuilder inline
-operator*(HamBuilder hb, Real x)
+template <class Tensor> 
+HamBuilder<Tensor>
+operator*(HamBuilder<Tensor> hb, Real x)
     {
     hb *= x;
     return hb;
     }
 
-HamBuilder inline
-operator*(Real x, HamBuilder hb)
+template <class Tensor> 
+HamBuilder<Tensor>
+operator*(Real x, HamBuilder<Tensor> hb)
     {
     hb *= x;
     return hb;
     }
 
-HamBuilder inline
-operator*(HamBuilder hb, Complex z)
+template <class Tensor> 
+HamBuilder<Tensor>
+operator*(HamBuilder<Tensor> hb, Complex z)
     {
     hb *= z;
     return hb;
     }
 
-HamBuilder inline
-operator*(Complex z, HamBuilder hb)
+template <class Tensor> 
+HamBuilder<Tensor>
+operator*(Complex z, HamBuilder<Tensor> hb)
     {
     hb *= z;
     return hb;
     }
 
-inline HamBuilder::
+template <class Tensor> 
+HamBuilder<Tensor>::
 HamBuilder(const Model& mod)
     :
     mod_(&mod),
@@ -125,7 +130,8 @@ HamBuilder(const Model& mod)
     setident_();
     }
 
-inline HamBuilder::
+template <class Tensor> 
+HamBuilder<Tensor>::
 HamBuilder(const Model& mod,
            const String& opname1, int j1,
            const String& opname2, int j2,
@@ -140,12 +146,13 @@ HamBuilder(const Model& mod,
     set(opname1,j1,opname2,j2,opname3,j3,opname4,j4);
     }
 
-inline HamBuilder::
+template <class Tensor>
+HamBuilder<Tensor>::
 HamBuilder(const Model& mod,
-           const IQTensor& op1, int j1,
-           const IQTensor& op2, int j2,
-           const IQTensor& op3, int j3,
-           const IQTensor& op4, int j4)
+           const Tensor& op1, int j1,
+           const Tensor& op2, int j2,
+           const Tensor& op3, int j3,
+           const Tensor& op4, int j4)
     :
     mod_(&mod),
     W_(mod),
@@ -155,8 +162,8 @@ HamBuilder(const Model& mod,
     set(op1,j1,op2,j2,op3,j3,op4,j4);
     }
 
-inline 
-HamBuilder& HamBuilder::
+template <class Tensor> 
+HamBuilder<Tensor>& HamBuilder<Tensor>::
 set(const String& opname1, int j1,
     const String& opname2, int j2,
     const String& opname3, int j3,
@@ -176,12 +183,12 @@ set(const String& opname1, int j1,
     return *this;
     }
 
-inline 
-HamBuilder& HamBuilder::
-set(const IQTensor& op1, int j1,
-    const IQTensor& op2, int j2,
-    const IQTensor& op3, int j3,
-    const IQTensor& op4, int j4)
+template <class Tensor> 
+HamBuilder<Tensor>& HamBuilder<Tensor>::
+set(const Tensor& op1, int j1,
+    const Tensor& op2, int j2,
+    const Tensor& op3, int j3,
+    const Tensor& op4, int j4)
     {
     if(initted_)
         {
@@ -197,7 +204,8 @@ set(const IQTensor& op1, int j1,
     return *this;
     }
 
-void inline HamBuilder::
+template <class Tensor> 
+void HamBuilder<Tensor>::
 putlinks_() const
     {
     if(initted_) return;
@@ -205,7 +213,8 @@ putlinks_() const
     initted_ = true;
     }
 
-void inline HamBuilder::
+template <class Tensor> 
+void HamBuilder<Tensor>::
 setident_() const
     {
     for(int j = 1; j <= mod_->N(); ++j)
