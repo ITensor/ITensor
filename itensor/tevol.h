@@ -7,8 +7,7 @@
 
 #include "mpo.h"
 #include "bondgate.h"
-//#include <list>
-#include "observer.h"
+#include "TEvolObserver.h"
 
 #define Cout std::cout
 #define Endl std::endl
@@ -101,22 +100,13 @@ gateTEvol(const Iterable& gatelist,
             psi.applygate(G);
             }
 
-        if(verbose)
-            {
-            Real percentdone = (100.*tt)/nt;
-            if(percentdone < 99.5 || (tt==nt))
-                {
-                Cout << Format("\b\b\b%2.f%%") % percentdone;
-                Cout.flush();
-                }
-            }
-
         tot_norm *= psi.normalize();
 
         tsofar += tstep;
 
         opts.add("TimeStep",tt);
         opts.add("Time",tsofar);
+        opts.add("TotalTime",ttotal);
         obs.measure(opts);
         }
     if(verbose) 
@@ -136,7 +126,7 @@ gateTEvol(const Iterable& gatelist,
           MPSt<Tensor>& psi, 
           const OptSet& opts)
     {
-    Observer obs;
+    TEvolObserver<Tensor> obs(opts);
     return gateTEvol(gatelist,ttotal,tstep,psi,obs,opts);
     }
 
