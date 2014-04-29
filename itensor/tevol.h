@@ -126,7 +126,7 @@ gateTEvol(const Iterable& gatelist,
           MPSt<Tensor>& psi, 
           const OptSet& opts)
     {
-    TEvolObserver<Tensor> obs(opts);
+    TEvolObserver obs(opts);
     return gateTEvol(gatelist,ttotal,tstep,psi,obs,opts);
     }
 

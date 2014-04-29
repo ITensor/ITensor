@@ -17,7 +17,6 @@
 // derived class.
 //
 
-template<class Tensor>
 class TEvolObserver : public Observer
     {
     public:
@@ -46,8 +45,7 @@ class TEvolObserver : public Observer
 
     }; // class TEvolObserver
 
-template<class Tensor>
-inline TEvolObserver<Tensor>::
+inline TEvolObserver::
 TEvolObserver(const OptSet& opts) 
     : 
     done_(false),
@@ -56,14 +54,13 @@ TEvolObserver(const OptSet& opts)
     }
 
 
-template<class Tensor>
-void inline TEvolObserver<Tensor>::
+void inline TEvolObserver::
 measure(const OptSet& opts)
     {
-    const int t = opts.getInt("Time");
+    const Real t = opts.getReal("Time");
     if(show_percent_)
         {
-        const int ttotal = opts.getInt("TotalTime");
+        const Real ttotal = opts.getReal("TotalTime");
         Real percentdone = (100.*t)/ttotal;
         if(percentdone < 99.5 || (fabs(t-ttotal) < 1E-10))
             {
@@ -74,8 +71,7 @@ measure(const OptSet& opts)
     }
 
 
-template<class Tensor>
-bool inline TEvolObserver<Tensor>::
+bool inline TEvolObserver::
 checkDone(const OptSet& opts)
     {
     const Real t = opts.getReal("Time");
