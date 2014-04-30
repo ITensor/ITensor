@@ -1042,7 +1042,7 @@ bool MPSt<IQTensor>::checkOrtho() const;
 
 template <class Tensor>
 void MPSt<Tensor>::
-applygate(const Tensor& gate,const OptSet& opts)
+applygate(const Tensor& gate, const OptSet& opts)
     {
     setBond(l_orth_lim_+1);
     Tensor AA = A_.at(l_orth_lim_+1) * A_.at(l_orth_lim_+2) * gate;
@@ -1053,6 +1053,22 @@ template
 void MPSt<ITensor>::applygate(const ITensor& gate,const OptSet& opts);
 template
 void MPSt<IQTensor>::applygate(const IQTensor& gate,const OptSet& opts);
+
+template <class Tensor>
+void MPSt<Tensor>::
+applygate(const BondGate<Tensor>& gate, 
+          const OptSet& opts)
+    {
+    const int gate_b = std::min(gate.i(),gate.j());
+    setBond(gate_b);
+    Tensor AA = A_.at(gate_b) * A_.at(gate_b+1) * Tensor(gate);
+    AA.noprime();
+    svdBond(gate_b,AA,Fromleft,opts);
+    }
+template
+void MPSt<ITensor>::applygate(const BondGate<ITensor>& gate,const OptSet& opts);
+template
+void MPSt<IQTensor>::applygate(const BondGate<IQTensor>& gate,const OptSet& opts);
 
 template <class Tensor>
 Real MPSt<Tensor>::

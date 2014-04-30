@@ -7,6 +7,7 @@
 #include "svdalgs.h"
 #include "model.h"
 #include "boost/function.hpp"
+#include "bondgate.h"
 
 #define Cout std::cout
 #define Endl std::endl
@@ -341,6 +342,9 @@ class MPSt
     // Opt DoNormalize(true) is included in opts.
     void 
     applygate(const Tensor& gate, const OptSet& opts = Global::opts());
+
+    void 
+    applygate(const BondGate<Tensor>& gate, const OptSet& opts = Global::opts());
 
     Real 
     norm() const;
