@@ -84,6 +84,7 @@ gateTEvol(const Iterable& gatelist,
 
     Real tsofar = 0;
     Real tot_norm = psi.normalize();
+    psi.position(gatelist.front().i());
     if(verbose) 
         {
         Cout << Format("Taking %d steps of timestep %.5f, total time %.5f")
@@ -96,7 +97,9 @@ gateTEvol(const Iterable& gatelist,
         {
         Foreach(const BondGate<Tensor>& G, gatelist)
             {
-            psi.position(G.i());
+            const int lastpos = psi.orthoCenter();
+            const int closest = abs(lastpos-G.i()) < abs(lastpos-G.j()) ? G.i() : G.j();
+            psi.position(closest);
             psi.applygate(G);
             }
 
