@@ -32,7 +32,7 @@ HEADERS=option.h global.h allocator.h real.h permutation.h index.h prodstats.h \
         model/tj.h model/Z3.h\
         eigensolver.h localop.h localmpo.h localmposet.h \
         partition.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h\
-        integrators.h idmrg.h
+        integrators.h idmrg.h TEvolObserver.h
 
 ####################################
 
