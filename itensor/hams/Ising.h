@@ -41,9 +41,6 @@ class Ising
     void 
     init();
 
-    void
-    setParams(const OptSet& opts);
-
     }; //class Ising
 
 inline Ising::
@@ -53,12 +50,6 @@ Ising(const Model& model,
     model_(model), 
     initted_(false)
     { 
-    setParams(opts);
-    }
-
-void inline Ising::
-setParams(const OptSet& opts)
-    {
     Ny_ = opts.getInt("Ny",1);
     Nx_ = model_.N()/Ny_;
     J_  = opts.getReal("J",1.);
@@ -99,7 +90,7 @@ init()
         //Transverse field
         if(hx_ != 0)
             {
-            W += model_.op("Sx",n) * row(k) * col(1) * hx_;
+            W += model_.op("Sx",n) * row(k) * col(1) * (-hx_);
             }
 
         //Horizontal bonds (N.N in 1d)
@@ -107,7 +98,7 @@ init()
         W += model_.op("Sz",n) * row(k) * col(2+(mpo_dist-1)) * J_;
 
         //
-        //The following only apply if ny_ > 1:
+        //The following only apply if Ny_ > 1:
         //
 
         //String of identity ops
