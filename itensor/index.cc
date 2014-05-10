@@ -61,9 +61,20 @@ IntToIndexType(int i)
 string 
 putprimes(string s, int plev)
     { 
-    for(int i = 1; i <= plev; ++i) 
-        s += "\'"; 
-    return s;
+    stringstream str;
+    str << s;
+    if(plev > 3)
+        {
+        str << "[" << plev << "'s]";
+        }
+    else
+        {
+        for(int i = 1; i <= plev; ++i) 
+            {
+            str << "\'";
+            }
+        }
+    return str.str();
     }
 
 string 
