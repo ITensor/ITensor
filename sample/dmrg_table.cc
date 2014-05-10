@@ -55,7 +55,12 @@ int main(int argc, char* argv[])
 
     InitState initState(model);
     for(int i = 1; i <= N; ++i) 
-        initState.set(i,(i%2==1 ? "Up" : "Dn"));
+        {
+        if(i%2 == 1)
+            initState.set(i,"Up");
+        else
+            initState.set(i,"Dn");
+        }
 
     MPS psi(initState);
 

@@ -18,30 +18,6 @@ class Hubbard : public Model
     bool
     conserveNf() const { return conserveNf_; }
 
-    IQIndexVal
-    Emp(int i) const;
-
-    IQIndexVal
-    Up(int i) const;
-
-    IQIndexVal
-    Dn(int i) const;
-
-    IQIndexVal
-    UpDn(int i) const;
-
-    IQIndexVal
-    EmpP(int i) const;
-
-    IQIndexVal
-    UpP(int i) const;
-
-    IQIndexVal
-    DnP(int i) const;
-
-    IQIndexVal
-    UpDnP(int i) const;
-
     private:
 
     virtual int
@@ -59,62 +35,15 @@ class Hubbard : public Model
     DefaultOpsT
     getDefaultOps(const OptSet& opts) const;
 
-    IQTensor
-    makeTReverse(int i) const { return getOp(i,"TReverse"); }
+    void 
+    constructSites();
 
-    IQTensor
-    makeNup(int i) const { return getOp(i,"Nup"); }
-
-    IQTensor
-    makeNdn(int i) const { return getOp(i,"Ndn"); }
-
-    IQTensor
-    makeNupdn(int i) const { return getOp(i,"Nupdn"); }
-
-    IQTensor
-    makeNtot(int i) const { return getOp(i,"Ntot"); }
-
-    IQTensor
-    makeCup(int i) const { return getOp(i,"Cup"); }
-
-    IQTensor
-    makeCdagup(int i) const { return getOp(i,"Cdagup"); }
-
-    IQTensor
-    makeCdn(int i) const { return getOp(i,"Cdn"); }
-
-    IQTensor
-    makeCdagdn(int i) const { return getOp(i,"Cdagdn"); }
-
-    IQTensor
-    makeAup(int i) const { return getOp(i,"Aup"); }
-
-    IQTensor
-    makeAdagup(int i) const { return getOp(i,"Adagup"); }
-
-    IQTensor
-    makeAdn(int i) const { return getOp(i,"Adn"); }
-
-    IQTensor
-    makeAdagdn(int i) const { return getOp(i,"Adagdn"); }
-
-    IQTensor
-    makeFermiPhase(int i) const { return getOp(i,"F"); }
-
-    IQTensor
-    makeSz(int i) const { return getOp(i,"Sz"); }
-
-    IQTensor
-    makeSx(int i) const { return getOp(i,"Sx"); }
-
-    virtual void
+    void
     doRead(std::istream& s);
 
-    virtual void
+    void
     doWrite(std::ostream& s) const;
 
-    virtual void
-    constructSites();
         
     //Data members -----------------
 
@@ -228,55 +157,9 @@ getState(int i, const String& state) const
         Error("State " + state + " not recognized");
         return getSi(i)(1);
         }
+    return IQIndexVal();
     }
 
-IQIndexVal inline Hubbard::
-Emp(int i) const
-    {
-    return getState(i,"0");
-    }
-
-IQIndexVal inline Hubbard::
-Up(int i) const
-    {
-    return getState(i,"+");
-    }
-
-IQIndexVal inline Hubbard::
-Dn(int i) const
-    {
-    return getState(i,"-");
-    }
-
-IQIndexVal inline Hubbard::
-UpDn(int i) const
-    {
-    return getState(i,"S");
-    }
-
-IQIndexVal inline Hubbard::
-EmpP(int i) const
-    {
-    return primed(getState(i,"0"));
-    }
-
-IQIndexVal inline Hubbard::
-UpP(int i) const
-    {
-    return primed(getState(i,"+"));
-    }
-
-IQIndexVal inline Hubbard::
-DnP(int i) const
-    {
-    return primed(getState(i,"-"));
-    }
-
-IQIndexVal inline Hubbard::
-UpDnP(int i) const
-    {
-    return primed(getState(i,"S"));
-    }
 
 inline IQTensor Hubbard::
 getOp(int i, const String& opname, const OptSet& opts) const

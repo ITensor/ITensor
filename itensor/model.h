@@ -167,7 +167,7 @@ op(const String& opname, int i,
             return multSiteOps(getOp(i,op1(opname,found),opts),
                                getOp(i,op2(opname,found),opts));
                 }
-            catch(ITError e)
+            catch(const ITError& e)
                 {
                 Print(opname);
                 Print(found);

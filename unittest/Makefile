@@ -25,6 +25,8 @@ SOURCES+= svdalgs_test.cc
 SOURCES+= webpage_test.cc
 SOURCES+= localmpo_test.cc
 SOURCES+= indexset_test.cc
+SOURCES+= model_test.cc
+SOURCES+= bondgate_test.cc
 
 ##################################################################
 

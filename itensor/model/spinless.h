@@ -14,24 +14,6 @@ class Spinless : public Model
 
     Spinless(int N, const OptSet& opts = Global::opts());
 
-    IQIndexVal
-    Emp(int i) const;
-
-    IQIndexVal
-    Occ(int i) const;
-
-    IQIndexVal
-    EmpP(int i) const;
-
-    IQIndexVal
-    OccP(int i) const;
-
-    IQTensor
-    projEmp(int i) const { return makeProjEmp(i); }
-
-    IQTensor
-    projOcc(int i) const { return makeProjOcc(i); }
-
     private:
 
     int
@@ -46,29 +28,8 @@ class Spinless : public Model
     virtual IQTensor
     getOp(int i, const String& opname, const OptSet& opts = Global::opts()) const;
 
-    IQTensor
-    makeN(int i) const { return getOp(i,"N"); }
-
-    IQTensor
-    makeC(int i) const { return getOp(i,"C"); }
-
-    IQTensor
-    makeA(int i) const { return getOp(i,"A"); }
-
-    IQTensor
-    makeCdag(int i) const { return getOp(i,"Cdag"); }
-
-    IQTensor
-    makeAdag(int i) const { return getOp(i,"Adag"); }
-
-    IQTensor
-    makeFermiPhase(int i) const { return getOp(i,"F"); }
-
-    IQTensor
-    makeProjEmp(int i) const { return getOp(i,"projEmp"); }
-
-    IQTensor
-    makeProjOcc(int i) const { return getOp(i,"projOcc"); }
+    void
+    constructSites();
 
     void
     doRead(std::istream& s);
@@ -76,8 +37,6 @@ class Spinless : public Model
     void
     doWrite(std::ostream& s) const;
 
-    void
-    constructSites();
         
     //Data members -----------------
 
@@ -172,30 +131,6 @@ const IQIndex& Spinless::
 getSi(int i) const
     { return site_.at(i); }
 
-
-IQIndexVal inline Spinless::
-Emp(int i) const
-    {
-    return getSi(i)(1);
-    }
-
-IQIndexVal inline Spinless::
-Occ(int i) const
-    {
-    return getSi(i)(2);
-    }
-
-IQIndexVal inline Spinless::
-EmpP(int i) const
-    {
-    return primed(getSi(i))(1);
-    }
-
-IQIndexVal inline Spinless::
-OccP(int i) const
-    {
-    return primed(getSi(i))(2);
-    }
 
 inline IQIndexVal Spinless::
 getState(int i, const String& state) const

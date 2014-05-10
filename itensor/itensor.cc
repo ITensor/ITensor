@@ -1267,6 +1267,19 @@ expandIndex(const Index& small, const Index& big, int start)
         }
 #endif
 
+    if(this->isComplex())
+        {
+        ITensor r(*this),
+                i(*this);
+        r.takeRealPart();
+        i.takeImagPart();
+        r.expandIndex(small,big,start);
+        i.expandIndex(small,big,start);
+        i *= Complex_i;
+        *this = r+i;
+        return;
+        }
+
     IndexSet<Index> newinds; 
     bool found = false;
     for(int j = 1; j <= r(); ++j)

@@ -31,15 +31,15 @@ class SpinOne : public Model
     virtual IQTensor
     getOp(int i, const String& opname, const OptSet& opts) const;
 
-    virtual void
-    doRead(std::istream& s);
+    void
+    constructSites(const OptSet& opts);
 
-    virtual void
+    void
+    doRead(std::istream& s);
+     
+    void
     doWrite(std::ostream& s) const;
 
-    virtual void
-    constructSites(const OptSet& opts);
-        
     //Data members -----------------
 
     int N_;

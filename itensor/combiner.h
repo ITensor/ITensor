@@ -115,6 +115,10 @@ class Combiner
     void 
     product(const ITensor& t, ITensor& res) const;
 
+    //For interface compatibility with IQCombiner
+    void 
+    doCondense(bool) { } 
+
     private:
 
     /////////

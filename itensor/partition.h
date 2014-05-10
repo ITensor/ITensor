@@ -5,6 +5,9 @@
 #ifndef __ITENSOR_PARTITION_H
 #define __ITENSOR_PARTITION_H
 
+#include "global.h"
+
+
 //
 // Partition
 //

@@ -70,7 +70,6 @@ operator*(const IQTensor& t, const Condenser& c)
     return res; 
     }
 
-
 Condenser inline
 conj(Condenser res) { res.conj(); return res; }
 

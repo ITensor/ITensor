@@ -820,6 +820,7 @@ uniqueIndex(const TensorA& A,
     return IndexT::Null();
     }
 
+
 template<class Tensor> typename
 Tensor::IndexT const&
 finddir(const Tensor& T, Arrow dir)

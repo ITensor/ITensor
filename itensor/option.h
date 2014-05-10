@@ -234,7 +234,6 @@ class OptSet
 
     private:
 
-
     ///////////////
     //
     // Data Members

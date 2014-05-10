@@ -85,6 +85,18 @@ class IQCombiner
     void 
     product(IQTensor t, IQTensor& res) const;
 
+    //
+    // Deprecated methods
+    //
+
+    int 
+    num_left() const 
+        {
+        Global::warnDeprecated("IQCombiner::num_left() deprecated: use numLeft() instead.");
+        return int(left_.size()); 
+        }
+
+
     private:
 
     /////////////

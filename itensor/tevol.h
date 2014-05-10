@@ -63,7 +63,6 @@ gateTEvol(const Iterable& gatelist,
 //
 // Implementations
 //
-//
 
 template <class Iterable, class Tensor>
 Real
