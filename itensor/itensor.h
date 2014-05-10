@@ -889,7 +889,8 @@ deprimed(Tensor A, const IndexT& I)
 //
 template <class Tensor>
 Tensor
-swapPrime(Tensor T, int plev1, int plev2) 
+swapPrime(Tensor T, int plev1, int plev2,
+          IndexType type = All)
     { 
     const int tempLevel = 100;
 #ifdef DEBUG
@@ -902,9 +903,9 @@ swapPrime(Tensor T, int plev1, int plev2)
             }
         }
 #endif
-    T.mapprime(plev1,tempLevel);
-    T.mapprime(plev2,plev1);
-    T.mapprime(tempLevel,plev2);
+    T.mapprime(plev1,tempLevel,type);
+    T.mapprime(plev2,plev1,type);
+    T.mapprime(tempLevel,plev2,type);
     return T; 
     }
 

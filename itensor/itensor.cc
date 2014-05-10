@@ -3163,6 +3163,7 @@ operator<<(ostream & s, const ITensor& t)
              % (isdiag ? ",D" : "")
              % (iscplx ? ",C" : "");
 
+        //const bool ff_set = (std::ios::floatfield & s.flags()) != 0;
 
         if(Global::printdat())
             {
