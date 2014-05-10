@@ -551,20 +551,22 @@ fitApplyMPO(Real fac,
             MPSt<Tensor>& res,
             const OptSet& opts)
     {
-    if(&psi == &res)
-        Error("fitApplyMPO: Result MPS cannot be same as input MPS");
     const int N = psi.N();
     const Real cutoff = opts.getReal("Cutoff",res.cutoff());
     const int maxm = opts.getInt("Maxm",res.maxm());
     const int minm = opts.getInt("Minm",res.minm());
     const int nsweep = opts.getInt("Nsweep",1);
+    const bool verbose = opts.getBool("Verbose",false);
+    const bool normalize = opts.getBool("Normalize",true);
+
+    const MPSt<Tensor> origPsi(psi);
 
     vector<Tensor> BK(N+2);
 
-    BK.at(N) = psi.A(N)*K.A(N)*conj(primed(res.A(N)));
+    BK.at(N) = origPsi.A(N)*K.A(N)*conj(primed(res.A(N)));
     for(int n = N-1; n > 2; --n)
         {
-        BK.at(n) = BK.at(n+1)*psi.A(n)*K.A(n)*conj(primed(res.A(n)));
+        BK.at(n) = BK.at(n+1)*origPsi.A(n)*K.A(n)*conj(primed(res.A(n)));
         }
 
     const Real orig_cut = res.cutoff();
@@ -581,16 +583,32 @@ fitApplyMPO(Real fac,
         {
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
-            Tensor lwfK = (BK.at(b-1).isNull() ? psi.A(b) : BK.at(b-1)*psi.A(b));
+            if(verbose)
+                {
+                cout << format("Sweep=%d, HS=%d, Bond=(%d,%d)") 
+                        % sw % ha % b % (b+1) << endl;
+                }
+
+            Tensor lwfK = (BK.at(b-1).isNull() ? origPsi.A(b) : BK.at(b-1)*origPsi.A(b));
             lwfK *= K.A(b);
-            Tensor rwfK = (BK.at(b+2).isNull() ? psi.A(b+1) : BK.at(b+2)*psi.A(b+1));
+            Tensor rwfK = (BK.at(b+2).isNull() ? origPsi.A(b+1) : BK.at(b+2)*origPsi.A(b+1));
             rwfK *= K.A(b+1);
 
             Tensor wfK = lwfK*rwfK;
             wfK.noprime();
             wfK *= fac;
 
+            if(normalize) wfK /= wfK.norm();
             res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
+
+
+            if(verbose)
+                {
+                cout << format("    Trunc. err=%.1E, States kept=%s")
+                        % res.spectrum(b).truncerr() 
+                        % showm(res.LinkInd(b)) 
+                        << endl;
+                }
 
             if(ha == 1)
                 BK.at(b) = lwfK * conj(primed(res.A(b)));
@@ -724,9 +742,12 @@ expsmallH(const MPOt<Tensor>& H,
           MPOt<Tensor>& K, 
           Real tau, 
           Real Etot, 
-          Real Kcutoff)
+          Real Kcutoff,
+          const OptSet& opts)
     {
     const int maxm = 400;
+    const int ord = opts.getInt("ExpHOrder",50);
+    const bool verbose = opts.getBool("Verbose",false);
 
     MPOt<Tensor> Hshift(H.model());
     Hshift.Anc(1) *= -Etot;
@@ -742,8 +763,14 @@ expsmallH(const MPOt<Tensor>& H,
     //      o=1    o=2      o=3      o=4  
     // K = 1-t*H*(1-t*H/2*(1-t*H/3*(1-t*H/4*(...))))
     //
-    for(int o = 50; o >= 1; --o)
+    if(verbose) cout << "Exponentiating H, order: " << endl;
+    for(int o = ord; o >= 1; --o)
         {
+        if(verbose) 
+            {
+            cout << o << " "; 
+            cout.flush();
+            }
         if(o > 1) xx[1].Anc(1) *= 1.0 / o;
 
         Real errlim = 1E-14;
@@ -752,26 +779,29 @@ expsmallH(const MPOt<Tensor>& H,
         if(o > 1)
             nmultMPO(K,Hshift,xx[1],errlim,maxm);
         }
+    if(verbose) cout << endl;
     }
 template
 void 
-expsmallH(const MPO& H, MPO& K, Real tau, Real Etot, Real Kcutoff);
+expsmallH(const MPO& H, MPO& K, Real tau, Real Etot, Real Kcutoff, const OptSet& opts);
 template
 void 
-expsmallH(const IQMPO& H, IQMPO& K, Real tau, Real Etot, Real Kcutoff);
+expsmallH(const IQMPO& H, IQMPO& K, Real tau, Real Etot, Real Kcutoff, const OptSet& opts);
 
 template<class Tensor>
 void 
 expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
-     Real Kcutoff, int ndoub)
+     Real Kcutoff, int ndoub,
+     const OptSet& opts)
     {
+    const bool verbose = opts.getBool("Verbose",false);
     Real ttau = tau / pow(2.0,ndoub);
     //cout << "ttau in expH is " << ttau << endl;
 
     K.cutoff(0.1 * Kcutoff * pow(0.25,ndoub));
-    expsmallH(H, K, ttau,Etot,K.cutoff());
+    expsmallH(H, K, ttau,Etot,K.cutoff(),opts);
 
-    cout << "Starting doubling in expH" << endl;
+    if(verbose) cout << "Starting doubling in expH" << endl;
     for(int doub = 1; doub <= ndoub; ++doub)
         {
         //cout << " Double step " << doub << endl;
@@ -796,10 +826,10 @@ expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
     }
 template
 void 
-expH(const MPO& H, MPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub);
+expH(const MPO& H, MPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, const OptSet&);
 template
 void 
-expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub);
+expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, const OptSet&);
 
 template<class Tensor>
 void

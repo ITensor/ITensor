@@ -446,7 +446,7 @@ fitApplyMPO(Real mpsfac,
 template<class Tensor>
 void 
 expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
-     Real Kcutoff, int ndoub);
+     Real Kcutoff, int ndoub, const OptSet& opts = Global::opts());
 
 //
 //Approximately computes |res> = exp(-tau*H)|psi>.
