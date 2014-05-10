@@ -157,6 +157,7 @@ findEig(int which,        //zero-indexed; so is return value
     for(int ii = 1; ii <= L; ++ii) 
         {
         A2(ii) = sqr(DR(ii))+sqr(DI(ii));
+        //A2(ii) = fabs(DR(ii));
         if(A2(ii) > maxj) 
             {
             maxj = A2(ii);
@@ -198,7 +199,7 @@ arnoldi(const BigMatrixT& A,
     if(maxrestart_ < 0) maxrestart_ = 0;
 
     const Real Approx0 = 1E-12;
-    const int Npass = 2; // number of Gram-Schmidt passes
+    const int Npass = opts.getInt("Npass",2); // number of Gram-Schmidt passes
 
     const size_t nget = phi.size();
     if(nget == 0) Error("No initial vectors passed to arnoldi.");
@@ -281,7 +282,7 @@ arnoldi(const BigMatrixT& A,
 
             //Do Gram-Schmidt orthogonalization Npass times
             //Build H matrix only on the first pass
-            Real nh;
+            Real nh = NAN;
             for(int pass = 1; pass <= Npass; ++pass)
                 {
                 for(int i = 0; i <= j; ++i)
@@ -300,6 +301,15 @@ arnoldi(const BigMatrixT& A,
                 if(nrm != 0) V.at(j+1) /= nrm;
                 else         V.at(j+1).randomize();
                 }
+
+            //for(int i1 = 0; i1 <= j+1; ++i1)
+            //for(int i2 = 0; i2 <= j+1; ++i2)
+            //    {
+            //    auto olap = BraKet(V.at(i1),V.at(i2)).real();
+            //    if(fabs(olap) > 1E-12)
+            //        Cout << Format(" %.2E") % BraKet(V.at(i1),V.at(i2)).real();
+            //    }
+            //Cout << Endl;
             
             //Diagonalize projected form of A to
             //obtain the w^th eigenvalue and eigenvector
@@ -327,10 +337,20 @@ arnoldi(const BigMatrixT& A,
 
             for(int j = 0; j <= w; ++j)
                 {
-                if(fabs(eigs[j].imag()) > Approx0)
-                    Cout << Format(" (%.10f,%.10f)") % eigs[j].real() % eigs[j].imag();
+                if(fabs(eigs[j].real()) > 1E-6)
+                    {
+                    if(fabs(eigs[j].imag()) > Approx0)
+                        Cout << Format(" (%.10f,%.10f)") % eigs[j].real() % eigs[j].imag();
+                    else
+                        Cout << Format(" %.10f") % eigs[j].real();
+                    }
                 else
-                    Cout << Format(" %.10f") % eigs[j].real();
+                    {
+                    if(fabs(eigs[j].imag()) > Approx0)
+                        Cout << Format(" (%.5E,%.5E)") % eigs[j].real() % eigs[j].imag();
+                    else
+                        Cout << Format(" %.5E") % eigs[j].real();
+                    }
                 }
             Cout << Endl;
 
@@ -347,6 +367,7 @@ arnoldi(const BigMatrixT& A,
         //Cout << Endl;
 
         //Compute w^th eigenvector of A
+        //Cout << Format("Computing eigenvector %d") % w << Endl;
         phi.at(w) = Complex(YR(1,1+n),YI(1,1+n))*V.at(0);
         for(int j = 1; j < niter; ++j)
             {
