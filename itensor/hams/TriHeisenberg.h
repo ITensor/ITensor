@@ -13,18 +13,6 @@ class TriangularHeisenberg
     TriangularHeisenberg(const Model& model, 
                          const OptSet& opts = Global::opts());
 
-    Real
-    J() const { return J_; }
-
-    void
-    J(Real val) { initted_ = false; J_ = val; }
-
-    int
-    ny() const { return Ny_; }
-
-    void
-    ny(int val) { initted_ = false; Ny_ = val; }
-
     operator MPO() { init_(); return H; }
 
     operator IQMPO() { init_(); return H; }
@@ -36,7 +24,9 @@ class TriangularHeisenberg
     const Model& model_;
     int Ny_,
         Nx_;
-    Real J_, boundary_h_;
+    Real Jz_, 
+         Jxy_,
+         boundary_h_;
     bool initted_;
     MPO H;
 
@@ -52,7 +42,9 @@ TriangularHeisenberg(const Model& model, const OptSet& opts)
     { 
     Ny_ = opts.getInt("Ny",1);
     Nx_ = model_.N()/Ny_;
-    J_ = opts.getReal("J",1.);
+    const Real J = opts.getReal("J",1.);
+    Jz_ = opts.getReal("Jz",J);
+    Jxy_ = opts.getReal("Jxy",J);
     boundary_h_ = opts.getReal("Boundary_h",0.);
     }
 
@@ -89,9 +81,9 @@ init_()
 
         //Horizontal bonds, connect n -> n+Ny_
         int mpo_dist = Ny_; 
-        W += model_.op("Sz",n) * row(k) * col(2+nop*(mpo_dist-1)) * J_;
-        W += model_.op("S-",n) * row(k) * col(3+nop*(mpo_dist-1)) * J_/2;
-        W += model_.op("S+",n) * row(k) * col(4+nop*(mpo_dist-1)) * J_/2;
+        W += model_.op("Sz",n) * row(k) * col(2+nop*(mpo_dist-1)) * Jz_;
+        W += model_.op("S-",n) * row(k) * col(3+nop*(mpo_dist-1)) * Jxy_/2;
+        W += model_.op("S+",n) * row(k) * col(4+nop*(mpo_dist-1)) * Jxy_/2;
 
         //Add boundary field if requested
         const int x = (n-1)/Ny_+1, y = (n-1)%Ny_+1;
@@ -114,23 +106,23 @@ init_()
         if(y == 1)
             {
             mpo_dist = Ny_-1; 
-            W += model_.op("Sz",n) * row(k) * col(2+nop*(mpo_dist-1)) * J_;
-            W += model_.op("S-",n) * row(k) * col(3+nop*(mpo_dist-1)) * J_/2;
-            W += model_.op("S+",n) * row(k) * col(4+nop*(mpo_dist-1)) * J_/2;
+            W += model_.op("Sz",n) * row(k) * col(2+nop*(mpo_dist-1)) * Jz_;
+            W += model_.op("S-",n) * row(k) * col(3+nop*(mpo_dist-1)) * Jxy_/2;
+            W += model_.op("S+",n) * row(k) * col(4+nop*(mpo_dist-1)) * Jxy_/2;
             }
 
         //N.N. bond along column
-        W += model_.op("Sz",n) * row(k) * col(2) * J_;
-        W += model_.op("S-",n) * row(k) * col(3) * J_/2;
-        W += model_.op("S+",n) * row(k) * col(4) * J_/2;
+        W += model_.op("Sz",n) * row(k) * col(2) * Jz_;
+        W += model_.op("S-",n) * row(k) * col(3) * Jxy_/2;
+        W += model_.op("S+",n) * row(k) * col(4) * Jxy_/2;
 
         //Diagonal bonds
         if(y != Ny_)
             {
             mpo_dist = Ny_+1; 
-            W += model_.op("Sz",n) * row(k) * col(2+nop*(mpo_dist-1)) * J_;
-            W += model_.op("S-",n) * row(k) * col(3+nop*(mpo_dist-1)) * J_/2;
-            W += model_.op("S+",n) * row(k) * col(4+nop*(mpo_dist-1)) * J_/2;
+            W += model_.op("Sz",n) * row(k) * col(2+nop*(mpo_dist-1)) * Jz_;
+            W += model_.op("S-",n) * row(k) * col(3+nop*(mpo_dist-1)) * Jxy_/2;
+            W += model_.op("S+",n) * row(k) * col(4+nop*(mpo_dist-1)) * Jxy_/2;
             }
         }
 
