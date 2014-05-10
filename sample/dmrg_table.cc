@@ -27,14 +27,15 @@ int main(int argc, char* argv[])
     InputGroup basic(infile,"basic");
 
     //Read in individual parameters from the input file
-    int N = 0;
-    basic.GetIntM("N",N); //the 'M' stands for mandatory
-    int nsweeps = 0;
-    basic.GetIntM("nsweeps",nsweeps);
-    int quiet = 1;
-    basic.GetYesNo("quiet",quiet);
+    const int N = basic.getInt("N");
+    const int nsweeps = basic.getInt("nsweeps");
+    //second argument to getXXX methods is a default
+    //in case parameter not provided in input file
+    const bool quiet = basic.getYesNo("quiet",true);
 
+    //
     // Read the sweeps parameters from a table.
+    //
 
     //Read in the sweeps table itself
     InputGroup table(basic,"sweeps");
