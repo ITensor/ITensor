@@ -24,7 +24,7 @@ Spectrum
 svd(const Tensor& AA, Tensor& U, Tensor& D, Tensor& V,
     const OptSet& opts = Global::opts())
     {
-    Spectrum spec;
+    Spectrum spec(opts);
     svd(AA,U,D,V,spec,opts);
     return spec;
     }
@@ -58,7 +58,7 @@ Spectrum
 denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
              const OptSet& opts = Global::opts())
     {
-    Spectrum spec;
+    Spectrum spec(opts);
     denmatDecomp(AA,A,B,dir,spec,LocalOp<Tensor>::Null(),opts);
     return spec;
     }
@@ -102,7 +102,7 @@ Spectrum
 diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
               const OptSet& opts = Global::opts())
     {
-    Spectrum spec;
+    Spectrum spec(opts);
     diagHermitian(M,U,D,spec,opts);
     return spec;
     }
@@ -130,7 +130,7 @@ Spectrum
 orthoDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir, 
             const OptSet& opts = Global::opts())
     {
-    Spectrum spec;
+    Spectrum spec(opts);
     orthoDecomp(T,A,B,dir,spec,opts);
     return spec;
     }
@@ -156,7 +156,7 @@ Spectrum
 csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
      const OptSet& opts = Global::opts())
     {
-    Spectrum spec;
+    Spectrum spec(opts);
     csvd(AA,L,V,R,spec,opts);
     return spec;
     }
@@ -201,7 +201,7 @@ Spectrum
 eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
      const OptSet& opts = Global::opts())
     {
-    Spectrum spec;
+    Spectrum spec(opts);
     eigDecomp(T,V,D,spec,opts);
     return spec;
     }

@@ -128,6 +128,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
          const OptSet& opts)
     {
     const bool cplx = A.isComplex();
+    const Real thresh = opts.getReal("SVDThreshold",1E-4);
 
     if(A.r() != 2)
         {
@@ -143,7 +144,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         Matrix M;
         A.toMatrix11NoScale(ui,vi,M);
 
-        SVD(M,UU,DD,VV);
+        SVD(M,UU,DD,VV,thresh);
         }
     else
         {
@@ -156,7 +157,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         Aim.toMatrix11NoScale(ui,vi,Mim);
 
         //SVDComplex(Mre,Mim,UU,iUU,DD,VV,iVV);
-        SVD(Mre,Mim,UU,iUU,DD,VV,iVV);
+        SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh);
         }
 
     //Truncate
@@ -181,9 +182,11 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         cout << format("minm = %d, maxm = %d, cutoff = %.3E")
                        %spec.minm()%spec.maxm()%spec.cutoff() << endl;
         cout << format("useOrigM = %s")%(spec.useOrigM()?"true":"false")<<endl;
+        cout << format("truncate = %s")%(spec.truncate()?"true":"false")<<endl;
+        cout << format("doRelCutoff = %s")%(spec.doRelCutoff()?"true":"false")<<endl;
+        cout << format("absoluteCutoff = %s")%(spec.absoluteCutoff()?"true":"false")<<endl;
         cout << format("Kept m=%d states in svdRank2 line 169") % m << endl;
         cout << format("svdtruncerr = %.3E")%spec.truncerr() << endl;
-
 
         int stop = min(10,DD.Length());
         Vector Ds = DD.SubVector(1,stop);
@@ -235,7 +238,14 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         }
 
     if(A.scale().isFiniteReal())
+        {
+        //cout << format("sqr(scale) = %.10E") % sqr(A.scale().real0()) << endl;
         DD *= sqr(A.scale().real0());
+        }
+    else
+        {
+        cout << "Warning: scale not finite real" << endl;
+        }
 
     spec.eigsKept(DD);
 
@@ -258,6 +268,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
          const OptSet& opts)
     {
     const bool cplx = A.isComplex();
+    const Real thresh = opts.getReal("SVDThreshold",1E-4);
 
     if(A.r() != 2)
         {
@@ -334,7 +345,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
             Matrix M(ui->m(),vi->m());
             t.toMatrix11NoScale(*ui,*vi,M);
 
-            SVD(M,UU,d,VV);
+            SVD(M,UU,d,VV,thresh);
             }
         else
             {
@@ -354,7 +365,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
             SVD(Mre,Mim,
                 UU,iUmatrix.at(itenind),
                 d,
-                VV,iVmatrix.at(itenind));
+                VV,iVmatrix.at(itenind),
+                thresh);
             }
 
         //Store the squared singular values
