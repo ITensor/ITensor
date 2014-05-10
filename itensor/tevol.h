@@ -74,7 +74,8 @@ gateTEvol(const Iterable& gatelist,
           Observer& obs,
           OptSet opts)
     {
-    bool verbose = opts.getBool("Verbose",false);
+    const bool verbose = opts.getBool("Verbose",false);
+    const bool normalize = opts.getBool("Normalize",true);
 
     const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
     if(fabs(nt*tstep-ttotal) > 1E-9)
@@ -103,7 +104,10 @@ gateTEvol(const Iterable& gatelist,
             psi.applygate(G);
             }
 
-        tot_norm *= psi.normalize();
+        if(normalize)
+            {
+            tot_norm *= psi.normalize();
+            }
 
         tsofar += tstep;
 
