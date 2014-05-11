@@ -59,11 +59,11 @@ TEST(MPSAddition)
     i2.set(2,"Occ");
 
     //"Valence bond" between sites 1 and 2
-    MPS psi = ISqrt2*(MPS(i1) + MPS(i2));
+    MPS psi = ISqrt2*sum(MPS(i1),MPS(i2));
 
     CHECK_CLOSE(psi.norm(),1,1E-5);
 
-    IQMPS iqpsi = ISqrt2*(IQMPS(i1) + IQMPS(i2));
+    IQMPS iqpsi = ISqrt2*sum(IQMPS(i1),IQMPS(i2));
 
     CHECK_EQUAL(totalQN(iqpsi),QN(0,1));
     }
@@ -78,14 +78,12 @@ TEST(PositionTest)
     init.set(6,"Occ");
 
     IQMPS psi(init);
-    psi.cutoff(1E-8);
-    psi.noise(1E-8);
     psi.Anc(1) *= Complex_i;
 
-    psi.position(1);
+    psi.position(1,"Cutoff=1E-8");
     CHECK_EQUAL(findCenter(psi),1);
 
-    psi.position(4);
+    psi.position(4,"Cutoff=1E-8");
     CHECK_EQUAL(findCenter(psi),4);
     }
 
