@@ -51,15 +51,15 @@ class Stats
         //Real s = 0;
         //for(size_t j = 0; j < dat.size(); ++j) s += sqr(dat.at(j)-av);
         Real av2 = tot2/dat.size();
-        return sqrt(av2-av*av);
+        return std::sqrt(av2-av*av);
         }
 
     Real 
     err() const
         {
         const Real n = dat.size();
-        if(n > 1) return sigma()/sqrt(n-1);
-        else return sigma()/sqrt(n);
+        if(n > 1) return sigma()/std::sqrt(n-1);
+        else return sigma()/std::sqrt(n);
         }
 
     Real 
