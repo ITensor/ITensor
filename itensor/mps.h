@@ -16,12 +16,7 @@
 template <class Tensor>
 class MPOt;
 
-template <class Tensor>
-class LocalMPO;
-
 class InitState;
-
-static const LogNumber DefaultRefScale(7.58273202392352185);
 
 void 
 convertToIQ(const Model& model, const std::vector<ITensor>& A, 
@@ -51,14 +46,12 @@ class MPSt
 
     MPSt();
 
-    MPSt(const Model& mod_,int maxmm = MAX_M, Real cut = MIN_CUT);
+    MPSt(const Model& sites);
 
-    MPSt(const InitState& initState,
-         int maxmm = MAX_M, Real cut = MIN_CUT);
-
-    MPSt(const Model& model, std::istream& s);
+    MPSt(const InitState& initState);
 
     MPSt(const MPSt& other);
+
     MPSt&
     operator=(const MPSt& other);
 
@@ -129,74 +122,10 @@ class MPSt
     Spectrum& 
     spectrum(int b) { return spectrum_.at(b); }
 
-
     bool 
     isNull() const { return (model_==0); }
     bool 
     isNotNull() const { return (model_!=0); }
-
-    bool 
-    doRelCutoff() const { return spectrum_.front().doRelCutoff(); }
-    void 
-    doRelCutoff(bool val) 
-        { 
-        Foreach(Spectrum& spec, spectrum_)
-            spec.doRelCutoff(val); 
-        }
-
-    bool 
-    absoluteCutoff() const { return spectrum_.front().absoluteCutoff(); }
-    void 
-    absoluteCutoff(bool val) 
-        { 
-        Foreach(Spectrum& spec, spectrum_)
-            spec.absoluteCutoff(val); 
-        }
-
-    LogNumber 
-    refNorm() const { return spectrum_.front().refNorm(); }
-    void 
-    refNorm(LogNumber val) 
-        { 
-        Foreach(Spectrum& spec, spectrum_)
-            spec.refNorm(val); 
-        }
-
-    Real 
-    noise() const { return spectrum_.front().noise(); }
-    void 
-    noise(Real val) 
-        { 
-        Foreach(Spectrum& spec, spectrum_)
-            spec.noise(val); 
-        }
-
-    Real 
-    cutoff() const { return spectrum_.front().cutoff(); }
-    void 
-    cutoff(Real val) 
-        { 
-        Foreach(Spectrum& spec, spectrum_)
-            spec.cutoff(val); 
-        }
-
-    int 
-    minm() const { return spectrum_.front().minm(); }
-    void 
-    minm(int val)
-        { 
-        Foreach(Spectrum& spec, spectrum_)
-            spec.minm(val); 
-        }
-
-    int 
-    maxm() const { return spectrum_.front().maxm(); }
-    void 
-    maxm(int val)
-        { 
-        Foreach(Spectrum& spec, spectrum_)
-            spec.maxm(val); 
-        }
 
     Real 
     truncerr(int b) const { return spectrum_.at(b).truncerr(); }
@@ -247,17 +176,9 @@ class MPSt
     friend inline MPSt 
     operator*(Complex z, MPSt res) { res *= z; return res; }
 
-
-    MPSt& 
-    operator+=(const MPSt& oth);
-    MPSt& 
-    addAssumeOrth(const MPSt& oth, const OptSet& opts = Global::opts());
-
-    inline MPSt 
-    operator+(MPSt res) const { res += *this; return res; }
-
-    inline MPSt 
-    operator-(MPSt res) const { res *= -1; res += *this; return res; }
+    MPSt&
+    plusEq(const MPSt& R, 
+           const OptSet& opts = Global::opts());
 
     //
     //MPSt Index Methods
@@ -368,19 +289,13 @@ class MPSt
     void 
     toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
         {
-        iqpsi = MPSt<IQTensor>(*model_,maxm(),cutoff());
+        iqpsi = MPSt<IQTensor>(*model_);
         iqpsi.spectrum_ = spectrum_;
         convertToIQ(*model_,A_,iqpsi.A_,totalq,cut);
         }
 
     void
     swap(MPSt& other);
-
-    //This constructor is deprecated: use version
-    //with no Model argument instead (model is already
-    //referenced in InitState object)
-    MPSt(const Model& mod_,const InitState& initState,
-         int maxmm = MAX_M, Real cut = MIN_CUT);
 
     protected:
 
@@ -455,6 +370,10 @@ class MPSt
     void 
     init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
+    MPSt&
+    addAssumeOrth(const MPSt& R, 
+                  const OptSet& opts = Global::opts());
+
     private:
 
     friend class MPSt<ITensor>;
@@ -474,21 +393,21 @@ class InitState
     typedef std::string
     String;
 
-    InitState(const Model& model)
+    InitState(const Model& sites)
         : 
-        model_(&model), 
-        state_(1+model.N())
+        sites_(&sites), 
+        state_(1+sites.N())
         { 
-        for(int n = 1; n <= model_->N(); ++n)
+        for(int n = 1; n <= sites_->N(); ++n)
             {
-            state_[n] = model_->si(n)(1);
+            state_[n] = sites_->si(n)(1);
             }
         }
 
-    InitState(const Model& model, const String& state)
+    InitState(const Model& sites, const String& state)
         : 
-        model_(&model), 
-        state_(1+model.N())
+        sites_(&sites), 
+        state_(1+sites.N())
         { 
         setAll(state);
         }
@@ -497,16 +416,16 @@ class InitState
     set(int i, const String& state)
         { 
         checkRange(i);
-        state_.at(i) = model_->st(i,state);
+        state_.at(i) = sites_->st(i,state);
         return *this;
         }
 
     InitState& 
     setAll(const String& state)
         { 
-        for(int n = 1; n <= model_->N(); ++n)
+        for(int n = 1; n <= sites_->N(); ++n)
             {
-            state_[n] = model_->st(n,state);
+            state_[n] = sites_->st(n,state);
             }
         return *this;
         }
@@ -515,20 +434,20 @@ class InitState
     operator()(int i) const { checkRange(i); return state_.at(i); }
 
     const Model&
-    model() const { return *model_; }
+    model() const { return *sites_; }
 
     private:
 
-    const Model* model_;
+    const Model* sites_;
     Storage state_;
 
     void
     checkRange(int i) const
         {
-        if(i > model_->N() || i < 1) 
+        if(i > sites_->N() || i < 1) 
             {
             Cout << "i = " << i << Endl;
-            Cout << "Valid range is 1 to " << model_->N() << Endl;
+            Cout << "Valid range is 1 to " << sites_->N() << Endl;
             Error("i out of range");
             }
         }
@@ -547,11 +466,6 @@ svdBond(int b, const Tensor& AA, Direction dir,
         const BigMatrixT& PH, const OptSet& opts)
     {
     setBond(b);
-    const bool use_orig_setting = spectrum_.at(b).useOrigM();
-    if(opts.getBool("UseOrigM",false)) 
-        {
-        spectrum_.at(b).useOrigM(true);
-        }
 
     if(dir == Fromleft && b-1 > l_orth_lim_)
         {
@@ -566,7 +480,10 @@ svdBond(int b, const Tensor& AA, Direction dir,
         Error("b+2 < r_orth_lim_");
         }
 
-    if(opts.getBool("UseSVD",false) || (noise() == 0 && cutoff() < 1E-12))
+    const Real noise = opts.getReal("Noise",0.);
+    const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
+
+    if(opts.getBool("UseSVD",false) || (noise == 0 && cutoff < 1E-12))
         {
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
@@ -578,7 +495,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
             Cout << "with spectrum:\n" << spectrum_.at(b) << Endl;
             }
             */
-        svd(AA,A_[b],D,A_[b+1],spectrum_.at(b),opts);
+        spectrum_.at(b) = svd(AA,A_[b],D,A_[b+1],opts);
 
         //Normalize the ortho center if requested
         if(opts.getBool("DoNormalize",false))
@@ -598,7 +515,8 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //or need to use noise term
         //use density matrix approach
         //Cout << "Calling svdBond denmatDecomp" << Endl;
-        denmatDecomp(AA,A_[b],A_[b+1],dir,spectrum_.at(b),PH,opts);
+        spectrum_.at(b) = 
+        denmatDecomp(AA,A_[b],A_[b+1],dir,PH,opts);
 
         //Normalize the ortho center if requested
         if(opts.getBool("DoNormalize",false))
@@ -625,8 +543,6 @@ svdBond(int b, const Tensor& AA, Direction dir,
             }
         r_orth_lim_ = b+1;
         }
-
-    spectrum_.at(b).useOrigM(use_orig_setting);
     }
 
 //
@@ -746,6 +662,19 @@ template <class Tensor>
 void 
 fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit);
 
+template <class Tensor>
+MPSt<Tensor>
+sum(const MPSt<Tensor>& L, 
+    const MPSt<Tensor>& R, 
+    const OptSet& opts = Global::opts())
+    {
+    MPSt<Tensor> res(L);
+    res.plusEq(R,opts);
+    return res;
+    }
+
+
+
 //
 // Template method for efficiently summing 
 // a set of MPS's or MPO's (or any class supporting operator+=)
@@ -755,24 +684,19 @@ fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit);
 // Assumes terms are zero-indexed
 //
 template <typename MPSType>
-void 
-sum(const std::vector<MPSType>& terms, MPSType& res, 
-    Real cut = MIN_CUT, int maxm = MAX_M)
+MPSType 
+sum(const std::vector<MPSType>& terms, 
+    const OptSet& opts = Global::opts())
     {
     const int Nt = terms.size();
     if(Nt == 2)
         { 
-        res = terms.at(0);
-        res.cutoff(cut); 
-        res.maxm(maxm);
-        res += terms.at(1);
+        return sum(terms.at(0),terms.at(1),opts);
         }
     else 
     if(Nt == 1) 
         {
-        res = terms.at(0);
-        res.cutoff(cut); 
-        res.maxm(maxm);
+        return terms.at(0);
         }
     else 
     if(Nt > 2)
@@ -782,17 +706,14 @@ sum(const std::vector<MPSType>& terms, MPSType& res,
         std::vector<MPSType> newterms(nsize); 
         for(int n = 0, np = 0; n < Nt-1; n += 2, ++np)
             {
-            MPSType& nt = newterms.at(np);
-            nt = terms.at(n);
-            nt.cutoff(cut);
-            nt.maxm(maxm);
-            nt += terms.at(n+1);
+            newterms.at(np) = sum(terms.at(n),terms.at(n+1),opts);
             }
         if(Nt%2 == 1) newterms.at(nsize-1) = terms.back();
 
         //Recursively call sum again
-        sum(newterms,res,cut,maxm);
+        return sum(newterms,opts);
         }
+    return MPSType();
     }
 
 template <class Tensor>

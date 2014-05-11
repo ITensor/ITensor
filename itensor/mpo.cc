@@ -20,28 +20,24 @@ template <class Tensor>
 MPOt<Tensor>::
 MPOt() 
     : 
-    Parent() 
+    Parent(),
+    logrefNorm_(DefaultLogRefScale)
     { 
-    doRelCutoff(true); 
     }
 template MPOt<ITensor>::MPOt();
 template MPOt<IQTensor>::MPOt();
 
 template <class Tensor>
 MPOt<Tensor>::
-MPOt(const Model& model, int maxm_, Real cutoff_, 
-     bool _doRelCutoff, LogNumber _refNorm) 
+MPOt(const Model& model,
+     Real _logrefNorm) 
     : 
-    Parent(model,maxm_,cutoff_)
+    Parent(model)
     { 
-    doRelCutoff(_doRelCutoff);
-    refNorm(_refNorm);
-
     // Norm of psi^2 = 1 = norm = sum of denmat evals. 
     // This translates to Tr{Adag A} = norm.  
     // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
-    if(_refNorm == DefaultRefScale) 
-        refNorm(exp(model.N()));
+    if(_logrefNorm == DefaultLogRefScale) logrefNorm_ = model.N();
 
     //Set all tensors to identity ops
     for(int j = 1; j <= N(); ++j)
@@ -52,12 +48,10 @@ MPOt(const Model& model, int maxm_, Real cutoff_,
     }
 template
 MPOt<ITensor>::
-MPOt(const Model& model, int maxm_, Real cutoff_, 
-     bool _doRelCutoff, LogNumber _refNorm);
+MPOt(const Model& model, Real _logrefNorm);
 template
 MPOt<IQTensor>::
-MPOt(const Model& model, int maxm_, Real cutoff_, 
-     bool _doRelCutoff, LogNumber _refNorm);
+MPOt(const Model& model, Real _logrefNorm);
 
 /*
 template<class Tensor> 
@@ -179,7 +173,8 @@ svdBond(int b, const IQTensor& AA, Direction dir, const OptSet& opts);
 
 template <class Tensor>
 MPOt<Tensor>& MPOt<Tensor>::
-operator+=(const MPOt<Tensor>& other_)
+plusEq(const MPOt<Tensor>& other_,
+       const OptSet& opts)
     {
     if(doWrite())
         Error("operator+= not supported if doWrite(true)");
@@ -207,15 +202,15 @@ operator+=(const MPOt<Tensor>& other_)
             { 
             return *this;
             }
-        return addAssumeOrth(other);
+        return addAssumeOrth(other,opts);
         }
 
-    return addAssumeOrth(other_);
+    return addAssumeOrth(other_,opts);
     }
 template
-MPOt<ITensor>& MPOt<ITensor>::operator+=(const MPOt<ITensor>& other);
+MPOt<ITensor>& MPOt<ITensor>::plusEq(const MPOt<ITensor>& other, const OptSet&);
 template
-MPOt<IQTensor>& MPOt<IQTensor>::operator+=(const MPOt<IQTensor>& other);
+MPOt<IQTensor>& MPOt<IQTensor>::plusEq(const MPOt<IQTensor>& other, const OptSet&);
 
 int 
 findCenter(const IQMPO& psi)
@@ -311,17 +306,14 @@ checkQNs(const IQMPO& H)
 
 template <class MPOType>
 void 
-nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm)
+nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
+         const OptSet& opts)
     {
     typedef typename MPOType::TensorT Tensor;
     typedef typename MPOType::IndexT IndexT;
     if(Aorig.N() != Borig.N()) Error("nmultMPO(MPOType): Mismatched N");
     int N = Borig.N();
     MPOType A(Aorig), B(Borig);
-
-    Spectrum spec;
-    spec.cutoff(cut);
-    spec.maxm(maxm);
 
     A.position(1);
     B.position(1);
@@ -358,7 +350,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
             }
             */
 
-        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,spec);
+        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,opts);
 
         IndexT mid = commonIndex(res.A(i),nfork,Link);
         mid.conj();
@@ -380,14 +372,13 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int 
     res.svdBond(N-1,nfork,Fromright);
     res.noprimelink();
     res.mapprime(2,1,Site);
-    res.cutoff(cut);
     res.orthogonalize();
 
     }//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
 template
-void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res,Real cut, int maxm);
+void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res, const OptSet&);
 template
-void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm);
+void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,const OptSet& );
 
 
 template <class Tensor>
@@ -406,8 +397,8 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
     if(&psi == &res)
         Error("psi and res must be different MPS instances");
 
-    Real cutoff = opts.getReal("Cutoff",psi.cutoff());
-    int maxm = opts.getInt("Maxm",psi.maxm());
+    //Real cutoff = opts.getReal("Cutoff",psi.cutoff());
+    //int maxm = opts.getInt("Maxm",psi.maxm());
 
     const int N = psi.N();
     if(K.N() != N) 
@@ -432,13 +423,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
     */
 #endif
 
-    Spectrum spec;
-    spec.cutoff(cutoff);
-    spec.maxm(maxm);
-
     res = psi; 
-    res.maxm(maxm); 
-    res.cutoff(cutoff);
     res.primelinks(0,4);
     res.mapprime(0,1,Site);
 
@@ -455,7 +440,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
         nfork = Tensor(psi.RightLinkInd(i),K.RightLinkInd(i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
-        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,spec);
+        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,opts);
         IndexT mid = commonIndex(res.A(i),nfork,Link);
         //assert(mid.dir() == In);
         mid.conj();
@@ -472,8 +457,6 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
     res.noprimelink();
     res.mapprime(1,0,Site);
     res.position(1);
-    res.maxm(psi.maxm()); 
-    res.cutoff(psi.cutoff());
     } //void zipUpApplyMPO
 template
 void 
@@ -485,7 +468,10 @@ zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const OptSet& opts);
 //Expensive: scales as m^3 k^3!
 template<class Tensor>
 void 
-exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
+exactApplyMPO(const MPSt<Tensor>& x, 
+              const MPOt<Tensor>& K, 
+              MPSt<Tensor>& res,
+              const OptSet& opts)
     {
     typedef typename Tensor::IndexT
     IndexT;
@@ -519,14 +505,14 @@ exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res)
         res.Anc(j+1) = conj(comb) * res.A(j+1); //m^3 k^3 d
         }
     res.mapprime(1,0,Site);
-    res.orthogonalize();
+    res.orthogonalize(opts);
     } //void exact_applyMPO
 template
 void 
-exactApplyMPO(const MPS& x, const MPO& K, MPS& res);
+exactApplyMPO(const MPS& x, const MPO& K, MPS& res, const OptSet&);
 template
 void 
-exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res);
+exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const OptSet&);
 
 
 template<class Tensor>
@@ -552,9 +538,6 @@ fitApplyMPO(Real fac,
             const OptSet& opts)
     {
     const int N = psi.N();
-    const Real cutoff = opts.getReal("Cutoff",res.cutoff());
-    const int maxm = opts.getInt("Maxm",res.maxm());
-    const int minm = opts.getInt("Minm",res.minm());
     const int nsweep = opts.getInt("Nsweep",1);
     const bool verbose = opts.getBool("Verbose",false);
     const bool normalize = opts.getBool("Normalize",true);
@@ -568,14 +551,6 @@ fitApplyMPO(Real fac,
         {
         BK.at(n) = BK.at(n+1)*origPsi.A(n)*K.A(n)*conj(primed(res.A(n)));
         }
-
-    const Real orig_cut = res.cutoff();
-    const int orig_minm = res.minm();
-    const int orig_maxm = res.maxm();
-
-    res.cutoff(cutoff);
-    res.minm(minm);
-    res.maxm(maxm);
 
     res.position(1);
 
@@ -601,7 +576,6 @@ fitApplyMPO(Real fac,
             if(normalize) wfK /= wfK.norm();
             res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
 
-
             if(verbose)
                 {
                 cout << format("    Trunc. err=%.1E, States kept=%s")
@@ -616,10 +590,6 @@ fitApplyMPO(Real fac,
                 BK.at(b+1) = rwfK * conj(primed(res.A(b+1)));
             }
         }
-
-    res.cutoff(orig_cut);
-    res.minm(orig_minm);
-    res.maxm(orig_maxm);
     }
 template
 void
@@ -661,9 +631,6 @@ fitApplyMPO(Real mpsfac,
         Error("fitApplyMPO: Result MPS cannot be same as an input MPS");
         }
     const int N = psiA.N();
-    const Real cutoff = opts.getReal("Cutoff",res.cutoff());
-    const int maxm = opts.getInt("Maxm",res.maxm());
-    const int minm = opts.getInt("Minm",res.minm());
     const int nsweep = opts.getInt("Nsweep",1);
 
     vector<Tensor> B(N+2),
@@ -676,14 +643,6 @@ fitApplyMPO(Real mpsfac,
         B.at(n) = B.at(n+1)*psiA.A(n)*conj(primed(res.A(n),Link));
         BK.at(n) = BK.at(n+1)*psiB.A(n)*K.A(n)*conj(primed(res.A(n)));
         }
-
-    const Real orig_cut = res.cutoff();
-    const int orig_minm = res.minm();
-    const int orig_maxm = res.maxm();
-
-    res.cutoff(cutoff);
-    res.minm(minm);
-    res.maxm(maxm);
 
     res.position(1);
 
@@ -717,10 +676,6 @@ fitApplyMPO(Real mpsfac,
             }
         }
 
-    res.cutoff(orig_cut);
-    res.minm(orig_minm);
-    res.maxm(orig_maxm);
-
     Tensor olp = B.at(3);
     olp *= psiA.A(2);
     olp *= conj(primed(res.A(2),Link));
@@ -743,15 +698,16 @@ expsmallH(const MPOt<Tensor>& H,
           Real tau, 
           Real Etot, 
           Real Kcutoff,
-          const OptSet& opts)
+          OptSet opts)
     {
-    const int maxm = 400;
     const int ord = opts.getInt("ExpHOrder",50);
     const bool verbose = opts.getBool("Verbose",false);
+    opts.add("Cutoff",MIN_CUT);
+    opts.add("Maxm",MAX_M);
 
     MPOt<Tensor> Hshift(H.model());
     Hshift.Anc(1) *= -Etot;
-    Hshift += H;
+    Hshift.plusEq(H,opts);
     Hshift.Anc(1) *= -tau;
 
     vector<MPOt<Tensor> > xx(2);
@@ -773,45 +729,46 @@ expsmallH(const MPOt<Tensor>& H,
             }
         if(o > 1) xx[1].Anc(1) *= 1.0 / o;
 
-        Real errlim = 1E-14;
-
-        sum(xx,K,errlim,maxm);
+        K = sum(xx,opts);
         if(o > 1)
-            nmultMPO(K,Hshift,xx[1],errlim,maxm);
+            nmultMPO(K,Hshift,xx[1],opts);
         }
     if(verbose) cout << endl;
     }
 template
 void 
-expsmallH(const MPO& H, MPO& K, Real tau, Real Etot, Real Kcutoff, const OptSet& opts);
+expsmallH(const MPO& H, MPO& K, Real tau, Real Etot, Real Kcutoff, OptSet opts);
 template
 void 
-expsmallH(const IQMPO& H, IQMPO& K, Real tau, Real Etot, Real Kcutoff, const OptSet& opts);
+expsmallH(const IQMPO& H, IQMPO& K, Real tau, Real Etot, Real Kcutoff, OptSet opts);
 
 template<class Tensor>
 void 
-expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
-     Real Kcutoff, int ndoub,
-     const OptSet& opts)
+expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, 
+     Real tau, 
+     Real Etot,
+     Real Kcutoff, 
+     int ndoub,
+     OptSet opts)
     {
     const bool verbose = opts.getBool("Verbose",false);
     Real ttau = tau / pow(2.0,ndoub);
     //cout << "ttau in expH is " << ttau << endl;
 
-    K.cutoff(0.1 * Kcutoff * pow(0.25,ndoub));
-    expsmallH(H, K, ttau,Etot,K.cutoff(),opts);
+    Real smallcut = 0.1*Kcutoff*pow(0.25,ndoub);
+    expsmallH(H, K, ttau,Etot,smallcut,opts);
 
     if(verbose) cout << "Starting doubling in expH" << endl;
     for(int doub = 1; doub <= ndoub; ++doub)
         {
         //cout << " Double step " << doub << endl;
         if(doub == ndoub) 
-            K.cutoff(Kcutoff);
+            opts.add("Cutoff",Kcutoff);
         else
-            K.cutoff(0.1 * Kcutoff * pow(0.25,ndoub-doub));
+            opts.add("Cutoff",0.1 * Kcutoff * pow(0.25,ndoub-doub));
         //cout << "in expH, K.cutoff is " << K.cutoff << endl;
         MPOt<Tensor> KK;
-        nmultMPO(K,K,KK,K.cutoff(),K.maxm());
+        nmultMPO(K,K,KK,opts);
         K = KK;
         /*
         if(doub == ndoub)
@@ -826,10 +783,10 @@ expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
     }
 template
 void 
-expH(const MPO& H, MPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, const OptSet&);
+expH(const MPO& H, MPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, OptSet);
 template
 void 
-expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, const OptSet&);
+expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, OptSet);
 
 template<class Tensor>
 void
@@ -850,20 +807,9 @@ applyExpH(const MPSt<Tensor>& psi,
     const int order = opts.getInt("Order",10);
 
     const int N = res.N();
-    const Real cutoff = opts.getReal("Cutoff",res.cutoff());
-    const int maxm = opts.getInt("Maxm",res.maxm());
-    const int minm = opts.getInt("Minm",res.minm());
     const int nsweep = opts.getInt("Nsweep",1);
 
-    const Real orig_cut = res.cutoff();
-    const int orig_minm = res.minm();
-    const int orig_maxm = res.maxm();
-
     res.position(1);
-
-    res.cutoff(cutoff);
-    res.minm(minm);
-    res.maxm(maxm);
 
     vector<Tensor> lastB(N+2),
                    B(N+2),
@@ -958,9 +904,6 @@ applyExpH(const MPSt<Tensor>& psi,
 
         } // for ord
 
-    res.cutoff(orig_cut);
-    res.minm(orig_minm);
-    res.maxm(orig_maxm);
     }
 template
 void

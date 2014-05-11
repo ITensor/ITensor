@@ -42,30 +42,28 @@ MPSt();
 
 template <class Tensor>
 MPSt<Tensor>::
-MPSt(const Model& mod_,int maxmm, Real cut) 
+MPSt(const Model& sites)
     : 
-    N_(mod_.N()), 
-    A_(mod_.N()+2), //idmrg may use A_[0] and A[N+1]
+    N_(sites.N()), 
+    A_(sites.N()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
-    r_orth_lim_(mod_.N()+1),
-    model_(&mod_), 
+    r_orth_lim_(sites.N()+1),
+    model_(&sites), 
     spectrum_(N_),
     atb_(1),
     writedir_("."),
     do_write_(false)
     { 
-    cutoff(cut);
-    maxm(maxmm);
     random_tensors(A_);
     }
 template MPSt<ITensor>::
-MPSt(const Model& mod_,int maxmm, Real cut);
+MPSt(const Model& sites);
 template MPSt<IQTensor>::
-MPSt(const Model& mod_,int maxmm, Real cut);
+MPSt(const Model& sites);
 
 template <class Tensor>
 MPSt<Tensor>::
-MPSt(const InitState& initState,int maxmm, Real cut)
+MPSt(const InitState& initState)
     : 
     N_(initState.model().N()),
     A_(initState.model().N()+2), //idmrg may use A_[0] and A[N+1]
@@ -77,32 +75,30 @@ MPSt(const InitState& initState,int maxmm, Real cut)
     writedir_("."),
     do_write_(false)
     { 
-    cutoff(cut);
-    maxm(maxmm);
     init_tensors(A_,initState);
     }
 template MPSt<ITensor>::
-MPSt(const InitState& initState,int maxmm, Real cut);
+MPSt(const InitState& initState);
 template MPSt<IQTensor>::
-MPSt(const InitState& initState,int maxmm, Real cut);
+MPSt(const InitState& initState);
 
-template <class Tensor>
-MPSt<Tensor>::
-MPSt(const Model& model, std::istream& s)
-    : 
-    N_(model.N()), 
-    A_(model.N()+2), //idmrg may use A_[0] and A[N+1]
-    model_(&model),
-    atb_(1),
-    writedir_("."),
-    do_write_(false)
-    { 
-    read(s); 
-    }
-template MPSt<ITensor>::
-MPSt(const Model& model, std::istream& s);
-template MPSt<IQTensor>::
-MPSt(const Model& model, std::istream& s);
+//template <class Tensor>
+//MPSt<Tensor>::
+//MPSt(const Model& model, std::istream& s)
+//    : 
+//    N_(model.N()), 
+//    A_(model.N()+2), //idmrg may use A_[0] and A[N+1]
+//    model_(&model),
+//    atb_(1),
+//    writedir_("."),
+//    do_write_(false)
+//    { 
+//    read(s); 
+//    }
+//template MPSt<ITensor>::
+//MPSt(const Model& model, std::istream& s);
+//template MPSt<IQTensor>::
+//MPSt(const Model& model, std::istream& s);
 
 template <class Tensor>
 MPSt<Tensor>::
@@ -559,92 +555,85 @@ plussers(const IQIndex& l1, const IQIndex& l2,
         }
     }
 
-//#define NEW_MPS_ADDITION
+//template <>
+//MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
+//    {
+//    if(do_write_)
+//        Error("operator+= not supported if doWrite(true)");
+//
+//    primelinks(0,4);
+//
+//    //Create new link indices
+//    vector<IQIndex> nlinks(N);
+//    for(int b = 1; b < N_; ++b)
+//        {
+//        IQIndex l1 = this->LinkInd(b);
+//        IQIndex l2 = other.LinkInd(b);
+//        vector<IndexQN> iq(l1.indices());
+//        iq.insert(iq.begin(),l2.indices().begin(),l2.indices().end());
+//        nlinks.at(b) = IQIndex(l2,iq);
+//        }
+//    //Create new A tensors
+//    vector<IQTensor> nA(N+1);
+//    nA[1] = IQTensor(si(1),nlinks[1]);
+//    for(int j = 2; j < N_; ++j)
+//        nA[j] = IQTensor(conj(nlinks[j-1]),si(j),nlinks[j]);
+//    nA[N] = IQTensor(conj(nlinks[N-1]),si(N));
+//
+//    for(int j = 1; j <= N_; ++j)
+//        {
+//        Foreach(const ITensor& t, A(j).blocks())
+//            { nA[j].insert(t); }
+//        Foreach(const ITensor& t, other.A(j).blocks())
+//            { nA[j].insert(t); }
+//        }
+//
+//    A.swap(nA);
+//
+//    orthogonalize();
+//
+//    return *this;
+//    }
+//
+//template <class Tensor>
+//MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
+//    {
+//    if(do_write_)
+//        Error("operator+= not supported if doWrite(true)");
+//
+//    primelinks(0,4);
+//
+//    vector<Tensor> first(N), second(N);
+//    for(int i = 1; i < N_; ++i)
+//        {
+//        IndexT l1 = this->RightLinkInd(i);
+//        IndexT l2 = other.RightLinkInd(i);
+//        IndexT r(l1);
+//        plussers(l1,l2,r,first[i],second[i]);
+//        }
+//
+//    Anc(1) = A(1) * first[1] + other.A(1) * second[1];
+//    for(int i = 2; i < N_; ++i)
+//        {
+//        Anc(i) = conj(first[i-1]) * A(i) * first[i] 
+//                  + conj(second[i-1]) * other.A(i) * second[i];
+//        }
+//    Anc(N) = conj(first[N-1]) * A(N) + conj(second[N-1]) * other.A(N);
+//
+//    noprimelink();
+//
+//    orthogonalize();
+//
+//    return *this;
+//    }
+//template
+//MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
 
-#ifdef NEW_MPS_ADDITION
-
-template <>
-MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other)
-    {
-    if(do_write_)
-        Error("operator+= not supported if doWrite(true)");
-
-    primelinks(0,4);
-
-    //Create new link indices
-    vector<IQIndex> nlinks(N);
-    for(int b = 1; b < N_; ++b)
-        {
-        IQIndex l1 = this->LinkInd(b);
-        IQIndex l2 = other.LinkInd(b);
-        vector<IndexQN> iq(l1.indices());
-        iq.insert(iq.begin(),l2.indices().begin(),l2.indices().end());
-        nlinks.at(b) = IQIndex(l2,iq);
-        }
-    //Create new A tensors
-    vector<IQTensor> nA(N+1);
-    nA[1] = IQTensor(si(1),nlinks[1]);
-    for(int j = 2; j < N_; ++j)
-        nA[j] = IQTensor(conj(nlinks[j-1]),si(j),nlinks[j]);
-    nA[N] = IQTensor(conj(nlinks[N-1]),si(N));
-
-    for(int j = 1; j <= N_; ++j)
-        {
-        Foreach(const ITensor& t, A(j).blocks())
-            { nA[j].insert(t); }
-        Foreach(const ITensor& t, other.A(j).blocks())
-            { nA[j].insert(t); }
-        }
-
-    A.swap(nA);
-
-    orthogonalize();
-
-    return *this;
-    }
-
-template <class Tensor>
-MPSt<Tensor>& MPSt<Tensor>::operator+=(const MPSt<Tensor>& other)
-    {
-    if(do_write_)
-        Error("operator+= not supported if doWrite(true)");
-
-    primelinks(0,4);
-
-    vector<Tensor> first(N), second(N);
-    for(int i = 1; i < N_; ++i)
-        {
-        IndexT l1 = this->RightLinkInd(i);
-        IndexT l2 = other.RightLinkInd(i);
-        IndexT r(l1);
-        plussers(l1,l2,r,first[i],second[i]);
-        }
-
-    Anc(1) = A(1) * first[1] + other.A(1) * second[1];
-    for(int i = 2; i < N_; ++i)
-        {
-        Anc(i) = conj(first[i-1]) * A(i) * first[i] 
-                  + conj(second[i-1]) * other.A(i) * second[i];
-        }
-    Anc(N) = conj(first[N-1]) * A(N) + conj(second[N-1]) * other.A(N);
-
-    noprimelink();
-
-    orthogonalize();
-
-    return *this;
-    }
-template
-MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
-
-#else
 template <class Tensor>
 MPSt<Tensor>& MPSt<Tensor>::
-operator+=(const MPSt<Tensor>& other_)
+plusEq(const MPSt<Tensor>& R,
+       const OptSet& opts)
     {
-    if(do_write_)
-        Error("operator+= not supported if doWrite(true)");
-
     //cout << "calling new orthog in sum" << endl;
     if(!this->isOrtho())
         {
@@ -653,31 +642,32 @@ operator+=(const MPSt<Tensor>& other_)
             }
         catch(const ResultIsZero& rz) 
             { 
-            *this = other_;
+            *this = R;
             return *this;
             }
         }
 
-    if(!other_.isOrtho())
+    if(!R.isOrtho())
         {
-        MPSt<Tensor> other(other_);
+        MPSt<Tensor> oR(R);
         try { 
-            other.orthogonalize(); 
+            oR.orthogonalize(); 
             }
         catch(const ResultIsZero& rz) 
             { 
             return *this;
             }
-        return addAssumeOrth(other);
+        return addAssumeOrth(oR,opts);
         }
 
-    return addAssumeOrth(other_);
+    return addAssumeOrth(R,opts);
     }
 template
-MPSt<ITensor>& MPSt<ITensor>::operator+=(const MPSt<ITensor>& other);
+MPSt<ITensor>& MPSt<ITensor>::
+plusEq(const MPSt<ITensor>& R, const OptSet& opts);
 template
-MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
-#endif
+MPSt<IQTensor>& MPSt<IQTensor>::
+plusEq(const MPSt<IQTensor>& R, const OptSet& opts);
 
 //
 // Adds two MPSs but doesn't attempt to
@@ -685,30 +675,31 @@ MPSt<IQTensor>& MPSt<IQTensor>::operator+=(const MPSt<IQTensor>& other);
 //
 template <class Tensor>
 MPSt<Tensor>& MPSt<Tensor>::
-addAssumeOrth(const MPSt<Tensor>& other_,
+addAssumeOrth(const MPSt<Tensor>& R,
               const OptSet& opts)
     {
-    if(do_write_)
-        Error("addAssumeOrth not supported if doWrite(true)");
+    typedef typename Tensor::IndexT
+    IndexT;
 
     primelinks(0,4);
 
-    vector<Tensor> first(N_), second(N_);
+    vector<Tensor> first(N_), 
+                   second(N_);
     for(int i = 1; i < N_; ++i)
         {
-        IndexT l1 = this->RightLinkInd(i);
-        IndexT l2 = other_.RightLinkInd(i);
+        IndexT l1 = RightLinkInd(i);
+        IndexT l2 = R.RightLinkInd(i);
         IndexT r(l1);
         plussers(l1,l2,r,first[i],second[i]);
         }
 
-    Anc(1) = A(1) * first[1] + other_.A(1) * second[1];
+    Anc(1) = A(1) * first[1] + R.A(1) * second[1];
     for(int i = 2; i < N_; ++i)
         {
         Anc(i) = conj(first[i-1]) * A(i) * first[i] 
-                  + conj(second[i-1]) * other_.A(i) * second[i];
+                     + conj(second[i-1]) * R.A(i) * second[i];
         }
-    Anc(N_) = conj(first[N_-1]) * A(N_) + conj(second[N_-1]) * other_.A(N_);
+    Anc(N_) = conj(first[N_-1]) * A(N_) + conj(second[N_-1]) * R.A(N_);
 
     noprimelink();
 
@@ -717,9 +708,11 @@ addAssumeOrth(const MPSt<Tensor>& other_,
     return *this;
     }
 template
-MPSt<ITensor>& MPSt<ITensor>::addAssumeOrth(const MPSt<ITensor>& other, const OptSet& opts);
+MPSt<ITensor>& MPSt<ITensor>::
+addAssumeOrth(const MPSt<ITensor>& R, const OptSet& opts);
 template
-MPSt<IQTensor>& MPSt<IQTensor>::addAssumeOrth(const MPSt<IQTensor>& other, const OptSet& opts);
+MPSt<IQTensor>& MPSt<IQTensor>::
+addAssumeOrth(const MPSt<IQTensor>& R, const OptSet& opts);
 
 
 //
@@ -797,8 +790,8 @@ struct Sqrt
     };
 
 template<class Tensor>
-void
-orthMPS(Tensor& A1, Tensor& A2, Spectrum& spec, Direction dir, const OptSet& opts)
+Spectrum
+orthMPS(Tensor& A1, Tensor& A2, Direction dir, const OptSet& opts)
     {
     typedef typename Tensor::IndexT
     IndexT;
@@ -807,7 +800,7 @@ orthMPS(Tensor& A1, Tensor& A2, Spectrum& spec, Direction dir, const OptSet& opt
     Tensor& R = (dir == Fromleft ? A2 : A1);
 
     IndexT bnd = commonIndex(L,R,Link);
-    if(bnd.isNull()) return;
+    if(bnd.isNull()) return Spectrum();
 
     if(opts.getBool("Verbose",false))
         {
@@ -816,7 +809,7 @@ orthMPS(Tensor& A1, Tensor& A2, Spectrum& spec, Direction dir, const OptSet& opt
 
     Tensor A,B(bnd);
     Tensor D;
-    svd(L,A,D,B,spec,opts);
+    Spectrum spec = svd(L,A,D,B,opts);
 
     L = A;
     R *= (D*B);
@@ -843,11 +836,13 @@ orthMPS(Tensor& A1, Tensor& A2, Spectrum& spec, Direction dir, const OptSet& opt
     //L.noprime();
 
     //R = primed(R,bnd)*sRho;
+
+    return spec;
     }
-template void
-orthMPS(ITensor& A1, ITensor& A2, Spectrum& spec, Direction dir, const OptSet& opts);
-template void
-orthMPS(IQTensor& A1, IQTensor& A2, Spectrum& spec, Direction dir, const OptSet& opts);
+template Spectrum
+orthMPS(ITensor& A1, ITensor& A2, Direction dir, const OptSet& opts);
+template Spectrum
+orthMPS(IQTensor& A1, IQTensor& A2, Direction dir, const OptSet& opts);
 
 
 template<class Tensor> void
@@ -882,8 +877,8 @@ position(int i, const OptSet& opts)
             if(l_orth_lim_ < 0) l_orth_lim_ = 0;
             setBond(l_orth_lim_+1);
             //cout << format("In position, SVDing bond %d\n") % (l_orth_lim_+1) << endl;
-            orthMPS(Anc(l_orth_lim_+1),Anc(l_orth_lim_+2),spectrum_.at(l_orth_lim_+1),
-                    Fromleft,opts);
+            spectrum_.at(l_orth_lim_+1) = 
+            orthMPS(Anc(l_orth_lim_+1),Anc(l_orth_lim_+2),Fromleft,opts);
             ++l_orth_lim_;
             if(r_orth_lim_ < l_orth_lim_+2) r_orth_lim_ = l_orth_lim_+2;
             }
@@ -892,8 +887,8 @@ position(int i, const OptSet& opts)
             if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
             setBond(r_orth_lim_-2);
             //cout << format("In position, SVDing bond %d\n") % (r_orth_lim_-2) << endl;
-            orthMPS(Anc(r_orth_lim_-2),Anc(r_orth_lim_-1),spectrum_.at(r_orth_lim_-2),
-                    Fromright,opts);
+            spectrum_.at(r_orth_lim_-2) = 
+            orthMPS(Anc(r_orth_lim_-2),Anc(r_orth_lim_-1),Fromright,opts);
             --r_orth_lim_;
             if(l_orth_lim_ > r_orth_lim_-2) l_orth_lim_ = r_orth_lim_-2;
             }
@@ -911,13 +906,12 @@ orthogonalize(const OptSet& opts)
     //Do a half-sweep to the right, orthogonalizing each bond
     //but lower the cutoff since the basis to the right
     //might not be ortho: don't want to over truncate
-    const Real orig_cut = cutoff();
-    cutoff(0.1*orig_cut);
     l_orth_lim_ = 0;
     r_orth_lim_ = N()+1;
-    position(N_,opts);
+    //Use smaller cutoff to orthogonalize w/ minimal truncation
+    const Real orig_cut = opts.getReal("Cutoff",MIN_CUT);
+    position(N_,opts & Opt("Cutoff",0.1*orig_cut));
     //Now basis is ortho, ok to truncate
-    cutoff(orig_cut);
     position(1,opts);
     }
 template

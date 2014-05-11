@@ -20,21 +20,8 @@
 // with D diagonal, real, and non-negative.
 //
 template<class Tensor>
-Spectrum
-svd(const Tensor& AA, Tensor& U, Tensor& D, Tensor& V,
-    const OptSet& opts = Global::opts())
-    {
-    Spectrum spec(opts);
-    svd(AA,U,D,V,spec,opts);
-    return spec;
-    }
-
-//SVD with Spectrum object controlling truncation
-//and storing eigs (squares of singular values) on return
-template<class Tensor>
-void 
+Spectrum 
 svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
-    Spectrum& spec,
     const OptSet& opts = Global::opts());
 
 //
@@ -58,31 +45,16 @@ Spectrum
 denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
              const OptSet& opts = Global::opts())
     {
-    Spectrum spec(opts);
-    denmatDecomp(AA,A,B,dir,spec,LocalOp<Tensor>::Null(),opts);
-    return spec;
+    return denmatDecomp(AA,A,B,dir,LocalOp<Tensor>::Null(),opts);
     }
 
-
-//Density matrix decomp with a Spectrum object controlling
-//the truncation parameters and storing the eigs on return.
-template<class Tensor>
-void 
-denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-             Spectrum& spec,
-             const OptSet& opts = Global::opts())
-    {
-    denmatDecomp(AA,A,B,dir,spec,LocalOp<Tensor>::Null(),opts);
-    }
-
-//Density matrix decomp with a Spectrum object 
-//and LocalOpT object supporting the noise term
+//Density matrix decomp with LocalOpT object supporting the noise term
 //The LocalOpT argument PH has to provide the deltaRho method
 //to enable the noise term feature (see localop.h for example)
 template<class Tensor, class LocalOpT>
-void 
+Spectrum 
 denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-             Spectrum& spec, const LocalOpT& PH,
+             const LocalOpT& PH,
              const OptSet& opts = Global::opts());
 
 
@@ -99,20 +71,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 //
 template<class Tensor>
 Spectrum 
-diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
-              const OptSet& opts = Global::opts())
-    {
-    Spectrum spec(opts);
-    diagHermitian(M,U,D,spec,opts);
-    return spec;
-    }
-
-//Version accepting a Spectrum object which
-//stores eigs on return
-template<class Tensor>
-void 
 diagHermitian(const Tensor& M, Tensor& U, Tensor& D, 
-              Spectrum& spec,
               const OptSet& opts = Global::opts());
 
 
@@ -127,21 +86,9 @@ diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
 //
 template<class Tensor>
 Spectrum 
-orthoDecomp(const Tensor& T, Tensor& A, Tensor& B, Direction dir, 
-            const OptSet& opts = Global::opts())
-    {
-    Spectrum spec(opts);
-    orthoDecomp(T,A,B,dir,spec,opts);
-    return spec;
-    }
-
-template<class Tensor>
-void 
-orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir, 
-            Spectrum& spec,
+orthoDecomp(Tensor T, Tensor& A, Tensor& B, 
+            Direction dir, 
             const OptSet& opts = Global::opts());
-
-
 
 
 //
@@ -151,20 +98,10 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
 // where V is the inverse of the diagonal tensor
 // appearing in the SVD
 //
+
 template<class Tensor>
 Spectrum 
 csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
-     const OptSet& opts = Global::opts())
-    {
-    Spectrum spec(opts);
-    csvd(AA,L,V,R,spec,opts);
-    return spec;
-    }
-
-template<class Tensor>
-void 
-csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
-     Spectrum& spec, 
      const OptSet& opts = Global::opts());
 
 
@@ -197,20 +134,9 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
 //  and for case (1) is the same as primed(V))
 //
 template<class Tensor>
-Spectrum 
-eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
-     const OptSet& opts = Global::opts())
-    {
-    Spectrum spec(opts);
-    eigDecomp(T,V,D,spec,opts);
-    return spec;
-    }
-
-template<class Tensor>
 void 
 eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
-     Spectrum& spec, 
-     const OptSet& opts = Global::opts());
+          const OptSet& opts = Global::opts());
 
 
 ///////////////////////////
@@ -220,31 +146,34 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
 //////////////////////////
 
 
-void 
+Spectrum 
 svdRank2(ITensor A, const Index& ui, const Index& vi,
-         ITensor& U, ITensor& D, ITensor& V, Spectrum& spec,
+         ITensor& U, ITensor& D, ITensor& V,
          const OptSet& opts = Global::opts());
 
-void 
+Spectrum 
 svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
-         IQTensor& U, IQTensor& D, IQTensor& V, Spectrum& spec,
+         IQTensor& U, IQTensor& D, IQTensor& V,
          const OptSet& opts = Global::opts());
 
 template<class Tensor>
-void 
+Spectrum 
 svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
-    Spectrum& spec, 
     const OptSet& opts)
     {
     typedef typename Tensor::IndexT 
     IndexT;
     typedef typename Tensor::CombinerT 
     CombinerT;
+
+    const Real noise = opts.getReal("Noise",0.);
+    const bool useOrigM = opts.getBool("UseOrigM",false);
+    const OptSet* opts_ = &opts;
     
     if(isZero(AA,Opt("Fast"))) 
         throw ResultIsZero("svd: AA is zero");
 
-    if(spec.noise() > 0)
+    if(noise > 0)
         Error("Noise term not implemented for svd");
 
     //if(noise_ > 0 && !PH.isNull())
@@ -275,81 +204,76 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 
     AA = Ucomb * AA * Vcomb;
 
-    const Real saved_cutoff = spec.cutoff(); 
-    const int saved_minm = spec.minm(),
-              saved_maxm = spec.maxm(); 
-    if(spec.useOrigM())
+    OptSet newOpts(opts);
+    if(useOrigM)
         {
         //Try to determine current m,
         //then set minm_ and maxm_ to this.
-        spec.cutoff(-1);
+        newOpts.add("Cutoff",-1);
+        int minm = 1,
+            maxm = MAX_M;
         if(D.r() == 0)
             {
             IndexT mid = commonIndex(U,V,Link);
             if(!mid.isNull())
                 {
-                spec.minm(mid.m());
-                spec.maxm(mid.m());
+                minm = maxm = mid.m();
                 }
             else
                 {
-                spec.minm(1);
-                spec.maxm(1);
+                minm = maxm = 1;
                 }
             }
         else
             {
-            spec.minm(D.indices().front().m());
-            spec.maxm(D.indices().front().m());
+            minm = maxm = D.indices().front().m();
             }
+        newOpts.add("Minm",minm);
+        newOpts.add("Maxm",maxm);
+        opts_ = &newOpts;
         }
 
-    svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,spec,opts);
-
-    spec.cutoff(saved_cutoff);
-    spec.minm(saved_minm);
-    spec.maxm(saved_maxm);
+    Spectrum spec = 
+    svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,*opts_);
 
     U = conj(Ucomb) * U;
     V = V * conj(Vcomb);
 
+    return spec;
+
     } //svd
 
 template<class Tensor>
-void 
+Spectrum 
 csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
-     Spectrum& spec, 
      const OptSet& opts)
     {
     Tensor UU(L),VV(R);
     Tensor D(V);
-    svd(AA,UU,D,VV,spec,opts);
+    Spectrum spec = svd(AA,UU,D,VV,spec,opts);
 
     L = UU*D;
     R = D*VV;
 
     V = conj(D);
     V.pseudoInvert(0);
+    return spec;
     }
 
-Real 
-diag_hermitian(ITensor rho, ITensor& U, ITensor& D, Spectrum& spec,
-               const OptSet& opts = Global::opts());
-
-Real 
-diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D, Spectrum& spec,
-               const OptSet& opts = Global::opts());
-
 template<class Tensor, class LocalOpT>
-void 
-denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-             Spectrum& spec, const LocalOpT& PH,
+Spectrum 
+denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, 
+             Direction dir, 
+             const LocalOpT& PH,
              const OptSet& opts)
     {
     typedef typename Tensor::IndexT 
     IndexT;
     typedef typename Tensor::CombinerT 
     CombinerT;
+
+    const Real noise = opts.getReal("Noise",0.);
+    const OptSet* opts_ = &opts;
 
     if(isZero(AA,Opt("Fast"))) 
         {
@@ -392,20 +316,19 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
     Tensor rho = AAc*AAcc; 
 
     //Add noise term if requested
-    if(spec.noise() > 0 && !PH.isNull())
+    if(noise > 0 && !PH.isNull())
         {
-        rho += spec.noise()*PH.deltaRho(AA,comb,dir);
+        rho += noise*PH.deltaRho(AA,comb,dir);
         rho *= 1./trace(realPart(rho));
         }
 
-    const Real saved_cutoff = spec.cutoff(); 
-    const int saved_minm = spec.minm(),
-              saved_maxm = spec.maxm(); 
-    if(spec.useOrigM())
+    OptSet newOpts;
+    if(opts.getBool("UseOrigM",false))
         {
-        spec.cutoff(-1);
-        spec.minm(mid.m());
-        spec.maxm(mid.m());
+        newOpts.add("Cutoff",-1);
+        newOpts.add("Minm",mid.m());
+        newOpts.add("Maxm",mid.m());
+        opts_ = &newOpts;
         }
 
     if(opts.getBool("TraceReIm",false))
@@ -415,25 +338,30 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 
     Tensor U;
     Tensor D;
-    Real truncerr = diag_hermitian(rho,U,D,spec,opts);
-    spec.truncerr(truncerr);
-
-    spec.cutoff(saved_cutoff);
-    spec.minm(saved_minm);
-    spec.maxm(saved_maxm);
+    Spectrum spec = diag_hermitian(rho,U,D,*opts_);
 
     comb.conj();
     comb.product(conj(U),to_orth);
     newoc = U * AAc;
 
+    return spec;
+
     } //denmatDecomp
 
 
+Spectrum 
+diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
+               const OptSet& opts = Global::opts());
+
+Spectrum 
+diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
+               const OptSet& opts = Global::opts());
+
 
 template<class Tensor>
-void 
-diagHermitian(const Tensor& M, Tensor& U, Tensor& D, Spectrum& spec,
-              const OptSet& opts)
+Spectrum 
+diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
+              OptSet opts)
     {
     typedef typename Tensor::IndexT 
     IndexT;
@@ -471,21 +399,20 @@ diagHermitian(const Tensor& M, Tensor& U, Tensor& D, Spectrum& spec,
         throw e;
         }
 
-    const bool truncate_setting = spec.truncate();
-    spec.truncate(false);
-    diag_hermitian(Mc,U,D,spec,opts);
-    spec.truncerr(0);
-    spec.truncate(truncate_setting);
+    opts.add("Truncate",false);
+    Spectrum spec = diag_hermitian(Mc,U,D,opts);
 
     U = comb * U;
+
+    return spec;
 
     } //diagHermitian
 
 
 template<class Tensor>
-void 
-orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir, 
-            Spectrum& spec,
+Spectrum 
+orthoDecomp(Tensor T, Tensor& A, Tensor& B, 
+            Direction dir, 
             const OptSet& opts)
     {
     typedef typename Tensor::IndexT 
@@ -496,15 +423,14 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
     if(isZero(T,Opt("Fast"))) 
         throw ResultIsZero("orthoDecomp: T is zero");
 
-    const Real orig_noise = spec.noise();
-    spec.noise(0);
-
     const
     bool usedenmat = false;
 
+    Spectrum spec;
+
     if(usedenmat)
         {
-        denmatDecomp(T,A,B,dir,spec,opts & Opt("TraceReIm"));
+        spec = denmatDecomp(T,A,B,dir,opts & Opt("TraceReIm") & Opt("Noise",0));
         }
     else //use svd
         {
@@ -539,7 +465,7 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
 
 
         Tensor D;
-        svdRank2(T,Acomb.right(),Bcomb.right(),A,D,B,spec,opts);
+        spec = svdRank2(T,Acomb.right(),Bcomb.right(),A,D,B,opts);
 
         A = conj(Acomb) * A;
         B = B * conj(Bcomb);
@@ -556,22 +482,22 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B, Direction dir,
             }
         }
 
-    spec.noise(orig_noise);
+    return spec;
+
     } //orthoDecomp
 
 void 
-eig_decomp(ITensor T, const Index& L, const Index& R, ITensor& V, ITensor& D, Spectrum& spec,
+eig_decomp(ITensor T, const Index& L, const Index& R, ITensor& V, ITensor& D,
            const OptSet& opts = Global::opts());
 
 void 
-eig_decomp(IQTensor T, const IQIndex& L, const IQIndex& R, IQTensor& V, IQTensor& D, Spectrum& spec,
+eig_decomp(IQTensor T, const IQIndex& L, const IQIndex& R, IQTensor& V, IQTensor& D,
            const OptSet& opts = Global::opts());
 
 template<class Tensor>
 void 
 eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
-     Spectrum& spec, 
-     const OptSet& opts)
+          const OptSet& opts)
     {
     typedef typename Tensor::IndexT 
     IndexT;
@@ -614,7 +540,7 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
         Error("Tensor not square-matrix-like in eigDecomp");
         }
 
-    eig_decomp(Tc,rcomb.right(),ccomb.right(),V,D,spec,opts);
+    eig_decomp(Tc,rcomb.right(),ccomb.right(),V,D,opts);
 
     V = V * ccomb;
     }

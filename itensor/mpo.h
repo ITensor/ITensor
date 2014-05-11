@@ -10,6 +10,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+static const Real DefaultLogRefScale(2.0255);
+
 //
 // class MPOt
 //
@@ -40,10 +42,7 @@ class MPOt : private MPSt<Tensor>
     MPOt();
 
     MPOt(const Model& model, 
-         int maxm_ = MAX_M, 
-         Real cutoff_ = MIN_CUT, 
-         bool _doRelCutoff = true, 
-         LogNumber _refNorm = DefaultRefScale);
+         Real _refNorm = DefaultLogRefScale);
 
 
     //Accessor Methods ------------------------------
@@ -64,11 +63,6 @@ class MPOt : private MPSt<Tensor>
     using Parent::Anc;
 
     using Parent::doWrite;
-    using Parent::doRelCutoff;
-    using Parent::refNorm;
-    using Parent::cutoff;
-    using Parent::minm;
-    using Parent::maxm;
     using Parent::truncerr;
     using Parent::eigsKept;
     using Parent::spectrum;
@@ -94,22 +88,12 @@ class MPOt : private MPSt<Tensor>
     operator*(Complex z, MPOt res) { res *= z; return res; }
 
     MPOt&
-    addAssumeOrth(const MPOt& oth, const OptSet& opts = Global::opts()) 
-        { Parent::addAssumeOrth(oth,opts & Opt("UseSVD")); return *this; }
-
-    MPOt& 
-    operator+=(const MPOt& oth);
-
-
-    MPOt 
-    operator+(MPOt res) const { res += *this; return res; }
-
-    MPOt 
-    operator-(MPOt res) const { res *= -1; res += *this; return res; }
+    plusEq(const MPOt& R,
+           const OptSet& opts = Global::opts());
 
     operator MPOt<IQTensor>()
         { 
-        MPOt<IQTensor> res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm()); 
+        MPOt<IQTensor> res(*model_,logrefNorm_); 
         res.spectrum_ = spectrum_;
         convertToIQ(*model_,A_,res.A_);
         return res; 
@@ -141,7 +125,9 @@ class MPOt : private MPSt<Tensor>
 
     void 
     svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts = Global::opts())
-        { Parent::svdBond(b,AA,dir,opts & Opt("UseSVD")); }
+        { 
+        Parent::svdBond(b,AA,dir,opts & Opt("UseSVD") & Opt("LogRefNorm",logrefNorm_)); 
+        }
 
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
@@ -171,7 +157,7 @@ class MPOt : private MPSt<Tensor>
     void 
     toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
         {
-        res = MPOt<IQTensor>(*model_,maxm(),cutoff());
+        res = MPOt<IQTensor>(*model_,logrefNorm_);
         res.spectrum_ = spectrum_;
         convertToIQ(*model_,A_,res.A_,totalq,cut);
         }
@@ -185,7 +171,15 @@ class MPOt : private MPSt<Tensor>
     using Parent::r_orth_lim_;
     using Parent::model_;
     using Parent::spectrum_;
+    Real logrefNorm_;
     ///////////
+
+    MPOt&
+    addAssumeOrth(const MPOt& oth, const OptSet& opts = Global::opts()) 
+        { 
+        Parent::addAssumeOrth(oth,opts & Opt("UseSVD") & Opt("LogRefNorm",logrefNorm_)); 
+        return *this; 
+        }
 
     friend class MPOt<ITensor>;
     friend class MPOt<IQTensor>;
@@ -199,7 +193,7 @@ template <> inline
 MPO MPOt<IQTensor>::
 toMPO() const
     {
-    MPO res(*model_,maxm(),cutoff(),doRelCutoff(),refNorm());
+    MPO res(*model_,logrefNorm_);
     res.spectrum_ = spectrum_;
     for(int j = 0; j <= N()+1; ++j)
         {
@@ -227,6 +221,17 @@ checkQNs(const MPO& psi) { }
 
 void
 checkQNs(const IQMPO& psi);
+
+template <class Tensor>
+MPOt<Tensor>
+sum(const MPOt<Tensor>& L, 
+    const MPOt<Tensor>& R, 
+    const OptSet& opts = Global::opts())
+    {
+    MPOt<Tensor> res(L);
+    res.plusEq(R,opts);
+    return res;
+    }
 
 
 template <class MPSType, class MPOType>
@@ -350,7 +355,8 @@ psiHKphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPOt<Tensor>& K,c
 
 template <class MPOType>
 void 
-nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,Real cut, int maxm);
+nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
+         const OptSet& opts = Global::opts());
 
 //
 // Applies an MPO to an MPS using the zip-up method described
@@ -374,7 +380,10 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
 //of x and K.
 template<class Tensor>
 void 
-exactApplyMPO(const MPSt<Tensor>& x, const MPOt<Tensor>& K, MPSt<Tensor>& res);
+exactApplyMPO(const MPSt<Tensor>& x, 
+              const MPOt<Tensor>& K, 
+              MPSt<Tensor>& res,
+              const OptSet& opts = Global::opts());
 
 //Applies an MPO K to an MPS psi (|res>=K|psi>) using a sweeping/DMRG-like
 //fitting approach. Warning: this method can get stuck i.e. fail to converge

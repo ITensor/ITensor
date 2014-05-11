@@ -435,7 +435,6 @@ operator()(const vector<IQTensor>& psi) const;
 template <class Tensor>
 void
 ungroupMPS(vector<Tensor>& psig,
-           Spectrum& spec,
            MPSt<Tensor>& psi, 
            Direction dir = Fromleft,
            const OptSet& opts = Global::opts())
@@ -494,9 +493,9 @@ ungroupMPS(vector<Tensor>& psig,
             Tensor U;
 
             if(dir == Fromleft)
-                svd(bond,psi.Anc(j),D,U,spec);
+                svd(bond,psi.Anc(j),D,U,opts);
             else
-                svd(bond,U,D,psi.Anc(j),spec);
+                svd(bond,U,D,psi.Anc(j),opts);
 
             j += d;
 
@@ -522,9 +521,9 @@ ungroupMPS(vector<Tensor>& psig,
             }
         }
     }
-template void ungroupMPS(vector<ITensor>& psig, Spectrum& spec, 
+template void ungroupMPS(vector<ITensor>& psig,
               MPSt<ITensor>& psi, Direction dir, const OptSet& opts);
-template void ungroupMPS(vector<IQTensor>& psig, Spectrum& spec, 
+template void ungroupMPS(vector<IQTensor>& psig,
               MPSt<IQTensor>& psi, Direction dir, const OptSet& opts);
 
 
