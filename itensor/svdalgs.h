@@ -72,7 +72,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 template<class Tensor>
 Spectrum 
 diagHermitian(const Tensor& M, Tensor& U, Tensor& D, 
-              const OptSet& opts = Global::opts());
+              OptSet opts = Global::opts());
 
 
 
@@ -250,7 +250,7 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
     {
     Tensor UU(L),VV(R);
     Tensor D(V);
-    Spectrum spec = svd(AA,UU,D,VV,spec,opts);
+    Spectrum spec = svd(AA,UU,D,VV,opts);
 
     L = UU*D;
     R = D*VV;

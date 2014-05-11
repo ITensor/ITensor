@@ -193,11 +193,6 @@ DMRGWorker(MPSt<Tensor>& psi,
            Observer& obs,
            OptSet opts = Global::opts())
     {
-    const Real orig_cutoff = psi.cutoff(),
-               orig_noise  = psi.noise();
-    const int orig_minm = psi.minm(), 
-              orig_maxm = psi.maxm();
-
     const bool quiet = opts.getBool("Quiet",false);
     const int debug_level = opts.getInt("DebugLevel",(quiet ? 0 : 1));
 
@@ -206,18 +201,16 @@ DMRGWorker(MPSt<Tensor>& psi,
 
     psi.position(1);
 
-    opts.add(Opt("DebugLevel",debug_level));
-    
-    opts.add(Opt("DoNormalize",true));
+    opts.add("DebugLevel",debug_level);
+    opts.add("DoNormalize",true);
     
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
         {
         opts.add("Sweep",sw);
-
-        psi.cutoff(sweeps.cutoff(sw)); 
-        psi.minm(sweeps.minm(sw)); 
-        psi.maxm(sweeps.maxm(sw));
-        psi.noise(sweeps.noise(sw));
+        opts.add("Cutoff",sweeps.cutoff(sw));
+        opts.add("Minm",sweeps.minm(sw));
+        opts.add("Maxm",sweeps.maxm(sw));
+        opts.add("Noise",sweeps.noise(sw));
         opts.add("MaxIter",sweeps.niter(sw));
 
         if(!PH.doWrite() &&
@@ -278,11 +271,6 @@ DMRGWorker(MPSt<Tensor>& psi,
     
         } //for loop over sw
     
-    psi.cutoff(orig_cutoff); 
-    psi.minm(orig_minm); 
-    psi.maxm(orig_maxm);
-    psi.noise(orig_noise); 
-
     psi.normalize();
 
     return energy;
