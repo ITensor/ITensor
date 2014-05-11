@@ -9,6 +9,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 //
 // Spectrum
 //
@@ -98,6 +100,8 @@ operator<<(std::ostream & s, const Spectrum& spec)
         }
     return s;
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Format

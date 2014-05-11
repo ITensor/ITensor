@@ -5,6 +5,7 @@
 #include "input.h"
 using boost::format;
 using namespace std;
+using namespace itensor;
 
 //
 // DMRG sample code which reads its

@@ -9,6 +9,8 @@
 #define Cout std::cout
 #define Endl std::endl
 
+namespace itensor {
+
 //
 // The LocalOp class represents
 // an MPO or other operator that
@@ -520,6 +522,8 @@ size() const
         }
     return size_;
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

@@ -17,7 +17,9 @@
 #define NAN (std::numeric_limits<Real>::quiet_NaN())
 #endif
 
-Real ran1();
+namespace itensor {
+
+//Real ran1();
 
 static const Real Pi = M_PI;
 static const Real Sqrt2 = sqrt(2);
@@ -370,6 +372,8 @@ sqrt(LogNumber L)
         Error("Negative LogNumber in sqrt");
     return L.pow(0.5);
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

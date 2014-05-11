@@ -3,6 +3,7 @@
 #include "hams/J1J2Chain.h"
 using boost::format;
 using namespace std;
+using namespace itensor;
 
 int main(int argc, char* argv[])
     {

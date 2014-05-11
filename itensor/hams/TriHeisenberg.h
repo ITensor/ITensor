@@ -6,6 +6,8 @@
 #define __ITENSOR_HAMS_TRIANGULARHEISENBERG_H
 #include "../mpo.h"
 
+namespace itensor {
+
 class TriangularHeisenberg
     {
     public:
@@ -131,6 +133,8 @@ init_()
 
     initted_ = true;
     }
+
+}; //namespace itensor
 
 
 #endif

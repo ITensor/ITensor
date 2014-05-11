@@ -3,6 +3,8 @@
 #include "global.h"
 #include "option.h"
 
+using namespace itensor;
+
 using namespace std;
 using namespace boost;
 

@@ -6,6 +6,8 @@
 #define __ITENSOR_SPINLESS_H
 #include "../model.h"
 
+namespace itensor {
+
 class Spinless : public Model
     {
     public:
@@ -213,5 +215,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
 
     return Op;
     }
+
+}; //namespace itensor
 
 #endif

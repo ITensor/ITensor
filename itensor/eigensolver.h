@@ -10,6 +10,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 //
 // Use basic power method to find first n==vecs.size()
 // eigenvalues and eigenvectors of the matrix A.
@@ -978,7 +980,7 @@ genDavidson(const BigMatrixTA& A,
     Tensor Bphi;
     B.product(phi,Bphi);
     Real phiBphi = Dot(conj(phi),Bphi);
-    phi *= 1.0/sqrt(phiBphi);
+    phi *= 1.0/std::sqrt(phiBphi);
     }
 
 
@@ -1269,6 +1271,8 @@ orthog(std::vector<Tensor>& T, int num, int numpass, int start)
         }
     } // orthog(vector<Tensor> ... )
     */
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

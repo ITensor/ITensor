@@ -4,6 +4,8 @@
 //
 #include "iqcombiner.h"
 
+namespace itensor {
+
 using std::istream;
 using std::ostream;
 using std::cout;
@@ -414,3 +416,5 @@ operator<<(ostream & s, const IQCombiner & c)
     Foreach(const IQIndex& I, c.left()) s << I << endl;
     return s << "\n\n";
     }
+
+}; //namespace itensor

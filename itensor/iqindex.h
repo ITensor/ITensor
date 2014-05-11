@@ -7,6 +7,8 @@
 #include "itensor.h"
 #include "qn.h"
 
+namespace itensor {
+
 // Forward declarations
 class IndexQN;
 class IQIndexDat;
@@ -263,5 +265,7 @@ operator<<(std::ostream &s, const IndexQN& x);
 
 std::ostream& 
 operator<<(std::ostream& s, const IQIndexVal& iv);
+
+}; //namespace itensor
 
 #endif

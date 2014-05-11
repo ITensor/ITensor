@@ -6,6 +6,8 @@
 #define __ITENSOR_HAMS_J1J2CHAIN_H
 #include "../mpo.h"
 
+namespace itensor {
+
 class J1J2Chain
     {
     public:
@@ -136,6 +138,8 @@ init()
 
     initted_ = true;
     }
+
+}; //namespace itensor
 
 
 #endif

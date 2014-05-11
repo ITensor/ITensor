@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/intrusive_ptr.hpp>
 
+using namespace itensor;
 using namespace std;
 using namespace boost;
 

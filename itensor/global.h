@@ -22,6 +22,8 @@
 #include "boost/foreach.hpp"
 #define Foreach BOOST_FOREACH
 
+namespace itensor {
+
 enum Direction { Fromright, Fromleft, Both, None };
 
 static const int NMAX = 8;
@@ -386,5 +388,7 @@ class ArrowError : public ITError
 
 
 //void reportnew() { }
+
+}; //namespace itensor
 
 #endif

@@ -4,6 +4,8 @@
 //
 #include "condenser.h"
 
+namespace itensor {
+
 using std::ostream;
 using std::cout;
 using std::endl;
@@ -230,4 +232,6 @@ operator<<(std::ostream & s, const Condenser & c)
         }
     return s << std::endl;
     }
+
+}; //namespace itensor
 

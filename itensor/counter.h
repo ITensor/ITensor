@@ -10,6 +10,8 @@
 #define Cout std::cout
 #define Endl std::endl
 
+namespace itensor {
+
 //
 // Counter
 //
@@ -161,6 +163,8 @@ operator<<(std::ostream& s, const Counter& c)
     s << ")";
     return s;
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

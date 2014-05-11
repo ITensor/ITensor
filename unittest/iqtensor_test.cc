@@ -2,6 +2,7 @@
 #include "iqtensor.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace itensor;
 using namespace std;
 
 struct IQTensorDefaults
@@ -73,7 +74,7 @@ TEST(Null)
 
 TEST(Constructors)
     {
-    Real f = ran1();
+    Real f = Global::random();
     IQTensor rZ(f);
 
     CHECK_EQUAL(rZ.r(),0);
@@ -187,7 +188,7 @@ TEST(TieIndices)
 
 TEST(ToReal)
     {
-    Real f = ran1();
+    Real f = Global::random();
     IQTensor T(f);
     CHECK_CLOSE(T.toReal(),f,1E-5);
 
@@ -236,7 +237,7 @@ TEST(BraKetTest)
 TEST(Trace)
     {
 
-    Real f = -ran1();
+    Real f = -Global::random();
     D *= f;
 
     IQTensor Dt = trace(D,conj(L1),primed(L1,2));

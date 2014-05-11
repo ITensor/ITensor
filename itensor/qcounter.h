@@ -11,6 +11,8 @@
 #define Cout std::cout
 #define Endl std::endl
 
+namespace itensor {
+
 //
 // QCounter
 //
@@ -59,6 +61,8 @@ class QCounter : public Counter
             }
         }
     };
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

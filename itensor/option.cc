@@ -6,6 +6,8 @@
 #include <cerrno>
 #include <algorithm>
 
+namespace itensor {
+
 using std::string;
 using std::cout;
 using std::endl;
@@ -457,3 +459,5 @@ operator<<(ostream & s, const OptSet& oset)
     s <<    "\\-----------------------" << endl;
     return s;
     }
+
+}; //namespace itensor

@@ -11,6 +11,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 template <class Tensor>
 Real
 idmrg(MPSt<Tensor>& psi, 
@@ -329,6 +331,8 @@ idmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H,
     DMRGObserver<Tensor> obs(psi);
     return idmrg(psi,H,sweeps,obs,opts);
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Format

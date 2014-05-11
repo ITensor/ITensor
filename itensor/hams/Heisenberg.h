@@ -11,6 +11,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 class Heisenberg
     {
     public:
@@ -263,6 +265,8 @@ init_()
     initted_ = true;
     }
 */
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

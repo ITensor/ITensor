@@ -5,6 +5,7 @@
 #include "localmpo.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace itensor;
 using namespace std;
 using boost::format;
 

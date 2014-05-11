@@ -8,6 +8,8 @@
 #include "input.h"
 #include "boost/function.hpp"
 
+namespace itensor {
+
 template <typename T>
 class SweepSetter;
 
@@ -380,6 +382,8 @@ sweepnext(int &b, int &ha, int N, int min_b = 1)
         ++ha;
         }
     }
+
+}; //namespace itensor
 
 
 #endif //__ITENSOR_SWEEPS_HEADER_H

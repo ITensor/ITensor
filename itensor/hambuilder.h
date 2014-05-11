@@ -8,6 +8,8 @@
 
 #define String std::string
 
+namespace itensor {
+
 //
 //
 // HamBuilder
@@ -220,6 +222,8 @@ setident_() const
     for(int j = 1; j <= mod_->N(); ++j)
         W_.Anc(j) = mod_->op("Id",j);
     }
+
+}; //namespace itensor
 
 #undef String
 

@@ -8,6 +8,8 @@
 #include "iqtensor.h"
 #include "model.h"
 
+namespace itensor {
+
 template <class Tensor>
 class BondGate
     {
@@ -129,5 +131,7 @@ makeSwapGate(const Model& sites)
         }
     gate_ = a*b;
     }
+
+}; //namespace itensor
 
 #endif

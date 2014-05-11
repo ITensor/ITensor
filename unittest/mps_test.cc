@@ -4,6 +4,8 @@
 #include "model/spinless.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace itensor;
+
 struct MPSDefaults
     {
     static const int N = 10;

@@ -7,6 +7,8 @@
 
 #include "itensor.h"
 
+namespace itensor {
+
 /*
 Combine several indices into one, use * to convert tensors efficiently
    \
@@ -325,6 +327,7 @@ operator<<(std::ostream & s, const Combiner & c)
     return s;
     }
 
+}; //namespace itensor
 
 
 #endif

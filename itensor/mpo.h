@@ -10,6 +10,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 static const Real DefaultLogRefScale(2.0255);
 
 //
@@ -484,6 +486,8 @@ void
 putMPOLinks(MPO& W, const OptSet& opts = Global::opts());
 void
 putMPOLinks(IQMPO& W, const OptSet& opts = Global::opts());
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

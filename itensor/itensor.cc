@@ -3,10 +3,14 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor.h"
+
+namespace itensor {
+
 using std::ostream;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::sqrt;
 using boost::format;
 using boost::shared_ptr;
 using boost::make_shared;
@@ -3468,3 +3472,5 @@ isZero(const ITensor& T, const OptSet& opts)
     if(T.normNoScale() == 0) return false;
     return false;
     }
+
+}; //namespace itensor

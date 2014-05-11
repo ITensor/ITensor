@@ -12,6 +12,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 
 //
 // Singular value decomposition (SVD)
@@ -544,6 +546,8 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
 
     V = V * ccomb;
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Format

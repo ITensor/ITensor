@@ -11,6 +11,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 enum IndexType { Link, Site, All };
 
 //Forward declarations
@@ -250,6 +252,8 @@ std::ostream&
 operator<<(std::ostream& s, const IndexType& it);
 
 static const Real UniqueRealAccuracy = 1E-14;
+
+}; //namespace itensor
 
 #undef Cout
 #undef Format

@@ -6,6 +6,8 @@
 #include "integrators.h"
 #include "sweeps.h"
 
+namespace itensor {
+
 using std::swap;
 using std::istream;
 using std::ostream;
@@ -86,7 +88,7 @@ struct SqrtInv
     Real
     operator()(Real r) const
         {
-        return (r < cut ? 0 : 1./sqrt(fabs(r)));
+        return (r < cut ? 0 : 1./std::sqrt(fabs(r)));
         }
     };
 
@@ -1014,7 +1016,7 @@ norm(const vector<Tensor>& psi)
         if(j == N)
             {
             L *= t;
-            return sqrt(fabs(Dot(conj(primed(t,Link)),L)));
+            return std::sqrt(fabs(Dot(conj(primed(t,Link)),L)));
             }
         else
             {
@@ -1031,3 +1033,4 @@ template
 Real
 norm(const vector<IQTensor>& psi);
 
+}; //namespace itensor

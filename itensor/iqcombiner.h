@@ -8,6 +8,8 @@
 #include "condenser.h"
 #include "qcounter.h"
 
+namespace itensor {
+
 /*
    Combine several indices into one index without loss of states.
    If the IQCombiner C is created from indices of IQTensor T, then
@@ -138,5 +140,6 @@ hasindex(const IQCombiner& C, const Index& i);
 std::ostream& 
 operator<<(std::ostream & s, const IQCombiner & c);
 
+}; //namespace itensor
 
 #endif

@@ -4,6 +4,7 @@
 #include "hams/Heisenberg.h"
 using boost::format;
 using namespace std;
+using namespace itensor;
 
 //typedef SpinHalf
 //Spin;           //use S=1/2 degrees of freedom

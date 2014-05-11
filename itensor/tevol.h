@@ -13,6 +13,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 //
 // Imaginary time evolve an MPS by an amount ttotal in time
 // steps of tstep using the Hamiltonian MPO H.
@@ -135,6 +137,8 @@ gateTEvol(const Iterable& gatelist,
     TEvolObserver obs(opts);
     return gateTEvol(gatelist,ttotal,tstep,psi,obs,opts);
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

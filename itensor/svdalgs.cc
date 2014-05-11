@@ -4,6 +4,8 @@
 //
 #include "svdalgs.h"
 
+namespace itensor {
+
 using std::swap;
 using std::istream;
 using std::ostream;
@@ -14,6 +16,7 @@ using std::find;
 using std::pair;
 using std::make_pair;
 using std::string;
+using std::sqrt;
 using boost::format;
 
 //Vector static
@@ -1292,3 +1295,5 @@ eig_decomp(IQTensor T,
     D *= refNorm;
 
     }
+
+}; //namespace itensor

@@ -2,6 +2,7 @@
 #include "itensor.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace itensor;
 using namespace std;
 
 struct ITensorDefaults
@@ -192,7 +193,7 @@ TEST(Constructors)
     CHECK_CLOSE(t85.norm(),Norm(M.TreatAsVector()),1E-10);
 
     Matrix W(a1.m(),l2.m()); 
-    W(1,1) = ran1(); W(1,2) = ran1();
+    W(1,1) = Global::random(); W(1,2) = Global::random();
     ITensor w1(a1,l2,W);
 
     CHECK_EQUAL(w1.r(),2);
@@ -213,7 +214,7 @@ TEST(Constructors)
     CHECK_CLOSE(sumels(w2),W.TreatAsVector().sumels(),1E-10);
     CHECK_CLOSE(w2.norm(),Norm(W.TreatAsVector()),1E-10);
 
-    Real b = ran1();
+    Real b = Global::random();
     ITensor t9(b);
 
     CHECK_CLOSE(sumels(t9),b,1E-10);
@@ -368,7 +369,7 @@ TEST(ITensorConstructors)
 
     ITensor t1(indices1,V);
 
-    Real f = ran1();
+    Real f = Global::random();
 
     ITensor t2(t1);
     t2 *= f;
@@ -396,7 +397,7 @@ TEST(ITensorConstructors)
     IndexSet<Index> indices5(l1,l4,l3,l2);
 
     ITensor t4(t3);
-    Real f2 = ran1();
+    Real f2 = Global::random();
     t4 /= f2;
     ITensor t5(indices5,t4,P);
 
@@ -462,7 +463,7 @@ TEST(ScalarMultiply)
     CHECK_EQUAL(A(s1(2),s2(1)),-21);
     CHECK_EQUAL(A(s1(2),s2(2)),-22);
 
-    Real f = ran1();
+    Real f = Global::random();
     A *= -f;
     CHECK_CLOSE(A(s1(1),s2(1)),11*f,1E-10);
     CHECK_CLOSE(A(s1(1),s2(2)),12*f,1E-10);
@@ -481,7 +482,7 @@ TEST(assignToVec)
 {
     Vector V(l1.m()*l2.m()*l3.m());
     V.Randomize();
-    Real f = -ran1();
+    Real f = -Global::random();
 
     IndexSet<Index> indices(l1,l2,l3);
 
@@ -585,7 +586,7 @@ TEST(SumDifference)
 
     ITensor v(mixed_inds,V), w(mixed_inds,W);
 
-    Real f1 = -ran1(), f2 = 0.1*f1;
+    Real f1 = -Global::random(), f2 = 0.1*f1;
 
     ITensor r = f1*v + w/f2; 
     VectorRef R = r.assignToVec();
@@ -622,7 +623,7 @@ TEST(ContractingProduct)
 
     //Check for rank 0 ITensors
     {
-    Real f = ran1();
+    Real f = Global::random();
     ITensor rZ(f), T(b2,a1,b4);
     T.randomize();
 
@@ -644,7 +645,7 @@ TEST(ContractingProduct)
 
     L.randomize(); R.randomize();
 
-    Real fL = ran1(), fR = ran1();
+    Real fL = Global::random(), fR = Global::random();
     ITensor Lf = L * fL;
     ITensor Rf = R * fR;
 
@@ -698,7 +699,7 @@ TEST(ContractingProduct)
 
     Q.randomize(); P.randomize();
 
-    Real fQ = ran1(), fP = ran1();
+    Real fQ = Global::random(), fP = Global::random();
     ITensor Qf = Q * fQ;
     ITensor Pf = P * fP;
 
@@ -757,7 +758,7 @@ TEST(NonContractingProduct)
 
     L.randomize(); R.randomize();
 
-    Real fL = ran1(), fR = ran1();
+    Real fL = Global::random(), fR = Global::random();
     ITensor Lf = L * fL;
     ITensor Rf = R * fR;
 
@@ -805,7 +806,7 @@ TEST(NonContractingProduct)
 
     Q.randomize(); P.randomize();
 
-    Real fQ = ran1(), fP = ran1();
+    Real fQ = Global::random(), fP = Global::random();
     ITensor Qf = Q * fQ;
     ITensor Pf = P * fP;
 
@@ -979,7 +980,7 @@ TEST(Trace)
 
     ITensor A(b2,a1,b3,b5,primed(b3));
     A.randomize();
-    Real f = -ran1();
+    Real f = -Global::random();
     A *= f;
 
     ITensor At = trace(A,b3,primed(b3));
@@ -1064,7 +1065,7 @@ TEST(ToFromMatrix11)
     {
     Matrix M(s1.m(),s2.m());    
 
-    Real f = -ran1();
+    Real f = -Global::random();
 
     A *= f;
 
@@ -1218,7 +1219,7 @@ TEST(CommaAssignment)
 
     ITensor AA(s1,s2);
     AA.randomize();
-    AA *= -ran1();
+    AA *= -Global::random();
     commaInit(AA,s1,s2) << 11, 12, 
                            21, 22;
     CHECK_EQUAL(AA(s1(1),s2(1)),11);
@@ -1228,7 +1229,7 @@ TEST(CommaAssignment)
 
     ITensor T(s1,s2,s3);
     T.randomize();
-    T *= -ran1();
+    T *= -Global::random();
     commaInit(T,s1,s2,s3) << 111, 112, 
                              121, 122,
                              211, 212,
@@ -1395,8 +1396,8 @@ TEST(DiagITensorBasicContraction)
     vb(1) = 1;
     vb(2) = -1;
 
-    const Real f1 = ran1(),
-               f2 = ran1();
+    const Real f1 = Global::random(),
+               f2 = Global::random();
 
     ITensor op1(s1,primed(s1),f1),
             op2(s1,primed(s1),f2),

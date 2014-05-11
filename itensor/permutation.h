@@ -6,6 +6,8 @@
 #define __ITENSOR_PERMUTATION_H
 #include "global.h"
 
+namespace itensor {
+
 //
 // Tell where each index will go, 
 // if(p.dest(2) == 1) then 2 -> 1, etc.
@@ -115,5 +117,7 @@ operator<<(std::ostream& s, const Permutation& p)
         s << "(" << i << "," << p.dest(i) << ")";
     return s;
     }
+
+}; //namespace itensor
 
 #endif

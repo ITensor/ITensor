@@ -7,6 +7,8 @@
 #include "iqindex.h"
 #include "iqtdat.h"
 
+namespace itensor {
+
 class IQCombiner;
 
 typedef boost::shared_ptr<IQTDat<ITensor> >
@@ -535,5 +537,6 @@ isZero(const IQTensor& T, const OptSet& opts = Global::opts());
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);
 
+}; //namespace itensor
 
 #endif

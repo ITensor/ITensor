@@ -5,6 +5,8 @@
 #include "mps.h"
 #include "localop.h"
 
+namespace itensor {
+
 using std::map;
 using std::istream;
 using std::ostream;
@@ -779,14 +781,14 @@ struct SqrtInv
     operator()(Real val) const 
         { 
         if(val == 0) return 0;
-        return 1./sqrt(fabs(val)); 
+        return 1./std::sqrt(fabs(val)); 
         }
     };
 
 struct Sqrt
     {
     Real
-    operator()(Real val) const { return sqrt(fabs(val)); }
+    operator()(Real val) const { return std::sqrt(fabs(val)); }
     };
 
 template<class Tensor>
@@ -1074,7 +1076,7 @@ norm() const
         }
     else
         {
-        return sqrt(psiphi(*this,*this)); 
+        return std::sqrt(psiphi(*this,*this)); 
         }
     }
 template Real MPSt<ITensor>::
@@ -1844,3 +1846,5 @@ operator<<(std::ostream& s, const InitState& state)
         s << state(i) << "\n";
     return s;
     }
+
+}; //namespace itensor

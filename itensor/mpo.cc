@@ -5,6 +5,8 @@
 #include "hambuilder.h"
 #include "sweeps.h"
 
+namespace itensor {
+
 using std::istream;
 using std::ostream;
 using std::cout;
@@ -956,3 +958,5 @@ putMPOLinks(IQMPO& W, const OptSet& opts)
         }
     W.Anc(N) *= conj(links.at(N-1)(1));
     }
+
+}; //namespace itensor

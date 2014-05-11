@@ -11,6 +11,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 //
 // 4th Order Runge-Kutta.
 // Assumes a time-independent Force.
@@ -87,6 +89,8 @@ midpointMethod(const Deriv& D, Real tstep, std::vector<Tensor>& v,
         v.at(j) += tstep*k2.at(j);
         }
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

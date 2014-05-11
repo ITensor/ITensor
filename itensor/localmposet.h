@@ -6,6 +6,8 @@
 #define __ITENSOR_LOCALMPOSET
 #include "localmpo.h"
 
+namespace itensor {
+
 template <class Tensor>
 class LocalMPOSet
     {
@@ -177,5 +179,7 @@ numCenter(int val)
     for(size_t n = 0; n < lmpo_.size(); ++n)
         lmpo_[n].numCenter(val);
     }
+
+}; //namespace itensor
 
 #endif

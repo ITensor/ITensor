@@ -6,6 +6,8 @@
 #define __ITENSOR_CONDENSER_H
 #include "iqtensor.h"
 
+namespace itensor {
+
 struct IndexMap;
 
 //
@@ -91,5 +93,7 @@ struct IndexMap
     int i;
     Index big;
     };
+
+}; //namespace itensor
 
 #endif

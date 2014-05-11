@@ -7,6 +7,8 @@
 #include "boost/random/lagged_fibonacci.hpp"
 //#include "boost/random/mersenne_twister.hpp"
 
+namespace itensor {
+
 using std::istream;
 using std::ostream;
 using std::cout;
@@ -397,4 +399,6 @@ operator<<(ostream& s, const IndexVal& iv)
     const Index& ii = iv;
     return s << "IndexVal: i = " << iv.i << ", ind = " << ii << "\n"; 
     }
+
+}; //namespace itensor
 

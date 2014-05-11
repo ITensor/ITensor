@@ -4,6 +4,7 @@
 #include "model/spinhalf.h"
 
 using std::vector;
+using namespace itensor;
 
 struct BondGateDefaults
     {

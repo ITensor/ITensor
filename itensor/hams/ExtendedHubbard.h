@@ -7,6 +7,8 @@
 #include "../mpo.h"
 #include "../model/hubbard.h"
 
+namespace itensor {
+
 class ExtendedHubbard
     {
     public:
@@ -135,5 +137,7 @@ init_()
 
     initted_ = true;
     }
+
+}; //namespace itensor
 
 #endif

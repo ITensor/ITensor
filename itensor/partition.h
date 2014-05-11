@@ -7,6 +7,8 @@
 
 #include "global.h"
 
+namespace itensor {
+
 
 //
 // Partition
@@ -169,5 +171,7 @@ operator<<(std::ostream& s, const Partition& p)
     s << std::endl;
     return s;
     }
+
+}; //namespace itensor
 
 #endif

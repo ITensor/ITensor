@@ -6,6 +6,8 @@
 #define __ITENSOR_Z3_H
 #include "../model.h"
 
+namespace itensor {
+
 class Z3 : public Model
     {
     public:
@@ -221,5 +223,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
 
     return Op;
     }
+
+}; //namespace itensor
 
 #endif

@@ -2,6 +2,7 @@
 #include <boost/test/unit_test.hpp>
 #include "iqtensor.h"
 
+using namespace itensor;
 using namespace std;
 using boost::format;
 

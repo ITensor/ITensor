@@ -11,6 +11,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 //
 // The LocalMPO class projects an MPO 
 // into the reduced Hilbert space of
@@ -611,6 +613,8 @@ initWrite()
     writedir_ = mkTempDir("PH",global_write_dir);
     //std::cout << "Successfully created directory " + writedir_ << std::endl;
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Format

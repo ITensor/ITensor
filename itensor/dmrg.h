@@ -15,6 +15,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 //
 // Available DMRG methods:
 //
@@ -276,6 +278,7 @@ DMRGWorker(MPSt<Tensor>& psi,
     return energy;
     }
 
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

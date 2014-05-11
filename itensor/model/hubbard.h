@@ -6,6 +6,8 @@
 #define __ITENSOR_HUBBARD_H
 #include "../model.h"
 
+namespace itensor {
+
 class Hubbard : public Model
     {
     public:
@@ -301,5 +303,7 @@ getDefaultOps(const OptSet& opts) const
     static const std::vector<String> dops_(initDefaultOps());
     return dops_;
     }
+
+}; //namespace itensor
 
 #endif

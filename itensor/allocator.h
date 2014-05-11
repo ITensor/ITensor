@@ -5,6 +5,8 @@
 #ifndef __ITENSOR_ALLOCATOR_H
 #define __ITENSOR_ALLOCATOR_H
 
+namespace itensor {
+
 template <class T>
 class DatAllocator
     {
@@ -125,5 +127,7 @@ private:
     friend class IQTDat;
 };
 */
+
+}; //namespace itensor
 
 #endif

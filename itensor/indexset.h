@@ -12,6 +12,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 
 //
 // IndexSet
@@ -915,6 +917,7 @@ operator<<(std::ostream& s, const IndexSet<Index>& is)
     return s;
     }
 
+}; //namespace itensor
 
 
 #undef Cout

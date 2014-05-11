@@ -10,6 +10,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 class Ising
     {
     public:
@@ -135,6 +137,7 @@ init()
 
     initted_ = true;
     }
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

@@ -1,6 +1,8 @@
 #include "test.h"
-#include "real.h"
+#include "global.h"
 #include <boost/test/unit_test.hpp>
+
+using namespace itensor;
 
 BOOST_AUTO_TEST_SUITE(LogNumberTest)
 
@@ -46,7 +48,7 @@ TEST(Constructors)
     CHECK_EQUAL(l6.sign(),-1);
     CHECK_CLOSE(l6.real(),-Big,LogNumber_Accuracy);
 
-    Real r = ran1();
+    Real r = Global::random();
     LogNumber l7(r);
 
     CHECK_CLOSE(l7.logNum(),log(fabs(r)),LogNumber_Accuracy);
@@ -56,7 +58,7 @@ TEST(Constructors)
 
 TEST(Operators)
     {
-    Real a = ran1(), b = ran1();
+    Real a = Global::random(), b = Global::random();
 
     const LogNumber la(a), lb(b);
 
@@ -97,7 +99,7 @@ TEST(Operators)
 
 TEST(Comparison)
     {
-    Real a = ran1(), b = ran1();
+    Real a = Global::random(), b = Global::random();
 
     const LogNumber la(a),lb(b);
 

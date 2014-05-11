@@ -3,6 +3,8 @@
 #include "model/spinhalf.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace itensor;
+
 struct LocalMPODefaults
     {
     static const int N = 10;

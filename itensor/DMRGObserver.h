@@ -10,6 +10,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 //
 // Class for monitoring DMRG calculations.
 // The measure and checkDone methods are virtual
@@ -184,6 +186,8 @@ checkDone(const OptSet& opts)
     
     return done_;
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

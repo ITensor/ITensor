@@ -13,6 +13,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 template <class Tensor>
 class MPOt;
 
@@ -728,6 +730,8 @@ operator<<(std::ostream& s, const MPSt<Tensor>& M)
 
 std::ostream& 
 operator<<(std::ostream& s, const InitState& state);
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

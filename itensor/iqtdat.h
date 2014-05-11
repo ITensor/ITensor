@@ -6,6 +6,8 @@
 #define __ITENSOR_IQTDAT_H
 #include "indexset.h"
 
+namespace itensor {
+
 
 //
 // IQTDat: storage for IQTensor and IQTSparse
@@ -246,5 +248,7 @@ Null()
     static boost::shared_ptr<IQTDat> Null_ = boost::make_shared<IQTDat>();
     return Null_;
     }
+
+}; //namespace itensor
 
 #endif

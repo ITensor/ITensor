@@ -6,6 +6,8 @@
 #define __ITENSOR_MODEL_H
 #include "iqtensor.h"
 
+namespace itensor {
+
 //
 // Classes derived from Model 
 // represent the abstract lattice of a 
@@ -199,5 +201,7 @@ operator<<(std::ostream& s, const Model& M)
         s << boost::format("si(%d) = ")%j << M.si(j) << "\n";
     return s;
     }
+
+}; //namespace itensor
 
 #endif

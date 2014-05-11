@@ -6,6 +6,8 @@
 #define __ITENSOR_SPINHALF_H
 #include "../model.h"
 
+namespace itensor {
+
 class SpinHalf : public Model
     {
     public:
@@ -196,5 +198,7 @@ getDefaultOps(const OptSet& opts) const
     static const std::vector<String> dops_(initDefaultOps());
     return dops_;
     }
+
+}; //namespace itensor
 
 #endif

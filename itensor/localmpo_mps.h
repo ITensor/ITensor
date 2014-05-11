@@ -6,6 +6,8 @@
 #define __ITENSOR_LOCALMPO_MPS
 #include "localmpo.h"
 
+namespace itensor {
+
 template <class Tensor>
 class LocalMPO_MPS
     {
@@ -185,5 +187,7 @@ position(int b, const MPSType& psi)
     for(size_t j = 0; j < lmps_.size(); ++j)
         lmps_[j].position(b,psi);
     }
+
+}; //namespace itensor
 
 #endif

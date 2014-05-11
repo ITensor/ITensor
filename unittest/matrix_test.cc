@@ -9,6 +9,7 @@
 Real
 sqr(Real x) { return x*x; }
 
+//using namespace itensor;
 using namespace std;
 using boost::format;
 

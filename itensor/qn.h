@@ -7,6 +7,8 @@
 
 #define DEF_NMAX 2
 
+namespace itensor {
+
 //
 // QN
 //
@@ -224,6 +226,7 @@ operator*(Arrow dir, QN q)
     return q;
     }
 
+}; //namespace itensor
 
 #undef DEF_NMAX
 

@@ -52,6 +52,8 @@
 
 #define NTIMERS 100
 
+namespace itensor {
+
 class Timers
         {
         typedef std::chrono::high_resolution_clock
@@ -258,6 +260,8 @@ class Prodstats
 
     };
 */
+
+}; //namespace itensor
 
 #endif //COLLECT_PRODSTATS
 

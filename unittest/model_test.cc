@@ -6,6 +6,8 @@
 #include "model/spinless.h"
 #include "model/tj.h"
 
+using namespace itensor;
+
 struct ModelTestDefaults
     {
     static const int N = 10;

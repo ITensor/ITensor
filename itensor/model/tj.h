@@ -6,6 +6,8 @@
 #define __ITENSOR_TJ_H
 #include "model.h"
 
+namespace itensor {
+
 class tJ : public Model
     {
     public:
@@ -478,5 +480,7 @@ makeSx(int i) const
     Sx(Dn(i),UpP(i)) = 1;
     return Sx;
     }
+
+}; //namespace itensor
 
 #endif

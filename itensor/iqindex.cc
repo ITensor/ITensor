@@ -4,6 +4,8 @@
 //
 #include "iqindex.h"
 
+namespace itensor {
+
 using std::istream;
 using std::ostream;
 using std::cout;
@@ -700,3 +702,5 @@ operator<<(std::ostream& s, const IQIndexVal& iv)
     const IQIndex& I = iv;
     return s << "IQIndexVal: i = " << iv.i << " for IQIndex:\n  " << I << "\n"; 
     }
+
+}; //namespace itensor

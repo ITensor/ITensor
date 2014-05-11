@@ -3,6 +3,7 @@
 #include "hams/heisenberg.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace itensor;
 using namespace std;
 
 struct MPODefaults

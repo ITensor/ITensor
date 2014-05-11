@@ -10,6 +10,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 class tJChain 
     {
     public:
@@ -112,6 +114,8 @@ init_()
 
     initted = true;
     }
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

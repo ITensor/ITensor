@@ -7,6 +7,8 @@
 
 #include "spectrum.h"
 
+namespace itensor {
+
 class SVDWorker;
 
 class Observer 
@@ -24,5 +26,7 @@ class Observer
     virtual ~Observer() { }
 
     };
+
+}; //namespace itensor
 
 #endif 

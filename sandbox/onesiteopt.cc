@@ -4,6 +4,7 @@
 #include "hams/Heisenberg.h"
 using boost::format;
 using namespace std;
+using namespace itensor;
 
 int main(int argc, char* argv[])
     {

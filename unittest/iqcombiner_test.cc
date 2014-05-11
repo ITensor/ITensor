@@ -2,6 +2,7 @@
 #include "iqcombiner.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace itensor;
 using namespace std;
 
 struct IQCombinerDefaults

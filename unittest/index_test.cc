@@ -2,6 +2,7 @@
 #include "index.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace itensor;
 using namespace std;
 
 BOOST_AUTO_TEST_SUITE(IndexTest)

@@ -7,6 +7,8 @@
 
 #include "real.h"
 
+namespace itensor {
+
 class Stats
     {
     public:
@@ -90,7 +92,7 @@ class Stats
             Real avg = 0.0;
             for(int i = 1; i <= n; ++i)
                 {
-                int which = int(ran1()*n);
+                int which = int(Global::random()*n);
                 avg += dat.at(which);
                 }
             avg /= n;
@@ -113,9 +115,9 @@ class Stats
             int which;
             for(int i = 1; i <= n; ++i)
                 { //Sample with replacement (replacement means 'which' can take the same value more than once)
-                which = int(ran1()*n);
+                which = int(Global::random()*n);
                 avg2 += dat.at(which);
-                if(!correlated) which = int(ran1()*n); //use <H^2> and <H> from the same METTS
+                if(!correlated) which = int(Global::random()*n); //use <H^2> and <H> from the same METTS
                 avg += firstc.dat.at(which);
                 }
             avg2 /= n; avg /= n;
@@ -125,5 +127,7 @@ class Stats
         }
 
     };
+
+}; //namespace itensor
 
 #endif

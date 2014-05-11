@@ -17,6 +17,8 @@
 #define Endl std::endl
 #define Format boost::format
 
+namespace itensor {
+
 //Forward declarations
 struct ProductProps;
 class Combiner;
@@ -1025,6 +1027,8 @@ trace(Tensor T,
 
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);
+
+}; //namespace itensor
 
 #undef Cout
 #undef Endl

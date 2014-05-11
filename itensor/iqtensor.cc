@@ -5,6 +5,8 @@
 #include "iqtensor.h"
 #include "qcounter.h"
 
+namespace itensor {
+
 using std::istream;
 using std::ostream;
 using std::cout;
@@ -1526,3 +1528,5 @@ isZero(const IQTensor& T, const OptSet& opts)
         }
     return true;
     }
+
+}; //namespace itensor

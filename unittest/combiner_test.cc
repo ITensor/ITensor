@@ -2,6 +2,8 @@
 #include "combiner.h"
 #include <boost/test/unit_test.hpp>
 
+using namespace itensor;
+
 struct CombinerDefaults
 {
     const Index s1,s2,s3,s4,
