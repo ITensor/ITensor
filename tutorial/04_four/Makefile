@@ -1,39 +1,48 @@
-include ../../this_dir.mk
-include ../../options.mk
-################################################################
+LIBRARY_DIR=../..
 
 APP=j1j2
 
-################################################################
+HEADERS=j1j2.h
 
-#Define Flags ----------
-CCFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(CPPFLAGS) $(OPTIMIZATIONS)
-CCGFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
-LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
-LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
+CCFILES=$(APP).cc
+
+#################################################################
+#################################################################
+#################################################################
+#################################################################
+
+TENSOR_HEADERS=core.h
+
+include $(LIBRARY_DIR)/this_dir.mk
+include $(LIBRARY_DIR)/options.mk
+
+#Mappings --------------
+REL_TENSOR_HEADERS=$(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(TENSOR_HEADERS))
+OBJECTS=$(patsubst %.cc,%.o, $(CCFILES))
+GOBJECTS=$(patsubst %,.debug_objs/%, $(OBJECTS))
 
 #Rules ------------------
 
-%.o: %.cc $(ITENSOR_LIBS)
+%.o: %.cc $(HEADERS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-.debug_objs/%.o: %.cc $(ITENSOR_GLIBS)
+.debug_objs/%.o: %.cc $(HEADERS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 #Targets -----------------
 
 build: $(APP)
-
 debug: $(APP)-g
 
-$(APP): $(APP).o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCFLAGS) $(APP).o -o $(APP) $(LIBFLAGS)
+$(APP): $(OBJECTS) $(ITENSOR_LIBS)
+	$(CCCOM) $(CCFLAGS) $(OBJECTS) -o $(APP) $(LIBFLAGS)
 
-$(APP)-g: mkdebugdir .debug_objs/$(APP).o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/$(APP).o -o $(APP)-g $(LIBGFLAGS)
+$(APP)-g: mkdebugdir $(GOBJECTS) $(ITENSOR_GLIBS)
+	$(CCCOM) $(CCGFLAGS) $(GOBJECTS) -o $(APP)-g $(LIBGFLAGS)
+
+clean:
+	rm -fr .debug_objs *.o $(APP) $(APP)-g
 
 mkdebugdir:
 	mkdir -p .debug_objs
 
-clean:
-	rm -fr *.o .debug_objs $(APP) $(APP)-g

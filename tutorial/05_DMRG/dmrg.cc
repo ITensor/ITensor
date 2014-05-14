@@ -6,6 +6,7 @@
 
 using namespace std;
 using boost::format;
+using namespace itensor;
 
 int
 main(int argc, char* argv[])
@@ -35,6 +36,8 @@ main(int argc, char* argv[])
 
     Real energy = NAN;
 
+    OptSet opts;
+
     //Loop over sweeps
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
         {
@@ -56,14 +59,12 @@ main(int argc, char* argv[])
             ITensor phi = psi.A(b)*psi.A(b+1);
             energy = davidson(Heff,phi);
 
-            //Construct 'Spectrum' object to pass
-            //accuracy parameters to svd
-            Spectrum spec;
-            spec.cutoff(sweeps.cutoff(sw)); 
-            spec.minm(sweeps.minm(sw)); 
-            spec.maxm(sweeps.maxm(sw));
+            //Update accuracy parameters for svd
+            opts.add("Cutoff",sweeps.cutoff(sw));
+            opts.add("Maxm",sweeps.maxm(sw));
+            opts.add("Minm",sweeps.minm(sw));
 
-            //Define tensor (references)
+            //Define tensor (references/aliases)
             //to hold SVD results
             ITensor& A = psi.Anc(b);   //nc means 'non-const'
             ITensor& B = psi.Anc(b+1); //nc means 'non-const'

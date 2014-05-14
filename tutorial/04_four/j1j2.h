@@ -5,6 +5,8 @@
 #include "model/spinhalf.h"
 #include "hams/J1J2Chain.h"
 
+using namespace itensor;
+
 #define Cout std::cout
 #define Endl std::endl
 #define Format boost::format

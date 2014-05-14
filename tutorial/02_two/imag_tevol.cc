@@ -2,6 +2,7 @@
 
 using namespace std;
 using boost::format;
+using namespace itensor;
 
 ITensor
 makeId(const Index& s)
@@ -59,7 +60,7 @@ main(int argc, char* argv[])
 
     cout << "psi.norm() = " << psi.norm() << endl;
 
-    PrintDat(psi);
+    PrintData(psi);
 
     //
     // Single-site operators
@@ -135,7 +136,7 @@ main(int argc, char* argv[])
 
     svd(psi_beta,A,D,B);
 
-    PrintDat(D);
+    PrintData(D);
 
 
     return 0;

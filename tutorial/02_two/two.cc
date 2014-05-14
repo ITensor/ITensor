@@ -2,6 +2,7 @@
 
 using namespace std;
 using boost::format;
+using namespace itensor;
 
 ITensor
 makeSp(const Index& s)
@@ -45,7 +46,7 @@ main(int argc, char* argv[])
     psi(s1(1),s2(2)) =  1./sqrt(2);
     psi(s1(2),s2(1)) = -1./sqrt(2);
 
-    PrintDat(psi);
+    PrintData(psi);
 
     //exit(0);
 
@@ -60,9 +61,9 @@ main(int argc, char* argv[])
             Sm1 = makeSm(s1),
             Sm2 = makeSm(s2);
 
-    PrintDat(Sz1);
-    PrintDat(Sp1);
-    PrintDat(Sm1);
+    PrintData(Sz1);
+    PrintData(Sp1);
+    PrintData(Sm1);
 
     //exit(0);
 

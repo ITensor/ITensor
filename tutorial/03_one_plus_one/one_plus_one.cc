@@ -2,6 +2,7 @@
 
 using namespace std;
 using boost::format;
+using namespace itensor;
 
 int
 main(int argc, char* argv[])

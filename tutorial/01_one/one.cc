@@ -2,6 +2,7 @@
 
 using namespace std;
 using boost::format;
+using namespace itensor;
 
 int
 main(int argc, char* argv[])
@@ -22,7 +23,7 @@ main(int argc, char* argv[])
 
     psi(s(1)) = 1;
 
-    PrintDat(psi);
+    PrintData(psi);
     
     //exit(0); //uncomment to exit here
 
@@ -39,8 +40,8 @@ main(int argc, char* argv[])
     commaInit(Sx,s,primed(s)) << 0.0, 0.5,
                                  0.5, 0.0;
 
-    PrintDat(Sz);
-    PrintDat(Sx);
+    PrintData(Sz);
+    PrintData(Sx);
 
     //exit(0); //uncomment to exit here
 
@@ -52,7 +53,7 @@ main(int argc, char* argv[])
 
     phi.noprime();
 
-    PrintDat(phi);
+    PrintData(phi);
 
     //exit(0); //uncomment to exit here
 
@@ -66,7 +67,7 @@ main(int argc, char* argv[])
     psi(s(1)) = cos(theta/2.);
     psi(s(2)) = sin(theta/2.);
 
-    PrintDat(psi);
+    PrintData(psi);
 
     //exit(0); //uncomment to exit here
 

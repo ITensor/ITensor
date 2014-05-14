@@ -1,44 +1,43 @@
-include ../../this_dir.mk
-include ../../options.mk
-################################################################
+LIBRARY_DIR=../..
 
 APP1=two
 APP2=imag_tevol
 
-#Define Flags ----------
-CCFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(CPPFLAGS) $(OPTIMIZATIONS)
-CCGFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
-LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
-LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
+#################################################################
+#################################################################
+#################################################################
+#################################################################
+
+TENSOR_HEADERS=core.h
+
+include $(LIBRARY_DIR)/this_dir.mk
+include $(LIBRARY_DIR)/options.mk
+
+#Mappings --------------
+REL_TENSOR_HEADERS=$(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(TENSOR_HEADERS))
 
 #Rules ------------------
 
-%.o: %.cc $(ITENSOR_LIBS)
+%.o: %.cc $(REL_TENSOR_HEADERS)
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
 
-.debug_objs/%.o: %.cc $(ITENSOR_GLIBS)
+.debug_objs/%.o: %.cc $(REL_TENSOR_HEADERS)
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 #Targets -----------------
 
 build: $(APP1) $(APP2)
-
 debug: $(APP1)-g $(APP2)-g
 
-$(APP1): $(APP1).o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
+$(APP1): $(APP1).o $(ITENSOR_LIBS)
 	$(CCCOM) $(CCFLAGS) $(APP1).o -o $(APP1) $(LIBFLAGS)
 
-$(APP1)-g: mkdebugdir .debug_objs/$(APP1).o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/$(APP1).o -o $(APP1)-g $(LIBGFLAGS)
-
-$(APP2): $(APP2).o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
+$(APP2): $(APP2).o $(ITENSOR_LIBS)
 	$(CCCOM) $(CCFLAGS) $(APP2).o -o $(APP2) $(LIBFLAGS)
 
-$(APP2)-g: mkdebugdir .debug_objs/$(APP2).o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
-	$(CCCOM) $(CCGFLAGS) .debug_objs/$(APP2).o -o $(APP2)-g $(LIBGFLAGS)
+clean:
+	rm -fr .debug_objs *.o $(APP1) $(APP1)-g $(APP2) $(APP2)-g
 
 mkdebugdir:
 	mkdir -p .debug_objs
 
-clean:
-	rm -fr *.o .debug_objs $(APP1) $(APP1)-g $(APP2) $(APP2)-g
