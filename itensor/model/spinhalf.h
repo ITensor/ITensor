@@ -159,6 +159,13 @@ getOp(int i, const String& opname, const OptSet& opts) const
         Op(Dn,UpP) = +0.5;
         }
     else
+    if(opname == "Sy")
+        {
+        Op(Up,DnP) = +0.5;
+        Op(Dn,UpP) = -0.5;
+        Op *= Complex_i;
+        }
+    else
     if(opname == "Sp" || opname == "S+")
         {
         Op(Dn,UpP) = 1;
