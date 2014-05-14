@@ -870,17 +870,18 @@ multSiteOps(Tensor A, const Tensor& B)
     return A;
     }
 
+
 //Return copy of ITensor with primeLevel of Index I increased by 1
 //(or optional amount inc)
 template <class Tensor, class IndexT>
 Tensor
-primed(Tensor A, const IndexT& I, int inc = 1)
+prime(Tensor A, const IndexT& I, int inc = 1)
     { A.prime(I,inc); return A; }
 
 //Return copy of ITensor with primeLevel of Index I set to zero
 template <class Tensor, class IndexT>
 Tensor
-deprimed(Tensor A, const IndexT& I)
+noprime(Tensor A, const IndexT& I)
     { A.noprime(I); return A; }
 
 //
@@ -1027,6 +1028,25 @@ trace(Tensor T,
 
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);
+
+
+//
+// Deprecated older functions.
+// For backwards compatibility only.
+//
+
+//Return copy of ITensor with primeLevel of Index I increased by 1
+//(or optional amount inc)
+template <class Tensor, class IndexT>
+Tensor
+primed(Tensor A, const IndexT& I, int inc = 1)
+    { A.prime(I,inc); return A; }
+
+//Return copy of ITensor with primeLevel of Index I set to zero
+template <class Tensor, class IndexT>
+Tensor
+deprimed(Tensor A, const IndexT& I)
+    { A.noprime(I); return A; }
 
 }; //namespace itensor
 
