@@ -346,7 +346,7 @@ psiHKphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPOt<Tensor>& K,c
         }
     //scales as m^2 k^2 d
     L = ((((L * phi.A(N)) * H.A(N)) * Kp.A(N)) * psiconj.A(N));
-    //cout << "in psiHKpsi, L is "; PrintDat(L);
+    //cout << "in psiHKpsi, L is "; PrintData(L);
     Complex z = L.toComplex();
     re = z.real();
     im = z.imag();

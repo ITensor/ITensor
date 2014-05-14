@@ -324,7 +324,7 @@ operator()(const vector<Tensor>& psi) const
                             << endl;
                     //const IndexT nlink = commonIndex(D,U);
                     //Tensor nOlap = primed(nB,nlink)*conj(nB);
-                    //PrintDat(nOlap);
+                    //PrintData(nOlap);
                     //PAUSE
                     /*
                     if(nrm > 1)
@@ -367,7 +367,7 @@ operator()(const vector<Tensor>& psi) const
 
             if(nrm > 1E-12)
                 {
-                PrintDat(D);
+                PrintData(D);
                 cout << "Large nrm using method 2" << endl;
                 PAUSE
 

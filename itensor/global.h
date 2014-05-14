@@ -79,6 +79,7 @@ enum Printdat { ShowData, HideData };
     }
 #define Print(X)    PrintEither(X,false)
 #define PrintDat(X) PrintEither(X,true)
+#define PrintData(X) PrintEither(X,true)
 
 
 bool inline

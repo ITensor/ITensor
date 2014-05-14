@@ -1299,7 +1299,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
         if(S > start) prev_bond = commonIndex(A[sprev],A[s],Link);
         if(S < Send) bond = commonIndex(A[s],A[snext],Link);
 
-        if(s == show_s) { PrintDat(A[s]); }
+        if(s == show_s) { PrintData(A[s]); }
 
         Foreach(const qC_vt& x, qC) 
         for(int n = 1; n <= Dim;  ++n)
@@ -1335,8 +1335,8 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                 cout << format("For n = %d\n")%n;
                 cout << format("Got a block with norm %.10f\n")%block.norm();
                 cout << format("bond.m() = %d\n")%bond.m();
-                PrintDat(block);
-                if(s != 1) PrintDat(comp);
+                PrintData(block);
+                if(s != 1) PrintData(comp);
                 }
 
             bool keep_block = false;
@@ -1401,7 +1401,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
 
                 if(s==show_s)
                     {
-                    PrintDat(block);
+                    PrintData(block);
                     cout << "D = " << D << "\n";
                     }
                 }
@@ -1528,7 +1528,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
         if(s == show_s) 
         {
-            PrintDat(A_[s]);
+            PrintData(A_[s]);
         }
 
         Foreach(const qC_vt& x, qC) {
@@ -1559,8 +1559,8 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                 cout << format("For n = %d\n")%n;
                 cout << format("Got a block with norm %.10f\n")%block.norm();
                 cout << format("bond.m() = %d\n")%bond.m();
-                PrintDat(block);
-                if(s != 1) PrintDat(comp);
+                PrintData(block);
+                if(s != 1) PrintData(comp);
             }
 
             bool keep_block = false;
