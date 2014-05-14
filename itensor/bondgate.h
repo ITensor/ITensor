@@ -111,8 +111,8 @@ template <class Tensor>
 void BondGate<Tensor>::
 makeSwapGate(const Model& sites)
     {
-    Tensor a(sites(i_),primed(sites(j_)),1);
-    Tensor b(sites(j_),primed(sites(i_)),1);
+    Tensor a(sites(i_),prime(sites(j_)),1);
+    Tensor b(sites(j_),prime(sites(i_)),1);
     gate_ = a*b;
     }
 
@@ -120,14 +120,14 @@ template<>
 void inline BondGate<IQTensor>::
 makeSwapGate(const Model& sites)
     {
-    IQTensor a(conj(sites(i_)),primed(sites(j_))),
-             b(conj(sites(j_)),primed(sites(i_)));
+    IQTensor a(conj(sites(i_)),prime(sites(j_))),
+             b(conj(sites(j_)),prime(sites(i_)));
     for(int n = 1; n <= sites(i_).nindex(); ++n)
         {
         const Index &iind(sites(i_).index(n)),
                     &jind(sites(j_).index(n));
-        a += ITensor(iind,primed(jind),1);
-        b += ITensor(jind,primed(iind),1);
+        a += ITensor(iind,prime(jind),1);
+        b += ITensor(jind,prime(iind),1);
         }
     gate_ = a*b;
     }

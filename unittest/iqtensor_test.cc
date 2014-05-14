@@ -54,10 +54,10 @@ struct IQTensorDefaults
         B = IQTensor(L1(4),L2(2));
         B.randomize();
 
-        C = IQTensor(conj(L1)(5),primed(L1)(5));
+        C = IQTensor(conj(L1)(5),prime(L1)(5));
         C.randomize();
 
-        D = IQTensor(conj(L1)(3),S1(1),primed(L1)(3),primed(L1,2)(5));
+        D = IQTensor(conj(L1)(3),S1(1),prime(L1)(3),prime(L1,2)(5));
         D.randomize();
         }
 
@@ -169,20 +169,20 @@ TEST(SymmetricDiag11)
     IQTensor set1(conj(mid));
     set1(mid(mink)) = 1;
     U *= set1;
-    CHECK_CLOSE(D(mid(mink)),Dot(primed(U),C*U),1E-10);
+    CHECK_CLOSE(D(mid(mink)),Dot(prime(U),C*U),1E-10);
 
     }
     */
 
 TEST(TieIndices)
     {
-    IQTensor D1 = tieIndices(D,L1,primed(L1),L1);
+    IQTensor D1 = tieIndices(D,L1,prime(L1),L1);
 
     for(int k1 = 1; k1 <= L1.m(); ++k1)
     for(int k2 = 1; k2 <= L1.m(); ++k2)
     for(int k3 = 1; k3 <= S1.m(); ++k3)
         {
-        CHECK_CLOSE(D1(L1(k1),primed(L1,2)(k2),S1(k3)),D(L1(k1),primed(L1)(k1),primed(L1,2)(k2),S1(k3)),1E-10);
+        CHECK_CLOSE(D1(L1(k1),prime(L1,2)(k2),S1(k3)),D(L1(k1),prime(L1)(k1),prime(L1,2)(k2),S1(k3)),1E-10);
         }
     }
 
@@ -240,7 +240,7 @@ TEST(Trace)
     Real f = -Global::random();
     D *= f;
 
-    IQTensor Dt = trace(D,conj(L1),primed(L1,2));
+    IQTensor Dt = trace(D,conj(L1),prime(L1,2));
 
     for(int j2 = 1; j2 <= S1.m(); ++j2)
     for(int j1 = 1; j1 <= L1.m(); ++j1)
@@ -248,9 +248,9 @@ TEST(Trace)
         Real val = 0;
         for(int k1 = 1; k1 <= L1.m(); ++k1)
             {
-            val += D(conj(L1)(k1),S1(j2),primed(L1)(j1),primed(L1,2)(k1));
+            val += D(conj(L1)(k1),S1(j2),prime(L1)(j1),prime(L1,2)(k1));
             }
-        CHECK_CLOSE(val,Dt(S1(j2),primed(L1)(j1)),1E-10);
+        CHECK_CLOSE(val,Dt(S1(j2),prime(L1)(j1)),1E-10);
         }
     }
 
@@ -279,13 +279,13 @@ TEST(Randomize)
 
 TEST(RealImagPart)
     {
-    IQTensor Z(conj(S1),primed(S1));
-    Z(S1(1),primed(S1)(1)) = +1;
-    Z(S1(2),primed(S1)(2)) = -1;
+    IQTensor Z(conj(S1),prime(S1));
+    Z(S1(1),prime(S1)(1)) = +1;
+    Z(S1(2),prime(S1)(2)) = -1;
 
-    IQTensor X(conj(S1),primed(S1));
-    X(S1(1),primed(S1)(2)) = 1;
-    X(S1(2),primed(S1)(1)) = 1;
+    IQTensor X(conj(S1),prime(S1));
+    X(S1(1),prime(S1)(2)) = 1;
+    X(S1(2),prime(S1)(1)) = 1;
 
     IQTensor ZiX = Complex_1*Z + Complex_i*X;
     IQTensor R(realPart(ZiX)),
@@ -310,13 +310,13 @@ TEST(RealImagPart)
 
 TEST(ComplexMult)
     {
-    IQTensor Z(conj(S1),primed(S1));
-    Z(S1(1),primed(S1)(1)) = +1;
-    Z(S1(2),primed(S1)(2)) = -1;
+    IQTensor Z(conj(S1),prime(S1));
+    Z(S1(1),prime(S1)(1)) = +1;
+    Z(S1(2),prime(S1)(2)) = -1;
 
-    IQTensor Y(conj(S1),primed(S1));
-    Y(S1(1),primed(S1)(2)) =  1;
-    Y(S1(2),primed(S1)(1)) = -1;
+    IQTensor Y(conj(S1),prime(S1));
+    Y(S1(1),prime(S1)(2)) =  1;
+    Y(S1(2),prime(S1)(1)) = -1;
     Y *= Complex_i;
 
     //PrintDat(Y);
@@ -330,13 +330,13 @@ TEST(ComplexMult)
 
 TEST(ComplexAdd)
     {
-    IQTensor Z(conj(S1),primed(S1));
-    Z(S1(1),primed(S1)(1)) = +1;
-    Z(S1(2),primed(S1)(2)) = -1;
+    IQTensor Z(conj(S1),prime(S1));
+    Z(S1(1),prime(S1)(1)) = +1;
+    Z(S1(2),prime(S1)(2)) = -1;
 
-    IQTensor X(conj(S1),primed(S1));
-    X(S1(1),primed(S1)(2)) = +1;
-    X(S1(2),primed(S1)(1)) = +1;
+    IQTensor X(conj(S1),prime(S1));
+    X(S1(1),prime(S1)(2)) = +1;
+    X(S1(2),prime(S1)(1)) = +1;
 
     IQTensor iX = X * Complex_i;
 
@@ -357,9 +357,9 @@ TEST(RandomizeTest)
 
 TEST(Test_normLogNum)
     {
-    IQTensor Z(conj(S1),primed(S1));
-    ITensor blk1(s1u(1),primed(s1u)(1)),
-            blk2(s1d(1),primed(s1d)(1));
+    IQTensor Z(conj(S1),prime(S1));
+    ITensor blk1(s1u(1),prime(s1u)(1)),
+            blk2(s1d(1),prime(s1d)(1));
     blk1 *= 0.1234;
     blk1 *= LogNumber(10,1);
     Z += blk1; 
@@ -372,9 +372,9 @@ TEST(Test_normLogNum)
 
 TEST(BigNorm)
     {
-    IQTensor Z(conj(S1),primed(S1));
-    ITensor blk1(s1u(1),primed(s1u)(1)),
-            blk2(s1d(1),primed(s1d)(1));
+    IQTensor Z(conj(S1),prime(S1));
+    ITensor blk1(s1u(1),prime(s1u)(1)),
+            blk2(s1d(1),prime(s1d)(1));
     blk1 *= 0.1234;
     blk1 *= LogNumber(1000,1);
     Z += blk1; 
@@ -409,13 +409,13 @@ TEST(ComplexConvert)
     I *= -2.333;
     IQTensor T = R+Complex_i*I;
 
-    Global::debug1() = true;
+    //Global::debug1() = true;
 
     ITensor r = R.toITensor(),
             i = I.toITensor();
     ITensor t = T.toITensor();
 
-    Global::debug1() = false;
+    //Global::debug1() = false;
 
 
     CHECK((realPart(t)-r).norm() < 1E-12);

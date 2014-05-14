@@ -581,7 +581,7 @@ projectOp(const MPSt<Tensor>& psi, int j, Direction dir,
         }
     nE = (E.isNull() ? psi.A(j) : E * psi.A(j));
     nE *= X; 
-    nE *= conj(primed(psi.A(j)));
+    nE *= conj(prime(psi.A(j)));
     }
 
 
@@ -618,11 +618,11 @@ psiphiC(const MPSType& psi, const MPSType& phi)
     if(l1.isNull())
         L *= conj(psi.A(1));
     else
-        L *= conj(primed(psi.A(1),l1)); 
+        L *= conj(prime(psi.A(1),l1)); 
 
     for(int i = 2; i < N; ++i) 
         { 
-        L = L * phi.A(i) * conj(primed(psi.A(i),Link)); 
+        L = L * phi.A(i) * conj(prime(psi.A(i),Link)); 
         }
     L = L * phi.A(N);
 
@@ -632,7 +632,7 @@ psiphiC(const MPSType& psi, const MPSType& phi)
     if(lNm.isNull())
         z = BraKet(psi.A(N),L);
     else
-        z = BraKet(primed(psi.A(N),lNm),L);
+        z = BraKet(prime(psi.A(N),lNm),L);
 
     return z;
     }

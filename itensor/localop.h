@@ -309,7 +309,7 @@ deltaRho(const Tensor& AA, const CombinerT& comb, Direction dir) const
     delta.noprime();
     delta = comb * delta;
     
-    delta *= conj(primed(delta,comb.right()));
+    delta *= conj(prime(delta,comb.right()));
 
     return delta;
     }
@@ -428,7 +428,7 @@ diag() const
         Error("Couldn't find Index");
         }
 
-    Tensor Diag = tieIndices(Op1,toTie,primed(toTie),toTie);
+    Tensor Diag = tieIndices(Op1,toTie,prime(toTie),toTie);
 
     found = false;
     Foreach(const IndexT& s, Op2.indices())
@@ -441,14 +441,14 @@ diag() const
             }
         }
     if(!found) Error("Couldn't find Index");
-    Diag *= tieIndices(Op2,toTie,primed(toTie),toTie);
+    Diag *= tieIndices(Op2,toTie,prime(toTie),toTie);
 
     if(!LIsNull())
         {
         found = false;
         Foreach(const IndexT& ll, L().indices())
             {
-            if(ll.primeLevel() == 0 && hasindex(L(),primed(ll)))
+            if(ll.primeLevel() == 0 && hasindex(L(),prime(ll)))
                 {
                 toTie = ll;
                 found = true;
@@ -456,7 +456,7 @@ diag() const
                 }
             }
         if(found)
-            Diag *= tieIndices(L(),toTie,primed(toTie),toTie);
+            Diag *= tieIndices(L(),toTie,prime(toTie),toTie);
         else
             Diag *= L();
         }
@@ -466,7 +466,7 @@ diag() const
         found = false;
         Foreach(const IndexT& rr, R().indices())
             {
-            if(rr.primeLevel() == 0 && hasindex(R(),primed(rr)))
+            if(rr.primeLevel() == 0 && hasindex(R(),prime(rr)))
                 {
                 toTie = rr;
                 found = true;
@@ -474,7 +474,7 @@ diag() const
                 }
             }
         if(found)
-            Diag *= tieIndices(R(),toTie,primed(toTie),toTie);
+            Diag *= tieIndices(R(),toTie,prime(toTie),toTie);
         else
             Diag *= R();
         }

@@ -819,7 +819,7 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const OptSet& opts)
     //Older density matrix implementation
     //Doesn't flip arrows appropriately
 
-    //Tensor rho = primed(L,bnd)*conj(L);
+    //Tensor rho = prime(L,bnd)*conj(L);
 
     //Tensor U;
     //Tensor D;
@@ -831,13 +831,13 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const OptSet& opts)
     //D.mapElems(Sqrt());
 
     //const
-    //Tensor siRho = conj(U)*Di*primed(U),
-    //       sRho = conj(U)*D*primed(U);
+    //Tensor siRho = conj(U)*Di*prime(U),
+    //       sRho = conj(U)*D*prime(U);
 
     //L *= siRho;
     //L.noprime();
 
-    //R = primed(R,bnd)*sRho;
+    //R = prime(R,bnd)*sRho;
 
     return spec;
     }
@@ -952,12 +952,12 @@ void MPSt<IQTensor>::makeRealBasis(int j, const OptSet& opts);
 ITensor
 makeKroneckerDelta(const Index& i, int plev)
     {
-    return ITensor(i,primed(i,plev),1);
+    return ITensor(i,prime(i,plev),1);
     }
 IQTensor
 makeKroneckerDelta(const IQIndex& I, int plev)
     {
-    IQTensor D(I,primed(I,plev));
+    IQTensor D(I,prime(I,plev));
 
     for(int j = 1; j <= I.nindex(); ++j)
         {
@@ -973,7 +973,7 @@ checkOrtho(int i, bool left) const
     setSite(i);
     IndexT link = (left ? RightLinkInd(i) : LeftLinkInd(i));
 
-    Tensor rho = A(i) * conj(primed(A(i),link,4));
+    Tensor rho = A(i) * conj(prime(A(i),link,4));
 
     Tensor Delta = makeKroneckerDelta(link,4);
 
@@ -1495,7 +1495,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
     iqpsi = IQMPSType(sst,maxm,cutoff);
 
     if(!A_[1].hasindex(si(1))) Error("convertToIQ: incorrect primelevel for conversion");
-    bool is_mpo = A_[1].hasindex(primed(si(1)));
+    bool is_mpo = A_[1].hasindex(prime(si(1)));
     const int Dim = si(1).m();
     const int PDim = (is_mpo ? Dim : 1);
 
@@ -1819,10 +1819,10 @@ fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit)
     if(psi_to_fit.N() != N) 
         Error("Wavefunctions must have same number of sites.");
 
-    Tensor A = psi_to_fit.A(N) * conj(primed(psi_basis.A(N),Link));
+    Tensor A = psi_to_fit.A(N) * conj(prime(psi_basis.A(N),Link));
     for(int n = N-1; n > 1; --n)
         {
-        A *= conj(primed(psi_basis.A(n),Link));
+        A *= conj(prime(psi_basis.A(n),Link));
         A *= psi_to_fit.A(n);
         }
     A = psi_to_fit.A(1) * A;

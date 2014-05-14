@@ -66,16 +66,16 @@ TEST(TutorialSimpleMeasurement)
     ket(s(2)) = sin(theta/2);
 
 
-    ITensor Sz(s,primed(s)),
-            Sx(s,primed(s));
+    ITensor Sz(s,prime(s)),
+            Sx(s,prime(s));
 
-    commaInit(Sz,s,primed(s)) << 0.5, 0, 
+    commaInit(Sz,s,prime(s)) << 0.5, 0, 
                                  0, -0.5;
 
-    commaInit(Sx,s,primed(s)) << 0, 0.5, 
+    commaInit(Sx,s,prime(s)) << 0, 0.5, 
                                  0.5, 0;
 
-    ITensor bra = conj(primed(ket));
+    ITensor bra = conj(prime(ket));
 
     Real zz = (bra * Sz * ket).toReal();
     Real xx = (bra * Sx * ket).toReal();

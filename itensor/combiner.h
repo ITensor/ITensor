@@ -22,7 +22,7 @@ Combine several indices into one, use * to convert tensors efficiently
 class Combiner;
 
 Combiner
-primed(Combiner C, int inc = 1);
+prime(Combiner C, int inc = 1);
 
 class Combiner
     {
@@ -239,7 +239,7 @@ prime(IndexType type, int inc)
     }
 
 Combiner inline
-primed(Combiner C, int inc)
+prime(Combiner C, int inc)
     {
     C.prime(All,inc);
     return C;
@@ -313,7 +313,6 @@ hasindex(const Combiner& C, const Index& I)
     }
 
 
-
 inline 
 std::ostream& 
 operator<<(std::ostream & s, const Combiner & c)
@@ -325,6 +324,13 @@ operator<<(std::ostream & s, const Combiner & c)
     s << "Left indices:\n";
     Foreach(const Index& l, c.left()) s << " " << l << "\n";
     return s;
+    }
+
+//Deprecated, for backwards compatibility only:
+Combiner inline
+primed(Combiner C, int inc = 1)
+    {
+    return prime(C,inc);
     }
 
 }; //namespace itensor

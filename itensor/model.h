@@ -26,7 +26,7 @@ namespace itensor {
 // with the Site IQIndex pointing
 // In and the Site' IQIndex pointing
 // Out. This is so we can compute expectation
-// values by doing conj(primed(A,Site)) * Op * A.
+// values by doing conj(prime(A,Site)) * Op * A.
 // (assuming the tensor A is an ortho center 
 // of our MPS)
 //
@@ -59,7 +59,7 @@ class Model
 
     //Primed Index at Site i
     IQIndex 
-    siP(int i) const { return primed(getSi(i)); }
+    siP(int i) const { return prime(getSi(i)); }
 
     //Index at site i set to a certain state
     //indicated by the string "state"
@@ -76,7 +76,7 @@ class Model
 
     IQIndexVal
     stP(int i, const String& state) const
-        { return primed(getState(i,state)); }
+        { return prime(getState(i,state)); }
 
 
     //Get the operator indicated by
@@ -155,7 +155,7 @@ op(const String& opname, int i,
         {
         const int n = opts.getInt("State");
         IQIndexVal v = si(i)(n);
-        return IQTensor(conj(v),primed(v));
+        return IQTensor(conj(v),prime(v));
         }
     else
         {

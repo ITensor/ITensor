@@ -111,45 +111,45 @@ TEST(PrimeLevelMethods)
     //
     // prime a specific IQIndex
     //
-    boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>(S1,primed(S1),S2,L2);
+    boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>(S1,prime(S1),S2,L2);
 
-    P->prime(primed(S1),2);
+    P->prime(prime(S1),2);
     CHECK(P->index(1) == S1);
-    CHECK(P->index(2) == primed(S1,3));
+    CHECK(P->index(2) == prime(S1,3));
     CHECK(P->index(3) == S2);
     CHECK(P->index(4) == L2);
     }
 
 TEST(PrimeIndex)
     {
-    boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>(S1,primed(S2));
+    boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>(S1,prime(S2));
 
     P->prime(conj(S1));
 
-    CHECK_EQUAL(P->index(1),primed(S1));
+    CHECK_EQUAL(P->index(1),prime(S1));
     //Even though the IQIndex passed to noprime had a different direction,
-    //it still compares equal and the unprimed IQIndex's arrow should be 
+    //it still compares equal and the unprime IQIndex's arrow should be 
     //unchanged
     CHECK_EQUAL(P->index(1).dir(),S1.dir());
     }
 
 TEST(NoPrimeIndex)
     {
-    boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>(S1,primed(S2));
+    boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>(S1,prime(S2));
 
-    P->noprime(conj(primed(S2)));
+    P->noprime(conj(prime(S2)));
 
     CHECK_EQUAL(P->index(2),S2);
     //Even though the IQIndex passed to noprime had a different direction,
-    //it still compares equal and the unprimed IQIndex's arrow should be 
+    //it still compares equal and the unprime IQIndex's arrow should be 
     //unchanged
     CHECK_EQUAL(P->index(2).dir(),S2.dir());
     }
 
 TEST(NoPrimeType)
     {
-    IQIndexSet I1(S1,primed(S2),primed(L1),primed(L2)),
-               I2(S1,primed(S2),L1,primed(L1));
+    IQIndexSet I1(S1,prime(S2),prime(L1),prime(L2)),
+               I2(S1,prime(S2),L1,prime(L1));
 
     I1.noprime(Link);
 
@@ -161,11 +161,11 @@ TEST(AddIndex)
     boost::shared_ptr<IQIndexSet> P = boost::make_shared<IQIndexSet>();
 
     P->addindex(S1);
-    P->addindex(primed(S1));
+    P->addindex(prime(S1));
     P->addindex(L2);
 
     CHECK_EQUAL(P->index(1),S1);
-    CHECK_EQUAL(P->index(2),primed(S1));
+    CHECK_EQUAL(P->index(2),prime(S1));
     CHECK_EQUAL(P->index(3),L2);
     CHECK_EQUAL(P->r(),3);
     }

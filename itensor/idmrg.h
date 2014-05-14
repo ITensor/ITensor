@@ -123,21 +123,21 @@ idmrg(MPSt<Tensor>& psi,
             {
             HL *= psi.A(j);
             HL *= H.A(j);
-            HL *= conj(primed(psi.A(j)));
+            HL *= conj(prime(psi.A(j)));
 
             HR *= psi.A(N0-j+1);
             HR *= H.A(N0-j+1);
-            HR *= conj(primed(psi.A(N0-j+1)));
+            HR *= conj(prime(psi.A(N0-j+1)));
             }
         swapUnitCells(H);
 
         if(measure_xi)
             {
-            vv[0] = psi.A(1)*conj(primed(psi.A(1),Link));
+            vv[0] = psi.A(1)*conj(prime(psi.A(1),Link));
             for(int j = 2; j <= Nuc; ++j)
                 {
                 vv[0] *= psi.A(j);
-                vv[0] *= conj(primed(psi.A(j),Link));
+                vv[0] *= conj(prime(psi.A(j),Link));
                 }
             }
 
@@ -239,12 +239,12 @@ idmrg(MPSt<Tensor>& psi,
         HR = PH.R();
         HR *= psi.A(Nuc+1);
         HR *= H.A(Nuc+1);
-        HR *= conj(primed(psi.A(Nuc+1)));
+        HR *= conj(prime(psi.A(Nuc+1)));
 
         HL = PH.L();
         HL *= psi.A(Nuc);
         HL *= H.A(Nuc);
-        HL *= conj(primed(psi.A(Nuc)));
+        HL *= conj(prime(psi.A(Nuc)));
 
         swapUnitCells(H);
 
@@ -257,7 +257,7 @@ idmrg(MPSt<Tensor>& psi,
                 for(int i = 1; i <= Nuc; ++i)
                     {
                     vv[j] *= psi.A(i);
-                    vv[j] *= conj(primed(psi.A(i),Link));
+                    vv[j] *= conj(prime(psi.A(i),Link));
                     }
                 for(int k = 0; k < j; ++k)
                     {

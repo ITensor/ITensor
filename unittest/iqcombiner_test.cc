@@ -153,18 +153,18 @@ TEST(Primes)
     c.addleft(L2);
     c.init();
 
-    IQTensor pphi = primed(phi);
+    IQTensor pphi = prime(phi);
 
-    IQTensor cpphi = primed(c) * pphi;
+    IQTensor cpphi = prime(c) * pphi;
 
-    CHECK(hasindex(cpphi,primed(S1)));
-    CHECK(hasindex(cpphi,primed(c.right())));
+    CHECK(hasindex(cpphi,prime(S1)));
+    CHECK(hasindex(cpphi,prime(c.right())));
 
-    //Check that using a primed combiner gives
+    //Check that using a prime combiner gives
     //same result as regular combiner, then
     //priming
     IQTensor cphi = c * phi;
-    IQTensor diff = primed(cphi) - cpphi;
+    IQTensor diff = prime(cphi) - cpphi;
     CHECK(diff.norm() < 1E-10);
 
     }

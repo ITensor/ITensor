@@ -145,7 +145,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
     const
     IQIndex s(si(i));
     const
-    IQIndex sP = primed(s);
+    IQIndex sP = prime(s);
 
     IQIndexVal Zer(s(1)),
                ZerP(sP(1)),

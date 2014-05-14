@@ -25,10 +25,10 @@ struct ITensorDefaults
     s2(Index("s2",2,Site)),
     s3(Index("s3",2,Site)),
     s4(Index("s4",2,Site)),
-    s1P(primed(s1)),
-    s2P(primed(s2)),
-    s3P(primed(s3)),
-    s4P(primed(s4)),
+    s1P(prime(s1)),
+    s2P(prime(s2)),
+    s3P(prime(s3)),
+    s4P(prime(s4)),
     l1(Index("l1",2)),
     l2(Index("l2",2)),
     l3(Index("l3",2)),
@@ -738,15 +738,15 @@ TEST(ContractingProduct)
         }
 
 
-    ITensor psi(a1,a2,a3), mpoh(l2,a1,primed(a1),a2,primed(a2));
+    ITensor psi(a1,a2,a3), mpoh(l2,a1,prime(a1),a2,prime(a2));
     psi.randomize(); mpoh.randomize();
 
     ITensor Hpsi = mpoh * psi;
 
     CHECK_EQUAL(Hpsi.r(),4);
     CHECK(hasindex(Hpsi,l2));
-    CHECK(hasindex(Hpsi,primed(a1)));
-    CHECK(hasindex(Hpsi,primed(a2)));
+    CHECK(hasindex(Hpsi,prime(a1)));
+    CHECK(hasindex(Hpsi,prime(a2)));
     CHECK(hasindex(Hpsi,a3));
     CHECK(!hasindex(Hpsi,a1));
     CHECK(!hasindex(Hpsi,a2));
@@ -845,7 +845,7 @@ TEST(NonContractingProduct)
     }
 
 
-    ITensor psi(a1,a2,a3), mpoh(l2,a1,primed(a1),a2,primed(a2));
+    ITensor psi(a1,a2,a3), mpoh(l2,a1,prime(a1),a2,prime(a2));
     psi.randomize(); mpoh.randomize();
 
     ITensor Hpsi = mpoh / psi;
@@ -854,8 +854,8 @@ TEST(NonContractingProduct)
     CHECK(hasindex(Hpsi,l2));
     CHECK(hasindex(Hpsi,a1));
     CHECK(hasindex(Hpsi,a2));
-    CHECK(hasindex(Hpsi,primed(a1)));
-    CHECK(hasindex(Hpsi,primed(a2)));
+    CHECK(hasindex(Hpsi,prime(a1)));
+    CHECK(hasindex(Hpsi,prime(a2)));
     CHECK(hasindex(Hpsi,a3));
 
     for(int j2 = 1; j2 <= 2; ++j2)
@@ -978,12 +978,12 @@ TEST(ComplexTieIndices)
 TEST(Trace)
     {
 
-    ITensor A(b2,a1,b3,b5,primed(b3));
+    ITensor A(b2,a1,b3,b5,prime(b3));
     A.randomize();
     Real f = -Global::random();
     A *= f;
 
-    ITensor At = trace(A,b3,primed(b3));
+    ITensor At = trace(A,b3,prime(b3));
 
     for(int j2 = 1; j2 <= b2.m(); ++j2)
     for(int j5 = 1; j5 <= b5.m(); ++j5)
@@ -991,12 +991,12 @@ TEST(Trace)
         Real val = 0;
         for(int j3 = 1; j3 <= b3.m(); ++j3)
             {
-            val += A(b2(j2),a1(1),b3(j3),b5(j5),primed(b3)(j3));
+            val += A(b2(j2),a1(1),b3(j3),b5(j5),prime(b3)(j3));
             }
         CHECK_CLOSE(val,At(b2(j2),a1(1),b5(j5)),1E-10);
         }
 
-    ITensor MM(b5,primed(b5));
+    ITensor MM(b5,prime(b5));
     MM.randomize();
     MM *= -2.34;
 
@@ -1005,7 +1005,7 @@ TEST(Trace)
     Real check_tr = 0;
     for(int j5 = 1; j5 <= b5.m(); ++j5)
         {
-        check_tr += MM(b5(j5),primed(b5)(j5));
+        check_tr += MM(b5(j5),prime(b5)(j5));
         }
     CHECK_CLOSE(tr,check_tr,1E-10);
 
@@ -1156,8 +1156,8 @@ TEST(ToFromMatrix22)
 /*
 TEST(SymmetricDiag11)
     {
-    ITensor T(s1,primed(s1));
-    commaInit(T,s1,primed(s1)) << 1, 2,
+    ITensor T(s1,prime(s1));
+    commaInit(T,s1,prime(s1)) << 1, 2,
                                   2, 1;
 
     T *= -2;
@@ -1177,7 +1177,7 @@ TEST(SymmetricDiag11)
     Matrix QQ(qs,qs);
     QQ.Randomize();
     QQ += QQ.t();
-    ITensor Q(q,primed(q),QQ);
+    ITensor Q(q,prime(q),QQ);
     Q *= -2;
 
     //Diagonalize and check the factorization
@@ -1269,26 +1269,26 @@ TEST(RealImagPart)
 
 TEST(SwapPrimeTest)
     {
-    ITensor T(s1,primed(s1));
-    commaInit(T,s1,primed(s1)) << 11, 12,
+    ITensor T(s1,prime(s1));
+    commaInit(T,s1,prime(s1)) << 11, 12,
                                   21, 22;
 
-    CHECK_EQUAL(T(s1(1),primed(s1)(1)),11);
-    CHECK_EQUAL(T(s1(2),primed(s1)(1)),21);
-    CHECK_EQUAL(T(s1(1),primed(s1)(2)),12);
-    CHECK_EQUAL(T(s1(2),primed(s1)(2)),22);
+    CHECK_EQUAL(T(s1(1),prime(s1)(1)),11);
+    CHECK_EQUAL(T(s1(2),prime(s1)(1)),21);
+    CHECK_EQUAL(T(s1(1),prime(s1)(2)),12);
+    CHECK_EQUAL(T(s1(2),prime(s1)(2)),22);
 
     T = swapPrime(T,0,1);
 
-    CHECK_EQUAL(T(primed(s1)(1),s1(1)),11);
-    CHECK_EQUAL(T(primed(s1)(2),s1(1)),21);
-    CHECK_EQUAL(T(primed(s1)(1),s1(2)),12);
-    CHECK_EQUAL(T(primed(s1)(2),s1(2)),22);
+    CHECK_EQUAL(T(prime(s1)(1),s1(1)),11);
+    CHECK_EQUAL(T(prime(s1)(2),s1(1)),21);
+    CHECK_EQUAL(T(prime(s1)(1),s1(2)),12);
+    CHECK_EQUAL(T(prime(s1)(2),s1(2)),22);
     }
 
 TEST(NoprimeTest)
     {
-    ITensor T(s1,primed(s1));
+    ITensor T(s1,prime(s1));
 
     //Check that T.noprime()
     //throws an exception since it would
@@ -1399,13 +1399,13 @@ TEST(DiagITensorBasicContraction)
     const Real f1 = Global::random(),
                f2 = Global::random();
 
-    ITensor op1(s1,primed(s1),f1),
-            op2(s1,primed(s1),f2),
+    ITensor op1(s1,prime(s1),f1),
+            op2(s1,prime(s1),f2),
             opa(s1,a1,3.1),
             psi(s1,l1,-1),
             opb(s1,b2,vb),
-            r1(s1,primed(s1,2)),
-            r2(s1,primed(s1,2));
+            r1(s1,prime(s1,2)),
+            r2(s1,prime(s1,2));
 
     r1.randomize();
     r2.randomize();
@@ -1478,7 +1478,7 @@ TEST(DiagMethod)
     v(2) = 1.34834;
     v(3) = 0.0;
     v(4) = 8.38457;
-    ITensor t2(primed(b4),b4,v);
+    ITensor t2(prime(b4),b4,v);
     CHECK(t2.type() == ITensor::Diag);
     CHECK(Norm(v-t2.diag()) < 1E-12);
     }

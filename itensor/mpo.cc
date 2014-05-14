@@ -357,7 +357,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
         IndexT mid = commonIndex(res.A(i),nfork,Link);
         mid.conj();
         midsize[i] = mid.m();
-        res.Anc(i+1) = Tensor(mid,conj(res.si(i+1)),primed(res.si(i+1),2),res.RightLinkInd(i+1));
+        res.Anc(i+1) = Tensor(mid,conj(res.si(i+1)),prime(res.si(i+1),2),res.RightLinkInd(i+1));
         }
 
     nfork = clust * A.A(N) * B.A(N);
@@ -449,7 +449,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
         midsize[i] = mid.m();
         maxdim = max(midsize[i],maxdim);
         assert(res.RightLinkInd(i+1).dir() == Out);
-        res.Anc(i+1) = Tensor(mid,primed(res.si(i+1)),res.RightLinkInd(i+1));
+        res.Anc(i+1) = Tensor(mid,prime(res.si(i+1)),res.RightLinkInd(i+1));
         }
     nfork = clust * psi.A(N) * K.A(N);
     //if(nfork.iten_size() == 0)	// this product gives 0 !!
@@ -548,10 +548,10 @@ fitApplyMPO(Real fac,
 
     vector<Tensor> BK(N+2);
 
-    BK.at(N) = origPsi.A(N)*K.A(N)*conj(primed(res.A(N)));
+    BK.at(N) = origPsi.A(N)*K.A(N)*conj(prime(res.A(N)));
     for(int n = N-1; n > 2; --n)
         {
-        BK.at(n) = BK.at(n+1)*origPsi.A(n)*K.A(n)*conj(primed(res.A(n)));
+        BK.at(n) = BK.at(n+1)*origPsi.A(n)*K.A(n)*conj(prime(res.A(n)));
         }
 
     res.position(1);
@@ -587,9 +587,9 @@ fitApplyMPO(Real fac,
                 }
 
             if(ha == 1)
-                BK.at(b) = lwfK * conj(primed(res.A(b)));
+                BK.at(b) = lwfK * conj(prime(res.A(b)));
             else
-                BK.at(b+1) = rwfK * conj(primed(res.A(b+1)));
+                BK.at(b+1) = rwfK * conj(prime(res.A(b+1)));
             }
         }
     }
@@ -638,12 +638,12 @@ fitApplyMPO(Real mpsfac,
     vector<Tensor> B(N+2),
                    BK(N+2);
 
-    B.at(N) = psiA.A(N)*conj(primed(res.A(N),Link));
-    BK.at(N) = psiB.A(N)*K.A(N)*conj(primed(res.A(N)));
+    B.at(N) = psiA.A(N)*conj(prime(res.A(N),Link));
+    BK.at(N) = psiB.A(N)*K.A(N)*conj(prime(res.A(N)));
     for(int n = N-1; n > 2; --n)
         {
-        B.at(n) = B.at(n+1)*psiA.A(n)*conj(primed(res.A(n),Link));
-        BK.at(n) = BK.at(n+1)*psiB.A(n)*K.A(n)*conj(primed(res.A(n)));
+        B.at(n) = B.at(n+1)*psiA.A(n)*conj(prime(res.A(n),Link));
+        BK.at(n) = BK.at(n+1)*psiB.A(n)*K.A(n)*conj(prime(res.A(n)));
         }
 
     res.position(1);
@@ -660,29 +660,29 @@ fitApplyMPO(Real mpsfac,
             Tensor rwfK = (BK.at(b+2).isNull() ? psiB.A(b+1) : BK.at(b+2)*psiB.A(b+1));
             rwfK *= K.A(b+1);
 
-            Tensor wf = mpsfac*deprimed(lwf*rwf) + mpofac*deprimed(lwfK*rwfK);
+            Tensor wf = mpsfac*noprime(lwf*rwf) + mpofac*noprime(lwfK*rwfK);
             wf.noprime();
 
             res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
 
             if(ha == 1)
                 {
-                B.at(b) = lwf * conj(primed(res.A(b),Link));
-                BK.at(b) = lwfK * conj(primed(res.A(b)));
+                B.at(b) = lwf * conj(prime(res.A(b),Link));
+                BK.at(b) = lwfK * conj(prime(res.A(b)));
                 }
             else
                 {
-                B.at(b+1) = rwf * conj(primed(res.A(b+1),Link));
-                BK.at(b+1) = rwfK * conj(primed(res.A(b+1)));
+                B.at(b+1) = rwf * conj(prime(res.A(b+1),Link));
+                BK.at(b+1) = rwfK * conj(prime(res.A(b+1)));
                 }
             }
         }
 
     Tensor olp = B.at(3);
     olp *= psiA.A(2);
-    olp *= conj(primed(res.A(2),Link));
+    olp *= conj(prime(res.A(2),Link));
     olp *= psiA.A(1);
-    olp *= conj(primed(res.A(1),Link));
+    olp *= conj(prime(res.A(1),Link));
 
     return olp.toComplex().real();
     }
@@ -817,12 +817,12 @@ applyExpH(const MPSt<Tensor>& psi,
                    B(N+2),
                    BH(N+2);
 
-    B.at(N) = psi.A(N)*conj(primed(psi.A(N),Link));
-    BH.at(N) = psi.A(N)*H.A(N)*conj(primed(psi.A(N)));
+    B.at(N) = psi.A(N)*conj(prime(psi.A(N),Link));
+    BH.at(N) = psi.A(N)*H.A(N)*conj(prime(psi.A(N)));
     for(int n = N-1; n > 2; --n)
         {
-        B.at(n) = B.at(n+1)*psi.A(n)*conj(primed(psi.A(n),Link));
-        BH.at(n) = BH.at(n+1)*psi.A(n)*H.A(n)*conj(primed(psi.A(n)));
+        B.at(n) = B.at(n+1)*psi.A(n)*conj(prime(psi.A(n),Link));
+        BH.at(n) = BH.at(n+1)*psi.A(n)*H.A(n)*conj(prime(psi.A(n)));
         }
 
     lastB = B;
@@ -857,16 +857,16 @@ applyExpH(const MPSt<Tensor>& psi,
                     }
                 else //dn
                     {
-                    lwf = (B.at(b-1).isNull() ? conj(primed(psi.A(b),Link)) : B.at(b-1)*conj(primed(psi.A(b),Link)));
-                    rwf = (B.at(b+2).isNull() ? conj(primed(psi.A(b+1),Link)) : B.at(b+2)*conj(primed(psi.A(b+1),Link)));
+                    lwf = (B.at(b-1).isNull() ? conj(prime(psi.A(b),Link)) : B.at(b-1)*conj(prime(psi.A(b),Link)));
+                    rwf = (B.at(b+2).isNull() ? conj(prime(psi.A(b+1),Link)) : B.at(b+2)*conj(prime(psi.A(b+1),Link)));
 
-                    lwfH = (BH.at(b-1).isNull() ? conj(primed(last.A(b))) : BH.at(b-1)*conj(primed(last.A(b))));
+                    lwfH = (BH.at(b-1).isNull() ? conj(prime(last.A(b))) : BH.at(b-1)*conj(prime(last.A(b))));
                     lwfH *= H.A(b);
-                    rwfH = (BH.at(b+2).isNull() ? conj(primed(last.A(b+1))) : BH.at(b+2)*conj(primed(last.A(b+1))));
+                    rwfH = (BH.at(b+2).isNull() ? conj(prime(last.A(b+1))) : BH.at(b+2)*conj(prime(last.A(b+1))));
                     rwfH *= H.A(b+1);
                     }
 
-                Tensor wf = deprimed(lwf*rwf) + mpofac*deprimed(lwfH*rwfH);
+                Tensor wf = noprime(lwf*rwf) + mpofac*noprime(lwfH*rwfH);
                 if(!up) wf.conj();
 
                 res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
@@ -875,13 +875,13 @@ applyExpH(const MPSt<Tensor>& psi,
                     {
                     if(ha == 1)
                         {
-                        B.at(b) = lwf * conj(primed(res.A(b),Link));
-                        BH.at(b) = lwfH * conj(primed(res.A(b)));
+                        B.at(b) = lwf * conj(prime(res.A(b),Link));
+                        BH.at(b) = lwfH * conj(prime(res.A(b)));
                         }
                     else
                         {
-                        B.at(b+1) = rwf * conj(primed(res.A(b+1),Link));
-                        BH.at(b+1) = rwfH * conj(primed(res.A(b+1)));
+                        B.at(b+1) = rwf * conj(prime(res.A(b+1),Link));
+                        BH.at(b+1) = rwfH * conj(prime(res.A(b+1)));
                         }
                     }
                 else //dn

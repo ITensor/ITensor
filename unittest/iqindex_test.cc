@@ -27,16 +27,16 @@ TEST(Primes)
     {
     IQIndex I("I",Index("i"),QN());
 
-    I = primed(I);
+    I = prime(I);
     CHECK_EQUAL(I.primeLevel(),1);
 
-    I = primed(I);
+    I = prime(I);
     CHECK_EQUAL(I.primeLevel(),2);
 
-    I = primed(I,7);
+    I = prime(I,7);
     CHECK_EQUAL(I.primeLevel(),9);
 
-    I = primed(I,-7);
+    I = prime(I,-7);
     CHECK_EQUAL(I.primeLevel(),2);
     }
 

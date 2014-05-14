@@ -81,28 +81,28 @@ TEST(SVDIndexOrder)
     CHECK((z-nz).norm() < 1E-10);
 
     }
-    //z(primed(a)(1),a(1),b(1),h(1)) = 11.8196;
-    //z(primed(a)(2),a(2),b(1),h(1)) = 10.4226;
-    //z(primed(a)(3),a(3),b(1),h(1)) = 9.02554;
-    //z(primed(a)(1),a(1),b(2),h(1)) = 3.7886;
-    //z(primed(a)(2),a(2),b(2),h(1)) = 3.11396;
-    //z(primed(a)(3),a(3),b(2),h(1)) = 2.43931;
-    //z(primed(a)(1),a(1),b(1),h(2)) = -1.55971;
-    //z(primed(a)(3),a(3),b(1),h(2)) = 1.55971;
-    //z(primed(a)(1),a(1),b(2),h(2)) = -0.753196;
-    //z(primed(a)(3),a(3),b(2),h(2)) = 0.753196;
-    //z(primed(a)(2),a(1),b(1),h(3)) = -1.10288;
-    //z(primed(a)(3),a(2),b(1),h(3)) = -1.10288;
-    //z(primed(a)(2),a(1),b(2),h(3)) = -0.53259;
-    //z(primed(a)(3),a(2),b(2),h(3)) = -0.53259;
-    //z(primed(a)(1),a(2),b(1),h(4)) = -1.10288;
-    //z(primed(a)(1),a(2),b(2),h(4)) = -0.53259;
-    //z(primed(a)(2),a(3),b(2),h(4)) = -0.53259;
-    //z(primed(a)(2),a(2),b(1),h(5)) = -1.55971;
-    //z(primed(a)(3),a(3),b(1),h(5)) = -1.55971;
-    //z(primed(a)(1),a(1),b(2),h(5)) = -0.753196;
-    //z(primed(a)(2),a(2),b(2),h(5)) = -0.753196;
-    //z(primed(a)(3),a(3),b(2),h(5)) = -0.753196;
+    //z(prime(a)(1),a(1),b(1),h(1)) = 11.8196;
+    //z(prime(a)(2),a(2),b(1),h(1)) = 10.4226;
+    //z(prime(a)(3),a(3),b(1),h(1)) = 9.02554;
+    //z(prime(a)(1),a(1),b(2),h(1)) = 3.7886;
+    //z(prime(a)(2),a(2),b(2),h(1)) = 3.11396;
+    //z(prime(a)(3),a(3),b(2),h(1)) = 2.43931;
+    //z(prime(a)(1),a(1),b(1),h(2)) = -1.55971;
+    //z(prime(a)(3),a(3),b(1),h(2)) = 1.55971;
+    //z(prime(a)(1),a(1),b(2),h(2)) = -0.753196;
+    //z(prime(a)(3),a(3),b(2),h(2)) = 0.753196;
+    //z(prime(a)(2),a(1),b(1),h(3)) = -1.10288;
+    //z(prime(a)(3),a(2),b(1),h(3)) = -1.10288;
+    //z(prime(a)(2),a(1),b(2),h(3)) = -0.53259;
+    //z(prime(a)(3),a(2),b(2),h(3)) = -0.53259;
+    //z(prime(a)(1),a(2),b(1),h(4)) = -1.10288;
+    //z(prime(a)(1),a(2),b(2),h(4)) = -0.53259;
+    //z(prime(a)(2),a(3),b(2),h(4)) = -0.53259;
+    //z(prime(a)(2),a(2),b(1),h(5)) = -1.55971;
+    //z(prime(a)(3),a(3),b(1),h(5)) = -1.55971;
+    //z(prime(a)(1),a(1),b(2),h(5)) = -0.753196;
+    //z(prime(a)(2),a(2),b(2),h(5)) = -0.753196;
+    //z(prime(a)(3),a(3),b(2),h(5)) = -0.753196;
 
 TEST(SVDArrows)
     {
@@ -145,15 +145,15 @@ TEST(ExpandIndex)
                   occ,QN(1,0),
                   Out);
 
-    ITensor oo(l,occ,primed(occ));
-    oo(l(1),occ(1),primed(occ)(1)) = 1;
+    ITensor oo(l,occ,prime(occ));
+    oo(l(1),occ(1),prime(occ)(1)) = 1;
 
     oo.expandIndex(occ,S,offset(S,occ));
 
-    oo.expandIndex(primed(occ),primed(S),offset(S,occ));
+    oo.expandIndex(prime(occ),prime(S),offset(S,occ));
 
-    CHECK_CLOSE(0,oo(S(1),primed(S)(1),l(1)),1E-5);
-    CHECK_CLOSE(1,oo(S(2),primed(S)(2),l(1)),1E-5);
+    CHECK_CLOSE(0,oo(S(1),prime(S)(1),l(1)),1E-5);
+    CHECK_CLOSE(1,oo(S(2),prime(S)(2),l(1)),1E-5);
     }
 
 TEST(ConvertToITensor)
@@ -164,16 +164,16 @@ TEST(ConvertToITensor)
                   occ,QN(1,0),
                   Out);
 
-    IQTensor T(L,S,primed(S));
-    T(L(1),S(1),primed(S)(1)) = 1;
-    T(L(1),S(2),primed(S)(2)) = 1;
+    IQTensor T(L,S,prime(S));
+    T(L(1),S(1),prime(S)(1)) = 1;
+    T(L(1),S(2),prime(S)(2)) = 1;
 
     ITensor t = T.toITensor();
 
-    CHECK_CLOSE(1,t(L(1),S(1),primed(S)(1)),1E-5);
-    CHECK_CLOSE(1,t(L(1),S(2),primed(S)(2)),1E-5);
-    CHECK_CLOSE(0,t(L(1),S(2),primed(S)(1)),1E-5);
-    CHECK_CLOSE(0,t(L(1),S(2),primed(S)(1)),1E-5);
+    CHECK_CLOSE(1,t(L(1),S(1),prime(S)(1)),1E-5);
+    CHECK_CLOSE(1,t(L(1),S(2),prime(S)(2)),1E-5);
+    CHECK_CLOSE(0,t(L(1),S(2),prime(S)(1)),1E-5);
+    CHECK_CLOSE(0,t(L(1),S(2),prime(S)(1)),1E-5);
     }
 
 

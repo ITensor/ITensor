@@ -675,7 +675,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     if(!cplx)
         {
         Matrix R;
-        rho.toMatrix11NoScale(active,primed(active),R);
+        rho.toMatrix11NoScale(active,prime(active),R);
         R *= -1.0; 
         EigenValues(R,DD,UU); 
         DD *= -1.0;
@@ -687,8 +687,8 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
                 irho = imagPart(rho);
         rrho.scaleTo(rho.scale());
         irho.scaleTo(rho.scale());
-        rrho.toMatrix11NoScale(primed(active),active,Mr);
-        irho.toMatrix11NoScale(primed(active),active,Mi);
+        rrho.toMatrix11NoScale(prime(active),active,Mr);
+        irho.toMatrix11NoScale(prime(active),active,Mi);
         Mr *= -1.0; 
         Mi *= -1.0; 
         HermitianEigenvalues(Mr,Mi,DD,UU,iUU); 
@@ -753,7 +753,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
 
     Index newmid(active.rawname(),m,active.type());
     U = ITensor(active,newmid,UU.Columns(1,m));
-    D = ITensor(primed(newmid),newmid,DD);
+    D = ITensor(prime(newmid),newmid,DD);
     D *= rho.scale();
 
     if(cplx)
@@ -845,7 +845,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         if(!cplx)
             {
             Matrix M;
-            t.toMatrix11NoScale(a,primed(a),M);
+            t.toMatrix11NoScale(a,prime(a),M);
             M *= -1;
             EigenValues(M,d,UU);
             d *= -1;
@@ -858,8 +858,8 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
             imt.scaleTo(refNorm);
             Matrix Mr,Mi;
             Matrix &iUU = imatrix.at(itenind);
-            ret.toMatrix11NoScale(primed(a),a,Mr);
-            imt.toMatrix11NoScale(primed(a),a,Mi);
+            ret.toMatrix11NoScale(prime(a),a,Mr);
+            imt.toMatrix11NoScale(prime(a),a,Mi);
             Mr *= -1;
             Mi *= -1;
             HermitianEigenvalues(Mr,Mi,d,UU,iUU);
@@ -1036,7 +1036,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
             iblocks.push_back(ITensor(act,nm,imatrix.at(itenind).Columns(1,this_m)));
             }
 
-        Dblocks.push_back(ITensor(primed(nm),nm,thisD.SubVector(1,this_m)));
+        Dblocks.push_back(ITensor(prime(nm),nm,thisD.SubVector(1,this_m)));
 
         ++itenind;
         }
@@ -1051,7 +1051,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     IQIndex newmid("qlink",iq, -active.dir());
 
     U = IQTensor(conj(active),conj(newmid));
-    D = IQTensor(primed(newmid),conj(newmid));
+    D = IQTensor(prime(newmid),conj(newmid));
     for(size_t j = 0; j < blocks.size(); ++j)
         {
         D += Dblocks.at(j);
@@ -1136,7 +1136,7 @@ eig_decomp(ITensor T,
 
     Index newmid("d",R.m(),R.type());
     V = ITensor(R,newmid,Ur);
-    D = ITensor(primed(newmid),newmid,Dr);
+    D = ITensor(prime(newmid),newmid,Dr);
 
     if(Norm(Ui.TreatAsVector()) > 1E-12)
         {
@@ -1145,7 +1145,7 @@ eig_decomp(ITensor T,
 
     if(Norm(Di) > 1E-12)
         {
-        D += ITensor(primed(newmid),newmid,Di)*Complex_i;
+        D += ITensor(prime(newmid),newmid,Di)*Complex_i;
         }
 
     D *= T.scale();
@@ -1263,10 +1263,10 @@ eig_decomp(IQTensor T,
             }
         Vblocks.push_back(blk);
 
-        ITensor Dblk(primed(nm),nm,dr);
+        ITensor Dblk(prime(nm),nm,dr);
         if(Norm(di) > 1E-12)
             {
-            Dblk += Complex_i*ITensor(primed(nm),nm,di);
+            Dblk += Complex_i*ITensor(prime(nm),nm,di);
             }
         Dblocks.push_back(Dblk);
 
@@ -1286,7 +1286,7 @@ eig_decomp(IQTensor T,
         V += t;
         }
 
-    D = IQTensor(primed(newmid),conj(newmid));
+    D = IQTensor(prime(newmid),conj(newmid));
     Foreach(const ITensor& t, Dblocks)
         {
         D += t;

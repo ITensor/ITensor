@@ -247,18 +247,18 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real
     Tensor L = phi.A(1); 
     //Some Hamiltonians may store edge tensors in H.A(0) and H.A(N+1)
     L *= (H.A(0).isNull() ? H.A(1) : H.A(0)*H.A(1));
-    L *= conj(primed(psi.A(1)));
+    L *= conj(prime(psi.A(1)));
     for(int i = 2; i < N; ++i) 
         { 
         L *= phi.A(i); 
         L *= H.A(i); 
-        L *= conj(primed(psi.A(i))); 
+        L *= conj(prime(psi.A(i))); 
         }
     L *= phi.A(N); 
     L *= H.A(N);
     if(!H.A(N+1).isNull()) L *= H.A(N+1);
 
-    Complex z = BraKet(primed(psi.A(N)),L);
+    Complex z = BraKet(prime(psi.A(N)),L);
     re = z.real();
     im = z.imag();
     }
@@ -296,12 +296,12 @@ psiHphi(const MPSt<Tensor>& psi,
 
     Tensor L = (LB.isNull() ? phi.A(1) : LB * phi.A(1));
     L *= H.A(1); 
-    L *= conj(primed(psi.A(1)));
+    L *= conj(prime(psi.A(1)));
     for(int i = 2; i <= N; ++i)
         { 
         L *= phi.A(i); 
         L *= H.A(i); 
-        L *= conj(primed(psi.A(i))); 
+        L *= conj(prime(psi.A(i))); 
         }
 
     if(!RB.isNull()) L *= RB;

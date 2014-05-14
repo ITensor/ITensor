@@ -82,7 +82,7 @@ init()
         Index &row = links[n-1], 
               &col = (n==Ns ? last : links[n]);
 
-        W = ITensor(model_.si(n),primed(model_.si(n)),row,col);
+        W = ITensor(model_.si(n),prime(model_.si(n)),row,col);
 
         W += model_.op("Id",n) * row(1) * col(1);
         W += model_.op("Id",n) * row(k) * col(k);

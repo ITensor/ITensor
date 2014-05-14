@@ -46,7 +46,7 @@ TEST(SpinOneModel)
     model.op("Sp",2); 
     model.op("Sm",2); 
     model.op("Sx",2); 
-    model.op("Sy",2); 
+    //model.op("Sy",2); 
     model.op("ISy",2); 
     }
 
