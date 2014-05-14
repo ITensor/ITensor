@@ -273,6 +273,14 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|ph
 	std::cerr << boost::format("\nReal psiHphi: WARNING, dropping non-zero (im = %.5f) imaginary part of expectation value.\n")%im;
     return re;
     }
+template <class MPSType, class MPOType>
+Complex 
+psiHphiC(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|phi>]
+    {
+    Real re, im;
+    psiHphi(psi,H,phi,re,im);
+    return Complex(re,im);
+    }
 
 template<class Tensor>
 void
@@ -348,6 +356,15 @@ psiHKphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPOt<Tensor>& K,c
     if(fabs(im) > 1.0e-12 * fabs(re))
 	Error("Non-zero imaginary part in psiHKphi");
     return re;
+    }
+
+template <class Tensor>
+Complex
+psiHKphiC(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPOt<Tensor>& K,const MPSt<Tensor>& phi) //<psi|H K|phi>
+    {
+    Real re,im;
+    psiHKphi(psi,H,K,phi,re,im);
+    return Complex(re,im);
     }
 
 template <class MPOType>
