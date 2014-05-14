@@ -323,8 +323,8 @@ operator+=(const ITensor& t)
             }
         if(q != d)
             {
-            Print(d);
-            Print(q);
+            //Print(d);
+            //Print(q);
             throw ITError("New ITensor block has different divergence from IQTensor.");
             }
         }
