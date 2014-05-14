@@ -39,7 +39,6 @@ clean:
 	cd matrix && make clean
 	cd itensor && make clean
 	cd sample && make clean
-	cd sandbox && make clean
 	rm -fr include/*
 	rm -f lib/*
 	rm -f this_dir.mk
