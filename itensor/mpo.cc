@@ -274,14 +274,14 @@ checkQNs(const IQMPO& H)
     //Check arrows from left edge
     for(int i = 1; i < center; ++i)
         {
-        if(H.RightLinkInd(i).dir() != In) 
+        if(rightLinkInd(H,i).dir() != In) 
             {
             std::cout << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
             Error("Incorrect Arrow in IQMPO");
             }
         if(i > 1)
             {
-            if(H.LeftLinkInd(i).dir() != Out) 
+            if(leftLinkInd(H,i).dir() != Out) 
                 {
                 std::cout << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
                 Error("Incorrect Arrow in IQMPO");
@@ -293,12 +293,12 @@ checkQNs(const IQMPO& H)
     for(int i = N; i > center; --i)
         {
         if(i < N)
-        if(H.RightLinkInd(i).dir() != Out) 
+        if(rightLinkInd(H,i).dir() != Out) 
             {
             std::cout << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
             Error("Incorrect Arrow in IQMPO");
             }
-        if(H.LeftLinkInd(i).dir() != In) 
+        if(leftLinkInd(H,i).dir() != In) 
             {
             std::cout << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
             Error("Incorrect Arrow in IQMPO");
@@ -314,11 +314,22 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
     typedef typename MPOType::TensorT Tensor;
     typedef typename MPOType::IndexT IndexT;
     if(Aorig.N() != Borig.N()) Error("nmultMPO(MPOType): Mismatched N");
-    int N = Borig.N();
-    MPOType A(Aorig), B(Borig);
+    const int N = Borig.N();
 
+    MPOType A(Aorig);
     A.position(1);
-    B.position(1);
+
+    MPOType B;
+    if(&Borig == &Aorig)
+        {
+        B = A;
+        }
+    else
+        {
+        B = Borig;
+        B.position(1);
+        }
+
     B.primeall();
 
     res=A;
@@ -340,8 +351,8 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
 
         if(i == N-1) break;
 
-        IndexT oldmid = res.RightLinkInd(i);
-        nfork = Tensor(A.RightLinkInd(i),B.RightLinkInd(i),oldmid);
+        IndexT oldmid = rightLinkInd(res,i);
+        nfork = Tensor(rightLinkInd(A,i),rightLinkInd(B,i),oldmid);
 
         /*
         if(clust.norm() == 0) // this product gives 0 !!
@@ -357,7 +368,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
         IndexT mid = commonIndex(res.A(i),nfork,Link);
         mid.conj();
         midsize[i] = mid.m();
-        res.Anc(i+1) = Tensor(mid,conj(res.si(i+1)),prime(res.si(i+1),2),res.RightLinkInd(i+1));
+        res.Anc(i+1) = Tensor(mid,conj(res.si(i+1)),prime(res.si(i+1),2),rightLinkInd(res,i+1));
         }
 
     nfork = clust * A.A(N) * B.A(N);
@@ -438,8 +449,8 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
         else { clust = nfork * (psi.A(i) * K.A(i)); }
         if(i == N-1) break; //No need to SVD for i == N-1
 
-        IndexT oldmid = res.RightLinkInd(i); assert(oldmid.dir() == Out);
-        nfork = Tensor(psi.RightLinkInd(i),K.RightLinkInd(i),oldmid);
+        IndexT oldmid = rightLinkInd(res,i); assert(oldmid.dir() == Out);
+        nfork = Tensor(rightLinkInd(psi,i),rightLinkInd(K,i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
         denmatDecomp(clust, res.Anc(i), nfork,Fromleft,opts);
@@ -448,8 +459,8 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
         mid.conj();
         midsize[i] = mid.m();
         maxdim = max(midsize[i],maxdim);
-        assert(res.RightLinkInd(i+1).dir() == Out);
-        res.Anc(i+1) = Tensor(mid,prime(res.si(i+1)),res.RightLinkInd(i+1));
+        assert(rightLinkInd(res,i+1).dir() == Out);
+        res.Anc(i+1) = Tensor(mid,prime(res.si(i+1)),rightLinkInd(res,i+1));
         }
     nfork = clust * psi.A(N) * K.A(N);
     //if(nfork.iten_size() == 0)	// this product gives 0 !!
@@ -582,7 +593,7 @@ fitApplyMPO(Real fac,
                 {
                 cout << format("    Trunc. err=%.1E, States kept=%s")
                         % res.spectrum(b).truncerr() 
-                        % showm(res.LinkInd(b)) 
+                        % showm(linkInd(res,b)) 
                         << endl;
                 }
 

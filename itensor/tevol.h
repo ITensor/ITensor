@@ -102,7 +102,7 @@ gateTEvol(const Iterable& gatelist,
             const int lastpos = psi.orthoCenter();
             const int closest = abs(lastpos-G.i()) < abs(lastpos-G.j()) ? G.i() : G.j();
             psi.position(closest);
-            psi.applygate(G);
+            applyGate(G,psi);
             }
 
         if(normalize)

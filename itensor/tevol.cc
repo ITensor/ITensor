@@ -613,7 +613,7 @@ oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
     //bool doUnprojStep = false;
     //for(int b = 1; b < N; ++b)
     //    {
-    //    int m = psi.LinkInd(b).m();
+    //    int m = linkInd(psi,b).m();
     //    if(m < m_threshold) 
     //        {
     //        doUnprojStep = true;
@@ -658,7 +658,7 @@ oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             cout << "After unprojected steps, m values = " << endl;
             for(int b = 1; b < N; ++b)
                 {
-                int m = psi.LinkInd(b).m();
+                int m = linkInd(psi,b).m();
                 cout << m << " ";
                 }
             cout << endl;
@@ -751,7 +751,7 @@ oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
             cout << "After ungroup, m values = " << endl;
             for(int b = 1; b < N; ++b)
                 {
-                int m = psi.LinkInd(b).m();
+                int m = linkInd(psi,b).m();
                 cout << m << " ";
                 }
             cout << endl;
@@ -911,7 +911,7 @@ imagTEvol(const MPOt<Tensor>& H,
             {
             for(int b = 1; b < psi.N(); ++b)
                 {
-                int m = psi.LinkInd(b).m();
+                int m = linkInd(psi,b).m();
                 cout << m << " ";
                 }
             cout << endl;

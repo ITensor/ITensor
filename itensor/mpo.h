@@ -53,7 +53,6 @@ class MPOt : private MPSt<Tensor>
 
     using Parent::model;
     using Parent::isNull;
-    using Parent::isNotNull;
 
     using Parent::si;
     using Parent::siP;
@@ -110,10 +109,6 @@ class MPOt : private MPSt<Tensor>
     using Parent::primelinks;
     using Parent::noprimelink;
 
-    using Parent::LinkInd;
-    using Parent::RightLinkInd;
-    using Parent::LeftLinkInd;
-
     void 
     primeall()	// sites i,i' -> i',i'';  link:  l -> l'
         {
@@ -143,10 +138,6 @@ class MPOt : private MPSt<Tensor>
     using Parent::orthoCenter;
 
     using Parent::isComplex;
-
-    using Parent::averageM;
-
-    using Parent::applygate;
 
     friend inline std::ostream& 
     operator<<(std::ostream& s, const MPOt& M)

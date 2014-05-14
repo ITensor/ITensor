@@ -197,17 +197,17 @@ void OptSet::
 add(const Opt& opt1, const Opt& opt2,
     const Opt& opt3, const Opt& opt4)
     {
-    if(opt1.isNotNull())
+    if(!opt1.isNull())
         opts_[opt1.name()] = opt1;
-    if(opt2.isNotNull())
+    if(!opt2.isNull())
         opts_[opt2.name()] = opt2;
 
-    if(opt3.isNotNull())
+    if(!opt3.isNull())
         opts_[opt3.name()] = opt3;
     else
         return;
 
-    if(opt4.isNotNull())
+    if(!opt4.isNull())
         opts_[opt4.name()] = opt4;
     }
 

@@ -92,6 +92,12 @@ class MPSt
     void 
     leftLim(int val) { l_orth_lim_ = val; }
 
+    bool 
+    isOrtho() const { return (l_orth_lim_+1) == (r_orth_lim_-1); }
+
+    int 
+    orthoCenter() const;
+
     IQIndex 
     si(int i) const { return model_->si(i); }
 
@@ -126,35 +132,12 @@ class MPSt
 
     bool 
     isNull() const { return (model_==0); }
-    bool 
-    isNotNull() const { return (model_!=0); }
 
     Real 
     truncerr(int b) const { return spectrum_.at(b).truncerr(); }
 
     const Vector& 
     eigsKept(int b) const { return spectrum_.at(b).eigsKept(); }
-
-    bool
-    doWrite() const { return do_write_; }
-    void
-    doWrite(bool val, const OptSet& opts = Global::opts());
-
-    const std::string&
-    writeDir() const { return writedir_; }
-
-    bool 
-    isOrtho() const { return (l_orth_lim_+1) == (r_orth_lim_-1); }
-
-    void 
-    read(std::istream& s);
-    void 
-    write(std::ostream& s) const;
-
-    //Read from a directory containing individual tensors,
-    //as created when doWrite(true) is called.
-    void 
-    read(const std::string& dirname);
 
     //
     //MPSt Operators
@@ -182,10 +165,6 @@ class MPSt
     plusEq(const MPSt& R, 
            const OptSet& opts = Global::opts());
 
-    //
-    //MPSt Index Methods
-    //
-
     void 
     mapprime(int oldp, int newp, IndexType type = All);
 
@@ -194,20 +173,6 @@ class MPSt
 
     void 
     noprimelink();
-
-    IndexT 
-    LinkInd(int b) const 
-        { return commonIndex(A(b),A(b+1),Link); }
-    IndexT 
-    RightLinkInd(int i) const 
-        { return commonIndex(A(i),A(i+1),Link); }
-    IndexT 
-    LeftLinkInd(int i)  const 
-        { return commonIndex(A(i),A(i-1),Link); }
-
-    //
-    //MPSt orthogonalization methods
-    //
 
     void 
     svdBond(int b, const Tensor& AA, Direction dir, 
@@ -219,16 +184,9 @@ class MPSt
                 const LocalOpT& PH, const OptSet& opts = Global::opts());
 
     //Move the orthogonality center to site i 
-    //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
+    //(leftLim() == i-1, rightLim() == i+1, orthoCenter() == i)
     void 
     position(int i, const OptSet& opts = Global::opts());
-
-    int 
-    orthoCenter() const 
-        { 
-        if(!isOrtho()) Error("orthogonality center not well defined.");
-        return (l_orth_lim_ + 1);
-        }
 
     void 
     orthogonalize(const OptSet& opts = Global::opts());
@@ -236,57 +194,14 @@ class MPSt
     void 
     makeRealBasis(int j, const OptSet& opts = Global::opts());
 
-    //Checks if A_[i] is left (left == true) 
-    //or right (left == false) orthogonalized
-    bool 
-    checkOrtho(int i, bool left) const;
-
-    bool 
-    checkRightOrtho(int i) const { return checkOrtho(i,false); }
-
-    bool 
-    checkLeftOrtho(int i) const { return checkOrtho(i,true); }
-    
-    bool 
-    checkOrtho() const;
-
-
-    //
-    // Applies a bond gate to the bond that is currently
-    // the OC.                                    |      |
-    // After calling position b, this bond is - A_[b] - A_[b+1] -
-    //
-    //      |      |
-    //      ==gate==
-    //      |      |
-    //  - A_[b] - A_[b+1] -
-    //
-    // Does not normalize the resulting wavefunction unless 
-    // Opt DoNormalize(true) is included in opts.
-    void 
-    applygate(const Tensor& gate, const OptSet& opts = Global::opts());
-
-    void 
-    applygate(const BondGate<Tensor>& gate, const OptSet& opts = Global::opts());
-
     Real 
     norm() const;
-
-    int
-    averageM() const;
 
     Real 
     normalize();
 
     bool 
-    isComplex() const
-        { 
-        for(int j = 1; j <= N_; ++j)
-            {
-            if(A_[j].isComplex()) return true;
-            }
-        return false;
-        }
+    isComplex() const;
 
     void 
     toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
@@ -298,6 +213,24 @@ class MPSt
 
     void
     swap(MPSt& other);
+
+    bool
+    doWrite() const { return do_write_; }
+    void
+    doWrite(bool val, const OptSet& opts = Global::opts());
+
+    const std::string&
+    writeDir() const { return writedir_; }
+
+    //Read from a directory containing individual tensors,
+    //as created when doWrite(true) is called.
+    void 
+    read(const std::string& dirname);
+
+    void 
+    read(std::istream& s);
+    void 
+    write(std::ostream& s) const;
 
     protected:
 
@@ -585,6 +518,139 @@ projectOp(const MPSt<Tensor>& psi, int j, Direction dir,
     }
 
 
+template <typename MPST>
+typename MPST::IndexT 
+linkInd(const MPST& psi, int b)
+    { 
+    return commonIndex(psi.A(b),psi.A(b+1),Link); 
+    }
+
+template <typename MPST>
+typename MPST::IndexT 
+rightLinkInd(const MPST& psi, int i)
+    { 
+    return commonIndex(psi.A(i),psi.A(i+1),Link); 
+    }
+
+template <typename MPST>
+typename MPST::IndexT 
+leftLinkInd(const MPST& psi, int i)
+    { 
+    return commonIndex(psi.A(i),psi.A(i-1),Link); 
+    }
+
+template <typename MPST>
+int
+averageM(const MPST& psi)
+    {
+    Real avgm = 0;
+    for(int b = 1; b < psi.N(); ++b) avgm += linkInd(psi,b).m();
+    avgm /= (psi.N()-1);
+    return int(avgm);
+    }
+
+//
+// Applies a bond gate to the bond that is currently
+// the OC.                                    |      |
+// After calling position b, this bond is - A_[b] - A_[b+1] -
+//
+//      |      |
+//      ==gate==
+//      |      |
+//  - A_[b] - A_[b+1] -
+//
+// Does not normalize the resulting wavefunction unless 
+// Opt DoNormalize(true) is included in opts.
+template <class Tensor>
+void 
+applyGate(const Tensor& gate, 
+          MPSt<Tensor>& psi,
+          const OptSet& opts = Global::opts())
+    {
+    const int c = psi.orthoCenter();
+    Tensor AA = psi.A(c) * psi.A(c+1) * gate;
+    AA.noprime();
+    psi.svdBond(c,AA,Fromleft,opts);
+    }
+
+template <class Tensor>
+void 
+applyGate(const BondGate<Tensor>& gate, 
+          MPSt<Tensor>& psi,
+          const OptSet& opts = Global::opts())
+    {
+    const int gate_b = std::min(gate.i(),gate.j());
+    Tensor AA = psi.A(gate_b) * psi.A(gate_b+1) * Tensor(gate);
+    AA.noprime();
+    psi.svdBond(gate_b,AA,Fromleft,opts);
+    }
+
+//Checks if A_[i] is left (left == true) 
+//or right (left == false) orthogonalized
+template <class Tensor>
+bool 
+checkOrtho(const MPSt<Tensor>& psi,
+           int i, 
+           bool left)
+    {
+    typedef typename Tensor::IndexT
+    IndexT;
+
+    IndexT link = (left ? rightLinkInd(psi,i) : leftLinkInd(psi,i));
+    Tensor rho = psi.A(i) * conj(prime(psi.A(i),link,4));
+    Tensor Delta = makeKroneckerDelta(link,4);
+    Tensor Diff = rho - Delta;
+
+    const
+    Real threshold = 1E-13;
+    //cout << format("i = %d, Diff.norm() = %.4E")
+    //        % i
+    //        % Diff.norm()
+    //        << Endl;
+    if(Diff.norm() < threshold) 
+        {
+        return true;
+        }
+
+    //Print any helpful debugging info here:
+    Cout << "checkOrtho: on line " << __LINE__ 
+         << " of mps.h," << Endl;
+    Cout << "checkOrtho: Tensor at position " << i 
+         << " failed to be " << (left ? "left" : "right") 
+         << " ortho." << Endl;
+    Cout << "checkOrtho: Diff.norm() = " << Format("%E") 
+         % Diff.norm() << Endl;
+    Cout << "checkOrtho: Error threshold set to " 
+              << Format("%E") % threshold << Endl;
+    //-----------------------------
+
+    return false;
+    }
+
+template <class Tensor>
+bool 
+checkOrtho(const MPSt<Tensor>& psi)
+    {
+    for(int i = 1; i <= psi.leftLim(); ++i)
+    if(!checkOrtho(psi,i,true))
+        {
+        std::cout << "checkOrtho: A_[i] not left orthogonal at site i=" 
+                  << i << std::endl;
+        return false;
+        }
+
+    for(int i = psi.N(); i >= psi.rightLim(); --i)
+    if(!checkOrtho(psi,i,false))
+        {
+        std::cout << "checkOrtho: A_[i] not right orthogonal at site i=" 
+                  << i << std::endl;
+        return false;
+        }
+    return true;
+    }
+
+
+
 
 int 
 findCenter(const IQMPS& psi);
@@ -613,7 +679,7 @@ psiphiC(const MPSType& psi, const MPSType& phi)
     const int N = psi.N();
     if(N != phi.N()) Error("psiphi: mismatched N");
 
-    IndexT l1 = psi.LinkInd(1);
+    IndexT l1 = linkInd(psi,1);
     Tensor L = phi.A(1);
     if(l1.isNull())
         L *= conj(psi.A(1));
@@ -628,7 +694,7 @@ psiphiC(const MPSType& psi, const MPSType& phi)
 
     Complex z;
 
-    IndexT lNm = psi.LinkInd(N-1);
+    IndexT lNm = linkInd(psi,N-1);
     if(lNm.isNull())
         z = BraKet(psi.A(N),L);
     else

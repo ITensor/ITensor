@@ -257,7 +257,7 @@ DMRGWorker(MPSt<Tensor>& psi,
                         << Endl;
                 Cout << Format("    Trunc. err=%.1E, States kept=%s")
                         % psi.spectrum(b).truncerr() 
-                        % showm(psi.LinkInd(b)) 
+                        % showm(linkInd(psi,b)) 
                         << Endl;
                 }
 

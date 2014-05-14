@@ -75,8 +75,6 @@ class Opt
 
     bool
     isNull() const { return type_ == None; }
-    bool
-    isNotNull() const { return type_ != None; }
 
     Type
     type() const { return type_; }
@@ -155,7 +153,7 @@ class OptSet
     defined(const Opt& opt) const;
 
     void
-    add(const Opt& opt) { if(opt.isNotNull()) opts_[opt.name()] = opt; }
+    add(const Opt& opt) { if(!opt.isNull()) opts_[opt.name()] = opt; }
     void
     add(const Name& name, bool bval) { add(Opt(name,bval)); }
     void

@@ -489,22 +489,6 @@ void MPSt<IQTensor>::
 init_tensors(std::vector<IQTensor>& A_, const InitState& initState);
 
 
-template <class Tensor>
-int MPSt<Tensor>::
-averageM() const
-    {
-    Real avgm = 0;
-    for(int b = 1; b < N(); ++b)
-        avgm += LinkInd(b).m();
-    avgm /= (N()-1);
-    return (int)avgm;
-    }
-template
-int MPSt<ITensor>::averageM() const;
-template
-int MPSt<IQTensor>::averageM() const;
-
-
 void 
 plussers(const Index& l1, const Index& l2, 
          Index& sumind, 
@@ -569,8 +553,8 @@ plussers(const IQIndex& l1, const IQIndex& l2,
 //    vector<IQIndex> nlinks(N);
 //    for(int b = 1; b < N_; ++b)
 //        {
-//        IQIndex l1 = this->LinkInd(b);
-//        IQIndex l2 = other.LinkInd(b);
+//        IQIndex l1 = linkInd(*this,b);
+//        IQIndex l2 = linkInd(other,b);
 //        vector<IndexQN> iq(l1.indices());
 //        iq.insert(iq.begin(),l2.indices().begin(),l2.indices().end());
 //        nlinks.at(b) = IQIndex(l2,iq);
@@ -608,8 +592,8 @@ plussers(const IQIndex& l1, const IQIndex& l2,
 //    vector<Tensor> first(N), second(N);
 //    for(int i = 1; i < N_; ++i)
 //        {
-//        IndexT l1 = this->RightLinkInd(i);
-//        IndexT l2 = other.RightLinkInd(i);
+//        IndexT l1 = rightLinkInd(*this,i);
+//        IndexT l2 = rightLinkInd(other,i);
 //        IndexT r(l1);
 //        plussers(l1,l2,r,first[i],second[i]);
 //        }
@@ -689,8 +673,8 @@ addAssumeOrth(const MPSt<Tensor>& R,
                    second(N_);
     for(int i = 1; i < N_; ++i)
         {
-        IndexT l1 = RightLinkInd(i);
-        IndexT l2 = R.RightLinkInd(i);
+        IndexT l1 = rightLinkInd(*this,i);
+        IndexT l2 = rightLinkInd(R,i);
         IndexT r(l1);
         plussers(l1,l2,r,first[i],second[i]);
         }
@@ -902,6 +886,18 @@ template void MPSt<IQTensor>::
 position(int b, const OptSet& opts);
 
 template <class Tensor>
+int MPSt<Tensor>::
+orthoCenter() const 
+    { 
+    if(!isOrtho()) Error("orthogonality center not well defined.");
+    return (l_orth_lim_ + 1);
+    }
+template
+int MPSt<ITensor>::orthoCenter() const;
+template
+int MPSt<IQTensor>::orthoCenter() const;
+
+template <class Tensor>
 void MPSt<Tensor>::
 orthogonalize(const OptSet& opts)
     {
@@ -966,105 +962,105 @@ makeKroneckerDelta(const IQIndex& I, int plev)
     return D;
     }
 
-template <class Tensor>
-bool MPSt<Tensor>::
-checkOrtho(int i, bool left) const
-    {
-    setSite(i);
-    IndexT link = (left ? RightLinkInd(i) : LeftLinkInd(i));
+//template <class Tensor>
+//bool MPSt<Tensor>::
+//checkOrtho(int i, bool left) const
+//    {
+//    setSite(i);
+//    IndexT link = (left ? rightLinkInd(*this,i) : leftLinkInd(*this,i));
+//
+//    Tensor rho = A(i) * conj(prime(A(i),link,4));
+//
+//    Tensor Delta = makeKroneckerDelta(link,4);
+//
+//    Tensor Diff = rho - Delta;
+//
+//    const
+//    Real threshold = 1E-13;
+//    //cout << format("i = %d, Diff.norm() = %.4E")
+//    //        % i
+//    //        % Diff.norm()
+//    //        << endl;
+//    if(Diff.norm() < threshold) 
+//        {
+//        return true;
+//        }
+//
+//    //Print any helpful debugging info here:
+//    cout << "checkOrtho: on line " << __LINE__ 
+//         << " of mps.h," << endl;
+//    cout << "checkOrtho: Tensor at position " << i 
+//         << " failed to be " << (left ? "left" : "right") 
+//         << " ortho." << endl;
+//    cout << "checkOrtho: Diff.norm() = " << format("%E") 
+//         % Diff.norm() << endl;
+//    cout << "checkOrtho: Error threshold set to " 
+//              << format("%E") % threshold << endl;
+//    //-----------------------------
+//
+//    return false;
+//    }
+//template
+//bool MPSt<ITensor>::checkOrtho(int i, bool left) const;
+//template
+//bool MPSt<IQTensor>::checkOrtho(int i, bool left) const;
 
-    Tensor rho = A(i) * conj(prime(A(i),link,4));
-
-    Tensor Delta = makeKroneckerDelta(link,4);
-
-    Tensor Diff = rho - Delta;
-
-    const
-    Real threshold = 1E-13;
-    //cout << format("i = %d, Diff.norm() = %.4E")
-    //        % i
-    //        % Diff.norm()
-    //        << endl;
-    if(Diff.norm() < threshold) 
-        {
-        return true;
-        }
-
-    //Print any helpful debugging info here:
-    cout << "checkOrtho: on line " << __LINE__ 
-         << " of mps.h," << endl;
-    cout << "checkOrtho: Tensor at position " << i 
-         << " failed to be " << (left ? "left" : "right") 
-         << " ortho." << endl;
-    cout << "checkOrtho: Diff.norm() = " << format("%E") 
-         % Diff.norm() << endl;
-    cout << "checkOrtho: Error threshold set to " 
-              << format("%E") % threshold << endl;
-    //-----------------------------
-
-    return false;
-    }
-template
-bool MPSt<ITensor>::checkOrtho(int i, bool left) const;
-template
-bool MPSt<IQTensor>::checkOrtho(int i, bool left) const;
-
-template <class Tensor>
-bool MPSt<Tensor>::
-checkOrtho() const
-    {
-    for(int i = 1; i <= l_orth_lim_; ++i)
-    if(!checkLeftOrtho(i))
-        {
-        cout << "checkOrtho: A_[i] not left orthogonal at site i=" 
-                  << i << endl;
-        return false;
-        }
-
-    for(int i = N(); i >= r_orth_lim_; --i)
-    if(!checkRightOrtho(i))
-        {
-        cout << "checkOrtho: A_[i] not right orthogonal at site i=" 
-                  << i << endl;
-        return false;
-        }
-    return true;
-    }
-template
-bool MPSt<ITensor>::checkOrtho() const;
-template
-bool MPSt<IQTensor>::checkOrtho() const;
+//template <class Tensor>
+//bool MPSt<Tensor>::
+//checkOrtho() const
+//    {
+//    for(int i = 1; i <= l_orth_lim_; ++i)
+//    if(!checkLeftOrtho(i))
+//        {
+//        cout << "checkOrtho: A_[i] not left orthogonal at site i=" 
+//                  << i << endl;
+//        return false;
+//        }
+//
+//    for(int i = N(); i >= r_orth_lim_; --i)
+//    if(!checkRightOrtho(i))
+//        {
+//        cout << "checkOrtho: A_[i] not right orthogonal at site i=" 
+//                  << i << endl;
+//        return false;
+//        }
+//    return true;
+//    }
+//template
+//bool MPSt<ITensor>::checkOrtho() const;
+//template
+//bool MPSt<IQTensor>::checkOrtho() const;
 
 
-template <class Tensor>
-void MPSt<Tensor>::
-applygate(const Tensor& gate, const OptSet& opts)
-    {
-    setBond(l_orth_lim_+1);
-    Tensor AA = A_.at(l_orth_lim_+1) * A_.at(l_orth_lim_+2) * gate;
-    AA.noprime();
-    svdBond(l_orth_lim_+1,AA,Fromleft,opts);
-    }
-template
-void MPSt<ITensor>::applygate(const ITensor& gate,const OptSet& opts);
-template
-void MPSt<IQTensor>::applygate(const IQTensor& gate,const OptSet& opts);
+//template <class Tensor>
+//void MPSt<Tensor>::
+//applygate(const Tensor& gate, const OptSet& opts)
+//    {
+//    setBond(l_orth_lim_+1);
+//    Tensor AA = A_.at(l_orth_lim_+1) * A_.at(l_orth_lim_+2) * gate;
+//    AA.noprime();
+//    svdBond(l_orth_lim_+1,AA,Fromleft,opts);
+//    }
+//template
+//void MPSt<ITensor>::applygate(const ITensor& gate,const OptSet& opts);
+//template
+//void MPSt<IQTensor>::applygate(const IQTensor& gate,const OptSet& opts);
 
-template <class Tensor>
-void MPSt<Tensor>::
-applygate(const BondGate<Tensor>& gate, 
-          const OptSet& opts)
-    {
-    const int gate_b = std::min(gate.i(),gate.j());
-    setBond(gate_b);
-    Tensor AA = A_.at(gate_b) * A_.at(gate_b+1) * Tensor(gate);
-    AA.noprime();
-    svdBond(gate_b,AA,Fromleft,opts);
-    }
-template
-void MPSt<ITensor>::applygate(const BondGate<ITensor>& gate,const OptSet& opts);
-template
-void MPSt<IQTensor>::applygate(const BondGate<IQTensor>& gate,const OptSet& opts);
+//template <class Tensor>
+//void MPSt<Tensor>::
+//applygate(const BondGate<Tensor>& gate, 
+//          const OptSet& opts)
+//    {
+//    const int gate_b = std::min(gate.i(),gate.j());
+//    setBond(gate_b);
+//    Tensor AA = A_.at(gate_b) * A_.at(gate_b+1) * Tensor(gate);
+//    AA.noprime();
+//    svdBond(gate_b,AA,Fromleft,opts);
+//    }
+//template
+//void MPSt<ITensor>::applygate(const BondGate<ITensor>& gate,const OptSet& opts);
+//template
+//void MPSt<IQTensor>::applygate(const BondGate<IQTensor>& gate,const OptSet& opts);
 
 template <class Tensor>
 Real MPSt<Tensor>::
@@ -1099,6 +1095,21 @@ normalize();
 template
 Real MPSt<IQTensor>::
 normalize();
+
+template <class Tensor>
+bool MPSt<Tensor>::
+isComplex() const
+    { 
+    for(int j = 1; j <= N_; ++j)
+        {
+        if(A_[j].isComplex()) return true;
+        }
+    return false;
+    }
+template
+bool MPSt<ITensor>::isComplex() const;
+template
+bool MPSt<IQTensor>::isComplex() const;
 
 template <class Tensor>
 void MPSt<Tensor>::
@@ -1523,8 +1534,8 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
     {
 
         qD.clear(); qt.clear();
-        if(s > 1) prev_bond = LinkInd(s-1); 
-        if(s < N) bond = LinkInd(s);
+        if(s > 1) prev_bond = linkInd(*this,s-1); 
+        if(s < N) bond = linkInd(*this,s);
 
         if(s == show_s) 
         {
@@ -1762,14 +1773,14 @@ checkQNs(const IQMPS& psi)
     //Check arrows from left edge
     for(int i = 1; i < center; ++i)
         {
-        if(psi.RightLinkInd(i).dir() != In) 
+        if(rightLinkInd(psi,i).dir() != In) 
             {
             cout << format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
             return false;
             }
         if(i > 1)
             {
-            if(psi.LeftLinkInd(i).dir() != Out) 
+            if(leftLinkInd(psi,i).dir() != Out) 
                 {
                 cout << format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
                 return false;
@@ -1781,12 +1792,12 @@ checkQNs(const IQMPS& psi)
     for(int i = N; i > center; --i)
         {
         if(i < N)
-        if(psi.RightLinkInd(i).dir() != Out) 
+        if(rightLinkInd(psi,i).dir() != Out) 
             {
             cout << format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
             return false;
             }
-        if(psi.LeftLinkInd(i).dir() != In) 
+        if(leftLinkInd(psi,i).dir() != In) 
             {
             cout << format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
             return false;
