@@ -15,7 +15,6 @@ B(const Model& model, int b)
 int
 main(int argc, char* argv[])
     {
-
     const int N = 20;
 
     //Model objects represent a collection of 

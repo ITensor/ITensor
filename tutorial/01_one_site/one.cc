@@ -7,13 +7,14 @@ using namespace itensor;
 int
 main(int argc, char* argv[])
     {
-
     //
     // Single-site wavefunction
     //
     
+    //Make a dimension 2 Index
     Index s("s",2);
 
+    //Construct an ITensor
     ITensor psi(s); //default initialized to zero
 
 
@@ -21,6 +22,7 @@ main(int argc, char* argv[])
     // Initialize up spin
     //
 
+    //Set first element to 1.
     psi(s(1)) = 1;
 
     PrintData(psi);

@@ -1,6 +1,6 @@
 LIBRARY_DIR=../..
 
-APP=one_plus_one
+APP=svd
 
 HEADERS=
 
