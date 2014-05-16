@@ -7,13 +7,13 @@
 #include "prodstats.h"
 #include <cmath>
 #include <cstdlib>
-#include <vector>
-#include <iostream>
 #include <fstream>
 #include <complex>
+#include "print.h"
 #include "error.h" //utilities
 #include "option.h"
 #include "assert.h"
+
 #include "boost/array.hpp"
 #include "boost/format.hpp"
 #include "boost/random/mersenne_twister.hpp"
@@ -21,6 +21,7 @@
 
 #include "boost/foreach.hpp"
 #define Foreach BOOST_FOREACH
+
 
 namespace itensor {
 
