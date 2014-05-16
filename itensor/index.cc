@@ -16,7 +16,6 @@ using std::endl;
 using std::vector;
 using std::string;
 using std::stringstream;
-using boost::format;
 
 //typedef boost::random::mt19937 
 //Generator;
@@ -54,8 +53,7 @@ IntToIndexType(int i)
     if(i == 1) return Link;
     if(i == 2) return Site;
     if(i == 3) return All;
-    cout << format("No IndexType value defined for i=%d\n")%i 
-              << endl;
+    printfln("No IndexType value defined for i=%d\n",i);
     Error("Undefined IntToIndexType value");
     return Link;
     }

@@ -16,7 +16,6 @@ using std::string;
 using std::find;
 using std::pair;
 using std::make_pair;
-using boost::format;
 using boost::array;
 //using boost::shared_ptr;
 //using boost::make_shared;

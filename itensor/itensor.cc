@@ -11,7 +11,6 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::sqrt;
-using boost::format;
 using boost::shared_ptr;
 using boost::make_shared;
 using boost::array;
@@ -393,7 +392,6 @@ ITensor(const IndexVal& iv)
     is_(Index(iv)),
     scale_(1)
 	{ 
-    //cout << format("Calling ITensor IndexVal constructor with iv.i=%d") % iv.i << endl;
     allocate(iv.m());
 	r_->v(iv.i) = 1; 
 	}
@@ -694,7 +692,7 @@ operator()()
 	{ 
     if(is_.rn() != 0)
         {
-        std::cerr << format("# given = 0, rn_ = %d\n")%is_.rn();
+        printfln("# given = 0, rn_ = %d\n",is_.rn());
         Error("Not enough indices (requires all having m!=1)");
         }
     solo(); 
@@ -708,7 +706,7 @@ operator()() const
     ITENSOR_CHECK_NULL
     if(is_.rn() != 0)
         {
-        std::cerr << format("# given = 0, rn_ = %d\n")%is_.rn();
+        printfln("# given = 0, rn_ = %d\n",is_.rn());
         Error("Not enough indices (requires all having m!=1)");
         }
     return scale_.real()*r_->v(1);
@@ -721,7 +719,7 @@ operator()(const IndexVal& iv1)
 #ifdef DEBUG
     if(is_.rn() > 1) 
         {
-        std::cerr << format("# given = 1, rn_ = %d\n")%is_.rn();
+        printfln("# given = 1, rn_ = %d\n",is_.rn());
         Error("Not enough m!=1 indices provided");
         }
     if(is_[0] != iv1)
@@ -742,7 +740,7 @@ operator()(const IndexVal& iv1) const
 #ifdef DEBUG
     if(is_.rn() > 1) 
         {
-        std::cerr << format("# given = 1, rn() = %d\n")%is_.rn();
+        printfln("# given = 1, rn_ = %d\n",is_.rn());
         Error("Not enough m!=1 indices provided");
         }
     if(is_[0] != iv1)
@@ -865,7 +863,6 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
     int nn = 0; //number of m != 1 indices
     for(int j = 1; j <= nind; ++j) 
         {
-        //cerr << format("indices[%d] = ") % j << indices[j] << "\n";
         const Index& J = indices[j];
         if(J.m() != 1) ++nn;
         tot_m *= J.m();
@@ -876,7 +873,6 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
             if(is_.index(k) == J) 
                 {
                 isReplaced[k] = (J.m() == 1 ? -1 : nn);
-                //cerr << format("setting isReplaced[%d] = %d\n ") % k % isReplaced[k];
                 foundit = true; 
                 break; 
                 }
@@ -899,16 +895,13 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
     int nkept = 0; 
     for(int j = 1; j <= is_.rn(); ++j)
         {
-        //cerr << format("isReplaced[%d] = %d\n") % j % isReplaced[j];
         if(isReplaced[j] == 0)
             {
-            //cerr << format("Kept index, setting P.fromTo(%d,%d)\n") % j % (nkept+1);
             P.fromTo(j,++nkept);
             nindices.addindex(is_.index(j)); 
             }
         else
             {
-            //cerr << format("Replaced index, setting P.fromTo(%d,%d)\n") % j % (res_rn_+isReplaced[j]-1);
             P.fromTo(j,res_rn_+isReplaced[j]-1);
             }
         }
@@ -1724,7 +1717,7 @@ _ind2(const IndexVal& iv1, const IndexVal& iv2) const
     {
     if(is_.rn() > 2) 
         {
-        std::cerr << format("# given = 2, rn_ = %d\n")%is_.rn();
+        printfln("# given = 2, rn_ = %d\n",is_.rn());
         Error("Not enough m!=1 indices provided");
         }
     if(is_[0] == iv1 && is_[1] == iv2)
@@ -2322,11 +2315,9 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
             tc.n[++tc.rn] = T.is_[i-1].m();
             ++tc.r;
             //Link up ti pointer
-            //cerr << format("Linking ti[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % i % tc.rn % tc.rn % (tc.n[tc.rn]);
             ti[i] = &(tc.i[tc.rn]);
 
             //Link ri pointer to free index of T
-            //cerr << format("Linking ri[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % res.is_.r() % tc.rn % tc.rn % (tc.n[tc.rn]);
             ri[res.is_.r()] = &(tc.i[tc.rn]);
             }
         else
@@ -2356,8 +2347,8 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
     if(res.is_.r() != (S.r()+T.r() - 2*ncon))
         {
         Print(res.is_);
-        cout << format("res.is_.r() = %d != (S.r()+T.r()-2*ncon) = %d")
-            % res.is_.r() % (S.r()+T.r()-2*ncon) << endl;
+        printfln("res.is_.r() = %d != (S.r()+T.r()-2*ncon) = %d",
+                 res.is_.r(),(S.r()+T.r()-2*ncon));
         Error("Incorrect rank");
         }
 #endif
@@ -2812,7 +2803,7 @@ operator+=(const ITensor& other)
 
     if(is_ != other.is_)
         {
-        cerr << format("this ur = %.10f, other.ur = %.10f\n")%is_.uniqueReal()%other.is_.uniqueReal();
+        printfln("this ur = %.10f, other.ur = %.10f\n",is_.uniqueReal(),other.is_.uniqueReal());
         Print(*this);
         Print(other);
         Error("ITensor::operator+=: different Index structure");
@@ -3164,11 +3155,11 @@ operator<<(ostream & s, const ITensor& t)
             Real nrm = t.norm();
             if(nrm >= 1E-2 && nrm < 1E5)
                 {
-                s << format(",N=%.2f") % nrm;
+                s << format(",N=%.2f",nrm);
                 }
             else
                 {
-                s << format(",N=%.1E") % nrm;
+                s << format(",N=%.1E",nrm);
                 }
             }
         else
@@ -3176,9 +3167,7 @@ operator<<(ostream & s, const ITensor& t)
             s << ",N=too big,scale=" << t.scale();
             }
 
-        s << format("%s%s}\n") 
-             % (isdiag ? ",D" : "")
-             % (iscplx ? ",C" : "");
+        s << format("%s%s}\n",(isdiag ? ",D" : ""), (iscplx ? ",C" : ""));
 
         //const bool ff_set = (std::ios::floatfield & s.flags()) != 0;
 
@@ -3193,13 +3182,13 @@ operator<<(ostream & s, const ITensor& t)
                 const Real rval = t.r_->v(1)*scale;
                 if(!iscplx)
                     {
-                    s << format("  %.10f\n") % rval;
+                    s << format("  %.10f\n",rval);
                     }
                 else
                     {
                     const Real ival = t.i_->v(1)*scale;
                     const char sgn = (ival > 0 ? '+' : '-');
-                    s << format("  %.10f%s%.10fi\n") % rval % sgn % fabs(ival);
+                    s << format("  %.10f%s%.10fi\n",rval,sgn,fabs(ival));
                     }
                 return s;
                 }
@@ -3217,7 +3206,7 @@ operator<<(ostream & s, const ITensor& t)
                             s << "  (" << j;
                             for(int n = 2; n <= t.r(); ++n)
                                 s << "," << j;
-                            s << format(") %.10f\n") % rval;
+                            s << format(") %.10f\n",rval);
                             }
                         }
                     else
@@ -3229,7 +3218,7 @@ operator<<(ostream & s, const ITensor& t)
                             s << "  (" << j;
                             for(int n = 2; n <= t.r(); ++n)
                                 s << "," << j;
-                            s << format(") %.10f%s%.10fi\n") % rval % sgn % fabs(ival);
+                            s << format(") %.10f%s%.10fi\n",rval,sgn,fabs(ival));
                             }
                         }
                     }
@@ -3245,7 +3234,7 @@ operator<<(ostream & s, const ITensor& t)
                         {
                         Real val = pv[c.ind]*scale;
                         if(fabs(val) > Global::printScale())
-                            { s << "  " << c << (format(" %.10f\n") % val); }
+                            { s << "  " << c << format(" %.10f\n",val); }
                         }
                     }
                 else //t is complex
@@ -3260,7 +3249,7 @@ operator<<(ostream & s, const ITensor& t)
                         const char sgn = (ival > 0 ? '+' : '-');
                         if(sqrt(sqr(rval)+sqr(ival)) > Global::printScale())
                             { 
-                            s << "  " << c << (format(" %.10f%s%.10fi\n") % rval % sgn % fabs(ival)); 
+                            s << "  " << c << format(" %.10f%s%.10fi\n",rval,sgn,fabs(ival)); 
                             }
                         }
                     }

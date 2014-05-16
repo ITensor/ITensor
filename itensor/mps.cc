@@ -17,7 +17,6 @@ using std::find;
 using std::pair;
 using std::make_pair;
 using std::string;
-using boost::format;
 
 //
 // class MPSt
@@ -844,7 +843,6 @@ position(int i, const OptSet& opts)
             if(l_orth_lim_ < 0) l_orth_lim_ = 0;
             setBond(l_orth_lim_+1);
             Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
-            //cout << format("In position, SVDing bond %d\n") % (l_orth_lim_+1) << endl;
             svdBond(l_orth_lim_+1,WF,Fromleft,opts);
             }
         while(r_orth_lim_ > i+1)
@@ -852,7 +850,6 @@ position(int i, const OptSet& opts)
             if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
             setBond(r_orth_lim_-2);
             Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
-            //cout << format("In position, SVDing bond %d\n") % (r_orth_lim_-2) << endl;
             svdBond(r_orth_lim_-2,WF,Fromright,opts);
             }
         }
@@ -862,7 +859,6 @@ position(int i, const OptSet& opts)
             {
             if(l_orth_lim_ < 0) l_orth_lim_ = 0;
             setBond(l_orth_lim_+1);
-            //cout << format("In position, SVDing bond %d\n") % (l_orth_lim_+1) << endl;
             spectrum_.at(l_orth_lim_+1) = 
             orthMPS(Anc(l_orth_lim_+1),Anc(l_orth_lim_+2),Fromleft,opts);
             ++l_orth_lim_;
@@ -872,7 +868,6 @@ position(int i, const OptSet& opts)
             {
             if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
             setBond(r_orth_lim_-2);
-            //cout << format("In position, SVDing bond %d\n") % (r_orth_lim_-2) << endl;
             spectrum_.at(r_orth_lim_-2) = 
             orthMPS(Anc(r_orth_lim_-2),Anc(r_orth_lim_-1),Fromright,opts);
             --r_orth_lim_;

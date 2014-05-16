@@ -17,7 +17,6 @@ using std::pair;
 using std::make_pair;
 using std::string;
 using std::sqrt;
-using boost::format;
 
 //Vector static
 //sqrt(Vector V)
@@ -202,13 +201,12 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
     if(opts.getBool("ShowEigs",false))
         {
         cout << endl;
-        cout << format("minm = %d, maxm = %d, cutoff = %.3E")
-                       %minm%maxm%cutoff << endl;
-        cout << format("truncate = %s")%(do_truncate?"true":"false")<<endl;
-        cout << format("doRelCutoff = %s")%(doRelCutoff?"true":"false")<<endl;
-        cout << format("absoluteCutoff = %s")%(absoluteCutoff?"true":"false")<<endl;
-        cout << format("Kept m=%d states in svdRank2 line 169") % m << endl;
-        cout << format("svdtruncerr = %.3E")%spec.truncerr() << endl;
+        printfln("minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
+        printfln("truncate = %s",(do_truncate?"true":"false"));
+        printfln("doRelCutoff = %s",(doRelCutoff?"true":"false"));
+        printfln("absoluteCutoff = %s",(absoluteCutoff?"true":"false"));
+        printfln("Kept m=%d states in svdRank2 line 169", m);
+        printfln("svdtruncerr = %.3E",spec.truncerr());
 
         int stop = min(10,DD.Length());
         Vector Ds = DD.SubVector(1,stop);
@@ -227,9 +225,8 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         for(int j = 1; j <= stop; ++j)
             {
             const Real sval = Ds(j);
-            cout << format( ( sval > 1E-3 && sval < 1000) ? ("%.3f") : ("%.3E")) 
-                    % sval;
-            cout << ((j != stop) ? ", " : "\n");
+            printf(( sval > 1E-3 && sval < 1000) ? ("%.3f") : ("%.3E") , sval); 
+            print((j != stop) ? ", " : "\n");
             }
         cout << endl;
         }
@@ -261,7 +258,6 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
 
     if(A.scale().isFiniteReal())
         {
-        //cout << format("sqr(scale) = %.10E") % sqr(A.scale().real0()) << endl;
         DD *= sqr(A.scale().real0());
         }
     else
@@ -428,18 +424,14 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     if(opts.getBool("ShowEigs",false))
         {
         cout << endl;
-        cout << "svdRank2 (IQTensor):" << endl;
-        cout << format("    minm = %d, maxm = %d, cutoff = %.3E")
-                       %minm%maxm%cutoff << endl;
-        cout << format("    Kept m = %d states in svdRank2")
-                                % m << endl;
-        cout << format("    svdtruncerr = %.2E")%svdtruncerr << endl;
-        cout << format("    docut = %.2E")%docut << endl;
-        cout << "    doRelCutoff is " 
-             << (doRelCutoff ? "true" : "false") << endl;
-        cout << "    absoluteCutoff is " 
-             << (absoluteCutoff ? "true" : "false") << endl;
-        cout << "    refNorm is " << refNorm << endl;
+        println("svdRank2 (IQTensor):");
+        printfln("    minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
+        printfln("    Kept m = %d states in svdRank2",m);
+        printfln("    svdtruncerr = %.2E",svdtruncerr);
+        printfln("    docut = %.2E",docut);
+        println("    doRelCutoff is ",(doRelCutoff ? "true" : "false"));
+        println("    absoluteCutoff is ",(absoluteCutoff ? "true" : "false"));
+        println("    refNorm is ",refNorm);
 
         const int s = alleig.size();
         const int max_show = 20;
@@ -468,9 +460,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         for(int j = s-1; j >= stop; --j)
             {
             const Real sval = sqrt(alleig.at(j))*real_fac;
-            cout << format( (sval >= 1E-3 && sval < 1E3) ? ("%.3f") : ("%.3E")) 
-                    % sval;
-            cout << ((j != stop) ? ", " : "\n");
+            printf( (sval >= 1E-3 && sval < 1E3) ? ("%.3f") : ("%.3E"), sval);
+            print((j != stop) ? ", " : "\n");
             }
         cout << endl;
         } //end if(showeigs_)
@@ -508,10 +499,6 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         while(this_m <= thisD.Length() && sqr(thisD(this_m)) > docut) 
             {
             ++total_m;
-            //if(Global::debug1())
-            //    {
-            //    cout << format("    %d Keeping eig %.3E, %.3E > %.3E") % total_m % thisD(this_m) % sqr(thisD(this_m)) % docut << endl;
-            //    }
             if(thisD(this_m) < 0) thisD(this_m) = 0;
             ++this_m;
             }
@@ -720,10 +707,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
 #ifdef DEBUG
     if(m > maxm)
         {
-        cout << format("m > maxm; m = %d, maxm = %d")
-                % m 
-                % maxm 
-             << endl;
+        printfln("m > maxm; m = %d, maxm = %d",m,maxm);
         Error("m > maxm");
         }
     if(m > 20000)
@@ -735,18 +719,17 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     if(opts.getBool("ShowEigs",false))
         {
         cout << endl;
-        cout << format("minm = %d, maxm = %d, cutoff = %.3E")
-                       %minm%maxm%cutoff << endl;
-        cout << format("Kept %d states in diag_denmat")% m << endl;
-        cout << format("svdtruncerr = %.3E")%svdtruncerr << endl;
+        printfln("minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
+        printfln("Kept %d states in diag_denmat",m);
+        printfln("svdtruncerr = %.3E",svdtruncerr);
         //cout << "doRelCutoff is " << doRelCutoff << endl;
         //int stop = min(D.Length(),10);
         int stop = DD.Length();
         cout << "Eigs: ";
         for(int j = 1; j <= stop; ++j)
             {
-            cout << format(DD(j) > 1E-3 ? ("%.3f") : ("%.3E")) % DD(j);
-            cout << ((j != stop) ? ", " : "\n");
+            printf(DD(j) > 1E-3 ? ("%.3f") : ("%.3E"),DD(j));
+            print((j != stop) ? ", " : "\n");
             }
         cout << endl;
         }
@@ -891,7 +874,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         Matrix Diff = Id-(UU.t()*UU);
         if(Norm(Diff.TreatAsVector()) > 1E-12)
             {
-            cerr << boost::format("\ndiff=%.2E\n")%Norm(Diff.TreatAsVector());
+            printfln("\ndiff=%.2E",Norm(Diff.TreatAsVector()));
             Print(UU.t()*UU);
             Error("UU not unitary in diag_denmat");
             }
@@ -920,12 +903,10 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     if(opts.getBool("ShowEigs",false))
         {
         cout << endl;
-        cout << format("Kept %d states in diag_denmat line 721")
-                                % m << endl;
-        cout << format("svdtruncerr = %.2E")%svdtruncerr << endl;
-        cout << format("docut = %.2E")%docut << endl;
-        cout << format("cutoff=%.2E, minm=%d, maxm=%d")
-                %cutoff%minm%maxm << endl;
+        printfln("Kept %d states in diag_denmat line 721", m);
+        printfln("svdtruncerr = %.2E",svdtruncerr);
+        printfln("docut = %.2E",docut);
+        printfln("cutoff=%.2E, minm=%d, maxm=%d",cutoff,minm,maxm);
         cout << "doRelCutoff is " << (doRelCutoff ? "true" : "false") << endl;
         cout << "absoluteCutoff is " << (absoluteCutoff ? "true" : "false") << endl;
         cout << "refNorm is " << refNorm << endl;
@@ -935,8 +916,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         cout << "Eigs: ";
         for(int j = s-1; j >= stop; --j)
             {
-            cout << format(alleig.at(j) > 1E-3 ? ("%.3f") : ("%.3E")) 
-                           % alleig.at(j);
+            printf(alleig.at(j) > 1E-3 ? ("%.3f") : ("%.3E"), alleig.at(j));
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -945,10 +925,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 #ifdef DEBUG
     if(m > maxm)
         {
-        cout << format("m > maxm; m = %d, maxm = %d")
-                % m 
-                % maxm 
-             << endl;
+        printfln("m > maxm; m = %d, maxm = %d",m,maxm);
         Error("m > maxm");
         }
     if(m > 20000)
