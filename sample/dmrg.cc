@@ -3,7 +3,6 @@
 #include "model/spinone.h"
 #include "hams/Heisenberg.h"
 
-using boost::format;
 using namespace std;
 using namespace itensor;
 
@@ -48,7 +47,7 @@ main(int argc, char* argv[])
     // psiHphi calculates matrix elements of MPO's with respect to MPS's
     // psiHphi(psi,H,psi) = <psi|H|psi>
     //
-    cout << format("Initial energy = %.5f") % psiHphi(psi,H,psi) << endl;
+    printfln("Initial energy = %.5f", psiHphi(psi,H,psi) );
 
     //
     // Set the parameters controlling the accuracy of the DMRG
@@ -72,7 +71,7 @@ main(int argc, char* argv[])
     //
     // Print the final energy reported by DMRG
     //
-    cout << format("\nGround State Energy = %.10f")%En << endl;
+    printfln("\nGround State Energy = %.10f",En);
 
     return 0;
     }

@@ -1,7 +1,7 @@
 #include "core.h"
 #include "model/spinhalf.h"
 #include "hams/J1J2Chain.h"
-using boost::format;
+
 using namespace std;
 using namespace itensor;
 
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     // psiHphi calculates matrix elements of MPO's with respect to MPS's
     // psiHphi(psi,H,psi) = <psi|H|psi>
     //
-    cout << format("Initial energy = %.5f\n")%psiHphi(psi,H,psi);
+    printfln("Initial energy = %.5f",psiHphi(psi,H,psi));
 
     //
     // Set the parameters controlling the accuracy of the DMRG
@@ -60,10 +60,10 @@ int main(int argc, char* argv[])
     //
     // Print the final energy reported by DMRG
     //
-    cout << format("\nGround State Energy = %.10f\n")%En;
-    cout << format("\nUsing psiHphi = %.10f\n") % psiHphi(psi,H,psi);
+    printfln("\nGround State Energy = %.10f",En);
+    printfln("\nUsing psiHphi = %.10f\n", psiHphi(psi,H,psi) );
 
-    cout << "\nTotal QN of Ground State = " << totalQN(psi) << "\n";
+    println("\nTotal QN of Ground State = ",totalQN(psi));
 
     //
     // Measure S.S on every bond
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
         IQTensor bra = conj(psi.A(b)*psi.A(b+1));
         bra.prime(Site);
         Real SdS = Dot(bra,ketzz) + Dot(bra,ketpm) + Dot(bra,ketmp);
-        cout << format("S.S b %d = %.10f") % b % SdS << endl;
+        printfln("S.S b %d = %.10f",b,SdS);
         }
 
     return 0;

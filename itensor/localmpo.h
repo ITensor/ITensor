@@ -7,10 +7,6 @@
 #include "mpo.h"
 #include "localop.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 //
@@ -240,7 +236,7 @@ class LocalMPO
     std::string
     PHFName(int j) const
         {
-        return (boost::format("%s/PH_%03d")%writedir_%j).str();
+        return format("%s/PH_%03d",writedir_,j);
         }
 
     };
@@ -537,7 +533,6 @@ setLHlim(int val)
 
     if(LHlim_ != val && !PH_.at(LHlim_).isNull())
         {
-        //std::cerr << boost::format("Writing PH(%d) to %s\n")%LHlim_%writedir_;
         writeToFile(PHFName(LHlim_),PH_.at(LHlim_));
         PH_.at(LHlim_) = Tensor();
         }
@@ -559,7 +554,7 @@ setLHlim(int val)
             }
         else
             {
-            std::cerr << boost::format("Tried to read file %s\n")%fname;
+            println("Tried to read file ",fname);
             Error("Missing file");
             }
         }
@@ -577,7 +572,6 @@ setRHlim(int val)
 
     if(RHlim_ != val && !PH_.at(RHlim_).isNull())
         {
-        //std::cerr << boost::format("Writing PH(%d) to %s\n")%RHlim_%writedir_;
         writeToFile(PHFName(RHlim_),PH_.at(RHlim_));
         PH_.at(RHlim_) = Tensor();
         }
@@ -599,7 +593,7 @@ setRHlim(int val)
             }
         else
             {
-            std::cerr << boost::format("Tried to read file %s\n")%fname;
+            println("Tried to read file ",fname);
             Error("Missing file");
             }
         }
@@ -611,13 +605,9 @@ initWrite()
     {
     std::string global_write_dir = Global::opts().getString("WriteDir","./");
     writedir_ = mkTempDir("PH",global_write_dir);
-    //std::cout << "Successfully created directory " + writedir_ << std::endl;
     }
 
 }; //namespace itensor
 
-#undef Cout
-#undef Format
-#undef Endl
 
 #endif

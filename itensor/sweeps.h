@@ -365,8 +365,8 @@ operator<<(std::ostream& s, const Sweeps& swps)
     s << "Sweeps:\n";
     for(int sw = 1; sw <= swps.nsweep(); ++sw)
         {
-        s << boost::format("%d  Maxm=%d, Minm=%d, Cutoff=%.1E, Niter=%d, Noise=%.1E\n")
-             % sw % swps.maxm(sw) % swps.minm(sw) % swps.cutoff(sw) %swps.niter(sw) % swps.noise(sw);
+        s << format("%d  Maxm=%d, Minm=%d, Cutoff=%.1E, Niter=%d, Noise=%.1E\n",
+              sw,swps.maxm(sw),swps.minm(sw),swps.cutoff(sw),swps.niter(sw),swps.noise(sw));
         }
     return s;
     }

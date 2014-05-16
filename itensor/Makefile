@@ -20,7 +20,7 @@ SOURCES+= mps.cc
 SOURCES+= mpo.cc 
 SOURCES+= tevol.cc
 
-HEADERS=option.h global.h allocator.h real.h permutation.h index.h prodstats.h \
+HEADERS=tinyformat.h print.h option.h global.h allocator.h real.h permutation.h index.h prodstats.h \
         indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \

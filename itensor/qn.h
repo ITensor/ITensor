@@ -184,15 +184,12 @@ read(std::istream& s)
 
 std::string inline QN::
 toString() const
-    { return (boost::format("(%+d:%d)")%sz_%Nf_).str(); }
+    { return format("(%+d:%d)",sz_,Nf_); }
 
 inline std::ostream& 
 operator<<(std::ostream &o, const QN &q)
     { 
-    return o << boost::format("(sz=%d, Nf=%d, p=%d)") 
-                % q.sz() 
-                % q.Nf()
-                % q.Nfp();
+    return o << format("(sz=%d, Nf=%d, p=%d)",q.sz(),q.Nf(),q.Nfp());
     }
 
 bool inline

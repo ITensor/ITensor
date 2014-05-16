@@ -9,10 +9,6 @@
 #include "boost/function.hpp"
 #include "bondgate.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 template <class Tensor>
@@ -381,8 +377,8 @@ class InitState
         {
         if(i > sites_->N() || i < 1) 
             {
-            Cout << "i = " << i << Endl;
-            Cout << "Valid range is 1 to " << sites_->N() << Endl;
+            println("i = ",i);
+            println("Valid range is 1 to ",sites_->N());
             Error("i out of range");
             }
         }
@@ -404,14 +400,12 @@ svdBond(int b, const Tensor& AA, Direction dir,
 
     if(dir == Fromleft && b-1 > l_orth_lim_)
         {
-        Cout << Format("b=%d, l_orth_lim_=%d")
-                %b%l_orth_lim_ << Endl;
+        printfln("b=%d, l_orth_lim_=%d",b,l_orth_lim_);
         Error("b-1 > l_orth_lim_");
         }
     if(dir == Fromright && b+2 < r_orth_lim_)
         {
-        Cout << Format("b=%d, r_orth_lim_=%d")
-                %b%r_orth_lim_ << Endl;
+        printfln("b=%d, r_orth_lim_=%d",b,r_orth_lim_);
         Error("b+2 < r_orth_lim_");
         }
 
@@ -423,13 +417,6 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
         Tensor D;
-        /*
-        if(Global::debug1())
-            {
-            Cout << "Calling svdBond SVD" << Endl;
-            Cout << "with spectrum:\n" << spectrum_.at(b) << Endl;
-            }
-            */
         spectrum_.at(b) = svd(AA,A_[b],D,A_[b+1],opts);
 
         //Normalize the ortho center if requested
@@ -449,7 +436,6 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //If we don't need extreme accuracy
         //or need to use noise term
         //use density matrix approach
-        //Cout << "Calling svdBond denmatDecomp" << Endl;
         spectrum_.at(b) = 
         denmatDecomp(AA,A_[b],A_[b+1],dir,PH,opts);
 
@@ -504,12 +490,12 @@ projectOp(const MPSt<Tensor>& psi, int j, Direction dir,
     {
     if(dir==Fromleft && j > psi.leftLim()) 
         { 
-        Cout << Format("projectOp: from left j > l_orth_lim_ (j=%d,leftLim=%d)")%j%psi.leftLim() << Endl;
+        printfln("projectOp: from left j > l_orth_lim_ (j=%d,leftLim=%d)",j,psi.leftLim());
         Error("Projecting operator at j > l_orth_lim_"); 
         }
     if(dir==Fromright && j < psi.rightLim()) 
         { 
-        Cout << Format("projectOp: from left j < r_orth_lim_ (j=%d,r_orth_lim_=%d)")%j%psi.rightLim() << Endl;
+        printfln("projectOp: from left j < r_orth_lim_ (j=%d,r_orth_lim_=%d)",j,psi.rightLim());
         Error("Projecting operator at j < r_orth_lim_"); 
         }
     nE = (E.isNull() ? psi.A(j) : E * psi.A(j));
@@ -603,25 +589,16 @@ checkOrtho(const MPSt<Tensor>& psi,
 
     const
     Real threshold = 1E-13;
-    //cout << format("i = %d, Diff.norm() = %.4E")
-    //        % i
-    //        % Diff.norm()
-    //        << Endl;
     if(Diff.norm() < threshold) 
         {
         return true;
         }
 
     //Print any helpful debugging info here:
-    Cout << "checkOrtho: on line " << __LINE__ 
-         << " of mps.h," << Endl;
-    Cout << "checkOrtho: Tensor at position " << i 
-         << " failed to be " << (left ? "left" : "right") 
-         << " ortho." << Endl;
-    Cout << "checkOrtho: Diff.norm() = " << Format("%E") 
-         % Diff.norm() << Endl;
-    Cout << "checkOrtho: Error threshold set to " 
-              << Format("%E") % threshold << Endl;
+    println("checkOrtho: on line ",__LINE__," of mps.h,");
+    println("checkOrtho: Tensor at position ",i," failed to be ",left?"left":"right"," ortho.");
+    printfln("checkOrtho: Diff.norm() = %E",Diff.norm());
+    printfln("checkOrtho: Error threshold set to %E",threshold);
     //-----------------------------
 
     return false;
@@ -719,7 +696,7 @@ psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
     Real re, im;
     psiphi(psi,phi,re,im);
     if(fabs(im) > (1E-12 * fabs(re)) )
-        Cout << Format("Real psiphi: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.") % im << Endl;
+        printfln("Real psiphi: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
     return re;
     }
 
@@ -799,8 +776,5 @@ operator<<(std::ostream& s, const InitState& state);
 
 }; //namespace itensor
 
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

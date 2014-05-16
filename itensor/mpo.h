@@ -6,9 +6,6 @@
 #define __ITENSOR_MPO_H
 #include "mps.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
 
 namespace itensor {
 
@@ -260,7 +257,7 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|ph
     Real re, im;
     psiHphi(psi,H,phi,re,im);
     if(fabs(im) > 1.0e-12 * fabs(re))
-        Cout << Format("\nReal psiHphi: WARNING, dropping non-zero (=%.5E) imaginary part of expectation value.")%im << Endl;
+        printfln("\nReal psiHphi: WARNING, dropping non-zero (=%.5E) imaginary part of expectation value.",im);
     return re;
     }
 template <class MPSType, class MPOType>
@@ -308,7 +305,7 @@ psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Tensor& LB, const 
     {
     Real re,im; psiHphi(psi,H,LB,RB,phi,re,im);
     if(fabs(im) > 1.0e-12 * fabs(re))
-        Cout << Format("Real psiHphi: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.") % im << Endl;
+        printfln("Real psiHphi: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
     return re;
     }
 
@@ -497,8 +494,5 @@ putMPOLinks(IQMPO& W, const OptSet& opts = Global::opts());
 
 }; //namespace itensor
 
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

@@ -9,13 +9,11 @@
 #include <cstdlib>
 #include <fstream>
 #include <complex>
-#include "print.h"
 #include "error.h" //utilities
 #include "option.h"
 #include "assert.h"
 
 #include "boost/array.hpp"
-#include "boost/format.hpp"
 #include "boost/random/mersenne_twister.hpp"
 #include "boost/random/uniform_real_distribution.hpp"
 
@@ -89,11 +87,6 @@ fileExists(const std::string& fname)
     std::ifstream file(fname.c_str());
     return file.good();
     }
-bool inline
-fileExists(const boost::format& fname)
-    {
-    return fileExists(fname.str());
-    }
 
 
 template<class T> 
@@ -107,13 +100,6 @@ readFromFile(const std::string& fname, T& t)
     s.close(); 
     }
 
-template<class T> 
-void inline
-readFromFile(const boost::format& fname, T& t) 
-    { 
-    readFromFile(fname.str(),t);
-    }
-
 
 template<class T> 
 void inline
@@ -124,13 +110,6 @@ writeToFile(const std::string& fname, const T& t)
         Error("Couldn't open file \"" + fname + "\" for writing");
     t.write(s); 
     s.close(); 
-    }
-
-template<class T> 
-void inline
-writeToFile(const boost::format& fname, const T& t) 
-    { 
-    writeToFile(fname.str(),t); 
     }
 
 //Given a prefix (e.g. pfix == "mydir")
@@ -357,7 +336,7 @@ class Global
         static int depcount = 1;
         if(depcount <= 10)
             {
-            std::cout << "\n\n" << message << "\n" << std::endl;
+            println("\n\n",message,"\n");
             ++depcount;
             }
         }

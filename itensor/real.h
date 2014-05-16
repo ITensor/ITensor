@@ -8,10 +8,7 @@
 #include <limits>
 #include "math.h"
 #include <cmath>
-
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
+#include "print.h"
 
 #ifndef NAN
 #define NAN (std::numeric_limits<Real>::quiet_NaN())
@@ -187,12 +184,12 @@ class LogNumber
 #ifdef DEBUG
         if(lognum_ > maxlogdouble)
             { 
-            Cout << "lognum_ = " << lognum_ << Endl;
+            println("lognum_ = ",lognum_);
             throw TooBigForReal("LogNumber too big to convert to Real");
             }
         if(lognum_ < -maxlogdouble)
             { 
-            Cout << "lognum_ = " << lognum_ << Endl;
+            println("lognum_ = ",lognum_);
             throw TooSmallForReal("LogNumber too small to convert to Real");
             }
 #endif
@@ -374,9 +371,5 @@ sqrt(LogNumber L)
     }
 
 }; //namespace itensor
-
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

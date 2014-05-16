@@ -1,7 +1,7 @@
 #include "core.h"
 #include "model/spinhalf.h"
 #include "hams/ExtendedHubbard.h"
-using boost::format;
+
 using namespace std;
 using namespace itensor;
 
@@ -103,23 +103,23 @@ int main(int argc, char* argv[])
 
     cout << "Up Density:" << endl;
     for(int j = 1; j <= N; ++j)
-        cout << format("%d %.10f\n") % j % upd(j);
+        printfln("%d %.10f",j,upd(j));
     cout << endl;
 
     cout << "Dn Density:" << endl;
     for(int j = 1; j <= N; ++j)
-        cout << format("%d %.10f\n") % j % dnd(j);
+        printfln("%d %.10f",j,dnd(j));
     cout << endl;
 
     cout << "Total Density:" << endl;
     for(int j = 1; j <= N; ++j)
-        cout << format("%d %.10f\n") % j % (upd(j)+dnd(j));
+        printfln("%d %.10f\n",j,(upd(j)+dnd(j)));
     cout << endl;
 
     //
     // Print the final energy reported by DMRG
     //
-    cout << format("\nGround State Energy = %.10f\n")%En;
+    printfln("\nGround State Energy = %.10f",En);
 
     return 0;
     }

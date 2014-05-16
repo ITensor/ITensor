@@ -13,10 +13,6 @@
 #include "allocator.h"
 #endif
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 //Forward declarations
@@ -1049,9 +1045,5 @@ deprimed(Tensor A, const IndexT& I)
     { A.noprime(I); return A; }
 
 }; //namespace itensor
-
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

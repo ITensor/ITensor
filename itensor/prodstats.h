@@ -48,7 +48,6 @@
 #include <map>
 #include <iostream>
 #include "error.h"
-#include "boost/format.hpp"
 
 #define NTIMERS 100
 
@@ -109,7 +108,7 @@ class Timers
                 const double count = tcount.at(j);
                 if(count > 0) 
                     {
-                    std::cout << boost::format("Section %d, Average Time = %.6f\n") % j % (time.at(j)/count);
+                    printfln("Section %d, Average Time = %.6f\n",j,(time.at(j)/count));
                     }
                 }
 
@@ -117,7 +116,7 @@ class Timers
                 {
                 if(tcount.at(j) > 0) 
                     {
-                    std::cout << boost::format("Section %d, Total Time = %.6f\n") % j % time.at(j);
+                    printfln("Section %d, Total Time = %.6f\n",j,time.at(j));
                     }
                 }
             std::cout << std::endl;

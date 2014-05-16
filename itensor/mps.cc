@@ -278,9 +278,9 @@ string MPSt<Tensor>::
 AFName(int j, const string& dirname) const
     { 
     if(dirname == "")
-        return (format("%s/A_%03d")%writedir_%j).str();
+        return format("%s/A_%03d",writedir_,j);
     else
-        return (format("%s/A_%03d")%dirname%j).str();
+        return format("%s/A_%03d",dirname,j);
     }
 template
 string MPSt<ITensor>::AFName(int j, const string&) const;
@@ -308,13 +308,11 @@ setBond(int b) const
         {
         if(!A_.at(atb_).isNull())
             {
-            //cout << format("Writing A(%d) to %s\n")%atb_%writedir_;
             writeToFile(AFName(atb_),A_.at(atb_));
             A_.at(atb_) = Tensor();
             }
         if(!A_.at(atb_+1).isNull())
             {
-            //cout << format("Writing A(%d) to %s\n")%(atb_+1)%writedir_;
             writeToFile(AFName(atb_+1),A_.at(atb_+1));
             if(atb_+1 != b) A_.at(atb_+1) = Tensor();
             }
@@ -324,13 +322,11 @@ setBond(int b) const
         {
         if(!A_.at(atb_).isNull())
             {
-            //cerr << format("Writing A(%d) to %s\n")%atb_%writedir_;
             writeToFile(AFName(atb_),A_.at(atb_));
             if(atb_ != b+1) A_.at(atb_) = Tensor();
             }
         if(!A_.at(atb_+1).isNull())
             {
-            //cerr << format("Writing A(%d) to %s\n")%(atb_+1)%writedir_;
             writeToFile(AFName(atb_+1),A_.at(atb_+1));
             A_.at(atb_+1) = Tensor();
             }
@@ -1297,7 +1293,6 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
         int s = periodicWrap(S,N);
         int sprev = periodicWrap(S-1,N);
         int snext = periodicWrap(S+1,N);
-        //cout << format("S = %d, s = %d, sprev = %d, snext = %d\n")%S%s%sprev%snext;
 
         qD.clear(); 
         qt.clear();
@@ -1338,9 +1333,9 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
 
             if(s == show_s)
                 {
-                cout << format("For n = %d\n")%n;
-                cout << format("Got a block with norm %.10f\n")%block.norm();
-                cout << format("bond.m() = %d\n")%bond.m();
+                println("For n = ",n);
+                printfln("Got a block with norm %.10f",block.norm());
+                println("bond.m() = ",bond.m());
                 PrintData(block);
                 if(s != 1) PrintData(comp);
                 }
@@ -1366,7 +1361,6 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                         const Index& new_ind = (*ci==prev_bond ? *(ci+1) : *ci);
                         summed_block = ITensor(new_ind,1) * block;
                         }
-                    //cout << format("s = %d, bond=")%s << bond << "\n";
                     //summed_block.print("summed_block");
 
                     Real rel_cut = -1;
@@ -1429,18 +1423,17 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
                     int mm = collapseCols(qD[q],M);
                     if(s==show_s)
                         {
-                        cout << format("Adding block, mm = %d\n")%mm;
+                        println("Adding block, mm = ",mm);
                         Print(q);
                         cout << "qD[q] = " << qD[q] << "\n";
                         cout << "M = \n" << M << "\n";
                         int count = 0;
                         Foreach(const ITensor& t, blks) 
                             {
-                            cout << format("t%02d") % (++count) << t << endl;
+                            printfln("t%02d",++count," ",t);
                             }
                         }
-                    //string qname = (format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
-                    string qname = (format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
+                    string qname = format("ql%d(%+d:%d)",s,q.sz(),q.Nf());
                     Index qbond(qname,mm);
                     ITensor compressor(bond,qbond,M);
                     Foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
@@ -1482,7 +1475,7 @@ convertToIQ(const Model& model, const vector<ITensor>& A,
 
         if(s==show_s)
             {
-            cout << format("qA[%d]")%s << qA[s] << endl;
+            printfln("qA[%d]",s,qA[s]);
             Error("Stopping");
             }
 
@@ -1753,7 +1746,7 @@ checkQNs(const IQMPS& psi)
         if(i == center) continue;
         if(psi.A(i).isNull())
             {
-            cout << format("A(%d) null, QNs not well defined\n")%i;
+            println("A(",i,") null, QNs not well defined");
             return false;
             }
         if(div(psi.A(i)) != Zero)
@@ -1770,14 +1763,14 @@ checkQNs(const IQMPS& psi)
         {
         if(rightLinkInd(psi,i).dir() != In) 
             {
-            cout << format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            println("checkQNs: At site ",i," to the left of the OC, Right side Link not pointing In");
             return false;
             }
         if(i > 1)
             {
             if(leftLinkInd(psi,i).dir() != Out) 
                 {
-                cout << format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                println("checkQNs: At site ",i," to the left of the OC, Left side Link not pointing Out");
                 return false;
                 }
             }
@@ -1789,12 +1782,12 @@ checkQNs(const IQMPS& psi)
         if(i < N)
         if(rightLinkInd(psi,i).dir() != Out) 
             {
-            cout << format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            println("checkQNs: At site ",i," to the right of the OC, Right side Link not pointing Out");
             return false;
             }
         if(leftLinkInd(psi,i).dir() != In) 
             {
-            cout << format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            println("checkQNs: At site ",i," to the right of the OC, Left side Link not pointing In");
             return false;
             }
         }

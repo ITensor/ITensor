@@ -6,10 +6,6 @@
 #define __ITENSOR_DMRGOBSERVER_H
 #include "observer.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 //
@@ -97,9 +93,9 @@ measure(const OptSet& opts)
                 Complex z = 
                     BraKet(primed(wfb,psi_.model()(b)),psi_.model().op(opname,b)*wfb);
                 if(fabs(z.imag()) < 1E-14)
-                    Cout << Format("<%s>(%d) = %.10E") % opname % b % z.real() << Endl;
+                    printfln("<%s>(%d) = %.10E",opname,b,z.real());
                 else
-                    Cout << Format("<%s>(%d) = (%.10E,%.10E)") % opname % b % z.real() % z.imag() << Endl;
+                    printfln("<%s>(%d) = (%.10E,%.10E)",opname,b,z.real(),z.imag());
                 }
             }
         }
@@ -108,22 +104,22 @@ measure(const OptSet& opts)
         {
         if(b == N/2 && ha == 2)
             {
-            Cout << Endl;
+            println();
             Vector center_eigs = psi_.eigsKept(b);
             Real S = 0;
             for(int j = 1; j <= center_eigs.Length(); ++j) 
                 {
                 S -= center_eigs(j)*log(fabs(center_eigs(j)));
                 }
-            Cout << Format("    vN Entropy at center bond b=%d = %.12f") % (N/2) % S << Endl;
-            Cout << Format("    Eigs at center bond b=%d: ") % (N/2);
+            printfln("    vN Entropy at center bond b=%d = %.12f",N/2,S);
+            printf("    Eigs at center bond b=%d: ",N/2);
             for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
                 {
                 const Real eig = center_eigs(j);
                 if(eig < 1E-3) break;
-                Cout << Format("%.4f ") % eig;
+                printf("%.4f ",eig);
                 }
-            Cout << Endl;
+            println();
             }
         }
 
@@ -131,12 +127,12 @@ measure(const OptSet& opts)
     max_te = max(max_te,psi_.spectrum(b).truncerr());
     if(b == 1 && ha == 2) 
         {
-        if(!printeigs) Cout << Endl;
-        Cout << "    Largest m during sweep " << sw << " was " << (max_eigs > 1 ? max_eigs : 1)  << "\n";
+        if(!printeigs) println();
+        println("    Largest m during sweep ",sw," was ",(max_eigs > 1 ? max_eigs : 1));
         max_eigs = -1;
-        Cout << "    Largest truncation error: " << (max_te > 0 ? max_te : 0.) << Endl;
+        println("    Largest truncation error: ",(max_te > 0 ? max_te : 0.));
         max_te = -1;
-        Cout << Format("    Energy after sweep %d is %.12f") % sw % energy << Endl;
+        printfln("    Energy after sweep %d is %.12f",sw,energy);
         }
 
     }
@@ -155,11 +151,8 @@ checkDone(const OptSet& opts)
         Real dE = fabs(energy-last_energy_);
         if(dE < energy_errgoal)
             {
-            Cout << Format("    Energy error goal met (dE = %.3E < %.3E); returning after %d sweeps.") 
-                    % dE
-                    % energy_errgoal
-                    % sw
-                 << Endl;
+            printfln("    Energy error goal met (dE = %.3E < %.3E); returning after %d sweeps.",
+                      dE, energy_errgoal, sw);
             last_energy_ = 1000;
             return true;
             }
@@ -170,7 +163,7 @@ checkDone(const OptSet& opts)
     //outer calling using same Observer may continue running e.g. infinite dmrg calling finite dmrg.
     if(fileExists("STOP_DMRG"))
         {
-        Cout << "File STOP_DMRG found: stopping this DMRG run after sweep " << sw << Endl;
+        println("File STOP_DMRG found: stopping this DMRG run after sweep ",sw);
         system("rm -f STOP_DMRG");
         return true;
         }
@@ -178,7 +171,7 @@ checkDone(const OptSet& opts)
     //Set done_ flag to true so any outer callers using this Observer will also terminate.
     if(fileExists("STOP_DMRG_ALL"))
         {
-        Cout << "File STOP_DMRG_ALL found: stopping this run after sweep " << sw << Endl;
+        println("File STOP_DMRG_ALL found: stopping this run after sweep ",sw);
         system("rm -f STOP_DMRG_ALL");
         done_ = true;
         return done_;
@@ -188,9 +181,5 @@ checkDone(const OptSet& opts)
     }
 
 }; //namespace itensor
-
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif // __ITENSOR_DMRGOBSERVER_H

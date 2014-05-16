@@ -16,7 +16,6 @@ using std::find;
 using std::pair;
 using std::make_pair;
 using std::string;
-using boost::format;
 
 template <class Tensor>
 MPOt<Tensor>::
@@ -248,7 +247,6 @@ checkQNs(const IQMPO& H)
     const QN Zero;
 
     int center = findCenter(H);
-    //std::cerr << boost::format("Found the OC at %d\n") % center;
     if(center == -1)
         {
         Error("Did not find an ortho. center");
@@ -260,7 +258,7 @@ checkQNs(const IQMPO& H)
         {
         if(H.A(i).isNull())
             {
-            std::cout << boost::format("A(%d) null, QNs not well defined\n")%i;
+            println("A(",i,") null, QNs not well defined");
             Error("QNs not well defined");
             }
         if(div(H.A(i)) != Zero)
@@ -276,14 +274,14 @@ checkQNs(const IQMPO& H)
         {
         if(rightLinkInd(H,i).dir() != In) 
             {
-            std::cout << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            println("checkQNs: At site ",i," to the left of the OC, Right side Link not pointing In");
             Error("Incorrect Arrow in IQMPO");
             }
         if(i > 1)
             {
             if(leftLinkInd(H,i).dir() != Out) 
                 {
-                std::cout << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                println("checkQNs: At site ",i," to the left of the OC, Left side Link not pointing Out");
                 Error("Incorrect Arrow in IQMPO");
                 }
             }
@@ -295,12 +293,12 @@ checkQNs(const IQMPO& H)
         if(i < N)
         if(rightLinkInd(H,i).dir() != Out) 
             {
-            std::cout << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            println("checkQNs: At site ",i," to the right of the OC, Right side Link not pointing Out");
             Error("Incorrect Arrow in IQMPO");
             }
         if(leftLinkInd(H,i).dir() != In) 
             {
-            std::cout << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            println("checkQNs: At site ",i," to the right of the OC, Left side Link not pointing In");
             Error("Incorrect Arrow in IQMPO");
             }
         }
@@ -573,8 +571,7 @@ fitApplyMPO(Real fac,
             {
             if(verbose)
                 {
-                cout << format("Sweep=%d, HS=%d, Bond=(%d,%d)") 
-                        % sw % ha % b % (b+1) << endl;
+                println("Sweep=",sw,", HS=",ha,", Bond=(",b,",",b+1,")");
                 }
 
             Tensor lwfK = (BK.at(b-1).isNull() ? origPsi.A(b) : BK.at(b-1)*origPsi.A(b));
@@ -591,10 +588,9 @@ fitApplyMPO(Real fac,
 
             if(verbose)
                 {
-                cout << format("    Trunc. err=%.1E, States kept=%s")
-                        % res.spectrum(b).truncerr() 
-                        % showm(linkInd(res,b)) 
-                        << endl;
+                printfln("    Trunc. err=%.1E, States kept=%s",
+                         res.spectrum(b).truncerr(),
+                         showm(linkInd(res,b)) );
                 }
 
             if(ha == 1)
@@ -844,7 +840,6 @@ applyExpH(const MPSt<Tensor>& psi,
 
     for(int ord = order, n = 0; ord >= 1; --ord, ++n)
         {
-        //cout << format("Computing psi-tau/%d*H*psi%d (up == %s)") % ord % n % (up?"true":"false") << endl;
         const Real mpofac = -tau/(1.*ord);
 
         if(n > 0) lastB.swap(B);
@@ -932,8 +927,7 @@ putMPOLinks(MPO& W, const OptSet& opts)
     vector<Index> links(W.N());
     for(int b = 1; b < W.N(); ++b)
         {
-        format nm = format("%s%d") % pfix % b;
-        links.at(b) = Index(nm.str());
+        links.at(b) = Index(format("%s%d",pfix,b));
         }
     W.Anc(1) *= links.at(1)(1);
     for(int b = 2; b < W.N(); ++b)
@@ -954,11 +948,10 @@ putMPOLinks(IQMPO& W, const OptSet& opts)
     vector<IQIndex> links(N);
     for(int b = 1; b < N; ++b)
         {
-        format nm = format("%s%d") % pfix % b;
+        string nm = format("%s%d",pfix,b);
                
         q += div(W.A(b),Opt("Fast"));
-        links.at(b) = IQIndex(nm.str(),
-                             Index(nm.str()),q);
+        links.at(b) = IQIndex(nm,Index(nm),q);
         }
 
     W.Anc(1) *= links.at(1)(1);

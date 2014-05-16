@@ -8,10 +8,6 @@
 #include "permutation.h"
 #include "boost/make_shared.hpp"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 
@@ -357,7 +353,6 @@ noprime(IndexType type)
                 if(k != j && index_[j].noprimeEquals(index_[k]))
                     {
                     //Print(*this);
-                    //Cout << "Calling noprime would lead to duplicate indices" << Endl;
                     throw ITError("Calling noprime would lead to duplicate indices");
                     }
                 }
@@ -520,7 +515,6 @@ operator*(const IndexSet& other) const
                 break;
                 }
             }
-        //Cout << (found ? "found" : "did not find") << "J = " << J << Endl;
         if(!found) 
             res.addindex(J);
         }
@@ -830,22 +824,22 @@ getperm(const IndexSet<IndexT>& iset,
             }
 	    if(!got_one)
             {
-            Cout << "\nj = " << j << "\n";
-            Cout << "iset = \n";
+            println("j = ",j);
+            println("iset =");
             for(int j = 0; j < iset.r(); ++j)
-                Cout << j << " " << iset[j] << Format(" | %.10E\n") % iset[j].uniqueReal();
-            Cout << "\noset = \n";
+                printfln("%d %s | %.10E",j,iset[j],iset[j].uniqueReal());
+            println("\noset = ");
             for(int j = 0; j < iset.r(); ++j)
-                Cout << j << " " << oset[j] << Format(" | %.10E\n") % oset[j].uniqueReal();
-            Cout << Endl;
-            Cout << Format("iset uniqueReal = %.15E") % iset.uniqueReal() << Endl;
+                printfln("%d %s | %.10E",j,oset[j],oset[j].uniqueReal());
+            println();
+            printfln("iset uniqueReal = %.15E",iset.uniqueReal());
             Real our = 0;
             for(int i = 0; i < iset.r(); ++i)
                 {
                 our += oset[i].uniqueReal();
                 }
-            Cout << Format("oset uniqueReal = %.15E") % our << Endl;
-            Cout << Format("uniqueReal diff = %.15E") % fabs(our-iset.uniqueReal()) << Endl;
+            printfln("oset uniqueReal = %.15E",our);
+            printfln("uniqueReal diff = %.15E",fabs(our-iset.uniqueReal()));
             throw ITError("IndexSet::getperm: no matching index");
             }
 	    }
@@ -918,10 +912,5 @@ operator<<(std::ostream& s, const IndexSet<Index>& is)
     }
 
 }; //namespace itensor
-
-
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

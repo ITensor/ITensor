@@ -3,7 +3,7 @@
 #include "model/spinone.h"
 #include "hams/Heisenberg.h"
 #include "input.h"
-using boost::format;
+
 using namespace std;
 using namespace itensor;
 
@@ -66,11 +66,11 @@ int main(int argc, char* argv[])
 
     MPS psi(initState);
 
-    cout << format("Initial energy = %.5f")%psiHphi(psi,H,psi) << endl;
+    printfln("Initial energy = %.5f",psiHphi(psi,H,psi));
 
     Real En = dmrg(psi,H,sweeps,Opt("Quiet",quiet));
 
-    cout << format("\nGround State Energy = %.10f")%En << endl;
+    printfln("\nGround State Energy = %.10f",En);
 
     return 0;
     }

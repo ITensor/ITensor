@@ -11,9 +11,6 @@
 #include "sweeps.h"
 #include "DMRGObserver.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
 
 namespace itensor {
 
@@ -223,8 +220,7 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             if(!quiet)
                 {
-                Cout << "\nTurning on write to disk, write_dir = " 
-                     << write_dir << Endl;
+                println("\nTurning on write to disk, write_dir = ",write_dir);
                 }
 
             psi.doWrite(true);
@@ -235,8 +231,7 @@ DMRGWorker(MPSt<Tensor>& psi,
             {
             if(!quiet)
                 {
-                Cout << Format("Sweep=%d, HS=%d, Bond=(%d,%d)") 
-                        % sw % ha % b % (b+1) << Endl;
+                printfln("Sweep=%d, HS=%d, Bond=(%d,%d)",sw,ha,b,(b+1));
                 }
 
             PH.position(b,psi);
@@ -249,16 +244,13 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             if(!quiet)
                 { 
-                Cout << 
-                    Format("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d") 
-                        % sweeps.cutoff(sw) 
-                        % sweeps.minm(sw) 
-                        % sweeps.maxm(sw) 
-                        << Endl;
-                Cout << Format("    Trunc. err=%.1E, States kept=%s")
-                        % psi.spectrum(b).truncerr() 
-                        % showm(linkInd(psi,b)) 
-                        << Endl;
+                printfln("    Truncated to Cutoff=%.1E, Min_m=%d, Max_m=%d",
+                          sweeps.cutoff(sw),
+                          sweeps.minm(sw), 
+                          sweeps.maxm(sw) );
+                printfln("    Trunc. err=%.1E, States kept=%s",
+                         psi.spectrum(b).truncerr(),
+                         showm(linkInd(psi,b)) );
                 }
 
             opts.add("AtBond",b);
@@ -280,8 +272,5 @@ DMRGWorker(MPSt<Tensor>& psi,
 
 }; //namespace itensor
 
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

@@ -198,7 +198,7 @@ operator<<(std::ostream& s, const Model& M)
     {
     s << "Model:\n";
     for(int j = 1; j <= M.N(); ++j) 
-        s << boost::format("si(%d) = ")%j << M.si(j) << "\n";
+        s << format("si(%d) = ",j,M.si(j),"\n");
     return s;
     }
 
