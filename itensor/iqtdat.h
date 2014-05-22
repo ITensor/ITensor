@@ -14,7 +14,7 @@ namespace itensor {
 //
 
 template <class Tensor>
-class IQTDat : public boost::noncopyable
+class IQTDat
     {
     public:
 
@@ -91,7 +91,7 @@ class IQTDat : public boost::noncopyable
     void 
     write(std::ostream& s) const;
 
-    static const boost::shared_ptr<IQTDat>& 
+    static const shared_ptr<IQTDat>& 
     Null();
 
     //void* operator 
@@ -135,7 +135,7 @@ class IQTDat : public boost::noncopyable
         }
 
     //Not copyable with =
-    void operator=(const IQTDat&);
+    IQTDat& operator=(const IQTDat&);
 
     //static DatAllocator<IQTDat>& allocator()
     //    {
@@ -242,10 +242,10 @@ write(std::ostream& s) const
     }
 
 template<class Tensor>
-const boost::shared_ptr<IQTDat<Tensor> >& IQTDat<Tensor>::
+const shared_ptr<IQTDat<Tensor> >& IQTDat<Tensor>::
 Null()
     {
-    static boost::shared_ptr<IQTDat> Null_ = boost::make_shared<IQTDat>();
+    static shared_ptr<IQTDat> Null_ = make_shared<IQTDat>();
     return Null_;
     }
 

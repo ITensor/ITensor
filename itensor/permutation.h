@@ -15,7 +15,7 @@ namespace itensor {
 class Permutation
     {
     public:
-    typedef boost::array<int,NMAX+1> 
+    typedef array<int,NMAX+1> 
     int9;
     
     Permutation();

@@ -6,6 +6,7 @@
 #define __COMBINER_H
 
 #include "itensor.h"
+#include "iterpair.h"
 
 namespace itensor {
 
@@ -28,7 +29,7 @@ class Combiner
     {
     public:
 
-    typedef boost::array<Index,NMAX+1>::const_iterator 
+    typedef array<Index,NMAX+1>::const_iterator 
     left_it;
 
     //Accessor Methods ----------------------------------------------
@@ -43,10 +44,10 @@ class Combiner
     const Index& 
     left(int j) const { return GET(left_,j); }
 
-    const std::pair<left_it,left_it> 
+    const IterPair<left_it>
     left() const 
         { 
-        return std::make_pair(left_.begin()+1,left_.begin()+rl_+1); 
+        return IterPair<left_it>(left_.begin()+1,left_.begin()+rl_+1); 
         }
 
     //Constructors --------------------------------------------------
@@ -125,7 +126,7 @@ class Combiner
 
     /////////
 
-    boost::array<Index,NMAX+1> left_; // max dim is 8
+    array<Index,NMAX+1> left_; // max dim is 8
     mutable Index right_;
     int rl_; //Number of m>1 'left' indices (indices to be combined into one)
     mutable bool initted;
@@ -162,7 +163,7 @@ Combiner(const Index& l1, const Index& l2,
     rl_(0), 
     initted(false)
 	{
-    boost::array<const Index*,NMAX+1> ll 
+    array<const Index*,NMAX+1> ll 
     = {{ &Index::Null(), &l1, &l2, &l3, &l4, &l5, &l6, &l7, &l8 }};
 
     do { ++rl_; left_[rl_] = *ll[rl_]; } 

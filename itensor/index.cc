@@ -3,7 +3,6 @@
 //    (See accompanying LICENSE file.)
 //
 #include "index.h"
-#include "boost/make_shared.hpp"
 #include "boost/random/lagged_fibonacci.hpp"
 //#include "boost/random/mersenne_twister.hpp"
 
@@ -80,7 +79,7 @@ putprimes(string s, int plev)
 string 
 nameindex(IndexType it, int plev)
     { 
-    static const boost::array<string,3>
+    static const array<string,3>
     indextypename = {{ "Link","Site", "All" }};
 #ifdef DEBUG
     return putprimes(indextypename.at(int(it)),plev);
@@ -141,7 +140,7 @@ IndexDat(const string& ss, int m_, IndexType it, IDType id_)
 const IndexDatPtr& IndexDat::
 Null()
     {
-    static IndexDatPtr Null_ = boost::make_shared<IndexDat>("Null",1,Site,0);
+    static IndexDatPtr Null_ = make_shared<IndexDat>("Null",1,Site,0);
     return Null_;
     }
 
@@ -174,7 +173,7 @@ Index()
 Index::
 Index(const string& name, int mm, IndexType it, int plev) 
     : 
-    p(boost::make_shared<IndexDat>(name,mm,it,generateID())), 
+    p(make_shared<IndexDat>(name,mm,it,generateID())), 
     primelevel_(plev) 
     { 
     if(it == All) Error("Constructing Index with type All disallowed");
@@ -334,7 +333,7 @@ read(istream& s)
     string ss(newname); 
     delete newname;
 
-    p = boost::make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
+    p = make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
     return *this;
     }
 

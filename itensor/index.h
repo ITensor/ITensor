@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include "global.h"
-#include "boost/shared_ptr.hpp"
 
 namespace itensor {
 
@@ -15,7 +14,7 @@ enum IndexType { Link, Site, All };
 struct IndexDat;
 class IndexVal;
 
-typedef boost::shared_ptr<IndexDat>
+typedef shared_ptr<IndexDat>
 IndexDatPtr;
 
 //

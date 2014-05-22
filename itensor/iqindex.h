@@ -14,7 +14,7 @@ class IndexQN;
 class IQIndexDat;
 class IQIndexVal;
 
-typedef boost::shared_ptr<IQIndexDat>
+typedef shared_ptr<IQIndexDat>
 IQIndexDatPtr;
 
 //
@@ -151,7 +151,7 @@ class IQIndex : public Index
     /////////////
     Arrow dir_;
 
-    boost::shared_ptr<IQIndexDat> pd;
+    shared_ptr<IQIndexDat> pd;
     /////////////
 
     IQIndex(const Index& index, const IQIndexDatPtr& pdat);

@@ -12,13 +12,10 @@
 #include "error.h" //utilities
 #include "option.h"
 #include "assert.h"
+#include "cppversion.h"
 
-#include "boost/array.hpp"
 #include "boost/random/mersenne_twister.hpp"
 #include "boost/random/uniform_real_distribution.hpp"
-
-#include "boost/foreach.hpp"
-#define Foreach BOOST_FOREACH
 
 
 namespace itensor {

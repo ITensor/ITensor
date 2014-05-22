@@ -6,7 +6,6 @@
 #define __ITENSOR_INDEXSET_H
 #include "index.h"
 #include "permutation.h"
-#include "boost/make_shared.hpp"
 
 namespace itensor {
 
@@ -47,13 +46,13 @@ class IndexSet
     // Type definitions
     //
 
-    typedef boost::array<IndexT,NMAX>
+    typedef array<IndexT,NMAX>
     Storage;
 
     typedef typename Storage::const_iterator 
     const_iterator;
 
-    typedef typename boost::shared_ptr<IndexSet<IndexT> >
+    typedef shared_ptr<IndexSet<IndexT> >
     Ptr;
 
     //
@@ -162,7 +161,7 @@ class IndexSet
 
     static const Ptr& Null()
         {
-        static Ptr Null_ = boost::make_shared<IndexSet<IndexT> >();
+        static Ptr Null_ = make_shared<IndexSet<IndexT> >();
         return Null_;
         }
 
@@ -259,7 +258,7 @@ IndexSet(IndexT i1, IndexT i2, IndexT i3,
     if(i3 == IndexT::Null())
         Error("i3 is null");
 #endif
-    boost::array<IndexT,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
+    array<IndexT,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
 	while(r_ < NMAX && ii[r_] != IndexT::Null()) ++r_;
     int alloc_size;
     sortIndices(ii,r_,alloc_size,0);
@@ -593,7 +592,7 @@ replaceIndex(const IndexT& oind, const IndexT& nind)
 /*
 template <class IndexT>
 void IndexSet<IndexT>::
-addindex1(const boost::array<IndexT,NMAX+1>& indices, int n) 
+addindex1(const array<IndexT,NMAX+1>& indices, int n) 
     {
 #ifdef DEBUG
     if(r_+n > NMAX) Error("Maximum number of indices reached");
@@ -715,7 +714,7 @@ sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset)
     alloc_size = 1;
 
     int r1_ = 0;
-    boost::array<const IndexT*,NMAX> index1_;
+    array<const IndexT*,NMAX> index1_;
 
     for(int n = offset; n < ninds+offset; ++n)
         {
@@ -802,7 +801,7 @@ findtype(const IndexSet<IndexT>& iset, IndexType t)
 
 //
 // Compute the permutation P taking an IndexSet iset
-// to oset (of type IndexSet or boost::array<IndexT,NMAX>)
+// to oset (of type IndexSet or array<IndexT,NMAX>)
 //
 template <class IndexT>
 void

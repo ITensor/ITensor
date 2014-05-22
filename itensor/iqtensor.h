@@ -11,7 +11,7 @@ namespace itensor {
 
 class IQCombiner;
 
-typedef boost::shared_ptr<IQTDat<ITensor> >
+typedef shared_ptr<IQTDat<ITensor> >
 IQTDatPtr;
 
 
@@ -267,13 +267,13 @@ class IQTensor
 
 
     void
-    tieIndices(const boost::array<IQIndex,NMAX>& indices, int nind, const IQIndex& tied);
+    tieIndices(const array<IQIndex,NMAX>& indices, int nind, const IQIndex& tied);
 
     void
     tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied);
 
     IQTensor&
-    trace(const boost::array<IQIndex,NMAX>& indices, int niqind = -1);
+    trace(const array<IQIndex,NMAX>& indices, int niqind = -1);
 
     IQTensor&
     trace(const IQIndex& i1, 
@@ -391,7 +391,7 @@ class IQTensor
     // 
     // Data Members
 
-    boost::shared_ptr<IndexSet<IQIndex> >
+    shared_ptr<IndexSet<IQIndex> >
     is_;
 
     Data dat;

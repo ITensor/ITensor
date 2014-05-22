@@ -52,7 +52,7 @@ class Counter
     {
     public:
 
-    boost::array<int,NMAX+1> n, 
+    array<int,NMAX+1> n, 
                       i;
     int ind,
         rn,
@@ -61,7 +61,7 @@ class Counter
     Counter();
 
     template <class IndexT>
-    Counter(const boost::array<IndexT,NMAX+1>& ii,int rn,int r);
+    Counter(const array<IndexT,NMAX+1>& ii,int rn,int r);
 
     template <class IndexT> 
     explicit
@@ -87,7 +87,7 @@ inline Counter::
 Counter() 
     : rn(0), r(0)
     {
-    n.assign(1); 
+    n.fill(1); 
     n[0] = 0;
     reset();
     }
@@ -95,13 +95,13 @@ Counter()
 void inline Counter::
 reset()
     {
-    i.assign(0);
+    i.fill(0);
     ind = 0;
     }
 
 template <class IndexT>
 Counter::
-Counter(const boost::array<IndexT,NMAX+1>& ii, int rn_, int r_)
+Counter(const array<IndexT,NMAX+1>& ii, int rn_, int r_)
     {
     rn = rn_;
     r = r_;

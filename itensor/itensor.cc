@@ -11,9 +11,6 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::sqrt;
-using boost::shared_ptr;
-using boost::make_shared;
-using boost::array;
 
 #ifdef DEBUG
 #define ITENSOR_CHECK_NULL if(type_ == Null) Error("ITensor is null");
@@ -430,7 +427,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
     array<int,NMAX+1> iv = 
         {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i, 1 }};
     array<int,NMAX> ja; 
-    ja.assign(0);
+    ja.fill(0);
     for(int k = 0; k < is_.rn(); ++k) //loop over indices of this ITensor
     for(int j = 0; j < size; ++j)      // loop over the given indices
         {
@@ -855,7 +852,7 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
         }
 
     array<int,NMAX+1> isReplaced; 
-    isReplaced.assign(0);
+    isReplaced.fill(0);
 
     //Print(*this);
 
@@ -937,7 +934,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
     int alloc_size = tm;
 
     array<bool,NMAX+1> is_tied;
-    is_tied.assign(false);
+    is_tied.fill(false);
 
     int nmatched = 0;
     for(int k = 1; k <= r(); ++k)
@@ -1002,7 +999,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
         ii[j] = &zero;
     
     //Create the new dat
-    boost::shared_ptr<ITDat> np = boost::make_shared<ITDat>(alloc_size);
+    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
     const Vector& thisdat = r_->v;
     for(; nc.notDone(); ++nc)
         {
@@ -1017,7 +1014,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
 
     if(this->isComplex())
         {
-        np = boost::make_shared<ITDat>(alloc_size);
+        np = make_shared<ITDat>(alloc_size);
         const Vector& thisidat = i_->v;
         for(nc.reset(); nc.notDone(); ++nc)
             {
@@ -1098,7 +1095,7 @@ trace(const array<Index,NMAX>& indices, int nind)
     int alloc_size = 1;
 
     array<bool,NMAX+1> traced;
-    traced.assign(false);
+    traced.fill(false);
 
     int nmatched = 0;
     for(int k = 1; k <= r(); ++k)
@@ -1171,7 +1168,7 @@ trace(const array<Index,NMAX>& indices, int nind)
         ii[j] = &zero;
     
     //Create the new dat
-    boost::shared_ptr<ITDat> np = boost::make_shared<ITDat>(alloc_size);
+    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
     Vector& resdat = np->v;
 
     const Vector& thisdat = r_->v;
@@ -1316,7 +1313,7 @@ expandIndex(const Index& small, const Index& big, int start)
                               is_[4].m()-1,is_[5].m()-1, 
                               is_[6].m()-1,is_[7].m()-1);
 
-    boost::shared_ptr<ITDat> oldr(r_);
+    shared_ptr<ITDat> oldr(r_);
     allocate(newinds.dim());
 
     const
@@ -1546,25 +1543,25 @@ scaleTo(const LogNumber& newscale)
 void ITensor::
 allocate(int dim) 
     { 
-    r_ = boost::make_shared<ITDat>(dim); 
+    r_ = make_shared<ITDat>(dim); 
     }
 
 void ITensor::
 allocate() 
     { 
-    r_ = boost::make_shared<ITDat>(); 
+    r_ = make_shared<ITDat>(); 
     }
 
 void ITensor::
 allocateImag(int dim) 
     { 
-    i_ = boost::make_shared<ITDat>(dim); 
+    i_ = make_shared<ITDat>(dim); 
     }
 
 void ITensor::
 allocateImag() 
     { 
-    i_ = boost::make_shared<ITDat>(); 
+    i_ = make_shared<ITDat>(); 
     }
 
 void ITensor::
@@ -1573,7 +1570,7 @@ soloReal()
     ITENSOR_CHECK_NULL
     if(!r_.unique())
         { 
-        boost::shared_ptr<ITDat> newr = boost::make_shared<ITDat>();
+        shared_ptr<ITDat> newr = make_shared<ITDat>();
         newr->v = r_->v;
         r_.swap(newr);
         }
@@ -1586,7 +1583,7 @@ soloImag()
 
     if(!i_.unique())
         { 
-        boost::shared_ptr<ITDat> newi = boost::make_shared<ITDat>();
+        shared_ptr<ITDat> newi = make_shared<ITDat>();
         newi->v = i_->v;
         i_.swap(newi);
         }
@@ -1743,7 +1740,7 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
     array<const IndexVal*,NMAX> iv = 
         {{ &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
     array<int,NMAX> ja; 
-    ja.assign(0);
+    ja.fill(0);
     //Loop over the given IndexVals
     int nn = 0;
     for(int j = 0; j < is_.r(); ++j)
@@ -2146,8 +2143,8 @@ directMultiply(const ITensor& L,
         ri[n] = &zero;
         }
 
-    boost::array<int,NMAX> nl,
-                           nr;
+    array<int,NMAX> nl,
+                    nr;
     std::fill(nl.begin(),nl.end(),0);
     std::fill(nr.begin(),nr.end(),0);
 
@@ -2274,8 +2271,8 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
     //
     array<int,NMAX+1> tcon,
                       scon;
-    tcon.assign(0);
-    scon.assign(0);
+    tcon.fill(0);
+    scon.fill(0);
     int ncon = 0; //number contracted
 
     //Analyze contracted Indices
@@ -2370,7 +2367,7 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
     //Allocate a new dat for res if necessary
     if(res.isNull() || !res.r_.unique())
         { 
-        res.r_ = boost::make_shared<ITDat>(alloc_size); 
+        res.r_ = make_shared<ITDat>(alloc_size); 
         }
     else
         {
@@ -3111,7 +3108,7 @@ convertToDense()
         {
         solo();
         const int dim = is_.dim(); //dense dimension
-        boost::shared_ptr<ITDat> oldr = r_;
+        shared_ptr<ITDat> oldr = r_;
         allocate(dim);
         const int ds = oldr->size();
         for(int j = 0; j < ds; ++j)
@@ -3121,7 +3118,7 @@ convertToDense()
 
         if(this->isComplex())
             {
-            boost::shared_ptr<ITDat> oldi = i_;
+            shared_ptr<ITDat> oldi = i_;
             allocateImag(dim);
             for(int j = 0; j < ds; ++j)
                 {
@@ -3338,8 +3335,8 @@ commaInit(ITensor& T,
         Error("commaInit not yet implemented for ITensor type Diag");
 
 
-    boost::array<Index,NMAX> ii;
-    ii.assign(Index::Null());
+    array<Index,NMAX> ii;
+    ii.fill(Index::Null());
 
     if(i2 == Index::Null())
         {
