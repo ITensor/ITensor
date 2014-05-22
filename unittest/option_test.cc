@@ -1,14 +1,17 @@
 #include "test.h"
-#include <boost/test/unit_test.hpp>
+
 #include "global.h"
-#include "option.h"
 
 using namespace std;
-using namespace boost;
 
-BOOST_AUTO_TEST_SUITE(OptTest)
+OptSet
+string_test_function(const OptSet& opts)
+    {
+    return opts;
+    }
 
-TEST(BasicUsage)
+
+TEST_CASE("BasicUsage")
     {
     Opt o1 = Quiet();
     Opt o2 = Quiet();
@@ -28,7 +31,7 @@ TEST(BasicUsage)
     //cout << Pinning(-0.42) << endl;
     }
 
-TEST(TestOptSet)
+TEST_CASE("TestOptSet")
     {
     OptSet& gopts = OptSet::GlobalOpts();
 
@@ -72,7 +75,7 @@ TEST(TestOptSet)
     CHECK(opts3.defined("Auto"));
     }
 
-TEST(Operator)
+TEST_CASE("Operator")
     {
     OptSet oset1 = Quiet() & Auto();
     CHECK(oset1.defined("Quiet"));
@@ -83,7 +86,4 @@ TEST(Operator)
     CHECK(oset1.defined("Auto"));
     CHECK(oset1.defined("Pinning"));
     }
-
-
-BOOST_AUTO_TEST_SUITE_END()
 

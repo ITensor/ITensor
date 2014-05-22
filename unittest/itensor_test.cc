@@ -1,53 +1,68 @@
 #include "test.h"
 #include "itensor.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace std;
 
-struct ITensorDefaults
+double static
+Func(double x)
     {
-    Index s1,s2,s3,s4,
-          s1P,s2P,s3P,s4P,
-          l1,l2,l3,l4,l5,l6,l7,l8,
-          a1,a2,a3,a4,
-          b2,b3,b4,b5;
+    return x*x;
+    }
 
-    ITensor A,B,X,Z;
-
-    IndexSet<Index> mixed_inds;
-
-    const
-    int mixed_inds_dim;
-
-    ITensorDefaults() :
-    s1(Index("s1",2,Site)),
-    s2(Index("s2",2,Site)),
-    s3(Index("s3",2,Site)),
-    s4(Index("s4",2,Site)),
-    s1P(primed(s1)),
-    s2P(primed(s2)),
-    s3P(primed(s3)),
-    s4P(primed(s4)),
-    l1(Index("l1",2)),
-    l2(Index("l2",2)),
-    l3(Index("l3",2)),
-    l4(Index("l4",2)),
-    l5(Index("l5",2)),
-    l6(Index("l6",2)),
-    l7(Index("l7",2)),
-    l8(Index("l8",2)),
-    a1(Index("a1")),
-    a2(Index("a2")),
-    a3(Index("a3")),
-    a4(Index("a4")),
-    b2(Index("b2",2)),
-    b3(Index("b3",3)),
-    b4(Index("b4",4)),
-    b5(Index("b5",5)),
-    mixed_inds(a2,b3,l1,l2,a4,l4),
-    //reordered_mixed_inds(6),
-    mixed_inds_dim(mixed_inds.dim())
+class Functor
     {
+    public:
+
+    double
+    operator()(double x) const
+        {
+        return x*x;
+        }
+
+    int
+    operator()(int x) const
+        {
+        return x*x;
+        }
+
+    };
+
+TEST_CASE("ITensor")
+{
+
+    Index s1("s1",2,Site);
+    Index s2("s2",2,Site);
+    Index s3("s3",2,Site);
+    Index s4("s4",2,Site);
+    Index s1P(primed(s1));
+    Index s2P(primed(s2));
+    Index s3P(primed(s3));
+    Index s4P(primed(s4));
+    Index l1("l1",2);
+    Index l2("l2",2);
+    Index l3("l3",2);
+    Index l4("l4",2);
+    Index l5("l5",2);
+    Index l6("l6",2);
+    Index l7("l7",2);
+    Index l8("l8",2);
+    Index a1("a1");
+    Index a2("a2");
+    Index a3("a3");
+    Index a4("a4");
+    Index b2("b2",2);
+    Index b3("b3",3);
+    Index b4("b4",4);
+    Index b5("b5",5);
+
+    IndexSet<Index> mixed_inds(a2,b3,l1,l2,a4,l4);
+    const int mixed_inds_dim = mixed_inds.dim();
+
+    ITensor A,
+            B,
+            X,
+            Z;
+
         {
         Matrix M(s1.m(),s2.m());
         M(1,1) = 11; M(1,2) = 12;
@@ -76,22 +91,9 @@ struct ITensorDefaults
         Z = ITensor(s1,s2,M);
         }
 
-        //reordered_mixed_inds[0] = a2;
-        //reordered_mixed_inds[1] = l1;
-        //reordered_mixed_inds[2] = b3;
-        //reordered_mixed_inds[3] = a4;
-        //reordered_mixed_inds[4] = l4;
-        //reordered_mixed_inds[5] = l2;
-    }
 
-    ~ITensorDefaults() { }
-
-    }; //struct ITensorDefaults
-
-BOOST_FIXTURE_TEST_SUITE(ITensorTest,ITensorDefaults)
-
-TEST(Null)
-{
+SECTION("Null")
+    {
     ITensor t1;
 
     CHECK(t1.isNull());
@@ -99,10 +101,10 @@ TEST(Null)
     ITensor t2(s1);
 
     CHECK(!t2.isNull());
-}
+    }
 
-TEST(Constructors)
-{
+SECTION("Constructors")
+    {
     ITensor t1(l1);
 
     CHECK_EQUAL(t1.r(),1);
@@ -227,9 +229,9 @@ TEST(Constructors)
     CHECK(hasindex(t10,linkind));
     CHECK_CLOSE(t10.sumels(),V.sumels(),1E-10);
     CHECK_CLOSE(t10.norm(),Norm(V),1E-10);
-}
+    }
 
-TEST(IndexValConstructors)
+SECTION("IndexValConstructors")
     {
     ITensor t1(l1(2));
 
@@ -330,7 +332,7 @@ TEST(IndexValConstructors)
 
     }
 
-TEST(MultiIndexConstructors)
+SECTION("MultiIndexConstructors")
     {
     const
     IndexSet<Index> indices(a2,l3,l1,a4);
@@ -358,7 +360,7 @@ TEST(MultiIndexConstructors)
     CHECK_CLOSE(t2.sumels(),V.sumels(),1E-10);
     }
 
-TEST(ITensorConstructors)
+SECTION("ITensorConstructors")
 {
     Index clink("clink",4);
     IndexSet<Index> indices1(l1,l2,clink);
@@ -412,7 +414,7 @@ TEST(ITensorConstructors)
 
 }
 
-TEST(Copy)
+SECTION("Copy")
 {
     IndexSet<Index> indices(a2,l3,l1,a4);
 
@@ -454,7 +456,7 @@ TEST(Copy)
     CHECK_CLOSE(t3.sumels(),V.sumels(),1E-10);
 }
 
-TEST(ScalarMultiply)
+SECTION("ScalarMultiply")
 {
     A *= -1;
     CHECK_EQUAL(A(s1(1),s2(1)),-11);
@@ -477,7 +479,7 @@ TEST(ScalarMultiply)
 }
 
 /*
-TEST(assignToVec)
+SECTION("assignToVec")
 {
     Vector V(l1.m()*l2.m()*l3.m());
     V.Randomize();
@@ -499,7 +501,7 @@ TEST(assignToVec)
 }
 */
 
-TEST(MapElems)
+SECTION("MapElems")
     {
     // class Functor and the function Func
     // are defined in test.h
@@ -524,7 +526,7 @@ TEST(MapElems)
     }
 
 /*
-TEST(reshapeDat)
+SECTION("reshapeDat")
     {
     Permutation P;
     P.fromTo(1,2);
@@ -544,7 +546,7 @@ TEST(reshapeDat)
     */
 
 /*
-TEST(reshape)
+SECTION("reshape")
     {
     //cout << "Begin: reshape -------------" << endl;
     Permutation P;
@@ -577,7 +579,7 @@ TEST(reshape)
     }
     */
 
-TEST(SumDifference)
+SECTION("SumDifference")
 {
     Vector V(mixed_inds_dim),W(mixed_inds_dim);
     V.Randomize();
@@ -617,7 +619,7 @@ TEST(SumDifference)
 
 }
 
-TEST(ContractingProduct)
+SECTION("ContractingProduct")
     {
 
     //Check for rank 0 ITensors
@@ -751,7 +753,7 @@ TEST(ContractingProduct)
     CHECK(!hasindex(Hpsi,a2));
     }
 
-TEST(NonContractingProduct)
+SECTION("NonContractingProduct")
     {
     ITensor L(b2,a1,b3,b4), R(a1,b3,a2,b5,b4);
 
@@ -861,7 +863,7 @@ TEST(NonContractingProduct)
         { CHECK_CLOSE(Hpsi(l2(j2)),psi(a1(1),a2(1),a3(1))*mpoh(l2(j2)),1E-10); }
     }
 
-TEST(ComplexNonContractingProduct)
+SECTION("ComplexNonContractingProduct")
     {
     ITensor Lr(b2,b3,b4), Li(b2,b3,b4),
             Rr(b3,a2,b5,b4), Ri(b3,a2,b5,b4);
@@ -895,7 +897,7 @@ TEST(ComplexNonContractingProduct)
 
     }
 
-TEST(TieIndices)
+SECTION("TieIndices")
     {
 
     Index t("tied",2);
@@ -949,7 +951,7 @@ TEST(TieIndices)
 
     } //TieIndices
 
-TEST(ComplexTieIndices)
+SECTION("ComplexTieIndices")
     {
     ITensor Tr(l1,l2,a1,s2,s1),
             Ti(l1,l2,a1,s2,s1);
@@ -974,7 +976,7 @@ TEST(ComplexTieIndices)
         }
     }
 
-TEST(Trace)
+SECTION("Trace")
     {
 
     ITensor A(b2,a1,b3,b5,primed(b3));
@@ -1010,7 +1012,7 @@ TEST(Trace)
 
     }
 
-TEST(fromMatrix11)
+SECTION("fromMatrix11")
     {
     Matrix M22(s1.m(),s2.m());
 
@@ -1060,7 +1062,7 @@ TEST(fromMatrix11)
     CHECK_CLOSE(P(s2(2),a1(1)),M12(1,2),1E-10);
     }
 
-TEST(ToFromMatrix11)
+SECTION("ToFromMatrix11")
     {
     Matrix M(s1.m(),s2.m());    
 
@@ -1133,7 +1135,7 @@ TEST(ToFromMatrix11)
 
     }
 
-TEST(ToFromMatrix22)
+SECTION("ToFromMatrix22")
     {
     Index i1("i1",3),
           i2("i2",4),
@@ -1153,7 +1155,7 @@ TEST(ToFromMatrix22)
     }
 
 /*
-TEST(SymmetricDiag11)
+SECTION("SymmetricDiag11")
     {
     ITensor T(s1,primed(s1));
     commaInit(T,s1,primed(s1)) << 1, 2,
@@ -1189,7 +1191,7 @@ TEST(SymmetricDiag11)
     }
     */
 
-TEST(CommaAssignment)
+SECTION("CommaAssignment")
     {
     ITensor VV(s1);
     VV.randomize();
@@ -1243,7 +1245,7 @@ TEST(CommaAssignment)
     CHECK_EQUAL(T(s1(2),s2(2),s3(2)),222);
     }
 
-TEST(RealImagPart)
+SECTION("RealImagPart")
     {
     const Real f1 = 2.124,
                f2 = 1.113;
@@ -1266,7 +1268,7 @@ TEST(RealImagPart)
     CHECK_CLOSE(I.norm(),0,1E-5);
     }
 
-TEST(SwapPrimeTest)
+SECTION("SwapPrimeTest")
     {
     ITensor T(s1,primed(s1));
     commaInit(T,s1,primed(s1)) << 11, 12,
@@ -1285,17 +1287,17 @@ TEST(SwapPrimeTest)
     CHECK_EQUAL(T(primed(s1)(2),s1(2)),22);
     }
 
-TEST(NoprimeTest)
+SECTION("NoprimeTest")
     {
     ITensor T(s1,primed(s1));
 
     //Check that T.noprime()
     //throws an exception since it would
     //lead to duplicate indices
-    CHECK_THROW(T.noprime(),ITError);
+    CHECK_THROWS_AS(T.noprime(),ITError);
     }
 
-TEST(NormTest)
+SECTION("NormTest")
     {
     A.randomize();
     CHECK_CLOSE(A.norm(),sqrt((A*A).toReal()),1E-5);
@@ -1305,7 +1307,7 @@ TEST(NormTest)
     CHECK_CLOSE(C.norm(),sqrt(realPart(conj(C)*C).toReal()),1E-5);
     }
 
-TEST(CR_ComplexAddition)
+SECTION("CR_ComplexAddition")
     {
     const Real f1 = 1.234,
                f2 = 2.456;
@@ -1318,7 +1320,7 @@ TEST(CR_ComplexAddition)
     CHECK_CLOSE(I.norm(),0,1E-5);
     }
 
-TEST(CC_ComplexAddition)
+SECTION("CC_ComplexAddition")
     {
     const Real f1 = 1.234,
                f2 = 2.456;
@@ -1330,7 +1332,7 @@ TEST(CC_ComplexAddition)
     CHECK_CLOSE(I.norm(),0,1E-5);
     }
 
-TEST(ComplexScalar)
+SECTION("ComplexScalar")
     {
     ITensor A(b4,s1),
             B(b4,s1);
@@ -1369,4 +1371,4 @@ TEST(ComplexScalar)
     CHECK((imagPart(T6)-(f1*A+f2*B)).norm() < 1E-12);
     }
 
-BOOST_AUTO_TEST_SUITE_END()
+}

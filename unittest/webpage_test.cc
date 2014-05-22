@@ -1,25 +1,9 @@
 #include "test.h"
-#include <boost/test/unit_test.hpp>
 #include "iqtensor.h"
 
 using namespace std;
-using boost::format;
 
-struct WebDefaults
-    {
-
-    WebDefaults()
-    {
-    }
-
-    ~WebDefaults() { }
-
-    }; //struct WebDefaults
-
-BOOST_FIXTURE_TEST_SUITE(WebpageTest,WebDefaults)
-
-
-TEST(Homepage)
+TEST_CASE("Homepage")
     {
     Index a("a",2), b("b",2), c("c",2);
     ITensor Z(a,b), X(b,c);
@@ -38,7 +22,7 @@ TEST(Homepage)
     CHECK_CLOSE(R(a(2),c(2)),0,1E-10);
     }
 
-TEST(TutorialIntro)
+TEST_CASE("TutorialIntro")
     {
     //cout << "Begin: TutorialIntro -----------------------" << endl;
     Index i("i",10), j("j",20), k("k",30);
@@ -54,7 +38,7 @@ TEST(TutorialIntro)
     //cout << "End: TutorialIntro -----------------------" << endl;
     }
 
-TEST(TutorialSimpleMeasurement)
+TEST_CASE("TutorialSimpleMeasurement")
     {
     Index s("s",2,Site);
 
@@ -82,8 +66,6 @@ TEST(TutorialSimpleMeasurement)
     CHECK_CLOSE(zz,0.5*sin(Pi/4),1E-5);
     CHECK_CLOSE(xx,0.5*sin(Pi/4),1E-5);
 
-    //cout << format("<Sz> = %.5f") % zz << endl;
-    //cout << format("<Sx> = %.5f") % xx << endl;
+    //println("<Sz> = ",zz);
+    //println("<Sx> = ",xx);
     }
-
-BOOST_AUTO_TEST_SUITE_END()

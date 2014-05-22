@@ -1,77 +1,84 @@
 #include "test.h"
 #include "iqtensor.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace std;
 
-struct IQTensorDefaults
+class Functor
     {
-    const Index
-    s1u,s1d,s2u,s2d,
-    l1u,l10,l1d,
-    l2uu,l20,l2dd;
+    public:
 
-    IQIndex S1,S2,L1,L2;
-
-    IQTensor phi,A,B,C,D;
-
-    IQTensorDefaults() :
-    s1u(Index("Site1 Up",1,Site)),
-    s1d(Index("Site1 Dn",1,Site)),
-    s2u(Index("Site2 Up",1,Site)),
-    s2d(Index("Site2 Dn",1,Site)),
-    l1u(Index("Link1 Up",2,Link)),
-    l10(Index("Link1 Z0",2,Link)),
-    l1d(Index("Link1 Dn",2,Link)),
-    l2uu(Index("Link2 UU",2,Link)),
-    l20(Index("Link2 Z0",2,Link)),
-    l2dd(Index("Link2 DD",2,Link))
+    double
+    operator()(double x) const
         {
-        S1 = IQIndex("S1",
-                     s1u,QN(+1),
-                     s1d,QN(-1),Out);
-        S2 = IQIndex("S2",
-                     s2u,QN(+1),
-                     s2d,QN(-1),Out);
-        L1 = IQIndex("L1",
-                     l1u,QN(+1),
-                     l10,QN( 0),
-                     l1d,QN(-1),
-                     Out);
-        L2 = IQIndex("L2",
-                     l2uu,QN(+2),
-                     l20,QN( 0),
-                     l2dd,QN(-2),
-                     Out);
+        return x*x;
+        }
 
-        phi = IQTensor(S1(1),S2(1),L2(3));
-        phi.randomize();
-
-        A = IQTensor(L1(1),S1(1),L2(4),S2(2));
-        A.randomize();
-
-        B = IQTensor(L1(4),L2(2));
-        B.randomize();
-
-        C = IQTensor(conj(L1)(5),primed(L1)(5));
-        C.randomize();
-
-        D = IQTensor(conj(L1)(3),S1(1),primed(L1)(3),primed(L1,2)(5));
-        D.randomize();
+    int
+    operator()(int x) const
+        {
+        return x*x;
         }
 
     };
 
-BOOST_FIXTURE_TEST_SUITE(IQTensorTest,IQTensorDefaults)
+TEST_CASE("IQTensorTest")
+{
 
-TEST(Null)
+Index s1u("Site1 Up",1,Site);
+Index s1d("Site1 Dn",1,Site);
+Index s2u("Site2 Up",1,Site);
+Index s2d("Site2 Dn",1,Site);
+Index l1u("Link1 Up",2,Link);
+Index l10("Link1 Z0",2,Link);
+Index l1d("Link1 Dn",2,Link);
+Index l2uu("Link2 UU",2,Link);
+Index l20("Link2 Z0",2,Link);
+Index l2dd("Link2 DD",2,Link);
+
+IQIndex S1,S2,L1,L2;
+
+IQTensor phi,A,B,C,D;
+
+S1 = IQIndex("S1",
+             s1u,QN(+1),
+             s1d,QN(-1),Out);
+S2 = IQIndex("S2",
+             s2u,QN(+1),
+             s2d,QN(-1),Out);
+L1 = IQIndex("L1",
+             l1u,QN(+1),
+             l10,QN( 0),
+             l1d,QN(-1),
+             Out);
+L2 = IQIndex("L2",
+             l2uu,QN(+2),
+             l20,QN( 0),
+             l2dd,QN(-2),
+             Out);
+
+phi = IQTensor(S1(1),S2(1),L2(3));
+phi.randomize();
+
+A = IQTensor(L1(1),S1(1),L2(4),S2(2));
+A.randomize();
+
+B = IQTensor(L1(4),L2(2));
+B.randomize();
+
+C = IQTensor(conj(L1)(5),primed(L1)(5));
+C.randomize();
+
+D = IQTensor(conj(L1)(3),S1(1),primed(L1)(3),primed(L1,2)(5));
+D.randomize();
+
+SECTION("Null")
     {
     IQTensor t1;
 
     CHECK(t1.isNull());
     }
 
-TEST(Constructors)
+SECTION("Constructors")
     {
     Real f = ran1();
     IQTensor rZ(f);
@@ -80,7 +87,7 @@ TEST(Constructors)
     CHECK_CLOSE(rZ.norm(),f,1E-10);
     }
 
-TEST(NonContractProd)
+SECTION("NonContractProd")
     {
 
     IQTensor res = A / B;
@@ -96,7 +103,7 @@ TEST(NonContractProd)
 
     }
 
-TEST(ComplexNonContractingProduct)
+SECTION("ComplexNonContractingProduct")
     {
     IQTensor Lr(L1(1),S1(2),L2(4)), Li(L1(1),S1(2),L2(4)),
             Rr(L1(1),S1(2),L2(4)), Ri(L1(1),S1(2),L2(4));
@@ -127,7 +134,7 @@ TEST(ComplexNonContractingProduct)
     CHECK(idiff.norm() < 1E-12);
     }
 
-TEST(ITensorConversion)
+SECTION("ITensorConversion")
     {
 
     ITensor itphi = phi.toITensor();
@@ -151,7 +158,7 @@ TEST(ITensorConversion)
     }
 
 /*
-TEST(SymmetricDiag11)
+SECTION("SymmetricDiag11")
     {
     IQTensor D,U;
     IQIndex mid;
@@ -173,7 +180,7 @@ TEST(SymmetricDiag11)
     }
     */
 
-TEST(TieIndices)
+SECTION("TieIndices")
     {
     IQTensor D1 = tieIndices(D,L1,primed(L1),L1);
 
@@ -185,7 +192,7 @@ TEST(TieIndices)
         }
     }
 
-TEST(ToReal)
+SECTION("ToReal")
     {
     Real f = ran1();
     IQTensor T(f);
@@ -197,7 +204,7 @@ TEST(ToReal)
     CHECK_CLOSE(Z.toReal(),0,1E-5);
     }
 
-TEST(DotTest)
+SECTION("DotTest")
     {
     Real dotval1 = sqrt( Dot(conj(B),B) );
     //Dot should auto-fix arrows
@@ -207,7 +214,7 @@ TEST(DotTest)
     CHECK_CLOSE(dotval2,nval,1E-5);
     }
 
-TEST(BraKetTest)
+SECTION("BraKetTest")
     {
     IQTensor R(L1(1),L2(1)),
              I(L1(1),L2(1));
@@ -233,7 +240,7 @@ TEST(BraKetTest)
     CHECK_CLOSE(z.imag(),Dot(I,R),1E-5);
     }
 
-TEST(Trace)
+SECTION("Trace")
     {
 
     Real f = -ran1();
@@ -253,7 +260,7 @@ TEST(Trace)
         }
     }
 
-TEST(MapElems)
+SECTION("MapElems")
     {
     IQTensor B1(B);
 
@@ -268,7 +275,7 @@ TEST(MapElems)
         }
     }
 
-TEST(Randomize)
+SECTION("Randomize")
     {
     IQTensor T(S1,S2,L2);
     T += ITensor(s1u,s2u,l2dd);
@@ -276,7 +283,7 @@ TEST(Randomize)
     //PrintDat(T);
     }
 
-TEST(RealImagPart)
+SECTION("RealImagPart")
     {
     IQTensor Z(conj(S1),primed(S1));
     Z(S1(1),primed(S1)(1)) = +1;
@@ -307,7 +314,7 @@ TEST(RealImagPart)
     CHECK_CLOSE(I.norm(),0,1E-5);
     }
 
-TEST(ComplexMult)
+SECTION("ComplexMult")
     {
     IQTensor Z(conj(S1),primed(S1));
     Z(S1(1),primed(S1)(1)) = +1;
@@ -327,7 +334,7 @@ TEST(ComplexMult)
     //PrintDat(YY);
     }
 
-TEST(ComplexAdd)
+SECTION("ComplexAdd")
     {
     IQTensor Z(conj(S1),primed(S1));
     Z(S1(1),primed(S1)(1)) = +1;
@@ -346,7 +353,7 @@ TEST(ComplexAdd)
 
     }
 
-TEST(RandomizeTest)
+SECTION("RandomizeTest")
     {
     IQTensor T(L1(1),S1(1),L2(4),S2(2));
     const QN D = div(T);
@@ -354,7 +361,7 @@ TEST(RandomizeTest)
     CHECK_EQUAL(D,div(T));
     }
 
-TEST(Test_normLogNum)
+SECTION("Test_normLogNum")
     {
     IQTensor Z(conj(S1),primed(S1));
     ITensor blk1(s1u(1),primed(s1u)(1)),
@@ -369,7 +376,7 @@ TEST(Test_normLogNum)
 
     }
 
-TEST(BigNorm)
+SECTION("BigNorm")
     {
     IQTensor Z(conj(S1),primed(S1));
     ITensor blk1(s1u(1),primed(s1u)(1)),
@@ -381,10 +388,10 @@ TEST(BigNorm)
     Z += blk2; 
 
     //Mainly want to check that Z.normLogNum() doesn't overflow in this case
-    CHECK_CLOSE(Z.normLogNum().logNum(),999.053,1E-4);
+    CHECK_CLOSE(Z.normLogNum().logNum(),999.053,1E-3);
     }
 
-TEST(AddBlock)
+SECTION("AddBlock")
     {
     ITensor b1(L1(4).indexqn(),L2(2).indexqn()),
             b2(L1(L1.m()).indexqn(),L2(2).indexqn());
@@ -394,11 +401,11 @@ TEST(AddBlock)
 
     B += b1; //shouldn't throw
 
-    CHECK_THROW(B += b2,ITError);
+    CHECK_THROWS_AS(B += b2,ITError);
     
     }
 
-TEST(ComplexConvert)
+SECTION("ComplexConvert")
     {
     IQTensor R(S1(1),L1(3)),
              I(S1(2),L1(1));
@@ -421,4 +428,4 @@ TEST(ComplexConvert)
     CHECK((imagPart(t)-i).norm() < 1E-12);
     }
 
-BOOST_AUTO_TEST_SUITE_END()
+}

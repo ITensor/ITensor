@@ -1,35 +1,21 @@
 #include "test.h"
 #include "localmpo.h"
 #include "model/spinhalf.h"
-#include <boost/test/unit_test.hpp>
 
-struct LocalMPODefaults
+
+TEST_CASE("LocalMPOAsMPS")
     {
     static const int N = 10;
-    SpinHalf shmodel;
+    SpinHalf shmodel(N);
 
-    InitState shNeel, shFerro;
+    InitState shFerro(shmodel,"Up");
+    InitState shNeel(shmodel);
 
-    LocalMPODefaults() 
-        :
-        shmodel(N),
-        shNeel(shmodel),
-        shFerro(shmodel,"Up")
+    for(int j = 1; j <= N; ++j)
         {
-        for(int j = 1; j <= N; ++j)
-            {
-            shNeel.set(j,j%2==1 ? "Up" : "Dn");
-            }
+        shNeel.set(j,j%2==1 ? "Up" : "Dn");
         }
 
-    ~LocalMPODefaults() { }
-
-    };
-
-BOOST_FIXTURE_TEST_SUITE(LocalMPOTest,LocalMPODefaults)
-
-BOOST_AUTO_TEST_CASE(LocalMPOAsMPS)
-    {
     IQMPS psiNeel(shNeel),
           psiFerro(shFerro);
 
@@ -38,4 +24,3 @@ BOOST_AUTO_TEST_CASE(LocalMPOAsMPS)
     }
 
 
-BOOST_AUTO_TEST_SUITE_END()

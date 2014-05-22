@@ -1,26 +1,17 @@
 #include "test.h"
-#include <boost/test/unit_test.hpp>
 #include "model/spinhalf.h"
 #include "model/spinone.h"
 #include "model/hubbard.h"
 #include "model/spinless.h"
 #include "model/tj.h"
 
-struct ModelTestDefaults
-    {
-    static const int N = 10;
 
-    ModelTestDefaults()
-        {
-        }
+TEST_CASE("ModelTest")
+{
 
-    ~ModelTestDefaults() { }
+const int N = 10;
 
-    };
-
-BOOST_FIXTURE_TEST_SUITE(ModelTest,ModelTestDefaults)
-
-TEST(SpinHalfModel)
+SECTION("SpinHalfModel")
     {
     SpinHalf model(N);
 
@@ -34,7 +25,7 @@ TEST(SpinHalfModel)
     model.op("ISy",2); 
     }
 
-TEST(SpinOneModel)
+SECTION("SpinOneModel")
     {
     SpinOne model(N);
 
@@ -48,7 +39,7 @@ TEST(SpinOneModel)
     model.op("ISy",2); 
     }
 
-TEST(HubbardModel)
+SECTION("HubbardModel")
     {
     Hubbard model(N);
 
@@ -64,7 +55,7 @@ TEST(HubbardModel)
     model.op("F",2); 
     }
 
-TEST(SpinlessModel)
+SECTION("SpinlessModel")
     {
     Spinless model(N);
 
@@ -74,7 +65,7 @@ TEST(SpinlessModel)
     model.op("F",2); 
     }
 
-TEST(tJModel)
+SECTION("tJModel")
     {
     tJ model(N);
 
@@ -84,6 +75,5 @@ TEST(tJModel)
     model.op("Adn",2); 
     model.op("F",2); 
     }
+}
 
-
-BOOST_AUTO_TEST_SUITE_END()

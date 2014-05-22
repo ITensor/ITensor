@@ -1,72 +1,59 @@
 #include "test.h"
 #include "iqcombiner.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace std;
 
-struct IQCombinerDefaults
+TEST_CASE("IQCombinerTest")
+{
+
+Index s1u("Site1 Up",1,Site);
+Index s1d("Site1 Dn",1,Site);
+Index s2u("Site2 Up",1,Site);
+Index s2d("Site2 Dn",1,Site);
+Index l1u("Link1 Up",2,Link);
+Index l10("Link1 Z0",2,Link);
+Index l1d("Link1 Dn",2,Link);
+Index l2uu("Link2 UU",2,Link);
+Index l20("Link2 Z0",2,Link);
+Index l2dd("Link2 DD",2,Link);
+
+IQIndex S1,S2,L1,L2;
+
+IQTensor phi;
+
+S1 = IQIndex("S1",
+             s1u,QN(+1),
+             s1d,QN(-1),Out);
+S2 = IQIndex("S2",
+             s2u,QN(+1),
+             s2d,QN(-1),Out);
+L1 = IQIndex("L1",
+             l1u,QN(+1),
+             l10,QN( 0),
+             l1d,QN(-1),
+             Out);
+L2 = IQIndex("L2",
+             l2uu,QN(+2),
+             l20,QN( 0),
+             l2dd,QN(-2),
+             Out);
+
+phi = IQTensor(S1,S2,L2);
     {
-    const Index
-    s1u,s1d,s2u,s2d,
-    l1u,l10,l1d,
-    l2uu,l20,l2dd;
+    ITensor uu(s1u,s2u,l2dd);
+    uu.randomize();
+    phi += uu;
 
-    IQIndex S1,S2,L1,L2;
+    ITensor ud(s1u,s2d,l20);
+    ud.randomize();
+    phi += ud;
 
-    IQTensor phi;
+    ITensor du(s1d,s2u,l20);
+    du.randomize();
+    phi += du;
+    }
 
-    IQCombinerDefaults() :
-        s1u(Index("Site1 Up",1,Site)),
-        s1d(Index("Site1 Dn",1,Site)),
-        s2u(Index("Site2 Up",1,Site)),
-        s2d(Index("Site2 Dn",1,Site)),
-        l1u(Index("Link1 Up",2,Link)),
-        l10(Index("Link1 Z0",2,Link)),
-        l1d(Index("Link1 Dn",2,Link)),
-        l2uu(Index("Link2 UU",2,Link)),
-        l20(Index("Link2 Z0",2,Link)),
-        l2dd(Index("Link2 DD",2,Link))
-        {
-        S1 = IQIndex("S1",
-                     s1u,QN(+1),
-                     s1d,QN(-1),Out);
-        S2 = IQIndex("S2",
-                     s2u,QN(+1),
-                     s2d,QN(-1),Out);
-        L1 = IQIndex("L1",
-                     l1u,QN(+1),
-                     l10,QN( 0),
-                     l1d,QN(-1),
-                     Out);
-        L2 = IQIndex("L2",
-                     l2uu,QN(+2),
-                     l20,QN( 0),
-                     l2dd,QN(-2),
-                     Out);
-
-        phi = IQTensor(S1,S2,L2);
-            {
-            ITensor uu(s1u,s2u,l2dd);
-            uu.randomize();
-            phi += uu;
-
-            ITensor ud(s1u,s2d,l20);
-            ud.randomize();
-            phi += ud;
-
-            ITensor du(s1d,s2u,l20);
-            du.randomize();
-            phi += du;
-            }
-        }
-
-    ~IQCombinerDefaults() { }
-
-    };
-
-BOOST_FIXTURE_TEST_SUITE(IQCombinerTest,IQCombinerDefaults)
-
-TEST(Constructors)
+SECTION("Constructors")
     {
     IQCombiner c1;
 
@@ -81,7 +68,7 @@ TEST(Constructors)
     CHECK_EQUAL(c2.right().m(),L1.m()*S1.m()*L2.m());
     }
 
-TEST(addLeft)
+SECTION("addLeft")
     {
     IQCombiner c1,
                c1s;
@@ -112,7 +99,7 @@ TEST(addLeft)
 
     }
 
-TEST(Product)
+SECTION("Product")
     {
     CHECK_EQUAL(L2.dir(),Out);
 
@@ -145,7 +132,7 @@ TEST(Product)
     CHECK_CLOSE(diff.norm(),0,1E-10);
     }
 
-TEST(Primes)
+SECTION("Primes")
     {
     IQCombiner c;
     c.addleft(S2);
@@ -168,7 +155,7 @@ TEST(Primes)
 
     }
 
-TEST(CondenseProduct)
+SECTION("CondenseProduct")
     {
     CHECK_EQUAL(L2.dir(),Out);
 
@@ -211,5 +198,5 @@ TEST(CondenseProduct)
     IQTensor diff = phi - ucphi;
     CHECK(diff.norm() < 1E-12);
     }
+}
 
-BOOST_AUTO_TEST_SUITE_END()

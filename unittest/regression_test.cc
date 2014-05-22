@@ -1,9 +1,7 @@
 #include "test.h"
-#include <boost/test/unit_test.hpp>
 #include "svdalgs.h"
 
 using namespace std;
-using boost::format;
 
 //
 //The tests in this suite are
@@ -14,17 +12,7 @@ using boost::format;
 //to prevent the same bugs from coming up again.
 //
 
-struct RegressionDefaults
-    {
-    RegressionDefaults()
-        {
-        }
-
-    };
-
-BOOST_FIXTURE_TEST_SUITE(RegressionTest,RegressionDefaults)
-
-TEST(CombinerOrder)
+TEST_CASE("CombinerOrder")
     {
     Index a("a",2),c("c",2);
 
@@ -48,7 +36,7 @@ TEST(CombinerOrder)
     CHECK((U-UU).norm() < 1E-10);
     }
 
-TEST(SVDIndexOrder)
+TEST_CASE("SVDIndexOrder")
     {
     Index a("a",2),b("b",1),c("c",2);
 
@@ -103,7 +91,7 @@ TEST(SVDIndexOrder)
     //z(primed(a)(2),a(2),b(2),h(5)) = -0.753196;
     //z(primed(a)(3),a(3),b(2),h(5)) = -0.753196;
 
-TEST(SVDArrows)
+TEST_CASE("SVDArrows")
     {
     Index l("l",2),r("r",2);
     IQIndex L("L",l,QN(1,1),In),R("R",r,QN(1,1),Out);
@@ -125,7 +113,7 @@ TEST(SVDArrows)
     CHECK_EQUAL(div(V),Zero);
     }
 
-TEST(ExpandIndex)
+TEST_CASE("ExpandIndex")
     {
     //
     //ITensor::expandIndex was
@@ -155,7 +143,7 @@ TEST(ExpandIndex)
     CHECK_CLOSE(1,oo(S(2),primed(S)(2),l(1)),1E-5);
     }
 
-TEST(ConvertToITensor)
+TEST_CASE("ConvertToITensor")
     {
     IQIndex L("L",Index("l"),QN(),Out);
     Index emp("emp"),occ("occ");
@@ -177,7 +165,7 @@ TEST(ConvertToITensor)
 
 
 /*
-TEST(IndexOrder)
+TEST_CASE("IndexOrder")
     {
     //
     //The ITensor contracting product code,
@@ -218,7 +206,55 @@ TEST(IndexOrder)
     }
     */
 
-TEST(ComplexAddition)
+TEST_CASE("IdentComplexMult")
+    {
+    //
+    // Aug 25, 2013: contracting product working incorrectly
+    // for 2x2 identity-type ITensor contracted with 2x2 complex
+    // ITensor
+    //
+    // Problem appears to be that the complex ITensor helper code at
+    // the top of ITensor::operator*= *assumes* same resulting index
+    // order for separate real- and imaginary-part contractions
+    //
+
+    Index d("d",2),
+          l("l",2),
+          c("c",2);
+
+    ITensor br(c,l),
+            bi(c,l);
+
+    commaInit(br,c,l) << 11,12,
+                         0 ,0 ;
+    commaInit(bi,c,l) << 11,12,
+                         0 ,0 ;
+
+    ITensor b = br+Complex_i*bi;
+
+
+    Matrix C(2,2);
+    C = 0;
+    C.Diagonal() = 1;
+
+    ITensor conv(d,c,C);
+
+    ITensor rr(d,l),
+            ri(d,l);
+
+    commaInit(rr,d,l) << 11,12,
+                         0 ,0 ;
+    commaInit(ri,d,l) << 11,12,
+                         0 ,0 ;
+
+    ITensor res = rr + Complex_i*ri;
+
+    ITensor Diff = conv*b-res;
+
+    CHECK(Diff.norm() < 1E-10);
+    }
+
+TEST_CASE("ComplexAddition")
     {
     //EMS Oct 21, 2013
     //Bug was happening because a below has different
@@ -245,4 +281,3 @@ TEST(ComplexAddition)
     CHECK((imagPart(r)-a).norm() < 1E-12);
     }
 
-BOOST_AUTO_TEST_SUITE_END()

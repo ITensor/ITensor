@@ -1,3 +1,0 @@
-BOOST_UNITTEST_LIBDIR=/opt/local/lib
-BOOST_UNITTEST_INCLUDEDIR=/opt/local/include
-BOOST_UNITTEST_LIBFLAGS=-lboost_test_exec_monitor

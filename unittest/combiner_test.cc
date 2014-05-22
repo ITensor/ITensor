@@ -1,51 +1,34 @@
 #include "test.h"
 #include "combiner.h"
-#include <boost/test/unit_test.hpp>
 
-struct CombinerDefaults
+TEST_CASE("CombinerTest")
 {
-    const Index s1,s2,s3,s4,
-          s1P,s2P,s3P,s4P,
-          l1,l2,l3,l4,l5,l6,l7,l8,
-          a1,a2,a3,a4,
-          b2,b3,b4,b5;
+    Index s1("s1",2,Site);
+    Index s2("s2",2,Site);
+    Index s3("s3",2,Site);
+    Index s4("s4",2,Site);
+    Index s1P(primed(s1));
+    Index s2P(primed(s2));
+    Index s3P(primed(s3));
+    Index s4P(primed(s4));
+    Index l1("l1",2);
+    Index l2("l2",2);
+    Index l3("l3",2);
+    Index l4("l4",2);
+    Index l5("l5",2);
+    Index l6("l6",2);
+    Index l7("l7",2);
+    Index l8("l8",2);
+    Index a1("a1");
+    Index a2("a2");
+    Index a3("a3");
+    Index a4("a4");
+    Index b2("b2",2);
+    Index b3("b3",3);
+    Index b4("b4",4);
+    Index b5("b5",5);
 
-    CombinerDefaults() :
-    s1(Index("s1",2,Site)),
-    s2(Index("s2",2,Site)),
-    s3(Index("s3",2,Site)),
-    s4(Index("s4",2,Site)),
-    s1P(primed(s1)),
-    s2P(primed(s2)),
-    s3P(primed(s3)),
-    s4P(primed(s4)),
-    l1(Index("l1",2)),
-    l2(Index("l2",2)),
-    l3(Index("l3",2)),
-    l4(Index("l4",2)),
-    l5(Index("l5",2)),
-    l6(Index("l6",2)),
-    l7(Index("l7",2)),
-    l8(Index("l8",2)),
-    a1(Index("a1")),
-    a2(Index("a2")),
-    a3(Index("a3")),
-    a4(Index("a4")),
-    b2(Index("b2",2)),
-    b3(Index("b3",3)),
-    b4(Index("b4",4)),
-    b5(Index("b5",5))
-    {
-
-    }
-
-    ~CombinerDefaults() { }
-
-};
-
-BOOST_FIXTURE_TEST_SUITE(CombinerTest,CombinerDefaults)
-
-TEST(Constructors)
+SECTION("Constructors")
 {
 
     Combiner c1;
@@ -62,7 +45,7 @@ TEST(Constructors)
 
 }
 
-TEST(addLeft)
+SECTION("addLeft")
 {
     Combiner c1;
 
@@ -83,7 +66,7 @@ TEST(addLeft)
 
 }
 
-TEST(Product)
+SECTION("Product")
 {
 
     ITensor A(a1,b3,l2,a4,l3);
@@ -156,4 +139,4 @@ TEST(Product)
 
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+}

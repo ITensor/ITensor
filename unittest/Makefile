@@ -1,10 +1,6 @@
 include ../this_dir.mk
 include ../options.mk
-include unittest_options.mk
 ################################################################
-
-REPORT_LEVEL=confirm
-#REPORT_LEVEL=detailed
 
 HEADERS=test.h
 SOURCES = test.cc
@@ -12,7 +8,7 @@ SOURCES+= matrix_test.cc
 SOURCES+= real_test.cc
 SOURCES+= index_test.cc
 SOURCES+= itensor_test.cc
-SOURCES+= itsparse_test.cc
+#SOURCES+= itsparse_test.cc
 SOURCES+= combiner_test.cc
 SOURCES+= iqindex_test.cc
 SOURCES+= iqcombiner_test.cc
@@ -22,7 +18,7 @@ SOURCES+= mpo_test.cc
 SOURCES+= eigensolver_test.cc
 SOURCES+= regression_test.cc
 SOURCES+= svdalgs_test.cc
-SOURCES+= iqtsparse_test.cc
+#SOURCES+= iqtsparse_test.cc
 SOURCES+= webpage_test.cc
 SOURCES+= localmpo_test.cc
 SOURCES+= option_test.cc
@@ -37,9 +33,9 @@ GOBJECTS=$(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 
 #Define Flags ----------
 CCFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(CPPFLAGS) $(OPTIMIZATIONS)
-CCGFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) -I$(BOOST_UNITTEST_INCLUDEDIR) $(DEBUGFLAGS)
-LIBFLAGS=-L$(ITENSOR_LIBDIR) -L$(BOOST_UNITTEST_LIBDIR) $(BOOST_UNITTEST_LIBFLAGS) $(ITENSOR_LIBFLAGS)
-LIBGFLAGS=-L$(ITENSOR_LIBDIR) -L$(BOOST_UNITTEST_LIBDIR) $(BOOST_UNITTEST_LIBFLAGS) $(ITENSOR_LIBGFLAGS)
+CCGFLAGS= -I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
+LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
+LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 #Rules ------------------
 
@@ -55,7 +51,7 @@ run: test-g
 	@echo 
 	@echo Running all tests...
 	@echo 
-	@./test-g --report_level=$(REPORT_LEVEL)
+	@./test-g
 
 growl:
 	@make run && growlnotify -m "Tests Passed" || growlnotify -m "Test Failed"
