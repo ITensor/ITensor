@@ -4,19 +4,17 @@
 //
 #ifndef __ITENSOR_GLOBAL_H
 #define __ITENSOR_GLOBAL_H
-#include "prodstats.h"
 #include <cmath>
 #include <cstdlib>
+#include <sys/types.h>
+#include <unistd.h>
 #include <fstream>
 #include <complex>
+#include "assert.h"
 #include "error.h" //utilities
 #include "option.h"
-#include "assert.h"
+#include "prodstats.h"
 #include "cppversion.h"
-
-#include "boost/random/mersenne_twister.hpp"
-#include "boost/random/uniform_real_distribution.hpp"
-
 
 namespace itensor {
 
@@ -312,9 +310,9 @@ class Global
     static Real
     random(int seed = 0)
         {
-        typedef boost::random::mt19937 
+        typedef mt19937 
         Generator;
-        typedef boost::random::uniform_real_distribution<Real>
+        typedef uniform_real_distribution<Real>
         Distribution;
 
         static Generator rng(std::time(NULL)+getpid());

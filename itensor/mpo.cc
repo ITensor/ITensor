@@ -119,58 +119,6 @@ template
 void MPOt<IQTensor>::orthogonalize(const OptSet& opts);
 */
 
-/*
-template <class Tensor>
-void MPOt<Tensor>::
-svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
-    {
-    if(opts.getBool("PreserveShape",false))
-        {
-        //The idea of the preserve_shape flag is to 
-        //leave any external indices of the MPO on the
-        //tensors they originally belong to
-        Error("preserve_shape not currently implemented");
-        }
-
-    if(dir == Fromleft && b-1 > l_orth_lim_)
-        {
-        std::cout << boost::format("b=%d, l_orth_lim_=%d")
-                %b%l_orth_lim_ << std::endl;
-        Error("b-1 > l_orth_lim_");
-        }
-    if(dir == Fromright && b+2 < r_orth_lim_)
-        {
-        std::cout << boost::format("b=%d, r_orth_lim_=%d")
-                %b%r_orth_lim_ << std::endl;
-        Error("b+2 < r_orth_lim_");
-        }
-
-    Tensor D;
-    svd(AA,A_[b],D,A_[b+1],spectrum_.at(b),opts);
-
-    //Push singular values/amplitudes
-    //to the right or left as requested
-    //and update orth_lims
-    if(dir == Fromleft)
-        {
-        A_[b+1] *= D;
-
-        l_orth_lim_ = b;
-        if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
-        }
-    else //dir == Fromright
-        {
-        A_[b] *= D;
-
-        if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
-        r_orth_lim_ = b+1;
-        }
-    }
-template void MPOt<ITensor>::
-svdBond(int b, const ITensor& AA, Direction dir, const OptSet& opts);
-template void MPOt<IQTensor>::
-svdBond(int b, const IQTensor& AA, Direction dir, const OptSet& opts);
-*/
 
 template <class Tensor>
 MPOt<Tensor>& MPOt<Tensor>::
@@ -355,7 +303,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
         /*
         if(clust.norm() == 0) // this product gives 0 !!
             { 
-            cerr << boost::format("WARNING: clust.norm()==0 in nmultMPO (i=%d).\n")%i; 
+            cout << "WARNING: clust.norm()==0 in nmultMPO i=" << i << endl;
             res *= 0;
             return; 
             }
@@ -498,7 +446,7 @@ exactApplyMPO(const MPSt<Tensor>& x,
     res.Anc(1) = x.A(1) * K.A(1);
     for(int j = 1; j < N; ++j)
         {
-        //cerr << boost::format("exact_applyMPO: step %d\n") % j;
+        //cout << "exact_applyMPO: step " << j << endl;
         //Compute product of MPS tensor and MPO tensor
         res.Anc(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
 

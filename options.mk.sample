@@ -1,5 +1,11 @@
 ### User Configurable Options
 
+## Set equal to yes to tell ITensor your compiler supports C++11
+## (Also make sure to add a flag like -std=c++11 to the CCCOM variable below.)
+## If this is set to no, you must defined BOOST_DIR below
+## to point to the location of the Boost C++ library headers
+USE_CPP11=no
+
 ## Set which compiler to use:
 
 ##GNU GCC compiler, consider adding flag -std=c++11 to enable newer C++11 features
@@ -10,6 +16,7 @@ CCCOM=g++ -m64
 #CCCOM=icpc
 
 ## Location of boost (this folder should have another one called 'boost' inside it)
+## Only required if USE_CPP11=no
 BOOST_DIR=$(HOME)/boost
 
 ## Flags to give the compiler for "release mode"
@@ -80,6 +87,13 @@ BLAS_LAPACK_INCLUDEFLAGS=
 
 PREFIX=$(THIS_DIR)
 
+ifeq ($(USE_CPP11),yes)
+CCCOM += -DUSE_CPP11
+endif
+ifeq ($(USE_CPP11),true)
+CCCOM += -DUSE_CPP11
+endif
+
 ITENSOR_LIBDIR=$(PREFIX)/lib
 ITENSOR_INCLUDEDIR=$(PREFIX)/include
 
@@ -91,7 +105,10 @@ ITENSOR_LIBGFLAGS+= $(BLAS_LAPACK_LIBFLAGS)
 ITENSOR_LIBS=$(patsubst %,$(ITENSOR_LIBDIR)/lib%.a, $(ITENSOR_LIBNAMES))
 ITENSOR_GLIBS=$(patsubst %,$(ITENSOR_LIBDIR)/lib%-g.a, $(ITENSOR_LIBNAMES))
 
-ITENSOR_INCLUDEFLAGS=-I$(ITENSOR_INCLUDEDIR) -I$(BOOST_DIR) $(BLAS_LAPACK_INCLUDEFLAGS)
+ITENSOR_INCLUDEFLAGS=-I$(ITENSOR_INCLUDEDIR) $(BLAS_LAPACK_INCLUDEFLAGS)
+ifdef BOOST_DIR 
+ITENSOR_INCLUDEFLAGS += -I$(BOOST_DIR)
+endif
 
 CCFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -Wno-unused-variable
 CCGFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)

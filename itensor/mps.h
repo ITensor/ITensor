@@ -6,7 +6,6 @@
 #define __ITENSOR_MPS_H
 #include "svdalgs.h"
 #include "model.h"
-#include "boost/function.hpp"
 #include "bondgate.h"
 
 namespace itensor {

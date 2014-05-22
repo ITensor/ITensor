@@ -94,7 +94,7 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-DEPHEADERS=real.h option.h prodstats.h
+DEPHEADERS=cppversion.h real.h option.h prodstats.h
 option.o: $(DEPHEADERS)
 .debug_objs/option.o: $(DEPHEADERS)
 DEPHEADERS+= global.h index.h permutation.h

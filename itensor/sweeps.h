@@ -6,7 +6,6 @@
 #define __ITENSOR_SWEEPS_HEADER_H
 #include "global.h"
 #include "input.h"
-#include "boost/function.hpp"
 
 namespace itensor {
 
@@ -180,7 +179,7 @@ class SweepSetter
         return *this;
         }
 
-    typedef boost::function2<T,int,int> 
+    typedef function<T(int,int)> 
     Func;
 
     //
