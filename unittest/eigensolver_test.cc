@@ -3,21 +3,14 @@
 #include "hams/heisenberg.h"
 #include "model/spinhalf.h"
 #include "localmpo.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace itensor;
 using namespace std;
-using boost::format;
 
-struct EigenSolverDefaults
-    {
-    EigenSolverDefaults()
-        { }
-    };
+TEST_CASE("EigenSolverTest")
+{
 
-BOOST_FIXTURE_TEST_SUITE(EigenSolverTest,EigenSolverDefaults)
-
-TEST(FourSite)
+SECTION("FourSite")
     {
     //Exact 4 site energy is -1.6160254038 from DMRG
 
@@ -116,7 +109,7 @@ TEST(FourSite)
 
     }
 
-TEST(IQFourSite)
+SECTION("IQFourSite")
     {
     //Exact 4 site energy is -1.6160254038 from DMRG
 
@@ -145,4 +138,4 @@ TEST(IQFourSite)
 
     }
 
-BOOST_AUTO_TEST_SUITE_END()
+}

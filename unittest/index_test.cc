@@ -1,13 +1,11 @@
 #include "test.h"
 #include "index.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace itensor;
 using namespace std;
 
-BOOST_AUTO_TEST_SUITE(IndexTest)
 
-TEST(Null)
+TEST_CASE("Null")
     {
     Index i1;
     CHECK(i1.isNull());
@@ -17,7 +15,7 @@ TEST(Null)
     CHECK(!i2.isNull());
     }
 
-TEST(Primes)
+TEST_CASE("Primes")
     {
     Index I("I");
 
@@ -35,5 +33,4 @@ TEST(Primes)
     }
 
 
-BOOST_AUTO_TEST_SUITE_END()
 
