@@ -20,8 +20,8 @@ SOURCES+= mps.cc
 SOURCES+= mpo.cc 
 SOURCES+= tevol.cc
 
-HEADERS=option.h global.h allocator.h real.h permutation.h index.h prodstats.h \
-        indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h iqtensor.h \
+HEADERS=cppversion.h tinyformat.h print.h option.h global.h allocator.h real.h permutation.h index.h \
+        prodstats.h indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h model.h\
@@ -32,7 +32,7 @@ HEADERS=option.h global.h allocator.h real.h permutation.h index.h prodstats.h \
         model/tj.h model/Z3.h\
         eigensolver.h localop.h localmpo.h localmposet.h \
         partition.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h\
-        integrators.h idmrg.h TEvolObserver.h
+        integrators.h idmrg.h TEvolObserver.h iterpair.h
 
 
 
@@ -94,7 +94,7 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-DEPHEADERS=real.h option.h prodstats.h
+DEPHEADERS=cppversion.h real.h option.h prodstats.h
 option.o: $(DEPHEADERS)
 .debug_objs/option.o: $(DEPHEADERS)
 DEPHEADERS+= global.h index.h permutation.h

@@ -7,11 +7,8 @@
 namespace itensor {
 
 using std::ostream;
-using std::cout;
-using std::endl;
 using std::vector;
 using std::map;
-using boost::format;
 
 
 Condenser::
@@ -228,7 +225,7 @@ operator<<(std::ostream & s, const Condenser & c)
     s << "index maps \n";
     Foreach(const IndexMap& m, c.maps())
         {
-        s << "(" << m.small << "," << m.i << ") " << m.big << endl;
+        s << "(" << m.small << "," << m.i << ") " << m.big << "\n";
         }
     return s << std::endl;
     }

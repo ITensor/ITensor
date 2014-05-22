@@ -2,40 +2,28 @@
 #include "mps.h"
 #include "model/spinhalf.h"
 #include "model/spinless.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace itensor;
 
-struct MPSDefaults
+TEST_CASE("MPSTest")
+{
+
+static const int N = 10;
+SpinHalf shmodel(N);
+
+InitState shFerro(shmodel,"Up");
+InitState shNeel(shmodel);
+
+for(int j = 1; j <= N; ++j)
     {
-    static const int N = 10;
-    SpinHalf shmodel;
+    shNeel.set(j,j%2==1 ? "Up" : "Dn");
+    }
 
-    InitState shNeel, 
-              shFerro;
-
-    MPSDefaults() :
-    shmodel(N),
-    shNeel(shmodel),
-    shFerro(shmodel,"Up")
-        {
-        for(int j = 1; j <= N; ++j)
-            {
-            shNeel.set(j,j%2==1 ? "Up" : "Dn");
-            }
-        }
-
-    ~MPSDefaults() { }
-
-    };
-
-BOOST_FIXTURE_TEST_SUITE(MPSTest,MPSDefaults)
-
-TEST(Constructors)
+SECTION("Constructors")
     {
     }
 
-TEST(QNCheck)
+SECTION("QNCheck")
     {
     IQMPS psiNeel(shNeel);
     CHECK(checkQNs(psiNeel));
@@ -48,7 +36,7 @@ TEST(QNCheck)
     CHECK_EQUAL(totalQN(psiFerro),QN(10));
     }
 
-TEST(MPSAddition)
+SECTION("MPSAddition")
     {
     Spinless model(10);
 
@@ -68,7 +56,7 @@ TEST(MPSAddition)
     CHECK_EQUAL(totalQN(iqpsi),QN(0,1));
     }
 
-TEST(PositionTest)
+SECTION("PositionTest")
     {
     Spinless model(10);
 
@@ -88,4 +76,4 @@ TEST(PositionTest)
     }
 
 
-BOOST_AUTO_TEST_SUITE_END()
+}

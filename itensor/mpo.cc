@@ -16,7 +16,6 @@ using std::find;
 using std::pair;
 using std::make_pair;
 using std::string;
-using boost::format;
 
 template <class Tensor>
 MPOt<Tensor>::
@@ -120,58 +119,6 @@ template
 void MPOt<IQTensor>::orthogonalize(const OptSet& opts);
 */
 
-/*
-template <class Tensor>
-void MPOt<Tensor>::
-svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
-    {
-    if(opts.getBool("PreserveShape",false))
-        {
-        //The idea of the preserve_shape flag is to 
-        //leave any external indices of the MPO on the
-        //tensors they originally belong to
-        Error("preserve_shape not currently implemented");
-        }
-
-    if(dir == Fromleft && b-1 > l_orth_lim_)
-        {
-        std::cout << boost::format("b=%d, l_orth_lim_=%d")
-                %b%l_orth_lim_ << std::endl;
-        Error("b-1 > l_orth_lim_");
-        }
-    if(dir == Fromright && b+2 < r_orth_lim_)
-        {
-        std::cout << boost::format("b=%d, r_orth_lim_=%d")
-                %b%r_orth_lim_ << std::endl;
-        Error("b+2 < r_orth_lim_");
-        }
-
-    Tensor D;
-    svd(AA,A_[b],D,A_[b+1],spectrum_.at(b),opts);
-
-    //Push singular values/amplitudes
-    //to the right or left as requested
-    //and update orth_lims
-    if(dir == Fromleft)
-        {
-        A_[b+1] *= D;
-
-        l_orth_lim_ = b;
-        if(r_orth_lim_ < b+2) r_orth_lim_ = b+2;
-        }
-    else //dir == Fromright
-        {
-        A_[b] *= D;
-
-        if(l_orth_lim_ > b-1) l_orth_lim_ = b-1;
-        r_orth_lim_ = b+1;
-        }
-    }
-template void MPOt<ITensor>::
-svdBond(int b, const ITensor& AA, Direction dir, const OptSet& opts);
-template void MPOt<IQTensor>::
-svdBond(int b, const IQTensor& AA, Direction dir, const OptSet& opts);
-*/
 
 template <class Tensor>
 MPOt<Tensor>& MPOt<Tensor>::
@@ -248,7 +195,6 @@ checkQNs(const IQMPO& H)
     const QN Zero;
 
     int center = findCenter(H);
-    //std::cerr << boost::format("Found the OC at %d\n") % center;
     if(center == -1)
         {
         Error("Did not find an ortho. center");
@@ -260,7 +206,7 @@ checkQNs(const IQMPO& H)
         {
         if(H.A(i).isNull())
             {
-            std::cout << boost::format("A(%d) null, QNs not well defined\n")%i;
+            println("A(",i,") null, QNs not well defined");
             Error("QNs not well defined");
             }
         if(div(H.A(i)) != Zero)
@@ -276,14 +222,14 @@ checkQNs(const IQMPO& H)
         {
         if(rightLinkInd(H,i).dir() != In) 
             {
-            std::cout << boost::format("checkQNs: At site %d to the left of the OC, Right side Link not pointing In\n")%i;
+            println("checkQNs: At site ",i," to the left of the OC, Right side Link not pointing In");
             Error("Incorrect Arrow in IQMPO");
             }
         if(i > 1)
             {
             if(leftLinkInd(H,i).dir() != Out) 
                 {
-                std::cout << boost::format("checkQNs: At site %d to the left of the OC, Left side Link not pointing Out\n")%i;
+                println("checkQNs: At site ",i," to the left of the OC, Left side Link not pointing Out");
                 Error("Incorrect Arrow in IQMPO");
                 }
             }
@@ -295,12 +241,12 @@ checkQNs(const IQMPO& H)
         if(i < N)
         if(rightLinkInd(H,i).dir() != Out) 
             {
-            std::cout << boost::format("checkQNs: At site %d to the right of the OC, Right side Link not pointing Out\n")%i;
+            println("checkQNs: At site ",i," to the right of the OC, Right side Link not pointing Out");
             Error("Incorrect Arrow in IQMPO");
             }
         if(leftLinkInd(H,i).dir() != In) 
             {
-            std::cout << boost::format("checkQNs: At site %d to the right of the OC, Left side Link not pointing In\n")%i;
+            println("checkQNs: At site ",i," to the right of the OC, Left side Link not pointing In");
             Error("Incorrect Arrow in IQMPO");
             }
         }
@@ -357,7 +303,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
         /*
         if(clust.norm() == 0) // this product gives 0 !!
             { 
-            cerr << boost::format("WARNING: clust.norm()==0 in nmultMPO (i=%d).\n")%i; 
+            cout << "WARNING: clust.norm()==0 in nmultMPO i=" << i << endl;
             res *= 0;
             return; 
             }
@@ -500,7 +446,7 @@ exactApplyMPO(const MPSt<Tensor>& x,
     res.Anc(1) = x.A(1) * K.A(1);
     for(int j = 1; j < N; ++j)
         {
-        //cerr << boost::format("exact_applyMPO: step %d\n") % j;
+        //cout << "exact_applyMPO: step " << j << endl;
         //Compute product of MPS tensor and MPO tensor
         res.Anc(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
 
@@ -573,8 +519,7 @@ fitApplyMPO(Real fac,
             {
             if(verbose)
                 {
-                cout << format("Sweep=%d, HS=%d, Bond=(%d,%d)") 
-                        % sw % ha % b % (b+1) << endl;
+                println("Sweep=",sw,", HS=",ha,", Bond=(",b,",",b+1,")");
                 }
 
             Tensor lwfK = (BK.at(b-1).isNull() ? origPsi.A(b) : BK.at(b-1)*origPsi.A(b));
@@ -591,10 +536,9 @@ fitApplyMPO(Real fac,
 
             if(verbose)
                 {
-                cout << format("    Trunc. err=%.1E, States kept=%s")
-                        % res.spectrum(b).truncerr() 
-                        % showm(linkInd(res,b)) 
-                        << endl;
+                printfln("    Trunc. err=%.1E, States kept=%s",
+                         res.spectrum(b).truncerr(),
+                         showm(linkInd(res,b)) );
                 }
 
             if(ha == 1)
@@ -844,7 +788,6 @@ applyExpH(const MPSt<Tensor>& psi,
 
     for(int ord = order, n = 0; ord >= 1; --ord, ++n)
         {
-        //cout << format("Computing psi-tau/%d*H*psi%d (up == %s)") % ord % n % (up?"true":"false") << endl;
         const Real mpofac = -tau/(1.*ord);
 
         if(n > 0) lastB.swap(B);
@@ -932,8 +875,7 @@ putMPOLinks(MPO& W, const OptSet& opts)
     vector<Index> links(W.N());
     for(int b = 1; b < W.N(); ++b)
         {
-        format nm = format("%s%d") % pfix % b;
-        links.at(b) = Index(nm.str());
+        links.at(b) = Index(format("%s%d",pfix,b));
         }
     W.Anc(1) *= links.at(1)(1);
     for(int b = 2; b < W.N(); ++b)
@@ -954,11 +896,10 @@ putMPOLinks(IQMPO& W, const OptSet& opts)
     vector<IQIndex> links(N);
     for(int b = 1; b < N; ++b)
         {
-        format nm = format("%s%d") % pfix % b;
+        string nm = format("%s%d",pfix,b);
                
         q += div(W.A(b),Opt("Fast"));
-        links.at(b) = IQIndex(nm.str(),
-                             Index(nm.str()),q);
+        links.at(b) = IQIndex(nm,Index(nm),q);
         }
 
     W.Anc(1) *= links.at(1)(1);

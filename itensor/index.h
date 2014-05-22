@@ -5,11 +5,6 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include "global.h"
-#include "boost/shared_ptr.hpp"
-
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
 
 namespace itensor {
 
@@ -19,7 +14,7 @@ enum IndexType { Link, Site, All };
 struct IndexDat;
 class IndexVal;
 
-typedef boost::shared_ptr<IndexDat>
+typedef shared_ptr<IndexDat>
 IndexDatPtr;
 
 //
@@ -274,9 +269,5 @@ deprimed(T I, IndexType type = All) { I.noprime(type); return I; }
 
 
 }; //namespace itensor
-
-#undef Cout
-#undef Format
-#undef Endl
 
 #endif

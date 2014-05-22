@@ -1,13 +1,13 @@
 #include "test.h"
 #include "iqindex.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace itensor;
 using namespace std;
 
-BOOST_AUTO_TEST_SUITE(IQIndexTest)
+TEST_CASE("IQIndexTest")
+    {
 
-TEST(Null)
+SECTION("Null")
     {
     IQIndex i1;
     CHECK(i1.isNull());
@@ -17,13 +17,13 @@ TEST(Null)
     CHECK(!I.isNull());
     }
 
-TEST(Arrows)
+SECTION("Arrows")
     {
     CHECK_EQUAL(-In,Out);
     CHECK_EQUAL(-Out,In);
     }
 
-TEST(Primes)
+SECTION("Primes")
     {
     IQIndex I("I",Index("i"),QN());
 
@@ -41,5 +41,4 @@ TEST(Primes)
     }
 
 
-BOOST_AUTO_TEST_SUITE_END()
-
+}

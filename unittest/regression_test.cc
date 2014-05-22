@@ -1,10 +1,8 @@
 #include "test.h"
-#include <boost/test/unit_test.hpp>
 #include "svdalgs.h"
 
 using namespace itensor;
 using namespace std;
-using boost::format;
 
 //
 //The tests in this suite are
@@ -15,17 +13,7 @@ using boost::format;
 //to prevent the same bugs from coming up again.
 //
 
-struct RegressionDefaults
-    {
-    RegressionDefaults()
-        {
-        }
-
-    };
-
-BOOST_FIXTURE_TEST_SUITE(RegressionTest,RegressionDefaults)
-
-TEST(CombinerOrder)
+TEST_CASE("CombinerOrder")
     {
     Index a("a",2),c("c",2);
 
@@ -49,7 +37,7 @@ TEST(CombinerOrder)
     CHECK((U-UU).norm() < 1E-10);
     }
 
-TEST(SVDIndexOrder)
+TEST_CASE("SVDIndexOrder")
     {
     Index a("a",2),b("b",1),c("c",2);
 
@@ -104,7 +92,7 @@ TEST(SVDIndexOrder)
     //z(prime(a)(2),a(2),b(2),h(5)) = -0.753196;
     //z(prime(a)(3),a(3),b(2),h(5)) = -0.753196;
 
-TEST(SVDArrows)
+TEST_CASE("SVDArrows")
     {
     Index l("l",2),r("r",2);
     IQIndex L("L",l,QN(1,1),In),R("R",r,QN(1,1),Out);
@@ -126,7 +114,7 @@ TEST(SVDArrows)
     CHECK_EQUAL(div(V),Zero);
     }
 
-TEST(ExpandIndex)
+TEST_CASE("ExpandIndex")
     {
     //
     //ITensor::expandIndex was
@@ -156,7 +144,7 @@ TEST(ExpandIndex)
     CHECK_CLOSE(1,oo(S(2),prime(S)(2),l(1)),1E-5);
     }
 
-TEST(ConvertToITensor)
+TEST_CASE("ConvertToITensor")
     {
     IQIndex L("L",Index("l"),QN(),Out);
     Index emp("emp"),occ("occ");
@@ -178,7 +166,7 @@ TEST(ConvertToITensor)
 
 
 /*
-TEST(IndexOrder)
+TEST_CASE("IndexOrder")
     {
     //
     //The ITensor contracting product code,
@@ -219,7 +207,7 @@ TEST(IndexOrder)
     }
     */
 
-TEST(IdentComplexMult)
+TEST_CASE("IdentComplexMult")
     {
     //
     // Aug 25, 2013: contracting product working incorrectly
@@ -267,7 +255,7 @@ TEST(IdentComplexMult)
     CHECK(Diff.norm() < 1E-10);
     }
 
-TEST(ComplexAddition)
+TEST_CASE("ComplexAddition")
     {
     //EMS Oct 21, 2013
     //Bug was happening because a below has different
@@ -294,4 +282,3 @@ TEST(ComplexAddition)
     CHECK((imagPart(r)-a).norm() < 1E-12);
     }
 
-BOOST_AUTO_TEST_SUITE_END()

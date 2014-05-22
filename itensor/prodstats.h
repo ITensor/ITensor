@@ -48,7 +48,6 @@
 #include <map>
 #include <iostream>
 #include "error.h"
-#include "boost/format.hpp"
 
 #define NTIMERS 100
 
@@ -109,7 +108,7 @@ class Timers
                 const double count = tcount.at(j);
                 if(count > 0) 
                     {
-                    std::cout << boost::format("Section %d, Average Time = %.6f\n") % j % (time.at(j)/count);
+                    printfln("Section %d, Average Time = %.6f\n",j,(time.at(j)/count));
                     }
                 }
 
@@ -117,7 +116,7 @@ class Timers
                 {
                 if(tcount.at(j) > 0) 
                     {
-                    std::cout << boost::format("Section %d, Total Time = %.6f\n") % j % time.at(j);
+                    printfln("Section %d, Total Time = %.6f\n",j,time.at(j));
                     }
                 }
             std::cout << std::endl;
@@ -168,9 +167,9 @@ class Prodstats
             //std::cout << "\n-------- Product Statistics ----------\n";
             //std::cout << "Global Count: " << std::endl;
             //for(CountMap::const_iterator pp = global.begin(); pp != global.end(); ++pp)
-            //    std::cout << boost::format("(%d,%d) = %d\n")%pp->first.first%pp->first.second%pp->second;
+            //    printfln("(%d,%d) = %d",pp->first.first,pp->first.second,pp->second);
             //std::cout << "Total = " << total << std::endl;
-            //std::cout << boost::format("# Matrices = %d (%.2f%%)\n") % (did_matrix) % (total == 0 ? 0 : (100.0*(1.*did_matrix/(2*total))));
+            //printfln("# Matrices = %d (%.2f%%)",(did_matrix),(total == 0 ? 0 : (100.0*(1.*did_matrix/(2*total)))));
 
             //std::cout << "# Case 1 = " << c1 << std::endl;
             //std::cout << "# Case 2 = " << c2 << std::endl;
@@ -189,7 +188,7 @@ class Prodstats
             //    int i1 = (c%3 == 0 ? 3 : c%3);
             //    int idx = ((i1-1)*3+i2-1)*3+i3;
             //    if(idx != j) std::cout << "Incorrect idx val (perms of 3)." << std::endl;
-            //    std::cout << boost::format("(%02d) %d, %d, %d = %d\n") % j % i1 % i2 % i3 % perms_of_3[j];
+            //    printfln("(%02d) %d, %d, %d = %d",j,i1,i2,i3,perms_of_3[j]);
             //    }
 
             //std::cout << "Permutations of 4 Count: " << std::endl;
@@ -206,7 +205,7 @@ class Prodstats
             //    int i1 = (c%4 == 0 ? 4 : c%4);
             //    int idx = (((i1-1)*4+i2-1)*4+i3-1)*4+i4;
             //    if(idx != j) std::cout << "Incorrect idx val (perms of 4)." << std::endl;
-            //    std::cout << boost::format("(%02d) %d, %d, %d, %d = %d\n") % j % i1 % i2 % i3 % i4 % perms_of_4[j];
+            //    printfln("(%02d) %d, %d, %d, %d = %d",j,i1,i2,i3,i4,perms_of_4[j]);
             //    }
 
             //std::cout << "Permutations of 5 Count: " << std::endl;
@@ -225,13 +224,13 @@ class Prodstats
             //    int i1 = (c%5 == 0 ? 5 : c%5);
             //    int idx = ((((i1-1)*5+i2-1)*5+i3-1)*5+i4-1)*5+i5;
             //    if(idx != j) std::cout << "Incorrect idx val (perms of 5)." << std::endl;
-            //    std::cout << boost::format("(%02d) %d, %d, %d, %d, %d = %d\n") % j % i1 % i2 % i3 % i4 % i5 % perms_of_5[j];
+            //    printfln("(%02d) %d, %d, %d, %d, %d = %d",j,i1,i2,i3,i4,i5,perms_of_5[j]);
             //    }
 
             //std::cout << "Permutations of 6 Count: " << std::endl;
             //for(int j = 0; j < (int) perms_of_6.size(); ++j)
             //    {
-            //    //std::cout << boost::format("po6[%d] = %d\n") % j % perms_of_6[j];
+            //    //printfln("po6[%d] = %d",j,perms_of_6[j]);
             //    if(perms_of_6[j] == 0) continue;
             //    int c = j;
             //    int i6 = (c%6 == 0 ? 6 : c%6);
@@ -247,7 +246,7 @@ class Prodstats
             //    int i1 = (c%6 == 0 ? 6 : c%6);
             //    int idx = (((((i1-1)*6+i2-1)*6+i3-1)*6+i4-1)*6+i5-1)*6+i6;
             //    if(idx != j) std::cout << "Incorrect idx val (perms of 6)." << std::endl;
-            //    std::cout << boost::format("(%02d) %d, %d, %d, %d, %d, %d = %d\n") % j % i1 % i2 % i3 % i4 % i5 % i6 % perms_of_6[j];
+            //    printfln("(%02d) %d, %d, %d, %d, %d, %d = %d",j,i1,i2,i3,i4,i5,i6,perms_of_6[j]);
             //    }
 
             }

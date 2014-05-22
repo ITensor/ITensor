@@ -1,170 +1,129 @@
 #include "test.h"
 #include "svdalgs.h"
-#include <boost/test/unit_test.hpp>
 
 using namespace itensor;
 using namespace std;
-using boost::format;
 
-struct SVDAlgsDefaults
+TEST_CASE("SVDAlgsTest")
+{
+IQIndex S1,S2,L1,L2,Mid,Mid10;
+
+
+IQTensor Phi0,L,R,Psi;
+IQTensor V;
+ITensor phi0,l,r,psi;
+ITensor v;
+
+Index s1u("Site1 Up",1,Site);
+Index s1d("Site1 Dn",1,Site);
+Index s2u("Site2 Up",1,Site);
+Index s2d("Site2 Dn",1,Site);
+Index l1u("Link1 Up",10,Link);
+Index l10("Link1 Z0",20,Link);
+Index l1d("Link1 Dn",10,Link);
+Index l2u("Link2 Up",5,Link);
+Index l20("Link2 Z0",50,Link);
+Index l2d("Link2 Dn",5,Link);
+Index mid("mid");
+Index mid10u("mid10u",2);
+Index mid10z("mid10z",5);
+Index mid10d("mid10d",3);
+
+S1 = IQIndex("S1",
+             s1u,QN(+1),
+             s1d,QN(-1),Out);
+S2 = IQIndex("S2",
+             s2u,QN(+1),
+             s2d,QN(-1),Out);
+L1 = IQIndex("L1",
+             l1u,QN(+1),
+             l10,QN( 0),
+             l1d,QN(-1),
+             Out);
+L2 = IQIndex("L2",
+             l2u,QN(+1),
+             l20,QN( 0),
+             l2d,QN(-1),
+             Out);
+
+Mid = IQIndex("Mid",mid,QN(),Out);
+
+Mid10 = IQIndex("Mid10",
+                mid10u,QN(+1),
+                mid10z,QN( 0),
+                mid10d,QN(-1),
+                Out);
+
+//Construct a divergenceless IQTensor phi0
+Phi0 = IQTensor(L1,S1,S2,L2);
     {
+    ITensor uudd(l1u,s1u,s2d,l2d);
+    uudd.randomize();
+    Phi0 += uudd;
 
-    IQIndex S1,S2,L1,L2,Mid,Mid10;
+    ITensor zudz(l10,s1u,s2d,l20);
+    zudz.randomize();
+    Phi0 += zudz;
 
-    const Index
-        s1u,s1d,s2u,s2d,
-        l1u,l10,l1d,
-        l2u,l20,l2d,
-        mid,
-        mid10u,mid10z,mid10d;
+    ITensor duud(l1d,s1u,s2u,l2d);
+    duud.randomize();
+    Phi0 += duud;
+    }
+Phi0 *= 1.0/Phi0.norm();
 
-    IQTensor Phi0,L,R,Psi;
-    IQTensor V;
-    ITensor phi0,l,r,psi;
-    ITensor v;
+const QN Zero;
+CHECK_EQUAL(div(Phi0),Zero);
 
-    SVDAlgsDefaults()
-        :
-        s1u(Index("Site1 Up",1,Site)),
-        s1d(Index("Site1 Dn",1,Site)),
-        s2u(Index("Site2 Up",1,Site)),
-        s2d(Index("Site2 Dn",1,Site)),
-        l1u(Index("Link1 Up",10,Link)),
-        l10(Index("Link1 Z0",20,Link)),
-        l1d(Index("Link1 Dn",10,Link)),
-        l2u(Index("Link2 Up",5,Link)),
-        l20(Index("Link2 Z0",50,Link)),
-        l2d(Index("Link2 Dn",5,Link)),
-        mid(Index("mid")),
-        mid10u(Index("mid10u",2)),
-        mid10z(Index("mid10z",5)),
-        mid10d(Index("mid10d",3)) 
-        {
-        S1 = IQIndex("S1",
-                     s1u,QN(+1),
-                     s1d,QN(-1),Out);
-        S2 = IQIndex("S2",
-                     s2u,QN(+1),
-                     s2d,QN(-1),Out);
-        L1 = IQIndex("L1",
-                     l1u,QN(+1),
-                     l10,QN( 0),
-                     l1d,QN(-1),
-                     Out);
-        L2 = IQIndex("L2",
-                     l2u,QN(+1),
-                     l20,QN( 0),
-                     l2d,QN(-1),
-                     Out);
+phi0 = Phi0.toITensor();
 
-        Mid = IQIndex("Mid",mid,QN(),Out);
+L = IQTensor(L1,S1,conj(Mid10));
+    {
+    ITensor zuu(l10,s1u,mid10u);
+    zuu.randomize();
+    L += zuu;
 
-        Mid10 = IQIndex("Mid10",
-                        mid10u,QN(+1),
-                        mid10z,QN( 0),
-                        mid10d,QN(-1),
-                        Out);
+    ITensor udz(l1u,s1d,mid10z);
+    udz.randomize();
+    L += udz;
 
-        //Construct a divergenceless IQTensor phi0
-        Phi0 = IQTensor(L1,S1,S2,L2);
-            {
-            ITensor uudd(l1u,s1u,s2d,l2d);
-            uudd.randomize();
-            Phi0 += uudd;
+    ITensor duz(l1d,s1u,mid10z);
+    duz.randomize();
+    L += duz;
 
-            ITensor zudz(l10,s1u,s2d,l20);
-            zudz.randomize();
-            Phi0 += zudz;
+    ITensor zdd(l10,s1d,mid10d);
+    zdd.randomize();
+    L += zdd;
+    }
+L *= 1./L.norm();
+l = L.toITensor();
 
-            ITensor duud(l1d,s1u,s2u,l2d);
-            duud.randomize();
-            Phi0 += duud;
-            }
-        Phi0 *= 1.0/Phi0.norm();
+R = IQTensor(Mid10,S2,L2);
+    {
+    ITensor zud(mid10z,s2u,l2d);
+    zud.randomize();
+    R += zud;
 
-        const QN Zero;
-        CHECK_EQUAL(div(Phi0),Zero);
+    ITensor udz(mid10u,s2d,l20);
+    udz.randomize();
+    R += udz;
 
-        phi0 = Phi0.toITensor();
+    ITensor duz(mid10d,s2u,l20);
+    duz.randomize();
+    R += duz;
 
-        L = IQTensor(L1,S1,conj(Mid10));
-            {
-            ITensor zuu(l10,s1u,mid10u);
-            zuu.randomize();
-            L += zuu;
+    ITensor zdu(mid10z,s2d,l2u);
+    zdu.randomize();
+    R += zdu;
+    }
+R *= 1./R.norm();
+r = R.toITensor();
 
-            ITensor udz(l1u,s1d,mid10z);
-            udz.randomize();
-            L += udz;
+Psi = L;
+Psi *= R;
 
-            ITensor duz(l1d,s1u,mid10z);
-            duz.randomize();
-            L += duz;
+psi = Psi.toITensor();
 
-            ITensor zdd(l10,s1d,mid10d);
-            zdd.randomize();
-            L += zdd;
-            }
-        L *= 1./L.norm();
-        l = L.toITensor();
-
-        R = IQTensor(Mid10,S2,L2);
-            {
-            ITensor zud(mid10z,s2u,l2d);
-            zud.randomize();
-            R += zud;
-
-            ITensor udz(mid10u,s2d,l20);
-            udz.randomize();
-            R += udz;
-
-            ITensor duz(mid10d,s2u,l20);
-            duz.randomize();
-            R += duz;
-
-            ITensor zdu(mid10z,s2d,l2u);
-            zdu.randomize();
-            R += zdu;
-            }
-        R *= 1./R.norm();
-        r = R.toITensor();
-
-        /*
-        V = IQTensor(Mid10);
-            {
-            Vector diag;
-
-            diag.ReDimension(mid10u.m());
-            for(int j = 1; j <= mid10u.m(); ++j)
-                diag(j) = 0.5*sqrt(1.*j);
-            V += ITensor(mid10u,diag);
-
-            diag.ReDimension(mid10z.m());
-            for(int j = 1; j <= mid10z.m(); ++j)
-                diag(j) = 2.121*sqrt(1.*j+7);
-            V += ITensor(mid10z,diag);
-
-            diag.ReDimension(mid10d);
-            for(int j = 1; j <= mid10d.m(); ++j)
-                diag(j) = 4.323*sqrt(1.*j+10);
-            V += ITensor(mid10d,diag);
-            }
-        v = V;
-        */
-
-        Psi = L;
-        //Psi /= V;
-        Psi *= R;
-
-        psi = Psi.toITensor();
-        }
-
-
-    };
-
-BOOST_FIXTURE_TEST_SUITE(SVDAlgsTest,SVDAlgsDefaults)
-
-TEST(SiteSVD)
+SECTION("SiteSVD")
     {
     //
     //ITensor version
@@ -195,7 +154,7 @@ TEST(SiteSVD)
     CHECK(spec.truncerr() < 1E-12);
     }
 
-TEST(BondSVD)
+SECTION("BondSVD")
     {
     //
     //ITensor version
@@ -231,7 +190,7 @@ TEST(BondSVD)
     
     }
 
-TEST(CSVDNorm)
+SECTION("CSVDNorm")
     {
     //
     //ITensor version
@@ -276,7 +235,7 @@ TEST(CSVDNorm)
 
     }
 
-TEST(AbsoluteCutoff)
+SECTION("AbsoluteCutoff")
     {
     OptSet opts;
     opts.add("AbsoluteCutoff",true);
@@ -321,7 +280,7 @@ TEST(AbsoluteCutoff)
     }
 
 /*
-TEST(UseOrigM)
+SECTION("UseOrigM")
     {
     SVDWorker svd;
     svd.cutoff(1E-2);
@@ -356,7 +315,7 @@ TEST(UseOrigM)
     */
 
 /*
-TEST(SvdRank2)
+SECTION("SvdRank2")
     {
     int n = 10, m = 5;
 
@@ -407,7 +366,7 @@ TEST(SvdRank2)
     }
     */
 
-TEST(ComplexSVD)
+SECTION("ComplexSVD")
     {
     IQTensor TR(L1(1),prime(L1(31))),
              TI(L1(1),prime(L1(31)));
@@ -423,7 +382,7 @@ TEST(ComplexSVD)
     CHECK(diff.norm() < 1E-10);
     }
 
-TEST(ComplexDenmat)
+SECTION("ComplexDenmat")
     {
     Index r("r",4),c("c",4);
     ITensor rr(r,c),ri(r,c);
@@ -451,7 +410,7 @@ TEST(ComplexDenmat)
     //PrintDat(V);
     }
 
-TEST(Diagonalization)
+SECTION("Diagonalization")
     {
     Index s1("s1",2,Site),s2("s2",2,Site);
     ITensor M(s1,s2,prime(s2),prime(s1));
@@ -482,7 +441,7 @@ TEST(Diagonalization)
     CHECK((T-(prime(UU)*DD*conj(UU))).norm() < 1E-14);
     }
 
-TEST(ComplexDiagonalization)
+SECTION("ComplexDiagonalization")
     {
     Index s1("s1",2,Site),s2("s2",2,Site);
     ITensor Mr(s1,s2,prime(s2),prime(s1)),
@@ -521,7 +480,7 @@ TEST(ComplexDiagonalization)
     CHECK((conj(T)-(prime(UU)*DD*conj(UU))).norm() < 1E-14);
     }
 
-TEST(OrthoDecomp)
+SECTION("OrthoDecomp")
     {
     ITensor phi(Phi0);
     ITensor cphi(phi);
@@ -571,7 +530,7 @@ TEST(OrthoDecomp)
     }
 
 
-TEST(EigDecomp)
+SECTION("EigDecomp")
     {
     Index i("i",4),
           j("j",10);
@@ -593,7 +552,7 @@ TEST(EigDecomp)
     CHECK((M*V - prime(V)*D).norm() < 1E-11);
     }
 
-TEST(IQEigDecomp)
+SECTION("IQEigDecomp")
     {
     IQIndex I("J",Index("I-",2),QN(-1),
                   Index("I0",2),QN(+0),
@@ -619,4 +578,4 @@ TEST(IQEigDecomp)
     CHECK((M*V - prime(V)*D).norm() < 1E-11);
     }
 
-BOOST_AUTO_TEST_SUITE_END()
+}

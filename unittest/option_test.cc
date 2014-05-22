@@ -1,12 +1,9 @@
 #include "test.h"
-#include <boost/test/unit_test.hpp>
-#include "global.h"
-#include "option.h"
 
-using namespace itensor;
+#include "global.h"
 
 using namespace std;
-using namespace boost;
+using namespace itensor;
 
 OptSet
 string_test_function(const OptSet& opts)
@@ -14,9 +11,8 @@ string_test_function(const OptSet& opts)
     return opts;
     }
 
-BOOST_AUTO_TEST_SUITE(OptTest)
 
-TEST(BasicUsage)
+TEST_CASE("BasicUsage")
     {
     Opt o1("Quiet");
     Opt o2("Quiet");
@@ -36,22 +32,22 @@ TEST(BasicUsage)
     CHECK_EQUAL(o5.name(),"UseSVD");
     CHECK_EQUAL(o5.type(),Opt::Boolean);
     CHECK_EQUAL(o5.boolVal(),true);
-    CHECK_THROW(o5.intVal(),ITError);
+    CHECK_THROWS_AS(o5.intVal(),ITError);
 
     Opt o6("UseSVD",false);
     CHECK_EQUAL(o6.name(),"UseSVD");
     CHECK_EQUAL(o6.type(),Opt::Boolean);
     CHECK_EQUAL(o6.boolVal(),false);
-    CHECK_THROW(o6.realVal(),ITError);
+    CHECK_THROWS_AS(o6.realVal(),ITError);
 
     Opt o7("Name","index");
     CHECK_EQUAL(o7.name(),"Name");
     CHECK_EQUAL(o7.type(),Opt::String);
     CHECK_EQUAL(o7.stringVal(),"index");
-    CHECK_THROW(o7.boolVal(),ITError);
+    CHECK_THROWS_AS(o7.boolVal(),ITError);
     }
 
-TEST(TestOptSet)
+TEST_CASE("TestOptSet")
     {
     OptSet& gopts = OptSet::GlobalOpts();
 
@@ -95,7 +91,7 @@ TEST(TestOptSet)
     CHECK(opts3.defined("Auto"));
     }
 
-TEST(Operator)
+TEST_CASE("Operator")
     {
     OptSet oset1; 
     oset1 &= "Quiet";
@@ -109,7 +105,7 @@ TEST(Operator)
     CHECK(oset1.defined("Pinning"));
     }
 
-TEST(StringConstructor)
+TEST_CASE("StringConstructor")
     {
     OptSet o1("Quiet,Auto,Pinning=-0.5");
     CHECK(o1.defined("Quiet"));
@@ -134,5 +130,4 @@ TEST(StringConstructor)
     }
 
 
-BOOST_AUTO_TEST_SUITE_END()
 

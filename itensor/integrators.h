@@ -7,10 +7,6 @@
 
 #include "global.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 //
@@ -91,9 +87,5 @@ midpointMethod(const Deriv& D, Real tstep, std::vector<Tensor>& v,
     }
 
 }; //namespace itensor
-
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

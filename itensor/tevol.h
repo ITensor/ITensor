@@ -9,10 +9,6 @@
 #include "bondgate.h"
 #include "TEvolObserver.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 //
@@ -89,11 +85,7 @@ gateTEvol(const Iterable& gatelist,
     psi.position(gatelist.front().i());
     if(verbose) 
         {
-        Cout << Format("Taking %d steps of timestep %.5f, total time %.5f")
-                % nt
-                % tstep
-                % ttotal
-                << Endl;
+        printfln("Taking %d steps of timestep %.5f, total time %.5f",nt,tstep,ttotal);
         }
     for(int tt = 1; tt <= nt; ++tt)
         {
@@ -119,7 +111,7 @@ gateTEvol(const Iterable& gatelist,
         }
     if(verbose) 
         {
-        Cout << Format("\nTotal time evolved = %.5f\n") % tsofar << Endl;
+        printfln("\nTotal time evolved = %.5f\n",tsofar);
         }
 
     return tot_norm;
@@ -140,8 +132,5 @@ gateTEvol(const Iterable& gatelist,
 
 }; //namespace itensor
 
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

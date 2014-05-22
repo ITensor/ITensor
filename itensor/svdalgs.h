@@ -8,9 +8,6 @@
 #include "localop.h"
 #include "spectrum.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
 
 namespace itensor {
 
@@ -288,7 +285,6 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
     //that keeps mid's arrow the same
     if(dir == None)
         {
-        //Cout << Format("Arrow before = %s")%(mid.dir() == Out ? "Out" : "In") << Endl;
         dir = (mid.dir() == Out ? Fromright : Fromleft);
         }
 
@@ -397,7 +393,7 @@ diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
         }
     catch(const ITError& e)
         {
-        Cout << "Diagonalize expects opposite arrow directions for primed and unprimed indices." << Endl;
+        println("Diagonalize expects opposite arrow directions for primed and unprimed indices.");
         throw e;
         }
 
@@ -548,10 +544,6 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
     }
 
 }; //namespace itensor
-
-#undef Cout
-#undef Format
-#undef Endl
 
 
 #endif

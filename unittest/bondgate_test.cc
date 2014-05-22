@@ -1,28 +1,17 @@
 #include "test.h"
-#include <boost/test/unit_test.hpp>
 #include "bondgate.h"
 #include "model/spinhalf.h"
 
 using std::vector;
 using namespace itensor;
 
-struct BondGateDefaults
-    {
-    int N; 
-    SpinHalf sites;
+TEST_CASE("BondGateTest")
+{
 
-    BondGateDefaults()
-    :
-    N(10),
-    sites(N)
-    {
-    }
+const int N = 10;
+SpinHalf sites(N);
 
-    }; 
-
-BOOST_FIXTURE_TEST_SUITE(BondGateTest,BondGateDefaults)
-
-TEST(SwapGate)
+SECTION("SwapGate")
     {
     Gate sw12(sites,1,2);
     ITensor id = multSiteOps(sw12.gate(),sw12.gate());
@@ -33,7 +22,7 @@ TEST(SwapGate)
     CHECK((qid-sites.op("Id",1)*sites.op("Id",2)).norm() < 1E-12);
     }
 
-TEST(ImagTimeGates)
+SECTION("ImagTimeGates")
     {
     vector<IQTensor> H(N+1);
     for(int b = 1; b < N; ++b)
@@ -61,7 +50,7 @@ TEST(ImagTimeGates)
         }
     }
 
-TEST(RealTimeGate)
+SECTION("RealTimeGate")
     {
     vector<IQTensor> H(N+1);
     for(int b = 1; b < N; ++b)
@@ -89,5 +78,4 @@ TEST(RealTimeGate)
         }
     }
 
-
-BOOST_AUTO_TEST_SUITE_END()
+}

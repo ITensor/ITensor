@@ -1,30 +1,20 @@
 #include "test.h"
-#include "matrix.h"
-#include <boost/test/unit_test.hpp>
-#include "boost/format.hpp"
+
+#include "global.h"
 #include "math.h"
 
-#include <fstream>
+using namespace itensor;
+using namespace std;
 
 Real
 sqr(Real x) { return x*x; }
 
-//using namespace itensor;
-using namespace std;
-using boost::format;
+TEST_CASE("MatrixTest")
+{
 
-struct MatrixDefaults
-    {
-    int N; 
-    MatrixDefaults() 
-        :
-        N(20)
-        {} 
-    };
+int N = 20;
 
-BOOST_FIXTURE_TEST_SUITE(MatrixTest,MatrixDefaults)
-
-TEST(MatrixVectorMultiply)
+SECTION("MatrixVectorMultiply")
     {
     const int N = 10;
 
@@ -50,13 +40,13 @@ TEST(MatrixVectorMultiply)
             val1 += M(r,c)*V(c);
             val2 += fac*M(c,r)*V(c);
             }
-        CHECK_CLOSE(val1,R1(r),1E-5);
-        CHECK_CLOSE(val2,R2(r),1E-5);
+        REQUIRE(fabs(val1-R1(r)) < 1E-5);
+        REQUIRE(fabs(val2-R2(r)) < 1E-5);
         }
 
     }
 
-TEST(TestEigenValues)
+SECTION("TestEigenValues")
     {
     Matrix A(N,N);
     A.Randomize();
@@ -71,51 +61,12 @@ TEST(TestEigenValues)
         {
         Vector diff = D(j)*U.Column(j);
         diff -= A*U.Column(j);
-        CHECK(Norm(diff) < 1E-10);
+        REQUIRE(Norm(diff) < 1E-10);
         }
     }
 
-/*
-TEST(GeneralizedEigenValues)
-    {
-    Matrix A(N,N);
-    A.Randomize();
-    A += A.t();
 
-    vector<Vector> b(N);
-    for(int j = 0; j < N; ++j)
-        {
-        b[j] = Vector(N);
-        b[j].Randomize();
-        b[j] *= 1./Norm(b[j]);
-        }
-
-    Matrix B(N,N);
-    for(int i = 0; i < N; ++i)
-    for(int j = 0; j < N; ++j)
-        {
-        B(i+1,j+1) = b[i]*b[j];
-        }
-
-    Matrix U;
-    Vector D;
-    GeneralizedEV(A,B,D,U);
-
-    for(int j = 1; j <= N; ++j)
-        {
-        Vector diff = D(j)*B*U.Column(j);
-        diff -= A*U.Column(j);
-        if(Norm(diff) > 1E-8)
-            {
-            cerr << format("j = %d: Norm(diff) = %.3E\n") % j % Norm(diff);
-            cerr << format("j = %d: D(j) = %.3E\n") % j % D(j);
-            }
-        CHECK(Norm(diff) < 1E-7);
-        }
-    }
-    */
-
-TEST(TestSVD)
+SECTION("TestSVD")
     {
     int n = 200, m = 400;
     Matrix A(n,m);
@@ -135,11 +86,10 @@ TEST(TestSVD)
     Matrix DD(n,n); DD = 0.0; DD.Diagonal() = D;
     Matrix err = A - U * DD * V;
     Real sumerrsq = Trace(err * err.t());
-    //cout << format("Avg err is %.2E") % sqrt(sumerrsq/(n*m)) << endl;
-    CHECK(sumerrsq < 1E-12);
+    REQUIRE(sumerrsq < 1E-12);
     }
 
-TEST(TestSVDComplex)
+SECTION("TestSVDComplex")
     {
     const int n = 10,
               m = 20;
@@ -159,8 +109,8 @@ TEST(TestSVDComplex)
     Matrix ReDiff = Are-(Ure*DD*Vre-Uim*DD*Vim);
     Matrix ImDiff = Aim-(Ure*DD*Vim+Uim*DD*Vre);
 
-    CHECK(Norm(ReDiff.TreatAsVector()) < 1E-10);
-    CHECK(Norm(ImDiff.TreatAsVector()) < 1E-10);
+    REQUIRE(Norm(ReDiff.TreatAsVector()) < 1E-10);
+    REQUIRE(Norm(ImDiff.TreatAsVector()) < 1E-10);
 
     //
     // Check nrows > ncols case
@@ -176,11 +126,11 @@ TEST(TestSVDComplex)
     ReDiff = Bre-(Ure*DD*Vre-Uim*DD*Vim);
     ImDiff = Bim-(Ure*DD*Vim+Uim*DD*Vre);
 
-    CHECK(Norm(ReDiff.TreatAsVector()) < 1E-10);
-    CHECK(Norm(ImDiff.TreatAsVector()) < 1E-10);
+    REQUIRE(Norm(ReDiff.TreatAsVector()) < 1E-10);
+    REQUIRE(Norm(ImDiff.TreatAsVector()) < 1E-10);
     }
 
-TEST(TestRecursiveComplexSVD)
+SECTION("TestRecursiveComplexSVD")
     {
     const int n = 100,
               m = 300;
@@ -201,11 +151,10 @@ TEST(TestRecursiveComplexSVD)
     Matrix err_re = Are - (Ure*DD*Vre - Uim*DD*Vim);
     Matrix err_im = Aim - (Ure*DD*Vim + Uim*DD*Vre);
     Real sumerrsq = Trace(err_re * err_re.t() + err_im * err_im.t());
-    //cout << format("Avg err is %.2E") % sqrt(sumerrsq/(n*m)) << endl;
-    CHECK(sumerrsq < 1E-12);
+    REQUIRE(sumerrsq < 1E-12);
     }
 
-TEST(TestHermitianEigs)
+SECTION("TestHermitianEigs")
     {
     const int n = 40;
     Matrix Are(n,n),
@@ -228,11 +177,11 @@ TEST(TestHermitianEigs)
     Matrix ReDiff = Are-(Ure*DD*Ure.t()+Uim*DD*Uim.t());
     Matrix ImDiff = Aim-(-Ure*DD*Uim.t()+Uim*DD*Ure.t());
 
-    CHECK(Norm(ReDiff.TreatAsVector()) < 1E-10);
-    CHECK(Norm(ImDiff.TreatAsVector()) < 1E-10);
+    REQUIRE(Norm(ReDiff.TreatAsVector()) < 1E-10);
+    REQUIRE(Norm(ImDiff.TreatAsVector()) < 1E-10);
     }
 
-TEST(TestRealDiag)
+SECTION("TestRealDiag")
     {
     const int N = 100;
     Matrix A(N,N);
@@ -276,11 +225,11 @@ TEST(TestRealDiag)
     Matrix ImDiff = A*Uim - (Ure*DDi+Uim*DDr);
 
     //cout << (Norm(ReDiff.TreatAsVector())) << endl;
-    CHECK(Norm(ReDiff.TreatAsVector()) < 1E-12);
-    CHECK(Norm(ImDiff.TreatAsVector()) < 1E-12);
+    REQUIRE(Norm(ReDiff.TreatAsVector()) < 1E-12);
+    REQUIRE(Norm(ImDiff.TreatAsVector()) < 1E-12);
     }
 
-TEST(TestNormalMatrixDiag)
+SECTION("TestNormalMatrixDiag")
     {
     //
     // For a normal matrix A such that A.t()*A == A*A.t()
@@ -337,11 +286,11 @@ TEST(TestNormalMatrixDiag)
 
     //cout << (Norm(ReDiff.TreatAsVector())) << endl;
     //cout << (Norm(ImPart.TreatAsVector())) << endl;
-    CHECK(Norm(ReDiff.TreatAsVector()) < 1E-12);
-    CHECK(Norm(ImPart.TreatAsVector()) < 1E-12);
+    REQUIRE(Norm(ReDiff.TreatAsVector()) < 1E-12);
+    REQUIRE(Norm(ImPart.TreatAsVector()) < 1E-12);
     }
 
-TEST(ComplexOrthog)
+SECTION("ComplexOrthog")
     {
     //
     // For a normal matrix A such that A.t()*A == A*A.t()
@@ -378,14 +327,14 @@ TEST(ComplexOrthog)
         }
 
     for(int j = 1; j <= N; ++j)
-        CHECK(fabs(Ore(j,j)-1) < 1E-12);
+        REQUIRE(fabs(Ore(j,j)-1) < 1E-12);
 
 
-    CHECK(re_err < 1E-12);
-    CHECK(Norm(Oim.TreatAsVector()) < 1E-12);
+    REQUIRE(re_err < 1E-12);
+    REQUIRE(Norm(Oim.TreatAsVector()) < 1E-12);
     }
 
-TEST(RectQR)
+SECTION("RectQR")
     {
     const
     int r = 4,
@@ -413,15 +362,15 @@ TEST(RectQR)
     //Check that diagonal elems of R are > 0
     //for(int j = 1; j <= m; ++j)
     //    {
-    //    CHECK(R(j,j) > 0);
-    //    if(R(j,j) <= 0) cout << boost::format("R(%d,%d) = %.5E") % j % j % R(j,j) << endl;
+    //    REQUIRE(R(j,j) > 0);
+    //    if(R(j,j) <= 0) printfln("R(%d,%d) = %.5E"),j,j, R(j,j) << endl;
     //    }
 
-    CHECK(Norm(Matrix(Q*R-M).TreatAsVector()) < 1E-14);
-    CHECK(Norm(Matrix(Q.t()*Q-I).TreatAsVector()) < 1E-14);
+    REQUIRE(Norm(Matrix(Q*R-M).TreatAsVector()) < 1E-14);
+    REQUIRE(Norm(Matrix(Q.t()*Q-I).TreatAsVector()) < 1E-14);
     }
 
-TEST(ComplexEV)
+SECTION("ComplexEV")
     {
     const int N = 40;
     Matrix R(N,N),
@@ -461,9 +410,9 @@ TEST(ComplexEV)
         nrm += sqr(Norm(pI-zI));
         nrm = sqrt(nrm);
 
-        CHECK(nrm < 1E-12);
+        REQUIRE(nrm < 1E-12);
         }
     }
+}
 
-BOOST_AUTO_TEST_SUITE_END()
 

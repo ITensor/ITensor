@@ -6,10 +6,6 @@
 #define __ITENSOR_TEVOLOBSERVER_H
 #include "observer.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 //
@@ -66,8 +62,7 @@ measure(const OptSet& opts)
         Real percentdone = (100.*t)/ttotal;
         if(percentdone < 99.5 || (fabs(t-ttotal) < 1E-10))
             {
-            Cout << Format("\b\b\b%2.f%%") % percentdone;
-            Cout.flush();
+            printf("\b\b\b%2.f%%",percentdone);
             }
         }
     }
@@ -79,7 +74,7 @@ checkDone(const OptSet& opts)
     const Real t = opts.getReal("Time");
     if(fileExists("STOP_TEVOL"))
         {
-        Cout << "File STOP_TEVOL found: stopping this time evolution run at time " << t << Endl;
+        println("File STOP_TEVOL found: stopping this time evolution run at time ",t);
         system("rm -f STOP_TEVOL");
         return true;
         }
@@ -87,7 +82,7 @@ checkDone(const OptSet& opts)
     //Set done_ flag to true so any outer callers using this Observer will also terminate.
     if(fileExists("STOP_TEVOL_ALL"))
         {
-        Cout << "File STOP_TEVOL_ALL found: stopping this time evolution at time " << t << Endl;
+        println("File STOP_TEVOL_ALL found: stopping this time evolution at time ",t);
         system("rm -f STOP_TEVOL_ALL");
         done_ = true;
         return done_;
@@ -98,8 +93,5 @@ checkDone(const OptSet& opts)
 
 }; //namespace itensor
 
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif // __ITENSOR_TEVOLOBSERVER_H

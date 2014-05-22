@@ -18,7 +18,6 @@ using std::find;
 using std::pair;
 using std::make_pair;
 using std::string;
-using boost::format;
 
 template <class Tensor>
 class DerivMPS
@@ -172,8 +171,8 @@ operator()(const vector<Tensor>& psi) const
         }
     if(Ns != H_.N())
         {
-        cout << format("psi tensors only had %d total sites \
-                        whereas H has %d sites") % Ns % H_.N() << endl;
+        printfln("psi tensors only had %d total sites \
+                        whereas H has %d sites",Ns, H_.N());
         Error("Mismatch in number of sites between psi and H");
         }
 
@@ -229,10 +228,7 @@ operator()(const vector<Tensor>& psi) const
 
         if(pass == Npass)
             {
-            cout << format("pass %d: psi1*dpsi1 = %.3E")
-                    % pass
-                    % olap
-                    << endl;
+            printfln("pass %d: psi1*dpsi1 = %.3E", pass, olap);
             PAUSE
             }
         }
@@ -316,12 +312,7 @@ operator()(const vector<Tensor>& psi) const
 
                 if(pass == Npass)
                     {
-                    cout << format("pass %d: psi%.02d*dpsi%.02d = %.3E")
-                            % pass
-                            % j
-                            % j
-                            % nrm
-                            << endl;
+                    printfln("pass %d: psi%.02d*dpsi%.02d = %.3E", pass,j,j,nrm);
                     //const IndexT nlink = commonIndex(D,U);
                     //Tensor nOlap = prime(nB,nlink)*conj(nB);
                     //PrintData(nOlap);
@@ -359,11 +350,7 @@ operator()(const vector<Tensor>& psi) const
 
             const
             Real nrm = (conj(B)*prime(dB,plink)).norm();
-            cout << format("psi%.02d*dpsi%.02d = %.3E")
-                    % j
-                    % j
-                    % nrm
-                    << endl;
+            printfln("psi%.02d*dpsi%.02d = %.3E",j,j,nrm);
 
             if(nrm > 1E-12)
                 {
@@ -382,12 +369,7 @@ operator()(const vector<Tensor>& psi) const
                     const
                     Real nrm = (conj(B)*prime(dB,plink)).norm();
                     if(pass == Npass)
-                        cout << format("pass %d: psi%.02d*dpsi%.02d = %.3E")
-                                % pass
-                                % j
-                                % j
-                                % nrm
-                                << endl;
+                        printfln("pass %d: psi%.02d*dpsi%.02d = %.3E",pass,j,j,nrm);
                     if(pass > 1 && nrm < 1E-10) break;
                     if(pass == Npass)
                         {
@@ -397,11 +379,7 @@ operator()(const vector<Tensor>& psi) const
 
                     const
                     Real nrm = (conj(B)*prime(dB,plink)).norm();
-                    cout << format("psi%.02d*dpsi%.02d = %.3E")
-                            % j
-                            % j
-                            % nrm
-                            << endl;
+                    printfln("psi%.02d*dpsi%.02d = %.3E",j,j,nrm);
                 }
             }
 
@@ -463,9 +441,6 @@ ungroupMPS(vector<Tensor>& psig,
           gend   = (dir==Fromleft ? Ng : 1);
 
     int j = start;
-    //cout << format("  Ng = %d, gstart = %d, gend = %d")
-    //        % Ng % gstart % gend
-    //        << endl;
     for(int g = gstart; g != (gend+d); g += d)
         {
         //cout << "  g = " << g << endl;
@@ -870,11 +845,8 @@ imagTEvol(const MPOt<Tensor>& H,
 
     if(verbose) 
         {
-        cout << format("Timestep %.5f, total time %.5f, using order %d method")
-                % tstep
-                % ttotal
-                % order
-                << endl;
+        printfln("Timestep %.5f, total time %.5f, using order %d method",
+                  tstep,ttotal,order);
         }
 
     Real tsofar = 0;
@@ -902,8 +874,7 @@ imagTEvol(const MPOt<Tensor>& H,
             Real percentdone = 100.*(tsofar/ttotal);
             if(percentdone < 99.8)
                 {
-                cout << format("\b\b\b%2.f%%") % percentdone;
-                cout.flush();
+                printf("\b\b\b%2.f%%",percentdone);
                 }
             }
 
@@ -922,7 +893,7 @@ imagTEvol(const MPOt<Tensor>& H,
         }
     if(verbose) 
         {
-        cout << format("\nTotal time evolved = %.5f\n") % tsofar << endl;
+        printfln("\nTotal time evolved = %.5f",tsofar);
         }
     }
 template
@@ -1000,7 +971,6 @@ norm(const vector<Tensor>& psi)
     int N = int(psi.size())-1;
     while(psi.at(N).isNull() && N > 1) --N;
 
-    //cout << format("In norm, counted %d groups") % N << endl;
 
     Tensor L;
     for(int j = 1; j <= N; ++j)

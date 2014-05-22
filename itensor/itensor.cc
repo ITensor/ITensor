@@ -11,10 +11,6 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::sqrt;
-using boost::format;
-using boost::shared_ptr;
-using boost::make_shared;
-using boost::array;
 
 #ifdef DEBUG
 #define ITENSOR_CHECK_NULL if(type_ == Null) Error("ITensor is null");
@@ -393,7 +389,6 @@ ITensor(const IndexVal& iv)
     is_(Index(iv)),
     scale_(1)
 	{ 
-    //cout << format("Calling ITensor IndexVal constructor with iv.i=%d") % iv.i << endl;
     allocate(iv.m());
 	r_->v(iv.i) = 1; 
 	}
@@ -432,7 +427,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
     array<int,NMAX+1> iv = 
         {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i, 1 }};
     array<int,NMAX> ja; 
-    ja.assign(0);
+    ja.fill(0);
     for(int k = 0; k < is_.rn(); ++k) //loop over indices of this ITensor
     for(int j = 0; j < size; ++j)      // loop over the given indices
         {
@@ -694,7 +689,7 @@ operator()()
 	{ 
     if(is_.rn() != 0)
         {
-        std::cerr << format("# given = 0, rn_ = %d\n")%is_.rn();
+        printfln("# given = 0, rn_ = %d\n",is_.rn());
         Error("Not enough indices (requires all having m!=1)");
         }
     solo(); 
@@ -708,7 +703,7 @@ operator()() const
     ITENSOR_CHECK_NULL
     if(is_.rn() != 0)
         {
-        std::cerr << format("# given = 0, rn_ = %d\n")%is_.rn();
+        printfln("# given = 0, rn_ = %d\n",is_.rn());
         Error("Not enough indices (requires all having m!=1)");
         }
     return scale_.real()*r_->v(1);
@@ -721,7 +716,7 @@ operator()(const IndexVal& iv1)
 #ifdef DEBUG
     if(is_.rn() > 1) 
         {
-        std::cerr << format("# given = 1, rn_ = %d\n")%is_.rn();
+        printfln("# given = 1, rn_ = %d\n",is_.rn());
         Error("Not enough m!=1 indices provided");
         }
     if(is_[0] != iv1)
@@ -742,7 +737,7 @@ operator()(const IndexVal& iv1) const
 #ifdef DEBUG
     if(is_.rn() > 1) 
         {
-        std::cerr << format("# given = 1, rn() = %d\n")%is_.rn();
+        printfln("# given = 1, rn_ = %d\n",is_.rn());
         Error("Not enough m!=1 indices provided");
         }
     if(is_[0] != iv1)
@@ -857,7 +852,7 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
         }
 
     array<int,NMAX+1> isReplaced; 
-    isReplaced.assign(0);
+    isReplaced.fill(0);
 
     //Print(*this);
 
@@ -865,7 +860,6 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
     int nn = 0; //number of m != 1 indices
     for(int j = 1; j <= nind; ++j) 
         {
-        //cerr << format("indices[%d] = ") % j << indices[j] << "\n";
         const Index& J = indices[j];
         if(J.m() != 1) ++nn;
         tot_m *= J.m();
@@ -876,7 +870,6 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
             if(is_.index(k) == J) 
                 {
                 isReplaced[k] = (J.m() == 1 ? -1 : nn);
-                //cerr << format("setting isReplaced[%d] = %d\n ") % k % isReplaced[k];
                 foundit = true; 
                 break; 
                 }
@@ -899,16 +892,13 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
     int nkept = 0; 
     for(int j = 1; j <= is_.rn(); ++j)
         {
-        //cerr << format("isReplaced[%d] = %d\n") % j % isReplaced[j];
         if(isReplaced[j] == 0)
             {
-            //cerr << format("Kept index, setting P.fromTo(%d,%d)\n") % j % (nkept+1);
             P.fromTo(j,++nkept);
             nindices.addindex(is_.index(j)); 
             }
         else
             {
-            //cerr << format("Replaced index, setting P.fromTo(%d,%d)\n") % j % (res_rn_+isReplaced[j]-1);
             P.fromTo(j,res_rn_+isReplaced[j]-1);
             }
         }
@@ -944,7 +934,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
     int alloc_size = tm;
 
     array<bool,NMAX+1> is_tied;
-    is_tied.assign(false);
+    is_tied.fill(false);
 
     int nmatched = 0;
     for(int k = 1; k <= r(); ++k)
@@ -1009,7 +999,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
         ii[j] = &zero;
     
     //Create the new dat
-    boost::shared_ptr<ITDat> np = boost::make_shared<ITDat>(alloc_size);
+    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
     const Vector& thisdat = r_->v;
     for(; nc.notDone(); ++nc)
         {
@@ -1024,7 +1014,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
 
     if(this->isComplex())
         {
-        np = boost::make_shared<ITDat>(alloc_size);
+        np = make_shared<ITDat>(alloc_size);
         const Vector& thisidat = i_->v;
         for(nc.reset(); nc.notDone(); ++nc)
             {
@@ -1105,7 +1095,7 @@ trace(const array<Index,NMAX>& indices, int nind)
     int alloc_size = 1;
 
     array<bool,NMAX+1> traced;
-    traced.assign(false);
+    traced.fill(false);
 
     int nmatched = 0;
     for(int k = 1; k <= r(); ++k)
@@ -1178,7 +1168,7 @@ trace(const array<Index,NMAX>& indices, int nind)
         ii[j] = &zero;
     
     //Create the new dat
-    boost::shared_ptr<ITDat> np = boost::make_shared<ITDat>(alloc_size);
+    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
     Vector& resdat = np->v;
 
     const Vector& thisdat = r_->v;
@@ -1323,7 +1313,7 @@ expandIndex(const Index& small, const Index& big, int start)
                               is_[4].m()-1,is_[5].m()-1, 
                               is_[6].m()-1,is_[7].m()-1);
 
-    boost::shared_ptr<ITDat> oldr(r_);
+    shared_ptr<ITDat> oldr(r_);
     allocate(newinds.dim());
 
     const
@@ -1553,25 +1543,25 @@ scaleTo(const LogNumber& newscale)
 void ITensor::
 allocate(int dim) 
     { 
-    r_ = boost::make_shared<ITDat>(dim); 
+    r_ = make_shared<ITDat>(dim); 
     }
 
 void ITensor::
 allocate() 
     { 
-    r_ = boost::make_shared<ITDat>(); 
+    r_ = make_shared<ITDat>(); 
     }
 
 void ITensor::
 allocateImag(int dim) 
     { 
-    i_ = boost::make_shared<ITDat>(dim); 
+    i_ = make_shared<ITDat>(dim); 
     }
 
 void ITensor::
 allocateImag() 
     { 
-    i_ = boost::make_shared<ITDat>(); 
+    i_ = make_shared<ITDat>(); 
     }
 
 void ITensor::
@@ -1580,7 +1570,7 @@ soloReal()
     ITENSOR_CHECK_NULL
     if(!r_.unique())
         { 
-        boost::shared_ptr<ITDat> newr = boost::make_shared<ITDat>();
+        shared_ptr<ITDat> newr = make_shared<ITDat>();
         newr->v = r_->v;
         r_.swap(newr);
         }
@@ -1593,7 +1583,7 @@ soloImag()
 
     if(!i_.unique())
         { 
-        boost::shared_ptr<ITDat> newi = boost::make_shared<ITDat>();
+        shared_ptr<ITDat> newi = make_shared<ITDat>();
         newi->v = i_->v;
         i_.swap(newi);
         }
@@ -1724,7 +1714,7 @@ _ind2(const IndexVal& iv1, const IndexVal& iv2) const
     {
     if(is_.rn() > 2) 
         {
-        std::cerr << format("# given = 2, rn_ = %d\n")%is_.rn();
+        printfln("# given = 2, rn_ = %d\n",is_.rn());
         Error("Not enough m!=1 indices provided");
         }
     if(is_[0] == iv1 && is_[1] == iv2)
@@ -1750,7 +1740,7 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
     array<const IndexVal*,NMAX> iv = 
         {{ &iv1, &iv2, &iv3, &iv4, &iv5, &iv6, &iv7, &iv8 }};
     array<int,NMAX> ja; 
-    ja.assign(0);
+    ja.fill(0);
     //Loop over the given IndexVals
     int nn = 0;
     for(int j = 0; j < is_.r(); ++j)
@@ -2153,8 +2143,8 @@ directMultiply(const ITensor& L,
         ri[n] = &zero;
         }
 
-    boost::array<int,NMAX> nl,
-                           nr;
+    array<int,NMAX> nl,
+                    nr;
     std::fill(nl.begin(),nl.end(),0);
     std::fill(nr.begin(),nr.end(),0);
 
@@ -2281,8 +2271,8 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
     //
     array<int,NMAX+1> tcon,
                       scon;
-    tcon.assign(0);
-    scon.assign(0);
+    tcon.fill(0);
+    scon.fill(0);
     int ncon = 0; //number contracted
 
     //Analyze contracted Indices
@@ -2322,11 +2312,9 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
             tc.n[++tc.rn] = T.is_[i-1].m();
             ++tc.r;
             //Link up ti pointer
-            //cerr << format("Linking ti[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % i % tc.rn % tc.rn % (tc.n[tc.rn]);
             ti[i] = &(tc.i[tc.rn]);
 
             //Link ri pointer to free index of T
-            //cerr << format("Linking ri[%d] to tc.i[%d] (tc.n[%d] = %d)\n") % res.is_.r() % tc.rn % tc.rn % (tc.n[tc.rn]);
             ri[res.is_.r()] = &(tc.i[tc.rn]);
             }
         else
@@ -2356,8 +2344,8 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
     if(res.is_.r() != (S.r()+T.r() - 2*ncon))
         {
         Print(res.is_);
-        cout << format("res.is_.r() = %d != (S.r()+T.r()-2*ncon) = %d")
-            % res.is_.r() % (S.r()+T.r()-2*ncon) << endl;
+        printfln("res.is_.r() = %d != (S.r()+T.r()-2*ncon) = %d",
+                 res.is_.r(),(S.r()+T.r()-2*ncon));
         Error("Incorrect rank");
         }
 #endif
@@ -2379,7 +2367,7 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
     //Allocate a new dat for res if necessary
     if(res.isNull() || !res.r_.unique())
         { 
-        res.r_ = boost::make_shared<ITDat>(alloc_size); 
+        res.r_ = make_shared<ITDat>(alloc_size); 
         }
     else
         {
@@ -2812,7 +2800,7 @@ operator+=(const ITensor& other)
 
     if(is_ != other.is_)
         {
-        cerr << format("this ur = %.10f, other.ur = %.10f\n")%is_.uniqueReal()%other.is_.uniqueReal();
+        printfln("this ur = %.10f, other.ur = %.10f\n",is_.uniqueReal(),other.is_.uniqueReal());
         Print(*this);
         Print(other);
         Error("ITensor::operator+=: different Index structure");
@@ -3120,7 +3108,7 @@ convertToDense()
         {
         solo();
         const int dim = is_.dim(); //dense dimension
-        boost::shared_ptr<ITDat> oldr = r_;
+        shared_ptr<ITDat> oldr = r_;
         allocate(dim);
         const int ds = oldr->size();
         for(int j = 0; j < ds; ++j)
@@ -3130,7 +3118,7 @@ convertToDense()
 
         if(this->isComplex())
             {
-            boost::shared_ptr<ITDat> oldi = i_;
+            shared_ptr<ITDat> oldi = i_;
             allocateImag(dim);
             for(int j = 0; j < ds; ++j)
                 {
@@ -3164,11 +3152,11 @@ operator<<(ostream & s, const ITensor& t)
             Real nrm = t.norm();
             if(nrm >= 1E-2 && nrm < 1E5)
                 {
-                s << format(",N=%.2f") % nrm;
+                s << format(",N=%.2f",nrm);
                 }
             else
                 {
-                s << format(",N=%.1E") % nrm;
+                s << format(",N=%.1E",nrm);
                 }
             }
         else
@@ -3176,9 +3164,7 @@ operator<<(ostream & s, const ITensor& t)
             s << ",N=too big,scale=" << t.scale();
             }
 
-        s << format("%s%s}\n") 
-             % (isdiag ? ",D" : "")
-             % (iscplx ? ",C" : "");
+        s << format("%s%s}\n",(isdiag ? ",D" : ""), (iscplx ? ",C" : ""));
 
         //const bool ff_set = (std::ios::floatfield & s.flags()) != 0;
 
@@ -3193,13 +3179,13 @@ operator<<(ostream & s, const ITensor& t)
                 const Real rval = t.r_->v(1)*scale;
                 if(!iscplx)
                     {
-                    s << format("  %.10f\n") % rval;
+                    s << format("  %.10f\n",rval);
                     }
                 else
                     {
                     const Real ival = t.i_->v(1)*scale;
                     const char sgn = (ival > 0 ? '+' : '-');
-                    s << format("  %.10f%s%.10fi\n") % rval % sgn % fabs(ival);
+                    s << format("  %.10f%s%.10fi\n",rval,sgn,fabs(ival));
                     }
                 return s;
                 }
@@ -3217,7 +3203,7 @@ operator<<(ostream & s, const ITensor& t)
                             s << "  (" << j;
                             for(int n = 2; n <= t.r(); ++n)
                                 s << "," << j;
-                            s << format(") %.10f\n") % rval;
+                            s << format(") %.10f\n",rval);
                             }
                         }
                     else
@@ -3229,7 +3215,7 @@ operator<<(ostream & s, const ITensor& t)
                             s << "  (" << j;
                             for(int n = 2; n <= t.r(); ++n)
                                 s << "," << j;
-                            s << format(") %.10f%s%.10fi\n") % rval % sgn % fabs(ival);
+                            s << format(") %.10f%s%.10fi\n",rval,sgn,fabs(ival));
                             }
                         }
                     }
@@ -3245,7 +3231,7 @@ operator<<(ostream & s, const ITensor& t)
                         {
                         Real val = pv[c.ind]*scale;
                         if(fabs(val) > Global::printScale())
-                            { s << "  " << c << (format(" %.10f\n") % val); }
+                            { s << "  " << c << format(" %.10f\n",val); }
                         }
                     }
                 else //t is complex
@@ -3260,7 +3246,7 @@ operator<<(ostream & s, const ITensor& t)
                         const char sgn = (ival > 0 ? '+' : '-');
                         if(sqrt(sqr(rval)+sqr(ival)) > Global::printScale())
                             { 
-                            s << "  " << c << (format(" %.10f%s%.10fi\n") % rval % sgn % fabs(ival)); 
+                            s << "  " << c << format(" %.10f%s%.10fi\n",rval,sgn,fabs(ival)); 
                             }
                         }
                     }
@@ -3349,8 +3335,8 @@ commaInit(ITensor& T,
         Error("commaInit not yet implemented for ITensor type Diag");
 
 
-    boost::array<Index,NMAX> ii;
-    ii.assign(Index::Null());
+    array<Index,NMAX> ii;
+    ii.fill(Index::Null());
 
     if(i2 == Index::Null())
         {

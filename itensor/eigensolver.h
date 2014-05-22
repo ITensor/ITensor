@@ -6,9 +6,6 @@
 #define __ITENSOR_EIGENSOLVER_H
 #include "iqcombiner.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
 
 namespace itensor {
 
@@ -132,7 +129,7 @@ powerMethod(const BigMatrixT& A,
             lambda = v.norm();
             v /= lambda;
             if(dlevel >= 1)
-                Cout << Format("%d %d %.10f") % t % ii % lambda << Endl;
+                printfln("%d %d %.10f",t,ii,lambda);
             if(fabs(lambda-last_lambda) < errgoal_)
                 {
                 break;
@@ -181,8 +178,6 @@ findEig(int which,        //zero-indexed; so is return value
             }
         maxj = nextmax;
         }
-    //Cout << "DR = " << DR;
-    //Cout << Format("Eig %d (%f) at position %d") % which % DR(n) % n << Endl;
     return (n-1);
     }
 
@@ -236,8 +231,8 @@ arnoldi(const BigMatrixT& A,
     const int actual_maxiter = min(maxiter_,maxsize-1);
     if(debug_level_ >= 2)
         {
-        Cout << Format("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d") 
-                % (maxsize-1) % maxiter_ % actual_maxiter << Endl;
+        printfln("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d", 
+                 (maxsize-1),     maxiter_ ,    actual_maxiter );
         }
 
     if(phi.front().indices().dim() != maxsize)
@@ -333,28 +328,28 @@ arnoldi(const BigMatrixT& A,
             assert(err >= 0);
 
             if(r == 0)
-                Cout << Format("I %d e %.0E E") % (1+j) % err;
+                printf("I %d e %.0E E",(1+j),err);
             else
-                Cout << Format("R %d I %d e %.0E E") % r % (1+j) % err;
+                printf("R %d I %d e %.0E E",r,(1+j),err);
 
             for(int j = 0; j <= w; ++j)
                 {
                 if(fabs(eigs[j].real()) > 1E-6)
                     {
                     if(fabs(eigs[j].imag()) > Approx0)
-                        Cout << Format(" (%.10f,%.10f)") % eigs[j].real() % eigs[j].imag();
+                        printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
                     else
-                        Cout << Format(" %.10f") % eigs[j].real();
+                        printf(" %.10f",eigs[j].real());
                     }
                 else
                     {
                     if(fabs(eigs[j].imag()) > Approx0)
-                        Cout << Format(" (%.5E,%.5E)") % eigs[j].real() % eigs[j].imag();
+                        printf(" (%.5E,%.5E)",eigs[j].real(),eigs[j].imag());
                     else
-                        Cout << Format(" %.5E") % eigs[j].real();
+                        printf(" %.5E",eigs[j].real());
                     }
                 }
-            Cout << Endl;
+            println();
 
             ++niter;
 
@@ -496,11 +491,8 @@ davidson(const BigMatrixT& A,
         eigs.at(j) = ceigs.at(j).real();
         if(debug_level_ > 2 && ceigs.at(j).imag() > Approx0*ceigs.at(j).real())
             {
-            Cout << Format("Warning: dropping imaginary part of eigs[%d] = (%.4E,%.4E).")
-                    % j
-                    % ceigs.at(j).real()
-                    % ceigs.at(j).imag()
-                 << Endl;
+            printfln("Warning: dropping imaginary part of eigs[%d] = (%.4E,%.4E).", 
+                     j , ceigs.at(j).real(), ceigs.at(j).imag());
             }
         }
     return eigs;
@@ -542,8 +534,8 @@ complexDavidson(const BigMatrixT& A,
     const int actual_maxiter = min(maxiter_,maxsize-1);
     if(debug_level_ >= 2)
         {
-        Cout << Format("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d") 
-                % (maxsize-1) % maxiter_ % actual_maxiter << Endl;
+        printfln("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d",
+                 (maxsize-1), maxiter_, actual_maxiter);
         }
 
     if(phi.front().indices().dim() != maxsize)
@@ -580,7 +572,7 @@ complexDavidson(const BigMatrixT& A,
     const Real initEn = z.real();
 
     if(debug_level_ > 2)
-        Cout << Format("Initial Davidson energy = %.10f") % initEn << Endl;
+        printfln("Initial Davidson energy = %.10f",initEn);
 
     size_t t = 0; //which eigenvector we are currently targeting
     Vector D,DI;
@@ -701,10 +693,9 @@ complexDavidson(const BigMatrixT& A,
 
             if(debug_level_ >= 3)
                 {
-                Cout << "complex_diag = " 
-                     << (complex_diag ? "true" : "false") << Endl;
-                Cout << "D = " << D;
-                Cout << Format("lambda = %.10f") % D(1) << Endl;
+                println("complex_diag = ", complex_diag ? "true" : "false");
+                print("D = ",D);
+                printfln("lambda = %.10f",D(1));
                 }
 
             }
@@ -731,17 +722,17 @@ complexDavidson(const BigMatrixT& A,
                     {
                     if((qnorm < errgoal_ && abs(lambda-last_lambda) < errgoal_))
                         {
-                        Cout << Format("Exiting Davidson because errgoal=%.0E reached") % errgoal_ << Endl;
+                        printfln("Exiting Davidson because errgoal=%.0E reached",errgoal_);
                         }
                     else
                     if(ii < miniter_ || qnorm < max(Approx0,errgoal_ * 1.0e-3))
                         {
-                        Cout << Format("Exiting Davidson because small residual=%.0E obtained") % qnorm << Endl;
+                        printfln("Exiting Davidson because small residual=%.0E obtained",qnorm);
                         }
                     else
                     if(ii == actual_maxiter)
                         {
-                        Cout << "Exiting Davidson because ii == actual_maxiter" << Endl;
+                        println("Exiting Davidson because ii == actual_maxiter");
                         }
                     }
 
@@ -751,16 +742,16 @@ complexDavidson(const BigMatrixT& A,
         
         if(debug_level_ >= 2 || (ii == 0 && debug_level_ >= 1))
             {
-            Cout << Format("I %d q %.0E E") % iter % qnorm;
+            printf("I %d q %.0E E",iter,qnorm);
             for(size_t j = 0; j < eigs.size(); ++j)
                 {
                 if(std::isnan(eigs[j].real())) break;
                 if(fabs(eigs[j].imag()) > Approx0)
-                    Cout << Format(" (%.10f,%.10f)") % eigs[j].real() % eigs[j].imag();
+                    printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
                 else
-                    Cout << Format(" %.10f") % eigs[j].real();
+                    printf(" %.10f",eigs[j].real());
                 }
-            Cout << Endl;
+            println();
             }
 
         //Compute next trial vector by
@@ -809,7 +800,7 @@ complexDavidson(const BigMatrixT& A,
                 //Orthogonalization failure,
                 //try randomizing
                 if(debug_level_ >= 2)
-                    Cout << "Vector not independent, randomizing" << Endl;
+                    println("Vector not independent, randomizing");
                 q = V.at(ni-1);
                 q.randomize();
 
@@ -819,7 +810,7 @@ complexDavidson(const BigMatrixT& A,
                     //max size of q (vecSize after randomize)
                     //is size of current basis
                     if(debug_level_ >= 3)
-                        Cout << "Breaking out of Davidson: max Hilbert space size reached" << Endl;
+                        println("Breaking out of Davidson: max Hilbert space size reached");
                     goto done;
                     }
 
@@ -827,7 +818,7 @@ complexDavidson(const BigMatrixT& A,
                     {
                     // Maybe the size of the matrix is only 1?
                     if(debug_level_ >= 3)
-                        Cout << "Breaking out of Davidson: count too big" << Endl;
+                        println("Breaking out of Davidson: count too big");
                     goto done;
                     }
 
@@ -938,22 +929,21 @@ complexDavidson(const BigMatrixT& A,
             Vo_final(r,c) = abs(z);
             Vo_final(c,r) = Vo_final(r,c);
             }
-        Cout << "Vo_final = " << Endl;
-        Cout << Vo_final;
+        println("Vo_final = \n",Vo_final);
         }
 
     if(debug_level_ > 0)
         {
-        Cout << Format("I %d q %.0E E") % iter % qnorm;
+        printf("I %d q %.0E E",iter,qnorm);
         for(size_t j = 0; j < eigs.size(); ++j)
             {
             if(std::isnan(eigs[j].real())) break;
             if(fabs(eigs[j].imag()) > Approx0)
-                Cout << Format(" (%.10f,%.10f)") % eigs[j].real() % eigs[j].imag();
+                printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
             else
-                Cout << Format(" %.10f") % eigs[j].real();
+                printf(" %.10f",eigs[j].real());
             }
-        Cout << Endl;
+        println();
         }
 
     return eigs;
@@ -1090,11 +1080,7 @@ genDavidson(const BigMatrixTA& A,
 
         if(debug_level_ > 1 || (ii == 1 && debug_level_ > 0))
             {
-            Cout << Format("I %d q %.0E E %.10f")
-                           % ii
-                           % qnorm
-                           % lambda 
-                           << Endl;
+            printfln("I %d q %.0E E %.10f",ii,qnorm,lambda);
             }
 
         //Apply generalized Davidson preconditioner
@@ -1184,11 +1170,7 @@ genDavidson(const BigMatrixTA& A,
 
     if(debug_level_ > 0)
         {
-        Cout << Format("I %d q %.0E E %.10f")
-                       % iter
-                       % qnorm
-                       % lambda 
-                       << Endl;
+        printfln("I %d q %.0E E %.10f",iter,qnorm,lambda);
         }
 
     //Compute eigenvector phi before returning
@@ -1274,8 +1256,5 @@ orthog(std::vector<Tensor>& T, int num, int numpass, int start)
 
 }; //namespace itensor
 
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

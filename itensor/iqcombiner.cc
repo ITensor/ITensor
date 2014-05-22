@@ -12,7 +12,6 @@ using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
-using boost::format;
 
 
 IQCombiner::

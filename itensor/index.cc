@@ -3,34 +3,24 @@
 //    (See accompanying LICENSE file.)
 //
 #include "index.h"
-#include "boost/make_shared.hpp"
-#include "boost/random/lagged_fibonacci.hpp"
-//#include "boost/random/mersenne_twister.hpp"
 
 namespace itensor {
 
-using std::istream;
-using std::ostream;
 using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
 using std::stringstream;
-using boost::format;
 
-//typedef boost::random::mt19937 
-//Generator;
-typedef boost::lagged_fibonacci2281 
-Generator;
 
-typedef Generator::result_type
+typedef Real
 IDType;
 
 //static const Real K1 = 1./sqrt(7.);
 //static const Real K2 = 1./sqrt(11.);
 
-ostream& 
-operator<<(ostream& s, const IndexType& it)
+std::ostream& 
+operator<<(std::ostream& s, const IndexType& it)
     { 
     if(it == Link) s << "Link"; 
     else if(it == Site) s << "Site"; 
@@ -54,8 +44,7 @@ IntToIndexType(int i)
     if(i == 1) return Link;
     if(i == 2) return Site;
     if(i == 3) return All;
-    cout << format("No IndexType value defined for i=%d\n")%i 
-              << endl;
+    printfln("No IndexType value defined for i=%d\n",i);
     Error("Undefined IntToIndexType value");
     return Link;
     }
@@ -82,7 +71,7 @@ putprimes(string s, int plev)
 string 
 nameindex(IndexType it, int plev)
     { 
-    static const boost::array<string,3>
+    static const array<string,3>
     indextypename = {{ "Link","Site", "All" }};
 #ifdef DEBUG
     return putprimes(indextypename.at(int(it)),plev);
@@ -143,7 +132,7 @@ IndexDat(const string& ss, int m_, IndexType it, IDType id_)
 const IndexDatPtr& IndexDat::
 Null()
     {
-    static IndexDatPtr Null_ = boost::make_shared<IndexDat>("Null",1,Site,0);
+    static IndexDatPtr Null_ = make_shared<IndexDat>("Null",1,Site,0);
     return Null_;
     }
 
@@ -155,8 +144,9 @@ Null()
 IDType 
 generateID()
     {
-    static Generator rng(std::time(NULL) + getpid());
-    return rng();
+    static mt19937 rng(std::time(NULL) + getpid());
+    static uniform_real_distribution<Real> dist(0,1);
+    return dist(rng);
 
     //static IDType nextid = 0;
     //++nextid;
@@ -176,7 +166,7 @@ Index()
 Index::
 Index(const string& name, int mm, IndexType it, int plev) 
     : 
-    p(boost::make_shared<IndexDat>(name,mm,it,generateID())), 
+    p(make_shared<IndexDat>(name,mm,it,generateID())), 
     primelevel_(plev) 
     { 
     if(it == All) Error("Constructing Index with type All disallowed");
@@ -289,7 +279,7 @@ prime(IndexType type, int inc)
     }
 
 void Index::
-write(ostream& s) const 
+write(std::ostream& s) const 
     { 
     if(isNull()) Error("Index::write: Index is null");
 
@@ -309,7 +299,7 @@ write(ostream& s) const
     }
 
 Index& Index::
-read(istream& s)
+read(std::istream& s)
     {
     s.read((char*) &primelevel_,sizeof(primelevel_));
 #ifdef DEBUG
@@ -336,7 +326,7 @@ read(istream& s)
     string ss(newname); 
     delete newname;
 
-    p = boost::make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
+    p = make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
     return *this;
     }
 
@@ -347,8 +337,8 @@ Null()
     return Null_;
     }
 
-ostream& 
-operator<<(ostream& s, const Index& t)
+std::ostream& 
+operator<<(std::ostream& s, const Index& t)
     {
     if(t.name() != "" && t.name() != " ") s << t.name();
     const int iur = (int) fabs(10000*noprime(t).uniqueReal());
@@ -393,8 +383,8 @@ Null()
 string
 showm(const Index& I) { return nameint("m=",I.m()); }
 
-ostream& 
-operator<<(ostream& s, const IndexVal& iv)
+std::ostream& 
+operator<<(std::ostream& s, const IndexVal& iv)
     { 
     const Index& ii = iv;
     return s << "IndexVal: i = " << iv.i << ", ind = " << ii << "\n"; 

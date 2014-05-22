@@ -165,10 +165,9 @@ operator<<(std::ostream& s, const Partition& p)
         {
         //The |#t| adds whitespace to the string
         //until its length reaches # characters
-        s << boost::format(" %1% %|6t|(%2%,%3%)%|15t|%4%\n")
-             % b % p.begin(b) % p.end(b) % p.size(b);
+        s << format(" %1% %|6t|(%2%,%3%)%|15t|%4%\n",b,p.begin(b),p.end(b),p.size(b));
         }
-    s << std::endl;
+    s << "\n";
     return s;
     }
 

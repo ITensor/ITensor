@@ -13,10 +13,6 @@
 #include "allocator.h"
 #endif
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 //Forward declarations
@@ -299,7 +295,7 @@ class ITensor
     //                  If j.m() == 5 and k.m() == 7, J.m() == 5*7.
     //
     void 
-    groupIndices(const boost::array<Index,NMAX+1>& indices, int nind, 
+    groupIndices(const array<Index,NMAX+1>& indices, int nind, 
                       const Index& grouped, ITensor& res) const;
 
     //
@@ -309,7 +305,7 @@ class ITensor
     // Rijl = Aijil <-- here we have tied the 1st and 3rd index of A
     //
     void
-    tieIndices(const boost::array<Index,NMAX>& indices, int nind,
+    tieIndices(const array<Index,NMAX>& indices, int nind,
                const Index& tied);
 
     void
@@ -344,7 +340,7 @@ class ITensor
           const Index& i8 = Index::Null());
 
     ITensor&
-    trace(const boost::array<Index,NMAX>& indices, int nind = -1);
+    trace(const array<Index,NMAX>& indices, int nind = -1);
 
 
     //
@@ -489,8 +485,8 @@ class ITensor
     Type type_;
 
     //Pointer to ITDat containing tensor data
-    boost::shared_ptr<ITDat> r_, //real part
-                             i_; //imag part
+    shared_ptr<ITDat> r_, //real part
+                      i_; //imag part
 
     //Indices, maximum of 8
     IndexSet<Index> is_;
@@ -1049,9 +1045,5 @@ deprimed(Tensor A, const IndexT& I)
     { A.noprime(I); return A; }
 
 }; //namespace itensor
-
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

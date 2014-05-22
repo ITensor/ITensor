@@ -5,10 +5,6 @@
 #ifndef __ITENSOR_SPECTRUM_H
 #define __ITENSOR_SPECTRUM_H
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 //
@@ -90,21 +86,15 @@ operator<<(std::ostream & s, const Spectrum& spec)
         s << "  Eigs kept: ";
         for(int j = 1; j <= stop; ++j)
             {
-            s << Format(eigs(j) > 1E-3 ? ("%.3f") : ("%.3E")) 
-                           % eigs(j);
+            s << format(eigs(j) > 1E-3 ? ("%.3f") : ("%.3E"), eigs(j));
             s << ((j != stop) ? ", " : "\n");
             }
-        s << Format("  Trunc. error = %.3E")
-             % spec.truncerr()
-             << Endl;
+        s << format("  Trunc. error = %.3E\n", spec.truncerr());
         }
     return s;
     }
 
 }; //namespace itensor
 
-#undef Cout
-#undef Format
-#undef Endl
 
 #endif

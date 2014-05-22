@@ -7,9 +7,6 @@
 
 #include "dmrg.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
 
 namespace itensor {
 
@@ -97,7 +94,7 @@ idmrg(MPSt<Tensor>& psi,
         { 
         if(!quiet)
             {
-            Cout << Format("\niDMRG Step = %d, N=%d sites") % sw % N << Endl;
+            printfln("\niDMRG Step = %d, N=%d sites",sw,N);
             }
 
         Sweeps ucsweeps(nucsweeps);
@@ -106,7 +103,7 @@ idmrg(MPSt<Tensor>& psi,
         ucsweeps.cutoff() = sweeps.cutoff(sw);
         ucsweeps.noise() = sweeps.noise(sw);
         ucsweeps.niter() = sweeps.niter(sw);
-        Cout << ucsweeps;
+        print(ucsweeps);
 
         const Real fac = sqrt(1./N0);
         HL *= fac;
@@ -182,13 +179,13 @@ idmrg(MPSt<Tensor>& psi,
         ucsweeps.niter() = sweeps.niter(sw);
         spec.maxm(sweeps.maxm(sw));
 
-        Cout << ucsweeps;
+        print(ucsweeps);
 
         N += N0;
 
         if(!quiet)
             {
-            Cout << Format("\niDMRG Step = %d, N=%d sites") % sw % N << Endl;
+            printfln("\niDMRG Step = %d, N=%d sites",sw,N);
             }
 
         const Real fac = sqrt((1.*N-N0)/N);
@@ -204,14 +201,14 @@ idmrg(MPSt<Tensor>& psi,
 
         Real ovrlap, im;
         psiphi(initPsi,psi,ovrlap,im);
-        Cout << "\n    Overlap of initial and final psi = " << Format(fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E") % fabs(ovrlap) << Endl;
-        Cout << "\n    1-Overlap of initial and final psi = " << Format(1-fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E") % (1-fabs(ovrlap)) << Endl;
+        println("\n    Overlap of initial and final psi = ", format(fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E",fabs(ovrlap)));
+        println("\n    1-Overlap of initial and final psi = ", format(1-fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E",(1-fabs(ovrlap))) );
 
 
         sub_en_per_site = (energy*N-lastenergy*(N-N0))/N0;
 
-        Cout << Format("    Energy per site = %.10f\n") % energy << Endl;
-        Cout << Format("    Subtracted Energy per site = %.14f\n") % sub_en_per_site << Endl;
+        printfln("    Energy per site = %.10f", energy);
+        printfln("    Subtracted Energy per site = %.14f", sub_en_per_site);
 
 
         //Save last center matrix
@@ -271,10 +268,10 @@ idmrg(MPSt<Tensor>& psi,
                     }
                 vv[j] /= eig;
 //#ifdef DEBUG
-                Cout << Format("    T eig(%d) = %.14f\n") % (1+j) % eig << Endl;
+                printfln("    T eig(%d) = %.14f\n",(1+j),eig);
                 if(j == 0 && fabs(eig-1.) > 1E-4)
                     {
-                    Cout << Format("    Leading transfer eigenvalue = %.14f\n") % eig << Endl;
+                    printfln("    Leading transfer eigenvalue = %.14f\n", eig);
                     }
 //#endif
                 if(j > 0 && eig > 1E-12)
@@ -282,7 +279,7 @@ idmrg(MPSt<Tensor>& psi,
                     xi = -1.*Nuc/log(eig);
                     }
                 }
-            Cout << Format("    Correlation length = %.14f\n") % xi << Endl;
+            printfln("    Correlation length = %.14f\n",xi);
             }
 
         //Prepare MPS for next step
@@ -334,8 +331,5 @@ idmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H,
 
 }; //namespace itensor
 
-#undef Cout
-#undef Format
-#undef Endl
 
 #endif

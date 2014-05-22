@@ -13,10 +13,6 @@ using std::endl;
 using std::vector;
 using std::string;
 using std::ostringstream;
-using boost::format;
-using boost::array;
-using boost::shared_ptr;
-using boost::make_shared;
 
 //
 // IQIndexDat
@@ -165,7 +161,7 @@ read(istream& s)
 const IQIndexDatPtr& IQIndexDat::
 Null()
     {
-    static IQIndexDatPtr Null_ = boost::make_shared<IQIndexDat>(Index::Null(),QN());
+    static IQIndexDatPtr Null_ = make_shared<IQIndexDat>(Index::Null(),QN());
     return Null_;
     }
 
@@ -237,7 +233,7 @@ IQIndex(const string& name,
     : 
     Index(name,i1.m(),i1.type(),i1.primeLevel()), 
     dir_(dir), 
-    pd(boost::make_shared<IQIndexDat>(i1,q1))
+    pd(make_shared<IQIndexDat>(i1,q1))
     {
     }
 
@@ -249,7 +245,7 @@ IQIndex(const string& name,
     : 
     Index(name,i1.m()+i2.m(),i1.type(),i1.primeLevel()), 
     dir_(dir), 
-    pd(boost::make_shared<IQIndexDat>(i1,q1,i2,q2))
+    pd(make_shared<IQIndexDat>(i1,q1,i2,q2))
     {
 #ifdef DEBUG
     if(i2.type() != i1.type())
@@ -269,7 +265,7 @@ IQIndex(const string& name,
     : 
     Index(name,i1.m()+i2.m()+i3.m(),i1.type(),i1.primeLevel()), 
     dir_(dir),
-    pd(boost::make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3))
+    pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3))
     {
 #ifdef DEBUG
     if(i2.type() != i1.type() 
@@ -292,7 +288,7 @@ IQIndex(const string& name,
     : 
     Index(name,i1.m()+i2.m()+i3.m()+i4.m(),i1.type(),i1.primeLevel()), 
     dir_(dir),
-    pd(boost::make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3,i4,q4))
+    pd(make_shared<IQIndexDat>(i1,q1,i2,q2,i3,q3,i4,q4))
     {
 #ifdef DEBUG
     if(i2.type() != i1.type() 
@@ -422,7 +418,7 @@ read(istream& s)
     {
     Index::read(s);
     s.read((char*)&dir_,sizeof(dir_));
-    pd = boost::make_shared<IQIndexDat>();
+    pd = make_shared<IQIndexDat>();
     pd->read(s);
     return *this;
     }
@@ -504,7 +500,7 @@ solo()
     if(!pd.unique())
         {
         const IQIndexDat& olddat = *pd;
-        pd = boost::make_shared<IQIndexDat>();
+        pd = make_shared<IQIndexDat>();
         pd->makeCopyOf(olddat);
         }
     }
