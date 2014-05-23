@@ -1226,7 +1226,7 @@ void
 convertToIQ(const Model& model, const vector<ITensor>& A, 
             vector<IQTensor>& qA, QN totalq, Real cut)
     {
-    const int N = A.size()-1;
+    const int N = model.N();
     qA.resize(A.size());
     const bool is_mpo = hasindex(A[1],model.siP(1));
     const int Dim = model.si(1).m();
