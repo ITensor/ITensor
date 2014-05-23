@@ -23,9 +23,7 @@ int main(int argc, char* argv[])
         cout << "Usage: " << argv[0] << " inputfile_dmrg_table" << endl;
         return 0;
         }
-    string infilename(argv[1]);
-    InputFile infile(infilename);
-    InputGroup basic(infile,"basic");
+    InputGroup basic(argv[1],"basic");
 
     //Read in individual parameters from the input file
     const int N = basic.getInt("N");

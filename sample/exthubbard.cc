@@ -13,9 +13,7 @@ int main(int argc, char* argv[])
         cout << "Usage: " << argv[0] << " inputfile." << endl;
         return 0;
         }
-    string infilename(argv[1]);
-    InputFile infile(infilename);
-    InputGroup basic(infile,"basic");
+    InputGroup basic(argv[1],"basic");
 
     int N = 0;
     basic.GetIntM("N",N); //the 'M' stands for mandatory

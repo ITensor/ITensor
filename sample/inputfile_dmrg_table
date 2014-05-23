@@ -1,6 +1,5 @@
 basic
     {
-
     N = 100
 
     nsweeps = 5

@@ -15,25 +15,28 @@ using std::endl;
 void InputFile::open()
     {
     close();
-    file.open(filename.c_str());
-    if(!file) 
-	error("can't open input file");
-    opened = 1;
+    file_.open(filename_.c_str());
+    if(!file_) 
+        error("can't open input file");
+    opened_ = true;
     }
 
 void InputFile::close()
     {
-    if(opened)
-	{ file.clear(); file.close(); }
-    opened = 0;
+    if(opened_) 
+        { 
+        file_.clear(); 
+        file_.close(); 
+        }
+    opened_ = false;
     }
 
 ostream & operator << (ostream &s, InputFile &a)
     {
     a.open();
     char c;
-    s << "Input filename is " << a.filename << endl;
-    while(a.file.get(c))
+    s << "Input filename is " << a.filename() << endl;
+    while(a.file().get(c))
 	s << c;
     a.close();
     return s;
@@ -98,45 +101,99 @@ int gettoken(istream& is, string& s)
     return 1;
     }
 
+InputGroup::
+InputGroup(std::string filename, 
+           std::string groupname,
+           const char* c)
+    : infile(new InputFile(filename)), 
+      parent(0), 
+      name_(groupname), 
+      quiet(false),
+      own_file_(true)
+    {
+    std::cout << "Making input group " << name_;
+    if(c) std::cout << ": " << c;
+    std::cout << std::endl;
+    }
+
+InputGroup::
+InputGroup(InputFile& inf, 
+           std::string name,
+           const char* c)
+    : infile(&inf), 
+      parent(0), 
+      name_(name), 
+      quiet(false),
+      own_file_(false)
+    {
+    std::cout << "Making input group " << name_;
+    if(c) std::cout << ": " << c;
+    std::cout << std::endl;
+    }
+
+InputGroup::
+InputGroup(InputGroup& par, 
+           std::string name,
+           const char* c)
+    : infile(par.infile), 
+      parent(&par), 
+      name_(name),
+      quiet(false),
+      own_file_(false)
+    {
+    std::cout << "Making input group " << parent->name_ << "." << name_;
+    if(c) std::cout << ": " << c;
+    std::cout << std::endl;
+    }
+
+InputGroup::
+~InputGroup()
+    {
+    if(own_file_)
+        {
+        delete infile;
+        }
+    }
+
 int InputGroup::GotoGroup()
     {
     if(parent != 0)
 	parent->GotoGroup();
     else
-	infile.open();
-    eatwhite(infile.file);
+	infile->open();
+    eatwhite(infile->file());
     while(1)
 	{
 	string s;
-	if(!gettoken(infile.file,s))
+	if(!gettoken(infile->file(),s))
 	    return 0;
 	// cout << "GotoGroup: got string " << s << endl;
-	if(s == name)
+	if(s == name_)
 	    {
-	    eatwhite(infile.file);
+	    eatwhite(infile->file());
 	    char c;
-	    infile.file.get(c);
+	    infile->file().get(c);
 	    if(c != '{')
 		error("bracket does not follow group name");
-	    eatwhite(infile.file);
+	    eatwhite(infile->file());
 	    return 1;
 	    }
 	else
 	    {
 	    if(s[0] == '{')
 		{
-		matchbracket(infile.file);
+		matchbracket(infile->file());
 		}
 
 	    while(1)
 		{
 		char c;
-		infile.file.get(c);
+		infile->file().get(c);
 		if(c == '{')
-		    matchbracket(infile.file);
+		    matchbracket(infile->file());
 		if(c == '\n')
 		    {
-		    eatwhite(infile.file);
+		    eatwhite(infile->file());
 		    break;
 		    }
 		}
@@ -151,7 +208,7 @@ int InputGroup::GotoToken(string s)
     while(1)
 	{
 	string t;
-	if(!gettoken(infile.file,t))
+	if(!gettoken(infile->file(),t))
 	    {
 	    // cout << "no token, returning from GotoToken" << endl;
 	    return 0;
@@ -160,40 +217,40 @@ int InputGroup::GotoToken(string s)
 	if(t[0] == '}') return 0;
 	if(t == s) 
 	    {
-	    eatwhite(infile.file);
+	    eatwhite(infile->file());
 	    char c;
-	    if(!(infile.file.get(c))) return 0;
+	    if(!(infile->file().get(c))) return 0;
 	    if(c != '=')
 		return 0;
-	    eatwhite(infile.file);
+	    eatwhite(infile->file());
 	    return 1;
 	    }
 	if(t[0] == '{')
 	    {
-	    matchbracket(infile.file);
+	    matchbracket(infile->file());
 	    }
 	while(1)
 	    {
 	    char c;
-	    if(!(infile.file.get(c))) return 0;
+	    if(!(infile->file().get(c))) return 0;
 	    if(c == '\n' || c == ',' || c == ';')
 		{
-		eatwhite(infile.file);
+		eatwhite(infile->file());
 		break;
 		}
 	    if(c == '{')
-		matchbracket(infile.file);
+		matchbracket(infile->file());
 	    }
 	}
     }
 
 int InputGroup::GetInt(string s, int& res,const char* c)
     {
-    if(!GotoToken(s) || !(infile.file >> res)) 
+    if(!GotoToken(s) || !(infile->file() >> res)) 
 	{
 	if(!quiet) 
     {
-    cout << "Couldnt get " << name << "." << s;
+    cout << "Couldnt get " << name_ << "." << s;
 	if(c) cout  << ": " << c;
 	cout << endl;
     }
@@ -201,7 +258,7 @@ int InputGroup::GetInt(string s, int& res,const char* c)
 	}
     if(!quiet) 
     {
-    cout << "Got " << name << "." << s << " = " << res;
+    cout << "Got " << name_ << "." << s << " = " << res;
     if(c) cout  << ": " << c;
     cout << endl;
     }
@@ -210,11 +267,11 @@ int InputGroup::GetInt(string s, int& res,const char* c)
 
 int InputGroup::GetLong(string s, lint& res,const char* c)
     {
-    if(!GotoToken(s) || !(infile.file >> res)) 
+    if(!GotoToken(s) || !(infile->file() >> res)) 
 	{
 	if(!quiet) 
     {
-    cout << "Couldnt get " << name << "." << s;
+    cout << "Couldnt get " << name_ << "." << s;
 	if(c) cout  << ": " << c;
 	cout << endl;
     }
@@ -222,7 +279,7 @@ int InputGroup::GetLong(string s, lint& res,const char* c)
 	}
     if(!quiet) 
     {
-    cout << "Got " << name << "." << s << " = " << res;
+    cout << "Got " << name_ << "." << s << " = " << res;
     if(c) cout  << ": " << c;
     cout << endl;
     }
@@ -231,11 +288,11 @@ int InputGroup::GetLong(string s, lint& res,const char* c)
 
 int InputGroup::GetReal(string s, Real& res,const char* c)
     {
-    if(!GotoToken(s) || !(infile.file >> res)) 
+    if(!GotoToken(s) || !(infile->file() >> res)) 
 	{
 	if(!quiet) 
     {
-    cout << "Couldnt get " << name << "." << s;
+    cout << "Couldnt get " << name_ << "." << s;
 	if(c) cout  << ": " << c;
 	cout << endl;
     }
@@ -243,7 +300,7 @@ int InputGroup::GetReal(string s, Real& res,const char* c)
 	}
     if(!quiet) 
     {
-    cout << "Got " << name << "." << s << " = " << res;
+    cout << "Got " << name_ << "." << s << " = " << res;
     if(c) cout  << ": " << c;
     cout << endl;
     }
@@ -252,11 +309,11 @@ int InputGroup::GetReal(string s, Real& res,const char* c)
 
 int InputGroup::GetString(string s, string& res,const char* c)
     {
-    if(!GotoToken(s) || !(infile.file >> res)) 
+    if(!GotoToken(s) || !(infile->file() >> res)) 
 	{
 	if(!quiet) 
     {
-    cout << "Couldnt get " << name << "." << s;
+    cout << "Couldnt get " << name_ << "." << s;
 	if(c) cout  << ": " << c;
 	cout << endl;
     }
@@ -264,7 +321,7 @@ int InputGroup::GetString(string s, string& res,const char* c)
 	}
     if(!quiet) 
     {
-    cout << "Got " << name << "." << s << " = " << res;
+    cout << "Got " << name_ << "." << s << " = " << res;
     if(c) cout  << ": " << c;
     cout << endl;
     }
@@ -276,11 +333,11 @@ char mydolower(char c) { return tolower(c); }
 int InputGroup::GetYesNo(string s, int& yes,const char* c)
     {
     string res;
-    if(!GotoToken(s) || !(infile.file >> res)) 
+    if(!GotoToken(s) || !(infile->file() >> res)) 
         {
         if(!quiet) 
             {
-            cout << "Couldnt get " << name << "." << s;
+            cout << "Couldnt get " << name_ << "." << s;
             if(c) cout  << ": " << c;
             cout << endl;
             }
@@ -288,7 +345,7 @@ int InputGroup::GetYesNo(string s, int& yes,const char* c)
         }
     if(!quiet) 
         {
-        cout << "Got " << name << "." << s << " = " << res;
+        cout << "Got " << name_ << "." << s << " = " << res;
         if(c) cout  << ": " << c;
         cout << endl;
         }
@@ -319,8 +376,8 @@ void InputGroup::SkipLine()
     {
     char c = '\0';
     while(c != '\n')
-	infile.file.get(c);
-    eatwhite(infile.file);
+	infile->file().get(c);
+    eatwhite(infile->file());
     }
 
 int InputGroup::

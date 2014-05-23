@@ -342,7 +342,7 @@ void inline Sweeps::
 tableInit(InputGroup& table)
     {
     if(!table.GotoGroup()) 
-        Error("Couldn't find table " + table.name);
+        Error("Couldn't find table " + table.name());
 
     minm_ = std::vector<int>(nsweep_+1);
     maxm_ = std::vector<int>(nsweep_+1);
@@ -353,7 +353,7 @@ tableInit(InputGroup& table)
     table.SkipLine(); //SkipLine so we can have a table key
     for(int i = 1; i <= nsweep_; i++)
         {
-        table.infile.file >> maxm_[i] >> minm_[i] >> cutoff_[i] >> niter_[i] >> noise_[i];
+        table.file() >> maxm_[i] >> minm_[i] >> cutoff_[i] >> niter_[i] >> noise_[i];
         }
 
     } //Sweeps::tableInit
