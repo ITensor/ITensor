@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "condenser.h"
+#include <map>
 
 namespace itensor {
 

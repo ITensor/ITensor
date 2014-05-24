@@ -2,6 +2,7 @@
 
 #include "global.h"
 #include "math.h"
+#include "matrix.h"
 
 using namespace itensor;
 using namespace std;

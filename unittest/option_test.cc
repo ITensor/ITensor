@@ -17,16 +17,17 @@ TEST_CASE("BasicUsage")
     Opt o1("Quiet");
     Opt o2("Quiet");
 
-    CHECK(o1 == o2);
+    CHECK(o1.name() == o2.name());
 
     Opt o3("Quiet",false);
-    CHECK(o1 == o3);
-    CHECK(o2 == o3);
+    CHECK(o1.name() == o3.name());
+    CHECK(o2.name() == o3.name());
 
     Opt o4("Weight",0.3);
     CHECK_EQUAL(o4.name(),"Weight");
     CHECK_EQUAL(o4.type(),Opt::Numeric);
     CHECK_CLOSE(o4.realVal(),0.3,1E-5);
+    CHECK(o4.name() != o3.name());
 
     Opt o5("UseSVD",true);
     CHECK_EQUAL(o5.name(),"UseSVD");
@@ -58,10 +59,11 @@ TEST_CASE("TestOptSet")
 
     gopts.add(o1,o2);
 
-    CHECK(gopts.getBool("Quiet") == true);
-
     //cout << "Global opts: " << endl;
     //cout << gopts << endl;
+
+    CHECK(gopts.getBool("Quiet") == true);
+
 
     OptSet opts1(Opt("Quiet",false));
 
@@ -94,8 +96,8 @@ TEST_CASE("TestOptSet")
 TEST_CASE("Operator")
     {
     OptSet oset1; 
-    oset1 &= "Quiet";
-    oset1 &= "Auto";
+    oset1 &= Opt("Quiet");
+    oset1 &= Opt("Auto");
     CHECK(oset1.defined("Quiet"));
     CHECK(oset1.defined("Auto"));
 

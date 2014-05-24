@@ -8,13 +8,15 @@ include ../options.mk
 
 #########################################
 
-HEADERS=array2.h intarray2.h hash.h indent.h cputime.h tarray1.h input.h error.h minmax.h
+HEADERS=cppversion.h array2.h intarray2.h hash.h indent.h cputime.h tarray1.h \
+        flstring.h option.h input.h error.h minmax.h
 
 OBJECTS= intarray2.o error.o ran1.o\
-	hash.o cputime.o tarray1.o input.o
+         hash.o cputime.o tarray1.o input.o option.o
 
 SOURCES= array2.cc error.cc ran1.cc hash.cc\
-	cputime.cc tarray1.cc testarray.cc intarray2.cc input.cc
+         cputime.cc tarray1.cc testarray.cc intarray2.cc \
+         input.cc option.cc
 
 CCFLAGS= -I. $(OPTIMIZATIONS)
 CCGFLAGS= -I. $(DEBUGFLAGS)
@@ -40,6 +42,7 @@ libutilities-g.a: $(SOURCES) $(HEADERS)
 	$(CCCOM) $(CCGFLAGS) -c ran1.cc
 	$(CCCOM) $(CCGFLAGS) -c hash.cc
 	$(CCCOM) $(CCGFLAGS) -c cputime.cc
+	$(CCCOM) $(CCGFLAGS) -c option.cc
 	$(CCCOM) $(CCGFLAGS) -c input.cc
 	ar rv libutilities-g.a $(OBJECTS)
 	ranlib libutilities-g.a

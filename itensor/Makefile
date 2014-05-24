@@ -8,8 +8,7 @@ include ../options.mk
 
 ####################################
 
-SOURCES=option.cc 
-SOURCES+= index.cc 
+SOURCES = index.cc 
 SOURCES+= itensor.cc 
 SOURCES+= iqindex.cc 
 SOURCES+= iqtensor.cc 
@@ -20,7 +19,7 @@ SOURCES+= mps.cc
 SOURCES+= mpo.cc 
 SOURCES+= tevol.cc
 
-HEADERS=cppversion.h tinyformat.h print.h option.h global.h allocator.h real.h permutation.h index.h \
+HEADERS=tinyformat.h print.h global.h allocator.h real.h permutation.h index.h \
         prodstats.h indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
@@ -94,10 +93,7 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-DEPHEADERS=cppversion.h real.h option.h prodstats.h
-option.o: $(DEPHEADERS)
-.debug_objs/option.o: $(DEPHEADERS)
-DEPHEADERS+= global.h index.h permutation.h
+DEPHEADERS=real.h prodstats.h global.h index.h permutation.h
 index.o: $(DEPHEADERS)
 .debug_objs/index.o: $(DEPHEADERS)
 DEPHEADERS+= indexset.h

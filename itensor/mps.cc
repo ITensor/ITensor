@@ -4,6 +4,7 @@
 //
 #include "mps.h"
 #include "localop.h"
+#include <map>
 
 namespace itensor {
 

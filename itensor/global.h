@@ -15,6 +15,7 @@
 #include "option.h"
 #include "prodstats.h"
 #include "cppversion.h"
+#include "print.h"
 
 namespace itensor {
 

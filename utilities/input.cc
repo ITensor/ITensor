@@ -3,13 +3,15 @@
 //    (See accompanying LICENSE file.)
 //
 #include "input.h"
-#include <algorithm>
+
 using std::ostream;
 using std::istream;
 using std::string;
 using std::cout;
 using std::cerr;
 using std::endl;
+
+namespace itensor {
 
 
 void InputFile::open()
@@ -31,7 +33,8 @@ void InputFile::close()
     opened_ = false;
     }
 
-ostream & operator << (ostream &s, InputFile &a)
+ostream& 
+operator<<(ostream &s, InputFile& a)
     {
     a.open();
     char c;
@@ -445,4 +448,6 @@ void InputGroup::GetYesNoM(string s, int& yes,const char* c)
     if(!GetYesNo(s,yes,c))
         error("mandatory item: " + s + ", exiting");
     }
+
+}; //namespace itensor
 
