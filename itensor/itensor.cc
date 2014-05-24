@@ -3166,9 +3166,9 @@ operator<<(ostream & s, const ITensor& t)
 
         s << format("%s%s}\n",(isdiag ? ",D" : ""), (iscplx ? ",C" : ""));
 
-        //const bool ff_set = (std::ios::floatfield & s.flags()) != 0;
+        const bool ff_set = (std::ios::floatfield & s.flags()) != 0;
 
-        if(Global::printdat())
+        if(ff_set || Global::printdat())
             {
             Real scale = 1.0;
             if(t.scale().isFiniteReal()) scale = t.scale().real();
