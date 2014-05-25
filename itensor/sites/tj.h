@@ -4,11 +4,11 @@
 //
 #ifndef __ITENSOR_TJ_H
 #define __ITENSOR_TJ_H
-#include "model.h"
+#include "../siteset.h"
 
 namespace itensor {
 
-class tJ : public Model
+class tJ : public SiteSet
     {
     public:
 

@@ -1,16 +1,16 @@
 #include "test.h"
 #include "localmpo.h"
-#include "model/spinhalf.h"
+#include "sites/spinhalf.h"
 
 using namespace itensor;
 
 TEST_CASE("LocalMPOAsMPS")
     {
     static const int N = 10;
-    SpinHalf shmodel(N);
+    SpinHalf shsites(N);
 
-    InitState shFerro(shmodel,"Up");
-    InitState shNeel(shmodel);
+    InitState shFerro(shsites,"Up");
+    InitState shNeel(shsites);
 
     for(int j = 1; j <= N; ++j)
         {

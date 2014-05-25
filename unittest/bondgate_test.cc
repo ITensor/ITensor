@@ -1,6 +1,6 @@
 #include "test.h"
 #include "bondgate.h"
-#include "model/spinhalf.h"
+#include "sites/spinhalf.h"
 
 using std::vector;
 using namespace itensor;

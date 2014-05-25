@@ -32,7 +32,7 @@ MPSt<Tensor>::
 MPSt() 
     : 
     N_(0), 
-    model_(0),
+    sites_(0),
     atb_(1),
     writedir_("."),
     do_write_(false)
@@ -44,13 +44,13 @@ MPSt();
 
 template <class Tensor>
 MPSt<Tensor>::
-MPSt(const Model& sites)
+MPSt(const SiteSet& sites)
     : 
     N_(sites.N()), 
     A_(sites.N()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(sites.N()+1),
-    model_(&sites), 
+    sites_(&sites), 
     spectrum_(N_),
     atb_(1),
     writedir_("."),
@@ -59,19 +59,19 @@ MPSt(const Model& sites)
     random_tensors(A_);
     }
 template MPSt<ITensor>::
-MPSt(const Model& sites);
+MPSt(const SiteSet& sites);
 template MPSt<IQTensor>::
-MPSt(const Model& sites);
+MPSt(const SiteSet& sites);
 
 template <class Tensor>
 MPSt<Tensor>::
 MPSt(const InitState& initState)
     : 
-    N_(initState.model().N()),
-    A_(initState.model().N()+2), //idmrg may use A_[0] and A[N+1]
+    N_(initState.sites().N()),
+    A_(initState.sites().N()+2), //idmrg may use A_[0] and A[N+1]
     l_orth_lim_(0),
     r_orth_lim_(2),
-    model_(&(initState.model())), 
+    sites_(&(initState.sites())), 
     spectrum_(N_),
     atb_(1),
     writedir_("."),
@@ -86,11 +86,11 @@ MPSt(const InitState& initState);
 
 //template <class Tensor>
 //MPSt<Tensor>::
-//MPSt(const Model& model, std::istream& s)
+//MPSt(const SiteSet& model, std::istream& s)
 //    : 
 //    N_(model.N()), 
 //    A_(model.N()+2), //idmrg may use A_[0] and A[N+1]
-//    model_(&model),
+//    sites_(&model),
 //    atb_(1),
 //    writedir_("."),
 //    do_write_(false)
@@ -98,9 +98,9 @@ MPSt(const InitState& initState);
 //    read(s); 
 //    }
 //template MPSt<ITensor>::
-//MPSt(const Model& model, std::istream& s);
+//MPSt(const SiteSet& model, std::istream& s);
 //template MPSt<IQTensor>::
-//MPSt(const Model& model, std::istream& s);
+//MPSt(const SiteSet& model, std::istream& s);
 
 template <class Tensor>
 MPSt<Tensor>::
@@ -110,7 +110,7 @@ MPSt(const MPSt& other)
     A_(other.A_),
     l_orth_lim_(other.l_orth_lim_),
     r_orth_lim_(other.r_orth_lim_),
-    model_(other.model_),
+    sites_(other.sites_),
     spectrum_(other.spectrum_),
     atb_(other.atb_),
     writedir_(other.writedir_),
@@ -131,7 +131,7 @@ operator=(const MPSt& other)
     A_ = other.A_;
     l_orth_lim_ = other.l_orth_lim_;
     r_orth_lim_ = other.r_orth_lim_;
-    model_ = other.model_;
+    sites_ = other.sites_;
     spectrum_ = other.spectrum_;
     atb_ = other.atb_;
     writedir_ = other.writedir_;
@@ -208,7 +208,7 @@ template <class Tensor>
 void MPSt<Tensor>::
 read(std::istream& s)
     {
-    if(model_ == 0)
+    if(sites_ == 0)
         Error("Can't read to default constructed MPS");
     for(size_t j = 0; j < A_.size(); ++j) 
         A_.at(j).read(s);
@@ -216,8 +216,8 @@ read(std::istream& s)
     //using the same model
     IndexT s1 = findtype(A_.at(1),Site);
     s1.noprime();
-    if(s1 != IndexT(model_->si(1)))
-        Error("Tensors read from disk not compatible with Model passed to constructor.");
+    if(s1 != IndexT(sites_->si(1)))
+        Error("Tensors read from disk not compatible with SiteSet passed to constructor.");
     s.read((char*) &l_orth_lim_,sizeof(l_orth_lim_));
     s.read((char*) &r_orth_lim_,sizeof(r_orth_lim_));
     spectrum_.resize(N_);
@@ -255,7 +255,7 @@ template <class Tensor>
 void MPSt<Tensor>::
 read(const std::string& dirname)
     {
-    if(model_ == 0)
+    if(sites_ == 0)
         Error("Can't read to default constructed MPS, must specify model");
 
     l_orth_lim_ = 0;
@@ -350,7 +350,7 @@ setBond(int b) const
 
     //if(b == 1)
         //{
-        //writeToFile(writedir_+"/model",*model_);
+        //writeToFile(writedir_+"/model",*sites_);
         //std::ofstream inf((format("%s/info")%writedir_).str().c_str());
         //    inf.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
         //    inf.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
@@ -1131,7 +1131,7 @@ initWrite(const OptSet& opts)
                 }
             }
 
-        writeToFile(writedir_+"/model",*model_);
+        writeToFile(writedir_+"/model",*sites_);
 
         do_write_ = true;
         }
@@ -1187,7 +1187,7 @@ swap(MPSt<Tensor>& other)
     A_.swap(other.A_);
     std::swap(l_orth_lim_,other.l_orth_lim_);
     std::swap(r_orth_lim_,other.r_orth_lim_);
-    std::swap(model_,other.model_);
+    std::swap(sites_,other.sites_);
     spectrum_.swap(other.spectrum_);
     std::swap(atb_,other.atb_);
     std::swap(writedir_,other.writedir_);
@@ -1224,7 +1224,7 @@ periodicWrap(int j, int N)
     }
 
 void 
-convertToIQ(const Model& model, const vector<ITensor>& A, 
+convertToIQ(const SiteSet& model, const vector<ITensor>& A, 
             vector<IQTensor>& qA, QN totalq, Real cut)
     {
     const int N = model.N();
@@ -1489,8 +1489,8 @@ template <class Tensor>
 template <class IQMPSType> 
 void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 {
-    assert(model_ != 0);
-    const Model& sst = *model_;
+    assert(sites_ != 0);
+    const SiteSet& sst = *sites_;
 
     iqpsi = IQMPSType(sst,maxm,cutoff);
 
@@ -1842,7 +1842,7 @@ std::ostream&
 operator<<(std::ostream& s, const InitState& state)
     {
     s << "\n";
-    for(int i = 1; i <= state.model().N(); ++i) 
+    for(int i = 1; i <= state.sites().N(); ++i) 
         s << state(i) << "\n";
     return s;
     }

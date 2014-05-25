@@ -4,14 +4,14 @@
 //
 #ifndef __ITENSOR_SPINONE_H
 #define __ITENSOR_SPINONE_H
-#include "../model.h"
+#include "../siteset.h"
 
 #define Cout std::cout
 #define Endl std::endl
 
 namespace itensor {
 
-class SpinOne : public Model
+class SpinOne : public SiteSet
     {
     public:
 

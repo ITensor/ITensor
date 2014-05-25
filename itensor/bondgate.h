@@ -6,7 +6,7 @@
 #define __ITENSOR_BONDGATE_H
 
 #include "iqtensor.h"
-#include "model.h"
+#include "siteset.h"
 
 namespace itensor {
 

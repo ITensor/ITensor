@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_MPS_H
 #define __ITENSOR_MPS_H
 #include "svdalgs.h"
-#include "model.h"
+#include "siteset.h"
 #include "bondgate.h"
 
 namespace itensor {
@@ -16,7 +16,7 @@ class MPOt;
 class InitState;
 
 void 
-convertToIQ(const Model& model, const std::vector<ITensor>& A, 
+convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
             std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
 //
@@ -43,7 +43,7 @@ class MPSt
 
     MPSt();
 
-    MPSt(const Model& sites);
+    MPSt(const SiteSet& sites);
 
     MPSt(const InitState& initState);
 
@@ -94,10 +94,10 @@ class MPSt
     orthoCenter() const;
 
     IQIndex 
-    si(int i) const { return model_->si(i); }
+    si(int i) const { return sites_->si(i); }
 
     IQIndex 
-    siP(int i) const { return model_->siP(i); }
+    siP(int i) const { return sites_->siP(i); }
 
     typedef typename std::vector<Tensor>::const_iterator 
     AA_it;
@@ -116,8 +116,8 @@ class MPSt
     Tensor& 
     Anc(int i); //nc stands for non-const
 
-    const Model& 
-    model() const { return *model_; }
+    const SiteSet& 
+    sites() const { return *sites_; }
 
     const Spectrum& 
     spectrum(int b) const { return spectrum_.at(b); }
@@ -126,7 +126,7 @@ class MPSt
     spectrum(int b) { return spectrum_.at(b); }
 
     bool 
-    isNull() const { return (model_==0); }
+    isNull() const { return (sites_==0); }
 
     Real 
     truncerr(int b) const { return spectrum_.at(b).truncerr(); }
@@ -201,9 +201,9 @@ class MPSt
     void 
     toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
         {
-        iqpsi = MPSt<IQTensor>(*model_);
+        iqpsi = MPSt<IQTensor>(*sites_);
         iqpsi.spectrum_ = spectrum_;
-        convertToIQ(*model_,A_,iqpsi.A_,totalq,cut);
+        convertToIQ(*sites_,A_,iqpsi.A_,totalq,cut);
         }
 
     void
@@ -227,11 +227,17 @@ class MPSt
     void 
     write(std::ostream& s) const;
 
+
+    //
+    // Deprecated methods, only for backwards compatibility
+    //
+
+    const SiteSet& 
+    model() const { return *sites_; }
+
     protected:
 
     //////////////////////////
-    //
-    //Data Members
 
     int N_;
 
@@ -241,7 +247,7 @@ class MPSt
     int l_orth_lim_,
         r_orth_lim_;
 
-    const Model* model_;
+    const SiteSet* sites_;
 
     std::vector<Spectrum> spectrum_;
 
@@ -252,7 +258,6 @@ class MPSt
 
     bool do_write_;
 
-    //
     //////////////////////////
 
     //
@@ -323,7 +328,7 @@ class InitState
     typedef std::string
     String;
 
-    InitState(const Model& sites)
+    InitState(const SiteSet& sites)
         : 
         sites_(&sites), 
         state_(1+sites.N())
@@ -334,7 +339,7 @@ class InitState
             }
         }
 
-    InitState(const Model& sites, const String& state)
+    InitState(const SiteSet& sites, const String& state)
         : 
         sites_(&sites), 
         state_(1+sites.N())
@@ -363,12 +368,12 @@ class InitState
     const IQIndexVal&
     operator()(int i) const { checkRange(i); return state_.at(i); }
 
-    const Model&
-    model() const { return *sites_; }
+    const SiteSet&
+    sites() const { return *sites_; }
 
     private:
 
-    const Model* sites_;
+    const SiteSet* sites_;
     Storage state_;
 
     void

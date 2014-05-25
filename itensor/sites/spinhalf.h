@@ -4,11 +4,11 @@
 //
 #ifndef __ITENSOR_SPINHALF_H
 #define __ITENSOR_SPINHALF_H
-#include "../model.h"
+#include "../siteset.h"
 
 namespace itensor {
 
-class SpinHalf : public Model
+class SpinHalf : public SiteSet
     {
     public:
 

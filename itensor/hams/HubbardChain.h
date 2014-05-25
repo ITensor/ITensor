@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_HAMS_HUBBARDCHAIN_H
 #define __ITENSOR_HAMS_HUBBARDCHAIN_H
 #include "../mpo.h"
-#include "../model/hubbard.h"
+#include "../sites/hubbard.h"
 
 #define Cout std::cout
 #define Endl std::endl
@@ -17,7 +17,7 @@ class HubbardChain
     {
     public:
 
-    HubbardChain(const Hubbard& model,
+    HubbardChain(const Hubbard& sites,
                  const OptSet& opts = Global::opts());
 
     operator MPO() { init_(); return H.toMPO(); }
@@ -30,7 +30,7 @@ class HubbardChain
     //
     // Data Members
 
-    const Hubbard& model_;
+    const Hubbard& sites_;
     Real t_,U_;
     bool initted_;
     bool infinite_;
@@ -45,10 +45,10 @@ class HubbardChain
     }; //class HubbardChain
 
 inline HubbardChain::
-HubbardChain(const Hubbard& model, 
+HubbardChain(const Hubbard& sites, 
              const OptSet& opts)
     : 
-    model_(model), 
+    sites_(sites), 
     initted_(false)
     { 
     U_ = opts.getReal("U",0);
@@ -61,9 +61,9 @@ init_()
     {
     if(initted_) return;
 
-    H = IQMPO(model_);
+    H = IQMPO(sites_);
 
-    const int Ns = model_.N();
+    const int Ns = sites_.N();
 
     std::vector<IQIndex> links(Ns+1);
     for(int l = 0; l <= Ns; ++l) 
@@ -87,25 +87,25 @@ init_()
         IQIndex row = conj(links[n-1]), 
                 col = (n==Ns ? last : links[n]);
 
-        W = IQTensor(conj(model_.si(n)),model_.siP(n),row,col);
+        W = IQTensor(conj(sites_.si(n)),sites_.siP(n),row,col);
 
         //Identity strings
-        W += model_.op("Id",n) * row(1) * col(1);
-        W += model_.op("Id",n) * row(2) * col(2);
+        W += sites_.op("Id",n) * row(1) * col(1);
+        W += sites_.op("Id",n) * row(2) * col(2);
 
         //Hubbard U
-        W += model_.op("Nupdn",n) * row(2) * col(1) * U_;
+        W += sites_.op("Nupdn",n) * row(2) * col(1) * U_;
 
         //Kinetic energy/hopping terms, defined as -t_*(c^d_i c_{i+1} + h.c.)
-        W += model_.op("Aup*F",n)    *row(2)*col(3)*(+t_);
-        W += model_.op("Adagdn",n)   *row(2)*col(4)*(-t_);
-        W += model_.op("Adn",n)      *row(2)*col(5)*(+t_);
-        W += model_.op("Adagup*F",n) *row(2)*col(6)*(-t_);
+        W += sites_.op("Aup*F",n)    *row(2)*col(3)*(+t_);
+        W += sites_.op("Adagdn",n)   *row(2)*col(4)*(-t_);
+        W += sites_.op("Adn",n)      *row(2)*col(5)*(+t_);
+        W += sites_.op("Adagup*F",n) *row(2)*col(6)*(-t_);
 
-        W += model_.op("Adagup",n)  *row(3)*col(1);
-        W += model_.op("F*Adn",n)   *row(4)*col(1);
-        W += model_.op("F*Adagdn",n)*row(5)*col(1);
-        W += model_.op("Aup",n)     *row(6)*col(1);
+        W += sites_.op("Adagup",n)  *row(3)*col(1);
+        W += sites_.op("F*Adn",n)   *row(4)*col(1);
+        W += sites_.op("F*Adagdn",n)*row(5)*col(1);
+        W += sites_.op("Aup",n)     *row(6)*col(1);
         }
 
     const

@@ -1,7 +1,7 @@
 #include "test.h"
 #include "mps.h"
-#include "model/spinhalf.h"
-#include "model/spinless.h"
+#include "sites/spinhalf.h"
+#include "sites/spinless.h"
 
 using namespace itensor;
 
@@ -9,10 +9,10 @@ TEST_CASE("MPSTest")
 {
 
 static const int N = 10;
-SpinHalf shmodel(N);
+SpinHalf shsites(N);
 
-InitState shFerro(shmodel,"Up");
-InitState shNeel(shmodel);
+InitState shFerro(shsites,"Up");
+InitState shNeel(shsites);
 
 for(int j = 1; j <= N; ++j)
     {
@@ -38,10 +38,10 @@ SECTION("QNCheck")
 
 SECTION("MPSAddition")
     {
-    Spinless model(10);
+    Spinless sites(10);
 
-    InitState i1(model,"Emp"),
-              i2(model,"Emp");
+    InitState i1(sites,"Emp"),
+              i2(sites,"Emp");
 
     i1.set(1,"Occ");
     i2.set(2,"Occ");
@@ -58,9 +58,9 @@ SECTION("MPSAddition")
 
 SECTION("PositionTest")
     {
-    Spinless model(10);
+    Spinless sites(10);
 
-    InitState init(model,"Emp");
+    InitState init(sites,"Emp");
     init.set(2,"Occ");
     init.set(4,"Occ");
     init.set(6,"Occ");

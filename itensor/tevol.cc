@@ -431,7 +431,7 @@ ungroupMPS(vector<Tensor>& psig,
     while(psig.at(Ng).isNull() && Ng > 1) --Ng;
 
     const int N = psi.N();
-    const Model& model = psi.model();
+    const SiteSet& sites = psi.sites();
 
     const int 
           d      = (dir==Fromleft ? +1 : -1),
@@ -455,7 +455,7 @@ ungroupMPS(vector<Tensor>& psig,
 
         for(int n = 1; n < nsite; ++n)
             {
-            IndexT sj = model.si(j);
+            IndexT sj = sites.si(j);
             if(j == start)
                 {
                 psi.Anc(j) = Tensor(sj);

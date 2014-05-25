@@ -40,7 +40,7 @@ class MPOt : private MPSt<Tensor>
 
     MPOt();
 
-    MPOt(const Model& model, 
+    MPOt(const SiteSet& sites, 
          Real _refNorm = DefaultLogRefScale);
 
 
@@ -48,7 +48,7 @@ class MPOt : private MPSt<Tensor>
 
     using Parent::N;
 
-    using Parent::model;
+    using Parent::sites;
     using Parent::isNull;
 
     using Parent::si;
@@ -91,9 +91,9 @@ class MPOt : private MPSt<Tensor>
 
     operator MPOt<IQTensor>()
         { 
-        MPOt<IQTensor> res(*model_,logrefNorm_); 
+        MPOt<IQTensor> res(*sites_,logrefNorm_); 
         res.spectrum_ = spectrum_;
-        convertToIQ(*model_,A_,res.A_);
+        convertToIQ(*sites_,A_,res.A_);
         return res; 
         }
 
@@ -147,9 +147,9 @@ class MPOt : private MPSt<Tensor>
     void 
     toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
         {
-        res = MPOt<IQTensor>(*model_,logrefNorm_);
+        res = MPOt<IQTensor>(*sites_,logrefNorm_);
         res.spectrum_ = spectrum_;
-        convertToIQ(*model_,A_,res.A_,totalq,cut);
+        convertToIQ(*sites_,A_,res.A_,totalq,cut);
         }
 
     private:
@@ -159,7 +159,7 @@ class MPOt : private MPSt<Tensor>
     using Parent::A_;
     using Parent::l_orth_lim_;
     using Parent::r_orth_lim_;
-    using Parent::model_;
+    using Parent::sites_;
     using Parent::spectrum_;
     Real logrefNorm_;
     ///////////
@@ -183,7 +183,7 @@ template <> inline
 MPO MPOt<IQTensor>::
 toMPO() const
     {
-    MPO res(*model_,logrefNorm_);
+    MPO res(*sites_,logrefNorm_);
     res.spectrum_ = spectrum_;
     for(int j = 0; j <= N()+1; ++j)
         {

@@ -16,7 +16,7 @@ class tJChain
     {
     public:
 
-    tJChain(const Model& model,
+    tJChain(const SiteSet& sites,
             const OptSet& opts = Global::opts());
 
     Real
@@ -37,7 +37,7 @@ class tJChain
 
     private:
 
-    const Model& model_;
+    const SiteSet& sites_;
     Real t_,J_;
     bool initted;
     MPO H;
@@ -47,9 +47,9 @@ class tJChain
     }; //class tJChain
 
 inline tJChain::
-tJChain(const Model& model, const OptSet& opts)
+tJChain(const SiteSet& sites, const OptSet& opts)
     : 
-    model_(model), 
+    sites_(sites), 
     initted(false)
     { 
     J_ = opts.getReal("J",0.35);
@@ -63,9 +63,9 @@ init_()
     if(initted) return;
     Cout << "J is " << J_ << Endl;
 
-    H = MPO(model_);
+    H = MPO(sites_);
 
-    const int Ns = model_.N();
+    const int Ns = sites_.N();
     const int k = 10;
 
     std::vector<Index> links(Ns+1);
@@ -77,36 +77,36 @@ init_()
         ITensor& W = H.Anc(n);
         Index &row = links[n-1], &col = links[n];
 
-        W = ITensor(model_.si(n),model_.siP(n),row,col);
+        W = ITensor(sites_.si(n),sites_.siP(n),row,col);
 
 	// fermiPhase will be needed for longer range hopping, but not for this nn chain
 
-        //W += model_.Nupdn(n) * row(k) * col(1) * U_;	
-        //W += multSiteOps(model_.fermiPhase(n),model_.Cup(n)) * row(k) * col(2) * t_;
-        //W += multSiteOps(model_.fermiPhase(n),model_.Cdn(n)) * row(k) * col(3) * t_;
-        //W += multSiteOps(model_.Cdagup(n),model_.fermiPhase(n)) * row(k) * col(4) * t_;
-        //W += multSiteOps(model_.Cdagdn(n),model.fermiPhase(n)) * row(k) * col(5) * t_;
+        //W += sites_.Nupdn(n) * row(k) * col(1) * U_;	
+        //W += multSiteOps(sites_.fermiPhase(n),sites_.Cup(n)) * row(k) * col(2) * t_;
+        //W += multSiteOps(sites_.fermiPhase(n),sites_.Cdn(n)) * row(k) * col(3) * t_;
+        //W += multSiteOps(sites_.Cdagup(n),sites_.fermiPhase(n)) * row(k) * col(4) * t_;
+        //W += multSiteOps(sites_.Cdagdn(n),sites.fermiPhase(n)) * row(k) * col(5) * t_;
 
-        W += model_.Cup(n) * row(k) * col(2) * t_;
-        W += model_.Cdn(n) * row(k) * col(3) * t_;
-        W += model_.Cdagup(n) * row(k) * col(4) * t_;
-        W += model_.Cdagdn(n) * row(k) * col(5) * t_;
+        W += sites_.Cup(n) * row(k) * col(2) * t_;
+        W += sites_.Cdn(n) * row(k) * col(3) * t_;
+        W += sites_.Cdagup(n) * row(k) * col(4) * t_;
+        W += sites_.Cdagdn(n) * row(k) * col(5) * t_;
 
-        W += model_.sz(n) * row(k) * col(6) * J_;
-        W += model_.sp(n) * row(k) * col(7) * J_/2;
-        W += model_.sm(n) * row(k) * col(8) * J_/2;
-        W += model_.Ntot(n) * row(k) * col(9) * (-J_/4);
-        W += model_.id(n) * row(k) * col(k);
+        W += sites_.sz(n) * row(k) * col(6) * J_;
+        W += sites_.sp(n) * row(k) * col(7) * J_/2;
+        W += sites_.sm(n) * row(k) * col(8) * J_/2;
+        W += sites_.Ntot(n) * row(k) * col(9) * (-J_/4);
+        W += sites_.id(n) * row(k) * col(k);
 
-        W += model_.id(n) * row(1) * col(1);
-        W += model_.Cdagup(n) * row(2) * col(1) * (-1.0);
-        W += model_.Cdagdn(n) * row(3) * col(1) * (-1.0);
-        W += model_.Cup(n) * row(4) * col(1) * (-1.0);
-        W += model_.Cdn(n) * row(5) * col(1) * (-1.0);
-        W += model_.sz(n) * row(6) * col(1);
-        W += model_.sm(n) * row(7) * col(1);
-        W += model_.sp(n) * row(8) * col(1);
-        W += model_.Ntot(n) * row(9) * col(1);
+        W += sites_.id(n) * row(1) * col(1);
+        W += sites_.Cdagup(n) * row(2) * col(1) * (-1.0);
+        W += sites_.Cdagdn(n) * row(3) * col(1) * (-1.0);
+        W += sites_.Cup(n) * row(4) * col(1) * (-1.0);
+        W += sites_.Cdn(n) * row(5) * col(1) * (-1.0);
+        W += sites_.sz(n) * row(6) * col(1);
+        W += sites_.sm(n) * row(7) * col(1);
+        W += sites_.sp(n) * row(8) * col(1);
+        W += sites_.Ntot(n) * row(9) * col(1);
         }
 
     H.Anc(1) *= ITensor(links.at(0)(k));

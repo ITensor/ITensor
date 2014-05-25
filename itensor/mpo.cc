@@ -30,29 +30,29 @@ template MPOt<IQTensor>::MPOt();
 
 template <class Tensor>
 MPOt<Tensor>::
-MPOt(const Model& model,
+MPOt(const SiteSet& sites,
      Real _logrefNorm) 
     : 
-    Parent(model)
+    Parent(sites)
     { 
     // Norm of psi^2 = 1 = norm = sum of denmat evals. 
     // This translates to Tr{Adag A} = norm.  
     // Ref. norm is Tr{1} = d^N, d = 2 S=1/2, d = 4 for Hubbard, etc
-    if(_logrefNorm == DefaultLogRefScale) logrefNorm_ = model.N();
+    if(_logrefNorm == DefaultLogRefScale) logrefNorm_ = sites.N();
 
     //Set all tensors to identity ops
     for(int j = 1; j <= N(); ++j)
         {
-        Anc(j) = model.op("Id",j);
+        Anc(j) = sites.op("Id",j);
         }
     putMPOLinks(*this);
     }
 template
 MPOt<ITensor>::
-MPOt(const Model& model, Real _logrefNorm);
+MPOt(const SiteSet& sites, Real _logrefNorm);
 template
 MPOt<IQTensor>::
-MPOt(const Model& model, Real _logrefNorm);
+MPOt(const SiteSet& sites, Real _logrefNorm);
 
 /*
 template<class Tensor> 
@@ -662,13 +662,13 @@ expsmallH(const MPOt<Tensor>& H,
     opts.add("Cutoff",MIN_CUT);
     opts.add("Maxm",MAX_M);
 
-    MPOt<Tensor> Hshift(H.model());
+    MPOt<Tensor> Hshift(H.sites());
     Hshift.Anc(1) *= -Etot;
     Hshift.plusEq(H,opts);
     Hshift.Anc(1) *= -tau;
 
     vector<MPOt<Tensor> > xx(2);
-    xx.at(0) = MPOt<Tensor>(H.model());
+    xx.at(0) = MPOt<Tensor>(H.sites());
     xx.at(1) = Hshift;
 
     //

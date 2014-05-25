@@ -2,22 +2,22 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_MODEL_H
-#define __ITENSOR_MODEL_H
+#ifndef __ITENSOR_SITESET_H
+#define __ITENSOR_SITESET_H
 #include "iqtensor.h"
 
 namespace itensor {
 
 //
-// Classes derived from Model 
-// represent the abstract lattice of a 
+// Classes derived from SiteSet 
+// represent the Hilbert space of a 
 // system as a set of Site indices.
 //
-// Classes derived from Model are
+// Classes derived from SiteSet are
 // responsible for implementing 
 // site operators such as Sz for 
 // spin models, Cdag for particle
-// models, etc. whereas the Model
+// models, etc. whereas the SiteSet
 // base class is reponsible for
 // enforcing a consistent interface.
 //
@@ -31,7 +31,10 @@ namespace itensor {
 // of our MPS)
 //
 
-class Model
+class SiteSet;
+typedef SiteSet Model; //for backwards compatibility
+
+class SiteSet
     {
     public:
 
@@ -41,9 +44,9 @@ class Model
     typedef std::vector<String>
     DefaultOpsT;
 
-    Model() { }
+    SiteSet() { }
 
-    Model(std::ifstream& s) { }
+    SiteSet(std::ifstream& s) { }
 
     //Number of Sites
     int 
@@ -63,9 +66,9 @@ class Model
 
     //Index at site i set to a certain state
     //indicated by the string "state"
-    //e.g. model("Up",5) returns the IQIndexVal
+    //e.g. sites("Up",5) returns the IQIndexVal
     //representing the spin up state on site 5
-    //(assuming a spin type model such as SpinHalf)
+    //(assuming a spin SiteSet such as SpinHalf)
     IQIndexVal
     operator()(int i, const String& state) const
         { return getState(i,state); }
@@ -96,7 +99,7 @@ class Model
     write(std::ostream& s) const { doWrite(s); }
 
     virtual 
-    ~Model() { }
+    ~SiteSet() { }
 
     //Implementations (To Be Overridden by Derived Classes) 
 
@@ -135,7 +138,7 @@ class Model
 
     };
 
-inline IQTensor Model::
+inline IQTensor SiteSet::
 op(const String& opname, int i, 
    const OptSet& opts) const
     { 
@@ -181,22 +184,22 @@ op(const String& opname, int i,
         }
     }
 
-std::string inline Model::
+std::string inline SiteSet::
 op1(const std::string& opname, size_t n) const
     {
     return opname.substr(0,n);
     }
 
-std::string inline Model::
+std::string inline SiteSet::
 op2(const std::string& opname, size_t n) const
     {
     return opname.substr(n+1);
     }
 
 inline std::ostream& 
-operator<<(std::ostream& s, const Model& M)
+operator<<(std::ostream& s, const SiteSet& M)
     {
-    s << "Model:\n";
+    s << "SiteSet:\n";
     for(int j = 1; j <= M.N(); ++j) 
         s << format("si(%d) = ",j,M.si(j),"\n");
     return s;

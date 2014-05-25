@@ -1,6 +1,6 @@
 #include "core.h"
-#include "model/spinhalf.h"
-#include "model/spinone.h"
+#include "sites/spinhalf.h"
+#include "sites/spinone.h"
 #include "hams/Heisenberg.h"
 
 using namespace std;
@@ -22,7 +22,7 @@ main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    Spin model(N);
+    Spin sites(N);
 
     //
     // Create the Hamiltonian matrix product operator.
@@ -30,12 +30,12 @@ main(int argc, char* argv[])
     // IQTensors, tensors whose indices are sorted
     // with respect to quantum numbers
     //
-    IQMPO H = Heisenberg(model);
+    IQMPO H = Heisenberg(sites);
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
     //
-    InitState initState(model);
+    InitState initState(sites);
     for(int i = 1; i <= N; ++i) 
         {
         if(i%2 == 1)

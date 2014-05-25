@@ -4,11 +4,11 @@
 //
 #ifndef __ITENSOR_HUBBARD_H
 #define __ITENSOR_HUBBARD_H
-#include "../model.h"
+#include "../siteset.h"
 
 namespace itensor {
 
-class Hubbard : public Model
+class Hubbard : public SiteSet
     {
     public:
 

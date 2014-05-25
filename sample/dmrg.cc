@@ -1,6 +1,6 @@
 #include "core.h"
-#include "model/spinhalf.h"
-#include "model/spinone.h"
+#include "sites/spinhalf.h"
+#include "sites/spinone.h"
 #include "hams/Heisenberg.h"
 
 using namespace std;
@@ -21,18 +21,18 @@ main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    Spin model(N);    // make a chain of N spins
+    Spin sites(N);    // make a chain of N spins
 
     //
     // Create the Hamiltonian matrix product operator (MPO)
     //
-    MPO H = Heisenberg(model);
+    MPO H = Heisenberg(sites);
 
     //
     // Set the initial wavefunction matrix product state (MPS)
     // to be a Neel state.
     //
-    InitState initState(model);
+    InitState initState(sites);
     for(int i = 1; i <= N; ++i) 
         {
         if(i%2 == 1)

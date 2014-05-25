@@ -4,11 +4,11 @@
 //
 #ifndef __ITENSOR_Z3_H
 #define __ITENSOR_Z3_H
-#include "../model.h"
+#include "../siteset.h"
 
 namespace itensor {
 
-class Z3 : public Model
+class Z3 : public SiteSet
     {
     public:
 

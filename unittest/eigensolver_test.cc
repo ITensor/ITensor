@@ -1,7 +1,7 @@
 #include "test.h"
 #include "eigensolver.h"
 #include "hams/heisenberg.h"
-#include "model/spinhalf.h"
+#include "sites/spinhalf.h"
 #include "localmpo.h"
 
 using namespace itensor;
@@ -15,10 +15,10 @@ SECTION("FourSite")
     //Exact 4 site energy is -1.6160254038 from DMRG
 
     const int N = 4;
-    SpinHalf model(N);
-    MPO H = Heisenberg(model);
+    SpinHalf sites(N);
+    MPO H = Heisenberg(sites);
 
-    InitState initState(model);
+    InitState initState(sites);
     for(int i = 1; i <= N; ++i)
         initState.set(i,i%2==1 ? "Up" : "Dn");
 
@@ -114,10 +114,10 @@ SECTION("IQFourSite")
     //Exact 4 site energy is -1.6160254038 from DMRG
 
     const int N = 4;
-    SpinHalf model(N);
-    IQMPO H = Heisenberg(model);
+    SpinHalf sites(N);
+    IQMPO H = Heisenberg(sites);
 
-    InitState initState(model);
+    InitState initState(sites);
     for(int i = 1; i <= N; ++i)
         initState.set(i,i%2==1 ? "Up" : "Dn");
 

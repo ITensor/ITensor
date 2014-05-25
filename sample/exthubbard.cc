@@ -1,5 +1,5 @@
 #include "core.h"
-#include "model/spinhalf.h"
+#include "sites/spinhalf.h"
 #include "hams/ExtendedHubbard.h"
 
 using namespace std;
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    Hubbard model(N);
+    Hubbard sites(N);
 
     //
     // Create the Hamiltonian matrix product operator.
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     // IQTensors, tensors whose indices are sorted
     // with respect to quantum numbers
     //
-    IQMPO H = ExtendedHubbard(model,
+    IQMPO H = ExtendedHubbard(sites,
                               Opt("U",U)
                               & Opt("t1",t1)
                               & Opt("t2",t2)
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
     //
-    InitState initState(model);
+    InitState initState(sites);
     int p = Npart;
     for(int i = N; i >= 1; --i) 
         {
@@ -95,8 +95,8 @@ int main(int argc, char* argv[])
     for(int j = 1; j <= N; ++j)
         {
         psi.position(j);
-        upd(j) = Dot(conj(primed(psi.A(j),Site)),model.op("Nup",j)*psi.A(j));
-        dnd(j) = Dot(conj(primed(psi.A(j),Site)),model.op("Ndn",j)*psi.A(j));
+        upd(j) = Dot(conj(primed(psi.A(j),Site)),sites.op("Nup",j)*psi.A(j));
+        dnd(j) = Dot(conj(primed(psi.A(j),Site)),sites.op("Ndn",j)*psi.A(j));
         }
 
     cout << "Up Density:" << endl;

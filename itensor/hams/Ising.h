@@ -20,7 +20,7 @@ class Ising
     // Constructors
     //
 
-    Ising(const Model& model,
+    Ising(const SiteSet& sites,
           const OptSet& opts = Global::opts());
 
     operator MPO() { init(); return H; }
@@ -28,7 +28,7 @@ class Ising
     private:
 
     ////////
-    const Model& model_;
+    const SiteSet& sites_;
     int Ny_,
         Nx_;
     Real J_, 
@@ -46,14 +46,14 @@ class Ising
     }; //class Ising
 
 inline Ising::
-Ising(const Model& model,
+Ising(const SiteSet& sites,
       const OptSet& opts)
     :
-    model_(model), 
+    sites_(sites), 
     initted_(false)
     { 
     Ny_ = opts.getInt("Ny",1);
-    Nx_ = model_.N()/Ny_;
+    Nx_ = sites_.N()/Ny_;
     J_  = opts.getReal("J",1.);
     hx_  = opts.getReal("hx",0.);
     infinite_ = opts.getBool("Infinite",false);
@@ -65,9 +65,9 @@ init()
     {
     if(initted_) return;
 
-    H = MPO(model_);
+    H = MPO(sites_);
 
-    const int Ns = model_.N();
+    const int Ns = sites_.N();
     const int max_mpo_dist = Ny_;
     const int k = 3+(max_mpo_dist-1);
 
@@ -82,22 +82,22 @@ init()
         Index &row = links[n-1], 
               &col = (n==Ns ? last : links[n]);
 
-        W = ITensor(model_.si(n),prime(model_.si(n)),row,col);
+        W = ITensor(sites_.si(n),prime(sites_.si(n)),row,col);
 
-        W += model_.op("Id",n) * row(1) * col(1);
-        W += model_.op("Id",n) * row(k) * col(k);
+        W += sites_.op("Id",n) * row(1) * col(1);
+        W += sites_.op("Id",n) * row(k) * col(k);
 
-        W += model_.op("Sz",n) * row(2) * col(1);
+        W += sites_.op("Sz",n) * row(2) * col(1);
 
         //Transverse field
         if(hx_ != 0)
             {
-            W += model_.op("Sx",n) * row(k) * col(1) * (-hx_);
+            W += sites_.op("Sx",n) * row(k) * col(1) * (-hx_);
             }
 
         //Horizontal bonds (N.N in 1d)
         int mpo_dist = Ny_; 
-        W += model_.op("Sz",n) * row(k) * col(2+(mpo_dist-1)) * J_;
+        W += sites_.op("Sz",n) * row(k) * col(2+(mpo_dist-1)) * J_;
 
         //
         //The following only apply if Ny_ > 1:
@@ -105,20 +105,20 @@ init()
 
         //String of identity ops
         for(int q = 1; q <= (max_mpo_dist-1); ++q)
-            { W += model_.op("Id",n) * row(2+q) * col(1+q); }
+            { W += sites_.op("Id",n) * row(2+q) * col(1+q); }
 
         //Periodic BC bond
         const int y = (n-1)%Ny_+1;
         if(y == 1 && Ny_ > 2)
             {
             int mpo_dist = Ny_-1; 
-            W += model_.op("Sz",n) * row(k) * col(2+(mpo_dist-1)) * J_;
+            W += sites_.op("Sz",n) * row(k) * col(2+(mpo_dist-1)) * J_;
             }
 
         //N.N. bond along column
         if(y != Ny_)
             {
-            W += model_.op("Sz",n) * row(k) * col(2) * J_;
+            W += sites_.op("Sz",n) * row(k) * col(2) * J_;
             }
         }
 
