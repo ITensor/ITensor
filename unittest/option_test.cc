@@ -12,7 +12,22 @@ string_test_function(const OptSet& opts)
     }
 
 
-TEST_CASE("BasicUsage")
+TEST_CASE("OptionTest")
+{
+
+SECTION("BooleanConversion")
+    {
+    Opt o1;
+    CHECK(!o1);
+
+    Opt o2("Opt 2");
+    CHECK(o2);
+
+    Opt o3("Opt 3",5);
+    CHECK(o3);
+    }
+
+SECTION("BasicUsage")
     {
     Opt o1("Quiet");
     Opt o2("Quiet");
@@ -48,7 +63,7 @@ TEST_CASE("BasicUsage")
     CHECK_THROWS_AS(o7.boolVal(),ITError);
     }
 
-TEST_CASE("TestOptSet")
+SECTION("TestOptSet")
     {
     OptSet& gopts = OptSet::GlobalOpts();
 
@@ -93,7 +108,7 @@ TEST_CASE("TestOptSet")
     CHECK(opts3.defined("Auto"));
     }
 
-TEST_CASE("Operator")
+SECTION("Operator")
     {
     OptSet oset1; 
     oset1 &= Opt("Quiet");
@@ -107,7 +122,7 @@ TEST_CASE("Operator")
     CHECK(oset1.defined("Pinning"));
     }
 
-TEST_CASE("StringConstructor")
+SECTION("StringConstructor")
     {
     OptSet o1("Quiet,Auto,Pinning=-0.5");
     CHECK(o1.defined("Quiet"));
@@ -132,4 +147,5 @@ TEST_CASE("StringConstructor")
     }
 
 
+}
 

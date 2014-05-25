@@ -8,6 +8,7 @@
 #include <vector>
 #include "math.h"
 #include "flstring.h"
+#include "safebool.h"
 
 #ifndef NAN
 #define NAN (std::numeric_limits<Real>::quiet_NaN())
@@ -17,7 +18,7 @@ namespace itensor {
 
 typedef double Real;
 
-class Opt
+class Opt : public safe_bool<Opt>
     {
     public:
 
@@ -61,7 +62,7 @@ class Opt
     realVal() const { assertType(Numeric); return rval_; }
 
     bool
-    isNull() const { return type_ == None; }
+    valid() const { return type_ != None; }
 
     //operator bool() const { return (type_ == None); }
 

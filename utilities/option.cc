@@ -182,7 +182,7 @@ defined(const Opt& opt) const
 void OptSet::
 add(const Opt& opt)
     {
-    if(opt.isNull()) return;
+    if(!opt) return;
     Foreach(Opt& x, opts_)
         {
         //If already defined, replace
@@ -200,10 +200,10 @@ void OptSet::
 add(const Opt& opt1, const Opt& opt2,
     const Opt& opt3, const Opt& opt4)
     {
-    if(!opt1.isNull()) opts_.push_back(opt1);
-    if(!opt2.isNull()) opts_.push_back(opt2);
-    if(!opt3.isNull()) opts_.push_back(opt3);
-    if(!opt4.isNull()) opts_.push_back(opt4);
+    if(opt1) opts_.push_back(opt1);
+    if(opt2) opts_.push_back(opt2);
+    if(opt3) opts_.push_back(opt3);
+    if(opt4) opts_.push_back(opt4);
     }
 
 void OptSet::
