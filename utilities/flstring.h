@@ -66,22 +66,37 @@ template <size_t Maxlen>
 bool
 operator!=(const FLString<Maxlen>& s1, const FLString<Maxlen>& s2) { return !operator==(s1,s2); }
 
-template <size_t Maxlen,typename StringT>
+template <size_t Maxlen>
 bool
-operator==(const FLString<Maxlen>& s1, const StringT& s2);
+operator==(const FLString<Maxlen>& s1, const std::string& s2);
 
-template <size_t Maxlen,typename StringT>
+template <size_t Maxlen>
 bool
-operator==(const StringT& s1, const FLString<Maxlen>& s2) { return operator==(s2,s1); }
+operator==(const std::string& s1, const FLString<Maxlen>& s2) { return operator==(s2,s1); }
 
-template <size_t Maxlen,typename StringT>
+template <size_t Maxlen>
 bool
-operator!=(const FLString<Maxlen>& s1, const StringT& s2) { return !operator==(s1,s2); }
+operator!=(const FLString<Maxlen>& s1, const std::string& s2) { return !operator==(s1,s2); }
 
-template <size_t Maxlen,typename StringT>
+template <size_t Maxlen>
 bool
-operator!=(const StringT& s1, const FLString<Maxlen>& s2) { return !operator==(s2,s1); }
+operator!=(const std::string& s1, const FLString<Maxlen>& s2) { return !operator==(s2,s1); }
 
+template <size_t Maxlen>
+bool
+operator==(const FLString<Maxlen>& s1, const char* s2);
+
+template <size_t Maxlen>
+bool
+operator==(const char* s1, const FLString<Maxlen>& s2) { return operator==(s2,s1); }
+
+template <size_t Maxlen>
+bool
+operator!=(const FLString<Maxlen>& s1, const char* s2) { return !operator==(s1,s2); }
+
+template <size_t Maxlen>
+bool
+operator!=(const char* s1, const FLString<Maxlen>& s2) { return !operator==(s2,s1); }
 
 //
 // Implementations
@@ -180,10 +195,10 @@ operator==(const FLString<Maxlen>& s1, const FLString<Maxlen>& s2)
     return true;
     }
 
-template <size_t Maxlen,typename StringT>
+template <size_t Maxlen>
 bool
 operator==(const FLString<Maxlen>& s1, 
-           const StringT& s2)
+           const std::string& s2)
     {
     const size_t ll = std::min(s2.size(),Maxlen);
     for(size_t n = 0; n < ll; ++n)
@@ -192,6 +207,44 @@ operator==(const FLString<Maxlen>& s1,
         }
     return true;
     }
+
+template <size_t Maxlen>
+bool
+operator==(const FLString<Maxlen>& s1, const char* s2)
+    {
+    for(size_t n = 0; n < Maxlen; ++n)
+        {
+        if(s1[n] != s2[n]) return false;
+        if(s2[n] == '\0') break;
+        }
+    return true;
+    }
+
+//template <size_t Maxlen>
+//bool
+//operator==(const FLString<Maxlen>& s1, const char s2[7])
+//    {
+//    size_t N = 7;
+//    const size_t ll = std::min(N,Maxlen);
+//    for(size_t n = 0; n < ll; ++n)
+//        {
+//        if(s1[n] != s2[n]) return false;
+//        }
+//    return true;
+//    }
+//
+//template <size_t Maxlen, size_t N>
+//bool
+//operator==(const char s1[7], const FLString<Maxlen>& s2)
+//    {
+//    size_t N = 7;
+//    const size_t ll = std::min(N,Maxlen);
+//    for(size_t n = 0; n < ll; ++n)
+//        {
+//        if(s1[n] != s2[n]) return false;
+//        }
+//    return true;
+//    }
 
 }; //namespace itensor
 

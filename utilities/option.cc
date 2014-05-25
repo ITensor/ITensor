@@ -5,6 +5,8 @@
 #include "option.h"
 #include <cerrno>
 #include <algorithm>
+#include <iostream>
+#include "error.h"
 
 namespace itensor {
 
@@ -117,14 +119,10 @@ operator<<(ostream & s, const Opt& opt)
 
 OptSet::
 OptSet()
-    :
-    is_global_(false)
     { }
 
 OptSet::
 OptSet(const Opt& opt)
-    :
-    is_global_(false)
     {
     add(opt);
     }
@@ -132,40 +130,26 @@ OptSet(const Opt& opt)
 OptSet::
 OptSet(const Opt& opt1, const Opt& opt2, 
        const Opt& opt3, const Opt& opt4)
-    :
-    is_global_(false)
     {
     add(opt1,opt2,opt3,opt4);
     }
 
 OptSet::
 OptSet(const char* ostring)
-    :
-    is_global_(false)
     {
     processString(string(ostring));
     }
 
 OptSet::
 OptSet(const string& ostring)
-    :
-    is_global_(false)
     {
     processString(ostring);
     }
 
 OptSet::
-OptSet(bool isGlobal)
-    :
-    is_global_(isGlobal)
-    { }
-
-OptSet::
 OptSet(const OptSet& other)
-    :
-    is_global_(false)
     { 
-    if(!other.is_global_)
+    if(!other.isGlobal())
         opts_ = other.opts_;
     }
 
@@ -175,7 +159,7 @@ OptSet(const OptSet& other)
 //    if(opts_.count(name) > 0)
 //        return true;
 //
-//    if(is_global_) 
+//    if(isGlobal()) 
 //        return false;
 //    //else see if GlobalOpts contains it
 //    return GlobalOpts().defined(name);
@@ -184,31 +168,42 @@ OptSet(const OptSet& other)
 bool OptSet::
 defined(const Opt& opt) const
     {
-    if(opts_.count(opt.name()) > 0)
-        return true;
+    Foreach(const Opt& x, opts_)
+        {
+        if(x.name() == opt.name()) return true;
+        }
 
-    if(is_global_) 
-        return false;
-    //else see if GlobalOpts contains it
+    if(isGlobal()) return false;
+
+    //otherwise see if GlobalOpts contains it
     return GlobalOpts().defined(opt.name());
+    }
+
+void OptSet::
+add(const Opt& opt)
+    {
+    if(opt.isNull()) return;
+    Foreach(Opt& x, opts_)
+        {
+        //If already defined, replace
+        if(x.name() == opt.name()) 
+            {
+            x = opt;
+            return;
+            }
+        }
+    //Otherwise add to the end
+    opts_.push_back(opt);
     }
 
 void OptSet::
 add(const Opt& opt1, const Opt& opt2,
     const Opt& opt3, const Opt& opt4)
     {
-    if(!opt1.isNull())
-        opts_[opt1.name()] = opt1;
-    if(!opt2.isNull())
-        opts_[opt2.name()] = opt2;
-
-    if(!opt3.isNull())
-        opts_[opt3.name()] = opt3;
-    else
-        return;
-
-    if(!opt4.isNull())
-        opts_[opt4.name()] = opt4;
+    if(!opt1.isNull()) opts_.push_back(opt1);
+    if(!opt2.isNull()) opts_.push_back(opt2);
+    if(!opt3.isNull()) opts_.push_back(opt3);
+    if(!opt4.isNull()) opts_.push_back(opt4);
     }
 
 void OptSet::
@@ -221,12 +216,14 @@ add(const char* ostring)
 const Opt& OptSet::
 get(const Opt::Name& name) const
     {
-    const_iterator it = opts_.find(name);
-    if(it != opts_.end()) return it->second;
-    //else, couldn't find the Opt
-    if(is_global_)
+    Foreach(const Opt& x, opts_)
         {
-        Error("Requested option " + name + " not found");
+        if(x.name() == name) return x;
+        }
+    //couldn't find the Opt in this OptSet
+    if(isGlobal())
+        {
+        throw ITError("Requested option " + name.toString() + " not found");
         }
     return GlobalOpts().get(name);
     }
@@ -365,47 +362,53 @@ addByString(string ostring)
         }
     }
 
-
 OptSet& OptSet::
-operator&(const OptSet& oset)
+operator+=(const OptSet& oset)
     {
-    for(const_iterator it = oset.cbegin(); it != oset.end(); ++it)
+    Foreach(const Opt& x, oset)
         {
-        opts_.insert(*it);
+        add(x);
         }
     return *this;
     }
 
 
 OptSet
-operator&(const Opt& opt1, const Opt& opt2)
+operator+(const Opt& opt1, const Opt& opt2)
     {
     return OptSet(opt1,opt2);
     }
 
 OptSet 
-operator&(OptSet oset, const Opt& opt)
+operator+(OptSet oset, const Opt& opt)
     {
     oset.add(opt);
     return oset;
     }
 
 OptSet&
-operator&=(OptSet& oset, const Opt& opt)
+operator+=(OptSet& oset, const Opt& opt)
+    {
+    oset.add(opt);
+    return oset;
+    }
+
+OptSet
+operator+(OptSet oset, const OptSet& other)
+    {
+    oset &= other;
+    return oset;
+    }
+
+OptSet 
+operator+(const Opt& opt, OptSet oset)
     {
     oset.add(opt);
     return oset;
     }
 
 OptSet 
-operator&(const Opt& opt, OptSet oset)
-    {
-    oset.add(opt);
-    return oset;
-    }
-
-OptSet 
-operator&(const Opt& opt, const char* ostring)
+operator+(const Opt& opt, const char* ostring)
     {
     OptSet res(ostring);
     res.add(opt);
@@ -413,7 +416,7 @@ operator&(const Opt& opt, const char* ostring)
     }
 
 OptSet 
-operator&(const char* ostring, const Opt& opt)
+operator+(const char* ostring, const Opt& opt)
     {
     OptSet res(ostring);
     res.add(opt);
@@ -421,14 +424,14 @@ operator&(const char* ostring, const Opt& opt)
     }
 
 OptSet 
-operator&(OptSet oset, const char* ostring)
+operator+(OptSet oset, const char* ostring)
     {
     oset.add(ostring);
     return oset;
     }
 
 OptSet 
-operator&(const char* ostring, OptSet oset)
+operator+(const char* ostring, OptSet oset)
     {
     oset.add(ostring);
     return oset;
@@ -437,10 +440,8 @@ operator&(const char* ostring, OptSet oset)
 ostream& 
 operator<<(ostream & s, const OptSet& oset)
     {
-    typedef OptSet::const_iterator 
-    const_it;
 
-    if(oset.is_global_)
+    if(oset.isGlobal())
         {
         s << "/- Global OptSet -------\n";
         }
@@ -450,10 +451,9 @@ operator<<(ostream & s, const OptSet& oset)
         s << "(only showing overrides of global opts)\n";
         }
 
-    for(const_it it = oset.opts_.begin();
-        it != oset.opts_.end(); ++it)
+    Foreach(const Opt& opt, oset)
         {
-        s << it->second << "\n";
+        s << opt << "\n";
         }
 
     s <<    "\\-----------------------" << endl;

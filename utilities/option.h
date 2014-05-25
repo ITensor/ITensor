@@ -5,16 +5,23 @@
 #ifndef __ITENSOR_OPTION_H
 #define __ITENSOR_OPTION_H
 
-#include <map>
-#include "real.h"
+#include <vector>
+#include "math.h"
+#include "flstring.h"
+
+#ifndef NAN
+#define NAN (std::numeric_limits<Real>::quiet_NaN())
+#endif
 
 namespace itensor {
+
+typedef double Real;
 
 class Opt
     {
     public:
 
-    typedef std::string
+    typedef FLString<20>
     Name;
 
     enum Type { Boolean, Numeric, String, None };
@@ -33,26 +40,6 @@ class Opt
     Opt(const Name& name, int ival);
 
     Opt(const Name& name, Real rval);
-
-    //
-    // Operators for comparison and sorting
-    //
-
-    // Two Opts are equal if they have the same name,
-    // regardless of other fields that may be set.
-    bool
-    operator==(const Opt& other) const
-        { 
-        return name_ == other.name_;
-        }
-
-    // Compares two Opts based on their name, using
-    // the < operator of std::string. Useful for sorting.
-    bool
-    operator<(const Opt& other) const
-        { 
-        return name_ < other.name_;
-        }
 
     //
     // Accessor methods
@@ -75,6 +62,8 @@ class Opt
 
     bool
     isNull() const { return type_ == None; }
+
+    //operator bool() const { return (type_ == None); }
 
     Type
     type() const { return type_; }
@@ -119,7 +108,7 @@ class OptSet
     typedef Opt::Name
     Name;
 
-    typedef std::map<Name,Opt>
+    typedef std::vector<Opt>
     storage_type;
 
     typedef storage_type::value_type
@@ -153,7 +142,7 @@ class OptSet
     defined(const Opt& opt) const;
 
     void
-    add(const Opt& opt) { if(!opt.isNull()) opts_[opt.name()] = opt; }
+    add(const Opt& opt);
     void
     add(const Name& name, bool bval) { add(Opt(name,bval)); }
     void
@@ -219,30 +208,26 @@ class OptSet
     cend() const { return opts_.end(); }
 
     OptSet&
-    operator&(const OptSet& other);
+    operator+=(const OptSet& other);
+    OptSet&
+    operator&=(const OptSet& other) { return operator+=(other); }
 
-    friend std::ostream& 
-    operator<<(std::ostream & s, const OptSet& oset);
+    bool
+    isGlobal() const { return (this == &GlobalOpts()); }
 
     static OptSet&
     GlobalOpts()
         {
-        const bool isGlobal = true;
-        static OptSet gos_(isGlobal);
+        static OptSet gos_;
         return gos_;
         }
 
     private:
 
     ///////////////
-    //
-    // Data Members
 
     storage_type opts_;
 
-    const bool is_global_;
-
-    //
     ///////////////
 
     OptSet(bool isGlobal);
@@ -255,30 +240,62 @@ class OptSet
 
     };
 
+OptSet
+operator+(const Opt& opt1, const Opt& opt2);
 
 OptSet
-operator&(const Opt& opt1, const Opt& opt2);
-
-OptSet
-operator&(OptSet oset, const Opt& opt);
+operator+(OptSet oset, const Opt& opt);
 
 OptSet&
-operator&=(OptSet& oset, const Opt& opt);
+operator+=(OptSet& oset, const Opt& opt);
 
 OptSet
-operator&(const Opt& opt, OptSet oset);
+operator+(OptSet oset, const OptSet& other);
 
 OptSet
-operator&(const Opt& opt, const char* ostring);
+operator+(const Opt& opt, OptSet oset);
 
 OptSet
-operator&(const char* ostring, const Opt& opt);
+operator+(const Opt& opt, const char* ostring);
 
 OptSet
-operator&(OptSet oset, const char* ostring);
+operator+(const char* ostring, const Opt& opt);
 
 OptSet
-operator&(const char* ostring, OptSet oset);
+operator+(OptSet oset, const char* ostring);
+
+OptSet
+operator+(const char* ostring, OptSet oset);
+
+///////////
+
+OptSet inline
+operator&(const Opt& opt1, const Opt& opt2) { return opt1+opt2; }
+
+OptSet inline
+operator&(OptSet oset, const Opt& opt) { return oset + opt; }
+
+inline 
+OptSet&
+operator&=(OptSet& oset, const Opt& opt) { return oset += opt; }
+
+OptSet inline
+operator&(OptSet oset, const OptSet& other) { return oset + other; }
+
+OptSet inline
+operator&(const Opt& opt, OptSet oset) { return opt + oset; }
+
+OptSet inline
+operator&(const Opt& opt, const char* ostring) { return opt + ostring; }
+
+OptSet inline
+operator&(const char* ostring, const Opt& opt) { return ostring + opt; }
+
+OptSet inline
+operator&(OptSet oset, const char* ostring) { return oset + ostring; }
+
+OptSet inline
+operator&(const char* ostring, OptSet oset) { return ostring + oset; }
 
 std::ostream& 
 operator<<(std::ostream & s, const Opt& opt);
