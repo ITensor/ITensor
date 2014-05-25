@@ -139,7 +139,7 @@ operator()(const vector<Tensor>& psi) const
     //psi tensors may have 1 or 2 sites,
     //so N is number of (non-null) psi tensors 
     int N = int(psi.size())-1;
-    while(psi.at(N).isNull() && N > 1) --N;
+    while(!psi.at(N) && N > 1) --N;
 
     vector<Tensor> dpsi(psi.size());
 
@@ -428,7 +428,7 @@ ungroupMPS(vector<Tensor>& psig,
         Error("Empty psig vector");
 
     int Ng = int(psig.size())-1;
-    while(psig.at(Ng).isNull() && Ng > 1) --Ng;
+    while(!psig.at(Ng) && Ng > 1) --Ng;
 
     const int N = psi.N();
     const SiteSet& sites = psi.sites();
@@ -520,7 +520,7 @@ class OrthVec
         {
         if(dir_ == None) return;
         int N = int(psi.size())-1;
-        while(psi.at(N).isNull() && N > 1) --N;
+        while(!psi.at(N) && N > 1) --N;
 
         const int start = (dir_==Fromleft ? 2 : N-1),
                   end   = (dir_==Fromleft ? N : 1),
@@ -914,7 +914,7 @@ expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
         Error("Empty psi vector");
 
     int N = int(psi.size())-1;
-    while(psi.at(N).isNull() && N > 1) --N;
+    while(!psi.at(N) && N > 1) --N;
 
     Tensor L;
     int s = 1;
@@ -969,7 +969,7 @@ norm(const vector<Tensor>& psi)
         Error("Empty psi vector");
 
     int N = int(psi.size())-1;
-    while(psi.at(N).isNull() && N > 1) --N;
+    while(!psi.at(N) && N > 1) --N;
 
 
     Tensor L;

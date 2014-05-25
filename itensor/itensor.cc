@@ -603,7 +603,7 @@ Real ITensor::
 toReal() const 
 	{ 
 #ifdef DEBUG
-    if(this->isNull())
+    if(!this->valid())
         Error("ITensor is null");
 #endif
 
@@ -1342,14 +1342,6 @@ expandIndex(const Index& small, const Index& big, int start)
     is_.swap(newinds);
     }
 
-/*
-int ITensor::
-vecSize() const 
-    { 
-    if(isNull()) return 0;
-    return r_->v.Length(); 
-    }
-    */
 
 VectorRef ITensor::
 assignToVec() const
@@ -1866,10 +1858,8 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
         Error("toMatrixProd not implemented for ITensor of type Diag (L)");
     if(R.type() == ITensor::Diag)
         Error("toMatrixProd not implemented for ITensor of type Diag (R)");
-    if(L.isNull())
-        Error("L null in toMatrixProd");
-    if(R.isNull())
-        Error("R null in toMatrixProd");
+    if(!L) Error("L null in toMatrixProd");
+    if(!R) Error("R null in toMatrixProd");
 #endif
     const Vector &Ldat = L.r_->v, 
                  &Rdat = R.r_->v;
@@ -2365,7 +2355,7 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
         }
 
     //Allocate a new dat for res if necessary
-    if(res.isNull() || !res.r_.unique())
+    if(!res || !res.r_.unique())
         { 
         res.r_ = make_shared<ITDat>(alloc_size); 
         }
@@ -2468,7 +2458,7 @@ contractDiagDiag(const ITensor& A, const ITensor& B, ITensor& res)
 ITensor& ITensor::
 operator*=(const ITensor& other)
     {
-    if(this->isNull() || other.isNull())
+    if(!this->valid() || !other.valid())
         Error("Null ITensor in product");
 
     if(this == &other)
@@ -2714,7 +2704,7 @@ checkSameIndOrder(const IndexSet<Index> is1,
 ITensor& ITensor::
 operator+=(const ITensor& other)
     {
-    if(this->isNull())
+    if(!this->valid())
         {
         operator=(other);
         return *this;
@@ -3142,7 +3132,7 @@ operator<<(ostream & s, const ITensor& t)
     const 
     bool isdiag = (t.type() == ITensor::Diag);
 
-    if(t.isNull()) s << ", dat is null}\n";
+    if(!t) s << ", dat is null}\n";
     else 
         {
         s << ", L=" << t.indices().dim();
@@ -3328,7 +3318,7 @@ commaInit(ITensor& T,
     started_(false),
     c_(T.is_)
     { 
-    if(T_.isNull()) 
+    if(!T_) 
         Error("Can't assign to null ITensor");
 
     if(T.type() == ITensor::Diag)

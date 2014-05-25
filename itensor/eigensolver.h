@@ -761,7 +761,7 @@ complexDavidson(const BigMatrixT& A,
 
         //Step D of Davidson (1975)
         //Apply Davidson preconditioner
-        if(!Adiag.isNull())
+        if(Adiag)
             {
             DavidsonPrecond dp(lambda.real());
             Tensor cond(Adiag);

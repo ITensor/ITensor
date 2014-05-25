@@ -45,9 +45,9 @@ solo()
 //
 
 bool IQTensor::
-isNull() const 
+valid() const 
     { 
-    return &dat() == IQTDat<ITensor>::Null().get(); 
+    return &dat() != IQTDat<ITensor>::Null().get(); 
     }
 
 bool IQTensor::
@@ -223,7 +223,7 @@ read(std::istream& s)
 void IQTensor::
 write(std::ostream& s) const
 	{
-	bool null_ = isNull();
+	bool null_ = !valid();
 	s.write((char*) &null_,sizeof(null_));
 	if(null_) return;
     is_->write(s);
@@ -768,50 +768,10 @@ trace(const IQIndex& i1, const IQIndex& i2,
     return *this;
     }
 
-/*
-int IQTensor::
-vecSize() const
-	{
-    if(this->isNull()) return 0;
-	int s = 0;
-    Foreach(const ITensor& t, dat())
-	    s += t.vecSize();
-	return s;
-	}
-    */
-
-/*
-//Redundant: use indices().dim() instead
-int IQTensor::
-maxSize() const
-	{
-    int ms = 1;
-	for(int j = 0; j < is_->r(); ++j)
-	    ms *= is_->m(j);
-    return ms;
-    }
-*/
-
-/*
-void IQTensor::
-assignToVec(VectorRef v) const
-	{
-	if(vecSize() != v.Length())
-	    Error("Mismatched sizes in IQTensor::assignToVec(VectorRef v).");
-	int off = 1;
-    Foreach(const ITensor& t, blocks())
-	    {
-	    int d = t.vecSize();
-	    t.assignToVec(v.SubVector(off,off+d-1));
-	    off += d;
-	    }
-	}
-    */
-
 void IQTensor::
 randomize(const OptSet& opts) 
 	{ 
-    if(isNull())
+    if(!valid())
         Error("Can't randomize default constructed IQTensor.");
     if(dat().empty())
         Error("Can't randomize IQTensor having no blocks");
@@ -883,7 +843,7 @@ std::ostream&
 operator<<(std::ostream & s, const IQTensor& T)
     {
 	s << "/--------------IQTensor--------------\n";
-    if(T.isNull())
+    if(!T)
         {
         s << "     (IQTensor is null)\n\n";
         return s;
@@ -934,10 +894,10 @@ operator*=(const IQTensor& other)
         return operator*=(cp_oth);
         }
 
-    if(this->isNull()) 
+    if(!this->valid()) 
         Error("'This' IQTensor null in product");
 
-    if(other.isNull()) 
+    if(!other)
         Error("Multiplying by null IQTensor");
 
     solo();
@@ -1064,10 +1024,10 @@ operator/=(const IQTensor& other)
         return operator/=(cp_oth);
         }
 
-    if(this->isNull()) 
+    if(!this->valid()) 
         Error("'This' IQTensor null in product");
 
-    if(other.isNull()) 
+    if(!other)
         Error("Multiplying by null IQTensor");
 
     vector<Real> common_inds;
@@ -1220,7 +1180,7 @@ operator+=(const IQTensor& other)
     {
     //TODO: account for fermion sign here
 
-    if(this->isNull())
+    if(!this->valid())
         {
         operator=(other);
         return *this;
@@ -1268,7 +1228,7 @@ operator+=(const IQTensor& other)
 ITensor IQTensor::
 toITensor() const
     {
-    if(this->isNull()) return ITensor();
+    if(!this->valid()) return ITensor();
 
     //if(Global::debug1())
     //    {

@@ -29,7 +29,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R,
 //
 // ITensor
 //
-class ITensor
+class ITensor : public safe_bool<ITensor>
     {
     public:
 
@@ -41,9 +41,9 @@ class ITensor
     int 
     r() const { return is_.r(); }
 
-    //true if ITensor is default constructed
+    //false if ITensor is default constructed
     bool 
-    isNull() const { return !bool(r_); }
+    valid() const { return bool(r_); }
 
     bool
     isComplex() const { return bool(i_); }
@@ -79,7 +79,6 @@ class ITensor
     //Constructors
     //
 
-    //Construct Null ITensor, isNull returns true
     ITensor();
 
     //Construct rank 1 ITensor, all entries set to zero

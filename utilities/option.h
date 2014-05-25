@@ -134,6 +134,23 @@ class OptSet
 
     OptSet(const OptSet& other);
 
+#ifdef USE_CPP11
+    template <typename T, typename... Args>
+    OptSet(const char* name1, 
+           const T& t1, 
+           const Args&... rest)
+        {
+        initialize(name1,t1,rest...);
+        }
+
+    template <typename... Args>
+    OptSet(const OptSet& other,
+           const Args&... rest)
+        {
+        initialize(other,rest...);
+        }
+#endif
+
     //
     // Methods for accessing Opts
     //
@@ -237,6 +254,31 @@ class OptSet
 
     void
     addByString(std::string ostring);
+
+#ifdef USE_CPP11
+    template <typename T, typename... Args>
+    void
+    initialize(const char* name1, 
+               const T& t1, 
+               const Args&... rest)
+        {
+        //std::cout << "Adding " << name1 << "=" << t1 << std::endl;
+        add(Opt(name1,t1));
+        initialize(rest...);
+        }
+
+    template <typename... Args>
+    void
+    initialize(const OptSet& other,
+               const Args&... rest)
+        {
+        operator+=(other);
+        initialize(rest...);
+        }
+
+    void
+    initialize() { }
+#endif
 
     };
 

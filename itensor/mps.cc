@@ -307,12 +307,12 @@ setBond(int b) const
     //
     while(b > atb_)
         {
-        if(!A_.at(atb_).isNull())
+        if(A_.at(atb_))
             {
             writeToFile(AFName(atb_),A_.at(atb_));
             A_.at(atb_) = Tensor();
             }
-        if(!A_.at(atb_+1).isNull())
+        if(A_.at(atb_+1))
             {
             writeToFile(AFName(atb_+1),A_.at(atb_+1));
             if(atb_+1 != b) A_.at(atb_+1) = Tensor();
@@ -321,12 +321,12 @@ setBond(int b) const
         }
     while(b < atb_)
         {
-        if(!A_.at(atb_).isNull())
+        if(A_.at(atb_))
             {
             writeToFile(AFName(atb_),A_.at(atb_));
             if(atb_ != b+1) A_.at(atb_) = Tensor();
             }
-        if(!A_.at(atb_+1).isNull())
+        if(A_.at(atb_+1))
             {
             writeToFile(AFName(atb_+1),A_.at(atb_+1));
             A_.at(atb_+1) = Tensor();
@@ -338,12 +338,12 @@ setBond(int b) const
     //Load tensors at bond b into RAM if
     //they aren't loaded already
     //
-    if(A_.at(b).isNull())
+    if(!A_.at(b))
         {
         readFromFile(AFName(b),A_.at(b));
         }
 
-    if(A_.at(b+1).isNull())
+    if(!A_.at(b+1))
         {
         readFromFile(AFName(b+1),A_.at(b+1));
         }
@@ -831,7 +831,7 @@ template<class Tensor> void
 MPSt<Tensor>::
 position(int i, const OptSet& opts)
     {
-    if(isNull()) Error("position: MPS is null");
+    if(!this->valid()) Error("position: MPS is default constructed");
 
     if(opts.getBool("DoSVDBond",false))
         {
@@ -913,7 +913,7 @@ template <class Tensor>
 void MPSt<Tensor>::
 makeRealBasis(int j, const OptSet& opts)
     {
-    if(isNull()) Error("position: MPS is null");
+    if(!this->valid()) Error("position: MPS is default constructed");
     l_orth_lim_ = 0;
     while(l_orth_lim_ < j-1)
         {
@@ -1116,7 +1116,7 @@ initWrite(const OptSet& opts)
         //later logic assumes null means written to disk
         for(int j = 1; j <= N_; ++j)
             {
-            if(A_.at(j).isNull())
+            if(!A_.at(j))
                 writeToFile(AFName(j),A_.at(j));
             }
 
@@ -1124,7 +1124,7 @@ initWrite(const OptSet& opts)
             {
             for(int j = 1; j <= N_; ++j)
                 {
-                if(A_.at(j).isNull()) continue;
+                if(!A_.at(j)) continue;
                 writeToFile(AFName(j),A_.at(j));
                 if(j < atb_ || j > atb_+1)
                     A_[j] = Tensor();
@@ -1745,7 +1745,7 @@ checkQNs(const IQMPS& psi)
     for(int i = 1; i <= N; ++i) 
         {
         if(i == center) continue;
-        if(psi.A(i).isNull())
+        if(!psi.A(i))
             {
             println("A(",i,") null, QNs not well defined");
             return false;

@@ -190,9 +190,9 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 
     //Divide up indices based on U
     //If U is null, use V instead
-    const Tensor &L = (U.isNull() ? V : U);
-    CombinerT &Lcomb = (U.isNull() ? Vcomb : Ucomb),
-              &Rcomb = (U.isNull() ? Ucomb : Vcomb);
+    const Tensor &L = (U ? U : V);
+    CombinerT &Lcomb = (U ? Ucomb : Vcomb),
+              &Rcomb = (U ? Vcomb : Ucomb);
     Foreach(const IndexT& I, AA.indices())
         { 
         if(hasindex(L,I))
@@ -287,7 +287,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
     
     CombinerT comb;
 
-    const IndexSet<IndexT>& activeInds = (to_orth.isNull() ? AA : to_orth).indices();
+    const IndexSet<IndexT>& activeInds = (to_orth ? to_orth : AA).indices();
 
     Foreach(const IndexT& I, activeInds)
         { 
@@ -435,9 +435,9 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
 
         //Divide up indices based on U
         //If U is null, use V instead
-        const Tensor &L = (A.isNull() ? B : A);
-        CombinerT &Lcomb = (A.isNull() ? Bcomb : Acomb),
-                  &Rcomb = (A.isNull() ? Acomb : Bcomb);
+        const Tensor &L = (A ? A : B);
+        CombinerT &Lcomb = (A ? Acomb : Bcomb),
+                  &Rcomb = (A ? Bcomb : Acomb);
         Foreach(const IndexT& I, T.indices())
             { 
             if(hasindex(L,I))

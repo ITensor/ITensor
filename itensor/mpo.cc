@@ -204,7 +204,7 @@ checkQNs(const IQMPO& H)
     //including the ortho. center
     for(int i = 1; i <= N; ++i) 
         {
-        if(H.A(i).isNull())
+        if(!H.A(i))
             {
             println("A(",i,") null, QNs not well defined");
             Error("QNs not well defined");
@@ -522,9 +522,9 @@ fitApplyMPO(Real fac,
                 println("Sweep=",sw,", HS=",ha,", Bond=(",b,",",b+1,")");
                 }
 
-            Tensor lwfK = (BK.at(b-1).isNull() ? origPsi.A(b) : BK.at(b-1)*origPsi.A(b));
+            Tensor lwfK = (BK.at(b-1) ? BK.at(b-1)*origPsi.A(b) : origPsi.A(b));
             lwfK *= K.A(b);
-            Tensor rwfK = (BK.at(b+2).isNull() ? origPsi.A(b+1) : BK.at(b+2)*origPsi.A(b+1));
+            Tensor rwfK = (BK.at(b+2) ? BK.at(b+2)*origPsi.A(b+1) : origPsi.A(b+1));
             rwfK *= K.A(b+1);
 
             Tensor wfK = lwfK*rwfK;
@@ -607,12 +607,12 @@ fitApplyMPO(Real mpsfac,
         {
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
-            Tensor lwf = (B.at(b-1).isNull() ? psiA.A(b) : B.at(b-1)*psiA.A(b));
-            Tensor rwf = (B.at(b+2).isNull() ? psiA.A(b+1) : psiA.A(b+1)*B.at(b+2));
+            Tensor lwf = (B.at(b-1) ? B.at(b-1)*psiA.A(b) : psiA.A(b));
+            Tensor rwf = (B.at(b+2) ? psiA.A(b+1)*B.at(b+2) : psiA.A(b+1));
 
-            Tensor lwfK = (BK.at(b-1).isNull() ? psiB.A(b) : BK.at(b-1)*psiB.A(b));
+            Tensor lwfK = (BK.at(b-1) ? BK.at(b-1)*psiB.A(b) : psiB.A(b));
             lwfK *= K.A(b);
-            Tensor rwfK = (BK.at(b+2).isNull() ? psiB.A(b+1) : BK.at(b+2)*psiB.A(b+1));
+            Tensor rwfK = (BK.at(b+2) ? BK.at(b+2)*psiB.A(b+1) : psiB.A(b+1));
             rwfK *= K.A(b+1);
 
             Tensor wf = mpsfac*noprime(lwf*rwf) + mpofac*noprime(lwfK*rwfK);
@@ -801,22 +801,22 @@ applyExpH(const MPSt<Tensor>& psi,
 
                 if(up)
                     {
-                    lwf = (B.at(b-1).isNull() ? psi.A(b) : B.at(b-1)*psi.A(b));
-                    rwf = (B.at(b+2).isNull() ? psi.A(b+1) : B.at(b+2)*psi.A(b+1));
+                    lwf = (B.at(b-1) ? B.at(b-1)*psi.A(b) : psi.A(b) );
+                    rwf = (B.at(b+2) ? B.at(b+2)*psi.A(b+1) : psi.A(b+1));
 
-                    lwfH = (BH.at(b-1).isNull() ? last.A(b) : BH.at(b-1)*last.A(b));
+                    lwfH = (BH.at(b-1) ? BH.at(b-1)*last.A(b) : last.A(b));
                     lwfH *= H.A(b);
-                    rwfH = (BH.at(b+2).isNull() ? last.A(b+1) : BH.at(b+2)*last.A(b+1));
+                    rwfH = (BH.at(b+2) ? BH.at(b+2)*last.A(b+1) : last.A(b+1));
                     rwfH *= H.A(b+1);
                     }
                 else //dn
                     {
-                    lwf = (B.at(b-1).isNull() ? conj(prime(psi.A(b),Link)) : B.at(b-1)*conj(prime(psi.A(b),Link)));
-                    rwf = (B.at(b+2).isNull() ? conj(prime(psi.A(b+1),Link)) : B.at(b+2)*conj(prime(psi.A(b+1),Link)));
+                    lwf = (B.at(b-1) ? B.at(b-1)*conj(prime(psi.A(b),Link)) : conj(prime(psi.A(b),Link)));
+                    rwf = (B.at(b+2) ? B.at(b+2)*conj(prime(psi.A(b+1),Link)) : conj(prime(psi.A(b+1),Link)));
 
-                    lwfH = (BH.at(b-1).isNull() ? conj(prime(last.A(b))) : BH.at(b-1)*conj(prime(last.A(b))));
+                    lwfH = (BH.at(b-1) ? BH.at(b-1)*conj(prime(last.A(b))) : conj(prime(last.A(b))));
                     lwfH *= H.A(b);
-                    rwfH = (BH.at(b+2).isNull() ? conj(prime(last.A(b+1))) : BH.at(b+2)*conj(prime(last.A(b+1))));
+                    rwfH = (BH.at(b+2) ? BH.at(b+2)*conj(prime(last.A(b+1))) : conj(prime(last.A(b+1))));
                     rwfH *= H.A(b+1);
                     }
 

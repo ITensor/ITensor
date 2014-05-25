@@ -17,7 +17,7 @@ static const Real DefaultLogRefScale(2.0255);
 // (defines MPO and IQMPO via typedefs)
 //
 template<class Tensor>
-class MPOt : private MPSt<Tensor>
+class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
     {
     public:
 
@@ -49,7 +49,7 @@ class MPOt : private MPSt<Tensor>
     using Parent::N;
 
     using Parent::sites;
-    using Parent::isNull;
+    using Parent::valid;
 
     using Parent::si;
     using Parent::siP;
@@ -234,7 +234,7 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real
 
     Tensor L = phi.A(1); 
     //Some Hamiltonians may store edge tensors in H.A(0) and H.A(N+1)
-    L *= (H.A(0).isNull() ? H.A(1) : H.A(0)*H.A(1));
+    L *= (H.A(0) ? H.A(0)*H.A(1) : H.A(1));
     L *= conj(prime(psi.A(1)));
     for(int i = 2; i < N; ++i) 
         { 
@@ -244,7 +244,7 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real
         }
     L *= phi.A(N); 
     L *= H.A(N);
-    if(!H.A(N+1).isNull()) L *= H.A(N+1);
+    if(H.A(N+1)) L *= H.A(N+1);
 
     Complex z = BraKet(prime(psi.A(N)),L);
     re = z.real();
@@ -282,7 +282,7 @@ psiHphi(const MPSt<Tensor>& psi,
     int N = psi.N();
     if(N != phi.N() || H.N() < N) Error("mismatched N in psiHphi");
 
-    Tensor L = (LB.isNull() ? phi.A(1) : LB * phi.A(1));
+    Tensor L = (LB ? LB*phi.A(1) : phi.A(1));
     L *= H.A(1); 
     L *= conj(prime(psi.A(1)));
     for(int i = 2; i <= N; ++i)
@@ -292,7 +292,7 @@ psiHphi(const MPSt<Tensor>& psi,
         L *= conj(prime(psi.A(i))); 
         }
 
-    if(!RB.isNull()) L *= RB;
+    if(RB) L *= RB;
 
     Complex z = L.toComplex();
     re = z.real();

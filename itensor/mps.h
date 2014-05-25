@@ -33,7 +33,7 @@ convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A,
 //
 
 template <class Tensor>
-class MPSt
+class MPSt : safe_bool<MPSt<Tensor> >
     {
     public:
 
@@ -126,7 +126,7 @@ class MPSt
     spectrum(int b) { return spectrum_.at(b); }
 
     bool 
-    isNull() const { return (sites_==0); }
+    valid() const { return (sites_!=0); }
 
     Real 
     truncerr(int b) const { return spectrum_.at(b).truncerr(); }
@@ -502,7 +502,7 @@ projectOp(const MPSt<Tensor>& psi, int j, Direction dir,
         printfln("projectOp: from left j < r_orth_lim_ (j=%d,r_orth_lim_=%d)",j,psi.rightLim());
         Error("Projecting operator at j < r_orth_lim_"); 
         }
-    nE = (E.isNull() ? psi.A(j) : E * psi.A(j));
+    nE = (E ? E*psi.A(j) : psi.A(j));
     nE *= X; 
     nE *= conj(prime(psi.A(j)));
     }

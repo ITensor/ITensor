@@ -19,13 +19,12 @@ IQTDatPtr;
 // IQTensor
 //
 
-class IQTensor
+class IQTensor : public safe_bool<IQTensor>
     {
     public:
 
     //Constructors --------------------------------------------------
 
-    //Construct Null ITensor, isNull returns true
     IQTensor();
 
     //Construct rank 0 IQTensor (scalar), value set to val
@@ -93,9 +92,9 @@ class IQTensor
     bool 
     empty() const;
 
-    //true if IQTensor is default constructed
+    //false if IQTensor is default constructed
     bool 
-    isNull() const;
+    valid() const;
 
     bool
     isComplex() const;

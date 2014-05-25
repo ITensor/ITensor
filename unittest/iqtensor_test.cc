@@ -130,11 +130,16 @@ C.randomize();
 D = IQTensor(conj(L1)(3),S1(1),prime(L1)(3),prime(L1,2)(5));
 D.randomize();
 
-SECTION("Null")
+SECTION("Boolean")
     {
     IQTensor t1;
 
-    CHECK(t1.isNull());
+    CHECK(!t1);
+
+    CHECK(A);
+    CHECK(B);
+    CHECK(C);
+    CHECK(D);
     }
 
 SECTION("Constructors")

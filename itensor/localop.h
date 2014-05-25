@@ -237,7 +237,7 @@ bool inline LocalOp<Tensor>::
 LIsNull() const
     {
     if(L_ == 0) return true;
-    return L_->isNull();
+    return !L_->valid();
     }
 
 template <class Tensor>
@@ -245,7 +245,7 @@ bool inline LocalOp<Tensor>::
 RIsNull() const
     {
     if(R_ == 0) return true;
-    return R_->isNull();
+    return !R_->valid();
     }
 
 template <class Tensor>

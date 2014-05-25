@@ -13,7 +13,7 @@ class safe_bool
     explicit operator bool() const
         {
         //std::cout << "Using C++11 safe bool idiom" << std::endl;
-        return (static_cast<const T*>(this))->boolean_test();
+        return (static_cast<const T*>(this))->valid();
         }
 
     protected:
@@ -37,7 +37,7 @@ class safe_bool
     operator bool_type() const 
         {
         //std::cout << "Using C++98 safe bool idiom" << std::endl;
-        return (static_cast<const T*>(this))->boolean_test()
+        return (static_cast<const T*>(this))->valid()
                ? &safe_bool::this_type_does_not_support_comparisons 
                : 0;
         }

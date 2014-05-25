@@ -346,8 +346,8 @@ product(const Tensor& phi, Tensor& phip) const
     if(Psi_ != 0)
         {
         int b = position();
-        Tensor othr = (L().isNull() ? conj(prime(Psi_->A(b),Link)) : L()*conj(prime(Psi_->A(b),Link)));
-        Tensor othrR = (R().isNull() ? conj(prime(Psi_->A(b+1),Link)) : R()*conj(prime(Psi_->A(b+1),Link)));
+        Tensor othr = (!L() ? conj(prime(Psi_->A(b),Link)) : L()*conj(prime(Psi_->A(b),Link)));
+        Tensor othrR = (!R() ? conj(prime(Psi_->A(b+1),Link)) : R()*conj(prime(Psi_->A(b+1),Link)));
         othr *= othrR;
 
         Complex z = (othr*phi).toComplex();
@@ -475,7 +475,7 @@ makeL(const MPSType& psi, int k)
             while(LHlim_ < k)
                 {
                 const int ll = LHlim_;
-                PH_.at(ll+1) = (PH_.at(ll).isNull() ? psi.A(ll+1) : PH_[ll]*psi.A(ll+1));
+                PH_.at(ll+1) = (!PH_.at(ll) ? psi.A(ll+1) : PH_[ll]*psi.A(ll+1));
                 PH_[ll+1] *= conj(prime(Psi_->A(ll+1),Link));
                 setLHlim(LHlim_+1);
                 }
@@ -504,7 +504,7 @@ makeR(const MPSType& psi, int k)
             while(RHlim_ > k)
                 {
                 const int rl = RHlim_;
-                PH_.at(rl-1) = (PH_.at(rl).isNull() ? psi.A(rl-1) : PH_[rl]*psi.A(rl-1));
+                PH_.at(rl-1) = (!PH_.at(rl) ? psi.A(rl-1) : PH_[rl]*psi.A(rl-1));
                 PH_[rl-1] *= conj(prime(Psi_->A(rl-1),Link));
                 setRHlim(RHlim_-1);
                 }
@@ -531,7 +531,7 @@ setLHlim(int val)
         return;
         }
 
-    if(LHlim_ != val && !PH_.at(LHlim_).isNull())
+    if(LHlim_ != val && PH_.at(LHlim_))
         {
         writeToFile(PHFName(LHlim_),PH_.at(LHlim_));
         PH_.at(LHlim_) = Tensor();
@@ -543,7 +543,7 @@ setLHlim(int val)
         PH_.at(LHlim_) = Tensor();
         return;
         }
-    if(PH_.at(LHlim_).isNull())
+    if(!PH_.at(LHlim_))
         {
         std::string fname = PHFName(LHlim_);
         std::ifstream s(fname.c_str());
@@ -570,7 +570,7 @@ setRHlim(int val)
         return;
         }
 
-    if(RHlim_ != val && !PH_.at(RHlim_).isNull())
+    if(RHlim_ != val && PH_.at(RHlim_))
         {
         writeToFile(PHFName(RHlim_),PH_.at(RHlim_));
         PH_.at(RHlim_) = Tensor();
@@ -582,7 +582,7 @@ setRHlim(int val)
         PH_.at(RHlim_) = Tensor();
         return;
         }
-    if(PH_.at(RHlim_).isNull())
+    if(!PH_.at(RHlim_))
         {
         std::string fname = PHFName(RHlim_);
         std::ifstream s(fname.c_str());

@@ -93,15 +93,15 @@ TEST_CASE("ITensor")
         }
 
 
-SECTION("Null")
+SECTION("Boolean")
     {
     ITensor t1;
 
-    CHECK(t1.isNull());
+    CHECK(!t1);
 
     ITensor t2(s1);
 
-    CHECK(!t2.isNull());
+    CHECK(t2);
     }
 
 SECTION("Constructors")
