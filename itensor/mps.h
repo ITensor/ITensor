@@ -662,10 +662,8 @@ psiphiC(const MPSType& psi, const MPSType& phi)
 
     IndexT l1 = linkInd(psi,1);
     Tensor L = phi.A(1);
-    if(l1.isNull())
-        L *= conj(psi.A(1));
-    else
-        L *= conj(prime(psi.A(1),l1)); 
+    if(l1) L *= conj(prime(psi.A(1),l1)); 
+    else   L *= conj(psi.A(1));
 
     for(int i = 2; i < N; ++i) 
         { 
@@ -676,10 +674,8 @@ psiphiC(const MPSType& psi, const MPSType& phi)
     Complex z;
 
     IndexT lNm = linkInd(psi,N-1);
-    if(lNm.isNull())
-        z = BraKet(psi.A(N),L);
-    else
-        z = BraKet(prime(psi.A(N),lNm),L);
+    if(lNm) z = BraKet(prime(psi.A(N),lNm),L);
+    else    z = BraKet(psi.A(N),L);
 
     return z;
     }

@@ -23,6 +23,7 @@ SOURCES+= localmpo_test.cc
 SOURCES+= indexset_test.cc
 SOURCES+= siteset_test.cc
 SOURCES+= bondgate_test.cc
+SOURCES+= safebool_test.cc
 
 ##################################################################
 

@@ -427,7 +427,7 @@ string
 showm(const IQIndex& I)
     {
 #ifdef DEBUG
-    if(I.isNull()) Error("Null IQIndex");
+    if(!I) Error("Null IQIndex");
 #endif
     string res = " ";
     ostringstream oh; 
@@ -673,7 +673,7 @@ findByQN(const IQIndex& I, const QN& qn)
 ostream& 
 operator<<(ostream &o, const IQIndex& I)
     {
-    if(I.isNull()) 
+    if(!I) 
         { 
         o << "IQIndex: (null)"; 
         return o;

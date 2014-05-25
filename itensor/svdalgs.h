@@ -214,14 +214,8 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
         if(D.r() == 0)
             {
             IndexT mid = commonIndex(U,V,Link);
-            if(!mid.isNull())
-                {
-                minm = maxm = mid.m();
-                }
-            else
-                {
-                minm = maxm = 1;
-                }
+            if(mid) minm = maxm = mid.m();
+            else    minm = maxm = 1;
             }
         else
             {
@@ -302,7 +296,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
         }
 
     //Apply combiner
-    comb.init(mid.isNull() ? "mid" : mid.rawname());
+    comb.init(mid ? mid.rawname() : "mid");
 
     Tensor AAc; 
     comb.product(AA,AAc);

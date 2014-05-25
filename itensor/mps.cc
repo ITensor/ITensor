@@ -782,7 +782,7 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const OptSet& opts)
     Tensor& R = (dir == Fromleft ? A2 : A1);
 
     IndexT bnd = commonIndex(L,R,Link);
-    if(bnd.isNull()) return Spectrum();
+    if(!bnd) return Spectrum();
 
     if(opts.getBool("Verbose",false))
         {

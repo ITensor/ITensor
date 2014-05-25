@@ -184,10 +184,13 @@ string Index::
 name() const  { return putprimes(rawname(),primelevel_); }
 
 const string& Index::
-rawname() const { return p->sname; }
+rawname() const 
+    { 
+    return p->sname; 
+    }
 
 bool Index::
-isNull() const { return (p == IndexDat::Null()); }
+valid() const { return (p != IndexDat::Null()); }
 
 int Index::
 primeLevel() const { return primelevel_; }
@@ -281,7 +284,7 @@ prime(IndexType type, int inc)
 void Index::
 write(std::ostream& s) const 
     { 
-    if(isNull()) Error("Index::write: Index is null");
+    if(!valid()) Error("Index::write: Index is default initialized");
 
     s.write((char*) &primelevel_,sizeof(primelevel_));
 

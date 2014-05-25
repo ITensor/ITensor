@@ -790,12 +790,6 @@ commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
     return IndexT::Null();
     }
 
-template<class TensorA, class TensorB>
-bool
-hasCommonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
-    {
-    return !(commonIndex(A,B,t).isNull());
-    }
 
 //Find index of tensor A (of optional type t) 
 //which is NOT shared by tensor B

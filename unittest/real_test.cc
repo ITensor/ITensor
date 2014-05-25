@@ -98,7 +98,8 @@ TEST_CASE("Operators")
 
 TEST_CASE("Comparison")
     {
-    Real a = Global::random(), b = Global::random();
+    Real a = Global::random(), 
+         b = Global::random();
 
     const LogNumber la(a),lb(b);
 
@@ -108,11 +109,11 @@ TEST_CASE("Comparison")
     CHECK_EQUAL(la >= lb,a >= b);
     CHECK_EQUAL(la == lb,a == b);
 
-    const LogNumber dla(a+0.1*LogNumber_Accuracy);
+    const LogNumber dla(a+a*0.1*LogNumber_Accuracy);
     REQUIRE(la.approxEquals(dla));
     REQUIRE(la != dla);
 
-    const LogNumber mdla(a-0.1*LogNumber_Accuracy);
+    const LogNumber mdla(a-a*0.1*LogNumber_Accuracy);
     REQUIRE(la.approxEquals(mdla));
     REQUIRE(la != mdla);
 

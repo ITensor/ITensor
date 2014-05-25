@@ -9,7 +9,7 @@ include ../options.mk
 #########################################
 
 HEADERS=cppversion.h array2.h intarray2.h hash.h indent.h cputime.h tarray1.h \
-        flstring.h option.h input.h error.h minmax.h
+        flstring.h option.h input.h error.h minmax.h safebool.h
 
 OBJECTS= intarray2.o error.o ran1.o\
          hash.o cputime.o tarray1.o input.o option.o

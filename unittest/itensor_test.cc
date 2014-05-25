@@ -1378,10 +1378,11 @@ SECTION("CommonIndex")
             T2(s1,l3),
             T3(s3,l4);
 
-    CHECK(hasCommonIndex(T1,T2));
-    CHECK(!hasCommonIndex(T1,T3));
-    CHECK(!hasCommonIndex(T2,T3));
-    CHECK(!hasCommonIndex(T1,T2,Link));
+    Index c = commonIndex(T1,T3);
+    CHECK(!c);
+
+    c = commonIndex(T2,T3);
+    CHECK(!c);
 
     CHECK(commonIndex(T1,T2) == s1);
     CHECK(commonIndex(T1,T2,Site) == s1);

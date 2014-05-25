@@ -650,7 +650,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
             }
         }
 
-    if(active.isNull())
+    if(!active)
         {
         Print(rho.indices());
         Error("Tensor must have one unprimed index");

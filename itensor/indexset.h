@@ -410,7 +410,7 @@ void IndexSet<IndexT>::
 prime(const IndexT& I, int inc)
     {
 #ifdef DEBUG
-    if(I.isNull())
+    if(!I)
         {
         Error("Request to prime null index");
         }
