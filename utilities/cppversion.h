@@ -22,6 +22,7 @@ using std::make_shared;
 namespace itensor {
 using std::mt19937;
 using std::uniform_real_distribution;
+using std::uniform_int_distribution;
 };
 
 #include <functional>
@@ -47,9 +48,11 @@ using boost::make_shared;
 
 #include "boost/random/mersenne_twister.hpp"
 #include "boost/random/uniform_real_distribution.hpp"
+#include "boost/random/uniform_int_distribution.hpp"
 namespace itensor {
 using boost::random::mt19937;
 using boost::random::uniform_real_distribution;
+using boost::random::uniform_int_distribution;
 };
 
 #include "boost/function.hpp"
