@@ -72,7 +72,7 @@ DMRGObserver(const MPSt<Tensor>& psi, const OptSet& opts)
     max_te(-1),
     done_(false),
     last_energy_(1000),
-    default_ops_(psi.model().defaultOps())
+    default_ops_(psi.sites().defaultOps())
     { 
     }
 
@@ -94,7 +94,7 @@ measure(const OptSet& opts)
             Foreach(const std::string& opname, default_ops_)
                 {
                 Complex z = 
-                    BraKet(primed(wfb,psi_.model()(b)),psi_.model().op(opname,b)*wfb);
+                    BraKet(primed(wfb,psi_.sites()(b)),psi_.sites().op(opname,b)*wfb);
                 if(fabs(z.imag()) < 1E-14)
                     printfln("<%s>(%d) = %.10E",opname,b,z.real());
                 else

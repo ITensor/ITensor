@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    SpinHalf model(N);
+    SpinHalf sites(N);
 
     //
     // Create the Hamiltonian matrix product operator.
@@ -24,12 +24,12 @@ int main(int argc, char* argv[])
     // IQTensors, tensors whose indices are sorted
     // with respect to quantum numbers
     //
-    IQMPO H = J1J2Chain(model,Opt("J2",J2));
+    IQMPO H = J1J2Chain(sites,Opt("J2",J2));
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
     //
-    InitState initState(model);
+    InitState initState(sites);
     for(int i = 1; i <= N; ++i) 
         initState.set(i,(i%2==1 ? "Up" : "Dn"));
 
@@ -71,9 +71,9 @@ int main(int argc, char* argv[])
     for(int b = 1; b < N; ++b)
         {
         psi.position(b);
-        IQTensor ketzz = psi.A(b)*psi.A(b+1)*model.op("Sz",b)*model.op("Sz",b+1);
-        IQTensor ketpm = psi.A(b)*psi.A(b+1)*model.op("Sp",b)*model.op("Sm",b+1)*0.5;
-        IQTensor ketmp = psi.A(b)*psi.A(b+1)*model.op("Sm",b)*model.op("Sp",b+1)*0.5;
+        IQTensor ketzz = psi.A(b)*psi.A(b+1)*sites.op("Sz",b)*sites.op("Sz",b+1);
+        IQTensor ketpm = psi.A(b)*psi.A(b+1)*sites.op("Sp",b)*sites.op("Sm",b+1)*0.5;
+        IQTensor ketmp = psi.A(b)*psi.A(b+1)*sites.op("Sm",b)*sites.op("Sp",b+1)*0.5;
         IQTensor bra = conj(psi.A(b)*psi.A(b+1));
         bra.prime(Site);
         Real SdS = Dot(bra,ketzz) + Dot(bra,ketpm) + Dot(bra,ketmp);

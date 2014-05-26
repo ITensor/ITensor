@@ -84,11 +84,11 @@ MPSt(const InitState& initState);
 
 //template <class Tensor>
 //MPSt<Tensor>::
-//MPSt(const SiteSet& model, std::istream& s)
+//MPSt(const SiteSet& sites, std::istream& s)
 //    : 
-//    N_(model.N()), 
-//    A_(model.N()+2), //idmrg may use A_[0] and A[N+1]
-//    sites_(&model),
+//    N_(sites.N()), 
+//    A_(sites.N()+2), //idmrg may use A_[0] and A[N+1]
+//    sites_(&sites),
 //    atb_(1),
 //    writedir_("."),
 //    do_write_(false)
@@ -96,9 +96,9 @@ MPSt(const InitState& initState);
 //    read(s); 
 //    }
 //template MPSt<ITensor>::
-//MPSt(const SiteSet& model, std::istream& s);
+//MPSt(const SiteSet& sites, std::istream& s);
 //template MPSt<IQTensor>::
-//MPSt(const SiteSet& model, std::istream& s);
+//MPSt(const SiteSet& sites, std::istream& s);
 
 template <class Tensor>
 MPSt<Tensor>::
@@ -209,7 +209,7 @@ read(std::istream& s)
     for(size_t j = 0; j < A_.size(); ++j) 
         A_.at(j).read(s);
     //Check that tensors read from disk were constructed
-    //using the same model
+    //using the same sites
     IndexT s1 = findtype(A_.at(1),Site);
     s1.noprime();
     if(s1 != IndexT(sites_->si(1)))
@@ -247,7 +247,7 @@ void MPSt<Tensor>::
 read(const std::string& dirname)
     {
     if(sites_ == 0)
-        Error("Can't read to default constructed MPS, must specify model");
+        Error("Can't read to default constructed MPS, must specify SiteSet");
 
     l_orth_lim_ = 0;
     r_orth_lim_ = N_+1;
@@ -341,7 +341,7 @@ setBond(int b) const
 
     //if(b == 1)
         //{
-        //writeToFile(writedir_+"/model",*sites_);
+        //writeToFile(writedir_+"/sites",*sites_);
         //std::ofstream inf((format("%s/info")%writedir_).str().c_str());
         //    inf.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
         //    inf.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
@@ -1120,7 +1120,7 @@ initWrite(const OptSet& opts)
                 }
             }
 
-        writeToFile(writedir_+"/model",*sites_);
+        writeToFile(writedir_+"/sites",*sites_);
 
         do_write_ = true;
         }
@@ -1212,14 +1212,14 @@ periodicWrap(int j, int N)
     }
 
 void 
-convertToIQ(const SiteSet& model, const vector<ITensor>& A, 
+convertToIQ(const SiteSet& sites, const vector<ITensor>& A, 
             vector<IQTensor>& qA, QN totalq, Real cut)
     {
-    const int N = model.N();
+    const int N = sites.N();
     qA.resize(A.size());
-    const bool is_mpo = hasindex(A[1],model.siP(1));
-    const int Dim = model.si(1).m();
-    if(model.si(2).m() != Dim)
+    const bool is_mpo = hasindex(A[1],sites.siP(1));
+    const int Dim = sites.si(1).m();
+    if(sites.si(2).m() != Dim)
         Error("convertToIQ assumes uniform site dimension");
     const int PDim = (is_mpo ? Dim : 1);
 
@@ -1227,7 +1227,7 @@ convertToIQ(const SiteSet& model, const vector<ITensor>& A,
     if(is_mpo)
         {
         for(int j = 1; j <= N; ++j)
-            qA.at(j) = model.op("Id",j);
+            qA.at(j) = sites.op("Id",j);
         }
 
     const int fullrank = (is_mpo ? 4 : 3);
@@ -1301,8 +1301,8 @@ convertToIQ(const SiteSet& model, const vector<ITensor>& A,
             //Alias previous compressor ITensor to comp
             const ITensor& comp = x.second; 
 
-            q = (is_mpo ? prev_q+model.si(s).qn(n)-model.si(s).qn(u) 
-                        : prev_q-model.si(s).qn(n));
+            q = (is_mpo ? prev_q+sites.si(s).qn(n)-sites.si(s).qn(u) 
+                        : prev_q-sites.si(s).qn(n));
 
             //For the last site, only keep blocks 
             //compatible with specified totalq i.e. q=0 here
@@ -1311,8 +1311,8 @@ convertToIQ(const SiteSet& model, const vector<ITensor>& A,
             //Set Site indices of A[s] and its previous Link Index
             block = A[s];
             if(S != start) block *= conj(comp);
-            block *= Index(model.si(s))(n);
-            if(is_mpo) block *= Index(model.siP(s))(u);
+            block *= Index(sites.si(s))(n);
+            if(is_mpo) block *= Index(sites.siP(s))(u);
 
             //Initialize D Vector (D records which values of
             //the right Link Index to keep for the current QN q)
@@ -1380,11 +1380,11 @@ convertToIQ(const SiteSet& model, const vector<ITensor>& A,
                 IndexSet<Index> newinds(block.indices());
                 if(is_mpo) 
                     {
-                    newinds.addindex(conj(model.si(s)(n).indexqn()));
-                    newinds.addindex(model.siP(s)(u).indexqn());
+                    newinds.addindex(conj(sites.si(s)(n).indexqn()));
+                    newinds.addindex(sites.siP(s)(u).indexqn());
                     }
                 else 
-                    { newinds.addindex(model.si(s)(n).indexqn()); }
+                    { newinds.addindex(sites.si(s)(n).indexqn()); }
 
                 qt[q].push_back(ITensor(newinds,block));
 
@@ -1443,19 +1443,19 @@ convertToIQ(const SiteSet& model, const vector<ITensor>& A,
             }
         if(S == start)
             {
-            qA.at(s) = (is_mpo ? IQTensor(conj(model.si(s)),model.siP(s),linkind.at(s)) 
-                            : IQTensor(model.si(s),linkind[s]));
+            qA.at(s) = (is_mpo ? IQTensor(conj(sites.si(s)),sites.siP(s),linkind.at(s)) 
+                            : IQTensor(sites.si(s),linkind[s]));
             }
         else 
         if(S == Send)
             {
-            qA.at(s) = (is_mpo ? IQTensor(conj(linkind[sprev]),conj(model.si(s)),model.siP(s)) 
-                            : IQTensor(conj(linkind[sprev]),model.si(s)));
+            qA.at(s) = (is_mpo ? IQTensor(conj(linkind[sprev]),conj(sites.si(s)),sites.siP(s)) 
+                            : IQTensor(conj(linkind[sprev]),sites.si(s)));
             }
         else
             {
-            qA.at(s) = (is_mpo ? IQTensor(conj(linkind[sprev]),conj(model.si(s)),model.siP(s),linkind[s]) 
-                            : IQTensor(conj(linkind[sprev]),model.si(s),linkind[s]));
+            qA.at(s) = (is_mpo ? IQTensor(conj(linkind[sprev]),conj(sites.si(s)),sites.siP(s),linkind[s]) 
+                            : IQTensor(conj(linkind[sprev]),sites.si(s),linkind[s]));
             }
 
         Foreach(const ITensor& nb, nblock) 

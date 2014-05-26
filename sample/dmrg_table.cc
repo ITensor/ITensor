@@ -48,12 +48,12 @@ int main(int argc, char* argv[])
     // with this Sweeps class
     //
 
-    //SpinHalf model(N);
-    SpinOne model(N);
+    //SpinHalf sites(N);
+    SpinOne sites(N);
 
-    MPO H = Heisenberg(model);
+    MPO H = Heisenberg(sites);
 
-    InitState initState(model);
+    InitState initState(sites);
     for(int i = 1; i <= N; ++i) 
         {
         if(i%2 == 1)
