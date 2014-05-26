@@ -1,7 +1,6 @@
 #include "core.h"
 
 using namespace std;
-using boost::format;
 using namespace itensor;
 
 int
@@ -82,8 +81,8 @@ main(int argc, char* argv[])
     Real zz = (cpsi * Sz * psi).toReal();
     Real xx = (cpsi * Sx * psi).toReal();
 
-    cout << format("<Sz> = %.5f") % zz << endl;
-    cout << format("<Sx> = %.5f") % xx << endl;
+    println("<Sz> = ", zz);
+    println("<Sx> = ", xx);
 
     return 0;
     }
