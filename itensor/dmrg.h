@@ -34,14 +34,14 @@ dmrg(MPSt<Tensor>& psi,
     }
 
 //
-//DMRG with an MPO and custom Observer
+//DMRG with an MPO and custom DMRGObserver
 //
 template <class Tensor>
 Real
 dmrg(MPSt<Tensor>& psi, 
      const MPOt<Tensor>& H, 
      const Sweeps& sweeps, 
-     Observer& obs,
+     DMRGObserver<Tensor>& obs,
      const OptSet& opts = Global::opts())
     {
     LocalMPO<Tensor> PH(H,opts);
@@ -77,7 +77,7 @@ dmrg(MPSt<Tensor>& psi,
      const MPOt<Tensor>& H, 
      const Tensor& LH, const Tensor& RH,
      const Sweeps& sweeps, 
-     Observer& obs,
+     DMRGObserver<Tensor>& obs,
      const OptSet& opts = Global::opts())
     {
     LocalMPO<Tensor> PH(H,LH,RH,opts);
@@ -102,7 +102,7 @@ dmrg(MPSt<Tensor>& psi,
     }
 
 //
-//DMRG with a set of MPOs and a custom Observer
+//DMRG with a set of MPOs and a custom DMRGObserver
 //(H vector is 0-indexed)
 //
 template <class Tensor>
@@ -110,7 +110,7 @@ Real
 dmrg(MPSt<Tensor>& psi, 
      const std::vector<MPOt<Tensor> >& Hset, 
      const Sweeps& sweeps, 
-     Observer& obs,
+     DMRGObserver<Tensor>& obs,
      const OptSet& opts = Global::opts())
     {
     LocalMPOSet<Tensor> PH(Hset,opts);
@@ -144,7 +144,7 @@ dmrg(MPSt<Tensor>& psi,
 //
 //DMRG with a single Hamiltonian MPO, 
 //a set of MPS to orthogonalize against, 
-//and a custom Observer.
+//and a custom DMRGObserver.
 //(psis vector is 0-indexed)
 //Options recognized:
 // Weight - real number w > 0; calling dmrg(psi,H,psis,sweeps,Opt("Weight",w))
@@ -157,7 +157,8 @@ Real
 dmrg(MPSt<Tensor>& psi, 
      const MPOt<Tensor>& H, 
      const std::vector<MPSt<Tensor> >& psis, 
-     const Sweeps& sweeps, Observer& obs, 
+     const Sweeps& sweeps, 
+     DMRGObserver<Tensor>& obs, 
      const OptSet& opts = Global::opts())
     {
     LocalMPO_MPS<Tensor> PH(H,psis,opts);
@@ -178,7 +179,6 @@ DMRGWorker(MPSt<Tensor>& psi,
            const Sweeps& sweeps,
            const OptSet& opts = Global::opts())
     {
-    //Default Observer type is DMRGObserver
     DMRGObserver<Tensor> obs(psi,opts);
     Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
     return energy;
@@ -189,7 +189,7 @@ Real
 DMRGWorker(MPSt<Tensor>& psi,
            LocalOpT& PH,
            const Sweeps& sweeps,
-           Observer& obs,
+           DMRGObserver<Tensor>& obs,
            OptSet opts = Global::opts())
     {
     const bool quiet = opts.getBool("Quiet",false);
@@ -240,7 +240,7 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             energy = davidson(PH,phi,opts);
             
-            psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,opts);
+            Spectrum spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,opts);
 
             if(!quiet)
                 { 
@@ -249,9 +249,11 @@ DMRGWorker(MPSt<Tensor>& psi,
                           sweeps.minm(sw), 
                           sweeps.maxm(sw) );
                 printfln("    Trunc. err=%.1E, States kept=%s",
-                         psi.spectrum(b).truncerr(),
+                         spec.truncerr(),
                          showm(linkInd(psi,b)) );
                 }
+
+            obs.lastSpectrum(spec);
 
             opts.add("AtBond",b);
             opts.add("HalfSweep",ha);

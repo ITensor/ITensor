@@ -119,20 +119,8 @@ class MPSt : safe_bool<MPSt<Tensor> >
     const SiteSet& 
     sites() const { return *sites_; }
 
-    const Spectrum& 
-    spectrum(int b) const { return spectrum_.at(b); }
-
-    Spectrum& 
-    spectrum(int b) { return spectrum_.at(b); }
-
     bool 
     valid() const { return (sites_!=0); }
-
-    Real 
-    truncerr(int b) const { return spectrum_.at(b).truncerr(); }
-
-    const Vector& 
-    eigsKept(int b) const { return spectrum_.at(b).eigsKept(); }
 
     //
     //MPSt Operators
@@ -169,12 +157,12 @@ class MPSt : safe_bool<MPSt<Tensor> >
     void 
     noprimelink();
 
-    void 
+    Spectrum 
     svdBond(int b, const Tensor& AA, Direction dir, 
             const OptSet& opts = Global::opts());
 
     template <class LocalOpT>
-    void 
+    Spectrum 
     svdBond(int b, const Tensor& AA, Direction dir, 
                 const LocalOpT& PH, const OptSet& opts = Global::opts());
 
@@ -202,7 +190,6 @@ class MPSt : safe_bool<MPSt<Tensor> >
     toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
         {
         iqpsi = MPSt<IQTensor>(*sites_);
-        iqpsi.spectrum_ = spectrum_;
         convertToIQ(*sites_,A_,iqpsi.A_,totalq,cut);
         }
 
@@ -248,8 +235,6 @@ class MPSt : safe_bool<MPSt<Tensor> >
         r_orth_lim_;
 
     const SiteSet* sites_;
-
-    std::vector<Spectrum> spectrum_;
 
     mutable
     int atb_;
@@ -396,11 +381,13 @@ class InitState
 
 template <class Tensor>
 template <class BigMatrixT>
-void MPSt<Tensor>::
+Spectrum MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, 
         const BigMatrixT& PH, const OptSet& opts)
     {
     setBond(b);
+
+    Spectrum res;
 
     if(dir == Fromleft && b-1 > l_orth_lim_)
         {
@@ -421,7 +408,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
         Tensor D;
-        spectrum_.at(b) = svd(AA,A_[b],D,A_[b+1],opts);
+        res = svd(AA,A_[b],D,A_[b+1],opts);
 
         //Normalize the ortho center if requested
         if(opts.getBool("DoNormalize",false))
@@ -440,8 +427,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //If we don't need extreme accuracy
         //or need to use noise term
         //use density matrix approach
-        spectrum_.at(b) = 
-        denmatDecomp(AA,A_[b],A_[b+1],dir,PH,opts);
+        res = denmatDecomp(AA,A_[b],A_[b+1],dir,PH,opts);
 
         //Normalize the ortho center if requested
         if(opts.getBool("DoNormalize",false))
@@ -468,6 +454,8 @@ svdBond(int b, const Tensor& AA, Direction dir,
             }
         r_orth_lim_ = b+1;
         }
+
+    return res;
     }
 
 //

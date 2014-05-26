@@ -532,12 +532,12 @@ fitApplyMPO(Real fac,
             wfK *= fac;
 
             if(normalize) wfK /= wfK.norm();
-            res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
+            Spectrum spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
 
             if(verbose)
                 {
                 printfln("    Trunc. err=%.1E, States kept=%s",
-                         res.spectrum(b).truncerr(),
+                         spec.truncerr(),
                          showm(linkInd(res,b)) );
                 }
 

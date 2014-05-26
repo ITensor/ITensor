@@ -51,7 +51,6 @@ MPSt(const SiteSet& sites)
     l_orth_lim_(0),
     r_orth_lim_(sites.N()+1),
     sites_(&sites), 
-    spectrum_(N_),
     atb_(1),
     writedir_("."),
     do_write_(false)
@@ -72,7 +71,6 @@ MPSt(const InitState& initState)
     l_orth_lim_(0),
     r_orth_lim_(2),
     sites_(&(initState.sites())), 
-    spectrum_(N_),
     atb_(1),
     writedir_("."),
     do_write_(false)
@@ -111,7 +109,6 @@ MPSt(const MPSt& other)
     l_orth_lim_(other.l_orth_lim_),
     r_orth_lim_(other.r_orth_lim_),
     sites_(other.sites_),
-    spectrum_(other.spectrum_),
     atb_(other.atb_),
     writedir_(other.writedir_),
     do_write_(other.do_write_)
@@ -132,7 +129,6 @@ operator=(const MPSt& other)
     l_orth_lim_ = other.l_orth_lim_;
     r_orth_lim_ = other.r_orth_lim_;
     sites_ = other.sites_;
-    spectrum_ = other.spectrum_;
     atb_ = other.atb_;
     writedir_ = other.writedir_;
     do_write_ = other.do_write_;
@@ -220,9 +216,6 @@ read(std::istream& s)
         Error("Tensors read from disk not compatible with SiteSet passed to constructor.");
     s.read((char*) &l_orth_lim_,sizeof(l_orth_lim_));
     s.read((char*) &r_orth_lim_,sizeof(r_orth_lim_));
-    spectrum_.resize(N_);
-    Foreach(Spectrum& spec, spectrum_)
-        spec.read(s);
     }
 template
 void MPSt<ITensor>::read(std::istream& s);
@@ -243,8 +236,6 @@ write(std::ostream& s) const
         }
     s.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
     s.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
-    Foreach(const Spectrum& spec, spectrum_)
-        spec.write(s);
     }
 template
 void MPSt<ITensor>::write(std::ostream& s) const;
@@ -743,15 +734,15 @@ void MPSt<ITensor>::noprimelink();
 template
 void MPSt<IQTensor>::noprimelink();
 
-template<class Tensor> void
-MPSt<Tensor>::
+template<class Tensor> 
+Spectrum MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts)
     {
-    svdBond(b,AA,dir,LocalOp<Tensor>::Null(),opts);
+    return svdBond(b,AA,dir,LocalOp<Tensor>::Null(),opts);
     }
-template void MPSt<ITensor>::
+template Spectrum MPSt<ITensor>::
 svdBond(int b, const ITensor& AA, Direction dir, const OptSet& opts);
-template void MPSt<IQTensor>::
+template Spectrum MPSt<IQTensor>::
 svdBond(int b, const IQTensor& AA, Direction dir, const OptSet& opts);
 
 
@@ -827,8 +818,8 @@ template Spectrum
 orthMPS(IQTensor& A1, IQTensor& A2, Direction dir, const OptSet& opts);
 
 
-template<class Tensor> void
-MPSt<Tensor>::
+template<class Tensor> 
+void MPSt<Tensor>::
 position(int i, const OptSet& opts)
     {
     if(!this->valid()) Error("position: MPS is default constructed");
@@ -856,7 +847,6 @@ position(int i, const OptSet& opts)
             {
             if(l_orth_lim_ < 0) l_orth_lim_ = 0;
             setBond(l_orth_lim_+1);
-            spectrum_.at(l_orth_lim_+1) = 
             orthMPS(Anc(l_orth_lim_+1),Anc(l_orth_lim_+2),Fromleft,opts);
             ++l_orth_lim_;
             if(r_orth_lim_ < l_orth_lim_+2) r_orth_lim_ = l_orth_lim_+2;
@@ -865,7 +855,6 @@ position(int i, const OptSet& opts)
             {
             if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
             setBond(r_orth_lim_-2);
-            spectrum_.at(r_orth_lim_-2) = 
             orthMPS(Anc(r_orth_lim_-2),Anc(r_orth_lim_-1),Fromright,opts);
             --r_orth_lim_;
             if(l_orth_lim_ > r_orth_lim_-2) l_orth_lim_ = r_orth_lim_-2;
@@ -1188,7 +1177,6 @@ swap(MPSt<Tensor>& other)
     std::swap(l_orth_lim_,other.l_orth_lim_);
     std::swap(r_orth_lim_,other.r_orth_lim_);
     std::swap(sites_,other.sites_);
-    spectrum_.swap(other.spectrum_);
     std::swap(atb_,other.atb_);
     std::swap(writedir_,other.writedir_);
     std::swap(do_write_,other.do_write_);

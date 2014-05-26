@@ -31,6 +31,9 @@ class DMRGObserver : public Observer
     bool virtual
     checkDone(const OptSet& opts = Global::opts());
 
+    void virtual
+    lastSpectrum(const Spectrum& spec) { last_spec_ = spec; }
+
     const MPSt<Tensor>& 
     psi() const { return psi_; }
     
@@ -49,6 +52,7 @@ class DMRGObserver : public Observer
     Real max_te;
     bool done_;
     Real last_energy_;
+    Spectrum last_spec_;
 
     Model::DefaultOpsT default_ops_;
 
@@ -71,7 +75,6 @@ DMRGObserver(const MPSt<Tensor>& psi, const OptSet& opts)
     default_ops_(psi.model().defaultOps())
     { 
     }
-
 
 template<class Tensor>
 void inline DMRGObserver<Tensor>::
@@ -105,7 +108,7 @@ measure(const OptSet& opts)
         if(b == N/2 && ha == 2)
             {
             println();
-            Vector center_eigs = psi_.eigsKept(b);
+            Vector center_eigs = last_spec_.eigsKept();
             Real S = 0;
             for(int j = 1; j <= center_eigs.Length(); ++j) 
                 {
@@ -123,8 +126,8 @@ measure(const OptSet& opts)
             }
         }
 
-    max_eigs = max(max_eigs,psi_.spectrum(b).numEigsKept());
-    max_te = max(max_te,psi_.spectrum(b).truncerr());
+    max_eigs = max(max_eigs,last_spec_.numEigsKept());
+    max_te = max(max_te,last_spec_.truncerr());
     if(b == 1 && ha == 2) 
         {
         if(!printeigs) println();

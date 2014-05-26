@@ -61,10 +61,6 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
     using Parent::Anc;
 
     using Parent::doWrite;
-    using Parent::truncerr;
-    using Parent::eigsKept;
-    using Parent::spectrum;
-
 
     using Parent::read;
     using Parent::write;
@@ -92,7 +88,6 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
     operator MPOt<IQTensor>()
         { 
         MPOt<IQTensor> res(*sites_,logrefNorm_); 
-        res.spectrum_ = spectrum_;
         convertToIQ(*sites_,A_,res.A_);
         return res; 
         }
@@ -148,7 +143,6 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
     toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
         {
         res = MPOt<IQTensor>(*sites_,logrefNorm_);
-        res.spectrum_ = spectrum_;
         convertToIQ(*sites_,A_,res.A_,totalq,cut);
         }
 
@@ -160,7 +154,6 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
     using Parent::l_orth_lim_;
     using Parent::r_orth_lim_;
     using Parent::sites_;
-    using Parent::spectrum_;
     Real logrefNorm_;
     ///////////
 
@@ -184,7 +177,6 @@ MPO MPOt<IQTensor>::
 toMPO() const
     {
     MPO res(*sites_,logrefNorm_);
-    res.spectrum_ = spectrum_;
     for(int j = 0; j <= N()+1; ++j)
         {
         res.A_.at(j) = A(j).toITensor();
