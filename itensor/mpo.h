@@ -165,24 +165,6 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
 typedef MPOt<ITensor> MPO;
 typedef MPOt<IQTensor> IQMPO;
 
-//template <class Tensor>
-//template <class T_>
-//MPOt<Tensor>::
-//MPOt(const MPOt<T_>& other)
-//    { 
-//    Error("Automatic MPO not defined in general case.");
-//    }
-//
-//template <class Tensor>
-//template <class T_>
-//MPOt<Tensor>::
-//MPOt(const MPOt<T_>& other)
-//    { 
-//    MPOt<Tensor> res(other.sites(),other.logrefNorm_); 
-//    convertToIQ(other.sites(),other.A_,res.A_);
-//    swap(res);
-//    }
-
 template <> inline
 MPO IQMPO::
 toMPO() const

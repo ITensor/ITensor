@@ -12,17 +12,12 @@ using std::vector;
 using std::string;
 using std::stringstream;
 
-
-
-//static const Real K1 = 1./sqrt(7.);
-//static const Real K2 = 1./sqrt(11.);
-
 std::ostream& 
 operator<<(std::ostream& s, const IndexType& it)
     { 
-    if(it == Link) s << "Link"; 
+    if(it == Link)      s << "Link"; 
     else if(it == Site) s << "Site"; 
-    else if(it == All) s << "All"; 
+    else if(it == All)  s << "All"; 
     return s; 
     }
 
@@ -31,7 +26,7 @@ IndexTypeToInt(IndexType it)
     {
     if(it == Link) return 1;
     if(it == Site) return 2;
-    if(it == All) return 3;
+    if(it == All)  return 3;
     Error("No integer value defined for IndexType.");
     return -1;
     }
