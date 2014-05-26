@@ -20,22 +20,21 @@ class MyClass
     name() const;
 
     int
-    i() const;
+    value() const;
 
     private:
-
-    ///////////
-
     int i_;
     std::string name_;
-
-    //////////
-
     };
 
 //
 //Defining this method enables printing of MyClass objects
 //using cout << m << endl; where m is a MyClass instance.
+//
+//It also allows printing using the print,println,printf, and
+//printfln functions. Use the "%s" flag to print custom objects
+//with printf and printfln.
+//
 //See myclass.cc for implementation.
 //
 std::ostream&

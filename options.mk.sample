@@ -1,33 +1,52 @@
 ### User Configurable Options
 
-## Set equal to yes to tell ITensor your compiler supports C++11
+## To set up, follow the steps [1], [2], ..., [5] below
+
+###################################
+## [1]
+## Set equal to yes to tell ITensor if your compiler supports C++11.
 ## (Also make sure to add a flag like -std=c++11 to the CCCOM variable below.)
 ## If this is set to no, you must defined BOOST_DIR below
-## to point to the location of the Boost C++ library headers
+## to point to the location of the boost C++ library headers
 USE_CPP11=no
+###################################
 
-## Set which compiler to use:
-
+#########
+## [2]
+##
+## Set which compiler to use by defining CCCOM:
 ##GNU GCC compiler, consider adding flag -std=c++11 to enable newer C++11 features
-CCCOM=g++ -m64
+CCCOM=g++ -m64 #-std=c++11
 ##Clang compiler (good to use on Mac OS), consider adding flag -std=c++1y to enable newer C++14 features
-#CCCOM=clang++
+#CCCOM=clang++ #-std=c++1y
 ##Intel C++ compiler (good to use with Intel MKL if available), consider adding -std=c++11
-#CCCOM=icpc
+#CCCOM=icpc #-std=c++11
+#########
 
-## Location of boost (this folder should have another one called 'boost' inside it)
-## Only required if USE_CPP11=no
-BOOST_DIR=$(HOME)/boost
+#########
+## [3]
+##
+## If USE_CPP11=no, set BOOST_DIR to the location of the boost 
+## headers on your machine (this folder should have another one called 'boost' inside it).
+## If USE_CPP11=yes, you can safely leave this undefined
+#BOOST_DIR=$(HOME)/boost
 
-## Flags to give the compiler for "release mode"
-OPTIMIZATIONS=-O2 -DNDEBUG -Wall -DBOOST_DISABLE_ASSERTS
-
-## Flags to give the compiler for "debug mode"
-DEBUGFLAGS=-DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall
-
-###
-###BLAS/LAPACK Related Options
-###
+#########
+## [4]
+## 
+## BLAS/LAPACK Related Options
+## 
+## o The variable PLATFORM can be set to macos,lapack,mkl, or acml.
+##   This tells ITensor which style of BLAS/Lapack library to expect.
+## 
+## o BLAS_LAPACK_INCLUDEFLAGS should be set to -I/path/to/lapack/include
+##   where "include" is a folder full of .h header files in the source code 
+##   of your BLAS/Lapack library (see examples below).
+##
+## o BLAS_LAPACK_LIBFLAGS should be something like 
+##   -L/path/to/lapack/lib -llapack -lblas
+##   though the names of the static libraries (the files referred
+##   to by the -l flags) can be highly variable - see examples below.
 
 ##
 ## Mac OSX system (include flags intentionally left blank)
@@ -36,15 +55,6 @@ DEBUGFLAGS=-DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall
 PLATFORM=macos
 BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 BLAS_LAPACK_INCLUDEFLAGS=
-
-##
-## Example using a C interface to LAPACK on GNU/LINUX systems
-## make sure to install LAPACKE development header needed by lapack_wrap.h
-##
-
-#PLATFORM=lapack
-#BLAS_LAPACK_INCLUDEFLAGS=-I/usr/include
-#BLAS_LAPACK_LIBFLAGS=-L/usr/lib -lblas -llapack 
 
 ##
 ## Example using a C interface to LAPACK on GNU/LINUX systems
@@ -76,16 +86,33 @@ BLAS_LAPACK_INCLUDEFLAGS=
 #BLAS_LAPACK_LIBFLAGS=-L/opt/acml5.1.0/gfortran64/lib -lacml -lgfortran -lpthread
 
 
+#########
+## [5]
+##
+## This step is optional, but if you wish to customize the flags
+## used to compile optimized and debug code, you can do so here.
+
+## Flags to give the compiler for "release mode"
+OPTIMIZATIONS=-O2 -DNDEBUG -Wall -DBOOST_DISABLE_ASSERTS
+
+## Flags to give the compiler for "debug mode"
+DEBUGFLAGS=-DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall
+
+#########
 
 
 #########
 ######### End BLAS/LAPACK Related Options
 #########
 
-### Other variables defined for convenience.
+### Other Makefile variables defined for convenience.
 ### Not necessary to modify these for most cases.
 
 PREFIX=$(THIS_DIR)
+
+ifndef CCCOM
+$(error Makefile variable CCCOM not defined in options.mk; please define it.)
+endif
 
 ifeq ($(USE_CPP11),yes)
 CCCOM += -DUSE_CPP11

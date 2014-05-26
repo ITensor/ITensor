@@ -20,7 +20,7 @@ name() const
     }
 
 int MyClass::
-i() const
+value() const
     {
     return i_;
     }
@@ -28,7 +28,7 @@ i() const
 std::ostream&
 operator<<(std::ostream& s, const MyClass& m)
     {
-    s << "MyClass(" << m.name() << "," << m.i() << ")";
+    s << "MyClass(" << m.name() << "," << m.value() << ")";
     return s;
     }
 
