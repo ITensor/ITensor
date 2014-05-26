@@ -43,7 +43,6 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
     MPOt(const SiteSet& sites, 
          Real _refNorm = DefaultLogRefScale);
 
-
     //Accessor Methods ------------------------------
 
     using Parent::N;
@@ -82,15 +81,12 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
     plusEq(const MPOt& R,
            const OptSet& opts = Global::opts());
 
-    operator MPOt<IQTensor>()
-        { 
-        MPOt<IQTensor> res(*sites_,logrefNorm_); 
-        convertToIQ(*sites_,A_,res.A_);
-        return res; 
-        }
 
     MPOt<ITensor>
     toMPO() const;
+
+    MPOt<IQTensor>
+    toIQMPO() const;
 
     //MPOt: index methods --------------------------------------------------
 
@@ -169,8 +165,26 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
 typedef MPOt<ITensor> MPO;
 typedef MPOt<IQTensor> IQMPO;
 
+//template <class Tensor>
+//template <class T_>
+//MPOt<Tensor>::
+//MPOt(const MPOt<T_>& other)
+//    { 
+//    Error("Automatic MPO not defined in general case.");
+//    }
+//
+//template <class Tensor>
+//template <class T_>
+//MPOt<Tensor>::
+//MPOt(const MPOt<T_>& other)
+//    { 
+//    MPOt<Tensor> res(other.sites(),other.logrefNorm_); 
+//    convertToIQ(other.sites(),other.A_,res.A_);
+//    swap(res);
+//    }
+
 template <> inline
-MPO MPOt<IQTensor>::
+MPO IQMPO::
 toMPO() const
     {
     MPO res(*sites_,logrefNorm_);
@@ -189,6 +203,25 @@ toMPO() const
     {
     Error("toMPO only implemented for class IQMPO");
     return MPO();
+    }
+
+template <> inline
+IQMPO MPO::
+toIQMPO() const
+    {
+    IQMPO res(*sites_,logrefNorm_);
+    convertToIQ(*sites_,A_,res.A_);
+    return res;
+    }
+
+//toMPO method fails unless template class 
+//Tensor is set to IQTensor (object is an IQMPO)
+template<class Tensor>
+IQMPO MPOt<Tensor>::
+toIQMPO() const
+    {
+    Error("toIQMPO only implemented for class MPO");
+    return IQMPO();
     }
 
 

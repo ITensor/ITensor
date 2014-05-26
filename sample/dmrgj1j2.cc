@@ -1,5 +1,5 @@
 #include "core.h"
-#include "model/spinhalf.h"
+#include "sites/spinhalf.h"
 #include "hams/J1J2Chain.h"
 
 using namespace std;

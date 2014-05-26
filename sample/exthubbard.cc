@@ -1,5 +1,5 @@
 #include "core.h"
-#include "sites/spinhalf.h"
+#include "sites/hubbard.h"
 #include "hams/ExtendedHubbard.h"
 
 using namespace std;

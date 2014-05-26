@@ -25,9 +25,9 @@ LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 #Targets -----------------
 
-build: dmrg iqdmrg
+build: dmrg iqdmrg dmrg_table dmrgj1j2 exthubbard
 
-debug: dmrg-g iqdmrg-g
+debug: dmrg-g iqdmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g
 
 all: dmrg iqdmrg dmrg_table dmrgj1j2 exthubbard
 

@@ -1,6 +1,6 @@
 #include "core.h"
-#include "model/spinhalf.h"
-#include "model/spinone.h"
+#include "sites/spinhalf.h"
+#include "sites/spinone.h"
 #include "hams/Heisenberg.h"
 #include "input.h"
 
