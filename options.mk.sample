@@ -1,13 +1,11 @@
 ### User Configurable Options
 
-## To set up, follow the steps [1], [2], ..., [5] below
+## To set up, follow the steps [1], [2], [3], [4] below
 
 ###################################
 ## [1]
-## Set equal to yes to tell ITensor if your compiler supports C++11.
+## Set equal to yes if your compiler supports C++11.
 ## (Also make sure to add a flag like -std=c++11 to the CCCOM variable below.)
-## If this is set to no, you must defined BOOST_DIR below
-## to point to the location of the boost C++ library headers
 USE_CPP11=no
 ###################################
 
@@ -25,14 +23,6 @@ CCCOM=g++ -m64 #-std=c++11
 
 #########
 ## [3]
-##
-## If USE_CPP11=no, set BOOST_DIR to the location of the boost 
-## headers on your machine (this folder should have another one called 'boost' inside it).
-## If USE_CPP11=yes, you can safely leave this undefined
-#BOOST_DIR=$(HOME)/boost
-
-#########
-## [4]
 ## 
 ## BLAS/LAPACK Related Options
 ## 
@@ -87,39 +77,30 @@ BLAS_LAPACK_INCLUDEFLAGS=
 
 
 #########
-## [5]
+## [4]
 ##
 ## This step is optional, but if you wish to customize the flags
 ## used to compile optimized and debug code, you can do so here.
 
 ## Flags to give the compiler for "release mode"
-OPTIMIZATIONS=-O2 -DNDEBUG -Wall -DBOOST_DISABLE_ASSERTS
+OPTIMIZATIONS=-O2 -DNDEBUG -Wall
 
 ## Flags to give the compiler for "debug mode"
 DEBUGFLAGS=-DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall
 
-#########
 
-
-#########
-######### End BLAS/LAPACK Related Options
-#########
-
+###
 ### Other Makefile variables defined for convenience.
 ### Not necessary to modify these for most cases.
+###
+
+
+## Use this variable to set the location of the boost 
+## headers on your machine (this folder should have another one called 'boost' inside it).
+## If USE_CPP11=yes, this variable will not be used.
+BOOST_DIR=$(THIS_DIR)/boost_minimal
 
 PREFIX=$(THIS_DIR)
-
-ifndef CCCOM
-$(error Makefile variable CCCOM not defined in options.mk; please define it.)
-endif
-
-ifeq ($(USE_CPP11),yes)
-CCCOM += -DUSE_CPP11
-endif
-ifeq ($(USE_CPP11),true)
-CCCOM += -DUSE_CPP11
-endif
 
 ITENSOR_LIBDIR=$(PREFIX)/lib
 ITENSOR_INCLUDEDIR=$(PREFIX)/include
@@ -133,12 +114,21 @@ ITENSOR_LIBS=$(patsubst %,$(ITENSOR_LIBDIR)/lib%.a, $(ITENSOR_LIBNAMES))
 ITENSOR_GLIBS=$(patsubst %,$(ITENSOR_LIBDIR)/lib%-g.a, $(ITENSOR_LIBNAMES))
 
 ITENSOR_INCLUDEFLAGS=-I$(ITENSOR_INCLUDEDIR) $(BLAS_LAPACK_INCLUDEFLAGS)
+
+ifndef CCCOM
+$(error Makefile variable CCCOM not defined in options.mk; please define it.)
+endif
+
+ifeq ($(USE_CPP11),yes)
+CCCOM += -DUSE_CPP11
+else
 ifdef BOOST_DIR 
 ITENSOR_INCLUDEFLAGS += -I$(BOOST_DIR)
+endif
+OPTIMIZATIONS += -DBOOST_DISABLE_ASSERTS
 endif
 
 CCFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -Wno-unused-variable
 CCGFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
 LIBFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBFLAGS)
 LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
-

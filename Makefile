@@ -39,6 +39,7 @@ clean:
 	cd matrix && make clean
 	cd itensor && make clean
 	cd sample && make clean
+	cd unittest && make clean
 	rm -fr include/*
 	rm -f lib/*
 	rm -f this_dir.mk
