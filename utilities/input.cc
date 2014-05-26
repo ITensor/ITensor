@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "input.h"
+#include <algorithm>
 
 using std::ostream;
 using std::istream;

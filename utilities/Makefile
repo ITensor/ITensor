@@ -18,8 +18,8 @@ SOURCES= array2.cc error.cc ran1.cc hash.cc\
          cputime.cc tarray1.cc testarray.cc intarray2.cc \
          input.cc option.cc
 
-CCFLAGS= -I. $(OPTIMIZATIONS)
-CCGFLAGS= -I. $(DEBUGFLAGS)
+CCFLAGS= -I. $(OPTIMIZATIONS) $(ITENSOR_INCLUDEFLAGS)
+CCGFLAGS= -I. $(DEBUGFLAGS) $(ITENSOR_INCLUDEFLAGS)
 
 .SUFFIXES: .cc $(SUFFIXES)
 

@@ -9,6 +9,7 @@
 #include "math.h"
 #include "flstring.h"
 #include "safebool.h"
+#include <limits>
 
 #ifndef NAN
 #define NAN (std::numeric_limits<Real>::quiet_NaN())

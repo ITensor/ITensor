@@ -1,6 +1,6 @@
 #include "test.h"
 #include "sites/spinone.h"
-#include "hams/heisenberg.h"
+#include "hams/Heisenberg.h"
 
 using namespace itensor;
 using namespace std;

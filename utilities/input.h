@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include "error.h"
+#include <limits>
 
 namespace itensor {
 

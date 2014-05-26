@@ -132,7 +132,7 @@ IndexDat(const string& ss, int m_, IndexType it, IDType id_)
 const IndexDatPtr& IndexDat::
 Null()
     {
-    static IndexDatPtr Null_ = make_shared<IndexDat>("Null",1,Site,0);
+    static IndexDatPtr Null_ = itensor::make_shared<IndexDat>("Null",1,Site,0);
     return Null_;
     }
 
@@ -166,7 +166,7 @@ Index()
 Index::
 Index(const string& name, int mm, IndexType it, int plev) 
     : 
-    p(make_shared<IndexDat>(name,mm,it,generateID())), 
+    p(itensor::make_shared<IndexDat>(name,mm,it,generateID())), 
     primelevel_(plev) 
     { 
     if(it == All) Error("Constructing Index with type All disallowed");
@@ -329,7 +329,7 @@ read(std::istream& s)
     string ss(newname); 
     delete newname;
 
-    p = make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
+    p = itensor::make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
     return *this;
     }
 

@@ -16,6 +16,7 @@
 #include "prodstats.h"
 #include "cppversion.h"
 #include "print.h"
+#include <ctime>
 
 namespace itensor {
 

@@ -1,6 +1,6 @@
 #include "test.h"
 #include "eigensolver.h"
-#include "hams/heisenberg.h"
+#include "hams/Heisenberg.h"
 #include "sites/spinhalf.h"
 #include "localmpo.h"
 
