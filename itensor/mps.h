@@ -93,20 +93,6 @@ class MPSt : safe_bool<MPSt<Tensor> >
     int 
     orthoCenter() const;
 
-    IQIndex 
-    si(int i) const { return sites_->si(i); }
-
-    IQIndex 
-    siP(int i) const { return sites_->siP(i); }
-
-    typedef typename std::vector<Tensor>::const_iterator 
-    AA_it;
-
-    //Returns pair of iterators which can be used in a 
-    //Foreach loop to iterate over all MPS tensors
-    const std::pair<AA_it,AA_it> 
-    A() const { return std::make_pair(A_.begin()+1,A_.end()); }
-
     //Read-only access to i'th MPS tensor
     const Tensor& 
     A(int i) const;

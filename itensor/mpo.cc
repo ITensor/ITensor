@@ -314,7 +314,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
         IndexT mid = commonIndex(res.A(i),nfork,Link);
         mid.conj();
         midsize[i] = mid.m();
-        res.Anc(i+1) = Tensor(mid,conj(res.si(i+1)),prime(res.si(i+1),2),rightLinkInd(res,i+1));
+        res.Anc(i+1) = Tensor(mid,conj(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
         }
 
     nfork = clust * A.A(N) * B.A(N);
@@ -406,7 +406,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
         midsize[i] = mid.m();
         maxdim = max(midsize[i],maxdim);
         assert(rightLinkInd(res,i+1).dir() == Out);
-        res.Anc(i+1) = Tensor(mid,prime(res.si(i+1)),rightLinkInd(res,i+1));
+        res.Anc(i+1) = Tensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
         }
     nfork = clust * psi.A(N) * K.A(N);
     //if(nfork.iten_size() == 0)	// this product gives 0 !!

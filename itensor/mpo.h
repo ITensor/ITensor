@@ -51,9 +51,6 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
     using Parent::sites;
     using Parent::valid;
 
-    using Parent::si;
-    using Parent::siP;
-
     using Parent::rightLim;
     using Parent::leftLim;
 

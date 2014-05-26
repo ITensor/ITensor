@@ -395,10 +395,10 @@ new_tensors(std::vector<ITensor>& A_)
     std::vector<Index> a(N_+1);
     for(int i = 1; i <= N_; ++i)
         { a[i] = Index(nameint("a",i)); }
-    A_[1] = ITensor(si(1),a[1]);
+    A_[1] = ITensor(sites()(1),a[1]);
     for(int i = 2; i < N_; i++)
-        { A_[i] = ITensor(conj(a[i-1]),si(i),a[i]); }
-    A_[N_] = ITensor(conj(a[N_-1]),si(N_));
+        { A_[i] = ITensor(conj(a[i-1]),sites()(i),a[i]); }
+    A_[N_] = ITensor(conj(a[N_-1]),sites()(N_));
     }
 template
 void MPSt<ITensor>::new_tensors(std::vector<ITensor>& A_);
