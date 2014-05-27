@@ -138,7 +138,6 @@ idmrg(MPSt<Tensor>& psi,
             }
 
         printfln("\n    Energy per site = %.14f\n",energy/N0);
-        printfln("\n    Energy per PFN site = %.14f\n", energy/(2*N0));
 
         psi.position(Nuc);
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1));
