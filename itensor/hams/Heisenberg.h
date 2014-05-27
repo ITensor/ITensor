@@ -7,10 +7,6 @@
 
 #include "../mpo.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 class Heisenberg
@@ -267,9 +263,5 @@ init_()
 */
 
 }; //namespace itensor
-
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

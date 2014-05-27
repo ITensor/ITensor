@@ -6,10 +6,6 @@
 #define __ITENSOR_HAMS_TJCHAIN_H
 #include "../mpo.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 class tJChain 
@@ -61,8 +57,6 @@ void inline tJChain::
 init_()
     {
     if(initted) return;
-    Cout << "J is " << J_ << Endl;
-
     H = MPO(sites_);
 
     const int Ns = sites_.N();
@@ -117,8 +111,5 @@ init_()
 
 }; //namespace itensor
 
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

@@ -6,10 +6,6 @@
 #define __ITENSOR_HAMS_ISING_H
 #include "../mpo.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 class Ising
@@ -138,9 +134,5 @@ init()
     initted_ = true;
     }
 }; //namespace itensor
-
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif
