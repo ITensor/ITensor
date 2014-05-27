@@ -889,7 +889,7 @@ orthogonalize(const OptSet& opts)
     r_orth_lim_ = N()+1;
     //Use smaller cutoff to orthogonalize w/ minimal truncation
     const Real orig_cut = opts.getReal("Cutoff",MIN_CUT);
-    position(N_,opts & Opt("Cutoff",0.1*orig_cut));
+    position(N_,opts + Opt("Cutoff",0.1*orig_cut));
     //Now basis is ortho, ok to truncate
     position(1,opts);
     }

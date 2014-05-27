@@ -65,8 +65,6 @@ class Opt : public safe_bool<Opt>
     bool
     valid() const { return type_ != None; }
 
-    //operator bool() const { return (type_ == None); }
-
     Type
     type() const { return type_; }
 
