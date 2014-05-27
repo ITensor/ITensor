@@ -98,9 +98,6 @@ class Combiner
     void
     prime(IndexType type, int inc = 1);
 
-    friend Combiner
-    primed(Combiner C, int inc);
-
 
     //Other Methods -------------------------------------------------
 
@@ -108,9 +105,6 @@ class Combiner
     uniqueReal() const;
 
     operator ITensor() const;
-
-    friend inline std::ostream& 
-    operator<<(std::ostream & s, const Combiner & c);
 
     void 
     conj() { init(); }
@@ -259,8 +253,10 @@ operator ITensor() const
     */
 
     //Use a kronecker delta tensor to convert this Combiner into an Tensor
-    ITensor res = operator*(ITensor(right_,primed(right_,5),1));
-    res.prime(primed(right_,5),-5);
+    Index rP = right_;
+    rP.prime(5);
+    ITensor res = operator*(ITensor(right_,rP,1));
+    res.prime(rP,-5);
     return res;
     }
 

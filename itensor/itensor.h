@@ -7,12 +7,6 @@
 #include "real.h"
 #include "counter.h"
 
-//#define ITENSOR_USE_ALLOCATOR
-
-#ifdef ITENSOR_USE_ALLOCATOR
-#include "allocator.h"
-#endif
-
 namespace itensor {
 
 //Forward declarations
@@ -622,22 +616,6 @@ class ITDat
     void 
     write(std::ostream& s) const;
     
-#ifdef ITENSOR_USE_ALLOCATOR
-    void* operator 
-    new(size_t) throw(std::bad_alloc)
-        { return allocator().alloc(); }
-
-    void operator 
-    delete(void* p) throw()
-        { return allocator().dealloc(p); }
-
-    static DatAllocator<ITDat>& allocator()
-        {
-        static DatAllocator<ITDat> allocator_;
-        return allocator_;
-        }
-#endif
-
     friend class ITensor;
 
     private:

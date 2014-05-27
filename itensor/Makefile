@@ -19,8 +19,8 @@ SOURCES+= mps.cc
 SOURCES+= mpo.cc 
 SOURCES+= tevol.cc
 
-HEADERS=tinyformat.h print.h global.h allocator.h real.h permutation.h index.h \
-        prodstats.h indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h iqtensor.h \
+HEADERS=tinyformat.h print.h global.h real.h permutation.h index.h \
+        indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\
@@ -93,13 +93,13 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-DEPHEADERS=real.h prodstats.h global.h index.h permutation.h
+DEPHEADERS=real.h global.h index.h permutation.h
 index.o: $(DEPHEADERS)
 .debug_objs/index.o: $(DEPHEADERS)
 DEPHEADERS+= indexset.h
 indexset.o: $(DEPHEADERS)
 .debug_objs/indexset.o: $(DEPHEADERS)
-DEPHEADERS+= allocator.h itensor.h counter.h
+DEPHEADERS+=  itensor.h counter.h
 itensor.o: $(DEPHEADERS)
 .debug_objs/itensor.o: $(DEPHEADERS)
 DEPHEADERS+= qn.h iqindex.h

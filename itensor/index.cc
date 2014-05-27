@@ -6,9 +6,6 @@
 
 namespace itensor {
 
-using std::cout;
-using std::endl;
-using std::vector;
 using std::string;
 using std::stringstream;
 
@@ -363,8 +360,8 @@ IndexVal(const Index& index, int i_)
         }
     if(i_ < 1 || i_ > index.m())
         {
-        cout << "i = " << i_ << endl;
-        cout << "index = " << index << endl;
+        println("i = ",i_);
+        println("index = ",index);
         Error("i out of range");
         }
 #endif

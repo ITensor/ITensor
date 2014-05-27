@@ -335,14 +335,6 @@ class LogNumber
         return *this;
         }
 
-    friend inline std::ostream& 
-    operator<<(std::ostream& s, const LogNumber& N)
-        {
-        s << "LogNumber(" << N.logNum() << ",";
-        if(N.sign() == 0) s << "0)";
-        else           s << (N.sign() > 0 ? "+)" : "-)");
-        return s;
-        }
 
     private:
 
@@ -368,6 +360,16 @@ sqrt(LogNumber L)
     if(L.sign() < 0) 
         Error("Negative LogNumber in sqrt");
     return L.pow(0.5);
+    }
+
+inline 
+std::ostream& 
+operator<<(std::ostream& s, const LogNumber& N)
+    {
+    s << "LogNumber(" << N.logNum() << ",";
+    if(N.sign() == 0) s << "0)";
+    else           s << (N.sign() > 0 ? "+)" : "-)");
+    return s;
     }
 
 }; //namespace itensor

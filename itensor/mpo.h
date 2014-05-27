@@ -124,14 +124,6 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
 
     using Parent::isComplex;
 
-    friend inline std::ostream& 
-    operator<<(std::ostream& s, const MPOt& M)
-        {
-        s << "\n";
-        for(int i = 1; i <= M.N(); ++i) s << M.A(i) << "\n";
-        return s;
-        }
-
     void 
     toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
         {
@@ -495,6 +487,10 @@ void
 putMPOLinks(MPO& W, const OptSet& opts = Global::opts());
 void
 putMPOLinks(IQMPO& W, const OptSet& opts = Global::opts());
+
+template <class Tensor>
+std::ostream& 
+operator<<(std::ostream& s, const MPOt<Tensor>& M);
 
 }; //namespace itensor
 

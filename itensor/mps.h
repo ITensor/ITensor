@@ -118,8 +118,6 @@ class MPSt : safe_bool<MPSt<Tensor> >
     operator/=(Real a) { Anc(l_orth_lim_+1) /= a; return *this; }
     MPSt 
     operator*(Real r) const { MPSt res(*this); res *= r; return res; }
-    friend inline MPSt 
-    operator*(Real r, MPSt res) { res *= r; return res; }
 
     MPSt& 
     operator*=(Complex z) { Anc(l_orth_lim_+1) *= z; return *this; }
@@ -127,8 +125,6 @@ class MPSt : safe_bool<MPSt<Tensor> >
     operator/=(Complex z) { Anc(l_orth_lim_+1) /= z; return *this; }
     MPSt 
     operator*(Complex z) const { MPSt res(*this); res *= z; return res; }
-    friend inline MPSt 
-    operator*(Complex z, MPSt res) { res *= z; return res; }
 
     MPSt&
     plusEq(const MPSt& R, 
@@ -289,6 +285,14 @@ class MPSt : safe_bool<MPSt<Tensor> >
 typedef MPSt<ITensor> MPS;
 typedef MPSt<IQTensor> IQMPS;
 
+template <class Tensor>
+MPSt<Tensor>
+operator*(Real r, MPSt<Tensor> res) { res *= r; return res; }
+
+template <class Tensor>
+MPSt<Tensor>
+operator*(Complex z, MPSt<Tensor> res) { res *= z; return res; }
+
 class InitState
     {
     public:
@@ -299,42 +303,15 @@ class InitState
     typedef std::string
     String;
 
-    InitState(const SiteSet& sites)
-        : 
-        sites_(&sites), 
-        state_(1+sites.N())
-        { 
-        for(int n = 1; n <= sites_->N(); ++n)
-            {
-            state_[n] = sites_->si(n)(1);
-            }
-        }
+    InitState(const SiteSet& sites);
 
-    InitState(const SiteSet& sites, const String& state)
-        : 
-        sites_(&sites), 
-        state_(1+sites.N())
-        { 
-        setAll(state);
-        }
+    InitState(const SiteSet& sites, const String& state);
 
     InitState& 
-    set(int i, const String& state)
-        { 
-        checkRange(i);
-        state_.at(i) = sites_->st(i,state);
-        return *this;
-        }
+    set(int i, const String& state);
 
     InitState& 
-    setAll(const String& state)
-        { 
-        for(int n = 1; n <= sites_->N(); ++n)
-            {
-            state_[n] = sites_->st(n,state);
-            }
-        return *this;
-        }
+    setAll(const String& state);
 
     const IQIndexVal&
     operator()(int i) const { checkRange(i); return state_.at(i); }
@@ -348,15 +325,7 @@ class InitState
     Storage state_;
 
     void
-    checkRange(int i) const
-        {
-        if(i > sites_->N() || i < 1) 
-            {
-            println("i = ",i);
-            println("Valid range is 1 to ",sites_->N());
-            Error("i out of range");
-            }
-        }
+    checkRange(int i) const;
     }; 
 
 
@@ -605,8 +574,6 @@ checkOrtho(const MPSt<Tensor>& psi)
     }
 
 
-
-
 int 
 findCenter(const IQMPS& psi);
 
@@ -737,13 +704,7 @@ sum(const std::vector<MPSType>& terms,
 
 template <class Tensor>
 std::ostream& 
-operator<<(std::ostream& s, const MPSt<Tensor>& M)
-    {
-    s << "\n";
-    for(int i = 1; i <= M.N(); ++i) 
-        s << M.A(i) << "\n";
-    return s;
-    }
+operator<<(std::ostream& s, const MPSt<Tensor>& M);
 
 std::ostream& 
 operator<<(std::ostream& s, const InitState& state);

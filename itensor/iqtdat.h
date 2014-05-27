@@ -94,26 +94,12 @@ class IQTDat
     static const shared_ptr<IQTDat>& 
     Null();
 
-    //void* operator 
-    //new(size_t size) 
-    //    throw(std::bad_alloc)
-    //    { return allocator().alloc(); }
-
-    //void operator 
-    //delete(void* p) 
-    //    throw()
-    //    { return allocator().dealloc(p); }
-
     private:
 
     //////////////
-    //
-    // Data Members
-    //
 
     StorageT blocks_;
 
-    //
     //////////////
 
     iterator
@@ -136,12 +122,6 @@ class IQTDat
 
     //Not copyable with =
     IQTDat& operator=(const IQTDat&);
-
-    //static DatAllocator<IQTDat>& allocator()
-    //    {
-    //    static DatAllocator<IQTDat> allocator_;
-    //    return allocator_;
-    //    };
 
     }; //class IQTDat
 

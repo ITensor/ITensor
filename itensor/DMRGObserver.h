@@ -94,7 +94,7 @@ measure(const OptSet& opts)
             Foreach(const std::string& opname, default_ops_)
                 {
                 Complex z = 
-                    BraKet(primed(wfb,psi_.sites()(b)),psi_.sites().op(opname,b)*wfb);
+                    BraKet(prime(wfb,psi_.sites()(b)),psi_.sites().op(opname,b)*wfb);
                 if(fabs(z.imag()) < 1E-14)
                     printfln("<%s>(%d) = %.10E",opname,b,z.real());
                 else

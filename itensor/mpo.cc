@@ -911,4 +911,20 @@ putMPOLinks(IQMPO& W, const OptSet& opts)
     W.Anc(N) *= conj(links.at(N-1)(1));
     }
 
+template <class Tensor>
+std::ostream& 
+operator<<(std::ostream& s, const MPOt<Tensor>& M)
+    {
+    s << "\n";
+    for(int i = 1; i <= M.N(); ++i) s << M.A(i) << "\n";
+    return s;
+    }
+template
+std::ostream& 
+operator<<(std::ostream& s, const MPOt<ITensor>& M);
+template
+std::ostream& 
+operator<<(std::ostream& s, const MPOt<IQTensor>& M);
+
+
 }; //namespace itensor

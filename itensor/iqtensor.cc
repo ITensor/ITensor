@@ -151,7 +151,7 @@ IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
     }
 
 IQTensor::
-IQTensor(std::vector<IQIndex>& iqinds_) 
+IQTensor(vector<IQIndex>& iqinds_) 
 	: 
     is_(new IndexSet<IQIndex>(iqinds_))
 	{ 

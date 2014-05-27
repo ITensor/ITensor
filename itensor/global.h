@@ -11,9 +11,8 @@
 #include <fstream>
 #include <complex>
 #include "assert.h"
-#include "error.h" //utilities
+#include "error.h"
 #include "option.h"
-#include "prodstats.h"
 #include "cppversion.h"
 #include "print.h"
 #include <ctime>

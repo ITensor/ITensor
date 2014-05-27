@@ -1186,6 +1186,56 @@ void MPSt<ITensor>::swap(MPSt<ITensor>& other);
 template
 void MPSt<IQTensor>::swap(MPSt<IQTensor>& other);
 
+InitState::
+InitState(const SiteSet& sites)
+    : 
+    sites_(&sites), 
+    state_(1+sites.N())
+    { 
+    for(int n = 1; n <= sites_->N(); ++n)
+        {
+        state_[n] = sites_->si(n)(1);
+        }
+    }
+
+InitState::
+InitState(const SiteSet& sites, const String& state)
+    : 
+    sites_(&sites), 
+    state_(1+sites.N())
+    { 
+    setAll(state);
+    }
+
+InitState& InitState::
+set(int i, const String& state)
+    { 
+    checkRange(i);
+    state_.at(i) = sites_->st(i,state);
+    return *this;
+    }
+
+InitState& InitState::
+setAll(const String& state)
+    { 
+    for(int n = 1; n <= sites_->N(); ++n)
+        {
+        state_[n] = sites_->st(n,state);
+        }
+    return *this;
+    }
+
+void InitState::
+checkRange(int i) const
+    {
+    if(i > sites_->N() || i < 1) 
+        {
+        println("i = ",i);
+        println("Valid range is 1 to ",sites_->N());
+        Error("i out of range");
+        }
+    }
+
 //Auxilary method for convertToIQ
 int 
 collapseCols(const Vector& Diag, Matrix& M)
@@ -1825,6 +1875,18 @@ fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit)
     }
 template void fitWF(const MPSt<ITensor>& psi_basis, MPSt<ITensor>& psi_to_fit);
 template void fitWF(const MPSt<IQTensor>& psi_basis, MPSt<IQTensor>& psi_to_fit);
+
+template <class Tensor>
+std::ostream& 
+operator<<(std::ostream& s, const MPSt<Tensor>& M)
+    {
+    s << "\n";
+    for(int i = 1; i <= M.N(); ++i) 
+        s << M.A(i) << "\n";
+    return s;
+    }
+template std::ostream& operator<<(std::ostream& s, const MPSt<ITensor>& M);
+template std::ostream& operator<<(std::ostream& s, const MPSt<IQTensor>& M);
 
 std::ostream& 
 operator<<(std::ostream& s, const InitState& state)

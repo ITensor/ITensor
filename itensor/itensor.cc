@@ -8,7 +8,6 @@ namespace itensor {
 
 using std::ostream;
 using std::cout;
-using std::cerr;
 using std::endl;
 using std::sqrt;
 
@@ -621,17 +620,15 @@ toReal() const
 	    }
 	catch(const TooBigForReal& e)
 	    {
-	    cout << "too big for real() in toReal" << endl;
-	    cerr << "too big for real() in toReal" << endl;
-	    cout << "r_->v(1) is " << r_->v(1) << endl;
-	    cout << "scale is " << scale() << endl;
-	    cout << "rethrowing" << endl;
+	    println("too big for real() in toReal");
+	    println("r_->v(1) is ",r_->v(1));
+	    println("scale is ",scale());
+	    println("rethrowing");
 	    throw e;
 	    }
 	catch(TooSmallForReal)
 	    {
 	    //cout << "warning: too small for real() in toReal" << endl;
-	    //cerr << "warning: too small for real() in toReal" << endl;
 	    //cout << "r_->v(1) is " << r_->v(1) << endl;
 	    //cout << "scale is " << scale() << endl;
 	    return 0.;
@@ -650,11 +647,10 @@ toComplex() const
             }
         catch(const TooBigForReal& e)
             {
-            cout << "too big for real() in toReal" << endl;
-            cerr << "too big for real() in toReal" << endl;
-            cout << "r_->v(1) is " << r_->v(1) << endl;
-            cout << "scale is " << scale() << endl;
-            cout << "rethrowing" << endl;
+            println("too big for real() in toReal");
+            println("r_->v(1) is ",r_->v(1));
+            println("scale is ",scale());
+            println("rethrowing");
             throw e;
             }
         catch(TooSmallForReal)
@@ -667,11 +663,10 @@ toComplex() const
             }
         catch(const TooBigForReal& e)
             {
-            cout << "too big for real() in toReal" << endl;
-            cerr << "too big for real() in toReal" << endl;
-            cout << "r_->v(1) is " << r_->v(1) << endl;
-            cout << "scale is " << scale() << endl;
-            cout << "rethrowing" << endl;
+            println("too big for real() in toReal");
+            println("i_->v(1) is ",i_->v(1));
+            println("scale is ",scale());
+            println("rethrowing");
             throw e;
             }
         catch(TooSmallForReal)
@@ -877,7 +872,7 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
         if(!foundit)
             {
             Print(*this);
-            cerr << "Couldn't find Index " << J << " in ITensor.\n";
+            println("Couldn't find Index ",J," in ITensor.");
             Error("bad request for Index to replace");
             }
         }
@@ -963,9 +958,8 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
     if(nmatched != nind)
         {
         Print(*this);
-        cout << "indices = " << endl;
-        for(int j = 0; j < nind; ++j)
-            cout << indices[j] << endl;
+        println("indices = ");
+        for(int j = 0; j < nind; ++j) println(indices[j]);
         Error("Couldn't find Index to tie");
         }
 
@@ -1131,9 +1125,8 @@ trace(const array<Index,NMAX>& indices, int nind)
     if(nmatched != nind)
         {
         Print(*this);
-        cout << "indices = " << endl;
-        for(int j = 0; j < nind; ++j)
-            cout << indices[j] << endl;
+        println("indices = ");
+        for(int j = 0; j < nind; ++j) println(indices[j]);
         Error("Couldn't find Index to trace");
         }
 
@@ -2377,7 +2370,6 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
 
     if(res_has_Sind)
         {
-        //cout << "Case III\n";
         for(tc.reset(); tc.notDone(); ++tc)
         for(diag_ind = 0; diag_ind < dsize; ++diag_ind)
             {
@@ -2394,7 +2386,6 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
         }
     else
         {
-        //cout << "Case IV\n";
         for(tc.reset(); tc.notDone(); ++tc)
             {
             Real val = 0;
@@ -2585,8 +2576,7 @@ operator*=(const ITensor& other)
 #ifdef DEBUG
         if((is_.rn()+nr1_) > NMAX) 
             {
-            std::cout << "new r_ would be = " << is_.r() << "\n";
-            std::cerr << "new r_ would be = " << is_.r() << "\n";
+            println("new r_ would be = ",is_.r());
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
             }
 #endif
@@ -2606,8 +2596,7 @@ operator*=(const ITensor& other)
 #ifdef DEBUG
         if((is_.rn()+nr1_) > NMAX) 
             {
-            std::cout << "new r_ would be = " << is_.r() << "\n";
-            std::cerr << "new r_ would be = " << is_.r() << "\n";
+            println("new r_ would be = ",is_.r());
             Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
             }
 #endif
@@ -2627,8 +2616,8 @@ operator*=(const ITensor& other)
         Print(*this);
         Print(other);
         Print(props.nsamen);
-        cerr << "new m==1 indices\n";
-        for(int j = 1; j <= nr1_; ++j) cerr << *(new_index1_.at(j)) << "\n";
+        println("new m==1 indices");
+        for(int j = 1; j <= nr1_; ++j) println(*(new_index1_.at(j)));
         Error("ITensor::operator*=: too many uncontracted indices in product (max is 8)");
         }
 #endif
