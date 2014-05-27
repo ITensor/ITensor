@@ -1,7 +1,5 @@
 #include "core.h"
 
-using namespace std;
-using boost::format;
 using namespace itensor;
 
 ITensor

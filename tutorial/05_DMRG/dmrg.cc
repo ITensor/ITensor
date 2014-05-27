@@ -1,11 +1,9 @@
 #include "eigensolver.h"
 #include "localmpo.h"
-#include "Sweeps.h"
-#include "model/spinone.h"
+#include "sweeps.h"
+#include "sites/spinone.h"
 #include "hams/Heisenberg.h"
 
-using namespace std;
-using boost::format;
 using namespace itensor;
 
 int
@@ -44,12 +42,7 @@ main(int argc, char* argv[])
         //Loop over bonds
         for(int b = 1, ha = 1; ha != 3; sweepnext(b,ha,N))
             {
-            cout << format("Sweep=%d, HS=%d, Bond=(%d,%d)")
-                    % sw
-                    % ha
-                    % b
-                    % (b+1)
-                    << endl;
+            printfln("Sweep=%d, HS=%d, Bond=(%d,%d)",sw,ha,b,b+1);
 
             //Grow effective H
             psi.position(b);

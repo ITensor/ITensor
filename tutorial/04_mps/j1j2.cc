@@ -1,7 +1,6 @@
 #include "j1j2.h"
 
-using namespace std;
-using boost::format;
+using std::vector;
 
 ITensor
 B(const Model& model, int b)
@@ -45,10 +44,7 @@ main(int argc, char* argv[])
 
     for(int j = 1; j < int(dimer.size()); ++j)
         {
-        cout << format("%.5f %.10f")
-                % J2s.at(j)
-                % dimer.at(j) 
-                << endl;
+        printfln("%.5f %.10f",J2s.at(j),dimer.at(j));
         }
 
     return 0;

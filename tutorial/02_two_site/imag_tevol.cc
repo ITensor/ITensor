@@ -1,7 +1,5 @@
 #include "core.h"
 
-using namespace std;
-using boost::format;
 using namespace itensor;
 
 ITensor
@@ -54,11 +52,11 @@ main(int argc, char* argv[])
 
     psi.randomize();
 
-    cout << "psi.norm() = " << psi.norm() << endl;
+    println("psi.norm() = ",psi.norm());
     
     psi *= 1./psi.norm();
 
-    cout << "psi.norm() = " << psi.norm() << endl;
+    println("psi.norm() = ",psi.norm());
 
     PrintData(psi);
 
@@ -89,9 +87,7 @@ main(int argc, char* argv[])
     ITensor cpsi = conj(primed(psi));
     Real initEn = (cpsi * H * psi).toReal();
 
-    cout << format("Initial energy = %.10f")
-            % initEn
-            << endl;
+    printfln("Initial energy = %.10f",initEn);
 
     //
     // Exponentiate H to form exp(-beta*H/2)
@@ -127,10 +123,7 @@ main(int argc, char* argv[])
     psi_beta *= 1./psi_beta.norm();
 
     Real En = (conj(primed(psi_beta)) * H * psi_beta).toReal();
-    cout << format("Energy at beta = %.3f: %.10f")
-            % beta
-            % En
-            << endl;
+    printfln("Energy at beta = %.3f: %.10f",beta,En);
 
     ITensor A(s1),B(s2),D;
 
