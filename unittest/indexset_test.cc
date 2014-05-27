@@ -2,7 +2,6 @@
 #include "iqtensor.h"
 
 using namespace itensor;
-using namespace std;
 
 typedef IndexSet<IQIndex>
 IQIndexSet;
