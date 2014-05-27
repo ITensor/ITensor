@@ -6,7 +6,7 @@ using namespace std;
 using namespace itensor;
 
 OptSet
-string_test_function(const OptSet& opts)
+test_function(const OptSet& opts)
     {
     return opts;
     }
@@ -130,12 +130,12 @@ SECTION("StringConstructor")
     CHECK(o1.defined("Pinning"));
     CHECK(o1.getReal("Pinning") == -0.5);
 
-    //string_test_function is defined at the top of this file
-    OptSet o2 = string_test_function("WriteM=500,UseSVD=false,");
+    //test_function is defined at the top of this file
+    OptSet o2 = test_function("WriteM=500,UseSVD=false,");
     CHECK(o2.getInt("WriteM") == 500);
     CHECK(o2.getBool("UseSVD") == false);
     
-    OptSet o3 = string_test_function(Opt("Quiet") & "WriteM=500,UseSVD=false,");
+    OptSet o3 = test_function(Opt("Quiet") & "WriteM=500,UseSVD=false,");
     CHECK(o3.getBool("Quiet") == true);
     CHECK(o3.getInt("WriteM") == 500);
     CHECK(o3.getBool("UseSVD") == false);
@@ -145,6 +145,31 @@ SECTION("StringConstructor")
     CHECK(fabs(o4.getReal("Cutoff")-5E-12) < 1E-14);
     CHECK(fabs(o4.getReal("Val")-(-4.235235)) < 1E-12);
     }
+
+#ifdef USE_CPP11
+SECTION("VariadicConstructor")
+    {
+    OptSet o1("Quiet",true,"Auto",true,"Pinning",-0.5);
+    CHECK(o1.defined("Quiet"));
+    CHECK(o1.defined("Auto"));
+    CHECK(o1.defined("Pinning"));
+    CHECK(o1.getReal("Pinning") == -0.5);
+
+    //test_function is defined at the top of this file
+    OptSet o2 = test_function({"WriteM",500,"UseSVD",false});
+    CHECK(o2.getInt("WriteM") == 500);
+    CHECK(o2.getBool("UseSVD") == false);
+    
+    OptSet o3("Name","new",o1,"Cutoff",5E-12,"Val",-4.235235);
+    CHECK(o3.getString("Name") == "new");
+    CHECK(fabs(o3.getReal("Cutoff")-5E-12) < 1E-14);
+    CHECK(fabs(o3.getReal("Val")-(-4.235235)) < 1E-12);
+    CHECK(o3.defined("Quiet"));
+    CHECK(o3.defined("Auto"));
+    CHECK(o3.defined("Pinning"));
+    CHECK(o3.getReal("Pinning") == -0.5);
+    }
+#endif
 
 
 }
