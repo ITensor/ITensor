@@ -1,9 +1,10 @@
 // test.cc -- Test the matrix package
-#define THIS_IS_MAIN
 
 #include "matrix.h"
 #include "cputime.h"
 #include <math.h>
+
+using namespace itensor;
 
 enum sii {size = 20};
 

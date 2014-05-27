@@ -1,6 +1,8 @@
 #ifndef _conjugate_gradient_h
 #define _conjugate_gradient_h 
 
+namespace itensor {
+
 class MinFunction
 {
  public:
@@ -46,4 +48,5 @@ class minxAx : public MinFunction
 Real conjugate_gradient(MinFunction& f,Matrix& evecs,Real err,
 			int maxiter=20,int debug=0);
 
+}; //namespace itensor
 #endif

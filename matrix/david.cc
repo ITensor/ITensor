@@ -13,6 +13,8 @@
 
 using namespace std;
 
+namespace itensor {
+
 
 // David -- Block Davidson Diagonalization.
 
@@ -245,3 +247,5 @@ void David(    // Object containing big hamiltonian
 	}
     cout.precision(oldp);
 }
+
+}; //namespace itensor

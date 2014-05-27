@@ -1,5 +1,9 @@
 // hpsortir -- adaptation of Num. Rec. 1st edition Heapsort for two arrays
 // Arrays start at 0 for input
+//
+
+
+namespace itensor {
 
 typedef double Real;
 
@@ -44,3 +48,5 @@ void hpsortir(int n,int* ra,Real* rb)
 	rb[i]=rrb;
     }
 }
+
+};

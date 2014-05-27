@@ -7,51 +7,59 @@
 #ifdef PLATFORM_macos
 
 #include <Accelerate/Accelerate.h>
+namespace itensor {
 typedef __CLPK_integer
 LAPACK_INT;
 typedef __CLPK_doublereal
 LAPACK_REAL;
 typedef __CLPK_doublecomplex
 LAPACK_COMPLEX;
+};
 
 #elif PLATFORM_acml
 
 #include "acml.h"
+namespace itensor {
 typedef int
 LAPACK_INT;
 typedef double
 LAPACK_REAL;
 typedef doublecomplex
 LAPACK_COMPLEX;
+};
 
 #elif PLATFORM_mkl
 
 #include "mkl_lapack.h"
+namespace itensor {
 typedef MKL_INT
 LAPACK_INT;
 typedef double
 LAPACK_REAL;
 typedef MKL_Complex16
 LAPACK_COMPLEX;
+};
 
 #elif PLATFORM_lapack
 
 #include "lapacke.h"
+namespace itensor {
 typedef lapack_int
 LAPACK_INT;
 typedef double
 LAPACK_REAL;
 typedef lapack_complex_double
 LAPACK_COMPLEX;
+};
 
 #endif
 
+namespace itensor {
 
 //
 // dsyev
 //
 void inline
-
 dsyev_wrapper(char* jobz,        //if jobz=='V', compute eigs and evecs
               char* uplo,        //if uplo=='U', read from upper triangle of A
               LAPACK_INT* n,     //number of cols of A
@@ -268,5 +276,7 @@ zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
     zgeev_(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info);
 #endif
     }
+
+}; //namespace itensor
 
 #endif

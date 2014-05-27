@@ -5,6 +5,8 @@
 
 #include "bigmatrix.h"		/* includes matrix.h */
 
+namespace itensor {
+
 const Real default_thresh = 1e-10; // Default threshold
 const Real default_efactor = 1.5;  // default expansion factor for rows
 const int default_minrsize = 20;   // Default minimum row size
@@ -320,5 +322,7 @@ public:
 inline std::ostream & operator << (std::ostream &s, const SparseVector &a) {return s; }
 
 ARRAY1CC_DEFS(SparseVector)
+
+};
 
 #endif

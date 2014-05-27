@@ -8,7 +8,7 @@ include ../options.mk
 
 ####################################################################
 
-HEADERS=matrixref.h matrix.h precisio.h sparse.h bigmatrix.h davidson.h\
+HEADERS=matrixref.h matrix.h sparse.h bigmatrix.h davidson.h\
 	storelink.h conjugate_gradient.h sparseref.h\
     svd.h
 
@@ -91,9 +91,9 @@ matrix.o: matrix.h matrixref.h storelink.h
 utility.o: matrix.h matrixref.h storelink.h
 test.o: matrix.h matrixref.h storelink.h
 testsparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
-davidtest.o: matrix.h sparse.h bigmatrix.h davidson.h precisio.h\
+davidtest.o: matrix.h sparse.h bigmatrix.h davidson.h \
 	matrixref.h storelink.h
-david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
+david.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 svd.o: svd.h matrixref.h
 
@@ -105,8 +105,8 @@ svd.o: svd.h matrixref.h
 .debug_objs/utility.o: matrix.h matrixref.h storelink.h
 .debug_objs/test.o: matrix.h matrixref.h storelink.h
 .debug_objs/testsparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
-.debug_objs/davidtest.o: matrix.h sparse.h bigmatrix.h davidson.h precisio.h\
+.debug_objs/davidtest.o: matrix.h sparse.h bigmatrix.h davidson.h \
 	matrixref.h storelink.h
-.debug_objs/david.o: matrix.h sparse.h bigmatrix.h precisio.h matrixref.h storelink.h
+.debug_objs/david.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 .debug_objs/sparse.o: matrix.h sparse.h bigmatrix.h matrixref.h storelink.h
 .debug_objs/svd.o: svd.h matrixref.h

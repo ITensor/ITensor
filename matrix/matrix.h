@@ -6,6 +6,9 @@
 #include "matrixref.h"
 #include <vector>
 
+
+namespace itensor {
+
 class Vector;			// Defined later 
 class SparseMatrix;
 
@@ -416,10 +419,14 @@ inline MatrixVectorRes::operator Vector() const
 inline VectorVectorRes::operator Vector() const
     { Vector res(Length()); res = *this; return res;  }
 
+};
 
 #include "svd.h"
 
+
+namespace itensor {
 ARRAY1CC_DEFS(Matrix)
 ARRAY1CC_DEFS(Vector)
+};
 
 #endif

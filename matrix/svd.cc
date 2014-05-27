@@ -6,6 +6,7 @@
 
 using namespace std;
 
+namespace itensor {
 
 void
 writeMatrix(const string& fname, const Matrix& M)
@@ -325,3 +326,5 @@ SVDComplex(const MatrixRef& Are, const MatrixRef& Aim,
         Vim(j,i) = VV(i,2*j);
         }
     }
+
+};

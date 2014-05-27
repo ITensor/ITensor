@@ -1,5 +1,7 @@
 #include "sparseref2.h"
 
+namespace itensor {
+
 typedef CRowIter CI;
 
 void SparseVec::write(ostream& s) const
@@ -174,3 +176,5 @@ int SparseRef::memory() const
     res += sizeof(base) + sizeof(transpose) + sizeof(scale);
     return res;
     }
+
+};

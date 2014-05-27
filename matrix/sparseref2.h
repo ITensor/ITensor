@@ -6,6 +6,8 @@
 //#include "sparse.h"
 #include <map>
 
+namespace itensor {
+
 typedef map<int,Real>::const_iterator CRowIter;
 
 class SparseVec : public map<int,Real>
@@ -142,5 +144,8 @@ inline SparseRef operator * (Real a, const SparseRef& sp)
     res.scale *= a;
     return res;   
     }
+
+
+};
 
 #endif

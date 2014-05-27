@@ -1,3 +1,5 @@
+namespace itensor {
+
 double dotprod(double *a,double *b, int l);
 // Multiply C += A B^T
 void matmuldot0(double *a,int ars,double *b,int brs,double *c,
@@ -328,8 +330,12 @@ for(i = ii; i < ilim; i += 4)
 	    }
 	}
     }
+
+}; //namespace itensor
+
 #include "matrix.h"
 
+namespace itensor {
 void dgemm(const MatrixRef& a, const MatrixRef& b,
 		MatrixRef& c, Real alpha, Real beta)
     {
@@ -373,3 +379,5 @@ void dgemm(const MatrixRef& a, const MatrixRef& b,
     if(alpha != 1.0)
 	c *= alpha;
     }
+
+};

@@ -11,6 +11,8 @@
 #define VECTOR
 #endif
 
+namespace itensor {
+
 using std::istream;
 using std::ostream;
 using std::endl;
@@ -676,4 +678,6 @@ Matrix::operator=(const SparseMatrix& S)
 	    el(i, S.Column0(i,j)) += S.Element0(i,j);
     return *this;
     }
+
+}; //namespace itensor
 

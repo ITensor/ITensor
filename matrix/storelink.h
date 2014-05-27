@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+namespace itensor {
+
 typedef double Real;
 
 // The Matrix/Vector Ref classes have a StoreLink, which prevents the 
@@ -180,6 +182,7 @@ inline int StoreLink::NumObjects() { return StoreLink::numberofobjects(); }
 inline StoreLink & StoreLink::operator = (const StoreLink & other)
     { return *this << other; } 		// private member function!
 
+}; //namespace itensor
 
 #endif
 

@@ -3,6 +3,8 @@
 using std::ostream;
 using std::istream;
 
+namespace itensor {
+
 SparseRef::SparseRef(const MatrixRef& M)
     : base(new SparseMatBase(M.Nrows(),M.Ncols())), scale(1.0), transpose(0)
     {
@@ -179,3 +181,5 @@ int SparseRef::memory() const
     res += sizeof(base) + sizeof(transpose) + sizeof(scale);
     return res;
     }
+
+};

@@ -5,6 +5,8 @@
 #include "indent.h"
 #include "conjugate_gradient.h"
 
+namespace itensor {
+
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -145,3 +147,5 @@ void minxAx::matrixA(VectorRef& x,VectorRef& Ax)
 {
   pA->product(x,Ax);
 }
+
+}; //namespace itensor

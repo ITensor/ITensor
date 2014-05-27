@@ -5,6 +5,8 @@
 #include "storelink.h"
 #include "minmax.h"
 
+namespace itensor {
+
 int 
 StoreLink::defragment(int newsize)	// move object to lower place in heap 
     {
@@ -34,3 +36,5 @@ StoreLink::defragment(int newsize)	// move object to lower place in heap
 	return 0;
 	}
     }
+
+};

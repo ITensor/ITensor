@@ -3,6 +3,8 @@
 
 #include "matrix.h"
 
+namespace itensor {
+
 class Matrix;
 class Vector;
 
@@ -40,5 +42,7 @@ SVDComplex(const MatrixRef& Are, const MatrixRef& Aim,
            Vector& D, 
            Matrix& Vre, Matrix& Vim);
            
+
+};
 
 #endif

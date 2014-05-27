@@ -17,6 +17,7 @@
 
 using namespace std;
 
+namespace itensor {
 
 void 
 Matrix::makematrix(int s1, int s2)
@@ -262,3 +263,5 @@ read(std::istream& s)
     ReDimension(nr,nc);
     this->TreatAsVector() = v;
     }
+
+};

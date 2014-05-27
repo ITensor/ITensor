@@ -10,6 +10,8 @@
 
 using namespace std;
 
+namespace itensor {
+
 Real inline
 sqr(Real x) { return x*x; }
 
@@ -890,4 +892,5 @@ Matrix Exp(const MatrixRef& M)
     }
 
 
+};
 

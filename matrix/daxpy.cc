@@ -1,4 +1,7 @@
     /* y += a * x; */
+
+namespace itensor {
+
 void daxpy( int n, double a, double *x,
 	 int incx,  double *y, int incy)
     {
@@ -167,4 +170,4 @@ void copyscale( int n, double a, double *x,
 	}
     }
 
-
+}; 

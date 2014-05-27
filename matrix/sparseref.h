@@ -5,6 +5,7 @@
 
 #include "sparse.h"
 
+namespace itensor {
 
 class SparseMatBase : private Array1<SparseVector>
     {
@@ -141,5 +142,7 @@ inline SparseRef operator * (Real a, const SparseRef& sp)
     res.scale *= a;
     return res;   
     }
+
+};
 
 #endif

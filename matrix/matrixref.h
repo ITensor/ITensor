@@ -11,6 +11,9 @@
 #include <cassert>
 #include <cstdlib>
 
+
+namespace itensor {
+
 inline void trade(int & i, int & j) { int k = i; i = j; j = k; }
 
 void _merror(const char *);		// error message and exit 
@@ -1060,5 +1063,7 @@ inline Real & VIter::val()
 
 ARRAY1CC_DEFS(MatrixRef)
 ARRAY1CC_DEFS(VectorRef)
+
+}; //namespace itensor
 
 #endif

@@ -6,6 +6,7 @@
 #include <sys/time.h>
 
 using namespace std;
+using namespace itensor;
 
 int main()
     {

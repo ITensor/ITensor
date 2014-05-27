@@ -7,6 +7,9 @@
 #include <memory>
 #include "indent.h"
 
+
+namespace itensor {
+
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -617,3 +620,5 @@ ostream & operator << (ostream & s, const MatrixMatrixRes & R)
     { return s << (Matrix)(R); }
 ostream & operator << (ostream & s, const MatrixVectorRes & V)
     { return s << (Vector)(V); }
+
+};

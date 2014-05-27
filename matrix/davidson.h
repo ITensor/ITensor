@@ -6,6 +6,8 @@
 
 #include "bigmatrix.h"
 
+namespace itensor {
+
 void David(const BigMatrix& big,	
 	   // Object containing big hamiltonian
 	   // should contain members:
@@ -23,5 +25,7 @@ void David(const BigMatrix& big,
 
 // void resetev(Matrix&);	// Reset Matrix to the unit Matrix plus a small
 				// random part
+                //
+}; //namespace itensor
 
 #endif

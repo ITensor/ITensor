@@ -6,6 +6,8 @@
 
 #include "matrix.h"
 
+namespace itensor {
+
 // BigMatrix contains the minimal operations expected by the David() routine.
 // Should be inherited by any class wanting to use David.  See the
 // SparseMatrix class as an example.
@@ -27,5 +29,7 @@ public:
     virtual ~ BigMatrix()
 	{ }
     };
+
+}; //namespace itensor
 
 #endif

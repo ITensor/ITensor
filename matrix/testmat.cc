@@ -1,11 +1,11 @@
 // test.cc -- Test the matrix package
-#define THIS_IS_MAIN
 
 #include "matrix.h"
 #include <math.h>
 #include <fstream>
 #include <iomanip>
 using namespace std;
+using namespace itensor;
 
 extern Real svdtruncerr;
 #ifdef THIS_IS_MAIN
