@@ -22,7 +22,7 @@ Real
 idmrg(MPSt<Tensor>& psi, 
       MPOt<Tensor> H,
       const Sweeps& sweeps,
-      Observer& obs,
+      DMRGObserver<Tensor>& obs,
       OptSet opts = Global::opts());
 
 
@@ -52,7 +52,7 @@ Real
 idmrg(MPSt<Tensor>& psi, 
       MPOt<Tensor> H,        //Copies H since algorithm swaps tensors in-place
       const Sweeps& sweeps,
-      Observer& obs,
+      DMRGObserver<Tensor>& obs,
       OptSet opts)
     {
     typedef typename Tensor::IndexT
@@ -105,7 +105,7 @@ idmrg(MPSt<Tensor>& psi,
         ucsweeps.niter() = sweeps.niter(sw);
         print(ucsweeps);
 
-        const Real fac = sqrt(1./N0);
+        const Real fac = std::sqrt(1./N0);
         HL *= fac;
         HR *= fac;
 
@@ -177,7 +177,7 @@ idmrg(MPSt<Tensor>& psi,
         ucsweeps.cutoff() = sweeps.cutoff(sw);
         ucsweeps.noise() = sweeps.noise(sw);
         ucsweeps.niter() = sweeps.niter(sw);
-        spec.maxm(sweeps.maxm(sw));
+        opts.add("Maxm",sweeps.maxm(sw));
 
         print(ucsweeps);
 
@@ -188,7 +188,7 @@ idmrg(MPSt<Tensor>& psi,
             printfln("\niDMRG Step = %d, N=%d sites",sw,N);
             }
 
-        const Real fac = sqrt((1.*N-N0)/N);
+        const Real fac = std::sqrt((1.*N-N0)/N);
         HL *= fac;
         HR *= fac;
 
@@ -196,7 +196,7 @@ idmrg(MPSt<Tensor>& psi,
 
         lastenergy = energy;
         LocalMPO<Tensor> PH(H,HL,HR,opts);
-        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts & Opt("Quiet",olevel < 3) & Opt("NoMeasure",sw%2==0));
+        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts+Opt("Quiet",olevel < 3)+Opt("NoMeasure",sw%2==0));
 
 
         Real ovrlap, im;
@@ -225,7 +225,7 @@ idmrg(MPSt<Tensor>& psi,
         obs.measure(opts&Opt("AtCenter")&Opt("NoMeasure"));
 
         D = Tensor();
-        svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1),spec);
+        svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1),opts);
         D /= D.norm();
 
 
