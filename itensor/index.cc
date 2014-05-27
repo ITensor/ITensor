@@ -13,8 +13,6 @@ using std::string;
 using std::stringstream;
 
 
-typedef Real
-IDType;
 
 //static const Real K1 = 1./sqrt(7.);
 //static const Real K2 = 1./sqrt(11.);
@@ -96,14 +94,14 @@ nameint(const string& f, int n)
 struct IndexDat
     {
     //////////////
-    // Public Data Members
+
+    typedef Real IDType;
 
     const IDType id;
     const int m;
     const IndexType type;
     const string sname;
 
-    //
     //////////////
 
     IndexDat(const string& ss, int mm, IndexType it, IDType id);
@@ -141,12 +139,14 @@ Null()
 //
 
 
-IDType 
+IndexDat::IDType 
 generateID()
     {
+    static const Real K1 = 1./sqrt(7.);
     static mt19937 rng(std::time(NULL) + getpid());
-    static uniform_real_distribution<Real> dist(0,1);
-    return dist(rng);
+    //static uniform_real_distribution<Real> dist(0,1);
+    const Real x = sin((K1*rng()));
+    return x*x;
 
     //static IDType nextid = 0;
     //++nextid;
@@ -315,7 +315,7 @@ read(std::istream& s)
     int t; 
     s.read((char*) &t,sizeof(t));
 
-    IDType id;
+    IndexDat::IDType id;
     s.read((char*) &id, sizeof(id));
 
     int mm; 
