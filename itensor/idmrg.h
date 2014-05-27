@@ -1,5 +1,5 @@
 //
-// Distributed under the ITensor Library License, Version 1.0.
+// Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
 #ifndef __ITENSOR_IDMRG_H
@@ -7,20 +7,37 @@
 
 #include "dmrg.h"
 
-
 namespace itensor {
 
 template <class Tensor>
-Real
+struct idmrgRVal
+    {
+    Real energy;
+    Tensor HL;
+    Tensor HR;
+    Tensor V;
+    };
+
+template <class Tensor>
+idmrgRVal<Tensor>
 idmrg(MPSt<Tensor>& psi, 
       const MPOt<Tensor>& H, 
       const Sweeps& sweeps, 
       const OptSet& opts = Global::opts());
 
 template <class Tensor>
-Real
+idmrgRVal<Tensor>
 idmrg(MPSt<Tensor>& psi, 
-      MPOt<Tensor> H,
+      const MPOt<Tensor>& H,
+      const Sweeps& sweeps,
+      DMRGObserver<Tensor>& obs,
+      const OptSet& opts = Global::opts());
+
+template <class Tensor, class MPOGenT>
+idmrgRVal<Tensor>
+idmrg(MPSt<Tensor>& psi, 
+      MPOt<Tensor> H,        //Copies H since algorithm swaps tensors in-place
+      Tensor IL,
       const Sweeps& sweeps,
       DMRGObserver<Tensor>& obs,
       OptSet opts = Global::opts());
@@ -47,10 +64,12 @@ swapUnitCells(MPSType& psi)
 //
 
 
-template <class Tensor>
-Real
+
+template <class Tensor, class MPOGenT>
+idmrgRVal<Tensor>
 idmrg(MPSt<Tensor>& psi, 
       MPOt<Tensor> H,        //Copies H since algorithm swaps tensors in-place
+      Tensor IL,
       const Sweeps& sweeps,
       DMRGObserver<Tensor>& obs,
       OptSet opts)
@@ -60,20 +79,16 @@ idmrg(MPSt<Tensor>& psi,
 
     const int olevel = opts.getInt("OutputLevel",0);
     const bool quiet = opts.getBool("Quiet",olevel == 0);
-    const bool measure_xi = opts.getBool("MeasureCorrLen",false);
     const int nucsweeps = opts.getInt("NUCSweeps",1);
-
-    const Real orig_cutoff = psi.cutoff(),
-               orig_noise  = psi.noise();
-    const int orig_minm = psi.minm(), 
-              orig_maxm = psi.maxm();
+    const int nucs_decr = opts.getInt("NUCSweepsDecrement",0);
+    const auto randomize = opts.getBool("Randomize",false);
+    int actual_nucsweeps = nucsweeps;
 
     const int N0 = psi.N(); //Number of sites in center
     const int Nuc = N0/2;   //Number of sites in unit cell
     int N = N0;             //Current system size
 
-    if(N0 == 2)
-        opts.add(Opt("CombineMPO",false));
+    if(N0 == 2) opts.add(Opt("CombineMPO",false));
 
     Real energy = NAN,
          lastenergy = 0;
@@ -81,9 +96,12 @@ idmrg(MPSt<Tensor>& psi,
     Tensor lastV,
            D;
 
-    const int Nteig = 2;
-    std::vector<Tensor> vv(Nteig);
-    std::vector<Real>   ee(Nteig,1.);
+    if(psi.A(0))
+        {
+        lastV = conj(psi.A(0));
+        lastV /= lastV.norm();
+        lastV.pseudoInvert(0);
+        }
 
     Tensor HL(H.A(0)),
            HR(H.A(N0+1));
@@ -97,7 +115,7 @@ idmrg(MPSt<Tensor>& psi,
             printfln("\niDMRG Step = %d, N=%d sites",sw,N);
             }
 
-        Sweeps ucsweeps(nucsweeps);
+        Sweeps ucsweeps(actual_nucsweeps);
         ucsweeps.minm() = sweeps.minm(sw);
         ucsweeps.maxm() = sweeps.maxm(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
@@ -105,41 +123,49 @@ idmrg(MPSt<Tensor>& psi,
         ucsweeps.niter() = sweeps.niter(sw);
         print(ucsweeps);
 
-        const Real fac = std::sqrt(1./N0);
-        HL *= fac;
-        HR *= fac;
+        energy = dmrg(psi,H,HL,HR,ucsweeps,obs,opts & Opt("Quiet",olevel < 3)
+                                                    & Opt("iDMRG_Step",sw)
+                                                    & Opt("NSweep",ucsweeps.nsweep()));
 
-        energy = dmrg(psi,H,HL,HR,ucsweeps,obs,opts & Opt("Quiet",olevel < 3));
+        if(randomize)
+            {
+            println("Randomizing psi");
+            for(int j = 1; j <= psi.N(); ++j)
+                {
+                psi.Anc(j).randomize();
+                }
+            psi.normalize();
+            }
+
+        printfln("\n    Energy per site = %.14f\n",energy/N0);
+        printfln("\n    Energy per PFN site = %.14f\n", energy/(2*N0));
 
         psi.position(Nuc);
         svd(psi.A(Nuc)*psi.A(Nuc+1),psi.Anc(Nuc),D,psi.Anc(Nuc+1));
         D /= D.norm();
-
+        
         //Prepare MPO for next step
         for(int j = 1; j <= Nuc; ++j)
             {
             HL *= psi.A(j);
             HL *= H.A(j);
-            HL *= conj(prime(psi.A(j)));
+            HL *= conj(primed(psi.A(j)));
+            IL *= psi.A(j);
+            IL *= H.A(j);
+            IL *= conj(primed(psi.A(j)));
 
             HR *= psi.A(N0-j+1);
             HR *= H.A(N0-j+1);
-            HR *= conj(prime(psi.A(N0-j+1)));
+            HR *= conj(primed(psi.A(N0-j+1)));
             }
+        //H = HG(sw);
         swapUnitCells(H);
 
-        if(measure_xi)
-            {
-            vv[0] = psi.A(1)*conj(prime(psi.A(1),Link));
-            for(int j = 2; j <= Nuc; ++j)
-                {
-                vv[0] *= psi.A(j);
-                vv[0] *= conj(prime(psi.A(j),Link));
-                }
-            }
+        HL += -energy*IL;
 
         //Prepare MPS for next step
         swapUnitCells(psi);
+        if(lastV) psi.Anc(Nuc+1) *= lastV;
         psi.Anc(1) *= D;
         psi.Anc(N0) *= D;
         psi.position(1);
@@ -147,31 +173,11 @@ idmrg(MPSt<Tensor>& psi,
         ++sw;
         }
 
-
-    //Orthonormalize vv tensors
-    if(measure_xi)
-        {
-        vv[0] /= vv[0].norm();
-        for(int j = 1; j < Nteig; ++j)
-            {
-            vv[j] = vv[0];
-            vv[j].randomize();
-            for(int k = 0; k < j; ++k)
-                {
-                vv[j] += vv[k]*(-BraKet(vv[k],vv[j]));
-                }
-            vv[j] /= vv[j].norm();
-            }
-        }
-
-
-    Real sub_en_per_site = energy/N0;
-
     Spectrum spec;
 
     for(; sw <= sweeps.nsweep(); ++sw)
         {
-        Sweeps ucsweeps(nucsweeps);
+        Sweeps ucsweeps(actual_nucsweeps);
         ucsweeps.minm() = sweeps.minm(sw);
         ucsweeps.maxm() = sweeps.maxm(sw);
         ucsweeps.cutoff() = sweeps.cutoff(sw);
@@ -181,6 +187,8 @@ idmrg(MPSt<Tensor>& psi,
 
         print(ucsweeps);
 
+        if(actual_nucsweeps > 1) actual_nucsweeps -= nucs_decr;
+
         N += N0;
 
         if(!quiet)
@@ -188,27 +196,24 @@ idmrg(MPSt<Tensor>& psi,
             printfln("\niDMRG Step = %d, N=%d sites",sw,N);
             }
 
-        const Real fac = std::sqrt((1.*N-N0)/N);
-        HL *= fac;
-        HR *= fac;
-
         const MPSt<Tensor> initPsi(psi);
 
         lastenergy = energy;
         LocalMPO<Tensor> PH(H,HL,HR,opts);
-        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts+Opt("Quiet",olevel < 3)+Opt("NoMeasure",sw%2==0));
-
+        
+        energy = DMRGWorker(psi,PH,ucsweeps,obs,opts & Opt("Quiet",olevel < 3) 
+                                                     & Opt("NoMeasure",sw%2==0)
+                                                     & Opt("iDMRG_Step",sw)
+                                                     & Opt("NSweep",ucsweeps.nsweep()));
 
         Real ovrlap, im;
         psiphi(initPsi,psi,ovrlap,im);
-        println("\n    Overlap of initial and final psi = ", format(fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E",fabs(ovrlap)));
-        println("\n    1-Overlap of initial and final psi = ", format(1-fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E",(1-fabs(ovrlap))) );
+        print("\n    Overlap of initial and final psi = ");
+        printfln((fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E"),fabs(ovrlap));
+        print("\n    1-Overlap of initial and final psi = ");
+        printfln((1-fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E"),1-fabs(ovrlap));
 
-
-        sub_en_per_site = (energy*N-lastenergy*(N-N0))/N0;
-
-        printfln("    Energy per site = %.10f", energy);
-        printfln("    Subtracted Energy per site = %.14f", sub_en_per_site);
+        printfln("    Energy per site = %.14f",energy/N0);
 
 
         //Save last center matrix
@@ -221,7 +226,7 @@ idmrg(MPSt<Tensor>& psi,
 
         opts.add("Sweep",sw);
         opts.add("AtBond",Nuc);
-        opts.add("Energy",sub_en_per_site);
+        opts.add("Energy",energy);
         obs.measure(opts&Opt("AtCenter")&Opt("NoMeasure"));
 
         D = Tensor();
@@ -230,57 +235,22 @@ idmrg(MPSt<Tensor>& psi,
 
 
         //Prepare MPO for next step
+        for(int j = 1; j <= Nuc; ++j)
+            {
+            HL *= psi.A(j);
+            HL *= H.A(j);
+            HL *= conj(primed(psi.A(j)));
+            IL *= psi.A(j);
+            IL *= H.A(j);
+            IL *= conj(primed(psi.A(j)));
 
-        PH.position(Nuc,psi);
-
-        HR = PH.R();
-        HR *= psi.A(Nuc+1);
-        HR *= H.A(Nuc+1);
-        HR *= conj(prime(psi.A(Nuc+1)));
-
-        HL = PH.L();
-        HL *= psi.A(Nuc);
-        HL *= H.A(Nuc);
-        HL *= conj(prime(psi.A(Nuc)));
-
+            HR *= psi.A(N0-j+1);
+            HR *= H.A(N0-j+1);
+            HR *= conj(primed(psi.A(N0-j+1)));
+            }
         swapUnitCells(H);
 
-        if(measure_xi)
-            {
-            //Update correlation length estimate
-            Real xi = NAN;
-            for(int j = 0; j < Nteig; ++j)
-                {
-                for(int i = 1; i <= Nuc; ++i)
-                    {
-                    vv[j] *= psi.A(i);
-                    vv[j] *= conj(prime(psi.A(i),Link));
-                    }
-                for(int k = 0; k < j; ++k)
-                    {
-                    vv[j] += vv[k]*(-BraKet(vv[k],vv[j]));
-                    }
-                ee[j] = vv[j].norm();
-                const Real eig = ee[j];
-                if(eig == 0)
-                    {
-                    Error("Zero norm of transfer matrix eigenvector");
-                    }
-                vv[j] /= eig;
-//#ifdef DEBUG
-                printfln("    T eig(%d) = %.14f\n",(1+j),eig);
-                if(j == 0 && fabs(eig-1.) > 1E-4)
-                    {
-                    printfln("    Leading transfer eigenvalue = %.14f\n", eig);
-                    }
-//#endif
-                if(j > 0 && eig > 1E-12)
-                    {
-                    xi = -1.*Nuc/log(eig);
-                    }
-                }
-            printfln("    Correlation length = %.14f\n",xi);
-            }
+        HL += -energy*IL;
 
         //Prepare MPS for next step
         swapUnitCells(psi);
@@ -299,8 +269,27 @@ idmrg(MPSt<Tensor>& psi,
                 psi.Anc(b) *= d;
                 }
             psi.Anc(Nuc+1) *= lastV;
+
             psi.Anc(0) = D;
+
             break;
+            }
+
+        if(fileExists("WRITE_WF") && sw%2==0)
+            {
+            println("File WRITE_WF found: writing out wavefunction after step",sw);
+            system("rm -f WRITE_WF");
+            MPSt<Tensor> wpsi(psi);
+            for(int b = N0-1; b >= Nuc+1; --b)
+                {
+                Tensor d;
+                svd(wpsi.A(b)*wpsi.A(b+1),wpsi.Anc(b),d,wpsi.Anc(b+1));
+                wpsi.Anc(b) *= d;
+                }
+            wpsi.Anc(Nuc+1) *= lastV;
+            wpsi.Anc(0) = D;
+            writeToFile(format("psi_%d",sw),wpsi);
+            writeToFile("sites",wpsi.model());
             }
 
         psi.Anc(Nuc+1) *= lastV;
@@ -311,17 +300,31 @@ idmrg(MPSt<Tensor>& psi,
 
         } //for loop over sw
     
-    psi.cutoff(orig_cutoff); 
-    psi.minm(orig_minm); 
-    psi.maxm(orig_maxm);
-    psi.noise(orig_noise); 
+    idmrgRVal<Tensor> res;
+    res.energy = energy;
+    res.HL = HL;
+    res.HR = HR;
+    res.V = lastV;
 
-    return sub_en_per_site;
+    return res;
     }
 
 template <class Tensor>
-Real
-idmrg(MPSt<Tensor>& psi, const MPOt<Tensor>& H, 
+idmrgRVal<Tensor>
+idmrg(MPSt<Tensor>& psi, 
+      const MPOt<Tensor>& H,
+      const Sweeps& sweeps,
+      DMRGObserver<Tensor>& obs,
+      const OptSet& opts)
+    {
+    Tensor IL(conj(H.A(H.N()+1)));
+    return idmrg(psi,H,IL,sweeps,obs,opts);
+    }
+
+template <class Tensor>
+idmrgRVal<Tensor>
+idmrg(MPSt<Tensor>& psi, 
+      const MPOt<Tensor>& H, 
       const Sweeps& sweeps, 
       const OptSet& opts)
     {

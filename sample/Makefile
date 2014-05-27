@@ -25,11 +25,11 @@ LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 #Targets -----------------
 
-build: dmrg iqdmrg dmrg_table dmrgj1j2 exthubbard
+build: dmrg iqdmrg dmrg_table dmrgj1j2 exthubbard idmrg
 
-debug: dmrg-g iqdmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g
+debug: dmrg-g iqdmrg-g dmrg_table-g dmrgj1j2-g exthubbard-g idmrg-g
 
-all: dmrg iqdmrg dmrg_table dmrgj1j2 exthubbard
+all: dmrg iqdmrg dmrg_table dmrgj1j2 exthubbard idmrg
 
 dmrg: dmrg.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) dmrg.o -o dmrg $(LIBFLAGS)
@@ -61,9 +61,16 @@ exthubbard: exthubbard.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 exthubbard-g: mkdebugdir .debug_objs/exthubbard.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
 	$(CCCOM) $(CCFLAGS) .debug_objs/exthubbard.o -o exthubbard-g $(LIBFLAGS)
 
+idmrg: idmrg.o $(ITENSOR_LIBS) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCFLAGS) idmrg.o -o idmrg $(LIBFLAGS)
+
+idmrg-g: mkdebugdir .debug_objs/idmrg.o $(ITENSOR_GLIBS) $(REL_TENSOR_HEADERS)
+	$(CCCOM) $(CCGFLAGS) .debug_objs/idmrg.o -o idmrg-g $(LIBGFLAGS)
+
 mkdebugdir:
 	mkdir -p .debug_objs
 
 clean:
 	rm -fr *.o .debug_objs dmrg dmrg-g iqdmrg iqdmrg-g \
-	dmrg_table dmrg_table-g dmrgj1j2 dmrgj1j2-g exthubbard exthubbard-g
+	dmrg_table dmrg_table-g dmrgj1j2 dmrgj1j2-g exthubbard exthubbard-g \
+    idmrg idmrg-g
