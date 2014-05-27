@@ -3,46 +3,6 @@
 
 using namespace itensor;
 
-//struct CombinerDefaults
-//{
-//    const Index s1,s2,s3,s4,
-//          s1P,s2P,s3P,s4P,
-//          l1,l2,l3,l4,l5,l6,l7,l8,
-//          a1,a2,a3,a4,
-//          b2,b3,b4,b5;
-//
-//    CombinerDefaults() :
-//    s1(Index("s1",2,Site)),
-//    s2(Index("s2",2,Site)),
-//    s3(Index("s3",2,Site)),
-//    s4(Index("s4",2,Site)),
-//    s1P(prime(s1)),
-//    s2P(prime(s2)),
-//    s3P(prime(s3)),
-//    s4P(prime(s4)),
-//    l1(Index("l1",2)),
-//    l2(Index("l2",2)),
-//    l3(Index("l3",2)),
-//    l4(Index("l4",2)),
-//    l5(Index("l5",2)),
-//    l6(Index("l6",2)),
-//    l7(Index("l7",2)),
-//    l8(Index("l8",2)),
-//    a1(Index("a1")),
-//    a2(Index("a2")),
-//    a3(Index("a3")),
-//    a4(Index("a4")),
-//    b2(Index("b2",2)),
-//    b3(Index("b3",3)),
-//    b4(Index("b4",4)),
-//    b5(Index("b5",5))
-//    {
-//
-//    }
-//
-//    ~CombinerDefaults() { }
-//
-//};
 
 TEST_CASE("CombinerTest")
 {

@@ -415,5 +415,3 @@ SECTION("ComplexEV")
         }
     }
 }
-
-

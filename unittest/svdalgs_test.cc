@@ -89,10 +89,6 @@ L = IQTensor(L1,S1,conj(Mid10));
     ITensor duz(l1d,s1u,mid10z);
     duz.randomize();
     L += duz;
-
-    ITensor zdd(l10,s1d,mid10d);
-    zdd.randomize();
-    L += zdd;
     }
 L *= 1./L.norm();
 l = L.toITensor();
@@ -577,5 +573,4 @@ SECTION("IQEigDecomp")
 
     CHECK((M*V - prime(V)*D).norm() < 1E-11);
     }
-
 }

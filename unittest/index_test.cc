@@ -35,5 +35,3 @@ TEST_CASE("IndexTest")
         CHECK_EQUAL(I.primeLevel(),2);
         }
     }
-
-
