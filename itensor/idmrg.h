@@ -33,7 +33,7 @@ idmrg(MPSt<Tensor>& psi,
       DMRGObserver<Tensor>& obs,
       const OptSet& opts = Global::opts());
 
-template <class Tensor, class MPOGenT>
+template <class Tensor>
 idmrgRVal<Tensor>
 idmrg(MPSt<Tensor>& psi, 
       MPOt<Tensor> H,        //Copies H since algorithm swaps tensors in-place
@@ -65,7 +65,7 @@ swapUnitCells(MPSType& psi)
 
 
 
-template <class Tensor, class MPOGenT>
+template <class Tensor>
 idmrgRVal<Tensor>
 idmrg(MPSt<Tensor>& psi, 
       MPOt<Tensor> H,        //Copies H since algorithm swaps tensors in-place
