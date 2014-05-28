@@ -583,7 +583,7 @@ complexDavidson(const BigMatrixT& A,
     int iter = 0;
     for(int ii = 0; ii <= actual_maxiter; ++ii)
         {
-        //Diagonalize conj(V)*A*V
+        //Diagonalize dag(V)*A*V
         //and compute the residual q
 
         const int ni = ii+1; 
@@ -969,7 +969,7 @@ genDavidson(const BigMatrixTA& A,
     {
     Tensor Bphi;
     B.product(phi,Bphi);
-    Real phiBphi = Dot(conj(phi),Bphi);
+    Real phiBphi = Dot(dag(phi),Bphi);
     phi *= 1.0/std::sqrt(phiBphi);
     }
 
@@ -1006,7 +1006,7 @@ genDavidson(const BigMatrixTA& A,
     for(int ii = 1; ii <= actual_maxiter; ++ii)
         {
         ++iter;
-        //Diagonalize conj(V)*A*V
+        //Diagonalize dag(V)*A*V
         //and compute the residual q
         Tensor q;
         if(ii == 1)
@@ -1016,8 +1016,8 @@ genDavidson(const BigMatrixTA& A,
             B.product(V[1],BV[1]);
 
             //No need to diagonalize
-            Mref = Dot(conj(V[1]),AV[1]);
-            Nref = Dot(conj(V[1]),BV[1]);
+            Mref = Dot(dag(V[1]),AV[1]);
+            Nref = Dot(dag(V[1]),BV[1]);
             lambda = Mref(1,1)/(Nref(1,1)+1E-33);
 
             //Calculate residual q
@@ -1070,7 +1070,7 @@ genDavidson(const BigMatrixTA& A,
             for(int i = 1; i <= ii; ++i)
             for(int j = i; j <= ii; ++j)
                 {
-                Vorth(i,j) = Dot(conj(V[i]),V[j]);
+                Vorth(i,j) = Dot(dag(V[i]),V[j]);
                 Vorth(j,i) = Vorth(i,j);
                 }
             Print(Vorth);
@@ -1114,7 +1114,7 @@ genDavidson(const BigMatrixTA& A,
         Vector Vd(ii);
         for(int k = 1; k <= ii; ++k)
             {
-            Vd(k) = Dot(conj(V[k]),d);
+            Vd(k) = Dot(dag(V[k]),d);
             }
         d = Vd(1)*V[1];
         for(int k = 2; k <= ii; ++k)
@@ -1141,7 +1141,7 @@ genDavidson(const BigMatrixTA& A,
             Nref << N.SubMatrix(1,ii+1,1,ii+1);
             for(int k = 1; k <= ii+1; ++k)
                 {
-                newCol(k) = Dot(conj(V[k]),BV[ii+1]);
+                newCol(k) = Dot(dag(V[k]),BV[ii+1]);
 
                 if(newCol(k) < 0)
                     {
@@ -1159,7 +1159,7 @@ genDavidson(const BigMatrixTA& A,
             Mref << M.SubMatrix(1,ii+1,1,ii+1);
             for(int k = 1; k <= ii+1; ++k)
                 {
-                newCol(k) = Dot(conj(V[k]),AV[ii+1]);
+                newCol(k) = Dot(dag(V[k]),AV[ii+1]);
                 }
             Mref.Column(ii+1) = newCol;
             Mref.Row(ii+1) = newCol;
@@ -1231,7 +1231,7 @@ orthog(std::vector<Tensor>& T, int num, int numpass, int start)
             Vector dps(n-start);
             for(int m = start; m < n; ++m)
                 {
-                dps(m-start+1) = Dot(conj(col),T.at(m));
+                dps(m-start+1) = Dot(dag(col),T.at(m));
                 }
             Tensor ovrlp = dps(1)*T.at(start);
             for(int m = start+1; m < n; ++m)

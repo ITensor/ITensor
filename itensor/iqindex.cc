@@ -398,7 +398,7 @@ IQIndex(const Index& index, const IQIndexDatPtr& pdat)
     { }
 
 IQIndex& IQIndex::
-conj() 
+dag() 
     { 
     dir_ = -dir_; 
     return *this;

@@ -35,7 +35,7 @@ IQCombiner(
     if(l4 != IQIndex::Null()) left_.push_back(l4);
     if(l5 != IQIndex::Null()) left_.push_back(l5); 
     if(l6 != IQIndex::Null()) left_.push_back(l6);
-    Foreach(IQIndex& L, left_) L.conj();
+    Foreach(IQIndex& L, left_) L.dag();
     }
 
 IQCombiner::
@@ -89,7 +89,7 @@ addleft(const IQIndex& l) 	// Include another left index
     left_.push_back(l);
     //Flip arrows to make combiner compatible with
     //the IQTensor from which it got its left indices
-    left_.back().conj();
+    left_.back().dag();
     initted = false;
 	}
 
@@ -220,16 +220,16 @@ prime(IndexType type, int inc)
 
 
 void IQCombiner::
-conj() 
+dag() 
     { 
     init();
-    Foreach(IQIndex& I, left_) I.conj(); 
+    Foreach(IQIndex& I, left_) I.dag(); 
     if(do_condense) 
         {
-        cond.conj();
-        ucright_.conj();
+        cond.dag();
+        ucright_.dag();
         }
-    right_.conj();
+    right_.dag();
     }
 
 

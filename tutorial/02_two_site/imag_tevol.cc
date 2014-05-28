@@ -84,7 +84,7 @@ main(int argc, char* argv[])
     // Energy expectation value
     //
 
-    ITensor cpsi = conj(primed(psi));
+    ITensor cpsi = dag(primed(psi));
     Real initEn = (cpsi * H * psi).toReal();
 
     printfln("Initial energy = %.10f",initEn);
@@ -122,7 +122,7 @@ main(int argc, char* argv[])
     psi_beta.noprime();
     psi_beta *= 1./psi_beta.norm();
 
-    Real En = (conj(primed(psi_beta)) * H * psi_beta).toReal();
+    Real En = (dag(primed(psi_beta)) * H * psi_beta).toReal();
     printfln("Energy at beta = %.3f: %.10f",beta,En);
 
     ITensor A(s1),B(s2),D;

@@ -28,10 +28,10 @@ Condenser(const IQIndex& bigindex, const std::string& smallind_name)
     }
 
 void Condenser::
-conj()
+dag()
     {
-    bigind_.conj();
-    smallind_.conj();
+    bigind_.dag();
+    smallind_.dag();
     }
 
 
@@ -71,7 +71,7 @@ init(const std::string& smallind_name)
 
     smallind_ = IQIndex(smallind_name,iq,bigind_.dir(),bigind_.primeLevel());
 
-    bigind_.conj();
+    bigind_.dag();
     }
 
 void Condenser::

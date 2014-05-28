@@ -810,23 +810,35 @@ randomize(const OptSet& opts)
         }
 	}
 
-
 IQTensor& IQTensor::
 conj()
+    {
+    if(!this->isComplex()) return *this;
+
+    solo();
+    Foreach(ITensor& t, dat.nc())
+        {
+        t.conj();
+        }
+    return *this;
+    }
+
+IQTensor& IQTensor::
+dag()
     {
     if(!this->isComplex())
         {
         soloIndex();
-        is_->conj();
+        is_->dag();
         return *this;
         }
     else
         {
         solo();
-        is_->conj();
+        is_->dag();
         Foreach(ITensor& t, dat.nc())
             {
-            t.conj();
+            t.dag();
             }
         }
     return *this;
@@ -1360,7 +1372,7 @@ Dot(IQTensor x, const IQTensor& y)
     IQIndex I = commonIndex(x,y);
     if(I.dir() == dir(y.indices(),I))
         {
-        x.conj();
+        x.dag();
         }
     x *= y;
     return x.toReal();
@@ -1369,7 +1381,7 @@ Dot(IQTensor x, const IQTensor& y)
 Complex 
 BraKet(IQTensor x, const IQTensor& y)
     {
-    x.conj();
+    x.dag();
     x *= y;
     return x.toComplex();
     }

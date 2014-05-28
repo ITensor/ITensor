@@ -554,8 +554,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     IQIndex L("L",Liq,uI.dir()), R("R",Riq,vI.dir());
 
     D = IQTensor(L,R);
-    U = IQTensor(uI,conj(L));
-    V = IQTensor(conj(R),vI);
+    U = IQTensor(uI,dag(L));
+    V = IQTensor(dag(R),vI);
 
     //Load blocks into D,U, and V
     for(size_t j = 0; j < Dblock.size(); ++j)
@@ -567,8 +567,8 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     if(cplx)
         {
-        IQTensor iU(uI,conj(L));
-        IQTensor iV(conj(R),vI);
+        IQTensor iU(uI,dag(L));
+        IQTensor iV(dag(R),vI);
         for(size_t j = 0; j < Dblock.size(); ++j)
             {
             if(iUblock.at(j).norm() > 1E-14)
@@ -1027,8 +1027,8 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 
     IQIndex newmid("qlink",iq, -active.dir());
 
-    U = IQTensor(conj(active),conj(newmid));
-    D = IQTensor(prime(newmid),conj(newmid));
+    U = IQTensor(dag(active),dag(newmid));
+    D = IQTensor(prime(newmid),dag(newmid));
     for(size_t j = 0; j < blocks.size(); ++j)
         {
         D += Dblocks.at(j);
@@ -1037,7 +1037,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 
     if(cplx)
         {
-        IQTensor iU(conj(active),conj(newmid));
+        IQTensor iU(dag(active),dag(newmid));
         for(size_t j = 0; j < iblocks.size(); ++j)
             {
             if(iblocks.at(j).norm() > 1E-14)
@@ -1257,13 +1257,13 @@ eig_decomp(IQTensor T,
 
     IQIndex newmid("L",iq,-R.dir());
 
-    V = IQTensor(conj(R),conj(newmid));
+    V = IQTensor(dag(R),dag(newmid));
     Foreach(const ITensor& t, Vblocks)
         {
         V += t;
         }
 
-    D = IQTensor(prime(newmid),conj(newmid));
+    D = IQTensor(prime(newmid),dag(newmid));
     Foreach(const ITensor& t, Dblocks)
         {
         D += t;

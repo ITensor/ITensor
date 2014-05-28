@@ -98,7 +98,7 @@ idmrg(MPSt<Tensor>& psi,
 
     if(psi.A(0))
         {
-        lastV = conj(psi.A(0));
+        lastV = dag(psi.A(0));
         lastV /= lastV.norm();
         lastV.pseudoInvert(0);
         }
@@ -148,14 +148,14 @@ idmrg(MPSt<Tensor>& psi,
             {
             HL *= psi.A(j);
             HL *= H.A(j);
-            HL *= conj(primed(psi.A(j)));
+            HL *= dag(primed(psi.A(j)));
             IL *= psi.A(j);
             IL *= H.A(j);
-            IL *= conj(primed(psi.A(j)));
+            IL *= dag(primed(psi.A(j)));
 
             HR *= psi.A(N0-j+1);
             HR *= H.A(N0-j+1);
-            HR *= conj(primed(psi.A(N0-j+1)));
+            HR *= dag(primed(psi.A(N0-j+1)));
             }
         //H = HG(sw);
         swapUnitCells(H);
@@ -216,7 +216,7 @@ idmrg(MPSt<Tensor>& psi,
 
 
         //Save last center matrix
-        lastV = conj(D);
+        lastV = dag(D);
         lastV /= lastV.norm();
         lastV.pseudoInvert(0);
 
@@ -238,14 +238,14 @@ idmrg(MPSt<Tensor>& psi,
             {
             HL *= psi.A(j);
             HL *= H.A(j);
-            HL *= conj(primed(psi.A(j)));
+            HL *= dag(primed(psi.A(j)));
             IL *= psi.A(j);
             IL *= H.A(j);
-            IL *= conj(primed(psi.A(j)));
+            IL *= dag(primed(psi.A(j)));
 
             HR *= psi.A(N0-j+1);
             HR *= H.A(N0-j+1);
-            HR *= conj(primed(psi.A(N0-j+1)));
+            HR *= dag(primed(psi.A(N0-j+1)));
             }
         swapUnitCells(H);
 
@@ -316,7 +316,7 @@ idmrg(MPSt<Tensor>& psi,
       DMRGObserver<Tensor>& obs,
       const OptSet& opts)
     {
-    Tensor IL(conj(H.A(H.N()+1)));
+    Tensor IL(dag(H.A(H.N()+1)));
     return idmrg(psi,H,IL,sweeps,obs,opts);
     }
 

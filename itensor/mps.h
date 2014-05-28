@@ -447,7 +447,7 @@ projectOp(const MPSt<Tensor>& psi, int j, Direction dir,
         }
     nE = (E ? E*psi.A(j) : psi.A(j));
     nE *= X; 
-    nE *= conj(prime(psi.A(j)));
+    nE *= dag(prime(psi.A(j)));
     }
 
 
@@ -530,7 +530,7 @@ checkOrtho(const MPSt<Tensor>& psi,
     IndexT;
 
     IndexT link = (left ? rightLinkInd(psi,i) : leftLinkInd(psi,i));
-    Tensor rho = psi.A(i) * conj(prime(psi.A(i),link,4));
+    Tensor rho = psi.A(i) * dag(prime(psi.A(i),link,4));
     Tensor Delta = makeKroneckerDelta(link,4);
     Tensor Diff = rho - Delta;
 
@@ -603,12 +603,12 @@ psiphiC(const MPSType& psi, const MPSType& phi)
 
     IndexT l1 = linkInd(psi,1);
     Tensor L = phi.A(1);
-    if(l1) L *= conj(prime(psi.A(1),l1)); 
-    else   L *= conj(psi.A(1));
+    if(l1) L *= dag(prime(psi.A(1),l1)); 
+    else   L *= dag(psi.A(1));
 
     for(int i = 2; i < N; ++i) 
         { 
-        L = L * phi.A(i) * conj(prime(psi.A(i),Link)); 
+        L = L * phi.A(i) * dag(prime(psi.A(i),Link)); 
         }
     L = L * phi.A(N);
 

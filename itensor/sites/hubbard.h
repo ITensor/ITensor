@@ -180,7 +180,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
                UD(s(4)),
                UDP(sP(4));
 
-    IQTensor Op(conj(s),sP);
+    IQTensor Op(dag(s),sP);
 
     if(opname == "TReverse")
         {

@@ -75,7 +75,7 @@ main(int argc, char* argv[])
     // Expectation values
     //
 
-    ITensor cpsi = conj(primed(psi));
+    ITensor cpsi = dag(primed(psi));
 
     Real zz = (cpsi * Sz * psi).toReal();
     Real xx = (cpsi * Sx * psi).toReal();

@@ -67,10 +67,10 @@ A.randomize();
 B = IQTensor(L1(4),L2(2));
 B.randomize();
 
-C = IQTensor(conj(L1)(5),prime(L1)(5));
+C = IQTensor(dag(L1)(5),prime(L1)(5));
 C.randomize();
 
-D = IQTensor(conj(L1)(3),S1(1),prime(L1)(3),prime(L1,2)(5));
+D = IQTensor(dag(L1)(3),S1(1),prime(L1)(3),prime(L1,2)(5));
 D.randomize();
 
 SECTION("Boolean")
@@ -176,10 +176,10 @@ SECTION("SymmetricDiag11")
     IQTensor UD(U);
     UD.prime(L1);
     UD /= D;
-    ITensor diff = (conj(UD)*U - C).toITensor();
+    ITensor diff = (dag(UD)*U - C).toITensor();
     CHECK(diff.norm() < 1E-10);
 
-    IQTensor set1(conj(mid));
+    IQTensor set1(dag(mid));
     set1(mid(mink)) = 1;
     U *= set1;
     CHECK_CLOSE(D(mid(mink)),Dot(prime(U),C*U),1E-10);
@@ -213,7 +213,7 @@ SECTION("ToReal")
 
 SECTION("DotTest")
     {
-    Real dotval1 = sqrt( Dot(conj(B),B) );
+    Real dotval1 = sqrt( Dot(dag(B),B) );
     //Dot should auto-fix arrows
     Real dotval2 = sqrt( Dot(B,B) );
     Real nval   = B.norm();
@@ -253,7 +253,7 @@ SECTION("Trace")
     Real f = -Global::random();
     D *= f;
 
-    IQTensor Dt = trace(D,conj(L1),prime(L1,2));
+    IQTensor Dt = trace(D,dag(L1),prime(L1,2));
 
     for(int j2 = 1; j2 <= S1.m(); ++j2)
     for(int j1 = 1; j1 <= L1.m(); ++j1)
@@ -261,7 +261,7 @@ SECTION("Trace")
         Real val = 0;
         for(int k1 = 1; k1 <= L1.m(); ++k1)
             {
-            val += D(conj(L1)(k1),S1(j2),prime(L1)(j1),prime(L1,2)(k1));
+            val += D(dag(L1)(k1),S1(j2),prime(L1)(j1),prime(L1,2)(k1));
             }
         CHECK_CLOSE(val,Dt(S1(j2),prime(L1)(j1)),1E-10);
         }
@@ -292,11 +292,11 @@ SECTION("Randomize")
 
 SECTION("RealImagPart")
     {
-    IQTensor Z(conj(S1),prime(S1));
+    IQTensor Z(dag(S1),prime(S1));
     Z(S1(1),prime(S1)(1)) = +1;
     Z(S1(2),prime(S1)(2)) = -1;
 
-    IQTensor X(conj(S1),prime(S1));
+    IQTensor X(dag(S1),prime(S1));
     X(S1(1),prime(S1)(2)) = 1;
     X(S1(2),prime(S1)(1)) = 1;
 
@@ -310,9 +310,9 @@ SECTION("RealImagPart")
     CHECK_CLOSE(R.norm(),0,1E-5);
     CHECK_CLOSE(I.norm(),0,1E-5);
 
-    //Test conj:
+    //Test hc:
 
-    ZiX.conj();
+    ZiX.dag();
     R = realPart(ZiX);
     I = imagPart(ZiX);
     R -= Z;
@@ -323,11 +323,11 @@ SECTION("RealImagPart")
 
 SECTION("ComplexMult")
     {
-    IQTensor Z(conj(S1),prime(S1));
+    IQTensor Z(dag(S1),prime(S1));
     Z(S1(1),prime(S1)(1)) = +1;
     Z(S1(2),prime(S1)(2)) = -1;
 
-    IQTensor Y(conj(S1),prime(S1));
+    IQTensor Y(dag(S1),prime(S1));
     Y(S1(1),prime(S1)(2)) =  1;
     Y(S1(2),prime(S1)(1)) = -1;
     Y *= Complex_i;
@@ -343,11 +343,11 @@ SECTION("ComplexMult")
 
 SECTION("ComplexAdd")
     {
-    IQTensor Z(conj(S1),prime(S1));
+    IQTensor Z(dag(S1),prime(S1));
     Z(S1(1),prime(S1)(1)) = +1;
     Z(S1(2),prime(S1)(2)) = -1;
 
-    IQTensor X(conj(S1),prime(S1));
+    IQTensor X(dag(S1),prime(S1));
     X(S1(1),prime(S1)(2)) = +1;
     X(S1(2),prime(S1)(1)) = +1;
 
@@ -370,7 +370,7 @@ SECTION("RandomizeTest")
 
 SECTION("Test_normLogNum")
     {
-    IQTensor Z(conj(S1),prime(S1));
+    IQTensor Z(dag(S1),prime(S1));
     ITensor blk1(s1u(1),prime(s1u)(1)),
             blk2(s1d(1),prime(s1d)(1));
     blk1 *= 0.1234;
@@ -385,7 +385,7 @@ SECTION("Test_normLogNum")
 
 SECTION("BigNorm")
     {
-    IQTensor Z(conj(S1),prime(S1));
+    IQTensor Z(dag(S1),prime(S1));
     ITensor blk1(s1u(1),prime(s1u)(1)),
             blk2(s1d(1),prime(s1d)(1));
     blk1 *= 0.1234;

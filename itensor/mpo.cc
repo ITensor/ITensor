@@ -312,9 +312,9 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
         denmatDecomp(clust, res.Anc(i), nfork,Fromleft,opts);
 
         IndexT mid = commonIndex(res.A(i),nfork,Link);
-        mid.conj();
+        mid.dag();
         midsize[i] = mid.m();
-        res.Anc(i+1) = Tensor(mid,conj(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
+        res.Anc(i+1) = Tensor(mid,dag(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
         }
 
     nfork = clust * A.A(N) * B.A(N);
@@ -402,7 +402,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
         denmatDecomp(clust, res.Anc(i), nfork,Fromleft,opts);
         IndexT mid = commonIndex(res.A(i),nfork,Link);
         //assert(mid.dir() == In);
-        mid.conj();
+        mid.dag();
         midsize[i] = mid.m();
         maxdim = max(midsize[i],maxdim);
         assert(rightLinkInd(res,i+1).dir() == Out);
@@ -461,7 +461,7 @@ exactApplyMPO(const MPSt<Tensor>& x,
 
         //Apply combiner to product tensors
         res.Anc(j) = res.A(j) * comb; //m^3 k^3 d
-        res.Anc(j+1) = conj(comb) * res.A(j+1); //m^3 k^3 d
+        res.Anc(j+1) = dag(comb) * res.A(j+1); //m^3 k^3 d
         }
     res.mapprime(1,0,Site);
     res.orthogonalize(opts);
@@ -505,10 +505,10 @@ fitApplyMPO(Real fac,
 
     vector<Tensor> BK(N+2);
 
-    BK.at(N) = origPsi.A(N)*K.A(N)*conj(prime(res.A(N)));
+    BK.at(N) = origPsi.A(N)*K.A(N)*dag(prime(res.A(N)));
     for(int n = N-1; n > 2; --n)
         {
-        BK.at(n) = BK.at(n+1)*origPsi.A(n)*K.A(n)*conj(prime(res.A(n)));
+        BK.at(n) = BK.at(n+1)*origPsi.A(n)*K.A(n)*dag(prime(res.A(n)));
         }
 
     res.position(1);
@@ -542,9 +542,9 @@ fitApplyMPO(Real fac,
                 }
 
             if(ha == 1)
-                BK.at(b) = lwfK * conj(prime(res.A(b)));
+                BK.at(b) = lwfK * dag(prime(res.A(b)));
             else
-                BK.at(b+1) = rwfK * conj(prime(res.A(b+1)));
+                BK.at(b+1) = rwfK * dag(prime(res.A(b+1)));
             }
         }
     }
@@ -593,12 +593,12 @@ fitApplyMPO(Real mpsfac,
     vector<Tensor> B(N+2),
                    BK(N+2);
 
-    B.at(N) = psiA.A(N)*conj(prime(res.A(N),Link));
-    BK.at(N) = psiB.A(N)*K.A(N)*conj(prime(res.A(N)));
+    B.at(N) = psiA.A(N)*dag(prime(res.A(N),Link));
+    BK.at(N) = psiB.A(N)*K.A(N)*dag(prime(res.A(N)));
     for(int n = N-1; n > 2; --n)
         {
-        B.at(n) = B.at(n+1)*psiA.A(n)*conj(prime(res.A(n),Link));
-        BK.at(n) = BK.at(n+1)*psiB.A(n)*K.A(n)*conj(prime(res.A(n)));
+        B.at(n) = B.at(n+1)*psiA.A(n)*dag(prime(res.A(n),Link));
+        BK.at(n) = BK.at(n+1)*psiB.A(n)*K.A(n)*dag(prime(res.A(n)));
         }
 
     res.position(1);
@@ -622,22 +622,22 @@ fitApplyMPO(Real mpsfac,
 
             if(ha == 1)
                 {
-                B.at(b) = lwf * conj(prime(res.A(b),Link));
-                BK.at(b) = lwfK * conj(prime(res.A(b)));
+                B.at(b) = lwf * dag(prime(res.A(b),Link));
+                BK.at(b) = lwfK * dag(prime(res.A(b)));
                 }
             else
                 {
-                B.at(b+1) = rwf * conj(prime(res.A(b+1),Link));
-                BK.at(b+1) = rwfK * conj(prime(res.A(b+1)));
+                B.at(b+1) = rwf * dag(prime(res.A(b+1),Link));
+                BK.at(b+1) = rwfK * dag(prime(res.A(b+1)));
                 }
             }
         }
 
     Tensor olp = B.at(3);
     olp *= psiA.A(2);
-    olp *= conj(prime(res.A(2),Link));
+    olp *= dag(prime(res.A(2),Link));
     olp *= psiA.A(1);
-    olp *= conj(prime(res.A(1),Link));
+    olp *= dag(prime(res.A(1),Link));
 
     return olp.toComplex().real();
     }
@@ -772,12 +772,12 @@ applyExpH(const MPSt<Tensor>& psi,
                    B(N+2),
                    BH(N+2);
 
-    B.at(N) = psi.A(N)*conj(prime(psi.A(N),Link));
-    BH.at(N) = psi.A(N)*H.A(N)*conj(prime(psi.A(N)));
+    B.at(N) = psi.A(N)*dag(prime(psi.A(N),Link));
+    BH.at(N) = psi.A(N)*H.A(N)*dag(prime(psi.A(N)));
     for(int n = N-1; n > 2; --n)
         {
-        B.at(n) = B.at(n+1)*psi.A(n)*conj(prime(psi.A(n),Link));
-        BH.at(n) = BH.at(n+1)*psi.A(n)*H.A(n)*conj(prime(psi.A(n)));
+        B.at(n) = B.at(n+1)*psi.A(n)*dag(prime(psi.A(n),Link));
+        BH.at(n) = BH.at(n+1)*psi.A(n)*H.A(n)*dag(prime(psi.A(n)));
         }
 
     lastB = B;
@@ -811,17 +811,17 @@ applyExpH(const MPSt<Tensor>& psi,
                     }
                 else //dn
                     {
-                    lwf = (B.at(b-1) ? B.at(b-1)*conj(prime(psi.A(b),Link)) : conj(prime(psi.A(b),Link)));
-                    rwf = (B.at(b+2) ? B.at(b+2)*conj(prime(psi.A(b+1),Link)) : conj(prime(psi.A(b+1),Link)));
+                    lwf = (B.at(b-1) ? B.at(b-1)*dag(prime(psi.A(b),Link)) : dag(prime(psi.A(b),Link)));
+                    rwf = (B.at(b+2) ? B.at(b+2)*dag(prime(psi.A(b+1),Link)) : dag(prime(psi.A(b+1),Link)));
 
-                    lwfH = (BH.at(b-1) ? BH.at(b-1)*conj(prime(last.A(b))) : conj(prime(last.A(b))));
+                    lwfH = (BH.at(b-1) ? BH.at(b-1)*dag(prime(last.A(b))) : dag(prime(last.A(b))));
                     lwfH *= H.A(b);
-                    rwfH = (BH.at(b+2) ? BH.at(b+2)*conj(prime(last.A(b+1))) : conj(prime(last.A(b+1))));
+                    rwfH = (BH.at(b+2) ? BH.at(b+2)*dag(prime(last.A(b+1))) : dag(prime(last.A(b+1))));
                     rwfH *= H.A(b+1);
                     }
 
                 Tensor wf = noprime(lwf*rwf) + mpofac*noprime(lwfH*rwfH);
-                if(!up) wf.conj();
+                if(!up) wf.dag();
 
                 res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
 
@@ -829,13 +829,13 @@ applyExpH(const MPSt<Tensor>& psi,
                     {
                     if(ha == 1)
                         {
-                        B.at(b) = lwf * conj(prime(res.A(b),Link));
-                        BH.at(b) = lwfH * conj(prime(res.A(b)));
+                        B.at(b) = lwf * dag(prime(res.A(b),Link));
+                        BH.at(b) = lwfH * dag(prime(res.A(b)));
                         }
                     else
                         {
-                        B.at(b+1) = rwf * conj(prime(res.A(b+1),Link));
-                        BH.at(b+1) = rwfH * conj(prime(res.A(b+1)));
+                        B.at(b+1) = rwf * dag(prime(res.A(b+1),Link));
+                        BH.at(b+1) = rwfH * dag(prime(res.A(b+1)));
                         }
                     }
                 else //dn
@@ -905,10 +905,10 @@ putMPOLinks(IQMPO& W, const OptSet& opts)
     W.Anc(1) *= links.at(1)(1);
     for(int b = 2; b < N; ++b)
         {
-        W.Anc(b) *= conj(links.at(b-1)(1));
+        W.Anc(b) *= dag(links.at(b-1)(1));
         W.Anc(b) *= links.at(b)(1);
         }
-    W.Anc(N) *= conj(links.at(N-1)(1));
+    W.Anc(N) *= dag(links.at(N-1)(1));
     }
 
 template <class Tensor>

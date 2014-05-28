@@ -397,8 +397,8 @@ new_tensors(std::vector<ITensor>& A_)
         { a[i] = Index(nameint("a",i)); }
     A_[1] = ITensor(sites()(1),a[1]);
     for(int i = 2; i < N_; i++)
-        { A_[i] = ITensor(conj(a[i-1]),sites()(i),a[i]); }
-    A_[N_] = ITensor(conj(a[N_-1]),sites()(N_));
+        { A_[i] = ITensor(dag(a[i-1]),sites()(i),a[i]); }
+    A_[N_] = ITensor(dag(a[N_-1]),sites()(N_));
     }
 template
 void MPSt<ITensor>::new_tensors(std::vector<ITensor>& A_);
@@ -468,8 +468,8 @@ init_tensors(std::vector<IQTensor>& A_, const InitState& initState)
 
     A_[1] = IQTensor(initState(1),a[1](1));
     for(int i = 2; i < N_; ++i)
-        A_[i] = IQTensor(conj(a[i-1])(1),initState(i),a[i](1)); 
-    A_[N_] = IQTensor(conj(a[N_-1])(1),initState(N_));
+        A_[i] = IQTensor(dag(a[i-1])(1),initState(i),a[i](1)); 
+    A_[N_] = IQTensor(dag(a[N_-1])(1),initState(N_));
     }
 template
 void MPSt<IQTensor>::
@@ -512,14 +512,14 @@ plussers(const IQIndex& l1, const IQIndex& l2,
         iq.push_back(IndexQN(jj,x.qn));
         }
     sumind = IQIndex(sumind.rawname(),iq,sumind.dir(),sumind.primeLevel());
-    first = IQTensor(conj(l1),sumind);
+    first = IQTensor(dag(l1),sumind);
     Foreach(const Index& il1, l1.indices())
         {
         Index s1 = l1map[il1];
         ITensor t(il1,s1,1.0);
         first += t;
         }
-    second = IQTensor(conj(l2),sumind);
+    second = IQTensor(dag(l2),sumind);
     Foreach(const Index& il2, l2.indices())
         {
         Index s2 = l2map[il2];
@@ -550,8 +550,8 @@ plussers(const IQIndex& l1, const IQIndex& l2,
 //    vector<IQTensor> nA(N+1);
 //    nA[1] = IQTensor(si(1),nlinks[1]);
 //    for(int j = 2; j < N_; ++j)
-//        nA[j] = IQTensor(conj(nlinks[j-1]),si(j),nlinks[j]);
-//    nA[N] = IQTensor(conj(nlinks[N-1]),si(N));
+//        nA[j] = IQTensor(dag(nlinks[j-1]),si(j),nlinks[j]);
+//    nA[N] = IQTensor(dag(nlinks[N-1]),si(N));
 //
 //    for(int j = 1; j <= N_; ++j)
 //        {
@@ -588,10 +588,10 @@ plussers(const IQIndex& l1, const IQIndex& l2,
 //    Anc(1) = A(1) * first[1] + other.A(1) * second[1];
 //    for(int i = 2; i < N_; ++i)
 //        {
-//        Anc(i) = conj(first[i-1]) * A(i) * first[i] 
-//                  + conj(second[i-1]) * other.A(i) * second[i];
+//        Anc(i) = dag(first[i-1]) * A(i) * first[i] 
+//                  + dag(second[i-1]) * other.A(i) * second[i];
 //        }
-//    Anc(N) = conj(first[N-1]) * A(N) + conj(second[N-1]) * other.A(N);
+//    Anc(N) = dag(first[N-1]) * A(N) + dag(second[N-1]) * other.A(N);
 //
 //    noprimelink();
 //
@@ -669,10 +669,10 @@ addAssumeOrth(const MPSt<Tensor>& R,
     Anc(1) = A(1) * first[1] + R.A(1) * second[1];
     for(int i = 2; i < N_; ++i)
         {
-        Anc(i) = conj(first[i-1]) * A(i) * first[i] 
-                     + conj(second[i-1]) * R.A(i) * second[i];
+        Anc(i) = dag(first[i-1]) * A(i) * first[i] 
+                     + dag(second[i-1]) * R.A(i) * second[i];
         }
-    Anc(N_) = conj(first[N_-1]) * A(N_) + conj(second[N_-1]) * R.A(N_);
+    Anc(N_) = dag(first[N_-1]) * A(N_) + dag(second[N_-1]) * R.A(N_);
 
     noprimelink();
 
@@ -790,7 +790,7 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const OptSet& opts)
     //Older density matrix implementation
     //Doesn't flip arrows appropriately
 
-    //Tensor rho = prime(L,bnd)*conj(L);
+    //Tensor rho = prime(L,bnd)*dag(L);
 
     //Tensor U;
     //Tensor D;
@@ -802,8 +802,8 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const OptSet& opts)
     //D.mapElems(Sqrt());
 
     //const
-    //Tensor siRho = conj(U)*Di*prime(U),
-    //       sRho = conj(U)*D*prime(U);
+    //Tensor siRho = dag(U)*Di*prime(U),
+    //       sRho = dag(U)*D*prime(U);
 
     //L *= siRho;
     //L.noprime();
@@ -950,7 +950,7 @@ makeKroneckerDelta(const IQIndex& I, int plev)
 //    setSite(i);
 //    IndexT link = (left ? rightLinkInd(*this,i) : leftLinkInd(*this,i));
 //
-//    Tensor rho = A(i) * conj(prime(A(i),link,4));
+//    Tensor rho = A(i) * dag(prime(A(i),link,4));
 //
 //    Tensor Delta = makeKroneckerDelta(link,4);
 //
@@ -1360,7 +1360,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
 
             //Set Site indices of A[s] and its previous Link Index
             block = A[s];
-            if(S != start) block *= conj(comp);
+            if(S != start) block *= dag(comp);
             block *= Index(sites.si(s))(n);
             if(is_mpo) block *= Index(sites.siP(s))(u);
 
@@ -1430,7 +1430,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                 IndexSet<Index> newinds(block.indices());
                 if(is_mpo) 
                     {
-                    newinds.addindex(conj(sites.si(s)(n).indexqn()));
+                    newinds.addindex(dag(sites.si(s)(n).indexqn()));
                     newinds.addindex(sites.siP(s)(u).indexqn());
                     }
                 else 
@@ -1493,19 +1493,19 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
             }
         if(S == start)
             {
-            qA.at(s) = (is_mpo ? IQTensor(conj(sites.si(s)),sites.siP(s),linkind.at(s)) 
+            qA.at(s) = (is_mpo ? IQTensor(dag(sites.si(s)),sites.siP(s),linkind.at(s)) 
                             : IQTensor(sites.si(s),linkind[s]));
             }
         else 
         if(S == Send)
             {
-            qA.at(s) = (is_mpo ? IQTensor(conj(linkind[sprev]),conj(sites.si(s)),sites.siP(s)) 
-                            : IQTensor(conj(linkind[sprev]),sites.si(s)));
+            qA.at(s) = (is_mpo ? IQTensor(dag(linkind[sprev]),dag(sites.si(s)),sites.siP(s)) 
+                            : IQTensor(dag(linkind[sprev]),sites.si(s)));
             }
         else
             {
-            qA.at(s) = (is_mpo ? IQTensor(conj(linkind[sprev]),conj(sites.si(s)),sites.siP(s),linkind[s]) 
-                            : IQTensor(conj(linkind[sprev]),sites.si(s),linkind[s]));
+            qA.at(s) = (is_mpo ? IQTensor(dag(linkind[sprev]),dag(sites.si(s)),sites.siP(s),linkind[s]) 
+                            : IQTensor(dag(linkind[sprev]),sites.si(s),linkind[s]));
             }
 
         Foreach(const ITensor& nb, nblock) 
@@ -1582,7 +1582,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
             //Set Site indices of A_[s] and its previous Link Index
             block = A_[s];
-            if(s != 1) block *= conj(comp);
+            if(s != 1) block *= dag(comp);
             block *= si(s)(n);
             if(is_mpo) block *= siP(s)(u);
 
@@ -1644,7 +1644,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
                 if(is_mpo) 
                 {
-                block.addindex(conj(si(s)(n).index()));
+                block.addindex(dag(si(s)(n).index()));
                 block.addindex(siP(s)(u).index());
                 }
                 else { block.addindex(si(s)(n).index()); }
@@ -1704,17 +1704,17 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
         }
         if(s == 1)
         {
-            iqpsi.Anc(s) = (is_mpo ? IQTensor(conj(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
+            iqpsi.Anc(s) = (is_mpo ? IQTensor(dag(si(s)),siP(s),linkind[s]) : IQTensor(si(s),linkind[s]));
         }
         else if(s == N)
         {
-            iqpsi.Anc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s)) 
-                                    : IQTensor(conj(linkind[s-1]),si(s)));
+            iqpsi.Anc(s) = (is_mpo ? IQTensor(dag(linkind[s-1]),dag(si(s)),siP(s)) 
+                                    : IQTensor(dag(linkind[s-1]),si(s)));
         }
         else
         {
-            iqpsi.Anc(s) = (is_mpo ? IQTensor(conj(linkind[s-1]),conj(si(s)),siP(s),linkind[s]) 
-                                    : IQTensor(conj(linkind[s-1]),si(s),linkind[s]));
+            iqpsi.Anc(s) = (is_mpo ? IQTensor(dag(linkind[s-1]),dag(si(s)),siP(s),linkind[s]) 
+                                    : IQTensor(dag(linkind[s-1]),si(s),linkind[s]));
         }
 
         Foreach(const ITensor& nb, nblock) { iqpsi.Anc(s) += nb; } nblock.clear();
@@ -1857,10 +1857,10 @@ fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit)
     if(psi_to_fit.N() != N) 
         Error("Wavefunctions must have same number of sites.");
 
-    Tensor A = psi_to_fit.A(N) * conj(prime(psi_basis.A(N),Link));
+    Tensor A = psi_to_fit.A(N) * dag(prime(psi_basis.A(N),Link));
     for(int n = N-1; n > 1; --n)
         {
-        A *= conj(prime(psi_basis.A(n),Link));
+        A *= dag(prime(psi_basis.A(n),Link));
         A *= psi_to_fit.A(n);
         }
     A = psi_to_fit.A(1) * A;

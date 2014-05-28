@@ -189,7 +189,7 @@ operator()(const vector<Tensor>& psi) const
     RH.at(j-1) = psi.at(s(j)) * H_.A(ps(pj--)); 
     if(nsite.at(j) == 2)
         RH.at(j-1) *= H_.A(ps(pj--));
-    RH.at(j-1) *= conj(prime(psi.at(s(j))));
+    RH.at(j-1) *= dag(prime(psi.at(s(j))));
 
     for(--j; j > 1; --j)
         {
@@ -197,7 +197,7 @@ operator()(const vector<Tensor>& psi) const
         RH.at(j-1) *= H_.A(ps(pj--));
         if(nsite.at(j) == 2)
             RH.at(j-1) *= H_.A(ps(pj--));
-        RH.at(j-1) *= conj(prime(psi.at(s(j))));
+        RH.at(j-1) *= dag(prime(psi.at(s(j))));
         }
 
     pj = 1;
@@ -208,8 +208,8 @@ operator()(const vector<Tensor>& psi) const
         dpsi.at(s(1)) *= H_.A(ps(pj++));
 
     //Use partial result to build LH
-    LH.at(2) = dpsi.at(s(1)) * conj(prime(psi.at(s(1))));
-    rho.at(2) = psi.at(s(1)) * conj(prime(psi.at(s(1)),Link));
+    LH.at(2) = dpsi.at(s(1)) * dag(prime(psi.at(s(1))));
+    rho.at(2) = psi.at(s(1)) * dag(prime(psi.at(s(1)),Link));
 
     //Continue applying H to psi
     dpsi.at(s(1)) *= RH.at(1);
@@ -247,9 +247,9 @@ operator()(const vector<Tensor>& psi) const
         //Use partial dB result to build LH
         if(j < N)
             {
-            LH.at(j+1) = dB * conj(prime(B));
+            LH.at(j+1) = dB * dag(prime(B));
             rho[j+1] = rho[j] * B;
-            rho[j+1] *= conj(prime(B,Link));
+            rho[j+1] *= dag(prime(B,Link));
             }
 
         //Finish applying H to psi
@@ -289,32 +289,32 @@ operator()(const vector<Tensor>& psi) const
             //B is far from being left/right ortho)
             //Perhaps do first pass using B then if 
             //B*dB is not small compute nB and switch to it.
-            Tensor olap = prime(B,plink)*conj(B);
+            Tensor olap = prime(B,plink)*dag(B);
             Tensor U;
             Tensor D;
             diagHermitian(olap,U,D);
             D.mapElems(SqrtInv());
 
-            //Tensor nB = (prime(U)*D*conj(U))*B;
-            Tensor nB = (D*conj(U))*B;
+            //Tensor nB = (prime(U)*D*dag(U))*B;
+            Tensor nB = (D*dag(U))*B;
             nB.noprime(Link);
 
             for(int pass = 1; pass <= Npass; ++pass)
                 {
                 //Compute component of dB along B
-                Tensor comp = nB*(conj(nB)*prime(dB,plink));
+                Tensor comp = nB*(dag(nB)*prime(dB,plink));
                 comp.noprime();
                 dB -= comp;
                 if(pass == 1) continue; //always do at least 2
 
-                const Real nrm = (conj(nB)*prime(dB,plink)).norm();
+                const Real nrm = (dag(nB)*prime(dB,plink)).norm();
                 if(nrm < 1E-11) break;
 
                 if(pass == Npass)
                     {
                     printfln("pass %d: psi%.02d*dpsi%.02d = %.3E", pass,j,j,nrm);
                     //const IndexT nlink = commonIndex(D,U);
-                    //Tensor nOlap = prime(nB,nlink)*conj(nB);
+                    //Tensor nOlap = prime(nB,nlink)*dag(nB);
                     //PrintData(nOlap);
                     //PAUSE
                     /*
@@ -339,17 +339,17 @@ operator()(const vector<Tensor>& psi) const
                 if(I == plink) continue;
                 Bp.prime(I);
                 }
-            const Tensor P = Bp*conj(B); //contract over plink
+            const Tensor P = Bp*dag(B); //contract over plink
             Tensor U;
             Tensor D;
             diagHermitian(P,U,D);
             Tensor sD(D);
             sD.mapElems(SwapOneZero());
-            dB = prime(U)*sD*conj(U)*dB;
+            dB = prime(U)*sD*dag(U)*dB;
             dB.noprime();
 
             const
-            Real nrm = (conj(B)*prime(dB,plink)).norm();
+            Real nrm = (dag(B)*prime(dB,plink)).norm();
             printfln("psi%.02d*dpsi%.02d = %.3E",j,j,nrm);
 
             if(nrm > 1E-12)
@@ -363,11 +363,11 @@ operator()(const vector<Tensor>& psi) const
                 for(int pass = 1; pass <= Npass; ++pass)
                     {
                     //Compute component of dB along B
-                    Tensor comp = B*(conj(B)*prime(dB,plink));
+                    Tensor comp = B*(dag(B)*prime(dB,plink));
                     comp.noprime();
                     dB -= comp;
                     const
-                    Real nrm = (conj(B)*prime(dB,plink)).norm();
+                    Real nrm = (dag(B)*prime(dB,plink)).norm();
                     if(pass == Npass)
                         printfln("pass %d: psi%.02d*dpsi%.02d = %.3E",pass,j,j,nrm);
                     if(pass > 1 && nrm < 1E-10) break;
@@ -378,7 +378,7 @@ operator()(const vector<Tensor>& psi) const
                     }
 
                     const
-                    Real nrm = (conj(B)*prime(dB,plink)).norm();
+                    Real nrm = (dag(B)*prime(dB,plink)).norm();
                     printfln("psi%.02d*dpsi%.02d = %.3E",j,j,nrm);
                 }
             }
@@ -391,7 +391,7 @@ operator()(const vector<Tensor>& psi) const
     ////Orthogonalize
     //IndexT plink = commonIndex(B,psi[s(j-1)]);
     ////Define P = B^\dag B
-    //Tensor P = conj(prime(B,plink))*prime(B);
+    //Tensor P = dag(prime(B,plink))*prime(B);
     ////Apply (1-P) to dB (by computing dB = dB - P*dB)
     //P *= dB;
     //P.noprime();
@@ -463,7 +463,7 @@ ungroupMPS(vector<Tensor>& psig,
             else
                 {
                 IndexT l = commonIndex(bond,psi.A(j-d));
-                psi.Anc(j) = Tensor(conj(l),sj);
+                psi.Anc(j) = Tensor(dag(l),sj);
                 }
 
             Tensor D;
@@ -539,13 +539,13 @@ class OrthVec
     void
     orth_(const IndexT& lnk, Tensor& B) const
         {
-        const Tensor olap = prime(B,lnk)*conj(B);
+        const Tensor olap = prime(B,lnk)*dag(B);
         Tensor U;
         Tensor D;
         diagHermitian(olap,U,D);
         D.mapElems(SqrtInv());
 
-        B = (prime(U)*D*conj(U))*B;
+        B = (prime(U)*D*dag(U))*B;
         B.noprime(Link);
         }
 
@@ -934,7 +934,7 @@ expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
             L = t;
             for(int n = 1; n <= nsite; ++n)
                 L *= H.A(s++);
-            L *= conj(prime(t));
+            L *= dag(prime(t));
             }
         else
         if(j == N)
@@ -942,14 +942,14 @@ expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
             L *= t;
             for(int n = 1; n <= nsite; ++n)
                 L *= H.A(s++);
-            return Dot(conj(prime(t)),L);
+            return Dot(dag(prime(t)),L);
             }
         else
             {
             L *= t;
             for(int n = 1; n <= nsite; ++n)
                 L *= H.A(s++);
-            L *= conj(prime(t));
+            L *= dag(prime(t));
             }
         }
     return NAN;
@@ -980,18 +980,18 @@ norm(const vector<Tensor>& psi)
         if(j == 1)
             {
             L = t;
-            L *= conj(prime(t,Link));
+            L *= dag(prime(t,Link));
             }
         else
         if(j == N)
             {
             L *= t;
-            return std::sqrt(fabs(Dot(conj(prime(t,Link)),L)));
+            return std::sqrt(fabs(Dot(dag(prime(t,Link)),L)));
             }
         else
             {
             L *= t;
-            L *= conj(prime(t,Link));
+            L *= dag(prime(t,Link));
             }
         }
     return NAN;

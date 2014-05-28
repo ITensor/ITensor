@@ -76,7 +76,7 @@ CHECK_EQUAL(div(Phi0),Zero);
 
 phi0 = Phi0.toITensor();
 
-L = IQTensor(L1,S1,conj(Mid10));
+L = IQTensor(L1,S1,dag(Mid10));
     {
     ITensor zuu(l10,s1u,mid10u);
     zuu.randomize();
@@ -205,8 +205,8 @@ SECTION("CSVDNorm")
 
     svd(phi0,l,v,r);
     Index nmr = commonIndex(r,v,Link);
-    //ITensor rhoRsvd1 = r * conj(primeind(r,rr));
-    //ITensor rhoRsvd2 = r * conj(primeind(r,nmr));
+    //ITensor rhoRsvd1 = r * dag(primeind(r,rr));
+    //ITensor rhoRsvd2 = r * dag(primeind(r,nmr));
     //PrintDat(r);
     //PrintDat(rhoRsvd1);
     //PrintDat(rhoRsvd2);
@@ -226,7 +226,7 @@ SECTION("CSVDNorm")
 
     //PrintDat(v * r);
     //ITensor ur = v*r; 
-    //ITensor rhoR = ur * conj(primeind(ur,rr));
+    //ITensor rhoR = ur * dag(primeind(ur,rr));
     //PrintDat(rhoR);
 
     }
@@ -418,23 +418,23 @@ SECTION("Diagonalization")
     ITensor D;
     diagHermitian(M,U,D);
 
-    CHECK((M-(prime(U)*D*conj(U))).norm() < 1E-14);
+    CHECK((M-(prime(U)*D*dag(U))).norm() < 1E-14);
 
     //////////////////////////
 
-    IQTensor T(conj(S2)(1),conj(S1)(2),prime(S1)(1),prime(S2)(2));
+    IQTensor T(dag(S2)(1),dag(S1)(2),prime(S1)(1),prime(S2)(2));
     T.randomize();
     T = T + swapPrime(T,0,1);
     T *= 0.5;
-    //IQTensor T(conj(S1),prime(S1));
-    //T(conj(S1)(1),prime(S1)(1)) = 1;
-    //T(conj(S1)(2),prime(S1)(2)) = -1;
+    //IQTensor T(dag(S1),prime(S1));
+    //T(dag(S1)(1),prime(S1)(1)) = 1;
+    //T(dag(S1)(2),prime(S1)(2)) = -1;
 
     IQTensor UU;
     IQTensor DD;
     diagHermitian(T,UU,DD);
 
-    CHECK((T-(prime(UU)*DD*conj(UU))).norm() < 1E-14);
+    CHECK((T-(prime(UU)*DD*dag(UU))).norm() < 1E-14);
     }
 
 SECTION("ComplexDiagonalization")
@@ -445,35 +445,35 @@ SECTION("ComplexDiagonalization")
     Mr.randomize();
     Mi.randomize();
     ITensor M = Complex_1*Mr + Complex_i*Mi;
-    M = M + conj(swapPrime(M,0,1));
+    M = M + dag(swapPrime(M,0,1));
     M *= 0.5;
 
     ITensor U;
     ITensor D;
     diagHermitian(M,U,D);
 
-    CHECK((M-(prime(U)*D*conj(U))).norm() < 1E-14);
+    CHECK((M-(prime(U)*D*dag(U))).norm() < 1E-14);
 
     //////////////////////////
 
-    IQTensor Tr(conj(S2)(1),conj(S1)(2),prime(S1)(1),prime(S2)(2)),
-             Ti(conj(S2)(1),conj(S1)(2),prime(S1)(1),prime(S2)(2));
+    IQTensor Tr(dag(S2)(1),dag(S1)(2),prime(S1)(1),prime(S2)(2)),
+             Ti(dag(S2)(1),dag(S1)(2),prime(S1)(1),prime(S2)(2));
     Tr.randomize();
     Ti.randomize();
     IQTensor T = Complex_1*Tr + Complex_i*Ti;
-    T = T + conj(swapPrime(T,0,1));
+    T = T + dag(swapPrime(T,0,1));
     T *= 0.5;
 
     IQTensor UU;
     IQTensor DD;
     diagHermitian(T,UU,DD);
 
-    CHECK((T-(prime(UU)*DD*conj(UU))).norm() < 1E-14);
+    CHECK((T-(prime(UU)*DD*dag(UU))).norm() < 1E-14);
 
     //Arrows the other way
-    diagHermitian(conj(T),UU,DD);
+    diagHermitian(dag(T),UU,DD);
 
-    CHECK((conj(T)-(prime(UU)*DD*conj(UU))).norm() < 1E-14);
+    CHECK((dag(T)-(prime(UU)*DD*dag(UU))).norm() < 1E-14);
     }
 
 SECTION("OrthoDecomp")
@@ -557,8 +557,8 @@ SECTION("IQEigDecomp")
                   Index("J0",2),QN(+0),
                   Index("J+",2),QN(+1));
 
-    IQTensor Mr(conj(I)(1),conj(J)(J.m()),prime(I(1)),prime(J(J.m()))),
-             Mi(conj(I)(1),conj(J)(J.m()),prime(I(1)),prime(J(J.m())));
+    IQTensor Mr(dag(I)(1),dag(J)(J.m()),prime(I(1)),prime(J(J.m()))),
+             Mi(dag(I)(1),dag(J)(J.m()),prime(I(1)),prime(J(J.m())));
 
     Mr.randomize();
     Mi.randomize();

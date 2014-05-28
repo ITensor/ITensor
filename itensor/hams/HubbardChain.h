@@ -84,10 +84,10 @@ init_()
         {
         IQTensor& W = H.Anc(n);
         const
-        IQIndex row = conj(links[n-1]), 
+        IQIndex row = dag(links[n-1]), 
                 col = (n==Ns ? last : links[n]);
 
-        W = IQTensor(conj(sites_.si(n)),sites_.siP(n),row,col);
+        W = IQTensor(dag(sites_.si(n)),sites_.siP(n),row,col);
 
         //Identity strings
         W += sites_.op("Id",n) * row(1) * col(1);
@@ -110,7 +110,7 @@ init_()
 
     const
     IQTensor LH(links.at(0)(2)),
-             RH(conj(last)(1)); 
+             RH(dag(last)(1)); 
 
     if(infinite_)
         {

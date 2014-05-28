@@ -318,8 +318,13 @@ class IQTensor : public safe_bool<IQTensor>
     void 
     randomize(const OptSet& opts = Global::opts());
 
+    //Take complex conjugate, do not reverse IQIndex arrows
     IQTensor& 
     conj();
+
+    //Take complex conjugate and reverse IQIndex arrows
+    IQTensor& 
+    dag();
 
     void
     pseudoInvert(Real cutoff = 0.);
@@ -467,8 +472,15 @@ mapElems(const Callable& f)
 Real
 sumels(const IQTensor& T);
 
+//Compute complex conjugate of IQTensor res,
+//but do not reverse IQIndex arrows
 IQTensor inline
 conj(IQTensor res) { res.conj(); return res; }
+
+//Compute complex conjugate of IQTensor res,
+//and reverse IQIndex arrows
+IQTensor inline
+dag(IQTensor res) { res.dag(); return res; }
 
 //
 // Computes the scalar/inner/dot product of two
@@ -490,8 +502,8 @@ Dot(IQTensor x, const IQTensor& y);
 // possibly complex ITensors.
 //
 // Conjugates the first argument, therefore
-// equivalent to the contraction conj(x) * y 
-// (except it yields two real numbers, re and im,
+// equivalent to the contraction dag(x) * y 
+// (except it yields a Complex scalar
 // instead of a rank 0 IQTensor).
 //
 Complex 

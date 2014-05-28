@@ -1258,9 +1258,9 @@ SECTION("RealImagPart")
     CHECK_CLOSE(R.norm(),0,1E-5);
     CHECK_CLOSE(I.norm(),0,1E-5);
 
-    //Test conj:
+    //Test hc:
     
-    ZiX.conj();
+    ZiX.dag();
     R = realPart(ZiX);
     I = imagPart(ZiX);
     R -= f1*Z;
@@ -1305,7 +1305,7 @@ SECTION("NormTest")
 
     ITensor C = Complex_1*A+Complex_i*B;
 
-    CHECK_CLOSE(C.norm(),sqrt(realPart(conj(C)*C).toReal()),1E-5);
+    CHECK_CLOSE(C.norm(),sqrt(realPart(dag(C)*C).toReal()),1E-5);
     }
 
 SECTION("CR_ComplexAddition")

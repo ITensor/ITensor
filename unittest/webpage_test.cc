@@ -59,7 +59,7 @@ TEST_CASE("TutorialSimpleMeasurement")
     commaInit(Sx,s,prime(s)) << 0, 0.5, 
                                  0.5, 0;
 
-    ITensor bra = conj(prime(ket));
+    ITensor bra = dag(prime(ket));
 
     Real zz = (bra * Sz * ket).toReal();
     Real xx = (bra * Sx * ket).toReal();

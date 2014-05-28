@@ -120,8 +120,8 @@ template<>
 void inline BondGate<IQTensor>::
 makeSwapGate(const Model& sites)
     {
-    IQTensor a(conj(sites(i_)),prime(sites(j_))),
-             b(conj(sites(j_)),prime(sites(i_)));
+    IQTensor a(dag(sites(i_)),prime(sites(j_))),
+             b(dag(sites(j_)),prime(sites(i_)));
     for(int n = 1; n <= sites(i_).nindex(); ++n)
         {
         const Index &iind(sites(i_).index(n)),

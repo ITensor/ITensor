@@ -94,10 +94,10 @@ init()
         {
         //Create j^th A (an IQTensor)
         IQTensor &W = H.Anc(j);
-        IQIndex row = conj(iqlinks.at(j-1)),
+        IQIndex row = dag(iqlinks.at(j-1)),
                 col = (j==N ? last : iqlinks.at(j));
 
-        W = IQTensor(conj(sites_.si(j)),sites_.siP(j),row,col);
+        W = IQTensor(dag(sites_.si(j)),sites_.siP(j),row,col);
 
         //Identity string operators
         W += sites_.op("Id",j) * row(ds) * col(ds);
@@ -123,7 +123,7 @@ init()
         }
 
     const IQTensor LH(iqlinks.at(0)(k)),
-                   RH(conj(last)(ds));
+                   RH(dag(last)(ds));
 
     if(infinite_)
         {

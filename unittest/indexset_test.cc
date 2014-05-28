@@ -109,7 +109,7 @@ SECTION("PrimeIndex")
     {
     shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>(S1,prime(S2));
 
-    P->prime(conj(S1));
+    P->prime(dag(S1));
 
     CHECK_EQUAL(P->index(1),prime(S1));
     //Even though the IQIndex passed to noprime had a different direction,
@@ -122,7 +122,7 @@ SECTION("NoPrimeIndex")
     {
     shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>(S1,prime(S2));
 
-    P->noprime(conj(prime(S2)));
+    P->noprime(dag(prime(S2)));
 
     CHECK_EQUAL(P->index(2),S2);
     //Even though the IQIndex passed to noprime had a different direction,

@@ -231,12 +231,12 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real
     Tensor L = phi.A(1); 
     //Some Hamiltonians may store edge tensors in H.A(0) and H.A(N+1)
     L *= (H.A(0) ? H.A(0)*H.A(1) : H.A(1));
-    L *= conj(prime(psi.A(1)));
+    L *= dag(prime(psi.A(1)));
     for(int i = 2; i < N; ++i) 
         { 
         L *= phi.A(i); 
         L *= H.A(i); 
-        L *= conj(prime(psi.A(i))); 
+        L *= dag(prime(psi.A(i))); 
         }
     L *= phi.A(N); 
     L *= H.A(N);
@@ -280,12 +280,12 @@ psiHphi(const MPSt<Tensor>& psi,
 
     Tensor L = (LB ? LB*phi.A(1) : phi.A(1));
     L *= H.A(1); 
-    L *= conj(prime(psi.A(1)));
+    L *= dag(prime(psi.A(1)));
     for(int i = 2; i <= N; ++i)
         { 
         L *= phi.A(i); 
         L *= H.A(i); 
-        L *= conj(prime(psi.A(i))); 
+        L *= dag(prime(psi.A(i))); 
         }
 
     if(RB) L *= RB;

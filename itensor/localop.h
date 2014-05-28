@@ -309,7 +309,7 @@ deltaRho(const Tensor& AA, const CombinerT& comb, Direction dir) const
     delta.noprime();
     delta = comb * delta;
     
-    delta *= conj(prime(delta,comb.right()));
+    delta *= dag(prime(delta,comb.right()));
 
     return delta;
     }
@@ -479,7 +479,7 @@ diag() const
             Diag *= R();
         }
 
-    Diag.conj();
+    Diag.dag();
     Diag.takeRealPart(); //Diag must be real since operator assumed Hermitian
     return Diag;
     }

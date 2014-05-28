@@ -120,7 +120,7 @@ SECTION("Product")
     //must use the conjugate IQCombiner
 
     IQCombiner cc(c);
-    cc.conj();
+    cc.dag();
     CHECK(c.right().dir() != cc.right().dir());
 
     IQTensor ucphi = cc * cphi;
@@ -187,10 +187,10 @@ SECTION("CondenseProduct")
     CHECK(hasindex(cphi,c.right()));
 
     IQCombiner cc(c);
-    cc.conj();
+    cc.dag();
     CHECK(c.right().dir() != cc.right().dir());
 
-    IQTensor ucphi = conj(c) * cphi;
+    IQTensor ucphi = dag(c) * cphi;
 
     CHECK(hasindex(ucphi,S1));
     CHECK(hasindex(ucphi,S2));

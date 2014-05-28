@@ -66,7 +66,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 // (tensor must be conjugate symmetric under
 //  exchange primed and unprimed indices)
 // Result is unitary tensor U and diagonal sparse tensor D
-// such that M == conj(U)*D*primed(U)
+// such that M == dag(U)*D*primed(U)
 //
 template<class Tensor>
 Spectrum 
@@ -229,8 +229,8 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
     Spectrum spec = 
     svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,*opts_);
 
-    U = conj(Ucomb) * U;
-    V = V * conj(Vcomb);
+    U = dag(Ucomb) * U;
+    V = V * dag(Vcomb);
 
     return spec;
 
@@ -248,7 +248,7 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
     L = UU*D;
     R = D*VV;
 
-    V = conj(D);
+    V = dag(D);
     V.pseudoInvert(0);
     return spec;
     }
@@ -302,7 +302,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
     comb.product(AA,AAc);
 
     //Form density matrix
-    Tensor AAcc = conj(AAc); 
+    Tensor AAcc = dag(AAc); 
     AAcc.prime(comb.right()); 
 
     Tensor rho = AAc*AAcc; 
@@ -332,8 +332,8 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
     Tensor D;
     Spectrum spec = diag_hermitian(rho,U,D,*opts_);
 
-    comb.conj();
-    comb.product(conj(U),to_orth);
+    comb.dag();
+    comb.product(dag(U),to_orth);
     newoc = U * AAc;
 
     return spec;
@@ -380,7 +380,7 @@ diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
 
     CombinerT combP(comb);
     combP.prime();
-    combP.conj();
+    combP.dag();
 
     try {
         Mc = combP * Mc;
@@ -459,18 +459,18 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
         Tensor D;
         spec = svdRank2(T,Acomb.right(),Bcomb.right(),A,D,B,opts);
 
-        A = conj(Acomb) * A;
-        B = B * conj(Bcomb);
+        A = dag(Acomb) * A;
+        B = B * dag(Bcomb);
 
         if(dir==Fromleft) 
             {
             B *= D;
-            B = B*conj(reim)(1) + Complex_i*B*conj(reim)(2);
+            B = B*dag(reim)(1) + Complex_i*B*dag(reim)(2);
             }
         else              
             {
             A *= D;
-            A = A*conj(reim)(1) + Complex_i*A*conj(reim)(2);
+            A = A*dag(reim)(1) + Complex_i*A*dag(reim)(2);
             }
         }
 

@@ -157,7 +157,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
                Z0(s(2)),
                Z0P(sP(2));
 
-    IQTensor Op(conj(s),sP);
+    IQTensor Op(dag(s),sP);
 
     if(opname == "Sz")
         {

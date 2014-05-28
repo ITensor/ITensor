@@ -13,12 +13,12 @@ namespace itensor {
 /*
    Combine several indices into one index without loss of states.
    If the IQCombiner C is created from indices of IQTensor T, then
-   an identity is   T * C * conj(C).  This looks like (for example)
+   an identity is   T * C * dag(C).  This looks like (for example)
 
         ___ __          __
        /      \        /
    ---T---- ---C-- --cC---
-   where cC is conj(C).  Use of IQCombiners is efficient, whereas
+   where cC is dag(C).  Use of IQCombiners is efficient, whereas
    use of IQTensors for this purpose would not be.
 */
 class IQCombiner
@@ -76,7 +76,7 @@ class IQCombiner
     prime(IndexType type, int inc = 1);
 
     void 
-    conj();
+    dag();
 
     IQTensor 
     operator*(const IQTensor& t) const { IQTensor res; product(t,res); return res; }
@@ -126,7 +126,7 @@ class IQCombiner
 //
 
 IQCombiner inline
-conj(IQCombiner res) { res.conj(); return res; }
+dag(IQCombiner res) { res.dag(); return res; }
 
 IQTensor inline
 operator*(const IQTensor& t, const IQCombiner& c) { return c.operator*(t); }

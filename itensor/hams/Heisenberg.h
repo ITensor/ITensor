@@ -102,7 +102,7 @@ init_()
         IQIndex &row = links.at(n-1), 
                 &col = (n==Ns ? last : links.at(n));
 
-        W = IQTensor(conj(sites_.si(n)),sites_.siP(n),conj(row),col);
+        W = IQTensor(dag(sites_.si(n)),sites_.siP(n),dag(row),col);
 
         W += sites_.op("Id",n) * row(1) * col(1); //ending state
         W += sites_.op("Id",n) * row(2) * col(2); //starting state
@@ -166,7 +166,7 @@ init_()
         }
 
     const IQTensor LH(links.at(0)(start)),
-                   RH(conj(last)(1));
+                   RH(dag(last)(1));
 
     if(infinite_)
         {

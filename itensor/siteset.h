@@ -26,7 +26,7 @@ namespace itensor {
 // with the Site IQIndex pointing
 // In and the Site' IQIndex pointing
 // Out. This is so we can compute expectation
-// values by doing conj(prime(A,Site)) * Op * A.
+// values by doing dag(prime(A,Site)) * Op * A.
 // (assuming the tensor A is an ortho center 
 // of our MPS)
 //
@@ -144,7 +144,7 @@ op(const String& opname, int i,
     { 
     if(opname == "Id")
         {
-        IQIndex s = conj(si(i));
+        IQIndex s = dag(si(i));
         IQIndex sP = siP(i);
         IQTensor id_(s,sP);
         for(int j = 1; j <= s.m(); ++j)
@@ -158,7 +158,7 @@ op(const String& opname, int i,
         {
         const int n = opts.getInt("State");
         IQIndexVal v = si(i)(n);
-        return IQTensor(conj(v),prime(v));
+        return IQTensor(dag(v),prime(v));
         }
     else
         {

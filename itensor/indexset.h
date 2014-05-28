@@ -151,7 +151,7 @@ class IndexSet
     clear();
 
     void
-    conj();
+    dag();
 
     void
     read(std::istream& s);
@@ -670,10 +670,10 @@ clear()
 
 template <class IndexT>
 void IndexSet<IndexT>::
-conj()
+dag()
     {
     for(int j = 0; j < r_; ++j)
-        index_[j].conj();
+        index_[j].dag();
     }
 
 template <class IndexT>

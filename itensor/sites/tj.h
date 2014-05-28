@@ -138,7 +138,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
                Dn(s(3)),
                DnP(sP(3));
 
-    IQTensor Op(conj(s),sP);
+    IQTensor Op(dag(s),sP);
 
     if(opname == "TReverse")
         {

@@ -3400,7 +3400,7 @@ BraKet(const ITensor& x, const ITensor& y)
     {
     if(x.isComplex())
         {
-        ITensor res = conj(x);
+        ITensor res = dag(x);
         res *= y;
         if(res.r() != 0) 
             {

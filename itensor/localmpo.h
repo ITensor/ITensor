@@ -346,13 +346,13 @@ product(const Tensor& phi, Tensor& phip) const
     if(Psi_ != 0)
         {
         int b = position();
-        Tensor othr = (!L() ? conj(prime(Psi_->A(b),Link)) : L()*conj(prime(Psi_->A(b),Link)));
-        Tensor othrR = (!R() ? conj(prime(Psi_->A(b+1),Link)) : R()*conj(prime(Psi_->A(b+1),Link)));
+        Tensor othr = (!L() ? dag(prime(Psi_->A(b),Link)) : L()*dag(prime(Psi_->A(b),Link)));
+        Tensor othrR = (!R() ? dag(prime(Psi_->A(b+1),Link)) : R()*dag(prime(Psi_->A(b+1),Link)));
         othr *= othrR;
 
         Complex z = (othr*phi).toComplex();
 
-        phip = conj(othr);
+        phip = dag(othr);
         phip *= z;
         }
     else
@@ -438,7 +438,7 @@ shift(int j, Direction dir, const Tensor& A)
         Tensor& nE = PH_.at(j);
         nE = E * A;
         nE *= Op_->A(j);
-        nE *= conj(prime(A));
+        nE *= dag(prime(A));
         setLHlim(j);
         setRHlim(j+nc_+1);
 
@@ -455,7 +455,7 @@ shift(int j, Direction dir, const Tensor& A)
         Tensor& nE = PH_.at(j);
         nE = E * A;
         nE *= Op_->A(j);
-        nE *= conj(prime(A));
+        nE *= dag(prime(A));
         setLHlim(j-nc_-1);
         setRHlim(j);
 
@@ -476,7 +476,7 @@ makeL(const MPSType& psi, int k)
                 {
                 const int ll = LHlim_;
                 PH_.at(ll+1) = (!PH_.at(ll) ? psi.A(ll+1) : PH_[ll]*psi.A(ll+1));
-                PH_[ll+1] *= conj(prime(Psi_->A(ll+1),Link));
+                PH_[ll+1] *= dag(prime(Psi_->A(ll+1),Link));
                 setLHlim(LHlim_+1);
                 }
             }
@@ -505,7 +505,7 @@ makeR(const MPSType& psi, int k)
                 {
                 const int rl = RHlim_;
                 PH_.at(rl-1) = (!PH_.at(rl) ? psi.A(rl-1) : PH_[rl]*psi.A(rl-1));
-                PH_[rl-1] *= conj(prime(Psi_->A(rl-1),Link));
+                PH_[rl-1] *= dag(prime(Psi_->A(rl-1),Link));
                 setRHlim(RHlim_-1);
                 }
             }

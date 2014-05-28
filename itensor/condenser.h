@@ -33,7 +33,7 @@ class Condenser
     operator*(const IQTensor& t) { IQTensor res; product(t,res); return res; }
 
     void 
-    conj();
+    dag();
 
     void 
     prime(int inc = 1) { prime(All,inc); }
@@ -73,7 +73,7 @@ operator*(const IQTensor& t, const Condenser& c)
     }
 
 Condenser inline
-conj(Condenser res) { res.conj(); return res; }
+dag(Condenser res) { res.dag(); return res; }
 
 std::ostream& 
 operator<<(std::ostream & s, const Condenser & c);

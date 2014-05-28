@@ -142,7 +142,7 @@ class Index : public safe_bool<Index>
     // Currently has no effect; exists for forward compatibility
     // with Arrows and interface compatibility with class IQIndex.
     void 
-    conj() { } //for forward compatibility with arrows
+    dag() { } //for forward compatibility with arrows
 
     // Write Index to binary output stream.
     void 
@@ -204,10 +204,10 @@ class IndexVal : public Index
     };
 
 Index inline
-conj(Index res) { res.conj(); return res; }
+dag(Index res) { res.dag(); return res; }
 
 IndexVal inline
-conj(IndexVal res) { res.conj(); return res; }
+dag(IndexVal res) { res.dag(); return res; }
 
 
 //Return a copy of I, increasing primelevel.

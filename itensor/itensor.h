@@ -415,6 +415,9 @@ class ITensor : public safe_bool<ITensor>
     void 
     conj();
 
+    void 
+    dag() { conj(); }
+
     Real 
     norm() const;
 
@@ -699,6 +702,9 @@ sumels(const ITensor& t);
 ITensor inline
 conj(ITensor res) { res.conj(); return res; }
 
+ITensor inline
+dag(ITensor res) { res.dag(); return res; }
+
 //
 // Computes the scalar/inner/dot product of two
 // real-valued ITensors.
@@ -715,7 +721,7 @@ Dot(const ITensor& x, const ITensor& y);
 // possibly complex ITensors.
 //
 // Conjugates the first argument, therefore
-// equivalent to the contraction conj(x) * y 
+// equivalent to the contraction dag(x) * y 
 // (except it yields two real numbers, re and im,
 // instead of a rank 0 ITensor).
 //

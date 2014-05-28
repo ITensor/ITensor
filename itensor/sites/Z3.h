@@ -154,7 +154,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
                Two(s(3)),
                TwoP(sP(3));
 
-    IQTensor Op(conj(s),sP);
+    IQTensor Op(dag(s),sP);
 
     if(opname == "N")
         {

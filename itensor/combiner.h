@@ -107,7 +107,7 @@ class Combiner
     operator ITensor() const;
 
     void 
-    conj() { init(); }
+    dag() { init(); }
 
     void 
     product(const ITensor& t, ITensor& res) const;
@@ -130,7 +130,7 @@ class Combiner
     }; //class Combiner
 
 Combiner inline
-conj(Combiner res) { res.conj(); return res; }
+dag(Combiner res) { res.dag(); return res; }
 
 ITensor inline
 operator*(const ITensor& t, const Combiner& c) { return c*t; }

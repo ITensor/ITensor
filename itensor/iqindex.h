@@ -131,7 +131,7 @@ class IQIndex : public Index
     //
 
     IQIndex& 
-    conj();
+    dag();
 
     void 
     write(std::ostream& s) const;
@@ -230,13 +230,13 @@ class IQIndexVal : public IQIndex
     };
 
 IndexQN inline
-conj(IndexQN res) { res.conj(); return res; }
+dag(IndexQN res) { res.dag(); return res; }
 
 IQIndex inline
-conj(IQIndex res) { res.conj(); return res; }
+dag(IQIndex res) { res.dag(); return res; }
 
 IQIndexVal inline
-conj(IQIndexVal res) { res.conj(); return res; }
+dag(IQIndexVal res) { res.dag(); return res; }
 
 
 bool
