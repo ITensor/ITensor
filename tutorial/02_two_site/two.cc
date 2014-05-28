@@ -5,25 +5,25 @@ using namespace itensor;
 ITensor
 makeSp(const Index& s)
     {
-    ITensor Sp(s,primed(s));
-    Sp(s(2),primed(s)(1)) = 1;
+    ITensor Sp(s,prime(s));
+    Sp(s(2),prime(s)(1)) = 1;
     return Sp;
     }
 
 ITensor
 makeSm(const Index& s)
     {
-    ITensor Sm(s,primed(s));
-    Sm(s(1),primed(s)(2)) = 1;
+    ITensor Sm(s,prime(s));
+    Sm(s(1),prime(s)(2)) = 1;
     return Sm;
     }
 
 ITensor
 makeSz(const Index& s)
     {
-    ITensor Sz(s,primed(s));
-    Sz(s(1),primed(s)(1)) =  0.5;
-    Sz(s(2),primed(s)(2)) = -0.5;
+    ITensor Sz(s,prime(s));
+    Sz(s(1),prime(s)(1)) =  0.5;
+    Sz(s(2),prime(s)(2)) = -0.5;
     return Sz;
     }
 
