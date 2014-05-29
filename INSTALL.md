@@ -54,7 +54,7 @@ We strongly recommend placing your own client/driver code *outside* the
 ITensor library source directory. The location you choose is up to you. 
 
 To get started quickly on your own driver code, we have put a folder
-called "project_template" under the "tutorial" folder. Copy the project_template
+called `project_template` under the `tutorial` folder. Copy the `project_template`
 folder to your personal software folder then follow the instructions in the
 Makefile to customize it.
 
