@@ -6,7 +6,7 @@
 ## [1]
 ## Set equal to yes if your compiler supports C++11.
 ## (Also make sure to add a flag like -std=c++11 to the CCCOM variable below.)
-USE_CPP11=no
+USE_CPP11=no  
 ###################################
 
 #########
@@ -119,12 +119,25 @@ ifndef CCCOM
 $(error Makefile variable CCCOM not defined in options.mk; please define it.)
 endif
 
-ifeq ($(USE_CPP11),yes)
+ifndef USE_CPP11
+$(error Makefile variable USE_CPP11 not defined in options.mk; please define it.)
+endif
+
+ifeq ($(strip $(USE_CPP11)),yes)
+else
+    ifeq ($(strip $(USE_CPP11)),no)
+    else
+    $(error Please set Makefile variable USE_CPP11=yes or USE_CPP11=no in file options.mk.)
+    endif
+endif
+
+
+ifeq ($(strip $(USE_CPP11)),yes)
 CCCOM += -DUSE_CPP11
 else
-ifdef BOOST_DIR 
-ITENSOR_INCLUDEFLAGS += -I$(BOOST_DIR)
-endif
+    ifdef BOOST_DIR 
+    ITENSOR_INCLUDEFLAGS += -I$(BOOST_DIR)
+    endif
 OPTIMIZATIONS += -DBOOST_DISABLE_ASSERTS
 endif
 
