@@ -349,9 +349,9 @@ IndexVal()
     { }
 
 IndexVal::
-IndexVal(const Index& index, int i_) 
+IndexVal(const Index& index_, int i_) 
     : 
-    Index(index),
+    index(index_),
     i(i_)
     { 
 #ifdef DEBUG
@@ -368,6 +368,12 @@ IndexVal(const Index& index, int i_)
 #endif
     }
 
+bool IndexVal::
+operator==(const IndexVal& other) const
+    {
+    return (index == other.index && i == other.i);
+    }
+
 
 const IndexVal& IndexVal::
 Null()
@@ -382,7 +388,7 @@ showm(const Index& I) { return nameint("m=",I.m()); }
 std::ostream& 
 operator<<(std::ostream& s, const IndexVal& iv)
     { 
-    const Index& ii = iv;
+    const Index& ii = iv.index;
     return s << "IndexVal: i = " << iv.i << ", ind = " << ii << "\n"; 
     }
 

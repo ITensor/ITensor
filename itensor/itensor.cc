@@ -385,7 +385,7 @@ ITensor::
 ITensor(const IndexVal& iv)
     :
     type_(Dense),
-    is_(Index(iv)),
+    is_(iv.index),
     scale_(1)
 	{ 
     allocate(iv.m());
@@ -396,7 +396,7 @@ ITensor::
 ITensor(const IndexVal& iv1, const IndexVal& iv2) 
     :
     type_(Dense),
-    is_(iv1,iv2),
+    is_(iv1.index,iv2.index),
     scale_(1)
 	{ 
     allocate(iv1.m()*iv2.m());
@@ -414,10 +414,10 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2,
 	{
     //Construct ITensor
     array<Index,NMAX+1> ii = 
-        {{ iv1, iv2, iv3, iv4, iv5, 
-           iv6, iv7, iv8, IndexVal::Null()}};
+        {{ iv1.index, iv2.index, iv3.index, iv4.index, iv5.index, 
+           iv6.index, iv7.index, iv8.index, Index::Null()}};
     int size = 3; 
-    while(ii[size] != IndexVal::Null()) ++size;
+    while(ii[size] != Index::Null()) ++size;
     int alloc_size = -1;
     is_ = IndexSet<Index>(ii,size,alloc_size,0);
     allocate(alloc_size);
@@ -714,7 +714,7 @@ operator()(const IndexVal& iv1)
         printfln("# given = 1, rn_ = %d\n",is_.rn());
         Error("Not enough m!=1 indices provided");
         }
-    if(is_[0] != iv1)
+    if(is_[0] != iv1.index)
         {
         Print(*this);
         Print(iv1);
@@ -735,7 +735,7 @@ operator()(const IndexVal& iv1) const
         printfln("# given = 1, rn_ = %d\n",is_.rn());
         Error("Not enough m!=1 indices provided");
         }
-    if(is_[0] != iv1)
+    if(is_[0] != iv1.index)
         {
         Print(*this);
         Print(iv1);
@@ -1702,9 +1702,9 @@ _ind2(const IndexVal& iv1, const IndexVal& iv2) const
         printfln("# given = 2, rn_ = %d\n",is_.rn());
         Error("Not enough m!=1 indices provided");
         }
-    if(is_[0] == iv1 && is_[1] == iv2)
+    if(is_[0] == iv1.index && is_[1] == iv2.index)
         return ((iv2.i-1)*is_[0].m()+iv1.i-1);
-    else if(is_[0] == iv2 && is_[1] == iv1)
+    else if(is_[0] == iv2.index && is_[1] == iv1.index)
         return ((iv1.i-1)*is_[0].m()+iv2.i-1);
     else
         {
@@ -1737,7 +1737,7 @@ _ind8(const IndexVal& iv1, const IndexVal& iv2,
         //Loop over indices of this ITensor
         for(int k = 0; k < is_.r(); ++k)
             {
-            if(is_[k] == J)
+            if(is_[k] == J.index)
                 {
                 ja[k] = J.i-1;
                 goto next;

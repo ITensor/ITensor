@@ -13,6 +13,38 @@ using namespace std;
 //to prevent the same bugs from coming up again.
 //
 
+TEST_CASE("ITensor Times IQIndexVal")
+    {
+    IQIndex s("S",Index("up",1,Site),QN(+1),
+                  Index("dn",1,Site),QN(-1));
+
+    Index l("l",4);
+    ITensor T(l);
+    T.randomize();
+
+    ITensor R = T * s(2);
+
+    REQUIRE(hasindex(R,s));
+    CHECK(R(l(1),s(1)) == 0);
+    CHECK(R(l(2),s(1)) == 0);
+    CHECK(R(l(3),s(1)) == 0);
+    CHECK(R(l(4),s(1)) == 0);
+    }
+
+TEST_CASE("ITensor from IQIndexVal")
+    {
+    IQIndex s("S",Index("up",1,Site),QN(+1),
+                  Index("dn",1,Site),QN(-1));
+
+    ITensor T1(s(1));
+    CHECK(T1(s(1)) == 1);
+    CHECK(T1(s(2)) == 0);
+
+    ITensor T2(s(2));
+    CHECK(T2(s(1)) == 0);
+    CHECK(T2(s(2)) == 1);
+    }
+
 TEST_CASE("CombinerOrder")
     {
     Index a("a",2),c("c",2);

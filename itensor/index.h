@@ -177,10 +177,11 @@ class Index : public safe_bool<Index>
 // Class pairing an Index of dimension m
 // with a specific value i where 1 <= i <= m
 //
-class IndexVal : public Index
+class IndexVal : public safe_bool<IndexVal>
     {
     public:
 
+    Index index;
     int i;
 
     IndexVal();
@@ -188,16 +189,32 @@ class IndexVal : public Index
     IndexVal(const Index& index, int i_);
 
     bool
-    operator==(const IndexVal& other) const
-        {
-        return (Index::operator==(other) && i == other.i);
-        }
+    operator==(const IndexVal& other) const;
 
     bool
-    operator!=(const IndexVal& other) const
-        {
-        return !operator==(other);
-        }
+    operator!=(const IndexVal& other) const { return !operator==(other); }
+
+    int
+    m() const { return index.m(); }
+
+    bool
+    valid() const { return index.valid(); }
+
+    IndexVal& 
+    prime(int inc = 1) { index.prime(inc); return *this; }
+
+    IndexVal& 
+    prime(IndexType type, int inc = 1) { index.prime(type,inc); return *this; }
+
+    IndexVal& 
+    noprime(IndexType type = All) { index.noprime(type); return *this; }
+
+    IndexVal& 
+    mapprime(int plevold, int plevnew, IndexType type = All) 
+        { index.mapprime(plevold,plevnew,type); return *this; }
+
+    void
+    dag() { }
 
     static const IndexVal& 
     Null();

@@ -517,9 +517,9 @@ calc_ind_ii(const IQIndexVal& iv, int& j, int& ii)
     {
     j = 1;
     ii = iv.i;
-    while(ii > iv.index(j).m())
+    while(ii > iv.index.index(j).m())
         {
-        ii -= iv.index(j).m();
+        ii -= iv.index.index(j).m();
         ++j;
         }
     }
@@ -528,7 +528,6 @@ calc_ind_ii(const IQIndexVal& iv, int& j, int& ii)
 IQIndexVal::
 IQIndexVal()
     : 
-    IQIndex(IQIndex::Null()), 
     i(0) 
     { }
 
@@ -536,13 +535,13 @@ IQIndexVal()
 IQIndexVal::
 IQIndexVal(const IQIndex& iqindex, int i_) 
     : 
-    IQIndex(iqindex),
+    index(iqindex),
     i(i_) 
     { 
 #ifdef DEBUG
     if(i > m() || i < 1) 
         {
-        Print(iqindex);
+        Print(index);
         Print(i);
         Error("IQIndexVal: i out of range");
         }
@@ -555,7 +554,7 @@ indexqn() const
     { 
     int j,ii;
     calc_ind_ii(*this,j,ii);
-    return IndexQN(IQIndex::index(j),IQIndex::qn(j));
+    return IndexQN(index.index(j),index.qn(j));
     }
 
 
@@ -564,19 +563,19 @@ qn() const
     { 
     int j,ii;
     calc_ind_ii(*this,j,ii);
-    return IQIndex::qn(j);
+    return index.qn(j);
     }
 
 bool IQIndexVal::
 operator==(const IQIndexVal& other) const
     {
-    return (IQIndex::operator==(other) && i == other.i);
+    return (index == other.index && i == other.i);
     }
 
 IQIndexVal::
 operator IndexVal() const 
     { 
-    return IndexVal(Index(*this),i); 
+    return IndexVal(Index(index),i); 
     }
 
 
@@ -587,8 +586,39 @@ blockIndexVal() const
         return IndexVal::Null();
     int j,ii;
     calc_ind_ii(*this,j,ii);
-    return IndexVal(this->index(j),ii); 
+    return IndexVal(index.index(j),ii); 
     }
+
+IQIndexVal&  IQIndexVal::
+prime(int inc)
+    {
+    index.prime(inc);
+    return *this;
+    }
+
+IQIndexVal&  IQIndexVal::
+prime(IndexType type, int inc)
+    {
+    index.prime(type,inc);
+    return *this;
+    }
+
+IQIndexVal&  IQIndexVal::
+noprime(IndexType type)
+    {
+    index.noprime(type);
+    return *this;
+    }
+
+IQIndexVal&  IQIndexVal::
+mapprime(int plevold, int plevnew, IndexType type)
+    {
+    index.mapprime(plevold,plevnew,type);
+    return *this;
+    }
+
+IQIndexVal&  IQIndexVal::
+dag() { index.dag(); return *this; }
 
 /*
 
@@ -695,7 +725,7 @@ operator<<(std::ostream &s, const IndexQN& x)
 std::ostream& 
 operator<<(std::ostream& s, const IQIndexVal& iv)
     { 
-    const IQIndex& I = iv;
+    const IQIndex& I = iv.index;
     return s << "IQIndexVal: i = " << iv.i << " for IQIndex:\n  " << I << "\n"; 
     }
 

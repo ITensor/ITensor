@@ -167,7 +167,7 @@ IQTensor(vector<IQIndex>& iqinds_)
 IQTensor::
 IQTensor(const IQIndexVal& iv1) 
     : 
-    is_(make_shared<IndexSet<IQIndex> >(IQIndex(iv1)))
+    is_(make_shared<IndexSet<IQIndex> >(iv1.index))
 	{ 
 	operator()(iv1) = 1;
 	}
@@ -175,7 +175,7 @@ IQTensor(const IQIndexVal& iv1)
 IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2) 
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(iv1,iv2))
+    is_(make_shared<IndexSet<IQIndex> >(iv1.index,iv2.index))
 	{ 
     operator()(iv1,iv2) = 1;
 	}
@@ -184,7 +184,7 @@ IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
          const IQIndexVal& iv3)
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(iv1,iv2,iv3))
+    is_(make_shared<IndexSet<IQIndex> >(iv1.index,iv2.index,iv3.index))
 	{ 
     operator()(iv1,iv2,iv3) = 1;
 	}
@@ -193,7 +193,7 @@ IQTensor::
 IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
          const IQIndexVal& iv3, const IQIndexVal& iv4)
 	: 
-    is_(make_shared<IndexSet<IQIndex> >(iv1,iv2,iv3,iv4))
+    is_(make_shared<IndexSet<IQIndex> >(iv1.index,iv2.index,iv3.index,iv4.index))
 	{ 
     operator()(iv1,iv2,iv3,iv4) = 1;
 	}
@@ -349,7 +349,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     while(GET(iv,nn+1) != IQIndexVal::Null()) 
         {
         ++nn;
-        if(!hasindex(*this,iv.at(nn))) 
+        if(!hasindex(*this,iv.at(nn).index)) 
             Error("IQTensor::operator(): IQIndex not found.");
         is.addindex(iv[nn].indexqn());
         }
@@ -383,7 +383,7 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
     while(GET(iv,nn+1) != IQIndexVal::Null()) 
         {
         //ur += GET(iv,++nn).indexqn().uniqueReal(); 
-        if(!hasindex(*this,iv.at(nn))) 
+        if(!hasindex(*this,iv.at(nn).index)) 
             Error("IQTensor::operator(): IQIndex not found.");
         is.addindex(iv[nn].indexqn());
         }

@@ -186,39 +186,63 @@ class IndexQN : public Index
 // IQIndexVal
 //
 
-class IQIndexVal : public IQIndex
+class IQIndexVal : public safe_bool<IQIndexVal>
     {
     public:
 
+    //////////
+    IQIndex index;
     int i;
+    //////////
 
     IQIndexVal();
 
     IQIndexVal(const IQIndex& iqindex, int i_);
 
-    IndexQN
-    indexqn() const;
-
     const QN&
     qn() const;
 
     const QN&
-    qn(int j) const { return IQIndex::qn(j); }
+    qn(int j) const { return index.qn(j); }
 
     bool
     operator==(const IQIndexVal& other) const;
+    bool
+    operator!=(const IQIndexVal& other) const { return !operator==(other); }
+
+    IndexQN
+    indexqn() const;
 
     operator IndexVal() const;
-
-    operator ITensor() const { return ITensor(IndexVal(*this)); }
 
     IndexVal 
     blockIndexVal() const;
 
+    bool
+    valid() const { return index.valid(); }
+
+    int 
+    m() const { return index.m(); }
+
+    IQIndexVal& 
+    prime(int inc = 1);
+
+    IQIndexVal& 
+    prime(IndexType type, int inc = 1);
+
+    IQIndexVal& 
+    noprime(IndexType type = All);
+
+    IQIndexVal& 
+    mapprime(int plevold, int plevnew, IndexType type = All);
+
+    IQIndexVal& 
+    dag();
+
     ITensor 
     operator*(const IndexVal& iv) const 
         { 
-        return IndexVal(Index(*this),i) * iv; 
+        return IndexVal(Index(index),i) * iv; 
         }
 
     static const IQIndexVal& Null()
