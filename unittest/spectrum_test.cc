@@ -67,11 +67,11 @@ TEST_CASE("Spectrum Test")
         Spectrum iqtspec = svd(phi,A,D,B);
 
         Spectrum spec(D);
-        PrintData(D);
+        //PrintData(D);
         for(int n = 1; n <= spec.numEigsKept(); ++n)
             {
             CHECK(fabs(spec.eig(n)-iqtspec.eig(n)) < 1E-5);
-            printfln("%s %.10f",spec.qn(n),spec.eig(n));
+            //printfln("%s %.10f",spec.qn(n),spec.eig(n));
             }
         CHECK(spec.hasQNs());
         }
