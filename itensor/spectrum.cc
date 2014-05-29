@@ -6,6 +6,12 @@
 #include <algorithm>
 #include <utility>
 
+using std::pair;
+using std::make_pair;
+
+
+namespace itensor {
+
 struct OrderSecond
     {
     using value_type = pair<QN,Real>;
@@ -16,13 +22,12 @@ struct OrderSecond
         }
     };
 
-namespace itensor {
-
 Spectrum::
 Spectrum(const OptSet& opts) 
     :
     truncerr_(NAN)
     { 
+    computeTruncerr(opts);
     }
 
 Spectrum::
@@ -30,12 +35,11 @@ Spectrum(const ITensor& D, const OptSet& opts)
     :
     truncerr_(0)
     {
-    if(D.type() != ITensor::Diag)
-        Error("Spectrum may only be constructed from Diag type ITensor.");
-
+    if(D.type() != ITensor::Diag) Error("Spectrum may only be constructed from Diag type ITensor.");
     eigsKept_ = D.diag();
-    truncerr_ = 1.-eigsKept_.sumels();
-    if(truncerr < 0) truncerr_ = 0;
+    for(int n = 1; n <= eigsKept_.Length(); ++n)
+        eigsKept_(n) = sqr(eigsKept_(n));
+    computeTruncerr(opts);
     }
 
 Spectrum::
@@ -48,27 +52,50 @@ Spectrum(const IQTensor& D, const OptSet& opts)
 
     Foreach(const ITensor& t, D.blocks())
         {
-        const Vector teigs = t.diag();
-        const QN q = qn(D,t.indices().front());
-        for(int n = 1; n <= teigs.Length(); ++n)
+        const Vector svals = t.diag();
+        const QN q = itensor::qn(D,t.indices().front());
+        for(int n = 1; n <= svals.Length(); ++n)
             {
-            eigs.push_back(std::make_pair(q,teigs(n)));
+            eigs.push_back(std::make_pair(q,sqr(svals(n))));
             }
         }
-
     std::sort(eigs.begin(),eigs.end(),OrderSecond());
+
+    qns_.resize(eigs.size());
+    eigsKept_.ReDimension(eigs.size());
+    for(size_t j = 0; j < eigs.size(); ++j)
+        {
+        qns_.at(j) = eigs.at(j).first;
+        eigsKept_[j] = eigs.at(j).second;
+        }
+    computeTruncerr(opts);
     }
 
 Spectrum::
 Spectrum(const Vector& eigs, const OptSet& opts)
+    :
+    eigsKept_(eigs)
     {
+    computeTruncerr(opts);
     }
+
 
 Spectrum::
 Spectrum(const Vector& eigs, 
          const QNStorage& qns,
          const OptSet& opts)
+    :
+    eigsKept_(eigs),
+    qns_(qns)
     {
+    computeTruncerr(opts);
+    }
+
+QN Spectrum::
+qn(int n) const
+    {
+    if(qns_.empty()) return QN();
+    return qns_.at(n-1);
     }
 
 void Spectrum::
@@ -76,6 +103,13 @@ read(std::istream& s)
     {
     s.read((char*)&truncerr_,sizeof(truncerr_));
     eigsKept_.read(s);
+    size_t sz = 0;
+    s.read((char*)&sz,sizeof(sz));
+    qns_.resize(sz);
+    for(size_t j = 0; j < sz; ++j)
+        {
+        s.read((char*)&qns_[j],sizeof(qns_[j]));
+        }
     }
 
 void Spectrum::
@@ -83,6 +117,29 @@ write(std::ostream& s) const
     {
     s.write((char*)&truncerr_,sizeof(truncerr_));
     eigsKept_.write(s);
+    size_t sz = qns_.size();
+    s.write((char*)&sz,sizeof(sz));
+    for(size_t j = 0; j < sz; ++j)
+        {
+        s.write((char*)&qns_[j],sizeof(qns_[j]));
+        }
+    }
+
+void Spectrum::
+computeTruncerr(const OptSet& opts)
+    {
+    if(opts.defined("Truncerr"))
+        {
+        truncerr_ = opts.getReal("Truncerr");
+        }
+    else
+        {
+        if(eigsKept_.Length() > 0)
+            {
+            truncerr_ = 1.-eigsKept_.sumels();
+            if(truncerr_ < 0) truncerr_ = 0;
+            }
+        }
     }
 
 std::ostream& 

@@ -140,10 +140,10 @@ public:
     inline VectorRef& operator = (const Vector &);
 
 // Making and resizing:
-    inline Vector (int);
-    inline Vector (int, Real);
-    inline explicit Vector (const std::vector<Real>& v);
-    inline void ReDimension(int);
+    explicit Vector (int);
+    Vector (int, Real);
+    explicit Vector (const std::vector<Real>& v);
+    void ReDimension(int);
     void ReduceDimension(int);
     void Enlarge(int);			// Change size while keeping contents
 // Element access 

@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_SPECTRUM_H
 #define __ITENSOR_SPECTRUM_H
 
-#include "global.h"
+#include "iqtensor.h"
 
 namespace itensor {
 
@@ -35,31 +35,37 @@ class Spectrum
              const QNStorage& qns,
              const OptSet& opts = Global::opts());
 
-    Real 
-    truncerr() const { return truncerr_; }
-    void 
-    truncerr(Real val) { truncerr_ = val; }
-
-    const Vector& 
-    eigsKept() const { return eigsKept_; }
-    void 
-    eigsKept(const Vector& val) { eigsKept_ = val; }
-
     QN
     qn(int n) const;
 
-    const QNStorage&
-    qn() const;
+    Real
+    eig(int n) const { return eigsKept_(n); }
 
-    void 
-    eigsKept(const Vector& val) { eigsKept_ = val; }
+    Real 
+    truncerr() const { return truncerr_; }
 
     int
     numEigsKept() const { return eigsKept_.Length(); }
 
+    bool
+    hasQNs() const { return !qns_.empty(); }
+
+    const Vector& 
+    eigsKept() const { return eigsKept_; }
+
+    const QNStorage&
+    qn() const { return qns_; }
+
+
     //
     // Other Methods
     //
+
+    void 
+    truncerr(Real val) { truncerr_ = val; }
+
+    void 
+    eigsKept(const Vector& val) { eigsKept_ = val; }
 
     void 
     read(std::istream& s);
@@ -75,6 +81,9 @@ class Spectrum
     std::vector<QN> qns_;
 
     /////////////////
+
+    void
+    computeTruncerr(const OptSet& opts);
 
     }; //class Spectrum
 

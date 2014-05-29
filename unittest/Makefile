@@ -17,6 +17,7 @@ SOURCES+= mps_test.cc
 SOURCES+= mpo_test.cc
 SOURCES+= eigensolver_test.cc
 SOURCES+= regression_test.cc
+SOURCES+= spectrum_test.cc
 SOURCES+= svdalgs_test.cc
 SOURCES+= webpage_test.cc
 SOURCES+= localmpo_test.cc
