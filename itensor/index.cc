@@ -44,6 +44,7 @@ putprimes(string s, int plev)
     { 
     stringstream str;
     str << s;
+    if(plev < 0) Error("Negative prime level");
     if(plev > 3)
         {
         str << "[" << plev << "'s]";

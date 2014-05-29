@@ -2782,6 +2782,18 @@ operator+=(const ITensor& other)
         printfln("this ur = %.10f, other.ur = %.10f\n",is_.uniqueReal(),other.is_.uniqueReal());
         Print(*this);
         Print(other);
+        Print(this->is_);
+        Foreach(const Index& I, is_)
+            {
+            printfln("    %s %.20f",I,I.uniqueReal());
+            }
+        printfln("this indexset uniqueReal = %.20f",is_.uniqueReal());
+        Print(other.is_);
+        Foreach(const Index& I, other.is_)
+            {
+            printfln("    %s %.20f",I,I.uniqueReal());
+            }
+        printfln("other indexset uniqueReal = %.20f",other.is_.uniqueReal());
         Error("ITensor::operator+=: different Index structure");
         }
 
