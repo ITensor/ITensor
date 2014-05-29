@@ -195,7 +195,6 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         m = sqrD.Length();
         DD.ReduceDimension(m);
         }
-    spec.truncerr(terr);
 
 
     if(opts.getBool("ShowEigs",false))
@@ -265,8 +264,6 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         cout << "Warning: scale not finite real" << endl;
         }
 
-    spec.eigsKept(DD);
-
     //Global::lastd() = DD;
 
     //Include A's scale to get the actual eigenvalues kept
@@ -278,7 +275,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
     //    Global::lastd() *= A.scale().real();
     //    }
 
-    return spec;
+    return Spectrum(DD,Opt("Truncerr",terr));
 
     } // void svdRank2
 
@@ -594,27 +591,13 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     //toMatrix11NoScale, so put the scale back in
     D *= refNorm;
 
-    //Update truncerr and eigsKept
-    Spectrum spec;
-    spec.truncerr(svdtruncerr);
-
     Vector DD(L.m());
     for(int i = 1; i <= L.m(); ++i) 
         {
         DD(i) = alleig.at(alleig.size()-i);
         }
-    spec.eigsKept(DD);
 
-    /*
-    {
-    IQTensor Ach = U * D * V;
-    Ach -= A;
-    Real nor = A.norm();
-    cout << "relative error in SVD is " << Ach.norm()/nor SP spec.cutoff() << endl;
-    }
-    */
-
-    return spec;
+    return Spectrum(DD,Opt("Truncerr",svdtruncerr));
 
     } //void svdRank2
 

@@ -14,6 +14,7 @@ SOURCES+= iqindex.cc
 SOURCES+= iqtensor.cc 
 SOURCES+= condenser.cc
 SOURCES+= iqcombiner.cc 
+SOURCES+= spectrum.cc 
 SOURCES+= svdalgs.cc 
 SOURCES+= mps.cc 
 SOURCES+= mpo.cc 
@@ -111,7 +112,10 @@ iqtensor.o: $(DEPHEADERS)
 DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h
 iqcombiner.o: $(DEPHEADERS)
 .debug_objs/iqcombiner.o: $(DEPHEADERS)
-DEPHEADERS+= spectrum.h svdalgs.h
+DEPHEADERS+= spectrum.h
+spectrum.o: $(DEPHEADERS)
+.debug_objs/spectrum.o: $(DEPHEADERS)
+DEPHEADERS+= svdalgs.h
 svdalgs.o: $(DEPHEADERS)
 .debug_objs/svdalgs.o: $(DEPHEADERS)
 DEPHEADERS+= mps.h
