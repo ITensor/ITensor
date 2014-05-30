@@ -16,6 +16,7 @@
 #include "cppversion.h"
 #include "print.h"
 #include <ctime>
+#include <string.h>
 
 namespace itensor {
 

@@ -5,15 +5,15 @@
 
 #define Foreach(X,Y) for(X : Y)
 
-#include <array>
+#include <memory>
 namespace itensor {
-using std::array;
 using std::shared_ptr;
 using std::make_shared;
 };
 
-#include <memory>
+#include <array>
 namespace itensor {
+using std::array;
 using std::shared_ptr;
 using std::make_shared;
 };
