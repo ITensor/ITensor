@@ -14,7 +14,8 @@ namespace itensor {
 
 struct OrderSecond
     {
-    using value_type = pair<QN,Real>;
+    typedef pair<QN,Real> value_type;
+
     bool
     operator()(const value_type& i, const value_type& j) const 
         { 
