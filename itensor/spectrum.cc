@@ -53,6 +53,8 @@ Spectrum(const IQTensor& D, const OptSet& opts)
 
     Foreach(const ITensor& t, D.blocks())
         {
+    	if(t.type() != ITensor::Diag)
+    		Error("Spectrum may only be constructed from IQTensor containing only Diag type ITensor.");
         const Vector svals = t.diag();
         const QN q = itensor::qn(D,t.indices().front());
         for(int n = 1; n <= svals.Length(); ++n)
@@ -137,6 +139,8 @@ computeTruncerr(const OptSet& opts)
         {
         if(eigsKept_.Length() > 0)
             {
+        	// Note: This only makes sense if the spectrum was normalized before truncation.
+        	// Otherwise this will mostly return zero.
             truncerr_ = 1.-eigsKept_.sumels();
             if(truncerr_ < 0) truncerr_ = 0;
             }
