@@ -81,7 +81,7 @@ idmrg(MPSt<Tensor>& psi,
     const bool quiet = opts.getBool("Quiet",olevel == 0);
     const int nucsweeps = opts.getInt("NUCSweeps",1);
     const int nucs_decr = opts.getInt("NUCSweepsDecrement",0);
-    const auto randomize = opts.getBool("Randomize",false);
+    const bool randomize = opts.getBool("Randomize",false);
     int actual_nucsweeps = nucsweeps;
 
     const int N0 = psi.N(); //Number of sites in center

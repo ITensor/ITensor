@@ -122,8 +122,6 @@ truncate(vector<Real>& alleig,
             --m;
             }
         if(mdisc >= int(alleig.size())) mdisc = alleig.size() - 1;
-        //cout << "mdisc = " << mdisc << "; alleig.size() = " << alleig.size() << endl;
-        //for(auto val : alleig) cout << val << endl;
         docut = (mdisc > 0 
                 ? (alleig.at(mdisc-1) + alleig.at(mdisc))*0.5 - 1E-5*alleig.at(mdisc-1)
                 : -1);
