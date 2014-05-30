@@ -8,8 +8,6 @@
 #include <array>
 namespace itensor {
 using std::array;
-using std::shared_ptr;
-using std::make_shared;
 };
 
 #include <memory>

@@ -4,6 +4,7 @@
 //
 #include "iqtensor.h"
 #include "qcounter.h"
+#include <algorithm>
 
 namespace itensor {
 

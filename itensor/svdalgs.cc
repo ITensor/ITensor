@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "svdalgs.h"
+#include <algorithm>
 
 namespace itensor {
 
