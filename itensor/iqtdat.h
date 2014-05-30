@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_IQTDAT_H
 #define __ITENSOR_IQTDAT_H
 #include "indexset.h"
+#include <algorithm>
 
 namespace itensor {
 
