@@ -17,6 +17,7 @@
 #include "print.h"
 #include <ctime>
 #include <string.h>
+#include <cstring>
 
 namespace itensor {
 

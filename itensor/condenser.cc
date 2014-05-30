@@ -4,6 +4,7 @@
 //
 #include "condenser.h"
 #include <map>
+#include <algorithm>
 
 namespace itensor {
 
