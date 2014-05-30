@@ -43,6 +43,8 @@ main(int argc, char* argv[])
     Real n2 = D2(1,1) + D2(2,2) + D2(3,3);
 
     Print(n2);
+
+    println();
     
 
     //
