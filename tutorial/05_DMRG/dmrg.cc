@@ -20,16 +20,14 @@ main(int argc, char* argv[])
 
     //Create MPS
     MPS psi(model); //random starting state
-    psi.position(1);
 
     //Define DMRG sweeps
     Sweeps sweeps(5);
     sweeps.maxm() = 10,20,100,100,200;
     sweeps.cutoff() = 1E-10;
 
-    //Some stuff we'll need
-    //to solve local
-    //eigenvalue problem
+    //Some stuff needed to solve
+    //projected eigenvalue problem
     LocalMPO<ITensor> Heff(H);
 
     Real energy = NAN;
@@ -52,7 +50,8 @@ main(int argc, char* argv[])
             ITensor phi = psi.A(b)*psi.A(b+1);
             energy = davidson(Heff,phi);
 
-            //Update accuracy parameters for svd
+            //Update accuracy parameters
+            //to pass to svd
             opts.add("Cutoff",sweeps.cutoff(sw));
             opts.add("Maxm",sweeps.maxm(sw));
             opts.add("Minm",sweeps.minm(sw));
