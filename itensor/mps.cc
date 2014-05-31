@@ -207,7 +207,7 @@ read(std::istream& s)
     if(sites_ == 0)
         Error("Can't read to default constructed MPS");
     for(size_t j = 0; j < A_.size(); ++j) 
-        A_.at(j).read(s);
+    	A_.at(j).read(s);
     //Check that tensors read from disk were constructed
     //using the same sites
     IndexT s1 = findtype(A_.at(1),Site);
@@ -231,9 +231,7 @@ write(std::ostream& s) const
         Error("MPSt::write not yet supported if doWrite(true)");
 
     for(size_t j = 0; j < A_.size(); ++j) 
-        {
         A_.at(j).write(s);
-        }
     s.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
     s.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
     }
@@ -257,7 +255,7 @@ read(const std::string& dirname)
     //    dname_ += "/";
 
     for(size_t j = 0; j < A_.size(); ++j) 
-        readFromFile(AFName(j,dirname),A_.at(j));
+    	readFromFile(AFName(j,dirname),A_.at(j));
     }
 template
 void MPSt<ITensor>::read(const std::string& dirname);
@@ -1103,7 +1101,7 @@ initWrite(const OptSet& opts)
 
         //Write all null tensors to disk immediately because
         //later logic assumes null means written to disk
-        for(int j = 1; j <= N_; ++j)
+        for(int j = 0; j < A_.size(); ++j)
             {
             if(!A_.at(j))
                 writeToFile(AFName(j),A_.at(j));
@@ -1111,7 +1109,7 @@ initWrite(const OptSet& opts)
 
         if(opts.getBool("WriteAll",false))
             {
-            for(int j = 1; j <= N_; ++j)
+            for(int j = 0; j < A_.size(); ++j)
                 {
                 if(!A_.at(j)) continue;
                 writeToFile(AFName(j),A_.at(j));
