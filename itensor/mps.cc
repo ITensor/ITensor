@@ -34,7 +34,7 @@ MPSt()
     N_(0), 
     sites_(0),
     atb_(1),
-    writedir_("."),
+    writedir_("./"),
     do_write_(false)
     { }
 template MPSt<ITensor>::
@@ -52,7 +52,7 @@ MPSt(const SiteSet& sites)
     r_orth_lim_(sites.N()+1),
     sites_(&sites), 
     atb_(1),
-    writedir_("."),
+    writedir_("./"),
     do_write_(false)
     { 
     random_tensors(A_);
@@ -72,7 +72,7 @@ MPSt(const InitState& initState)
     r_orth_lim_(2),
     sites_(&(initState.sites())), 
     atb_(1),
-    writedir_("."),
+    writedir_("./"),
     do_write_(false)
     { 
     init_tensors(A_,initState);
@@ -207,7 +207,9 @@ read(std::istream& s)
     if(sites_ == 0)
         Error("Can't read to default constructed MPS");
     for(size_t j = 0; j < A_.size(); ++j) 
+        {
     	A_.at(j).read(s);
+        }
     //Check that tensors read from disk were constructed
     //using the same sites
     IndexT s1 = findtype(A_.at(1),Site);
@@ -231,7 +233,9 @@ write(std::ostream& s) const
         Error("MPSt::write not yet supported if doWrite(true)");
 
     for(size_t j = 0; j < A_.size(); ++j) 
+        {
         A_.at(j).write(s);
+        }
     s.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
     s.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
     }
@@ -255,7 +259,9 @@ read(const std::string& dirname)
     //    dname_ += "/";
 
     for(size_t j = 0; j < A_.size(); ++j) 
+        {
     	readFromFile(AFName(j,dirname),A_.at(j));
+        }
     }
 template
 void MPSt<ITensor>::read(const std::string& dirname);
@@ -1096,15 +1102,14 @@ initWrite(const OptSet& opts)
     {
     if(!do_write_)
         {
-        std::string global_write_dir = Global::opts().getString("WriteDir","./");
-        writedir_ = mkTempDir("psi",global_write_dir);
+        std::string write_dir_parent = opts.getString("WriteDir","./");
+        writedir_ = mkTempDir("psi",write_dir_parent);
 
         //Write all null tensors to disk immediately because
         //later logic assumes null means written to disk
         for(int j = 0; j < A_.size(); ++j)
             {
-            if(!A_.at(j))
-                writeToFile(AFName(j),A_.at(j));
+            if(!A_.at(j)) writeToFile(AFName(j),A_.at(j));
             }
 
         if(opts.getBool("WriteAll",false))
@@ -1135,11 +1140,11 @@ copyWriteDir()
     if(do_write_)
         {
         string old_writedir = writedir_;
-        std::string global_write_dir = Global::opts().getString("WriteDir","./");
+        string global_write_dir = Global::opts().getString("WriteDir","./");
         writedir_ = mkTempDir("psi",global_write_dir);
 
         string cmdstr = "cp -r " + old_writedir + "/* " + writedir_;
-        //cout << "Calling system(" << cmdstr << ")" << endl;
+        println("Copying MPS with doWrite()==true. Issuing command: ",cmdstr);
         system(cmdstr.c_str());
         }
     }

@@ -212,15 +212,14 @@ DMRGWorker(MPSt<Tensor>& psi,
         opts.add("Noise",sweeps.noise(sw));
         opts.add("MaxIter",sweeps.niter(sw));
 
-        if(!PH.doWrite() &&
-            opts.defined("WriteM") &&
-            sweeps.maxm(sw) >= opts.getInt("WriteM"))
+        if(!PH.doWrite()
+           && opts.defined("WriteM")
+           && sweeps.maxm(sw) >= opts.getInt("WriteM"))
             {
-            std::string write_dir = opts.getString("WriteDir","./");
-
             if(!quiet)
                 {
-                println("\nTurning on write to disk, write_dir = ",write_dir);
+                println("\nTurning on write to disk, write_dir = ",
+                        opts.getString("WriteDir","./"));
                 }
 
             psi.doWrite(true);
