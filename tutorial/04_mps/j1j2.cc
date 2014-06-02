@@ -16,8 +16,6 @@ main(int argc, char* argv[])
     {
     const int N = 20;
 
-    //Model objects represent a collection of 
-    //lattice degrees of freedom of a certain type
     SpinHalf sites(N);
 
     vector<Real> J2s(1,NAN),
