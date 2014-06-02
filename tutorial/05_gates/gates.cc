@@ -47,7 +47,7 @@ main(int argc, char* argv[])
             {
             const int b = G.i();
             psi.position(b);
-            const ITensor AA = psi.A(b)*psi.A(b+1);
+            ITensor AA = psi.A(b)*psi.A(b+1);
 
             //
             // Write code here that applies 
@@ -62,6 +62,10 @@ main(int argc, char* argv[])
             //    ========
             //    |      |
             //   s_b    s_{b+1}
+            //
+            // After applying G to AA, don't forget
+            // to reset the prime level to 0 by using
+            // the noprime or mapprime methods.
             //
 
 
