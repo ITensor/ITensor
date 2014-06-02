@@ -1,6 +1,7 @@
 #include "j1j2.h"
 
 using std::vector;
+using namespace itensor;
 
 ITensor
 B(const SiteSet& sites, int b)

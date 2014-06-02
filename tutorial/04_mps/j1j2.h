@@ -5,7 +5,7 @@
 #include "sites/spinhalf.h"
 #include "hams/J1J2Chain.h"
 
-using namespace itensor;
+namespace itensor {
 
 MPS inline
 computeGroundState(const SpinHalf& sites, Real J2)
@@ -26,5 +26,7 @@ computeGroundState(const SpinHalf& sites, Real J2)
 
     return psi;
     }
+
+}; //namespace itensor
 
 #endif
