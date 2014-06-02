@@ -8,11 +8,11 @@
 using namespace itensor;
 
 MPS inline
-computeGroundState(const SpinHalf& model, Real J2)
+computeGroundState(const SpinHalf& sites, Real J2)
     {
-    MPO H = J1J2Chain(model,Opt("J2",J2));
+    MPO H = J1J2Chain(sites,Opt("J2",J2));
 
-    MPS psi(model);
+    MPS psi(sites);
 
     Sweeps sweeps(5);
     sweeps.maxm() = 50,50,100,100,200;
