@@ -76,7 +76,7 @@ main(int argc, char* argv[])
     // Energy expectation value
     //
 
-    ITensor cpsi = dag(primed(psi));
+    ITensor cpsi = dag(prime(psi));
     Real E = (cpsi * H * psi).toReal();
 
     Print(E);
