@@ -34,11 +34,11 @@ main(int argc, char* argv[])
     ITensor Sz(s,primed(s)),
             Sx(s,primed(s));
 
-    commaInit(Sz,s,primed(s)) << 0.5, 0.0,
-                                 0.0,-0.5;
+    commaInit(Sz,s,primed(s)) = 0.5, 0.0,
+                                0.0,-0.5;
 
-    commaInit(Sx,s,primed(s)) << 0.0, 0.5,
-                                 0.5, 0.0;
+    commaInit(Sx,s,primed(s)) = 0.0, 0.5,
+                                0.5, 0.0;
 
     PrintData(Sz);
     PrintData(Sx);

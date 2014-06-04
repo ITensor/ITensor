@@ -3350,7 +3350,7 @@ commaInit(ITensor& T,
     }
 
 commaInit& commaInit::
-operator<<(Real r)
+operator=(Real r)
     {
     started_ = true;
     return operator,(r);

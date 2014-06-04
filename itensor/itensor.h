@@ -572,9 +572,14 @@ class commaInit
               const Index& i2 = Index::Null(),
               const Index& i3 = Index::Null());
 
-    commaInit& operator<<(Real r);
+    commaInit& 
+    operator=(Real r);
 
-    commaInit& operator,(Real r);
+    commaInit& 
+    operator<<(Real r) { return operator=(r); }
+
+    commaInit& 
+    operator,(Real r);
 
     ~commaInit();
 
