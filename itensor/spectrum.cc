@@ -37,9 +37,9 @@ Spectrum(const ITensor& D, const OptSet& opts)
     truncerr_(0)
     {
     if(D.type() != ITensor::Diag) Error("Spectrum may only be constructed from Diag type ITensor.");
-    eigsKept_ = D.diag();
-    for(int n = 1; n <= eigsKept_.Length(); ++n)
-        eigsKept_(n) = sqr(eigsKept_(n));
+    eigs_ = D.diag();
+    for(int n = 1; n <= eigs_.Length(); ++n)
+        eigs_(n) = sqr(eigs_(n));
     computeTruncerr(opts);
     }
 
@@ -65,11 +65,11 @@ Spectrum(const IQTensor& D, const OptSet& opts)
     std::sort(eigs.begin(),eigs.end(),OrderSecond());
 
     qns_.resize(eigs.size());
-    eigsKept_.ReDimension(eigs.size());
+    eigs_.ReDimension(eigs.size());
     for(size_t j = 0; j < eigs.size(); ++j)
         {
         qns_.at(j) = eigs.at(j).first;
-        eigsKept_[j] = eigs.at(j).second;
+        eigs_[j] = eigs.at(j).second;
         }
     computeTruncerr(opts);
     }
@@ -77,7 +77,7 @@ Spectrum(const IQTensor& D, const OptSet& opts)
 Spectrum::
 Spectrum(const Vector& eigs, const OptSet& opts)
     :
-    eigsKept_(eigs)
+    eigs_(eigs)
     {
     computeTruncerr(opts);
     }
@@ -88,7 +88,7 @@ Spectrum(const Vector& eigs,
          const QNStorage& qns,
          const OptSet& opts)
     :
-    eigsKept_(eigs),
+    eigs_(eigs),
     qns_(qns)
     {
     computeTruncerr(opts);
@@ -101,11 +101,12 @@ qn(int n) const
     return qns_.at(n-1);
     }
 
+
 void Spectrum::
 read(std::istream& s)
     {
     s.read((char*)&truncerr_,sizeof(truncerr_));
-    eigsKept_.read(s);
+    eigs_.read(s);
     size_t sz = 0;
     s.read((char*)&sz,sizeof(sz));
     qns_.resize(sz);
@@ -119,7 +120,7 @@ void Spectrum::
 write(std::ostream& s) const
     {
     s.write((char*)&truncerr_,sizeof(truncerr_));
-    eigsKept_.write(s);
+    eigs_.write(s);
     size_t sz = qns_.size();
     s.write((char*)&sz,sizeof(sz));
     for(size_t j = 0; j < sz; ++j)
@@ -137,11 +138,11 @@ computeTruncerr(const OptSet& opts)
         }
     else
         {
-        if(eigsKept_.Length() > 0)
+        if(eigs_.Length() > 0)
             {
         	// Note: This only makes sense if the spectrum was normalized before truncation.
         	// Otherwise this will mostly return zero.
-            truncerr_ = 1.-eigsKept_.sumels();
+            truncerr_ = 1.-eigs_.sumels();
             if(truncerr_ < 0) truncerr_ = 0;
             }
         }
