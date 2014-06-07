@@ -265,7 +265,7 @@ operator<<(std::ostream& s, const IndexVal& iv);
 std::ostream& 
 operator<<(std::ostream& s, const IndexType& it);
 
-static const Real UniqueRealAccuracy = 1E-14;
+static const Real UniqueRealAccuracy = 1E-12;
 
 
 

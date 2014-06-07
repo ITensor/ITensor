@@ -208,7 +208,8 @@ uniqueReal() const
 bool Index::
 operator==(const Index& other) const 
     { 
-    return fabs(uniqueReal() - other.uniqueReal()) < UniqueRealAccuracy; 
+    return (fabs(p->id-other.p->id) < UniqueRealAccuracy)
+        && (primelevel_ == other.primelevel_); 
     }
 
 bool Index::
