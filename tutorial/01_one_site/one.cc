@@ -35,10 +35,10 @@ main(int argc, char* argv[])
             Sx(s,prime(s));
 
     commaInit(Sz,s,prime(s)) = 0.5, 0.0,
-                                0.0,-0.5;
+                               0.0,-0.5;
 
     commaInit(Sx,s,prime(s)) = 0.0, 0.5,
-                                0.5, 0.0;
+                               0.5, 0.0;
 
     PrintData(Sz);
     PrintData(Sx);
