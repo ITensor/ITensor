@@ -192,7 +192,7 @@ class MPSt : safe_bool<MPSt<Tensor> >
     read(const std::string& dirname);
 
     void 
-    read(std::istream& s);
+    read(std::istream& s, const OptSet& opts = Global::opts());
     void 
     write(std::ostream& s) const;
 
