@@ -35,8 +35,6 @@ int main(int argc, char* argv[])
 
     IQMPS psi(initState);
 
-    Global::opts(Opt("WriteM", 10));
-    psi.doWrite(true);
     //
     // psiHphi calculates matrix elements of MPO's with respect to MPS's
     // psiHphi(psi,H,psi) = <psi|H|psi>
@@ -70,7 +68,6 @@ int main(int argc, char* argv[])
     //
     // Measure S.S on every bond
     //
-    psi.doWrite(false);
     for(int b = 1; b < N; ++b)
         {
         psi.position(b);
