@@ -3388,13 +3388,11 @@ Dot(const ITensor& x, const ITensor& y)
     res *= y;
     if(res.r() != 0) 
         { 
-        Print(x);
-        Print(y);
         if(x.isComplex() || y.isComplex())
             {
-            Error("Must use BraKet, not Dot, for complex ITensors");
+            throw ITError("Must use BraKet, not Dot, for complex ITensors");
             }
-        Error("Bad Dot, product is not a scalar"); 
+        throw ITError("Bad call to Dot, product is not a scalar"); 
         }
     return res.toReal();
     }
@@ -3408,9 +3406,7 @@ BraKet(const ITensor& x, const ITensor& y)
         res *= y;
         if(res.r() != 0) 
             {
-            Print(x);
-            Print(y);
-            Error("Bad Dot, product not a scalar");
+            throw ITError("Bad call to BraKet, product not a scalar");
             }
         return res.toComplex();
         }
@@ -3421,9 +3417,7 @@ BraKet(const ITensor& x, const ITensor& y)
         res *= y;
         if(res.r() != 0) 
             {
-            Print(x);
-            Print(y);
-            Error("Bad Dot, product not a scalar");
+            throw ITError("Bad call to BraKet, product not a scalar");
             }
         return res.toComplex();
         }

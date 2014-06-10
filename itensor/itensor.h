@@ -727,7 +727,7 @@ Dot(const ITensor& x, const ITensor& y);
 //
 // Conjugates the first argument, therefore
 // equivalent to the contraction dag(x) * y 
-// (except it yields two real numbers, re and im,
+// (except it yields a Complex number
 // instead of a rank 0 ITensor).
 //
 Complex 
