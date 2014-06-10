@@ -207,9 +207,8 @@ read(std::istream& s, const OptSet& opts)
     if(sites_ == 0)
         Error("Can't read to default constructed MPS");
 
-    if( opts.getBool("Legacy", false))
+    if( opts.getBool("v0.2", false))
     {
-    	std::cout << "Size of Legacy MPS: "<<A_.size()<<std::endl;
     	A_.at(0) = Tensor();
     	for(int j = 1; j <= N_; ++j)
 			A_.at(j).read(s);
