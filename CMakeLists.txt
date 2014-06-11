@@ -85,7 +85,7 @@ if (Testing)
 endif (Testing)
 
 # Build example
-option(Tutorial "Build tutorial" OFF)
+option(Tutorial "Build tutorial" ON)
 if (Tutorial)
     message(STATUS "Building tutorial")
     add_subdirectory(tutorial)
