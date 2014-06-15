@@ -1,4 +1,5 @@
 
+include_directories(../utilities ../matrix ../itensor)
 add_subdirectory(01_one_site)
 add_subdirectory(02_two_site)
 add_subdirectory(03_svd)

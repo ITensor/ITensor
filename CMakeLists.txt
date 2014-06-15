@@ -74,9 +74,9 @@ list(APPEND CMAKE_LINKER_FLAGS ${LAPACK_LINKER_FLAGS})
 link_libraries(${LAPACK_LIBRARIES})
 
 # build itensor parts
+add_subdirectory(utilities)
 add_subdirectory(matrix)
 add_subdirectory(itensor)
-add_subdirectory(utilities)
 
 # Enable testing
 option(Testing "Enable testing" ON)

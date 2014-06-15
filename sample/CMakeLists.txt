@@ -1,4 +1,4 @@
-include_directories(../include)
+include_directories(../utilities ../matrix ../itensor)
 
 set (progs 
 dmrg iqdmrg dmrg_table dmrgj1j2 exthubbard idmrg
