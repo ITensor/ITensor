@@ -23,7 +23,7 @@ set (tests
     safebool_test.cc
 )
 
-include_directories(../include .)
+include_directories(../utilities ../matrix ../itensor)
 
 add_executable(test1 ${tests})
 target_link_libraries(test1 utility matrix itensor) 

@@ -7,7 +7,8 @@ set (SOURCES matrix.cc utility.cc sparse.cc david.cc hpsortir.cc
 	conjugate_gradient.cc sparseref.cc
 	daxpy.cc svd.cc)
 
-include_directories(../include .)
+include_directories(../utilities .)
 add_library(matrix STATIC ${SOURCES})
 install(TARGETS matrix DESTINATION lib)
+install(FILES ${HEADERS} DESTINATION include/itensor)
 
