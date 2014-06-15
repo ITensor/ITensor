@@ -8,9 +8,9 @@ set (SOURCES error.cc ran1.cc
     )
 #file(GLOB SOURCES "*.cc")
 
-include_directories(../include .)
+include_directories(.)
 add_library(utility STATIC ${SOURCES})
 
 install(TARGETS utility DESTINATION lib)
-
+install(FILES ${HEADERS} DESTINATION include/itensor)
 

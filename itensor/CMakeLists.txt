@@ -26,10 +26,10 @@ set (SOURCES
     tevol.cc
     )
 
-include_directories(../include .)
+include_directories(../utilities ../matrix .)
 
 add_library(itensor STATIC ${SOURCES})
 install(TARGETS itensor DESTINATION lib)
-
+install(FILES ${HEADERS} DESTINATION include/itensor)
 
 
