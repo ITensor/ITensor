@@ -78,10 +78,11 @@ add_subdirectory(matrix)
 add_subdirectory(itensor)
 add_subdirectory(utilities)
 
+# Enable testing
 option(Testing "Enable testing" ON)
 if (Testing)
-    add_subdirectory(unittest)
     enable_testing()
+    add_subdirectory(unittest)
 endif (Testing)
 
 # Build example
@@ -90,6 +91,13 @@ if (Tutorial)
     message(STATUS "Building tutorial")
     add_subdirectory(tutorial)
 endif (Tutorial)
+
+# Build sample
+option(Sample "Build samples" ON)
+if (Sample)
+    message(STATUS "Building samples")
+    add_subdirectory(sample)
+endif (Sample)
 
 # Install pkg-config file
 #configure_file(ITensor.pc.in ITensor.pc @ONLY)
