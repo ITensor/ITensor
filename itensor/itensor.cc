@@ -520,7 +520,7 @@ takeImagPart()
     ITENSOR_CHECK_NULL
     if(!i_)
         {
-        scale_ = 0;
+        scale_ = LogNumber(0);
         return *this;
         }
     r_.swap(i_);
@@ -1960,7 +1960,7 @@ operator/=(const ITensor& other)
 
     if(scale_.isZero() || other.scale_.isZero())
         {
-        scale_ = 0;
+        scale_ = LogNumber(0);
         return *this;
         }
 
@@ -2860,7 +2860,7 @@ operator-=(const ITensor& other)
     {
     if(this == &other) 
         { 
-        scale_ = 0; 
+        scale_ = LogNumber(0); 
         return *this; 
         }
     scale_.negate();
@@ -2879,7 +2879,7 @@ fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     DO_IF_DEBUG(if(i2.m() != M.Ncols()) Error("fromMatrix11: wrong number of cols");)
 
     solo();
-    scale_ = 1;
+    scale_ = LogNumber(1);
     is_ = IndexSet<Index>(i1,i2);
 
     MatrixRef dref; 

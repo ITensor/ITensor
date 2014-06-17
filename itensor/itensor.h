@@ -436,6 +436,8 @@ class ITensor : public safe_bool<ITensor>
 
     void 
     scaleTo(const LogNumber& newscale);
+    void 
+    scaleTo(Real newscale) { scaleTo(LogNumber(newscale)); }
 
     VectorRef 
     assignToVec() const;
