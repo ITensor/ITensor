@@ -220,11 +220,10 @@ sum(const MPOt<Tensor>& L,
     }
 
 
-template <class MPSType, class MPOType>
+template <class Tensor>
 void 
-psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real& im) //<psi|H|phi>
+psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPSt<Tensor>& phi, Real& re, Real& im) //<psi|H|phi>
     {
-    typedef typename MPSType::TensorT Tensor;
     const int N = H.N();
     if(phi.N() != N || psi.N() != N) Error("psiHphi: mismatched N");
 
@@ -246,9 +245,9 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi, Real& re, Real
     re = z.real();
     im = z.imag();
     }
-template <class MPSType, class MPOType>
+template <class Tensor>
 Real 
-psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|phi>]
+psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPSt<Tensor>& phi) //Re[<psi|H|phi>]
     {
     Real re, im;
     psiHphi(psi,H,phi,re,im);
@@ -256,9 +255,9 @@ psiHphi(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|ph
         printfln("\nReal psiHphi: WARNING, dropping non-zero (=%.5E) imaginary part of expectation value.",im);
     return re;
     }
-template <class MPSType, class MPOType>
+template <class Tensor>
 Complex 
-psiHphiC(const MPSType& psi, const MPOType& H, const MPSType& phi) //Re[<psi|H|phi>]
+psiHphiC(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPSt<Tensor>& phi) //Re[<psi|H|phi>]
     {
     Real re, im;
     psiHphi(psi,H,phi,re,im);
