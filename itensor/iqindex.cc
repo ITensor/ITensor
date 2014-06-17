@@ -427,7 +427,7 @@ string
 showm(const IQIndex& I)
     {
 #ifdef DEBUG
-    if(!I) Error("Null IQIndex");
+    if(!I) Error("Calling showm on null IQIndex");
 #endif
     string res = " ";
     ostringstream oh; 
