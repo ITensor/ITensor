@@ -88,7 +88,8 @@ struct IndexDat
     {
     //////////////
 
-    typedef Real IDType;
+    typedef mt19937 IDGenerator;
+    typedef IDGenerator::result_type IDType;
 
     const IDType id;
     const int m;
@@ -135,11 +136,8 @@ Null()
 IndexDat::IDType 
 generateID()
     {
-    static const Real K1 = 1./sqrt(7.);
-    static mt19937 rng(std::time(NULL) + getpid());
-    //static uniform_real_distribution<Real> dist(0,1);
-    const Real x = sin((K1*rng()));
-    return x*x;
+    static IndexDat::IDGenerator rng(std::time(NULL) + getpid());
+    return rng();
 
     //static IDType nextid = 0;
     //++nextid;
@@ -202,20 +200,19 @@ primeLevel(int plev)
 Real Index::
 uniqueReal() const
     {
-    return p->id*(1.0+(sin(primelevel_)/10.));
+    return fabs(sin(p->id))*(1.0+(sin(primelevel_)/10.));
     }
 
 bool Index::
 operator==(const Index& other) const 
     { 
-    return (fabs(p->id-other.p->id) < UniqueRealAccuracy)
-        && (primelevel_ == other.primelevel_); 
+    return (p->id == other.p->id) && (primelevel_ == other.primelevel_); 
     }
 
 bool Index::
 noprimeEquals(const Index& other) const
     { 
-    return fabs(p->id - other.p->id) < UniqueRealAccuracy;
+    return (p->id == other.p->id);
     }
 
 bool Index::
@@ -341,6 +338,8 @@ operator<<(std::ostream& s, const Index& t)
     const int iur = (int) fabs(10000*noprime(t).uniqueReal());
     return s << "(" << nameindex(t.type(),t.primeLevel()) 
              << "," << iur << "):" << t.m();
+    //return s << "(" << nameindex(t.type(),t.primeLevel()) 
+    //         << "," << t.p->id << "):" << t.m();
     }
 
 IndexVal::
