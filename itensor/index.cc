@@ -200,7 +200,8 @@ primeLevel(int plev)
 Real Index::
 uniqueReal() const
     {
-    return fabs(sin(p->id))*(1.0+(sin(primelevel_)/10.));
+    static const Real rmax = IndexDat::IDGenerator::max();
+    return (p->id/rmax)*(1.0+sin(primelevel_));
     }
 
 bool Index::
