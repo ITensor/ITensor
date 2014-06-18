@@ -29,30 +29,29 @@ CCCOM=g++ -m64 #-std=c++11
 ## o The variable PLATFORM can be set to macos,lapack,mkl, or acml.
 ##   This tells ITensor which style of BLAS/Lapack library to expect.
 ## 
-## o BLAS_LAPACK_INCLUDEFLAGS should be set to -I/path/to/lapack/include
-##   where "include" is a folder full of .h header files in the source code 
-##   of your BLAS/Lapack library (see examples below).
-##
 ## o BLAS_LAPACK_LIBFLAGS should be something like 
 ##   -L/path/to/lapack/lib -llapack -lblas
 ##   though the names of the static libraries (the files referred
 ##   to by the -l flags) can be highly variable - see examples below.
+##
+## o BLAS_LAPACK_INCLUDEFLAGS is currently required for the mkl platform only.
+##   It should be set to -I/path/to/lapack/include
+##   where "include" is a folder full of .h header files in the source code 
+##   of your BLAS/Lapack library (see examples below).
+##
 
 ##
-## Mac OSX system (include flags intentionally left blank)
+## Mac OSX system
 ##
 
 PLATFORM=macos
 BLAS_LAPACK_LIBFLAGS=-framework Accelerate
-BLAS_LAPACK_INCLUDEFLAGS=
 
 ##
 ## Example using a C interface to LAPACK on GNU/LINUX systems
-## make sure to install LAPACKE development header needed by lapack_wrap.h
 ##
 
 #PLATFORM=lapack
-#BLAS_LAPACK_INCLUDEFLAGS=-I/usr/include
 #BLAS_LAPACK_LIBFLAGS=-L/usr/lib -lblas -llapack 
 
 ##
@@ -60,19 +59,15 @@ BLAS_LAPACK_INCLUDEFLAGS=
 ##
 
 #PLATFORM=mkl
-## MKL example for GNU/Linux systems (recommended with Intel C++ compiler icpc for performance on Intel CPUs)
-#BLAS_LAPACK_INCLUDEFLAGS=-I/opt/intel/composer_xe_2013_sp1.1.106/mkl/include
+## MKL example (recommended with Intel C++ compiler icpc for performance on Intel CPUs)
 #BLAS_LAPACK_LIBFLAGS=-L/opt/intel/composer_xe_2013_sp1.1.106/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_rt -lmkl_core -liomp5 -lpthread
-## MKL example for other UNIX flavours
-#BLAS_LAPACK_INCLUDEFLAGS=-I/sopt/intel/mkl/10.1.0.015/include
-#BLAS_LAPACK_LIBFLAGS=-L/sopt/intel/mkl/10.1.0.015/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lgfortran -lpthread
+#BLAS_LAPACK_INCLUDEFLAGS=-I/opt/intel/composer_xe_2013_sp1.1.106/mkl/include
 
 ##
 ## Example using the AMD ACML library
 ##
 
 #PLATFORM=acml
-#BLAS_LAPACK_INCLUDEFLAGS=-I/opt/acml5.1.0/gfortran64/include
 #BLAS_LAPACK_LIBFLAGS=-L/opt/acml5.1.0/gfortran64/lib -lacml -lgfortran -lpthread
 
 
