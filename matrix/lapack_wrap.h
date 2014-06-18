@@ -20,8 +20,10 @@ typedef int
 LAPACK_INT;
 typedef double
 LAPACK_REAL;
-typedef std::complex<double>
-LAPACK_COMPLEX;
+typedef struct
+{
+  double real, imag;
+} LAPACK_COMPLEX;
 };
 
 #elif defined PLATFORM_macos
