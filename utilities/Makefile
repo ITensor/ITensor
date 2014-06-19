@@ -8,7 +8,7 @@ include ../options.mk
 
 #########################################
 
-HEADERS=cppversion.h indent.h cputime.h tarray1.h \
+HEADERS=tinyformat.h print.h cppversion.h indent.h cputime.h tarray1.h \
         flstring.h option.h input.h error.h minmax.h safebool.h
 
 OBJECTS= error.o ran1.o\
