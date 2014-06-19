@@ -140,7 +140,7 @@ class ITensor : public safe_bool<ITensor>
 
     //Read in ITensor from binary stream s
     void 
-    read(std::istream& s);
+    read(std::istream& s, const OptSet& opts = Global::opts());
 
     //Write out ITensor to binary stream s
     void

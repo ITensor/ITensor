@@ -200,7 +200,7 @@ scaleTo(const LogNumber& newscale)
 template<class Tensor>
 void IQTDat<Tensor>::
 read(std::istream& s)
-    { 
+    {
     size_t size;
     s.read((char*) &size,sizeof(size));
     blocks_.resize(size);
