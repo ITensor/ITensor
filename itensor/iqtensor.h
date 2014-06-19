@@ -11,7 +11,7 @@ namespace itensor {
 
 class IQCombiner;
 
-typedef shared_ptr<IQTDat<ITensor> >
+typedef shared_ptr<IQTDat>
 IQTDatPtr;
 
 
@@ -22,6 +22,19 @@ IQTDatPtr;
 class IQTensor : public safe_bool<IQTensor>
     {
     public:
+    //Typedefs -----------------------------------------------------
+
+    typedef IQIndex 
+    IndexT;
+
+    typedef IQIndexVal 
+    IndexValT;
+
+    typedef IQCombiner 
+    CombinerT;
+
+    typedef IQTDat
+    Storage;
 
     //Constructors --------------------------------------------------
 
@@ -103,11 +116,11 @@ class IQTensor : public safe_bool<IQTensor>
     //The ITensors can be iterated over using a Foreach
     //For example, given an IQTensor T,
     //Foreach(const ITensor& t, T.blocks()) { ... }
-    const IQTDat<ITensor>&
-    blocks() const { return dat(); }
+    const IQTDat&
+    blocks() const { return *d_; }
     
     const IndexSet<IQIndex>& 
-    indices() const { return *is_; }
+    indices() const { return is_; }
 
 
     //----------------------------------------------------
@@ -343,73 +356,29 @@ class IQTensor : public safe_bool<IQTensor>
     void 
     write(std::ostream& s) const;
 
-    //Typedefs -----------------------------------------------------
-
-    typedef IQIndex 
-    IndexT;
-
-    typedef IQIndexVal 
-    IndexValT;
-
-    typedef IQCombiner 
-    CombinerT;
-
-    //Deprecated methods
-
-    //Get the jth IQIndex of this ITensor, j = 1,2,..,r()
-    //const IQIndex& 
-    //index(int j) const;
-
-    //Copy IQTensor, incrementing IQIndices of matching IndexType by 1
-    //IQTensor(IndexType type, const IQTensor& other);
-
-
     private:
 
-    //Data struct ensures const-correct access
-    //to the IQTDat, preventing unnecessary sorting of blocks
-    struct Data
-        {
-        Data();
+    /////////////
 
-        Data(const IQTDatPtr& p_);
+    IndexSet<IQIndex> is_;
 
-        //Const access
-        const IQTDat<ITensor>&
-        operator()() const { return *p; }
-
-        //Non-const access
-        IQTDat<ITensor>&
-        nc() { return *p; }
-
-        void inline
-        solo();
-
-        void
-        swap(Data& othr) { p.swap(othr.p); }
-
-        private: IQTDatPtr p;
-        };
+    IQTDatPtr d_;
 
     /////////////////
-    // 
-    // Data Members
 
-    shared_ptr<IndexSet<IQIndex> >
-    is_;
+    const ITensor&
+    getBlock(const IndexSet<Index>& inds) const;
+    ITensor&
+    getBlock(const IndexSet<Index>& inds);
 
-    Data dat;
-
-    //
-    /////////////////
-
-    void 
-    soloIndex();
+    void
+    allocate();
 
     void 
     solo();
 
     }; //class IQTensor
+
 
 IQTensor inline
 operator*(IQTensor T, Real fac) {  T *= fac; return T; }
@@ -464,7 +433,7 @@ IQTensor& IQTensor::
 mapElems(const Callable& f)
     {
     solo();
-    Foreach(ITensor& t, dat.nc()) 
+    Foreach(ITensor& t, *d_)
         t.mapElems(f);
     return *this;
     }

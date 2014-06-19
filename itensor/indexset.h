@@ -159,11 +159,11 @@ class IndexSet
     void
     write(std::ostream& s) const;
 
-    static const Ptr& Null()
-        {
-        static Ptr Null_ = make_shared<IndexSet<IndexT> >();
-        return Null_;
-        }
+    //static const Ptr& Null()
+    //    {
+    //    static Ptr Null_ = make_shared<IndexSet<IndexT> >();
+    //    return Null_;
+    //    }
 
     private:
 

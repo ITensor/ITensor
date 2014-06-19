@@ -55,6 +55,10 @@ class IQIndexDat
 
     const Index&
     index(int i) { return iq_[i-1]; }
+
+    const Index&
+    operator[](int i) { return iq_[i]; }
+
     const QN&
     qn(int i) { return iq_[i-1].qn; }
 
@@ -202,6 +206,21 @@ index(int i) const
         }
 #endif
     return pd->index(i);
+    }
+
+const Index& IQIndex::
+operator[](int i) const 
+    {
+    IQINDEX_CHECK_NULL
+#ifdef DEBUG
+    if(i > nindex()-1)
+        {
+        Print(nindex());
+        Print(i);
+        Error("IQIndex::index arg out of range");
+        }
+#endif
+    return pd->operator[](i);
     }
 
 const QN& IQIndex::
