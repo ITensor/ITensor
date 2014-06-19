@@ -28,7 +28,7 @@ IQCombiner(
     : initted(false), 
       do_condense(true)
     {
-    if(l1 == IQIndex::Null()) Error("Null IQIndex");
+    if(l1 == IQIndex::Null()) Error("Null IQIndex in IQCombiner constructor");
     if(l1 != IQIndex::Null()) left_.push_back(l1); 
     if(l2 != IQIndex::Null()) left_.push_back(l2);
     if(l3 != IQIndex::Null()) left_.push_back(l3); 
@@ -85,7 +85,7 @@ reset()
 void IQCombiner::
 addleft(const IQIndex& l) 	// Include another left index
 	{ 
-    if(l == IQIndex::Null()) Error("Null IQIndex");
+    if(l == IQIndex::Null()) Error("Null IQIndex in IQCombiner addleft");
     left_.push_back(l);
     //Flip arrows to make combiner compatible with
     //the IQTensor from which it got its left indices

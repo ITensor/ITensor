@@ -520,7 +520,7 @@ takeImagPart()
     ITENSOR_CHECK_NULL
     if(!i_)
         {
-        scale_ = 0;
+        scale_ = LogNumber(0);
         return *this;
         }
     r_.swap(i_);
@@ -1974,7 +1974,7 @@ operator/=(const ITensor& other)
 
     if(scale_.isZero() || other.scale_.isZero())
         {
-        scale_ = 0;
+        scale_ = LogNumber(0);
         return *this;
         }
 
@@ -2874,7 +2874,7 @@ operator-=(const ITensor& other)
     {
     if(this == &other) 
         { 
-        scale_ = 0; 
+        scale_ = LogNumber(0); 
         return *this; 
         }
     scale_.negate();
@@ -2893,7 +2893,7 @@ fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     DO_IF_DEBUG(if(i2.m() != M.Ncols()) Error("fromMatrix11: wrong number of cols");)
 
     solo();
-    scale_ = 1;
+    scale_ = LogNumber(1);
     is_ = IndexSet<Index>(i1,i2);
 
     MatrixRef dref; 
@@ -3364,7 +3364,7 @@ commaInit(ITensor& T,
     }
 
 commaInit& commaInit::
-operator<<(Real r)
+operator=(Real r)
     {
     started_ = true;
     return operator,(r);
@@ -3402,13 +3402,11 @@ Dot(const ITensor& x, const ITensor& y)
     res *= y;
     if(res.r() != 0) 
         { 
-        Print(x);
-        Print(y);
         if(x.isComplex() || y.isComplex())
             {
-            Error("Must use BraKet, not Dot, for complex ITensors");
+            throw ITError("Must use BraKet, not Dot, for complex ITensors");
             }
-        Error("Bad Dot, product is not a scalar"); 
+        throw ITError("Bad call to Dot, product is not a scalar"); 
         }
     return res.toReal();
     }
@@ -3422,9 +3420,7 @@ BraKet(const ITensor& x, const ITensor& y)
         res *= y;
         if(res.r() != 0) 
             {
-            Print(x);
-            Print(y);
-            Error("Bad Dot, product not a scalar");
+            throw ITError("Bad call to BraKet, product not a scalar");
             }
         return res.toComplex();
         }
@@ -3435,9 +3431,7 @@ BraKet(const ITensor& x, const ITensor& y)
         res *= y;
         if(res.r() != 0) 
             {
-            Print(x);
-            Print(y);
-            Error("Bad Dot, product not a scalar");
+            throw ITError("Bad call to BraKet, product not a scalar");
             }
         return res.toComplex();
         }

@@ -134,7 +134,7 @@ init_()
             {
             Real eff_h = Boundary_h_;
             if(J_ > 0) eff_h *= (x%2==1 ? -1 : 1)*(y%2==1 ? -1 : 1);
-            //cerr << format("Doing a staggered bf of %.2f at site %d (%d,%d)\n")%eff_h%n%x%y;
+            printfln("Applying staggered h of %.2f at site %d (%d,%d)",eff_h,n,x,y);
             W += sites_.op("Sz",n) * row(start) * col(1) * eff_h;
             }
 

@@ -436,6 +436,8 @@ class ITensor : public safe_bool<ITensor>
 
     void 
     scaleTo(const LogNumber& newscale);
+    void 
+    scaleTo(Real newscale) { scaleTo(LogNumber(newscale)); }
 
     VectorRef 
     assignToVec() const;
@@ -572,9 +574,14 @@ class commaInit
               const Index& i2 = Index::Null(),
               const Index& i3 = Index::Null());
 
-    commaInit& operator<<(Real r);
+    commaInit& 
+    operator=(Real r);
 
-    commaInit& operator,(Real r);
+    commaInit& 
+    operator<<(Real r) { return operator=(r); }
+
+    commaInit& 
+    operator,(Real r);
 
     ~commaInit();
 
@@ -722,7 +729,7 @@ Dot(const ITensor& x, const ITensor& y);
 //
 // Conjugates the first argument, therefore
 // equivalent to the contraction dag(x) * y 
-// (except it yields two real numbers, re and im,
+// (except it yields a Complex number
 // instead of a rank 0 ITensor).
 //
 Complex 

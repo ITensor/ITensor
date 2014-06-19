@@ -37,6 +37,9 @@ class DMRGObserver : public Observer
     const MPSt<Tensor>& 
     psi() const { return psi_; }
     
+    const Spectrum&
+    spectrum() const { return last_spec_; }
+
     private:
 
     /////////////

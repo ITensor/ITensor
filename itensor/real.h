@@ -132,6 +132,7 @@ class LogNumber
         sign_(1) 
         { }
 
+    explicit
     LogNumber(Real r)
         {
         if(r == 0)

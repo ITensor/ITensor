@@ -99,7 +99,7 @@ main(int argc, char* argv[])
 
     const ITensor I = Id1*Id2;
 
-    ITensor x = H*(-beta/2.);
+    ITensor x = H*(-beta);
 
     //Make expH = (x/M + 1), similar to the innermost
     //parentheses in the formula above:
@@ -115,7 +115,7 @@ main(int argc, char* argv[])
     //    |      |
     //    ========
     //    |      |
-    //    s1'    s1'
+    //    s1'    s2'
     //
 
     for(int ord = max_order-1; ord >= 1; --ord)

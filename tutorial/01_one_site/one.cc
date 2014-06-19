@@ -31,14 +31,14 @@ main(int argc, char* argv[])
     // Operators 
     //
 
-    ITensor Sz(s,primed(s)),
-            Sx(s,primed(s));
+    ITensor Sz(s,prime(s)),
+            Sx(s,prime(s));
 
-    commaInit(Sz,s,primed(s)) << 0.5, 0.0,
-                                 0.0,-0.5;
+    commaInit(Sz,s,prime(s)) = 0.5, 0.0,
+                               0.0,-0.5;
 
-    commaInit(Sx,s,primed(s)) << 0.0, 0.5,
-                                 0.5, 0.0;
+    commaInit(Sx,s,prime(s)) = 0.0, 0.5,
+                               0.5, 0.0;
 
     PrintData(Sz);
     PrintData(Sx);
@@ -75,7 +75,7 @@ main(int argc, char* argv[])
     // Expectation values
     //
 
-    ITensor cpsi = dag(primed(psi));
+    ITensor cpsi = dag(prime(psi));
 
     Real zz = (cpsi * Sz * psi).toReal();
     Real xx = (cpsi * Sx * psi).toReal();

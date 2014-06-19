@@ -66,7 +66,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 // (tensor must be conjugate symmetric under
 //  exchange primed and unprimed indices)
 // Result is unitary tensor U and diagonal sparse tensor D
-// such that M == dag(U)*D*primed(U)
+// such that M == dag(U)*D*prime(U)
 //
 template<class Tensor>
 Spectrum 
@@ -130,7 +130,7 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
 //
 //       ~
 // (here V is identical to V upon replacing K->I, L->J,
-//  and for case (1) is the same as primed(V))
+//  and for case (1) is the same as prime(V))
 //
 template<class Tensor>
 void 

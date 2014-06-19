@@ -6,6 +6,7 @@
 #define __ITENSOR_SPECTRUM_H
 
 #include "iqtensor.h"
+#include "iterpair.h"
 
 namespace itensor {
 
@@ -38,34 +39,40 @@ class Spectrum
     QN
     qn(int n) const;
 
+    const QNStorage&
+    qns() const { return qns_; }
+
     Real
-    eig(int n) const { return eigsKept_(n); }
+    eig(int n) const { return eigs_(n); }
+
+    const Vector&
+    eigs() const { return eigs_; }
 
     Real 
     truncerr() const { return truncerr_; }
 
     int
-    numEigsKept() const { return eigsKept_.Length(); }
+    size() const { return eigs_.Length(); }
 
     bool
     hasQNs() const { return !qns_.empty(); }
-
-    const Vector& 
-    eigsKept() const { return eigsKept_; }
-
-    const QNStorage&
-    qn() const { return qns_; }
 
 
     //
     // Other Methods
     //
 
+    const Vector& 
+    eigsKept() const { return eigs_; }
+
+    int
+    numEigsKept() const { return eigs_.Length(); }
+
     void 
     truncerr(Real val) { truncerr_ = val; }
 
     void 
-    eigsKept(const Vector& val) { eigsKept_ = val; }
+    eigsKept(const Vector& val) { eigs_ = val; }
 
     void 
     read(std::istream& s);
@@ -76,7 +83,7 @@ class Spectrum
 
     /////////////////
 
-    Vector eigsKept_;
+    Vector eigs_;
     Real truncerr_;
     std::vector<QN> qns_;
 

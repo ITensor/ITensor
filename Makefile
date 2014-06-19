@@ -27,9 +27,7 @@ itensor: configure
 	@echo
 	cd itensor && make
 
-configure: this_dir.mk
-
-this_dir.mk:
+configure:
 	@echo
 	@echo Configure: Writing current dir to this_dir.mk
 	@echo THIS_DIR=`pwd` > this_dir.mk

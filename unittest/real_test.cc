@@ -68,7 +68,7 @@ TEST_CASE("Operators")
     LogNumber l1(a);
     l1 *= -1;
 
-    CHECK_CLOSE((l1*-1).real(),a,LogNumber_Accuracy);
+    CHECK_CLOSE((-l1).real(),a,LogNumber_Accuracy);
 
     LogNumber l2(a);
     l2 *= b;
@@ -126,11 +126,11 @@ TEST_CASE("Comparison")
 
     LogNumber zero(0);
 
-    REQUIRE(zero.approxEquals(0));
+    REQUIRE(zero.approxEquals(zero));
 
     zero *= -1;
 
-    REQUIRE(zero.approxEquals(0));
+    REQUIRE(zero.approxEquals(zero));
 
     LogNumber one(1);
 

@@ -148,14 +148,14 @@ idmrg(MPSt<Tensor>& psi,
             {
             HL *= psi.A(j);
             HL *= H.A(j);
-            HL *= dag(primed(psi.A(j)));
+            HL *= dag(prime(psi.A(j)));
             IL *= psi.A(j);
             IL *= H.A(j);
-            IL *= dag(primed(psi.A(j)));
+            IL *= dag(prime(psi.A(j)));
 
             HR *= psi.A(N0-j+1);
             HR *= H.A(N0-j+1);
-            HR *= dag(primed(psi.A(N0-j+1)));
+            HR *= dag(prime(psi.A(N0-j+1)));
             }
         //H = HG(sw);
         swapUnitCells(H);
@@ -238,14 +238,14 @@ idmrg(MPSt<Tensor>& psi,
             {
             HL *= psi.A(j);
             HL *= H.A(j);
-            HL *= dag(primed(psi.A(j)));
+            HL *= dag(prime(psi.A(j)));
             IL *= psi.A(j);
             IL *= H.A(j);
-            IL *= dag(primed(psi.A(j)));
+            IL *= dag(prime(psi.A(j)));
 
             HR *= psi.A(N0-j+1);
             HR *= H.A(N0-j+1);
-            HR *= dag(primed(psi.A(N0-j+1)));
+            HR *= dag(prime(psi.A(N0-j+1)));
             }
         swapUnitCells(H);
 

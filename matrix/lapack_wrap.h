@@ -1,10 +1,32 @@
-#ifndef __lapack_wrap_h
-#define __lapack_wrap_h
+//
+// Distributed under the ITensor Library License, Version 1.1.
+//    (See accompanying LICENSE file.)
+//
+#ifndef __ITENSOR_lapack_wrap_h
+#define __ITENSOR_lapack_wrap_h
 
 //
 // Headers and typedefs
 //
-#ifdef PLATFORM_macos
+
+#ifdef PLATFORM_lapack
+
+#define LAPACK_REQUIRE_EXTERN
+
+#include <complex>
+
+namespace itensor {
+typedef int
+LAPACK_INT;
+typedef double
+LAPACK_REAL;
+typedef struct
+{
+  double real, imag;
+} LAPACK_COMPLEX;
+};
+
+#elif defined PLATFORM_macos
 
 #include <Accelerate/Accelerate.h>
 namespace itensor {
@@ -16,19 +38,23 @@ typedef __CLPK_doublecomplex
 LAPACK_COMPLEX;
 };
 
-#elif PLATFORM_acml
+#elif defined PLATFORM_acml
 
-#include "acml.h"
+#define LAPACK_REQUIRE_EXTERN
+
+//#include "acml.h"
 namespace itensor {
 typedef int
 LAPACK_INT;
 typedef double
 LAPACK_REAL;
-typedef doublecomplex
-LAPACK_COMPLEX;
+typedef struct
+{
+  double real, imag;
+} LAPACK_COMPLEX;
 };
 
-#elif PLATFORM_mkl
+#elif defined PLATFORM_mkl
 
 #include "mkl_lapack.h"
 namespace itensor {
@@ -40,21 +66,104 @@ typedef MKL_Complex16
 LAPACK_COMPLEX;
 };
 
-#elif PLATFORM_lapack
+#endif
 
-#include "lapacke.h"
-namespace itensor {
-typedef lapack_int
-LAPACK_INT;
-typedef double
-LAPACK_REAL;
-typedef lapack_complex_double
-LAPACK_COMPLEX;
-};
-
+#ifdef FORTRAN_NO_TRAILING_UNDERSCORE
+#define F77NAME(x) x
+#else
+#define F77NAME(x) x##_
 #endif
 
 namespace itensor {
+
+//
+//
+// Forward declarations of fortran lapack routines
+//
+//
+#ifdef LAPACK_REQUIRE_EXTERN
+extern "C" {
+
+#ifdef PLATFORM_acml
+void F77NAME(dsyev)(char *jobz, char *uplo, int *n, double *a, int *lda, 
+                    double *w, double *work, int *lwork, int *info, 
+                    int jobz_len, int uplo_len);
+#else
+void F77NAME(dsyev)(const char* jobz, const char* uplo, const LAPACK_INT* n, double* a,
+            const LAPACK_INT* lda, double* w, double* work, const LAPACK_INT* lwork,
+            LAPACK_INT* info );
+#endif
+
+#ifdef PLATFORM_acml
+void F77NAME(zgesdd)(char *jobz, int *m, int *n, LAPACK_COMPLEX *a, int *lda, double *s, 
+             LAPACK_COMPLEX *u, int *ldu, LAPACK_COMPLEX *vt, int *ldvt, 
+             LAPACK_COMPLEX *work, int *lwork, double *rwork, int *iwork, int *info, 
+             int jobz_len);
+#else
+void F77NAME(zgesdd)(char *jobz, LAPACK_INT *m, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, double *s, 
+             LAPACK_COMPLEX *u, LAPACK_INT *ldu, LAPACK_COMPLEX *vt, LAPACK_INT *ldvt, 
+             LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, LAPACK_INT *iwork, LAPACK_INT *info);
+#endif
+
+void F77NAME(dgeqrf)(LAPACK_INT *m, LAPACK_INT *n, double *a, LAPACK_INT *lda, 
+                     double *tau, double *work, LAPACK_INT *lwork, LAPACK_INT *info);
+
+void F77NAME(dorgqr)(LAPACK_INT *m, LAPACK_INT *n, LAPACK_INT *k, double *a, 
+                     LAPACK_INT *lda, double *tau, double *work, LAPACK_INT *lwork, 
+                     LAPACK_INT *info);
+
+#ifdef PLATFORM_acml
+void F77NAME(zheev)(char *jobz, char *uplo, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, 
+            double *w, LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, 
+            LAPACK_INT *info, LAPACK_INT jobz_len, LAPACK_INT uplo_len);
+#else
+void F77NAME(zheev)(char *jobz, char *uplo, LAPACK_INT *n, LAPACK_COMPLEX *a, LAPACK_INT *lda, 
+           double *w, LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, 
+           LAPACK_INT *info);
+#endif
+
+
+#ifdef PLATFORM_acml
+void F77NAME(dsygv)(LAPACK_INT *itype, char *jobz, char *uplo, LAPACK_INT *n, double *a, 
+            LAPACK_INT *lda, double *b, LAPACK_INT *ldb, double *w, double *work, 
+            LAPACK_INT *lwork, LAPACK_INT *info, LAPACK_INT jobz_len, LAPACK_INT uplo_len); 
+#else
+void F77NAME(dsygv)(LAPACK_INT *itype, char *jobz, char *uplo, LAPACK_INT *n, double *a, 
+           LAPACK_INT *lda, double *b, LAPACK_INT *ldb, double *w, double *work, 
+           LAPACK_INT *lwork, LAPACK_INT *info);
+#endif
+
+
+#ifdef PLATFORM_acml
+void F77NAME(dgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, double *a, 
+                    LAPACK_INT *lda, double *wr, double *wi, double *vl, LAPACK_INT *ldvl, 
+                    double *vr, LAPACK_INT *ldvr, double *work, LAPACK_INT *lwork, 
+                    LAPACK_INT *info, LAPACK_INT jobvl_len, LAPACK_INT jobvr_len);
+#else
+void F77NAME(dgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, double *a, 
+                    LAPACK_INT *lda, double *wr, double *wi, double *vl, LAPACK_INT *ldvl, 
+                    double *vr, LAPACK_INT *ldvr, double *work, LAPACK_INT *lwork, 
+                    LAPACK_INT *info);
+#endif
+
+
+#ifdef PLATFORM_acml
+void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a, 
+                    LAPACK_INT *lda, LAPACK_COMPLEX *w, LAPACK_COMPLEX *vl, 
+                    LAPACK_INT *ldvl, LAPACK_COMPLEX *vr, LAPACK_INT *ldvr, 
+                    LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, 
+                    LAPACK_INT *info, LAPACK_INT jobvl_len, LAPACK_INT jobvr_len);
+#else
+void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a, 
+                    LAPACK_INT *lda, LAPACK_COMPLEX *w, LAPACK_COMPLEX *vl, 
+                    LAPACK_INT *ldvl, LAPACK_COMPLEX *vr, LAPACK_INT *ldvr, 
+                    LAPACK_COMPLEX *work, LAPACK_INT *lwork, double *rwork, 
+                    LAPACK_INT *info);
+#endif
+
+} //extern "C"
+#endif
+
 
 //
 // dsyev
@@ -62,7 +171,7 @@ namespace itensor {
 void inline
 dsyev_wrapper(char* jobz,        //if jobz=='V', compute eigs and evecs
               char* uplo,        //if uplo=='U', read from upper triangle of A
-              LAPACK_INT* n,     //number of cols of A
+              LAPACK_INT* n,     //numbec of cols of A
               LAPACK_REAL* A,    //symmetric matrix A
               LAPACK_INT* lda,   //size of A (usually same as n)
               LAPACK_REAL* eigs, //eigenvalues on return
@@ -72,11 +181,9 @@ dsyev_wrapper(char* jobz,        //if jobz=='V', compute eigs and evecs
     LAPACK_REAL work[lwork];
 
 #ifdef PLATFORM_acml
-    dsyev_(jobz,uplo,n,A,lda,eigs,work,&lwork,info,1,1);
-#elif PLATFORM_lapack
-    LAPACK_dsyev(jobz, uplo, n, A, lda, eigs, work, &lwork, info);
+    F77NAME(dsyev)(jobz,uplo,n,A,lda,eigs,work,&lwork,info,1,1);
 #else
-    dsyev_(jobz,uplo,n,A,lda,eigs,work,&lwork,info);
+    F77NAME(dsyev)(jobz,uplo,n,A,lda,eigs,work,&lwork,info);
 #endif
     }
 
@@ -99,11 +206,9 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
     LAPACK_INT iwork[8*l];
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
-    zgesdd_(jobz,m,n,A,m,s,u,m,vt,n,work,&lwork,rwork,iwork,info,jobz_len);
-#elif PLATFORM_lapack
-    LAPACK_zgesdd(jobz, m, n, A, m, s, u, m, vt, n, work, &lwork, rwork, iwork, info);
+    F77NAME(zgesdd)(jobz,m,n,A,m,s,u,m,vt,n,work,&lwork,rwork,iwork,info,jobz_len);
 #else
-    zgesdd_(jobz,m,n,A,m,s,u,m,vt,n,work,&lwork,rwork,iwork,info);
+    F77NAME(zgesdd)(jobz,m,n,A,m,s,u,m,vt,n,work,&lwork,rwork,iwork,info);
 #endif
     }
 
@@ -124,11 +229,7 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
     {
     int lwork = max(1,4*max(*n,*m));
     LAPACK_REAL work[lwork]; 
-#ifdef PLATFORM_lapack
-    LAPACK_dgeqrf(m, n, A, lda, tau, work, &lwork, info);
-#else
-    dgeqrf_(m,n,A,lda,tau,work,&lwork,info);
-#endif
+    F77NAME(dgeqrf)(m,n,A,lda,tau,work,&lwork,info);
     }
 
 //
@@ -148,11 +249,7 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
     {
     int lwork = max(1,4*max(*n,*m));
     LAPACK_REAL work[lwork]; 
-#ifdef PLATFORM_lapack
-    LAPACK_dorgqr(m, n, k, A, lda, tau, work, &lwork, info);
-#else
-    dorgqr_(m,n,k,A,lda,tau,work,&lwork,info);
-#endif
+    F77NAME(dorgqr)(m,n,k,A,lda,tau,work,&lwork,info);
     }
 
 //
@@ -176,11 +273,9 @@ zheev_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
     LAPACK_INT uplo_len = 1;
-    zheev_(jobz,uplo,n,A,lda,d,work,lwork,rwork,info,jobz_len,uplo_len);
-#elif PLATFORM_lapack
-    LAPACK_zheev(jobz, uplo, n, A, lda, d, work, lwork, rwork, info);
+    F77NAME(zheev)(jobz,uplo,n,A,lda,d,work,lwork,rwork,info,jobz_len,uplo_len);
 #else
-    zheev_(jobz,uplo,n,A,lda,d,work,lwork,rwork,info);
+    F77NAME(zheev)(jobz,uplo,n,A,lda,d,work,lwork,rwork,info);
 #endif
     }
 
@@ -208,11 +303,9 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
     LAPACK_INT uplo_len = 1;
-    dsygv_(&itype,jobz,uplo,n,A,n,B,n,d,work,&lwork,info,jobz_len,uplo_len);
-#elif PLATFORM_lapack
-    LAPACK_dsygv(&itype, jobz, uplo, n, A, n, B, n, d, work, &lwork, info);
+    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,work,&lwork,info,jobz_len,uplo_len);
 #else
-    dsygv_(&itype,jobz,uplo,n,A,n,B,n,d,work,&lwork,info);
+    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,work,&lwork,info);
 #endif
     }
 
@@ -240,11 +333,9 @@ dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
 #ifdef PLATFORM_acml
     LAPACK_INT jobvl_len = 1;
     LAPACK_INT jobvr_len = 1;
-    dgeev_(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work,&lwork,info,jobvl_len,jobvr_len);
-#elif PLATFORM_lapack
-    LAPACK_dgeev(jobvl, jobvr, n, A, n, dr, di, vl, &nevecl, vr, &nevecr, work, &lwork, info);
+    F77NAME(dgeev)(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work,&lwork,info,jobvl_len,jobvr_len);
 #else
-    dgeev_(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work,&lwork,info);
+    F77NAME(dgeev)(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work,&lwork,info);
 #endif
     }
 
@@ -271,9 +362,9 @@ zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
     LAPACK_INT lrwork = max(1,2*(*n));
     LAPACK_REAL rwork[lrwork];
 #ifdef PLATFORM_acml
-    zgeev_(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info,1,1);
+    F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info,1,1);
 #else
-    zgeev_(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info);
+    F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info);
 #endif
     }
 
