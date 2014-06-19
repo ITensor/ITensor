@@ -148,7 +148,7 @@ class SkipIterator
         }
 
     void
-    swap (SkipIterator& x)
+    swap(SkipIterator& x)
         {
         std::swap(curr_,x.curr_);
         std::swap(end_,x.end_);
@@ -169,7 +169,10 @@ class SkipIterator
     void 
     initialize_()
         {
-        if(Skip()(curr_)) increment_();
+        if(valid())
+            {
+            if(Skip()(curr_)) increment_();
+            }
         }
 
     private:
