@@ -66,7 +66,7 @@ blockPos(const IndexSet<Index>& is,
 bool IQTensor::
 valid() const 
     { 
-    return bool(d_);
+    return bool(d_) && (d_.get() != IQTDat::Null().get());
     }
 
 bool IQTensor::
@@ -104,6 +104,8 @@ allocate()
 
 IQTensor::
 IQTensor() 
+    :
+    d_(IQTDat::Null())
     { }
 
 IQTensor::
@@ -1418,16 +1420,31 @@ replaceIndex(const IQIndex& oind,
 const ITensor& IQTensor::
 getBlock(const IndexSet<Index>& inds) const
     {
+    if(!valid()) Error("Default initialized IQTensor");
+#ifdef DEBUG
+    const int pos = blockPos(inds,is_);
+    if(pos < 0 || pos >= d_->size()) 
+        {
+        Print(inds);
+        Print(is_);
+        Print(blockPos(inds,is_));
+        Print(d_->size());
+        Error("blockPos out of range");
+        }
+    const ITensor& t = d_->at(pos);
+    return t;
+#else
     return d_->at(blockPos(inds,is_));
+#endif
     }
 
 ITensor& IQTensor::
 getBlock(const IndexSet<Index>& inds)
     {
-    if(!d_) Error("Default initialized IQTensor");
+    if(!valid()) Error("Default initialized IQTensor");
 #ifdef DEBUG
     const int pos = blockPos(inds,is_);
-    if(pos >= d_->size()) 
+    if(pos < 0 || pos >= d_->size()) 
         {
         Print(inds);
         Print(is_);

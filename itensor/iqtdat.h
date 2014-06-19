@@ -71,6 +71,9 @@ class IQTDat
     void 
     write(std::ostream& s) const;
 
+    static const shared_ptr<IQTDat>&
+    Null();
+
     private:
 
     //////////////
@@ -113,6 +116,14 @@ write(std::ostream& s) const
         }
     }
 
+
+inline
+const shared_ptr<IQTDat>& IQTDat::
+Null()
+    {
+    static shared_ptr<IQTDat> Null_ = make_shared<IQTDat>();
+    return Null_;
+    }
 
 }; //namespace itensor
 
