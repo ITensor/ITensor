@@ -590,12 +590,6 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     //toMatrix11NoScale, so put the scale back in
     D *= refNorm;
 
-//    Vector DD(L.m());
-//    for(int i = 1; i <= L.m(); ++i)
-//        {
-//        DD(i) = alleig.at(alleig.size()-i);
-//        }
-
     return Spectrum(D,Opt("Truncerr",svdtruncerr));
 
     } //void svdRank2
