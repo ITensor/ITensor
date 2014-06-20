@@ -102,6 +102,7 @@ allocate()
     d_ = make_shared<Storage>(dim);
     }
 
+
 IQTensor::
 IQTensor() 
     :
@@ -745,13 +746,15 @@ trace(const array<IQIndex,NMAX>& indices, int niqind)
         const IQIndex& K = is_.index(k);
         bool K_traced = false;
         for(int j = 0; j < niqind; ++j)
-        if(K == indices[j]) 
             {
-            if(indices[j].m() != tm)
-                Error("Traced indices must have matching m's");
-            K_traced = true;
-            ++nmatched;
-            break;
+            if(K == indices[j]) 
+                {
+                if(indices[j].m() != tm)
+                    Error("Traced indices must have matching m's");
+                K_traced = true;
+                ++nmatched;
+                break;
+                }
             }
         if(!K_traced)
             {
@@ -778,7 +781,9 @@ trace(const array<IQIndex,NMAX>& indices, int niqind)
     for(int i = 1; i <= nindex; ++i)
         {
         for(int n = 0; n < niqind; ++n)
+            {
             totrace[n] = indices[n].index(i);
+            }
 
         Foreach(const ITensor& t, *prevdat)
             {
@@ -799,6 +804,8 @@ trace(const array<IQIndex,NMAX>& indices, int niqind)
                 }
             }
         }
+
+
     return *this;
     }
 

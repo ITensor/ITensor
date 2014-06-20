@@ -963,13 +963,18 @@ template <class Tensor>
 Real
 trace(Tensor T)
     {
+    typedef typename Tensor::IndexT
+    IndexT;
     if(T.isComplex())
         {
         Error("ITensor is complex, use trace(T,re,im)");
         }
     if(T.indices().rn() != 0) 
         {
-        T.trace(T.indices(),T.indices().rn());
+        const 
+        typename IndexSet<IndexT>::Storage
+        inds = T.indices();
+        T.trace(inds,T.indices().rn());
         }
     return T.toReal();
     }

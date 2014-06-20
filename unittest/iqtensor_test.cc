@@ -291,6 +291,13 @@ SECTION("Trace")
             }
         CHECK_CLOSE(val,Dt(S1(j2),prime(L1)(j1)),1E-10);
         }
+
+    IQTensor rho(L1(2),prime(L1)(2));
+    rho.randomize();
+    Real tr = trace(rho);
+    rho /= tr;
+    tr = trace(rho);
+    CHECK(fabs(tr-1.) < 1E-11);
     }
 
 SECTION("MapElems")

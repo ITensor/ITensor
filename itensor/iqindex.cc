@@ -174,7 +174,7 @@ Null()
 //
 
 #ifdef DEBUG
-#define IQINDEX_CHECK_NULL if(pd == 0) Error("IQIndex is null");
+#define IQINDEX_CHECK_NULL if(pd == 0) throw ITError("IQIndex is null");
 #else
 #define IQINDEX_CHECK_NULL
 #endif
