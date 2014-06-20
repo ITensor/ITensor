@@ -54,13 +54,37 @@ class IQTDat
     cend() const { return const_iterator(blocks_.end(),blocks_.end()); }
 
     int
-    size() const { return blocks_.size(); }
+    maxSize() const { return blocks_.size(); }
+
+    int
+    size() const 
+        { 
+        int sz = 0;
+        Foreach(const ITensor& t, blocks_)
+            {
+            if(t.valid()) ++sz;
+            }
+        return sz;
+        }
 
     bool
-    empty() const { return blocks_.empty(); }
+    empty() const 
+        { 
+        Foreach(const ITensor& t, blocks_)
+            {
+            if(t.valid()) return false;
+            }
+        return true;
+        }
 
     void
-    clear() { blocks_.clear(); }
+    clear() 
+        { 
+        Foreach(ITensor& t, blocks_)
+            {
+            if(t.valid()) t = ITensor();
+            }
+        }
 
     void
     swap(Storage& new_blocks) { blocks_.swap(new_blocks); }

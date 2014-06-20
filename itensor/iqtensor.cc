@@ -943,6 +943,7 @@ dot_(const array<const int*,NMAX>& i,
 IQTensor& IQTensor::
 operator*=(const IQTensor& other)
     {
+    Error("IQTensor operator *= still not tested.");
     //TODO: account for fermion sign here
     if(this == &other)
         {
@@ -1055,15 +1056,12 @@ operator*=(const IQTensor& other)
     std::fill(ll.begin(),ll.end(),0);
     std::fill(rl.begin(),rl.end(),0);
 
-    int dim = 1;
-    for(int n = 0; n < is_.r(); ++n)
+    for(int n = 0, dim = 1; n < is_.r(); ++n)
         {
         ll[n] = dim;
         dim *= is_[n].nindex();
         }
-
-    dim = 1;
-    for(int n = 0; n < other.is_.r(); ++n)
+    for(int n = 0, dim = 1; n < other.is_.r(); ++n)
         {
         rl[n] = dim;
         dim *= other.is_[n].nindex();
@@ -1444,12 +1442,12 @@ getBlock(const IndexSet<Index>& inds)
     if(!valid()) Error("Default initialized IQTensor");
 #ifdef DEBUG
     const int pos = blockPos(inds,is_);
-    if(pos < 0 || pos >= d_->size()) 
+    if(pos < 0 || pos >= d_->maxSize()) 
         {
         Print(inds);
         Print(is_);
         Print(blockPos(inds,is_));
-        Print(d_->size());
+        Print(d_->maxSize());
         Error("blockPos out of range");
         }
     ITensor& t = d_->at(pos);
