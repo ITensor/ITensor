@@ -159,10 +159,10 @@ class SkipIterator
     void 
     increment_()
         {
-        while(curr_ != end_)
+        while(valid())
             {
             ++curr_;
-            if(!Skip()(curr_)) break;
+            if(!valid() || !Skip()(curr_)) return;
             }
         }
 
