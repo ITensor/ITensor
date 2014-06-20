@@ -640,72 +640,72 @@ tieIndices(const array<IQIndex,NMAX>& indices,
            int niqind, 
            const IQIndex& tied)
     {
-    Error("tieIndices not currently implemented.");
-    //if(niqind < 1) Error("No IQIndices to tie");
+    if(niqind < 1) Error("No IQIndices to tie");
 
-    //const int nindex = indices[0].nindex();
+    const int nindex = indices[0].nindex();
 
-    //IQTDatPtr dat = make_shared<IQTDat>(d_->size());
-    //d_.swap(dat);
+    IndexSet<IQIndex> nis_(tied);
 
-    //IndexSet<IQIndex> nis_(tied);
+    int nmatched = 0;
+    for(int k = 1; k <= is_.r(); ++k)
+        {
+        const IQIndex& K = is_.index(k);
+        bool K_is_tied = false;
+        for(int j = 0; j < niqind; ++j)
+        if(K == indices[j]) 
+            {
+            if(indices[j].m() != tied.m())
+                Error("Tied indices must have matching m's");
+            K_is_tied = true;
+            ++nmatched;
+            break;
+            }
+        if(!K_is_tied)
+            {
+            nis_.addindex(K);
+            }
+        }
 
-    //int nmatched = 0;
-    //for(int k = 1; k <= is_.r(); ++k)
-    //    {
-    //    const IQIndex& K = is_.index(k);
-    //    bool K_is_tied = false;
-    //    for(int j = 0; j < niqind; ++j)
-    //    if(K == indices[j]) 
-    //        {
-    //        if(indices[j].m() != tied.m())
-    //            Error("Tied indices must have matching m's");
-    //        K_is_tied = true;
-    //        ++nmatched;
-    //        break;
-    //        }
-    //    if(!K_is_tied)
-    //        {
-    //        nis_.addindex(K);
-    //        }
-    //    }
+    if(nmatched != niqind)
+        {
+        Print(this->indices());
+        cout << "Indices to tie = " << endl;
+        for(int j = 0; j < niqind; ++j)
+            cout << indices[j] << endl;
+        Error("Couldn't find IQIndex to tie");
+        }
 
-    //if(nmatched != niqind)
-    //    {
-    //    Print(this->indices());
-    //    cout << "Indices to tie = " << endl;
-    //    for(int j = 0; j < niqind; ++j)
-    //        cout << indices[j] << endl;
-    //    Error("Couldn't find IQIndex to tie");
-    //    }
+    is_.swap(nis_);
 
-    //is_.swap(nis_);
+    IQTDatPtr prevdat;
+    prevdat.swap(d_);
+    allocate();
 
-    //array<Index,NMAX> totie;
-    //for(int i = 1; i <= nindex; ++i)
-    //    {
-    //    for(int n = 0; n < niqind; ++n)
-    //        totie[n] = indices[n].index(i);
+    array<Index,NMAX> totie;
+    for(int i = 1; i <= nindex; ++i)
+        {
+        for(int n = 0; n < niqind; ++n)
+            totie[n] = indices[n].index(i);
 
-    //    Foreach(const ITensor& t, *dat)
-    //        {
-    //        bool has_all = true;
-    //        for(int n = 0; n < niqind; ++n)
-    //            {
-    //            if(!hasindex(t,totie[n]))
-    //                {
-    //                has_all = false;
-    //                break;
-    //                }
-    //            }
-    //        if(has_all)
-    //            {
-    //            ITensor nt(t);
-    //            nt.tieIndices(totie,niqind,tied.index(i));
-    //            getBlock(nt.indices()) += nt;
-    //            }
-    //        }
-    //    }
+        Foreach(const ITensor& t, *prevdat)
+            {
+            bool has_all = true;
+            for(int n = 0; n < niqind; ++n)
+                {
+                if(!hasindex(t,totie[n]))
+                    {
+                    has_all = false;
+                    break;
+                    }
+                }
+            if(has_all)
+                {
+                ITensor nt(t);
+                nt.tieIndices(totie,niqind,tied.index(i));
+                getBlock(nt.indices()) += nt;
+                }
+            }
+        }
     }
 
 void IQTensor::
@@ -723,77 +723,79 @@ tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied)
 IQTensor& IQTensor::
 trace(const array<IQIndex,NMAX>& indices, int niqind)
     {
-    Error("trace not currently implemented.");
-    //if(niqind < 0)
-    //    {
-    //    niqind = 0;
-    //    while(indices[niqind] != IQIndex::Null()) ++niqind;
-    //    }
+    if(niqind < 0)
+        {
+        niqind = 0;
+        while(indices[niqind] != IQIndex::Null()) ++niqind;
+        }
 
-    //if(niqind < 1) Error("No IQIndices to trace");
+    if(niqind < 1) Error("No IQIndices to trace");
 
-    //const int nindex = indices[0].nindex();
-    //const int tm = indices[0].m();
+    const int nindex = indices[0].nindex();
+    const int tm = indices[0].m();
 
-    //Data ndat;
-    //IndexSet<IQIndex> nis_;
+    IndexSet<IQIndex> nis_;
 
-    //int nmatched = 0;
-    //for(int k = 1; k <= is_.r(); ++k)
-    //    {
-    //    const IQIndex& K = is_.index(k);
-    //    bool K_traced = false;
-    //    for(int j = 0; j < niqind; ++j)
-    //    if(K == indices[j]) 
-    //        {
-    //        if(indices[j].m() != tm)
-    //            Error("Traced indices must have matching m's");
-    //        K_traced = true;
-    //        ++nmatched;
-    //        break;
-    //        }
-    //    if(!K_traced)
-    //        {
-    //        nis_.addindex(K);
-    //        }
-    //    }
+    int nmatched = 0;
+    for(int k = 1; k <= is_.r(); ++k)
+        {
+        const IQIndex& K = is_.index(k);
+        bool K_traced = false;
+        for(int j = 0; j < niqind; ++j)
+        if(K == indices[j]) 
+            {
+            if(indices[j].m() != tm)
+                Error("Traced indices must have matching m's");
+            K_traced = true;
+            ++nmatched;
+            break;
+            }
+        if(!K_traced)
+            {
+            nis_.addindex(K);
+            }
+        }
 
-    //if(nmatched != niqind)
-    //    {
-    //    Print(this->indices());
-    //    cout << "Indices to trace = " << endl;
-    //    for(int j = 0; j < niqind; ++j)
-    //        cout << indices[j] << endl;
-    //    Error("Couldn't find IQIndex to trace");
-    //    }
+    if(nmatched != niqind)
+        {
+        Print(this->indices());
+        cout << "Indices to trace = " << endl;
+        for(int j = 0; j < niqind; ++j)
+            cout << indices[j] << endl;
+        Error("Couldn't find IQIndex to trace");
+        }
 
-    //array<Index,NMAX> totrace;
-    //for(int i = 1; i <= nindex; ++i)
-    //    {
-    //    for(int n = 0; n < niqind; ++n)
-    //        totrace[n] = indices[n].index(i);
+    is_.swap(nis_);
 
-    //    Foreach(const ITensor& t, *d_)
-    //        {
-    //        bool has_all = true;
-    //        for(int n = 0; n < niqind; ++n)
-    //            {
-    //            if(!hasindex(t,totrace[n]))
-    //                {
-    //                has_all = false;
-    //                break;
-    //                }
-    //            }
-    //        if(has_all)
-    //            {
-    //            ITensor tt(t);
-    //            tt.trace(totrace,niqind);
-    //            ndat.nc().insert_add(tt);
-    //            }
-    //        }
-    //    }
-    //dat.swap(ndat);
-    //is_.swap(nis_);
+    IQTDatPtr prevdat;
+    prevdat.swap(d_);
+    allocate();
+
+    array<Index,NMAX> totrace;
+    for(int i = 1; i <= nindex; ++i)
+        {
+        for(int n = 0; n < niqind; ++n)
+            totrace[n] = indices[n].index(i);
+
+        Foreach(const ITensor& t, *prevdat)
+            {
+            bool has_all = true;
+            for(int n = 0; n < niqind; ++n)
+                {
+                if(!hasindex(t,totrace[n]))
+                    {
+                    has_all = false;
+                    break;
+                    }
+                }
+            if(has_all)
+                {
+                ITensor tt(t);
+                tt.trace(totrace,niqind);
+                getBlock(tt.indices()) += tt;
+                }
+            }
+        }
     return *this;
     }
 
