@@ -952,6 +952,8 @@ dot_(const array<const int*,NMAX>& i,
     return d;
     }
 
+// Contracting product
+
 IQTensor& IQTensor::
 operator*=(const IQTensor& other)
     {
@@ -1277,8 +1279,6 @@ toReal() const
 IQTensor& IQTensor::
 operator+=(const IQTensor& other)
     {
-    //TODO: account for fermion sign here
-
     if(!this->valid())
         {
         operator=(other);
@@ -1289,25 +1289,6 @@ operator+=(const IQTensor& other)
         {
         operator*=(2);
         return *this;
-        }
-
-    /*
-    //EMS Mar 7 2013: not sure what this does or if it's correct
-    if(is_.r() == 0)	// Automatic initializing a summed IQTensor in a loop
-        { 
-        return (*this = other); 
-        }
-        */
-
-    IQTensor& This = *this;
-
-    if(fabs(This.is_.uniqueReal()-other.is_.uniqueReal()) > 1.0e-11) 
-        {
-        Print(This.indices());
-        Print(other.indices());
-        Print(This.is_.uniqueReal());
-        Print(other.is_.uniqueReal());
-        Error("Mismatched indices in IQTensor::operator+=");
         }
 
     solo(); 
