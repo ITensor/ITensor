@@ -192,6 +192,13 @@ class SkipIterator
 
     };
 
+template<typename Iterator, class Skip>
+std::ostream&
+operator<<(std::ostream& s, const SkipIterator<Iterator,Skip>& si)
+    {
+    s << "SkipIterator";
+    }
+
 }; //namespace itensor::detail
 }; //namespace itensor
 
