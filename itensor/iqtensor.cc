@@ -1375,10 +1375,13 @@ toITensor() const
 IQTensor& IQTensor::
 takeRealPart()
     {
-    solo();
-    Foreach(ITensor& t, *d_)
+    if(isComplex())
         {
-        t.takeRealPart();
+        solo();
+        Foreach(ITensor& t, *d_)
+            {
+            t.takeRealPart();
+            }
         }
     return *this;
     }
