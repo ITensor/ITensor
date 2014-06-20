@@ -390,14 +390,17 @@ operator()(const IQIndexVal& iv1, const IQIndexVal& iv2,
         Error("Wrong number of IQIndexVals provided");
         }
 
-    return (getBlock(is)).operator()(iv1.blockIndexVal(),
-                                       iv2.blockIndexVal(),
-                                       iv3.blockIndexVal(),
-                                       iv4.blockIndexVal(),
-                                       iv5.blockIndexVal(),
-                                       iv6.blockIndexVal(),
-                                       iv7.blockIndexVal(),
-                                       iv8.blockIndexVal());
+    ITensor& block = getBlock(is);
+    if(!block.valid()) block = ITensor(is);
+
+    return block.operator()(iv1.blockIndexVal(),
+                            iv2.blockIndexVal(),
+                            iv3.blockIndexVal(),
+                            iv4.blockIndexVal(),
+                            iv5.blockIndexVal(),
+                            iv6.blockIndexVal(),
+                            iv7.blockIndexVal(),
+                            iv8.blockIndexVal());
 	}
 
 //const element access
@@ -1449,22 +1452,10 @@ getBlock(const IndexSet<Index>& inds) const
 ITensor& IQTensor::
 getBlock(const IndexSet<Index>& inds)
     {
-    if(!valid()) Error("Default initialized IQTensor");
 #ifdef DEBUG
-    const int pos = blockPos(inds,is_);
-    if(pos < 0 || pos >= d_->maxSize()) 
-        {
-        Print(inds);
-        Print(is_);
-        Print(blockPos(inds,is_));
-        Print(d_->maxSize());
-        Error("blockPos out of range");
-        }
-    ITensor& t = d_->at(pos);
-#else
-    ITensor& t = d_->at(blockPos(inds,is_));
+    if(!valid()) Error("Default initialized IQTensor");
 #endif
-    if(!t.valid()) t = ITensor(inds);
+    ITensor& t = d_->at(blockPos(inds,is_));
     return t;
     }
 
@@ -1472,7 +1463,7 @@ void IQTensor::
 solo()
     {
 #ifdef DEBUG
-	if(!d_) Error("IQTensor is null");
+	if(!valid()) Error("IQTensor is default initialized");
 #endif
 	if(!d_.unique())
         {
