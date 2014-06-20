@@ -562,8 +562,7 @@ diag() const
 void ITensor::
 read(std::istream& s, const OptSet& opts)
     {
-	bool Legacy = opts.getBool("Legacy", false);
-	if( Legacy )
+	if( opts.getBool("v0.2", false) )
 	{
 		bool isNull_ = false;
 		s.read((char*) &isNull_,sizeof(isNull_));
