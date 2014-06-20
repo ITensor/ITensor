@@ -117,6 +117,8 @@ iqtensor.o: $(DEPHEADERS)
 DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h
 iqcombiner.o: $(DEPHEADERS)
 .debug_objs/iqcombiner.o: $(DEPHEADERS)
+condenser.o: $(DEPHEADERS)
+.debug_objs/condenser.o: $(DEPHEADERS)
 DEPHEADERS+= spectrum.h
 spectrum.o: $(DEPHEADERS)
 .debug_objs/spectrum.o: $(DEPHEADERS)
