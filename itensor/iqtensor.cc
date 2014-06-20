@@ -987,9 +987,6 @@ operator*=(const IQTensor& other)
     if(!other)
         Error("Multiplying by null IQTensor");
 
-    //Print(*this);
-    //Print(other);
-
     array<bool,NMAX> contractedL,
                      contractedR;
     contractedL.fill(false);
@@ -1101,114 +1098,56 @@ operator*=(const IQTensor& other)
 
 
     IndexSet<IQIndex> nis(newindex,nnew,0);
-
-    vector<BlockInfo> Lb,
-                      Rb;
-
-    int p = 0; //position of t in storage
-    Foreach(const ITensor& t, d_->store())
-        {
-        if(t.valid())
-            {
-            BlockInfo nfo(p);
-            for(int n = 0, j = p, nu = 0; n < is_.rn(); ++n)
-                {
-                const int N = is_[n].nindex();
-                const int i = j%N;
-                j /= N;
-                if(contractedL[n]) 
-                    {
-                    nfo.c += i*cdL[n];
-                    }
-                else               
-                    {
-                    nfo.u += i*ud[nu++];
-                    }
-                }
-            Lb.push_back(nfo);
-            }
-        ++p;
-        }
-
-    p = 0;
-    Foreach(const ITensor& t, other.d_->store())
-        {
-        if(t.valid())
-            {
-            BlockInfo nfo(p);
-            for(int n = 0, j = p, nu = nucL; n < other.is_.rn(); ++n)
-                {
-                const int N = other.is_[n].nindex();
-                const int i = j%N;
-                j /= N;
-                if(contractedR[n]) 
-                    {
-                    nfo.c += i*cdR[n];
-                    }
-                else               
-                    {
-                    nfo.u += i*ud[nu++];
-                    }
-                }
-            Rb.push_back(nfo);
-            }
-        ++p;
-        }
-
-    //println("ud =");
-    //for(auto x : ud)
-    //    {
-    //    print(x," ");
-    //    }
-    //println();
-
-    //println("cdL =");
-    //for(auto x : cdL)
-    //    {
-    //    print(x," ");
-    //    }
-    //println();
-
-    //println("cdR =");
-    //for(auto x : cdR)
-    //    {
-    //    print(x," ");
-    //    }
-    //println();
-
-    //println("Lb = ");
-    //for(const auto& nfo : Lb)
-    //    {
-    //    println("  ",nfo);
-    //    }
-
-    //println("Rb = ");
-    //for(const auto& nfo : Rb)
-    //    {
-    //    println("  ",nfo);
-    //    }
-
     IQTDatPtr ndat = make_shared<IQTDat>(nsize);
 
     const IQTDat::Storage& L = d_->store();
     const IQTDat::Storage& R = other.d_->store();
     IQTDat::Storage& N = ndat->store();
 
-    Foreach(const BlockInfo& l, Lb)
-    Foreach(const BlockInfo& r, Rb)
+    vector<BlockInfo> Lb;
+
+    for(size_t p = 0; p < L.size(); ++p)
         {
-        if(l.c == r.c) 
+        if(!L[p].valid()) continue;
+
+        BlockInfo l(p);
+        for(int n = 0, j = p, nu = 0; n < is_.rn(); ++n)
             {
-            //printfln("%d += %s* %s",l.u+r.u,l,r);
-            N.at(l.u+r.u) += L.at(l.p) * R.at(r.p);
+            const int N = is_[n].nindex();
+            const int i = j%N;
+            j /= N;
+            if(contractedL[n]) l.c += i*cdL[n];
+            else               l.u += i*ud[nu++];
+            }
+        Lb.push_back(l);
+        }
+
+    for(size_t p = 0; p < R.size(); ++p)
+        {
+        if(!R[p].valid()) continue;
+
+        BlockInfo r(p);
+        for(int n = 0, j = p, nu = nucL; n < other.is_.rn(); ++n)
+            {
+            const int N = other.is_[n].nindex();
+            const int i = j%N;
+            j /= N;
+            if(contractedR[n]) r.c += i*cdR[n];
+            else               r.u += i*ud[nu++];
+            }
+
+        Foreach(const BlockInfo& l, Lb)
+            {
+            if(l.c == r.c) 
+                {
+                N[l.u+r.u] += L[l.p] * R[r.p];
+                }
             }
         }
 
     is_.swap(nis);
     d_.swap(ndat);
     
-    //Print(*this);
-
     return *this;
 
     } //IQTensor& IQTensor::operator*=(const IQTensor& other)
