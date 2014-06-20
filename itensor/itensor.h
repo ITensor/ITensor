@@ -37,7 +37,7 @@ class ITensor : public safe_bool<ITensor>
 
     //false if ITensor is default constructed
     bool 
-    valid() const { return bool(r_); }
+    valid() const { return type_!=Null; }
 
     bool
     isComplex() const { return bool(i_); }
