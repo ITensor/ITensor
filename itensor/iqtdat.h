@@ -106,6 +106,13 @@ class IQTDat
 
     //////////////
 
+    ITensor*
+    store() { return &blocks_.front(); }
+    const ITensor*
+    store() const { return &blocks_.front(); }
+
+    friend class IQTensor;
+
     }; //class IQTDat
 
 struct ITValidCheck

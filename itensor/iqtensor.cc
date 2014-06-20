@@ -933,7 +933,7 @@ dot_(const array<const int*,NMAX>& i,
     int d = 0;
     array<const int*,NMAX>::const_iterator it = i.begin();
     array<int,NMAX>::const_iterator  Lt = L.begin();
-    for(; Lt != L.end(); ++Lt)
+    for(; Lt != L.end(); ++Lt,++it)
         {
         d += (*(*it)) * (*Lt);
         }
@@ -943,7 +943,6 @@ dot_(const array<const int*,NMAX>& i,
 IQTensor& IQTensor::
 operator*=(const IQTensor& other)
     {
-    Error("IQTensor operator *= still not tested.");
     //TODO: account for fermion sign here
     if(this == &other)
         {
@@ -964,8 +963,7 @@ operator*=(const IQTensor& other)
 
     const int zero = 0;
 
-    array<const int*,NMAX> li,
-                     ri;
+    array<const int*,NMAX> li,ri;
     for(int n = 0; n < li.size(); ++n)
         {
         li[n] = &zero;
@@ -976,9 +974,6 @@ operator*=(const IQTensor& other)
     array<IQIndex,NMAX> newindex;
     int nnew = 0; //number of indices on product
     int nsize = 1; //size of storage for product
-
-    typedef IndexSet<IQIndex>::const_iterator
-    const_iqind_it;
 
     for(int i = 0; i < is_.r(); ++i)
         {
@@ -1047,10 +1042,6 @@ operator*=(const IQTensor& other)
             }
         }
 
-    is_ = IndexSet<IQIndex>(newindex,nnew,0);
-
-    IQTDatPtr nd_ = make_shared<IQTDat>(nsize);
-
     array<int,NMAX> ll,
                     rl;
     std::fill(ll.begin(),ll.end(),0);
@@ -1067,9 +1058,13 @@ operator*=(const IQTensor& other)
         dim *= other.is_[n].nindex();
         }
 
-    const ITensor* pL = &(*(d_->begin()));
-    const ITensor* pR = &(*(other.d_->begin()));
-    ITensor* pN = &(*(nd_->begin()));
+    is_ = IndexSet<IQIndex>(newindex,nnew,0);
+
+    IQTDatPtr nd_ = make_shared<IQTDat>(nsize);
+
+    const ITensor* pL = d_->store();
+    const ITensor* pR = other.d_->store();
+    ITensor* pN = nd_->store();
 
     for(; u.notDone(); ++u)
         {
