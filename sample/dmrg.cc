@@ -60,7 +60,7 @@ main(int argc, char* argv[])
     sweeps.cutoff() = 1E-10;
     sweeps.niter() = 2;
     sweeps.noise() = 1E-7,1E-8,0.0;
-    cout << sweeps;
+    println(sweeps);
 
     //
     // Begin the DMRG calculation

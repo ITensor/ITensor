@@ -8,11 +8,7 @@ using namespace itensor;
 int main(int argc, char* argv[])
     {
     //Parse the input file
-    if(argc != 2)
-        {
-        cout << "Usage: " << argv[0] << " inputfile." << endl;
-        return 0;
-        }
+    if(argc != 2) { printfln("Usage: %s inputfile",argv[0]); return 0; }
     InputGroup basic(argv[1],"basic");
 
     int N = 0;
@@ -33,7 +29,7 @@ int main(int argc, char* argv[])
 
     InputGroup table(basic,"sweeps");
     Sweeps sweeps(nsweeps,table);
-    cout << sweeps;
+    println(sweeps);
 
     //
     // Initialize the site degrees of freedom.
@@ -62,14 +58,14 @@ int main(int argc, char* argv[])
         {
         if(p > i)
             {
-            cout << "Doubly occupying site " << i << endl;
+            println("Doubly occupying site ",i);
             initState.set(i,"UpDn");
             p -= 2;
             }
         else
         if(p > 0)
             {
-            cout << "Singly occupying site " << i << endl;
+            println("Singly occupying site ",i);
             initState.set(i,(i%2==1 ? "Up" : "Dn"));
             p -= 1;
             }
@@ -81,7 +77,7 @@ int main(int argc, char* argv[])
 
     IQMPS psi(initState);
 
-    cout << totalQN(psi) << endl;
+    println(totalQN(psi));
 
     //
     // Begin the DMRG calculation
@@ -99,20 +95,20 @@ int main(int argc, char* argv[])
         dnd(j) = Dot(conj(primed(psi.A(j),Site)),sites.op("Ndn",j)*psi.A(j));
         }
 
-    cout << "Up Density:" << endl;
+    println("Up Density:");
     for(int j = 1; j <= N; ++j)
         printfln("%d %.10f",j,upd(j));
-    cout << endl;
+    println();
 
-    cout << "Dn Density:" << endl;
+    println("Dn Density:");
     for(int j = 1; j <= N; ++j)
         printfln("%d %.10f",j,dnd(j));
-    cout << endl;
+    println();
 
-    cout << "Total Density:" << endl;
+    println("Total Density:");
     for(int j = 1; j <= N; ++j)
-        printfln("%d %.10f\n",j,(upd(j)+dnd(j)));
-    cout << endl;
+        printfln("%d %.10f",j,(upd(j)+dnd(j)));
+    println();
 
     //
     // Print the final energy reported by DMRG
