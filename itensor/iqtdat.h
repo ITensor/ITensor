@@ -106,10 +106,10 @@ class IQTDat
 
     //////////////
 
-    ITensor*
-    store() { return &blocks_.front(); }
-    const ITensor*
-    store() const { return &blocks_.front(); }
+    Storage&
+    store() { return blocks_; }
+    const Storage&
+    store() const { return blocks_; }
 
     friend class IQTensor;
 

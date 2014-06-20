@@ -920,6 +920,8 @@ operator<<(std::ostream & s, const IQTensor& T)
         if(t.r() > 0)
             {
             s << "  ";
+            //s << blockPos(t.indices(),T.indices()) << "  ";
+
             //Treat first Index specially in order to add trailing commas
             IndexSet<Index>::const_iterator it = t.indices().begin();
             const IQIndex& I1 = findIQInd(T,*it);
@@ -952,7 +954,22 @@ dot_(const array<const int*,NMAX>& i,
     return d;
     }
 
+
 // Contracting product
+
+struct BlockInfo
+    {
+    int u, //"partial index" associated with uncontracted indices
+        c, //"partial index" associated with contracted indices
+        p; //position of block in storage
+
+    BlockInfo(int n) : u(0),c(0),p(n) { }
+    };
+std::ostream&
+operator<<(std::ostream& s, BlockInfo nfo)
+    {
+    return s << "(" << nfo.u << "," << nfo.c << "," << nfo.p << ")";
+    }
 
 IQTensor& IQTensor::
 operator*=(const IQTensor& other)
@@ -970,34 +987,31 @@ operator*=(const IQTensor& other)
     if(!other)
         Error("Multiplying by null IQTensor");
 
-    //solo();
+    //Print(*this);
+    //Print(other);
 
-    Counter u, //uncontracted
-            c; //contracted
+    array<bool,NMAX> contractedL,
+                     contractedR;
+    contractedL.fill(false);
+    contractedR.fill(false);
 
-    const int zero = 0;
+    //cdL/R is "contracted dimensions": weights/shapes 
+    //of indices enumerating the contracted indices
+    array<int,NMAX> cdL,
+                    cdR;
+    cdL.fill(-1000);
+    cdR.fill(-1000);
 
-    array<const int*,NMAX> li,ri;
-    for(int n = 0; n < li.size(); ++n)
-        {
-        li[n] = &zero;
-        ri[n] = &zero;
-        }
-
-    //Load newindex with those IQIndex's *not* common to *this and other
-    array<IQIndex,NMAX> newindex;
-    int nnew = 0; //number of indices on product
-    int nsize = 1; //size of storage for product
-
-    for(int i = 0; i < is_.r(); ++i)
+    for(int i = 0, cdim = 1; i < is_.rn(); ++i)
         {
         const IQIndex& I = is_[i];
-        int j = 0;
-        for(; j < other.is_.r(); ++j)
+        for(int j = 0; j < other.is_.rn(); ++j)
             {
             const IQIndex& J = other.is_[j];
             if(J == I)
                 {
+                //I(==J) is contracted:
+
                 //Check that arrow directions are compatible
                 if(Global::checkArrows())
                     {
@@ -1012,89 +1026,188 @@ operator*=(const IQTensor& other)
                         }
                     }
 
-                ++c.rn;
-                c.n[c.rn] = J.nindex();
-                li[i] = &(c.i[c.rn]);
-                ri[j] = &(c.i[c.rn]);
+                contractedL[i] = true;
+                contractedR[j] = true;
+
+                cdL[i] = cdim;
+                cdR[j] = cdim;
+                cdim *= J.nindex();
 
                 break;
                 }
             }
+        }
 
-        if(j == other.is_.r()) 
-            { 
-            // I is not contracted 
-            ++u.rn;
-            u.n[u.rn] = I.nindex();
-            li[i] = &(u.i[u.rn]);
+    //Finish making contractedL/R for m==1 IQIndices
+    for(int i = is_.rn(); i < is_.r(); ++i)
+    for(int j = other.is_.rn(); j < other.is_.r(); ++j)
+        {
+        if(other.is_[j] == is_[i]) 
+            {
+            contractedL[i] = true;
+            contractedR[j] = true;
+            break;
+            }
+        }
+
+    //Load newindex with those IQIndex's *not* common to *this and other
+    array<IQIndex,NMAX> newindex;
+    int nnew = 0; //number of indices of product
+    int nsize = 1; //size of storage for product
+
+    //ud is "uncontracted dimensions": weights/shapes 
+    //of indices enumerating the uncontracted indices
+    array<int,NMAX> ud;
+    ud.fill(-1000);
+    int udim = 1; //accumulates products of dims of uncontracted indices
+
+    for(int i = 0; i < is_.rn(); ++i)
+        if(!contractedL[i])
+            {
+            const IQIndex& I = is_[i];
             newindex[nnew] = I;
             nsize *= I.nindex();
+            ud[nnew] = udim;
+            udim *= I.nindex();
             ++nnew;
             }
-        }
 
-    for(int j = 0; j < other.is_.r(); ++j)
-        {
-        const IQIndex& J = other.is_[j];
-        bool contracted = false;
-        Foreach(const IQIndex& I, is_)
+    //nucL is number of uncontracted from Left tensor
+    const int nucL = nnew;
+
+    for(int j = 0; j < other.is_.rn(); ++j)
+        if(!contractedR[j])
             {
-            if(I == J)
-                {
-                contracted = true;
-                break;
-                }
-            }
-        if(!contracted)
-            {
-            ++u.rn;
-            u.n[u.rn] = J.nindex();
-            ri[j] = &(u.i[u.rn]);
+            const IQIndex& J = other.is_[j];
             newindex[nnew] = J;
             nsize *= J.nindex();
+            ud[nnew] = udim;
+            udim *= J.nindex();
             ++nnew;
             }
-        }
 
-    array<int,NMAX> ll,
-                    rl;
-    std::fill(ll.begin(),ll.end(),0);
-    std::fill(rl.begin(),rl.end(),0);
-
-    for(int n = 0, dim = 1; n < is_.r(); ++n)
-        {
-        ll[n] = dim;
-        dim *= is_[n].nindex();
-        }
-    for(int n = 0, dim = 1; n < other.is_.r(); ++n)
-        {
-        rl[n] = dim;
-        dim *= other.is_[n].nindex();
-        }
-
-    is_ = IndexSet<IQIndex>(newindex,nnew,0);
-
-    IQTDatPtr nd_ = make_shared<IQTDat>(nsize);
-
-    const ITensor* pL = d_->store();
-    const ITensor* pR = other.d_->store();
-    ITensor* pN = nd_->store();
-
-    for(; u.notDone(); ++u)
-        {
-        ITensor& n = pN[u.ind];
-        for(c.reset(); c.notDone(); ++c)
+    //Finish making newindex by appending uncontracted m==1 IQIndices:
+    for(int i = is_.rn(); i < is_.r(); ++i)
+        if(!contractedL[i])
             {
-            const ITensor& l = pL[dot_(li,ll)];
-            const ITensor& r = pR[dot_(ri,rl)];
-            if(l.valid() && r.valid())
+            newindex[nnew++] = is_[i];
+            }
+    
+    for(int j = other.is_.rn(); j < other.is_.r(); ++j)
+        if(!contractedR[j])
+            {
+            newindex[nnew++] = other.is_[j];
+            }
+
+
+    IndexSet<IQIndex> nis(newindex,nnew,0);
+
+    vector<BlockInfo> Lb,
+                      Rb;
+
+    int p = 0; //position of t in storage
+    Foreach(const ITensor& t, d_->store())
+        {
+        if(t.valid())
+            {
+            BlockInfo nfo(p);
+            for(int n = 0, j = p, nu = 0; n < is_.rn(); ++n)
                 {
-                n += (l * r);
+                const int N = is_[n].nindex();
+                const int i = j%N;
+                j /= N;
+                if(contractedL[n]) 
+                    {
+                    nfo.c += i*cdL[n];
+                    }
+                else               
+                    {
+                    nfo.u += i*ud[nu++];
+                    }
                 }
+            Lb.push_back(nfo);
+            }
+        ++p;
+        }
+
+    p = 0;
+    Foreach(const ITensor& t, other.d_->store())
+        {
+        if(t.valid())
+            {
+            BlockInfo nfo(p);
+            for(int n = 0, j = p, nu = nucL; n < other.is_.rn(); ++n)
+                {
+                const int N = other.is_[n].nindex();
+                const int i = j%N;
+                j /= N;
+                if(contractedR[n]) 
+                    {
+                    nfo.c += i*cdR[n];
+                    }
+                else               
+                    {
+                    nfo.u += i*ud[nu++];
+                    }
+                }
+            Rb.push_back(nfo);
+            }
+        ++p;
+        }
+
+    //println("ud =");
+    //for(auto x : ud)
+    //    {
+    //    print(x," ");
+    //    }
+    //println();
+
+    //println("cdL =");
+    //for(auto x : cdL)
+    //    {
+    //    print(x," ");
+    //    }
+    //println();
+
+    //println("cdR =");
+    //for(auto x : cdR)
+    //    {
+    //    print(x," ");
+    //    }
+    //println();
+
+    //println("Lb = ");
+    //for(const auto& nfo : Lb)
+    //    {
+    //    println("  ",nfo);
+    //    }
+
+    //println("Rb = ");
+    //for(const auto& nfo : Rb)
+    //    {
+    //    println("  ",nfo);
+    //    }
+
+    IQTDatPtr ndat = make_shared<IQTDat>(nsize);
+
+    const IQTDat::Storage& L = d_->store();
+    const IQTDat::Storage& R = other.d_->store();
+    IQTDat::Storage& N = ndat->store();
+
+    Foreach(const BlockInfo& l, Lb)
+    Foreach(const BlockInfo& r, Rb)
+        {
+        if(l.c == r.c) 
+            {
+            //printfln("%d += %s* %s",l.u+r.u,l,r);
+            N.at(l.u+r.u) += L.at(l.p) * R.at(r.p);
             }
         }
 
-    d_.swap(nd_);
+    is_.swap(nis);
+    d_.swap(ndat);
+    
+    //Print(*this);
 
     return *this;
 
@@ -1115,8 +1228,6 @@ operator/=(const IQTensor& other)
 
     if(!other)
         Error("Multiplying by null IQTensor");
-
-    //solo();
 
     Counter u;
 
@@ -1225,9 +1336,9 @@ operator/=(const IQTensor& other)
 
     IQTDatPtr nd_ = make_shared<IQTDat>(nsize);
 
-    const ITensor* pL = d_->store();
-    const ITensor* pR = other.d_->store();
-    ITensor* pN = nd_->store();
+    const ITensor* pL = &(d_->store().front());
+    const ITensor* pR = &(other.d_->store().front());
+    ITensor* pN = &(nd_->store().front());
 
     for(; u.notDone(); ++u)
         {
