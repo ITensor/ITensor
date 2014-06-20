@@ -1091,132 +1091,145 @@ operator*=(const IQTensor& other)
 IQTensor& IQTensor::
 operator/=(const IQTensor& other)
     {
-    Error("IQTensor operator/= not currently implemented.");
+    //TODO: account for fermion sign here
+    if(this == &other)
+        {
+        IQTensor cp_oth(other);
+        return operator*=(cp_oth);
+        }
 
-    ////TODO: account for fermion sign here
-    //if(this == &other)
-    //    {
-    //    IQTensor cp_oth(other);
-    //    return operator/=(cp_oth);
-    //    }
+    if(!this->valid()) 
+        Error("'This' IQTensor null in product");
 
-    //if(!this->valid()) 
-    //    Error("'This' IQTensor null in product");
-
-    //if(!other)
-    //    Error("Multiplying by null IQTensor");
-
-    //vector<Real> common_inds;
-    //
-    //array<IQIndex,NMAX> riqind_holder;
-    //int rholder = 0;
-
-    //typedef IndexSet<IQIndex>::const_iterator
-    //const_iqind_it;
-
-    //for(int i = 1; i <= is_.r(); ++i)
-    //    {
-    //    const IQIndex& I = is_.index(i);
-    //    const_iqind_it f = find(other.is_.begin(),other.is_.end(),I);
-    //    if(f != other.is_.end()) //I is an element of other.iqindex_
-    //        {
-    //        //Check that arrow directions are compatible
-    //        if(Global::checkArrows())
-    //            if(f->dir() != I.dir())
-    //                {
-    //                Print(this->indices());
-    //                Print(other.indices());
-    //                cout << "IQIndex from *this = " << I << endl;
-    //                cout << "IQIndex from other = " << *f << endl;
-    //                cout << "Incompatible arrow directions in IQTensor::operator*=" << endl;
-    //                throw ArrowError("Incompatible arrow directions in IQTensor::operator/=.");
-    //                }
-
-    //        Foreach(const Index& i, I.indices())
-    //            { 
-    //            common_inds.push_back(i.uniqueReal()); 
-    //            }
-
-    //        common_inds.push_back(I.uniqueReal());
-    //        }
-    //    riqind_holder[rholder] = I;
-    //    ++rholder;
-    //    }
-
-    //bool inds_from_other = false;
-    //for(int i = 1; i <= other.is_.r(); ++i)
-    //    {
-    //    const IQIndex& I = other.is_.index(i);
-    //    if(!vectoruRContains(common_inds,I.uniqueReal()))
-    //        { 
-    //        if(rholder >= NMAX)
-    //            {
-    //            Print(this->indices());
-    //            Print(other.indices());
-    //            cout << "Uncontracted IQIndices found so far:" << endl;
-    //            for(int n = 0; n < rholder; ++n)
-    //                {
-    //                cout << riqind_holder[n] << endl;
-    //                }
-    //            Error("Too many indices (>= 8) on resulting IQTensor");
-    //            }
-    //        riqind_holder[rholder] = I;
-    //        ++rholder;
-    //        inds_from_other = true;
-    //        }
-    //    }
-
-    ////Only update IQIndices if they are different
-    ////from current set
-    //if(inds_from_other)
-    //    {
-    //    is_ = IndexSet<IQIndex>(riqind_holder,rholder,0);
-    //    }
+    if(!other)
+        Error("Multiplying by null IQTensor");
 
     //solo();
 
-    //IQTDat::StorageT old_itensor; 
-    //dat.nc().swap(old_itensor);
+    Counter u;
 
-    //typedef IQTDat::const_iterator
-    //cbit;
+    const int zero = 0;
 
-    //typedef pair<Real,cbit>
-    //blockpair;
+    array<const int*,NMAX> li,ri;
+    for(int n = 0; n < li.size(); ++n)
+        {
+        li[n] = &zero;
+        ri[n] = &zero;
+        }
 
-    //vector<blockpair> other_block;
-    //other_block.reserve(other.d_->size());
+    //Load newindex with those IQIndex's *not* common to *this and other
+    array<IQIndex,NMAX> newindex;
+    int nnew = 0; //number of indices on product
+    int nsize = 1; //size of storage for product
 
-    //for(cbit ot = other.d_->begin(); ot != other.d_->end(); ++ot)
-    //    {
-    //    Real r = 0.0;
-    //    Foreach(const Index& I, ot->indices())
-    //        {
-    //        if(vectoruRContains(common_inds,I.uniqueReal()))
-    //            r += I.uniqueReal(); 
-    //        }
-    //    other_block.push_back(make_pair(r,ot));
-    //    }
+    for(int i = 0; i < is_.r(); ++i)
+        {
+        const IQIndex& I = is_[i];
+        int j = 0;
+        for(; j < other.is_.r(); ++j)
+            {
+            const IQIndex& J = other.is_[j];
+            if(J == I)
+                {
+                //Check that arrow directions are compatible
+                if(Global::checkArrows())
+                    {
+                    if(J.dir() != I.dir())
+                        {
+                        Print(this->indices());
+                        Print(other.indices());
+                        cout << "IQIndex from *this = " << I << endl;
+                        cout << "IQIndex from other = " << J << endl;
+                        cout << "Incompatible arrow directions in IQTensor::operator/=" << endl;
+                        throw ArrowError("Incompatible arrow directions in IQTensor::operator/=");
+                        }
+                    }
 
-    //ITensor prod;
+                ++u.rn;
+                u.n[u.rn] = J.nindex();
+                li[i] = &(u.i[u.rn]);
+                ri[j] = &(u.i[u.rn]);
 
-    //Foreach(const ITensor& t, old_itensor)
-    //    {
-    //    Real r = 0;
-    //    Foreach(const Index& I, t.indices())
-    //        {
-    //        if(vectoruRContains(common_inds,I.uniqueReal()))
-    //            r += I.uniqueReal();
-    //        }
-    //    Foreach(const blockpair& p, other_block)
-    //        {
-    //        if(fabs(r - p.first) > UniqueRealAccuracy) continue;
-    //        prod = t;
-    //        prod /= *(p.second);
-    //        if(prod.scale().sign() != 0)
-    //            dat.nc().insert_add(prod);
-    //        }
-    //    }
+                newindex[nnew] = J;
+                nsize *= J.nindex();
+                ++nnew;
+
+                break;
+                }
+            }
+
+        if(j == other.is_.r()) 
+            { 
+            // I is not contracted 
+            ++u.rn;
+            u.n[u.rn] = I.nindex();
+            li[i] = &(u.i[u.rn]);
+            newindex[nnew] = I;
+            nsize *= I.nindex();
+            ++nnew;
+            }
+        }
+
+    for(int j = 0; j < other.is_.r(); ++j)
+        {
+        const IQIndex& J = other.is_[j];
+        bool contracted = false;
+        Foreach(const IQIndex& I, is_)
+            {
+            if(I == J)
+                {
+                contracted = true;
+                break;
+                }
+            }
+        if(!contracted)
+            {
+            ++u.rn;
+            u.n[u.rn] = J.nindex();
+            ri[j] = &(u.i[u.rn]);
+            newindex[nnew] = J;
+            nsize *= J.nindex();
+            ++nnew;
+            }
+        }
+
+    array<int,NMAX> ll,
+                    rl;
+    std::fill(ll.begin(),ll.end(),0);
+    std::fill(rl.begin(),rl.end(),0);
+
+    for(int n = 0, dim = 1; n < is_.r(); ++n)
+        {
+        ll[n] = dim;
+        dim *= is_[n].nindex();
+        }
+    for(int n = 0, dim = 1; n < other.is_.r(); ++n)
+        {
+        rl[n] = dim;
+        dim *= other.is_[n].nindex();
+        }
+
+    is_ = IndexSet<IQIndex>(newindex,nnew,0);
+
+    IQTDatPtr nd_ = make_shared<IQTDat>(nsize);
+
+    const ITensor* pL = d_->store();
+    const ITensor* pR = other.d_->store();
+    ITensor* pN = nd_->store();
+
+    for(; u.notDone(); ++u)
+        {
+        ITensor& n = pN[u.ind];
+        const ITensor& l = pL[dot_(li,ll)];
+        const ITensor& r = pR[dot_(ri,rl)];
+        if(l.valid() && r.valid())
+            {
+            n = l;
+            n /= r;
+            }
+        }
+
+    d_.swap(nd_);
 
     return *this;
 
