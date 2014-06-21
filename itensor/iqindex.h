@@ -90,6 +90,9 @@ class IQIndex : public Index
     const Index& 
     index(int i) const;
 
+    const Index& 
+    operator[](int i) const;
+
     const QN& 
     qn(int i) const;
 

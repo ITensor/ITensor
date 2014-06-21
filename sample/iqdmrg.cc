@@ -63,7 +63,7 @@ main(int argc, char* argv[])
     sweeps.cutoff() = 1E-10;
     sweeps.niter() = 2;
     sweeps.noise() = 1E-7,1E-8,0.0;
-    cout << sweeps;
+    println(sweeps);
 
     //
     // Begin the DMRG calculation
@@ -76,7 +76,7 @@ main(int argc, char* argv[])
     printfln("\nGround State Energy = %.10f",En);
     printfln("\nUsing psiHphi = %.10f", psiHphi(psi,H,psi) );
 
-    cout << "\nTotal QN of Ground State = " << totalQN(psi) << "\n";
+    println("\nTotal QN of Ground State = ",totalQN(psi));
 
     return 0;
     }

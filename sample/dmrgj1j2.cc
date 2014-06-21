@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     {
     int N = 100;
 
-    cout << "Input J2 value:" << endl;
+    println("Input J2 value:");
     Real J2 = 0;
     cin >> J2;
 
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
     Sweeps sweeps(5);
     sweeps.maxm() = 50,50,100,100,200;
     sweeps.cutoff() = 1E-8;
-    cout << sweeps;
+    println(sweeps);
 
     //
     // Begin the DMRG calculation

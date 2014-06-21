@@ -56,12 +56,13 @@ run: test-g
 growl:
 	@make run && growlnotify -m "Tests Passed" || growlnotify -m "Test Failed"
 
-build: test
-
 debug: test-g
 
-test: test.o $(ITENSOR_LIBS) $(OBJECTS)
-	$(CCCOM) $(CCFLAGS) $(OBJECTS) -o test $(LIBFLAGS)
+#build: test
+
+
+#test: test.o $(ITENSOR_LIBS) $(OBJECTS)
+#	$(CCCOM) $(CCFLAGS) $(OBJECTS) -o test $(LIBFLAGS)
 
 test-g: mkdebugdir .debug_objs/test.o $(ITENSOR_GLIBS) $(GOBJECTS)
 	$(CCCOM) $(CCGFLAGS) $(GOBJECTS) -o test-g $(LIBGFLAGS)

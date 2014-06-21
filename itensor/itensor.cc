@@ -255,8 +255,7 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
 ITensor::
 ITensor()  
     : 
-    type_(Null),
-    scale_(1)
+    type_(Null)
     { }
 
 

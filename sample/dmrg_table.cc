@@ -18,11 +18,7 @@ using namespace itensor;
 int main(int argc, char* argv[])
     {
     //Parse the input file
-    if(argc != 2)
-        {
-        cout << "Usage: " << argv[0] << " inputfile_dmrg_table" << endl;
-        return 0;
-        }
+    if(argc != 2) { printfln("Usage: %s inputfile",argv[0]); return 0; }
     InputGroup basic(argv[1],"basic");
 
     //Read in individual parameters from the input file
@@ -41,7 +37,7 @@ int main(int argc, char* argv[])
 
     //Create the sweeps class & print
     Sweeps sweeps(nsweeps,table);
-    cout << sweeps;
+    println(sweeps);
 
     //
     // Now set up a run a DMRG simulation 

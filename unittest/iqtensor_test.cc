@@ -64,7 +64,7 @@ phi.randomize();
 A = IQTensor(L1(1),S1(1),L2(4),S2(2));
 A.randomize();
 
-B = IQTensor(L1(4),L2(2));
+B = IQTensor(L1(1),L2(3));
 B.randomize();
 
 C = IQTensor(dag(L1)(5),prime(L1)(5));
@@ -94,6 +94,29 @@ SECTION("Constructors")
     CHECK_CLOSE(rZ.norm(),f,1E-10);
     }
 
+SECTION("Contracting Product")
+    {
+    IQTensor res = A * dag(B);
+
+    CHECK(hasindex(res,S1));
+    CHECK(hasindex(res,S2));
+    CHECK(!hasindex(res,L1));
+    CHECK(!hasindex(res,L2));
+
+    for(int k1 = 1; k1 <= S1.m(); ++k1)
+    for(int k2 = 1; k2 <= S2.m(); ++k2)
+        {
+        Real val = 0;
+        for(int j1 = 1; j1 <= L1.m(); ++j1)
+        for(int j2 = 1; j2 <= L2.m(); ++j2)
+            {
+            val += A(L1(j1),S1(k1),L2(j2),S2(k2))*B(L1(j1),L2(j2));
+            }
+        CHECK_CLOSE(res(S1(k1),S2(k2)),val,1E-5);
+        }
+
+    }
+
 SECTION("NonContractProd")
     {
 
@@ -104,6 +127,9 @@ SECTION("NonContractProd")
     for(int k1 = 1; k1 <= S1.m(); ++k1)
     for(int k2 = 1; k2 <= S2.m(); ++k2)
         {
+        res(L1(j1),L2(j2),S1(k1),S2(k2));
+        A(L1(j1),S1(k1),L2(j2),S2(k2));
+        B(L1(j1),L2(j2));
         CHECK_CLOSE(res(L1(j1),L2(j2),S1(k1),S2(k2)),
                     A(L1(j1),S1(k1),L2(j2),S2(k2))*B(L1(j1),L2(j2)),1E-5);
         }
@@ -164,29 +190,29 @@ SECTION("ITensorConversion")
 
     }
 
-/*
-SECTION("SymmetricDiag11")
-    {
-    IQTensor D,U;
-    IQIndex mid;
-    int mink,maxk;
-    C *= -2;
-    C.symmetricDiag11(L1,D,U,mid,mink,maxk);
-
-    IQTensor UD(U);
-    UD.prime(L1);
-    UD /= D;
-    ITensor diff = (dag(UD)*U - C).toITensor();
-    CHECK(diff.norm() < 1E-10);
-
-    IQTensor set1(dag(mid));
-    set1(mid(mink)) = 1;
-    U *= set1;
-    CHECK_CLOSE(D(mid(mink)),Dot(prime(U),C*U),1E-10);
-
-    }
-    */
-
+///*
+//SECTION("SymmetricDiag11")
+//    {
+//    IQTensor D,U;
+//    IQIndex mid;
+//    int mink,maxk;
+//    C *= -2;
+//    C.symmetricDiag11(L1,D,U,mid,mink,maxk);
+//
+//    IQTensor UD(U);
+//    UD.prime(L1);
+//    UD /= D;
+//    ITensor diff = (dag(UD)*U - C).toITensor();
+//    CHECK(diff.norm() < 1E-10);
+//
+//    IQTensor set1(dag(mid));
+//    set1(mid(mink)) = 1;
+//    U *= set1;
+//    CHECK_CLOSE(D(mid(mink)),Dot(prime(U),C*U),1E-10);
+//
+//    }
+//    */
+//
 SECTION("TieIndices")
     {
     IQTensor D1 = tieIndices(D,L1,prime(L1),L1);
@@ -265,6 +291,13 @@ SECTION("Trace")
             }
         CHECK_CLOSE(val,Dt(S1(j2),prime(L1)(j1)),1E-10);
         }
+
+    IQTensor rho(L1(2),prime(L1)(2));
+    rho.randomize();
+    Real tr = trace(rho);
+    rho /= tr;
+    tr = trace(rho);
+    CHECK(fabs(tr-1.) < 1E-11);
     }
 
 SECTION("MapElems")
@@ -400,8 +433,8 @@ SECTION("BigNorm")
 
 SECTION("AddBlock")
     {
-    ITensor b1(L1(4).indexqn(),L2(2).indexqn()),
-            b2(L1(L1.m()).indexqn(),L2(2).indexqn());
+    ITensor b1(L1(1).indexqn(),L2(3).indexqn()),
+            b2(L1(1).indexqn(),L2(2).indexqn());
 
     b1.randomize();
     b2.randomize();
