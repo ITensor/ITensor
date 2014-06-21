@@ -95,7 +95,7 @@ void IQTensor::
 allocate()
     {
     int dim = 1;
-    Foreach(const IQIndex& I, is_)
+    Foreach(const IQIndex& I, this->indices())
         {
         dim *= I.nindex();
         }
@@ -1236,7 +1236,7 @@ operator/=(const IQTensor& other)
         {
         const IQIndex& J = other.is_[j];
         bool contracted = false;
-        Foreach(const IQIndex& I, is_)
+        Foreach(const IQIndex& I, this->indices())
             {
             if(I == J)
                 {
