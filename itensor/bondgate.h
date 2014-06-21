@@ -17,35 +17,47 @@ class BondGate
 
     enum Type { tReal,  //real-time gate
                 tImag,  //imaginary-time gate
-                Swap }; //exchange states of site i and j
+                Swap }; //exchange states of sites i1 and i2
 
-    BondGate(const Model& sites, int i, int j);
+    BondGate(const Model& sites, int i1, int i2);
 
-    BondGate(const Model& sites, int i, int j, 
+    BondGate(const Model& sites, int i1, int i2, 
              Type type, Real tau, Tensor bondH);
+
+    int i1() const { return i1_; }
+
+    int i2() const { return i2_; }
 
     operator const Tensor&() const { return gate_; }
 
     const Tensor&
     gate() const { return gate_; }
 
-    int
-    i() const { return i_; }
-
-    int
-    j() const { return j_; }
-
     Type
     type() const { return type_; }
+
+  
+
+
+
+    // Deprecated: use i1() and i2() instead
+    int
+    i() const { return i1_; }
+
+    // Deprecated: use i1() and i2() instead
+    int
+    j() const { return i2_; }
+
 
     private:
 
     Type type_;
-    int i_,j_; // The left, right indices of bond
+    int i1_,i2_; // The left, right indices of bond
     Tensor gate_;
 
     void
     makeSwapGate(const Model& sites);
+
 
     };
 typedef BondGate<ITensor>
@@ -63,30 +75,47 @@ operator*(Tensor T, const BondGate<Tensor>& G) { T *= G.gate(); return T; }
 
 template <class Tensor>
 BondGate<Tensor>::
-BondGate(const Model& sites, int i, int j)
+BondGate(const Model& sites, int i1, int i2)
     : 
-    type_(Swap), 
-    i_(i), 
-    j_(j)
+    type_(Swap) 
     {
+    if(i1 < i2)
+        {
+        i1_ = i1;
+        i2_ = i2;
+        }
+    else
+        {
+        i1_ = i2;
+        i2_ = i1;
+        }
     makeSwapGate(sites);
     }
 
 template <class Tensor>
 BondGate<Tensor>::
-BondGate(const Model& sites, int i, int j, 
+BondGate(const Model& sites, int i1, int i2, 
          Type type, Real tau, Tensor bondH)
     : 
-    type_(type), 
-    i_(i), 
-    j_(j)
+    type_(type)
     {
+    if(i1 < i2)
+        {
+        i1_ = i1;
+        i2_ = i2;
+        }
+    else
+        {
+        i1_ = i2;
+        i2_ = i1;
+        }
+
     if(!(type_ == tReal || type_ ==tImag))
         {
         Error("When providing bondH, type must be tReal or tImag");
         }
     bondH *= -tau;
-    Tensor unit = sites.op("Id",i)*sites.op("Id",j);
+    Tensor unit = sites.op("Id",i1_)*sites.op("Id",i2_);
     if(type_ == tReal)
         {
         bondH *= Complex_i;
@@ -111,8 +140,8 @@ template <class Tensor>
 void BondGate<Tensor>::
 makeSwapGate(const Model& sites)
     {
-    Tensor a(sites(i_),prime(sites(j_)),1);
-    Tensor b(sites(j_),prime(sites(i_)),1);
+    Tensor a(sites(i1_),prime(sites(i2_)),1);
+    Tensor b(sites(i2_),prime(sites(i1_)),1);
     gate_ = a*b;
     }
 
@@ -120,14 +149,14 @@ template<>
 void inline BondGate<IQTensor>::
 makeSwapGate(const Model& sites)
     {
-    IQTensor a(dag(sites(i_)),prime(sites(j_))),
-             b(dag(sites(j_)),prime(sites(i_)));
-    for(int n = 1; n <= sites(i_).nindex(); ++n)
+    IQTensor a(dag(sites(i1_)),prime(sites(i2_))),
+             b(dag(sites(i2_)),prime(sites(i1_)));
+    for(int n = 1; n <= sites(i1_).nindex(); ++n)
         {
-        const Index &iind(sites(i_).index(n)),
-                    &jind(sites(j_).index(n));
-        a += ITensor(iind,prime(jind),1);
-        b += ITensor(jind,prime(iind),1);
+        const Index &i1ind(sites(i1_).index(n)),
+                    &i2ind(sites(i2_).index(n));
+        a += ITensor(i1ind,prime(i2ind),1);
+        b += ITensor(i2ind,prime(i1ind),1);
         }
     gate_ = a*b;
     }
