@@ -11,6 +11,26 @@ TEST_CASE("BondGateTest")
 const int N = 10;
 SpinHalf sites(N);
 
+SECTION("Site Accessors")
+    {
+    Gate g1(sites,1,2);
+    CHECK(g1.i1() < g1.i2());
+
+    Gate g2(sites,2,1);
+    CHECK(g2.i1() < g2.i2());
+
+    const int s1 = 3, s2 = 4;
+    ITensor hh =  sites.op("Sz",s1)*sites.op("Sz",s2);
+    hh += sites.op("Sm",s1)*sites.op("Sp",s2) * 0.5;
+    hh += sites.op("Sp",s1)*sites.op("Sm",s2) * 0.5;
+
+    Gate g3(sites,s1,s2,Gate::tImag,0.1,hh);
+    CHECK(g3.i1() < g3.i2());
+
+    Gate g4(sites,s2,s1,Gate::tImag,0.1,hh);
+    CHECK(g4.i1() < g4.i2());
+    }
+
 SECTION("SwapGate")
     {
     Gate sw12(sites,1,2);

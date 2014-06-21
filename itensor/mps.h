@@ -512,10 +512,9 @@ applyGate(const BondGate<Tensor>& gate,
           MPSt<Tensor>& psi,
           const OptSet& opts = Global::opts())
     {
-    const int gate_b = std::min(gate.i(),gate.j());
-    Tensor AA = psi.A(gate_b) * psi.A(gate_b+1) * Tensor(gate);
+    Tensor AA = psi.A(gate.i1()) * psi.A(gate.i1()+1) * Tensor(gate);
     AA.noprime();
-    psi.svdBond(gate_b,AA,Fromleft,opts);
+    psi.svdBond(gate.i1(),AA,Fromleft,opts);
     }
 
 //Checks if A_[i] is left (left == true) 
