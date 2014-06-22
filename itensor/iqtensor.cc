@@ -248,6 +248,7 @@ read(std::istream& s)
     if(null_) 
         { *this = IQTensor(); return; }
     is_.read(s);
+    d_ = make_shared<Storage>();
     d_->read(s);
     }
 
