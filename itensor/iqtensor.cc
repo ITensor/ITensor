@@ -18,6 +18,13 @@ using std::find;
 using std::pair;
 using std::make_pair;
 
+void static
+insertAdd(ITensor& lhs, const ITensor& rhs)
+    {
+    if(!lhs.valid()) lhs = rhs;
+    else             lhs += rhs;
+    }
+
 int static
 indPos(const Index& i,
        const IQIndex& J)
@@ -362,7 +369,7 @@ operator+=(const ITensor& t)
     if(t.scale().sign() != 0)
         {
         solo();
-        getBlock(t.indices()) += t;
+        insertAdd(getBlock(t.indices()),t);
         }
     return *this;
     }
@@ -707,7 +714,7 @@ tieIndices(const array<IQIndex,NMAX>& indices,
                 {
                 ITensor nt(t);
                 nt.tieIndices(totie,niqind,tied.index(i));
-                getBlock(nt.indices()) += nt;
+                insertAdd(getBlock(nt.indices()),nt);
                 }
             }
         }
@@ -801,7 +808,7 @@ trace(const array<IQIndex,NMAX>& indices, int niqind)
                 {
                 ITensor tt(t);
                 tt.trace(totrace,niqind);
-                getBlock(tt.indices()) += tt;
+                insertAdd(getBlock(tt.indices()),tt);
                 }
             }
         }
@@ -860,7 +867,7 @@ randomize(const OptSet& opts)
             {
             ITensor t(nset);
             t.randomize(opts);
-            block += t;
+            insertAdd(block,t);
             }
         }
 	}
@@ -1139,10 +1146,7 @@ operator*=(const IQTensor& other)
 
         Foreach(const BlockInfo& l, Lb)
             {
-            if(l.c == r.c) 
-                {
-                N[l.u+r.u] += L[l.p] * R[r.p];
-                }
+            if(l.c == r.c) insertAdd(N[l.u+r.u],L[l.p] * R[r.p]);
             }
         }
 
@@ -1332,7 +1336,12 @@ operator+=(const IQTensor& other)
     {
     if(!this->valid())
         {
-        operator=(other);
+        Error("Calling += on null IQTensor");
+        return *this;
+        }
+    if(!other.valid())
+        {
+        Error("Right-hand side of IQTensor += is null");
         return *this;
         }
 
@@ -1346,7 +1355,7 @@ operator+=(const IQTensor& other)
 
     Foreach(const ITensor& t, *(other.d_))
         { 
-        getBlock(t.indices()) += t;
+        insertAdd(getBlock(t.indices()),t);
         }
 
     return *this;

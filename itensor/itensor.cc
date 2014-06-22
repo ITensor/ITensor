@@ -2694,7 +2694,12 @@ operator+=(const ITensor& other)
     {
     if(!this->valid())
         {
-        operator=(other);
+        Error("Calling += on null ITensor");
+        return *this;
+        }
+    if(!other.valid())
+        {
+        Error("Right-hand side of ITensor += is null");
         return *this;
         }
 
