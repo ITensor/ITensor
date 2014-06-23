@@ -59,11 +59,6 @@ class Index : public safe_bool<Index>
     Index& 
     primeLevel(int plev);
 
-    // Returns a unique Real number identifying this Index.
-    // Useful for efficiently checking that sets of indices match.
-    Real 
-    uniqueReal() const;
-
     // Returns the IndexType
     IndexType 
     type() const;
@@ -168,6 +163,8 @@ class Index : public safe_bool<Index>
     int primelevel_; 
     /////////////
 
+    friend std::ostream& operator<<(std::ostream& s, const Index& t);
+
     }; //class Index
 
 
@@ -264,9 +261,6 @@ operator<<(std::ostream& s, const IndexVal& iv);
 
 std::ostream& 
 operator<<(std::ostream& s, const IndexType& it);
-
-static const Real UniqueRealAccuracy = 1E-13;
-
 
 
 //

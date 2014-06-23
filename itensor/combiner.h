@@ -101,9 +101,6 @@ class Combiner
 
     //Other Methods -------------------------------------------------
 
-    Real
-    uniqueReal() const;
-
     ITensor
     toITensor() const;
 
@@ -287,15 +284,6 @@ product(const ITensor& t, ITensor& res) const
         }
 
     t.groupIndices(left_,rl_,right_,res);
-    }
-
-Real inline Combiner::
-uniqueReal() const
-    {
-    Real ur = 0;
-    for(int j = 1; j <= rl_; ++j)
-        ur += left_[j].uniqueReal();
-    return ur;
     }
 
 //

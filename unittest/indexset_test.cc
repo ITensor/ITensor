@@ -46,34 +46,21 @@ SECTION("Constructors")
     {
     shared_ptr<IQIndexSet> p1(new IQIndexSet(S1));
     CHECK_EQUAL(p1->index(1),S1);
-    CHECK_CLOSE(p1->uniqueReal(),S1.uniqueReal(),1E-10);
 
     shared_ptr<IQIndexSet> p2(new IQIndexSet(S1,L1));
     CHECK_EQUAL(p2->index(1),S1);
     CHECK_EQUAL(p2->index(2),L1);
-    const Real ur2 = S1.uniqueReal()
-                   + L1.uniqueReal();
-    CHECK_CLOSE(p2->uniqueReal(),ur2,1E-10);
 
     shared_ptr<IQIndexSet> p3(new IQIndexSet(S1,L1,S2));
     CHECK_EQUAL(p3->index(1),S1);
     CHECK_EQUAL(p3->index(2),L1);
     CHECK_EQUAL(p3->index(3),S2);
-    const Real ur3 = S1.uniqueReal()
-                   + L1.uniqueReal()
-                   + S2.uniqueReal();
-    CHECK_CLOSE(p3->uniqueReal(),ur3,1E-10);
 
     shared_ptr<IQIndexSet> p4(new IQIndexSet(S1,L1,S2,L2));
     CHECK_EQUAL(p4->index(1), S1);
     CHECK_EQUAL(p4->index(2), L1);
     CHECK_EQUAL(p4->index(3), S2);
     CHECK_EQUAL(p4->index(4), L2);
-    const Real ur4 = S1.uniqueReal()
-                   + L1.uniqueReal()
-                   + S2.uniqueReal()
-                   + L2.uniqueReal();
-    CHECK_CLOSE(p4->uniqueReal(),ur4,1E-10);
 
     //Check that m==1 indices get sorted to the back
 
@@ -84,11 +71,6 @@ SECTION("Constructors")
     CHECK_EQUAL(p5->index(2),S2);
     CHECK_EQUAL(p5->index(3),L2);
     CHECK_EQUAL(p5->index(4),L3);
-    const Real ur5 = S1.uniqueReal()
-                   + S2.uniqueReal()
-                   + L2.uniqueReal()
-                   + L3.uniqueReal();
-    CHECK_CLOSE(p5->uniqueReal(),ur5,1E-10);
     }
 
 SECTION("PrimeLevelMethods")

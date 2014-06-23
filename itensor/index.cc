@@ -197,13 +197,6 @@ primeLevel(int plev)
     return *this;
     }
 
-Real Index::
-uniqueReal() const
-    {
-    static const Real rmax = IndexDat::IDGenerator::max();
-    return (p->id/rmax)*(1.0+sin(primelevel_));
-    }
-
 bool Index::
 operator==(const Index& other) const 
     { 
@@ -219,7 +212,7 @@ noprimeEquals(const Index& other) const
 bool Index::
 operator<(const Index& other) const 
     { 
-    return (uniqueReal() < other.uniqueReal()); 
+    return (p->id < other.p->id);
     }
 
 IndexVal Index::
@@ -336,11 +329,8 @@ std::ostream&
 operator<<(std::ostream& s, const Index& t)
     {
     if(t.name() != "" && t.name() != " ") s << t.name();
-    const int iur = (int) fabs(10000*noprime(t).uniqueReal());
     return s << "(" << nameindex(t.type(),t.primeLevel()) 
-             << "," << iur << "):" << t.m();
-    //return s << "(" << nameindex(t.type(),t.primeLevel()) 
-    //         << "," << t.p->id << "):" << t.m();
+             << "," << (t.p->id % 10000) << "):" << t.m();
     }
 
 IndexVal::

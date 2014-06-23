@@ -2781,17 +2781,17 @@ operator+=(const ITensor& other)
         }
 
 
-    if(is_ != other.is_)
-        {
-        printfln("this ur = %.10f, other.ur = %.10f\n",is_.uniqueReal(),other.is_.uniqueReal());
-        Print(*this);
-        Print(other);
-        Print(this->is_);
-        printfln("this indexset uniqueReal = %.20f",is_.uniqueReal());
-        Print(other.is_);
-        printfln("other indexset uniqueReal = %.20f",other.is_.uniqueReal());
-        Error("ITensor::operator+=: different Index structure");
-        }
+    //if(is_ != other.is_)
+    //    {
+    //    printfln("this ur = %.10f, other.ur = %.10f\n",is_.uniqueReal(),other.is_.uniqueReal());
+    //    Print(*this);
+    //    Print(other);
+    //    Print(this->is_);
+    //    printfln("this indexset uniqueReal = %.20f",is_.uniqueReal());
+    //    Print(other.is_);
+    //    printfln("other indexset uniqueReal = %.20f",other.is_.uniqueReal());
+    //    Error("ITensor::operator+=: different Index structure");
+    //    }
 
 
 
