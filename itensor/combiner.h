@@ -104,7 +104,8 @@ class Combiner
     Real
     uniqueReal() const;
 
-    operator ITensor() const;
+    ITensor
+    toITensor() const;
 
     void 
     dag() { init(); }
@@ -240,9 +241,9 @@ prime(Combiner C, int inc)
     return C;
     }
 
-inline
+ITensor inline
 Combiner::
-operator ITensor() const
+toITensor() const
     {
     /*
     if(right_.m() > 16) 

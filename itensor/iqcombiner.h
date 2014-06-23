@@ -61,7 +61,8 @@ class IQCombiner
          Arrow dir = Neither, 
          int primelevel = 0) const;
     
-    operator IQTensor() const;
+    IQTensor
+    toIQTensor() const;
 
     const IQIndex& 
     right() const;

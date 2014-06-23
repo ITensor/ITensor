@@ -156,8 +156,8 @@ init(string rname, IndexType type,
     initted = true;
 	}
 
-IQCombiner::
-operator IQTensor() const
+IQTensor IQCombiner::
+toIQTensor() const
     {
     if(!initted) Error("IQCombiner::operator IQTensor(): IQCombiner not initialized.");
 
@@ -167,9 +167,7 @@ operator IQTensor() const
 
     Foreach(const Combiner& co, combs)
         {
-        //Here we are using the fact that Combiners
-        //can be converted to ITensors
-        res.insert(co);
+        res.insert(co.toITensor());
         }
 
 #ifdef DEBUG
