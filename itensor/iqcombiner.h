@@ -109,7 +109,7 @@ class IQCombiner
 
     std::vector<IQIndex> left_;
     mutable IQIndex right_;
-    mutable std::vector<Combiner> combs;
+    mutable std::vector<Combiner> combs_;
     mutable bool initted;
 
     mutable Condenser cond;

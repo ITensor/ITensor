@@ -45,20 +45,25 @@ class QCounter : public Counter
         reset();
         }
 
-    void 
+    int 
     getVecInd(const std::vector<IQIndex>& origv, 
               std::vector<Index>& vind, QN& q) const
         {
+        int pos = 0,
+            dim = 1;
         const int size = origv.size();
         vind.resize(size);
         q = QN(); 
         for(int k = 0; k < size; ++k)
             {
             const IQIndex& I = origv[k];
-            const int j = i[k+1]+1;
-            vind[k] = I.index(j);
-            q += I.qn(j)*I.dir();
+            const int j = i[k+1];
+            vind[k] = I[j];
+            q += I.qn(1+j)*I.dir();
+            pos += dim*j;
+            dim *= I.nindex();
             }
+        return pos;
         }
     };
 
