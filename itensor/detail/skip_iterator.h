@@ -6,7 +6,6 @@
 #define __ITENSOR_SKIP_ITERATOR_H
 
 #include <iterator>
-#include <type_traits>
 
 namespace itensor {
 namespace detail {
@@ -196,7 +195,7 @@ template<typename Iterator, class Skip>
 std::ostream&
 operator<<(std::ostream& s, const SkipIterator<Iterator,Skip>& si)
     {
-    s << "SkipIterator";
+    return s << "SkipIterator";
     }
 
 }; //namespace itensor::detail
