@@ -1178,7 +1178,7 @@ operator/=(const IQTensor& other)
     const int zero = 0;
 
     array<const int*,NMAX> li,ri;
-    for(int n = 0; n < li.size(); ++n)
+    for(size_t n = 0; n < li.size(); ++n)
         {
         li[n] = &zero;
         ri[n] = &zero;

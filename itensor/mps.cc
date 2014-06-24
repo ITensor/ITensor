@@ -1107,14 +1107,14 @@ initWrite(const OptSet& opts)
 
         //Write all null tensors to disk immediately because
         //later logic assumes null means written to disk
-        for(int j = 0; j < A_.size(); ++j)
+        for(size_t j = 0; j < A_.size(); ++j)
             {
             if(!A_.at(j)) writeToFile(AFName(j),A_.at(j));
             }
 
         if(opts.getBool("WriteAll",false))
             {
-            for(int j = 0; j < A_.size(); ++j)
+            for(int j = 0; j < int(A_.size()); ++j)
                 {
                 if(!A_.at(j)) continue;
                 writeToFile(AFName(j),A_.at(j));
