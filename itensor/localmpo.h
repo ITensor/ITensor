@@ -94,9 +94,6 @@ class LocalMPO
         { return lop_.deltaRho(AA,comb,dir); }
 
     Tensor
-    deltaPhi(const Tensor& phi) const { return lop_.deltaPhi(phi); }
-
-    Tensor
     diag() const { return lop_.diag(); }
 
     //
