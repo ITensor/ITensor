@@ -324,6 +324,8 @@ class IQTensor : public safe_bool<IQTensor>
 
     void 
     scaleTo(const LogNumber& newscale);
+    void 
+    scaleTo(Real newscale) { scaleTo(LogNumber(newscale)); }
 
     void 
     clean(Real min_norm = MIN_CUT);
