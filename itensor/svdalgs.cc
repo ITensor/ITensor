@@ -236,6 +236,13 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
     U = ITensor(ui,uL,UU.Columns(1,m));
     V = ITensor(vL,vi,VV.Rows(1,m));
 
+    //Fix for cases where A.scale() may be negative
+    if(A.scale().sign() == -1)
+        {
+        D *= -1;
+        U *= -1;
+        }
+
     if(cplx)
         {
         ITensor iU(ui,uL,iUU.Columns(1,m)),
