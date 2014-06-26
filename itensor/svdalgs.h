@@ -175,18 +175,9 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
     if(noise > 0)
         Error("Noise term not implemented for svd");
 
-    //if(noise_ > 0 && !PH.isNull())
-    //    {
-    //    //Add in noise term
-    //    Real orig_norm = AA.norm();
-    //    AA += noise_*PH.deltaPhi(AA);
-    //    AA *= orig_norm/AA.norm();
-    //    }
-
     //Combiners which transform AA
     //into a rank 2 tensor
     CombinerT Ucomb, Vcomb;
-
 
     //Divide up indices based on U
     //If U is null, use V instead

@@ -71,9 +71,6 @@ class LocalOp
              const CombinerT& comb, Direction dir) const;
 
     Tensor
-    deltaPhi(const Tensor& phi) const;
-
-    Tensor
     diag() const;
 
     int
@@ -314,92 +311,6 @@ deltaRho(const Tensor& AA, const CombinerT& comb, Direction dir) const
     return delta;
     }
 
-template <class Tensor>
-Tensor inline LocalOp<Tensor>::
-deltaPhi(const Tensor& phi) const
-    {
-    Tensor deltaL(phi),
-           deltaR(phi);
-
-    if(!LIsNull()) 
-        {
-        deltaL *= L();
-        }
-
-    if(!RIsNull()) 
-        {
-        deltaR *= R();
-        }
-
-    const Tensor& Op1 = *Op1_;
-    const Tensor& Op2 = *Op2_;
-
-    deltaL *= Op1;
-    deltaR *= Op2;
-
-    IndexT hl = commonIndex(Op1,Op2,Link);
-
-    deltaL.trace(hl);
-    deltaL.mapprime(1,0);
-
-    deltaR.trace(hl);
-    deltaR.mapprime(1,0);
-
-    deltaL += deltaR;
-
-    return deltaL;
-    }
-
-template <>
-IQTensor inline LocalOp<IQTensor>::
-deltaPhi(const IQTensor& phi) const
-    {
-    IQTensor deltaL(phi),
-           deltaR(phi);
-
-    if(!LIsNull()) 
-        {
-        deltaL *= L();
-        }
-
-    if(!RIsNull()) 
-        {
-        deltaR *= R();
-        }
-
-    const IQTensor& Op1 = *Op1_;
-    const IQTensor& Op2 = *Op2_;
-
-    deltaL *= Op1;
-    deltaR *= Op2;
-
-    IndexT hl = commonIndex(Op1,Op2,Link);
-
-    deltaL.trace(hl);
-    deltaL.mapprime(1,0);
-
-    deltaR.trace(hl);
-    deltaR.mapprime(1,0);
-
-    deltaL += deltaR;
-
-    IQTensor delta(deltaL);
-    delta *= 0;
-
-    const QN targetQn = div(phi,Opt("Fast"));
-
-    Foreach(const ITensor& block, deltaL.blocks())
-        {
-        QN div;
-        Foreach(const Index& I, block.indices())
-            div += qn(deltaL,I);
-
-        if(div == targetQn)
-            delta += block;
-        }
-
-    return delta;
-    }
 
 template <class Tensor>
 Tensor inline LocalOp<Tensor>::
