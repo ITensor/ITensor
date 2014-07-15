@@ -377,8 +377,9 @@ product(IQTensor T, IQTensor& res) const
             if(pos >= combs_.size()) 
                 {
                 Print(*this);
+                Print(T);
                 Print(t);
-                printfln("pos=%d, left_.size()=%d",pos,left_.size());
+                printfln("pos=%d, combs_.size()=%d",pos,combs_.size());
                 Error("pos out of range");
                 }
 
