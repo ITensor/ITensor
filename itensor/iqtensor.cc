@@ -1603,7 +1603,7 @@ findIQInd(const IQTensor& T, const Index& i)
         }
     Print(T.indices());
     Print(i);
-    Error("Index i not found in any of T's IQIndices");
+    throw ITError("Index i not found in any of T's IQIndices");
     return IQIndex::Null();
     }
 
@@ -1652,6 +1652,27 @@ isZero(const IQTensor& T, const OptSet& opts)
         if(!isZero(t)) return false;
         }
     return true;
+    }
+
+void
+checkStorage(const IQTensor& T)
+    {
+    const IQTDat& store = T.blocks();
+    for(int n = 0; n < store.maxSize(); ++n)
+        {
+        const ITensor& b = store.at(n);
+        if(b.valid())
+            {
+            const int pos = blockPos(b.indices(),T.indices());
+            if(pos != n)
+                {
+                printfln("T.indices() = %s",T.indices());
+                printfln("b = %s",b);
+                printfln("pos=%d, n=%d",pos,n);
+                throw ITError("ITensor block in wrong storage position.");
+                }
+            }
+        }
     }
 
 }; //namespace itensor

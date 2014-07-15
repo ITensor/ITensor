@@ -519,6 +519,9 @@ isZero(const IQTensor& T, const OptSet& opts = Global::opts());
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);
 
+void
+checkStorage(const IQTensor& T);
+
 }; //namespace itensor
 
 #endif
