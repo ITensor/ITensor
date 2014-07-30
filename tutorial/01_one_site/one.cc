@@ -5,83 +5,83 @@ using namespace itensor;
 int
 main(int argc, char* argv[])
     {
-    //
-    // Single-site wavefunction
-    //
-    
-    //Make a dimension 2 Index
-    Index s("s",2);
+      //
+      // Single-site wavefunction
+      //
 
-    //Construct an ITensor
-    ITensor psi(s); //default initialized to zero
+      //Make a dimension 2 Index
+      Index s("s",2);
+
+      //Construct an ITensor
+      ITensor psi(s); //default initialized to zero
 
 
-    //
-    // Initialize up spin
-    //
+      //
+      // Initialize up spin
+      //
 
-    //Set first element to 1.
-    psi(s(1)) = 1;
+      //Set first element to 1.
+      psi(s(1)) = 1;
 
-    PrintData(psi);
-    
-    //exit(0); //uncomment to exit here
+      PrintData(psi);
 
-    //
-    // Operators 
-    //
+      //exit(0); //uncomment to exit here
 
-    ITensor Sz(s,prime(s)),
-            Sx(s,prime(s));
+      //
+      // Operators 
+      //
 
-    commaInit(Sz,s,prime(s)) = 0.5, 0.0,
-                               0.0,-0.5;
+      ITensor Sz(s,prime(s)),
+              Sx(s,prime(s));
 
-    commaInit(Sx,s,prime(s)) = 0.0, 0.5,
-                               0.5, 0.0;
+      commaInit(Sz,s,prime(s)) = 0.5, 0.0,
+        0.0,-0.5;
 
-    PrintData(Sz);
-    PrintData(Sx);
+      commaInit(Sx,s,prime(s)) = 0.0, 0.5,
+        0.5, 0.0;
 
-    //exit(0); //uncomment to exit here
+      PrintData(Sz);
+      PrintData(Sx);
 
-    //
-    // Product Sx * phi 
-    //
+      //exit(0); //uncomment to exit here
 
-    ITensor phi = Sx * psi;
+      //
+      // Product Sx * phi 
+      //
 
-    phi.noprime();
+      ITensor phi = Sx * psi;
 
-    PrintData(phi);
+      phi.noprime();
 
-    //exit(0); //uncomment to exit here
+      PrintData(phi);
 
-    //
-    // 45* angle spin
-    //
+      //exit(0); //uncomment to exit here
 
-    const Real theta = Pi/4;
+      //
+      // 45* angle spin
+      //
 
-    //Extra factors of two come from S=1/2 representation
-    psi(s(1)) = cos(theta/2.);
-    psi(s(2)) = sin(theta/2.);
+      const Real theta = Pi/4;
 
-    PrintData(psi);
+      //Extra factors of two come from S=1/2 representation
+      psi(s(1)) = cos(theta/2.);
+      psi(s(2)) = sin(theta/2.);
 
-    //exit(0); //uncomment to exit here
+      PrintData(psi);
 
-    //
-    // Expectation values
-    //
+      //exit(0); //uncomment to exit here
 
-    ITensor cpsi = dag(prime(psi));
+      //
+      // Expectation values
+      //
 
-    Real zz = (cpsi * Sz * psi).toReal();
-    Real xx = (cpsi * Sx * psi).toReal();
+      ITensor cpsi = dag(prime(psi));
 
-    println("<Sz> = ", zz);
-    println("<Sx> = ", xx);
+      Real zz = (cpsi * Sz * psi).toReal();
+      Real xx = (cpsi * Sx * psi).toReal();
+
+      println("<Sz> = ", zz);
+      println("<Sx> = ", xx);
 
     return 0;
     }
