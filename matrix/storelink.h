@@ -17,6 +17,12 @@ namespace itensor {
 
 typedef double Real;
 
+#ifdef USE_CPP11
+#define STATIC_VAR(type,name) static type& name() { static type t{}; return t; }
+#else
+#define STATIC_VAR(type,name) static type& name() { static type t(0); return t; }
+#endif
+
 class StoreLink
     {
     shared_ptr<std::vector<Real> > p; // Only data member
@@ -28,7 +34,16 @@ class StoreLink
     // Reserve "=" for copies of storage pointed to, defined in later classes
     // using StoreLink. Do ref copy (rebinding) using <<
 
-    //StoreLink(const StoreLink & S) = default;
+#ifdef USE_CPP11
+    StoreLink(const StoreLink & S) = default;
+#endif
+
+    // Commands for new storage, used by storage classes only.
+    StoreLink(lint s = 0) // Negative lint treated as 0.
+        { 
+        donew(s); 
+        }
+
 
     ~StoreLink() 
         { 
@@ -38,7 +53,11 @@ class StoreLink
     Real* 
     Store() const	// Don't ever delete this on your own.
         {
-        if(!p || p->size() == 0) return nullptr;
+#ifdef USE_CPP11
+        if(!p || p->empty()) return nullptr;
+#else
+        if(!p || p->empty()) return NULL;
+#endif
         return &(p->front());
         }
 
@@ -47,12 +66,6 @@ class StoreLink
         { 
         if(this != &S) { dodelete(); p = S.p; }
         return *this; 
-        }
-
-    // Commands for new storage, used by storage classes only.
-    StoreLink(lint s = 0) // Negative lint treated as 0.
-        { 
-        donew(s); 
         }
 
     void 
@@ -104,17 +117,8 @@ class StoreLink
 
     StoreLink& operator=(const StoreLink &);
 
-    static lint& storageinuse()
-        {
-        static lint storageinuse_(0);
-        return storageinuse_;
-        }
-
-    static lint& numberofobjects()
-        {
-        static lint numberofobjects_(0);
-        return numberofobjects_;
-        }
+    STATIC_VAR(lint,storageinuse)
+    STATIC_VAR(lint,numberofobjects)
 
     void donew(lint s)
         {
@@ -127,7 +131,7 @@ class StoreLink
     void 
     dodelete()
         { 
-        if(p && p.use_count() == 1) 
+        if(p && p.unique())
             {
             storageinuse() -= p->size(); 
             --numberofobjects();
@@ -137,6 +141,8 @@ class StoreLink
     };
 
 }; //namespace itensor
+
+#undef STATIC_VAR
 
 #endif
 
