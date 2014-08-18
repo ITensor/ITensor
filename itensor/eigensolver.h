@@ -327,29 +327,32 @@ arnoldi(const BigMatrixT& A,
             err = nh*abs(Complex(YR(1+j,1+n),YI(1+j,1+n)));
             assert(err >= 0);
 
-            if(r == 0)
-                printf("I %d e %.0E E",(1+j),err);
-            else
-                printf("R %d I %d e %.0E E",r,(1+j),err);
-
-            for(int j = 0; j <= w; ++j)
+            if(debug_level_ >= 1)
                 {
-                if(fabs(eigs[j].real()) > 1E-6)
-                    {
-                    if(fabs(eigs[j].imag()) > Approx0)
-                        printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
-                    else
-                        printf(" %.10f",eigs[j].real());
-                    }
+                if(r == 0)
+                    printf("I %d e %.0E E",(1+j),err);
                 else
+                    printf("R %d I %d e %.0E E",r,(1+j),err);
+
+                for(int j = 0; j <= w; ++j)
                     {
-                    if(fabs(eigs[j].imag()) > Approx0)
-                        printf(" (%.5E,%.5E)",eigs[j].real(),eigs[j].imag());
+                    if(fabs(eigs[j].real()) > 1E-6)
+                        {
+                        if(fabs(eigs[j].imag()) > Approx0)
+                            printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
+                        else
+                            printf(" %.10f",eigs[j].real());
+                        }
                     else
-                        printf(" %.5E",eigs[j].real());
+                        {
+                        if(fabs(eigs[j].imag()) > Approx0)
+                            printf(" (%.5E,%.5E)",eigs[j].real(),eigs[j].imag());
+                        else
+                            printf(" %.5E",eigs[j].real());
+                        }
                     }
+                println();
                 }
-            println();
 
             ++niter;
 
