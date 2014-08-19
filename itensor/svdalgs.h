@@ -54,7 +54,7 @@ template<class Tensor, class LocalOpT>
 Spectrum 
 denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
              const LocalOpT& PH,
-             const OptSet& opts = Global::opts());
+             OptSet opts = Global::opts());
 
 
 
@@ -249,7 +249,7 @@ Spectrum
 denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, 
              Direction dir, 
              const LocalOpT& PH,
-             const OptSet& opts)
+             OptSet opts)
     {
     typedef typename Tensor::IndexT 
     IndexT;
@@ -257,7 +257,6 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
     CombinerT;
 
     const Real noise = opts.getReal("Noise",0.);
-    const OptSet* opts_ = &opts;
 
     if(isZero(AA,Opt("Fast"))) 
         {
@@ -305,13 +304,11 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
         rho *= 1./trace(realPart(rho));
         }
 
-    OptSet newOpts;
     if(opts.getBool("UseOrigM",false))
         {
-        newOpts.add("Cutoff",-1);
-        newOpts.add("Minm",mid.m());
-        newOpts.add("Maxm",mid.m());
-        opts_ = &newOpts;
+        opts.add("Cutoff",-1);
+        opts.add("Minm",mid.m());
+        opts.add("Maxm",mid.m());
         }
 
     if(opts.getBool("TraceReIm",false))
@@ -321,7 +318,8 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
 
     Tensor U;
     Tensor D;
-    Spectrum spec = diag_hermitian(rho,U,D,*opts_);
+    opts.add("Truncate",true);
+    Spectrum spec = diag_hermitian(rho,U,D,opts);
 
     comb.dag();
     comb.product(dag(U),to_orth);
@@ -382,7 +380,6 @@ diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
         throw e;
         }
 
-    opts.add("Truncate",false);
     Spectrum spec = diag_hermitian(Mc,U,D,opts);
 
     U = comb * U;
