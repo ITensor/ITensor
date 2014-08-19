@@ -747,6 +747,15 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
         U = U + iU*Complex_i;
         }
 
+    if(rho.scale().isFiniteReal())
+        {
+        DD *= rho.scale().real();
+        }
+    else
+        {
+        println("Scale not a finite Real, omitting from returned spectrum.");
+        }
+
     spec.eigsKept(DD);
 
     return spec;
@@ -902,11 +911,12 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     Real docut = -1;
     int m = (int)alleig.size();
 
+    sort(alleig.begin(),alleig.end());
+
     if(do_truncate)
         {
         //Sort all eigenvalues from smallest to largest
         //irrespective of quantum numbers
-        sort(alleig.begin(),alleig.end());
 
         svdtruncerr = truncate(alleig,m,docut,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         }

@@ -573,4 +573,46 @@ SECTION("IQEigDecomp")
 
     CHECK((M*V - prime(V)*D).norm() < 1E-11);
     }
+
+SECTION("Returned Spectrum scale")
+    {
+    //
+    // Check that if tensor being diagonalized
+    // has been multiplied by a scalar, that this
+    // factor gets propagated to the Spectrum that
+    // is returned by diagHermitian
+    //
+
+    Index s1("s1",2,Site),s2("s2",2,Site);
+    ITensor M(s1,s2,prime(s2),prime(s1));
+    M.randomize();
+    M = M + swapPrime(M,0,1);
+    M *= 0.5;
+
+    ITensor U;
+    ITensor D;
+    Spectrum spec = diagHermitian(M,U,D);
+    Index d = commonIndex(U,D,Link);
+
+    CHECK(fabs(spec.eig(1)-D(d(1),prime(d)(1))) < 1E-12);
+    
+    //////////////////////////
+
+    IQTensor T(dag(S2)(1),dag(S1)(2),prime(S1)(1),prime(S2)(2));
+    T.randomize();
+    T = T + swapPrime(T,0,1);
+    T *= 0.5;
+
+    IQTensor UU;
+    IQTensor DD;
+    spec = diagHermitian(T,UU,DD);
+    IQIndex dd = commonIndex(UU,DD,Link);
+
+    Real maxDD = -100;
+    for(int i = 1; i <= dd.m(); ++i)
+        {
+        maxDD = std::max(maxDD,DD(dd(i),prime(dd)(i)));
+        }
+    CHECK(fabs(spec.eig(1)-maxDD) < 1E-12);
+    }
 }
