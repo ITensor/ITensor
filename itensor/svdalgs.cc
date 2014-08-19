@@ -615,7 +615,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
     const int maxm = opts.getInt("Maxm",MAX_M);
     const int minm = opts.getInt("Minm",1);
-    const bool do_truncate = opts.getBool("Truncate",true);
+    const bool do_truncate = opts.getBool("Truncate",false);
     const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
     const bool absoluteCutoff = opts.getBool("AbsoluteCutoff",false);
     const bool cplx = rho.isComplex();
@@ -645,6 +645,13 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
         Error("Tensor must have one unprimed index");
         }
 
+    //Depending on the sign of the scale, calling .toMatrix11NoScale 
+    //yields a matrix proportional to either rho or -rho.
+    //If rho (scale().sign() > 0) then want to temporarily reverse 
+    //the sign of the matrix when calling the diagonalization routine
+    //to ensure eigenvalues are ordered from largest to smallest.
+    bool flipSign = rho.scale().sign() > 0;
+
     //Do the diagonalization
     Vector DD;
     Matrix UU,iUU;
@@ -652,9 +659,9 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
         {
         Matrix R;
         rho.toMatrix11NoScale(active,prime(active),R);
-        R *= -1.0; 
+        if(flipSign) R *= -1;
         EigenValues(R,DD,UU); 
-        DD *= -1.0;
+        if(flipSign) DD *= -1;
         }
     else
         {
@@ -665,10 +672,13 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
         irho.scaleTo(rho.scale());
         rrho.toMatrix11NoScale(prime(active),active,Mr);
         irho.toMatrix11NoScale(prime(active),active,Mi);
-        Mr *= -1.0; 
-        Mi *= -1.0; 
+        if(flipSign)
+            {
+            Mr *= -1.0; 
+            Mi *= -1.0; 
+            }
         HermitianEigenvalues(Mr,Mi,DD,UU,iUU); 
-        DD *= -1.0;
+        if(flipSign) DD *= -1.0;
         }
 
 
@@ -681,10 +691,13 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     //    DD *= rho.scale().real();
     //    }
 
+    if(opts.getBool("ShowEigs",false)) 
+        {
+        println("Before truncating, m = ",DD.Length());
+        }
+
     //Truncate
     Real svdtruncerr = 0.0;
-    if(opts.getBool("ShowEigs",false))
-        cout << "Before truncating, m = " << DD.Length() << endl;
     if(do_truncate)
         {
         svdtruncerr = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
@@ -746,7 +759,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
     const int maxm = opts.getInt("Maxm",MAX_M);
     const int minm = opts.getInt("Minm",1);
-    const bool do_truncate = opts.getBool("Truncate",true);
+    const bool do_truncate = opts.getBool("Truncate",false);
     const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
     const bool absoluteCutoff = opts.getBool("AbsoluteCutoff",false);
     const bool cplx = rho.isComplex();
@@ -794,6 +807,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         }
     rho.scaleTo(refNorm);
 
+
     //1. Diagonalize each ITensor within rho.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
@@ -812,15 +826,22 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         Matrix &UU = mmatrix.at(itenind);
         Vector &d =  mvector.at(itenind);
 
+        //Depending on the sign of the scale, calling .toMatrix11NoScale 
+        //yields a matrix proportional to either t or -t.
+        //If t (scale().sign() > 0) then want to temporarily reverse 
+        //the sign of the matrix when calling the diagonalization routine
+        //to ensure eigenvalues are ordered from largest to smallest.
+        bool flipSign = t.scale().sign() > 0;
+
         //Diag ITensors within rho
         const int n = a.m();
         if(!cplx)
             {
             Matrix M;
             t.toMatrix11NoScale(a,prime(a),M);
-            M *= -1;
+            if(flipSign) M *= -1;
             EigenValues(M,d,UU);
-            d *= -1;
+            if(flipSign) d *= -1;
             }
         else
             {
@@ -832,10 +853,13 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
             Matrix &iUU = imatrix.at(itenind);
             ret.toMatrix11NoScale(prime(a),a,Mr);
             imt.toMatrix11NoScale(prime(a),a,Mi);
-            Mr *= -1;
-            Mi *= -1;
+            if(flipSign)
+                {
+                Mr *= -1;
+                Mi *= -1;
+                }
             HermitianEigenvalues(Mr,Mi,d,UU,iUU);
-            d *= -1;
+            if(flipSign) d *= -1;
             }
 
         for(int j = 1; j <= n; ++j) 
