@@ -19,7 +19,7 @@ IQTDatPtr;
 // IQTensor
 //
 
-class IQTensor : public safe_bool<IQTensor>
+class IQTensor
     {
     public:
     //Typedefs -----------------------------------------------------
@@ -104,6 +104,9 @@ class IQTensor : public safe_bool<IQTensor>
     //true if IQTensor has no blocks
     bool 
     empty() const;
+
+    //IQTensor evaluates to false if it is default constructed
+    explicit operator bool() const { return valid(); }
 
     //false if IQTensor is default constructed
     bool 

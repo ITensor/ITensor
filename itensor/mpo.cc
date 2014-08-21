@@ -169,7 +169,7 @@ findCenter(const IQMPO& psi)
         const IQTensor& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in IQMPO");
         bool allOut = true;
-        Foreach(const IQIndex& I, A.indices())
+        for(const IQIndex& I : A.indices())
             {
             //Only look at Link IQIndices
             if(I.type() != Link) continue;
@@ -452,7 +452,7 @@ exactApplyMPO(const MPSt<Tensor>& x,
 
         //Add common IQIndices to IQCombiner
         CombinerT comb; 
-        Foreach(const IndexT& I, res.A(j).indices())
+        for(const IndexT& I : res.A(j).indices())
             {
             if(hasindex(res.A(j+1),I))
                 comb.addleft(I);

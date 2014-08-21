@@ -8,7 +8,6 @@
 #include <vector>
 #include "math.h"
 #include "flstring.h"
-#include "safebool.h"
 #include <limits>
 
 #ifndef NAN
@@ -19,7 +18,7 @@ namespace itensor {
 
 typedef double Real;
 
-class Opt : public safe_bool<Opt>
+class Opt
     {
     public:
 
@@ -61,6 +60,8 @@ class Opt : public safe_bool<Opt>
 
     Real
     realVal() const { assertType(Numeric); return rval_; }
+
+    explicit operator bool() const { return valid(); }
 
     bool
     valid() const { return type_ != None; }
@@ -134,7 +135,6 @@ class OptSet
 
     OptSet(const OptSet& other);
 
-#ifdef USE_CPP11
     template <typename T, typename... Args>
     OptSet(const char* name1, 
            const T& t1, 
@@ -149,7 +149,6 @@ class OptSet
         {
         initialize(other,rest...);
         }
-#endif
 
     //
     // Methods for accessing Opts
@@ -255,7 +254,6 @@ class OptSet
     void
     addByString(std::string ostring);
 
-#ifdef USE_CPP11
     template <typename T, typename... Args>
     void
     initialize(const char* name1, 
@@ -278,7 +276,6 @@ class OptSet
 
     void
     initialize() { }
-#endif
 
     };
 

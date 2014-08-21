@@ -159,7 +159,7 @@ operator()(const vector<Tensor>& psi) const
     for(int j = 1; j <= N; ++j)
         {
         const Tensor& B = psi.at(s(j));
-        Foreach(const Index& I, B.indices())
+        for(const Index& I : B.indices())
             {
             if(I.type() == Site)
                 {
@@ -334,7 +334,7 @@ operator()(const vector<Tensor>& psi) const
             const
             IndexT plink = commonIndex(B,psi[s(j-1)]);
             Tensor Bp(B);
-            Foreach(const IndexT& I, B.indices())
+            for(const IndexT& I : B.indices())
                 {
                 if(I == plink) continue;
                 Bp.prime(I);
@@ -447,7 +447,7 @@ ungroupMPS(vector<Tensor>& psig,
         Tensor& bond = psig.at(g);
 
         int nsite = 0;
-        Foreach(const Index& I, bond.indices())
+        for(const Index& I : bond.indices())
             {
             if(I.type() == Site)
                 ++nsite;
@@ -923,7 +923,7 @@ expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
         const Tensor& t = psi.at(j);
 
         int nsite = 0;
-        Foreach(const Index& I, t.indices())
+        for(const Index& I : t.indices())
             {
             if(I.type() == Site)
                 ++nsite;

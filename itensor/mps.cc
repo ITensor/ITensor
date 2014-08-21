@@ -503,13 +503,13 @@ plussers(const IQIndex& l1, const IQIndex& l2,
     {
     map<Index,Index> l1map, l2map;
     vector<IndexQN> iq;
-    Foreach(const IndexQN& x, l1.indices())
+    for(const IndexQN& x : l1.indices())
         {
         Index jj(x.rawname(),x.m(),x.type());
         l1map[x] = jj;
         iq.push_back(IndexQN(jj,x.qn));
         }
-    Foreach(const IndexQN& x, l2.indices())
+    for(const IndexQN& x : l2.indices())
         {
         Index jj(x.rawname(),x.m(),x.type());
         l2map[x] = jj;
@@ -517,14 +517,14 @@ plussers(const IQIndex& l1, const IQIndex& l2,
         }
     sumind = IQIndex(sumind.rawname(),iq,sumind.dir(),sumind.primeLevel());
     first = IQTensor(dag(l1),sumind);
-    Foreach(const Index& il1, l1.indices())
+    for(const Index& il1 : l1.indices())
         {
         Index s1 = l1map[il1];
         ITensor t(il1,s1,1.0);
         first += t;
         }
     second = IQTensor(dag(l2),sumind);
-    Foreach(const Index& il2, l2.indices())
+    for(const Index& il2 : l2.indices())
         {
         Index s2 = l2map[il2];
         ITensor t(il2,s2,1.0);
@@ -1344,7 +1344,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
 
         if(s == show_s) { PrintData(A[s]); }
 
-        Foreach(const qC_vt& x, qC) 
+        for(const qC_vt& x : qC) 
         for(int n = 1; n <= Dim;  ++n)
         for(int u = 1; u <= PDim; ++u)
             {
@@ -1451,14 +1451,14 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
 
         qC.clear();
 
-        Foreach(const qt_vt& x, qt)
+        for(const qt_vt& x : qt)
             {
             const vector<ITensor>& blks = x.second;
             if(blks.size() != 0)
                 {
                 q = x.first; 
                 if(S == Send) 
-                    { Foreach(const ITensor& t, blks) nblock.push_back(t); }
+                    { for(const ITensor& t : blks) nblock.push_back(t); }
                 else
                     {
                     Matrix M; 
@@ -1470,7 +1470,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                         cout << "qD[q] = " << qD[q] << "\n";
                         cout << "M = \n" << M << "\n";
                         int count = 0;
-                        Foreach(const ITensor& t, blks) 
+                        for(const ITensor& t : blks) 
                             {
                             printfln("t%02d",++count," ",t);
                             }
@@ -1478,7 +1478,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                     string qname = format("ql%d(%+d:%d)",s,q.sz(),q.Nf());
                     Index qbond(qname,mm);
                     ITensor compressor(bond,qbond,M);
-                    Foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
+                    for(const ITensor& t : blks) nblock.push_back(t * compressor);
                     iq.push_back(IndexQN(qbond,q));
                     qC[q] = compressor;
                     }
@@ -1511,7 +1511,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                             : IQTensor(dag(linkind[sprev]),sites.si(s),linkind[s]));
             }
 
-        Foreach(const ITensor& nb, nblock) 
+        for(const ITensor& nb : nblock) 
             { qA.at(s) += nb; } 
         nblock.clear();
 

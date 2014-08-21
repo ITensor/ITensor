@@ -30,7 +30,6 @@ struct IterPair
         end_(IP.end_)
         {}
 
-#ifdef USE_CPP11
     IterPair(_Iter&& b,
              _Iter&& e)
         : 
@@ -44,7 +43,6 @@ struct IterPair
         begin_(IP.begin_),
         end_(IP.end_)
         {}
-#endif
 
     _Iter
     begin() const { return begin_; }

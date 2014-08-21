@@ -46,10 +46,10 @@ blockPos(const IndexSet<Index>& is,
     int pos = 0;
     int dim = 1;
 
-    Foreach(const IQIndex& J, qs)
+    for(const IQIndex& J : qs)
         {
         bool found = false;
-        Foreach(const Index& i, is)
+        for(const Index& i : is)
             {
             if(hasindex(J,i))
                 {
@@ -79,7 +79,7 @@ valid() const
 bool IQTensor::
 isComplex() const
     {
-    Foreach(const ITensor& t, *d_)
+    for(const ITensor& t : *d_)
         {
         if(t.isComplex()) return true;
         }
@@ -102,7 +102,7 @@ void IQTensor::
 allocate()
     {
     int dim = 1;
-    Foreach(const IQIndex& I, this->indices())
+    for(const IQIndex& I : this->indices())
         {
         dim *= I.nindex();
         }
@@ -200,7 +200,7 @@ IQTensor(vector<IQIndex>& iqinds_)
     is_(iqinds_)
 	{ 
 #ifdef DEBUG
-    Foreach(const IQIndex& I, iqinds_)
+    for(const IQIndex& I : iqinds_)
         {
         if(I == IQIndex::Null())
             Error("IQIndex is null");
@@ -280,7 +280,7 @@ operator*=(Real fac)
         return *this; 
         }
 
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         {
         t *= fac;
         }
@@ -293,7 +293,7 @@ operator/=(Real fac)
     { 
     solo();
 
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         {
         t /= fac;
         }
@@ -312,7 +312,7 @@ operator*=(Complex z)
         return *this; 
         }
 
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         {
         t *= z;
         }
@@ -325,7 +325,7 @@ operator*=(const LogNumber& lgnum)
     { 
     solo();
 
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         {
         t *= lgnum;
         }
@@ -354,7 +354,7 @@ operator+=(const ITensor& t)
         const
         QN d = div(*this);
         QN q;
-        Foreach(const Index& i, t.indices())
+        for(const Index& i : t.indices())
             {
             q += qn(*this,i)*dir(*this,i);
             }
@@ -470,7 +470,7 @@ noprime(IndexType type)
 
     is_.noprime(type);
 
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         t.noprime(type); 
     return *this;
 	} 
@@ -482,7 +482,7 @@ prime(IndexType type, int inc)
 
     is_.prime(type,inc);
 
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
 	    t.prime(type,inc);
     return *this;
 	}
@@ -494,7 +494,7 @@ mapprime(int plevold, int plevnew, IndexType type)
 
     is_.mapprime(plevold,plevnew,type);
 
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
 	    t.mapprime(plevold,plevnew,type);
     return *this;
 	}
@@ -506,8 +506,8 @@ prime(const IQIndex& I, int inc)
 
     is_.prime(I,inc);
 
-    Foreach(ITensor& t, *d_)
-    Foreach(const Index& i, I.indices())
+    for(ITensor& t : *d_)
+    for(const Index& i : I.indices())
         {
 		if(hasindex(t,i)) 
 		    t.prime(i,inc);
@@ -522,8 +522,8 @@ noprime(const IQIndex& I)
 
     is_.noprime(I);
 
-    Foreach(ITensor& t, *d_)
-    Foreach(const Index& i, I.indices())
+    for(ITensor& t : *d_)
+    for(const Index& i : I.indices())
         {
         if(hasindex(t,i)) 
             t.noprime(i);
@@ -540,7 +540,7 @@ normLogNum() const
     if(d_->empty()) return LogNumber(0);
 
     Real maxLogNum = -maxlogdouble;
-    Foreach(const ITensor& t, *d_)
+    for(const ITensor& t : *d_)
         { 
         if(t.scale().logNum() > maxLogNum)
             maxLogNum = t.scale().logNum();
@@ -549,7 +549,7 @@ normLogNum() const
     //Add sum of squares of the block norms with exp(2*maxLogNum) scaled out, 
     //using lognorm as a temporary
     Real lognorm = 0;
-    Foreach(const ITensor& t, *d_)
+    for(const ITensor& t : *d_)
         { 
         if(t.scale().sign() != 0)
             {
@@ -568,14 +568,14 @@ diag() const
     if(this->isComplex()) 
         Error("diag() may only be called on real IQTensors - try taking real or imaginary part first");
     int nb = this->indices().front().nindex();
-    Foreach(const IQIndex& I, this->indices())
+    for(const IQIndex& I : this->indices())
         nb = min(nb,I.nindex());
     vector<Real> els;
     for(int n = 1; n <= nb; ++n)
         {
         IndexSet<Index> is;
         int bsize = this->indices().front().index(n).m();
-        Foreach(const IQIndex& I, this->indices())
+        for(const IQIndex& I : this->indices())
             {
             is.addindex(I.index(n));
             bsize = min(bsize,I.index(n).m());
@@ -611,7 +611,7 @@ Real
 sumels(const IQTensor& T)
     {
     Real sum = 0;
-    Foreach(const ITensor& t, T.blocks())
+    for(const ITensor& t : T.blocks())
         { 
         sum += sumels(t); 
         }
@@ -623,7 +623,7 @@ scaleOutNorm()
     {
     solo(); 
     const LogNumber newscale = normLogNum();
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         t.scaleTo(newscale);
     }
 
@@ -631,7 +631,7 @@ void IQTensor::
 scaleTo(const LogNumber& newscale)
     {
     solo(); 
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         t.scaleTo(newscale);
     }
 
@@ -639,7 +639,7 @@ void IQTensor::
 clean(Real min_norm)
     { 
     solo(); 
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         {
         if(t.norm() < min_norm)
             t = ITensor();
@@ -699,7 +699,7 @@ tieIndices(const array<IQIndex,NMAX>& indices,
         for(int n = 0; n < niqind; ++n)
             totie[n] = indices[n].index(i);
 
-        Foreach(const ITensor& t, *prevdat)
+        for(const ITensor& t : *prevdat)
             {
             bool has_all = true;
             for(int n = 0; n < niqind; ++n)
@@ -793,7 +793,7 @@ trace(const array<IQIndex,NMAX>& indices, int niqind)
             totrace[n] = indices[n].index(i);
             }
 
-        Foreach(const ITensor& t, *prevdat)
+        for(const ITensor& t : *prevdat)
             {
             bool has_all = true;
             for(int n = 0; n < niqind; ++n)
@@ -878,7 +878,7 @@ conj()
     if(!this->isComplex()) return *this;
 
     solo();
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         {
         t.conj();
         }
@@ -897,7 +897,7 @@ dag()
         {
         solo();
         is_.dag();
-        Foreach(ITensor& t, *d_)
+        for(ITensor& t : *d_)
             {
             t.dag();
             }
@@ -923,7 +923,7 @@ operator<<(std::ostream & s, const IQTensor& T)
         }
     s << "IQIndices:\n" << T.indices();
     s << "ITensor Blocks:\n";
-    Foreach(const ITensor& t, T.blocks())
+    for(const ITensor& t : T.blocks())
         { 
         if(t.r() > 0)
             {
@@ -1144,7 +1144,7 @@ operator*=(const IQTensor& other)
             else               r.u += i*ud[nu++];
             }
 
-        Foreach(const BlockInfo& l, Lb)
+        for(const BlockInfo& l : Lb)
             {
             if(l.c == r.c) insertAdd(N[l.u+r.u],L[l.p] * R[r.p]);
             }
@@ -1241,7 +1241,7 @@ operator/=(const IQTensor& other)
         {
         const IQIndex& J = other.is_[j];
         bool contracted = false;
-        Foreach(const IQIndex& I, this->indices())
+        for(const IQIndex& I : this->indices())
             {
             if(I == J)
                 {
@@ -1353,7 +1353,7 @@ operator+=(const IQTensor& other)
 
     solo(); 
 
-    Foreach(const ITensor& t, *(other.d_))
+    for(const ITensor& t : *(other.d_))
         { 
         insertAdd(getBlock(t.indices()),t);
         }
@@ -1386,11 +1386,11 @@ toITensor() const
     ITensor res(indices);
 
     //Loop over ITensors (blocks) within this IQTensor
-    Foreach(const ITensor& t, *d_)
+    for(const ITensor& t : *d_)
         {
         ITensor exp(t);
         //Loop over Index's of the k'th ITensor
-        Foreach(const Index& small, t.indices())
+        for(const Index& small : t.indices())
             {
             //Want to transform 'small' into the 
             //Index version of the IQIndex that contains
@@ -1398,7 +1398,7 @@ toITensor() const
 
             //Find the IQIndex that contains 'small'
             const IQIndex* big = 0;
-            Foreach(const IQIndex& I, this->indices())
+            for(const IQIndex& I : this->indices())
                 if(hasindex(I,small))
                     {
                     big = &I;
@@ -1419,7 +1419,7 @@ takeRealPart()
     if(isComplex())
         {
         solo();
-        Foreach(ITensor& t, *d_)
+        for(ITensor& t : *d_)
             {
             t.takeRealPart();
             }
@@ -1431,7 +1431,7 @@ IQTensor& IQTensor::
 takeImagPart()
     {
     solo();
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         {
         t.takeImagPart();
         }
@@ -1442,7 +1442,7 @@ void IQTensor::
 pseudoInvert(Real cutoff)
     {
     solo();
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         {
         t.pseudoInvert();
         }
@@ -1466,9 +1466,9 @@ replaceIndex(const IQIndex& oind,
         }
     solo(); 
     is_.replaceIndex(oind,nind); 
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         {
-        Foreach(const Index& i, t.indices())
+        for(const Index& i : t.indices())
             {
             const int j = findindex(oind,i);
             if(j != 0)
@@ -1556,7 +1556,7 @@ div(const IQTensor& T, const OptSet& opts)
     //Calculate divergence of first block
     QN div_;
     IQTDat::const_iterator it = T.blocks().begin();
-    Foreach(const Index& i, it->indices())
+    for(const Index& i : it->indices())
         {
         div_ += qn(T,i)*dir(T,i);
         }
@@ -1571,7 +1571,7 @@ div(const IQTensor& T, const OptSet& opts)
     for(++it; it != T.blocks().end(); ++it)
         {
         QN q;
-        Foreach(const Index& i, it->indices())
+        for(const Index& i : it->indices())
             {
             q += qn(T,i)*dir(T,i);
             }
@@ -1596,7 +1596,7 @@ div(const IQTensor& T, const OptSet& opts)
 const IQIndex&
 findIQInd(const IQTensor& T, const Index& i)
     {
-    Foreach(const IQIndex& J, T.indices())
+    for(const IQIndex& J : T.indices())
         {
         if(hasindex(J,i)) 
             return J;
@@ -1622,7 +1622,7 @@ dir(const IQTensor& T, const Index& i)
 Arrow
 dir(const IQTensor& T, const IQIndex& I)
 	{
-    Foreach(const IQIndex& J, T.indices())
+    for(const IQIndex& J : T.indices())
         {
         if(I == J) return J.dir();
         }
@@ -1633,7 +1633,7 @@ dir(const IQTensor& T, const IQIndex& I)
 bool
 uses_ind(const IQTensor& T, const Index& ii)
     {
-    Foreach(const ITensor& t, T.blocks())
+    for(const ITensor& t : T.blocks())
         {
         if(hasindex(t,ii)) 
             return true;
@@ -1647,7 +1647,7 @@ isZero(const IQTensor& T, const OptSet& opts)
     if(T.empty()) return true;
     //done with all fast checks
     if(opts.getBool("Fast",false)) return false;
-    Foreach(const ITensor& t, T.blocks())
+    for(const ITensor& t : T.blocks())
         {
         if(!isZero(t)) return false;
         }

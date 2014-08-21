@@ -189,7 +189,7 @@ class IndexQN : public Index
 // IQIndexVal
 //
 
-class IQIndexVal : public safe_bool<IQIndexVal>
+class IQIndexVal
     {
     public:
 
@@ -212,6 +212,8 @@ class IQIndexVal : public safe_bool<IQIndexVal>
     operator==(const IQIndexVal& other) const;
     bool
     operator!=(const IQIndexVal& other) const { return !operator==(other); }
+
+    explicit operator bool() const { return valid(); }
 
     IndexQN
     indexqn() const;

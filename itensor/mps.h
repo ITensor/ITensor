@@ -33,7 +33,7 @@ convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A,
 //
 
 template <class Tensor>
-class MPSt : safe_bool<MPSt<Tensor> >
+class MPSt
     {
     public:
 
@@ -104,6 +104,8 @@ class MPSt : safe_bool<MPSt<Tensor> >
 
     const SiteSet& 
     sites() const { return *sites_; }
+
+    explicit operator bool() const { return valid(); }
 
     bool 
     valid() const { return (sites_!=0); }

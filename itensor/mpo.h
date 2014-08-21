@@ -17,7 +17,7 @@ static const Real DefaultLogRefScale(2.0255);
 // (defines MPO and IQMPO via typedefs)
 //
 template<class Tensor>
-class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
+class MPOt : private MPSt<Tensor>
     {
     public:
 
@@ -49,6 +49,7 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
 
     using Parent::sites;
     using Parent::valid;
+    explicit operator bool() const { return valid(); }
 
     using Parent::rightLim;
     using Parent::leftLim;

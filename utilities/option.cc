@@ -168,7 +168,7 @@ OptSet(const OptSet& other)
 bool OptSet::
 defined(const Opt& opt) const
     {
-    Foreach(const Opt& x, opts_)
+    for(const Opt& x : opts_)
         {
         if(x.name() == opt.name()) return true;
         }
@@ -183,7 +183,7 @@ void OptSet::
 add(const Opt& opt)
     {
     if(!opt) return;
-    Foreach(Opt& x, opts_)
+    for(Opt& x : opts_)
         {
         //If already defined, replace
         if(x.name() == opt.name()) 
@@ -216,7 +216,7 @@ add(const char* ostring)
 const Opt& OptSet::
 get(const Opt::Name& name) const
     {
-    Foreach(const Opt& x, opts_)
+    for(const Opt& x : opts_)
         {
         if(x.name() == name) return x;
         }
@@ -365,7 +365,7 @@ addByString(string ostring)
 OptSet& OptSet::
 operator+=(const OptSet& oset)
     {
-    Foreach(const Opt& x, oset)
+    for(const Opt& x : oset)
         {
         add(x);
         }
@@ -451,7 +451,7 @@ operator<<(ostream & s, const OptSet& oset)
         s << "(only showing overrides of global opts)\n";
         }
 
-    Foreach(const Opt& opt, oset)
+    for(const Opt& opt : oset)
         {
         s << opt << "\n";
         }

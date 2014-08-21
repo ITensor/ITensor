@@ -23,7 +23,7 @@ void toMatrixProd(const ITensor& L, const ITensor& R,
 //
 // ITensor
 //
-class ITensor : public safe_bool<ITensor>
+class ITensor
     {
     public:
 
@@ -34,6 +34,9 @@ class ITensor : public safe_bool<ITensor>
     //Rank of this ITensor (number of indices)
     int 
     r() const { return is_.r(); }
+
+    //ITensor evaluates to false if it is default constructed
+    explicit operator bool() const { return valid(); }
 
     //false if ITensor is default constructed
     bool 
@@ -51,8 +54,8 @@ class ITensor : public safe_bool<ITensor>
     ITensor&
     takeImagPart();
 
-    //Enables looping over Indices in a Foreach
-    //e.g. Foreach(const Index& I, t.index() ) { ... }
+    //Enables looping over Indices in a range-based for loop
+    //e.g. for(const Index& I : t.index() ) { ... }
     const IndexSet<Index>&
     indices() const { return is_; }
 
@@ -769,7 +772,7 @@ commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
     {
     typedef typename TensorA::IndexT
     IndexT;
-    Foreach(const IndexT& I, A.indices())
+    for(const IndexT& I : A.indices())
         {
         if( (t == All || I.type() == t)
          && hasindex(B.indices(),I) ) 
@@ -791,7 +794,7 @@ uniqueIndex(const TensorA& A,
     {
     typedef typename TensorA::IndexT
     IndexT;
-    Foreach(const IndexT& I, A.indices())
+    for(const IndexT& I : A.indices())
         {
         if( (t == All || I.type() == t)
          && !hasindex(B.indices(),I) ) 
@@ -878,7 +881,7 @@ swapPrime(Tensor T, int plev1, int plev2,
     { 
     const int tempLevel = 100;
 #ifdef DEBUG
-    Foreach(const typename Tensor::IndexT& I, T.indices())
+    for(const typename Tensor::IndexT& I : T.indices())
         {
         if(I.primeLevel() == tempLevel) 
             {

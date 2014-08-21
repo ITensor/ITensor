@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include "global.h"
-#include "safebool.h"
 
 namespace itensor {
 
@@ -28,7 +27,7 @@ IndexDatPtr;
 //
 // To make an Index distinct from other copies, increase its primeLevel.
 //
-class Index : public safe_bool<Index>
+class Index
     {
     public:
     //
@@ -71,17 +70,20 @@ class Index : public safe_bool<Index>
     const std::string&
     rawname() const;
 
+    // Evaluates to false if Index is default constructed.
+    explicit operator bool() const { return valid(); }
+
     // Returns false if Index is default constructed.
-    // Allows writing "if(I)" or "if(!I)" for some Index I
-    // (implemented by parent class safe_bool<Index>).
     bool 
     valid() const;
+
 
     // Returns the Arrow direction of this Index
     Arrow 
     dir() const { return Out; }
     void 
     dir(Arrow ndir) const {  }
+
 
     //
     // Prime level methods
@@ -174,7 +176,7 @@ class Index : public safe_bool<Index>
 // Class pairing an Index of dimension m
 // with a specific value i where 1 <= i <= m
 //
-class IndexVal : public safe_bool<IndexVal>
+class IndexVal
     {
     public:
 
@@ -193,6 +195,8 @@ class IndexVal : public safe_bool<IndexVal>
 
     int
     m() const { return index.m(); }
+
+    explicit operator bool() const { return valid(); }
 
     bool
     valid() const { return index.valid(); }

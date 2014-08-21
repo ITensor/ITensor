@@ -334,7 +334,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         {
         Real maxLogNum = -200;
         A.scaleOutNorm();
-        Foreach(const ITensor& t, A.blocks())
+        for(const ITensor& t : A.blocks())
             {
             maxLogNum = max(maxLogNum,t.scale().logNum());
             }
@@ -345,7 +345,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     //1. SVD each ITensor within A.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
-    Foreach(const ITensor& t, A.blocks())
+    for(const ITensor& t : A.blocks())
         {
         Matrix &UU = Umatrix.at(itenind);
         Matrix &VV = Vmatrix.at(itenind);
@@ -353,7 +353,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         const Index *ui=0,*vi=0;
         bool gotui = false;
-        Foreach(const Index& I, t.indices())
+        for(const Index& I : t.indices())
             {
             if(!gotui) 
                 {
@@ -492,7 +492,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     itenind = 0;
     int total_m = 0;
-    Foreach(const ITensor& t, A.blocks())
+    for(const ITensor& t : A.blocks())
         {
         const Matrix& UU = Umatrix.at(itenind);
         const Matrix& VV = Vmatrix.at(itenind);
@@ -514,7 +514,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         const Index *ui=0,*vi=0;
         bool gotui = false;
-        Foreach(const Index& I, t.indices())
+        for(const Index& I : t.indices())
             {
             if(!gotui) 
                 {
@@ -630,7 +630,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
 #endif
 
     Index active;
-    Foreach(const Index& I, rho.indices())
+    for(const Index& I : rho.indices())
         {
         if(I.primeLevel() == 0)
             {
@@ -700,6 +700,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     Real svdtruncerr = 0.0;
     if(do_truncate)
         {
+        if(DD(1) < 0) DD *= -1;
         svdtruncerr = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         }
     Spectrum spec;
@@ -808,7 +809,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
         Real maxLogNum = -200;
         rho.scaleOutNorm();
-        Foreach(const ITensor& t, rho.blocks())
+        for(const ITensor& t : rho.blocks())
             {
             maxLogNum = max(maxLogNum,t.scale().logNum());
             }
@@ -820,10 +821,10 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     //1. Diagonalize each ITensor within rho.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
-    Foreach(const ITensor& t, rho.blocks())
+    for(const ITensor& t : rho.blocks())
         {
         Index a;
-        Foreach(const Index& I, t.indices())
+        for(const Index& I : t.indices())
             {
             if(I.primeLevel() == 0)
                 {
@@ -958,7 +959,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 #endif
 
     IQIndex active;
-    Foreach(const IQIndex& I, rho.indices())
+    for(const IQIndex& I : rho.indices())
         {
         if(I.primeLevel() == 0)
             {
@@ -984,7 +985,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     iq.reserve(rho.blocks().size());
 
     itenind = 0;
-    Foreach(const ITensor& t, rho.blocks())
+    for(const ITensor& t : rho.blocks())
         {
         Vector& thisD = mvector.at(itenind);
         Matrix& thisU = mmatrix.at(itenind);
@@ -1014,7 +1015,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         Index nm("qlink",this_m);
 
         Index act;
-        Foreach(const Index& I, t.indices())
+        for(const Index& I : t.indices())
             {
             if(I.primeLevel() == 0)
                 {
@@ -1185,7 +1186,7 @@ eig_decomp(IQTensor T,
         {
         Real maxLogNum = -200;
         T.scaleOutNorm();
-        Foreach(const ITensor& t, T.blocks())
+        for(const ITensor& t : T.blocks())
             {
             maxLogNum = max(maxLogNum,t.scale().logNum());
             }
@@ -1196,7 +1197,7 @@ eig_decomp(IQTensor T,
     //1. Diagonalize each ITensor within rho.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
-    Foreach(const ITensor& t, T.blocks())
+    for(const ITensor& t : T.blocks())
         {
         Index li = t.indices().front(),
               ri = t.indices().back();
@@ -1241,7 +1242,7 @@ eig_decomp(IQTensor T,
     iq.reserve(T.blocks().size());
 
     itenind = 0;
-    Foreach(const ITensor& t, T.blocks())
+    for(const ITensor& t : T.blocks())
         {
         Vector &dr = reigs.at(itenind),
                &di = ieigs.at(itenind);
@@ -1281,13 +1282,13 @@ eig_decomp(IQTensor T,
     IQIndex newmid("L",iq,-R.dir());
 
     V = IQTensor(dag(R),dag(newmid));
-    Foreach(const ITensor& t, Vblocks)
+    for(const ITensor& t : Vblocks)
         {
         V += t;
         }
 
     D = IQTensor(prime(newmid),dag(newmid));
-    Foreach(const ITensor& t, Dblocks)
+    for(const ITensor& t : Dblocks)
         {
         D += t;
         }
