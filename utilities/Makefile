@@ -8,8 +8,8 @@ include ../options.mk
 
 #########################################
 
-HEADERS=tinyformat.h print.h cppversion.h indent.h cputime.h tarray1.h \
-        flstring.h option.h input.h error.h minmax.h 
+HEADERS=tinyformat.h print.h types.h indent.h cputime.h tarray1.h \
+        flstring.h option.h input.h error.h minmax.h complex.h
 
 OBJECTS= error.o ran1.o\
          cputime.o tarray1.o input.o option.o

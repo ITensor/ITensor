@@ -9,6 +9,7 @@
 #include "math.h"
 #include <cmath>
 #include "print.h"
+#include "types.h"
 
 #ifndef NAN
 #define NAN (std::numeric_limits<Real>::quiet_NaN())

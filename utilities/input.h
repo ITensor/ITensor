@@ -12,10 +12,9 @@
 #include <string>
 #include "error.h"
 #include <limits>
+#include "types.h"
 
 namespace itensor {
-
-typedef double Real;
 
 #ifndef NAN
 #define NAN (std::numeric_limits<Real>::quiet_NaN())

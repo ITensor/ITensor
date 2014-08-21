@@ -13,11 +13,12 @@
 #include "assert.h"
 #include "error.h"
 #include "option.h"
-#include "cppversion.h"
+#include "types.h"
 #include <ctime>
 #include <string.h>
 #include <cstring>
 #include "real.h"
+#include "complex.h"
 
 namespace itensor {
 
@@ -27,8 +28,6 @@ static const int NMAX = 8;
 static const Real MIN_CUT = 1E-15;
 static const int MAX_M = 5000;
 
-typedef std::complex<Real>
-Complex;
 
 static const Complex Complex_1 = Complex(1,0);
 static const Complex Complex_i = Complex(0,1);
@@ -313,10 +312,8 @@ class Global
     static Real
     random(int seed = 0)
         {
-        typedef mt19937 
-        Generator;
-        typedef uniform_real_distribution<Real>
-        Distribution;
+        using Generator = mt19937;
+        using Distribution = uniform_real_distribution<Real>;
 
         static Generator rng(std::time(NULL)+getpid());
         static Distribution dist(0,1);
@@ -345,8 +342,7 @@ class ResultIsZero : public ITError
     {
     public:
 
-    typedef ITError
-    Parent;
+    using Parent = ITError;
 
     ResultIsZero(const std::string& message) 
         : Parent(message)
@@ -357,8 +353,7 @@ class ArrowError : public ITError
     {
     public:
 
-    typedef ITError
-    Parent;
+    using Parent = ITError;
 
     ArrowError(const std::string& message) 
         : Parent(message)

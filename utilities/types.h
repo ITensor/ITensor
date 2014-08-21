@@ -1,7 +1,11 @@
-#ifndef __ITENSOR_CPPVERSION_H_
-#define __ITENSOR_CPPVERSION_H_
+#ifndef __ITENSOR_TYPES_H_
+#define __ITENSOR_TYPES_H_
 
-#define Foreach(X,Y) for(X : Y)
+namespace itensor {
+
+using Real = double;
+
+};
 
 #include <array>
 namespace itensor {
