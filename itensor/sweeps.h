@@ -179,8 +179,7 @@ class SweepSetter
         return *this;
         }
 
-    typedef function<T(int,int)> 
-    Func;
+    using Func = function<T(int,int)>;
 
     //
     //Sets the remaining values of v_ by 

@@ -11,8 +11,7 @@ namespace itensor {
 
 class IQCombiner;
 
-typedef shared_ptr<IQTDat>
-IQTDatPtr;
+using IQTDatPtr = shared_ptr<IQTDat>;
 
 
 //
@@ -22,19 +21,11 @@ IQTDatPtr;
 class IQTensor
     {
     public:
-    //Typedefs -----------------------------------------------------
 
-    typedef IQIndex 
-    IndexT;
-
-    typedef IQIndexVal 
-    IndexValT;
-
-    typedef IQCombiner 
-    CombinerT;
-
-    typedef IQTDat
-    Storage;
+    using IndexT = IQIndex;
+    using IndexValT = IQIndexVal;
+    using CombinerT = IQCombiner;
+    using Storage = IQTDat;
 
     //Constructors --------------------------------------------------
 

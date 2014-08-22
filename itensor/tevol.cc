@@ -133,8 +133,7 @@ template <class Tensor>
 vector<Tensor> DerivMPS<Tensor>::
 operator()(const vector<Tensor>& psi) const
     {
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
     //psi tensors may have 1 or 2 sites,
     //so N is number of (non-null) psi tensors 
@@ -419,10 +418,8 @@ ungroupMPS(vector<Tensor>& psig,
            Direction dir = Fromleft,
            const OptSet& opts = Global::opts())
     {
-    typedef typename Tensor::IndexT
-    IndexT;
-    typedef MPSt<Tensor>
-    MPST;
+    using IndexT = typename Tensor::IndexT;
+    using MPST = MPSt<Tensor>;
 
     if(psig.size() == 0)
         Error("Empty psig vector");
@@ -512,8 +509,7 @@ class OrthVec
     OrthVec(Direction dir = Fromleft)
         : dir_(dir) { }
 
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
     
     void
     operator()(std::vector<Tensor>& psi) const
@@ -834,10 +830,8 @@ imagTEvol(const MPOt<Tensor>& H,
           MPSt<Tensor>& psi, 
           const OptSet& opts)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
-    typedef MPSt<Tensor>
-    MPST;
+    using IndexT = typename Tensor::IndexT;
+    using MPST = MPSt<Tensor>;
 
     const bool verbose = opts.getBool("Verbose",false);
     const int order = opts.getInt("Order",4);

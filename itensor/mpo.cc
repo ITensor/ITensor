@@ -257,8 +257,8 @@ void
 nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
          const OptSet& opts)
     {
-    typedef typename MPOType::TensorT Tensor;
-    typedef typename MPOType::IndexT IndexT;
+    using Tensor = typename MPOType::TensorT;
+    using IndexT = typename MPOType::IndexT;
     if(Aorig.N() != Borig.N()) Error("nmultMPO(MPOType): Mismatched N");
     const int N = Borig.N();
 
@@ -347,8 +347,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
               MPSt<Tensor>& res,
               const OptSet& opts)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
     const
     bool allow_arb_position = opts.getBool("AllowArbPosition",false);
@@ -432,10 +431,8 @@ exactApplyMPO(const MPSt<Tensor>& x,
               MPSt<Tensor>& res,
               const OptSet& opts)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
-    typedef typename Tensor::CombinerT
-    CombinerT;
+    using IndexT = typename Tensor::IndexT;
+    using CombinerT = typename Tensor::CombinerT;
 
     int N = x.N();
     if(K.N() != N) Error("Mismatched N in exactApplyMPO");
@@ -753,11 +750,8 @@ applyExpH(const MPSt<Tensor>& psi,
           MPSt<Tensor>& res, 
           const OptSet& opts)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
-
-    typedef MPSt<Tensor>
-    MPST;
+    using IndexT = typename Tensor::IndexT;
+    using MPST = MPSt<Tensor>;
 
     if(&psi == &res) Error("Must pass distinct MPS arguments to applyExpH");
 

@@ -32,6 +32,11 @@ convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A,
 //    IQMPS for IQTensors
 //
 
+template <class Tensor> class MPSt;
+
+using MPS = MPSt<ITensor>;
+using IQMPS = MPSt<IQTensor>;
+
 template <class Tensor>
 class MPSt
     {
@@ -58,17 +63,10 @@ class MPSt
     //MPSt Typedefs
     //
 
-    typedef Tensor 
-    TensorT;
-
-    typedef typename Tensor::IndexT 
-    IndexT;
-
-    typedef typename Tensor::IndexValT 
-    IndexValT;
-
-    typedef MPOt<Tensor>
-    MPOType;
+    using TensorT = Tensor;
+    using IndexT = typename Tensor::IndexT;
+    using IndexValT = typename Tensor::IndexValT;
+    using MPOType = MPOt<Tensor>;
 
     //
     //MPSt Accessor Methods
@@ -284,8 +282,7 @@ class MPSt
     friend class MPSt<IQTensor>;
 
     }; //class MPSt<Tensor>
-typedef MPSt<ITensor> MPS;
-typedef MPSt<IQTensor> IQMPS;
+
 
 template <class Tensor>
 MPSt<Tensor>

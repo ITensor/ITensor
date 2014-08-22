@@ -6,13 +6,6 @@
 using namespace std;
 using namespace itensor;
 
-//typedef SpinHalf
-//Spin;           //use S=1/2 degrees of freedom
-
-//Un-comment above typedef and comment this one to switch spin type
-typedef SpinOne
-Spin;             //use S=1 degrees of freedom
-
 int 
 main(int argc, char* argv[])
     {
@@ -21,15 +14,15 @@ main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    Spin sites(N);    // make a chain of N spins
+    //SpinHalf sites(N); //make a chain of N spin 1/2's
+    SpinOne sites(N); //make a chain of N spin 1's
 
     //
-    // Create the Hamiltonian matrix product operator (MPO)
+    // Create the Hamiltonian matrix product operator.
     //
     MPO H = Heisenberg(sites);
 
-    //
-    // Set the initial wavefunction matrix product state (MPS)
+    // Set the initial wavefunction matrix product state
     // to be a Neel state.
     //
     InitState initState(sites);
@@ -65,13 +58,13 @@ main(int argc, char* argv[])
     //
     // Begin the DMRG calculation
     //
-
     Real En = dmrg(psi,H,sweeps,"Quiet");
 
     //
     // Print the final energy reported by DMRG
     //
     printfln("\nGround State Energy = %.10f",En);
+    printfln("\nUsing psiHphi = %.10f", psiHphi(psi,H,psi) );
 
     return 0;
     }

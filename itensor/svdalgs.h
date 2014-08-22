@@ -160,10 +160,8 @@ Spectrum
 svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
     const OptSet& opts)
     {
-    typedef typename Tensor::IndexT 
-    IndexT;
-    typedef typename Tensor::CombinerT 
-    CombinerT;
+    using IndexT = typename Tensor::IndexT;
+    using CombinerT = typename Tensor::CombinerT;
 
     const Real noise = opts.getReal("Noise",0.);
     const bool useOrigM = opts.getBool("UseOrigM",false);
@@ -251,10 +249,8 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
              const LocalOpT& PH,
              OptSet opts)
     {
-    typedef typename Tensor::IndexT 
-    IndexT;
-    typedef typename Tensor::CombinerT 
-    CombinerT;
+    using IndexT = typename Tensor::IndexT;
+    using CombinerT = typename Tensor::CombinerT;
 
     const Real noise = opts.getReal("Noise",0.);
 
@@ -344,10 +340,8 @@ Spectrum
 diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
               OptSet opts)
     {
-    typedef typename Tensor::IndexT 
-    IndexT;
-    typedef typename Tensor::CombinerT 
-    CombinerT;
+    using IndexT = typename Tensor::IndexT;
+    using CombinerT = typename Tensor::CombinerT;
 
     if(isZero(M,Opt("Fast"))) 
         throw ResultIsZero("denmatDecomp: M is zero");
@@ -395,10 +389,8 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
             Direction dir, 
             const OptSet& opts)
     {
-    typedef typename Tensor::IndexT 
-    IndexT;
-    typedef typename Tensor::CombinerT 
-    CombinerT;
+    using IndexT = typename Tensor::IndexT;
+    using CombinerT = typename Tensor::CombinerT;
 
     if(isZero(T,Opt("Fast"))) 
         throw ResultIsZero("orthoDecomp: T is zero");
@@ -479,10 +471,8 @@ void
 eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
           const OptSet& opts)
     {
-    typedef typename Tensor::IndexT 
-    IndexT;
-    typedef typename Tensor::CombinerT 
-    CombinerT;
+    using IndexT = typename Tensor::IndexT;
+    using CombinerT = typename Tensor::CombinerT;
 
     if(isZero(T,Opt("Fast"))) 
         throw ResultIsZero("eigDecomp: T is zero");

@@ -655,8 +655,7 @@ MPSt<Tensor>& MPSt<Tensor>::
 addAssumeOrth(const MPSt<Tensor>& R,
               const OptSet& opts)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
     primelinks(0,4);
 
@@ -770,8 +769,7 @@ template<class Tensor>
 Spectrum
 orthMPS(Tensor& A1, Tensor& A2, Direction dir, const OptSet& opts)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
     Tensor& L = (dir == Fromleft ? A1 : A2);
     Tensor& R = (dir == Fromleft ? A2 : A1);
@@ -1308,13 +1306,13 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
 
     vector<IQIndex> linkind(N+1);
 
-    typedef map<QN,Vector>::value_type qD_vt;
+    using qD_vt = map<QN,Vector>::value_type;
     map<QN,Vector> qD; //Diags of compressor matrices by QN
 
-    typedef map<QN,vector<ITensor> >::value_type qt_vt;
+    using qt_vt = map<QN,vector<ITensor> >::value_type;
     map<QN,vector<ITensor> > qt; //ITensor blocks by QN
 
-    typedef map<QN,ITensor>::value_type qC_vt;
+    using qC_vt = map<QN,ITensor>::value_type;
     map<QN,ITensor> qC; //Compressor ITensors by QN
 
     ITensor block;
@@ -1542,11 +1540,11 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
     vector<IQIndex> linkind(N);
 
-    typedef map<QN,Vector>::value_type qD_vt;
+    using qD_vt = map<QN,Vector>::value_type;
     map<QN,Vector> qD; //Diags of compressor matrices by QN
-    typedef map<QN,vector<ITensor> >::value_type qt_vt;
+    using qt_vt = map<QN,vector<ITensor> >::value_type;
     map<QN,vector<ITensor> > qt; //ITensor blocks by QN
-    typedef map<QN,ITensor>::value_type qC_vt;
+    using qC_vt = map<QN,ITensor>::value_type;
     map<QN,ITensor> qC; //Compressor ITensors by QN
     ITensor block;
     vector<ITensor> nblock;

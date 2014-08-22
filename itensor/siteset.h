@@ -32,17 +32,14 @@ namespace itensor {
 //
 
 class SiteSet;
-typedef SiteSet Model; //for backwards compatibility
+using Model = SiteSet; //for backwards compatibility
 
 class SiteSet
     {
     public:
 
-    typedef std::string
-    String;
-
-    typedef std::vector<String>
-    DefaultOpsT;
+    using String = std::string;
+    using DefaultOpsT = std::vector<String>;
 
     SiteSet() { }
 

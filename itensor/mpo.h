@@ -11,6 +11,11 @@ namespace itensor {
 
 static const Real DefaultLogRefScale(2.0255);
 
+template<class Tensor> class MPOt;
+
+using MPO = MPOt<ITensor>;
+using IQMPO = MPOt<IQTensor>;
+
 //
 // class MPOt
 //
@@ -21,20 +26,11 @@ class MPOt : private MPSt<Tensor>
     {
     public:
 
-    typedef MPSt<Tensor> 
-    Parent;
-
-    typedef Tensor 
-    TensorT;
-
-    typedef typename Tensor::IndexT 
-    IndexT;
-
-    typedef typename Tensor::IndexValT 
-    IndexValT;
-
-    typedef typename Tensor::CombinerT 
-    CombinerT;
+    using Parent = MPSt<Tensor>;
+    using TensorT = Tensor;
+    using IndexT = typename Tensor::IndexT;
+    using IndexValT = typename Tensor::IndexValT;
+    using CombinerT = typename Tensor::CombinerT;
 
     //MPOt: Constructors -----------------------------------------
 
@@ -154,9 +150,6 @@ class MPOt : private MPSt<Tensor>
     friend class MPOt<IQTensor>;
 
     }; //class MPOt<Tensor>
-
-typedef MPOt<ITensor> MPO;
-typedef MPOt<IQTensor> IQMPO;
 
 template <> inline
 MPO IQMPO::

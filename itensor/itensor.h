@@ -26,6 +26,26 @@ void toMatrixProd(const ITensor& L, const ITensor& R,
 class ITensor
     {
     public:
+    enum Type { Null, Dense, Diag };
+
+    using IndexT = Index;
+    using IndexValT = IndexVal;
+    using CombinerT = Combiner;
+
+    private:
+    //
+    //Data members
+    //
+    Type type_;
+    //Pointer to ITDat containing tensor data
+    shared_ptr<ITDat> r_, //real part
+                      i_; //imag part
+    //Indices, maximum of 8
+    IndexSet<Index> is_;
+    //scale_ absorbs scalar factors to avoid copying ITDat
+    LogNumber scale_; 
+
+    public:
 
     //
     //Accessor Methods
@@ -63,7 +83,6 @@ class ITensor
     const LogNumber&
     scale() const { return scale_; }
 
-    enum Type { Null, Dense, Diag };
 
     Type
     type() const { return type_; }
@@ -453,19 +472,6 @@ class ITensor
                  const Index& nind)
         { is_.replaceIndex(oind,nind); }
 
-    //
-    // Typedefs
-    //
-
-    typedef Index 
-    IndexT;
-
-    typedef IndexVal 
-    IndexValT;
-
-    typedef Combiner 
-    CombinerT;
-
     //Deprecated methods --------------------------
 
     //Use indices().dim() instead of vecSize
@@ -477,27 +483,6 @@ class ITensor
 
 
     private:
-
-    //////////////
-    //
-    // Data Members
-    //
-
-    Type type_;
-
-    //Pointer to ITDat containing tensor data
-    shared_ptr<ITDat> r_, //real part
-                      i_; //imag part
-
-    //Indices, maximum of 8
-    IndexSet<Index> is_;
-
-    //scale_ absorbs scalar factors to avoid copying ITDat
-    LogNumber scale_; 
-
-    //
-    //
-    //////////////
 
     void 
     allocate(int dim);
