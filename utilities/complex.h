@@ -45,13 +45,13 @@ Complex
 operator-(const Complex& z, int i) { return z-Real(i); }
 
 Complex constexpr inline
-operator""_i(unsigned long long int i)
+operator"" _i(unsigned long long int i)
     {
     return Complex(0.,i);
     }
 
 Complex constexpr inline
-operator""_i(long double x)
+operator"" _i(long double x)
     {
     return Complex(0.,x);
     }
