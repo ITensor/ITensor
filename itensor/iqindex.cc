@@ -145,7 +145,7 @@ write(ostream& s) const
     {
     size_t size = iq_.size();
     s.write((char*)&size,sizeof(size));
-    Foreach(const IndexQN& x, iq_)
+    for(const IndexQN& x : iq_)
         { 
         x.write(s); 
         }
@@ -156,7 +156,7 @@ read(istream& s)
     {
     size_t size; s.read((char*)&size,sizeof(size));
     iq_.resize(size);
-    Foreach(IndexQN& x, iq_)
+    for(IndexQN& x : iq_)
         { 
         x.read(s); 
         }
@@ -385,7 +385,7 @@ int
 totalM(const IQIndexDat::StorageT& storage)
     {
     int tm = 0;
-    Foreach(const IndexQN& iq, storage)
+    for(const IndexQN& iq : storage)
         {
         tm += iq.m();
 #ifdef DEBUG
@@ -451,7 +451,7 @@ showm(const IQIndex& I)
     string res = " ";
     ostringstream oh; 
     oh << I.m() << " | ";
-    Foreach(const IndexQN& iq, I.indices())
+    for(const IndexQN& iq : I.indices())
         {
         oh << iq.qn << ":" << iq.m() << " ";
         }
@@ -464,7 +464,7 @@ primeLevel(int val)
     {
     solo();
     Index::primeLevel(val);
-    Foreach(IndexQN& iq, *pd)
+    for(IndexQN& iq : *pd)
         {
         iq.primeLevel(val);
         }
@@ -476,7 +476,7 @@ prime(int inc)
     {
     solo();
     Index::prime(inc);
-    Foreach(IndexQN& iq, *pd)
+    for(IndexQN& iq : *pd)
         iq.prime(inc);
     return *this;
     }
@@ -486,7 +486,7 @@ prime(IndexType type, int inc)
     {
     solo();
     Index::prime(type,inc);
-    Foreach(IndexQN& iq, *pd)
+    for(IndexQN& iq : *pd)
         iq.prime(type,inc);
     return *this;
     }
@@ -496,7 +496,7 @@ mapprime(int plevold, int plevnew, IndexType type)
     {
     solo();
     Index::mapprime(plevold,plevnew,type);
-    Foreach(IndexQN& iq, *pd)
+    for(IndexQN& iq : *pd)
         iq.mapprime(plevold,plevnew,type);
     return *this;
     }
@@ -506,7 +506,7 @@ noprime(IndexType type)
     {
     solo();
     Index::noprime(type);
-    Foreach(IndexQN& iq, *pd)
+    for(IndexQN& iq : *pd)
         iq.noprime(type);
     return *this;
     }
@@ -659,7 +659,7 @@ operator()(int n) const
 bool
 hasindex(const IQIndex& J, const Index& i)
     { 
-    Foreach(const Index& j, J.indices())
+    for(const Index& j : J.indices())
         {
         if(j == i) return true;
         }
@@ -680,7 +680,7 @@ int
 offset(const IQIndex& I, const Index& i)
     {
     int os = 0;
-    Foreach(const IndexQN& iq, I.indices())
+    for(const IndexQN& iq : I.indices())
         {
         if(iq == i) return os;
         os += iq.m();
@@ -694,7 +694,7 @@ offset(const IQIndex& I, const Index& i)
 QN
 qn(const IQIndex& I, const Index& i)
     { 
-    Foreach(const IndexQN& jq, I.indices())
+    for(const IndexQN& jq : I.indices())
         { 
         if(jq == i) 
             return jq.qn; 
@@ -708,7 +708,7 @@ qn(const IQIndex& I, const Index& i)
 Index
 findByQN(const IQIndex& I, const QN& qn)
     { 
-    Foreach(const IndexQN& jq, I.indices())
+    for(const IndexQN& jq : I.indices())
         { 
         if(jq.qn == qn) 
             return jq;

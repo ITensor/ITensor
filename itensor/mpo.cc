@@ -93,7 +93,7 @@ orthogonalize(const OptSet& opts)
     //svd_.useOrigM(true);
     int orig_maxm = maxm();
     Real orig_cutoff = cutoff();
-    Foreach(Spectrum& spec, spectrum_)
+    for(Spectrum& spec : spectrum_)
         {
         spec.maxm(MAX_M);
         spec.cutoff(MIN_CUT);
@@ -103,7 +103,7 @@ orthogonalize(const OptSet& opts)
     position(N_);
 
     //Now basis is ortho, ok to truncate
-    Foreach(Spectrum& spec, spectrum_)
+    for(Spectrum& spec : spectrum_)
         {
         spec.useOrigM(false);
         spec.maxm(orig_maxm);

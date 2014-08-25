@@ -182,7 +182,7 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
     const Tensor &L = (U ? U : V);
     CombinerT &Lcomb = (U ? Ucomb : Vcomb),
               &Rcomb = (U ? Vcomb : Ucomb);
-    Foreach(const IndexT& I, AA.indices())
+    for(const IndexT& I : AA.indices())
         { 
         if(hasindex(L,I))
             Lcomb.addleft(I);
@@ -275,7 +275,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
 
     const IndexSet<IndexT>& activeInds = (to_orth ? to_orth : AA).indices();
 
-    Foreach(const IndexT& I, activeInds)
+    for(const IndexT& I : activeInds)
         { 
         if(!hasindex(newoc,I))
             comb.addleft(I);
@@ -347,7 +347,7 @@ diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
         throw ResultIsZero("denmatDecomp: M is zero");
 
     CombinerT comb;
-    Foreach(const IndexT& I, M.indices())
+    for(const IndexT& I : M.indices())
         { 
         if(I.primeLevel() == 0)
             {
@@ -418,7 +418,7 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
         const Tensor &L = (A ? A : B);
         CombinerT &Lcomb = (A ? Acomb : Bcomb),
                   &Rcomb = (A ? Bcomb : Acomb);
-        Foreach(const IndexT& I, T.indices())
+        for(const IndexT& I : T.indices())
             { 
             if(hasindex(L,I))
                 Lcomb.addleft(I);
@@ -482,7 +482,7 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
     if(V.r() != 0)
         {
         //Use indices of V as "column" indices
-        Foreach(const IndexT& I, T.indices())
+        for(const IndexT& I : T.indices())
             { 
             if(hasindex(V,I))
                 ccomb.addleft(I);
@@ -494,7 +494,7 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
         {
         //No hint from V, 
         //separate indices by primelevel
-        Foreach(const IndexT& I, T.indices())
+        for(const IndexT& I : T.indices())
             { 
             if(I.primeLevel() == 0)
                 ccomb.addleft(I);

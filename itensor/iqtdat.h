@@ -60,7 +60,7 @@ class IQTDat
     size() const 
         { 
         int sz = 0;
-        Foreach(const ITensor& t, blocks_)
+        for(const ITensor& t : blocks_)
             {
             if(t.valid()) ++sz;
             }
@@ -70,7 +70,7 @@ class IQTDat
     bool
     empty() const 
         { 
-        Foreach(const ITensor& t, blocks_)
+        for(const ITensor& t : blocks_)
             {
             if(t.valid()) return false;
             }
@@ -80,7 +80,7 @@ class IQTDat
     void
     clear() 
         { 
-        Foreach(ITensor& t, blocks_)
+        for(ITensor& t : blocks_)
             {
             if(t.valid()) t = ITensor();
             }
@@ -130,7 +130,7 @@ read(std::istream& s)
     size_t sz = 0;
     s.read((char*) &sz,sizeof(sz));
     blocks_.resize(sz);
-    Foreach(ITensor& t, blocks_)
+    for(ITensor& t : blocks_)
         {
         t.read(s);
         }
@@ -141,7 +141,7 @@ write(std::ostream& s) const
     {
     size_t sz = blocks_.size();
     s.write((char*) &sz,sizeof(sz));
-    Foreach(const ITensor& t, blocks_)
+    for(const ITensor& t : blocks_)
         {
         t.write(s);
         }

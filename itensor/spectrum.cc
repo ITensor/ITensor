@@ -51,7 +51,7 @@ Spectrum(const IQTensor& D, const OptSet& opts)
     std::vector<OrderSecond::value_type> eigs;
     eigs.reserve(D.indices().front().m());
 
-    Foreach(const ITensor& t, D.blocks())
+    for(const ITensor& t : D.blocks())
         {
     	if(t.type() != ITensor::Diag)
     		Error("Spectrum may only be constructed from IQTensor containing only Diag type ITensor.");

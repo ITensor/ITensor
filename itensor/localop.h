@@ -324,7 +324,7 @@ diag() const
     IndexT toTie;
     bool found = false;
 
-    Foreach(const IndexT& s, Op1.indices())
+    for(const IndexT& s : Op1.indices())
         {
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
@@ -342,7 +342,7 @@ diag() const
     Tensor Diag = tieIndices(Op1,toTie,prime(toTie),toTie);
 
     found = false;
-    Foreach(const IndexT& s, Op2.indices())
+    for(const IndexT& s : Op2.indices())
         {
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
@@ -357,7 +357,7 @@ diag() const
     if(!LIsNull())
         {
         found = false;
-        Foreach(const IndexT& ll, L().indices())
+        for(const IndexT& ll : L().indices())
             {
             if(ll.primeLevel() == 0 && hasindex(L(),prime(ll)))
                 {
@@ -375,7 +375,7 @@ diag() const
     if(!RIsNull())
         {
         found = false;
-        Foreach(const IndexT& rr, R().indices())
+        for(const IndexT& rr : R().indices())
             {
             if(rr.primeLevel() == 0 && hasindex(R(),prime(rr)))
                 {
@@ -407,7 +407,7 @@ size() const
         size_ = 1;
         if(!LIsNull()) 
             {
-            Foreach(const IndexT& I, L().indices())
+            for(const IndexT& I : L().indices())
                 {
                 if(I.primeLevel() > 0)
                     {
@@ -418,7 +418,7 @@ size() const
             }
         if(!RIsNull()) 
             {
-            Foreach(const IndexT& I, R().indices())
+            for(const IndexT& I : R().indices())
                 {
                 if(I.primeLevel() > 0)
                     {

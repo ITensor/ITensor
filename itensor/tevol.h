@@ -90,7 +90,7 @@ gateTEvol(const Iterable& gatelist,
         }
     for(int tt = 1; tt <= nt; ++tt)
         {
-        Foreach(const BondGate<Tensor>& G, gatelist)
+        for(const BondGate<Tensor>& G : gatelist)
             {
             const int lastpos = psi.orthoCenter();
             const int closest = abs(lastpos-G.i1()) < abs(lastpos-G.i2()) ? G.i1() : G.i2();

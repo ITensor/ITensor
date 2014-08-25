@@ -429,7 +429,7 @@ IQTensor& IQTensor::
 mapElems(const Callable& f)
     {
     solo();
-    Foreach(ITensor& t, *d_)
+    for(ITensor& t : *d_)
         t.mapElems(f);
     return *this;
     }

@@ -267,7 +267,7 @@ product(const ITensor& t, ITensor& res) const
     if(hasindex(t,right_))
         {
         IndexSet<Index> nind;
-        Foreach(const Index& I, t.indices())
+        for(const Index& I : t.indices())
             {
             if(I == right_)
                 {
@@ -308,7 +308,7 @@ operator<<(std::ostream & s, const Combiner & c)
     else
         s << "\nRight index not initialized" << "\n";
     s << "Left indices:\n";
-    Foreach(const Index& l, c.left()) s << " " << l << "\n";
+    for(const Index& l : c.left()) s << " " << l << "\n";
     return s;
     }
 

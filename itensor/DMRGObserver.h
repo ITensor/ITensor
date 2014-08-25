@@ -94,7 +94,7 @@ measure(const OptSet& opts)
         if(b < N && b > 0)
             {
             const Tensor wfb = psi_.A(b)*psi_.A(b+1);
-            Foreach(const std::string& opname, default_ops_)
+            for(const std::string& opname : default_ops_)
                 {
                 Complex z = 
                     BraKet(prime(wfb,psi_.sites()(b)),psi_.sites().op(opname,b)*wfb);
