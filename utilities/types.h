@@ -1,9 +1,12 @@
 #ifndef __ITENSOR_TYPES_H_
 #define __ITENSOR_TYPES_H_
 
+#include <complex>
+
 namespace itensor {
 
 using Real = double;
+using Complex = std::complex<Real>;
 
 };
 

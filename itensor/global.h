@@ -18,7 +18,6 @@
 #include <string.h>
 #include <cstring>
 #include "real.h"
-#include "complex.h"
 
 namespace itensor {
 

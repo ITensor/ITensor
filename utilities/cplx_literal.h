@@ -6,11 +6,8 @@
 #define __ITENSOR_COMPLEX_H
 
 #include "types.h"
-#include <complex>
 
 namespace itensor {
-
-using Complex = std::complex<Real>;
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
 Complex inline
