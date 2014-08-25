@@ -1306,7 +1306,6 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
 
     vector<IQIndex> linkind(N+1);
 
-    using qD_vt = map<QN,Vector>::value_type;
     map<QN,Vector> qD; //Diags of compressor matrices by QN
 
     using qt_vt = map<QN,vector<ITensor> >::value_type;

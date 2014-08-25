@@ -419,7 +419,6 @@ ungroupMPS(vector<Tensor>& psig,
            const OptSet& opts = Global::opts())
     {
     using IndexT = typename Tensor::IndexT;
-    using MPST = MPSt<Tensor>;
 
     if(psig.size() == 0)
         Error("Empty psig vector");
@@ -830,7 +829,6 @@ imagTEvol(const MPOt<Tensor>& H,
           MPSt<Tensor>& psi, 
           const OptSet& opts)
     {
-    using IndexT = typename Tensor::IndexT;
     using MPST = MPSt<Tensor>;
 
     const bool verbose = opts.getBool("Verbose",false);
