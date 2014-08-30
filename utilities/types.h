@@ -3,6 +3,8 @@
 
 #include <complex>
 
+#define Foreach(X,Y) for(X : Y)
+
 namespace itensor {
 
 using Real = double;
