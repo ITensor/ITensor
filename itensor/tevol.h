@@ -105,7 +105,7 @@ gateTEvol(const Iterable& gatelist,
 
         tsofar += tstep;
 
-        opts.add("TimeStep",tt);
+        opts.add("TimeStepNum",tt);
         opts.add("Time",tsofar);
         opts.add("TotalTime",ttotal);
         obs.measure(opts);
