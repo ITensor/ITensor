@@ -85,9 +85,10 @@ plusAppend(std::string& s, const std::string& a)
         }
     }
 
+template<>
 IQMPO
-toIQMPO(const AutoMPO& am,
-        const OptSet& opts)
+toMPO<IQTensor>(const AutoMPO& am,
+                const OptSet& opts)
     {
     const SiteSet& sites = am.sites();
     IQMPO H(sites);
@@ -294,19 +295,20 @@ toIQMPO(const AutoMPO& am,
     return H;
     }
 
+template<>
 MPO
-toMPO(const AutoMPO& a,
-      const OptSet& opts)
+toMPO<ITensor>(const AutoMPO& a,
+               const OptSet& opts)
     {
-    IQMPO res = toIQMPO(a,opts);
+    IQMPO res = toMPO<IQTensor>(a,opts);
     return res.toMPO();
     }
 
 
 IQMPO
-toIQExpH_ZW1(const AutoMPO& am,
-             Complex tau,
-             const OptSet& opts)
+toExpH_ZW1(const AutoMPO& am,
+           Complex tau,
+           const OptSet& opts)
     {
     const SiteSet& sites = am.sites();
     IQMPO H(sites);
@@ -492,8 +494,9 @@ toIQExpH_ZW1(const AutoMPO& am,
     return H;
     }
 
+template<>
 IQMPO
-toIQExpH(const AutoMPO& a,
+toExpH<IQTensor>(const AutoMPO& a,
          Complex tau,
          const OptSet& opts)
     {
@@ -501,7 +504,7 @@ toIQExpH(const AutoMPO& a,
     IQMPO res;
     if(approx == "ZW1")
         {
-        res = toIQExpH_ZW1(a,tau,opts);
+        res = toExpH_ZW1(a,tau,opts);
         }
     else
         {
@@ -510,12 +513,13 @@ toIQExpH(const AutoMPO& a,
     return res;
     }
 
+template<>
 MPO
-toExpH(const AutoMPO& a,
-       Complex tau,
-       const OptSet& opts)
+toExpH<ITensor>(const AutoMPO& a,
+                Complex tau,
+                const OptSet& opts)
     {
-    IQMPO res = toIQExpH(a,tau,opts);
+    IQMPO res = toExpH<IQTensor>(a,tau,opts);
     return res.toMPO();
     }
 
