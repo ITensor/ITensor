@@ -19,6 +19,7 @@ SOURCES+= svdalgs.cc
 SOURCES+= mps.cc 
 SOURCES+= mpo.cc 
 SOURCES+= tevol.cc
+SOURCES+= autompo.cc
 
 HEADERS=global.h real.h permutation.h index.h \
         indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h  \
@@ -33,7 +34,7 @@ HEADERS=global.h real.h permutation.h index.h \
         sites/tj.h sites/Z3.h\
         eigensolver.h localop.h localmpo.h localmposet.h \
         partition.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h\
-        integrators.h idmrg.h TEvolObserver.h iterpair.h
+        integrators.h idmrg.h TEvolObserver.h iterpair.h autompo.h
 
 
 
@@ -131,6 +132,9 @@ mps.o: $(DEPHEADERS)
 DEPHEADERS+= mpo.h
 mpo.o: $(DEPHEADERS)
 .debug_objs/mpo.o: $(DEPHEADERS)
+DEPHEADERS+= autompo.h
+autompo.o: $(DEPHEADERS)
+.debug_objs/autompo.o: $(DEPHEADERS)
 DEPHEADERS+= bondgate.h tevol.h integrators.h
 tevol.o: $(DEPHEADERS)
 .debug_objs/tevol.o: $(DEPHEADERS)
