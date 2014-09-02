@@ -2906,9 +2906,19 @@ toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
     if(type_ == Diag)
         Error("toMatrix not implemented for ITensor type Diag");
 
-    if(r() != 2) Error("toMatrix11: incorrect rank");
+    if(r() != 2) 
+        {
+        Print(i1);
+        Print(i2);
+        for(auto i : this->indices()) printfln("%s: %s",i.id(),i);
+        Print(*this);
+        Error("toMatrix11: incorrect rank");
+        }
+
     if(this->isComplex())
+        {
         Error("toMatrix11 defined only for real ITensor");
+        }
 #ifdef DEBUG
     if(!hasindex(*this,i1))
         {
@@ -2945,7 +2955,15 @@ toMatrix12NoScale(const Index& i1, const Index& i2,
     if(type_ == Diag)
         Error("toMatrix not implemented for ITensor type Diag");
 
-    if(r() != 3) Error("toMatrix11: incorrect rank");
+    if(r() != 3) 
+        {
+        Print(i1);
+        Print(i2);
+        Print(i3);
+        for(auto i : this->indices()) printfln("%s: %s",i.id(),i);
+        Print(*this);
+        Error("toMatrix12: incorrect rank");
+        }
     if(this->isComplex())
         Error("toMatrix12 defined only for real ITensor");
     assert(hasindex(*this,i1));

@@ -149,6 +149,9 @@ class Index
     Index& 
     read(std::istream& s);
 
+    std::string
+    id() const;
+
     //
     // Static Index instances
     //

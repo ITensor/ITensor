@@ -325,6 +325,12 @@ Null()
     return Null_;
     }
 
+std::string Index::
+id() const
+    {
+    return format("%d",p->id);
+    }
+
 std::ostream& 
 operator<<(std::ostream& s, const Index& t)
     {
