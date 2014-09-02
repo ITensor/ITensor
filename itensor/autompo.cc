@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "autompo.h"
+#include <algorithm>
 
 using std::find;
 using std::cout;
@@ -11,6 +12,7 @@ using std::string;
 using std::vector;
 
 namespace itensor {
+
 
 /*
 MPO convention:
@@ -121,7 +123,7 @@ toMPO<IQTensor>(const AutoMPO& am,
         {
         auto& bn = basis.at(n);
         auto test = [&ht](const SiteQN& sq){ return sq.st == ht.first(); };
-        bool has_first = (std::find_if(bn.cbegin(),bn.cend(),test) != bn.end());
+        bool has_first = (find_if(bn.cbegin(),bn.cend(),test) != bn.end());
         if(!has_first) 
             {
             auto Op = sites.op(ht.first().op,ht.first().i);
