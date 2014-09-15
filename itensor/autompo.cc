@@ -87,6 +87,8 @@ plusAppend(std::string& s, const std::string& a)
         }
     }
 
+//#define SHOW_AUTOMPO
+
 template<>
 IQMPO
 toMPO<IQTensor>(const AutoMPO& am,
@@ -169,16 +171,18 @@ toMPO<IQTensor>(const AutoMPO& am,
 
         links.at(n) = IQIndex(nameint("Hl",n),inqn);
 
-        if(n <= 2 or n == N)
-            {
-            println("basis for site ",n);
-            for(size_t l = 0; l < bn.size(); ++l) printfln("%d %s %s",l,bn.at(l).st,bn.at(l).q);
-            println();
-            printfln("IQIndex for site %d:\n%s",n,links.at(n));
-            }
+        //if(n <= 2 or n == N)
+        //    {
+        //    println("basis for site ",n);
+        //    for(size_t l = 0; l < bn.size(); ++l) printfln("%d %s %s",l,bn.at(l).st,bn.at(l).q);
+        //    println();
+        //    printfln("IQIndex for site %d:\n%s",n,links.at(n));
+        //    }
         }
 
+#ifdef SHOW_AUTOMPO
     static string ws[100][100];
+#endif
 
     //Create arrays indexed by lattice sites.
     //For lattice site "j", ht_by_n[j] contains
@@ -208,13 +212,17 @@ toMPO<IQTensor>(const AutoMPO& am,
             auto& rst = bn1.at(r).st;
             auto& cst = bn.at(c).st;
 
+#ifdef SHOW_AUTOMPO
             ws[r][c] = "0";
+#endif
             auto rc = IQTensor(dag(row)(r+1)) * IQTensor(col(c+1));
 
             //Start a new operator string
             if(cst.i == n && rst == IL)
                 {
+#ifdef SHOW_AUTOMPO
                 ws[r][c] = format("%.2f %s",cst.coef,cst.op);
+#endif
                 W += cst.coef * sites.op(cst.op,n) * rc;
                 }
 
@@ -233,7 +241,9 @@ toMPO<IQTensor>(const AutoMPO& am,
                         if(st.i == n)
                             {
                             found += 1;
+#ifdef SHOW_AUTOMPO
                             ws[r][c] = format("%.2f %s",st.coef,st.op);
+#endif
                             W += st.coef * sites.op(st.op,n) * rc;
                             }
                         }
@@ -241,7 +251,9 @@ toMPO<IQTensor>(const AutoMPO& am,
 
                 if(found == 0)
                     {
+#ifdef SHOW_AUTOMPO
                     ws[r][c] = "1";
+#endif
                     W += sites.op("Id",n) * rc;
                     }
 
@@ -258,7 +270,9 @@ toMPO<IQTensor>(const AutoMPO& am,
                 for(const auto& ht : ht_by_n.at(n))
                 if(rst == ht.first() && ht.last().i == n)
                     {
+#ifdef SHOW_AUTOMPO
                     ws[r][c] = ht.last().op;
+#endif
                     W += ht.last().coef * sites.op(ht.last().op,n) * rc;
                     }
                 }
@@ -269,13 +283,16 @@ toMPO<IQTensor>(const AutoMPO& am,
                 for(const auto& ht : ht_by_n.at(n))
                 if(ht.first().i == ht.last().i)
                     {
+#ifdef SHOW_AUTOMPO
                     ws[r][c] = format("%.2f %s",ht.first().coef,ht.first().op);
+#endif
                     W += ht.first().coef * sites.op(ht.first().op,n) * rc;
                     }
                 }
 
             }
 
+#ifdef SHOW_AUTOMPO
         if(n <= 10 or n == N)
             {
             for(int r = 0; r < row.m(); ++r, println())
@@ -287,6 +304,7 @@ toMPO<IQTensor>(const AutoMPO& am,
                 }
             println("=========================================");
             }
+#endif
         }
 
     H.Anc(1) *= IQTensor(links.at(0)(1));
@@ -388,16 +406,18 @@ toExpH_ZW1(const AutoMPO& am,
 
         links.at(n) = IQIndex(nameint("Hl",n),inqn);
 
-        if(n <= 2 or n == N)
-            {
-            println("basis for site ",n);
-            for(size_t l = 0; l < bn.size(); ++l) printfln("%d %s %s",l,bn.at(l).st,bn.at(l).q);
-            println();
-            printfln("IQIndex for site %d:\n%s",n,links.at(n));
-            }
+        //if(n <= 2 or n == N)
+        //    {
+        //    println("basis for site ",n);
+        //    for(size_t l = 0; l < bn.size(); ++l) printfln("%d %s %s",l,bn.at(l).st,bn.at(l).q);
+        //    println();
+        //    printfln("IQIndex for site %d:\n%s",n,links.at(n));
+        //    }
         }
 
+#ifdef SHOW_AUTOMPO
     static string ws[100][100];
+#endif
 
     //Create arrays indexed by lattice sites.
     //For lattice site "j", ht_by_n[j] contains
@@ -427,13 +447,17 @@ toExpH_ZW1(const AutoMPO& am,
             auto& rst = bn1.at(r).st;
             auto& cst = bn.at(c).st;
 
+#ifdef SHOW_AUTOMPO
             ws[r][c] = "0";
+#endif
             auto rc = IQTensor(dag(row)(r+1)) * IQTensor(col(c+1));
 
             //Start a new operator string
             if(cst.i == n && rst == IL)
                 {
+#ifdef SHOW_AUTOMPO
                 ws[r][c] = format("(-t*%.2f)*%s",cst.coef,cst.op);
+#endif
                 auto op = cst.coef * sites.op(cst.op,n) * rc;
                 if(is_complex) op *= (-tau);
                 else           op *= (-tau.real());
@@ -444,7 +468,9 @@ toExpH_ZW1(const AutoMPO& am,
             //strings of more than two sites in length
             if(cst == rst)
                 {
+#ifdef SHOW_AUTOMPO
                 plusAppend(ws[r][c],"1");
+#endif
                 W += sites.op("Id",n) * rc;
                 }
 
@@ -454,7 +480,9 @@ toExpH_ZW1(const AutoMPO& am,
                 for(const auto& ht : ht_by_n.at(n))
                 if(rst == ht.first() && ht.last().i == n)
                     {
+#ifdef SHOW_AUTOMPO
                     ws[r][c] = ht.last().op;
+#endif
                     W += ht.last().coef * sites.op(ht.last().op,n) * rc;
                     }
                 }
@@ -465,7 +493,9 @@ toExpH_ZW1(const AutoMPO& am,
                 for(const auto& ht : ht_by_n.at(n))
                 if(ht.first().i == ht.last().i)
                     {
+#ifdef SHOW_AUTOMPO
                     plusAppend(ws[r][c],format("(-t*%.2f)*%s",ht.first().coef,ht.first().op));
+#endif
                     auto op = ht.first().coef * sites.op(ht.first().op,n) * rc;
                     if(is_complex) op *= (-tau);
                     else           op *= (-tau.real());
@@ -475,6 +505,7 @@ toExpH_ZW1(const AutoMPO& am,
 
             }
 
+#ifdef SHOW_AUTOMPO
         if(n <= 10 or n == N)
             {
             for(int r = 0; r < row.m(); ++r, println())
@@ -486,6 +517,7 @@ toExpH_ZW1(const AutoMPO& am,
                 }
             println("=========================================");
             }
+#endif
         }
 
     H.Anc(1) *= IQTensor(links.at(0)(1));

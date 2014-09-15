@@ -1,7 +1,7 @@
 #include "core.h"
 #include "sites/spinhalf.h"
 #include "sites/spinone.h"
-#include "hams/Heisenberg.h"
+#include "autompo.h"
 
 using namespace std;
 using namespace itensor;
@@ -18,12 +18,22 @@ main(int argc, char* argv[])
     SpinOne sites(N); //make a chain of N spin 1's
 
     //
-    // Create the Hamiltonian matrix product operator.
-    // Here we use the IQMPO class which is an MPO of 
-    // IQTensors, tensors whose indices are sorted
-    // with respect to quantum numbers
+    // Use the AutoMPO feature to create the 
+    // next-neighbor Heisenberg model.
     //
-    IQMPO H = Heisenberg(sites);
+    // Here we convert the AutoMPO information
+    // into an IQMPO, a matrix-product operator
+    // which automatically tracks quantum
+    // number information.
+    //
+    AutoMPO a(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        a += 0.5,"S+",j,"S-",j+1;
+        a += 0.5,"S-",j,"S+",j+1;
+        a +=     "Sz",j,"Sz",j+1;
+        }
+    IQMPO H(a);
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.

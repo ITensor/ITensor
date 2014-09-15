@@ -1,7 +1,7 @@
 #include "core.h"
 #include "sites/spinhalf.h"
 #include "sites/spinone.h"
-#include "hams/Heisenberg.h"
+#include "autompo.h"
 
 using namespace std;
 using namespace itensor;
@@ -18,9 +18,17 @@ main(int argc, char* argv[])
     SpinOne sites(N); //make a chain of N spin 1's
 
     //
-    // Create the Hamiltonian matrix product operator.
+    // Use the AutoMPO feature to create the 
+    // next-neighbor Heisenberg model
     //
-    MPO H = Heisenberg(sites);
+    AutoMPO a(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        a += 0.5,"S+",j,"S-",j+1;
+        a += 0.5,"S-",j,"S+",j+1;
+        a +=     "Sz",j,"Sz",j+1;
+        }
+    MPO H(a);
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
