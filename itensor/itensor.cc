@@ -872,6 +872,9 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
             {
             Print(*this);
             println("Couldn't find Index ",J," in ITensor.");
+            println("indices:");
+            for(int j = 1; j <= nind; ++j)
+                println("  ",indices[j]);
             Error("bad request for Index to replace");
             }
         }
