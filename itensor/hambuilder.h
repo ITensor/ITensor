@@ -26,15 +26,15 @@ class HamBuilder
 
     HamBuilder() { };
 
-    HamBuilder(const Model& mod);
+    HamBuilder(const SiteSet& sites);
 
-    HamBuilder(const Model& mod,
+    HamBuilder(const SiteSet& sites,
                const String& opname1, int j1,
                const String& opname2 = "", int j2 = 0,
                const String& opname3 = "", int j3 = 0,
                const String& opname4 = "", int j4 = 0);
 
-    HamBuilder(const Model& mod,
+    HamBuilder(const SiteSet& sites,
                const Tensor& op1, int j1,
                const Tensor& op2 = Tensor(), int j2 = 0,
                const Tensor& op3 = Tensor(), int j3 = 0,
@@ -66,7 +66,7 @@ class HamBuilder
     //
     // Data Members
 
-    const Model* mod_;
+    const SiteSet* sites_;
     mutable MPOt<Tensor> W_;
     mutable bool initted_;
 
@@ -123,10 +123,10 @@ operator*(Complex z, HamBuilder<Tensor> hb)
 
 template <class Tensor> 
 HamBuilder<Tensor>::
-HamBuilder(const Model& mod)
+HamBuilder(const SiteSet& sites)
     :
-    mod_(&mod),
-    W_(mod),
+    sites_(&sites),
+    W_(sites),
     initted_(false)
     { 
     setident_();
@@ -134,14 +134,14 @@ HamBuilder(const Model& mod)
 
 template <class Tensor> 
 HamBuilder<Tensor>::
-HamBuilder(const Model& mod,
+HamBuilder(const SiteSet& sites,
            const String& opname1, int j1,
            const String& opname2, int j2,
            const String& opname3, int j3,
            const String& opname4, int j4)
     :
-    mod_(&mod),
-    W_(mod),
+    sites_(&sites),
+    W_(sites),
     initted_(false)
     { 
     setident_();
@@ -150,14 +150,14 @@ HamBuilder(const Model& mod,
 
 template <class Tensor>
 HamBuilder<Tensor>::
-HamBuilder(const Model& mod,
+HamBuilder(const SiteSet& sites,
            const Tensor& op1, int j1,
            const Tensor& op2, int j2,
            const Tensor& op3, int j3,
            const Tensor& op4, int j4)
     :
-    mod_(&mod),
-    W_(mod),
+    sites_(&sites),
+    W_(sites),
     initted_(false)
     { 
     setident_();
@@ -175,13 +175,13 @@ set(const String& opname1, int j1,
         {
         Error("Cannot set additional site operators once MPO has been retrieved from HamBuilder.");
         }
-    W_.Anc(j1) = mod_->op(opname1,j1);
+    W_.Anc(j1) = sites_->op(opname1,j1);
     if(j2 != 0)
-        W_.Anc(j2) = mod_->op(opname2,j2);
+        W_.Anc(j2) = sites_->op(opname2,j2);
     if(j3 != 0)
-        W_.Anc(j3) = mod_->op(opname3,j3);
+        W_.Anc(j3) = sites_->op(opname3,j3);
     if(j4 != 0)
-        W_.Anc(j4) = mod_->op(opname4,j4);
+        W_.Anc(j4) = sites_->op(opname4,j4);
     return *this;
     }
 
@@ -219,8 +219,8 @@ template <class Tensor>
 void HamBuilder<Tensor>::
 setident_() const
     {
-    for(int j = 1; j <= mod_->N(); ++j)
-        W_.Anc(j) = mod_->op("Id",j);
+    for(int j = 1; j <= sites_->N(); ++j)
+        W_.Anc(j) = sites_->op("Id",j);
     }
 
 }; //namespace itensor
