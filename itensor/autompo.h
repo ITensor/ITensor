@@ -268,6 +268,21 @@ class AutoMPO
             return *this;
             }
 
+        Accumulator&
+        operator,(const std::string& op_)
+            {
+            if(state == New)
+                {
+                op = op_;
+                state = Op;
+                }
+            else
+                {
+                Error("Invalid input to AutoMPO (two strings in a row?)");
+                }
+            return *this;
+            }
+
         };
 
     public:
