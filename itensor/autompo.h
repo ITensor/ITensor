@@ -54,7 +54,7 @@ struct SiteTerm
     {
     std::string op;
     int i;
-    Real coef;
+    Complex coef;
 
     SiteTerm() : i(-1), coef(0) { }
 
@@ -70,7 +70,7 @@ struct SiteTerm
     bool
     operator==(const SiteTerm& other) const
         {
-        return (op == other.op && i == other.i && fabs(coef-other.coef) < 1E-12);
+        return (op == other.op && i == other.i && abs(coef-other.coef) < 1E-12);
         }
     bool
     operator!=(const SiteTerm& other) const { return !operator==(other); }
@@ -144,17 +144,25 @@ struct HTerm
         return i >= first().i && i <= last().i; 
         }
 
-    Real
+    Complex
     coef() const
         {
         if(Nops() == 0) return 0;
-        Real c = 1;
+        Complex c = 1;
         for(const auto& op : ops) c *= op.coef;
         return c;
         }
 
     HTerm&
     operator*=(Real x)
+        {
+        if(Nops() == 0) Error("No operators in HTerm");
+        ops.front().coef *= x;
+        return *this;
+        }
+
+    HTerm&
+    operator*=(Complex x)
         {
         if(Nops() == 0) Error("No operators in HTerm");
         ops.front().coef *= x;
@@ -195,13 +203,21 @@ class AutoMPO
         private:
         AutoMPO* pa;
         State state;
-        Real coef;
+        Complex coef;
         std::string op;
         public:
         HTerm term;
 
         Accumulator(AutoMPO* pa_, 
                     Real x_)
+            :
+            pa(pa_),
+            state(New),
+            coef(x_)
+            {}
+
+        Accumulator(AutoMPO* pa_, 
+                    Complex x_)
             :
             pa(pa_),
             state(New),
@@ -223,6 +239,16 @@ class AutoMPO
             op(op_)
             {}
 
+        Accumulator(AutoMPO* pa_, 
+                    const std::string& op_)
+            :
+            pa(pa_),
+            state(Op),
+            coef(1),
+            op(op_)
+            {}
+
+
         ~Accumulator()
             {
             if(state==Op) Error("Invalid input to AutoMPO (missing site number?)");
@@ -232,6 +258,13 @@ class AutoMPO
         
         Accumulator&
         operator,(Real x)
+            {
+            coef *= x;
+            return *this;
+            }
+
+        Accumulator&
+        operator,(Complex x)
             {
             coef *= x;
             return *this;
@@ -248,7 +281,7 @@ class AutoMPO
                 }
             else
                 {
-                coef *= i;
+                coef *= Real(i);
                 }
             return *this;
             }

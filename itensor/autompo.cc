@@ -13,6 +13,12 @@ using std::vector;
 
 namespace itensor {
 
+bool
+isReal(const Complex& z) { return z.imag() == 0; }
+
+bool
+isApproxReal(const Complex& z, Real epsilon = 1E-12) { return fabs(z.imag()) < epsilon; }
+
 
 /*
 MPO convention:
@@ -569,7 +575,10 @@ toExpH<ITensor>(const AutoMPO& a,
 std::ostream& 
 operator<<(std::ostream& s, const SiteTerm& t)
     {
-    s << format("%f * %s(%d)",t.coef,t.op,t.i);
+    if(isReal(t.coef))
+        s << format("%f * %s(%d)",t.coef.real(),t.op,t.i);
+    else
+        s << format("%f * %s(%d)",t.coef,t.op,t.i);
     return s;
     }
 
@@ -578,7 +587,8 @@ std::ostream&
 operator<<(std::ostream& s, const HTerm& t)
     {
     const char* pfix = "";
-    if(fabs(t.coef()-1) > 1E-12) s << format("%f ",t.coef());
+    if(abs(t.coef()-1.0) > 1E-12) 
+        s << (isReal(t.coef()) ? format("%f ",t.coef().real()) : format("%f ",t.coef()));
     for(const auto& st : t.ops) 
         {
         s << format("%s%s(%d)",pfix,st.op,st.i);
