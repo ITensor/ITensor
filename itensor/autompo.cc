@@ -97,6 +97,7 @@ toMPO<IQTensor>(const AutoMPO& am,
     const SiteSet& sites = am.sites();
     IQMPO H(sites);
     const int N = sites.N();
+    const auto checkqn = opts.getBool("CheckQNs",true);
 
     for(auto& t : am.terms())
     if(t.Nops() > 2) 
@@ -117,6 +118,8 @@ toMPO<IQTensor>(const AutoMPO& am,
     for(int n = 1; n <= N; ++n)
         basis.at(n).emplace_back(HL,QN());
 
+    const QN Zero;
+
     //Fill up the basis array at each site with 
     //the unique operator types occurring on the site
     //and starting a string of operators (i.e. first op of an HTerm)
@@ -129,21 +132,26 @@ toMPO<IQTensor>(const AutoMPO& am,
         if(!has_first) 
             {
             auto Op = sites.op(ht.first().op,ht.first().i);
-            bn.emplace_back(ht.first(),-div(Op));
+            if(checkqn)
+                bn.emplace_back(ht.first(),-div(Op));
+            else
+                bn.emplace_back(ht.first(),Zero);
             }
         }
 
-    const QN Zero;
-    auto qn_comp = [&Zero](const SiteQN& sq1,const SiteQN& sq2)
-                   {
-                   //First two if statements are to artificially make
-                   //the default-constructed Zero QN come first in the sort
-                   if(sq1.q == Zero && sq2.q != Zero) return true;
-                   else if(sq2.q == Zero && sq1.q != Zero) return false;
-                   return sq1.q < sq2.q;
-                   };
-    //Sort bond "basis" elements by quantum number sector:
-    for(auto& bn : basis) std::sort(bn.begin(),bn.end(),qn_comp);
+    if(checkqn)
+        {
+        auto qn_comp = [&Zero](const SiteQN& sq1,const SiteQN& sq2)
+                       {
+                       //First two if statements are to artificially make
+                       //the default-constructed Zero QN come first in the sort
+                       if(sq1.q == Zero && sq2.q != Zero) return true;
+                       else if(sq2.q == Zero && sq1.q != Zero) return false;
+                       return sq1.q < sq2.q;
+                       };
+        //Sort bond "basis" elements by quantum number sector:
+        for(auto& bn : basis) std::sort(bn.begin(),bn.end(),qn_comp);
+        }
 
     vector<IQIndex> links(N+1);
     vector<IndexQN> inqn;
@@ -320,7 +328,8 @@ MPO
 toMPO<ITensor>(const AutoMPO& a,
                const OptSet& opts)
     {
-    IQMPO res = toMPO<IQTensor>(a,opts);
+    static Opt checkqn("CheckQNs",false);
+    IQMPO res = toMPO<IQTensor>(a,opts+checkqn);
     return res.toMPO();
     }
 
