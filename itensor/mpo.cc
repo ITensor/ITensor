@@ -529,7 +529,7 @@ fitApplyMPO(Real fac,
             wfK *= fac;
 
             if(normalize) wfK /= wfK.norm();
-            Spectrum spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
+            Spectrum spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),opts+Opt("UseSVD",true));
 
             if(verbose)
                 {

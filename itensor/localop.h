@@ -143,7 +143,6 @@ class LocalOp
         Op2_ = other.Op2_;
         L_ = other.L_;
         R_ = other.R_;
-        bond_ = other.bond_;
         }
 
     private:
@@ -156,7 +155,6 @@ class LocalOp
     const Tensor *Op1_, *Op2_; 
     const Tensor *L_, *R_; 
     mutable int size_;
-    mutable Tensor bond_;
 
     //
     /////////////////
@@ -216,7 +214,6 @@ update(const Tensor& Op1, const Tensor& Op2)
     L_ = 0;
     R_ = 0;
     size_ = -1;
-    bond_ = Tensor();
     }
 
 template <class Tensor>
