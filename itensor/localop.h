@@ -122,7 +122,7 @@ class LocalOp
         }
 
     bool
-    isNull() const { return Op1_ == 0; }
+    isNull() const { return Op1_ == nullptr; }
 
     bool
     LIsNull() const;
@@ -168,10 +168,10 @@ template <class Tensor>
 inline LocalOp<Tensor>::
 LocalOp(const OptSet& opts)
     :
-    Op1_(0),
-    Op2_(0),
-    L_(0),
-    R_(0),
+    Op1_(nullptr),
+    Op2_(nullptr),
+    L_(nullptr),
+    R_(nullptr),
     size_(-1)
     { 
     }
@@ -181,10 +181,10 @@ inline LocalOp<Tensor>::
 LocalOp(const Tensor& Op1, const Tensor& Op2,
         const OptSet& opts)
     : 
-    Op1_(0),
-    Op2_(0),
-    L_(0),
-    R_(0),
+    Op1_(nullptr),
+    Op2_(nullptr),
+    L_(nullptr),
+    R_(nullptr),
     size_(-1)
     {
     update(Op1,Op2);
@@ -196,10 +196,10 @@ LocalOp(const Tensor& Op1, const Tensor& Op2,
         const Tensor& L, const Tensor& R,
         const OptSet& opts)
     : 
-    Op1_(0),
-    Op2_(0),
-    L_(0),
-    R_(0),
+    Op1_(nullptr),
+    Op2_(nullptr),
+    L_(nullptr),
+    R_(nullptr),
     size_(-1)
     {
     update(Op1,Op2,L,R);
@@ -211,8 +211,8 @@ update(const Tensor& Op1, const Tensor& Op2)
     {
     Op1_ = &Op1;
     Op2_ = &Op2;
-    L_ = 0;
-    R_ = 0;
+    L_ = nullptr;
+    R_ = nullptr;
     size_ = -1;
     }
 
@@ -230,7 +230,7 @@ template <class Tensor>
 bool inline LocalOp<Tensor>::
 LIsNull() const
     {
-    if(L_ == 0) return true;
+    if(L_ == nullptr) return true;
     return !L_->valid();
     }
 
@@ -238,7 +238,7 @@ template <class Tensor>
 bool inline LocalOp<Tensor>::
 RIsNull() const
     {
-    if(R_ == 0) return true;
+    if(R_ == nullptr) return true;
     return !R_->valid();
     }
 
