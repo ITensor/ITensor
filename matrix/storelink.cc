@@ -3,15 +3,15 @@
 #include <stdlib.h>
 #include <memory.h>
 #include "storelink.h"
-//#include "minmax.h"
+#include "minmax.h"
 
 namespace itensor {
 
-StoreLink::lint StoreLink::
-defragment(lint newsize) // move object to lower place in heap 
+int 
+StoreLink::defragment(int newsize)	// move object to lower place in heap 
     {
     if(NumRef() != 1) return 0;
-    newsize = std::min(newsize,Storage());
+    newsize = min(newsize,Storage());
     if(newsize < 1) return 0;
     int rsize = sizeof(Real)*newsize;
     const int stacksize = 10000;
