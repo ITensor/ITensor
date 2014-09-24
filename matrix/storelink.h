@@ -17,11 +17,7 @@ namespace itensor {
 
 typedef double Real;
 
-#ifdef USE_CPP11
 #define STATIC_VAR(type,name) static type& name() { static type t{}; return t; }
-#else
-#define STATIC_VAR(type,name) static type& name() { static type t(0); return t; }
-#endif
 
 class StoreLink
     {
@@ -34,9 +30,7 @@ class StoreLink
     // Reserve "=" for copies of storage pointed to, defined in later classes
     // using StoreLink. Do ref copy (rebinding) using <<
 
-#ifdef USE_CPP11
     StoreLink(const StoreLink & S) = default;
-#endif
 
     // Commands for new storage, used by storage classes only.
     StoreLink(lint s = 0) // Negative lint treated as 0.
