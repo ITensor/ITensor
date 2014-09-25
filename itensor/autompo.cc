@@ -309,7 +309,7 @@ toMPO<IQTensor>(const AutoMPO& am,
             //Start a new operator string
             if(cst.i == n && rst == IL)
                 {
-                //Call startOp to handle fermionic cases with Jordan-Wigner strings
+                //Call startTerm to handle fermionic cases with Jordan-Wigner strings
                 auto op = startTerm(cst.op);
                 W += cst.coef * sites.op(op,n) * rc;
 #ifdef SHOW_AUTOMPO
@@ -563,7 +563,8 @@ toExpH_ZW1(const AutoMPO& am,
                 else
                     ws[r][c] = format("(-t*%.2f)*%s",cst.coef,cst.op);
 #endif
-                auto op = cst.coef * sites.op(cst.op,n) * rc;
+                auto opname = startTerm(cst.op);
+                auto op = cst.coef * sites.op(opname,n) * rc;
                 if(is_complex) op *= (-tau);
                 else           op *= (-tau.real());
                 W += op;
@@ -574,9 +575,13 @@ toExpH_ZW1(const AutoMPO& am,
             if(cst == rst)
                 {
 #ifdef SHOW_AUTOMPO
-                plusAppend(ws[r][c],"1");
+                if(isFermionic(cst)) plusAppend(ws[r][c],"F");
+                else                 plusAppend(ws[r][c],"1");
 #endif
-                W += sites.op("Id",n) * rc;
+                if(isFermionic(cst))
+                    W += sites.op("F",n) * rc;
+                else
+                    W += sites.op("Id",n) * rc;
                 }
 
             //End operator strings
@@ -588,7 +593,7 @@ toExpH_ZW1(const AutoMPO& am,
 #ifdef SHOW_AUTOMPO
                     ws[r][c] = ht.last().op;
 #endif
-                    W += ht.last().coef * sites.op(ht.last().op,n) * rc;
+                    W += ht.last().coef * sites.op(endTerm(ht.last().op),n) * rc;
                     }
                 }
 
@@ -599,7 +604,10 @@ toExpH_ZW1(const AutoMPO& am,
                 if(ht.first().i == ht.last().i)
                     {
 #ifdef SHOW_AUTOMPO
-                    plusAppend(ws[r][c],format("(-t*%.2f)*%s",ht.first().coef,ht.first().op));
+                    if(isApproxReal(ht.first().coef))
+                        plusAppend(ws[r][c],format("(-t*%.2f)*%s",ht.first().coef.real(),ht.first().op));
+                    else
+                        plusAppend(ws[r][c],format("(-t*%.2f)*%s",ht.first().coef,ht.first().op));
 #endif
                     auto op = ht.first().coef * sites.op(ht.first().op,n) * rc;
                     if(is_complex) op *= (-tau);
