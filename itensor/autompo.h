@@ -83,6 +83,13 @@ struct SiteTerm
 
     };
 
+bool inline
+isFermionic(const SiteTerm& st)
+    {
+    if(!st.op.empty() && st.op.front() == 'C') return true;
+    return false;
+    }
+
 struct HTerm
     {
     std::vector<SiteTerm> ops;
@@ -346,7 +353,7 @@ class AutoMPO
     void
     add(const HTerm& t)
         {
-        terms_.push_back(t);
+        if(abs(t.coef()) != 0) terms_.push_back(t);
         }
 
     };

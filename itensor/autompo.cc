@@ -10,6 +10,9 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
+using std::array;
+using std::pair;
+using std::make_pair;
 
 namespace itensor {
 
@@ -56,10 +59,41 @@ HL     0     1     0     0     0     0
 111A   0    t1 B   1     0     0     0  
 111B   0    t1 A   0     1     0     0  
 
-If F == fermiPhase, i.e. F = (-1)^(# of fermions)
-Then we make c and cdagger both have F's going off to the left,
-towards site.   So in c(1) cdag(2),  c(1) has an F in front of
-it, which evaluates to -1 since c requres
+F == fermiPhase, i.e. F = (-1)^(# of fermions of either type of spin)
+Then we make c and cdagger both have F's going off to the left.
+
+Fermion operator rewriting convention:
+
+//
+//Spinless fermions
+//
+
+Cdag_i C_j  = (F_1 F_2 F_3 ... F_{i-1})^2 (Adag_i F_i) F_{i+1} ... A_j
+            = Adag_i F_{i+1} ... A_j
+
+-C_i Cdag_j = -(A_i F_i) F_{i+1} ... Adag_j
+            = A_i F_{i+1} ... Adag_j
+
+//
+//Fermions with spin
+//
+
+Cdagup_i Cup_j  = (F_1 F_2 F_3 ... )^2 (Adagup_i F_i) F_{i+1} ... Aup_j
+                = (Adagup_i F_i) F_{i+1} ... Aup_j //cancel squared F operators
+
+Cup_i Cdagup_j = (Aup_i F_i) F_{i+1} ... Adagup_j
+
+Cdagdn_i Cdn_j  = (Adagdn_i F_i) F_{i+1} ... Fup_j Adn_j 
+                = - Adagdn_i F_{i+1} ... Fup_j Adn_j     //use Adagdn_i * F_i = -Adagdn_i
+                = Adagdn_i F_{i+1} ... Fup_j Fdn_j Adn_j //use Adn_j = -Fdn_j*Adn_j
+                = Adagdn_i F_{i+1} ... (F_j Adn_j)       //combine Fup_j*Fdn_j = F_j (definition)
+
+Cdn_i Cdagdn_j = (Adn_i F_i) F_{i+1} ... Fup_j Adagdn_j
+               = - Adn_i F_{i+1} ... Fup_j Adagdn_j      //use Adn_i*F_i = -Adn_i
+               = Adn_i F_{i+1} ... Fup_j Fdn_j Adagdn_j  //use Adagdn_j = -Fdn_j*Adagdn_j
+               = Adn_i F_{i+1} ... (F_j Adagdn_j)        //combined Fup_j*Fdn_j = F_j (definition)
+
+
 */
 
 
@@ -94,6 +128,47 @@ plusAppend(std::string& s, const std::string& a)
     }
 
 //#define SHOW_AUTOMPO
+
+
+string
+startTerm(const std::string& op)
+    {
+    static array<pair<string,string>,6>
+           rewrites =
+           {{
+           make_pair("Cdagup","Adagup*F"),
+           make_pair("Cup","Aup*F"),
+           make_pair("Cdagdn","Adagdn"),
+           make_pair("Cdn","Adn"),
+           make_pair("C","A"),
+           make_pair("Cdag","Adag")
+           }};
+    for(auto& p : rewrites)
+        {
+        if(p.first == op) return p.second;
+        }
+    return op;
+    }
+
+string
+endTerm(const std::string& op)
+    {
+    static array<pair<string,string>,6>
+           rewrites =
+           {{
+           make_pair("Cup","Aup"),
+           make_pair("Cdagup","Adagup"),
+           make_pair("Cdn","F*Adn"),
+           make_pair("Cdagdn","F*Adagdn"),
+           make_pair("C","A"),
+           make_pair("Cdag","Adag")
+           }};
+    for(auto& p : rewrites)
+        {
+        if(p.first == op) return p.second;
+        }
+    return op;
+    }
 
 template<>
 IQMPO
@@ -133,8 +208,8 @@ toMPO<IQTensor>(const AutoMPO& am,
     for(int n = ht.first().i; n < ht.last().i; ++n)
         {
         auto& bn = basis.at(n);
-        auto test = [&ht](const SiteQN& sq){ return sq.st == ht.first(); };
-        bool has_first = (find_if(bn.cbegin(),bn.cend(),test) != bn.end());
+        auto test_has_first = [&ht](const SiteQN& sq){ return sq.st == ht.first(); };
+        bool has_first = (find_if(bn.cbegin(),bn.cend(),test_has_first) != bn.end());
         if(!has_first) 
             {
             auto Op = sites.op(ht.first().op,ht.first().i);
@@ -234,16 +309,22 @@ toMPO<IQTensor>(const AutoMPO& am,
             //Start a new operator string
             if(cst.i == n && rst == IL)
                 {
+                //Call startOp to handle fermionic cases with Jordan-Wigner strings
+                auto op = startTerm(cst.op);
+                W += cst.coef * sites.op(op,n) * rc;
 #ifdef SHOW_AUTOMPO
-                ws[r][c] = format("%.2f %s",cst.coef,cst.op);
+                if(isApproxReal(cst.coef))
+                    ws[r][c] = format("%.2f %s",cst.coef.real(),op);
+                else
+                    ws[r][c] = format("%.2f %s",cst.coef,op);
 #endif
-                W += cst.coef * sites.op(cst.op,n) * rc;
                 }
 
             //Add identity "string" connecting operator
             //strings of more than two sites in length
             if(cst == rst)
                 {
+                /*
                 int found = 0;
                 for(const auto& ht : ht_by_n.at(n))
                     {
@@ -262,20 +343,22 @@ toMPO<IQTensor>(const AutoMPO& am,
                             }
                         }
                     }
+                //if(found == 0)
+                    */
 
-                if(found == 0)
-                    {
-#ifdef SHOW_AUTOMPO
-                    ws[r][c] = "1";
-#endif
+                if(isFermionic(cst))
+                    W += sites.op("F",n) * rc;
+                else
                     W += sites.op("Id",n) * rc;
-                    }
-
-                if(found > 1)
-                    {
-                    println("Warning: found > 1 at site ",n);
-                    PAUSE
-                    }
+#ifdef SHOW_AUTOMPO
+                if(isFermionic(cst)) ws[r][c] = "F";
+                else                 ws[r][c] = "1";
+#endif
+                //if(found > 1)
+                //    {
+                //    println("Warning: found > 1 at site ",n);
+                //    PAUSE
+                //    }
                 }
 
             //End operator strings
@@ -284,10 +367,11 @@ toMPO<IQTensor>(const AutoMPO& am,
                 for(const auto& ht : ht_by_n.at(n))
                 if(rst == ht.first() && ht.last().i == n)
                     {
+                    auto op = endTerm(ht.last().op);
+                    W += ht.last().coef * sites.op(op,n) * rc;
 #ifdef SHOW_AUTOMPO
-                    ws[r][c] = ht.last().op;
+                    ws[r][c] = op;
 #endif
-                    W += ht.last().coef * sites.op(ht.last().op,n) * rc;
                     }
                 }
 
@@ -298,7 +382,10 @@ toMPO<IQTensor>(const AutoMPO& am,
                 if(ht.first().i == ht.last().i)
                     {
 #ifdef SHOW_AUTOMPO
-                    ws[r][c] = format("%.2f %s",ht.first().coef,ht.first().op);
+                    if(isApproxReal(ht.first().coef))
+                        ws[r][c] = format("%.2f %s",ht.first().coef.real(),ht.first().op);
+                    else
+                        ws[r][c] = format("%.2f %s",ht.first().coef,ht.first().op);
 #endif
                     W += ht.first().coef * sites.op(ht.first().op,n) * rc;
                     }
@@ -471,7 +558,10 @@ toExpH_ZW1(const AutoMPO& am,
             if(cst.i == n && rst == IL)
                 {
 #ifdef SHOW_AUTOMPO
-                ws[r][c] = format("(-t*%.2f)*%s",cst.coef,cst.op);
+                if(isApproxReal(cst.coef))
+                    ws[r][c] = format("(-t*%.2f)*%s",cst.coef.real(),cst.op);
+                else
+                    ws[r][c] = format("(-t*%.2f)*%s",cst.coef,cst.op);
 #endif
                 auto op = cst.coef * sites.op(cst.op,n) * rc;
                 if(is_complex) op *= (-tau);

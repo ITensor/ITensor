@@ -1,6 +1,6 @@
 #include "core.h"
 #include "sites/hubbard.h"
-#include "hams/ExtendedHubbard.h"
+#include "autompo.h"
 
 using namespace std;
 using namespace itensor;
@@ -16,16 +16,12 @@ int main(int argc, char* argv[])
     int Npart = N; //number of particles, default is N (half filling)
     basic.GetInt("Npart",Npart);
 
-    int nsweeps = 0;
-    basic.GetIntM("nsweeps",nsweeps);
-    Real t1 = 0;
-    basic.GetRealM("t1",t1);
-    Real t2 = 0;
-    basic.GetRealM("t2",t2);
-    Real U = 0;
-    basic.GetRealM("U",U);
-    Real V1 = 0;
-    basic.GetRealM("V1",V1);
+    auto nsweeps = basic.getInt("nsweeps");
+    auto t1 = basic.getReal("t1",1);
+    auto t2 = basic.getReal("t2",0);
+    auto U = basic.getReal("U",0);
+    auto V1 = basic.getReal("V1",0);
+    auto quiet = basic.getYesNo("quiet",false);
 
     InputGroup table(basic,"sweeps");
     Sweeps sweeps(nsweeps,table);
@@ -36,17 +32,29 @@ int main(int argc, char* argv[])
     //
     Hubbard sites(N);
 
-    //
-    // Create the Hamiltonian matrix product operator.
-    // Here we use the IQMPO class which is an MPO of 
-    // IQTensors, tensors whose indices are sorted
-    // with respect to quantum numbers
-    //
-    IQMPO H = ExtendedHubbard(sites,
-                              Opt("U",U)
-                              & Opt("t1",t1)
-                              & Opt("t2",t2)
-                              & Opt("V1",V1));
+    AutoMPO a(sites);
+    for(int i = 1; i <= N; ++i) 
+        {
+        a += U,"Nupdn",i;
+        }
+    for(int b = 1; b < N; ++b)
+        {
+        //Note the + signs for the Hermitian conjugate terms
+        a += -t1,"Cdagup",b,"Cup",b+1;
+        a += +t1,"Cup",b,"Cdagup",b+1;
+        a += -t1,"Cdagdn",b,"Cdn",b+1;
+        a += +t1,"Cdn",b,"Cdagdn",b+1;
+
+        a += V1,"Ntot",b,"Ntot",b+1;
+        }
+    for(int b = 1; b < N-1; ++b)
+        {
+        a += -t2,"Cdagup",b,"Cup",b+2;
+        a += +t2,"Cup",b,"Cdagup",b+2;
+        a += -t2,"Cdagdn",b,"Cdn",b+2;
+        a += +t2,"Cdn",b,"Cdagdn",b+2;
+        }
+    IQMPO H(a);
 
     //
     // Set the initial wavefunction matrix product state
@@ -82,7 +90,7 @@ int main(int argc, char* argv[])
     //
     // Begin the DMRG calculation
     //
-    Real En = dmrg(psi,H,sweeps,"Quiet");
+    Real En = dmrg(psi,H,sweeps,Opt("Quiet",quiet));
 
     //
     // Measure spin densities
