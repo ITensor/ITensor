@@ -720,7 +720,7 @@ inline int MatrixRef::DoTranspose() const
     { return transpose; }
 
 inline Real* MatrixRef::Last() const
-    { return store+(nrows-1)*rowstride+ncols; }
+    { return store+(nrows-1)*rowstride+ncols-1; }
 
 inline Real* MatrixRef::First() const
     { return store; }
