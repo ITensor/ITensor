@@ -4,43 +4,38 @@
 //
 
 #include "cputime.h"
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::ostream;
-using std::ostringstream;
-using std::setprecision;
-
-#define __alpha
-#ifdef __alpha
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <string>
 #include <sstream>
+#include <iomanip>
+#include <chrono>
 
-double mytime()
+using namespace std;
+using namespace std::chrono;
+
+double cpu_mytime()		// cpu time in seconds used by program
     {
     struct rusage result;
     getrusage(RUSAGE_SELF,&result);
     return result.ru_utime.tv_sec + 1e-6 * result.ru_utime.tv_usec;
     }
 
-#else
-
-#include <time.h>
-
-double mytime()
-    { return clock() * (1.0 / CLOCKS_PER_SEC); }
-
-#endif
-
-ostream & operator << (ostream & s, const cpu_time & t)
+double cpu_mywall()		// wall time since program started
     {
-    double time = t.time;
+    static auto initial = steady_clock::now();
+    auto current = steady_clock::now();
+    auto dur = duration_cast<microseconds>(current-initial);
+    return dur.count() * 1.0e-6;
+    }
+
+double firstwall = cpu_mywall();	// So cpu_mywall gets called at begining of program
+
+static string showtime(double time)
+    {
     if(time < -1.0e-5) 
 	{
 	cout << "CPU time is negative!" << time << endl;
-	s << "CPU time is negative!" << time << endl;
 	cerr << "CPU time is negative!" << time << endl;
 	}
     if(time < 0.0) time = 0.0;
@@ -49,13 +44,27 @@ ostream & operator << (ostream & s, const cpu_time & t)
     int minutes = (int) time/60;
     time -= minutes * 60;
     double seconds = time;
-    if(hours != 0) s << hours << (hours == 1 ? " hour, " : " hours, ");
-    if(minutes != 0) s << minutes << 
-    		(minutes == 1 ? " minute, " : " minutes, ");
     ostringstream oh;
-    oh << setprecision(3) << seconds << " seconds";
-    s << oh.str();
-    // s << "(" << t.time << ")";
+    //if(hours != 0) oh << hours << (hours == 1 ? " hour, " : " hours, ");
+    if(hours != 0) oh << std::fixed << hours << "h, ";
+    if(minutes != 0) oh << std::fixed << minutes << 
+    		(minutes == 1 ? "m, " : "m, ");
+    int prec = 6;
+    if(seconds > 0.001) prec = 5;
+    if(seconds > 0.01) prec = 4;
+    if(seconds > 0.1) prec = 3;
+    if(seconds >= 10) prec = 2;
+    if(minutes > 0) prec = 1;
+    if(minutes >= 10) prec = 0;
+    if(hours > 0) prec = 0;
+    oh << setprecision(prec) << std::fixed << seconds << "s";
+    return oh.str();
+    }
+
+ostream & operator << (ostream & s, const cpu_time & t)
+    {
+    s << "[CPU: " << showtime(t.time) << 
+	", Wall: " << showtime(t.wall) << "]";
     return s;
     }
 
@@ -63,9 +72,6 @@ cpu_time cpu_time::sincemark()
     {
     cpu_time res;
     res.time -= time;
+    res.wall -= wall;
     return res;
     }
-    
-    
-
-
