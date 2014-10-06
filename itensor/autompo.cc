@@ -71,8 +71,7 @@ Fermion operator rewriting convention:
 Cdag_i C_j  = (F_1 F_2 F_3 ... F_{i-1})^2 (Adag_i F_i) F_{i+1} ... A_j
             = Adag_i F_{i+1} ... A_j
 
--C_i Cdag_j = -(A_i F_i) F_{i+1} ... Adag_j
-            = A_i F_{i+1} ... Adag_j
+C_i Cdag_j = (A_i F_i) F_{i+1} ... Adag_j
 
 //
 //Fermions with spin
@@ -140,7 +139,7 @@ startTerm(const std::string& op)
            make_pair("Cup","Aup*F"),
            make_pair("Cdagdn","Adagdn"),
            make_pair("Cdn","Adn"),
-           make_pair("C","A"),
+           make_pair("C","A*F"),
            make_pair("Cdag","Adag")
            }};
     for(auto& p : rewrites)
