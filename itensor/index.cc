@@ -309,10 +309,9 @@ read(std::istream& s)
     int nlength; 
     s.read((char*) &nlength,sizeof(nlength));
 
-    char* newname = new char[nlength+1]; 
-    s.read(newname,nlength+1);
-    string ss(newname); 
-    delete newname;
+    auto newname = std::unique_ptr<char[]>(new char[nlength+1]);
+    s.read(newname.get(),nlength+1);
+    string ss(newname.get()); 
 
     p = itensor::make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
     return *this;
