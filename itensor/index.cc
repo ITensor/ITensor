@@ -319,7 +319,7 @@ read(std::istream& s)
     char* newname = new char[nlength+1]; 
     s.read(newname,nlength+1);
     string ss(newname); 
-    delete newname;
+    delete[] newname;
 
     p = itensor::make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
     return *this;
