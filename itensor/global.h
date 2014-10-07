@@ -125,24 +125,16 @@ mkTempDir(const std::string& pfix,
     dirname += pfix + "_XXXXXX";
 
     //Create C string version of dirname
-    char* cstr;
-    cstr = new char[dirname.size()+1];
-    strcpy(cstr,dirname.c_str());
+    auto cstr = std::unique_ptr<char[]>(new char[dirname.size()+1]);
+    strcpy(cstr.get(),dirname.c_str());
 
     //Call mkdtemp
-    char* retval = mkdtemp(cstr);
+    char* retval = mkdtemp(cstr.get());
     //Check error condition
-    if(retval == NULL)
-        {
-        delete[] cstr;
-        throw ITError("mkTempDir failed");
-        }
+    if(retval == NULL) throw ITError("mkTempDir failed");
 
     //Prepare return value
     std::string final_dirname(retval);
-
-    //Clean up
-    delete[] cstr;
 
     return final_dirname;
     }
