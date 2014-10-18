@@ -447,6 +447,12 @@ conj(IQTensor res) { res.conj(); return res; }
 IQTensor inline
 dag(IQTensor res) { res.dag(); return res; }
 
+Real inline
+toReal(const IQTensor& T) { return T.toReal(); }
+
+Complex inline
+toComplex(const IQTensor& T) { return T.toComplex(); }
+
 //
 // Computes the scalar/inner/dot product of two
 // real-valued IQTensors.

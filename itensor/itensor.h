@@ -999,6 +999,13 @@ trace(Tensor T,
     return T; 
     }
 
+Real inline
+toReal(const ITensor& T) { return T.toReal(); }
+
+Complex inline
+toComplex(const ITensor& T) { return T.toComplex(); }
+
+
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);
 
