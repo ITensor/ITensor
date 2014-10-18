@@ -88,8 +88,8 @@ struct IndexDat
     {
     //////////////
 
-    typedef mt19937 IDGenerator;
-    typedef IDGenerator::result_type IDType;
+    using IDGenerator = mt19937;
+    using IDType = IDGenerator::result_type;
 
     const IDType id;
     const int m;

@@ -14,8 +14,7 @@ enum IndexType { Link, Site, All };
 struct IndexDat;
 class IndexVal;
 
-typedef shared_ptr<IndexDat>
-IndexDatPtr;
+using IndexDatPtr = shared_ptr<IndexDat>;
 
 //
 // Index
