@@ -321,7 +321,7 @@ read(istream& s)
     char* newname = new char[nlength+1]; 
     s.read(newname,nlength+1);
     string ss(newname); 
-    delete newname;
+    delete[] newname;
 
     p = boost::make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
     //setUniqueReal();
