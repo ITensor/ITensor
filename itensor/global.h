@@ -250,43 +250,43 @@ class Global
     static OptSet&
     opts()
         {
-        return OptSet::GlobalOpts();
+        return OptSet::Global();
         }
     //Shortcut for adding global Opts,
     //so you don't have to write Global::opts().add(Opt("MyOption",3));
     //but just Global::opts(Opt("MyOption",3));
     //Also see name,val shortcuts below.
-    void static
-    opts(const Opt& o)
-        {
-        OptSet::GlobalOpts().add(o);
-        }
+    //void static
+    //opts(const Opt& o)
+    //    {
+    //    OptSet::GlobalOpts().add(o);
+    //    }
     //Get a global Opt by just providing its name
-    Opt static
-    opts(const Opt::Name& name)
-        {
-        return OptSet::GlobalOpts().get(name);
-        }
+    //Opt static
+    //opts(const Opt::Name& name)
+    //    {
+    //    return OptSet::GlobalOpts().get(name);
+    //    }
     //Set global opts by providing their name and value
     void static
-    opts(const Opt::Name& name, bool bval)
+    opts(const OptSet::Name& name, bool bval)
         {
-        OptSet::GlobalOpts().add(name,bval);
+        OptSet::Global().add(name,bval);
         }
     void static
-    opts(const Opt::Name& name, int ival)
+    opts(const OptSet::Name& name, int ival)
         {
-        OptSet::GlobalOpts().add(name,ival);
+        OptSet::Global().add(name,ival);
         }
     void static
-    opts(const Opt::Name& name, Real rval)
+    opts(const OptSet::Name& name, Real rval)
         {
-        OptSet::GlobalOpts().add(name,rval);
+        OptSet::Global().add(name,rval);
         }
     void static
-    opts(const Opt::Name& name, const std::string& sval)
+    opts(const OptSet::Name& name, const std::string& sval)
         {
-        OptSet::GlobalOpts().add(name,sval);
+        OptSet::Global().add(name,sval);
         }
     static bool& 
     printdat()

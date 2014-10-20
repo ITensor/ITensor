@@ -88,7 +88,7 @@ idmrg(MPSt<Tensor>& psi,
     const int Nuc = N0/2;   //Number of sites in unit cell
     int N = N0;             //Current system size
 
-    if(N0 == 2) opts.add(Opt("CombineMPO",false));
+    if(N0 == 2) opts.add("CombineMPO",false);
 
     Real energy = NAN,
          lastenergy = 0;

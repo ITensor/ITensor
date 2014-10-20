@@ -7,246 +7,140 @@
 
 #include <vector>
 #include "math.h"
-#include "flstring.h"
-#include <limits>
-
-#ifndef NAN
-#define NAN (std::numeric_limits<Real>::quiet_NaN())
-#endif
+#include <string>
+#include "types.h"
 
 namespace itensor {
 
-typedef double Real;
-
-class Opt
-    {
-    public:
-
-    typedef FLString<20>
-    Name;
-
-    enum Type { Boolean, Numeric, String, None };
-
-    Opt();
-
-    Opt(const char* name);
-
-    Opt(const Name& name);
-
-    Opt(const Name& name, bool bval);
-
-    Opt(const Name& name, const char* sval);
-    Opt(const Name& name, const std::string& sval);
-
-    Opt(const Name& name, int ival);
-
-    Opt(const Name& name, Real rval);
-
-    //
-    // Accessor methods
-    //
-
-    const Name&
-    name() const { return name_; }
-
-    bool
-    boolVal() const { assertType(Boolean); return bool(rval_); }
-
-    const std::string&
-    stringVal() const { assertType(String); return sval_; }
-
-    int
-    intVal() const { assertType(Numeric); return int(rval_); }
-
-    Real
-    realVal() const { assertType(Numeric); return rval_; }
-
-    explicit operator bool() const { return valid(); }
-
-    bool
-    valid() const { return type_ != None; }
-
-    Type
-    type() const { return type_; }
-
-    //operator const Name&() const { return name_; }
-
-    static Opt&
-    Null()
-        {
-        static Opt null_;
-        return null_;
-        }
-
-    private:
-
-    /////////////////////
-    // Data Members
-
-    Name name_;
-
-    Type type_;
-
-    std::string sval_;
-    Real rval_;
-
-    //
-    /////////////////////
-
-    void
-    assertType(Type t) const;
-
-    };
+class Args;
+// Type names "OptSet" and "Opt" are
+// aliases for Args for backwards compatibility.
+using OptSet = Args;
+using Opt = Args;
 
 //
-// OptSet
+// Args
 //
 
-class OptSet
+class Args
     {
+    struct Val;
     public:
 
-    typedef Opt::Name
-    Name;
+    using Name = std::string;
+    using storage_type = std::vector<Val>;
 
-    typedef std::vector<Opt>
-    storage_type;
+    Args();
 
-    typedef storage_type::value_type
-    value_type;
-
-    typedef storage_type::iterator
-    iterator;
-
-    typedef storage_type::const_iterator
-    const_iterator;
-
-    OptSet();
-
-    OptSet(const Opt& opt1);
-
-    OptSet(const Opt& opt1, 
-           const Opt& opt2, 
-           const Opt& opt3 = Opt::Null(),
-           const Opt& opt4 = Opt::Null());
-
-    OptSet(const char* ostring);
-    OptSet(const std::string& ostring);
-
-    OptSet(const OptSet& other);
-
-    template <typename T, typename... Args>
-    OptSet(const char* name1, 
+    //
+    // Construct Args from a list of name-value pairs:
+    // Args args("Name1",val1,"Name2",val2,"Name3",val3,...);
+    //
+    template <typename T, typename... Rest>
+    Args(const char* name1, 
            const T& t1, 
-           const Args&... rest)
-        {
-        initialize(name1,t1,rest...);
-        }
-
-    template <typename... Args>
-    OptSet(const OptSet& other,
-           const Args&... rest)
-        {
-        initialize(other,rest...);
-        }
+           const Rest&... rest);
 
     //
-    // Methods for accessing Opts
+    // Construct Args from another Args and a list of
+    // name-value pairs:
+    // Args args(other,"Name1",val1,"Name2",val2,"Name3",val3,...);
     //
+    template <typename... Rest>
+    Args(const Args& other,
+         const Rest&... rest);
 
-    bool
-    defined(const Opt& opt) const;
 
-    void
-    add(const Opt& opt);
-    void
-    add(const Name& name, bool bval) { add(Opt(name,bval)); }
-    void
-    add(const Name& name, int ival) { add(Opt(name,ival)); }
-    void
-    add(const Name& name, const std::string& sval) { add(Opt(name,sval)); }
-    void
-    add(const Name& name, Real rval) { add(Opt(name,rval)); }
+    //
+    //Args("Name") is equivalent to Args("Name",true).
+    //
+    Args(const char* ostring);
+    Args(const std::string& ostring);
 
-    void
-    add(const Opt& opt1, 
-        const Opt& opt2,
-        const Opt& opt3 = Opt::Null(), 
-        const Opt& opt4 = Opt::Null());
+    //
+    // Copy and move constructors and assignment
+    //
+    Args(const Args& other);
+    Args(Args&& other);
+    Args&
+    operator=(const Args& other);
+    Args&
+    operator=(Args&& other);
 
+
+    //
+    // Add a named value
+    //
+    void
+    add(const Name& name, bool bval) { add(Val(name,bval)); }
+    void
+    add(const Name& name, int ival) { add(Val(name,ival)); }
+    void
+    add(const Name& name, const std::string& sval) { add(Val(name,sval)); }
+    void
+    add(const Name& name, Real rval) { add(Val(name,rval)); }
     void
     add(const char* ostring);
 
-    const Opt&
-    get(const Name& name) const;
+    //
+    // Check if a specific name is defined in this Args instance
+    //
+    bool
+    defined(const Name& name) const;
 
     //
-    // Methods for getting fields of a specific Opt
+    // Methods for getting values of named arguments
     //
 
+    // Get value of bool-type argument, throws if not defined
     bool
     getBool(const Name& name) const;
+    // Get value of bool-type argument, returns default_val if not defined
     bool
     getBool(const Name& name, bool default_val) const;
 
+    // Get value of string-type argument, throws if not defined
     const std::string&
     getString(const Name& name) const;
+    // Get value of string-type argument, returns default_val if not defined
     const std::string&
     getString(const Name& name, const std::string& default_val) const;
 
+    // Get value of int-type argument, throws if not defined
     int
     getInt(const Name& name) const;
+    // Get value of int-type argument, returns default_val if not defined
     int
     getInt(const Name& name, int default_val) const;
 
+    // Get value of Real-type argument, throws if not defined
     Real
     getReal(const Name& name) const;
+    // Get value of Real-type argument, returns default_val if not defined
     Real
     getReal(const Name& name, Real default_val) const;
 
-    //
-    // Iteration
-    //
+    // Add contents of other to this
+    Args&
+    operator+=(const Args& other);
 
-    iterator
-    begin() { return opts_.begin(); }
-    iterator
-    end() { return opts_.end(); }
-
-    const_iterator
-    begin() const { return opts_.begin(); }
-    const_iterator
-    end() const { return opts_.end(); }
-
-    const_iterator
-    cbegin() const { return opts_.begin(); }
-    const_iterator
-    cend() const { return opts_.end(); }
-
-    OptSet&
-    operator+=(const OptSet& other);
-    OptSet&
-    operator&=(const OptSet& other) { return operator+=(other); }
-
+    // Check if this is the global Args object
     bool
-    isGlobal() const { return (this == &GlobalOpts()); }
+    isGlobal() const { return (this == &Global()); }
 
-    static OptSet&
-    GlobalOpts()
+    // Access the global Args object
+    static Args&
+    Global()
         {
-        static OptSet gos_;
+        static Args gos_;
         return gos_;
         }
 
     private:
 
     ///////////////
-
-    storage_type opts_;
-
+    storage_type vals_;
     ///////////////
-
-    OptSet(bool isGlobal);
 
     void
     processString(std::string ostring);
@@ -254,21 +148,20 @@ class OptSet
     void
     addByString(std::string ostring);
 
-    template <typename T, typename... Args>
+    template <typename T, typename... Rest>
     void
     initialize(const char* name1, 
                const T& t1, 
-               const Args&... rest)
+               const Rest&... rest)
         {
-        //std::cout << "Adding " << name1 << "=" << t1 << std::endl;
-        add(Opt(name1,t1));
+        add(Val(name1,t1));
         initialize(rest...);
         }
 
-    template <typename... Args>
+    template <typename... Rest>
     void
-    initialize(const OptSet& other,
-               const Args&... rest)
+    initialize(const Args& other,
+               const Rest&... rest)
         {
         operator+=(other);
         initialize(rest...);
@@ -277,70 +170,131 @@ class OptSet
     void
     initialize() { }
 
+    void
+    add(const Val& v);
+
+    const Val&
+    get(const Name& name) const;
+
+    friend std::ostream& 
+    operator<<(std::ostream & s, const Val& v);
+
+    friend std::ostream& 
+    operator<<(std::ostream & s, const Args& args);
+
+    struct Val
+        {
+        enum Type { Boolean, Numeric, String, None };
+
+        Val();
+
+        Val(const char* name);
+
+        Val(const Name& name);
+
+        Val(const Name& name, bool bval);
+
+        Val(const Name& name, const char* sval);
+        Val(const Name& name, const std::string& sval);
+
+        Val(const Name& name, int ival);
+
+        Val(const Name& name, Real rval);
+
+        //
+        // Accessor methods
+        //
+
+        const Name&
+        name() const { return name_; }
+
+        bool
+        boolVal() const { assertType(Boolean); return bool(rval_); }
+
+        const std::string&
+        stringVal() const { assertType(String); return sval_; }
+
+        int
+        intVal() const { assertType(Numeric); return int(rval_); }
+
+        Real
+        realVal() const { assertType(Numeric); return rval_; }
+
+        explicit operator bool() const { return valid(); }
+
+        bool
+        valid() const { return type_ != None; }
+
+        Type
+        type() const { return type_; }
+
+        private:
+
+        /////////////////
+        Name name_;
+        Type type_;
+        std::string sval_;
+        Real rval_;
+        /////////////////
+
+        void
+        assertType(Type t) const;
+
+        };
+
+    public:
+    
+    //
+    // Deprecated operator&= method. Use operator+= instead.
+    //
+    Args&
+    operator&=(const Args& other) { return operator+=(other); }
+
     };
 
-OptSet
-operator+(const Opt& opt1, const Opt& opt2);
 
-OptSet
-operator+(OptSet oset, const Opt& opt);
+template <typename T, typename... Rest>
+Args::
+Args(const char* name1, 
+       const T& t1, 
+       const Rest&... rest)
+    {
+    initialize(name1,t1,rest...);
+    }
 
-OptSet&
-operator+=(OptSet& oset, const Opt& opt);
+template <typename... Rest>
+Args::
+Args(const Args& other,
+     const Rest&... rest)
+    {
+    initialize(other,rest...);
+    }
 
-OptSet
-operator+(OptSet oset, const OptSet& other);
+Args
+operator+(Args args, const Args& other);
 
-OptSet
-operator+(const Opt& opt, OptSet oset);
+Args
+operator+(Args args, const char* ostring);
 
-OptSet
-operator+(const Opt& opt, const char* ostring);
+Args
+operator+(const char* ostring, Args args);
 
-OptSet
-operator+(const char* ostring, const Opt& opt);
 
-OptSet
-operator+(OptSet oset, const char* ostring);
 
-OptSet
-operator+(const char* ostring, OptSet oset);
 
-///////////
 
-OptSet inline
-operator&(const Opt& opt1, const Opt& opt2) { return opt1+opt2; }
+//
+// Deprecated operator& methods. Use operator+ methods instead.
+//
 
-OptSet inline
-operator&(OptSet oset, const Opt& opt) { return oset + opt; }
+Args inline
+operator&(Args args, const Args& other) { return args + other; }
 
-inline 
-OptSet&
-operator&=(OptSet& oset, const Opt& opt) { return oset += opt; }
+Args inline
+operator&(Args args, const char* ostring) { return args + ostring; }
 
-OptSet inline
-operator&(OptSet oset, const OptSet& other) { return oset + other; }
-
-OptSet inline
-operator&(const Opt& opt, OptSet oset) { return opt + oset; }
-
-OptSet inline
-operator&(const Opt& opt, const char* ostring) { return opt + ostring; }
-
-OptSet inline
-operator&(const char* ostring, const Opt& opt) { return ostring + opt; }
-
-OptSet inline
-operator&(OptSet oset, const char* ostring) { return oset + ostring; }
-
-OptSet inline
-operator&(const char* ostring, OptSet oset) { return ostring + oset; }
-
-std::ostream& 
-operator<<(std::ostream & s, const Opt& opt);
-
-std::ostream& 
-operator<<(std::ostream & s, const OptSet& oset);
+Args inline
+operator&(const char* ostring, Args args) { return ostring + args; }
 
 }; //namespace itensor
 
