@@ -246,11 +246,17 @@ class Global
         static bool debug4_ = false;
         return debug4_;
         }
-    //Global option set
-    static OptSet&
-    opts()
+    //Global named arguments
+    static Args&
+    args()
         {
-        return OptSet::Global();
+        return Args::Global();
+        }
+    //Global named args (deprecated)
+    static Args&
+    opts() //deprecated, use Global::args() instead
+        {
+        return args();
         }
     //Shortcut for adding global Opts,
     //so you don't have to write Global::opts().add(Opt("MyOption",3));
