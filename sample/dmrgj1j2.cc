@@ -1,6 +1,6 @@
 #include "core.h"
 #include "sites/spinhalf.h"
-#include "hams/J1J2Chain.h"
+#include "autompo.h"
 
 using namespace std;
 using namespace itensor;
@@ -24,7 +24,20 @@ int main(int argc, char* argv[])
     // IQTensors, tensors whose indices are sorted
     // with respect to quantum numbers
     //
-    IQMPO H = J1J2Chain(sites,Opt("J2",J2));
+    AutoMPO a(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        a += 0.5,"S+",j,"S-",j+1;
+        a += 0.5,"S-",j,"S+",j+1;
+        a +=     "Sz",j,"Sz",j+1;
+        }
+    for(int j = 1; j < N-1; ++j)
+        {
+        a += 0.5*J2,"S+",j,"S-",j+2;
+        a += 0.5*J2,"S-",j,"S+",j+2;
+        a +=     J2,"Sz",j,"Sz",j+2;
+        }
+    IQMPO H = a;
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.

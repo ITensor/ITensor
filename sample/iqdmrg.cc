@@ -33,7 +33,7 @@ main(int argc, char* argv[])
         a += 0.5,"S-",j,"S+",j+1;
         a +=     "Sz",j,"Sz",j+1;
         }
-    IQMPO H(a);
+    IQMPO H = a;
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.

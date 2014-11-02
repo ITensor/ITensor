@@ -32,6 +32,9 @@ int main(int argc, char* argv[])
     //
     Hubbard sites(N);
 
+    //
+    // Create the Hamiltonian using AutoMPO
+    //
     AutoMPO a(sites);
     for(int i = 1; i <= N; ++i) 
         {
@@ -54,7 +57,7 @@ int main(int argc, char* argv[])
         a += -t2,"Cdagdn",b,"Cdn",b+2;
         a += +t2,"Cdn",b,"Cdagdn",b+2;
         }
-    IQMPO H(a);
+    IQMPO H = a;
 
     //
     // Set the initial wavefunction matrix product state
@@ -90,7 +93,7 @@ int main(int argc, char* argv[])
     //
     // Begin the DMRG calculation
     //
-    Real En = dmrg(psi,H,sweeps,Opt("Quiet",quiet));
+    Real En = dmrg(psi,H,sweeps,{"Quiet",quiet});
 
     //
     // Measure spin densities

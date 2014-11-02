@@ -337,10 +337,8 @@ class AutoMPO
     const std::vector<HTerm>&
     terms() const { return terms_; }
 
-    explicit
     operator MPO() const { return toMPO<ITensor>(*this); }
 
-    explicit
     operator IQMPO() const { return toMPO<IQTensor>(*this); }
 
     template <typename T>

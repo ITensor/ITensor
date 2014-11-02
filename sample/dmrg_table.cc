@@ -1,8 +1,8 @@
 #include "core.h"
 #include "sites/spinhalf.h"
 #include "sites/spinone.h"
-#include "hams/Heisenberg.h"
 #include "input.h"
+#include "autompo.h"
 
 using namespace std;
 using namespace itensor;
@@ -18,7 +18,7 @@ using namespace itensor;
 int main(int argc, char* argv[])
     {
     //Parse the input file
-    if(argc != 2) { printfln("Usage: %s inputfile",argv[0]); return 0; }
+    if(argc < 2) { printfln("Usage: %s inputfile",argv[0]); return 0; }
     InputGroup basic(argv[1],"basic");
 
     //Read in individual parameters from the input file
@@ -47,7 +47,18 @@ int main(int argc, char* argv[])
     //SpinHalf sites(N);
     SpinOne sites(N);
 
-    MPO H = Heisenberg(sites);
+    //
+    // Use the AutoMPO feature to create the 
+    // next-neighbor Heisenberg model
+    //
+    AutoMPO a(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        a += 0.5,"S+",j,"S-",j+1;
+        a += 0.5,"S-",j,"S+",j+1;
+        a +=     "Sz",j,"Sz",j+1;
+        }
+    MPO H = a;
 
     InitState initState(sites);
     for(int i = 1; i <= N; ++i) 
@@ -62,7 +73,7 @@ int main(int argc, char* argv[])
 
     printfln("Initial energy = %.5f",psiHphi(psi,H,psi));
 
-    Real En = dmrg(psi,H,sweeps,Opt("Quiet",quiet));
+    Real En = dmrg(psi,H,sweeps,{"Quiet",quiet});
 
     printfln("\nGround State Energy = %.10f",En);
 

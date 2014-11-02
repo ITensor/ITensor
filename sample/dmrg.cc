@@ -2,7 +2,6 @@
 #include "sites/spinhalf.h"
 #include "sites/spinone.h"
 #include "autompo.h"
-#include "cputime.h"
 
 using namespace std;
 using namespace itensor;
@@ -29,7 +28,7 @@ main(int argc, char* argv[])
         a += 0.5,"S-",j,"S+",j+1;
         a +=     "Sz",j,"Sz",j+1;
         }
-    MPO H(a);
+    MPO H = a;
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
@@ -67,7 +66,6 @@ main(int argc, char* argv[])
     //
     // Begin the DMRG calculation
     //
-    cpu_time cpu;
     Real En = dmrg(psi,H,sweeps,"Quiet");
 
     //
@@ -75,7 +73,6 @@ main(int argc, char* argv[])
     //
     printfln("\nGround State Energy = %.10f",En);
     printfln("\nUsing psiHphi = %.10f", psiHphi(psi,H,psi) );
-    std::cout << "cpu time used: " << cpu.sincemark() << std::endl;
 
     return 0;
     }
