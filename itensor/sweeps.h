@@ -164,13 +164,13 @@ class SweepSetter
         }
 
     SweepSetter& 
-    operator,(const Opt& opts)
+    operator,(const Args& args)
         { 
         checkStarted();
-        if(opts.defined("Repeat"))
+        if(args.defined("Repeat"))
             {
             if(j_ == 1) Error("No value to repeat");
-            for(int n = 1; n < opts.getInt("Repeat"); ++n, ++j_)
+            for(int n = 1; n < args.getInt("Repeat"); ++n, ++j_)
                 {
                 if(j_ > nsweep_) return *this;
                 v_[j_] = last_val_;
@@ -223,11 +223,11 @@ class SweepSetter
 struct RampM
     {
     RampM(int start_m, int end_m,
-          const OptSet& opts = Global::opts())
+          const Args& args = Global::args())
         :
         start_m_(start_m),
         end_m_(end_m),
-        nwarm_(opts.getInt("Warmup",-1))
+        nwarm_(args.getInt("Warmup",-1))
         { }
 
     int
@@ -250,11 +250,11 @@ struct RampM
 struct ExpM
     {
     ExpM(int start_m, int end_m,
-         const OptSet& opts = Global::opts())
+         const Args& args = Global::args())
         :
         start_m_(start_m),
         end_m_(end_m),
-        exp_base_(opts.getReal("ExpBase",2.))
+        exp_base_(args.getReal("ExpBase",2.))
         { }
 
     int
