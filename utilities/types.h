@@ -2,6 +2,7 @@
 #define __ITENSOR_TYPES_H_
 
 #include <complex>
+#include <limits>
 
 #define Foreach(X,Y) for(X : Y)
 
@@ -9,6 +10,10 @@ namespace itensor {
 
 using Real = double;
 using Complex = std::complex<Real>;
+
+#ifndef NAN
+#define NAN (std::numeric_limits<Real>::quiet_NaN())
+#endif
 
 };
 
