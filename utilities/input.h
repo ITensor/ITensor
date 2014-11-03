@@ -13,6 +13,7 @@
 #include "error.h"
 #include <limits>
 #include "types.h"
+#include "optional_ptr.h"
 
 namespace itensor {
 
@@ -104,10 +105,15 @@ class InputGroup
     file() const { return infile->file(); }
 
     // These versions return their value
-    int getInt(std::string s, int def = 0, const char* c = 0);
-    Real getReal(std::string s, Real def = NAN, const char* c = 0);
-    std::string getString(std::string s, std::string def = "", const char* c = 0);
-    bool getYesNo(std::string s, bool def = false, const char* c = 0);
+    int getInt(std::string s, int default_);
+    Real getReal(std::string s, Real default_);
+    std::string getString(std::string s, std::string default_);
+    bool getYesNo(std::string s, bool default_);
+
+    int getInt(std::string s);
+    Real getReal(std::string s);
+    std::string getString(std::string s);
+    bool getYesNo(std::string s);
 
 
     // The following go to s, and read into i,r,t, or yes, printing c.
@@ -132,11 +138,10 @@ class InputGroup
 
     private:
 
-    InputFile* infile;
+    optional_ptr<InputFile,std::shared_ptr<InputFile>> infile;
     InputGroup* parent;
     std::string name_;
-    bool quiet,
-         own_file_;
+    bool quiet;
 
     };
 
