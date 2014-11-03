@@ -164,13 +164,13 @@ class SweepSetter
         }
 
     SweepSetter& 
-    operator,(const Opt& opt)
+    operator,(const Opt& opts)
         { 
         checkStarted();
-        if(opt.name() == "Repeat")
+        if(opts.defined("Repeat"))
             {
             if(j_ == 1) Error("No value to repeat");
-            for(int n = 1; n < opt.intVal(); ++n, ++j_)
+            for(int n = 1; n < opts.getInt("Repeat"); ++n, ++j_)
                 {
                 if(j_ > nsweep_) return *this;
                 v_[j_] = last_val_;
