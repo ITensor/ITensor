@@ -463,26 +463,41 @@ class VectorRefNoLink : public VectorRef	// for fast Ref operations
     {
 public:
     VectorRefNoLink()  {}
-    void operator<<(const VectorRef &V)
-	{
-	store=V.Store(); length=V.Length(); stride=V.Stride(); scale=V.Scale();
-	}
-    void operator<<(const MatrixRef &M)
-	{
-	if(M.rowstride != M.ncols)
-	    _merror("bad call to VectorRefNoLink<<MatrixRef");
-	store=M.store; length=M.nrows*M.ncols; stride=1; scale=M.scale;
-	}
+    VectorRefNoLink(Real* sto, long len, long str = 1)
+        {
+        store = sto;
+        length = len;
+        stride = str;
+        scale = 1.0;
+        }
+    void 
+    operator<<(const VectorRef &V)
+        {
+        store=V.Store(); 
+        length=V.Length(); 
+        stride=V.Stride(); 
+        scale=V.Scale();
+        }
+    void 
+    operator<<(const MatrixRef &M)
+        {
+        if(M.rowstride != M.ncols)
+            _merror("bad call to VectorRefNoLink<<MatrixRef");
+        store=M.store; 
+        length=M.nrows*M.ncols; 
+        stride=1; 
+        scale=M.scale;
+        }
     void SetScale(Real a)
-	{ scale = a; }
+        { scale = a; }
     VectorRef & operator = (Real a)
-	{ return VectorRef::operator=(a); }
+        { return VectorRef::operator=(a); }
     VectorRef & operator = (const VectorRef &other)
-	{ return VectorRef::operator=(other); }
+        { return VectorRef::operator=(other); }
     VectorRef & operator = (const VectorVectorRes &other)
-	{ return VectorRef::operator=(other); }
+        { return VectorRef::operator=(other); }
     VectorRef & operator = (const MatrixVectorRes &other)
-	{ return VectorRef::operator=(other); }
+        { return VectorRef::operator=(other); }
     };
 
 std::ostream & operator << (std::ostream &s, const MatrixRef &a);
