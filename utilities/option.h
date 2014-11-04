@@ -72,13 +72,13 @@ class Args
     // Add a named value
     //
     void
-    add(const Name& name, bool bval) { add(Val(name,bval)); }
+    add(const Name& name, bool bval);
     void
-    add(const Name& name, int ival) { add(Val(name,ival)); }
+    add(const Name& name, int ival);
     void
-    add(const Name& name, const std::string& sval) { add(Val(name,sval)); }
+    add(const Name& name, const std::string& sval);
     void
-    add(const Name& name, Real rval) { add(Val(name,rval)); }
+    add(const Name& name, Real rval);
     void
     add(const char* ostring);
 
@@ -278,7 +278,6 @@ operator+(Args args, const char* ostring);
 
 Args
 operator+(const char* ostring, Args args);
-
 
 
 

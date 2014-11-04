@@ -163,6 +163,15 @@ operator=(Args&& other)
     return *this;
     }
 
+void Args::
+add(const Name& name, bool bval) { add({name,bval}); }
+void Args::
+add(const Name& name, int ival) { add({name,ival}); }
+void Args::
+add(const Name& name, const std::string& sval) { add({name,sval}); }
+void Args::
+add(const Name& name, Real rval) { add({name,rval}); }
+
 bool Args::
 defined(const Name& name) const
     {
@@ -179,20 +188,18 @@ defined(const Name& name) const
 
 
 void Args::
-add(const Val& opt)
+add(const Val& val)
     {
-    if(!opt) return;
+    if(!val) return;
     for(auto& x : vals_)
-        {
         //If already defined, replace
-        if(x.name() == opt.name()) 
+        if(x.name() == val.name()) 
             {
-            x = opt;
+            x = val;
             return;
             }
-        }
     //Otherwise add to the end
-    vals_.push_back(opt);
+    vals_.push_back(val);
     }
 
 void Args::
@@ -226,10 +233,8 @@ getBool(const Name& name) const
 bool Args::
 getBool(const Name& name, bool default_value) const
     {
-    if(defined(name))
-        return get(name).boolVal();
-    else
-        return default_value;
+    if(defined(name)) return get(name).boolVal();
+    return default_value;
     }
 
  
@@ -242,10 +247,8 @@ getString(const Name& name) const
 const string& Args::
 getString(const Name& name, const string& default_value) const
     {
-    if(defined(name))
-        return get(name).stringVal();
-    else
-        return default_value;
+    if(defined(name)) return get(name).stringVal();
+    return default_value;
     }
 
 int Args::
@@ -257,10 +260,8 @@ getInt(const Name& name) const
 int Args::
 getInt(const Name& name, int default_value) const
     {
-    if(defined(name))
-        return get(name).intVal();
-    else
-        return default_value;
+    if(defined(name)) return get(name).intVal();
+    return default_value;
     }
 
 Real Args::
@@ -272,10 +273,8 @@ getReal(const Name& name) const
 Real Args::
 getReal(const Name& name, Real default_value) const
     {
-    if(defined(name))
-        return get(name).realVal();
-    else
-        return default_value;
+    if(defined(name)) return get(name).realVal();
+    return default_value;
     }
 
 void Args::
@@ -283,7 +282,7 @@ processString(string ostring)
     {
     ostring.erase(std::remove(ostring.begin(), ostring.end(),' '), ostring.end());
 
-    size_t found = ostring.find_first_of(',');
+    auto found = ostring.find_first_of(',');
     while(found != std::string::npos)
         {
         addByString(ostring.substr(0,found));
@@ -299,8 +298,7 @@ addByString(string ostring)
     {
     if(ostring.size() < 1) return;
 
-    const
-    size_t found = ostring.find_first_of('=');
+    auto found = ostring.find_first_of('=');
 
     if(found == std::string::npos)
         {
@@ -334,20 +332,9 @@ addByString(string ostring)
                 }
             }
         
-        if(val == "false")
-            {
-            add(Val(name,false));
-            }
-        else
-        if(val == "true")
-            {
-            add(Val(name,true));
-            }
-        else
-            {
-            add(Val(name,val));
-            }
-
+        if(val == "false")     add(Val(name,false));
+        else if(val == "true") add(Val(name,true));
+        else                   add(Val(name,val));
         }
     }
 
@@ -387,23 +374,12 @@ operator+(const char* ostring, Args args)
 ostream& 
 operator<<(ostream & s, const Args& args)
     {
-
-    if(args.isGlobal())
-        {
-        s << "/- Global Args -------\n";
-        }
-    else
-        {
-        s << "/- Args --------------\n";
-        s << "(only showing overrides of global opts)\n";
-        }
+    if(args.isGlobal()) s << "Global Args:\n";
+    else                s << "Args: (only showing overrides of global args)\n";
 
     for(const auto& opt : args.vals_)
-        {
         s << opt << "\n";
-        }
 
-    s <<    "\\-----------------------" << endl;
     return s;
     }
 
