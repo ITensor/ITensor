@@ -56,70 +56,45 @@ struct SiteTerm
     int i;
     Complex coef;
 
-    SiteTerm() : i(-1), coef(0) { }
+    SiteTerm();
 
-    SiteTerm(const std::string& op_,
-             int i_,
-             Real coef_ = 1)
-        :
-        op(op_),
-        i(i_),
-        coef(coef_)
-        { }
+    SiteTerm(const std::string& op,
+             int i,
+             Real coef = 1);
 
     bool
-    operator==(const SiteTerm& other) const
-        {
-        return (op == other.op && i == other.i && abs(coef-other.coef) < 1E-12);
-        }
+    operator==(const SiteTerm& other) const;
+
     bool
     operator!=(const SiteTerm& other) const { return !operator==(other); }
 
     bool
-    proportialTo(const SiteTerm& other) const
-        {
-        return (op == other.op && i == other.i);
-        }
-
+    proportialTo(const SiteTerm& other) const;
     };
 
-bool inline
-isFermionic(const SiteTerm& st)
-    {
-    if(!st.op.empty() && st.op.front() == 'C') return true;
-    return false;
-    }
+bool
+isFermionic(const SiteTerm& st);
 
 struct HTerm
     {
     std::vector<SiteTerm> ops;
 
-    HTerm() { }
+    HTerm();
 
-    HTerm(const std::string& op1_,
-          int i1_,
-          Real x_ = 1)
-        { 
-        add(op1_,i1_,x_);
-        }
+    HTerm(const std::string& op1,
+          int i1,
+          Real x = 1);
 
     HTerm(const std::string& op1_,
           int i1_,
           const std::string& op2_,
           int i2_,
-          Real x_ = 1)
-        { 
-        add(op1_,i1_,x_);
-        add(op2_,i2_);
-        }
+          Real x_ = 1);
 
     void
     add(const std::string& op,
         int i,
-        Real x = 1)
-        {
-        ops.emplace_back(op,i,x);
-        }
+        Real x = 1);
 
     explicit
     operator bool() const { return !ops.empty(); }
@@ -129,73 +104,33 @@ struct HTerm
 
     const SiteTerm&
     first() const { return ops.front(); }
+
     const SiteTerm&
     last() const { return ops.back(); }
 
     bool
-    startsOn(int i) const 
-        { 
-        if(ops.empty()) Error("No operators in HTerm");
-        return first().i == i; 
-        }
+    startsOn(int i) const;
+
     bool
-    endsOn(int i) const 
-        { 
-        if(ops.empty()) Error("No operators in HTerm");
-        return last().i == i; 
-        }
+    endsOn(int i) const;
+
     bool
-    contains(int i) const 
-        { 
-        if(ops.empty()) Error("No operators in HTerm");
-        return i >= first().i && i <= last().i; 
-        }
+    contains(int i) const;
 
     Complex
-    coef() const
-        {
-        if(Nops() == 0) return 0;
-        Complex c = 1;
-        for(const auto& op : ops) c *= op.coef;
-        return c;
-        }
+    coef() const;
 
     HTerm&
-    operator*=(Real x)
-        {
-        if(Nops() == 0) Error("No operators in HTerm");
-        ops.front().coef *= x;
-        return *this;
-        }
+    operator*=(Real x);
 
     HTerm&
-    operator*=(Complex x)
-        {
-        if(Nops() == 0) Error("No operators in HTerm");
-        ops.front().coef *= x;
-        return *this;
-        }
+    operator*=(Complex x);
 
     bool
-    operator==(const HTerm& other) const
-        {
-        if(Nops() != other.Nops()) return false;
-
-        for(size_t n = 0; n <= ops.size(); ++n)
-        if(ops[n] != other.ops.at(n)) 
-            {
-            return false;
-            }
-
-        return true;
-        }
+    operator==(const HTerm& other) const;
 
     bool
-    operator!=(const HTerm& other) const
-        {
-        return !operator==(other);
-        }
-
+    operator!=(const HTerm& other) const;
     };
 
 class AutoMPO
@@ -205,9 +140,8 @@ class AutoMPO
 
     enum State { New, Op };
 
-    struct Accumulator
+    class Accumulator
         {
-        private:
         AutoMPO* pa;
         State state;
         Complex coef;
@@ -215,114 +149,36 @@ class AutoMPO
         public:
         HTerm term;
 
-        Accumulator(AutoMPO* pa_, 
-                    Real x_)
-            :
-            pa(pa_),
-            state(New),
-            coef(x_)
-            {}
+        Accumulator(AutoMPO* pa, 
+                    Real x);
 
         Accumulator(AutoMPO* pa_, 
-                    Complex x_)
-            :
-            pa(pa_),
-            state(New),
-            coef(x_)
-            {}
+                    Complex x);
 
-        Accumulator(AutoMPO* pa_)
-            : 
-            Accumulator(pa_,1)
-            {}
+        Accumulator(AutoMPO* pa);
 
+        Accumulator(AutoMPO* pa, 
+                    const char* opname);
 
-        Accumulator(AutoMPO* pa_, 
-                    const char* op_)
-            :
-            pa(pa_),
-            state(Op),
-            coef(1),
-            op(op_)
-            {}
+        Accumulator(AutoMPO* pa, 
+                    const std::string& opname);
 
-        Accumulator(AutoMPO* pa_, 
-                    const std::string& op_)
-            :
-            pa(pa_),
-            state(Op),
-            coef(1),
-            op(op_)
-            {}
-
-
-        ~Accumulator()
-            {
-            if(state==Op) Error("Invalid input to AutoMPO (missing site number?)");
-            term *= coef;
-            pa->add(term);
-            }
+        ~Accumulator();
         
         Accumulator&
-        operator,(Real x)
-            {
-            coef *= x;
-            return *this;
-            }
+        operator,(Real x);
 
         Accumulator&
-        operator,(Complex x)
-            {
-            coef *= x;
-            return *this;
-            }
+        operator,(Complex x);
 
         Accumulator&
-        operator,(int i)
-            {
-            if(state==Op)
-                {
-                term.add(op,i);
-                state = New;
-                op = "";
-                }
-            else
-                {
-                coef *= Real(i);
-                }
-            return *this;
-            }
+        operator,(int i);
 
         Accumulator&
-        operator,(const char* op_)
-            {
-            if(state == New)
-                {
-                op = op_;
-                state = Op;
-                }
-            else
-                {
-                Error("Invalid input to AutoMPO (two strings in a row?)");
-                }
-            return *this;
-            }
+        operator,(const char* op_);
 
         Accumulator&
-        operator,(const std::string& op_)
-            {
-            if(state == New)
-                {
-                op = op_;
-                state = Op;
-                }
-            else
-                {
-                Error("Invalid input to AutoMPO (two strings in a row?)");
-                }
-            return *this;
-            }
-
+        operator,(const std::string& op_);
         };
 
     public:
@@ -343,16 +199,13 @@ class AutoMPO
 
     template <typename T>
     Accumulator
-    operator+=(T x)
-        {
-        return Accumulator(this,x);
-        }
+    operator+=(T x) { return Accumulator(this,x); }
 
     void
-    add(const HTerm& t)
-        {
-        if(abs(t.coef()) != 0) terms_.push_back(t);
-        }
+    add(const HTerm& t) { if(abs(t.coef()) != 0) terms_.push_back(t); }
+
+    void
+    reset() { terms_.clear(); }
 
     };
 

@@ -22,6 +22,249 @@ isReal(const Complex& z) { return z.imag() == 0; }
 bool
 isApproxReal(const Complex& z, Real epsilon = 1E-12) { return fabs(z.imag()) < epsilon; }
 
+SiteTerm::
+SiteTerm() : i(-1), coef(0) { }
+
+SiteTerm::
+SiteTerm(const std::string& op_,
+         int i_,
+         Real coef_)
+    :
+    op(op_),
+    i(i_),
+    coef(coef_)
+    { }
+
+bool SiteTerm::
+operator==(const SiteTerm& other) const
+    {
+    return (op == other.op && i == other.i && abs(coef-other.coef) < 1E-12);
+    }
+
+bool SiteTerm::
+proportialTo(const SiteTerm& other) const
+    {
+    return (op == other.op && i == other.i);
+    }
+
+bool
+isFermionic(const SiteTerm& st)
+    {
+    if(!st.op.empty() && st.op.front() == 'C') return true;
+    return false;
+    }
+
+HTerm::
+HTerm() { }
+
+HTerm::
+HTerm(const std::string& op1_,
+      int i1_,
+      Real x_)
+    { 
+    add(op1_,i1_,x_);
+    }
+
+HTerm::
+HTerm(const std::string& op1_,
+      int i1_,
+      const std::string& op2_,
+      int i2_,
+      Real x_)
+    { 
+    add(op1_,i1_,x_);
+    add(op2_,i2_);
+    }
+
+void HTerm::
+add(const std::string& op,
+    int i,
+    Real x)
+    {
+    ops.emplace_back(op,i,x);
+    }
+
+bool HTerm::
+startsOn(int i) const 
+    { 
+    if(ops.empty()) Error("No operators in HTerm");
+    return first().i == i; 
+    }
+
+bool HTerm::
+endsOn(int i) const 
+    { 
+    if(ops.empty()) Error("No operators in HTerm");
+    return last().i == i; 
+    }
+
+bool HTerm::
+contains(int i) const 
+    { 
+    if(ops.empty()) Error("No operators in HTerm");
+    return i >= first().i && i <= last().i; 
+    }
+
+Complex HTerm::
+coef() const
+    {
+    if(Nops() == 0) return 0;
+    Complex c = 1;
+    for(const auto& op : ops) c *= op.coef;
+    return c;
+    }
+
+HTerm& HTerm::
+operator*=(Real x)
+    {
+    if(Nops() == 0) Error("No operators in HTerm");
+    ops.front().coef *= x;
+    return *this;
+    }
+
+HTerm& HTerm::
+operator*=(Complex x)
+    {
+    if(Nops() == 0) Error("No operators in HTerm");
+    ops.front().coef *= x;
+    return *this;
+    }
+
+bool HTerm::
+operator==(const HTerm& other) const
+    {
+    if(Nops() != other.Nops()) return false;
+
+    for(size_t n = 0; n <= ops.size(); ++n)
+    if(ops[n] != other.ops.at(n)) 
+        {
+        return false;
+        }
+
+    return true;
+    }
+
+bool HTerm::
+operator!=(const HTerm& other) const
+    {
+    return !operator==(other);
+    }
+
+
+AutoMPO::Accumulator::
+Accumulator(AutoMPO* pa_, 
+            Real x_)
+    :
+    pa(pa_),
+    state(New),
+    coef(x_)
+    {}
+
+AutoMPO::Accumulator::
+Accumulator(AutoMPO* pa_, 
+            Complex x_)
+    :
+    pa(pa_),
+    state(New),
+    coef(x_)
+    {}
+
+AutoMPO::Accumulator::
+Accumulator(AutoMPO* pa_)
+    : 
+    Accumulator(pa_,1)
+    {}
+
+
+AutoMPO::Accumulator::
+Accumulator(AutoMPO* pa_, 
+            const char* op_)
+    :
+    pa(pa_),
+    state(Op),
+    coef(1),
+    op(op_)
+    {}
+
+AutoMPO::Accumulator::
+Accumulator(AutoMPO* pa_, 
+            const std::string& op_)
+    :
+    pa(pa_),
+    state(Op),
+    coef(1),
+    op(op_)
+    {}
+
+
+AutoMPO::Accumulator::
+~Accumulator()
+    {
+    if(state==Op) Error("Invalid input to AutoMPO (missing site number?)");
+    term *= coef;
+    pa->add(term);
+    }
+    
+
+AutoMPO::Accumulator& AutoMPO::Accumulator::
+operator,(Real x)
+    {
+    coef *= x;
+    return *this;
+    }
+
+AutoMPO::Accumulator& AutoMPO::Accumulator::
+operator,(Complex x)
+    {
+    coef *= x;
+    return *this;
+    }
+
+AutoMPO::Accumulator& AutoMPO::Accumulator::
+operator,(int i)
+    {
+    if(state==Op)
+        {
+        term.add(op,i);
+        state = New;
+        op = "";
+        }
+    else
+        {
+        coef *= Real(i);
+        }
+    return *this;
+    }
+
+AutoMPO::Accumulator& AutoMPO::Accumulator::
+operator,(const char* op_)
+    {
+    if(state == New)
+        {
+        op = op_;
+        state = Op;
+        }
+    else
+        {
+        Error("Invalid input to AutoMPO (two strings in a row?)");
+        }
+    return *this;
+    }
+
+AutoMPO::Accumulator& AutoMPO::Accumulator::
+operator,(const std::string& op_)
+    {
+    if(state == New)
+        {
+        op = op_;
+        state = Op;
+        }
+    else
+        {
+        Error("Invalid input to AutoMPO (two strings in a row?)");
+        }
+    return *this;
+    }
 
 /*
 MPO convention:
