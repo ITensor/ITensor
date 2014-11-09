@@ -152,7 +152,7 @@ class AutoMPO
         Accumulator(AutoMPO* pa, 
                     Real x);
 
-        Accumulator(AutoMPO* pa_, 
+        Accumulator(AutoMPO* pa, 
                     Complex x);
 
         Accumulator(AutoMPO* pa);
@@ -175,10 +175,10 @@ class AutoMPO
         operator,(int i);
 
         Accumulator&
-        operator,(const char* op_);
+        operator,(const char* op);
 
         Accumulator&
-        operator,(const std::string& op_);
+        operator,(const std::string& op);
         };
 
     public:
@@ -217,7 +217,6 @@ operator<<(std::ostream& s, const HTerm& t);
 
 std::ostream& 
 operator<<(std::ostream& s, const AutoMPO& a);
-
 
 };
 
