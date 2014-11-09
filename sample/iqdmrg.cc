@@ -3,7 +3,6 @@
 #include "sites/spinone.h"
 #include "autompo.h"
 
-using namespace std;
 using namespace itensor;
 
 int 
@@ -26,14 +25,14 @@ main(int argc, char* argv[])
     // which automatically tracks quantum
     // number information.
     //
-    AutoMPO a(sites);
+    AutoMPO ampo(sites);
     for(int j = 1; j < N; ++j)
         {
-        a += 0.5,"S+",j,"S-",j+1;
-        a += 0.5,"S-",j,"S+",j+1;
-        a +=     "Sz",j,"Sz",j+1;
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
         }
-    IQMPO H = a;
+    auto H = IQMPO(ampo);
 
     // Set the initial wavefunction matrix product state
     // to be a Neel state.
@@ -71,12 +70,12 @@ main(int argc, char* argv[])
     //
     // Begin the DMRG calculation
     //
-    Real En = dmrg(psi,H,sweeps,"Quiet");
+    auto energy = dmrg(psi,H,sweeps,"Quiet");
 
     //
     // Print the final energy reported by DMRG
     //
-    printfln("\nGround State Energy = %.10f",En);
+    printfln("\nGround State Energy = %.10f",energy);
     printfln("\nUsing psiHphi = %.10f", psiHphi(psi,H,psi) );
 
     println("\nTotal QN of Ground State = ",totalQN(psi));

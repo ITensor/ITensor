@@ -4,7 +4,6 @@
 #include "input.h"
 #include "autompo.h"
 
-using namespace std;
 using namespace itensor;
 
 //
@@ -18,15 +17,15 @@ using namespace itensor;
 int main(int argc, char* argv[])
     {
     //Parse the input file
-    if(argc < 2) { printfln("Usage: %s inputfile",argv[0]); return 0; }
+    if(argc < 2) { printfln("Usage: %s inputfile_dmrg_table",argv[0]); return 0; }
     InputGroup basic(argv[1],"basic");
 
     //Read in individual parameters from the input file
-    const int N = basic.getInt("N");
-    const int nsweeps = basic.getInt("nsweeps");
+    auto N = basic.getInt("N");
+    auto nsweeps = basic.getInt("nsweeps");
     //second argument to getXXX methods is a default
     //in case parameter not provided in input file
-    const bool quiet = basic.getYesNo("quiet",true);
+    auto quiet = basic.getYesNo("quiet",true);
 
     //
     // Read the sweeps parameters from a table.
@@ -51,31 +50,29 @@ int main(int argc, char* argv[])
     // Use the AutoMPO feature to create the 
     // next-neighbor Heisenberg model
     //
-    AutoMPO a(sites);
+    AutoMPO ampo(sites);
     for(int j = 1; j < N; ++j)
         {
-        a += 0.5,"S+",j,"S-",j+1;
-        a += 0.5,"S-",j,"S+",j+1;
-        a +=     "Sz",j,"Sz",j+1;
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
         }
-    MPO H = a;
+    auto H = MPO(ampo);
 
     InitState initState(sites);
     for(int i = 1; i <= N; ++i) 
         {
-        if(i%2 == 1)
-            initState.set(i,"Up");
-        else
-            initState.set(i,"Dn");
+        if(i%2 == 1) initState.set(i,"Up");
+        else         initState.set(i,"Dn");
         }
 
     MPS psi(initState);
 
     printfln("Initial energy = %.5f",psiHphi(psi,H,psi));
 
-    Real En = dmrg(psi,H,sweeps,{"Quiet",quiet});
+    auto energy = dmrg(psi,H,sweeps,{"Quiet",quiet});
 
-    printfln("\nGround State Energy = %.10f",En);
+    printfln("\nGround State Energy = %.10f",energy);
 
     return 0;
     }

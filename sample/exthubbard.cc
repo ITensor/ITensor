@@ -2,19 +2,16 @@
 #include "sites/hubbard.h"
 #include "autompo.h"
 
-using namespace std;
 using namespace itensor;
 
 int main(int argc, char* argv[])
     {
     //Parse the input file
-    if(argc != 2) { printfln("Usage: %s inputfile",argv[0]); return 0; }
+    if(argc != 2) { printfln("Usage: %s inputfile_exthubbard",argv[0]); return 0; }
     InputGroup basic(argv[1],"basic");
 
-    int N = 0;
-    basic.GetIntM("N",N); //the 'M' stands for mandatory
-    int Npart = N; //number of particles, default is N (half filling)
-    basic.GetInt("Npart",Npart);
+    auto N = basic.getInt("N");
+    auto Npart = basic.getInt("Npart",N); //number of particles, default is N (half filling)
 
     auto nsweeps = basic.getInt("nsweeps");
     auto t1 = basic.getReal("t1",1);
@@ -35,29 +32,29 @@ int main(int argc, char* argv[])
     //
     // Create the Hamiltonian using AutoMPO
     //
-    AutoMPO a(sites);
+    AutoMPO ampo(sites);
     for(int i = 1; i <= N; ++i) 
         {
-        a += U,"Nupdn",i;
+        ampo += U,"Nupdn",i;
         }
     for(int b = 1; b < N; ++b)
         {
         //Note the + signs for the Hermitian conjugate terms
-        a += -t1,"Cdagup",b,"Cup",b+1;
-        a += +t1,"Cup",b,"Cdagup",b+1;
-        a += -t1,"Cdagdn",b,"Cdn",b+1;
-        a += +t1,"Cdn",b,"Cdagdn",b+1;
+        ampo += -t1,"Cdagup",b,"Cup",b+1;
+        ampo += +t1,"Cup",b,"Cdagup",b+1;
+        ampo += -t1,"Cdagdn",b,"Cdn",b+1;
+        ampo += +t1,"Cdn",b,"Cdagdn",b+1;
 
-        a += V1,"Ntot",b,"Ntot",b+1;
+        ampo += V1,"Ntot",b,"Ntot",b+1;
         }
     for(int b = 1; b < N-1; ++b)
         {
-        a += -t2,"Cdagup",b,"Cup",b+2;
-        a += +t2,"Cup",b,"Cdagup",b+2;
-        a += -t2,"Cdagdn",b,"Cdn",b+2;
-        a += +t2,"Cdn",b,"Cdagdn",b+2;
+        ampo += -t2,"Cdagup",b,"Cup",b+2;
+        ampo += +t2,"Cup",b,"Cdagup",b+2;
+        ampo += -t2,"Cdagdn",b,"Cdn",b+2;
+        ampo += +t2,"Cdn",b,"Cdagdn",b+2;
         }
-    IQMPO H = a;
+    auto H = IQMPO(ampo);
 
     //
     // Set the initial wavefunction matrix product state
@@ -93,7 +90,7 @@ int main(int argc, char* argv[])
     //
     // Begin the DMRG calculation
     //
-    Real En = dmrg(psi,H,sweeps,{"Quiet",quiet});
+    auto energy = dmrg(psi,H,sweeps,{"Quiet",quiet});
 
     //
     // Measure spin densities
@@ -124,7 +121,7 @@ int main(int argc, char* argv[])
     //
     // Print the final energy reported by DMRG
     //
-    printfln("\nGround State Energy = %.10f",En);
+    printfln("\nGround State Energy = %.10f",energy);
 
     return 0;
     }
