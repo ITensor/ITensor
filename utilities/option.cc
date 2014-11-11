@@ -16,6 +16,31 @@ using std::endl;
 using std::ostream;
 using std::istream;
 
+/*              +--------------------+               
+>---------------|      Contents      |---------------<
+                +--------------------+               */
+
+//1. Opt Function
+//2. Overloaded << function
+//3. OptSet function
+//4. Is Opt variable defined?
+//5. Add Opt variable
+//6. get name of Opt variable
+//7. getBool
+//8. getString
+//9. getInt
+//10. getReal
+//11. processString
+//12. addByString
+//13. Overloading +,+=
+
+/*              +--------------------+               
+>---------------|    Opt function    |---------------<
+                +--------------------+               */
+//Assigns nothing, Boolean, character, int, and Real (first input) to the struct Opt
+//
+//Can assign default value (second input)
+
 
 Opt::
 Opt()
@@ -83,6 +108,8 @@ Opt(const Name& name, Real rval)
     rval_(rval)
     { }
 
+//If type is undefined, then an error is tossed
+
 void Opt::
 assertType(Type t) const
     {
@@ -90,32 +117,52 @@ assertType(Type t) const
         throw ITError("Attempt to access Opt by wrong type");
     }
 
+/*              +------------------------+               
+>---------------| Overloaded << function |---------------<
+                +------------------------+               */
+
+//Allows for ITensor functions to print with the << operator
+
+
 ostream& 
 operator<<(ostream & s, const Opt& opt)
     {
     s << opt.name() << "=";
     if(opt.type() == Opt::Boolean)
         {
-        s << (opt.boolVal() ? "true" : "false");
+        s << (opt.boolVal() ? "true" : "false");//formatting for Booleans
         }
     else
     if(opt.type() == Opt::Numeric)
         {
-        s << opt.realVal();
+        s << opt.realVal();//formatting for Real values
         }
     else
     if(opt.type() == Opt::String)
         {
-        s << "\"" << opt.stringVal() << "\"";
+        s << "\"" << opt.stringVal() << "\"";//formatting for Strings
         }
     else
         {
-        s << "(Null)";
+        s << "(Null)";//Prints Null for undefined types
         }
     return s;
     }
 
-
+/*              +------------------------+               
+>---------------|    OptSet function     |---------------<
+                +------------------------+               */
+//Defines OptSet to add members to an Opt.  
+//
+//Can introduce 
+//1.  1 Opt object (see above)
+//2.  4 Opt objects
+//3.  character
+//4.  string 
+//5.  other option going under the label "other.opts_"
+//
+//Notes:
+//"add" initialized in option.h and defined below
 
 OptSet::
 OptSet()
@@ -165,6 +212,11 @@ OptSet(const OptSet& other)
 //    return GlobalOpts().defined(name);
 //    }
 
+/*        +---------------------------------+               
+>---------|    Is Opt variable defined?     |---------------<
+          +---------------------------------+               */
+//return true or false depnding on if specifed variable is available
+
 bool OptSet::
 defined(const Opt& opt) const
     {
@@ -179,11 +231,23 @@ defined(const Opt& opt) const
     return GlobalOpts().defined(opt.name());
     }
 
+/*           +-------------------------+               
+>------------|    Add Opt variable     |---------------<
+             +-------------------------+               */
+
+//can add a variable to an Opt struct:
+//1. one variable
+//2. four variables
+//3. character
+//
+//Notes:
+//function automatically scans through names in struct to match the input
+
 void OptSet::
 add(const Opt& opt)
     {
-    if(!opt) return;
-    Foreach(Opt& x, opts_)
+    if(!opt) return;//will exit if opt not defined in Opt class
+    Foreach(Opt& x, opts_)//scans through Opt variable types
         {
         //If already defined, replace
         if(x.name() == opt.name()) 
@@ -212,11 +276,22 @@ add(const char* ostring)
     processString(std::string(ostring));
     }
 
+/*           +-------------------------------+               
+>------------|   get name of Opt variable    |---------------<
+             +-------------------------------+               */
+
+//Gets name of Opt variable.
+//
+//ex:  get("maxm") returns maxm variable value 
+//
+//Notes:
+//Initialized in option.h
+//Useful for printing purposes without writing out the name by hand
  
 const Opt& OptSet::
 get(const Opt::Name& name) const
     {
-    Foreach(const Opt& x, opts_)
+    Foreach(const Opt& x, opts_)//scans through Opt variable types
         {
         if(x.name() == name) return x;
         }
@@ -228,11 +303,18 @@ get(const Opt::Name& name) const
     return GlobalOpts().get(name);
     }
 
+/*              +--------------------+               
+>---------------|       getBool      |---------------<
+                +--------------------+               */
+//Get the value of the Opt labeled by "name" as a Boolean.
+
 bool OptSet::
 getBool(const Opt::Name& name) const
     {
     return get(name).boolVal();
     }
+
+//The second version accepts a default argument.
 
 bool OptSet::
 getBool(const Opt::Name& name, bool default_value) const
@@ -243,12 +325,18 @@ getBool(const Opt::Name& name, bool default_value) const
         return default_value;
     }
 
- 
+/*              +--------------------+               
+>---------------|       getString    |--------------<
+                +--------------------+               */
+//Get the value of the Opt labeled by "name" as a String. 
+
 const string& OptSet::
 getString(const Opt::Name& name) const
     {
     return get(name).stringVal();
     }
+
+//The second version accepts a default argument.
 
 const string& OptSet::
 getString(const Opt::Name& name, const string& default_value) const
@@ -259,11 +347,18 @@ getString(const Opt::Name& name, const string& default_value) const
         return default_value;
     }
 
+/*              +--------------------+               
+>---------------|       getInt       |---------------<
+                +--------------------+               */
+//Get the value of the Opt labeled by "name" as an Integer number.
+
 int OptSet::
 getInt(const Opt::Name& name) const
     {
     return get(name).intVal();
     }
+
+//The second version accepts a default argument.
 
 int OptSet::
 getInt(const Opt::Name& name, int default_value) const
@@ -274,11 +369,18 @@ getInt(const Opt::Name& name, int default_value) const
         return default_value;
     }
 
+/*              +--------------------+               
+>---------------|       getReal      |--------------<
+                +--------------------+               */
+//Get the value of the Opt labeled by "name" as a Real number.
+
 Real OptSet::
 getReal(const Opt::Name& name) const
     {
     return get(name).realVal();
     }
+
+//The second version accepts a default argument.
 
 Real OptSet::
 getReal(const Opt::Name& name, Real default_value) const
@@ -289,21 +391,40 @@ getReal(const Opt::Name& name, Real default_value) const
         return default_value;
     }
 
+/*              +--------------------+               
+>---------------|   processString    |--------------<
+                +--------------------+               */
+//Add variables from a string directly into an Opt.  
+//This will get the name and value of several variables if separated by commas.
+//
+//ex:  "maxm=15,minm=1,..."
+//
+//Notes:
+//begin, erase, and end are all internal to C++
+
 void OptSet::
 processString(string ostring)
     {
-    ostring.erase(std::remove(ostring.begin(), ostring.end(),' '), ostring.end());
+    ostring.erase(std::remove(ostring.begin(), ostring.end(),' '), ostring.end());//remove any spaces in the string
 
     size_t found = ostring.find_first_of(',');
     while(found != std::string::npos)
         {
-        addByString(ostring.substr(0,found));
+        addByString(ostring.substr(0,found));//defined below
         ostring = ostring.substr(found+1);
         found = ostring.find_first_of(',');
         }
 
     addByString(ostring);
     }
+
+/*              +--------------------+               
+>---------------|    addByString     |--------------<
+                +--------------------+               */
+//addByString adds variables to an Opt by taking the values from a string 
+//
+//Notes:
+//used in processString (above)
 
 void OptSet::
 addByString(string ostring)
@@ -361,6 +482,14 @@ addByString(string ostring)
 
         }
     }
+
+/*              +--------------------+               
+>---------------| Overloading +,+=   |--------------<
+                +--------------------+               */
+
+//Allows for the addition of variables to an Opt with +,+=
+//
+//ex:  foo += x //where "x" is the class type of oset
 
 OptSet& OptSet::
 operator+=(const OptSet& oset)
