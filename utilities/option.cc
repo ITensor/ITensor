@@ -40,12 +40,12 @@ using std::istream;
 >---------------|      Contents      |---------------<
                 +--------------------+               */
 
-//1. Vals Function
+//1. Val Constructor
 //2. Overloaded << function
-//3. Arg function
-//4. Is Arg variable defined?
-//5. Add Arg variable
-//6. get name of Arg variable
+//3. Args Constructor
+//4. Is Args variable defined?
+//5. Add Args variable
+//6. get name of Args variable
 //7. getBool
 //8. getString
 //9. getInt
@@ -55,10 +55,10 @@ using std::istream;
 //13. Overloading +,+=
 
 /*              +--------------------+               
->---------------| Vals Constructors  |---------------<
+>---------------| Val Constructors  |---------------<
                 +--------------------+               */
-// Construct an Opt by providing its name and value. The value can be a bool, string (const char* or std::string), int, or Real.
-// If no value is provided, the Opt will be of bool type with its value set to true.
+// Construct an Args by providing its name and value. The value can be a bool, string (const char* or std::string), int, or Real.
+// If no value is provided, the Args will be of bool type with its value set to true.
 
 Args::Val::
 Val()
@@ -171,13 +171,6 @@ operator<<(ostream & s, const Args::Val& v)
                 +------------------------+               */
 //Defines Args class that stores pairs of strings and values.  
 //
-//Can introduce 
-//1.  1 object (see above)
-//2.  4 objects
-//3.  character
-//4.  string 
-//5.  other option going under the label "other.vals_"
-//
 //Notes:
 //"add" initialized in option.h and defined below
 //was OptSet but now Opt and OptSet (set of Opts) are combined (v0,v1)
@@ -189,28 +182,39 @@ Args()
 Args::
 Args(const char* ostring)
     {
-    processString(string(ostring));
+    processString(string(ostring));//single string
     }
 
 Args::
 Args(const string& ostring)
     {
-    processString(ostring);
+    processString(ostring);//referenced string
     }
 
 Args::
 Args(const Args& other)
     { 
     if(!other.isGlobal())
-        vals_ = other.vals_;
+        vals_ = other.vals_;//variable defined in Args now is global
     }
+
+//C++11 allows for a slick way to copy variables at a low memory cost.
+//Instead of copying a variable to another variable and then deleting the temporary memory storage,
+//one can use the && operator to swap the pointers and leave the original variable with a Null pointer.
+//This means that the other variable is simply 'forgotten' (without a memory leak).  
+//Good for quickly copying large data types.
 
 Args::
 Args(Args&& other)
     { 
     if(!other.isGlobal())
-        vals_ = std::move(other.vals_);
+        vals_ = std::move(other.vals_);//rvalue reference
     }
+
+//Same as the above but with equals signs.
+//
+//ex:  someargs.add("nsweeps",20)
+//         [Args something] = nsweeps
 
 Args& Args::
 operator=(const Args& other)
@@ -231,7 +235,7 @@ operator=(Args&& other)
 /*        +------------------+               
 >---------|    Add to Args   |---------------<
           +------------------+               */
-//Adds either boolean, integer, string (constant), or real to Arg.
+//Add a named argument having either boolean, integer, string, or Real value to Args.
 
 void Args::
 add(const Name& name, bool bval) { add({name,bval}); }
@@ -243,9 +247,9 @@ void Args::
 add(const Name& name, Real rval) { add({name,rval}); }
 
 /*        +---------------------------------+               
->---------|    Is Arg variable defined?     |---------------<
+>---------|    Is Args variable defined?     |---------------<
           +---------------------------------+               */
-//return true or false depnding on if specifed variable is available.
+//Return true or false depnding on if specifed variable is available.
 
 
 bool Args::
@@ -263,23 +267,18 @@ defined(const Name& name) const
     }
 
 /*           +-------------------------+               
->------------| Add Val variable to Arg |---------------<
+>------------|Add Val variable to Args |---------------<
              +-------------------------+               */
+//Can add variable to Args just by variable.
 //
-
-//can add a variable to an Opt struct:
-//1. one variable
-//2. four variables
-//3. character
-//
-//Notes:
-//function automatically scans through names in struct to match the input
+//ex:  Int nsweeps = 20;
+//         someargs.add(nsweeps)
 
 void Args::
 add(const Val& val)
     {
     if(!val) return;
-    for(auto& x : vals_)
+    for(auto& x : vals_)//function automatically scans through names in Args to match the input
         //If already defined, replace
         if(x.name() == val.name()) 
             {
@@ -297,10 +296,10 @@ add(const char* ostring)
     }
 
 /*           +-------------------------------+               
->------------| get name of variable in Arg   |---------------<
+>------------| get name of variable in Args  |---------------<
              +-------------------------------+               */
 
-//Gets name of Val in Arg class.
+//Gets value of Val in Args class with name "name".
 //
 //ex:  get("maxm") returns maxm variable value 
 //
@@ -313,7 +312,7 @@ get(const Name& name) const
     {
     for(const auto& x : vals_)
         {
-        if(x.name() == name) return x;//scans through Opt variable types
+        if(x.name() == name) return x;//scans through Args variable types
         }
     //couldn't find the Val in this Args
     if(isGlobal())
@@ -326,7 +325,8 @@ get(const Name& name) const
 /*              +--------------------+               
 >---------------|       getBool      |---------------<
                 +--------------------+               */
-//Get the value of the Val labeled by "name" as a Boolean.
+//Get the value of the named argument ("name") assuming it is of a Boolean type.
+//Throws an error if no argument with name "name" is found
 
 bool Args::
 getBool(const Name& name) const
@@ -346,7 +346,8 @@ getBool(const Name& name, bool default_value) const
 /*              +--------------------+               
 >---------------|       getString    |--------------<
                 +--------------------+               */
-//Get the value of the Val from Arg class labeled by "name" as a String.
+//Get the value of the named argument ("name") assuming it is a string.
+//Throws an error if no argument with name "name" is found
  
 const string& Args::
 getString(const Name& name) const
@@ -366,7 +367,8 @@ getString(const Name& name, const string& default_value) const
 /*              +--------------------+               
 >---------------|       getInt       |---------------<
                 +--------------------+               */
-//Get the value of the Val from Arg class labeled by "name" as an Integer number.
+//Get the value of the named argument ("name") assuming it is an Integer type.
+//Throws an error if no argument with name "name" is found
 
 int Args::
 getInt(const Name& name) const
@@ -386,7 +388,8 @@ getInt(const Name& name, int default_value) const
 /*              +--------------------+               
 >---------------|       getReal      |--------------<
                 +--------------------+               */
-//Get the value of the Val from Arg class labeled by "name" as a Real number.
+//Get the value of the named argument ("name") assuming it is a Real number type.
+//Throws an error if no argument with name "name" is found
 
 Real Args::
 getReal(const Name& name) const
@@ -406,19 +409,15 @@ getReal(const Name& name, Real default_value) const
 /*              +--------------------+               
 >---------------|   processString    |--------------<
                 +--------------------+               */
-//Add variables from a string directly into an Arg.  
+//Add variables from a string directly into an Args.  
 //This will get the name and value of several variables if separated by commas.
 //
 //ex:  "maxm=15,minm=1,..."
-//
-//Notes:
-//begin, erase, and end are all internal to C++
-
 
 void Args::
 processString(string ostring)
     {
-    ostring.erase(std::remove(ostring.begin(), ostring.end(),' '), ostring.end());//remove any spaces in the string
+    ostring.erase(std::remove(ostring.begin(), ostring.end(),' '), ostring.end());//remove any spaces in the string (functions internal to C++)
 
     auto found = ostring.find_first_of(',');
     while(found != std::string::npos)
@@ -434,7 +433,7 @@ processString(string ostring)
 /*              +--------------------+               
 >---------------|    addByString     |--------------<
                 +--------------------+               */
-//addByString adds variables to an Arg by taking the values from a string.
+//addByString adds variables to an Args by taking the values from a string.
 //
 //Notes:
 //used in processString (above)
@@ -491,7 +490,11 @@ addByString(string ostring)
 
 //Allows for the addition of variables to an Args with +,+=
 //
-//ex:  foo += x //where "x" is the class type of args
+//ex:  foo += x //where "x" is an object of type Args
+//
+//Running example:
+//     Int nsweeps = 20
+//         someArgs += nsweeps
 
 Args& Args::
 operator+=(const Args& args)
@@ -503,6 +506,8 @@ operator+=(const Args& args)
     return *this;
     }
 
+//----------OR------------
+//        someotherArgs = someArgs + nsweeps
 
 Args
 operator+(Args args, const Args& other)
@@ -511,6 +516,8 @@ operator+(Args args, const Args& other)
     return args;
     }
 
+//----------OR-------------
+//        someArgs + "nsweeps=20"
 
 Args 
 operator+(Args args, const char* ostring)
@@ -519,6 +526,9 @@ operator+(Args args, const char* ostring)
     return args;
     }
 
+//----------OR-------------
+// ????
+
 Args 
 operator+(const char* ostring, Args args)
     {
@@ -526,6 +536,9 @@ operator+(const char* ostring, Args args)
     return args;
     }
  
+//----------OR-------------
+//       cout << nsweep
+
 ostream& 
 operator<<(ostream & s, const Args& args)
     {
