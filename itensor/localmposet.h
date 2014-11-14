@@ -18,14 +18,11 @@ class LocalMPOSet
     LocalMPOSet(const std::vector<MPOt<Tensor> >& Op,
                 const OptSet& opts = Global::opts());
 
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
-    typedef typename Tensor::CombinerT
-    CombinerT;
+    using CombinerT = typename Tensor::CombinerT;
 
-    typedef LocalMPO<Tensor>
-    LocalMPOT;
+    using LocalMPOT = LocalMPO<Tensor>;
 
     void
     product(const Tensor& phi, Tensor& phip) const;

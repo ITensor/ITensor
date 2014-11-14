@@ -10,8 +10,8 @@ namespace itensor {
 template <typename _Iter>
 struct IterPair
     {
-    typedef _Iter iterator;
-    typedef _Iter const_iterator;
+    using iterator = _Iter;
+    using const_iterator = _Iter;
 
     IterPair() {}
 

@@ -29,8 +29,7 @@ class Combiner
     {
     public:
 
-    typedef array<Index,NMAX+1>::const_iterator 
-    left_it;
+    using left_it = array<Index,NMAX+1>::const_iterator;
 
     //Accessor Methods ----------------------------------------------
 

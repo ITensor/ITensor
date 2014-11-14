@@ -69,8 +69,7 @@ static const Real LogNumber_Accuracy = 1E-12;
 class TooBigForReal : public ITError
     {
 public:
-    typedef ITError
-    Parent;
+    using Parent = ITError;
 
     TooBigForReal(const std::string& message) 
         : Parent(message)
@@ -80,8 +79,7 @@ public:
 class TooSmallForReal : public ITError
     {
 public:
-    typedef ITError
-    Parent;
+    using Parent = ITError;
 
     TooSmallForReal(const std::string& message) 
         : Parent(message)

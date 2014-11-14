@@ -81,8 +81,9 @@ Then in program:
 
 class InputGroup
     {
-    typedef long int lint;
     public:
+
+    InputGroup() { }
 
     InputGroup(std::string filename, 
                std::string groupname,
@@ -118,7 +119,7 @@ class InputGroup
 
     // The following go to s, and read into i,r,t, or yes, printing c.
     int GetInt(std::string s, int& i,const char* c = 0);
-    int GetLong(std::string s, lint& i,const char* c = 0);
+    int GetLong(std::string s, long& i,const char* c = 0);
     int GetReal(std::string s, Real& r,const char* c = 0);	
     int GetString(std::string s, std::string& t,const char* c = 0);
     int GetYesNo(std::string s, int& yes,const char* c = 0);	 // understands yes/no
@@ -126,7 +127,7 @@ class InputGroup
 
     // The following are mandatory versions; if they doesn't get it, we quit
     void GetIntM(std::string s, int& i,const char* c = 0);	
-    void GetLongM(std::string s, lint& i,const char* c = 0);	
+    void GetLongM(std::string s, long& i,const char* c = 0);	
     void GetRealM(std::string s, Real& r,const char* c = 0);
     void GetStringM(std::string s, std::string& t,const char* c = 0);
     void GetYesNoM(std::string s, int& yes,const char* c = 0);

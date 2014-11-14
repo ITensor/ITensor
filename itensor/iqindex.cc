@@ -22,13 +22,10 @@ class IQIndexDat
     {
     public:
 
-    typedef vector<IndexQN>
-    StorageT;
+    using StorageT = vector<IndexQN>;
 
-    typedef StorageT::iterator
-    iterator;
-    typedef StorageT::const_iterator
-    const_iterator;
+    using iterator = StorageT::iterator;
+    using const_iterator = StorageT::const_iterator;
 
 
     IQIndexDat() { }

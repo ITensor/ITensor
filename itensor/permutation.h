@@ -15,8 +15,7 @@ namespace itensor {
 class Permutation
     {
     public:
-    typedef array<int,NMAX+1> 
-    int9;
+    using int9 = array<int,NMAX+1>;
     
     Permutation();
 

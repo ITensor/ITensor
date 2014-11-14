@@ -25,8 +25,7 @@ class IQCombiner
     {
     public:
 
-    typedef std::vector<IQIndex>::const_iterator 
-    left_it;
+    using left_it = std::vector<IQIndex>::const_iterator;
 
     IQCombiner();
 

@@ -6,9 +6,6 @@
 #define __ITENSOR_LOCAL_OP
 #include "iqtensor.h"
 
-#define Cout std::cout
-#define Endl std::endl
-
 namespace itensor {
 
 //
@@ -37,11 +34,9 @@ class LocalOp
     {
     public:
 
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
-    typedef typename Tensor::CombinerT
-    CombinerT;
+    using CombinerT = typename Tensor::CombinerT;
 
     //
     // Constructors
@@ -432,8 +427,5 @@ size() const
     }
 
 }; //namespace itensor
-
-#undef Cout
-#undef Endl
 
 #endif

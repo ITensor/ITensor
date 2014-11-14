@@ -553,10 +553,8 @@ oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
           MPSt<Tensor>& psi, 
           const OptSet& opts)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
-    typedef MPSt<Tensor>
-    MPST;
+    using IndexT = typename Tensor::IndexT;
+    using MPST = MPSt<Tensor>;
 
     if(ttotal == 0) return 1.;
 

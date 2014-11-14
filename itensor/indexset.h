@@ -46,14 +46,11 @@ class IndexSet
     // Type definitions
     //
 
-    typedef array<IndexT,NMAX>
-    Storage;
+    using Storage = array<IndexT,NMAX>;
 
-    typedef typename Storage::const_iterator 
-    const_iterator;
+    using const_iterator = typename Storage::const_iterator;
 
-    typedef shared_ptr<IndexSet<IndexT> >
-    Ptr;
+    using Ptr = shared_ptr<IndexSet<IndexT>>;
 
     //
     // Accessor Methods

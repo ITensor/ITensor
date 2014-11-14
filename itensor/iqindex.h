@@ -14,8 +14,7 @@ class IndexQN;
 class IQIndexDat;
 class IQIndexVal;
 
-typedef shared_ptr<IQIndexDat>
-IQIndexDatPtr;
+using IQIndexDatPtr = shared_ptr<IQIndexDat>;
 
 //
 // IQIndex
@@ -78,8 +77,7 @@ class IQIndex : public Index
     //Accessor Methods
     //
 
-    typedef std::vector<IndexQN>
-    Storage;
+    using Storage = std::vector<IndexQN>;
 
     const Storage&
     indices() const;

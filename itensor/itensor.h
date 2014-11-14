@@ -755,8 +755,7 @@ template<class TensorA, class TensorB> typename
 TensorA::IndexT
 commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
     {
-    typedef typename TensorA::IndexT
-    IndexT;
+    using IndexT = typename TensorA::IndexT;
     for(const IndexT& I : A.indices())
         {
         if( (t == All || I.type() == t)
@@ -777,8 +776,7 @@ uniqueIndex(const TensorA& A,
             const TensorB& B, 
             IndexType t)
     {
-    typedef typename TensorA::IndexT
-    IndexT;
+    using IndexT = typename TensorA::IndexT;
     for(const IndexT& I : A.indices())
         {
         if( (t == All || I.type() == t)
@@ -951,8 +949,7 @@ template <class Tensor>
 Real
 trace(Tensor T)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
     if(T.isComplex())
         {
         Error("ITensor is complex, use trace(T,re,im)");

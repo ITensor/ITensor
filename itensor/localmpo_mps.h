@@ -35,15 +35,11 @@ class LocalMPO_MPS
     // Typedefs
     //
 
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
-    typedef typename Tensor::CombinerT
-    CombinerT;
+    using CombinerT = typename Tensor::CombinerT;
 
-    typedef LocalMPO<Tensor>
-    LocalMPOType;
-
+    using LocalMPOType = LocalMPO<Tensor>;
 
     //
     // Sparse matrix methods

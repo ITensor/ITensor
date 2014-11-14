@@ -19,14 +19,11 @@ class IQTDat
     {
     public:
 
-    typedef std::vector<ITensor>
-    Storage;
+    using Storage = std::vector<ITensor>;
 
-    typedef detail::SkipIterator<Storage::const_iterator,ITValidCheck>
-    const_iterator;
+    using const_iterator = detail::SkipIterator<Storage::const_iterator,ITValidCheck>;
 
-    typedef detail::SkipIterator<Storage::iterator,ITValidCheck>
-    iterator;
+    using iterator = detail::SkipIterator<Storage::iterator,ITValidCheck>;
 
     IQTDat() { }
 

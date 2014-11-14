@@ -86,7 +86,7 @@ fileExists(const std::string& fname)
 
 
 template<class T> 
-void inline
+void
 readFromFile(const std::string& fname, T& t) 
     { 
     std::ifstream s(fname.c_str()); 
@@ -98,7 +98,7 @@ readFromFile(const std::string& fname, T& t)
 
 
 template<class T> 
-void inline
+void
 writeToFile(const std::string& fname, const T& t) 
     { 
     std::ofstream s(fname.c_str()); 

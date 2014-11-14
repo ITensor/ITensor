@@ -296,11 +296,9 @@ class InitState
     {
     public:
 
-    typedef std::vector<IQIndexVal>
-    Storage;
+    using Storage = std::vector<IQIndexVal>;
 
-    typedef std::string
-    String;
+    using String = std::string;
 
     InitState(const SiteSet& sites);
 
@@ -524,8 +522,7 @@ checkOrtho(const MPSt<Tensor>& psi,
            int i, 
            bool left)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
     IndexT link = (left ? rightLinkInd(psi,i) : leftLinkInd(psi,i));
     Tensor rho = psi.A(i) * dag(prime(psi.A(i),link,4));
@@ -591,10 +588,8 @@ template <class MPSType>
 Complex 
 psiphiC(const MPSType& psi, const MPSType& phi)
     {
-    typedef typename MPSType::TensorT
-    Tensor;
-    typedef typename Tensor::IndexT
-    IndexT;
+    using Tensor = typename MPSType::TensorT;
+    using IndexT = typename Tensor::IndexT;
 
     const int N = psi.N();
     if(N != phi.N()) Error("psiphi: mismatched N");

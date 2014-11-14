@@ -21,8 +21,7 @@ class Spectrum
     {
     public:
 
-    typedef std::vector<QN>
-    QNStorage;
+    using QNStorage = std::vector<QN>;
 
     Spectrum(const OptSet& opts = Global::opts());
 

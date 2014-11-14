@@ -60,10 +60,8 @@ class BondGate
 
 
     };
-typedef BondGate<ITensor>
-Gate;
-typedef BondGate<IQTensor>
-IQGate;
+using Gate = BondGate<ITensor>;
+using IQGate = BondGate<IQTensor>;
 
 template<class Tensor>
 Tensor

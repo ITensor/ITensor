@@ -36,8 +36,7 @@ class LocalMPO
     {
     public:
 
-    typedef typename Tensor::CombinerT
-    CombinerT;
+    using CombinerT = typename Tensor::CombinerT;
 
     //
     // Constructors

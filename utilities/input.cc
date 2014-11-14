@@ -262,7 +262,7 @@ int InputGroup::GetInt(string s, int& res,const char* c)
     return 1;
     }
 
-int InputGroup::GetLong(string s, lint& res,const char* c)
+int InputGroup::GetLong(string s, long& res,const char* c)
     {
     if(!GotoToken(s) || !(infile->file() >> res)) 
 	{
@@ -451,7 +451,7 @@ void InputGroup::GetIntM(string s, int& res,const char* c)
         error("mandatory item: " + s + ", exiting");
     }
 
-void InputGroup::GetLongM(string s, lint& res,const char* c)
+void InputGroup::GetLongM(string s, long& res,const char* c)
     {
     if(!GetLong(s,res,c))
         error("mandatory item: " + s + ", exiting");

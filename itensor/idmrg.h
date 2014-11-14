@@ -74,8 +74,7 @@ idmrg(MPSt<Tensor>& psi,
       DMRGObserver<Tensor>& obs,
       Args args)
     {
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
     const int olevel = args.getInt("OutputLevel",0);
     const bool quiet = args.getBool("Quiet",olevel == 0);
