@@ -2,8 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#include "hambuilder.h"
-#include "sweeps.h"
+#include "mpo.h"
 
 namespace itensor {
 
@@ -493,8 +492,31 @@ fitApplyMPO(Real fac,
             MPSt<Tensor>& res,
             const OptSet& opts)
     {
+    const auto nsweep = opts.getInt("Nsweep",1);
+    Sweeps sweeps(nsweep);
+    const auto cutoff = opts.getReal("Cutoff",-1);
+    if(cutoff >= 0) sweeps.cutoff() = cutoff;
+    const auto maxm = opts.getInt("Maxm",-1);
+    if(maxm >= 1) sweeps.maxm() = maxm;
+    fitApplyMPO(fac,psi,K,res,sweeps,opts);
+    }
+template
+void
+fitApplyMPO(Real fac,const MPSt<ITensor>& psi,const MPOt<ITensor>& K,MPSt<ITensor>& res,const OptSet& opts);
+template
+void
+fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const OptSet& opts);
+
+template<class Tensor>
+void
+fitApplyMPO(Real fac,
+            const MPSt<Tensor>& psi,
+            const MPOt<Tensor>& K,
+            MPSt<Tensor>& res,
+            const Sweeps& sweeps,
+            OptSet opts)
+    {
     const int N = psi.N();
-    const int nsweep = opts.getInt("Nsweep",1);
     const bool verbose = opts.getBool("Verbose",false);
     const bool normalize = opts.getBool("Normalize",true);
 
@@ -510,8 +532,14 @@ fitApplyMPO(Real fac,
 
     res.position(1);
 
-    for(int sw = 1; sw <= nsweep; ++sw)
+    for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
         {
+        opts.add("Sweep",sw);
+        opts.add("Cutoff",sweeps.cutoff(sw));
+        opts.add("Minm",sweeps.minm(sw));
+        opts.add("Maxm",sweeps.maxm(sw));
+        opts.add("Noise",sweeps.noise(sw));
+
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
             if(verbose)
@@ -529,7 +557,14 @@ fitApplyMPO(Real fac,
             wfK *= fac;
 
             if(normalize) wfK /= wfK.norm();
-            Spectrum spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),opts+Opt("UseSVD",true));
+            //Print(K.A(b).indices());
+            //Print(K.A(b+1).indices());
+            //Print(BK.at(b-1).indices());
+            //Print(BK.at(b+2).indices());
+            //Print(wfK);
+            //PAUSE
+            LocalOp<Tensor> PH(K.A(b),K.A(b+1),BK.at(b-1),BK.at(b+2));
+            Spectrum spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,opts);
 
             if(verbose)
                 {
@@ -547,10 +582,10 @@ fitApplyMPO(Real fac,
     }
 template
 void
-fitApplyMPO(Real fac,const MPSt<ITensor>& psi,const MPOt<ITensor>& K,MPSt<ITensor>& res,const OptSet& opts);
+fitApplyMPO(Real fac,const MPSt<ITensor>& psi,const MPOt<ITensor>& K,MPSt<ITensor>& res, const Sweeps&, OptSet opts);
 template
 void
-fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const OptSet& opts);
+fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTensor>& res, const Sweeps&, OptSet opts);
 
 template<class Tensor>
 Real

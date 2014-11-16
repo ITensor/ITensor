@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_MPO_H
 #define __ITENSOR_MPO_H
 #include "mps.h"
+#include "sweeps.h"
 
 
 namespace itensor {
@@ -411,6 +412,24 @@ fitApplyMPO(Real fac,
             const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
             const OptSet& opts = Global::opts());
+
+//Applies an MPO K to an MPS psi including an overall scalar factor (|res>=fac*K|psi>) 
+//using a sweeping/DMRG-like fitting approach. 
+//Warning: this method can get stuck i.e. fail to converge
+//if the initial value of res is too different from the product fac*K|psi>.
+//Try setting noise > 0 in the Sweeps argument to overcome this.
+//Options recognized:
+//   Verbose (default: false) - print out extra information
+//   Normalize (default: true) - normalize the result MPS "res" at every step
+//
+template<class Tensor>
+void
+fitApplyMPO(Real fac,
+            const MPSt<Tensor>& psi,
+            const MPOt<Tensor>& K,
+            MPSt<Tensor>& res,
+            const Sweeps& sweeps,
+            OptSet opts);
 
 //Computes |res> = |psiA> + mpofac*H*|psiB>
 //using a sweeping/DMRG-like fitting approach. 
