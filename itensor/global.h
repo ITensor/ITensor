@@ -89,7 +89,7 @@ template<class T>
 void
 readFromFile(const std::string& fname, T& t) 
     { 
-    std::ifstream s(fname.c_str()); 
+    std::ifstream s(fname.c_str(),std::ios::binary);
     if(!s.good()) 
         Error("Couldn't open file \"" + fname + "\" for reading");
     t.read(s); 
@@ -101,7 +101,7 @@ template<class T, typename... InitArgs>
 T
 readFromFile(const std::string& fname, InitArgs&&... iargs)
     { 
-    std::ifstream s(fname.c_str()); 
+    std::ifstream s(fname.c_str(),std::ios::binary); 
     if(!s.good()) 
         Error("Couldn't open file \"" + fname + "\" for reading");
     T t(std::forward<InitArgs>(iargs)...);
@@ -115,7 +115,7 @@ template<class T>
 void
 writeToFile(const std::string& fname, const T& t) 
     { 
-    std::ofstream s(fname.c_str()); 
+    std::ofstream s(fname.c_str(),std::ios::binary); 
     if(!s.good()) 
         Error("Couldn't open file \"" + fname + "\" for writing");
     t.write(s); 
