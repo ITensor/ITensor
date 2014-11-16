@@ -85,7 +85,7 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
     res.ReDimension(dat.Length());
     res = 0;
 
-    const Permutation::int9& ind = P.ind();
+    const auto& ind = P.store();
 
     //Make a counter for dat
     Counter c(is);
@@ -885,18 +885,18 @@ groupIndices(const array<Index,NMAX+1>& indices, int nind,
     const int res_rn_ = is_.rn() - nn + (nn == 0 ? 0 : 1);
 
     IndexSet<Index> nindices; 
-    Permutation P;
+    Permutation P(NMAX+1);
     int nkept = 0; 
     for(int j = 1; j <= is_.rn(); ++j)
         {
         if(isReplaced[j] == 0)
             {
-            P.fromTo(j,++nkept);
+            P.setFromTo(j,++nkept);
             nindices.addindex(is_.index(j)); 
             }
         else
             {
-            P.fromTo(j,res_rn_+isReplaced[j]-1);
+            P.setFromTo(j,res_rn_+isReplaced[j]-1);
             }
         }
 
@@ -1785,7 +1785,8 @@ struct ProductProps
 
     //Permutations that move all matching m!=1
     //indices pairwise to the front 
-    Permutation pl, pr;
+    Permutation pl,
+                pr;
 
     //Permutation which, if applied, will make
     //contracted indices of R match order of L
@@ -1801,7 +1802,9 @@ ProductProps(const ITensor& L, const ITensor& R)
     odimL(-1), 
     odimR(-1),
     lcstart(100), 
-    rcstart(100)
+    rcstart(100),
+    pl(NMAX+1),
+    pr(NMAX+1)
     {
     for(int j = 1; j <= NMAX; ++j) 
         contractedL[j] = contractedR[j] = false;
@@ -1814,27 +1817,27 @@ ProductProps(const ITensor& L, const ITensor& R)
         if(k < rcstart) rcstart = k;
 
 		++nsamen;
-		pl.fromTo(j,nsamen);
-		pr.fromTo(k,nsamen);
+		pl.setFromTo(j,nsamen);
+		pr.setFromTo(k,nsamen);
 
 		contractedL[j] = contractedR[k] = true;
 
         cdim *= L.is_.index(j).m();
 
-        //matchL.fromTo(k,j-lcstart+1);
+        //matchL.setFromTo(k,j-lcstart+1);
 		}
     //Finish making pl
     int q = nsamen;
     for(int j = 1; j <= L.is_.rn(); ++j)
-        if(!contractedL[j]) pl.fromTo(j,++q);
+        if(!contractedL[j]) pl.setFromTo(j,++q);
     //Finish making pr and matchL
     q = nsamen;
     for(int j = 1; j <= R.is_.rn(); ++j)
         if(!contractedR[j]) 
             {
             ++q;
-            pr.fromTo(j,q);
-            //matchL.fromTo(j,q);
+            pr.setFromTo(j,q);
+            //matchL.setFromTo(j,q);
             }
 
     odimL = L.r_->v.Length()/cdim;
@@ -2748,7 +2751,7 @@ operator+=(const ITensor& other)
             }
         else
             {
-            Permutation P; 
+            Permutation P(NMAX+1); 
             getperm(is_,other.is_,P);
             allocateImag();
             reshape(P,other.is_,other.i_->v,i_->v);
@@ -2822,7 +2825,7 @@ operator+=(const ITensor& other)
         return *this; 
         }
 
-    Permutation P; 
+    Permutation P(NMAX+1); 
     getperm(is_,other.is_,P);
     Counter c(other.is_);
 
@@ -2979,7 +2982,7 @@ toMatrix12NoScale(const Index& i1, const Index& i2,
         = {{ i2, i3, i1,    Index::Null(), Index::Null(), 
              Index::Null(), Index::Null(), Index::Null() }};
 
-    Permutation P; 
+    Permutation P(NMAX+1); 
     getperm(is_,reshuf,P);
 
     Vector V;
@@ -3029,7 +3032,7 @@ toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Ma
         ncol = i3.m() * i4.m();
     res.ReDimension(nrow,ncol);
     const array<Index,NMAX> reshuf = {{ i3, i4, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
-    Permutation P; 
+    Permutation P(NMAX+1); 
     getperm(is_,reshuf,P);
     Vector V; 
     reshape(P,is_,r_->v,V);
@@ -3334,7 +3337,8 @@ commaInit(ITensor& T,
     : 
     T_(T),
     started_(false),
-    c_(T.is_)
+    c_(T.is_),
+    P_(NMAX+1)
     { 
     if(!T_) 
         Error("Can't assign to null ITensor");
