@@ -97,6 +97,20 @@ readFromFile(const std::string& fname, T& t)
     }
 
 
+template<class T, typename... InitArgs>
+T
+readFromFile(const std::string& fname, InitArgs&&... iargs)
+    { 
+    std::ifstream s(fname.c_str()); 
+    if(!s.good()) 
+        Error("Couldn't open file \"" + fname + "\" for reading");
+    T t(std::forward<InitArgs>(iargs)...);
+    t.read(s); 
+    s.close(); 
+    return t;
+    }
+
+
 template<class T> 
 void
 writeToFile(const std::string& fname, const T& t) 
