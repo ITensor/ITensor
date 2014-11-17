@@ -19,71 +19,65 @@ class IndexSet
     {
     public:
 
+    using storage = std::vector<IndexT>;
+    using const_iterator = typename storage::const_iterator;
+
     IndexSet();
 
     explicit
     IndexSet(const IndexT& i1);
 
-    IndexSet(const IndexT& i1, const IndexT& i2);
+    IndexSet(const IndexT& i1, 
+             const IndexT& i2);
 
-    IndexSet(IndexT i1, IndexT i2, IndexT i3,
-             IndexT i4 = IndexT::Null(), 
-             IndexT i5 = IndexT::Null(), 
-             IndexT i6 = IndexT::Null(),
-             IndexT i7 = IndexT::Null(), 
-             IndexT i8 = IndexT::Null());
+    // construct from 3 or more Index's
+    template <typename... Inds>
+    IndexSet(const IndexT& i1, 
+             const Inds&... inds);
+
+    IndexSet(storage&& ii);
 
     template <class Iterable> 
     explicit
-    IndexSet(const Iterable& ii, int size = -1, int offset = 0);
+    IndexSet(const Iterable& ii);
 
     template <class Iterable>
-    IndexSet(const Iterable& ii, int size, int& alloc_size, int offset);
-
-    IndexSet(const IndexSet& other, const Permutation& P);
-
-    //
-    // Type definitions
-    //
-
-    using Storage = array<IndexT,NMAX>;
-
-    using const_iterator = typename Storage::const_iterator;
-
-    using Ptr = shared_ptr<IndexSet<IndexT>>;
+    IndexSet(const Iterable& ii, size_t size, size_t offset);
 
     //
     // Accessor Methods
     //
 
     int
-    r() const { return r_; }
+    r() const { return index_.size(); }
 
     int
     rn() const { return rn_; }
 
-    const IndexT&
-    index(int j) const { return index_[j-1]; }
-
+    // 0-indexed access
     const IndexT&
     operator[](int j) const { return index_[j]; }
 
-    int
+    // 1-indexed access
+    const IndexT&
+    index(int j) const { return index_[j-1]; }
+
+    long
     dim() const;
 
-    IndexT
-    front() const;
+    const IndexT&
+    front() const { return index_.front(); }
 
-    IndexT
-    back() const;
+    const IndexT&
+    back() const { return index_.back(); }
 
     const_iterator
     begin() const { return index_.begin(); }
 
     const_iterator
-    end() const { return (index_.begin()+r_); }
+    end() const { return index_.end(); }
 
-    operator const Storage&() const { return index_; }
+    operator const storage&() const { return index_; }
 
     //
     // Primelevel Methods
@@ -142,26 +136,25 @@ class IndexSet
     void
     write(std::ostream& s) const;
 
-    //static const Ptr& Null()
-    //    {
-    //    static Ptr Null_ = make_shared<IndexSet<IndexT> >();
-    //    return Null_;
-    //    }
-
     private:
 
     //////////
 
-    Storage index_;
+    storage index_;
 
-    int rn_,
-        r_;
+    int rn_;
 
     /////////
 
-    template <class Iterable>
     void
-    sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset = 0);
+    init();
+
+    bool static
+    compare_index(const IndexT& i1,
+                  const IndexT& i2)
+        {
+        return i1.m() > i2.m();
+        }
 
     };
 
@@ -169,29 +162,28 @@ template<class IndexT>
 IndexSet<IndexT>::
 IndexSet()
     :
-    rn_(0),
-    r_(0)
+    rn_(0)
     { }
 
 template<class IndexT>
 IndexSet<IndexT>::
 IndexSet(const IndexT& i1)
     :
-    rn_((i1.m() == 1 ? 0 : 1)),
-    r_(1)
+    index_(1,i1),
+    rn_((i1.m() == 1 ? 0 : 1))
     { 
 #ifdef DEBUG
     if(i1 == IndexT::Null())
         Error("i1 is null");
 #endif
-    index_[0] = i1;
     }
 
 template<class IndexT>
 IndexSet<IndexT>::
-IndexSet(const IndexT& i1, const IndexT& i2)
+IndexSet(const IndexT& i1, 
+         const IndexT& i2)
     :
-    r_(2)
+    index_(2)
     { 
 #ifdef DEBUG
     if(i1 == IndexT::Null())
@@ -214,106 +206,79 @@ IndexSet(const IndexT& i1, const IndexT& i2)
     }
 
 template<class IndexT>
+template<typename... Inds>
 IndexSet<IndexT>::
-IndexSet(IndexT i1, IndexT i2, IndexT i3,
-         IndexT i4, IndexT i5, IndexT i6,
-         IndexT i7, IndexT i8)
+IndexSet(const IndexT& i1, 
+         const Inds&... inds)
     :
-    r_(3)
+    index_{i1,inds...},
+    rn_(0)
     { 
-#ifdef DEBUG
-    if(i1 == IndexT::Null())
-        Error("i1 is null");
-    if(i2 == IndexT::Null())
-        Error("i2 is null");
-    if(i3 == IndexT::Null())
-        Error("i3 is null");
-#endif
-    array<IndexT,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
-	while(r_ < NMAX && ii[r_] != IndexT::Null()) ++r_;
-    int alloc_size;
-    sortIndices(ii,r_,alloc_size,0);
+    init();
+    }
+
+template <class IndexT>
+IndexSet<IndexT>::
+IndexSet(storage&& ii)
+    :
+    index_(std::move(ii)),
+    rn_(0)
+    { 
+    init();
     }
 
 template <class IndexT>
 template <class Iterable>
 IndexSet<IndexT>::
-IndexSet(const Iterable& ii, int size, int offset)
+IndexSet(const Iterable& ii)
+    :
+    index_(ii.begin(),ii.end()),
+    rn_(0)
     { 
-    r_ = (size < 0 ? ii.size() : size);
-    int alloc_size = -1;
-    sortIndices(ii,r_,alloc_size,offset);
+    init();
     }
 
 template <class IndexT>
 template <class Iterable>
 IndexSet<IndexT>::
-IndexSet(const Iterable& ii, int size, int& alloc_size, int offset)
+IndexSet(const Iterable& ii, size_t size, size_t offset)
     :
-    r_(size)
+    index_(size),
+    rn_(0)
     { 
-    sortIndices(ii,size,alloc_size,offset);
+    for(size_t n = offset, i = 0; n < size+offset; ++n, ++i)
+        {
+        index_[i] = ii[n];
+        }
+    init();
     }
 
 
 template <class IndexT>
-IndexSet<IndexT>::
-IndexSet(const IndexSet& other, const Permutation& P)
-    :
-    rn_(other.rn_),
-    r_(other.r_)
-    {
-    for(int j = 1; j <= r_; ++j)
-        index_[P.dest(j)-1] = other.index_[j-1];
-    }
-
-template <class IndexT>
-int IndexSet<IndexT>::
+long IndexSet<IndexT>::
 dim() const
     {   
-    int d = 1;
+    long d = 1;
     for(int j = 0; j < rn_; ++j)
         d *= index_[j].m();
     return d;
     }
 
 template <class IndexT>
-IndexT IndexSet<IndexT>::
-front() const
-    {
-#ifdef DEBUG
-    if(r_ == 0)
-        Error("Empty IndexSet");
-#endif
-    return index_[0];
-    }
-
-template <class IndexT>
-IndexT IndexSet<IndexT>::
-back() const
-    {
-#ifdef DEBUG
-    if(r_ == 0)
-        Error("Empty IndexSet");
-#endif
-    return index_[r_-1];
-    }
-
-template <class IndexT>
 void IndexSet<IndexT>::
 noprime(IndexType type)
     {
-    for(int j = 0; j < r_; ++j) 
-        {
-        IndexT& J = index_[j];
+    for(auto& J : index_) J.noprime(type);
+
 #ifdef DEBUG
         //Check if calling noprime is ok
         //Error if it causes duplicate indices
+    for(size_t j = 0; j < index_.size(); ++j) 
         if(type == All || J.type() == type)
             {
-            for(int k = 0; k < r_; ++k)
+            for(size_t k = 0; k < index_.size(); ++k)
                 {
-                const IndexT& K = index_[k];
+                const auto& K = index_[k];
                 if(type != All && K.type() != type) continue;
                 if(k != j && index_[j].noprimeEquals(index_[k]))
                     {
@@ -323,23 +288,21 @@ noprime(IndexType type)
                 }
             }
 #endif
-        J.noprime(type);
-        }
 	}
 
 template <class IndexT>
 void IndexSet<IndexT>::
 noprime(const IndexT& I)
     {
-    int j = (I.m() == 1 ? rn_ : 0);
-    for(; j < r_; ++j) 
+    auto j = size_t(I.m() == 1 ? rn_ : 0);
+    for(; j < index_.size(); ++j) 
         {
         if(index_[j] == I)
             {
 #ifdef DEBUG
             //Check if calling noprime is ok
             //Error if it causes duplicate indices
-            for(int k = 0; k < r_; ++k)
+            for(size_t k = 0; k < index_.size(); ++k)
                 {
                 if(k != j && index_[j].noprimeEquals(index_[k]))
                     {
@@ -360,16 +323,13 @@ template <class IndexT>
 void IndexSet<IndexT>::
 prime(IndexType type, int inc)
 	{
-    for(int j = 0; j < r_; ++j) 
-        {
-        IndexT& J = index_[j];
-        J.prime(type,inc);
-        }
+    for(auto& J : index_) J.prime(type,inc);
 	}
 
 template <class IndexT>
 void IndexSet<IndexT>::
-prime(const IndexT& I, int inc)
+prime(const IndexT& I, 
+      int inc)
     {
 #ifdef DEBUG
     if(!I)
@@ -377,12 +337,13 @@ prime(const IndexT& I, int inc)
         Error("Request to prime null index");
         }
 #endif
-    for(int j = (I.m() == 1 ? rn_ : 0); j < r_; ++j) 
+    auto start = size_t(I.m() == 1 ? rn_ : 0);
+    for(auto j = start; j < index_.size(); ++j) 
         if(index_[j] == I)
-        {
-        index_[j].prime(inc);
-        return;
-        }
+            {
+            index_[j].prime(inc);
+            return;
+            }
     Print(*this);
     Print(I);
     Error("IndexSet::prime: index not found.");
@@ -392,93 +353,89 @@ template <class IndexT>
 void IndexSet<IndexT>::
 mapprime(int plevold, int plevnew, IndexType type)
 	{
-    for(int j = 0; j < r_; ++j) 
-        {
-        IndexT& J = index_[j];
-        J.mapprime(plevold,plevnew,type);
-        }
+    for(auto& J : index_) J.mapprime(plevold,plevnew,type);
 	}
 
-template <class IndexT>
-IndexSet<IndexT> inline IndexSet<IndexT>::
-operator*(const IndexSet& other) const
-    {
-    IndexSet<IndexT> res;
-
-    //Loop over m!=1 indices of this
-    for(int i = 0; i < rn_; ++i)
-        {
-        const IndexT& I = index_[i];
-        //Loop over m!=1 indices of other
-        bool found = false;
-        for(int j = 0; j < other.rn_; ++j)
-            {
-            if(I == other.index_[j])
-                {
-                found = true;
-                break;
-                }
-            }
-        if(!found) 
-            res.addindex(I);
-        }
-
-    //Loop over m!=1 indices of other
-    for(int j = 0; j < other.rn_; ++j)
-        {
-        const IndexT& J = other.index_[j];
-        //Loop over m!=1 indices of other
-        bool found = false;
-        for(int i = 0; i < rn_; ++i)
-            {
-            if(J == index_[i])
-                {
-                found = true;
-                break;
-                }
-            }
-        if(!found) 
-            res.addindex(J);
-        }
-
-    //Loop over m==1 indices of this
-    for(int i = rn_; i < r_; ++i)
-        {
-        const IndexT& I = index_[i];
-        //Loop over m==1 indices of other
-        bool found = false;
-        for(int j = other.rn_; j < other.r_; ++j)
-            {
-            if(I == other.index_[j])
-                {
-                found = true;
-                break;
-                }
-            }
-        if(!found) 
-            res.addindex(I);
-        }
-
-    //Loop over m!=1 indices of other
-    for(int j = other.rn_; j < other.r_; ++j)
-        {
-        const IndexT& J = other.index_[j];
-        //Loop over m!=1 indices of other
-        bool found = false;
-        for(int i = rn_; i < r_; ++i)
-            {
-            if(J == index_[i])
-                {
-                found = true;
-                break;
-                }
-            }
-        if(!found) 
-            res.addindex(J);
-        }
-
-    return res;
-    }
+//template <class IndexT>
+//IndexSet<IndexT> inline IndexSet<IndexT>::
+//operator*(const IndexSet& other) const
+//    {
+//    IndexSet<IndexT> res;
+//
+//    //Loop over m!=1 indices of this
+//    for(int i = 0; i < rn_; ++i)
+//        {
+//        const IndexT& I = index_[i];
+//        //Loop over m!=1 indices of other
+//        bool found = false;
+//        for(int j = 0; j < other.rn_; ++j)
+//            {
+//            if(I == other.index_[j])
+//                {
+//                found = true;
+//                break;
+//                }
+//            }
+//        if(!found) 
+//            res.addindex(I);
+//        }
+//
+//    //Loop over m!=1 indices of other
+//    for(int j = 0; j < other.rn_; ++j)
+//        {
+//        const IndexT& J = other.index_[j];
+//        //Loop over m!=1 indices of other
+//        bool found = false;
+//        for(int i = 0; i < rn_; ++i)
+//            {
+//            if(J == index_[i])
+//                {
+//                found = true;
+//                break;
+//                }
+//            }
+//        if(!found) 
+//            res.addindex(J);
+//        }
+//
+//    //Loop over m==1 indices of this
+//    for(int i = rn_; i < r_; ++i)
+//        {
+//        const IndexT& I = index_[i];
+//        //Loop over m==1 indices of other
+//        bool found = false;
+//        for(int j = other.rn_; j < other.r_; ++j)
+//            {
+//            if(I == other.index_[j])
+//                {
+//                found = true;
+//                break;
+//                }
+//            }
+//        if(!found) 
+//            res.addindex(I);
+//        }
+//
+//    //Loop over m!=1 indices of other
+//    for(int j = other.rn_; j < other.r_; ++j)
+//        {
+//        const IndexT& J = other.index_[j];
+//        //Loop over m!=1 indices of other
+//        bool found = false;
+//        for(int i = rn_; i < r_; ++i)
+//            {
+//            if(J == index_[i])
+//                {
+//                found = true;
+//                break;
+//                }
+//            }
+//        if(!found) 
+//            res.addindex(J);
+//        }
+//
+//    return res;
+//    }
 
 
 //
@@ -490,36 +447,28 @@ void IndexSet<IndexT>::
 addindex(const IndexT& I)
     {
 #ifdef DEBUG
-    if(r_ == NMAX) 
-        Error("Maximum number of indices reached");
-    if(I == IndexT::Null())
-        Error("Index is null");
-    for(int j = (I.m()==1 ? rn_ : 0); j < r_; ++j)
-        {
-        if(index_[j] == I)
+    if(I == IndexT::Null()) Error("Index is null");
+
+    for(const auto& J : index_)
+        if(J == I)
             {
             Print(*this);
             Print(I);
             Error("Adding Index twice");
             }
-        }
 #endif
-    if(I.m() == 1)
+
+    if(I.m() == 1) 
         {
-        index_[r_] = I;
+        index_.push_back(I);
         }
     else
         {
-        if(r_ != rn_)
-            {
-            //Move all m==1's over by 1
-            for(int k = r_; k > rn_; --k)
-                index_[k] = index_[k-1];
-            }
-        index_[rn_] = I;
+        auto m_eq_one = [](const IndexT& ii) { return ii.m()==1; };
+        auto it = std::find(index_.begin(),index_.end(),m_eq_one);
+        index_.insert(it,I);
         ++rn_;
         }
-    ++r_;
     }
 
 template <class IndexT>
@@ -533,73 +482,25 @@ replaceIndex(const IndexT& oind, const IndexT& nind)
         Error("replaceIndex: new index must have same dimension as old.");
         }
     bool found = false;
-    for(int j = 0; j < r_; ++j) 
+    for(auto& J : index_)
         {
-        if(index_[j] == oind)
+        if(oind == J)
             {
-            index_[j] = nind;
+            J = nind;
             found = true;
+            break;
             }
         }
     if(!found)
         Error("replaceIndex: index not found");
     }
 
-/*
-template <class IndexT>
-void IndexSet<IndexT>::
-addindex1(const array<IndexT,NMAX+1>& indices, int n) 
-    {
-#ifdef DEBUG
-    if(r_+n > NMAX) Error("Maximum number of indices reached");
-#endif
-    for(int j = 1; j <= n; ++j)
-        {
-        const IndexT& J = indices[j];
-        index_[r_] = J;
-        ++r_;
-        ur_ += J.uniqueReal();
-        }
-    }
-    */
-
-/*
-template <class IndexT>
-void IndexSet<IndexT>::
-addindex1(const std::vector<IndexT>& indices) 
-    { 
-#ifdef DEBUG
-    if((r_+(int)indices.size()) > NMAX)
-        {
-        Print(*this);
-        Print(indices.size());
-        Error("Maximum number of indices reached");
-        }
-#endif
-    for(size_t j = 0; j < indices.size(); ++j)
-        { 
-        assert(indices[j].m() == 1);
-
-        index_[r_] = indices[j]; 
-        ++r_;
-        ur_ += indices[j].uniqueReal();
-        }
-    }
-    */
-
 template <class IndexT>
 void IndexSet<IndexT>::
 swap(IndexSet& other)
     {
     index_.swap(other.index_);
-
-    int tmp = r_;
-    r_ = other.r_;
-    other.r_ = tmp;
-
-    tmp = rn_;
-    rn_ = other.rn_;
-    other.rn_ = tmp;
+    std::swap(rn_,other.rn_);
     }
 
 template <class IndexT>
@@ -607,78 +508,105 @@ void IndexSet<IndexT>::
 clear()
     {
     rn_ = 0;
-    r_ = 0;
+    index_.clear();
     }
 
 template <class IndexT>
 void IndexSet<IndexT>::
 dag()
     {
-    for(int j = 0; j < r_; ++j)
-        index_[j].dag();
+    for(auto& J : index_) J.dag();
     }
 
 template <class IndexT>
 void IndexSet<IndexT>::
 read(std::istream& s)
     {
-    s.read((char*) &r_,sizeof(r_));
-    s.read((char*) &rn_,sizeof(rn_));
-    for(int j = 0; j < r_; ++j) 
+    size_t size = 0;
+    s.read((char*) &size,sizeof(size));
+    index_.resize(size);
+    for(auto& J : index_)
         {
-        index_[j].read(s);
+        J.read(s);
         }
+
+    s.read((char*) &rn_,sizeof(rn_));
     }
 
 template <class IndexT>
 void IndexSet<IndexT>::
 write(std::ostream& s) const
     {
-    s.write((char*) &r_,sizeof(r_));
+    size_t size = index_.size();
+    s.write((char*) &size,sizeof(size));
+    for(auto& J : index_)
+        {
+        J.write(s);
+        }
+
     s.write((char*) &rn_,sizeof(rn_));
-    for(int j = 0; j < r_; ++j) 
-        index_[j].write(s);
     }
 
-template <class IndexT>
-template <class Iterable>
-void IndexSet<IndexT>::
-sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset)
+
+template<class IndexT>
+IndexSet<IndexT>::
+init()
     {
 #ifdef DEBUG
-    if(ninds > NMAX)
-        Error("Too many indices for IndexSet");
+    if(rn_ != 0) Error("rn_ should be zero in init()");
+
+    for(const auto& ii : index_)
+        if(ii == IndexT::Null()) Error("Null index in IndexSet");
 #endif
 
-    rn_ = 0;
-    alloc_size = 1;
+    std::sort(index_.begin(),index_.end(),compare_index);
 
-    int r1_ = 0;
-    array<const IndexT*,NMAX> index1_;
-
-    for(int n = offset; n < ninds+offset; ++n)
+    for(const auto& ii : index_)
         {
-        const IndexT& i = I[n];
-#ifdef DEBUG
-        if(i == IndexT::Null()) Error("Null Index in sortIndices");
-#endif
-        if(i.m()==1) 
-            { 
-            index1_[r1_] = &i;
-            ++r1_;
-            }
-        else         
-            { 
-            index_[rn_] = i; 
-            ++rn_;
-            alloc_size *= i.m(); 
-            }
-        }
-    for(int l = 0; l < r1_; ++l) 
-        {
-        index_[rn_+l] = *(index1_[l]);
+        if(ii.m() == 1) break;
+        ++rn_;
         }
     }
+
+//template <class IndexT>
+//template <class Iterable>
+//void IndexSet<IndexT>::
+//sortIndices(const Iterable& I, int ninds, int& alloc_size, int offset)
+//    {
+//#ifdef DEBUG
+//    if(ninds > NMAX)
+//        Error("Too many indices for IndexSet");
+//#endif
+//
+//    rn_ = 0;
+//    alloc_size = 1;
+//
+//    int r1_ = 0;
+//    array<const IndexT*,NMAX> index1_;
+//
+//    for(int n = offset; n < ninds+offset; ++n)
+//        {
+//        const IndexT& i = I[n];
+//#ifdef DEBUG
+//        if(i == IndexT::Null()) Error("Null Index in sortIndices");
+//#endif
+//        if(i.m()==1) 
+//            { 
+//            index1_[r1_] = &i;
+//            ++r1_;
+//            }
+//        else         
+//            { 
+//            index_[rn_] = i; 
+//            ++rn_;
+//            alloc_size *= i.m(); 
+//            }
+//        }
+//    for(int l = 0; l < r1_; ++l) 
+//        {
+//        index_[rn_+l] = *(index1_[l]);
+//        }
+//    }
 
 //
 //
@@ -690,10 +618,9 @@ template<class IndexT>
 Arrow
 dir(const IndexSet<IndexT>& is, const IndexT& I)
     {
-    for(int j = 0; j < is.r(); ++j)
+    for(const auto& J : is)
         {
-        if(is[j] == I) 
-            return is[j].dir();
+        if(J == I) return J.dir();
         }
     Error("dir: Index not found");
     return In;
@@ -704,8 +631,10 @@ template <class IndexT>
 const IndexT&
 finddir(const IndexSet<IndexT>& iset, Arrow dir)
     {
-    for(int j = 0; j < iset.r(); ++j)
-        if(iset[j].dir() == dir) return iset[j];
+    for(const auto& J : iset)
+        {
+        if(J.dir() == dir) return J;
+        }
     Error("Couldn't find index with specified dir");
     return IndexT::Null();
     }
@@ -717,7 +646,8 @@ finddir(const IndexSet<IndexT>& iset, Arrow dir)
 //
 template <class IndexT>
 int
-findindex(const IndexSet<IndexT>& iset, const IndexT& I)
+findindex(const IndexSet<IndexT>& iset, 
+          const IndexT& I)
     {
     int j = (I.m()==1 ? iset.rn() : 0);
     for(; j < iset.r(); ++j)
@@ -733,8 +663,10 @@ template <class IndexT>
 const IndexT&
 findtype(const IndexSet<IndexT>& iset, IndexType t)
 	{
-    for(int j = 0; j < iset.r(); ++j)
-        if(iset[j].type() == t) return iset[j];
+    for(const auto& J : iset)
+        {
+        if(J.type() == t) return J;
+        }
     Error("findtype failed."); 
     return IndexT::Null();
 	}
@@ -746,7 +678,7 @@ findtype(const IndexSet<IndexT>& iset, IndexType t)
 template <class IndexT>
 void
 getperm(const IndexSet<IndexT>& iset, 
-        const typename IndexSet<IndexT>::Storage& oset, 
+        const typename IndexSet<IndexT>::storage& oset, 
         Permutation& P)
 	{
 	for(int j = 0; j < iset.r(); ++j)
@@ -786,7 +718,8 @@ getperm(const IndexSet<IndexT>& iset,
 
 template <class IndexT>
 bool
-hasindex(const IndexSet<IndexT>& iset, const IndexT& I)
+hasindex(const IndexSet<IndexT>& iset, 
+         const IndexT& I)
 	{
     int j = (I.m()==1 ? iset.rn() : 0);
     for(; j < iset.r(); ++j)
@@ -798,10 +731,13 @@ hasindex(const IndexSet<IndexT>& iset, const IndexT& I)
 
 template <class IndexT>
 bool
-hastype(const IndexSet<IndexT>& iset, IndexType t)
+hastype(const IndexSet<IndexT>& iset, 
+        IndexType t)
 	{
-    for(int j = 0; j < iset.r(); ++j)
-        if(iset[j].type() == t) return true;
+    for(const auto& J : iset)
+        {
+        if(J.type() == t) return true;
+        }
     return false;
 	}
 
@@ -835,8 +771,10 @@ template <class IndexT>
 std::ostream&
 operator<<(std::ostream& s, const IndexSet<IndexT>& is)
     {
-    for(int i = 1; i <= is.r(); ++i) 
-        s << is.index(i) << "\n"; 
+    for(const auto& J : iset)
+        {
+        s << J << "\n"; 
+        }
     return s;
     }
 
