@@ -22,7 +22,7 @@ SOURCES+= tevol.cc
 SOURCES+= autompo.cc
 
 HEADERS=global.h real.h permutation.h index.h \
-        indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h  \
+        indexset.h counter.h simpletensor.h itensor.h qn.h iqindex.h iqtdat.h  \
         detail/skip_iterator.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
