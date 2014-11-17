@@ -68,7 +68,7 @@ ostream & operator << (ostream & s, const cpu_time & t)
     return s;
     }
 
-cpu_time cpu_time::sincemark()
+cpu_time cpu_time::sincemark() const
     {
     cpu_time res;
     res.time -= time;

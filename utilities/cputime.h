@@ -20,7 +20,7 @@ public:
 	{ time = cpu_mytime(); wall = cpu_mywall(); }
     void mark() 
 	{ time = cpu_mytime(); wall = cpu_mywall(); }
-    cpu_time sincemark();
+    cpu_time sincemark() const;
     };
 
 std::ostream & operator << (std::ostream & s, const cpu_time & t);
