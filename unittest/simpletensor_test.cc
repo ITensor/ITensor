@@ -13,6 +13,7 @@ TEST_CASE("Simpletensor")
         STensor s;
         CHECK(s.r() == 0);
         CHECK(s.size() == 0);
+        CHECK(!s);
         }
 
     SECTION("Variadic Constructor")
@@ -20,6 +21,7 @@ TEST_CASE("Simpletensor")
             {
             long m0 = 12;
             STensor s(m0);
+            CHECK(s);
             CHECK(s.r() == 1);
             CHECK(s.n(0) == m0);
             CHECK(s.size() == m0);
@@ -66,6 +68,7 @@ TEST_CASE("Simpletensor")
         STensor::index ind = {5,2};
         STensor t(&(v.front()),ind);
 
+        CHECK(t);
         CHECK(!t.ownstorage());
         CHECK(t.n(0) == 5);
         CHECK(t.n(1) == 2);
@@ -81,7 +84,30 @@ TEST_CASE("Simpletensor")
         CHECK_REQUAL(t(4,1),52);
         }
 
+    SECTION("Move in Data")
+        {
+        STensor::index ind = {5,2};
+        STensor::storage v= {11,21,31,41,51,
+                             12,22,32,42,52};
 
+        STensor t(std::move(ind),std::move(v));
 
+        CHECK(ind.empty());
+        CHECK(v.empty());
+
+        CHECK(t.ownstorage());
+        CHECK(t.n(0) == 5);
+        CHECK(t.n(1) == 2);
+        CHECK(t.size() == 5*2);
+
+        CHECK_REQUAL(t(0,0),11);
+        CHECK_REQUAL(t(0,1),12);
+        CHECK_REQUAL(t(2,0),31);
+        CHECK_REQUAL(t(2,1),32);
+        CHECK_REQUAL(t(3,0),41);
+        CHECK_REQUAL(t(3,1),42);
+        CHECK_REQUAL(t(4,0),51);
+        CHECK_REQUAL(t(4,1),52);
+        }
 
     }
