@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_SIMPLETENSOR_H
 #define __ITENSOR_SIMPLETENSOR_H
 
-#include <array>
 #include "matrixref.h"
 
 namespace itensor {
@@ -30,7 +29,7 @@ class simpletensor
     private:
     index n_;          // size of each index;  first index dim is n[0]; indices from 0 to n[j]-1
     index stride_;     // spacing in memory for that index, stride_[0]==1 (column-major order)
-    T* data = nullptr; // always used to point to the storage
+    T* data_ = nullptr; // always used to point to the storage
     storage vec_;      // used if it owns its storage
     public:
 
@@ -38,8 +37,8 @@ class simpletensor
     //  if it owns storage  2) simpletensor T(v);  v a vector<int> or vector<long int>
     //                      3) simpletensor T;  uninitialized
     // resize has the same sets of arguments
-    // The only way to construct it where it does not own its data
-    // is  simpletensor(T* dat, const vector<U>& dims)
+    // To construct a simpletensor which does not own its data:
+    //     simpletensor(T* dat, const vector<U>& dims)
 
     simpletensor() { }
 
@@ -66,20 +65,42 @@ class simpletensor
         init(true); 
         }
 
+    // U == int or long
+    template<typename U, typename InputIterator>
+    simpletensor(const std::vector<U>& dims,
+                 InputIterator first,
+                 InputIterator last)
+        : 
+        vec_(first,last)
+        { 
+        set_n(dims); 
+        initNoAlloc(true); 
+        }
+
+    simpletensor(index&& dims,
+                 storage&& vv)
+        : 
+        n_(std::move(dims)),
+        vec_(std::move(vv))
+        { 
+        initNoAlloc(true); 
+        }
+
     template<typename U> // U == int or long
     simpletensor(const T* dat, 
                  const std::vector<U>& dims) 
         : 
-        data(const_cast<T*>(dat))
+        data_(const_cast<T*>(dat))
         { 
         set_n(dims); 
         init(false); 
         }
 
-    simpletensor(const T* dat, index&& dims) 
+    simpletensor(const T* dat, 
+                 index&& dims) 
         : 
         n_(std::move(dims)),
-        data(const_cast<T*>(dat))
+        data_(const_cast<T*>(dat))
         { 
         init(false); 
         }
@@ -87,6 +108,14 @@ class simpletensor
     // number of indices (tensor rank)
     long 
     r() const { return n_.size(); }
+
+    long 
+    size() const { return vec_.size(); }
+
+    explicit operator bool() const { return bool(data_);}
+
+    bool
+    ownstorage() const { return (!vec_.empty() && data_==&vec_.front()); }
 
     // dimension of index i
     long 
@@ -96,17 +125,23 @@ class simpletensor
     long 
     stride(long i) const { return stride_[i]; }
 
-    long 
-    size() const { return vec_.size(); }
-
-    // direct access to data
+    // direct access to element
     const T& 
-    v(long i) const { return data[i]; }
+    v(long i) const { return data_[i]; }
+
+    // direct access to element
+    T& 
+    vref(long i) { return data_[i]; }
 
     // direct access to data
-    T& 
-    vref(long i) { return data[i]; }
+    const T*
+    data() const { return data_; }
 
+    // direct access to data
+    T*
+    data() { return data_; }
+
+    // access storage
     const storage&
     store() const { return vec_; }
 
@@ -129,63 +164,46 @@ class simpletensor
         init(true); 
         }
 
+    template<typename Iterable>
+    long
+    indIterable(const Iterable& inds) const
+        {
+        long ii = 0, 
+             i = 0;
+        for(auto& j : inds)
+            {
+            ii += stride_[i] * j;
+            ++i;
+            }
+        return ii;
+        }
+
     template<typename U>
-    long 
+    long
     ind(const std::vector<U>& inds) const
         {
-        long ii = 0, i = 0;
-        for(auto& j : inds)
-            {
-            ii += stride_[i] * j;
-            ++i;
-            }
-        return ii;
+        return indIterable(inds);
         }
 
-    long 
-    ind(std::initializer_list<long> inds) const
+    template<typename U, size_t size>
+    long
+    ind(const std::array<U,size>& inds) const
         {
-        long ii = 0, i = 0;
-        for(auto& j : inds)
-            {
-            ii += stride_[i] * j;
-            ++i;
-            }
-        return ii;
+        return indIterable(inds);
         }
-
-    long 
-    ind(long i0) const { return i0; }
 
     template <typename... Inds>
     long
     ind(long i0, Inds... inds) { return __ind<0>(i0,inds...); }
 
-    // Element access through t({i,j,k,l}) etc. any number of indices
-    //                through t(i,j,k,l) etc. probably fastest
-    //                through t(vector<long>& vi) generally
+
+    template <typename Ind0, typename... Inds>
     T& 
-    operator()(std::initializer_list<long> inds) { return data[ind(inds)]; }
+    operator()(const Ind0& i0, Inds... rest) { return data_[ind(i0,rest...)]; }
 
+    template <typename Ind0, typename... Inds>
     const T& 
-    operator()(const index& inds) const { return data[ind(inds)]; }
-
-    T& 
-    operator()(long i0) { return data[ind(i0)]; }
-
-    const T& 
-    operator()(long i0) const { return data[ind(i0)]; }
-
-    template <typename... Inds>
-    T& 
-    operator()(long i0, Inds... rest) { return data[ind(i0,rest...)]; }
-
-    template <typename... Inds>
-    const T& 
-    operator()(long i0, Inds... rest) const { return data[ind(i0,rest...)]; }
-
-    bool
-    ownstorage() const { return (!vec_.empty() && data==&vec_.front()); }
+    operator()(Ind0 i0, Inds... rest) const { return data_[ind(i0,rest...)]; }
 
     void 
     clear()
@@ -193,7 +211,7 @@ class simpletensor
         vec_.clear();
         n_.clear();
         stride_.clear();
-        data = nullptr;
+        data_ = nullptr;
         }
 
     private:
@@ -207,8 +225,9 @@ class simpletensor
             n_[i] = long{v[i]};
         }
 
-    void 
-    init(bool ownstore) // if member-data n_ is initialized, take care of stride and data
+    // assumes n_ has already been set
+    long
+    computeStride()
         {
         stride_.resize(r());
         long len = 1;
@@ -217,10 +236,31 @@ class simpletensor
             stride_[i] = len;
             len *= n_[i];
             }
+        return len;
+        }
+
+    // assumes n_ has already been set and
+    // vec_ has already been allocated to correct size
+    void 
+    initNoAlloc(bool ownstore)
+        {
+        auto len = computeStride();
+        if(ownstore && len > 0)
+            {
+            if(vec_.size() != len) throw std::runtime_error("Wrong size of input data");
+            data_ = &vec_.front();
+            }
+        }
+
+    // assumes n_ has already been set
+    void 
+    init(bool ownstore)
+        {
+        auto len = computeStride();
         if(ownstore && len > 0)
             {
             vec_.resize(len);
-            data = &vec_.front();
+            data_ = &vec_.front();
             }
         }
 
@@ -240,5 +280,7 @@ class simpletensor
 
     };
 
+
 }; //namespace itensor
+
 #endif
