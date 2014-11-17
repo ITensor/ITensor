@@ -74,7 +74,10 @@ IT_IntToType(int n)
     }
 
 void
-reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vector& res)
+reshape(const Permutation& P, 
+        const IndexSet<Index>& is, 
+        const Vector& dat, 
+        Vector& res)
     {
     if(P.isTrivial())
         {
@@ -262,52 +265,51 @@ ITensor()
 ITensor::
 ITensor(Real val) 
     :
-    type_(Dense),
-    scale_(1)
+    scale_(1),
+    type_(DenseReal)
     { 
-    allocate(1);
-    r_->v = val;
+    allocate(1,val);
     }
 
 ITensor::
 ITensor(const Index& i1) 
     :
-    type_(Dense),
     is_(i1),
-    scale_(1)
+    scale_(1),
+    type_(DenseReal)
 	{ 
     allocate(i1.m());
     }
 
 ITensor::
-ITensor(const Index& i1, Real val) 
+ITensor(const Index& i1, 
+        Real val) 
     :
-    type_(Dense),
     is_(i1),
-    scale_(1)
+    scale_(1),
+    type_(DenseReal)
 	{ 
-    allocate(i1.m());
-    r_->v = val; 
+    allocate(i1.m(),val);
     }
 
 ITensor::
-ITensor(const Index& i1, const VectorRef& V) 
+ITensor(const Index& i1, 
+        const VectorRef& V) 
     : 
-    type_(Dense),
-    r_(make_shared<ITDat>(V)),
     is_(i1),
-    scale_(1)
+    scale_(1),
+    type_(DenseReal)
 	{ 
-	if(i1.m() != V.Length()) 
-	    Error("Mismatch of Index and Vector sizes.");
+    allocate(V);
+	if(i1.m() != V.Length()) Error("Mismatch of Index and Vector sizes.");
 	}
 
 ITensor::
 ITensor(const Index& i1,const Index& i2) 
     :
-    type_(Dense),
     is_(i1,i2),
-    scale_(1)
+    scale_(1),
+    type_(DenseReal)
 	{ 
     allocate(i1.m()*i2.m());
     }
@@ -317,143 +319,89 @@ ITensor::
 ITensor(const Index& i1,const Index& i2,Real a) 
     :
     is_(i1,i2),
-    scale_(1)
+    scale_(1),
+    type_(DiagReal)
 	{
-    type_ = Diag;
-    const int dim = min(i1.m(),i2.m());
-    allocate(dim);
-    r_->v = a;
+    allocate(std::min(i1.m(),i2.m()),a);
 	}
 
 ITensor::
-ITensor(const Index& i1,const Index& i2, const VectorRef& V) 
+ITensor(const Index& i1,
+        const Index& i2, 
+        const VectorRef& V) 
     :
     is_(i1,i2),
-    scale_(1)
+    scale_(1),
+    type_(DiagReal)
 	{
-    type_ = Diag;
-    allocate();
-    r_->v = V;
+    allocate(V);
 #ifdef DEBUG
-    const int dim = min(i1.m(),i2.m());
-    if(V.Length() != dim)
+    if(V.Length() != min(i1.m(),i2.m()))
         Error("Diagonal vector must have length == min(i1.m(),i2.m())");
 #endif
 	}
 
 ITensor::
-ITensor(const Index& i1,const Index& i2,const MatrixRef& M) 
+ITensor(const Index& i1,
+        const Index& i2,
+        const MatrixRef& M) 
     :
-    type_(Dense),
     is_(i1,i2),
-    scale_(1)
+    scale_(1),
+    type_(DenseReal)
 	{
-    allocate(i1.m()*i2.m());
 	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
 	    Error("Mismatch of Index sizes and matrix.");
 	MatrixRef dref; 
-	r_->v.TreatAsMatrix(dref,i2.m(),i1.m()); 
+    Vector v(i1.m()*i2.m());
+	v.TreatAsMatrix(dref,i2.m(),i1.m()); 
 	dref = M.t();
-	}
-
-ITensor::
-ITensor(const Index& i1, const Index& i2, const Index& i3,
-        const Index& i4, const Index& i5, const Index& i6,
-        const Index& i7, const Index& i8)
-    :
-    type_(Dense),
-    scale_(1)
-	{
-#ifdef DEBUG
-    if(i1 == Index::Null())
-        Error("i1 is null");
-    if(i2 == Index::Null())
-        Error("i2 is null");
-    if(i3 == Index::Null())
-        Error("i3 is null");
-#endif
-	array<Index,NMAX> ii = {{ i1, i2, i3, i4, i5, i6, i7, i8 }};
-	int size = 3;
-	while(ii[size] != Index::Null()) ++size;
-	int alloc_size = -1; 
-    is_ = IndexSet<Index>(ii,size,alloc_size,0);
-	allocate(alloc_size);
+    allocate(i1.m()*i2.m(),v);
 	}
 
 ITensor::
 ITensor(const IndexVal& iv)
     :
-    type_(Dense),
     is_(iv.index),
-    scale_(1)
+    scale_(1),
+    type_(DenseReal)
 	{ 
     allocate(iv.m());
-	r_->v(iv.i) = 1; 
+	store_->v(iv.i) = 1; 
 	}
 
 ITensor::
-ITensor(const IndexVal& iv1, const IndexVal& iv2) 
+ITensor(const IndexVal& iv1, 
+        const IndexVal& iv2) 
     :
-    type_(Dense),
     is_(iv1.index,iv2.index),
-    scale_(1)
+    scale_(1),
+    type_(DenseReal)
 	{ 
     allocate(iv1.m()*iv2.m());
-	r_->v((iv2.i-1)*iv1.m()+iv1.i) = 1; 
+	store_->v((iv2.i-1)*iv1.m()+iv1.i) = 1; 
 	}
 
-ITensor::
-ITensor(const IndexVal& iv1, const IndexVal& iv2, 
-        const IndexVal& iv3, const IndexVal& iv4, 
-        const IndexVal& iv5, const IndexVal& iv6, 
-        const IndexVal& iv7, const IndexVal& iv8)
-    :
-    type_(Dense),
-    scale_(1)
-	{
-    //Construct ITensor
-    array<Index,NMAX+1> ii = 
-        {{ iv1.index, iv2.index, iv3.index, iv4.index, iv5.index, 
-           iv6.index, iv7.index, iv8.index, Index::Null()}};
-    int size = 3; 
-    while(ii[size] != Index::Null()) ++size;
-    int alloc_size = -1;
-    is_ = IndexSet<Index>(ii,size,alloc_size,0);
-    allocate(alloc_size);
-
-    //Assign specified element to 1
-    array<int,NMAX+1> iv = 
-        {{ iv1.i, iv2.i, iv3.i, iv4.i, iv5.i, iv6.i, iv7.i, iv8.i, 1 }};
-    array<int,NMAX> ja; 
-    ja.fill(0);
-    for(int k = 0; k < is_.rn(); ++k) //loop over indices of this ITensor
-    for(int j = 0; j < size; ++j)      // loop over the given indices
-        {
-        if(is_[k] == ii[j]) 
-            { ja[k] = iv[j]-1; break; }
-        }
-
-    r_->v[_ind(is_,ja[0],ja[1],ja[2],ja[3],ja[4],ja[5],ja[6],ja[7])] = 1;
-    }
 
 ITensor::
 ITensor(const IndexSet<Index>& I) 
     :
-    type_(Dense),
     is_(I),
-    scale_(1)
+    scale_(1),
+    type_(DenseReal)
 	{
 	allocate(is_.dim());
 	}
 
 ITensor::
-ITensor(const IndexSet<Index>& I, const Vector& V) 
+ITensor(const IndexSet<Index>& I, 
+        const Vector& V) 
     : 
-    type_(Dense),
-    r_(make_shared<ITDat>(V)),
     is_(I),
-    scale_(1)
+    scale_(1),
+    type_(DenseReal)
 	{
+    allocate(V);
 #ifdef DEBUG
     if(is_.dim() != V.Length())
 	    Error("incompatible Index and Vector sizes");
@@ -462,26 +410,28 @@ ITensor(const IndexSet<Index>& I, const Vector& V)
 
 
 ITensor::
-ITensor(const IndexSet<Index>& I, const ITensor& other) 
+ITensor(const IndexSet<Index>& I, 
+        const ITensor& other) 
     : 
-    type_(other.type_),
-    r_(other.r_), 
-    i_(other.i_), 
     is_(I),
-    scale_(other.scale_)
+    d_(other.d_)
+    store_(other.store_)
+    scale_(other.scale_),
+    type_(other.type_)
 	{
 #ifdef DEBUG
-	if(is_.dim() != other.is_.dim()) 
-	    { Error("incompatible dimensions"); }
+	if(is_.dim() != other.is_.dim()) Error("incompatible dimensions");
 #endif
 	}
 
 ITensor::
-ITensor(const IndexSet<Index>& I, const ITensor& other, const Permutation& P) 
+ITensor(const IndexSet<Index>& I, 
+        const ITensor& other, 
+        const Permutation& P) 
     : 
-    type_(other.type_),
     is_(I),
-    scale_(other.scale_)
+    scale_(other.scale_),
+    type_(other.type_)
     {
 #ifdef DEBUG
     if(is_.dim() != other.is_.dim()) 
@@ -489,21 +439,26 @@ ITensor(const IndexSet<Index>& I, const ITensor& other, const Permutation& P)
 #endif
     if(P.isTrivial()) 
         { 
-        r_ = other.r_; 
-        i_ = other.i_; 
+        d_ = other.d_;
+        store_ = other.store_;
         }
     else               
         { 
-        allocate(); 
-        reshape(P,other.is_,other.r_->v,r_->v); 
+        Error("Not yet implemented");
+        //allocate(); 
+        //reshape(P,other.is_,other.r_->v,r_->v); 
 
-        if(other.i_)
-            {
-            allocateImag();
-            reshape(P,other.is_,other.i_->v,i_->v); 
-            }
+        //if(other.i_)
+        //    {
+        //    allocateImag();
+        //    reshape(P,other.is_,other.i_->v,i_->v); 
+        //    }
         }
     }
+
+//TODO
+
+GOT TO HERE
 
 ITensor& ITensor::
 takeRealPart()
@@ -1526,18 +1481,6 @@ scaleTo(const LogNumber& newscale)
     scale_ = newscale;
     }
 
-
-void ITensor::
-allocate(int dim) 
-    { 
-    r_ = make_shared<ITDat>(dim); 
-    }
-
-void ITensor::
-allocate() 
-    { 
-    r_ = make_shared<ITDat>(); 
-    }
 
 void ITensor::
 allocateImag(int dim) 
@@ -3275,30 +3218,28 @@ operator<<(ostream & s, const ITensor& t)
 
 ITDat::
 ITDat() 
-    : 
-    v(0)
-    { }
+    { 
+    }
 
 ITDat::
-ITDat(int size) 
+ITDat(size_type size) 
     : 
-    v(size)
+    v(size,0.)
     { 
-    v = 0; 
     }
 
 ITDat::
 ITDat(const VectorRef& v_) 
     : 
-    v(v_)
-    { }
+    v(v_.begin(),v_.end())
+    { 
+    }
 
 ITDat::
 ITDat(Real r) 
     : 
-    v(1)
+    v(1,r)
     { 
-    v = r; 
     }
 
 ITDat::
@@ -3310,10 +3251,10 @@ ITDat(const ITDat& other)
 void ITDat:: 
 read(std::istream& s) 
     { 
-    int size = 0;
+    size_type size = 0;
     s.read((char*) &size,sizeof(size));
-    v.ReDimension(size);
-    s.read((char*) v.Store(), sizeof(Real)*size);
+    v.resize(size);
+    s.read((char*) v.front(), sizeof(Real)*size);
     }
 
 

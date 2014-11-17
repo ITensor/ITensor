@@ -26,24 +26,38 @@ void toMatrixProd(const ITensor& L, const ITensor& R,
 class ITensor
     {
     public:
-    enum Type { Null, Dense, Diag };
+
+    enum Type { Null, 
+                DenseReal, 
+                DenseCplx, 
+                DiagReal, 
+                DiagCplx };
 
     using IndexT = Index;
     using IndexValT = IndexVal;
     using CombinerT = Combiner;
 
     private:
-    //
-    //Data members
-    //
-    Type type_;
-    //Pointer to ITDat containing tensor data
-    shared_ptr<ITDat> r_, //real part
-                      i_; //imag part
+
+    ////////////
+
     //Indices, maximum of 8
     IndexSet<Index> is_;
+
     //scale_ absorbs scalar factors to avoid copying ITDat
     LogNumber scale_; 
+
+    // d_ always points to ITensor data
+    Real* d_ = nullptr;
+
+    // store_ points to ITDat if ITensor
+    // has shared ownership of storage
+    shared_ptr<ITDat> store_;
+
+    // type_ tells how to interpret storage
+    Type type_ = Null;
+
+    //////////////
 
     public:
 
@@ -60,10 +74,10 @@ class ITensor
 
     //false if ITensor is default constructed
     bool 
-    valid() const { return type_!=Null; }
+    valid() const { return (type_ != Null); }
 
     bool
-    isComplex() const { return bool(i_); }
+    isComplex() const { return (type_ == DenseCplx || type_ == DiagCplx); }
 
     //Sets this ITensor to its real part only
     ITensor&
@@ -83,7 +97,6 @@ class ITensor
     const LogNumber&
     scale() const { return scale_; }
 
-
     Type
     type() const { return type_; }
 
@@ -102,15 +115,15 @@ class ITensor
     ITensor(const Index& i1);
 
     //Construct rank 2 ITensor, all entries set to zero
-    ITensor(const Index& i1,const Index& i2);
+    ITensor(const Index& i1,
+            const Index& i2);
 
-    //Construct ITensor up to rank 8, entries set to zero
-    ITensor(const Index& i1, const Index& i2, const Index& i3,
-            const Index& i4 = Index::Null(),
-            const Index& i5 = Index::Null(),
-            const Index& i6 = Index::Null(),
-            const Index& i7 = Index::Null(),
-            const Index& i8 = Index::Null());
+    //Construct arbitrary rank ITensor, entries set to zero
+    template <typename... Inds>
+    ITensor(const Index& i1,
+            const Index& i2, 
+            const Index& i3,
+            const Inds&... inds);
 
     //Construct rank 0 ITensor (scalar), value set to val
     explicit
@@ -157,7 +170,8 @@ class ITensor
 
     ITensor(const IndexSet<Index>& I, const ITensor& other);
 
-    ITensor(const IndexSet<Index>& I, const ITensor& other, 
+    ITensor(const IndexSet<Index>& I, 
+            const ITensor& other, 
             const Permutation& P);
 
     //Read in ITensor from binary stream s
@@ -484,10 +498,13 @@ class ITensor
 
     private:
 
+    template<typename.. Args>
     void 
-    allocate(int dim);
-    void 
-    allocate();
+    allocate(Args&&... args)
+        {
+        store_ = make_shared<ITDat>(std::forward<Args>(args)...);
+        d_ = store_->front();
+        }
 
     void 
     allocateImag(int dim);
@@ -551,6 +568,58 @@ class ITensor
 
     }; // class ITensor
 
+template <typename... Inds>
+ITensor::
+ITensor(const Index& i1,
+        const Index& i2, 
+        const Index& i3,
+        const Inds&... inds)
+    :
+    is_{i1,i2,i3,inds...},
+    scale_(1),
+    type_(DenseReal)
+    {
+    allocate(is_.dim());
+    }
+
+template <typename... IVs>
+ITensor::
+ITensor(const IndexVal& iv1, 
+        const IndexVal& iv2, 
+        const IndexVal& iv3, 
+        const IVs&... rest) 
+    {
+    :
+    scale_(1),
+    type_(DenseReal)
+	{
+    const auto size = 3 + sizeof...(rest);
+    std::array<Index,size> ivs = {{ iv1, iv2, iv3, static_cast<Index>(rest)...}};
+
+    IndexSet<Index>::storage inds(size);
+    for(size_t j = 0; j < size; ++j)
+        {
+        inds[j] = ivs[j].index;
+        }
+
+    is_ = IndexSet<Index>(std::move(inds));
+
+    //Assign specified element to 1
+    array<int,size> ja; 
+    ja.fill(0);
+    for(int k = 0; k < is_.rn(); ++k) //loop over indices of this ITensor
+    for(const auto& iv : ivs)  // loop over the given IndexVals
+        {
+        if(is_[k] == iv.index) 
+            { 
+            ja[k] = iv.i-1; 
+            break; 
+            }
+        }
+
+    auto t = simpletensor<Real>(&(store_->v.front()),is_);
+    t(ja) = 1;
+    }
 
 
 class commaInit
@@ -585,16 +654,21 @@ class commaInit
 //
 // ITDat
 //
-class ITDat
+struct ITDat
     {
-    public:
+    using storage = std::vector<Real>;
+    using size_type = storage::size_type;
 
-    Vector v;
+    storage v;
 
     ITDat();
 
     explicit 
-    ITDat(int size);
+    ITDat(size_type size);
+
+    explicit 
+    ITDat(size_type size,
+          Real val);
 
     explicit 
     ITDat(const VectorRef& v_);
@@ -605,8 +679,9 @@ class ITDat
     explicit 
     ITDat(const ITDat& other);
 
-    int
-    size() const { return v.Length(); }
+    size_type
+    size() const { return v.size(); }
+
 
     void
     read(std::istream& s);
@@ -614,13 +689,10 @@ class ITDat
     void 
     write(std::ostream& s) const;
     
-    friend class ITensor;
-
     private:
 
     //Must be dynamically allocated:
-    void operator=(const ITDat&);
-
+    void operator=(const ITDat&) = delete;
 
     };
 
