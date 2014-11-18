@@ -432,7 +432,7 @@ class ITensor
     imagDatStart() const;
 
     void 
-    randomize(const OptSet& opts = Global::opts());
+    randomize(const Args& args = Global::args());
 
     void 
     conj();
@@ -934,13 +934,13 @@ imagPart(const Tensor& T)
 
 //Returns true if T is exactly zero.
 //
-//If passed the option Opt("Fast",true),
+//If passed the option Args("Fast",true),
 //only performs fast operations such as checking
 //the scale of T, but skips computing T's norm.
 //This can cause the return value to be true even
 //if T is actually zero.
 bool
-isZero(const ITensor& T, const OptSet& opts = Global::opts());
+isZero(const ITensor& T, const Args& args = Global::args());
 
 //
 // Tracing over all indices results in a Real

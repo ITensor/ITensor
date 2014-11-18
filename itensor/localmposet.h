@@ -16,7 +16,7 @@ class LocalMPOSet
     LocalMPOSet();
 
     LocalMPOSet(const std::vector<MPOt<Tensor> >& Op,
-                const OptSet& opts = Global::opts());
+                const Args& args = Global::args());
 
     using IndexT = typename Tensor::IndexT;
 
@@ -90,7 +90,7 @@ LocalMPOSet()
 template <class Tensor>
 inline LocalMPOSet<Tensor>::
 LocalMPOSet(const std::vector<MPOt<Tensor> >& Op,
-            const OptSet& opts)
+            const Args& args)
     : 
     Op_(&Op),
     lmpo_(Op.size())

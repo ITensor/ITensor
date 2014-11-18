@@ -19,7 +19,7 @@ template <typename BigMatrixT, typename Tensor>
 std::vector<Real>
 powerMethod(const BigMatrixT& A, 
             std::vector<Tensor>& vecs,
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
 
 //
 // Use Arnoldi iteration to find the N eigenvectors
@@ -33,7 +33,7 @@ template <class BigMatrixT, class Tensor>
 std::vector<Complex>
 arnoldi(const BigMatrixT& A, 
         std::vector<Tensor>& vecs,
-        const OptSet& opts = Global::opts());
+        const Args& args = Global::args());
 
 //Arnoldi wrapper for just obtaining the single dominant
 //eigenvalue/eigenvector pair
@@ -41,7 +41,7 @@ template <class BigMatrixT, class Tensor>
 Complex
 arnoldi(const BigMatrixT& A, 
         Tensor& vec,
-        const OptSet& opts = Global::opts());
+        const Args& args = Global::args());
 
 //
 // Use the Davidson algorithm to find the 
@@ -53,7 +53,7 @@ arnoldi(const BigMatrixT& A,
 template <class BigMatrixT, class Tensor> 
 Real 
 davidson(const BigMatrixT& A, Tensor& phi,
-         const OptSet& opts = Global::opts());
+         const Args& args = Global::args());
 
 //
 // Use Davidson to find the N eigenvectors with smallest 
@@ -67,13 +67,13 @@ template <class BigMatrixT, class Tensor>
 std::vector<Real>
 davidson(const BigMatrixT& A, 
          std::vector<Tensor>& phi,
-         const OptSet& opts = Global::opts());
+         const Args& args = Global::args());
 
 template <class BigMatrixT, class Tensor> 
 std::vector<Complex>
 complexDavidson(const BigMatrixT& A, 
                 std::vector<Tensor>& phi,
-                const OptSet& opts = Global::opts());
+                const Args& args = Global::args());
 
 //
 // Uses the Davidson algorithm to find the minimal
@@ -86,7 +86,7 @@ Real
 genDavidson(const BigMatrixTA& A, 
                 const BigMatrixTB& B, 
                 Tensor& phi, 
-                const OptSet& opts = Global::opts());
+                const Args& args = Global::args());
 
 
 
@@ -102,12 +102,12 @@ template <typename BigMatrixT, typename Tensor>
 std::vector<Real>
 powerMethod(const BigMatrixT& A, 
             std::vector<Tensor>& vecs,
-            const OptSet& opts)
+            const Args& args)
     {
     const size_t nget = vecs.size();
     const int maxiter = 1000;
-    const Real errgoal_ = opts.getReal("ErrGoal",1E-4);
-    const int dlevel = opts.getInt("DebugLevel",0);
+    const Real errgoal_ = args.getReal("ErrGoal",1E-4);
+    const int dlevel = args.getInt("DebugLevel",0);
     std::vector<Real> eigs(nget,1000);
     for(size_t t = 0; t < nget; ++t)
         {
@@ -185,18 +185,18 @@ template <class BigMatrixT, class Tensor>
 std::vector<Complex>
 arnoldi(const BigMatrixT& A, 
         std::vector<Tensor>& phi,
-        const OptSet& opts)
+        const Args& args)
     {
-    int maxiter_ = opts.getInt("MaxIter",10);
-    int maxrestart_ = opts.getInt("MaxRestart",0);
-    const Real errgoal_ = opts.getReal("ErrGoal",1E-6);
-    const int debug_level_ = opts.getInt("DebugLevel",-1);
+    int maxiter_ = args.getInt("MaxIter",10);
+    int maxrestart_ = args.getInt("MaxRestart",0);
+    const Real errgoal_ = args.getReal("ErrGoal",1E-6);
+    const int debug_level_ = args.getInt("DebugLevel",-1);
 
     if(maxiter_ < 1) maxiter_ = 1;
     if(maxrestart_ < 0) maxrestart_ = 0;
 
     const Real Approx0 = 1E-12;
-    const int Npass = opts.getInt("Npass",2); // number of Gram-Schmidt passes
+    const int Npass = args.getInt("Npass",2); // number of Gram-Schmidt passes
 
     const size_t nget = phi.size();
     if(nget == 0) Error("No initial vectors passed to arnoldi.");
@@ -398,10 +398,10 @@ template <class BigMatrixT, class Tensor>
 Complex
 arnoldi(const BigMatrixT& A, 
         Tensor& vec,
-        const OptSet& opts)
+        const Args& args)
     {
     std::vector<Tensor> phi(1,vec);
-    Complex res = arnoldi(A,phi,opts).front();
+    Complex res = arnoldi(A,phi,args).front();
     vec = phi.front();
     return res;
     }
@@ -470,11 +470,11 @@ class PseudoInverter
 template <class BigMatrixT, class Tensor> 
 Real
 davidson(const BigMatrixT& A, Tensor& phi,
-         const OptSet& opts)
+         const Args& args)
     {
     std::vector<Tensor> v(1);
     v.front() = phi;
-    std::vector<Real> eigs = davidson(A,v,opts);
+    std::vector<Real> eigs = davidson(A,v,args);
     phi = v.front();
     return eigs.front();
     }
@@ -483,11 +483,11 @@ template <class BigMatrixT, class Tensor>
 std::vector<Real>
 davidson(const BigMatrixT& A, 
          std::vector<Tensor>& phi,
-         const OptSet& opts)
+         const Args& args)
     {
-    const int debug_level_ = opts.getInt("DebugLevel",-1);
+    const int debug_level_ = args.getInt("DebugLevel",-1);
     const Real Approx0 = 1E-12;
-    std::vector<Complex> ceigs = complexDavidson(A,phi,opts);
+    std::vector<Complex> ceigs = complexDavidson(A,phi,args);
     std::vector<Real> eigs(ceigs.size());
     for(size_t j = 0; j < ceigs.size(); ++j)
         {
@@ -507,13 +507,13 @@ template <class BigMatrixT, class Tensor>
 std::vector<Complex>
 complexDavidson(const BigMatrixT& A, 
                 std::vector<Tensor>& phi,
-                const OptSet& opts)
+                const Args& args)
     {
-    const int maxiter_ = opts.getInt("MaxIter",2);
-    const Real errgoal_ = opts.getReal("ErrGoal",1E-4);
-    const int debug_level_ = opts.getInt("DebugLevel",-1);
-    const int miniter_ = opts.getInt("MinIter",1);
-    const bool hermitian = opts.getBool("Hermitian",true);
+    const int maxiter_ = args.getInt("MaxIter",2);
+    const Real errgoal_ = args.getReal("ErrGoal",1E-4);
+    const int debug_level_ = args.getInt("DebugLevel",-1);
+    const int miniter_ = args.getInt("MinIter",1);
+    const bool hermitian = args.getBool("Hermitian",true);
 
     const Real Approx0 = 1E-12;
 
@@ -958,13 +958,13 @@ Real
 genDavidson(const BigMatrixTA& A, 
                 const BigMatrixTB& B, 
                 Tensor& phi, 
-                const OptSet& opts)
+                const Args& args)
     {
-    int maxiter_ = opts.getInt("MaxIter",2);
-    Real errgoal_ = opts.getReal("ErrGoal",1E-4);
-    //int numget_ = opts.getInt("NumGet",1);
-    int debug_level_ = opts.getInt("DebugLevel",-1);
-    //int miniter_ = opts.getInt("MinIter",1);
+    int maxiter_ = args.getInt("MaxIter",2);
+    Real errgoal_ = args.getReal("ErrGoal",1E-4);
+    //int numget_ = args.getInt("NumGet",1);
+    int debug_level_ = args.getInt("DebugLevel",-1);
+    //int miniter_ = args.getInt("MinIter",1);
 
     Error("genDavidson still in development");
 

@@ -1422,7 +1422,7 @@ imagDatStart() const
     }
 
 void ITensor::
-randomize(const OptSet& opts) 
+randomize(const Args& args) 
     { 
     solo(); 
     convertToDense();
@@ -1430,7 +1430,7 @@ randomize(const OptSet& opts)
         {
         r_->v[j] = Global::random();
         }
-    if(i_ || opts.getBool("Complex",false))
+    if(i_ || args.getBool("Complex",false))
         {
         allocateImag(r_->v.Length());
         for(int j = 0; j < i_->v.Length(); ++j)
@@ -3455,12 +3455,12 @@ BraKet(const ITensor& x, const ITensor& y)
     }
 
 bool
-isZero(const ITensor& T, const OptSet& opts)
+isZero(const ITensor& T, const Args& args)
     {
     if(T.scale().isZero())
         return true;
     //done with all fast checks
-    if(opts.getBool("Fast",false)) return false;
+    if(args.getBool("Fast",false)) return false;
     if(T.normNoScale() == 0) return false;
     return false;
     }

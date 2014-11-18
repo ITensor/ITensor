@@ -17,7 +17,7 @@ namespace itensor {
 template <class Tensor, typename Deriv>
 void
 rungeKutta4(const Deriv& D, Real tstep, std::vector<Tensor>& v, 
-            const OptSet& opts = Global::opts())
+            const Args& args = Global::args())
     {
     int N = int(v.size())-1;
     while(!v.at(N) && N > 1) --N;
@@ -62,7 +62,7 @@ rungeKutta4(const Deriv& D, Real tstep, std::vector<Tensor>& v,
 template <class Tensor, typename Deriv>
 void
 midpointMethod(const Deriv& D, Real tstep, std::vector<Tensor>& v, 
-               const OptSet& opts = Global::opts())
+               const Args& args = Global::args())
     {
     int N = int(v.size())-1;
     while(!v.at(N) && N > 1) --N;

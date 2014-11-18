@@ -416,7 +416,7 @@ void
 ungroupMPS(vector<Tensor>& psig,
            MPSt<Tensor>& psi, 
            Direction dir = Fromleft,
-           const OptSet& opts = Global::opts())
+           const Args& args = Global::args())
     {
     using IndexT = typename Tensor::IndexT;
 
@@ -466,9 +466,9 @@ ungroupMPS(vector<Tensor>& psig,
             Tensor U;
 
             if(dir == Fromleft)
-                svd(bond,psi.Anc(j),D,U,opts);
+                svd(bond,psi.Anc(j),D,U,args);
             else
-                svd(bond,U,D,psi.Anc(j),opts);
+                svd(bond,U,D,psi.Anc(j),args);
 
             j += d;
 
@@ -495,9 +495,9 @@ ungroupMPS(vector<Tensor>& psig,
         }
     }
 template void ungroupMPS(vector<ITensor>& psig,
-              MPSt<ITensor>& psi, Direction dir, const OptSet& opts);
+              MPSt<ITensor>& psi, Direction dir, const Args& args);
 template void ungroupMPS(vector<IQTensor>& psig,
-              MPSt<IQTensor>& psi, Direction dir, const OptSet& opts);
+              MPSt<IQTensor>& psi, Direction dir, const Args& args);
 
 
 template <class Tensor>
@@ -551,7 +551,7 @@ template <class Tensor>
 Real
 oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep, 
           MPSt<Tensor>& psi, 
-          const OptSet& opts)
+          const Args& args)
     {
     using IndexT = typename Tensor::IndexT;
     using MPST = MPSt<Tensor>;
@@ -565,7 +565,7 @@ oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
         Error("tstep must be positive");
 
     const
-    bool verbose = opts.getBool("Verbose",false);
+    bool verbose = args.getBool("Verbose",false);
 
     const int N = H.N();
 
@@ -589,8 +589,8 @@ oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
     //        }
     //    }
 
-    const int nexact = opts.getInt("NExact",0);
-    const int Order = opts.getInt("ExactOrder",4);
+    const int nexact = args.getInt("NExact",0);
+    const int Order = args.getInt("ExactOrder",4);
     if(nexact > 0)
         {
         cout << format("Exact tstep = %.5f") % tstep << endl;
@@ -712,7 +712,7 @@ oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
 
         if(verbose) cout << "Ungrouping sites" << endl;
 
-        ungroupMPS(psiv,spec,psi,dir,opts);
+        ungroupMPS(psiv,spec,psi,dir,args);
 
         if(verbose)
             {
@@ -811,11 +811,11 @@ oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
 template
 Real
 oldImagTEvol(const MPOt<ITensor>& H, Real ttotal, Real tstep, 
-          MPSt<ITensor>& psi, const OptSet& opts);
+          MPSt<ITensor>& psi, const Args& args);
 template
 Real
 oldImagTEvol(const MPOt<IQTensor>& H, Real ttotal, Real tstep, 
-          MPSt<IQTensor>& psi, const OptSet& opts);
+          MPSt<IQTensor>& psi, const Args& args);
 */
 
 
@@ -825,13 +825,13 @@ imagTEvol(const MPOt<Tensor>& H,
           Real ttotal, 
           Real tstep, 
           MPSt<Tensor>& psi, 
-          const OptSet& opts)
+          const Args& args)
     {
     using MPST = MPSt<Tensor>;
 
-    const bool verbose = opts.getBool("Verbose",false);
-    const int order = opts.getInt("Order",4);
-    const bool showm = opts.getBool("ShowM",false);
+    const bool verbose = args.getBool("Verbose",false);
+    const int order = args.getInt("Order",4);
+    const bool showm = args.getBool("ShowM",false);
 
     if(verbose) 
         {
@@ -847,12 +847,12 @@ imagTEvol(const MPOt<Tensor>& H,
         if(fabs(ttotal-tsofar) < this_step)
             this_step = fabs(ttotal-tsofar);
 
-        applyExpH(psi,H,this_step,psi1,opts&Opt("DoRelCutoff"));
+        applyExpH(psi,H,this_step,psi1,args+Args("DoRelCutoff"));
 
         //MPST last(psi1);
         //for(int ord = order; ord >= 1; --ord)
         //    {
-        //    fitApplyMPO(psi,-this_step/(1.*ord),last,H,psi1,opts&Opt("DoRelCutoff"));
+        //    fitApplyMPO(psi,-this_step/(1.*ord),last,H,psi1,args+Args("DoRelCutoff"));
         //    if(ord != 1) last = psi1;
         //    }
 
@@ -889,11 +889,11 @@ imagTEvol(const MPOt<Tensor>& H,
 template
 void
 imagTEvol(const MPOt<ITensor>& H, Real ttotal, Real tstep, 
-          MPSt<ITensor>& psi, const OptSet& opts);
+          MPSt<ITensor>& psi, const Args& args);
 template
 void
 imagTEvol(const MPOt<IQTensor>& H, Real ttotal, Real tstep, 
-          MPSt<IQTensor>& psi, const OptSet& opts);
+          MPSt<IQTensor>& psi, const Args& args);
 
 
 template <class Tensor>

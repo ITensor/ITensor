@@ -19,7 +19,7 @@ class AutoMPO;
 template <typename Tensor>
 MPOt<Tensor>
 toMPO(const AutoMPO& a,
-      const OptSet& opts = Global::opts());
+      const Args& args = Global::args());
 
 
 //
@@ -30,24 +30,24 @@ toMPO(const AutoMPO& a,
 // tau (Real is auto convertible to Complex) will 
 // result in a real-valued MPO.
 //
-// Options recognized:
-// o Approx
+// Arguments recognized:
+// o "Approx":
 //   - (Default) "ZW1" - Zaletel et al. "W1" approximation
 //
 template <typename Tensor>
 MPOt<Tensor>
 toExpH(const AutoMPO& a,
        Complex tau,
-       const OptSet& opts = Global::opts());
+       const Args& args = Global::args());
 
 
 
 //Instantiations of templates to allow us to define them
 //later in autompo.cc
-template<> MPO toMPO<ITensor>(const AutoMPO& a, const OptSet& opts);
-template<> IQMPO toMPO<IQTensor>(const AutoMPO& a, const OptSet& opts);
-template<> MPO toExpH<ITensor>(const AutoMPO& a, Complex tau, const OptSet& opts);
-template<> IQMPO toExpH<IQTensor>(const AutoMPO& a, Complex tau, const OptSet& opts);
+template<> MPO toMPO<ITensor>(const AutoMPO& a, const Args& args);
+template<> IQMPO toMPO<IQTensor>(const AutoMPO& a, const Args& args);
+template<> MPO toExpH<ITensor>(const AutoMPO& a, Complex tau, const Args& args);
+template<> IQMPO toExpH<IQTensor>(const AutoMPO& a, Complex tau, const Args& args);
 
 
 struct SiteTerm

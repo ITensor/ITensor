@@ -48,14 +48,14 @@ class LocalMPO
     //Regular case where H is an MPO for a finite system
     //
     LocalMPO(const MPOt<Tensor>& H, 
-             const OptSet& opts = Global::opts());
+             const Args& args = Global::args());
 
     //
     //Use an MPS instead of an MPO. Equivalent to using an MPO
     //of the outer product |Psi><Psi| but much more efficient.
     //
     LocalMPO(const MPSt<Tensor>& Psi, 
-             const OptSet& opts = Global::opts());
+             const Args& args = Global::args());
 
     //
     //Use an MPO having boundary indices capped off by left and
@@ -65,7 +65,7 @@ class LocalMPO
     LocalMPO(const MPOt<Tensor>& H, 
              const Tensor& LH, 
              const Tensor& RH,
-             const OptSet& opts = Global::opts());
+             const Args& args = Global::args());
 
     //
     //Use an MPS with boundary indices capped off by left and right
@@ -75,7 +75,7 @@ class LocalMPO
     LocalMPO(const MPSt<Tensor>& Psi, 
              const Tensor& LP,
              const Tensor& RP,
-             const OptSet& opts = Global::opts());
+             const Args& args = Global::args());
 
     //
     // Sparse Matrix Methods
@@ -252,50 +252,50 @@ LocalMPO()
 template <class Tensor>
 inline LocalMPO<Tensor>::
 LocalMPO(const MPOt<Tensor>& H, 
-         const OptSet& opts)
+         const Args& args)
     : Op_(&H),
       PH_(H.N()+2),
       LHlim_(0),
       RHlim_(H.N()+1),
       nc_(2),
-      lop_(opts),
+      lop_(args),
       do_write_(false),
       writedir_("."),
       Psi_(0)
     { 
-    if(opts.defined("NumCenter"))
-        numCenter(opts.getInt("NumCenter"));
+    if(args.defined("NumCenter"))
+        numCenter(args.getInt("NumCenter"));
     }
 
 template <class Tensor>
 inline LocalMPO<Tensor>::
 LocalMPO(const MPSt<Tensor>& Psi, 
-         const OptSet& opts)
+         const Args& args)
     : Op_(0),
       PH_(Psi.N()+2),
       LHlim_(0),
       RHlim_(Psi.N()+1),
       nc_(2),
-      lop_(opts),
+      lop_(args),
       do_write_(false),
       writedir_("."),
       Psi_(&Psi)
     { 
-    if(opts.defined("NumCenter"))
-        numCenter(opts.getInt("NumCenter"));
+    if(args.defined("NumCenter"))
+        numCenter(args.getInt("NumCenter"));
     }
 
 template <class Tensor>
 inline LocalMPO<Tensor>::
 LocalMPO(const MPOt<Tensor>& H, 
          const Tensor& LH, const Tensor& RH,
-         const OptSet& opts)
+         const Args& args)
     : Op_(&H),
       PH_(H.N()+2),
       LHlim_(0),
       RHlim_(H.N()+1),
       nc_(2),
-      lop_(opts),
+      lop_(args),
       do_write_(false),
       writedir_("."),
       Psi_(0)
@@ -304,8 +304,8 @@ LocalMPO(const MPOt<Tensor>& H,
     PH_[H.N()+1] = RH;
     if(H.N()==2)
         lop_.update(Op_->A(1),Op_->A(2),L(),R());
-    if(opts.defined("NumCenter"))
-        numCenter(opts.getInt("NumCenter"));
+    if(args.defined("NumCenter"))
+        numCenter(args.getInt("NumCenter"));
     }
 
 template <class Tensor>
@@ -313,21 +313,21 @@ inline LocalMPO<Tensor>::
 LocalMPO(const MPSt<Tensor>& Psi, 
          const Tensor& LP,
          const Tensor& RP,
-         const OptSet& opts)
+         const Args& args)
     : Op_(0),
       PH_(Psi.N()+2),
       LHlim_(0),
       RHlim_(Psi.N()+1),
       nc_(2),
-      lop_(opts),
+      lop_(args),
       do_write_(false),
       writedir_("."),
       Psi_(&Psi)
     { 
     PH_[0] = LP;
     PH_[Psi.N()+1] = RP;
-    if(opts.defined("NumCenter"))
-        numCenter(opts.getInt("NumCenter"));
+    if(args.defined("NumCenter"))
+        numCenter(args.getInt("NumCenter"));
     }
 
 template <class Tensor> inline
@@ -599,7 +599,7 @@ template <class Tensor>
 void inline LocalMPO<Tensor>::
 initWrite()
     {
-    std::string global_write_dir = Global::opts().getString("WriteDir","./");
+    std::string global_write_dir = Global::args().getString("WriteDir","./");
     writedir_ = mkTempDir("PH",global_write_dir);
     }
 

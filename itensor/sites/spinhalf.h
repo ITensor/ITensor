@@ -28,10 +28,10 @@ class SpinHalf : public SiteSet
     getState(int i, const String& state) const;
 
     IQTensor
-    getOp(int i, const String& opname, const OptSet& opts) const;
+    getOp(int i, const String& opname, const Args& opts) const;
 
     DefaultOpsT
-    getDefaultOps(const OptSet& opts) const;
+    getDefaultOps(const Args& opts) const;
 
     virtual void
     doRead(std::istream& s);
@@ -127,7 +127,7 @@ getState(int i, const String& state) const
     }
 
 inline IQTensor SpinHalf::
-getOp(int i, const String& opname, const OptSet& opts) const
+getOp(int i, const String& opname, const Args& opts) const
     {
     const
     IQIndex s(si(i));
@@ -200,7 +200,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
     }
 
 SpinHalf::DefaultOpsT inline SpinHalf::
-getDefaultOps(const OptSet& opts) const
+getDefaultOps(const Args& opts) const
     {
     static const std::vector<String> dops_(initDefaultOps());
     return dops_;

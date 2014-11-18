@@ -325,7 +325,7 @@ class IQTensor
     clean(Real min_norm = MIN_CUT);
 
     void 
-    randomize(const OptSet& opts = Global::opts());
+    randomize(const Args& args = Global::args());
 
     //Take complex conjugate, do not reverse IQIndex arrows
     IQTensor& 
@@ -341,7 +341,7 @@ class IQTensor
     void
     replaceIndex(const IQIndex& oind,
                  const IQIndex& nind,
-                 const OptSet& opts = Global::opts());
+                 const Args& args = Global::args());
 
     void
     swap(IQTensor& other);
@@ -486,7 +486,7 @@ BraKet(IQTensor x, const IQTensor& y);
 //the same divergence, throws an exception
 //(since IQTensor is not correctly constructed).
 QN 
-div(const IQTensor& T, const OptSet& opts = Global::opts());
+div(const IQTensor& T, const Args& args = Global::args());
 
 const IQIndex&
 findIQInd(const IQTensor& T, const Index& i);
@@ -507,14 +507,14 @@ usesIndex(const IQTensor& T, const Index& i);
 
 //Returns true if T is exactly zero.
 //
-//If passed the option Opt("Fast",true),
+//If passed the argument Args("Fast",true),
 //only performs fast operations such as checking
 //whether T contains any blocks, but skips computing
 //the norm of the blocks.
 //This can cause the return value to be true even
 //if T is actually zero.
 bool
-isZero(const IQTensor& T, const OptSet& opts = Global::opts());
+isZero(const IQTensor& T, const Args& args = Global::args());
 
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);

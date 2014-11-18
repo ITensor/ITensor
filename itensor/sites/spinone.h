@@ -17,7 +17,7 @@ class SpinOne : public SiteSet
 
     SpinOne();
 
-    SpinOne(int N, const OptSet& opts = Global::opts());
+    SpinOne(int N, const Args& opts = Global::opts());
 
     private:
 
@@ -31,10 +31,10 @@ class SpinOne : public SiteSet
     getState(int i, const String& state) const;
 
     virtual IQTensor
-    getOp(int i, const String& opname, const OptSet& opts) const;
+    getOp(int i, const String& opname, const Args& opts) const;
 
     void
-    constructSites(const OptSet& opts);
+    constructSites(const Args& opts);
 
     void
     doRead(std::istream& s);
@@ -56,7 +56,7 @@ SpinOne()
     { }
 
 inline SpinOne::
-SpinOne(int N, const OptSet& opts)
+SpinOne(int N, const Args& opts)
     : N_(N),
       site_(N_+1)
     { 
@@ -64,7 +64,7 @@ SpinOne(int N, const OptSet& opts)
     }
 
 inline void SpinOne::
-constructSites(const OptSet& opts)
+constructSites(const Args& opts)
     {
     for(int j = 1; j <= N_; ++j)
         {
@@ -143,7 +143,7 @@ getState(int i, const String& state) const
     }
 
 inline IQTensor SpinOne::
-getOp(int i, const String& opname, const OptSet& opts) const
+getOp(int i, const String& opname, const Args& opts) const
     {
     const
     IQIndex s(si(i));

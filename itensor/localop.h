@@ -42,14 +42,14 @@ class LocalOp
     // Constructors
     //
 
-    LocalOp(const OptSet& opts = Global::opts());
+    LocalOp(const Args& args = Global::args());
 
     LocalOp(const Tensor& Op1, const Tensor& Op2,
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
 
     LocalOp(const Tensor& Op1, const Tensor& Op2, 
             const Tensor& L, const Tensor& R,
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
 
     //
     // Sparse Matrix Methods
@@ -161,7 +161,7 @@ class LocalOp
 
 template <class Tensor>
 inline LocalOp<Tensor>::
-LocalOp(const OptSet& opts)
+LocalOp(const Args& args)
     :
     Op1_(nullptr),
     Op2_(nullptr),
@@ -174,7 +174,7 @@ LocalOp(const OptSet& opts)
 template <class Tensor>
 inline LocalOp<Tensor>::
 LocalOp(const Tensor& Op1, const Tensor& Op2,
-        const OptSet& opts)
+        const Args& args)
     : 
     Op1_(nullptr),
     Op2_(nullptr),
@@ -189,7 +189,7 @@ template <class Tensor>
 inline LocalOp<Tensor>::
 LocalOp(const Tensor& Op1, const Tensor& Op2, 
         const Tensor& L, const Tensor& R,
-        const OptSet& opts)
+        const Args& args)
     : 
     Op1_(nullptr),
     Op2_(nullptr),

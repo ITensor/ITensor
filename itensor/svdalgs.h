@@ -21,7 +21,7 @@ namespace itensor {
 template<class Tensor>
 Spectrum 
 svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
-    const OptSet& opts = Global::opts());
+    const Args& args = Global::args());
 
 //
 // Density Matrix Decomposition
@@ -42,9 +42,9 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 template<class Tensor>
 Spectrum 
 denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-             const OptSet& opts = Global::opts())
+             const Args& args = Global::args())
     {
-    return denmatDecomp(AA,A,B,dir,LocalOp<Tensor>::Null(),opts);
+    return denmatDecomp(AA,A,B,dir,LocalOp<Tensor>::Null(),args);
     }
 
 //Density matrix decomp with LocalOpT object supporting the noise term
@@ -54,7 +54,7 @@ template<class Tensor, class LocalOpT>
 Spectrum 
 denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
              const LocalOpT& PH,
-             OptSet opts = Global::opts());
+             Args args = Global::args());
 
 
 
@@ -71,7 +71,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 template<class Tensor>
 Spectrum 
 diagHermitian(const Tensor& M, Tensor& U, Tensor& D, 
-              OptSet opts = Global::opts());
+              Args args = Global::args());
 
 
 
@@ -87,7 +87,7 @@ template<class Tensor>
 Spectrum 
 orthoDecomp(Tensor T, Tensor& A, Tensor& B, 
             Direction dir, 
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
 
 
 //
@@ -101,7 +101,7 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
 template<class Tensor>
 Spectrum 
 csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
-     const OptSet& opts = Global::opts());
+     const Args& args = Global::args());
 
 
 //
@@ -135,7 +135,7 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
 template<class Tensor>
 void 
 eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
-          const OptSet& opts = Global::opts());
+          const Args& args = Global::args());
 
 
 ///////////////////////////
@@ -148,26 +148,26 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
 Spectrum 
 svdRank2(ITensor A, const Index& ui, const Index& vi,
          ITensor& U, ITensor& D, ITensor& V,
-         const OptSet& opts = Global::opts());
+         const Args& args = Global::args());
 
 Spectrum 
 svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
          IQTensor& U, IQTensor& D, IQTensor& V,
-         const OptSet& opts = Global::opts());
+         const Args& args = Global::args());
 
 template<class Tensor>
 Spectrum 
 svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
-    const OptSet& opts)
+    const Args& args)
     {
     using IndexT = typename Tensor::IndexT;
     using CombinerT = typename Tensor::CombinerT;
 
-    const Real noise = opts.getReal("Noise",0.);
-    const bool useOrigM = opts.getBool("UseOrigM",false);
-    const OptSet* opts_ = &opts;
+    const Real noise = args.getReal("Noise",0.);
+    const bool useOrigM = args.getBool("UseOrigM",false);
+    const Args* args_ = &args;
     
-    if(isZero(AA,Opt("Fast"))) 
+    if(isZero(AA,Args("Fast"))) 
         throw ResultIsZero("svd: AA is zero");
 
     if(noise > 0)
@@ -192,12 +192,12 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 
     AA = Ucomb * AA * Vcomb;
 
-    OptSet newOpts(opts);
+    Args newArgs(args);
     if(useOrigM)
         {
         //Try to determine current m,
         //then set minm_ and maxm_ to this.
-        newOpts.add("Cutoff",-1);
+        newArgs.add("Cutoff",-1);
         int minm = 1,
             maxm = MAX_M;
         if(D.r() == 0)
@@ -210,13 +210,13 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
             {
             minm = maxm = D.indices().front().m();
             }
-        newOpts.add("Minm",minm);
-        newOpts.add("Maxm",maxm);
-        opts_ = &newOpts;
+        newArgs.add("Minm",minm);
+        newArgs.add("Maxm",maxm);
+        args_ = &newArgs;
         }
 
     Spectrum spec = 
-    svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,*opts_);
+    svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,*args_);
 
     U = dag(Ucomb) * U;
     V = V * dag(Vcomb);
@@ -228,11 +228,11 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 template<class Tensor>
 Spectrum 
 csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
-     const OptSet& opts)
+     const Args& args)
     {
     Tensor UU(L),VV(R);
     Tensor D(V);
-    Spectrum spec = svd(AA,UU,D,VV,opts);
+    Spectrum spec = svd(AA,UU,D,VV,args);
 
     L = UU*D;
     R = D*VV;
@@ -247,14 +247,14 @@ Spectrum
 denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, 
              Direction dir, 
              const LocalOpT& PH,
-             OptSet opts)
+             Args args)
     {
     using IndexT = typename Tensor::IndexT;
     using CombinerT = typename Tensor::CombinerT;
 
-    const Real noise = opts.getReal("Noise",0.);
+    const Real noise = args.getReal("Noise",0.);
 
-    if(isZero(AA,Opt("Fast"))) 
+    if(isZero(AA,Args("Fast"))) 
         {
         throw ResultIsZero("denmatDecomp: AA is zero");
         }
@@ -300,22 +300,22 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
         rho *= 1./trace(realPart(rho));
         }
 
-    if(opts.getBool("UseOrigM",false))
+    if(args.getBool("UseOrigM",false))
         {
-        opts.add("Cutoff",-1);
-        opts.add("Minm",mid.m());
-        opts.add("Maxm",mid.m());
+        args.add("Cutoff",-1);
+        args.add("Minm",mid.m());
+        args.add("Maxm",mid.m());
         }
 
-    if(opts.getBool("TraceReIm",false))
+    if(args.getBool("TraceReIm",false))
         {
         rho = realPart(rho);
         }
 
     Tensor U;
     Tensor D;
-    opts.add("Truncate",true);
-    Spectrum spec = diag_hermitian(rho,U,D,opts);
+    args.add("Truncate",true);
+    Spectrum spec = diag_hermitian(rho,U,D,args);
 
     comb.dag();
     comb.product(dag(U),to_orth);
@@ -328,22 +328,22 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
 
 Spectrum 
 diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
-               const OptSet& opts = Global::opts());
+               const Args& args = Global::args());
 
 Spectrum 
 diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
-               const OptSet& opts = Global::opts());
+               const Args& args = Global::args());
 
 
 template<class Tensor>
 Spectrum 
 diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
-              OptSet opts)
+              Args args)
     {
     using IndexT = typename Tensor::IndexT;
     using CombinerT = typename Tensor::CombinerT;
 
-    if(isZero(M,Opt("Fast"))) 
+    if(isZero(M,Args("Fast"))) 
         throw ResultIsZero("denmatDecomp: M is zero");
 
     CombinerT comb;
@@ -374,7 +374,7 @@ diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
         throw e;
         }
 
-    Spectrum spec = diag_hermitian(Mc,U,D,opts);
+    Spectrum spec = diag_hermitian(Mc,U,D,args);
 
     U = comb * U;
 
@@ -387,12 +387,12 @@ template<class Tensor>
 Spectrum 
 orthoDecomp(Tensor T, Tensor& A, Tensor& B, 
             Direction dir, 
-            const OptSet& opts)
+            const Args& args)
     {
     using IndexT = typename Tensor::IndexT;
     using CombinerT = typename Tensor::CombinerT;
 
-    if(isZero(T,Opt("Fast"))) 
+    if(isZero(T,Args("Fast"))) 
         throw ResultIsZero("orthoDecomp: T is zero");
 
     const
@@ -402,7 +402,7 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
 
     if(usedenmat)
         {
-        spec = denmatDecomp(T,A,B,dir,opts & Opt("TraceReIm") & Opt("Noise",0));
+        spec = denmatDecomp(T,A,B,dir,args + Args("TraceReIm",true,"Noise",0));
         }
     else //use svd
         {
@@ -437,7 +437,7 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
 
 
         Tensor D;
-        spec = svdRank2(T,Acomb.right(),Bcomb.right(),A,D,B,opts);
+        spec = svdRank2(T,Acomb.right(),Bcomb.right(),A,D,B,args);
 
         A = dag(Acomb) * A;
         B = B * dag(Bcomb);
@@ -460,21 +460,21 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
 
 void 
 eig_decomp(ITensor T, const Index& L, const Index& R, ITensor& V, ITensor& D,
-           const OptSet& opts = Global::opts());
+           const Args& args = Global::args());
 
 void 
 eig_decomp(IQTensor T, const IQIndex& L, const IQIndex& R, IQTensor& V, IQTensor& D,
-           const OptSet& opts = Global::opts());
+           const Args& args = Global::args());
 
 template<class Tensor>
 void 
 eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
-          const OptSet& opts)
+          const Args& args)
     {
     using IndexT = typename Tensor::IndexT;
     using CombinerT = typename Tensor::CombinerT;
 
-    if(isZero(T,Opt("Fast"))) 
+    if(isZero(T,Args("Fast"))) 
         throw ResultIsZero("eigDecomp: T is zero");
 
     CombinerT ccomb, //common or column indices
@@ -510,7 +510,7 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
         Error("Tensor not square-matrix-like in eigDecomp");
         }
 
-    eig_decomp(Tc,rcomb.right(),ccomb.right(),V,D,opts);
+    eig_decomp(Tc,rcomb.right(),ccomb.right(),V,D,args);
 
     V = V * ccomb;
     }

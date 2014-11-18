@@ -415,12 +415,12 @@ endTerm(const std::string& op)
 template<>
 IQMPO
 toMPO<IQTensor>(const AutoMPO& am,
-                const OptSet& opts)
+                const Args& args)
     {
     const SiteSet& sites = am.sites();
     IQMPO H(sites);
     const int N = sites.N();
-    const auto checkqn = opts.getBool("CheckQNs",true);
+    const auto checkqn = args.getBool("CheckQNs",true);
 
     for(auto& t : am.terms())
     if(t.Nops() > 2) 
@@ -661,10 +661,10 @@ toMPO<IQTensor>(const AutoMPO& am,
 template<>
 MPO
 toMPO<ITensor>(const AutoMPO& a,
-               const OptSet& opts)
+               const Args& args)
     {
-    static Opt checkqn("CheckQNs",false);
-    IQMPO res = toMPO<IQTensor>(a,opts+checkqn);
+    static Args checkqn("CheckQNs",false);
+    IQMPO res = toMPO<IQTensor>(a,args+checkqn);
     return res.toMPO();
     }
 
@@ -672,7 +672,7 @@ toMPO<ITensor>(const AutoMPO& a,
 IQMPO
 toExpH_ZW1(const AutoMPO& am,
            Complex tau,
-           const OptSet& opts)
+           const Args& args)
     {
     const SiteSet& sites = am.sites();
     IQMPO H(sites);
@@ -887,13 +887,13 @@ template<>
 IQMPO
 toExpH<IQTensor>(const AutoMPO& a,
          Complex tau,
-         const OptSet& opts)
+         const Args& args)
     {
-    auto approx = opts.getString("Approx","ZW1");
+    auto approx = args.getString("Approx","ZW1");
     IQMPO res;
     if(approx == "ZW1")
         {
-        res = toExpH_ZW1(a,tau,opts);
+        res = toExpH_ZW1(a,tau,args);
         }
     else
         {
@@ -906,9 +906,9 @@ template<>
 MPO
 toExpH<ITensor>(const AutoMPO& a,
                 Complex tau,
-                const OptSet& opts)
+                const Args& args)
     {
-    IQMPO res = toExpH<IQTensor>(a,tau,opts);
+    IQMPO res = toExpH<IQTensor>(a,tau,args);
     return res.toMPO();
     }
 

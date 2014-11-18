@@ -14,7 +14,7 @@ class Spinless : public SiteSet
 
     Spinless();
 
-    Spinless(int N, const OptSet& opts = Global::opts());
+    Spinless(int N, const Args& opts = Global::opts());
 
     private:
 
@@ -28,7 +28,7 @@ class Spinless : public SiteSet
     getState(int i, const String& state) const;
 
     virtual IQTensor
-    getOp(int i, const String& opname, const OptSet& opts = Global::opts()) const;
+    getOp(int i, const String& opname, const Args& opts = Global::opts()) const;
 
     void
     constructSites();
@@ -61,7 +61,7 @@ Spinless()
     }
 
 inline Spinless::
-Spinless(int N, const OptSet& opts)
+Spinless(int N, const Args& opts)
     : N_(N),
       site_(N_+1)
     { 
@@ -154,7 +154,7 @@ getState(int i, const String& state) const
     }
 
 inline IQTensor Spinless::
-getOp(int i, const String& opname, const OptSet& opts) const
+getOp(int i, const String& opname, const Args& opts) const
     {
     const
     IQIndex s(si(i));

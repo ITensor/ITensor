@@ -21,15 +21,15 @@ class DMRGObserver : public Observer
     public:
     
     DMRGObserver(const MPSt<Tensor>& psi, 
-                 const OptSet& opts = Global::opts());
+                 const Args& args = Global::args());
 
     virtual ~DMRGObserver() { }
 
     void virtual
-    measure(const OptSet& opts = Global::opts());
+    measure(const Args& args = Global::args());
     
     bool virtual
-    checkDone(const OptSet& opts = Global::opts());
+    checkDone(const Args& args = Global::args());
 
     void virtual
     lastSpectrum(const Spectrum& spec) { last_spec_ = spec; }
@@ -66,11 +66,11 @@ class DMRGObserver : public Observer
 
 template<class Tensor>
 inline DMRGObserver<Tensor>::
-DMRGObserver(const MPSt<Tensor>& psi, const OptSet& opts) 
+DMRGObserver(const MPSt<Tensor>& psi, const Args& args) 
     : 
     psi_(psi),
-    energy_errgoal(opts.getReal("EnergyErrgoal",-1)), 
-    printeigs(opts.getBool("PrintEigs",true)),
+    energy_errgoal(args.getReal("EnergyErrgoal",-1)), 
+    printeigs(args.getBool("PrintEigs",true)),
     max_eigs(-1),
     max_te(-1),
     done_(false),
@@ -81,15 +81,15 @@ DMRGObserver(const MPSt<Tensor>& psi, const OptSet& opts)
 
 template<class Tensor>
 void inline DMRGObserver<Tensor>::
-measure(const OptSet& opts)
+measure(const Args& args)
     {
     const int N = psi_.N();
-    const int b = opts.getInt("AtBond",1);
-    const int sw = opts.getInt("Sweep",0);
-    const int ha = opts.getInt("HalfSweep",0);
-    const Real energy = opts.getReal("Energy",0);
+    const int b = args.getInt("AtBond",1);
+    const int sw = args.getInt("Sweep",0);
+    const int ha = args.getInt("HalfSweep",0);
+    const Real energy = args.getReal("Energy",0);
 
-    if(!opts.getBool("Quiet",false) && !opts.getBool("NoMeasure",false))
+    if(!args.getBool("Quiet",false) && !args.getBool("NoMeasure",false))
         {
         if(b < N && b > 0)
             {
@@ -146,10 +146,10 @@ measure(const OptSet& opts)
 
 template<class Tensor>
 bool inline DMRGObserver<Tensor>::
-checkDone(const OptSet& opts)
+checkDone(const Args& args)
     {
-    const int sw = opts.getInt("Sweep",0);
-    const Real energy = opts.getReal("Energy",0);
+    const int sw = args.getInt("Sweep",0);
+    const Real energy = args.getReal("Energy",0);
     
     if(sw == 1) last_energy_ = 1000;
     if(energy_errgoal > 0 && sw%2 == 0)

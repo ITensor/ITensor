@@ -830,7 +830,7 @@ trace(const IQIndex& i1, const IQIndex& i2,
     }
 
 void IQTensor::
-randomize(const OptSet& opts) 
+randomize(const Args& args) 
 	{ 
     if(!valid())
         Error("Can't randomize default constructed IQTensor.");
@@ -861,12 +861,12 @@ randomize(const OptSet& opts)
         ITensor& block = getBlock(nset);
         if(block)
             {
-            block.randomize(opts);
+            block.randomize(args);
             }
         else
             {
             ITensor t(nset);
-            t.randomize(opts);
+            t.randomize(args);
             insertAdd(block,t);
             }
         }
@@ -1451,9 +1451,9 @@ pseudoInvert(Real cutoff)
 void IQTensor::
 replaceIndex(const IQIndex& oind,
              const IQIndex& nind,
-             const OptSet& opts)
+             const Args& args)
     { 
-    if(opts.getBool("CheckArrows",true))
+    if(args.getBool("CheckArrows",true))
         {
         if(nind.dir() != dir(*this,oind))
             {
@@ -1545,7 +1545,7 @@ BraKet(IQTensor x, const IQTensor& y)
 
 
 QN
-div(const IQTensor& T, const OptSet& opts)
+div(const IQTensor& T, const Args& args)
 	{
 	if(T.empty())
 	    {   
@@ -1561,7 +1561,7 @@ div(const IQTensor& T, const OptSet& opts)
         div_ += qn(T,i)*dir(T,i);
         }
 
-    bool fast = opts.getBool("Fast",false);
+    bool fast = args.getBool("Fast",false);
 #ifdef DEBUG
     fast = false;
 #endif
@@ -1642,11 +1642,11 @@ uses_ind(const IQTensor& T, const Index& ii)
     }
 
 bool
-isZero(const IQTensor& T, const OptSet& opts)
+isZero(const IQTensor& T, const Args& args)
     {
     if(T.empty()) return true;
     //done with all fast checks
-    if(opts.getBool("Fast",false)) return false;
+    if(args.getBool("Fast",false)) return false;
     for(const ITensor& t : T.blocks())
         {
         if(!isZero(t)) return false;

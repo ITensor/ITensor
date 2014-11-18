@@ -56,7 +56,7 @@ MPOt(const SiteSet& sites, Real _logrefNorm);
 /*
 template<class Tensor> 
 void MPOt<Tensor>::
-position(int i, const OptSet& opts)
+position(int i, const Args& args)
     {
     if(isNull()) Error("position: MPS is null");
 
@@ -64,27 +64,27 @@ position(int i, const OptSet& opts)
         {
         if(l_orth_lim_ < 0) l_orth_lim_ = 0;
         Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
-        svdBond(l_orth_lim_+1,WF,Fromleft,opts);
+        svdBond(l_orth_lim_+1,WF,Fromleft,args);
         }
     while(r_orth_lim_ > i+1)
         {
         if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
         Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
-        svdBond(r_orth_lim_-2,WF,Fromright,opts);
+        svdBond(r_orth_lim_-2,WF,Fromright,args);
         }
 
     is_ortho_ = true;
     }
 template void MPOt<ITensor>::
-position(int b, const OptSet& opts);
+position(int b, const Args& args);
 template void MPOt<IQTensor>::
-position(int b, const OptSet& opts);
+position(int b, const Args& args);
 */
 
 /*
 template <class Tensor>
 void MPOt<Tensor>::
-orthogonalize(const OptSet& opts)
+orthogonalize(const Args& args)
     {
     //Do a half-sweep to the right, orthogonalizing each bond
     //but do not truncate since the basis to the right might not
@@ -113,16 +113,16 @@ orthogonalize(const OptSet& opts)
     is_ortho_ = true;
     }
 template
-void MPOt<ITensor>::orthogonalize(const OptSet& opts);
+void MPOt<ITensor>::orthogonalize(const Args& args);
 template
-void MPOt<IQTensor>::orthogonalize(const OptSet& opts);
+void MPOt<IQTensor>::orthogonalize(const Args& args);
 */
 
 
 template <class Tensor>
 MPOt<Tensor>& MPOt<Tensor>::
 plusEq(const MPOt<Tensor>& other_,
-       const OptSet& opts)
+       const Args& args)
     {
     if(doWrite())
         Error("operator+= not supported if doWrite(true)");
@@ -150,15 +150,15 @@ plusEq(const MPOt<Tensor>& other_,
             { 
             return *this;
             }
-        return addAssumeOrth(other,opts);
+        return addAssumeOrth(other,args);
         }
 
-    return addAssumeOrth(other_,opts);
+    return addAssumeOrth(other_,args);
     }
 template
-MPOt<ITensor>& MPOt<ITensor>::plusEq(const MPOt<ITensor>& other, const OptSet&);
+MPOt<ITensor>& MPOt<ITensor>::plusEq(const MPOt<ITensor>& other, const Args&);
 template
-MPOt<IQTensor>& MPOt<IQTensor>::plusEq(const MPOt<IQTensor>& other, const OptSet&);
+MPOt<IQTensor>& MPOt<IQTensor>::plusEq(const MPOt<IQTensor>& other, const Args&);
 
 int 
 findCenter(const IQMPO& psi)
@@ -254,7 +254,7 @@ checkQNs(const IQMPO& H)
 template <class MPOType>
 void 
 nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
-         const OptSet& opts)
+         const Args& args)
     {
     using Tensor = typename MPOType::TensorT;
     using IndexT = typename MPOType::IndexT;
@@ -308,7 +308,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
             }
             */
 
-        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,opts);
+        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,args);
 
         IndexT mid = commonIndex(res.A(i),nfork,Link);
         mid.dag();
@@ -334,9 +334,9 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
 
     }//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
 template
-void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res, const OptSet&);
+void nmultMPO(const MPO& Aorig, const MPO& Borig, MPO& res, const Args&);
 template
-void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,const OptSet& );
+void nmultMPO(const IQMPO& Aorig, const IQMPO& Borig, IQMPO& res,const Args& );
 
 
 template <class Tensor>
@@ -344,18 +344,18 @@ void
 zipUpApplyMPO(const MPSt<Tensor>& psi, 
               const MPOt<Tensor>& K, 
               MPSt<Tensor>& res,
-              const OptSet& opts)
+              const Args& args)
     {
     using IndexT = typename Tensor::IndexT;
 
     const
-    bool allow_arb_position = opts.getBool("AllowArbPosition",false);
+    bool allow_arb_position = args.getBool("AllowArbPosition",false);
 
     if(&psi == &res)
         Error("psi and res must be different MPS instances");
 
-    //Real cutoff = opts.getReal("Cutoff",psi.cutoff());
-    //int maxm = opts.getInt("Maxm",psi.maxm());
+    //Real cutoff = args.getReal("Cutoff",psi.cutoff());
+    //int maxm = args.getInt("Maxm",psi.maxm());
 
     const int N = psi.N();
     if(K.N() != N) 
@@ -397,7 +397,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
         nfork = Tensor(rightLinkInd(psi,i),rightLinkInd(K,i),oldmid);
         //if(clust.iten_size() == 0)	// this product gives 0 !!
 	    //throw ResultIsZero("clust.iten size == 0");
-        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,opts);
+        denmatDecomp(clust, res.Anc(i), nfork,Fromleft,args);
         IndexT mid = commonIndex(res.A(i),nfork,Link);
         //assert(mid.dir() == In);
         mid.dag();
@@ -410,17 +410,17 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
     //if(nfork.iten_size() == 0)	// this product gives 0 !!
 	//throw ResultIsZero("nfork.iten size == 0");
 
-    res.svdBond(N-1,nfork,Fromright,opts);
+    res.svdBond(N-1,nfork,Fromright,args);
     res.noprimelink();
     res.mapprime(1,0,Site);
     res.position(1);
     } //void zipUpApplyMPO
 template
 void 
-zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, const OptSet& opts);
+zipUpApplyMPO(const MPS& x, const MPO& K, MPS& res, const Args& args);
 template
 void 
-zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const OptSet& opts);
+zipUpApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const Args& args);
 
 //Expensive: scales as m^3 k^3!
 template<class Tensor>
@@ -428,7 +428,7 @@ void
 exactApplyMPO(const MPSt<Tensor>& x, 
               const MPOt<Tensor>& K, 
               MPSt<Tensor>& res,
-              const OptSet& opts)
+              const Args& args)
     {
     using IndexT = typename Tensor::IndexT;
     using CombinerT = typename Tensor::CombinerT;
@@ -460,14 +460,14 @@ exactApplyMPO(const MPSt<Tensor>& x,
         res.Anc(j+1) = dag(comb) * res.A(j+1); //m^3 k^3 d
         }
     res.mapprime(1,0,Site);
-    res.orthogonalize(opts);
+    res.orthogonalize(args);
     } //void exact_applyMPO
 template
 void 
-exactApplyMPO(const MPS& x, const MPO& K, MPS& res, const OptSet&);
+exactApplyMPO(const MPS& x, const MPO& K, MPS& res, const Args&);
 template
 void 
-exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const OptSet&);
+exactApplyMPO(const IQMPS& x, const IQMPO& K, IQMPS& res, const Args&);
 
 
 template<class Tensor>
@@ -475,14 +475,14 @@ void
 fitApplyMPO(const MPSt<Tensor>& psi,
             const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
-            const OptSet& opts)
+            const Args& args)
     {
-    fitApplyMPO(1.,psi,K,res,opts);
+    fitApplyMPO(1.,psi,K,res,args);
     }
 template
-void fitApplyMPO(const MPSt<ITensor>& psi, const MPOt<ITensor>& K, MPSt<ITensor>& res, const OptSet& opts);
+void fitApplyMPO(const MPSt<ITensor>& psi, const MPOt<ITensor>& K, MPSt<ITensor>& res, const Args& args);
 template
-void fitApplyMPO(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& K, MPSt<IQTensor>& res, const OptSet& opts);
+void fitApplyMPO(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& K, MPSt<IQTensor>& res, const Args& args);
 
 template<class Tensor>
 void
@@ -490,22 +490,22 @@ fitApplyMPO(Real fac,
             const MPSt<Tensor>& psi,
             const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
-            const OptSet& opts)
+            const Args& args)
     {
-    const auto nsweep = opts.getInt("Nsweep",1);
+    const auto nsweep = args.getInt("Nsweep",1);
     Sweeps sweeps(nsweep);
-    const auto cutoff = opts.getReal("Cutoff",-1);
+    const auto cutoff = args.getReal("Cutoff",-1);
     if(cutoff >= 0) sweeps.cutoff() = cutoff;
-    const auto maxm = opts.getInt("Maxm",-1);
+    const auto maxm = args.getInt("Maxm",-1);
     if(maxm >= 1) sweeps.maxm() = maxm;
-    fitApplyMPO(fac,psi,K,res,sweeps,opts);
+    fitApplyMPO(fac,psi,K,res,sweeps,args);
     }
 template
 void
-fitApplyMPO(Real fac,const MPSt<ITensor>& psi,const MPOt<ITensor>& K,MPSt<ITensor>& res,const OptSet& opts);
+fitApplyMPO(Real fac,const MPSt<ITensor>& psi,const MPOt<ITensor>& K,MPSt<ITensor>& res,const Args& args);
 template
 void
-fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const OptSet& opts);
+fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const Args& args);
 
 template<class Tensor>
 void
@@ -514,11 +514,11 @@ fitApplyMPO(Real fac,
             const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
             const Sweeps& sweeps,
-            OptSet opts)
+            Args args)
     {
     const int N = psi.N();
-    const bool verbose = opts.getBool("Verbose",false);
-    const bool normalize = opts.getBool("Normalize",true);
+    const bool verbose = args.getBool("Verbose",false);
+    const bool normalize = args.getBool("Normalize",true);
 
     const MPSt<Tensor> origPsi(psi);
 
@@ -534,11 +534,11 @@ fitApplyMPO(Real fac,
 
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
         {
-        opts.add("Sweep",sw);
-        opts.add("Cutoff",sweeps.cutoff(sw));
-        opts.add("Minm",sweeps.minm(sw));
-        opts.add("Maxm",sweeps.maxm(sw));
-        opts.add("Noise",sweeps.noise(sw));
+        args.add("Sweep",sw);
+        args.add("Cutoff",sweeps.cutoff(sw));
+        args.add("Minm",sweeps.minm(sw));
+        args.add("Maxm",sweeps.maxm(sw));
+        args.add("Noise",sweeps.noise(sw));
 
         for(int b = 1, ha = 1; ha <= 2; sweepnext(b,ha,N))
             {
@@ -564,7 +564,7 @@ fitApplyMPO(Real fac,
             //Print(wfK);
             //PAUSE
             LocalOp<Tensor> PH(K.A(b),K.A(b+1),BK.at(b-1),BK.at(b+2));
-            Spectrum spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,opts);
+            Spectrum spec = res.svdBond(b,wfK,(ha==1?Fromleft:Fromright),PH,args);
 
             if(verbose)
                 {
@@ -582,10 +582,10 @@ fitApplyMPO(Real fac,
     }
 template
 void
-fitApplyMPO(Real fac,const MPSt<ITensor>& psi,const MPOt<ITensor>& K,MPSt<ITensor>& res, const Sweeps&, OptSet opts);
+fitApplyMPO(Real fac,const MPSt<ITensor>& psi,const MPOt<ITensor>& K,MPSt<ITensor>& res, const Sweeps&, Args args);
 template
 void
-fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTensor>& res, const Sweeps&, OptSet opts);
+fitApplyMPO(Real fac,const MPSt<IQTensor>& psi,const MPOt<IQTensor>& K,MPSt<IQTensor>& res, const Sweeps&, Args args);
 
 template<class Tensor>
 Real
@@ -594,16 +594,16 @@ fitApplyMPO(const MPSt<Tensor>& psiA,
             const MPSt<Tensor>& psiB,
             const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
-            const OptSet& opts)
+            const Args& args)
     {
-    return fitApplyMPO(1.,psiA,mpofac,psiB,K,res,opts);
+    return fitApplyMPO(1.,psiA,mpofac,psiB,K,res,args);
     }
 template
 Real
-fitApplyMPO(const MPSt<ITensor>& psiA, Real mpofac,const MPSt<ITensor>& psiB,const MPOt<ITensor>& K,MPSt<ITensor>& res,const OptSet& opts);
+fitApplyMPO(const MPSt<ITensor>& psiA, Real mpofac,const MPSt<ITensor>& psiB,const MPOt<ITensor>& K,MPSt<ITensor>& res,const Args& args);
 template
 Real
-fitApplyMPO(const MPSt<IQTensor>& psiA, Real mpofac,const MPSt<IQTensor>& psiB,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const OptSet& opts);
+fitApplyMPO(const MPSt<IQTensor>& psiA, Real mpofac,const MPSt<IQTensor>& psiB,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const Args& args);
 
 template<class Tensor>
 Real
@@ -613,14 +613,14 @@ fitApplyMPO(Real mpsfac,
             const MPSt<Tensor>& psiB,
             const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
-            const OptSet& opts)
+            const Args& args)
     {
     if(&psiA == &res || &psiB == &res)
         {
         Error("fitApplyMPO: Result MPS cannot be same as an input MPS");
         }
     const int N = psiA.N();
-    const int nsweep = opts.getInt("Nsweep",1);
+    const int nsweep = args.getInt("Nsweep",1);
 
     vector<Tensor> B(N+2),
                    BK(N+2);
@@ -650,7 +650,7 @@ fitApplyMPO(Real mpsfac,
             Tensor wf = mpsfac*noprime(lwf*rwf) + mpofac*noprime(lwfK*rwfK);
             wf.noprime();
 
-            res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
+            res.svdBond(b,wf,(ha==1?Fromleft:Fromright),args+Args("UseSVD",true));
 
             if(ha == 1)
                 {
@@ -675,10 +675,10 @@ fitApplyMPO(Real mpsfac,
     }
 template
 Real
-fitApplyMPO(Real mpsfac,const MPSt<ITensor>& psiA, Real mpofac,const MPSt<ITensor>& psiB,const MPOt<ITensor>& K,MPSt<ITensor>& res,const OptSet& opts);
+fitApplyMPO(Real mpsfac,const MPSt<ITensor>& psiA, Real mpofac,const MPSt<ITensor>& psiB,const MPOt<ITensor>& K,MPSt<ITensor>& res,const Args& args);
 template
 Real
-fitApplyMPO(Real mpsfac,const MPSt<IQTensor>& psiA, Real mpofac,const MPSt<IQTensor>& psiB,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const OptSet& opts);
+fitApplyMPO(Real mpsfac,const MPSt<IQTensor>& psiA, Real mpofac,const MPSt<IQTensor>& psiB,const MPOt<IQTensor>& K,MPSt<IQTensor>& res,const Args& args);
 
 template<class Tensor>
 void 
@@ -687,16 +687,16 @@ expsmallH(const MPOt<Tensor>& H,
           Real tau, 
           Real Etot, 
           Real Kcutoff,
-          OptSet opts)
+          Args args)
     {
-    const int ord = opts.getInt("ExpHOrder",50);
-    const bool verbose = opts.getBool("Verbose",false);
-    opts.add("Cutoff",MIN_CUT);
-    opts.add("Maxm",MAX_M);
+    const int ord = args.getInt("ExpHOrder",50);
+    const bool verbose = args.getBool("Verbose",false);
+    args.add("Cutoff",MIN_CUT);
+    args.add("Maxm",MAX_M);
 
     MPOt<Tensor> Hshift(H.sites());
     Hshift.Anc(1) *= -Etot;
-    Hshift.plusEq(H,opts);
+    Hshift.plusEq(H,args);
     Hshift.Anc(1) *= -tau;
 
     vector<MPOt<Tensor> > xx(2);
@@ -718,18 +718,18 @@ expsmallH(const MPOt<Tensor>& H,
             }
         if(o > 1) xx[1].Anc(1) *= 1.0 / o;
 
-        K = sum(xx,opts);
+        K = sum(xx,args);
         if(o > 1)
-            nmultMPO(K,Hshift,xx[1],opts);
+            nmultMPO(K,Hshift,xx[1],args);
         }
     if(verbose) cout << endl;
     }
 template
 void 
-expsmallH(const MPO& H, MPO& K, Real tau, Real Etot, Real Kcutoff, OptSet opts);
+expsmallH(const MPO& H, MPO& K, Real tau, Real Etot, Real Kcutoff, Args args);
 template
 void 
-expsmallH(const IQMPO& H, IQMPO& K, Real tau, Real Etot, Real Kcutoff, OptSet opts);
+expsmallH(const IQMPO& H, IQMPO& K, Real tau, Real Etot, Real Kcutoff, Args args);
 
 template<class Tensor>
 void 
@@ -738,26 +738,26 @@ expH(const MPOt<Tensor>& H, MPOt<Tensor>& K,
      Real Etot,
      Real Kcutoff, 
      int ndoub,
-     OptSet opts)
+     Args args)
     {
-    const bool verbose = opts.getBool("Verbose",false);
+    const bool verbose = args.getBool("Verbose",false);
     Real ttau = tau / pow(2.0,ndoub);
     //cout << "ttau in expH is " << ttau << endl;
 
     Real smallcut = 0.1*Kcutoff*pow(0.25,ndoub);
-    expsmallH(H, K, ttau,Etot,smallcut,opts);
+    expsmallH(H, K, ttau,Etot,smallcut,args);
 
     if(verbose) cout << "Starting doubling in expH" << endl;
     for(int doub = 1; doub <= ndoub; ++doub)
         {
         //cout << " Double step " << doub << endl;
         if(doub == ndoub) 
-            opts.add("Cutoff",Kcutoff);
+            args.add("Cutoff",Kcutoff);
         else
-            opts.add("Cutoff",0.1 * Kcutoff * pow(0.25,ndoub-doub));
+            args.add("Cutoff",0.1 * Kcutoff * pow(0.25,ndoub-doub));
         //cout << "in expH, K.cutoff is " << K.cutoff << endl;
         MPOt<Tensor> KK;
-        nmultMPO(K,K,KK,opts);
+        nmultMPO(K,K,KK,args);
         K = KK;
         /*
         if(doub == ndoub)
@@ -772,10 +772,10 @@ expH(const MPOt<Tensor>& H, MPOt<Tensor>& K,
     }
 template
 void 
-expH(const MPO& H, MPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, OptSet);
+expH(const MPO& H, MPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, Args);
 template
 void 
-expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, OptSet);
+expH(const IQMPO& H, IQMPO& K, Real tau, Real Etot,Real Kcutoff, int ndoub, Args);
 
 template<class Tensor>
 void
@@ -783,17 +783,17 @@ applyExpH(const MPSt<Tensor>& psi,
           const MPOt<Tensor>& H, 
           Real tau, 
           MPSt<Tensor>& res, 
-          const OptSet& opts)
+          const Args& args)
     {
     using IndexT = typename Tensor::IndexT;
     using MPST = MPSt<Tensor>;
 
     if(&psi == &res) Error("Must pass distinct MPS arguments to applyExpH");
 
-    const int order = opts.getInt("Order",10);
+    const int order = args.getInt("Order",10);
 
     const int N = res.N();
-    const int nsweep = opts.getInt("Nsweep",1);
+    const int nsweep = args.getInt("Nsweep",1);
 
     res.position(1);
 
@@ -852,7 +852,7 @@ applyExpH(const MPSt<Tensor>& psi,
                 Tensor wf = noprime(lwf*rwf) + mpofac*noprime(lwfH*rwfH);
                 if(!up) wf.dag();
 
-                res.svdBond(b,wf,(ha==1?Fromleft:Fromright),opts&Opt("UseSVD",true));
+                res.svdBond(b,wf,(ha==1?Fromleft:Fromright),args+Args("UseSVD",true));
 
                 if(up)
                     {
@@ -892,15 +892,15 @@ applyExpH(const MPSt<Tensor>& psi,
     }
 template
 void
-applyExpH(const MPSt<ITensor>& psi, const MPOt<ITensor>& H, Real tau, MPSt<ITensor>& res, const OptSet& opts);
+applyExpH(const MPSt<ITensor>& psi, const MPOt<ITensor>& H, Real tau, MPSt<ITensor>& res, const Args& args);
 template
 void
-applyExpH(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& H, Real tau, MPSt<IQTensor>& res, const OptSet& opts);
+applyExpH(const MPSt<IQTensor>& psi, const MPOt<IQTensor>& H, Real tau, MPSt<IQTensor>& res, const Args& args);
 
 void
-putMPOLinks(MPO& W, const OptSet& opts)
+putMPOLinks(MPO& W, const Args& args)
     {
-    const string pfix = opts.getString("Prefix","l");
+    const string pfix = args.getString("Prefix","l");
     vector<Index> links(W.N());
     for(int b = 1; b < W.N(); ++b)
         {
@@ -916,18 +916,18 @@ putMPOLinks(MPO& W, const OptSet& opts)
     }
 
 void
-putMPOLinks(IQMPO& W, const OptSet& opts)
+putMPOLinks(IQMPO& W, const Args& args)
     {
     QN q;
     const int N = W.N();
-    const string pfix = opts.getString("Prefix","l");
+    const string pfix = args.getString("Prefix","l");
 
     vector<IQIndex> links(N);
     for(int b = 1; b < N; ++b)
         {
         string nm = format("%s%d",pfix,b);
                
-        q += div(W.A(b),Opt("Fast"));
+        q += div(W.A(b),Args("Fast"));
         links.at(b) = IQIndex(nm,Index(nm),q);
         }
 

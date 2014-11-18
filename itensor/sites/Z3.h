@@ -39,7 +39,7 @@ class Z3 : public SiteSet
     getState(int i, const String& state) const;
 
     virtual IQTensor
-    getOp(int i, const String& opname, const OptSet& opts) const;
+    getOp(int i, const String& opname, const Args& opts) const;
 
     void
     doRead(std::istream& s);
@@ -140,7 +140,7 @@ getState(int i, const String& state) const
     }
 
 inline IQTensor Z3::
-getOp(int i, const String& opname, const OptSet& opts) const
+getOp(int i, const String& opname, const Args& opts) const
     {
     const
     IQIndex s(si(i));

@@ -138,15 +138,15 @@ truncate(vector<Real>& alleig,
 Spectrum 
 svdRank2(ITensor A, const Index& ui, const Index& vi,
          ITensor& U, ITensor& D, ITensor& V,
-         const OptSet& opts)
+         const Args& args)
     {
-    const Real thresh = opts.getReal("SVDThreshold",1E-4);
-    const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
-    const int maxm = opts.getInt("Maxm",MAX_M);
-    const int minm = opts.getInt("Minm",1);
-    const bool do_truncate = opts.getBool("Truncate",true);
-    const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = opts.getBool("AbsoluteCutoff",false);
+    const Real thresh = args.getReal("SVDThreshold",1E-4);
+    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
+    const int maxm = args.getInt("Maxm",MAX_M);
+    const int minm = args.getInt("Minm",1);
+    const bool do_truncate = args.getBool("Truncate",true);
+    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
+    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     const bool cplx = A.isComplex();
 
     if(A.r() != 2)
@@ -196,7 +196,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         }
 
 
-    if(opts.getBool("ShowEigs",false))
+    if(args.getBool("ShowEigs",false))
         {
         cout << endl;
         printfln("minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
@@ -281,24 +281,24 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
     //    Global::lastd() *= A.scale().real();
     //    }
 
-    return Spectrum(DD,Opt("Truncerr",terr));
+    return Spectrum(DD,Args("Truncerr",terr));
 
     } // void svdRank2
 
 Spectrum
 svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
          IQTensor& U, IQTensor& D, IQTensor& V,
-         const OptSet& opts)
+         const Args& args)
     {
     const bool cplx = A.isComplex();
-    const Real thresh = opts.getReal("SVDThreshold",1E-4);
-    const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
-    const int maxm = opts.getInt("Maxm",MAX_M);
-    const int minm = opts.getInt("Minm",1);
-    const bool do_truncate = opts.getBool("Truncate",true);
-    const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = opts.getBool("AbsoluteCutoff",false);
-    const Real logrefNorm = opts.getReal("LogRefNorm",0.);
+    const Real thresh = args.getReal("SVDThreshold",1E-4);
+    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
+    const int maxm = args.getInt("Maxm",MAX_M);
+    const int minm = args.getInt("Minm",1);
+    const bool do_truncate = args.getBool("Truncate",true);
+    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
+    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
+    const Real logrefNorm = args.getReal("LogRefNorm",0.);
 
     if(A.r() != 2)
         {
@@ -424,7 +424,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
                                absoluteCutoff,doRelCutoff);
         }
 
-    if(opts.getBool("ShowEigs",false))
+    if(args.getBool("ShowEigs",false))
         {
         cout << endl;
         println("svdRank2 (IQTensor):");
@@ -603,21 +603,21 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         DD(i) = alleig.at(alleig.size()-i);
         }
 
-    return Spectrum(DD,Opt("Truncerr",svdtruncerr));
+    return Spectrum(DD,Args("Truncerr",svdtruncerr));
 
     } //void svdRank2
 
 
 Spectrum
 diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
-               const OptSet& opts)
+               const Args& args)
     {
-    const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
-    const int maxm = opts.getInt("Maxm",MAX_M);
-    const int minm = opts.getInt("Minm",1);
-    const bool do_truncate = opts.getBool("Truncate",false);
-    const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = opts.getBool("AbsoluteCutoff",false);
+    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
+    const int maxm = args.getInt("Maxm",MAX_M);
+    const int minm = args.getInt("Minm",1);
+    const bool do_truncate = args.getBool("Truncate",false);
+    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
+    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     const bool cplx = rho.isComplex();
 
 #ifdef DEBUG
@@ -691,7 +691,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     //    DD *= rho.scale().real();
     //    }
 
-    if(opts.getBool("ShowEigs",false)) 
+    if(args.getBool("ShowEigs",false)) 
         {
         println("Before truncating, m = ",DD.Length());
         }
@@ -719,7 +719,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
         }
 #endif
 
-    if(opts.getBool("ShowEigs",false))
+    if(args.getBool("ShowEigs",false))
         {
         cout << endl;
         printfln("minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
@@ -764,14 +764,14 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
 
 Spectrum
 diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
-               const OptSet& opts)
+               const Args& args)
     {
-    const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
-    const int maxm = opts.getInt("Maxm",MAX_M);
-    const int minm = opts.getInt("Minm",1);
-    const bool do_truncate = opts.getBool("Truncate",false);
-    const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = opts.getBool("AbsoluteCutoff",false);
+    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
+    const int maxm = args.getInt("Maxm",MAX_M);
+    const int minm = args.getInt("Minm",1);
+    const bool do_truncate = args.getBool("Truncate",false);
+    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
+    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     const bool cplx = rho.isComplex();
 
     if(rho.r() != 2)
@@ -924,7 +924,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     Spectrum spec;
     spec.truncerr(svdtruncerr);
 
-    if(opts.getBool("ShowEigs",false))
+    if(args.getBool("ShowEigs",false))
         {
         cout << endl;
         printfln("Kept %d states in diag_denmat line 721", m);
@@ -1099,9 +1099,9 @@ void
 eig_decomp(ITensor T, 
            const Index& L, const Index& R,
            ITensor& V, ITensor& D,
-           const OptSet& opts)
+           const Args& args)
     {
-    //const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
+    //const bool doRelCutoff = args.getBool("DoRelCutoff",false);
     bool cplx = T.isComplex();
 
 #ifdef DEBUG
@@ -1157,9 +1157,9 @@ void
 eig_decomp(IQTensor T, 
            const IQIndex& L, const IQIndex& R,
            IQTensor& V, IQTensor& D,
-           const OptSet& opts)
+           const Args& args)
     {
-    const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
+    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
     bool cplx = T.isComplex();
 
 #ifdef DEBUG

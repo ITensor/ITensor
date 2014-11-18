@@ -18,10 +18,10 @@ class Observer
     Observer() { }
     
     void virtual
-    measure(const OptSet& opts = Global::opts()) { }
+    measure(const Args& args = Global::args()) { }
     
     bool virtual
-    checkDone(const OptSet& opts = Global::opts()) { return false; }
+    checkDone(const Args& args = Global::args()) { return false; }
 
     virtual ~Observer() { }
 

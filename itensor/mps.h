@@ -128,7 +128,7 @@ class MPSt
 
     MPSt&
     plusEq(const MPSt& R, 
-           const OptSet& opts = Global::opts());
+           const Args& args = Global::args());
 
     void 
     mapprime(int oldp, int newp, IndexType type = All);
@@ -141,23 +141,23 @@ class MPSt
 
     Spectrum 
     svdBond(int b, const Tensor& AA, Direction dir, 
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
 
     template <class LocalOpT>
     Spectrum 
     svdBond(int b, const Tensor& AA, Direction dir, 
-                const LocalOpT& PH, const OptSet& opts = Global::opts());
+                const LocalOpT& PH, const Args& args = Global::args());
 
     //Move the orthogonality center to site i 
     //(leftLim() == i-1, rightLim() == i+1, orthoCenter() == i)
     void 
-    position(int i, const OptSet& opts = Global::opts());
+    position(int i, const Args& args = Global::args());
 
     void 
-    orthogonalize(const OptSet& opts = Global::opts());
+    orthogonalize(const Args& args = Global::args());
 
     void 
-    makeRealBasis(int j, const OptSet& opts = Global::opts());
+    makeRealBasis(int j, const Args& args = Global::args());
 
     Real 
     norm() const;
@@ -181,7 +181,7 @@ class MPSt
     bool
     doWrite() const { return do_write_; }
     void
-    doWrite(bool val, const OptSet& opts = Global::opts());
+    doWrite(bool val, const Args& args = Global::args());
 
     const std::string&
     writeDir() const { return writedir_; }
@@ -243,7 +243,7 @@ class MPSt
 
 
     void
-    initWrite(const OptSet& opts = Global::opts());
+    initWrite(const Args& args = Global::args());
     void
     copyWriteDir();
     void
@@ -274,7 +274,7 @@ class MPSt
 
     MPSt&
     addAssumeOrth(const MPSt& R, 
-                  const OptSet& opts = Global::opts());
+                  const Args& args = Global::args());
 
     private:
 
@@ -335,7 +335,7 @@ template <class Tensor>
 template <class BigMatrixT>
 Spectrum MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, 
-        const BigMatrixT& PH, const OptSet& opts)
+        const BigMatrixT& PH, const Args& args)
     {
     setBond(b);
 
@@ -352,18 +352,18 @@ svdBond(int b, const Tensor& AA, Direction dir,
         Error("b+2 < r_orth_lim_");
         }
 
-    const Real noise = opts.getReal("Noise",0.);
-    const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
+    const Real noise = args.getReal("Noise",0.);
+    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
 
-    if(opts.getBool("UseSVD",false) || (noise == 0 && cutoff < 1E-12))
+    if(args.getBool("UseSVD",false) || (noise == 0 && cutoff < 1E-12))
         {
         //Need high accuracy, use svd which calls the
         //accurate SVD method in the MatrixRef library
         Tensor D;
-        res = svd(AA,A_[b],D,A_[b+1],opts);
+        res = svd(AA,A_[b],D,A_[b+1],args);
 
         //Normalize the ortho center if requested
-        if(opts.getBool("DoNormalize",false))
+        if(args.getBool("DoNormalize",false))
             {
             D *= 1./D.norm();
             }
@@ -379,10 +379,10 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //If we don't need extreme accuracy
         //or need to use noise term
         //use density matrix approach
-        res = denmatDecomp(AA,A_[b],A_[b+1],dir,PH,opts);
+        res = denmatDecomp(AA,A_[b],A_[b+1],dir,PH,args);
 
         //Normalize the ortho center if requested
-        if(opts.getBool("DoNormalize",false))
+        if(args.getBool("DoNormalize",false))
             {
             Tensor& oc = (dir == Fromleft ? A_[b+1] : A_[b]);
             Real norm = oc.norm();
@@ -490,28 +490,28 @@ averageM(const MPST& psi)
 //  - A_[b] - A_[b+1] -
 //
 // Does not normalize the resulting wavefunction unless 
-// Opt DoNormalize(true) is included in opts.
+// Args("DoNormalize",true) is included in args.
 template <class Tensor>
 void 
 applyGate(const Tensor& gate, 
           MPSt<Tensor>& psi,
-          const OptSet& opts = Global::opts())
+          const Args& args = Global::args())
     {
     const int c = psi.orthoCenter();
     Tensor AA = psi.A(c) * psi.A(c+1) * gate;
     AA.noprime();
-    psi.svdBond(c,AA,Fromleft,opts);
+    psi.svdBond(c,AA,Fromleft,args);
     }
 
 template <class Tensor>
 void 
 applyGate(const BondGate<Tensor>& gate, 
           MPSt<Tensor>& psi,
-          const OptSet& opts = Global::opts())
+          const Args& args = Global::args())
     {
     Tensor AA = psi.A(gate.i1()) * psi.A(gate.i1()+1) * Tensor(gate);
     AA.noprime();
-    psi.svdBond(gate.i1(),AA,Fromleft,opts);
+    psi.svdBond(gate.i1(),AA,Fromleft,args);
     }
 
 //Checks if A_[i] is left (left == true) 
@@ -645,10 +645,10 @@ template <class Tensor>
 MPSt<Tensor>
 sum(const MPSt<Tensor>& L, 
     const MPSt<Tensor>& R, 
-    const OptSet& opts = Global::opts())
+    const Args& args = Global::args())
     {
     MPSt<Tensor> res(L);
-    res.plusEq(R,opts);
+    res.plusEq(R,args);
     return res;
     }
 
@@ -665,12 +665,12 @@ sum(const MPSt<Tensor>& L,
 template <typename MPSType>
 MPSType 
 sum(const std::vector<MPSType>& terms, 
-    const OptSet& opts = Global::opts())
+    const Args& args = Global::args())
     {
     const int Nt = terms.size();
     if(Nt == 2)
         { 
-        return sum(terms.at(0),terms.at(1),opts);
+        return sum(terms.at(0),terms.at(1),args);
         }
     else 
     if(Nt == 1) 
@@ -685,12 +685,12 @@ sum(const std::vector<MPSType>& terms,
         std::vector<MPSType> newterms(nsize); 
         for(int n = 0, np = 0; n < Nt-1; n += 2, ++np)
             {
-            newterms.at(np) = sum(terms.at(n),terms.at(n+1),opts);
+            newterms.at(np) = sum(terms.at(n),terms.at(n+1),args);
             }
         if(Nt%2 == 1) newterms.at(nsize-1) = terms.back();
 
         //Recursively call sum again
-        return sum(newterms,opts);
+        return sum(newterms,args);
         }
     return MPSType();
     }

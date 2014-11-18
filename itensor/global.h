@@ -279,34 +279,54 @@ class Global
     //void static
     //opts(const Opt& o)
     //    {
-    //    OptSet::GlobalOpts().add(o);
+    //    Args::GlobalOpts().add(o);
     //    }
     //Get a global Opt by just providing its name
     //Opt static
     //opts(const Opt::Name& name)
     //    {
-    //    return OptSet::GlobalOpts().get(name);
+    //    return Args::GlobalOpts().get(name);
     //    }
     //Set global opts by providing their name and value
     void static
-    opts(const OptSet::Name& name, bool bval)
+    opts(const Args::Name& name, bool bval)
         {
-        OptSet::Global().add(name,bval);
+        Args::Global().add(name,bval);
         }
     void static
-    opts(const OptSet::Name& name, int ival)
+    opts(const Args::Name& name, int ival)
         {
-        OptSet::Global().add(name,ival);
+        Args::Global().add(name,ival);
         }
     void static
-    opts(const OptSet::Name& name, Real rval)
+    opts(const Args::Name& name, Real rval)
         {
-        OptSet::Global().add(name,rval);
+        Args::Global().add(name,rval);
         }
     void static
-    opts(const OptSet::Name& name, const std::string& sval)
+    opts(const Args::Name& name, const std::string& sval)
         {
-        OptSet::Global().add(name,sval);
+        Args::Global().add(name,sval);
+        }
+    void static
+    args(const Args::Name& name, bool bval)
+        {
+        Args::Global().add(name,bval);
+        }
+    void static
+    args(const Args::Name& name, int ival)
+        {
+        Args::Global().add(name,ival);
+        }
+    void static
+    args(const Args::Name& name, Real rval)
+        {
+        Args::Global().add(name,rval);
+        }
+    void static
+    args(const Args::Name& name, const std::string& sval)
+        {
+        Args::Global().add(name,sval);
         }
     static bool& 
     printdat()
