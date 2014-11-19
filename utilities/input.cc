@@ -354,12 +354,12 @@ int InputGroup::GetYesNo(string s, int& yes,const char* c)
         cout << endl;
         }
     transform(res.begin(),res.end(),res.begin(),mydolower);
-    if(res == "yes" || res == "y")
+    if(res == "yes" || res == "y" || res == "true")
         {
         yes = 1;
         return 1;
         }
-    if(res == "no" || res == "n")
+    if(res == "no" || res == "n" || res == "false")
         {
         yes = 0;
         return 1;
