@@ -700,7 +700,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     Real svdtruncerr = 0.0;
     if(do_truncate)
         {
-        if(DD(1) < 0) DD *= -1;
+        if(DD(1) < 0) DD *= -1; //DEBUG
         svdtruncerr = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         }
     Spectrum spec;
