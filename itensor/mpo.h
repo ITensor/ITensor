@@ -251,7 +251,7 @@ psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPSt<Tensor>& phi)
     {
     Real re, im;
     psiHphi(psi,H,phi,re,im);
-    if(fabs(im) > 1.0e-12 * fabs(re))
+    if(std::fabs(im) > 1.0e-12 * std::fabs(re))
         printfln("\nReal psiHphi: WARNING, dropping non-zero (=%.5E) imaginary part of expectation value.",im);
     return re;
     }
@@ -299,7 +299,7 @@ Real
 psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const Tensor& LB, const Tensor& RB, const MPSt<Tensor>& phi) //Re[<psi|H|phi>]
     {
     Real re,im; psiHphi(psi,H,LB,RB,phi,re,im);
-    if(fabs(im) > 1.0e-12 * fabs(re))
+    if(std::fabs(im) > 1.0e-12 * std::fabs(re))
         printfln("Real psiHphi: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
     return re;
     }
@@ -341,7 +341,7 @@ psiHKphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPOt<Tensor>& K,c
     {
     Real re,im;
     psiHKphi(psi,H,K,phi,re,im);
-    if(fabs(im) > 1.0e-12 * fabs(re))
+    if(std::fabs(im) > 1.0e-12 * std::fabs(re))
 	Error("Non-zero imaginary part in psiHKphi");
     return re;
     }
