@@ -38,7 +38,7 @@ class Index
     // Name of Index is used for printing purposes
     explicit
     Index(const std::string& name, 
-          int m = 1, 
+          long m = 1, 
           IndexType it = Link, 
           int primelev = 0);
 
@@ -47,7 +47,7 @@ class Index
     //
 
     // Returns the bond dimension
-    int 
+    long 
     m() const;
 
     // Returns the prime level
@@ -71,6 +71,10 @@ class Index
 
     // Evaluates to false if Index is default constructed.
     explicit operator bool() const { return valid(); }
+
+    // (Explicitly) convertible to integer types
+    explicit operator int() const { return m(); }
+    explicit operator long() const { return m(); }
 
     // Returns false if Index is default constructed.
     bool 
@@ -128,7 +132,7 @@ class Index
 
     // Creates an IndexVal from this Index with value i
     IndexVal 
-    operator()(int i) const;
+    operator()(long i) const;
 
     //
     // Other methods
@@ -150,14 +154,6 @@ class Index
 
     std::string
     id() const;
-
-    //
-    // Static Index instances
-    //
-
-    //Static default-constructed placeholder Index
-    static const 
-    Index& Null();
 
     private:
 

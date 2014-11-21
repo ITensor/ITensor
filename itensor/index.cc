@@ -92,13 +92,13 @@ struct IndexDat
     using IDType = IDGenerator::result_type;
 
     const IDType id;
-    const int m;
+    const long m;
     const IndexType type;
     const string sname;
 
     //////////////
 
-    IndexDat(const string& ss, int mm, IndexType it, IDType id);
+    IndexDat(const string& ss, long mm, IndexType it, IDType id);
 
     static const IndexDatPtr&
     Null();
@@ -113,7 +113,7 @@ struct IndexDat
     }; //class IndexDat
 
 IndexDat::
-IndexDat(const string& ss, int m_, IndexType it, IDType id_)
+IndexDat(const string& ss, long m_, IndexType it, IDType id_)
     : 
     id(id_),
     m(m_), 
@@ -155,7 +155,7 @@ Index()
     }
 
 Index::
-Index(const string& name, int mm, IndexType it, int plev) 
+Index(const string& name, long mm, IndexType it, int plev) 
     : 
     p(itensor::make_shared<IndexDat>(name,mm,it,generateID())), 
     primelevel_(plev) 
@@ -165,7 +165,7 @@ Index(const string& name, int mm, IndexType it, int plev)
     }
 
 
-int Index::
+long Index::
 m() const { return p->m; }
 
 IndexType Index::
@@ -216,7 +216,7 @@ operator<(const Index& other) const
     }
 
 IndexVal Index::
-operator()(int i) const { return IndexVal(*this,i); }
+operator()(long i) const { return IndexVal(*this,i); }
 
 Index& Index::
 mapprime(int plevold, int plevnew, IndexType type)
@@ -303,7 +303,7 @@ read(std::istream& s)
     IndexDat::IDType id;
     s.read((char*) &id, sizeof(id));
 
-    int mm; 
+    long mm; 
     s.read((char*) &mm,sizeof(mm));
 
     int nlength; 
