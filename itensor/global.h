@@ -341,8 +341,9 @@ class Global
         return printScale_;
         }
     static Real
-    random(int seed = 0)
+    random()//int seed = 0)
         {
+        int seed = 0;
         using Generator = mt19937;
         using Distribution = uniform_real_distribution<Real>;
 

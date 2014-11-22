@@ -9,20 +9,25 @@ include ../options.mk
 ####################################
 
 SOURCES = index.cc 
+SOURCES+= itdata_functions.cc 
 SOURCES+= itensor.cc 
-SOURCES+= iqindex.cc 
-SOURCES+= iqtensor.cc 
-SOURCES+= condenser.cc
-SOURCES+= iqcombiner.cc 
-SOURCES+= spectrum.cc 
-SOURCES+= svdalgs.cc 
-SOURCES+= mps.cc 
-SOURCES+= mpo.cc 
-SOURCES+= tevol.cc
-SOURCES+= autompo.cc
+#SOURCES+= iqindex.cc 
+#SOURCES+= iqtensor.cc 
+#SOURCES+= condenser.cc
+#SOURCES+= iqcombiner.cc 
+#SOURCES+= spectrum.cc 
+#SOURCES+= svdalgs.cc 
+#SOURCES+= mps.cc 
+#SOURCES+= mpo.cc 
+#SOURCES+= tevol.cc
+#SOURCES+= autompo.cc
 
-HEADERS=global.h real.h permutation.h index.h \
-        indexset.h counter.h simpletensor.h itensor.h qn.h iqindex.h iqtdat.h  \
+HEADERS=detail/functions.h detail/skip_iterator.h detail/gcounter.h \
+        global.h real.h permutation.h index.h \
+        indexset.h counter.h simpletensor.h \
+        itdata/itdata.h itdata_functions.h \
+        itdata/itdense.h \
+        itensor.h qn.h iqindex.h iqtdat.h  \
         detail/skip_iterator.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
@@ -48,6 +53,10 @@ GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 INCLUDE_HEADERS= $(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(HEADERS))
 
 .SUFFIXES: .cc $(SUFFIXES)
+
+$(ITENSOR_INCLUDEDIR)/itdata/%.h: itdata/%.h
+	mkdir -p $(ITENSOR_INCLUDEDIR)/itdata
+	cp $^ $(ITENSOR_INCLUDEDIR)/itdata
 
 $(ITENSOR_INCLUDEDIR)/detail/%.h: detail/%.h
 	mkdir -p $(ITENSOR_INCLUDEDIR)/detail
@@ -106,7 +115,8 @@ index.o: $(DEPHEADERS)
 DEPHEADERS+= indexset.h
 indexset.o: $(DEPHEADERS)
 .debug_objs/indexset.o: $(DEPHEADERS)
-DEPHEADERS+=  itensor.h counter.h
+DEPHEADERS+= simpletensor.h itdata/itdata.h itdata_functions.h \
+itensor.h counter.h
 itensor.o: $(DEPHEADERS)
 .debug_objs/itensor.o: $(DEPHEADERS)
 DEPHEADERS+= qn.h iqindex.h
