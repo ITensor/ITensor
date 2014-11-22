@@ -11,56 +11,51 @@
 #include "print.h"
 #include "types.h"
 
-#ifndef NAN
-#define NAN (std::numeric_limits<Real>::quiet_NaN())
-#endif
+//#ifndef NAN
+//#define NAN (std::numeric_limits<Real>::quiet_NaN())
+//#endif
 
 namespace itensor {
-
-//Real ran1();
 
 static const Real Pi = M_PI;
 static const Real Sqrt2 = sqrt(2);
 static const Real ISqrt2 = 1.0/sqrt(2);
-//static const Real Sqrt3 = sqrt(3);
-//static const Real ISqrt3 = 1.0/sqrt(3);
 
 template <typename T>
 T sqr(T x) { return x*x; }
 
-static const Real ApproxReal_Accuracy = 1E-12;
-
-struct ApproxReal
-    {
-    Real r;
-
-    //Default constructed to NAN 
-    //to signal initialization errors
-    ApproxReal() : r(NAN) {}
-
-    ApproxReal(Real _r) : r(_r) {}
-
-    bool 
-    operator==(const ApproxReal& other) const
-        { return fabs(r-other.r) <= ApproxReal_Accuracy; }
-
-    bool 
-    operator!=(const ApproxReal& other) const
-        { return fabs(r-other.r) > ApproxReal_Accuracy; }
-
-    bool
-    operator<(const ApproxReal& other) const
-        { return other.r-r > ApproxReal_Accuracy; }
-
-    ApproxReal& 
-    operator+=(const ApproxReal &A)
-        { r += A.r; return *this; }
-
-    ApproxReal& 
-    operator+=(Real a)
-        { r += a; return *this; }
-
-    };
+//static const Real ApproxReal_Accuracy = 1E-12;
+//struct ApproxReal
+//    {
+//    Real r;
+//
+//    //Default constructed to NAN 
+//    //to signal initialization errors
+//    ApproxReal() : r(NAN) {}
+//
+//    ApproxReal(Real _r) : r(_r) {}
+//
+//    bool 
+//    operator==(const ApproxReal& other) const
+//        { return fabs(r-other.r) <= ApproxReal_Accuracy; }
+//
+//    bool 
+//    operator!=(const ApproxReal& other) const
+//        { return fabs(r-other.r) > ApproxReal_Accuracy; }
+//
+//    bool
+//    operator<(const ApproxReal& other) const
+//        { return other.r-r > ApproxReal_Accuracy; }
+//
+//    ApproxReal& 
+//    operator+=(const ApproxReal &A)
+//        { r += A.r; return *this; }
+//
+//    ApproxReal& 
+//    operator+=(Real a)
+//        { r += a; return *this; }
+//
+//    };
 
 static const Real maxlogdouble = log(std::numeric_limits<double>::max());
 
@@ -131,7 +126,6 @@ class LogNumber
         sign_(1) 
         { }
 
-    explicit
     LogNumber(Real r)
         {
         if(r == 0)
@@ -335,6 +329,13 @@ class LogNumber
         return *this;
         }
 
+    // Reset this LogNumber to 1.0
+    void
+    reset()
+        {
+        lognum_ = 0;
+        sign_ = 1;
+        }
 
     private:
 
