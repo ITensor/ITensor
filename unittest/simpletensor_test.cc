@@ -65,14 +65,14 @@ TEST_CASE("Simpletensor")
         {
         std::vector<Real> v({11,21,31,41,51,
                              12,22,32,42,52});
-        STensor::index ind = {5,2};
-        STensor t(&(v.front()),ind);
+        Range ind{5,2};
+        STensor t(&(v.front()),std::move(ind));
 
         CHECK(t);
         CHECK(!t.ownstorage());
         CHECK(t.n(0) == 5);
         CHECK(t.n(1) == 2);
-        CHECK(t.size() == 0);
+        CHECK(t.size() == 10);
 
         CHECK_REQUAL(t(0,0),11);
         CHECK_REQUAL(t(0,1),12);
@@ -86,14 +86,15 @@ TEST_CASE("Simpletensor")
 
     SECTION("Move in Data")
         {
-        STensor::index ind = {5,2};
+        Range ind{5,2};
         STensor::storage v= {11,21,31,41,51,
                              12,22,32,42,52};
 
-        STensor t(std::move(ind),std::move(v));
+        STensor t(std::move(ind),v.begin(),v.end());
 
-        CHECK(ind.empty());
-        CHECK(v.empty());
+        Range testrange{5,2};
+        auto foos = std::move(testrange);
+        CHECK(testrange.empty());
 
         CHECK(t.ownstorage());
         CHECK(t.n(0) == 5);
