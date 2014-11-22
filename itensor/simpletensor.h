@@ -25,10 +25,14 @@ class simpletensor
     public:
     using value_type = T;
     using storage = std::vector<T>;
-    using index = std::vector<long>;
     private:
-    index n_;          // size of each index;  first index dim is n[0]; indices from 0 to n[j]-1
-    index stride_;     // spacing in memory for that index, stride_[0]==1 (column-major order)
+    struct Ind 
+        { 
+        long dim = 0, stride = 0; 
+        Ind() { }
+        Ind(long dim_, long stride_) : dim(dim_),stride(stride_) { }
+        };
+    std::vector<Ind> inds_;          // size of each index;  first index dim is n[0]; indices from 0 to n[j]-1
     T* data_ = nullptr; // always used to point to the storage
     storage vec_;      // used if it owns its storage
     public:
@@ -46,23 +50,21 @@ class simpletensor
     //e.g. simpletensor(4,4,3,4,2);
     template <typename... Dims>
     simpletensor(long d0, Dims... rest)
-        :
-        n_{d0,rest...}
         {
-        init(true);
+        const auto ndim = 1+sizeof...(rest);
+        std::array<long,ndim> dims = {{d0,static_cast<long>(rest)...}};
+        init(true,dims);
         }
 
     simpletensor(std::initializer_list<long> dims)
         { 
-        n_ = dims; 
-        init(true); 
+        init(true,dims); 
         }
 
     template<typename U> // U == int or long
     simpletensor(const std::vector<U>& dims)
         { 
-        set_n(dims); 
-        init(true); 
+        init(true,dims); 
         }
 
     // U == int or long
@@ -73,17 +75,7 @@ class simpletensor
         : 
         vec_(first,last)
         { 
-        set_n(dims); 
-        initNoAlloc(true); 
-        }
-
-    simpletensor(index&& dims,
-                 storage&& vv)
-        : 
-        n_(std::move(dims)),
-        vec_(std::move(vv))
-        { 
-        initNoAlloc(true); 
+        initNoAlloc(true,dims);
         }
 
     template<typename U> // U == int or long
@@ -92,22 +84,21 @@ class simpletensor
         : 
         data_(const_cast<T*>(dat))
         { 
-        set_n(dims); 
-        init(false); 
+        init(false,dims); 
         }
 
+    template<typename Iterable>
     simpletensor(const T* dat, 
-                 index&& dims) 
+                 Iterable&& dims) 
         : 
-        n_(std::move(dims)),
         data_(const_cast<T*>(dat))
         { 
-        init(false); 
+        init(false,dims); 
         }
 
     // number of indices (tensor rank)
     long 
-    r() const { return n_.size(); }
+    r() const { return inds_.size(); }
 
     long 
     size() const { return vec_.size(); }
@@ -119,11 +110,11 @@ class simpletensor
 
     // dimension of index i
     long 
-    n(long i) const { return n_[i]; }
+    n(long i) const { return inds_[i].dim; }
 
     // stride of index i
     long 
-    stride(long i) const { return stride_[i]; }
+    stride(long i) const { return inds_[i].stride; }
 
     // direct access to element
     const T& 
@@ -152,30 +143,14 @@ class simpletensor
     void 
     resize(std::initializer_list<long> dims) 
         { 
-        n_ = dims; 
-        init(true); 
+        init(true,dims); 
         }
 
     template<typename U> 
     void 
     resize(const std::vector<U>& dims) 
         { 
-        set_n(dims); 
-        init(true); 
-        }
-
-    template<typename Iterable>
-    long
-    indIterable(const Iterable& inds) const
-        {
-        long ii = 0, 
-             i = 0;
-        for(auto& j : inds)
-            {
-            ii += stride_[i] * j;
-            ++i;
-            }
-        return ii;
+        init(true,dims); 
         }
 
     template<typename U>
@@ -203,48 +178,53 @@ class simpletensor
 
     template <typename Ind0, typename... Inds>
     const T& 
-    operator()(Ind0 i0, Inds... rest) const { return data_[ind(i0,rest...)]; }
+    operator()(const Ind0& i0, Inds... rest) const { return data_[ind(i0,rest...)]; }
 
     void 
     clear()
         {
         vec_.clear();
-        n_.clear();
-        stride_.clear();
+        inds_.clear();
         data_ = nullptr;
         }
 
     private:
 
-    template<typename U>
-    void 
-    set_n(const std::vector<U>& v)
+    template<typename Iterable>
+    long
+    indIterable(const Iterable& inds) const
         {
-        n_.resize(v.size());
-        for(int i = 0; i < v.size(); ++i)
-            n_[i] = long{v[i]};
+        long ii = 0, 
+             i = 0;
+        for(auto& j : inds)
+            {
+            ii += inds_[i].stride * j;
+            ++i;
+            }
+        return ii;
         }
 
-    // assumes n_ has already been set
-    long
-    computeStride()
+
+    template<typename Iterable>
+    long 
+    computeInds(const Iterable& v)
         {
-        stride_.resize(r());
+        inds_.resize(v.size());
         long len = 1;
-        for(long i = 0; i < r(); ++i)
+        for(int i = 0; i < v.size(); ++i)
             {
-            stride_[i] = len;
-            len *= n_[i];
+            inds_[i] = Ind(long{v[i]},len);
+            len *= inds_[i].dim;
             }
         return len;
         }
 
-    // assumes n_ has already been set and
-    // vec_ has already been allocated to correct size
+    // assumes vec_ has already been allocated to correct size
+    template<typename Iterable>
     void 
-    initNoAlloc(bool ownstore)
+    initNoAlloc(bool ownstore, const Iterable& v)
         {
-        auto len = computeStride();
+        auto len = computeInds(v);
         if(ownstore && len > 0)
             {
             if(vec_.size() != len) throw std::runtime_error("Wrong size of input data");
@@ -252,11 +232,11 @@ class simpletensor
             }
         }
 
-    // assumes n_ has already been set
+    template<typename Iterable>
     void 
-    init(bool ownstore)
+    init(bool ownstore, const Iterable& v)
         {
-        auto len = computeStride();
+        auto len = computeInds(v);
         if(ownstore && len > 0)
             {
             vec_.resize(len);
@@ -268,14 +248,14 @@ class simpletensor
     long
     __ind(long first, Inds... rest)
         {
-        return first*stride_[i] + __ind<i+1>(rest...);
+        return first*inds_[i].stride + __ind<i+1>(rest...);
         }
 
     template <long i>
     long
     __ind(long first)
         {
-        return first*stride_[i];
+        return first*inds_[i].stride;
         }
 
     };
