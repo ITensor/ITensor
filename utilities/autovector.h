@@ -33,7 +33,7 @@ using lint = long int;
 template<typename T>
 class autovector // returns T() outside range or unassigned
     {
-private:
+    private:
     lint mini_, 
          maxi_, // minimum and maximum indices i set so far
          miniloc_; // offset of mini in storage
@@ -45,7 +45,7 @@ private:
         constexpr static auto default_ = T();
         return default_;
         }
-public:
+    public:
     autovector()
      : mini_(1), maxi_(0), miniloc_(0) { }
 
@@ -66,6 +66,19 @@ public:
 
     void
     clear() { dat_.clear(); }
+
+    T*
+    begin() { return &dat_[miniloc_]; }
+    T*
+    end() { return &dat_[1+maxi_-mini_+miniloc_]; }
+    const T*
+    begin() const { return &dat_[miniloc_]; }
+    const T*
+    end() const { return &dat_[1+maxi_-mini_+miniloc_]; }
+    const T*
+    cbegin() const { return &dat_[miniloc_]; }
+    const T*
+    cend() const { return &dat_[1+maxi_-mini_+miniloc_]; }
 
     const T&
     operator()(lint i) const
