@@ -317,13 +317,6 @@ read(std::istream& s)
     return *this;
     }
 
-const Index& Index::
-Null()
-    {
-    static const Index Null_;
-    return Null_;
-    }
-
 std::string Index::
 id() const
     {
@@ -351,10 +344,7 @@ IndexVal(const Index& index_, int i_)
     i(i_)
     { 
 #ifdef DEBUG
-    if(index == Index::Null())
-        {
-        Error("IndexVal initialized with null Index");
-        }
+    if(!index) Error("IndexVal initialized with default initialized Index");
     if(i_ < 1 || i_ > index.m())
         {
         println("i = ",i_);
@@ -370,13 +360,6 @@ operator==(const IndexVal& other) const
     return (index == other.index && i == other.i);
     }
 
-
-const IndexVal& IndexVal::
-Null()
-    {
-    static const IndexVal Null_;
-    return Null_;
-    }
 
 string
 showm(const Index& I) { return nameint("m=",I.m()); }

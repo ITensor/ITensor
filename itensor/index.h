@@ -191,6 +191,9 @@ class IndexVal
     bool
     operator!=(const IndexVal& other) const { return !operator==(other); }
 
+    bool
+    operator==(const Index& I) const { return index == I; }
+
     int
     m() const { return index.m(); }
 
@@ -218,6 +221,12 @@ class IndexVal
     static const IndexVal& 
     Null();
     };
+
+bool inline
+operator==(const Index& I, const IndexVal& iv)
+    {
+    return iv.operator==(I);
+    }
 
 Index inline
 dag(Index res) { res.dag(); return res; }
