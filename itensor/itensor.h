@@ -6,7 +6,6 @@
 #define __ITENSOR_ITENSOR_H
 #include "itdata_functions.h"
 
-
 namespace itensor {
 
 //
@@ -669,7 +668,39 @@ sumels(const ITensor& T);
 template <class Tensor>
 Tensor
 swapPrime(Tensor T, int plev1, int plev2,
-          IndexType type = All)
+          IndexType type = All);
+
+//Find index of tensor A (of optional type t) 
+//which is shared with tensor B
+template<class TensorA, class TensorB> typename 
+TensorA::IndexT
+commonIndex(const TensorA& A, const TensorB& B, IndexType t = All);
+
+//Find index of tensor A (of optional type t) 
+//which is NOT shared by tensor B
+template<class TensorA, class TensorB> typename 
+TensorA::IndexT
+uniqueIndex(const TensorA& A, 
+            const TensorB& B, 
+            IndexType t);
+
+
+
+
+
+
+//
+//
+//
+// Template Method Implementations
+//
+//
+//
+
+template <class Tensor>
+Tensor
+swapPrime(Tensor T, int plev1, int plev2,
+          IndexType type)
     { 
     int tempLevel = 100;
 #ifdef DEBUG
@@ -688,11 +719,9 @@ swapPrime(Tensor T, int plev1, int plev2,
     return T; 
     }
 
-//Find index of tensor A (of optional type t) 
-//which is shared with tensor B
 template<class TensorA, class TensorB> typename 
 TensorA::IndexT
-commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
+commonIndex(const TensorA& A, const TensorB& B, IndexType t)
     {
     using IndexT = typename TensorA::IndexT;
     for(const IndexT& I : A.inds())
@@ -707,8 +736,6 @@ commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
     }
 
 
-//Find index of tensor A (of optional type t) 
-//which is NOT shared by tensor B
 template<class TensorA, class TensorB> typename 
 TensorA::IndexT
 uniqueIndex(const TensorA& A, 
@@ -728,9 +755,6 @@ uniqueIndex(const TensorA& A,
     }
 
 
-//
-// Template Method Implementations
-//
 
 //template <typename... Indices>
 //ITensor
