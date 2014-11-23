@@ -92,6 +92,22 @@ ITensor(const Index& i1,
     store_(std::make_shared<ITDiag<Real>>(V.begin(),V.end()))
 	{ }
 
+ITensor::
+ITensor(const IndexSet<Index>& is)
+    :
+    is_(is),
+    scale_(1.),
+    store_(std::make_shared<ITDense<Real>>(is_))
+	{ }
+
+ITensor::
+ITensor(const IndexSet<Index>& is,
+        const VectorRef& v)
+    :
+    is_(is),
+    scale_(1.),
+    store_(std::make_shared<ITDense<Real>>(is_,v.begin(),v.end()))
+	{ }
 
 //class IsScalar
 //    {

@@ -54,11 +54,19 @@ class ITensor
     ITensor(const Index& i1,
             const VectorRef& V);
 
-    //Construct rank 2 ITensor,
-    //diagonal given by VectorRef V
+    //Construct diagonal rank 2 ITensor,
+    //diagonal elements given by VectorRef V
     ITensor(const Index& i1,
             const Index& i2,
             const VectorRef& V);
+
+    //Construct rank n ITensor, all
+    //entries set to zero except the single
+    //entry specified by the IndexVal args
+    template <typename... IVals>
+    explicit
+    ITensor(const IndexVal& iv1, 
+            const IVals&... rest);
 
     //
     // Accessor Methods
@@ -203,6 +211,15 @@ class ITensor
     ITensor(IndexSet<Index>&& iset,
             NewData nd,
             LogNumber scale);
+
+    //Provide indices from IndexSet<Index>
+    explicit
+    ITensor(const IndexSet<Index>& is);
+
+    //Provide indices from an index set
+    //and elements from a VectorRef
+    ITensor(const IndexSet<Index>& is,
+            const VectorRef& v);
 
     //Scale factor, used internally for efficient scalar ops.
     //Mostly for developer use, not necessary to explicitly involve
@@ -405,6 +422,25 @@ ITensor(const Index& i1,
     scale_(1.),
     store_(make_shared<ITDense<Real>>(is_))
 	{ }
+
+template <typename... IVals>
+ITensor::
+ITensor(const IndexVal& iv1, 
+        const IVals&... rest)
+    :
+    scale_(1.)
+    {
+    const auto size = 1+sizeof...(rest);
+    auto ivs = std::array<IndexVal,size>{{iv1,rest...}};
+    auto inds = std::vector<Index>();
+    inds.reserve(size);
+    for(const auto& iv : ivs) inds.push_back(iv.index);
+    is_ = IndexSet<Index>(std::move(inds));
+
+    store_ = make_shared<ITDense<Real>>(is_);
+
+    set(1.,iv1,rest...);
+    }
 
 template <typename... IndexVals>
 Complex ITensor::

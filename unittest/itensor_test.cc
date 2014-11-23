@@ -266,7 +266,6 @@ SECTION("Constructors")
         Vector V(i1.m()); 
         V.Randomize();
         ITensor T(i1,i2,V);
-        PrintDat(T);
 
         CHECK_EQUAL(T.r(),2);
         CHECK(hasindex(T,i1));
@@ -276,135 +275,146 @@ SECTION("Constructors")
         }
     }
   
-//SECTION("IndexValConstructors")
-//    {
-//    ITensor t1(l1(2));
-//
-//    CHECK_EQUAL(t1.r(),1);
-//    CHECK(hasindex(t1,l1));
-//    CHECK_CLOSE(t1(l1(1)),0,1E-10);
-//    CHECK_CLOSE(t1(l1(2)),1,1E-10);
-//    CHECK_CLOSE(sumels(t1),1,1E-10);
-//    CHECK_CLOSE(t1.norm(),1,1E-10);
-//
-//    ITensor t2(l1(2),l2(1));
-//
-//    CHECK_EQUAL(t2.r(),2);
-//    CHECK(hasindex(t2,l1));
-//    CHECK(hasindex(t2,l2));
-//    CHECK_CLOSE(t2(l1(1),l2(1)),0,1E-10);
-//    CHECK_CLOSE(t2(l1(1),l2(2)),0,1E-10);
-//    CHECK_CLOSE(t2(l1(2),l2(1)),1,1E-10);
-//    CHECK_CLOSE(t2(l1(2),l2(2)),0,1E-10);
-//    CHECK_CLOSE(sumels(t2),1,1E-10);
-//    CHECK_CLOSE(t2.norm(),1,1E-10);
-//
-//    ITensor u2a(a1(1),l2(2));
-//
-//    CHECK_EQUAL(u2a.r(),2);
-//    CHECK(hasindex(u2a,a1));
-//    CHECK(hasindex(u2a,l2));
-//    CHECK_CLOSE(u2a(l2(1)),0,1E-10);
-//    CHECK_CLOSE(u2a(l2(2)),1,1E-10);
-//    CHECK_CLOSE(sumels(u2a),1,1E-10);
-//    CHECK_CLOSE(u2a.norm(),1,1E-10);
-//
-//    ITensor u2b(l1(2),a2(1));
-//
-//    CHECK_EQUAL(u2b.r(),2);
-//    CHECK(hasindex(u2b,l1));
-//    CHECK(hasindex(u2b,a2));
-//    CHECK_CLOSE(u2b(l1(1)),0,1E-10);
-//    CHECK_CLOSE(u2b(l1(2)),1,1E-10);
-//    CHECK_CLOSE(sumels(u2b),1,1E-10);
-//    CHECK_CLOSE(u2b.norm(),1,1E-10);
-//
-//    ITensor t3(l1(2),l3(1),l2(1));
-//
-//    CHECK_EQUAL(t3.r(),3);
-//    CHECK(hasindex(t3,l1));
-//    CHECK(hasindex(t3,l2));
-//    CHECK(hasindex(t3,l3));
-//    CHECK_CLOSE(t3(l1(1),l3(1),l2(1)),0,1E-10);
-//    CHECK_CLOSE(t3(l1(2),l3(1),l2(1)),1,1E-10);
-//    CHECK_CLOSE(t3(l1(1),l3(2),l2(1)),0,1E-10);
-//    CHECK_CLOSE(t3(l1(2),l3(2),l2(2)),0,1E-10);
-//    CHECK_CLOSE(t3(l1(1),l3(1),l2(2)),0,1E-10);
-//    CHECK_CLOSE(t3(l1(2),l3(1),l2(2)),0,1E-10);
-//    CHECK_CLOSE(t3(l1(1),l3(2),l2(2)),0,1E-10);
-//    CHECK_CLOSE(t3(l1(2),l3(2),l2(2)),0,1E-10);
-//    CHECK_CLOSE(sumels(t3),1,1E-10);
-//    CHECK_CLOSE(t3.norm(),1,1E-10);
-//
-//    ITensor t4(a1(1),l3(2),l2(1));
-//
-//    CHECK_EQUAL(t4.r(),3);
-//    CHECK(hasindex(t4,a1));
-//    CHECK(hasindex(t4,l2));
-//    CHECK(hasindex(t4,l3));
-//    CHECK_CLOSE(t4(l3(1),l2(1)),0,1E-10);
-//    CHECK_CLOSE(t4(l3(1),l2(2)),0,1E-10);
-//    CHECK_CLOSE(t4(l3(2),l2(1)),1,1E-10);
-//    CHECK_CLOSE(t4(l3(2),l2(2)),0,1E-10);
-//    CHECK_CLOSE(sumels(t4),1,1E-10);
-//    CHECK_CLOSE(t4.norm(),1,1E-10);
-//
-//    ITensor r4(l1(1),l3(1),l2(2),l4(1));
-//
-//    CHECK_EQUAL(r4.r(),4);
-//    CHECK(hasindex(r4,l1));
-//    CHECK(hasindex(r4,l2));
-//    CHECK(hasindex(r4,l3));
-//    CHECK(hasindex(r4,l4));
-//    CHECK_CLOSE(r4(l1(1),l3(1),l2(2),l4(1)),1,1E-10);
-//    CHECK_CLOSE(sumels(r4),1,1E-10);
-//    CHECK_CLOSE(r4.norm(),1,1E-10);
-//
-//    ITensor t8(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2));
-//
-//    CHECK_EQUAL(t8.r(),8);
-//    CHECK(hasindex(t8,l1));
-//    CHECK(hasindex(t8,l2));
-//    CHECK(hasindex(t8,l3));
-//    CHECK(hasindex(t8,l4));
-//    CHECK(hasindex(t8,l5));
-//    CHECK(hasindex(t8,l6));
-//    CHECK(hasindex(t8,l7));
-//    CHECK(hasindex(t8,l8));
-//
-//    CHECK_CLOSE(t8(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2)),1,1E-10);
-//    CHECK_CLOSE(t8.norm(),1,1E-10);
-//
-//    }
-//
-//SECTION("MultiIndexConstructors")
-//    {
-//    const
-//    IndexSet<Index> indices(a2,l3,l1,a4);
-//
-//    ITensor t1(indices);
-//
-//    CHECK_EQUAL(t1.r(),4);
-//    CHECK(hasindex(t1,a2));
-//    CHECK(hasindex(t1,l3));
-//    CHECK(hasindex(t1,l1));
-//    CHECK(hasindex(t1,a4));
-//    CHECK_CLOSE(t1.norm(),0,1E-10);
-//
-//    Vector V(l1.m()*l3.m());
-//    V.Randomize();
-//
-//    ITensor t2(indices,V);
-//
-//    CHECK_EQUAL(t2.r(),4);
-//    CHECK(hasindex(t2,a2));
-//    CHECK(hasindex(t2,l3));
-//    CHECK(hasindex(t2,l1));
-//    CHECK(hasindex(t2,a4));
-//    CHECK_CLOSE(t2.norm(),Norm(V),1E-10);
-//    CHECK_CLOSE(sumels(t2),V.sumels(),1E-10);
-//    }
-//
+SECTION("IndexValConstructors")
+    {
+    SECTION("Rank 1")
+        {
+        ITensor t1(l1(2));
+        CHECK_EQUAL(t1.r(),1);
+        CHECK(hasindex(t1,l1));
+        CHECK_CLOSE(t1.real(l1(1)),0,1E-10);
+        CHECK_CLOSE(t1.real(l1(2)),1,1E-10);
+        CHECK_CLOSE(sumels(t1),1,1E-10);
+        CHECK_CLOSE(norm(t1),1,1E-10);
+        }
+
+    SECTION("Rank 2")
+        {
+        ITensor t2(l1(2),l2(1));
+
+        CHECK_EQUAL(t2.r(),2);
+        CHECK(hasindex(t2,l1));
+        CHECK(hasindex(t2,l2));
+        CHECK_CLOSE(t2.real(l1(1),l2(1)),0,1E-10);
+        CHECK_CLOSE(t2.real(l1(1),l2(2)),0,1E-10);
+        CHECK_CLOSE(t2.real(l1(2),l2(1)),1,1E-10);
+        CHECK_CLOSE(t2.real(l1(2),l2(2)),0,1E-10);
+        CHECK_CLOSE(sumels(t2),1,1E-10);
+        CHECK_CLOSE(norm(t2),1,1E-10);
+
+        ITensor u2a(a1(1),l2(2));
+
+        CHECK_EQUAL(u2a.r(),2);
+        CHECK(hasindex(u2a,a1));
+        CHECK(hasindex(u2a,l2));
+        CHECK_CLOSE(u2a.real(l2(1)),0,1E-10);
+        CHECK_CLOSE(u2a.real(l2(2)),1,1E-10);
+        CHECK_CLOSE(sumels(u2a),1,1E-10);
+        CHECK_CLOSE(norm(u2a),1,1E-10);
+
+        ITensor u2b(l1(2),a2(1));
+
+        CHECK_EQUAL(u2b.r(),2);
+        CHECK(hasindex(u2b,l1));
+        CHECK(hasindex(u2b,a2));
+        CHECK_CLOSE(u2b.real(l1(1)),0,1E-10);
+        CHECK_CLOSE(u2b.real(l1(2)),1,1E-10);
+        CHECK_CLOSE(sumels(u2b),1,1E-10);
+        CHECK_CLOSE(norm(u2b),1,1E-10);
+        }
+
+    SECTION("Rank 3")
+        {
+        ITensor t3(l1(2),l3(1),l2(1));
+        CHECK_EQUAL(t3.r(),3);
+        CHECK(hasindex(t3,l1));
+        CHECK(hasindex(t3,l2));
+        CHECK(hasindex(t3,l3));
+        CHECK_CLOSE(t3.real(l1(1),l3(1),l2(1)),0,1E-10);
+        CHECK_CLOSE(t3.real(l1(2),l3(1),l2(1)),1,1E-10);
+        CHECK_CLOSE(t3.real(l1(1),l3(2),l2(1)),0,1E-10);
+        CHECK_CLOSE(t3.real(l1(2),l3(2),l2(2)),0,1E-10);
+        CHECK_CLOSE(t3.real(l1(1),l3(1),l2(2)),0,1E-10);
+        CHECK_CLOSE(t3.real(l1(2),l3(1),l2(2)),0,1E-10);
+        CHECK_CLOSE(t3.real(l1(1),l3(2),l2(2)),0,1E-10);
+        CHECK_CLOSE(t3.real(l1(2),l3(2),l2(2)),0,1E-10);
+        CHECK_CLOSE(sumels(t3),1,1E-10);
+        CHECK_CLOSE(norm(t3),1,1E-10);
+
+        ITensor t4(a1(1),l3(2),l2(1));
+
+        CHECK_EQUAL(t4.r(),3);
+        CHECK(hasindex(t4,a1));
+        CHECK(hasindex(t4,l2));
+        CHECK(hasindex(t4,l3));
+        CHECK_CLOSE(t4.real(l3(1),l2(1)),0,1E-10);
+        CHECK_CLOSE(t4.real(l3(1),l2(2)),0,1E-10);
+        CHECK_CLOSE(t4.real(l3(2),l2(1)),1,1E-10);
+        CHECK_CLOSE(t4.real(l3(2),l2(2)),0,1E-10);
+        CHECK_CLOSE(sumels(t4),1,1E-10);
+        CHECK_CLOSE(norm(t4),1,1E-10);
+        }
+
+    SECTION("Rank 4")
+        {
+        ITensor r4(l1(1),l3(1),l2(2),l4(1));
+
+        CHECK_EQUAL(r4.r(),4);
+        CHECK(hasindex(r4,l1));
+        CHECK(hasindex(r4,l2));
+        CHECK(hasindex(r4,l3));
+        CHECK(hasindex(r4,l4));
+        CHECK_CLOSE(r4.real(l1(1),l3(1),l2(2),l4(1)),1,1E-10);
+        CHECK_CLOSE(sumels(r4),1,1E-10);
+        CHECK_CLOSE(norm(r4),1,1E-10);
+        }
+
+    SECTION("Rank 8")
+        {
+        ITensor t8(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2));
+
+        CHECK_EQUAL(t8.r(),8);
+        CHECK(hasindex(t8,l1));
+        CHECK(hasindex(t8,l2));
+        CHECK(hasindex(t8,l3));
+        CHECK(hasindex(t8,l4));
+        CHECK(hasindex(t8,l5));
+        CHECK(hasindex(t8,l6));
+        CHECK(hasindex(t8,l7));
+        CHECK(hasindex(t8,l8));
+
+        CHECK_CLOSE(t8.real(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2)),1,1E-10);
+        CHECK_CLOSE(norm(t8),1,1E-10);
+        }
+    }
+
+SECTION("MultiIndexConstructors")
+    {
+    auto indices = IndexSet<Index>(a2,l3,l1,a4);
+
+    ITensor t1(indices);
+
+    CHECK_EQUAL(t1.r(),4);
+    CHECK(hasindex(t1,a2));
+    CHECK(hasindex(t1,l3));
+    CHECK(hasindex(t1,l1));
+    CHECK(hasindex(t1,a4));
+    CHECK_CLOSE(norm(t1),0,1E-10);
+
+    Vector V(l1.m()*l3.m());
+    V.Randomize();
+
+    ITensor t2(indices,V);
+
+    CHECK_EQUAL(t2.r(),4);
+    CHECK(hasindex(t2,a2));
+    CHECK(hasindex(t2,l3));
+    CHECK(hasindex(t2,l1));
+    CHECK(hasindex(t2,a4));
+    CHECK_CLOSE(norm(t2),Norm(V),1E-10);
+    CHECK_CLOSE(sumels(t2),V.sumels(),1E-10);
+    }
+
 //SECTION("ITensorConstructors")
 //{
 //    Index clink("clink",4);
