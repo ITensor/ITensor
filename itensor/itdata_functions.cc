@@ -18,6 +18,21 @@ operator()(const ITDense<Complex>& d) const
     return std::move(nd);
     }
 
+NewData FillReal::
+operator()(ITDiag<Real>& d) const
+    {
+    std::fill(d.data.begin(),d.data.end(),r_);
+    return NewData();
+    }
+
+NewData FillReal::
+operator()(const ITDiag<Complex>& d) const
+    {
+    auto nd = make_newdata<ITDiag<Real>>(d.data.size());
+    operator()(*nd);
+    return std::move(nd);
+    }
+
 NewData FillCplx::
 operator()(const ITDense<Real>& d) const
     {
@@ -80,8 +95,34 @@ operator()(ITDense<Complex>& d) const
     return NewData();
     }
 
+void
+printVal(std::ostream& s,
+         Real val)
+    {
+    if(std::fabs(val) > 1E-10)
+        s << val << "\n";
+    else
+        s << format("%.8E\n",val);
+    }
+
+void
+printVal(std::ostream& s,
+         const Complex& val)
+    {
+    if(std::norm(val) > 1E-10)
+        {
+        auto sgn = (val.imag() < 0 ? '-' : '+');
+        s << val.real() << sgn << std::fabs(val.imag()) << "i\n";
+        }
+    else
+        {
+        s << format("%.8E\n",val);
+        }
+    }
+
+template<typename T>
 NewData PrintIT::
-operator()(const ITDense<Real>& d) const
+operator()(const ITDense<T>& d) const
     {
     s_ << "}\n";
     Real scalefac = 1.0;
@@ -98,43 +139,6 @@ operator()(const ITDense<Real>& d) const
     for(; gc.notDone(); ++gc)
         {
         auto val = d.data(gc.i);
-        if(fabs(val) > Global::printScale())
-            {
-            s_ << "  (";
-            for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
-                {
-                s_ << (1+gc.i(ii));
-                if(ii < gc.i.maxi()) s_ << ",";
-                }
-            s_ << ") ";
-
-            if(fabs(val) > 1E-10)
-                s_ << val << "\n";
-            else
-                s_ << format("%.8E\n",val);
-            }
-        }
-    return NewData();
-    }
-
-NewData PrintIT::
-operator()(const ITDense<Complex>& d) const 
-    {
-    s_ << "}\n";
-    Real scalefac = 1.0;
-    if(!x_.isTooBigForReal()) scalefac = x_.real0();
-    else s_ << "  (omitting too large scale factor)\n";
-
-    auto rank = d.data.r();
-    if(rank == 0) return NewData();
-
-    auto gc = detail::GCounter(0,rank-1,0);
-    for(int i = 0; i < rank; ++i)
-        gc.setInd(i,0,d.data.n(i)-1);
-
-    for(; gc.notDone(); ++gc)
-        {
-        auto val = d.data(gc.i)*scalefac;
         if(std::norm(val) > Global::printScale())
             {
             s_ << "  (";
@@ -145,20 +149,40 @@ operator()(const ITDense<Complex>& d) const
                 }
             s_ << ") ";
 
-            if(std::norm(val) > 1E-10)
-                {
-                auto sgn = (val.imag() < 0 ? '-' : '+');
-                s_ << val.real() << sgn << fabs(val.imag()) << "i\n";
-                }
-            else
-                {
-                s_ << format("%.8E\n",val);
-                }
+            printVal(s_,val);
             }
         }
     return NewData();
     }
+template NewData PrintIT::operator()(const ITDense<Real>& d) const;
+template NewData PrintIT::operator()(const ITDense<Complex>& d) const;
 
+template<typename T>
+NewData PrintIT::
+operator()(const ITDiag<T>& d) const
+    {
+    s_ << " Diag}\n";
+    Real scalefac = 1.0;
+    if(!x_.isTooBigForReal()) scalefac = x_.real0();
+    else s_ << "  (omitting too large scale factor)\n";
 
+    for(size_t i = 0; i < d.data.size(); ++i)
+        {
+        auto val = d.data[i];
+        if(std::norm(val) > Global::printScale())
+            {
+            s_ << "  (";
+            for(int j = 1; j < is_.size(); ++j)
+                {
+                s_ << (1+i) << ",";
+                }
+            s_ << (1+i) << ") ";
+            printVal(s_,val);
+            }
+        }
+    return NewData();
+    }
+template NewData PrintIT::operator()(const ITDiag<Real>& d) const;
+template NewData PrintIT::operator()(const ITDiag<Complex>& d) const;
 
 }; //namespace itensor

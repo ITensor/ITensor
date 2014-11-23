@@ -6,6 +6,8 @@
 #define __ITENSOR_ITDATA_FUNCTIONS_H
 #include "global.h"
 #include "itdata/itdense.h"
+#include "itdata/itdiag.h"
+#include "indexset.h"
 
 namespace itensor {
 
@@ -22,6 +24,18 @@ class ApplyIT
               typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
     NewData
     operator()(ITDense<T>& d) const
+        {
+        for(auto& elt : d.data)
+            {
+            elt = f_(elt);
+            }
+        return NewData();
+        }
+
+    template <typename T,
+              typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
+    NewData
+    operator()(ITDiag<T>& d) const
         {
         for(auto& elt : d.data)
             {
@@ -95,6 +109,28 @@ class ApplyIT
 //                      Pind_;
 //    };
 
+class NormNoScale
+    {
+    Real nrm_;
+    public:
+
+    NormNoScale() : nrm_(0) { }
+
+    operator Real() const { return nrm_; }
+
+    template<typename T>
+    NewData
+    operator()(const T& d)
+        {
+        for(const auto& elt : d.data)
+            {
+            nrm_ += std::norm(elt);
+            }
+        nrm_ = std::sqrt(nrm_);
+        return NewData();
+        }
+    };
+
 class FillReal
     {
     Real r_;
@@ -107,6 +143,10 @@ class FillReal
     operator()(ITDense<Real>& d) const;
     NewData
     operator()(const ITDense<Complex>& d) const;
+    NewData
+    operator()(ITDiag<Real>& d) const;
+    NewData
+    operator()(const ITDiag<Complex>& d) const;
     };
 
 class FillCplx
@@ -121,6 +161,10 @@ class FillCplx
     operator()(const ITDense<Real>& d) const;
     NewData
     operator()(ITDense<Complex>& d) const;
+
+    template<typename T>
+    NewData
+    operator()(const T& d) const { Error("Function not implemented."); return NewData(); }
     };
 
 template <typename F>
@@ -134,7 +178,7 @@ struct GenerateIT
 
     template <typename T>
     NewData
-    operator()(ITDense<T>& d) const
+    operator()(T& d) const
         {
         for(auto& elt : d.data)
             {
@@ -235,6 +279,10 @@ class MultReal
     operator()(ITDense<Real>& d) const;
     NewData
     operator()(ITDense<Complex>& d) const;
+
+    template<typename T>
+    NewData
+    operator()(const T& d) const { Error("Function not implemented."); return NewData(); }
     };
 
 //struct PlusEQ
@@ -309,16 +357,25 @@ struct PrintIT
     {
     std::ostream& s_;
     const LogNumber& x_;
+    const IndexSet<Index>& is_;
 
     PrintIT(std::ostream& s,
-            const LogNumber& x)
-        : s_(s), x_(x)
+            const LogNumber& x,
+            const IndexSet<Index>& is)
+        : s_(s), x_(x), is_(is)
         { }
 
+    template<typename T>
     NewData
-    operator()(const ITDense<Real>& d) const;
+    operator()(const ITDense<T>& d) const;
+
+    template<typename T>
     NewData
-    operator()(const ITDense<Complex>& d) const;
+    operator()(const ITDiag<T>& d) const;
+
+    template<typename T>
+    NewData
+    operator()(const T& d) const { Error("Function not implemented."); return NewData(); }
     };
 
 struct Read
@@ -403,6 +460,10 @@ class SetEltComplex
         d.data(inds_) = elt_;
         return NewData();
         }
+
+    template<typename T>
+    NewData
+    operator()(const T& d) const { Error("Function not implemented."); return NewData(); }
     };
 
 template<int size>
@@ -424,6 +485,10 @@ class SetEltReal
         d.data(inds_) = elt_;
         return NewData();
         }
+
+    template<typename T>
+    NewData
+    operator()(const T& d) const { Error("Function not implemented."); return NewData(); }
     };
 
 template <typename F>
@@ -438,7 +503,7 @@ class VisitIT
 
     template <typename T>
     NewData
-    operator()(const ITDense<T>& d) const
+    operator()(const T& d) const
         {
         for(const auto& elt : d.data)
             {

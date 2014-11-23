@@ -329,14 +329,6 @@ class LogNumber
         return *this;
         }
 
-    // Reset this LogNumber to 1.0
-    void
-    reset()
-        {
-        lognum_ = 0;
-        sign_ = 1;
-        }
-
     private:
 
     /////////////

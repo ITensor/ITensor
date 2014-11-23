@@ -4,7 +4,6 @@
 //
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
-#include "indexset.h"
 #include "itdata_functions.h"
 
 
@@ -50,6 +49,17 @@ class ITensor
     explicit
     ITensor(Complex val);
 
+    //Construct rank 1 ITensor,
+    //elements given by VectorRef V
+    ITensor(const Index& i1,
+            const VectorRef& V);
+
+    //Construct rank 2 ITensor,
+    //diagonal given by VectorRef V
+    ITensor(const Index& i1,
+            const Index& i2,
+            const VectorRef& V);
+
     //
     // Accessor Methods
     //
@@ -92,20 +102,20 @@ class ITensor
     //operator*=(const ITensor& other);
 
     //Multiplication and division by scalar
-    //ITensor& 
-    //operator*=(Real fac);
+    ITensor& 
+    operator*=(Real fac);
 
-    //ITensor& 
-    //operator/=(Real fac);
+    ITensor& 
+    operator/=(Real fac);
 
-    //ITensor& 
-    //operator*=(Complex z);
+    ITensor& 
+    operator*=(Complex z);
 
-    //ITensor& 
-    //operator/=(Complex z);
+    ITensor& 
+    operator/=(Complex z);
 
-    //ITensor
-    //operator-() const;
+    ITensor
+    operator-() const;
 
     //Tensor addition and subtraction
     //Summands must have same Indices, in any order
@@ -174,11 +184,11 @@ class ITensor
     void 
     solo();
 
-    //void
-    //scaleOutNorm();
+    void
+    scaleOutNorm();
 
-    //void
-    //equalizeScales(ITensor& other);
+    void
+    equalizeScales(ITensor& other);
 
     public:
 
@@ -506,18 +516,18 @@ operator<<(std::ostream & s, const ITensor& T);
 
 //ITensor inline
 //operator*(ITensor A, const ITensor& B) { A *= B; return A; }
-//ITensor inline
-//operator*(ITensor T, Real fac) { T *= fac; return T; }
-//ITensor inline
-//operator*(Real fac, ITensor T) { T *= fac; return T; }
-//ITensor inline
-//operator*(ITensor T, Complex fac) { T *= fac; return T; }
-//ITensor inline
-//operator*(Complex fac, ITensor T) { T *= fac; return T; }
-//ITensor inline
-//operator/(ITensor T, Real fac) { T /= fac; return T; }
-//ITensor inline
-//operator/(ITensor T, Complex fac) { T /= fac; return T; }
+ITensor inline
+operator*(ITensor T, Real fac) { T *= fac; return T; }
+ITensor inline
+operator*(Real fac, ITensor T) { T *= fac; return T; }
+ITensor inline
+operator*(ITensor T, Complex fac) { T *= fac; return T; }
+ITensor inline
+operator*(Complex fac, ITensor T) { T *= fac; return T; }
+ITensor inline
+operator/(ITensor T, Real fac) { T /= fac; return T; }
+ITensor inline
+operator/(ITensor T, Complex fac) { T /= fac; return T; }
 //ITensor inline
 //operator+(ITensor A, const ITensor& B) { A += B; return A; }
 //ITensor inline
@@ -581,6 +591,9 @@ dag(const ITensor& T) { return conj(T); }
 
 bool
 isComplex(const ITensor& T);
+
+Real
+sumels(const ITensor& T);
 
 
 

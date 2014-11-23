@@ -26,7 +26,7 @@ HEADERS=detail/functions.h detail/skip_iterator.h detail/gcounter.h \
         global.h real.h permutation.h index.h \
         indexset.h counter.h simpletensor.h \
         itdata/itdata.h itdata_functions.h \
-        itdata/itdense.h \
+        itdata/itdense.h itdata/itdiag.h \
         itensor.h qn.h iqindex.h iqtdat.h  \
         detail/skip_iterator.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \

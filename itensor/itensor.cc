@@ -72,7 +72,25 @@ ITensor(IndexSet<Index>&& iset,
     {
     }
 
+ITensor::
+ITensor(const Index& i1,
+        const VectorRef& V)
+    :
+    is_(i1),
+    scale_(1.),
+    store_(std::make_shared<ITDense<Real>>(is_,V.begin(),V.end()))
+	{ 
+    }
 
+ITensor::
+ITensor(const Index& i1,
+        const Index& i2,
+        const VectorRef& V)
+    :
+    is_(i1,i2),
+    scale_(1.),
+    store_(std::make_shared<ITDiag<Real>>(V.begin(),V.end()))
+	{ }
 
 
 //class IsScalar
@@ -420,7 +438,7 @@ fill(Real r)
     {
     if(!(*this)) return *this;
     solo();
-    scale_.reset();
+    scale_ = LogNumber(1.);
     applyFunc<FillReal>(store_,{r});
     return *this;
     }
@@ -430,7 +448,7 @@ fill(Complex z)
     {
     if(!(*this)) return *this;
     solo();
-    scale_.reset();
+    scale_ = LogNumber(1.);
     applyFunc<FillCplx>(store_,{z});
     return *this;
     }
@@ -453,41 +471,39 @@ solo()
     if(!store_.unique()) store_ = store_->clone();
     }
 
-//void ITensor::
-//scaleOutNorm()
-//    {
-//    //TODO
-//    //Real f = normNoScale();
-//    ////If norm already 1 return so
-//    ////we don't have to call solo()
-//    //if(fabs(f-1) < 1E-12) return;
-//
-//    //if(f != 0)
-//    //    {
-//    //    solo();
-//    //    store_->mult(1./f);
-//    //    scale_ *= f;
-//    //    }
-//    //else //norm == zero
-//    //    {
-//    //    scale_ = LogNumber(1.);
-//    //    store_->fill(0.,store_);
-//    //    }
-//    }
-//
-//void ITensor::
-//equalizeScales(ITensor& other)
-//    {
-//    if(scale_.sign() != 0)
-//        {
-//        other.scaleTo(scale_);
-//        }
-//    else //*this is equivalent to zero
-//        {
-//        fill(0);
-//        scale_ = other.scale_;
-//        }
-//    }
+void ITensor::
+scaleOutNorm()
+    {
+    Real f = applyFunc<NormNoScale>(store_);
+    //If norm already 1 return so
+    //we don't have to call solo()
+    if(fabs(f-1) < 1E-12) return;
+
+    if(f != 0)
+        {
+        solo();
+        applyFunc<MultReal>(store_,{1./f});
+        scale_ *= f;
+        }
+    else //norm == zero
+        {
+        scale_ = LogNumber(1.);
+        }
+    }
+
+void ITensor::
+equalizeScales(ITensor& other)
+    {
+    if(scale_.sign() != 0)
+        {
+        other.scaleTo(scale_);
+        }
+    else //*this is equivalent to zero
+        {
+        fill(0);
+        scale_ = other.scale_;
+        }
+    }
 
 
 ostream& 
@@ -504,7 +520,7 @@ operator<<(ostream & s, const ITensor& t)
 
     if(ff_set || Global::printdat())
         {
-        if(t) applyFunc<PrintIT>(t.data(),{s,t.scale()});
+        if(t) applyFunc<PrintIT>(t.data(),{s,t.scale(),t.inds()});
         else           s << " (default constructed)}\n";
         }
     return s;
@@ -518,23 +534,11 @@ randIT(ITensor T, const OptSet& opts)
     }
 
 
-struct NormVisitor
-    {
-    Real nrm2 = 0.;
-
-    void
-    operator()(Real r) { nrm2 += r*r; }
-
-    void
-    operator()(Complex z) { nrm2 += sqr(z.real()) + sqr(z.imag()); }
-    };
-
 Real
 norm(const ITensor& T)
     {
-    NormVisitor N;
-    T.visit(N);
-    return std::sqrt(N.nrm2);
+    return T.scale().real0() *
+           applyFunc<NormNoScale>(T.data());
     }
 
 //Possible optimization:
@@ -581,6 +585,32 @@ bool
 isComplex(const ITensor& t)
     {
     return applyFunc<CheckComplex>(t.data());
+    }
+
+class SumEls
+    {
+    Complex sum_;
+    public:
+
+    SumEls() : sum_(0) { }
+
+    operator Complex() const { return sum_; }
+
+    template <class T>
+    NewData
+    operator()(const T& d) 
+        { 
+        for(const auto& elt : d.data)
+            sum_ += elt;
+        return NewData();
+        }
+    };
+Real
+sumels(const ITensor& t)
+    {
+    auto z = Complex(applyFunc<SumEls>(t.data()));
+    if(z.imag() != 0) Error("ITensor has non-zero imaginary part");
+    return t.scale().real0()*z.real();
     }
 
 };
