@@ -308,6 +308,50 @@ class simpletensor
         init(false); 
         }
 
+    simpletensor(const simpletensor& other)
+        {
+        operator=(other);
+        }
+
+    simpletensor(simpletensor&& other)
+        {
+        operator=(std::move(other));
+        }
+
+
+    simpletensor&
+    operator=(const simpletensor& other)
+        { 
+        inds_ = other.inds_;
+        data_ = nullptr;
+        vec_ = other.vec_;
+        if(other.ownstorage())
+            {
+            initNoAlloc(true);
+            }
+        else
+            {
+            data_ = other.data_;
+            }
+        return *this;
+        }
+
+    simpletensor&
+    operator=(simpletensor&& other)
+        { 
+        inds_ = std::move(other.inds_);
+        if(other.ownstorage())
+            {
+            vec_ = std::move(other.vec_);
+            initNoAlloc(true);
+            }
+        else
+            {
+            data_ = other.data_;
+            }
+        return *this;
+        }
+
     // number of indices (tensor rank)
     long 
     r() const { return inds_.size(); }

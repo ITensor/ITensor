@@ -4,32 +4,26 @@
 using namespace std;
 using namespace itensor;
 
-//double static
-//Func(double x)
-//    {
-//    return x*x;
-//    }
+double static
+Func(double x)
+    {
+    return x*x;
+    }
 
 class Functor
     {
     public:
 
-    double
-    operator()(double x) const
+    template<typename T>
+    T
+    operator()(T x) const
         {
         return x*x;
         }
-
-    int
-    operator()(int x) const
-        {
-        return x*x;
-        }
-
     };
 
 TEST_CASE("ITensor")
-{
+    {
 
     Index s1("s1",2,Site);
     Index s2("s2",2,Site);
@@ -64,33 +58,33 @@ TEST_CASE("ITensor")
             X,
             Z;
 
-     //   {
-     //   Matrix M(s1.m(),s2.m());
-     //   M(1,1) = 11; M(1,2) = 12;
-     //   M(2,1) = 21; M(2,2) = 22;
-     //   A = ITensor(s1,s2,M);
-     //   }
+        {
+        Matrix M(s1.m(),s2.m());
+        M(1,1) = 11; M(1,2) = 12;
+        M(2,1) = 21; M(2,2) = 22;
+        A = ITensor(s1,s2,M);
+        }
 
-     //   {
-     //   Matrix M(s1.m(),s2.m());
-     //   M(1,1) = 110; M(1,2) = 120;
-     //   M(2,1) = 210; M(2,2) = 220;
-     //   B = ITensor(s1,s2,M);
-     //   }
+        {
+        Matrix M(s1.m(),s2.m());
+        M(1,1) = 110; M(1,2) = 120;
+        M(2,1) = 210; M(2,2) = 220;
+        B = ITensor(s1,s2,M);
+        }
 
-     //   {
-     //   Matrix M(s1.m(),s2.m());
-     //   M(1,1) = 0; M(1,2) = 1;
-     //   M(2,1) = 1; M(2,2) = 0;
-     //   X = ITensor(s1,s2,M);
-     //   }
-     //   
-     //   {
-     //   Matrix M(s1.m(),s2.m());
-     //   M(1,1) = 1; M(1,2) =  0;
-     //   M(2,1) = 0; M(2,2) = -1;
-     //   Z = ITensor(s1,s2,M);
-     //   }
+        {
+        Matrix M(s1.m(),s2.m());
+        M(1,1) = 0; M(1,2) = 1;
+        M(2,1) = 1; M(2,2) = 0;
+        X = ITensor(s1,s2,M);
+        }
+        
+        {
+        Matrix M(s1.m(),s2.m());
+        M(1,1) = 1; M(1,2) =  0;
+        M(2,1) = 0; M(2,2) = -1;
+        Z = ITensor(s1,s2,M);
+        }
 
 
 SECTION("Boolean")
@@ -416,7 +410,7 @@ SECTION("MultiIndexConstructors")
     }
 
 //SECTION("ITensorConstructors")
-//{
+//    {
 //    Index clink("clink",4);
 //    IndexSet<Index> indices1(l1,l2,clink);
 //
@@ -425,26 +419,30 @@ SECTION("MultiIndexConstructors")
 //
 //    ITensor t1(indices1,V);
 //
-//    Real f = Global::random();
+//    Real f = 1;
+//    //Real f = Global::random();
+//    //ITensor t2(t1);
+//    //t2 *= f;
 //
-//    ITensor t2(t1);
-//    t2 *= f;
+//    IndexSet<Index> indices3(l1,l2,l4,l3);
 //
-//    IndexSet<Index> indices3(l1,l2,l3,l4);
+//    //ITensor t3(indices3,t2);
+//    ITensor t3(indices3,t1);
 //
-//    ITensor t3(indices3,t2);
+//    PrintData(t1);
+//    PrintData(t3);
 //
 //    CHECK_EQUAL(4,t3.r());
 //
 //    for(int i = 1; i <= l1.m(); ++i)
 //    for(int j = 1; j <= l2.m(); ++j)
 //    {
-//    CHECK_CLOSE(t1(l1(i),l2(j),clink(1))*f,t3(l1(i),l2(j),l3(1),l4(1)),1E-10);
-//    CHECK_CLOSE(t1(l1(i),l2(j),clink(2))*f,t3(l1(i),l2(j),l3(2),l4(1)),1E-10);
-//    CHECK_CLOSE(t1(l1(i),l2(j),clink(3))*f,t3(l1(i),l2(j),l3(1),l4(2)),1E-10);
-//    CHECK_CLOSE(t1(l1(i),l2(j),clink(4))*f,t3(l1(i),l2(j),l3(2),l4(2)),1E-10);
+//    CHECK_CLOSE(t1.real(l1(i),l2(j),clink(1))*f,t3.real(l1(i),l2(j),l3(1),l4(1)),1E-10);
+//    CHECK_CLOSE(t1.real(l1(i),l2(j),clink(2))*f,t3.real(l1(i),l2(j),l3(2),l4(1)),1E-10);
+//    CHECK_CLOSE(t1.real(l1(i),l2(j),clink(3))*f,t3.real(l1(i),l2(j),l3(1),l4(2)),1E-10);
+//    CHECK_CLOSE(t1.real(l1(i),l2(j),clink(4))*f,t3.real(l1(i),l2(j),l3(2),l4(2)),1E-10);
 //    }
-//
+
 //    Permutation P(NMAX+1);
 //    P.setFromTo(2,4);
 //    P.setFromTo(4,2);
@@ -464,176 +462,98 @@ SECTION("MultiIndexConstructors")
 //    for(int k = 1; k <= l3.m(); ++k)
 //    for(int l = 1; l <= l4.m(); ++l)
 //    {
-//    CHECK_CLOSE(t3(l1(i),l2(j),l3(k),l4(l))/f2,t5(l1(i),l2(j),l3(k),l4(l)),1E-10);
+//    CHECK_CLOSE(t3.real(l1(i),l2(j),l3(k),l4(l))/f2,t5.real(l1(i),l2(j),l3(k),l4(l)),1E-10);
 //    }
-//
-//}
-//
-//SECTION("Copy")
-//{
-//    IndexSet<Index> indices(a2,l3,l1,a4);
-//
-//    Vector V(l1.m()*l3.m());
-//    V.Randomize();
-//
-//    ITensor t1(indices,V);
-//
-//    CHECK_EQUAL(t1.r(),4);
-//    CHECK(hasindex(t1,a2));
-//    CHECK(hasindex(t1,l3));
-//    CHECK(hasindex(t1,l1));
-//    CHECK(hasindex(t1,a4));
-//    CHECK_CLOSE(t1.norm(),Norm(V),1E-10);
-//    CHECK_CLOSE(sumels(t1),V.sumels(),1E-10);
-//
-//    //Use copy constructor
-//    ITensor t2(t1);
-//    t1 = ITensor(); //destroy t1
-//
-//    CHECK_EQUAL(t2.r(),4);
-//    CHECK(hasindex(t2,a2));
-//    CHECK(hasindex(t2,l3));
-//    CHECK(hasindex(t2,l1));
-//    CHECK(hasindex(t2,a4));
-//    CHECK_CLOSE(t2.norm(),Norm(V),1E-10);
-//    CHECK_CLOSE(sumels(t2),V.sumels(),1E-10);
-//
-//    //Use operator=
-//    ITensor t3 = t2;
-//    t2 = ITensor(); //destroy t2
-//
-//    CHECK_EQUAL(t3.r(),4);
-//    CHECK(hasindex(t3,a2));
-//    CHECK(hasindex(t3,l3));
-//    CHECK(hasindex(t3,l1));
-//    CHECK(hasindex(t3,a4));
-//    CHECK_CLOSE(t3.norm(),Norm(V),1E-10);
-//    CHECK_CLOSE(sumels(t3),V.sumels(),1E-10);
-//}
-//
-//SECTION("ScalarMultiply")
-//{
-//    A *= -1;
-//    CHECK_EQUAL(A(s1(1),s2(1)),-11);
-//    CHECK_EQUAL(A(s1(1),s2(2)),-12);
-//    CHECK_EQUAL(A(s1(2),s2(1)),-21);
-//    CHECK_EQUAL(A(s1(2),s2(2)),-22);
-//
-//    Real f = Global::random();
-//    A *= -f;
-//    CHECK_CLOSE(A(s1(1),s2(1)),11*f,1E-10);
-//    CHECK_CLOSE(A(s1(1),s2(2)),12*f,1E-10);
-//    CHECK_CLOSE(A(s1(2),s2(1)),21*f,1E-10);
-//    CHECK_CLOSE(A(s1(2),s2(2)),22*f,1E-10);
-//
-//    B /= f;
-//    CHECK_CLOSE(B(s1(1),s2(1)),110/f,1E-10);
-//    CHECK_CLOSE(B(s1(1),s2(2)),120/f,1E-10);
-//    CHECK_CLOSE(B(s1(2),s2(1)),210/f,1E-10);
-//    CHECK_CLOSE(B(s1(2),s2(2)),220/f,1E-10);
-//}
-//
-///*
-//SECTION("assignToVec")
-//{
-//    Vector V(l1.m()*l2.m()*l3.m());
-//    V.Randomize();
-//    Real f = -Global::random();
-//
-//    IndexSet<Index> indices(l1,l2,l3);
-//
-//    ITensor T(indices,V);
-//
-//    T *= f;
-//
-//    Vector U(T.indices().dim()); T.assignToVec(U);
-//
-//    CHECK_EQUAL(U.Length(),V.Length());
-//
-//    for(int j = 1; j < V.Length(); ++j)
-//    { CHECK_CLOSE(U(j),V(j)*f,1E-10); }
-//
-//}
-//*/
-//
-//SECTION("MapElems")
-//    {
-//    // class Functor and the function Func
-//    // are defined in test.h
-//
-//    ITensor A1(A);
-//    Functor f;
-//    A1.mapElems(f);
-//    for(int n1 = 1; n1 <= s1.m(); ++n1)
-//    for(int n2 = 1; n2 <= s2.m(); ++n2)
-//        {
-//        CHECK_CLOSE( f( A(s1(n1),s2(n2)) ), A1(s1(n1),s2(n2)) ,1E-10);
-//        }
-//
-//    ITensor A2(A);
-//    Real (*pFunc)(Real) = Func;
-//    A2.mapElems(*pFunc);
-//    for(int n1 = 1; n1 <= s1.m(); ++n1)
-//    for(int n2 = 1; n2 <= s2.m(); ++n2)
-//        {
-//        CHECK_CLOSE( Func( A(s1(n1),s2(n2)) ), A2(s1(n1),s2(n2)) ,1E-10);
-//        }
 //    }
-//
-///*
-//SECTION("reshapeDat")
-//    {
-//    Permutation P;
-//    P.fromTo(1,2);
-//    P.fromTo(2,1);
-//
-//    Real f = -5;
-//    A *= f;
-//
-//    A.reshapeDat(P);
-//
-//    CHECK_CLOSE(A(s1(1),s2(1)),11*f,1E-10);
-//    CHECK_CLOSE(A(s1(1),s2(2)),21*f,1E-10);
-//    CHECK_CLOSE(A(s1(2),s2(1)),12*f,1E-10);
-//    CHECK_CLOSE(A(s1(2),s2(2)),22*f,1E-10);
-//
-//    }
-//    */
-//
-///*
-//SECTION("reshape")
-//    {
-//    //cout << "Begin: reshape -------------" << endl;
-//    Permutation P;
-//    P.fromTo(1,2);
-//    P.fromTo(2,1);
-//
-//    Real f = -5;
-//    A *= f;
-//
-//    CHECK_CLOSE(A(s1(1),s2(1)),11*f,1E-10);
-//    CHECK_CLOSE(A(s1(1),s2(2)),12*f,1E-10);
-//    CHECK_CLOSE(A(s1(2),s2(1)),21*f,1E-10);
-//    CHECK_CLOSE(A(s1(2),s2(2)),22*f,1E-10);
-//
-//    ITensor cA(A);
-//    cA.reshape(P);
-//
-//    //Check that indices are re-ordered...
-//    CHECK(A.index(1) == cA.index(P.dest(1)));
-//    CHECK(A.index(2) == cA.index(P.dest(2)));
-//
-//    //...but cA is equivalent to A apart from
-//    //Index order:
-//    CHECK_CLOSE(cA(s1(1),s2(1)),A(s1(1),s2(1)),1E-10);
-//    CHECK_CLOSE(cA(s1(1),s2(2)),A(s1(1),s2(2)),1E-10);
-//    CHECK_CLOSE(cA(s1(2),s2(1)),A(s1(2),s2(1)),1E-10);
-//    CHECK_CLOSE(cA(s1(2),s2(2)),A(s1(2),s2(2)),1E-10);
-//
-//    //cout << "End: reshape ---------------" << endl;
-//    }
-//    */
-//
+
+SECTION("Copy")
+    {
+    IndexSet<Index> indices(a2,l3,l1,a4);
+
+    Vector V(l1.m()*l3.m());
+    V.Randomize();
+
+    ITensor t1(indices,V);
+
+    CHECK_EQUAL(t1.r(),4);
+    CHECK(hasindex(t1,a2));
+    CHECK(hasindex(t1,l3));
+    CHECK(hasindex(t1,l1));
+    CHECK(hasindex(t1,a4));
+    CHECK_CLOSE(norm(t1),Norm(V),1E-10);
+    CHECK_CLOSE(sumels(t1),V.sumels(),1E-10);
+
+    //Use copy constructor
+    ITensor t2(t1);
+    t1 = ITensor(); //destroy t1
+
+    CHECK_EQUAL(t2.r(),4);
+    CHECK(hasindex(t2,a2));
+    CHECK(hasindex(t2,l3));
+    CHECK(hasindex(t2,l1));
+    CHECK(hasindex(t2,a4));
+    CHECK_CLOSE(norm(t2),Norm(V),1E-10);
+    CHECK_CLOSE(sumels(t2),V.sumels(),1E-10);
+
+    //Use operator=
+    ITensor t3 = t2;
+    t2 = ITensor(); //destroy t2
+
+    CHECK_EQUAL(t3.r(),4);
+    CHECK(hasindex(t3,a2));
+    CHECK(hasindex(t3,l3));
+    CHECK(hasindex(t3,l1));
+    CHECK(hasindex(t3,a4));
+    CHECK_CLOSE(norm(t3),Norm(V),1E-10);
+    CHECK_CLOSE(sumels(t3),V.sumels(),1E-10);
+    }
+
+SECTION("ScalarMultiply")
+    {
+    A *= -1;
+    CHECK_EQUAL(A.real(s1(1),s2(1)),-11);
+    CHECK_EQUAL(A.real(s1(1),s2(2)),-12);
+    CHECK_EQUAL(A.real(s1(2),s2(1)),-21);
+    CHECK_EQUAL(A.real(s1(2),s2(2)),-22);
+
+    Real f = Global::random();
+    A *= -f;
+    CHECK_CLOSE(A.real(s1(1),s2(1)),11*f,1E-10);
+    CHECK_CLOSE(A.real(s1(1),s2(2)),12*f,1E-10);
+    CHECK_CLOSE(A.real(s1(2),s2(1)),21*f,1E-10);
+    CHECK_CLOSE(A.real(s1(2),s2(2)),22*f,1E-10);
+
+    B /= f;
+    CHECK_CLOSE(B.real(s1(1),s2(1)),110/f,1E-10);
+    CHECK_CLOSE(B.real(s1(1),s2(2)),120/f,1E-10);
+    CHECK_CLOSE(B.real(s1(2),s2(1)),210/f,1E-10);
+    CHECK_CLOSE(B.real(s1(2),s2(2)),220/f,1E-10);
+    }
+
+SECTION("MapElems")
+    {
+    // class Functor and the function Func
+    // are defined in test.h
+
+    ITensor A1(A);
+    Functor f;
+    A1.mapElems(f);
+    for(int n1 = 1; n1 <= s1.m(); ++n1)
+    for(int n2 = 1; n2 <= s2.m(); ++n2)
+        {
+        CHECK_CLOSE( f( A.real(s1(n1),s2(n2)) ), A1.real(s1(n1),s2(n2)) ,1E-10);
+        }
+
+    ITensor A2(A);
+    Real (*pFunc)(Real) = Func;
+    A2.mapElems(*pFunc);
+    for(int n1 = 1; n1 <= s1.m(); ++n1)
+    for(int n2 = 1; n2 <= s2.m(); ++n2)
+        {
+        CHECK_CLOSE( Func( A.real(s1(n1),s2(n2)) ), A2.real(s1(n1),s2(n2)) ,1E-10);
+        }
+    }
+
 //SECTION("SumDifference")
 //{
 //    Vector V(mixed_inds_dim),W(mixed_inds_dim);
@@ -1209,43 +1129,6 @@ SECTION("MultiIndexConstructors")
 //    CHECK((T-V).norm() < 1E-12);
 //    }
 //
-///*
-//SECTION("SymmetricDiag11")
-//    {
-//    ITensor T(s1,prime(s1));
-//    commaInit(T,s1,prime(s1)) << 1, 2,
-//                                  2, 1;
-//
-//    T *= -2;
-//    Index mid;
-//    ITensor D,U;
-//    T.symmetricDiag11(s1,D,U,mid);
-//    ITensor UD(U);
-//    UD.prime(s1);
-//    UD /= D;
-//    ITensor rT = UD*U;
-//    ITensor diff(UD*U - T);
-//    CHECK(diff.norm() < 1E-10);
-//
-//    //Construct a random, symmetric ITensor
-//    const int qs = 50;
-//    Index q("q",qs);
-//    Matrix QQ(qs,qs);
-//    QQ.Randomize();
-//    QQ += QQ.t();
-//    ITensor Q(q,prime(q),QQ);
-//    Q *= -2;
-//
-//    //Diagonalize and check the factorization
-//    Q.symmetricDiag11(q,D,U,mid);
-//    UD =U;
-//    UD.prime(q);
-//    UD /= D;
-//    diff = UD*U - Q;
-//    CHECK(diff.norm() < 1E-10);
-//    }
-//    */
-//
 //SECTION("CommaAssignment")
 //    {
 //    ITensor VV(s1);
@@ -1322,36 +1205,32 @@ SECTION("MultiIndexConstructors")
 //    CHECK_CLOSE(R.norm(),0,1E-5);
 //    CHECK_CLOSE(I.norm(),0,1E-5);
 //    }
-//
+
 //SECTION("SwapPrimeTest")
 //    {
-//    ITensor T(s1,prime(s1));
-//    commaInit(T,s1,prime(s1)) << 11, 12,
-//                                  21, 22;
+//    CHECK_EQUAL(A.real(s1(1),prime(s1)(1)),11);
+//    CHECK_EQUAL(A.real(s1(2),prime(s1)(1)),21);
+//    CHECK_EQUAL(A.real(s1(1),prime(s1)(2)),12);
+//    CHECK_EQUAL(A.real(s1(2),prime(s1)(2)),22);
 //
-//    CHECK_EQUAL(T(s1(1),prime(s1)(1)),11);
-//    CHECK_EQUAL(T(s1(2),prime(s1)(1)),21);
-//    CHECK_EQUAL(T(s1(1),prime(s1)(2)),12);
-//    CHECK_EQUAL(T(s1(2),prime(s1)(2)),22);
+//    A = swapPrime(A,0,1);
 //
-//    T = swapPrime(T,0,1);
-//
-//    CHECK_EQUAL(T(prime(s1)(1),s1(1)),11);
-//    CHECK_EQUAL(T(prime(s1)(2),s1(1)),21);
-//    CHECK_EQUAL(T(prime(s1)(1),s1(2)),12);
-//    CHECK_EQUAL(T(prime(s1)(2),s1(2)),22);
+//    CHECK_EQUAL(A.real(prime(s1)(1),s1(1)),11);
+//    CHECK_EQUAL(A.real(prime(s1)(2),s1(1)),21);
+//    CHECK_EQUAL(A.real(prime(s1)(1),s1(2)),12);
+//    CHECK_EQUAL(A.real(prime(s1)(2),s1(2)),22);
 //    }
-//
-//SECTION("NoprimeTest")
-//    {
-//    ITensor T(s1,prime(s1));
-//
-//    //Check that T.noprime()
-//    //throws an exception since it would
-//    //lead to duplicate indices
-//    CHECK_THROWS_AS(T.noprime(),ITError);
-//    }
-//
+
+SECTION("NoprimeTest")
+    {
+    ITensor T(s1,prime(s1));
+
+    //Check that T.noprime()
+    //throws an exception since it would
+    //lead to duplicate indices
+    CHECK_THROWS_AS(T.noprime(),ITError);
+    }
+
 //SECTION("NormTest")
 //    {
 //    A.randomize();
@@ -1425,23 +1304,23 @@ SECTION("MultiIndexConstructors")
 //    CHECK((realPart(T6)-(f2*A-f1*B)).norm() < 1E-12);
 //    CHECK((imagPart(T6)-(f1*A+f2*B)).norm() < 1E-12);
 //    }
-//
-//SECTION("CommonIndex")
-//    {
-//    ITensor T1(s1,s2,l1,l2),
-//            T2(s1,l3),
-//            T3(s3,l4);
-//
-//    Index c = commonIndex(T1,T3);
-//    CHECK(!c);
-//
-//    c = commonIndex(T2,T3);
-//    CHECK(!c);
-//
-//    CHECK(commonIndex(T1,T2) == s1);
-//    CHECK(commonIndex(T1,T2,Site) == s1);
-//    }
-//
+
+SECTION("CommonIndex")
+    {
+    ITensor T1(s1,s2,l1,l2),
+            T2(s1,l3),
+            T3(s3,l4);
+
+    Index c = commonIndex(T1,T3);
+    CHECK(!c);
+
+    c = commonIndex(T2,T3);
+    CHECK(!c);
+
+    CHECK(commonIndex(T1,T2) == s1);
+    CHECK(commonIndex(T1,T2,Site) == s1);
+    }
+
 //SECTION("DiagITensorBasicContraction")
 //    {
 //    Vector v(3);
@@ -1540,4 +1419,4 @@ SECTION("MultiIndexConstructors")
 //    CHECK(Norm(v-t2.diag()) < 1E-12);
 //    }
 
-}
+    } //TEST_CASE("ITensor")
