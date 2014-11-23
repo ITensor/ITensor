@@ -36,7 +36,8 @@ class Range
         index(long dim_, long stride_) : dim(dim_),stride(stride_) { }
         explicit operator long() const { return dim; }
         };
-    using storage = std::vector<index>;
+    using value_type = index;
+    using storage_type = std::vector<index>;
 
     Range() { }
 
@@ -98,8 +99,88 @@ class Range
             }
         }
 
-    storage inds_;
+    storage_type inds_;
     };
+
+namespace detail {
+template<typename Iterable>
+long
+indIterable(const Range& r, const Iterable& inds)
+    {
+    long ii = 0, 
+         i = 0;
+    for(auto& j : inds)
+        {
+        ii += r[i].stride * j;
+        ++i;
+        }
+    return ii;
+    }
+
+struct ComputeInd
+    {
+    const Range& r;
+    ComputeInd(const Range& r_) : r(r_) { }
+
+    template<typename... Inds>
+    long
+    operator()(long first, Inds... rest) const 
+        { 
+        return ind__<0>(first,rest...);
+        }
+
+    private:
+
+    template <long i, typename... Inds>
+    long
+    ind__(long first, Inds... rest) const
+        {
+        return first*r[i].stride + ind__<i+1>(rest...);
+        }
+
+    template <long i>
+    long
+    ind__(long first) const
+        {
+        return first*r[i].stride;
+        }
+    };
+
+}; //namespace detail
+
+template<typename U>
+long
+ind(const Range& r, const std::vector<U>& inds)
+    {
+    return detail::indIterable(inds);
+    }
+
+template<typename U, size_t size>
+long
+ind(const Range& r, const std::array<U,size>& inds)
+    {
+    return detail::indIterable(r,inds);
+    }
+
+template<typename U>
+long
+ind(const Range& r, const autovector<U>& inds)
+    {
+    return detail::indIterable(r,inds);
+    }
+
+long inline
+ind(const Range& r, long i0)
+    {
+    return detail::ComputeInd(r)(i0);
+    }
+
+template<typename... Inds>
+long
+ind(const Range& r, long i0, long i1, Inds... inds)
+    {
+    return detail::ComputeInd(r)(i0,i1,inds...);
+    }
 
 long inline
 area(const Range& r)
@@ -114,12 +195,14 @@ class simpletensor
     {
     public:
     using value_type = T;
-    using storage = std::vector<T>;
+    using storage_type = std::vector<T>;
     using index_type = Range;
+    using iterator = T*;
+    using const_iterator = const T*;
     private:
     index_type inds_;          // size of each index;  first index dim is n[0]; indices from 0 to n[j]-1
     T* data_ = nullptr; // always used to point to the storage
-    storage vec_;      // used if it owns its storage
+    storage_type vec_;      // used if it owns its storage
     public:
 
     // Constructor examples 1) simpletensor T{2,3,4}; 3 dimensional; first index from 0 to 1, etc
@@ -156,11 +239,20 @@ class simpletensor
         init(true); 
         }
 
-    simpletensor(Range&& dims)
+    simpletensor(index_type&& dims)
         :
-        inds_(std::forward<Range>(dims))
+        inds_(std::move(dims))
         { 
         init(true); 
+        }
+
+    simpletensor(index_type&& dims,
+                 storage_type&& v)
+        :
+        inds_(std::move(dims)),
+        vec_(std::move(v))
+        { 
+        initNoAlloc(true); 
         }
 
     // U == int or long
@@ -176,7 +268,18 @@ class simpletensor
         }
 
     template<typename InputIterator>
-    simpletensor(Range&& dims,
+    simpletensor(const index_type& dims,
+                 InputIterator first,
+                 InputIterator last)
+        : 
+        inds_(dims),
+        vec_(first,last)
+        { 
+        initNoAlloc(true);
+        }
+
+    template<typename InputIterator>
+    simpletensor(index_type&& dims,
                  InputIterator first,
                  InputIterator last)
         : 
@@ -197,7 +300,7 @@ class simpletensor
         }
 
     simpletensor(const T* dat, 
-                 Range&& dims) 
+                 index_type&& dims) 
         : 
         inds_(std::move(dims)),
         data_(const_cast<T*>(dat))
@@ -238,28 +341,28 @@ class simpletensor
     vref(long i) { return data_[i]; }
 
     // direct access to data
-    const T*
+    const_iterator
     data() const { return data_; }
 
     // direct access to data
-    T*
+    iterator
     data() { return data_; }
 
     // access storage
-    const storage&
+    const storage_type&
     store() const { return vec_; }
 
-    T*
+    iterator
     begin() { return data_; }
-    T*
+    iterator
     end() { return data_+size(); }
-    const T*
+    const_iterator
     begin() const { return data_; }
-    const T*
+    const_iterator
     end() const { return data_+size(); }
-    const T*
+    const_iterator
     cbegin() const { return begin(); }
-    const T*
+    const_iterator
     cend() const { return end(); }
 
     VectorRefNoLink 
@@ -279,39 +382,13 @@ class simpletensor
         init(true,dims); 
         }
 
-    template<typename U>
-    long
-    ind(const std::vector<U>& inds) const
-        {
-        return indIterable(inds);
-        }
-
-    template<typename U, size_t size>
-    long
-    ind(const std::array<U,size>& inds) const
-        {
-        return indIterable(inds);
-        }
-
-    template<typename U>
-    long
-    ind(const autovector<U>& inds) const
-        {
-        return indIterable(inds);
-        }
+    template <typename... Inds>
+    T& 
+    operator()(const Inds&... inds) { return data_[ind(inds_,inds...)]; }
 
     template <typename... Inds>
-    long
-    ind(long i0, Inds... inds) { return __ind<0>(i0,inds...); }
-
-
-    template <typename Ind0, typename... Inds>
-    T& 
-    operator()(const Ind0& i0, Inds... rest) { return data_[ind(i0,rest...)]; }
-
-    template <typename Ind0, typename... Inds>
     const T& 
-    operator()(const Ind0& i0, Inds... rest) const { return data_[ind(i0,rest...)]; }
+    operator()(const Inds&... inds) const { return data_[ind(inds_,inds...)]; }
 
     void 
     clear()
@@ -322,21 +399,6 @@ class simpletensor
         }
 
     private:
-
-    template<typename Iterable>
-    long
-    indIterable(const Iterable& inds) const
-        {
-        long ii = 0, 
-             i = 0;
-        for(auto& j : inds)
-            {
-            ii += inds_[i].stride * j;
-            ++i;
-            }
-        return ii;
-        }
-
 
     // assumes vec_ has already been allocated to correct size
     void 
@@ -356,25 +418,10 @@ class simpletensor
         auto len = area(inds_);
         if(ownstore && len > 0)
             {
-            vec_ = storage(len,val);
+            vec_ = storage_type(len,val);
             data_ = &vec_.front();
             }
         }
-
-    template <long i, typename... Inds>
-    long
-    __ind(long first, Inds... rest) const
-        {
-        return first*inds_[i].stride + __ind<i+1>(rest...);
-        }
-
-    template <long i>
-    long
-    __ind(long first) const
-        {
-        return first*inds_[i].stride;
-        }
-
     };
 
 
