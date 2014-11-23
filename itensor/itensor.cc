@@ -109,6 +109,106 @@ ITensor(const IndexSet<Index>& is,
     store_(std::make_shared<ITDense<Real>>(is_,v.begin(),v.end()))
 	{ }
 
+struct CopyElems
+    {
+    CopyElems() { }
+
+    template<typename T>
+    NewData
+    operator()(T& d1,
+               const T& d2)
+        {
+        std::copy(d2.data.begin(),d2.data.end(),d1.data.begin());
+        return NewData();
+        }
+    };
+
+ITensor::
+ITensor(const IndexSet<Index>& is,
+        const ITensor& t)
+    :
+    is_(is),
+    scale_(t.scale_),
+    store_(std::make_shared<ITDense<Real>>(is_))
+    {
+    Error("ITensor(IndexSet,ITensor) constructor currently broken due to automatic sorting of Indices by IndexSet");
+    applyFunc<CopyElems>(store_,t.store_);
+    }
+
+ITensor::
+ITensor(const Index& i1,
+        const Index& i2,
+        const MatrixRef& M)
+    :
+    is_(i1,i2),
+    scale_(1.)
+    {
+	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
+	    Error("Mismatch of Index sizes and matrix.");
+
+    if(i1 == is_[0])
+        {
+        Matrix Mt = M.t();
+        VectorRef vref = Mt.TreatAsVector(); 
+        store_ = make_newdata<ITDense<Real>>(is_,vref.begin(),vref.end());
+        }
+    else
+        {
+        VectorRef vref = M.TreatAsVector(); 
+        store_ = make_newdata<ITDense<Real>>(is_,vref.begin(),vref.end());
+        }
+    }
+
+
+//class Reshape
+//    {
+//    const Permutation& P_;
+//    const IndexSet<Index>& is_;
+//    public:
+//    Reshape(const Permutation& P,
+//            const IndexSet<Index>& is)
+//        : P_(P), is_(is)
+//        { }
+//
+//    NewData
+//    operator()(ITDense<Real>& t1, 
+//               const ITDense<Real>& t2)
+//        {
+//        auto v = std::vector<Real>();
+//        reshape(P_,is_,t2.data(),v);
+//        return NewData();
+//        }
+//
+//    template<typename T1, typename T2>
+//    NewData
+//    operator()(T1& t1, const T2& t2)
+//        {
+//        Error("Reshape not implemented for ITData types");
+//        return NewData();
+//        }
+//    };
+//
+//ITensor::
+//ITensor(const IndexSet<Index>& is,
+//        const ITensor& t,
+//        const Permutation& P)
+//    :
+//    is_(is_),
+//    scale_(t.scale_)
+//    {
+//    if(P.isTrivial()) 
+//        { 
+//        store_ = other.store_;
+//        }
+//    else               
+//        { 
+//        Error("Not yet implemented");
+//        store_ = make_shared<ITDense<Real>>(is_);
+//        applyFunc<Reshape>(store_,other.store_,{P,other.is_});
+//        }
+//    }
+
+
 //class IsScalar
 //    {
 //    bool value_ = false;
@@ -287,48 +387,48 @@ ITensor(const IndexSet<Index>& is,
 //
 //    return *this;
 //    }
-//
-//ITensor& ITensor::
-//operator*=(Real fac)
-//    {
-//    if(fac == 0)
-//        {
-//        fill(0);
-//        return *this;
-//        }
-//    scale_ *= fac;
-//    return *this;
-//    }
-//
-//ITensor& ITensor::
-//operator/=(Real fac) 
-//    { 
-//    scale_ /= fac; 
-//    return *this; 
-//    }
-//
-//ITensor& ITensor::
-//operator*=(Complex z)
-//    {
-//    if(z.imag() == 0) return operator*=(z.real());
-//    solo();
-//    applyFunc<MultComplex>(store_,{z});
-//    return *this;
-//    }
-//
-//ITensor& ITensor::
-//operator/=(Complex z)
-//    {
-//    return operator*=(1./z);
-//    }
-//
-//ITensor ITensor::
-//operator-() const 
-//    { 
-//    ITensor T(*this); 
-//    T.scale_ *= -1; 
-//    return T; 
-//    }
+
+ITensor& ITensor::
+operator*=(Real fac)
+    {
+    if(fac == 0)
+        {
+        fill(0);
+        return *this;
+        }
+    scale_ *= fac;
+    return *this;
+    }
+
+ITensor& ITensor::
+operator/=(Real fac) 
+    { 
+    scale_ /= fac; 
+    return *this; 
+    }
+
+ITensor& ITensor::
+operator*=(Complex z)
+    {
+    if(z.imag() == 0) return operator*=(z.real());
+    solo();
+    applyFunc<MultComplex>(store_,{z});
+    return *this;
+    }
+
+ITensor& ITensor::
+operator/=(Complex z)
+    {
+    return operator*=(1./z);
+    }
+
+ITensor ITensor::
+operator-() const 
+    { 
+    ITensor T(*this); 
+    T.scale_ *= -1; 
+    return T; 
+    }
 
 ITensor& ITensor::
 noprime(IndexType type) 

@@ -48,35 +48,23 @@ operator()(ITDense<Complex>& d) const
     return NewData();
     }
 
-//NewData MultComplex::
-//operator()(const ITDense<Real>& d) const
-//    {
-//    auto nd = new ITDense<Complex>(d);
-//    btas::scal(z_,nd->t_);
-//    return NewData(nd);
-//    }
-//
-//NewData MultComplex::
-//operator()(ITDense<Complex>& d) const
-//    {
-//    btas::scal(z_,d.t_);
-//    return NewData();
-//    }
-//
-//NewData MultComplex::
-//operator()(const ITScalar<Real>& d) const
-//    {
-//    auto nd = new ITScalar<Complex>(z_*d.x_);
-//    return NewData(nd);
-//    }
-//
-//NewData MultComplex::
-//operator()(ITScalar<Complex>& d) const
-//    {
-//    d.x_ *= z_;
-//    return NewData();
-//    }
-//
+NewData MultComplex::
+operator()(const ITDense<Real>& d) const
+    {
+    auto nd = make_newdata<ITDense<Complex>>(d.data.inds());
+    operator()(*nd);
+    return std::move(nd);
+    }
+
+NewData MultComplex::
+operator()(ITDense<Complex>& d) const
+    {
+    //TODO: use BLAS algorithm
+    for(auto& elt : d.data)
+        elt *= z_;
+    return NewData();
+    }
+
 NewData MultReal::
 operator()(ITDense<Real>& d) const
     {

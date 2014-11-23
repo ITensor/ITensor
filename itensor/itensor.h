@@ -221,6 +221,13 @@ class ITensor
     ITensor(const IndexSet<Index>& is,
             const VectorRef& v);
 
+    ITensor(const IndexSet<Index>& is,
+            const ITensor& t);
+
+    //ITensor(const IndexSet<Index>& is,
+    //        const ITensor& t,
+    //        const Permutation& P);
+
     //Scale factor, used internally for efficient scalar ops.
     //Mostly for developer use, not necessary to explicitly involve
     //scale factors in most ITensor operations.
@@ -232,6 +239,27 @@ class ITensor
 
     void 
     scaleTo(const LogNumber& newscale);
+
+    //
+    // Deprecated methods
+    //
+
+    //Construct matrix-like rank 2 ITensor,
+    //elements given by MatrixRef M
+    ITensor(const Index& i1,
+            const Index& i2,
+            const MatrixRef& M);
+
+    template <typename Callable> 
+    ITensor&
+    mapElems(Callable&& f)
+        {
+        return apply(std::forward<Callable>(f));
+        }
+
+    const IndexSet<Index>&
+    indices() const { return inds(); }
+
     
     private:
 
@@ -631,6 +659,73 @@ isComplex(const ITensor& T);
 Real
 sumels(const ITensor& T);
 
+//
+//Return copy of a tensor with primeLevels plev1 and plev2 swapped
+//
+//For example, if T has indices i,i' (like a matrix or a site
+//operator) then swapPrime(T,0,1) will have indices i',i 
+//i.e. the transpose of T.
+//
+template <class Tensor>
+Tensor
+swapPrime(Tensor T, int plev1, int plev2,
+          IndexType type = All)
+    { 
+    int tempLevel = 100;
+#ifdef DEBUG
+    for(const auto& I : T.inds())
+        {
+        if(I.primeLevel() == tempLevel) 
+            {
+            Print(tempLevel);
+            Error("swapPrime fails if an index has primeLevel==tempLevel");
+            }
+        }
+#endif
+    T.mapprime(plev1,tempLevel,type);
+    T.mapprime(plev2,plev1,type);
+    T.mapprime(tempLevel,plev2,type);
+    return T; 
+    }
+
+//Find index of tensor A (of optional type t) 
+//which is shared with tensor B
+template<class TensorA, class TensorB> typename 
+TensorA::IndexT
+commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
+    {
+    using IndexT = typename TensorA::IndexT;
+    for(const IndexT& I : A.inds())
+        {
+        if( (t == All || I.type() == t)
+         && hasindex(B.inds(),I) ) 
+            {
+            return I;
+            }
+        }
+    return IndexT();
+    }
+
+
+//Find index of tensor A (of optional type t) 
+//which is NOT shared by tensor B
+template<class TensorA, class TensorB> typename 
+TensorA::IndexT
+uniqueIndex(const TensorA& A, 
+            const TensorB& B, 
+            IndexType t)
+    {
+    using IndexT = typename TensorA::IndexT;
+    for(const IndexT& I : A.inds())
+        {
+        if( (t == All || I.type() == t)
+         && !hasindex(B.inds(),I) ) 
+            {
+            return I;
+            }
+        }
+    return IndexT::Null();
+    }
 
 
 //

@@ -252,20 +252,21 @@ struct GetPtrElt
         }
     };
 
-//struct MultComplex
-//    {
-//    MultComplex(Complex z)
-//        : z_(z)
-//        { }
-//
-//    NewData
-//    operator()(const ITDense<Real>& d) const;
-//    NewData
-//    operator()(ITDense<Complex>& d) const;
-//
-//    private:
-//    Complex z_;
-//    };
+class MultComplex
+    {
+    Complex z_;
+    public:
+    MultComplex(Complex z) : z_(z) { }
+
+    NewData
+    operator()(const ITDense<Real>& d) const;
+    NewData
+    operator()(ITDense<Complex>& d) const;
+
+    template<typename T>
+    NewData
+    operator()(T& d) const { Error("MultComplex not defined for ITData type"); return NewData(); }
+    };
 
 class MultReal
     {
@@ -282,7 +283,7 @@ class MultReal
 
     template<typename T>
     NewData
-    operator()(const T& d) const { Error("Function not implemented."); return NewData(); }
+    operator()(const T& d) const { Error("MultReal not implemented for ITData type."); return NewData(); }
     };
 
 //struct PlusEQ
