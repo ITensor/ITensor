@@ -1,166 +1,115 @@
 #include "test.h"
-#include "iqtensor.h"
+#include "indexset.h"
 
 using namespace itensor;
-typedef IndexSet<IQIndex>
-IQIndexSet;
 
 TEST_CASE("IndexSetTest")
-{
-
-Index s1u("Site1 Up",1,Site);
-Index s1d("Site1 Dn",1,Site);
-Index s2u("Site2 Up",1,Site);
-Index s2d("Site2 Dn",1,Site);
-Index l1u("Link1 Up",2,Link);
-Index l10("Link1 Z0",2,Link);
-Index l1d("Link1 Dn",2,Link);
-Index l2uu("Link2 UU",2,Link);
-Index l20("Link2 Z0",2,Link);
-Index l2dd("Link2 DD",2,Link);
-Index l30("Link3 Z0",1,Link);
-
-IQIndex S1,S2,L1,L2,L3;
-
-S1 = IQIndex("S1",
-             s1u,QN(+1),
-             s1d,QN(-1),Out);
-S2 = IQIndex("S2",
-             s2u,QN(+1),
-             s2d,QN(-1),Out);
-L1 = IQIndex("L1",
-             l1u,QN(+1),
-             l10,QN( 0),
-             l1d,QN(-1),
-             Out);
-L2 = IQIndex("L2",
-             l2uu,QN(+2),
-             l20,QN( 0),
-             l2dd,QN(-2),
-             Out);
-L3 = IQIndex("L3",
-             l30,QN(0),
-             In);
-
-SECTION("Constructors")
     {
-    shared_ptr<IQIndexSet> p1(new IQIndexSet(S1));
-    CHECK_EQUAL(p1->index(1),S1);
+    Index i1("i1",1),
+          i2("i2",2),
+          i3("i3",3),
+          i4("i4",4),
+          i5("i5",5),
+          i6("i6",6),
+          i7("i7",7),
+          i8("i8",8),
+          i9("i9",9),
+          i10("i10",10),
+          j1("j1",1),
+          j2("j2",2),
+          j3("j3",3),
+          j4("j4",4),
+          j5("j5",5),
+          j6("j6",6),
+          j7("j7",7),
+          j8("j8",8),
+          j9("j9",9),
+          j10("j10",10);
 
-    shared_ptr<IQIndexSet> p2(new IQIndexSet(S1,L1));
-    CHECK_EQUAL(p2->index(1),S1);
-    CHECK_EQUAL(p2->index(2),L1);
+    SECTION("Constructors")
+        {
+        SECTION("One")
+            {
+            auto is = IndexSet<Index>(i4);
+            CHECK(is.r() == 1);
+            CHECK(is.rn() == 1);
+            CHECK(is.dim() == 4);
+            CHECK(is[0] == i4);
+            CHECK(is[0] == is.index(1));
 
-    shared_ptr<IQIndexSet> p3(new IQIndexSet(S1,L1,S2));
-    CHECK_EQUAL(p3->index(1),S1);
-    CHECK_EQUAL(p3->index(2),L1);
-    CHECK_EQUAL(p3->index(3),S2);
+            is = IndexSet<Index>(i1);
+            CHECK(is.r() == 1);
+            CHECK(is.rn() == 0);
+            CHECK(is.dim() == 1);
+            CHECK(is[0] == i1);
+            CHECK(is[0] == is.index(1));
+            }
 
-    shared_ptr<IQIndexSet> p4(new IQIndexSet(S1,L1,S2,L2));
-    CHECK_EQUAL(p4->index(1), S1);
-    CHECK_EQUAL(p4->index(2), L1);
-    CHECK_EQUAL(p4->index(3), S2);
-    CHECK_EQUAL(p4->index(4), L2);
+        SECTION("Two")
+            {
+            auto is1 = IndexSet<Index>(i4,i3);
+            CHECK(is1.r() == 2);
+            CHECK(is1.rn() == 2);
+            CHECK(is1.dim() == 4*3);
+            CHECK(is1[0] == i4);
+            CHECK(is1[1] == i3);
 
-    //Check that m==1 indices get sorted to the back
+            auto is2 = IndexSet<Index>(i3,i4);
+            CHECK(is2.r() == 2);
+            CHECK(is2.rn() == 2);
+            CHECK(is2.dim() == 4*3);
+            //IndexSet automatically sorts the indices
+            CHECK(is2[0] == i4);
+            CHECK(is2[1] == i3);
 
-    CHECK_EQUAL(L3.m(),1);
+            auto isA = IndexSet<Index>(i3,j3);
+            auto isB = IndexSet<Index>(j3,i3);
+            //IndexSet sorts equal-m indices
+            //by their id #
+            CHECK(isA[0] == isA[0]);
+            CHECK(isB[1] == isB[1]);
+            }
 
-    shared_ptr<IQIndexSet> p5(new IQIndexSet(S1,L3,S2,L2));
-    CHECK_EQUAL(p5->index(1),S1);
-    CHECK_EQUAL(p5->index(2),S2);
-    CHECK_EQUAL(p5->index(3),L2);
-    CHECK_EQUAL(p5->index(4),L3);
+        SECTION("THREE")
+            {
+            auto is = IndexSet<Index>(i3,i1,i4);
+            CHECK(is.r() == 3);
+            CHECK(is.rn() == 2);
+            CHECK(is.dim() == 4*3);
+            CHECK(is[0] == i4);
+            CHECK(is[1] == i3);
+            CHECK(is[2] == i1);
+            }
+
+        SECTION("TEN")
+            {
+            auto is = IndexSet<Index>(i3,i1,i4,i2,i5,i6,i7,i8,i10,i9);
+            CHECK(is.r() == 10);
+            CHECK(is.rn() == 9);
+            CHECK(is[0] == i10);
+            CHECK(is[1] == i9);
+            CHECK(is[2] == i8);
+            CHECK(is[8] == i2);
+            CHECK(is[9] == i1);
+            }
+        }
+
+    SECTION("PrimeLevelMethods")
+        {
+        SECTION("PrimeIndex")
+            {
+            }
+
+        SECTION("NoPrimeIndex")
+            {
+            }
+
+        SECTION("NoPrimeType")
+            {
+            }
+
+        SECTION("AddIndex")
+            {
+            }
+        }
     }
-
-SECTION("PrimeLevelMethods")
-    {
-    //
-    // prime a specific IQIndex
-    //
-    shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>(S1,prime(S1),S2,L2);
-
-    P->prime(prime(S1),2);
-    CHECK(P->index(1) == S1);
-    CHECK(P->index(2) == prime(S1,3));
-    CHECK(P->index(3) == S2);
-    CHECK(P->index(4) == L2);
-    }
-
-SECTION("PrimeIndex")
-    {
-    shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>(S1,prime(S2));
-
-    P->prime(dag(S1));
-
-    CHECK_EQUAL(P->index(1),prime(S1));
-    //Even though the IQIndex passed to noprime had a different direction,
-    //it still compares equal and the unprime IQIndex's arrow should be 
-    //unchanged
-    CHECK_EQUAL(P->index(1).dir(),S1.dir());
-    }
-
-SECTION("NoPrimeIndex")
-    {
-    shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>(S1,prime(S2));
-
-    P->noprime(dag(prime(S2)));
-
-    CHECK_EQUAL(P->index(2),S2);
-    //Even though the IQIndex passed to noprime had a different direction,
-    //it still compares equal and the unprime IQIndex's arrow should be 
-    //unchanged
-    CHECK_EQUAL(P->index(2).dir(),S2.dir());
-    }
-
-SECTION("NoPrimeType")
-    {
-    IQIndexSet I1(S1,prime(S2),prime(L1),prime(L2)),
-               I2(S1,prime(S2),L1,prime(L1));
-
-    I1.noprime(Link);
-
-    CHECK_THROWS_AS(I2.noprime(Link),ITError);
-    }
-
-SECTION("AddIndex")
-    {
-    shared_ptr<IQIndexSet> P = make_shared<IQIndexSet>();
-
-    P->addindex(S1);
-    P->addindex(prime(S1));
-    P->addindex(L2);
-
-    CHECK_EQUAL(P->index(1),S1);
-    CHECK_EQUAL(P->index(2),prime(S1));
-    CHECK_EQUAL(P->index(3),L2);
-    CHECK_EQUAL(P->r(),3);
-    }
-
-SECTION("Contraction")
-    {
-    IQIndexSet is1(S1,L1,L3),
-               is2(L1,L2,L3,S2);
-
-    IQIndexSet res = is1 * is2;
-
-    CHECK(hasindex(res,S1));
-    CHECK(!hasindex(res,L1));
-    CHECK(!hasindex(res,L3));
-    CHECK(hasindex(res,L2));
-    CHECK(hasindex(res,S2));
-
-    IndexSet<Index> is3(s1u,l1u,l2uu,s1d),
-                    is4(s1d,s2u,l2dd,l1u);
-
-    IndexSet<Index> res2 = is3 * is4;
-
-    CHECK(hasindex(res2,s1u));
-    CHECK(!hasindex(res2,l1u));
-    CHECK(hasindex(res2,l2uu));
-    CHECK(!hasindex(res2,s1d));
-    CHECK(hasindex(res2,s2u));
-    CHECK(hasindex(res2,l2dd));
-    }
-
-}

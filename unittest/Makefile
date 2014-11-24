@@ -8,7 +8,8 @@ SOURCES = test.cc
 #SOURCES+= real_test.cc
 #SOURCES+= option_test.cc
 SOURCES+= index_test.cc
-#SOURCES+= simpletensor_test.cc
+SOURCES+= indexset_test.cc
+SOURCES+= simpletensor_test.cc
 SOURCES+= itensor_test.cc
 #SOURCES+= combiner_test.cc
 #SOURCES+= iqindex_test.cc
@@ -22,7 +23,6 @@ SOURCES+= itensor_test.cc
 #SOURCES+= svdalgs_test.cc
 #SOURCES+= webpage_test.cc
 #SOURCES+= localmpo_test.cc
-#SOURCES+= indexset_test.cc
 #SOURCES+= siteset_test.cc
 #SOURCES+= bondgate_test.cc
 
