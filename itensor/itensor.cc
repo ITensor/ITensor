@@ -90,7 +90,12 @@ ITensor(const Index& i1,
     is_(i1,i2),
     scale_(1.),
     store_(std::make_shared<ITDiag<Real>>(V.begin(),V.end()))
-	{ }
+	{ 
+#ifdef DEBUG
+    if(V.Length() != std::min(i1.m(),i2.m()))
+        Error("Wrong size of data in diagonal ITensor constructor");
+#endif
+    }
 
 ITensor::
 ITensor(const IndexSet<Index>& is)
@@ -121,6 +126,11 @@ struct CopyElems
         std::copy(d2.data.begin(),d2.data.end(),d1.data.begin());
         return NewData();
         }
+
+    template<typename T1, typename T2>
+    NewData
+    operator()(T1& d1,
+               const T2& d2) { Error("Not implemented"); return NewData(); }
     };
 
 ITensor::
@@ -477,77 +487,52 @@ mapprime(int plevold, int plevnew, IndexType type)
     return *this; 
     }
 
-//bool static
-//checkSameIndOrder(const IndexSet<Index>& is1,
-//                  const IndexSet<Index>& is2)
-//    {
-//    for(int j = 0; j < is1.rn(); ++j)
-//        {
-//        if(is1[j] != is2[j])
-//            return false;
-//        }
-//    return true;
-//    }
+ITensor& ITensor::
+operator+=(const ITensor& other)
+    {
+    if(!*this) Error("Calling += on default constructed ITensor");
+    if(!other) Error("Right-hand-side of += is default constructed");
+    if(this == &other) return operator*=(2.);
+    if(this->scale_.isZero()) return operator=(other);
 
+    if(is_ != other.is_)
+        {
+        Print(*this);
+        Print(other);
+        Error("ITensor::operator+=: different Index structure");
+        }
 
-//ITensor& ITensor::
-//operator+=(const ITensor& other)
-//    {
-//    if(!store_) return operator=(other);
-//    if(this == &other) return operator*=(2.);
-//    if(this->scale_.isZero()) return operator=(other);
-//
-//    if(is_ != other.is_)
-//        {
-//        PrintVar(*this);
-//        PrintVar(other);
-//        Error("ITensor::operator+=: different Index structure");
-//        }
-//
-//    const
-//    bool same_ind_order = checkSameIndOrder(is_,other.is_);
-//
-//
-//    Real scalefac = 1;
-//    if(scale_.magnitudeLessThan(other.scale_)) 
-//        {
-//        this->scaleTo(other.scale_); 
-//        }
-//    else
-//        {
-//        scalefac = (other.scale_/scale_).real();
-//        }
-//
-//    solo();
-//
-//    if(same_ind_order) 
-//        { 
-//        applyFunc<PlusEQ>(store_,other.store_,{scalefac});
-//        }
-//    else // not same_ind_order
-//        {
-//        PlusEQ::perm P(is_.size());
-//        detail::calc_permutation(is_,other.is_,P);
-//        applyFunc<PlusEQ>(store_,other.store_,{P,scalefac});
-//        }
-//
-//    return *this;
-//    } 
-//
-//ITensor& ITensor::
-//operator-=(const ITensor& other)
-//    {
-//    if(this == &other) 
-//        { 
-//        scale_ = 0; 
-//        fill(0);
-//        return *this; 
-//        }
-//    scale_.negate();
-//    operator+=(other); 
-//    scale_.negate();
-//    return *this; 
-//    }
+    Real scalefac = 1;
+    if(scale_.magnitudeLessThan(other.scale_)) 
+        {
+        this->scaleTo(other.scale_); 
+        }
+    else
+        {
+        scalefac = (other.scale_/scale_).real();
+        }
+
+    solo();
+
+    applyFunc<PlusEQ>(store_,other.store_,{scalefac});
+
+    return *this;
+    } 
+
+ITensor& ITensor::
+operator-=(const ITensor& other)
+    {
+    if(this == &other) 
+        { 
+        scale_ = 0; 
+        fill(0);
+        return *this; 
+        }
+    scale_.negate();
+    operator+=(other); 
+    scale_.negate();
+    return *this; 
+    }
 
 ITensor& ITensor::
 fill(Real r)

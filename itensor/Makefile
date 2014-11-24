@@ -10,6 +10,7 @@ include ../options.mk
 
 SOURCES = index.cc 
 SOURCES+= itdata_functions.cc 
+SOURCES+= simpletensor.cc 
 SOURCES+= itensor.cc 
 #SOURCES+= iqindex.cc 
 #SOURCES+= iqtensor.cc 
@@ -45,8 +46,8 @@ HEADERS=detail/functions.h detail/skip_iterator.h detail/gcounter.h \
 
 ####################################
 
-CCFLAGS= $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS)
-CCGFLAGS= $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
+CCFLAGS= $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -DPLATFORM_$(PLATFORM)
+CCGFLAGS= $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS) -DPLATFORM_$(PLATFORM)
 
 OBJECTS= $(patsubst %.cc,%.o, $(SOURCES))
 GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))

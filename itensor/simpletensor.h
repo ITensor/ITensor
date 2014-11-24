@@ -186,6 +186,7 @@ long inline
 area(const Range& r)
     { 
     if(r.empty()) return 0;
+    //TODO: this won't work if we allow Ranges to be constructed for slicing
     return r.back().dim*r.back().stride;
     }
 
@@ -385,11 +386,11 @@ class simpletensor
     vref(long i) { return data_[i]; }
 
     // direct access to data
-    const_iterator
+    const T*
     data() const { return data_; }
 
     // direct access to data
-    iterator
+    T*
     data() { return data_; }
 
     // access storage
@@ -468,6 +469,11 @@ class simpletensor
         }
     };
 
+// t2 += fac*t1, based on BLAS axpy
+void
+plusEq(Real fac,
+       const simpletensor<Real>& t1,
+       simpletensor<Real>& t2);
 
 }; //namespace itensor
 

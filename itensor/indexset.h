@@ -26,12 +26,10 @@ class IndexSet
     explicit
     IndexSet(const IndexT& i1);
 
-    IndexSet(const IndexT& i1, 
-             const IndexT& i2);
-
-    // construct from 3 or more Index's
+    // construct from 2 or more indices
     template <typename... Inds>
     IndexSet(const IndexT& i1, 
+             const IndexT& i2,
              const Inds&... inds);
 
     IndexSet(storage&& ii);
@@ -104,18 +102,13 @@ class IndexSet
     mapprime(int plevold, int plevnew, IndexType type = All);
 
     //
-    // Operators
-    //
-
-    //Contraction - just like tensor contraction but only the indices,
-    //no data involved. Result is disjoint union of this and other
-    //(this U other - this N other, where N is intersection).
-    IndexSet
-    operator*(const IndexSet& other) const;
-
-    //
     // Other Methods
     //
+
+    bool
+    operator==(const IndexSet& other) const;
+    bool
+    operator!=(const IndexSet& other) const { return !operator==(other); }
 
     void 
     addindex(const IndexT& I);
@@ -155,7 +148,9 @@ class IndexSet
     compare_index(const IndexT& i1,
                   const IndexT& i2)
         {
-        return i1.m() > i2.m();
+        return i1.m() == i2.m() 
+               ? (i1.id() > i2.id())
+               : (i1.m() > i2.m());
         }
 
     };
@@ -180,37 +175,13 @@ IndexSet(const IndexT& i1)
     }
 
 template<class IndexT>
-IndexSet<IndexT>::
-IndexSet(const IndexT& i1, 
-         const IndexT& i2)
-    :
-    index_(2)
-    { 
-#ifdef DEBUG
-    if(!i1) Error("i1 is default initialized");
-    if(!i2) Error("i2 is default initialized");
-#endif
-	if(i1.m()==1) 
-	    {
-	    index_[0] = i2; 
-        index_[1] = i1; 
-	    rn_ = (i2.m() == 1 ? 0 : 1);
-	    }
-	else 
-	    { 
-	    index_[0] = i1; 
-        index_[1] = i2; 
-	    rn_ = (i2.m() == 1 ? 1 : 2); 
-	    }
-    }
-
-template<class IndexT>
 template<typename... Inds>
 IndexSet<IndexT>::
 IndexSet(const IndexT& i1, 
+         const IndexT& i2,
          const Inds&... inds)
     :
-    index_{i1,inds...},
+    index_{i1,i2,inds...},
     rn_(0)
     { 
     init();
@@ -355,86 +326,22 @@ mapprime(int plevold, int plevnew, IndexType type)
     for(auto& J : index_) J.mapprime(plevold,plevnew,type);
 	}
 
-//template <class IndexT>
-//IndexSet<IndexT> inline IndexSet<IndexT>::
-//operator*(const IndexSet& other) const
-//    {
-//    IndexSet<IndexT> res;
-//
-//    //Loop over m!=1 indices of this
-//    for(int i = 0; i < rn_; ++i)
-//        {
-//        const IndexT& I = index_[i];
-//        //Loop over m!=1 indices of other
-//        bool found = false;
-//        for(int j = 0; j < other.rn_; ++j)
-//            {
-//            if(I == other.index_[j])
-//                {
-//                found = true;
-//                break;
-//                }
-//            }
-//        if(!found) 
-//            res.addindex(I);
-//        }
-//
-//    //Loop over m!=1 indices of other
-//    for(int j = 0; j < other.rn_; ++j)
-//        {
-//        const IndexT& J = other.index_[j];
-//        //Loop over m!=1 indices of other
-//        bool found = false;
-//        for(int i = 0; i < rn_; ++i)
-//            {
-//            if(J == index_[i])
-//                {
-//                found = true;
-//                break;
-//                }
-//            }
-//        if(!found) 
-//            res.addindex(J);
-//        }
-//
-//    //Loop over m==1 indices of this
-//    for(int i = rn_; i < r_; ++i)
-//        {
-//        const IndexT& I = index_[i];
-//        //Loop over m==1 indices of other
-//        bool found = false;
-//        for(int j = other.rn_; j < other.r_; ++j)
-//            {
-//            if(I == other.index_[j])
-//                {
-//                found = true;
-//                break;
-//                }
-//            }
-//        if(!found) 
-//            res.addindex(I);
-//        }
-//
-//    //Loop over m!=1 indices of other
-//    for(int j = other.rn_; j < other.r_; ++j)
-//        {
-//        const IndexT& J = other.index_[j];
-//        //Loop over m!=1 indices of other
-//        bool found = false;
-//        for(int i = rn_; i < r_; ++i)
-//            {
-//            if(J == index_[i])
-//                {
-//                found = true;
-//                break;
-//                }
-//            }
-//        if(!found) 
-//            res.addindex(J);
-//        }
-//
-//    return res;
-//    }
+template <class IndexT>
+bool IndexSet<IndexT>::
+operator==(const IndexSet& other) const
+    {
+    if(other.r() != r()) return false;
+
+    //IndexSet sorts its indices by dimension
+    //and id number, so enough to check if exactly
+    //the same to check if indices are the same
+    //in an unordered sense
+    for(size_t j = 0; j < index_.size(); ++j)
+        {
+        if(index_[j] != other.index_[j]) return false;
+        }
+    return true;
+    }
 
 
 //

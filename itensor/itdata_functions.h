@@ -211,6 +211,22 @@ struct GetElt
         return NewData();
         }
 
+    template <typename V,
+              typename std::enable_if<std::is_convertible<V,T>::value>::type* = nullptr>
+    NewData
+    operator()(const ITDiag<V>& d)
+        {
+        auto first_i = inds_.front();
+        for(auto i : inds_)
+            if(i != first_i)
+                {
+                elt_ = 0;
+                return NewData();
+                }
+        elt_ = d.data.at(first_i);
+        return NewData();
+        }
+
     template <class D>
     NewData
     operator()(const D& d)
@@ -286,72 +302,59 @@ class MultReal
     operator()(const T& d) const { Error("MultReal not implemented for ITData type."); return NewData(); }
     };
 
-//struct PlusEQ
-//    {
-//    using perm = btas::varray<size_t>;
-//
-//    PlusEQ(Real fac)
-//        :
-//        fac_(fac)
-//        { }
-//
-//    PlusEQ(const perm& P,
-//           Real fac)
-//        :
-//        P_(P),
-//        fac_(fac)
-//        { }
-//
-//    NewData
-//    operator()(ITDense<Real>& a1,
-//               const ITDense<Complex>& a2) const
-//        {
-//        auto np = new ITDense<Complex>(a1);
-//        operator()(*np,a2);
-//        return NewData(np);
-//        }
-//
-//    //TODO: handle this case automatically in btas::axpy
-//    //      once it is supported
-//    NewData
-//    operator()(ITDense<Complex>& a1,
-//               const ITDense<Real>& a2) const
-//        {
-//        ITDense<Complex> a2c(a2);
-//        operator()(a1,a2c);
-//        return NewData();
-//        }
-//
-//    template <typename T>
-//    NewData
-//    operator()(ITDense<T>& a1,
-//               const ITDense<T>& a2) const
-//        {
-//        //axpy computes a1.t_ += a2.t_ * fac
-//        if(P_.empty())
-//            {
-//            btas::axpy(fac_,a2.t_,a1.t_);
-//            }
-//        else
-//            {
-//            //TODO: inefficient - have to copy permutation
-//            //      of a2.t_ instead of using a TensorView
-//            //      because axpy doesn't work for TensorViews
-//            //      or for mixed Tensor/TensorView arguments
-//            decltype(a2.t_) a2copy = permute(a2.t_,P_);
-//            btas::axpy(fac_,a2copy,a1.t_);
-//
-//            //Would like to do:
-//            //auto a2view = permute(a2.t_,P_);
-//            //btas::axpy(fac_,a2view,a1.t_);
-//            }
-//        return NewData();
-//        }
-//
-//    private:
-//    perm P_;
-//    const Real fac_;
-//    };
+class PlusEQ
+    {
+    Real fac_;
+    public:
+
+    PlusEQ(Real fac)
+        :
+        fac_(fac)
+        { }
+
+    NewData
+    operator()(ITDense<Real>& a1,
+               const ITDense<Real>& a2)
+        {
+        //plusEq computes a1.data += a2.data * fac_
+        plusEq(fac_,a2.data,a1.data);
+        return NewData();
+        }
+
+    NewData
+    operator()(ITDiag<Real>& a1,
+               const ITDiag<Real>& a2);
+
+    NewData
+    operator()(ITDense<Real>& a1,
+               const ITDense<Complex>& a2)
+        {
+        Error("Real + Complex not implemented");
+        //auto np = make_newdata<ITDense<Complex>>(a1);
+        //operator()(*np,a2);
+        //return NewData(np);
+        return NewData();
+        }
+
+    NewData
+    operator()(ITDense<Complex>& a1,
+               const ITDense<Real>& a2)
+        {
+        Error("Complex + Real not implemented");
+        //ITDense<Complex> a2c(a2);
+        //operator()(a1,a2c);
+        return NewData();
+        }
+
+    template <typename T1, typename T2>
+    NewData
+    operator()(T1& a1,
+               const T2& a2)
+        {
+        Error("Diag += not implemented");
+        return NewData();
+        }
+    };
 
 
 struct PrintIT

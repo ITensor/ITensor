@@ -1,5 +1,6 @@
 #include "itdata_functions.h"
 #include "detail/gcounter.h"
+#include "lapack_wrap.h"
 
 namespace itensor {
 
@@ -80,6 +81,19 @@ operator()(ITDense<Complex>& d) const
     //TODO: use BLAS algorithm
     for(auto& elt : d.data)
         elt *= r_;
+    return NewData();
+    }
+
+NewData PlusEQ::
+operator()(ITDiag<Real>& a1,
+           const ITDiag<Real>& a2)
+    {
+#ifdef DEBUG
+    if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
+#endif
+    LAPACK_INT size = a1.data.size();
+    LAPACK_INT inc = 1;
+    daxpy_wrapper(&size,&fac_,&(a2.data.front()),&inc,&(a1.data.front()),&inc);
     return NewData();
     }
 

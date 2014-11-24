@@ -105,8 +105,18 @@ class ITensor
     //Contracting product
     //All matching Index pairs automatically contracted
     //Cji = \sum_{k,l} Akjl * Blki
+    //TODO:
     //ITensor& 
     //operator*=(const ITensor& other);
+
+    // Contract with IndexVal
+    // If iv = (J,n), Index J is fixed to it's nth
+    // value and rank decreases by 1
+    // (similar to summing against a Kronecker
+    // delta tensor \delta_{J,n})
+    //TODO
+    //ITensor& 
+    //operator*=(const IndexVal& iv) { return operator*=(ITensor(iv)); } 
 
     //Multiplication and division by scalar
     ITensor& 
@@ -124,14 +134,15 @@ class ITensor
     ITensor
     operator-() const;
 
+
     //Tensor addition and subtraction
     //Summands must have same Indices, in any order
     //Cijk = Aijk + Bkij
-    //ITensor& 
-    //operator+=(const ITensor& other);
+    ITensor& 
+    operator+=(const ITensor& other);
 
-    //ITensor& 
-    //operator-=(const ITensor& other);
+    ITensor& 
+    operator-=(const ITensor& other);
 
     //
     // Index Prime Level Methods
@@ -594,10 +605,48 @@ ITensor inline
 operator/(ITensor T, Real fac) { T /= fac; return T; }
 ITensor inline
 operator/(ITensor T, Complex fac) { T /= fac; return T; }
+ITensor inline
+operator+(ITensor A, const ITensor& B) { A += B; return A; }
+ITensor inline
+operator-(ITensor A, const ITensor& B) { A -= B; return A; }
+
+//TODO:
 //ITensor inline
-//operator+(ITensor A, const ITensor& B) { A += B; return A; }
+//operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }
+//TODO:
 //ITensor inline
-//operator-(ITensor A, const ITensor& B) { A -= B; return A; }
+//operator*(const IndexVal& iv, const ITensor& t) { return (ITensor(iv) *= t); }
+
+//
+// Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
+// (I1, I2 are Index objects; n1,n2 are type int)
+// to be an ITensor T such that T(I1(n1),I2(n2)) == 1
+//
+// Useful for creating MPOs
+//
+//TODO:
+//ITensor inline
+//operator*(const IndexVal& iv1, const IndexVal& iv2) 
+//    { 
+//    ITensor t(iv1); 
+//    return (t *= iv2); 
+//    }
+//
+// Define product of IndexVal iv1 = (I1,n1) with a Real "val"
+// to be an ITensor T such that T(I1(n1)) == val
+//
+// Useful for creating MPOs
+//
+//TODO:
+//ITensor inline
+//operator*(const IndexVal& iv1, Real val) 
+//    { 
+//    ITensor res(iv1); 
+//    res *= val; 
+//    return res; 
+//    }
+//ITensor inline
+//operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
 
 //Return copy of ITensor with primeLevel of Index I increased by 1
 //(or optional amount inc)

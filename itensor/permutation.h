@@ -24,7 +24,7 @@ struct Permutation
     ///////////
     public:
 
-    Permutation(size_type size);
+    Permutation(size_type size = 0);
 
     long
     size() const { return long(store_.size()); }

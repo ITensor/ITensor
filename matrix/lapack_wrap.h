@@ -84,6 +84,14 @@ namespace itensor {
 #ifdef LAPACK_REQUIRE_EXTERN
 extern "C" {
 
+#ifdef PLATFORM_macos
+void cblas_daxpy(const int n, const double alpha, const double *X, const int incX, double *Y, const int incY);
+#else
+void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha, 
+                    LAPACK_REAL* X, LAPACK_INT* incx,
+                    LAPACK_REAL* Y, LAPACK_INT* incy);
+#endif
+
 #ifdef PLATFORM_acml
 void F77NAME(dsyev)(char *jobz, char *uplo, int *n, double *a, int *lda, 
                     double *w, double *work, int *lwork, int *info, 
@@ -164,6 +172,25 @@ void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a,
 } //extern "C"
 #endif
 
+//
+// daxpy
+// Y += alpha*X
+//
+void inline
+daxpy_wrapper(LAPACK_INT* n,        //number of elements of X,Y
+              LAPACK_REAL* alpha,   //scale factor
+              const LAPACK_REAL* X, //pointer to head of vector X
+              LAPACK_INT* incx,     //increment with which to step through X
+              LAPACK_REAL* Y,       //pointer to head of vector Y
+              LAPACK_INT* incy)     //increment with which to step through Y
+    {
+#ifdef PLATFORM_macos
+    cblas_daxpy(*n,*alpha,X,*incx,Y,*incy);
+#else
+    auto Xnc = const_cast<LAPACK_REAL*>(X);
+    F77NAME(daxpy)(n,alpha,Xnc,incx,Y,incy);
+#endif
+    }
 
 //
 // dsyev
@@ -171,7 +198,7 @@ void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a,
 void inline
 dsyev_wrapper(char* jobz,        //if jobz=='V', compute eigs and evecs
               char* uplo,        //if uplo=='U', read from upper triangle of A
-              LAPACK_INT* n,     //numbec of cols of A
+              LAPACK_INT* n,     //number of cols of A
               LAPACK_REAL* A,    //symmetric matrix A
               LAPACK_INT* lda,   //size of A (usually same as n)
               LAPACK_REAL* eigs, //eigenvalues on return

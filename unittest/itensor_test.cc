@@ -51,7 +51,7 @@ TEST_CASE("ITensor")
     Index b5("b5",5);
 
     IndexSet<Index> mixed_inds(a2,b3,l1,l2,a4,l4);
-    //const int mixed_inds_dim = mixed_inds.dim();
+    const int mixed_inds_dim = mixed_inds.dim();
 
     ITensor A,
             B,
@@ -557,46 +557,92 @@ SECTION("Apply")
         }
     }
 
-//SECTION("SumDifference")
-//{
-//    Vector V(mixed_inds_dim),W(mixed_inds_dim);
-//    V.Randomize();
-//    W.Randomize();
-//
-//    ITensor v(mixed_inds,V), w(mixed_inds,W);
-//
-//    Real f1 = -Global::random(), f2 = 0.1*f1;
-//
-//    ITensor r = f1*v + w/f2; 
-//    VectorRef R = r.assignToVec();
-//    for(int j = 1; j < R.Length(); ++j)
-//    { CHECK_CLOSE(R(j),f1*V(j)+W(j)/f2,1E-10); }
-//
-//    ITensor d(v); d -= w;
-//    VectorRef D = d.assignToVec();
-//    for(int j = 1; j < D.Length(); ++j)
-//    { CHECK_CLOSE(D(j),V(j)-W(j),1E-10); }
-//
-//    Vector YY(mixed_inds_dim),ZZ(mixed_inds_dim);
-//    YY.Randomize();
-//    ZZ.Randomize();
-//
-//    f1 = 1; f2 = 1;
-//    ITensor yy(mixed_inds,YY), zz(mixed_inds,ZZ);
-//    r = f1*yy + f2*zz;
-//    for(int j1 = 1; j1 <= 2; ++j1)
-//    for(int j2 = 1; j2 <= 2; ++j2)
-//    for(int k3 = 1; k3 <= 3; ++k3)
-//    for(int j4 = 1; j4 <= 2; ++j4)
-//    { 
-//        CHECK_CLOSE(r(l1(j1),l2(j2),b3(k3),l4(j4)),
-//                    f1*yy(l1(j1),l2(j2),b3(k3),l4(j4))
-//                   +f2*zz(l1(j1),l2(j2),b3(k3),l4(j4))
-//                   ,1E-10); 
-//    }
-//
-//}
-//
+SECTION("SumDifference")
+    {
+    Vector V(mixed_inds_dim),
+           W(mixed_inds_dim);
+    V.Randomize();
+    W.Randomize();
+
+    ITensor v(mixed_inds,V), 
+            w(mixed_inds,W);
+
+    Real f1 = -Global::random(), 
+         f2 = 0.1*f1;
+
+    ITensor r = f1*v + w/f2; 
+    for(int j1 = 1; j1 <= 2; ++j1)
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int k3 = 1; k3 <= 3; ++k3)
+    for(int j4 = 1; j4 <= 2; ++j4)
+        { 
+        CHECK_REQUAL(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
+                     f1*v.real(l1(j1),l2(j2),b3(k3),l4(j4))
+                   + w.real(l1(j1),l2(j2),b3(k3),l4(j4))/f2);
+        }
+
+    ITensor d(v); 
+    d -= w;
+    for(int j1 = 1; j1 <= 2; ++j1)
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int k3 = 1; k3 <= 3; ++k3)
+    for(int j4 = 1; j4 <= 2; ++j4)
+        { 
+        CHECK_REQUAL(d.real(l1(j1),l2(j2),b3(k3),l4(j4)),
+                    v.real(l1(j1),l2(j2),b3(k3),l4(j4))-w.real(l1(j1),l2(j2),b3(k3),l4(j4)));
+        }
+
+    Vector YY(mixed_inds_dim),
+           ZZ(mixed_inds_dim);
+    YY.Randomize();
+    ZZ.Randomize();
+
+    f1 = 1; f2 = 1;
+    ITensor yy(mixed_inds,YY), 
+            zz(mixed_inds,ZZ);
+    r = f1*yy + f2*zz;
+    for(int j1 = 1; j1 <= 2; ++j1)
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int k3 = 1; k3 <= 3; ++k3)
+    for(int j4 = 1; j4 <= 2; ++j4)
+        { 
+        CHECK_REQUAL(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
+                    f1*yy.real(l1(j1),l2(j2),b3(k3),l4(j4))
+                   +f2*zz.real(l1(j1),l2(j2),b3(k3),l4(j4)));
+        }
+
+    IndexSet<Index> reordered(l2,l1,b3,a4,a2,l4);
+    w = ITensor(reordered,W); 
+    r = f1*v + w/f2; 
+    for(int j1 = 1; j1 <= 2; ++j1)
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int k3 = 1; k3 <= 3; ++k3)
+    for(int j4 = 1; j4 <= 2; ++j4)
+        { 
+        CHECK_REQUAL(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
+                     f1*v.real(l1(j1),l2(j2),b3(k3),l4(j4))
+                   + w.real(l1(j1),l2(j2),b3(k3),l4(j4))/f2);
+        }
+
+    SECTION("Add diag")
+        {
+        Vector V1(std::min(l6.m(),b4.m())),
+               V2(std::min(l6.m(),b4.m()));
+        V1.Randomize();
+        V2.Randomize();
+        ITensor v1(l6,b4,V1),
+                v2(b4,l6,V2);
+        auto r = v1+v2;
+        for(int j1 = 1; j1 <= 2; ++j1)
+        for(int j2 = 1; j2 <= 4; ++j2)
+            {
+            //printfln("r.real(l6(%d),b4(%d)) = %.10f",j1,j2,r.real(l6(j1),b4(j2)));
+            CHECK_REQUAL(r.real(l6(j1),b4(j2)),v1.real(l6(j1),b4(j2))+v2.real(l6(j1),b4(j2)));
+            }
+        }
+
+    }
+
 //SECTION("ContractingProduct")
 //    {
 //
