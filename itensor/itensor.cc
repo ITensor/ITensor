@@ -621,6 +621,16 @@ equalizeScales(ITensor& other)
         }
     }
 
+Real ITensor::
+norm() const 
+    {
+#ifdef DEBUG
+    if(!*this) Error("ITensor is default initialized");
+#endif
+    return scale_.real0() *
+           applyFunc<NormNoScale>(store_);
+    }
+
 
 ostream& 
 operator<<(ostream & s, const ITensor& t)
@@ -653,6 +663,9 @@ randIT(ITensor T, const OptSet& opts)
 Real
 norm(const ITensor& T)
     {
+#ifdef DEBUG
+    if(!T) Error("ITensor is default initialized");
+#endif
     return T.scale().real0() *
            applyFunc<NormNoScale>(T.data());
     }

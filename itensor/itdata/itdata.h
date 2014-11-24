@@ -24,6 +24,16 @@
     X(Y  ITDiag<Complex>    &t) Z;
 ///////////////////////////////////
 
+//
+//Ideas for improvement:
+// o Create SFINAE overloads of applyFunc which check if 
+//   functions return void, and plug them into wrappers which
+//   don't require that they return a NewData. May conflict
+//   with existing definitions of ITData::plugInto though?
+//   Not if these wrappers return NewData() after calling 
+//   the wrapped function.
+//
+
 namespace itensor {
 
 ///////////////////////////////////

@@ -177,60 +177,63 @@ SECTION("Constructors")
         CHECK_CLOSE(t7.real(l1(2),l2(2)),1.5,1E-5);
         }
 
-//
-//    Matrix M(l1.m(),b3.m()); 
-//    M(1,1) = 11; M(1,2) = 12; M(1,3) = 13;
-//    M(2,1) = 21; M(2,2) = 22; M(2,3) = 23;
-//    ITensor t8(l1,b3,M);
-//
-//    CHECK_EQUAL(t8.r(),2);
-//    CHECK(hasindex(t8,l1));
-//    CHECK(hasindex(t8,b3));
-//    CHECK_CLOSE(t8(l1(1),b3(1)),11,1E-10);
-//    CHECK_CLOSE(t8(l1(1),b3(2)),12,1E-10);
-//    CHECK_CLOSE(t8(l1(1),b3(3)),13,1E-10);
-//    CHECK_CLOSE(t8(l1(2),b3(1)),21,1E-10);
-//    CHECK_CLOSE(t8(l1(2),b3(2)),22,1E-10);
-//    CHECK_CLOSE(t8(l1(2),b3(3)),23,1E-10);
-//    CHECK_CLOSE(sumels(t8),M.TreatAsVector().sumels(),1E-10);
-//    CHECK_CLOSE(t8.norm(),Norm(M.TreatAsVector()),1E-10);
-//
-//    ITensor t85(b3,l1,M.t());
-//
-//    CHECK_EQUAL(t85.r(),2);
-//    CHECK(hasindex(t85,l1));
-//    CHECK(hasindex(t85,b3));
-//    CHECK_CLOSE(t85(l1(1),b3(1)),11,1E-10);
-//    CHECK_CLOSE(t85(l1(1),b3(2)),12,1E-10);
-//    CHECK_CLOSE(t85(l1(1),b3(3)),13,1E-10);
-//    CHECK_CLOSE(t85(l1(2),b3(1)),21,1E-10);
-//    CHECK_CLOSE(t85(l1(2),b3(2)),22,1E-10);
-//    CHECK_CLOSE(t85(l1(2),b3(3)),23,1E-10);
-//    CHECK_CLOSE(sumels(t85),M.TreatAsVector().sumels(),1E-10);
-//    CHECK_CLOSE(t85.norm(),Norm(M.TreatAsVector()),1E-10);
-//
-//    Matrix W(a1.m(),l2.m()); 
-//    W(1,1) = Global::random(); W(1,2) = Global::random();
-//    ITensor w1(a1,l2,W);
-//
-//    CHECK_EQUAL(w1.r(),2);
-//    CHECK(hasindex(w1,a1));
-//    CHECK(hasindex(w1,l2));
-//    CHECK_CLOSE(w1(l2(1)),W(1,1),1E-10);
-//    CHECK_CLOSE(w1(l2(2)),W(1,2),1E-10);
-//    CHECK_CLOSE(sumels(w1),W.TreatAsVector().sumels(),1E-10);
-//    CHECK_CLOSE(w1.norm(),Norm(W.TreatAsVector()),1E-10);
-//
-//    ITensor w2(l2,a1,W.t());
-//
-//    CHECK_EQUAL(w2.r(),2);
-//    CHECK(hasindex(w2,a1));
-//    CHECK(hasindex(w2,l2));
-//    CHECK_CLOSE(w2(l2(1)),W(1,1),1E-10);
-//    CHECK_CLOSE(w2(l2(2)),W(1,2),1E-10);
-//    CHECK_CLOSE(sumels(w2),W.TreatAsVector().sumels(),1E-10);
-//    CHECK_CLOSE(w2.norm(),Norm(W.TreatAsVector()),1E-10);
-//
+
+    SECTION("Matrix Constructor")
+        {
+        Matrix M(l1.m(),b3.m()); 
+        M(1,1) = 11; M(1,2) = 12; M(1,3) = 13;
+        M(2,1) = 21; M(2,2) = 22; M(2,3) = 23;
+        ITensor t8(l1,b3,M);
+
+        CHECK_EQUAL(t8.r(),2);
+        CHECK(hasindex(t8,l1));
+        CHECK(hasindex(t8,b3));
+        CHECK_CLOSE(t8.real(l1(1),b3(1)),11,1E-10);
+        CHECK_CLOSE(t8.real(l1(1),b3(2)),12,1E-10);
+        CHECK_CLOSE(t8.real(l1(1),b3(3)),13,1E-10);
+        CHECK_CLOSE(t8.real(l1(2),b3(1)),21,1E-10);
+        CHECK_CLOSE(t8.real(l1(2),b3(2)),22,1E-10);
+        CHECK_CLOSE(t8.real(l1(2),b3(3)),23,1E-10);
+        CHECK_CLOSE(sumels(t8),M.TreatAsVector().sumels(),1E-10);
+        CHECK_CLOSE(norm(t8),Norm(M.TreatAsVector()),1E-10);
+
+        ITensor t85(b3,l1,M.t());
+
+        CHECK_EQUAL(t85.r(),2);
+        CHECK(hasindex(t85,l1));
+        CHECK(hasindex(t85,b3));
+        CHECK_CLOSE(t85.real(l1(1),b3(1)),11,1E-10);
+        CHECK_CLOSE(t85.real(l1(1),b3(2)),12,1E-10);
+        CHECK_CLOSE(t85.real(l1(1),b3(3)),13,1E-10);
+        CHECK_CLOSE(t85.real(l1(2),b3(1)),21,1E-10);
+        CHECK_CLOSE(t85.real(l1(2),b3(2)),22,1E-10);
+        CHECK_CLOSE(t85.real(l1(2),b3(3)),23,1E-10);
+        CHECK_CLOSE(sumels(t85),M.TreatAsVector().sumels(),1E-10);
+        CHECK_CLOSE(norm(t85),Norm(M.TreatAsVector()),1E-10);
+
+        Matrix W(a1.m(),l2.m()); 
+        W(1,1) = Global::random(); W(1,2) = Global::random();
+        ITensor w1(a1,l2,W);
+
+        CHECK_EQUAL(w1.r(),2);
+        CHECK(hasindex(w1,a1));
+        CHECK(hasindex(w1,l2));
+        CHECK_CLOSE(w1.real(l2(1)),W(1,1),1E-10);
+        CHECK_CLOSE(w1.real(l2(2)),W(1,2),1E-10);
+        CHECK_CLOSE(sumels(w1),W.TreatAsVector().sumels(),1E-10);
+        CHECK_CLOSE(norm(w1),Norm(W.TreatAsVector()),1E-10);
+
+        ITensor w2(l2,a1,W.t());
+
+        CHECK_EQUAL(w2.r(),2);
+        CHECK(hasindex(w2,a1));
+        CHECK(hasindex(w2,l2));
+        CHECK_CLOSE(w2.real(l2(1)),W(1,1),1E-10);
+        CHECK_CLOSE(w2.real(l2(2)),W(1,2),1E-10);
+        CHECK_CLOSE(sumels(w2),W.TreatAsVector().sumels(),1E-10);
+        CHECK_CLOSE(norm(w2),Norm(W.TreatAsVector()),1E-10);
+        }
+
 
     SECTION("Real Scalar")
         {
@@ -530,14 +533,14 @@ SECTION("ScalarMultiply")
     CHECK_CLOSE(B.real(s1(2),s2(2)),220/f,1E-10);
     }
 
-SECTION("MapElems")
+SECTION("Apply")
     {
     // class Functor and the function Func
     // are defined in test.h
 
     ITensor A1(A);
     Functor f;
-    A1.mapElems(f);
+    A1.apply(f);
     for(int n1 = 1; n1 <= s1.m(); ++n1)
     for(int n2 = 1; n2 <= s2.m(); ++n2)
         {
@@ -546,7 +549,7 @@ SECTION("MapElems")
 
     ITensor A2(A);
     Real (*pFunc)(Real) = Func;
-    A2.mapElems(*pFunc);
+    A2.apply(*pFunc);
     for(int n1 = 1; n1 <= s1.m(); ++n1)
     for(int n2 = 1; n2 <= s2.m(); ++n2)
         {
@@ -867,8 +870,8 @@ SECTION("MapElems")
 //    ITensor rdiff = resR-(Lr/Rr-Li/Ri);
 //    ITensor idiff = resI-(Lr/Ri+Li/Rr);
 //
-//    CHECK(rdiff.norm() < 1E-12);
-//    CHECK(idiff.norm() < 1E-12);
+//    CHECK(norm(rdiff) < 1E-12);
+//    CHECK(norm(idiff) < 1E-12);
 //
 //    }
 //
@@ -880,7 +883,7 @@ SECTION("MapElems")
 //    ITensor dX(X);
 //    dX.tieIndices(s1,s2,t);
 //
-//    CHECK_CLOSE(dX.norm(),0,1E-5);
+//    CHECK_CLOSE(norm(dX),0,1E-5);
 //    CHECK_EQUAL(dX.r(),1);
 //    CHECK(hasindex(dX,t));
 //
@@ -1126,7 +1129,7 @@ SECTION("MapElems")
 //    ITensor V;
 //    V.fromMatrix22(i2,i1,i4,i3,M);
 //
-//    CHECK((T-V).norm() < 1E-12);
+//    CHECK(norm(T-V) < 1E-12);
 //    }
 //
 //SECTION("CommaAssignment")
@@ -1192,8 +1195,8 @@ SECTION("MapElems")
 //            I(imagPart(ZiX));
 //    R -= f1*Z;
 //    I -= f2*X;
-//    CHECK_CLOSE(R.norm(),0,1E-5);
-//    CHECK_CLOSE(I.norm(),0,1E-5);
+//    CHECK_CLOSE(norm(R),0,1E-5);
+//    CHECK_CLOSE(norm(I),0,1E-5);
 //
 //    //Test hc:
 //    
@@ -1202,8 +1205,8 @@ SECTION("MapElems")
 //    I = imagPart(ZiX);
 //    R -= f1*Z;
 //    I += f2*X;
-//    CHECK_CLOSE(R.norm(),0,1E-5);
-//    CHECK_CLOSE(I.norm(),0,1E-5);
+//    CHECK_CLOSE(norm(R),0,1E-5);
+//    CHECK_CLOSE(norm(I),0,1E-5);
 //    }
 
 //SECTION("SwapPrimeTest")
@@ -1234,11 +1237,11 @@ SECTION("NoprimeTest")
 //SECTION("NormTest")
 //    {
 //    A.randomize();
-//    CHECK_CLOSE(A.norm(),sqrt((A*A).toReal()),1E-5);
+//    CHECK_CLOSE(norm(A),sqrt((A*A).toReal()),1E-5);
 //
 //    ITensor C = Complex_1*A+Complex_i*B;
 //
-//    CHECK_CLOSE(C.norm(),sqrt(realPart(dag(C)*C).toReal()),1E-5);
+//    CHECK_CLOSE(norm(C),sqrt(realPart(dag(C)*C).toReal()),1E-5);
 //    }
 //
 //SECTION("CR_ComplexAddition")
@@ -1250,8 +1253,8 @@ SECTION("NoprimeTest")
 //            I(imagPart(iZX));
 //    R -= f2*X;
 //    I -= f1*Z;
-//    CHECK_CLOSE(R.norm(),0,1E-5);
-//    CHECK_CLOSE(I.norm(),0,1E-5);
+//    CHECK_CLOSE(norm(R),0,1E-5);
+//    CHECK_CLOSE(norm(I),0,1E-5);
 //    }
 //
 //SECTION("CC_ComplexAddition")
@@ -1262,8 +1265,8 @@ SECTION("NoprimeTest")
 //    ITensor R(realPart(iZiX)),
 //            I(imagPart(iZiX));
 //    I -= f1*Z+f2*X;
-//    CHECK_CLOSE(R.norm(),0,1E-5);
-//    CHECK_CLOSE(I.norm(),0,1E-5);
+//    CHECK_CLOSE(norm(R),0,1E-5);
+//    CHECK_CLOSE(norm(I),0,1E-5);
 //    }
 //
 //SECTION("ComplexScalar")
@@ -1278,31 +1281,31 @@ SECTION("NoprimeTest")
 //
 //    ITensor T1 = Complex(f1,0)*A;
 //
-//    CHECK((realPart(T1)-(f1*A)).norm() < 1E-12);
-//    CHECK(imagPart(T1).norm() < 1E-12);
+//    CHECK(norm(realPart(T1)-(f1*A)) < 1E-12);
+//    CHECK(norm(imagPart(T1)) < 1E-12);
 //
 //    ITensor T2 = Complex(0,f2)*A;
 //
-//    CHECK(realPart(T2).norm() < 1E-12);
-//    CHECK((imagPart(T2)-f2*A).norm() < 1E-12);
+//    CHECK(norm(realPart(T2)) < 1E-12);
+//    CHECK(norm(imagPart(T2)-f2*A) < 1E-12);
 //
 //    ITensor T3 = Complex(f1,f2)*A;
-//    CHECK((realPart(T3)-f1*A).norm() < 1E-12);
-//    CHECK((imagPart(T3)-f2*A).norm() < 1E-12);
+//    CHECK(norm(realPart(T3)-f1*A)) < 1E-12);
+//    CHECK(norm(imagPart(T3)-f2*A)) < 1E-12);
 //
 //    ITensor T4 = Complex(f2,f1)*A;
-//    CHECK((realPart(T4)-f2*A).norm() < 1E-12);
-//    CHECK((imagPart(T4)-f1*A).norm() < 1E-12);
+//    CHECK(norm(realPart(T4)-f2*A)) < 1E-12);
+//    CHECK(norm(imagPart(T4)-f1*A)) < 1E-12);
 //
 //    ITensor T5 = A+Complex_i*B;
 //    T5 *= Complex(f1,f2);
-//    CHECK((realPart(T5)-(f1*A-f2*B)).norm() < 1E-12);
-//    CHECK((imagPart(T5)-(f2*A+f1*B)).norm() < 1E-12);
+//    CHECK(norm(realPart(T5)-(f1*A-f2*B))) < 1E-12);
+//    CHECK(norm(imagPart(T5)-(f2*A+f1*B))) < 1E-12);
 //
 //    ITensor T6 = A+Complex_i*B;
 //    T6 *= Complex(f2,f1);
-//    CHECK((realPart(T6)-(f2*A-f1*B)).norm() < 1E-12);
-//    CHECK((imagPart(T6)-(f1*A+f2*B)).norm() < 1E-12);
+//    CHECK(norm(realPart(T6)-(f2*A-f1*B))) < 1E-12);
+//    CHECK(norm(imagPart(T6)-(f1*A+f2*B))) < 1E-12);
 //    }
 
 SECTION("CommonIndex")
@@ -1363,13 +1366,13 @@ SECTION("CommonIndex")
 //    CHECK(res1.type() == ITensor::Dense);
 //    res1.mapprime(1,0);
 //    ITensor diff1 = res1-f1*r1;
-//    CHECK(diff1.norm() < 1E-10);
+//    CHECK(norm(diff1) < 1E-10);
 //
 //    ITensor res2 = r1*op1;
 //    CHECK(res2.type() == ITensor::Dense);
 //    res2.mapprime(1,0);
 //    ITensor diff2 = res2-f1*r1;
-//    CHECK(diff2.norm() < 1E-10);
+//    CHECK(norm(diff2) < 1E-10);
 //
 //    ITensor rc = r1+Complex_i*r2;
 //
@@ -1378,14 +1381,14 @@ SECTION("CommonIndex")
 //    CHECK(res3.type() == ITensor::Dense);
 //    CHECK(res3.isComplex());
 //    ITensor diff3 = res3-f1*rc;
-//    CHECK(diff3.norm() < 1E-10);
+//    CHECK(norm(diff3) < 1E-10);
 //
 //    ITensor res4 = op1*rc;
 //    res4.mapprime(1,0);
 //    CHECK(res4.type() == ITensor::Dense);
 //    CHECK(res4.isComplex());
 //    ITensor diff4 = res4-f1*rc;
-//    CHECK(diff4.norm() < 1E-10);
+//    CHECK(norm(diff4) < 1E-10);
 //
 //    ITensor res5 = rc*op3;
 //    CHECK(res5.type() == ITensor::Dense);
@@ -1394,8 +1397,8 @@ SECTION("CommonIndex")
 //            ires5(imagPart(res5));
 //    ITensor rdiff5 = rres5-(r1*op1-r2*op2),
 //            idiff5 = ires5-(r1*op2+r2*op1);
-//    CHECK(rdiff5.norm() < 1E-10);
-//    CHECK(idiff5.norm() < 1E-10);
+//    CHECK(norm(rdiff5) < 1E-10);
+//    CHECK(norm(idiff5) < 1E-10);
 //    }
 //
 //SECTION("DiagMethod")

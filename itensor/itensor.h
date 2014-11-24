@@ -15,7 +15,7 @@ class ITensor
     {
     public:
 
-    using storage = ITData;
+    using storage_type = ITData;
     using storage_ptr = PData;
     using IndexT = Index;
     using IndexValT = IndexVal;
@@ -75,7 +75,7 @@ class ITensor
     int 
     r() const { return is_.r(); }
 
-    //Access IndexSet<Index>
+    //Access index set
     const IndexSet<Index>&
     inds() const { return is_; }
 
@@ -248,6 +248,9 @@ class ITensor
     ITensor(const Index& i1,
             const Index& i2,
             const MatrixRef& M);
+
+    Real
+    norm() const;
 
     template <typename Callable> 
     ITensor&
