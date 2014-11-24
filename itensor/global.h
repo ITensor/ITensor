@@ -1,5 +1,5 @@
 //
-// Distributed under the ITensor Library License, Version 1.1.
+// Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
 #ifndef __ITENSOR_GLOBAL_H
@@ -12,7 +12,7 @@
 #include <complex>
 #include "assert.h"
 #include "error.h"
-#include "option.h"
+#include "args.h"
 #include "types.h"
 #include <ctime>
 #include <string.h>

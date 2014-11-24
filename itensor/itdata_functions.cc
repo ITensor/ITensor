@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.2
+//    (See accompanying LICENSE file.)
+//
 #include "itdata_functions.h"
 #include "detail/gcounter.h"
 #include "lapack_wrap.h"

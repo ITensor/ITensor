@@ -1,4 +1,4 @@
-ITensor Library License - Version 1.1 - April 24th, 2014
+ITensor Library License - Version 1.2 - November 24th, 2014
 
 Permission is hereby granted, free of charge, to any person or organization
 obtaining a copy of the software and accompanying documentation covered by
@@ -7,10 +7,12 @@ execute, and transmit the Library, and to prepare derivative works of the
 Library, and to permit third-parties to whom the Library is furnished to
 do so, all subject to the following:
 
-1. In any scientific publication where published data was produced using the Library,
-use of the Library must be acknowledged and this acknowledgement must include
-the address of the ITensor website http://itensor.org/. The suggested format is:
-"Calculations were performed using the ITensor Library (version 0.2.4), http://itensor.org/"
+1. In any scientific publication where significant published data was produced 
+using the Library, use of the Library must be acknowledged and this acknowledgement 
+must include the address of the ITensor website http://itensor.org/. 
+The suggested format is: 
+"Calculations performed using the ITensor C++ library (version X.X.X), http://itensor.org/"
+where X.X.X should be replaced with the actual version number used.
 The version number is optional, but could be useful for groups wishing to share their code.
 
 2. The copyright notices in the Library and this entire statement, including

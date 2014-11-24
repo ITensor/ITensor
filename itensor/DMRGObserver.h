@@ -1,10 +1,11 @@
 //
-// Distributed under the ITensor Library License, Version 1.1.
+// Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
 #ifndef __ITENSOR_DMRGOBSERVER_H
 #define __ITENSOR_DMRGOBSERVER_H
 #include "observer.h"
+#include "spectrum.h"
 
 namespace itensor {
 

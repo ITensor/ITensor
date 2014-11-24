@@ -1,15 +1,13 @@
 //
-// Distributed under the ITensor Library License, Version 1.1.
+// Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
 #ifndef __ITENSOR_OBSERVER_H
 #define __ITENSOR_OBSERVER_H
 
-#include "spectrum.h"
+#include "global.h"
 
 namespace itensor {
-
-class SVDWorker;
 
 class Observer 
     {

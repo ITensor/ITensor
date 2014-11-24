@@ -9,11 +9,11 @@ include ../options.mk
 #########################################
 
 HEADERS=tinyformat.h print.h types.h indent.h cputime.h tarray1.h \
-        flstring.h option.h input.h error.h minmax.h cplx_literal.h \
+        flstring.h args.h input.h error.h  cplx_literal.h \
         autovector.h optional_ptr.h
 
 OBJECTS= error.o ran1.o\
-         cputime.o tarray1.o input.o option.o
+         cputime.o tarray1.o input.o args.o
 
 
 CCFLAGS= -I. $(OPTIMIZATIONS) $(ITENSOR_INCLUDEFLAGS)

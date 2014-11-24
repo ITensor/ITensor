@@ -1,3 +1,7 @@
+//
+// Distributed under the ITensor Library License, Version 1.2
+//    (See accompanying LICENSE file.)
+//
 #ifndef __ITENSOR_OPTIONAL_PTR_H
 #define __ITENSOR_OPTIONAL_PTR_H 1
 
