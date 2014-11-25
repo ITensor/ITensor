@@ -23,7 +23,6 @@ namespace itensor {
 
 enum Direction { Fromright, Fromleft, Both, None };
 
-static const int NMAX = 8;
 static const Real MIN_CUT = 1E-15;
 static const int MAX_M = 5000;
 
