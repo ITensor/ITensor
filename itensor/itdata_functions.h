@@ -182,10 +182,7 @@ struct GenerateIT
     NewData
     operator()(T& d) const
         {
-        for(auto& elt : d.data)
-            {
-            elt = f_();
-            }
+        std::generate(d.data.begin(),d.data.end(),f_);
         return NewData();
         }
     };

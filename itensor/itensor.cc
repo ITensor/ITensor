@@ -624,7 +624,7 @@ norm() const
 ostream& 
 operator<<(ostream & s, const ITensor& t)
     {
-    s << "ITensor r = " << t.r() << ": ";
+    s << "ITensor r=" << t.r() << ": ";
     s << t.inds() << "\n";
     s << "  {log(scale)[incl in elems]=" << t.scale().logNum();
 
@@ -638,13 +638,30 @@ operator<<(ostream & s, const ITensor& t)
         if(t) applyFunc<PrintIT>(t.data(),{s,t.scale(),t.inds()});
         else           s << " (default constructed)}\n";
         }
+    else
+        {
+        s << "}";
+        }
     return s;
+    }
+
+
+Real
+quickran()
+    {
+    static auto seed = (std::time(NULL) + getpid());
+    int im = 134456;
+    int ia = 8121;
+    int ic = 28411;
+    Real scale = 1.0 / im;
+    seed = (seed*ia+ic)%im;
+    return Real(seed) * scale;
     }
 
 ITensor
 randIT(ITensor T, const Args& args)
     {
-    T.generate(Global::random);
+    T.generate(quickran);
     return T;
     }
 
