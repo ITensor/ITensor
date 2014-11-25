@@ -149,7 +149,7 @@ class IndexSet
                   const IndexT& i2)
         {
         return i1.m() == i2.m() 
-               ? (i1.id() > i2.id())
+               ? (i1 < i2)
                : (i1.m() > i2.m());
         }
 
@@ -623,16 +623,16 @@ getperm(const IndexSet<IndexT>& iset,
 	}
 
 template <class IndexT>
-bool
+int
 hasindex(const IndexSet<IndexT>& iset, 
          const IndexT& I)
 	{
     int j = (I.m()==1 ? iset.rn() : 0);
     for(; j < iset.r(); ++j)
         {
-        if(iset[j] == I) return true;
+        if(iset[j] == I) return j;
         }
-    return false;
+    return 0;
 	}
 
 template <class IndexT>

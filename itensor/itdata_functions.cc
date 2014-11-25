@@ -5,8 +5,18 @@
 #include "itdata_functions.h"
 #include "detail/gcounter.h"
 #include "lapack_wrap.h"
+#include "contract.h"
 
 namespace itensor {
+
+NewData Contract::
+operator()(const ITDense<Real>& a1,
+           const ITDense<Real>& a2) const
+    {
+    auto res = make_newdata<ITDense<Real>>(nis_);
+    contractloop(a1.data,Lind_,a2.data,Rind_,res->data,Pind_);
+    return std::move(res);
+    }
 
 NewData FillReal::
 operator()(ITDense<Real>& d) const

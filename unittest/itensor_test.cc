@@ -643,59 +643,59 @@ SECTION("SumDifference")
 
     }
 
-//SECTION("ContractingProduct")
-//    {
-//
-//    //Check for rank 0 ITensors
-//    {
-//    Real f = Global::random();
-//    ITensor rZ(f), T(b2,a1,b4);
-//    T.randomize();
-//
-//    ITensor res = rZ * T;
-//
-//    CHECK_EQUAL(rZ.r(),0);
-//    CHECK_EQUAL(res.r(),3);
-//
-//    for(int j2 = 1; j2 <= 2; ++j2)
-//    for(int j4 = 1; j4 <= 4; ++j4)
-//        {
-//        Real val = f * T(b2(j2),a1(1),b4(j4));
-//        CHECK_CLOSE(res(b2(j2),a1(1),b4(j4)),val,1E-10);
-//        }
-//    }
-//
-//    //More general case
-//    ITensor L(b4,a1,b3,a2,b2), R(b5,a1,b4,b2,b3);
-//
-//    L.randomize(); R.randomize();
-//
-//    Real fL = Global::random(), fR = Global::random();
-//    ITensor Lf = L * fL;
-//    ITensor Rf = R * fR;
-//
-//    ITensor res1 = Lf*Rf;
-//
-//    CHECK(hasindex(res1,b5));
-//    CHECK(hasindex(res1,a2));
-//    CHECK(!hasindex(res1,a1));
-//    CHECK(!hasindex(res1,b2));
-//    CHECK(!hasindex(res1,b3));
-//    CHECK(!hasindex(res1,b4));
-//
-//    CHECK_EQUAL(res1.r(),2);
-//
-//    for(int j5 = 1; j5 <= b5.m(); ++j5)
-//        {
-//        Real val = 0;
-//        for(int j2 = 1; j2 <= 2; ++j2)
-//        for(int j3 = 1; j3 <= 3; ++j3)
-//        for(int j4 = 1; j4 <= 4; ++j4)
-//            {
-//            val += L(b2(j2),a1(1),b3(j3),b4(j4))*fL * R(b5(j5),a1(1),b3(j3),b2(j2),b4(j4))*fR;
-//            }
-//        CHECK_CLOSE(res1(a2(1),b5(j5)),val,1E-10);
-//        }
+SECTION("ContractingProduct")
+    {
+
+    //Check for rank 0 ITensors
+    {
+    Real f = Global::random();
+    auto rZ = ITensor(f); 
+    auto T = randIT(b2,a1,b4);
+
+    auto res = rZ * T;
+
+    CHECK_EQUAL(rZ.r(),0);
+    CHECK_EQUAL(res.r(),3);
+
+    for(int j2 = 1; j2 <= 2; ++j2)
+    for(int j4 = 1; j4 <= 4; ++j4)
+        {
+        Real val = f * T.real(b2(j2),a1(1),b4(j4));
+        CHECK_CLOSE(res.real(b2(j2),a1(1),b4(j4)),val,1E-10);
+        }
+    }
+
+    //More general case
+    auto L = randIT(b4,a1,b3,a2,b2), 
+         R = randIT(b5,a1,b4,b2,b3);
+
+    Real fL = Global::random(), 
+         fR = Global::random();
+    auto Lf = L * fL;
+    auto Rf = R * fR;
+
+    auto res1 = Lf*Rf;
+
+    CHECK(hasindex(res1,b5));
+    CHECK(hasindex(res1,a2));
+    CHECK(!hasindex(res1,a1));
+    CHECK(!hasindex(res1,b2));
+    CHECK(!hasindex(res1,b3));
+    CHECK(!hasindex(res1,b4));
+
+    CHECK_EQUAL(res1.r(),2);
+
+    for(int j5 = 1; j5 <= b5.m(); ++j5)
+        {
+        Real val = 0;
+        for(int j2 = 1; j2 <= 2; ++j2)
+        for(int j3 = 1; j3 <= 3; ++j3)
+        for(int j4 = 1; j4 <= 4; ++j4)
+            {
+            val += L.real(b2(j2),a1(1),b3(j3),b4(j4))*fL * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4))*fR;
+            }
+        CHECK_CLOSE(res1.real(a2(1),b5(j5)),val,1E-10);
+        }
 //
 //    ITensor res2 = R*L;
 //
@@ -775,8 +775,8 @@ SECTION("SumDifference")
 //    CHECK(hasindex(Hpsi,a3));
 //    CHECK(!hasindex(Hpsi,a1));
 //    CHECK(!hasindex(Hpsi,a2));
-//    }
-//
+    }
+
 //SECTION("NonContractingProduct")
 //    {
 //    ITensor L(b2,a1,b3,b4), R(a1,b3,a2,b5,b4);

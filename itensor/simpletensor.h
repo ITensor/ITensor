@@ -152,7 +152,7 @@ template<typename U>
 long
 ind(const Range& r, const std::vector<U>& inds)
     {
-    return detail::indIterable(inds);
+    return detail::indIterable(r,inds);
     }
 
 template<typename U, size_t size>
@@ -417,14 +417,16 @@ class simpletensor
     void 
     resize(std::initializer_list<long> dims) 
         { 
-        init(true,dims); 
+        inds_ = Range(dims);
+        init(true); 
         }
 
     template<typename U> 
     void 
     resize(const std::vector<U>& dims) 
         { 
-        init(true,dims); 
+        inds_ = Range(dims);
+        init(true); 
         }
 
     template <typename... Inds>
@@ -458,16 +460,26 @@ class simpletensor
         }
 
     void 
-    init(bool ownstore, T val = 0)
+    init(bool ownstore)
         {
         auto len = area(inds_);
         if(ownstore && len > 0)
             {
-            vec_ = storage_type(len,val);
+            if(vec_.size() != len)
+                vec_ = storage_type(len);
             data_ = &vec_.front();
             }
         }
     };
+
+template<typename T, typename... Args>
+long
+ind(const simpletensor<T>& t,
+    Args&&... args)
+    {
+    return ind(t.inds(),std::forward<Args>(args)...);
+    }
+
 
 // t2 += fac*t1, based on BLAS axpy
 void

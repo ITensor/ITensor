@@ -212,7 +212,9 @@ noprimeEquals(const Index& other) const
 bool Index::
 operator<(const Index& other) const 
     { 
-    return (p->id < other.p->id);
+    return (p->id == other.p->id)
+         ? (primelevel_ < other.primelevel_)
+         : (p->id < other.p->id);
     }
 
 IndexVal Index::

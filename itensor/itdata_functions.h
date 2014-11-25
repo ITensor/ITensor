@@ -45,69 +45,71 @@ class ApplyIT
         }
     };
 
-//struct Contract
-//    {
-//    using annotation = btas::varray<size_t>;
-//
-//    Contract(const annotation& Lind,
-//             const annotation& Rind,
-//             const annotation& Pind)
-//        :
-//        Lind_(Lind),
-//        Rind_(Rind),
-//        Pind_(Pind)
-//        { }
-//
-//    template <typename T>
-//    NewData
-//    operator()(const ITDense<T>& a1,
-//               const ITDense<T>& a2) const
-//        {
-//        static const auto One = T(1.),
-//                          Zero = T(0.);
-//        auto res = new ITDense<T>();
-//        btas::contract(One,a1.t_,Lind_,a2.t_,Rind_,Zero,res->t_,Pind_);
-//        return NewData(res);
-//        }
-//
-//    NewData
-//    operator()(const ITDense<Real>& a1,
-//               const ITDense<Complex>& a2) const
-//        {
-//        ITDense<Complex> c1(a1);
-//        return operator()(c1,a2);
-//        }
-//
-//    NewData
-//    operator()(const ITDense<Complex>& a1,
-//               const ITDense<Real>& a2) const
-//        {
-//        ITDense<Complex> c2(a2);
-//        return operator()(a1,c2);
-//        }
-//
-//
-//    //template <typename T1, typename T2>
-//    //NewData
-//    //operator()(const ITDense<T1>& a1,
-//    //           const ITDense<T2>& a2) const
-//    //    {
-//    //    using product_type = decltype(::std::declval<T1>() * ::std::declval<T2>());
-//    //    //static const auto One = product_type(1.),
-//    //    //                  Zero = product_type(0.);
-//    //    auto res = new ITDense<product_type>();
-//    //    //TODO:
-//    //    Error("Contract not implemented for tensors of different element types.");
-//    //    //btas::contract(One,a1.t_,Lind_,a2.t_,Rind_,Zero,res->t_,Pind_);
-//    //    return NewData(res);
-//    //    }
-//
-// 
-//    private:
-//    const annotation& Lind_,
-//                      Rind_,
-//                      Pind_;
-//    };
+struct Contract
+    {
+    using ind = std::vector<int>;
+    const ind& Lind_,
+               Rind_,
+               Pind_;
+    //New IndexSet
+    const IndexSet<Index>& nis_;
+
+    Contract(const ind& Lind,
+             const ind& Rind,
+             const ind& Pind,
+             const IndexSet<Index>& nis)
+        :
+        Lind_(Lind),
+        Rind_(Rind),
+        Pind_(Pind),
+        nis_(nis)
+        { }
+
+    NewData
+    operator()(const ITDense<Real>& a1,
+               const ITDense<Real>& a2) const;
+
+    //NewData
+    //operator()(const ITDense<Real>& a1,
+    //           const ITDense<Complex>& a2) const
+    //    {
+    //    ITDense<Complex> c1(a1);
+    //    return operator()(c1,a2);
+    //    }
+
+    //NewData
+    //operator()(const ITDense<Complex>& a1,
+    //           const ITDense<Real>& a2) const
+    //    {
+    //    ITDense<Complex> c2(a2);
+    //    return operator()(a1,c2);
+    //    }
+
+
+    //template <typename T1, typename T2>
+    //NewData
+    //operator()(const ITDense<T1>& a1,
+    //           const ITDense<T2>& a2) const
+    //    {
+    //    using product_type = decltype(::std::declval<T1>() * ::std::declval<T2>());
+    //    //static const auto One = product_type(1.),
+    //    //                  Zero = product_type(0.);
+    //    auto res = new ITDense<product_type>();
+    //    //TODO:
+    //    Error("Contract not implemented for tensors of different element types.");
+    //    //btas::contract(One,a1.t_,Lind_,a2.t_,Rind_,Zero,res->t_,Pind_);
+    //    return NewData(res);
+    //    }
+
+    template <typename T1, typename T2>
+    NewData
+    operator()(const T1& a1,const T2& a2) const
+        {
+        Error("Contract not implemented for this case");
+        return NewData();
+        }
+ 
+    };
 
 class NormNoScale
     {

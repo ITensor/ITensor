@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor.h"
+#include "contract.h"
 
 using std::array;
 using std::ostream;
@@ -242,161 +243,164 @@ ITensor(const Index& i1,
 //        return NewData();
 //        }
 //    };
-//
-//
-//ITensor& ITensor::
-//operator*=(const ITensor& other)
-//    {
-//    if(!(*this) || !other)
-//        Error("Default constructed ITensor in product");
-//
-//    if(this == &other)
-//        return operator=( ITensor(sqr(norm(*this))) );
-//
-//    if(applyFunc<IsScalar>(other.store_))
-//        {
-//        operator*=(other.cplx());
-//        return *this;
-//        }
-//
-//    const auto& Thisd = this->store_;
-//    if(applyFunc<IsScalar>(Thisd))
-//        {
-//        auto z = this->cplx();
-//        operator=(other);
-//        operator*=(z);
-//        return *this;
-//        }
-//
-//    btas::varray<bool> contL(size_t(is_.r()),false),
-//                       contR(size_t(other.is_.r()),false);
-//
-//    //Possible optimization:
-//    // o replace Lind, Rind with static-allocated arrays
-//    // o redefine btas::contract to take pair of iterators
-//    //   to annotations instead of containers
-//    // o reimplement current version as just as wrapper
-//
-//    //Set Lind, Rind to zero. Special value 0 marks
-//    //uncontracted indices. Later will assign unique numbers
-//    //to these entries in Lind and Rind
-//    btas::varray<size_t> Lind(size_t(is_.rn()),0),
-//                         Rind(size_t(other.is_.rn()),0);
-//
-//    //Count number of contracted indices,
-//    //set corresponding entries of Lind, Rind
-//    //to 1,2,...,ncont
-//    int ncont = 0;
-//    for(int i = 0; i < is_.rn(); ++i)
-//    for(int j = 0; j < other.is_.rn(); ++j)
-//        {
-//        if(is_[i] == other.is_[j])
-//            {
-//            contL[i] = true;
-//            contR[j] = true;
-//
-//            ++ncont;
-//            Lind[i] = ncont;
-//            Rind[j] = ncont;
-//
-//            break;
-//            }
-//        }
-//
-//    //Finish making contL, contR for m==1 indices
-//    int ncont_all = ncont;
-//    for(int i = is_.rn(); i < is_.r(); ++i)
-//    for(int j = other.is_.rn(); j < other.is_.r(); ++j)
-//        {
-//        if(is_[i] == other.is_[j])
-//            {
-//            ++ncont_all;
-//            contL[i] = true;
-//            contR[j] = true;
-//            break;
-//            }
-//        }
-//
-//    //nuniq is total number of unique, uncontracted indices
-//    //(nuniq all includes m==1 indices)
-//    const int nuniq = is_.rn()+other.is_.rn()-2*ncont;
-//    const int nuniq_all = is_.r()+other.is_.r()-2*ncont_all;
-//
-//    //container in which we will accumulate the new indices
-//    IndexSet<Index>::storage newind(nuniq_all);
-//
-//    //Go through and assign uncontracted entries of Lind,Rind
-//    //the integers ncont+1,ncont+2,...
-//    //Simultaneously fill newind (keeping count "ni")
-//    size_t ni = 0;
-//    size_t uu = ncont;
-//    for(int j = 0; j < is_.rn(); ++j)
-//        {
-//        if(!contL[j]) 
-//            {
-//            Lind[j] = ++uu;
-//            newind.at(ni++) = is_[j];
-//            }
-//        }
-//    for(int j = 0; j < other.is_.rn(); ++j)
-//        {
-//        if(!contR[j]) 
-//            {
-//            Rind[j] = ++uu;
-//            newind.at(ni++) = other.is_[j];
-//            }
-//        }
-//
-//    //Finish filling up newind with m==1 indices
-//    for(int j = is_.rn(); j < is_.r(); ++j)
-//        {
-//        if(!contL[j]) 
-//            newind.at(ni++) = is_[j];
-//        }
-//    for(int j = other.is_.rn(); j < other.is_.r(); ++j)
-//        {
-//        if(!contR[j]) 
-//            newind.at(ni++) = other.is_[j];
-//        }
-//
-//    btas::varray<size_t> Pind(nuniq);
-//    for(size_t i = 0, u = 1+ncont; i < nuniq; ++i,++u)
-//        {
-//        Pind[i] = u;
-//        }
-//
-//    //cout << "Lind = {";
-//    //for(auto x : Lind)
-//    //    {
-//    //    cout << x << ",";
-//    //    }
-//    //cout << "}" << endl;
-//    //cout << "Rind = {";
-//    //for(auto x : Rind)
-//    //    {
-//    //    cout << x << ",";
-//    //    }
-//    //cout << "}" << endl;
-//    //cout << "Pind = {";
-//    //for(auto x : Pind)
-//    //    {
-//    //    cout << x << ",";
-//    //    }
-//    //cout << "}" << endl;
-//    //exit(0);
-//
-//    applyFunc<Contract>(store_,other.store_,{Lind,Rind,Pind});
-//
-//    IndexSet<Index> new_index(std::move(newind),nuniq);
-//
-//    is_.swap(new_index);
-//
-//    scale_ *= other.scale_;
-//
-//    scaleOutNorm();
-//
-//    return *this;
-//    }
+
+
+ITensor& ITensor::
+operator*=(const ITensor& other)
+    {
+    if(!(*this) || !other)
+        Error("Default constructed ITensor in product");
+
+    if(this == &other)
+        {
+        return operator=( ITensor(sqr(this->norm())) );
+        }
+
+    //Check if other is a scalar
+    if(other.inds().r() == 0)
+        {
+        return operator*=(other.cplx());
+        }
+    //Check if this is a scalar
+    if(this->r() == 0)
+        {
+        return operator=(other*cplx());
+        }
+
+    std::vector<bool> contL(is_.r(),false),
+                      contR(other.is_.r(),false);
+
+    //Set Lind, Rind to zero. Special value 0 marks
+    //uncontracted indices. Later will assign unique numbers
+    //to these entries in Lind and Rind
+    Labels Lind(is_.rn(),0),
+           Rind(other.is_.rn(),0);
+
+    //Count number of contracted indices,
+    //set corresponding entries of Lind, Rind
+    //to 1,2,...,ncont
+    int ncont = 0;
+    for(int i = 0; i < is_.rn(); ++i)
+    for(int j = 0; j < other.is_.rn(); ++j)
+        if(is_[i] == other.is_[j])
+            {
+            contL[i] = true;
+            contR[j] = true;
+
+            ++ncont;
+            Lind[i] = ncont;
+            Rind[j] = ncont;
+
+            break;
+            }
+
+    //Finish making contL, contR for m==1 indices
+    int ncont_all = ncont;
+    for(int i = is_.rn(); i < is_.r(); ++i)
+    for(int j = other.is_.rn(); j < other.is_.r(); ++j)
+        {
+        if(is_[i] == other.is_[j])
+            {
+            ++ncont_all;
+            contL[i] = true;
+            contR[j] = true;
+            break;
+            }
+        }
+
+    //nuniq is total number of unique, uncontracted indices
+    //(nuniq all includes m==1 indices)
+    int nuniq = is_.rn()+other.is_.rn()-2*ncont;
+    int nuniq_all = is_.r()+other.is_.r()-2*ncont_all;
+
+    //container in which we will accumulate the new indices
+    IndexSet<Index>::storage newind;
+    newind.reserve(nuniq_all);
+
+    //Go through and assign uncontracted entries of Lind,Rind
+    //the integers ncont+1,ncont+2,...
+    //Simultaneously fill newind (keeping count "ni")
+    int uu = ncont;
+    for(int j = 0; j < is_.rn(); ++j)
+        {
+        if(!contL[j]) 
+            {
+            Lind[j] = ++uu;
+            newind.push_back(is_[j]);
+            }
+        }
+    for(int j = 0; j < other.is_.rn(); ++j)
+        {
+        if(!contR[j]) 
+            {
+            Rind[j] = ++uu;
+            newind.push_back(other.is_[j]);
+            }
+        }
+
+    //Finish filling up newind with m==1 indices
+    for(int j = is_.rn(); j < is_.r(); ++j)
+        {
+        if(!contL[j]) newind.push_back(is_[j]);
+        }
+    for(int j = other.is_.rn(); j < other.is_.r(); ++j)
+        {
+        if(!contR[j]) newind.push_back(other.is_[j]);
+        }
+
+    IndexSet<Index> new_index(std::move(newind));
+#ifdef DEBUG
+    if(new_index.rn() != nuniq) Error("new_index size not equal to nuniq");
+#endif
+
+    Labels Pind(nuniq);
+    for(int i = 0; i < new_index.r(); ++i)
+        {
+        int j = hasindex(is_,new_index[i]);
+        if(j)
+            {
+            Pind[i] = Lind[j];
+            }
+        else
+            {
+            j = hasindex(other.is_,new_index[i]);
+            Pind[i] = Rind[j];
+            }
+        }
+
+    //println(this->is_);
+    //cout << "Lind = {";
+    //for(auto x : Lind)
+    //    {
+    //    cout << x << ",";
+    //    }
+    //cout << "}" << endl;
+    //println(other.is_);
+    //cout << "Rind = {";
+    //for(auto x : Rind)
+    //    {
+    //    cout << x << ",";
+    //    }
+    //cout << "}" << endl;
+    //println(new_index);
+    //cout << "Pind = {";
+    //for(auto x : Pind)
+    //    {
+    //    cout << x << ",";
+    //    }
+    //cout << "}" << endl;
+    //exit(0);
+
+    applyFunc<Contract>(store_,other.store_,{Lind,Rind,Pind,new_index});
+
+    is_.swap(new_index);
+
+    scale_ *= other.scale_;
+
+    scaleOutNorm();
+
+    return *this;
+    }
 
 ITensor& ITensor::
 operator*=(Real fac)
@@ -638,7 +642,7 @@ operator<<(ostream & s, const ITensor& t)
     }
 
 ITensor
-randIT(ITensor T, const OptSet& opts)
+randIT(ITensor T, const Args& args)
     {
     T.generate(Global::random);
     return T;

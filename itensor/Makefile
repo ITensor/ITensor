@@ -11,6 +11,7 @@ include ../options.mk
 SOURCES = index.cc 
 SOURCES+= itdata_functions.cc 
 SOURCES+= simpletensor.cc 
+SOURCES+= contract.cc 
 SOURCES+= itensor.cc 
 #SOURCES+= iqindex.cc 
 #SOURCES+= iqtensor.cc 
@@ -25,7 +26,7 @@ SOURCES+= itensor.cc
 
 HEADERS=detail/functions.h detail/skip_iterator.h detail/gcounter.h \
         global.h real.h permutation.h index.h \
-        indexset.h counter.h simpletensor.h \
+        indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h itdata_functions.h \
         itdata/itdense.h itdata/itdiag.h \
         itensor.h qn.h iqindex.h iqtdat.h  \
