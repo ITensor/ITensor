@@ -29,36 +29,30 @@ class Combiner
     {
     public:
 
-    using left_it = array<Index,NMAX+1>::const_iterator;
+    //Constructors --------------------------------------------------
+
+    Combiner() : initted(false) {}
+
+    template<typename... Inds>
+    Combiner(const Index& l1, 
+             const Inds&... inds);
+
+    Combiner(const Combiner& other) { operator=(other); }
 
     //Accessor Methods ----------------------------------------------
 
-    inline const Index& 
-    right() const 
-        { init(); return right_; }
+    const Index& 
+    right() const { init(); return right_; }
 
     int 
-    numLeft() const { return rl_; }
+    numLeft() const { return left_.size(); }
 
+    //1-indexed access to left indices
     const Index& 
-    left(int j) const { return GET(left_,j); }
+    left(int j) const { return GET(left_,j-1); }
 
-    const IterPair<left_it>
-    left() const 
-        { 
-        return IterPair<left_it>(left_.begin()+1,left_.begin()+rl_+1); 
-        }
-
-    //Constructors --------------------------------------------------
-
-    Combiner() : rl_(0), initted(false) {}
-
-    Combiner(const Index& l1, const Index& l2 = Index::Null(), 
-             const Index& l3 = Index::Null(), const Index& l4 = Index::Null(), 
-             const Index& l5 = Index::Null(), const Index& l6 = Index::Null(), 
-             const Index& l7 = Index::Null(), const Index& l8 = Index::Null() );
-
-    Combiner(const Combiner& other) { operator=(other); }
+    const std::vector<Index>&
+    left() const { return left_; }
 
     //Operators -----------------------------------------------------
 
@@ -117,10 +111,9 @@ class Combiner
 
     /////////
 
-    array<Index,NMAX+1> left_; // max dim is 8
-    mutable Index right_;
-    int rl_; //Number of m>1 'left' indices (indices to be combined into one)
     mutable bool initted;
+    std::vector<Index> left_;
+    mutable Index right_;
 
     ///////
 
@@ -139,36 +132,25 @@ operator=(const Combiner& other)
     other.init();
     left_ = other.left_;
     right_ = other.right_;
-    rl_ = other.rl_;
     initted = other.initted;
     return *this;
     }
 
-inline
+template<typename... Inds>
 Combiner::
-Combiner(const Index& l1, const Index& l2,
-         const Index& l3, const Index& l4, 
-         const Index& l5, const Index& l6, 
-         const Index& l7, const Index& l8)
+Combiner(const Index& l1, 
+         const Inds&... inds);
     : 
-    rl_(0), 
-    initted(false)
+    initted(false),
+    left_{l1,inds...}
 	{
-    array<const Index*,NMAX+1> ll 
-    = {{ &Index::Null(), &l1, &l2, &l3, &l4, &l5, &l6, &l7, &l8 }};
-
-    do { ++rl_; left_[rl_] = *ll[rl_]; } 
-    while(rl_ < NMAX && *ll[rl_+1] != Index::Null());
-
-    assert(rl_ == NMAX || left_[rl_+1] == Index::Null());
-    assert(left_[rl_] != Index::Null());
 	}
 
 inline
 void Combiner::
 reset()
     {
-    rl_ = 0;
+    left_.clear();
     initted = false;
     }
 
@@ -176,20 +158,14 @@ void inline Combiner::
 addleft(const Index& l)// Include another left index
     { 
     initted = false;
-    if(rl_ == NMAX) 
-        Error("Combiner: already reached max number of left indices.");
-    ++rl_;
-    left_[rl_] = l; 
+    left_.push_back(l); 
     }
 
 void inline Combiner::
 addleft(const std::vector<Index>& ls)
     { 
     initted = false;
-    if(rl_+int(ls.size()) > NMAX) 
-        Error("Combiner: too many left indices.");
-    for(size_t j = 0; j < ls.size(); ++j)
-        left_[++rl_] = ls[j]; 
+    left_.insert(left_.end(),ls.begin(),ls.end());
     }
 
 inline
@@ -198,8 +174,7 @@ init(std::string rname, IndexType type, Arrow dir, int primelevel) const
     {
     if(initted) return;
     int m = 1; 
-    for(int i = 1; i <= rl_; ++i) 
-        { m *= left_[i].m(); }
+    for(const auto& ll : left_) m *= ll.m();
     right_ = Index(rname,m,type,primelevel); 
     initted = true;
     }
@@ -207,27 +182,15 @@ init(std::string rname, IndexType type, Arrow dir, int primelevel) const
 void inline Combiner::
 prime(int inc)
     {
-    for(int j = 1; j <= rl_; ++j) 
-        {
-        left_[j].prime(inc);
-        }
-    if(initted)
-        {
-        right_.prime(inc);
-        }
+    for(auto& ll : left_) ll.prime(inc);
+    if(initted) right_.prime(inc);
     }
 
 void inline Combiner::
 prime(IndexType type, int inc)
     {
-    for(int j = 1; j <= rl_; ++j) 
-        {
-        left_[j].prime(type,inc);
-        }
-    if(initted)
-        {
-        right_.prime(type,inc);
-        }
+    for(auto& ll : left_) ll.prime(type,inc);
+    if(initted) right_.prime(type,inc);
     }
 
 Combiner inline
@@ -270,8 +233,8 @@ product(const ITensor& t, ITensor& res) const
             {
             if(I == right_)
                 {
-                for(int i = 1; i <= rl_; ++i)
-                    nind.addindex(left_[i]);
+                for(const auto& ll : left_)
+                    nind.addindex(ll);
                 }
             else
                 {
@@ -282,19 +245,20 @@ product(const ITensor& t, ITensor& res) const
         return;
         }
 
-    t.groupIndices(left_,rl_,right_,res);
+    Error("Need to change groupIndices to assume 0-indexed container");
+    t.groupIndices(left_,left_.size(),right_,res);
     }
 
 //
 // Combiner helper method
 //
 
-bool inline
+int inline
 hasindex(const Combiner& C, const Index& I)
     {
     for(int j = 1; j <= C.numLeft(); ++j) 
-        if(C.left(j) == I) return true;
-    return false;
+        if(C.left(j) == I) return j;
+    return 0;
     }
 
 
