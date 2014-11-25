@@ -615,7 +615,7 @@ plusEq(const MPSt<Tensor>& R,
     if(!this->isOrtho())
         {
         try { 
-            orthogonalize(); 
+            orthogonalize(args); 
             }
         catch(const ResultIsZero& rz) 
             { 
@@ -628,7 +628,7 @@ plusEq(const MPSt<Tensor>& R,
         {
         MPSt<Tensor> oR(R);
         try { 
-            oR.orthogonalize(); 
+            oR.orthogonalize(args); 
             }
         catch(const ResultIsZero& rz) 
             { 
@@ -769,12 +769,10 @@ template<class Tensor>
 Spectrum
 orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
     {
-    using IndexT = typename Tensor::IndexT;
+    auto& L = (dir == Fromleft ? A1 : A2);
+    auto& R = (dir == Fromleft ? A2 : A1);
 
-    Tensor& L = (dir == Fromleft ? A1 : A2);
-    Tensor& R = (dir == Fromleft ? A2 : A1);
-
-    IndexT bnd = commonIndex(L,R,Link);
+    auto bnd = commonIndex(L,R,Link);
     if(!bnd) return Spectrum();
 
     if(args.getBool("Verbose",false))
@@ -784,33 +782,10 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
 
     Tensor A,B(bnd);
     Tensor D;
-    Spectrum spec = svd(L,A,D,B,args);
+    auto spec = svd(L,A,D,B,args);
 
     L = A;
     R *= (D*B);
-
-    //Older density matrix implementation
-    //Doesn't flip arrows appropriately
-
-    //Tensor rho = prime(L,bnd)*dag(L);
-
-    //Tensor U;
-    //Tensor D;
-    //diagHermitian(rho,U,D,spec,args);
-
-
-    //Tensor Di = D;
-    //Di.mapElems(SqrtInv());
-    //D.mapElems(Sqrt());
-
-    //const
-    //Tensor siRho = dag(U)*Di*prime(U),
-    //       sRho = dag(U)*D*prime(U);
-
-    //L *= siRho;
-    //L.noprime();
-
-    //R = prime(R,bnd)*sRho;
 
     return spec;
     }
@@ -832,14 +807,14 @@ position(int i, const Args& args)
             {
             if(l_orth_lim_ < 0) l_orth_lim_ = 0;
             setBond(l_orth_lim_+1);
-            Tensor WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
+            auto WF = A(l_orth_lim_+1) * A(l_orth_lim_+2);
             svdBond(l_orth_lim_+1,WF,Fromleft,args);
             }
         while(r_orth_lim_ > i+1)
             {
             if(r_orth_lim_ > N_+1) r_orth_lim_ = N_+1;
             setBond(r_orth_lim_-2);
-            Tensor WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
+            auto WF = A(r_orth_lim_-2) * A(r_orth_lim_-1);
             svdBond(r_orth_lim_-2,WF,Fromright,args);
             }
         }
@@ -890,8 +865,8 @@ orthogonalize(const Args& args)
     l_orth_lim_ = 0;
     r_orth_lim_ = N()+1;
     //Use smaller cutoff to orthogonalize w/ minimal truncation
-    const Real orig_cut = args.getReal("Cutoff",MIN_CUT);
-    position(N_,args + Opt("Cutoff",0.1*orig_cut));
+    auto orig_cut = args.getReal("Cutoff",MIN_CUT);
+    position(N_,args + Args("Cutoff",0.01*orig_cut));
     //Now basis is ortho, ok to truncate
     position(1,args);
     }

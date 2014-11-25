@@ -143,7 +143,7 @@ class MPOt : private MPSt<Tensor>
     MPOt&
     addAssumeOrth(const MPOt& oth, const Args& args = Global::args()) 
         { 
-        Parent::addAssumeOrth(oth,args+Args("UseSVD",true,"LogRefNorm",logrefNorm_)); 
+        Parent::addAssumeOrth(oth,args+Args("UseSVD",true,"LogRefNorm",logrefNorm_,"DoRelCutoff",true)); 
         return *this; 
         }
 
@@ -210,7 +210,7 @@ sum(const MPOt<Tensor>& L,
     const Args& args = Global::args())
     {
     MPOt<Tensor> res(L);
-    res.plusEq(R,args);
+    res.plusEq(R,args+Args("UseSVD",true,"DoRelCutoff",true));
     return res;
     }
 

@@ -131,7 +131,7 @@ plusEq(const MPOt<Tensor>& other_,
     if(!this->isOrtho())
         {
         try { 
-            orthogonalize(); 
+            orthogonalize(args); 
             }
         catch(const ResultIsZero& rz) 
             { 
@@ -144,7 +144,7 @@ plusEq(const MPOt<Tensor>& other_,
         {
         MPOt<Tensor> other(other_);
         try { 
-            other.orthogonalize(); 
+            other.orthogonalize(args); 
             }
         catch(const ResultIsZero& rz) 
             { 
@@ -330,7 +330,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
     res.svdBond(N-1,nfork,Fromright);
     res.noprimelink();
     res.mapprime(2,1,Site);
-    res.orthogonalize();
+    res.orthogonalize(args);
 
     }//void nmultMPO(const MPOType& Aorig, const IQMPO& Borig, IQMPO& res,Real cut, int maxm)
 template
