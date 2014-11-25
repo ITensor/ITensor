@@ -1,8 +1,10 @@
 #include "contract.h"
+#include "detail/functions.h"
 
 using std::vector;
 using std::cout;
 using std::endl;
+using std::set_intersection;
 
 namespace itensor {
 
@@ -40,7 +42,6 @@ reshape(const RTensor& x, Permutation p, RTensor& res)
         }
     }
 
-//void RTensor::product(const RTensor& other, RTensor& res) const
 void 
 contract_reshape(const RTensor& A, const Labels& ai, 
                  const RTensor& B, const Labels& bi, 
@@ -49,46 +50,65 @@ contract_reshape(const RTensor& A, const Labels& ai,
     int na = A.r(), 
         nb = B.r(), 
         nc = C.r();
-    ABCints abc(ai,bi,ci);
-    Labels newai, newbi, newci;
-    abc.get_newinds(newai,newbi,newci); 
 
-    //Tell where each index will go, PX(2,1,3) says 1 -> 2, 2 -> 1, 3 -> 3
+    Labels newai(ai), 
+           newbi(bi), 
+           newci(ci);
+    std::sort(newai.begin(),newai.end());
+    std::sort(newbi.begin(),newbi.end());
+    std::sort(newci.begin(),newci.end());
+
+    Labels leftind, 
+           midind,
+           rightind;
+    //midind is contracted indices
+    set_intersection(newai.begin(),newai.end(),newbi.begin(),newbi.end(),back_inserter(midind));
+    //leftind is uncontracted indices of A
+    set_intersection(newai.begin(),newai.end(),newci.begin(),newci.end(),back_inserter(leftind));
+    //rightind is uncontracted indices of A
+    set_intersection(newbi.begin(),newbi.end(),newci.begin(),newci.end(),back_inserter(rightind));
+
+    newai=leftind;
+    newbi=midind;
+    newci=leftind;
+    newai.insert(newai.end(),midind.begin(),midind.end());
+    newbi.insert(newbi.end(),rightind.begin(),rightind.end());
+    newci.insert(newci.end(),rightind.begin(),rightind.end());
+
     Permutation PA(na), 
                 PB(nb), 
                 PC(nc);
-    for(int i = 0; i < na; i++)
-        {
-        PA.setFromTo(i,findIndex(newai,ai[i]));
-        }
-    for(int i = 0; i < nb; i++)
-        {
-        PB.setFromTo(i,findIndex(newbi,bi[i]));
-        }
-    for(int i = 0; i < nc; i++)
-        {
-        PC.setFromTo(i,findIndex(newci,ci[i]));
-        }
+    detail::calc_permutation(ai,newai,PA);
+    detail::calc_permutation(bi,newbi,PA);
+    detail::calc_permutation(ci,newci,PA);
+    //for(int i = 0; i < na; i++)
+    //    {
+    //    PA.setFromTo(i,findIndex(newai,ai[i]));
+    //    }
+    //for(int i = 0; i < nb; i++)
+    //    {
+    //    PB.setFromTo(i,findIndex(newbi,bi[i]));
+    //    }
+    //for(int i = 0; i < nc; i++)
+    //    {
+    //    PC.setFromTo(i,findIndex(newci,ci[i]));
+    //    }
 
     Permutation rA(inverse(PA)), 
                 rB(inverse(PB)), 
                 rC(inverse(PC));
 
-    RTensor newA, newB, newC;
+    RTensor newA, newB;
     cpu_time cpu;
     reshape(A,rA,newA);
-	//RTensor Ach;
-	//reshape(newA,PA,Ach);
-	//cout << "error in double reshape is " << dist(A,Ach) << endl;
     reshape(B,rB,newB);
-	//RTensor Bch;
-	//reshape(newB,PB,Bch);
-	//cout << "error in double reshape is " << dist(B,Bch) << endl;
     println("A and B reshaped, took ",cpu.sincemark());
-    int dimleft = abc.leftind.size();
-    int dimmid = abc.midind.size();
-    int dimright = abc.rightind.size();
-    long nleft = 1, nmid = 1, nright = 1;
+    int dimleft = leftind.size(),
+        dimmid = midind.size(),
+        dimright = rightind.size();
+    long nleft = 1, 
+         nmid = 1, 
+         nright = 1;
     for(int i = 0; i < dimleft; i++)
         nleft *= newA.n(i);
     for(int i = 0; i < dimmid; i++)
@@ -96,30 +116,32 @@ contract_reshape(const RTensor& A, const Labels& ai,
     for(int i = 0; i < dimright; i++)
         nright *= newB.n(i+dimmid);
 
-    VectorRefNoLink nAv(&newA.vref(0),newA.size());
-    VectorRefNoLink nBv(&newB.vref(0),newB.size());
-    MatrixRefNoLink mA, mB;
-    nAv.TreatAsMatrix(mA,nmid,nleft);
-    nBv.TreatAsMatrix(mB,nright,nmid);
-    Vector vc(mB.Nrows()*mA.Ncols());
-    MatrixRef cref;
-    vc.TreatAsMatrix(cref,mB.Nrows(),mA.Ncols());
-    cpu.mark();
-    printfln("Multiplying a %d,%d x %d,%d",mB.Nrows(),mB.Ncols(),mA.Nrows(),mA.Ncols());
-    cref = mB * mA;
-    println("Matrix multiply done, took ",cpu.sincemark());
     vector<long> cn(dimleft+dimright);
     for(int i = 0; i < dimleft; i++)
         cn[i] = newA.n(i);
     for(int i = 0; i < dimright; i++)
         cn[dimleft+i] = newB.n(dimmid+i);
-    newC.resize(cn);
-    //Vector vc = Cmat.TreatAsVector();
-    for(long i = 0; i < vc.Length(); i++)
-        newC.vref(i) = vc.el(i);
+    RTensor newC(cn);
+
+    VectorRefNoLink nAv(newA.data(),newA.size()),
+                    nBv(newB.data(),newB.size()),
+                    nCv(newC.data(),newC.size());
+    MatrixRefNoLink mA, 
+                    mB;
+    MatrixRef cref;
+    nAv.TreatAsMatrix(mA,nmid,nleft);
+    nBv.TreatAsMatrix(mB,nright,nmid);
+    nCv.TreatAsMatrix(cref,nright,nleft);
+
+    cpu.mark();
+    printfln("Multiplying a %d,%d x %d,%d",mB.Nrows(),mB.Ncols(),mA.Nrows(),mA.Ncols());
+    cref = mB * mA;
+    println("Matrix multiply done, took ",cpu.sincemark());
+
     cpu.mark();
     reshape(newC,PC,C);
     println("C reshaped, took ",cpu.sincemark());
+
     return;
     }
 
@@ -279,7 +301,6 @@ contractloop(const RTensor& A, const Labels& ai,
             cabq.addtask(sA,sB,sC,offC+1);
             }
         }
-
     cabq.run(nthread);
     }
 

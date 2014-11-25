@@ -192,10 +192,8 @@ Reshape(const RTensor& x,
 
 struct ABCints	// ints describing index pattern for C = A * B
     {
-
     Labels ai, bi, ci;
     int nactiveA, nactiveB, nactiveC;
-    Labels leftind, midind, rightind;
     Labels AtoB, AtoC, BtoC;
 
     ABCints(const Labels& ai_, 
@@ -237,40 +235,6 @@ struct ABCints	// ints describing index pattern for C = A * B
         nactiveA = (indval[ai[0]] == 1 ? 0 : (indval[ai[1]] == 1 ? 1 : 2));
         nactiveB = (indval[bi[0]] == 1 ? 0 : (indval[bi[1]] == 1 ? 1 : 2));
         nactiveC = (indval[ci[0]] == 1 ? 0 : (indval[ci[1]] == 1 ? 1 : 2));
-        }
-
-    void 
-    get_newinds(Labels& newai, 
-                Labels& newbi, 
-                Labels& newci)
-        {
-        Labels ais(ai), bis(bi), cis(ci);
-        PRI(ai)
-        PRI(bi)
-        PRI(ci)
-        sort(ais.begin(),ais.end());
-        sort(bis.begin(),bis.end());
-        sort(cis.begin(),cis.end());
-        PRI(ais)
-        PRI(bis)
-        PRI(cis)
-
-        set_intersection(ais.begin(),ais.end(),bis.begin(),bis.end(),back_inserter(midind));
-        set_intersection(ais.begin(),ais.end(),cis.begin(),cis.end(),back_inserter(leftind));
-        set_intersection(bis.begin(),bis.end(),cis.begin(),cis.end(),back_inserter(rightind));
-        PRI(leftind)
-        PRI(midind)
-        PRI(rightind)
-
-        newai=leftind;
-        newbi=midind;
-        newci=leftind;
-        newai.insert(newai.end(),midind.begin(),midind.end());
-        newbi.insert(newbi.end(),rightind.begin(),rightind.end());
-        newci.insert(newci.end(),rightind.begin(),rightind.end());
-        PRI(newai)
-        PRI(newbi)
-        PRI(newci)
         }
 
     void 

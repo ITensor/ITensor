@@ -36,6 +36,11 @@ struct Permutation
     setFromTo(long from, 
               long to);
 
+    long&
+    operator[](int i) { return GET(store_,i); }
+    const long&
+    operator[](int i) const { return GET(store_,i); }
+
     long 
     dest(long j) const { return GET(store_,j); }
 
