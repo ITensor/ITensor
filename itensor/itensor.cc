@@ -273,7 +273,7 @@ operator*=(const ITensor& other)
     //Set Lind, Rind to zero. Special value 0 marks
     //uncontracted indices. Later will assign unique numbers
     //to these entries in Lind and Rind
-    Labels Lind(is_.rn(),0),
+    Label Lind(is_.rn(),0),
            Rind(other.is_.rn(),0);
 
     //Count number of contracted indices,
@@ -353,7 +353,7 @@ operator*=(const ITensor& other)
     if(new_index.rn() != nuniq) Error("new_index size not equal to nuniq");
 #endif
 
-    Labels Pind(nuniq);
+    Label Pind(nuniq);
     for(int i = 0; i < new_index.r(); ++i)
         {
         int j = hasindex(is_,new_index[i]);

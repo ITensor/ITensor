@@ -18,7 +18,7 @@
 namespace itensor {
 
 using RTensor = simpletensor<Real>;
-using Labels = std::vector<int>;
+using Label = std::vector<int>;
 
 template<typename T>
 void
@@ -138,7 +138,7 @@ class GCounter	// General Counter
 
 inline 
 std::ostream& 
-operator<<(std::ostream& s, const Labels& A)
+operator<<(std::ostream& s, const Label& A)
     {
     for(const auto& a : A) s << a << " ";
     s << "\n";
@@ -192,13 +192,13 @@ Reshape(const RTensor& x,
 
 struct ABCints	// ints describing index pattern for C = A * B
     {
-    Labels ai, bi, ci;
+    Label ai, bi, ci;
     int nactiveA, nactiveB, nactiveC;
-    Labels AtoB, AtoC, BtoC;
+    Label AtoB, AtoC, BtoC;
 
-    ABCints(const Labels& ai_, 
-            const Labels& bi_, 
-            const Labels& ci_) 
+    ABCints(const Label& ai_, 
+            const Label& bi_, 
+            const Label& ci_) 
         : 
         ai(ai_), 
         bi(bi_), 
@@ -244,9 +244,9 @@ struct ABCints	// ints describing index pattern for C = A * B
             nb = bi.size(), 
             nc = ci.size();
 
-        AtoB = Labels(na,-1);
-        AtoC = Labels(na,-1);
-        BtoC = Labels(nb,-1);
+        AtoB = Label(na,-1);
+        AtoC = Label(na,-1);
+        BtoC = Label(nb,-1);
         for(int i = 0; i < na; i++)
         for(int j = 0; j < nb; j++)
             if(ai[i] == bi[j]) AtoB[i] = j;
@@ -287,11 +287,11 @@ dist(const RTensor& A, const RTensor& Ach)
 
 void 
 contract_reshape(const RTensor& A, 
-                 const Labels& ai, 
+                 const Label& ai, 
                  const RTensor& B, 
-                 const Labels& bi, 
+                 const Label& bi, 
                  RTensor& C, 
-                 const Labels& ci);
+                 const Label& ci);
 
 struct SimpleMatrixRef
     {
@@ -431,9 +431,9 @@ class ApplyTasks
     };
 
 std::function<void(ABoffC&)> 
-computeCAB(const Labels& ai, 
-           const Labels& bi, 
-           const Labels& ci);
+computeCAB(const Label& ai, 
+           const Label& bi, 
+           const Label& ci);
 
 class CABqueue
     {
@@ -444,9 +444,9 @@ class CABqueue
     FType f;
     public:
 
-    CABqueue(const Labels& ai_, 
-             const Labels& bi_, 
-             const Labels& ci_) 
+    CABqueue(const Label& ai_, 
+             const Label& bi_, 
+             const Label& ci_) 
         {
         f = computeCAB(ai_,bi_,ci_);
         }
@@ -499,9 +499,9 @@ class CABqueue
     };
 
 void 
-contractloop(const RTensor& A, const Labels& ai, 
-             const RTensor& B, const Labels& bi, 
-             RTensor& C,       const Labels& ci,
+contractloop(const RTensor& A, const Label& ai, 
+             const RTensor& B, const Label& bi, 
+             RTensor& C,       const Label& ci,
              const Args& args = Global::args());
 
 }; //namespace itensor

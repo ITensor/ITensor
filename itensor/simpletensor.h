@@ -84,6 +84,12 @@ class Range
     const index&
     back() const { return inds_.back(); }
 
+    void
+    swap(Range& other)
+        {
+        inds_.swap(other.inds_);
+        }
+
     private:
 
     template<typename Iterable>
@@ -443,6 +449,14 @@ class simpletensor
         vec_.clear();
         inds_.clear();
         data_ = nullptr;
+        }
+
+    void
+    swap(simpletensor& other)
+        {
+        vec_.swap(other.vec_);
+        inds_.swap(other.inds_);
+        std::swap(data_,other.data_);
         }
 
     private:

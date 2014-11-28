@@ -9,64 +9,80 @@ using std::set_intersection;
 namespace itensor {
 
 void 
-reshape(const RTensor& x, Permutation p, RTensor& res)
+reshape(const RTensor& T, 
+        const Permutation& P, 
+        RTensor& res)
     {
-    int d = x.r();
-    vector<long> resdims(d);
-    for(int i = 0; i < d; i++)
-	resdims[p.dest(i)] = x.n(i);
-    res.resize(resdims);
-    long bigind = 0, big = x.n(0);
-    for(int m = 1; m < d; m++)
-	if(big < x.n(m))
-	    big = x.n(m), bigind = m;
-    long stepx = x.stride(bigind);
-    int rbigind = p.dest(bigind);
-    long stepr = res.stride(rbigind);
+    auto r = T.r();
 
-    GCounter c(0,d-1,0);
-    for(int i = 0; i < d; i++)
-	c.setInd(i,0,x.n(i)-1);
+    vector<long> resdims(r);
+    for(int i = 0; i < r; ++i)
+        resdims[P.dest(i)] = T.n(i);
+    res.resize(resdims);
+
+    //find largest dimension of T,
+    //size "big" and position "bigind"
+    long bigind = 0, 
+         big = T.n(0);
+    for(int m = 1; m < r; ++m)
+        if(big < T.n(m))
+            {
+            big = T.n(m); 
+            bigind = m;
+            }
+
+    auto stept = T.stride(bigind);
+    auto rbigind = P.dest(bigind);
+    auto stepr = res.stride(rbigind);
+
+    GCounter c(0,r-1,0);
+    for(int i = 0; i < r; ++i)
+        c.setInd(i,0,T.n(i)-1);
     c.setInd(bigind,0,0);		// This one we leave at 0 only
-    Labels xi(d), 
-           ri(d);
+
+    Label Ti(r), 
+          ri(r);
     for(; c.notDone(); ++c)
         {
-        for(int i = 0; i < d; i++)
-            xi[i] = ri[p.dest(i)] = c.i.fast(i);
+        for(int i = 0; i < r; ++i)
+            Ti[i] = ri[P.dest(i)] = c.i.fast(i);
 
-        int xstart = ind(x,xi);
-        int rstart = ind(res,ri);
-        for(int k = 0; k < big; k++)
-            res.vref(rstart+k*stepr) = x.v(xstart+k*stepx);
+        auto* pr = &res.vref(ind(res,ri));
+        auto* pt = &T.v(ind(T,Ti));
+        for(int k = 0; k < big; ++k)
+            {
+            *pr = *pt;
+            pr += stepr;
+            pt += stept;
+            }
         }
     }
 
 void 
-contract_reshape(const RTensor& A, const Labels& ai, 
-                 const RTensor& B, const Labels& bi, 
-                 RTensor& C, const Labels& ci)
+contract_reshape(const RTensor& A, const Label& ai, 
+                 const RTensor& B, const Label& bi, 
+                 RTensor& C, const Label& ci)
     {
-    int na = A.r(), 
-        nb = B.r(), 
-        nc = C.r();
-
-    Labels newai(ai), 
-           newbi(bi), 
-           newci(ci);
+    Label newai(ai), 
+          newbi(bi), 
+          newci(ci);
     std::sort(newai.begin(),newai.end());
     std::sort(newbi.begin(),newbi.end());
     std::sort(newci.begin(),newci.end());
 
-    Labels leftind, 
-           midind,
-           rightind;
+    Label leftind, 
+          midind,
+          rightind;
     //midind is contracted indices
     set_intersection(newai.begin(),newai.end(),newbi.begin(),newbi.end(),back_inserter(midind));
     //leftind is uncontracted indices of A
     set_intersection(newai.begin(),newai.end(),newci.begin(),newci.end(),back_inserter(leftind));
     //rightind is uncontracted indices of A
     set_intersection(newbi.begin(),newbi.end(),newci.begin(),newci.end(),back_inserter(rightind));
+
+    //PRI(leftind)
+    //PRI(midind)
+    //PRI(rightind)
 
     newai=leftind;
     newbi=midind;
@@ -75,71 +91,111 @@ contract_reshape(const RTensor& A, const Labels& ai,
     newbi.insert(newbi.end(),rightind.begin(),rightind.end());
     newci.insert(newci.end(),rightind.begin(),rightind.end());
 
-    Permutation PA(na), 
-                PB(nb), 
-                PC(nc);
-    detail::calc_permutation(ai,newai,PA);
-    detail::calc_permutation(bi,newbi,PA);
-    detail::calc_permutation(ci,newci,PA);
-    //for(int i = 0; i < na; i++)
-    //    {
-    //    PA.setFromTo(i,findIndex(newai,ai[i]));
-    //    }
-    //for(int i = 0; i < nb; i++)
-    //    {
-    //    PB.setFromTo(i,findIndex(newbi,bi[i]));
-    //    }
-    //for(int i = 0; i < nc; i++)
-    //    {
-    //    PC.setFromTo(i,findIndex(newci,ci[i]));
-    //    }
+    //PRI(ai)
+    //PRI(bi)
+    //PRI(ci)
+    //PRI(newai)
+    //PRI(newbi)
+    //PRI(newci)
 
-    Permutation rA(inverse(PA)), 
-                rB(inverse(PB)), 
-                rC(inverse(PC));
+    Permutation PA(ai.size()), 
+                PB(bi.size()), 
+                PC(ci.size());
+    for(size_t i = 0; i < ai.size(); ++i)
+        {
+        PA.setFromTo(i,findIndex(newai,ai[i]));
+        }
+    for(size_t i = 0; i < bi.size(); ++i)
+        {
+        PB.setFromTo(i,findIndex(newbi,bi[i]));
+        }
+    for(size_t i = 0; i < ci.size(); ++i)
+        {
+        PC.setFromTo(i,findIndex(newci,ci[i]));
+        }
+    //Print(PA);
+    //Print(PB);
+    //Print(PC);
 
-    RTensor newA, newB;
+    //////////////////////
     cpu_time cpu;
-    reshape(A,rA,newA);
-    reshape(B,rB,newB);
+
+    RTensor newA;
+    const auto *pnA = &newA;
+    if(PA.isTrivial()) pnA = &A;
+    else               {println("Calling reshape A"); reshape(A,PA,newA); }
+
+    RTensor newB;
+    const auto *pnB = &newB;
+    if(PB.isTrivial()) pnB = &B;
+    else               {println("Calling reshape B"); reshape(B,PB,newB); }
+
     println("A and B reshaped, took ",cpu.sincemark());
+    println("pnA now has dims:");
+    for(int i = 0; i < pnA->r(); ++i)
+        print(pnA->n(i)," ");
+    println();
+    println("pnB now has dims:");
+    for(int i = 0; i < pnB->r(); ++i)
+        print(pnB->n(i)," ");
+    println();
+    //////////////////////
+
     int dimleft = leftind.size(),
         dimmid = midind.size(),
         dimright = rightind.size();
     long nleft = 1, 
          nmid = 1, 
          nright = 1;
-    for(int i = 0; i < dimleft; i++)
-        nleft *= newA.n(i);
+    for(int i = 0; i < dimleft; ++i)
+        {
+        //printfln("A.n(%d) = %d",i,A.n(i));
+        //printfln("pnA->n(%d) = %d",i,pnA->n(i));
+        nleft *= pnA->n(i);
+        }
     for(int i = 0; i < dimmid; i++)
-        nmid *= newB.n(i);
+        {
+        //printfln("B.n(%d) = %d",i,B.n(i));
+        //printfln("pnB->n(%d) = %d",i,pnB->n(i));
+        nmid *= pnB->n(i);
+        }
     for(int i = 0; i < dimright; i++)
-        nright *= newB.n(i+dimmid);
+        {
+        //printfln("B.n(%d) = %d",i+dimmid,B.n(i+dimmid));
+        //printfln("pnB->n(%d) = %d",i+dimmid,pnB->n(i+dimmid));
+        nright *= pnB->n(i+dimmid);
+        }
+
+    Print(nleft);
+    Print(nmid);
+    Print(nright);
 
     vector<long> cn(dimleft+dimright);
     for(int i = 0; i < dimleft; i++)
-        cn[i] = newA.n(i);
+        cn[i] = pnA->n(i);
     for(int i = 0; i < dimright; i++)
-        cn[dimleft+i] = newB.n(dimmid+i);
+        cn[dimleft+i] = pnB->n(dimmid+i);
     RTensor newC(cn);
 
-    VectorRefNoLink nAv(newA.data(),newA.size()),
-                    nBv(newB.data(),newB.size()),
+    VectorRefNoLink nAv(const_cast<Real*>(pnA->data()),pnA->size()),
+                    nBv(const_cast<Real*>(pnB->data()),pnB->size()),
                     nCv(newC.data(),newC.size());
     MatrixRefNoLink mA, 
                     mB;
-    MatrixRef cref;
     nAv.TreatAsMatrix(mA,nmid,nleft);
     nBv.TreatAsMatrix(mB,nright,nmid);
-    nCv.TreatAsMatrix(cref,nright,nleft);
+
+    MatrixRef cref;
+    nCv.TreatAsMatrix(cref,mB.Nrows(),mA.Ncols());
 
     cpu.mark();
-    printfln("Multiplying a %d,%d x %d,%d",mB.Nrows(),mB.Ncols(),mA.Nrows(),mA.Ncols());
+    printfln("Multiplying a %dx%d * %dx%d (mB * mA)",mB.Nrows(),mB.Ncols(),mA.Nrows(),mA.Ncols());
     cref = mB * mA;
     println("Matrix multiply done, took ",cpu.sincemark());
 
     cpu.mark();
-    reshape(newC,PC,C);
+    if(PC.isTrivial()) { C.swap(newC); println("PC trivial, swapping newC and C"); }
+    else               reshape(newC,PC,C);
     println("C reshaped, took ",cpu.sincemark());
 
     return;
@@ -177,9 +233,9 @@ mult_add(SimpleMatrixRef A, SimpleMatrixRef B, SimpleMatrixRef C)  // C += A * B
     }
 
 std::function<void(ABoffC&)> 
-computeCAB(const Labels& ai, 
-           const Labels& bi, 
-           const Labels& ci)
+computeCAB(const Label& ai, 
+           const Label& bi, 
+           const Label& ci)
     {
     if(ai[1] == ci[1])
         {
@@ -214,9 +270,9 @@ computeCAB(const Labels& ai,
     }
 
 void 
-contractloop(const RTensor& A, const Labels& ai, 
-             const RTensor& B, const Labels& bi, 
-             RTensor& C,       const Labels& ci,
+contractloop(const RTensor& A, const Label& ai, 
+             const RTensor& B, const Label& bi, 
+             RTensor& C,       const Label& ci,
              const Args& args)
     {
     auto nthread = args.getInt("NThread",4);
@@ -256,7 +312,7 @@ contractloop(const RTensor& A, const Labels& ai,
     for(int j = 2; j < rb; ++j)
         couB.setInd(j,0,B.n(j)-1);
 
-    Labels aind(ra,0), 
+    Label aind(ra,0), 
            bind(rb,0), 
            cind(rc,0);
     for(; couA.notDone(); ++couA)
