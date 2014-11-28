@@ -323,6 +323,9 @@ struct SimpleMatrixRef
         transpose(m.DoTranspose())
         { }
 
+    void
+    ApplyTrans() { transpose = !transpose; }
+
     SimpleMatrixRef 
     t()
         { 
