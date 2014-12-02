@@ -389,7 +389,6 @@ operator*=(const ITensor& other)
         cout << x << ",";
         }
     println("}");
-    //exit(0);
 
     applyFunc<Contract>(store_,other.store_,{Lind,Rind,Pind,new_index});
 
