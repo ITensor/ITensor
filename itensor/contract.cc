@@ -8,6 +8,123 @@ using std::set_intersection;
 
 namespace itensor {
 
+// struct analyzing index pattern for C = A * B
+struct ABCProps
+    {
+    const Label &ai, 
+                &bi, 
+                &ci;
+    int nactiveA, 
+        nactiveB, 
+        nactiveC;
+    Label AtoB, 
+          AtoC, 
+          BtoC;
+    int ncont,
+        Acstart,
+        Bcstart;
+    
+    ABCProps(const Label& ai_, 
+             const Label& bi_, 
+             const Label& ci_) 
+        : 
+        ai(ai_),bi(bi_),ci(ci_),
+        nactiveA(0),
+        nactiveB(0),
+        nactiveC(0),
+        ncont(0),
+        Acstart(ai_.size()),
+        Bcstart(bi_.size())
+        { }
+
+    ABCProps(const ABCProps&) = delete;
+
+
+    void 
+    computePerms()
+        {
+        if(!AtoB.empty()) return;
+
+        int na = ai.size(), 
+            nb = bi.size(), 
+            nc = ci.size();
+
+        AtoB = Label(na,-1);
+        AtoC = Label(na,-1);
+        BtoC = Label(nb,-1);
+        for(int i = 0; i < na; ++i)
+            {
+            for(int j = 0; j < nb; ++j)
+                if(ai[i] == bi[j]) 
+                    {
+                    ++ncont;
+                    if(i < Acstart) Acstart = i;
+                    if(j < Bcstart) Bcstart = j;
+                    AtoB[i] = j;
+                    break;
+                    }
+            }
+
+        for(int i = 0; i < na; ++i)
+            {
+            for(int k = 0; k < nc; ++k)
+                if(ai[i] == ci[k]) 
+                    {
+                    AtoC[i] = k;
+                    break;
+                    }
+            }
+
+        for(int j = 0; j < nb; ++j)
+            {
+            for(int k = 0; k < nc; ++k)
+                if(bi[j] == ci[k]) 
+                    {
+                    BtoC[j] = k;
+                    break;
+                    }
+            }
+        //PRI(AtoB)
+        //PRI(AtoC)
+        //PRI(BtoC)
+        }
+
+    void
+    computeNactive()
+        {
+        // Out of A, B and C  (C = A*B), each index appears in two tensors.
+        // An active index appears as one of the first two indices in each of the two 
+        // tensor in which it appears.  More specifically:
+        // the first index of a tensor is active if its pair is also a first index, or if its
+        // pair is a second index and that tensor's first index is active.
+
+        // indval is the number of times an index appears among the first two of each tensor
+        // Good indices have indval == 2, bad ones have indval == 1
+
+        if(ai.size() < 2) error("rank of A is < 2");
+        if(bi.size() < 2) error("rank of B is < 2");
+        if(ci.size() < 2) error("rank of C is < 2");
+
+        small_map<int,int> indval;
+        for(int i = 0; i <= 1; ++i)
+            {
+            ++indval[ai[i]]; 
+            ++indval[bi[i]]; 
+            ++indval[ci[i]]; 
+            }
+
+        for(int elim = 1; elim <= 3; ++elim) // bad guys at position 0 kill the index at 1
+            {
+            if(indval[ai[0]] == 1) indval[ai[1]] = 1;
+            if(indval[bi[0]] == 1) indval[bi[1]] = 1;
+            if(indval[ci[0]] == 1) indval[ci[1]] = 1;
+            }
+        nactiveA = (indval[ai[0]] == 1 ? 0 : (indval[ai[1]] == 1 ? 1 : 2));
+        nactiveB = (indval[bi[0]] == 1 ? 0 : (indval[bi[1]] == 1 ? 1 : 2));
+        nactiveC = (indval[ci[0]] == 1 ? 0 : (indval[ci[1]] == 1 ? 1 : 2));
+        }
+    };
+
 //
 // small_map has an interface similar to std::map
 // but can only contain N elements and uses linear search
@@ -131,7 +248,6 @@ mult_add(SimpleMatrixRef A, SimpleMatrixRef B, SimpleMatrixRef C)  // C += A * B
     BlasInt ldb = A.rowStride();
     BlasInt ldc = C.rowStride();
 
-    //Real beta = noclear ? 1.0 : 0.0;
     Real beta = 1.0;
     Real sca = 1.0;
     Real *pa = const_cast<Real*>(B.store());
@@ -186,15 +302,15 @@ class CABqueue
         {
 
         //////////
-        //Analyze tasks:
-        println("number of distinct offCs is ",subtask.size());
-        int ttasks = 0;
-        for(auto& st : subtask) ttasks += st.second.size();
-        println("number of distinct tasks is ",ttasks);
-        size_t maxj = 0;
-        for(const auto& st : subtask)
-            maxj = std::max(st.second.size(),maxj);
-        println("max subtask size is ",maxj);
+        ////Analyze tasks:
+        //println("number of distinct offCs is ",subtask.size());
+        //int ttasks = 0;
+        //for(auto& st : subtask) ttasks += st.second.size();
+        //println("number of distinct tasks is ",ttasks);
+        //size_t maxj = 0;
+        //for(const auto& st : subtask)
+        //    maxj = std::max(st.second.size(),maxj);
+        //println("max subtask size is ",maxj);
         //////////
 
         //Loop over threads in a round-robin fashion.
@@ -216,7 +332,7 @@ class CABqueue
         for(size_t i = 0; i < numthread; ++i)
             {
             auto& tt = threadtask[i];
-            printfln("task size for thread %d is %d",i,tt.size());
+            //printfln("task size for thread %d is %d",i,tt.size());
             futs[i] = std::async(std::launch::async,
                       [&tt]()
                           { 
@@ -233,86 +349,6 @@ class CABqueue
         }
     };
 
-// struct analyzing index pattern for C = A * B
-struct ABCProps
-    {
-    const Label &ai, 
-                &bi, 
-                &ci;
-    int nactiveA, 
-        nactiveB, 
-        nactiveC;
-    Label AtoB, 
-          AtoC, 
-          BtoC;
-
-    ABCProps(const Label& ai_, 
-            const Label& bi_, 
-            const Label& ci_) 
-        : 
-        ai(ai_), 
-        bi(bi_), 
-        ci(ci_)
-        {
-        // Out of A, B and C  (C = A*B), each index appears in two tensors.
-        // An active index appears as one of the first two indices in each of the two 
-        // tensor in which it appears.  More specifically:
-        // the first index of a tensor is active if its pair is also a first index, or if its
-        // pair is a second index and that tensor's first index is active.
-
-        // indval is the number of times an index appears among the first two of each tensor
-        // Good indices have indval == 2, bad ones have indval == 1
-
-        if(ai.size() < 2) error("rank of A is < 2");
-        if(bi.size() < 2) error("rank of B is < 2");
-        if(ci.size() < 2) error("rank of C is < 2");
-
-        small_map<int,int> indval;
-        for(int i = 0; i <= 1; ++i)
-            {
-            //(Miles asks: Doesn't this always just set indval[xi[i]] = 2; for x = a,b,c ?)
-            ++indval[ai[i]]; 
-            ++indval[bi[i]]; 
-            ++indval[ci[i]]; 
-            }
-
-        for(int elim = 1; elim <= 3; ++elim) // bad guys at position 0 kill the index at 1
-            {
-            if(indval[ai[0]] == 1) indval[ai[1]] = 1;
-            if(indval[bi[0]] == 1) indval[bi[1]] = 1;
-            if(indval[ci[0]] == 1) indval[ci[1]] = 1;
-            }
-        nactiveA = (indval[ai[0]] == 1 ? 0 : (indval[ai[1]] == 1 ? 1 : 2));
-        nactiveB = (indval[bi[0]] == 1 ? 0 : (indval[bi[1]] == 1 ? 1 : 2));
-        nactiveC = (indval[ci[0]] == 1 ? 0 : (indval[ci[1]] == 1 ? 1 : 2));
-        }
-
-    void 
-    get_AtoBs()
-        {
-        int na = ai.size(), 
-            nb = bi.size(), 
-            nc = ci.size();
-
-        AtoB = Label(na,-1);
-        AtoC = Label(na,-1);
-        BtoC = Label(nb,-1);
-        for(int i = 0; i < na; i++)
-        for(int j = 0; j < nb; j++)
-            if(ai[i] == bi[j]) AtoB[i] = j;
-
-        for(int i = 0; i < na; i++)
-        for(int j = 0; j < nc; j++)
-            if(ai[i] == ci[j]) AtoC[i] = j;
-
-        for(int i = 0; i < nb; i++)
-        for(int j = 0; j < nc; j++)
-            if(bi[i] == ci[j]) BtoC[i] = j;
-        PRI(AtoB)
-        PRI(AtoC)
-        PRI(BtoC)
-        }
-    };
 
 void 
 reshape(const RTensor& T, 
@@ -381,17 +417,67 @@ reshape(const RTensor& T,
 
 
 void 
-contract(const ABCProps& prop,
-         const RTensor& A, const Label& ai, 
-         const RTensor& B, const Label& bi, 
-               RTensor& C, const Label& ci)
+contract(const ABCProps& abc,
+         const RTensor& A, 
+         const RTensor& B, 
+               RTensor& C)
     {
+    // Optimizations to do:
+    // o In cases where only one of A or B is matrix-like due
+    //   to contracted inds appearing in a different order,
+    //   reshape the smaller of the two tensors instead of always
+    //   just reshaping A.
+    //
 
-    //Check if A is matrix-like
+    auto contracted = [](int n) { return n < 0; }
+    auto uncontracted = [](int n) { return n >= 0; }
 
-    Label newai(ai), 
-          newbi(bi), 
-          newci(ci);
+    //Check if A and B are matrix-like
+    bool Aismatrix = true,
+         Bismatrix = true;
+    if(abc.ncont > 0)
+        {
+        for(int i = 0; i < abc.ncont; ++i)
+            {
+            //If contracted indices are not contiguous
+            //or in a different order from those of B,
+            //A is not matrix-like
+            auto aind = abc.Acstart+i;
+                 bind = abc.Bcstart+i;
+            if(uncontracted(abc.AtoC[aind]) || abc.AtoB[aind] != bind)
+                {
+                Aismatrix = false;
+                break;
+                }
+            }
+        //If contracted indices are not all at front or back, A is not matrix-like
+        if(!(contracted(abc.AtoC.front()) || contracted(abc.AtoC.back())))
+            {
+            Aismatrix = false;
+            }
+
+        for(int i = 0; i < abc.ncont; ++i)
+            {
+            //If contracted indices are not contiguous
+            //B is not matrix-like
+            auto bind = abc.Bcstart+i;
+            if(uncontracted(abc.BtoC[bind]))
+                {
+                Bismatrix = false;
+                break;
+                }
+            }
+        //If contracted indices are not all at front or back, B is not matrix-like
+        if(!(contracted(abc.BtoC.front()) || contracted(abc.BtoC.back())))
+            {
+            Bismatrix = false;
+            }
+        }
+
+
+    Label newai(abc.ai),
+          newbi(abc.bi),
+          newci(abc.ci);
     std::sort(newai.begin(),newai.end());
     std::sort(newbi.begin(),newbi.end());
     std::sort(newci.begin(),newci.end());
@@ -424,20 +510,20 @@ contract(const ABCProps& prop,
     //PRI(newbi)
     //PRI(newci)
 
-    Permutation PA(ai.size()), 
-                PB(bi.size()), 
-                PC(ci.size());
-    for(size_t i = 0; i < ai.size(); ++i)
+    Permutation PA(abc.ai.size()), 
+                PB(abc.bi.size()), 
+                PC(abc.ci.size());
+    for(size_t i = 0; i < abc.ai.size(); ++i)
         {
-        PA.setFromTo(i,findIndex(newai,ai[i]));
+        PA.setFromTo(i,findIndex(newai,abc.ai[i]));
         }
-    for(size_t i = 0; i < bi.size(); ++i)
+    for(size_t i = 0; i < abc.bi.size(); ++i)
         {
-        PB.setFromTo(i,findIndex(newbi,bi[i]));
+        PB.setFromTo(i,findIndex(newbi,abc.bi[i]));
         }
-    for(size_t i = 0; i < ci.size(); ++i)
+    for(size_t i = 0; i < abc.ci.size(); ++i)
         {
-        PC.setFromTo(i,findIndex(newci,ci[i]));
+        PC.setFromTo(i,findIndex(newci,abc.ci[i]));
         }
     //Print(PA);
     //Print(PB);
@@ -530,8 +616,8 @@ contract(const RTensor& A, const Label& ai,
          const RTensor& B, const Label& bi, 
                RTensor& C, const Label& ci)
     {
-    auto prop = ABCProps(ai,bi,ci);
-    contract(prop,A,ai,B,bi,C,ci);
+    ABCProps prop(ai,bi,ci);
+    contract(prop,A,B,C);
     }
 
 
@@ -658,18 +744,18 @@ contractloop(const RTensor& A, const Label& ai,
          rb = B.r(), 
          rc = C.r();
     ABCProps abc(ai,bi,ci);
-    printfln("nactiveA, B, C are %d %d %d",abc.nactiveA,abc.nactiveB,abc.nactiveC);
+    abc.computeNactive();
 
+    //printfln("nactiveA, B, C are %d %d %d",abc.nactiveA,abc.nactiveB,abc.nactiveC);
     if(abc.nactiveA != 2 || abc.nactiveB != 2 || abc.nactiveC != 2)
         {
         println("calling contract from within contractloop");
-        contract(A,ai,B,bi,C,ci);
+        contract(abc,A,B,C);
         return;
         }
 
-    abc.get_AtoBs();
+    abc.computePerms();
 
-    CABqueue cabq;
     auto nfo = computeMultInfo(ai,bi,ci);
 
     auto Arow = A.n(1), Acol = A.n(0); // Matrix Column index incs the fastest
@@ -692,8 +778,11 @@ contractloop(const RTensor& A, const Label& ai,
         couB.setInd(j,0,B.n(j)-1);
 
     Label aind(ra,0), 
-           bind(rb,0), 
-           cind(rc,0);
+          bind(rb,0), 
+          cind(rc,0);
+
+    CABqueue cabq;
+
     for(; couA.notDone(); ++couA)
         {
         for(int ia = 2; ia < ra; ++ia)
