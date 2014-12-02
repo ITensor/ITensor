@@ -310,25 +310,25 @@ psiHKphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPOt<Tensor>& K,c
     {
     if(psi.N() != phi.N() || psi.N() != H.N() || psi.N() != K.N()) Error("Mismatched N in psiHKphi");
     int N = psi.N();
-    MPSt<Tensor> psiconj(psi);
+    MPSt<Tensor> psidag(psi);
     for(int i = 1; i <= N; i++)
         {
-        psiconj.Anc(i) = conj(psi.A(i));
-        psiconj.Anc(i).mapprime(0,2);
+        psidag.Anc(i) = dag(psi.A(i));
+        psidag.Anc(i).mapprime(0,2);
         }
     MPOt<Tensor> Kp(K);
     Kp.mapprime(1,2);
     Kp.mapprime(0,1);
 
     //scales as m^2 k^2 d
-    Tensor L = (((phi.A(1) * H.A(1)) * Kp.A(1)) * psiconj.A(1));
+    Tensor L = (((phi.A(1) * H.A(1)) * Kp.A(1)) * psidag.A(1));
     for(int i = 2; i < N; i++)
         {
         //scales as m^3 k^2 d + m^2 k^3 d^2
-        L = ((((L * phi.A(i)) * H.A(i)) * Kp.A(i)) * psiconj.A(i));
+        L = ((((L * phi.A(i)) * H.A(i)) * Kp.A(i)) * psidag.A(i));
         }
     //scales as m^2 k^2 d
-    L = ((((L * phi.A(N)) * H.A(N)) * Kp.A(N)) * psiconj.A(N));
+    L = ((((L * phi.A(N)) * H.A(N)) * Kp.A(N)) * psidag.A(N));
     //cout << "in psiHKpsi, L is "; PrintData(L);
     Complex z = L.toComplex();
     re = z.real();
