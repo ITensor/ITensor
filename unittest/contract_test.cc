@@ -4,106 +4,8 @@
 
 using namespace itensor;
 
-//struct GetFront
-//    {
-//    const Real* front;
-//
-//    GetFront() {}
-//
-//    NewData
-//    operator()(const ITDense<Real>& d)
-//        {
-//        front = d.data.data();
-//        return NewData();
-//        }
-//
-//    NewData
-//    operator()(const ITDiag<Real>& d)
-//        {
-//        Error("Encountered Diag ITensor");
-//        return NewData();
-//        }
-//
-//    NewData
-//    operator()(const ITDense<Complex>& d)
-//        {
-//        Error("Encountered Complex ITensor");
-//        return NewData();
-//        }
-//
-//    NewData
-//    operator()(const ITDiag<Complex>& d)
-//        {
-//        Error("Encountered Complex Diag ITensor");
-//        return NewData();
-//        }
-//
-//    //template<typename T>
-//    //NewData
-//    //operator()(T& d) 
-//    //    { 
-//    //    Error("GetFront not supported"); 
-//    //    return NewData(); 
-//    //    }
-//    };
-//
-//void 
-//simple_from_ITensor(const ITensor& it, RTensor& st)
-//    {
-//    if(isComplex(it)) error("Complex case not implemented yet");
-//    auto r = it.r();
-//    std::vector<long> n(r);
-//    const auto& is = it.indices();
-//    for(int i = 0; i < r; ++i)
-//        n[i] = is[i].m();
-//    //PRI(n)
-//    auto front = applyFunc<GetFront>(it.data()).front;
-//    st = RTensor(front,std::move(n));
-//    }
-//
-//// C += A * B
-//void 
-//mult_add(ITensor& A, 
-//         ITensor& B, 
-//         ITensor& C,
-//         const Args& args)
-//    {
-//    //Convert ITensors to RTensors
-//    RTensor a,b,c;
-//    println("Calling simple_from_ITensor A");
-//    simple_from_ITensor(A,a);
-//    println("Calling simple_from_ITensor B");
-//    simple_from_ITensor(B,b);
-//    println("Calling simple_from_ITensor C");
-//    simple_from_ITensor(C,c);
-//
-//    //Make a small_map which maps each unique Index
-//    //to a unique integer
-//    int i = 0;
-//    small_map<Index,int> imap;
-//    for(auto ind : A.inds())
-//        if(imap[ind] == 0) imap[ind] = ++i;
-//    for(auto ind : B.inds())
-//        if(imap[ind] == 0) imap[ind] = ++i;
-//
-//    //Create vectors of integers instructing
-//    //contractloop how to contract A with B
-//    Label ai(A.r()),
-//          bi(B.r()),
-//          ci(C.r());
-//    for(int j = 0; j < A.r(); ++j)
-//        ai.at(j) = imap[A.inds()[j]];
-//    for(int j = 0; j < B.r(); ++j)
-//        bi.at(j) = imap[B.inds()[j]];
-//    for(int j = 0; j < C.r(); ++j)
-//        ci.at(j) = imap[C.inds()[j]];
-//
-//    contractloop(a,ai,b,bi,c,ci,args);
-//    }
-
 TEST_CASE("Contract Test")
     {
-
     auto randomize = [](auto& t)
         {
         for(auto& elt : t) elt = Global::random();
@@ -333,7 +235,7 @@ TEST_CASE("Contract Test")
                 }
             }
 
-        } // Contract Reshape Non-Matrix
+        } // Contract Reshape Matrix
 
     //SECTION("Contract Loop")
     //    {
