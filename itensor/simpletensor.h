@@ -263,6 +263,16 @@ class simpletensor
         }
 
     // U == int or long
+    template<typename U>
+    simpletensor(const std::vector<U>& dims,
+                 const T& val)
+        : 
+        inds_(dims)
+        { 
+        init(true,val);
+        }
+
+    // U == int or long
     template<typename U, typename InputIterator>
     simpletensor(const std::vector<U>& dims,
                  InputIterator first,
@@ -481,6 +491,18 @@ class simpletensor
             {
             if(vec_.size() != len)
                 vec_ = storage_type(len);
+            data_ = &vec_.front();
+            }
+        }
+
+    void 
+    init(bool ownstore, const T& val)
+        {
+        auto len = area(inds_);
+        if(ownstore && len > 0)
+            {
+            if(vec_.size() != len)
+                vec_ = storage_type(len,val);
             data_ = &vec_.front();
             }
         }
