@@ -124,28 +124,28 @@ TEST_CASE("Contract Test")
     //        }
     //    }
 
-    //SECTION("Contract Reshape Non-Matrix")
-    //    {
-    //    SECTION("Case 1")
-    //        {
-    //        RTensor A(2,3,4),
-    //                B(3,7,2),
-    //                C;
-    //        randomize(A);
-    //        randomize(B);
-    //        contract(A,{2,3,4},B,{3,7,2},C,{4,7});
-    //        for(int i4 = 0; i4 < 4; ++i4)
-    //        for(int i7 = 0; i7 < 7; ++i7)
-    //            {
-    //            Real val = 0;
-    //            for(int i2 = 0; i2 < 2; ++i2)
-    //            for(int i3 = 0; i3 < 3; ++i3)
-    //                {
-    //                val += A(i2,i3,i4)*B(i3,i7,i2);
-    //                }
-    //            CHECK_REQUAL(C(i4,i7),val);
-    //            }
-    //        }
+    SECTION("Contract Reshape Non-Matrix")
+        {
+        SECTION("Case 1")
+            {
+            RTensor A(2,3,4),
+                    B(3,7,2),
+                    C;
+            randomize(A);
+            randomize(B);
+            contract(A,{2,3,4},B,{3,7,2},C,{4,7});
+            for(int i4 = 0; i4 < 4; ++i4)
+            for(int i7 = 0; i7 < 7; ++i7)
+                {
+                Real val = 0;
+                for(int i2 = 0; i2 < 2; ++i2)
+                for(int i3 = 0; i3 < 3; ++i3)
+                    {
+                    val += A(i2,i3,i4)*B(i3,i7,i2);
+                    }
+                CHECK_REQUAL(C(i4,i7),val);
+                }
+            }
 
     //    SECTION("Case 2")
     //        {
@@ -210,30 +210,79 @@ TEST_CASE("Contract Test")
     //            }
     //        }
 
-    //    } // Contract Reshape Non-Matrix
+    //    SECTION("Case NM1")
+    //        {
+    //        RTensor A(2,3,4),
+    //                B(7,3,2),
+    //                C;
+    //        randomize(A);
+    //        randomize(B);
+    //        contract(A,{2,3,4},B,{7,3,2},C,{4,7});
+    //        for(int i4 = 0; i4 < 4; ++i4)
+    //        for(int i7 = 0; i7 < 7; ++i7)
+    //            {
+    //            Real val = 0;
+    //            for(int i2 = 0; i2 < 2; ++i2)
+    //            for(int i3 = 0; i3 < 3; ++i3)
+    //                {
+    //                val += A(i2,i3,i4)*B(i7,i3,i2);
+    //                }
+    //            CHECK_REQUAL(C(i4,i7),val);
+    //            }
+    //        }
+
+    //    SECTION("Case NM2")
+    //        {
+    //        RTensor A(2,3,4,5),
+    //                B(7,6,3,2),
+    //                C;
+    //        randomize(A);
+    //        randomize(B);
+    //        contract(A,{2,3,4,5},B,{7,6,3,2},C,{5,4,6,7});
+    //        REQUIRE(C.n(0) == 5);
+    //        REQUIRE(C.n(1) == 4);
+    //        REQUIRE(C.n(2) == 6);
+    //        REQUIRE(C.n(3) == 7);
+    //        for(int i4 = 0; i4 < 4; ++i4)
+    //        for(int i5 = 0; i5 < 5; ++i5)
+    //        for(int i6 = 0; i6 < 6; ++i6)
+    //        for(int i7 = 0; i7 < 7; ++i7)
+    //            {
+    //            Real val = 0;
+    //            for(int i2 = 0; i2 < 2; ++i2)
+    //            for(int i3 = 0; i3 < 3; ++i3)
+    //                {
+    //                val += A(i2,i3,i4,i5)*B(i7,i6,i3,i2);
+    //                }
+    //            CHECK_REQUAL(C(i5,i4,i6,i7),val);
+    //            }
+    //        }
+
+        } // Contract Reshape Non-Matrix
 
     SECTION("Contract Reshape Matrix")
         {
-        SECTION("Case M1")
-            {
-            RTensor A(2,3,4),
-                    B(7,2,3),
-                    C;
-            randomize(A);
-            randomize(B);
-            contract(A,{2,3,4},B,{7,2,3},C,{4,7});
-            for(int i4 = 0; i4 < 4; ++i4)
-            for(int i7 = 0; i7 < 7; ++i7)
-                {
-                Real val = 0;
-                for(int i2 = 0; i2 < 2; ++i2)
-                for(int i3 = 0; i3 < 3; ++i3)
-                    {
-                    val += A(i2,i3,i4)*B(i7,i2,i3);
-                    }
-                CHECK_REQUAL(C(i4,i7),val);
-                }
-            }
+        //SECTION("Case M1")
+        //    {
+        //    RTensor A(2,3,4),
+        //            B(7,2,3),
+        //            C;
+        //    randomize(A);
+        //    randomize(B);
+        //    contract(A,{2,3,4},B,{7,2,3},C,{4,7});
+        //    for(int i4 = 0; i4 < 4; ++i4)
+        //    for(int i7 = 0; i7 < 7; ++i7)
+        //        {
+        //        Real val = 0;
+        //        for(int i2 = 0; i2 < 2; ++i2)
+        //        for(int i3 = 0; i3 < 3; ++i3)
+        //            {
+        //            val += A(i2,i3,i4)*B(i7,i2,i3);
+        //            }
+        //        CHECK_REQUAL(C(i4,i7),val);
+        //        }
+        //    }
+
 
         } // Contract Reshape Matrix
 
