@@ -20,7 +20,6 @@ struct Permutation
     private: 
     ///////////
     storage store_;
-    bool trivial_;
     ///////////
     public:
 
@@ -29,8 +28,6 @@ struct Permutation
     long
     size() const { return long(store_.size()); }
 
-    bool 
-    isTrivial() const { return trivial_; }
 
     void 
     setFromTo(long from, 
@@ -50,8 +47,7 @@ struct Permutation
 inline Permutation::
 Permutation(size_type size) 
     : 
-    store_(size),
-    trivial_(true)
+    store_(size)
     { 
     for(size_type n = 0; n < size; ++n)
         store_[n] = n;
@@ -61,7 +57,6 @@ void inline Permutation::
 setFromTo(long from, 
           long to) 
     { 
-    if(from != to) trivial_ = false;
     GET(store_,from) = to; 
     }
 
@@ -72,6 +67,29 @@ inverse(const Permutation& P)
     for(long n = 0; n < P.size(); ++n) 
         inv.setFromTo(P.dest(n),n);
     return inv;
+    }
+
+bool inline
+isTrivial(const Permutation& P)
+    {
+    for(long n = 0; n < P.size(); ++n) 
+        {
+        if(P.dest(n) != n) return false;
+        }
+    return true;
+    }
+
+template<typename Iterable>
+void
+permute(const Permutation& P,
+        const Iterable& from,
+        Iterable& to)
+    {
+    using size_type = typename Iterable::size_type;
+    for(size_type i = 0; i < from.size(); ++i)
+        {
+        to[P.dest(i)] = from[i];
+        }
     }
 
 //bool inline Permutation::

@@ -207,7 +207,7 @@ ITensor(const Index& i1,
 //    is_(is_),
 //    scale_(t.scale_)
 //    {
-//    if(P.isTrivial()) 
+//    if(isTrivial(P)) 
 //        { 
 //        store_ = other.store_;
 //        }
