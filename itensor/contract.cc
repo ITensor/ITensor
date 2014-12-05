@@ -689,44 +689,6 @@ contract(const RTensor& A, const Label& ai,
     }
 
 
-//std::function<void(ABoffC&)> 
-//computeCAB(const Label& ai, 
-//           const Label& bi, 
-//           const Label& ci)
-//    {
-//    println("Need to replace computeCAB, which invokes virtual std::function, with directly transposing elements of task list");
-//    if(ai[1] == ci[1])
-//        {
-//        if(ai[0] == bi[1])  // C_ij = A_ik B_kj;  mC += mA * mB;
-//            return [](ABoffC& x){ mult_add(x.mA,x.mB,x.mC); };
-//        else //ai[0] == bi[0]) C_ij = A_ik B_jk;  mC += mA * mB.t();
-//            return [](ABoffC& x){ mult_add(x.mA,x.mB.t(),x.mC); };
-//        }
-//    else if(ai[1] == ci[0])
-//        {
-//        if(ai[0] == bi[1])  // C_ji = A_ik B_kj;  mC += mB.t() * mA.t();
-//            return [](ABoffC& x){ mult_add(x.mB.t(),x.mA.t(),x.mC); };
-//        else //ai[0] == bi[0]) C_ji = A_ik B_jk;  mC += mB * mA.t();
-//            return [](ABoffC& x){ mult_add(x.mB,x.mA.t(),x.mC); };
-//        }
-//    else if(ai[1] == bi[1])
-//        {
-//        if(ai[0] == ci[1])  // C_kj = A_ik B_ij;  mC += mA.t() * mB;
-//            return [](ABoffC& x){ mult_add(x.mA.t(),x.mB,x.mC); };
-//        else //ai[0] == ci[0]) C_jk = A_ik B_ij;  mC += mB.t() * mA;
-//            return [](ABoffC& x){ mult_add(x.mB.t(),x.mA,x.mC); };
-//        }
-//    else if(ai[1] == bi[0])
-//        {
-//        if(ai[0] == ci[1])  // C_ji = A_ik B_kj
-//            return [](ABoffC& x){ mult_add(x.mA.t(),x.mB.t(),x.mC); };
-//        else //ai[0] == ci[0]) C_ij = A_ik B_kj
-//            return [](ABoffC& x){ mult_add(x.mB,x.mA,x.mC); };
-//        }
-//    Error("Invalid tensor annotations passed to computeCAB");
-//    return [](ABoffC& x) { }; 
-//    }
-
 struct MultInfo
     {
     bool tA = false,
@@ -808,14 +770,11 @@ contractloop(const RTensor& A, const Label& ai,
              const Args& args)
     {
     auto nthread = args.getInt("NThread",4);
-    auto ra = A.r(), 
+    long ra = A.r(), 
          rb = B.r(), 
-         rc = C.r();
+         rc = ci.size();
     ABCProps abc(ai,bi,ci);
     abc.computeNactive();
-
-    println("Need to initialize C with zeros");
-    PAUSE
 
     //printfln("nactiveA, B, C are %d %d %d",abc.nactiveA,abc.nactiveB,abc.nactiveC);
     if(abc.nactiveA != 2 || abc.nactiveB != 2 || abc.nactiveC != 2)
@@ -826,6 +785,19 @@ contractloop(const RTensor& A, const Label& ai,
         }
 
     abc.computePerms();
+
+    vector<long> cdims(rc);
+    for(int i = 0; i < ra; ++i)
+        if(abc.AtoC[i] >= 0)
+            {
+            cdims[abc.AtoC[i]] = A.n(i);
+            }
+    for(int j = 0; j < rb; ++j)
+        if(abc.BtoC[j] >= 0)
+            {
+            cdims[abc.BtoC[j]] = B.n(j);
+            }
+    C = RTensor(cdims,0.);
 
     auto nfo = computeMultInfo(ai,bi,ci);
 
