@@ -41,6 +41,13 @@ printv(const std::vector<T>& t)
     for(const auto& i : t) print(i," ");
     println();
     }
+template<typename T, size_t size>
+void
+printv(const std::array<T,size>& t)
+    {
+    for(const auto& i : t) print(i," ");
+    println();
+    }
 template<typename T>
 void
 printv(const autovector<T>& t)

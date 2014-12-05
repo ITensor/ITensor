@@ -122,9 +122,11 @@ struct ABCProps
         // indval is the number of times an index appears among the first two of each tensor
         // Good indices have indval == 2, bad ones have indval == 1
 
-        if(ai.size() < 2) error("rank of A is < 2");
-        if(bi.size() < 2) error("rank of B is < 2");
-        if(ci.size() < 2) error("rank of C is < 2");
+        if(ai.size() < 2 || bi.size() < 2 || ci.size() < 2)
+            {
+            nactiveA = nactiveB = nactiveC = 0;
+            return;
+            }
 
         small_map<int,int> indval;
         for(int i = 0; i <= 1; ++i)
@@ -417,9 +419,9 @@ contract(ABCProps& abc,
     //   would require transposing C, then do aref*bref instead).
     //
 
-    int ra = A.r(),
-        rb = B.r(),
-        rc = int(abc.ci.size());
+    long ra = abc.ai.size(),
+         rb = abc.bi.size(),
+         rc = abc.ci.size();
 
     abc.computePerms();
 
@@ -457,6 +459,7 @@ contract(ABCProps& abc,
             ++c;
             }
         }
+
 
     // Check if A is matrix-like
     bool Aismatrix = true;
@@ -770,8 +773,8 @@ contractloop(const RTensor& A, const Label& ai,
              const Args& args)
     {
     auto nthread = args.getInt("NThread",4);
-    long ra = A.r(), 
-         rb = B.r(), 
+    long ra = ai.size(),
+         rb = bi.size(),
          rc = ci.size();
     ABCProps abc(ai,bi,ci);
     abc.computeNactive();

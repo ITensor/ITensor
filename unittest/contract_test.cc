@@ -258,6 +258,7 @@ TEST_CASE("Contract Test")
                 }
             }
 
+
         } // Contract Reshape Non-Matrix
 
     SECTION("Contract Reshape Matrix")
@@ -343,6 +344,28 @@ TEST_CASE("Contract Test")
                     val += A(i2,i3,i4)*B(i2,i3,i7);
                     }
                 CHECK_REQUAL(C(i4,i7),val);
+                }
+            }
+
+        SECTION("Regression Test 1")
+            {
+            RTensor A(4,3,2),
+                    B(5,4,3,2),
+                    C;
+            randomize(A);
+            randomize(B);
+            contract(A,{4,3,2},B,{5,4,3,2},C,{5});
+            REQUIRE(C.n(0) == 5);
+            for(int i5 = 0; i5 < 5; ++i5)
+                {
+                Real val = 0;
+                for(int i2 = 0; i2 < 2; ++i2)
+                for(int i3 = 0; i3 < 3; ++i3)
+                for(int i4 = 0; i4 < 4; ++i4)
+                    {
+                    val += A(i4,i3,i2)*B(i5,i4,i3,i2);
+                    }
+                CHECK_REQUAL(C(i5),val);
                 }
             }
 
