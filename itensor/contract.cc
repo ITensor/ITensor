@@ -404,22 +404,6 @@ reshape(const RTensor& T,
         }
     }
 
-//
-// contract optimizations to implement:
-//
-// o Detect matrix cases,
-//   separately for A and B. 
-//   Matrix if:
-//   - Contracted indices contiguous
-//   - Contracted indices all front or back
-//   
-// o If only one of A or B is matrix,
-//   reshape other (say B) to have contiguous
-//   inds in the same order so A doesn't
-//   have to be reshaped
-//
-
-
 void 
 contract(ABCProps& abc,
          const RTensor& A, 
@@ -428,17 +412,9 @@ contract(ABCProps& abc,
     {
     // Optimizations to do:
     //
-    // o Simplify logic:
-    //   1. Determine if A is contig (independent of order of contracted inds of B)
-    //   2. Determine if B is contig (independent of contracted inds of A)
-    //   3. If both contig, check if same order.
-    //      If not same order, reshape cheaper of the two,
-    //      also trying to target order of C if possible.
-    //
-    // o In cases where only one of A or B is matrix-like due
-    //   to contracted inds appearing in a different order,
-    //   reshape the smaller of the two tensors instead of always
-    //   just reshaping A.
+    // o Detect whether doing cref = bref*aref or cref = aref*bref
+    //   might avoid having to reshape C (e.g. if bref*aref version
+    //   would require transposing C, then do aref*bref instead).
     //
 
     int ra = A.r(),
@@ -482,9 +458,7 @@ contract(ABCProps& abc,
             }
         }
 
-    //
     // Check if A is matrix-like
-    //
     bool Aismatrix = true;
     if(!(contractedA(0) || contractedA(ra-1)))
         {
@@ -495,13 +469,10 @@ contract(ABCProps& abc,
         {
         for(int i = 0; i < abc.ncont; ++i)
             {
-            auto aind = abc.Acstart+i,
-                 bind = abc.Bcstart+i;
-            //printfln("abc.AtoB[%d]=%d; bind=%d",aind,abc.AtoB[aind],bind);
-            if(!contractedA(aind) || abc.AtoB[aind] != bind)
+            auto aind = abc.Acstart+i;
+            if(!contractedA(aind)) 
                 {
                 //If contracted indices are not contiguous
-                //or in a different order from those of B,
                 //A is not matrix-like
                 Aismatrix = false;
                 break;
@@ -533,32 +504,45 @@ contract(ABCProps& abc,
             }
         }
 
-    printfln("A is matrix = %s",Aismatrix);
-    PRI(abc.ai)
-    printfln("B is matrix = %s",Bismatrix);
-    PRI(abc.bi)
-    PRI(abc.ci)
+    //printfln("A is matrix = %s",Aismatrix);
+    //PRI(abc.ai)
+    //printfln("B is matrix = %s",Bismatrix);
+    //PRI(abc.bi)
+    //PRI(abc.ci)
 
-    cpu_time cpu;
+    if(Aismatrix && Bismatrix)
+        {
+        //Check if contracted inds. in same order
+        //if not, set ismatrix=false for the smaller one
+        for(int i = 0; i < abc.ncont; ++i)
+            {
+            auto aind = abc.Acstart+i,
+                 bind = abc.Bcstart+i;
+            if(abc.AtoB[aind] != bind) 
+                {
+                if(dleft < dright) Aismatrix = false;
+                else               Bismatrix = false;
+
+                break;
+                }
+            }
+        }
+
+    //cpu_time cpu;
 
     SimpleMatrixRef aref;
     RTensor newA;
+    Permutation PA;
     if(Aismatrix)
         {
         if(contractedA(0))
-            {
-            println("Transposing A");
             aref = SimpleMatrixRef(A.data(),dleft,dmid,dmid,true);
-            }
         else
-            {
-            println("Not transposing A");
             aref = SimpleMatrixRef(A.data(),dmid,dleft,dleft,false);
-            }
         }
-    else //A not matrix-like, reshape data
+    else
         {
-        Permutation PA(ra);
+        PA = Permutation(ra);
         //Permute contracted indices to the front,
         //in the same order as on B
         int newi = 0;
@@ -567,10 +551,6 @@ contract(ABCProps& abc,
             {
             while(!contractedB(bind)) ++bind;
             int j = findIndex(abc.ai,abc.bi[bind]);
-            printfln("bind = %d, j = %d",bind,j);
-#ifdef DEBUG
-            if(j == -1) Error("Contracted index of B not found on A");
-#endif
             PA.setFromTo(j,newi++);
             ++bind;
             }
@@ -582,42 +562,46 @@ contract(ABCProps& abc,
             if(j != -1)
                 {
                 PA.setFromTo(j,newi++);
-                PC.setFromTo(k,k);
-                cdims[k] = A.n(j);
                 }
             if(newi == ra) break;
             }
-        println("PA = ",PA);
-        PAUSE
-        println("Calling reshape A"); 
         reshape(A,PA,newA);
         aref = SimpleMatrixRef(newA.data(),dleft,dmid,dmid,true);
         }
 
     SimpleMatrixRef bref;
     RTensor newB;
+    Permutation PB;
     if(Bismatrix)
         {
         if(contractedB(0))
-            {
-            println("Not transposing B");
             bref = SimpleMatrixRef(B.data(),dright,dmid,dmid,false);
+        else
+            bref = SimpleMatrixRef(B.data(),dmid,dright,dright,true);
+        }
+    else
+        {
+        PB = Permutation(rb);
+        int newi = 0;
+        if(Aismatrix)
+            {
+            auto aind = abc.Acstart;
+            for(int i = 0; i < abc.ncont; ++i)
+                {
+                while(!contractedA(aind)) ++aind;
+                int j = findIndex(abc.bi,abc.ai[aind]);
+                PB.setFromTo(j,newi++);
+                ++aind;
+                }
             }
         else
             {
-            println("Transposing B");
-            bref = SimpleMatrixRef(B.data(),dmid,dright,dright,true);
-            }
-        }
-    else //B not matrix-like, reshape data
-        {
-        Permutation PB(rb);
-        int newi = 0;
-        //Permute contracted indices to the front
-        for(int i = 0; newi < abc.ncont; ++newi)
-            {
-            while(!contractedB(i)) ++i;
-            PB.setFromTo(i++,newi);
+            //Permute contracted indices to the front
+            for(int i = abc.Bcstart; newi < abc.ncont; ++newi)
+                {
+                while(!contractedB(i)) ++i;
+                PB.setFromTo(i++,newi);
+                }
             }
         //Permute uncontracted indices to
         //appear in same order as on C
@@ -630,30 +614,50 @@ contract(ABCProps& abc,
                 }
             if(newi == ra) break;
             }
-        println("PB = ",PB);
-        println("Calling reshape B"); 
         reshape(B,PB,newB);
-        bref = SimpleMatrixRef(B.data(),dright,dmid,dmid,false);
+        bref = SimpleMatrixRef(newB.data(),dright,dmid,dmid,false);
         }
-    println("A and B reshaped, took ",cpu.sincemark());
 
-    //
+    //println("A and B reshaped, took ",cpu.sincemark());
+
+    if(!Aismatrix || !Bismatrix)
+        {
+        //Recompute PC and cdims
+        int c = 0;
+        for(int i = 0; i < ra; ++i)
+            {
+            auto ni = (PA.size()==0 ? i : PA.dest(i));
+            if(!contractedA(ni))
+                {
+                PC.setFromTo(c,abc.AtoC[ni]);
+                cdims[c++] = A.n(ni);
+                }
+            }
+        for(int j = 0; j < rb; ++j)
+            {
+            auto nj = (PB.size()==0 ? j : PB.dest(j));
+            if(!contractedB(nj)) 
+                {
+                PC.setFromTo(c,abc.BtoC[nj]);
+                cdims[c++] = B.n(nj);
+                }
+            }
+        }
+
     //
     // Carry out the contraction as a matrix-matrix multiply
     //
-    //
 
     RTensor newC(cdims,0.);
-    println("newC.size() = ",newC.size());
     SimpleMatrixRef cref(newC.data(),bref.Nrows(),aref.Ncols(),aref.Ncols(),false);
 
     //println("aref = \n",aref);
     //println("bref = \n",bref);
 
-    cpu.mark();
-    printfln("Multiplying a %dx%d * %dx%d (bref * aref)",bref.Nrows(),bref.Ncols(),aref.Nrows(),aref.Ncols());
+    //cpu.mark();
+    //printfln("Multiplying a %dx%d * %dx%d (bref * aref)",bref.Nrows(),bref.Ncols(),aref.Nrows(),aref.Ncols());
     mult_add(bref,aref,cref);
-    println("Matrix multiply done, took ",cpu.sincemark());
+    //println("Matrix multiply done, took ",cpu.sincemark());
 
     //println("cref = \n",cref);
 
@@ -664,14 +668,14 @@ contract(ABCProps& abc,
     if(isTrivial(PC)) 
         { 
         C.swap(newC); 
-        println("PC trivial, swapping newC and C"); 
+        //println("PC trivial, swapping newC and C"); 
         }
     else               
         {
-        println("PC = ",PC);
-        cpu.mark();
+        //println("PC = ",PC);
+        //cpu.mark();
         reshape(newC,PC,C);
-        println("C reshaped, took ",cpu.sincemark());
+        //println("C reshaped, took ",cpu.sincemark());
         }
     }
 
