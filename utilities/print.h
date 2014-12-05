@@ -9,8 +9,15 @@
 
 namespace itensor {
 
-using tinyformat::printf;
 using tinyformat::format;
+
+template <typename... Args>
+void
+printf(const char* fmt_string, const Args&... args)
+    {
+    tinyformat::printf(fmt_string,args...);
+    std::cout.flush();
+    }
 
 template <typename... Args>
 void
@@ -56,6 +63,7 @@ print(const T& arg1, const Args&... args)
     std::cout << arg1;
     print(args...);
     }
+
 
 
 }; //namespace itensor
