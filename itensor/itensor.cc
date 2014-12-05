@@ -356,14 +356,14 @@ operator*=(const ITensor& other)
     Label Pind(nuniq);
     for(int i = 0; i < new_index.r(); ++i)
         {
-        int j = hasindex(is_,new_index[i]);
-        if(j)
+        int j = findindex(is_,new_index[i]);
+        if(j >= 0)
             {
             Pind[i] = Lind[j];
             }
         else
             {
-            j = hasindex(other.is_,new_index[i]);
+            j = findindex(other.is_,new_index[i]);
             Pind[i] = Rind[j];
             }
         }

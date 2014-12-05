@@ -37,25 +37,27 @@ calc_permutation(const Set1& s1,
         }
     }
 
+
 template <typename Set1,
-          typename Set2,
+          typename Set2Iter,
           typename RType,
           typename Map>
 void
 permute_map(const Set1& s1,
-            const Set2& s2,
+            const Set2Iter& s2begin,
+            const Set2Iter& s2end,
             RType& r,
             Map&& m)
     {
-    for(size_t i2 = 0; i2 < s2.size(); ++i2)
+    for(auto it = s2begin; it != s2end; ++it)
         {
-        const auto& v2 = s2[i2];
+        const auto& v2 = *it;
         bool found = false;
         for(size_t i1 = 0; i1 < s1.size(); ++i1)
             {
             if(v2 == s1[i1])
                 {
-                r[i1] = m(s2[i2]);
+                r[i1] = m(v2);
                 found = true;
                 break;
                 }
@@ -66,6 +68,19 @@ permute_map(const Set1& s1,
             throw ITError("sets are not permutations of each other");
             }
         }
+    }
+
+template <typename Set1,
+          typename Set2,
+          typename RType,
+          typename Map>
+void
+permute_map(const Set1& s1,
+            const Set2& s2,
+            RType& r,
+            Map&& m)
+    {
+    permute_map(s1,std::begin(s2),std::end(s2),r,std::forward<Map>(m));
     }
 
 template <typename Container, typename Item>

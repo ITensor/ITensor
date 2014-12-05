@@ -548,7 +548,7 @@ finddir(const IndexSet<IndexT>& iset, Arrow dir)
 //
 // Given IndexSet<IndexT> iset and IndexT I,
 // return int j such that iset[j] == I.
-// If not found, throws an ITError.
+// If not found, returns -1
 //
 template <class IndexT>
 int
@@ -560,9 +560,7 @@ findindex(const IndexSet<IndexT>& iset,
         {
         if(iset[j] == I) return j;
         }
-    Print(I);
-    Error("Index I not found");
-    return 0;
+    return -1;
     }
 
 template <class IndexT>
@@ -623,16 +621,16 @@ getperm(const IndexSet<IndexT>& iset,
 	}
 
 template <class IndexT>
-int
+bool
 hasindex(const IndexSet<IndexT>& iset, 
          const IndexT& I)
 	{
     int j = (I.m()==1 ? iset.rn() : 0);
     for(; j < iset.r(); ++j)
         {
-        if(iset[j] == I) return j;
+        if(iset[j] == I) return true;
         }
-    return 0;
+    return false;
 	}
 
 template <class IndexT>

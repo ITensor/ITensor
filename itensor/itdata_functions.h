@@ -190,7 +190,7 @@ struct GenerateIT
 template<typename T, int size>
 struct GetElt
     {
-    using Inds = std::array<long,size>;
+    using Inds = std::vector<long>;
 
     T elt_;
     const Inds& inds_;

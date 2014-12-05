@@ -481,6 +481,7 @@ ITensor(const IndexVal& iv1,
     set(1.,iv1,rest...);
     }
 
+
 template <typename... IndexVals>
 Complex ITensor::
 cplx(const IndexVals&... ivs) const
@@ -489,8 +490,8 @@ cplx(const IndexVals&... ivs) const
     if(!*this) Error("ITensor is default constructed");
 #endif
     static constexpr auto size = sizeof...(ivs);
-    const std::array<IndexVal,size> vals = {{ static_cast<IndexVal>(ivs)...}};
-    std::array<long,size> inds;
+    std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
+    std::vector<long> inds(is_.size(),0);
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
     auto g = applyFunc<GetElt<Complex,size>>(store_,{inds});
 	try {

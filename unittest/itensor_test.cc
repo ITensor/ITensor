@@ -661,7 +661,7 @@ SECTION("ContractingProduct")
     for(int j4 = 1; j4 <= 4; ++j4)
         {
         Real val = f * T.real(b2(j2),a1(1),b4(j4));
-        CHECK_CLOSE(res.real(b2(j2),a1(1),b4(j4)),val,1E-10);
+        CHECK_REQUAL(res.real(b2(j2),a1(1),b4(j4)),val);
         }
     }
 
@@ -682,7 +682,7 @@ SECTION("ContractingProduct")
     CHECK(!hasindex(res1,b2));
     CHECK(!hasindex(res1,b3));
     CHECK(!hasindex(res1,b4));
-
+    
     CHECK_EQUAL(res1.r(),2);
 
     for(int j5 = 1; j5 <= b5.m(); ++j5)
@@ -696,54 +696,55 @@ SECTION("ContractingProduct")
             }
         CHECK_CLOSE(res1.real(a2(1),b5(j5)),val,1E-10);
         }
-//
-//    ITensor res2 = R*L;
-//
-//    CHECK(hasindex(res2,b5));
-//    CHECK(hasindex(res2,a2));
-//    CHECK(!hasindex(res2,a1));
-//    CHECK(!hasindex(res2,b2));
-//    CHECK(!hasindex(res2,b3));
-//    CHECK(!hasindex(res2,b4));
-//
-//    CHECK_EQUAL(res2.r(),2);
-//
-//    for(int j5 = 1; j5 <= b5.m(); ++j5)
-//        {
-//        Real val = 0;
-//        for(int j2 = 1; j2 <= 2; ++j2)
-//        for(int j3 = 1; j3 <= 3; ++j3)
-//        for(int j4 = 1; j4 <= 4; ++j4)
-//            {
-//            val += L(b2(j2),a1(1),b3(j3),b4(j4)) * R(b5(j5),a1(1),b3(j3),b2(j2),b4(j4));
-//            }
-//        CHECK_CLOSE(res2(a2(1),b5(j5)),val,1E-10);
-//        }
-//
-//    ITensor Q(a1,b4,a2,b2), P(a2,a3,a1);
-//
-//    Q.randomize(); P.randomize();
-//
-//    Real fQ = Global::random(), fP = Global::random();
-//    ITensor Qf = Q * fQ;
-//    ITensor Pf = P * fP;
-//
-//    ITensor res3 = Qf*Pf;
-//
-//    CHECK(hasindex(res3,b4));
-//    CHECK(hasindex(res3,b2));
-//    CHECK(hasindex(res3,a3));
-//    CHECK(!hasindex(res3,a1));
-//    CHECK(!hasindex(res3,a2));
-//
-//    CHECK_EQUAL(res3.r(),3);
-//
-//    for(int j2 = 1; j2 <= b2.m(); ++j2)
-//    for(int j4 = 1; j4 <= b4.m(); ++j4)
-//        {
-//        Real val = Q(a1(1),b4(j4),a2(1),b2(j2))*fQ * P(a2(1),a3(1),a1(1))*fP;
-//        CHECK_CLOSE(res3(b4(j4),b2(j2)),val,1E-10);
-//        }
+
+
+    auto res2 = R*L;
+
+    CHECK(hasindex(res2,b5));
+    CHECK(hasindex(res2,a2));
+    CHECK(!hasindex(res2,a1));
+    CHECK(!hasindex(res2,b2));
+    CHECK(!hasindex(res2,b3));
+    CHECK(!hasindex(res2,b4));
+
+    CHECK_EQUAL(res2.r(),2);
+
+    for(int j5 = 1; j5 <= b5.m(); ++j5)
+        {
+        Real val = 0;
+        for(int j2 = 1; j2 <= 2; ++j2)
+        for(int j3 = 1; j3 <= 3; ++j3)
+        for(int j4 = 1; j4 <= 4; ++j4)
+            {
+            val += L.real(b2(j2),a1(1),b3(j3),b4(j4)) * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4));
+            }
+        CHECK_CLOSE(res2.real(a2(1),b5(j5)),val,1E-10);
+        }
+
+    //ITensor Q = randIT(a1,b4,a2,b2), 
+    //        P = randIT(a2,a3,a1);
+
+    //Real fQ = Global::random(), 
+    //     fP = Global::random();
+    //auto Qf = Q * fQ;
+    //auto Pf = P * fP;
+
+    //auto res3 = Qf*Pf;
+
+    //CHECK(hasindex(res3,b4));
+    //CHECK(hasindex(res3,b2));
+    //CHECK(hasindex(res3,a3));
+    //CHECK(!hasindex(res3,a1));
+    //CHECK(!hasindex(res3,a2));
+
+    //CHECK_EQUAL(res3.r(),3);
+
+    //for(int j2 = 1; j2 <= b2.m(); ++j2)
+    //for(int j4 = 1; j4 <= b4.m(); ++j4)
+    //    {
+    //    Real val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
+    //    CHECK_CLOSE(res3.real(b4(j4),b2(j2)),val,1E-10);
+    //    }
 //
 //    ITensor res4 = Pf*Qf;
 //
@@ -1359,6 +1360,9 @@ SECTION("CommonIndex")
     ITensor T1(s1,s2,l1,l2),
             T2(s1,l3),
             T3(s3,l4);
+
+    CHECK(hasindex(T1,s1));
+    CHECK(hasindex(T2,s1));
 
     Index c = commonIndex(T1,T3);
     CHECK(!c);
