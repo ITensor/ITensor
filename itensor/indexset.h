@@ -62,9 +62,6 @@ class IndexSet
     const IndexT&
     index(int j) const { return index_[j-1]; }
 
-    long
-    dim() const;
-
     const IndexT&
     front() const { return index_.front(); }
 
@@ -224,15 +221,6 @@ IndexSet(const Iterable& ii, size_t size, size_t offset)
     }
 
 
-template <class IndexT>
-long IndexSet<IndexT>::
-dim() const
-    {   
-    long d = 1;
-    for(int j = 0; j < rn_; ++j)
-        d *= index_[j].m();
-    return d;
-    }
 
 template <class IndexT>
 void IndexSet<IndexT>::
@@ -519,6 +507,16 @@ init()
 // IndexSet helper methods
 //
 //
+
+template <class IndexT>
+long
+dim(const IndexSet<IndexT>& is)
+    {   
+    long d = 1;
+    for(int j = 0; j < is.rn(); ++j)
+        d *= is[j].m();
+    return d;
+    }
 
 template<class IndexT>
 Arrow
