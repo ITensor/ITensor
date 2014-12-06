@@ -271,15 +271,12 @@ class ITensor
     const IndexSet<Index>&
     indices() const { return inds(); }
 
-    
     private:
-
     ////////////////////////
     IndexSet<Index> is_;
     LogNumber scale_;
     storage_ptr store_;
     ////////////////////////
-
     }; // class ITensor
 
 //template <typename T_>

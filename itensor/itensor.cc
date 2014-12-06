@@ -256,17 +256,6 @@ operator*=(const ITensor& other)
         return operator=( ITensor(sqr(this->norm())) );
         }
 
-    //Check if other is a scalar
-    if(other.inds().r() == 0)
-        {
-        return operator*=(other.cplx());
-        }
-    //Check if this is a scalar
-    if(this->r() == 0)
-        {
-        return operator=(other*cplx());
-        }
-
     std::vector<bool> contL(is_.r(),false),
                       contR(other.is_.r(),false);
 
@@ -274,7 +263,7 @@ operator*=(const ITensor& other)
     //uncontracted indices. Later will assign unique numbers
     //to these entries in Lind and Rind
     Label Lind(is_.rn(),0),
-           Rind(other.is_.rn(),0);
+          Rind(other.is_.rn(),0);
 
     //Count number of contracted indices,
     //set corresponding entries of Lind, Rind
@@ -307,6 +296,7 @@ operator*=(const ITensor& other)
             break;
             }
         }
+
 
     //nuniq is total number of unique, uncontracted indices
     //(nuniq all includes m==1 indices)
@@ -352,6 +342,22 @@ operator*=(const ITensor& other)
 #ifdef DEBUG
     if(new_index.rn() != nuniq) Error("new_index size not equal to nuniq");
 #endif
+
+    //Check if other is a scalar (modulo m==1 inds)
+    if(other.inds().rn() == 0)
+        {
+        operator*=(other.cplx());
+        is_.swap(new_index);
+        return *this;
+        }
+    //Check if this is a scalar (modulo m==1 inds)
+    if(inds().rn() == 0)
+        {
+        operator=(other*cplx());
+        is_.swap(new_index);
+        return *this;
+        }
+
 
     Label Pind(nuniq);
     for(int i = 0; i < new_index.r(); ++i)
