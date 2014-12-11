@@ -121,8 +121,17 @@ struct CopyElems
 
     template<typename T>
     NewData
-    operator()(T& d1,
-               const T& d2)
+    operator()(ITDense<T>& d1,
+               const ITDense<T>& d2)
+        {
+        std::copy(d2.data.begin(),d2.data.end(),d1.data.begin());
+        return NewData();
+        }
+
+    template<typename T>
+    NewData
+    operator()(ITDiag<T>& d1,
+               const ITDiag<T>& d2)
         {
         std::copy(d2.data.begin(),d2.data.end(),d1.data.begin());
         return NewData();
@@ -738,7 +747,16 @@ class SumEls
 
     template <class T>
     NewData
-    operator()(const T& d) 
+    operator()(const ITDense<T>& d) 
+        { 
+        for(const auto& elt : d.data)
+            sum_ += elt;
+        return NewData();
+        }
+
+    template <class T>
+    NewData
+    operator()(const ITDiag<T>& d) 
         { 
         for(const auto& elt : d.data)
             sum_ += elt;

@@ -389,7 +389,6 @@ class simpletensor
     long 
     stride(long i) const { return inds_[i].stride; }
 
-    // stride of index i
     index_type 
     inds() const { return inds_; }
 

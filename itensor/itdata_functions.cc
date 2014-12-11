@@ -18,6 +18,14 @@ operator()(const ITDense<Real>& a1,
     return std::move(res);
     }
 
+NewData Contract::
+operator()(const ITDense<Real>& d,
+           const ITCombiner& C) const
+    {
+    Error("Not implemented");
+    return NewData();
+    }
+
 NewData FillReal::
 operator()(ITDense<Real>& d) const
     {

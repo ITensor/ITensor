@@ -48,6 +48,13 @@ class ITensor
     explicit
     ITensor(Complex val);
 
+    //Construct ITensor with diagonal elements set to z
+    //(z can be Real argument too; convertible to Complex)
+    //template<typename... Inds>
+    //ITensor(Complex z, 
+    //        const Index& i1,
+    //        const Inds&... inds);
+
     //Construct rank 1 ITensor,
     //elements given by VectorRef V
     ITensor(const Index& i1,
@@ -292,6 +299,18 @@ ITensor(const Index& i1,
     store_(make_shared<ITDense<Real>>(is_))
 	{ }
 
+//template<typename... Inds>
+//ITensor::
+//ITensor(Complex z, 
+//        const Index& i1,
+//        const Inds&... inds)
+//    :
+//    is_(i1,inds...)
+//    scale_(1.),
+//    store_(make_shared<ITDelta>(z))
+//    { }
+
+
 template <typename... IVals>
 ITensor::
 ITensor(const IndexVal& iv1, 
@@ -443,6 +462,29 @@ ITensor inline
 operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }
 ITensor inline
 operator*(const IndexVal& iv, const ITensor& t) { return (ITensor(iv) *= t); }
+
+ITensor inline
+combiner(std::vector<Index> inds)
+    {
+    long rm = 1;
+    for(const auto& i : inds)
+        {
+        rm *= i.m();
+        }
+    //Create combined index, will get sorted to front by IndexSet
+    inds.emplace_back("cmb",rm);
+    IndexSet<Index> iset(std::move(inds));
+    auto nd = NewData(make_newdata<ITCombiner>());
+    return ITensor(std::move(iset),std::move(nd),{1.0});
+    }
+
+template<typename... Inds>
+ITensor
+combiner(const Index& i1, const Inds&... inds)
+    {
+    std::vector<Index> vec{i1,inds...};
+    return combiner(std::vector<Index>{i1,inds...});
+    }
 
 //
 // Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)

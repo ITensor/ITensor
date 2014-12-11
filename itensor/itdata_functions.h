@@ -7,6 +7,7 @@
 #include "global.h"
 #include "itdata/itdense.h"
 #include "itdata/itdiag.h"
+#include "itdata/itcombiner.h"
 #include "indexset.h"
 
 namespace itensor {
@@ -69,6 +70,25 @@ struct Contract
     operator()(const ITDense<Real>& a1,
                const ITDense<Real>& a2) const;
 
+    NewData
+    operator()(const ITDense<Real>& d,
+               const ITCombiner& C) const;
+    NewData
+    operator()(const ITCombiner& C,
+               const ITDense<Real>& d) const { return operator(d,C); }
+
+    //NewData
+    //operator()(const ITDiag<Real>& d,
+    //           const ITDense<Real>& t) const
+    //    {
+    //    }
+    //NewData
+    //operator()(const ITDense<Real>& t,
+    //           const ITDiag<Real>& d) const 
+    //    { 
+    //    return operator(d,t); 
+    //    }
+
     //NewData
     //operator()(const ITDense<Real>& a1,
     //           const ITDense<Complex>& a2) const
@@ -122,7 +142,14 @@ class NormNoScale
 
     template<typename T>
     NewData
-    operator()(const T& d)
+    operator()(const ITDense<T>& d) { return calc(d); }
+    template<typename T>
+    NewData
+    operator()(const ITDiag<T>& d) { return calc(d); }
+
+    template<typename T>
+    NewData
+    calc(const T& d)
         {
         for(const auto& elt : d.data)
             {
@@ -180,7 +207,17 @@ struct GenerateIT
 
     template <typename T>
     NewData
-    operator()(T& d) const
+    operator()(ITDense<T>& d) const { return doGen(d); }
+
+    template <typename T>
+    NewData
+    operator()(ITDiag<T>& d) const { return doGen(d); }
+
+    private:
+
+    template<typename T>
+    NewData
+    doGen(T& d) const
         {
         std::generate(d.data.begin(),d.data.end(),f_);
         return NewData();
@@ -375,6 +412,9 @@ struct PrintIT
     template<typename T>
     NewData
     operator()(const ITDiag<T>& d) const;
+
+    NewData
+    operator()(const ITCombiner& d) const { s_ << " Combiner}\n"; return NewData(); }
 
     template<typename T>
     NewData
