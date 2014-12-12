@@ -372,16 +372,15 @@ reshape(const RTensor& T,
     //size "big" and position "bigind"
     long bigind = 0, 
          big = T.n(0);
-    for(int m = 1; m < r; ++m)
-        if(big < T.n(m))
+    for(int j = 1; j < r; ++j)
+        if(big < T.n(j))
             {
-            big = T.n(m); 
-            bigind = m;
+            big = T.n(j); 
+            bigind = j;
             }
 
     auto stept = T.stride(bigind);
-    auto rbigind = P.dest(bigind);
-    auto stepr = res.stride(rbigind);
+    auto stepr = res.stride(P.dest(bigind));
 
     GCounter c(0,r-1,0);
     for(int i = 0; i < r; ++i)
