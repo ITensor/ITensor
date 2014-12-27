@@ -172,6 +172,8 @@ class LocalMPO
     int
     size() const { return lop_.size(); }
 
+    explicit operator bool() const { return !isNull(); }
+
     bool
     isNull() const { return Op_ == 0 && Psi_ == 0; }
 
