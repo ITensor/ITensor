@@ -335,10 +335,7 @@ inline Vector::Vector (const std::vector<Real>& v)
     { 
     init(); 
     makevector(v.size()); 
-    for(size_t j = 0; j < v.size(); ++j)
-        {
-        operator[](j) = v[j];
-        }
+    std::copy(v.begin(),v.end(),Store());
     }
 
 inline Vector::Vector (const VectorRef &V)

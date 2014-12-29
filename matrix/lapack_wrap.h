@@ -16,10 +16,8 @@
 #include <complex>
 
 namespace itensor {
-typedef int
-LAPACK_INT;
-typedef double
-LAPACK_REAL;
+using LAPACK_INT = int;
+using LAPACK_REAL = double;
 typedef struct
 {
   double real, imag;
@@ -30,12 +28,9 @@ typedef struct
 
 #include <Accelerate/Accelerate.h>
 namespace itensor {
-typedef __CLPK_integer
-LAPACK_INT;
-typedef __CLPK_doublereal
-LAPACK_REAL;
-typedef __CLPK_doublecomplex
-LAPACK_COMPLEX;
+using LAPACK_INT = __CLPK_integer;
+using LAPACK_REAL = __CLPK_doublereal;
+using LAPACK_COMPLEX = __CLPK_doublecomplex;
 };
 
 #elif defined PLATFORM_acml
@@ -44,10 +39,8 @@ LAPACK_COMPLEX;
 
 //#include "acml.h"
 namespace itensor {
-typedef int
-LAPACK_INT;
-typedef double
-LAPACK_REAL;
+using LAPACK_INT = int;
+using LAPACK_REAL = double;
 typedef struct
 {
   double real, imag;
@@ -58,12 +51,9 @@ typedef struct
 
 #include "mkl_lapack.h"
 namespace itensor {
-typedef MKL_INT
-LAPACK_INT;
-typedef double
-LAPACK_REAL;
-typedef MKL_Complex16
-LAPACK_COMPLEX;
+using LAPACK_INT = MKL_INT;
+using LAPACK_REAL = double;
+using LAPACK_COMPLEX = MKL_Complex16;
 };
 
 #endif
@@ -83,6 +73,20 @@ namespace itensor {
 //
 #ifdef LAPACK_REQUIRE_EXTERN
 extern "C" {
+
+#ifdef PLATFORM_macos
+void cblas_daxpy(const int n, const double alpha, const double *X, const int incX, double *Y, const int incY);
+#else
+void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha, 
+                    LAPACK_REAL* X, LAPACK_INT* incx,
+                    LAPACK_REAL* Y, LAPACK_INT* incy);
+#endif
+
+#ifdef PLATFORM_macos
+void cblas_dscal(const LAPACK_INT __N, const LAPACK_REAL __alpha, LAPACK_REAL *x,const LAPACK_INT incX);
+#else
+void F77NAME(dscal)(LAPACK_INT* n, LAPACK_REAL* alpha, LAPACK_REAL* x, LAPACK_INT* incx);
+#endif
 
 #ifdef PLATFORM_acml
 void F77NAME(dsyev)(char *jobz, char *uplo, int *n, double *a, int *lda, 
@@ -163,6 +167,42 @@ void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a,
 
 } //extern "C"
 #endif
+
+//
+// daxpy
+// Y += alpha*X
+//
+void inline
+daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
+              LAPACK_REAL alpha,   //scale factor
+              const LAPACK_REAL* X, //pointer to head of vector X
+              LAPACK_INT incx,     //increment with which to step through X
+              LAPACK_REAL* Y,       //pointer to head of vector Y
+              LAPACK_INT incy)     //increment with which to step through Y
+    {
+#ifdef PLATFORM_macos
+    cblas_daxpy(n,alpha,X,incx,Y,incy);
+#else
+    auto Xnc = const_cast<LAPACK_REAL*>(X);
+    F77NAME(daxpy)(&n,&alpha,Xnc,&incx,Y,&incy);
+#endif
+    }
+
+//
+// dscal
+//
+void inline
+dscal_wrapper(LAPACK_INT n,        //number of elements
+              LAPACK_REAL alpha,   //factor to scale by
+              LAPACK_REAL* x,      //pointer to data
+              LAPACK_INT incx = 1) //step/increment size
+    {
+#ifdef PLATFORM_macos
+    cblas_dscal(n,alpha,x,incx);
+#else
+    F77NAME(dscal)(&n,&alpha,x,&incx);
+#endif
+    }
 
 
 //

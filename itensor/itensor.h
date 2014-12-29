@@ -485,12 +485,12 @@ class ITensor
     private:
 
     void 
-    allocate(int dim);
+    allocate(size_t dim, Real val = 0.);
     void 
     allocate();
 
     void 
-    allocateImag(int dim);
+    allocateImag(size_t dim, Real val = 0.);
     void 
     allocateImag();
 
@@ -589,24 +589,22 @@ class ITDat
     {
     public:
 
-    Vector v;
+    std::vector<Real> v;
 
     ITDat();
 
     explicit 
-    ITDat(int size);
+    ITDat(size_t size,
+          Real val = 0);
 
     explicit 
     ITDat(const VectorRef& v_);
 
     explicit 
-    ITDat(Real r);
-
-    explicit 
     ITDat(const ITDat& other);
 
-    int
-    size() const { return v.Length(); }
+    size_t
+    size() const { return v.size(); }
 
     void
     read(std::istream& s);
@@ -686,8 +684,10 @@ mapElems(const Callable& f)
         throw ITError("mapElems only works for real ITensor");
     solo();
     scaleTo(1);
-    for(int j = 1; j <= r_->size(); ++j)
-        r_->v(j) = f(r_->v(j));
+    for(size_t j = 0; j < r_->size(); ++j)
+        {
+        r_->v[j] = f(r_->v[j]);
+        }
     return *this;
     }
 

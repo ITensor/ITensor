@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor.h"
+#include "lapack_wrap.h"
 
 namespace itensor {
 
@@ -10,12 +11,31 @@ using std::ostream;
 using std::cout;
 using std::endl;
 using std::sqrt;
+using std::vector;
 
 #ifdef DEBUG
 #define ITENSOR_CHECK_NULL if(type_ == Null) Error("ITensor is null");
 #else
 #define ITENSOR_CHECK_NULL
 #endif
+
+void
+vectormult(std::vector<Real>& v, Real fac)
+    {
+    dscal_wrapper(v.size(),fac,v.data());
+    }
+
+// Y += fac*X
+void
+vectordaxpy(std::vector<Real>& Y, 
+            const std::vector<Real>& X,
+            Real fac = 1)
+    {
+#ifdef DEBUG
+    if(X.size() != Y.size()) Error("Mismatched sizes in vectordaxpy");
+#endif
+    daxpy_wrapper(Y.size(),fac,X.data(),1,Y.data(),1);
+    }
 
 //Both arguments and return value of _ind
 //are zero-indexed
@@ -73,17 +93,13 @@ IT_IntToType(int n)
     return ITensor::Null;
     }
 
+namespace detail {
 void
-reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vector& res)
+reshape(const Permutation& P, 
+        const IndexSet<Index>& is, 
+        const vector<Real>& dat, 
+        Real *res)
     {
-    if(P.isTrivial())
-        {
-        res = dat;
-        return;
-        }
-
-    res.ReDimension(dat.Length());
-    res = 0;
 
     const auto& ind = P.store();
 
@@ -121,8 +137,10 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
     if(is.rn() == 2 && ind[1] == 2 && ind[2] == 1)
         {
         MatrixRef xref; 
-        dat.TreatAsMatrix(xref,c.n[2],c.n[1]);
-        res = Matrix(xref.t()).TreatAsVector();
+        VectorRefNoLink vref(const_cast<Real*>(dat.data()),dat.size());
+        vref.TreatAsMatrix(xref,c.n[2],c.n[1]);
+        auto newvref = Matrix(xref.t()).TreatAsVector();
+        std::copy(newvref.begin(),newvref.end(),res);
         return; 
         }
     else if(is.rn() == 3)
@@ -243,6 +261,37 @@ reshape(const Permutation& P, const IndexSet<Index>& is, const Vector& dat, Vect
     } //switch(c.rn)
 
     } // reshape
+};
+
+void
+reshape(const Permutation& P, 
+        const IndexSet<Index>& is, 
+        const vector<Real>& dat, 
+        vector<Real>& res)
+    {
+    if(P.isTrivial())
+        {
+        res = dat;
+        return;
+        }
+    res.resize(dat.size());
+    detail::reshape(P,is,dat,res.data());
+    }
+
+void
+reshape(const Permutation& P, 
+        const IndexSet<Index>& is, 
+        const vector<Real>& dat, 
+        Vector& res)
+    {
+    if(P.isTrivial())
+        {
+        res = Vector(dat);
+        return;
+        }
+    res.ReDimension(dat.size());
+    detail::reshape(P,is,dat,res.Store());
+    }
 
 //
 // ITensor
@@ -265,8 +314,7 @@ ITensor(Real val)
     type_(Dense),
     scale_(1)
     { 
-    allocate(1);
-    r_->v = val;
+    allocate(1,val);
     }
 
 ITensor::
@@ -286,8 +334,7 @@ ITensor(const Index& i1, Real val)
     is_(i1),
     scale_(1)
 	{ 
-    allocate(i1.m());
-    r_->v = val; 
+    allocate(i1.m(),val);
     }
 
 ITensor::
@@ -321,21 +368,19 @@ ITensor(const Index& i1,const Index& i2,Real a)
 	{
     type_ = Diag;
     const int dim = min(i1.m(),i2.m());
-    allocate(dim);
-    r_->v = a;
+    allocate(dim,a);
 	}
 
 ITensor::
 ITensor(const Index& i1,const Index& i2, const VectorRef& V) 
     :
+    r_(make_shared<ITDat>(V)),
     is_(i1,i2),
     scale_(1)
 	{
     type_ = Diag;
-    allocate();
-    r_->v = V;
 #ifdef DEBUG
-    const int dim = min(i1.m(),i2.m());
+    auto dim = min(i1.m(),i2.m());
     if(V.Length() != dim)
         Error("Diagonal vector must have length == min(i1.m(),i2.m())");
 #endif
@@ -352,7 +397,8 @@ ITensor(const Index& i1,const Index& i2,const MatrixRef& M)
 	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
 	    Error("Mismatch of Index sizes and matrix.");
 	MatrixRef dref; 
-	r_->v.TreatAsMatrix(dref,i2.m(),i1.m()); 
+    VectorRefNoLink vref(r_->v.data(),r_->size());
+	vref.TreatAsMatrix(dref,i2.m(),i1.m()); 
 	dref = M.t();
 	}
 
@@ -388,7 +434,15 @@ ITensor(const IndexVal& iv)
     scale_(1)
 	{ 
     allocate(iv.m());
-	r_->v(iv.i) = 1; 
+#ifdef DEBUG
+    if(iv.i < 1 || iv.i > int(r_->size())) 
+        {
+        Print(iv.i);
+        Print(r_->size());
+        Error("IndexVal out of range");
+        }
+#endif
+	r_->v[iv.i-1] = 1; 
 	}
 
 ITensor::
@@ -399,7 +453,11 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2)
     scale_(1)
 	{ 
     allocate(iv1.m()*iv2.m());
-	r_->v((iv2.i-1)*iv1.m()+iv1.i) = 1; 
+    auto offset = (iv2.i-1)*iv1.m()+iv1.i-1;
+#ifdef DEBUG
+    if(offset < 0 || offset > r_->size()) Error("IndexVal out of range");
+#endif
+	r_->v[offset] = 1; 
 	}
 
 ITensor::
@@ -535,7 +593,7 @@ diag() const
     Vector res;
     if(type_ == Diag)
         {
-        res = r_->v;
+        res = Vector(r_->v);
         }
     else
     if(type_ == Dense)
@@ -615,12 +673,12 @@ toReal() const
         }
 
 	try {
-	    return r_->v(1)*scale_.real(); 
+	    return r_->v.at(0)*scale_.real(); 
 	    }
 	catch(const TooBigForReal& e)
 	    {
 	    println("too big for real() in toReal");
-	    println("r_->v(1) is ",r_->v(1));
+	    println("r_->v[0] is ",r_->v.at(0));
 	    println("scale is ",scale());
 	    println("rethrowing");
 	    throw e;
@@ -642,12 +700,12 @@ toComplex() const
         {
         Real re, im;
         try {
-            re = r_->v(1)*scale_.real(); 
+            re = r_->v.at(0)*scale_.real(); 
             }
         catch(const TooBigForReal& e)
             {
             println("too big for real() in toReal");
-            println("r_->v(1) is ",r_->v(1));
+            println("r_->v[0] is ",r_->v.at(0));
             println("scale is ",scale());
             println("rethrowing");
             throw e;
@@ -658,12 +716,12 @@ toComplex() const
             }
 
         try {
-            im = i_->v(1)*scale_.real(); 
+            im = i_->v.at(0)*scale_.real(); 
             }
         catch(const TooBigForReal& e)
             {
             println("too big for real() in toReal");
-            println("i_->v(1) is ",i_->v(1));
+            println("i_->v[0] is ",i_->v.at(0));
             println("scale is ",scale());
             println("rethrowing");
             throw e;
@@ -722,7 +780,7 @@ operator()(const IndexVal& iv1)
 #endif
     solo(); 
     scaleTo(1);
-    return r_->v(iv1.i);
+    return r_->v.at(iv1.i-1);
 	}
 
 Real ITensor::
@@ -741,7 +799,7 @@ operator()(const IndexVal& iv1) const
         Error("Incorrect IndexVal argument to ITensor");
         }
 #endif
-    return scale_.real()*r_->v(iv1.i);
+    return scale_.real()*r_->v.at(iv1.i-1);
 	}
 
 Real& ITensor::
@@ -757,7 +815,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2)
 
     if(type_ == Diag)
         {
-        return r_->v(iv1.i);
+        return r_->v.at(iv1.i-1);
         }
 
     return r_->v[_ind2(iv1,iv2)];
@@ -770,7 +828,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2) const
     if(type_ == Diag)
         {
         if(iv1.i != iv2.i) return 0;
-        return r_->v(iv1.i);
+        return r_->v.at(iv1.i-1);
         }
     return scale_.real()*r_->v[_ind2(iv1,iv2)];
     }
@@ -789,7 +847,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2,
         if(di == -1)
             convertToDense();
         else
-            return r_->v(di);
+            return r_->v.at(di-1);
         }
     return r_->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
     }
@@ -805,7 +863,7 @@ operator()(const IndexVal& iv1, const IndexVal& iv2,
         {
         const int di = _diag_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8);
         if(di == -1) return 0;
-        return scale_.real()*r_->v(di);
+        return scale_.real()*r_->v.at(di-1);
         }
     return scale_.real()*r_->v[_ind8(iv1,iv2,iv3,iv4,iv5,iv6,iv7,iv8)];
     }
@@ -995,8 +1053,8 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
         ii[j] = &zero;
     
     //Create the new dat
-    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
-    const Vector& thisdat = r_->v;
+    auto np = make_shared<ITDat>(alloc_size);
+    const auto& thisdat = r_->v;
     for(; nc.notDone(); ++nc)
         {
         np->v[nc.ind] =
@@ -1011,7 +1069,7 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
     if(this->isComplex())
         {
         np = make_shared<ITDat>(alloc_size);
-        const Vector& thisidat = i_->v;
+        const auto& thisidat = i_->v;
         for(nc.reset(); nc.notDone(); ++nc)
             {
             np->v[nc.ind] =
@@ -1164,9 +1222,9 @@ trace(const array<Index,NMAX>& indices, int nind)
     
     //Create the new dat
     shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
-    Vector& resdat = np->v;
+    auto& resdat = np->v;
 
-    const Vector& thisdat = r_->v;
+    const auto& thisdat = r_->v;
     for(; nc.notDone(); ++nc)
         {
         Real newval = 0;
@@ -1186,7 +1244,7 @@ trace(const array<Index,NMAX>& indices, int nind)
 
     if(this->isComplex())
         {
-        const Vector& thisidat = i_->v;
+        const auto& thisidat = i_->v;
         for(nc.reset(); nc.notDone(); ++nc)
             {
             Real newval = 0;
@@ -1311,11 +1369,10 @@ expandIndex(const Index& small, const Index& big, int start)
     shared_ptr<ITDat> oldr(r_);
     allocate(newinds.dim());
 
-    const
-    int omax = oldr->v.Length();
+    auto omax = oldr->v.size();
 
-    const Real* const olddat = oldr->v.Store();
-    Real* const newdat = r_->v.Store();
+    const Real* const olddat = oldr->v.data();
+    Real* const newdat = r_->v.data();
 
 	if(nmax == omax)
 	    {
@@ -1344,8 +1401,7 @@ assignToVec() const
     ITENSOR_CHECK_NULL
     if(this->isComplex())
         Error("assignToVec defined only for real ITensor");
-    VectorRef rv;
-    rv << r_->v;
+    Vector rv(r_->v);
     if(scale_.isRealZero()) 
         {
         rv *= 0;
@@ -1366,10 +1422,10 @@ pseudoInvert(Real cutoff)
     scale_.pow(-1); //succeeds even if scale_ == 0
     for(int j = 1; j <= r_->size(); ++j)
         {
-        if(r_->v(j) > cutoff)
-            r_->v(j) = 1./r_->v(j);
+        if(r_->v.at(j-1) > cutoff)
+            r_->v.at(j-1) = 1./r_->v.at(j-1);
         else
-            r_->v(j) = 0;
+            r_->v.at(j-1) = 0;
         }
     }
 
@@ -1383,13 +1439,13 @@ reshapeDat(const Permutation& P)
         }
     if(P.isTrivial()) return;
     solo();
-    Vector newdat;
+    std::vector<Real> newdat;
     reshape(P,is_,r_->v,newdat);
-    r_->v = newdat;
+    r_->v = std::move(newdat);
     if(i_)
         {
         reshape(P,is_,i_->v,newdat);
-        i_->v = newdat;
+        i_->v = std::move(newdat);
         }
     }
 
@@ -1411,14 +1467,14 @@ const Real* ITensor::
 datStart() const
     {
     if(!r_) Error("ITensor is null");
-    return r_->v.Store();
+    return r_->v.data();
     }
 
 const Real* ITensor::
 imagDatStart() const
     {
     if(!i_) Error("ITensor is real");
-    return i_->v.Store();
+    return i_->v.data();
     }
 
 void ITensor::
@@ -1426,14 +1482,14 @@ randomize(const Args& args)
     { 
     solo(); 
     convertToDense();
-    for(int j = 0; j < r_->v.Length(); ++j)
+    for(size_t j = 0; j < r_->v.size(); ++j)
         {
         r_->v[j] = Global::random();
         }
     if(i_ || args.getBool("Complex",false))
         {
-        allocateImag(r_->v.Length());
-        for(int j = 0; j < i_->v.Length(); ++j)
+        allocateImag(r_->v.size());
+        for(size_t j = 0; j < i_->v.size(); ++j)
             {
             i_->v[j] = Global::random();
             }
@@ -1446,7 +1502,7 @@ conj()
     if(i_)
         {
         soloImag();
-        i_->v *= -1;
+        vectormult(i_->v,-1);
         }
     }
 
@@ -1464,11 +1520,13 @@ normNoScale() const
     ITENSOR_CHECK_NULL
     if(!this->isComplex())
         {
-        return Norm(r_->v);
+        return Norm(VectorRefNoLink(r_->v.data(),r_->size()));
         }
     else
         {
-        return sqrt(sqr(Norm(r_->v))+sqr(Norm(i_->v)));
+        auto rref = VectorRefNoLink(r_->v.data(),r_->size());
+        auto iref = VectorRefNoLink(i_->v.data(),i_->size());
+        return sqrt(sqr(Norm(rref))+sqr(Norm(iref)));
         }
     }
 
@@ -1502,8 +1560,8 @@ scaleOutNorm()
     if(f != 0) 
         { 
         solo();
-        r_->v *= 1./f; 
-        if(i_) i_->v *= 1./f;
+        vectormult(r_->v,1./f);
+        if(i_) vectormult(i_->v,1./f);
         scale_ *= f; 
         }
     else //norm == zero
@@ -1521,16 +1579,16 @@ scaleTo(const LogNumber& newscale)
     if(scale_ == newscale) return;
     solo();
     scale_ /= newscale;
-    r_->v *= scale_.real0();
-    if(i_) i_->v *= scale_.real0();
+    vectormult(r_->v,scale_.real0());
+    if(i_) vectormult(i_->v,scale_.real0());
     scale_ = newscale;
     }
 
 
 void ITensor::
-allocate(int dim) 
+allocate(size_t dim, Real val) 
     { 
-    r_ = make_shared<ITDat>(dim); 
+    r_ = make_shared<ITDat>(dim,val);
     }
 
 void ITensor::
@@ -1540,9 +1598,9 @@ allocate()
     }
 
 void ITensor::
-allocateImag(int dim) 
+allocateImag(size_t dim,Real val) 
     { 
-    i_ = make_shared<ITDat>(dim); 
+    i_ = make_shared<ITDat>(dim,val); 
     }
 
 void ITensor::
@@ -1593,7 +1651,7 @@ equalizeScales(ITensor& other)
     else //*this is equivalent to zero
         {
         soloReal();
-        r_->v *= 0;
+        std::fill(r_->v.begin(),r_->v.end(),0.);
         scale_ = other.scale_;
         }
     }
@@ -1604,8 +1662,8 @@ operator*=(Real fac)
     if(fac == 0)
         {
         solo();
-        r_->v *= 0;
-        if(i_) i_->v *= 0;
+        std::fill(r_->v.begin(),r_->v.end(),0.);
+        if(i_) std::fill(i_->v.begin(),i_->v.end(),0);
         return *this;
         }
 
@@ -1619,9 +1677,9 @@ operator*=(Complex z)
     if(z.real() == 0)
         {
         r_.swap(i_);
-        if(!r_) allocate(i_->v.Length());
+        if(!r_) allocate(i_->v.size());
         soloReal();
-        r_->v *= -1;
+        vectormult(r_->v,-1);
         scale_ *= z.imag();
         return *this;
         }
@@ -1639,12 +1697,12 @@ operator*=(Complex z)
         if(fabs(z.real()) > fabs(z.imag()))
             {
             scale_ *= z.real();
-            i_->v *= (z.imag()/z.real());
+            vectormult(i_->v,(z.imag()/z.real()));
             }
         else
             {
             soloReal();
-            r_->v *= (z.real()/z.imag());
+            vectormult(r_->v,(z.real()/z.imag()));
             scale_ *= z.imag();
             }
         return *this;
@@ -1652,10 +1710,14 @@ operator*=(Complex z)
 
     //Else this is complex
     solo();
-    Vector newr = r_->v*z.real() - i_->v*z.imag();
-    Vector newi = r_->v*z.imag() + i_->v*z.real();
-    r_->v = newr;
-    i_->v = newi;
+    VectorRefNoLink rref(r_->v.data(),r_->size());
+    VectorRefNoLink iref(i_->v.data(),i_->size());
+    //Vector newr = r_->v*z.real() - i_->v*z.imag();
+    //Vector newi = r_->v*z.imag() + i_->v*z.real();
+    Vector newr = rref*z.real()-iref*z.imag();
+    Vector newi = rref*z.imag()+iref*z.real();
+    r_->v.assign(newr.begin(),newr.end());
+    i_->v.assign(newi.begin(),newi.end());
 
     return *this;
     }
@@ -1840,8 +1902,8 @@ ProductProps(const ITensor& L, const ITensor& R)
             //matchL.setFromTo(j,q);
             }
 
-    odimL = L.r_->v.Length()/cdim;
-    odimR = R.r_->v.Length()/cdim;
+    odimL = L.r_->size()/cdim;
+    odimR = R.r_->size()/cdim;
     }
 
 //Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref
@@ -1859,8 +1921,8 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
     if(!L) Error("L null in toMatrixProd");
     if(!R) Error("R null in toMatrixProd");
 #endif
-    const Vector &Ldat = L.r_->v, 
-                 &Rdat = R.r_->v;
+    const auto &Ldat = L.r_->v;
+    const auto &Rdat = R.r_->v;
 
     //Initially, assume both L & R are matrix-like
     L_is_matrix = true, 
@@ -1901,32 +1963,42 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
 
     if(L_is_matrix)  
         {
+        VectorRefNoLink lvec(const_cast<Real*>(Ldat.data()),Ldat.size());
         if(props.contractedL[1]) 
             { 
-            Ldat.TreatAsMatrix(lref,props.odimL,props.cdim); 
+            lvec.TreatAsMatrix(lref,props.odimL,props.cdim); 
             lref.ApplyTrans(); 
             }
         else 
             { 
-            Ldat.TreatAsMatrix(lref,props.cdim,props.odimL); 
+            lvec.TreatAsMatrix(lref,props.cdim,props.odimL); 
             }
         }
     else //L not matrix, need to reshape to make lref
         {
-        Vector lv; reshape(props.pl,L.is_,L.r_->v,lv);
-        lv.TreatAsMatrix(lref,props.odimL,props.cdim); lref.ApplyTrans();
+        Vector lv; 
+        reshape(props.pl,L.is_,L.r_->v,lv);
+        lv.TreatAsMatrix(lref,props.odimL,props.cdim); 
+        lref.ApplyTrans();
         }
 
     if(R_is_matrix) 
         {
+        VectorRefNoLink rvec(const_cast<Real*>(Rdat.data()),Rdat.size());
         if(props.contractedR[1]) 
-            { Rdat.TreatAsMatrix(rref,props.odimR,props.cdim); }
+            { 
+            rvec.TreatAsMatrix(rref,props.odimR,props.cdim); 
+            }
         else                    
-            { Rdat.TreatAsMatrix(rref,props.cdim,props.odimR); rref.ApplyTrans(); }
+            { 
+            rvec.TreatAsMatrix(rref,props.cdim,props.odimR); 
+            rref.ApplyTrans(); 
+            }
         }
     else //R not matrix, need to reshape to make rref
         {
-        Vector rv; reshape(props.pr,R.is_,R.r_->v,rv);
+        Vector rv; 
+        reshape(props.pr,R.is_,R.r_->v,rv);
         rv.TreatAsMatrix(rref,props.odimR,props.cdim);
         }
 
@@ -2029,7 +2101,7 @@ operator/=(const ITensor& other)
     if(other.is_.rn() == 0)
         {
         scale_ *= other.scale_;
-        scale_ *= other.r_->v(1);
+        scale_ *= other.r_->v.at(0);
         for(int j = other.is_.rn()+1; j <= other.r(); ++j)
             {
             const Index& J = other.is_.index(j);
@@ -2041,7 +2113,7 @@ operator/=(const ITensor& other)
     else if(is_.rn() == 0)
         {
         scale_ *= other.scale_;
-        scale_ *= r_->v(1);
+        scale_ *= r_->v.at(0);
         r_ = other.r_;
         IndexSet<Index> new_is(other.is_);
         for(int j = 1; j <= r(); ++j) 
@@ -2061,17 +2133,18 @@ operator/=(const ITensor& other)
 
     if(!r_.unique()) allocate();
 
-    Vector& thisdat = r_->v; 
+    auto &thisdat = r_->v; 
     
     const int ni = lref.Ncols(), nj = lref.Nrows(), nk = rref.Nrows();
     Matrix L(lref), R(rref);
-    thisdat.ReDimension(ni*nj*nk);
+    thisdat.resize(ni*nj*nk);
     
     for(int j = 1; j <= nj; ++j) 
     for(int k = 1; k <= nk; ++k) 
     for(int i = 1; i <= ni; ++i)
-        { thisdat(((j-1)*nk+k-1)*ni+i) =  R(k,j) * L(j,i); }
-
+        { 
+        thisdat[((j-1)*nk+k-1)*ni+i-1] =  R(k,j) * L(j,i); 
+        }
 
     IndexSet<Index> new_index;
 
@@ -2115,7 +2188,7 @@ void static
 directMultiply(const ITensor& L,
                const ITensor& R, 
                ProductProps& props, 
-               Vector& newdat,
+               vector<Real>& newdat,
                IndexSet<Index>& new_index)
     {
     Counter u,  //uncontracted indices
@@ -2181,11 +2254,11 @@ directMultiply(const ITensor& L,
         nr[j] = Ris[j].m();
         }
 
-    newdat.ReDimension(props.odimL*props.odimR);
+    newdat.resize(props.odimL*props.odimR);
 
     const Real* pL = L.datStart();
     const Real* pR = R.datStart();
-    Real* pN = newdat.Store();
+    Real* pN = newdat.data();
 
     for(; u.notDone(); ++u)
         {
@@ -2348,7 +2421,7 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
         {
         res.r_ = T.r_;
         res.i_ = T.i_;
-        res *= S.r_->v(1);
+        res *= S.r_->v.at(0);
         return;
         }
 
@@ -2359,8 +2432,7 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
         }
     else
         {
-        res.r_->v.ReDimension(alloc_size);
-        res.r_->v *= 0;
+        res.r_->v.assign(alloc_size,0);
         }
 
     //Finish initting Counter tc
@@ -2370,8 +2442,8 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
         }
 
 
-    const Vector& Tdat = T.r_->v;
-    Vector& resdat = res.r_->v;
+    const auto &Tdat = T.r_->v;
+    auto &resdat = res.r_->v;
 
     if(res_has_Sind)
         {
@@ -2431,11 +2503,11 @@ contractDiagDiag(const ITensor& A, const ITensor& B, ITensor& res)
         {
         res.type_ = ITensor::Diag;
         res.allocate();
-        Vector& rdat = res.r_->v;
-        const Vector& Adat = A.r_->v;
-        const Vector& Bdat = B.r_->v;
+        auto& rdat = res.r_->v;
+        const auto& Adat = A.r_->v;
+        const auto& Bdat = B.r_->v;
         rdat = Adat;
-        for(int j = 0; j < rdat.Length(); ++j)
+        for(int j = 0; j < rdat.size(); ++j)
             {
             rdat[j] *= Bdat[j];
             }
@@ -2577,7 +2649,7 @@ operator*=(const ITensor& other)
     if(other.is_.rn() == 0)
         {
         scale_ *= other.scale_;
-        scale_ *= other.r_->v(1);
+        scale_ *= other.r_->v.at(0);
 #ifdef DEBUG
         if((is_.rn()+nr1_) > NMAX) 
             {
@@ -2596,7 +2668,7 @@ operator*=(const ITensor& other)
     else if(is_.rn() == 0)
         {
         scale_ *= other.scale_;
-        scale_ *= r_->v(1);
+        scale_ *= r_->v.at(0);
         r_ = other.r_;
 #ifdef DEBUG
         if((is_.rn()+nr1_) > NMAX) 
@@ -2647,9 +2719,10 @@ operator*=(const ITensor& other)
         //Do the matrix multiplication
         if(!r_.unique()) allocate();
 
-        r_->v.ReDimension(rref.Nrows()*lref.Ncols());
+        r_->v.resize(rref.Nrows()*lref.Ncols());
+        VectorRefNoLink nvec(r_->v.data(),r_->size());
         MatrixRef nref; 
-        r_->v.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
+        nvec.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
         nref = rref*lref;
 
         //Handle m!=1 indices
@@ -2662,10 +2735,10 @@ operator*=(const ITensor& other)
         }
     else
         {
-        Vector newdat;
+        vector<Real> newdat;
         directMultiply(*this,other,props,newdat,new_index);
         if(!r_.unique()) allocate();
-        r_->v = newdat;
+        r_->v = std::move(newdat);
         }
 
     //Put in m==1 indices
@@ -2759,8 +2832,8 @@ operator+=(const ITensor& other)
         if(scale_ != other.scale_)
             {
             soloImag();
-            const LogNumber nscale = other.scale_/scale_;
-            i_->v *= nscale.real0();
+            LogNumber nscale = other.scale_/scale_;
+            vectormult(i_->v,nscale.real0());
             }
         return *this;
         }
@@ -2813,15 +2886,12 @@ operator+=(const ITensor& other)
 
     solo();
 
-    Vector& thisdat = r_->v;
-    const Vector& othrdat = other.r_->v;
+    auto &thisdat = r_->v;
+    const auto &othrdat = other.r_->v;
 
     if(same_ind_order) 
         { 
-        if(scalefac == 1)
-            thisdat += othrdat; 
-        else
-            thisdat += scalefac*othrdat;
+        vectordaxpy(thisdat,othrdat,scalefac);
         return *this; 
         }
 
@@ -2893,14 +2963,15 @@ fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     is_ = IndexSet<Index>(i1,i2);
 
     MatrixRef dref; 
+    VectorRefNoLink vref(r_->v.data(),r_->size());
     if(i1 == is_[0])
         {
-        r_->v.TreatAsMatrix(dref,i2.m(),i1.m());
+        vref.TreatAsMatrix(dref,i2.m(),i1.m());
         dref = M.t();
         }
     else
         {
-        r_->v.TreatAsMatrix(dref,i1.m(),i2.m());
+        vref.TreatAsMatrix(dref,i1.m(),i2.m());
         dref = M;
         }
     i_.reset();
@@ -2940,7 +3011,8 @@ toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
     res.ReDimension(i1.m(),i2.m());
 
     MatrixRef dref; 
-    r_->v.TreatAsMatrix(dref,is_[1].m(),is_[0].m());
+    VectorRefNoLink vref(const_cast<Real*>(r_->v.data()),r_->size());
+    vref.TreatAsMatrix(dref,is_[1].m(),is_[0].m());
     res = dref.t(i1==is_[0]); 
     }
 
@@ -3009,7 +3081,8 @@ fromMatrix12(const Index& i1, const Index& i2,
         Error("fromMatrix not implemented for ITensor type Diag");
 
     ITensor Q(i3,i1,i2);
-    Q.r_->v = M.TreatAsVector();
+    auto mref = M.TreatAsVector();
+    Q.r_->v.assign(mref.begin(),mref.end());
     *this = Q;
     }
 
@@ -3050,7 +3123,8 @@ fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,
     if(i3.m()*i4.m() != M.Ncols()) Error("fromMatrix22: wrong number of cols");
     if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix22: wrong number of rows");
     ITensor Q(i3,i4,i1,i2);
-    Q.r_->v = M.TreatAsVector();
+    auto mref = M.TreatAsVector();
+    Q.r_->v.assign(mref.begin(),mref.end());
     *this = Q;
     }
 
@@ -3187,14 +3261,14 @@ operator<<(ostream & s, const ITensor& t)
 
             if(t.r() == 0)
                 {
-                const Real rval = t.r_->v(1)*scale;
+                const Real rval = t.r_->v.at(0)*scale;
                 if(!iscplx)
                     {
                     s << format("  %.10f\n",rval);
                     }
                 else
                     {
-                    const Real ival = t.i_->v(1)*scale;
+                    const Real ival = t.i_->v.at(0)*scale;
                     const char sgn = (ival > 0 ? '+' : '-');
                     s << format("  %.10f%s%.10fi\n",rval,sgn,fabs(ival));
                     }
@@ -3206,7 +3280,7 @@ operator<<(ostream & s, const ITensor& t)
                 const int ds = t.indices().front().m();
                 for(int j = 1; j <= ds; ++j)
                     {
-                    const Real rval = t.r_->v(j)*scale;
+                    const Real rval = t.r_->v.at(j-1)*scale;
                     if(!iscplx)
                         {
                         if(fabs(rval) > Global::printScale())
@@ -3219,7 +3293,7 @@ operator<<(ostream & s, const ITensor& t)
                         }
                     else
                         {
-                        const Real ival = t.i_->v(j)*scale;
+                        const Real ival = t.i_->v.at(j-1)*scale;
                         if(sqrt(sqr(rval)+sqr(ival)) > Global::printScale())
                             {
                             const char sgn = (ival > 0 ? '+' : '-');
@@ -3275,31 +3349,21 @@ operator<<(ostream & s, const ITensor& t)
 
 ITDat::
 ITDat() 
-    : 
-    v(0)
     { }
 
 ITDat::
-ITDat(int size) 
+ITDat(size_t size, 
+      Real val) 
     : 
-    v(size)
+    v(size,val)
     { 
-    v = 0; 
     }
 
 ITDat::
 ITDat(const VectorRef& v_) 
     : 
-    v(v_)
+    v(v_.begin(),v_.end())
     { }
-
-ITDat::
-ITDat(Real r) 
-    : 
-    v(1)
-    { 
-    v = r; 
-    }
 
 ITDat::
 ITDat(const ITDat& other) 
@@ -3310,19 +3374,19 @@ ITDat(const ITDat& other)
 void ITDat:: 
 read(std::istream& s) 
     { 
-    int size = 0;
+    size_t size = 0;
     s.read((char*) &size,sizeof(size));
-    v.ReDimension(size);
-    s.read((char*) v.Store(), sizeof(Real)*size);
+    v.resize(size);
+    s.read((char*) v.data(), sizeof(Real)*size);
     }
 
 
 void ITDat::
 write(std::ostream& s) const 
     { 
-    const int size = v.Length();
+    size_t size = v.size();
     s.write((char*) &size, sizeof(size));
-    s.write((char*) v.Store(), sizeof(Real)*size); 
+    s.write((char*) v.data(), sizeof(Real)*size); 
     }
 
 //
