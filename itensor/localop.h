@@ -331,7 +331,7 @@ diag() const
         Error("Couldn't find Index");
         }
 
-    Tensor Diag = tieIndices(Op1,toTie,prime(toTie),toTie);
+    auto Diag = tieIndices(Op1,toTie,prime(toTie),toTie);
 
     found = false;
     for(const IndexT& s : Op2.indices())
@@ -377,9 +377,13 @@ diag() const
                 }
             }
         if(found)
+            {
             Diag *= tieIndices(R(),toTie,prime(toTie),toTie);
+            }
         else
+            {
             Diag *= R();
+            }
         }
 
     Diag.dag();

@@ -1053,11 +1053,12 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
         ii[j] = &zero;
     
     //Create the new dat
-    auto np = make_shared<ITDat>(alloc_size);
+    auto np = make_shared<ITDat>(alloc_size,0);
     const auto& thisdat = r_->v;
+    auto& newdat = np->v;
     for(; nc.notDone(); ++nc)
         {
-        np->v[nc.ind] =
+        newdat[nc.ind] =
         thisdat[_ind(is_,*ii[1],*ii[2],
                          *ii[3],*ii[4],
                          *ii[5],*ii[6],
@@ -1068,11 +1069,12 @@ tieIndices(const array<Index,NMAX>& indices, int nind,
 
     if(this->isComplex())
         {
-        np = make_shared<ITDat>(alloc_size);
+        np = make_shared<ITDat>(alloc_size,0);
         const auto& thisidat = i_->v;
+        auto& newdat = np->v;
         for(nc.reset(); nc.notDone(); ++nc)
             {
-            np->v[nc.ind] =
+            newdat[nc.ind] =
             thisidat[_ind(is_,*ii[1],*ii[2],
                               *ii[3],*ii[4],
                               *ii[5],*ii[6],
@@ -2131,20 +2133,21 @@ operator/=(const ITensor& other)
     bool L_is_matrix,R_is_matrix;
     toMatrixProd(*this,other,props,lref,rref,L_is_matrix,R_is_matrix);
 
-    if(!r_.unique()) allocate();
+    const int ni = lref.Ncols(), 
+              nj = lref.Nrows(), 
+              nk = rref.Nrows();
 
-    auto &thisdat = r_->v; 
-    
-    const int ni = lref.Ncols(), nj = lref.Nrows(), nk = rref.Nrows();
-    Matrix L(lref), R(rref);
-    thisdat.resize(ni*nj*nk);
-    
+    auto nsize = ni*nj*nk;
+    auto np = make_shared<ITDat>(nsize,0);
+    auto &thisdat = np->v; 
     for(int j = 1; j <= nj; ++j) 
     for(int k = 1; k <= nk; ++k) 
     for(int i = 1; i <= ni; ++i)
         { 
-        thisdat[((j-1)*nk+k-1)*ni+i-1] =  R(k,j) * L(j,i); 
+        thisdat[((j-1)*nk+k-1)*ni+i-1] =  rref(k,j) * lref(j,i); 
         }
+
+    r_.swap(np);
 
     IndexSet<Index> new_index;
 
@@ -2618,7 +2621,7 @@ operator*=(const ITensor& other)
         this->swap(res);
         return *this;
         }
-
+    
     //These hold  regular new indices and the m==1 indices that appear in the result
     IndexSet<Index> new_index;
 
@@ -2717,14 +2720,16 @@ operator*=(const ITensor& other)
         //DO_IF_PS(++Prodstats::stats().c2;)
 
         //Do the matrix multiplication
-        if(!r_.unique()) allocate();
+        auto nsize = rref.Nrows()*lref.Ncols();
+        auto np = make_shared<ITDat>(nsize);
 
-        r_->v.resize(rref.Nrows()*lref.Ncols());
-        VectorRefNoLink nvec(r_->v.data(),r_->size());
         MatrixRef nref; 
+        VectorRefNoLink nvec(np->v.data(),np->size());
         nvec.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
         nref = rref*lref;
 
+        r_.swap(np);
+        
         //Handle m!=1 indices
         for(int j = 0; j < this->is_.rn(); ++j)
             if(!props.contractedL[j+1]) 
@@ -2735,10 +2740,9 @@ operator*=(const ITensor& other)
         }
     else
         {
-        vector<Real> newdat;
-        directMultiply(*this,other,props,newdat,new_index);
-        if(!r_.unique()) allocate();
-        r_->v = std::move(newdat);
+        auto np = make_shared<ITDat>();
+        directMultiply(*this,other,props,np->v,new_index);
+        r_.swap(np);
         }
 
     //Put in m==1 indices
