@@ -50,6 +50,7 @@ typedef struct
 #elif defined PLATFORM_mkl
 
 #include "mkl_lapack.h"
+#include "mkl_blas.h"
 namespace itensor {
 using LAPACK_INT = MKL_INT;
 using LAPACK_REAL = double;
@@ -76,6 +77,10 @@ extern "C" {
 
 #ifdef PLATFORM_macos
 void cblas_daxpy(const int n, const double alpha, const double *X, const int incX, double *Y, const int incY);
+#elif defined PLATFORM_mkl
+void daxpy(LAPACK_INT* n, LAPACK_REAL* alpha, 
+           LAPACK_REAL* X, LAPACK_INT* incx,
+           LAPACK_REAL* Y, LAPACK_INT* incy);
 #else
 void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha, 
                     LAPACK_REAL* X, LAPACK_INT* incx,
@@ -84,6 +89,8 @@ void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha,
 
 #ifdef PLATFORM_macos
 void cblas_dscal(const LAPACK_INT __N, const LAPACK_REAL __alpha, LAPACK_REAL *x,const LAPACK_INT incX);
+#elif define PLATFORM_mkl
+void dscal(LAPACK_INT* n, LAPACK_REAL* alpha, LAPACK_REAL* x, LAPACK_INT* incx);
 #else
 void F77NAME(dscal)(LAPACK_INT* n, LAPACK_REAL* alpha, LAPACK_REAL* x, LAPACK_INT* incx);
 #endif
@@ -182,6 +189,9 @@ daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
     {
 #ifdef PLATFORM_macos
     cblas_daxpy(n,alpha,X,incx,Y,incy);
+#elif defined PLATFORM_mkl
+    auto Xnc = const_cast<LAPACK_REAL*>(X);
+    daxpy(&n,&alpha,Xnc,&incx,Y,&incy);
 #else
     auto Xnc = const_cast<LAPACK_REAL*>(X);
     F77NAME(daxpy)(&n,&alpha,Xnc,&incx,Y,&incy);
@@ -199,6 +209,8 @@ dscal_wrapper(LAPACK_INT n,        //number of elements
     {
 #ifdef PLATFORM_macos
     cblas_dscal(n,alpha,x,incx);
+#elif defined PLATFORM_mkl
+    dscal(&n,&alpha,x,&incx);
 #else
     F77NAME(dscal)(&n,&alpha,x,&incx);
 #endif
