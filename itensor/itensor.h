@@ -603,6 +603,11 @@ class ITDat
     explicit 
     ITDat(const ITDat& other);
 
+    const Real*
+    data() const { return v.data(); }
+    Real*
+    data() { return v.data(); }
+
     size_t
     size() const { return v.size(); }
 

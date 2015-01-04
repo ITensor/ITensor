@@ -397,7 +397,7 @@ ITensor(const Index& i1,const Index& i2,const MatrixRef& M)
 	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
 	    Error("Mismatch of Index sizes and matrix.");
 	MatrixRef dref; 
-    VectorRefNoLink vref(r_->v.data(),r_->size());
+    VectorRefNoLink vref(r_->data(),r_->size());
 	vref.TreatAsMatrix(dref,i2.m(),i1.m()); 
 	dref = M.t();
 	}
@@ -1372,9 +1372,8 @@ expandIndex(const Index& small, const Index& big, int start)
     allocate(newinds.dim());
 
     auto omax = oldr->v.size();
-
-    const Real* const olddat = oldr->v.data();
-    Real* const newdat = r_->v.data();
+    const Real* const olddat = oldr->data();
+    Real* const newdat = r_->data();
 
 	if(nmax == omax)
 	    {
@@ -1469,14 +1468,14 @@ const Real* ITensor::
 datStart() const
     {
     if(!r_) Error("ITensor is null");
-    return r_->v.data();
+    return r_->data();
     }
 
 const Real* ITensor::
 imagDatStart() const
     {
     if(!i_) Error("ITensor is real");
-    return i_->v.data();
+    return i_->data();
     }
 
 void ITensor::
@@ -1522,12 +1521,12 @@ normNoScale() const
     ITENSOR_CHECK_NULL
     if(!this->isComplex())
         {
-        return Norm(VectorRefNoLink(r_->v.data(),r_->size()));
+        return Norm(VectorRefNoLink(r_->data(),r_->size()));
         }
     else
         {
-        auto rref = VectorRefNoLink(r_->v.data(),r_->size());
-        auto iref = VectorRefNoLink(i_->v.data(),i_->size());
+        auto rref = VectorRefNoLink(r_->data(),r_->size());
+        auto iref = VectorRefNoLink(i_->data(),i_->size());
         return sqrt(sqr(Norm(rref))+sqr(Norm(iref)));
         }
     }
@@ -1712,8 +1711,8 @@ operator*=(Complex z)
 
     //Else this is complex
     solo();
-    VectorRefNoLink rref(r_->v.data(),r_->size());
-    VectorRefNoLink iref(i_->v.data(),i_->size());
+    VectorRefNoLink rref(r_->data(),r_->size());
+    VectorRefNoLink iref(i_->data(),i_->size());
     //Vector newr = r_->v*z.real() - i_->v*z.imag();
     //Vector newi = r_->v*z.imag() + i_->v*z.real();
     Vector newr = rref*z.real()-iref*z.imag();
@@ -2724,7 +2723,7 @@ operator*=(const ITensor& other)
         auto np = make_shared<ITDat>(nsize);
 
         MatrixRef nref; 
-        VectorRefNoLink nvec(np->v.data(),np->size());
+        VectorRefNoLink nvec(np->data(),np->size());
         nvec.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
         nref = rref*lref;
 
@@ -2967,7 +2966,7 @@ fromMatrix11(const Index& i1, const Index& i2, const Matrix& M)
     is_ = IndexSet<Index>(i1,i2);
 
     MatrixRef dref; 
-    VectorRefNoLink vref(r_->v.data(),r_->size());
+    VectorRefNoLink vref(r_->data(),r_->size());
     if(i1 == is_[0])
         {
         vref.TreatAsMatrix(dref,i2.m(),i1.m());
@@ -3015,7 +3014,7 @@ toMatrix11NoScale(const Index& i1, const Index& i2, Matrix& res) const
     res.ReDimension(i1.m(),i2.m());
 
     MatrixRef dref; 
-    VectorRefNoLink vref(const_cast<Real*>(r_->v.data()),r_->size());
+    VectorRefNoLink vref(const_cast<Real*>(r_->data()),r_->size());
     vref.TreatAsMatrix(dref,is_[1].m(),is_[0].m());
     res = dref.t(i1==is_[0]); 
     }
