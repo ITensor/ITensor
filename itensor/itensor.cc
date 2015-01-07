@@ -4,6 +4,7 @@
 //
 #include "itensor.h"
 #include "lapack_wrap.h"
+#include "simplematrix.h"
 
 namespace itensor {
 
@@ -1223,7 +1224,7 @@ trace(const array<Index,NMAX>& indices, int nind)
         ii[j] = &zero;
     
     //Create the new dat
-    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size);
+    shared_ptr<ITDat> np = make_shared<ITDat>(alloc_size,0);
     auto& resdat = np->v;
 
     const auto& thisdat = r_->v;
@@ -1377,6 +1378,16 @@ expandIndex(const Index& small, const Index& big, int start)
 
 	if(nmax == omax)
 	    {
+#ifdef DEBUG
+        if((inc+omax) > r_->size()) 
+            {
+            Print(inc);
+            Print(omax);
+            Print(inc+omax);
+            Print(r_->size());
+            Error("Mismatched sizes in expandIndex, copy case");
+            }
+#endif
         std::copy(olddat,olddat+omax,newdat+inc);
 	    }
     else
@@ -1384,6 +1395,14 @@ expandIndex(const Index& small, const Index& big, int start)
         Counter c(is_);
         for(; c.notDone(); ++c)
             {
+#ifdef DEBUG
+            auto ind = inc+_ind(newinds,c.i[1],c.i[2],
+                                    c.i[3],c.i[4],
+                                    c.i[5],c.i[6],
+                                    c.i[7],c.i[8]);
+            if(ind < 0 || ind >= int(r_->size())) Error("ind out of range in expandIndex");
+            if(c.ind >= int(oldr->size())) Error("c.ind out of range in expandIndex");
+#endif
             newdat[inc+_ind(newinds,c.i[1],c.i[2],
                                     c.i[3],c.i[4],
                                     c.i[5],c.i[6],
@@ -1910,8 +1929,11 @@ ProductProps(const ITensor& L, const ITensor& R)
 //Converts ITensor dats into MatrixRef's that can be multiplied as rref*lref
 //contractedL/R[j] == true if L/R.indexn(j) contracted
 void 
-toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
-             MatrixRefNoLink& lref, MatrixRefNoLink& rref, 
+toMatrixProd(const ITensor& L, const ITensor& R, 
+             std::vector<Real>& newLdat,
+             std::vector<Real>& newRdat,
+             ProductProps& props,
+             SimpleMatrixRef& lref, SimpleMatrixRef& rref, 
              bool& L_is_matrix, bool& R_is_matrix, bool doReshape)
     {
 #ifdef DEBUG
@@ -1964,43 +1986,57 @@ toMatrixProd(const ITensor& L, const ITensor& R, ProductProps& props,
 
     if(L_is_matrix)  
         {
-        VectorRefNoLink lvec(const_cast<Real*>(Ldat.data()),Ldat.size());
         if(props.contractedL[1]) 
             { 
-            lvec.TreatAsMatrix(lref,props.odimL,props.cdim); 
+            lref = SimpleMatrixRef(Ldat.data(),props.odimL,props.cdim);
+#ifdef DEBUG
+            if(not lref.readOnly()) Error("lref should be readOnly");
+#endif
             lref.ApplyTrans(); 
             }
         else 
             { 
-            lvec.TreatAsMatrix(lref,props.cdim,props.odimL); 
+            lref = SimpleMatrixRef(Ldat.data(),props.cdim,props.odimL);
+#ifdef DEBUG
+            if(not lref.readOnly()) Error("lref should be readOnly");
+#endif
             }
         }
     else //L not matrix, need to reshape to make lref
         {
-        Vector lv; 
-        reshape(props.pl,L.is_,L.r_->v,lv);
-        lv.TreatAsMatrix(lref,props.odimL,props.cdim); 
-        lref.ApplyTrans();
+        reshape(props.pl,L.is_,L.r_->v,newLdat);
+        lref = SimpleMatrixRef(newLdat.data(),props.odimL,props.cdim);
+        lref.ApplyTrans(); 
+#ifdef DEBUG
+            if(lref.readOnly()) Error("lref should not be readOnly");
+#endif
         }
 
     if(R_is_matrix) 
         {
-        VectorRefNoLink rvec(const_cast<Real*>(Rdat.data()),Rdat.size());
         if(props.contractedR[1]) 
             { 
-            rvec.TreatAsMatrix(rref,props.odimR,props.cdim); 
+            rref = SimpleMatrixRef(Rdat.data(),props.odimR,props.cdim);
+#ifdef DEBUG
+            if(not rref.readOnly()) Error("rref should be readOnly");
+#endif
             }
         else                    
             { 
-            rvec.TreatAsMatrix(rref,props.cdim,props.odimR); 
+            rref = SimpleMatrixRef(Rdat.data(),props.cdim,props.odimR);
             rref.ApplyTrans(); 
+#ifdef DEBUG
+            if(not rref.readOnly()) Error("rref should be readOnly");
+#endif
             }
         }
     else //R not matrix, need to reshape to make rref
         {
-        Vector rv; 
-        reshape(props.pr,R.is_,R.r_->v,rv);
-        rv.TreatAsMatrix(rref,props.odimR,props.cdim);
+        reshape(props.pr,R.is_,R.r_->v,newRdat);
+        rref = SimpleMatrixRef(newRdat.data(),props.odimR,props.cdim);
+#ifdef DEBUG
+            if(rref.readOnly()) Error("rref should not be readOnly");
+#endif
         }
 
 #ifdef COLLECT_PRODSTATS
@@ -2128,9 +2164,12 @@ operator/=(const ITensor& other)
         }
 
     ProductProps props(*this,other);
-    MatrixRefNoLink lref, rref;
-    bool L_is_matrix,R_is_matrix;
-    toMatrixProd(*this,other,props,lref,rref,L_is_matrix,R_is_matrix);
+    SimpleMatrixRef lref, 
+                    rref;
+    bool L_is_matrix = false,
+         R_is_matrix = false;
+    vector<Real> newLdat,newRdat;
+    toMatrixProd(*this,other,newLdat,newRdat,props,lref,rref,L_is_matrix,R_is_matrix);
 
     const int ni = lref.Ncols(), 
               nj = lref.Nrows(), 
@@ -2430,7 +2469,7 @@ contractDiagDense(const ITensor& S, const ITensor& T, ITensor& res)
     //Allocate a new dat for res if necessary
     if(!res || !res.r_.unique())
         { 
-        res.r_ = make_shared<ITDat>(alloc_size); 
+        res.r_ = make_shared<ITDat>(alloc_size,0); 
         }
     else
         {
@@ -2709,9 +2748,12 @@ operator*=(const ITensor& other)
     const
     bool do_matrix_multiply = (complexity > 1000);
 
-    MatrixRefNoLink lref, rref;
-    bool L_is_matrix,R_is_matrix;
-    toMatrixProd(*this,other,props,lref,rref,
+    SimpleMatrixRef lref, 
+                    rref;
+    bool L_is_matrix = false,
+         R_is_matrix = false;
+    vector<Real> Lrs_store,Rrs_store; //storage in case reshape is needed
+    toMatrixProd(*this,other,Lrs_store,Rrs_store,props,lref,rref,
                  L_is_matrix,R_is_matrix,do_matrix_multiply);
 
     if(do_matrix_multiply || (L_is_matrix && R_is_matrix))
@@ -2720,12 +2762,10 @@ operator*=(const ITensor& other)
 
         //Do the matrix multiplication
         auto nsize = rref.Nrows()*lref.Ncols();
-        auto np = make_shared<ITDat>(nsize);
+        auto np = make_shared<ITDat>(nsize,0);
 
-        MatrixRef nref; 
-        VectorRefNoLink nvec(np->data(),np->size());
-        nvec.TreatAsMatrix(nref,rref.Nrows(),lref.Ncols());
-        nref = rref*lref;
+        SimpleMatrixRef nref(np->data(),rref.Nrows(),lref.Ncols());
+        mult_add(rref,lref,nref,0);
 
         r_.swap(np);
         
@@ -2743,6 +2783,7 @@ operator*=(const ITensor& other)
         directMultiply(*this,other,props,np->v,new_index);
         r_.swap(np);
         }
+
 
     //Put in m==1 indices
     for(int j = 1; j <= nr1_; ++j) 

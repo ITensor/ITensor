@@ -22,7 +22,8 @@ SOURCES+= tevol.cc
 SOURCES+= autompo.cc
 
 HEADERS=global.h real.h permutation.h index.h \
-        indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h  \
+        indexset.h counter.h simplematrix.h itensor.h \
+        qn.h iqindex.h iqtdat.h  \
         detail/skip_iterator.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
@@ -106,7 +107,7 @@ index.o: $(DEPHEADERS)
 DEPHEADERS+= indexset.h
 indexset.o: $(DEPHEADERS)
 .debug_objs/indexset.o: $(DEPHEADERS)
-DEPHEADERS+=  itensor.h counter.h
+DEPHEADERS+=  itensor.h counter.h simplematrix.h
 itensor.o: $(DEPHEADERS)
 .debug_objs/itensor.o: $(DEPHEADERS)
 DEPHEADERS+= qn.h iqindex.h

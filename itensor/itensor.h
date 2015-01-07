@@ -14,10 +14,13 @@ struct ProductProps;
 class Combiner;
 class ITDat;
 class ITensor;
+class SimpleMatrixRef;
 
 void toMatrixProd(const ITensor& L, const ITensor& R, 
+                  std::vector<Real>& newLdat,
+                  std::vector<Real>& newRdat,
                   ProductProps& pp,
-                  MatrixRefNoLink& lref, MatrixRefNoLink& rref,
+                  SimpleMatrixRef& lref, SimpleMatrixRef& rref,
                   bool& L_is_matrix, bool& R_is_matrix, bool doReshape = true);
 
 //
@@ -515,8 +518,10 @@ class ITensor
     friend struct ProductProps;
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
+                             std::vector<Real>& newLdat,
+                             std::vector<Real>& newRdat,
                              ProductProps& pp,
-                             MatrixRefNoLink& lref, MatrixRefNoLink& rref,
+                             SimpleMatrixRef& lref, SimpleMatrixRef& rref,
                              bool& L_is_matrix, bool& R_is_matrix, bool doReshape);
 
     int _ind2(const IndexVal& iv1, const IndexVal& iv2) const;
