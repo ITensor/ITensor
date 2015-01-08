@@ -1,12 +1,14 @@
 #include "test.h"
 #include "print.h"
 #include "simpletensor.h"
+#include "types.h"
 
 using namespace itensor;
 
-using RTensor = simpletensor<Real>;
+using RTensor = tensor<Real>;
+using RTRef = tensorref<Real,Range>;
 
-TEST_CASE("Simpletensor")
+TEST_CASE("tensor")
     {
     SECTION("Default Constructor")
         {
@@ -69,7 +71,7 @@ TEST_CASE("Simpletensor")
         std::vector<Real> v({11,21,31,41,51,
                              12,22,32,42,52});
         Range ind{5,2};
-        RTensor t(&(v.front()),std::move(ind));
+        RTRef t(v.data(),ind);
 
         CHECK(t);
         CHECK(!t.ownstorage());
