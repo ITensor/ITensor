@@ -8,16 +8,13 @@
 namespace itensor {
 
 void
-plusEq(Real fac,
-       const simpletensor<Real>& t1,
-       simpletensor<Real>& t2)
+plusEqData(double fac,
+           const double *d1,
+           double *d2,
+           LAPACK_INT size)
     {
-#ifdef DEBUG
-    if(t1.size() != t2.size()) Error("Mismatched sizes in plusEq");
-#endif
-    LAPACK_INT size = t1.size();
     LAPACK_INT inc = 1;
-    daxpy_wrapper(&size,&fac,t1.data(),&inc,t2.data(),&inc);
+    daxpy_wrapper(&size,&fac,d1,&inc,d2,&inc);
     }
 
 };
