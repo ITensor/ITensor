@@ -204,7 +204,7 @@ dsyev_wrapper(char* jobz,        //if jobz=='V', compute eigs and evecs
               LAPACK_REAL* eigs, //eigenvalues on return
               LAPACK_INT* info)  //error info
     {
-    LAPACK_INT lwork = max(1,3*(*n)-1);
+    LAPACK_INT lwork = std::max(1,3*(*n)-1);
     LAPACK_REAL work[lwork];
 
 #ifdef PLATFORM_acml
@@ -225,8 +225,8 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
                LAPACK_COMPLEX *vt,   //on return, unitary matrix V transpose
                LAPACK_INT *info)
     {
-    LAPACK_INT l = min(*m,*n),
-               g = max(*m,*n);
+    LAPACK_INT l = std::min(*m,*n),
+               g = std::max(*m,*n);
     LAPACK_INT lwork = l*l+2*l+g+100;
     LAPACK_COMPLEX work[lwork];
     LAPACK_REAL rwork[5*l*(1+l)];
@@ -254,7 +254,7 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                                   //length should be min(m,n)
                LAPACK_INT* info)  //error info
     {
-    int lwork = max(1,4*max(*n,*m));
+    int lwork = std::max(1,4*std::max(*n,*m));
     LAPACK_REAL work[lwork]; 
     F77NAME(dgeqrf)(m,n,A,lda,tau,work,&lwork,info);
     }
@@ -274,7 +274,7 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_REAL* tau,  //scalar factors as returned by dgeqrf
                LAPACK_INT* info)  //error info
     {
-    int lwork = max(1,4*max(*n,*m));
+    int lwork = std::max(1,4*std::max(*n,*m));
     LAPACK_REAL work[lwork]; 
     F77NAME(dorgqr)(m,n,k,A,lda,tau,work,&lwork,info);
     }
@@ -325,7 +325,7 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
               LAPACK_INT* info)  //error info
     {
     int itype = 1;
-    LAPACK_INT lwork = max(1,3*(*n)-1);//max(1, 1+6*N+2*N*N);
+    LAPACK_INT lwork = std::max(1,3*(*n)-1);//std::max(1, 1+6*N+2*N*N);
     LAPACK_REAL work[lwork];
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
@@ -355,7 +355,7 @@ dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
     {
     int nevecl = (*jobvl == 'V' ? *n : 1);
     int nevecr = (*jobvr == 'V' ? *n : 1);
-    LAPACK_INT lwork = max(1,4*(*n));
+    LAPACK_INT lwork = std::max(1,4*(*n));
     LAPACK_REAL work[lwork];
 #ifdef PLATFORM_acml
     LAPACK_INT jobvl_len = 1;
@@ -384,9 +384,9 @@ zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
     {
     int nevecl = (*jobvl == 'V' ? *n : 1);
     int nevecr = (*jobvr == 'V' ? *n : 1);
-    LAPACK_INT lwork = max(1,4*(*n));
+    LAPACK_INT lwork = std::max(1,4*(*n));
     LAPACK_COMPLEX work[lwork];
-    LAPACK_INT lrwork = max(1,2*(*n));
+    LAPACK_INT lrwork = std::max(1,2*(*n));
     LAPACK_REAL rwork[lrwork];
 #ifdef PLATFORM_acml
     F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info,1,1);
