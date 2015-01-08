@@ -4,34 +4,41 @@
 //
 #pragma once
 
-#include <future>
-#include <unordered_map>
 #include <array>
-#include <functional>
 
 #include "print.h"
 #include "permutation.h"
 #include "simpletensor.h"
-#include "autovector.h"
-#include "cputime.h"
 
 namespace itensor {
 
-using RTensor = simpletensor<Real>;
+template<typename RangeT>
+using RTref = tensorref<Real,RangeT>;
 using Label = std::vector<int>;
 
+template<typename R1, typename R2>
 void 
-contract(const RTensor& A, 
-         const Label& ai, 
-         const RTensor& B, 
-         const Label& bi, 
-         RTensor& C, 
-         const Label& ci);
+reshape(const RTref<R1>& T, 
+        const Permutation& P, 
+        RTref<R2>& res);
 
+template<typename RangeT>
 void 
-contractloop(const RTensor& A, const Label& ai, 
-             const RTensor& B, const Label& bi, 
-             RTensor& C,       const Label& ci,
+reshape(const RTref<RangeT>& T, 
+        const Permutation& P, 
+        tensor<Real,Range>& res);
+
+template<typename RangeT>
+void 
+contract(const RTref<RangeT>& A, const Label& ai, 
+         const RTref<RangeT>& B, const Label& bi, 
+         RTref<RangeT>& C,       const Label& ci);
+
+template<typename RangeT>
+void 
+contractloop(const RTref<RangeT>& A, const Label& ai, 
+             const RTref<RangeT>& B, const Label& bi, 
+             RTref<RangeT>& C,       const Label& ci,
              const Args& args = Global::args());
 
 template<typename T>
@@ -60,79 +67,6 @@ printv(const autovector<T>& t)
     }
 #define PRI(a) print(#a,": "); printv(a);
 
-
-class GCounter	// General Counter
-    {
-    public:
-
-    // first are initial values of each index
-    // last are final values of each index
-    // i are the current values of each index
-    autovector<long> first, 
-                     last, 
-                     i;
-
-    // position of this GCounter value; starts at 0
-    long ind;
-
-    // for a GCounter that has indices i[1] through i[8], and starts its counts at 0, 
-    // firstind = 1, lastind = 8, firstval = 0
-
-    GCounter(long firstind, 
-             long lastind, 
-             long firstval = 1) 
-        : 
-        first(firstind,lastind,firstval), 
-        last(firstind,lastind,firstval),
-        i(firstind,lastind,firstval), 
-        ind(0)
-        { }
-
-    // After constructing a GCounter g, calling g.setInd(j,s,e)
-    // lets g.i[j] = s,s+1,...,e when iterating g
-    void 
-    setInd(long j, long f, long l)
-        {
-        first.ref(j) = f;
-        last.ref(j) = l;
-        i.ref(j) = f;
-        ind = 0;
-        }
-
-    void 
-    reset()
-        {
-        i = first;
-        ind = 0;
-        }
-
-    GCounter& 
-    operator++()
-        {
-        long mi = first.mini(), 
-             ma = first.maxi();
-        ++i.fastref(mi);
-        ++ind;
-        if(i.fast(mi) > last.fast(mi))
-            {
-            for(int j = mi+1; j <= ma; ++j)
-                {
-                i.fastref(j-1) = first.fast(j-1);
-                ++i.fastref(j);
-                if(i.fast(j) <= last.fast(j)) return *this;
-                }
-            i.fastref(mi) = first.fast(mi) - 1;	  // all done if get here; set !notdone()
-            }
-        return *this;
-        }
-
-    bool 
-    notDone()
-        {
-        return i.fast(first.mini()) >= first.fast(first.mini());
-        }
-    };
-
 inline 
 std::ostream& 
 operator<<(std::ostream& s, const Label& A)
@@ -153,9 +87,10 @@ findIndex(const std::vector<T>& v,
     return -1;
     }
 
+template<typename R>
 inline 
 Real 
-dist(const RTensor& A, const RTensor& Ach)
+dist(const RTref<R>& A, const RTref<R>& Ach)
     {
     Real dif = 0.0;
     for(long i = 0; i < A.size(); i++)
@@ -163,5 +98,74 @@ dist(const RTensor& A, const RTensor& Ach)
     return std::sqrt(dif);
     };
 
+
+
+///
+/// Implementations
+///
+
+template<typename R1, typename R2>
+void 
+reshape(const RTref<R1>& T, 
+        const Permutation& P, 
+        RTref<R2>& res)
+    {
+    auto r = T.r();
+
+#ifdef DEBUG
+    if(res.size() != T.size()) Error("Mismatched storage sizes in reshape");
+#endif
+
+    //find largest dimension of T,
+    //size "big" and position "bigind"
+    long bigind = 0, 
+         big = T.n(0);
+    for(int j = 1; j < r; ++j)
+        if(big < T.n(j))
+            {
+            big = T.n(j); 
+            bigind = j;
+            }
+
+    auto stept = T.stride(bigind);
+    auto stepr = res.stride(P.dest(bigind));
+
+    detail::GCounter c(0,r-1,0);
+    for(int i = 0; i < r; ++i)
+        c.setInd(i,0,T.n(i)-1);
+    c.setInd(bigind,0,0);		// This one we leave at 0 only
+
+    Label Ti(r), 
+          ri(r);
+    for(; c.notDone(); ++c)
+        {
+        for(int i = 0; i < r; ++i)
+            Ti[i] = ri[P.dest(i)] = c.i.fast(i);
+
+        auto* pr = &res.vref(ind(res,ri));
+        auto* pt = &T.v(ind(T,Ti));
+        for(int k = 0; k < big; ++k)
+            {
+            *pr = *pt;
+            pr += stepr;
+            pt += stept;
+            }
+        }
+    }
+
+template<typename RangeT>
+void 
+reshape(const RTref<RangeT>& T, 
+        const Permutation& P, 
+        tensor<Real,Range>& res)
+    {
+    auto r = T.r();
+    std::vector<long> resdims(r);
+    for(int i = 0; i < r; ++i)
+        resdims[P.dest(i)] = T.n(i);
+    res.resize(resdims);
+    tensorref<Real,Range> res_ref(res.data(),res.inds());
+    reshape(T,P,res_ref);
+    }
 
 }; //namespace itensor

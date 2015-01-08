@@ -1,5 +1,11 @@
 #include "contract.h"
 #include "detail/functions.h"
+//TODO: replace unordered_map with a simpler container (small_map? or jump directly to location?)
+#include <unordered_map>
+#include <future>
+#include "cputime.h"
+#include "detail/gcounter.h"
+#include "indexset.h"
 
 using std::vector;
 using std::cout;
@@ -7,6 +13,7 @@ using std::endl;
 using std::set_intersection;
 
 namespace itensor {
+
 
 //
 // small_map has an interface similar to std::map
@@ -198,6 +205,8 @@ class SimpleMatrixRef
 
     const Real*
     store() const { return store_; }
+    void
+    store(const Real* newstore) { store_ = newstore; }
 
     SimpleMatrixRef 
     t()
@@ -356,62 +365,16 @@ class CABqueue
     };
 
 
-void 
-reshape(const RTensor& T, 
-        const Permutation& P, 
-        RTensor& res)
-    {
-    auto r = T.r();
 
-    vector<long> resdims(r);
-    for(int i = 0; i < r; ++i)
-        resdims[P.dest(i)] = T.n(i);
-    res.resize(resdims);
-
-    //find largest dimension of T,
-    //size "big" and position "bigind"
-    long bigind = 0, 
-         big = T.n(0);
-    for(int j = 1; j < r; ++j)
-        if(big < T.n(j))
-            {
-            big = T.n(j); 
-            bigind = j;
-            }
-
-    auto stept = T.stride(bigind);
-    auto stepr = res.stride(P.dest(bigind));
-
-    GCounter c(0,r-1,0);
-    for(int i = 0; i < r; ++i)
-        c.setInd(i,0,T.n(i)-1);
-    c.setInd(bigind,0,0);		// This one we leave at 0 only
-
-    Label Ti(r), 
-          ri(r);
-    for(; c.notDone(); ++c)
-        {
-        for(int i = 0; i < r; ++i)
-            Ti[i] = ri[P.dest(i)] = c.i.fast(i);
-
-        auto* pr = &res.vref(ind(res,ri));
-        auto* pt = &T.v(ind(T,Ti));
-        for(int k = 0; k < big; ++k)
-            {
-            *pr = *pt;
-            pr += stepr;
-            pt += stept;
-            }
-        }
-    }
-
+template<typename RangeT>
 void 
 contract(ABCProps& abc,
-         const RTensor& A, 
-         const RTensor& B, 
-               RTensor& C)
+         const RTref<RangeT>& A, 
+         const RTref<RangeT>& B, 
+               RTref<RangeT>& C)
     {
-    // Optimizations to do:
+    println("---------------");
+    // Optimizations TODO
     //
     // o Detect whether doing cref = bref*aref or cref = aref*bref
     //   might avoid having to reshape C (e.g. if bref*aref version
@@ -433,14 +396,14 @@ contract(ABCProps& abc,
          dmid = 1,
          dright = 1;
     int c = 0;
-    vector<long> cdims(rc);
+    //vector<long> cdims(rc);
     for(int i = 0; i < ra; ++i)
         {
         if(!contractedA(i))
             {
             dleft *= A.n(i);
             PC.setFromTo(c,abc.AtoC[i]);
-            cdims[c] = A.n(i);
+            //cdims[c] = A.n(i);
             ++c;
             }
         else
@@ -454,7 +417,7 @@ contract(ABCProps& abc,
             {
             dright *= B.n(j);
             PC.setFromTo(c,abc.BtoC[j]);
-            cdims[c] = B.n(j);
+            //cdims[c] = B.n(j);
             ++c;
             }
         }
@@ -506,11 +469,11 @@ contract(ABCProps& abc,
             }
         }
 
-    //printfln("A is matrix = %s",Aismatrix);
-    //PRI(abc.ai)
-    //printfln("B is matrix = %s",Bismatrix);
-    //PRI(abc.bi)
-    //PRI(abc.ci)
+    printfln("A is matrix = %s",Aismatrix);
+    PRI(abc.ai)
+    printfln("B is matrix = %s",Bismatrix);
+    PRI(abc.bi)
+    PRI(abc.ci)
 
     if(Aismatrix && Bismatrix)
         {
@@ -533,7 +496,7 @@ contract(ABCProps& abc,
     //cpu_time cpu;
 
     SimpleMatrixRef aref;
-    RTensor newA;
+    tensor<Real> newA;
     Permutation PA;
     if(Aismatrix)
         {
@@ -544,6 +507,7 @@ contract(ABCProps& abc,
         }
     else
         {
+        println("Reshaping A");
         PA = Permutation(ra);
         //Permute contracted indices to the front,
         //in the same order as on B
@@ -556,14 +520,18 @@ contract(ABCProps& abc,
             PA.setFromTo(j,newi++);
             ++bind;
             }
+        //Reset abc.AtoC:
+        std::fill(abc.AtoC.begin(),abc.AtoC.end(),-1);
         //Permute uncontracted indices to
         //appear in same order as on C
         for(int k = 0; k < rc; ++k)
             {
-            int j = findIndex(abc.ai,abc.ci[k]);
+            auto j = findIndex(abc.ai,abc.ci[k]);
             if(j != -1)
                 {
-                PA.setFromTo(j,newi++);
+                abc.AtoC[newi] = k;
+                PA.setFromTo(j,newi);
+                ++newi;
                 }
             if(newi == ra) break;
             }
@@ -572,17 +540,24 @@ contract(ABCProps& abc,
         }
 
     SimpleMatrixRef bref;
-    RTensor newB;
+    tensor<Real> newB;
     Permutation PB;
     if(Bismatrix)
         {
         if(contractedB(0))
+            {
+            //println("Not transposing bref");
             bref = SimpleMatrixRef(B.data(),dright,dmid,dmid,false);
+            }
         else
+            {
+            //println("Transposing bref");
             bref = SimpleMatrixRef(B.data(),dmid,dright,dright,true);
+            }
         }
     else
         {
+        println("Reshaping B");
         PB = Permutation(rb);
         int newi = 0;
         if(Aismatrix)
@@ -605,6 +580,8 @@ contract(ABCProps& abc,
                 PB.setFromTo(i++,newi);
                 }
             }
+        //Reset abc.BtoC:
+        std::fill(abc.BtoC.begin(),abc.BtoC.end(),-1);
         //Permute uncontracted indices to
         //appear in same order as on C
         for(int k = 0; k < rc; ++k)
@@ -612,7 +589,9 @@ contract(ABCProps& abc,
             int j = findIndex(abc.bi,abc.ci[k]);
             if(j != -1)
                 {
-                PB.setFromTo(j,newi++);
+                abc.BtoC[newi] = k;
+                PB.setFromTo(j,newi);
+                ++newi;
                 }
             if(newi == ra) break;
             }
@@ -624,41 +603,89 @@ contract(ABCProps& abc,
 
     if(!Aismatrix || !Bismatrix)
         {
-        //Recompute PC and cdims
+        //Recompute PC
         int c = 0;
         for(int i = 0; i < ra; ++i)
             {
-            auto ni = (PA.size()==0 ? i : PA.dest(i));
-            if(!contractedA(ni))
+            if(!contractedA(i))
                 {
-                PC.setFromTo(c,abc.AtoC[ni]);
-                cdims[c++] = A.n(ni);
+                PC.setFromTo(c,abc.AtoC[i]);
+                ++c;
                 }
             }
         for(int j = 0; j < rb; ++j)
             {
-            auto nj = (PB.size()==0 ? j : PB.dest(j));
-            if(!contractedB(nj)) 
+            if(!contractedB(j)) 
                 {
-                PC.setFromTo(c,abc.BtoC[nj]);
-                cdims[c++] = B.n(nj);
+                PC.setFromTo(c,abc.BtoC[j]);
+                ++c;
                 }
             }
         }
+
+    PRI(abc.AtoC)
+    PRI(abc.BtoC)
+    Print(PC);
 
     //
     // Carry out the contraction as a matrix-matrix multiply
     //
 
-    RTensor newC(cdims,0.);
-    SimpleMatrixRef cref(newC.data(),bref.Nrows(),aref.Ncols(),aref.Ncols(),false);
+    if(C.size() != bref.Nrows()*aref.Ncols())
+        throw std::runtime_error("incorrect size of C in contract");
+
+    SimpleMatrixRef cref(C.data(),bref.Nrows(),aref.Ncols(),aref.Ncols(),false);
+
+    tensor<Real> newC;
+    auto pc_triv = isTrivial(PC);
+    printfln("pc_triv = %s",pc_triv);
+    if(!pc_triv)
+        {
+        PRI(abc.AtoC)
+        PRI(abc.BtoC)
+        vector<long> cdims(rc);
+        int c = 0;
+        if(Aismatrix)
+            {
+            for(int i = 0; i < ra; ++i)
+                if(!contractedA(i))
+                    cdims[c++] = A.n(i);
+            }
+        else
+            {
+            for(int i = 0; i < ra; ++i)
+                if(!contractedA(i))
+                    cdims[c++] = newA.n(i);
+            }
+        if(Bismatrix)
+            {
+            for(int j = 0; j < rb; ++j)
+                if(!contractedB(j)) 
+                    cdims[c++] = B.n(j);
+            }
+        else
+            {
+            for(int j = 0; j < rb; ++j)
+                if(!contractedB(j)) 
+                    cdims[c++] = newB.n(j);
+            }
+        PRI(cdims)
+        //Allocate newC
+        newC = tensor<Real>(cdims,0.);
+        //Update cref to point at newC
+        cref.store(newC.data());
+        }
 
     //println("aref = \n",aref);
     //println("bref = \n",bref);
 
     //cpu.mark();
     //printfln("Multiplying a %dx%d * %dx%d (bref * aref)",bref.Nrows(),bref.Ncols(),aref.Nrows(),aref.Ncols());
-    mult_add(bref,aref,cref);
+    //println("bref = ",bref.transpose()?"t\n":"\n",bref);
+    //println("aref = ",aref.transpose()?"t\n":"\n",aref);
+    //println("cref before = ",cref.transpose()?"t\n":"\n",cref);
+    mult_add(bref,aref,cref,0);
+    //println("cref = ",cref.transpose()?"t\n":"\n",cref);
     //println("Matrix multiply done, took ",cpu.sincemark());
 
     //println("cref = \n",cref);
@@ -667,28 +694,36 @@ contract(ABCProps& abc,
     // Reshape C if necessary
     //
 
-    if(isTrivial(PC)) 
-        { 
-        C.swap(newC); 
-        //println("PC trivial, swapping newC and C"); 
-        }
-    else               
+    if(!pc_triv)
         {
         //println("PC = ",PC);
         //cpu.mark();
         reshape(newC,PC,C);
         //println("C reshaped, took ",cpu.sincemark());
         }
+
+    println("---------------");
     }
 
+template<typename RangeT>
 void 
-contract(const RTensor& A, const Label& ai, 
-         const RTensor& B, const Label& bi, 
-               RTensor& C, const Label& ci)
+contract(const RTref<RangeT>& A, const Label& ai, 
+         const RTref<RangeT>& B, const Label& bi, 
+         RTref<RangeT>& C,       const Label& ci)
     {
     ABCProps prop(ai,bi,ci);
     contract(prop,A,B,C);
     }
+template 
+void 
+contract(const RTref<Range>& A, const Label& ai, 
+         const RTref<Range>& B, const Label& bi, 
+         RTref<Range>& C,       const Label& ci);
+template 
+void 
+contract(const RTref<IndexSet>& A, const Label& ai, 
+         const RTref<IndexSet>& B, const Label& bi, 
+         RTref<IndexSet>& C,       const Label& ci);
 
 
 struct MultInfo
@@ -765,10 +800,11 @@ computeMultInfo(const Label& ai,
     return I;
     }
 
+template<typename RangeT>
 void 
-contractloop(const RTensor& A, const Label& ai, 
-             const RTensor& B, const Label& bi, 
-             RTensor& C,       const Label& ci,
+contractloop(const RTref<RangeT>& A, const Label& ai, 
+             const RTref<RangeT>& B, const Label& bi, 
+             RTref<RangeT>& C,       const Label& ci,
              const Args& args)
     {
     auto nthread = args.getInt("NThread",4);
@@ -788,18 +824,18 @@ contractloop(const RTensor& A, const Label& ai,
 
     abc.computePerms();
 
-    vector<long> cdims(rc);
-    for(int i = 0; i < ra; ++i)
-        if(abc.AtoC[i] >= 0)
-            {
-            cdims[abc.AtoC[i]] = A.n(i);
-            }
-    for(int j = 0; j < rb; ++j)
-        if(abc.BtoC[j] >= 0)
-            {
-            cdims[abc.BtoC[j]] = B.n(j);
-            }
-    C = RTensor(cdims,0.);
+    //vector<long> cdims(rc);
+    //for(int i = 0; i < ra; ++i)
+    //    if(abc.AtoC[i] >= 0)
+    //        {
+    //        cdims[abc.AtoC[i]] = A.n(i);
+    //        }
+    //for(int j = 0; j < rb; ++j)
+    //    if(abc.BtoC[j] >= 0)
+    //        {
+    //        cdims[abc.BtoC[j]] = B.n(j);
+    //        }
+    //C = tensor<Real>(cdims,0.);
 
     auto nfo = computeMultInfo(ai,bi,ci);
 
@@ -807,7 +843,7 @@ contractloop(const RTensor& A, const Label& ai,
     auto Brow = B.n(1), Bcol = B.n(0);
     auto Crow = C.n(1), Ccol = C.n(0);
 
-    GCounter couA(0,ra-1,0), 
+    detail::GCounter couA(0,ra-1,0), 
              couB(0,rb-1,0);
     //Keep couA.i[0] and couA.i[1] fixed at 0
     couA.setInd(0,0,0);
@@ -880,5 +916,17 @@ contractloop(const RTensor& A, const Label& ai,
         }
     cabq.run(nthread);
     }
+template
+void 
+contractloop(const RTref<Range>& A, const Label& ai, 
+             const RTref<Range>& B, const Label& bi, 
+             RTref<Range>& C,       const Label& ci,
+             const Args& args);
+template
+void 
+contractloop(const RTref<IndexSet>& A, const Label& ai, 
+             const RTref<IndexSet>& B, const Label& bi, 
+             RTref<IndexSet>& C,       const Label& ci,
+             const Args& args);
 
 };
