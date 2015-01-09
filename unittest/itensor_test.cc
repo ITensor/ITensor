@@ -248,7 +248,7 @@ SECTION("Constructors")
         Index linkind("linkind",10);
         Vector V(linkind.m()); 
         V.Randomize();
-        ITensor t10(linkind,V);
+        ITensor t10(V,linkind);
 
         CHECK_EQUAL(t10.r(),1);
         CHECK(hasindex(t10,linkind));
@@ -262,7 +262,7 @@ SECTION("Constructors")
               i2("i2",10);
         Vector V(i1.m()); 
         V.Randomize();
-        ITensor T(i1,i2,V);
+        ITensor T(V,i1,i2);
 
         CHECK_EQUAL(T.r(),2);
         CHECK(hasindex(T,i1));
@@ -632,8 +632,8 @@ SECTION("SumDifference")
                V2(std::min(l6.m(),b4.m()));
         V1.Randomize();
         V2.Randomize();
-        ITensor v1(l6,b4,V1),
-                v2(b4,l6,V2);
+        ITensor v1(V1,l6,b4),
+                v2(V2,b4,l6);
         auto r = v1+v2;
         for(int j1 = 1; j1 <= 2; ++j1)
         for(int j2 = 1; j2 <= 4; ++j2)
@@ -781,150 +781,6 @@ SECTION("ContractingProduct")
     CHECK(!hasindex(Hpsi,a2));
     }
 
-//SECTION("NonContractingProduct")
-//    {
-//    ITensor L(b2,a1,b3,b4), R(a1,b3,a2,b5,b4);
-//
-//    L.randomize(); R.randomize();
-//
-//    Real fL = Global::random(), fR = Global::random();
-//    ITensor Lf = L * fL;
-//    ITensor Rf = R * fR;
-//
-//    ITensor res1 = Lf / Rf;
-//
-//    CHECK(hasindex(res1,b2));
-//    CHECK(hasindex(res1,a2));
-//    CHECK(hasindex(res1,b5));
-//    CHECK(hasindex(res1,a1));
-//    CHECK(hasindex(res1,b3));
-//    CHECK(hasindex(res1,b4));
-//
-//    CHECK_EQUAL(res1.r(),6);
-//
-//    for(int j2 = 1; j2 <= 2; ++j2)
-//    for(int j3 = 1; j3 <= 3; ++j3)
-//    for(int j4 = 1; j4 <= 4; ++j4)
-//    for(int j5 = 1; j5 <= 5; ++j5)
-//    {
-//        Real val = L(b2(j2),b3(j3),b4(j4))*fL * R(b3(j3),b5(j5),b4(j4))*fR;
-//        CHECK_CLOSE(res1(b2(j2),b3(j3),b4(j4),b5(j5)),val,1E-10);
-//    }
-//
-//    ITensor res2 = R/L;
-//
-//    CHECK(hasindex(res2,b2));
-//    CHECK(hasindex(res2,a2));
-//    CHECK(hasindex(res2,b5));
-//    CHECK(hasindex(res2,a1));
-//    CHECK(hasindex(res2,b3));
-//    CHECK(hasindex(res2,b4));
-//
-//    CHECK_EQUAL(res2.r(),6);
-//
-//    for(int j2 = 1; j2 <= 2; ++j2)
-//    for(int j3 = 1; j3 <= 3; ++j3)
-//    for(int j4 = 1; j4 <= 4; ++j4)
-//    for(int j5 = 1; j5 <= 5; ++j5)
-//    {
-//        Real val = L(b2(j2),a1(1),b3(j3),b4(j4)) * R(a1(1),b3(j3),a2(1),b5(j5),b4(j4));
-//        CHECK_CLOSE(res2(b2(j2),b3(j3),b4(j4),b5(j5)),val,1E-10);
-//    }
-//
-//    ITensor Q(a1,b4,a2,b2), P(a2,a3,a1);
-//
-//    Q.randomize(); P.randomize();
-//
-//    Real fQ = Global::random(), fP = Global::random();
-//    ITensor Qf = Q * fQ;
-//    ITensor Pf = P * fP;
-//
-//    ITensor res3 = Qf/Pf;
-//
-//    CHECK(hasindex(res3,b4));
-//    CHECK(hasindex(res3,b2));
-//    CHECK(hasindex(res3,a3));
-//    CHECK(hasindex(res3,a1));
-//    CHECK(hasindex(res3,a2));
-//
-//    CHECK_EQUAL(res3.r(),5);
-//
-//    for(int j2 = 1; j2 <= 2; ++j2)
-//    for(int j4 = 1; j4 <= 4; ++j4)
-//    {
-//        Real val = Q(a1(1),b4(j4),a2(1),b2(j2))*fQ * P(a2(1),a3(1),a1(1))*fP;
-//        CHECK_CLOSE(res3(b4(j4),b2(j2)),val,1E-10);
-//    }
-//
-//    ITensor res4 = Pf/Qf;
-//
-//    CHECK(hasindex(res4,b4));
-//    CHECK(hasindex(res4,b2));
-//    CHECK(hasindex(res4,a3));
-//    CHECK(hasindex(res4,a1));
-//    CHECK(hasindex(res4,a2));
-//
-//    CHECK_EQUAL(res4.r(),5);
-//
-//    for(int j2 = 1; j2 <= 2; ++j2)
-//    for(int j4 = 1; j4 <= 4; ++j4)
-//    {
-//        Real val = Q(a1(1),b4(j4),a2(1),b2(j2))*fQ * P(a2(1),a3(1),a1(1))*fP;
-//        CHECK_CLOSE(res4(b4(j4),b2(j2)),val,1E-10);
-//    }
-//
-//
-//    ITensor psi(a1,a2,a3), mpoh(l2,a1,prime(a1),a2,prime(a2));
-//    psi.randomize(); mpoh.randomize();
-//
-//    ITensor Hpsi = mpoh / psi;
-//
-//    CHECK_EQUAL(Hpsi.r(),6);
-//    CHECK(hasindex(Hpsi,l2));
-//    CHECK(hasindex(Hpsi,a1));
-//    CHECK(hasindex(Hpsi,a2));
-//    CHECK(hasindex(Hpsi,prime(a1)));
-//    CHECK(hasindex(Hpsi,prime(a2)));
-//    CHECK(hasindex(Hpsi,a3));
-//
-//    for(int j2 = 1; j2 <= 2; ++j2)
-//        { CHECK_CLOSE(Hpsi(l2(j2)),psi(a1(1),a2(1),a3(1))*mpoh(l2(j2)),1E-10); }
-//    }
-//
-//SECTION("ComplexNonContractingProduct")
-//    {
-//    ITensor Lr(b2,b3,b4), Li(b2,b3,b4),
-//            Rr(b3,a2,b5,b4), Ri(b3,a2,b5,b4);
-//
-//    Lr.randomize(); 
-//    Li.randomize(); 
-//    Rr.randomize();
-//    Ri.randomize();
-//
-//    ITensor L = Complex_1*Lr + Complex_i*Li;
-//    ITensor R = Complex_1*Rr + Complex_i*Ri;
-//
-//    ITensor res1 = L / R;
-//
-//    CHECK(hasindex(res1,b2));
-//    CHECK(hasindex(res1,a2));
-//    CHECK(hasindex(res1,b5));
-//    CHECK(hasindex(res1,b3));
-//    CHECK(hasindex(res1,b4));
-//
-//    CHECK_EQUAL(res1.r(),5);
-//
-//    ITensor resR(realPart(res1)),
-//            resI(imagPart(res1));
-//
-//    ITensor rdiff = resR-(Lr/Rr-Li/Ri);
-//    ITensor idiff = resI-(Lr/Ri+Li/Rr);
-//
-//    CHECK(norm(rdiff) < 1E-12);
-//    CHECK(norm(idiff) < 1E-12);
-//
-//    }
-//
 //SECTION("TieIndices")
 //    {
 //
@@ -1377,33 +1233,33 @@ SECTION("CommonIndex")
     CHECK(commonIndex(T1,T2,Site) == s1);
     }
 
-//SECTION("DiagITensorBasicContraction")
-//    {
-//    Vector v(3);
-//    v(1) = -0.8;
-//    v(2) = 1.7;
-//    v(3) = 4.9;
-//
-//    Vector vb(2);
-//    vb(1) = 1;
-//    vb(2) = -1;
-//
-//    const Real f1 = Global::random(),
-//               f2 = Global::random();
-//
-//    ITensor op1(s1,prime(s1),f1),
-//            op2(s1,prime(s1),f2),
-//            opa(s1,a1,3.1),
-//            psi(s1,l1,-1),
-//            opb(s1,b2,vb);
-//
-//    auto r1 = randIT(s1,prime(s1,2)),
-//         r2 = randIT(s1,prime(s1,2));
-//
-//    auto res1 = op1*r1;
-//    res1.mapprime(1,0);
-//    CHECK(norm(res1-f1*r1) < 1E-10);
-//    }
+SECTION("DiagITensorBasicContraction")
+    {
+    Vector v(3);
+    v(1) = -0.8;
+    v(2) = 1.7;
+    v(3) = 4.9;
+
+    Vector vb(2);
+    vb(1) = 1;
+    vb(2) = -1;
+
+    Real f1 = Global::random(),
+         f2 = Global::random();
+
+    ITensor op1(f1,s1,prime(s1),s2,prime(s2)),
+            op2(f2,s1,prime(s1)),
+            opa(3.1,s1,a1),
+            psi(-1,s1,l1),
+            opb(vb,s1,b2);
+
+    //auto r1 = randIT(s1,prime(s1,2)),
+    //     r2 = randIT(s1,prime(s1,2));
+
+    //auto res1 = op1*r1;
+    //res1.mapprime(1,0);
+    //CHECK(norm(res1-f1*r1) < 1E-10);
+    }
 
 //SECTION("Complex Diag ITensor")
 //    {

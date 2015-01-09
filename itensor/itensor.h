@@ -50,21 +50,17 @@ class ITensor
 
     //Construct ITensor with diagonal elements set to z
     //(z can be Real argument too; convertible to Complex)
-    //template<typename... Inds>
-    //ITensor(Complex z, 
-    //        const Index& i1,
-    //        const Inds&... inds);
+    template<typename... Inds>
+    ITensor(Complex z, 
+            const Index& i1,
+            const Inds&... inds);
 
-    //Construct rank 1 ITensor,
-    //elements given by VectorRef V
-    ITensor(const Index& i1,
-            const VectorRef& V);
-
-    //Construct diagonal rank 2 ITensor,
+    //Construct diagonal ITensor,
     //diagonal elements given by VectorRef V
-    ITensor(const Index& i1,
-            const Index& i2,
-            const VectorRef& V);
+    template<typename... Inds>
+    ITensor(const VectorRef& V,
+            const Index& i1,
+            const Inds&... inds);
 
     //Construct rank n ITensor, all
     //entries set to zero except the single
@@ -299,16 +295,47 @@ ITensor(const Index& i1,
     store_(make_shared<ITDense<Real>>(area(is_),0.))
 	{ }
 
-//template<typename... Inds>
-//ITensor::
-//ITensor(Complex z, 
-//        const Index& i1,
-//        const Inds&... inds)
-//    :
-//    is_(i1,inds...)
-//    scale_(1.),
-//    store_(make_shared<ITDelta>(z))
-//    { }
+template<typename... Inds>
+ITensor::
+ITensor(Complex z, 
+        const Index& i1,
+        const Inds&... inds)
+    :
+    is_(i1,inds...),
+    scale_(1.)
+    { 
+    long size = i1.m();
+    for(const auto& ind : is_)
+        if(ind.m() < size) size = ind.m();
+    if(z.imag() == 0)
+        store_ = make_shared<ITDiag<Real>>(size,z.real());
+    else
+        store_ = make_shared<ITDiag<Complex>>(size,z);
+    }
+
+template<typename... Inds>
+ITensor::
+ITensor(const VectorRef& V, 
+        const Index& i1,
+        const Inds&... inds)
+    :
+    is_(i1,inds...),
+    scale_(1.),
+    store_(std::make_shared<ITDiag<Real>>(V.begin(),V.end()))
+    { 
+#ifdef DEBUG
+    //Compute min of all index dimensions
+    long minm = i1.m();
+    for(const auto& ind : is_)
+        if(ind.m() < minm) minm = ind.m();
+    if(V.Length() != minm)
+        {
+        Print(minm);
+        Print(V.Length());
+        Error("Wrong size of data in diagonal ITensor constructor");
+        }
+#endif
+    }
 
 
 template <typename... IVals>

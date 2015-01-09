@@ -74,31 +74,6 @@ ITensor(IndexSet&& iset,
     }
 
 ITensor::
-ITensor(const Index& i1,
-        const VectorRef& V)
-    :
-    is_(i1),
-    scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(V.begin(),V.end()))
-	{ 
-    }
-
-ITensor::
-ITensor(const Index& i1,
-        const Index& i2,
-        const VectorRef& V)
-    :
-    is_(i1,i2),
-    scale_(1.),
-    store_(std::make_shared<ITDiag<Real>>(V.begin(),V.end()))
-	{ 
-#ifdef DEBUG
-    if(V.Length() != std::min(i1.m(),i2.m()))
-        Error("Wrong size of data in diagonal ITensor constructor");
-#endif
-    }
-
-ITensor::
 ITensor(const IndexSet& is)
     :
     is_(is),
