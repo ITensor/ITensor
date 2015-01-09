@@ -210,11 +210,31 @@ noprimeEquals(const Index& other) const
     }
 
 bool Index::
-operator<(const Index& other) const 
+operator>(const Index& other) const 
     { 
-    return (p->id == other.p->id)
-         ? (primelevel_ < other.primelevel_)
-         : (p->id < other.p->id);
+    if(this->m() == other.m()) 
+        {
+        if(p->id == other.p->id) 
+            {
+            return primelevel_ > other.primelevel_;
+            }
+        return p->id > other.p->id;
+        }
+    return this->m() > other.m();
+    }
+
+bool Index::
+operator<(const Index& other) const
+    {
+    if(this->m() == other.m()) 
+        {
+        if(p->id == other.p->id) 
+            {
+            return primelevel_ < other.primelevel_;
+            }
+        return p->id < other.p->id;
+        }
+    return this->m() < other.m();
     }
 
 IndexVal Index::

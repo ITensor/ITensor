@@ -128,6 +128,8 @@ class Index
 
     // Useful for sorting Index objects
     bool 
+    operator>(const Index& other) const;
+    bool 
     operator<(const Index& other) const;
 
     // Creates an IndexVal from this Index with value i

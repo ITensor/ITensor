@@ -38,10 +38,8 @@ class IndexSetT
     // construct from 2 or more indices
     template <typename... Inds>
     IndexSetT(const IndexT& i1, 
-             const IndexT& i2,
-             const Inds&... inds);
-
-    IndexSetT(storage&& ii);
+              const IndexT& i2,
+              const Inds&... inds);
 
     template <class Iterable> 
     explicit
@@ -158,15 +156,6 @@ class IndexSetT
     void
     init();
 
-    bool static
-    compare_index(const IndexT& i1,
-                  const IndexT& i2)
-        {
-        return i1.m() == i2.m() 
-               ? (i1 < i2)
-               : (i1.m() > i2.m());
-        }
-
     };
 
 template<class IndexT>
@@ -197,16 +186,6 @@ IndexSetT(const IndexT& i1,
          const Inds&... inds)
     :
     index_{i1,i2,inds...},
-    rn_(0)
-    { 
-    init();
-    }
-
-template <class IndexT>
-IndexSetT<IndexT>::
-IndexSetT(storage&& ii)
-    :
-    index_(std::move(ii)),
     rn_(0)
     { 
     init();
@@ -471,7 +450,8 @@ init()
         if(!ii) Error("Default initialized index in IndexSetT");
 #endif
 
-    std::sort(index_.begin(),index_.end(),compare_index);
+    auto comp = [](const IndexT& i1, const IndexT& i2) { return i1 > i2; };
+    std::sort(index_.begin(),index_.end(),comp);
 
     stride_ = std::vector<long>(index_.size(),1);
 
