@@ -45,9 +45,6 @@ class IndexSetT
     explicit
     IndexSetT(const Iterable& ii);
 
-    template <class Iterable>
-    IndexSetT(const Iterable& ii, size_t size, size_t offset);
-
     //
     // Accessor Methods
     //
@@ -153,8 +150,9 @@ class IndexSetT
 
     /////////
 
+    template<class Iterable>
     void
-    init();
+    init(const Iterable& inds);
 
     };
 
@@ -182,41 +180,20 @@ template<class IndexT>
 template<typename... Inds>
 IndexSetT<IndexT>::
 IndexSetT(const IndexT& i1, 
-         const IndexT& i2,
-         const Inds&... inds)
-    :
-    index_{i1,i2,inds...},
-    rn_(0)
+          const IndexT& i2,
+          const Inds&... inds)
     { 
-    init();
+    auto ii = std::array<Index,2+sizeof...(inds)>{{i1,i2,inds...}};
+    init(ii);
     }
 
 template <class IndexT>
 template <class Iterable>
 IndexSetT<IndexT>::
 IndexSetT(const Iterable& ii)
-    :
-    index_(ii.begin(),ii.end()),
-    rn_(0)
     { 
-    init();
+    init(ii);
     }
-
-template <class IndexT>
-template <class Iterable>
-IndexSetT<IndexT>::
-IndexSetT(const Iterable& ii, size_t size, size_t offset)
-    :
-    index_(size),
-    rn_(0)
-    { 
-    for(size_t n = offset, i = 0; n < size+offset; ++n, ++i)
-        {
-        index_[i] = ii[n];
-        }
-    init();
-    }
-
 
 
 template <class IndexT>
@@ -440,29 +417,43 @@ write(std::ostream& s) const
 
 
 template<class IndexT>
+template<class Iterable>
 void IndexSetT<IndexT>::
-init()
+init(const Iterable& inds)
     {
 #ifdef DEBUG
-    if(rn_ != 0) Error("rn_ should be zero in init()");
-
-    for(const auto& ii : index_)
+    for(const auto& ii : inds)
         if(!ii) Error("Default initialized index in IndexSetT");
 #endif
+    long r = inds.size();
 
-    auto comp = [](const IndexT& i1, const IndexT& i2) { return i1 > i2; };
-    std::sort(index_.begin(),index_.end(),comp);
+    index_.resize(r);
+    rn_ = r;
+    long i = 0;
+    //Put m==1 indices at back; m>1 at front
+    //rn_ should count # of m>1's when done
+    for(const auto& I : inds)
+        {
+        if(I.m() == 1)
+            {
+            --rn_;
+            index_.at(rn_) = I;
+            }
+        else
+            {
+            index_.at(i) = I;
+            ++i;
+            }
+        }
 
-    stride_ = std::vector<long>(index_.size(),1);
-
+    stride_ = std::vector<long>(r,1);
     long str = 1;
-    for(size_t j = 0; j < index_.size(); ++j)
+    for(long j = 0; j < r; ++j)
         {
         stride_[j] = str;
         if(index_[j].m() != 1) 
             {
             str *= index_[j].m();
-            ++rn_;
             }
         }
     }

@@ -58,16 +58,8 @@ TEST_CASE("IndexSetTest")
             CHECK(is2.r() == 2);
             CHECK(is2.rn() == 2);
             CHECK(area(is2) == 4*3);
-            //IndexSet automatically sorts the indices
-            CHECK(is2[0] == i4);
-            CHECK(is2[1] == i3);
-
-            auto isA = IndexSet(i3,j3);
-            auto isB = IndexSet(j3,i3);
-            //IndexSet sorts equal-m indices
-            //by their id #
-            CHECK(isA[0] == isA[0]);
-            CHECK(isB[1] == isB[1]);
+            CHECK(is2[0] == i3);
+            CHECK(is2[1] == i4);
             }
 
         SECTION("THREE")
@@ -76,8 +68,8 @@ TEST_CASE("IndexSetTest")
             CHECK(is.r() == 3);
             CHECK(is.rn() == 2);
             CHECK(area(is) == 4*3);
-            CHECK(is[0] == i4);
-            CHECK(is[1] == i3);
+            CHECK(is[0] == i3);
+            CHECK(is[1] == i4);
             CHECK(is[2] == i1);
             }
 
@@ -86,10 +78,15 @@ TEST_CASE("IndexSetTest")
             auto is = IndexSet(i3,i1,i4,i2,i5,i6,i7,i8,i10,i9);
             CHECK(is.r() == 10);
             CHECK(is.rn() == 9);
-            CHECK(is[0] == i10);
-            CHECK(is[1] == i9);
-            CHECK(is[2] == i8);
-            CHECK(is[8] == i2);
+            CHECK(is[0] == i3);
+            CHECK(is[1] == i4);
+            CHECK(is[2] == i2);
+            CHECK(is[3] == i5);
+            CHECK(is[4] == i6);
+            CHECK(is[5] == i7);
+            CHECK(is[6] == i8);
+            CHECK(is[7] == i10);
+            CHECK(is[8] == i9);
             CHECK(is[9] == i1);
             }
         }
