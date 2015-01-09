@@ -13,8 +13,11 @@ NewData Contract::
 operator()(const ITDense<Real>& a1,
            const ITDense<Real>& a2) const
     {
-    auto res = make_newdata<ITDense<Real>>(nis_);
-    contractloop(a1.data,Lind_,a2.data,Rind_,res->data,Pind_);
+    auto res = make_newdata<ITDense<Real>>(area(Nis_),0.);
+    auto t1 = make_tensorref(a1.data.data(),Lis_),
+         t2 = make_tensorref(a2.data.data(),Ris_),
+         tr = make_tensorref(res->data.data(),Nis_);
+    contractloop(t1,Lind_,t2,Rind_,tr,Nind_);
     return std::move(res);
     }
 
@@ -36,7 +39,7 @@ operator()(ITDense<Real>& d) const
 NewData FillReal::
 operator()(const ITDense<Complex>& d) const
     {
-    auto nd = make_newdata<ITDense<Real>>(d.data.inds());
+    auto nd = make_newdata<ITDense<Real>>(d.data.size());
     operator()(*nd);
     return std::move(nd);
     }
@@ -51,17 +54,13 @@ operator()(ITDiag<Real>& d) const
 NewData FillReal::
 operator()(const ITDiag<Complex>& d) const
     {
-    auto nd = make_newdata<ITDiag<Real>>(d.data.size());
-    operator()(*nd);
-    return std::move(nd);
+    return make_newdata<ITDiag<Real>>(d.data.size(),r_);
     }
 
 NewData FillCplx::
 operator()(const ITDense<Real>& d) const
     {
-    auto nd = make_newdata<ITDense<Complex>>(d.data.inds());
-    operator()(*nd);
-    return std::move(nd);
+    return make_newdata<ITDense<Complex>>(d.data.size(),z_);
     }
 
 NewData FillCplx::
@@ -74,7 +73,7 @@ operator()(ITDense<Complex>& d) const
 NewData MultComplex::
 operator()(const ITDense<Real>& d) const
     {
-    auto nd = make_newdata<ITDense<Complex>>(d.data.inds());
+    auto nd = make_newdata<ITDense<Complex>>(d.data.begin(),d.data.end());
     operator()(*nd);
     return std::move(nd);
     }
@@ -106,6 +105,24 @@ operator()(ITDense<Complex>& d) const
     return NewData();
     }
 
+void
+plusEqData(Real fac, Real *d1, const Real *d2, LAPACK_INT size)
+    {
+    LAPACK_INT inc = 1;
+    daxpy_wrapper(&size,&fac,d2,&inc,d1,&inc);
+    }
+
+NewData PlusEQ::
+operator()(ITDense<Real>& a1,
+           const ITDense<Real>& a2)
+    {
+#ifdef DEBUG
+    if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
+#endif
+    plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
+    return NewData();
+    }
+
 NewData PlusEQ::
 operator()(ITDiag<Real>& a1,
            const ITDiag<Real>& a2)
@@ -113,9 +130,7 @@ operator()(ITDiag<Real>& a1,
 #ifdef DEBUG
     if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
 #endif
-    LAPACK_INT size = a1.data.size();
-    LAPACK_INT inc = 1;
-    daxpy_wrapper(&size,&fac_,&(a2.data.front()),&inc,&(a1.data.front()),&inc);
+    plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
     return NewData();
     }
 
@@ -153,16 +168,16 @@ operator()(const ITDense<T>& d) const
     if(!x_.isTooBigForReal()) scalefac = x_.real0();
     else s_ << "  (omitting too large scale factor)\n";
 
-    auto rank = d.data.r();
+    auto rank = is_.r();
     if(rank == 0) return NewData();
 
     auto gc = detail::GCounter(0,rank-1,0);
     for(int i = 0; i < rank; ++i)
-        gc.setInd(i,0,d.data.n(i)-1);
+        gc.setInd(i,0,is_.dim(i)-1);
 
     for(; gc.notDone(); ++gc)
         {
-        auto val = d.data(gc.i);
+        auto val = d.data[ind(is_,gc.i)];
         if(std::norm(val) > Global::printScale())
             {
             s_ << "  (";

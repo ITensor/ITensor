@@ -9,6 +9,7 @@
 #include "itdata/itdiag.h"
 #include "itdata/itcombiner.h"
 #include "indexset.h"
+#include "simpletensor.h"
 
 namespace itensor {
 
@@ -46,24 +47,36 @@ class ApplyIT
         }
     };
 
-struct Contract
+class Contract
     {
     using ind = std::vector<int>;
-    const ind& Lind_,
-               Rind_,
-               Pind_;
-    //New IndexSet
-    const IndexSet<Index>& nis_;
 
-    Contract(const ind& Lind,
+    const ind &Lind_,
+              &Rind_,
+              &Nind_;
+
+    const IndexSet &Lis_,
+                   &Ris_;
+
+    //New IndexSet
+    const IndexSet& Nis_;
+
+    public:
+
+
+    Contract(const IndexSet& Lis,
+             const ind& Lind,
+             const IndexSet& Ris,
              const ind& Rind,
-             const ind& Pind,
-             const IndexSet<Index>& nis)
+             const IndexSet& Nis,
+             const ind& Nind)
         :
         Lind_(Lind),
         Rind_(Rind),
-        Pind_(Pind),
-        nis_(nis)
+        Nind_(Nind),
+        Lis_(Lis),
+        Ris_(Ris),
+        Nis_(Nis)
         { }
 
     NewData
@@ -75,7 +88,7 @@ struct Contract
                const ITCombiner& C) const;
     NewData
     operator()(const ITCombiner& C,
-               const ITDense<Real>& d) const { return operator(d,C); }
+               const ITDense<Real>& d) const { return operator()(d,C); }
 
     //NewData
     //operator()(const ITDiag<Real>& d,
@@ -117,7 +130,7 @@ struct Contract
     //    auto res = new ITDense<product_type>();
     //    //TODO:
     //    Error("Contract not implemented for tensors of different element types.");
-    //    //btas::contract(One,a1.t_,Lind_,a2.t_,Rind_,Zero,res->t_,Pind_);
+    //    //btas::contract(One,a1.t_,Lind_,a2.t_,Rind_,Zero,res->t_,Nind_);
     //    return NewData(res);
     //    }
 
@@ -229,11 +242,15 @@ struct GetElt
     {
     using Inds = std::vector<long>;
 
-    T elt_;
+    const IndexSet& is_;
     const Inds& inds_;
+    T elt_;
 
-    GetElt(const Inds& inds)
-        : inds_(inds)
+    GetElt(const IndexSet& is,
+           const Inds& inds)
+        : 
+        is_(is),
+        inds_(inds)
         { }
 
     explicit operator T() const { return elt_; }
@@ -243,7 +260,7 @@ struct GetElt
     NewData
     operator()(const ITDense<V>& d)
         {
-        elt_ = T{d.data(inds_)};
+        elt_ = T{d.data[ind(is_,inds_)]};
         return NewData();
         }
 
@@ -350,12 +367,7 @@ class PlusEQ
 
     NewData
     operator()(ITDense<Real>& a1,
-               const ITDense<Real>& a2)
-        {
-        //plusEq computes a1.data += a2.data * fac_
-        plusEq(fac_,a2.data,a1.data);
-        return NewData();
-        }
+               const ITDense<Real>& a2);
 
     NewData
     operator()(ITDiag<Real>& a1,
@@ -397,11 +409,11 @@ struct PrintIT
     {
     std::ostream& s_;
     const LogNumber& x_;
-    const IndexSet<Index>& is_;
+    const IndexSet& is_;
 
     PrintIT(std::ostream& s,
             const LogNumber& x,
-            const IndexSet<Index>& is)
+            const IndexSet& is)
         : s_(s), x_(x), is_(is)
         { }
 
@@ -481,26 +493,29 @@ template<int size>
 class SetEltComplex
     {
     Complex elt_;
+    const IndexSet& is_;
     const std::array<long,size>& inds_;
     public:
     SetEltComplex(const Complex& elt,
+                  const IndexSet& is,
                   const std::array<long,size>& inds)
         : elt_(elt),
+          is_(is),
           inds_(inds)
         { }
 
     NewData
     operator()(const ITDense<Real>& d) const
         {
-        auto nd = make_newdata<ITDense<Complex>>(d.data.inds(),d.data.cbegin(),d.data.cend());
-        nd->data(inds_) = elt_;
+        auto nd = make_newdata<ITDense<Complex>>(d.data.cbegin(),d.data.cend());
+        nd->data[ind(is_,inds_)] = elt_;
         return std::move(nd);
         }
 
     NewData
     operator()(ITDense<Complex>& d) const
         {
-        d.data(inds_) = elt_;
+        d.data[ind(is_,inds_)] = elt_;
         return NewData();
         }
 
@@ -513,11 +528,14 @@ template<int size>
 class SetEltReal
     {
     Real elt_;
+    const IndexSet& is_;
     const std::array<int,size>& inds_;
     public:
     SetEltReal(Real elt,
+               const IndexSet& is,
                const std::array<int,size>& inds)
         : elt_(elt),
+          is_(is),
           inds_(inds)
         { }
 
@@ -525,7 +543,7 @@ class SetEltReal
     NewData
     operator()(ITDense<T>& d) const
         {
-        d.data(inds_) = elt_;
+        d.data[ind(is_,inds_)] = elt_;
         return NewData();
         }
 

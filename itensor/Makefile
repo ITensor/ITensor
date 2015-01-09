@@ -26,7 +26,7 @@ SOURCES+= itensor.cc
 
 HEADERS=detail/functions.h detail/skip_iterator.h detail/gcounter.h \
         global.h real.h permutation.h index.h \
-        indexset.h counter.h simpletensor.h contract.h \
+        range.h indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h itdata_functions.h \
         itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
         itensor.h qn.h iqindex.h iqtdat.h  \

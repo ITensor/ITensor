@@ -83,7 +83,7 @@ class ITensor
     r() const { return is_.r(); }
 
     //Access index set
-    const IndexSet<Index>&
+    const IndexSet&
     inds() const { return is_; }
 
     //evaluate to false if ITensor is default constructed
@@ -223,23 +223,23 @@ class ITensor
     //
 
     //Construct by explicitly providing data members
-    ITensor(IndexSet<Index>&& iset,
+    ITensor(IndexSet&& iset,
             NewData nd,
             LogNumber scale);
 
-    //Provide indices from IndexSet<Index>
+    //Provide indices from IndexSet
     explicit
-    ITensor(const IndexSet<Index>& is);
+    ITensor(const IndexSet& is);
 
     //Provide indices from an index set
     //and elements from a VectorRef
-    ITensor(const IndexSet<Index>& is,
+    ITensor(const IndexSet& is,
             const VectorRef& v);
 
-    ITensor(const IndexSet<Index>& is,
+    ITensor(const IndexSet& is,
             const ITensor& t);
 
-    //ITensor(const IndexSet<Index>& is,
+    //ITensor(const IndexSet& is,
     //        const ITensor& t,
     //        const Permutation& P);
 
@@ -275,12 +275,12 @@ class ITensor
         return apply(std::forward<Callable>(f));
         }
 
-    const IndexSet<Index>&
+    const IndexSet&
     indices() const { return inds(); }
 
     private:
     ////////////////////////
-    IndexSet<Index> is_;
+    IndexSet is_;
     LogNumber scale_;
     storage_ptr store_;
     ////////////////////////
@@ -296,7 +296,7 @@ ITensor(const Index& i1,
     :
     is_(i1,i2,i3,rest...),
     scale_(1.),
-    store_(make_shared<ITDense<Real>>(is_))
+    store_(make_shared<ITDense<Real>>(area(is_),0.))
 	{ }
 
 //template<typename... Inds>
@@ -323,9 +323,9 @@ ITensor(const IndexVal& iv1,
     auto inds = std::vector<Index>();
     inds.reserve(size);
     for(const auto& iv : ivs) inds.push_back(iv.index);
-    is_ = IndexSet<Index>(std::move(inds));
+    is_ = IndexSet(std::move(inds));
 
-    store_ = make_shared<ITDense<Real>>(is_);
+    store_ = make_shared<ITDense<Real>>(area(is_),0.);
 
     set(1.,iv1,rest...);
     }
@@ -342,7 +342,7 @@ cplx(const IndexVals&... ivs) const
     std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
     std::vector<long> inds(is_.size(),0);
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
-    auto g = applyFunc<GetElt<Complex,size>>(store_,{inds});
+    auto g = applyFunc<GetElt<Complex,size>>(store_,{is_,inds});
 	try {
 	    return Complex(g)*scale_.real(); 
 	    }
@@ -382,7 +382,7 @@ set(Real val, const IndexVals&... ivs)
     const std::array<IndexVal,size> vals = {{ static_cast<IndexVal>(ivs)...}};
     std::array<int,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
-    applyFunc<SetEltReal<size>>(store_,{val,inds});
+    applyFunc<SetEltReal<size>>(store_,{val,is_,inds});
     }
 
 template <typename... IndexVals>
@@ -394,7 +394,7 @@ set(Complex val, const IndexVals&... ivs)
     const std::array<IndexVal,size> vals = {{ static_cast<IndexVal>(ivs)...}};
     std::array<int,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
-    applyFunc<SetEltComplex<size>>(store_,{val,inds});
+    applyFunc<SetEltComplex<size>>(store_,{val,is_,inds});
     }
 
 //template <typename T, typename... inds>
@@ -471,9 +471,10 @@ combiner(std::vector<Index> inds)
         {
         rm *= i.m();
         }
+    if(rm == 1) Error("Still need to check rm==1 combiner case");
     //Create combined index, will get sorted to front by IndexSet
     inds.emplace_back("cmb",rm);
-    IndexSet<Index> iset(std::move(inds));
+    IndexSet iset(std::move(inds));
     auto nd = NewData(make_newdata<ITCombiner>());
     return ITensor(std::move(iset),std::move(nd),{1.0});
     }

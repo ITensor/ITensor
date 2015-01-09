@@ -30,40 +30,40 @@ TEST_CASE("IndexSetTest")
         {
         SECTION("One")
             {
-            auto is = IndexSet<Index>(i4);
+            auto is = IndexSet(i4);
             CHECK(is.r() == 1);
             CHECK(is.rn() == 1);
-            CHECK(is.dim() == 4);
+            CHECK(area(is) == 4);
             CHECK(is[0] == i4);
             CHECK(is[0] == is.index(1));
 
-            is = IndexSet<Index>(i1);
+            is = IndexSet(i1);
             CHECK(is.r() == 1);
             CHECK(is.rn() == 0);
-            CHECK(is.dim() == 1);
+            CHECK(area(is) == 1);
             CHECK(is[0] == i1);
             CHECK(is[0] == is.index(1));
             }
 
         SECTION("Two")
             {
-            auto is1 = IndexSet<Index>(i4,i3);
+            auto is1 = IndexSet(i4,i3);
             CHECK(is1.r() == 2);
             CHECK(is1.rn() == 2);
-            CHECK(is1.dim() == 4*3);
+            CHECK(area(is1) == 4*3);
             CHECK(is1[0] == i4);
             CHECK(is1[1] == i3);
 
-            auto is2 = IndexSet<Index>(i3,i4);
+            auto is2 = IndexSet(i3,i4);
             CHECK(is2.r() == 2);
             CHECK(is2.rn() == 2);
-            CHECK(is2.dim() == 4*3);
+            CHECK(area(is2) == 4*3);
             //IndexSet automatically sorts the indices
             CHECK(is2[0] == i4);
             CHECK(is2[1] == i3);
 
-            auto isA = IndexSet<Index>(i3,j3);
-            auto isB = IndexSet<Index>(j3,i3);
+            auto isA = IndexSet(i3,j3);
+            auto isB = IndexSet(j3,i3);
             //IndexSet sorts equal-m indices
             //by their id #
             CHECK(isA[0] == isA[0]);
@@ -72,10 +72,10 @@ TEST_CASE("IndexSetTest")
 
         SECTION("THREE")
             {
-            auto is = IndexSet<Index>(i3,i1,i4);
+            auto is = IndexSet(i3,i1,i4);
             CHECK(is.r() == 3);
             CHECK(is.rn() == 2);
-            CHECK(is.dim() == 4*3);
+            CHECK(area(is) == 4*3);
             CHECK(is[0] == i4);
             CHECK(is[1] == i3);
             CHECK(is[2] == i1);
@@ -83,7 +83,7 @@ TEST_CASE("IndexSetTest")
 
         SECTION("TEN")
             {
-            auto is = IndexSet<Index>(i3,i1,i4,i2,i5,i6,i7,i8,i10,i9);
+            auto is = IndexSet(i3,i1,i4,i2,i5,i6,i7,i8,i10,i9);
             CHECK(is.r() == 10);
             CHECK(is.rn() == 9);
             CHECK(is[0] == i10);

@@ -29,7 +29,7 @@ ITensor(const Index& i1)
     :
     is_(i1),
     scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(i1.m()))
+    store_(std::make_shared<ITDense<Real>>(i1.m(),0.))
 	{ 
     }
 
@@ -39,7 +39,7 @@ ITensor(const Index& i1,const Index& i2)
     :
     is_(i1,i2),
     scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(i1.m(),i2.m()))
+    store_(std::make_shared<ITDense<Real>>(i1.m()*i2.m(),0.))
 	{ 
     }
     
@@ -48,7 +48,7 @@ ITensor::
 ITensor(Real val) 
     :
     scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(1))
+    store_(std::make_shared<ITDense<Real>>(1,0.))
     { 
     fill(val);
     }
@@ -57,13 +57,13 @@ ITensor::
 ITensor(Complex val) 
     :
     scale_(1.),
-    store_(std::make_shared<ITDense<Complex>>(1))
+    store_(std::make_shared<ITDense<Complex>>(1,0.))
     { 
     fill(val);
     }
 
 ITensor::
-ITensor(IndexSet<Index>&& iset,
+ITensor(IndexSet&& iset,
         NewData nd,
         LogNumber scale)
     :
@@ -79,7 +79,7 @@ ITensor(const Index& i1,
     :
     is_(i1),
     scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(is_,V.begin(),V.end()))
+    store_(std::make_shared<ITDense<Real>>(V.begin(),V.end()))
 	{ 
     }
 
@@ -99,20 +99,20 @@ ITensor(const Index& i1,
     }
 
 ITensor::
-ITensor(const IndexSet<Index>& is)
+ITensor(const IndexSet& is)
     :
     is_(is),
     scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(is_))
+    store_(std::make_shared<ITDense<Real>>(area(is_),0.))
 	{ }
 
 ITensor::
-ITensor(const IndexSet<Index>& is,
+ITensor(const IndexSet& is,
         const VectorRef& v)
     :
     is_(is),
     scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(is_,v.begin(),v.end()))
+    store_(std::make_shared<ITDense<Real>>(v.begin(),v.end()))
 	{ }
 
 struct CopyElems
@@ -144,12 +144,12 @@ struct CopyElems
     };
 
 ITensor::
-ITensor(const IndexSet<Index>& is,
+ITensor(const IndexSet& is,
         const ITensor& t)
     :
     is_(is),
     scale_(t.scale_),
-    store_(std::make_shared<ITDense<Real>>(is_))
+    store_(std::make_shared<ITDense<Real>>(area(is_),0.))
     {
     Error("ITensor(IndexSet,ITensor) constructor currently broken due to automatic sorting of Indices by IndexSet");
     applyFunc<CopyElems>(store_,t.store_);
@@ -170,12 +170,12 @@ ITensor(const Index& i1,
         {
         Matrix Mt = M.t();
         VectorRef vref = Mt.TreatAsVector(); 
-        store_ = make_newdata<ITDense<Real>>(is_,vref.begin(),vref.end());
+        store_ = make_newdata<ITDense<Real>>(vref.begin(),vref.end());
         }
     else
         {
         VectorRef vref = M.TreatAsVector(); 
-        store_ = make_newdata<ITDense<Real>>(is_,vref.begin(),vref.end());
+        store_ = make_newdata<ITDense<Real>>(vref.begin(),vref.end());
         }
     }
 
@@ -183,10 +183,10 @@ ITensor(const Index& i1,
 //class Reshape
 //    {
 //    const Permutation& P_;
-//    const IndexSet<Index>& is_;
+//    const IndexSet& is_;
 //    public:
 //    Reshape(const Permutation& P,
-//            const IndexSet<Index>& is)
+//            const IndexSet& is)
 //        : P_(P), is_(is)
 //        { }
 //
@@ -209,7 +209,7 @@ ITensor(const Index& i1,
 //    };
 //
 //ITensor::
-//ITensor(const IndexSet<Index>& is,
+//ITensor(const IndexSet& is,
 //        const ITensor& t,
 //        const Permutation& P)
 //    :
@@ -313,7 +313,7 @@ operator*=(const ITensor& other)
     int nuniq_all = is_.r()+other.is_.r()-2*ncont_all;
 
     //container in which we will accumulate the new indices
-    IndexSet<Index>::storage newind;
+    IndexSet::storage newind;
     newind.reserve(nuniq_all);
 
     //Go through and assign uncontracted entries of Lind,Rind
@@ -347,7 +347,7 @@ operator*=(const ITensor& other)
         if(!contR[j]) newind.push_back(other.is_[j]);
         }
 
-    IndexSet<Index> new_index(std::move(newind));
+    IndexSet new_index(std::move(newind));
 #ifdef DEBUG
     if(new_index.rn() != nuniq) Error("new_index size not equal to nuniq");
 #endif
@@ -356,14 +356,14 @@ operator*=(const ITensor& other)
     if(other.inds().rn() == 0)
         {
         operator*=(other.cplx());
-        is_.swap(new_index);
+        is_ = std::move(new_index);
         return *this;
         }
     //Check if this is a scalar (modulo m==1 inds)
     if(inds().rn() == 0)
         {
         operator=(other*cplx());
-        is_.swap(new_index);
+        is_ = std::move(new_index);
         return *this;
         }
 
@@ -405,9 +405,9 @@ operator*=(const ITensor& other)
         }
     println("}");
 
-    applyFunc<Contract>(store_,other.store_,{Lind,Rind,Pind,new_index});
+    applyFunc<Contract>(store_,other.store_,{is_,Lind,other.is_,Rind,new_index,Pind});
 
-    is_.swap(new_index);
+    is_ = std::move(new_index);
 
     scale_ *= other.scale_;
 
