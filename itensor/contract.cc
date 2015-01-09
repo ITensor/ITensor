@@ -373,7 +373,6 @@ contract(ABCProps& abc,
          const RTref<RangeT>& B, 
                RTref<RangeT>& C)
     {
-    println("---------------");
     // Optimizations TODO
     //
     // o Detect whether doing cref = bref*aref or cref = aref*bref
@@ -396,14 +395,12 @@ contract(ABCProps& abc,
          dmid = 1,
          dright = 1;
     int c = 0;
-    //vector<long> cdims(rc);
     for(int i = 0; i < ra; ++i)
         {
         if(!contractedA(i))
             {
             dleft *= A.n(i);
             PC.setFromTo(c,abc.AtoC[i]);
-            //cdims[c] = A.n(i);
             ++c;
             }
         else
@@ -417,7 +414,6 @@ contract(ABCProps& abc,
             {
             dright *= B.n(j);
             PC.setFromTo(c,abc.BtoC[j]);
-            //cdims[c] = B.n(j);
             ++c;
             }
         }
@@ -469,11 +465,11 @@ contract(ABCProps& abc,
             }
         }
 
-    printfln("A is matrix = %s",Aismatrix);
-    PRI(abc.ai)
-    printfln("B is matrix = %s",Bismatrix);
-    PRI(abc.bi)
-    PRI(abc.ci)
+    //printfln("A is matrix = %s",Aismatrix);
+    //PRI(abc.ai)
+    //printfln("B is matrix = %s",Bismatrix);
+    //PRI(abc.bi)
+    //PRI(abc.ci)
 
     if(Aismatrix && Bismatrix)
         {
@@ -507,7 +503,6 @@ contract(ABCProps& abc,
         }
     else
         {
-        println("Reshaping A");
         PA = Permutation(ra);
         //Permute contracted indices to the front,
         //in the same order as on B
@@ -557,7 +552,6 @@ contract(ABCProps& abc,
         }
     else
         {
-        println("Reshaping B");
         PB = Permutation(rb);
         int newi = 0;
         if(Aismatrix)
@@ -623,9 +617,9 @@ contract(ABCProps& abc,
             }
         }
 
-    PRI(abc.AtoC)
-    PRI(abc.BtoC)
-    Print(PC);
+    //PRI(abc.AtoC)
+    //PRI(abc.BtoC)
+    //Print(PC);
 
     //
     // Carry out the contraction as a matrix-matrix multiply
@@ -638,11 +632,9 @@ contract(ABCProps& abc,
 
     tensor<Real> newC;
     auto pc_triv = isTrivial(PC);
-    printfln("pc_triv = %s",pc_triv);
+    //printfln("pc_triv = %s",pc_triv);
     if(!pc_triv)
         {
-        PRI(abc.AtoC)
-        PRI(abc.BtoC)
         vector<long> cdims(rc);
         int c = 0;
         if(Aismatrix)
@@ -669,7 +661,6 @@ contract(ABCProps& abc,
                 if(!contractedB(j)) 
                     cdims[c++] = newB.n(j);
             }
-        PRI(cdims)
         //Allocate newC
         newC = tensor<Real>(cdims,0.);
         //Update cref to point at newC
@@ -701,8 +692,6 @@ contract(ABCProps& abc,
         reshape(newC,PC,C);
         //println("C reshaped, took ",cpu.sincemark());
         }
-
-    println("---------------");
     }
 
 template<typename RangeT>
