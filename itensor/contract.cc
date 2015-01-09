@@ -806,7 +806,7 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
     //printfln("nactiveA, B, C are %d %d %d",abc.nactiveA,abc.nactiveB,abc.nactiveC);
     if(abc.nactiveA != 2 || abc.nactiveB != 2 || abc.nactiveC != 2)
         {
-        println("calling contract from within contractloop");
+        //println("calling contract from within contractloop");
         contract(abc,A,B,C);
         return;
         }

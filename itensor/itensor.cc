@@ -383,27 +383,27 @@ operator*=(const ITensor& other)
             }
         }
 
-    println(this->is_);
-    print("Lind = {");
-    for(auto x : Lind)
-        {
-        cout << x << ",";
-        }
-    println("}");
-    println(other.is_);
-    print("Rind = {");
-    for(auto x : Rind)
-        {
-        cout << x << ",";
-        }
-    println("}");
-    println(new_index);
-    print("Pind = {");
-    for(auto x : Pind)
-        {
-        cout << x << ",";
-        }
-    println("}");
+    //println(this->is_);
+    //print("Lind = {");
+    //for(auto x : Lind)
+    //    {
+    //    cout << x << ",";
+    //    }
+    //println("}");
+    //println(other.is_);
+    //print("Rind = {");
+    //for(auto x : Rind)
+    //    {
+    //    cout << x << ",";
+    //    }
+    //println("}");
+    //println(new_index);
+    //print("Pind = {");
+    //for(auto x : Pind)
+    //    {
+    //    cout << x << ",";
+    //    }
+    //println("}");
 
     applyFunc<Contract>(store_,other.store_,{is_,Lind,other.is_,Rind,new_index,Pind});
 
