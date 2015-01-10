@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "option.h"
+#include "args.h"
 #include <cerrno>
 #include <algorithm>
 #include <iostream>
