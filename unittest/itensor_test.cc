@@ -791,6 +791,25 @@ SECTION("ContractingProduct")
         CHECK(!hasindex(Hpsi,a1));
         CHECK(!hasindex(Hpsi,a2));
         }
+
+    SECTION("Case 6")
+        {
+        auto T1 = randIT(b3,b5,l6,a1,s3),
+             T2 = randIT(l6,s4,b3,a1);
+        auto R = T1*T2;
+        for(int j5 = 1; j5 <= 5; ++j5)
+        for(int i3 = 1; i3 <= 2; ++i3)
+        for(int i4 = 1; i4 <= 2; ++i4)
+            {
+            Real val = 0;
+            for(int j3 = 1; j3 <= 3; ++j3)
+            for(int k6 = 1; k6 <= 2; ++k6)
+                {
+                val += T1.real(b3(j3),b5(j5),l6(k6),s3(i3)) * T2.real(l6(k6),s4(i4),b3(j3));
+                }
+            CHECK_CLOSE(R.real(b5(j5),s3(i3),s4(i4)),val,1E-10);
+            }
+        }
     }
 
 //SECTION("TieIndices")
