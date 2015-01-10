@@ -3,7 +3,7 @@
 
 
 #include "matrix.h"
-#include "minmax.h"
+//#include "minmax.h"
 #include "bigmatrix.h"		/* include file for BigMatrix type */
 #include "indent.h"
 #include <math.h>

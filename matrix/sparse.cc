@@ -44,9 +44,9 @@ SparseVector::adjustsize(int minsize,int maxsize)
     if (maxsize < minsize)
 	maxsize = minsize;
 
-    int s = max(minsize, int (cursize * SparseVector::efactor()));
-    s = max(SparseVector::minrsize(), s);
-    s = min(maxsize, s);
+    int s = std::max(minsize, int (cursize * SparseVector::efactor()));
+    s = std::max(SparseVector::minrsize(), s);
+    s = std::min(maxsize, s);
 
     if (Length() > 1 && !sorted)
 	{				// sort and consolidate the row 
@@ -249,7 +249,7 @@ void SparseMatrix::make(int r,int c)
 
     if (r < 0 || c < 0)
 	_merror("SparseMatrix::make: Bad arguments");
-    diag.ReDimension(max(0,min(r,c)));
+    diag.ReDimension(std::max(0,std::min(r,c)));
     nrows = r;
     ncols = c;
     noff = 0;
@@ -445,7 +445,7 @@ void mult(const SparseMatrix& S,const VectorRef& V1,VectorRef& V2)
     if (V2.Length() != S.Nrows())
 	_merror("mult(S,V1,V2): Vector V2 wrong size");
 
-    int ndiag = min(S.nrows, S.ncols);	// Multiply by diagonal elements 
+    int ndiag = std::min(S.nrows, S.ncols);	// Multiply by diagonal elements 
 
     elmult(S.diag,V1.SubVector(1,ndiag),V2.SubVector(1,ndiag));
     if(ndiag < V2.Length())
@@ -463,7 +463,7 @@ Vector SparseMatrix::TransposeTimes(const VectorRef& V) const
 
     Vector B;
     B.ReDimension(ncols);
-    int ndiag = min(nrows, ncols);	// Multiply by diagonal elements 
+    int ndiag = std::min(nrows, ncols);	// Multiply by diagonal elements 
     elmult(diag,V.SubVector(1,ndiag),B.SubVector(1,ndiag));
     if(ndiag < V.Length())
 	B.SubVector(ndiag+1,B.Length()) = 0.0;
@@ -489,7 +489,7 @@ void mult(const SparseMatrix &S, const MatrixRef &A, MatrixRef &B)
     if (B.Ncols() != A.Ncols())
 	_merror("mult(S,A,B): Matrix A wrong size");
 
-    int ndiag = min(S.nrows, S.ncols);	// Multiply by diagonal elements 
+    int ndiag = std::min(S.nrows, S.ncols);	// Multiply by diagonal elements 
 
     int i;
     for (i = 1; i <= ndiag; i++)
@@ -515,7 +515,7 @@ void mult(const MatrixRef &A, const SparseMatrix &S, MatrixRef &B)
     if (B.Ncols() != S.Ncols())
 	_merror("mult(A,S,B): Matrix A wrong size");
 
-    int ndiag = min(S.nrows, S.ncols);	// Multiply by diagonal elements 
+    int ndiag = std::min(S.nrows, S.ncols);	// Multiply by diagonal elements 
 
     int i;
     for (i = 1; i <= ndiag; i++)
@@ -571,7 +571,7 @@ void SparseMatrix::read(istream& s)
     s.read((char *) &(nc), sizeof(nc));
     make(nr, nc);
 
-    int ndiag = min(nrows, ncols);
+    int ndiag = std::min(nrows, ncols);
     s.read((char *) diag.Store(), ndiag * sizeof(Real));
 
     noff = 0;
@@ -596,7 +596,7 @@ void SparseMatrix::write(ostream& s)
     s.write((char *) &(nrows), sizeof(nrows));
     s.write((char *) &(ncols), sizeof(ncols));
 
-    int ndiag = min(nrows, ncols);
+    int ndiag = std::min(nrows, ncols);
     s.write((char *) diag.Store(), ndiag * sizeof(Real));
 
     int i;
@@ -619,7 +619,7 @@ ostream& operator<<(ostream& s, const SparseMatrix& X)
     s << ", diagonal Elements:" << iendl;
 
     int i,j;
-    for (i = 0; i < min(X.nrows, X.ncols); i++)
+    for (i = 0; i < std::min(X.nrows, X.ncols); i++)
 	s << i << "," << i << ": " << std::setw(w) << X.diag.el(i) << iendl;
 
     s << iendl << "Off-diagonal Elements:" << iendl;
@@ -646,7 +646,7 @@ void SparseMatrix::PrintSymmetric(ostream& s)
     s << ", diagonal Elements:" << endl;
 
     int i,j;
-    for (i = 0; i < min(nrows, ncols); i++)
+    for (i = 0; i < std::min(nrows, ncols); i++)
 	s << i << " " << i << ": " << std::setw(0) << std::setprecision(7)
 	    << diag.el(i) << endl;
 

@@ -2,7 +2,7 @@
 
 #include "matrix.h"
 #include "tarray1.h"
-#include "minmax.h"
+//#include "minmax.h"
 #include <math.h>
 #include <fstream>
 

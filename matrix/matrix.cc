@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iomanip>
 #include <memory.h>
-#include "minmax.h"
+//#include "minmax.h"
 #include "sparse.h"
 #include "indent.h"
 #ifdef _CRAY

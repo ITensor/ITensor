@@ -58,7 +58,7 @@ public:
 
     void ReDimension(int storage, int size = 0)
 	{
-	int s = max(storage,size);
+	int s = std::max(storage,size);
 	data.ReDimension(s); index->ReDimension(s);
 	data.ReduceDimension(size);
 	}
@@ -228,7 +228,7 @@ public:
 	{ return ncols; }
 
     int Storage() const
-	{ return noff + min(nrows, ncols); }
+	{ return noff + std::min(nrows, ncols); }
 
     VectorRef DiagRef() const	// Pointer to diagonal elements 
 	{ return diag; }
@@ -240,10 +240,10 @@ public:
 	{ return (i >= 0 && i < nrows) ? row[i].Length() : -1; }
 
     Real DiagElement(int i) const	// return diagonal element i 
-	{ return (i > 0 && i <= min(nrows, ncols)) ? diag(i) : 0.0; }
+	{ return (i > 0 && i <= std::min(nrows, ncols)) ? diag(i) : 0.0; }
 
     Real DiagElement0(int i) const  // return diagonal element i, starting at 0
-	{ return (i >= 0 && i < min(nrows, ncols)) ? diag.el(i) : 0; }
+	{ return (i >= 0 && i < std::min(nrows, ncols)) ? diag.el(i) : 0; }
 
     Real ODElement(int r, int i) const    // return ith OD element in Row row 
 	{ return row[r-1].data(i); }

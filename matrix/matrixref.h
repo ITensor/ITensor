@@ -5,7 +5,7 @@
 
 //#define MATRIXBOUNDS		/* Define this for bounds checking  * /
 
-#include "minmax.h"
+//#include "minmax.h"
 #include "storelink.h"
 #include "tarray1.h"
 #include <cassert>
@@ -773,7 +773,7 @@ inline VectorRef MatrixRef::Column(int i) const
     }
 
 inline VectorRef MatrixRef::Diagonal() const
-    { return VectorRef(slink,store,min(nrows,ncols),rowstride+1,scale); }
+    { return VectorRef(slink,store,std::min(nrows,ncols),rowstride+1,scale); }
 
 inline MatrixRef MatrixRef::SubMatrix(int il, int iu, int jl, int ju) const
     { 
