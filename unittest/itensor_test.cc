@@ -24,7 +24,6 @@ class Functor
 
 TEST_CASE("ITensor")
     {
-
     Index s1("s1",2,Site);
     Index s2("s2",2,Site);
     Index s3("s3",2,Site);
@@ -1341,4 +1340,28 @@ SECTION("DiagITensorBasicContraction")
 //    CHECK(Norm(v-t2.diag()) < 1E-12);
 //    }
 
+    SECTION("Combiner")
+        {
+        auto C = combiner(s1,s2);
+
+        //auto T1 = randIT(s1,s2,s3);
+        //auto T1c = C*T1;
+        //CHECK(T1c.r() == 2);
+        //auto ci = commonIndex(C,T1c);
+        //CHECK(ci.m() == s1.m()*s2.m());
+        }
+
+    SECTION("Kronecker Delta Tensor")
+        {
+        auto d = delta(s1,s2);
+        //PrintData(d);
+
+        //auto T1 = randIT(s1,s3);
+        //auto R = d*T1;
+        //CHECK(T1.r() == 2);
+        //CHECK(hasindex(T1,s2));
+        }
+
     } //TEST_CASE("ITensor")
+
+
