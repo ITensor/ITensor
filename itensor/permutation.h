@@ -36,6 +36,11 @@ struct Permutation
     long 
     dest(long j) const { return GET(store_,j); }
 
+    long&
+    operator[](long j) { return store_[j]; }
+    long
+    operator[](long j) const { return store_[j]; }
+
     //bool 
     //check(int d);
 

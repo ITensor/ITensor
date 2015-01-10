@@ -510,8 +510,16 @@ template<typename... Inds>
 ITensor
 combiner(const Index& i1, const Inds&... inds)
     {
-    std::vector<Index> vec{i1,inds...};
-    return combiner(std::vector<Index>{i1,inds...});
+    return combiner({i1,inds...});
+    }
+
+ITensor inline
+delta(const Index& i1, const Index& i2)
+    {
+#ifdef DEBUG
+    if(i1.m() != i2.m()) Error("delta: indices must have same dimension");
+#endif
+    return ITensor({i1,i2},make_newdata<ITCombiner>(),{1.0});
     }
 
 //

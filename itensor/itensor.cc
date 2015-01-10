@@ -284,8 +284,8 @@ operator*=(const ITensor& other)
 
     //nuniq is total number of unique, uncontracted indices
     //(nuniq all includes m==1 indices)
-    int nuniq = is_.rn()+other.is_.rn()-2*ncont;
-    int nuniq_all = is_.r()+other.is_.r()-2*ncont_all;
+    auto nuniq = is_.rn()+other.is_.rn()-2*ncont;
+    auto nuniq_all = is_.r()+other.is_.r()-2*ncont_all;
 
     //container in which we will accumulate the new indices
     IndexSet::storage newind;
@@ -346,7 +346,7 @@ operator*=(const ITensor& other)
     Label Pind(nuniq);
     for(int i = 0; i < new_index.r(); ++i)
         {
-        int j = findindex(is_,new_index[i]);
+        auto j = findindex(is_,new_index[i]);
         if(j >= 0)
             {
             Pind[i] = Lind[j];
@@ -358,27 +358,29 @@ operator*=(const ITensor& other)
             }
         }
 
-    //println(this->is_);
-    //print("Lind = {");
-    //for(auto x : Lind)
-    //    {
-    //    cout << x << ",";
-    //    }
-    //println("}");
-    //println(other.is_);
-    //print("Rind = {");
-    //for(auto x : Rind)
-    //    {
-    //    cout << x << ",";
-    //    }
-    //println("}");
-    //println(new_index);
-    //print("Pind = {");
-    //for(auto x : Pind)
-    //    {
-    //    cout << x << ",";
-    //    }
-    //println("}");
+        //{
+        //println(this->is_);
+        //print("Lind = {");
+        //for(auto x : Lind)
+        //    {
+        //    cout << x << ",";
+        //    }
+        //println("}");
+        //println(other.is_);
+        //print("Rind = {");
+        //for(auto x : Rind)
+        //    {
+        //    cout << x << ",";
+        //    }
+        //println("}");
+        //println(new_index);
+        //print("Pind = {");
+        //for(auto x : Pind)
+        //    {
+        //    cout << x << ",";
+        //    }
+        //println("}");
+        //}
 
     applyFunc<Contract>(store_,other.store_,{is_,Lind,other.is_,Rind,new_index,Pind});
 
@@ -488,7 +490,11 @@ operator+=(const ITensor& other)
     if(this == &other) return operator*=(2.);
     if(this->scale_.isZero()) return operator=(other);
 
-    if(is_ != other.is_)
+    PlusEQ::permutation P(is_.size());
+    try {
+        detail::calc_permutation(is_,other.is_,P);
+        }
+    catch(const ITError& e)
         {
         Print(*this);
         Print(other);
@@ -506,8 +512,15 @@ operator+=(const ITensor& other)
         }
 
     solo();
-
-    applyFunc<PlusEQ>(store_,other.store_,{scalefac});
+    
+    if(isTrivial(P))
+        {
+        applyFunc<PlusEQ>(store_,other.store_,{scalefac});
+        }
+    else
+        {
+        applyFunc<PlusEQ>(store_,other.store_,{P,is_,other.is_,scalefac});
+        }
 
     return *this;
     } 

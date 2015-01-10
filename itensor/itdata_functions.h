@@ -358,11 +358,28 @@ class MultReal
 class PlusEQ
     {
     Real fac_;
+    const Permutation *P_ = nullptr;
+    const IndexSet *is1_ = nullptr,
+                   *is2_ = nullptr;
+    bool permute_ = false;
     public:
+    using permutation = Permutation;
 
     PlusEQ(Real fac)
         :
         fac_(fac)
+        { }
+
+    PlusEQ(const Permutation& P,
+           const IndexSet& is1,
+           const IndexSet& is2,
+           Real fac)
+        :
+        fac_(fac),
+        P_(&P),
+        is1_(&is1),
+        is2_(&is2),
+        permute_(true)
         { }
 
     NewData

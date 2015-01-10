@@ -119,7 +119,18 @@ operator()(ITDense<Real>& a1,
 #ifdef DEBUG
     if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
 #endif
-    plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
+    if(permute_)
+        {
+        auto ref1 = tensorref<Real,IndexSet>(a1.data.data(),*is1_),
+             ref2 = tensorref<Real,IndexSet>(a2.data.data(),*is2_);
+        auto f = fac_;
+        auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
+        reshape(ref2,*P_,ref1,add);
+        }
+    else
+        {
+        plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
+        }
     return NewData();
     }
 

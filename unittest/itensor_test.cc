@@ -648,79 +648,83 @@ SECTION("ContractingProduct")
     {
 
     //Check for rank 0 ITensors
-    {
-    Real f = Global::random();
-    auto rZ = ITensor(f); 
-    auto T = randIT(b2,a1,b4);
-
-    auto res = rZ * T;
-
-    CHECK_EQUAL(rZ.r(),0);
-    CHECK_EQUAL(res.r(),3);
-
-    for(int j2 = 1; j2 <= 2; ++j2)
-    for(int j4 = 1; j4 <= 4; ++j4)
+    SECTION("Rank 0")
         {
-        Real val = f * T.real(b2(j2),a1(1),b4(j4));
-        CHECK_REQUAL(res.real(b2(j2),a1(1),b4(j4)),val);
-        }
-    }
+        Real f = Global::random();
+        auto rZ = ITensor(f); 
+        auto T = randIT(b2,a1,b4);
 
-    //More general case
+        auto res = rZ * T;
+
+        CHECK_EQUAL(rZ.r(),0);
+        CHECK_EQUAL(res.r(),3);
+
+        for(int j2 = 1; j2 <= 2; ++j2)
+        for(int j4 = 1; j4 <= 4; ++j4)
+            {
+            Real val = f * T.real(b2(j2),a1(1),b4(j4));
+            CHECK_REQUAL(res.real(b2(j2),a1(1),b4(j4)),val);
+            }
+        }
+
     auto L = randIT(b4,a1,b3,a2,b2), 
          R = randIT(b5,a1,b4,b2,b3);
 
-    Real fL = Global::random(), 
-         fR = Global::random();
-    auto Lf = L * fL;
-    auto Rf = R * fR;
-
-    auto res1 = Lf*Rf;
-
-    CHECK(hasindex(res1,b5));
-    CHECK(hasindex(res1,a2));
-    CHECK(!hasindex(res1,a1));
-    CHECK(!hasindex(res1,b2));
-    CHECK(!hasindex(res1,b3));
-    CHECK(!hasindex(res1,b4));
-    
-    CHECK_EQUAL(res1.r(),2);
-
-    for(int j5 = 1; j5 <= b5.m(); ++j5)
+    SECTION("Case 1")
         {
-        Real val = 0;
-        for(int j2 = 1; j2 <= 2; ++j2)
-        for(int j3 = 1; j3 <= 3; ++j3)
-        for(int j4 = 1; j4 <= 4; ++j4)
+        Real fL = Global::random(), 
+             fR = Global::random();
+        auto Lf = L * fL;
+        auto Rf = R * fR;
+
+        auto res1 = Lf*Rf;
+
+        CHECK(hasindex(res1,b5));
+        CHECK(hasindex(res1,a2));
+        CHECK(!hasindex(res1,a1));
+        CHECK(!hasindex(res1,b2));
+        CHECK(!hasindex(res1,b3));
+        CHECK(!hasindex(res1,b4));
+        
+        CHECK_EQUAL(res1.r(),2);
+
+        for(int j5 = 1; j5 <= b5.m(); ++j5)
             {
-            val += L.real(b2(j2),a1(1),b3(j3),b4(j4))*fL * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4))*fR;
+            Real val = 0;
+            for(int j2 = 1; j2 <= 2; ++j2)
+            for(int j3 = 1; j3 <= 3; ++j3)
+            for(int j4 = 1; j4 <= 4; ++j4)
+                {
+                val += L.real(b2(j2),a1(1),b3(j3),b4(j4))*fL * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4))*fR;
+                }
+            CHECK_CLOSE(res1.real(a2(1),b5(j5)),val,1E-10);
             }
-        CHECK_CLOSE(res1.real(a2(1),b5(j5)),val,1E-10);
         }
 
-
-
-    auto res2 = R*L;
-
-    CHECK(hasindex(res2,b5));
-    CHECK(hasindex(res2,a2));
-    CHECK(!hasindex(res2,a1));
-    CHECK(!hasindex(res2,b2));
-    CHECK(!hasindex(res2,b3));
-    CHECK(!hasindex(res2,b4));
-
-    CHECK_EQUAL(res2.r(),2);
-
-    for(int j5 = 1; j5 <= b5.m(); ++j5)
+    SECTION("Case 2")
         {
-        Real val = 0;
-        for(int j2 = 1; j2 <= 2; ++j2)
-        for(int j3 = 1; j3 <= 3; ++j3)
-        for(int j4 = 1; j4 <= 4; ++j4)
+        auto res2 = R*L;
+
+        CHECK(hasindex(res2,b5));
+        CHECK(hasindex(res2,a2));
+        CHECK(!hasindex(res2,a1));
+        CHECK(!hasindex(res2,b2));
+        CHECK(!hasindex(res2,b3));
+        CHECK(!hasindex(res2,b4));
+
+        CHECK_EQUAL(res2.r(),2);
+
+        for(int j5 = 1; j5 <= b5.m(); ++j5)
             {
-            val += L.real(b2(j2),a1(1),b3(j3),b4(j4)) * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4));
+            Real val = 0;
+            for(int j2 = 1; j2 <= 2; ++j2)
+            for(int j3 = 1; j3 <= 3; ++j3)
+            for(int j4 = 1; j4 <= 4; ++j4)
+                {
+                val += L.real(b2(j2),a1(1),b3(j3),b4(j4)) * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4));
+                }
+            CHECK_CLOSE(res2.real(a2(1),b5(j5)),val,1E-10);
             }
-        CHECK_CLOSE(res2.real(a2(1),b5(j5)),val,1E-10);
         }
 
     ITensor Q = randIT(a1,b4,a2,b2), 
@@ -731,53 +735,62 @@ SECTION("ContractingProduct")
     auto Qf = Q * fQ;
     auto Pf = P * fP;
 
-    auto res3 = Qf*Pf;
-
-    CHECK(hasindex(res3,b4));
-    CHECK(hasindex(res3,b2));
-    CHECK(hasindex(res3,a3));
-    CHECK(!hasindex(res3,a1));
-    CHECK(!hasindex(res3,a2));
-
-    CHECK_EQUAL(res3.r(),3);
-
-    for(int j2 = 1; j2 <= b2.m(); ++j2)
-    for(int j4 = 1; j4 <= b4.m(); ++j4)
+    SECTION("Case 3")
         {
-        Real val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
-        CHECK_CLOSE(res3.real(b4(j4),b2(j2)),val,1E-10);
+        auto res3 = Qf*Pf;
+
+        CHECK(hasindex(res3,b4));
+        CHECK(hasindex(res3,b2));
+        CHECK(hasindex(res3,a3));
+        CHECK(!hasindex(res3,a1));
+        CHECK(!hasindex(res3,a2));
+
+        CHECK_EQUAL(res3.r(),3);
+
+        for(int j2 = 1; j2 <= b2.m(); ++j2)
+        for(int j4 = 1; j4 <= b4.m(); ++j4)
+            {
+            Real val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
+            CHECK_CLOSE(res3.real(b4(j4),b2(j2)),val,1E-10);
+            }
         }
 
-    auto res4 = Pf*Qf;
-
-    CHECK(hasindex(res4,b4));
-    CHECK(hasindex(res4,b2));
-    CHECK(hasindex(res4,a3));
-    CHECK(!hasindex(res4,a1));
-    CHECK(!hasindex(res4,a2));
-
-    CHECK_EQUAL(res4.r(),3);
-
-    for(int j2 = 1; j2 <= 2; ++j2)
-    for(int j4 = 1; j4 <= 4; ++j4)
+    SECTION("Case 4")
         {
-        Real val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
-        CHECK_CLOSE(res4.real(b4(j4),b2(j2)),val,1E-10);
+        auto res4 = Pf*Qf;
+
+        CHECK(hasindex(res4,b4));
+        CHECK(hasindex(res4,b2));
+        CHECK(hasindex(res4,a3));
+        CHECK(!hasindex(res4,a1));
+        CHECK(!hasindex(res4,a2));
+
+        CHECK_EQUAL(res4.r(),3);
+
+        for(int j2 = 1; j2 <= 2; ++j2)
+        for(int j4 = 1; j4 <= 4; ++j4)
+            {
+            Real val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
+            CHECK_CLOSE(res4.real(b4(j4),b2(j2)),val,1E-10);
+            }
         }
 
 
-    auto psi = randIT(a1,a2,a3), 
-         mpoh = randIT(l2,a1,prime(a1),a2,prime(a2));
+    SECTION("Case 5")
+        {
+        auto psi = randIT(a1,a2,a3), 
+             mpoh = randIT(l2,a1,prime(a1),a2,prime(a2));
 
-    auto Hpsi = mpoh * psi;
+        auto Hpsi = mpoh * psi;
 
-    CHECK_EQUAL(Hpsi.r(),4);
-    CHECK(hasindex(Hpsi,l2));
-    CHECK(hasindex(Hpsi,prime(a1)));
-    CHECK(hasindex(Hpsi,prime(a2)));
-    CHECK(hasindex(Hpsi,a3));
-    CHECK(!hasindex(Hpsi,a1));
-    CHECK(!hasindex(Hpsi,a2));
+        CHECK_EQUAL(Hpsi.r(),4);
+        CHECK(hasindex(Hpsi,l2));
+        CHECK(hasindex(Hpsi,prime(a1)));
+        CHECK(hasindex(Hpsi,prime(a2)));
+        CHECK(hasindex(Hpsi,a3));
+        CHECK(!hasindex(Hpsi,a1));
+        CHECK(!hasindex(Hpsi,a2));
+        }
     }
 
 //SECTION("TieIndices")

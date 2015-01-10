@@ -104,13 +104,15 @@ dist(const RTref<R>& A, const RTref<R>& Ach)
 /// Implementations
 ///
 
-template<typename R1, typename R2>
+
+template<typename R1, typename R2, typename Callable>
 void 
 reshape(const RTref<R1>& T, 
         const Permutation& P, 
-        RTref<R2>& res)
+        RTref<R2>& res,
+        const Callable& func)
     {
-    auto r = T.r();
+    auto r = P.size();
 
 #ifdef DEBUG
     if(res.size() != T.size()) Error("Mismatched storage sizes in reshape");
@@ -146,11 +148,26 @@ reshape(const RTref<R1>& T,
         auto* pt = &T.v(ind(T,Ti));
         for(int k = 0; k < big; ++k)
             {
-            *pr = *pt;
+            func(*pr,*pt);
+            //*pr = *pt;
             pr += stepr;
             pt += stept;
             }
         }
+    }
+
+namespace detail {
+void inline
+assign(Real& r1, Real r2) { r1 = r2; }
+};
+
+template<typename R1, typename R2>
+void 
+reshape(const RTref<R1>& T, 
+        const Permutation& P, 
+        RTref<R2>& res)
+    {
+    reshape(T,P,res,detail::assign);
     }
 
 template<typename RangeT>
@@ -159,7 +176,7 @@ reshape(const RTref<RangeT>& T,
         const Permutation& P, 
         tensor<Real,Range>& res)
     {
-    auto r = T.r();
+    auto r = P.size();
     std::vector<long> resdims(r);
     for(int i = 0; i < r; ++i)
         resdims[P.dest(i)] = T.n(i);

@@ -114,11 +114,6 @@ class IndexSetT
     // Other Methods
     //
 
-    bool
-    operator==(const IndexSetT& other) const;
-    bool
-    operator!=(const IndexSetT& other) const { return !operator==(other); }
-
     void 
     addindex(const IndexT& I);
 
@@ -288,22 +283,22 @@ mapprime(int plevold, int plevnew, IndexType type)
     for(auto& J : index_) J.mapprime(plevold,plevnew,type);
 	}
 
-template <class IndexT>
-bool IndexSetT<IndexT>::
-operator==(const IndexSetT& other) const
-    {
-    if(other.r() != r()) return false;
-
-    //IndexSetT sorts its indices by dimension
-    //and id number, so enough to check if exactly
-    //the same to check if indices are the same
-    //in an unordered sense
-    for(size_t j = 0; j < index_.size(); ++j)
-        {
-        if(index_[j] != other.index_[j]) return false;
-        }
-    return true;
-    }
+//template <class IndexT>
+//bool IndexSetT<IndexT>::
+//operator==(const IndexSetT& other) const
+//    {
+//    if(other.r() != r()) return false;
+//
+//    //IndexSetT sorts its indices by dimension
+//    //and id number, so enough to check if exactly
+//    //the same to check if indices are the same
+//    //in an unordered sense
+//    for(size_t j = 0; j < index_.size(); ++j)
+//        {
+//        if(index_[j] != other.index_[j]) return false;
+//        }
+//    return true;
+//    }
 
 
 //
