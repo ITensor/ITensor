@@ -89,6 +89,30 @@ TEST_CASE("IndexSetTest")
             CHECK(is[8] == i9);
             CHECK(is[9] == i1);
             }
+
+        SECTION("m=1 Indices")
+            {
+            Index a1("a1",1),
+                  a2("a2",1),
+                  a3("a3",1);
+            IndexSet is(j8,a2,j9,a1,a3);
+            CHECK(is[0] == j8);
+            CHECK(is[1] == j9);
+            CHECK(is[2] == a2);
+            CHECK(is[3] == a1);
+            CHECK(is[4] == a3);
+
+            CHECK(is.dim(0) == 8);
+            CHECK(is.stride(0) == 1);
+            CHECK(is.dim(1) == 9);
+            CHECK(is.stride(1) == 8);
+            CHECK(is.dim(2) == 1);
+            CHECK(is.stride(2) == 72);
+            CHECK(is.dim(3) == 1);
+            CHECK(is.stride(3) == 72);
+            CHECK(is.dim(4) == 1);
+            CHECK(is.stride(4) == 72);
+            }
         }
 
     SECTION("PrimeLevelMethods")

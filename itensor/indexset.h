@@ -22,6 +22,14 @@ class IQIndex;
 using IndexSet = IndexSetT<Index>;
 using IQIndexSet = IndexSetT<IQIndex>;
 
+//
+// When constructed from a collection of indices,
+// (as an explicit set of arguments or via
+// a container) puts the indices with m>1 to the
+// front and those with m==1 at the back but otherwise
+// keeps the indices in the order given.
+//
+
 template <class IndexT>
 class IndexSetT
     {
@@ -423,34 +431,28 @@ init(const Iterable& inds)
     long r = inds.size();
 
     index_.resize(r);
-    rn_ = r;
-    long i = 0;
-    //Put m==1 indices at back; m>1 at front
-    //rn_ should count # of m>1's when done
-    for(const auto& I : inds)
-        {
-        if(I.m() == 1)
-            {
-            --rn_;
-            index_.at(rn_) = I;
-            }
-        else
-            {
-            index_.at(i) = I;
-            ++i;
-            }
-        }
-
+    rn_ = 0;
     stride_ = std::vector<long>(r,1);
     long str = 1;
-    for(long j = 0; j < r; ++j)
-        {
-        stride_[j] = str;
-        if(index_[j].m() != 1) 
+    //Put m==1 indices at back; m>1 at front,
+    //keeping original order otherwise.
+    //rn_ should count # of m>1's when done
+    for(const auto& I : inds)
+        if(I.m() > 1)
             {
-            str *= index_[j].m();
+            index_.at(rn_) = I;
+            stride_[rn_] = str;
+            str *= I.m();
+            ++rn_;
             }
-        }
+    long i = rn_;
+    for(const auto& I : inds)
+        if(I.m() == 1)
+            {
+            index_.at(i) = I;
+            stride_[i] = str;
+            ++i;
+            }
     }
 
 //template <class IndexT>
