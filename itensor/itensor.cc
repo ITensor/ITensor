@@ -322,26 +322,28 @@ operator*=(const ITensor& other)
         if(!contR[j]) newind.push_back(other.is_[j]);
         }
 
-    IndexSet new_index(std::move(newind));
-#ifdef DEBUG
-    if(new_index.rn() != nuniq) Error("new_index size not equal to nuniq");
-#endif
-
     //Check if other is a scalar (modulo m==1 inds)
     if(other.inds().rn() == 0)
         {
         operator*=(other.cplx());
-        is_ = std::move(new_index);
+        is_ = IndexSet(std::move(newind));
         return *this;
         }
     //Check if this is a scalar (modulo m==1 inds)
     if(inds().rn() == 0)
         {
         operator=(other*cplx());
-        is_ = std::move(new_index);
+        is_ = IndexSet(std::move(newind));
         return *this;
         }
 
+    auto comp = [](const Index& i1, const Index& i2) { return i1 > i2; };
+    std::sort(newind.begin(),newind.end(),comp);
+
+    IndexSet new_index(std::move(newind));
+#ifdef DEBUG
+    if(new_index.rn() != nuniq) Error("new_index size not equal to nuniq");
+#endif
 
     Label Pind(nuniq);
     for(int i = 0; i < new_index.r(); ++i)
