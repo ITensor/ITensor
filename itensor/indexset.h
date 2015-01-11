@@ -47,11 +47,17 @@ class IndexSetT
     template <typename... Inds>
     IndexSetT(const IndexT& i1, 
               const IndexT& i2,
-              const Inds&... inds);
+              const Inds&... inds)
+        {
+        init(std::array<Index,2+sizeof...(inds)>{{i1,i2,inds...}});
+        }
 
-    template <class Iterable> 
     explicit
-    IndexSetT(const Iterable& ii);
+    IndexSetT(const std::vector<IndexT>& ii) { init(ii); }
+
+    template<size_t N>
+    explicit
+    IndexSetT(const std::array<IndexT,N>& ii) { init(ii); }
 
     //
     // Accessor Methods
@@ -155,7 +161,7 @@ class IndexSetT
 
     template<class Iterable>
     void
-    init(const Iterable& inds);
+    init(Iterable&& inds);
 
     };
 
@@ -178,26 +184,6 @@ IndexSetT(const IndexT& i1)
     if(!i1) Error("i1 is default initialized");
 #endif
     }
-
-template<class IndexT>
-template<typename... Inds>
-IndexSetT<IndexT>::
-IndexSetT(const IndexT& i1, 
-          const IndexT& i2,
-          const Inds&... inds)
-    { 
-    auto ii = std::array<Index,2+sizeof...(inds)>{{i1,i2,inds...}};
-    init(ii);
-    }
-
-template <class IndexT>
-template <class Iterable>
-IndexSetT<IndexT>::
-IndexSetT(const Iterable& ii)
-    { 
-    init(ii);
-    }
-
 
 template <class IndexT>
 void IndexSetT<IndexT>::
@@ -422,7 +408,7 @@ write(std::ostream& s) const
 template<class IndexT>
 template<class Iterable>
 void IndexSetT<IndexT>::
-init(const Iterable& inds)
+init(Iterable&& inds)
     {
 #ifdef DEBUG
     for(const auto& ii : inds)

@@ -106,7 +106,7 @@ template <typename Ret, class T, typename V>
 Ret
 call_impl(T&& obj, V&& v, long) 
     {
-    throw std::runtime_error("Object does not support operator() for specified type.");
+    throw std::runtime_error("Object does not support operator(v)->Ret for specified type.");
     return Ret();
     }
 //
@@ -135,7 +135,7 @@ template <class T, typename V>
 void
 call_impl(T&& obj, V&& v, long) 
     {
-    throw std::runtime_error("Object does not support operator() for specified type.");
+    throw std::runtime_error("Object does not support operator(v) for specified type.");
     }
 //
 // The call(obj,v) function uses substitution-failure-is-not-an-error (sfinae)
@@ -163,7 +163,7 @@ template <typename Ret, class T, typename V1, typename V2>
 Ret
 call_impl(T&& obj, V1&& v1, V2&& v2, long) 
     {
-    throw std::runtime_error("Object does not support operator() for specified type.");
+    throw std::runtime_error("Object does not support operator(v1,v2)->Ret for specified type.");
     return Ret();
     }
 //
@@ -194,7 +194,7 @@ template <class T, typename V1, typename V2>
 void
 call_impl(T&& obj, V1&& v1, V2&& v2, long) 
     {
-    throw std::runtime_error("Object does not support operator() for specified type.");
+    throw std::runtime_error("Object does not support operator(v1,v2) for specified type.");
     }
 //
 // The call(obj,v1,v2) function uses substitution-failure-is-not-an-error (sfinae)

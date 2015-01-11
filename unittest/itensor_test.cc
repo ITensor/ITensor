@@ -1389,7 +1389,10 @@ SECTION("DiagITensorBasicContraction")
         //PrintData(d);
 
         //auto T1 = randIT(s1,s3);
+        //PrintData(T1);
+        //println("Doing d*T1");
         //auto R = d*T1;
+        //PrintData(R);
         //CHECK(T1.r() == 2);
         //CHECK(hasindex(T1,s2));
         }
