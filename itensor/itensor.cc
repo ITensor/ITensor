@@ -317,11 +317,12 @@ operator*=(const ITensor& other)
         return *this;
         }
 
-    is_ = applyFunc<Contract>(store_,other.store_,{is_,Lind,other.is_,Rind});
+    auto C = applyFunc<Contract>(store_,other.store_,{is_,Lind,other.is_,Rind});
+
+    is_ = C.newIndexSet();
 
     scale_ *= other.scale_;
-
-    scaleOutNorm();
+    if(C.scalefac() > 0) scale_ *= C.scalefac();
 
     return *this;
     }
@@ -518,17 +519,15 @@ scaleOutNorm()
     //If norm already 1 return so
     //we don't have to call solo()
     if(fabs(f-1) < 1E-12) return;
-
-    if(f != 0)
-        {
-        solo();
-        applyFunc<MultReal>(store_,{1./f});
-        scale_ *= f;
-        }
-    else //norm == zero
+    if(f == 0)
         {
         scale_ = LogNumber(1.);
+        return;
         }
+
+    solo();
+    applyFunc<MultReal>(store_,{1./f});
+    scale_ *= f;
     }
 
 void ITensor::

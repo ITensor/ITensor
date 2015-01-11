@@ -240,8 +240,8 @@ class ITensor
     //        const Permutation& P);
 
     //Scale factor, used internally for efficient scalar ops.
-    //Mostly for developer use, not necessary to explicitly involve
-    //scale factors in most ITensor operations.
+    //Mostly for developer use; not necessary to explicitly involve
+    //scale factors in user-level ITensor operations.
     const LogNumber&
     scale() const { return scale_; }
 

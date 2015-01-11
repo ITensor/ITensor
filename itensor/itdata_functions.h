@@ -50,14 +50,15 @@ class ApplyIT
 
 class Contract
     {
-    const Label *Lind_,
-                *Rind_;
+    const Label &Lind_,
+                &Rind_;
 
-    const IndexSet *Lis_,
-                   *Ris_;
+    const IndexSet &Lis_,
+                   &Ris_;
 
     //New IndexSet
     IndexSet Nis_;
+    Real scalefac_ = -1;
 
     public:
 
@@ -66,13 +67,16 @@ class Contract
              const IndexSet& Ris,
              const Label& Rind)
         :
-        Lind_(&Lind),
-        Rind_(&Rind),
-        Lis_(&Lis),
-        Ris_(&Ris)
+        Lind_(Lind),
+        Rind_(Rind),
+        Lis_(Lis),
+        Ris_(Ris)
         { }
 
-    operator IndexSet() const { return std::move(Nis_); }
+    IndexSet
+    newIndexSet() { return std::move(Nis_); }
+    Real
+    scalefac() { return scalefac_; }
 
     ITResult
     operator()(const ITDense<Real>& a1,
@@ -82,26 +86,18 @@ class Contract
     operator()(const ITDense<Real>& d,
                const ITCombiner& C)
         {
-        const auto& Cinds = *Ris_;
-        if(Cinds.size() == 2) 
-            {
-            //If combiner has only two indices, no need to modify ITDense
-            //data, just return ITResult() signaling "don't modify"
-            return ITResult::AssignPointer;
-            }
-        if(Cinds.empty()) Error("No indices in ITCombiner product.");
-        //const auto& ci = Cinds[0];
-        Error("General combiner case not implemented.");
-        return ITResult();
+        auto res = combine(d,Lis_,Ris_);
+        if(!res) return ITResult::None;
+        else     return std::move(res);
         }
     ITResult
     operator()(const ITCombiner& C,
                const ITDense<Real>& d)
-            { 
-            std::swap(Lis_,Ris_);
-            std::swap(Lind_,Rind_);
-            return operator()(d,C); 
-            }
+        { 
+        auto res = combine(d,Ris_,Lis_);
+        if(!res) return ITResult::AssignPointer;
+        else     return std::move(res);
+        }
 
     //ITResult
     //operator()(const ITDiag<Real>& d,
@@ -154,6 +150,17 @@ class Contract
         Error("Contract not implemented for this case");
         return ITResult();
         }
+
+    private:
+
+    enum SortOption { Sort, NoSort };
+    void
+    computeNis(SortOption sort);
+
+    NewData
+    combine(const ITDense<Real>& d,
+            const IndexSet& dis,
+            const IndexSet& Cis);
  
     };
 

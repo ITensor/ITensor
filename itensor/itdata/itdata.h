@@ -67,12 +67,7 @@ struct ITResult
     Action action_ = None;
     public:
 
-    ITResult()
-        :
-        action_(None)
-        { }
-
-    ITResult(Action act)
+    ITResult(Action act = None)
         :
         action_(act)
         { }
@@ -109,14 +104,11 @@ struct ITResult
     void
     update_single(T& arg)
         {
-        if(action_ == AssignNewData)
-            {
-            arg = std::move(nd_);
-            }
+        if(action_ == AssignNewData) arg = std::move(nd_);
+#ifdef DEBUG
         else if(action_ == AssignPointer)
-            {
             Error("Can't do AssignPointer action on single pointer.");
-            }
+#endif
         }
     };
 

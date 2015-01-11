@@ -10,51 +10,48 @@ using std::vector;
 
 namespace itensor {
 
+void Contract::
+computeNis(SortOption sort)
+    {
+    long ncont = 0;
+    for(const auto& i : Lind_) if(i < 0) ++ncont;
+    long nuniq = Lis_.r()+Ris_.r()-2*ncont;
+    vector<Index> newind(nuniq);
+    long nn = 0;
+    for(int j = 0; j < Lis_.r(); ++j)
+        {
+        if(Lind_[j] > 0) newind[nn++] = Lis_[j];
+        }
+    for(int j = 0; j < Ris_.r(); ++j)
+        {
+        if(Rind_[j] > 0) newind[nn++] = Ris_[j];
+        }
+    if(sort == Sort)
+        {
+        auto comp = [](const Index& i1, const Index& i2) { return i1 > i2; };
+        std::sort(newind.begin(),newind.end(),comp);
+        }
+    Nis_ = IndexSet(std::move(newind));
+    }
+
 ITResult Contract::
 operator()(const ITDense<Real>& a1,
            const ITDense<Real>& a2)
     {
-    const auto& Lis = *Lis_;
-    const auto& Ris = *Ris_;
-    const auto& Lind = *Lind_;
-    const auto& Rind = *Rind_;
-
-    long ncont = 0;
-    for(const auto& i : Lind) if(i < 0) ++ncont;
-    long nuniq = Lis.r()+Ris.r()-2*ncont;
-    vector<Index> newind(nuniq);
-
-    long nn = 0;
-    for(int j = 0; j < Lis.r(); ++j)
-        {
-        if(Lind[j] > 0) 
-            {
-            newind[nn++] = Lis[j];
-            }
-        }
-    for(int j = 0; j < Ris.r(); ++j)
-        {
-        if(Rind[j] > 0) 
-            {
-            newind[nn++] = Ris[j];
-            }
-        }
-    auto comp = [](const Index& i1, const Index& i2) { return i1 > i2; };
-    std::sort(newind.begin(),newind.end(),comp);
-    Nis_ = IndexSet(std::move(newind));
+    computeNis(Sort);
     
-    Label Nind(nuniq);
+    Label Nind(Nis_.r());
     for(size_t i = 0; i < Nis_.r(); ++i)
         {
-        auto j = findindex(*Lis_,Nis_[i]);
+        auto j = findindex(Lis_,Nis_[i]);
         if(j >= 0)
             {
-            Nind[i] = (*Lind_)[j];
+            Nind[i] = Lind_[j];
             }
         else
             {
-            j = findindex(*Ris_,Nis_[i]);
-            Nind[i] = (*Rind_)[j];
+            j = findindex(Ris_,Nis_[i]);
+            Nind[i] = Rind_[j];
             }
         }
 
@@ -63,12 +60,128 @@ operator()(const ITDense<Real>& a1,
     //PRI(Nind);
 
     auto res = make_newdata<ITDense<Real>>(area(Nis_),0.);
-    auto t1 = make_tensorref(a1.data.data(),Lis),
-         t2 = make_tensorref(a2.data.data(),Ris),
+    auto t1 = make_tensorref(a1.data.data(),Lis_),
+         t2 = make_tensorref(a2.data.data(),Ris_),
          tr = make_tensorref(res->data.data(),Nis_);
-    contractloop(t1,Lind,t2,Rind,tr,Nind);
+    contractloop(t1,Lind_,t2,Rind_,tr,Nind);
+    scalefac_ = 0;
+    for(auto elt : res->data)
+        {
+        scalefac_ += elt*elt;
+        }
+    scalefac_ = std::sqrt(scalefac_);
+    for(auto& elt : res->data)
+        {
+        elt /= scalefac_;
+        }
     return std::move(res);
     }
+
+NewData Contract::
+combine(const ITDense<Real>& d,
+        const IndexSet& dis,
+        const IndexSet& Cis)
+    {
+    const auto& cind = Cis[0];
+    int jc = findindex(dis,cind);
+    if(jc >= 0) //has cind
+        {
+        //dis has cind, replace with other inds
+        vector<Index> newind;
+        newind.reserve(dis.r()+Cis.r()-2);
+        for(int j = 0; j < dis.r(); ++j)
+            if(j == jc)
+                {
+                for(int k = 1; k < Cis.size(); ++k)
+                    newind.push_back(Cis[k]);
+                }
+            else
+                {
+                newind.push_back(dis[j]);
+                }
+        Nis_ = IndexSet(std::move(newind));
+        return NewData();
+        }
+    else
+        {
+        //dis doesn't have cind, replace
+        //Cis[1], Cis[2], ... with cind
+        //may need to reshape
+        int J1 = findindex(dis,Cis[1]);
+        if(J1 < 0) 
+            {
+            println("IndexSet of dense tensor = \n",dis);
+            println("IndexSet of combiner/delta = \n",Cis);
+            Error("No contracted indices in combiner-tensor product");
+            }
+        //Check if Cis[1],Cis[2],... are grouped together (contiguous)
+        bool contig = true;
+        for(int j = J1+1, c = 2; c < Cis.r() && j < dis.r(); ++j,++c)
+            if(dis[j] != Cis[c])
+                {
+                contig = false;
+                break;
+                }
+        if(contig)
+            {
+            vector<Index> newind;
+            newind.reserve(dis.r()-Cis.r()+1);
+            for(int j = 0; j < J1; ++j) 
+                newind.push_back(dis[j]);
+            newind.push_back(cind);
+            for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
+                newind.push_back(dis[j]);
+            Nis_ = IndexSet(std::move(newind));
+            return NewData();
+            }
+        else
+            {
+            Permutation P(dis.r());
+            //Set P destination values to -1 to mark
+            //indices that need to be assigned destinations:
+            for(int i = 0; i < P.size(); ++i) P.setFromTo(i,-1);
+
+            //permute combined indices to the front, in same
+            //order as in Cis:
+            long ni = 0;
+            for(int c = 1; c < Cis.r(); ++c)
+                {
+                int j = findindex(dis,Cis[c]);
+                if(j < 0) 
+                    {
+                    println("IndexSet of dense tensor =\n  ",dis);
+                    println("IndexSet of combiner/delta =\n  ",Cis);
+                    println("Missing index: ",Cis[c]);
+                    Error("Combiner: missing index");
+                    }
+                P.setFromTo(j,ni++);
+                }
+            //permute uncombined indices to back, keeping relative order:
+            vector<Index> newind;
+            vector<long> pdims(dis.r(),-1);
+            newind.reserve(dis.r()-Cis.r()+1);
+            newind.push_back(cind);
+            for(int j = 0; j < dis.r(); ++j)
+                {
+                if(P.dest(j) == -1) 
+                    {
+                    P.setFromTo(j,ni++);
+                    newind.push_back(dis[j]);
+                    }
+                pdims[j] = dis[P.dest(j)].m();
+                }
+            Range rr(pdims);
+            Nis_ = IndexSet(std::move(newind));
+            auto res = make_newdata<ITDense<Real>>(area(Nis_));
+            auto td = make_tensorref(d.data.data(),dis);
+            auto tr = make_tensorref(res->data.data(),rr);
+            reshape(td,P,tr);
+            return std::move(res);
+            }
+        }
+    return NewData();
+    }
+
 
 ITResult FillReal::
 operator()(ITDense<Real>& d) const
