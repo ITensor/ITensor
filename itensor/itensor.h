@@ -424,17 +424,6 @@ set(Complex val, const IndexVals&... ivs)
     applyFunc<SetEltComplex<size>>(store_,{val,is_,inds});
     }
 
-//template <typename T, typename... inds>
-//T& ITensor::
-//elt(int i1, inds... rest)
-//    {
-//    const auto size = 1 + sizeof...(rest);
-//    const std::array<int,size> inds = {{ i0, i1, static_cast<int>(rest)...}};
-//    T* p = nullptr;
-//    applyFunc(GetElt<T,size>(inds,p),store_);
-//    return *p;
-//    }
-
 template <typename Func>
 ITensor& ITensor::
 generate(Func&& f)
@@ -490,26 +479,8 @@ operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }
 ITensor inline
 operator*(const IndexVal& iv, const ITensor& t) { return (ITensor(iv) *= t); }
 
-ITensor inline
-combiner(std::vector<Index> inds)
-    {
-    if(inds.empty()) Error("No indices passed to combiner");
-    long rm = 1;
-    for(const auto& i : inds)
-        {
-        rm *= i.m();
-        }
-    //increase size by 1
-    inds.push_back(Index());
-    //shuffle contents to the end
-    for(size_t j = inds.size()-1; j > 0; --j)
-        {
-        inds[j] = inds[j-1];
-        }
-    //create combined index
-    inds.front() = Index("cmb",rm);
-    return ITensor(IndexSet(std::move(inds)),make_newdata<ITCombiner>(),{1.0});
-    }
+ITensor
+combiner(std::vector<Index> inds);
 
 template<typename... Inds>
 ITensor
@@ -518,14 +489,8 @@ combiner(const Index& i1, const Inds&... inds)
     return combiner({i1,inds...});
     }
 
-ITensor inline
-delta(const Index& i1, const Index& i2)
-    {
-#ifdef DEBUG
-    if(i1.m() != i2.m()) Error("delta: indices must have same dimension");
-#endif
-    return ITensor({i1,i2},make_newdata<ITCombiner>(),{1.0});
-    }
+ITensor
+delta(const Index& i1, const Index& i2);
 
 //
 // Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
