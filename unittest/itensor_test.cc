@@ -48,6 +48,9 @@ TEST_CASE("ITensor")
     Index b3("b3",3);
     Index b4("b4",4);
     Index b5("b5",5);
+    Index b6("b6",6);
+    Index b7("b7",7);
+    Index b8("b8",8);
 
     IndexSet mixed_inds(a2,b3,l1,l2,a4,l4);
     auto mixed_inds_dim = area(mixed_inds);
@@ -1372,26 +1375,89 @@ SECTION("DiagITensorBasicContraction")
 //    CHECK(Norm(v-t2.diag()) < 1E-12);
 //    }
 
+    SECTION("Kronecker Delta Tensor")
+        {
+        auto d = delta(s1,s2);
+
+        auto T1 = randIT(s1,s3);
+
+        auto R1a = d*T1;
+        CHECK(R1a.r() == 2);
+        CHECK(hasindex(R1a,s2));
+
+        auto R1b = T1*d;
+        CHECK(R1b.r() == 2);
+        CHECK(hasindex(R1b,s2));
+
+        for(int i3 = 1; i3 <= s3.m(); ++i3)
+        for(int i12 = 1; i12 <= s1.m(); ++i12)
+            {
+            CHECK_REQUAL(T1.real(s1(i12),s3(i3)), R1a.real(s2(i12),s3(i3)));
+            CHECK_REQUAL(T1.real(s1(i12),s3(i3)), R1b.real(s2(i12),s3(i3)));
+            }
+
+        auto T2 = randIT(s2,s3);
+
+        auto R2a = d*T2;
+        CHECK(R2a.r() == 2);
+        CHECK(hasindex(R2a,s1));
+
+        auto R2b = T2*d;
+        CHECK(R2b.r() == 2);
+        CHECK(hasindex(R2b,s1));
+
+        for(int i3 = 1; i3 <= s3.m(); ++i3)
+        for(int i12 = 1; i12 <= s1.m(); ++i12)
+            {
+            CHECK_REQUAL(T2.real(s2(i12),s3(i3)), R2a.real(s1(i12),s3(i3)));
+            CHECK_REQUAL(T2.real(s2(i12),s3(i3)), R2b.real(s1(i12),s3(i3)));
+            }
+
+        auto T3 = randIT(b8,s1,b6,a1);
+        auto R3a = d*T3;
+        auto R3b = T3*d;
+        CHECK(hasindex(R3a,s2));
+        CHECK(hasindex(R3b,s2));
+
+        auto T4 = randIT(b8,s2,b6,a1);
+        auto R4a = d*T4;
+        auto R4b = T4*d;
+        CHECK(hasindex(R4a,s1));
+        CHECK(hasindex(R4b,s1));
+        }
+
+
     SECTION("Combiner")
         {
         auto C = combiner(s1,s2);
 
-        //auto T1 = randIT(s1,s2,s3);
-        //auto T1c = C*T1;
-        //CHECK(T1c.r() == 2);
-        //auto ci = commonIndex(C,T1c);
-        //CHECK(ci.m() == s1.m()*s2.m());
-        }
+        auto T1 = randIT(s1,s2,s3);
+        auto R1 = C*T1;
+        auto ci = commonIndex(C,R1);
+        CHECK(ci);
+        CHECK(ci.m() == s1.m()*s2.m());
 
-    SECTION("Kronecker Delta Tensor")
-        {
-        auto d = delta(s1,s2);
-        //PrintData(d);
+        for(int i1 = 1; i1 <= s1.m(); ++i1)
+        for(int i2 = 1; i2 <= s2.m(); ++i2)
+        for(int i3 = 1; i3 <= s3.m(); ++i3)
+            {
+            auto j = i1+(i2-1)*s2.m();
+            CHECK_REQUAL(T1.real(s1(i1),s2(i2),s3(i3)), R1.real(ci(j),s3(i3)));
+            }
 
-        //auto T1 = randIT(s1,s3);
-        //auto R = d*T1;
-        //CHECK(T1.r() == 2);
-        //CHECK(hasindex(T1,s2));
+        auto T2 = randIT(s1,s3,s2);
+        auto R2 = C*T2;
+        CHECK(R2.r() == 2);
+        ci = commonIndex(C,R2);
+        CHECK(ci);
+        CHECK(ci.m() == s1.m()*s2.m());
+        for(int i1 = 1; i1 <= s1.m(); ++i1)
+        for(int i2 = 1; i2 <= s2.m(); ++i2)
+        for(int i3 = 1; i3 <= s3.m(); ++i3)
+            {
+            auto j = i1+(i2-1)*s2.m();
+            CHECK_REQUAL(T2.real(s1(i1),s2(i2),s3(i3)), R2.real(ci(j),s3(i3)));
+            }
         }
 
     } //TEST_CASE("ITensor")

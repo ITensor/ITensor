@@ -3,7 +3,6 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor.h"
-#include "contract.h"
 
 using std::array;
 using std::ostream;
@@ -228,6 +227,26 @@ ITensor(const Index& i1,
 //        }
 //    };
 
+vector<Index>
+computeNewInds(const IndexSet& Lis,
+               const Label& Lind,
+               const IndexSet& Ris,
+               const Label& Rind,
+               size_t size_hint = 0)
+    {
+    vector<Index> newind;
+    if(size_hint > 0) newind.reserve(size_hint);
+    for(int j = 0; j < Lis.r(); ++j)
+        {
+        if(Lind[j] > 0) newind.push_back(Lis[j]);
+        }
+    for(int j = 0; j < Ris.r(); ++j)
+        {
+        if(Rind[j] > 0) newind.push_back(Ris[j]);
+        }
+    return newind;
+    }
+
 
 ITensor& ITensor::
 operator*=(const ITensor& other)
@@ -240,157 +259,70 @@ operator*=(const ITensor& other)
         return operator=( ITensor(sqr(this->norm())) );
         }
 
-    std::vector<bool> contL(is_.r(),false),
-                      contR(other.is_.r(),false);
+    const auto& Lis = is_;
+    const auto& Ris = other.is_;
 
     //Set Lind, Rind to zero. Special value 0 marks
     //uncontracted indices. Later will assign unique numbers
     //to these entries in Lind and Rind
-    Label Lind(is_.rn(),0),
-          Rind(other.is_.rn(),0);
+    Label Lind(Lis.r(),0),
+          Rind(Ris.r(),0);
 
     //Count number of contracted indices,
     //set corresponding entries of Lind, Rind
     //to 1,2,...,ncont
-    int ncont = 0;
-    for(int i = 0; i < is_.rn(); ++i)
-    for(int j = 0; j < other.is_.rn(); ++j)
-        if(is_[i] == other.is_[j])
+    int ncont = 1;
+    for(int i = 0; i < Lis.r(); ++i)
+    for(int j = 0; j < Ris.r(); ++j)
+        if(Lis[i] == Ris[j])
             {
-            contL[i] = true;
-            contR[j] = true;
-
+            //Negative entries in 
+            //Lind, Rind indicate
+            //contracted indices
+            Lind[i] = -ncont;
+            Rind[j] = -ncont;
             ++ncont;
-            Lind[i] = ncont;
-            Rind[j] = ncont;
-
             break;
             }
-
-    //Finish making contL, contR for m==1 indices
-    int ncont_all = ncont;
-    for(int i = is_.rn(); i < is_.r(); ++i)
-    for(int j = other.is_.rn(); j < other.is_.r(); ++j)
-        {
-        if(is_[i] == other.is_[j])
-            {
-            ++ncont_all;
-            contL[i] = true;
-            contR[j] = true;
-            break;
-            }
-        }
-
 
     //nuniq is total number of unique, uncontracted indices
     //(nuniq all includes m==1 indices)
-    auto nuniq = is_.rn()+other.is_.rn()-2*ncont;
-    auto nuniq_all = is_.r()+other.is_.r()-2*ncont_all;
-
-    //container in which we will accumulate the new indices
-    IndexSet::storage newind;
-    newind.reserve(nuniq_all);
+    auto nuniq = Lis.r()+Ris.r()-2*ncont;
 
     //Go through and assign uncontracted entries of Lind,Rind
     //the integers ncont+1,ncont+2,...
-    //Simultaneously fill newind (keeping count "ni")
-    int uu = ncont;
-    for(int j = 0; j < is_.rn(); ++j)
+    auto uu = ncont;
+    for(int j = 0; j < Lis.r(); ++j)
         {
-        if(!contL[j]) 
-            {
-            Lind[j] = ++uu;
-            newind.push_back(is_[j]);
-            }
+        if(Lind[j] == 0) Lind[j] = ++uu;
         }
-    for(int j = 0; j < other.is_.rn(); ++j)
+    for(int j = 0; j < Ris.r(); ++j)
         {
-        if(!contR[j]) 
-            {
-            Rind[j] = ++uu;
-            newind.push_back(other.is_[j]);
-            }
-        }
-
-    //Finish filling up newind with m==1 indices
-    for(int j = is_.rn(); j < is_.r(); ++j)
-        {
-        if(!contL[j]) newind.push_back(is_[j]);
-        }
-    for(int j = other.is_.rn(); j < other.is_.r(); ++j)
-        {
-        if(!contR[j]) newind.push_back(other.is_[j]);
+        if(Rind[j] == 0) Rind[j] = ++uu;
         }
 
     //Check if other is a scalar (modulo m==1 inds)
-    if(other.inds().rn() == 0)
+    if(Ris.rn() == 0)
         {
         operator*=(other.cplx());
-        is_ = IndexSet(std::move(newind));
+        is_ = IndexSet(computeNewInds(Lis,Lind,Ris,Rind,nuniq));
         return *this;
         }
     //Check if this is a scalar (modulo m==1 inds)
-    if(inds().rn() == 0)
+    if(Lis.rn() == 0)
         {
+        auto newind = computeNewInds(Lis,Lind,Ris,Rind,nuniq);
         operator=(other*cplx());
         is_ = IndexSet(std::move(newind));
         return *this;
         }
 
-    auto comp = [](const Index& i1, const Index& i2) { return i1 > i2; };
-    std::sort(newind.begin(),newind.end(),comp);
+    auto C = applyFunc<Contract>(store_,other.store_,{is_,Lind,other.is_,Rind});
 
-    IndexSet new_index(std::move(newind));
-#ifdef DEBUG
-    if(new_index.rn() != nuniq) Error("new_index size not equal to nuniq");
-#endif
-
-    Label Pind(nuniq);
-    for(int i = 0; i < new_index.r(); ++i)
-        {
-        auto j = findindex(is_,new_index[i]);
-        if(j >= 0)
-            {
-            Pind[i] = Lind[j];
-            }
-        else
-            {
-            j = findindex(other.is_,new_index[i]);
-            Pind[i] = Rind[j];
-            }
-        }
-
-        //{
-        //println(this->is_);
-        //print("Lind = {");
-        //for(auto x : Lind)
-        //    {
-        //    cout << x << ",";
-        //    }
-        //println("}");
-        //println(other.is_);
-        //print("Rind = {");
-        //for(auto x : Rind)
-        //    {
-        //    cout << x << ",";
-        //    }
-        //println("}");
-        //println(new_index);
-        //print("Pind = {");
-        //for(auto x : Pind)
-        //    {
-        //    cout << x << ",";
-        //    }
-        //println("}");
-        //}
-
-    applyFunc<Contract>(store_,other.store_,{is_,Lind,other.is_,Rind,new_index,Pind});
-
-    is_ = std::move(new_index);
+    is_ = C.newIndexSet();
 
     scale_ *= other.scale_;
-
-    scaleOutNorm();
+    if(C.scalefac() > 0) scale_ *= C.scalefac();
 
     return *this;
     }
@@ -587,17 +519,15 @@ scaleOutNorm()
     //If norm already 1 return so
     //we don't have to call solo()
     if(fabs(f-1) < 1E-12) return;
-
-    if(f != 0)
-        {
-        solo();
-        applyFunc<MultReal>(store_,{1./f});
-        scale_ *= f;
-        }
-    else //norm == zero
+    if(f == 0)
         {
         scale_ = LogNumber(1.);
+        return;
         }
+
+    solo();
+    applyFunc<MultReal>(store_,{1./f});
+    scale_ *= f;
     }
 
 void ITensor::

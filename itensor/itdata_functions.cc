@@ -5,38 +5,192 @@
 #include "itdata_functions.h"
 #include "detail/gcounter.h"
 #include "lapack_wrap.h"
-#include "contract.h"
+
+using std::vector;
 
 namespace itensor {
 
-NewData Contract::
-operator()(const ITDense<Real>& a1,
-           const ITDense<Real>& a2) const
+void Contract::
+computeNis(SortOption sort)
     {
+    long ncont = 0;
+    for(const auto& i : Lind_) if(i < 0) ++ncont;
+    long nuniq = Lis_.r()+Ris_.r()-2*ncont;
+    vector<Index> newind(nuniq);
+    long nn = 0;
+    for(int j = 0; j < Lis_.r(); ++j)
+        {
+        if(Lind_[j] > 0) newind[nn++] = Lis_[j];
+        }
+    for(int j = 0; j < Ris_.r(); ++j)
+        {
+        if(Rind_[j] > 0) newind[nn++] = Ris_[j];
+        }
+    if(sort == Sort)
+        {
+        auto comp = [](const Index& i1, const Index& i2) { return i1 > i2; };
+        std::sort(newind.begin(),newind.end(),comp);
+        }
+    Nis_ = IndexSet(std::move(newind));
+    }
+
+ITResult Contract::
+operator()(const ITDense<Real>& a1,
+           const ITDense<Real>& a2)
+    {
+    computeNis(Sort);
+    
+    Label Nind(Nis_.r());
+    for(size_t i = 0; i < Nis_.r(); ++i)
+        {
+        auto j = findindex(Lis_,Nis_[i]);
+        if(j >= 0)
+            {
+            Nind[i] = Lind_[j];
+            }
+        else
+            {
+            j = findindex(Ris_,Nis_[i]);
+            Nind[i] = Rind_[j];
+            }
+        }
+
+    //PRI(Lind);
+    //PRI(Rind);
+    //PRI(Nind);
+
     auto res = make_newdata<ITDense<Real>>(area(Nis_),0.);
     auto t1 = make_tensorref(a1.data.data(),Lis_),
          t2 = make_tensorref(a2.data.data(),Ris_),
          tr = make_tensorref(res->data.data(),Nis_);
-    contractloop(t1,Lind_,t2,Rind_,tr,Nind_);
+    contractloop(t1,Lind_,t2,Rind_,tr,Nind);
+    scalefac_ = 0;
+    for(auto elt : res->data)
+        {
+        scalefac_ += elt*elt;
+        }
+    scalefac_ = std::sqrt(scalefac_);
+    for(auto& elt : res->data)
+        {
+        elt /= scalefac_;
+        }
     return std::move(res);
     }
 
 NewData Contract::
-operator()(const ITDense<Real>& d,
-           const ITCombiner& C) const
+combine(const ITDense<Real>& d,
+        const IndexSet& dis,
+        const IndexSet& Cis)
     {
-    Error("Not implemented");
+    const auto& cind = Cis[0];
+    int jc = findindex(dis,cind);
+    if(jc >= 0) //has cind
+        {
+        //dis has cind, replace with other inds
+        vector<Index> newind;
+        newind.reserve(dis.r()+Cis.r()-2);
+        for(int j = 0; j < dis.r(); ++j)
+            if(j == jc)
+                {
+                for(int k = 1; k < Cis.size(); ++k)
+                    newind.push_back(Cis[k]);
+                }
+            else
+                {
+                newind.push_back(dis[j]);
+                }
+        Nis_ = IndexSet(std::move(newind));
+        return NewData();
+        }
+    else
+        {
+        //dis doesn't have cind, replace
+        //Cis[1], Cis[2], ... with cind
+        //may need to reshape
+        int J1 = findindex(dis,Cis[1]);
+        if(J1 < 0) 
+            {
+            println("IndexSet of dense tensor = \n",dis);
+            println("IndexSet of combiner/delta = \n",Cis);
+            Error("No contracted indices in combiner-tensor product");
+            }
+        //Check if Cis[1],Cis[2],... are grouped together (contiguous)
+        bool contig = true;
+        for(int j = J1+1, c = 2; c < Cis.r() && j < dis.r(); ++j,++c)
+            if(dis[j] != Cis[c])
+                {
+                contig = false;
+                break;
+                }
+        if(contig)
+            {
+            vector<Index> newind;
+            newind.reserve(dis.r()-Cis.r()+1);
+            for(int j = 0; j < J1; ++j) 
+                newind.push_back(dis[j]);
+            newind.push_back(cind);
+            for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
+                newind.push_back(dis[j]);
+            Nis_ = IndexSet(std::move(newind));
+            return NewData();
+            }
+        else
+            {
+            Permutation P(dis.r());
+            //Set P destination values to -1 to mark
+            //indices that need to be assigned destinations:
+            for(int i = 0; i < P.size(); ++i) P.setFromTo(i,-1);
+
+            //permute combined indices to the front, in same
+            //order as in Cis:
+            long ni = 0;
+            for(int c = 1; c < Cis.r(); ++c)
+                {
+                int j = findindex(dis,Cis[c]);
+                if(j < 0) 
+                    {
+                    println("IndexSet of dense tensor =\n  ",dis);
+                    println("IndexSet of combiner/delta =\n  ",Cis);
+                    println("Missing index: ",Cis[c]);
+                    Error("Combiner: missing index");
+                    }
+                P.setFromTo(j,ni++);
+                }
+            //permute uncombined indices to back, keeping relative order:
+            vector<Index> newind;
+            vector<long> pdims(dis.r(),-1);
+            newind.reserve(dis.r()-Cis.r()+1);
+            newind.push_back(cind);
+            for(int j = 0; j < dis.r(); ++j)
+                {
+                if(P.dest(j) == -1) 
+                    {
+                    P.setFromTo(j,ni++);
+                    newind.push_back(dis[j]);
+                    }
+                pdims[j] = dis[P.dest(j)].m();
+                }
+            Range rr(pdims);
+            Nis_ = IndexSet(std::move(newind));
+            auto res = make_newdata<ITDense<Real>>(area(Nis_));
+            auto td = make_tensorref(d.data.data(),dis);
+            auto tr = make_tensorref(res->data.data(),rr);
+            reshape(td,P,tr);
+            return std::move(res);
+            }
+        }
     return NewData();
     }
 
-NewData FillReal::
+
+ITResult FillReal::
 operator()(ITDense<Real>& d) const
     {
     std::fill(d.data.begin(),d.data.end(),r_);
-    return NewData();
+    return ITResult();
     }
 
-NewData FillReal::
+ITResult FillReal::
 operator()(const ITDense<Complex>& d) const
     {
     auto nd = make_newdata<ITDense<Real>>(d.data.size());
@@ -44,33 +198,33 @@ operator()(const ITDense<Complex>& d) const
     return std::move(nd);
     }
 
-NewData FillReal::
+ITResult FillReal::
 operator()(ITDiag<Real>& d) const
     {
     std::fill(d.data.begin(),d.data.end(),r_);
-    return NewData();
+    return ITResult();
     }
 
-NewData FillReal::
+ITResult FillReal::
 operator()(const ITDiag<Complex>& d) const
     {
     return make_newdata<ITDiag<Real>>(d.data.size(),r_);
     }
 
-NewData FillCplx::
+ITResult FillCplx::
 operator()(const ITDense<Real>& d) const
     {
     return make_newdata<ITDense<Complex>>(d.data.size(),z_);
     }
 
-NewData FillCplx::
+ITResult FillCplx::
 operator()(ITDense<Complex>& d) const
     {
     std::fill(d.data.begin(),d.data.end(),z_);
-    return NewData();
+    return ITResult();
     }
 
-NewData MultComplex::
+ITResult MultComplex::
 operator()(const ITDense<Real>& d) const
     {
     auto nd = make_newdata<ITDense<Complex>>(d.data.begin(),d.data.end());
@@ -78,31 +232,31 @@ operator()(const ITDense<Real>& d) const
     return std::move(nd);
     }
 
-NewData MultComplex::
+ITResult MultComplex::
 operator()(ITDense<Complex>& d) const
     {
     //TODO: use BLAS algorithm
     for(auto& elt : d.data)
         elt *= z_;
-    return NewData();
+    return ITResult();
     }
 
-NewData MultReal::
+ITResult MultReal::
 operator()(ITDense<Real>& d) const
     {
     //TODO: use BLAS algorithm
     for(auto& elt : d.data)
         elt *= r_;
-    return NewData();
+    return ITResult();
     }
 
-NewData MultReal::
+ITResult MultReal::
 operator()(ITDense<Complex>& d) const
     {
     //TODO: use BLAS algorithm
     for(auto& elt : d.data)
         elt *= r_;
-    return NewData();
+    return ITResult();
     }
 
 void
@@ -112,7 +266,7 @@ plusEqData(Real fac, Real *d1, const Real *d2, LAPACK_INT size)
     daxpy_wrapper(&size,&fac,d2,&inc,d1,&inc);
     }
 
-NewData PlusEQ::
+ITResult PlusEQ::
 operator()(ITDense<Real>& a1,
            const ITDense<Real>& a2)
     {
@@ -131,10 +285,10 @@ operator()(ITDense<Real>& a1,
         {
         plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
         }
-    return NewData();
+    return ITResult();
     }
 
-NewData PlusEQ::
+ITResult PlusEQ::
 operator()(ITDiag<Real>& a1,
            const ITDiag<Real>& a2)
     {
@@ -142,7 +296,7 @@ operator()(ITDiag<Real>& a1,
     if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
 #endif
     plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
-    return NewData();
+    return ITResult();
     }
 
 void
@@ -171,7 +325,7 @@ printVal(std::ostream& s,
     }
 
 template<typename T>
-NewData PrintIT::
+ITResult PrintIT::
 operator()(const ITDense<T>& d) const
     {
     s_ << "}\n";
@@ -180,7 +334,7 @@ operator()(const ITDense<T>& d) const
     else s_ << "  (omitting too large scale factor)\n";
 
     auto rank = is_.r();
-    if(rank == 0) return NewData();
+    if(rank == 0) return ITResult();
 
     auto gc = detail::GCounter(0,rank-1,0);
     for(int i = 0; i < rank; ++i)
@@ -188,7 +342,7 @@ operator()(const ITDense<T>& d) const
 
     for(; gc.notDone(); ++gc)
         {
-        auto val = d.data[ind(is_,gc.i)];
+        auto val = scalefac*d.data[ind(is_,gc.i)];
         if(std::norm(val) > Global::printScale())
             {
             s_ << "  (";
@@ -202,13 +356,13 @@ operator()(const ITDense<T>& d) const
             printVal(s_,val);
             }
         }
-    return NewData();
+    return ITResult();
     }
-template NewData PrintIT::operator()(const ITDense<Real>& d) const;
-template NewData PrintIT::operator()(const ITDense<Complex>& d) const;
+template ITResult PrintIT::operator()(const ITDense<Real>& d) const;
+template ITResult PrintIT::operator()(const ITDense<Complex>& d) const;
 
 template<typename T>
-NewData PrintIT::
+ITResult PrintIT::
 operator()(const ITDiag<T>& d) const
     {
     s_ << " Diag}\n";
@@ -218,7 +372,7 @@ operator()(const ITDiag<T>& d) const
 
     for(size_t i = 0; i < d.data.size(); ++i)
         {
-        auto val = d.data[i];
+        auto val = scalefac*d.data[i];
         if(std::norm(val) > Global::printScale())
             {
             s_ << "  (";
@@ -230,9 +384,9 @@ operator()(const ITDiag<T>& d) const
             printVal(s_,val);
             }
         }
-    return NewData();
+    return ITResult();
     }
-template NewData PrintIT::operator()(const ITDiag<Real>& d) const;
-template NewData PrintIT::operator()(const ITDiag<Complex>& d) const;
+template ITResult PrintIT::operator()(const ITDiag<Real>& d) const;
+template ITResult PrintIT::operator()(const ITDiag<Complex>& d) const;
 
 }; //namespace itensor

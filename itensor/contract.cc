@@ -379,6 +379,11 @@ contract(ABCProps& abc,
     //   might avoid having to reshape C (e.g. if bref*aref version
     //   would require transposing C, then do aref*bref instead).
     //
+    // o If trailing n(j)==1 dimensions at end of A, B, or C indices
+    //   (as often the case for ITensors with m==1 indices),
+    //   have ABCProps resize ai, bi, and ci accordingly to avoid
+    //   looping over these.
+    //   
 
     long ra = abc.ai.size(),
          rb = abc.bi.size(),

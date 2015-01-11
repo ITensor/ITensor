@@ -10,6 +10,7 @@
 #include "itdata/itcombiner.h"
 #include "indexset.h"
 #include "simpletensor.h"
+#include "contract.h"
 
 namespace itensor {
 
@@ -24,85 +25,93 @@ class ApplyIT
 
     template <typename T,
               typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
-    NewData
+    ITResult
     operator()(ITDense<T>& d) const
         {
         for(auto& elt : d.data)
             {
             elt = f_(elt);
             }
-        return NewData();
+        return ITResult();
         }
 
     template <typename T,
               typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
-    NewData
+    ITResult
     operator()(ITDiag<T>& d) const
         {
         for(auto& elt : d.data)
             {
             elt = f_(elt);
             }
-        return NewData();
+        return ITResult();
         }
     };
 
 class Contract
     {
-    using ind = std::vector<int>;
-
-    const ind &Lind_,
-              &Rind_,
-              &Nind_;
+    const Label &Lind_,
+                &Rind_;
 
     const IndexSet &Lis_,
                    &Ris_;
 
     //New IndexSet
-    const IndexSet& Nis_;
+    IndexSet Nis_;
+    Real scalefac_ = -1;
 
     public:
 
-
     Contract(const IndexSet& Lis,
-             const ind& Lind,
+             const Label& Lind,
              const IndexSet& Ris,
-             const ind& Rind,
-             const IndexSet& Nis,
-             const ind& Nind)
+             const Label& Rind)
         :
         Lind_(Lind),
         Rind_(Rind),
-        Nind_(Nind),
         Lis_(Lis),
-        Ris_(Ris),
-        Nis_(Nis)
+        Ris_(Ris)
         { }
 
-    NewData
+    IndexSet
+    newIndexSet() { return std::move(Nis_); }
+    Real
+    scalefac() { return scalefac_; }
+
+    ITResult
     operator()(const ITDense<Real>& a1,
-               const ITDense<Real>& a2) const;
+               const ITDense<Real>& a2);
 
-    NewData
+    ITResult
     operator()(const ITDense<Real>& d,
-               const ITCombiner& C) const;
-    NewData
+               const ITCombiner& C)
+        {
+        auto res = combine(d,Lis_,Ris_);
+        if(!res) return ITResult::None;
+        else     return std::move(res);
+        }
+    ITResult
     operator()(const ITCombiner& C,
-               const ITDense<Real>& d) const { return operator()(d,C); }
+               const ITDense<Real>& d)
+        { 
+        auto res = combine(d,Ris_,Lis_);
+        if(!res) return ITResult::AssignPointer;
+        else     return std::move(res);
+        }
 
-    //NewData
+    //ITResult
     //operator()(const ITDiag<Real>& d,
     //           const ITDense<Real>& t) const
     //    {
     //    }
-    //NewData
+    //ITResult
     //operator()(const ITDense<Real>& t,
     //           const ITDiag<Real>& d) const 
     //    { 
     //    return operator(d,t); 
     //    }
 
-    //NewData
+    //ITResult
     //operator()(const ITDense<Real>& a1,
     //           const ITDense<Complex>& a2) const
     //    {
@@ -110,7 +119,7 @@ class Contract
     //    return operator()(c1,a2);
     //    }
 
-    //NewData
+    //ITResult
     //operator()(const ITDense<Complex>& a1,
     //           const ITDense<Real>& a2) const
     //    {
@@ -120,7 +129,7 @@ class Contract
 
 
     //template <typename T1, typename T2>
-    //NewData
+    //ITResult
     //operator()(const ITDense<T1>& a1,
     //           const ITDense<T2>& a2) const
     //    {
@@ -131,16 +140,27 @@ class Contract
     //    //TODO:
     //    Error("Contract not implemented for tensors of different element types.");
     //    //btas::contract(One,a1.t_,Lind_,a2.t_,Rind_,Zero,res->t_,Nind_);
-    //    return NewData(res);
+    //    return ITResult(res);
     //    }
 
     template <typename T1, typename T2>
-    NewData
+    ITResult
     operator()(const T1& a1,const T2& a2) const
         {
         Error("Contract not implemented for this case");
-        return NewData();
+        return ITResult();
         }
+
+    private:
+
+    enum SortOption { Sort, NoSort };
+    void
+    computeNis(SortOption sort);
+
+    NewData
+    combine(const ITDense<Real>& d,
+            const IndexSet& dis,
+            const IndexSet& Cis);
  
     };
 
@@ -154,14 +174,14 @@ class NormNoScale
     operator Real() const { return nrm_; }
 
     template<typename T>
-    NewData
+    ITResult
     operator()(const ITDense<T>& d) { return calc(d); }
     template<typename T>
-    NewData
+    ITResult
     operator()(const ITDiag<T>& d) { return calc(d); }
 
     template<typename T>
-    NewData
+    ITResult
     calc(const T& d)
         {
         for(const auto& elt : d.data)
@@ -169,7 +189,7 @@ class NormNoScale
             nrm_ += std::norm(elt);
             }
         nrm_ = std::sqrt(nrm_);
-        return NewData();
+        return ITResult();
         }
     };
 
@@ -181,13 +201,13 @@ class FillReal
         : r_(r)
         { }
 
-    NewData
+    ITResult
     operator()(ITDense<Real>& d) const;
-    NewData
+    ITResult
     operator()(const ITDense<Complex>& d) const;
-    NewData
+    ITResult
     operator()(ITDiag<Real>& d) const;
-    NewData
+    ITResult
     operator()(const ITDiag<Complex>& d) const;
     };
 
@@ -199,14 +219,14 @@ class FillCplx
         : z_(z)
         { }
 
-    NewData
+    ITResult
     operator()(const ITDense<Real>& d) const;
-    NewData
+    ITResult
     operator()(ITDense<Complex>& d) const;
 
     template<typename T>
-    NewData
-    operator()(const T& d) const { Error("Function not implemented."); return NewData(); }
+    ITResult
+    operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
     };
 
 template <typename F>
@@ -219,21 +239,21 @@ struct GenerateIT
         { }
 
     template <typename T>
-    NewData
+    ITResult
     operator()(ITDense<T>& d) const { return doGen(d); }
 
     template <typename T>
-    NewData
+    ITResult
     operator()(ITDiag<T>& d) const { return doGen(d); }
 
     private:
 
     template<typename T>
-    NewData
+    ITResult
     doGen(T& d) const
         {
         std::generate(d.data.begin(),d.data.end(),f_);
-        return NewData();
+        return ITResult();
         }
     };
 
@@ -257,16 +277,16 @@ struct GetElt
 
     template <typename V,
               typename std::enable_if<std::is_convertible<V,T>::value>::type* = nullptr>
-    NewData
+    ITResult
     operator()(const ITDense<V>& d)
         {
         elt_ = T{d.data[ind(is_,inds_)]};
-        return NewData();
+        return ITResult();
         }
 
     template <typename V,
               typename std::enable_if<std::is_convertible<V,T>::value>::type* = nullptr>
-    NewData
+    ITResult
     operator()(const ITDiag<V>& d)
         {
         auto first_i = inds_.front();
@@ -274,18 +294,18 @@ struct GetElt
             if(i != first_i)
                 {
                 elt_ = 0;
-                return NewData();
+                return ITResult();
                 }
         elt_ = d.data.at(first_i);
-        return NewData();
+        return ITResult();
         }
 
     template <class D>
-    NewData
+    ITResult
     operator()(const D& d)
         {
         throw ITError("ITensor does not have requested element type");
-        return NewData();
+        return ITResult();
         }
     };
 
@@ -305,19 +325,19 @@ struct GetPtrElt
 
     template <typename V,
               typename std::enable_if<std::is_same<V,typename std::remove_const<T>::type>::value>::type* = nullptr>
-    NewData
+    ITResult
     operator()(const ITDense<V>& d)
         {
         ptr_ = &(d.data.vref(d.data.ind(inds_)));
-        return NewData();
+        return ITResult();
         }
 
     template <class D>
-    NewData
+    ITResult
     operator()(const D& d)
         {
         throw ITError("ITensor does not have requested element type");
-        return NewData();
+        return ITResult();
         }
     };
 
@@ -327,14 +347,14 @@ class MultComplex
     public:
     MultComplex(Complex z) : z_(z) { }
 
-    NewData
+    ITResult
     operator()(const ITDense<Real>& d) const;
-    NewData
+    ITResult
     operator()(ITDense<Complex>& d) const;
 
     template<typename T>
-    NewData
-    operator()(T& d) const { Error("MultComplex not defined for ITData type"); return NewData(); }
+    ITResult
+    operator()(T& d) const { Error("MultComplex not defined for ITData type"); return ITResult(); }
     };
 
 class MultReal
@@ -345,14 +365,14 @@ class MultReal
         : r_(r)
         { }
 
-    NewData
+    ITResult
     operator()(ITDense<Real>& d) const;
-    NewData
+    ITResult
     operator()(ITDense<Complex>& d) const;
 
     template<typename T>
-    NewData
-    operator()(const T& d) const { Error("MultReal not implemented for ITData type."); return NewData(); }
+    ITResult
+    operator()(const T& d) const { Error("MultReal not implemented for ITData type."); return ITResult(); }
     };
 
 class PlusEQ
@@ -382,42 +402,42 @@ class PlusEQ
         permute_(true)
         { }
 
-    NewData
+    ITResult
     operator()(ITDense<Real>& a1,
                const ITDense<Real>& a2);
 
-    NewData
+    ITResult
     operator()(ITDiag<Real>& a1,
                const ITDiag<Real>& a2);
 
-    NewData
+    ITResult
     operator()(ITDense<Real>& a1,
                const ITDense<Complex>& a2)
         {
         Error("Real + Complex not implemented");
         //auto np = make_newdata<ITDense<Complex>>(a1);
         //operator()(*np,a2);
-        //return NewData(np);
-        return NewData();
+        //return ITResult(np);
+        return ITResult();
         }
 
-    NewData
+    ITResult
     operator()(ITDense<Complex>& a1,
                const ITDense<Real>& a2)
         {
         Error("Complex + Real not implemented");
         //ITDense<Complex> a2c(a2);
         //operator()(a1,a2c);
-        return NewData();
+        return ITResult();
         }
 
     template <typename T1, typename T2>
-    NewData
+    ITResult
     operator()(T1& a1,
                const T2& a2)
         {
         Error("Diag += not implemented");
-        return NewData();
+        return ITResult();
         }
     };
 
@@ -435,19 +455,19 @@ struct PrintIT
         { }
 
     template<typename T>
-    NewData
+    ITResult
     operator()(const ITDense<T>& d) const;
 
     template<typename T>
-    NewData
+    ITResult
     operator()(const ITDiag<T>& d) const;
 
-    NewData
-    operator()(const ITCombiner& d) const { s_ << " Combiner}\n"; return NewData(); }
+    ITResult
+    operator()(const ITCombiner& d) const { s_ << " Combiner}\n"; return ITResult(); }
 
     template<typename T>
-    NewData
-    operator()(const T& d) const { Error("Function not implemented."); return NewData(); }
+    ITResult
+    operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
     };
 
 struct Read
@@ -456,11 +476,11 @@ struct Read
     Read(std::istream& s) : s_(s) { }
     
     template<typename DataType>
-    NewData
+    ITResult
     operator()(DataType& d) const
         { 
         d.read(s_);
-        return NewData(); 
+        return ITResult(); 
         }
     };
 
@@ -470,11 +490,11 @@ struct Write
     Write(std::ostream& s) : s_(s) { }
     
     template<typename DataType>
-    NewData
+    ITResult
     operator()(const DataType& d) const
         { 
         d.write(s_);
-        return NewData(); 
+        return ITResult(); 
         }
     };
 
@@ -487,22 +507,22 @@ class ReadWriteID
     
     explicit operator int() const { return id_; }
 
-    NewData
-    operator()(const ITDense<Real>& d) { id_ = 1; return NewData(); }
-    NewData
-    operator()(const ITDense<Complex>& d) { id_ = 2; return NewData(); }
+    ITResult
+    operator()(const ITDense<Real>& d) { id_ = 1; return ITResult(); }
+    ITResult
+    operator()(const ITDense<Complex>& d) { id_ = 2; return ITResult(); }
 
-    NewData static
+    ITResult static
     allocate(int id)
         {
         if(id == 1)
-            return make_newdata<ITDense<Real>>();
+            return make_result<ITDense<Real>>();
         else 
         if(id == 2)
-            return make_newdata<ITDense<Complex>>();
+            return make_result<ITDense<Complex>>();
         else
             Error(format("ID %d not recognized",id));
-        return NewData();
+        return ITResult();
         }
     };
 
@@ -521,7 +541,7 @@ class SetEltComplex
           inds_(inds)
         { }
 
-    NewData
+    ITResult
     operator()(const ITDense<Real>& d) const
         {
         auto nd = make_newdata<ITDense<Complex>>(d.data.cbegin(),d.data.cend());
@@ -529,16 +549,16 @@ class SetEltComplex
         return std::move(nd);
         }
 
-    NewData
+    ITResult
     operator()(ITDense<Complex>& d) const
         {
         d.data[ind(is_,inds_)] = elt_;
-        return NewData();
+        return ITResult();
         }
 
     template<typename T>
-    NewData
-    operator()(const T& d) const { Error("Function not implemented."); return NewData(); }
+    ITResult
+    operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
     };
 
 template<int size>
@@ -557,16 +577,16 @@ class SetEltReal
         { }
 
     template<typename T>
-    NewData
+    ITResult
     operator()(ITDense<T>& d) const
         {
         d.data[ind(is_,inds_)] = elt_;
-        return NewData();
+        return ITResult();
         }
 
     template<typename T>
-    NewData
-    operator()(const T& d) const { Error("Function not implemented."); return NewData(); }
+    ITResult
+    operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
     };
 
 template <typename F>
@@ -580,14 +600,14 @@ class VisitIT
         { }
 
     template <typename T>
-    NewData
+    ITResult
     operator()(const T& d) const
         {
         for(const auto& elt : d.data)
             {
             f_(elt*scale_fac);
             }
-        return NewData();
+        return ITResult();
         }
     };
 

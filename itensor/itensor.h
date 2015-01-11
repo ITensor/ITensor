@@ -240,8 +240,8 @@ class ITensor
     //        const Permutation& P);
 
     //Scale factor, used internally for efficient scalar ops.
-    //Mostly for developer use, not necessary to explicitly involve
-    //scale factors in most ITensor operations.
+    //Mostly for developer use; not necessary to explicitly involve
+    //scale factors in user-level ITensor operations.
     const LogNumber&
     scale() const { return scale_; }
 
@@ -493,17 +493,22 @@ operator*(const IndexVal& iv, const ITensor& t) { return (ITensor(iv) *= t); }
 ITensor inline
 combiner(std::vector<Index> inds)
     {
+    if(inds.empty()) Error("No indices passed to combiner");
     long rm = 1;
     for(const auto& i : inds)
         {
         rm *= i.m();
         }
-    if(rm == 1) Error("Still need to check rm==1 combiner case");
-    //Create combined index, will get sorted to front by IndexSet
-    inds.emplace_back("cmb",rm);
-    IndexSet iset(std::move(inds));
-    auto nd = NewData(make_newdata<ITCombiner>());
-    return ITensor(std::move(iset),std::move(nd),{1.0});
+    //increase size by 1
+    inds.push_back(Index());
+    //shuffle contents to the end
+    for(size_t j = inds.size()-1; j > 0; --j)
+        {
+        inds[j] = inds[j-1];
+        }
+    //create combined index
+    inds.front() = Index("cmb",rm);
+    return ITensor(IndexSet(std::move(inds)),make_newdata<ITCombiner>(),{1.0});
     }
 
 template<typename... Inds>
