@@ -229,7 +229,7 @@ operator()(const ITDense<T>& d) const
 
     for(; gc.notDone(); ++gc)
         {
-        auto val = d.data[ind(is_,gc.i)];
+        auto val = scalefac*d.data[ind(is_,gc.i)];
         if(std::norm(val) > Global::printScale())
             {
             s_ << "  (";
@@ -259,7 +259,7 @@ operator()(const ITDiag<T>& d) const
 
     for(size_t i = 0; i < d.data.size(); ++i)
         {
-        auto val = d.data[i];
+        auto val = scalefac*d.data[i];
         if(std::norm(val) > Global::printScale())
             {
             s_ << "  (";
