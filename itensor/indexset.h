@@ -614,27 +614,27 @@ hastype(const IndexSetT<IndexT>& iset,
 	}
 
 template <class IndexT>
-int
+long
 minM(const IndexSetT<IndexT>& iset)
     {
     if(iset.rn() < iset.r()) return 1;
 
-    int mm = iset[0].m();
+    auto mm = iset[0].m();
     for(int j = 1; j < iset.rn(); ++j)
-        mm = min(mm,iset[j].m());
+        mm = std::min(mm,iset[j].m());
 
     return mm;
     }
 
 template <class IndexT>
-int
+long
 maxM(const IndexSetT<IndexT>& iset)
     {
     if(iset.rn() == 0) return 1;
 
-    int mm = iset[0].m();
+    auto mm = iset[0].m();
     for(int j = 1; j < iset.rn(); ++j)
-        mm = max(mm,iset[j].m());
+        mm = std::max(mm,iset[j].m());
 
     return mm;
     }
