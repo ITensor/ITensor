@@ -336,7 +336,7 @@ H_K(int Lx, int Ly, Real tx, Real ty)
         {
         for(int jx = 1; jx <= Lx; jx++)
             {
-            r++;
+            r++;            // r=(iy-1)*Lx+jx;
             if(Lx != 1)
                 {
                 if(jx == 1)
@@ -415,90 +415,45 @@ CPMC_Lab(Real& E_ave, Real& E_err, int Lx, int Ly, int N_up, int N_dn,
     //
     int N_sites = Lx*Ly;
     int N_par = N_up + N_dn;
-    // form the one-body kinetic Hamiltonian
+    //  form the one-body kinetic Hamiltonian
     Matrix H_k = H_K(Lx,Ly,tx,ty);
-
-    /*
-    Matrix H_k(N_sites,N_sites);
-    H_k = 0.0;
-
-    int r = 0;
-    for(int iy = 1; iy <= Ly; iy++)
-        {
-        for(int jx = 1; jx <= Lx; jx++)
-            {
-            r++;
-            if(Lx != 1)
-                {
-                if(jx == 1)
-                    {
-                    H_k(r,r+1) = H_k(r,r+1) - tx;
-                    }
-                else if(jx == Lx)
-                    {
-                    H_k(r,r-1) = H_k(r,r-1) - tx;
-                    }
-                else
-                    {
-                    H_k(r,r-1) = -tx;
-                    H_k(r,r+1) = -tx;
-                    }
-                }
-
-            if(Ly != 1)
-                {
-                if(iy == 1)
-                    {
-                    H_k(r,r+Lx) = H_k(r,r-Lx) - ty;
-                    }
-                else if(iy == Ly)
-                    {
-                    H_k(r,r-Lx) = H_k(r,r-Lx) - ty;
-                    }
-                else
-                    {
-                    H_k(r,r-Lx) = -ty;
-                    H_k(r,r-Lx) = -ty;
-                    }
-                }
-            }
-        }
-    */
-
+    // the matrix of the operator exp(-deltau*K/2)
     Matrix Proj_k_half = Exp(-0.5*deltau*H_k);
 
-    int n = N_sites;
-
+    //
+    //  Initialize the trial wave function and calculate the ensemble's initial 
+    //  energy 
+    //
+    
+    // Diagonalize the one-body kinetic Hamiltonian to get the non-interacting 
+    // single-particle orbitals:
     Vector E_nonint;
     Matrix psi_nonint;
-
     EigenValues(H_k, E_nonint, psi_nonint);
 
+    // assemble the non-interacting single-particle orbitals into a Slater 
+    // determinant:
     Matrix Phi_T(N_sites,N_par);
     if(N_up > 0)
-        {
-        Phi_T.SubMatrix(1,N_sites,1,N_up) = psi_nonint.SubMatrix(1,N_sites,1,N_up);
-        }
+        Phi_T.SubMatrix(1,N_sites,1,N_up) = psi_nonint.SubMatrix(1,N_sites,
+                                            1,N_up);
     if(N_dn > 0)
-        {
-        Phi_T.SubMatrix(1,N_sites,N_up+1,N_par) = psi_nonint.SubMatrix(1,N_sites,1,N_dn);;
-        }
-
+        Phi_T.SubMatrix(1,N_sites,N_up+1,N_par) = psi_nonint.SubMatrix(1,
+                                                  N_sites,1,N_dn);
+    // the kinetic energy of the trial wave function
     Real E_K = 0.0;
-
     for(int i = 1; i <= N_up; i++)
         E_K += E_nonint(i);
     for(int i = 1; i <= N_dn; i++)
         E_K += E_nonint(i);
-
-    Vector n_r_up(N_sites);
-    Vector n_r_dn(N_sites);
-    n_r_up = 0.0;
-    n_r_dn = 0.0;
-
+    // the potential energy of the trial wave function
+    Vector n_r_up(N_sites),
+           n_r_dn(N_sites);
+    n_r_up = 0.0, n_r_dn = 0.0;
     if(N_up > 0)
         {
-        Matrix Lambda_up = Phi_T.SubMatrix(1,N_sites,1,N_up)*(Phi_T.SubMatrix(1,N_sites,1,N_up)).t();
+        Matrix Phi_T_up = Phi_T.SubMatrix(1,N_sites,1,N_up);
+        Matrix Lambda_up = Phi_T_up*Phi_T_up.t();
         n_r_dn = Lambda_up.Diagonal();
         }
     if(N_dn > 0)
