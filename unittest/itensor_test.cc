@@ -1283,16 +1283,43 @@ SECTION("DiagITensorBasicContraction")
 
     ITensor op1(f1,s1,prime(s1),s2,prime(s2)),
             op2(f2,s1,prime(s1)),
-            opa(3.1,s1,a1),
+            opa(1.0,s1,a1),
             psi(-1,s1,l1),
             opb(vb,s1,b2);
 
-    //auto r1 = randIT(s1,prime(s1,2)),
-    //     r2 = randIT(s1,prime(s1,2));
+    auto r1 = randIT(s1,prime(s1,2)),
+         r2 = randIT(s1,prime(s1,2));
 
-    //auto res1 = op1*r1;
+    PrintData(opa);
+    PrintData(r1);
+    auto res1 = opa*r1;
+    PrintData(res1);
     //res1.mapprime(1,0);
     //CHECK(norm(res1-f1*r1) < 1E-10);
+    }
+
+SECTION("Tie Indices with Diag Tensor")
+    {
+    auto T = randIT(s1,s2,s3,s4);
+
+    auto tied1 = Index("tied1",s1.m());
+    auto tt1 = ITensor(1,s1,s2,s3,tied1);
+    auto R1 = T*tt1;
+    for(int t = 1; t <= tied1.m(); ++t)
+    for(int j4 = 1; j4 <= s4.m(); ++j4)
+        {
+        CHECK_REQUAL(T.real(s1(t),s2(t),s3(t),s4(j4)), R1.real(tied1(t),s4(j4)));
+        }
+
+    auto tied2 = Index("tied2",s1.m());
+    auto tt2 = ITensor(1,s1,s3,tied2);
+    auto R2 = T*tt2;
+    for(int t = 1; t <= tied1.m(); ++t)
+    for(int j2 = 1; j2 <= s2.m(); ++j2)
+    for(int j4 = 1; j4 <= s4.m(); ++j4)
+        {
+        CHECK_REQUAL(T.real(s1(t),s2(j2),s3(t),s4(j4)), R2.real(tied2(t),s2(j2),s4(j4)));
+        }
     }
 
 //SECTION("Complex Diag ITensor")

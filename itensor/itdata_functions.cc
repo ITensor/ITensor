@@ -77,11 +77,98 @@ operator()(const ITDense<Real>& a1,
     return std::move(res);
     }
 
+ITResult Contract::
+diagDense(const ITDiag<Real>& d,
+          const IndexSet& dis,
+          const Label& dind,
+          const ITDense<Real>& t,
+          const IndexSet& tis,
+          const Label& tind)
+    {
+    computeNis(Sort);
+
+    long tcstride = 0; //total t-stride of contracted inds of t
+    size_t ntu = 0; //number uncontracted inds of t
+    assert(int(tind.size()) == tis.size());
+    for(size_t j = 0; j < tind.size(); ++j)
+        {
+        //if index j is contracted, add its stride to tcstride:
+        if(tind[j] < 0) tcstride += tis.stride(j);
+        else            ++ntu;
+        }
+
+    long dustride = 0; //total result-stride of uncontracted inds of d
+    for(size_t i = 0; i < Nis_.r(); ++i)
+        {
+        auto j = findindex(dis,Nis_[i]);
+        if(j >= 0) dustride += Nis_.stride(i);
+        }
+
+    if(ntu > 0)
+        {
+        vector<long> tstride(ntu,0),
+                     rstride(ntu,0);
+        detail::GCounter C(0,ntu,0);
+        size_t n = 0;
+        for(size_t j = 0; j < tind.size(); ++j)
+            {
+            if(tind[j] > 0)
+                {
+#ifdef DEBUG
+                if(n >= ntu) Error("n out of range");
+#endif
+                C.setInd(n,0,tis.dim(j)-1);
+                tstride.at(n) = tis.stride(j);
+                auto k = findindex(Nis_,tis[j]);
+#ifdef DEBUG
+                if(k < 0) Error("Index not found");
+#endif
+                rstride.at(n) = Nis_.stride(k);
+                ++n;
+                }
+            }
+        auto res = make_newdata<ITDense<Real>>(area(Nis_),0.);
+        Real *pr = res->data.data();
+        const Real *pt = t.data.data(),
+                   *pd = d.data.data();
+        auto Md = d.data.size();
+        for(;C.notDone();++C)
+            {
+            size_t roffset = 0,
+                   toffset = 0;
+            for(size_t i = 0; i < ntu; ++i)
+                {
+                auto ii = C.i.fast(i);
+                toffset += ii*tstride[i];
+                roffset += ii*rstride[i];
+                }
+            for(size_t J = 0; J < Md; ++J)
+                {
+                pr[J*dustride+roffset] = pd[J]*pt[J*tcstride+toffset];
+                }
+            }
+        return std::move(res);
+        }
+    else
+        {
+        //all of t's indices contracted with d
+        //result will be diagonal:
+        // o scalar if all of d's inds contracted also
+        // o dot product of d's data and t's diagonal otherwise
+        //auto res = make_newdata<ITDiag<Real>>(???,0.);
+        Error("Case not handled");
+        }
+    Error("Case not handled");
+    return ITResult();
+    }
+
 NewData Contract::
 combine(const ITDense<Real>& d,
         const IndexSet& dis,
         const IndexSet& Cis)
     {
+    //TODO: try to make use of Lind,Rind label vectors
+    //      to simplify combine logic
     const auto& cind = Cis[0];
     int jc = findindex(dis,cind);
     if(jc >= 0) //has cind

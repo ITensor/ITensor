@@ -99,17 +99,18 @@ class Contract
         else     return std::move(res);
         }
 
-    //ITResult
-    //operator()(const ITDiag<Real>& d,
-    //           const ITDense<Real>& t) const
-    //    {
-    //    }
-    //ITResult
-    //operator()(const ITDense<Real>& t,
-    //           const ITDiag<Real>& d) const 
-    //    { 
-    //    return operator(d,t); 
-    //    }
+    ITResult
+    operator()(const ITDiag<Real>& d,
+               const ITDense<Real>& t)
+        {
+        return diagDense(d,Lis_,Lind_,t,Ris_,Rind_);
+        }
+    ITResult
+    operator()(const ITDense<Real>& t,
+               const ITDiag<Real>& d)
+        { 
+        return diagDense(d,Ris_,Rind_,t,Lis_,Lind_);
+        }
 
     //ITResult
     //operator()(const ITDense<Real>& a1,
@@ -161,6 +162,14 @@ class Contract
     combine(const ITDense<Real>& d,
             const IndexSet& dis,
             const IndexSet& Cis);
+
+    ITResult
+    diagDense(const ITDiag<Real>& d,
+              const IndexSet& dis,
+              const Label& dind,
+              const ITDense<Real>& t,
+              const IndexSet& tis,
+              const Label& tind);
  
     };
 
