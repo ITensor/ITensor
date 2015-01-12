@@ -14,14 +14,26 @@ template<typename T>
 class ITDiag : public ITDispatch<ITDiag<T>>
     {
     public:
+    using size_type = typename std::vector<T>::size_type;
 
+    T val = 0;
     std::vector<T> data;
 
-    template<typename... Args>
-    ITDiag(Args&&... args) : data(std::forward<Args>(args)...) { }
+    template<typename InputIterator>
+    ITDiag(InputIterator b, InputIterator e)
+        :
+        data(b,e)
+        { }
+
+    ITDiag(T t) 
+        : val(t) 
+        { }
 
     virtual
     ~ITDiag() { }
+
+    bool
+    allSame() const { return data.empty(); }
 
     };
 

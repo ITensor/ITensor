@@ -304,13 +304,10 @@ ITensor(Complex z,
     is_(i1,inds...),
     scale_(1.)
     { 
-    long size = i1.m();
-    for(const auto& ind : is_)
-        if(ind.m() < size) size = ind.m();
     if(z.imag() == 0)
-        store_ = make_shared<ITDiag<Real>>(size,z.real());
+        store_ = make_shared<ITDiag<Real>>(z.real());
     else
-        store_ = make_shared<ITDiag<Complex>>(size,z);
+        store_ = make_shared<ITDiag<Complex>>(z);
     }
 
 template<typename... Inds>

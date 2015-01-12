@@ -128,23 +128,46 @@ diagDense(const ITDiag<Real>& d,
                 }
             }
         auto res = make_newdata<ITDense<Real>>(area(Nis_),0.);
-        Real *pr = res->data.data();
-        const Real *pt = t.data.data(),
-                   *pd = d.data.data();
-        auto Md = d.data.size();
-        for(;C.notDone();++C)
+        auto *pr = res->data.data();
+        const auto *pt = t.data.data();
+
+        if(d.allSame())
             {
-            size_t roffset = 0,
-                   toffset = 0;
-            for(size_t i = 0; i < ntu; ++i)
+            auto size = minM(dis);
+            for(;C.notDone();++C)
                 {
-                auto ii = C.i.fast(i);
-                toffset += ii*tstride[i];
-                roffset += ii*rstride[i];
+                size_t roffset = 0,
+                       toffset = 0;
+                for(size_t i = 0; i < ntu; ++i)
+                    {
+                    auto ii = C.i.fast(i);
+                    toffset += ii*tstride[i];
+                    roffset += ii*rstride[i];
+                    }
+                for(long J = 0; J < size; ++J)
+                    {
+                    pr[J*dustride+roffset] = d.val*pt[J*tcstride+toffset];
+                    }
                 }
-            for(size_t J = 0; J < Md; ++J)
+            }
+        else
+            {
+            auto* pd = d.data.data();
+            auto Md = d.data.size();
+            for(;C.notDone();++C)
                 {
-                pr[J*dustride+roffset] = pd[J]*pt[J*tcstride+toffset];
+                size_t roffset = 0,
+                       toffset = 0;
+                for(size_t i = 0; i < ntu; ++i)
+                    {
+                    auto ii = C.i.fast(i);
+                    toffset += ii*tstride[i];
+                    roffset += ii*rstride[i];
+                    }
+                for(size_t J = 0; J < Md; ++J)
+                    {
+                    pr[J*dustride+roffset] = pd[J]*pt[J*tcstride+toffset];
+                    }
                 }
             }
         return std::move(res);
@@ -288,14 +311,13 @@ operator()(const ITDense<Complex>& d) const
 ITResult FillReal::
 operator()(ITDiag<Real>& d) const
     {
-    std::fill(d.data.begin(),d.data.end(),r_);
-    return ITResult();
+    return make_newdata<ITDiag<Real>>(r_);
     }
 
 ITResult FillReal::
 operator()(const ITDiag<Complex>& d) const
     {
-    return make_newdata<ITDiag<Real>>(d.data.size(),r_);
+    return make_newdata<ITDiag<Real>>(r_);
     }
 
 ITResult FillCplx::
@@ -382,6 +404,7 @@ operator()(ITDiag<Real>& a1,
 #ifdef DEBUG
     if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
 #endif
+    if(a1.allSame() || a2.allSame()) Error("ITDiag plusEq allSame case not implemented");
     plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
     return ITResult();
     }
@@ -452,14 +475,16 @@ template<typename T>
 ITResult PrintIT::
 operator()(const ITDiag<T>& d) const
     {
-    s_ << " Diag}\n";
+    auto allsame = d.allSame();
+    s_ << " Diag" << (allsame ? "(all same)" : "") << "}\n";
     Real scalefac = 1.0;
     if(!x_.isTooBigForReal()) scalefac = x_.real0();
     else s_ << "  (omitting too large scale factor)\n";
 
-    for(size_t i = 0; i < d.data.size(); ++i)
+    auto size = minM(is_);
+    for(size_t i = 0; i < size; ++i)
         {
-        auto val = scalefac*d.data[i];
+        auto val = scalefac*(allsame ? d.val : d.data[i]);
         if(std::norm(val) > Global::printScale())
             {
             s_ << "  (";

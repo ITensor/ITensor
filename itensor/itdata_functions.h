@@ -218,6 +218,14 @@ class FillReal
     operator()(ITDiag<Real>& d) const;
     ITResult
     operator()(const ITDiag<Complex>& d) const;
+
+    template<typename T>
+    ITResult
+    operator()(const T& t) const
+        {
+        Error("FillReal: ITData type not implemented");
+        return ITResult();
+        }
     };
 
 class FillCplx
