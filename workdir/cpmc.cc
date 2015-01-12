@@ -442,52 +442,76 @@ CPMC_Lab(Real& E_ave, Real& E_err, int Lx, int Ly, int N_up, int N_dn,
                                                   N_sites,1,N_dn);
     // the kinetic energy of the trial wave function
     Real E_K = 0.0;
+
     for(int i = 1; i <= N_up; i++)
         E_K += E_nonint(i);
     for(int i = 1; i <= N_dn; i++)
         E_K += E_nonint(i);
+
     // the potential energy of the trial wave function
     Vector n_r_up(N_sites),
            n_r_dn(N_sites);
     n_r_up = 0.0, n_r_dn = 0.0;
+
     if(N_up > 0)
         {
         Matrix Phi_T_up = Phi_T.SubMatrix(1,N_sites,1,N_up);
         Matrix Lambda_up = Phi_T_up*Phi_T_up.t();
-        n_r_dn = Lambda_up.Diagonal();
+        n_r_up = Lambda_up.Diagonal();
         }
     if(N_dn > 0)
         {
-        Matrix Lambda_dn = Phi_T.SubMatrix(1,N_sites,N_up+1,N_par)*(Phi_T.SubMatrix(1,N_sites,N_up+1,N_par)).t();
+        Matrix Phi_T_dn = Phi_T.SubMatrix(1,N_sites,N_up+1,N_par);
+        Matrix Lambda_dn = Phi_T_dn*Phi_T_dn.t();
         n_r_dn = Lambda_dn.Diagonal();
         }
 
     Real E_V = U*n_r_up*n_r_dn;
+    // the total energy of the trial wave function = the initial trial energy
     Real E_T = E_K + E_V;
 
+    //
     // Assemble the initial population of walkers
+    //
     std::vector<Matrix> Phi(N_wlk+1);
+    // initiate each walker to be the trial wave function
     for(int i = 1; i <= N_wlk; i++)
         {
+        // Phi[i] is the ith walker. Each is a matrix of size N_sites by N_par
+        // The left N_sites by N_up block is the spin up sector
+        // The rest is the spin down sector
+        // They are propagated independently and only share the auxiliary field
         Phi[i] = Phi_T;
         }
 
-    Vector w(N_wlk);
-    Vector O(N_wlk);
-
+    // initiate the weight and overlap of each walker to 1
+    Vector w(N_wlk),
+           O(N_wlk);
     w = 1.0, O = 1.0;
 
-    Vector E_blk(N_blk);
-    Vector W_blk(N_blk);
-
+    // the arrays that store the energy and weight at each block
+    Vector E_blk(N_blk),
+           W_blk(N_blk);
     E_blk = 0.0, W_blk = 0.0;
 
+    //
     // initialize auxiliary field constants
+    //
+
+    // exponent of the prefactor exp(-deltau*(-E_T)) in the ground state 
+    // projector 
+    // fac_norm also include -0.5*U*(N_up+N_dn), the exponent of the 
+    // prefactor in the Hirsch transformation
     Real fac_norm = (E_T-0.5*U*N_par)*deltau;
+    // gamma in Hirsch's transformation
     Real gamma = acosh(exp(0.5*deltau*U));
+    // aux_fld is the 2x2 matrix containing all the possible values of 
+    // the quantity exp(-gamma*s(sigma)*x_i)
     Matrix aux_fld(2,2);
     aux_fld = 0.0;
-
+    
+    // The first index corresponds to spin up or down
+    // The second index corresponds to the auxiliary field x_i=1 or x_i=-1
     for(int i = 1; i <= 2; i++)
         {
         for(int j = 1; j <= 2; j++)
@@ -498,7 +522,10 @@ CPMC_Lab(Real& E_ave, Real& E_err, int Lx, int Ly, int N_up, int N_dn,
                 aux_fld(i,j)=exp(-gamma);
             }
         }
-   
+  
+    //
+    // randomize the random number generator seed based on the current time
+    //
     srand(time(NULL));
 
     int flag_mea = 0;
