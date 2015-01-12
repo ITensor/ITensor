@@ -29,7 +29,6 @@ halfK(Matrix& phi, Real& w, Real& O, Matrix& invO_matrix_up,
         Phi_T_up = Phi_T.SubMatrix(1,N_site,1,N_up);
         phi_up = phi.SubMatrix(1,N_site,1,N_up);
         invO_matrix_up = Inverse(Phi_T_up.t()*phi_up);
-        cout << invO_matrix_up;
         detinvO_matrix_up = Determinant(invO_matrix_up);
         }
     
@@ -311,6 +310,220 @@ pop_cntrl(std::vector<Matrix>& Phi, Vector& w, Vector& O, int N_wlk, int N_sites
 
     w = Vector(N_wlk,1.0);
     }
+
+//
+// Perform a constrained path Monte Carlo calculatiion.
+// Input
+//  Lx: The number of lattice sites in the x direction.
+//  Ly: The number of lattice sites in the y direction.
+//  N_up: The number of spin-up electrons
+//  N_dn: The number of spin-down electrons
+//  U: The on-site repulsion strength in the Hubbard Hamiltonian
+//  tx: The hopping amplitude between nearest-neighbor sites in the x direction
+//  ty: The hopping amplitude between nearest neighbor sites in the y direction
+//  deltau: The imaginary time step
+//  N_wlk: The number of random walkers
+//  N_blksteps: The number of random walk steps in each block
+//  N_eqblk: The number of blocks used to equilibrate the random walk before energy 
+//           measurement takes place
+//  N_blk: The number of blocks used in the measurement phase
+//  itv_modsvd: The interval between two adjacent modified Gram-Schmidt 
+//              re-orthonormalization of the random walkers.
+//  itv_pc: The interval between two adjacent population controls
+//  itv_Em: The interval between two adjacent energy measurements
+// Output:
+//  E_ave: the ground state energy
+//  E_err: the standard error in the ground state energy
+//
+
+void
+CPMC_Lab(Real& E_ave, Real& E_err, int Lx, int Ly, int N_up, int N_dn, 
+         Real U, Real tx, Real ty, Real deltau, int N_wlk, int N_blksteps, 
+         int N_eqblk, int N_blk, int itv_modsvd, int itv_pc, int itv_Em)
+    {
+    int N_sites = Lx*Ly;
+    int N_par = N_up + N_dn;
+
+    Matrix H_k(N_sites,N_sites);
+    H_k = 0.0;
+
+    int r = 0;
+    for(int iy = 1; iy <= Ly; iy++)
+        {
+        for(int jx = 1; jx <= Lx; jx++)
+            {
+            r++;
+            if(Lx != 1)
+                {
+                if(jx == 1)
+                    {
+                    H_k(r,r+1) = H_k(r,r+1) - tx;
+                    }
+                else if(jx == Lx)
+                    {
+                    H_k(r,r-1) = H_k(r,r-1) - tx;
+                    }
+                else
+                    {
+                    H_k(r,r-1) = -tx;
+                    H_k(r,r+1) = -tx;
+                    }
+                }
+
+            if(Ly != 1)
+                {
+                if(iy == 1)
+                    {
+                    H_k(r,r+Lx) = H_k(r,r-Lx) - ty;
+                    }
+                else if(iy == Ly)
+                    {
+                    H_k(r,r-Lx) = H_k(r,r-Lx) - ty;
+                    }
+                else
+                    {
+                    H_k(r,r-Lx) = -ty;
+                    H_k(r,r-Lx) = -ty;
+                    }
+                }
+            }
+        }
+   
+    Matrix Proj_k_half = Exp(-0.5*deltau*H_k);
+
+    int n = N_sites;
+
+    Vector E_nonint;
+    Matrix psi_nonint;
+
+    EigenValues(H_k, E_nonint, psi_nonint);
+
+    Matrix Phi_T(N_sites,N_par);
+    if(N_up > 0)
+        {
+        Phi_T.SubMatrix(1,N_sites,1,N_up) = psi_nonint.SubMatrix(1,N_sites,1,N_up);
+        }
+    if(N_dn > 0)
+        {
+        Phi_T.SubMatrix(1,N_sites,N_up+1,N_par) = psi_nonint.SubMatrix(1,N_sites,1,N_dn);;
+        }
+
+    Real E_K = 0.0;
+
+    for(int i = 1; i <= N_up; i++)
+        E_K += E_nonint(i);
+    for(int i = 1; i <= N_dn; i++)
+        E_K += E_nonint(i);
+
+    Vector n_r_up(N_sites);
+    Vector n_r_dn(N_sites);
+    n_r_up = 0.0;
+    n_r_dn = 0.0;
+
+    if(N_up > 0)
+        {
+        Matrix Lambda_up = Phi_T.SubMatrix(1,N_sites,1,N_up)*(Phi_T.SubMatrix(1,N_sites,1,N_up)).t();
+        n_r_dn = Lambda_up.Diagonal();
+        }
+    if(N_dn > 0)
+        {
+        Matrix Lambda_dn = Phi_T.SubMatrix(1,N_sites,N_up+1,N_par)*(Phi_T.SubMatrix(1,N_sites,N_up+1,N_par)).t();
+        n_r_dn = Lambda_dn.Diagonal();
+        }
+
+    Real E_V = U*n_r_up*n_r_dn;
+    Real E_T = E_K + E_V;
+
+    // Assemble the initial population of walkers
+    std::vector<Matrix> Phi(N_wlk+1);
+    for(int i = 1; i <= N_wlk; i++)
+        {
+        Phi[i] = Phi_T;
+        }
+
+    Vector w(N_wlk);
+    Vector O(N_wlk);
+
+    w = 1.0, O = 1.0;
+
+    Vector E_blk(N_blk);
+    Vector W_blk(N_blk);
+
+    E_blk = 0.0, W_blk = 0.0;
+
+    // initialize auxiliary field constants
+    Real fac_norm = (E_T-0.5*U*N_par)*deltau;
+    Real gamma = acosh(exp(0.5*deltau*U));
+    Matrix aux_fld(2,2);
+    aux_fld = 0.0;
+
+    for(int i = 1; i <= 2; i++)
+        {
+        for(int j = 1; j <= 2; j++)
+            {
+            if((i+j)%2 == 0)
+                aux_fld(i,j)=exp(gamma);
+            else
+                aux_fld(i,j)=exp(-gamma);
+            }
+        }
+   
+    srand(time(NULL));
+
+    int flag_mea = 0;
+    Real E = 0.0;
+    Real W = 0.0;
+
+    // Equilibration phase
+    for(int i_blk = 1; i_blk <= N_eqblk; i_blk++)
+        {
+        for(int j_step = 1; j_step <= N_blksteps; j_step++)
+            {
+            stepwlk(Phi, N_wlk, N_sites, w, O, E, W, H_k, Proj_k_half, flag_mea, Phi_T, N_up, N_par, U, fac_norm, aux_fld);
+            if(j_step % itv_modsvd == 0)
+                {
+                stblz(Phi, N_wlk, O, N_up, N_par);
+                }
+            if(j_step % itv_pc == 0)
+                {
+                pop_cntrl(Phi, w, O, N_wlk, N_sites, N_par);
+                }
+            }
+        }
+    
+    // Measurement phase
+    for(int i_blk = 1; i_blk <= N_blk; i_blk++)
+        {
+        for(int j_step = 1; j_step <= N_blksteps; j_step++)
+            {
+            if(j_step % itv_Em == 0)
+                flag_mea = 1;
+            else
+                flag_mea = 0;
+            stepwlk(Phi, N_wlk, N_sites, w, O, E_blk(i_blk), W_blk(i_blk), H_k, Proj_k_half, flag_mea, Phi_T, N_up, N_par, U, fac_norm, aux_fld);
+            if (j_step % itv_modsvd == 0)
+                {
+                stblz(Phi, N_wlk, O, N_up, N_par);
+                }
+            if (j_step % itv_pc == 0)
+                pop_cntrl(Phi, w, O, N_wlk, N_sites, N_par);
+            if (j_step % itv_Em ==0)
+                fac_norm = (E_blk(i_blk)/W_blk(i_blk)-0.5*U*N_par)*deltau;
+            }
+        E_blk(i_blk)=E_blk(i_blk)/W_blk(i_blk);
+        }
+    
+    for(int i = 1; i <= N_blk; i++)
+        E_ave += E_blk(i);
+    E_ave = E_ave/N_blk;
+    if(N_blk > 1)
+        {
+        for(int i = 1; i <= N_blk; i++)
+            E_err += (E_blk(i) - E_ave)*(E_blk(i) - E_ave);
+        E_err = std::sqrt(E_err) / std::sqrt(N_blk - 1);
+        E_err = E_err / std::sqrt(N_blk);
+        }
+    } // End CPMC_Lab
 
 };
 
