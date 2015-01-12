@@ -312,38 +312,22 @@ pop_cntrl(std::vector<Matrix>& Phi, Vector& w, Vector& O, int N_wlk, int N_sites
     }
 
 //
-// Perform a constrained path Monte Carlo calculatiion.
-// Input
+// Generate the one-body kinetic term of the Hubbard Hamiltonian with 
+// the given parameters
+// Input:
 //  Lx: The number of lattice sites in the x direction.
 //  Ly: The number of lattice sites in the y direction.
-//  N_up: The number of spin-up electrons
-//  N_dn: The number of spin-down electrons
-//  U: The on-site repulsion strength in the Hubbard Hamiltonian
 //  tx: The hopping amplitude between nearest-neighbor sites in the x direction
 //  ty: The hopping amplitude between nearest neighbor sites in the y direction
-//  deltau: The imaginary time step
-//  N_wlk: The number of random walkers
-//  N_blksteps: The number of random walk steps in each block
-//  N_eqblk: The number of blocks used to equilibrate the random walk before energy 
-//           measurement takes place
-//  N_blk: The number of blocks used in the measurement phase
-//  itv_modsvd: The interval between two adjacent modified Gram-Schmidt 
-//              re-orthonormalization of the random walkers.
-//  itv_pc: The interval between two adjacent population controls
-//  itv_Em: The interval between two adjacent energy measurements
-// Output:
-//  E_ave: the ground state energy
-//  E_err: the standard error in the ground state energy
+// Output
+//  H_k: The one-body kinetic Hamiltonian in the form of a square matrix of 
+//  size (Lx*Ly) 
 //
 
-void
-CPMC_Lab(Real& E_ave, Real& E_err, int Lx, int Ly, int N_up, int N_dn, 
-         Real U, Real tx, Real ty, Real deltau, int N_wlk, int N_blksteps, 
-         int N_eqblk, int N_blk, int itv_modsvd, int itv_pc, int itv_Em)
+Matrix
+H_K(int Lx, int Ly, Real tx, Real ty)
     {
     int N_sites = Lx*Ly;
-    int N_par = N_up + N_dn;
-
     Matrix H_k(N_sites,N_sites);
     H_k = 0.0;
 
@@ -389,6 +373,98 @@ CPMC_Lab(Real& E_ave, Real& E_err, int Lx, int Ly, int N_up, int N_dn,
             }
         }
    
+    return H_k;
+    }
+
+//
+// Perform a constrained path Monte Carlo calculatiion.
+// Input
+//  Lx: The number of lattice sites in the x direction.
+//  Ly: The number of lattice sites in the y direction.
+//  N_up: The number of spin-up electrons
+//  N_dn: The number of spin-down electrons
+//  U: The on-site repulsion strength in the Hubbard Hamiltonian
+//  tx: The hopping amplitude between nearest-neighbor sites in the x direction
+//  ty: The hopping amplitude between nearest neighbor sites in the y direction
+//  deltau: The imaginary time step
+//  N_wlk: The number of random walkers
+//  N_blksteps: The number of random walk steps in each block
+//  N_eqblk: The number of blocks used to equilibrate the random walk before energy 
+//           measurement takes place
+//  N_blk: The number of blocks used in the measurement phase
+//  itv_modsvd: The interval between two adjacent modified Gram-Schmidt 
+//              re-orthonormalization of the random walkers.
+//  itv_pc: The interval between two adjacent population controls
+//  itv_Em: The interval between two adjacent energy measurements
+// Output:
+//  E_ave: the ground state energy
+//  E_err: the standard error in the ground state energy
+//
+
+void
+CPMC_Lab(Real& E_ave, Real& E_err, int Lx, int Ly, int N_up, int N_dn, 
+         Real U, Real tx, Real ty, Real deltau, int N_wlk, int N_blksteps, 
+         int N_eqblk, int N_blk, int itv_modsvd, int itv_pc, int itv_Em)
+    {
+    //
+    //  Initialization
+    //
+
+    //
+    //  Initialize internal quantities
+    //
+    int N_sites = Lx*Ly;
+    int N_par = N_up + N_dn;
+    // form the one-body kinetic Hamiltonian
+    Matrix H_k = H_K(Lx,Ly,tx,ty);
+
+    /*
+    Matrix H_k(N_sites,N_sites);
+    H_k = 0.0;
+
+    int r = 0;
+    for(int iy = 1; iy <= Ly; iy++)
+        {
+        for(int jx = 1; jx <= Lx; jx++)
+            {
+            r++;
+            if(Lx != 1)
+                {
+                if(jx == 1)
+                    {
+                    H_k(r,r+1) = H_k(r,r+1) - tx;
+                    }
+                else if(jx == Lx)
+                    {
+                    H_k(r,r-1) = H_k(r,r-1) - tx;
+                    }
+                else
+                    {
+                    H_k(r,r-1) = -tx;
+                    H_k(r,r+1) = -tx;
+                    }
+                }
+
+            if(Ly != 1)
+                {
+                if(iy == 1)
+                    {
+                    H_k(r,r+Lx) = H_k(r,r-Lx) - ty;
+                    }
+                else if(iy == Ly)
+                    {
+                    H_k(r,r-Lx) = H_k(r,r-Lx) - ty;
+                    }
+                else
+                    {
+                    H_k(r,r-Lx) = -ty;
+                    H_k(r,r-Lx) = -ty;
+                    }
+                }
+            }
+        }
+    */
+
     Matrix Proj_k_half = Exp(-0.5*deltau*H_k);
 
     int n = N_sites;
