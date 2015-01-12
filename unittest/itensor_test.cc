@@ -22,6 +22,63 @@ class Functor
         }
     };
 
+enum Type { NoType, Dense, Diag, DiagAllSame, Combiner };
+
+std::ostream&
+operator<<(std::ostream& s, Type t)
+    {
+    if(t == NoType) s << "NoType";
+    else if(t == Dense) s << "Dense";
+    else if(t == Diag) s << "Diag";
+    else if(t == DiagAllSame) s << "DiagAllSame";
+    else if(t == Combiner) s << "Combiner";
+    else Error("Unrecognized Type value");
+    return s;
+    }
+
+struct GetType
+    {
+    Type type = NoType;
+
+    GetType() { }
+
+    operator Type() const { return type; }
+
+    template<typename T>
+    ITResult
+    operator()(const ITDense<T>& d)
+        {
+        type = Dense;
+        return ITResult();
+        }
+
+    template<typename T>
+    ITResult
+    operator()(const ITDiag<T>& d)
+        {
+        type = (d.allSame() ? DiagAllSame : Diag);
+        return ITResult();
+        }
+
+    ITResult
+    operator()(const ITCombiner& c)
+        {
+        type = Combiner;
+        return ITResult();
+        }
+
+    template<typename T>
+    ITResult
+    operator()(const T& d)
+        {
+        type = NoType;
+        return ITResult();
+        }
+    };
+
+Type
+getType(const ITensor& t) { return applyFunc<GetType>(t.data()); }
+
 TEST_CASE("ITensor")
     {
     Index s1("s1",2,Site);
@@ -105,6 +162,7 @@ SECTION("Constructors")
     SECTION("Rank 1")
         {
         ITensor t1(l1);
+        CHECK(getType(t1) == Dense);
         CHECK_EQUAL(t1.r(),1);
         CHECK(hasindex(t1,l1));
         CHECK_CLOSE(norm(t1),0,1E-10);
@@ -113,6 +171,7 @@ SECTION("Constructors")
     SECTION("Rank 2")
         {
         ITensor t2(l1,l2);
+        CHECK(getType(t2) == Dense);
         CHECK_EQUAL(t2.r(),2);
         CHECK(hasindex(t2,l1));
         CHECK(hasindex(t2,l2));
@@ -122,6 +181,7 @@ SECTION("Constructors")
     SECTION("Rank 3")
         {
         ITensor t3(l1,l2,l3);
+        CHECK(getType(t3) == Dense);
         CHECK_EQUAL(t3.r(),3);
         CHECK(hasindex(t3,l1));
         CHECK(hasindex(t3,l2));
@@ -265,6 +325,7 @@ SECTION("Constructors")
         Vector V(i1.m()); 
         V.Randomize();
         ITensor T(V,i1,i2);
+        CHECK(getType(T) == Diag);
 
         CHECK_EQUAL(T.r(),2);
         CHECK(hasindex(T,i1));
@@ -1267,35 +1328,37 @@ SECTION("CommonIndex")
     CHECK(commonIndex(T1,T2,Site) == s1);
     }
 
-SECTION("DiagITensorBasicContraction")
+SECTION("Diag ITensor Contraction")
     {
-    Vector v(3);
-    v(1) = -0.8;
-    v(2) = 1.7;
-    v(3) = 4.9;
-
     Vector vb(2);
     vb(1) = 1;
     vb(2) = -1;
 
-    Real f1 = Global::random(),
-         f2 = Global::random();
-
-    ITensor op1(f1,s1,prime(s1),s2,prime(s2)),
-            op2(f2,s1,prime(s1)),
-            opa(1.0,s1,a1),
-            psi(-1,s1,l1),
+    ITensor opa(1.0,s1,a1),
             opb(vb,s1,b2);
 
-    auto r1 = randIT(s1,prime(s1,2)),
-         r2 = randIT(s1,prime(s1,2));
+    CHECK(getType(opa) == DiagAllSame);
+    CHECK(getType(opb) == Diag);
 
-    PrintData(opa);
-    PrintData(r1);
+    auto r1 = randIT(s1,prime(s1,2));
     auto res1 = opa*r1;
-    PrintData(res1);
-    //res1.mapprime(1,0);
-    //CHECK(norm(res1-f1*r1) < 1E-10);
+    CHECK(hasindex(res1,a1));
+    CHECK(hasindex(res1,prime(s1,2)));
+    for(int j1 = 1; j1 <= s1.m(); ++j1)
+        {
+        CHECK_REQUAL(res1.real(prime(s1,2)(j1),a1(1)), r1.real(prime(s1,2)(j1),s1(1)));
+        }
+
+    auto r2 = randIT(s1,s2);
+    auto res2 = opb*r2;
+    CHECK(hasindex(res2,s2));
+    CHECK(hasindex(res2,b2));
+    auto diagm = std::min(s1.m(),b2.m());
+    for(int j2 = 1; j2 <= s2.m(); ++j2)
+    for(int d = 1; d <= diagm; ++d)
+        {
+        CHECK_REQUAL(res2.real(s2(j2),b2(d)), vb(d) * r2.real(s2(j2),s1(d)));
+        }
     }
 
 SECTION("Tie Indices with Diag Tensor")
@@ -1405,6 +1468,7 @@ SECTION("Tie Indices with Diag Tensor")
     SECTION("Kronecker Delta Tensor")
         {
         auto d = delta(s1,s2);
+        CHECK(getType(d) == Combiner);
 
         auto T1 = randIT(s1,s3);
 
@@ -1457,6 +1521,7 @@ SECTION("Tie Indices with Diag Tensor")
     SECTION("Combiner")
         {
         auto C = combiner(s1,s2);
+        CHECK(getType(C) == Combiner);
 
         auto T1 = randIT(s1,s2,s3);
         auto R1 = C*T1;
