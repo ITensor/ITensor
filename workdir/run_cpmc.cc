@@ -6,6 +6,7 @@ using std::endl;
 using std::string;
 using namespace itensor;
 
+/*
 #define rNum()    ( (double)rand() / (1.0+(double)RAND_MAX) )
 
 void
@@ -303,6 +304,7 @@ pop_cntrl(std::vector<Matrix>& Phi, Vector& w, Vector& O, int N_wlk, int N_sites
 
     w = Vector(N_wlk,1.0);
     }
+*/
 
 //  A script to set the input parameters and run a CPMC calculation
 //

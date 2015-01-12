@@ -1,45 +1,40 @@
-//The following ifndef/define/endif pattern is called a 
-//scope guard, and prevents the C++ compiler (actually, preprocessor)
-//from including a header file more than once.
-#ifndef __MY_CLASS_H_
-#define __MY_CLASS_H_
+#ifndef __CPMC_H_
+#define __CPMC_H_
 
-#include <string>
-#include <iostream>
+#include <vector>
+#include "storelink.h"
 
-class MyClass
-    {
-    public:
-    
-    //Default constructor
-    MyClass();
+namespace itensor {
 
-    MyClass(std::string name, int i);
+class Matrix;
+class Vector;
 
-    const std::string&
-    name() const;
+void
+halfK(Matrix& phi, Real& w, Real& O, Matrix& invO_matrix_up, 
+      Matrix& invO_matrix_dn, Matrix Proj_k_half, Matrix Phi_T, 
+      int N_up, int N_par);
 
-    int
-    value() const;
+void
+V(Vector& phi, Vector phi_T, int N_up, int N_par, Real& O, Real& w, 
+  Matrix& invO_matrix_up, Matrix& invO_matrix_dn, Matrix aux_fld);
 
-    private:
-    int i_;
-    std::string name_;
-    };
+Real
+measure(Matrix H_k, Matrix phi, Matrix Phi_T, Matrix invO_matrix_up, 
+        Matrix invO_matrix_dn, int N_up, int N_par, Real U);
 
-//
-//Defining this method enables printing of MyClass objects
-//using cout << m << endl; where m is a MyClass instance.
-//
-//It also allows printing using the print,println,printf, and
-//printfln functions. Use the "%s" flag to print custom objects
-//with printf and printfln.
-//
-//See myclass.cc for implementation.
-//
-std::ostream&
-operator<<(std::ostream& s, const MyClass& m);
+void
+stepwlk(std::vector<Matrix>& phi, int N_wlk, int N_sites, Vector& w, 
+        Vector& O, Real& E, Real& W, Matrix H_k, Matrix Proj_k_half, 
+        int flag_mea, Matrix Phi_T, int N_up, int N_par, Real U, 
+        Real fac_norm, Matrix aux_fld);
 
-//Implementation code is in myclass.cc ...
+void
+stblz(std::vector<Matrix>& Phi, int N_wlk, Vector& O, int N_up, int N_par);
+
+void
+pop_cntrl(std::vector<Matrix>& Phi, Vector& w, Vector& O, int N_wlk, 
+          int N_sites, int N_par);
+
+};
 
 #endif
