@@ -8,41 +8,67 @@ using namespace std;
 
 namespace itensor {
 
+//
+// Propagate a walker by the kinetic energy propagator exp(-deltau*K/2)
+// Inputs:
+//  phi: the matrix of a single walker
+//  w: the weight of that walker
+//  O: the overlap of that walker
+//  Proj_k_half: the matrix of the operator exp(-deltau*K/2)
+//  Phi_T: the matrix of the trial wave function
+//  N_up: the number of spin up electrons
+//  N_par: the total number of electrons
+// Outputs:
+//  phi: the matrix of the propagated single walker
+//  w: the weight of the propagated walker
+//  O: the overlap of the propagated walker   
+//  invO_matrix_up: the inverse of the spin up sector of the walker's overlap matrix 
+//  invO_matrix_dn: the inverse of the spin down sector of the walker's overlap matrix
+// 
+
 void
 halfK(Matrix& phi, Real& w, Real& O, Matrix& invO_matrix_up, 
       Matrix& invO_matrix_dn, Matrix Proj_k_half, Matrix Phi_T, 
       int N_up, int N_par)
     {
+    //
+    // propagate the walker by exp(-deltau*K/2)
+    //
     phi = Proj_k_half*phi;
     
     int N_site = phi.Nrows();
    
-    Matrix Phi_T_up;
-    Matrix phi_up;
-    Matrix Phi_T_dn;
-    Matrix phi_dn;
+    //
+    // update the inverse of the overlap
+    //
     Real detinvO_matrix_up = 1.0;
     Real detinvO_matrix_dn = 1.0;
-
     if(N_up > 0)
         {
-        Phi_T_up = Phi_T.SubMatrix(1,N_site,1,N_up);
-        phi_up = phi.SubMatrix(1,N_site,1,N_up);
+        Matrix Phi_T_up = Phi_T.SubMatrix(1,N_site,1,N_up);
+        Matrix phi_up = phi.SubMatrix(1,N_site,1,N_up);
         invO_matrix_up = Inverse(Phi_T_up.t()*phi_up);
         detinvO_matrix_up = Determinant(invO_matrix_up);
         }
     
     if(N_par-N_up > 0)
         {
-        Phi_T_dn = Phi_T.SubMatrix(1,N_site,N_up+1,N_par);
-        phi_dn = phi.SubMatrix(1,N_site,N_up+1,N_par);
+        Matrix Phi_T_dn = Phi_T.SubMatrix(1,N_site,N_up+1,N_par);
+        Matrix phi_dn = phi.SubMatrix(1,N_site,N_up+1,N_par);
         invO_matrix_dn = Inverse(Phi_T_dn.t()*phi_dn);
         detinvO_matrix_dn = Determinant(invO_matrix_dn);
         }
-    
+    // calculate the new overlap 
     Real O_new = 1.0/(detinvO_matrix_up*detinvO_matrix_dn);
-    Real O_ratio=O_new/O;
+    Real O_ratio = O_new/O;
 
+    //
+    // enforce the constrained path condition
+    //
+    // If the new weight is negative (O_raio<0), kill the walker by setting 
+    // its weight to zero
+    // real(O_ratio) enforces the phase-free approximation in case of complex 
+    // phases (because the condition O_ratio>0 only checks the real part of O_ratio)
     if(O_ratio > 0)
         {
         O=O_new;
@@ -53,18 +79,49 @@ halfK(Matrix& phi, Real& w, Real& O, Matrix& invO_matrix_up,
         w = 0;
         }
 
-    }
+    } // End halfK()
+
+//
+// Sample the auxiliary field over a single lattice site for a single walker and 
+// propagate that walker by the potential energy propagator exp(-deltau*V)
+// Inputs:
+//  phi: a single row in the matrix of a walker (corresponding to the amplitude 
+//  of all electrons over a single lattice site in that walker)
+//  phi_T: the matrix of the trial wave function
+//  N_up: the number of spin up electrons
+//  N_par: the total number of electrons
+//  O: the overlap of the aforementioned walker
+//  w: the weight of the aforementioned walker
+//  invO_matrix_up: the inverse of the spin up sector of the walker's overlap matrix 
+//  invO_matrix_dn: the inverse of the spin down sector of the walker's overlap matrix
+//  aux_fld: the 2x2 matrix containing all the possible values of the quantity 
+//  exp(gamma*s(sigma)*x_i) (used in V.m only)
+// Outputs:
+//  phi: the propagated row of the aforementioned walker
+//  O: the overlap after propagation of the aforementioned walker
+//  w: the weight after propagation of the aforementioned walker
+//  invO_matrix_up: the updated inverse of the spin up sector of the walker's 
+//  overlap matrix 
+//  invO_matrix_dn: the updated inverse of the spin down sector of the walker's 
+//  overlap matrix 
+//
 
 void
 V(Vector& phi, Vector phi_T, int N_up, int N_par, Real& O, 
   Real& w, Matrix& invO_matrix_up, Matrix& invO_matrix_dn, 
   Matrix aux_fld)
     {
+    //
+    // Pre-allocate matrices:
+    //
     Vector Gii(2);
     Matrix RR(2,2);
     Gii = 0.0;
     RR = 0.0;
 
+    //
+    // Calculate the Green's function
+    //
     Vector temp1_up(N_up);
     Vector temp2_up(N_up);
     Vector temp1_dn(N_par-N_up);
@@ -73,7 +130,6 @@ V(Vector& phi, Vector phi_T, int N_up, int N_par, Real& O,
     temp2_up = 0.0;
     temp1_dn = 0.0;
     temp2_dn = 0.0;
-
     if(N_up > 0)
         {
         temp1_up = phi.SubVector(1,N_up)*invO_matrix_up;
@@ -87,29 +143,32 @@ V(Vector& phi, Vector phi_T, int N_up, int N_par, Real& O,
         temp2_dn = invO_matrix_dn*phi_T.SubVector(N_up+1,N_par);
         Gii(2) = temp1_dn*phi_T.SubVector(N_up+1,N_par);
         }
-
     RR(1,1) = (aux_fld(1,1)-1.0)*Gii(1) + 1.0;
     RR(1,2) = (aux_fld(1,2)-1.0)*Gii(1) + 1.0;
     RR(2,1) = (aux_fld(2,1)-1.0)*Gii(2) + 1.0;
     RR(2,2) = (aux_fld(2,2)-1.0)*Gii(2) + 1.0;
 
+    //
+    // Perform the importance sampling and propagate the walker
+    //
+    // compute overlaps
     Vector O_ratio_temp(2);
     O_ratio_temp(1) = RR(1,1)*RR(2,1);
     O_ratio_temp(2) = RR(1,2)*RR(2,2);
-
     Vector O_ratio_temp_real(2);
     O_ratio_temp_real = 0.0;
     if(O_ratio_temp(1) > 0.0)
         O_ratio_temp_real(1) = O_ratio_temp(1);
     if(O_ratio_temp(2) > 0.0)
         O_ratio_temp_real(2) = O_ratio_temp(2);
+    // the normalization for the importance-sampled pdf
     Real sum_O_ratio_temp_real = O_ratio_temp_real(1)+O_ratio_temp_real(2);
-
+    // if both auxiliary fields lead to negative overlap then kill the walker
     if(sum_O_ratio_temp_real <= 0)
         w=0;
-
     if(w > 0)
         {
+        // Otherwise update the weight
         w=w*0.5*sum_O_ratio_temp_real;
         
         int x_spin;
@@ -117,16 +176,36 @@ V(Vector& phi, Vector phi_T, int N_up, int N_par, Real& O,
             x_spin=1;
         else
             x_spin=2;
+        // propagates the walker with the chosen auxiliary field
         if(N_up > 0)
-            phi.SubVector(1,N_up)=phi.SubVector(1,N_up)*aux_fld(1,x_spin);
+            phi.SubVector(1,N_up) = phi.SubVector(1,N_up)*aux_fld(1,x_spin);
         if(N_par-N_up > 0)
-            phi.SubVector(N_up+1,N_par)=phi.SubVector(N_up+1,N_par)*aux_fld(2,x_spin);
-    
-        O=O*O_ratio_temp(x_spin);
-        invO_matrix_up=invO_matrix_up+(1-aux_fld(1,x_spin))/RR(1,x_spin)*temp2_up*temp1_up;
-        invO_matrix_dn=invO_matrix_dn+(1-aux_fld(2,x_spin))/RR(2,x_spin)*temp2_dn*temp1_dn;
+            phi.SubVector(N_up+1,N_par) = phi.SubVector(N_up+1,N_par)*
+                                                    aux_fld(2,x_spin);
+        
+        // Update the overlap using Sherman-Morrison
+        O = O*O_ratio_temp(x_spin);
+        invO_matrix_up = invO_matrix_up + (1-aux_fld(1,x_spin))/
+                                 RR(1,x_spin)*temp2_up*temp1_up;
+        invO_matrix_dn = invO_matrix_dn + (1-aux_fld(2,x_spin))/
+                                 RR(2,x_spin)*temp2_dn*temp1_dn;
         }
-    }
+    } // End V()
+
+//
+// Calculate the mixed estimator for the ground state energy of a walker
+// Inputs:
+//  H_k: the one-body kinetic Hamiltonian
+//  phi: the matrix of a single walker
+//  Phi_T: the matrix of the trial wave function
+//  invO_matrix_up: the inverse of the spin up sector of the walker's overlap matrix 
+//  invO_matrix_dn: the inverse of the spin down sector of the walker's overlap matrix
+//  N_up: the number of spin up electrons
+//  N_par: the total number of electrons of both spins
+//  U: the on-site repulsion strength in the Hubbard model
+// Outputs:
+//  e: the mixed estimator for the ground state energy of the input walker
+//
 
 Real
 measure(Matrix H_k, Matrix phi, Matrix Phi_T, Matrix invO_matrix_up, 
@@ -135,6 +214,9 @@ measure(Matrix H_k, Matrix phi, Matrix Phi_T, Matrix invO_matrix_up,
     Real e = 0.0;
     int N_sites = phi.Nrows();
 
+    //
+    // calculate the single-particle Green's function matrix for each spin:
+    //
     Vector diag_G_up(N_sites);
     diag_G_up = 0.0;
     Vector diag_G_dn(N_sites);
@@ -143,37 +225,71 @@ measure(Matrix H_k, Matrix phi, Matrix Phi_T, Matrix invO_matrix_up,
     Matrix G_dn(N_sites,N_sites);
     G_up = 0.0;
     G_dn = 0.0;
-
+    
+    //
+    // calculate the potential energy:
+    //
     if(N_up > 0)
         {
         Matrix temp_up = phi.SubMatrix(1,N_sites,1,N_up)*invO_matrix_up;
         G_up = temp_up*(Phi_T.SubMatrix(1,N_sites,1,N_up)).t();
         diag_G_up = G_up.Diagonal();
         }
-
     if(N_par - N_up > 0)
         {
         Matrix temp_dn = phi.SubMatrix(1,N_sites,N_up+1,N_par)*invO_matrix_dn;
         G_dn = temp_dn*(Phi_T.SubMatrix(1,N_sites,N_up+1,N_par)).t();
         diag_G_dn = G_dn.Diagonal();
         }
-   
     Real n_int = diag_G_up*diag_G_dn;
     Real potentialEnergy = n_int*U;
-    
+   
+    //
+    // calculate the kinetic energy:
+    //
     Real kineticEnergy = 0.0;
     for(int i = 1; i <= N_sites; i++)
         {
         for(int j = 1; j <= N_sites; j++)
-            {
             kineticEnergy += H_k(i,j)*(G_up(i,j)+G_dn(i,j));
-            }
         }
-    
+   
+    //
+    // calculate the total energy:
+    //
     e = potentialEnergy + kineticEnergy;
 
     return e;
-    }
+    } // End measure()
+
+//
+// Perform one step of the random walk
+// Inputs:
+//  phi: the whole ensemble of walkers
+//  N_wlk: the number of walkers
+//  N_sites: the total number of lattice sites
+//  w: the array of weights of all the walkers
+//  O: the array of overlaps of all the walkers
+//  E: the total energy of all walkers
+//  W: the total weight of all walkers
+//  H_k: the one-body kinetic Hamiltonian
+//  Proj_k_half: the matrix of the operator exp(-deltau*K/2)
+//  flag_mea: the flag (1 or 0) that specifies whether the energy should the 
+//  measured in this step
+//  Phi_T: the matrix of the trial wave function
+//  N_up: the number of spin up electrons
+//  N_par: the total number of electrons
+//  U: the on-site repulsion strength in the Hubbard model
+//  fac_norm: the exponent of the pre-factor exp(-deltau*(H-E_T))
+//  aux_fld: the 2x2 matrix containing all the possible values of the quantity 
+//  exp(gamma*s(sigma)*x_i) (used in V.m only)
+// Outputs:
+//  phi: the ensemble of walkers after propagation
+//  w: the new array of weights of all walkers
+//  O: the new array of overlaps of all walkers
+//  E: the new total energy of all walkers
+//  W: the new total weight of all walkers
+//
 
 void
 stepwlk(std::vector<Matrix>& phi, int N_wlk, int N_sites, Vector& w, 
@@ -181,7 +297,10 @@ stepwlk(std::vector<Matrix>& phi, int N_wlk, int N_sites, Vector& w,
         int flag_mea, Matrix Phi_T, int N_up, int N_par, Real U, 
         Real fac_norm, Matrix aux_fld)
     {
-    Vector e(N_wlk);
+    //
+    // Propagate each walker:
+    //
+    Vector e(N_wlk); // Array containing the energy
     e = 0.0;
     Matrix invO_matrix_up;
     Matrix invO_matrix_dn;
@@ -191,36 +310,47 @@ stepwlk(std::vector<Matrix>& phi, int N_wlk, int N_sites, Vector& w,
         Matrix Phi = phi[i_wlk];
         if(w(i_wlk) > 0)
             {
+            // multiply by the pre-factor exp(-deltau*(E_T)) in the ground-state 
+            // projector and by the prefactor exp(-0.5*U*(N_up+N_dn)) in the 
+            // Hirsch transformation
             w(i_wlk) = w(i_wlk)*exp(fac_norm);
-            halfK(Phi, w(i_wlk), O(i_wlk), invO_matrix_up, invO_matrix_dn, Proj_k_half, Phi_T, N_up, N_par);
+            // propagate by the kinetic term exp(-1/2*deltau*K)
+            halfK(Phi, w(i_wlk), O(i_wlk), invO_matrix_up, invO_matrix_dn, 
+                  Proj_k_half, Phi_T, N_up, N_par);
             if(w(i_wlk) > 0)
                 {
+                // propagate each lattice site of a walker by the potential term:
                 for(int j_site = 1; j_site <= N_sites; j_site++)
                     {
                     if(w(i_wlk) > 0)
                         {
                         Vector Phi_site = Phi.Row(j_site);
-                        V(Phi_site, Phi_T.Row(j_site), N_up, N_par, O(i_wlk), w(i_wlk), invO_matrix_up, invO_matrix_dn, aux_fld);
+                        V(Phi_site, Phi_T.Row(j_site), N_up, N_par, O(i_wlk), 
+                          w(i_wlk), invO_matrix_up, invO_matrix_dn, aux_fld);
                         Phi.Row(j_site) = Phi_site;
                         }
                     }
                 }
             if(w(i_wlk) > 0)
                 {
-                halfK(Phi, w(i_wlk), O(i_wlk), invO_matrix_up, invO_matrix_dn, Proj_k_half, Phi_T, N_up, N_par);
+                // propagate by the kinetic term exp(-1/2*deltau*K)
+                halfK(Phi, w(i_wlk), O(i_wlk), invO_matrix_up, invO_matrix_dn, 
+                      Proj_k_half, Phi_T, N_up, N_par);
                 if(w(i_wlk) > 0)
                     {
+                    // measure the energy if needed:
                     if(flag_mea == 1)
-                        {
-                        e(i_wlk) = measure(H_k, Phi, Phi_T,  invO_matrix_up, invO_matrix_dn, N_up, N_par, U); 
-                        }
+                        e(i_wlk) = measure(H_k, Phi, Phi_T,  invO_matrix_up, 
+                                           invO_matrix_dn, N_up, N_par, U); 
                     }
                 }
             }
         phi[i_wlk] = Phi;
         }
-
+    
+    //
     // Compute the ensemble's total energy and weight if measurement took place
+    //
     if(flag_mea == 1)
         {
         for(int i_wlk = 1; i_wlk <= N_wlk; i_wlk++)
@@ -232,20 +362,37 @@ stepwlk(std::vector<Matrix>& phi, int N_wlk, int N_sites, Vector& w,
                 }
             }
         }
-    }
+    } // End stepwlk()
+
+//
+// Perform the modified Gram-Schmidt orthogonalization to stabilize the walkers
+// Inputs:
+//  Phi: the whole ensemble of walkers
+//  N_wlk: the number of walkkers
+//  O: the array of overlaps of all walkers
+//  N_up: the number of spin up electrons
+//  N_par: the total number of electrons
+// Outputs:
+//  Phi: the stabilized ensemble of walkers
+//  O: the updated array of overlaps
+//
 
 void
 stblz(std::vector<Matrix>& Phi, int N_wlk, Vector& O, int N_up, int N_par)
     {
     int N_sites = Phi[1].Nrows();
     int N_dn = N_par - N_up;
-
+    
+    //
+    // Perform the QR decomposition on each walker
+    //
+    // Keep only the Q matrices and discard the R matrices
     for(int i_wlk = 1; i_wlk <= N_wlk; i_wlk++)
         {
         Matrix phi = Phi[i_wlk];
         Real det_R_up = 1.0;
         Real det_R_dn = 1.0;
-
+        // for the spin up sector: 
         if(N_up > 0)
             {
             Matrix Q_up;
@@ -257,6 +404,7 @@ stblz(std::vector<Matrix>& Phi, int N_wlk, Vector& O, int N_up, int N_par)
             phi.SubMatrix(1,N_sites,1,N_up) = Q_up.SubMatrix(1,N_sites,1,N_up);
             det_R_up = Determinant(R_up.SubMatrix(1,N_up,1,N_up));
             }
+        // for the spin down sector:
         if(N_dn > 0)
             {
             Matrix Q_dn;
@@ -269,9 +417,10 @@ stblz(std::vector<Matrix>& Phi, int N_wlk, Vector& O, int N_up, int N_par)
             det_R_dn = Determinant(R_dn.SubMatrix(1,N_dn,1,N_dn));
             }
         Phi[i_wlk] = phi;
+        // Update the weight of each walker
         O(i_wlk) = O(i_wlk)/det_R_up/det_R_dn;
         }
-    }
+    } // End stblz()
 
 //
 // Perform population control with a simple "combing" method
