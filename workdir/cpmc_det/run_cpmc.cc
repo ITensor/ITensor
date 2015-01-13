@@ -6,6 +6,7 @@ using std::endl;
 using std::string;
 using namespace itensor;
 
+//
 //  A script to set the input parameters and run a CPMC calculation
 //
 // Huy Nguyen, Hao Shi, Jie Xu and Shiwei Zhang
@@ -19,6 +20,7 @@ using namespace itensor;
 // on the method):
 // "CPMC-Lab: A Matlab Package for Constrained Path Monte Carlo Calculations" 
 // Comput. Phys. Commun. (2014)
+//
 
 int 
 main(int argc, char* argv[])
