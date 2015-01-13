@@ -273,26 +273,49 @@ stblz(std::vector<Matrix>& Phi, int N_wlk, Vector& O, int N_up, int N_par)
         }
     }
 
+//
+// Perform population control with a simple "combing" method
+// Inputs:
+//  Phi: the whole ensemble of walkers
+//  w: array containing the weights of all the walkers
+//  O: array containing the overlaps of all the walkers
+//  N_wlk: the number of walkers
+//  N_sites: the total number of lattice sites
+//  N_par: the total number of electrons
+// Outputs:
+//  Phi: the new ensemble of walkers after population control
+//  w: the new array of weights
+//  O: the new array of overlaps
+// 
+
 void
 pop_cntrl(std::vector<Matrix>& Phi, Vector& w, Vector& O, int N_wlk, int N_sites, int N_par)
     {
+    //
+    // Preparation
+    //
+    // Create empty matrices that will hold the outputs
+    // in the end the number of walkers will still be N_wlk
     std::vector<Matrix> new_Phi(N_wlk+1);
     Matrix zeros(N_sites, N_par);
     zeros = 0.0;
     for(int i = 1; i <= N_wlk; i++)
         new_Phi[i] = zeros;
-
     Vector new_O(N_wlk);
     new_O = 0.0;
     
     Real sum_w = 0.0;
     for(int i = 1; i <= N_wlk; i++)
         sum_w += w(i);
+    // scaling factor to bring the current total weight back to the original level (=N_wlk)
     Real d = 1.0*N_wlk/sum_w;
-    
+    // start the "comb" at a random position to avoid bias against the first walker 
     sum_w = -rNum();
     int n_wlk = 0;
 
+    //
+    // Apply the comb
+    //
     for(int i_wlk = 1; i_wlk <= N_wlk; i_wlk++)
         {
         sum_w += w(i_wlk)*d;
@@ -305,11 +328,14 @@ pop_cntrl(std::vector<Matrix>& Phi, Vector& w, Vector& O, int N_wlk, int N_sites
         n_wlk = n;
         }
 
+    //
+    // Return the new population, weights and overlaps:
+    //
     Phi = new_Phi;
     O = new_O;
-
+    // All new walkers have weights to 1 and the total weight = N_wlk
     w = Vector(N_wlk,1.0);
-    }
+    } // End pop_cntrl()
 
 //
 // Generate the one-body kinetic term of the Hubbard Hamiltonian with 
@@ -374,7 +400,129 @@ H_K(int Lx, int Ly, Real tx, Real ty)
         }
    
     return H_k;
-    }
+    } // End H_K()
+
+void
+initialization(int Lx, int Ly, Real tx, Real ty, int N_up, int N_dn,
+               Real deltau, Real U, int N_wlk, int N_blk,
+               int& N_sites, int& N_par, Matrix& H_k, Matrix& Proj_k_half, 
+               Matrix& Phi_T, std::vector<Matrix>& Phi, Vector& w, Vector& O, 
+               Vector& E_blk, Vector& W_blk, Real& fac_norm, Real& gamma, 
+               Matrix& aux_fld)
+    {
+    //
+    //  Initialize internal quantities
+    //
+    N_sites = Lx*Ly;
+    N_par = N_up + N_dn;
+    //  form the one-body kinetic Hamiltonian
+    H_k = H_K(Lx,Ly,tx,ty);
+    // the matrix of the operator exp(-deltau*K/2)
+    Proj_k_half = Exp(-0.5*deltau*H_k);
+
+    //
+    //  Initialize the trial wave function and calculate the ensemble's initial 
+    //  energy 
+    //
+    
+    // Diagonalize the one-body kinetic Hamiltonian to get the non-interacting 
+    // single-particle orbitals:
+    Vector E_nonint;
+    Matrix psi_nonint;
+    EigenValues(H_k, E_nonint, psi_nonint);
+
+    // assemble the non-interacting single-particle orbitals into a Slater 
+    // determinant:
+    Phi_T = Matrix(N_sites,N_par);
+    if(N_up > 0)
+        Phi_T.SubMatrix(1,N_sites,1,N_up) = psi_nonint.SubMatrix(1,N_sites,
+                                            1,N_up);
+    if(N_dn > 0)
+        Phi_T.SubMatrix(1,N_sites,N_up+1,N_par) = psi_nonint.SubMatrix(1,
+                                                  N_sites,1,N_dn);
+    // the kinetic energy of the trial wave function
+    Real E_K = 0.0;
+    for(int i = 1; i <= N_up; i++)
+        E_K += E_nonint(i);
+    for(int i = 1; i <= N_dn; i++)
+        E_K += E_nonint(i);
+
+    // the potential energy of the trial wave function
+    Vector n_r_up(N_sites),
+           n_r_dn(N_sites);
+    n_r_up = 0.0, n_r_dn = 0.0;
+
+    if(N_up > 0)
+        {
+        Matrix Phi_T_up = Phi_T.SubMatrix(1,N_sites,1,N_up);
+        Matrix Lambda_up = Phi_T_up*Phi_T_up.t();
+        n_r_up = Lambda_up.Diagonal();
+        }
+    if(N_dn > 0)
+        {
+        Matrix Phi_T_dn = Phi_T.SubMatrix(1,N_sites,N_up+1,N_par);
+        Matrix Lambda_dn = Phi_T_dn*Phi_T_dn.t();
+        n_r_dn = Lambda_dn.Diagonal();
+        }
+
+    Real E_V = U*n_r_up*n_r_dn;
+    // the total energy of the trial wave function = the initial trial energy
+    Real E_T = E_K + E_V;
+
+    //
+    // Assemble the initial population of walkers
+    //
+
+    // initiate each walker to be the trial wave function
+    for(int i = 1; i <= N_wlk; i++)
+        {
+        // Phi[i] is the ith walker. Each is a matrix of size N_sites by N_par
+        // The left N_sites by N_up block is the spin up sector
+        // The rest is the spin down sector
+        // They are propagated independently and only share the auxiliary field
+        Phi[i] = Phi_T;
+        }
+
+    // initiate the weight and overlap of each walker to 1
+    w = Vector(N_wlk);
+    O = Vector(N_wlk);
+    w = 1.0, O = 1.0;
+
+    // the arrays that store the energy and weight at each block
+    E_blk = Vector(N_blk);
+    W_blk = Vector(N_blk);
+    E_blk = 0.0, W_blk = 0.0;
+
+    //
+    // initialize auxiliary field constants
+    //
+
+    // exponent of the prefactor exp(-deltau*(-E_T)) in the ground state 
+    // projector 
+    // fac_norm also include -0.5*U*(N_up+N_dn), the exponent of the 
+    // prefactor in the Hirsch transformation
+    fac_norm = (E_T-0.5*U*N_par)*deltau;
+    // gamma in Hirsch's transformation
+    gamma = acosh(exp(0.5*deltau*U));
+    // aux_fld is the 2x2 matrix containing all the possible values of 
+    // the quantity exp(-gamma*s(sigma)*x_i)
+    aux_fld = Matrix(2,2);
+    aux_fld = 0.0;
+    
+    // The first index corresponds to spin up or down
+    // The second index corresponds to the auxiliary field x_i=1 or x_i=-1
+    for(int i = 1; i <= 2; i++)
+        {
+        for(int j = 1; j <= 2; j++)
+            {
+            if((i+j)%2 == 0)
+                aux_fld(i,j)=exp(gamma);
+            else
+                aux_fld(i,j)=exp(-gamma);
+            }
+        }
+  
+    } // End initialization()
 
 //
 // Perform a constrained path Monte Carlo calculatiion.
@@ -409,147 +557,43 @@ CPMC_Lab(Real& E_ave, Real& E_err, int Lx, int Ly, int N_up, int N_dn,
     //
     //  Initialization
     //
-
-    //
-    //  Initialize internal quantities
-    //
-    int N_sites = Lx*Ly;
-    int N_par = N_up + N_dn;
-    //  form the one-body kinetic Hamiltonian
-    Matrix H_k = H_K(Lx,Ly,tx,ty);
-    // the matrix of the operator exp(-deltau*K/2)
-    Matrix Proj_k_half = Exp(-0.5*deltau*H_k);
-
-    //
-    //  Initialize the trial wave function and calculate the ensemble's initial 
-    //  energy 
-    //
-    
-    // Diagonalize the one-body kinetic Hamiltonian to get the non-interacting 
-    // single-particle orbitals:
-    Vector E_nonint;
-    Matrix psi_nonint;
-    EigenValues(H_k, E_nonint, psi_nonint);
-
-    // assemble the non-interacting single-particle orbitals into a Slater 
-    // determinant:
-    Matrix Phi_T(N_sites,N_par);
-    if(N_up > 0)
-        Phi_T.SubMatrix(1,N_sites,1,N_up) = psi_nonint.SubMatrix(1,N_sites,
-                                            1,N_up);
-    if(N_dn > 0)
-        Phi_T.SubMatrix(1,N_sites,N_up+1,N_par) = psi_nonint.SubMatrix(1,
-                                                  N_sites,1,N_dn);
-    // the kinetic energy of the trial wave function
-    Real E_K = 0.0;
-
-    for(int i = 1; i <= N_up; i++)
-        E_K += E_nonint(i);
-    for(int i = 1; i <= N_dn; i++)
-        E_K += E_nonint(i);
-
-    // the potential energy of the trial wave function
-    Vector n_r_up(N_sites),
-           n_r_dn(N_sites);
-    n_r_up = 0.0, n_r_dn = 0.0;
-
-    if(N_up > 0)
-        {
-        Matrix Phi_T_up = Phi_T.SubMatrix(1,N_sites,1,N_up);
-        Matrix Lambda_up = Phi_T_up*Phi_T_up.t();
-        n_r_up = Lambda_up.Diagonal();
-        }
-    if(N_dn > 0)
-        {
-        Matrix Phi_T_dn = Phi_T.SubMatrix(1,N_sites,N_up+1,N_par);
-        Matrix Lambda_dn = Phi_T_dn*Phi_T_dn.t();
-        n_r_dn = Lambda_dn.Diagonal();
-        }
-
-    Real E_V = U*n_r_up*n_r_dn;
-    // the total energy of the trial wave function = the initial trial energy
-    Real E_T = E_K + E_V;
-
-    //
-    // Assemble the initial population of walkers
-    //
+    int N_sites, N_par;
+    Real fac_norm, gamma;
+    Vector w, O, E_blk, W_blk;
+    Matrix H_k, Proj_k_half, Phi_T, aux_fld;
     std::vector<Matrix> Phi(N_wlk+1);
-    // initiate each walker to be the trial wave function
-    for(int i = 1; i <= N_wlk; i++)
-        {
-        // Phi[i] is the ith walker. Each is a matrix of size N_sites by N_par
-        // The left N_sites by N_up block is the spin up sector
-        // The rest is the spin down sector
-        // They are propagated independently and only share the auxiliary field
-        Phi[i] = Phi_T;
-        }
+    // initialize internal constants, form the trial wave function and assemble the initial 
+    // population of walkers
+    initialization(Lx, Ly, tx, ty, N_up, N_dn, deltau, U, N_wlk, N_blk, N_sites, N_par, 
+                   H_k, Proj_k_half, Phi_T, Phi, w, O, E_blk, W_blk, fac_norm, 
+                   gamma, aux_fld);
 
-    // initiate the weight and overlap of each walker to 1
-    Vector w(N_wlk),
-           O(N_wlk);
-    w = 1.0, O = 1.0;
-
-    // the arrays that store the energy and weight at each block
-    Vector E_blk(N_blk),
-           W_blk(N_blk);
-    E_blk = 0.0, W_blk = 0.0;
-
-    //
-    // initialize auxiliary field constants
-    //
-
-    // exponent of the prefactor exp(-deltau*(-E_T)) in the ground state 
-    // projector 
-    // fac_norm also include -0.5*U*(N_up+N_dn), the exponent of the 
-    // prefactor in the Hirsch transformation
-    Real fac_norm = (E_T-0.5*U*N_par)*deltau;
-    // gamma in Hirsch's transformation
-    Real gamma = acosh(exp(0.5*deltau*U));
-    // aux_fld is the 2x2 matrix containing all the possible values of 
-    // the quantity exp(-gamma*s(sigma)*x_i)
-    Matrix aux_fld(2,2);
-    aux_fld = 0.0;
-    
-    // The first index corresponds to spin up or down
-    // The second index corresponds to the auxiliary field x_i=1 or x_i=-1
-    for(int i = 1; i <= 2; i++)
-        {
-        for(int j = 1; j <= 2; j++)
-            {
-            if((i+j)%2 == 0)
-                aux_fld(i,j)=exp(gamma);
-            else
-                aux_fld(i,j)=exp(-gamma);
-            }
-        }
-  
-    //
     // randomize the random number generator seed based on the current time
-    //
     srand(time(NULL));
 
-    int flag_mea = 0;
+    int flag_mea = 0; // determine when a measurement should take place
     Real E = 0.0;
     Real W = 0.0;
 
+    //
     // Equilibration phase
+    //
     for(int i_blk = 1; i_blk <= N_eqblk; i_blk++)
         {
         for(int j_step = 1; j_step <= N_blksteps; j_step++)
             {
-            stepwlk(Phi, N_wlk, N_sites, w, O, E, W, H_k, Proj_k_half, flag_mea, Phi_T, N_up, N_par, U, fac_norm, aux_fld);
+            stepwlk(Phi, N_wlk, N_sites, w, O, E, W, H_k, Proj_k_half, flag_mea, Phi_T, 
+                    N_up, N_par, U, fac_norm, aux_fld);
             if(j_step % itv_modsvd == 0)
-                {
-                stblz(Phi, N_wlk, O, N_up, N_par);
-                }
+                stblz(Phi, N_wlk, O, N_up, N_par); // re-orthonormalize the walkers
             if(j_step % itv_pc == 0)
-                {
-                pop_cntrl(Phi, w, O, N_wlk, N_sites, N_par);
-                }
+                pop_cntrl(Phi, w, O, N_wlk, N_sites, N_par); // population control
             }
         }
     
+    // 
     // Measurement phase
+    //
     for(int i_blk = 1; i_blk <= N_blk; i_blk++)
         {
         for(int j_step = 1; j_step <= N_blksteps; j_step++)
@@ -558,19 +602,25 @@ CPMC_Lab(Real& E_ave, Real& E_err, int Lx, int Ly, int N_up, int N_dn,
                 flag_mea = 1;
             else
                 flag_mea = 0;
-            stepwlk(Phi, N_wlk, N_sites, w, O, E_blk(i_blk), W_blk(i_blk), H_k, Proj_k_half, flag_mea, Phi_T, N_up, N_par, U, fac_norm, aux_fld);
+            // propagate the walkers:
+            stepwlk(Phi, N_wlk, N_sites, w, O, E_blk(i_blk), W_blk(i_blk), H_k, 
+                    Proj_k_half, flag_mea, Phi_T, N_up, N_par, U, fac_norm, aux_fld);
             if (j_step % itv_modsvd == 0)
-                {
-                stblz(Phi, N_wlk, O, N_up, N_par);
-                }
+                stblz(Phi, N_wlk, O, N_up, N_par); // re-orthonormalize the walkers
             if (j_step % itv_pc == 0)
-                pop_cntrl(Phi, w, O, N_wlk, N_sites, N_par);
+                pop_cntrl(Phi, w, O, N_wlk, N_sites, N_par); // population control
             if (j_step % itv_Em ==0)
+                {
+                // update the exponent of the pre-factor exp(-deltau*(H-E_T))
                 fac_norm = (E_blk(i_blk)/W_blk(i_blk)-0.5*U*N_par)*deltau;
+                }
             }
         E_blk(i_blk)=E_blk(i_blk)/W_blk(i_blk);
         }
-    
+   
+    //
+    // Results
+    //
     for(int i = 1; i <= N_blk; i++)
         E_ave += E_blk(i);
     E_ave = E_ave/N_blk;
