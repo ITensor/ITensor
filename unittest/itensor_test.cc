@@ -22,6 +22,63 @@ class Functor
         }
     };
 
+enum Type { NoType, Dense, Diag, DiagAllSame, Combiner };
+
+std::ostream&
+operator<<(std::ostream& s, Type t)
+    {
+    if(t == NoType) s << "NoType";
+    else if(t == Dense) s << "Dense";
+    else if(t == Diag) s << "Diag";
+    else if(t == DiagAllSame) s << "DiagAllSame";
+    else if(t == Combiner) s << "Combiner";
+    else Error("Unrecognized Type value");
+    return s;
+    }
+
+struct GetType
+    {
+    Type type = NoType;
+
+    GetType() { }
+
+    operator Type() const { return type; }
+
+    template<typename T>
+    ITResult
+    operator()(const ITDense<T>& d)
+        {
+        type = Dense;
+        return ITResult();
+        }
+
+    template<typename T>
+    ITResult
+    operator()(const ITDiag<T>& d)
+        {
+        type = (d.allSame() ? DiagAllSame : Diag);
+        return ITResult();
+        }
+
+    ITResult
+    operator()(const ITCombiner& c)
+        {
+        type = Combiner;
+        return ITResult();
+        }
+
+    template<typename T>
+    ITResult
+    operator()(const T& d)
+        {
+        type = NoType;
+        return ITResult();
+        }
+    };
+
+Type
+getType(const ITensor& t) { return applyFunc<GetType>(t.data()); }
+
 TEST_CASE("ITensor")
     {
     Index s1("s1",2,Site);
@@ -51,6 +108,10 @@ TEST_CASE("ITensor")
     Index b6("b6",6);
     Index b7("b7",7);
     Index b8("b8",8);
+
+    Index J("J",10),
+          K("K",10),
+          L("L",10);
 
     IndexSet mixed_inds(a2,b3,l1,l2,a4,l4);
     auto mixed_inds_dim = area(mixed_inds);
@@ -105,6 +166,7 @@ SECTION("Constructors")
     SECTION("Rank 1")
         {
         ITensor t1(l1);
+        CHECK(getType(t1) == Dense);
         CHECK_EQUAL(t1.r(),1);
         CHECK(hasindex(t1,l1));
         CHECK_CLOSE(norm(t1),0,1E-10);
@@ -113,6 +175,7 @@ SECTION("Constructors")
     SECTION("Rank 2")
         {
         ITensor t2(l1,l2);
+        CHECK(getType(t2) == Dense);
         CHECK_EQUAL(t2.r(),2);
         CHECK(hasindex(t2,l1));
         CHECK(hasindex(t2,l2));
@@ -122,6 +185,7 @@ SECTION("Constructors")
     SECTION("Rank 3")
         {
         ITensor t3(l1,l2,l3);
+        CHECK(getType(t3) == Dense);
         CHECK_EQUAL(t3.r(),3);
         CHECK(hasindex(t3,l1));
         CHECK(hasindex(t3,l2));
@@ -265,6 +329,7 @@ SECTION("Constructors")
         Vector V(i1.m()); 
         V.Randomize();
         ITensor T(V,i1,i2);
+        CHECK(getType(T) == Diag);
 
         CHECK_EQUAL(T.r(),2);
         CHECK(hasindex(T,i1));
@@ -1267,32 +1332,119 @@ SECTION("CommonIndex")
     CHECK(commonIndex(T1,T2,Site) == s1);
     }
 
-SECTION("DiagITensorBasicContraction")
+SECTION("Diag ITensor Contraction")
     {
-    Vector v(3);
-    v(1) = -0.8;
-    v(2) = 1.7;
-    v(3) = 4.9;
+    SECTION("Diag All Same")
+        {
+        auto op = ITensor(1.,s1,a1); //all diag elements same
+        CHECK(getType(op) == DiagAllSame);
 
-    Vector vb(2);
-    vb(1) = 1;
-    vb(2) = -1;
+        auto r1 = randIT(s1,prime(s1,2));
+        auto res1 = op*r1;
+        CHECK(hasindex(res1,a1));
+        CHECK(hasindex(res1,prime(s1,2)));
+        for(int j1 = 1; j1 <= s1.m(); ++j1)
+            {
+            CHECK_REQUAL(res1.real(prime(s1,2)(j1),a1(1)), r1.real(prime(s1,2)(j1),s1(1)));
+            }
+        }
 
-    Real f1 = Global::random(),
-         f2 = Global::random();
+    SECTION("Diag")
+        {
+        Vector v(2);
+        v(1) = 1.23234;
+        v(2) = -0.9237;
+        auto op = ITensor(v,s1,b2);
+        CHECK(getType(op) == Diag);
 
-    ITensor op1(f1,s1,prime(s1),s2,prime(s2)),
-            op2(f2,s1,prime(s1)),
-            opa(3.1,s1,a1),
-            psi(-1,s1,l1),
-            opb(vb,s1,b2);
+        auto r2 = randIT(s1,s2);
+        auto res2 = op*r2;
+        CHECK(hasindex(res2,s2));
+        CHECK(hasindex(res2,b2));
+        auto diagm = std::min(s1.m(),b2.m());
+        for(int j2 = 1; j2 <= s2.m(); ++j2)
+        for(int d = 1; d <= diagm; ++d)
+            {
+            CHECK_REQUAL(res2.real(s2(j2),b2(d)), v(d) * r2.real(s2(j2),s1(d)));
+            }
+        }
 
-    //auto r1 = randIT(s1,prime(s1,2)),
-    //     r2 = randIT(s1,prime(s1,2));
+    SECTION("Trace")
+        {
+        auto T = randIT(s1,s2,s3);
+        auto d = ITensor(1,s1,s2);
+        auto R = d*T;
+        for(int i3 = 1; i3 <= s3.m(); ++i3)
+            {
+            Real val = 0;
+            for(int i12 = 1; i12 <= s1.m(); ++i12)
+                {
+                val += T.real(s1(i12),s2(i12),s3(i3));
+                }
+            CHECK_REQUAL(val,R.real(s3(i3)));
+            }
+        }
 
-    //auto res1 = op1*r1;
-    //res1.mapprime(1,0);
-    //CHECK(norm(res1-f1*r1) < 1E-10);
+    SECTION("Tie Indices with Diag Tensor")
+        {
+        auto T = randIT(s1,s2,s3,s4);
+
+        auto tied1 = Index("tied1",s1.m());
+        auto tt1 = ITensor(1,s1,s2,s3,tied1);
+        auto R1 = T*tt1;
+        for(int t = 1; t <= tied1.m(); ++t)
+        for(int j4 = 1; j4 <= s4.m(); ++j4)
+            {
+            CHECK_REQUAL(T.real(s1(t),s2(t),s3(t),s4(j4)), R1.real(tied1(t),s4(j4)));
+            }
+
+        auto tied2 = Index("tied2",s1.m());
+        auto tt2 = ITensor(1,s1,s3,tied2);
+        auto R2 = T*tt2;
+        for(int t = 1; t <= tied1.m(); ++t)
+        for(int j2 = 1; j2 <= s2.m(); ++j2)
+        for(int j4 = 1; j4 <= s4.m(); ++j4)
+            {
+            CHECK_REQUAL(T.real(s1(t),s2(j2),s3(t),s4(j4)), R2.real(tied2(t),s2(j2),s4(j4)));
+            }
+        }
+
+    SECTION("Contract All Dense Inds; Diag Scalar result")
+        {
+        auto T = randIT(J,K);
+
+        auto d1 = ITensor(1,J,K);
+        auto R = d1*T;
+        CHECK(getType(R) == DiagAllSame);
+        Real val = 0;
+        auto minjk = std::min(J.m(),K.m());
+        for(long j = 1; j <= minjk; ++j)
+            val += T.real(J(j),K(j));
+        CHECK_REQUAL(R.real(),val);
+
+        Vector v(minjk);
+        for(int i = 1; i <= minjk; ++i) v(i) = Global::random();
+        auto d2 = ITensor(v,J,K);
+        R = d2*T;
+        CHECK(getType(R) == DiagAllSame);
+        val = 0;
+        for(long j = 1; j <= minjk; ++j)
+            val += v(j)*T.real(J(j),K(j));
+        CHECK_REQUAL(R.real(),val);
+        }
+
+    SECTION("Contract All Dense Inds; Diag result")
+        {
+        auto T = randIT(J,K);
+        
+        auto d = ITensor(1,J,K,L);
+        auto R = d*T;
+        CHECK(getType(R) == Diag);
+        CHECK(hasindex(R,L));
+        auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
+        for(long j = 1; j <= minjkl; ++j)
+            CHECK_REQUAL(R.real(L(j)), T.real(J(j),K(j)));
+        }
     }
 
 //SECTION("Complex Diag ITensor")
@@ -1378,6 +1530,7 @@ SECTION("DiagITensorBasicContraction")
     SECTION("Kronecker Delta Tensor")
         {
         auto d = delta(s1,s2);
+        CHECK(getType(d) == Combiner);
 
         auto T1 = randIT(s1,s3);
 
@@ -1430,6 +1583,7 @@ SECTION("DiagITensorBasicContraction")
     SECTION("Combiner")
         {
         auto C = combiner(s1,s2);
+        CHECK(getType(C) == Combiner);
 
         auto T1 = randIT(s1,s2,s3);
         auto R1 = C*T1;

@@ -77,11 +77,158 @@ operator()(const ITDense<Real>& a1,
     return std::move(res);
     }
 
+ITResult Contract::
+diagDense(const ITDiag<Real>& d,
+          const IndexSet& dis,
+          const Label& dind,
+          const ITDense<Real>& t,
+          const IndexSet& tis,
+          const Label& tind)
+    {
+    computeNis(Sort);
+
+    long t_cstride = 0; //total t-stride of contracted inds of t
+    size_t ntu = 0; //number uncontracted inds of t
+    assert(int(tind.size()) == tis.size());
+    for(size_t j = 0; j < tind.size(); ++j)
+        {
+        //if index j is contracted, add its stride to t_cstride:
+        if(tind[j] < 0) t_cstride += tis.stride(j);
+        else            ++ntu;
+        }
+
+    long d_ustride = 0; //total result-stride of uncontracted inds of d
+    for(size_t i = 0; i < Nis_.r(); ++i)
+        {
+        auto j = findindex(dis,Nis_[i]);
+        if(j >= 0) d_ustride += Nis_.stride(i);
+        }
+
+    auto dsize = size_t(minM(dis));
+
+    if(ntu > 0)
+        {
+        vector<long> tstride(ntu,0),
+                     rstride(ntu,0);
+        detail::GCounter C(0,ntu,0);
+        size_t n = 0;
+        for(size_t j = 0; j < tind.size(); ++j)
+            {
+            if(tind[j] > 0)
+                {
+#ifdef DEBUG
+                if(n >= ntu) Error("n out of range");
+#endif
+                C.setInd(n,0,tis.dim(j)-1);
+                tstride.at(n) = tis.stride(j);
+                auto k = findindex(Nis_,tis[j]);
+#ifdef DEBUG
+                if(k < 0) Error("Index not found");
+#endif
+                rstride.at(n) = Nis_.stride(k);
+                ++n;
+                }
+            }
+        auto res = make_newdata<ITDense<Real>>(area(Nis_),0.);
+        auto *pr = res->data.data();
+        const auto *pt = t.data.data();
+
+        if(d.allSame())
+            {
+            for(;C.notDone();++C)
+                {
+                size_t roffset = 0,
+                       toffset = 0;
+                for(size_t i = 0; i < ntu; ++i)
+                    {
+                    auto ii = C.i.fast(i);
+                    toffset += ii*tstride[i];
+                    roffset += ii*rstride[i];
+                    }
+                for(long J = 0; J < dsize; ++J)
+                    {
+                    pr[J*d_ustride+roffset] += d.val*pt[J*t_cstride+toffset];
+                    }
+                }
+            }
+        else
+            {
+            auto* pd = d.data.data();
+            assert(d.data.size() == dsize);
+            for(;C.notDone();++C)
+                {
+                size_t roffset = 0,
+                       toffset = 0;
+                for(size_t i = 0; i < ntu; ++i)
+                    {
+                    auto ii = C.i.fast(i);
+                    toffset += ii*tstride[i];
+                    roffset += ii*rstride[i];
+                    }
+                for(size_t J = 0; J < dsize; ++J)
+                    {
+                    pr[J*d_ustride+roffset] += pd[J]*pt[J*t_cstride+toffset];
+                    }
+                }
+            }
+        return std::move(res);
+        }
+    else
+        {
+        //all of t's indices contracted with d
+        //result will be diagonal
+        if(d_ustride == 0) //all of d's inds contracted
+            {
+            // o scalar if all of d's inds contracted also
+            Real val = 0;
+            const auto *pt = t.data.data();
+            if(d.allSame())
+                {
+                for(size_t J = 0; J < dsize; ++J)
+                    val += d.val*pt[J*t_cstride];
+                }
+            else
+                {
+                assert(dsize == d.data.size());
+                auto *pd = d.data.data();
+                for(size_t J = 0; J < dsize; ++J)
+                    val += pd[J]*pt[J*t_cstride];
+                }
+            auto res = make_newdata<ITDiag<Real>>(val);
+            return std::move(res);
+            }
+        else //some of d's inds uncontracted
+            {
+            // o element-wise product of d's data and t's diagonal
+            auto res = make_newdata<ITDiag<Real>>(dsize,0.);
+            auto *pr = res->data.data();
+            const auto *pt = t.data.data();
+            if(d.allSame())
+                {
+                for(size_t J = 0; J < dsize; ++J)
+                    pr[J] += d.val*pt[J*t_cstride];
+                }
+            else
+                {
+                assert(dsize == d.data.size());
+                auto *pd = d.data.data();
+                for(size_t J = 0; J < dsize; ++J)
+                    pr[J] += pd[J]*pt[J*t_cstride];
+                }
+            return std::move(res);
+            }
+        }
+    Error("Case not handled");
+    return ITResult();
+    }
+
 NewData Contract::
 combine(const ITDense<Real>& d,
         const IndexSet& dis,
         const IndexSet& Cis)
     {
+    //TODO: try to make use of Lind,Rind label vectors
+    //      to simplify combine logic
     const auto& cind = Cis[0];
     int jc = findindex(dis,cind);
     if(jc >= 0) //has cind
@@ -201,14 +348,13 @@ operator()(const ITDense<Complex>& d) const
 ITResult FillReal::
 operator()(ITDiag<Real>& d) const
     {
-    std::fill(d.data.begin(),d.data.end(),r_);
-    return ITResult();
+    return make_newdata<ITDiag<Real>>(r_);
     }
 
 ITResult FillReal::
 operator()(const ITDiag<Complex>& d) const
     {
-    return make_newdata<ITDiag<Real>>(d.data.size(),r_);
+    return make_newdata<ITDiag<Real>>(r_);
     }
 
 ITResult FillCplx::
@@ -295,6 +441,7 @@ operator()(ITDiag<Real>& a1,
 #ifdef DEBUG
     if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
 #endif
+    if(a1.allSame() || a2.allSame()) Error("ITDiag plusEq allSame case not implemented");
     plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
     return ITResult();
     }
@@ -365,14 +512,16 @@ template<typename T>
 ITResult PrintIT::
 operator()(const ITDiag<T>& d) const
     {
-    s_ << " Diag}\n";
+    auto allsame = d.allSame();
+    s_ << " Diag" << (allsame ? "(all same)" : "") << "}\n";
     Real scalefac = 1.0;
     if(!x_.isTooBigForReal()) scalefac = x_.real0();
     else s_ << "  (omitting too large scale factor)\n";
 
-    for(size_t i = 0; i < d.data.size(); ++i)
+    auto size = minM(is_);
+    for(size_t i = 0; i < size; ++i)
         {
-        auto val = scalefac*d.data[i];
+        auto val = scalefac*(allsame ? d.val : d.data[i]);
         if(std::norm(val) > Global::printScale())
             {
             s_ << "  (";
