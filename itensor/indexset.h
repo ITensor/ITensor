@@ -617,7 +617,7 @@ template <class IndexT>
 long
 minM(const IndexSetT<IndexT>& iset)
     {
-    if(iset.rn() < iset.r()) return 1;
+    if(iset.rn() < iset.r() || iset.r() == 0) return 1;
 
     auto mm = iset[0].m();
     for(int j = 1; j < iset.rn(); ++j)

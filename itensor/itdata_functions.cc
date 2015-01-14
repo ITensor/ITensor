@@ -104,6 +104,8 @@ diagDense(const ITDiag<Real>& d,
         if(j >= 0) d_ustride += Nis_.stride(i);
         }
 
+    auto dsize = size_t(minM(dis));
+
     if(ntu > 0)
         {
         vector<long> tstride(ntu,0),
@@ -133,7 +135,6 @@ diagDense(const ITDiag<Real>& d,
 
         if(d.allSame())
             {
-            auto size = minM(dis);
             for(;C.notDone();++C)
                 {
                 size_t roffset = 0,
@@ -144,7 +145,7 @@ diagDense(const ITDiag<Real>& d,
                     toffset += ii*tstride[i];
                     roffset += ii*rstride[i];
                     }
-                for(long J = 0; J < size; ++J)
+                for(long J = 0; J < dsize; ++J)
                     {
                     pr[J*d_ustride+roffset] += d.val*pt[J*t_cstride+toffset];
                     }
@@ -153,7 +154,7 @@ diagDense(const ITDiag<Real>& d,
         else
             {
             auto* pd = d.data.data();
-            auto Md = d.data.size();
+            assert(d.data.size() == dsize);
             for(;C.notDone();++C)
                 {
                 size_t roffset = 0,
@@ -164,7 +165,7 @@ diagDense(const ITDiag<Real>& d,
                     toffset += ii*tstride[i];
                     roffset += ii*rstride[i];
                     }
-                for(size_t J = 0; J < Md; ++J)
+                for(size_t J = 0; J < dsize; ++J)
                     {
                     pr[J*d_ustride+roffset] += pd[J]*pt[J*t_cstride+toffset];
                     }
@@ -175,11 +176,47 @@ diagDense(const ITDiag<Real>& d,
     else
         {
         //all of t's indices contracted with d
-        //result will be diagonal:
-        // o scalar if all of d's inds contracted also
-        // o dot product of d's data and t's diagonal otherwise
-        //auto res = make_newdata<ITDiag<Real>>(???,0.);
-        Error("Case not handled");
+        //result will be diagonal
+        if(d_ustride == 0) //all of d's inds contracted
+            {
+            // o scalar if all of d's inds contracted also
+            Real val = 0;
+            const auto *pt = t.data.data();
+            if(d.allSame())
+                {
+                for(size_t J = 0; J < dsize; ++J)
+                    val += d.val*pt[J*t_cstride];
+                }
+            else
+                {
+                assert(dsize == d.data.size());
+                auto *pd = d.data.data();
+                for(size_t J = 0; J < dsize; ++J)
+                    val += pd[J]*pt[J*t_cstride];
+                }
+            auto res = make_newdata<ITDiag<Real>>(val);
+            return std::move(res);
+            }
+        else //some of d's inds uncontracted
+            {
+            // o element-wise product of d's data and t's diagonal
+            auto res = make_newdata<ITDiag<Real>>(dsize,0.);
+            auto *pr = res->data.data();
+            const auto *pt = t.data.data();
+            if(d.allSame())
+                {
+                for(size_t J = 0; J < dsize; ++J)
+                    pr[J] += d.val*pt[J*t_cstride];
+                }
+            else
+                {
+                assert(dsize == d.data.size());
+                auto *pd = d.data.data();
+                for(size_t J = 0; J < dsize; ++J)
+                    pr[J] += pd[J]*pt[J*t_cstride];
+                }
+            return std::move(res);
+            }
         }
     Error("Case not handled");
     return ITResult();

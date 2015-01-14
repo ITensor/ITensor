@@ -109,6 +109,10 @@ TEST_CASE("ITensor")
     Index b7("b7",7);
     Index b8("b8",8);
 
+    Index J("J",10),
+          K("K",10),
+          L("L",10);
+
     IndexSet mixed_inds(a2,b3,l1,l2,a4,l4);
     auto mixed_inds_dim = area(mixed_inds);
 
@@ -1403,6 +1407,43 @@ SECTION("Diag ITensor Contraction")
             {
             CHECK_REQUAL(T.real(s1(t),s2(j2),s3(t),s4(j4)), R2.real(tied2(t),s2(j2),s4(j4)));
             }
+        }
+
+    SECTION("Contract All Dense Inds; Diag Scalar result")
+        {
+        auto T = randIT(J,K);
+
+        auto d1 = ITensor(1,J,K);
+        auto R = d1*T;
+        CHECK(getType(R) == DiagAllSame);
+        Real val = 0;
+        auto minjk = std::min(J.m(),K.m());
+        for(long j = 1; j <= minjk; ++j)
+            val += T.real(J(j),K(j));
+        CHECK_REQUAL(R.real(),val);
+
+        Vector v(minjk);
+        for(int i = 1; i <= minjk; ++i) v(i) = Global::random();
+        auto d2 = ITensor(v,J,K);
+        R = d2*T;
+        CHECK(getType(R) == DiagAllSame);
+        val = 0;
+        for(long j = 1; j <= minjk; ++j)
+            val += v(j)*T.real(J(j),K(j));
+        CHECK_REQUAL(R.real(),val);
+        }
+
+    SECTION("Contract All Dense Inds; Diag result")
+        {
+        auto T = randIT(J,K);
+        
+        auto d = ITensor(1,J,K,L);
+        auto R = d*T;
+        CHECK(getType(R) == Diag);
+        CHECK(hasindex(R,L));
+        auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
+        for(long j = 1; j <= minjkl; ++j)
+            CHECK_REQUAL(R.real(L(j)), T.real(J(j),K(j)));
         }
     }
 

@@ -25,6 +25,11 @@ class ITDiag : public ITDispatch<ITDiag<T>>
         data(b,e)
         { }
 
+    ITDiag(size_t size, T val)
+        :
+        data(size,val)
+        { }
+
     ITDiag(T t) 
         : val(t) 
         { }
