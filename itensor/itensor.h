@@ -87,11 +87,11 @@ class ITensor
 
     template <typename... IndexVals>
     Real
-    real(const IndexVals&... ivs) const;
+    real(IndexVals&&... ivs) const;
 
     template <typename... IndexVals>
     Complex
-    cplx(const IndexVals&... ivs) const;
+    cplx(IndexVals&&... ivs) const;
 
     template<typename... IndexVals>
     void
@@ -357,18 +357,19 @@ ITensor(const IndexVal& iv1,
 
 template <typename... IndexVals>
 Complex ITensor::
-cplx(const IndexVals&... ivs) const
+cplx(IndexVals&&... ivs) const
     {
+    constexpr auto size = sizeof...(ivs);
 #ifdef DEBUG
     if(!*this) Error("ITensor is default constructed");
+    if(size > r()) Error("Too many IndexVals passed to real/cplx");
 #endif
-    static constexpr auto size = sizeof...(ivs);
     std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
-    std::vector<long> inds(is_.size(),0);
+    std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
-    auto g = applyFunc<GetElt<Complex,size>>(store_,{is_,inds});
+    Complex z = applyFunc<GetElt<Complex,size>>(store_,{is_,inds});
 	try {
-	    return Complex(g)*scale_.real(); 
+	    return z*scale_.real(); 
 	    }
 	catch(const TooBigForReal& e)
 	    {
@@ -386,9 +387,9 @@ cplx(const IndexVals&... ivs) const
 
 template <typename... IndexVals>
 Real ITensor::
-real(const IndexVals&... ivs) const
+real(IndexVals&&... ivs) const
     {
-    auto z = cplx(ivs...);
+    auto z = cplx(std::forward<IndexVals>(ivs)...);
     if(fabs(z.imag()) != 0)
         {
         printfln("element = (%.5E,%.5E)",z.real(),z.imag());

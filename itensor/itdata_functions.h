@@ -277,7 +277,7 @@ struct GenerateIT
 template<typename T, int size>
 struct GetElt
     {
-    using Inds = std::vector<long>;
+    using Inds = std::array<long,size>;
 
     const IndexSet& is_;
     const Inds& inds_;
@@ -290,7 +290,7 @@ struct GetElt
         inds_(inds)
         { }
 
-    explicit operator T() const { return elt_; }
+    operator T() const { return elt_; }
 
     template <typename V,
               typename std::enable_if<std::is_convertible<V,T>::value>::type* = nullptr>
@@ -306,14 +306,19 @@ struct GetElt
     ITResult
     operator()(const ITDiag<V>& d)
         {
-        auto first_i = inds_.front();
+        auto first_i = (inds_.empty() ? 0 : inds_.front());
+        //Check if inds_ reference an
+        //element on the diagonal, else zero
         for(auto i : inds_)
             if(i != first_i)
                 {
                 elt_ = 0;
                 return ITResult();
                 }
-        elt_ = d.data.at(first_i);
+        if(d.allSame())
+            elt_ = d.val;
+        else
+            elt_ = d.data.at(first_i);
         return ITResult();
         }
 
