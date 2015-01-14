@@ -87,21 +87,21 @@ diagDense(const ITDiag<Real>& d,
     {
     computeNis(Sort);
 
-    long tcstride = 0; //total t-stride of contracted inds of t
+    long t_cstride = 0; //total t-stride of contracted inds of t
     size_t ntu = 0; //number uncontracted inds of t
     assert(int(tind.size()) == tis.size());
     for(size_t j = 0; j < tind.size(); ++j)
         {
-        //if index j is contracted, add its stride to tcstride:
-        if(tind[j] < 0) tcstride += tis.stride(j);
+        //if index j is contracted, add its stride to t_cstride:
+        if(tind[j] < 0) t_cstride += tis.stride(j);
         else            ++ntu;
         }
 
-    long dustride = 0; //total result-stride of uncontracted inds of d
+    long d_ustride = 0; //total result-stride of uncontracted inds of d
     for(size_t i = 0; i < Nis_.r(); ++i)
         {
         auto j = findindex(dis,Nis_[i]);
-        if(j >= 0) dustride += Nis_.stride(i);
+        if(j >= 0) d_ustride += Nis_.stride(i);
         }
 
     if(ntu > 0)
@@ -146,7 +146,7 @@ diagDense(const ITDiag<Real>& d,
                     }
                 for(long J = 0; J < size; ++J)
                     {
-                    pr[J*dustride+roffset] = d.val*pt[J*tcstride+toffset];
+                    pr[J*d_ustride+roffset] += d.val*pt[J*t_cstride+toffset];
                     }
                 }
             }
@@ -166,7 +166,7 @@ diagDense(const ITDiag<Real>& d,
                     }
                 for(size_t J = 0; J < Md; ++J)
                     {
-                    pr[J*dustride+roffset] = pd[J]*pt[J*tcstride+toffset];
+                    pr[J*d_ustride+roffset] += pd[J]*pt[J*t_cstride+toffset];
                     }
                 }
             }
