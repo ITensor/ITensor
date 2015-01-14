@@ -108,10 +108,10 @@ Index::
 Index() 
     : 
     id_(0),
+    primelevel_(0),
     m_(1),
     type_(Site),
-    sname_("Null"),
-    primelevel_(0) 
+    sname_("Null")
     { 
     }
 
@@ -119,13 +119,12 @@ Index::
 Index(const string& name, int m, IndexType type, int plev) 
     : 
     id_(generateID()),
+    primelevel_(plev),
     m_(m),
     type_(type),
-    sname_(name),
-    primelevel_(plev) 
+    sname_(name)
     { 
     if(type_ == All) Error("Constructing Index with type All disallowed");
-    //setUniqueReal();
     }
 
 

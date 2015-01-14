@@ -163,10 +163,10 @@ class Index
 
     /////////////
     IDType id_;
+    int primelevel_; 
     int m_;
     IndexType type_;
     std::string sname_;
-    int primelevel_; 
     /////////////
 
     friend std::ostream& operator<<(std::ostream& s, const Index& t);
