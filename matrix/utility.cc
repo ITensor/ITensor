@@ -191,6 +191,48 @@ QRDecomp(const MatrixRef& M, Matrix& Q, Matrix& R)
 
     } //void QRDecomp
 
+//
+// Schur Decomposition of a real matrix
+// T is block upper triangular (real Schur form) and Z is orthogonal
+// If M is anti-symmetric, T is block-diagonal
+//
+void
+SchurDecomp(const MatrixRef& M, Matrix& T, Matrix& Z)
+    {
+    int n = M.Nrows();
+    Vector Tau(n); Tau = 0;
+
+    Z = M;
+
+    int info = 0;
+    int ilo = 1;
+    int ihi = n;
+
+    // Reduces a general matrix to upper Hessenberg form, A = Q H Q^T
+    // Takes matrix A (stored in Z), overwrites and outputs upper Hessenberg
+    // matrix H and details about matrix Q
+    dgehrd_wrapper(&n, &ilo, &ihi, Z.Store(), &n, Tau.Store(), &info);
+    if(info != 0) error("Error in call to dgehrd_.");
+    
+    // Store Hessenberg matrix H (stored in Z) in T
+    T = Z;
+
+    // Generates the real orthogonal matrix Q determined by dgehrd.
+    // Takes the output of dgehrd (information about Q, along with H,
+    // is stored in Z) and forms Q, storing in Z
+    dorghr_wrapper(&n, &ilo, &ihi, Z.Store(), &n, Tau.Store(), &info);
+    if(info != 0) error("Error in call to dorghr_.");
+    
+    Vector wr(n); wr = 0;
+    Vector wi(n); wi = 0;
+
+    // Computes the Schur factorization of a matrix reduced to Hessenberg form, A = Z T Z^T
+    // Takes Hessenberg matrix H (stored in T) and matrix Q (stored in Z), and outputs
+    // Schur vectors in Z and block upper-triangular matrix in T
+    dhseqr_wrapper(&n, &ilo, &ihi, T.Store(), &n, wr.Store(), wi.Store(), Z.Store(), &n, &info);
+    if(info != 0) error("Error in call to dhseqr_.");
+   
+    }
 
 //
 // Eigenvalues and eigenvectors of a real, symmetric matrix A
