@@ -8,13 +8,10 @@
 
 namespace itensor {
 
-enum IndexType { Link, Site, All };
+enum IndexType { Link, Site, All, NullIndex };
 
 //Forward declarations
-struct IndexDat;
 class IndexVal;
-
-using IndexDatPtr = shared_ptr<IndexDat>;
 
 //
 // Index
@@ -29,6 +26,9 @@ using IndexDatPtr = shared_ptr<IndexDat>;
 class Index
     {
     public:
+    using IDGenerator = mt19937;
+    using IDType = IDGenerator::result_type;
+
     //
     // Constructors
     //
@@ -48,18 +48,18 @@ class Index
 
     // Returns the bond dimension
     long 
-    m() const;
+    m() const { return m_; }
 
     // Returns the prime level
     int 
-    primeLevel() const;
+    primeLevel() const { return primelevel_; }
     // Sets the prime level to a specified value.
     Index& 
     primeLevel(int plev);
 
     // Returns the IndexType
     IndexType 
-    type() const;
+    type() const { return type_; }
 
     // Returns the name of this Index
     std::string 
@@ -67,7 +67,7 @@ class Index
 
     // Returns the name of this Index with primes removed
     const std::string&
-    rawname() const;
+    rawname() const { return sname_; }
 
     // Evaluates to false if Index is default constructed.
     explicit operator bool() const { return valid(); }
@@ -78,7 +78,7 @@ class Index
 
     // Returns false if Index is default constructed.
     bool 
-    valid() const;
+    valid() const { return (type_ != NullIndex); }
 
 
     // Returns the Arrow direction of this Index
@@ -154,18 +154,26 @@ class Index
     Index& 
     read(std::istream& s);
 
-    std::string
-    id() const;
+    IDType
+    id() const { return id_; }
+
 
     private:
 
     /////////////
-    IndexDatPtr p;
-
+    IDType id_;
     int primelevel_; 
+    long m_;
+    IndexType type_;
+    std::string sname_;
     /////////////
 
-    friend std::ostream& operator<<(std::ostream& s, const Index& t);
+    Index::IDType 
+    generateID()
+        {
+        static Index::IDGenerator rng(std::time(NULL) + getpid());
+        return rng();
+        }
 
     }; //class Index
 
@@ -220,8 +228,8 @@ class IndexVal
     void
     dag() { }
 
-    static const IndexVal& 
-    Null();
+    //static const IndexVal& 
+    //Null();
     };
 
 bool inline
@@ -273,26 +281,90 @@ std::ostream&
 operator<<(std::ostream& s, const IndexVal& iv);
 
 std::ostream& 
-operator<<(std::ostream& s, const IndexType& it);
+operator<<(std::ostream& s, IndexType it);
+
 
 
 //
-// Deprecated older function names.
-// For backwards compatibility only.
+//
+// Implementations
+//
 //
 
-template<class T>
-T
-primed(T I, int inc = 1) { I.prime(inc); return I; }
+inline Index::
+Index() 
+    : 
+    id_(0),
+    primelevel_(0),
+    m_(1),
+    type_(NullIndex)
+    { }
 
-template<class T>
-T 
-primed(T I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
+inline Index::
+Index(const std::string& name, long m, IndexType type, int plev) 
+    : 
+    id_(generateID()),
+    primelevel_(plev),
+    m_(m),
+    type_(type),
+    sname_(name)
+    { 
+#ifdef DEBUG
+    if(type_ == All) Error("Constructing Index with type All disallowed");
+    if(type_ == NullIndex) Error("Constructing Index with type NullIndex disallowed");
+#endif
+    }
 
-template<class T>
-T
-deprimed(T I, IndexType type = All) { I.noprime(type); return I; }
+bool inline Index::
+operator==(const Index& other) const 
+    { 
+    return (id_ == other.id_) && (primelevel_ == other.primelevel_); 
+    }
 
+bool inline Index::
+noprimeEquals(const Index& other) const
+    { 
+    return (id_ == other.id_);
+    }
+
+bool inline Index::
+operator>(const Index& other) const 
+    { 
+    if(m_ == other.m_) 
+        {
+        if(id_ == other.id_) return primelevel_ > other.primelevel_;
+        return id_ > other.id_;
+        }
+    return m_ > other.m_;
+    }
+
+bool inline Index::
+operator<(const Index& other) const
+    {
+    if(m_ == other.m_) 
+        {
+        if(id_ == other.id_) return primelevel_ < other.primelevel_;
+        return id_ < other.id_;
+        }
+    return m_ < other.m_;
+    }
+
+IndexVal inline Index::
+operator()(long i) const { return IndexVal(*this,i); }
+
+inline
+Index& Index::
+prime(int inc) 
+    { 
+    primelevel_ += inc; 
+#ifdef DEBUG
+    if(primelevel_ < 0)
+        {
+        Error("Negative primeLevel");
+        }
+#endif
+    return *this;
+    }
 
 }; //namespace itensor
 

@@ -9,12 +9,20 @@ namespace itensor {
 using std::string;
 using std::stringstream;
 
+const char*
+indexTypeName(IndexType it)
+    {
+    if(it == Link)      return "Link"; 
+    else if(it == Site) return "Site"; 
+    else if(it == All)  return "All"; 
+    else if(it == NullIndex)  return "NullIndex"; 
+    else return "";
+    }
+
 std::ostream& 
-operator<<(std::ostream& s, const IndexType& it)
+operator<<(std::ostream& s, IndexType it)
     { 
-    if(it == Link)      s << "Link"; 
-    else if(it == Site) s << "Site"; 
-    else if(it == All)  s << "All"; 
+    s << indexTypeName(it);
     return s; 
     }
 
@@ -24,6 +32,7 @@ IndexTypeToInt(IndexType it)
     if(it == Link) return 1;
     if(it == Site) return 2;
     if(it == All)  return 3;
+    if(it == NullIndex) return 4;
     Error("No integer value defined for IndexType.");
     return -1;
     }
@@ -34,6 +43,7 @@ IntToIndexType(int i)
     if(i == 1) return Link;
     if(i == 2) return Site;
     if(i == 3) return All;
+    if(i == 4) return NullIndex;
     printfln("No IndexType value defined for i=%d\n",i);
     Error("Undefined IntToIndexType value");
     return Link;
@@ -51,10 +61,7 @@ putprimes(string s, int plev)
         }
     else
         {
-        for(int i = 1; i <= plev; ++i) 
-            {
-            str << "\'";
-            }
+        for(int i = 1; i <= plev; ++i) str << "\'";
         }
     return str.str();
     }
@@ -62,13 +69,7 @@ putprimes(string s, int plev)
 string 
 nameindex(IndexType it, int plev)
     { 
-    static const array<string,3>
-    indextypename = {{ "Link","Site", "All" }};
-#ifdef DEBUG
-    return putprimes(indextypename.at(int(it)),plev);
-#else
-    return putprimes(indextypename[int(it)],plev); 
-#endif
+    return putprimes(indexTypeName(it),plev); 
     }
 
 string 
@@ -79,112 +80,13 @@ nameint(const string& f, int n)
     return ss.str(); 
     }
 
-
-//
-// IndexDat
-// Storage for Index objects.
-//
-struct IndexDat
-    {
-    //////////////
-
-    using IDGenerator = mt19937;
-    using IDType = IDGenerator::result_type;
-
-    const IDType id;
-    const long m;
-    const IndexType type;
-    const string sname;
-
-    //////////////
-
-    IndexDat(const string& ss, long mm, IndexType it, IDType id);
-
-    static const IndexDatPtr&
-    Null();
-
-    private:
-
-    //These methods are not implemented
-    //to disallow copying
-    IndexDat(const IndexDat&);
-    void operator=(const IndexDat&);
-
-    }; //class IndexDat
-
-IndexDat::
-IndexDat(const string& ss, long m_, IndexType it, IDType id_)
-    : 
-    id(id_),
-    m(m_), 
-    type(it), 
-    sname(ss)
-    { }
-
-const IndexDatPtr& IndexDat::
-Null()
-    {
-    static IndexDatPtr Null_ = itensor::make_shared<IndexDat>("Null",1,Site,0);
-    return Null_;
-    }
-
 //
 // class Index
 //
 
 
-IndexDat::IDType 
-generateID()
-    {
-    static IndexDat::IDGenerator rng(std::time(NULL) + getpid());
-    return rng();
-
-    //static IDType nextid = 0;
-    //++nextid;
-    //return nextid;
-    }
-
-
-Index::
-Index() 
-    : 
-    p(IndexDat::Null()), 
-    primelevel_(0) 
-    { 
-    //setUniqueReal();
-    }
-
-Index::
-Index(const string& name, long mm, IndexType it, int plev) 
-    : 
-    p(itensor::make_shared<IndexDat>(name,mm,it,generateID())), 
-    primelevel_(plev) 
-    { 
-    if(it == All) Error("Constructing Index with type All disallowed");
-    //setUniqueReal();
-    }
-
-
-long Index::
-m() const { return p->m; }
-
-IndexType Index::
-type() const { return p->type; }
-
 string Index::
-name() const  { return putprimes(rawname(),primelevel_); }
-
-const string& Index::
-rawname() const 
-    { 
-    return p->sname; 
-    }
-
-bool Index::
-valid() const { return (p != IndexDat::Null()); }
-
-int Index::
-primeLevel() const { return primelevel_; }
+name() const  { return putprimes(sname_,primelevel_); }
 
 Index& Index::
 primeLevel(int plev) 
@@ -197,48 +99,6 @@ primeLevel(int plev)
     return *this;
     }
 
-bool Index::
-operator==(const Index& other) const 
-    { 
-    return (p->id == other.p->id) && (primelevel_ == other.primelevel_); 
-    }
-
-bool Index::
-noprimeEquals(const Index& other) const
-    { 
-    return (p->id == other.p->id);
-    }
-
-bool Index::
-operator>(const Index& other) const 
-    { 
-    if(this->m() == other.m()) 
-        {
-        if(p->id == other.p->id) 
-            {
-            return primelevel_ > other.primelevel_;
-            }
-        return p->id > other.p->id;
-        }
-    return this->m() > other.m();
-    }
-
-bool Index::
-operator<(const Index& other) const
-    {
-    if(this->m() == other.m()) 
-        {
-        if(p->id == other.p->id) 
-            {
-            return primelevel_ < other.primelevel_;
-            }
-        return p->id < other.p->id;
-        }
-    return this->m() < other.m();
-    }
-
-IndexVal Index::
-operator()(long i) const { return IndexVal(*this,i); }
 
 Index& Index::
 mapprime(int plevold, int plevnew, IndexType type)
@@ -259,18 +119,6 @@ mapprime(int plevold, int plevnew, IndexType type)
     return *this;
     }
 
-Index& Index::
-prime(int inc) 
-    { 
-    primelevel_ += inc; 
-#ifdef DEBUG
-    if(primelevel_ < 0)
-        {
-        Error("Negative primeLevel");
-        }
-#endif
-    return *this;
-    }
 
 Index& Index::
 prime(IndexType type, int inc)
@@ -295,17 +143,17 @@ write(std::ostream& s) const
 
     s.write((char*) &primelevel_,sizeof(primelevel_));
 
-    const int t = IndexTypeToInt(p->type);
+    const auto t = IndexTypeToInt(type_);
     s.write((char*) &t,sizeof(t));
 
-    s.write((char*) &(p->id),sizeof(p->id));
+    s.write((char*) &(id_),sizeof(id_));
 
-    s.write((char*) &(p->m),sizeof(p->m));
+    s.write((char*) &(m_),sizeof(m_));
 
-    const int nlength = p->sname.length();
+    const int nlength = sname_.length();
     s.write((char*) &nlength,sizeof(nlength));
 
-    s.write(p->sname.data(),nlength+1);
+    s.write(sname_.c_str(),nlength+1);
     }
 
 Index& Index::
@@ -321,28 +169,20 @@ read(std::istream& s)
 
     int t; 
     s.read((char*) &t,sizeof(t));
+    type_ = IntToIndexType(t);
 
-    IndexDat::IDType id;
-    s.read((char*) &id, sizeof(id));
+    s.read((char*) &id_, sizeof(id_));
 
-    long mm; 
-    s.read((char*) &mm,sizeof(mm));
+    s.read((char*) &m_,sizeof(m_));
 
     int nlength; 
     s.read((char*) &nlength,sizeof(nlength));
 
     auto newname = std::unique_ptr<char[]>(new char[nlength+1]);
     s.read(newname.get(),nlength+1);
-    string ss(newname.get()); 
+    sname_ = string(newname.get()); 
 
-    p = itensor::make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
     return *this;
-    }
-
-std::string Index::
-id() const
-    {
-    return format("%d",p->id);
     }
 
 std::ostream& 
@@ -350,7 +190,7 @@ operator<<(std::ostream& s, const Index& t)
     {
     if(t.name() != "" && t.name() != " ") s << t.name();
     return s << "(" << nameindex(t.type(),t.primeLevel()) 
-             << "," << (t.p->id % 10000) << "):" << t.m();
+             << "," << (t.id() % 10000) << "):" << t.m();
     }
 
 IndexVal::
