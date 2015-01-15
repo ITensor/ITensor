@@ -479,63 +479,6 @@ SECTION("MultiIndexConstructors")
     CHECK_CLOSE(sumels(t2),V.sumels(),1E-10);
     }
 
-//SECTION("ITensorConstructors")
-//    {
-//    Index clink("clink",4);
-//    IndexSet indices1(l1,l2,clink);
-//
-//    Vector V(l1.m()*l2.m()*clink.m());
-//    V.Randomize();
-//
-//    ITensor t1(indices1,V);
-//
-//    Real f = 1;
-//    //Real f = Global::random();
-//    //ITensor t2(t1);
-//    //t2 *= f;
-//
-//    IndexSet indices3(l1,l2,l4,l3);
-//
-//    //ITensor t3(indices3,t2);
-//    ITensor t3(indices3,t1);
-//
-//    PrintData(t1);
-//    PrintData(t3);
-//
-//    CHECK_EQUAL(4,t3.r());
-//
-//    for(int i = 1; i <= l1.m(); ++i)
-//    for(int j = 1; j <= l2.m(); ++j)
-//    {
-//    CHECK_CLOSE(t1.real(l1(i),l2(j),clink(1))*f,t3.real(l1(i),l2(j),l3(1),l4(1)),1E-10);
-//    CHECK_CLOSE(t1.real(l1(i),l2(j),clink(2))*f,t3.real(l1(i),l2(j),l3(2),l4(1)),1E-10);
-//    CHECK_CLOSE(t1.real(l1(i),l2(j),clink(3))*f,t3.real(l1(i),l2(j),l3(1),l4(2)),1E-10);
-//    CHECK_CLOSE(t1.real(l1(i),l2(j),clink(4))*f,t3.real(l1(i),l2(j),l3(2),l4(2)),1E-10);
-//    }
-
-//    Permutation P(NMAX+1);
-//    P.setFromTo(2,4);
-//    P.setFromTo(4,2);
-//    //CHECK(P.check(4));
-//
-//    IndexSet indices5(l1,l4,l3,l2);
-//
-//    ITensor t4(t3);
-//    Real f2 = Global::random();
-//    t4 /= f2;
-//    ITensor t5(indices5,t4,P);
-//
-//    CHECK_EQUAL(4,t5.r());
-//
-//    for(int i = 1; i <= l1.m(); ++i)
-//    for(int j = 1; j <= l2.m(); ++j)
-//    for(int k = 1; k <= l3.m(); ++k)
-//    for(int l = 1; l <= l4.m(); ++l)
-//    {
-//    CHECK_CLOSE(t3.real(l1(i),l2(j),l3(k),l4(l))/f2,t5.real(l1(i),l2(j),l3(k),l4(l)),1E-10);
-//    }
-//    }
-
 SECTION("Copy")
     {
     IndexSet indices(a2,l3,l1,a4);
