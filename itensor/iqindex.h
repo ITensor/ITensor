@@ -23,53 +23,27 @@ using IQIndexDatPtr = shared_ptr<IQIndexDat>;
 class IQIndex : public Index
     {
     public:
+
+    using storage = std::vector<IndexQN>;
     //
     //Constructors
     //
 
     IQIndex();
 
+    template<typename... Args>
     IQIndex(const std::string& name, 
             const Index& i1, const QN& q1, 
-            Arrow dir = Out);
+            const Args&... args);
 
+    template<typename... Args>
     IQIndex(const std::string& name, 
+            Arrow dir,
             const Index& i1, const QN& q1, 
-            const Index& i2, const QN& q2,
-            Arrow dir = Out);
+            const Args&... args);
 
     IQIndex(const std::string& name, 
-            const Index& i1, const QN& q1, 
-            const Index& i2, const QN& q2,
-            const Index& i3, const QN& q3,
-            Arrow dir = Out);
-
-    IQIndex(const std::string& name, 
-            const Index& i1, const QN& q1, 
-            const Index& i2, const QN& q2,
-            const Index& i3, const QN& q3,
-            const Index& i4, const QN& q4,
-            Arrow dir = Out);
-
-    IQIndex(const std::string& name, 
-            const Index& i1, const QN& q1, 
-            const Index& i2, const QN& q2,
-            const Index& i3, const QN& q3,
-            const Index& i4, const QN& q4,
-            const Index& i5, const QN& q5,
-            Arrow dir = Out);
-
-    IQIndex(const std::string& name, 
-            const Index& i1, const QN& q1, 
-            const Index& i2, const QN& q2,
-            const Index& i3, const QN& q3,
-            const Index& i4, const QN& q4,
-            const Index& i5, const QN& q5,
-            const Index& i6, const QN& q6,
-            Arrow dir = Out);
-
-    IQIndex(const std::string& name, 
-            std::vector<IndexQN>& ind_qn, 
+            storage&& ind_qn, 
             Arrow dir = Out, 
             int plev = 0);
 
@@ -77,22 +51,24 @@ class IQIndex : public Index
     //Accessor Methods
     //
 
-    using Storage = std::vector<IndexQN>;
 
-    const Storage&
+    const storage&
     indices() const;
 
     int 
     nindex() const;
 
+    //1-indexed
     const Index& 
     index(int i) const;
 
-    const Index& 
-    operator[](int i) const;
-
+    //1-indexed
     const QN& 
     qn(int i) const;
+
+    //0-indexed
+    const Index& 
+    operator[](int i) const;
 
     Arrow 
     dir() const { return dir_; }
@@ -140,19 +116,11 @@ class IQIndex : public Index
     IQIndex& 
     read(std::istream& s);
 
-    //
-    // Static Index instances
-    //
-
-    static const 
-    IQIndex& Null();
-
     private:
 
     /////////////
+    IQIndexDatPtr pd;
     Arrow dir_;
-
-    shared_ptr<IQIndexDat> pd;
     /////////////
 
     IQIndex(const Index& index, const IQIndexDatPtr& pdat);
@@ -292,6 +260,162 @@ operator<<(std::ostream &s, const IndexQN& x);
 
 std::ostream& 
 operator<<(std::ostream& s, const IQIndexVal& iv);
+
+//
+//
+// Implementations
+//
+//
+
+class IQIndexDat
+    {
+    public:
+
+    using storage = std::vector<IndexQN>;
+    using iterator = storage::iterator;
+    using const_iterator = storage::const_iterator;
+
+    IQIndexDat() { }
+
+    template<typename... Args>
+    IQIndexDat(const Index& i1, const QN& q1,
+               const Args&... args) 
+        { 
+        constexpr auto size = sizeof...(args)/2+1;
+        iq_.resize(size);
+        fill<0>(i1,q1,args...);
+        }
+
+    explicit
+    IQIndexDat(storage&& ind_qn) { iq_ = std::move(ind_qn); }
+
+    const storage&
+    indices() const { return iq_; }
+
+    int
+    size() { return iq_.size(); }
+
+    const Index&
+    index(int i) { return iq_[i-1]; }
+
+    const Index&
+    operator[](int i) { return iq_[i]; }
+
+    const QN&
+    qn(int i) { return iq_[i-1].qn; }
+
+    iterator
+    begin() { return iq_.begin(); }
+    iterator
+    end() { return iq_.end(); }
+
+    const_iterator
+    begin() const { return iq_.begin(); }
+    const_iterator
+    end()   const { return iq_.end(); }
+
+    void 
+    write(std::ostream& s) const;
+
+    void 
+    read(std::istream& s);
+
+    static const IQIndexDatPtr& Null();
+
+    void
+    makeCopyOf(const IQIndexDat& other) { iq_ = other.iq_; }
+
+    private:
+
+    //////////////////
+
+    storage iq_;
+
+    /////////////////
+
+    //Disallow copying using =
+    void 
+    operator=(const IQIndexDat&);
+
+    template<long J>
+    void
+    fill() { }
+
+    template<long J, typename... Args>
+    void
+    fill(const Index& i, const QN& q, const Args&... rest)
+        {
+#ifdef DEBUG
+        assert(J < iq_.size());
+#endif
+        iq_[J] = IndexQN(i,q);
+        fill<J+1>(rest...);
+        }
+
+    };
+
+long
+totalM(const IQIndexDat::storage& storage);
+
+inline IQIndex::
+IQIndex() 
+    : 
+    dir_(Neither)
+    { }
+
+namespace detail {
+
+long inline
+totalM()
+    {
+    return 0;
+    }
+
+template<typename... Args>
+long
+totalM(const Index& i, const QN& q,
+       const Args&... args)
+    {
+    return i.m()+detail::totalM(args...);
+    }
+
+}; //namespace detail
+
+
+template<typename... Args>
+IQIndex::
+IQIndex(const std::string& name, 
+        const Index& i1, const QN& q1, 
+        const Args&... rest)
+    : 
+    Index(name,detail::totalM(i1,q1,rest...),i1.type(),i1.primeLevel()), 
+    pd(make_shared<IQIndexDat>(i1,q1,rest...)),
+    dir_(Out)
+    { }
+
+template<typename... Args>
+IQIndex::
+IQIndex(const std::string& name, 
+        Arrow dir,
+        const Index& i1, const QN& q1, 
+        const Args&... rest)
+    : 
+    Index(name,detail::totalM(i1,q1,rest...),i1.type(),i1.primeLevel()), 
+    pd(make_shared<IQIndexDat>(i1,q1,rest...)),
+    dir_(dir)
+    { }
+
+inline IQIndex::
+IQIndex(const std::string& name, 
+        storage&& ind_qn, 
+        Arrow dir, int plev) 
+    : 
+    Index(name,totalM(ind_qn),ind_qn.front().type(),plev),
+    pd(make_shared<IQIndexDat>(std::move(ind_qn))),
+    dir_(dir)
+    { 
+    }
+
 
 }; //namespace itensor
 
