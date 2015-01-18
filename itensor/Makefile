@@ -29,8 +29,8 @@ HEADERS=detail/functions.h detail/skip_iterator.h detail/gcounter.h \
         range.h indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h itdata_functions.h \
         itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
-        itdata/iqtdense.h \
-        itensor.h qn.h iqindex.h iqtdat.h  \
+        itdata/iqtdata.h \
+        itensor.h qn.h iqindex.h  \
         detail/skip_iterator.h iqtensor.h \
         condenser.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
@@ -128,7 +128,7 @@ itensor.o: $(DEPHEADERS)
 DEPHEADERS+= qn.h iqindex.h
 iqindex.o: $(DEPHEADERS)
 .debug_objs/iqindex.o: $(DEPHEADERS)
-DEPHEADERS+= iqtdat.h iqtensor.h qcounter.h detail/skip_iterator.h
+DEPHEADERS+= itdata/iqtdata.h iqtensor.h qcounter.h detail/skip_iterator.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
 DEPHEADERS+= condenser.h iqcombiner.h localmpo.h
