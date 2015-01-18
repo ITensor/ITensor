@@ -42,23 +42,15 @@ ITensor(const Index& i1,const Index& i2)
 	{ 
     }
     
-
-ITensor::
-ITensor(Real val) 
-    :
-    scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(1,0.))
-    { 
-    fill(val);
-    }
-
 ITensor::
 ITensor(Complex val) 
     :
-    scale_(1.),
-    store_(std::make_shared<ITDense<Complex>>(1,0.))
+    scale_(1.)
     { 
-    fill(val);
+    if(val.imag() == 0)
+        store_ = std::make_shared<ITDense<Real>>(1,val.real());
+    else
+        store_ = std::make_shared<ITDense<Complex>>(1,val);
     }
 
 ITensor::

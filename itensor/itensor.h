@@ -15,10 +15,9 @@ class ITensor
     {
     public:
 
-    using storage_type = ITData;
-    using storage_ptr = PData;
     using IndexT = Index;
     using IndexValT = IndexVal;
+    using storage_ptr = PData;
 
     //
     // Constructors
@@ -27,15 +26,15 @@ class ITensor
     //Construct Null ITensor, ITensor will evaluate to false in boolean context
     ITensor();
 
-    //Construct rank 1 ITensor, all entries set to zero
+    //Construct rank 1 ITensor, all elements set to zero
     explicit
     ITensor(const Index& i1);
 
-    //Construct rank 2 ITensor, all entries set to zero
+    //Construct rank 2 ITensor, all elements set to zero
     ITensor(const Index& i1,
             const Index& i2);
 
-    //Construct rank n ITensor, all entries set to zero
+    //Construct rank n ITensor, all elements set to zero
     template <typename... Indices>
     ITensor(const Index& i1, 
             const Index& i2, 
@@ -43,8 +42,7 @@ class ITensor
             const Indices&... rest);
 
     //Construct rank 0 ITensor (scalar), value set to val
-    explicit
-    ITensor(Real val);
+    //If val.imag()==0, only Real storage will be used
     explicit
     ITensor(Complex val);
 
@@ -63,7 +61,7 @@ class ITensor
             const Inds&... inds);
 
     //Construct rank n ITensor, all
-    //entries set to zero except the single
+    //elements set to zero except the single
     //entry specified by the IndexVal args
     template <typename... IVals>
     explicit
@@ -93,10 +91,9 @@ class ITensor
     Complex
     cplx(IndexVals&&... ivs) const;
 
-    template<typename... IndexVals>
-    void
-    set(Real val, const IndexVals&... ivs);
-
+    //Set element at location given by collection
+    //of IndexVals. Will not switch storage
+    //from Real to Complex unless val.imag()!=0 
     template<typename... IndexVals>
     void
     set(Complex val, const IndexVals&... ivs);
@@ -398,17 +395,6 @@ real(IndexVals&&... ivs) const
     return z.real();
     }
 
-template <typename... IndexVals>
-void ITensor::
-set(Real val, const IndexVals&... ivs)
-    {
-    static constexpr auto size = sizeof...(ivs);
-    scaleTo(1.);
-    const std::array<IndexVal,size> vals = {{ static_cast<IndexVal>(ivs)...}};
-    std::array<int,size> inds;
-    detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
-    applyFunc<SetEltReal<size>>(store_,{val,is_,inds});
-    }
 
 template <typename... IndexVals>
 void ITensor::
@@ -417,9 +403,12 @@ set(Complex val, const IndexVals&... ivs)
     static constexpr auto size = sizeof...(ivs);
     scaleTo(1.);
     const std::array<IndexVal,size> vals = {{ static_cast<IndexVal>(ivs)...}};
-    std::array<int,size> inds;
+    std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
-    applyFunc<SetEltComplex<size>>(store_,{val,is_,inds});
+    if(val.imag() == 0)
+        applyFunc<SetEltReal<size>>(store_,{val.real(),is_,inds});
+    else
+        applyFunc<SetEltComplex<size>>(store_,{val,is_,inds});
     }
 
 template <typename Func>

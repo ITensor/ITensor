@@ -548,14 +548,14 @@ class ReadWriteID
         }
     };
 
-template<int size>
+template<long size>
 class SetEltComplex
     {
     Complex elt_;
     const IndexSet& is_;
     const std::array<long,size>& inds_;
     public:
-    SetEltComplex(const Complex& elt,
+    SetEltComplex(Complex elt,
                   const IndexSet& is,
                   const std::array<long,size>& inds)
         : elt_(elt),
@@ -583,16 +583,16 @@ class SetEltComplex
     operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
     };
 
-template<int size>
+template<long size>
 class SetEltReal
     {
     Real elt_;
     const IndexSet& is_;
-    const std::array<int,size>& inds_;
+    const std::array<long,size>& inds_;
     public:
     SetEltReal(Real elt,
                const IndexSet& is,
-               const std::array<int,size>& inds)
+               const std::array<long,size>& inds)
         : elt_(elt),
           is_(is),
           inds_(inds)
