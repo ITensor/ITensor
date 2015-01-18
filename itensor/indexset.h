@@ -49,7 +49,7 @@ class IndexSetT
               const IndexT& i2,
               const Inds&... inds)
         {
-        init(std::array<Index,2+sizeof...(inds)>{{i1,i2,inds...}});
+        init(std::array<IndexT,2+sizeof...(inds)>{{i1,i2,inds...}});
         }
 
     explicit
