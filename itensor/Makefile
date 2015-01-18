@@ -31,7 +31,7 @@ HEADERS=detail/functions.h detail/skip_iterator.h detail/gcounter.h \
         itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
         itensor.h qn.h iqindex.h iqtdat.h  \
         detail/skip_iterator.h iqtensor.h \
-        condenser.h combiner.h qcounter.h iqcombiner.h \
+        condenser.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
@@ -130,7 +130,7 @@ iqindex.o: $(DEPHEADERS)
 DEPHEADERS+= iqtdat.h iqtensor.h qcounter.h detail/skip_iterator.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
-DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h
+DEPHEADERS+= condenser.h iqcombiner.h localmpo.h
 iqcombiner.o: $(DEPHEADERS)
 .debug_objs/iqcombiner.o: $(DEPHEADERS)
 condenser.o: $(DEPHEADERS)
