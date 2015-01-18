@@ -62,13 +62,13 @@ class IQIndex : public Index
     const Index& 
     index(long i) const;
 
-    //1-indexed
-    const QN& 
-    qn(long i) const;
-
     //0-indexed
     const Index& 
     operator[](long i) const;
+
+    //1-indexed
+    const QN& 
+    qn(long i) const;
 
     Arrow 
     dir() const { return dir_; }

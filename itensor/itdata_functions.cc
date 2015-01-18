@@ -7,6 +7,7 @@
 #include "lapack_wrap.h"
 
 using std::vector;
+using std::move;
 
 namespace itensor {
 
@@ -31,7 +32,7 @@ computeNis(SortOption sort)
         auto comp = [](const Index& i1, const Index& i2) { return i1 > i2; };
         std::sort(newind.begin(),newind.end(),comp);
         }
-    Nis_ = IndexSet(std::move(newind));
+    Nis_ = IndexSet(move(newind));
     }
 
 ITResult Contract::
@@ -74,7 +75,7 @@ operator()(const ITDense<Real>& a1,
         {
         elt /= scalefac_;
         }
-    return std::move(res);
+    return move(res);
     }
 
 ITResult Contract::
@@ -171,7 +172,7 @@ diagDense(const ITDiag<Real>& d,
                     }
                 }
             }
-        return std::move(res);
+        return move(res);
         }
     else
         {
@@ -195,7 +196,7 @@ diagDense(const ITDiag<Real>& d,
                     val += pd[J]*pt[J*t_cstride];
                 }
             auto res = make_newdata<ITDiag<Real>>(val);
-            return std::move(res);
+            return move(res);
             }
         else //some of d's inds uncontracted
             {
@@ -215,7 +216,7 @@ diagDense(const ITDiag<Real>& d,
                 for(size_t J = 0; J < dsize; ++J)
                     pr[J] += pd[J]*pt[J*t_cstride];
                 }
-            return std::move(res);
+            return move(res);
             }
         }
     Error("Case not handled");
@@ -246,7 +247,7 @@ combine(const ITDense<Real>& d,
                 {
                 newind.push_back(dis[j]);
                 }
-        Nis_ = IndexSet(std::move(newind));
+        Nis_ = IndexSet(move(newind));
         return NewData();
         }
     else
@@ -278,7 +279,7 @@ combine(const ITDense<Real>& d,
             newind.push_back(cind);
             for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
                 newind.push_back(dis[j]);
-            Nis_ = IndexSet(std::move(newind));
+            Nis_ = IndexSet(move(newind));
             return NewData();
             }
         else
@@ -318,12 +319,12 @@ combine(const ITDense<Real>& d,
                 pdims[j] = dis[P.dest(j)].m();
                 }
             Range rr(pdims);
-            Nis_ = IndexSet(std::move(newind));
+            Nis_ = IndexSet(move(newind));
             auto res = make_newdata<ITDense<Real>>(area(Nis_));
             auto td = make_tensorref(d.data.data(),dis);
             auto tr = make_tensorref(res->data.data(),rr);
             reshape(td,P,tr);
-            return std::move(res);
+            return move(res);
             }
         }
     return NewData();
@@ -342,7 +343,7 @@ operator()(const ITDense<Complex>& d) const
     {
     auto nd = make_newdata<ITDense<Real>>(d.data.size());
     operator()(*nd);
-    return std::move(nd);
+    return move(nd);
     }
 
 ITResult FillReal::
@@ -375,7 +376,7 @@ operator()(const ITDense<Real>& d) const
     {
     auto nd = make_newdata<ITDense<Complex>>(d.data.begin(),d.data.end());
     operator()(*nd);
-    return std::move(nd);
+    return move(nd);
     }
 
 ITResult MultComplex::

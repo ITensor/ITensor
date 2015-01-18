@@ -28,8 +28,7 @@ class Range
     template <typename... Dims>
     Range(long d0, Dims... rest)
         {
-        const auto ndim = 1+sizeof...(rest);
-        std::array<long,ndim> dims = {{d0,static_cast<long>(rest)...}};
+        std::array<long,1+sizeof...(rest)> dims = {{d0,static_cast<long>(rest)...}};
         init(dims);
         }
 
