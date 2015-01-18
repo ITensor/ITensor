@@ -2,12 +2,20 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#pragma once
+#ifndef __ITENSOR_GCOUNTER_H
+#define __ITENSOR_GCOUNTER_H
 
 #include "autovector.h"
 
 namespace itensor {
 namespace detail {
+
+//
+//TODO: possible optimizations
+//
+// o combine first, last into a single autovector
+//   of pair<long,long> to save one call to new and
+//   increase data locality
 
 class GCounter	// General Counter
     {
@@ -25,7 +33,6 @@ class GCounter	// General Counter
 
     // for a GCounter that has indices i[1] through i[8], and starts its counts at 0, 
     // firstind = 1, lastind = 8, firstval = 0
-
     GCounter(long firstind, 
              long lastind, 
              long firstval = 1) 
@@ -39,11 +46,11 @@ class GCounter	// General Counter
     // After constructing a GCounter g, calling g.setInd(j,s,e)
     // lets g.i[j] = s,s+1,...,e when iterating g
     void 
-    setInd(long j, long f, long l)
+    setInd(long j, long s, long e)
         {
-        first.ref(j) = f;
-        last.ref(j) = l;
-        i.ref(j) = f;
+        first.ref(j) = s;
+        last.ref(j) = e;
+        i.ref(j) = s;
         ind = 0;
         }
 
@@ -82,5 +89,6 @@ class GCounter	// General Counter
     };
 
 
-};
-};
+}; //namespace detail
+}; //namespace itensor
+#endif
