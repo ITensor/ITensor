@@ -24,7 +24,7 @@ class ITensor
     //
 
     //Construct Null ITensor, ITensor will evaluate to false in boolean context
-    ITensor();
+    ITensor() { }
 
     //Construct rank 1 ITensor, all elements set to zero
     explicit
@@ -339,15 +339,12 @@ ITensor(const IndexVal& iv1,
     :
     scale_(1.)
     {
-    const auto size = 1+sizeof...(rest);
+    const size_t size = 1+sizeof...(rest);
     auto ivs = std::array<IndexVal,size>{{iv1,rest...}};
-    auto inds = std::vector<Index>();
-    inds.reserve(size);
-    for(const auto& iv : ivs) inds.push_back(iv.index);
-    is_ = IndexSet(std::move(inds));
-
+    std::array<Index,size> inds;
+    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
+    is_ = IndexSet(inds);
     store_ = make_shared<ITDense<Real>>(area(is_),0.);
-
     set(1.,iv1,rest...);
     }
 

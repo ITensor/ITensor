@@ -18,10 +18,6 @@ namespace itensor {
 // ITensor Constructors
 //
 
-ITensor::
-ITensor()  
-    { }
-
 
 ITensor::
 ITensor(const Index& i1) 
@@ -29,8 +25,7 @@ ITensor(const Index& i1)
     is_(i1),
     scale_(1.),
     store_(std::make_shared<ITDense<Real>>(i1.m(),0.))
-	{ 
-    }
+	{ }
 
 
 ITensor::
@@ -39,8 +34,7 @@ ITensor(const Index& i1,const Index& i2)
     is_(i1,i2),
     scale_(1.),
     store_(std::make_shared<ITDense<Real>>(i1.m()*i2.m(),0.))
-	{ 
-    }
+	{ }
     
 ITensor::
 ITensor(Complex val) 
@@ -61,8 +55,7 @@ ITensor(IndexSet&& iset,
     is_(iset),
     scale_(scale),
     store_(std::move(nd))
-    {
-    }
+    { }
 
 ITensor::
 ITensor(const IndexSet& is)
