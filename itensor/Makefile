@@ -14,7 +14,7 @@ SOURCES+= simpletensor.cc
 SOURCES+= contract.cc 
 SOURCES+= itensor.cc 
 SOURCES+= iqindex.cc 
-#SOURCES+= iqtensor.cc 
+SOURCES+= iqtensor.cc 
 #SOURCES+= condenser.cc
 #SOURCES+= iqcombiner.cc 
 #SOURCES+= spectrum.cc 
@@ -29,6 +29,7 @@ HEADERS=detail/functions.h detail/skip_iterator.h detail/gcounter.h \
         range.h indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h itdata_functions.h \
         itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
+        itdata/iqtdense.h \
         itensor.h qn.h iqindex.h iqtdat.h  \
         detail/skip_iterator.h iqtensor.h \
         condenser.h qcounter.h iqcombiner.h \
