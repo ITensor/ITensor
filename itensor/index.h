@@ -189,11 +189,11 @@ class IndexVal
     public:
 
     Index index;
-    int i;
+    long i;
 
     IndexVal();
 
-    IndexVal(const Index& index, int i_);
+    IndexVal(const Index& index, long i_);
 
     bool
     operator==(const IndexVal& other) const;
@@ -204,7 +204,7 @@ class IndexVal
     bool
     operator==(const Index& I) const { return index == I; }
 
-    int
+    long
     m() const { return index.m(); }
 
     explicit operator bool() const { return valid(); }

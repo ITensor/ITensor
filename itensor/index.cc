@@ -200,7 +200,7 @@ IndexVal()
     { }
 
 IndexVal::
-IndexVal(const Index& index_, int i_) 
+IndexVal(const Index& index_, long i_) 
     : 
     index(index_),
     i(i_)

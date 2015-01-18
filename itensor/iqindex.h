@@ -55,20 +55,20 @@ class IQIndex : public Index
     const storage&
     indices() const;
 
-    int 
+    long 
     nindex() const;
 
     //1-indexed
     const Index& 
-    index(int i) const;
+    index(long i) const;
 
     //1-indexed
     const QN& 
-    qn(int i) const;
+    qn(long i) const;
 
     //0-indexed
     const Index& 
-    operator[](int i) const;
+    operator[](long i) const;
 
     Arrow 
     dir() const { return dir_; }
@@ -101,7 +101,7 @@ class IQIndex : public Index
     //
 
     IQIndexVal 
-    operator()(int n) const;
+    operator()(long n) const;
 
     //
     // Other methods
@@ -161,18 +161,18 @@ class IQIndexVal
 
     //////////
     IQIndex index;
-    int i;
+    long i;
     //////////
 
     IQIndexVal();
 
-    IQIndexVal(const IQIndex& iqindex, int i_);
+    IQIndexVal(const IQIndex& iqindex, long i_);
 
     const QN&
     qn() const;
 
     const QN&
-    qn(int j) const { return index.qn(j); }
+    qn(long j) const { return index.qn(j); }
 
     bool
     operator==(const IQIndexVal& other) const;
@@ -192,7 +192,7 @@ class IQIndexVal
     bool
     valid() const { return index.valid(); }
 
-    int 
+    long 
     m() const { return index.m(); }
 
     IQIndexVal& 
@@ -237,10 +237,10 @@ dag(IQIndexVal res) { res.dag(); return res; }
 bool
 hasindex(const IQIndex& I, const Index& i);
 
-int
+long
 findindex(const IQIndex& I, const Index& i);
 
-int 
+long 
 offset(const IQIndex& I, const Index& i);
 
 QN 
@@ -292,17 +292,17 @@ class IQIndexDat
     const storage&
     indices() const { return iq_; }
 
-    int
+    long
     size() { return iq_.size(); }
 
     const Index&
-    index(int i) { return iq_[i-1]; }
+    index(long i) { return iq_[i-1]; }
 
     const Index&
-    operator[](int i) { return iq_[i]; }
+    operator[](long i) { return iq_[i]; }
 
     const QN&
-    qn(int i) { return iq_[i-1].qn; }
+    qn(long i) { return iq_[i-1].qn; }
 
     iterator
     begin() { return iq_.begin(); }

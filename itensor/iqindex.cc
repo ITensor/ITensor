@@ -65,15 +65,15 @@ indices() const
     return pd->indices();
     }
 
-int IQIndex::
+long IQIndex::
 nindex() const 
     { 
     IQINDEX_CHECK_NULL
-    return (int) pd->size(); 
+    return (long) pd->size(); 
     }
 
 const Index& IQIndex::
-index(int i) const 
+index(long i) const 
     {
     IQINDEX_CHECK_NULL
 #ifdef DEBUG
@@ -88,7 +88,7 @@ index(int i) const
     }
 
 const Index& IQIndex::
-operator[](int i) const 
+operator[](long i) const 
     {
     IQINDEX_CHECK_NULL
 #ifdef DEBUG
@@ -103,7 +103,7 @@ operator[](int i) const
     }
 
 const QN& IQIndex::
-qn(int i) const 
+qn(long i) const 
     {
     IQINDEX_CHECK_NULL
 #ifdef DEBUG
@@ -257,7 +257,7 @@ solo()
 //    }
 
 void
-calc_ind_ii(const IQIndexVal& iv, int& j, int& ii)
+calc_ind_ii(const IQIndexVal& iv, long& j, long& ii)
     {
     j = 1;
     ii = iv.i;
@@ -277,7 +277,7 @@ IQIndexVal()
 
 
 IQIndexVal::
-IQIndexVal(const IQIndex& iqindex, int i_) 
+IQIndexVal(const IQIndex& iqindex, long i_) 
     : 
     index(iqindex),
     i(i_) 
@@ -296,7 +296,7 @@ IQIndexVal(const IQIndex& iqindex, int i_)
 IndexQN IQIndexVal::
 indexqn() const 
     { 
-    int j,ii;
+    long j,ii;
     calc_ind_ii(*this,j,ii);
     return IndexQN(index.index(j),index.qn(j));
     }
@@ -305,7 +305,7 @@ indexqn() const
 const QN& IQIndexVal::
 qn() const 
     { 
-    int j,ii;
+    long j,ii;
     calc_ind_ii(*this,j,ii);
     return index.qn(j);
     }
@@ -328,7 +328,7 @@ blockIndexVal() const
     { 
     //if(*this == IQIndexVal::Null())
     //    return IndexVal::Null();
-    int j,ii;
+    long j,ii;
     calc_ind_ii(*this,j,ii);
     return IndexVal(index.index(j),ii); 
     }
@@ -376,7 +376,7 @@ operator ITensor() const
 
 
 IQIndexVal IQIndex::
-operator()(int n) const 
+operator()(long n) const 
     { 
     return IQIndexVal(*this,n); 
     }
@@ -391,20 +391,20 @@ hasindex(const IQIndex& J, const Index& i)
     return false;
     }
 
-int
+long
 findindex(const IQIndex& J, const Index& i)
     { 
-    for(int j = 1; j <= J.nindex(); ++j)
+    for(long j = 1; j <= J.nindex(); ++j)
         {
         if(J.index(j) == i) return j;
         }
     return 0;
     }
 
-int
+long
 offset(const IQIndex& I, const Index& i)
     {
-    int os = 0;
+    long os = 0;
     for(const IndexQN& iq : I.indices())
         {
         if(iq == i) return os;
@@ -453,7 +453,7 @@ operator<<(ostream &o, const IQIndex& I)
         return o;
         }
     o << "IQIndex: " << Index(I) << " <" << I.dir() << ">" << endl;
-    for(int j = 1; j <= I.nindex(); ++j) 
+    for(long j = 1; j <= I.nindex(); ++j) 
         o << "  " << I.index(j) SP I.qn(j) << "\n";
     return o;
     }
