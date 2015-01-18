@@ -5,14 +5,12 @@
 #ifndef __ITENSOR_IQTENSOR_H
 #define __ITENSOR_IQTENSOR_H
 #include "iqindex.h"
-#include "iqtdat.h"
+#include "itensor.h"
 
 namespace itensor {
 
-class IQCombiner;
-
-using IQTDatPtr = shared_ptr<IQTDat>;
-
+ITensor 
+toITensor(const IQTensor& T) const;
 
 //
 // IQTensor
@@ -24,48 +22,34 @@ class IQTensor
 
     using IndexT = IQIndex;
     using IndexValT = IQIndexVal;
-    using CombinerT = IQCombiner;
-    using Storage = IQTDat;
+    using storage_ptr = PData;
 
     //Constructors --------------------------------------------------
 
     IQTensor();
 
     //Construct rank 0 IQTensor (scalar), value set to val
+    //If val.imag()==0, only Real storage will be used
     explicit 
-    IQTensor(Real val);
+    IQTensor(Complex val);
 
-    //Construct rank 1 IQTensor, set to zero
+    //Construct rank 1 IQTensor, all elements set to zero
     explicit 
     IQTensor(const IQIndex& i1);
 
-    //Construct rank 2 IQTensor, set to zero
-    IQTensor(const IQIndex& i1,const IQIndex& i2);
+    //Construct rank 2 IQTensor, all elements set to zero
+    IQTensor(const IQIndex& i1,
+             const IQIndex& i2);
 
-    //Construct rank 3 IQTensor, set to zero
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3);
-
-    //Construct rank 4 IQTensor, set to zero
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
-             const IQIndex& i4);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
-             const IQIndex& i4,const IQIndex& i5);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
-             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
-             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6,
-             const IQIndex& i7);
-
-    IQTensor(const IQIndex& i1,const IQIndex& i2,const IQIndex& i3,
-             const IQIndex& i4,const IQIndex& i5,const IQIndex& i6,
-             const IQIndex& i7,const IQIndex& i8);
+    //Construct rank n IQTensor, all elements set to zero
+    template<typename... IQIndices>
+    IQTensor(const IQIndex& i1,
+             const IQIndex& i2,
+             const IQIndices&... rest);
 
     //Construct IQTensor with IQIndices given by vector iqinds
     explicit 
-    IQTensor(std::vector<IQIndex>& iqinds);
+    IQTensor(std::vector<IQIndex>&& iqinds);
 
     //
     // IQIndexVal IQTensor Constructors
@@ -75,16 +59,10 @@ class IQTensor
     // construct an IQTensor T such that
     // T(I1(n1),I2(n2),I3(n3),...) == 1
     //
+    template <typename... IQIVals>
     explicit
-    IQTensor(const IQIndexVal& iv);
-
-    IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2);
-
-    IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
-             const IQIndexVal& iv3);
-
-    IQTensor(const IQIndexVal& iv1, const IQIndexVal& iv2,
-             const IQIndexVal& iv3, const IQIndexVal& iv4);
+    IQTensor(const IQIndexVal& iv1,
+             const IQIVals&... rest);
 
     //Accessor Methods ------------------------------------------
 
@@ -114,7 +92,7 @@ class IQTensor
     blocks() const { return *d_; }
     
     const IndexSet<IQIndex>& 
-    indices() const { return is_; }
+    inds() const { return is_; }
 
 
     //----------------------------------------------------
@@ -129,16 +107,6 @@ class IQTensor
 
     IQTensor& 
     operator*=(const IQTensor& other);
-
-    //
-    // Non-Contracting product
-    //
-    IQTensor 
-    operator/(IQTensor other) const 
-        { other /= *this; return other; }
-
-    IQTensor& 
-    operator/=(const IQTensor& other);
 
     //
     // Addition and subtraction
@@ -180,17 +148,12 @@ class IQTensor
 
     IQTensor& 
     operator*=(Complex z);
-
     
     //
     // Multiplication by an IQIndexVal
     //
     IQTensor& 
     operator*=(const IQIndexVal& iv) { return operator*=(IQTensor(iv)); }
-
-    //Convert to ITensor
-    ITensor 
-    toITensor() const;
 
     //Automatic conversion to ITensor
     operator 
@@ -206,45 +169,23 @@ class IQTensor
     //before inserting
     void insert(const ITensor& block);
 
-    //Non-const element access
-    Real& 
-    operator()(const IQIndexVal& iv1, 
-               const IQIndexVal& iv2 = IQIndexVal::Null(), 
-	           const IQIndexVal& iv3 = IQIndexVal::Null(), 
-               const IQIndexVal& iv4 = IQIndexVal::Null(), 
-	           const IQIndexVal& iv5 = IQIndexVal::Null(), 
-               const IQIndexVal& iv6 = IQIndexVal::Null(),
-	           const IQIndexVal& iv7 = IQIndexVal::Null(), 
-               const IQIndexVal& iv8 = IQIndexVal::Null());
+    //----------------------------------------------------
+    //IQTensor: element access
 
-    //const element access
-    Real 
-    operator()(const IQIndexVal& iv1, 
-               const IQIndexVal& iv2 = IQIndexVal::Null(), 
-	           const IQIndexVal& iv3 = IQIndexVal::Null(), 
-               const IQIndexVal& iv4 = IQIndexVal::Null(), 
-	           const IQIndexVal& iv5 = IQIndexVal::Null(), 
-               const IQIndexVal& iv6 = IQIndexVal::Null(),
-	           const IQIndexVal& iv7 = IQIndexVal::Null(), 
-               const IQIndexVal& iv8 = IQIndexVal::Null()) const;
-
-    //Method for specifically requesting const access
-    Real 
-    at(const IQIndexVal& iv1, 
-       const IQIndexVal& iv2 = IQIndexVal::Null(), 
-	   const IQIndexVal& iv3 = IQIndexVal::Null(), 
-       const IQIndexVal& iv4 = IQIndexVal::Null(), 
-	   const IQIndexVal& iv5 = IQIndexVal::Null(), 
-       const IQIndexVal& iv6 = IQIndexVal::Null(),
-	   const IQIndexVal& iv7 = IQIndexVal::Null(), 
-       const IQIndexVal& iv8 = IQIndexVal::Null()) const;
-
+    template <typename... IQIndexVals>
     Real
-    toReal() const;
+    real(IQIndexVals&&... ivs) const;
 
-    Complex 
-    toComplex() const;
+    template <typename... IQIndexVals>
+    Complex
+    cplx(IQIndexVals&&... ivs) const;
 
+    //Set element at location given by collection
+    //of IQIndexVals. Will not switch storage
+    //from Real to Complex unless val.imag()!=0 
+    template<typename... IQIndexVals>
+    void
+    set(Complex val, const IQIndexVals&... ivs);
 
     //----------------------------------------------------
     //IQTensor: prime methods
@@ -269,29 +210,6 @@ class IQTensor
     mapprime(int plevold, int plevnew, IndexType type = All);
 
     //----------------------------------------------------
-    //IQTensor index methods
-
-
-    void
-    tieIndices(const array<IQIndex,NMAX>& indices, int nind, const IQIndex& tied);
-
-    void
-    tieIndices(const IQIndex& i1, const IQIndex& i2, const IQIndex& tied);
-
-    IQTensor&
-    trace(const array<IQIndex,NMAX>& indices, int niqind = -1);
-
-    IQTensor&
-    trace(const IQIndex& i1, 
-          const IQIndex& i2 = IQIndex::Null(), 
-          const IQIndex& i3 = IQIndex::Null(),
-          const IQIndex& i4 = IQIndex::Null(),
-          const IQIndex& i5 = IQIndex::Null(),
-          const IQIndex& i6 = IQIndex::Null(),
-          const IQIndex& i7 = IQIndex::Null(),
-          const IQIndex& i8 = IQIndex::Null());
-
-    //----------------------------------------------------
     //IQTensor miscellaneous methods
 
     IQTensor&
@@ -300,34 +218,12 @@ class IQTensor
     IQTensor&
     takeImagPart();
 
-    Vector
-    diag() const;
-
-    Real 
-    norm() const;
-
-    LogNumber 
-    normLogNum() const;
-
-    template <typename Callable> 
-    IQTensor&
-    mapElems(const Callable& f);
-
-    void 
-    scaleOutNorm();
-
     void 
     scaleTo(const LogNumber& newscale);
     void 
     scaleTo(Real newscale) { scaleTo(LogNumber(newscale)); }
 
-    void 
-    clean(Real min_norm = MIN_CUT);
-
-    void 
-    randomize(const Args& args = Global::args());
-
-    //Take complex conjugate, do not reverse IQIndex arrows
+    //Take complex conjugate; do not reverse IQIndex arrows
     IQTensor& 
     conj();
 
@@ -335,43 +231,31 @@ class IQTensor
     IQTensor& 
     dag();
 
-    void
-    pseudoInvert(Real cutoff = 0.);
-
-    void
-    replaceIndex(const IQIndex& oind,
-                 const IQIndex& nind,
-                 const Args& args = Global::args());
-
-    void
-    swap(IQTensor& other);
-
     void 
     read(std::istream& s);
 
     void 
     write(std::ostream& s) const;
 
+    //
+    // Deprecated methods
+    //
+
+    const IndexSet<IQIndex>& 
+    indices() const { return inds(); }
+
     private:
 
     /////////////
-
-    IndexSet<IQIndex> is_;
-
-    IQTDatPtr d_;
-
+    IQIndexSet is_;
+    storage_ptr store_;
     /////////////////
-
-    const ITensor&
-    getBlock(const IndexSet<Index>& inds) const;
-    ITensor&
-    getBlock(const IndexSet<Index>& inds);
-
-    void
-    allocate();
 
     void 
     solo();
+
+    void 
+    scaleOutNorm();
 
     }; //class IQTensor
 
@@ -424,20 +308,7 @@ operator*(const IndexVal& iv, const IQTensor& T)
     return ITensor(iv) * T.toITensor(); 
     }
 
-template <typename Callable> 
-IQTensor& IQTensor::
-mapElems(const Callable& f)
-    {
-    solo();
-    for(ITensor& t : *d_)
-        t.mapElems(f);
-    return *this;
-    }
-
-Real
-sumels(const IQTensor& T);
-
-//Compute complex conjugate of IQTensor res,
+//Take complex conjugate of IQTensor res,
 //but do not reverse IQIndex arrows
 IQTensor inline
 conj(IQTensor res) { res.conj(); return res; }
@@ -446,39 +317,6 @@ conj(IQTensor res) { res.conj(); return res; }
 //and reverse IQIndex arrows
 IQTensor inline
 dag(IQTensor res) { res.dag(); return res; }
-
-Real inline
-toReal(const IQTensor& T) { return T.toReal(); }
-
-Complex inline
-toComplex(const IQTensor& T) { return T.toComplex(); }
-
-//
-// Computes the scalar/inner/dot product of two
-// real-valued IQTensors.
-//
-// Equivalent to the IQTensor contraction x * y 
-// except the result is a Real number versus a 
-// rank 0 IQTensor.
-//
-// N.B. even if the IQIndex arrows of the two
-// arguments don't match, the method will 
-// automatically correct them.
-//
-Real 
-Dot(IQTensor x, const IQTensor& y);
-
-//
-// Scalar (inner) product of two
-// possibly complex ITensors.
-//
-// Conjugates the first argument, therefore
-// equivalent to the contraction dag(x) * y 
-// (except it yields a Complex scalar
-// instead of a rank 0 IQTensor).
-//
-Complex 
-BraKet(IQTensor x, const IQTensor& y);
 
 //Compute divergence of IQTensor T
 //
@@ -500,11 +338,6 @@ dir(const IQTensor& T, const Index& i);
 Arrow
 dir(const IQTensor& T, const IQIndex& i);
 
-//Return true if one of the ITensor blocks of
-//T uses this Index
-bool 
-usesIndex(const IQTensor& T, const Index& i);
-
 //Returns true if T is exactly zero.
 //
 //If passed the argument Args("Fast",true),
@@ -518,9 +351,6 @@ isZero(const IQTensor& T, const Args& args = Global::args());
 
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);
-
-void
-checkStorage(const IQTensor& T);
 
 }; //namespace itensor
 
