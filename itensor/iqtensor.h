@@ -6,7 +6,7 @@
 #define __ITENSOR_IQTENSOR_H
 #include "iqindex.h"
 #include "itensor.h"
-#include "itdata/iqtdense.h"
+#include "itdata/iqtdata.h"
 
 namespace itensor {
 
@@ -68,7 +68,7 @@ class IQTensor
 
     //false if IQTensor is default constructed
     bool 
-    valid() const;
+    valid() const { return bool(store_); }
 
     const IQIndexSet& 
     inds() const { return is_; }
@@ -205,8 +205,9 @@ class IQTensor
 
     /////////////////
     IQIndexSet is_;
-    LogNumber scale_;
     storage_ptr store_;
+    QN div_;
+    LogNumber scale_;
     /////////////////
 
     void 
@@ -215,8 +216,7 @@ class IQTensor
     void 
     scaleOutNorm();
 
-    void
-    initDense(const QN& Q);
+    friend QN div(const IQTensor&);
 
     }; //class IQTensor
 
@@ -227,8 +227,9 @@ IQTensor(const QN& q,
          const IQIndices&... rest)
     : 
     is_(i1,rest...),
-    scale_(1.),
-    store_(make_shared<IQTDense<Real>>(is_,q))
+    store_(make_shared<IQTData<Real>>(is_,q)),
+    div_(q),
+    scale_(1.)
     { }
 
 template <typename... IQIVals>
@@ -243,9 +244,8 @@ IQTensor(const IQIndexVal& iv1,
     std::array<IQIndex,size> inds;
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     is_ = IQIndexSet(inds);
-    QN q;
-    for(const auto& iv : ivs) q += iv.qn()*iv.index.dir();
-    store_ = make_shared<IQTDense<Real>>(is_,q);
+    for(const auto& iv : ivs) div_ += iv.qn()*iv.index.dir();
+    store_ = make_shared<IQTData<Real>>(is_,div_);
     set(1.,iv1,rest...);
     }
 
@@ -310,12 +310,8 @@ IQTensor inline
 dag(IQTensor res) { res.dag(); return res; }
 
 //Compute divergence of IQTensor T
-//
-//If DEBUG defined and all blocks do not have
-//the same divergence, throws an exception
-//(since IQTensor is not correctly constructed).
-QN 
-div(const IQTensor& T, const Args& args = Global::args());
+QN inline
+div(const IQTensor& T) { return T.div_; }
 
 IQIndex
 findIQInd(const IQTensor& T, const Index& i);
