@@ -154,10 +154,6 @@ class Contract
 
     private:
 
-    enum SortOption { Sort, NoSort };
-    void
-    computeNis(SortOption sort);
-
     NewData
     combine(const ITDense<Real>& d,
             const IndexSet& dis,

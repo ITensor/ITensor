@@ -258,9 +258,6 @@ class ITensor
             const Index& i2,
             const MatrixRef& M);
 
-    Real
-    norm() const;
-
     template <typename Callable> 
     ITensor&
     mapElems(Callable&& f)

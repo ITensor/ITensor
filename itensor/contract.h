@@ -2,7 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#pragma once
+#ifndef __ITENSOR_CONTRACT_H
+#define __ITENSOR_CONTRACT_H
 
 #include <array>
 
@@ -15,6 +16,71 @@ namespace itensor {
 template<typename RangeT>
 using RTref = tensorref<Real,RangeT>;
 using Label = std::vector<int>;
+
+template<typename Inds, typename Func>
+long
+computeAnnotations(const Inds& Lis,
+                   long rL,
+                   const Inds& Ris,
+                   long rR,
+                   Label& Lind,
+                   Label& Rind,
+                   const Func& checkCont)
+    {
+    //Set Lind, Rind to zero. Special value 0 marks
+    //uncontracted indices. Later will assign unique numbers
+    //to these entries in Lind and Rind
+    Lind.assign(rL,0);
+    Rind.assign(rR,0);
+
+    //Count number of contracted indices,
+    //set corresponding entries of Lind, Rind
+    //to 1,2,...,ncont
+       // if(Lis[i] == Ris[j])
+    long ncont = 1;
+    for(long i = 0; i < rL; ++i)
+    for(long j = 0; j < rR; ++j)
+        if(Lis[i] == Ris[j])
+            {
+            //Negative entries in 
+            //Lind, Rind indicate
+            //contracted indices
+            Lind[i] = -ncont;
+            Rind[j] = -ncont;
+            checkCont(Lis[i],Ris[j]);
+            ++ncont;
+            break;
+            }
+
+    //Go through and assign uncontracted entries of Lind,Rind
+    //the integers ncont+1,ncont+2,...
+    auto uu = ncont;
+    for(long j = 0; j < rL; ++j)
+        {
+        if(Lind[j] == 0) Lind[j] = uu++;
+        }
+    for(long j = 0; j < rR; ++j)
+        {
+        if(Rind[j] == 0) Rind[j] = uu++;
+        }
+    return ncont;
+    }
+
+template<typename Inds>
+long
+computeAnnotations(const Inds& Lis,
+                   long rL,
+                   const Inds& Ris,
+                   long rR,
+                   Label& Lind,
+                   Label& Rind)
+    {
+    using ind = typename Inds::value_type;
+    auto nocheck = [](const ind& li,const ind& ri) { };
+    return computeAnnotations(Lis,rL,Ris,rR,Lind,Rind,nocheck);
+    }
+
+
 
 template<typename R1, typename R2>
 void 
@@ -186,3 +252,5 @@ reshape(const RTref<RangeT>& T,
     }
 
 }; //namespace itensor
+
+#endif

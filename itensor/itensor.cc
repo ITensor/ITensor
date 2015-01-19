@@ -240,51 +240,15 @@ operator*=(const ITensor& other)
         Error("Default constructed ITensor in product");
 
     if(this == &other)
-        {
-        return operator=( ITensor(sqr(this->norm())) );
-        }
+        return operator=( ITensor(sqr(norm(*this))) );
 
     const auto& Lis = is_;
     const auto& Ris = other.is_;
 
-    //Set Lind, Rind to zero. Special value 0 marks
-    //uncontracted indices. Later will assign unique numbers
-    //to these entries in Lind and Rind
-    Label Lind(Lis.r(),0),
-          Rind(Ris.r(),0);
-
-    //Count number of contracted indices,
-    //set corresponding entries of Lind, Rind
-    //to 1,2,...,ncont
-    int ncont = 1;
-    for(int i = 0; i < Lis.r(); ++i)
-    for(int j = 0; j < Ris.r(); ++j)
-        if(Lis[i] == Ris[j])
-            {
-            //Negative entries in 
-            //Lind, Rind indicate
-            //contracted indices
-            Lind[i] = -ncont;
-            Rind[j] = -ncont;
-            ++ncont;
-            break;
-            }
-
-    //nuniq is total number of unique, uncontracted indices
-    //(nuniq all includes m==1 indices)
+    Label Lind,
+          Rind;
+    auto ncont = computeAnnotations(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
     auto nuniq = Lis.r()+Ris.r()-2*ncont;
-
-    //Go through and assign uncontracted entries of Lind,Rind
-    //the integers ncont+1,ncont+2,...
-    auto uu = ncont;
-    for(int j = 0; j < Lis.r(); ++j)
-        {
-        if(Lind[j] == 0) Lind[j] = ++uu;
-        }
-    for(int j = 0; j < Ris.r(); ++j)
-        {
-        if(Rind[j] == 0) Rind[j] = ++uu;
-        }
 
     //Check if other is a scalar (modulo m==1 inds)
     if(Ris.rn() == 0)
@@ -302,7 +266,7 @@ operator*=(const ITensor& other)
         return *this;
         }
 
-    auto C = applyFunc<Contract>(store_,other.store_,{is_,Lind,other.is_,Rind});
+    auto C = applyFunc<Contract>(store_,other.store_,{Lis,Lind,Ris,Rind});
 
     is_ = C.newIndexSet();
 
@@ -528,17 +492,6 @@ equalizeScales(ITensor& other)
         scale_ = other.scale_;
         }
     }
-
-Real ITensor::
-norm() const 
-    {
-#ifdef DEBUG
-    if(!*this) Error("ITensor is default initialized");
-#endif
-    return scale_.real0() *
-           applyFunc<NormNoScale>(store_);
-    }
-
 
 ostream& 
 operator<<(ostream & s, const ITensor& t)
