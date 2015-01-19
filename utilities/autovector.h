@@ -67,6 +67,9 @@ class autovector // returns T() outside range or unassigned
     void
     clear() { dat_.clear(); }
 
+    lint
+    size() const { return 1+(maxi_-mini_); }
+
     T*
     begin() { return &dat_[miniloc_]; }
     T*
@@ -141,6 +144,11 @@ class autovector // returns T() outside range or unassigned
         {
         return dat_[i-mini_+miniloc_];
         }
+
+    const T&
+    operator[](lint i) const { return fast(i); }
+    T&
+    operator[](lint i) { return fastref(i); }
 
     };
 
