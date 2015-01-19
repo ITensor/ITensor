@@ -838,7 +838,7 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
     auto Crow = C.n(1), Ccol = C.n(0);
 
     detail::GCounter couA(0,ra-1,0), 
-             couB(0,rb-1,0);
+                     couB(0,rb-1,0);
     //Keep couA.i[0] and couA.i[1] fixed at 0
     couA.setInd(0,0,0);
     couA.setInd(1,0,0);
@@ -866,6 +866,11 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
             }
         auto offA = ind(A,aind);
 
+        //TODO: possible bug, shouldn't we
+        //      call couB.setInd to extend
+        //      ranges to 0...B.n(j)-1
+        //      for those which aren't restricted
+        //      to ival below?
         couB.reset();
         for(int ia = 2; ia < ra; ++ia)
             {
