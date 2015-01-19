@@ -231,8 +231,12 @@ operator()(const IQTData<T>& A,
             //Print(Arange);
             //Print(Brange);
             //Print(Crange);
-            //println("Calling contractloop");
+            //println("----------Calling contractloop--------------");
+            //Print(aref);
+            //Print(bref);
+            //Print(cref);
             contractloop(aref,Aind_,bref,Bind_,cref,Cind);
+            //Print(cref);
 
             } //for couB
         } //for A.offsets
@@ -277,7 +281,7 @@ operator*=(const IQTensor& other)
         };
     Label Lind,
           Rind;
-    computeAnnotations(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind,checkDirs);
+    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind,checkDirs);
 
     PRI(Lind);
     PRI(Rind);

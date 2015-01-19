@@ -247,7 +247,7 @@ operator*=(const ITensor& other)
 
     Label Lind,
           Rind;
-    auto ncont = computeAnnotations(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
+    auto ncont = computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
     auto nuniq = Lis.r()+Ris.r()-2*ncont;
 
     //Check if other is a scalar (modulo m==1 inds)

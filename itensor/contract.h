@@ -19,13 +19,13 @@ using Label = std::vector<int>;
 
 template<typename Inds, typename Func>
 long
-computeAnnotations(const Inds& Lis,
-                   long rL,
-                   const Inds& Ris,
-                   long rR,
-                   Label& Lind,
-                   Label& Rind,
-                   const Func& checkCont)
+computeLabels(const Inds& Lis,
+              long rL,
+              const Inds& Ris,
+              long rR,
+              Label& Lind,
+              Label& Rind,
+              const Func& checkCont)
     {
     //Set Lind, Rind to zero. Special value 0 marks
     //uncontracted indices. Later will assign unique numbers
@@ -68,16 +68,16 @@ computeAnnotations(const Inds& Lis,
 
 template<typename Inds>
 long
-computeAnnotations(const Inds& Lis,
-                   long rL,
-                   const Inds& Ris,
-                   long rR,
-                   Label& Lind,
-                   Label& Rind)
+computeLabels(const Inds& Lis,
+              long rL,
+              const Inds& Ris,
+              long rR,
+              Label& Lind,
+              Label& Rind)
     {
     using ind = typename Inds::value_type;
     auto nocheck = [](const ind& li,const ind& ri) { };
-    return computeAnnotations(Lis,rL,Ris,rR,Lind,Rind,nocheck);
+    return computeLabels(Lis,rL,Ris,rR,Lind,Rind,nocheck);
     }
 
 
