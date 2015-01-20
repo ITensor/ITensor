@@ -232,14 +232,14 @@ operator()(const IQTData<T>& A,
             }
         for(;couB.notDone(); ++couB)
             {
-            auto boff = B.getOffset(couB.i,[this](long i){ return this->Bis_[i].nindex(); });
+            auto boff = B.getOffset(couB.i,Bis_);
             if(boff < 0) continue;
 
             //Finish making Cblock
             for(int ib = 0; ib < rB; ++ib)
                 if(BtoC[ib] != -1) Cblock[BtoC[ib]] = couB.i[ib];
 
-            auto coff = C.getOffset(Cblock,[this](long i){ return this->Cis_[i].nindex(); });
+            auto coff = C.getOffset(Cblock,Cis_);
             assert(coff != -1);
 
             PRI(couB.i);

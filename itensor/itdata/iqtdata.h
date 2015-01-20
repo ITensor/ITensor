@@ -85,17 +85,17 @@ class IQTData : public ITDispatch<IQTData<T>>
         data.assign(totalsize,0);
         }
 
-    template<typename Iterable, typename StrideFunc>
+    template<typename Indexable>
     long
-    getOffset(const Iterable& ind,
-              const StrideFunc& stride) const
+    getOffset(const Indexable& ind,
+              const IQIndexSet& is) const
         {
         long ii = 0,
              str = 1;
         for(size_t i = 0; i < size_t(ind.size()); ++i)
             {
             ii += ind[i]*str;
-            str *= stride(i);
+            str *= is[i].nindex();
             }
         //Do a linear search to see if there
         //is a block with block index ii
