@@ -31,6 +31,12 @@ class IQTData : public ITDispatch<IQTData<T>>
     IQTData(const IQIndexSet& is, 
             const QN& Q)
         {
+        if(is.r()==0)
+            {
+            data.assign(1,0);
+            offsets.emplace_back(0,0);
+            return;
+            }
         detail::GCounter C(0,is.r()-1,0);
         for(int j = 0; j < is.r(); ++j) 
             C.setInd(j,0,is[j].nindex()-1);

@@ -330,7 +330,12 @@ operator*=(const IQTensor& other)
 IQTensor& IQTensor::
 dag()
     {
-    Error("Not implemented");
+    if(isComplex(*this))
+        {
+        Error("Not implemented");
+        solo();
+        }
+    is_.dag();
     div_ = -div_;
     return *this;
     }
@@ -380,6 +385,35 @@ toITensor(const IQTensor& T)
     {
     Error("toITensor not implemented");
     return ITensor();
+    }
+
+struct IsComplex
+    {
+    bool res = false;
+    IsComplex() { }
+
+    operator bool() const { return res; }
+
+    ITResult
+    operator()(const IQTData<Real>& d)
+        {
+        res = false;
+        return ITResult();
+        }
+
+    ITResult
+    operator()(const IQTData<Complex>& d)
+        {
+        res = true;
+        return ITResult();
+        }
+    };
+
+
+bool
+isComplex(const IQTensor& T)
+    {
+    return applyFunc<IsComplex>(T.data());
     }
 
 IQIndex

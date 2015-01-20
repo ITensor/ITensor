@@ -346,6 +346,9 @@ operator*(const IndexVal& iv, const IQTensor& T)
     return ITensor(iv) * toITensor(T); 
     }
 
+bool
+isComplex(const IQTensor& T);
+
 //Take complex conjugate of IQTensor res,
 //but do not reverse IQIndex arrows
 IQTensor inline
