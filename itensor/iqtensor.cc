@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "iqtensor.h"
+#include "detail/printing.h"
 
 namespace itensor {
 
@@ -57,6 +58,36 @@ operator+=(const IQTensor& other)
     //
 
     return *this;
+    }
+
+IQTensor& IQTensor::
+operator*=(Real fac)
+    {
+    scale_ *= fac;
+    return *this;
+    }
+
+IQTensor& IQTensor::
+operator/=(Real fac)
+    {
+    scale_ /= fac;
+    return *this;
+    }
+
+IQTensor& IQTensor::
+operator*=(const LogNumber& lgnum)
+    {
+    scale_ *= lgnum;
+    return *this;
+    }
+
+IQTensor& IQTensor::
+operator-=(const IQTensor& o)
+    { 
+    if(this == &o) { operator*=(0); return *this; }
+    IQTensor oth(o);
+    oth *= -1;
+    return operator+=(oth);
     }
 
 class QContract
@@ -206,7 +237,7 @@ operator()(const IQTData<T>& A,
 
             //Finish making Cblock
             for(int ib = 0; ib < rB; ++ib)
-                if(BtoC[ib] != -1) Cblock[BtoC[ib]] = couB.i.fast(ib);
+                if(BtoC[ib] != -1) Cblock[BtoC[ib]] = couB.i[ib];
 
             auto coff = C.getOffset(Cblock,[this](long i){ return this->Cis_[i].nindex(); });
             assert(coff != -1);
@@ -304,6 +335,46 @@ dag()
     return *this;
     }
 
+class MultReal
+    {
+    Real r_;
+    public:
+    MultReal(Real r)
+        : r_(r)
+        { }
+
+    template<typename T>
+    ITResult
+    operator()(IQTData<T>& d) const
+        {
+        //use BLAS algorithm?
+        for(auto& elt : d.data)
+            elt *= r_;
+        return ITResult();
+        }
+
+    template<typename T>
+    ITResult
+    operator()(const T& d) const { Error("IQTensor MultReal not implemented for ITData type."); return ITResult(); }
+    };
+
+void IQTensor::
+scaleTo(const LogNumber& newscale)
+    {
+    if(scale_ == newscale) return;
+    if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
+    solo();
+    scale_ /= newscale;
+    applyFunc<MultReal>(store_,{scale_.real0()});
+    scale_ = newscale;
+    }
+
+void IQTensor::
+solo()
+	{
+    if(!store_.unique()) store_ = store_->clone();
+    }
+
 ITensor
 toITensor(const IQTensor& T)
     {
@@ -344,6 +415,97 @@ isZero(const IQTensor& T, const Args& args)
     //    if(!isZero(t)) return false;
     //    }
     return true;
+    }
+
+struct PrintIQT
+    {
+    std::ostream& s_;
+    const LogNumber& x_;
+    const IQIndexSet& is_;
+
+    PrintIQT(std::ostream& s,
+             const LogNumber& x,
+             const IQIndexSet& is)
+        : s_(s), x_(x), is_(is)
+        { }
+
+    template<typename T>
+    ITResult
+    operator()(const IQTData<T>& d) const;
+
+    template<typename T>
+    ITResult
+    operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
+    };
+
+template<typename T>
+ITResult PrintIQT::
+operator()(const IQTData<T>& d) const
+    {
+    Real scalefac = 1.0;
+    if(!x_.isTooBigForReal()) scalefac = x_.real0();
+    else s_ << "(omitting too large scale factor)\n";
+
+    auto rank = is_.r();
+    if(rank == 0) return ITResult();
+        
+    vector<long> block(is_.r(),0);
+    Range brange;
+    detail::GCounter C(0,is_.r()-1,0);
+    for(const auto& io : d.offsets)
+        {
+        //Determine block indices (where in the IQIndex space
+        //this non-zero block is located)
+        inverseInd(io.ind,is_,block);
+        //Print Indices of this block
+        for(size_t i = 0; i < block.size(); ++i)
+            {
+            s_ << (is_[i])[block[i]] << "<" << is_[i].dir() << "> ";
+            }
+        s_ << "\n";
+        //Wire up GCounter with appropriate dims
+        C.reset();
+        for(int i = 0; i < is_.r(); ++i)
+            C.setInd(i,0,(is_[i])[block[i]].m()-1);
+        for(auto os = io.offset; C.notDone(); ++C, ++os)
+            {
+            auto val = scalefac*d.data[os];
+            if(std::norm(val) > Global::printScale())
+                {
+                s_ << "  (";
+                for(auto ii = C.i.mini(); ii <= C.i.maxi(); ++ii)
+                    {
+                    s_ << (1+C.i(ii));
+                    if(ii < C.i.maxi()) s_ << ",";
+                    }
+                s_ << ") ";
+                detail::printVal(s_,val);
+                }
+            }
+        }
+
+    return ITResult();
+    }
+
+std::ostream&
+operator<<(std::ostream& s, const IQTensor& T)
+    {
+	s << "/--------------IQTensor--------------\n";
+    s << "r=" << T.r() << ", log(scale)[incl in elems]=" << T.scale().logNum() << "\n";
+    s << T.inds();
+
+    //Checking whether std::ios::floatfield is set enables 
+    //printing the contents of an ITensor when using the printf
+    //format string %f (or another float-related format string)
+    const bool ff_set = (std::ios::floatfield & s.flags()) != 0;
+
+    if(ff_set || Global::printdat())
+        {
+        if(T) applyFunc<PrintIQT>(T.data(),{s,T.scale(),T.inds()});
+        else           s << " (default constructed)}\n";
+        }
+	s << "\\------------------------------------\n\n";
+    return s;
     }
 
 

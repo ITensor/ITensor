@@ -6,6 +6,7 @@
 #define __ITENSOR_RANGE_H
 
 #include "autovector.h"
+#include <iostream>
 
 namespace itensor {
 

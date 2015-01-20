@@ -7,6 +7,7 @@
 
 #include "itdata.h"
 #include "../iqindex.h"
+#include "../indexset.h"
 
 namespace itensor {
 
@@ -54,7 +55,7 @@ class IQTData : public ITDispatch<IQTData<T>>
                 for(int j = 0; j < is.r(); ++j)
                     {
                     const auto& J = is[j];
-                    auto i_j = C.i.fast(j);
+                    auto i_j = C.i[j];
                     ind += i_j*indstr;
                     indstr *= J.nindex();
                     totm *= J[i_j].m();

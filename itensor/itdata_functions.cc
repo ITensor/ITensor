@@ -4,6 +4,7 @@
 //
 #include "itdata_functions.h"
 #include "detail/gcounter.h"
+#include "detail/printing.h"
 #include "lapack_wrap.h"
 
 using std::vector;
@@ -367,24 +368,6 @@ operator()(ITDense<Complex>& d) const
     return ITResult();
     }
 
-ITResult MultReal::
-operator()(ITDense<Real>& d) const
-    {
-    //TODO: use BLAS algorithm
-    for(auto& elt : d.data)
-        elt *= r_;
-    return ITResult();
-    }
-
-ITResult MultReal::
-operator()(ITDense<Complex>& d) const
-    {
-    //TODO: use BLAS algorithm
-    for(auto& elt : d.data)
-        elt *= r_;
-    return ITResult();
-    }
-
 void
 plusEqData(Real fac, Real *d1, const Real *d2, LAPACK_INT size)
     {
@@ -426,30 +409,6 @@ operator()(ITDiag<Real>& a1,
     return ITResult();
     }
 
-void
-printVal(std::ostream& s,
-         Real val)
-    {
-    if(std::fabs(val) > 1E-10)
-        s << val << "\n";
-    else
-        s << format("%.8E\n",val);
-    }
-
-void
-printVal(std::ostream& s,
-         const Complex& val)
-    {
-    if(std::norm(val) > 1E-10)
-        {
-        auto sgn = (val.imag() < 0 ? '-' : '+');
-        s << val.real() << sgn << std::fabs(val.imag()) << "i\n";
-        }
-    else
-        {
-        s << format("%.8E\n",val);
-        }
-    }
 
 template<typename T>
 ITResult PrintIT::
@@ -480,7 +439,7 @@ operator()(const ITDense<T>& d) const
                 }
             s_ << ") ";
 
-            printVal(s_,val);
+            detail::printVal(s_,val);
             }
         }
     return ITResult();
@@ -510,7 +469,7 @@ operator()(const ITDiag<T>& d) const
                 s_ << (1+i) << ",";
                 }
             s_ << (1+i) << ") ";
-            printVal(s_,val);
+            detail::printVal(s_,val);
             }
         }
     return ITResult();

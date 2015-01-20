@@ -6,7 +6,7 @@
 #define __ITENSOR_IQTENSOR_H
 #include "iqindex.h"
 #include "itensor.h"
-#include "itdata/iqtdata.h"
+#include "iqtdata_functions.h"
 
 namespace itensor {
 
@@ -82,13 +82,7 @@ class IQTensor
     operator+=(const IQTensor& o);
 
     IQTensor&
-    operator-=(const IQTensor& o)
-        { 
-        if(this == &o) { operator*=(0); return *this; }
-        IQTensor oth(o);
-        oth *= -1;
-        return operator+=(oth);
-        }
+    operator-=(const IQTensor& o);
 
     //
     // Multiplication by a scalar
@@ -114,16 +108,12 @@ class IQTensor
     //Automatic conversion to ITensor
     operator ITensor() const;
 
-    //Inserts an ITensor block or adds it to
-    //existing one if already present and QNs match
+    //Add ITensor 'block' to the matching block
+    //of this IQTensor. The quantum-number flux
+    //of the ITensor block must be compatible
+    //with this IQTensor.
     IQTensor& 
-    operator+=(const ITensor& block);
-
-    //Like operator+=(ITensor) but
-    //demands that the block is zero/absent
-    //before inserting
-    void 
-    insert(const ITensor& block);
+    addBlock(const ITensor& block);
 
     //----------------------------------------------------
     //IQTensor: element access
@@ -169,12 +159,41 @@ class IQTensor
     //----------------------------------------------------
     //IQTensor miscellaneous methods
 
+    //Set all elements to z. If z.imag()==0
+    //(such as if z is automatically converted from a Real)
+    //then storage will be real only.
+    IQTensor&
+    fill(Complex z);
+
+    //Call a function of the form f()->val once
+    //for each element, assign result to each element.
+    template <typename Func>
+    IQTensor&
+    generate(Func&& f);
+
+    //Apply a function of the form f(x)->y
+    //to each element x, replacing it with y
+    template <typename Func>
+    IQTensor&
+    apply(Func&& f);
+
+    //Apply a function of the form f(x)->void
+    //to each element x.
+    template <typename Func>
+    const IQTensor&
+    visit(Func&& f) const;
+
     IQTensor&
     takeRealPart();
 
     IQTensor&
     takeImagPart();
 
+    const ITData&
+    data() const { return *store_; }
+
+    const LogNumber&
+    scale() const { return scale_; }
     void 
     scaleTo(const LogNumber& newscale);
     void 
@@ -247,6 +266,34 @@ IQTensor(const IQIndexVal& iv1,
     for(const auto& iv : ivs) div_ += iv.qn()*iv.index.dir();
     store_ = make_shared<IQTData<Real>>(is_,div_);
     set(1.,iv1,rest...);
+    }
+
+template <typename Func>
+IQTensor& IQTensor::
+generate(Func&& f)
+    {
+    solo();
+    scaleTo(1);
+    applyFunc<GenerateIQT<decltype(f)>>(store_,{std::forward<Func>(f)});
+    return *this;
+    }
+
+template <typename Func>
+IQTensor& IQTensor::
+apply(Func&& f)
+    {
+    solo();
+    scaleTo(1);
+    applyFunc<ApplyIQT<decltype(f)>>(store_,{std::forward<Func>(f)});
+    return *this;
+    }
+
+template <typename Func>
+const IQTensor& IQTensor::
+visit(Func&& f) const
+    {
+    applyFunc<VisitIQT<decltype(f)>>(store_,{std::forward<Func>(f),scale_.real0()});
+    return *this;
     }
 
 

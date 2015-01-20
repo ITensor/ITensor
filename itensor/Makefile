@@ -24,14 +24,14 @@ SOURCES+= iqtensor.cc
 #SOURCES+= tevol.cc
 #SOURCES+= autompo.cc
 
-HEADERS=detail/functions.h detail/skip_iterator.h detail/gcounter.h \
+HEADERS=detail/functions.h detail/printing.h detail/skip_iterator.h detail/gcounter.h \
         global.h real.h permutation.h index.h \
         range.h indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h itdata_functions.h \
         itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
         itdata/iqtdata.h \
         itensor.h qn.h iqindex.h  \
-        detail/skip_iterator.h iqtensor.h \
+        detail/skip_iterator.h iqtdata_functions.h iqtensor.h \
         condenser.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\
@@ -128,7 +128,7 @@ itensor.o: $(DEPHEADERS)
 DEPHEADERS+= qn.h iqindex.h
 iqindex.o: $(DEPHEADERS)
 .debug_objs/iqindex.o: $(DEPHEADERS)
-DEPHEADERS+= itdata/iqtdata.h iqtensor.h qcounter.h detail/skip_iterator.h
+DEPHEADERS+= itdata/iqtdata.h iqtdata_functions.h iqtensor.h qcounter.h detail/skip_iterator.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
 DEPHEADERS+= condenser.h iqcombiner.h localmpo.h

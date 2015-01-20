@@ -424,24 +424,51 @@ operator-=(const ITensor& other)
     }
 
 ITensor& ITensor::
-fill(Real r)
-    {
-    if(!(*this)) return *this;
-    solo();
-    scale_ = LogNumber(1.);
-    applyFunc<FillReal>(store_,{r});
-    return *this;
-    }
-
-ITensor& ITensor::
 fill(Complex z)
     {
     if(!(*this)) return *this;
     solo();
     scale_ = LogNumber(1.);
-    applyFunc<FillCplx>(store_,{z});
+    if(z.imag() == 0)
+        applyFunc<FillReal>(store_,{z.real()});
+    else
+        applyFunc<FillCplx>(store_,{z});
     return *this;
     }
+
+class MultReal
+    {
+    Real r_;
+    public:
+    MultReal(Real r)
+        : r_(r)
+        { }
+
+    template<typename T>
+    ITResult
+    operator()(ITDense<T>& d) const
+        {
+        //TODO: use BLAS algorithm?
+        for(auto& elt : d.data)
+            elt *= r_;
+        return ITResult();
+        }
+
+    template<typename T>
+    ITResult
+    operator()(ITDiag<T>& d) const
+        {
+        d.val *= r_;
+        //TODO: use BLAS algorithm
+        for(auto& elt : d.data)
+            elt *= r_;
+        return ITResult();
+        }
+
+    template<typename T>
+    ITResult
+    operator()(const T& d) const { Error("MultReal not implemented for ITData type."); return ITResult(); }
+    };
 
 void ITensor::
 scaleTo(const LogNumber& newscale)
