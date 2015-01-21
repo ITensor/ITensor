@@ -19,6 +19,7 @@ using std::make_pair;
 using std::make_shared;
 using std::move;
 
+
 IQTensor::
 IQTensor(Complex val) 
     :
@@ -483,24 +484,26 @@ operator()(const IQTData<T>& d) const
     auto rank = is_.r();
     if(rank == 0) return ITResult();
         
-    vector<long> block(is_.r(),0);
+    vector<long> block(rank,0);
+    auto blockIndex = [&block,this](long i)->const Index& { return (this->is_[i])[block[i]]; };
+
     Range brange;
-    detail::GCounter C(0,is_.r()-1,0);
+    detail::GCounter C(0,rank-1,0);
     for(const auto& io : d.offsets)
         {
         //Determine block indices (where in the IQIndex space
         //this non-zero block is located)
         inverseInd(io.ind,is_,block);
         //Print Indices of this block
-        for(size_t i = 0; i < block.size(); ++i)
+        for(size_t i = 0; i < rank; ++i)
             {
-            s_ << (is_[i])[block[i]] << "<" << is_[i].dir() << "> ";
+            s_ << blockIndex(i) << "<" << is_[i].dir() << "> ";
             }
         s_ << "\n";
         //Wire up GCounter with appropriate dims
         C.reset();
-        for(int i = 0; i < is_.r(); ++i)
-            C.setInd(i,0,(is_[i])[block[i]].m()-1);
+        for(int i = 0; i < rank; ++i)
+            C.setInd(i,0,blockIndex(i).m()-1);
         for(auto os = io.offset; C.notDone(); ++C, ++os)
             {
             auto val = scalefac*d.data[os];

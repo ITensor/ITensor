@@ -268,6 +268,49 @@ IQTensor(const IQIndexVal& iv1,
     set(1.,iv1,rest...);
     }
 
+
+template <typename... IQIndexVals>
+Complex IQTensor::
+cplx(IQIndexVals&&... ivs) const
+    {
+    constexpr auto size = sizeof...(ivs);
+#ifdef DEBUG
+    if(!*this) Error("IQTensor is default constructed");
+    if(size > r()) Error("Too many IQIndexVals passed to real/cplx");
+#endif
+    std::array<IQIndexVal,size> vals{{static_cast<IQIndexVal>(ivs)...}};
+    std::array<IQIndexVal::BlockInd,size> bis;
+    detail::permute_map(is_,vals,bis,[](const IQIndexVal& iv) { return iv.blockInd(); });
+    Complex z = applyFunc<IQGetElt<Complex,size>>(store_,{is_,bis});
+	try {
+	    return z*scale_.real(); 
+	    }
+	catch(const TooBigForReal& e)
+	    {
+	    println("too big for real in cplx(...), scale = ",scale());
+	    throw e;
+	    }
+	catch(TooSmallForReal)
+	    {
+        println("warning: too small for real in cplx(...)");
+	    return Complex(0.,0.);
+	    }
+    return Complex(NAN,NAN);
+    }
+
+template <typename... IQIndexVals>
+Real IQTensor::
+real(IQIndexVals&&... ivs) const
+    {
+    auto z = cplx(std::forward<IQIndexVals>(ivs)...);
+    if(fabs(z.imag()) != 0)
+        {
+        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
+        Error("IQTensor is Complex-valued, use .cplx(...) method");
+        }
+    return z.real();
+    }
+
 template <typename Func>
 IQTensor& IQTensor::
 generate(Func&& f)

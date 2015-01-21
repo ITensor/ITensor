@@ -179,12 +179,25 @@ class IQIndexVal
     bool
     operator!=(const IQIndexVal& other) const { return !operator==(other); }
 
+    bool
+    operator==(const IQIndex& iqind) const { return index == iqind; }
+    bool
+    operator!=(const IQIndex& iqind) const { return !operator==(iqind); }
+
     explicit operator bool() const { return valid(); }
 
     IndexQN
     indexqn() const;
 
     operator IndexVal() const;
+
+    struct BlockInd
+        {
+        long block = 0,
+             ind   = 0;
+        };
+    BlockInd
+    blockInd() const;
 
     IndexVal 
     blockIndexVal() const;
