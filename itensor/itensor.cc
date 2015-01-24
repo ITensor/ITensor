@@ -488,6 +488,35 @@ solo()
     if(!store_.unique()) store_ = store_->clone();
     }
 
+class NormNoScale
+    {
+    Real nrm_;
+    public:
+
+    NormNoScale() : nrm_(0) { }
+
+    operator Real() const { return nrm_; }
+
+    template<typename T>
+    ITResult
+    operator()(const ITDense<T>& d) { return calc(d); }
+    template<typename T>
+    ITResult
+    operator()(const ITDiag<T>& d) { return calc(d); }
+
+    template<typename T>
+    ITResult
+    calc(const T& d)
+        {
+        for(const auto& elt : d.data)
+            {
+            nrm_ += std::norm(elt);
+            }
+        nrm_ = std::sqrt(nrm_);
+        return ITResult();
+        }
+    };
+
 void ITensor::
 scaleOutNorm()
     {

@@ -441,6 +441,43 @@ dir(const IQTensor& T, const IQIndex& I)
     return Out;
 	}
 
+class NormNoScale
+    {
+    Real nrm_;
+    public:
+
+    NormNoScale() : nrm_(0) { }
+
+    operator Real() const { return nrm_; }
+
+    template<typename T>
+    ITResult
+    operator()(const IQTData<T>& d) { calc(d); return ITResult(); }
+
+    private:
+
+    template<typename T>
+    void
+    calc(const T& d)
+        {
+        for(const auto& elt : d.data)
+            {
+            nrm_ += std::norm(elt);
+            }
+        nrm_ = std::sqrt(nrm_);
+        }
+    };
+
+Real
+norm(const IQTensor& T)
+    {
+#ifdef DEBUG
+    if(!T) Error("ITensor is default initialized");
+#endif
+    return T.scale().real0() *
+           applyFunc<NormNoScale>(T.data());
+    }
+
 IQTensor
 randomize(IQTensor T, const Args& args)
     {

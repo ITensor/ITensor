@@ -440,6 +440,13 @@ dir(const IQTensor& T, const Index& i) { return findIQInd(T,i).dir(); }
 Arrow
 dir(const IQTensor& T, const IQIndex& i);
 
+//Compute the norm of an IQTensor.
+//Thinking of elements as a vector, equivalent to sqrt(v*v).
+//Result is equivalent to sqrt((T*T).real()) 
+//[and similar for complex case] but computed much more efficiently.
+Real
+norm(const IQTensor& T);
+
 IQTensor
 randomize(IQTensor T, const Args& args = Global::args());
 
