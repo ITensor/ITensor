@@ -232,6 +232,425 @@ computeNewInds(const IndexSet& Lis,
     return newind;
     }
 
+class Contract
+    {
+    const Label &Lind_,
+                &Rind_;
+
+    const IndexSet &Lis_,
+                   &Ris_;
+
+    //New IndexSet
+    IndexSet Nis_;
+    Real scalefac_ = -1;
+
+    public:
+
+    Contract(const IndexSet& Lis,
+             const Label& Lind,
+             const IndexSet& Ris,
+             const Label& Rind)
+        :
+        Lind_(Lind),
+        Rind_(Rind),
+        Lis_(Lis),
+        Ris_(Ris)
+        { }
+
+    IndexSet
+    newIndexSet() { return std::move(Nis_); }
+    Real
+    scalefac() { return scalefac_; }
+
+    ITResult
+    operator()(const ITDense<Real>& a1,
+               const ITDense<Real>& a2);
+
+    ITResult
+    operator()(const ITDense<Real>& d,
+               const ITCombiner& C)
+        {
+        auto res = combine(d,Lis_,Ris_);
+        if(!res) return ITResult::None;
+        else     return std::move(res);
+        }
+    ITResult
+    operator()(const ITCombiner& C,
+               const ITDense<Real>& d)
+        { 
+        auto res = combine(d,Ris_,Lis_);
+        if(!res) return ITResult::AssignPointer;
+        else     return std::move(res);
+        }
+
+    ITResult
+    operator()(const ITDiag<Real>& d,
+               const ITDense<Real>& t)
+        {
+        return diagDense(d,Lis_,Lind_,t,Ris_,Rind_);
+        }
+    ITResult
+    operator()(const ITDense<Real>& t,
+               const ITDiag<Real>& d)
+        { 
+        return diagDense(d,Ris_,Rind_,t,Lis_,Lind_);
+        }
+
+    //ITResult
+    //operator()(const ITDense<Real>& a1,
+    //           const ITDense<Complex>& a2) const
+    //    {
+    //    ITDense<Complex> c1(a1);
+    //    return operator()(c1,a2);
+    //    }
+
+    //ITResult
+    //operator()(const ITDense<Complex>& a1,
+    //           const ITDense<Real>& a2) const
+    //    {
+    //    ITDense<Complex> c2(a2);
+    //    return operator()(a1,c2);
+    //    }
+
+
+    //template <typename T1, typename T2>
+    //ITResult
+    //operator()(const ITDense<T1>& a1,
+    //           const ITDense<T2>& a2) const
+    //    {
+    //    using product_type = decltype(::std::declval<T1>() * ::std::declval<T2>());
+    //    //static const auto One = product_type(1.),
+    //    //                  Zero = product_type(0.);
+    //    auto res = new ITDense<product_type>();
+    //    //TODO:
+    //    Error("Contract not implemented for tensors of different element types.");
+    //    //btas::contract(One,a1.t_,Lind_,a2.t_,Rind_,Zero,res->t_,Nind_);
+    //    return ITResult(res);
+    //    }
+
+    template <typename T1, typename T2>
+    ITResult
+    operator()(const T1& a1,const T2& a2) const
+        {
+        Error("Contract not implemented for this case");
+        return ITResult();
+        }
+
+    private:
+
+    NewData
+    combine(const ITDense<Real>& d,
+            const IndexSet& dis,
+            const IndexSet& Cis);
+
+    ITResult
+    diagDense(const ITDiag<Real>& d,
+              const IndexSet& dis,
+              const Label& dind,
+              const ITDense<Real>& t,
+              const IndexSet& tis,
+              const Label& tind);
+ 
+    };
+
+ITResult Contract::
+operator()(const ITDense<Real>& a1,
+           const ITDense<Real>& a2)
+    {
+    contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,true);
+    
+    Label Nind(Nis_.r(),0);
+    for(size_t i = 0; i < Nis_.r(); ++i)
+        {
+        auto j = findindex(Lis_,Nis_[i]);
+        if(j >= 0)
+            {
+            Nind[i] = Lind_[j];
+            }
+        else
+            {
+            j = findindex(Ris_,Nis_[i]);
+            Nind[i] = Rind_[j];
+            }
+        }
+
+    //PRI(Lind);
+    //PRI(Rind);
+    //PRI(Nind);
+
+    auto res = make_newdata<ITDense<Real>>(area(Nis_),0.);
+    auto t1 = make_tensorref(a1.data.data(),Lis_),
+         t2 = make_tensorref(a2.data.data(),Ris_);
+    auto tr = make_tensorref(res->data.data(),Nis_);
+    contractloop(t1,Lind_,t2,Rind_,tr,Nind);
+    scalefac_ = 0;
+    for(auto elt : res->data)
+        {
+        scalefac_ += elt*elt;
+        }
+    scalefac_ = std::sqrt(scalefac_);
+    if(scalefac_ != 0)
+        {
+        for(auto& elt : res->data)
+            {
+            elt /= scalefac_;
+            }
+        }
+    return move(res);
+    }
+
+ITResult Contract::
+diagDense(const ITDiag<Real>& d,
+          const IndexSet& dis,
+          const Label& dind,
+          const ITDense<Real>& t,
+          const IndexSet& tis,
+          const Label& tind)
+    {
+    contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,true);
+
+    long t_cstride = 0; //total t-stride of contracted inds of t
+    size_t ntu = 0; //number uncontracted inds of t
+    assert(int(tind.size()) == tis.size());
+    for(size_t j = 0; j < tind.size(); ++j)
+        {
+        //if index j is contracted, add its stride to t_cstride:
+        if(tind[j] < 0) t_cstride += tis.stride(j);
+        else            ++ntu;
+        }
+
+    long d_ustride = 0; //total result-stride of uncontracted inds of d
+    for(size_t i = 0; i < Nis_.r(); ++i)
+        {
+        auto j = findindex(dis,Nis_[i]);
+        if(j >= 0) d_ustride += Nis_.stride(i);
+        }
+
+    auto dsize = size_t(minM(dis));
+
+    if(ntu > 0)
+        {
+        vector<long> tstride(ntu,0),
+                     rstride(ntu,0);
+        detail::GCounter C(0,ntu,0);
+        size_t n = 0;
+        for(size_t j = 0; j < tind.size(); ++j)
+            {
+            if(tind[j] > 0)
+                {
+#ifdef DEBUG
+                if(n >= ntu) Error("n out of range");
+#endif
+                C.setInd(n,0,tis.dim(j)-1);
+                tstride.at(n) = tis.stride(j);
+                auto k = findindex(Nis_,tis[j]);
+#ifdef DEBUG
+                if(k < 0) Error("Index not found");
+#endif
+                rstride.at(n) = Nis_.stride(k);
+                ++n;
+                }
+            }
+        auto res = make_newdata<ITDense<Real>>(area(Nis_),0.);
+        auto *pr = res->data.data();
+        const auto *pt = t.data.data();
+
+        if(d.allSame())
+            {
+            for(;C.notDone();++C)
+                {
+                size_t roffset = 0,
+                       toffset = 0;
+                for(size_t i = 0; i < ntu; ++i)
+                    {
+                    auto ii = C.i.fast(i);
+                    toffset += ii*tstride[i];
+                    roffset += ii*rstride[i];
+                    }
+                for(long J = 0; J < dsize; ++J)
+                    {
+                    pr[J*d_ustride+roffset] += d.val*pt[J*t_cstride+toffset];
+                    }
+                }
+            }
+        else
+            {
+            auto* pd = d.data.data();
+            assert(d.data.size() == dsize);
+            for(;C.notDone();++C)
+                {
+                size_t roffset = 0,
+                       toffset = 0;
+                for(size_t i = 0; i < ntu; ++i)
+                    {
+                    auto ii = C.i.fast(i);
+                    toffset += ii*tstride[i];
+                    roffset += ii*rstride[i];
+                    }
+                for(size_t J = 0; J < dsize; ++J)
+                    {
+                    pr[J*d_ustride+roffset] += pd[J]*pt[J*t_cstride+toffset];
+                    }
+                }
+            }
+        return move(res);
+        }
+    else
+        {
+        //all of t's indices contracted with d
+        //result will be diagonal
+        if(d_ustride == 0) //all of d's inds contracted
+            {
+            // o scalar if all of d's inds contracted also
+            Real val = 0;
+            const auto *pt = t.data.data();
+            if(d.allSame())
+                {
+                for(size_t J = 0; J < dsize; ++J)
+                    val += d.val*pt[J*t_cstride];
+                }
+            else
+                {
+                assert(dsize == d.data.size());
+                auto *pd = d.data.data();
+                for(size_t J = 0; J < dsize; ++J)
+                    val += pd[J]*pt[J*t_cstride];
+                }
+            auto res = make_newdata<ITDiag<Real>>(val);
+            return move(res);
+            }
+        else //some of d's inds uncontracted
+            {
+            // o element-wise product of d's data and t's diagonal
+            auto res = make_newdata<ITDiag<Real>>(dsize,0.);
+            auto *pr = res->data.data();
+            const auto *pt = t.data.data();
+            if(d.allSame())
+                {
+                for(size_t J = 0; J < dsize; ++J)
+                    pr[J] += d.val*pt[J*t_cstride];
+                }
+            else
+                {
+                assert(dsize == d.data.size());
+                auto *pd = d.data.data();
+                for(size_t J = 0; J < dsize; ++J)
+                    pr[J] += pd[J]*pt[J*t_cstride];
+                }
+            return move(res);
+            }
+        }
+    Error("Case not handled");
+    return ITResult();
+    }
+
+NewData Contract::
+combine(const ITDense<Real>& d,
+        const IndexSet& dis,
+        const IndexSet& Cis)
+    {
+    //TODO: try to make use of Lind,Rind label vectors
+    //      to simplify combine logic
+    const auto& cind = Cis[0];
+    int jc = findindex(dis,cind);
+    if(jc >= 0) //has cind
+        {
+        //dis has cind, replace with other inds
+        vector<Index> newind;
+        newind.reserve(dis.r()+Cis.r()-2);
+        for(int j = 0; j < dis.r(); ++j)
+            if(j == jc)
+                {
+                for(int k = 1; k < Cis.size(); ++k)
+                    newind.push_back(Cis[k]);
+                }
+            else
+                {
+                newind.push_back(dis[j]);
+                }
+        Nis_ = IndexSet(move(newind));
+        return NewData();
+        }
+    else
+        {
+        //dis doesn't have cind, replace
+        //Cis[1], Cis[2], ... with cind
+        //may need to reshape
+        int J1 = findindex(dis,Cis[1]);
+        if(J1 < 0) 
+            {
+            println("IndexSet of dense tensor = \n",dis);
+            println("IndexSet of combiner/delta = \n",Cis);
+            Error("No contracted indices in combiner-tensor product");
+            }
+        //Check if Cis[1],Cis[2],... are grouped together (contiguous)
+        bool contig = true;
+        for(int j = J1+1, c = 2; c < Cis.r() && j < dis.r(); ++j,++c)
+            if(dis[j] != Cis[c])
+                {
+                contig = false;
+                break;
+                }
+        if(contig)
+            {
+            vector<Index> newind;
+            newind.reserve(dis.r()-Cis.r()+1);
+            for(int j = 0; j < J1; ++j) 
+                newind.push_back(dis[j]);
+            newind.push_back(cind);
+            for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
+                newind.push_back(dis[j]);
+            Nis_ = IndexSet(move(newind));
+            return NewData();
+            }
+        else
+            {
+            Permutation P(dis.r());
+            //Set P destination values to -1 to mark
+            //indices that need to be assigned destinations:
+            for(int i = 0; i < P.size(); ++i) P.setFromTo(i,-1);
+
+            //permute combined indices to the front, in same
+            //order as in Cis:
+            long ni = 0;
+            for(int c = 1; c < Cis.r(); ++c)
+                {
+                int j = findindex(dis,Cis[c]);
+                if(j < 0) 
+                    {
+                    println("IndexSet of dense tensor =\n  ",dis);
+                    println("IndexSet of combiner/delta =\n  ",Cis);
+                    println("Missing index: ",Cis[c]);
+                    Error("Combiner: missing index");
+                    }
+                P.setFromTo(j,ni++);
+                }
+            //permute uncombined indices to back, keeping relative order:
+            vector<Index> newind;
+            vector<long> pdims(dis.r(),-1);
+            newind.reserve(dis.r()-Cis.r()+1);
+            newind.push_back(cind);
+            for(int j = 0; j < dis.r(); ++j)
+                {
+                if(P.dest(j) == -1) 
+                    {
+                    P.setFromTo(j,ni++);
+                    newind.push_back(dis[j]);
+                    }
+                pdims[j] = dis[P.dest(j)].m();
+                }
+            Range rr(pdims);
+            Nis_ = IndexSet(move(newind));
+            auto res = make_newdata<ITDense<Real>>(area(Nis_));
+            auto td = make_tensorref(d.data.data(),dis);
+            auto tr = make_tensorref(res->data.data(),rr);
+            reshape(td,P,tr);
+            return move(res);
+            }
+        }
+    return NewData();
+    }
+
 
 ITensor& ITensor::
 operator*=(const ITensor& other)
