@@ -4,6 +4,7 @@
 //
 #include "itdata_functions.h"
 #include "detail/gcounter.h"
+#include "detail/printing.h"
 #include "lapack_wrap.h"
 
 using std::vector;
@@ -11,37 +12,13 @@ using std::move;
 
 namespace itensor {
 
-void Contract::
-computeNis(SortOption sort)
-    {
-    long ncont = 0;
-    for(const auto& i : Lind_) if(i < 0) ++ncont;
-    long nuniq = Lis_.r()+Ris_.r()-2*ncont;
-    vector<Index> newind(nuniq);
-    long nn = 0;
-    for(int j = 0; j < Lis_.r(); ++j)
-        {
-        if(Lind_[j] > 0) newind[nn++] = Lis_[j];
-        }
-    for(int j = 0; j < Ris_.r(); ++j)
-        {
-        if(Rind_[j] > 0) newind[nn++] = Ris_[j];
-        }
-    if(sort == Sort)
-        {
-        auto comp = [](const Index& i1, const Index& i2) { return i1 > i2; };
-        std::sort(newind.begin(),newind.end(),comp);
-        }
-    Nis_ = IndexSet(move(newind));
-    }
-
 ITResult Contract::
 operator()(const ITDense<Real>& a1,
            const ITDense<Real>& a2)
     {
-    computeNis(Sort);
+    contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,true);
     
-    Label Nind(Nis_.r());
+    Label Nind(Nis_.r(),0);
     for(size_t i = 0; i < Nis_.r(); ++i)
         {
         auto j = findindex(Lis_,Nis_[i]);
@@ -62,8 +39,8 @@ operator()(const ITDense<Real>& a1,
 
     auto res = make_newdata<ITDense<Real>>(area(Nis_),0.);
     auto t1 = make_tensorref(a1.data.data(),Lis_),
-         t2 = make_tensorref(a2.data.data(),Ris_),
-         tr = make_tensorref(res->data.data(),Nis_);
+         t2 = make_tensorref(a2.data.data(),Ris_);
+    auto tr = make_tensorref(res->data.data(),Nis_);
     contractloop(t1,Lind_,t2,Rind_,tr,Nind);
     scalefac_ = 0;
     for(auto elt : res->data)
@@ -71,9 +48,12 @@ operator()(const ITDense<Real>& a1,
         scalefac_ += elt*elt;
         }
     scalefac_ = std::sqrt(scalefac_);
-    for(auto& elt : res->data)
+    if(scalefac_ != 0)
         {
-        elt /= scalefac_;
+        for(auto& elt : res->data)
+            {
+            elt /= scalefac_;
+            }
         }
     return move(res);
     }
@@ -86,7 +66,7 @@ diagDense(const ITDiag<Real>& d,
           const IndexSet& tis,
           const Label& tind)
     {
-    computeNis(Sort);
+    contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,true);
 
     long t_cstride = 0; //total t-stride of contracted inds of t
     size_t ntu = 0; //number uncontracted inds of t
@@ -388,24 +368,6 @@ operator()(ITDense<Complex>& d) const
     return ITResult();
     }
 
-ITResult MultReal::
-operator()(ITDense<Real>& d) const
-    {
-    //TODO: use BLAS algorithm
-    for(auto& elt : d.data)
-        elt *= r_;
-    return ITResult();
-    }
-
-ITResult MultReal::
-operator()(ITDense<Complex>& d) const
-    {
-    //TODO: use BLAS algorithm
-    for(auto& elt : d.data)
-        elt *= r_;
-    return ITResult();
-    }
-
 void
 plusEqData(Real fac, Real *d1, const Real *d2, LAPACK_INT size)
     {
@@ -447,30 +409,6 @@ operator()(ITDiag<Real>& a1,
     return ITResult();
     }
 
-void
-printVal(std::ostream& s,
-         Real val)
-    {
-    if(std::fabs(val) > 1E-10)
-        s << val << "\n";
-    else
-        s << format("%.8E\n",val);
-    }
-
-void
-printVal(std::ostream& s,
-         const Complex& val)
-    {
-    if(std::norm(val) > 1E-10)
-        {
-        auto sgn = (val.imag() < 0 ? '-' : '+');
-        s << val.real() << sgn << std::fabs(val.imag()) << "i\n";
-        }
-    else
-        {
-        s << format("%.8E\n",val);
-        }
-    }
 
 template<typename T>
 ITResult PrintIT::
@@ -501,7 +439,7 @@ operator()(const ITDense<T>& d) const
                 }
             s_ << ") ";
 
-            printVal(s_,val);
+            detail::printVal(s_,val);
             }
         }
     return ITResult();
@@ -531,7 +469,7 @@ operator()(const ITDiag<T>& d) const
                 s_ << (1+i) << ",";
                 }
             s_ << (1+i) << ") ";
-            printVal(s_,val);
+            detail::printVal(s_,val);
             }
         }
     return ITResult();

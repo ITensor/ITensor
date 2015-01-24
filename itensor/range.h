@@ -6,6 +6,7 @@
 #define __ITENSOR_RANGE_H
 
 #include "autovector.h"
+#include <iostream>
 
 namespace itensor {
 
@@ -92,24 +93,65 @@ class Range
         inds_.swap(other.inds_);
         }
 
-    private:
-
-    template<typename Iterable>
+    template<typename Indexable>
     void 
-    init(const Iterable& v)
+    init(const Indexable& v)
         {
         inds_.resize(v.size());
         long len = 1;
-        size_t i = 0;
-        for(const auto& vi : v)
+        for(size_t i = 0; i < size_t(v.size()); ++i)
             {
-            inds_[i] = index(long{vi},len);
-            len *= inds_[i].dim;
-            ++i;
+            inds_[i] = index(long{v[i]},len);
+            len *= long{v[i]};
             }
         }
 
+    private:
+
     storage_type inds_;
+    };
+
+inline
+std::ostream&
+operator<<(std::ostream& s, const Range& r)
+    {
+    s << "dim: ";
+    for(long i = 0; i < r.r(); ++i) s << r.dim(i) << " ";
+    s << "stride: ";
+    for(long i = 0; i < r.r(); ++i) s << r.stride(i) << " ";
+    return s;
+    }
+
+class RangeRef
+    {
+    public:
+    using index = Range::index;
+    using value_type = index;
+
+    RangeRef(value_type* prange,
+             long rank)
+        :
+        inds_(prange),
+        rank_(rank)
+        { }
+
+    long
+    dim(long i) const { return inds_[i].dim; }
+    long
+    stride(long i) const { return inds_[i].stride; }
+    long
+    r() const { return rank_; }
+
+    const index&
+    operator[](long i) const { return inds_[i]; }
+    index&
+    operator[](long i) { return inds_[i]; }
+
+    private:
+    /////////
+    value_type* inds_;
+    long rank_;
+    /////////
     };
 
 namespace detail {

@@ -680,7 +680,7 @@ contract(ABCProps& abc,
     //println("bref = ",bref.transpose()?"t\n":"\n",bref);
     //println("aref = ",aref.transpose()?"t\n":"\n",aref);
     //println("cref before = ",cref.transpose()?"t\n":"\n",cref);
-    mult_add(bref,aref,cref,0);
+    mult_add(bref,aref,cref);
     //println("cref = ",cref.transpose()?"t\n":"\n",cref);
     //println("Matrix multiply done, took ",cpu.sincemark());
 
@@ -694,7 +694,7 @@ contract(ABCProps& abc,
         {
         //println("PC = ",PC);
         //cpu.mark();
-        reshape(newC,PC,C);
+        reshape(newC,PC,C,detail::plusEq<Real>);
         //println("C reshaped, took ",cpu.sincemark());
         }
     }
@@ -838,7 +838,7 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
     auto Crow = C.n(1), Ccol = C.n(0);
 
     detail::GCounter couA(0,ra-1,0), 
-             couB(0,rb-1,0);
+                     couB(0,rb-1,0);
     //Keep couA.i[0] and couA.i[1] fixed at 0
     couA.setInd(0,0,0);
     couA.setInd(1,0,0);
@@ -866,6 +866,11 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
             }
         auto offA = ind(A,aind);
 
+        //TODO: possible bug, shouldn't we
+        //      call couB.setInd to extend
+        //      ranges to 0...B.n(j)-1
+        //      for those which aren't restricted
+        //      to ival below?
         couB.reset();
         for(int ia = 2; ia < ra; ++ia)
             {

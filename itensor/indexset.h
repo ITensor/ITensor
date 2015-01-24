@@ -37,6 +37,7 @@ class IndexSetT
 
     using storage = std::vector<IndexT>;
     using const_iterator = typename storage::const_iterator;
+    using value_type = IndexT;
 
     IndexSetT();
 
@@ -637,6 +638,36 @@ maxM(const IndexSetT<IndexT>& iset)
         mm = std::max(mm,iset[j].m());
 
     return mm;
+    }
+
+template<class IndexT>
+void
+contractIS(const IndexSetT<IndexT>& Lis,
+          const std::vector<int>& Lind,
+          const IndexSetT<IndexT>& Ris,
+          const std::vector<int>& Rind,
+          IndexSetT<IndexT>& Nis,
+          bool sortResult)
+    {
+    long ncont = 0;
+    for(const auto& i : Lind) if(i < 0) ++ncont;
+    long nuniq = Lis.r()+Ris.r()-2*ncont;
+    std::vector<IndexT> newind(nuniq);
+    long nn = 0;
+    for(int j = 0; j < Lis.r(); ++j)
+        {
+        if(Lind[j] > 0) newind[nn++] = Lis[j];
+        }
+    for(int j = 0; j < Ris.r(); ++j)
+        {
+        if(Rind[j] > 0) newind[nn++] = Ris[j];
+        }
+    if(sortResult)
+        {
+        auto comp = [](const IndexT& i1, const IndexT& i2) { return i1 > i2; };
+        std::sort(newind.begin(),newind.end(),comp);
+        }
+    Nis = IndexSetT<IndexT>(move(newind));
     }
 
 template <class IndexT>

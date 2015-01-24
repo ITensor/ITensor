@@ -240,51 +240,15 @@ operator*=(const ITensor& other)
         Error("Default constructed ITensor in product");
 
     if(this == &other)
-        {
-        return operator=( ITensor(sqr(this->norm())) );
-        }
+        return operator=( ITensor(sqr(norm(*this))) );
 
     const auto& Lis = is_;
     const auto& Ris = other.is_;
 
-    //Set Lind, Rind to zero. Special value 0 marks
-    //uncontracted indices. Later will assign unique numbers
-    //to these entries in Lind and Rind
-    Label Lind(Lis.r(),0),
-          Rind(Ris.r(),0);
-
-    //Count number of contracted indices,
-    //set corresponding entries of Lind, Rind
-    //to 1,2,...,ncont
-    int ncont = 1;
-    for(int i = 0; i < Lis.r(); ++i)
-    for(int j = 0; j < Ris.r(); ++j)
-        if(Lis[i] == Ris[j])
-            {
-            //Negative entries in 
-            //Lind, Rind indicate
-            //contracted indices
-            Lind[i] = -ncont;
-            Rind[j] = -ncont;
-            ++ncont;
-            break;
-            }
-
-    //nuniq is total number of unique, uncontracted indices
-    //(nuniq all includes m==1 indices)
+    Label Lind,
+          Rind;
+    auto ncont = computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
     auto nuniq = Lis.r()+Ris.r()-2*ncont;
-
-    //Go through and assign uncontracted entries of Lind,Rind
-    //the integers ncont+1,ncont+2,...
-    auto uu = ncont;
-    for(int j = 0; j < Lis.r(); ++j)
-        {
-        if(Lind[j] == 0) Lind[j] = ++uu;
-        }
-    for(int j = 0; j < Ris.r(); ++j)
-        {
-        if(Rind[j] == 0) Rind[j] = ++uu;
-        }
 
     //Check if other is a scalar (modulo m==1 inds)
     if(Ris.rn() == 0)
@@ -302,7 +266,7 @@ operator*=(const ITensor& other)
         return *this;
         }
 
-    auto C = applyFunc<Contract>(store_,other.store_,{is_,Lind,other.is_,Rind});
+    auto C = applyFunc<Contract>(store_,other.store_,{Lis,Lind,Ris,Rind});
 
     is_ = C.newIndexSet();
 
@@ -460,24 +424,51 @@ operator-=(const ITensor& other)
     }
 
 ITensor& ITensor::
-fill(Real r)
-    {
-    if(!(*this)) return *this;
-    solo();
-    scale_ = LogNumber(1.);
-    applyFunc<FillReal>(store_,{r});
-    return *this;
-    }
-
-ITensor& ITensor::
 fill(Complex z)
     {
     if(!(*this)) return *this;
     solo();
     scale_ = LogNumber(1.);
-    applyFunc<FillCplx>(store_,{z});
+    if(z.imag() == 0)
+        applyFunc<FillReal>(store_,{z.real()});
+    else
+        applyFunc<FillCplx>(store_,{z});
     return *this;
     }
+
+class MultReal
+    {
+    Real r_;
+    public:
+    MultReal(Real r)
+        : r_(r)
+        { }
+
+    template<typename T>
+    ITResult
+    operator()(ITDense<T>& d) const
+        {
+        //TODO: use BLAS algorithm?
+        for(auto& elt : d.data)
+            elt *= r_;
+        return ITResult();
+        }
+
+    template<typename T>
+    ITResult
+    operator()(ITDiag<T>& d) const
+        {
+        d.val *= r_;
+        //TODO: use BLAS algorithm
+        for(auto& elt : d.data)
+            elt *= r_;
+        return ITResult();
+        }
+
+    template<typename T>
+    ITResult
+    operator()(const T& d) const { Error("MultReal not implemented for ITData type."); return ITResult(); }
+    };
 
 void ITensor::
 scaleTo(const LogNumber& newscale)
@@ -496,6 +487,35 @@ solo()
 	{
     if(!store_.unique()) store_ = store_->clone();
     }
+
+class NormNoScale
+    {
+    Real nrm_;
+    public:
+
+    NormNoScale() : nrm_(0) { }
+
+    operator Real() const { return nrm_; }
+
+    template<typename T>
+    ITResult
+    operator()(const ITDense<T>& d) { return calc(d); }
+    template<typename T>
+    ITResult
+    operator()(const ITDiag<T>& d) { return calc(d); }
+
+    template<typename T>
+    ITResult
+    calc(const T& d)
+        {
+        for(const auto& elt : d.data)
+            {
+            nrm_ += std::norm(elt);
+            }
+        nrm_ = std::sqrt(nrm_);
+        return ITResult();
+        }
+    };
 
 void ITensor::
 scaleOutNorm()
@@ -529,17 +549,6 @@ equalizeScales(ITensor& other)
         }
     }
 
-Real ITensor::
-norm() const 
-    {
-#ifdef DEBUG
-    if(!*this) Error("ITensor is default initialized");
-#endif
-    return scale_.real0() *
-           applyFunc<NormNoScale>(store_);
-    }
-
-
 ostream& 
 operator<<(ostream & s, const ITensor& t)
     {
@@ -565,22 +574,11 @@ operator<<(ostream & s, const ITensor& t)
     }
 
 
-Real
-quickran()
-    {
-    static auto seed = (std::time(NULL) + getpid());
-    int im = 134456;
-    int ia = 8121;
-    int ic = 28411;
-    Real scale = 1.0 / im;
-    seed = (seed*ia+ic)%im;
-    return Real(seed) * scale;
-    }
 
 ITensor
-randIT(ITensor T, const Args& args)
+randomize(ITensor T, const Args& args)
     {
-    T.generate(quickran);
+    T.generate(detail::quickran);
     return T;
     }
 

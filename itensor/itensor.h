@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
 #include "itdata_functions.h"
+#include "index.h"
 
 namespace itensor {
 
@@ -174,20 +175,26 @@ class ITensor
     // Element Transformation Methods
     //
 
-    ITensor&
-    fill(Real r);
-
+    //Set all elements to z. If z.imag()==0
+    //(such as if z is automatically converted from a Real)
+    //then storage will be real only.
     ITensor&
     fill(Complex z);
 
+    //Call a function of the form f()->val once
+    //for each element, assign result to each element.
     template <typename Func>
     ITensor&
     generate(Func&& f);
 
+    //Apply a function of the form f(x)->y
+    //to each element x, replacing it with y
     template <typename Func>
     ITensor&
     apply(Func&& f);
 
+    //Apply a function of the form f(x)->void
+    //to each element x.
     template <typename Func>
     const ITensor&
     visit(Func&& f) const;
@@ -257,9 +264,6 @@ class ITensor
     ITensor(const Index& i1,
             const Index& i2,
             const MatrixRef& M);
-
-    Real
-    norm() const;
 
     template <typename Callable> 
     ITensor&
@@ -399,7 +403,7 @@ set(Complex val, const IndexVals&... ivs)
     {
     static constexpr auto size = sizeof...(ivs);
     scaleTo(1.);
-    const std::array<IndexVal,size> vals = {{ static_cast<IndexVal>(ivs)...}};
+    const std::array<IndexVal,size> vals{{ static_cast<IndexVal>(ivs)...}};
     std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
     if(val.imag() == 0)
@@ -432,7 +436,7 @@ template <typename Func>
 const ITensor& ITensor::
 visit(Func&& f) const
     {
-    applyFunc<VisitIT<decltype(f)>>(store_,{std::forward<Func>(f),scale()});
+    applyFunc<VisitIT<decltype(f)>>(store_,{std::forward<Func>(f),scale_.real0()});
     return *this;
     }
 
@@ -532,13 +536,13 @@ hasindex(const Tensor& T, const typename Tensor::IndexT& I)
     }
 
 ITensor
-randIT(ITensor T, const Args& args = Global::args());
+randomize(ITensor T, const Args& args = Global::args());
 
-template <typename... Indices>
+template <typename... Params>
 ITensor
-randIT(const Index& i1, const Indices&... rest)
+randIT(Params&&... params)
     {
-    return randIT(ITensor(i1,rest...));
+    return randomize(ITensor(std::forward<Params>(params)...));
     }
 
 template <typename... Indices>

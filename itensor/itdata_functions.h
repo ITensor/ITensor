@@ -19,31 +19,26 @@ class ApplyIT
     {
     F& f_;
     public:
-    ApplyIT(F&& f)
-        : f_(f)
-        { }
+    ApplyIT(F&& f) : f_(f) { }
 
     template <typename T,
               typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
     ITResult
-    operator()(ITDense<T>& d) const
-        {
-        for(auto& elt : d.data)
-            {
-            elt = f_(elt);
-            }
-        return ITResult();
-        }
-
+    operator()(ITDense<T>& d) const { return doApply(d); }
+        
     template <typename T,
               typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
     ITResult
-    operator()(ITDiag<T>& d) const
+    operator()(ITDiag<T>& d) const { return doApply(d); }
+
+    private:
+
+    template<typename T>
+    ITResult
+    doApply(T& d) const
         {
         for(auto& elt : d.data)
-            {
             elt = f_(elt);
-            }
         return ITResult();
         }
     };
@@ -154,10 +149,6 @@ class Contract
 
     private:
 
-    enum SortOption { Sort, NoSort };
-    void
-    computeNis(SortOption sort);
-
     NewData
     combine(const ITDense<Real>& d,
             const IndexSet& dis,
@@ -173,34 +164,6 @@ class Contract
  
     };
 
-class NormNoScale
-    {
-    Real nrm_;
-    public:
-
-    NormNoScale() : nrm_(0) { }
-
-    operator Real() const { return nrm_; }
-
-    template<typename T>
-    ITResult
-    operator()(const ITDense<T>& d) { return calc(d); }
-    template<typename T>
-    ITResult
-    operator()(const ITDiag<T>& d) { return calc(d); }
-
-    template<typename T>
-    ITResult
-    calc(const T& d)
-        {
-        for(const auto& elt : d.data)
-            {
-            nrm_ += std::norm(elt);
-            }
-        nrm_ = std::sqrt(nrm_);
-        return ITResult();
-        }
-    };
 
 class FillReal
     {
@@ -377,24 +340,6 @@ class MultComplex
     template<typename T>
     ITResult
     operator()(T& d) const { Error("MultComplex not defined for ITData type"); return ITResult(); }
-    };
-
-class MultReal
-    {
-    Real r_;
-    public:
-    MultReal(Real r)
-        : r_(r)
-        { }
-
-    ITResult
-    operator()(ITDense<Real>& d) const;
-    ITResult
-    operator()(ITDense<Complex>& d) const;
-
-    template<typename T>
-    ITResult
-    operator()(const T& d) const { Error("MultReal not implemented for ITData type."); return ITResult(); }
     };
 
 class PlusEQ

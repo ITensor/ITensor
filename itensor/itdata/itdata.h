@@ -22,7 +22,8 @@
     X(Y  ITDense<Complex>   &t) Z;\
     X(Y  ITCombiner         &t) Z;\
     X(Y  ITDiag<Real>       &t) Z;\
-    X(Y  ITDiag<Complex>    &t) Z;
+    X(Y  ITDiag<Complex>    &t) Z;\
+    X(Y  IQTData<Real>     &t) Z;
 ///////////////////////////////////
 
 //
@@ -46,6 +47,9 @@ template <typename>
 class ITDiag;
 
 class ITCombiner;
+
+template <typename>
+class IQTData;
 ///////////////////////////////////
 
 

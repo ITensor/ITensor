@@ -179,6 +179,11 @@ class IQIndexVal
     bool
     operator!=(const IQIndexVal& other) const { return !operator==(other); }
 
+    bool
+    operator==(const IQIndex& iqind) const { return index == iqind; }
+    bool
+    operator!=(const IQIndex& iqind) const { return !operator==(iqind); }
+
     explicit operator bool() const { return valid(); }
 
     IndexQN
