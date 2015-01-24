@@ -25,46 +25,7 @@ computeLabels(const Inds& Lis,
               long rR,
               Label& Lind,
               Label& Rind,
-              const Func& checkCont)
-    {
-    //Set Lind, Rind to zero. Special value 0 marks
-    //uncontracted indices. Later will assign unique numbers
-    //to these entries in Lind and Rind
-    Lind.assign(rL,0);
-    Rind.assign(rR,0);
-
-    //Count number of contracted indices,
-    //set corresponding entries of Lind, Rind
-    //to 1,2,...,ncont
-       // if(Lis[i] == Ris[j])
-    long ncont = 1;
-    for(long i = 0; i < rL; ++i)
-    for(long j = 0; j < rR; ++j)
-        if(Lis[i] == Ris[j])
-            {
-            //Negative entries in 
-            //Lind, Rind indicate
-            //contracted indices
-            Lind[i] = -ncont;
-            Rind[j] = -ncont;
-            checkCont(Lis[i],Ris[j]);
-            ++ncont;
-            break;
-            }
-
-    //Go through and assign uncontracted entries of Lind,Rind
-    //the integers ncont+1,ncont+2,...
-    auto uu = ncont;
-    for(long j = 0; j < rL; ++j)
-        {
-        if(Lind[j] == 0) Lind[j] = uu++;
-        }
-    for(long j = 0; j < rR; ++j)
-        {
-        if(Rind[j] == 0) Rind[j] = uu++;
-        }
-    return ncont;
-    }
+              const Func& checkCont);
 
 template<typename Inds>
 long
@@ -73,13 +34,7 @@ computeLabels(const Inds& Lis,
               const Inds& Ris,
               long rR,
               Label& Lind,
-              Label& Rind)
-    {
-    using ind = typename Inds::value_type;
-    auto nocheck = [](const ind& li,const ind& ri) { };
-    return computeLabels(Lis,rL,Ris,rR,Lind,Rind,nocheck);
-    }
-
+              Label& Rind);
 
 
 template<typename R1, typename R2>
@@ -93,6 +48,15 @@ void
 reshape(const RTref<RangeT>& T, 
         const Permutation& P, 
         tensor<Real,Range>& res);
+
+//Callable is any function func(Real& x, Real y)
+//default is func = [](Real& x, Real y) { x = y; };
+template<typename R1, typename R2, typename Callable>
+void 
+reshape(const RTref<R1>& T, 
+        const Permutation& P, 
+        RTref<R2>& res,
+        const Callable& func);
 
 template<typename RangeT>
 void 
@@ -170,6 +134,68 @@ dist(const RTref<R>& A, const RTref<R>& Ach)
 /// Implementations
 ///
 
+template<typename Inds, typename Func>
+long
+computeLabels(const Inds& Lis,
+              long rL,
+              const Inds& Ris,
+              long rR,
+              Label& Lind,
+              Label& Rind,
+              const Func& checkCont)
+    {
+    //Set Lind, Rind to zero. Special value 0 marks
+    //uncontracted indices. Later will assign unique numbers
+    //to these entries in Lind and Rind
+    Lind.assign(rL,0);
+    Rind.assign(rR,0);
+
+    //Count number of contracted indices,
+    //set corresponding entries of Lind, Rind
+    //to 1,2,...,ncont
+       // if(Lis[i] == Ris[j])
+    long ncont = 1;
+    for(long i = 0; i < rL; ++i)
+    for(long j = 0; j < rR; ++j)
+        if(Lis[i] == Ris[j])
+            {
+            //Negative entries in 
+            //Lind, Rind indicate
+            //contracted indices
+            Lind[i] = -ncont;
+            Rind[j] = -ncont;
+            checkCont(Lis[i],Ris[j]);
+            ++ncont;
+            break;
+            }
+
+    //Go through and assign uncontracted entries of Lind,Rind
+    //the integers ncont+1,ncont+2,...
+    auto uu = ncont;
+    for(long j = 0; j < rL; ++j)
+        {
+        if(Lind[j] == 0) Lind[j] = uu++;
+        }
+    for(long j = 0; j < rR; ++j)
+        {
+        if(Rind[j] == 0) Rind[j] = uu++;
+        }
+    return ncont;
+    }
+
+template<typename Inds>
+long
+computeLabels(const Inds& Lis,
+              long rL,
+              const Inds& Ris,
+              long rR,
+              Label& Lind,
+              Label& Rind)
+    {
+    using ind = typename Inds::value_type;
+    auto nocheck = [](const ind& li,const ind& ri) { };
+    return computeLabels(Lis,rL,Ris,rR,Lind,Rind,nocheck);
+    }
 
 template<typename R1, typename R2, typename Callable>
 void 
@@ -223,8 +249,12 @@ reshape(const RTref<R1>& T,
     }
 
 namespace detail {
-void inline
-assign(Real& r1, Real r2) { r1 = r2; }
+template<typename T>
+void 
+assign(T& r1, T r2) { r1 = r2; }
+template<typename T>
+void
+plusEq(T& r1, T r2) { r1 += r2; }
 };
 
 template<typename R1, typename R2>
@@ -233,7 +263,7 @@ reshape(const RTref<R1>& T,
         const Permutation& P, 
         RTref<R2>& res)
     {
-    reshape(T,P,res,detail::assign);
+    reshape(T,P,res,detail::assign<Real>);
     }
 
 template<typename RangeT>

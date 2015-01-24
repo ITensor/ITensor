@@ -680,7 +680,7 @@ contract(ABCProps& abc,
     //println("bref = ",bref.transpose()?"t\n":"\n",bref);
     //println("aref = ",aref.transpose()?"t\n":"\n",aref);
     //println("cref before = ",cref.transpose()?"t\n":"\n",cref);
-    mult_add(bref,aref,cref,0);
+    mult_add(bref,aref,cref);
     //println("cref = ",cref.transpose()?"t\n":"\n",cref);
     //println("Matrix multiply done, took ",cpu.sincemark());
 
@@ -694,7 +694,7 @@ contract(ABCProps& abc,
         {
         //println("PC = ",PC);
         //cpu.mark();
-        reshape(newC,PC,C);
+        reshape(newC,PC,C,detail::plusEq<Real>);
         //println("C reshaped, took ",cpu.sincemark());
         }
     }
