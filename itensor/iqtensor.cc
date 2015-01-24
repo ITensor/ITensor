@@ -221,7 +221,7 @@ operator()(const IQTData<T>& A,
     for(const auto& aio : A.offsets)
         {
         inverseBlockInd(aio.block,Ais_,Ablock);
-        PRI(Ablock);
+        //PRI(Ablock);
         couB.reset();
         for(int ib = 0; ib < rB; ++ib)
             couB.setInd(ib,0,Bis_[ib].nindex()-1);
@@ -243,11 +243,10 @@ operator()(const IQTData<T>& A,
             auto* cblock = C.getBlock(Cis_,Cblock);
             assert(cblock != nullptr);
 
-            PRI(couB.i);
+            //PRI(couB.i);
             //println("aoff = ",aio.offset);
             //println("boff = ",boff);
             //println("coff = ",coff);
-            println();
 
             Arange.init(make_indexdim(Ais_,Ablock));
             Brange.init(make_indexdim(Bis_,couB.i));
@@ -266,8 +265,7 @@ operator()(const IQTData<T>& A,
             //println("----------Calling contractloop--------------");
             //Print(aref);
             //Print(bref);
-            //Print(cref);
-            contractloop(aref,Aind_,bref,Bind_,cref,Cind);
+            contract(aref,Aind_,bref,Bind_,cref,Cind);
             //Print(cref);
 
             } //for couB
@@ -315,8 +313,8 @@ operator*=(const IQTensor& other)
           Rind;
     computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind,checkDirs);
 
-    PRI(Lind);
-    PRI(Rind);
+    //PRI(Lind);
+    //PRI(Rind);
 
     auto C = applyFunc<QContract>(store_,other.store_,{Lis,Lind,Ris,Rind,div_+other.div_});
 

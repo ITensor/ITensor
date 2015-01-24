@@ -90,7 +90,7 @@ IQTData(const IQIndexSet& is,
             }
         if(blockqn == Q)
             {
-            PRI(C.i);
+            //PRI(C.i);
             //println("blockqn = ",blockqn);
             long indstr = 1, //accumulate Index strides
                  ind = 0,
@@ -107,18 +107,11 @@ IQTData(const IQIndexSet& is,
             totalsize += totm;
             }
         }
-    print("offsets = {");
-    for(const auto& i : offsets)
-        printf("(%d,%d),",i.block,i.offset);
-    println("}");
-    printfln("totalsize = %d",totalsize);
-#ifdef DEBUG
-    if(totalsize == 0) 
-        {
-        println("QN provided = ",Q);
-        Error("No IQTensor blocks compatible with QN provided");
-        }
-#endif
+    //print("offsets = {");
+    //for(const auto& i : offsets)
+    //    printf("(%d,%d),",i.block,i.offset);
+    //println("}");
+    //printfln("totalsize = %d",totalsize);
     data.assign(totalsize,0);
     }
 

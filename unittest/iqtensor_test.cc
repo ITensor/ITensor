@@ -26,16 +26,16 @@ class Functor
 TEST_CASE("IQTensorTest")
 {
 
-Index s1u("Site1 Up",1,Site);
-Index s1d("Site1 Dn",1,Site);
-Index s2u("Site2 Up",1,Site);
-Index s2d("Site2 Dn",1,Site);
-Index l1u("Link1 Up",2,Link);
-Index l10("Link1 Z0",2,Link);
-Index l1d("Link1 Dn",2,Link);
-Index l2uu("Link2 UU",2,Link);
-Index l20("Link2 Z0",2,Link);
-Index l2dd("Link2 DD",2,Link);
+Index s1u("S1+1",1,Site);
+Index s1d("S1-1",1,Site);
+Index s2u("S2+1",1,Site);
+Index s2d("S2-1",1,Site);
+Index l1u("L1+1",2,Link);
+Index l10("L1_0",2,Link);
+Index l1d("L1-1",2,Link);
+Index l2uu("L2+2",2,Link);
+Index l20("L2_0",2,Link);
+Index l2dd("L2-2",2,Link);
 
 IQIndex S1,S2,L1,L2;
 
@@ -79,34 +79,51 @@ SECTION("Boolean")
     CHECK(D);
     }
 
-SECTION("Constructors")
-    {
-    Real f = Global::random();
-    IQTensor rZ(f);
+//SECTION("Constructors")
+//    {
+//    Real f = Global::random();
+//    IQTensor rZ(f);
+//
+//    CHECK_EQUAL(rZ.r(),0);
+//    CHECK_REQUAL(norm(rZ),f);
+//    }
 
-    CHECK_EQUAL(rZ.r(),0);
-    CHECK_REQUAL(norm(rZ),f);
-    }
+//SECTION("ToReal")
+//    {
+//    Real f = Global::random();
+//    IQTensor T(f);
+//    PrintData(T);
+//    CHECK_REQUAL(T.real(),f);
+//    }
 
 SECTION("Contracting Product")
     {
-    auto res = A*dag(B);
-
-    CHECK(hasindex(res,S1));
-    CHECK(hasindex(res,S2));
-    CHECK(!hasindex(res,L1));
-    CHECK(!hasindex(res,L2));
-
-    for(int k1 = 1; k1 <= S1.m(); ++k1)
-    for(int k2 = 1; k2 <= S2.m(); ++k2)
+    SECTION("Case 1")
         {
-        Real val = 0;
-        for(int j1 = 1; j1 <= L1.m(); ++j1)
-        for(int j2 = 1; j2 <= L2.m(); ++j2)
+        //PrintData(A);
+        //PrintData(B);
+        auto R = A*dag(B);
+        //PrintData(R);
+
+        CHECK(hasindex(R,S1));
+        CHECK(hasindex(R,S2));
+        CHECK(!hasindex(R,L1));
+        CHECK(!hasindex(R,L2));
+
+        for(int k1 = 1; k1 <= S1.m(); ++k1)
+        for(int k2 = 1; k2 <= S2.m(); ++k2)
             {
-            val += A.real(L1(j1),S1(k1),L2(j2),S2(k2))*B.real(L1(j1),L2(j2));
+            Real val = 0;
+            for(int j1 = 1; j1 <= L1.m(); ++j1)
+            for(int j2 = 1; j2 <= L2.m(); ++j2)
+                {
+                //printf("val += %f*%f",A.real(L1(j1),S1(k1),L2(j2),S2(k2)),B.real(L1(j1),L2(j2)));
+                val += A.real(L1(j1),S1(k1),L2(j2),S2(k2))*B.real(L1(j1),L2(j2));
+                //printfln(" (now val=%f)",val);
+                }
+            //printfln("val = %f, R.real(S1(%d),S2(%d))=%f",val,k1,k2,R.real(S1(k1),S2(k2)));
+            CHECK_REQUAL(R.real(S1(k1),S2(k2)),val);
             }
-        CHECK_REQUAL(res.real(S1(k1),S2(k2)),val);
         }
 
     }
@@ -146,12 +163,6 @@ SECTION("Contracting Product")
 //        }
 //    }
 
-SECTION("ToReal")
-    {
-    Real f = Global::random();
-    IQTensor T(f);
-    CHECK_REQUAL(T.real(),f);
-    }
 
 //SECTION("DotTest")
 //    {
