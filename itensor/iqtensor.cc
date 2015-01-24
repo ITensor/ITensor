@@ -322,6 +322,8 @@ operator*=(const IQTensor& other)
 
     is_ = C.newIndexSet();
 
+    div_ += other.div_;
+
     scale_ *= other.scale_;
     if(C.scalefac() > 0) scale_ *= C.scalefac();
 
