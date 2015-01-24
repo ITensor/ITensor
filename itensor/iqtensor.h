@@ -422,7 +422,11 @@ dag(IQTensor res) { res.dag(); return res; }
 
 //Compute divergence of IQTensor T
 QN inline
-div(const IQTensor& T) { return T.div_; }
+div(const IQTensor& T) 
+    { 
+    if(!T) Error("div(IQTensor) not defined for null IQTensor");
+    return T.div_; 
+    }
 
 IQIndex
 findIQInd(const IQTensor& T, const Index& i);
@@ -435,6 +439,17 @@ dir(const IQTensor& T, const Index& i) { return findIQInd(T,i).dir(); }
 
 Arrow
 dir(const IQTensor& T, const IQIndex& i);
+
+IQTensor
+randomize(IQTensor T, const Args& args = Global::args());
+
+template <typename... Params>
+IQTensor
+randIQT(Params&&... params)
+    {
+    return randomize(IQTensor(std::forward<Params>(params)...));
+    }
+
 
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);

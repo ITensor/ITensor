@@ -380,6 +380,9 @@ scaleTo(const LogNumber& newscale)
 void IQTensor::
 solo()
 	{
+#ifdef DEBUG
+    if(!store_) Error("Cannot modify default-constructed IQTensor.");
+#endif
     if(!store_.unique()) store_ = store_->clone();
     }
 
@@ -439,6 +442,13 @@ dir(const IQTensor& T, const IQIndex& I)
     Error("dir: IQIndex not found");
     return Out;
 	}
+
+IQTensor
+randomize(IQTensor T, const Args& args)
+    {
+    T.generate(detail::quickran);
+    return T;
+    }
 
 bool
 isZero(const IQTensor& T, const Args& args)

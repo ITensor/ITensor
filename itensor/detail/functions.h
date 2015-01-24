@@ -95,6 +95,19 @@ contains(const Container& C,
     return false;
     }
 
+//Simple linear congruential random number generator
+Real inline
+quickran()
+    {
+    static int seed = (std::time(NULL) + getpid());
+    int im = 134456;
+    int ia = 8121;
+    int ic = 28411;
+    Real scale = 1.0 / im;
+    seed = (seed*ia+ic)%im;
+    return Real(seed) * scale;
+    }
+
 
 template <typename Ret, class T, typename V>
 auto 

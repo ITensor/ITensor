@@ -545,22 +545,11 @@ operator<<(ostream & s, const ITensor& t)
     }
 
 
-Real
-quickran()
-    {
-    static auto seed = (std::time(NULL) + getpid());
-    int im = 134456;
-    int ia = 8121;
-    int ic = 28411;
-    Real scale = 1.0 / im;
-    seed = (seed*ia+ic)%im;
-    return Real(seed) * scale;
-    }
 
 ITensor
-randIT(ITensor T, const Args& args)
+randomize(ITensor T, const Args& args)
     {
-    T.generate(quickran);
+    T.generate(detail::quickran);
     return T;
     }
 

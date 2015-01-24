@@ -536,13 +536,13 @@ hasindex(const Tensor& T, const typename Tensor::IndexT& I)
     }
 
 ITensor
-randIT(ITensor T, const Args& args = Global::args());
+randomize(ITensor T, const Args& args = Global::args());
 
-template <typename... Indices>
+template <typename... Params>
 ITensor
-randIT(const Index& i1, const Indices&... rest)
+randIT(Params&&... params)
     {
-    return randIT(ITensor(i1,rest...));
+    return randomize(ITensor(std::forward<Params>(params)...));
     }
 
 template <typename... Indices>
