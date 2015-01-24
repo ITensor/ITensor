@@ -323,14 +323,6 @@ operator IndexVal() const
     }
 
 
-IQIndexVal::BlockInd IQIndexVal::
-blockInd() const 
-    {
-    BlockInd bi;
-    calc_ind_ii(*this,bi.block,bi.ind);
-    return bi;
-    }
-
 IndexVal IQIndexVal::
 blockIndexVal() const 
     { 

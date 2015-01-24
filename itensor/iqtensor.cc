@@ -130,9 +130,9 @@ class QContract
     }; //QContract
 
 void
-inverseInd(long I,
-           const IQIndexSet& is,
-           vector<long>& ind)
+inverseBlockInd(long I,
+                const IQIndexSet& is,
+                vector<long>& ind)
     {
     auto r = int(ind.size());
     assert(r == is.r());
@@ -220,7 +220,7 @@ operator()(const IQTData<T>& A,
           Crange;
     for(const auto& aio : A.offsets)
         {
-        inverseInd(aio.ind,Ais_,Ablock);
+        inverseBlockInd(aio.block,Ais_,Ablock);
         PRI(Ablock);
         couB.reset();
         for(int ib = 0; ib < rB; ++ib)
@@ -233,20 +233,20 @@ operator()(const IQTData<T>& A,
             }
         for(;couB.notDone(); ++couB)
             {
-            auto boff = B.getOffset(couB.i,Bis_);
-            if(boff < 0) continue;
+            auto* bblock = B.getBlock(Bis_,couB.i);
+            if(!bblock) continue;
 
             //Finish making Cblock
             for(int ib = 0; ib < rB; ++ib)
                 if(BtoC[ib] != -1) Cblock[BtoC[ib]] = couB.i[ib];
 
-            auto coff = C.getOffset(Cblock,Cis_);
-            assert(coff != -1);
+            auto* cblock = C.getBlock(Cis_,Cblock);
+            assert(cblock != nullptr);
 
             PRI(couB.i);
-            println("aoff = ",aio.offset);
-            println("boff = ",boff);
-            println("coff = ",coff);
+            //println("aoff = ",aio.offset);
+            //println("boff = ",boff);
+            //println("coff = ",coff);
             println();
 
             Arange.init(make_indexdim(Ais_,Ablock));
@@ -254,8 +254,8 @@ operator()(const IQTData<T>& A,
             Crange.init(make_indexdim(Cis_,Cblock));
 
             auto aref = make_tensorref(A.data.data()+aio.offset,Arange),
-                 bref = make_tensorref(B.data.data()+boff,Brange);
-            auto cref= make_tensorref(C.data.data()+coff,Crange);
+                 bref = make_tensorref(bblock,Brange);
+            auto cref= make_tensorref(cblock,Crange);
 
             //PRI(Aind_);
             //PRI(Bind_);
@@ -493,7 +493,7 @@ operator()(const IQTData<T>& d) const
         {
         //Determine block indices (where in the IQIndex space
         //this non-zero block is located)
-        inverseInd(io.ind,is_,block);
+        inverseBlockInd(io.block,is_,block);
         //Print Indices of this block
         for(size_t i = 0; i < rank; ++i)
             {

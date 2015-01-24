@@ -191,14 +191,6 @@ class IQIndexVal
 
     operator IndexVal() const;
 
-    struct BlockInd
-        {
-        long block = 0,
-             ind   = 0;
-        };
-    BlockInd
-    blockInd() const;
-
     IndexVal 
     blockIndexVal() const;
 

@@ -403,7 +403,7 @@ set(Complex val, const IndexVals&... ivs)
     {
     static constexpr auto size = sizeof...(ivs);
     scaleTo(1.);
-    const std::array<IndexVal,size> vals = {{ static_cast<IndexVal>(ivs)...}};
+    const std::array<IndexVal,size> vals{{ static_cast<IndexVal>(ivs)...}};
     std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
     if(val.imag() == 0)

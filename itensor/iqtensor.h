@@ -279,9 +279,9 @@ cplx(IQIndexVals&&... ivs) const
     if(size > r()) Error("Too many IQIndexVals passed to real/cplx");
 #endif
     std::array<IQIndexVal,size> vals{{static_cast<IQIndexVal>(ivs)...}};
-    std::array<IQIndexVal::BlockInd,size> bis;
-    detail::permute_map(is_,vals,bis,[](const IQIndexVal& iv) { return iv.blockInd(); });
-    Complex z = applyFunc<IQGetElt<Complex,size>>(store_,{is_,bis});
+    std::array<long,size> inds;
+    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.i-1; });
+    Complex z = applyFunc<IQGetElt<Complex,size>>(store_,{is_,inds});
 	try {
 	    return z*scale_.real(); 
 	    }
@@ -309,6 +309,24 @@ real(IQIndexVals&&... ivs) const
         Error("IQTensor is Complex-valued, use .cplx(...) method");
         }
     return z.real();
+    }
+
+template<typename... IQIndexVals>
+void IQTensor::
+set(Complex val, const IQIndexVals&... ivs)
+    {
+    static constexpr auto size = sizeof...(ivs);
+    scaleTo(1.);
+    const std::array<IQIndexVal,size> vals{{ static_cast<IQIndexVal>(ivs)...}};
+    std::array<long,size> inds;
+    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.i-1; });
+    if(val.imag() == 0)
+        applyFunc<IQSetEltReal<size>>(store_,{val.real(),is_,inds});
+    else
+        {
+        Error("Set Complex element not implemented");
+        //applyFunc<IQSetEltComplex<size>>(store_,{val,is_,bis});
+        }
     }
 
 template <typename Func>
