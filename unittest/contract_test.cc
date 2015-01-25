@@ -24,111 +24,134 @@ TEST_CASE("Contract Test")
         B(0,0) = 5; B(0,1) = 6;
         B(1,0) = 7; B(1,1) = 8;
 
-        //
-        // 1 2  5 6   19 22
-        // 3 4  7 8   43 50
-        //
-        //println("Case 1:");
-        contract(A,{1,2},B,{2,3},C,{1,3});
-        for(int r = 0; r < 2; ++r)
-        for(int c = 0; c < 2; ++c)
+        SECTION("Case 1")
             {
-            Real val = 0;
-            for(int k = 0; k < 2; ++k)
+            //
+            // 1 2  5 6   19 22
+            // 3 4  7 8   43 50
+            //
+            contract(A,{1,2},B,{2,3},C,{1,3});
+            for(int r = 0; r < 2; ++r)
+            for(int c = 0; c < 2; ++c)
                 {
-                //printfln("A(%d,%d)*B(%d,%d)=%d*%d=%d",r,k,k,c,A(r,k),B(k,c),A(r,k)*B(k,c));
-                val += A(r,k)*B(k,c);
+                Real val = 0;
+                for(int k = 0; k < 2; ++k)
+                    {
+                    //printfln("A(%d,%d)*B(%d,%d)=%d*%d=%d",r,k,k,c,A(r,k),B(k,c),A(r,k)*B(k,c));
+                    val += A(r,k)*B(k,c);
+                    }
+                REQUIRE(C(r,c) == val);
                 }
-            REQUIRE(C(r,c) == val);
             }
 
-        //
-        // 1 2  5 7   17 23
-        // 3 4  6 8   39 53
-        //
-        //println("Case 2:");
-        contract(A,{1,2},B,{3,2},C,{1,3});
-        for(int r = 0; r < 2; ++r)
-        for(int c = 0; c < 2; ++c)
+        SECTION("Case 2")
             {
-            Real val = 0;
-            for(int k = 0; k < 2; ++k)
+            //
+            // 1 2  5 7   17 23
+            // 3 4  6 8   39 53
+            //
+            //println("Case 2:");
+            contract(A,{1,2},B,{3,2},C,{1,3});
+            for(int r = 0; r < 2; ++r)
+            for(int c = 0; c < 2; ++c)
                 {
-                val += A(r,k)*B(c,k);
+                Real val = 0;
+                for(int k = 0; k < 2; ++k)
+                    {
+                    val += A(r,k)*B(c,k);
+                    }
+                REQUIRE(C(r,c) == val);
                 }
-            REQUIRE(C(r,c) == val);
             }
 
-        contract(A,{1,2},B,{2,3},C,{3,1});
-        for(int r = 0; r < 2; ++r)
-        for(int c = 0; c < 2; ++c)
+        SECTION("Case 3")
             {
-            Real val = 0;
-            for(int k = 0; k < 2; ++k)
+            contract(A,{1,2},B,{2,3},C,{3,1});
+            for(int r = 0; r < 2; ++r)
+            for(int c = 0; c < 2; ++c)
                 {
-                val += A(r,k)*B(k,c);
+                Real val = 0;
+                for(int k = 0; k < 2; ++k)
+                    {
+                    val += A(r,k)*B(k,c);
+                    }
+                REQUIRE(C(c,r) == val);
                 }
-            REQUIRE(C(c,r) == val);
             }
 
-        contract(A,{1,2},B,{3,2},C,{3,1});
-        for(int r = 0; r < 2; ++r)
-        for(int c = 0; c < 2; ++c)
+        SECTION("Case 4")
             {
-            Real val = 0;
-            for(int k = 0; k < 2; ++k)
+            contract(A,{1,2},B,{3,2},C,{3,1});
+            for(int r = 0; r < 2; ++r)
+            for(int c = 0; c < 2; ++c)
                 {
-                val += A(r,k)*B(c,k);
+                Real val = 0;
+                for(int k = 0; k < 2; ++k)
+                    {
+                    val += A(r,k)*B(c,k);
+                    }
+                REQUIRE(C(c,r) == val);
                 }
-            REQUIRE(C(c,r) == val);
             }
 
-        contract(A,{2,1},B,{2,3},C,{1,3});
-        for(int r = 0; r < 2; ++r)
-        for(int c = 0; c < 2; ++c)
+        SECTION("Case 5")
             {
-            Real val = 0;
-            for(int k = 0; k < 2; ++k)
+            contract(A,{2,1},B,{2,3},C,{1,3});
+            for(int r = 0; r < 2; ++r)
+            for(int c = 0; c < 2; ++c)
                 {
-                val += A(k,r)*B(k,c);
+                Real val = 0;
+                for(int k = 0; k < 2; ++k)
+                    {
+                    val += A(k,r)*B(k,c);
+                    }
+                REQUIRE(C(r,c) == val);
                 }
-            REQUIRE(C(r,c) == val);
             }
 
-        contract(A,{2,1},B,{3,2},C,{1,3});
-        for(int r = 0; r < 2; ++r)
-        for(int c = 0; c < 2; ++c)
+        SECTION("Case 6")
             {
-            Real val = 0;
-            for(int k = 0; k < 2; ++k)
+            contract(A,{2,1},B,{3,2},C,{1,3});
+            for(int r = 0; r < 2; ++r)
+            for(int c = 0; c < 2; ++c)
                 {
-                val += A(k,r)*B(c,k);
+                Real val = 0;
+                for(int k = 0; k < 2; ++k)
+                    {
+                    val += A(k,r)*B(c,k);
+                    }
+                REQUIRE(C(r,c) == val);
                 }
-            REQUIRE(C(r,c) == val);
             }
 
-        contract(A,{2,1},B,{2,3},C,{3,1});
-        for(int r = 0; r < 2; ++r)
-        for(int c = 0; c < 2; ++c)
+        SECTION("Case 7")
             {
-            Real val = 0;
-            for(int k = 0; k < 2; ++k)
+            contract(A,{2,1},B,{2,3},C,{3,1});
+            for(int r = 0; r < 2; ++r)
+            for(int c = 0; c < 2; ++c)
                 {
-                val += A(k,r)*B(k,c);
+                Real val = 0;
+                for(int k = 0; k < 2; ++k)
+                    {
+                    val += A(k,r)*B(k,c);
+                    }
+                REQUIRE(C(c,r) == val);
                 }
-            REQUIRE(C(c,r) == val);
             }
 
-        contract(A,{2,1},B,{3,2},C,{3,1});
-        for(int r = 0; r < 2; ++r)
-        for(int c = 0; c < 2; ++c)
+        SECTION("Case 8")
             {
-            Real val = 0;
-            for(int k = 0; k < 2; ++k)
+            contract(A,{2,1},B,{3,2},C,{3,1});
+            for(int r = 0; r < 2; ++r)
+            for(int c = 0; c < 2; ++c)
                 {
-                val += A(k,r)*B(c,k);
+                Real val = 0;
+                for(int k = 0; k < 2; ++k)
+                    {
+                    val += A(k,r)*B(c,k);
+                    }
+                REQUIRE(C(c,r) == val);
                 }
-            REQUIRE(C(c,r) == val);
             }
         }
 
