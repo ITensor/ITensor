@@ -121,7 +121,7 @@ indexset.o: $(DEPHEADERS)
 DEPHEADERS+= contract.h
 contract.o: $(DEPHEADERS)
 .debug_objs/contract.o: $(DEPHEADERS)
-DEPHEADERS+= simpletensor.h itdata/itdata.h itdata_functions.h \
+DEPHEADERS+= range.h simpletensor.h itdata/itdata.h itdata_functions.h \
 itensor.h counter.h
 itensor.o: $(DEPHEADERS)
 .debug_objs/itensor.o: $(DEPHEADERS)

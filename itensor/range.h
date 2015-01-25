@@ -39,12 +39,6 @@ class Range
         init(v);
         }
 
-    template <typename I>
-    Range(const std::initializer_list<I>& ll)
-        {
-        init(ll);
-        }
-
     template <typename I, size_t size>
     Range(const std::array<I,size>& a)
         {

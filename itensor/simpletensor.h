@@ -147,7 +147,7 @@ class tensor : public tensorref<T,RangeT>
     template <typename... Dims>
     tensor(long d0, Dims... rest)
         :
-        inds_{d0,rest...}
+        inds_(d0,rest...)
         {
         init();
         }
