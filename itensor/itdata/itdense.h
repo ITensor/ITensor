@@ -22,8 +22,14 @@ class ITDense : public ITDispatch<ITDense<T>>
 
     std::vector<T> data;
 
-    template<typename... Args>
-    ITDense(Args&&... args) : data(std::forward<Args>(args)...) { }
+    ITDense() { }
+
+    ITDense(size_t size) : data(size) { }
+
+    ITDense(size_t size, T val) : data(size,val) { }
+
+    template<typename InputIterator>
+    ITDense(InputIterator b, InputIterator e) : data(b,e) { }
 
     virtual
     ~ITDense() { }
