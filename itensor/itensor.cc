@@ -328,13 +328,13 @@ class Contract
     //    return ITResult(res);
     //    }
 
-    template <typename T1, typename T2>
-    ITResult
-    operator()(const T1& a1,const T2& a2) const
-        {
-        Error("Contract not implemented for this case");
-        return ITResult();
-        }
+    //template <typename T1, typename T2>
+    //ITResult
+    //operator()(const T1& a1,const T2& a2) const
+    //    {
+    //    Error("Contract not implemented for this case");
+    //    return ITResult();
+    //    }
 
     private:
 
