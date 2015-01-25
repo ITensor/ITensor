@@ -166,15 +166,15 @@ call(T&& obj, V&& v)
 
 /////////////////////////
 
-template <typename Ret, class T, typename V1, typename V2>
+template <typename Ret, class FType, typename T1, typename T2>
 auto 
-call_impl(T&& obj, V1&& v1, V2&& v2, int) -> decltype(obj(v1,v2))
+call_impl(FType& func, T1& a1, T2& a2, int) -> decltype(func(a1,a2))
     {
-    return obj(v1,v2);
+    return func(a1,a2);
     }
-template <typename Ret, class T, typename V1, typename V2>
+template <typename Ret, class FType, typename T1, typename T2>
 Ret
-call_impl(T&& obj, V1&& v1, V2&& v2, long) 
+call_impl(FType& func, T1& a1, T2& a2, long) 
     {
     throw std::runtime_error("Object does not support operator(v1,v2)->Ret for specified type.");
     return Ret();
@@ -186,13 +186,13 @@ call_impl(T&& obj, V1&& v1, V2&& v2, long)
 // Use call(obj,v1,v2) to convert the absence of a specific operator() method
 // to be a run-time error instead of a compile-time error.
 //
-template <typename Ret, class T, typename V1, typename V2>
+template <typename Ret, class FType, typename T1, typename T2>
 Ret
-call(T&& obj, V1&& v1, V2&& v2)
+call(FType&& func, T1&& a1, T2&& a2)
     {
-    return call_impl<Ret,T,V1,V2>(std::forward<T>(obj),
-                                  std::forward<V1>(v1),
-                                  std::forward<V2>(v2),0);
+    return call_impl<Ret,FType,T1,T2>(std::forward<FType>(func),
+                                      std::forward<T1>(a1),
+                                      std::forward<T2>(a2),0);
     }
 
 /////////////////////////
