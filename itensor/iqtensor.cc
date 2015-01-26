@@ -334,7 +334,6 @@ dag()
     if(isComplex(*this))
         {
         Error("Not implemented");
-        solo();
         }
     is_.dag();
     div_ = -div_;
@@ -369,19 +368,9 @@ scaleTo(const LogNumber& newscale)
     {
     if(scale_ == newscale) return;
     if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
-    solo();
     scale_ /= newscale;
     applyFunc<MultReal>(store_,{scale_.real0()});
     scale_ = newscale;
-    }
-
-void IQTensor::
-solo()
-	{
-#ifdef DEBUG
-    if(!store_) Error("Cannot modify default-constructed IQTensor.");
-#endif
-    if(!store_.unique()) store_ = store_->clone();
     }
 
 ITensor

@@ -158,13 +158,6 @@ ITensor(const Index& i1,
 //        return NewData();
 //        }
 //
-//    template<typename T1, typename T2>
-//    NewData
-//    operator()(T1& t1, const T2& t2)
-//        {
-//        Error("Reshape not implemented for ITData types");
-//        return NewData();
-//        }
 //    };
 //
 //ITensor::
@@ -295,46 +288,6 @@ class Contract
         { 
         return diagDense(d,Ris_,Rind_,t,Lis_,Lind_);
         }
-
-    //ITResult
-    //operator()(const ITDense<Real>& a1,
-    //           const ITDense<Complex>& a2) const
-    //    {
-    //    ITDense<Complex> c1(a1);
-    //    return operator()(c1,a2);
-    //    }
-
-    //ITResult
-    //operator()(const ITDense<Complex>& a1,
-    //           const ITDense<Real>& a2) const
-    //    {
-    //    ITDense<Complex> c2(a2);
-    //    return operator()(a1,c2);
-    //    }
-
-
-    //template <typename T1, typename T2>
-    //ITResult
-    //operator()(const ITDense<T1>& a1,
-    //           const ITDense<T2>& a2) const
-    //    {
-    //    using product_type = decltype(::std::declval<T1>() * ::std::declval<T2>());
-    //    //static const auto One = product_type(1.),
-    //    //                  Zero = product_type(0.);
-    //    auto res = new ITDense<product_type>();
-    //    //TODO:
-    //    Error("Contract not implemented for tensors of different element types.");
-    //    //btas::contract(One,a1.t_,Lind_,a2.t_,Rind_,Zero,res->t_,Nind_);
-    //    return ITResult(res);
-    //    }
-
-    //template <typename T1, typename T2>
-    //ITResult
-    //operator()(const T1& a1,const T2& a2) const
-    //    {
-    //    Error("Contract not implemented for this case");
-    //    return ITResult();
-    //    }
 
     private:
 
@@ -718,7 +671,6 @@ ITensor& ITensor::
 operator*=(Complex z)
     {
     if(z.imag() == 0) return operator*=(z.real());
-    solo();
     applyFunc<MultComplex>(store_,{z});
     return *this;
     }
@@ -813,8 +765,6 @@ operator+=(const ITensor& other)
         scalefac = (other.scale_/scale_).real();
         }
 
-    solo();
-    
     if(isTrivial(P))
         {
         applyFunc<PlusEQ>(store_,other.store_,{scalefac});
@@ -846,7 +796,6 @@ ITensor& ITensor::
 fill(Complex z)
     {
     if(!(*this)) return *this;
-    solo();
     scale_ = LogNumber(1.);
     if(z.imag() == 0)
         applyFunc<FillReal>(store_,{z.real()});
@@ -883,10 +832,6 @@ class MultReal
             elt *= r_;
         return ITResult();
         }
-
-    template<typename T>
-    ITResult
-    operator()(const T& d) const { Error("MultReal not implemented for ITData type."); return ITResult(); }
     };
 
 void ITensor::
@@ -894,18 +839,11 @@ scaleTo(const LogNumber& newscale)
     {
     if(scale_ == newscale) return;
     if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
-    solo();
     scale_ /= newscale;
     applyFunc<MultReal>(store_,{scale_.real0()});
     scale_ = newscale;
     }
 
-
-void ITensor::
-solo()
-	{
-    if(!store_.unique()) store_ = store_->clone();
-    }
 
 class NormNoScale
     {
@@ -941,15 +879,13 @@ scaleOutNorm()
     {
     Real f = applyFunc<NormNoScale>(store_);
     //If norm already 1 return so
-    //we don't have to call solo()
+    //we don't have to call MultReal
     if(fabs(f-1) < 1E-12) return;
     if(f == 0)
         {
         scale_ = LogNumber(1.);
         return;
         }
-
-    solo();
     applyFunc<MultReal>(store_,{1./f});
     scale_ *= f;
     }
@@ -1043,13 +979,6 @@ class CheckComplex
     NewData
     operator()(const ITDense<Complex>& d) { isComplex_ = true; return NewData(); }
 
-    template <class T>
-    NewData
-    operator()(const T& d)
-        {
-        Error("CheckComplex not implemented for data type.");
-        return NewData();
-        }
     };
 
 bool

@@ -8,6 +8,7 @@
 #include "itdata/itdense.h"
 #include "itdata/itdiag.h"
 #include "itdata/itcombiner.h"
+#include "itdata/iqtdata.h"
 #include "indexset.h"
 #include "simpletensor.h"
 #include "contract.h"
@@ -49,9 +50,7 @@ class FillReal
     {
     Real r_;
     public:
-    FillReal(Real r)
-        : r_(r)
-        { }
+    FillReal(Real r) : r_(r) { }
 
     ITResult
     operator()(ITDense<Real>& d) const;
@@ -61,32 +60,18 @@ class FillReal
     operator()(ITDiag<Real>& d) const;
     ITResult
     operator()(const ITDiag<Complex>& d) const;
-
-    template<typename T>
-    ITResult
-    operator()(const T& t) const
-        {
-        Error("FillReal: ITData type not implemented");
-        return ITResult();
-        }
     };
 
 class FillCplx
     {
     Complex z_;
     public:
-    FillCplx(Complex z)
-        : z_(z)
-        { }
+    FillCplx(Complex z) : z_(z) { }
 
     ITResult
     operator()(const ITDense<Real>& d) const;
     ITResult
     operator()(ITDense<Complex>& d) const;
-
-    template<typename T>
-    ITResult
-    operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
     };
 
 template <typename F>
@@ -94,9 +79,7 @@ struct GenerateIT
     {
     F& f_;
     public:
-    GenerateIT(F&& f)
-        : f_(f)
-        { }
+    GenerateIT(F&& f) : f_(f) { }
 
     template <typename T>
     ITResult
@@ -165,13 +148,13 @@ struct GetElt
         return ITResult();
         }
 
-    template <class D>
-    ITResult
-    operator()(const D& d)
-        {
-        throw ITError("ITensor does not have requested element type");
-        return ITResult();
-        }
+    //template <class D>
+    //ITResult
+    //operator()(const D& d)
+    //    {
+    //    throw ITError("ITensor does not have requested element type");
+    //    return ITResult();
+    //    }
     };
 
 template<typename T, int size>
@@ -311,10 +294,6 @@ struct PrintIT
 
     ITResult
     operator()(const ITCombiner& d) const { s_ << " Combiner}\n"; return ITResult(); }
-
-    template<typename T>
-    ITResult
-    operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
     };
 
 struct Read
@@ -402,10 +381,6 @@ class SetEltComplex
         d.data[ind(is_,inds_)] = elt_;
         return ITResult();
         }
-
-    template<typename T>
-    ITResult
-    operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
     };
 
 template<long size>
@@ -430,10 +405,6 @@ class SetEltReal
         d.data[ind(is_,inds_)] = elt_;
         return ITResult();
         }
-
-    template<typename T>
-    ITResult
-    operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
     };
 
 template <typename F>

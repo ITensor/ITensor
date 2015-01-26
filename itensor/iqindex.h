@@ -4,12 +4,13 @@
 //
 #ifndef __ITENSOR_IQINDEX_H
 #define __ITENSOR_IQINDEX_H
-#include "itensor.h"
+#include "index.h"
 #include "qn.h"
 
 namespace itensor {
 
 // Forward declarations
+class ITensor;
 class IndexQN;
 class IQIndexDat;
 class IQIndexVal;
@@ -216,10 +217,7 @@ class IQIndexVal
     dag();
 
     ITensor 
-    operator*(const IndexVal& iv) const 
-        { 
-        return IndexVal(Index(index),i) * iv; 
-        }
+    operator*(const IndexVal& iv) const;
 
     static const IQIndexVal& Null()
         {

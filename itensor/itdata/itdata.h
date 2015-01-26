@@ -23,7 +23,7 @@
     X(Y  ITCombiner         &t) Z;\
     X(Y  ITDiag<Real>       &t) Z;\
     X(Y  ITDiag<Complex>    &t) Z;\
-    X(Y  IQTData<Real>     &t) Z;
+    X(Y  IQTData<Real>      &t) Z;
 ///////////////////////////////////
 
 //
@@ -130,6 +130,19 @@ make_result(Args&&... args)
     return ITResult(std::unique_ptr<DataType>(new DataType(std::forward<Args>(args)...)));
     }
 
+namespace detail {
+
+template<typename Func, typename T>
+ITResult
+clone_modify(Func& f, T& a, PData& pdat);
+
+template<typename Func, typename T1, typename T2>
+ITResult
+clone_modify(Func& f, T1& a1, const T2& a2, PData& pdat);
+
+};
+
+
 struct Func1Base
     {
     Func1Base() { }
@@ -155,6 +168,39 @@ class Func1Dispatch : public Func1Base
 
     REGISTER(ITResult operator(),,final { return static_cast<Derived*>(this)->applyTo(t); })
     };
+
+template <typename Callable>
+class Func1 : public Func1Dispatch<Func1<Callable>>
+    {
+    Callable& d_;
+    PData& pdat_;
+    public:
+    Func1(Callable& d, PData& pdat) : d_(d), pdat_(pdat) { }
+    virtual ~Func1() { }
+
+    template <typename DataType>
+    ITResult
+    applyTo(DataType& t) { return detail::clone_modify(d_,t,pdat_); }
+    };
+
+template <typename Callable>
+class Func2Mod : public Func1Dispatch<Func2Mod<Callable>>
+    {
+    Callable& d_;
+    const ITData& arg2_;
+    PData& pdat1_;
+    public:
+
+    Func2Mod(Callable& d, const ITData& arg2, PData& pdat1) : d_(d), arg2_(arg2), pdat1_(pdat1) { }
+    virtual ~Func2Mod() { }
+
+    template<typename DataType>
+    ITResult
+    applyTo(DataType& arg1);
+    };
+
+//////////////////
+//////////////////
 
 
 struct ConstFunc1Base
@@ -183,33 +229,6 @@ class ConstFunc1Dispatch : public ConstFunc1Base
     REGISTER(ITResult operator(),const,final { return static_cast<Derived*>(this)->applyTo(t); })
     };
 
-template <typename Callable>
-class Func1 : public Func1Dispatch<Func1<Callable>>
-    {
-    Callable& d_;
-    public:
-    Func1(Callable& d) : d_(d) { }
-    virtual ~Func1() { }
-
-    template <typename DataType>
-    ITResult
-    applyTo(DataType& t) { return detail::call<ITResult>(d_,t); }
-    };
-
-template <typename Callable>
-class Func2Mod : public Func1Dispatch<Func2Mod<Callable>>
-    {
-    Callable& d_;
-    const ITData& arg2_;
-    public:
-
-    Func2Mod(Callable& d, const ITData& arg2) : d_(d), arg2_(arg2) { }
-    virtual ~Func2Mod() { }
-
-    template<typename DataType>
-    ITResult
-    applyTo(DataType& arg1);
-    };
 
 template <typename Callable>
 class ConstFunc1 : public ConstFunc1Dispatch<ConstFunc1<Callable>>
@@ -238,6 +257,11 @@ class Func2 : public ConstFunc1Dispatch<Func2<Callable>>
     ITResult
     applyTo(const DataType& arg1);
     };
+
+
+//////////////////
+//////////////////
+
 
 class ITData
     {
@@ -286,6 +310,72 @@ struct ITDispatch : public ITData
         }
     };
 
+//
+// Implementations
+//
+
+namespace detail {
+
+template<typename Func, typename T>
+auto
+clone_modify_impl(Func& f, T& a, PData& pdat,int) -> decltype(f(static_cast<const T&>(a)))
+    {
+    const T& ca = a;
+    return f(ca);
+    }
+
+template<typename Func, typename T>
+ITResult
+clone_modify_impl(Func& f, T& a, PData& pdat,long)
+    {
+    T *pa = &a;
+    if(!pdat.unique()) 
+        {
+        pdat = pdat->clone();
+        pa = static_cast<T*>(pdat.get());
+        }
+    return detail::call<ITResult>(f,*pa);
+    }
+
+template<typename Func, typename T>
+ITResult
+clone_modify(Func& f, T& a, PData& pdat)
+    {
+    return clone_modify_impl(f,a,pdat,0);
+    }
+
+/////////////////////
+
+template<typename Func, typename T1, typename T2>
+auto
+clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) -> decltype(f(static_cast<const T1&>(a1)))
+    {
+    const T1& ca1 = a1;
+    return f(ca1,a2);
+    }
+
+template<typename Func, typename T1, typename T2>
+ITResult
+clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,long)
+    {
+    T1 *pa1 = &a1;
+    if(!pdat.unique()) 
+        {
+        pdat = pdat->clone();
+        pa1 = static_cast<T1*>(pdat.get());
+        }
+    return detail::call<ITResult>(f,*pa1,a2);
+    }
+
+template<typename Func, typename T1, typename T2>
+ITResult
+clone_modify(Func& f, T1& a1, const T2& a2, PData& pdat)
+    {
+    return clone_modify_impl(f,a1,a2,pdat,0);
+    }
+
+};
+
 template<typename Callable>
 template<typename DataType>
 ITResult Func2<Callable>::
@@ -301,7 +391,10 @@ template<typename DataType>
 ITResult Func2Mod<Callable>::
 applyTo(DataType& arg1)
     {
-    auto C = [this,&arg1](const auto& a2) { return detail::call<ITResult>(this->d_,arg1,a2); };
+    auto C = [this,&arg1](const auto& a2) 
+        { 
+        return detail::clone_modify(this->d_,arg1,a2,this->pdat1_); 
+        };
     auto f1 = ConstFunc1<decltype(C)>(C);
     return arg2_.plugInto(f1);
     }
@@ -329,34 +422,13 @@ applyFunc(const CPData& arg,
     return applyFunc(*arg,f);
     }
 
-namespace detail 
-    {
-    template<typename F>
-    ITResult
-    applyFuncImpl(ITData& arg,
-                  F& f)
-        {
-        Func1<F> f1(f);
-        return arg.plugInto(f1);
-        }
-    };
-
 template<typename F>
 F
 applyFunc(PData& arg,
           F f = F())
     {
-    auto res = detail::applyFuncImpl(*arg,f);
-    res.update(arg);
-    return f;
-    }
-
-template<typename F>
-F
-applyFunc(NewData& arg,
-          F f = F())
-    {
-    auto res = detail::applyFuncImpl(*arg,f);
+    Func1<F> f1(f,arg);
+    auto res = arg->plugInto(f1);
     res.update(arg);
     return f;
     }
@@ -378,7 +450,7 @@ applyFunc(PData& arg1,
           const PData& arg2,
           F f = F())
     {
-    Func2Mod<F> f2m(f,*arg2);
+    Func2Mod<F> f2m(f,*arg2,arg1);
     auto res = arg1->plugInto(f2m);
     res.update(arg1,arg2);
     return f;
