@@ -20,6 +20,47 @@ using std::make_pair;
 using std::make_shared;
 using std::move;
 
+void
+inverseBlockInd(long I,
+                const IQIndexSet& is,
+                vector<long>& ind)
+    {
+    auto r = int(ind.size());
+    assert(r == is.r());
+    for(int j = 0; j < r-1; ++j)
+        {
+        ind[j] = I % is[j].nindex();
+        I = (I-ind[j])/is[j].nindex();
+        }
+    ind[r-1] = I;
+    }
+
+template<typename Indexable>
+class IndexDim
+    {
+    const IQIndexSet& is_;
+    const Indexable& ind_;
+    public:
+
+    IndexDim(const IQIndexSet& is,
+             const Indexable& ind)
+        :
+        is_(is),
+        ind_(ind)
+        { }
+
+    long
+    size() const { return is_.r(); }
+
+    long
+    operator[](long j) const { return (is_[j])[ind_[j]].m(); }
+    };
+
+template<typename Indexable>
+IndexDim<Indexable>
+make_indexdim(const IQIndexSet& is, const Indexable& ind) 
+    { return IndexDim<Indexable>(is,ind); }
+
 
 IQTensor::
 IQTensor(Complex val) 
@@ -69,26 +110,40 @@ class IQPlusEQ
     };
 
 ITResult IQPlusEQ::
-operator()(IQTData<Real>& a1,
-           const IQTData<Real>& a2)
+operator()(IQTData<Real>& A,
+           const IQTData<Real>& B)
     {
 #ifdef DEBUG
-    if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
+    if(A.data.size() != B.data.size()) Error("Mismatched sizes in plusEq");
 #endif
-    if(P_)
+    if(!P_)
         {
-        Error("IQTensor += permute case not implemented");
-        //auto ref1 = tensorref<Real,IndexSet>(a1.data.data(),*is1_),
-        //     ref2 = tensorref<Real,IndexSet>(a2.data.data(),*is2_);
-        //auto f = fac_;
-        //auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
-        //reshape(ref2,*P_,ref1,add);
+        LAPACK_INT inc = 1;
+        LAPACK_INT size = A.data.size();
+        daxpy_wrapper(&size,&fac_,B.data.data(),&inc,A.data.data(),&inc);
         }
     else
         {
-        LAPACK_INT inc = 1;
-        LAPACK_INT size = a1.data.size();
-        daxpy_wrapper(&size,&fac_,a2.data.data(),&inc,a1.data.data(),&inc);
+        auto r = is1_->r();
+        vector<long> Ablock(r,0),
+                     Bblock(r,0);
+        Range Arange,
+              Brange;
+        for(const auto& aio : A.offsets)
+            {
+            inverseBlockInd(aio.block,*is1_,Ablock);
+            for(int i = 0; i < r; ++i)
+                Bblock[i] = Ablock[P_->dest(i)];
+            Arange.init(make_indexdim(*is1_,Ablock));
+            Brange.init(make_indexdim(*is2_,Bblock));
+            const auto* bblock = B.getBlock(*is2_,Bblock);
+
+            auto aref = make_tensorref(A.data.data()+aio.offset,Arange),
+                 bref = make_tensorref(bblock,Brange);
+            auto f = fac_;
+            auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
+            reshape(bref,*P_,aref,add);
+            }
         }
     return ITResult();
     }
@@ -103,7 +158,7 @@ operator+=(const IQTensor& other)
 
     Permutation P(is_.size());
     try {
-        detail::calc_permutation(is_,other.is_,P);
+        detail::calc_permutation(other.is_,is_,P);
         }
     catch(const ITError& e)
         {
@@ -203,46 +258,7 @@ class QContract
 
     }; //QContract
 
-void
-inverseBlockInd(long I,
-                const IQIndexSet& is,
-                vector<long>& ind)
-    {
-    auto r = int(ind.size());
-    assert(r == is.r());
-    for(int j = 0; j < r-1; ++j)
-        {
-        ind[j] = I % is[j].nindex();
-        I = (I-ind[j])/is[j].nindex();
-        }
-    ind[r-1] = I;
-    }
 
-template<typename Indexable>
-class IndexDim
-    {
-    const IQIndexSet& is_;
-    const Indexable& ind_;
-    public:
-
-    IndexDim(const IQIndexSet& is,
-             const Indexable& ind)
-        :
-        is_(is),
-        ind_(ind)
-        { }
-
-    long
-    size() const { return is_.r(); }
-
-    long
-    operator[](long j) const { return (is_[j])[ind_[j]].m(); }
-    };
-
-template<typename Indexable>
-IndexDim<Indexable>
-make_indexdim(const IQIndexSet& is, const Indexable& ind) 
-    { return IndexDim<Indexable>(is,ind); }
 
 template<typename T>
 ITResult QContract::

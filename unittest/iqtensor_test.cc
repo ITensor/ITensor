@@ -128,6 +128,42 @@ SECTION("Contracting Product")
 
     }
 
+SECTION("Addition and Subtraction")
+    {
+    SECTION("Case 1")
+        {
+        auto T1 = randIQT(QN(0),L1,S1,L2,S2),
+             T2 = randIQT(QN(0),L1,S1,L2,S2);
+        auto R = T1+T2;
+
+        for(int j1 = 1; j1 <= L1.m(); ++j1)
+        for(int j2 = 1; j2 <= L2.m(); ++j2)
+        for(int k1 = 1; k1 <= S1.m(); ++k1)
+        for(int k2 = 1; k2 <= S2.m(); ++k2)
+            {
+            auto val = T1.real(L1(j1),S1(k1),L2(j2),S2(k2))+T2.real(L1(j1),S1(k1),L2(j2),S2(k2));
+            CHECK_REQUAL(val,R.real(L1(j1),S1(k1),L2(j2),S2(k2)));
+            }
+        }
+
+    SECTION("Case 2")
+        {
+        auto T1 = randIQT(QN(0),L1,S1,L2,S2),
+             T2 = randIQT(QN(0),S1,S2,L1,L2);
+        auto R = T1+T2;
+
+        for(int j1 = 1; j1 <= L1.m(); ++j1)
+        for(int j2 = 1; j2 <= L2.m(); ++j2)
+        for(int k1 = 1; k1 <= S1.m(); ++k1)
+        for(int k2 = 1; k2 <= S2.m(); ++k2)
+            {
+            auto val = T1.real(L1(j1),S1(k1),L2(j2),S2(k2))+T2.real(L1(j1),S1(k1),L2(j2),S2(k2));
+            CHECK_REQUAL(val,R.real(L1(j1),S1(k1),L2(j2),S2(k2)));
+            }
+        }
+
+    }
+
 //SECTION("ITensorConversion")
 //    {
 //
