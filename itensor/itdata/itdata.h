@@ -130,6 +130,19 @@ make_result(Args&&... args)
     return ITResult(std::unique_ptr<DataType>(new DataType(std::forward<Args>(args)...)));
     }
 
+namespace detail {
+
+template<typename Func, typename T>
+ITResult
+clone_modify(Func& f, T& a, PData& pdat);
+
+template<typename Func, typename T1, typename T2>
+ITResult
+clone_modify(Func& f, T1& a1, const T2& a2, PData& pdat);
+
+};
+
+
 struct Func1Base
     {
     Func1Base() { }
@@ -286,6 +299,62 @@ struct ITDispatch : public ITData
         }
     };
 
+//
+// Implementations
+//
+
+namespace detail {
+
+template<typename Func, typename T>
+auto
+clone_modify_impl(Func& f, T& a, PData& pdat,int) -> decltype(f(static_cast<const T&>(a)))
+    {
+    const T& ca = a;
+    return f(ca);
+    }
+
+template<typename Func, typename T>
+ITResult
+clone_modify_impl(Func& f, T& a, PData& pdat,long)
+    {
+    if(!pdat.unique()) pdat = pdat->clone();
+    return detail::call<ITResult>(f,a);
+    }
+
+template<typename Func, typename T>
+ITResult
+clone_modify(Func& f, T& a, PData& pdat)
+    {
+    return clone_modify_impl(f,a,pdat,0);
+    }
+
+/////////////////////
+
+template<typename Func, typename T1, typename T2>
+auto
+clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) -> decltype(f(static_cast<const T1&>(a1)))
+    {
+    const T1& ca1 = a1;
+    return f(ca1,a2);
+    }
+
+template<typename Func, typename T1, typename T2>
+ITResult
+clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,long)
+    {
+    if(!pdat.unique()) pdat = pdat->clone();
+    return detail::call<ITResult>(f,a1,a2);
+    }
+
+template<typename Func, typename T1, typename T2>
+ITResult
+clone_modify(Func& f, T1& a1, const T2& a2, PData& pdat)
+    {
+    return clone_modify_impl(f,a1,a2,pdat,0);
+    }
+
+};
+
 template<typename Callable>
 template<typename DataType>
 ITResult Func2<Callable>::
@@ -329,34 +398,13 @@ applyFunc(const CPData& arg,
     return applyFunc(*arg,f);
     }
 
-namespace detail 
-    {
-    template<typename F>
-    ITResult
-    applyFuncImpl(ITData& arg,
-                  F& f)
-        {
-        Func1<F> f1(f);
-        return arg.plugInto(f1);
-        }
-    };
-
 template<typename F>
 F
 applyFunc(PData& arg,
           F f = F())
     {
-    auto res = detail::applyFuncImpl(*arg,f);
-    res.update(arg);
-    return f;
-    }
-
-template<typename F>
-F
-applyFunc(NewData& arg,
-          F f = F())
-    {
-    auto res = detail::applyFuncImpl(*arg,f);
+    Func1<F> f1(f);
+    auto res = arg->plugInto(f1);
     res.update(arg);
     return f;
     }
