@@ -636,6 +636,21 @@ SECTION("SumDifference")
                    + w.real(l1(j1),l2(j2),b3(k3),l4(j4))/f2);
         }
 
+    SECTION("Reordered Case 2")
+        {
+        auto T1 = randIT(b6,s1,b5,s2),
+             T2 = randIT(s1,s2,b6,b5);
+        auto R = T1+T2;
+        for(int j6 = 1; j6 <= b6.m(); ++j6)
+        for(int j5 = 1; j5 <= b5.m(); ++j5)
+        for(int k1 = 1; k1 <= s1.m(); ++k1)
+        for(int k2 = 1; k2 <= s2.m(); ++k2)
+            {
+            auto val = T1.real(b6(j6),s1(k1),b5(j5),s2(k2))+T2.real(b6(j6),s1(k1),b5(j5),s2(k2));
+            CHECK_REQUAL(R.real(b6(j6),s1(k1),b5(j5),s2(k2)),val);
+            }
+        }
+
     SECTION("Add diag")
         {
         Vector V1(std::min(l6.m(),b4.m())),
