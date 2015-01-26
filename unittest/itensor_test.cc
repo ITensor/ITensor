@@ -821,6 +821,23 @@ SECTION("ContractingProduct")
             CHECK_CLOSE(R.real(b5(j5),s3(i3),s4(i4)),val,1E-10);
             }
         }
+
+    SECTION("Scalar Result")
+        {
+        auto T1 = randIT(a1,b3,b4),
+             T2 = randIT(b4,a1,b3);
+        auto f = -0.2342;
+        T1 *= f;
+        auto R = T1*T2;
+
+        Real val = 0;
+        for(long j3 = 1; j3 <= b3.m(); ++j3)
+        for(long j4 = 1; j4 <= b4.m(); ++j4)
+            {
+            val += T1.real(a1(1),b3(j3),b4(j4))*T2.real(a1(1),b3(j3),b4(j4));
+            }
+        CHECK_REQUAL(val,R.real());
+        }
     }
 
 //SECTION("TieIndices")
