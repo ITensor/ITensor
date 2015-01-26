@@ -631,7 +631,11 @@ contract(ABCProps& abc,
     //
 
     if(C.size() != bref.Nrows()*aref.Ncols())
+        {
+        println("C.size() = ",C.size());
+        printfln("bref.Nrows()*aref.Ncols() = %d*%d = %d",bref.Nrows(),aref.Ncols(),bref.Nrows()*aref.Ncols());
         throw std::runtime_error("incorrect size of C in contract");
+        }
 
     SimpleMatrixRef cref(C.data(),bref.Nrows(),aref.Ncols(),aref.Ncols(),false);
 

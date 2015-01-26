@@ -234,10 +234,11 @@ template<typename RangeT>
 long
 area(const RangeT& r)
     { 
-    if(r.empty()) return 0;
+    if(r.empty()) return 1l;
     //TODO: this won't work if we allow Ranges to be constructed for slicing
     auto last = r.r()-1;
-    return r.dim(last)*r.stride(last);
+    auto A = r.dim(last)*r.stride(last);
+    return A;
     }
 
 

@@ -121,7 +121,12 @@ operator()(const ITDense<T>& d) const
     else s_ << "  (omitting too large scale factor)\n";
 
     auto rank = is_.r();
-    if(rank == 0) return ITResult();
+    if(rank == 0) 
+        {
+        s_ << "  ";
+        detail::printVal(s_,scalefac*d.data.front());
+        return ITResult();
+        }
 
     auto gc = detail::GCounter(0,rank-1,0);
     for(int i = 0; i < rank; ++i)

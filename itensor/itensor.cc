@@ -327,26 +327,31 @@ operator()(const ITDense<Real>& a1,
             }
         }
 
-    //PRI(Lind);
-    //PRI(Rind);
+    //PRI(Lind_);
+    //PRI(Rind_);
     //PRI(Nind);
 
-    auto res = make_newdata<ITDense<Real>>(area(Nis_),0.);
+    auto rsize = area(Nis_);
+    auto res = make_newdata<ITDense<Real>>(rsize,0.);
     auto t1 = make_tensorref(a1.data.data(),Lis_),
          t2 = make_tensorref(a2.data.data(),Ris_);
     auto tr = make_tensorref(res->data.data(),Nis_);
     contractloop(t1,Lind_,t2,Rind_,tr,Nind);
+
     scalefac_ = 0;
-    for(auto elt : res->data)
+    if(rsize > 1)
         {
-        scalefac_ += elt*elt;
-        }
-    scalefac_ = std::sqrt(scalefac_);
-    if(scalefac_ != 0)
-        {
-        for(auto& elt : res->data)
+        for(auto elt : res->data)
             {
-            elt /= scalefac_;
+            scalefac_ += elt*elt;
+            }
+        scalefac_ = std::sqrt(scalefac_);
+        if(scalefac_ != 0)
+            {
+            for(auto& elt : res->data)
+                {
+                elt /= scalefac_;
+                }
             }
         }
     return move(res);
