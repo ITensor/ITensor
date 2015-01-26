@@ -328,6 +328,7 @@ template<typename Func, typename T>
 ITResult
 clone_modify_impl(Func& f, T& a, PData& pdat,long)
     {
+    if(Global::debug3()) println("Calling solo (1 param)");
     T *pa = &a;
     if(!pdat.unique()) 
         {
@@ -348,8 +349,9 @@ clone_modify(Func& f, T& a, PData& pdat)
 
 template<typename Func, typename T1, typename T2>
 auto
-clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) -> decltype(f(static_cast<const T1&>(a1)))
+clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) -> decltype(f(static_cast<const T1&>(a1),a2))
     {
+    if(Global::debug3()) println("Not calling solo (2 params)");
     const T1& ca1 = a1;
     return f(ca1,a2);
     }
@@ -358,6 +360,7 @@ template<typename Func, typename T1, typename T2>
 ITResult
 clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,long)
     {
+    if(Global::debug3()) println("Calling solo (2 params)");
     T1 *pa1 = &a1;
     if(!pdat.unique()) 
         {
