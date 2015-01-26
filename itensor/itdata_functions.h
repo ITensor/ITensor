@@ -260,15 +260,6 @@ class PlusEQ
         //operator()(a1,a2c);
         return ITResult();
         }
-
-    template <typename T1, typename T2>
-    ITResult
-    operator()(T1& a1,
-               const T2& a2)
-        {
-        Error("Diag += not implemented");
-        return ITResult();
-        }
     };
 
 
