@@ -320,7 +320,6 @@ template<typename Func, typename T>
 auto
 clone_modify_impl(Func& f, T& a, PData& pdat,int) -> decltype(f(static_cast<const T&>(a)))
     {
-    println("Not calling solo");
     const T& ca = a;
     return f(ca);
     }
@@ -329,7 +328,6 @@ template<typename Func, typename T>
 ITResult
 clone_modify_impl(Func& f, T& a, PData& pdat,long)
     {
-    println("Calling solo");
     T *pa = &a;
     if(!pdat.unique()) 
         {
@@ -352,7 +350,6 @@ template<typename Func, typename T1, typename T2>
 auto
 clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) -> decltype(f(static_cast<const T1&>(a1)))
     {
-    println("Not calling solo (2 arg version)");
     const T1& ca1 = a1;
     return f(ca1,a2);
     }
@@ -361,7 +358,6 @@ template<typename Func, typename T1, typename T2>
 ITResult
 clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,long)
     {
-    println("Calling solo (2 arg version)");
     T1 *pa1 = &a1;
     if(!pdat.unique()) 
         {
@@ -395,7 +391,10 @@ template<typename DataType>
 ITResult Func2Mod<Callable>::
 applyTo(DataType& arg1)
     {
-    auto C = [this,&arg1](const auto& a2) { return detail::call<ITResult>(this->d_,arg1,a2); };
+    auto C = [this,&arg1](const auto& a2) 
+        { 
+        return detail::clone_modify(this->d_,arg1,a2,this->pdat1_); 
+        };
     auto f1 = ConstFunc1<decltype(C)>(C);
     return arg2_.plugInto(f1);
     }
