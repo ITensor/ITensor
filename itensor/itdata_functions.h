@@ -46,33 +46,7 @@ class ApplyIT
 
 
 
-class FillReal
-    {
-    Real r_;
-    public:
-    FillReal(Real r) : r_(r) { }
 
-    ITResult
-    operator()(ITDense<Real>& d) const;
-    ITResult
-    operator()(const ITDense<Complex>& d) const;
-    ITResult
-    operator()(ITDiag<Real>& d) const;
-    ITResult
-    operator()(const ITDiag<Complex>& d) const;
-    };
-
-class FillCplx
-    {
-    Complex z_;
-    public:
-    FillCplx(Complex z) : z_(z) { }
-
-    ITResult
-    operator()(const ITDense<Real>& d) const;
-    ITResult
-    operator()(ITDense<Complex>& d) const;
-    };
 
 template <typename F>
 struct GenerateIT
@@ -205,62 +179,6 @@ class MultComplex
     operator()(T& d) const { Error("MultComplex not defined for ITData type"); return ITResult(); }
     };
 
-class PlusEQ
-    {
-    Real fac_;
-    const Permutation *P_ = nullptr;
-    const IndexSet *is1_ = nullptr,
-                   *is2_ = nullptr;
-    bool permute_ = false;
-    public:
-    using permutation = Permutation;
-
-    PlusEQ(Real fac)
-        :
-        fac_(fac)
-        { }
-
-    PlusEQ(const Permutation& P,
-           const IndexSet& is1,
-           const IndexSet& is2,
-           Real fac)
-        :
-        fac_(fac),
-        P_(&P),
-        is1_(&is1),
-        is2_(&is2),
-        permute_(true)
-        { }
-
-    ITResult
-    operator()(ITDense<Real>& a1,
-               const ITDense<Real>& a2);
-
-    ITResult
-    operator()(ITDiag<Real>& a1,
-               const ITDiag<Real>& a2);
-
-    ITResult
-    operator()(ITDense<Real>& a1,
-               const ITDense<Complex>& a2)
-        {
-        Error("Real + Complex not implemented");
-        //auto np = make_newdata<ITDense<Complex>>(a1);
-        //operator()(*np,a2);
-        //return ITResult(np);
-        return ITResult();
-        }
-
-    ITResult
-    operator()(ITDense<Complex>& a1,
-               const ITDense<Real>& a2)
-        {
-        Error("Complex + Real not implemented");
-        //ITDense<Complex> a2c(a2);
-        //operator()(a1,a2c);
-        return ITResult();
-        }
-    };
 
 
 struct PrintIT

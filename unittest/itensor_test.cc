@@ -303,10 +303,10 @@ SECTION("Constructors")
 
     SECTION("Real Scalar")
         {
-        Real b = Global::random();
+        Real b = -1*Global::random();
         ITensor t9(b);
-        CHECK_CLOSE(sumels(t9),b,1E-10);
-        CHECK_CLOSE(norm(t9),fabs(b),1E-10);
+        CHECK_REQUAL(sumels(t9),b);
+        CHECK_REQUAL(norm(t9),fabs(b));
         }
 
     SECTION("Dense Rank 1 from Vector")

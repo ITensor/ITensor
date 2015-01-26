@@ -4,6 +4,7 @@
 //
 #include "iqtensor.h"
 #include "detail/printing.h"
+#include "lapack_wrap.h"
 
 namespace itensor {
 
@@ -40,10 +41,94 @@ IQTensor(const QN& q, vector<IQIndex>&& iqinds)
     scale_(1.)
 	{ }
 
+class IQPlusEQ
+    {
+    Real fac_;
+    const Permutation *P_ = nullptr;
+    const IQIndexSet *is1_ = nullptr,
+                     *is2_ = nullptr;
+    public:
+
+    IQPlusEQ(Real fac) : fac_(fac) { }
+
+    IQPlusEQ(const Permutation& P,
+             const IQIndexSet& is1,
+             const IQIndexSet& is2,
+             Real fac)
+        :
+        fac_(fac),
+        P_(&P),
+        is1_(&is1),
+        is2_(&is2)
+        { }
+
+    ITResult
+    operator()(IQTData<Real>& a1,
+               const IQTData<Real>& a2);
+
+    };
+
+ITResult IQPlusEQ::
+operator()(IQTData<Real>& a1,
+           const IQTData<Real>& a2)
+    {
+#ifdef DEBUG
+    if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
+#endif
+    if(P_)
+        {
+        //auto ref1 = tensorref<Real,IndexSet>(a1.data.data(),*is1_),
+        //     ref2 = tensorref<Real,IndexSet>(a2.data.data(),*is2_);
+        //auto f = fac_;
+        //auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
+        //reshape(ref2,*P_,ref1,add);
+        }
+    else
+        {
+        LAPACK_INT inc = 1;
+        LAPACK_INT size = a1.data.size();
+        daxpy_wrapper(&size,&fac_,a2.data.data(),&inc,a1.data.data(),&inc);
+        }
+    return ITResult();
+    }
+
 IQTensor& IQTensor::
 operator+=(const IQTensor& other)
     {
-    Error("Not implemented");
+    if(!*this) Error("Calling += on default constructed IQTensor");
+    if(!other) Error("Right-hand-side of IQTensor += is default constructed");
+    if(this == &other) return operator*=(2.);
+    if(this->scale_.isZero()) return operator=(other);
+
+    Permutation P(is_.size());
+    try {
+        detail::calc_permutation(is_,other.is_,P);
+        }
+    catch(const ITError& e)
+        {
+        Print(*this);
+        Print(other);
+        Error("IQTensor::operator+=: different IQIndex structure");
+        }
+
+    Real scalefac = 1;
+    if(scale_.magnitudeLessThan(other.scale_)) 
+        {
+        this->scaleTo(other.scale_); 
+        }
+    else
+        {
+        scalefac = (other.scale_/scale_).real();
+        }
+
+    if(isTrivial(P))
+        {
+        applyFunc<IQPlusEQ>(store_,other.store_,{scalefac});
+        }
+    else
+        {
+        applyFunc<IQPlusEQ>(store_,other.store_,{P,is_,other.is_,scalefac});
+        }
 
     //
     // Idea to implement:

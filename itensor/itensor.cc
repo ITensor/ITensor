@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor.h"
+#include "lapack_wrap.h"
 
 using std::array;
 using std::ostream;
@@ -745,11 +746,107 @@ mapprime(int plevold, int plevnew, IndexType type)
     return *this; 
     }
 
+class PlusEQ
+    {
+    Real fac_;
+    const Permutation *P_ = nullptr;
+    const IndexSet *is1_ = nullptr,
+                   *is2_ = nullptr;
+    public:
+    using permutation = Permutation;
+
+    PlusEQ(Real fac)
+        :
+        fac_(fac)
+        { }
+
+    PlusEQ(const Permutation& P,
+           const IndexSet& is1,
+           const IndexSet& is2,
+           Real fac)
+        :
+        fac_(fac),
+        P_(&P),
+        is1_(&is1),
+        is2_(&is2)
+        { }
+
+    ITResult
+    operator()(ITDense<Real>& a1,
+               const ITDense<Real>& a2);
+
+    ITResult
+    operator()(ITDiag<Real>& a1,
+               const ITDiag<Real>& a2);
+
+    ITResult
+    operator()(ITDense<Real>& a1,
+               const ITDense<Complex>& a2)
+        {
+        Error("Real + Complex not implemented");
+        //auto np = make_newdata<ITDense<Complex>>(a1);
+        //operator()(*np,a2);
+        //return ITResult(np);
+        return ITResult();
+        }
+
+    ITResult
+    operator()(ITDense<Complex>& a1,
+               const ITDense<Real>& a2)
+        {
+        Error("Complex + Real not implemented");
+        //ITDense<Complex> a2c(a2);
+        //operator()(a1,a2c);
+        return ITResult();
+        }
+    };
+
+void
+plusEqData(Real fac, Real *d1, const Real *d2, LAPACK_INT size)
+    {
+    LAPACK_INT inc = 1;
+    daxpy_wrapper(&size,&fac,d2,&inc,d1,&inc);
+    }
+
+ITResult PlusEQ::
+operator()(ITDense<Real>& a1,
+           const ITDense<Real>& a2)
+    {
+#ifdef DEBUG
+    if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
+#endif
+    if(P_)
+        {
+        auto ref1 = tensorref<Real,IndexSet>(a1.data.data(),*is1_),
+             ref2 = tensorref<Real,IndexSet>(a2.data.data(),*is2_);
+        auto f = fac_;
+        auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
+        reshape(ref2,*P_,ref1,add);
+        }
+    else
+        {
+        plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
+        }
+    return ITResult();
+    }
+
+ITResult PlusEQ::
+operator()(ITDiag<Real>& a1,
+           const ITDiag<Real>& a2)
+    {
+#ifdef DEBUG
+    if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
+#endif
+    if(a1.allSame() || a2.allSame()) Error("ITDiag plusEq allSame case not implemented");
+    plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
+    return ITResult();
+    }
+
 ITensor& ITensor::
 operator+=(const ITensor& other)
     {
     if(!*this) Error("Calling += on default constructed ITensor");
-    if(!other) Error("Right-hand-side of += is default constructed");
+    if(!other) Error("Right-hand-side of ITensor += is default constructed");
     if(this == &other) return operator*=(2.);
     if(this->scale_.isZero()) return operator=(other);
 
@@ -800,6 +897,56 @@ operator-=(const ITensor& other)
     scale_.negate();
     return *this; 
     }
+
+class FillReal
+    {
+    Real r_;
+    public:
+    FillReal(Real r) : r_(r) { }
+
+    ITResult
+    operator()(ITDense<Real>& d) const
+        {
+        std::fill(d.data.begin(),d.data.end(),r_);
+        return ITResult();
+        }
+    ITResult
+    operator()(const ITDense<Complex>& d) const
+        {
+        auto nd = make_newdata<ITDense<Real>>(d.data.size());
+        operator()(*nd);
+        return move(nd);
+        }
+    ITResult
+    operator()(const ITDiag<Real>& d) const
+        {
+        return make_newdata<ITDiag<Real>>(r_);
+        }
+    ITResult
+    operator()(const ITDiag<Complex>& d) const
+        {
+        return make_newdata<ITDiag<Real>>(r_);
+        }
+    };
+
+class FillCplx
+    {
+    Complex z_;
+    public:
+    FillCplx(Complex z) : z_(z) { }
+
+    ITResult
+    operator()(const ITDense<Real>& d) const
+        {
+        return make_newdata<ITDense<Complex>>(d.data.size(),z_);
+        }
+    ITResult
+    operator()(ITDense<Complex>& d) const
+        {
+        std::fill(d.data.begin(),d.data.end(),z_);
+        return ITResult();
+        }
+    };
 
 ITensor& ITensor::
 fill(Complex z)
@@ -857,22 +1004,16 @@ scaleTo(const LogNumber& newscale)
 class NormNoScale
     {
     Real nrm_;
+    const IndexSet& is_;
     public:
 
-    NormNoScale() : nrm_(0) { }
+    NormNoScale(const IndexSet& is) : nrm_(0), is_(is) { }
 
     operator Real() const { return nrm_; }
 
     template<typename T>
     ITResult
-    operator()(const ITDense<T>& d) { return calc(d); }
-    template<typename T>
-    ITResult
-    operator()(const ITDiag<T>& d) { return calc(d); }
-
-    template<typename T>
-    ITResult
-    calc(const T& d)
+    operator()(const ITDense<T>& d)
         {
         for(const auto& elt : d.data)
             {
@@ -881,12 +1022,33 @@ class NormNoScale
         nrm_ = std::sqrt(nrm_);
         return ITResult();
         }
+
+    template<typename T>
+    ITResult
+    operator()(const ITDiag<T>& d)
+        {
+        if(d.allSame())
+            {
+            auto mm = Real(minM(is_));
+            nrm_ = std::norm(d.val)*std::sqrt(mm);
+            }
+        else
+            {
+            for(const auto& elt : d.data)
+                {
+                nrm_ += std::norm(elt);
+                }
+            }
+        nrm_ = std::sqrt(nrm_);
+        return ITResult();
+        }
+
     };
 
 void ITensor::
 scaleOutNorm()
     {
-    Real f = applyFunc<NormNoScale>(store_);
+    Real f = applyFunc<NormNoScale>(store_,{is_});
     //If norm already 1 return so
     //we don't have to call MultReal
     if(fabs(f-1) < 1E-12) return;
@@ -954,7 +1116,7 @@ norm(const ITensor& T)
     if(!T) Error("ITensor is default initialized");
 #endif
     return T.scale().real0() *
-           applyFunc<NormNoScale>(T.data());
+           applyFunc<NormNoScale>(T.data(),{T.inds()});
     }
 
 //Possible optimization:
@@ -999,9 +1161,10 @@ isComplex(const ITensor& t)
 class SumEls
     {
     Complex sum_;
+    const IndexSet& is_;
     public:
 
-    SumEls() : sum_(0) { }
+    SumEls(const IndexSet& is) : sum_(0), is_(is) { }
 
     operator Complex() const { return sum_; }
 
@@ -1018,15 +1181,22 @@ class SumEls
     NewData
     operator()(const ITDiag<T>& d) 
         { 
-        for(const auto& elt : d.data)
-            sum_ += elt;
+        if(d.allSame())
+            {
+            sum_ = Real(minM(is_))*d.val;
+            }
+        else
+            {
+            for(const auto& elt : d.data)
+                sum_ += elt;
+            }
         return NewData();
         }
     };
 Real
 sumels(const ITensor& t)
     {
-    auto z = Complex(applyFunc<SumEls>(t.data()));
+    auto z = Complex(applyFunc<SumEls>(t.data(),{t.inds()}));
     if(z.imag() != 0) Error("ITensor has non-zero imaginary part");
     return t.scale().real0()*z.real();
     }
