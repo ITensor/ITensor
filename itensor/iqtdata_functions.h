@@ -36,14 +36,6 @@ struct IQGetElt
         else     elt_ = 0;
         return ITResult();
         }
-
-    template <class D>
-    ITResult
-    operator()(const D& d)
-        {
-        throw ITError("IQTensor does not have requested element type");
-        return ITResult();
-        }
     };
 
 template<size_t size>
@@ -77,14 +69,6 @@ struct IQSetEltReal
             {
             Error("Setting IQTensor element non-zero would violate its symmetry.");
             }
-        return ITResult();
-        }
-
-    template <class D>
-    ITResult
-    operator()(const D& d)
-        {
-        throw ITError("IQTensor does not have requested element type");
         return ITResult();
         }
     };
