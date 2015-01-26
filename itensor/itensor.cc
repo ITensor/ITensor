@@ -41,10 +41,14 @@ ITensor(Complex val)
     :
     scale_(1.)
     { 
+    //if(val.imag() == 0)
+    //    store_ = std::make_shared<ITDense<Real>>(1,val.real());
+    //else
+    //    store_ = std::make_shared<ITDense<Complex>>(1,val);
     if(val.imag() == 0)
-        store_ = std::make_shared<ITDense<Real>>(1,val.real());
+        store_ = std::make_shared<ITDiag<Real>>(val.real());
     else
-        store_ = std::make_shared<ITDense<Complex>>(1,val);
+        store_ = std::make_shared<ITDiag<Complex>>(val);
     }
 
 ITensor::
