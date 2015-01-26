@@ -230,9 +230,6 @@ class IQTensor
     /////////////////
 
     void 
-    solo();
-
-    void 
     scaleOutNorm();
 
     friend QN div(const IQTensor&);
@@ -333,7 +330,6 @@ template <typename Func>
 IQTensor& IQTensor::
 generate(Func&& f)
     {
-    solo();
     scaleTo(1);
     applyFunc<GenerateIQT<decltype(f)>>(store_,{std::forward<Func>(f)});
     return *this;
@@ -343,7 +339,6 @@ template <typename Func>
 IQTensor& IQTensor::
 apply(Func&& f)
     {
-    solo();
     scaleTo(1);
     applyFunc<ApplyIQT<decltype(f)>>(store_,{std::forward<Func>(f)});
     return *this;

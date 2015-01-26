@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "iqindex.h"
+#include "itensor.h"
 
 namespace itensor {
 
@@ -147,6 +148,7 @@ dag()
     dir_ = -dir_; 
     return *this;
     }
+
 
 void IQIndex::
 write(ostream& s) const
@@ -363,6 +365,12 @@ mapprime(int plevold, int plevnew, IndexType type)
 
 IQIndexVal&  IQIndexVal::
 dag() { index.dag(); return *this; }
+
+ITensor IQIndexVal::
+operator*(const IndexVal& iv) const 
+    { 
+    return IndexVal(Index(index),i) * iv; 
+    }
 
 /*
 

@@ -23,7 +23,7 @@
     X(Y  ITCombiner         &t) Z;\
     X(Y  ITDiag<Real>       &t) Z;\
     X(Y  ITDiag<Complex>    &t) Z;\
-    X(Y  IQTData<Real>     &t) Z;
+    X(Y  IQTData<Real>      &t) Z;
 ///////////////////////////////////
 
 //
@@ -169,6 +169,39 @@ class Func1Dispatch : public Func1Base
     REGISTER(ITResult operator(),,final { return static_cast<Derived*>(this)->applyTo(t); })
     };
 
+template <typename Callable>
+class Func1 : public Func1Dispatch<Func1<Callable>>
+    {
+    Callable& d_;
+    PData& pdat_;
+    public:
+    Func1(Callable& d, PData& pdat) : d_(d), pdat_(pdat) { }
+    virtual ~Func1() { }
+
+    template <typename DataType>
+    ITResult
+    applyTo(DataType& t) { return detail::clone_modify(d_,t,pdat_); }
+    };
+
+template <typename Callable>
+class Func2Mod : public Func1Dispatch<Func2Mod<Callable>>
+    {
+    Callable& d_;
+    const ITData& arg2_;
+    PData& pdat1_;
+    public:
+
+    Func2Mod(Callable& d, const ITData& arg2, PData& pdat1) : d_(d), arg2_(arg2), pdat1_(pdat1) { }
+    virtual ~Func2Mod() { }
+
+    template<typename DataType>
+    ITResult
+    applyTo(DataType& arg1);
+    };
+
+//////////////////
+//////////////////
+
 
 struct ConstFunc1Base
     {
@@ -196,33 +229,6 @@ class ConstFunc1Dispatch : public ConstFunc1Base
     REGISTER(ITResult operator(),const,final { return static_cast<Derived*>(this)->applyTo(t); })
     };
 
-template <typename Callable>
-class Func1 : public Func1Dispatch<Func1<Callable>>
-    {
-    Callable& d_;
-    public:
-    Func1(Callable& d) : d_(d) { }
-    virtual ~Func1() { }
-
-    template <typename DataType>
-    ITResult
-    applyTo(DataType& t) { return detail::call<ITResult>(d_,t); }
-    };
-
-template <typename Callable>
-class Func2Mod : public Func1Dispatch<Func2Mod<Callable>>
-    {
-    Callable& d_;
-    const ITData& arg2_;
-    public:
-
-    Func2Mod(Callable& d, const ITData& arg2) : d_(d), arg2_(arg2) { }
-    virtual ~Func2Mod() { }
-
-    template<typename DataType>
-    ITResult
-    applyTo(DataType& arg1);
-    };
 
 template <typename Callable>
 class ConstFunc1 : public ConstFunc1Dispatch<ConstFunc1<Callable>>
@@ -251,6 +257,11 @@ class Func2 : public ConstFunc1Dispatch<Func2<Callable>>
     ITResult
     applyTo(const DataType& arg1);
     };
+
+
+//////////////////
+//////////////////
+
 
 class ITData
     {
@@ -309,6 +320,7 @@ template<typename Func, typename T>
 auto
 clone_modify_impl(Func& f, T& a, PData& pdat,int) -> decltype(f(static_cast<const T&>(a)))
     {
+    println("Not calling solo");
     const T& ca = a;
     return f(ca);
     }
@@ -317,8 +329,14 @@ template<typename Func, typename T>
 ITResult
 clone_modify_impl(Func& f, T& a, PData& pdat,long)
     {
-    if(!pdat.unique()) pdat = pdat->clone();
-    return detail::call<ITResult>(f,a);
+    println("Calling solo");
+    T *pa = &a;
+    if(!pdat.unique()) 
+        {
+        pdat = pdat->clone();
+        pa = static_cast<T*>(pdat.get());
+        }
+    return detail::call<ITResult>(f,*pa);
     }
 
 template<typename Func, typename T>
@@ -334,6 +352,7 @@ template<typename Func, typename T1, typename T2>
 auto
 clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) -> decltype(f(static_cast<const T1&>(a1)))
     {
+    println("Not calling solo (2 arg version)");
     const T1& ca1 = a1;
     return f(ca1,a2);
     }
@@ -342,8 +361,14 @@ template<typename Func, typename T1, typename T2>
 ITResult
 clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,long)
     {
-    if(!pdat.unique()) pdat = pdat->clone();
-    return detail::call<ITResult>(f,a1,a2);
+    println("Calling solo (2 arg version)");
+    T1 *pa1 = &a1;
+    if(!pdat.unique()) 
+        {
+        pdat = pdat->clone();
+        pa1 = static_cast<T1*>(pdat.get());
+        }
+    return detail::call<ITResult>(f,*pa1,a2);
     }
 
 template<typename Func, typename T1, typename T2>
@@ -403,7 +428,7 @@ F
 applyFunc(PData& arg,
           F f = F())
     {
-    Func1<F> f1(f);
+    Func1<F> f1(f,arg);
     auto res = arg->plugInto(f1);
     res.update(arg);
     return f;
@@ -426,7 +451,7 @@ applyFunc(PData& arg1,
           const PData& arg2,
           F f = F())
     {
-    Func2Mod<F> f2m(f,*arg2);
+    Func2Mod<F> f2m(f,*arg2,arg1);
     auto res = arg1->plugInto(f2m);
     res.update(arg1,arg2);
     return f;

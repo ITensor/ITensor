@@ -201,12 +201,6 @@ class ITensor
 
     private:
 
-    //Disattach self from current ITData and create own copy instead.
-    //Necessary because ITensors logically represent distinct
-    //tensors even though they may share data (copy-on-write idiom)
-    void 
-    solo();
-
     void
     scaleOutNorm();
 
@@ -416,7 +410,6 @@ template <typename Func>
 ITensor& ITensor::
 generate(Func&& f)
     {
-    solo();
     scaleTo(1);
     applyFunc<GenerateIT<decltype(f)>>(store_,{std::forward<Func>(f)});
     return *this;
@@ -426,7 +419,6 @@ template <typename Func>
 ITensor& ITensor::
 apply(Func&& f)
     {
-    solo();
     scaleTo(1);
     applyFunc<ApplyIT<decltype(f)>>(store_,{std::forward<Func>(f)});
     return *this;
