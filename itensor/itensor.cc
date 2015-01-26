@@ -289,38 +289,6 @@ class Contract
         return diagDense(d,Ris_,Rind_,t,Lis_,Lind_);
         }
 
-    //ITResult
-    //operator()(const ITDense<Real>& a1,
-    //           const ITDense<Complex>& a2) const
-    //    {
-    //    ITDense<Complex> c1(a1);
-    //    return operator()(c1,a2);
-    //    }
-
-    //ITResult
-    //operator()(const ITDense<Complex>& a1,
-    //           const ITDense<Real>& a2) const
-    //    {
-    //    ITDense<Complex> c2(a2);
-    //    return operator()(a1,c2);
-    //    }
-
-
-    //template <typename T1, typename T2>
-    //ITResult
-    //operator()(const ITDense<T1>& a1,
-    //           const ITDense<T2>& a2) const
-    //    {
-    //    using product_type = decltype(::std::declval<T1>() * ::std::declval<T2>());
-    //    //static const auto One = product_type(1.),
-    //    //                  Zero = product_type(0.);
-    //    auto res = new ITDense<product_type>();
-    //    //TODO:
-    //    Error("Contract not implemented for tensors of different element types.");
-    //    //btas::contract(One,a1.t_,Lind_,a2.t_,Rind_,Zero,res->t_,Nind_);
-    //    return ITResult(res);
-    //    }
-
     private:
 
     NewData
