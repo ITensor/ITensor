@@ -163,6 +163,13 @@ operator()(const ITDiag<T>& d) const
     if(!x_.isTooBigForReal()) scalefac = x_.real0();
     else s_ << "  (omitting too large scale factor)\n";
 
+    if(is_.r() == 0) 
+        {
+        s_ << "  ";
+        detail::printVal(s_,scalefac*(d.data.empty() ? d.val : d.data.front()));
+        return ITResult();
+        }
+
     auto size = minM(is_);
     for(size_t i = 0; i < size; ++i)
         {
