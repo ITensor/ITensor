@@ -77,6 +77,7 @@ operator()(IQTData<Real>& a1,
 #endif
     if(P_)
         {
+        Error("IQTensor += permute case not implemented");
         //auto ref1 = tensorref<Real,IndexSet>(a1.data.data(),*is1_),
         //     ref2 = tensorref<Real,IndexSet>(a2.data.data(),*is2_);
         //auto f = fac_;
@@ -130,18 +131,6 @@ operator+=(const IQTensor& other)
         applyFunc<IQPlusEQ>(store_,other.store_,{P,is_,other.is_,scalefac});
         }
 
-    //
-    // Idea to implement:
-    // - Compute permutation P from is_ to other.is_
-    // - If P trivial, do a straight daxpy on the data
-    // - If P not trivial, loop over blocks of *this
-    //   and get pointer to corresponding block of other 
-    //   by applying P and add those blocks.
-    //   (Instead of looping over a GCounter
-    //   to visit all non-zero blocks, may be faster
-    //   to iterate through offset_ and calculate block indices
-    //   from position of non-negative offset_ elements.)
-    //
 
     return *this;
     }
@@ -442,10 +431,6 @@ class MultReal
             elt *= r_;
         return ITResult();
         }
-
-    template<typename T>
-    ITResult
-    operator()(const T& d) const { Error("IQTensor MultReal not implemented for ITData type."); return ITResult(); }
     };
 
 void IQTensor::
@@ -588,10 +573,6 @@ struct PrintIQT
     template<typename T>
     ITResult
     operator()(const IQTData<T>& d) const;
-
-    template<typename T>
-    ITResult
-    operator()(const T& d) const { Error("Function not implemented."); return ITResult(); }
     };
 
 template<typename T>
