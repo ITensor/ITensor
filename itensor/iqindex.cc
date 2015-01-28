@@ -460,7 +460,8 @@ operator<<(ostream &o, const IQIndex& I)
         o << "IQIndex: (null)"; 
         return o;
         }
-    o << "IQIndex: " << Index(I) << " <" << I.dir() << ">" << endl;
+    //o << "IQIndex: " << Index(I) << " <" << I.dir() << ">" << endl;
+    o << Index(I) << " <" << I.dir() << ">" << endl;
     for(long j = 1; j <= I.nindex(); ++j) 
         o << "  " << I.index(j) SP I.qn(j) << "\n";
     return o;

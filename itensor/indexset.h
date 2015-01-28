@@ -674,10 +674,12 @@ template <class IndexT>
 std::ostream&
 operator<<(std::ostream& s, const IndexSetT<IndexT>& is)
     {
-    for(const auto& J : is)
+    long j = 0;
+    for(; j < long(is.size())-1; ++j)
         {
-        s << J << "\n"; 
+        s << is[j] << "\n"; 
         }
+    s << is[j];
     return s;
     }
 
