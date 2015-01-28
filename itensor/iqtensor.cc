@@ -302,7 +302,7 @@ operator()(const IQTData<T>& A,
             break;
             }
     
-    detail::GCounter couB(0,rB-1,0);
+    detail::GCounter couB(rB);
     vector<long> Ablock(rA,0),
                  Cblock(rC,0);
     Range Arange,
@@ -459,11 +459,59 @@ scaleTo(const LogNumber& newscale)
     scale_ = newscale;
     }
 
+class ToITensor
+    {
+    ITensor res;
+    const IQIndexSet& is_;
+    const LogNumber& scale_;
+    public:
+
+    ToITensor(const IQIndexSet& is,
+              const LogNumber& scale)
+        :
+        is_(is),
+        scale_(scale)
+        { }
+
+    explicit
+    operator ITensor() { return std::move(res); }
+
+    template<typename T>
+    ITResult
+    operator()(const IQTData<T>& d)
+        {
+        auto r = is_.r();
+        auto nd = make_newdata<ITDense<T>>(area(is_),0);
+        auto *pd = d.data.data();
+        auto *pn = nd->data.data();
+        vector<long> block(r,0);
+        detail::GCounter C(r);
+        for(const auto& io : d.offsets)
+            {
+            inverseBlockInd(io.block,is_,block);
+            for(long j = 0; j < r; ++j)
+                {
+                long start = 0;
+                for(long b = 0; b < block[j]; ++b)
+                    start += is_[j][b].m();
+                C.setInd(j,start,start+is_[j][block[j]].m()-1);
+                }
+            for(; C.notDone(); ++C)
+                {
+                pn[ind(is_,C.i)] = pd[io.offset+C.ind];
+                }
+            }
+        vector<Index> inds(r);
+        for(long j = 0; j < r; ++j) inds[j] = is_[j];
+        res = ITensor(IndexSet(std::move(inds)),std::move(nd),scale_);
+        return ITResult();
+        }
+    };
+
 ITensor
 toITensor(const IQTensor& T)
     {
-    Error("toITensor not implemented");
-    return ITensor();
+    return ITensor(applyFunc<ToITensor>(T.data(),{T.inds(),T.scale()}));
     }
 
 struct IsComplex
@@ -606,7 +654,7 @@ operator()(const IQTData<T>& d) const
     auto blockIndex = [&block,this](long i)->const Index& { return (this->is_[i])[block[i]]; };
 
     Range brange;
-    detail::GCounter C(0,rank-1,0);
+    detail::GCounter C(rank);
     for(const auto& io : d.offsets)
         {
         //Determine block indices (where in the IQIndex space

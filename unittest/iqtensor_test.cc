@@ -164,28 +164,28 @@ SECTION("Addition and Subtraction")
 
     }
 
-//SECTION("ITensorConversion")
-//    {
-//
-//    ITensor itphi = phi.toITensor();
-//
-//    for(int k1 = 1; k1 <= S1.m(); ++k1)
-//    for(int k2 = 1; k2 <= S2.m(); ++k2)
-//    for(int j2 = 1; j2 <= L2.m(); ++j2)
-//        CHECK_CLOSE(phi(S1(k1),S2(k2),L2(j2)),itphi(Index(S1)(k1),Index(S2)(k2),Index(L2)(j2)),1E-5);
-//
-//    ITensor itA = A.toITensor();
-//
-//    for(int k1 = 1; k1 <= S1.m(); ++k1)
-//    for(int k2 = 1; k2 <= S2.m(); ++k2)
-//    for(int j1 = 1; j1 <= L1.m(); ++j1)
-//    for(int j2 = 1; j2 <= L2.m(); ++j2)
-//        CHECK_CLOSE(A(S1(k1),S2(k2),L1(j1),L2(j2)),
-//                    itA(Index(S1)(k1),Index(S2)(k2),Index(L1)(j1),Index(L2)(j2)),
-//                    1E-5);
-//
-//
-//    }
+SECTION("ITensor Conversion")
+    {
+    SECTION("Case 1")
+        {
+        auto itphi = toITensor(phi);
+        for(int k1 = 1; k1 <= S1.m(); ++k1)
+        for(int k2 = 1; k2 <= S2.m(); ++k2)
+        for(int j2 = 1; j2 <= L2.m(); ++j2)
+            CHECK_REQUAL(phi.real(S1(k1),S2(k2),L2(j2)),itphi.real(Index(S1)(k1),Index(S2)(k2),Index(L2)(j2)));
+        }
+
+    SECTION("Case 2")
+        {
+        ITensor itA = A; //implicit conversion 
+        for(int k1 = 1; k1 <= S1.m(); ++k1)
+        for(int k2 = 1; k2 <= S2.m(); ++k2)
+        for(int j1 = 1; j1 <= L1.m(); ++j1)
+        for(int j2 = 1; j2 <= L2.m(); ++j2)
+            CHECK_REQUAL(A.real(S1(k1),S2(k2),L1(j1),L2(j2)),
+                        itA.real(Index(S1)(k1),Index(S2)(k2),Index(L1)(j1),Index(L2)(j2)));
+        }
+    }
 
 //SECTION("TieIndices")
 //    {

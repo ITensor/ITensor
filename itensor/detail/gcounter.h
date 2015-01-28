@@ -31,11 +31,20 @@ class GCounter	// General Counter
     // position of this GCounter value; starts at 0
     long ind;
 
+    //Make a 0-indexed counter with nind indices
+    GCounter(long nind)
+        : 
+        first(0,nind-1,0), 
+        last(0,nind-1,0),
+        i(0,nind-1,0), 
+        ind(0)
+        { }
+
     // for a GCounter that has indices i[1] through i[8], and starts its counts at 0, 
     // firstind = 1, lastind = 8, firstval = 0
     GCounter(long firstind, 
              long lastind, 
-             long firstval = 1) 
+             long firstval = 0) 
         : 
         first(firstind,lastind,firstval), 
         last(firstind,lastind,firstval),

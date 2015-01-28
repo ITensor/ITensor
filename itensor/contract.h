@@ -75,27 +75,44 @@ template<typename T>
 void
 printv(const std::vector<T>& t)
     {
+    print("{ ");
     for(const auto& i : t) print(i," ");
-    println();
+    println("}");
+    }
+template<typename T,typename F>
+void
+printv(const std::vector<T>& t,
+       const F& f)
+    {
+    print("{ ");
+    for(const auto& i : t) 
+        {
+        f(i);
+        print(" ");
+        }
+    println("}");
     }
 template<typename T, size_t size>
 void
 printv(const std::array<T,size>& t)
     {
+    print("{ ");
     for(const auto& i : t) print(i," ");
-    println();
+    println("}");
     }
 template<typename T>
 void
 printv(const autovector<T>& t)
     {
+    print("{ ");
     for(auto i = t.mini(); i <= t.maxi(); ++i)
         {
         print(t.fast(i)," ");
         }
-    println();
+    println("}");
     }
 #define PRI(a) print(#a,": "); printv(a);
+#define PRIL(a,l) print(#a,": "); printv(a,l);
 
 inline 
 std::ostream& 
