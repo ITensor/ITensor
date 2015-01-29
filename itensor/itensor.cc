@@ -456,7 +456,7 @@ ITensor(const IndexVal& iv1, const IndexVal& iv2)
     allocate(iv1.m()*iv2.m());
     auto offset = (iv2.i-1)*iv1.m()+iv1.i-1;
 #ifdef DEBUG
-    if(offset < 0 || offset > r_->size()) Error("IndexVal out of range");
+    if(offset < 0 || offset > int(r_->size())) Error("IndexVal out of range");
 #endif
 	r_->v[offset] = 1; 
 	}
@@ -1372,7 +1372,7 @@ expandIndex(const Index& small, const Index& big, int start)
     shared_ptr<ITDat> oldr(r_);
     allocate(newinds.dim());
 
-    auto omax = oldr->v.size();
+    auto omax = int(oldr->v.size());
     const Real* const olddat = oldr->data();
     Real* const newdat = r_->data();
 
@@ -1440,7 +1440,7 @@ pseudoInvert(Real cutoff)
         Error("pseudoInvert currently only defined for real ITensor");
     solo();
     scale_.pow(-1); //succeeds even if scale_ == 0
-    for(int j = 1; j <= r_->size(); ++j)
+    for(int j = 1; j <= int(r_->size()); ++j)
         {
         if(r_->v.at(j-1) > cutoff)
             r_->v.at(j-1) = 1./r_->v.at(j-1);
@@ -2548,7 +2548,7 @@ contractDiagDiag(const ITensor& A, const ITensor& B, ITensor& res)
         const auto& Adat = A.r_->v;
         const auto& Bdat = B.r_->v;
         rdat = Adat;
-        for(int j = 0; j < rdat.size(); ++j)
+        for(int j = 0; j < int(rdat.size()); ++j)
             {
             rdat[j] *= Bdat[j];
             }
