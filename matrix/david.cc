@@ -206,9 +206,15 @@ void David(    // Object containing big hamiltonian
 	    //Real *diagp = big.Diagpointer();	// Step D 
 	    VectorRefBare diagp(big.DiagRef());
 
-	    VectorRefBare XI(xi);
-	    for (int j = 1 ; j <= n; j++) 
-		  XI(j) /= ((eiglast-diagp(j))+1e-33);
+        VectorRefBare XI(xi);
+        for(long j = 1 ; j <= n; j++) 
+            {
+            if(eiglast-diagp(j) == 0.)
+                XI(j) /= 1e-33;
+            else
+                XI(j) /= ((eiglast-diagp(j))+1e-33);
+            }
+
 
 	    if (debug > 3)
 		cout << "xi after D:" << iendl << xi;
