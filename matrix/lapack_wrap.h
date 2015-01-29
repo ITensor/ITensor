@@ -89,7 +89,7 @@ void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha,
 
 #ifdef PLATFORM_macos
 void cblas_dscal(const LAPACK_INT __N, const LAPACK_REAL __alpha, LAPACK_REAL *x,const LAPACK_INT incX);
-#elif define PLATFORM_mkl
+#elif defined PLATFORM_mkl
 void dscal(LAPACK_INT* n, LAPACK_REAL* alpha, LAPACK_REAL* x, LAPACK_INT* incx);
 #else
 void F77NAME(dscal)(LAPACK_INT* n, LAPACK_REAL* alpha, LAPACK_REAL* x, LAPACK_INT* incx);
