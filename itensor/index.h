@@ -11,10 +11,7 @@ namespace itensor {
 enum IndexType { Link, Site, All };
 
 //Forward declarations
-struct IndexDat;
 class IndexVal;
-
-using IndexDatPtr = shared_ptr<IndexDat>;
 
 //
 // Index
@@ -48,18 +45,18 @@ class Index
 
     // Returns the bond dimension
     int 
-    m() const;
+    m() const { return m_; }
 
     // Returns the prime level
     int 
-    primeLevel() const;
+    primeLevel() const { return primelevel_; }
     // Sets the prime level to a specified value.
     Index& 
     primeLevel(int plev);
 
     // Returns the IndexType
     IndexType 
-    type() const;
+    type() const { return type_; }
 
     // Returns the name of this Index
     std::string 
@@ -67,7 +64,7 @@ class Index
 
     // Returns the name of this Index with primes removed
     const std::string&
-    rawname() const;
+    rawname() const { return sname_; }
 
     // Evaluates to false if Index is default constructed.
     explicit operator bool() const { return valid(); }
@@ -159,12 +156,17 @@ class Index
     static const 
     Index& Null();
 
+    using IDGenerator = mt19937;
+    using IDType = IDGenerator::result_type;
+
     private:
 
     /////////////
-    IndexDatPtr p;
-
+    IDType id_;
     int primelevel_; 
+    int m_;
+    IndexType type_;
+    std::string sname_;
     /////////////
 
     friend std::ostream& operator<<(std::ostream& s, const Index& t);
@@ -286,6 +288,32 @@ template<class T>
 T
 deprimed(T I, IndexType type = All) { I.noprime(type); return I; }
 
+
+
+//
+// Implementations
+//
+
+bool inline Index::
+operator==(const Index& other) const 
+    { 
+    return (id_ == other.id_) && (primelevel_ == other.primelevel_); 
+    }
+
+bool inline Index::
+noprimeEquals(const Index& other) const
+    { 
+    return (id_ == other.id_);
+    }
+
+bool inline Index::
+operator<(const Index& other) const 
+    { 
+    return (id_ < other.id_);
+    }
+
+IndexVal inline Index::
+operator()(int i) const { return IndexVal(*this,i); }
 
 }; //namespace itensor
 
