@@ -19,7 +19,7 @@ namespace itensor {
 
 //Real ran1();
 
-static const Real Pi = M_PI;
+static const Real Pi = 3.1415926535897932384626433832795028841971693993;
 static const Real Sqrt2 = sqrt(2);
 static const Real ISqrt2 = 1.0/sqrt(2);
 //static const Real Sqrt3 = sqrt(3);
