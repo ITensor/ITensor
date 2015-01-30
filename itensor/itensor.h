@@ -233,10 +233,6 @@ class ITensor
     ITensor(const IndexSet& is,
             const ITensor& t);
 
-    //ITensor(const IndexSet& is,
-    //        const ITensor& t,
-    //        const Permutation& P);
-
     //Scale factor, used internally for efficient scalar ops.
     //Mostly for developer use; not necessary to explicitly involve
     //scale factors in user-level ITensor operations.
