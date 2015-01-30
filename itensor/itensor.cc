@@ -159,7 +159,7 @@ ITensor(const Index& i1,
 //               const ITDense<Real>& t2)
 //        {
 //        auto v = std::vector<Real>();
-//        reshape(P_,is_,t2.data(),v);
+//        permute(P_,is_,t2.data(),v);
 //        return NewData();
 //        }
 //
@@ -538,7 +538,7 @@ combine(const ITDense<Real>& d,
         {
         //dis doesn't have cind, replace
         //Cis[1], Cis[2], ... with cind
-        //may need to reshape
+        //may need to permute
         int J1 = findindex(dis,Cis[1]);
         if(J1 < 0) 
             {
@@ -607,7 +607,7 @@ combine(const ITDense<Real>& d,
             auto res = make_newdata<ITDense<Real>>(area(Nis_));
             auto td = make_tensorref(d.data.data(),dis);
             auto tr = make_tensorref(res->data.data(),rr);
-            reshape(td,P,tr);
+            permute(td,P,tr);
             return move(res);
             }
         }
@@ -825,7 +825,7 @@ operator()(ITDense<Real>& a1,
              ref2 = tensorref<Real,IndexSet>(a2.data.data(),*is2_);
         auto f = fac_;
         auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
-        reshape(ref2,*P_,ref1,add);
+        permute(ref2,*P_,ref1,add);
         }
     return ITResult();
     }

@@ -39,13 +39,13 @@ computeLabels(const Inds& Lis,
 
 template<typename R1, typename R2>
 void 
-reshape(const RTref<R1>& T, 
+permute(const RTref<R1>& T, 
         const Permutation& P, 
         RTref<R2>& res);
 
 template<typename RangeT>
 void 
-reshape(const RTref<RangeT>& T, 
+permute(const RTref<RangeT>& T, 
         const Permutation& P, 
         tensor<Real,Range>& res);
 
@@ -53,7 +53,7 @@ reshape(const RTref<RangeT>& T,
 //default is func = [](Real& x, Real y) { x = y; };
 template<typename R1, typename R2, typename Callable>
 void 
-reshape(const RTref<R1>& T, 
+permute(const RTref<R1>& T, 
         const Permutation& P, 
         RTref<R2>& res,
         const Callable& func);
@@ -216,7 +216,7 @@ computeLabels(const Inds& Lis,
 
 template<typename R1, typename R2, typename Callable>
 void 
-reshape(const RTref<R1>& T, 
+permute(const RTref<R1>& T, 
         const Permutation& P, 
         RTref<R2>& res,
         const Callable& func)
@@ -224,7 +224,7 @@ reshape(const RTref<R1>& T,
     auto r = P.size();
 
 #ifdef DEBUG
-    if(res.size() != T.size()) Error("Mismatched storage sizes in reshape");
+    if(res.size() != T.size()) Error("Mismatched storage sizes in permute");
 #endif
 
     //find largest dimension of T,
@@ -276,16 +276,16 @@ plusEq(T& r1, T r2) { r1 += r2; }
 
 template<typename R1, typename R2>
 void 
-reshape(const RTref<R1>& T, 
+permute(const RTref<R1>& T, 
         const Permutation& P, 
         RTref<R2>& res)
     {
-    reshape(T,P,res,detail::assign<Real>);
+    permute(T,P,res,detail::assign<Real>);
     }
 
 template<typename RangeT>
 void 
-reshape(const RTref<RangeT>& T, 
+permute(const RTref<RangeT>& T, 
         const Permutation& P, 
         tensor<Real,Range>& res)
     {
@@ -295,7 +295,7 @@ reshape(const RTref<RangeT>& T,
         resdims[P.dest(i)] = T.n(i);
     res.resize(resdims);
     tensorref<Real,Range> res_ref(res.data(),res.inds());
-    reshape(T,P,res_ref);
+    permute(T,P,res_ref);
     }
 
 }; //namespace itensor

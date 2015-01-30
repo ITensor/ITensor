@@ -376,7 +376,7 @@ contract(ABCProps& abc,
     // Optimizations TODO
     //
     // o Detect whether doing cref = bref*aref or cref = aref*bref
-    //   might avoid having to reshape C (e.g. if bref*aref version
+    //   might avoid having to permute C (e.g. if bref*aref version
     //   would require transposing C, then do aref*bref instead).
     //
     // o If trailing n(j)==1 dimensions at end of A, B, or C indices
@@ -535,7 +535,7 @@ contract(ABCProps& abc,
                 }
             if(newi == ra) break;
             }
-        reshape(A,PA,newA);
+        permute(A,PA,newA);
         aref = SimpleMatrixRef(newA.data(),dleft,dmid,dmid,true);
         }
 
@@ -594,11 +594,11 @@ contract(ABCProps& abc,
                 }
             if(newi == ra) break;
             }
-        reshape(B,PB,newB);
+        permute(B,PB,newB);
         bref = SimpleMatrixRef(newB.data(),dright,dmid,dmid,false);
         }
 
-    //println("A and B reshaped, took ",cpu.sincemark());
+    //println("A and B permuted, took ",cpu.sincemark());
 
     if(!Aismatrix || !Bismatrix)
         {
@@ -698,8 +698,8 @@ contract(ABCProps& abc,
         {
         //println("PC = ",PC);
         //cpu.mark();
-        reshape(newC,PC,C,detail::plusEq<Real>);
-        //println("C reshaped, took ",cpu.sincemark());
+        permute(newC,PC,C,detail::plusEq<Real>);
+        //println("C permuted, took ",cpu.sincemark());
         }
     }
 

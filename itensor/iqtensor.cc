@@ -142,7 +142,7 @@ operator()(IQTData<Real>& A,
                  bref = make_tensorref(bblock,Brange);
             auto f = fac_;
             auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
-            reshape(bref,*P_,aref,add);
+            permute(bref,*P_,aref,add);
             }
         }
     return ITResult();
