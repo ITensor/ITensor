@@ -560,13 +560,26 @@ diag() const
     }
 
 void ITensor::
-read(std::istream& s)
-    { 
-    int tint = 0;
-    s.read((char*) &tint,sizeof(tint));
-    type_ = IT_IntToType(tint);
-
-    if(type_ == Null) { *this = ITensor(); return; }
+read(std::istream& s, const OptSet& opts)
+    {
+	if( opts.getBool("v0.2", false) )
+	{
+		bool isNull_ = false;
+		s.read((char*) &isNull_,sizeof(isNull_));
+		if( isNull_ )
+		{
+			type_ = Null;
+		}
+		else
+			type_ = Dense;
+	}
+	else
+	{
+		int tint = 0;
+		s.read((char*) &tint,sizeof(tint));
+		type_ = IT_IntToType(tint);
+	}
+	if(type_ == Null) { *this = ITensor(); return; }
 
     is_.read(s);
     scale_.read(s);

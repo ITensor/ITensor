@@ -202,14 +202,23 @@ doWrite(bool val, const OptSet& opts);
 
 template <class Tensor>
 void MPSt<Tensor>::
-read(std::istream& s)
+read(std::istream& s, const OptSet& opts)
     {
     if(sites_ == 0)
         Error("Can't read to default constructed MPS");
-    for(size_t j = 0; j < A_.size(); ++j) 
-        {
-    	A_.at(j).read(s);
-        }
+
+    if( opts.getBool("v0.2", false))
+    {
+    	A_.at(0) = Tensor();
+    	for(int j = 1; j <= N_; ++j)
+			A_.at(j).read(s);
+    	A_.at(A_.size()-1) = Tensor();
+    }
+    else
+    {
+    	for(size_t j = 0; j < A_.size(); ++j)
+    		A_.at(j).read(s);
+    }
     //Check that tensors read from disk were constructed
     //using the same sites
     IndexT s1 = findtype(A_.at(1),Site);
@@ -218,11 +227,33 @@ read(std::istream& s)
         Error("Tensors read from disk not compatible with SiteSet passed to constructor.");
     s.read((char*) &l_orth_lim_,sizeof(l_orth_lim_));
     s.read((char*) &r_orth_lim_,sizeof(r_orth_lim_));
+
+    if( opts.getBool("Legacy", false) )
+    {
+    	// read in useless spectrum data
+    	for(int i = 0; i < N_; ++i)
+    	{
+    		Real emptyReal;
+    		int emptyInt;
+    		bool emptyBool;
+    		LogNumber emptyLog;
+    		Vector emptyVec;
+    		s.read((char*) &emptyReal, sizeof(emptyReal));
+    		s.read((char*) &emptyReal, sizeof(emptyReal));
+    		s.read((char*) &emptyInt, sizeof(emptyInt));
+    		s.read((char*) &emptyInt, sizeof(emptyInt));
+    		s.read((char*) &emptyBool, sizeof(emptyBool));
+    		s.read((char*) &emptyBool, sizeof(emptyBool));
+    		s.read((char*) &emptyBool, sizeof(emptyBool));
+    		s.read((char*) &emptyLog, sizeof(emptyLog));
+    		emptyVec.read(s);
+    	}
+    }
     }
 template
-void MPSt<ITensor>::read(std::istream& s);
+void MPSt<ITensor>::read(std::istream& s, const OptSet& opts);
 template
-void MPSt<IQTensor>::read(std::istream& s);
+void MPSt<IQTensor>::read(std::istream& s, const OptSet& opts);
 
 
 template <class Tensor>

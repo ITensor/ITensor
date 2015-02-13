@@ -597,13 +597,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     //toMatrix11NoScale, so put the scale back in
     D *= refNorm;
 
-    Vector DD(L.m());
-    for(int i = 1; i <= L.m(); ++i) 
-        {
-        DD(i) = alleig.at(alleig.size()-i);
-        }
-
-    return Spectrum(DD,Opt("Truncerr",svdtruncerr));
+    return Spectrum(D,Opt("Truncerr",svdtruncerr));
 
     } //void svdRank2
 
@@ -920,8 +914,6 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 
         svdtruncerr = truncate(alleig,m,docut,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         }
-    Spectrum spec;
-    spec.truncerr(svdtruncerr);
 
     if(opts.getBool("ShowEigs",false))
         {
@@ -1072,13 +1064,6 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 
     D *= refNorm;
 
-    Vector DD(newmid.m());
-    const size_t aesize = alleig.size();
-    for(int i = 1; i <= newmid.m(); ++i) 
-        DD(i) = alleig.at(aesize-i);
-
-    spec.eigsKept(DD);
-
     //Include spec.refNorm() to get the actual eigenvalues kept
     //as long as the leading eigenvalue is within a few orders
     //of magnitude of 1.0. Otherwise just report the scaled eigs.
@@ -1090,7 +1075,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         }
         */
 
-    return spec;
+    return Spectrum(D, Opt("Truncerr", svdtruncerr));
 
     } //void diag_hermitian
 
