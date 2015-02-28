@@ -26,7 +26,7 @@ set (tests
 include_directories(../utilities ../matrix ../itensor)
 
 add_executable(test1 ${tests})
-target_link_libraries(test1 utility matrix itensor) 
+target_link_libraries(test1 itensor) 
 add_test(test1 test1)
 
 
