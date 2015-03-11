@@ -785,7 +785,7 @@ applyExpH(const MPSt<Tensor>& psi,
           MPSt<Tensor>& res, 
           const Args& args)
     {
-    using IndexT = typename Tensor::IndexT;
+    //using IndexT = typename Tensor::IndexT;
     using MPST = MPSt<Tensor>;
 
     if(&psi == &res) Error("Must pass distinct MPS arguments to applyExpH");
