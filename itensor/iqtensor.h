@@ -227,6 +227,21 @@ class IQTensor
 
     friend QN div(const IQTensor&);
 
+    public:
+
+    //
+    // Developer / advanced methods
+    //
+    // The following methods should not
+    // be needed for most user code.
+    //
+
+    //Construct by explicitly providing data members
+    IQTensor(const QN& q,
+             IQIndexSet&& iset,
+             NewData nd,
+             LogNumber scale);
+
     }; //class IQTensor
 
 
@@ -297,6 +312,9 @@ div(const IQTensor& T)
     if(!T) Error("div(IQTensor) not defined for null IQTensor");
     return T.div_; 
     }
+
+IQTensor
+combiner(std::vector<IQIndex> inds);
 
 IQIndex
 findIQInd(const IQTensor& T, const Index& i);
