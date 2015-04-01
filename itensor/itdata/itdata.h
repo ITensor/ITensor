@@ -319,17 +319,22 @@ namespace detail {
 
 template<typename Func, typename T>
 auto
-clone_modify_impl(Func& f, T& a, PData& pdat,int) -> decltype(f(static_cast<const T&>(a)))
+clone_modify_impl(Func& f, T& a, PData& pdat,int) //-> decltype(f(static_cast<const T&>(a)))
+    //Using std::conditional here because we want the return type to be ITResult regardless
+    //of return type of f, but need to evaluate f(const T&) to get substitution failure (SFINAE) 
+    //if no such call exists.
+    -> std::conditional_t<std::is_same<decltype(f(static_cast<const T&>(a))),void>::value,ITResult,ITResult>
     {
     const T& ca = a;
-    return f(ca);
+    //return f(ca);
+    return detail::call<ITResult>(f,ca);
     }
 
 template<typename Func, typename T>
 ITResult
 clone_modify_impl(Func& f, T& a, PData& pdat,long)
     {
-    if(Global::debug3()) println("Calling solo (1 param)");
+    //if(Global::debug3()) println("Calling solo (1 param)");
     T *pa = &a;
     if(!pdat.unique()) 
         {
@@ -350,18 +355,23 @@ clone_modify(Func& f, T& a, PData& pdat)
 
 template<typename Func, typename T1, typename T2>
 auto
-clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) -> decltype(f(static_cast<const T1&>(a1),a2))
+clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) 
+    //Using std::conditional here because we want the return type to be ITResult regardless
+    //of return type of f, but need to evaluate f(const T1&,const T2&) to get substitution failure (SFINAE) 
+    //if no such call exists.
+    -> std::conditional_t<std::is_same<decltype(f(static_cast<const T1&>(a1),a2)),void>::value,ITResult,ITResult>
     {
-    if(Global::debug3()) println("Not calling solo (2 params)");
+    //if(Global::debug3()) println("Not calling solo (2 params)");
     const T1& ca1 = a1;
-    return f(ca1,a2);
+    //return f(ca1,a2);
+    return detail::call<ITResult>(f,ca1,a2);
     }
 
 template<typename Func, typename T1, typename T2>
 ITResult
 clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,long)
     {
-    if(Global::debug3()) println("Calling solo (2 params)");
+    //if(Global::debug3()) println("Calling solo (2 params)");
     T1 *pa1 = &a1;
     if(!pdat.unique()) 
         {
