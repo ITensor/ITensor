@@ -20,18 +20,17 @@ operator()(const ITDense<Real>& d) const
     return move(nd);
     }
 
-ITResult MultComplex::
+void MultComplex::
 operator()(ITDense<Complex>& d) const
     {
     //TODO: use BLAS algorithm
     for(auto& elt : d.data)
         elt *= z_;
-    return ITResult();
     }
 
 
 template<typename T>
-ITResult PrintIT::
+void PrintIT::
 operator()(const ITDense<T>& d) const
     {
     s_ << "}\n";
@@ -44,7 +43,6 @@ operator()(const ITDense<T>& d) const
         {
         s_ << "  ";
         detail::printVal(s_,scalefac*d.data.front());
-        return ITResult();
         }
 
     auto gc = detail::GCounter(0,rank-1,0);
@@ -67,13 +65,12 @@ operator()(const ITDense<T>& d) const
             detail::printVal(s_,val);
             }
         }
-    return ITResult();
     }
-template ITResult PrintIT::operator()(const ITDense<Real>& d) const;
-template ITResult PrintIT::operator()(const ITDense<Complex>& d) const;
+template void PrintIT::operator()(const ITDense<Real>& d) const;
+template void PrintIT::operator()(const ITDense<Complex>& d) const;
 
 template<typename T>
-ITResult PrintIT::
+void PrintIT::
 operator()(const ITDiag<T>& d) const
     {
     auto allsame = d.allSame();
@@ -86,7 +83,6 @@ operator()(const ITDiag<T>& d) const
         {
         s_ << "  ";
         detail::printVal(s_,scalefac*(d.data.empty() ? d.val : d.data.front()));
-        return ITResult();
         }
 
     auto size = minM(is_);
@@ -104,9 +100,8 @@ operator()(const ITDiag<T>& d) const
             detail::printVal(s_,val);
             }
         }
-    return ITResult();
     }
-template ITResult PrintIT::operator()(const ITDiag<Real>& d) const;
-template ITResult PrintIT::operator()(const ITDiag<Complex>& d) const;
+template void PrintIT::operator()(const ITDiag<Real>& d) const;
+template void PrintIT::operator()(const ITDiag<Complex>& d) const;
 
 }; //namespace itensor

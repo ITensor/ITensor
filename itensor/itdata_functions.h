@@ -24,23 +24,22 @@ class ApplyIT
 
     template <typename T,
               typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
-    ITResult
-    operator()(ITDense<T>& d) const { return doApply(d); }
+    void
+    operator()(ITDense<T>& d) const { doApply(d); }
         
     template <typename T,
               typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
-    ITResult
-    operator()(ITDiag<T>& d) const { return doApply(d); }
+    void
+    operator()(ITDiag<T>& d) const { doApply(d); }
 
     private:
 
     template<typename T>
-    ITResult
+    void
     doApply(T& d) const
         {
         for(auto& elt : d.data)
             elt = f_(elt);
-        return ITResult();
         }
     };
 
@@ -56,21 +55,20 @@ struct GenerateIT
     GenerateIT(F&& f) : f_(f) { }
 
     template <typename T>
-    ITResult
-    operator()(ITDense<T>& d) const { return doGen(d); }
+    void
+    operator()(ITDense<T>& d) const { doGen(d); }
 
     template <typename T>
-    ITResult
-    operator()(ITDiag<T>& d) const { return doGen(d); }
+    void
+    operator()(ITDiag<T>& d) const { doGen(d); }
 
     private:
 
     template<typename T>
-    ITResult
+    void
     doGen(T& d) const
         {
         std::generate(d.data.begin(),d.data.end(),f_);
-        return ITResult();
         }
     };
 
@@ -94,16 +92,15 @@ struct GetElt
 
     template <typename V,
               typename std::enable_if<std::is_convertible<V,T>::value>::type* = nullptr>
-    ITResult
+    void
     operator()(const ITDense<V>& d)
         {
         elt_ = T{d.data[ind(is_,inds_)]};
-        return ITResult();
         }
 
     template <typename V,
               typename std::enable_if<std::is_convertible<V,T>::value>::type* = nullptr>
-    ITResult
+    void
     operator()(const ITDiag<V>& d)
         {
         auto first_i = (inds_.empty() ? 0 : inds_.front());
@@ -113,13 +110,12 @@ struct GetElt
             if(i != first_i)
                 {
                 elt_ = 0;
-                return ITResult();
+                return;
                 }
         if(d.allSame())
             elt_ = d.val;
         else
             elt_ = d.data.at(first_i);
-        return ITResult();
         }
 
     //template <class D>
@@ -147,19 +143,17 @@ struct GetPtrElt
 
     template <typename V,
               typename std::enable_if<std::is_same<V,typename std::remove_const<T>::type>::value>::type* = nullptr>
-    ITResult
+    void
     operator()(const ITDense<V>& d)
         {
         ptr_ = &(d.data.vref(d.data.ind(inds_)));
-        return ITResult();
         }
 
     template <class D>
-    ITResult
+    void
     operator()(const D& d)
         {
         throw ITError("ITensor does not have requested element type");
-        return ITResult();
         }
     };
 
@@ -171,12 +165,12 @@ class MultComplex
 
     ITResult
     operator()(const ITDense<Real>& d) const;
-    ITResult
+    void
     operator()(ITDense<Complex>& d) const;
 
     template<typename T>
-    ITResult
-    operator()(T& d) const { Error("MultComplex not defined for ITData type"); return ITResult(); }
+    void
+    operator()(T& d) const { Error("MultComplex not defined for ITData type"); }
     };
 
 
@@ -194,15 +188,15 @@ struct PrintIT
         { }
 
     template<typename T>
-    ITResult
+    void
     operator()(const ITDense<T>& d) const;
 
     template<typename T>
-    ITResult
+    void
     operator()(const ITDiag<T>& d) const;
 
-    ITResult
-    operator()(const ITCombiner& d) const { s_ << " Combiner}\n"; return ITResult(); }
+    void
+    operator()(const ITCombiner& d) const { s_ << " Combiner}\n"; }
     };
 
 struct Read
@@ -211,11 +205,10 @@ struct Read
     Read(std::istream& s) : s_(s) { }
     
     template<typename DataType>
-    ITResult
+    void
     operator()(DataType& d) const
         { 
         d.read(s_);
-        return ITResult(); 
         }
     };
 
@@ -225,11 +218,10 @@ struct Write
     Write(std::ostream& s) : s_(s) { }
     
     template<typename DataType>
-    ITResult
+    void
     operator()(const DataType& d) const
         { 
         d.write(s_);
-        return ITResult(); 
         }
     };
 
@@ -242,10 +234,10 @@ class ReadWriteID
     
     explicit operator int() const { return id_; }
 
-    ITResult
-    operator()(const ITDense<Real>& d) { id_ = 1; return ITResult(); }
-    ITResult
-    operator()(const ITDense<Complex>& d) { id_ = 2; return ITResult(); }
+    void
+    operator()(const ITDense<Real>& d) { id_ = 1; }
+    void
+    operator()(const ITDense<Complex>& d) { id_ = 2; }
 
     ITResult static
     allocate(int id)
@@ -284,11 +276,10 @@ class SetEltComplex
         return std::move(nd);
         }
 
-    ITResult
+    void
     operator()(ITDense<Complex>& d) const
         {
         d.data[ind(is_,inds_)] = elt_;
-        return ITResult();
         }
     };
 
@@ -308,11 +299,10 @@ class SetEltReal
         { }
 
     template<typename T>
-    ITResult
+    void
     operator()(ITDense<T>& d) const
         {
         d.data[ind(is_,inds_)] = elt_;
-        return ITResult();
         }
     };
 
@@ -327,14 +317,13 @@ class VisitIT
         { }
 
     template <typename T>
-    ITResult
+    void
     operator()(const T& d) const
         {
         for(const auto& elt : d.data)
             {
             f_(elt*scale_fac);
             }
-        return ITResult();
         }
     };
 

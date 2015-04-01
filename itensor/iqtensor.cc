@@ -103,13 +103,13 @@ class IQPlusEQ
         is2_(&is2)
         { }
 
-    ITResult
+    void
     operator()(IQTData<Real>& a1,
                const IQTData<Real>& a2);
 
     };
 
-ITResult IQPlusEQ::
+void IQPlusEQ::
 operator()(IQTData<Real>& A,
            const IQTData<Real>& B)
     {
@@ -145,7 +145,6 @@ operator()(IQTData<Real>& A,
             permute(bref,*P_,aref,add);
             }
         }
-    return ITResult();
     }
 
 IQTensor& IQTensor::
@@ -439,13 +438,12 @@ class MultReal
         { }
 
     template<typename T>
-    ITResult
+    void
     operator()(IQTData<T>& d) const
         {
         //use BLAS algorithm?
         for(auto& elt : d.data)
             elt *= r_;
-        return ITResult();
         }
     };
 
@@ -477,7 +475,7 @@ class ToITensor
     operator ITensor() { return std::move(res); }
 
     template<typename T>
-    ITResult
+    void
     operator()(const IQTData<T>& d)
         {
         auto r = is_.r();
@@ -504,7 +502,6 @@ class ToITensor
         vector<Index> inds(r);
         for(long j = 0; j < r; ++j) inds[j] = is_[j];
         res = ITensor(IndexSet(std::move(inds)),std::move(nd),scale_);
-        return ITResult();
         }
     };
 
@@ -521,18 +518,16 @@ struct IsComplex
 
     operator bool() const { return res; }
 
-    ITResult
+    void
     operator()(const IQTData<Real>& d)
         {
         res = false;
-        return ITResult();
         }
 
-    ITResult
+    void
     operator()(const IQTData<Complex>& d)
         {
         res = true;
-        return ITResult();
         }
     };
 
@@ -574,8 +569,8 @@ class NormNoScale
     operator Real() const { return nrm_; }
 
     template<typename T>
-    ITResult
-    operator()(const IQTData<T>& d) { calc(d); return ITResult(); }
+    void
+    operator()(const IQTData<T>& d) { calc(d); }
 
     private:
 
@@ -635,12 +630,12 @@ struct PrintIQT
         { }
 
     template<typename T>
-    ITResult
+    void
     operator()(const IQTData<T>& d) const;
     };
 
 template<typename T>
-ITResult PrintIQT::
+void PrintIQT::
 operator()(const IQTData<T>& d) const
     {
     Real scalefac = 1.0;
@@ -648,7 +643,7 @@ operator()(const IQTData<T>& d) const
     else s_ << "(omitting too large scale factor)\n";
 
     auto rank = is_.r();
-    if(rank == 0) return ITResult();
+    if(rank == 0) return;
         
     vector<long> block(rank,0);
     auto blockIndex = [&block,this](long i)->const Index& { return (this->is_[i])[block[i]]; };
@@ -687,7 +682,6 @@ operator()(const IQTData<T>& d) const
             }
         }
 
-    return ITResult();
     }
 
 std::ostream&

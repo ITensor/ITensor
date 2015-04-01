@@ -771,15 +771,15 @@ class PlusEQ
         is2_(&is2)
         { }
 
-    ITResult
+    void
     operator()(ITDense<Real>& a1,
                const ITDense<Real>& a2);
 
-    ITResult
+    void
     operator()(ITDiag<Real>& a1,
                const ITDiag<Real>& a2);
 
-    ITResult
+    void
     operator()(ITDense<Real>& a1,
                const ITDense<Complex>& a2)
         {
@@ -787,17 +787,15 @@ class PlusEQ
         //auto np = make_newdata<ITDense<Complex>>(a1);
         //operator()(*np,a2);
         //return ITResult(np);
-        return ITResult();
         }
 
-    ITResult
+    void
     operator()(ITDense<Complex>& a1,
                const ITDense<Real>& a2)
         {
         Error("Complex + Real not implemented");
         //ITDense<Complex> a2c(a2);
         //operator()(a1,a2c);
-        return ITResult();
         }
     };
 
@@ -808,7 +806,7 @@ plusEqData(Real fac, Real *d1, const Real *d2, LAPACK_INT size)
     daxpy_wrapper(&size,&fac,d2,&inc,d1,&inc);
     }
 
-ITResult PlusEQ::
+void PlusEQ::
 operator()(ITDense<Real>& a1,
            const ITDense<Real>& a2)
     {
@@ -827,10 +825,9 @@ operator()(ITDense<Real>& a1,
         auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
         permute(ref2,*P_,ref1,add);
         }
-    return ITResult();
     }
 
-ITResult PlusEQ::
+void PlusEQ::
 operator()(ITDiag<Real>& a1,
            const ITDiag<Real>& a2)
     {
@@ -839,7 +836,6 @@ operator()(ITDiag<Real>& a1,
 #endif
     if(a1.allSame() || a2.allSame()) Error("ITDiag plusEq allSame case not implemented");
     plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
-    return ITResult();
     }
 
 ITensor& ITensor::
@@ -904,11 +900,10 @@ class FillReal
     public:
     FillReal(Real r) : r_(r) { }
 
-    ITResult
+    void
     operator()(ITDense<Real>& d) const
         {
         std::fill(d.data.begin(),d.data.end(),r_);
-        return ITResult();
         }
     ITResult
     operator()(const ITDense<Complex>& d) const
@@ -940,11 +935,10 @@ class FillCplx
         {
         return make_newdata<ITDense<Complex>>(d.data.size(),z_);
         }
-    ITResult
+    void
     operator()(ITDense<Complex>& d) const
         {
         std::fill(d.data.begin(),d.data.end(),z_);
-        return ITResult();
         }
     };
 
@@ -969,24 +963,22 @@ class MultReal
         { }
 
     template<typename T>
-    ITResult
+    void
     operator()(ITDense<T>& d) const
         {
         //TODO: use BLAS algorithm?
         for(auto& elt : d.data)
             elt *= r_;
-        return ITResult();
         }
 
     template<typename T>
-    ITResult
+    void
     operator()(ITDiag<T>& d) const
         {
         d.val *= r_;
         //TODO: use BLAS algorithm
         for(auto& elt : d.data)
             elt *= r_;
-        return ITResult();
         }
     };
 
@@ -1012,7 +1004,7 @@ class NormNoScale
     operator Real() const { return nrm_; }
 
     template<typename T>
-    ITResult
+    void
     operator()(const ITDense<T>& d)
         {
         for(const auto& elt : d.data)
@@ -1020,11 +1012,10 @@ class NormNoScale
             nrm_ += std::norm(elt);
             }
         nrm_ = std::sqrt(nrm_);
-        return ITResult();
         }
 
     template<typename T>
-    ITResult
+    void
     operator()(const ITDiag<T>& d)
         {
         if(d.allSame())
@@ -1040,7 +1031,6 @@ class NormNoScale
                 }
             }
         nrm_ = std::sqrt(nrm_);
-        return ITResult();
         }
 
     };
@@ -1145,10 +1135,10 @@ class CheckComplex
 
     operator bool() const { return isComplex_; }
 
-    NewData
-    operator()(const ITDense<Real>& d) { isComplex_ = false; return NewData(); }
-    NewData
-    operator()(const ITDense<Complex>& d) { isComplex_ = true; return NewData(); }
+    void
+    operator()(const ITDense<Real>& d) { isComplex_ = false; }
+    void
+    operator()(const ITDense<Complex>& d) { isComplex_ = true; }
 
     };
 
