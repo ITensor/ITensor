@@ -6,6 +6,7 @@
 #define __ITENSOR_ITDATA_H
 #include "../global.h"
 #include "../detail/functions.h"
+#include "../detail/call_rewrite.h"
 
 //
 // To register a new ITData subtype:
