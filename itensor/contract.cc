@@ -1,5 +1,5 @@
 #include "contract.h"
-#include "detail/functions.h"
+#include "detail/algs.h"
 //TODO: replace unordered_map with a simpler container (small_map? or jump directly to location?)
 #include <unordered_map>
 #include <future>

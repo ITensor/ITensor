@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITDATA_H
 #define __ITENSOR_ITDATA_H
 #include "../global.h"
-#include "../detail/functions.h"
+#include "../detail/algs.h"
 #include "../detail/call_rewrite.h"
 
 //
