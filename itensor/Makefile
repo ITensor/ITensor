@@ -30,7 +30,7 @@ HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterat
         itdata/itdata.h itdata_functions.h \
         itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
         itdata/iqtdata.h \
-        itensor.h qn.h iqindex.h  \
+        itensor.h itensor.ih qn.h iqindex.h  \
         detail/skip_iterator.h iqtdata_functions.h iqtensor.h \
         condenser.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
@@ -74,6 +74,9 @@ $(ITENSOR_INCLUDEDIR)/sites/%.h: sites/%.h
 	cp $^ $(ITENSOR_INCLUDEDIR)/sites
 
 $(ITENSOR_INCLUDEDIR)/%.h: %.h
+	cp $^ $(ITENSOR_INCLUDEDIR)
+
+$(ITENSOR_INCLUDEDIR)/%.ih: %.ih
 	cp $^ $(ITENSOR_INCLUDEDIR)
 
 %.o: %.cc
