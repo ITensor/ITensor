@@ -236,122 +236,6 @@ class IQTensor
 
     }; //class IQTensor
 
-template<typename... IQIndices>
-IQTensor::
-IQTensor(const QN& q,
-         const IQIndex& i1,
-         const IQIndices&... rest)
-    : 
-    is_(i1,rest...),
-    store_(make_shared<IQTData<Real>>(is_,q)),
-    div_(q),
-    scale_(1.)
-    { }
-
-template <typename... IQIVals>
-IQTensor::
-IQTensor(const IQIndexVal& iv1,
-         const IQIVals&... rest)
-    :
-    scale_(1.)
-    { 
-    const size_t size = 1+sizeof...(rest);
-    auto ivs = std::array<IQIndexVal,size>{{iv1,rest...}};
-    std::array<IQIndex,size> inds;
-    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
-    is_ = IQIndexSet(inds);
-    for(const auto& iv : ivs) div_ += iv.qn()*iv.index.dir();
-    store_ = make_shared<IQTData<Real>>(is_,div_);
-    set(1.,iv1,rest...);
-    }
-
-
-template <typename... IQIndexVals>
-Complex IQTensor::
-cplx(IQIndexVals&&... ivs) const
-    {
-    constexpr auto size = sizeof...(ivs);
-#ifdef DEBUG
-    if(!*this) Error("IQTensor is default constructed");
-    if(size > r()) Error("Too many IQIndexVals passed to real/cplx");
-#endif
-    std::array<IQIndexVal,size> vals{{static_cast<IQIndexVal>(ivs)...}};
-    std::array<long,size> inds;
-    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.i-1; });
-    Complex z = applyFunc<IQGetElt<Complex,size>>(store_,{is_,inds});
-	try {
-	    return z*scale_.real(); 
-	    }
-	catch(const TooBigForReal& e)
-	    {
-	    println("too big for real in cplx(...), scale = ",scale());
-	    throw e;
-	    }
-	catch(TooSmallForReal)
-	    {
-        println("warning: too small for real in cplx(...)");
-	    return Complex(0.,0.);
-	    }
-    return Complex(NAN,NAN);
-    }
-
-template <typename... IQIndexVals>
-Real IQTensor::
-real(IQIndexVals&&... ivs) const
-    {
-    auto z = cplx(std::forward<IQIndexVals>(ivs)...);
-    if(fabs(z.imag()) != 0)
-        {
-        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-        Error("IQTensor is Complex-valued, use .cplx(...) method");
-        }
-    return z.real();
-    }
-
-template<typename... IQIndexVals>
-void IQTensor::
-set(Complex val, const IQIndexVals&... ivs)
-    {
-    static constexpr auto size = sizeof...(ivs);
-    scaleTo(1.);
-    const std::array<IQIndexVal,size> vals{{ static_cast<IQIndexVal>(ivs)...}};
-    std::array<long,size> inds;
-    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.i-1; });
-    if(val.imag() == 0)
-        applyFunc<IQSetEltReal<size>>(store_,{val.real(),is_,inds});
-    else
-        {
-        Error("Set Complex element not implemented");
-        //applyFunc<IQSetEltComplex<size>>(store_,{val,is_,bis});
-        }
-    }
-
-template <typename Func>
-IQTensor& IQTensor::
-generate(Func&& f)
-    {
-    scaleTo(1);
-    applyFunc<GenerateIQT<decltype(f)>>(store_,{std::forward<Func>(f)});
-    return *this;
-    }
-
-template <typename Func>
-IQTensor& IQTensor::
-apply(Func&& f)
-    {
-    scaleTo(1);
-    applyFunc<ApplyIQT<decltype(f)>>(store_,{std::forward<Func>(f)});
-    return *this;
-    }
-
-template <typename Func>
-const IQTensor& IQTensor::
-visit(Func&& f) const
-    {
-    applyFunc<VisitIQT<decltype(f)>>(store_,{std::forward<Func>(f),scale_.real0()});
-    return *this;
-    }
-
 
 IQTensor inline
 operator*(IQTensor A, const IQTensor& B) { A *= B; return A; }
@@ -383,8 +267,6 @@ operator-(IQTensor T) { T *= -1; return T; }
 ITensor 
 toITensor(const IQTensor& T);
 
-inline IQTensor::
-operator ITensor() const { return toITensor(*this); }
 
 //
 // Multiplication by an IndexVal
@@ -457,5 +339,8 @@ std::ostream&
 operator<<(std::ostream & s, const IQTensor &t);
 
 }; //namespace itensor
+
+//See file iqtensor.ih for template/inline method implementations
+#include "iqtensor.ih"
 
 #endif

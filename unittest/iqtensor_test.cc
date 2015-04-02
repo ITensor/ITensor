@@ -4,22 +4,11 @@
 using namespace itensor;
 using namespace std;
 
-class Functor
+struct FuncObj
     {
-    public:
-
-    double
-    operator()(double x) const
-        {
-        return x*x;
-        }
-
-    int
-    operator()(int x) const
-        {
-        return x*x;
-        }
-
+    template<typename T>
+    T
+    operator()(T x) const { return x*x; }
     };
 
 
@@ -264,7 +253,7 @@ SECTION("MapElems")
     {
     IQTensor B1(B);
 
-    Functor f;
+    FuncObj f;
     B1.apply(f);
 
     for(int j1 = 1; j1 <= L1.m(); ++j1)

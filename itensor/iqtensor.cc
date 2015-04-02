@@ -264,11 +264,9 @@ ITResult QContract::
 operator()(const IQTData<T>& A,
            const IQTData<T>& B)
     {
-    //compute C index set and sort:
     contractIS(Ais_,Aind_,Bis_,Bind_,Cis_,true);
     auto res = make_newdata<IQTData<Real>>(Cis_,Cdiv_);
     auto& C = *res;
-    //println("Cis_ = \n",Cis_);
 
     auto rA = Ais_.r(),
          rB = Bis_.r(),
@@ -307,62 +305,62 @@ operator()(const IQTData<T>& A,
     Range Arange,
           Brange,
           Crange;
+    //Loop over blocks of A (labeled by elements of A.offsets)
     for(const auto& aio : A.offsets)
         {
+        //Reconstruct indices labeling this block of A, put into Ablock
         inverseBlockInd(aio.block,Ais_,Ablock);
-        //PRI(Ablock);
+        //Reset couB to run over indices of B (at first)
         couB.reset();
         for(int ib = 0; ib < rB; ++ib)
             couB.setInd(ib,0,Bis_[ib].nindex()-1);
         for(int iA = 0; iA < rA; ++iA)
             {
             auto ival = Ablock[iA];
+            //Restrict couB to be fixed for indices of B contracted with A
             if(AtoB[iA] != -1) couB.setInd(AtoB[iA],ival,ival);
+            //Begin computing elements of Cblock(=destination of this block-block contraction)
             if(AtoC[iA] != -1) Cblock[AtoC[iA]] = ival;
             }
+        //Loop over blocks of B which contract with current block of A
         for(;couB.notDone(); ++couB)
             {
+            //Check whether B contains non-zero block for this setting of couB
+            //TODO: check whether block is present by computing its QN flux,
+            //      should be faster than calling getBlock
             auto* bblock = B.getBlock(Bis_,couB.i);
             if(!bblock) continue;
 
-            //Finish making Cblock
+            //Finish making Cblock index array
             for(int ib = 0; ib < rB; ++ib)
                 if(BtoC[ib] != -1) Cblock[BtoC[ib]] = couB.i[ib];
 
             auto* cblock = C.getBlock(Cis_,Cblock);
             assert(cblock != nullptr);
 
-            //PRI(couB.i);
-            //println("aoff = ",aio.offset);
-            //println("boff = ",boff);
-            //println("coff = ",coff);
-
+            //Construct range objects for aref,bref,cref
+            //using IndexDim helper objects
             Arange.init(make_indexdim(Ais_,Ablock));
             Brange.init(make_indexdim(Bis_,couB.i));
             Crange.init(make_indexdim(Cis_,Cblock));
 
+            //"Wire up" tensorref's pointing to blocks of A,B, and C
+            //we are working with
             auto aref = make_tensorref(A.data.data()+aio.offset,Arange),
                  bref = make_tensorref(bblock,Brange);
             auto cref= make_tensorref(cblock,Crange);
 
-            //PRI(Aind_);
-            //PRI(Bind_);
-            //PRI(Cind);
-            //Print(Arange);
-            //Print(Brange);
-            //Print(Crange);
-            //println("----------Calling contractloop--------------");
-            //Print(aref);
-            //Print(bref);
+            //Compute aref*bref=cref
             contract(aref,Aind_,bref,Bind_,cref,Cind);
-            //Print(cref);
 
             } //for couB
         } //for A.offsets
 
+    //Compute new scalefac_ from C.data
     scalefac_ = 0;
     for(auto elt : C.data) scalefac_ += elt*elt;
     scalefac_ = std::sqrt(scalefac_);
+    //Rescale C by scalefac_
     if(scalefac_ != 0)
         {
         for(auto& elt : C.data) elt /= scalefac_;
@@ -402,17 +400,15 @@ operator*=(const IQTensor& other)
           Rind;
     computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind,checkDirs);
 
-    //PRI(Lind);
-    //PRI(Rind);
+    auto qcres = 
+    applyFunc<QContract>(store_,other.store_,{Lis,Lind,Ris,Rind,div_+other.div_});
 
-    auto C = applyFunc<QContract>(store_,other.store_,{Lis,Lind,Ris,Rind,div_+other.div_});
-
-    is_ = C.newIndexSet();
+    is_ = qcres.newIndexSet();
 
     div_ += other.div_;
 
     scale_ *= other.scale_;
-    if(C.scalefac() > 0) scale_ *= C.scalefac();
+    if(qcres.scalefac() > 0) scale_ *= qcres.scalefac();
 
     return *this;
     }
@@ -530,7 +526,6 @@ struct IsComplex
         res = true;
         }
     };
-
 
 bool
 isComplex(const IQTensor& T)
