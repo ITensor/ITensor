@@ -4,6 +4,7 @@ include ../options.mk
 
 HEADERS=test.h
 SOURCES = test.cc
+SOURCES+= algorithm_test.cc
 #SOURCES+= matrix_test.cc
 #SOURCES+= real_test.cc
 #SOURCES+= option_test.cc

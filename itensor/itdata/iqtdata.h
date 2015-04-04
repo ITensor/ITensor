@@ -8,6 +8,7 @@
 #include "itdata.h"
 #include "../iqindex.h"
 #include "../indexset.h"
+#include "../detail/gcounter.h"
 
 namespace itensor {
 
@@ -61,7 +62,32 @@ class IQTData : public ITDispatch<IQTData<T>>
     virtual
     ~IQTData() { }
 
+    private:
+
+
     };
+
+namespace detail {
+
+//function object for calling binaryFind
+//on offset vectors below
+template<typename T>
+struct compBlock
+    {
+    using BlockOffset = typename IQTData<T>::BlockOffset;
+    bool
+    operator()(const BlockOffset& bo1,
+               const BlockOffset& bo2) const
+        { return bo1.block < bo2.block; }
+    bool
+    operator()(const BlockOffset& bo, long blk) const        
+        { return bo.block < blk; }
+    bool
+    operator()(long blk, const BlockOffset& bo) const 
+        { return blk < bo.block; }
+    };
+
+}; //namespace detail
 
 template<typename T>
 IQTData<T>::
@@ -107,11 +133,6 @@ IQTData(const IQIndexSet& is,
             totalsize += totm;
             }
         }
-    //print("offsets = {");
-    //for(const auto& i : offsets)
-    //    printf("(%d,%d),",i.block,i.offset);
-    //println("}");
-    //printfln("totalsize = %d",totalsize);
     data.assign(totalsize,0);
     }
 
@@ -133,13 +154,13 @@ getBlock(const IQIndexSet& is,
         ii *= is[i-1].nindex();
         }
     ii += block_ind[0];
-    //Do a linear search to see if there
+    //Do binary search to see if there
     //is a block with block index ii
-    for(const auto& io : offsets)
-        if(io.block == ii)
-            {
-            return data.data()+io.offset;
-            }
+    auto res = detail::binaryFind(offsets,ii,detail::compBlock<T>());
+    if(res)
+        {
+        return data.data()+res->offset;
+        }
     return nullptr;
     }
 
@@ -160,33 +181,29 @@ getElt(const IQIndexSet& is,
          estr = 1; //element stride
     for(auto i = 0; i < r; ++i)
         {
-        //println("i=",i);
         const auto& I = is[i];
         long block_ind = 0,
              elt_ind = ind[i];
-        //printfln("  elt_ind = %d, I[%d].m()=%d",elt_ind,block_ind,I[block_ind].m());
         while(elt_ind >= I[block_ind].m()) //elt_ind 0-indexed
             {
             elt_ind -= I[block_ind].m();
             ++block_ind;
             }
-        //printfln("  block_ind=%d",block_ind);
         boff += block_ind*bstr;
         bstr *= I.nindex();
         eoff += elt_ind*estr;
         estr *= I[block_ind].m();
         }
-    //Do a linear search to see if there
-    //is a block with block offset bo
-    for(const auto& io : offsets)
-        if(io.block == boff)
-            {
+    //Do a binary search (equal_range) to see
+    //if there is a block with block offset "boff"
+    auto res = detail::binaryFind(offsets,boff,detail::compBlock<T>());
+    if(res)
+        {
 #ifdef DEBUG
-            if(io.offset+eoff >= data.size()) Error("get_elt out of range");
+        if(res->offset+eoff >= data.size()) Error("get_elt out of range");
 #endif
-            //printfln("io.offset = %d, eoff = %d, total = %d",io.offset,eoff,io.offset+eoff);
-            return data.data()+io.offset+eoff;
-            }
+        return data.data()+res->offset+eoff;
+        }
     return nullptr;
     }
 
