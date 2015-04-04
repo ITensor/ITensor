@@ -227,14 +227,14 @@ permute(const RTref<R1>& T,
     if(res.size() != T.size()) Error("Mismatched storage sizes in permute");
 #endif
 
-    //find largest dimension of T,
-    //size "big" and position "bigind"
+    //find largest index of T,
+    //size "bigsize" and position "bigind"
     long bigind = 0, 
-         big = T.n(0);
+         bigsize = T.n(0);
     for(int j = 1; j < r; ++j)
-        if(big < T.n(j))
+        if(bigsize < T.n(j))
             {
-            big = T.n(j); 
+            bigsize = T.n(j); 
             bigind = j;
             }
 
@@ -244,21 +244,23 @@ permute(const RTref<R1>& T,
     detail::GCounter c(0,r-1,0);
     for(int i = 0; i < r; ++i)
         c.setInd(i,0,T.n(i)-1);
-    c.setInd(bigind,0,0);		// This one we leave at 0 only
+    //Leave bigind fixed to zero, will
+    //increment manually in the loop below
+    c.setInd(bigind,0,0);
 
-    Label Ti(r), 
-          ri(r);
+    Label ri(r);
     for(; c.notDone(); ++c)
         {
-        for(int i = 0; i < r; ++i)
-            Ti[i] = ri[P.dest(i)] = c.i.fast(i);
+        for(int j = 0; j < r; ++j)
+            ri[P.dest(j)] = c.i[j];
 
         auto* pr = &res.vref(ind(res,ri));
-        auto* pt = &T.v(ind(T,Ti));
-        for(int k = 0; k < big; ++k)
+        auto* pt = &T.v(ind(T,c.i));
+        for(int b = 0; b < bigsize; ++b)
             {
+            //func defaults to (*pr = *pt) but can also 
+            //be operations such as (*pr += *pt)
             func(*pr,*pt);
-            //*pr = *pt;
             pr += stepr;
             pt += stept;
             }
