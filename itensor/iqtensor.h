@@ -108,13 +108,6 @@ class IQTensor
     //Automatic conversion to ITensor
     operator ITensor() const;
 
-    //Add ITensor 'block' to the matching block
-    //of this IQTensor. The quantum-number flux
-    //of the ITensor block must be compatible
-    //with this IQTensor.
-    IQTensor& 
-    addBlock(const ITensor& block);
-
     //----------------------------------------------------
     //IQTensor: element access
 
