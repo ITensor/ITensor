@@ -25,8 +25,14 @@ class IQTData : public ITDispatch<IQTData<T>>
         };
 
     //////////////
+    //Data Members:
     std::vector<BlockOffset> offsets;
+        //^ Block index / data offset pairs.
+        //Assumed that block indices are
+        //in increasing order.
+
     std::vector<T> data;
+        //^ tensor data stored contiguously
     //////////////
 
     IQTData(const IQIndexSet& is, 
