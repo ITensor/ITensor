@@ -316,6 +316,13 @@ div(const IQTensor& T)
 IQTensor
 combiner(std::vector<IQIndex> inds);
 
+template<typename... Inds>
+IQTensor
+combiner(const IQIndex& i1, const Inds&... inds)
+    {
+    return combiner({i1,inds...});
+    }
+
 IQIndex
 findIQInd(const IQTensor& T, const Index& i);
 

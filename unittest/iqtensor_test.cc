@@ -153,6 +153,29 @@ SECTION("Addition and Subtraction")
 
     }
 
+SECTION("Apply")
+    {
+    IQTensor B1(B);
+
+    FuncObj f;
+    B1.apply(f);
+
+    for(int j1 = 1; j1 <= L1.m(); ++j1)
+    for(int j2 = 1; j2 <= L2.m(); ++j2)
+        {
+        CHECK_REQUAL( f( B.real(L1(j1),L2(j2)) ), 
+                    B1.real(L1(j1),L2(j2)));
+        }
+    }
+
+SECTION("RandomizeTest")
+    {
+    IQTensor T(L1(1),S1(1),L2(4),S2(2));
+    const QN D = div(T);
+    T = randomize(T);
+    CHECK_EQUAL(D,div(T));
+    }
+
 SECTION("ITensor Conversion")
     {
     SECTION("Case 1")
@@ -175,6 +198,8 @@ SECTION("ITensor Conversion")
                         itA.real(Index(S1)(k1),Index(S2)(k2),Index(L1)(j1),Index(L2)(j2)));
         }
     }
+
+
 
 //SECTION("TieIndices")
 //    {
@@ -249,20 +274,6 @@ SECTION("ITensor Conversion")
 //    CHECK(fabs(tr-1.) < 1E-11);
 //    }
 
-SECTION("MapElems")
-    {
-    IQTensor B1(B);
-
-    FuncObj f;
-    B1.apply(f);
-
-    for(int j1 = 1; j1 <= L1.m(); ++j1)
-    for(int j2 = 1; j2 <= L2.m(); ++j2)
-        {
-        CHECK_REQUAL( f( B.real(L1(j1),L2(j2)) ), 
-                    B1.real(L1(j1),L2(j2)));
-        }
-    }
 
 //SECTION("RealImagPart")
 //    {
@@ -333,14 +344,6 @@ SECTION("MapElems")
 //    CHECK_CLOSE((imagPart(R)-X).norm(),0,1E-5);
 //
 //    }
-
-SECTION("RandomizeTest")
-    {
-    IQTensor T(L1(1),S1(1),L2(4),S2(2));
-    const QN D = div(T);
-    T = randomize(T);
-    CHECK_EQUAL(D,div(T));
-    }
 
 //SECTION("Test_normLogNum")
 //    {
