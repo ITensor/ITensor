@@ -289,85 +289,73 @@ class QContract
     operator()(const IQTData<T>& d1,
                const IQTData<T>& d2);
 
-    ITResult
-    operator()(const IQTData<Real>& d,
+    void
+    operator()(IQTData<Real>& d,
                const ITCombiner& C)
         {
-        auto res = combine(d,Ais_,Bis_);
-        if(!res) return ITResult::None;
-        else     return std::move(res);
+        combine(d,Ais_,Bis_);
         }
     ITResult
     operator()(const ITCombiner& C,
                const IQTData<Real>& d)
         { 
-        auto res = combine(d,Bis_,Ais_);
-        if(!res) return ITResult::AssignPointer;
-        else     return std::move(res);
+        auto res = make_newdata<IQTData<Real>>(d);
+        combine(*res,Bis_,Ais_);
+        return std::move(res);
         }
 
     private:
 
-    NewData
-    combine(const IQTData<Real>& d,
+    void
+    combine(IQTData<Real>& d,
             const IQIndexSet& dis,
             const IQIndexSet& Cis);
 
     }; //QContract
 
-NewData QContract::
-combine(const IQTData<Real>& d,
+void QContract::
+combine(IQTData<Real>& d,
         const IQIndexSet& dis,
         const IQIndexSet& Cis)
     {
-    //TODO: try to make use of Lind,Rind label vectors
-    //      to simplify combine logic
-
+    //TODO: only modify d when needed (e.g. only when Cis.r() > 2)
     //cind is "combined index"
     const auto& cind = Cis[0];
     //check if d has combined index i.e. we are "uncombining"
-    int jc = findindex(dis,cind);
+    auto jc = findindex(dis,cind);
     if(jc >= 0) //has cind
         {
+        if(jc != 0) //TODO:
+            Error("Not implemented; combined index not at front, need to permute");
         //dis has cind, replace with other inds
-        Error("Uncombining IQTensor not yet implemented");
-        return NewData();
+        auto newr = dis.r()+Cis.r()-2;
+        auto offset = Cis.r()-1;
+        vector<IQIndex> newind(newr);
+        for(long j = 0; j < offset; ++j) 
+            newind.at(j) = Cis[1+j];
+        for(long j = 0; j < dis.r()-1; ++j) 
+            newind.at(offset+j) = dis[1+j];
+        Nis_ = IQIndexSet(move(newind));
+        //Only need to modify d if Cis.r() > 2;
+        //if Cis.r()==2 just swapping one index for another
+        if(Cis.r() > 2) d.updateOffsets(Nis_,Cdiv_);
         }
     else
         {
-        //d doesn't have cind - we are combining
-        //replace Cis[1], Cis[2], ... with cind
-        //may need to permute, begin checking locations
+        //check locations
         //of Cis[1], Cis[2], ...
-        int J1 = findindex(dis,Cis[1]);
-        if(J1 < 0) 
-            {
-            println("IndexSet of dense tensor = \n",dis);
-            println("IndexSet of combiner/delta = \n",Cis);
-            Error("No contracted indices in combiner-tensor product");
-            }
         //Check if Cis[1],Cis[2],... are grouped together (contiguous)
-        bool contig = true;
-        for(int j = J1+1, c = 2; c < Cis.r() && j < dis.r(); ++j,++c)
+        //all at front, and in same order as on combiner
+        bool front_contig = true;
+        for(auto j = 0, c = 1; c < Cis.r() && j < dis.r(); ++j,++c)
             if(dis[j] != Cis[c])
                 {
-                contig = false;
+                front_contig = false;
                 break;
                 }
-        if(contig) //if contig=true, no need to permute
+        if(!front_contig) //if !front_contig, need to permute
             {
-            vector<IQIndex> newind;
-            newind.reserve(dis.r()-Cis.r()+1);
-            for(int j = 0; j < J1; ++j) 
-                newind.push_back(dis[j]);
-            newind.push_back(cind);
-            for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
-                newind.push_back(dis[j]);
-            Nis_ = IQIndexSet(move(newind));
-            return NewData();
-            }
-        else
-            {
+            //TODO:
             Permutation P(dis.r());
             //Set P destination values to -1 to mark
             //indices that need to be assigned destinations:
@@ -389,31 +377,18 @@ combine(const IQTData<Real>& d,
                 P.setFromTo(j,ni++);
                 }
             Error("IQCombiner permute case not yet implemented");
-
-            //permute uncombined indices to back, keeping relative order:
-            //vector<Index> newind;
-            //vector<long> pdims(dis.r(),-1);
-            //newind.reserve(dis.r()-Cis.r()+1);
-            //newind.push_back(cind);
-            //for(int j = 0; j < dis.r(); ++j)
-            //    {
-            //    if(P.dest(j) == -1) 
-            //        {
-            //        P.setFromTo(j,ni++);
-            //        newind.push_back(dis[j]);
-            //        }
-            //    pdims[j] = dis[P.dest(j)].m();
-            //    }
-            //Range rr(pdims);
-            //Nis_ = IndexSet(move(newind));
-            //auto res = make_newdata<ITDense<Real>>(area(Nis_));
-            //auto td = make_tensorref(d.data.data(),dis);
-            //auto tr = make_tensorref(res->data.data(),rr);
-            //permute(td,P,tr);
-            //return move(res);
             }
+        auto newr = dis.r()-Cis.r()+2;
+        auto offset = Cis.r()-2;
+        vector<IQIndex> newind(newr);
+        newind.front() = cind;
+        for(size_t j = 1; j < newr; ++j) 
+            newind.at(j) = dis[offset+j];
+        Nis_ = IQIndexSet(move(newind));
+        //Only need to modify d if Cis.r() > 2;
+        //if Cis.r()==2 just swapping one index for another
+        if(Cis.r() > 2) d.updateOffsets(Nis_,Cdiv_);
         }
-    return NewData();
     }
 
 
@@ -677,15 +652,18 @@ struct IsComplex
     operator bool() const { return res; }
 
     void
-    operator()(const IQTData<Real>& d)
-        {
-        res = false;
-        }
-
-    void
     operator()(const IQTData<Complex>& d)
         {
         res = true;
+        }
+
+    //Catch-all case: assume not complex
+    //unless specified otherwise
+    template<typename T>
+    void
+    operator()(const T& d)
+        {
+        res = false;
         }
     };
 
@@ -748,7 +726,7 @@ combiner(std::vector<IQIndex> inds)
         {
         if(qm.first != currqn)
             {
-            indqn[count] = IndexQN(Index(nameint("c",count),currm,type),currqn);
+            indqn[count] = IndexQN(Index(nameint("C",count),currm,type),currqn);
             currqn = qm.first;
             ++count;
             currm = qm.second;
@@ -759,7 +737,7 @@ combiner(std::vector<IQIndex> inds)
             }
         }
     //Handle last element of indqn:
-    indqn[count] = IndexQN(Index(nameint("c",count),currm,type),currqn);
+    indqn[count] = IndexQN(Index(nameint("C",count),currm,type),currqn);
     //Finally make new combined IQIndex and put at front of inds
     vector<IQIndex> newinds(inds.size()+1);
     auto it = newinds.begin();

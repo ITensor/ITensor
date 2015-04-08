@@ -199,6 +199,88 @@ SECTION("ITensor Conversion")
         }
     }
 
+SECTION("Combiner")
+    {
+    SECTION("Combine / Uncombine 0 - No Permute")
+        {
+        auto T = randIQT(QN(),L1,L2);
+        auto C = combiner(L1);
+        auto R = T*C;
+        auto ci = commonIndex(R,C); //get combined index
+        //check that ci exists
+        CHECK(ci);
+        //check that all elements of T accounted for in R
+        CHECK_REQUAL(norm(T),norm(R));
+        R *= dag(C); //uncombine
+        //Check that R equals original T
+        for(int i1 = 1; i1 <= L1.m(); ++i1)
+        for(int i2 = 1; i2 <= L2.m(); ++i2)
+            {
+            CHECK_REQUAL( T.real(L1(i1),L2(i2)), R.real(L1(i1),L2(i2)) );
+            }
+        }
+    SECTION("Combine / Uncombine 1 - No Permute")
+        {
+        auto T = randIQT(QN(),L1,L2);
+        auto C = combiner(L1,L2);
+        auto R = T*C;
+        auto ci = commonIndex(R,C); //get combined index
+        //check that ci exists
+        CHECK(ci);
+        //check that all elements of T accounted for in R
+        CHECK_REQUAL(norm(T),norm(R));
+        R *= dag(C); //uncombine
+        //Check that R equals original T
+        for(int i1 = 1; i1 <= L1.m(); ++i1)
+        for(int i2 = 1; i2 <= L2.m(); ++i2)
+            {
+            CHECK_REQUAL( T.real(L1(i1),L2(i2)), R.real(L1(i1),L2(i2)) );
+            }
+        }
+
+    SECTION("Combine / Uncombine 2 - No Permute")
+        {
+        auto T = randIQT(QN(),L1,L2,S1);
+        auto C = combiner(L1,L2);
+        auto R = T*C;
+        auto ci = commonIndex(R,C); //get combined index
+        //check that ci exists
+        CHECK(ci);
+        //check that all elements of T accounted for in R
+        CHECK_REQUAL(norm(T),norm(R));
+        R *= dag(C); //uncombine
+        //Check that R equals original T
+        for(int i1 = 1; i1 <= L1.m(); ++i1)
+        for(int i2 = 1; i2 <= L2.m(); ++i2)
+        for(int j1 = 1; j1 <= S1.m(); ++j1)
+            {
+            CHECK_REQUAL( T.real(L1(i1),L2(i2),S1(j1)), R.real(L1(i1),L2(i2),S1(j1)) );
+            }
+        }
+
+    SECTION("Combine / Uncombine 3 - No Permute")
+        {
+        auto T = randIQT(QN(),L1,S1,L2,S2);
+        auto C = combiner(L1,S1);
+        auto R = T*C;
+        auto ci = commonIndex(R,C); //get combined index
+        //check that ci exists
+        CHECK(ci);
+        //check that all elements of T accounted for in R
+        CHECK_REQUAL(norm(T),norm(R));
+        R *= dag(C); //uncombine
+        //Check that R equals original T
+        for(int i1 = 1; i1 <= L1.m(); ++i1)
+        for(int i2 = 1; i2 <= L2.m(); ++i2)
+        for(int j1 = 1; j1 <= S1.m(); ++j1)
+        for(int j2 = 1; j2 <= S2.m(); ++j2)
+            {
+            CHECK_REQUAL( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+            }
+        }
+
+    }
+
 
 
 //SECTION("TieIndices")

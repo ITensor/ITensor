@@ -65,7 +65,7 @@ struct ITResult
         {
         None,
         AssignNewData,
-        AssignPointer
+        AssignPointerRtoL
         };
     private:
     NewData nd_;
@@ -98,7 +98,7 @@ struct ITResult
             {
             arg1 = std::move(nd_);
             }
-        else if(action_ == AssignPointer)
+        else if(action_ == AssignPointerRtoL)
             {
             arg1 = arg2;
             }
@@ -111,8 +111,8 @@ struct ITResult
         {
         if(action_ == AssignNewData) arg = std::move(nd_);
 #ifdef DEBUG
-        else if(action_ == AssignPointer)
-            Error("Can't do AssignPointer action on single pointer.");
+        else if(action_ == AssignPointerRtoL)
+            Error("Can't do AssignPointerRtoL action on single pointer.");
 #endif
         }
     };

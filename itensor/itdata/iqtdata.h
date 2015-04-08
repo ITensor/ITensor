@@ -65,6 +65,10 @@ class IQTData : public ITDispatch<IQTData<T>>
         return const_cast<T*>(static_cast<const IQTData&>(*this).getElt(is,ind));
         }
 
+    long
+    updateOffsets(const IQIndexSet& is,
+                  const QN& Q);
+
     virtual
     ~IQTData() { }
 
@@ -96,16 +100,17 @@ struct compBlock
 }; //namespace detail
 
 template<typename T>
-IQTData<T>::
-IQTData(const IQIndexSet& is, 
-        const QN& Q)
+long IQTData<T>::
+updateOffsets(const IQIndexSet& is,
+              const QN& Q)
     {
+    offsets.clear();
     if(is.r()==0)
         {
-        data.assign(1,0);
         offsets.emplace_back(0,0);
-        return;
+        return 1;
         }
+
     detail::GCounter C(0,is.r()-1,0);
     for(int j = 0; j < is.r(); ++j) 
         C.setInd(j,0,is[j].nindex()-1);
@@ -122,8 +127,6 @@ IQTData(const IQIndexSet& is,
             }
         if(blockqn == Q)
             {
-            //PRI(C.i);
-            //println("blockqn = ",blockqn);
             long indstr = 1, //accumulate Index strides
                  ind = 0,
                  totm = 1;   //accumulate area of Indices
@@ -139,6 +142,15 @@ IQTData(const IQIndexSet& is,
             totalsize += totm;
             }
         }
+    return totalsize;
+    }
+
+template<typename T>
+IQTData<T>::
+IQTData(const IQIndexSet& is, 
+        const QN& Q)
+    {
+    auto totalsize = updateOffsets(is,Q);
     data.assign(totalsize,0);
     }
 

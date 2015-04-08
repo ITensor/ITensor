@@ -277,7 +277,7 @@ class Contract
                const ITDense<Real>& d)
         { 
         auto res = combine(d,Ris_,Lis_);
-        if(!res) return ITResult::AssignPointer;
+        if(!res) return ITResult::AssignPointerRtoL;
         else     return std::move(res);
         }
 
@@ -557,12 +557,13 @@ combine(const ITDense<Real>& d,
         if(contig)
             {
             vector<Index> newind;
-            newind.reserve(dis.r()-Cis.r()+1);
+            newind.reserve(dis.r()-Cis.r()+2);
             for(int j = 0; j < J1; ++j) 
                 newind.push_back(dis[j]);
             newind.push_back(cind);
             for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
                 newind.push_back(dis[j]);
+            assert(newind.size() == dis.r()-Cis.r()+2);
             Nis_ = IndexSet(move(newind));
             return NewData();
             }
