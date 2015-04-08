@@ -45,34 +45,30 @@ struct GetType
     operator Type() const { return type; }
 
     template<typename T>
-    ITResult
+    void
     operator()(const ITDense<T>& d)
         {
         type = Dense;
-        return ITResult();
         }
 
     template<typename T>
-    ITResult
+    void
     operator()(const ITDiag<T>& d)
         {
         type = (d.allSame() ? DiagAllSame : Diag);
-        return ITResult();
         }
 
-    ITResult
+    void
     operator()(const ITCombiner& c)
         {
         type = Combiner;
-        return ITResult();
         }
 
     template<typename T>
-    ITResult
+    void
     operator()(const T& d)
         {
         type = NoType;
-        return ITResult();
         }
     };
 
