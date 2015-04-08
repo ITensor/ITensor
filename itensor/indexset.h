@@ -83,11 +83,25 @@ class IndexSetT
 
     // 0-indexed access
     const IndexT&
-    operator[](int j) const { return index_[j]; }
+    operator[](int j) const 
+        { 
+#ifdef DEBUG
+        return index_.at(j); 
+#else
+        return index_[j]; 
+#endif
+        }
 
     // 1-indexed access
     const IndexT&
-    index(int j) const { return index_[j-1]; }
+    index(int j) const 
+        { 
+#ifdef DEBUG
+        return index_.at(j-1); 
+#else
+        return index_[j-1]; 
+#endif
+        }
 
     const IndexT&
     front() const { return index_.front(); }
