@@ -74,10 +74,12 @@ call(T&& obj, V&& v);
 //Implementation:
 
 template <class T, typename V>
-void 
+auto 
 call_impl(T&& obj, V&& v, int)
+    -> std::conditional_t<std::is_same<decltype(obj(v)),void>::value,int,int>
     {
     obj(std::forward<V>(v));
+    return 0;
     }
 template <class T, typename V>
 void
@@ -166,10 +168,12 @@ call(T&& obj, V1&& v1, V2&& v2);
 //Implementation:
 
 template <class T, typename V1, typename V2>
-void 
+auto 
 call_impl(T&& obj, V1&& v1, V2&& v2, int)
+    -> std::conditional_t<std::is_same<decltype(obj(std::forward<V1>(v1),std::forward<V2>(v2))),void>::value,int,int>
     {
     obj(std::forward<V1>(v1),std::forward<V2>(v2));
+    return 0;
     }
 template <class T, typename V1, typename V2>
 void

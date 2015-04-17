@@ -16,7 +16,7 @@ namespace itensor {
 //
 
 template<typename T>
-class ITDense : public ITDispatch<ITDense<T>>
+class ITDense : public RegisterData<ITDense<T>>
     {
     public:
 

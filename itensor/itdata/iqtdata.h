@@ -13,7 +13,7 @@
 namespace itensor {
 
 template<typename T>
-class IQTData : public ITDispatch<IQTData<T>>
+class IQTData : public RegisterData<IQTData<T>>
     {
     public:
 
