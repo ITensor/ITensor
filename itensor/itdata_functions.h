@@ -16,8 +16,9 @@
 namespace itensor {
 
 template <typename F>
-class ApplyIT
+struct ApplyIT : RegisterFunc<ApplyIT<F>>
     {
+    private:
     F& f_;
     public:
     ApplyIT(F&& f) : f_(f) { }
@@ -48,8 +49,9 @@ class ApplyIT
 
 
 template <typename F>
-struct GenerateIT
+struct GenerateIT : RegisterFunc<GenerateIT<F>>
     {
+    private:
     F& f_;
     public:
     GenerateIT(F&& f) : f_(f) { }
@@ -73,7 +75,7 @@ struct GenerateIT
     };
 
 template<typename T, int size>
-struct GetElt
+struct GetElt : RegisterFunc<GetElt<T,size>>
     {
     using Inds = std::array<long,size>;
 
@@ -128,7 +130,7 @@ struct GetElt
     };
 
 template<typename T, int size>
-struct GetPtrElt
+struct GetPtrElt : RegisterFunc<GetPtrElt<T,size>>
     {
     using Inds = std::array<long,size>;
 
@@ -157,16 +159,17 @@ struct GetPtrElt
         }
     };
 
-class MultComplex
+struct MultComplex : RegisterFunc<MultComplex>
     {
+    private:
     Complex z_;
     public:
     MultComplex(Complex z) : z_(z) { }
 
-    ITResult
-    operator()(const ITDense<Real>& d) const;
     void
-    operator()(ITDense<Complex>& d) const;
+    operator()(const ITDense<Real>& d);
+    void
+    operator()(ITDense<Complex>& d);
 
     template<typename T>
     void
@@ -175,7 +178,7 @@ class MultComplex
 
 
 
-struct PrintIT
+struct PrintIT : RegisterFunc<PrintIT>
     {
     std::ostream& s_;
     const LogNumber& x_;
@@ -199,63 +202,36 @@ struct PrintIT
     operator()(const ITCombiner& d) const { s_ << " Combiner}\n"; }
     };
 
-struct Read
+//struct Read : RegisterFunc<Read>
+//    {
+//    std::istream& s_;
+//    Read(std::istream& s) : s_(s) { }
+//    
+//    template<typename DataType>
+//    void
+//    operator()(DataType& d) const
+//        { 
+//        d.read(s_);
+//        }
+//    };
+//
+//struct Write : RegisterFunc<Write>
+//    {
+//    std::ostream& s_;
+//    Write(std::ostream& s) : s_(s) { }
+//    
+//    template<typename DataType>
+//    void
+//    operator()(const DataType& d) const
+//        { 
+//        d.write(s_);
+//        }
+//    };
+
+template<size_t size>
+struct SetEltComplex : RegisterFunc<SetEltComplex<size>>
     {
-    std::istream& s_;
-    Read(std::istream& s) : s_(s) { }
-    
-    template<typename DataType>
-    void
-    operator()(DataType& d) const
-        { 
-        d.read(s_);
-        }
-    };
-
-struct Write
-    {
-    std::ostream& s_;
-    Write(std::ostream& s) : s_(s) { }
-    
-    template<typename DataType>
-    void
-    operator()(const DataType& d) const
-        { 
-        d.write(s_);
-        }
-    };
-
-class ReadWriteID
-    {
-    int id_ = 0;
-    public:
-
-    ReadWriteID() { }
-    
-    explicit operator int() const { return id_; }
-
-    void
-    operator()(const ITDense<Real>& d) { id_ = 1; }
-    void
-    operator()(const ITDense<Complex>& d) { id_ = 2; }
-
-    ITResult static
-    allocate(int id)
-        {
-        if(id == 1)
-            return make_result<ITDense<Real>>();
-        else 
-        if(id == 2)
-            return make_result<ITDense<Complex>>();
-        else
-            Error(format("ID %d not recognized",id));
-        return ITResult();
-        }
-    };
-
-template<long size>
-class SetEltComplex
-    {
+    private:
     Complex elt_;
     const IndexSet& is_;
     const std::array<long,size>& inds_;
@@ -268,24 +244,24 @@ class SetEltComplex
           inds_(inds)
         { }
 
-    ITResult
-    operator()(const ITDense<Real>& d) const
+    void
+    operator()(const ITDense<Real>& d)
         {
-        auto nd = make_newdata<ITDense<Complex>>(d.data.cbegin(),d.data.cend());
+        auto nd = this->template setNewData<ITDense<Complex>>(d.data.cbegin(),d.data.cend());
         nd->data[ind(is_,inds_)] = elt_;
-        return std::move(nd);
         }
 
     void
-    operator()(ITDense<Complex>& d) const
+    operator()(ITDense<Complex>& d)
         {
         d.data[ind(is_,inds_)] = elt_;
         }
     };
 
 template<long size>
-class SetEltReal
+struct SetEltReal : RegisterFunc<SetEltReal<size>>
     {
+    private:
     Real elt_;
     const IndexSet& is_;
     const std::array<long,size>& inds_;
@@ -307,8 +283,9 @@ class SetEltReal
     };
 
 template <typename F>
-class VisitIT
+struct VisitIT : RegisterFunc<VisitIT<F>>
     {
+    private:
     F& f_;
     Real scale_fac;
     public:
