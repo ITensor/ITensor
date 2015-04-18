@@ -4,6 +4,8 @@
 //
 #include "itensor.h"
 #include "lapack_wrap.h"
+#include "detail/printing.h"
+#include "detail/gcounter.h"
 
 using std::array;
 using std::ostream;
@@ -659,6 +661,38 @@ operator/=(Real fac)
     return *this; 
     }
 
+struct MultComplex : RegisterFunc<MultComplex>
+    {
+    private:
+    Complex z_;
+    public:
+    MultComplex(Complex z) : z_(z) { }
+
+    void
+    operator()(const ITDense<Real>& d);
+    void
+    operator()(ITDense<Complex>& d);
+
+    template<typename T>
+    void
+    operator()(T& d) const { Error("MultComplex not defined for ITData type"); }
+    };
+
+void MultComplex::
+operator()(const ITDense<Real>& d)
+    {
+    auto nd = setNewData<ITDense<Complex>>(d.data.begin(),d.data.end());
+    operator()(*nd);
+    }
+
+void MultComplex::
+operator()(ITDense<Complex>& d)
+    {
+    //TODO: use BLAS algorithm
+    for(auto& elt : d.data)
+        elt *= z_;
+    }
+
 ITensor& ITensor::
 operator*=(Complex z)
     {
@@ -1042,6 +1076,103 @@ equalizeScales(ITensor& other)
         }
     }
 
+struct PrintIT : RegisterFunc<PrintIT>
+    {
+    std::ostream& s_;
+    const LogNumber& x_;
+    const IndexSet& is_;
+
+    PrintIT(std::ostream& s,
+            const LogNumber& x,
+            const IndexSet& is)
+        : s_(s), x_(x), is_(is)
+        { }
+
+    template<typename T>
+    void
+    operator()(const ITDense<T>& d) const;
+
+    template<typename T>
+    void
+    operator()(const ITDiag<T>& d) const;
+
+    void
+    operator()(const ITCombiner& d) const { s_ << " Combiner}\n"; }
+    };
+
+template<typename T>
+void PrintIT::
+operator()(const ITDense<T>& d) const
+    {
+    s_ << "}\n";
+    Real scalefac = 1.0;
+    if(!x_.isTooBigForReal()) scalefac = x_.real0();
+    else s_ << "  (omitting too large scale factor)\n";
+
+    auto rank = is_.r();
+    if(rank == 0) 
+        {
+        s_ << "  ";
+        detail::printVal(s_,scalefac*d.data.front());
+        }
+
+    auto gc = detail::GCounter(0,rank-1,0);
+    for(int i = 0; i < rank; ++i)
+        gc.setInd(i,0,is_.dim(i)-1);
+
+    for(; gc.notDone(); ++gc)
+        {
+        auto val = scalefac*d.data[ind(is_,gc.i)];
+        if(std::norm(val) > Global::printScale())
+            {
+            s_ << "  (";
+            for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
+                {
+                s_ << (1+gc.i(ii));
+                if(ii < gc.i.maxi()) s_ << ",";
+                }
+            s_ << ") ";
+
+            detail::printVal(s_,val);
+            }
+        }
+    }
+
+template<typename T>
+void PrintIT::
+operator()(const ITDiag<T>& d) const
+    {
+    auto allsame = d.allSame();
+    s_ << " Diag" << (allsame ? "(all same)" : "") << "}\n";
+    Real scalefac = 1.0;
+    if(!x_.isTooBigForReal()) scalefac = x_.real0();
+    else s_ << "  (omitting too large scale factor)\n";
+
+    if(is_.r() == 0) 
+        {
+        s_ << "  ";
+        detail::printVal(s_,scalefac*(d.data.empty() ? d.val : d.data.front()));
+        }
+
+    auto size = minM(is_);
+    for(size_t i = 0; i < size; ++i)
+        {
+        auto val = scalefac*(allsame ? d.val : d.data[i]);
+        if(std::norm(val) > Global::printScale())
+            {
+            s_ << "  (";
+            for(int j = 1; j < is_.size(); ++j)
+                {
+                s_ << (1+i) << ",";
+                }
+            s_ << (1+i) << ") ";
+            detail::printVal(s_,val);
+            }
+        }
+    }
+//template void PrintIT::operator()(const ITDiag<Real>& d) const;
+//template void PrintIT::operator()(const ITDiag<Complex>& d) const;
+
 ostream& 
 operator<<(ostream & s, const ITensor& t)
     {
@@ -1195,5 +1326,31 @@ delta(const Index& i1, const Index& i2)
 #endif
     return ITensor({i1,i2},make_newdata<ITCombiner>(),{1.0});
     }
+
+//struct Read : RegisterFunc<Read>
+//    {
+//    std::istream& s_;
+//    Read(std::istream& s) : s_(s) { }
+//    
+//    template<typename DataType>
+//    void
+//    operator()(DataType& d) const
+//        { 
+//        d.read(s_);
+//        }
+//    };
+//
+//struct Write : RegisterFunc<Write>
+//    {
+//    std::ostream& s_;
+//    Write(std::ostream& s) : s_(s) { }
+//    
+//    template<typename DataType>
+//    void
+//    operator()(const DataType& d) const
+//        { 
+//        d.write(s_);
+//        }
+//    };
 
 };
