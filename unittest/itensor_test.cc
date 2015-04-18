@@ -36,7 +36,7 @@ operator<<(std::ostream& s, Type t)
     return s;
     }
 
-struct GetType
+struct GetType : RegisterFunc<GetType>
     {
     Type type = NoType;
 

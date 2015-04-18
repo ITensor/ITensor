@@ -11,7 +11,7 @@
 namespace itensor {
 
 template<typename T>
-class ITDiag : public ITDispatch<ITDiag<T>>
+class ITDiag : public RegisterData<ITDiag<T>>
     {
     public:
     using size_type = typename std::vector<T>::size_type;

@@ -12,16 +12,15 @@ using std::move;
 
 namespace itensor {
 
-ITResult MultComplex::
-operator()(const ITDense<Real>& d) const
+void MultComplex::
+operator()(const ITDense<Real>& d)
     {
-    auto nd = make_newdata<ITDense<Complex>>(d.data.begin(),d.data.end());
+    auto nd = setNewData<ITDense<Complex>>(d.data.begin(),d.data.end());
     operator()(*nd);
-    return move(nd);
     }
 
 void MultComplex::
-operator()(ITDense<Complex>& d) const
+operator()(ITDense<Complex>& d)
     {
     //TODO: use BLAS algorithm
     for(auto& elt : d.data)

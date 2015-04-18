@@ -15,8 +15,7 @@ SOURCES+= contract.cc
 SOURCES+= itensor.cc 
 SOURCES+= iqindex.cc 
 SOURCES+= iqtensor.cc 
-#SOURCES+= condenser.cc
-#SOURCES+= iqcombiner.cc 
+
 #SOURCES+= spectrum.cc 
 #SOURCES+= svdalgs.cc 
 #SOURCES+= mps.cc 
@@ -24,15 +23,17 @@ SOURCES+= iqtensor.cc
 #SOURCES+= tevol.cc
 #SOURCES+= autompo.cc
 
+        #itdata_functions.h \
+
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
         detail/gcounter.h global.h real.h permutation.h index.h \
         range.h indexset.h counter.h simpletensor.h contract.h \
-        itdata/itdata.h itdata_functions.h \
+        itdata/itdata.h \
         itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
         itdata/iqtdata.h \
-        itensor.h itensor.ih qn.h iqindex.h  \
-        detail/skip_iterator.h iqtdata_functions.h iqtensor.h iqtensor.ih \
-        condenser.h qcounter.h iqcombiner.h \
+        itdata_functions.h itensor.h itensor.ih qn.h iqindex.h  \
+        iqtdata_functions.h iqtensor.h iqtensor.ih \
+        #condenser.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
