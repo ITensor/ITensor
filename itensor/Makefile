@@ -22,8 +22,6 @@ SOURCES+= iqtensor.cc
 #SOURCES+= tevol.cc
 #SOURCES+= autompo.cc
 
-        #itdata_functions.h \
-
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
         detail/gcounter.h global.h real.h permutation.h index.h \
         range.h indexset.h counter.h simpletensor.h contract.h \
@@ -124,7 +122,7 @@ indexset.o: $(DEPHEADERS)
 DEPHEADERS+= contract.h range.h simpletensor.h
 contract.o: $(DEPHEADERS)
 .debug_objs/contract.o: $(DEPHEADERS)
-DEPHEADERS+= itdata/itdata.h itdata_functions.h \
+DEPHEADERS+= itdata/itdata.h \
 itensor.h counter.h
 itensor.o: $(DEPHEADERS)
 .debug_objs/itensor.o: $(DEPHEADERS)

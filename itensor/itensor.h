@@ -4,8 +4,8 @@
 //
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
-#include "itdata_functions.h"
-#include "index.h"
+#include "indexset.h"
+#include "itdata/itdata.h"
 
 namespace itensor {
 

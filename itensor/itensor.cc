@@ -6,6 +6,7 @@
 #include "lapack_wrap.h"
 #include "detail/printing.h"
 #include "detail/gcounter.h"
+#include "contract.h"
 
 using std::array;
 using std::ostream;

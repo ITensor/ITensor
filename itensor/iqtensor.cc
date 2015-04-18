@@ -5,6 +5,7 @@
 #include "iqtensor.h"
 #include "detail/printing.h"
 #include "lapack_wrap.h"
+#include "contract.h"
 
 namespace itensor {
 

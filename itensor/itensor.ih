@@ -5,6 +5,11 @@
 #ifndef __ITENSOR_ITENSOR_IH
 #define __ITENSOR_ITENSOR_IH
 
+#include "itdata/itdense.h"
+#include "itdata/itdiag.h"
+#include "itdata/itcombiner.h"
+#include "itdata/iqtdata.h"
+
 //
 // Template Method Implementations
 //
