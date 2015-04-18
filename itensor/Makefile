@@ -29,7 +29,7 @@ HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterat
         itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
         itdata/iqtdata.h \
         itensor.h itensor.ih qn.h iqindex.h  \
-        iqtdata_functions.h iqtensor.h iqtensor.ih \
+        iqtensor.h iqtensor.ih \
         #condenser.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\
@@ -129,7 +129,7 @@ itensor.o: $(DEPHEADERS)
 DEPHEADERS+= qn.h iqindex.h
 iqindex.o: $(DEPHEADERS)
 .debug_objs/iqindex.o: $(DEPHEADERS)
-DEPHEADERS+= itdata/iqtdata.h iqtdata_functions.h iqtensor.h qcounter.h detail/skip_iterator.h
+DEPHEADERS+= itdata/iqtdata.h iqtensor.h qcounter.h detail/skip_iterator.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
 DEPHEADERS+= condenser.h iqcombiner.h localmpo.h
