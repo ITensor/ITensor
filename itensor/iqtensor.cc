@@ -95,7 +95,7 @@ IQTensor(const QN& q,
     {
     }
 
-class IQPlusEQ
+class IQPlusEQ : public RegisterFunc<IQPlusEQ>
     {
     Real fac_;
     const Permutation *P_ = nullptr;
@@ -232,20 +232,20 @@ operator-=(const IQTensor& o)
     return operator+=(oth);
     }
 
-struct Permute
+struct Permute : RegisterFunc<Permute>
     {
     Permutation P;
 
     Permute(const Permutation& P_) : P(P_) { }
 
     template<typename T>
-    ITResult
+    void
     operator()(const IQTData<T>& d) const;
 
     };
 
 template<typename T>
-ITResult Permute::
+void Permute::
 operator()(const IQTData<T>& d) const
     {
     //auto res = make_newdata<IQTData<Real>>(Nis_,Cdiv_);
@@ -253,7 +253,7 @@ operator()(const IQTData<T>& d) const
     }
 
 
-class QContract
+class QContract : public RegisterFunc<QContract>
     {
     const Label &Aind_,
                 &Bind_;
@@ -285,7 +285,7 @@ class QContract
     scalefac() const { return scalefac_; }
 
     template<typename T>
-    ITResult
+    void
     operator()(const IQTData<T>& d1,
                const IQTData<T>& d2);
 
@@ -295,13 +295,12 @@ class QContract
         {
         combine(d,Ais_,Bis_);
         }
-    ITResult
+    void
     operator()(const ITCombiner& C,
                const IQTData<Real>& d)
         { 
-        auto res = make_newdata<IQTData<Real>>(d);
-        combine(*res,Bis_,Ais_);
-        return std::move(res);
+        auto nd = setNewData<IQTData<Real>>(d);
+        combine(*nd,Bis_,Ais_);
         }
 
     private:
@@ -393,7 +392,7 @@ combine(IQTData<Real>& d,
 
 
 template<typename T>
-ITResult QContract::
+void QContract::
 operator()(const IQTData<T>& A,
            const IQTData<T>& B)
     {
@@ -401,8 +400,8 @@ operator()(const IQTData<T>& A,
     contractIS(Ais_,Aind_,Bis_,Bind_,Nis_,true);
 
     //Allocate storage for C
-    auto res = make_newdata<IQTData<Real>>(Nis_,Cdiv_);
-    auto& C = *res;
+    auto nd = setNewData<IQTData<Real>>(Nis_,Cdiv_);
+    auto& C = *nd;
 
     auto rA = Ais_.r(),
          rB = Bis_.r(),
@@ -501,8 +500,6 @@ operator()(const IQTData<T>& A,
         {
         for(auto& elt : C.data) elt /= scalefac_;
         }
-
-    return move(res);
     }
 
 
@@ -562,7 +559,7 @@ dag()
     return *this;
     }
 
-class MultReal
+class MultReal : public RegisterFunc<MultReal>
     {
     Real r_;
     public:
@@ -590,7 +587,7 @@ scaleTo(const LogNumber& newscale)
     scale_ = newscale;
     }
 
-class ToITensor
+class ToITensor : public RegisterFunc<ToITensor>
     {
     ITensor res;
     const IQIndexSet& is_;
@@ -644,27 +641,19 @@ toITensor(const IQTensor& T)
     return ITensor(applyFunc<ToITensor>(T.data(),{T.inds(),T.scale()}));
     }
 
-struct IsComplex
+struct IsComplex : RegisterFunc<IsComplex>
     {
     bool res = false;
-    IsComplex() { }
 
     operator bool() const { return res; }
 
     void
-    operator()(const IQTData<Complex>& d)
-        {
-        res = true;
-        }
+    operator()(const IQTData<Complex>& d) { res = true; }
 
-    //Catch-all case: assume not complex
-    //unless specified otherwise
+    //Catch-all case: assume real unless specified otherwise
     template<typename T>
     void
-    operator()(const T& d)
-        {
-        res = false;
-        }
+    operator()(const T& d) { res = false; }
     };
 
 bool
@@ -772,14 +761,14 @@ dir(const IQTensor& T, const IQIndex& I)
     return Out;
 	}
 
-class NormNoScale
+class IQNormNoScale : public RegisterFunc<IQNormNoScale>
     {
     Real nrm_;
     public:
 
-    NormNoScale() : nrm_(0) { }
+    IQNormNoScale() : nrm_(0) { }
 
-    operator Real() const { return nrm_; }
+    operator Real() { return nrm_; }
 
     template<typename T>
     void
@@ -806,7 +795,7 @@ norm(const IQTensor& T)
     if(!T) Error("ITensor is default initialized");
 #endif
     return T.scale().real0() *
-           applyFunc<NormNoScale>(T.data());
+           applyFunc<IQNormNoScale>(T.data());
     }
 
 IQTensor
@@ -830,7 +819,7 @@ isZero(const IQTensor& T, const Args& args)
     return true;
     }
 
-struct PrintIQT
+struct PrintIQT : RegisterFunc<PrintIQT>
     {
     std::ostream& s_;
     const LogNumber& x_;

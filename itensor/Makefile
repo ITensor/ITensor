@@ -13,8 +13,8 @@ SOURCES+= itdata_functions.cc
 SOURCES+= simpletensor.cc 
 SOURCES+= contract.cc 
 SOURCES+= itensor.cc 
-#SOURCES+= iqindex.cc 
-#SOURCES+= iqtensor.cc 
+SOURCES+= iqindex.cc 
+SOURCES+= iqtensor.cc 
 
 #SOURCES+= spectrum.cc 
 #SOURCES+= svdalgs.cc 
@@ -32,8 +32,8 @@ HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterat
         itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
         itdata/iqtdata.h \
         itdata_functions.h itensor.h itensor.ih qn.h iqindex.h  \
-        #detail/skip_iterator.h iqtdata_functions.h iqtensor.h iqtensor.ih \
-        condenser.h qcounter.h iqcombiner.h \
+        iqtdata_functions.h iqtensor.h iqtensor.ih \
+        #condenser.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \

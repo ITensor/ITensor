@@ -9,7 +9,7 @@
 namespace itensor {
 
 template<typename T, size_t size>
-struct IQGetElt
+struct IQGetElt : RegisterFunc<IQGetElt<T,size>>
     {
     using Inds = std::array<long,size>;
 
@@ -28,18 +28,17 @@ struct IQGetElt
 
     template <typename V,
               typename std::enable_if<std::is_convertible<V,T>::value>::type* = nullptr>
-    ITResult
+    void
     operator()(const IQTData<V>& d)
         {
         auto* pelt = d.getElt(is_,inds_);
         if(pelt) elt_ = *pelt;
         else     elt_ = 0;
-        return ITResult();
         }
     };
 
 template<size_t size>
-struct IQSetEltReal
+struct IQSetEltReal : RegisterFunc<IQSetEltReal<size>>
     {
     using Inds = std::array<long,size>;
 
@@ -57,24 +56,17 @@ struct IQSetEltReal
         { }
 
     template<typename T>
-    ITResult
+    void
     operator()(IQTData<T>& d)
         {
         auto* pelt = d.getElt(is_,inds_);
-        if(pelt) 
-            {
-            *pelt = T{elt_};
-            }
-        else 
-            {
-            Error("Setting IQTensor element non-zero would violate its symmetry.");
-            }
-        return ITResult();
+        if(pelt) *pelt = T{elt_};
+        else     Error("Setting IQTensor element non-zero would violate its symmetry.");
         }
     };
 
 template <typename F>
-class ApplyIQT
+class ApplyIQT : public RegisterFunc<ApplyIQT<F>>
     {
     F& f_;
     public:
@@ -82,23 +74,22 @@ class ApplyIQT
 
     template <typename T,
               typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
-    ITResult
-    operator()(IQTData<T>& d) const { return doApply(d); }
+    void
+    operator()(IQTData<T>& d) const { doApply(d); }
 
     private:
 
     template<typename T>
-    ITResult
+    void
     doApply(T& d) const
         {
         for(auto& elt : d.data)
             elt = f_(elt);
-        return ITResult();
         }
     };
 
 template <typename F>
-struct GenerateIQT
+struct GenerateIQT : public RegisterFunc<GenerateIQT<F>>
     {
     F& f_;
     public:
@@ -107,22 +98,21 @@ struct GenerateIQT
         { }
 
     template <typename T>
-    ITResult
-    operator()(IQTData<T>& d) const { return doGen(d); }
+    void
+    operator()(IQTData<T>& d) const { doGen(d); }
 
     private:
 
     template<typename T>
-    ITResult
+    void
     doGen(T& d) const
         {
         std::generate(d.data.begin(),d.data.end(),f_);
-        return ITResult();
         }
     };
 
 template <typename F>
-class VisitIQT
+class VisitIQT : public RegisterFunc<VisitIQT<F>>
     {
     F& f_;
     Real scale_fac;
@@ -132,12 +122,11 @@ class VisitIQT
         { }
 
     template <typename T>
-    ITResult
+    void
     operator()(const T& d) const
         {
         for(const auto& elt : d.data)
             f_(elt*scale_fac);
-        return ITResult();
         }
     };
 

@@ -320,7 +320,7 @@ template<typename... Inds>
 IQTensor
 combiner(const IQIndex& i1, const Inds&... inds)
     {
-    return combiner({i1,inds...});
+    return combiner(std::vector<IQIndex>{i1,inds...});
     }
 
 IQIndex
