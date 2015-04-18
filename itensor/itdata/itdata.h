@@ -56,6 +56,19 @@ make_newdata(Args&&... args)
     return std::unique_ptr<DataType>(new DataType(std::forward<Args>(args)...));
     }
 
+struct FuncBase
+    {
+    FuncBase() { }
+    virtual ~FuncBase() { }
+
+    REGISTER(void virtual applyTo,,=0;)
+    REGISTER(void virtual applyTo,const,=0;)
+
+    template <typename T>
+    void
+    applyTo(T& t) { throw ITError("ITData subtype not registered."); }
+    };
+
 struct ITData
     {
     ITData() { }
@@ -104,19 +117,6 @@ struct RegisterData : ITData
 //////////////////
 //////////////////
 
-struct FuncBase
-    {
-    FuncBase() { }
-    virtual ~FuncBase() { }
-
-    REGISTER(void virtual applyTo,,=0;)
-    REGISTER(void virtual applyTo,const,=0;)
-
-    template <typename T>
-    void
-    applyTo(T& t) { throw ITError("ITData subtype not registered."); }
-    };
-
 
 template <typename Derived>
 struct RegisterFunc : FuncBase
@@ -129,9 +129,12 @@ struct RegisterFunc : FuncBase
     T&
     modifyData(const T& d);
 
-    template <typename ITDataType>
-    void
-    assignNewData(std::unique_ptr<ITDataType>&& nd);
+    template <typename ITDataType, typename... Args>
+    ITDataType*
+    setNewData(Args&&... args);
+
+    bool
+    newDataIsSet() { return action_ == AssignNewData; }
 
     void
     assignPointerRtoL();
@@ -160,7 +163,7 @@ struct RegisterFunc : FuncBase
     const PData* arg2_ = nullptr;
     Derived& dt_;
     Action action_ = None;
-    NewData nd_;
+    PData nd_;
 
     public:
 
@@ -315,16 +318,16 @@ setup(PData* arg1, const PData* arg2)
     }
 
 template <typename Derived>
-template <typename ITDataType>
-void RegisterFunc<Derived>::
-assignNewData(std::unique_ptr<ITDataType>&& nd)
+template <typename ITDataType, typename... Args>
+ITDataType* RegisterFunc<Derived>::
+setNewData(Args&&... args)
     {
-    if(!arg1_) Error("Can't do action AssignNewData with const-only access to first arg");
-    if(nd)
-        {
-        nd_ = std::move(nd);
-        action_ = AssignNewData;
-        }
+    if(!arg1_) Error("Can't call setNewData with const-only access to first arg");
+    action_ = AssignNewData;
+    auto newdat = std::make_shared<ITDataType>(std::forward<Args>(args)...);
+    auto* ret = newdat.get();
+    nd_ = std::move(newdat);
+    return ret;
     }
 
 template <typename Derived>
@@ -401,6 +404,15 @@ applyToImpl(T& d)
 //////
 ////// applyFunc methods
 //////
+
+template<typename F>
+F
+applyFunc(const ITData& arg,
+          F f = F())
+    {
+    arg.plugInto(f);
+    return f;
+    }
 
 template<typename F>
 F
