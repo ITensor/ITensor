@@ -364,6 +364,26 @@ SECTION("Combiner")
 
     }
 
+SECTION("Scalar")
+    {
+    auto T1 = randIQT(QN(),L1,L2,S1,S2);
+    auto T2 = randIQT(QN(),S1,L2,S2,L1);
+    auto S = T1*dag(T2);
+    CHECK(S.r() == 0);
+
+    Real val = 0;
+    for(int i1 = 1; i1 <= L1.m(); ++i1)
+    for(int i2 = 1; i2 <= L2.m(); ++i2)
+    for(int j1 = 1; j1 <= S1.m(); ++j1)
+    for(int j2 = 1; j2 <= S2.m(); ++j2)
+        {
+        val += T1.real(L1(i1),L2(i2),S1(j1),S2(j2))*T2.real(L1(i1),L2(i2),S1(j1),S2(j2));
+        }
+
+    CHECK_REQUAL(val, S.real());
+    CHECK_REQUAL(fabs(val), norm(S));
+    }
+
 
 
 //SECTION("TieIndices")

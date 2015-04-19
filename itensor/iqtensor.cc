@@ -907,7 +907,12 @@ operator()(const IQTData<T>& d) const
     else s_ << "(omitting too large scale factor)\n";
 
     auto rank = is_.r();
-    if(rank == 0) return;
+    if(rank == 0) 
+        {
+        s_ << "  ";
+        detail::printVal(s_,scalefac*d.data.front());
+        return;
+        }
         
     vector<long> block(rank,0);
     auto blockIndex = [&block,this](long i)->const Index& { return (this->is_[i])[block[i]]; };
