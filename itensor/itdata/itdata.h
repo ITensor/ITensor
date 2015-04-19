@@ -103,24 +103,27 @@ struct RegisterData : ITData
     plugInto(FuncBase& f) const final
         {
         auto& cdt = *(static_cast<const Derived*>(this));
-        return f.applyTo(cdt);
+        f.applyTo(cdt);
         }
         
     void
     plugInto(FuncBase& f) final
         {
         auto& dt = *(static_cast<Derived*>(this));
-        return f.applyTo(dt);
+        f.applyTo(dt);
         }
     };
 
 //////////////////
 //////////////////
 
+struct NoReturn { };
 
-template <typename Derived>
+template <typename Derived, typename Return = NoReturn>
 struct RegisterFunc : FuncBase
     {
+    using return_type = Return;
+
     RegisterFunc();
     RegisterFunc(RegisterFunc&& other);
     virtual ~RegisterFunc() { }
@@ -142,6 +145,8 @@ struct RegisterFunc : FuncBase
 
     void
     assignPointerRtoL();
+
+    operator Return() { return ret_; }
 
     private:
 
@@ -168,6 +173,7 @@ struct RegisterFunc : FuncBase
     Derived& dt_;
     Action action_ = None;
     PData nd_;
+    Return ret_;
 
     public:
 
@@ -181,7 +187,7 @@ struct RegisterFunc : FuncBase
 
     };
 
-template <typename Callable, typename T1>
+template <typename Callable, typename T1, typename Return>
 struct CallWrap : FuncBase
     {
     CallWrap(Callable& c, T1& arg1) : c_(c), arg1_(arg1), parg1_(nullptr) { }
@@ -189,6 +195,9 @@ struct CallWrap : FuncBase
 
     REGISTER(void applyTo,,final { applyToImpl(d); })
     REGISTER(void applyTo,const,final { applyToImpl(d); })
+
+    Return
+    getReturn() { return ret_; }
 
     private:
 
@@ -199,6 +208,7 @@ struct CallWrap : FuncBase
     Callable& c_;
     T1& arg1_;
     PData* parg1_;
+    Return ret_;
     };
 
 
@@ -208,122 +218,121 @@ struct CallWrap : FuncBase
 
 namespace detail {
 
-template<typename Func, typename T>
+template<typename Ret, typename Func, typename T>
 auto
 clone_modify_impl(Func& f, T& a, PData& pdat,int) //-> decltype(f(static_cast<const T&>(a)))
-    //Using std::conditional here because we want the return type to be a placeholder int,
-    //but need to call f(const T&) to get substitution failure (SFINAE) if no such call exists.
-    -> std::conditional_t<std::is_same<decltype(f(static_cast<const T&>(a))),void>::value,int,int>
+    //Using std::conditional here because we want the return type to be Ret regardless
+    //but need to call possibly void f(const T&) to get substitution failure (SFINAE) if no such call exists.
+    -> std::conditional_t<std::is_same<decltype(f(static_cast<const T&>(a))),void>::value,Ret,Ret>
     {
     const T& ca = a;
-    detail::call(f,ca);
-    return 0;
+    return detail::call<Ret>(f,ca);
     }
 
-template<typename Func, typename T>
-void
+template<typename Ret, typename Func, typename T>
+Ret
 clone_modify_impl(Func& f, T& a, PData& pdat,long)
     {
     //if(Global::debug3()) println("Calling solo (1 param)");
     //println("--> Calling solo (1 param)");
     if(!pdat.unique()) pdat = pdat->clone();
     auto* pa = static_cast<T*>(pdat.get());
-    detail::call(f,*pa);
+    return detail::call<Ret>(f,*pa);
     }
 
-template<typename Func, typename T>
-void
+template<typename Ret, typename Func, typename T>
+Ret
 clone_modify(Func& f, T& a, PData& pdat)
     {
-    clone_modify_impl(f,a,pdat,0);
+    return clone_modify_impl<Ret>(f,a,pdat,0);
     }
 
 /////////////////////
 
-template<typename Func, typename T1, typename T2>
+template<typename Ret, typename Func, typename T1, typename T2>
 auto
 clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) 
-    //Using std::conditional here because we want the return type to be a placeholder int,
-    //but need to call f(const T1&,const T2&) to get substitution failure (SFINAE) 
+    //Using std::conditional here because we want the return type to be Ret regardless
+    //but need to call possibly void f(const T1&,const T2&) to get substitution failure (SFINAE) 
     //if no such call exists.
-    -> std::conditional_t<std::is_same<decltype(f(static_cast<const T1&>(a1),a2)),void>::value,int,int>
+    -> std::conditional_t<std::is_same<decltype(f(static_cast<const T1&>(a1),a2)),void>::value,Ret,Ret>
     {
     //if(Global::debug3()) println("Not calling solo (2 params)");
     const T1& ca1 = a1;
-    detail::call(f,ca1,a2);
-    return 0;
+    return detail::call<Ret>(f,ca1,a2);
     }
 
-template<typename Func, typename T1, typename T2>
-void
+template<typename Ret, typename Func, typename T1, typename T2>
+Ret
 clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,long)
     {
     //if(Global::debug3()) println("Calling solo (2 params)");
     //println("--> Calling solo (2 params)");
     if(!pdat.unique()) pdat = pdat->clone();
     auto* pa1 = static_cast<T1*>(pdat.get());
-    detail::call(f,*pa1,a2);
+    return detail::call<Ret>(f,*pa1,a2);
     }
 
-template<typename Func, typename T1, typename T2>
-void
+template<typename Ret, typename Func, typename T1, typename T2>
+Ret
 clone_modify(Func& f, T1& a1, const T2& a2, PData& pdat)
     {
-    clone_modify_impl(f,a1,a2,pdat,0);
+    return clone_modify_impl<Ret>(f,a1,a2,pdat,0);
     }
 
 }; //namespace detail
 
-template <typename Callable, typename T1>
+template <typename Callable, typename T1, typename Return>
 template<typename T2>
-void CallWrap<Callable,T1>::
+void CallWrap<Callable,T1,Return>::
 applyToImpl(const T2& d2) 
     { 
-    if(parg1_) detail::clone_modify(c_,arg1_,d2,*parg1_); 
-    else       detail::call(c_,arg1_,d2); 
+    if(parg1_) ret_ = detail::clone_modify<Return>(c_,arg1_,d2,*parg1_); 
+    else       ret_ = detail::call<Return>(c_,arg1_,d2); 
     }
 
-template <typename Derived>
-RegisterFunc<Derived>::
+template <typename Derived, typename Return>
+RegisterFunc<Derived,Return>::
 RegisterFunc() 
     :
     arg2_(nullptr),
     dt_(*static_cast<Derived*>(this))
     { }
 
-template <typename Derived>
-RegisterFunc<Derived>::
+template <typename Derived, typename Return>
+RegisterFunc<Derived,Return>::
 RegisterFunc(RegisterFunc&& other)
     :
     arg1_(other.arg1_),
     arg2_(other.arg2_),
     dt_(*static_cast<Derived*>(this)),
     action_(other.action_),
-    nd_(std::move(other.nd_))
+    nd_(std::move(other.nd_)),
+    ret_(std::move(other.ret_))
     { 
     other.arg1_ = nullptr;
     other.arg2_ = nullptr;
     other.action_ = None;
     }
 
-template <typename Derived>
-void RegisterFunc<Derived>::
+template <typename Derived, typename Return>
+void RegisterFunc<Derived,Return>::
 setup(PData* arg1)
     { 
     arg1_ = arg1;
     }
 
-template <typename Derived>
-void RegisterFunc<Derived>::
+template <typename Derived, typename Return>
+void RegisterFunc<Derived,Return>::
 setup(PData* arg1, const PData* arg2)
     { 
     arg1_ = arg1; 
     arg2_ = arg2;
     }
 
-template <typename Derived>
+template <typename Derived, typename Return>
 template <typename ITDataType, typename... Args>
-ITDataType* RegisterFunc<Derived>::
+ITDataType* RegisterFunc<Derived,Return>::
 makeNewData(Args&&... args)
     {
     if(!arg1_) Error("Can't call setNewData with const-only access to first arg");
@@ -334,25 +343,25 @@ makeNewData(Args&&... args)
     return ret;
     }
 
-template <typename Derived>
+template <typename Derived, typename Return>
 template <typename ITDataType>
-void RegisterFunc<Derived>::
+void RegisterFunc<Derived,Return>::
 setNewData(std::shared_ptr<ITDataType>&& nd)
     {
     nd_ = std::move(nd);
     action_ = AssignNewData;
     }
 
-template <typename Derived>
-void RegisterFunc<Derived>::
+template <typename Derived, typename Return>
+void RegisterFunc<Derived,Return>::
 assignPointerRtoL() 
     { 
     if(!arg2_) Error("No second pointer provided for action AssignPointerRtoL");
     action_ = AssignPointerRtoL; 
     }
 
-template <typename Derived>
-void RegisterFunc<Derived>::
+template <typename Derived, typename Return>
+void RegisterFunc<Derived,Return>::
 updateArg1()
     {
     if(action_ == AssignNewData)
@@ -365,9 +374,9 @@ updateArg1()
         }
     }
 
-template <typename Derived>
+template <typename Derived, typename Return>
 template<typename T>
-T& RegisterFunc<Derived>::
+T& RegisterFunc<Derived,Return>::
 modifyData(const T& d)
     {
     if(!arg1_) Error("Can't modify const data");
@@ -376,39 +385,41 @@ modifyData(const T& d)
     return *pa1;
     }
 
-template <typename Derived>
+template <typename Derived, typename Return>
 template<typename T>
-void RegisterFunc<Derived>::
+void RegisterFunc<Derived,Return>::
 applyToImpl(const T& d)
     {
     //println("In applyToImpl #1");
     if(arg2_)
         {
-        CallWrap<Derived,const T> w(dt_,d);
+        CallWrap<Derived,const T,Return> w(dt_,d);
         (*arg2_)->plugInto(w);
+        ret_ = std::move(w.getReturn());
         }
     else
         {
-        detail::call(dt_,d);
+        ret_ = detail::call<Return>(dt_,d);
         }
     updateArg1();
     }
 
-template <typename Derived>
+template <typename Derived, typename Return>
 template<typename T>
-void RegisterFunc<Derived>::
+void RegisterFunc<Derived,Return>::
 applyToImpl(T& d)
     {
     //println("In applyToImpl #2");
     assert(arg1_);
     if(arg2_)
         {
-        CallWrap<Derived,T> w(dt_,d,*arg1_);
+        CallWrap<Derived,T,Return> w(dt_,d,*arg1_);
         (*arg2_)->plugInto(w);
+        ret_ = std::move(w.getReturn());
         }
     else
         {
-        detail::clone_modify(dt_,d,*arg1_);
+        ret_ = detail::clone_modify<Return>(dt_,d,*arg1_);
         }
     updateArg1();
     }
@@ -418,8 +429,15 @@ applyToImpl(T& d)
 ////// applyFunc methods
 //////
 
+template <typename F>
+using returnTypeOf = typename std::conditional<
+                               std::is_same<typename F::return_type,NoReturn>::value,
+                                   F,
+                                   typename F::return_type
+                               >::type;
+
 template<typename F>
-F
+returnTypeOf<F>
 applyFunc(const ITData& arg,
           F f = F())
     {
@@ -428,7 +446,7 @@ applyFunc(const ITData& arg,
     }
 
 template<typename F>
-F
+returnTypeOf<F>
 applyFunc(const CPData& arg,
           F f = F())
     {
@@ -437,7 +455,7 @@ applyFunc(const CPData& arg,
     }
 
 template<typename F>
-F
+returnTypeOf<F>
 applyFunc(PData& arg,
           F f = F())
     {
@@ -447,7 +465,7 @@ applyFunc(PData& arg,
     }
 
 template<typename F>
-F
+returnTypeOf<F>
 applyFunc(const PData& arg1,
           const PData& arg2,
           F f = F())
@@ -458,7 +476,7 @@ applyFunc(const PData& arg1,
     }
 
 template<typename F>
-F 
+returnTypeOf<F>
 applyFunc(PData& arg1,
           const PData& arg2,
           F f = F())

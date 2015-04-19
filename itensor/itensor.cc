@@ -673,10 +673,6 @@ struct MultComplex : RegisterFunc<MultComplex>
     operator()(const ITDense<Real>& d);
     void
     operator()(ITDense<Complex>& d);
-
-    template<typename T>
-    void
-    operator()(T& d) const { Error("MultComplex not defined for ITData type"); }
     };
 
 void MultComplex::
@@ -925,13 +921,9 @@ class FillReal : public RegisterFunc<FillReal>
         {
         makeNewData<ITDense<Real>>(d.data.size(),r_);
         }
+    template<typename T>
     void
-    operator()(const ITDiag<Real>& d)
-        {
-        makeNewData<ITDiag<Real>>(r_);
-        }
-    void
-    operator()(const ITDiag<Complex>& d)
+    operator()(const ITDiag<T>& d)
         {
         makeNewData<ITDiag<Real>>(r_);
         }
@@ -951,6 +943,12 @@ class FillCplx : public RegisterFunc<FillCplx>
     operator()(ITDense<Complex>& d) const
         {
         std::fill(d.data.begin(),d.data.end(),z_);
+        }
+    template<typename T>
+    void
+    operator()(const ITDiag<T>& d)
+        {
+        makeNewData<ITDiag<Complex>>(z_);
         }
     };
 
@@ -1005,46 +1003,40 @@ scaleTo(const LogNumber& newscale)
     }
 
 
-class NormNoScale : public RegisterFunc<NormNoScale>
+class NormNoScale : public RegisterFunc<NormNoScale,Real>
     {
-    Real nrm_;
     const IndexSet& is_;
     public:
 
-    NormNoScale(const IndexSet& is) : nrm_(0), is_(is) { }
-
-    operator Real() const { return nrm_; }
+    NormNoScale(const IndexSet& is) : is_(is) { }
 
     template<typename T>
-    void
+    Real
     operator()(const ITDense<T>& d)
         {
+        Real nrm = 0;
         for(const auto& elt : d.data)
-            {
-            nrm_ += std::norm(elt);
-            }
-        nrm_ = std::sqrt(nrm_);
+            nrm += std::norm(elt);
+        return std::sqrt(nrm);
         }
 
     template<typename T>
-    void
+    Real
     operator()(const ITDiag<T>& d)
         {
+        Real nrm = 0;
         if(d.allSame())
             {
             auto mm = Real(minM(is_));
-            nrm_ = std::norm(d.val)*std::sqrt(mm);
+            nrm = std::norm(d.val)*std::sqrt(mm);
             }
         else
             {
             for(const auto& elt : d.data)
-                {
-                nrm_ += std::norm(elt);
-                }
+                nrm += std::norm(elt);
             }
-        nrm_ = std::sqrt(nrm_);
+        return std::sqrt(nrm);
         }
-
     };
 
 void ITensor::
@@ -1257,37 +1249,38 @@ isComplex(const ITensor& t)
     return applyFunc<CheckComplex>(t.data());
     }
 
-class SumEls : public RegisterFunc<SumEls>
+class SumEls : public RegisterFunc<SumEls,Complex>
     {
-    Complex sum_;
     const IndexSet& is_;
     public:
 
-    SumEls(const IndexSet& is) : sum_(0), is_(is) { }
-
-    operator Complex() const { return sum_; }
+    SumEls(const IndexSet& is) : is_(is) { }
 
     template <class T>
-    void
+    T
     operator()(const ITDense<T>& d) 
         { 
+        T sum = 0;
         for(const auto& elt : d.data)
-            sum_ += elt;
+            sum += elt;
+        return sum;
         }
 
     template <class T>
-    void
+    T
     operator()(const ITDiag<T>& d) 
         { 
+        T sum = 0;
         if(d.allSame())
             {
-            sum_ = Real(minM(is_))*d.val;
+            sum = Real(minM(is_))*d.val;
             }
         else
             {
             for(const auto& elt : d.data)
-                sum_ += elt;
+                sum += elt;
             }
+        return sum;
         }
     };
 Real
