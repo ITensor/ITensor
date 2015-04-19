@@ -66,6 +66,9 @@ class IQTData : public RegisterData<IQTData<T>>
         }
 
     long
+    offsetOf(long blkind) const;
+
+    long
     updateOffsets(const IQIndexSet& is,
                   const QN& Q);
 
@@ -174,10 +177,10 @@ getBlock(const IQIndexSet& is,
     ii += block_ind[0];
     //Do binary search to see if there
     //is a block with block index ii
-    auto res = detail::binaryFind(offsets,ii,detail::compBlock<T>());
-    if(res)
+    auto boff = offsetOf(ii);
+    if(boff >= 0)
         {
-        return data.data()+res->offset;
+        return data.data()+boff;
         }
     return nullptr;
     }
@@ -193,36 +196,45 @@ getElt(const IQIndexSet& is,
 #ifdef DEBUG
     if(is.r() != r) Error("Mismatched size of IQIndexSet and elt_ind in get_block");
 #endif
-    long boff = 0, //block offset
+    long bind = 0, //block index (total)
          bstr = 1, //block stride so far
          eoff = 0, //element offset within block
          estr = 1; //element stride
     for(auto i = 0; i < r; ++i)
         {
         const auto& I = is[i];
-        long block_ind = 0,
-             elt_ind = ind[i];
-        while(elt_ind >= I[block_ind].m()) //elt_ind 0-indexed
+        long block_subind = 0,
+             elt_subind = ind[i];
+        while(elt_subind >= I[block_subind].m()) //elt_ind 0-indexed
             {
-            elt_ind -= I[block_ind].m();
-            ++block_ind;
+            elt_subind -= I[block_subind].m();
+            ++block_subind;
             }
-        boff += block_ind*bstr;
+        bind += block_subind*bstr;
         bstr *= I.nindex();
-        eoff += elt_ind*estr;
-        estr *= I[block_ind].m();
+        eoff += elt_subind*estr;
+        estr *= I[block_subind].m();
         }
     //Do a binary search (equal_range) to see
-    //if there is a block with block offset "boff"
-    auto res = detail::binaryFind(offsets,boff,detail::compBlock<T>());
-    if(res)
+    //if there is a block with block index "bind"
+    auto boff = offsetOf(bind);
+    if(boff >= 0)
         {
 #ifdef DEBUG
-        if(res->offset+eoff >= data.size()) Error("get_elt out of range");
+        if(boff+eoff >= data.size()) Error("get_elt out of range");
 #endif
-        return data.data()+res->offset+eoff;
+        return data.data()+boff+eoff;
         }
     return nullptr;
+    }
+
+template <typename T>
+long IQTData<T>::
+offsetOf(long blkind) const
+    {
+    auto blk = detail::binaryFind(offsets,blkind,detail::compBlock<T>());
+    if(blk) return blk->offset;
+    return -1;
     }
 
 }; //namespace itensor
