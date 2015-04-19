@@ -307,7 +307,7 @@ template<typename... Inds>
 ITensor
 combiner(const Index& i1, const Inds&... inds)
     {
-    return combiner({i1,inds...});
+    return combiner(std::vector<Index>{i1,inds...});
     }
 
 ITensor

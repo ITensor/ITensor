@@ -535,6 +535,7 @@ contract(ABCProps& abc,
                 }
             if(newi == ra) break;
             }
+        //println("Calling permute A");
         permute(A,PA,newA);
         aref = SimpleMatrixRef(newA.data(),dleft,dmid,dmid,true);
         }
@@ -594,6 +595,7 @@ contract(ABCProps& abc,
                 }
             if(newi == ra) break;
             }
+        //println("Calling permute B");
         permute(B,PB,newB);
         bref = SimpleMatrixRef(newB.data(),dright,dmid,dmid,false);
         }
@@ -697,9 +699,9 @@ contract(ABCProps& abc,
     if(!pc_triv)
         {
         //println("PC = ",PC);
-        //cpu.mark();
+        //cpu_time cpuC; 
         permute(newC,PC,C,detail::plusEq<Real>);
-        //println("C permuted, took ",cpu.sincemark());
+        //println("C permuted, took ",cpuC.sincemark());
         }
     }
 
