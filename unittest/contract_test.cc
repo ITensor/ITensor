@@ -185,7 +185,9 @@ TEST_CASE("Contract Test")
                     C(7,4);
             randomize(A);
             randomize(B);
+            Global::debug3() = true;
             contract(A,{2,3,4},B,{3,7,2},C,{7,4});
+            Global::debug3() = false;
             for(int i4 = 0; i4 < 4; ++i4)
             for(int i7 = 0; i7 < 7; ++i7)
                 {
@@ -286,6 +288,58 @@ TEST_CASE("Contract Test")
                     val += A(i2,i3,i4,i5)*B(i7,i6,i3,i2);
                     }
                 CHECK_REQUAL(C(i5,i4,i6,i7),val);
+                }
+            }
+
+        SECTION("Case NM3")
+            {
+            RTensor A(2,3,4,5),
+                    B(7,6,3,2),
+                    C(5,4,6,7);
+            randomize(A);
+            randomize(B);
+            contract(B,{7,6,3,2},A,{2,3,4,5},C,{5,4,6,7});
+            REQUIRE(C.n(0) == 5);
+            REQUIRE(C.n(1) == 4);
+            REQUIRE(C.n(2) == 6);
+            REQUIRE(C.n(3) == 7);
+            for(int i4 = 0; i4 < 4; ++i4)
+            for(int i5 = 0; i5 < 5; ++i5)
+            for(int i6 = 0; i6 < 6; ++i6)
+            for(int i7 = 0; i7 < 7; ++i7)
+                {
+                Real val = 0;
+                for(int i2 = 0; i2 < 2; ++i2)
+                for(int i3 = 0; i3 < 3; ++i3)
+                    {
+                    val += A(i2,i3,i4,i5)*B(i7,i6,i3,i2);
+                    }
+                CHECK_REQUAL(C(i5,i4,i6,i7),val);
+                }
+            }
+
+        SECTION("Case NM4")
+            {
+            RTensor A(2,3,4,5,6,7),
+                    B(8,7,5,6,9),
+                    C(2,8,4,3,9);
+            randomize(A);
+            randomize(B);
+            contract(B,{8,7,5,6,9},A,{2,3,4,5,6,7},C,{2,8,4,3,9});
+            for(int i2 = 0; i2 < 2; ++i2)
+            for(int i3 = 0; i3 < 3; ++i3)
+            for(int i4 = 0; i4 < 4; ++i4)
+            for(int i8 = 0; i8 < 8; ++i8)
+            for(int i9 = 0; i9 < 9; ++i9)
+                {
+                Real val = 0;
+                for(int i5 = 0; i5 < 5; ++i5)
+                for(int i6 = 0; i6 < 6; ++i6)
+                for(int i7 = 0; i7 < 7; ++i7)
+                    {
+                    val += A(i2,i3,i4,i5,i6,i7)*B(i8,i7,i5,i6,i9);
+                    }
+                CHECK_REQUAL(C(i2,i8,i4,i3,i9),val);
                 }
             }
 

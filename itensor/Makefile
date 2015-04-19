@@ -24,7 +24,7 @@ SOURCES+= iqtensor.cc
 
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
         detail/gcounter.h global.h real.h permutation.h index.h \
-        range.h indexset.h counter.h simpletensor.h contract.h \
+        range.h indexset.h counter.h simplematrix.h simpletensor.h contract.h \
         itdata/itdata.h \
         itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
         itdata/iqtdata.h \
@@ -119,7 +119,7 @@ index.o: $(DEPHEADERS)
 DEPHEADERS+= indexset.h
 indexset.o: $(DEPHEADERS)
 .debug_objs/indexset.o: $(DEPHEADERS)
-DEPHEADERS+= contract.h range.h simpletensor.h
+DEPHEADERS+= contract.h range.h simpletensor.h simplematrix.h
 contract.o: $(DEPHEADERS)
 .debug_objs/contract.o: $(DEPHEADERS)
 DEPHEADERS+= itdata/itdata.h \

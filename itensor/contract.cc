@@ -6,6 +6,7 @@
 #include "cputime.h"
 #include "detail/gcounter.h"
 #include "indexset.h"
+#include "simplematrix.h"
 
 using std::vector;
 using std::cout;
@@ -53,8 +54,10 @@ struct ABCProps
           AtoC, 
           BtoC;
     int ncont = 0,
-        Acstart = 0,
-        Bcstart = 0;
+        Acstart,
+        Bcstart,
+        Austart,
+        Bustart;
     
     ABCProps(const Label& ai_, 
              const Label& bi_, 
@@ -62,7 +65,9 @@ struct ABCProps
         : 
         ai(ai_),bi(bi_),ci(ci_),
         Acstart(ai_.size()),
-        Bcstart(bi_.size())
+        Bcstart(bi_.size()),
+        Austart(ai_.size()),
+        Bustart(bi_.size())
         { }
 
     ABCProps(const ABCProps&) = delete;
@@ -98,6 +103,7 @@ struct ABCProps
             for(int k = 0; k < nc; ++k)
                 if(ai[i] == ci[k]) 
                     {
+                    if(i < Austart) Austart = i;
                     AtoC[i] = k;
                     break;
                     }
@@ -108,6 +114,7 @@ struct ABCProps
             for(int k = 0; k < nc; ++k)
                 if(bi[j] == ci[k]) 
                     {
+                    if(j < Bustart) Bustart = j;
                     BtoC[j] = k;
                     break;
                     }
@@ -155,124 +162,6 @@ struct ABCProps
         }
     };
 
-
-class SimpleMatrixRef
-    {
-    const Real *store_ = nullptr;
-    long nrows_ = 0, 
-         ncols_ = 0, 
-         rowstride_ = 0;
-    bool transpose_ = false;
-    public:
-
-    SimpleMatrixRef() { }
-
-    SimpleMatrixRef(const Real* sto, 
-                    long nro, 
-                    long ncol, 
-                    long rowstr, 
-                    bool trans)
-        : 
-        store_(sto), 
-        nrows_(nro), 
-        ncols_(ncol), 
-        rowstride_(rowstr), 
-        transpose_(trans)
-        { }
-
-    SimpleMatrixRef(const SimpleMatrixRef& other) = default;
-
-    SimpleMatrixRef(MatrixRefNoLink m)
-        :
-        store_(m.Store()), 
-        nrows_(m.Nrows()), 
-        ncols_(m.Ncols()), 
-        rowstride_(m.RowStride()), 
-        transpose_(m.DoTranspose())
-        { }
-
-    long
-    Nrows() const { return transpose_ ? ncols_ : nrows_; }
-    long
-    Ncols() const { return transpose_ ? nrows_ : ncols_; }
-    long
-    rowStride() const { return rowstride_; }
-
-    bool
-    transpose() const { return transpose_; }
-    void
-    ApplyTrans() { transpose_ = !transpose_; }
-
-    const Real*
-    store() const { return store_; }
-    void
-    store(const Real* newstore) { store_ = newstore; }
-
-    SimpleMatrixRef 
-    t()
-        { 
-        SimpleMatrixRef res(*this);
-        res.transpose_ = !transpose_; 
-        return res;
-        }
-    };
-
-std::ostream&
-operator<<(std::ostream& s, const SimpleMatrixRef& M)
-    {
-    auto p = M.store();
-    for(int r = 1; r <= M.Nrows(); ++r)
-        {
-        s << "|";
-        for(int c = 1; c <= M.Ncols(); ++c)
-            {
-            s << (*p);
-            s << (c == M.Ncols() ? "|" : " ");
-            ++p;
-            }
-        s << "\n";
-        }
-    return s;
-    }
-
-using BlasInt = int;
-extern "C" void dgemm_(char*,char*,BlasInt*,BlasInt*,BlasInt*,Real*,Real*,BlasInt*,
-	                   Real*,BlasInt*,Real*,Real*,BlasInt*);
-
-// C = alpha*A*B + beta*C
-void 
-mult_add(SimpleMatrixRef A, 
-         SimpleMatrixRef B, 
-         SimpleMatrixRef C, 
-         Real beta = 1.0, 
-         Real alpha = 1.0)
-    {
-#ifdef MATRIXBOUNDS
-    if(A.Ncols() != B.Nrows())
-        {
-        error("mult_add(A,B,C): Matrices A, B incompatible");
-        }
-    if(A.Nrows() != C.Nrows() || B.Ncols() != C.Ncols())
-        error("mult_add(A,B,C): Matrix C incompatible");
-#endif
-
-    // Use BLAS 3 routine
-    // Have to reverse the order, since we are really multiplying Ct = Bt*At
-    BlasInt m = C.Ncols();
-    BlasInt n = C.Nrows();
-    BlasInt k = B.Nrows();
-    BlasInt lda = B.rowStride();
-    BlasInt ldb = A.rowStride();
-    BlasInt ldc = C.rowStride();
-
-    Real *pa = const_cast<Real*>(B.store());
-    Real *pb = const_cast<Real*>(A.store());
-    Real *pc = const_cast<Real*>(C.store());
-
-    char transb = A.transpose() ? 'T' : 'N';
-    char transa = B.transpose() ? 'T' : 'N';
-    dgemm_(&transa,&transb,&m,&n,&k,&alpha,pa,&lda,pb,&ldb,&beta,pc,&ldc);
-    }
 
 struct ABoffC
     {
@@ -375,15 +264,15 @@ contract(ABCProps& abc,
     {
     // Optimizations TODO
     //
-    // o Detect whether doing cref = bref*aref or cref = aref*bref
-    //   might avoid having to permute C (e.g. if bref*aref version
-    //   would require transposing C, then do aref*bref instead).
+    // o Add "automatic C" mode where index order of C can be
+    //   unspecified, and will be chosen so as not to require
+    //   permuting C at the end.
     //
     // o If trailing n(j)==1 dimensions at end of A, B, or C indices
     //   (as often the case for ITensors with m==1 indices),
     //   have ABCProps resize ai, bi, and ci accordingly to avoid
     //   looping over these.
-    //   
+    //
 
     long ra = abc.ai.size(),
          rb = abc.bi.size(),
@@ -502,9 +391,9 @@ contract(ABCProps& abc,
     if(Aismatrix)
         {
         if(contractedA(0))
-            aref = SimpleMatrixRef(A.data(),dleft,dmid,dmid,true);
+            aref = SimpleMatrixRef(A.data(),dleft,dmid,true);
         else
-            aref = SimpleMatrixRef(A.data(),dmid,dleft,dleft,false);
+            aref = SimpleMatrixRef(A.data(),dmid,dleft,false);
         }
     else
         {
@@ -537,7 +426,7 @@ contract(ABCProps& abc,
             }
         //println("Calling permute A");
         permute(A,PA,newA);
-        aref = SimpleMatrixRef(newA.data(),dleft,dmid,dmid,true);
+        aref = SimpleMatrixRef(newA.data(),dleft,dmid,true);
         }
 
     SimpleMatrixRef bref;
@@ -548,12 +437,12 @@ contract(ABCProps& abc,
         if(contractedB(0))
             {
             //println("Not transposing bref");
-            bref = SimpleMatrixRef(B.data(),dright,dmid,dmid,false);
+            bref = SimpleMatrixRef(B.data(),dright,dmid,false);
             }
         else
             {
             //println("Transposing bref");
-            bref = SimpleMatrixRef(B.data(),dmid,dright,dright,true);
+            bref = SimpleMatrixRef(B.data(),dmid,dright,true);
             }
         }
     else
@@ -597,7 +486,7 @@ contract(ABCProps& abc,
             }
         //println("Calling permute B");
         permute(B,PB,newB);
-        bref = SimpleMatrixRef(newB.data(),dright,dmid,dmid,false);
+        bref = SimpleMatrixRef(newB.data(),dright,dmid,false);
         }
 
     //println("A and B permuted, took ",cpu.sincemark());
@@ -606,20 +495,35 @@ contract(ABCProps& abc,
         {
         //Recompute PC
         int c = 0;
+        //Also update Acstart and Austart below
+        abc.Acstart = ra;
+        abc.Austart = ra;
         for(int i = 0; i < ra; ++i)
             {
             if(!contractedA(i))
                 {
+                if(i < abc.Austart) abc.Austart = i;
                 PC.setFromTo(c,abc.AtoC[i]);
                 ++c;
                 }
+            else
+                {
+                if(i < abc.Acstart) abc.Acstart = i;
+                }
             }
+        abc.Bcstart = rb;
+        abc.Bustart = rb;
         for(int j = 0; j < rb; ++j)
             {
             if(!contractedB(j)) 
                 {
+                if(j < abc.Bustart) abc.Bustart = j;
                 PC.setFromTo(c,abc.BtoC[j]);
                 ++c;
+                }
+            else
+                {
+                if(j < abc.Bcstart) abc.Bcstart = j;
                 }
             }
         }
@@ -632,22 +536,57 @@ contract(ABCProps& abc,
     // Carry out the contraction as a matrix-matrix multiply
     //
 
+#ifdef DEBUG
     if(C.size() != bref.Nrows()*aref.Ncols())
         {
         println("C.size() = ",C.size());
         printfln("bref.Nrows()*aref.Ncols() = %d*%d = %d",bref.Nrows(),aref.Ncols(),bref.Nrows()*aref.Ncols());
         throw std::runtime_error("incorrect size of C in contract");
         }
+#endif
 
-    SimpleMatrixRef cref(C.data(),bref.Nrows(),aref.Ncols(),aref.Ncols(),false);
+    auto pc_triv = isTrivial(PC);
+
+    bool ctrans = false;
+    if(!pc_triv)
+        {
+        //Check if uncontracted A inds in same order on A as on C
+        bool ACsameorder = true;
+        auto aCind = abc.AtoC.at(abc.Austart);
+        for(int i = 0; i < ra && ACsameorder; ++i) 
+            if(!contractedA(i))
+                {
+                if(abc.AtoC.at(i) == aCind) ++aCind;
+                else                        ACsameorder = false;
+                }
+        //Check if uncontracted B inds in same order on B as on C
+        bool BCsameorder = true;
+        auto bCind = abc.BtoC.at(abc.Bustart);
+        for(int i = 0; i < rb && BCsameorder; ++i) 
+            if(!contractedB(i))
+                {
+                if(abc.BtoC.at(i) == bCind) ++bCind;
+                else                        BCsameorder = false;
+                }
+        //Here we already know since pc_triv = false that
+        //at best indices from B precede those from A (on result C)
+        //so if both sets remain in same order on C 
+        //just need to transpose C, not permute it
+        if(BCsameorder && ACsameorder) ctrans = true;
+        }
+
+    SimpleMatrixRef cref;
+    if(ctrans)
+        cref = SimpleMatrixRef(C.data(),aref.Ncols(),bref.Nrows(),true);
+    else
+        cref = SimpleMatrixRef(C.data(),bref.Nrows(),aref.Ncols(),false);
 
     tensor<Real> newC;
-    auto pc_triv = isTrivial(PC);
-    //printfln("pc_triv = %s",pc_triv);
-    if(!pc_triv)
+    if(!pc_triv && !ctrans)
         {
         vector<long> cdims(rc);
         int c = 0;
+
         if(Aismatrix)
             {
             for(int i = 0; i < ra; ++i)
@@ -686,7 +625,9 @@ contract(ABCProps& abc,
     //println("bref = ",bref.transpose()?"t\n":"\n",bref);
     //println("aref = ",aref.transpose()?"t\n":"\n",aref);
     //println("cref before = ",cref.transpose()?"t\n":"\n",cref);
+
     mult_add(bref,aref,cref);
+
     //println("cref = ",cref.transpose()?"t\n":"\n",cref);
     //println("Matrix multiply done, took ",cpu.sincemark());
 
@@ -696,9 +637,8 @@ contract(ABCProps& abc,
     // Reshape C if necessary
     //
 
-    if(!pc_triv)
+    if(!pc_triv && !ctrans)
         {
-        //println("PC = ",PC);
         //cpu_time cpuC; 
         permute(newC,PC,C,detail::plusEq<Real>);
         //println("C permuted, took ",cpuC.sincemark());
@@ -903,9 +843,9 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
             auto offB = ind(B,bind);
             auto offC = ind(C,cind);
 
-            SimpleMatrixRef sA(&A.v(offA),Arow,Acol,Acol,nfo.tA);
-            SimpleMatrixRef sB(&B.v(offB),Brow,Bcol,Bcol,nfo.tB);
-            SimpleMatrixRef sC(&C.v(offC),Crow,Ccol,Ccol,false);
+            SimpleMatrixRef sA(&A.v(offA),Arow,Acol,nfo.tA);
+            SimpleMatrixRef sB(&B.v(offB),Brow,Bcol,nfo.tB);
+            SimpleMatrixRef sC(&C.v(offC),Crow,Ccol,false);
 
             if(nfo.Bfirst)
                 {
