@@ -28,6 +28,7 @@ struct Permutation
     long
     size() const { return long(store_.size()); }
 
+    explicit operator bool() const { return store_.size() != 0; }
 
     void 
     setFromTo(long from, 

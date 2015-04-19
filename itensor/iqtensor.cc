@@ -6,6 +6,7 @@
 #include "detail/printing.h"
 #include "lapack_wrap.h"
 #include "contract.h"
+#include "count.h"
 
 namespace itensor {
 
@@ -19,6 +20,7 @@ using std::find;
 using std::pair;
 using std::make_pair;
 using std::make_shared;
+using std::shared_ptr;
 using std::move;
 
 void
@@ -233,26 +235,47 @@ operator-=(const IQTensor& o)
     return operator+=(oth);
     }
 
-struct Permute : RegisterFunc<Permute>
-    {
-    Permutation P;
-
-    Permute(const Permutation& P_) : P(P_) { }
-
-    template<typename T>
-    void
-    operator()(const IQTData<T>& d) const;
-
-    };
-
 template<typename T>
-void Permute::
-operator()(const IQTData<T>& d) const
-    {
-    //auto res = make_newdata<IQTData<Real>>(Nis_,Cdiv_);
-    //auto& C = *res;
-    }
+void
+permuteIQ(const Permutation& P,
+          const IQIndexSet& Ais,
+          const QN& div,
+          const IQTData<T>& dA,
+          IQIndexSet& Bis,
+          shared_ptr<IQTData<T>>& pdB)
 
+    {
+#ifdef DEBUG
+    if(isTrivial(P)) Error("Calling permuteIQ for trivial Permutation");
+#endif
+    auto r = Ais.r();
+    vector<IQIndex> bind(r);
+    for(auto i : count(r))
+        {
+        bind.at(P.dest(i)) = Ais[i];
+        }
+    Bis = IQIndexSet(std::move(bind));
+    pdB = make_shared<IQTData<T>>(Bis,div);
+
+    vector<long> Ablock(r,-1),
+                 Bblock(r,-1);
+    Range Arange,
+          Brange;
+    for(auto aio : dA.offsets)
+        {
+        //Compute bi, new block index of blk
+        inverseBlockInd(aio.block,Ais,Ablock);
+        for(auto j : index(Ablock)) 
+            Bblock.at(P.dest(j)) = Ablock[j];
+        Arange.init(make_indexdim(Ais,Ablock));
+        Brange.init(make_indexdim(Bis,Bblock));
+
+        auto* bblock = pdB->getBlock(Bis,Bblock);
+        auto aref = make_tensorref(dA.data.data()+aio.offset,Arange),
+             bref = make_tensorref(bblock,Brange);
+        permute(aref,P,bref);
+        }
+    }
 
 class QContract : public RegisterFunc<QContract>
     {
@@ -291,59 +314,52 @@ class QContract : public RegisterFunc<QContract>
                const IQTData<T>& d2);
 
     void
-    operator()(IQTData<Real>& d,
+    operator()(const IQTData<Real>& d,
                const ITCombiner& C)
         {
-        combine(d,Ais_,Bis_);
+        combine(d,Ais_,Bis_,true);
         }
     void
     operator()(const ITCombiner& C,
                const IQTData<Real>& d)
         { 
-        auto nd = setNewData<IQTData<Real>>(d);
-        combine(*nd,Bis_,Ais_);
+        combine(d,Bis_,Ais_,false);
         }
 
     private:
 
     void
-    combine(IQTData<Real>& d,
+    combine(const IQTData<Real>& d,
             const IQIndexSet& dis,
-            const IQIndexSet& Cis);
+            const IQIndexSet& Cis,
+            bool own_data);
 
     }; //QContract
 
 void QContract::
-combine(IQTData<Real>& d,
+combine(const IQTData<Real>& d,
         const IQIndexSet& dis,
-        const IQIndexSet& Cis)
+        const IQIndexSet& Cis,
+        bool own_data)
     {
-    //TODO: only modify d when needed (e.g. only when Cis.r() > 2)
     //cind is "combined index"
     const auto& cind = Cis[0];
     //check if d has combined index i.e. we are "uncombining"
     auto jc = findindex(dis,cind);
-    if(jc >= 0) //has cind
+
+    Permutation P;
+    if(jc > 0) //we are uncombining, but cind not at front
         {
-        if(jc != 0) //TODO:
-            Error("Not implemented; combined index not at front, need to permute");
-        //dis has cind, replace with other inds
-        auto newr = dis.r()+Cis.r()-2;
-        auto offset = Cis.r()-1;
-        vector<IQIndex> newind(newr);
-        for(long j = 0; j < offset; ++j) 
-            newind.at(j) = Cis[1+j];
-        for(long j = 0; j < dis.r()-1; ++j) 
-            newind.at(offset+j) = dis[1+j];
-        Nis_ = IQIndexSet(move(newind));
-        //Only need to modify d if Cis.r() > 2;
-        //if Cis.r()==2 just swapping one index for another
-        if(Cis.r() > 2) d.updateOffsets(Nis_,Cdiv_);
+        P = Permutation(dis.r());
+        P.setFromTo(jc,0);
+        long ni = 1;
+        for(auto j : index(dis))
+            if(j != jc) P.setFromTo(j,ni++);
+        jc = 0;
         }
-    else
+    else if(jc < 0)
         {
-        //check locations
-        //of Cis[1], Cis[2], ...
+        //check locations of Cis[1], Cis[2], ...
         //Check if Cis[1],Cis[2],... are grouped together (contiguous)
         //all at front, and in same order as on combiner
         bool front_contig = true;
@@ -355,40 +371,85 @@ combine(IQTData<Real>& d,
                 }
         if(!front_contig) //if !front_contig, need to permute
             {
-            //TODO:
-            Permutation P(dis.r());
+            P = Permutation(dis.r());
             //Set P destination values to -1 to mark
             //indices that need to be assigned destinations:
-            for(int i = 0; i < P.size(); ++i) P.setFromTo(i,-1);
+            for(auto i : index(P)) P.setFromTo(i,-1);
 
             //permute combined indices to the front, in same
             //order as in Cis:
             long ni = 0;
-            for(int c = 1; c < Cis.r(); ++c)
+            for(auto c : count(1,Cis.r()))
                 {
-                int j = findindex(dis,Cis[c]);
+                auto j = findindex(dis,Cis[c]);
                 if(j < 0) 
                     {
                     println("IQIndexSet of dense tensor =\n  ",dis);
                     println("IQIndexSet of combiner/delta =\n  ",Cis);
                     println("Missing IQIndex: ",Cis[c]);
+                    println("jc = ",jc);
                     Error("IQCombiner: missing IQIndex");
                     }
                 P.setFromTo(j,ni++);
                 }
-            Error("IQCombiner permute case not yet implemented");
+            for(auto j : index(P))
+                {
+                if(P.dest(j) == -1) P.setFromTo(j,ni++);
+                }
             }
-        auto newr = dis.r()-Cis.r()+2;
+        }
+
+    std::shared_ptr<IQTData<Real>> pnd;
+    IQTData<Real>* nd = nullptr;
+    if(P) 
+        {
+        permuteIQ(P,dis,Cdiv_,d,Nis_,pnd);
+        nd = pnd.get();
+        }
+    auto& Pis = (P ? Nis_ : dis);
+
+    if(jc == 0) //has cind at front, we are "uncombining"
+        {
+        auto newr = Pis.r()+Cis.r()-2;
+        auto offset = Cis.r()-1;
+        vector<IQIndex> newind(newr);
+        for(auto j : count(offset))
+            newind.at(j) = Cis[1+j];
+        for(auto j : count(Pis.r()-1))
+            newind.at(offset+j) = Pis[1+j];
+        Nis_ = IQIndexSet(move(newind));
+        }
+    else //we are "combining"
+        {
+        auto newr = Pis.r()-Cis.r()+2;
         auto offset = Cis.r()-2;
         vector<IQIndex> newind(newr);
         newind.front() = cind;
-        for(size_t j = 1; j < newr; ++j) 
-            newind.at(j) = dis[offset+j];
+        for(auto j : count(1,newr))
+            newind.at(j) = Pis[offset+j];
         Nis_ = IQIndexSet(move(newind));
-        //Only need to modify d if Cis.r() > 2;
-        //if Cis.r()==2 just swapping one index for another
-        if(Cis.r() > 2) d.updateOffsets(Nis_,Cdiv_);
         }
+
+    //Only need to modify d if Cis.r() > 2.
+    //If Cis.r()==2 just swapping one index for another
+    if(Cis.r() > 2)
+        {
+        if(!nd)
+            {
+            if(own_data) 
+                {
+                nd = &modifyData(d);
+                }
+            else
+                {
+                pnd = std::make_shared<IQTData<Real>>(d);
+                nd = pnd.get();
+                }
+            }
+        nd->updateOffsets(Nis_,Cdiv_);
+        }
+
+    if(pnd) setNewData(std::move(pnd));
     }
 
 
@@ -401,7 +462,7 @@ operator()(const IQTData<T>& A,
     contractIS(Ais_,Aind_,Bis_,Bind_,Nis_,true);
 
     //Allocate storage for C
-    auto nd = setNewData<IQTData<Real>>(Nis_,Cdiv_);
+    auto nd = makeNewData<IQTData<Real>>(Nis_,Cdiv_);
     auto& C = *nd;
 
     auto rA = Ais_.r(),
