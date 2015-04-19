@@ -309,7 +309,12 @@ void Contract::
 operator()(const ITDense<Real>& a1,
            const ITDense<Real>& a2)
     {
-    contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,true);
+    //Optimization TODO:
+    //  Test different scenarios where having sortInds=true or false
+    //  can improve performance. Having sorted inds can make adding
+    //  quicker and let contractloop run in parallel more often in principle.
+    const bool sortInds = false; //whether to sort indices of result
+    contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,sortInds);
     
     Label Nind(Nis_.r(),0);
     for(size_t i = 0; i < Nis_.r(); ++i)
