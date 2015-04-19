@@ -131,10 +131,14 @@ struct RegisterFunc : FuncBase
 
     template <typename ITDataType, typename... Args>
     ITDataType*
-    setNewData(Args&&... args);
+    makeNewData(Args&&... args);
 
-    bool
-    newDataIsSet() { return action_ == AssignNewData; }
+    template <typename ITDataType>
+    void
+    setNewData(std::shared_ptr<ITDataType>&& nd);
+
+    PData&
+    newData() { return nd_; }
 
     void
     assignPointerRtoL();
@@ -320,7 +324,7 @@ setup(PData* arg1, const PData* arg2)
 template <typename Derived>
 template <typename ITDataType, typename... Args>
 ITDataType* RegisterFunc<Derived>::
-setNewData(Args&&... args)
+makeNewData(Args&&... args)
     {
     if(!arg1_) Error("Can't call setNewData with const-only access to first arg");
     action_ = AssignNewData;
@@ -328,6 +332,15 @@ setNewData(Args&&... args)
     auto* ret = newdat.get();
     nd_ = std::move(newdat);
     return ret;
+    }
+
+template <typename Derived>
+template <typename ITDataType>
+void RegisterFunc<Derived>::
+setNewData(std::shared_ptr<ITDataType>&& nd)
+    {
+    nd_ = std::move(nd);
+    action_ = AssignNewData;
     }
 
 template <typename Derived>
