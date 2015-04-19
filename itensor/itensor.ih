@@ -226,7 +226,7 @@ struct SetEltComplex : RegisterFunc<SetEltComplex<size>>
     void
     operator()(const ITDense<Real>& d)
         {
-        auto nd = this->template setNewData<ITDense<Complex>>(d.data.cbegin(),d.data.cend());
+        auto nd = this->template makeNewData<ITDense<Complex>>(d.data.cbegin(),d.data.cend());
         nd->data[ind(is_,inds_)] = elt_;
         }
 

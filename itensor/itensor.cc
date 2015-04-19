@@ -272,7 +272,7 @@ struct Contract : RegisterFunc<Contract>
                const ITDense<Real>& d)
         { 
         combine(d,Ris_,Lis_);
-        if(!newDataIsSet()) assignPointerRtoL();
+        if(!newData()) assignPointerRtoL();
         }
 
     void
@@ -331,7 +331,7 @@ operator()(const ITDense<Real>& a1,
     //PRI(Nind);
 
     auto rsize = area(Nis_);
-    auto nd = setNewData<ITDense<Real>>(rsize,0.);
+    auto nd = makeNewData<ITDense<Real>>(rsize,0.);
     auto t1 = make_tensorref(a1.data.data(),Lis_),
          t2 = make_tensorref(a2.data.data(),Ris_);
     auto tr = make_tensorref(nd->data.data(),Nis_);
@@ -407,7 +407,7 @@ diagDense(const ITDiag<Real>& d,
                 ++n;
                 }
             }
-        auto nd = setNewData<ITDense<Real>>(area(Nis_),0.);
+        auto nd = makeNewData<ITDense<Real>>(area(Nis_),0.);
         auto *pr = nd->data.data();
         const auto *pt = t.data.data();
 
@@ -471,12 +471,12 @@ diagDense(const ITDiag<Real>& d,
                 for(size_t J = 0; J < dsize; ++J)
                     val += pd[J]*pt[J*t_cstride];
                 }
-            setNewData<ITDiag<Real>>(val);
+            makeNewData<ITDiag<Real>>(val);
             }
         else //some of d's inds uncontracted
             {
             // o element-wise product of d's data and t's diagonal
-            auto nd = setNewData<ITDiag<Real>>(dsize,0.);
+            auto nd = makeNewData<ITDiag<Real>>(dsize,0.);
             auto *pr = nd->data.data();
             const auto *pt = t.data.data();
             if(d.allSame())
@@ -591,7 +591,7 @@ combine(const ITDense<Real>& d,
                 }
             Range rr(pdims);
             Nis_ = IndexSet(move(newind));
-            auto nd = setNewData<ITDense<Real>>(area(Nis_));
+            auto nd = makeNewData<ITDense<Real>>(area(Nis_));
             auto td = make_tensorref(d.data.data(),dis);
             auto tr = make_tensorref(nd->data.data(),rr);
             permute(td,P,tr);
@@ -682,7 +682,7 @@ struct MultComplex : RegisterFunc<MultComplex>
 void MultComplex::
 operator()(const ITDense<Real>& d)
     {
-    auto nd = setNewData<ITDense<Complex>>(d.data.begin(),d.data.end());
+    auto nd = makeNewData<ITDense<Complex>>(d.data.begin(),d.data.end());
     operator()(*nd);
     }
 
@@ -923,17 +923,17 @@ class FillReal : public RegisterFunc<FillReal>
     void
     operator()(const ITDense<Complex>& d)
         {
-        setNewData<ITDense<Real>>(d.data.size(),r_);
+        makeNewData<ITDense<Real>>(d.data.size(),r_);
         }
     void
     operator()(const ITDiag<Real>& d)
         {
-        setNewData<ITDiag<Real>>(r_);
+        makeNewData<ITDiag<Real>>(r_);
         }
     void
     operator()(const ITDiag<Complex>& d)
         {
-        setNewData<ITDiag<Real>>(r_);
+        makeNewData<ITDiag<Real>>(r_);
         }
     };
 
@@ -945,7 +945,7 @@ class FillCplx : public RegisterFunc<FillCplx>
     void
     operator()(const ITDense<Real>& d)
         {
-        setNewData<ITDense<Complex>>(d.data.size(),z_);
+        makeNewData<ITDense<Complex>>(d.data.size(),z_);
         }
     void
     operator()(ITDense<Complex>& d) const
