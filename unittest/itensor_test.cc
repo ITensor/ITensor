@@ -4,12 +4,6 @@
 using namespace std;
 using namespace itensor;
 
-double static
-Func(double x)
-    {
-    return x*x;
-    }
-
 class Functor
     {
     public:
@@ -22,13 +16,14 @@ class Functor
         }
     };
 
-enum Type { NoType, Dense, Diag, DiagAllSame, Combiner };
+enum Type { NoType, Dense, DenseCplx, Diag, DiagAllSame, Combiner };
 
 struct GetType : RegisterFunc<GetType,Type>
     {
-    template<typename T>
     Type
-    operator()(const ITDense<T>& d) { return Dense; }
+    operator()(const ITDense& d) { return Dense; }
+    Type
+    operator()(const ITDenseCplx& d) { return DenseCplx; }
 
     template<typename T>
     Type
@@ -537,15 +532,6 @@ for(int n1 = 1; n1 <= s1.m(); ++n1)
 for(int n2 = 1; n2 <= s1P.m(); ++n2)
     {
     CHECK_CLOSE( f( A.real(s1(n1),s1P(n2)) ), A1.real(s1(n1),s1P(n2)) ,1E-10);
-    }
-
-ITensor A2(A);
-Real (*pFunc)(Real) = Func;
-A2.apply(*pFunc);
-for(int n1 = 1; n1 <= s1.m(); ++n1)
-for(int n2 = 1; n2 <= s1P.m(); ++n2)
-    {
-    CHECK_CLOSE( Func( A.real(s1(n1),s1P(n2)) ), A2.real(s1(n1),s1P(n2)) ,1E-10);
     }
 }
 

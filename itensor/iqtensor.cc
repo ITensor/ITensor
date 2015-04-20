@@ -666,14 +666,13 @@ class ToITensor : public RegisterFunc<ToITensor>
     explicit
     operator ITensor() { return std::move(res); }
 
-    template<typename T>
     void
-    operator()(const IQTData<T>& d)
+    operator()(const IQTData<Real>& d)
         {
         auto r = is_.r();
-        auto nd = make_newdata<ITDense<T>>(area(is_),0);
+        auto nd = make_newdata<ITDense>(area(is_),0);
         auto *pd = d.data.data();
-        auto *pn = nd->data.data();
+        auto *pn = nd->data();
         vector<long> block(r,0);
         detail::GCounter C(r);
         for(const auto& io : d.offsets)

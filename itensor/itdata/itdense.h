@@ -10,30 +10,70 @@
 namespace itensor {
 
 //
-// TODO: replace std::vector storage with
-//       storage type only holding data ptr
-//       and size, maybe use in simpletensor too
+// Optimization TODO: 
+//  replace std::vector storage with
+//  storage type only holding data ptr
+//  and size, maybe use in simpletensor too
 //
 
-template<typename T>
-class ITDense : public RegisterData<ITDense<T>>
+struct ITDense : RegisterData<ITDense>
     {
-    public:
+    using storage_type = std::vector<Real>;
+    using size_type = storage_type::size_type;
+    using iterator = storage_type::iterator;
+    using const_iterator = storage_type::const_iterator;
+    using value_type = Real;
 
-    std::vector<T> data;
+    //
+    // Data members
+    //
+
+    storage_type store;
+
+    //
+    // Constructors
+    //
 
     ITDense() { }
 
-    ITDense(size_t size) : data(size) { }
+    ITDense(size_t size) : store(size) { }
 
-    ITDense(size_t size, T val) : data(size,val) { }
+    ITDense(size_t size, Real val) : store(size,val) { }
 
     template<typename InputIterator>
-    ITDense(InputIterator b, InputIterator e) : data(b,e) { }
+    ITDense(InputIterator b, InputIterator e) : store(b,e) { }
 
-    virtual
-    ~ITDense() { }
+    //
+    //std container like methods
+    //
 
+    Real&
+    operator[](size_type i) { return store[i]; }
+    const Real&
+    operator[](size_type i) const { return store[i]; }
+
+    size_type
+    size() const { return store.size(); }
+    bool
+    empty() const { return store.empty(); }
+
+    Real*
+    data() { return store.data(); }
+    const Real*
+    data() const { return store.data(); }
+    
+    const_iterator
+    cbegin() const { return store.cbegin(); }
+    const_iterator
+    cend() const { return store.cend(); }
+    const_iterator
+    begin() const { return store.begin(); }
+    const_iterator
+    end() const { return store.end(); }
+    iterator
+    begin() { return store.begin(); }
+    iterator
+    end() { return store.end(); }
     };
 
 }; //namespace itensor

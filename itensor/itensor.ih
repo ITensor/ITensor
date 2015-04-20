@@ -6,6 +6,7 @@
 #define __ITENSOR_ITENSOR_IH
 
 #include "itdata/itdense.h"
+#include "itdata/itdensecplx.h"
 #include "itdata/itdiag.h"
 #include "itdata/itcombiner.h"
 #include "itdata/iqtdata.h"
@@ -26,7 +27,7 @@ ITensor(const Index& i1,
     :
     is_(i1,i2,i3,rest...),
     scale_(1.),
-    store_(make_shared<ITDense<Real>>(area(is_),0.))
+    store_(make_shared<ITDense>(area(is_),0.))
 	{ }
 
 template<typename... Inds>
@@ -81,18 +82,17 @@ ITensor(const IndexVal& iv1,
     std::array<Index,size> inds;
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     is_ = IndexSet(inds);
-    store_ = make_shared<ITDense<Real>>(area(is_),0.);
+    store_ = make_shared<ITDense>(area(is_),0.);
     set(1.,iv1,rest...);
     }
 
-template<typename T, int size>
-struct GetElt : RegisterFunc<GetElt<T,size>>
+template<int size>
+struct GetElt : RegisterFunc<GetElt<size>,Complex>
     {
     using Inds = std::array<long,size>;
 
     const IndexSet& is_;
     const Inds& inds_;
-    T elt_;
 
     GetElt(const IndexSet& is,
            const Inds& inds)
@@ -101,43 +101,30 @@ struct GetElt : RegisterFunc<GetElt<T,size>>
         inds_(inds)
         { }
 
-    operator T() const { return elt_; }
-
-    template <typename V,
-              typename std::enable_if<std::is_convertible<V,T>::value>::type* = nullptr>
-    void
-    operator()(const ITDense<V>& d)
+    Complex
+    operator()(const ITDense& d)
         {
-        elt_ = T{d.data[ind(is_,inds_)]};
+        return d[ind(is_,inds_)];
         }
 
-    template <typename V,
-              typename std::enable_if<std::is_convertible<V,T>::value>::type* = nullptr>
-    void
+    Complex
+    operator()(const ITDenseCplx& d)
+        {
+        return d.get(ind(is_,inds_));
+        }
+
+    template <typename V>
+    Complex
     operator()(const ITDiag<V>& d)
         {
         auto first_i = (inds_.empty() ? 0 : inds_.front());
         //Check if inds_ reference an
         //element on the diagonal, else zero
-        for(auto i : inds_)
-            if(i != first_i)
-                {
-                elt_ = 0;
-                return;
-                }
-        if(d.allSame())
-            elt_ = d.val;
-        else
-            elt_ = d.data.at(first_i);
-        }
+        for(auto i : inds_) if(i != first_i) return 0;
 
-    //template <class D>
-    //ITResult
-    //operator()(const D& d)
-    //    {
-    //    throw ITError("ITensor does not have requested element type");
-    //    return ITResult();
-    //    }
+        if(d.allSame()) return d.val;
+        return d.store.at(first_i);
+        }
     };
 
 template <typename... IndexVals>
@@ -152,7 +139,7 @@ cplx(IndexVals&&... ivs) const
     std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
     std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
-    Complex z = applyFunc<GetElt<Complex,size>>(store_,{is_,inds});
+    auto z = applyFunc<GetElt<size>>(store_,{is_,inds});
 	try {
 	    return z*scale_.real(); 
 	    }
@@ -199,18 +186,22 @@ struct SetEltReal : RegisterFunc<SetEltReal<size>>
           inds_(inds)
         { }
 
-    template<typename T>
     void
-    operator()(ITDense<T>& d) const
+    operator()(ITDense& d) const
         {
-        d.data[ind(is_,inds_)] = elt_;
+        d[ind(is_,inds_)] = elt_;
+        }
+
+    void
+    operator()(ITDenseCplx& d) const
+        {
+        d.set(ind(is_,inds_),elt_);
         }
     };
 
 template<size_t size>
-struct SetEltComplex : RegisterFunc<SetEltComplex<size>>
+class SetEltComplex : public RegisterFunc<SetEltComplex<size>>
     {
-    private:
     Complex elt_;
     const IndexSet& is_;
     const std::array<long,size>& inds_;
@@ -218,22 +209,17 @@ struct SetEltComplex : RegisterFunc<SetEltComplex<size>>
     SetEltComplex(Complex elt,
                   const IndexSet& is,
                   const std::array<long,size>& inds)
-        : elt_(elt),
-          is_(is),
-          inds_(inds)
-        { }
-
+        : elt_(elt), is_(is), inds_(inds) { }
     void
-    operator()(const ITDense<Real>& d)
+    operator()(const ITDense& d)
         {
-        auto nd = this->template makeNewData<ITDense<Complex>>(d.data.cbegin(),d.data.cend());
-        nd->data[ind(is_,inds_)] = elt_;
+        auto nd = this->template makeNewData<ITDenseCplx>(d.cbegin(),d.cend());
+        nd->set(ind(is_,inds_),elt_);
         }
-
     void
-    operator()(ITDense<Complex>& d)
+    operator()(ITDenseCplx& d)
         {
-        d.data[ind(is_,inds_)] = elt_;
+        d.set(ind(is_,inds_),elt_);
         }
     };
 
@@ -255,26 +241,21 @@ set(Complex val, const IndexVals&... ivs)
 template <typename F>
 struct GenerateIT : RegisterFunc<GenerateIT<F>>
     {
-    private:
     F& f_;
-    public:
     GenerateIT(F&& f) : f_(f) { }
 
-    template <typename T>
     void
-    operator()(ITDense<T>& d) const { doGen(d); }
+    operator()(ITDense& d) const { doGen(d); }
 
     template <typename T>
     void
     operator()(ITDiag<T>& d) const { doGen(d); }
 
-    private:
-
     template<typename T>
     void
     doGen(T& d) const
         {
-        std::generate(d.data.begin(),d.data.end(),f_);
+        std::generate(d.begin(),d.end(),f_);
         }
     };
 
@@ -290,29 +271,38 @@ generate(Func&& f)
 template <typename F>
 struct ApplyIT : RegisterFunc<ApplyIT<F>>
     {
-    private:
     F& f_;
-    public:
     ApplyIT(F&& f) : f_(f) { }
 
-    template <typename T,
-              typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
     void
-    operator()(ITDense<T>& d) const { doApply(d); }
+    operator()(ITDense& d)
+        { 
+        for(auto& elt : d) elt = f_(elt);
+        }
+
+    void
+    operator()(ITDenseCplx& d)
+        { 
+        for(auto j = 0ul; j < d.csize(); ++j)
+            {
+            auto res = f_(d.get(j));
+            d.set(j,res);
+            }
+        }
         
     template <typename T,
               typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
     void
-    operator()(ITDiag<T>& d) const { doApply(d); }
-
-    private:
-
-    template<typename T>
-    void
-    doApply(T& d) const
-        {
-        for(auto& elt : d.data)
-            elt = f_(elt);
+    operator()(ITDiag<T>& d) 
+        { 
+        if(d.allSame()) 
+            {
+            d.val = f_(d.val);
+            }
+        else
+            {
+            for(auto& elt : d.store) elt = f_(elt);
+            }
         }
     };
 
@@ -328,10 +318,8 @@ apply(Func&& f)
 template <typename F>
 struct VisitIT : RegisterFunc<VisitIT<F>>
     {
-    private:
     F& f_;
     Real scale_fac;
-    public:
     VisitIT(F&& f, const LogNumber& scale)
         : f_(f), scale_fac(scale.real0())
         { }

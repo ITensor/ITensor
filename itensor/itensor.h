@@ -199,6 +199,13 @@ class ITensor
     const ITensor&
     visit(Func&& f) const;
 
+    //
+    // Complex number methods
+    //
+
+    ITensor&
+    conj();
+
     private:
 
     void
@@ -393,7 +400,7 @@ Real
 norm(const ITensor& T);
 
 ITensor
-conj(const ITensor& T);
+conj(ITensor T);
 
 ITensor inline
 dag(const ITensor& T) { return conj(T); }

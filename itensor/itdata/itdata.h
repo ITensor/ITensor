@@ -19,8 +19,8 @@
 ////////////////////////////////////
 // (1) Add a new line here to register a new ITData subtype:
 #define REGISTER(X,Y,Z)\
-    X(Y  ITDense<Real>      &d) Z\
-    X(Y  ITDense<Complex>   &d) Z\
+    X(Y  ITDense            &d) Z\
+    X(Y  ITDenseCplx        &d) Z\
     X(Y  ITCombiner         &d) Z\
     X(Y  ITDiag<Real>       &d) Z\
     X(Y  ITDiag<Complex>    &d) Z\
@@ -31,8 +31,9 @@ namespace itensor {
 
 ///////////////////////////////////
 // (2) Forward declarations for all ITData subtypes:
-template <typename>
-class ITDense;
+struct ITDense;
+
+struct ITDenseCplx;
 
 template <typename>
 class ITDiag;

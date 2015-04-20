@@ -26,7 +26,7 @@ HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterat
         detail/gcounter.h global.h real.h permutation.h index.h \
         range.h indexset.h counter.h simplematrix.h simpletensor.h contract.h \
         itdata/itdata.h \
-        itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h \
+        itdata/itdense.h itdata/itdiag.h itdata/itcombiner.h itdata/itdensecplx.h \
         itdata/iqtdata.h \
         itensor.h itensor.ih qn.h iqindex.h  \
         iqtensor.h iqtensor.ih \
@@ -123,7 +123,7 @@ DEPHEADERS+= contract.h range.h simpletensor.h simplematrix.h
 contract.o: $(DEPHEADERS)
 .debug_objs/contract.o: $(DEPHEADERS)
 DEPHEADERS+= itdata/itdata.h \
-itensor.h counter.h
+itensor.h counter.h itdata/itdense.h itdata/itdiag.h itdata/itdensecplx.h
 itensor.o: $(DEPHEADERS)
 .debug_objs/itensor.o: $(DEPHEADERS)
 DEPHEADERS+= qn.h iqindex.h

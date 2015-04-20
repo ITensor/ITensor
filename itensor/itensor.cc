@@ -28,7 +28,7 @@ ITensor(const Index& i1)
     :
     is_(i1),
     scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(i1.m(),0.))
+    store_(std::make_shared<ITDense>(i1.m(),0.))
 	{ }
 
 
@@ -37,7 +37,7 @@ ITensor(const Index& i1,const Index& i2)
     :
     is_(i1,i2),
     scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(i1.m()*i2.m(),0.))
+    store_(std::make_shared<ITDense>(i1.m()*i2.m(),0.))
 	{ }
     
 ITensor::
@@ -46,9 +46,9 @@ ITensor(Complex val)
     scale_(1.)
     { 
     //if(val.imag() == 0)
-    //    store_ = std::make_shared<ITDense<Real>>(1,val.real());
+    //    store_ = std::make_shared<ITDense>(1,val.real());
     //else
-    //    store_ = std::make_shared<ITDense<Complex>>(1,val);
+    //    store_ = std::make_shared<ITDenseCplx>(1,val);
     if(val.imag() == 0)
         store_ = std::make_shared<ITDiag<Real>>(val.real());
     else
@@ -70,7 +70,7 @@ ITensor(const IndexSet& is)
     :
     is_(is),
     scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(area(is_),0.))
+    store_(std::make_shared<ITDense>(area(is_),0.))
 	{ }
 
 ITensor::
@@ -79,19 +79,18 @@ ITensor(const IndexSet& is,
     :
     is_(is),
     scale_(1.),
-    store_(std::make_shared<ITDense<Real>>(v.begin(),v.end()))
+    store_(std::make_shared<ITDense>(v.begin(),v.end()))
 	{ }
 
 struct CopyElems : public RegisterFunc<CopyElems>
     {
     CopyElems() { }
 
-    template<typename T>
     void
-    operator()(ITDense<T>& d1,
-               const ITDense<T>& d2)
+    operator()(ITDense& d1,
+               const ITDense& d2)
         {
-        std::copy(d2.data.begin(),d2.data.end(),d1.data.begin());
+        std::copy(d2.begin(),d2.end(),d1.begin());
         }
 
     template<typename T>
@@ -99,7 +98,7 @@ struct CopyElems : public RegisterFunc<CopyElems>
     operator()(ITDiag<T>& d1,
                const ITDiag<T>& d2)
         {
-        std::copy(d2.data.begin(),d2.data.end(),d1.data.begin());
+        std::copy(d2.begin(),d2.end(),d1.begin());
         }
     };
 
@@ -109,7 +108,7 @@ ITensor(const IndexSet& is,
     :
     is_(is),
     scale_(t.scale_),
-    store_(std::make_shared<ITDense<Real>>(area(is_),0.))
+    store_(std::make_shared<ITDense>(area(is_),0.))
     {
     Error("ITensor(IndexSet,ITensor) constructor currently broken due to automatic sorting of Indices by IndexSet");
     applyFunc<CopyElems>(store_,t.store_);
@@ -130,12 +129,12 @@ ITensor(const Index& i1,
         {
         Matrix Mt = M.t();
         VectorRef vref = Mt.TreatAsVector(); 
-        store_ = make_newdata<ITDense<Real>>(vref.begin(),vref.end());
+        store_ = make_newdata<ITDense>(vref.begin(),vref.end());
         }
     else
         {
         VectorRef vref = M.TreatAsVector(); 
-        store_ = make_newdata<ITDense<Real>>(vref.begin(),vref.end());
+        store_ = make_newdata<ITDense>(vref.begin(),vref.end());
         }
     }
 
@@ -151,8 +150,8 @@ ITensor(const Index& i1,
 //        { }
 //
 //    NewData
-//    operator()(ITDense<Real>& t1, 
-//               const ITDense<Real>& t2)
+//    operator()(ITDense& t1, 
+//               const ITDense& t2)
 //        {
 //        auto v = std::vector<Real>();
 //        permute(P_,is_,t2.data(),v);
@@ -176,7 +175,7 @@ ITensor(const Index& i1,
 //    else               
 //        { 
 //        Error("Not yet implemented");
-//        store_ = make_shared<ITDense<Real>>(is_);
+//        store_ = make_shared<ITDense>(is_);
 //        applyFunc<Reshape>(store_,other.store_,{P,other.is_});
 //        }
 //    }
@@ -258,18 +257,18 @@ struct Contract : RegisterFunc<Contract>
     scalefac() { return scalefac_; }
 
     void
-    operator()(const ITDense<Real>& a1,
-               const ITDense<Real>& a2);
+    operator()(const ITDense& a1,
+               const ITDense& a2);
 
     void
-    operator()(const ITDense<Real>& d,
+    operator()(const ITDense& d,
                const ITCombiner& C)
         {
         combine(d,Lis_,Ris_);
         }
     void
     operator()(const ITCombiner& C,
-               const ITDense<Real>& d)
+               const ITDense& d)
         { 
         combine(d,Ris_,Lis_);
         if(!newData()) assignPointerRtoL();
@@ -277,12 +276,12 @@ struct Contract : RegisterFunc<Contract>
 
     void
     operator()(const ITDiag<Real>& d,
-               const ITDense<Real>& t)
+               const ITDense& t)
         {
         diagDense(d,Lis_,Lind_,t,Ris_,Rind_);
         }
     void
-    operator()(const ITDense<Real>& t,
+    operator()(const ITDense& t,
                const ITDiag<Real>& d)
         { 
         diagDense(d,Ris_,Rind_,t,Lis_,Lind_);
@@ -291,7 +290,7 @@ struct Contract : RegisterFunc<Contract>
     private:
 
     void
-    combine(const ITDense<Real>& d,
+    combine(const ITDense& d,
             const IndexSet& dis,
             const IndexSet& Cis);
 
@@ -299,15 +298,15 @@ struct Contract : RegisterFunc<Contract>
     diagDense(const ITDiag<Real>& d,
               const IndexSet& dis,
               const Label& dind,
-              const ITDense<Real>& t,
+              const ITDense& t,
               const IndexSet& tis,
               const Label& tind);
  
     };
 
 void Contract::
-operator()(const ITDense<Real>& a1,
-           const ITDense<Real>& a2)
+operator()(const ITDense& a1,
+           const ITDense& a2)
     {
     //Optimization TODO:
     //  Test different scenarios where having sortInds=true or false
@@ -336,23 +335,23 @@ operator()(const ITDense<Real>& a1,
     //PRI(Nind);
 
     auto rsize = area(Nis_);
-    auto nd = makeNewData<ITDense<Real>>(rsize,0.);
-    auto t1 = make_tensorref(a1.data.data(),Lis_),
-         t2 = make_tensorref(a2.data.data(),Ris_);
-    auto tr = make_tensorref(nd->data.data(),Nis_);
+    auto nd = makeNewData<ITDense>(rsize,0.);
+    auto t1 = make_tensorref(a1.data(),Lis_),
+         t2 = make_tensorref(a2.data(),Ris_);
+    auto tr = make_tensorref(nd->data(),Nis_);
     contractloop(t1,Lind_,t2,Rind_,tr,Nind);
 
     scalefac_ = 0;
     if(rsize > 1)
         {
-        for(auto elt : nd->data)
+        for(auto elt : *nd)
             {
             scalefac_ += elt*elt;
             }
         scalefac_ = std::sqrt(scalefac_);
         if(scalefac_ != 0)
             {
-            for(auto& elt : nd->data)
+            for(auto& elt : *nd)
                 {
                 elt /= scalefac_;
                 }
@@ -364,7 +363,7 @@ void Contract::
 diagDense(const ITDiag<Real>& d,
           const IndexSet& dis,
           const Label& dind,
-          const ITDense<Real>& t,
+          const ITDense& t,
           const IndexSet& tis,
           const Label& tind)
     {
@@ -412,9 +411,9 @@ diagDense(const ITDiag<Real>& d,
                 ++n;
                 }
             }
-        auto nd = makeNewData<ITDense<Real>>(area(Nis_),0.);
-        auto *pr = nd->data.data();
-        const auto *pt = t.data.data();
+        auto nd = makeNewData<ITDense>(area(Nis_),0.);
+        auto *pr = nd->data();
+        const auto *pt = t.data();
 
         if(d.allSame())
             {
@@ -436,8 +435,8 @@ diagDense(const ITDiag<Real>& d,
             }
         else
             {
-            auto* pd = d.data.data();
-            assert(d.data.size() == dsize);
+            auto* pd = d.data();
+            assert(d.size() == dsize);
             for(;C.notDone();++C)
                 {
                 size_t roffset = 0,
@@ -463,7 +462,7 @@ diagDense(const ITDiag<Real>& d,
             {
             // o scalar if all of d's inds contracted also
             Real val = 0;
-            const auto *pt = t.data.data();
+            const auto *pt = t.data();
             if(d.allSame())
                 {
                 for(size_t J = 0; J < dsize; ++J)
@@ -471,8 +470,8 @@ diagDense(const ITDiag<Real>& d,
                 }
             else
                 {
-                assert(dsize == d.data.size());
-                auto *pd = d.data.data();
+                assert(dsize == d.size());
+                auto *pd = d.data();
                 for(size_t J = 0; J < dsize; ++J)
                     val += pd[J]*pt[J*t_cstride];
                 }
@@ -482,8 +481,8 @@ diagDense(const ITDiag<Real>& d,
             {
             // o element-wise product of d's data and t's diagonal
             auto nd = makeNewData<ITDiag<Real>>(dsize,0.);
-            auto *pr = nd->data.data();
-            const auto *pt = t.data.data();
+            auto *pr = nd->data();
+            const auto *pt = t.data();
             if(d.allSame())
                 {
                 for(size_t J = 0; J < dsize; ++J)
@@ -491,8 +490,8 @@ diagDense(const ITDiag<Real>& d,
                 }
             else
                 {
-                assert(dsize == d.data.size());
-                auto *pd = d.data.data();
+                assert(dsize == d.size());
+                auto *pd = d.data();
                 for(size_t J = 0; J < dsize; ++J)
                     pr[J] += pd[J]*pt[J*t_cstride];
                 }
@@ -501,7 +500,7 @@ diagDense(const ITDiag<Real>& d,
     }
 
 void Contract::
-combine(const ITDense<Real>& d,
+combine(const ITDense& d,
         const IndexSet& dis,
         const IndexSet& Cis)
     {
@@ -596,9 +595,9 @@ combine(const ITDense<Real>& d,
                 }
             Range rr(pdims);
             Nis_ = IndexSet(move(newind));
-            auto nd = makeNewData<ITDense<Real>>(area(Nis_));
-            auto td = make_tensorref(d.data.data(),dis);
-            auto tr = make_tensorref(nd->data.data(),rr);
+            auto nd = makeNewData<ITDense>(area(Nis_));
+            auto td = make_tensorref(d.data(),dis);
+            auto tr = make_tensorref(nd->data(),rr);
             permute(td,P,tr);
             }
         }
@@ -675,24 +674,22 @@ struct MultComplex : RegisterFunc<MultComplex>
     MultComplex(Complex z) : z_(z) { }
 
     void
-    operator()(const ITDense<Real>& d);
+    operator()(const ITDense& d);
     void
-    operator()(ITDense<Complex>& d);
+    operator()(ITDenseCplx& d);
     };
 
 void MultComplex::
-operator()(const ITDense<Real>& d)
+operator()(const ITDense& d)
     {
-    auto nd = makeNewData<ITDense<Complex>>(d.data.begin(),d.data.end());
+    auto nd = makeNewData<ITDenseCplx>(d.begin(),d.end());
     operator()(*nd);
     }
 
 void MultComplex::
-operator()(ITDense<Complex>& d)
+operator()(ITDenseCplx& d)
     {
-    //TODO: use BLAS algorithm
-    for(auto& elt : d.data)
-        elt *= z_;
+    d *= z_;
     }
 
 ITensor& ITensor::
@@ -790,28 +787,28 @@ class PlusEQ : public RegisterFunc<PlusEQ>
         { }
 
     void
-    operator()(ITDense<Real>& a1,
-               const ITDense<Real>& a2);
+    operator()(ITDense& a1,
+               const ITDense& a2);
 
     void
     operator()(ITDiag<Real>& a1,
                const ITDiag<Real>& a2);
 
     void
-    operator()(ITDense<Real>& a1,
-               const ITDense<Complex>& a2)
+    operator()(ITDense& a1,
+               const ITDenseCplx& a2)
         {
         Error("Real + Complex not implemented");
-        //auto np = make_newdata<ITDense<Complex>>(a1);
+        //auto np = make_newdata<ITDenseCplx>(a1);
         //operator()(*np,a2);
         }
 
     void
-    operator()(ITDense<Complex>& a1,
-               const ITDense<Real>& a2)
+    operator()(ITDenseCplx& a1,
+               const ITDense& a2)
         {
         Error("Complex + Real not implemented");
-        //ITDense<Complex> a2c(a2);
+        //ITDenseCplx a2c(a2);
         //operator()(a1,a2c);
         }
     };
@@ -824,20 +821,20 @@ plusEqData(Real fac, Real *d1, const Real *d2, LAPACK_INT size)
     }
 
 void PlusEQ::
-operator()(ITDense<Real>& a1,
-           const ITDense<Real>& a2)
+operator()(ITDense& a1,
+           const ITDense& a2)
     {
 #ifdef DEBUG
-    if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
+    if(a1.size() != a2.size()) Error("Mismatched sizes in plusEq");
 #endif
     if(!P_)
         {
-        plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
+        plusEqData(fac_,a1.data(),a2.data(),a1.size());
         }
     else
         {
-        auto ref1 = tensorref<Real,IndexSet>(a1.data.data(),*is1_),
-             ref2 = tensorref<Real,IndexSet>(a2.data.data(),*is2_);
+        auto ref1 = tensorref<Real,IndexSet>(a1.data(),*is1_),
+             ref2 = tensorref<Real,IndexSet>(a2.data(),*is2_);
         auto f = fac_;
         auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
         permute(ref2,*P_,ref1,add);
@@ -849,10 +846,10 @@ operator()(ITDiag<Real>& a1,
            const ITDiag<Real>& a2)
     {
 #ifdef DEBUG
-    if(a1.data.size() != a2.data.size()) Error("Mismatched sizes in plusEq");
+    if(a1.size() != a2.size()) Error("Mismatched sizes in plusEq");
 #endif
     if(a1.allSame() || a2.allSame()) Error("ITDiag plusEq allSame case not implemented");
-    plusEqData(fac_,a1.data.data(),a2.data.data(),a1.data.size());
+    plusEqData(fac_,a1.data(),a2.data(),a1.size());
     }
 
 ITensor& ITensor::
@@ -917,14 +914,14 @@ class FillReal : public RegisterFunc<FillReal>
     public:
     FillReal(Real r) : r_(r) { }
     void
-    operator()(ITDense<Real>& d) const
+    operator()(ITDense& d) const
         {
-        std::fill(d.data.begin(),d.data.end(),r_);
+        std::fill(d.begin(),d.end(),r_);
         }
     void
-    operator()(const ITDense<Complex>& d)
+    operator()(const ITDenseCplx& d)
         {
-        makeNewData<ITDense<Real>>(d.data.size(),r_);
+        makeNewData<ITDense>(d.size(),r_);
         }
     template<typename T>
     void
@@ -940,14 +937,14 @@ class FillCplx : public RegisterFunc<FillCplx>
     public:
     FillCplx(Complex z) : z_(z) { }
     void
-    operator()(const ITDense<Real>& d)
+    operator()(const ITDense& d)
         {
-        makeNewData<ITDense<Complex>>(d.data.size(),z_);
+        makeNewData<ITDenseCplx>(d.size(),z_);
         }
     void
-    operator()(ITDense<Complex>& d) const
+    operator()(ITDenseCplx& d) const
         {
-        std::fill(d.data.begin(),d.data.end(),z_);
+        d.fill(z_);
         }
     template<typename T>
     void
@@ -977,13 +974,11 @@ class MultReal : public RegisterFunc<MultReal>
         : r_(r)
         { }
 
-    template<typename T>
     void
-    operator()(ITDense<T>& d) const
+    operator()(ITDense& d) const
         {
-        //TODO: use BLAS algorithm?
-        for(auto& elt : d.data)
-            elt *= r_;
+        //use BLAS algorithm?
+        for(auto& elt : d) elt *= r_;
         }
 
     template<typename T>
@@ -991,9 +986,8 @@ class MultReal : public RegisterFunc<MultReal>
     operator()(ITDiag<T>& d) const
         {
         d.val *= r_;
-        //TODO: use BLAS algorithm
-        for(auto& elt : d.data)
-            elt *= r_;
+        //use BLAS algorithm?
+        for(auto& elt : d.store) elt *= r_;
         }
     };
 
@@ -1015,12 +1009,11 @@ class NormNoScale : public RegisterFunc<NormNoScale,Real>
 
     NormNoScale(const IndexSet& is) : is_(is) { }
 
-    template<typename T>
     Real
-    operator()(const ITDense<T>& d)
+    operator()(const ITDense& d)
         {
         Real nrm = 0;
-        for(const auto& elt : d.data)
+        for(const auto& elt : d)
             nrm += std::norm(elt);
         return std::sqrt(nrm);
         }
@@ -1037,7 +1030,7 @@ class NormNoScale : public RegisterFunc<NormNoScale,Real>
             }
         else
             {
-            for(const auto& elt : d.data)
+            for(const auto& elt : d.store)
                 nrm += std::norm(elt);
             }
         return std::sqrt(nrm);
@@ -1074,6 +1067,40 @@ equalizeScales(ITensor& other)
         }
     }
 
+struct Conj : RegisterFunc<Conj>
+    {
+    void
+    operator()(ITDenseCplx& d) 
+        { 
+        auto* i = d.istart();
+        auto* ie = d.istart()+d.csize();
+        for(; i < ie; ++i) 
+            *i *= -1;
+        }
+    void
+    operator()(ITDiag<Complex>& d) 
+        { 
+        if(d.allSame()) 
+            {
+            d.val = std::conj(d.val);
+            }
+        else
+            {
+            for(auto& el : d.store) 
+                el = std::conj(el);
+            }
+        }
+    template<typename T>
+    void
+    operator()(const T& d) { }
+    };
+ITensor& ITensor::
+conj()
+    {
+    applyFunc<Conj>(store_);
+    return *this;
+    }
+
 struct PrintIT : RegisterFunc<PrintIT>
     {
     std::ostream& s_;
@@ -1086,9 +1113,8 @@ struct PrintIT : RegisterFunc<PrintIT>
         : s_(s), x_(x), is_(is)
         { }
 
-    template<typename T>
     void
-    operator()(const ITDense<T>& d) const;
+    operator()(const ITDense& d) const;
 
     template<typename T>
     void
@@ -1098,9 +1124,8 @@ struct PrintIT : RegisterFunc<PrintIT>
     operator()(const ITCombiner& d) const { s_ << " Combiner}\n"; }
     };
 
-template<typename T>
 void PrintIT::
-operator()(const ITDense<T>& d) const
+operator()(const ITDense& d) const
     {
     s_ << "}\n";
     Real scalefac = 1.0;
@@ -1111,7 +1136,7 @@ operator()(const ITDense<T>& d) const
     if(rank == 0) 
         {
         s_ << "  ";
-        detail::printVal(s_,scalefac*d.data.front());
+        detail::printVal(s_,scalefac*d.store.front());
         }
 
     auto gc = detail::GCounter(0,rank-1,0);
@@ -1120,7 +1145,7 @@ operator()(const ITDense<T>& d) const
 
     for(; gc.notDone(); ++gc)
         {
-        auto val = scalefac*d.data[ind(is_,gc.i)];
+        auto val = scalefac*d[ind(is_,gc.i)];
         if(std::norm(val) > Global::printScale())
             {
             s_ << "  (";
@@ -1149,13 +1174,13 @@ operator()(const ITDiag<T>& d) const
     if(is_.r() == 0) 
         {
         s_ << "  ";
-        detail::printVal(s_,scalefac*(d.data.empty() ? d.val : d.data.front()));
+        detail::printVal(s_,scalefac*(d.empty() ? d.val : d.store.front()));
         }
 
     auto size = minM(is_);
     for(size_t i = 0; i < size; ++i)
         {
-        auto val = scalefac*(allsame ? d.val : d.data[i]);
+        auto val = scalefac*(allsame ? d.val : d.store[i]);
         if(std::norm(val) > Global::printScale())
             {
             s_ << "  (";
@@ -1215,37 +1240,25 @@ norm(const ITensor& T)
            applyFunc<NormNoScale>(T.data(),{T.inds()});
     }
 
-//Possible optimization:
-// this will get called a lot,
-// optimize by requiring all ITData subtypes to
-// have a virtual method bool isComplex() ?
+
 ITensor
-conj(const ITensor& T)
+conj(ITensor T)
     {
-    if(isComplex(T))
-        {
-        auto Tc = T;
-        Tc.apply([](auto z) { return std::conj(z); });
-        return Tc;
-        }
+    T.conj();
     return T;
     }
 
 
-class CheckComplex : public RegisterFunc<CheckComplex>
+struct CheckComplex : RegisterFunc<CheckComplex,bool>
     {
-    bool isComplex_;
-    public:
+    bool
+    operator()(const ITDenseCplx& d) { return true; }
+    bool
+    operator()(const ITDiag<Complex>& d) { return true; }
 
-    CheckComplex() : isComplex_(false) { }
-
-    operator bool() const { return isComplex_; }
-
-    void
-    operator()(const ITDense<Real>& d) { isComplex_ = false; }
-    void
-    operator()(const ITDense<Complex>& d) { isComplex_ = true; }
-
+    template<typename T>
+    bool
+    operator()(const T& d) { return false; }
     };
 
 bool
@@ -1261,18 +1274,17 @@ class SumEls : public RegisterFunc<SumEls,Complex>
 
     SumEls(const IndexSet& is) : is_(is) { }
 
-    template <class T>
-    T
-    operator()(const ITDense<T>& d) 
+    Complex
+    operator()(const ITDense& d) 
         { 
-        T sum = 0;
-        for(const auto& elt : d.data)
+        Real sum = 0;
+        for(const auto& elt : d)
             sum += elt;
         return sum;
         }
 
     template <class T>
-    T
+    Complex
     operator()(const ITDiag<T>& d) 
         { 
         T sum = 0;
@@ -1282,7 +1294,7 @@ class SumEls : public RegisterFunc<SumEls,Complex>
             }
         else
             {
-            for(const auto& elt : d.data)
+            for(const auto& elt : d.store)
                 sum += elt;
             }
         return sum;

@@ -14,20 +14,32 @@ template<typename T>
 class ITDiag : public RegisterData<ITDiag<T>>
     {
     public:
-    using size_type = typename std::vector<T>::size_type;
+    using storage_type = typename std::vector<T>;
+    using size_type = typename storage_type::size_type;
+    using iterator = typename storage_type::iterator;
+    using const_iterator = typename storage_type::const_iterator;
+    using value_type = T;
+
+    //
+    // Data members
+    //
 
     T val = 0;
-    std::vector<T> data;
+    storage_type store;
+
+    //
+    // Constructors
+    //
 
     template<typename InputIterator>
     ITDiag(InputIterator b, InputIterator e)
         :
-        data(b,e)
+        store(b,e)
         { }
 
     ITDiag(size_t size, T val)
         :
-        data(size,val)
+        store(size,val)
         { }
 
     ITDiag(T t) 
@@ -37,8 +49,39 @@ class ITDiag : public RegisterData<ITDiag<T>>
     virtual
     ~ITDiag() { }
 
+    //
+    // Accessors
+    //
+
     bool
-    allSame() const { return data.empty(); }
+    allSame() const { return store.empty(); }
+
+    //
+    // std container like methods
+    //
+
+    size_type
+    size() const { return store.size(); }
+    bool
+    empty() const { return store.empty(); }
+
+    Real*
+    data() { return store.data(); }
+    const Real*
+    data() const { return store.data(); }
+    
+    const_iterator
+    cbegin() const { return store.cbegin(); }
+    const_iterator
+    cend() const { return store.cend(); }
+    const_iterator
+    begin() const { return store.begin(); }
+    const_iterator
+    end() const { return store.end(); }
+    iterator
+    begin() { return store.begin(); }
+    iterator
+    end() { return store.end(); }
 
     };
 
