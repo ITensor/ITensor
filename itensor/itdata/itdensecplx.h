@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITDENSECPLX_H
 #define __ITENSOR_ITDENSECPLX_H
 
-#include "itdata.h"
+#include "itdense.h"
 
 namespace itensor {
 
@@ -49,6 +49,12 @@ struct ITDenseCplx : RegisterData<ITDenseCplx>
         { 
         fill(val);
         }
+    ITDenseCplx(const ITDense& d)
+        : 
+        store(2*d.size(),0) 
+        { 
+        std::copy(d.begin(),d.end(),store.begin());
+        }
 
     template<typename InputIterator>
     ITDenseCplx(InputIterator b, InputIterator e) : store(b,e) { }
@@ -80,8 +86,10 @@ struct ITDenseCplx : RegisterData<ITDenseCplx>
              b = z.imag();
         for(; r < re; ++r, ++i)
             {
-            *r = *r*a-*i*b;
-            *i = *i*a+*r*b;
+            auto nr = *r*a-*i*b;
+            auto ni = *i*a+*r*b;
+            *r = nr;
+            *i = ni;
             }
         return *this;
         }

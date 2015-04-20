@@ -57,12 +57,12 @@ ITensor(Complex val)
 
 ITensor::
 ITensor(IndexSet&& iset,
-        NewData nd,
-        LogNumber scale)
+        storage_ptr&& data,
+        const LogNumber& scale)
     :
-    is_(iset),
+    is_(std::move(iset)),
     scale_(scale),
-    store_(std::move(nd))
+    store_(std::move(data))
     { }
 
 ITensor::
@@ -73,14 +73,14 @@ ITensor(const IndexSet& is)
     store_(std::make_shared<ITDense>(area(is_),0.))
 	{ }
 
-ITensor::
-ITensor(const IndexSet& is,
-        const VectorRef& v)
-    :
-    is_(is),
-    scale_(1.),
-    store_(std::make_shared<ITDense>(v.begin(),v.end()))
-	{ }
+//ITensor::
+//ITensor(const IndexSet& is,
+//        const VectorRef& v)
+//    :
+//    is_(is),
+//    scale_(1.),
+//    store_(std::make_shared<ITDense>(v.begin(),v.end()))
+//	{ }
 
 struct CopyElems : public RegisterFunc<CopyElems>
     {
@@ -114,29 +114,29 @@ ITensor(const IndexSet& is,
     applyFunc<CopyElems>(store_,t.store_);
     }
 
-ITensor::
-ITensor(const Index& i1,
-        const Index& i2,
-        const MatrixRef& M)
-    :
-    is_(i1,i2),
-    scale_(1.)
-    {
-	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
-	    Error("Mismatch of Index sizes and matrix.");
-
-    if(i1 == is_[0])
-        {
-        Matrix Mt = M.t();
-        VectorRef vref = Mt.TreatAsVector(); 
-        store_ = make_newdata<ITDense>(vref.begin(),vref.end());
-        }
-    else
-        {
-        VectorRef vref = M.TreatAsVector(); 
-        store_ = make_newdata<ITDense>(vref.begin(),vref.end());
-        }
-    }
+//ITensor::
+//ITensor(const Index& i1,
+//        const Index& i2,
+//        const MatrixRef& M)
+//    :
+//    is_(i1,i2),
+//    scale_(1.)
+//    {
+//	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
+//	    Error("Mismatch of Index sizes and matrix.");
+//
+//    if(i1 == is_[0])
+//        {
+//        Matrix Mt = M.t();
+//        VectorRef vref = Mt.TreatAsVector(); 
+//        store_ = make_newdata<ITDense>(vref.begin(),vref.end());
+//        }
+//    else
+//        {
+//        VectorRef vref = M.TreatAsVector(); 
+//        store_ = make_newdata<ITDense>(vref.begin(),vref.end());
+//        }
+//    }
 
 
 //class Reshape
@@ -674,23 +674,14 @@ struct MultComplex : RegisterFunc<MultComplex>
     MultComplex(Complex z) : z_(z) { }
 
     void
-    operator()(const ITDense& d);
+    operator()(const ITDense& d)
+        {
+        auto nd = makeNewData<ITDenseCplx>(d);
+        *nd *= z_;
+        }
     void
-    operator()(ITDenseCplx& d);
+    operator()(ITDenseCplx& d) { d *= z_; }
     };
-
-void MultComplex::
-operator()(const ITDense& d)
-    {
-    auto nd = makeNewData<ITDenseCplx>(d.begin(),d.end());
-    operator()(*nd);
-    }
-
-void MultComplex::
-operator()(ITDenseCplx& d)
-    {
-    d *= z_;
-    }
 
 ITensor& ITensor::
 operator*=(Complex z)

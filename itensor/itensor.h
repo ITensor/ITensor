@@ -225,8 +225,8 @@ class ITensor
 
     //Construct by explicitly providing data members
     ITensor(IndexSet&& iset,
-            NewData nd,
-            LogNumber scale);
+            storage_ptr&& data,
+            const LogNumber& scale);
 
     //Provide indices from IndexSet
     explicit
