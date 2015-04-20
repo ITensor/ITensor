@@ -384,6 +384,12 @@ randIT(Params&&... params)
     {
     return randomize(ITensor(std::forward<Params>(params)...));
     }
+template <typename... Params>
+ITensor
+randITCplx(Params&&... params)
+    {
+    return randomize(ITensor(std::forward<Params>(params)...),"Complex");
+    }
 
 template <typename... Indices>
 ITensor

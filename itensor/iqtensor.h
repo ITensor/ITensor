@@ -6,7 +6,6 @@
 #define __ITENSOR_IQTENSOR_H
 #include "iqindex.h"
 #include "itensor.h"
-//#include "iqtdata_functions.h"
 
 namespace itensor {
 

@@ -365,12 +365,15 @@ template <typename Derived, typename Return>
 void RegisterFunc<Derived,Return>::
 updateArg1()
     {
+    //println("In updateArg1, arg1_ points to ",arg1_->get());
     if(action_ == AssignNewData)
         {
+        //println("Doing AssignNewData");
         *arg1_ = std::move(nd_);
         }
     else if(action_ == AssignPointerRtoL)
         {
+        //println("Doing AssignPointerRtoL");
         *arg1_ = *arg2_;
         }
     }
@@ -381,7 +384,10 @@ T& RegisterFunc<Derived,Return>::
 modifyData(const T& d)
     {
     if(!arg1_) Error("Can't modify const data");
-    if(!(arg1_->unique())) *arg1_ = (*arg1_)->clone();
+    if(!(arg1_->unique())) 
+        {
+        *arg1_ = (*arg1_)->clone();
+        }
     auto* pa1 = static_cast<T*>(arg1_->get());
     return *pa1;
     }
@@ -402,7 +408,7 @@ applyToImpl(const T& d)
         {
         ret_ = detail::call<Return>(dt_,d);
         }
-    updateArg1();
+    if(arg1_) updateArg1();
     }
 
 template <typename Derived, typename Return>

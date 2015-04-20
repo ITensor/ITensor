@@ -1116,6 +1116,9 @@ struct PrintIT : RegisterFunc<PrintIT>
     void
     operator()(const ITDense& d) const;
 
+    void
+    operator()(const ITDenseCplx& d) const;
+
     template<typename T>
     void
     operator()(const ITDiag<T>& d) const;
@@ -1127,7 +1130,7 @@ struct PrintIT : RegisterFunc<PrintIT>
 void PrintIT::
 operator()(const ITDense& d) const
     {
-    s_ << "}\n";
+    s_ << " (Dense Real)}\n";
     Real scalefac = 1.0;
     if(!x_.isTooBigForReal()) scalefac = x_.real0();
     else s_ << "  (omitting too large scale factor)\n";
@@ -1161,12 +1164,49 @@ operator()(const ITDense& d) const
         }
     }
 
+void PrintIT::
+operator()(const ITDenseCplx& d) const
+    {
+    s_ << " (Dense Cplx)}\n";
+    Real scalefac = 1.0;
+    if(!x_.isTooBigForReal()) scalefac = x_.real0();
+    else s_ << "  (omitting too large scale factor)\n";
+
+    auto rank = is_.r();
+    if(rank == 0) 
+        {
+        s_ << "  ";
+        detail::printVal(s_,scalefac*d.get(0));
+        }
+
+    auto gc = detail::GCounter(0,rank-1,0);
+    for(int i = 0; i < rank; ++i)
+        gc.setInd(i,0,is_.dim(i)-1);
+
+    for(; gc.notDone(); ++gc)
+        {
+        auto val = scalefac*d.get(ind(is_,gc.i));
+        if(std::norm(val) > Global::printScale())
+            {
+            s_ << "  (";
+            for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
+                {
+                s_ << (1+gc.i(ii));
+                if(ii < gc.i.maxi()) s_ << ",";
+                }
+            s_ << ") ";
+
+            detail::printVal(s_,val);
+            }
+        }
+    }
+
 template<typename T>
 void PrintIT::
 operator()(const ITDiag<T>& d) const
     {
     auto allsame = d.allSame();
-    s_ << " Diag" << (allsame ? "(all same)" : "") << "}\n";
+    s_ << " (Diag" << (allsame ? ",all same)" : ")") << "}\n";
     Real scalefac = 1.0;
     if(!x_.isTooBigForReal()) scalefac = x_.real0();
     else s_ << "  (omitting too large scale factor)\n";
@@ -1221,11 +1261,14 @@ operator<<(ostream & s, const ITensor& t)
     }
 
 
+Complex
+quickranCplx() { return Complex(detail::quickran(),detail::quickran()); }
 
 ITensor
 randomize(ITensor T, const Args& args)
     {
-    T.generate(detail::quickran);
+    if(args.getBool("Complex",false)) T.generate(quickranCplx);
+    else                              T.generate(detail::quickran);
     return T;
     }
 

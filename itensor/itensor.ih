@@ -239,23 +239,46 @@ set(Complex val, const IndexVals&... ivs)
     }
 
 template <typename F>
-struct GenerateIT : RegisterFunc<GenerateIT<F>>
+struct GenerateIT : public RegisterFunc<GenerateIT<F>>
     {
+    using Parent = RegisterFunc<GenerateIT<F>>;
     F& f_;
-    GenerateIT(F&& f) : f_(f) { }
+    bool complex_ = false;
+    GenerateIT(F&& f) : f_(f) 
+        { 
+        complex_ = std::is_same<typename std::result_of<F()>::type,Complex>::value;
+        }
 
     void
-    operator()(ITDense& d) const { doGen(d); }
+    operator()(const ITDense& d)
+        { 
+        if(complex_)
+            {
+            auto nd = Parent::template makeNewData<ITDenseCplx>(d.size());
+            for(auto j = 0ul; j < nd->csize(); ++j)
+                nd->set(j,f_());
+            }
+        else
+            {
+            auto& dref = Parent::modifyData(d);
+            std::generate(dref.begin(),dref.end(),[this](){ return std::real(this->f_()); });
+            }
+        }
 
-    template <typename T>
     void
-    operator()(ITDiag<T>& d) const { doGen(d); }
-
-    template<typename T>
-    void
-    doGen(T& d) const
-        {
-        std::generate(d.begin(),d.end(),f_);
+    operator()(const ITDenseCplx& d)
+        { 
+        if(complex_)
+            {
+            auto& dref = Parent::modifyData(d);
+            for(auto j = 0ul; j < dref.csize(); ++j)
+                dref.set(j,f_());
+            }
+        else
+            {
+            auto nd = Parent::template makeNewData<ITDense>(d.csize());
+            std::generate(nd->begin(),nd->end(),[this](){ return std::real(this->f_()); });
+            }
         }
     };
 
