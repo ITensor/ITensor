@@ -170,7 +170,7 @@ real(IndexVals&&... ivs) const
     if(fabs(z.imag()) != 0)
         {
         printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-        Error("ITensor is Complex-valued, use .cplx(...) method");
+        Error("ITensor is Complex valued, use .cplx(...) method");
         }
     return z.real();
     }

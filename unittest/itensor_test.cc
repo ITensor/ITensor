@@ -1,5 +1,6 @@
 #include "test.h"
 #include "itensor.h"
+#include "cplx_literal.h"
 
 using namespace std;
 using namespace itensor;
@@ -16,22 +17,33 @@ class Functor
         }
     };
 
-enum Type { NoType, Dense, DenseCplx, Diag, DiagAllSame, Combiner };
+enum Type { 
+            NoType, 
+            DenseReal, 
+            DenseCplx, 
+            DiagReal, 
+            DiagRealAllSame, 
+            DiagCplx, 
+            DiagCplxAllSame, 
+            Combiner 
+          };
 
 struct GetType : RegisterFunc<GetType,Type>
     {
     Type
-    operator()(const ITDense& d) { return Dense; }
+    operator()(const ITDense& d) { return DenseReal; }
     Type
     operator()(const ITDenseCplx& d) { return DenseCplx; }
-
-    template<typename T>
     Type
-    operator()(const ITDiag<T>& d)
+    operator()(const ITDiag<Real>& d)
         {
-        return (d.allSame() ? DiagAllSame : Diag);
+        return (d.allSame() ? DiagRealAllSame : DiagReal);
         }
-
+    Type
+    operator()(const ITDiag<Complex>& d)
+        {
+        return (d.allSame() ? DiagCplxAllSame : DiagCplx);
+        }
     Type
     operator()(const ITCombiner& c) { return Combiner; }
     };
@@ -46,9 +58,12 @@ std::ostream&
 operator<<(std::ostream& s, Type t)
     {
     if(t == NoType) s << "NoType";
-    else if(t == Dense) s << "Dense";
-    else if(t == Diag) s << "Diag";
-    else if(t == DiagAllSame) s << "DiagAllSame";
+    else if(t == DenseReal) s << "DenseReal";
+    else if(t == DenseCplx) s << "DenseCplx";
+    else if(t == DiagReal) s << "DiagReal";
+    else if(t == DiagRealAllSame) s << "DiagRealAllSame";
+    else if(t == DiagCplx) s << "DiagCplx";
+    else if(t == DiagCplxAllSame) s << "DiagCplxAllSame";
     else if(t == Combiner) s << "Combiner";
     else Error("Unrecognized Type value");
     return s;
@@ -141,7 +156,7 @@ SECTION("Constructors")
 SECTION("Rank 1")
     {
     ITensor t1(l1);
-    CHECK(getType(t1) == Dense);
+    CHECK(getType(t1) == DenseReal);
     CHECK_EQUAL(t1.r(),1);
     CHECK(hasindex(t1,l1));
     CHECK_CLOSE(norm(t1),0,1E-10);
@@ -150,7 +165,7 @@ SECTION("Rank 1")
 SECTION("Rank 2")
     {
     ITensor t2(l1,l2);
-    CHECK(getType(t2) == Dense);
+    CHECK(getType(t2) == DenseReal);
     CHECK_EQUAL(t2.r(),2);
     CHECK(hasindex(t2,l1));
     CHECK(hasindex(t2,l2));
@@ -160,7 +175,7 @@ SECTION("Rank 2")
 SECTION("Rank 3")
     {
     ITensor t3(l1,l2,l3);
-    CHECK(getType(t3) == Dense);
+    CHECK(getType(t3) == DenseReal);
     CHECK_EQUAL(t3.r(),3);
     CHECK(hasindex(t3,l1));
     CHECK(hasindex(t3,l2));
@@ -247,7 +262,7 @@ SECTION("Diag Rank 2 from Vector")
     Vector V(i1.m()); 
     V.Randomize();
     auto T = diagtensor(V,i1,i2);
-    CHECK(getType(T) == Diag);
+    CHECK(getType(T) == DiagReal);
 
     CHECK_EQUAL(T.r(),2);
     CHECK(hasindex(T,i1));
@@ -444,6 +459,33 @@ CHECK_CLOSE(B.real(s1(1),s2(1)),110/f,1E-10);
 CHECK_CLOSE(B.real(s1(1),s2(2)),120/f,1E-10);
 CHECK_CLOSE(B.real(s1(2),s2(1)),210/f,1E-10);
 CHECK_CLOSE(B.real(s1(2),s2(2)),220/f,1E-10);
+}
+
+SECTION("Complex Scalar Multiply")
+{
+CHECK(getType(A) == DenseReal);
+A *= 1_i;
+CHECK(getType(A) == DenseCplx);
+auto s1P = prime(s1);
+CHECK_EQUAL(A.cplx(s1(1),s1P(1)),11_i);
+CHECK_EQUAL(A.cplx(s1(1),s1P(2)),12_i);
+CHECK_EQUAL(A.cplx(s1(2),s1P(1)),21_i);
+CHECK_EQUAL(A.cplx(s1(2),s1P(2)),22_i);
+
+auto T = randomize(A);
+CHECK(getType(T) == DenseReal);
+CHECK(getType(A) == DenseCplx);
+
+T = randomize(T,"Complex");
+CHECK(getType(T) == DenseCplx);
+
+auto z = 2.2-3.1_i;
+auto cT = T;
+T *= z;
+CHECK_NEQUAL(T.cplx(s1(1),s1P(1)),z * cT.cplx(s1(1),s1P(1)));
+CHECK_NEQUAL(T.cplx(s1(1),s1P(2)),z * cT.cplx(s1(1),s1P(2)));
+CHECK_NEQUAL(T.cplx(s1(2),s1P(1)),z * cT.cplx(s1(2),s1P(1)));
+CHECK_NEQUAL(T.cplx(s1(2),s1P(2)),z * cT.cplx(s1(2),s1P(2)));
 }
 
 SECTION("Apply")
@@ -737,6 +779,279 @@ SECTION("Scalar Result")
     CHECK_REQUAL(val,R.real());
     }
 }
+
+
+SECTION("SwapPrimeTest")
+{
+CHECK_EQUAL(A.real(s1(1),prime(s1)(1)),11);
+CHECK_EQUAL(A.real(s1(2),prime(s1)(1)),21);
+CHECK_EQUAL(A.real(s1(1),prime(s1)(2)),12);
+CHECK_EQUAL(A.real(s1(2),prime(s1)(2)),22);
+
+A = swapPrime(A,0,1);
+
+CHECK_EQUAL(A.real(prime(s1)(1),s1(1)),11);
+CHECK_EQUAL(A.real(prime(s1)(2),s1(1)),21);
+CHECK_EQUAL(A.real(prime(s1)(1),s1(2)),12);
+CHECK_EQUAL(A.real(prime(s1)(2),s1(2)),22);
+}
+
+SECTION("NoprimeTest")
+{
+ITensor T(s1,prime(s1));
+
+//Check that T.noprime()
+//throws an exception since it would
+//lead to duplicate indices
+CHECK_THROWS_AS(T.noprime(),ITError);
+}
+
+SECTION("CommonIndex")
+{
+ITensor T1(s1,s2,l1,l2),
+        T2(s1,l3),
+        T3(s3,l4);
+
+CHECK(hasindex(T1,s1));
+CHECK(hasindex(T2,s1));
+
+Index c = commonIndex(T1,T3);
+CHECK(!c);
+
+c = commonIndex(T2,T3);
+CHECK(!c);
+
+CHECK(commonIndex(T1,T2) == s1);
+CHECK(commonIndex(T1,T2,Site) == s1);
+}
+
+SECTION("Diag ITensor Contraction")
+{
+SECTION("Diag All Same")
+    {
+    auto op = diagtensor(1.,s1,a1); //all diag elements same
+    CHECK(getType(op) == DiagRealAllSame);
+
+    auto r1 = randIT(s1,prime(s1,2));
+    auto res1 = op*r1;
+    CHECK(hasindex(res1,a1));
+    CHECK(hasindex(res1,prime(s1,2)));
+    for(int j1 = 1; j1 <= s1.m(); ++j1)
+        {
+        CHECK_REQUAL(res1.real(prime(s1,2)(j1),a1(1)), r1.real(prime(s1,2)(j1),s1(1)));
+        }
+    }
+
+SECTION("Diag")
+    {
+    Vector v(2);
+    v(1) = 1.23234;
+    v(2) = -0.9237;
+    auto op = diagtensor(v,s1,b2);
+    CHECK(getType(op) == DiagReal);
+
+    auto r2 = randIT(s1,s2);
+    auto res2 = op*r2;
+    CHECK(hasindex(res2,s2));
+    CHECK(hasindex(res2,b2));
+    auto diagm = std::min(s1.m(),b2.m());
+    for(int j2 = 1; j2 <= s2.m(); ++j2)
+    for(int d = 1; d <= diagm; ++d)
+        {
+        CHECK_REQUAL(res2.real(s2(j2),b2(d)), v(d) * r2.real(s2(j2),s1(d)));
+        }
+    }
+
+SECTION("Trace")
+    {
+    auto T = randIT(s1,s2,s3);
+    auto d = diagtensor(1,s1,s2);
+    auto R = d*T;
+    for(int i3 = 1; i3 <= s3.m(); ++i3)
+        {
+        Real val = 0;
+        for(int i12 = 1; i12 <= s1.m(); ++i12)
+            {
+            val += T.real(s1(i12),s2(i12),s3(i3));
+            }
+        CHECK_REQUAL(val,R.real(s3(i3)));
+        }
+    }
+
+SECTION("Tie Indices with Diag Tensor")
+    {
+    auto T = randIT(s1,s2,s3,s4);
+
+    auto tied1 = Index("tied1",s1.m());
+    auto tt1 = diagtensor(1,s1,s2,s3,tied1);
+    auto R1 = T*tt1;
+    for(int t = 1; t <= tied1.m(); ++t)
+    for(int j4 = 1; j4 <= s4.m(); ++j4)
+        {
+        CHECK_REQUAL(T.real(s1(t),s2(t),s3(t),s4(j4)), R1.real(tied1(t),s4(j4)));
+        }
+
+    auto tied2 = Index("tied2",s1.m());
+    auto tt2 = diagtensor(1,s1,s3,tied2);
+    auto R2 = T*tt2;
+    for(int t = 1; t <= tied1.m(); ++t)
+    for(int j2 = 1; j2 <= s2.m(); ++j2)
+    for(int j4 = 1; j4 <= s4.m(); ++j4)
+        {
+        CHECK_REQUAL(T.real(s1(t),s2(j2),s3(t),s4(j4)), R2.real(tied2(t),s2(j2),s4(j4)));
+        }
+    }
+
+SECTION("Contract All Dense Inds; Diag Scalar result")
+    {
+    auto T = randIT(J,K);
+
+    auto d1 = diagtensor(1,J,K);
+    auto R = d1*T;
+    CHECK(getType(R) == DiagRealAllSame);
+    Real val = 0;
+    auto minjk = std::min(J.m(),K.m());
+    for(long j = 1; j <= minjk; ++j)
+        val += T.real(J(j),K(j));
+    CHECK_REQUAL(R.real(),val);
+
+    Vector v(minjk);
+    for(int i = 1; i <= minjk; ++i) v(i) = Global::random();
+    auto d2 = diagtensor(v,J,K);
+    R = d2*T;
+    CHECK(getType(R) == DiagRealAllSame);
+    val = 0;
+    for(long j = 1; j <= minjk; ++j)
+        val += v(j)*T.real(J(j),K(j));
+    CHECK_REQUAL(R.real(),val);
+    }
+
+SECTION("Contract All Dense Inds; Diag result")
+    {
+    auto T = randIT(J,K);
+    
+    auto d = diagtensor(1,J,K,L);
+    auto R = d*T;
+    CHECK(getType(R) == DiagReal);
+    CHECK(hasindex(R,L));
+    auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
+    for(long j = 1; j <= minjkl; ++j)
+        CHECK_REQUAL(R.real(L(j)), T.real(J(j),K(j)));
+    }
+}
+
+SECTION("Kronecker Delta Tensor")
+    {
+    auto d = delta(s1,s2);
+    CHECK(getType(d) == Combiner);
+
+    auto T1 = randIT(s1,s3);
+
+    auto R1a = d*T1;
+    CHECK(R1a.r() == 2);
+    CHECK(hasindex(R1a,s2));
+
+    auto R1b = T1*d;
+    CHECK(R1b.r() == 2);
+    CHECK(hasindex(R1b,s2));
+
+    for(int i3 = 1; i3 <= s3.m(); ++i3)
+    for(int i12 = 1; i12 <= s1.m(); ++i12)
+        {
+        CHECK_REQUAL(T1.real(s1(i12),s3(i3)), R1a.real(s2(i12),s3(i3)));
+        CHECK_REQUAL(T1.real(s1(i12),s3(i3)), R1b.real(s2(i12),s3(i3)));
+        }
+
+    auto T2 = randIT(s2,s3);
+
+    auto R2a = d*T2;
+    CHECK(R2a.r() == 2);
+    CHECK(hasindex(R2a,s1));
+
+    auto R2b = T2*d;
+    CHECK(R2b.r() == 2);
+    CHECK(hasindex(R2b,s1));
+
+    for(int i3 = 1; i3 <= s3.m(); ++i3)
+    for(int i12 = 1; i12 <= s1.m(); ++i12)
+        {
+        CHECK_REQUAL(T2.real(s2(i12),s3(i3)), R2a.real(s1(i12),s3(i3)));
+        CHECK_REQUAL(T2.real(s2(i12),s3(i3)), R2b.real(s1(i12),s3(i3)));
+        }
+
+    auto T3 = randIT(b8,s1,b6,a1);
+    auto R3a = d*T3;
+    auto R3b = T3*d;
+    CHECK(hasindex(R3a,s2));
+    CHECK(hasindex(R3b,s2));
+
+    auto T4 = randIT(b8,s2,b6,a1);
+    auto R4a = d*T4;
+    auto R4b = T4*d;
+    CHECK(hasindex(R4a,s1));
+    CHECK(hasindex(R4b,s1));
+    }
+
+SECTION("Combiner")
+    {
+    SECTION("Two Index")
+        {
+        auto C = combiner(s1,s2);
+        CHECK(getType(C) == Combiner);
+
+        auto T1 = randIT(s1,s2,s3);
+        auto R1 = C*T1;
+        auto ci = commonIndex(C,R1);
+        CHECK(ci);
+        CHECK(ci.m() == s1.m()*s2.m());
+
+        for(int i1 = 1; i1 <= s1.m(); ++i1)
+        for(int i2 = 1; i2 <= s2.m(); ++i2)
+        for(int i3 = 1; i3 <= s3.m(); ++i3)
+            {
+            auto j = i1+(i2-1)*s2.m();
+            CHECK_REQUAL(T1.real(s1(i1),s2(i2),s3(i3)), R1.real(ci(j),s3(i3)));
+            }
+
+        auto T2 = randIT(s1,s3,s2);
+        auto R2 = C*T2;
+        CHECK(R2.r() == 2);
+        ci = commonIndex(C,R2);
+        CHECK(ci);
+        CHECK(ci.m() == s1.m()*s2.m());
+        for(int i1 = 1; i1 <= s1.m(); ++i1)
+        for(int i2 = 1; i2 <= s2.m(); ++i2)
+        for(int i3 = 1; i3 <= s3.m(); ++i3)
+            {
+            auto j = i1+(i2-1)*s2.m();
+            CHECK_REQUAL(T2.real(s1(i1),s2(i2),s3(i3)), R2.real(ci(j),s3(i3)));
+            }
+        }
+
+    SECTION("One Index")
+        {
+        auto T1 = randIT(s4,b5,s1,l2);
+
+        auto cs4 = combiner(s4);
+        auto Rs4a = T1*cs4;
+        CHECK(!hasindex(Rs4a,s4));
+        CHECK(commonIndex(cs4,Rs4a));
+        auto Rs4b = cs4*T1;
+        CHECK(!hasindex(Rs4b,s4));
+        CHECK(commonIndex(cs4,Rs4b));
+
+        auto cl2 = combiner(l2);
+        auto Rl2a = T1*cl2;
+        CHECK(!hasindex(Rl2a,l2));
+        CHECK(commonIndex(cl2,Rl2a));
+        auto Rl2b = cl2*T1;
+        CHECK(commonIndex(cl2,Rl2b));
+        CHECK(!hasindex(Rl2b,l2));
+        CHECK(hasindex(Rl2b,s4));
+        CHECK(hasindex(Rl2b,b5));
+        CHECK(hasindex(Rl2b,s1));
+        }
+    }
 
 //SECTION("TieIndices")
 //    {
@@ -1072,31 +1387,6 @@ SECTION("Scalar Result")
 //    CHECK_CLOSE(norm(I),0,1E-5);
 //    }
 
-SECTION("SwapPrimeTest")
-{
-CHECK_EQUAL(A.real(s1(1),prime(s1)(1)),11);
-CHECK_EQUAL(A.real(s1(2),prime(s1)(1)),21);
-CHECK_EQUAL(A.real(s1(1),prime(s1)(2)),12);
-CHECK_EQUAL(A.real(s1(2),prime(s1)(2)),22);
-
-A = swapPrime(A,0,1);
-
-CHECK_EQUAL(A.real(prime(s1)(1),s1(1)),11);
-CHECK_EQUAL(A.real(prime(s1)(2),s1(1)),21);
-CHECK_EQUAL(A.real(prime(s1)(1),s1(2)),12);
-CHECK_EQUAL(A.real(prime(s1)(2),s1(2)),22);
-}
-
-SECTION("NoprimeTest")
-{
-ITensor T(s1,prime(s1));
-
-//Check that T.noprime()
-//throws an exception since it would
-//lead to duplicate indices
-CHECK_THROWS_AS(T.noprime(),ITError);
-}
-
 //SECTION("NormTest")
 //    {
 //    A = randIT(s1,prime(s1));
@@ -1171,139 +1461,6 @@ CHECK_THROWS_AS(T.noprime(),ITError);
 //    CHECK(norm(imagPart(T6)-(f1*A+f2*B))) < 1E-12);
 //    }
 
-SECTION("CommonIndex")
-{
-ITensor T1(s1,s2,l1,l2),
-        T2(s1,l3),
-        T3(s3,l4);
-
-CHECK(hasindex(T1,s1));
-CHECK(hasindex(T2,s1));
-
-Index c = commonIndex(T1,T3);
-CHECK(!c);
-
-c = commonIndex(T2,T3);
-CHECK(!c);
-
-CHECK(commonIndex(T1,T2) == s1);
-CHECK(commonIndex(T1,T2,Site) == s1);
-}
-
-SECTION("Diag ITensor Contraction")
-{
-SECTION("Diag All Same")
-    {
-    auto op = diagtensor(1.,s1,a1); //all diag elements same
-    CHECK(getType(op) == DiagAllSame);
-
-    auto r1 = randIT(s1,prime(s1,2));
-    auto res1 = op*r1;
-    CHECK(hasindex(res1,a1));
-    CHECK(hasindex(res1,prime(s1,2)));
-    for(int j1 = 1; j1 <= s1.m(); ++j1)
-        {
-        CHECK_REQUAL(res1.real(prime(s1,2)(j1),a1(1)), r1.real(prime(s1,2)(j1),s1(1)));
-        }
-    }
-
-SECTION("Diag")
-    {
-    Vector v(2);
-    v(1) = 1.23234;
-    v(2) = -0.9237;
-    auto op = diagtensor(v,s1,b2);
-    CHECK(getType(op) == Diag);
-
-    auto r2 = randIT(s1,s2);
-    auto res2 = op*r2;
-    CHECK(hasindex(res2,s2));
-    CHECK(hasindex(res2,b2));
-    auto diagm = std::min(s1.m(),b2.m());
-    for(int j2 = 1; j2 <= s2.m(); ++j2)
-    for(int d = 1; d <= diagm; ++d)
-        {
-        CHECK_REQUAL(res2.real(s2(j2),b2(d)), v(d) * r2.real(s2(j2),s1(d)));
-        }
-    }
-
-SECTION("Trace")
-    {
-    auto T = randIT(s1,s2,s3);
-    auto d = diagtensor(1,s1,s2);
-    auto R = d*T;
-    for(int i3 = 1; i3 <= s3.m(); ++i3)
-        {
-        Real val = 0;
-        for(int i12 = 1; i12 <= s1.m(); ++i12)
-            {
-            val += T.real(s1(i12),s2(i12),s3(i3));
-            }
-        CHECK_REQUAL(val,R.real(s3(i3)));
-        }
-    }
-
-SECTION("Tie Indices with Diag Tensor")
-    {
-    auto T = randIT(s1,s2,s3,s4);
-
-    auto tied1 = Index("tied1",s1.m());
-    auto tt1 = diagtensor(1,s1,s2,s3,tied1);
-    auto R1 = T*tt1;
-    for(int t = 1; t <= tied1.m(); ++t)
-    for(int j4 = 1; j4 <= s4.m(); ++j4)
-        {
-        CHECK_REQUAL(T.real(s1(t),s2(t),s3(t),s4(j4)), R1.real(tied1(t),s4(j4)));
-        }
-
-    auto tied2 = Index("tied2",s1.m());
-    auto tt2 = diagtensor(1,s1,s3,tied2);
-    auto R2 = T*tt2;
-    for(int t = 1; t <= tied1.m(); ++t)
-    for(int j2 = 1; j2 <= s2.m(); ++j2)
-    for(int j4 = 1; j4 <= s4.m(); ++j4)
-        {
-        CHECK_REQUAL(T.real(s1(t),s2(j2),s3(t),s4(j4)), R2.real(tied2(t),s2(j2),s4(j4)));
-        }
-    }
-
-SECTION("Contract All Dense Inds; Diag Scalar result")
-    {
-    auto T = randIT(J,K);
-
-    auto d1 = diagtensor(1,J,K);
-    auto R = d1*T;
-    CHECK(getType(R) == DiagAllSame);
-    Real val = 0;
-    auto minjk = std::min(J.m(),K.m());
-    for(long j = 1; j <= minjk; ++j)
-        val += T.real(J(j),K(j));
-    CHECK_REQUAL(R.real(),val);
-
-    Vector v(minjk);
-    for(int i = 1; i <= minjk; ++i) v(i) = Global::random();
-    auto d2 = diagtensor(v,J,K);
-    R = d2*T;
-    CHECK(getType(R) == DiagAllSame);
-    val = 0;
-    for(long j = 1; j <= minjk; ++j)
-        val += v(j)*T.real(J(j),K(j));
-    CHECK_REQUAL(R.real(),val);
-    }
-
-SECTION("Contract All Dense Inds; Diag result")
-    {
-    auto T = randIT(J,K);
-    
-    auto d = diagtensor(1,J,K,L);
-    auto R = d*T;
-    CHECK(getType(R) == Diag);
-    CHECK(hasindex(R,L));
-    auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
-    for(long j = 1; j <= minjkl; ++j)
-        CHECK_REQUAL(R.real(L(j)), T.real(J(j),K(j)));
-    }
-}
 
 //SECTION("Complex Diag ITensor")
 //    {
@@ -1385,119 +1542,8 @@ SECTION("Contract All Dense Inds; Diag result")
 //    CHECK(Norm(v-t2.diag()) < 1E-12);
 //    }
 
-SECTION("Kronecker Delta Tensor")
-    {
-    auto d = delta(s1,s2);
-    CHECK(getType(d) == Combiner);
-
-    auto T1 = randIT(s1,s3);
-
-    auto R1a = d*T1;
-    CHECK(R1a.r() == 2);
-    CHECK(hasindex(R1a,s2));
-
-    auto R1b = T1*d;
-    CHECK(R1b.r() == 2);
-    CHECK(hasindex(R1b,s2));
-
-    for(int i3 = 1; i3 <= s3.m(); ++i3)
-    for(int i12 = 1; i12 <= s1.m(); ++i12)
-        {
-        CHECK_REQUAL(T1.real(s1(i12),s3(i3)), R1a.real(s2(i12),s3(i3)));
-        CHECK_REQUAL(T1.real(s1(i12),s3(i3)), R1b.real(s2(i12),s3(i3)));
-        }
-
-    auto T2 = randIT(s2,s3);
-
-    auto R2a = d*T2;
-    CHECK(R2a.r() == 2);
-    CHECK(hasindex(R2a,s1));
-
-    auto R2b = T2*d;
-    CHECK(R2b.r() == 2);
-    CHECK(hasindex(R2b,s1));
-
-    for(int i3 = 1; i3 <= s3.m(); ++i3)
-    for(int i12 = 1; i12 <= s1.m(); ++i12)
-        {
-        CHECK_REQUAL(T2.real(s2(i12),s3(i3)), R2a.real(s1(i12),s3(i3)));
-        CHECK_REQUAL(T2.real(s2(i12),s3(i3)), R2b.real(s1(i12),s3(i3)));
-        }
-
-    auto T3 = randIT(b8,s1,b6,a1);
-    auto R3a = d*T3;
-    auto R3b = T3*d;
-    CHECK(hasindex(R3a,s2));
-    CHECK(hasindex(R3b,s2));
-
-    auto T4 = randIT(b8,s2,b6,a1);
-    auto R4a = d*T4;
-    auto R4b = T4*d;
-    CHECK(hasindex(R4a,s1));
-    CHECK(hasindex(R4b,s1));
-    }
 
 
-SECTION("Combiner")
-    {
-    SECTION("Two Index")
-        {
-        auto C = combiner(s1,s2);
-        CHECK(getType(C) == Combiner);
-
-        auto T1 = randIT(s1,s2,s3);
-        auto R1 = C*T1;
-        auto ci = commonIndex(C,R1);
-        CHECK(ci);
-        CHECK(ci.m() == s1.m()*s2.m());
-
-        for(int i1 = 1; i1 <= s1.m(); ++i1)
-        for(int i2 = 1; i2 <= s2.m(); ++i2)
-        for(int i3 = 1; i3 <= s3.m(); ++i3)
-            {
-            auto j = i1+(i2-1)*s2.m();
-            CHECK_REQUAL(T1.real(s1(i1),s2(i2),s3(i3)), R1.real(ci(j),s3(i3)));
-            }
-
-        auto T2 = randIT(s1,s3,s2);
-        auto R2 = C*T2;
-        CHECK(R2.r() == 2);
-        ci = commonIndex(C,R2);
-        CHECK(ci);
-        CHECK(ci.m() == s1.m()*s2.m());
-        for(int i1 = 1; i1 <= s1.m(); ++i1)
-        for(int i2 = 1; i2 <= s2.m(); ++i2)
-        for(int i3 = 1; i3 <= s3.m(); ++i3)
-            {
-            auto j = i1+(i2-1)*s2.m();
-            CHECK_REQUAL(T2.real(s1(i1),s2(i2),s3(i3)), R2.real(ci(j),s3(i3)));
-            }
-        }
-
-    SECTION("One Index")
-        {
-        auto T1 = randIT(s4,b5,s1,l2);
-
-        auto cs4 = combiner(s4);
-        auto Rs4a = T1*cs4;
-        CHECK(!hasindex(Rs4a,s4));
-        CHECK(commonIndex(cs4,Rs4a));
-        auto Rs4b = cs4*T1;
-        CHECK(!hasindex(Rs4b,s4));
-        CHECK(commonIndex(cs4,Rs4b));
-
-        auto cl2 = combiner(l2);
-        auto Rl2a = T1*cl2;
-        CHECK(!hasindex(Rl2a,l2));
-        CHECK(commonIndex(cl2,Rl2a));
-        auto Rl2b = cl2*T1;
-        CHECK(commonIndex(cl2,Rl2b));
-        CHECK(!hasindex(Rl2b,l2));
-        CHECK(hasindex(Rl2b,s4));
-        CHECK(hasindex(Rl2b,b5));
-        CHECK(hasindex(Rl2b,s1));
-        }
-    }
 
 } //TEST_CASE("ITensor")
 
