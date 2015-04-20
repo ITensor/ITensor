@@ -103,6 +103,7 @@ installo: headerscopy libitensor.a
 	cp libitensor.a $(ITENSOR_LIBDIR)
 	ranlib $(ITENSOR_LIBDIR)/libitensor.a
 
+debug: installg
 installg: headerscopy libitensor-g.a
 	cp libitensor-g.a $(ITENSOR_LIBDIR)
 	ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
@@ -113,45 +114,22 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
 
-DEPHEADERS=real.h global.h index.h permutation.h
-index.o: $(DEPHEADERS)
-.debug_objs/index.o: $(DEPHEADERS)
-DEPHEADERS+= indexset.h
-indexset.o: $(DEPHEADERS)
-.debug_objs/indexset.o: $(DEPHEADERS)
-DEPHEADERS+= contract.h range.h simpletensor.h simplematrix.h
-contract.o: $(DEPHEADERS)
-.debug_objs/contract.o: $(DEPHEADERS)
-DEPHEADERS+= itdata/itdata.h \
-itensor.h counter.h itdata/itdense.h itdata/itdiag.h itdata/itdensecplx.h
-itensor.o: $(DEPHEADERS)
-.debug_objs/itensor.o: $(DEPHEADERS)
-DEPHEADERS+= qn.h iqindex.h
-iqindex.o: $(DEPHEADERS)
-.debug_objs/iqindex.o: $(DEPHEADERS)
-DEPHEADERS+= itdata/iqtdata.h iqtensor.h qcounter.h detail/skip_iterator.h
-iqtensor.o: $(DEPHEADERS)
-.debug_objs/iqtensor.o: $(DEPHEADERS)
-DEPHEADERS+= condenser.h iqcombiner.h localmpo.h
-iqcombiner.o: $(DEPHEADERS)
-.debug_objs/iqcombiner.o: $(DEPHEADERS)
-condenser.o: $(DEPHEADERS)
-.debug_objs/condenser.o: $(DEPHEADERS)
-DEPHEADERS+= spectrum.h
-spectrum.o: $(DEPHEADERS)
-.debug_objs/spectrum.o: $(DEPHEADERS)
-DEPHEADERS+= svdalgs.h
-svdalgs.o: $(DEPHEADERS)
-.debug_objs/svdalgs.o: $(DEPHEADERS)
-DEPHEADERS+= mps.h
-mps.o: $(DEPHEADERS)
-.debug_objs/mps.o: $(DEPHEADERS)
-DEPHEADERS+= mpo.h
-mpo.o: $(DEPHEADERS)
-.debug_objs/mpo.o: $(DEPHEADERS)
-DEPHEADERS+= autompo.h
-autompo.o: $(DEPHEADERS)
-.debug_objs/autompo.o: $(DEPHEADERS)
-DEPHEADERS+= bondgate.h tevol.h integrators.h
-tevol.o: $(DEPHEADERS)
-.debug_objs/tevol.o: $(DEPHEADERS)
+GDEPHEADERS=real.h global.h index.h permutation.h
+index.o: $(GDEPHEADERS)
+.debug_objs/index.o: $(GDEPHEADERS)
+GDEPHEADERS+= indexset.h
+indexset.o: $(GDEPHEADERS)
+.debug_objs/indexset.o: $(GDEPHEADERS)
+GDEPHEADERS+= contract.h range.h simpletensor.h simplematrix.h
+contract.o: $(GDEPHEADERS)
+.debug_objs/contract.o: $(GDEPHEADERS)
+ITDEPHEADERS= itensor.ih itensor.h itdata/itdense.h itdata/itdiag.h itdata/itdensecplx.h
+GDEPHEADERS+= counter.h itdata/itdata.h
+itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+IQDEPHEADERS= qn.h iqindex.h
+iqindex.o: $(IQDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/iqindex.o: $(IQDEPHEADERS) $(GDEPHEADERS)
+IQDEPHEADERS+= itdata/iqtdata.h iqtensor.ih iqtensor.h qcounter.h detail/skip_iterator.h
+iqtensor.o: $(IQDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/iqtensor.o: $(IQDEPHEADERS) $(GDEPHEADERS)
