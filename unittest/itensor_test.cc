@@ -89,7 +89,6 @@ Index J("J",10),
       L("L",10);
 
 IndexSet mixed_inds(a2,b3,l1,l2,a4,l4);
-auto mixed_inds_dim = area(mixed_inds);
 
 ITensor A,
         B,
@@ -97,31 +96,32 @@ ITensor A,
         Z;
 
     {
-    Matrix M(s1.m(),prime(s1).m());
-    M(1,1) = 11; M(1,2) = 12;
-    M(2,1) = 21; M(2,2) = 22;
-    A = ITensor(s1,prime(s1),M);
+    auto s1p = prime(s1);
+    A = ITensor(s1,prime(s1));
+    A.set(11,s1(1),s1p(1));
+    A.set(12,s1(1),s1p(2));
+    A.set(21,s1(2),s1p(1));
+    A.set(22,s1(2),s1p(2));
     }
 
     {
-    Matrix M(s1.m(),s2.m());
-    M(1,1) = 110; M(1,2) = 120;
-    M(2,1) = 210; M(2,2) = 220;
-    B = ITensor(s1,s2,M);
+    B = ITensor(s1,s2);
+    B.set(110,s1(1),s2(1));
+    B.set(120,s1(1),s2(2));
+    B.set(210,s1(2),s2(1));
+    B.set(220,s1(2),s2(2));
     }
 
     {
-    Matrix M(s1.m(),s2.m());
-    M(1,1) = 0; M(1,2) = 1;
-    M(2,1) = 1; M(2,2) = 0;
-    X = ITensor(s1,s2,M);
+    X = ITensor(s1,s2);
+    X.set(1,s1(1),s2(2));
+    X.set(1,s1(2),s2(1));
     }
     
     {
-    Matrix M(s1.m(),s2.m());
-    M(1,1) = 1; M(1,2) =  0;
-    M(2,1) = 0; M(2,2) = -1;
-    Z = ITensor(s1,s2,M);
+    Z = ITensor(s1,s2);
+    Z.set(1,s1(1),s2(1));
+    Z.set(1,s1(2),s2(2));
     }
 
 
@@ -219,63 +219,6 @@ SECTION("Rank 7")
     }
 
 
-SECTION("Matrix Constructor")
-    {
-    Matrix M(l1.m(),b3.m()); 
-    M(1,1) = 11; M(1,2) = 12; M(1,3) = 13;
-    M(2,1) = 21; M(2,2) = 22; M(2,3) = 23;
-    ITensor t8(l1,b3,M);
-
-    CHECK_EQUAL(t8.r(),2);
-    CHECK(hasindex(t8,l1));
-    CHECK(hasindex(t8,b3));
-    CHECK_CLOSE(t8.real(l1(1),b3(1)),11,1E-10);
-    CHECK_CLOSE(t8.real(l1(1),b3(2)),12,1E-10);
-    CHECK_CLOSE(t8.real(l1(1),b3(3)),13,1E-10);
-    CHECK_CLOSE(t8.real(l1(2),b3(1)),21,1E-10);
-    CHECK_CLOSE(t8.real(l1(2),b3(2)),22,1E-10);
-    CHECK_CLOSE(t8.real(l1(2),b3(3)),23,1E-10);
-    CHECK_CLOSE(sumels(t8),M.TreatAsVector().sumels(),1E-10);
-    CHECK_CLOSE(norm(t8),Norm(M.TreatAsVector()),1E-10);
-
-    ITensor t85(b3,l1,M.t());
-
-    CHECK_EQUAL(t85.r(),2);
-    CHECK(hasindex(t85,l1));
-    CHECK(hasindex(t85,b3));
-    CHECK_CLOSE(t85.real(l1(1),b3(1)),11,1E-10);
-    CHECK_CLOSE(t85.real(l1(1),b3(2)),12,1E-10);
-    CHECK_CLOSE(t85.real(l1(1),b3(3)),13,1E-10);
-    CHECK_CLOSE(t85.real(l1(2),b3(1)),21,1E-10);
-    CHECK_CLOSE(t85.real(l1(2),b3(2)),22,1E-10);
-    CHECK_CLOSE(t85.real(l1(2),b3(3)),23,1E-10);
-    CHECK_CLOSE(sumels(t85),M.TreatAsVector().sumels(),1E-10);
-    CHECK_CLOSE(norm(t85),Norm(M.TreatAsVector()),1E-10);
-
-    Matrix W(a1.m(),l2.m()); 
-    W(1,1) = Global::random(); W(1,2) = Global::random();
-    ITensor w1(a1,l2,W);
-
-    CHECK_EQUAL(w1.r(),2);
-    CHECK(hasindex(w1,a1));
-    CHECK(hasindex(w1,l2));
-    CHECK_CLOSE(w1.real(l2(1)),W(1,1),1E-10);
-    CHECK_CLOSE(w1.real(l2(2)),W(1,2),1E-10);
-    CHECK_CLOSE(sumels(w1),W.TreatAsVector().sumels(),1E-10);
-    CHECK_CLOSE(norm(w1),Norm(W.TreatAsVector()),1E-10);
-
-    ITensor w2(l2,a1,W.t());
-
-    CHECK_EQUAL(w2.r(),2);
-    CHECK(hasindex(w2,a1));
-    CHECK(hasindex(w2,l2));
-    CHECK_CLOSE(w2.real(l2(1)),W(1,1),1E-10);
-    CHECK_CLOSE(w2.real(l2(2)),W(1,2),1E-10);
-    CHECK_CLOSE(sumels(w2),W.TreatAsVector().sumels(),1E-10);
-    CHECK_CLOSE(norm(w2),Norm(W.TreatAsVector()),1E-10);
-    }
-
-
 SECTION("Real Scalar")
     {
     Real b = -1*Global::random();
@@ -289,7 +232,7 @@ SECTION("Dense Rank 1 from Vector")
     Index linkind("linkind",10);
     Vector V(linkind.m()); 
     V.Randomize();
-    ITensor t10(V,linkind);
+    auto t10 = diagtensor(V,linkind);
 
     CHECK_EQUAL(t10.r(),1);
     CHECK(hasindex(t10,linkind));
@@ -303,7 +246,7 @@ SECTION("Diag Rank 2 from Vector")
           i2("i2",10);
     Vector V(i1.m()); 
     V.Randomize();
-    ITensor T(V,i1,i2);
+    auto T = diagtensor(V,i1,i2);
     CHECK(getType(T) == Diag);
 
     CHECK_EQUAL(T.r(),2);
@@ -439,37 +382,21 @@ CHECK(hasindex(t1,l3));
 CHECK(hasindex(t1,l1));
 CHECK(hasindex(t1,a4));
 CHECK_CLOSE(norm(t1),0,1E-10);
-
-Vector V(l1.m()*l3.m());
-V.Randomize();
-
-ITensor t2(indices,V);
-
-CHECK_EQUAL(t2.r(),4);
-CHECK(hasindex(t2,a2));
-CHECK(hasindex(t2,l3));
-CHECK(hasindex(t2,l1));
-CHECK(hasindex(t2,a4));
-CHECK_CLOSE(norm(t2),Norm(V),1E-10);
-CHECK_CLOSE(sumels(t2),V.sumels(),1E-10);
 }
 
 SECTION("Copy")
 {
 IndexSet indices(a2,l3,l1,a4);
 
-Vector V(l1.m()*l3.m());
-V.Randomize();
-
-ITensor t1(indices,V);
+auto t1 = randIT(indices);
+auto t1nrm = norm(t1);
+auto t1sum = sumels(t1);
 
 CHECK_EQUAL(t1.r(),4);
 CHECK(hasindex(t1,a2));
 CHECK(hasindex(t1,l3));
 CHECK(hasindex(t1,l1));
 CHECK(hasindex(t1,a4));
-CHECK_CLOSE(norm(t1),Norm(V),1E-10);
-CHECK_CLOSE(sumels(t1),V.sumels(),1E-10);
 
 //Use copy constructor
 ITensor t2(t1);
@@ -480,8 +407,8 @@ CHECK(hasindex(t2,a2));
 CHECK(hasindex(t2,l3));
 CHECK(hasindex(t2,l1));
 CHECK(hasindex(t2,a4));
-CHECK_CLOSE(norm(t2),Norm(V),1E-10);
-CHECK_CLOSE(sumels(t2),V.sumels(),1E-10);
+CHECK_CLOSE(norm(t2),t1nrm,1E-10);
+CHECK_CLOSE(sumels(t2),t1sum,1E-10);
 
 //Use operator=
 ITensor t3 = t2;
@@ -492,8 +419,8 @@ CHECK(hasindex(t3,a2));
 CHECK(hasindex(t3,l3));
 CHECK(hasindex(t3,l1));
 CHECK(hasindex(t3,a4));
-CHECK_CLOSE(norm(t3),Norm(V),1E-10);
-CHECK_CLOSE(sumels(t3),V.sumels(),1E-10);
+CHECK_CLOSE(norm(t3),t1nrm,1E-10);
+CHECK_CLOSE(sumels(t3),t1sum,1E-10);
 }
 
 SECTION("ScalarMultiply")
@@ -537,13 +464,8 @@ for(int n2 = 1; n2 <= s1P.m(); ++n2)
 
 SECTION("SumDifference")
 {
-Vector V(mixed_inds_dim),
-       W(mixed_inds_dim);
-V.Randomize();
-W.Randomize();
-
-ITensor v(mixed_inds,V), 
-        w(mixed_inds,W);
+auto v = randIT(mixed_inds), 
+     w = randIT(mixed_inds);
 
 Real f1 = -Global::random(), 
      f2 = 0.1*f1;
@@ -570,14 +492,9 @@ for(int j4 = 1; j4 <= 2; ++j4)
                 v.real(l1(j1),l2(j2),b3(k3),l4(j4))-w.real(l1(j1),l2(j2),b3(k3),l4(j4)));
     }
 
-Vector YY(mixed_inds_dim),
-       ZZ(mixed_inds_dim);
-YY.Randomize();
-ZZ.Randomize();
-
 f1 = 1; f2 = 1;
-ITensor yy(mixed_inds,YY), 
-        zz(mixed_inds,ZZ);
+auto yy = randIT(mixed_inds), 
+     zz = randIT(mixed_inds);
 r = f1*yy + f2*zz;
 for(int j1 = 1; j1 <= 2; ++j1)
 for(int j2 = 1; j2 <= 2; ++j2)
@@ -590,7 +507,7 @@ for(int j4 = 1; j4 <= 2; ++j4)
     }
 
 IndexSet reordered(l2,l1,b3,a4,a2,l4);
-w = ITensor(reordered,W); 
+w = randIT(reordered); 
 r = f1*v + w/f2; 
 for(int j1 = 1; j1 <= 2; ++j1)
 for(int j2 = 1; j2 <= 2; ++j2)
@@ -623,8 +540,8 @@ SECTION("Add diag")
            V2(std::min(l6.m(),b4.m()));
     V1.Randomize();
     V2.Randomize();
-    ITensor v1(V1,l6,b4),
-            v2(V2,b4,l6);
+    auto v1 = diagtensor(V1,l6,b4),
+         v2 = diagtensor(V2,b4,l6);
     auto r = v1+v2;
     for(int j1 = 1; j1 <= 2; ++j1)
     for(int j2 = 1; j2 <= 4; ++j2)
@@ -1277,7 +1194,7 @@ SECTION("Diag ITensor Contraction")
 {
 SECTION("Diag All Same")
     {
-    auto op = ITensor(1.,s1,a1); //all diag elements same
+    auto op = diagtensor(1.,s1,a1); //all diag elements same
     CHECK(getType(op) == DiagAllSame);
 
     auto r1 = randIT(s1,prime(s1,2));
@@ -1295,7 +1212,7 @@ SECTION("Diag")
     Vector v(2);
     v(1) = 1.23234;
     v(2) = -0.9237;
-    auto op = ITensor(v,s1,b2);
+    auto op = diagtensor(v,s1,b2);
     CHECK(getType(op) == Diag);
 
     auto r2 = randIT(s1,s2);
@@ -1313,7 +1230,7 @@ SECTION("Diag")
 SECTION("Trace")
     {
     auto T = randIT(s1,s2,s3);
-    auto d = ITensor(1,s1,s2);
+    auto d = diagtensor(1,s1,s2);
     auto R = d*T;
     for(int i3 = 1; i3 <= s3.m(); ++i3)
         {
@@ -1331,7 +1248,7 @@ SECTION("Tie Indices with Diag Tensor")
     auto T = randIT(s1,s2,s3,s4);
 
     auto tied1 = Index("tied1",s1.m());
-    auto tt1 = ITensor(1,s1,s2,s3,tied1);
+    auto tt1 = diagtensor(1,s1,s2,s3,tied1);
     auto R1 = T*tt1;
     for(int t = 1; t <= tied1.m(); ++t)
     for(int j4 = 1; j4 <= s4.m(); ++j4)
@@ -1340,7 +1257,7 @@ SECTION("Tie Indices with Diag Tensor")
         }
 
     auto tied2 = Index("tied2",s1.m());
-    auto tt2 = ITensor(1,s1,s3,tied2);
+    auto tt2 = diagtensor(1,s1,s3,tied2);
     auto R2 = T*tt2;
     for(int t = 1; t <= tied1.m(); ++t)
     for(int j2 = 1; j2 <= s2.m(); ++j2)
@@ -1354,7 +1271,7 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     {
     auto T = randIT(J,K);
 
-    auto d1 = ITensor(1,J,K);
+    auto d1 = diagtensor(1,J,K);
     auto R = d1*T;
     CHECK(getType(R) == DiagAllSame);
     Real val = 0;
@@ -1365,7 +1282,7 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
 
     Vector v(minjk);
     for(int i = 1; i <= minjk; ++i) v(i) = Global::random();
-    auto d2 = ITensor(v,J,K);
+    auto d2 = diagtensor(v,J,K);
     R = d2*T;
     CHECK(getType(R) == DiagAllSame);
     val = 0;
@@ -1378,7 +1295,7 @@ SECTION("Contract All Dense Inds; Diag result")
     {
     auto T = randIT(J,K);
     
-    auto d = ITensor(1,J,K,L);
+    auto d = diagtensor(1,J,K,L);
     auto R = d*T;
     CHECK(getType(R) == Diag);
     CHECK(hasindex(R,L));

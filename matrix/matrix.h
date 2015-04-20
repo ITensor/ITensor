@@ -133,6 +133,13 @@ std::ostream & operator << (std::ostream &, const Matrix &);	// Overload for I/O
 class Vector : public VectorRef
     {
 public:
+    typedef Real*
+    iterator;
+    typedef const Real*
+    const_iterator;
+    typedef Real
+    value_type;
+
     inline VectorRef& operator = (const VectorRef &);
     inline VectorRef& operator = (const MatrixVectorRes &);
     inline VectorRef& operator = (const VectorVectorRes &);

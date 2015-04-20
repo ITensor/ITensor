@@ -47,20 +47,6 @@ class ITensor
     explicit
     ITensor(Complex val);
 
-    //Construct ITensor with diagonal elements set to z
-    //(z can be Real argument too; convertible to Complex)
-    template<typename... Inds>
-    ITensor(Complex z, 
-            const Index& i1,
-            const Inds&... inds);
-
-    //Construct diagonal ITensor,
-    //diagonal elements given by VectorRef V
-    template<typename... Inds>
-    ITensor(const VectorRef& V,
-            const Index& i1,
-            const Inds&... inds);
-
     //Construct rank n ITensor, all
     //elements set to zero except the single
     //entry specified by the IndexVal args
@@ -234,8 +220,8 @@ class ITensor
 
     //Provide indices from an index set
     //and elements from a VectorRef
-    ITensor(const IndexSet& is,
-            const VectorRef& v);
+    //ITensor(const IndexSet& is,
+    //        const VectorRef& v);
 
     ITensor(const IndexSet& is,
             const ITensor& t);
@@ -258,9 +244,9 @@ class ITensor
 
     //Construct matrix-like rank 2 ITensor,
     //elements given by MatrixRef M
-    ITensor(const Index& i1,
-            const Index& i2,
-            const MatrixRef& M);
+    //ITensor(const Index& i1,
+    //        const Index& i2,
+    //        const MatrixRef& M);
 
     template <typename Callable> 
     ITensor&
@@ -319,6 +305,34 @@ combiner(const Index& i1, const Inds&... inds)
 
 ITensor
 delta(const Index& i1, const Index& i2);
+
+//Construct ITensor with diagonal elements set to z
+//(if z is a Real or z.imag()==0 storage will be real)
+template<typename... Inds>
+ITensor
+diagtensor(Complex z,
+           const Index& i1,
+           Inds&&... inds);
+
+template<typename... Inds>
+ITensor
+diagtensor(Real r,
+           const Index& i1,
+           Inds&&... inds)
+    {
+    return diagtensor(Complex(r),i1,std::forward<Inds>(inds)...);
+    }
+
+//Construct diagonal ITensor,
+//diagonal elements given by container C
+template<typename Container, typename... Inds>
+auto //->return type is ITensor
+diagtensor(const Container& C,
+           const Index& i1,
+           Inds&&... inds) 
+        //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"
+        //types (such as Container==int) that don't have a value_type member type
+        -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type;
 
 //
 // Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)

@@ -49,6 +49,8 @@ class VectorRef		// This class never allocates storage for itself !!
     iterator;
     typedef const Real*
     const_iterator;
+    typedef Real
+    value_type;
 
     inline VectorRef SubVector(int l, int u) const;
     inline VectorRef SubVector(int first, int length, int str) const;
@@ -116,6 +118,7 @@ class VectorRef		// This class never allocates storage for itself !!
     void ShiftStore(int s) 		// potentially dangerous!
 	{ store += s; }
     inline int Length() const;
+    inline int size() const { return Length(); }
     int& AccessLength()
 	{ return length; }		// REALLY allow access to length
     inline int Stride() const;

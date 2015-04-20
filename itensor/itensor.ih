@@ -31,42 +31,47 @@ ITensor(const Index& i1,
 	{ }
 
 template<typename... Inds>
-ITensor::
-ITensor(Complex z, 
-        const Index& i1,
-        const Inds&... inds)
-    :
-    is_(i1,inds...),
-    scale_(1.)
+ITensor
+diagtensor(Complex z, 
+           const Index& i1,
+           Inds&&... inds)
     { 
+    IndexSet is(i1,std::forward<Inds>(inds)...);
+    LogNumber scale(1.);
+    ITensor::storage_ptr store;
     if(z.imag() == 0)
-        store_ = make_shared<ITDiag<Real>>(z.real());
+        store = make_shared<ITDiag<Real>>(z.real());
     else
-        store_ = make_shared<ITDiag<Complex>>(z);
+        store = make_shared<ITDiag<Complex>>(z);
+    return ITensor(std::move(is),std::move(store),scale);
     }
 
-template<typename... Inds>
-ITensor::
-ITensor(const VectorRef& V, 
-        const Index& i1,
-        const Inds&... inds)
-    :
-    is_(i1,inds...),
-    scale_(1.),
-    store_(std::make_shared<ITDiag<Real>>(V.begin(),V.end()))
+template<typename Container, typename... Inds>
+auto
+diagtensor(const Container& C, 
+           const Index& i1,
+           Inds&&... inds)
+    //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"
+    //types (such as Container==int) that don't have a value_type member type
+    -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
     { 
+    IndexSet is(i1,std::forward<Inds>(inds)...);
+    LogNumber scale(1.);
 #ifdef DEBUG
     //Compute min of all index dimensions
-    long minm = i1.m();
-    for(const auto& ind : is_)
+    auto minm = i1.m();
+    for(const auto& ind : is)
         if(ind.m() < minm) minm = ind.m();
-    if(V.Length() != minm)
+    if(C.size() != minm)
         {
         Print(minm);
-        Print(V.Length());
+        Print(C.size());
         Error("Wrong size of data in diagonal ITensor constructor");
         }
 #endif
+    using value_type = typename Container::value_type;
+    auto store = std::make_shared<ITDiag<value_type>>(C.begin(),C.end());
+    return ITensor(std::move(is),std::move(store),scale);
     }
 
 
