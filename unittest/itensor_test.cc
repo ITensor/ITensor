@@ -159,7 +159,7 @@ SECTION("Rank 1")
     CHECK(getType(t1) == DenseReal);
     CHECK_EQUAL(t1.r(),1);
     CHECK(hasindex(t1,l1));
-    CHECK_CLOSE(norm(t1),0,1E-10);
+    CHECK_DIFF(norm(t1),0,1E-10);
     }
 
 SECTION("Rank 2")
@@ -169,7 +169,7 @@ SECTION("Rank 2")
     CHECK_EQUAL(t2.r(),2);
     CHECK(hasindex(t2,l1));
     CHECK(hasindex(t2,l2));
-    CHECK_CLOSE(norm(t2),0,1E-10);
+    CHECK_DIFF(norm(t2),0,1E-10);
     }
 
 SECTION("Rank 3")
@@ -180,7 +180,7 @@ SECTION("Rank 3")
     CHECK(hasindex(t3,l1));
     CHECK(hasindex(t3,l2));
     CHECK(hasindex(t3,l3));
-    CHECK_CLOSE(norm(t3),0,1E-10);
+    CHECK_DIFF(norm(t3),0,1E-10);
     }
 
 SECTION("Rank 4")
@@ -190,7 +190,7 @@ SECTION("Rank 4")
     CHECK_EQUAL(t4.r(),2);
     CHECK(hasindex(t4,a1));
     CHECK(hasindex(t4,l1));
-    CHECK_CLOSE(norm(t4),0,1E-10);
+    CHECK_DIFF(norm(t4),0,1E-10);
     }
 
 SECTION("Rank 5")
@@ -201,7 +201,7 @@ SECTION("Rank 5")
     CHECK(hasindex(t5,a1));
     CHECK(hasindex(t5,l1));
     CHECK(hasindex(t5,l2));
-    CHECK_CLOSE(norm(t5),0,1E-10);
+    CHECK_DIFF(norm(t5),0,1E-10);
     }
 
 SECTION("Rank 6")
@@ -213,7 +213,7 @@ SECTION("Rank 6")
     CHECK(hasindex(t6,a1));
     CHECK(hasindex(t6,l2));
     CHECK(hasindex(t6,a2));
-    CHECK_CLOSE(norm(t6),0,1E-10);
+    CHECK_DIFF(norm(t6),0,1E-10);
     }
 
 SECTION("Rank 7")
@@ -225,12 +225,12 @@ SECTION("Rank 7")
     CHECK_EQUAL(t7.r(),2);
     CHECK(hasindex(t7,l1));
     CHECK(hasindex(t7,l2));
-    CHECK_CLOSE(t7.real(l1(1),l2(1)),a,1E-5);
-    CHECK_CLOSE(t7.real(l1(1),l2(2)),a,1E-5);
-    CHECK_CLOSE(t7.real(l1(2),l2(1)),a,1E-5);
-    CHECK_CLOSE(t7.real(l1(2),l2(2)),a,1E-5);
+    CHECK_DIFF(t7.real(l1(1),l2(1)),a,1E-5);
+    CHECK_DIFF(t7.real(l1(1),l2(2)),a,1E-5);
+    CHECK_DIFF(t7.real(l1(2),l2(1)),a,1E-5);
+    CHECK_DIFF(t7.real(l1(2),l2(2)),a,1E-5);
     t7.set(1.5,l1(2),l2(2));
-    CHECK_CLOSE(t7.real(l1(2),l2(2)),1.5,1E-5);
+    CHECK_DIFF(t7.real(l1(2),l2(2)),1.5,1E-5);
     }
 
 
@@ -238,8 +238,8 @@ SECTION("Real Scalar")
     {
     Real b = -1*Global::random();
     ITensor t9(b);
-    CHECK_REQUAL(sumels(t9),b);
-    CHECK_REQUAL(norm(t9),fabs(b));
+    CHECK_CLOSE(sumels(t9),b);
+    CHECK_CLOSE(norm(t9),fabs(b));
     }
 
 SECTION("Dense Rank 1 from Vector")
@@ -251,8 +251,8 @@ SECTION("Dense Rank 1 from Vector")
 
     CHECK_EQUAL(t10.r(),1);
     CHECK(hasindex(t10,linkind));
-    CHECK_CLOSE(sumels(t10),V.sumels(),1E-10);
-    CHECK_CLOSE(norm(t10),Norm(V),1E-10);
+    CHECK_DIFF(sumels(t10),V.sumels(),1E-10);
+    CHECK_DIFF(norm(t10),Norm(V),1E-10);
     }
 
 SECTION("Diag Rank 2 from Vector")
@@ -267,8 +267,8 @@ SECTION("Diag Rank 2 from Vector")
     CHECK_EQUAL(T.r(),2);
     CHECK(hasindex(T,i1));
     CHECK(hasindex(T,i2));
-    CHECK_CLOSE(norm(T),Norm(V),1E-10);
-    CHECK_CLOSE(sumels(T),V.sumels(),1E-10);
+    CHECK_DIFF(norm(T),Norm(V),1E-10);
+    CHECK_DIFF(sumels(T),V.sumels(),1E-10);
     }
 }
 
@@ -279,10 +279,10 @@ SECTION("Rank 1")
     ITensor t1(l1(2));
     CHECK_EQUAL(t1.r(),1);
     CHECK(hasindex(t1,l1));
-    CHECK_CLOSE(t1.real(l1(1)),0,1E-10);
-    CHECK_CLOSE(t1.real(l1(2)),1,1E-10);
-    CHECK_CLOSE(sumels(t1),1,1E-10);
-    CHECK_CLOSE(norm(t1),1,1E-10);
+    CHECK_DIFF(t1.real(l1(1)),0,1E-10);
+    CHECK_DIFF(t1.real(l1(2)),1,1E-10);
+    CHECK_DIFF(sumels(t1),1,1E-10);
+    CHECK_DIFF(norm(t1),1,1E-10);
     }
 
 SECTION("Rank 2")
@@ -292,32 +292,32 @@ SECTION("Rank 2")
     CHECK_EQUAL(t2.r(),2);
     CHECK(hasindex(t2,l1));
     CHECK(hasindex(t2,l2));
-    CHECK_CLOSE(t2.real(l1(1),l2(1)),0,1E-10);
-    CHECK_CLOSE(t2.real(l1(1),l2(2)),0,1E-10);
-    CHECK_CLOSE(t2.real(l1(2),l2(1)),1,1E-10);
-    CHECK_CLOSE(t2.real(l1(2),l2(2)),0,1E-10);
-    CHECK_CLOSE(sumels(t2),1,1E-10);
-    CHECK_CLOSE(norm(t2),1,1E-10);
+    CHECK_DIFF(t2.real(l1(1),l2(1)),0,1E-10);
+    CHECK_DIFF(t2.real(l1(1),l2(2)),0,1E-10);
+    CHECK_DIFF(t2.real(l1(2),l2(1)),1,1E-10);
+    CHECK_DIFF(t2.real(l1(2),l2(2)),0,1E-10);
+    CHECK_DIFF(sumels(t2),1,1E-10);
+    CHECK_DIFF(norm(t2),1,1E-10);
 
     ITensor u2a(a1(1),l2(2));
 
     CHECK_EQUAL(u2a.r(),2);
     CHECK(hasindex(u2a,a1));
     CHECK(hasindex(u2a,l2));
-    CHECK_CLOSE(u2a.real(l2(1)),0,1E-10);
-    CHECK_CLOSE(u2a.real(l2(2)),1,1E-10);
-    CHECK_CLOSE(sumels(u2a),1,1E-10);
-    CHECK_CLOSE(norm(u2a),1,1E-10);
+    CHECK_DIFF(u2a.real(l2(1)),0,1E-10);
+    CHECK_DIFF(u2a.real(l2(2)),1,1E-10);
+    CHECK_DIFF(sumels(u2a),1,1E-10);
+    CHECK_DIFF(norm(u2a),1,1E-10);
 
     ITensor u2b(l1(2),a2(1));
 
     CHECK_EQUAL(u2b.r(),2);
     CHECK(hasindex(u2b,l1));
     CHECK(hasindex(u2b,a2));
-    CHECK_CLOSE(u2b.real(l1(1)),0,1E-10);
-    CHECK_CLOSE(u2b.real(l1(2)),1,1E-10);
-    CHECK_CLOSE(sumels(u2b),1,1E-10);
-    CHECK_CLOSE(norm(u2b),1,1E-10);
+    CHECK_DIFF(u2b.real(l1(1)),0,1E-10);
+    CHECK_DIFF(u2b.real(l1(2)),1,1E-10);
+    CHECK_DIFF(sumels(u2b),1,1E-10);
+    CHECK_DIFF(norm(u2b),1,1E-10);
     }
 
 SECTION("Rank 3")
@@ -327,16 +327,16 @@ SECTION("Rank 3")
     CHECK(hasindex(t3,l1));
     CHECK(hasindex(t3,l2));
     CHECK(hasindex(t3,l3));
-    CHECK_CLOSE(t3.real(l1(1),l3(1),l2(1)),0,1E-10);
-    CHECK_CLOSE(t3.real(l1(2),l3(1),l2(1)),1,1E-10);
-    CHECK_CLOSE(t3.real(l1(1),l3(2),l2(1)),0,1E-10);
-    CHECK_CLOSE(t3.real(l1(2),l3(2),l2(2)),0,1E-10);
-    CHECK_CLOSE(t3.real(l1(1),l3(1),l2(2)),0,1E-10);
-    CHECK_CLOSE(t3.real(l1(2),l3(1),l2(2)),0,1E-10);
-    CHECK_CLOSE(t3.real(l1(1),l3(2),l2(2)),0,1E-10);
-    CHECK_CLOSE(t3.real(l1(2),l3(2),l2(2)),0,1E-10);
-    CHECK_CLOSE(sumels(t3),1,1E-10);
-    CHECK_CLOSE(norm(t3),1,1E-10);
+    CHECK_DIFF(t3.real(l1(1),l3(1),l2(1)),0,1E-10);
+    CHECK_DIFF(t3.real(l1(2),l3(1),l2(1)),1,1E-10);
+    CHECK_DIFF(t3.real(l1(1),l3(2),l2(1)),0,1E-10);
+    CHECK_DIFF(t3.real(l1(2),l3(2),l2(2)),0,1E-10);
+    CHECK_DIFF(t3.real(l1(1),l3(1),l2(2)),0,1E-10);
+    CHECK_DIFF(t3.real(l1(2),l3(1),l2(2)),0,1E-10);
+    CHECK_DIFF(t3.real(l1(1),l3(2),l2(2)),0,1E-10);
+    CHECK_DIFF(t3.real(l1(2),l3(2),l2(2)),0,1E-10);
+    CHECK_DIFF(sumels(t3),1,1E-10);
+    CHECK_DIFF(norm(t3),1,1E-10);
 
     ITensor t4(a1(1),l3(2),l2(1));
 
@@ -344,12 +344,12 @@ SECTION("Rank 3")
     CHECK(hasindex(t4,a1));
     CHECK(hasindex(t4,l2));
     CHECK(hasindex(t4,l3));
-    CHECK_CLOSE(t4.real(l3(1),l2(1)),0,1E-10);
-    CHECK_CLOSE(t4.real(l3(1),l2(2)),0,1E-10);
-    CHECK_CLOSE(t4.real(l3(2),l2(1)),1,1E-10);
-    CHECK_CLOSE(t4.real(l3(2),l2(2)),0,1E-10);
-    CHECK_CLOSE(sumels(t4),1,1E-10);
-    CHECK_CLOSE(norm(t4),1,1E-10);
+    CHECK_DIFF(t4.real(l3(1),l2(1)),0,1E-10);
+    CHECK_DIFF(t4.real(l3(1),l2(2)),0,1E-10);
+    CHECK_DIFF(t4.real(l3(2),l2(1)),1,1E-10);
+    CHECK_DIFF(t4.real(l3(2),l2(2)),0,1E-10);
+    CHECK_DIFF(sumels(t4),1,1E-10);
+    CHECK_DIFF(norm(t4),1,1E-10);
     }
 
 SECTION("Rank 4")
@@ -361,9 +361,9 @@ SECTION("Rank 4")
     CHECK(hasindex(r4,l2));
     CHECK(hasindex(r4,l3));
     CHECK(hasindex(r4,l4));
-    CHECK_CLOSE(r4.real(l1(1),l3(1),l2(2),l4(1)),1,1E-10);
-    CHECK_CLOSE(sumels(r4),1,1E-10);
-    CHECK_CLOSE(norm(r4),1,1E-10);
+    CHECK_DIFF(r4.real(l1(1),l3(1),l2(2),l4(1)),1,1E-10);
+    CHECK_DIFF(sumels(r4),1,1E-10);
+    CHECK_DIFF(norm(r4),1,1E-10);
     }
 
 SECTION("Rank 8")
@@ -380,8 +380,8 @@ SECTION("Rank 8")
     CHECK(hasindex(t8,l7));
     CHECK(hasindex(t8,l8));
 
-    CHECK_CLOSE(t8.real(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2)),1,1E-10);
-    CHECK_CLOSE(norm(t8),1,1E-10);
+    CHECK_DIFF(t8.real(l1(1),l2(2),l3(1),l4(2),l5(1),l6(2),l7(1),l8(2)),1,1E-10);
+    CHECK_DIFF(norm(t8),1,1E-10);
     }
 }
 
@@ -396,7 +396,7 @@ CHECK(hasindex(t1,a2));
 CHECK(hasindex(t1,l3));
 CHECK(hasindex(t1,l1));
 CHECK(hasindex(t1,a4));
-CHECK_CLOSE(norm(t1),0,1E-10);
+CHECK_DIFF(norm(t1),0,1E-10);
 }
 
 SECTION("Copy")
@@ -422,8 +422,8 @@ CHECK(hasindex(t2,a2));
 CHECK(hasindex(t2,l3));
 CHECK(hasindex(t2,l1));
 CHECK(hasindex(t2,a4));
-CHECK_CLOSE(norm(t2),t1nrm,1E-10);
-CHECK_CLOSE(sumels(t2),t1sum,1E-10);
+CHECK_DIFF(norm(t2),t1nrm,1E-10);
+CHECK_DIFF(sumels(t2),t1sum,1E-10);
 
 //Use operator=
 ITensor t3 = t2;
@@ -434,8 +434,8 @@ CHECK(hasindex(t3,a2));
 CHECK(hasindex(t3,l3));
 CHECK(hasindex(t3,l1));
 CHECK(hasindex(t3,a4));
-CHECK_CLOSE(norm(t3),t1nrm,1E-10);
-CHECK_CLOSE(sumels(t3),t1sum,1E-10);
+CHECK_DIFF(norm(t3),t1nrm,1E-10);
+CHECK_DIFF(sumels(t3),t1sum,1E-10);
 }
 
 SECTION("ScalarMultiply")
@@ -449,16 +449,16 @@ CHECK_EQUAL(A.real(s1(2),s1P(2)),-22);
 
 Real f = Global::random();
 A *= -f;
-CHECK_CLOSE(A.real(s1(1),s1P(1)),11*f,1E-10);
-CHECK_CLOSE(A.real(s1(1),s1P(2)),12*f,1E-10);
-CHECK_CLOSE(A.real(s1(2),s1P(1)),21*f,1E-10);
-CHECK_CLOSE(A.real(s1(2),s1P(2)),22*f,1E-10);
+CHECK_DIFF(A.real(s1(1),s1P(1)),11*f,1E-10);
+CHECK_DIFF(A.real(s1(1),s1P(2)),12*f,1E-10);
+CHECK_DIFF(A.real(s1(2),s1P(1)),21*f,1E-10);
+CHECK_DIFF(A.real(s1(2),s1P(2)),22*f,1E-10);
 
 B /= f;
-CHECK_CLOSE(B.real(s1(1),s2(1)),110/f,1E-10);
-CHECK_CLOSE(B.real(s1(1),s2(2)),120/f,1E-10);
-CHECK_CLOSE(B.real(s1(2),s2(1)),210/f,1E-10);
-CHECK_CLOSE(B.real(s1(2),s2(2)),220/f,1E-10);
+CHECK_DIFF(B.real(s1(1),s2(1)),110/f,1E-10);
+CHECK_DIFF(B.real(s1(1),s2(2)),120/f,1E-10);
+CHECK_DIFF(B.real(s1(2),s2(1)),210/f,1E-10);
+CHECK_DIFF(B.real(s1(2),s2(2)),220/f,1E-10);
 }
 
 SECTION("Complex Scalar Multiply")
@@ -482,10 +482,10 @@ CHECK(getType(T) == DenseCplx);
 auto z = 2.2-3.1_i;
 auto cT = T;
 T *= z;
-CHECK_NEQUAL(T.cplx(s1(1),s1P(1)),z * cT.cplx(s1(1),s1P(1)));
-CHECK_NEQUAL(T.cplx(s1(1),s1P(2)),z * cT.cplx(s1(1),s1P(2)));
-CHECK_NEQUAL(T.cplx(s1(2),s1P(1)),z * cT.cplx(s1(2),s1P(1)));
-CHECK_NEQUAL(T.cplx(s1(2),s1P(2)),z * cT.cplx(s1(2),s1P(2)));
+CHECK_CLOSE(T.cplx(s1(1),s1P(1)),z * cT.cplx(s1(1),s1P(1)));
+CHECK_CLOSE(T.cplx(s1(1),s1P(2)),z * cT.cplx(s1(1),s1P(2)));
+CHECK_CLOSE(T.cplx(s1(2),s1P(1)),z * cT.cplx(s1(2),s1P(1)));
+CHECK_CLOSE(T.cplx(s1(2),s1P(2)),z * cT.cplx(s1(2),s1P(2)));
 }
 
 SECTION("Apply")
@@ -500,7 +500,7 @@ auto s1P = prime(s1);
 for(int n1 = 1; n1 <= s1.m(); ++n1)
 for(int n2 = 1; n2 <= s1P.m(); ++n2)
     {
-    CHECK_CLOSE( f( A.real(s1(n1),s1P(n2)) ), A1.real(s1(n1),s1P(n2)) ,1E-10);
+    CHECK_DIFF( f( A.real(s1(n1),s1P(n2)) ), A1.real(s1(n1),s1P(n2)) ,1E-10);
     }
 }
 
@@ -518,7 +518,7 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_REQUAL(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
+    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
                  f1*v.real(l1(j1),l2(j2),b3(k3),l4(j4))
                + w.real(l1(j1),l2(j2),b3(k3),l4(j4))/f2);
     }
@@ -530,7 +530,7 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_REQUAL(d.real(l1(j1),l2(j2),b3(k3),l4(j4)),
+    CHECK_CLOSE(d.real(l1(j1),l2(j2),b3(k3),l4(j4)),
                 v.real(l1(j1),l2(j2),b3(k3),l4(j4))-w.real(l1(j1),l2(j2),b3(k3),l4(j4)));
     }
 
@@ -543,7 +543,7 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_REQUAL(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
+    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
                 f1*yy.real(l1(j1),l2(j2),b3(k3),l4(j4))
                +f2*zz.real(l1(j1),l2(j2),b3(k3),l4(j4)));
     }
@@ -556,7 +556,7 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_REQUAL(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
+    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
                  f1*v.real(l1(j1),l2(j2),b3(k3),l4(j4))
                + w.real(l1(j1),l2(j2),b3(k3),l4(j4))/f2);
     }
@@ -572,7 +572,7 @@ SECTION("Reordered Case 2")
     for(int k2 = 1; k2 <= s2.m(); ++k2)
         {
         auto val = T1.real(b6(j6),s1(k1),b5(j5),s2(k2))+T2.real(b6(j6),s1(k1),b5(j5),s2(k2));
-        CHECK_REQUAL(R.real(b6(j6),s1(k1),b5(j5),s2(k2)),val);
+        CHECK_CLOSE(R.real(b6(j6),s1(k1),b5(j5),s2(k2)),val);
         }
     }
 
@@ -589,7 +589,7 @@ SECTION("Add diag")
     for(int j2 = 1; j2 <= 4; ++j2)
         {
         //printfln("r.real(l6(%d),b4(%d)) = %.10f",j1,j2,r.real(l6(j1),b4(j2)));
-        CHECK_REQUAL(r.real(l6(j1),b4(j2)),v1.real(l6(j1),b4(j2))+v2.real(l6(j1),b4(j2)));
+        CHECK_CLOSE(r.real(l6(j1),b4(j2)),v1.real(l6(j1),b4(j2))+v2.real(l6(j1),b4(j2)));
         }
     }
 
@@ -614,7 +614,7 @@ SECTION("Rank 0")
     for(int j4 = 1; j4 <= 4; ++j4)
         {
         Real val = f * T.real(b2(j2),a1(1),b4(j4));
-        CHECK_REQUAL(res.real(b2(j2),a1(1),b4(j4)),val);
+        CHECK_CLOSE(res.real(b2(j2),a1(1),b4(j4)),val);
         }
     }
 
@@ -648,7 +648,7 @@ SECTION("Case 1")
             {
             val += L.real(b2(j2),a1(1),b3(j3),b4(j4))*fL * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4))*fR;
             }
-        CHECK_CLOSE(res1.real(a2(1),b5(j5)),val,1E-10);
+        CHECK_DIFF(res1.real(a2(1),b5(j5)),val,1E-10);
         }
     }
 
@@ -674,7 +674,7 @@ SECTION("Case 2")
             {
             val += L.real(b2(j2),a1(1),b3(j3),b4(j4)) * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4));
             }
-        CHECK_CLOSE(res2.real(a2(1),b5(j5)),val,1E-10);
+        CHECK_DIFF(res2.real(a2(1),b5(j5)),val,1E-10);
         }
     }
 
@@ -702,7 +702,7 @@ SECTION("Case 3")
     for(int j4 = 1; j4 <= b4.m(); ++j4)
         {
         Real val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
-        CHECK_CLOSE(res3.real(b4(j4),b2(j2)),val,1E-10);
+        CHECK_DIFF(res3.real(b4(j4),b2(j2)),val,1E-10);
         }
     }
 
@@ -722,7 +722,7 @@ SECTION("Case 4")
     for(int j4 = 1; j4 <= 4; ++j4)
         {
         Real val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
-        CHECK_CLOSE(res4.real(b4(j4),b2(j2)),val,1E-10);
+        CHECK_DIFF(res4.real(b4(j4),b2(j2)),val,1E-10);
         }
     }
 
@@ -758,7 +758,7 @@ SECTION("Case 6")
             {
             val += T1.real(b3(j3),b5(j5),l6(k6),s3(i3)) * T2.real(l6(k6),s4(i4),b3(j3));
             }
-        CHECK_CLOSE(R.real(b5(j5),s3(i3),s4(i4)),val,1E-10);
+        CHECK_DIFF(R.real(b5(j5),s3(i3),s4(i4)),val,1E-10);
         }
     }
 
@@ -776,7 +776,7 @@ SECTION("Scalar Result")
         {
         val += T1.real(a1(1),b3(j3),b4(j4))*T2.real(a1(1),b3(j3),b4(j4));
         }
-    CHECK_REQUAL(val,R.real());
+    CHECK_CLOSE(val,R.real());
     }
 }
 
@@ -838,7 +838,7 @@ SECTION("Diag All Same")
     CHECK(hasindex(res1,prime(s1,2)));
     for(int j1 = 1; j1 <= s1.m(); ++j1)
         {
-        CHECK_REQUAL(res1.real(prime(s1,2)(j1),a1(1)), r1.real(prime(s1,2)(j1),s1(1)));
+        CHECK_CLOSE(res1.real(prime(s1,2)(j1),a1(1)), r1.real(prime(s1,2)(j1),s1(1)));
         }
     }
 
@@ -858,7 +858,7 @@ SECTION("Diag")
     for(int j2 = 1; j2 <= s2.m(); ++j2)
     for(int d = 1; d <= diagm; ++d)
         {
-        CHECK_REQUAL(res2.real(s2(j2),b2(d)), v(d) * r2.real(s2(j2),s1(d)));
+        CHECK_CLOSE(res2.real(s2(j2),b2(d)), v(d) * r2.real(s2(j2),s1(d)));
         }
     }
 
@@ -874,7 +874,7 @@ SECTION("Trace")
             {
             val += T.real(s1(i12),s2(i12),s3(i3));
             }
-        CHECK_REQUAL(val,R.real(s3(i3)));
+        CHECK_CLOSE(val,R.real(s3(i3)));
         }
     }
 
@@ -888,7 +888,7 @@ SECTION("Tie Indices with Diag Tensor")
     for(int t = 1; t <= tied1.m(); ++t)
     for(int j4 = 1; j4 <= s4.m(); ++j4)
         {
-        CHECK_REQUAL(T.real(s1(t),s2(t),s3(t),s4(j4)), R1.real(tied1(t),s4(j4)));
+        CHECK_CLOSE(T.real(s1(t),s2(t),s3(t),s4(j4)), R1.real(tied1(t),s4(j4)));
         }
 
     auto tied2 = Index("tied2",s1.m());
@@ -898,7 +898,7 @@ SECTION("Tie Indices with Diag Tensor")
     for(int j2 = 1; j2 <= s2.m(); ++j2)
     for(int j4 = 1; j4 <= s4.m(); ++j4)
         {
-        CHECK_REQUAL(T.real(s1(t),s2(j2),s3(t),s4(j4)), R2.real(tied2(t),s2(j2),s4(j4)));
+        CHECK_CLOSE(T.real(s1(t),s2(j2),s3(t),s4(j4)), R2.real(tied2(t),s2(j2),s4(j4)));
         }
     }
 
@@ -913,7 +913,7 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     auto minjk = std::min(J.m(),K.m());
     for(long j = 1; j <= minjk; ++j)
         val += T.real(J(j),K(j));
-    CHECK_REQUAL(R.real(),val);
+    CHECK_CLOSE(R.real(),val);
 
     Vector v(minjk);
     for(int i = 1; i <= minjk; ++i) v(i) = Global::random();
@@ -923,7 +923,7 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     val = 0;
     for(long j = 1; j <= minjk; ++j)
         val += v(j)*T.real(J(j),K(j));
-    CHECK_REQUAL(R.real(),val);
+    CHECK_CLOSE(R.real(),val);
     }
 
 SECTION("Contract All Dense Inds; Diag result")
@@ -936,7 +936,7 @@ SECTION("Contract All Dense Inds; Diag result")
     CHECK(hasindex(R,L));
     auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
     for(long j = 1; j <= minjkl; ++j)
-        CHECK_REQUAL(R.real(L(j)), T.real(J(j),K(j)));
+        CHECK_CLOSE(R.real(L(j)), T.real(J(j),K(j)));
     }
 }
 
@@ -958,8 +958,8 @@ SECTION("Kronecker Delta Tensor")
     for(int i3 = 1; i3 <= s3.m(); ++i3)
     for(int i12 = 1; i12 <= s1.m(); ++i12)
         {
-        CHECK_REQUAL(T1.real(s1(i12),s3(i3)), R1a.real(s2(i12),s3(i3)));
-        CHECK_REQUAL(T1.real(s1(i12),s3(i3)), R1b.real(s2(i12),s3(i3)));
+        CHECK_CLOSE(T1.real(s1(i12),s3(i3)), R1a.real(s2(i12),s3(i3)));
+        CHECK_CLOSE(T1.real(s1(i12),s3(i3)), R1b.real(s2(i12),s3(i3)));
         }
 
     auto T2 = randIT(s2,s3);
@@ -975,8 +975,8 @@ SECTION("Kronecker Delta Tensor")
     for(int i3 = 1; i3 <= s3.m(); ++i3)
     for(int i12 = 1; i12 <= s1.m(); ++i12)
         {
-        CHECK_REQUAL(T2.real(s2(i12),s3(i3)), R2a.real(s1(i12),s3(i3)));
-        CHECK_REQUAL(T2.real(s2(i12),s3(i3)), R2b.real(s1(i12),s3(i3)));
+        CHECK_CLOSE(T2.real(s2(i12),s3(i3)), R2a.real(s1(i12),s3(i3)));
+        CHECK_CLOSE(T2.real(s2(i12),s3(i3)), R2b.real(s1(i12),s3(i3)));
         }
 
     auto T3 = randIT(b8,s1,b6,a1);
@@ -1010,7 +1010,7 @@ SECTION("Combiner")
         for(int i3 = 1; i3 <= s3.m(); ++i3)
             {
             auto j = i1+(i2-1)*s2.m();
-            CHECK_REQUAL(T1.real(s1(i1),s2(i2),s3(i3)), R1.real(ci(j),s3(i3)));
+            CHECK_CLOSE(T1.real(s1(i1),s2(i2),s3(i3)), R1.real(ci(j),s3(i3)));
             }
 
         auto T2 = randIT(s1,s3,s2);
@@ -1024,7 +1024,7 @@ SECTION("Combiner")
         for(int i3 = 1; i3 <= s3.m(); ++i3)
             {
             auto j = i1+(i2-1)*s2.m();
-            CHECK_REQUAL(T2.real(s1(i1),s2(i2),s3(i3)), R2.real(ci(j),s3(i3)));
+            CHECK_CLOSE(T2.real(s1(i1),s2(i2),s3(i3)), R2.real(ci(j),s3(i3)));
             }
         }
 
@@ -1053,6 +1053,25 @@ SECTION("Combiner")
         }
     }
 
+SECTION("Norm")
+{
+Real nrm = 0;
+auto calcnrm = [&nrm](auto el) { nrm += std::norm(el); };
+
+auto T = randIT(b2,b7,b8);
+T.visit(calcnrm);
+printfln("nrm = %f",nrm);
+CHECK_CLOSE(std::sqrt(nrm),norm(T));
+
+nrm = 0;
+T = randITCplx(b2,b7,b8);
+CHECK(getType(T) == DenseCplx);
+T.visit(calcnrm);
+printfln("nrm = %f",nrm);
+CHECK_CLOSE(std::sqrt(nrm),norm(T));
+
+}
+
 //SECTION("TieIndices")
 //    {
 //
@@ -1061,14 +1080,14 @@ SECTION("Combiner")
 //    ITensor dX(X);
 //    dX.tieIndices(s1,s2,t);
 //
-//    CHECK_CLOSE(norm(dX),0,1E-5);
+//    CHECK_DIFF(norm(dX),0,1E-5);
 //    CHECK_EQUAL(dX.r(),1);
 //    CHECK(hasindex(dX,t));
 //
 //    ITensor dZ(Z);
 //    dZ.tieIndices(s1,s2,t);
-//    CHECK_CLOSE(dZ(t(1)),+1,1E-5);
-//    CHECK_CLOSE(dZ(t(2)),-1,1E-5);
+//    CHECK_DIFF(dZ(t(1)),+1,1E-5);
+//    CHECK_DIFF(dZ(t(2)),-1,1E-5);
 //
 //    {
 //    ITensor T(l1,l2,a1,s2,s1);
@@ -1082,7 +1101,7 @@ SECTION("Combiner")
 //    for(int j = 1; j <= 2; ++j)
 //    for(int k = 1; k <= 2; ++k)
 //        {
-//        CHECK_CLOSE(T(l1(j),l2(j),a1(1),s2(k),s1(j)),TT(l2(j),s2(k),a1(1)),1E-5);
+//        CHECK_DIFF(T(l1(j),l2(j),a1(1),s2(k),s1(j)),TT(l2(j),s2(k),a1(1)),1E-5);
 //        }
 //    }
 //
@@ -1099,7 +1118,7 @@ SECTION("Combiner")
 //    for(int j = 1; j <= 2; ++j)
 //    for(int k = 1; k <= 2; ++k)
 //        {
-//        CHECK_CLOSE(T(l1(j),s2(k)),TT(l1(j),s2(k)),1E-5);
+//        CHECK_DIFF(T(l1(j),s2(k)),TT(l1(j),s2(k)),1E-5);
 //        }
 //    }
 //
@@ -1127,8 +1146,8 @@ SECTION("Combiner")
 //    for(int j = 1; j <= 2; ++j)
 //    for(int k = 1; k <= 2; ++k)
 //        {
-//        CHECK_CLOSE(Tr(l1(j),l2(j),a1(1),s2(k),s1(j)),TTr(l2(j),s2(k),a1(1)),1E-5);
-//        CHECK_CLOSE(Ti(l1(j),l2(j),a1(1),s2(k),s1(j)),TTi(l2(j),s2(k),a1(1)),1E-5);
+//        CHECK_DIFF(Tr(l1(j),l2(j),a1(1),s2(k),s1(j)),TTr(l2(j),s2(k),a1(1)),1E-5);
+//        CHECK_DIFF(Ti(l1(j),l2(j),a1(1),s2(k),s1(j)),TTi(l2(j),s2(k),a1(1)),1E-5);
 //        }
 //    }
 //
@@ -1150,7 +1169,7 @@ SECTION("Combiner")
 //            {
 //            val += A(b2(j2),a1(1),b3(j3),b5(j5),prime(b3)(j3));
 //            }
-//        CHECK_CLOSE(val,At(b2(j2),a1(1),b5(j5)),1E-10);
+//        CHECK_DIFF(val,At(b2(j2),a1(1),b5(j5)),1E-10);
 //        }
 //
 //    ITensor MM(b5,prime(b5));
@@ -1164,7 +1183,7 @@ SECTION("Combiner")
 //        {
 //        check_tr += MM(b5(j5),prime(b5)(j5));
 //        }
-//    CHECK_CLOSE(tr,check_tr,1E-10);
+//    CHECK_DIFF(tr,check_tr,1E-10);
 //
 //    }
 //
@@ -1182,24 +1201,24 @@ SECTION("Combiner")
 //
 //    T.fromMatrix11(s1,s2,M22);
 //
-//    CHECK_CLOSE(T(s1(1),s2(1)),M22(1,1),1E-10);
-//    CHECK_CLOSE(T(s1(1),s2(2)),M22(1,2),1E-10);
-//    CHECK_CLOSE(T(s1(2),s2(1)),M22(2,1),1E-10);
-//    CHECK_CLOSE(T(s1(2),s2(2)),M22(2,2),1E-10);
+//    CHECK_DIFF(T(s1(1),s2(1)),M22(1,1),1E-10);
+//    CHECK_DIFF(T(s1(1),s2(2)),M22(1,2),1E-10);
+//    CHECK_DIFF(T(s1(2),s2(1)),M22(2,1),1E-10);
+//    CHECK_DIFF(T(s1(2),s2(2)),M22(2,2),1E-10);
 //
 //    ITensor U(T);
 //
 //    U.fromMatrix11(s2,s1,M22);
 //
-//    CHECK_CLOSE(T(s1(1),s2(1)),M22(1,1),1E-10);
-//    CHECK_CLOSE(T(s1(1),s2(2)),M22(1,2),1E-10);
-//    CHECK_CLOSE(T(s1(2),s2(1)),M22(2,1),1E-10);
-//    CHECK_CLOSE(T(s1(2),s2(2)),M22(2,2),1E-10);
+//    CHECK_DIFF(T(s1(1),s2(1)),M22(1,1),1E-10);
+//    CHECK_DIFF(T(s1(1),s2(2)),M22(1,2),1E-10);
+//    CHECK_DIFF(T(s1(2),s2(1)),M22(2,1),1E-10);
+//    CHECK_DIFF(T(s1(2),s2(2)),M22(2,2),1E-10);
 //
-//    CHECK_CLOSE(U(s2(1),s1(1)),M22(1,1),1E-10);
-//    CHECK_CLOSE(U(s2(1),s1(2)),M22(1,2),1E-10);
-//    CHECK_CLOSE(U(s2(2),s1(1)),M22(2,1),1E-10);
-//    CHECK_CLOSE(U(s2(2),s1(2)),M22(2,2),1E-10);
+//    CHECK_DIFF(U(s2(1),s1(1)),M22(1,1),1E-10);
+//    CHECK_DIFF(U(s2(1),s1(2)),M22(1,2),1E-10);
+//    CHECK_DIFF(U(s2(2),s1(1)),M22(2,1),1E-10);
+//    CHECK_DIFF(U(s2(2),s1(2)),M22(2,2),1E-10);
 //
 //    Matrix M12(a1.m(),s2.m());
 //    M12(1,1) = 37; M12(1,2) = -2;
@@ -1209,13 +1228,13 @@ SECTION("Combiner")
 //
 //    P.fromMatrix11(a1,s2,M12);
 //
-//    CHECK_CLOSE(P(a1(1),s2(1)),M12(1,1),1E-10);
-//    CHECK_CLOSE(P(a1(1),s2(2)),M12(1,2),1E-10);
+//    CHECK_DIFF(P(a1(1),s2(1)),M12(1,1),1E-10);
+//    CHECK_DIFF(P(a1(1),s2(2)),M12(1,2),1E-10);
 //
 //    P.fromMatrix11(s2,a1,M12.t());
 //
-//    CHECK_CLOSE(P(s2(1),a1(1)),M12(1,1),1E-10);
-//    CHECK_CLOSE(P(s2(2),a1(1)),M12(1,2),1E-10);
+//    CHECK_DIFF(P(s2(1),a1(1)),M12(1,1),1E-10);
+//    CHECK_DIFF(P(s2(2),a1(1)),M12(1,2),1E-10);
 //    }
 //
 //SECTION("ToFromMatrix11")
@@ -1228,39 +1247,39 @@ SECTION("Combiner")
 //
 //    A.toMatrix11(s2,s1,M);
 //
-//    CHECK_CLOSE(M(1,1),11*f,1E-10);
-//    CHECK_CLOSE(M(2,1),12*f,1E-10);
-//    CHECK_CLOSE(M(1,2),21*f,1E-10);
-//    CHECK_CLOSE(M(2,2),22*f,1E-10);
+//    CHECK_DIFF(M(1,1),11*f,1E-10);
+//    CHECK_DIFF(M(2,1),12*f,1E-10);
+//    CHECK_DIFF(M(1,2),21*f,1E-10);
+//    CHECK_DIFF(M(2,2),22*f,1E-10);
 //
 //    A.toMatrix11(s1,s2,M);
 //
-//    CHECK_CLOSE(M(1,1),11*f,1E-10);
-//    CHECK_CLOSE(M(1,2),12*f,1E-10);
-//    CHECK_CLOSE(M(2,1),21*f,1E-10);
-//    CHECK_CLOSE(M(2,2),22*f,1E-10);
+//    CHECK_DIFF(M(1,1),11*f,1E-10);
+//    CHECK_DIFF(M(1,2),12*f,1E-10);
+//    CHECK_DIFF(M(2,1),21*f,1E-10);
+//    CHECK_DIFF(M(2,2),22*f,1E-10);
 //
 //    A.toMatrix11NoScale(s2,s1,M);
 //
-//    CHECK_CLOSE(M(1,1),11,1E-10);
-//    CHECK_CLOSE(M(2,1),12,1E-10);
-//    CHECK_CLOSE(M(1,2),21,1E-10);
-//    CHECK_CLOSE(M(2,2),22,1E-10);
+//    CHECK_DIFF(M(1,1),11,1E-10);
+//    CHECK_DIFF(M(2,1),12,1E-10);
+//    CHECK_DIFF(M(1,2),21,1E-10);
+//    CHECK_DIFF(M(2,2),22,1E-10);
 //
 //    A *= -40;
 //    A.fromMatrix11(s2,s1,M);
 //
-//    CHECK_CLOSE(A(s1(1),s2(1)),11,1E-10);
-//    CHECK_CLOSE(A(s1(1),s2(2)),12,1E-10);
-//    CHECK_CLOSE(A(s1(2),s2(1)),21,1E-10);
-//    CHECK_CLOSE(A(s1(2),s2(2)),22,1E-10);
+//    CHECK_DIFF(A(s1(1),s2(1)),11,1E-10);
+//    CHECK_DIFF(A(s1(1),s2(2)),12,1E-10);
+//    CHECK_DIFF(A(s1(2),s2(1)),21,1E-10);
+//    CHECK_DIFF(A(s1(2),s2(2)),22,1E-10);
 //
 //    A.fromMatrix11(s1,s2,M);
 //
-//    CHECK_CLOSE(A(s1(1),s2(1)),11,1E-10);
-//    CHECK_CLOSE(A(s1(1),s2(2)),21,1E-10);
-//    CHECK_CLOSE(A(s1(2),s2(1)),12,1E-10);
-//    CHECK_CLOSE(A(s1(2),s2(2)),22,1E-10);
+//    CHECK_DIFF(A(s1(1),s2(1)),11,1E-10);
+//    CHECK_DIFF(A(s1(1),s2(2)),21,1E-10);
+//    CHECK_DIFF(A(s1(2),s2(1)),12,1E-10);
+//    CHECK_DIFF(A(s1(2),s2(2)),22,1E-10);
 //
 //
 //    Vector V(4);
@@ -1277,17 +1296,17 @@ SECTION("Combiner")
 //    
 //    T.toMatrix11(link,a1,M41);
 //
-//    CHECK_CLOSE(M41(1,1),V(1),1E-10);
-//    CHECK_CLOSE(M41(2,1),V(2),1E-10);
-//    CHECK_CLOSE(M41(3,1),V(3),1E-10);
-//    CHECK_CLOSE(M41(4,1),V(4),1E-10);
+//    CHECK_DIFF(M41(1,1),V(1),1E-10);
+//    CHECK_DIFF(M41(2,1),V(2),1E-10);
+//    CHECK_DIFF(M41(3,1),V(3),1E-10);
+//    CHECK_DIFF(M41(4,1),V(4),1E-10);
 //     
 //    T.toMatrix11(a1,link,M14);
 //
-//    CHECK_CLOSE(M14(1,1),V(1),1E-10);
-//    CHECK_CLOSE(M14(1,2),V(2),1E-10);
-//    CHECK_CLOSE(M14(1,3),V(3),1E-10);
-//    CHECK_CLOSE(M14(1,4),V(4),1E-10);
+//    CHECK_DIFF(M14(1,1),V(1),1E-10);
+//    CHECK_DIFF(M14(1,2),V(2),1E-10);
+//    CHECK_DIFF(M14(1,3),V(3),1E-10);
+//    CHECK_DIFF(M14(1,4),V(4),1E-10);
 //
 //    }
 //
@@ -1373,8 +1392,8 @@ SECTION("Combiner")
 //            I(imagPart(ZiX));
 //    R -= f1*Z;
 //    I -= f2*X;
-//    CHECK_CLOSE(norm(R),0,1E-5);
-//    CHECK_CLOSE(norm(I),0,1E-5);
+//    CHECK_DIFF(norm(R),0,1E-5);
+//    CHECK_DIFF(norm(I),0,1E-5);
 //
 //    //Test hc:
 //    
@@ -1383,18 +1402,18 @@ SECTION("Combiner")
 //    I = imagPart(ZiX);
 //    R -= f1*Z;
 //    I += f2*X;
-//    CHECK_CLOSE(norm(R),0,1E-5);
-//    CHECK_CLOSE(norm(I),0,1E-5);
+//    CHECK_DIFF(norm(R),0,1E-5);
+//    CHECK_DIFF(norm(I),0,1E-5);
 //    }
 
 //SECTION("NormTest")
 //    {
 //    A = randIT(s1,prime(s1));
-//    CHECK_CLOSE(norm(A),sqrt((A*A).real()),1E-5);
+//    CHECK_DIFF(norm(A),sqrt((A*A).real()),1E-5);
 //
 //    ITensor C = Complex_1*A+Complex_i*B;
 //
-//    CHECK_CLOSE(norm(C),sqrt(realPart(dag(C)*C).toReal()),1E-5);
+//    CHECK_DIFF(norm(C),sqrt(realPart(dag(C)*C).toReal()),1E-5);
 //    }
 
 //SECTION("CR_ComplexAddition")
@@ -1406,8 +1425,8 @@ SECTION("Combiner")
 //            I(imagPart(iZX));
 //    R -= f2*X;
 //    I -= f1*Z;
-//    CHECK_CLOSE(norm(R),0,1E-5);
-//    CHECK_CLOSE(norm(I),0,1E-5);
+//    CHECK_DIFF(norm(R),0,1E-5);
+//    CHECK_DIFF(norm(I),0,1E-5);
 //    }
 //
 //SECTION("CC_ComplexAddition")
@@ -1418,8 +1437,8 @@ SECTION("Combiner")
 //    ITensor R(realPart(iZiX)),
 //            I(imagPart(iZiX));
 //    I -= f1*Z+f2*X;
-//    CHECK_CLOSE(norm(R),0,1E-5);
-//    CHECK_CLOSE(norm(I),0,1E-5);
+//    CHECK_DIFF(norm(R),0,1E-5);
+//    CHECK_DIFF(norm(I),0,1E-5);
 //    }
 //
 //SECTION("ComplexScalar")

@@ -912,7 +912,7 @@ class FillReal : public RegisterFunc<FillReal>
     void
     operator()(const ITDenseCplx& d)
         {
-        makeNewData<ITDense>(d.size(),r_);
+        makeNewData<ITDense>(d.csize(),r_);
         }
     template<typename T>
     void
@@ -972,6 +972,12 @@ class MultReal : public RegisterFunc<MultReal>
         for(auto& elt : d) elt *= r_;
         }
 
+    void
+    operator()(ITDenseCplx& d) const
+        {
+        for(auto& elt : d) elt *= r_;
+        }
+
     template<typename T>
     void
     operator()(ITDiag<T>& d) const
@@ -1001,29 +1007,28 @@ class NormNoScale : public RegisterFunc<NormNoScale,Real>
     NormNoScale(const IndexSet& is) : is_(is) { }
 
     Real
-    operator()(const ITDense& d)
-        {
-        Real nrm = 0;
-        for(const auto& elt : d)
-            nrm += std::norm(elt);
-        return std::sqrt(nrm);
-        }
+    operator()(const ITDense& d) { return vec_norm(d); }
+
+    Real
+    operator()(const ITDenseCplx& d) { return vec_norm(d); }
 
     template<typename T>
     Real
     operator()(const ITDiag<T>& d)
         {
+        if(d.allSame()) return std::sqrt(std::norm(d.val))*std::sqrt(minM(is_));
+        return vec_norm(d.store);
+        }
+
+    private:
+
+    template<typename Container>
+    Real
+    vec_norm(const Container& v)
+        {
         Real nrm = 0;
-        if(d.allSame())
-            {
-            auto mm = Real(minM(is_));
-            nrm = std::norm(d.val)*std::sqrt(mm);
-            }
-        else
-            {
-            for(const auto& elt : d.store)
-                nrm += std::norm(elt);
-            }
+        for(const auto& elt : v)
+            nrm += std::norm(elt); //conj(elt)*elt
         return std::sqrt(nrm);
         }
     };
@@ -1031,17 +1036,17 @@ class NormNoScale : public RegisterFunc<NormNoScale,Real>
 void ITensor::
 scaleOutNorm()
     {
-    Real f = applyFunc<NormNoScale>(store_,{is_});
+    auto nrm = applyFunc<NormNoScale>(store_,{is_});
     //If norm already 1 return so
     //we don't have to call MultReal
-    if(fabs(f-1) < 1E-12) return;
-    if(f == 0)
+    if(fabs(nrm-1.) < 1E-12) return;
+    if(nrm == 0)
         {
         scale_ = LogNumber(1.);
         return;
         }
-    applyFunc<MultReal>(store_,{1./f});
-    scale_ *= f;
+    applyFunc<MultReal>(store_,{1./nrm});
+    scale_ *= nrm;
     }
 
 void ITensor::
@@ -1085,6 +1090,7 @@ struct Conj : RegisterFunc<Conj>
     void
     operator()(const T& d) { }
     };
+
 ITensor& ITensor::
 conj()
     {
@@ -1206,6 +1212,7 @@ operator()(const ITDiag<T>& d) const
         {
         s_ << "  ";
         detail::printVal(s_,scalefac*(d.empty() ? d.val : d.store.front()));
+        return;
         }
 
     auto size = minM(is_);

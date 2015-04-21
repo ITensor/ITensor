@@ -352,14 +352,17 @@ struct VisitIT : RegisterFunc<VisitIT<F>>
         : f_(f), scale_fac(scale.real0())
         { }
 
-    template <typename T>
     void
-    operator()(const T& d) const
-        {
-        for(const auto& elt : d.data)
-            {
-            f_(elt*scale_fac);
-            }
+    operator()(const ITDense& d)
+        { 
+        for(auto& elt : d) f_(scale_fac * elt);
+        }
+
+    void
+    operator()(const ITDenseCplx& d)
+        { 
+        for(auto j = 0ul; j < d.csize(); ++j)
+            f_(scale_fac * d.get(j));
         }
     };
 

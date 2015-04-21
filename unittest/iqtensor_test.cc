@@ -74,7 +74,7 @@ SECTION("Boolean")
 //    IQTensor rZ(f);
 //
 //    CHECK_EQUAL(rZ.r(),0);
-//    CHECK_REQUAL(norm(rZ),f);
+//    CHECK_CLOSE(norm(rZ),f);
 //    }
 
 //SECTION("ToReal")
@@ -82,7 +82,7 @@ SECTION("Boolean")
 //    Real f = Global::random();
 //    IQTensor T(f);
 //    PrintData(T);
-//    CHECK_REQUAL(T.real(),f);
+//    CHECK_CLOSE(T.real(),f);
 //    }
 
 SECTION("Contracting Product")
@@ -111,7 +111,7 @@ SECTION("Contracting Product")
                 //printfln(" (now val=%f)",val);
                 }
             //printfln("val = %f, R.real(S1(%d),S2(%d))=%f",val,k1,k2,R.real(S1(k1),S2(k2)));
-            CHECK_REQUAL(R.real(S1(k1),S2(k2)),val);
+            CHECK_CLOSE(R.real(S1(k1),S2(k2)),val);
             }
         }
 
@@ -131,7 +131,7 @@ SECTION("Addition and Subtraction")
         for(int k2 = 1; k2 <= S2.m(); ++k2)
             {
             auto val = T1.real(L1(j1),S1(k1),L2(j2),S2(k2))+T2.real(L1(j1),S1(k1),L2(j2),S2(k2));
-            CHECK_REQUAL(val,R.real(L1(j1),S1(k1),L2(j2),S2(k2)));
+            CHECK_CLOSE(val,R.real(L1(j1),S1(k1),L2(j2),S2(k2)));
             }
         }
 
@@ -147,7 +147,7 @@ SECTION("Addition and Subtraction")
         for(int k2 = 1; k2 <= S2.m(); ++k2)
             {
             auto val = T1.real(L1(j1),S1(k1),L2(j2),S2(k2))+T2.real(L1(j1),S1(k1),L2(j2),S2(k2));
-            CHECK_REQUAL(val,R.real(L1(j1),S1(k1),L2(j2),S2(k2)));
+            CHECK_CLOSE(val,R.real(L1(j1),S1(k1),L2(j2),S2(k2)));
             }
         }
 
@@ -163,7 +163,7 @@ SECTION("Apply")
     for(int j1 = 1; j1 <= L1.m(); ++j1)
     for(int j2 = 1; j2 <= L2.m(); ++j2)
         {
-        CHECK_REQUAL( f( B.real(L1(j1),L2(j2)) ), 
+        CHECK_CLOSE( f( B.real(L1(j1),L2(j2)) ), 
                     B1.real(L1(j1),L2(j2)));
         }
     }
@@ -184,7 +184,7 @@ SECTION("ITensor Conversion")
         for(int k1 = 1; k1 <= S1.m(); ++k1)
         for(int k2 = 1; k2 <= S2.m(); ++k2)
         for(int j2 = 1; j2 <= L2.m(); ++j2)
-            CHECK_REQUAL(phi.real(S1(k1),S2(k2),L2(j2)),itphi.real(Index(S1)(k1),Index(S2)(k2),Index(L2)(j2)));
+            CHECK_CLOSE(phi.real(S1(k1),S2(k2),L2(j2)),itphi.real(Index(S1)(k1),Index(S2)(k2),Index(L2)(j2)));
         }
 
     SECTION("Case 2")
@@ -194,7 +194,7 @@ SECTION("ITensor Conversion")
         for(int k2 = 1; k2 <= S2.m(); ++k2)
         for(int j1 = 1; j1 <= L1.m(); ++j1)
         for(int j2 = 1; j2 <= L2.m(); ++j2)
-            CHECK_REQUAL(A.real(S1(k1),S2(k2),L1(j1),L2(j2)),
+            CHECK_CLOSE(A.real(S1(k1),S2(k2),L1(j1),L2(j2)),
                         itA.real(Index(S1)(k1),Index(S2)(k2),Index(L1)(j1),Index(L2)(j2)));
         }
     }
@@ -210,13 +210,13 @@ SECTION("Combiner")
         //check that ci exists
         CHECK(ci);
         //check that all elements of T accounted for in R
-        CHECK_REQUAL(norm(T),norm(R));
+        CHECK_CLOSE(norm(T),norm(R));
         R *= dag(C); //uncombine
         //Check that R equals original T
         for(int i1 = 1; i1 <= L1.m(); ++i1)
         for(int i2 = 1; i2 <= L2.m(); ++i2)
             {
-            CHECK_REQUAL( T.real(L1(i1),L2(i2)), R.real(L1(i1),L2(i2)) );
+            CHECK_CLOSE( T.real(L1(i1),L2(i2)), R.real(L1(i1),L2(i2)) );
             }
         }
     SECTION("Combine / Uncombine 1 - No Permute")
@@ -228,13 +228,13 @@ SECTION("Combiner")
         //check that ci exists
         CHECK(ci);
         //check that all elements of T accounted for in R
-        CHECK_REQUAL(norm(T),norm(R));
+        CHECK_CLOSE(norm(T),norm(R));
         R *= dag(C); //uncombine
         //Check that R equals original T
         for(int i1 = 1; i1 <= L1.m(); ++i1)
         for(int i2 = 1; i2 <= L2.m(); ++i2)
             {
-            CHECK_REQUAL( T.real(L1(i1),L2(i2)), R.real(L1(i1),L2(i2)) );
+            CHECK_CLOSE( T.real(L1(i1),L2(i2)), R.real(L1(i1),L2(i2)) );
             }
         }
 
@@ -250,7 +250,7 @@ SECTION("Combiner")
         CHECK(!hasindex(R,L1));
         CHECK(!hasindex(R,L2));
         //check that all elements of T accounted for in R
-        CHECK_REQUAL(norm(T),norm(R));
+        CHECK_CLOSE(norm(T),norm(R));
         R *= dag(C); //uncombine
         CHECK(!hasindex(R,ci));
         CHECK(hasindex(R,L1));
@@ -261,7 +261,7 @@ SECTION("Combiner")
         for(int i2 = 1; i2 <= L2.m(); ++i2)
         for(int j1 = 1; j1 <= S1.m(); ++j1)
             {
-            CHECK_REQUAL( T.real(L1(i1),L2(i2),S1(j1)), R.real(L1(i1),L2(i2),S1(j1)) );
+            CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1)), R.real(L1(i1),L2(i2),S1(j1)) );
             }
         }
 
@@ -274,7 +274,7 @@ SECTION("Combiner")
         //check that ci exists
         CHECK(ci);
         //check that all elements of T accounted for in R
-        CHECK_REQUAL(norm(T),norm(R));
+        CHECK_CLOSE(norm(T),norm(R));
         R *= dag(C); //uncombine
         //Check that R equals original T
         for(int i1 = 1; i1 <= L1.m(); ++i1)
@@ -282,7 +282,7 @@ SECTION("Combiner")
         for(int j1 = 1; j1 <= S1.m(); ++j1)
         for(int j2 = 1; j2 <= S2.m(); ++j2)
             {
-            CHECK_REQUAL( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+            CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
             }
         }
 
@@ -295,7 +295,7 @@ SECTION("Combiner")
         //check that ci exists
         CHECK(ci);
         //check that all elements of T accounted for in R
-        CHECK_REQUAL(norm(T),norm(R));
+        CHECK_CLOSE(norm(T),norm(R));
         R *= dag(C); //uncombine
         //Check that R equals original T
         for(int i1 = 1; i1 <= L1.m(); ++i1)
@@ -303,7 +303,7 @@ SECTION("Combiner")
         for(int j1 = 1; j1 <= S1.m(); ++j1)
         for(int j2 = 1; j2 <= S2.m(); ++j2)
             {
-            CHECK_REQUAL( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+            CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
             }
         }
 
@@ -320,7 +320,7 @@ SECTION("Combiner")
         CHECK(!hasindex(R,L2));
         CHECK(hasindex(R,S2));
         //check that all elements of T accounted for in R
-        CHECK_REQUAL(norm(T),norm(R));
+        CHECK_CLOSE(norm(T),norm(R));
         R = dag(C)*R; //uncombine
         CHECK(!hasindex(R,ci));
         CHECK(hasindex(R,L1));
@@ -333,7 +333,7 @@ SECTION("Combiner")
         for(int j1 = 1; j1 <= S1.m(); ++j1)
         for(int j2 = 1; j2 <= S2.m(); ++j2)
             {
-            CHECK_REQUAL( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+            CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
             }
         }
 
@@ -350,7 +350,7 @@ SECTION("Combiner")
         CHECK(!hasindex(R,S1));
         CHECK(!hasindex(R,S2));
         //check that all elements of T accounted for in R
-        CHECK_REQUAL(norm(T),norm(R));
+        CHECK_CLOSE(norm(T),norm(R));
         R *= dag(C); //uncombine
         //Check that R equals original T
         for(int i1 = 1; i1 <= L1.m(); ++i1)
@@ -358,7 +358,7 @@ SECTION("Combiner")
         for(int j1 = 1; j1 <= S1.m(); ++j1)
         for(int j2 = 1; j2 <= S2.m(); ++j2)
             {
-            CHECK_REQUAL( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
+            CHECK_CLOSE( T.real(L1(i1),L2(i2),S1(j1),S2(j2)), R.real(L1(i1),L2(i2),S1(j1),S2(j2)) );
             }
         }
 
@@ -380,8 +380,8 @@ SECTION("Scalar")
         val += T1.real(L1(i1),L2(i2),S1(j1),S2(j2))*T2.real(L1(i1),L2(i2),S1(j1),S2(j2));
         }
 
-    CHECK_REQUAL(val, S.real());
-    CHECK_REQUAL(fabs(val), norm(S));
+    CHECK_CLOSE(val, S.real());
+    CHECK_CLOSE(fabs(val), norm(S));
     }
 
 
@@ -394,7 +394,7 @@ SECTION("Scalar")
 //    for(int k2 = 1; k2 <= L1.m(); ++k2)
 //    for(int k3 = 1; k3 <= S1.m(); ++k3)
 //        {
-//        CHECK_CLOSE(D1(L1(k1),prime(L1,2)(k2),S1(k3)),D(L1(k1),prime(L1)(k1),prime(L1,2)(k2),S1(k3)),1E-10);
+//        CHECK_DIFF(D1(L1(k1),prime(L1,2)(k2),S1(k3)),D(L1(k1),prime(L1)(k1),prime(L1,2)(k2),S1(k3)),1E-10);
 //        }
 //    }
 
@@ -405,8 +405,8 @@ SECTION("Scalar")
 //    //Dot should auto-fix arrows
 //    Real dotval2 = sqrt( Dot(B,B) );
 //    Real nval   = B.norm();
-//    CHECK_CLOSE(dotval1,nval,1E-5);
-//    CHECK_CLOSE(dotval2,nval,1E-5);
+//    CHECK_DIFF(dotval1,nval,1E-5);
+//    CHECK_DIFF(dotval2,nval,1E-5);
 //    }
 //
 //SECTION("BraKetTest")
@@ -417,20 +417,20 @@ SECTION("Scalar")
 //    const Real ii = sqr(I.norm());
 //
 //    Complex z = BraKet(R,R);
-//    CHECK_CLOSE(z.real(),rr,1E-5);
+//    CHECK_DIFF(z.real(),rr,1E-5);
 //
 //    IQTensor T = Complex_1*R + Complex_i*I;
 //    z = BraKet(T,T);
-//    CHECK_CLOSE(z.real(),rr+ii,1E-5);
+//    CHECK_DIFF(z.real(),rr+ii,1E-5);
 //    CHECK(fabs(z.imag()) < 1E-12);
 //
 //    z = BraKet(T,R);
-//    CHECK_CLOSE(z.real(),rr,1E-5);
-//    CHECK_CLOSE(z.imag(),-Dot(I,R),1E-5);
+//    CHECK_DIFF(z.real(),rr,1E-5);
+//    CHECK_DIFF(z.imag(),-Dot(I,R),1E-5);
 //
 //    z = BraKet(T,Complex_i*I);
-//    CHECK_CLOSE(z.real(),ii,1E-5);
-//    CHECK_CLOSE(z.imag(),Dot(I,R),1E-5);
+//    CHECK_DIFF(z.real(),ii,1E-5);
+//    CHECK_DIFF(z.imag(),Dot(I,R),1E-5);
 //    }
 
 //SECTION("Trace")
@@ -449,7 +449,7 @@ SECTION("Scalar")
 //            {
 //            val += D(dag(L1)(k1),S1(j2),prime(L1)(j1),prime(L1,2)(k1));
 //            }
-//        CHECK_CLOSE(val,Dt(S1(j2),prime(L1)(j1)),1E-10);
+//        CHECK_DIFF(val,Dt(S1(j2),prime(L1)(j1)),1E-10);
 //        }
 //
 //    auto rho = randIQT(L1(2),prime(L1)(2));
@@ -477,8 +477,8 @@ SECTION("Scalar")
 //    //PrintDat(I);
 //    R -= Z;
 //    I -= X;
-//    CHECK_CLOSE(R.norm(),0,1E-5);
-//    CHECK_CLOSE(I.norm(),0,1E-5);
+//    CHECK_DIFF(R.norm(),0,1E-5);
+//    CHECK_DIFF(I.norm(),0,1E-5);
 //
 //    //Test hc:
 //
@@ -487,8 +487,8 @@ SECTION("Scalar")
 //    I = imagPart(ZiX);
 //    R -= Z;
 //    I += X;
-//    CHECK_CLOSE(R.norm(),0,1E-5);
-//    CHECK_CLOSE(I.norm(),0,1E-5);
+//    CHECK_DIFF(R.norm(),0,1E-5);
+//    CHECK_DIFF(I.norm(),0,1E-5);
 //    }
 
 //SECTION("ComplexMult")
@@ -525,8 +525,8 @@ SECTION("Scalar")
 //
 //    IQTensor R = Z + iX;
 //
-//    CHECK_CLOSE((realPart(R)-Z).norm(),0,1E-5);
-//    CHECK_CLOSE((imagPart(R)-X).norm(),0,1E-5);
+//    CHECK_DIFF((realPart(R)-Z).norm(),0,1E-5);
+//    CHECK_DIFF((imagPart(R)-X).norm(),0,1E-5);
 //
 //    }
 
@@ -541,7 +541,7 @@ SECTION("Scalar")
 //    blk2 *= LogNumber(9,1);
 //    Z += blk2; 
 //
-//    CHECK_CLOSE(Z.normLogNum().logNum(),log(sqrt(sqr(0.1234)*exp(20)+exp(18))),1E-5);
+//    CHECK_DIFF(Z.normLogNum().logNum(),log(sqrt(sqr(0.1234)*exp(20)+exp(18))),1E-5);
 //
 //    }
 
@@ -557,7 +557,7 @@ SECTION("Scalar")
 //    Z += blk2; 
 //
 //    //Mainly want to check that Z.normLogNum() doesn't overflow in this case
-//    CHECK_CLOSE(Z.normLogNum().logNum(),999.053,1E-3);
+//    CHECK_DIFF(Z.normLogNum().logNum(),999.053,1E-3);
 //    }
 
 //SECTION("AddBlock")
