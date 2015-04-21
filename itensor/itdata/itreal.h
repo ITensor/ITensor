@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_ITDENSE_H
-#define __ITENSOR_ITDENSE_H
+#ifndef __ITENSOR_ITREAL_H
+#define __ITENSOR_ITREAL_H
 
 #include "itdata.h"
 
@@ -16,7 +16,7 @@ namespace itensor {
 //  and size, maybe use in simpletensor too
 //
 
-struct ITDense : RegisterData<ITDense>
+struct ITReal : RegisterData<ITReal>
     {
     using storage_type = std::vector<Real>;
     using size_type = storage_type::size_type;
@@ -34,14 +34,14 @@ struct ITDense : RegisterData<ITDense>
     // Constructors
     //
 
-    ITDense() { }
+    ITReal() { }
 
-    ITDense(size_t size) : store(size) { }
+    ITReal(size_t size) : store(size) { }
 
-    ITDense(size_t size, Real val) : store(size,val) { }
+    ITReal(size_t size, Real val) : store(size,val) { }
 
     template<typename InputIterator>
-    ITDense(InputIterator b, InputIterator e) : store(b,e) { }
+    ITReal(InputIterator b, InputIterator e) : store(b,e) { }
 
     //
     //std container like methods

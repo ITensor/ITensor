@@ -28,7 +28,7 @@ ITensor(const Index& i1)
     :
     is_(i1),
     scale_(1.),
-    store_(std::make_shared<ITDense>(i1.m(),0.))
+    store_(std::make_shared<ITReal>(i1.m(),0.))
 	{ }
 
 
@@ -37,7 +37,7 @@ ITensor(const Index& i1,const Index& i2)
     :
     is_(i1,i2),
     scale_(1.),
-    store_(std::make_shared<ITDense>(i1.m()*i2.m(),0.))
+    store_(std::make_shared<ITReal>(i1.m()*i2.m(),0.))
 	{ }
     
 ITensor::
@@ -46,9 +46,9 @@ ITensor(Complex val)
     scale_(1.)
     { 
     //if(val.imag() == 0)
-    //    store_ = std::make_shared<ITDense>(1,val.real());
+    //    store_ = std::make_shared<ITReal>(1,val.real());
     //else
-    //    store_ = std::make_shared<ITDenseCplx>(1,val);
+    //    store_ = std::make_shared<ITCplx>(1,val);
     if(val.imag() == 0)
         store_ = std::make_shared<ITDiag<Real>>(val.real());
     else
@@ -70,7 +70,7 @@ ITensor(const IndexSet& is)
     :
     is_(is),
     scale_(1.),
-    store_(std::make_shared<ITDense>(area(is_),0.))
+    store_(std::make_shared<ITReal>(area(is_),0.))
 	{ }
 
 //ITensor::
@@ -79,7 +79,7 @@ ITensor(const IndexSet& is)
 //    :
 //    is_(is),
 //    scale_(1.),
-//    store_(std::make_shared<ITDense>(v.begin(),v.end()))
+//    store_(std::make_shared<ITReal>(v.begin(),v.end()))
 //	{ }
 
 struct CopyElems : public RegisterFunc<CopyElems>
@@ -87,8 +87,8 @@ struct CopyElems : public RegisterFunc<CopyElems>
     CopyElems() { }
 
     void
-    operator()(ITDense& d1,
-               const ITDense& d2)
+    operator()(ITReal& d1,
+               const ITReal& d2)
         {
         std::copy(d2.begin(),d2.end(),d1.begin());
         }
@@ -108,7 +108,7 @@ ITensor(const IndexSet& is,
     :
     is_(is),
     scale_(t.scale_),
-    store_(std::make_shared<ITDense>(area(is_),0.))
+    store_(std::make_shared<ITReal>(area(is_),0.))
     {
     Error("ITensor(IndexSet,ITensor) constructor currently broken due to automatic sorting of Indices by IndexSet");
     applyFunc<CopyElems>(store_,t.store_);
@@ -129,12 +129,12 @@ ITensor(const IndexSet& is,
 //        {
 //        Matrix Mt = M.t();
 //        VectorRef vref = Mt.TreatAsVector(); 
-//        store_ = make_newdata<ITDense>(vref.begin(),vref.end());
+//        store_ = make_newdata<ITReal>(vref.begin(),vref.end());
 //        }
 //    else
 //        {
 //        VectorRef vref = M.TreatAsVector(); 
-//        store_ = make_newdata<ITDense>(vref.begin(),vref.end());
+//        store_ = make_newdata<ITReal>(vref.begin(),vref.end());
 //        }
 //    }
 
@@ -150,8 +150,8 @@ ITensor(const IndexSet& is,
 //        { }
 //
 //    NewData
-//    operator()(ITDense& t1, 
-//               const ITDense& t2)
+//    operator()(ITReal& t1, 
+//               const ITReal& t2)
 //        {
 //        auto v = std::vector<Real>();
 //        permute(P_,is_,t2.data(),v);
@@ -175,7 +175,7 @@ ITensor(const IndexSet& is,
 //    else               
 //        { 
 //        Error("Not yet implemented");
-//        store_ = make_shared<ITDense>(is_);
+//        store_ = make_shared<ITReal>(is_);
 //        applyFunc<Reshape>(store_,other.store_,{P,other.is_});
 //        }
 //    }
@@ -257,18 +257,18 @@ struct Contract : RegisterFunc<Contract>
     scalefac() { return scalefac_; }
 
     void
-    operator()(const ITDense& a1,
-               const ITDense& a2);
+    operator()(const ITReal& a1,
+               const ITReal& a2);
 
     void
-    operator()(const ITDense& d,
+    operator()(const ITReal& d,
                const ITCombiner& C)
         {
         combine(d,Lis_,Ris_);
         }
     void
     operator()(const ITCombiner& C,
-               const ITDense& d)
+               const ITReal& d)
         { 
         combine(d,Ris_,Lis_);
         if(!newData()) assignPointerRtoL();
@@ -276,12 +276,12 @@ struct Contract : RegisterFunc<Contract>
 
     void
     operator()(const ITDiag<Real>& d,
-               const ITDense& t)
+               const ITReal& t)
         {
         diagDense(d,Lis_,Lind_,t,Ris_,Rind_);
         }
     void
-    operator()(const ITDense& t,
+    operator()(const ITReal& t,
                const ITDiag<Real>& d)
         { 
         diagDense(d,Ris_,Rind_,t,Lis_,Lind_);
@@ -290,7 +290,7 @@ struct Contract : RegisterFunc<Contract>
     private:
 
     void
-    combine(const ITDense& d,
+    combine(const ITReal& d,
             const IndexSet& dis,
             const IndexSet& Cis);
 
@@ -298,15 +298,15 @@ struct Contract : RegisterFunc<Contract>
     diagDense(const ITDiag<Real>& d,
               const IndexSet& dis,
               const Label& dind,
-              const ITDense& t,
+              const ITReal& t,
               const IndexSet& tis,
               const Label& tind);
  
     };
 
 void Contract::
-operator()(const ITDense& a1,
-           const ITDense& a2)
+operator()(const ITReal& a1,
+           const ITReal& a2)
     {
     //Optimization TODO:
     //  Test different scenarios where having sortInds=true or false
@@ -335,7 +335,7 @@ operator()(const ITDense& a1,
     //PRI(Nind);
 
     auto rsize = area(Nis_);
-    auto nd = makeNewData<ITDense>(rsize,0.);
+    auto nd = makeNewData<ITReal>(rsize,0.);
     auto t1 = make_tensorref(a1.data(),Lis_),
          t2 = make_tensorref(a2.data(),Ris_);
     auto tr = make_tensorref(nd->data(),Nis_);
@@ -363,7 +363,7 @@ void Contract::
 diagDense(const ITDiag<Real>& d,
           const IndexSet& dis,
           const Label& dind,
-          const ITDense& t,
+          const ITReal& t,
           const IndexSet& tis,
           const Label& tind)
     {
@@ -411,7 +411,7 @@ diagDense(const ITDiag<Real>& d,
                 ++n;
                 }
             }
-        auto nd = makeNewData<ITDense>(area(Nis_),0.);
+        auto nd = makeNewData<ITReal>(area(Nis_),0.);
         auto *pr = nd->data();
         const auto *pt = t.data();
 
@@ -500,7 +500,7 @@ diagDense(const ITDiag<Real>& d,
     }
 
 void Contract::
-combine(const ITDense& d,
+combine(const ITReal& d,
         const IndexSet& dis,
         const IndexSet& Cis)
     {
@@ -595,7 +595,7 @@ combine(const ITDense& d,
                 }
             Range rr(pdims);
             Nis_ = IndexSet(move(newind));
-            auto nd = makeNewData<ITDense>(area(Nis_));
+            auto nd = makeNewData<ITReal>(area(Nis_));
             auto td = make_tensorref(d.data(),dis);
             auto tr = make_tensorref(nd->data(),rr);
             permute(td,P,tr);
@@ -674,13 +674,13 @@ struct MultComplex : RegisterFunc<MultComplex>
     MultComplex(Complex z) : z_(z) { }
 
     void
-    operator()(const ITDense& d)
+    operator()(const ITReal& d)
         {
-        auto nd = makeNewData<ITDenseCplx>(d);
+        auto nd = makeNewData<ITCplx>(d);
         *nd *= z_;
         }
     void
-    operator()(ITDenseCplx& d) { d *= z_; }
+    operator()(ITCplx& d) { d *= z_; }
     };
 
 ITensor& ITensor::
@@ -778,28 +778,28 @@ class PlusEQ : public RegisterFunc<PlusEQ>
         { }
 
     void
-    operator()(ITDense& a1,
-               const ITDense& a2);
+    operator()(ITReal& a1,
+               const ITReal& a2);
 
     void
     operator()(ITDiag<Real>& a1,
                const ITDiag<Real>& a2);
 
     void
-    operator()(ITDense& a1,
-               const ITDenseCplx& a2)
+    operator()(ITReal& a1,
+               const ITCplx& a2)
         {
         Error("Real + Complex not implemented");
-        //auto np = make_newdata<ITDenseCplx>(a1);
+        //auto np = make_newdata<ITCplx>(a1);
         //operator()(*np,a2);
         }
 
     void
-    operator()(ITDenseCplx& a1,
-               const ITDense& a2)
+    operator()(ITCplx& a1,
+               const ITReal& a2)
         {
         Error("Complex + Real not implemented");
-        //ITDenseCplx a2c(a2);
+        //ITCplx a2c(a2);
         //operator()(a1,a2c);
         }
     };
@@ -812,8 +812,8 @@ plusEqData(Real fac, Real *d1, const Real *d2, LAPACK_INT size)
     }
 
 void PlusEQ::
-operator()(ITDense& a1,
-           const ITDense& a2)
+operator()(ITReal& a1,
+           const ITReal& a2)
     {
 #ifdef DEBUG
     if(a1.size() != a2.size()) Error("Mismatched sizes in plusEq");
@@ -905,14 +905,14 @@ class FillReal : public RegisterFunc<FillReal>
     public:
     FillReal(Real r) : r_(r) { }
     void
-    operator()(ITDense& d) const
+    operator()(ITReal& d) const
         {
         std::fill(d.begin(),d.end(),r_);
         }
     void
-    operator()(const ITDenseCplx& d)
+    operator()(const ITCplx& d)
         {
-        makeNewData<ITDense>(d.csize(),r_);
+        makeNewData<ITReal>(d.csize(),r_);
         }
     template<typename T>
     void
@@ -928,12 +928,12 @@ class FillCplx : public RegisterFunc<FillCplx>
     public:
     FillCplx(Complex z) : z_(z) { }
     void
-    operator()(const ITDense& d)
+    operator()(const ITReal& d)
         {
-        makeNewData<ITDenseCplx>(d.size(),z_);
+        makeNewData<ITCplx>(d.size(),z_);
         }
     void
-    operator()(ITDenseCplx& d) const
+    operator()(ITCplx& d) const
         {
         d.fill(z_);
         }
@@ -966,14 +966,14 @@ class MultReal : public RegisterFunc<MultReal>
         { }
 
     void
-    operator()(ITDense& d) const
+    operator()(ITReal& d) const
         {
         //use BLAS algorithm?
         for(auto& elt : d) elt *= r_;
         }
 
     void
-    operator()(ITDenseCplx& d) const
+    operator()(ITCplx& d) const
         {
         for(auto& elt : d) elt *= r_;
         }
@@ -1007,10 +1007,10 @@ class NormNoScale : public RegisterFunc<NormNoScale,Real>
     NormNoScale(const IndexSet& is) : is_(is) { }
 
     Real
-    operator()(const ITDense& d) { return vec_norm(d); }
+    operator()(const ITReal& d) { return vec_norm(d); }
 
     Real
-    operator()(const ITDenseCplx& d) { return vec_norm(d); }
+    operator()(const ITCplx& d) { return vec_norm(d); }
 
     template<typename T>
     Real
@@ -1066,7 +1066,7 @@ equalizeScales(ITensor& other)
 struct Conj : RegisterFunc<Conj>
     {
     void
-    operator()(const ITDenseCplx& cd) 
+    operator()(const ITCplx& cd) 
         { 
         auto& d = modifyData(cd);
         auto* i = d.istart();
@@ -1112,10 +1112,10 @@ struct PrintIT : RegisterFunc<PrintIT>
         { }
 
     void
-    operator()(const ITDense& d) const;
+    operator()(const ITReal& d) const;
 
     void
-    operator()(const ITDenseCplx& d) const;
+    operator()(const ITCplx& d) const;
 
     template<typename T>
     void
@@ -1126,7 +1126,7 @@ struct PrintIT : RegisterFunc<PrintIT>
     };
 
 void PrintIT::
-operator()(const ITDense& d) const
+operator()(const ITReal& d) const
     {
     s_ << " (Dense Real)}\n";
     Real scalefac = 1.0;
@@ -1163,7 +1163,7 @@ operator()(const ITDense& d) const
     }
 
 void PrintIT::
-operator()(const ITDenseCplx& d) const
+operator()(const ITCplx& d) const
     {
     s_ << " (Dense Cplx)}\n";
     Real scalefac = 1.0;
@@ -1294,7 +1294,7 @@ conj(ITensor T)
 struct CheckComplex : RegisterFunc<CheckComplex,bool>
     {
     bool
-    operator()(const ITDenseCplx& d) { return true; }
+    operator()(const ITCplx& d) { return true; }
     bool
     operator()(const ITDiag<Complex>& d) { return true; }
 
@@ -1317,7 +1317,7 @@ class SumEls : public RegisterFunc<SumEls,Complex>
     SumEls(const IndexSet& is) : is_(is) { }
 
     Complex
-    operator()(const ITDense& d) 
+    operator()(const ITReal& d) 
         { 
         Real sum = 0;
         for(const auto& elt : d)
@@ -1329,16 +1329,10 @@ class SumEls : public RegisterFunc<SumEls,Complex>
     Complex
     operator()(const ITDiag<T>& d) 
         { 
+        if(d.allSame()) return Real(minM(is_))*d.val;
         T sum = 0;
-        if(d.allSame())
-            {
-            sum = Real(minM(is_))*d.val;
-            }
-        else
-            {
-            for(const auto& elt : d.store)
-                sum += elt;
-            }
+        for(const auto& elt : d.store)
+            sum += elt;
         return sum;
         }
     };

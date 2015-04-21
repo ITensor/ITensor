@@ -32,9 +32,9 @@ enum Type {
 struct GetType : RegisterFunc<GetType,Type>
     {
     Type
-    operator()(const ITDense& d) { return DenseReal; }
+    operator()(const ITReal& d) { return DenseReal; }
     Type
-    operator()(const ITDenseCplx& d) { return DenseCplx; }
+    operator()(const ITCplx& d) { return DenseCplx; }
     Type
     operator()(const ITDiag<Real>& d)
         {

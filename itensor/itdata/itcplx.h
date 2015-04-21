@@ -2,10 +2,10 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_ITDENSECPLX_H
-#define __ITENSOR_ITDENSECPLX_H
+#ifndef __ITENSOR_ITCPLX_H
+#define __ITENSOR_ITCPLX_H
 
-#include "itdense.h"
+#include "itreal.h"
 
 namespace itensor {
 
@@ -16,7 +16,7 @@ namespace itensor {
 //  and size, maybe use in simpletensor too
 //
 
-struct ITDenseCplx : RegisterData<ITDenseCplx>
+struct ITCplx : RegisterData<ITCplx>
     {
     using storage_type = std::vector<Real>;
     using size_type = storage_type::size_type;
@@ -33,23 +33,23 @@ struct ITDenseCplx : RegisterData<ITDenseCplx>
     // Constructors
     //
 
-    ITDenseCplx() { }
+    ITCplx() { }
 
-    ITDenseCplx(size_t size) : store(2*size,0) { }
+    ITCplx(size_t size) : store(2*size,0) { }
 
-    ITDenseCplx(size_t size, Real val) 
+    ITCplx(size_t size, Real val) 
         : 
         store(2*size,0) 
         { 
         std::fill(store.begin(),store.begin()+csize(),val);
         }
-    ITDenseCplx(size_t size, const Complex& val) 
+    ITCplx(size_t size, const Complex& val) 
         : 
         store(2*size) 
         { 
         fill(val);
         }
-    ITDenseCplx(const ITDense& d)
+    ITCplx(const ITReal& d)
         : 
         store(2*d.size(),0) 
         { 
@@ -57,7 +57,7 @@ struct ITDenseCplx : RegisterData<ITDenseCplx>
         }
 
     template<typename InputIterator>
-    ITDenseCplx(InputIterator b, InputIterator e) : store(b,e) { }
+    ITCplx(InputIterator b, InputIterator e) : store(b,e) { }
 
     //
     // Accessors
@@ -76,7 +76,7 @@ struct ITDenseCplx : RegisterData<ITDenseCplx>
         store[csize()+i] = z.imag();
         }
 
-    ITDenseCplx&
+    ITCplx&
     operator*=(const Complex& z)
         {
         auto* r = rstart();

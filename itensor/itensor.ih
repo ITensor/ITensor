@@ -5,8 +5,8 @@
 #ifndef __ITENSOR_ITENSOR_IH
 #define __ITENSOR_ITENSOR_IH
 
-#include "itdata/itdense.h"
-#include "itdata/itdensecplx.h"
+#include "itdata/itreal.h"
+#include "itdata/itcplx.h"
 #include "itdata/itdiag.h"
 #include "itdata/itcombiner.h"
 #include "itdata/iqtdata.h"
@@ -27,7 +27,7 @@ ITensor(const Index& i1,
     :
     is_(i1,i2,i3,rest...),
     scale_(1.),
-    store_(make_shared<ITDense>(area(is_),0.))
+    store_(make_shared<ITReal>(area(is_),0.))
 	{ }
 
 template<typename... Inds>
@@ -87,7 +87,7 @@ ITensor(const IndexVal& iv1,
     std::array<Index,size> inds;
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     is_ = IndexSet(inds);
-    store_ = make_shared<ITDense>(area(is_),0.);
+    store_ = make_shared<ITReal>(area(is_),0.);
     set(1.,iv1,rest...);
     }
 
@@ -107,13 +107,13 @@ struct GetElt : RegisterFunc<GetElt<size>,Complex>
         { }
 
     Complex
-    operator()(const ITDense& d)
+    operator()(const ITReal& d)
         {
         return d[ind(is_,inds_)];
         }
 
     Complex
-    operator()(const ITDenseCplx& d)
+    operator()(const ITCplx& d)
         {
         return d.get(ind(is_,inds_));
         }
@@ -192,13 +192,13 @@ struct SetEltReal : RegisterFunc<SetEltReal<size>>
         { }
 
     void
-    operator()(ITDense& d) const
+    operator()(ITReal& d) const
         {
         d[ind(is_,inds_)] = elt_;
         }
 
     void
-    operator()(ITDenseCplx& d) const
+    operator()(ITCplx& d) const
         {
         d.set(ind(is_,inds_),elt_);
         }
@@ -216,13 +216,13 @@ class SetEltComplex : public RegisterFunc<SetEltComplex<size>>
                   const std::array<long,size>& inds)
         : elt_(elt), is_(is), inds_(inds) { }
     void
-    operator()(const ITDense& d)
+    operator()(const ITReal& d)
         {
-        auto nd = this->template makeNewData<ITDenseCplx>(d.cbegin(),d.cend());
+        auto nd = this->template makeNewData<ITCplx>(d.cbegin(),d.cend());
         nd->set(ind(is_,inds_),elt_);
         }
     void
-    operator()(ITDenseCplx& d)
+    operator()(ITCplx& d)
         {
         d.set(ind(is_,inds_),elt_);
         }
@@ -255,11 +255,11 @@ struct GenerateIT : public RegisterFunc<GenerateIT<F>>
         }
 
     void
-    operator()(const ITDense& d)
+    operator()(const ITReal& d)
         { 
         if(complex_)
             {
-            auto nd = Parent::template makeNewData<ITDenseCplx>(d.size());
+            auto nd = Parent::template makeNewData<ITCplx>(d.size());
             for(auto j = 0ul; j < nd->csize(); ++j)
                 nd->set(j,f_());
             }
@@ -271,7 +271,7 @@ struct GenerateIT : public RegisterFunc<GenerateIT<F>>
         }
 
     void
-    operator()(const ITDenseCplx& d)
+    operator()(const ITCplx& d)
         { 
         if(complex_)
             {
@@ -281,7 +281,7 @@ struct GenerateIT : public RegisterFunc<GenerateIT<F>>
             }
         else
             {
-            auto nd = Parent::template makeNewData<ITDense>(d.csize());
+            auto nd = Parent::template makeNewData<ITReal>(d.csize());
             std::generate(nd->begin(),nd->end(),[this](){ return std::real(this->f_()); });
             }
         }
@@ -303,13 +303,13 @@ struct ApplyIT : RegisterFunc<ApplyIT<F>>
     ApplyIT(F&& f) : f_(f) { }
 
     void
-    operator()(ITDense& d)
+    operator()(ITReal& d)
         { 
         for(auto& elt : d) elt = f_(elt);
         }
 
     void
-    operator()(ITDenseCplx& d)
+    operator()(ITCplx& d)
         { 
         for(auto j = 0ul; j < d.csize(); ++j)
             {
@@ -353,13 +353,13 @@ struct VisitIT : RegisterFunc<VisitIT<F>>
         { }
 
     void
-    operator()(const ITDense& d)
+    operator()(const ITReal& d)
         { 
         for(auto& elt : d) f_(scale_fac * elt);
         }
 
     void
-    operator()(const ITDenseCplx& d)
+    operator()(const ITCplx& d)
         { 
         for(auto j = 0ul; j < d.csize(); ++j)
             f_(scale_fac * d.get(j));
