@@ -237,7 +237,7 @@ struct Contract : RegisterFunc<Contract>
 
     //New IndexSet
     IndexSet Nis_;
-    Real scalefac_ = -1;
+    Real scalefac_ = 0;
 
     public:
 
@@ -260,6 +260,25 @@ struct Contract : RegisterFunc<Contract>
     void
     operator()(const ITReal& a1,
                const ITReal& a2);
+
+    void
+    operator()(const ITCplx& a1,
+               const ITCplx& a2);
+
+
+    void
+    operator()(const ITReal& a1,
+               const ITCplx& a2)
+        {
+        realCplx(a1,Lis_,Lind_,a2,Ris_,Rind_);
+        }
+
+    void
+    operator()(const ITCplx& a1,
+               const ITReal& a2)
+        {
+        realCplx(a2,Ris_,Rind_,a1,Lis_,Lind_);
+        }
 
     void
     operator()(const ITReal& d,
@@ -302,8 +321,118 @@ struct Contract : RegisterFunc<Contract>
               const ITReal& t,
               const IndexSet& tis,
               const Label& tind);
+
+    void
+    realCplx(const ITReal& R,
+             const IndexSet& ris,
+             const Label& rind,
+             const ITCplx& C,
+             const IndexSet& cis,
+             const Label& cind);
+
+    template<typename Data>
+    void
+    computeScalefac(Data& dat)
+        {
+        scalefac_ = 0;
+        for(auto elt : dat) scalefac_ += elt*elt;
+        scalefac_ = std::sqrt(scalefac_);
+        if(scalefac_ == 0) return;
+        for(auto& elt : dat) elt /= scalefac_;
+        }
  
     };
+
+void Contract::
+operator()(const ITCplx& a1,
+           const ITCplx& a2)
+    {
+    //Optimization TODO:
+    //  Test different scenarios where having sortInds=true or false
+    //  can improve performance. Having sorted inds can make adding
+    //  quicker and let contractloop run in parallel more often in principle.
+    const bool sortInds = false; //whether to sort indices of result
+    contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,sortInds);
+    
+    Label Nind(Nis_.r(),0);
+    for(size_t i = 0; i < Nis_.r(); ++i)
+        {
+        auto j = findindex(Lis_,Nis_[i]);
+        if(j >= 0)
+            {
+            Nind[i] = Lind_[j];
+            }
+        else
+            {
+            j = findindex(Ris_,Nis_[i]);
+            Nind[i] = Rind_[j];
+            }
+        }
+
+    auto rsize = area(Nis_);
+    auto nd = makeNewData<ITCplx>(rsize,0.);
+
+    auto t1r = make_tensorref(a1.rstart(),Lis_),
+         t1i = make_tensorref(a1.istart(),Lis_),
+         t2r = make_tensorref(a2.rstart(),Ris_),
+         t2i = make_tensorref(a2.istart(),Ris_);
+    auto trr = make_tensorref(nd->rstart(),Nis_),
+         tri = make_tensorref(nd->istart(),Nis_);
+
+    contractloop(t1i,Lind_,t2i,Rind_,trr,Nind);
+    for(auto p = nd->rstart(); p < nd->istart(); ++p) *p *= -1;
+    contractloop(t1r,Lind_,t2r,Rind_,trr,Nind);
+
+    contractloop(t1i,Lind_,t2r,Rind_,tri,Nind);
+    contractloop(t1r,Lind_,t2i,Rind_,tri,Nind);
+
+    if(rsize > 1) computeScalefac(*nd);
+    }
+
+void Contract::
+realCplx(const ITReal& R,
+         const IndexSet& ris,
+         const Label& rind,
+         const ITCplx& C,
+         const IndexSet& cis,
+         const Label& cind)
+    {
+    //Optimization TODO:
+    //  Test different scenarios where having sortInds=true or false
+    //  can improve performance. Having sorted inds can make adding
+    //  quicker and let contractloop run in parallel more often in principle.
+    const bool sortInds = false; //whether to sort indices of result
+    contractIS(ris,rind,cis,cind,Nis_,sortInds);
+    
+    Label Nind(Nis_.r(),0);
+    for(size_t i = 0; i < Nis_.r(); ++i)
+        {
+        auto j = findindex(ris,Nis_[i]);
+        if(j >= 0)
+            {
+            Nind[i] = rind[j];
+            }
+        else
+            {
+            j = findindex(cis,Nis_[i]);
+            Nind[i] = cind[j];
+            }
+        }
+
+    auto rsize = area(Nis_);
+    auto nd = makeNewData<ITCplx>(rsize,0.);
+
+    auto t1 = make_tensorref(R.data(),ris),
+         t2r = make_tensorref(C.rstart(),cis),
+         t2i = make_tensorref(C.istart(),cis);
+    auto trr = make_tensorref(nd->rstart(),Nis_),
+         tri = make_tensorref(nd->istart(),Nis_);
+
+    contractloop(t1,rind,t2r,cind,trr,Nind);
+    contractloop(t1,rind,t2i,cind,tri,Nind);
+
+    if(rsize > 1) computeScalefac(*nd);
+    }
 
 void Contract::
 operator()(const ITReal& a1,
@@ -342,22 +471,7 @@ operator()(const ITReal& a1,
     auto tr = make_tensorref(nd->data(),Nis_);
     contractloop(t1,Lind_,t2,Rind_,tr,Nind);
 
-    scalefac_ = 0;
-    if(rsize > 1)
-        {
-        for(auto elt : *nd)
-            {
-            scalefac_ += elt*elt;
-            }
-        scalefac_ = std::sqrt(scalefac_);
-        if(scalefac_ != 0)
-            {
-            for(auto& elt : *nd)
-                {
-                elt /= scalefac_;
-                }
-            }
-        }
+    if(rsize > 1) computeScalefac(*nd);
     }
 
 void Contract::
