@@ -114,6 +114,9 @@ struct ITCplx : RegisterData<ITCplx>
     const Real*
     istart() const { return store.data()+csize(); }
 
+    const Real*
+    iend() const { return store.data()+store.size(); }
+
     //
     // std container like methods
     //

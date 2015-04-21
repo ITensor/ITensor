@@ -7,6 +7,7 @@
 #include "detail/printing.h"
 #include "detail/gcounter.h"
 #include "contract.h"
+#include "count.h"
 
 using std::array;
 using std::ostream;
@@ -1099,6 +1100,62 @@ conj()
     return *this;
     }
 
+struct TakeReal : RegisterFunc<TakeReal>
+    {
+    void
+    operator()(const ITCplx& d) 
+        { 
+        makeNewData<ITReal>(d.rstart(),d.istart());
+        }
+    void
+    operator()(const ITDiag<Complex>& d) 
+        { 
+        if(d.allSame()) makeNewData<ITDiag<Real>>(d.val.real());
+        else            
+            {
+            auto nd = makeNewData<ITDiag<Real>>(d.size(),0.);
+            for(auto i : index(d.store)) nd->store[i] = d.store[i].real();
+            }
+        }
+    template<typename T>
+    void
+    operator()(const T& d) { }
+    };
+ITensor& ITensor::
+takeReal()
+    {
+    applyFunc<TakeReal>(store_);
+    return *this;
+    }
+
+struct TakeImag : RegisterFunc<TakeImag>
+    {
+    void
+    operator()(const ITCplx& d) 
+        { 
+        makeNewData<ITReal>(d.istart(),d.iend());
+        }
+    void
+    operator()(const ITDiag<Complex>& d) 
+        { 
+        if(d.allSame()) makeNewData<ITDiag<Real>>(d.val.imag());
+        else            
+            {
+            auto nd = makeNewData<ITDiag<Real>>(d.size(),0.);
+            for(auto i : index(d.store)) nd->store[i] = d.store[i].imag();
+            }
+        }
+    template<typename T>
+    void
+    operator()(const T& d) { }
+    };
+ITensor& ITensor::
+takeImag()
+    {
+    applyFunc<TakeImag>(store_);
+    return *this;
+    }
+
 struct PrintIT : RegisterFunc<PrintIT>
     {
     std::ostream& s_;
@@ -1325,6 +1382,17 @@ class SumEls : public RegisterFunc<SumEls,Complex>
         return sum;
         }
 
+    Complex
+    operator()(const ITCplx& d) 
+        { 
+        Real rsum = 0,
+             isum = 0;
+        auto* p = d.rstart();
+        for(; p < d.istart(); ++p) rsum += *p;
+        for(; p < d.iend(); ++p)   isum += *p;
+        return Complex(rsum,isum);
+        }
+
     template <class T>
     Complex
     operator()(const ITDiag<T>& d) 
@@ -1336,12 +1404,20 @@ class SumEls : public RegisterFunc<SumEls,Complex>
         return sum;
         }
     };
+
+Complex
+sumelsC(const ITensor& t)
+    {
+    auto z = Complex(applyFunc<SumEls>(t.data(),{t.inds()}));
+    return t.scale().real0()*z;
+    }
+
 Real
 sumels(const ITensor& t)
     {
-    auto z = Complex(applyFunc<SumEls>(t.data(),{t.inds()}));
-    if(z.imag() != 0) Error("ITensor has non-zero imaginary part");
-    return t.scale().real0()*z.real();
+    auto z = sumelsC(t);
+    if(z.imag() != 0) Error("ITensor has non-zero imaginary part, use sumelsC");
+    return z.real();
     }
 
 ITensor

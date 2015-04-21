@@ -1084,6 +1084,27 @@ for(auto j7 = 1; j7 <= b7.m(); ++j7)
 
 }
 
+SECTION("SumEls")
+{
+auto T = randIT(b2,b7);
+Real r = 0;
+for(auto j2 = 1; j2 <= b2.m(); ++j2) 
+for(auto j7 = 1; j7 <= b7.m(); ++j7) 
+    {
+    r += T.real(b2(j2),b7(j7));
+    }
+CHECK_CLOSE(sumels(T),r);
+
+T = randITCplx(b2,b7);
+Complex z = 0;
+for(auto j2 = 1; j2 <= b2.m(); ++j2) 
+for(auto j7 = 1; j7 <= b7.m(); ++j7) 
+    {
+    z += T.cplx(b2(j2),b7(j7));
+    }
+CHECK_CLOSE(sumelsC(T),z);
+}
+
 //SECTION("TieIndices")
 //    {
 //

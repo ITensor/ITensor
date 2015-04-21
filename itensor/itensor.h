@@ -189,8 +189,17 @@ class ITensor
     // Complex number methods
     //
 
+    //Take complex conjugate of all elements
     ITensor&
     conj();
+
+    //Replace data with real part
+    ITensor&
+    takeReal();
+
+    //Replace data with imaginary part
+    ITensor&
+    takeImag();
 
     private:
 
@@ -428,8 +437,19 @@ dag(const ITensor& T) { return conj(T); }
 bool
 isComplex(const ITensor& T);
 
+template <class Tensor>
+Tensor
+realPart(Tensor T) { T.takeReal(); return T; }
+
+template <class Tensor>
+Tensor
+imagPart(Tensor T) { T.takeImag(); return T; }
+
 Real
 sumels(const ITensor& T);
+
+Complex
+sumelsC(const ITensor& T);
 
 //
 //Return copy of a tensor with primeLevels plev1 and plev2 swapped
