@@ -257,22 +257,20 @@ class ITensor
     //        const Index& i2,
     //        const MatrixRef& M);
 
-    template <typename Callable> 
-    ITensor&
-    mapElems(Callable&& f)
-        {
-        return apply(std::forward<Callable>(f));
-        }
+    //template <typename Callable> 
+    //ITensor&
+    //mapElems(Callable&& f)
+    //    {
+    //    return apply(std::forward<Callable>(f));
+    //    }
 
-    const IndexSet&
-    indices() const { return inds(); }
+    //const IndexSet&
+    //indices() const { return inds(); }
 
     private:
-    ////////////////////////
     IndexSet is_;
-    LogNumber scale_;
     storage_ptr store_;
-    ////////////////////////
+    LogNumber scale_;
     }; // class ITensor
 
 std::ostream& 

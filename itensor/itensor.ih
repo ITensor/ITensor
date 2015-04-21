@@ -26,8 +26,8 @@ ITensor(const Index& i1,
         const Indices&... rest)
     :
     is_(i1,i2,i3,rest...),
-    scale_(1.),
-    store_(make_shared<ITReal>(area(is_),0.))
+    store_(make_shared<ITReal>(area(is_),0.)),
+    scale_(1.)
 	{ }
 
 template<typename... Inds>

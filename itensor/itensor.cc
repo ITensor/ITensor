@@ -28,8 +28,8 @@ ITensor::
 ITensor(const Index& i1) 
     :
     is_(i1),
-    scale_(1.),
-    store_(std::make_shared<ITReal>(i1.m(),0.))
+    store_(std::make_shared<ITReal>(i1.m(),0.)),
+    scale_(1.)
 	{ }
 
 
@@ -37,8 +37,8 @@ ITensor::
 ITensor(const Index& i1,const Index& i2) 
     :
     is_(i1,i2),
-    scale_(1.),
-    store_(std::make_shared<ITReal>(i1.m()*i2.m(),0.))
+    store_(std::make_shared<ITReal>(i1.m()*i2.m(),0.)),
+    scale_(1.)
 	{ }
     
 ITensor::
@@ -62,16 +62,16 @@ ITensor(IndexSet&& iset,
         const LogNumber& scale)
     :
     is_(std::move(iset)),
-    scale_(scale),
-    store_(std::move(data))
+    store_(std::move(data)),
+    scale_(scale)
     { }
 
 ITensor::
 ITensor(const IndexSet& is)
     :
     is_(is),
-    scale_(1.),
-    store_(std::make_shared<ITReal>(area(is_),0.))
+    store_(std::make_shared<ITReal>(area(is_),0.)),
+    scale_(1.)
 	{ }
 
 //ITensor::
@@ -108,8 +108,8 @@ ITensor(const IndexSet& is,
         const ITensor& t)
     :
     is_(is),
-    scale_(t.scale_),
-    store_(std::make_shared<ITReal>(area(is_),0.))
+    store_(std::make_shared<ITReal>(area(is_),0.)),
+    scale_(t.scale_)
     {
     Error("ITensor(IndexSet,ITensor) constructor currently broken due to automatic sorting of Indices by IndexSet");
     applyFunc<CopyElems>(store_,t.store_);
@@ -1195,6 +1195,7 @@ operator()(const ITReal& d) const
         {
         s_ << "  ";
         detail::printVal(s_,scalefac*d.store.front());
+        return;
         }
 
     auto gc = detail::GCounter(0,rank-1,0);
@@ -1232,6 +1233,7 @@ operator()(const ITCplx& d) const
         {
         s_ << "  ";
         detail::printVal(s_,scalefac*d.get(0));
+        return;
         }
 
     auto gc = detail::GCounter(0,rank-1,0);
