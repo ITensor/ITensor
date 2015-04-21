@@ -1,6 +1,7 @@
 #include "test.h"
 #include "itensor.h"
 #include "cplx_literal.h"
+#include "count.h"
 
 using namespace std;
 using namespace itensor;
@@ -1060,15 +1061,26 @@ auto calcnrm = [&nrm](auto el) { nrm += std::norm(el); };
 
 auto T = randIT(b2,b7,b8);
 T.visit(calcnrm);
-printfln("nrm = %f",nrm);
 CHECK_CLOSE(std::sqrt(nrm),norm(T));
 
 nrm = 0;
 T = randITCplx(b2,b7,b8);
 CHECK(getType(T) == DenseCplx);
 T.visit(calcnrm);
-printfln("nrm = %f",nrm);
 CHECK_CLOSE(std::sqrt(nrm),norm(T));
+}
+
+SECTION("Conj")
+{
+auto T1 = randITCplx(b2,b7);
+CHECK(isComplex(T1));
+auto T2 = conj(T1);
+for(auto j2 = 1; j2 <= b2.m(); ++j2) 
+for(auto j7 = 1; j7 <= b7.m(); ++j7) 
+    {
+    //printfln("T1 val = %f, conj = %f, T2 val = %f",T1.cplx(b2(j2),b7(j7)),std::conj(T1.cplx(b2(j2),b7(j7))), T2.cplx(b2(j2),b7(j7)));
+    CHECK_CLOSE(std::conj(T1.cplx(b2(j2),b7(j7))), T2.cplx(b2(j2),b7(j7)));
+    }
 
 }
 

@@ -1066,16 +1066,17 @@ equalizeScales(ITensor& other)
 struct Conj : RegisterFunc<Conj>
     {
     void
-    operator()(ITDenseCplx& d) 
+    operator()(const ITDenseCplx& cd) 
         { 
+        auto& d = modifyData(cd);
         auto* i = d.istart();
-        auto* ie = d.istart()+d.csize();
-        for(; i < ie; ++i) 
-            *i *= -1;
+        auto* ie = i+d.csize();
+        for(; i < ie; ++i) *i *= -1;
         }
     void
-    operator()(ITDiag<Complex>& d) 
+    operator()(const ITDiag<Complex>& cd) 
         { 
+        auto& d = modifyData(cd);
         if(d.allSame()) 
             {
             d.val = std::conj(d.val);
