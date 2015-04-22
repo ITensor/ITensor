@@ -268,6 +268,8 @@ contract(ABCProps& abc,
     //   unspecified, and will be chosen so as not to require
     //   permuting C at the end.
     //
+    // o If rc > ra+rb and going to permute C, permute both A and B instead
+    //
     // o If trailing n(j)==1 dimensions at end of A, B, or C indices
     //   (as often the case for ITensors with m==1 indices),
     //   have ABCProps resize ai, bi, and ci accordingly to avoid
