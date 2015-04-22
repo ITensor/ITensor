@@ -7,7 +7,7 @@
 
 include options.mk
 
-build: utilities matrix itensor 
+build: utilities itensor 
 
 utilities: configure
 	@echo

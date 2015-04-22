@@ -19,13 +19,23 @@ using std::make_pair;
 using std::string;
 using std::sqrt;
 
-//Vector static
-//sqrt(Vector V)
-//    {
-//    for(int j = 1; j <= V.Length(); ++j)
-//        V(j) = sqrt(fabs(V(j)));
-//    return V;
-//    }
+
+
+
+struct ToMatrix11NoScale : RegisterFunc<ToMatrix11NoScale,MatrixRef>
+    {
+    MatrixRef
+    operator()(const ITReal& d)
+        {
+        return MatrixRef();
+        }
+    };
+
+MatrixRef
+toMatrix11NoScale(const ITensor& T)
+    {
+    return applyFunc<ToMatrix11NoScale>(T.data());
+    }
 
 
 Real static
@@ -136,23 +146,24 @@ truncate(vector<Real>& alleig,
 
 
 Spectrum 
-svdRank2(ITensor A, const Index& ui, const Index& vi,
-         ITensor& U, ITensor& D, ITensor& V,
+svdRank2(ITensor A, 
+         const Index& ui, 
+         const Index& vi,
+         ITensor& U, 
+         ITensor& D, 
+         ITensor& V,
          const Args& args)
     {
-    const Real thresh = args.getReal("SVDThreshold",1E-4);
-    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
-    const int maxm = args.getInt("Maxm",MAX_M);
-    const int minm = args.getInt("Minm",1);
-    const bool do_truncate = args.getBool("Truncate",true);
-    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-    const bool cplx = A.isComplex();
+    const auto thresh = args.getReal("SVDThreshold",1E-4);
+    const auto cutoff = args.getReal("Cutoff",MIN_CUT);
+    const auto maxm = args.getInt("Maxm",MAX_M);
+    const auto minm = args.getInt("Minm",1);
+    const auto do_truncate = args.getBool("Truncate",true);
+    const auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    const auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
+    const auto cplx = isComplex(A);
 
-    if(A.r() != 2)
-        {
-        Error("A must be matrix-like");
-        }
+    if(A.r() != 2) Error("A must be matrix-like (rank 2)");
 
     Matrix UU,VV,
            iUU,iVV;
@@ -179,7 +190,9 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh);
         }
 
-    //Truncate
+    //
+    // Truncate
+    //
 
     Spectrum spec;
 
@@ -261,25 +274,8 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         DD(j) *= DD(j);
         }
 
-    if(A.scale().isFiniteReal())
-        {
-        DD *= sqr(A.scale().real0());
-        }
-    else
-        {
-        cout << "Warning: scale not finite real" << endl;
-        }
-
-    //Global::lastd() = DD;
-
-    //Include A's scale to get the actual eigenvalues kept
-    //as long as the leading eigenvalue is within a few orders
-    //of magnitude of 1.0. Otherwise just report the scaled eigs.
-    //Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
-    //if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
-    //    {
-    //    Global::lastd() *= A.scale().real();
-    //    }
+    if(A.scale().isFiniteReal()) DD *= sqr(A.scale().real0());
+    else                         println("Warning: scale not finite real");
 
     return Spectrum(DD,Args("Truncerr",terr));
 

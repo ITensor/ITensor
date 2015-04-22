@@ -10,6 +10,7 @@ include ../options.mk
 
 SOURCES = index.cc 
 SOURCES+= simpletensor.cc 
+SOURCES+= matrix/simplematrix.cc 
 SOURCES+= contract.cc 
 SOURCES+= itensor.cc 
 SOURCES+= iqindex.cc 
@@ -24,7 +25,8 @@ SOURCES+= iqtensor.cc
 
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
         detail/gcounter.h global.h real.h permutation.h index.h \
-        range.h indexset.h counter.h simplematrix.h simpletensor.h contract.h \
+        lapack_wrap.h matrix/simplematrix.h \
+        range.h indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h \
         itdata/itreal.h itdata/itdiag.h itdata/itcombiner.h itdata/itcplx.h \
         itdata/iqtdata.h \
@@ -55,6 +57,10 @@ INCLUDE_HEADERS= $(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(HEADERS))
 
 .SUFFIXES: .cc $(SUFFIXES)
 
+$(ITENSOR_INCLUDEDIR)/matrix/%.h: matrix/%.h
+	mkdir -p $(ITENSOR_INCLUDEDIR)/matrix
+	cp $^ $(ITENSOR_INCLUDEDIR)/matrix
+
 $(ITENSOR_INCLUDEDIR)/itdata/%.h: itdata/%.h
 	mkdir -p $(ITENSOR_INCLUDEDIR)/itdata
 	cp $^ $(ITENSOR_INCLUDEDIR)/itdata
@@ -70,6 +76,7 @@ $(ITENSOR_INCLUDEDIR)/hams/%.h: hams/%.h
 $(ITENSOR_INCLUDEDIR)/sites/%.h: sites/%.h
 	mkdir -p $(ITENSOR_INCLUDEDIR)/sites
 	cp $^ $(ITENSOR_INCLUDEDIR)/sites
+
 
 $(ITENSOR_INCLUDEDIR)/%.h: %.h
 	cp $^ $(ITENSOR_INCLUDEDIR)
@@ -110,6 +117,7 @@ installg: headerscopy libitensor-g.a
 
 mkdebugdir:
 	mkdir -p .debug_objs
+	mkdir -p .debug_objs/matrix
 
 clean:	
 	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
@@ -120,7 +128,10 @@ index.o: $(GDEPHEADERS)
 GDEPHEADERS+= indexset.h
 indexset.o: $(GDEPHEADERS)
 .debug_objs/indexset.o: $(GDEPHEADERS)
-GDEPHEADERS+= contract.h range.h simpletensor.h simplematrix.h
+GDEPHEADERS+= matrix/simplematrix.h
+matrix/simplematrix.o: $(GDEPHEADERS)
+.debug_objs/matrix/simplematrix.o: $(GDEPHEADERS)
+GDEPHEADERS+= contract.h range.h simpletensor.h
 contract.o: $(GDEPHEADERS)
 .debug_objs/contract.o: $(GDEPHEADERS)
 ITDEPHEADERS= itensor.ih itensor.h itdata/itreal.h itdata/itdiag.h itdata/itcplx.h

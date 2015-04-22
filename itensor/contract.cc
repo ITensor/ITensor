@@ -6,7 +6,7 @@
 #include "cputime.h"
 #include "detail/gcounter.h"
 #include "indexset.h"
-#include "simplematrix.h"
+#include "matrix/simplematrix.h"
 
 using std::vector;
 using std::cout;
@@ -165,14 +165,14 @@ struct ABCProps
 
 struct ABoffC
     {
-    SimpleMatrixRef mA, 
+    matrixref mA, 
                     mB, 
                     mC;
     int offC;
 
-    ABoffC(SimpleMatrixRef& mA_, 
-           SimpleMatrixRef& mB_, 
-           SimpleMatrixRef& mC_, 
+    ABoffC(matrixref& mA_, 
+           matrixref& mB_, 
+           matrixref& mC_, 
            int offC_)
         : 
         mA(mA_), 
@@ -193,9 +193,9 @@ class CABqueue
     CABqueue() { }
 
     void 
-    addtask(SimpleMatrixRef& mA, 
-            SimpleMatrixRef& mB, 
-            SimpleMatrixRef& mC, 
+    addtask(matrixref& mA, 
+            matrixref& mB, 
+            matrixref& mC, 
             int offC)
         {
         subtask[offC].emplace_back(mA,mB,mC,offC);
@@ -387,15 +387,15 @@ contract(ABCProps& abc,
 
     //cpu_time cpu;
 
-    SimpleMatrixRef aref;
+    matrixref aref;
     tensor<Real> newA;
     Permutation PA;
     if(Aismatrix)
         {
         if(contractedA(0))
-            aref = SimpleMatrixRef(A.data(),dleft,dmid,true);
+            aref = matrixref(A.data(),dleft,dmid,true);
         else
-            aref = SimpleMatrixRef(A.data(),dmid,dleft,false);
+            aref = matrixref(A.data(),dmid,dleft,false);
         }
     else
         {
@@ -428,10 +428,10 @@ contract(ABCProps& abc,
             }
         //println("Calling permute A");
         permute(A,PA,newA);
-        aref = SimpleMatrixRef(newA.data(),dleft,dmid,true);
+        aref = matrixref(newA.data(),dleft,dmid,true);
         }
 
-    SimpleMatrixRef bref;
+    matrixref bref;
     tensor<Real> newB;
     Permutation PB;
     if(Bismatrix)
@@ -439,12 +439,12 @@ contract(ABCProps& abc,
         if(contractedB(0))
             {
             //println("Not transposing bref");
-            bref = SimpleMatrixRef(B.data(),dright,dmid,false);
+            bref = matrixref(B.data(),dright,dmid,false);
             }
         else
             {
             //println("Transposing bref");
-            bref = SimpleMatrixRef(B.data(),dmid,dright,true);
+            bref = matrixref(B.data(),dmid,dright,true);
             }
         }
     else
@@ -488,7 +488,7 @@ contract(ABCProps& abc,
             }
         //println("Calling permute B");
         permute(B,PB,newB);
-        bref = SimpleMatrixRef(newB.data(),dright,dmid,false);
+        bref = matrixref(newB.data(),dright,dmid,false);
         }
 
     //println("A and B permuted, took ",cpu.sincemark());
@@ -577,11 +577,11 @@ contract(ABCProps& abc,
         if(BCsameorder && ACsameorder) ctrans = true;
         }
 
-    SimpleMatrixRef cref;
+    matrixref cref;
     if(ctrans)
-        cref = SimpleMatrixRef(C.data(),aref.Ncols(),bref.Nrows(),true);
+        cref = matrixref(C.data(),aref.Ncols(),bref.Nrows(),true);
     else
-        cref = SimpleMatrixRef(C.data(),bref.Nrows(),aref.Ncols(),false);
+        cref = matrixref(C.data(),bref.Nrows(),aref.Ncols(),false);
 
     tensor<Real> newC;
     if(!pc_triv && !ctrans)
@@ -845,9 +845,9 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
             auto offB = ind(B,bind);
             auto offC = ind(C,cind);
 
-            SimpleMatrixRef sA(&A.v(offA),Arow,Acol,nfo.tA);
-            SimpleMatrixRef sB(&B.v(offB),Brow,Bcol,nfo.tB);
-            SimpleMatrixRef sC(&C.v(offC),Crow,Ccol,false);
+            matrixref sA(&A.v(offA),Arow,Acol,nfo.tA);
+            matrixref sB(&B.v(offB),Brow,Bcol,nfo.tB);
+            matrixref sC(&C.v(offC),Crow,Ccol,false);
 
             if(nfo.Bfirst)
                 {
