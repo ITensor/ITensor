@@ -6,158 +6,177 @@
 #define __ITENSOR_SIMPLEMATRIX_H_
 
 #include "types.h"
-//#include "global.h"
+#include "print.h"
 
 namespace itensor {
 
-class SimpleMatrixRef
+class matrixref
     {
-    const Real *store_ = nullptr;
+    public:
+    using iterator = Real*;
+    using const_iterator = const Real*;
+    using value_type = Real;
+    using size_type = long;
+    private:
+    Real *store_ = nullptr;
+    const Real *cstore_ = nullptr;
     long nrows_ = 0, 
          ncols_ = 0;
     bool transpose_ = false;
     public:
 
-    SimpleMatrixRef() { }
+    matrixref() { }
 
-    SimpleMatrixRef(const Real* sto, 
-                    long nro, 
-                    long ncol, 
-                    bool trans)
-        : 
-        store_(sto), 
-        nrows_(nro), 
-        ncols_(ncol), 
-        transpose_(trans)
-        { }
+    matrixref(long nro, 
+              long ncol, 
+              bool trans = false);
 
-    SimpleMatrixRef(const SimpleMatrixRef& other) = default;
+    matrixref(const Real* sto, 
+              long nro, 
+              long ncol, 
+              bool trans = false);
+
+    matrixref(Real* sto, 
+              long nro, 
+              long ncol, 
+              bool trans = false);
+
+    matrixref(const matrixref& other) = default;
 
     long
     Nrows() const { return transpose_ ? ncols_ : nrows_; }
     long
     Ncols() const { return transpose_ ? nrows_ : ncols_; }
-    long
-    rowStride() const { return ncols_; }
+
+    explicit operator bool() const { return bool(cstore_); }
 
     bool
     transpose() const { return transpose_; }
     void
-    ApplyTrans() { transpose_ = !transpose_; }
+    applyTrans() { transpose_ = !transpose_; }
+
+    bool
+    readOnly() const { return !bool(store_); }
 
     const Real*
-    store() const { return store_; }
+    store() const { return cstore_; }
     void
-    store(const Real* newstore) { store_ = newstore; }
-
-    SimpleMatrixRef 
-    t()
+    store(const Real* newstore) 
         { 
-        SimpleMatrixRef res(*this);
-        res.ApplyTrans();
-        return res;
+        store_ = nullptr;
+        cstore_ = newstore;
         }
+    void
+    store(Real* newstore) 
+        { 
+        store_ = newstore;
+        cstore_ = newstore;
+        }
+
+    matrixref 
+    t();
+
+    Real
+    operator()(long i, long j) const { return cstore_[index(i,j)]; }
+    Real&
+    operator()(long i, long j) 
+        { 
+#ifdef DEBUG
+        if(readOnly()) throw std::runtime_error("matrixref is read only");
+#endif
+        return store_[index(i,j)]; 
+        }
+
+    long
+    size() const { return long(nrows_*ncols_); }
+
+    iterator
+    begin() 
+        { 
+#ifdef DEBUG
+        if(readOnly()) throw std::runtime_error("matrixref is read only");
+#endif
+        return store_; 
+        }
+    iterator
+    end() 
+        { 
+#ifdef DEBUG
+        if(readOnly()) throw std::runtime_error("matrixref is read only");
+#endif
+        return store_+size(); 
+        }
+    const_iterator
+    begin() const{ return cstore_; }
+    const_iterator
+    end() const{ return cstore_+size(); }
+    const_iterator
+    cbegin() const{ return cstore_; }
+    const_iterator
+    cend() const{ return cstore_+size(); }
+
+    private:
+    
+    long 
+    index0(long i, long j) const
+        { 
+        return transpose_ ? j+i*nrows_ : i+j*nrows_;
+        }
+    long 
+    index(long i, long j) const { return index0(i-1,j-1); }
     };
 
-inline
+class matrix : public matrixref
+    {
+    public:
+    using parent = matrixref;
+    using storage_type = std::vector<Real>;
+    using iterator = parent::iterator;
+    using const_iterator = parent::const_iterator;
+    using value_type = parent::value_type;
+    using size_type = parent::size_type;
+    private:
+    std::vector<Real> data_;
+    public:
+
+    matrix() { }
+
+    matrix(long nro, 
+           long ncol, 
+           bool trans = false)
+        : matrixref(nro,ncol,trans)
+        {
+        data_ = storage_type(nro*ncol,0);
+        store(data_.data());
+        }
+      
+    matrix(const matrix& other) = default;
+    matrix(matrix&& other) = default;
+
+    matrix(const matrixref& other)
+        :
+        matrixref(other)
+        { 
+        data_ = storage_type(other.cbegin(),other.cend());
+        store(data_.data());
+        }
+
+    };
+
 std::ostream&
-operator<<(std::ostream& s, const SimpleMatrixRef& M)
-    {
-    auto p = M.store();
-    for(int r = 1; r <= M.Nrows(); ++r)
-        {
-        s << "|";
-        for(int c = 1; c <= M.Ncols(); ++c)
-            {
-            s << (*p);
-            s << (c == M.Ncols() ? "|" : " ");
-            ++p;
-            }
-        s << "\n";
-        }
-    return s;
-    }
+operator<<(std::ostream& s, const matrixref& M);
 
-using BlasInt = int;
-extern "C" void dgemm_(char*,char*,BlasInt*,BlasInt*,BlasInt*,Real*,Real*,BlasInt*,
-	                   Real*,BlasInt*,Real*,Real*,BlasInt*);
+// C += A*B
+void
+mult_add(matrixref A, 
+         matrixref B, 
+         matrixref C);
 
-// C = alpha*A*B + beta*C
-void inline
-dgemm_wrapper(SimpleMatrixRef A, 
-              SimpleMatrixRef B, 
-              SimpleMatrixRef C, 
-              Real beta,
-              Real alpha)
-    {
-    // Use BLAS 3 routine
-    if(!C.transpose())
-        {
-#ifdef DEBUG
-        if(A.Ncols() != B.Nrows())
-            throw std::runtime_error("mult_add(A,B,C): Matrices A, B incompatible");
-        if(A.Nrows() != C.Nrows() || B.Ncols() != C.Ncols())
-            throw std::runtime_error("mult_add(A,B,C): Matrix C incompatible");
-#endif
-        // Have to reverse the order, since we are really multiplying Ct = Bt*At
-        BlasInt m = C.Ncols();
-        BlasInt n = C.Nrows();
-        BlasInt k = B.Nrows();
-        BlasInt lda = B.rowStride();
-        BlasInt ldb = A.rowStride();
-        BlasInt ldc = C.rowStride();
-
-        Real *pa = const_cast<Real*>(B.store());
-        Real *pb = const_cast<Real*>(A.store());
-        Real *pc = const_cast<Real*>(C.store());
-
-        //printfln("Calling C no transpose version: m=%d, n=%d, k=%d, lda=%d, ldb=%d, B.t=%s, A.t=%s",m,n,k,lda,ldb,B.transpose(),A.transpose());
-        char transa = B.transpose() ? 'T' : 'N';
-        char transb = A.transpose() ? 'T' : 'N';
-        dgemm_(&transa,&transb,&m,&n,&k,&alpha,pa,&lda,pb,&ldb,&beta,pc,&ldc);
-        }
-    else //C.transpose()==true
-        {
-#ifdef DEBUG
-        if(A.Ncols() != B.Nrows())
-            throw std::runtime_error("mult_add(A,B,C): Matrices A, B incompatible");
-        if(A.Nrows() != C.Nrows() || B.Ncols() != C.Ncols())
-            throw std::runtime_error("mult_add(A,B,C): Matrix C incompatible");
-#endif
-        // Here we are really multiplying C = A*B
-        BlasInt m = C.Nrows();
-        BlasInt n = C.Ncols();
-        BlasInt k = A.Ncols();
-        BlasInt lda = A.rowStride();
-        BlasInt ldb = B.rowStride();
-        BlasInt ldc = C.rowStride();
-
-        Real *pa = const_cast<Real*>(A.store());
-        Real *pb = const_cast<Real*>(B.store());
-        Real *pc = const_cast<Real*>(C.store());
-
-        //printfln("Calling C transpose version: m=%d, n=%d, k=%d, lda=%d, ldb=%d",m,n,k,lda,ldb);
-        char transa = A.transpose() ? 'N' : 'T';
-        char transb = B.transpose() ? 'N' : 'T';
-        dgemm_(&transa,&transb,&m,&n,&k,&alpha,pa,&lda,pb,&ldb,&beta,pc,&ldc);
-        }
-    }
-
-void inline
-mult_add(SimpleMatrixRef A, 
-         SimpleMatrixRef B, 
-         SimpleMatrixRef C)
-    {
-    dgemm_wrapper(A,B,C,1,1);
-    }
-
-void inline
-mult(SimpleMatrixRef A, 
-     SimpleMatrixRef B, 
-     SimpleMatrixRef C)
-    {
-    dgemm_wrapper(A,B,C,0,1);
-    }
+// C = A*B
+void
+mult(matrixref A, 
+     matrixref B, 
+     matrixref C);
 
 };
 

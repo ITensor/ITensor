@@ -5,6 +5,7 @@ include ../options.mk
 HEADERS=test.h
 SOURCES = test.cc
 #SOURCES+= algorithm_test.cc
+SOURCES+= simplematrix_test.cc
 #SOURCES+= matrix_test.cc
 #SOURCES+= real_test.cc
 #SOURCES+= option_test.cc
@@ -12,7 +13,7 @@ SOURCES = test.cc
 #SOURCES+= indexset_test.cc
 #SOURCES+= tensor_test.cc
 #SOURCES+= contract_test.cc
-SOURCES+= itensor_test.cc
+#SOURCES+= itensor_test.cc
 #SOURCES+= iqindex_test.cc
 #SOURCES+= iqtensor_test.cc
 #SOURCES+= mps_test.cc

@@ -8,13 +8,13 @@ include ../options.mk
 
 ####################################
 
-SOURCES = index.cc 
 SOURCES+= simpletensor.cc 
 SOURCES+= matrix/simplematrix.cc 
-SOURCES+= contract.cc 
-SOURCES+= itensor.cc 
-SOURCES+= iqindex.cc 
-SOURCES+= iqtensor.cc 
+#SOURCES = index.cc 
+#SOURCES+= contract.cc 
+#SOURCES+= itensor.cc 
+#SOURCES+= iqindex.cc 
+#SOURCES+= iqtensor.cc 
 
 #SOURCES+= spectrum.cc 
 #SOURCES+= svdalgs.cc 

@@ -66,6 +66,13 @@ index(const C& container) -> CountHelper<decltype(container.size())>
     return CountHelper<size_type>(0,container.size());
     }
 
+template <typename T> constexpr
+CountHelper<T>
+count1(T end)
+    {
+    return CountHelper<T>(1,1+end);
+    }
+
 };
 
 #endif
