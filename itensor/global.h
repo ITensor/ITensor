@@ -37,17 +37,10 @@ static const Complex Complex_i = Complex(0,1);
 
 
 #ifndef DEBUG
-
 #ifndef NDEBUG
 #define NDEBUG //turn off asserts
 #endif
-
-#ifndef BOOST_DISABLE_ASSERTS
-#define BOOST_DISABLE_ASSERTS
 #endif
-
-#endif
-
 
 #ifdef DEBUG
 #define DO_IF_DEBUG(X) X
@@ -221,14 +214,6 @@ operator<<(std::ostream& s, Arrow D)
 class Global
     {
     public:
-    /*
-    static Vector& 
-    lastd()
-        {
-        static Vector lastd_(1);
-        return lastd_;
-        }
-        */
     static bool& 
     checkArrows()
         {
@@ -264,48 +249,6 @@ class Global
     args()
         {
         return Args::Global();
-        }
-    //Global named args (deprecated)
-    static Args&
-    opts() //deprecated, use Global::args() instead
-        {
-        return args();
-        }
-    //Shortcut for adding global Opts,
-    //so you don't have to write Global::opts().add(Opt("MyOption",3));
-    //but just Global::opts(Opt("MyOption",3));
-    //Also see name,val shortcuts below.
-    //void static
-    //opts(const Opt& o)
-    //    {
-    //    Args::GlobalOpts().add(o);
-    //    }
-    //Get a global Opt by just providing its name
-    //Opt static
-    //opts(const Opt::Name& name)
-    //    {
-    //    return Args::GlobalOpts().get(name);
-    //    }
-    //Set global opts by providing their name and value
-    void static
-    opts(const Args::Name& name, bool bval)
-        {
-        Args::Global().add(name,bval);
-        }
-    void static
-    opts(const Args::Name& name, int ival)
-        {
-        Args::Global().add(name,ival);
-        }
-    void static
-    opts(const Args::Name& name, Real rval)
-        {
-        Args::Global().add(name,rval);
-        }
-    void static
-    opts(const Args::Name& name, const std::string& sval)
-        {
-        Args::Global().add(name,sval);
         }
     void static
     args(const Args::Name& name, bool bval)
@@ -391,8 +334,6 @@ class ArrowError : public ITError
         { }
     };
 
-
-//void reportnew() { }
 
 }; //namespace itensor
 

@@ -54,7 +54,7 @@ class SimpleMatrixRef
     t()
         { 
         SimpleMatrixRef res(*this);
-        res.transpose_ = !transpose_; 
+        res.ApplyTrans();
         return res;
         }
     };

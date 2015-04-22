@@ -59,7 +59,10 @@ checksvd(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V)
     }
 
 void 
-SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
+SVD(const MatrixRef& A, 
+    Matrix& U, 
+    Vector& D, 
+    Matrix& V,
     Real newThresh)
     {
     const int n = A.Nrows(), 
@@ -146,10 +149,13 @@ SVD(const MatrixRef& A, Matrix& U, Vector& D, Matrix& V,
     }
 
 void 
-SVD(const MatrixRef& Are, const MatrixRef& Aim, 
-    Matrix& Ure, Matrix& Uim, 
+SVD(const MatrixRef& Are, 
+    const MatrixRef& Aim, 
+    Matrix& Ure, 
+    Matrix& Uim, 
     Vector& D, 
-    Matrix& Vre, Matrix& Vim,
+    Matrix& Vre, 
+    Matrix& Vim,
     Real newThresh)
     {
     const int n = Are.Nrows(), 

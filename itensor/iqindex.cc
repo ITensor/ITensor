@@ -9,8 +9,6 @@ namespace itensor {
 
 using std::istream;
 using std::ostream;
-using std::cout;
-using std::endl;
 using std::vector;
 using std::string;
 using std::ostringstream;
@@ -432,8 +430,8 @@ qn(const IQIndex& I, const Index& i)
         if(jq == i) 
             return jq.qn; 
         }
-    cout << I << "\n";
-    cout << "i = " << i << endl;
+    println("I = ",I);
+    println("i = ",i);
     Error("IQIndex does not contain given index.");
     return QN();
     }
@@ -446,8 +444,8 @@ findByQN(const IQIndex& I, const QN& qn)
         if(jq.qn == qn) 
             return jq;
         }
-    cout << I << "\n";
-    cout << "qn = " << qn << endl;
+    println("I = ",I);
+    println("qn = ",qn);
     Error("IQIndex does not contain given QN block.");
     return Index();
     }
@@ -460,10 +458,9 @@ operator<<(ostream &o, const IQIndex& I)
         o << "IQIndex: (null)"; 
         return o;
         }
-    //o << "IQIndex: " << Index(I) << " <" << I.dir() << ">" << endl;
-    o << Index(I) << " <" << I.dir() << ">" << endl;
+    o << Index(I) << " <" << I.dir() << ">" << "\n";
     for(long j = 1; j <= I.nindex(); ++j) 
-        o << "  " << I.index(j) SP I.qn(j) << "\n";
+        o << "  " << I.index(j) << " " <<  I.qn(j) << "\n";
     return o;
     }
 
