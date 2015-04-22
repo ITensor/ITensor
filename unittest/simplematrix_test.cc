@@ -24,6 +24,103 @@ randomMatrix(long nr, long nc, bool trans = false)
     return M;
     }
 
+void
+sliceFunc(const vecref& v1r,
+           vecref& v2r)
+    {
+    vecref nr = v1r;
+    v2r = nr;
+    }
+
+void
+sliceFunc(const matrixref& M1r,
+          matrixref& M2r)
+    {
+    matrixref nr = M1r;
+    M2r = nr;
+    }
+
+TEST_CASE("Check no slicing")
+    {
+    SECTION("vector")
+        {
+        //
+        // Without defining vecref::operator=(vecref) to
+        // be virtual and defining proper overload,
+        // sliceFunc1 and 2 could cause v2's store() and data_.data()
+        // pointers to get out of sync
+        //
+        vec v1(10),
+            v2(10);
+        CHECK(v1.store() == v1.data());
+        CHECK(v2.store() == v2.data());
+
+        sliceFunc(v1,v2);
+        CHECK(v1.store() == v1.data());
+        CHECK(v2.store() == v2.data());
+        }
+
+    SECTION("matrix")
+        {
+        matrix M1(10,10),
+               M2(10,10);
+        CHECK(M1.store() == M1.data());
+        CHECK(M2.store() == M2.data());
+
+        sliceFunc(M1,M2);
+        CHECK(M1.store() == M1.data());
+        CHECK(M2.store() == M2.data());
+        }
+    }
+
+TEST_CASE("Test vec and vecref")
+{
+SECTION("Constructors")
+    {
+    auto size = 10;
+    auto data = randomData(1,size);
+    auto vr = vecref(data.begin(),size);
+    CHECK(vr);
+    CHECK(vr.size() == size);
+
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(vr(i),data(i));
+        }
+
+    auto v = vec(size);
+    CHECK(v);
+    CHECK(v.size() == size);
+    const auto* p = v.store();
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(v(i),p[i-1]);
+        }
+    }
+
+SECTION("Construct and assign from vecref")
+    {
+    auto size = 10;
+    auto data = randomData(1,size);
+    auto vr = vecref(data.begin(),size);
+
+    vec v1(vr);
+    CHECK(v1.size() == size);
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(v1(i),data(i));
+        }
+
+    vec v2(size+2);
+    v2 = vr;
+    CHECK(v2.size() == size);
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(v2(i),data(i));
+        }
+    }
+}
+
 TEST_CASE("Test matrixref")
 {
 
@@ -37,11 +134,6 @@ SECTION("Constructors")
         CHECK(data.size() == Ar*Ac);
         auto A = matrixref(data.begin(),Ar,Ac);
 
-        //println("data = ");
-        //for(const auto& el : data) print(el,", ");
-        //println();
-        //Print(A);
-        //exit(0);
         for(auto r : count1(Ar))
         for(auto c : count1(Ac))
             {

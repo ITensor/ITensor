@@ -6,6 +6,14 @@
 
 namespace itensor {
 
+void vecref::
+operator=(const vecref& other)
+    {
+    store_ = other.store_;
+    cstore_ = other.cstore_;
+    size_ = other.size_;
+    }
+
 matrixref::
 matrixref(long nro, 
           long ncol, 
@@ -47,6 +55,16 @@ matrixref(Real* sto,
     { 
     }
 
+void matrixref::
+operator=(const matrixref& other)
+    {
+    store_ = other.store_;
+    cstore_ = other.cstore_;
+    nrows_ = other.nrows_;
+    ncols_ = other.ncols_;
+    transpose_ = other.transpose_;
+    }
+
 
 matrixref matrixref::
 t()
@@ -56,6 +74,15 @@ t()
     return res;
     }
 
+std::ostream&
+operator<<(std::ostream& s, const vecref& v)
+    {
+    for(auto j = 0ul; j <= v.size(); ++j)
+        {
+        s << v(j) << " ";
+        }
+    return s;
+    }
 std::ostream&
 operator<<(std::ostream& s, const matrixref& M)
     {
@@ -67,7 +94,7 @@ operator<<(std::ostream& s, const matrixref& M)
             s << M(r,c);
             s << (c == M.Ncols() ? "|" : " ");
             }
-        s << "\n";
+        if(r < M.Nrows()) s << "\n";
         }
     return s;
     }
@@ -78,12 +105,17 @@ extern "C" void dgemm_(char*,char*,BlasInt*,BlasInt*,BlasInt*,Real*,Real*,BlasIn
 
 // C = alpha*A*B + beta*C
 void
-dgemm_wrapper(matrixref A, 
-              matrixref B, 
-              matrixref C,
+dgemm_wrapper(const matrixref& AA, 
+              const matrixref& BB, 
+              matrixref& CC,
               Real beta,
               Real alpha)
     {
+    //Workaround while getting slicing going:
+    auto A = AA;
+    auto B = BB;
+    auto C = CC;
+
     if(C.transpose())
         {
         //Do C = Bt*At instead of Ct=A*B
@@ -132,17 +164,17 @@ dgemm_wrapper(matrixref A,
     }
 
 void
-mult_add(matrixref A, 
-         matrixref B, 
-         matrixref C)
+mult_add(const matrixref& A, 
+         const matrixref& B, 
+         matrixref& C)
     {
     dgemm_wrapper(A,B,C,1,1);
     }
 
 void
-mult(matrixref A, 
-     matrixref B, 
-     matrixref C)
+mult(const matrixref& A, 
+     const matrixref& B, 
+     matrixref& C)
     {
     dgemm_wrapper(A,B,C,0,1);
     }
