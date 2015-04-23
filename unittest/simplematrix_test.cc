@@ -188,232 +188,232 @@ SECTION("Read Only")
     CHECK(cA.readOnly());
     }
 
-SECTION("Test matrixref mult")
-    {
-    SECTION("Case 1")
-        {
-        auto Ar = 3,
-             K  = 4,
-             Bc = 5;
-        auto dataA = randomData(1,Ar*K);
-        auto dataB = randomData(1,K*Bc);
-        auto dataC = autovector<Real>(1,Ar*Bc);
-
-        auto A = matrixref(dataA.begin(),Ar,K);
-        auto B = matrixref(dataB.begin(),K,Bc);
-        auto C = matrixref(dataC.begin(),Ar,Bc);
-
-        mult(A,B,C);
-        for(auto r : count1(C.Nrows()))
-        for(auto c : count1(C.Ncols()))
-            {
-            Real val = 0;
-            for(auto k : count1(K)) val += A(r,k)*B(k,c);
-            CHECK_CLOSE(C(r,c),val);
-            }
-        }
-
-    SECTION("Case 2")
-        {
-        auto Ac = 3,
-             K  = 4,
-             Bc = 5;
-        auto dataA = randomData(1,K*Ac);
-        auto dataB = randomData(1,K*Bc);
-        auto dataC = autovector<Real>(1,Ac*Bc);
-
-        auto A = matrixref(dataA.begin(),K,Ac);
-        auto B = matrixref(dataB.begin(),K,Bc);
-        auto C = matrixref(dataC.begin(),Ac,Bc);
-
-        auto At = A.t();
-        mult(At,B,C);
-        for(auto r : count1(C.Nrows()))
-        for(auto c : count1(C.Ncols()))
-            {
-            Real val = 0;
-            for(auto k : count1(K)) val += At(r,k)*B(k,c);
-            CHECK_CLOSE(C(r,c),val);
-            }
-        }
-
-    SECTION("Case 3")
-        {
-        auto Ar = 3,
-             K =  4,
-             Br = 5;
-        auto dataA = randomData(1,Ar*K);
-        auto dataB = randomData(1,Br*K);
-        auto dataC = autovector<Real>(1,Ar*Br);
-
-        auto A = matrixref(dataA.begin(),Ar,K);
-        auto B = matrixref(dataB.begin(),Br,K);
-        auto C = matrixref(dataC.begin(),Ar,Br);
-
-        auto Bt = B.t();
-        mult(A,Bt,C);
-        for(auto r : count1(C.Nrows()))
-        for(auto c : count1(C.Ncols()))
-            {
-            Real val = 0;
-            for(auto k : count1(K)) val += A(r,k)*Bt(k,c);
-            CHECK_CLOSE(C(r,c),val);
-            }
-        }
-
-    SECTION("Case 4")
-        {
-        auto Ac = 3,
-             K =  4,
-             Br = 5;
-        auto dataA = randomData(1,K*Ac);
-        auto dataB = randomData(1,Br*K);
-        auto dataC = autovector<Real>(1,Ac*Br);
-
-        auto A = matrixref(dataA.begin(),K,Ac);
-        auto B = matrixref(dataB.begin(),Br,K);
-        auto C = matrixref(dataC.begin(),Ac,Br);
-
-        auto At = A.t();
-        auto Bt = B.t();
-        mult(At,Bt,C);
-        for(auto r : count1(C.Nrows()))
-        for(auto c : count1(C.Ncols()))
-            {
-            Real val = 0;
-            for(auto k : count1(K)) val += At(r,k)*Bt(k,c);
-            CHECK_CLOSE(C(r,c),val);
-            }
-        }
-
-    SECTION("Case 5")
-        {
-        auto Ar = 3,
-             K =  4,
-             Bc = 5;
-        auto dataA = randomData(1,Ar*K);
-        auto dataB = randomData(1,K*Bc);
-        auto dataC = autovector<Real>(1,Ar*Bc);
-
-        auto A = matrixref(dataA.begin(),Ar,K);
-        auto B = matrixref(dataB.begin(),K,Bc);
-        auto C = matrixref(dataC.begin(),Bc,Ar);
-
-        auto Ct = C.t();
-        mult(A,B,Ct);
-        for(auto r : count1(Ct.Nrows()))
-        for(auto c : count1(Ct.Ncols()))
-            {
-            Real val = 0;
-            for(auto k : count1(K)) val += A(r,k)*B(k,c);
-            CHECK_CLOSE(Ct(r,c),val);
-            }
-        }
-
-    SECTION("Case 6")
-        {
-        auto Ac = 3,
-             K =  4,
-             Bc = 5;
-        auto dataA = randomData(1,K*Ac);
-        auto dataB = randomData(1,K*Bc);
-        auto dataC = autovector<Real>(1,Bc*Ac);
-
-        auto A = matrixref(dataA.begin(),K,Ac);
-        auto B = matrixref(dataB.begin(),K,Bc);
-        auto C = matrixref(dataC.begin(),Bc,Ac);
-
-        auto At = A.t();
-        auto Ct = C.t();
-        mult(At,B,Ct);
-        for(auto r : count1(Ct.Nrows()))
-        for(auto c : count1(Ct.Ncols()))
-            {
-            Real val = 0;
-            for(auto k : count1(K)) val += At(r,k)*B(k,c);
-            CHECK_CLOSE(Ct(r,c),val);
-            }
-        }
-
-    SECTION("Case 7")
-        {
-        auto Ar = 3,
-             K =  4,
-             Br = 5;
-        auto dataA = randomData(1,Ar*K);
-        auto dataB = randomData(1,Br*K);
-        auto dataC = autovector<Real>(1,Br*Ar);
-
-        auto A = matrixref(dataA.begin(),Ar,K);
-        auto B = matrixref(dataB.begin(),Br,K);
-        auto C = matrixref(dataC.begin(),Br,Ar);
-
-        auto Bt = B.t();
-        auto Ct = C.t();
-        mult(A,Bt,Ct);
-        for(auto r : count1(Ct.Nrows()))
-        for(auto c : count1(Ct.Ncols()))
-            {
-            Real val = 0;
-            for(auto k : count1(K)) val += A(r,k)*Bt(k,c);
-            CHECK_CLOSE(Ct(r,c),val);
-            }
-        }
-
-    SECTION("Case 8")
-        {
-        auto Ac = 3,
-             K =  4,
-             Br = 5;
-        auto dataA = randomData(1,K*Ac);
-        auto dataB = randomData(1,Br*K);
-        auto dataC = autovector<Real>(1,Br*Ac);
-
-        auto A = matrixref(dataA.begin(),K,Ac);
-        auto B = matrixref(dataB.begin(),Br,K);
-        auto C = matrixref(dataC.begin(),Br,Ac);
-
-        auto At = A.t();
-        auto Bt = B.t();
-        auto Ct = C.t();
-        mult(At,Bt,Ct);
-        for(auto r : count1(Ct.Nrows()))
-        for(auto c : count1(Ct.Ncols()))
-            {
-            Real val = 0;
-            for(auto k : count1(K)) val += At(r,k)*Bt(k,c);
-            CHECK_CLOSE(Ct(r,c),val);
-            }
-        }
-    }
-
-SECTION("Test mult_add")
-    {
-    auto Ar = 3,
-         K  = 4,
-         Bc = 5;
-    auto dataA = randomData(1,Ar*K);
-    auto dataB = randomData(1,K*Bc);
-    auto dataC = autovector<Real>(1,Ar*Bc);
-
-    auto A = matrixref(dataA.begin(),Ar,K);
-    auto B = matrixref(dataB.begin(),K,Bc);
-    auto C = matrixref(dataC.begin(),Ar,Bc);
-
-    //Save a copy of C's original data in order
-    //to explicitly carry out mult_add alg. below
-    auto orig_dataC = dataC;
-    auto origC = matrixref(orig_dataC.begin(),Ar,Bc);
-
-    mult_add(A,B,C);
-    for(auto r : count1(C.Nrows()))
-    for(auto c : count1(C.Ncols()))
-        {
-        Real val = 0;
-        for(auto k : count1(K)) val += A(r,k)*B(k,c) + origC(r,c);
-        CHECK_CLOSE(C(r,c),val);
-        }
-    }
+//SECTION("Test matrixref mult")
+//    {
+//    SECTION("Case 1")
+//        {
+//        auto Ar = 3,
+//             K  = 4,
+//             Bc = 5;
+//        auto dataA = randomData(1,Ar*K);
+//        auto dataB = randomData(1,K*Bc);
+//        auto dataC = autovector<Real>(1,Ar*Bc);
+//
+//        auto A = matrixref(dataA.begin(),Ar,K);
+//        auto B = matrixref(dataB.begin(),K,Bc);
+//        auto C = matrixref(dataC.begin(),Ar,Bc);
+//
+//        mult(A,B,C);
+//        for(auto r : count1(C.Nrows()))
+//        for(auto c : count1(C.Ncols()))
+//            {
+//            Real val = 0;
+//            for(auto k : count1(K)) val += A(r,k)*B(k,c);
+//            CHECK_CLOSE(C(r,c),val);
+//            }
+//        }
+//
+//    SECTION("Case 2")
+//        {
+//        auto Ac = 3,
+//             K  = 4,
+//             Bc = 5;
+//        auto dataA = randomData(1,K*Ac);
+//        auto dataB = randomData(1,K*Bc);
+//        auto dataC = autovector<Real>(1,Ac*Bc);
+//
+//        auto A = matrixref(dataA.begin(),K,Ac);
+//        auto B = matrixref(dataB.begin(),K,Bc);
+//        auto C = matrixref(dataC.begin(),Ac,Bc);
+//
+//        auto At = A.t();
+//        mult(At,B,C);
+//        for(auto r : count1(C.Nrows()))
+//        for(auto c : count1(C.Ncols()))
+//            {
+//            Real val = 0;
+//            for(auto k : count1(K)) val += At(r,k)*B(k,c);
+//            CHECK_CLOSE(C(r,c),val);
+//            }
+//        }
+//
+//    SECTION("Case 3")
+//        {
+//        auto Ar = 3,
+//             K =  4,
+//             Br = 5;
+//        auto dataA = randomData(1,Ar*K);
+//        auto dataB = randomData(1,Br*K);
+//        auto dataC = autovector<Real>(1,Ar*Br);
+//
+//        auto A = matrixref(dataA.begin(),Ar,K);
+//        auto B = matrixref(dataB.begin(),Br,K);
+//        auto C = matrixref(dataC.begin(),Ar,Br);
+//
+//        auto Bt = B.t();
+//        mult(A,Bt,C);
+//        for(auto r : count1(C.Nrows()))
+//        for(auto c : count1(C.Ncols()))
+//            {
+//            Real val = 0;
+//            for(auto k : count1(K)) val += A(r,k)*Bt(k,c);
+//            CHECK_CLOSE(C(r,c),val);
+//            }
+//        }
+//
+//    SECTION("Case 4")
+//        {
+//        auto Ac = 3,
+//             K =  4,
+//             Br = 5;
+//        auto dataA = randomData(1,K*Ac);
+//        auto dataB = randomData(1,Br*K);
+//        auto dataC = autovector<Real>(1,Ac*Br);
+//
+//        auto A = matrixref(dataA.begin(),K,Ac);
+//        auto B = matrixref(dataB.begin(),Br,K);
+//        auto C = matrixref(dataC.begin(),Ac,Br);
+//
+//        auto At = A.t();
+//        auto Bt = B.t();
+//        mult(At,Bt,C);
+//        for(auto r : count1(C.Nrows()))
+//        for(auto c : count1(C.Ncols()))
+//            {
+//            Real val = 0;
+//            for(auto k : count1(K)) val += At(r,k)*Bt(k,c);
+//            CHECK_CLOSE(C(r,c),val);
+//            }
+//        }
+//
+//    SECTION("Case 5")
+//        {
+//        auto Ar = 3,
+//             K =  4,
+//             Bc = 5;
+//        auto dataA = randomData(1,Ar*K);
+//        auto dataB = randomData(1,K*Bc);
+//        auto dataC = autovector<Real>(1,Ar*Bc);
+//
+//        auto A = matrixref(dataA.begin(),Ar,K);
+//        auto B = matrixref(dataB.begin(),K,Bc);
+//        auto C = matrixref(dataC.begin(),Bc,Ar);
+//
+//        auto Ct = C.t();
+//        mult(A,B,Ct);
+//        for(auto r : count1(Ct.Nrows()))
+//        for(auto c : count1(Ct.Ncols()))
+//            {
+//            Real val = 0;
+//            for(auto k : count1(K)) val += A(r,k)*B(k,c);
+//            CHECK_CLOSE(Ct(r,c),val);
+//            }
+//        }
+//
+//    SECTION("Case 6")
+//        {
+//        auto Ac = 3,
+//             K =  4,
+//             Bc = 5;
+//        auto dataA = randomData(1,K*Ac);
+//        auto dataB = randomData(1,K*Bc);
+//        auto dataC = autovector<Real>(1,Bc*Ac);
+//
+//        auto A = matrixref(dataA.begin(),K,Ac);
+//        auto B = matrixref(dataB.begin(),K,Bc);
+//        auto C = matrixref(dataC.begin(),Bc,Ac);
+//
+//        auto At = A.t();
+//        auto Ct = C.t();
+//        mult(At,B,Ct);
+//        for(auto r : count1(Ct.Nrows()))
+//        for(auto c : count1(Ct.Ncols()))
+//            {
+//            Real val = 0;
+//            for(auto k : count1(K)) val += At(r,k)*B(k,c);
+//            CHECK_CLOSE(Ct(r,c),val);
+//            }
+//        }
+//
+//    SECTION("Case 7")
+//        {
+//        auto Ar = 3,
+//             K =  4,
+//             Br = 5;
+//        auto dataA = randomData(1,Ar*K);
+//        auto dataB = randomData(1,Br*K);
+//        auto dataC = autovector<Real>(1,Br*Ar);
+//
+//        auto A = matrixref(dataA.begin(),Ar,K);
+//        auto B = matrixref(dataB.begin(),Br,K);
+//        auto C = matrixref(dataC.begin(),Br,Ar);
+//
+//        auto Bt = B.t();
+//        auto Ct = C.t();
+//        mult(A,Bt,Ct);
+//        for(auto r : count1(Ct.Nrows()))
+//        for(auto c : count1(Ct.Ncols()))
+//            {
+//            Real val = 0;
+//            for(auto k : count1(K)) val += A(r,k)*Bt(k,c);
+//            CHECK_CLOSE(Ct(r,c),val);
+//            }
+//        }
+//
+//    SECTION("Case 8")
+//        {
+//        auto Ac = 3,
+//             K =  4,
+//             Br = 5;
+//        auto dataA = randomData(1,K*Ac);
+//        auto dataB = randomData(1,Br*K);
+//        auto dataC = autovector<Real>(1,Br*Ac);
+//
+//        auto A = matrixref(dataA.begin(),K,Ac);
+//        auto B = matrixref(dataB.begin(),Br,K);
+//        auto C = matrixref(dataC.begin(),Br,Ac);
+//
+//        auto At = A.t();
+//        auto Bt = B.t();
+//        auto Ct = C.t();
+//        mult(At,Bt,Ct);
+//        for(auto r : count1(Ct.Nrows()))
+//        for(auto c : count1(Ct.Ncols()))
+//            {
+//            Real val = 0;
+//            for(auto k : count1(K)) val += At(r,k)*Bt(k,c);
+//            CHECK_CLOSE(Ct(r,c),val);
+//            }
+//        }
+//    }
+//
+//SECTION("Test mult_add")
+//    {
+//    auto Ar = 3,
+//         K  = 4,
+//         Bc = 5;
+//    auto dataA = randomData(1,Ar*K);
+//    auto dataB = randomData(1,K*Bc);
+//    auto dataC = autovector<Real>(1,Ar*Bc);
+//
+//    auto A = matrixref(dataA.begin(),Ar,K);
+//    auto B = matrixref(dataB.begin(),K,Bc);
+//    auto C = matrixref(dataC.begin(),Ar,Bc);
+//
+//    //Save a copy of C's original data in order
+//    //to explicitly carry out mult_add alg. below
+//    auto orig_dataC = dataC;
+//    auto origC = matrixref(orig_dataC.begin(),Ar,Bc);
+//
+//    mult_add(A,B,C);
+//    for(auto r : count1(C.Nrows()))
+//    for(auto c : count1(C.Ncols()))
+//        {
+//        Real val = 0;
+//        for(auto k : count1(K)) val += A(r,k)*B(k,c) + origC(r,c);
+//        CHECK_CLOSE(C(r,c),val);
+//        }
+//    }
 }
 
 TEST_CASE("Test matrix")
@@ -461,37 +461,37 @@ SECTION("Constructors")
         }
     }
 
-SECTION("Test matrix mult")
-    {
-    auto Ar = 3,
-         K  = 4,
-         Bc = 5;
-
-    //Multiply matrices A*B, store in matrix C
-    auto A = matrix(Ar,K);
-    auto B = matrix(K,Bc);
-    auto C = matrix(Ar,Bc);
-    mult(A,B,C);
-    for(auto r : count1(C.Nrows()))
-    for(auto c : count1(C.Ncols()))
-        {
-        Real val = 0;
-        for(auto k : count1(K)) val += A(r,k)*B(k,c);
-        CHECK_CLOSE(C(r,c),val);
-        }
-
-
-    //Store result in a matrixref instead
-    auto dataC = autovector<Real>(1,Ar*Bc);
-    auto Cref = matrixref(dataC.begin(),Ar,Bc);
-    mult(A,B,Cref);
-    for(auto r : count1(C.Nrows()))
-    for(auto c : count1(C.Ncols()))
-        {
-        Real val = 0;
-        for(auto k : count1(K)) val += A(r,k)*B(k,c);
-        CHECK_CLOSE(Cref(r,c),val);
-        }
-    }
+//SECTION("Test matrix mult")
+//    {
+//    auto Ar = 3,
+//         K  = 4,
+//         Bc = 5;
+//
+//    //Multiply matrices A*B, store in matrix C
+//    auto A = matrix(Ar,K);
+//    auto B = matrix(K,Bc);
+//    auto C = matrix(Ar,Bc);
+//    mult(A,B,C);
+//    for(auto r : count1(C.Nrows()))
+//    for(auto c : count1(C.Ncols()))
+//        {
+//        Real val = 0;
+//        for(auto k : count1(K)) val += A(r,k)*B(k,c);
+//        CHECK_CLOSE(C(r,c),val);
+//        }
+//
+//
+//    //Store result in a matrixref instead
+//    auto dataC = autovector<Real>(1,Ar*Bc);
+//    auto Cref = matrixref(dataC.begin(),Ar,Bc);
+//    mult(A,B,Cref);
+//    for(auto r : count1(C.Nrows()))
+//    for(auto c : count1(C.Ncols()))
+//        {
+//        Real val = 0;
+//        for(auto k : count1(K)) val += A(r,k)*B(k,c);
+//        CHECK_CLOSE(Cref(r,c),val);
+//        }
+//    }
 
 } // Test matrix

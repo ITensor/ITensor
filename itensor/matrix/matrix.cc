@@ -2,28 +2,18 @@
 // Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
-#include "simplematrix.h"
+#include "matrix.h"
 
 namespace itensor {
-
-void vecref::
-operator=(const vecref& other)
-    {
-    store_ = other.store_;
-    cstore_ = other.cstore_;
-    size_ = other.size_;
-    }
 
 matrixref::
 matrixref(long nro, 
           long ncol, 
           bool trans)
     : 
+    ind_(trans ? mrange(ncol,nro,nro,1) : mrange(nro,ncol)),
     store_(nullptr),
-    cstore_(nullptr),
-    nrows_(nro), 
-    ncols_(ncol), 
-    transpose_(trans)
+    cstore_(nullptr)
     { 
     }
 
@@ -33,11 +23,9 @@ matrixref(const Real* sto,
           long ncol, 
           bool trans)
     : 
+    ind_(trans ? mrange(ncol,nro,nro,1) : mrange(nro,ncol)),
     store_(nullptr),
-    cstore_(sto),
-    nrows_(nro), 
-    ncols_(ncol), 
-    transpose_(trans)
+    cstore_(sto)
     { 
     }
 
@@ -47,22 +35,18 @@ matrixref(Real* sto,
           long ncol, 
           bool trans)
     : 
+    ind_(trans ? mrange(ncol,nro,nro,1) : mrange(nro,ncol)),
     store_(sto),
-    cstore_(sto),
-    nrows_(nro), 
-    ncols_(ncol), 
-    transpose_(trans)
+    cstore_(sto)
     { 
     }
 
 void matrixref::
 operator=(const matrixref& other)
     {
+    ind_ = other.ind_;
     store_ = other.store_;
     cstore_ = other.cstore_;
-    nrows_ = other.nrows_;
-    ncols_ = other.ncols_;
-    transpose_ = other.transpose_;
     }
 
 
@@ -74,15 +58,6 @@ t()
     return res;
     }
 
-std::ostream&
-operator<<(std::ostream& s, const vecref& v)
-    {
-    for(auto j = 0ul; j <= v.size(); ++j)
-        {
-        s << v(j) << " ";
-        }
-    return s;
-    }
 std::ostream&
 operator<<(std::ostream& s, const matrixref& M)
     {
@@ -111,6 +86,10 @@ dgemm_wrapper(const matrixref& AA,
               Real beta,
               Real alpha)
     {
+#ifdef DEBUG
+    if(CC.readOnly()) throw std::runtime_error("Can't store result of matrix multiply in read-only matrixref or matrix");
+#endif
+    /*
     //Workaround while getting slicing going:
     auto A = AA;
     auto B = BB;
@@ -156,11 +135,12 @@ dgemm_wrapper(const matrixref& AA,
     //BlasInt lda = A.index().rowStride();
     //BlasInt ldb = B.index().rowStride();
 
-    auto *pa = const_cast<Real*>(A.store());
-    auto *pb = const_cast<Real*>(B.store());
-    auto *pc = const_cast<Real*>(C.store());
+    auto *pa = const_cast<Real*>(A.cstore());
+    auto *pb = const_cast<Real*>(B.cstore());
+    auto *pc = const_cast<Real*>(C.store()); //const_cast may be redundant here
 
     dgemm_(&transa,&transb,&m,&n,&k,&alpha,pa,&lda,pb,&ldb,&beta,pc,&m);
+    */
     }
 
 void
