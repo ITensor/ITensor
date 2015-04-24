@@ -570,6 +570,25 @@ SECTION("Addition / Subtraction")
         CHECK_CLOSE(C(r,c),A(r,c)-B(r,c));
     }
 
+SECTION("Scalar multiply, divide")
+    {
+    auto N = 10;
+    auto A = randomMatrix(N,N);
+    auto origA = A;
+    auto fac = Global::random();
+
+    A *= fac;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(A(r,c),origA(r,c)*fac);
+
+    A = origA;
+    A /= fac;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(A(r,c),origA(r,c)/fac);
+    }
+
 } // Test matrix
 
 

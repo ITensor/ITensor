@@ -230,6 +230,8 @@ class matrix : public matrixref
 
     matrix&
     operator*=(Real fac);
+    matrix&
+    operator/=(Real fac);
 
     private:
     void
@@ -307,6 +309,8 @@ matrix inline
 operator*(matrix A, Real fac) { A *= fac; return A; }
 matrix inline
 operator*(Real fac, matrix A) { return operator*(A,fac); }
+matrix inline
+operator/(matrix A, Real fac) { A /= fac; return A; }
 
 std::ostream&
 operator<<(std::ostream& s, const vecref& v);

@@ -240,57 +240,11 @@ operator*=(Real fac)
     dscal_wrapper(sz,fac,store());
     return *this;
     }
-
-
-
-void
-diagSymmetric(const matrixref& M,
-              matrixref& U,
-              vecref& d)
-
+matrix& matrix::
+operator/=(Real fac)
     {
-    LAPACK_INT N = M.Ncols();
-    if(N < 1) throw std::runtime_error("diagSymmetric: 0 dimensional matrix");
-    if(N != M.Nrows())
-        {
-        printfln("M is %dx%d",M.Nrows(),M.Ncols());
-        throw std::runtime_error("diagSymmetric: Input Matrix must be square");
-        }
-
-#ifdef DEBUG
-    if(U.Nrows() != N || U.Ncols() != N) 
-        throw std::runtime_error("diagSymmetric: U should have same dims as M");
-    if(!U.contiguous())
-        throw std::runtime_error("diagSymmetric: U must be contiguous");
-    if(!d.contiguous())
-        throw std::runtime_error("diagSymmetric: d must be contiguous");
-#endif
-
-    char jobz = 'V';
-    char uplo = 'U';
-    LAPACK_INT info;
-
-    std::copy(M.cbegin(),M.cend(),U.begin());
-    
-    dsyev_wrapper(&jobz,&uplo,&N,U.store(),&N,d.store(),&info);
-
-    if(info != 0) throw std::runtime_error("Error condition in diagSymmetric");
-
-    //Transpose U before return
-    U.applyTrans();
-    }
-
-void
-diagSymmetric(const matrixref& M,
-              matrix& U,
-              vec& d)
-    {
-    if(U.Nrows() != M.Nrows() || U.Ncols() != M.Ncols())
-        U = matrix(M.Nrows(),M.Ncols());
-    if(d.size() != M.Nrows()) d = vec(M.Nrows());
-    matrixref& Uref = U;
-    vecref& dref = d;
-    diagSymmetric(M,Uref,dref);
+    if(fac == 0) throw std::runtime_error("matrix /=: divide by zero");
+    return operator*=(1./fac);
     }
 
 }; //namespace itensor
