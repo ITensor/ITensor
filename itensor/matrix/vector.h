@@ -207,6 +207,9 @@ class vec : public vecref
     data() const { return data_.data(); }
     };
 
+Real
+norm(const vecref& v);
+
 };
 
 #endif

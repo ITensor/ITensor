@@ -26,4 +26,12 @@ operator<<(std::ostream& s, const vecref& v)
     return s;
     }
 
+Real
+norm(const vecref& v)
+    {
+    Real nrm = 0;
+    for(auto& el : v) nrm += el*el;
+    return std::sqrt(nrm);
+    }
+
 }; //namespace itensor

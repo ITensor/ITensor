@@ -517,6 +517,16 @@ SECTION("Test matrix mult")
         for(auto k : count1(K)) val += A(r,k)*B(k,c);
         CHECK_CLOSE(Cref(r,c),val);
         }
+
+    //Use operator*
+    auto R = A*B;
+    for(auto r : count1(C.Nrows()))
+    for(auto c : count1(C.Ncols()))
+        {
+        Real val = 0;
+        for(auto k : count1(K)) val += A(r,k)*B(k,c);
+        CHECK_CLOSE(R(r,c),val);
+        }
     }
 
 SECTION("Assign from ref")

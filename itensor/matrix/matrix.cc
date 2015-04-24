@@ -229,22 +229,54 @@ call_daxpy(const matrix& other, Real alpha_)
     daxpy_wrapper(&size,&alpha,other.cstore(),&inc,store(),&inc);
     }
 
-matrix& matrix::
+void matrixref::
 operator*=(Real fac)
     {
-    LAPACK_INT sz = parent::size();
 #ifdef DEBUG
-    if(parent::size() > std::numeric_limits<LAPACK_INT>::max()) 
-        throw std::runtime_error("matrix *=: overflow of size beyond LAPACK_INT range");
+    if(readOnly()) throw std::runtime_error("matrixref *=: read only");
 #endif
-    dscal_wrapper(sz,fac,store());
-    return *this;
+    if(contiguous())
+        {
+#ifdef DEBUG
+        if(size() > std::numeric_limits<LAPACK_INT>::max()) 
+            throw std::runtime_error("matrixref *=: overflow of size beyond LAPACK_INT range");
+#endif
+        dscal_wrapper(size(),fac,store());
+        }
+    else
+        {
+        for(auto& el : *this) el *= fac;
+        }
     }
-matrix& matrix::
+void matrixref::
 operator/=(Real fac)
     {
-    if(fac == 0) throw std::runtime_error("matrix /=: divide by zero");
-    return operator*=(1./fac);
+    if(fac == 0) throw std::runtime_error("matrixref /=: divide by zero");
+    operator*=(1./fac);
+    }
+
+Real
+norm(const matrix& M)
+    {
+    Real nrm = 0;
+    return std::sqrt(nrm);
+    }
+
+Real
+norm(const matrixref& M)
+    {
+    Real nrm = 0;
+    if(M.contiguous())
+        {
+        auto p = M.cstore();
+        auto pend = M.cstore()+M.size();
+        for(; p != pend; ++p) nrm += (*p)*(*p);
+        }
+    else
+        {
+        for(auto& el : M) nrm += el*el;
+        }
+    return std::sqrt(nrm);
     }
 
 }; //namespace itensor

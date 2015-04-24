@@ -50,6 +50,7 @@ class matrixref
     operator=(const matrixref& other);
 
     matrixref(const matrix& other) = delete;
+
     matrixref&
     operator=(const matrix& other) = delete;
 
@@ -66,18 +67,21 @@ class matrixref
     transposed() const { return isTransposed(ind_); }
     bool
     contiguous() const { return isContiguous(ind_); }
+    bool
+    readOnly() const { return !bool(store_); }
 
     explicit operator bool() const { return bool(cstore_); }
 
     void
     applyTrans() { ind_ = transpose(ind_); }
-
-    bool
-    readOnly() const { return !bool(store_); }
-
-
     matrixref 
     t();
+
+    void
+    operator*=(Real fac);
+    void
+    operator/=(Real fac);
+
 
     Real
     operator()(long i, long j) const { return cstore_[ind_.index(i,j)]; }
@@ -149,7 +153,6 @@ class matrixref
     cbegin() const { return const_iterator(cstore_,ind_); }
     const_iterator
     cend() const { return const_iterator(ind_); }
-
     void
     clear() { *this = matrixref(); }
     };
@@ -228,10 +231,10 @@ class matrix : public matrixref
     matrix&
     operator-=(const matrix& other) { call_daxpy(other,-1.); return *this; }
 
-    matrix&
-    operator*=(Real fac);
-    matrix&
-    operator/=(Real fac);
+    //matrix&
+    //operator*=(Real fac);
+    //matrix&
+    //operator/=(Real fac);
 
     private:
     void
@@ -278,6 +281,7 @@ operator*(const matrixref& A,
     mult(A,B,C);
     return C;
     }
+
 matrix inline
 operator+(matrix A, const matrix& B)
     {
@@ -287,7 +291,7 @@ operator+(matrix A, const matrix& B)
 matrix inline
 operator+(const matrix& A, matrix&& B)
     {
-    auto res = std::move(B);
+    matrix res(std::move(B));
     res += A;
     return res;
     }
@@ -300,7 +304,7 @@ operator-(matrix A, const matrix& B)
 matrix inline
 operator-(const matrix& A, matrix&& B)
     {
-    auto res = std::move(B);
+    matrix res(std::move(B));
     res *= -1;
     res += A;
     return res;
