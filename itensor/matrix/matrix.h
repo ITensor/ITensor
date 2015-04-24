@@ -149,6 +149,9 @@ class matrixref
     cbegin() const { return const_iterator(cstore_,ind_); }
     const_iterator
     cend() const { return const_iterator(ind_); }
+
+    void
+    clear() { *this = matrixref(); }
     };
 
 vecref
@@ -172,9 +175,6 @@ void
 mult(const matrixref& A, 
      const matrixref& B, 
      matrixref& C);
-
-matrix
-operator+(const matrixref& A, const matrixref& B);
 
 void
 diagSymmetric(const matrixref& M,
@@ -223,23 +223,31 @@ class matrix : public matrixref
     void virtual
     operator=(const matrixref& other) override { assignFromRef(other); }
 
+    matrix&
+    operator+=(const matrix& other) { call_daxpy(other,+1.); return *this; }
+    matrix&
+    operator-=(const matrix& other) { call_daxpy(other,-1.); return *this; }
+
+    matrix&
+    operator*=(Real fac);
+
     private:
     void
     assignFromRef(const matrixref& other)
         {
         if(&other == this) return;
-        parent::ind(mrange(other.Nrows(),other.Ncols()));
         data_ = storage_type(other.cbegin(),other.cend());
         store(data_.data());
+        parent::ind(mrange(other.Nrows(),other.Ncols()));
         }
 
     void
     assignFrom(const matrix& other)
         {
         if(&other == this) return;
-        const matrixref& oref = other;
-        parent::operator=(oref);
         data_ = other.data_;
+        store(data_.data());
+        parent::ind(mrange(other.Nrows(),other.Ncols()));
         }
 
     void
@@ -248,7 +256,13 @@ class matrix : public matrixref
         const matrixref& oref = other;
         parent::operator=(oref);
         data_ = std::move(other.data_);
+        other.clear();
+        other.data_.clear();
         }
+
+    void
+    call_daxpy(const matrix& other, Real alpha);
+
     public:
     const Real*
     data() const { return data_.data(); }
@@ -262,7 +276,37 @@ operator*(const matrixref& A,
     mult(A,B,C);
     return C;
     }
-
+matrix inline
+operator+(matrix A, const matrix& B)
+    {
+    A += B;
+    return A;
+    }
+matrix inline
+operator+(const matrix& A, matrix&& B)
+    {
+    auto res = std::move(B);
+    res += A;
+    return res;
+    }
+matrix inline
+operator-(matrix A, const matrix& B)
+    {
+    A -= B;
+    return A;
+    }
+matrix inline
+operator-(const matrix& A, matrix&& B)
+    {
+    auto res = std::move(B);
+    res *= -1;
+    res += A;
+    return res;
+    }
+matrix inline
+operator*(matrix A, Real fac) { A *= fac; return A; }
+matrix inline
+operator*(Real fac, matrix A) { return operator*(A,fac); }
 
 std::ostream&
 operator<<(std::ostream& s, const vecref& v);

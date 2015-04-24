@@ -198,34 +198,50 @@ mult(const matrixref& A,
     }
 
 
-matrix
-operator+(const matrixref& A, const matrixref& B)
-    {
-#ifdef DEBUG
-    if(!(A.Nrows() == B.Nrows() && A.Ncols() == B.Ncols())) throw std::runtime_error("Mismatched matrix sizes in plus");
-#endif
-    matrix C(A.Nrows(),A.Ncols());
-//    if(A.ind() == B.ind())
-//        {
-//        LAPACK_REAL alpha = 1.0;
-//        LAPACK_INT inc = 1;
-//        LAPACK_INT size = C.size();
+//matrix
+//operator+(const matrixref& A, const matrixref& B)
+//    {
 //#ifdef DEBUG
-//        if(C.size() > std::numeric_limits<LAPACK_INT>::max()) throw std::runtime_error("plus: overflow of size beyond LAPACK_INT range");
+//    if(!(A.Nrows() == B.Nrows() && A.Ncols() == B.Ncols())) throw std::runtime_error("Mismatched matrix sizes in plus");
 //#endif
-//        daxpy_wrapper(&size,&alpha,B.cstore(),&inc,C.store(),&inc);
-//        return C;
+//    matrix C(A.Nrows(),A.Ncols());
+//    auto c = C.begin();
+//    auto a = A.cbegin();
+//    for(const auto& el : B)
+//        {
+//        *c = el + *a;
+//        ++c;
+//        ++a;
 //        }
-    auto c = C.begin();
-    auto a = A.cbegin();
-    for(const auto& el : B)
-        {
-        *c = el + *a;
-        ++c;
-        ++a;
-        }
-    return C;
+//    return C;
+//    }
+
+void matrix::
+call_daxpy(const matrix& other, Real alpha_)
+    {
+    LAPACK_REAL alpha = alpha_;
+    LAPACK_INT inc = 1;
+    LAPACK_INT size = parent::size();
+#ifdef DEBUG
+    if(!(other.Nrows() == Nrows() && other.Ncols() == Ncols())) throw std::runtime_error("matrix +=: mismatches sizes");
+    if(parent::size() > std::numeric_limits<LAPACK_INT>::max()) throw std::runtime_error("matrix +=: overflow of size beyond LAPACK_INT range");
+#endif
+    daxpy_wrapper(&size,&alpha,other.cstore(),&inc,store(),&inc);
     }
+
+matrix& matrix::
+operator*=(Real fac)
+    {
+    LAPACK_INT sz = parent::size();
+#ifdef DEBUG
+    if(parent::size() > std::numeric_limits<LAPACK_INT>::max()) 
+        throw std::runtime_error("matrix *=: overflow of size beyond LAPACK_INT range");
+#endif
+    dscal_wrapper(sz,fac,store());
+    return *this;
+    }
+
+
 
 void
 diagSymmetric(const matrixref& M,

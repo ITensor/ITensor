@@ -533,6 +533,43 @@ SECTION("Assign from ref")
         CHECK_CLOSE(M2(r,c),M1t(r,c));
     }
 
+SECTION("Addition / Subtraction")
+    {
+    auto Nr = 4,
+         Nc = 5;
+    auto A = randomMatrix(Nr,Nc);
+    auto B = randomMatrix(Nr,Nc);
+
+    auto C = A;
+    C += B;
+    for(auto r : count1(Nr))
+    for(auto c : count1(Nc))
+        CHECK_CLOSE(C(r,c),A(r,c)+B(r,c));
+
+    C = A;
+    C -= B;
+    for(auto r : count1(Nr))
+    for(auto c : count1(Nc))
+        CHECK_CLOSE(C(r,c),A(r,c)-B(r,c));
+
+    auto D = B;
+    C = A + std::move(D);
+    CHECK(!D);
+    CHECK(B);
+    for(auto r : count1(Nr))
+    for(auto c : count1(Nc))
+        CHECK_CLOSE(C(r,c),A(r,c)+B(r,c));
+
+    D = B;
+    CHECK(D);
+    C = A - std::move(D);
+    CHECK(!D);
+    CHECK(B);
+    for(auto r : count1(Nr))
+    for(auto c : count1(Nc))
+        CHECK_CLOSE(C(r,c),A(r,c)-B(r,c));
+    }
+
 } // Test matrix
 
 
