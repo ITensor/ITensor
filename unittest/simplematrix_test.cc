@@ -519,6 +519,20 @@ SECTION("Test matrix mult")
         }
     }
 
+SECTION("Assign from ref")
+    {
+    auto N = 2;
+    auto M1 = randomMatrix(N,N);
+    auto M2 = randomMatrix(N,N);
+
+    M2 = M1.t();
+
+    auto M1t = M1.t();
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(M2(r,c),M1t(r,c));
+    }
+
 } // Test matrix
 
 

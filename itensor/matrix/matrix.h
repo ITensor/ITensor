@@ -97,6 +97,8 @@ class matrixref
 
     const mrange&
     ind() const { return ind_; }
+    void
+    ind(const mrange& ni) { ind_ = ni; }
 
     const Real*
     cstore() const { return cstore_; }
@@ -226,7 +228,7 @@ class matrix : public matrixref
     assignFromRef(const matrixref& other)
         {
         if(&other == this) return;
-        parent::operator=(other);
+        parent::ind(mrange(other.Nrows(),other.Ncols()));
         data_ = storage_type(other.cbegin(),other.cend());
         store(data_.data());
         }
