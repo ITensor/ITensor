@@ -390,6 +390,25 @@ SECTION("Test matrixref mult")
             CHECK_CLOSE(Ct(r,c),val);
             }
         }
+
+    SECTION("Multipy with self")
+        {
+        auto N = 8;
+        auto dataA = randomData(1,N*N);
+        auto dataC = randomData(1,N*N);
+
+        auto A = matrixref(dataA.begin(),N,N);
+        auto C = matrixref(dataC.begin(),N,N);
+
+        mult(A,A,C);
+        for(auto r : count1(C.Nrows()))
+        for(auto c : count1(C.Ncols()))
+            {
+            Real val = 0;
+            for(auto k : count1(N)) val += A(r,k)*A(k,c);
+            CHECK_CLOSE(C(r,c),val);
+            }
+        }
     }
 
 SECTION("Test mult_add")
@@ -638,3 +657,22 @@ SECTION("Sub Matrix")
 
     }
 } //Test slicing
+
+TEST_CASE("Matrix Algorithms and Decompositions")
+{
+
+SECTION("diagHermitian")
+    {
+    auto M = randomMatrix(2,2);
+    Print(M);
+    M = M+M.t();
+    Print(M);
+
+    matrix U;
+    vec d;
+    diagSymmetric(M,U,d);
+    Print(U);
+    Print(d);
+    }
+
+}

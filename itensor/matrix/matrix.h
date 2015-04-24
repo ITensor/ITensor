@@ -171,10 +171,8 @@ mult(const matrixref& A,
      const matrixref& B, 
      matrixref& C);
 
-void
-plusEq(const matrixref& X,
-       matrixref& Y,
-       Real alpha = 1);
+matrix
+operator+(const matrixref& A, const matrixref& B);
 
 void
 diagSymmetric(const matrixref& M,
@@ -227,6 +225,7 @@ class matrix : public matrixref
     void
     assignFromRef(const matrixref& other)
         {
+        if(&other == this) return;
         parent::operator=(other);
         data_ = storage_type(other.cbegin(),other.cend());
         store(data_.data());
@@ -235,6 +234,7 @@ class matrix : public matrixref
     void
     assignFrom(const matrix& other)
         {
+        if(&other == this) return;
         const matrixref& oref = other;
         parent::operator=(oref);
         data_ = other.data_;

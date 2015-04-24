@@ -195,35 +195,34 @@ mult(const matrixref& A,
     call_dgemm(A,B,C,0,1);
     }
 
-void
-plusEq(const matrixref& X,
-       matrixref& Y,
-       Real alpha)
+
+matrix
+operator+(const matrixref& A, const matrixref& B)
     {
 #ifdef DEBUG
-    if(!(X.Nrows() == Y.Nrows() && X.Ncols() == Y.Ncols())) throw std::runtime_error("Mismatched matrix sizes in plusEq");
+    if(!(A.Nrows() == B.Nrows() && A.Ncols() == B.Ncols())) throw std::runtime_error("Mismatched matrix sizes in plus");
 #endif
-    if(X.ind() == Y.ind())
+    matrix C(A.Nrows(),A.Ncols());
+//    if(A.ind() == B.ind())
+//        {
+//        LAPACK_REAL alpha = 1.0;
+//        LAPACK_INT inc = 1;
+//        LAPACK_INT size = C.size();
+//#ifdef DEBUG
+//        if(C.size() > std::numeric_limits<LAPACK_INT>::max()) throw std::runtime_error("plus: overflow of size beyond LAPACK_INT range");
+//#endif
+//        daxpy_wrapper(&size,&alpha,B.cstore(),&inc,C.store(),&inc);
+//        return C;
+//        }
+    auto c = C.begin();
+    auto a = A.cbegin();
+    for(const auto& el : B)
         {
-        LAPACK_INT inc = 1;
-        LAPACK_INT size = X.size();
-#ifdef DEBUG
-        if(X.size() > std::numeric_limits<LAPACK_INT>::max()) throw std::runtime_error("Overflow of X.size() beyond LAPACK_INT range");
-#endif
-        println("Calling daxpy");
-        daxpy_wrapper(&size,&alpha,X.cstore(),&inc,Y.store(),&inc);
+        *c = el + *a;
+        ++c;
+        ++a;
         }
-    else
-        {
-        println("Using iterator algorithm");
-        auto x = X.begin();
-        auto y = Y.begin();
-        for(; x != X.end(); ++x, ++y)
-            {
-            printfln("x=%.3f y=%.3f",*x,*y);
-            *y = *y + (*x)*alpha;
-            }
-        }
+    return C;
     }
 
 void
