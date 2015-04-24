@@ -21,13 +21,13 @@ class miterator
     using iterator_category = std::forward_iterator_tag;
     private:
     pointer p_; 
-    long r_;
+    long count_;
     mrange ind_; 
     public: 
 
-    miterator() : p_(nullptr), r_(0) { }; 
-    miterator(const miterator& other) : p_(other.p_), r_(other.r_), ind_(other.ind_) { } 
-    miterator(pointer p, const mrange& ind) : p_(p), r_(0), ind_(ind) { }  
+    miterator() : p_(nullptr), count_(0) { }; 
+    miterator(const miterator& other) : p_(other.p_), count_(other.count_), ind_(other.ind_) { } 
+    miterator(pointer p, const mrange& ind) : p_(p), count_(0), ind_(ind) { }  
 
     pointer
     data() const { return p_; }
@@ -41,28 +41,28 @@ class miterator
     reference 
     operator*() { return *p_; }  
 
+    bool
+    operator!=(const miterator& other) const { return count_!=other.count_; }
+    bool
+    operator==(const miterator& other) const { return count_==other.count_; }
+
     private:
 
     void
     increment()
         {
         p_ += ind_.rs;
-        ++r_;
-        if(r_ == ind_.rn)
+        ++count_;
+        if((count_%ind_.rn) == 0)
             {
-            r_ = 0;
-            p_ += (ind_.cs - ind_.rn*ind_.rs);
+            std::advance(p_,ind_.cs-ind_.rn*ind_.rs);
             }
         }
+    public:
+    //For developer use only; for making end iterator
+    miterator(const mrange& ind) : p_(nullptr), count_(ind.area()), ind_(ind) { }
     }; 
 
-template<typename T>
-miterator<T>
-make_end(const miterator<T>& m)
-    {
-    const auto& i = m.ind();
-    return miterator<T>(m.data()+i.cn*i.cs,i);
-    }
 
 template <typename T>
 bool 

@@ -4,6 +4,7 @@
 //
 #include "matrix.h"
 #include "lapack_wrap.h"
+#include <limits>
 
 namespace itensor {
 
@@ -195,26 +196,57 @@ mult(const matrixref& A,
     }
 
 void
-diagHermitian(const matrixref& M,
+plusEq(const matrixref& X,
+       matrixref& Y,
+       Real alpha)
+    {
+#ifdef DEBUG
+    if(!(X.Nrows() == Y.Nrows() && X.Ncols() == Y.Ncols())) throw std::runtime_error("Mismatched matrix sizes in plusEq");
+#endif
+    if(X.ind() == Y.ind())
+        {
+        LAPACK_INT inc = 1;
+        LAPACK_INT size = X.size();
+#ifdef DEBUG
+        if(X.size() > std::numeric_limits<LAPACK_INT>::max()) throw std::runtime_error("Overflow of X.size() beyond LAPACK_INT range");
+#endif
+        println("Calling daxpy");
+        daxpy_wrapper(&size,&alpha,X.cstore(),&inc,Y.store(),&inc);
+        }
+    else
+        {
+        println("Using iterator algorithm");
+        auto x = X.begin();
+        auto y = Y.begin();
+        for(; x != X.end(); ++x, ++y)
+            {
+            printfln("x=%.3f y=%.3f",*x,*y);
+            *y = *y + (*x)*alpha;
+            }
+        }
+    }
+
+void
+diagSymmetric(const matrixref& M,
               matrixref& U,
               vecref& d)
 
     {
     LAPACK_INT N = M.Ncols();
-    if(N < 1) throw std::runtime_error("diagHermitian: 0 dimensional matrix");
+    if(N < 1) throw std::runtime_error("diagSymmetric: 0 dimensional matrix");
     if(N != M.Nrows())
         {
         printfln("M is %dx%d",M.Nrows(),M.Ncols());
-        throw std::runtime_error("diagHermitian: Input Matrix must be square");
+        throw std::runtime_error("diagSymmetric: Input Matrix must be square");
         }
 
 #ifdef DEBUG
     if(U.Nrows() != N || U.Ncols() != N) 
-        throw std::runtime_error("diagHermitian: U should have same dims as M");
+        throw std::runtime_error("diagSymmetric: U should have same dims as M");
     if(!U.contiguous())
-        throw std::runtime_error("diagHermitian: U must be contiguous");
+        throw std::runtime_error("diagSymmetric: U must be contiguous");
     if(!d.contiguous())
-        throw std::runtime_error("diagHermitian: d must be contiguous");
+        throw std::runtime_error("diagSymmetric: d must be contiguous");
 #endif
 
     char jobz = 'V';
@@ -225,14 +257,14 @@ diagHermitian(const matrixref& M,
     
     dsyev_wrapper(&jobz,&uplo,&N,U.store(),&N,d.store(),&info);
 
-    if(info != 0) throw std::runtime_error("Error condition in diagHermitian");
+    if(info != 0) throw std::runtime_error("Error condition in diagSymmetric");
 
     //Transpose U before return
     U.applyTrans();
     }
 
 void
-diagHermitian(const matrixref& M,
+diagSymmetric(const matrixref& M,
               matrix& U,
               vec& d)
     {
@@ -241,7 +273,7 @@ diagHermitian(const matrixref& M,
     if(d.size() != M.Nrows()) d = vec(M.Nrows());
     matrixref& Uref = U;
     vecref& dref = d;
-    diagHermitian(M,Uref,dref);
+    diagSymmetric(M,Uref,dref);
     }
 
 }; //namespace itensor

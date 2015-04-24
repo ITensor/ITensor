@@ -45,6 +45,15 @@ transpose(const mrange& i)
     return mrange(i.cn,i.cs,i.rn,i.rs); 
     }
 
+bool inline
+isTransposed(const mrange& i) { return (i.rs==i.cn && i.cs==1); }
+
+bool inline
+isNormal(const mrange& i) { return (i.rs==1 && i.cs==i.rn); }
+
+bool inline
+isContiguous(const mrange& i) { return isNormal(i) || isTransposed(i); }
+
 };
 
 #endif

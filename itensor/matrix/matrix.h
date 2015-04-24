@@ -63,9 +63,9 @@ class matrixref
     colStride() const { return ind_.cs; }
 
     bool
-    transposed() const { return (ind_.rs==ind_.cn && ind_.cs==1); }
+    transposed() const { return isTransposed(ind_); }
     bool
-    contiguous() const { return (ind_.rs==1 && ind_.cs==ind_.rn) || transposed(); }
+    contiguous() const { return isContiguous(ind_); }
 
     explicit operator bool() const { return bool(cstore_); }
 
@@ -137,16 +137,16 @@ class matrixref
 #ifdef DEBUG
         if(readOnly()) throw std::runtime_error("matrixref is read only");
 #endif
-        return make_end(iterator(store_,ind_));
+        return iterator(ind_);
         }
     const_iterator
     begin() const { return const_iterator(cstore_,ind_); }
     const_iterator
-    end() const { return make_end(const_iterator(cstore_,ind_)); }
+    end() const { return const_iterator(ind_); }
     const_iterator
     cbegin() const { return const_iterator(cstore_,ind_); }
     const_iterator
-    cend() const { return make_end(const_iterator(cstore_,ind_)); }
+    cend() const { return const_iterator(ind_); }
     };
 
 vecref
@@ -172,12 +172,17 @@ mult(const matrixref& A,
      matrixref& C);
 
 void
-diagHermitian(const matrixref& M,
+plusEq(const matrixref& X,
+       matrixref& Y,
+       Real alpha = 1);
+
+void
+diagSymmetric(const matrixref& M,
               matrixref& U,
               vecref& d);
 
 void
-diagHermitian(const matrixref& M,
+diagSymmetric(const matrixref& M,
               matrix& U,
               vec& d);
 
