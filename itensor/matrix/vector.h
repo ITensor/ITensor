@@ -58,6 +58,8 @@ class vecref
     size() const { return size_; }
     size_type
     stride() const { return strd_; }
+    bool
+    contiguous() const { return strd_ == 1; }
 
     explicit operator bool() const { return bool(cstore_); }
 

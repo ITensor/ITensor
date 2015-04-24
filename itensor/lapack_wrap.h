@@ -16,10 +16,8 @@
 #include <complex>
 
 namespace itensor {
-typedef int
-LAPACK_INT;
-typedef double
-LAPACK_REAL;
+using LAPACK_INT = int;
+using LAPACK_REAL = double;
 typedef struct
 {
   double real, imag;
@@ -30,12 +28,9 @@ typedef struct
 
 #include <Accelerate/Accelerate.h>
 namespace itensor {
-typedef __CLPK_integer
-LAPACK_INT;
-typedef __CLPK_doublereal
-LAPACK_REAL;
-typedef __CLPK_doublecomplex
-LAPACK_COMPLEX;
+using LAPACK_INT = __CLPK_integer;
+using LAPACK_REAL = __CLPK_doublereal;
+using LAPACK_COMPLEX = __CLPK_doublecomplex;
 };
 
 #elif defined PLATFORM_acml
@@ -44,10 +39,8 @@ LAPACK_COMPLEX;
 
 //#include "acml.h"
 namespace itensor {
-typedef int
-LAPACK_INT;
-typedef double
-LAPACK_REAL;
+using LAPACK_INT = int;
+using LAPACK_REAL = double;
 typedef struct
 {
   double real, imag;
@@ -58,12 +51,9 @@ typedef struct
 
 #include "mkl_lapack.h"
 namespace itensor {
-typedef MKL_INT
-LAPACK_INT;
-typedef double
-LAPACK_REAL;
-typedef MKL_Complex16
-LAPACK_COMPLEX;
+using LAPACK_INT = MKL_INT;
+using LAPACK_REAL = double;
+using LAPACK_COMPLEX = MKL_Complex16;
 };
 
 #endif
@@ -83,6 +73,19 @@ namespace itensor {
 //
 #ifdef LAPACK_REQUIRE_EXTERN
 extern "C" {
+
+#ifdef PLATFORM_macos
+void cblas_dgemm(const enum CBLAS_ORDER __Order,
+        const enum CBLAS_TRANSPOSE __TransA,
+        const enum CBLAS_TRANSPOSE __TransB, const int __M, const int __N,
+        const int __K, const double __alpha, const double *__A,
+        const int __lda, const double *__B, const int __ldb,
+        const double __beta, double *__C, const int __ldc);
+#else
+void F77NAME(dgemm)(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
+            LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*,LAPACK_REAL*,
+            LAPACK_INT*,LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*);
+#endif
 
 #ifdef PLATFORM_macos
 void cblas_daxpy(const int n, const double alpha, const double *X, const int incX, double *Y, const int incY);
@@ -191,6 +194,36 @@ daxpy_wrapper(LAPACK_INT* n,        //number of elements of X,Y
     F77NAME(daxpy)(n,alpha,Xnc,incx,Y,incy);
 #endif
     }
+
+//
+// dgemm
+//
+void inline
+dgemm_wrapper(bool transa, 
+              bool transb,
+              LAPACK_INT m,
+              LAPACK_INT n,
+              LAPACK_INT k,
+              LAPACK_REAL alpha,
+              LAPACK_REAL* A,
+              LAPACK_REAL lda,
+              LAPACK_REAL* B,
+              LAPACK_REAL ldb,
+              LAPACK_REAL beta,
+              LAPACK_REAL* C,
+              LAPACK_REAL ldc)
+    {
+#ifdef PLATFORM_macos
+    auto at = transa ? CblasTrans : ClasNoTrans;
+    auto bt = transb ? CblasTrans : ClasNoTrans;
+    cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc);
+#else
+    char at = transa ? 'T' : 'N';
+    char bt = transb ? 'T' : 'N';
+    F77NAME(dgemm)(&at,&bt,&m,&n,&k,&alpha,A,&lda,B,&ldb,&beta,C,&m);
+#endif
+    }
+
 
 //
 // dsyev
