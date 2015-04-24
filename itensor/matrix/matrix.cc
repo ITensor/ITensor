@@ -100,22 +100,17 @@ extern "C" void dgemm_(char*,char*,BlasInt*,BlasInt*,BlasInt*,Real*,Real*,BlasIn
 
 // C = alpha*A*B + beta*C
 void
-dgemm_wrapper(const matrixref& AA, 
-              const matrixref& BB, 
-              matrixref& CC,
+dgemm_wrapper(matrixref A, 
+              matrixref B, 
+              matrixref C,
               Real beta,
               Real alpha)
     {
 #ifdef DEBUG
-    if(CC.readOnly()) throw std::runtime_error("Can't store result of matrix multiply in read-only matrixref or matrix");
+    if(C.readOnly()) throw std::runtime_error("Can't store result of matrix multiply in read-only matrixref or matrix");
 #endif
-    /*
-    //Workaround while getting slicing going:
-    auto A = AA;
-    auto B = BB;
-    auto C = CC;
 
-    if(C.transpose())
+    if(C.transposed())
         {
         //Do C = Bt*At instead of Ct=A*B
         //Recall that C.store() points to elements of C, not C.t()
@@ -140,27 +135,26 @@ dgemm_wrapper(const matrixref& AA,
     BlasInt m = A.Nrows();
     BlasInt n = B.Ncols();
     BlasInt k = A.Ncols();
-    char transa = A.transpose() ? 'T' : 'N';
-    char transb = B.transpose() ? 'T' : 'N';
-    BlasInt lda = A.transpose() ? k : m;
-    BlasInt ldb = B.transpose() ? n : k;
-
-    //New version:
-    //BlasInt m = A.Nrows();
-    //BlasInt n = B.Ncols();
-    //BlasInt k = A.Ncols();
-    //Something like:
-    //char transa = A.index().rowMajor() ? 'N' : 'T';
-    //char transb = ... similar
-    //BlasInt lda = A.index().rowStride();
-    //BlasInt ldb = B.index().rowStride();
+    char transa = 'N';
+    BlasInt lda = A.colStride();
+    if(A.transposed())
+        {
+        transa = 'T';
+        lda = A.rowStride();
+        }
+    char transb = 'N';
+    BlasInt ldb = B.colStride();
+    if(B.transposed())
+        {
+        transb = 'T';
+        ldb = B.rowStride();
+        }
 
     auto *pa = const_cast<Real*>(A.cstore());
     auto *pb = const_cast<Real*>(B.cstore());
-    auto *pc = const_cast<Real*>(C.store()); //const_cast may be redundant here
+    auto *pc = C.store(); //const_cast may be redundant here
 
     dgemm_(&transa,&transb,&m,&n,&k,&alpha,pa,&lda,pb,&ldb,&beta,pc,&m);
-    */
     }
 
 void

@@ -62,6 +62,11 @@ class matrixref
     long
     colStride() const { return ind_.cs; }
 
+    bool
+    transposed() const { return (ind_.rs==ind_.cn && ind_.cs==1); }
+    bool
+    contiguous() const { return (ind_.rs==1 && ind_.cs==ind_.rn) || transposed(); }
+
     explicit operator bool() const { return bool(cstore_); }
 
     void
