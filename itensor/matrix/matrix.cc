@@ -8,10 +8,6 @@
 
 namespace itensor {
 
-//extern "C" void dgemm_(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
-//            LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*,LAPACK_REAL*,
-//            LAPACK_INT*,LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*);
-
 matrixref::
 matrixref(long nro, 
           long ncol, 
@@ -130,12 +126,18 @@ subMatrix(const matrixref& m,
 
 // C = alpha*A*B + beta*C
 void
-call_dgemm(matrixref A, 
-           matrixref B, 
-           matrixref C,
+call_dgemm(const matrixref& AA, 
+           const matrixref& BB, 
+           matrixref& CC,
            Real beta,
            Real alpha)
     {
+    //Need to modify A,B,C below but want to take
+    //advantage of subtle C++ feature where const references
+    //extend lifetimes of temporaries e.g. if AA is a temporary matrix object
+    auto A = AA;
+    auto B = BB;
+    auto C = CC;
 #ifdef DEBUG
     if(C.readOnly()) throw std::runtime_error("Can't store result of matrix multiply in read-only matrixref or matrix");
     if(!(A.contiguous() && B.contiguous() && C.contiguous())) 
