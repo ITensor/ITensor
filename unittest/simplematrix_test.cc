@@ -122,6 +122,28 @@ SECTION("Construct and assign from vecref")
         CHECK_CLOSE(v2(i),data(i));
         }
     }
+
+SECTION("Scalar multiply, divide")
+    {
+    auto size = 10;
+    auto data = randomData(1,size);
+    auto origdata = data;
+    auto vr = vecref(data.begin(),size);
+    auto fac = Global::random();
+
+    vr *= fac;
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(data(i),fac*origdata(i));
+        }
+
+    vec v1(vr);
+    v1 *= fac;
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(v1(i),fac*data(i));
+        }
+    }
 }
 
 TEST_CASE("Test matrixref")
@@ -597,6 +619,20 @@ SECTION("Scalar multiply, divide")
     for(auto r : count1(N))
     for(auto c : count1(N))
         CHECK_CLOSE(A(r,c),origA(r,c)/fac);
+
+    A = origA;
+    auto At = A.t();
+    At *= fac;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(A(r,c),origA(r,c)*fac);
+
+    A = origA;
+    auto S = subMatrix(A,1,N/2,1,N/2);
+    S *= fac;
+    for(auto r : count1(N/2))
+    for(auto c : count1(N/2))
+        CHECK_CLOSE(A(r,c),origA(r,c)*fac);
     }
 
 } // Test matrix

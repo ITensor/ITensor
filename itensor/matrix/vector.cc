@@ -3,6 +3,8 @@
 //    (See accompanying LICENSE file.)
 //
 #include "vector.h"
+#include "lapack_wrap.h"
+#include <limits>
 
 namespace itensor {
 
@@ -13,6 +15,32 @@ operator=(const vecref& other)
     cstore_ = other.cstore_;
     strd_ = other.strd_;
     size_ = other.size_;
+    }
+
+void vecref::
+operator*=(Real fac)
+    {
+#ifdef DEBUG
+    if(readOnly()) throw std::runtime_error("vecref *=: read only");
+#endif
+    if(contiguous())
+        {
+#ifdef DEBUG
+        if(size() > std::numeric_limits<LAPACK_INT>::max()) 
+            throw std::runtime_error("matrixref *=: overflow of size beyond LAPACK_INT range");
+#endif
+        dscal_wrapper(size(),fac,store());
+        }
+    else
+        {
+        for(auto& el : *this) el *= fac;
+        }
+    }
+void vecref::
+operator/=(Real fac)
+    {
+    if(fac == 0) throw std::runtime_error("vecref /=: divide by zero");
+    operator*=(1./fac);
     }
 
 

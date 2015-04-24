@@ -60,11 +60,15 @@ class vecref
     stride() const { return strd_; }
     bool
     contiguous() const { return strd_ == 1; }
+    bool
+    readOnly() const { return !bool(store_); }
 
     explicit operator bool() const { return bool(cstore_); }
 
-    bool
-    readOnly() const { return !bool(store_); }
+    void
+    operator*=(Real fac);
+    void
+    operator/=(Real fac);
 
     const Real*
     cstore() const { return cstore_; }
