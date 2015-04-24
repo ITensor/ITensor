@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "matrix/simplematrix.h"
+#include "matrix/matrix.h"
 #include "autovector.h"
 #include "global.h"
 #include "count.h"
@@ -103,6 +103,9 @@ SECTION("Construct and assign from vecref")
     auto size = 10;
     auto data = randomData(1,size);
     auto vr = vecref(data.begin(),size);
+
+    //print("data = "); for(auto& el : data) print(el," "); println();
+    //print("vr = "); for(auto& el : vr) print(el," "); println();
 
     vec v1(vr);
     CHECK(v1.size() == size);
@@ -495,3 +498,137 @@ SECTION("Constructors")
 //    }
 
 } // Test matrix
+
+
+TEST_CASE("Test slicing")
+{
+
+
+SECTION("Diagonal")
+    {
+    auto A = randomMatrix(4,4);
+    auto d = diagonal(A);
+    long i = 1;
+    for(const auto& el : d)
+        {
+        CHECK_CLOSE(el,A(i,i));
+        ++i;
+        }
+
+    //Set diag els of A to 100 through d
+    for(auto& el : d) el = 100;
+
+    for(auto j : count1(d.size()))
+        {
+        CHECK_CLOSE(100,A(j,j));
+        }
+
+    A = randomMatrix(5,10);
+    d = diagonal(A);
+    i = 1;
+    for(const auto& el : d)
+        {
+        CHECK_CLOSE(el,A(i,i));
+        ++i;
+        }
+
+    A = randomMatrix(10,5);
+    d = diagonal(A);
+    i = 1;
+    for(const auto& el : d)
+        {
+        CHECK_CLOSE(el,A(i,i));
+        ++i;
+        }
+    for(auto j : count1(d.size()))
+        {
+        CHECK_CLOSE(d(j),A(j,j));
+        }
+    }
+
+SECTION("Transpose")
+    {
+    auto nr = 10,
+         nc = 15;
+    auto A = randomMatrix(nr,nc);
+    auto At = matrixref(A.cstore(),transpose(A.ind()));
+
+    for(auto i : count1(nr))
+    for(auto j : count1(nc))
+        {
+        CHECK_CLOSE(A(i,j),At.get(j,i));
+        }
+    }
+
+SECTION("Sub Vector")
+    {
+    auto v = vec(20);
+    for(auto& el : v) el = Global::random();
+
+    long start = 1,
+         stop = 10;
+    auto s = subVector(v,start,stop);
+    long count = 0;
+    for(auto j : count1(start,stop))
+        {
+        CHECK_CLOSE(s(j),v(start-1+j));
+        ++count;
+        }
+    CHECK(count == s.size());
+
+    start = 3;
+    stop = 12;
+    s = subVector(v,start,stop);
+    count = 0;
+    for(auto j : count1(start,stop))
+        {
+        CHECK_CLOSE(s(j),v(start-1+j));
+        ++count;
+        }
+    CHECK(count == s.size());
+
+    //Set elements of v through s
+    for(auto& el : s) el = -1;
+    for(auto j : count1(start,stop))
+        CHECK_CLOSE(-1,v(j));
+    }
+
+SECTION("Sub Matrix")
+    {
+    auto nr = 10,
+         nc = 15;
+    auto A = randomMatrix(nr,nc);
+
+    auto rstart = 1,
+         rstop = 3,
+         cstart = 1,
+         cstop = 4;
+    auto S = subMatrix(A,rstart,rstop,cstart,cstop);
+    for(auto r : count1(S.Nrows()))
+    for(auto c : count1(S.Ncols()))
+        {
+        CHECK_CLOSE(S(r,c),A(rstart-1+r,cstart-1+c));
+        }
+
+    rstart = 2;
+    cstart = 3;
+    S = subMatrix(A,rstart,rstop,cstart,cstop);
+    for(auto r : count1(S.Nrows()))
+    for(auto c : count1(S.Ncols()))
+        {
+        CHECK_CLOSE(S(r,c),A(rstart-1+r,cstart-1+c));
+        }
+
+    rstart = 3;
+    rstop = 8;
+    cstart = 5;
+    cstop = 10;
+    S = subMatrix(A,rstart,rstop,cstart,cstop);
+    for(auto r : count1(S.Nrows()))
+    for(auto c : count1(S.Ncols()))
+        {
+        CHECK_CLOSE(S(r,c),A(rstart-1+r,cstart-1+c));
+        }
+
+    }
+} //Test slicing

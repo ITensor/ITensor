@@ -73,6 +73,13 @@ count1(T end)
     return CountHelper<T>(1,1+end);
     }
 
+template <typename ST, typename T> constexpr
+CountHelper<T>
+count1(ST start, T end)
+    {
+    return CountHelper<T>(start,1+end);
+    }
+
 };
 
 #endif

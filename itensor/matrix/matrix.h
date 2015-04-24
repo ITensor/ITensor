@@ -6,41 +6,17 @@
 #define __ITENSOR_MATRIX___H_
 
 #include "vector.h"
+#include "miterator.h"
 
 namespace itensor {
 
 class matrix;
 
-struct mrange
-    {
-    long rn=0,rs=0,cn=0,cs=0;
-    mrange() { } 
-    mrange(long rn_, long rs_,
-         long cn_, long cs_) 
-        : rn(rn_),rs(rs_),cn(cn_),cs(cs_) 
-        { }
-    mrange(long rn_, long cn_)
-        : rn(rn_),rs(1),cn(cn_),cs(rn_) 
-        { }
-    long
-    index(long i, long j) const { return (i-1)*rs+(j-1)*cs; }
-    long
-    index0(long i, long j) const { return i*rs+j*cs; }
-    long
-    area() const { return rn*cn; }
-    };
-
-mrange inline
-transpose(const mrange& ind)
-    {
-    return mrange(ind.cn,ind.cs,ind.rn,ind.rs); 
-    }
-
 class matrixref
     {
     public:
-    using iterator = Real*;
-    using const_iterator = const Real*;
+    using iterator = miterator<Real*>;
+    using const_iterator = miterator<const Real*>;
     using value_type = Real;
     using size_type = long;
     private:
@@ -65,6 +41,11 @@ class matrixref
               long ncol,
               bool trans = false);
 
+    matrixref(Real* sto, 
+              const mrange& ind);
+    matrixref(const Real* sto, 
+              const mrange& ind);
+
     void virtual
     operator=(const matrixref& other);
 
@@ -88,6 +69,29 @@ class matrixref
 
     bool
     readOnly() const { return !bool(store_); }
+
+
+    matrixref 
+    t();
+
+    Real
+    operator()(long i, long j) const { return cstore_[ind_.index(i,j)]; }
+    Real&
+    operator()(long i, long j) 
+        { 
+#ifdef DEBUG
+        if(readOnly()) throw std::runtime_error("matrixref is read only");
+#endif
+        return store_[ind_.index(i,j)]; 
+        }
+    Real
+    get(long i, long j) const { return cstore_[ind_.index(i,j)];  }
+
+    long
+    size() const { return ind_.area(); }
+
+    const mrange&
+    ind() const { return ind_; }
 
     const Real*
     cstore() const { return cstore_; }
@@ -114,57 +118,58 @@ class matrixref
         cstore_ = newstore;
         }
 
-    matrixref 
-    t();
-
-    Real
-    operator()(long i, long j) const { return cstore_[ind_.index(i,j)]; }
-    Real&
-    operator()(long i, long j) 
+    iterator
+    begin() 
         { 
 #ifdef DEBUG
         if(readOnly()) throw std::runtime_error("matrixref is read only");
 #endif
-        return store_[ind_.index(i,j)]; 
+        return iterator(store_,ind_); 
         }
-
-    long
-    size() const { return ind_.area(); }
-
-//    iterator
-//    begin() 
-//        { 
-//#ifdef DEBUG
-//        if(readOnly()) throw std::runtime_error("matrixref is read only");
-//#endif
-//        return store_; 
-//        }
-//    iterator
-//    end() 
-//        { 
-//#ifdef DEBUG
-//        if(readOnly()) throw std::runtime_error("matrixref is read only");
-//#endif
-//        return store_+size(); 
-//        }
-//    const_iterator
-//    begin() const { return cstore_; }
-//    const_iterator
-//    end() const { return cstore_+size(); }
-//    const_iterator
-//    cbegin() const { return cstore_; }
-//    const_iterator
-//    cend() const { return cstore_+size(); }
+    iterator
+    end() 
+        { 
+#ifdef DEBUG
+        if(readOnly()) throw std::runtime_error("matrixref is read only");
+#endif
+        return make_end(iterator(store_,ind_));
+        }
+    const_iterator
+    begin() const { return const_iterator(cstore_,ind_); }
+    const_iterator
+    end() const { return make_end(const_iterator(cstore_,ind_)); }
+    const_iterator
+    cbegin() const { return const_iterator(cstore_,ind_); }
+    const_iterator
+    cend() const { return make_end(const_iterator(cstore_,ind_)); }
 
     };
 
-vecref
+vecref inline
 diagonal(const matrixref& m) 
     { 
     auto vsize = std::min(m.Nrows(),m.Ncols());
     auto vstrd = m.rowStride()+m.colStride();
     if(m.readOnly()) return vecref(m.cstore(),vsize,vstrd);
-    else           return vecref(m.store(),vsize,vstrd);
+    else             return vecref(m.store(),vsize,vstrd);
+    }
+
+matrixref inline
+subMatrix(const matrixref& m,
+          long rstart,
+          long rstop,
+          long cstart,
+          long cstop)
+    { 
+#ifdef DEBUG
+    if(rstop > m.Nrows() || rstart >= rstop) throw std::runtime_error("subMatrix invalid row start and stop");
+    if(cstop > m.Ncols() || cstart >= cstop) throw std::runtime_error("subMatrix invalid col start and stop");
+#endif
+    const auto& i = m.ind();
+    auto offset = i.rs*(rstart-1)+i.cs*(cstart-1);
+    auto subind = mrange(rstop-rstart+1,i.rs,cstop-cstart+1,i.cs);
+    if(m.readOnly()) return matrixref(m.cstore()+offset,subind);
+    else             return matrixref(m.store()+offset,subind);
     }
 
 class matrix : public matrixref
@@ -209,9 +214,7 @@ class matrix : public matrixref
     assignFromRef(const matrixref& other)
         {
         parent::operator=(other);
-        throw std::runtime_error("assignFromRef currently broken");
-        //data_ = storage_type(other.cbegin(),other.cend());
-
+        data_ = storage_type(other.cbegin(),other.cend());
         store(data_.data());
         }
 

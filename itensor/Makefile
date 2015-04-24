@@ -26,7 +26,8 @@ SOURCES+= matrix/matrix.cc
 
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
         detail/gcounter.h global.h real.h permutation.h index.h \
-        lapack_wrap.h matrix/matrix.h \
+        lapack_wrap.h matrix/strideiter.h matrix/mrange.h matrix/vector.h \
+        matrix/miterator.h matrix/matrix.h \
         range.h indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h \
         itdata/itreal.h itdata/itdiag.h itdata/itcombiner.h itdata/itcplx.h \
@@ -129,10 +130,10 @@ index.o: $(GDEPHEADERS)
 GDEPHEADERS+= indexset.h
 indexset.o: $(GDEPHEADERS)
 .debug_objs/indexset.o: $(GDEPHEADERS)
-GDEPHEADERS+= matrix/vector.h
+GDEPHEADERS+= matrix/strideiter.h matrix/vector.h
 matrix/vector.o: $(GDEPHEADERS)
 .debug_objs/matrix/vector.o: $(GDEPHEADERS)
-GDEPHEADERS+= matrix/matrix.h
+GDEPHEADERS+= matrix/mrange.h matrix/miterator.h matrix/matrix.h
 matrix/matrix.o: $(GDEPHEADERS)
 .debug_objs/matrix/matrix.o: $(GDEPHEADERS)
 GDEPHEADERS+= contract.h range.h simpletensor.h

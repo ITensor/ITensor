@@ -41,6 +41,26 @@ matrixref(Real* sto,
     { 
     }
 
+matrixref::
+matrixref(const Real* sto, 
+          const mrange& ind)
+    : 
+    ind_(ind),
+    store_(nullptr),
+    cstore_(sto)
+    { 
+    }
+
+matrixref::
+matrixref(Real* sto, 
+          const mrange& ind)
+    : 
+    ind_(ind),
+    store_(sto),
+    cstore_(sto)
+    { 
+    }
+
 void matrixref::
 operator=(const matrixref& other)
     {
