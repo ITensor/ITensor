@@ -105,6 +105,12 @@ void F77NAME(dsyev)(const char* jobz, const char* uplo, const LAPACK_INT* n, dou
             LAPACK_INT* info );
 #endif
 
+#ifdef PLATFORM_macos
+void cblas_dscal(const LAPACK_INT N, const LAPACK_REAL alpha, LAPACK_REAL* X,const LAPACK_INT incX);
+#else
+void F77NAME(dscal)(LAPACK_INT* N, LAPACK_REAL* alpha, LAPACK_REAL* X,LAPACK_INT* incX);
+#endif
+
 #ifdef PLATFORM_acml
 void F77NAME(zgesdd)(char *jobz, int *m, int *n, LAPACK_COMPLEX *a, int *lda, double *s, 
              LAPACK_COMPLEX *u, int *ldu, LAPACK_COMPLEX *vt, int *ldvt, 
@@ -214,8 +220,8 @@ dgemm_wrapper(bool transa,
               LAPACK_REAL ldc)
     {
 #ifdef PLATFORM_macos
-    auto at = transa ? CblasTrans : ClasNoTrans;
-    auto bt = transb ? CblasTrans : ClasNoTrans;
+    auto at = transa ? CblasTrans : CblasNoTrans;
+    auto bt = transb ? CblasTrans : CblasNoTrans;
     cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc);
 #else
     char at = transa ? 'T' : 'N';
@@ -244,6 +250,22 @@ dsyev_wrapper(char* jobz,        //if jobz=='V', compute eigs and evecs
     F77NAME(dsyev)(jobz,uplo,n,A,lda,eigs,work,&lwork,info,1,1);
 #else
     F77NAME(dsyev)(jobz,uplo,n,A,lda,eigs,work,&lwork,info);
+#endif
+    }
+
+//
+// dscal
+//
+void inline
+dscal_wrapper(LAPACK_INT N,
+              LAPACK_REAL alpha,
+              LAPACK_REAL* data,
+              LAPACK_INT inc = 1)
+    {
+#ifdef PLATFORM_macos
+    cblas_dscal(N,alpha,data,inc);
+#else
+    F77NAME(dscal)(&N,&alpha,data,&inc);
 #endif
     }
 
