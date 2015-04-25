@@ -16,14 +16,6 @@ randomData(long first, long last)
     return data;
     }
 
-matrix
-randomMatrix(long nr, long nc, bool trans = false)
-    {
-    matrix M(nr,nc,trans);
-    for(auto& el : M) el = Global::random();
-    return M;
-    }
-
 void
 sliceFunc(const vecref& v1r,
            vecref& v2r)
@@ -170,7 +162,36 @@ SECTION("Test += -= operators")
         {
         CHECK_CLOSE(A(i),origdataA(i)-C(i));
         }
+    }
 
+SECTION("vec + and -")
+    {
+    auto size = 20;
+    auto v1 = randomVec(size),
+         v2 = randomVec(size);
+    auto origv1 = v1;
+
+    v1 = v1+v2;
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(v1(i),origv1(i)+v2(i));
+        }
+
+    v1 = origv1;
+    v1 = v1-v2;
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(v1(i),origv1(i)-v2(i));
+        }
+
+    v1 = origv1;
+    auto origv2 = v2;
+    v1 = v1+std::move(v2);
+    CHECK(!v2);
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(v1(i),origv1(i)+origv2(i));
+        }
     }
 }
 
@@ -571,7 +592,8 @@ SECTION("Constructors")
         {
         auto Ar = 3,
              Ac = 4;
-        auto A = randomMatrix(Ar,Ac,true);
+        auto A = matrix(Ar,Ac,true);
+        for(auto& el : A) el = Global::random();
         CHECK(A.transposed());
 
         const auto *data = A.store();

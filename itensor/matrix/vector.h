@@ -137,9 +137,18 @@ class vecref
     const_iterator
     cend() const{ return const_iterator(cstore_+size_*strd_,strd_); }
 
+    void virtual
+    clear() { *this = vecref(); }
+
     vecref(const vec& other) = delete;
     vecref&
     operator=(const vec& other) = delete;
+
+
+    void
+    size(size_type nsize) { size_ = nsize; }
+    void
+    stride(size_type nstride) { strd_ = nstride; }
     };
 
 vecref inline
@@ -185,22 +194,33 @@ class vec : public vecref
     void virtual
     operator=(const vecref& other) override { assignFromRef(other); }
 
+    void virtual
+    clear() override
+        {
+        parent::clear();
+        data_.clear();
+        }
+
     private:
 
     void
     assignFromRef(const vecref& other)
         {
-        parent::operator=(other);
+        if(&other == this) return;
         data_ = storage_type(other.cbegin(),other.cend());
         store(data_.data());
+        parent::size(data_.size());
+        parent::stride(1);
         }
 
     void
     assignFromVec(const vec& other)
         {
-        const vecref& oref = other;
-        parent::operator=(oref);
+        if(&other == this) return;
         data_ = other.data_;
+        store(data_.data());
+        parent::size(data_.size());
+        parent::stride(1);
         }
 
     void
@@ -209,11 +229,40 @@ class vec : public vecref
         const vecref& oref = other;
         parent::operator=(oref);
         data_ = std::move(other.data_);
+        other.clear();
         }
     public:
     const Real*
     data() const { return data_.data(); }
     };
+
+vec inline
+operator+(vec A, const vec& B)
+    {
+    A += B;
+    return A;
+    }
+vec inline
+operator+(const vec& A, vec&& B)
+    {
+    vec res(std::move(B));
+    res += A;
+    return res;
+    }
+vec inline
+operator-(vec A, const vec& B)
+    {
+    A -= B;
+    return A;
+    }
+vec inline
+operator-(const vec& A, vec&& B)
+    {
+    vec res(std::move(B));
+    res *= -1;
+    res += A;
+    return res;
+    }
 
 Real
 norm(const vecref& v);
