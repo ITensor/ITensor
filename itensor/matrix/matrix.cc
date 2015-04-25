@@ -5,6 +5,7 @@
 #include "matrix.h"
 #include "lapack_wrap.h"
 #include <limits>
+#include "detail/algs.h"
 
 namespace itensor {
 
@@ -343,6 +344,14 @@ norm(const matrixref& M)
         for(auto& el : M) nrm += el*el;
         }
     return std::sqrt(nrm);
+    }
+
+matrix
+randomMatrix(long Nr, long Nc)
+    {
+    matrix res(Nr,Nc);
+    for(auto& el : res) el = detail::quickran();
+    return res;
     }
 
 }; //namespace itensor

@@ -218,6 +218,9 @@ class vec : public vecref
 Real
 norm(const vecref& v);
 
+vec
+randomVec(long size);
+
 std::ostream&
 operator<<(std::ostream& s, const vecref& v);
 

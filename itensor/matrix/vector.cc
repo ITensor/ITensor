@@ -5,6 +5,7 @@
 #include "vector.h"
 #include "lapack_wrap.h"
 #include <limits>
+#include "detail/algs.h"
 
 namespace itensor {
 
@@ -113,6 +114,14 @@ norm(const vecref& v)
     Real nrm = 0;
     for(auto& el : v) nrm += el*el;
     return std::sqrt(nrm);
+    }
+
+vec
+randomVec(long size)
+    {
+    vec res(size);
+    for(auto& el : res) el = detail::quickran();
+    return res;
     }
 
 }; //namespace itensor
