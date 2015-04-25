@@ -237,6 +237,11 @@ class matrix : public matrixref
     void virtual
     operator=(const matrixref& other) override { assignFromRef(other); }
 
+    void
+    operator+=(const matrix& other);
+    void
+    operator-=(const matrix& other);
+
     void virtual
     clear() override
         {

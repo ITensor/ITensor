@@ -285,6 +285,11 @@ operator+=(const matrixref& other)
     if(readOnly()) throw std::runtime_error("matrixref +=: read only");
     if(!(other.Nrows() == Nrows() && other.Ncols() == Ncols())) throw std::runtime_error("matrixref +=: mismatched sizes");
 #endif
+    if(other.cstore() == cstore())
+        {
+        operator*=(2.);
+        return;
+        }
     if(ind() == other.ind() && contiguous()) 
         {
         call_daxpy(*this,other,1.);
@@ -307,6 +312,11 @@ operator-=(const matrixref& other)
     if(readOnly()) throw std::runtime_error("matrixref +=: read only");
     if(!(other.Nrows() == Nrows() && other.Ncols() == Ncols())) throw std::runtime_error("matrixref -=: mismatched sizes");
 #endif
+    if(other.cstore() == cstore())
+        {
+        operator*=(0.);
+        return;
+        }
     if(ind() == other.ind() && contiguous()) 
         {
         call_daxpy(*this,other,-1.);
@@ -320,6 +330,34 @@ operator-=(const matrixref& other)
             ++o;
             }
         }
+    }
+
+void matrix::
+operator+=(const matrix& other)
+    {
+    if(&other == this)
+        {
+        operator*=(2.);
+        return;
+        }
+#ifdef DEBUG
+    if(!(other.Nrows() == Nrows() && other.Ncols() == Ncols())) throw std::runtime_error("matrix +=: mismatched sizes");
+#endif
+    call_daxpy(*this,other,1.);
+    }
+
+void matrix::
+operator-=(const matrix& other)
+    {
+    if(&other == this)
+        {
+        operator*=(0.);
+        return;
+        }
+#ifdef DEBUG
+    if(!(other.Nrows() == Nrows() && other.Ncols() == Ncols())) throw std::runtime_error("matrix +=: mismatched sizes");
+#endif
+    call_daxpy(*this,other,-1.);
     }
 
 

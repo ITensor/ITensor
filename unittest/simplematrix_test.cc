@@ -580,7 +580,22 @@ SECTION("Test += -= operators")
         }
     }
 
+SECTION("Test addition of refs to same data")
+    {
+    auto N = 4;
+    auto M = randomMatrix(N,N);
+    auto origM = M;
+    matrixref& Mr1 = M;
+    const matrixref& Mr2 = M;
 
+    Mr1 += Mr2;
+    for(auto r : count1(N)) 
+    for(auto c : count1(N)) 
+        CHECK_CLOSE(M(r,c),2*origM(r,c));
+
+    Mr1 -= Mr2;
+    for(auto& el : M) CHECK(el < 1E-10);
+    }
 }
 
 TEST_CASE("Test matrix")
