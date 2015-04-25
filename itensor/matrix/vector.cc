@@ -43,6 +43,59 @@ operator/=(Real fac)
     operator*=(1./fac);
     }
 
+void
+call_daxpy(vecref& A, const vecref& B, Real alpha_)
+    {
+    LAPACK_REAL alpha = alpha_;
+    LAPACK_INT inc = 1;
+    LAPACK_INT size = A.size();
+#ifdef DEBUG
+    if(A.size() > std::numeric_limits<LAPACK_INT>::max()) throw std::runtime_error("overflow of size beyond LAPACK_INT range");
+#endif
+    daxpy_wrapper(&size,&alpha,B.cstore(),&inc,A.store(),&inc);
+    }
+
+void vecref::
+operator+=(const vecref& other)
+    {
+#ifdef DEBUG
+    if(size()!=other.size()) throw std::runtime_error("vecref+=: mismatched sizes");
+#endif
+    if(contiguous() && other.contiguous())
+        {
+        call_daxpy(*this,other,+1);
+        }
+    else
+        {
+        auto o = other.begin();
+        for(auto& el : *this) 
+            {
+            el += *o;
+            ++o;
+            }
+        }
+    }
+void vecref::
+operator-=(const vecref& other)
+    {
+#ifdef DEBUG
+    if(size()!=other.size()) throw std::runtime_error("vecref+=: mismatched sizes");
+#endif
+    if(contiguous() && other.contiguous())
+        {
+        call_daxpy(*this,other,-1);
+        }
+    else
+        {
+        auto o = other.begin();
+        for(auto& el : *this) 
+            {
+            el -= *o;
+            ++o;
+            }
+        }
+    }
+
 
 std::ostream&
 operator<<(std::ostream& s, const vecref& v)

@@ -69,6 +69,10 @@ class vecref
     operator*=(Real fac);
     void
     operator/=(Real fac);
+    void
+    operator+=(const vecref& other);
+    void
+    operator-=(const vecref& other);
 
     const Real*
     cstore() const { return cstore_; }

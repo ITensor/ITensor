@@ -144,6 +144,34 @@ SECTION("Scalar multiply, divide")
         CHECK_CLOSE(v1(i),fac*data(i));
         }
     }
+
+SECTION("Test += -= operators")
+    {
+    auto size = 10;
+    auto dataA = randomData(1,size);
+    auto dataB = randomData(1,size);
+    auto origdataA = dataA;
+    auto A = vecref(dataA.begin(),size);
+    auto B = vecref(dataB.begin(),size);
+
+    A += B;
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(A(i),B(i)+origdataA(i));
+        }
+
+    dataA = origdataA;
+    auto cstride = 3;
+    auto dataC = randomData(1,cstride*size);
+    //Only access every third element:
+    auto C = vecref(dataC.begin(),size,cstride);
+    A -= C;
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(A(i),origdataA(i)-C(i));
+        }
+
+    }
 }
 
 TEST_CASE("Test matrixref")
