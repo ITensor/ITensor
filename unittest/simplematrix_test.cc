@@ -460,6 +460,53 @@ SECTION("Test mult_add")
         CHECK_CLOSE(C(r,c),val);
         }
     }
+
+SECTION("Test += -= operators")
+    {
+    auto N = 5;
+    auto dataA = randomData(1,N*N);
+    auto dataB = randomData(1,N*N);
+    auto origdataA = dataA;
+
+    auto A = matrixref(dataA.begin(),N,N);
+    auto origA = matrixref(origdataA.begin(),N,N);
+    auto B = matrixref(dataB.begin(),N,N);
+    auto At = A.t();
+    auto Bt = B.t();
+
+    A += B;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
+        }
+
+    dataA = origdataA;
+    At += Bt;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
+        }
+
+    dataA = origdataA;
+    At += B;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),B(c,r)+origA(r,c));
+        }
+
+    dataA = origdataA;
+    A -= Bt;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),-B(c,r)+origA(r,c));
+        }
+    }
+
+
 }
 
 TEST_CASE("Test matrix")

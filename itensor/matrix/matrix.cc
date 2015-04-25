@@ -236,18 +236,7 @@ mult(const matrixref& A,
 //    return C;
 //    }
 
-void matrix::
-call_daxpy(const matrix& other, Real alpha_)
-    {
-    LAPACK_REAL alpha = alpha_;
-    LAPACK_INT inc = 1;
-    LAPACK_INT size = parent::size();
-#ifdef DEBUG
-    if(!(other.Nrows() == Nrows() && other.Ncols() == Ncols())) throw std::runtime_error("matrix +=: mismatches sizes");
-    if(parent::size() > std::numeric_limits<LAPACK_INT>::max()) throw std::runtime_error("matrix +=: overflow of size beyond LAPACK_INT range");
-#endif
-    daxpy_wrapper(&size,&alpha,other.cstore(),&inc,store(),&inc);
-    }
+
 
 void matrixref::
 operator*=(Real fac)
@@ -273,6 +262,63 @@ operator/=(Real fac)
     {
     if(fac == 0) throw std::runtime_error("matrixref /=: divide by zero");
     operator*=(1./fac);
+    }
+
+void
+call_daxpy(matrixref& A, const matrixref& B, Real alpha_)
+    {
+    LAPACK_REAL alpha = alpha_;
+    LAPACK_INT inc = 1;
+    LAPACK_INT size = A.size();
+#ifdef DEBUG
+    if(!(B.Nrows() == A.Nrows() && B.Ncols() == A.Ncols())) throw std::runtime_error("call_daxpy (matrixref +=, -=): mismatched sizes");
+    if(A.size() > std::numeric_limits<LAPACK_INT>::max()) throw std::runtime_error("overflow of size beyond LAPACK_INT range");
+#endif
+    daxpy_wrapper(&size,&alpha,B.cstore(),&inc,A.store(),&inc);
+    }
+
+void matrixref::
+operator+=(const matrixref& other)
+    {
+#ifdef DEBUG
+    if(readOnly()) throw std::runtime_error("matrixref +=: read only");
+    if(!(other.Nrows() == Nrows() && other.Ncols() == Ncols())) throw std::runtime_error("matrixref +=: mismatched sizes");
+#endif
+    if(ind() == other.ind() && contiguous()) 
+        {
+        call_daxpy(*this,other,1.);
+        }
+    else
+        {
+        auto o = other.begin();
+        for(auto& el : *this) 
+            {
+            el += *o;
+            ++o;
+            }
+        }
+    }
+
+void matrixref::
+operator-=(const matrixref& other)
+    {
+#ifdef DEBUG
+    if(readOnly()) throw std::runtime_error("matrixref +=: read only");
+    if(!(other.Nrows() == Nrows() && other.Ncols() == Ncols())) throw std::runtime_error("matrixref -=: mismatched sizes");
+#endif
+    if(ind() == other.ind() && contiguous()) 
+        {
+        call_daxpy(*this,other,-1.);
+        }
+    else
+        {
+        auto o = other.begin();
+        for(auto& el : *this) 
+            {
+            el -= *o;
+            ++o;
+            }
+        }
     }
 
 Real

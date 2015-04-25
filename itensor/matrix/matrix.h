@@ -82,6 +82,10 @@ class matrixref
     void
     operator/=(Real fac);
 
+    void
+    operator+=(const matrixref& other);
+    void
+    operator-=(const matrixref& other);
 
     Real
     operator()(long i, long j) const { return cstore_[ind_.index(i,j)]; }
@@ -233,13 +237,8 @@ class matrix : public matrixref
     void virtual
     operator=(const matrixref& other) override { assignFromRef(other); }
 
-    matrix&
-    operator+=(const matrix& other) { call_daxpy(other,+1.); return *this; }
-    matrix&
-    operator-=(const matrix& other) { call_daxpy(other,-1.); return *this; }
-
     void virtual
-    clear()
+    clear() override
         {
         parent::clear();
         data_.clear();
@@ -273,9 +272,6 @@ class matrix : public matrixref
         data_ = std::move(other.data_);
         other.clear();
         }
-
-    void
-    call_daxpy(const matrix& other, Real alpha);
 
     public:
     const Real*
