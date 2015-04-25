@@ -33,26 +33,19 @@ class vecref
 
     vecref(const Real* sto, 
            long size,
-           long stride = 1)
-        :
-        store_(nullptr),
-        cstore_(sto),
-        strd_(stride),
-        size_(size)
-        { }
+           long stride = 1);
 
     vecref(Real* sto, 
            long size,
-           long stride = 1)
-        :
-        store_(sto),
-        cstore_(sto),
-        strd_(stride),
-        size_(size)
-        { }
+           long stride = 1);
 
     void virtual
     operator=(const vecref& other);
+
+    vecref(const vec& other) = delete;
+
+    vecref&
+    operator=(const vec& other) { assignFromVec(other); return *this; }
 
     size_type
     size() const { return size_; }
@@ -78,73 +71,42 @@ class vecref
     cstore() const { return cstore_; }
 
     Real*
-    store() const
-        { 
-#ifdef DEBUG
-        if(readOnly()) throw std::runtime_error("vecref read-only: call cstore() or call store() on const vecref object");
-#endif
-        return store_; 
-        }
+    store() const;
 
     void
-    store(const Real* newstore) 
-        { 
-        store_ = nullptr;
-        cstore_ = newstore;
-        }
+    store(const Real* newstore);
     void
-    store(Real* newstore) 
-        { 
-        store_ = newstore;
-        cstore_ = newstore;
-        }
+    store(Real* newstore);
 
     Real
-    operator()(long i) const { return cstore_[(i-1)*strd_]; }
+    operator()(long i) const;
     Real&
-    operator()(long i)
-        { 
-#ifdef DEBUG
-        if(readOnly()) throw std::runtime_error("vecref is read only");
-#endif
-        return store_[(i-1)*strd_];
-        }
+    operator()(long i);
     Real
     get(long i) const { return cstore_[(i-1)*strd_]; }
 
     iterator
-    begin() 
-        { 
-#ifdef DEBUG
-        if(readOnly()) throw std::runtime_error("vecref is read only");
-#endif
-        return iterator(store_,strd_); 
-        }
+    begin();
     iterator
-    end() 
-        { 
-#ifdef DEBUG
-        if(readOnly()) throw std::runtime_error("vecref is read only");
-#endif
-        return iterator(store_+size_*strd_,strd_); 
-        }
+    end();
     const_iterator
-    begin() const{ return const_iterator(cstore_,strd_); }
+    begin() const;
     const_iterator
-    end() const{ return const_iterator(cstore_+size_*strd_,strd_); }
+    end() const;
     const_iterator
-    cbegin() const{ return const_iterator(cstore_,strd_); }
+    cbegin() const;
     const_iterator
-    cend() const{ return const_iterator(cstore_+size_*strd_,strd_); }
+    cend() const;
 
     void virtual
     clear() { *this = vecref(); }
 
-    vecref(const vec& other) = delete;
-    vecref&
-    operator=(const vec& other) = delete;
+    private:
 
+    void virtual
+    assignFromVec(const vec& other);
 
+    public:
     void
     size(size_type nsize) { size_ = nsize; }
     void
@@ -204,33 +166,14 @@ class vec : public vecref
     private:
 
     void
-    assignFromRef(const vecref& other)
-        {
-        if(&other == this) return;
-        data_ = storage_type(other.cbegin(),other.cend());
-        store(data_.data());
-        parent::size(data_.size());
-        parent::stride(1);
-        }
+    assignFromRef(const vecref& other);
+
+    void virtual
+    assignFromVec(const vec& other) override;
 
     void
-    assignFromVec(const vec& other)
-        {
-        if(&other == this) return;
-        data_ = other.data_;
-        store(data_.data());
-        parent::size(data_.size());
-        parent::stride(1);
-        }
+    moveFromVec(vec&& other);
 
-    void
-    moveFromVec(vec&& other)
-        {
-        const vecref& oref = other;
-        parent::operator=(oref);
-        data_ = std::move(other.data_);
-        other.clear();
-        }
     public:
     const Real*
     data() const { return data_.data(); }

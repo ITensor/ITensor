@@ -9,6 +9,28 @@
 
 namespace itensor {
 
+vecref::
+vecref(const Real* sto, 
+       long size,
+       long stride)
+    :
+    store_(nullptr),
+    cstore_(sto),
+    strd_(stride),
+    size_(size)
+    { }
+
+vecref::
+vecref(Real* sto, 
+       long size,
+       long stride)
+    :
+    store_(sto),
+    cstore_(sto),
+    strd_(stride),
+    size_(size)
+    { }
+
 void vecref::
 operator=(const vecref& other)
     {
@@ -17,6 +39,87 @@ operator=(const vecref& other)
     strd_ = other.strd_;
     size_ = other.size_;
     }
+
+void vecref::
+assignFromVec(const vec& other)
+    {
+    if(&other == this) return;
+    if(readOnly()) throw std::runtime_error("vecref is read only, cannot assign from vec");
+#ifdef DEBUG
+    if(other.size() != size_) throw std::runtime_error("mismatched sizes in vecref::operator=(vec)");
+#endif
+    auto po = other.cbegin();
+    for(auto& el : *this) 
+        {
+        el = *po;
+        ++po;
+        }
+    }
+
+Real* vecref::
+store() const
+    { 
+#ifdef DEBUG
+    if(readOnly()) throw std::runtime_error("vecref read-only: call cstore() or call store() on const vecref object");
+#endif
+    return store_; 
+    }
+
+void vecref::
+store(const Real* newstore) 
+    { 
+    store_ = nullptr;
+    cstore_ = newstore;
+    }
+
+void vecref::
+store(Real* newstore) 
+    { 
+    store_ = newstore;
+    cstore_ = newstore;
+    }
+
+Real vecref::
+operator()(long i) const { return cstore_[(i-1)*strd_]; }
+
+Real& vecref::
+operator()(long i)
+    { 
+#ifdef DEBUG
+    if(readOnly()) throw std::runtime_error("vecref is read only");
+#endif
+    return store_[(i-1)*strd_];
+    }
+
+vecref::iterator vecref::
+begin() 
+    { 
+#ifdef DEBUG
+    if(readOnly()) throw std::runtime_error("vecref is read only");
+#endif
+    return iterator(store_,strd_); 
+    }
+vecref::iterator vecref::
+end() 
+    { 
+#ifdef DEBUG
+    if(readOnly()) throw std::runtime_error("vecref is read only");
+#endif
+    return iterator(store_+size_*strd_,strd_); 
+    }
+
+vecref::const_iterator vecref::
+begin() const { return const_iterator(cstore_,strd_); }
+
+vecref::const_iterator vecref::
+end() const { return const_iterator(cstore_+size_*strd_,strd_); }
+
+vecref::const_iterator vecref::
+cbegin() const { return const_iterator(cstore_,strd_); }
+
+vecref::const_iterator vecref::
+cend() const { return const_iterator(cstore_+size_*strd_,strd_); }
+
 
 void vecref::
 operator*=(Real fac)
@@ -95,6 +198,35 @@ operator-=(const vecref& other)
             ++o;
             }
         }
+    }
+
+void vec::
+assignFromRef(const vecref& other)
+    {
+    if(&other == this) return;
+    data_ = storage_type(other.cbegin(),other.cend());
+    store(data_.data());
+    parent::size(data_.size());
+    parent::stride(1);
+    }
+
+void vec::
+assignFromVec(const vec& other)
+    {
+    if(&other == this) return;
+    data_ = other.data_;
+    store(data_.data());
+    parent::size(data_.size());
+    parent::stride(1);
+    }
+
+void vec::
+moveFromVec(vec&& other)
+    {
+    const vecref& oref = other;
+    parent::operator=(oref);
+    data_ = std::move(other.data_);
+    other.clear();
     }
 
 
