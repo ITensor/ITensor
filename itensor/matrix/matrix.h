@@ -190,6 +190,12 @@ mult(const matrixref& A,
      const matrixref& B, 
      matrixref& C);
 
+// y = M*x
+void
+mult(const matrixref& M,
+     const vecref& x, 
+     vec& y);
+
 void
 diagSymmetric(const matrixref& M,
               matrixref& U,
@@ -249,7 +255,6 @@ class matrix : public matrixref
         data_.clear();
         }
 
-
     private:
     void
     assignFromRef(const matrixref& other)
@@ -290,6 +295,15 @@ operator*(const matrixref& A,
     matrix C(A.Nrows(),B.Ncols());
     mult(A,B,C);
     return C;
+    }
+
+vec inline
+operator*(const matrixref& M,
+          const vecref& v)
+    {
+    vec res(M.Nrows());
+    mult(M,v,res);
+    return res;
     }
 
 matrix inline

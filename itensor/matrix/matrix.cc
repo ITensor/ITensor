@@ -164,7 +164,6 @@ call_dgemm(const matrixref& AA,
     if(!(A.contiguous() && B.contiguous() && C.contiguous())) 
         throw std::runtime_error("multiplication of non-contiguous matrixref's not currently supported");
 #endif
-
     if(C.transposed())
         {
         //Do C = Bt*At instead of Ct=A*B
@@ -218,25 +217,27 @@ mult(const matrixref& A,
     call_dgemm(A,B,C,0,1);
     }
 
+void
+call_dgemv(const matrixref& MM,
+          const vecref& x, 
+          vec& y,
+          Real alpha,
+          Real beta)
+    {
+    auto M = MM;
+    if(!M.contiguous())
+        throw std::runtime_error("multiplication of non-contiguous matrixref by vector not currently supported");
+    auto trans = M.transposed();
+    dgemv_wrapper(trans,alpha,beta,M.Nrows(),M.Ncols(),M.cstore(),x.cstore(),x.stride(),y.store(),y.stride());
+    }
 
-//matrix
-//operator+(const matrixref& A, const matrixref& B)
-//    {
-//#ifdef DEBUG
-//    if(!(A.Nrows() == B.Nrows() && A.Ncols() == B.Ncols())) throw std::runtime_error("Mismatched matrix sizes in plus");
-//#endif
-//    matrix C(A.Nrows(),A.Ncols());
-//    auto c = C.begin();
-//    auto a = A.cbegin();
-//    for(const auto& el : B)
-//        {
-//        *c = el + *a;
-//        ++c;
-//        ++a;
-//        }
-//    return C;
-//    }
-
+void
+mult(const matrixref& M,
+     const vecref& x, 
+     vec& y)
+    {
+    call_dgemv(M,x,y,1,0);
+    }
 
 
 void matrixref::

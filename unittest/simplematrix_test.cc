@@ -772,6 +772,39 @@ SECTION("Scalar multiply, divide")
         CHECK_CLOSE(A(r,c),origA(r,c)*fac);
     }
 
+SECTION("Matrix-vector product")
+    {
+    auto N = 10;
+    auto M = randomMatrix(N,N);
+    auto x = randomVec(N);
+
+    auto y = M*x;
+    for(auto r : count1(N))
+        {
+        Real val = 0;
+        for(auto c : count1(N)) val += M(r,c)*x(c);
+        CHECK_CLOSE(y(r),val);
+        }
+
+    y = M.t()*x;
+    for(auto r : count1(N))
+        {
+        Real val = 0;
+        for(auto c : count1(N)) val += M(c,r)*x(c);
+        CHECK_CLOSE(y(r),val);
+        }
+
+    //Check a case where vector is strided
+    auto d = diagonal(M);
+    y = M*d;
+    for(auto r : count1(N))
+        {
+        Real val = 0;
+        for(auto c : count1(N)) val += M(r,c)*M(c,c);
+        CHECK_CLOSE(y(r),val);
+        }
+    }
+
 } // Test matrix
 
 

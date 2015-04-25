@@ -74,18 +74,6 @@ namespace itensor {
 #ifdef LAPACK_REQUIRE_EXTERN
 extern "C" {
 
-#ifdef PLATFORM_macos
-void cblas_dgemm(const enum CBLAS_ORDER __Order,
-        const enum CBLAS_TRANSPOSE __TransA,
-        const enum CBLAS_TRANSPOSE __TransB, const int __M, const int __N,
-        const int __K, const double __alpha, const double *__A,
-        const int __lda, const double *__B, const int __ldb,
-        const double __beta, double *__C, const int __ldc);
-#else
-void F77NAME(dgemm)(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
-            LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*,LAPACK_REAL*,
-            LAPACK_INT*,LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*);
-#endif
 
 #ifdef PLATFORM_macos
 void cblas_daxpy(const int n, const double alpha, const double *X, const int incX, double *Y, const int incY);
@@ -102,6 +90,31 @@ cblas_ddot(const LAPACK_INT N, const LAPACK_REAL *X, const LAPACK_INT incx, cons
 LAPACK_REAL F77NAME(ddot)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx, LAPACK_REAL* Y, LAPACK_INT* incy);
 #endif
 
+#ifdef PLATFORM_macos
+void cblas_dgemm(const enum CBLAS_ORDER __Order,
+        const enum CBLAS_TRANSPOSE __TransA,
+        const enum CBLAS_TRANSPOSE __TransB, const int __M, const int __N,
+        const int __K, const double __alpha, const double *__A,
+        const int __lda, const double *__B, const int __ldb,
+        const double __beta, double *__C, const int __ldc);
+#else
+void F77NAME(dgemm)(char*,char*,LAPACK_INT*,LAPACK_INT*,LAPACK_INT*,
+            LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*,LAPACK_REAL*,
+            LAPACK_INT*,LAPACK_REAL*,LAPACK_REAL*,LAPACK_INT*);
+#endif
+
+#ifdef PLATFORM_macos
+void cblas_dgemv(const enum CBLAS_ORDER Order,
+        const enum CBLAS_TRANSPOSE TransA, const LAPACK_INT M, const LAPACK_INT N,
+        const LAPACK_REAL alpha, const LAPACK_REAL *A, const LAPACK_INT lda,
+        const LAPACK_REAL *X, const LAPACK_INT incX, const LAPACK_REAL beta, LAPACK_REAL *Y,
+        const LAPACK_INT incY);
+#else
+void F77NAME(dgemv)(char* transa,LAPACK_INT* M,LAPACK_INT* N,LAPACK_REAL* alpha, LAPACK_REAL* A,
+                    LAPACK_INT* LDA, LAPACK_REAL* X, LAPACK_INT* incx, LAPACK_REAL* beta,
+                    LAPACK_REAL* Y, LAPACK_INT* incy);
+#endif
+
 
 #ifdef PLATFORM_acml
 void F77NAME(dsyev)(char *jobz, char *uplo, int *n, double *a, int *lda, 
@@ -112,7 +125,7 @@ void F77NAME(dsyev)(const char* jobz, const char* uplo, const LAPACK_INT* n, dou
             const LAPACK_INT* lda, double* w, double* work, const LAPACK_INT* lwork,
             LAPACK_INT* info );
 #endif
-
+PA
 #ifdef PLATFORM_macos
 void cblas_dscal(const LAPACK_INT N, const LAPACK_REAL alpha, LAPACK_REAL* X,const LAPACK_INT incX);
 #else
@@ -254,6 +267,30 @@ dgemm_wrapper(bool transa,
     char at = transa ? 'T' : 'N';
     char bt = transb ? 'T' : 'N';
     F77NAME(dgemm)(&at,&bt,&m,&n,&k,&alpha,A,&lda,B,&ldb,&beta,C,&m);
+#endif
+    }
+
+//
+// dgemv - matrix*vector multiply
+//
+void inline
+dgemv_wrapper(bool trans, 
+              LAPACK_REAL alpha,
+              LAPACK_REAL beta,
+              LAPACK_INT m,
+              LAPACK_INT n,
+              const LAPACK_REAL* A,
+              const LAPACK_REAL* x,
+              LAPACK_INT incx,
+              LAPACK_REAL* y,
+              LAPACK_INT incy)
+    {
+#ifdef PLATFORM_macos
+    auto Tr = trans ? CblasTrans : CblasNoTrans;
+    cblas_dgemv(CblasColMajor,Tr,m,n,alpha,A,m,x,incx,beta,y,incy);
+#else
+    char Tr = trans ? 'T' : 'N';
+    F77NAME(dgemv)(&at,&m,&n,&n,&alpha,const_cast<LAPACK_REAL*>(A),&m,const_cast<LAPACK_REAL*>(x),&incx,&beta,y,&incy);
 #endif
     }
 
