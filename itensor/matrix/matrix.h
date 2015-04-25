@@ -179,6 +179,22 @@ subMatrix(const matrixref& m,
           long cstart,
           long cstop);
 
+matrixref inline
+rows(const matrixref& m,
+        long rstart,
+        long rstop)
+    {
+    return subMatrix(m,rstart,rstop,1,m.Nrows());
+    }
+
+matrixref inline
+columns(const matrixref& m,
+        long cstart,
+        long cstop)
+    {
+    return subMatrix(m,1,m.Nrows(),cstart,cstop);
+    }
+
 
 // C += A*B
 void

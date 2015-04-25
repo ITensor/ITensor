@@ -97,7 +97,7 @@ orthog(const matrixref& M, long num, long numpass)
         coli /= nrm;
         if(i == 1) continue;
 
-        Mcols = subMatrix(M,1,M.Nrows(),1,i-1);
+        Mcols = columns(M,1,i-1);
         dotsref = subVector(dots,1,i-1);
         for(auto pass : count1(numpass))
             {
