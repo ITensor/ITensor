@@ -76,6 +76,8 @@ class matrixref
     applyTrans() { ind_ = transpose(ind_); }
     matrixref 
     t();
+    void
+    randomize();
 
     void
     operator*=(Real fac);

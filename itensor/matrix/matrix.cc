@@ -81,6 +81,15 @@ t()
     return res;
     }
 
+void matrixref::
+randomize()
+    {
+#ifdef DEBUG
+    if(readOnly()) throw std::runtime_error("randomize: matrixref is read only");
+#endif
+    for(auto& el : *this) el = detail::quickran();
+    }
+
 std::ostream&
 operator<<(std::ostream& s, const matrixref& M)
     {
@@ -404,7 +413,7 @@ matrix
 randomMatrix(long Nr, long Nc)
     {
     matrix res(Nr,Nc);
-    for(auto& el : res) el = detail::quickran();
+    res.randomize();
     return res;
     }
 

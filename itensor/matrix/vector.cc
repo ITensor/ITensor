@@ -91,6 +91,15 @@ operator()(long i)
     return store_[(i-1)*strd_];
     }
 
+void vecref::
+randomize()
+    {
+#ifdef DEBUG
+    if(readOnly()) throw std::runtime_error("randomize: vecref is read only");
+#endif
+    for(auto& el : *this) el = detail::quickran();
+    }
+
 vecref::iterator vecref::
 begin() 
     { 
@@ -263,7 +272,7 @@ vec
 randomVec(long size)
     {
     vec res(size);
-    for(auto& el : res) el = detail::quickran();
+    res.randomize();
     return res;
     }
 

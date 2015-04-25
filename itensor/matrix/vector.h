@@ -69,10 +69,8 @@ class vecref
 
     const Real*
     cstore() const { return cstore_; }
-
     Real*
     store() const;
-
     void
     store(const Real* newstore);
     void
@@ -84,6 +82,9 @@ class vecref
     operator()(long i);
     Real
     get(long i) const { return cstore_[(i-1)*strd_]; }
+
+    void
+    randomize();
 
     iterator
     begin();
