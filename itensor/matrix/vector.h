@@ -206,6 +206,9 @@ operator-(const vec& A, vec&& B)
     res += A;
     return res;
     }
+//Dot product:
+Real
+operator*(const vecref& A, const vecref& B);
 
 Real
 norm(const vecref& v);

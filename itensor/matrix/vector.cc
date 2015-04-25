@@ -248,6 +248,17 @@ norm(const vecref& v)
     return std::sqrt(nrm);
     }
 
+Real
+operator*(const vecref& A, const vecref& B)
+    {
+#ifdef DEBUG
+    if(A.size() != B.size()) throw std::runtime_error("vecref*vecref: mismatched sizes");
+    if(A.size() > std::numeric_limits<LAPACK_INT>::max()) 
+        throw std::runtime_error("vecref*vecref: overflow of size beyond LAPACK_INT range");
+#endif
+    return ddot_wrapper(A.size(),A.cstore(),A.stride(),B.cstore(),B.stride());
+    }
+
 vec
 randomVec(long size)
     {

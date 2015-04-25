@@ -95,6 +95,14 @@ void F77NAME(daxpy)(LAPACK_INT* n, LAPACK_REAL* alpha,
                     LAPACK_REAL* Y, LAPACK_INT* incy);
 #endif
 
+#ifdef PLATFORM_macos
+LAPACK_REAL 
+cblas_ddot(const LAPACK_INT N, const LAPACK_REAL *X, const LAPACK_INT incx, const LAPACK_REAL *Y, const LAPACK_INT incy);
+#else
+LAPACK_REAL F77NAME(ddot)(LAPACK_INT* N, LAPACK_REAL* X, LAPACK_INT* incx, LAPACK_REAL* Y, LAPACK_INT* incy);
+#endif
+
+
 #ifdef PLATFORM_acml
 void F77NAME(dsyev)(char *jobz, char *uplo, int *n, double *a, int *lda, 
                     double *w, double *work, int *lwork, int *info, 
@@ -198,6 +206,25 @@ daxpy_wrapper(LAPACK_INT* n,        //number of elements of X,Y
 #else
     auto Xnc = const_cast<LAPACK_REAL*>(X);
     F77NAME(daxpy)(n,alpha,Xnc,incx,Y,incy);
+#endif
+    }
+
+//
+// ddot
+//
+LAPACK_REAL inline
+ddot_wrapper(LAPACK_INT N,
+             const LAPACK_REAL* X,
+             LAPACK_INT incx,
+             const LAPACK_REAL* Y,
+             LAPACK_INT incy)
+    {
+#ifdef PLATFORM_macos
+    return cblas_ddot(N,X,incx,Y,incy);
+#else
+    auto *Xnc = const_cast<LAPACK_REAL*>(X);
+    auto *Ync = const_cast<LAPACK_REAL*>(Y);
+    return F77NAME(ddot)(&N,Xnc,&incx,Ync,&incy);
 #endif
     }
 

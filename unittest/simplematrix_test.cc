@@ -32,6 +32,8 @@ sliceFunc(const matrixref& M1r,
     M2r = nr;
     }
 
+//Here "slicing" means in the C++ inheritance sense,
+//not "matrix slicing" i.e. taking a subset of elements
 TEST_CASE("Check no slicing")
     {
     SECTION("vector")
@@ -192,6 +194,29 @@ SECTION("vec + and -")
         {
         CHECK_CLOSE(v1(i),origv1(i)+origv2(i));
         }
+    }
+
+SECTION("Dot product")
+    {
+    auto N = 10;
+
+    auto v = randomVec(N);
+    auto vnrm = norm(v);
+    CHECK_CLOSE(v*v,vnrm*vnrm);
+
+    //Non-trivial stride case:
+    auto M1 = randomMatrix(N,N);
+    auto M2 = randomMatrix(N,N);
+    auto d1 = diagonal(M1);
+    auto d2 = diagonal(M2);
+
+    auto dot = d1*d2;
+    Real val = 0;
+    for(auto j : count1(N))
+        {
+        val += M1(j,j)*M2(j,j);
+        }
+    CHECK_CLOSE(val,dot);
     }
 }
 
@@ -893,7 +918,6 @@ SECTION("Sub Matrix")
 
 TEST_CASE("Matrix Algorithms and Decompositions")
 {
-
 SECTION("diagSymmetric")
     {
     auto N = 100;
@@ -916,5 +940,4 @@ SECTION("diagSymmetric")
         }
     CHECK(norm(R-M) < 1E-12*norm(M));
     }
-
 }
