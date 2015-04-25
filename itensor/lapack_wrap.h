@@ -235,21 +235,21 @@ dgemm_wrapper(bool transa,
 // dsyev
 //
 void inline
-dsyev_wrapper(char* jobz,        //if jobz=='V', compute eigs and evecs
-              char* uplo,        //if uplo=='U', read from upper triangle of A
-              LAPACK_INT* n,     //number of cols of A
+dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
+              char uplo,        //if uplo=='U', read from upper triangle of A
+              LAPACK_INT n,     //number of cols of A
               LAPACK_REAL* A,    //symmetric matrix A
-              LAPACK_INT* lda,   //size of A (usually same as n)
               LAPACK_REAL* eigs, //eigenvalues on return
-              LAPACK_INT* info)  //error info
+              LAPACK_INT& info)  //error info
     {
-    LAPACK_INT lwork = std::max(1,3*(*n)-1);
+    LAPACK_INT lwork = std::max(1,3*n-1);
     LAPACK_REAL work[lwork];
+    LAPACK_INT lda = n;
 
 #ifdef PLATFORM_acml
-    F77NAME(dsyev)(jobz,uplo,n,A,lda,eigs,work,&lwork,info,1,1);
+    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work,&lwork,&info,1,1);
 #else
-    F77NAME(dsyev)(jobz,uplo,n,A,lda,eigs,work,&lwork,info);
+    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work,&lwork,&info);
 #endif
     }
 
