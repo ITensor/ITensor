@@ -322,12 +322,6 @@ operator-=(const matrixref& other)
         }
     }
 
-Real
-norm(const matrix& M)
-    {
-    Real nrm = 0;
-    return std::sqrt(nrm);
-    }
 
 Real
 norm(const matrixref& M)
@@ -343,6 +337,16 @@ norm(const matrixref& M)
         {
         for(auto& el : M) nrm += el*el;
         }
+    return std::sqrt(nrm);
+    }
+
+Real
+norm(const matrix& M)
+    {
+    Real nrm = 0;
+    auto p = M.cstore();
+    auto pend = M.cstore()+M.size();
+    for(; p != pend; ++p) nrm += (*p)*(*p);
     return std::sqrt(nrm);
     }
 

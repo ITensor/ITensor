@@ -324,6 +324,12 @@ operator/(matrix A, Real fac) { A /= fac; return A; }
 matrix
 randomMatrix(long Nr, long Nc);
 
+Real
+norm(const matrixref& M);
+
+Real
+norm(const matrix& M);
+
 std::ostream&
 operator<<(std::ostream& s, const matrixref& M);
 
