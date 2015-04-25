@@ -32,18 +32,20 @@ diagSymmetric(const matrixref& M,
         throw std::runtime_error("diagSymmetric: d must be contiguous");
 #endif
 
-    char jobz = 'V';
-    char uplo = 'U';
+    //Set U = -M so eigenvalues will be sorted from largest to smallest
+    auto pM = M.cbegin();
+    for(auto& el : U) 
+        { 
+        el = -(*pM); 
+        ++pM; 
+        }
+
     LAPACK_INT info;
-
-    std::copy(M.cbegin(),M.cend(),U.begin());
-    
-    dsyev_wrapper(&jobz,&uplo,&N,U.store(),&N,d.store(),&info);
-
+    dsyev_wrapper('V','U',N,U.store(),d.store(),info);
     if(info != 0) throw std::runtime_error("Error condition in diagSymmetric");
 
-    //Transpose U before return
-    U.applyTrans();
+    //Correct the signs of the eigenvalues:
+    d *= -1;
     }
 
 void

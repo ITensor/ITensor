@@ -894,18 +894,27 @@ SECTION("Sub Matrix")
 TEST_CASE("Matrix Algorithms and Decompositions")
 {
 
-SECTION("diagHermitian")
+SECTION("diagSymmetric")
     {
-    auto M = randomMatrix(2,2);
-    Print(M);
+    auto N = 100;
+    auto M = randomMatrix(N,N);
+    //Symmetrize:
     M = M+M.t();
-    Print(M);
 
     matrix U;
     vec d;
     diagSymmetric(M,U,d);
-    Print(U);
-    Print(d);
+
+    auto D = matrix(N,N);
+    diagonal(D) = d;
+    auto R = U*D*U.t();
+
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(R(r,c),M(r,c));
+        }
+    CHECK(norm(R-M) < 1E-12*norm(M));
     }
 
 }
