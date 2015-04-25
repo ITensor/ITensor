@@ -143,8 +143,8 @@ subMatrix(const matrixref& m,
           long cstop)
     { 
 #ifdef DEBUG
-    if(rstop > m.Nrows() || rstart >= rstop) throw std::runtime_error("subMatrix invalid row start and stop");
-    if(cstop > m.Ncols() || cstart >= cstop) throw std::runtime_error("subMatrix invalid col start and stop");
+    if(rstop > m.Nrows() || rstart > rstop) throw std::runtime_error("subMatrix invalid row start and stop");
+    if(cstop > m.Ncols() || cstart > cstop) throw std::runtime_error("subMatrix invalid col start and stop");
 #endif
     const auto& i = m.ind();
     auto offset = i.rs*(rstart-1)+i.cs*(cstart-1);

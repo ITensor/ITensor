@@ -42,7 +42,7 @@ diagSymmetric(const matrixref& M,
 //orthogonalize the first num columns of a matrixref M,
 //optionally repeating numpass times to reduce roundoff errors
 void 
-orthog(const matrixref& M, long num, long numpass = 2);
+orthog(const matrixref& M, long num = -1, long numpass = 2);
 
 };
 

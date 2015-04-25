@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "matrix/matrix.h"
+#include "matrix/matrix_algs.h"
 #include "autovector.h"
 #include "global.h"
 #include "count.h"
@@ -1048,5 +1048,21 @@ SECTION("diagSymmetric")
         CHECK_CLOSE(R(r,c),M(r,c));
         }
     CHECK(norm(R-M) < 1E-12*norm(M));
+    }
+
+SECTION("Orthogonalize")
+    {
+    auto N = 10;
+    auto M = randomMatrix(N,N);
+
+    orthog(M);
+
+    auto R = M.t()*M;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        if(r == c) CHECK_CLOSE(R(r,c),1);
+        else       CHECK(R(r,c) < 1E-12);
+        }
     }
 }

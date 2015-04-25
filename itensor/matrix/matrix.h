@@ -199,15 +199,6 @@ mult(const matrixref& M,
      vec& y,
      bool fromleft = false);
 
-void
-diagSymmetric(const matrixref& M,
-              matrixref& U,
-              vecref& d);
-
-void
-diagSymmetric(const matrixref& M,
-              matrix& U,
-              vec& d);
 
 class matrix : public matrixref
     {
