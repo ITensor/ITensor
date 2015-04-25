@@ -102,7 +102,27 @@ diagonal(const matrixref& m)
     auto vsize = std::min(m.Nrows(),m.Ncols());
     auto vstrd = m.rowStride()+m.colStride();
     if(m.readOnly()) return vecref(m.cstore(),vsize,vstrd);
-    else             return vecref(m.store(),vsize,vstrd);
+    return vecref(m.store(),vsize,vstrd);
+    }
+
+vecref
+column(const matrixref& m, long j)
+    { 
+    auto offset = (j-1)*m.colStride();
+    auto vsize = m.Nrows();
+    auto vstrd = m.rowStride();
+    if(m.readOnly()) return vecref(m.cstore()+offset,vsize,vstrd);
+    return vecref(m.store()+offset,vsize,vstrd);
+    }
+
+vecref
+row(const matrixref& m, long j)
+    { 
+    auto offset = (j-1)*m.rowStride();
+    auto vsize = m.Ncols();
+    auto vstrd = m.colStride();
+    if(m.readOnly()) return vecref(m.cstore()+offset,vsize,vstrd);
+    return vecref(m.store()+offset,vsize,vstrd);
     }
 
 matrixref
@@ -120,7 +140,7 @@ subMatrix(const matrixref& m,
     auto offset = i.rs*(rstart-1)+i.cs*(cstart-1);
     auto subind = mrange(rstop-rstart+1,i.rs,cstop-cstart+1,i.cs);
     if(m.readOnly()) return matrixref(m.cstore()+offset,subind);
-    else             return matrixref(m.store()+offset,subind);
+    return matrixref(m.store()+offset,subind);
     }
 
 

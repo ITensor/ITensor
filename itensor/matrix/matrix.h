@@ -160,12 +160,19 @@ class matrixref
 vecref
 diagonal(const matrixref& m);
 
+vecref
+column(const matrixref& m, long j);
+
+vecref
+row(const matrixref& m, long j);
+
 matrixref
 subMatrix(const matrixref& m,
           long rstart,
           long rstop,
           long cstart,
           long cstop);
+
 
 // C += A*B
 void

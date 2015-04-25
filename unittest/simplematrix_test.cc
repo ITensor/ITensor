@@ -684,6 +684,26 @@ SECTION("Diagonal")
         }
     }
 
+SECTION("Row / Col Slicing")
+    {
+    auto N = 10;
+    auto A = randomMatrix(N,N);
+
+    for(auto r : count1(N))
+        {
+        auto R = row(A,r);
+        for(auto c : count1(N))
+            CHECK_CLOSE(A(r,c),R(c));
+        }
+
+    for(auto c : count1(N))
+        {
+        auto C = column(A,c);
+        for(auto r : count1(N))
+            CHECK_CLOSE(A(r,c),C(r));
+        }
+    }
+
 SECTION("Transpose")
     {
     auto nr = 10,
