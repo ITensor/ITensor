@@ -774,35 +774,96 @@ SECTION("Scalar multiply, divide")
 
 SECTION("Matrix-vector product")
     {
-    auto N = 10;
-    auto M = randomMatrix(N,N);
-    auto x = randomVec(N);
-
-    auto y = M*x;
-    for(auto r : count1(N))
+    SECTION("Square case")
         {
-        Real val = 0;
-        for(auto c : count1(N)) val += M(r,c)*x(c);
-        CHECK_CLOSE(y(r),val);
-        }
+        auto N = 10;
+        auto M = randomMatrix(N,N);
+        auto x = randomVec(N);
 
-    y = M.t()*x;
-    for(auto r : count1(N))
-        {
-        Real val = 0;
-        for(auto c : count1(N)) val += M(c,r)*x(c);
-        CHECK_CLOSE(y(r),val);
-        }
+        auto y = M*x;
+        for(auto r : count1(N))
+            {
+            Real val = 0;
+            for(auto c : count1(N)) val += M(r,c)*x(c);
+            CHECK_CLOSE(y(r),val);
+            }
 
-    //Check a case where vector is strided
-    auto d = diagonal(M);
-    y = M*d;
-    for(auto r : count1(N))
+        y = M.t()*x;
+        for(auto r : count1(N))
+            {
+            Real val = 0;
+            for(auto c : count1(N)) val += M(c,r)*x(c);
+            CHECK_CLOSE(y(r),val);
+            }
+
+        y = x*M;
+        for(auto c : count1(N))
+            {
+            Real val = 0;
+            for(auto r : count1(N)) val += x(r)*M(r,c);
+            CHECK_CLOSE(y(c),val);
+            }
+
+        y = x*M.t();
+        for(auto c : count1(N))
+            {
+            Real val = 0;
+            for(auto r : count1(N)) val += x(r)*M(c,r);
+            CHECK_CLOSE(y(c),val);
+            }
+
+        //Check a case where vector is strided
+        auto d = diagonal(M);
+        y = M*d;
+        for(auto r : count1(N))
+            {
+            Real val = 0;
+            for(auto c : count1(N)) val += M(r,c)*M(c,c);
+            CHECK_CLOSE(y(r),val);
+            }
+        } //Square case
+
+    SECTION("Rectangular case")
         {
-        Real val = 0;
-        for(auto c : count1(N)) val += M(r,c)*M(c,c);
-        CHECK_CLOSE(y(r),val);
-        }
+        auto Ar = 5,
+             Ac = 10;
+        auto A = randomMatrix(Ar,Ac);
+        auto vR = randomVec(Ac);
+        auto vL = randomVec(Ar);
+
+        auto res = A*vR;
+        for(auto r : count1(Ar))
+            {
+            Real val = 0;
+            for(auto c : count1(Ac)) val += A(r,c)*vR(c);
+            CHECK_CLOSE(res(r),val);
+            }
+
+        res = vL*A;
+        for(auto c : count1(Ac))
+            {
+            Real val = 0;
+            for(auto r : count1(Ar)) val += vL(r)*A(r,c);
+            CHECK_CLOSE(res(c),val);
+            }
+
+        res = A.t()*vL;
+        for(auto c : count1(Ac))
+            {
+            Real val = 0;
+            for(auto r : count1(Ar)) val += vL(r)*A(r,c);
+            CHECK_CLOSE(res(c),val);
+            }
+
+        res = vR*A.t();
+        for(auto r : count1(Ar))
+            {
+            Real val = 0;
+            for(auto c : count1(Ac)) val += A(r,c)*vR(c);
+            CHECK_CLOSE(res(r),val);
+            }
+
+        } //Rectangular case
     }
 
 } // Test matrix

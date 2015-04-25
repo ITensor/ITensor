@@ -218,25 +218,36 @@ mult(const matrixref& A,
     }
 
 void
-call_dgemv(const matrixref& MM,
+call_dgemv(const matrixref& M,
           const vecref& x, 
           vec& y,
           Real alpha,
-          Real beta)
+          Real beta,
+          bool fromleft)
     {
-    auto M = MM;
+#ifdef DEBUG
     if(!M.contiguous())
         throw std::runtime_error("multiplication of non-contiguous matrixref by vector not currently supported");
-    auto trans = M.transposed();
-    dgemv_wrapper(trans,alpha,beta,M.Nrows(),M.Ncols(),M.cstore(),x.cstore(),x.stride(),y.store(),y.stride());
+#endif
+    auto trans = M.transposed() != fromleft; //here != acts as XOR
+    LAPACK_INT m = M.transposed() ? M.Ncols() : M.Nrows();
+    LAPACK_INT n = M.transposed() ? M.Nrows() : M.Ncols();
+    dgemv_wrapper(trans,alpha,beta,m,n,M.cstore(),x.cstore(),x.stride(),y.store(),y.stride());
     }
 
 void
 mult(const matrixref& M,
      const vecref& x, 
-     vec& y)
+     vec& y,
+     bool fromleft)
     {
-    call_dgemv(M,x,y,1,0);
+#ifdef DEBUG
+    if(fromleft ? M.Nrows()!=x.size() : M.Ncols()!=x.size()) 
+        throw std::runtime_error("matrix vector mult: mismatched sizes");
+    if(fromleft ? M.Ncols()!=y.size() : M.Nrows()!=y.size())
+        throw std::runtime_error("matrix vector mult: wrong size for result (y) vec");
+#endif
+    call_dgemv(M,x,y,1,0,fromleft);
     }
 
 

@@ -194,7 +194,8 @@ mult(const matrixref& A,
 void
 mult(const matrixref& M,
      const vecref& x, 
-     vec& y);
+     vec& y,
+     bool fromleft = false);
 
 void
 diagSymmetric(const matrixref& M,
@@ -303,6 +304,15 @@ operator*(const matrixref& M,
     {
     vec res(M.Nrows());
     mult(M,v,res);
+    return res;
+    }
+
+vec inline
+operator*(const vecref& v,
+          const matrixref& M)
+    {
+    vec res(M.Ncols());
+    mult(M,v,res,true);
     return res;
     }
 
