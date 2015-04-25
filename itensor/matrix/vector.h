@@ -214,6 +214,9 @@ class vec : public vecref
 Real
 norm(const vecref& v);
 
+std::ostream&
+operator<<(std::ostream& s, const vecref& v);
+
 };
 
 #endif

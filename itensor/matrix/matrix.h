@@ -153,7 +153,7 @@ class matrixref
     cbegin() const { return const_iterator(cstore_,ind_); }
     const_iterator
     cend() const { return const_iterator(ind_); }
-    void
+    void virtual
     clear() { *this = matrixref(); }
     };
 
@@ -238,10 +238,13 @@ class matrix : public matrixref
     matrix&
     operator-=(const matrix& other) { call_daxpy(other,-1.); return *this; }
 
-    //matrix&
-    //operator*=(Real fac);
-    //matrix&
-    //operator/=(Real fac);
+    void virtual
+    clear()
+        {
+        parent::clear();
+        data_.clear();
+        }
+
 
     private:
     void
@@ -269,7 +272,6 @@ class matrix : public matrixref
         parent::operator=(oref);
         data_ = std::move(other.data_);
         other.clear();
-        other.data_.clear();
         }
 
     void
@@ -324,10 +326,7 @@ matrix inline
 operator/(matrix A, Real fac) { A /= fac; return A; }
 
 std::ostream&
-operator<<(std::ostream& s, const vecref& v);
-std::ostream&
 operator<<(std::ostream& s, const matrixref& M);
-
 
 };
 
