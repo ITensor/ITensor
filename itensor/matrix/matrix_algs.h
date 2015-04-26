@@ -44,6 +44,13 @@ diagSymmetric(const matrixref& M,
 void 
 orthog(const matrixref& M, long num = -1, long numpass = 2);
 
+void
+SVD(const matrixref& A,
+    matrix& U, 
+    vec& D, 
+    matrix& V,
+    Real thresh = 1E-3);
+
 };
 
 #endif

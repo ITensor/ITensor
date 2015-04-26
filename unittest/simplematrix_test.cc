@@ -1065,4 +1065,15 @@ SECTION("Orthogonalize")
         else       CHECK(R(r,c) < 1E-12);
         }
     }
+
+SECTION("Singular Value Decomp")
+    {
+    //auto N = 10;
+    //auto M = randomMatrix(N,N);
+
+    //matrix U,V;
+    //vec d;
+    //SVD(M,U,d,V);
+
+    }
 }

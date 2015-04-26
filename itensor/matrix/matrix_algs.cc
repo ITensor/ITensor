@@ -9,6 +9,10 @@
 
 namespace itensor {
 
+//
+// diagSymmetric
+//
+
 void
 diagSymmetric(const matrixref& M,
               matrixref& U,
@@ -60,6 +64,10 @@ diagSymmetric(const matrixref& M,
     vecref& dref = d;
     diagSymmetric(M,Uref,dref);
     }
+
+//
+// orthog
+//
 
 void 
 orthog(const matrixref& M, long num, long numpass)
@@ -113,6 +121,130 @@ orthog(const matrixref& M, long num, long numpass)
             coli /= nrm;
             }
         }
+    }
+
+//
+// SVD
+//
+
+#define CHKSVD
+
+void 
+checksvd(const matrixref& A, const matrixref& U, const vecref& D, const matrixref& V)
+    {
+    matrix Ach = U;
+    for(int i = 1; i <= D.size(); ++i) column(Ach,i) *= D(i);
+    Ach = Ach * V;
+    Ach -= A;
+    auto nor = norm(A);
+    printfln("relative error with sqrt in low level svd is %.5E",norm(Ach)/nor);
+    }
+
+void
+SVD(const matrixref& A,
+    matrixref& U, 
+    vecref& D, 
+    matrixref& V,
+    Real thresh)
+    {
+    auto n = A.Nrows(), 
+         m = A.Ncols();
+
+    if(n > m)
+        {
+        matrixref At = A.t(),
+                  Ut = U.t(),
+                  Vt = V.t();
+        SVD(At,Vt,D,Ut,thresh);
+#ifdef CHKSVD
+        checksvd(A,U,D,V);
+#endif
+        return;
+        }
+
+    //Form 'density matrix' rho
+    matrix rho = A * A.t();
+
+    vec evals;
+    diagSymmetric(rho,U,evals);
+
+    //Form Vt and fix up its orthogonality
+    //(Vt is transpose of V)
+    matrix Vt = A.t() * U;
+    orthog(Vt,n,2); //2 is the number of orthog passes
+
+    //B should be close to diagonal
+    //but may not be perfect - fix
+    //it up below
+    matrix B = U.t() * A * Vt;
+
+    D = diagonal(B);
+    V = Vt.t();
+
+    if(D(1) == 0 || thresh == 0)
+        {
+#ifdef CHKSVD
+        checksvd(A,U,D,V);
+#endif
+        return;
+        }
+
+    long start = 2;
+    auto D1 = D(1);
+    for(; start < n; ++start)
+        {
+        if(D(start)/D1 < thresh) break;
+        }
+
+    if(start >= (n-1)) 
+        {
+#ifdef CHKSVD
+        checksvd(A,U,D,V);
+#endif
+        return;
+        }
+
+    //
+    //Recursively SVD part of B 
+    //for greater final accuracy
+    //
+
+    matrixref b = subMatrix(B,start,n,start,n);
+
+    matrix u,
+           v;
+    vec d;
+    SVD(b,u,d,v,thresh);
+
+    subVector(D,start,n) = d;
+
+    subMatrix(U,1,n,start,n) = subMatrix(U,1,n,start,n) * u;
+
+    subMatrix(V,start,n,1,m) = v * subMatrix(V,start,n,1,m);
+
+#ifdef CHKSVD
+	checksvd(A,U,D,V);
+#endif
+
+    return;
+    }
+
+void
+SVD(const matrixref& A,
+    matrix& U, 
+    vec& D, 
+    matrix& V,
+    Real thresh)
+    {
+    auto nsv = std::min(A.Nrows(),A.Ncols());
+    if(!(U.Nrows()==A.Nrows() && U.Ncols()==nsv)) U = matrix(A.Nrows(),nsv);
+    if(!(V.Nrows()==nsv && V.Ncols()==A.Ncols())) V = matrix(nsv,A.Ncols());
+    if(D.size() != nsv) D = vec(nsv);
+    matrixref& Uref = U;
+    vecref& Dref = D;
+    matrixref& Vref = V;
+    printfln("Dref.readOnly = %s",Dref.readOnly());
+    SVD(A,Uref,Dref,Vref,thresh);
     }
 
 }; //namespace itensor
