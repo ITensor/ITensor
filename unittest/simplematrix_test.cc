@@ -66,6 +66,25 @@ SECTION("Construct and assign from VecRef")
         }
     }
 
+SECTION("Copy data")
+    {
+    auto size = 10;
+    auto data1 = randomData(1,size);
+    auto data2 = randomData(1,size);
+    auto vr1 = VecRef(data1.begin(),size);
+    auto vr2 = VecRef(data2.begin(),size);
+    auto v1 = randomVec(size);
+    auto v2 = randomVec(4*size);
+
+    vr1 &= v1;
+    for(auto i : count1(size))
+        CHECK_CLOSE(data1(i),v1(i));
+
+    vr2 &= makeVecRef(v2,size,4);
+    for(auto i : count1(size))
+        CHECK_CLOSE(data2(i),v2(1+4*(i-1)));
+    }
+
 SECTION("Scalar multiply, divide")
     {
     auto size = 10;

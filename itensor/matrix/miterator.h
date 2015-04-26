@@ -1,9 +1,9 @@
 //
-// Distributed under the ITensor Library License, Version 1.1.
+// Distributed under the ITensor Library License, Version 1.2.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_MATRIX_MITERATOR_H_
-#define __ITENSOR_MATRIX_MITERATOR_H_
+#ifndef __ITENSOR_MITERATOR_H_
+#define __ITENSOR_MITERATOR_H_
 
 #include <iterator> 
 #include "mrange.h"
