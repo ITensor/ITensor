@@ -3,7 +3,7 @@
 #include "autovector.h"
 #include "global.h"
 #include "count.h"
-#include "matrix/vec.h"
+#include "matrix/mat.h"
 
 using namespace itensor;
 using namespace std;
@@ -188,8 +188,7 @@ SECTION("Dot product")
     }
 }
 
-/*
-TEST_CASE("Test matrixref")
+TEST_CASE("Test MatRef")
 {
 
 SECTION("Constructors")
@@ -200,7 +199,7 @@ SECTION("Constructors")
              Ac = 4;
         auto data = randomData(1,Ar*Ac);
         CHECK(data.size() == Ar*Ac);
-        auto A = matrixref(data.begin(),Ar,Ac);
+        auto A = makeMatRef(data.begin(),Ar,Ac);
 
         for(auto r : count1(Ar))
         for(auto c : count1(Ac))
@@ -214,7 +213,7 @@ SECTION("Constructors")
              Ac = 4;
         auto data = randomData(1,Ar*Ac);
         CHECK(data.size() == Ar*Ac);
-        auto A = matrixref(data.begin(),Ar,Ac,true);
+        auto A = makeMatRef(data.begin(),Ar,Ac,true);
         CHECK(A.transposed());
 
         for(auto r : count1(Ar))
@@ -230,7 +229,7 @@ SECTION("Transpose Method")
     auto Ar = 5,
          Ac = 3;
     auto data = randomData(1,Ar*Ac);
-    auto A = matrixref(data.begin(),Ar,Ac);
+    auto A = makeMatRef(data.begin(),Ar,Ac);
 
     auto At = A.t();
     CHECK(At.transposed());
@@ -242,22 +241,69 @@ SECTION("Transpose Method")
         }
     }
 
-SECTION("Read Only")
+SECTION("Test += -= operators")
     {
-    auto Ar = 5,
-         Ac = 3;
-    auto data = randomData(1,Ar*Ac);
+    auto N = 5;
+    auto dataA = randomData(1,N*N);
+    auto dataB = randomData(1,N*N);
+    auto origdataA = dataA;
 
-    auto A = matrixref(data.begin(),Ar,Ac);
-    CHECK(!A.readOnly());
-    A(1,2) = 7;
-    CHECK(A(1,2) == 7);
+    auto A = makeMatRef(dataA.begin(),N,N);
+    auto origA = makeMatRef(origdataA.cbegin(),N,N);
+    auto B = makeMatRef(dataB.cbegin(),N,N);
+    auto At = A.t();
+    auto Bt = B.t();
 
-    const auto& cdata = data;
-    auto cA = matrixref(cdata.begin(),Ar,Ac);
-    CHECK(cA.readOnly());
+    A += B;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
+        }
+
+    dataA = origdataA;
+    At += Bt;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
+        }
+
+    dataA = origdataA;
+    At += B;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),B(c,r)+origA(r,c));
+        }
+
+    dataA = origdataA;
+    A -= Bt;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        {
+        CHECK_CLOSE(A(r,c),-B(c,r)+origA(r,c));
+        }
     }
 
+//SECTION("Test addition of refs to same data")
+//    {
+//    auto N = 4;
+//    auto M = randomMatrix(N,N);
+//    auto origM = M;
+//    matrixref& Mr1 = M;
+//    const matrixref& Mr2 = M;
+//
+//    Mr1 += Mr2;
+//    for(auto r : count1(N)) 
+//    for(auto c : count1(N)) 
+//        CHECK_CLOSE(M(r,c),2*origM(r,c));
+//
+//    Mr1 -= Mr2;
+//    for(auto& el : M) CHECK(el < 1E-10);
+//    }
+
+/*
 SECTION("Test matrixref mult")
     {
     SECTION("Case 1")
@@ -475,7 +521,9 @@ SECTION("Test matrixref mult")
             }
         }
     }
+*/
 
+/*
 SECTION("Test mult_add")
     {
     auto Ar = 3,
@@ -503,69 +551,12 @@ SECTION("Test mult_add")
         CHECK_CLOSE(C(r,c),val);
         }
     }
+*/
 
-SECTION("Test += -= operators")
-    {
-    auto N = 5;
-    auto dataA = randomData(1,N*N);
-    auto dataB = randomData(1,N*N);
-    auto origdataA = dataA;
 
-    auto A = matrixref(dataA.begin(),N,N);
-    auto origA = matrixref(origdataA.begin(),N,N);
-    auto B = matrixref(dataB.begin(),N,N);
-    auto At = A.t();
-    auto Bt = B.t();
+} //Test MatRef
 
-    A += B;
-    for(auto r : count1(N))
-    for(auto c : count1(N))
-        {
-        CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
-        }
-
-    dataA = origdataA;
-    At += Bt;
-    for(auto r : count1(N))
-    for(auto c : count1(N))
-        {
-        CHECK_CLOSE(A(r,c),B(r,c)+origA(r,c));
-        }
-
-    dataA = origdataA;
-    At += B;
-    for(auto r : count1(N))
-    for(auto c : count1(N))
-        {
-        CHECK_CLOSE(A(r,c),B(c,r)+origA(r,c));
-        }
-
-    dataA = origdataA;
-    A -= Bt;
-    for(auto r : count1(N))
-    for(auto c : count1(N))
-        {
-        CHECK_CLOSE(A(r,c),-B(c,r)+origA(r,c));
-        }
-    }
-
-SECTION("Test addition of refs to same data")
-    {
-    auto N = 4;
-    auto M = randomMatrix(N,N);
-    auto origM = M;
-    matrixref& Mr1 = M;
-    const matrixref& Mr2 = M;
-
-    Mr1 += Mr2;
-    for(auto r : count1(N)) 
-    for(auto c : count1(N)) 
-        CHECK_CLOSE(M(r,c),2*origM(r,c));
-
-    Mr1 -= Mr2;
-    for(auto& el : M) CHECK(el < 1E-10);
-    }
-}
+/*
 
 TEST_CASE("Test matrix")
 {

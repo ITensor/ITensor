@@ -108,7 +108,7 @@ class MatRefT
     MatRefT 
     t() const
         {
-        MatRefT res = this;
+        MatRefT res(*this);
         res.applyTrans();
         return res;
         }
@@ -141,7 +141,7 @@ makeMatRef(Real* p,
            long ncols,
            bool trans = false)
     {
-    return MatRef(p,nrows,ncols); 
+    return MatRef(p,nrows,ncols,trans);
     }
 
 CMatRef inline
@@ -150,7 +150,7 @@ makeMatRef(const Real* cp,
            long ncols,
            bool trans = false)
     {
-    return CMatRef(cp,nrows,ncols); 
+    return CMatRef(cp,nrows,ncols,trans); 
     }
 
 
@@ -170,11 +170,6 @@ operator+=(MatRef& a, CMatRef b);
 MatRef&
 operator-=(MatRef& a, CMatRef b);
 
-MatRef&
-operator+=(MatRef& a, CMatRef b);
-
-MatRef&
-operator-=(MatRef& a, CMatRef b);
 
 };
 

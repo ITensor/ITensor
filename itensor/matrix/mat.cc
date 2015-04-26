@@ -45,6 +45,90 @@ operator&=(MatRef& a, CMatRef b)
     return a;
     }
 
+MatRef& 
+operator*=(MatRef& a, Real fac)
+    {
+    if(a.contiguous())
+        {
+#ifdef DEBUG
+        if(a.size() > std::numeric_limits<LAPACK_INT>::max()) 
+            throw std::runtime_error("MatRef overflow of size beyond LAPACK_INT range");
+#endif
+        dscal_wrapper(a.size(),fac,a.data());
+        }
+    else
+        {
+        for(auto& el : a) el *= fac;
+        }
+    return a;
+    }
+
+MatRef& 
+operator/=(MatRef& a, Real fac)
+    {
+    if(fac == 0) throw std::runtime_error("MatRef /=: divide by zero");
+    return operator*=(a,1./fac);
+    }
+
+void
+call_daxpy(MatRef& A, const CMatRef& B, Real alpha_)
+    {
+    LAPACK_REAL alpha = alpha_;
+    LAPACK_INT inc = 1;
+    LAPACK_INT size = A.size();
+#ifdef DEBUG
+    if(A.size() > std::numeric_limits<LAPACK_INT>::max()) 
+        throw std::runtime_error("overflow of size beyond LAPACK_INT range");
+#endif
+    daxpy_wrapper(&size,&alpha,B.data(),&inc,A.data(),&inc);
+    }
+
+MatRef&
+operator+=(MatRef& a, CMatRef b)
+    {
+#ifdef DEBUG
+    if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
+        throw std::runtime_error("MatRef +=: mismatched sizes");
+#endif
+    if(b.ind()==a.ind() && b.contiguous())
+        {
+        call_daxpy(a,b,+1);
+        }
+    else
+        {
+        auto pluseq = [](Real& x, Real y) { x += y; };
+        apply(a,b.cbegin(),pluseq);
+        }
+    return a;
+    }
+
+MatRef&
+operator-=(MatRef& a, CMatRef b)
+    {
+#ifdef DEBUG
+    if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
+        throw std::runtime_error("MatRef +=: mismatched sizes");
+#endif
+    if(b.ind()==a.ind() && b.contiguous())
+        {
+        call_daxpy(a,b,-1);
+        }
+    else
+        {
+        auto minuseq = [](Real& x, Real y) { x -= y; };
+        apply(a,b.cbegin(),minuseq);
+        }
+    return a;
+    }
+
+Real
+norm(CMatRef v)
+    {
+    Real nrm = 0;
+    for(auto& el : v) nrm += el*el;
+    return std::sqrt(nrm);
+    }
+
 
 std::ostream&
 operator<<(std::ostream& s, CMatRef M)
