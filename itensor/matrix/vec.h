@@ -140,12 +140,6 @@ operator+=(VecRef& a, CVecRef b);
 VecRef&
 operator-=(VecRef& a, CVecRef b);
 
-VecRef&
-operator+=(VecRef& a, CVecRef b);
-
-VecRef&
-operator-=(VecRef& a, CVecRef b);
-
 //Dot product
 Real
 operator*(CVecRef a, CVecRef b);
