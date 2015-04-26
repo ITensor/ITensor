@@ -109,7 +109,7 @@ orthog(const matrixref& M, long num, long numpass)
         dotsref = subVector(dots,1,i-1);
         for(auto pass : count1(numpass))
             {
-            dotsref = Mcols.t() * coli;
+            dotsref &= Mcols.t() * coli;
             coli -= Mcols * dotsref;
             auto nrm = norm(coli);
             if(nrm < 1E-3) --pass; //orthog is suspect
@@ -216,11 +216,11 @@ SVD(const matrixref& A,
     vec d;
     SVD(b,u,d,v,thresh);
 
-    subVector(D,start,n) = d;
+    subVector(D,start,n) &= d;
 
-    subMatrix(U,1,n,start,n) = subMatrix(U,1,n,start,n) * u;
+    subMatrix(U,1,n,start,n) &= subMatrix(U,1,n,start,n) * u;
 
-    subMatrix(V,start,n,1,m) = v * subMatrix(V,start,n,1,m);
+    subMatrix(V,start,n,1,m) &= v * subMatrix(V,start,n,1,m);
 
 #ifdef CHKSVD
 	checksvd(A,U,D,V);

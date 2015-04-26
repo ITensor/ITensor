@@ -9,9 +9,9 @@ include ../options.mk
 ####################################
 
 SOURCES+= simpletensor.cc 
-SOURCES+= matrix/vector.cc 
-SOURCES+= matrix/matrix.cc 
-SOURCES+= matrix/matrix_algs.cc 
+SOURCES+= matrix/vec.cc 
+#SOURCES+= matrix/mat.cc 
+#SOURCES+= matrix/algs.cc 
 #SOURCES = index.cc 
 #SOURCES+= contract.cc 
 #SOURCES+= itensor.cc 
@@ -27,8 +27,8 @@ SOURCES+= matrix/matrix_algs.cc
 
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
         detail/gcounter.h global.h real.h permutation.h index.h \
-        lapack_wrap.h matrix/strideiter.h matrix/mrange.h matrix/vector.h \
-        matrix/miterator.h matrix/matrix.h matrix/matrix_algs.h \
+        lapack_wrap.h matrix/strideiter.h matrix/vec.h matrix/slicevec.h \
+        matrix/mrange.h matrix/miterator.h matrix/mat.h matrix/algs.h \
         range.h indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h \
         itdata/itreal.h itdata/itdiag.h itdata/itcombiner.h itdata/itcplx.h \
@@ -131,15 +131,15 @@ index.o: $(GDEPHEADERS)
 GDEPHEADERS+= indexset.h
 indexset.o: $(GDEPHEADERS)
 .debug_objs/indexset.o: $(GDEPHEADERS)
-GDEPHEADERS+= matrix/strideiter.h matrix/vector.h
-matrix/vector.o: $(GDEPHEADERS)
-.debug_objs/matrix/vector.o: $(GDEPHEADERS)
-GDEPHEADERS+= matrix/mrange.h matrix/miterator.h matrix/matrix.h
-matrix/matrix.o: $(GDEPHEADERS)
-.debug_objs/matrix/matrix.o: $(GDEPHEADERS)
-GDEPHEADERS+= matrix/matrix_algs.h
-matrix/matrix_algs.o: $(GDEPHEADERS)
-.debug_objs/matrix/matrix_algs.o: $(GDEPHEADERS)
+GDEPHEADERS+= matrix/strideiter.h matrix/vec.h
+matrix/vec.o: $(GDEPHEADERS)
+.debug_objs/matrix/vec.o: $(GDEPHEADERS)
+GDEPHEADERS+= matrix/mrange.h matrix/miterator.h matrix/mat.h
+matrix/mat.o: $(GDEPHEADERS)
+.debug_objs/matrix/mat.o: $(GDEPHEADERS)
+GDEPHEADERS+= matrix/algs.h
+matrix/algs.o: $(GDEPHEADERS)
+.debug_objs/matrix/algs.o: $(GDEPHEADERS)
 GDEPHEADERS+= contract.h range.h simpletensor.h
 contract.o: $(GDEPHEADERS)
 .debug_objs/contract.o: $(GDEPHEADERS)

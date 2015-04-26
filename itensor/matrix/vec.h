@@ -1,0 +1,302 @@
+//
+// Distributed under the ITensor Library License, Version 1.1.
+//    (See accompanying LICENSE file.)
+//
+#ifndef __ITENSOR_VEC_H_
+#define __ITENSOR_VEC_H_
+
+#include "types.h"
+#include "print.h"
+#include "strideiter.h"
+
+namespace itensor {
+
+template<typename T>
+class VecRefT;
+
+using VecRef = VecRefT<Real>;
+
+using CVecRef = VecRefT<const Real>;
+
+template<typename T>
+class VecRefT
+    {
+    public:
+    using iterator = stride_iter<T*>;
+    using const_iterator = stride_iter<const T*>;
+    using value_type = std::remove_const_t<T>;
+    using pointer = T*;
+    using reference = T&;
+    using size_type = long;
+    private:
+    pointer pdata_ = nullptr;
+    size_type strd_ = 1;
+    size_type size_ = 0;
+    public:
+
+    VecRefT() { }
+
+    VecRefT(pointer pdata, 
+            long size,
+            long stride = 1)
+        :
+        pdata_(pdata),
+        strd_(stride),
+        size_(size)
+        { }
+
+    VecRefT(const VecRefT<value_type>& other)
+        :
+        pdata_(other.pdata_),
+        strd_(other.strd_),
+        size_(other.size_)
+        { }
+
+    VecRefT(const VecRefT<const value_type>& other)
+        :
+        pdata_(other.pdata_),
+        strd_(other.strd_),
+        size_(other.size_)
+        { }
+
+    VecRefT&
+    operator=(const VecRefT<value_type>& other)
+        {
+        pdata_ = other.pdata_;
+        strd_ = other.strd_;
+        size_ = other.size_;
+        }
+
+    VecRefT&
+    operator=(const VecRefT<const value_type>& other)
+        {
+        pdata_ = other.pdata_;
+        strd_ = other.strd_;
+        size_ = other.size_;
+        }
+
+    size_type
+    size() const { return size_; }
+
+    size_type
+    stride() const { return strd_; }
+
+    bool
+    contiguous() const { return strd_ == 1; }
+
+    explicit operator bool() const { return bool(pdata_); }
+
+    pointer
+    data() const { return pdata_; }
+
+    reference
+    operator()(long i) const { return pdata_[(i-1)*strd_]; }
+
+    iterator 
+    begin() const { return iterator(pdata_,strd_); }
+
+    iterator 
+    end() const { return iterator(pdata_+size_*strd_,strd_); }
+
+    const_iterator 
+    cbegin() const { return const_iterator(pdata_,strd_); }
+
+    const_iterator 
+    cend() const { return const_iterator(pdata_+size_*strd_,strd_); }
+
+    friend VecRefT<value_type>;
+    friend VecRefT<const value_type>;
+    };
+
+VecRef inline
+makeRef(Real* pd, 
+        long size,
+        long stride = 1)
+    {
+    return VecRef(pd,size,stride); 
+    }
+
+CVecRef inline
+makeRef(const Real* pd, 
+        long size,
+        long stride = 1)
+    {
+    return CVecRef(pd,size,stride); 
+    }
+
+//Copy data referenced by b to memory referenced by a
+VecRef&
+operator&=(VecRef& a, CVecRef b);
+
+//VecRef&
+//operator*=(VecRef& v, Real fac);
+//
+//VecRef&
+//operator/=(VecRef& v, Real fac);
+//
+//VecRef&
+//operator+=(VecRef& a, CVecRef b);
+//
+//VecRef&
+//operator-=(VecRef& a, CVecRef b);
+//
+//VecRef&
+//operator+=(VecRef& a, CVecRef b);
+//
+//VecRef&
+//operator-=(VecRef& a, CVecRef b);
+//
+////Dot product
+//Real
+//operator*(CVecRef a, CVecRef b);
+
+class Vec
+    {
+    public:
+    using storage_type = std::vector<Real>;
+    using iterator = Real*;
+    using const_iterator = const Real*;
+    using value_type = Real;
+    using size_type = storage_type::size_type;
+    public:
+    storage_type data_;
+    public:
+
+    Vec() { }
+
+    Vec(long size)
+        :
+        data_(size)
+        { }
+
+    Vec(const Vec& other) { assignFromVec(other); }
+
+    Vec(Vec&& other) { moveFromVec(std::move(other)); }
+
+    Vec(CVecRef ref) { assignFromRef(ref); }
+
+    Vec&
+    operator=(const Vec& other) { assignFromVec(other); return *this; }
+    Vec& 
+    operator=(Vec&& other) { moveFromVec(std::move(other)); return *this; }
+    Vec&
+    operator=(CVecRef ref) { assignFromRef(ref); return *this; }
+    Vec&
+    operator*=(Real fac);
+    Vec&
+    operator/=(Real fac);
+    Vec&
+    operator+=(const Vec& other);
+    Vec&
+    operator-=(const Vec& other);
+    Vec&
+    operator+=(CVecRef other);
+    Vec&
+    operator-=(CVecRef other);
+
+    Real*
+    data() { return data_.data(); }
+
+    const Real*
+    data() const { return data_.data(); }
+
+    size_type
+    size() const { return data_.size(); }
+
+    void
+    clear() { data_.clear(); }
+
+    private:
+
+    void
+    assignFromRef(CVecRef other);
+
+    void
+    assignFromVec(const Vec& other);
+
+    void
+    moveFromVec(Vec&& other);
+
+    };
+
+Vec inline
+operator+(Vec A, const Vec& B)
+    {
+    A += B;
+    return A;
+    }
+Vec inline
+operator+(const Vec& A, Vec&& B)
+    {
+    Vec res(std::move(B));
+    res += A;
+    return res;
+    }
+Vec inline
+operator-(Vec A, const Vec& B)
+    {
+    A -= B;
+    return A;
+    }
+Vec inline
+operator-(const Vec& A, Vec&& B)
+    {
+    Vec res(std::move(B));
+    res *= -1;
+    res += A;
+    return res;
+    }
+
+VecRef inline
+makeRef(Vec& v, 
+        long size,
+        long stride = 1)
+    {
+    return VecRef(v.data(),size,stride); 
+    }
+
+VecRef inline
+makeRef(Vec& v)
+    {
+    return VecRef(v.data(),v.size()); 
+    }
+
+CVecRef inline
+makeRef(const Vec& v, 
+        long size,
+        long stride = 1)
+    {
+    return CVecRef(v.data(),size,stride); 
+    }
+
+CVecRef inline
+makeRef(const Vec& v)
+    {
+    return CVecRef(v.data(),v.size()); 
+    }
+
+inline VecRef&
+operator&=(VecRef& ref, const Vec& v) { return operator&=(ref,makeRef(v)); }
+
+//Real
+//norm(CVecRef v);
+//
+
+VecRef
+randomize(VecRef v);
+
+inline Vec&
+randomize(Vec& v) { randomize(makeRef(v)); return v; }
+
+Vec
+randomVec(long size);
+
+std::ostream&
+operator<<(std::ostream& s, CVecRef v);
+
+inline std::ostream&
+operator<<(std::ostream& s, const Vec& v) { return operator<<(s,makeRef(v)); }
+
+};
+
+#endif
