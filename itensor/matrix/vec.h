@@ -109,7 +109,7 @@ class VecRefT
     };
 
 VecRef inline
-makeRef(Real* pd, 
+makeVecRef(Real* pd, 
         long size,
         long stride = 1)
     {
@@ -117,11 +117,11 @@ makeRef(Real* pd,
     }
 
 CVecRef inline
-makeRef(const Real* pd, 
+makeVecRef(const Real* cpd, 
         long size,
         long stride = 1)
     {
-    return CVecRef(pd,size,stride); 
+    return CVecRef(cpd,size,stride); 
     }
 
 //Copy data referenced by b to memory referenced by a
@@ -164,15 +164,14 @@ class Vec
 
     Vec() { }
 
-    Vec(long size)
-        :
-        data_(size)
-        { }
+    explicit
+    Vec(long size) : data_(size) { }
 
     Vec(const Vec& other) { assignFromVec(other); }
 
     Vec(Vec&& other) { moveFromVec(std::move(other)); }
 
+    explicit
     Vec(CVecRef ref) { assignFromRef(ref); }
 
     Vec&
@@ -255,7 +254,7 @@ class Vec
     };
 
 VecRef inline
-makeRef(Vec& v, 
+makeVecRef(Vec& v, 
         long size,
         long stride = 1)
     {
@@ -263,13 +262,13 @@ makeRef(Vec& v,
     }
 
 VecRef inline
-makeRef(Vec& v)
+makeVecRef(Vec& v)
     {
     return VecRef(v.data(),v.size()); 
     }
 
 CVecRef inline
-makeRef(const Vec& v, 
+makeVecRef(const Vec& v, 
         long size,
         long stride = 1)
     {
@@ -277,71 +276,51 @@ makeRef(const Vec& v,
     }
 
 CVecRef inline
-makeRef(const Vec& v)
+makeVecRef(const Vec& v)
     {
     return CVecRef(v.data(),v.size()); 
     }
 
 Vec inline
-operator+(Vec A, const Vec& B)
-    {
-    A += B;
-    return A;
-    }
+operator+(Vec A, const Vec& B) { A += B; return A; }
 Vec inline
-operator+(const Vec& A, Vec&& B)
-    {
-    Vec res(std::move(B));
-    res += A;
-    return res;
-    }
+operator+(const Vec& A, Vec&& B) { Vec res(std::move(B)); res += A; return res; }
 Vec inline
-operator-(Vec A, const Vec& B)
-    {
-    A -= B;
-    return A;
-    }
+operator-(Vec A, const Vec& B) { A -= B; return A; }
 Vec inline
-operator-(const Vec& A, Vec&& B)
-    {
-    Vec res(std::move(B));
-    res *= -1;
-    res += A;
-    return res;
-    }
+operator-(const Vec& A, Vec&& B) { Vec res(std::move(B)); res *= -1; res += A; return res; }
+inline Vec& Vec::
+operator*=(Real fac) { auto r = makeVecRef(*this); r *= fac; return *this; }
+inline Vec& Vec::
+operator/=(Real fac) { auto r = makeVecRef(*this); r /= fac; return *this; }
+inline Vec& Vec::
+operator+=(const Vec& other) { auto r = makeVecRef(*this); r += makeVecRef(other); return *this; }
+inline Vec& Vec::
+operator-=(const Vec& other) { auto r = makeVecRef(*this); r -= makeVecRef(other); return *this; }
+inline Vec& Vec::
+operator+=(CVecRef other) { auto r = makeVecRef(*this); r += other; return *this; }
+inline Vec& Vec::
+operator-=(CVecRef other) { auto r = makeVecRef(*this); r -= other; return *this; }
 
-inline Vec& Vec::
-operator*=(Real fac) { auto r = makeRef(*this); r *= fac; return *this; }
-inline Vec& Vec::
-operator/=(Real fac) { auto r = makeRef(*this); r /= fac; return *this; }
-inline Vec& Vec::
-operator+=(const Vec& other) { auto r = makeRef(*this); r += makeRef(other); return *this; }
-inline Vec& Vec::
-operator-=(const Vec& other) { auto r = makeRef(*this); r -= makeRef(other); return *this; }
-inline Vec& Vec::
-operator+=(CVecRef other) { auto r = makeRef(*this); r += other; return *this; }
-inline Vec& Vec::
-operator-=(CVecRef other) { auto r = makeRef(*this); r -= other; return *this; }
-
-
+//Copy contents of Vec to memory referenced by VecRef
 inline VecRef&
-operator&=(VecRef& ref, const Vec& v) { return operator&=(ref,makeRef(v)); }
+operator&=(VecRef& ref, const Vec& v) { return operator&=(ref,makeVecRef(v)); }
 
 //Dot product
 Real inline
-operator*(const Vec& a, const Vec& b) { return operator*(makeRef(a),makeRef(b)); }
+operator*(const Vec& a, const Vec& b) { return operator*(makeVecRef(a),makeVecRef(b)); }
 
 Real
 norm(CVecRef v);
 
 Real inline
-norm(const Vec& v) { return norm(makeRef(v)); }
+norm(const Vec& v) { return norm(makeVecRef(v)); }
 
 VecRef
 randomize(VecRef v);
 
 inline Vec&
-randomize(Vec& v) { randomize(makeRef(v)); return v; }
+randomize(Vec& v) { randomize(makeVecRef(v)); return v; }
 
 Vec
 randomVec(long size);
@@ -350,15 +329,16 @@ std::ostream&
 operator<<(std::ostream& s, CVecRef v);
 
 inline std::ostream&
-operator<<(std::ostream& s, const Vec& v) { return operator<<(s,makeRef(v)); }
+operator<<(std::ostream& s, const Vec& v) { return operator<<(s,makeVecRef(v)); }
 
+//Return ref to elements [start,stop] of a Vec, inclusive
 template<typename Vec_>
 auto
 subVector(Vec_& v,
           long start,
           long stop)
     {
-    return makeRef(v.data()+(start-1),stop-start+1);
+    return makeVecRef(v.data()+(start-1),stop-start+1);
     }
 
 };
