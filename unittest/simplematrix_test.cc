@@ -1,9 +1,9 @@
 #include "test.h"
 
-#include "matrix/matrix_algs.h"
 #include "autovector.h"
 #include "global.h"
 #include "count.h"
+#include "matrix/vec.h"
 
 using namespace itensor;
 using namespace std;
@@ -16,64 +16,13 @@ randomData(long first, long last)
     return data;
     }
 
-void
-sliceFunc(const vecref& v1r,
-           vecref& v2r)
-    {
-    vecref nr = v1r;
-    v2r = nr;
-    }
-
-void
-sliceFunc(const matrixref& M1r,
-          matrixref& M2r)
-    {
-    matrixref nr = M1r;
-    M2r = nr;
-    }
-
-//Here "slicing" means in the C++ inheritance sense,
-//not "matrix slicing" i.e. taking a subset of elements
-TEST_CASE("Check no slicing")
-    {
-    SECTION("vector")
-        {
-        //
-        // Without defining vecref::operator=(vecref) to
-        // be virtual and defining proper overload,
-        // sliceFunc1 and 2 could cause v2's store() and data_.data()
-        // pointers to get out of sync
-        //
-        vec v1(10),
-            v2(10);
-        CHECK(v1.store() == v1.data());
-        CHECK(v2.store() == v2.data());
-
-        sliceFunc(v1,v2);
-        CHECK(v1.store() == v1.data());
-        CHECK(v2.store() == v2.data());
-        }
-
-    SECTION("matrix")
-        {
-        matrix M1(10,10),
-               M2(10,10);
-        CHECK(M1.store() == M1.data());
-        CHECK(M2.store() == M2.data());
-
-        sliceFunc(M1,M2);
-        CHECK(M1.store() == M1.data());
-        CHECK(M2.store() == M2.data());
-        }
-    }
-
-TEST_CASE("Test vec and vecref")
+TEST_CASE("Test VecRef")
 {
 SECTION("Constructors")
     {
     auto size = 10;
     auto data = randomData(1,size);
-    auto vr = vecref(data.begin(),size);
+    auto vr = VecRef(data.begin(),size);
     CHECK(vr);
     CHECK(vr.size() == size);
 
@@ -82,33 +31,33 @@ SECTION("Constructors")
         CHECK_CLOSE(vr(i),data(i));
         }
 
-    auto v = vec(size);
+    auto v = Vec(size);
     CHECK(v);
     CHECK(v.size() == size);
-    const auto* p = v.store();
+    const auto* p = v.data();
     for(auto i : count1(size))
         {
         CHECK_CLOSE(v(i),p[i-1]);
         }
     }
 
-SECTION("Construct and assign from vecref")
+SECTION("Construct and assign from VecRef")
     {
     auto size = 10;
     auto data = randomData(1,size);
-    auto vr = vecref(data.begin(),size);
+    auto vr = VecRef(data.begin(),size);
 
     //print("data = "); for(auto& el : data) print(el," "); println();
     //print("vr = "); for(auto& el : vr) print(el," "); println();
 
-    vec v1(vr);
+    Vec v1(vr);
     CHECK(v1.size() == size);
     for(auto i : count1(size))
         {
         CHECK_CLOSE(v1(i),data(i));
         }
 
-    vec v2(size+2);
+    Vec v2(size+2);
     v2 = vr;
     CHECK(v2.size() == size);
     for(auto i : count1(size))
@@ -122,7 +71,7 @@ SECTION("Scalar multiply, divide")
     auto size = 10;
     auto data = randomData(1,size);
     auto origdata = data;
-    auto vr = vecref(data.begin(),size);
+    auto vr = VecRef(data.begin(),size);
     auto fac = Global::random();
 
     vr *= fac;
@@ -131,7 +80,7 @@ SECTION("Scalar multiply, divide")
         CHECK_CLOSE(data(i),fac*origdata(i));
         }
 
-    vec v1(vr);
+    Vec v1(vr);
     v1 *= fac;
     for(auto i : count1(size))
         {
@@ -145,8 +94,8 @@ SECTION("Test += -= operators")
     auto dataA = randomData(1,size);
     auto dataB = randomData(1,size);
     auto origdataA = dataA;
-    auto A = vecref(dataA.begin(),size);
-    auto B = vecref(dataB.begin(),size);
+    auto A = VecRef(dataA.begin(),size);
+    auto B = VecRef(dataB.begin(),size);
 
     A += B;
     for(auto i : count1(size))
@@ -158,7 +107,7 @@ SECTION("Test += -= operators")
     auto cstride = 3;
     auto dataC = randomData(1,cstride*size);
     //Only access every third element:
-    auto C = vecref(dataC.begin(),size,cstride);
+    auto C = VecRef(dataC.begin(),size,cstride);
     A -= C;
     for(auto i : count1(size))
         {
@@ -166,7 +115,7 @@ SECTION("Test += -= operators")
         }
     }
 
-SECTION("vec + and -")
+SECTION("Vec + and -")
     {
     auto size = 20;
     auto v1 = randomVec(size),
@@ -204,19 +153,19 @@ SECTION("Dot product")
     auto vnrm = norm(v);
     CHECK_CLOSE(v*v,vnrm*vnrm);
 
-    //Non-trivial stride case:
-    auto M1 = randomMatrix(N,N);
-    auto M2 = randomMatrix(N,N);
-    auto d1 = diagonal(M1);
-    auto d2 = diagonal(M2);
+    ////Non-trivial stride case:
+    //auto M1 = randomMatrix(N,N);
+    //auto M2 = randomMatrix(N,N);
+    //auto d1 = diagonal(M1);
+    //auto d2 = diagonal(M2);
 
-    auto dot = d1*d2;
-    Real val = 0;
-    for(auto j : count1(N))
-        {
-        val += M1(j,j)*M2(j,j);
-        }
-    CHECK_CLOSE(val,dot);
+    //auto dot = d1*d2;
+    //Real val = 0;
+    //for(auto j : count1(N))
+    //    {
+    //    val += M1(j,j)*M2(j,j);
+    //    }
+    //CHECK_CLOSE(val,dot);
     }
 }
 
@@ -622,7 +571,7 @@ SECTION("Constructors")
              Ac = 4;
         auto A = randomMatrix(Ar,Ac);
 
-        const auto *data = A.store();
+        const auto *data = A.data();
         for(auto r : count(Ar))
         for(auto c : count(Ac))
             {
@@ -637,7 +586,7 @@ SECTION("Constructors")
         for(auto& el : A) el = Global::random();
         CHECK(A.transposed());
 
-        const auto *data = A.store();
+        const auto *data = A.data();
         for(auto r : count(Ar))
         for(auto c : count(Ac))
             {
@@ -941,7 +890,7 @@ SECTION("Transpose")
     auto nr = 10,
          nc = 15;
     auto A = randomMatrix(nr,nc);
-    auto At = matrixref(A.cstore(),transpose(A.ind()));
+    auto At = matrixref(A.data(),transpose(A.ind()));
     CHECK(At.transposed());
 
     for(auto i : count1(nr))

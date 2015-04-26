@@ -27,7 +27,7 @@ SOURCES+= matrix/vec.cc
 
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
         detail/gcounter.h global.h real.h permutation.h index.h \
-        lapack_wrap.h matrix/strideiter.h matrix/vec.h matrix/slicevec.h \
+        lapack_wrap.h matrix/strideiter.h matrix/vec.h \
         matrix/mrange.h matrix/miterator.h matrix/mat.h matrix/algs.h \
         range.h indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h \

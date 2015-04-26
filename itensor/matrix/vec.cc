@@ -9,6 +9,16 @@
 
 namespace itensor {
 
+//
+//
+//  \       /  /----   /-----  .----.   /----  /----
+//   \     /   |       |       |    |   |      |    
+//    \   /    |---    |       |---'.   |---   |--- 
+//     \ /     |       |       |    |   |      |    
+//      ^      \----   \-----  |    |   \----  |    
+//
+//
+
 template<typename Func, typename Iter>
 void
 apply(VecRef& v,
@@ -22,7 +32,6 @@ apply(VecRef& v,
         }
     }
 
-
 VecRef& 
 operator&=(VecRef& a, CVecRef b)
     {
@@ -35,134 +44,78 @@ operator&=(VecRef& a, CVecRef b)
     return a;
     }
 
-//void vecref::
-//operator*=(Real fac)
-//    {
-//#ifdef DEBUG
-//    if(readOnly()) throw std::runtime_error("vecref *=: read only");
-//#endif
-//    if(contiguous())
-//        {
-//#ifdef DEBUG
-//        if(size() > std::numeric_limits<LAPACK_INT>::max()) 
-//            throw std::runtime_error("matrixref *=: overflow of size beyond LAPACK_INT range");
-//#endif
-//        dscal_wrapper(size(),fac,store());
-//        }
-//    else
-//        {
-//        for(auto& el : *this) el *= fac;
-//        }
-//    }
-//void vecref::
-//operator/=(Real fac)
-//    {
-//    if(fac == 0) throw std::runtime_error("vecref /=: divide by zero");
-//    operator*=(1./fac);
-//    }
-//
-//void
-//call_daxpy(vecref& A, const vecref& B, Real alpha_)
-//    {
-//    LAPACK_REAL alpha = alpha_;
-//    LAPACK_INT inc = 1;
-//    LAPACK_INT size = A.size();
-//#ifdef DEBUG
-//    if(A.size() > std::numeric_limits<LAPACK_INT>::max()) throw std::runtime_error("overflow of size beyond LAPACK_INT range");
-//#endif
-//    daxpy_wrapper(&size,&alpha,B.cstore(),&inc,A.store(),&inc);
-//    }
-//
-//void vecref::
-//operator+=(const vecref& other)
-//    {
-//#ifdef DEBUG
-//    if(size()!=other.size()) throw std::runtime_error("vecref+=: mismatched sizes");
-//#endif
-//    if(contiguous() && other.contiguous())
-//        {
-//        call_daxpy(*this,other,+1);
-//        }
-//    else
-//        {
-//        auto o = other.begin();
-//        for(auto& el : *this) 
-//            {
-//            el += *o;
-//            ++o;
-//            }
-//        }
-//    }
-//void vecref::
-//operator-=(const vecref& other)
-//    {
-//#ifdef DEBUG
-//    if(size()!=other.size()) throw std::runtime_error("vecref+=: mismatched sizes");
-//#endif
-//    if(contiguous() && other.contiguous())
-//        {
-//        call_daxpy(*this,other,-1);
-//        }
-//    else
-//        {
-//        auto o = other.begin();
-//        for(auto& el : *this) 
-//            {
-//            el -= *o;
-//            ++o;
-//            }
-//        }
-//    }
-//
-////
-////  \       /   /----   /-----
-////   \     /    |       |
-////    \   /     |---    |
-////     \ /      |       |
-////      ^       \----   \-----
-////
-//
-//void vec::
-//assignFromRef(const vecref& other)
-//    {
-//    if(&other == this) return;
-//    //Copy data from other contiguously into data_
-//    data_ = storage_type(other.cbegin(),other.cend());
-//    //Set up appropriate store pointers, size, stride
-//    parent::operator=(vecref(data_.data(),data_.size()));
-//    }
-//
-//void vec::
-//assignFromVec(const vec& other)
-//    {
-//    if(&other == this) return;
-//    data_ = other.data_;
-//    parent::operator=(vecref(data_.data(),data_.size()));
-//    }
-//
-//void vec::
-//moveFromVec(vec&& other)
-//    {
-//    data_ = std::move(other.data_);
-//    other.clear();
-//    parent::operator=(vecref(data_.data(),data_.size()));
-//    }
-//
-//
-
-VecRef
-randomize(VecRef v)
+VecRef& 
+operator*=(VecRef& a, Real fac)
     {
-    for(auto& el : v) el = detail::quickran();
-    return v;
+    if(a.contiguous())
+        {
+#ifdef DEBUG
+        if(a.size() > std::numeric_limits<LAPACK_INT>::max()) 
+            throw std::runtime_error("VecRef overflow of size beyond LAPACK_INT range");
+#endif
+        dscal_wrapper(a.size(),fac,a.data());
+        return a;
+        }
+    for(auto& el : a) el *= fac;
+    return a;
     }
 
-Vec
-randomVec(long size)
+VecRef& 
+operator/=(VecRef& a, Real fac)
     {
-    Vec v(size);
-    randomize(v);
-    return v;
+    if(fac == 0) throw std::runtime_error("VecRef /=: divide by zero");
+    return operator*=(a,1./fac);
+    }
+
+void
+call_daxpy(VecRef& A, const CVecRef& B, Real alpha_)
+    {
+    LAPACK_REAL alpha = alpha_;
+    LAPACK_INT inc = 1;
+    LAPACK_INT size = A.size();
+#ifdef DEBUG
+    if(A.size() > std::numeric_limits<LAPACK_INT>::max()) 
+        throw std::runtime_error("overflow of size beyond LAPACK_INT range");
+#endif
+    daxpy_wrapper(&size,&alpha,B.data(),&inc,A.data(),&inc);
+    }
+
+VecRef&
+operator+=(VecRef& a, CVecRef b)
+    {
+#ifdef DEBUG
+    if(a.size()!=b.size()) throw std::runtime_error("VecRef +=: mismatched sizes");
+#endif
+    auto pluseq = [](Real& x, Real y) { x += y; };
+    if(b.contiguous())
+        {
+        if(a.contiguous()) call_daxpy(a,b,+1);
+        else               apply(a,b.data(),pluseq);
+        }
+    else
+        {
+        apply(a,b.cbegin(),pluseq);
+        }
+    return a;
+    }
+
+VecRef&
+operator-=(VecRef& a, CVecRef b)
+    {
+#ifdef DEBUG
+    if(a.size()!=b.size()) throw std::runtime_error("VecRef +=: mismatched sizes");
+#endif
+    auto minuseq = [](Real& x, Real y) { x -= y; };
+    if(b.contiguous())
+        {
+        if(a.contiguous()) call_daxpy(a,b,-1);
+        else               apply(a,b.data(),minuseq);
+        }
+    else
+        {
+        apply(a,b.cbegin(),minuseq);
+        }
+    return a;
     }
 
 std::ostream&
@@ -175,32 +128,51 @@ operator<<(std::ostream& s, CVecRef v)
     return s;
     }
 
-//Real
-//norm(const vecref& v)
-//    {
-//    Real nrm = 0;
-//    for(auto& el : v) nrm += el*el;
-//    return std::sqrt(nrm);
-//    }
+Real
+norm(CVecRef v)
+    {
+    Real nrm = 0;
+    for(auto& el : v) nrm += el*el;
+    return std::sqrt(nrm);
+    }
+
+Real
+operator*(CVecRef a, CVecRef b)
+    {
+#ifdef DEBUG
+    if(a.size() != b.size()) throw std::runtime_error("VecRef dot product: mismatched sizes");
+    if(a.size() > std::numeric_limits<LAPACK_INT>::max()) 
+        throw std::runtime_error("VecRef dot product: overflow of size beyond LAPACK_INT range");
+#endif
+    return ddot_wrapper(a.size(),a.data(),a.stride(),b.data(),b.stride());
+    }
+
+VecRef
+randomize(VecRef v)
+    {
+    for(auto& el : v) el = detail::quickran();
+    return v;
+    }
+
 //
-//Real
-//operator*(const vecref& A, const vecref& B)
-//    {
-//#ifdef DEBUG
-//    if(A.size() != B.size()) throw std::runtime_error("vecref*vecref: mismatched sizes");
-//    if(A.size() > std::numeric_limits<LAPACK_INT>::max()) 
-//        throw std::runtime_error("vecref*vecref: overflow of size beyond LAPACK_INT range");
-//#endif
-//    return ddot_wrapper(A.size(),A.cstore(),A.stride(),B.cstore(),B.stride());
-//    }
 //
-//vec
-//randomVec(long size)
-//    {
-//    vec res(size);
-//    res.randomize();
-//    return res;
-//    }
+//  \       /   /----   /-----
+//   \     /    |       |
+//    \   /     |---    |
+//     \ /      |       |
+//      ^       \----   \-----
+//
+//
+
+
+Vec
+randomVec(long size)
+    {
+    Vec v(size);
+    randomize(v);
+    return v;
+    }
+
 
 //bool
 //overlaps(const Real* b1, const Real* e1,

@@ -128,27 +128,27 @@ makeRef(const Real* pd,
 VecRef&
 operator&=(VecRef& a, CVecRef b);
 
-//VecRef&
-//operator*=(VecRef& v, Real fac);
-//
-//VecRef&
-//operator/=(VecRef& v, Real fac);
-//
-//VecRef&
-//operator+=(VecRef& a, CVecRef b);
-//
-//VecRef&
-//operator-=(VecRef& a, CVecRef b);
-//
-//VecRef&
-//operator+=(VecRef& a, CVecRef b);
-//
-//VecRef&
-//operator-=(VecRef& a, CVecRef b);
-//
-////Dot product
-//Real
-//operator*(CVecRef a, CVecRef b);
+VecRef&
+operator*=(VecRef& v, Real fac);
+
+VecRef&
+operator/=(VecRef& v, Real fac);
+
+VecRef&
+operator+=(VecRef& a, CVecRef b);
+
+VecRef&
+operator-=(VecRef& a, CVecRef b);
+
+VecRef&
+operator+=(VecRef& a, CVecRef b);
+
+VecRef&
+operator-=(VecRef& a, CVecRef b);
+
+//Dot product
+Real
+operator*(CVecRef a, CVecRef b);
 
 class Vec
     {
@@ -181,6 +181,27 @@ class Vec
     operator=(Vec&& other) { moveFromVec(std::move(other)); return *this; }
     Vec&
     operator=(CVecRef ref) { assignFromRef(ref); return *this; }
+
+    Real&
+    operator()(long i) 
+        { 
+#ifdef DEBUG
+        return data_.at(i-1); 
+#else
+        return data_[i-1]; 
+#endif
+        }
+
+    Real
+    operator()(long i) const 
+        { 
+#ifdef DEBUG
+        return data_.at(i-1); 
+#else
+        return data_[i-1]; 
+#endif
+        }
+
     Vec&
     operator*=(Real fac);
     Vec&
@@ -193,6 +214,8 @@ class Vec
     operator+=(CVecRef other);
     Vec&
     operator-=(CVecRef other);
+
+    explicit operator bool() const { return !data_.empty(); }
 
     Real*
     data() { return data_.data(); }
@@ -209,43 +232,27 @@ class Vec
     private:
 
     void
-    assignFromRef(CVecRef other);
+    assignFromRef(CVecRef other)
+        {
+        //Copy data from other contiguously into data_
+        data_ = storage_type(other.cbegin(),other.cend());
+        }
 
     void
-    assignFromVec(const Vec& other);
+    assignFromVec(const Vec& other)
+        {
+        if(&other == this) return;
+        data_ = other.data_;
+        }
 
     void
-    moveFromVec(Vec&& other);
+    moveFromVec(Vec&& other)
+        {
+        data_ = std::move(other.data_);
+        other.clear();
+        }
 
     };
-
-Vec inline
-operator+(Vec A, const Vec& B)
-    {
-    A += B;
-    return A;
-    }
-Vec inline
-operator+(const Vec& A, Vec&& B)
-    {
-    Vec res(std::move(B));
-    res += A;
-    return res;
-    }
-Vec inline
-operator-(Vec A, const Vec& B)
-    {
-    A -= B;
-    return A;
-    }
-Vec inline
-operator-(const Vec& A, Vec&& B)
-    {
-    Vec res(std::move(B));
-    res *= -1;
-    res += A;
-    return res;
-    }
 
 VecRef inline
 makeRef(Vec& v, 
@@ -275,12 +282,60 @@ makeRef(const Vec& v)
     return CVecRef(v.data(),v.size()); 
     }
 
+Vec inline
+operator+(Vec A, const Vec& B)
+    {
+    A += B;
+    return A;
+    }
+Vec inline
+operator+(const Vec& A, Vec&& B)
+    {
+    Vec res(std::move(B));
+    res += A;
+    return res;
+    }
+Vec inline
+operator-(Vec A, const Vec& B)
+    {
+    A -= B;
+    return A;
+    }
+Vec inline
+operator-(const Vec& A, Vec&& B)
+    {
+    Vec res(std::move(B));
+    res *= -1;
+    res += A;
+    return res;
+    }
+
+inline Vec& Vec::
+operator*=(Real fac) { auto r = makeRef(*this); r *= fac; return *this; }
+inline Vec& Vec::
+operator/=(Real fac) { auto r = makeRef(*this); r /= fac; return *this; }
+inline Vec& Vec::
+operator+=(const Vec& other) { auto r = makeRef(*this); r += makeRef(other); return *this; }
+inline Vec& Vec::
+operator-=(const Vec& other) { auto r = makeRef(*this); r -= makeRef(other); return *this; }
+inline Vec& Vec::
+operator+=(CVecRef other) { auto r = makeRef(*this); r += other; return *this; }
+inline Vec& Vec::
+operator-=(CVecRef other) { auto r = makeRef(*this); r -= other; return *this; }
+
+
 inline VecRef&
 operator&=(VecRef& ref, const Vec& v) { return operator&=(ref,makeRef(v)); }
 
-//Real
-//norm(CVecRef v);
-//
+//Dot product
+Real inline
+operator*(const Vec& a, const Vec& b) { return operator*(makeRef(a),makeRef(b)); }
+
+Real
+norm(CVecRef v);
+
+Real inline
+norm(const Vec& v) { return norm(makeRef(v)); }
 
 VecRef
 randomize(VecRef v);
@@ -296,6 +351,15 @@ operator<<(std::ostream& s, CVecRef v);
 
 inline std::ostream&
 operator<<(std::ostream& s, const Vec& v) { return operator<<(s,makeRef(v)); }
+
+template<typename Vec_>
+auto
+subVector(Vec_& v,
+          long start,
+          long stop)
+    {
+    return makeRef(v.data()+(start-1),stop-start+1);
+    }
 
 };
 
