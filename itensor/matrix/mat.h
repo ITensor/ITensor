@@ -2,57 +2,79 @@
 // Distributed under the ITensor Library License, Version 1.2.
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_MATRIX___H_
-#define __ITENSOR_MATRIX___H_
+#ifndef __ITENSOR_MAT__H_
+#define __ITENSOR_MAT__H_
 
-#include "vector.h"
+#include "vec.h"
 #include "miterator.h"
 
 namespace itensor {
 
-class matrix;
+template<typename T>
+class MatRefT;
 
-class matrixref
+using MatRef = MatRefT<Real>;
+
+using CMatRef = MatRefT<const Real>;
+
+template<typename T>
+class MatRefT
     {
     public:
-    using iterator = miterator<Real*>;
-    using const_iterator = miterator<const Real*>;
-    using value_type = Real;
+    using iterator = miterator<T*>;
+    using const_iterator = miterator<const T*>;
+    using value_type = std::remove_const_t<T>;
+    using pointer = T*;
+    using reference = T&;
     using size_type = long;
     private:
+    pointer pdata_ = nullptr;
     mrange ind_;
-    Real *store_ = nullptr;
-    const Real *cstore_ = nullptr;
     public:
 
-    matrixref() { }
+    MatRefT() { }
 
-    matrixref(long nro, 
-              long ncol,
-              bool trans = false);
+    MatRefT(pointer pdata, 
+            long nrows,
+            long ncols,
+            bool trans = false)
+        :
+        pdata_(pdata),
+        ind_(trans ? mrange(ncols,nrows,nrows,1) : mrange(nrows,ncols))
+        { }
 
-    matrixref(const Real* sto, 
-              long nro, 
-              long ncol,
-              bool trans = false);
+    MatRefT(pointer pdata, 
+            const mrange& ind)
+        :
+        pdata_(pdata),
+        ind_(ind)
+        { }
 
-    matrixref(Real* sto, 
-              long nro, 
-              long ncol,
-              bool trans = false);
+    MatRefT(const MatRefT<value_type>& other)
+        :
+        pdata_(other.pdata_),
+        ind_(other.ind_)
+        { }
 
-    matrixref(Real* sto, 
-              const mrange& ind);
-    matrixref(const Real* sto, 
-              const mrange& ind);
+    MatRefT(const MatRefT<const value_type>& other)
+        :
+        pdata_(other.pdata_),
+        ind_(other.ind_)
+        { }
 
-    void virtual
-    operator=(const matrixref& other);
+    MatRefT&
+    operator=(const MatRefT<value_type>& other)
+        {
+        pdata_ = other.pdata_;
+        ind_ = other.ind_;
+        }
 
-    matrixref(const matrix& other) = delete;
-
-    matrixref&
-    operator=(const matrix& other) { assignFrom(other); return *this; }
+    MatRefT&
+    operator=(const MatRefT<const value_type>& other)
+        {
+        pdata_ = other.pdata_;
+        ind_ = other.ind_;
+        }
 
     long
     Nrows() const { return ind_.rn; }
@@ -61,319 +83,98 @@ class matrixref
     long
     rowStride() const { return ind_.rs; }
     long
-    colStride() const { return ind_.cs; }
+    colStride() const { return ind_.rs; }
 
-    bool
-    transposed() const { return isTransposed(ind_); }
-    bool
-    contiguous() const { return isContiguous(ind_); }
-    bool
-    readOnly() const { return !bool(store_); }
-
-    explicit operator bool() const { return bool(cstore_); }
-
-    void
-    applyTrans() { ind_ = transpose(ind_); }
-    matrixref 
-    t() const;
-    void
-    randomize();
-
-    void
-    operator*=(Real fac);
-    void
-    operator/=(Real fac);
-
-    void
-    operator+=(const matrixref& other);
-    void
-    operator-=(const matrixref& other);
-
-    Real
-    operator()(long i, long j) const { return cstore_[ind_.index(i,j)]; }
-    Real&
-    operator()(long i, long j) 
-        { 
-#ifdef DEBUG
-        if(readOnly()) throw std::runtime_error("matrixref is read only");
-#endif
-        return store_[ind_.index(i,j)]; 
-        }
-    Real
-    get(long i, long j) const { return cstore_[ind_.index(i,j)];  }
-
-    long
+    size_type
     size() const { return ind_.area(); }
 
     const mrange&
     ind() const { return ind_; }
-    void
-    ind(const mrange& ni) { ind_ = ni; }
 
-    const Real*
-    cstore() const { return cstore_; }
+    bool
+    contiguous() const { return isContiguous(ind_); }
 
-    Real*
-    store() const
-        { 
-#ifdef DEBUG
-        if(readOnly()) throw std::runtime_error("matrixref read-only: call cstore() or call store() on const matrixref object");
-#endif
-        return store_; 
-        }
+    bool
+    transposed() const { return isTransposed(ind_); }
+
+    explicit operator bool() const { return bool(pdata_); }
+
+    pointer
+    data() const { return pdata_; }
 
     void
-    store(const Real* newstore) 
-        { 
-        store_ = nullptr;
-        cstore_ = newstore;
-        }
-    void
-    store(Real* newstore) 
-        { 
-        store_ = newstore;
-        cstore_ = newstore;
+    applyTrans() { ind_ = transpose(ind_); }
+
+    MatRefT 
+    t() const
+        {
+        MatRefT res = this;
+        res.applyTrans();
+        return res;
         }
 
-    iterator
-    begin() 
-        { 
-#ifdef DEBUG
-        if(readOnly()) throw std::runtime_error("matrixref is read only");
-#endif
-        return iterator(store_,ind_); 
-        }
-    iterator
-    end() 
-        { 
-#ifdef DEBUG
-        if(readOnly()) throw std::runtime_error("matrixref is read only");
-#endif
-        return iterator(ind_);
-        }
-    const_iterator
-    begin() const { return const_iterator(cstore_,ind_); }
-    const_iterator
-    end() const { return const_iterator(ind_); }
-    const_iterator
-    cbegin() const { return const_iterator(cstore_,ind_); }
-    const_iterator
+    reference
+    operator()(long i, long j) const { return pdata_[ind_.index(i,j)]; }
+
+    iterator 
+    begin() const { return iterator(pdata_,ind_); }
+
+    iterator 
+    end() const { return iterator(ind_); }
+
+    const_iterator 
+    cbegin() const { return const_iterator(pdata_,ind_); }
+
+    const_iterator 
     cend() const { return const_iterator(ind_); }
-    void virtual
-    clear() { *this = matrixref(); }
 
-    private:
-    void virtual
-    assignFrom(const matrix& m);
+    friend MatRefT<value_type>;
+    friend MatRefT<const value_type>;
     };
-
-vecref
-diagonal(const matrixref& m);
-
-vecref
-column(const matrixref& m, long j);
-
-vecref
-row(const matrixref& m, long j);
-
-matrixref
-subMatrix(const matrixref& m,
-          long rstart,
-          long rstop,
-          long cstart,
-          long cstop);
-
-matrixref inline
-rows(const matrixref& m,
-        long rstart,
-        long rstop)
-    {
-    return subMatrix(m,rstart,rstop,1,m.Nrows());
-    }
-
-matrixref inline
-columns(const matrixref& m,
-        long cstart,
-        long cstop)
-    {
-    return subMatrix(m,1,m.Nrows(),cstart,cstop);
-    }
-
-
-// C += A*B
-void
-mult_add(const matrixref& A, 
-         const matrixref& B, 
-         matrixref& C);
-
-// C = A*B
-void
-mult(const matrixref& A, 
-     const matrixref& B, 
-     matrixref& C);
-
-// y = M*x
-void
-mult(const matrixref& M,
-     const vecref& x, 
-     vec& y,
-     bool fromleft = false);
-
-
-class matrix : public matrixref
-    {
-    public:
-    using parent = matrixref;
-    using storage_type = std::vector<Real>;
-    using iterator = parent::iterator;
-    using const_iterator = parent::const_iterator;
-    using value_type = parent::value_type;
-    using size_type = parent::size_type;
-    private:
-    storage_type data_;
-    public:
-
-    matrix() { }
-
-    matrix(long nro, 
-           long ncol, 
-           bool trans = false)
-        : matrixref(nro,ncol,trans)
-        {
-        data_ = storage_type(nro*ncol,0);
-        store(data_.data());
-        }
-      
-    matrix(const matrix& other) { assignFrom(other); }
-
-    matrix(matrix&& other) { moveFrom(std::move(other)); }
-
-    matrix(const matrixref& other) { assignFromRef(other); }
-
-    matrix& 
-    operator=(const matrix& other) { assignFrom(other); return *this; }
-    matrix& 
-    operator=(matrix&& other) { moveFrom(std::move(other)); return *this; }
-    void virtual
-    operator=(const matrixref& other) override { assignFromRef(other); }
-
-    void
-    operator+=(const matrix& other);
-    void
-    operator-=(const matrix& other);
-
-    void virtual
-    clear() override
-        {
-        parent::clear();
-        data_.clear();
-        }
-
-    private:
-    void
-    assignFromRef(const matrixref& other)
-        {
-        if(&other == this) return;
-        data_ = storage_type(other.cbegin(),other.cend());
-        store(data_.data());
-        parent::ind(mrange(other.Nrows(),other.Ncols()));
-        }
-
-    void virtual
-    assignFrom(const matrix& other) override
-        {
-        if(&other == this) return;
-        data_ = other.data_;
-        store(data_.data());
-        parent::ind(mrange(other.Nrows(),other.Ncols()));
-        }
-
-    void
-    moveFrom(matrix&& other)
-        {
-        const matrixref& oref = other;
-        parent::operator=(oref);
-        data_ = std::move(other.data_);
-        other.clear();
-        }
-
-    public:
-    const Real*
-    data() const { return data_.data(); }
-    };
-
-matrix inline
-operator*(const matrixref& A,
-          const matrixref& B)
-    {
-    matrix C(A.Nrows(),B.Ncols());
-    mult(A,B,C);
-    return C;
-    }
-
-vec inline
-operator*(const matrixref& M,
-          const vecref& v)
-    {
-    vec res(M.Nrows());
-    mult(M,v,res);
-    return res;
-    }
-
-vec inline
-operator*(const vecref& v,
-          const matrixref& M)
-    {
-    vec res(M.Ncols());
-    mult(M,v,res,true);
-    return res;
-    }
-
-matrix inline
-operator+(matrix A, const matrix& B)
-    {
-    A += B;
-    return A;
-    }
-matrix inline
-operator+(const matrix& A, matrix&& B)
-    {
-    matrix res(std::move(B));
-    res += A;
-    return res;
-    }
-matrix inline
-operator-(matrix A, const matrix& B)
-    {
-    A -= B;
-    return A;
-    }
-matrix inline
-operator-(const matrix& A, matrix&& B)
-    {
-    matrix res(std::move(B));
-    res *= -1;
-    res += A;
-    return res;
-    }
-matrix inline
-operator*(matrix A, Real fac) { A *= fac; return A; }
-matrix inline
-operator*(Real fac, matrix A) { return operator*(A,fac); }
-matrix inline
-operator/(matrix A, Real fac) { A /= fac; return A; }
-
-matrix
-randomMatrix(long Nr, long Nc);
-
-Real
-norm(const matrixref& M);
-
-Real
-norm(const matrix& M);
 
 std::ostream&
-operator<<(std::ostream& s, const matrixref& M);
+operator<<(std::ostream& s, CMatRef M);
+
+MatRef inline
+makeMatRef(Real* p, 
+           long nrows,
+           long ncols,
+           bool trans = false)
+    {
+    return MatRef(p,nrows,ncols); 
+    }
+
+CMatRef inline
+makeMatRef(const Real* cp, 
+           long nrows,
+           long ncols,
+           bool trans = false)
+    {
+    return CMatRef(cp,nrows,ncols); 
+    }
+
+
+//Copy data referenced by b to memory referenced by a
+MatRef&
+operator&=(MatRef& a, CMatRef b);
+
+MatRef&
+operator*=(MatRef& v, Real fac);
+
+MatRef&
+operator/=(MatRef& v, Real fac);
+
+MatRef&
+operator+=(MatRef& a, CMatRef b);
+
+MatRef&
+operator-=(MatRef& a, CMatRef b);
+
+MatRef&
+operator+=(MatRef& a, CMatRef b);
+
+MatRef&
+operator-=(MatRef& a, CMatRef b);
 
 };
 
