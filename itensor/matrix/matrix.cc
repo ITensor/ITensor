@@ -72,9 +72,26 @@ operator=(const matrixref& other)
     cstore_ = other.cstore_;
     }
 
+void matrixref::
+assignFrom(const matrix& m)
+    {
+    if(&m==this) return;
+#ifdef DEBUG
+    if(readOnly()) throw std::runtime_error("matrixref is read only, cannot assign from matrix");
+    if(!(m.Nrows()==Nrows() && m.Ncols()==Ncols()))
+        throw std::runtime_error("mismatched sizes in matrixref::operator=(matrix)");
+#endif
+    auto po = m.cbegin();
+    for(auto& el : *this) 
+        {
+        el = *po;
+        ++po;
+        }
+    }
+
 
 matrixref matrixref::
-t()
+t() const
     { 
     matrixref res(*this);
     res.applyTrans();

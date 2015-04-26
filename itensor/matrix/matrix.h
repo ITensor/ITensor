@@ -52,7 +52,7 @@ class matrixref
     matrixref(const matrix& other) = delete;
 
     matrixref&
-    operator=(const matrix& other) = delete;
+    operator=(const matrix& other) { assignFrom(other); return *this; }
 
     long
     Nrows() const { return ind_.rn; }
@@ -75,7 +75,7 @@ class matrixref
     void
     applyTrans() { ind_ = transpose(ind_); }
     matrixref 
-    t();
+    t() const;
     void
     randomize();
 
@@ -161,6 +161,10 @@ class matrixref
     cend() const { return const_iterator(ind_); }
     void virtual
     clear() { *this = matrixref(); }
+
+    private:
+    void virtual
+    assignFrom(const matrix& m);
     };
 
 vecref
@@ -275,8 +279,8 @@ class matrix : public matrixref
         parent::ind(mrange(other.Nrows(),other.Ncols()));
         }
 
-    void
-    assignFrom(const matrix& other)
+    void virtual
+    assignFrom(const matrix& other) override
         {
         if(&other == this) return;
         data_ = other.data_;
