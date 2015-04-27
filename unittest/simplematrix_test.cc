@@ -3,7 +3,7 @@
 #include "autovector.h"
 #include "global.h"
 #include "count.h"
-#include "matrix/algs.h"
+#include "matrix/vec.h"
 
 using namespace itensor;
 using namespace std;
@@ -41,7 +41,7 @@ SECTION("Constructors")
         }
     }
 
-SECTION("Automatic Conversion")
+SECTION("VecRef Conversion")
     {
     auto size = 10;
     auto data1 = randomData(1,size);
@@ -60,6 +60,54 @@ SECTION("Automatic Conversion")
     //This is not allowed - no conversion
     //from CVecRef back to VecRef
     //vr1 = cvr2;
+    }
+
+SECTION("Vec to Ref Conversion")
+    {
+    auto size = 5;
+    auto f1 = [](CVecRef ref) { return ref.data(); };
+    auto f2 = [](const CVecRef& ref) { return ref.data(); };
+    auto f3 = [](VecRef ref) { ref *= 2; };
+
+    Vec v = randomVec(size);
+    auto origv = v;
+    const Vec cv = randomVec(size);
+
+    CHECK(f1(v) == v.data());
+    CHECK(f1(cv) == cv.data());
+    CHECK(f2(v) == v.data());
+    CHECK(f2(cv) == cv.data());
+
+    //This case not allowed:
+    //CHECK(f3(cv) == cv.data());
+
+    f3(v);
+    for(auto j : count1(size))
+        CHECK_CLOSE(v(j),2*origv(j));
+
+    //Not allowed to convert/assign to either
+    //type of Ref from a temporary
+    //f1(randomVec(size)); //not allowed
+    //f3(randomVec(size)); //not allowed
+    //VecRef ref1 = cv; //not allowed
+
+    CVecRef ref2(cv);
+    CHECK(ref2.data() == cv.data());
+    ref2.reset();
+    ref2 = cv;
+    CHECK(ref2.data() == cv.data());
+
+    VecRef ref3(v);
+    CHECK(ref3.data() == v.data());
+    ref3.reset();
+    ref3 = v;
+    CHECK(ref3.data() == v.data());
+
+    CVecRef ref4 = v;
+    CHECK(ref4.data() == v.data());
+    ref4.reset();
+    ref4 = v;
+    CHECK(ref4.data() == v.data());
     }
 
 SECTION("Construct and assign from VecRef")
@@ -208,6 +256,8 @@ SECTION("Dot product")
     //CHECK_CLOSE(val,dot);
     }
 }
+
+/*
 
 TEST_CASE("Test MatRef")
 {
@@ -1030,6 +1080,7 @@ SECTION("Sub Matrix")
     }
 } //Test slicing
 
+
 TEST_CASE("Matrix Algorithms and Decompositions")
 {
 SECTION("diagSymmetric")
@@ -1073,12 +1124,14 @@ SECTION("Orthogonalize")
 
 SECTION("Singular Value Decomp")
     {
-    //auto N = 10;
-    //auto M = randomMat(N,N);
+    auto Nr = 2,
+         Nc = 3;
+    auto M = randomMat(Nr,Nc);
 
-    //Mat U,V;
-    //Vec d;
-    //SVD(M,U,d,V);
+    Mat U,V;
+    Vec d;
+    SVD(M,U,d,V);
 
     }
 }
+*/

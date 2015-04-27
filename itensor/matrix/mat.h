@@ -17,6 +17,8 @@ using MatRef = MatRefT<Real>;
 
 using CMatRef = MatRefT<const Real>;
 
+class Mat; //forward declaration
+
 template<typename T>
 class MatRefT
     {
@@ -49,6 +51,11 @@ class MatRefT
         pdata_(pdata),
         ind_(ind)
         { }
+
+    MatRefT(Mat& M);
+
+    MatRefT&
+    operator=(Mat& M);
 
     operator MatRefT<const T>() const { return MatRefT<const T>(pdata_,ind_); }
 
@@ -103,6 +110,13 @@ class MatRefT
 
     const_iterator 
     cend() const { return const_iterator(ind_); }
+
+    void
+    reset()
+        {
+        pdata_ = nullptr;
+        ind_ = MRange();
+        }
     };
 
 std::ostream&
@@ -140,7 +154,7 @@ makeMatRef(MatT& M,
     }
 
 template<typename D>
-MatRefT<D>
+MatRefT<D> constexpr
 makeMatRef(MatRefT<D> M) 
     { 
     return M; 
@@ -171,12 +185,13 @@ operator+=(const MatRef& a, CMatRef b);
 void
 operator-=(const MatRef& a, CMatRef b);
 
-// compute matrix multiply (dgemm) A*B
-// write result to memory referenced by C
 void
-mult(CMatRef A, 
-     CMatRef B, 
-     MatRef  C);
+call_dgemm(CMatRef A, 
+           CMatRef B, 
+           MatRef  C,
+           Real alpha,
+           Real beta);
+
 
 // compute matrix multiply (dgemm) A*B
 // add result to memory referenced by C
@@ -233,7 +248,9 @@ class Mat
     Mat&
     operator=(CMatRef ref) { assignFromRef(ref); return *this; }
 
-    operator CMatRef() const { return CMatRef(data_.data(),ind_); }
+    //This conversion is problematic because the current object
+    //could be a temporary:
+    //operator CMatRef() const { return CMatRef(data_.data(),ind_); }
 
     long
     Nrows() const { return ind_.rn; }
@@ -345,29 +362,50 @@ class Mat
 
     };
 
-Mat inline
-operator+(Mat A, const Mat& B) { A += B; return A; }
-Mat inline
-operator+(Mat A, CMatRef B) { A += B; return A; }
-Mat inline
-operator+(const Mat& A, Mat&& B)
+template<typename D>
+MatRefT<D>::
+MatRefT(Mat& M)
+    :
+    pdata_(M.data()),
+    ind_(M.ind())
+    { }
+
+template<typename D>
+MatRefT<D>& MatRefT<D>::
+operator=(Mat& M)
+    {
+    pdata_ = M.data();
+    ind_ = M.ind();
+    }
+
+
+template<class MType>
+Mat
+operator+(Mat A, const MType& B) { A += B; return A; }
+
+template<class MType>
+Mat 
+operator+(const MType& A, Mat&& B)
     {
     Mat res(std::move(B));
     res += A;
     return res;
     }
-Mat inline
-operator-(Mat A, const Mat& B) { A -= B; return A; }
-Mat inline
-operator-(Mat A, CMatRef B) { A -= B; return A; }
-Mat inline
-operator-(const Mat& A, Mat&& B)
+
+template<class MType>
+Mat
+operator-(Mat A, const MType& B) { A -= B; return A; }
+
+template<class MType>
+Mat
+operator-(const MType& A, Mat&& B)
     {
     Mat res(std::move(B));
     res *= -1;
     res += A;
     return res;
     }
+
 Mat inline
 operator*(Mat A, Real fac) { A *= fac; return A; }
 Mat inline
@@ -375,12 +413,22 @@ operator*(Real fac, Mat A) { return operator*(A,fac); }
 Mat inline
 operator/(Mat A, Real fac) { A /= fac; return A; }
 
+//Copy Mat elements to memory referenced by MatRef
 void inline
-mult(CMatRef A,
-     CMatRef B,
-     Mat& C)
-    { 
-    mult(A,B,makeMatRef(C)); 
+operator&=(const MatRef& ref, const Mat& M) { operator&=(ref,makeMatRef(M)); }
+void inline
+operator+=(const MatRef& ref, const Mat& M) { operator+=(ref,makeMatRef(M)); }
+void inline
+operator-=(const MatRef& ref, const Mat& M) { operator-=(ref,makeMatRef(M)); }
+
+template<class M1, class M2>
+Mat
+matrixMult(const M1& A, 
+           const M2& B)
+    {
+    Mat C(A.Nrows(),B.Ncols());
+    call_dgemm(makeMatRef(A),makeMatRef(B),makeMatRef(C),1.,0.);
+    return C;
     }
 
 void inline
@@ -393,13 +441,13 @@ mult(CMatRef M,
     }
 
 Mat inline
-operator*(CMatRef A,
-          CMatRef B)
-    {
-    Mat C(A.Nrows(),B.Ncols());
-    mult(A,B,C);
-    return C;
-    }
+operator*(const CMatRef& A, const Mat& B) { return matrixMult(A,B); }
+Mat inline
+operator*(const Mat& A, const CMatRef& B) { return matrixMult(A,B); }
+Mat inline
+operator*(const Mat& A, const Mat& B) { return matrixMult(A,B); }
+Mat inline
+operator*(const CMatRef& A, const CMatRef& B) { return matrixMult(A,B); }
 
 Vec inline
 operator*(CMatRef A,
@@ -419,6 +467,9 @@ operator*(CVecRef v,
     mult(A,v,res,fromleft);
     return res;
     }
+
+Real inline
+norm(const Mat& M) { return norm(makeMatRef(M)); }
 
 inline Mat&
 randomize(Mat& v) { randomize(makeMatRef(v)); return v; }

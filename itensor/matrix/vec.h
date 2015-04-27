@@ -18,6 +18,8 @@ using VecRef = VecRefT<Real>;
 
 using CVecRef = VecRefT<const Real>;
 
+class Vec;
+
 template<typename T>
 class VecRefT
     {
@@ -44,6 +46,26 @@ class VecRefT
         strd_(stride),
         size_(size)
         { }
+
+    VecRefT(Vec& v) { assignFromVec(v); }
+    
+    VecRefT&
+    operator=(Vec& v) { assignFromVec(v); return *this; }
+
+    template<typename U = T>
+    VecRefT(const Vec& v, std::enable_if_t<std::is_const<U>::value>* = 0)
+        {
+        assignFromVec(v);
+        }
+
+    template<typename U = T>
+    std::enable_if_t<std::is_const<U>::value,VecRefT&>
+    operator=(const Vec& v) { assignFromVec(v); return *this; }
+
+    VecRefT(Vec&& v) = delete;
+
+    VecRefT&
+    operator=(Vec&& v) = delete;
 
     operator VecRefT<const T>() const { return VecRefT<const T>(pdata_,size_,strd_); }
 
@@ -75,6 +97,24 @@ class VecRefT
 
     const_iterator 
     cend() const { return const_iterator(pdata_+size_*strd_,strd_); }
+
+    void
+    reset()
+        {
+        pdata_ = nullptr;
+        strd_ = 1;
+        size_ = 0;
+        }
+
+    private:
+    void
+    assignPointer(const value_type** ppdat, const T* p) { *ppdat = p; }
+    void
+    assignPointer(value_type** ppdat, const T* p) { assert(false); }
+    void
+    assignFromVec(Vec& v);
+    void
+    assignFromVec(const Vec& v);
     };
 
 VecRef inline
@@ -144,7 +184,9 @@ class Vec
     Vec&
     operator=(CVecRef ref) { assignFromRef(ref); return *this; }
 
-    operator CVecRef() const { return CVecRef(data_.data(),data_.size()); }
+    //The following conversion is problematic because the current object
+    //could be a temporary:
+    //operator CVecRef() const { return CVecRef(data_.data(),data_.size()); }
 
     Real&
     operator()(long i) 
@@ -231,6 +273,7 @@ class Vec
 
     };
 
+
 VecRef inline
 makeVecRef(Vec& v, 
         long size,
@@ -259,14 +302,6 @@ makeVecRef(const Vec& v)
     return CVecRef(v.data(),v.size()); 
     }
 
-Vec inline
-operator+(Vec A, const Vec& B) { A += B; return A; }
-Vec inline
-operator+(const Vec& A, Vec&& B) { Vec res(std::move(B)); res += A; return res; }
-Vec inline
-operator-(Vec A, const Vec& B) { A -= B; return A; }
-Vec inline
-operator-(const Vec& A, Vec&& B) { Vec res(std::move(B)); res *= -1; res += A; return res; }
 inline Vec& Vec::
 operator*=(Real fac) { auto r = makeVecRef(*this); r *= fac; return *this; }
 inline Vec& Vec::
@@ -280,9 +315,41 @@ operator+=(CVecRef other) { auto r = makeVecRef(*this); r += other; return *this
 inline Vec& Vec::
 operator-=(CVecRef other) { auto r = makeVecRef(*this); r -= other; return *this; }
 
+template<class VType>
+Vec
+operator+(Vec A, const VType& B) { A += B; return A; }
+
+template<class VType>
+Vec
+operator+(const VType& A, Vec&& B) 
+    { 
+    Vec res(std::move(B)); 
+    res += A; 
+    return res; 
+    }
+
+template<class VType>
+Vec
+operator-(Vec A, const VType& B) { A -= B; return A; }
+
+template<class VType>
+Vec
+operator-(const VType& A, Vec&& B) 
+    { 
+    Vec res(std::move(B)); 
+    res *= -1; 
+    res += A; 
+    return res; 
+    }
+
+
 //Copy contents of Vec to memory referenced by VecRef
-inline VecRef
+VecRef inline
 operator&=(VecRef ref, const Vec& v) { return operator&=(ref,makeVecRef(v)); }
+VecRef inline
+operator+=(VecRef ref, const Vec& v) { return operator+=(ref,makeVecRef(v)); }
+VecRef inline
+operator-=(VecRef ref, const Vec& v) { return operator-=(ref,makeVecRef(v)); }
 
 //Dot product
 Real inline
@@ -317,6 +384,25 @@ subVector(Vec_& v,
           long stop)
     {
     return makeVecRef(v.data()+(start-1),stop-start+1);
+    }
+
+
+template<typename T>
+void VecRefT<T>::
+assignFromVec(Vec& v)
+    {
+    pdata_ = v.data();
+    size_ = v.size();
+    strd_ = 1;
+    }
+
+template<typename T>
+void VecRefT<T>::
+assignFromVec(const Vec& v)
+    {
+    assignPointer(&pdata_,v.data());
+    size_ = v.size();
+    strd_ = 1;
     }
 
 };

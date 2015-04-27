@@ -203,9 +203,9 @@ call_dgemm(CMatRef A,
     }
 
 void
-mult(CMatRef A, 
-     CMatRef B, 
-     MatRef  C)
+matrixMult(CMatRef A, 
+           CMatRef B, 
+           MatRef  C)
     {
     call_dgemm(A,B,C,1.,0.);
     }
