@@ -11,7 +11,7 @@ include ../options.mk
 SOURCES+= simpletensor.cc 
 SOURCES+= matrix/vec.cc 
 SOURCES+= matrix/mat.cc 
-#SOURCES+= matrix/algs.cc 
+SOURCES+= matrix/algs.cc 
 #SOURCES = index.cc 
 #SOURCES+= contract.cc 
 #SOURCES+= itensor.cc 

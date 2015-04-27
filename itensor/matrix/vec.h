@@ -94,20 +94,20 @@ makeVecRef(const Real* cpd,
     }
 
 //Copy data referenced by b to memory referenced by a
-VecRef&
-operator&=(VecRef& a, CVecRef b);
+VecRef
+operator&=(VecRef a, CVecRef b);
 
-VecRef&
-operator*=(VecRef& v, Real fac);
+VecRef
+operator*=(VecRef v, Real fac);
 
-VecRef&
-operator/=(VecRef& v, Real fac);
+VecRef
+operator/=(VecRef v, Real fac);
 
-VecRef&
-operator+=(VecRef& a, CVecRef b);
+VecRef
+operator+=(VecRef a, CVecRef b);
 
-VecRef&
-operator-=(VecRef& a, CVecRef b);
+VecRef
+operator-=(VecRef a, CVecRef b);
 
 //Dot product
 Real
@@ -281,8 +281,8 @@ inline Vec& Vec::
 operator-=(CVecRef other) { auto r = makeVecRef(*this); r -= other; return *this; }
 
 //Copy contents of Vec to memory referenced by VecRef
-inline VecRef&
-operator&=(VecRef& ref, const Vec& v) { return operator&=(ref,makeVecRef(v)); }
+inline VecRef
+operator&=(VecRef ref, const Vec& v) { return operator&=(ref,makeVecRef(v)); }
 
 //Dot product
 Real inline

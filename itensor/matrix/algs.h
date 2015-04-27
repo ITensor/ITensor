@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_MATRIX_ALGS__H_
 #define __ITENSOR_MATRIX_ALGS__H_
 
-#include "matrix.h"
+#include "slicemat.h"
 
 namespace itensor {
 
@@ -30,25 +30,38 @@ namespace itensor {
 //
 
 void
-diagSymmetric(const matrixref& M,
-              matrixref& U,
-              vecref& d);
+diagSymmetric(CMatRef M,
+              MatRef U,
+              VecRef d);
 
 void
-diagSymmetric(const matrixref& M,
-              matrix& U,
-              vec& d);
+diagSymmetric(CMatRef M,
+              Mat& U,
+              Vec& d);
 
 //orthogonalize the first num columns of a matrixref M,
 //optionally repeating numpass times to reduce roundoff errors
 void 
-orthog(const matrixref& M, long num = -1, long numpass = 2);
+orthog(MatRef M, long num = -1, long numpass = 2);
+
+void inline
+orthog(Mat& M, long num = -1, long numpass = 2)
+    {
+    orthog(makeMatRef(M),num,numpass);
+    }
 
 void
-SVD(const matrixref& A,
-    matrix& U, 
-    vec& D, 
-    matrix& V,
+SVD(CMatRef A,
+    MatRef U, 
+    VecRef D, 
+    MatRef V,
+    Real thresh = 1E-3);
+
+void
+SVD(CMatRef A,
+    Mat& U, 
+    Vec& D, 
+    Mat& V,
     Real thresh = 1E-3);
 
 };

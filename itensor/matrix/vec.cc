@@ -32,8 +32,8 @@ apply(VecRef& v,
         }
     }
 
-VecRef& 
-operator&=(VecRef& a, CVecRef b)
+VecRef
+operator&=(VecRef a, CVecRef b)
     {
 #ifdef DEBUG
     if(b.size() != a.size()) throw std::runtime_error("mismatched sizes in VecRef operator&=");
@@ -44,8 +44,8 @@ operator&=(VecRef& a, CVecRef b)
     return a;
     }
 
-VecRef& 
-operator*=(VecRef& a, Real fac)
+VecRef 
+operator*=(VecRef a, Real fac)
     {
     if(a.contiguous())
         {
@@ -60,8 +60,8 @@ operator*=(VecRef& a, Real fac)
     return a;
     }
 
-VecRef& 
-operator/=(VecRef& a, Real fac)
+VecRef 
+operator/=(VecRef a, Real fac)
     {
     if(fac == 0) throw std::runtime_error("VecRef /=: divide by zero");
     return operator*=(a,1./fac);
@@ -80,8 +80,8 @@ call_daxpy(VecRef& A, const CVecRef& B, Real alpha_)
     daxpy_wrapper(&size,&alpha,B.data(),&inc,A.data(),&inc);
     }
 
-VecRef&
-operator+=(VecRef& a, CVecRef b)
+VecRef
+operator+=(VecRef a, CVecRef b)
     {
 #ifdef DEBUG
     if(a.size()!=b.size()) throw std::runtime_error("VecRef +=: mismatched sizes");
@@ -99,8 +99,8 @@ operator+=(VecRef& a, CVecRef b)
     return a;
     }
 
-VecRef&
-operator-=(VecRef& a, CVecRef b)
+VecRef
+operator-=(VecRef a, CVecRef b)
     {
 #ifdef DEBUG
     if(a.size()!=b.size()) throw std::runtime_error("VecRef +=: mismatched sizes");

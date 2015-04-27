@@ -3,7 +3,7 @@
 #include "autovector.h"
 #include "global.h"
 #include "count.h"
-#include "matrix/slicemat.h"
+#include "matrix/algs.h"
 
 using namespace itensor;
 using namespace std;
@@ -858,7 +858,6 @@ SECTION("Matrix-vector product")
 } // Test matrix
 
 
-/*
 TEST_CASE("Test slicing")
 {
 
@@ -923,6 +922,14 @@ SECTION("Row / Col Slicing")
         for(auto r : count1(N))
             CHECK_CLOSE(A(r,c),C(r));
         }
+
+    auto S = transpose(subMatrix(A,1,N/2,1,N/2));
+    for(auto c : count1(N/2))
+        {
+        auto C = column(S,c);
+        for(auto r : count1(N/2))
+            CHECK_CLOSE(S(r,c),C(r));
+        }
     }
 
 SECTION("Transpose")
@@ -930,19 +937,19 @@ SECTION("Transpose")
     auto nr = 10,
          nc = 15;
     auto A = randomMat(nr,nc);
-    auto At = matrixref(A.data(),transpose(A.ind()));
+    auto At = transpose(MatRef(A.data(),A.ind()));
     CHECK(At.transposed());
 
     for(auto i : count1(nr))
     for(auto j : count1(nc))
         {
-        CHECK_CLOSE(A(i,j),At.get(j,i));
+        CHECK_CLOSE(A(i,j),At(j,i));
         }
     }
 
 SECTION("Sub Vector")
     {
-    auto v = vec(20);
+    auto v = Vec(20);
     for(auto& el : v) el = Global::random();
 
     long start = 1,
@@ -992,7 +999,7 @@ SECTION("Sub Matrix")
 
     rstart = 2;
     cstart = 3;
-    auto At = A.t();
+    auto At = transpose(A);
     CHECK(At.transposed());
     S = subMatrix(At,rstart,rstop,cstart,cstop);
     for(auto r : count1(S.Nrows()))
@@ -1014,25 +1021,23 @@ SECTION("Sub Matrix")
 
     }
 } //Test slicing
-*/
 
-/*
 TEST_CASE("Matrix Algorithms and Decompositions")
 {
 SECTION("diagSymmetric")
     {
-    auto N = 100;
+    auto N = 10;
     auto M = randomMat(N,N);
     //Symmetrize:
-    M = M+M.t();
+    M = M+transpose(M);
 
-    matrix U;
-    vec d;
+    Mat U;
+    Vec d;
     diagSymmetric(M,U,d);
 
-    auto D = matrix(N,N);
+    auto D = Mat(N,N);
     diagonal(D) &= d;
-    auto R = U*D*U.t();
+    auto R = U*D*transpose(U);
 
     for(auto r : count1(N))
     for(auto c : count1(N))
@@ -1049,7 +1054,7 @@ SECTION("Orthogonalize")
 
     orthog(M);
 
-    auto R = M.t()*M;
+    auto R = transpose(M)*M;
     for(auto r : count1(N))
     for(auto c : count1(N))
         {
@@ -1063,10 +1068,9 @@ SECTION("Singular Value Decomp")
     //auto N = 10;
     //auto M = randomMat(N,N);
 
-    //matrix U,V;
-    //vec d;
+    //Mat U,V;
+    //Vec d;
     //SVD(M,U,d,V);
 
     }
 }
-*/

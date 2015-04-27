@@ -59,7 +59,7 @@ class MatRefT
     long
     rowStride() const { return ind_.rs; }
     long
-    colStride() const { return ind_.rs; }
+    colStride() const { return ind_.cs; }
 
     size_type
     size() const { return ind_.area(); }
@@ -242,7 +242,7 @@ class Mat
     long
     rowStride() const { return ind_.rs; }
     long
-    colStride() const { return ind_.rs; }
+    colStride() const { return ind_.cs; }
 
     const MRange&
     ind() const { return ind_; }
@@ -348,6 +348,8 @@ class Mat
 Mat inline
 operator+(Mat A, const Mat& B) { A += B; return A; }
 Mat inline
+operator+(Mat A, CMatRef B) { A += B; return A; }
+Mat inline
 operator+(const Mat& A, Mat&& B)
     {
     Mat res(std::move(B));
@@ -356,6 +358,8 @@ operator+(const Mat& A, Mat&& B)
     }
 Mat inline
 operator-(Mat A, const Mat& B) { A -= B; return A; }
+Mat inline
+operator-(Mat A, CMatRef B) { A -= B; return A; }
 Mat inline
 operator-(const Mat& A, Mat&& B)
     {
