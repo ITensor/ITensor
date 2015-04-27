@@ -122,10 +122,21 @@ operator-=(MatRef& a, CMatRef b)
     }
 
 Real
-norm(CMatRef v)
+norm(CMatRef M)
     {
     Real nrm = 0;
-    for(auto& el : v) nrm += el*el;
+    if(M.contiguous())
+        {
+        auto end = M.data()+M.size();
+        for(auto it = M.data(); it != end; ++it) 
+            {
+            nrm += (*it)*(*it);
+            }
+        }
+    else
+        {
+        for(auto& el : M) nrm += el*el;
+        }
     return std::sqrt(nrm);
     }
 
@@ -191,6 +202,14 @@ mult(CMatRef A,
      MatRef  C)
     {
     call_dgemm(A,B,C,1.,0.);
+    }
+
+void
+multAdd(CMatRef A, 
+        CMatRef B, 
+        MatRef  C)
+    {
+    call_dgemm(A,B,C,1.,1.);
     }
 
 

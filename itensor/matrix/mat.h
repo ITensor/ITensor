@@ -179,6 +179,16 @@ mult(CMatRef A,
      CMatRef B, 
      MatRef  C);
 
+// compute matrix multiply (dgemm) A*B
+// add result to memory referenced by C
+void
+multAdd(CMatRef A, 
+        CMatRef B, 
+        MatRef  C);
+
+Real
+norm(CMatRef M);
+
 };
 
 #endif

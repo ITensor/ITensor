@@ -521,8 +521,7 @@ SECTION("Test matrixref mult")
         }
     }
 
-/*
-SECTION("Test mult_add")
+SECTION("Test multAdd")
     {
     auto Ar = 3,
          K  = 4,
@@ -536,11 +535,11 @@ SECTION("Test mult_add")
     auto C = makeMatRef(dataC.begin(),Ar,Bc);
 
     //Save a copy of C's original data in order
-    //to explicitly carry out mult_add alg. below
+    //to explicitly carry out multAdd alg. below
     auto orig_dataC = dataC;
     auto origC = makeMatRef(orig_dataC.begin(),Ar,Bc);
 
-    mult_add(A,B,C);
+    multAdd(A,B,C);
     for(auto r : count1(C.Nrows()))
     for(auto c : count1(C.Ncols()))
         {
@@ -549,14 +548,13 @@ SECTION("Test mult_add")
         CHECK_CLOSE(C(r,c),val);
         }
     }
-*/
 
 
 } //Test MatRef
 
 /*
 
-TEST_CASE("Test matrix")
+TEST_CASE("Test Mat")
 {
 SECTION("Constructors")
     {
