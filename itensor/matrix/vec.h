@@ -65,6 +65,7 @@ class VecRefT
         pdata_ = other.pdata_;
         strd_ = other.strd_;
         size_ = other.size_;
+        return *this;
         }
 
     VecRefT&
@@ -73,6 +74,7 @@ class VecRefT
         pdata_ = other.pdata_;
         strd_ = other.strd_;
         size_ = other.size_;
+        return *this;
         }
 
     size_type

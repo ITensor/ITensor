@@ -146,5 +146,52 @@ operator<<(std::ostream& s, CMatRef M)
     return s;
     }
 
+// C = alpha*A*B + beta*C
+void
+call_dgemm(CMatRef A, 
+           CMatRef B, 
+           MatRef  C,
+           Real alpha,
+           Real beta)
+    {
+#ifdef DEBUG
+    if(!(A.contiguous() && B.contiguous() && C.contiguous())) 
+        throw std::runtime_error("multiplication of non-contiguous MatRefs not currently supported");
+#endif
+    if(C.transposed())
+        {
+        //Do C = Bt*At instead of Ct=A*B
+        //Recall that C.data() points to elements of C, not C.t()
+        //regardless of whether C.transpose()==true or false
+        std::swap(A,B);
+        A.applyTrans();
+        B.applyTrans();
+        C.applyTrans();
+        }
+
+#ifdef DEBUG
+    if(A.Ncols() != B.Nrows())
+        throw std::runtime_error("matrices A, B incompatible");
+    if(A.Nrows() != C.Nrows() || B.Ncols() != C.Ncols())
+        {
+        printfln("A is %dx%d",A.Nrows(),A.Ncols());
+        printfln("B is %dx%d",B.Nrows(),B.Ncols());
+        printfln("C is %dx%d",C.Nrows(),C.Ncols());
+        throw std::runtime_error("mult(_add) AxB -> C: matrix C incompatible");
+        }
+#endif
+    dgemm_wrapper(A.transposed(),B.transposed(),
+                  A.Nrows(),B.Ncols(),A.Ncols(),
+                  alpha,A.data(),B.data(),beta,C.data());
+    }
+
+void
+mult(CMatRef A, 
+     CMatRef B, 
+     MatRef  C)
+    {
+    call_dgemm(A,B,C,1.,0.);
+    }
+
 
 }; //namespace itensor

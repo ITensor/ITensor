@@ -251,22 +251,43 @@ dgemm_wrapper(bool transa,
               LAPACK_INT n,
               LAPACK_INT k,
               LAPACK_REAL alpha,
-              LAPACK_REAL* A,
-              LAPACK_REAL lda,
-              LAPACK_REAL* B,
-              LAPACK_REAL ldb,
+              const LAPACK_REAL* A,
+              const LAPACK_REAL* B,
               LAPACK_REAL beta,
-              LAPACK_REAL* C,
-              LAPACK_REAL ldc)
+              LAPACK_REAL* C)
     {
+    LAPACK_INT lda = m,
+               ldb = k;
 #ifdef PLATFORM_macos
-    auto at = transa ? CblasTrans : CblasNoTrans;
-    auto bt = transb ? CblasTrans : CblasNoTrans;
-    cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,ldc);
+    auto at = CblasNoTrans,
+         bt = CblasNoTrans;
+    if(transa)
+        {
+        at = CblasTrans;
+        lda = k;
+        }
+    if(transb)
+        {
+        bt = CblasTrans;
+        ldb = n;
+        }
+    cblas_dgemm(CblasColMajor,at,bt,m,n,k,alpha,A,lda,B,ldb,beta,C,m);
 #else
-    char at = transa ? 'T' : 'N';
-    char bt = transb ? 'T' : 'N';
-    F77NAME(dgemm)(&at,&bt,&m,&n,&k,&alpha,A,&lda,B,&ldb,&beta,C,&m);
+    auto *pA = const_cast<double*>(A);
+    auto *pB = const_cast<double*>(B);
+    char at = 'N';
+    char bt = 'N';
+    if(transa)
+        {
+        at = 'T';
+        lda = k;
+        }
+    if(transb)
+        {
+        bt = 'T';
+        ldb = n;
+        }
+    F77NAME(dgemm)(&at,&bt,&m,&n,&k,&alpha,pA,&lda,pB,&ldb,&beta,C,&m);
 #endif
     }
 

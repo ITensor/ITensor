@@ -67,6 +67,7 @@ class MatRefT
         {
         pdata_ = other.pdata_;
         ind_ = other.ind_;
+        return *this;
         }
 
     MatRefT&
@@ -74,6 +75,7 @@ class MatRefT
         {
         pdata_ = other.pdata_;
         ind_ = other.ind_;
+        return *this;
         }
 
     long
@@ -170,6 +172,12 @@ operator+=(MatRef& a, CMatRef b);
 MatRef&
 operator-=(MatRef& a, CMatRef b);
 
+// compute matrix multiply (dgemm) A*B
+// write result to memory referenced by C
+void
+mult(CMatRef A, 
+     CMatRef B, 
+     MatRef  C);
 
 };
 

@@ -123,7 +123,7 @@ mkdebugdir:
 	mkdir -p .debug_objs/matrix
 
 clean:	
-	rm -fr *.o .debug_objs libitensor.a libitensor-g.a
+	rm -fr *.o .debug_objs matrix/*.o libitensor.a libitensor-g.a
 
 GDEPHEADERS=real.h global.h index.h permutation.h
 index.o: $(GDEPHEADERS)

@@ -303,7 +303,6 @@ SECTION("Test += -= operators")
 //    for(auto& el : M) CHECK(el < 1E-10);
 //    }
 
-/*
 SECTION("Test matrixref mult")
     {
     SECTION("Case 1")
@@ -315,9 +314,9 @@ SECTION("Test matrixref mult")
         auto dataB = randomData(1,K*Bc);
         auto dataC = autovector<Real>(1,Ar*Bc);
 
-        auto A = matrixref(dataA.begin(),Ar,K);
-        auto B = matrixref(dataB.begin(),K,Bc);
-        auto C = matrixref(dataC.begin(),Ar,Bc);
+        auto A = makeMatRef(dataA.begin(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),Ar,Bc);
 
         mult(A,B,C);
         for(auto r : count1(C.Nrows()))
@@ -338,9 +337,9 @@ SECTION("Test matrixref mult")
         auto dataB = randomData(1,K*Bc);
         auto dataC = autovector<Real>(1,Ac*Bc);
 
-        auto A = matrixref(dataA.begin(),K,Ac);
-        auto B = matrixref(dataB.begin(),K,Bc);
-        auto C = matrixref(dataC.begin(),Ac,Bc);
+        auto A = makeMatRef(dataA.begin(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),Ac,Bc);
 
         auto At = A.t();
         mult(At,B,C);
@@ -362,9 +361,9 @@ SECTION("Test matrixref mult")
         auto dataB = randomData(1,Br*K);
         auto dataC = autovector<Real>(1,Ar*Br);
 
-        auto A = matrixref(dataA.begin(),Ar,K);
-        auto B = matrixref(dataB.begin(),Br,K);
-        auto C = matrixref(dataC.begin(),Ar,Br);
+        auto A = makeMatRef(dataA.begin(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),Br,K);
+        auto C = makeMatRef(dataC.begin(),Ar,Br);
 
         auto Bt = B.t();
         mult(A,Bt,C);
@@ -386,9 +385,9 @@ SECTION("Test matrixref mult")
         auto dataB = randomData(1,Br*K);
         auto dataC = autovector<Real>(1,Ac*Br);
 
-        auto A = matrixref(dataA.begin(),K,Ac);
-        auto B = matrixref(dataB.begin(),Br,K);
-        auto C = matrixref(dataC.begin(),Ac,Br);
+        auto A = makeMatRef(dataA.begin(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),Br,K);
+        auto C = makeMatRef(dataC.begin(),Ac,Br);
 
         auto At = A.t();
         auto Bt = B.t();
@@ -411,9 +410,9 @@ SECTION("Test matrixref mult")
         auto dataB = randomData(1,K*Bc);
         auto dataC = autovector<Real>(1,Ar*Bc);
 
-        auto A = matrixref(dataA.begin(),Ar,K);
-        auto B = matrixref(dataB.begin(),K,Bc);
-        auto C = matrixref(dataC.begin(),Bc,Ar);
+        auto A = makeMatRef(dataA.begin(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),Bc,Ar);
 
         auto Ct = C.t();
         mult(A,B,Ct);
@@ -435,9 +434,9 @@ SECTION("Test matrixref mult")
         auto dataB = randomData(1,K*Bc);
         auto dataC = autovector<Real>(1,Bc*Ac);
 
-        auto A = matrixref(dataA.begin(),K,Ac);
-        auto B = matrixref(dataB.begin(),K,Bc);
-        auto C = matrixref(dataC.begin(),Bc,Ac);
+        auto A = makeMatRef(dataA.begin(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),K,Bc);
+        auto C = makeMatRef(dataC.begin(),Bc,Ac);
 
         auto At = A.t();
         auto Ct = C.t();
@@ -460,9 +459,9 @@ SECTION("Test matrixref mult")
         auto dataB = randomData(1,Br*K);
         auto dataC = autovector<Real>(1,Br*Ar);
 
-        auto A = matrixref(dataA.begin(),Ar,K);
-        auto B = matrixref(dataB.begin(),Br,K);
-        auto C = matrixref(dataC.begin(),Br,Ar);
+        auto A = makeMatRef(dataA.begin(),Ar,K);
+        auto B = makeMatRef(dataB.begin(),Br,K);
+        auto C = makeMatRef(dataC.begin(),Br,Ar);
 
         auto Bt = B.t();
         auto Ct = C.t();
@@ -485,9 +484,9 @@ SECTION("Test matrixref mult")
         auto dataB = randomData(1,Br*K);
         auto dataC = autovector<Real>(1,Br*Ac);
 
-        auto A = matrixref(dataA.begin(),K,Ac);
-        auto B = matrixref(dataB.begin(),Br,K);
-        auto C = matrixref(dataC.begin(),Br,Ac);
+        auto A = makeMatRef(dataA.begin(),K,Ac);
+        auto B = makeMatRef(dataB.begin(),Br,K);
+        auto C = makeMatRef(dataC.begin(),Br,Ac);
 
         auto At = A.t();
         auto Bt = B.t();
@@ -508,8 +507,8 @@ SECTION("Test matrixref mult")
         auto dataA = randomData(1,N*N);
         auto dataC = randomData(1,N*N);
 
-        auto A = matrixref(dataA.begin(),N,N);
-        auto C = matrixref(dataC.begin(),N,N);
+        auto A = makeMatRef(dataA.begin(),N,N);
+        auto C = makeMatRef(dataC.begin(),N,N);
 
         mult(A,A,C);
         for(auto r : count1(C.Nrows()))
@@ -521,7 +520,6 @@ SECTION("Test matrixref mult")
             }
         }
     }
-*/
 
 /*
 SECTION("Test mult_add")
@@ -533,14 +531,14 @@ SECTION("Test mult_add")
     auto dataB = randomData(1,K*Bc);
     auto dataC = autovector<Real>(1,Ar*Bc);
 
-    auto A = matrixref(dataA.begin(),Ar,K);
-    auto B = matrixref(dataB.begin(),K,Bc);
-    auto C = matrixref(dataC.begin(),Ar,Bc);
+    auto A = makeMatRef(dataA.begin(),Ar,K);
+    auto B = makeMatRef(dataB.begin(),K,Bc);
+    auto C = makeMatRef(dataC.begin(),Ar,Bc);
 
     //Save a copy of C's original data in order
     //to explicitly carry out mult_add alg. below
     auto orig_dataC = dataC;
-    auto origC = matrixref(orig_dataC.begin(),Ar,Bc);
+    auto origC = makeMatRef(orig_dataC.begin(),Ar,Bc);
 
     mult_add(A,B,C);
     for(auto r : count1(C.Nrows()))
