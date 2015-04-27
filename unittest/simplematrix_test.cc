@@ -945,6 +945,14 @@ SECTION("Transpose")
         {
         CHECK_CLOSE(A(i,j),At(j,i));
         }
+
+    auto B = randomMat(nc,nr);
+    transpose(B) &= A;
+    for(auto i : count1(nc))
+    for(auto j : count1(nr))
+        {
+        CHECK_CLOSE(B(i,j),A(j,i));
+        }
     }
 
 SECTION("Sub Vector")

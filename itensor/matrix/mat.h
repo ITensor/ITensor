@@ -156,20 +156,20 @@ makeMatRef(MatRefT<D> M,
 
 
 //Copy data referenced by b to memory referenced by a
-MatRef&
-operator&=(MatRef& a, CMatRef b);
+MatRef
+operator&=(MatRef a, CMatRef b);
 
-MatRef&
-operator*=(MatRef& v, Real fac);
+MatRef
+operator*=(MatRef v, Real fac);
 
-MatRef&
-operator/=(MatRef& v, Real fac);
+MatRef
+operator/=(MatRef v, Real fac);
 
-MatRef&
-operator+=(MatRef& a, CMatRef b);
+MatRef
+operator+=(MatRef a, CMatRef b);
 
-MatRef&
-operator-=(MatRef& a, CMatRef b);
+MatRef
+operator-=(MatRef a, CMatRef b);
 
 // compute matrix multiply (dgemm) A*B
 // write result to memory referenced by C

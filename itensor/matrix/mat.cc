@@ -32,8 +32,8 @@ apply(MatRef& v,
         }
     }
 
-MatRef& 
-operator&=(MatRef& a, CMatRef b)
+MatRef 
+operator&=(MatRef a, CMatRef b)
     {
 #ifdef DEBUG
     if(!(b.Nrows()==a.Nrows() && b.Ncols()==a.Ncols())) 
@@ -45,8 +45,8 @@ operator&=(MatRef& a, CMatRef b)
     return a;
     }
 
-MatRef& 
-operator*=(MatRef& a, Real fac)
+MatRef 
+operator*=(MatRef a, Real fac)
     {
     if(a.contiguous())
         {
@@ -63,8 +63,8 @@ operator*=(MatRef& a, Real fac)
     return a;
     }
 
-MatRef& 
-operator/=(MatRef& a, Real fac)
+MatRef 
+operator/=(MatRef a, Real fac)
     {
     if(fac == 0) throw std::runtime_error("MatRef /=: divide by zero");
     return operator*=(a,1./fac);
@@ -86,8 +86,8 @@ call_daxpy(MatT1& A, const MatT2& B, Real alpha_)
     daxpy_wrapper(&size,&alpha,B.data(),&inc,A.data(),&inc);
     }
 
-MatRef&
-operator+=(MatRef& a, CMatRef b)
+MatRef
+operator+=(MatRef a, CMatRef b)
     {
 #ifdef DEBUG
     if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
@@ -105,8 +105,8 @@ operator+=(MatRef& a, CMatRef b)
     return a;
     }
 
-MatRef&
-operator-=(MatRef& a, CMatRef b)
+MatRef
+operator-=(MatRef a, CMatRef b)
     {
 #ifdef DEBUG
     if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
