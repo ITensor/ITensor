@@ -21,7 +21,7 @@ namespace itensor {
 
 template<typename Func, typename Iter>
 void
-apply(MatRef& v,
+apply(const MatRef& v,
       Iter it,
       const Func& f)
     {
@@ -32,8 +32,8 @@ apply(MatRef& v,
         }
     }
 
-MatRef 
-operator&=(MatRef a, CMatRef b)
+void 
+operator&=(const MatRef& a, CMatRef b)
     {
 #ifdef DEBUG
     if(!(b.Nrows()==a.Nrows() && b.Ncols()==a.Ncols())) 
@@ -42,11 +42,10 @@ operator&=(MatRef a, CMatRef b)
     auto assign = [](Real& x, Real y) { x = y; };
     if(b.contiguous()) apply(a,b.data(),assign);
     else               apply(a,b.cbegin(),assign);
-    return a;
     }
 
-MatRef 
-operator*=(MatRef a, Real fac)
+void 
+operator*=(const MatRef& a, Real fac)
     {
     if(a.contiguous())
         {
@@ -60,14 +59,13 @@ operator*=(MatRef a, Real fac)
         {
         for(auto& el : a) el *= fac;
         }
-    return a;
     }
 
-MatRef 
-operator/=(MatRef a, Real fac)
+void 
+operator/=(const MatRef& a, Real fac)
     {
     if(fac == 0) throw std::runtime_error("MatRef /=: divide by zero");
-    return operator*=(a,1./fac);
+    operator*=(a,1./fac);
     }
 
 template<typename MatT1, typename MatT2>
@@ -86,8 +84,8 @@ call_daxpy(MatT1& A, const MatT2& B, Real alpha_)
     daxpy_wrapper(&size,&alpha,B.data(),&inc,A.data(),&inc);
     }
 
-MatRef
-operator+=(MatRef a, CMatRef b)
+void
+operator+=(const MatRef& a, CMatRef b)
     {
 #ifdef DEBUG
     if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
@@ -102,11 +100,10 @@ operator+=(MatRef a, CMatRef b)
         auto pluseq = [](Real& x, Real y) { x += y; };
         apply(a,b.cbegin(),pluseq);
         }
-    return a;
     }
 
-MatRef
-operator-=(MatRef a, CMatRef b)
+void
+operator-=(const MatRef& a, CMatRef b)
     {
 #ifdef DEBUG
     if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
@@ -121,7 +118,6 @@ operator-=(MatRef a, CMatRef b)
         auto minuseq = [](Real& x, Real y) { x -= y; };
         apply(a,b.cbegin(),minuseq);
         }
-    return a;
     }
 
 Real
