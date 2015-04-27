@@ -45,37 +45,7 @@ class VecRefT
         size_(size)
         { }
 
-    VecRefT(const VecRefT<value_type>& other)
-        :
-        pdata_(other.pdata_),
-        strd_(other.strd_),
-        size_(other.size_)
-        { }
-
-    VecRefT(const VecRefT<const value_type>& other)
-        :
-        pdata_(other.pdata_),
-        strd_(other.strd_),
-        size_(other.size_)
-        { }
-
-    VecRefT&
-    operator=(const VecRefT<value_type>& other)
-        {
-        pdata_ = other.pdata_;
-        strd_ = other.strd_;
-        size_ = other.size_;
-        return *this;
-        }
-
-    VecRefT&
-    operator=(const VecRefT<const value_type>& other)
-        {
-        pdata_ = other.pdata_;
-        strd_ = other.strd_;
-        size_ = other.size_;
-        return *this;
-        }
+    operator VecRefT<const T>() const { return VecRefT<const T>(pdata_,size_,strd_); }
 
     size_type
     size() const { return size_; }
@@ -105,9 +75,6 @@ class VecRefT
 
     const_iterator 
     cend() const { return const_iterator(pdata_+size_*strd_,strd_); }
-
-    friend VecRefT<value_type>;
-    friend VecRefT<const value_type>;
     };
 
 VecRef inline
@@ -150,8 +117,8 @@ class Vec
     {
     public:
     using storage_type = std::vector<Real>;
-    using iterator = Real*;
-    using const_iterator = const Real*;
+    using iterator = storage_type::iterator;
+    using const_iterator = storage_type::const_iterator;
     using value_type = Real;
     using size_type = storage_type::size_type;
     public:
@@ -176,6 +143,8 @@ class Vec
     operator=(Vec&& other) { moveFromVec(std::move(other)); return *this; }
     Vec&
     operator=(CVecRef ref) { assignFromRef(ref); return *this; }
+
+    operator CVecRef() const { return CVecRef(data_.data(),data_.size()); }
 
     Real&
     operator()(long i) 
@@ -223,6 +192,19 @@ class Vec
 
     void
     clear() { data_.clear(); }
+
+    iterator
+    begin() { return data_.begin(); }
+    iterator
+    end() { return data_.end(); }
+    const_iterator
+    begin() const { return data_.cbegin(); }
+    const_iterator
+    end() const { return data_.cend(); }
+    const_iterator
+    cbegin() const { return data_.cbegin(); }
+    const_iterator
+    cend() const { return data_.cend(); }
 
     private:
 

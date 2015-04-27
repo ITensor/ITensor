@@ -7,20 +7,18 @@
 
 namespace itensor {
 
-class matrix;
-
-struct mrange
+struct MRange
     {
     long rn = 0, //number of rows
          rs = 0, //row stride
          cn = 0, //number of cols
          cs = 0; //column stride
-    mrange() { } 
-    mrange(long rn_, long rs_,
+    MRange() { } 
+    MRange(long rn_, long rs_,
          long cn_, long cs_) 
         : rn(rn_),rs(rs_),cn(cn_),cs(cs_) 
         { }
-    mrange(long rn_, long cn_)
+    MRange(long rn_, long cn_)
         : rn(rn_),rs(1),cn(cn_),cs(rn_) 
         { }
     long
@@ -32,27 +30,21 @@ struct mrange
     };
 
 bool inline
-operator==(const mrange& a, const mrange& b)
+operator==(const MRange& a, const MRange& b)
     {
     return (a.rn==b.rn && a.rs==b.rs && a.cn==b.cn && a.cs==b.cs);
     }
 bool inline
-operator!=(const mrange& a, const mrange& b) { return !operator==(a,b); }
-
-mrange inline
-transpose(const mrange& i)
-    {
-    return mrange(i.cn,i.cs,i.rn,i.rs); 
-    }
+operator!=(const MRange& a, const MRange& b) { return !operator==(a,b); }
 
 bool inline
-isTransposed(const mrange& i) { return (i.rs==i.cn && i.cs==1); }
+isTransposed(const MRange& i) { return (i.rs==i.cn && i.cs==1); }
 
 bool inline
-isNormal(const mrange& i) { return (i.rs==1 && i.cs==i.rn); }
+isNormal(const MRange& i) { return (i.rs==1 && i.cs==i.rn); }
 
 bool inline
-isContiguous(const mrange& i) { return isNormal(i) || isTransposed(i); }
+isContiguous(const MRange& i) { return isNormal(i) || isTransposed(i); }
 
 };
 

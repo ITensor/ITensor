@@ -22,16 +22,16 @@ class miterator
     private:
     pointer p_; 
     long count_;
-    mrange ind_; 
+    MRange ind_; 
     public: 
 
     miterator() : p_(nullptr), count_(0) { }; 
     miterator(const miterator& other) : p_(other.p_), count_(other.count_), ind_(other.ind_) { } 
-    miterator(pointer p, const mrange& ind) : p_(p), count_(0), ind_(ind) { }  
+    miterator(pointer p, const MRange& ind) : p_(p), count_(0), ind_(ind) { }  
 
     pointer
     data() const { return p_; }
-    const mrange&
+    const MRange&
     ind() const { return ind_; }
 
     miterator& 
@@ -60,7 +60,7 @@ class miterator
         }
     public:
     //For developer use only; for making end iterator
-    miterator(const mrange& ind) : p_(nullptr), count_(ind.area()), ind_(ind) { }
+    miterator(const MRange& ind) : p_(nullptr), count_(ind.area()), ind_(ind) { }
     }; 
 
 

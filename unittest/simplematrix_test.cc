@@ -3,7 +3,7 @@
 #include "autovector.h"
 #include "global.h"
 #include "count.h"
-#include "matrix/mat.h"
+#include "matrix/slicemat.h"
 
 using namespace itensor;
 using namespace std;
@@ -39,6 +39,27 @@ SECTION("Constructors")
         {
         CHECK_CLOSE(v(i),p[i-1]);
         }
+    }
+
+SECTION("Automatic Conversion")
+    {
+    auto size = 10;
+    auto data1 = randomData(1,size);
+    auto data2 = randomData(1,size);
+    auto vr1 = VecRef(data1.begin(),size);
+    auto cvr2 = CVecRef(data2.begin(),size);
+
+    //Assigning to CVecRef from VecRef is ok
+    cvr2 = vr1;
+    CHECK(cvr2.data() == vr1.data());
+
+    //Constructing CVecRef from VecRef is ok
+    CVecRef cref(vr1);
+    CHECK(cref.data() == vr1.data());
+
+    //This is not allowed - no conversion
+    //from CVecRef back to VecRef
+    //vr1 = cvr2;
     }
 
 SECTION("Construct and assign from VecRef")
@@ -173,8 +194,8 @@ SECTION("Dot product")
     CHECK_CLOSE(v*v,vnrm*vnrm);
 
     ////Non-trivial stride case:
-    //auto M1 = randomMatrix(N,N);
-    //auto M2 = randomMatrix(N,N);
+    //auto M1 = randomMat(N,N);
+    //auto M2 = randomMat(N,N);
     //auto d1 = diagonal(M1);
     //auto d2 = diagonal(M2);
 
@@ -222,6 +243,27 @@ SECTION("Constructors")
             CHECK_CLOSE(A(c,r),data[r+Ar*(c-1)]);
             }
         }
+    }
+
+SECTION("Automatic Conversion")
+    {
+    auto N = 10;
+    auto data1 = randomData(1,N*N);
+    auto data2 = randomData(1,N*N);
+    auto mr1 = MatRef(data1.begin(),N,N);
+    auto cmr2 = CMatRef(data2.begin(),N,N);
+
+    //Assigning to CMatRef from MatRef is ok
+    cmr2 = mr1;
+    CHECK(cmr2.data() == mr1.data());
+
+    //Constructing CVecRef from VecRef is ok
+    CMatRef cref(mr1);
+    CHECK(cref.data() == mr1.data());
+
+    //This is not allowed - no conversion
+    //from CMatRef back to MatRef
+    //mr1 = cmr2;
     }
 
 SECTION("Transpose Method")
@@ -289,7 +331,7 @@ SECTION("Test += -= operators")
 //SECTION("Test addition of refs to same data")
 //    {
 //    auto N = 4;
-//    auto M = randomMatrix(N,N);
+//    auto M = randomMat(N,N);
 //    auto origM = M;
 //    matrixref& Mr1 = M;
 //    const matrixref& Mr2 = M;
@@ -303,7 +345,7 @@ SECTION("Test += -= operators")
 //    for(auto& el : M) CHECK(el < 1E-10);
 //    }
 
-SECTION("Test matrixref mult")
+SECTION("Test MatRef mult")
     {
     SECTION("Case 1")
         {
@@ -552,7 +594,6 @@ SECTION("Test multAdd")
 
 } //Test MatRef
 
-/*
 
 TEST_CASE("Test Mat")
 {
@@ -562,12 +603,12 @@ SECTION("Constructors")
         {
         auto Ar = 3,
              Ac = 4;
-        auto A = matrix(Ar,Ac);
+        auto A = Mat(Ar,Ac);
         CHECK(A.Nrows() == Ar);
         CHECK(A.Ncols() == Ac);
         CHECK(A);
 
-        matrix B;
+        Mat B;
         CHECK(!B);
         }
 
@@ -575,7 +616,7 @@ SECTION("Constructors")
         {
         auto Ar = 3,
              Ac = 4;
-        auto A = randomMatrix(Ar,Ac);
+        auto A = randomMat(Ar,Ac);
 
         const auto *data = A.data();
         for(auto r : count(Ar))
@@ -584,33 +625,38 @@ SECTION("Constructors")
             CHECK_CLOSE(A(1+r,1+c),data[r+Ar*c]);
             }
         }
-    SECTION("Transpose Constructor")
-        {
-        auto Ar = 3,
-             Ac = 4;
-        auto A = matrix(Ar,Ac,true);
-        for(auto& el : A) el = Global::random();
-        CHECK(A.transposed());
-
-        const auto *data = A.data();
-        for(auto r : count(Ar))
-        for(auto c : count(Ac))
-            {
-            CHECK_CLOSE(A(1+c,1+r),data[r+Ar*c]);
-            }
-        }
     }
 
-SECTION("Test matrix mult")
+SECTION("Assign from ref")
+    {
+    auto N = 4;
+    auto M1 = randomMat(N,N);
+    auto M2 = randomMat(N,N);
+
+    auto M1t = transpose(M1);
+    M2 = M1t;
+
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(M2(r,c),M1t(r,c));
+
+    auto M1tt = transpose(transpose(M1));
+    M2 = M1tt;
+    for(auto r : count1(N))
+    for(auto c : count1(N))
+        CHECK_CLOSE(M2(r,c),M1tt(r,c));
+    }
+
+SECTION("Test Mat multiplication")
     {
     auto Ar = 3,
          K  = 4,
          Bc = 5;
 
     //Multiply matrices A*B, store in matrix C
-    auto A = matrix(Ar,K);
-    auto B = matrix(K,Bc);
-    auto C = matrix(Ar,Bc);
+    auto A = Mat(Ar,K);
+    auto B = Mat(K,Bc);
+    auto C = Mat(Ar,Bc);
     mult(A,B,C);
     for(auto r : count1(C.Nrows()))
     for(auto c : count1(C.Ncols()))
@@ -623,7 +669,7 @@ SECTION("Test matrix mult")
 
     //Store result in a matrixref instead
     auto dataC = autovector<Real>(1,Ar*Bc);
-    auto Cref = matrixref(dataC.begin(),Ar,Bc);
+    auto Cref = MatRef(dataC.begin(),Ar,Bc);
     mult(A,B,Cref);
     for(auto r : count1(C.Nrows()))
     for(auto c : count1(C.Ncols()))
@@ -644,26 +690,13 @@ SECTION("Test matrix mult")
         }
     }
 
-SECTION("Assign from ref")
-    {
-    auto N = 2;
-    auto M1 = randomMatrix(N,N);
-    auto M2 = randomMatrix(N,N);
-
-    M2 = M1.t();
-
-    auto M1t = M1.t();
-    for(auto r : count1(N))
-    for(auto c : count1(N))
-        CHECK_CLOSE(M2(r,c),M1t(r,c));
-    }
 
 SECTION("Addition / Subtraction")
     {
     auto Nr = 4,
          Nc = 5;
-    auto A = randomMatrix(Nr,Nc);
-    auto B = randomMatrix(Nr,Nc);
+    auto A = randomMat(Nr,Nc);
+    auto B = randomMat(Nr,Nc);
 
     auto C = A;
     C += B;
@@ -698,7 +731,7 @@ SECTION("Addition / Subtraction")
 SECTION("Scalar multiply, divide")
     {
     auto N = 10;
-    auto A = randomMatrix(N,N);
+    auto A = randomMat(N,N);
     auto origA = A;
     auto fac = Global::random();
 
@@ -714,7 +747,7 @@ SECTION("Scalar multiply, divide")
         CHECK_CLOSE(A(r,c),origA(r,c)/fac);
 
     A = origA;
-    auto At = A.t();
+    auto At = transpose(A);
     At *= fac;
     for(auto r : count1(N))
     for(auto c : count1(N))
@@ -733,7 +766,7 @@ SECTION("Matrix-vector product")
     SECTION("Square case")
         {
         auto N = 10;
-        auto M = randomMatrix(N,N);
+        auto M = randomMat(N,N);
         auto x = randomVec(N);
 
         auto y = M*x;
@@ -744,7 +777,7 @@ SECTION("Matrix-vector product")
             CHECK_CLOSE(y(r),val);
             }
 
-        y = M.t()*x;
+        y = transpose(M)*x;
         for(auto r : count1(N))
             {
             Real val = 0;
@@ -760,7 +793,7 @@ SECTION("Matrix-vector product")
             CHECK_CLOSE(y(c),val);
             }
 
-        y = x*M.t();
+        y = x*transpose(M);
         for(auto c : count1(N))
             {
             Real val = 0;
@@ -783,7 +816,7 @@ SECTION("Matrix-vector product")
         {
         auto Ar = 5,
              Ac = 10;
-        auto A = randomMatrix(Ar,Ac);
+        auto A = randomMat(Ar,Ac);
         auto vR = randomVec(Ac);
         auto vL = randomVec(Ar);
 
@@ -803,7 +836,7 @@ SECTION("Matrix-vector product")
             CHECK_CLOSE(res(c),val);
             }
 
-        res = A.t()*vL;
+        res = transpose(A)*vL;
         for(auto c : count1(Ac))
             {
             Real val = 0;
@@ -811,7 +844,7 @@ SECTION("Matrix-vector product")
             CHECK_CLOSE(res(c),val);
             }
 
-        res = vR*A.t();
+        res = vR*transpose(A);
         for(auto r : count1(Ar))
             {
             Real val = 0;
@@ -825,13 +858,14 @@ SECTION("Matrix-vector product")
 } // Test matrix
 
 
+/*
 TEST_CASE("Test slicing")
 {
 
 
 SECTION("Diagonal")
     {
-    auto A = randomMatrix(4,4);
+    auto A = randomMat(4,4);
     auto d = diagonal(A);
     long i = 1;
     for(const auto& el : d)
@@ -848,7 +882,7 @@ SECTION("Diagonal")
         CHECK_CLOSE(100,A(j,j));
         }
 
-    A = randomMatrix(5,10);
+    A = randomMat(5,10);
     d = diagonal(A);
     i = 1;
     for(const auto& el : d)
@@ -857,7 +891,7 @@ SECTION("Diagonal")
         ++i;
         }
 
-    A = randomMatrix(10,5);
+    A = randomMat(10,5);
     d = diagonal(A);
     i = 1;
     for(const auto& el : d)
@@ -874,7 +908,7 @@ SECTION("Diagonal")
 SECTION("Row / Col Slicing")
     {
     auto N = 10;
-    auto A = randomMatrix(N,N);
+    auto A = randomMat(N,N);
 
     for(auto r : count1(N))
         {
@@ -895,7 +929,7 @@ SECTION("Transpose")
     {
     auto nr = 10,
          nc = 15;
-    auto A = randomMatrix(nr,nc);
+    auto A = randomMat(nr,nc);
     auto At = matrixref(A.data(),transpose(A.ind()));
     CHECK(At.transposed());
 
@@ -943,7 +977,7 @@ SECTION("Sub Matrix")
     {
     auto nr = 10,
          nc = 15;
-    auto A = randomMatrix(nr,nc);
+    auto A = randomMat(nr,nc);
 
     auto rstart = 1,
          rstop = 3,
@@ -980,13 +1014,15 @@ SECTION("Sub Matrix")
 
     }
 } //Test slicing
+*/
 
+/*
 TEST_CASE("Matrix Algorithms and Decompositions")
 {
 SECTION("diagSymmetric")
     {
     auto N = 100;
-    auto M = randomMatrix(N,N);
+    auto M = randomMat(N,N);
     //Symmetrize:
     M = M+M.t();
 
@@ -1009,7 +1045,7 @@ SECTION("diagSymmetric")
 SECTION("Orthogonalize")
     {
     auto N = 10;
-    auto M = randomMatrix(N,N);
+    auto M = randomMat(N,N);
 
     orthog(M);
 
@@ -1025,7 +1061,7 @@ SECTION("Orthogonalize")
 SECTION("Singular Value Decomp")
     {
     //auto N = 10;
-    //auto M = randomMatrix(N,N);
+    //auto M = randomMat(N,N);
 
     //matrix U,V;
     //vec d;

@@ -70,13 +70,16 @@ operator/=(MatRef& a, Real fac)
     return operator*=(a,1./fac);
     }
 
+template<typename MatT1, typename MatT2>
 void
-call_daxpy(MatRef& A, const CMatRef& B, Real alpha_)
+call_daxpy(MatT1& A, const MatT2& B, Real alpha_)
     {
     LAPACK_REAL alpha = alpha_;
     LAPACK_INT inc = 1;
     LAPACK_INT size = A.size();
 #ifdef DEBUG
+    if(A.size() != B.size())
+        throw std::runtime_error("mismatched sizes in MatRef/Mat call_daxpy");
     if(A.size() > std::numeric_limits<LAPACK_INT>::max()) 
         throw std::runtime_error("overflow of size beyond LAPACK_INT range");
 #endif
@@ -138,6 +141,13 @@ norm(CMatRef M)
         for(auto& el : M) nrm += el*el;
         }
     return std::sqrt(nrm);
+    }
+
+MatRef
+randomize(MatRef M)
+    {
+    for(auto& el : M) el = detail::quickran();
+    return M;
     }
 
 
@@ -210,6 +220,84 @@ multAdd(CMatRef A,
         MatRef  C)
     {
     call_dgemm(A,B,C,1.,1.);
+    }
+
+void
+call_dgemv(const CMatRef& M,
+           const CVecRef& x, 
+           VecRef& y,
+           Real alpha,
+           Real beta,
+           bool fromleft)
+    {
+#ifdef DEBUG
+    if(!M.contiguous())
+        throw std::runtime_error("multiplication of non-contiguous matrixref by vector not currently supported");
+#endif
+    auto trans = fromleft;
+    LAPACK_INT m = M.Nrows(),
+               n = M.Ncols();
+    if(M.transposed())
+        {
+        trans = !fromleft;
+        m = M.Ncols();
+        n = M.Nrows();
+        }
+    dgemv_wrapper(trans,alpha,beta,m,n,M.data(),x.data(),x.stride(),y.data(),y.stride());
+    }
+
+void
+mult(CMatRef M,
+     CVecRef x,
+     VecRef y,
+     bool fromleft)
+    {
+#ifdef DEBUG
+    if(fromleft ? M.Nrows()!=x.size() : M.Ncols()!=x.size()) 
+        throw std::runtime_error("matrix vector mult: mismatched sizes");
+    if(fromleft ? M.Ncols()!=y.size() : M.Nrows()!=y.size())
+        throw std::runtime_error("matrix vector mult: wrong size for result (y) vec");
+#endif
+    call_dgemv(M,x,y,1,0,fromleft);
+    }
+
+Mat& Mat::
+operator*=(Real fac)
+    {
+    dscal_wrapper(data_.size(),fac,data_.data());
+    return *this;
+    }
+Mat& Mat::
+operator/=(Real fac)
+    {
+    if(fac == 0) throw std::runtime_error("Mat /=: divide by zero");
+    return operator*=(1./fac);
+    }
+Mat& Mat::
+operator+=(const Mat& other)
+    {
+    call_daxpy(*this,other,+1);
+    return *this;
+    }
+Mat& Mat::
+operator-=(const Mat& other)
+    {
+    call_daxpy(*this,other,-1);
+    return *this;
+    }
+Mat& Mat::
+operator+=(CMatRef other)
+    {
+    auto tr = makeMatRef(*this);
+    tr += other;
+    return *this;
+    }
+Mat& Mat::
+operator-=(CMatRef other)
+    {
+    auto tr = makeMatRef(*this);
+    tr -= other;
+    return *this;
     }
 
 
