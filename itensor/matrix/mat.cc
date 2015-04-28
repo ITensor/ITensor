@@ -40,8 +40,14 @@ operator&=(const MatRef& a, MatRefc b)
         throw std::runtime_error("mismatched sizes in VecRef operator&=");
 #endif
     auto assign = [](Real& x, Real y) { x = y; };
-    if(b.contiguous()) apply(a,b.data(),assign);
-    else               apply(a,b.cbegin(),assign);
+    if(a.ind()==b.ind() && b.contiguous())
+        {
+        apply(a,b.data(),assign);
+        }
+    else
+        {
+        apply(a,b.cbegin(),assign);
+        }
     }
 
 void 
