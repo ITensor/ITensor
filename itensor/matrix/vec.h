@@ -239,6 +239,10 @@ class Vector
     const T*
     data() const { return data_.data(); }
 
+    //Essentially no cost when resizing downward
+    void
+    resize(long size) { data_.resize(size,0); }
+
     void
     clear() { data_.clear(); }
 

@@ -314,6 +314,15 @@ class Matrix
     const T*
     data() const { return data_.data(); }
 
+    //Essentially no cost when resizing downward
+    void
+    resize(long nrows,
+           long ncols)
+        {
+        ind_ = MRange(nrows,ncols);
+        data_.resize(ind_.area(),0);
+        }
+
     void
     clear() 
         { 
