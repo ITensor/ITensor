@@ -6,7 +6,7 @@
 #define __ITENSOR_MAT__H_
 
 #include "vec.h"
-#include "miterator.h"
+#include "matiter.h"
 
 namespace itensor {
 
@@ -28,8 +28,8 @@ template<typename T>
 class MatrixRef
     {
     public:
-    using iterator = miterator<T*>;
-    using const_iterator = miterator<const T*>;
+    using iterator = MatIter<T*>;
+    using const_iterator = MatIter<const T*>;
     using value_type = std::remove_const_t<T>;
     using pointer = T*;
     using reference = T&;
