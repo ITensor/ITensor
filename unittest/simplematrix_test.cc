@@ -276,6 +276,32 @@ SECTION("Vec + and -")
         {
         CHECK_CLOSE(v1(i),origv1(i)+origv2(i));
         }
+
+    v1 = origv1;
+    CHECK(v1.data() != origv1.data());
+    auto ref1 = makeRef(origv1);
+    CHECK(ref1.data() == origv1.data());
+    CHECK((std::is_same<decltype(ref1),VecRef>::value));
+    v1 += ref1;
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(v1(i),2*origv1(i));
+        }
+
+    v1 = origv1;
+    v1 = v1+ref1;
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(v1(i),2*origv1(i));
+        }
+
+    v1 = origv1;
+    VecRefc cref1(origv1);
+    v1 = cref1+ref1;
+    for(auto i : count1(size))
+        {
+        CHECK_CLOSE(v1(i),2*origv1(i));
+        }
     }
 
 SECTION("Dot product")
@@ -285,6 +311,16 @@ SECTION("Dot product")
     auto v = randomVec(N);
     auto vnrm = norm(v);
     CHECK_CLOSE(v*v,vnrm*vnrm);
+
+    auto ref = makeRef(v);
+    CHECK_CLOSE(ref*ref,vnrm*vnrm);
+    CHECK_CLOSE(ref*v,vnrm*vnrm);
+    CHECK_CLOSE(v*ref,vnrm*vnrm);
+
+    const auto& cv = v;
+    auto cref = makeRef(cv);
+    CHECK_CLOSE(cref*cref,vnrm*vnrm);
+    CHECK_CLOSE(ref*cref,vnrm*vnrm);
 
     ////Non-trivial stride case:
     //auto M1 = randomMat(N,N);
@@ -300,6 +336,22 @@ SECTION("Dot product")
     //    }
     //CHECK_CLOSE(val,dot);
     }
+
+SECTION("Misc Vector Functions")
+    {
+    auto size = 20;
+    auto v = Vec(size);
+
+    //Test that randomize works
+    randomize(v);
+
+    //Test norm function
+    Real calcnrm = 0;
+    for(auto& el : v) calcnrm += el*el;
+    calcnrm = std::sqrt(calcnrm);
+    CHECK_CLOSE(norm(v),calcnrm);
+    }
+
 
 SECTION("Sub Vector")
     {
@@ -332,6 +384,9 @@ SECTION("Sub Vector")
     for(auto& el : s) el = -1;
     for(auto j : count1(start,stop))
         CHECK_CLOSE(-1,v(j));
+
+    //Not allowed: would return ref to temporary
+    //auto ref = subVector(Vec(20),1,10);
     }
 }
 
