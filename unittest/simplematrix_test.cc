@@ -3,8 +3,7 @@
 #include "autovector.h"
 #include "global.h"
 #include "count.h"
-#include "matrix/vec.h"
-#include <type_traits>
+#include "matrix/algs.h"
 
 using namespace itensor;
 using namespace std;
@@ -390,7 +389,6 @@ SECTION("Sub Vector")
     }
 }
 
-/*
 
 TEST_CASE("Test MatRef")
 {
@@ -403,7 +401,7 @@ SECTION("Constructors")
              Ac = 4;
         auto data = randomData(1,Ar*Ac);
         CHECK(data.size() == Ar*Ac);
-        auto A = makeMatRef(data.begin(),Ar,Ac);
+        auto A = MatRef(data.begin(),Ar,Ac);
 
         for(auto r : count1(Ar))
         for(auto c : count1(Ac))
@@ -411,21 +409,42 @@ SECTION("Constructors")
             CHECK_CLOSE(A(r,c),data[r+Ar*(c-1)]);
             }
         }
-    SECTION("Transpose Constructor")
-        {
-        auto Ar = 3,
-             Ac = 4;
-        auto data = randomData(1,Ar*Ac);
-        CHECK(data.size() == Ar*Ac);
-        auto A = makeMatRef(data.begin(),Ar,Ac,true);
-        CHECK(A.transposed());
-
-        for(auto r : count1(Ar))
-        for(auto c : count1(Ac))
-            {
-            CHECK_CLOSE(A(c,r),data[r+Ar*(c-1)]);
-            }
-        }
+//    SECTION("Transpose Constructor")
+//        {
+//        auto Ar = 3,
+//             Ac = 4;
+//        auto data = randomData(1,Ar*Ac);
+//        CHECK(data.size() == Ar*Ac);
+//
+//        //auto MC = MatRef(data.begin(),Ar,Ac,true);
+//        //printfln("MC: %s (%d,%d,%d,%d)",MC.data(),MC.ind().rn,MC.ind().rs,MC.ind().cn,MC.ind().cs);
+//
+//        //auto MA = MatRef(data.begin(),Ar,Ac);
+//        //MA.applyTrans();
+//        //printfln("MA: %s (%d,%d,%d,%d)",MA.data(),MA.ind().rn,MA.ind().rs,MA.ind().cn,MA.ind().cs);
+//
+//        //auto MR = MatRefc(data.begin(),Ar,Ac);
+//        //MR = MatRefc(MR.data(),MR.Nrows(),MR.Ncols(),true);
+//        //printfln("MR: %s (%d,%d,%d,%d)",MR.data(),MR.ind().rn,MR.ind().rs,MR.ind().cn,MR.ind().cs);
+//
+//        auto A = MatRef(data.begin(),Ar,Ac,true);
+//        CHECK(A.transposed());
+//        for(auto r : count1(Ar))
+//        for(auto c : count1(Ac))
+//            {
+//            CHECK_CLOSE(A(c,r),data[r+Ar*(c-1)]);
+//            }
+//
+//        auto A2 = MatRef(data.begin(),Ar,Ac);
+//        A2.applyTrans();
+//        CHECK(A2.transposed());
+//
+//        for(auto r : count1(Ar))
+//        for(auto c : count1(Ac))
+//            {
+//            CHECK_CLOSE(A2(c,r),data[r+Ar*(c-1)]);
+//            }
+//        }
     }
 
 SECTION("Automatic Conversion")
@@ -434,37 +453,55 @@ SECTION("Automatic Conversion")
     auto data1 = randomData(1,N*N);
     auto data2 = randomData(1,N*N);
     auto mr1 = MatRef(data1.begin(),N,N);
-    auto cmr2 = CMatRef(data2.begin(),N,N);
+    auto cmr2 = MatRefc(data2.begin(),N,N);
 
-    //Assigning to CMatRef from MatRef is ok
+    //Assigning to MatRefc from MatRef is ok
     cmr2 = mr1;
     CHECK(cmr2.data() == mr1.data());
 
     //Constructing VecRefc from VecRef is ok
-    CMatRef cref(mr1);
+    MatRefc cref(mr1);
     CHECK(cref.data() == mr1.data());
 
     //This is not allowed - no conversion
-    //from CMatRef back to MatRef
+    //from MatRefc back to MatRef
     //mr1 = cmr2;
     }
 
-SECTION("Transpose Method")
+SECTION("Test makeRef")
     {
-    auto Ar = 5,
-         Ac = 3;
-    auto data = randomData(1,Ar*Ac);
-    auto A = makeMatRef(data.begin(),Ar,Ac);
+    auto N = 10;
+    auto data = randomData(1,N*N);
 
-    auto At = A.t();
-    CHECK(At.transposed());
+    MatRef Mr(data.begin(),N,N);
+    MatRefc cMr(data.begin(),N,N);
+    Mat M(N,N);
+    const Mat& cM = M;
 
-    for(auto r : count1(Ar))
-    for(auto c : count1(Ac))
-        {
-        CHECK_CLOSE(A(r,c),At(c,r));
-        }
+    auto ref1 = makeRef(Mr);
+    CHECK(ref1.data() == data.begin());
+
+    auto ref2 = makeRef(cMr);
+    CHECK(ref2.data() == data.begin());
+    CHECK((std::is_same<decltype(ref2),MatRefc>::value));
+
+    auto ref3 = makeRef(M);
+    CHECK(ref3.data() == M.data());
+    CHECK((std::is_same<decltype(ref3),MatRef>::value));
+
+    auto ref4 = makeRef(cM);
+    CHECK(ref4.data() == cM.data());
+    CHECK((std::is_same<decltype(ref4),MatRefc>::value));
+
+    //Not allowed to make ref of temporary:
+    //auto ref5 = makeRef(Mat(N,N)); //not allowed
+    //auto ref6 = makeRef(std::move(M)); //not allowed
+
+    //std::vector<Real> data1(N*N);
+    //makeRef(data1); //not allowed
     }
+
+
 
 SECTION("Test += -= operators")
     {
@@ -473,11 +510,11 @@ SECTION("Test += -= operators")
     auto dataB = randomData(1,N*N);
     auto origdataA = dataA;
 
-    auto A = makeMatRef(dataA.begin(),N,N);
-    auto origA = makeMatRef(origdataA.cbegin(),N,N);
-    auto B = makeMatRef(dataB.cbegin(),N,N);
-    auto At = A.t();
-    auto Bt = B.t();
+    auto A = MatRef(dataA.begin(),N,N);
+    auto origA = MatRefc(origdataA.cbegin(),N,N);
+    auto B = MatRefc(dataB.cbegin(),N,N);
+    auto At = transpose(MatRef(dataA.begin(),N,N));
+    auto Bt = transpose(MatRefc(dataB.cbegin(),N,N));
 
     A += B;
     for(auto r : count1(N))
@@ -511,6 +548,7 @@ SECTION("Test += -= operators")
         }
     }
 
+
 //SECTION("Test addition of refs to same data")
 //    {
 //    auto N = 4;
@@ -539,9 +577,9 @@ SECTION("Test MatRef mult")
         auto dataB = randomData(1,K*Bc);
         auto dataC = autovector<Real>(1,Ar*Bc);
 
-        auto A = makeMatRef(dataA.begin(),Ar,K);
-        auto B = makeMatRef(dataB.begin(),K,Bc);
-        auto C = makeMatRef(dataC.begin(),Ar,Bc);
+        auto A = MatRef(dataA.begin(),Ar,K);
+        auto B = MatRef(dataB.begin(),K,Bc);
+        auto C = MatRef(dataC.begin(),Ar,Bc);
 
         mult(A,B,C);
         for(auto r : count1(C.Nrows()))
@@ -562,11 +600,11 @@ SECTION("Test MatRef mult")
         auto dataB = randomData(1,K*Bc);
         auto dataC = autovector<Real>(1,Ac*Bc);
 
-        auto A = makeMatRef(dataA.begin(),K,Ac);
-        auto B = makeMatRef(dataB.begin(),K,Bc);
-        auto C = makeMatRef(dataC.begin(),Ac,Bc);
+        auto A = MatRef(dataA.begin(),K,Ac);
+        auto B = MatRef(dataB.begin(),K,Bc);
+        auto C = MatRef(dataC.begin(),Ac,Bc);
 
-        auto At = A.t();
+        auto At = transpose(A);
         mult(At,B,C);
         for(auto r : count1(C.Nrows()))
         for(auto c : count1(C.Ncols()))
@@ -586,11 +624,11 @@ SECTION("Test MatRef mult")
         auto dataB = randomData(1,Br*K);
         auto dataC = autovector<Real>(1,Ar*Br);
 
-        auto A = makeMatRef(dataA.begin(),Ar,K);
-        auto B = makeMatRef(dataB.begin(),Br,K);
-        auto C = makeMatRef(dataC.begin(),Ar,Br);
+        auto A = MatRef(dataA.begin(),Ar,K);
+        auto B = MatRef(dataB.begin(),Br,K);
+        auto C = MatRef(dataC.begin(),Ar,Br);
 
-        auto Bt = B.t();
+        auto Bt = transpose(B);
         mult(A,Bt,C);
         for(auto r : count1(C.Nrows()))
         for(auto c : count1(C.Ncols()))
@@ -610,12 +648,12 @@ SECTION("Test MatRef mult")
         auto dataB = randomData(1,Br*K);
         auto dataC = autovector<Real>(1,Ac*Br);
 
-        auto A = makeMatRef(dataA.begin(),K,Ac);
-        auto B = makeMatRef(dataB.begin(),Br,K);
-        auto C = makeMatRef(dataC.begin(),Ac,Br);
+        auto A = MatRef(dataA.begin(),K,Ac);
+        auto B = MatRef(dataB.begin(),Br,K);
+        auto C = MatRef(dataC.begin(),Ac,Br);
 
-        auto At = A.t();
-        auto Bt = B.t();
+        auto At = transpose(A);
+        auto Bt = transpose(B);
         mult(At,Bt,C);
         for(auto r : count1(C.Nrows()))
         for(auto c : count1(C.Ncols()))
@@ -635,11 +673,11 @@ SECTION("Test MatRef mult")
         auto dataB = randomData(1,K*Bc);
         auto dataC = autovector<Real>(1,Ar*Bc);
 
-        auto A = makeMatRef(dataA.begin(),Ar,K);
-        auto B = makeMatRef(dataB.begin(),K,Bc);
-        auto C = makeMatRef(dataC.begin(),Bc,Ar);
+        auto A = MatRef(dataA.begin(),Ar,K);
+        auto B = MatRef(dataB.begin(),K,Bc);
+        auto C = MatRef(dataC.begin(),Bc,Ar);
 
-        auto Ct = C.t();
+        auto Ct = transpose(C);
         mult(A,B,Ct);
         for(auto r : count1(Ct.Nrows()))
         for(auto c : count1(Ct.Ncols()))
@@ -659,12 +697,12 @@ SECTION("Test MatRef mult")
         auto dataB = randomData(1,K*Bc);
         auto dataC = autovector<Real>(1,Bc*Ac);
 
-        auto A = makeMatRef(dataA.begin(),K,Ac);
-        auto B = makeMatRef(dataB.begin(),K,Bc);
-        auto C = makeMatRef(dataC.begin(),Bc,Ac);
+        auto A = MatRef(dataA.begin(),K,Ac);
+        auto B = MatRef(dataB.begin(),K,Bc);
+        auto C = MatRef(dataC.begin(),Bc,Ac);
 
-        auto At = A.t();
-        auto Ct = C.t();
+        auto At = transpose(A);
+        auto Ct = transpose(C);
         mult(At,B,Ct);
         for(auto r : count1(Ct.Nrows()))
         for(auto c : count1(Ct.Ncols()))
@@ -684,12 +722,12 @@ SECTION("Test MatRef mult")
         auto dataB = randomData(1,Br*K);
         auto dataC = autovector<Real>(1,Br*Ar);
 
-        auto A = makeMatRef(dataA.begin(),Ar,K);
-        auto B = makeMatRef(dataB.begin(),Br,K);
-        auto C = makeMatRef(dataC.begin(),Br,Ar);
+        auto A = MatRef(dataA.begin(),Ar,K);
+        auto B = MatRef(dataB.begin(),Br,K);
+        auto C = MatRef(dataC.begin(),Br,Ar);
 
-        auto Bt = B.t();
-        auto Ct = C.t();
+        auto Bt = transpose(B);
+        auto Ct = transpose(C);
         mult(A,Bt,Ct);
         for(auto r : count1(Ct.Nrows()))
         for(auto c : count1(Ct.Ncols()))
@@ -709,13 +747,13 @@ SECTION("Test MatRef mult")
         auto dataB = randomData(1,Br*K);
         auto dataC = autovector<Real>(1,Br*Ac);
 
-        auto A = makeMatRef(dataA.begin(),K,Ac);
-        auto B = makeMatRef(dataB.begin(),Br,K);
-        auto C = makeMatRef(dataC.begin(),Br,Ac);
+        auto A = MatRef(dataA.begin(),K,Ac);
+        auto B = MatRef(dataB.begin(),Br,K);
+        auto C = MatRef(dataC.begin(),Br,Ac);
 
-        auto At = A.t();
-        auto Bt = B.t();
-        auto Ct = C.t();
+        auto At = transpose(A);
+        auto Bt = transpose(B);
+        auto Ct = transpose(C);
         mult(At,Bt,Ct);
         for(auto r : count1(Ct.Nrows()))
         for(auto c : count1(Ct.Ncols()))
@@ -732,8 +770,8 @@ SECTION("Test MatRef mult")
         auto dataA = randomData(1,N*N);
         auto dataC = randomData(1,N*N);
 
-        auto A = makeMatRef(dataA.begin(),N,N);
-        auto C = makeMatRef(dataC.begin(),N,N);
+        auto A = MatRef(dataA.begin(),N,N);
+        auto C = MatRef(dataC.begin(),N,N);
 
         mult(A,A,C);
         for(auto r : count1(C.Nrows()))
@@ -755,14 +793,14 @@ SECTION("Test multAdd")
     auto dataB = randomData(1,K*Bc);
     auto dataC = autovector<Real>(1,Ar*Bc);
 
-    auto A = makeMatRef(dataA.begin(),Ar,K);
-    auto B = makeMatRef(dataB.begin(),K,Bc);
-    auto C = makeMatRef(dataC.begin(),Ar,Bc);
+    auto A = MatRef(dataA.begin(),Ar,K);
+    auto B = MatRef(dataB.begin(),K,Bc);
+    auto C = MatRef(dataC.begin(),Ar,Bc);
 
     //Save a copy of C's original data in order
     //to explicitly carry out multAdd alg. below
     auto orig_dataC = dataC;
-    auto origC = makeMatRef(orig_dataC.begin(),Ar,Bc);
+    auto origC = MatRef(orig_dataC.begin(),Ar,Bc);
 
     multAdd(A,B,C);
     for(auto r : count1(C.Nrows()))
@@ -1209,7 +1247,7 @@ SECTION("diagSymmetric")
 
 SECTION("Orthogonalize")
     {
-    auto N = 10;
+    auto N = 4;
     auto M = randomMat(N,N);
 
     orthog(M);
@@ -1223,6 +1261,7 @@ SECTION("Orthogonalize")
         }
     }
 
+/*
 SECTION("Singular Value Decomp")
     {
     auto Nr = 2,
@@ -1234,5 +1273,5 @@ SECTION("Singular Value Decomp")
     SVD(M,U,d,V);
 
     }
-}
 */
+}

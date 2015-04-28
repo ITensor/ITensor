@@ -30,12 +30,12 @@ namespace itensor {
 //
 
 void
-diagSymmetric(CMatRef M,
-              MatRef U,
-              VecRef d);
+diagSymmetric(MatRefc M,
+              MatRef  U,
+              VecRef  d);
 
 void
-diagSymmetric(CMatRef M,
+diagSymmetric(MatRefc M,
               Mat& U,
               Vec& d);
 
@@ -44,21 +44,15 @@ diagSymmetric(CMatRef M,
 void 
 orthog(MatRef M, long num = -1, long numpass = 2);
 
-void inline
-orthog(Mat& M, long num = -1, long numpass = 2)
-    {
-    orthog(makeMatRef(M),num,numpass);
-    }
-
 void
-SVD(CMatRef A,
-    MatRef U, 
-    VecRef D, 
-    MatRef V,
+SVD(MatRefc A,
+    MatRef  U, 
+    VecRef  D, 
+    MatRef  V,
     Real thresh = 1E-3);
 
 void
-SVD(CMatRef A,
+SVD(MatRefc A,
     Mat& U, 
     Vec& D, 
     Mat& V,

@@ -147,11 +147,10 @@ operator*(VecRefc a, VecRefc b)
     return ddot_wrapper(a.size(),a.data(),a.stride(),b.data(),b.stride());
     }
 
-VecRef
+void
 randomize(VecRef v)
     {
     for(auto& el : v) el = detail::quickran();
-    return v;
     }
 
 //

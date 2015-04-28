@@ -15,7 +15,7 @@ namespace itensor {
 //
 
 void
-diagSymmetric(CMatRef M,
+diagSymmetric(MatRefc M,
               MatRef U,
               VecRef d)
     {
@@ -53,7 +53,7 @@ diagSymmetric(CMatRef M,
     }
 
 void
-diagSymmetric(CMatRef M,
+diagSymmetric(MatRefc M,
               Mat& U,
               Vec& d)
     {
@@ -65,7 +65,7 @@ diagSymmetric(CMatRef M,
         {
         d = Vec(M.Nrows());
         }
-    diagSymmetric(M,makeMatRef(U),makeVecRef(d));
+    diagSymmetric(M,makeRef(U),makeRef(d));
     }
 
 //
@@ -131,8 +131,9 @@ orthog(MatRef M, long num, long numpass)
 
 #define CHKSVD
 
+/*
 void 
-checksvd(const CMatRef& A, const CMatRef& U, const CVecRef& D, const CMatRef& V)
+checksvd(const MatRefc& A, const MatRefc& U, const VecRefc& D, const MatRefc& V)
     {
     Mat Ach(U);
     for(long i = 1; i <= D.size(); ++i) column(Ach,i) *= D(i);
@@ -144,7 +145,7 @@ checksvd(const CMatRef& A, const CMatRef& U, const CVecRef& D, const CMatRef& V)
     }
 
 void
-SVD(CMatRef A,
+SVD(MatRefc A,
     MatRef U, 
     VecRef D, 
     MatRef V,
@@ -239,7 +240,7 @@ SVD(CMatRef A,
     }
 
 void
-SVD(CMatRef A,
+SVD(MatRefc A,
     Mat& U, 
     Vec& D, 
     Mat& V,
@@ -260,5 +261,6 @@ SVD(CMatRef A,
         }
     SVD(A,MatRef(U),VecRef(D),MatRef(V),thresh);
     }
+*/
 
 }; //namespace itensor

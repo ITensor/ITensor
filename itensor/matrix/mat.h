@@ -11,16 +11,21 @@
 namespace itensor {
 
 template<typename T>
-class MatRefT;
-
-using MatRef = MatRefT<Real>;
-
-using CMatRef = MatRefT<const Real>;
-
-class Mat; //forward declaration
+class Matrix;
 
 template<typename T>
-class MatRefT
+class MatrixRef;
+
+using Mat = Matrix<Real>;
+using MatRef = MatrixRef<Real>;
+using MatRefc = MatrixRef<const Real>;
+
+//using CMat = Matrix<Complex>;
+//using CMatRef = MatrixRef<Complex>;
+//using CMatRefc = MatrixRef<const Complex>;
+
+template<typename T>
+class MatrixRef
     {
     public:
     using iterator = miterator<T*>;
@@ -29,44 +34,61 @@ class MatRefT
     using pointer = T*;
     using reference = T&;
     using size_type = long;
+    using mat_type = std::conditional_t<std::is_const<T>::value,
+                                        const Matrix<value_type>,
+                                        Matrix<value_type>>;
     private:
     pointer pdata_ = nullptr;
     MRange ind_;
     public:
 
-    MatRefT() { }
+    MatrixRef() { }
 
-    MatRefT(pointer pdata, 
-            long nrows,
-            long ncols,
-            bool trans = false)
+    MatrixRef(pointer pdata, 
+              long nrows,
+              long ncols)
+              //bool trans = false)
         :
         pdata_(pdata),
-        ind_(trans ? MRange(ncols,nrows,nrows,1) : MRange(nrows,ncols))
+        ind_(nrows,ncols)
+        //ind_(trans ? MRange(ncols,nrows,nrows,1) : MRange(nrows,ncols))
         { }
 
 
-    MatRefT(pointer pdata, 
-            const MRange& ind)
+    MatrixRef(pointer pdata, 
+              const MRange& ind)
         :
         pdata_(pdata),
         ind_(ind)
         { }
 
-    MatRefT(pointer pdata, 
+    MatrixRef(pointer pdata, 
             long offset,
             long nrows,
             long ncols,
             bool trans)
-        : MatRefT(pdata+offset,nrows,ncols,trans)
+        : MatrixRef(pdata+offset,nrows,ncols,trans)
         { }
 
-    MatRefT(Mat& M);
+    MatrixRef(pointer pdata, 
+              long offset,
+              const MRange& ind)
+        : MatrixRef(pdata+offset,ind)
+        { }
 
-    MatRefT&
-    operator=(Mat& M);
+    MatrixRef(mat_type& M) { assignFromMat(M); }
 
-    operator MatRefT<const T>() const { return MatRefT<const T>(pdata_,ind_); }
+    MatrixRef&
+    operator=(mat_type& M) { assignFromMat(M); return *this; }
+
+    MatrixRef(mat_type&& M) = delete;
+
+    MatrixRef&
+    operator=(mat_type&& M) = delete;
+
+    operator MatrixRef<const T>() const { return MatrixRef<const T>(pdata_,ind_); }
+
+    explicit operator bool() const { return bool(pdata_); }
 
     long
     Nrows() const { return ind_.rn; }
@@ -89,21 +111,8 @@ class MatRefT
     bool
     transposed() const { return isTransposed(ind_); }
 
-    explicit operator bool() const { return bool(pdata_); }
-
     pointer
     data() const { return pdata_; }
-
-    void
-    applyTrans() { ind_ = MRange(ind_.cn,ind_.cs,ind_.rn,ind_.rs); }
-
-    MatRefT 
-    t() const
-        {
-        MatRefT res(*this);
-        res.applyTrans();
-        return res;
-        }
 
     reference
     operator()(long i, long j) const { return pdata_[ind_.index(i,j)]; }
@@ -126,61 +135,15 @@ class MatRefT
         pdata_ = nullptr;
         ind_ = MRange();
         }
+
+    void
+    applyTrans() { ind_ = MRange(ind_.cn,ind_.cs,ind_.rn,ind_.rs); }
+
+    private:
+    void
+    assignFromMat(mat_type& M);
     };
 
-std::ostream&
-operator<<(std::ostream& s, CMatRef M);
-
-template<typename... CtrArgs>
-MatRef
-makeMatRef(Real* p,
-           CtrArgs&&... args)
-    {
-    return MatRef(p,std::forward<CtrArgs>(args)...);
-    }
-
-template<typename... CtrArgs>
-CMatRef
-makeMatRef(const Real* p,
-           CtrArgs&&... args)
-    {
-    return CMatRef(p,std::forward<CtrArgs>(args)...);
-    }
-
-template<typename MatT>
-auto
-makeMatRef(MatT& M)
-    {
-    return makeMatRef(M.data(),M.ind());
-    }
-
-template<typename MatT>
-auto
-makeMatRef(MatT& M,
-           const MRange& ind)
-    {
-    return makeMatRef(M.data(),ind);
-    }
-
-template<typename D>
-MatRefT<D> constexpr
-makeMatRef(MatRefT<D> M) 
-    { 
-    return M; 
-    }
-
-template<typename D>
-MatRefT<D>
-makeMatRef(MatRefT<D> M,
-           const MRange& ind)
-    {
-    return MatRefT<D>(M.data(),ind);
-    }
-
-
-//Copy data referenced by b to memory referenced by a
-void
-operator&=(const MatRef& a, CMatRef b);
 
 void
 operator*=(const MatRef& v, Real fac);
@@ -189,77 +152,87 @@ void
 operator/=(const MatRef& v, Real fac);
 
 void
-operator+=(const MatRef& a, CMatRef b);
+operator+=(const MatRef& a, MatRefc b);
 
 void
-operator-=(const MatRef& a, CMatRef b);
+operator-=(const MatRef& a, MatRefc b);
+
+//Copy data referenced by b to memory referenced by a
+void
+operator&=(const MatRef& a, MatRefc b);
 
 void
-call_dgemm(CMatRef A, 
-           CMatRef B, 
+call_dgemm(MatRefc A, 
+           MatRefc B, 
            MatRef  C,
            Real alpha,
            Real beta);
+
+void
+mult(MatRefc A,
+     MatRefc B,
+     MatRef  C);
 
 
 // compute matrix multiply (dgemm) A*B
 // add result to memory referenced by C
 void
-multAdd(CMatRef A, 
-        CMatRef B, 
+multAdd(MatRefc A, 
+        MatRefc B, 
         MatRef  C);
 
 void
-mult(CMatRef M,
-     CVecRef x,
+mult(MatRefc M,
+     VecRefc x,
      VecRef y,
      bool fromleft = false);
 
-Real
-norm(CMatRef M);
 
-MatRef
-randomize(MatRef M);
-
-class Mat
+template<typename T>
+class Matrix
     {
     public:
-    using storage_type = std::vector<Real>;
-    using iterator = storage_type::iterator;
-    using const_iterator = storage_type::const_iterator;
-    using value_type = Real;
-    using size_type = storage_type::size_type;
+    using storage_type = std::vector<T>;
+    using iterator = typename storage_type::iterator;
+    using const_iterator = typename storage_type::const_iterator;
+    using value_type = std::remove_const_t<T>;
+    using pointer = std::add_pointer<T>;
+    using reference = std::add_lvalue_reference_t<T>;
+    using size_type = typename storage_type::size_type;
     public:
     MRange ind_;
     storage_type data_;
     public:
 
-    Mat() { }
+    Matrix() { }
 
-    Mat(long nrows,
-        long ncols) 
+    Matrix(long nrows,
+           long ncols) 
         : 
         ind_(nrows,ncols),
         data_(nrows*ncols,0) 
         { }
 
-    Mat(const Mat& other) { assignFromMat(other); }
+    Matrix(const Matrix& other) { assignFromMat(other); }
 
-    Mat(Mat&& other) { moveFromMat(std::move(other)); }
+    Matrix(Matrix&& other) { moveFromMat(std::move(other)); }
 
     explicit
-    Mat(CMatRef ref) { assignFromRef(ref); }
+    Matrix(MatRefc ref) { assignFromRef(ref); }
 
-    Mat&
-    operator=(const Mat& other) { assignFromMat(other); return *this; }
-    Mat& 
-    operator=(Mat&& other) { moveFromMat(std::move(other)); return *this; }
-    Mat&
-    operator=(CMatRef ref) { assignFromRef(ref); return *this; }
+    Matrix&
+    operator=(const Matrix& other) { assignFromMat(other); return *this; }
 
-    //This conversion is problematic because the current object
-    //could be a temporary:
-    //operator CMatRef() const { return CMatRef(data_.data(),ind_); }
+    Matrix& 
+    operator=(Matrix&& other) { moveFromMat(std::move(other)); return *this; }
+
+    Matrix&
+    operator=(MatRefc ref) { assignFromRef(ref); return *this; }
+
+    explicit operator bool() const { return !data_.empty(); }
+
+    size_type
+    size() const { return data_.size(); }
 
     long
     Nrows() const { return ind_.rn; }
@@ -279,7 +252,7 @@ class Mat
     bool
     transposed() const { return false; }
 
-    Real&
+    reference
     operator()(long i, long j)
         { 
 #ifdef DEBUG
@@ -289,7 +262,7 @@ class Mat
 #endif
         }
 
-    Real
+    value_type
     operator()(long i, long j) const
         { 
 #ifdef DEBUG
@@ -299,29 +272,47 @@ class Mat
 #endif
         }
 
-    Mat&
+    Matrix&
     operator*=(Real fac);
-    Mat&
+
+    Matrix&
     operator/=(Real fac);
-    Mat&
-    operator+=(const Mat& other);
-    Mat&
-    operator-=(const Mat& other);
-    Mat&
-    operator+=(CMatRef other);
-    Mat&
-    operator-=(CMatRef other);
 
-    explicit operator bool() const { return !data_.empty(); }
+    Matrix&
+    operator+=(const Matrix& other);
 
-    Real*
+    Matrix&
+    operator-=(const Matrix& other);
+
+    Matrix&
+    operator+=(MatrixRef<const T> other);
+
+    Matrix&
+    operator-=(MatrixRef<const T> other);
+
+    iterator
+    begin() { return data_.begin(); }
+
+    iterator
+    end() { return data_.end(); }
+
+    const_iterator
+    begin() const { return data_.cbegin(); }
+
+    const_iterator
+    end() const { return data_.cend(); }
+
+    const_iterator
+    cbegin() const { return data_.cbegin(); }
+
+    const_iterator
+    cend() const { return data_.cend(); }
+
+    T*
     data() { return data_.data(); }
 
-    const Real*
+    const T*
     data() const { return data_.data(); }
-
-    size_type
-    size() const { return data_.size(); }
 
     void
     clear() 
@@ -330,23 +321,10 @@ class Mat
         data_.clear(); 
         }
 
-    iterator
-    begin() { return data_.begin(); }
-    iterator
-    end() { return data_.end(); }
-    const_iterator
-    begin() const { return data_.cbegin(); }
-    const_iterator
-    end() const { return data_.cend(); }
-    const_iterator
-    cbegin() const { return data_.cbegin(); }
-    const_iterator
-    cend() const { return data_.cend(); }
-
     private:
 
     void
-    assignFromRef(CMatRef other)
+    assignFromRef(MatRefc other)
         {
         ind_ = MRange(other.Nrows(),other.Ncols());
         //Copy data from other contiguously into data_
@@ -354,7 +332,7 @@ class Mat
         }
 
     void
-    assignFromMat(const Mat& other)
+    assignFromMat(const Matrix& other)
         {
         if(&other == this) return;
         ind_ = other.ind_;
@@ -362,105 +340,223 @@ class Mat
         }
 
     void
-    moveFromMat(Mat&& other)
+    moveFromMat(Matrix&& other)
         {
         ind_ = other.ind_;
         data_ = std::move(other.data_);
         other.clear();
         }
-
     };
 
-template<typename D>
-MatRefT<D>::
-MatRefT(Mat& M)
-    :
-    pdata_(M.data()),
-    ind_(M.ind())
-    { }
-
-template<typename D>
-MatRefT<D>& MatRefT<D>::
-operator=(Mat& M)
+template<typename T>
+void MatrixRef<T>::
+assignFromMat(mat_type& M)
     {
     pdata_ = M.data();
     ind_ = M.ind();
     }
 
+//
+// makeRef functions
+//
 
-template<class MType>
-Mat
-operator+(Mat A, const MType& B) { A += B; return A; }
+template<typename T>
+auto
+makeRef(MatrixRef<T>& M) { return M; }
 
-template<class MType>
-Mat 
-operator+(const MType& A, Mat&& B)
-    {
-    Mat res(std::move(B));
-    res += A;
-    return res;
+template<typename T>
+auto
+makeRef(MatrixRef<const T>& M) { return M; }
+
+template<typename T>
+auto
+makeRef(Matrix<T>& M) { return MatrixRef<T>(M); }
+
+template<typename T>
+auto
+makeRef(const Matrix<T>& M) { return MatrixRef<const T>(M); }
+
+template<typename T, typename Arg, typename... Rest>
+auto
+makeRef(const MatrixRef<T>& M, Arg&& arg, Rest&&... args) 
+    { return MatrixRef<T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
+
+template<typename T, typename Arg, typename... Rest>
+auto
+makeRef(const MatrixRef<const T>& M, Arg&& arg, Rest&&... args) 
+    { return MatrixRef<const T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
+
+template<typename T, typename Arg, typename... Rest>
+auto
+makeRef(Matrix<T>& M, Arg&& arg, Rest&&... args) 
+    { return MatrixRef<T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
+
+template<typename T, typename Arg, typename... Rest>
+auto
+makeRef(const Matrix<T>& M, Arg&& arg, Rest&&... args) 
+    { return MatrixRef<const T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
+
+
+//This version of makeRef intended to fail,
+//forbids explicitly making MatrixRef's to temporaries
+template<typename T, typename... Rest>
+auto
+makeRef(Matrix<T>&& M, Rest&&... args) { return MatrixRef<T>(std::move(M)); }
+
+
+//
+// makeVecRef
+//
+
+template<typename T>
+auto
+makeVecRef(Matrix<T>& M) { return VectorRef<T>(M.data(),M.size()); }
+
+template<typename T>
+auto
+makeVecRef(const Matrix<T>& M) { return VectorRef<const T>(M.data(),M.size()); }
+
+template<typename T, typename Arg, typename... Rest>
+auto
+makeVecRef(Matrix<T>& M, Arg&& arg, Rest&&... args) 
+    { return VectorRef<T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
+
+template<typename T, typename Arg, typename... Rest>
+auto
+makeVecRef(const Matrix<T>& M, Arg&& arg, Rest&&... args) 
+    { return VectorRef<const T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
+
+template<typename T, typename Arg, typename... Rest>
+auto
+makeVecRef(const MatrixRef<T>& M, Arg&& arg, Rest&&... args) 
+    { return VectorRef<T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
+
+template<typename T, typename Arg, typename... Rest>
+auto
+makeVecRef(const Matrix<const T>& M, Arg&& arg, Rest&&... args) 
+    { return VectorRef<const T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
+
+
+//This version of makeVecRef intended to fail,
+//forbids explicitly making VectorRef's to temporaries
+template<typename T, typename... Rest>
+auto
+makeVecRef(Matrix<T>&& M, Rest&&... args) { return VectorRef<T>(std::move(M)); }
+
+
+//
+// Finish defining Matrix operators
+//
+
+template<typename T>
+Matrix<T>& Matrix<T>::
+operator*=(Real fac) { makeRef(*this) *= fac; return *this; }
+
+template<typename T>
+Matrix<T>& Matrix<T>::
+operator/=(Real fac) { makeRef(*this) /= fac; return *this; }
+
+template<typename T>
+Matrix<T>& Matrix<T>::
+operator+=(const Matrix<T>& other) { makeRef(*this) += makeRef(other); return *this; }
+
+template<typename T>
+Matrix<T>& Matrix<T>::
+operator-=(const Matrix<T>& other) { makeRef(*this) -= makeRef(other); return *this; }
+
+template<typename T>
+Matrix<T>& Matrix<T>::
+operator+=(MatrixRef<const T> other) {  makeRef(*this) += other; return *this; }
+
+template<typename T>
+Matrix<T>& Matrix<T>::
+operator-=(MatrixRef<const T> other) { makeRef(*this) -= other; return *this; }
+
+template<typename T>
+Matrix<T>
+operator*(Matrix<T> A, Real fac) { A *= fac; return A; }
+
+template<typename T>
+Matrix<T>
+operator*(Real fac, Matrix<T> A) { A *= fac; return A; }
+
+template<typename T>
+Matrix<T>
+operator/(Matrix<T> A, Real fac) { A /= fac; return A; }
+
+Mat inline
+operator+(MatRefc A, MatRefc B)
+    { 
+    Mat res(A);
+    res += B; 
+    return res; 
     }
 
-template<class MType>
-Mat
-operator-(Mat A, const MType& B) { A -= B; return A; }
+Mat inline
+operator+(MatRefc A, Mat&& B) 
+    { 
+    Mat res(std::move(B)); 
+    res += A; 
+    return res; 
+    }
 
-template<class MType>
-Mat
-operator-(const MType& A, Mat&& B)
-    {
-    Mat res(std::move(B));
+Mat inline
+operator+(Mat&& A, MatRefc B) 
+    { 
+    Mat res(std::move(A)); 
+    res += B; 
+    return res; 
+    }
+
+Mat inline
+operator-(MatRefc A, MatRefc B)
+    { 
+    Mat res(A);
+    res -= B; 
+    return res; 
+    }
+
+Mat inline
+operator-(MatRefc A, Mat&& B) 
+    { 
+    Mat res(std::move(B)); 
     res *= -1;
-    res += A;
-    return res;
+    res += A; 
+    return res; 
     }
 
 Mat inline
-operator*(Mat A, Real fac) { A *= fac; return A; }
-Mat inline
-operator*(Real fac, Mat A) { return operator*(A,fac); }
-Mat inline
-operator/(Mat A, Real fac) { A /= fac; return A; }
+operator-(Mat&& A, MatRefc B) 
+    { 
+    Mat res(std::move(A)); 
+    res -= B; 
+    return res; 
+    }
 
-//Copy Mat elements to memory referenced by MatRef
-void inline
-operator&=(const MatRef& ref, const Mat& M) { operator&=(ref,makeMatRef(M)); }
-void inline
-operator+=(const MatRef& ref, const Mat& M) { operator+=(ref,makeMatRef(M)); }
-void inline
-operator-=(const MatRef& ref, const Mat& M) { operator-=(ref,makeMatRef(M)); }
-
-template<class M1, class M2>
-Mat
-matrixMult(const M1& A, 
-           const M2& B)
+Mat inline
+matrixMult(MatRefc A,
+           MatRefc B)
     {
     Mat C(A.Nrows(),B.Ncols());
-    call_dgemm(makeMatRef(A),makeMatRef(B),makeMatRef(C),1.,0.);
+    call_dgemm(A,B,C,1.,0.);
     return C;
     }
 
-void inline
-mult(CMatRef M,
-     CVecRef x,
-     Vec& y,
-     bool fromleft = false)
-    { 
-    mult(M,x,makeVecRef(y),fromleft); 
-    }
+Mat inline
+operator*(MatRefc A, const Mat& B) { return matrixMult(A,B); }
 
 Mat inline
-operator*(const CMatRef& A, const Mat& B) { return matrixMult(A,B); }
-Mat inline
-operator*(const Mat& A, const CMatRef& B) { return matrixMult(A,B); }
+operator*(const Mat& A, MatRefc B) { return matrixMult(A,B); }
+
 Mat inline
 operator*(const Mat& A, const Mat& B) { return matrixMult(A,B); }
+
 Mat inline
-operator*(const CMatRef& A, const CMatRef& B) { return matrixMult(A,B); }
+operator*(MatRefc A, MatRefc B) { return matrixMult(A,B); }
 
 Vec inline
-operator*(CMatRef A,
-          CVecRef v)
+operator*(MatRefc A,
+          VecRefc v)
     {
     Vec res(A.Nrows());
     mult(A,v,res);
@@ -468,8 +564,8 @@ operator*(CMatRef A,
     }
 
 Vec inline
-operator*(CVecRef v,
-          CMatRef A)
+operator*(VecRefc v,
+          MatRefc A)
     {
     Vec res(A.Ncols());
     bool fromleft = true;
@@ -477,11 +573,32 @@ operator*(CVecRef v,
     return res;
     }
 
-Real inline
-norm(const Mat& M) { return norm(makeMatRef(M)); }
+Real
+norm(MatRefc M);
 
-inline Mat&
-randomize(Mat& v) { randomize(makeMatRef(v)); return v; }
+Real inline
+norm(const Mat& M) { return norm(makeRef(M)); }
+
+//
+// These versions of op-assign to MatRef can
+// work safely for temporary Mat's since
+// const references extend lifetime of rvalues
+//
+
+void inline
+operator&=(MatRef a, const Mat& b) { a &= makeRef(b); }
+
+void inline
+operator+=(MatRef a, const Mat& b) { a += makeRef(b); }
+
+void inline
+operator-=(MatRef a, const Mat& b) { a -= makeRef(b); }
+
+void
+randomize(MatRef M);
+
+std::ostream&
+operator<<(std::ostream& s, MatRefc M);
 
 template<typename... CtrArgs>
 Mat
@@ -491,7 +608,6 @@ randomMat(CtrArgs&&... args)
     randomize(M);
     return M;
     }
-
 
 };
 

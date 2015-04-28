@@ -33,7 +33,7 @@ apply(const MatRef& v,
     }
 
 void 
-operator&=(const MatRef& a, CMatRef b)
+operator&=(const MatRef& a, MatRefc b)
     {
 #ifdef DEBUG
     if(!(b.Nrows()==a.Nrows() && b.Ncols()==a.Ncols())) 
@@ -85,7 +85,7 @@ call_daxpy(MatT1& A, const MatT2& B, Real alpha_)
     }
 
 void
-operator+=(const MatRef& a, CMatRef b)
+operator+=(const MatRef& a, MatRefc b)
     {
 #ifdef DEBUG
     if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
@@ -103,7 +103,7 @@ operator+=(const MatRef& a, CMatRef b)
     }
 
 void
-operator-=(const MatRef& a, CMatRef b)
+operator-=(const MatRef& a, MatRefc b)
     {
 #ifdef DEBUG
     if(!(a.Ncols()==b.Ncols() && a.Nrows()==b.Nrows())) 
@@ -121,7 +121,7 @@ operator-=(const MatRef& a, CMatRef b)
     }
 
 Real
-norm(CMatRef M)
+norm(MatRefc M)
     {
     Real nrm = 0;
     if(M.contiguous())
@@ -139,16 +139,15 @@ norm(CMatRef M)
     return std::sqrt(nrm);
     }
 
-MatRef
+void
 randomize(MatRef M)
     {
     for(auto& el : M) el = detail::quickran();
-    return M;
     }
 
 
 std::ostream&
-operator<<(std::ostream& s, CMatRef M)
+operator<<(std::ostream& s, MatRefc M)
     {
     for(long r = 1; r <= M.Nrows(); ++r)
         {
@@ -165,8 +164,8 @@ operator<<(std::ostream& s, CMatRef M)
 
 // C = alpha*A*B + beta*C
 void
-call_dgemm(CMatRef A, 
-           CMatRef B, 
+call_dgemm(MatRefc A, 
+           MatRefc B, 
            MatRef  C,
            Real alpha,
            Real beta)
@@ -203,24 +202,24 @@ call_dgemm(CMatRef A,
     }
 
 void
-matrixMult(CMatRef A, 
-           CMatRef B, 
-           MatRef  C)
+mult(MatRefc A, 
+     MatRefc B, 
+     MatRef  C)
     {
     call_dgemm(A,B,C,1.,0.);
     }
 
 void
-multAdd(CMatRef A, 
-        CMatRef B, 
+multAdd(MatRefc A, 
+        MatRefc B, 
         MatRef  C)
     {
     call_dgemm(A,B,C,1.,1.);
     }
 
 void
-call_dgemv(const CMatRef& M,
-           const CVecRef& x, 
+call_dgemv(const MatRefc& M,
+           const VecRefc& x, 
            VecRef& y,
            Real alpha,
            Real beta,
@@ -243,8 +242,8 @@ call_dgemv(const CMatRef& M,
     }
 
 void
-mult(CMatRef M,
-     CVecRef x,
+mult(MatRefc M,
+     VecRefc x,
      VecRef y,
      bool fromleft)
     {
@@ -255,45 +254,6 @@ mult(CMatRef M,
         throw std::runtime_error("matrix vector mult: wrong size for result (y) vec");
 #endif
     call_dgemv(M,x,y,1,0,fromleft);
-    }
-
-Mat& Mat::
-operator*=(Real fac)
-    {
-    dscal_wrapper(data_.size(),fac,data_.data());
-    return *this;
-    }
-Mat& Mat::
-operator/=(Real fac)
-    {
-    if(fac == 0) throw std::runtime_error("Mat /=: divide by zero");
-    return operator*=(1./fac);
-    }
-Mat& Mat::
-operator+=(const Mat& other)
-    {
-    call_daxpy(*this,other,+1);
-    return *this;
-    }
-Mat& Mat::
-operator-=(const Mat& other)
-    {
-    call_daxpy(*this,other,-1);
-    return *this;
-    }
-Mat& Mat::
-operator+=(CMatRef other)
-    {
-    auto tr = makeMatRef(*this);
-    tr += other;
-    return *this;
-    }
-Mat& Mat::
-operator-=(CMatRef other)
-    {
-    auto tr = makeMatRef(*this);
-    tr -= other;
-    return *this;
     }
 
 

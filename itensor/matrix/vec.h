@@ -29,12 +29,11 @@ template<typename T>
 class VectorRef
     {
     public:
-    using base_type = T;
     using iterator = stride_iter<T*>;
     using const_iterator = stride_iter<const T*>;
     using value_type = std::remove_const_t<T>;
-    using pointer = std::add_pointer_t<T>;
-    using reference = std::add_lvalue_reference_t<T>;
+    using pointer = T*;
+    using reference = T&;
     using size_type = long;
     using vec_type = std::conditional_t<std::is_const<T>::value,
                                         const Vector<value_type>,
@@ -353,6 +352,18 @@ template<typename T>
 Vector<T>& Vector<T>::
 operator-=(VectorRef<const T> other) { makeRef(*this) -= other; return *this; }
 
+template<typename T>
+Vector<T>
+operator*(Vector<T> A, Real fac) { A *= fac; return A; }
+
+template<typename T>
+Vector<T>
+operator*(Real fac, Vector<T> A) { A *= fac; return A; }
+
+template<typename T>
+Vector<T>
+operator/(Vector<T> A, Real fac) { A /= fac; return A; }
+
 Vec inline
 operator+(VecRefc A, VecRefc B)
     { 
@@ -405,11 +416,31 @@ operator-(Vec&& A, VecRefc B)
 Real
 norm(VecRefc v);
 
-VecRef
+Real inline
+norm(const Vec& v) { return norm(makeRef(v)); }
+
+void
 randomize(VecRef v);
 
 Vec
 randomVec(long size);
+
+
+//
+// These versions of op-assign to VecRef can
+// work safely for temporary Vec's since
+// const references extend lifetime of rvalues
+//
+
+void inline
+operator&=(VecRef a, const Vec& b) { a &= makeRef(b); }
+
+void inline
+operator+=(VecRef a, const Vec& b) { a += makeRef(b); }
+
+void inline
+operator-=(VecRef a, const Vec& b) { a -= makeRef(b); }
+
 
 std::ostream&
 operator<<(std::ostream& s, VecRefc v);

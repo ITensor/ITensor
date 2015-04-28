@@ -15,7 +15,7 @@ struct MRange
          cs = 0; //column stride
     MRange() { } 
     MRange(long rn_, long rs_,
-         long cn_, long cs_) 
+           long cn_, long cs_) 
         : rn(rn_),rs(rs_),cn(cn_),cs(cs_) 
         { }
     MRange(long rn_, long cn_)

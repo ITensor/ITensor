@@ -9,24 +9,15 @@
 
 namespace itensor {
 
-template<template<class> class Ref>
-struct CheckNoRValue;
-
-template<typename MatType>
-using MSlice = std::result_of_t<CheckNoRValue<MatRefT>(MatType)>;
-
-template<typename MatType>
-using VSlice = std::result_of_t<CheckNoRValue<VecRefT>(MatType)>;
-
 template<typename Mat_>
-MSlice<Mat_>
+auto
 transpose(Mat_&& M)
     {
-    return makeMatRef(M.data(),MRange(M.Ncols(),M.colStride(),M.Nrows(),M.rowStride()));
+    return makeRef(std::forward<Mat_>(M),MRange(M.Ncols(),M.colStride(),M.Nrows(),M.rowStride()));
     }
 
 template<typename Mat_>
-MSlice<Mat_>
+auto
 subMatrix(Mat_&& M,
           long rstart,
           long rstop,
@@ -39,7 +30,7 @@ subMatrix(Mat_&& M,
 #endif
     auto offset = M.rowStride()*(rstart-1)+M.colStride()*(cstart-1);
     auto subind = MRange(rstop-rstart+1,M.rowStride(),cstop-cstart+1,M.colStride());
-    return makeMatRef(M.data()+offset,subind);
+    return makeRef(std::forward<Mat_>(M),offset,subind);
     }
 
 template<typename Mat_>
@@ -61,40 +52,26 @@ columns(Mat_&& M,
     }
 
 template<typename Mat_>
-VSlice<Mat_>
+auto
 diagonal(Mat_&& M)
     {
-    return makeVecRef(M.data(),std::min(M.Nrows(),M.Ncols()),M.rowStride()+M.colStride());
+    return makeVecRef(std::forward<Mat_>(M),std::min(M.Nrows(),M.Ncols()),M.rowStride()+M.colStride());
     }
 
 template<typename Mat_>
-VSlice<Mat_>
+auto
 row(Mat_&& M, long j)
     {
-    return makeVecRef(M.data()+(j-1)*M.rowStride(),M.Ncols(),M.colStride());
+    return makeVecRef(std::forward<Mat_>(M),(j-1)*M.rowStride(),M.Ncols(),M.colStride());
     }
 
 template<typename Mat_>
-VSlice<Mat_>
+auto
 column(Mat_&& M, long j)
     {
-    return makeVecRef(M.data()+(j-1)*M.colStride(),M.Nrows(),M.rowStride());
+    return makeVecRef(std::forward<Mat_>(M),(j-1)*M.colStride(),M.Nrows(),M.rowStride());
     }
 
-template<typename T1, typename T2>
-using transfer_const = std::conditional_t<!std::is_const<T1>::value,T2,const T2>;
-
-template<template<class> class Ref>
-struct CheckNoRValue
-    {
-    template<typename Mat_>
-    Ref<transfer_const<Mat_,Real>>
-    operator()(Mat_& m);
-
-    template<typename D>
-    Ref<D>
-    operator()(Ref<D> m);
-    };
 
 }; //namespace itensor
 
