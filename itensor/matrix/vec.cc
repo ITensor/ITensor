@@ -33,7 +33,7 @@ apply(VecRef& v,
     }
 
 VecRef
-operator&=(VecRef a, CVecRef b)
+operator&=(VecRef a, VecRefc b)
     {
 #ifdef DEBUG
     if(b.size() != a.size()) throw std::runtime_error("mismatched sizes in VecRef operator&=");
@@ -68,7 +68,7 @@ operator/=(VecRef a, Real fac)
     }
 
 void
-call_daxpy(VecRef& A, const CVecRef& B, Real alpha_)
+call_daxpy(VecRef& A, const VecRefc& B, Real alpha_)
     {
     LAPACK_REAL alpha = alpha_;
     LAPACK_INT inc = 1;
@@ -81,7 +81,7 @@ call_daxpy(VecRef& A, const CVecRef& B, Real alpha_)
     }
 
 VecRef
-operator+=(VecRef a, CVecRef b)
+operator+=(VecRef a, VecRefc b)
     {
 #ifdef DEBUG
     if(a.size()!=b.size()) throw std::runtime_error("VecRef +=: mismatched sizes");
@@ -100,7 +100,7 @@ operator+=(VecRef a, CVecRef b)
     }
 
 VecRef
-operator-=(VecRef a, CVecRef b)
+operator-=(VecRef a, VecRefc b)
     {
 #ifdef DEBUG
     if(a.size()!=b.size()) throw std::runtime_error("VecRef +=: mismatched sizes");
@@ -119,7 +119,7 @@ operator-=(VecRef a, CVecRef b)
     }
 
 std::ostream&
-operator<<(std::ostream& s, CVecRef v)
+operator<<(std::ostream& s, VecRefc v)
     {
     for(const auto& el : v)
         {
@@ -129,7 +129,7 @@ operator<<(std::ostream& s, CVecRef v)
     }
 
 Real
-norm(CVecRef v)
+norm(VecRefc v)
     {
     Real nrm = 0;
     for(auto& el : v) nrm += el*el;
@@ -137,7 +137,7 @@ norm(CVecRef v)
     }
 
 Real
-operator*(CVecRef a, CVecRef b)
+operator*(VecRefc a, VecRefc b)
     {
 #ifdef DEBUG
     if(a.size() != b.size()) throw std::runtime_error("VecRef dot product: mismatched sizes");

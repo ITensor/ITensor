@@ -4,6 +4,7 @@
 #include "global.h"
 #include "count.h"
 #include "matrix/vec.h"
+#include <type_traits>
 
 using namespace itensor;
 using namespace std;
@@ -18,6 +19,42 @@ randomData(long first, long last)
 
 TEST_CASE("Test VecRef")
 {
+
+SECTION("Test makeRef")
+    {
+    auto size = 10;
+    auto data = randomData(1,size);
+
+    VecRef vr(data.begin(),size);
+    VecRefc cvr(data.begin(),size);
+    Vec v(size);
+    const Vec& cv = v;
+
+    auto ref1 = makeRef(vr);
+    CHECK(ref1.data() == data.begin());
+
+    auto ref2 = makeRef(cvr);
+    CHECK(ref2.data() == data.begin());
+    CHECK((std::is_same<decltype(ref2),VecRefc>::value));
+
+    auto ref3 = makeRef(v);
+    CHECK(ref3.data() == v.data());
+    CHECK((std::is_same<decltype(ref3),VecRef>::value));
+
+    auto ref4 = makeRef(cv);
+    CHECK(ref4.data() == cv.data());
+    CHECK((std::is_same<decltype(ref4),VecRefc>::value));
+
+    //Not allowed to make ref of temporary:
+    //auto ref5 = makeRef(Vec(size)); //not allowed
+    //auto ref6 = makeRef(std::move(v)); //not allowed
+
+    //std::vector<Real> data1(size);
+    //makeRef(data1);
+    //println(ref7.data());
+    }
+
+
 SECTION("Constructors")
     {
     auto size = 10;
@@ -47,26 +84,26 @@ SECTION("VecRef Conversion")
     auto data1 = randomData(1,size);
     auto data2 = randomData(1,size);
     auto vr1 = VecRef(data1.begin(),size);
-    auto cvr2 = CVecRef(data2.begin(),size);
+    auto cvr2 = VecRefc(data2.begin(),size);
 
-    //Assigning to CVecRef from VecRef is ok
+    //Assigning to VecRefc from VecRef is ok
     cvr2 = vr1;
     CHECK(cvr2.data() == vr1.data());
 
-    //Constructing CVecRef from VecRef is ok
-    CVecRef cref(vr1);
+    //Constructing VecRefc from VecRef is ok
+    VecRefc cref(vr1);
     CHECK(cref.data() == vr1.data());
 
     //This is not allowed - no conversion
-    //from CVecRef back to VecRef
+    //from VecRefc back to VecRef
     //vr1 = cvr2;
     }
 
 SECTION("Vec to Ref Conversion")
     {
     auto size = 5;
-    auto f1 = [](CVecRef ref) { return ref.data(); };
-    auto f2 = [](const CVecRef& ref) { return ref.data(); };
+    auto f1 = [](VecRefc ref) { return ref.data(); };
+    auto f2 = [](const VecRefc& ref) { return ref.data(); };
     auto f3 = [](VecRef ref) { ref *= 2; };
 
     Vec v = randomVec(size);
@@ -89,9 +126,17 @@ SECTION("Vec to Ref Conversion")
     //type of Ref from a temporary
     //f1(randomVec(size)); //not allowed
     //f3(randomVec(size)); //not allowed
-    //VecRef ref1 = cv; //not allowed
 
-    CVecRef ref2(cv);
+    
+    //Not allowed to construct a VecRef from const Vec:
+    //VecRef vref1 = cv; //not allowed
+    //VecRef vref2(cv); //not allowed
+
+    //Not allowed to assign/convert to VecRef from const Vec:
+    //VecRef vref3;
+    //vref3 = cv; //not allowed
+
+    VecRefc ref2(cv);
     CHECK(ref2.data() == cv.data());
     ref2.reset();
     ref2 = cv;
@@ -103,7 +148,7 @@ SECTION("Vec to Ref Conversion")
     ref3 = v;
     CHECK(ref3.data() == v.data());
 
-    CVecRef ref4 = v;
+    VecRefc ref4 = v;
     CHECK(ref4.data() == v.data());
     ref4.reset();
     ref4 = v;
@@ -149,7 +194,7 @@ SECTION("Copy data")
     for(auto i : count1(size))
         CHECK_CLOSE(data1(i),v1(i));
 
-    vr2 &= makeVecRef(v2,size,4);
+    vr2 &= VecRef(v2.data(),size,4);
     for(auto i : count1(size))
         CHECK_CLOSE(data2(i),v2(1+4*(i-1)));
     }
@@ -255,6 +300,39 @@ SECTION("Dot product")
     //    }
     //CHECK_CLOSE(val,dot);
     }
+
+SECTION("Sub Vector")
+    {
+    auto v = Vec(20);
+    for(auto& el : v) el = Global::random();
+
+    long start = 1,
+         stop = 10;
+    auto s = subVector(v,start,stop);
+    long count = 0;
+    for(auto j : count1(start,stop))
+        {
+        CHECK_CLOSE(s(j),v(start-1+j));
+        ++count;
+        }
+    CHECK(count == s.size());
+
+    start = 3;
+    stop = 12;
+    s = subVector(v,start,stop);
+    count = 0;
+    for(auto j : count1(start,stop))
+        {
+        CHECK_CLOSE(s(j),v(start-1+j));
+        ++count;
+        }
+    CHECK(count == s.size());
+
+    //Set elements of v through s
+    for(auto& el : s) el = -1;
+    for(auto j : count1(start,stop))
+        CHECK_CLOSE(-1,v(j));
+    }
 }
 
 /*
@@ -307,7 +385,7 @@ SECTION("Automatic Conversion")
     cmr2 = mr1;
     CHECK(cmr2.data() == mr1.data());
 
-    //Constructing CVecRef from VecRef is ok
+    //Constructing VecRefc from VecRef is ok
     CMatRef cref(mr1);
     CHECK(cref.data() == mr1.data());
 
@@ -1005,38 +1083,6 @@ SECTION("Transpose")
         }
     }
 
-SECTION("Sub Vector")
-    {
-    auto v = Vec(20);
-    for(auto& el : v) el = Global::random();
-
-    long start = 1,
-         stop = 10;
-    auto s = subVector(v,start,stop);
-    long count = 0;
-    for(auto j : count1(start,stop))
-        {
-        CHECK_CLOSE(s(j),v(start-1+j));
-        ++count;
-        }
-    CHECK(count == s.size());
-
-    start = 3;
-    stop = 12;
-    s = subVector(v,start,stop);
-    count = 0;
-    for(auto j : count1(start,stop))
-        {
-        CHECK_CLOSE(s(j),v(start-1+j));
-        ++count;
-        }
-    CHECK(count == s.size());
-
-    //Set elements of v through s
-    for(auto& el : s) el = -1;
-    for(auto j : count1(start,stop))
-        CHECK_CLOSE(-1,v(j));
-    }
 
 SECTION("Sub Matrix")
     {

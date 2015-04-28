@@ -45,11 +45,20 @@ class MatRefT
         ind_(trans ? MRange(ncols,nrows,nrows,1) : MRange(nrows,ncols))
         { }
 
+
     MatRefT(pointer pdata, 
             const MRange& ind)
         :
         pdata_(pdata),
         ind_(ind)
+        { }
+
+    MatRefT(pointer pdata, 
+            long offset,
+            long nrows,
+            long ncols,
+            bool trans)
+        : MatRefT(pdata+offset,nrows,ncols,trans)
         { }
 
     MatRefT(Mat& M);
