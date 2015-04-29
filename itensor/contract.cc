@@ -6,7 +6,7 @@
 #include "cputime.h"
 #include "detail/gcounter.h"
 #include "indexset.h"
-#include "matrix/simplematrix.h"
+#include "matrix/mat.h"
 
 using std::vector;
 using std::cout;
@@ -165,14 +165,14 @@ struct ABCProps
 
 struct ABoffC
     {
-    matrixref mA, 
-                    mB, 
-                    mC;
+    MatRefc mA, 
+            mB;
+    MatRef  mC;
     int offC;
 
-    ABoffC(matrixref& mA_, 
-           matrixref& mB_, 
-           matrixref& mC_, 
+    ABoffC(MatRefc& mA_, 
+           MatRefc& mB_, 
+           MatRef& mC_, 
            int offC_)
         : 
         mA(mA_), 
@@ -182,7 +182,7 @@ struct ABoffC
         { }
 
     void
-    execute() const { mult_add(mA,mB,mC); }
+    execute() const { multAdd(mA,mB,mC); }
     };
 
 class CABqueue
@@ -193,9 +193,9 @@ class CABqueue
     CABqueue() { }
 
     void 
-    addtask(matrixref& mA, 
-            matrixref& mB, 
-            matrixref& mC, 
+    addtask(MatRefc& mA, 
+            MatRefc& mB, 
+            MatRef& mC, 
             int offC)
         {
         subtask[offC].emplace_back(mA,mB,mC,offC);
@@ -262,6 +262,8 @@ contract(ABCProps& abc,
          const RTref<RangeT>& B, 
                RTref<RangeT>& C)
     {
+    //println();
+    //println("------------------------------------------");
     // Optimizations TODO
     //
     // o Add "automatic C" mode where index order of C can be
@@ -387,19 +389,27 @@ contract(ABCProps& abc,
 
     //cpu_time cpu;
 
-    matrixref aref;
+    MatRefc aref;
     tensor<Real> newA;
     Permutation PA;
     if(Aismatrix)
         {
-        if(contractedA(0))
-            aref = matrixref(A.data(),dleft,dmid,true);
+        //println("A is matrix already, making aref");
+        if(!contractedA(0)) 
+            {
+            aref = MatRefc(A.data(),dleft,dmid);
+            }
         else
-            aref = matrixref(A.data(),dmid,dleft,false);
+            {
+            //println("  Transposing aref");
+            aref = MatRefc(A.data(),dmid,dleft);
+            aref.applyTrans();
+            }
         }
     else
         {
         PA = Permutation(ra);
+        //TODO: consider permuting to back instead and do timing
         //Permute contracted indices to the front,
         //in the same order as on B
         int newi = 0;
@@ -428,23 +438,25 @@ contract(ABCProps& abc,
             }
         //println("Calling permute A");
         permute(A,PA,newA);
-        aref = matrixref(newA.data(),dleft,dmid,true);
+        aref = MatRefc(newA.data(),dmid,dleft);
+        aref.applyTrans();
         }
 
-    matrixref bref;
+    MatRefc bref;
     tensor<Real> newB;
     Permutation PB;
     if(Bismatrix)
         {
-        if(contractedB(0))
+        //println("B is matrix already, making bref");
+        if(!contractedB(0)) 
             {
-            //println("Not transposing bref");
-            bref = matrixref(B.data(),dright,dmid,false);
+            //println("  Transposing bref");
+            bref = MatRefc(B.data(),dright,dmid);
+            bref.applyTrans();
             }
         else
             {
-            //println("Transposing bref");
-            bref = matrixref(B.data(),dmid,dright,true);
+            bref = MatRefc(B.data(),dmid,dright);
             }
         }
     else
@@ -453,6 +465,8 @@ contract(ABCProps& abc,
         int newi = 0;
         if(Aismatrix)
             {
+            //Permute contracted indices to the
+            //front and in same order as on A
             auto aind = abc.Acstart;
             for(int i = 0; i < abc.ncont; ++i)
                 {
@@ -488,7 +502,7 @@ contract(ABCProps& abc,
             }
         //println("Calling permute B");
         permute(B,PB,newB);
-        bref = matrixref(newB.data(),dright,dmid,false);
+        bref = MatRefc(newB.data(),dmid,dright);
         }
 
     //println("A and B permuted, took ",cpu.sincemark());
@@ -539,10 +553,10 @@ contract(ABCProps& abc,
     //
 
 #ifdef DEBUG
-    if(C.size() != bref.Nrows()*aref.Ncols())
+    if(C.size() != aref.Nrows()*bref.Ncols())
         {
         println("C.size() = ",C.size());
-        printfln("bref.Nrows()*aref.Ncols() = %d*%d = %d",bref.Nrows(),aref.Ncols(),bref.Nrows()*aref.Ncols());
+        printfln("aref.Ncols()*bref.Nrows() = %d*%d = %d",aref.Ncols(),bref.Nrows(),aref.Ncols()*bref.Nrows());
         throw std::runtime_error("incorrect size of C in contract");
         }
 #endif
@@ -577,11 +591,18 @@ contract(ABCProps& abc,
         if(BCsameorder && ACsameorder) ctrans = true;
         }
 
-    matrixref cref;
-    if(ctrans)
-        cref = matrixref(C.data(),aref.Ncols(),bref.Nrows(),true);
+    MatRef cref;
+    if(!ctrans) 
+        {
+        cref = MatRef(C.data(),aref.Nrows(),bref.Ncols());
+        }
     else
-        cref = matrixref(C.data(),bref.Nrows(),aref.Ncols(),false);
+        {
+        cref = MatRef(C.data(),bref.Ncols(),aref.Nrows());
+        cref.applyTrans();
+        }
+
+    //printfln("ctrans = %s",ctrans);
 
     tensor<Real> newC;
     if(!pc_triv && !ctrans)
@@ -616,24 +637,18 @@ contract(ABCProps& abc,
         //Allocate newC
         newC = tensor<Real>(cdims,0.);
         //Update cref to point at newC
-        cref.store(newC.data());
+        cref = MatRef(newC.data(),cref.Nrows(),cref.Ncols());
         }
 
-    //println("aref = \n",aref);
-    //println("bref = \n",bref);
-
     //cpu.mark();
-    //printfln("Multiplying a %dx%d * %dx%d (bref * aref)",bref.Nrows(),bref.Ncols(),aref.Nrows(),aref.Ncols());
-    //println("bref = ",bref.transpose()?"t\n":"\n",bref);
-    //println("aref = ",aref.transpose()?"t\n":"\n",aref);
-    //println("cref before = ",cref.transpose()?"t\n":"\n",cref);
+    //printfln("Multiplying a %dx%d%s * %dx%d%s = %dx%d%s",
+    //         aref.Nrows(),aref.Ncols(),aref.transposed()?"(t)":"",
+    //         bref.Nrows(),bref.Ncols(),bref.transposed()?"(t)":"",
+    //         cref.Nrows(),cref.Ncols(),cref.transposed()?"(t)":"");
 
-    mult_add(bref,aref,cref);
+    multAdd(aref,bref,cref);
 
-    //println("cref = ",cref.transpose()?"t\n":"\n",cref);
     //println("Matrix multiply done, took ",cpu.sincemark());
-
-    //println("cref = \n",cref);
 
     //
     // Reshape C if necessary
@@ -645,6 +660,8 @@ contract(ABCProps& abc,
         permute(newC,PC,C,detail::plusEq<Real>);
         //println("C permuted, took ",cpuC.sincemark());
         }
+    //println("------------------------------------------");
+    //println();
     }
 
 template<typename RangeT>
@@ -684,58 +701,57 @@ computeMultInfo(const Label& ai,
     MultInfo I;
     if(ai[1] == ci[1])
         {
-        if(ai[0] == bi[1])  // C_ij = A_ik B_kj;  mC += mA * mB;
+        if(ai[0] == bi[1])  // Bik Akj = Cij,  mC += mB * mA
             {
-            //leave I as is
+            I.Bfirst = true;
             //println("=======Case 1==========");
             }
-        else //ai[0] == bi[0]) C_ij = A_ik B_jk;  mC += mA * mB.t();
+        else //ai[0] == bi[0]) Bki Akj = C_ij,  mC += mBt * mA
             {
             I.tB = true;
+            I.Bfirst = true;
             //println("=======Case 2==========");
             }
         }
     else if(ai[1] == ci[0])
         {
-        if(ai[0] == bi[1])  // C_ji = A_ik B_kj;  mC += mB.t() * mA.t();
+        if(ai[0] == bi[1])  // Aki Bjk = Cij,  mCt += mAt * mBt;
             {
-            I.Bfirst = true;
             I.tA = true;
             I.tB = true;
             //println("=======Case 3==========");
             }
-        else //ai[0] == bi[0]) C_ji = A_ik B_jk;  mC += mB * mA.t();
+        else //ai[0] == bi[0]) Aki Bkj = Cij,  mC += mAt * mB
             {
-            I.Bfirst = true;
             I.tA = true;
             //println("=======Case 4==========");
             }
         }
     else if(ai[1] == bi[1])
         {
-        if(ai[0] == ci[1])  // C_kj = A_ik B_ij;  mC += mA.t() * mB;
+        if(ai[0] == ci[1])  // Bik Ajk = Cij,  mC += mB * mAt
             {
+            I.Bfirst = true;
             I.tA = true;
             //println("=======Case 5==========");
             }
-        else //ai[0] == ci[0]) C_jk = A_ik B_ij;  mC += mB.t() * mA;
+        else //ai[0] == ci[0]) Aik Bjk = Cij,  mC += mA * mBt
             {
-            I.Bfirst = true;
             I.tB = true;
             //println("=======Case 6==========");
             }
         }
     else if(ai[1] == bi[0])
         {
-        if(ai[0] == ci[1])
+        if(ai[0] == ci[1]) // Bki Ajk = Cij, mC += mBt * mAt
             {
+            I.Bfirst = true;
             I.tA = true;
             I.tB = true;
             //println("=======Case 7==========");
             }
-        else
+        else //ai[0] == ci[0], Aik Bkj = Cij, mC += mA * mB
             {
-            I.Bfirst = true;
             //println("=======Case 8==========");
             }
         }
@@ -749,6 +765,8 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
              RTref<RangeT>& C,       const Label& ci,
              const Args& args)
     {
+    //println();
+    //println("Loop start--------------------------------");
     auto nthread = args.getInt("NThread",4);
     long ra = ai.size(),
          rb = bi.size(),
@@ -756,7 +774,7 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
     ABCProps abc(ai,bi,ci);
     abc.computeNactive();
 
-    //printfln("nactiveA, B, C are %d %d %d",abc.nactiveA,abc.nactiveB,abc.nactiveC);
+    //printfln("nactive A, B, C are %d %d %d",abc.nactiveA,abc.nactiveB,abc.nactiveC);
     if(abc.nactiveA != 2 || abc.nactiveB != 2 || abc.nactiveC != 2)
         {
         //println("calling contract from within contractloop");
@@ -781,9 +799,9 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
 
     auto nfo = computeMultInfo(ai,bi,ci);
 
-    auto Arow = A.n(1), Acol = A.n(0); // Matrix Column index incs the fastest
-    auto Brow = B.n(1), Bcol = B.n(0);
-    auto Crow = C.n(1), Ccol = C.n(0);
+    auto Arow = A.n(0), Acol = A.n(1);
+    auto Brow = B.n(0), Bcol = B.n(1);
+    auto Crow = C.n(0), Ccol = C.n(1);
 
     detail::GCounter couA(0,ra-1,0), 
                      couB(0,rb-1,0);
@@ -845,9 +863,11 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
             auto offB = ind(B,bind);
             auto offC = ind(C,cind);
 
-            matrixref sA(&A.v(offA),Arow,Acol,nfo.tA);
-            matrixref sB(&B.v(offB),Brow,Bcol,nfo.tB);
-            matrixref sC(&C.v(offC),Crow,Ccol,false);
+            auto sA = MatRefc(A.data()+offA,Arow,Acol);
+            if(nfo.tA) sA.applyTrans();
+            auto sB = MatRefc(B.data() + offB,Brow,Bcol);
+            if(nfo.tB) sB.applyTrans();
+            auto sC = MatRef(C.data()+offC,Crow,Ccol);
 
             if(nfo.Bfirst)
                 {
@@ -862,6 +882,8 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
             }
         }
     cabq.run(nthread);
+    //println("Loop end----------------------------------");
+    //println();
     }
 template
 void 

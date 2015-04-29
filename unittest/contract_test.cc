@@ -1,6 +1,7 @@
 #include "test.h"
 #include "itensor.h"
 #include "contract.h"
+#include "cputime.h"
 
 using namespace itensor;
 
@@ -454,12 +455,11 @@ TEST_CASE("Contract Test")
                 }
             }
 
-
         } // Contract Reshape Matrix
 
     SECTION("Contract Loop")
         {
-        SECTION("Case 1")
+        SECTION("Case 1: Bik Akj = Cij")
             {
             int m1 = 10,
                 m2 = 20,
@@ -485,7 +485,33 @@ TEST_CASE("Contract Test")
                 }
             }
 
-        SECTION("Case 3")
+        SECTION("Case 2: Bki Akj = C_ij")
+            {
+            int m1 = 10,
+                m2 = 20,
+                m3 = 30;
+            RTensor A(m1,m2,4,5),
+                    B(m1,m3,4,6),
+                    C(m3,m2,5,6);
+            randomize(A);
+            randomize(B);
+            contractloop(A,{1,2,4,5},B,{1,3,4,6},C,{3,2,5,6});
+            for(int i2 = 0; i2 < m2; ++i2)
+            for(int i3 = 0; i3 < m3; ++i3)
+            for(int i5 = 0; i5 < 5; ++i5)
+            for(int i6 = 0; i6 < 6; ++i6)
+                {
+                Real val = 0;
+                for(int i1 = 0; i1 < m1; ++i1)
+                for(int i4 = 0; i4 < 4; ++i4)
+                    {
+                    val += A(i1,i2,i4,i5)*B(i1,i3,i4,i6);
+                    }
+                CHECK_REQUAL(C(i3,i2,i5,i6),val);
+                }
+            }
+
+        SECTION("Case 3: Aki Bjk = Cij")
             {
             int m1 = 10,
                 m2 = 20,
@@ -511,36 +537,190 @@ TEST_CASE("Contract Test")
                 }
             }
 
-        //SECTION("Timing")
-        //    {
-        //    int m1 = 100,
-        //        m2 = 200,
-        //        m3 = 30,
-        //        m4 = 4,
-        //        m5 = 5,
-        //        m6 = 6;
-        //    RTensor A(m1,m2,m4,m5),
-        //            B(m1,m3,m4,m6),
-        //            C(m2,m3,m5,m6);
-        //    randomize(A);
-        //    randomize(B);
-        //    cpu_time cpu;
-        //    contractloop(A,{1,2,4,5},B,{1,3,4,6},C,{2,3,5,6});
-        //    println("Time = ",cpu.sincemark());
-        //    for(int i2 = 0; i2 < m2; ++i2)
-        //    for(int i3 = 0; i3 < m3; ++i3)
-        //    for(int i5 = 0; i5 < 5; ++i5)
-        //    for(int i6 = 0; i6 < 6; ++i6)
-        //        {
-        //        Real val = 0;
-        //        for(int i1 = 0; i1 < m1; ++i1)
-        //        for(int i4 = 0; i4 < 4; ++i4)
-        //            {
-        //            val += A(i1,i2,i4,i5)*B(i1,i3,i4,i6);
-        //            }
-        //        CHECK_REQUAL(C(i2,i3,i5,i6),val);
-        //        }
-        //    }
+        SECTION("Case 4: Aki Bkj = Cij")
+            {
+            int m1 = 10,
+                m2 = 20,
+                m3 = 30;
+            RTensor A(m1,m2,4,5),
+                    B(m1,m3,4,6),
+                    C(m2,m3,5,6);
+            randomize(A);
+            randomize(B);
+            contractloop(A,{1,2,4,5},B,{1,3,4,6},C,{2,3,5,6});
+            for(int i2 = 0; i2 < m2; ++i2)
+            for(int i3 = 0; i3 < m3; ++i3)
+            for(int i5 = 0; i5 < 5; ++i5)
+            for(int i6 = 0; i6 < 6; ++i6)
+                {
+                Real val = 0;
+                for(int i1 = 0; i1 < m1; ++i1)
+                for(int i4 = 0; i4 < 4; ++i4)
+                    {
+                    val += A(i1,i2,i4,i5)*B(i1,i3,i4,i6);
+                    }
+                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                }
+            }
+
+        SECTION("Case 5: Bik Ajk = Cij")
+            {
+            int m1 = 10,
+                m2 = 20,
+                m3 = 30;
+            RTensor A(m3,m1,4,5),
+                    B(m2,m1,4,6),
+                    C(m2,m3,5,6);
+            randomize(A);
+            randomize(B);
+            contractloop(A,{3,1,4,5},B,{2,1,4,6},C,{2,3,5,6});
+            for(int i2 = 0; i2 < m2; ++i2)
+            for(int i3 = 0; i3 < m3; ++i3)
+            for(int i5 = 0; i5 < 5; ++i5)
+            for(int i6 = 0; i6 < 6; ++i6)
+                {
+                Real val = 0;
+                for(int i1 = 0; i1 < m1; ++i1)
+                for(int i4 = 0; i4 < 4; ++i4)
+                    {
+                    val += A(i3,i1,i4,i5)*B(i2,i1,i4,i6);
+                    }
+                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                }
+            }
+
+        SECTION("Case 6: Aik Bjk = Cij")
+            {
+            int m1 = 10,
+                m2 = 20,
+                m3 = 30;
+            RTensor A(m2,m1,4,5),
+                    B(m3,m1,4,6),
+                    C(m2,m3,5,6);
+            randomize(A);
+            randomize(B);
+            contractloop(A,{2,1,4,5},B,{3,1,4,6},C,{2,3,5,6});
+            for(int i2 = 0; i2 < m2; ++i2)
+            for(int i3 = 0; i3 < m3; ++i3)
+            for(int i5 = 0; i5 < 5; ++i5)
+            for(int i6 = 0; i6 < 6; ++i6)
+                {
+                Real val = 0;
+                for(int i1 = 0; i1 < m1; ++i1)
+                for(int i4 = 0; i4 < 4; ++i4)
+                    {
+                    val += A(i2,i1,i4,i5)*B(i3,i1,i4,i6);
+                    }
+                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                }
+            }
+
+        SECTION("Case 7: Bki Ajk = Cij")
+            {
+            int m1 = 10,
+                m2 = 20,
+                m3 = 30;
+            RTensor A(m3,m1,4,5),
+                    B(m1,m2,4,6),
+                    C(m2,m3,5,6);
+            randomize(A);
+            randomize(B);
+            contractloop(A,{3,1,4,5},B,{1,2,4,6},C,{2,3,5,6});
+            for(int i2 = 0; i2 < m2; ++i2)
+            for(int i3 = 0; i3 < m3; ++i3)
+            for(int i5 = 0; i5 < 5; ++i5)
+            for(int i6 = 0; i6 < 6; ++i6)
+                {
+                Real val = 0;
+                for(int i1 = 0; i1 < m1; ++i1)
+                for(int i4 = 0; i4 < 4; ++i4)
+                    {
+                    val += A(i3,i1,i4,i5)*B(i1,i2,i4,i6);
+                    }
+                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                }
+
+            RTensor Ap(m2,m1,4,5),
+                    Bp(m1,m3,4,6),
+                    Cp(m3,m2,5,6);
+            randomize(A);
+            randomize(B);
+            contractloop(Ap,{2,1,4,5},Bp,{1,3,4,6},Cp,{3,2,5,6});
+            for(int i2 = 0; i2 < m2; ++i2)
+            for(int i3 = 0; i3 < m3; ++i3)
+            for(int i5 = 0; i5 < 5; ++i5)
+            for(int i6 = 0; i6 < 6; ++i6)
+                {
+                Real val = 0;
+                for(int i1 = 0; i1 < m1; ++i1)
+                for(int i4 = 0; i4 < 4; ++i4)
+                    {
+                    val += Ap(i2,i1,i4,i5)*Bp(i1,i3,i4,i6);
+                    }
+                CHECK_REQUAL(Cp(i3,i2,i5,i6),val);
+                }
+            }
+
+        SECTION("Case 8: Aik Bkj = Cij")
+            {
+            int m1 = 10,
+                m2 = 20,
+                m3 = 30;
+            RTensor A(m2,m1,4,5),
+                    B(m1,m3,4,6),
+                    C(m2,m3,5,6);
+            randomize(A);
+            randomize(B);
+            contractloop(A,{2,1,4,5},B,{1,3,4,6},C,{2,3,5,6});
+            for(int i2 = 0; i2 < m2; ++i2)
+            for(int i3 = 0; i3 < m3; ++i3)
+            for(int i5 = 0; i5 < 5; ++i5)
+            for(int i6 = 0; i6 < 6; ++i6)
+                {
+                Real val = 0;
+                for(int i1 = 0; i1 < m1; ++i1)
+                for(int i4 = 0; i4 < 4; ++i4)
+                    {
+                    val += A(i2,i1,i4,i5)*B(i1,i3,i4,i6);
+                    }
+                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                }
+            }
+
+//#define DO_TIMING
+
+#ifdef DO_TIMING
+        SECTION("Timing")
+            {
+            int m1 = 100,
+                m2 = 200,
+                m3 = 30,
+                m4 = 4,
+                m5 = 5,
+                m6 = 6;
+            RTensor A(m1,m2,m4,m5),
+                    B(m1,m3,m4,m6),
+                    C(m2,m3,m5,m6);
+            randomize(A);
+            randomize(B);
+            cpu_time cpu;
+            contractloop(A,{1,2,4,5},B,{1,3,4,6},C,{2,3,5,6});
+            println("Time = ",cpu.sincemark());
+            for(int i2 = 0; i2 < m2; ++i2)
+            for(int i3 = 0; i3 < m3; ++i3)
+            for(int i5 = 0; i5 < 5; ++i5)
+            for(int i6 = 0; i6 < 6; ++i6)
+                {
+                Real val = 0;
+                for(int i1 = 0; i1 < m1; ++i1)
+                for(int i4 = 0; i4 < 4; ++i4)
+                    {
+                    val += A(i1,i2,i4,i5)*B(i1,i3,i4,i6);
+                    }
+                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                }
+            }
+#endif
     
         } // Contract Loop
     }
