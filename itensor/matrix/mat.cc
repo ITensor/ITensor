@@ -37,7 +37,7 @@ operator&=(const MatRef& a, MatRefc b)
     {
 #ifdef DEBUG
     if(!(b.Nrows()==a.Nrows() && b.Ncols()==a.Ncols())) 
-        throw std::runtime_error("mismatched sizes in VecRef operator&=");
+        throw std::runtime_error("mismatched sizes in MatRef operator&=");
 #endif
     auto assign = [](Real& x, Real y) { x = y; };
     if(a.ind()==b.ind() && b.contiguous())

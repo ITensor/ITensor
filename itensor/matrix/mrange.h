@@ -46,6 +46,13 @@ isNormal(const MRange& i) { return (i.rs==1 && i.cs==i.rn); }
 bool inline
 isContiguous(const MRange& i) { return isNormal(i) || isTransposed(i); }
 
+inline std::ostream&
+operator<<(std::ostream& s, const MRange& mr)
+    {
+    s << "(rn="<< mr.rn <<",rs="<< mr.rs <<",cn="<< mr.cn <<",cs="<< mr.cs << ")";
+    return s;
+    }
+
 };
 
 #endif

@@ -8,6 +8,9 @@
 #include "count.h"
 #include "slicemat.h"
 
+using std::move;
+using std::sqrt;
+
 namespace itensor {
 
 //
@@ -15,9 +18,9 @@ namespace itensor {
 //
 
 void
-diagSymmetric(MatRefc M,
-              MatRef U,
-              VecRef d)
+diagSymmetric(const MatRefc& M,
+              const MatRef& U,
+              const VecRef& d)
     {
     LAPACK_INT N = M.Ncols();
     if(N < 1) throw std::runtime_error("diagSymmetric: 0 dimensional matrix");
@@ -28,8 +31,10 @@ diagSymmetric(MatRefc M,
         }
 
 #ifdef DEBUG
-    if(U.Nrows() != N || U.Ncols() != N) 
+    if(!(U.Nrows()== N && U.Ncols() == N)) 
         throw std::runtime_error("diagSymmetric: U should have same dims as M");
+    if(d.size() != N)
+        throw std::runtime_error("diagSymmetric: d size should be linear size of M");
     if(!U.contiguous())
         throw std::runtime_error("diagSymmetric: U must be contiguous");
     if(!d.contiguous())
@@ -44,7 +49,7 @@ diagSymmetric(MatRefc M,
         ++pM; 
         }
 
-    LAPACK_INT info;
+    LAPACK_INT info = 0;
     dsyev_wrapper('V','U',N,U.data(),d.data(),info);
     if(info != 0) throw std::runtime_error("Error condition in diagSymmetric");
 
@@ -57,15 +62,11 @@ diagSymmetric(MatRefc M,
               Mat& U,
               Vec& d)
     {
-    if(!(U.Nrows()==M.Nrows() && U.Ncols()==M.Ncols()))
-        {
-        U = Mat(M.Nrows(),M.Ncols());
-        }
-    if(d.size() != M.Nrows()) 
-        {
-        d = Vec(M.Nrows());
-        }
-    diagSymmetric(M,makeRef(U),makeRef(d));
+    U.resize(M.Nrows(),M.Ncols());
+    d.resize(M.Nrows());
+    auto Uref = makeRef(U);
+    auto dref = makeRef(d);
+    diagSymmetric(M,Uref,dref);
     }
 
 //
@@ -77,8 +78,8 @@ orthog(MatRef M, long num, long numpass)
     {
     if(num == -1) num = M.Ncols();
 #ifdef DEBUG
-    if(num > M.Nrows() || (num == 0 && M.Ncols() > M.Nrows()))
-        throw std::runtime_error("orthog: Ncols() > M.Nrows()");
+    //if(num > M.Nrows() || (num == 0 && M.Ncols() > M.Nrows()))
+    //    throw std::runtime_error("orthog: Ncols() > M.Nrows()");
 #endif
 
     long nkeep = -1;// Orthogonalize to at most the column dim 
@@ -113,7 +114,7 @@ orthog(MatRef M, long num, long numpass)
             {
             dotsref &= transpose(Mcols) * coli;
             coli -= Mcols * dotsref;
-            auto nrm = norm(coli);
+            nrm = norm(coli);
             if(nrm < 1E-3) --pass; //orthog is suspect
             if(nrm < 1E-10) // What if a subspace was zero in all vectors?
                 {
@@ -129,87 +130,75 @@ orthog(MatRef M, long num, long numpass)
 // SVD
 //
 
-#define CHKSVD
+//#define CHKSVD
 
-/*
 void 
 checksvd(const MatRefc& A, const MatRefc& U, const VecRefc& D, const MatRefc& V)
     {
     Mat Ach(U);
     for(long i = 1; i <= D.size(); ++i) column(Ach,i) *= D(i);
-    Ach = Ach * V;
-    println("A = \n",A);
-    println("Ach = \n",Ach);
+    Ach = Ach * transpose(V);
     Ach -= A;
     printfln("relative error with sqrt in low level svd is %.5E",norm(Ach)/norm(A));
     }
 
 void
-SVD(MatRefc A,
-    MatRef U, 
-    VecRef D, 
-    MatRef V,
-    Real thresh)
+SVDRef(const MatRefc& M,
+       const MatRef& U, 
+       const VecRef& D, 
+       const MatRef& V,
+       Real thresh)
     {
-    println("In SVD");
-    auto n = A.Nrows(), 
-         m = A.Ncols();
+    auto Mr = M.Nrows(), 
+         Mc = M.Ncols();
 
-    if(n > m)
+    if(Mr > Mc)
         {
-        auto At = transpose(A);
-        auto Ut = transpose(U);
-        auto Vt = transpose(V);
-        SVD(At,Vt,D,Ut,thresh);
+        SVDRef(transpose(M),V,D,U,thresh);
 #ifdef CHKSVD
-        checksvd(A,U,D,V);
+        checksvd(M,U,D,V);
 #endif
         return;
         }
+
+#ifdef DEBUG
+    if(!(U.Nrows()==Mr && U.Ncols()==Mr)) 
+        throw std::runtime_error("SVD (ref version), wrong size of U");
+    if(!(V.Nrows()==Mc && V.Ncols()==Mr)) 
+        throw std::runtime_error("SVD (ref version), wrong size of V");
+    if(D.size()!=Mr)
+        throw std::runtime_error("SVD (ref version), wrong size of D");
+#endif
 
     //Form 'density matrix' rho
-    Mat rho = A * transpose(A);
+    Mat rho = M * transpose(M);
 
-    Vec evals(n);
-    diagSymmetric(rho,U,evals);
+    //Diagonalize rho: evals are squares of singular vals
+    diagSymmetric(rho,U,D);
 
-    //Form Vt and fix up its orthogonality
-    //(Vt is transpose of V)
-
-    V &= transpose(U) * A;
-    orthog(V,n,2); //2 is the number of orthog passes
-    //V &= transpose(Vt);
-
-    Mat Vt = transpose(A) * U;
-    orthog(Vt,n,2); //2 is the number of orthog passes
-    V &= transpose(Vt);
-
-    //B should be close to diagonal
-    //but may not be perfect - fix
-    //it up below
-    const Mat B = transpose(U) * A * Vt;
-
-    D &= diagonal(B);
-
-    if(D(1) == 0 || thresh == 0)
+    for(auto& el : D) // el = sqrt(fabs(el));
         {
-#ifdef CHKSVD
-        checksvd(A,U,D,V);
-#endif
-        return;
+        //This formula zeroes out any negative evals,
+        //smaller error than taking their abs value
+        el = sqrt((fabs(el)+el)/2);
         }
+
+    //Put result of Mt*U==(V*D) in V storage
+    mult(transpose(M),U,V);
+    //Orthogonalize cols of V*D to obtain V
+    orthog(V,Mr,2); //2 is the number of orthog passes
 
     long start = 2;
-    auto D1 = D(1);
-    for(; start < n; ++start)
+    auto D1t = D(1)*thresh;
+    for(; start < Mr; ++start)
         {
-        if(D(start)/D1 < thresh) break;
+        if(D(start) < D1t) break;
         }
 
-    if(start >= (n-1)) 
+    if(start >= (Mr-1)) 
         {
 #ifdef CHKSVD
-        checksvd(A,U,D,V);
+        checksvd(M,U,D,V);
 #endif
         return;
         }
@@ -219,48 +208,49 @@ SVD(MatRefc A,
     //for greater final accuracy
     //
 
-    auto b = subMatrix(B,start,n,start,n);
+    auto n = Mr-start+1;
 
-    Mat u,
-        v;
-    Vec d;
-    SVD(b,u,d,v,thresh);
+    //reuse storage of rho to hold mv=M*columns(V,start,Mr)
+    Mat mv = move(rho);
+    mv.resize(Mr,n);
+    mult(M,columns(V,start,Mr),mv);
 
-    subVector(D,start,n) &= d;
+    //b should be close to diagonal
+    //but may not be perfect - fix it up below
+    Mat b = rows(transpose(U),start,Mr)*mv;
+   
+    auto d = subVector(D,start,Mr);
+    Mat u(n,n),
+        v(n,n);
+    SVDRef(b,u,d,v,thresh);
 
-    subMatrix(U,1,n,start,n) &= subMatrix(U,1,n,start,n) * u;
+    auto Uu = move(mv);
+    mult(columns(U,start,Mr),u,Uu);
+    columns(U,start,Mr) &= Uu;
 
-    subMatrix(V,start,n,1,m) &= v * subMatrix(V,start,n,1,m);
+    columns(V,start,Mr) &= columns(V,start,Mr) * v;
 
 #ifdef CHKSVD
-	checksvd(A,U,D,V);
+	checksvd(M,U,D,V);
 #endif
 
     return;
     }
 
 void
-SVD(MatRefc A,
+SVD(const MatRefc& M,
     Mat& U, 
     Vec& D, 
     Mat& V,
     Real thresh)
     {
-    auto nsv = std::min(A.Nrows(),A.Ncols());
-    if(!(U.Nrows()==A.Nrows() && U.Ncols()==nsv)) 
-        {
-        U = Mat(A.Nrows(),nsv);
-        }
-    if(!(V.Nrows()==nsv && V.Ncols()==A.Ncols())) 
-        {
-        V = Mat(nsv,A.Ncols());
-        }
-    if(D.size() != nsv) 
-        {
-        D = Vec(nsv);
-        }
-    SVD(A,MatRef(U),VecRef(D),MatRef(V),thresh);
+    auto Mr = M.Nrows(),
+         Mc = M.Ncols();
+    auto nsv = std::min(Mr,Mc);
+    U.resize(Mr,nsv);
+    V.resize(Mc,nsv);
+    D.resize(nsv);
+    SVDRef(M,U,D,V,thresh);
     }
-*/
 
 }; //namespace itensor

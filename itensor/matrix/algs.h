@@ -29,10 +29,10 @@ namespace itensor {
 //  earlier version of ITensor/MatrixRef)
 //
 
-void
-diagSymmetric(MatRefc M,
-              MatRef  U,
-              VecRef  d);
+//void
+//diagSymmetric(const MatRefc& M,
+//              MatRef&  U,
+//              VecRef&  d);
 
 void
 diagSymmetric(MatRefc M,
@@ -44,15 +44,19 @@ diagSymmetric(MatRefc M,
 void 
 orthog(MatRef M, long num = -1, long numpass = 2);
 
+//Compute U,D,V such that 
+//A == U*D*transpose(V), schematically
 void
-SVD(MatRefc A,
-    MatRef  U, 
-    VecRef  D, 
-    MatRef  V,
-    Real thresh = 1E-3);
+SVDRefs(const MatRefc& A,
+        const MatRef&  U, 
+        const VecRef&  D, 
+        const MatRef&  V,
+        Real thresh = 1E-3);
 
+//Compute U,D,V such that 
+//A == U*D*transpose(V), schematically
 void
-SVD(MatRefc A,
+SVD(const MatRefc& A,
     Mat& U, 
     Vec& D, 
     Mat& V,

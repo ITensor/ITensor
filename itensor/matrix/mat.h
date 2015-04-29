@@ -392,11 +392,6 @@ makeRef(const MatrixRef<T>& M, Arg&& arg, Rest&&... args)
 
 template<typename T, typename Arg, typename... Rest>
 auto
-makeRef(const MatrixRef<const T>& M, Arg&& arg, Rest&&... args) 
-    { return MatrixRef<const T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
-
-template<typename T, typename Arg, typename... Rest>
-auto
 makeRef(Matrix<T>& M, Arg&& arg, Rest&&... args) 
     { return MatrixRef<T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
 
@@ -439,12 +434,6 @@ template<typename T, typename Arg, typename... Rest>
 auto
 makeVecRef(const MatrixRef<T>& M, Arg&& arg, Rest&&... args) 
     { return VectorRef<T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
-
-template<typename T, typename Arg, typename... Rest>
-auto
-makeVecRef(const Matrix<const T>& M, Arg&& arg, Rest&&... args) 
-    { return VectorRef<const T>(M.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
-
 
 //This version of makeVecRef intended to fail,
 //forbids explicitly making VectorRef's to temporaries

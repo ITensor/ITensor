@@ -354,14 +354,13 @@ SECTION("Misc Vector Functions")
 
 SECTION("Sub Vector")
     {
-    auto v = Vec(20);
-    for(auto& el : v) el = Global::random();
+    auto v = randomVec(20);
 
     long start = 1,
          stop = 10;
     auto s = subVector(v,start,stop);
     long count = 0;
-    for(auto j : count1(start,stop))
+    for(auto j : count1(s.size()))
         {
         CHECK_CLOSE(s(j),v(start-1+j));
         ++count;
@@ -372,11 +371,12 @@ SECTION("Sub Vector")
     stop = 12;
     s = subVector(v,start,stop);
     count = 0;
-    for(auto j : count1(start,stop))
+    for(auto j : count1(s.size()))
         {
         CHECK_CLOSE(s(j),v(start-1+j));
         ++count;
         }
+    println("Done");
     CHECK(count == s.size());
 
     //Set elements of v through s
@@ -1261,17 +1261,38 @@ SECTION("Orthogonalize")
         }
     }
 
-/*
 SECTION("Singular Value Decomp")
     {
-    auto Nr = 2,
-         Nc = 3;
-    auto M = randomMat(Nr,Nc);
-
-    Mat U,V;
+    Mat U,V,D;
     Vec d;
-    SVD(M,U,d,V);
 
+    auto dMat = 
+        [](const Vec& d) 
+        { 
+        Mat D(d.size(),d.size()); 
+        diagonal(D) &= d; 
+        return D; 
+        };
+
+    auto Nr = 10,
+         Nc = 8;
+    auto M = randomMat(Nr,Nc);
+    SVD(M,U,d,V);
+    auto R = U*dMat(d)*transpose(V);
+    CHECK((norm(R-M)/norm(M)) < 1E-13);
+
+    Nr = 10;
+    Nc = 10;
+    M = randomMat(Nr,Nc);
+    SVD(M,U,d,V);
+    R = U*dMat(d)*transpose(V);
+    CHECK((norm(R-M)/norm(M)) < 1E-13);
+
+    Nr = 10;
+    Nc = 20;
+    M = randomMat(Nr,Nc);
+    SVD(M,U,d,V);
+    R = U*dMat(d)*transpose(V);
+    CHECK((norm(R-M)/norm(M)) < 1E-13);
     }
-*/
 }

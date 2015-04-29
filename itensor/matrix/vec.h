@@ -86,7 +86,14 @@ class VectorRef
     contiguous() const { return strd_ == 1; }
 
     reference
-    operator()(long i) const { return pdata_[(i-1)*strd_]; }
+    operator()(long i) const 
+        { 
+#ifdef DEBUG
+        if(i > size_ || i < 1) throw std::runtime_error("VectorRef: out of range");
+#endif
+        return pdata_[(i-1)*strd_]; 
+        }
+
 
     iterator 
     begin() const { return iterator(pdata_,strd_); }
@@ -302,13 +309,8 @@ makeRef(const Vector<T>& v) { return VectorRef<const T>(v); }
 
 template<typename T, typename Arg, typename... Rest>
 auto
-makeRef(VectorRef<T>& v, Arg&& arg, Rest&&... args) 
+makeRef(const VectorRef<T>& v, Arg&& arg, Rest&&... args) 
     { return VectorRef<T>(v.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
-
-template<typename T, typename Arg, typename... Rest>
-auto
-makeRef(VectorRef<const T>& v, Arg&& arg, Rest&&... args) 
-    { return VectorRef<const T>(v.data(),std::forward<Arg>(arg),std::forward<Rest>(args)...); }
 
 template<typename T, typename Arg, typename... Rest>
 auto

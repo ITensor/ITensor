@@ -62,6 +62,9 @@ template<typename Mat_>
 auto
 row(Mat_&& M, long j)
     {
+#ifdef DEBUG
+    if(j < 1 || j > M.Nrows()) throw std::runtime_error("invalid row index");
+#endif
     return makeVecRef(std::forward<Mat_>(M),(j-1)*M.rowStride(),M.Ncols(),M.colStride());
     }
 
@@ -69,6 +72,9 @@ template<typename Mat_>
 auto
 column(Mat_&& M, long j)
     {
+#ifdef DEBUG
+    if(j < 1 || j > M.Ncols()) throw std::runtime_error("invalid column index");
+#endif
     return makeVecRef(std::forward<Mat_>(M),(j-1)*M.colStride(),M.Nrows(),M.rowStride());
     }
 
