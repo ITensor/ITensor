@@ -16,7 +16,7 @@ randomData(long first, long last)
     return data;
     }
 
-TEST_CASE("Test VecRef")
+TEST_CASE("Test VectorRef and Vector")
 {
 
 SECTION("Test makeRef")
@@ -386,6 +386,34 @@ SECTION("Sub Vector")
 
     //Not allowed: would return ref to temporary
     //auto ref = subVector(Vec(20),1,10);
+    }
+
+
+SECTION("Test Resize")
+    {
+    auto size = 20;
+    auto v = Vec(size);
+    for(auto i : count1(size)) v(i) = i*i;
+    auto origv = v;
+
+    //Check that downsizing doesn't change any elements
+    v.resize(size/2);
+    for(auto i : count1(v.size())) 
+        {
+        CHECK(v(i) == i*i);
+        }
+
+    //Check that upsizing pads with zeros
+    v = origv;
+    v.resize(2*size);
+    for(auto i : count1(size)) 
+        {
+        CHECK(v(i) == i*i);
+        }
+    for(auto i : count1(size+1,2*size)) 
+        {
+        CHECK(v(i) == 0);
+        }
     }
 }
 
