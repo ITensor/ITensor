@@ -75,17 +75,17 @@ class GCounter	// General Counter
         {
         long mi = first.mini(), 
              ma = first.maxi();
-        ++i.fastref(mi);
+        ++i[mi];
         ++ind;
-        if(i.fast(mi) > last.fast(mi))
+        if(i[mi] > last[mi])
             {
             for(int j = mi+1; j <= ma; ++j)
                 {
-                i.fastref(j-1) = first.fast(j-1);
-                ++i.fastref(j);
-                if(i.fast(j) <= last.fast(j)) return *this;
+                i[j-1] = first[j-1];
+                ++i[j];
+                if(i[j] <= last[j]) return *this;
                 }
-            i.fastref(mi) = first.fast(mi) - 1;	  // all done if get here; set !notdone()
+            i[mi] = first[mi] - 1;	  // all done if get here; set !notdone()
             }
         return *this;
         }
@@ -93,7 +93,7 @@ class GCounter	// General Counter
     bool 
     notDone()
         {
-        return i.fast(first.mini()) >= first.fast(first.mini());
+        return i[first.mini()] >= first[first.mini()];
         }
     };
 

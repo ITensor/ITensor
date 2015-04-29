@@ -70,6 +70,14 @@ operator<<(std::ostream& s, Type t)
     return s;
     }
 
+std::vector<Real>
+randomData(size_t size)
+    {
+    std::vector<Real> data(size);
+    for(auto& el : data) el = Global::random();
+    return data;
+    }
+
 TEST_CASE("ITensor")
 {
 Index s1("s1",2,Site);
@@ -243,33 +251,38 @@ SECTION("Real Scalar")
     CHECK_CLOSE(norm(t9),fabs(b));
     }
 
-SECTION("Dense Rank 1 from Vector")
+SECTION("Dense Rank 1 from container")
     {
     Index linkind("linkind",10);
-    Vector V(linkind.m()); 
-    V.Randomize();
-    auto t10 = diagtensor(V,linkind);
+    auto data = randomData(linkind.m());
+    auto t10 = diagtensor(data,linkind);
 
     CHECK_EQUAL(t10.r(),1);
     CHECK(hasindex(t10,linkind));
-    CHECK_DIFF(sumels(t10),V.sumels(),1E-10);
-    CHECK_DIFF(norm(t10),Norm(V),1E-10);
+    Real tot = 0;
+    for(auto& el : data) tot += el;
+    CHECK_DIFF(sumels(t10),tot,1E-10);
+    Real chknrm = 0;
+    for(auto el : data) chknrm += el*el;
+    CHECK_DIFF(norm(t10),std::sqrt(chknrm),1E-10);
     }
 
-SECTION("Diag Rank 2 from Vector")
+SECTION("Diag Rank 2 from container")
     {
     Index i1("i1",10),
           i2("i2",10);
-    Vector V(i1.m()); 
-    V.Randomize();
-    auto T = diagtensor(V,i1,i2);
+    auto data = randomData(i1.m());
+    auto T = diagtensor(data,i1,i2);
     CHECK(getType(T) == DiagReal);
 
     CHECK_EQUAL(T.r(),2);
     CHECK(hasindex(T,i1));
     CHECK(hasindex(T,i2));
-    CHECK_DIFF(norm(T),Norm(V),1E-10);
-    CHECK_DIFF(sumels(T),V.sumels(),1E-10);
+    Real tot = 0,
+         nrm = 0;
+    for(auto& el : data) tot += el, nrm += el*el;
+    CHECK_DIFF(norm(T),std::sqrt(nrm),1E-10);
+    CHECK_DIFF(sumels(T),tot,1E-10);
     }
 }
 
@@ -579,12 +592,10 @@ SECTION("Reordered Case 2")
 
 SECTION("Add diag")
     {
-    Vector V1(std::min(l6.m(),b4.m())),
-           V2(std::min(l6.m(),b4.m()));
-    V1.Randomize();
-    V2.Randomize();
-    auto v1 = diagtensor(V1,l6,b4),
-         v2 = diagtensor(V2,b4,l6);
+    auto data1 = randomData(std::min(l6.m(),b4.m())),
+         data2 = randomData(std::min(l6.m(),b4.m()));
+    auto v1 = diagtensor(data1,l6,b4),
+         v2 = diagtensor(data2,b4,l6);
     auto r = v1+v2;
     for(int j1 = 1; j1 <= 2; ++j1)
     for(int j2 = 1; j2 <= 4; ++j2)
@@ -802,7 +813,7 @@ SECTION("Complex-Complex")
         }
     }
 
-SECTION("Complex-Complex")
+SECTION("Real-Complex")
     {
     auto T1 = randIT(b3,b5,l6,a1,s3),
          T2 = randITCplx(l6,s4,b3,a1);
@@ -888,9 +899,7 @@ SECTION("Diag All Same")
 
 SECTION("Diag")
     {
-    Vector v(2);
-    v(1) = 1.23234;
-    v(2) = -0.9237;
+    std::vector<Real> v = {{1.23234, -0.9237}};
     auto op = diagtensor(v,s1,b2);
     CHECK(getType(op) == DiagReal);
 
@@ -902,7 +911,7 @@ SECTION("Diag")
     for(int j2 = 1; j2 <= s2.m(); ++j2)
     for(int d = 1; d <= diagm; ++d)
         {
-        CHECK_CLOSE(res2.real(s2(j2),b2(d)), v(d) * r2.real(s2(j2),s1(d)));
+        CHECK_CLOSE(res2.real(s2(j2),b2(d)), v.at(d-1) * r2.real(s2(j2),s1(d)));
         }
     }
 
@@ -959,14 +968,13 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
         val += T.real(J(j),K(j));
     CHECK_CLOSE(R.real(),val);
 
-    Vector v(minjk);
-    for(int i = 1; i <= minjk; ++i) v(i) = Global::random();
-    auto d2 = diagtensor(v,J,K);
+    auto data = randomData(minjk);
+    auto d2 = diagtensor(data,J,K);
     R = d2*T;
     CHECK(getType(R) == DiagRealAllSame);
     val = 0;
     for(long j = 1; j <= minjk; ++j)
-        val += v(j)*T.real(J(j),K(j));
+        val += data.at(j-1)*T.real(J(j),K(j));
     CHECK_CLOSE(R.real(),val);
     }
 

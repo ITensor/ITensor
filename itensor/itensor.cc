@@ -74,15 +74,6 @@ ITensor(const IndexSet& is)
     scale_(1.)
 	{ }
 
-//ITensor::
-//ITensor(const IndexSet& is,
-//        const VectorRef& v)
-//    :
-//    is_(is),
-//    scale_(1.),
-//    store_(std::make_shared<ITReal>(v.begin(),v.end()))
-//	{ }
-
 struct CopyElems : public RegisterFunc<CopyElems>
     {
     CopyElems() { }
@@ -139,72 +130,6 @@ ITensor(const IndexSet& is,
 //        }
 //    }
 
-
-//class Reshape
-//    {
-//    const Permutation& P_;
-//    const IndexSet& is_;
-//    public:
-//    Reshape(const Permutation& P,
-//            const IndexSet& is)
-//        : P_(P), is_(is)
-//        { }
-//
-//    NewData
-//    operator()(ITReal& t1, 
-//               const ITReal& t2)
-//        {
-//        auto v = std::vector<Real>();
-//        permute(P_,is_,t2.data(),v);
-//        return NewData();
-//        }
-//
-//    };
-//
-//ITensor::
-//ITensor(const IndexSet& is,
-//        const ITensor& t,
-//        const Permutation& P)
-//    :
-//    is_(is_),
-//    scale_(t.scale_)
-//    {
-//    if(isTrivial(P)) 
-//        { 
-//        store_ = other.store_;
-//        }
-//    else               
-//        { 
-//        Error("Not yet implemented");
-//        store_ = make_shared<ITReal>(is_);
-//        applyFunc<Reshape>(store_,other.store_,{P,other.is_});
-//        }
-//    }
-
-
-//class IsScalar
-//    {
-//    bool value_ = false;
-//    public:
-//
-//    explicit operator bool() const { return value_; }
-//
-//    template <typename T>
-//    NewData
-//    operator()(const ITScalar<T>& d)
-//        {
-//        value_ = true;
-//        return NewData();
-//        }
-//
-//    template <class T>
-//    NewData
-//    operator()(const T& d)
-//        {
-//        value_ = false;
-//        return NewData();
-//        }
-//    };
 
 vector<Index>
 computeNewInds(const IndexSet& Lis,

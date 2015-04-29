@@ -8,12 +8,18 @@ include ../options.mk
 
 #########################################
 
-HEADERS=tinyformat.h print.h types.h indent.h cputime.h tarray1.h \
+HEADERS=tinyformat.h print.h types.h indent.h cputime.h \
         flstring.h args.h input.h error.h  cplx_literal.h \
         autovector.h optional_ptr.h count.h
 
-OBJECTS= error.o ran1.o\
-         cputime.o tarray1.o input.o args.o
+#HEADERS += tarray1.h
+
+OBJECTS = error.o 
+OBJECTS += cputime.o 
+OBJECTS += input.o 
+OBJECTS += args.o
+#OBJECTS += ran1.o
+#OBJECTS += tarray1.o 
 
 
 CCFLAGS= -I. $(OPTIMIZATIONS) $(ITENSOR_INCLUDEFLAGS)
