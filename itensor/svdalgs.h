@@ -4,8 +4,8 @@
 //
 #ifndef __ITENSOR_SVDALGS_H
 #define __ITENSOR_SVDALGS_H
-#include "iqcombiner.h"
-#include "localop.h"
+#include "iqtensor.h"
+//#include "localop.h"
 #include "spectrum.h"
 
 
@@ -39,13 +39,14 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 // may be added to it). Any indices not initially present on A or B 
 // will end up on B if dir==Fromleft or on A if dir==Fromright.
 //
-template<class Tensor>
-Spectrum 
-denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-             const Args& args = Global::args())
-    {
-    return denmatDecomp(AA,A,B,dir,LocalOp<Tensor>::Null(),args);
-    }
+
+//template<class Tensor>
+//Spectrum 
+//denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
+//             const Args& args = Global::args())
+//    {
+//    return denmatDecomp(AA,A,B,dir,LocalOp<Tensor>::Null(),args);
+//    }
 
 //Density matrix decomp with LocalOpT object supporting the noise term
 //The LocalOpT argument PH has to provide the deltaRho method
@@ -161,34 +162,41 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
     const Args& args)
     {
     using IndexT = typename Tensor::IndexT;
-    using CombinerT = typename Tensor::CombinerT;
 
-    const Real noise = args.getReal("Noise",0.);
-    const bool useOrigM = args.getBool("UseOrigM",false);
-    const Args* args_ = &args;
-    
-    if(isZero(AA,Args("Fast"))) 
-        throw ResultIsZero("svd: AA is zero");
+#ifdef DEBUG
+    if(!U && !V) 
+        Error("U and V default-initialized in svd, must indicate at least one index on U or V");
+#endif
+
+    auto noise = args.getReal("Noise",0);
+    auto useOrigM = args.getBool("UseOrigM",false);
+    auto* pargs = &args;
 
     if(noise > 0)
         Error("Noise term not implemented for svd");
+    
+    //if(isZero(AA,Args("Fast"))) 
+    //    throw ResultIsZero("svd: AA is zero");
+
 
     //Combiners which transform AA
     //into a rank 2 tensor
-    CombinerT Ucomb, Vcomb;
-
+    std::vector<IndexT> Uinds, 
+                        Vinds;
+    Uinds.reserve(AA.r());
+    Vinds.reserve(AA.r());
     //Divide up indices based on U
     //If U is null, use V instead
-    const Tensor &L = (U ? U : V);
-    CombinerT &Lcomb = (U ? Ucomb : Vcomb),
-              &Rcomb = (U ? Vcomb : Ucomb);
-    for(const IndexT& I : AA.indices())
+    auto &L = (U ? U : V);
+    auto &Linds = (U ? Uinds : Vinds),
+         &Rinds = (U ? Vinds : Uinds);
+    for(const auto& I : AA.inds())
         { 
-        if(hasindex(L,I))
-            Lcomb.addleft(I);
-        else
-            Rcomb.addleft(I);
+        if(hasindex(L,I)) Linds.push_back(I);
+        else              Rinds.push_back(I);
         }
+    auto Ucomb = combiner(std::move(Uinds));
+    auto Vcomb = combiner(std::move(Vinds));
 
     AA = Ucomb * AA * Vcomb;
 
@@ -198,31 +206,32 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
         //Try to determine current m,
         //then set minm_ and maxm_ to this.
         newArgs.add("Cutoff",-1);
-        int minm = 1,
-            maxm = MAX_M;
+        long minm = 1,
+             maxm = MAX_M;
         if(D.r() == 0)
             {
-            IndexT mid = commonIndex(U,V,Link);
+            auto mid = commonIndex(U,V,Link);
             if(mid) minm = maxm = mid.m();
             else    minm = maxm = 1;
             }
         else
             {
-            minm = maxm = D.indices().front().m();
+            minm = maxm = D.inds().front().m();
             }
         newArgs.add("Minm",minm);
         newArgs.add("Maxm",maxm);
-        args_ = &newArgs;
+        pargs = &newArgs;
         }
+    
+    auto ui = commonIndex(Ucomb,AA);
+    auto vi = commonIndex(Vcomb,AA);
 
-    Spectrum spec = 
-    svdRank2(AA,Ucomb.right(),Vcomb.right(),U,D,V,*args_);
+    auto spec = svdRank2(AA,ui,vi,U,D,V,*pargs);
 
     U = dag(Ucomb) * U;
     V = V * dag(Vcomb);
 
     return spec;
-
     } //svd
 
 template<class Tensor>
@@ -230,6 +239,7 @@ Spectrum
 csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R, 
      const Args& args)
     {
+    /*
     Tensor UU(L),VV(R);
     Tensor D(V);
     Spectrum spec = svd(AA,UU,D,VV,args);
@@ -240,6 +250,9 @@ csvd(const Tensor& AA, Tensor& L, Tensor& V, Tensor& R,
     V = dag(D);
     V.pseudoInvert(0);
     return spec;
+    */
+    //TODO remove this line:
+    return Spectrum();
     }
 
 template<class Tensor, class LocalOpT>
@@ -249,6 +262,7 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
              const LocalOpT& PH,
              Args args)
     {
+    /*
     using IndexT = typename Tensor::IndexT;
     using CombinerT = typename Tensor::CombinerT;
 
@@ -322,6 +336,10 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
     newoc = U * AAc;
 
     return spec;
+    */
+
+    //TODO remove this line:
+    return Spectrum();
 
     } //denmatDecomp
 
@@ -340,6 +358,7 @@ Spectrum
 diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
               Args args)
     {
+    /*
     using IndexT = typename Tensor::IndexT;
     using CombinerT = typename Tensor::CombinerT;
 
@@ -379,6 +398,10 @@ diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
     U = comb * U;
 
     return spec;
+    */
+
+    //TODO remove this line:
+    return Spectrum();
 
     } //diagHermitian
 
@@ -389,6 +412,7 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
             Direction dir, 
             const Args& args)
     {
+    /*
     using IndexT = typename Tensor::IndexT;
     using CombinerT = typename Tensor::CombinerT;
 
@@ -455,6 +479,10 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
         }
 
     return spec;
+    */
+
+    //TODO remove this line:
+    return Spectrum();
 
     } //orthoDecomp
 
@@ -471,6 +499,7 @@ void
 eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
           const Args& args)
     {
+    /*
     using IndexT = typename Tensor::IndexT;
     using CombinerT = typename Tensor::CombinerT;
 
@@ -513,6 +542,7 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
     eig_decomp(Tc,rcomb.right(),ccomb.right(),V,D,args);
 
     V = V * ccomb;
+    */
     }
 
 }; //namespace itensor

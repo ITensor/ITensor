@@ -46,6 +46,12 @@ class ITDiag : public RegisterData<ITDiag<T>>
         : val(t) 
         { }
 
+    explicit
+    ITDiag(storage_type&& data)
+        :
+        store(std::move(data))
+        { }
+
     virtual
     ~ITDiag() { }
 

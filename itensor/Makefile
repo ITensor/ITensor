@@ -8,17 +8,17 @@ include ../options.mk
 
 ####################################
 
-SOURCES+= simpletensor.cc 
 SOURCES+= matrix/vec.cc 
 SOURCES+= matrix/mat.cc 
 SOURCES+= matrix/algs.cc 
-#SOURCES = index.cc 
-#SOURCES+= contract.cc 
-#SOURCES+= itensor.cc 
-#SOURCES+= iqindex.cc 
-#SOURCES+= iqtensor.cc 
-#SOURCES+= spectrum.cc 
-#SOURCES+= svdalgs.cc 
+SOURCES+= simpletensor.cc 
+SOURCES+= index.cc 
+SOURCES+= contract.cc 
+SOURCES+= itensor.cc 
+SOURCES+= iqindex.cc 
+SOURCES+= iqtensor.cc 
+SOURCES+= spectrum.cc 
+SOURCES+= svdalgs.cc 
 
 #SOURCES+= mps.cc 
 #SOURCES+= mpo.cc 
@@ -35,8 +35,8 @@ HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterat
         itdata/iqtdata.h \
         itensor.h itensor.ih qn.h iqindex.h  \
         iqtensor.h iqtensor.ih \
-        #condenser.h qcounter.h iqcombiner.h \
-        spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
+        iterpair.h spectrum.h svdalgs.h \
+        #mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
         hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h \
@@ -45,7 +45,7 @@ HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterat
         sites/tj.h sites/Z3.h\
         eigensolver.h localop.h localmpo.h localmposet.h \
         partition.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h\
-        integrators.h idmrg.h TEvolObserver.h iterpair.h autompo.h
+        integrators.h idmrg.h TEvolObserver.h  autompo.h
 
 
 
@@ -80,7 +80,6 @@ $(ITENSOR_INCLUDEDIR)/sites/%.h: sites/%.h
 	mkdir -p $(ITENSOR_INCLUDEDIR)/sites
 	cp $^ $(ITENSOR_INCLUDEDIR)/sites
 
-
 $(ITENSOR_INCLUDEDIR)/%.h: %.h
 	cp $^ $(ITENSOR_INCLUDEDIR)
 
@@ -94,6 +93,7 @@ $(ITENSOR_INCLUDEDIR)/%.ih: %.ih
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
 install: installo installg
+	@echo $(OBJECTS)
 
 libitensor.a: $(OBJECTS)
 	ar rv libitensor.a $(OBJECTS)
@@ -153,3 +153,9 @@ iqindex.o: $(IQDEPHEADERS) $(GDEPHEADERS)
 IQDEPHEADERS+= itdata/iqtdata.h iqtensor.ih iqtensor.h qcounter.h detail/skip_iterator.h
 iqtensor.o: $(IQDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/iqtensor.o: $(IQDEPHEADERS) $(GDEPHEADERS)
+GDEPHEADERS+= spectrum.h
+spectrum.o: $(ITDEPHEADERS) $(IQDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/spectrum.o: $(ITDEPHEADERS) $(IQDEPHEADERS) $(GDEPHEADERS)
+GDEPHEADERS+= svdalgs.h
+svdalgs.o: $(ITDEPHEADERS) $(IQDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/svdalgs.o: $(ITDEPHEADERS) $(IQDEPHEADERS) $(GDEPHEADERS)

@@ -74,6 +74,8 @@ class Args
     void
     add(const Name& name, bool bval);
     void
+    add(const Name& name, long ival);
+    void
     add(const Name& name, int ival);
     void
     add(const Name& name, const std::string& sval);
@@ -107,11 +109,11 @@ class Args
     getString(const Name& name, const std::string& default_val) const;
 
     // Get value of int-type argument, throws if not defined
-    int
+    long
     getInt(const Name& name) const;
     // Get value of int-type argument, returns default_val if not defined
-    int
-    getInt(const Name& name, int default_val) const;
+    long
+    getInt(const Name& name, long default_val) const;
 
     // Get value of Real-type argument, throws if not defined
     Real
@@ -197,6 +199,7 @@ class Args
         Val(const Name& name, const char* sval);
         Val(const Name& name, const std::string& sval);
 
+        Val(const Name& name, long ival);
         Val(const Name& name, int ival);
 
         Val(const Name& name, Real rval);
@@ -214,8 +217,8 @@ class Args
         const std::string&
         stringVal() const { assertType(String); return sval_; }
 
-        int
-        intVal() const { assertType(Numeric); return int(rval_); }
+        long
+        intVal() const { assertType(Numeric); return long(rval_); }
 
         Real
         realVal() const { assertType(Numeric); return rval_; }

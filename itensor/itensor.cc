@@ -892,15 +892,20 @@ operator+=(const ITensor& other)
     if(this->scale_.isZero()) return operator=(other);
 
     PlusEQ::permutation P(is_.size());
+#ifdef DEBUG
     try {
         detail::calc_permutation(other.is_,is_,P);
         }
-    catch(const ITError& e)
+    catch(const std::exception& e)
         {
         Print(*this);
         Print(other);
         Error("ITensor::operator+=: different Index structure");
         }
+#else
+    detail::calc_permutation(other.is_,is_,P);
+#endif
+
 
     Real scalefac = 1;
     if(scale_.magnitudeLessThan(other.scale_)) 
@@ -1301,8 +1306,9 @@ template<typename T>
 void PrintIT::
 operator()(const ITDiag<T>& d) const
     {
+    constexpr auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
     auto allsame = d.allSame();
-    s_ << " (Diag" << (allsame ? ",all same)" : ")") << "}\n";
+    s_ << " (Diag " << type << (allsame ? ",all same)" : ")") << "}\n";
     Real scalefac = 1.0;
     if(!x_.isTooBigForReal()) scalefac = x_.real0();
     else s_ << "  (omitting too large scale factor)\n";

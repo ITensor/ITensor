@@ -4,14 +4,13 @@
 //
 #include "svdalgs.h"
 #include <algorithm>
+#include "matrix/algs.h"
 
 namespace itensor {
 
 using std::swap;
 using std::istream;
 using std::ostream;
-using std::cout;
-using std::endl;
 using std::vector;
 using std::find;
 using std::pair;
@@ -20,33 +19,39 @@ using std::string;
 using std::sqrt;
 
 
-
-
-struct ToMatrix11NoScale : RegisterFunc<ToMatrix11NoScale,MatrixRef>
+struct ToMatRefc : RegisterFunc<ToMatRefc,MatRefc>
     {
-    MatrixRef
+    long nrows=0,
+         ncols=0;
+    ToMatRefc(long nr, long nc) : nrows(nr), ncols(nc) { }
+
+    MatRefc
     operator()(const ITReal& d)
         {
-        return MatrixRef();
+        return MatRefc(d.data(),nrows,ncols);
         }
     };
 
-MatrixRef
-toMatrix11NoScale(const ITensor& T)
+MatRefc
+toMatRefc(const ITensor& T, const Index& i1, const Index& i2)
     {
-    return applyFunc<ToMatrix11NoScale>(T.data());
+    if(i1 == T.inds().front())
+        {
+        return applyFunc<ToMatRefc>(T.data(),{i1.m(),i2.m()});
+        }
+    return applyFunc<ToMatRefc>(T.data(),{i2.m(),i1.m()});
     }
 
 
 Real static
-truncate(Vector& D,
+truncate(Vec& P,
          int maxm,
          int minm,
          Real cutoff,
          bool absoluteCutoff,
          bool doRelCutoff)
     {
-    int m = D.Length();
+    auto m = P.size();
     if(m == 1) return 0;
 
     Real truncerr = 0;
@@ -54,94 +59,94 @@ truncate(Vector& D,
     //Zero out any negative weight
     for(int zerom = m; zerom > 0; --zerom)
         {
-        if(D(zerom) >= 0) break;
-        D(zerom) = 0;
+        if(P(zerom) >= 0) break;
+        P(zerom) = 0;
         }
 
     if(absoluteCutoff)
         {
-        for(;m > maxm || (D(m) < cutoff && m > minm); --m)
+        for(;m > maxm || (P(m) < cutoff && m > minm); --m)
             {
-            truncerr += D(m);
+            truncerr += P(m);
             }
         }
     else
         {
-        const Real scale = doRelCutoff ? D(1) : 1.0;
-        for(;m > maxm || (truncerr+D(m) < cutoff*scale && m > minm); --m)
+        const Real scale = doRelCutoff ? P(1) : 1.0;
+        for(;m > maxm || (truncerr+P(m) < cutoff*scale && m > minm); --m)
             {
-            truncerr += D(m);
+            truncerr += P(m);
             }
-        truncerr = (D(1) == 0 ? 0 : truncerr/scale);
+        truncerr = (P(1) == 0 ? 0 : truncerr/scale);
         }
 
-    D.ReduceDimension(m); 
+    P.resize(m); 
 
     return truncerr;
     }
 
-Real static
-truncate(vector<Real>& alleig, 
-         int& m, 
-         Real& docut, 
-         int maxm,
-         int minm,
-         Real cutoff,
-         bool absoluteCutoff,
-         bool doRelCutoff)
-    {
-    m = (int)alleig.size();
-    if(m == 1)
-        {
-        docut = alleig.front()/2.;
-        return 0;
-        }
-    int mdisc = 0;
-
-    Real truncerr = 0;
-
-    if(absoluteCutoff)
-        {
-        while(m > maxm || ( (alleig.at(mdisc) < cutoff && m > minm)
-            && mdisc < (int)alleig.size() ) )
-            {
-            if(alleig.at(mdisc) > 0)
-                truncerr += alleig.at(mdisc);
-            else
-                alleig.at(mdisc) = 0;
-
-            ++mdisc;
-            --m;
-            }
-        docut = (mdisc > 0 
-                ? (alleig.at(mdisc-1) + alleig.at(mdisc))*0.5 - 1E-5*alleig.at(mdisc-1)
-                : -1);
-        }
-    else
-        {
-        Real scale = doRelCutoff ? alleig.back() : 1.0;
-        while(   m > maxm 
-             || ( (mdisc < (int)alleig.size()) && (truncerr+alleig.at(mdisc) < cutoff*scale && m > minm))
-             )
-            {
-            if(alleig.at(mdisc) > 0)
-                truncerr += alleig.at(mdisc);
-            else
-                alleig.at(mdisc) = 0;
-
-            ++mdisc;
-            --m;
-            }
-        if(mdisc >= int(alleig.size())) mdisc = alleig.size() - 1;
-        docut = (mdisc > 0 
-                ? (alleig.at(mdisc-1) + alleig.at(mdisc))*0.5 - 1E-5*alleig.at(mdisc-1)
-                : -1);
-        truncerr = (alleig.back() == 0 ? 0 : truncerr/scale);
-        }
-
-
-    return truncerr;
-    }
+//Real static
+//truncate(vector<Real>& alleig, 
+//         int& m, 
+//         Real& docut, 
+//         int maxm,
+//         int minm,
+//         Real cutoff,
+//         bool absoluteCutoff,
+//         bool doRelCutoff)
+//    {
+//    m = (int)alleig.size();
+//    if(m == 1)
+//        {
+//        docut = alleig.front()/2.;
+//        return 0;
+//        }
+//    int mdisc = 0;
+//
+//    Real truncerr = 0;
+//
+//    if(absoluteCutoff)
+//        {
+//        while(m > maxm || ( (alleig.at(mdisc) < cutoff && m > minm)
+//            && mdisc < (int)alleig.size() ) )
+//            {
+//            if(alleig.at(mdisc) > 0)
+//                truncerr += alleig.at(mdisc);
+//            else
+//                alleig.at(mdisc) = 0;
+//
+//            ++mdisc;
+//            --m;
+//            }
+//        docut = (mdisc > 0 
+//                ? (alleig.at(mdisc-1) + alleig.at(mdisc))*0.5 - 1E-5*alleig.at(mdisc-1)
+//                : -1);
+//        }
+//    else
+//        {
+//        Real scale = doRelCutoff ? alleig.back() : 1.0;
+//        while(   m > maxm 
+//             || ( (mdisc < (int)alleig.size()) && (truncerr+alleig.at(mdisc) < cutoff*scale && m > minm))
+//             )
+//            {
+//            if(alleig.at(mdisc) > 0)
+//                truncerr += alleig.at(mdisc);
+//            else
+//                alleig.at(mdisc) = 0;
+//
+//            ++mdisc;
+//            --m;
+//            }
+//        if(mdisc >= int(alleig.size())) mdisc = alleig.size() - 1;
+//        docut = (mdisc > 0 
+//                ? (alleig.at(mdisc-1) + alleig.at(mdisc))*0.5 - 1E-5*alleig.at(mdisc-1)
+//                : -1);
+//        truncerr = (alleig.back() == 0 ? 0 : truncerr/scale);
+//        }
+//
+//
+//    return truncerr;
+//    }
 
 
 
@@ -154,83 +159,80 @@ svdRank2(ITensor A,
          ITensor& V,
          const Args& args)
     {
-    const auto thresh = args.getReal("SVDThreshold",1E-4);
-    const auto cutoff = args.getReal("Cutoff",MIN_CUT);
-    const auto maxm = args.getInt("Maxm",MAX_M);
-    const auto minm = args.getInt("Minm",1);
-    const auto do_truncate = args.getBool("Truncate",true);
-    const auto doRelCutoff = args.getBool("DoRelCutoff",false);
-    const auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-    const auto cplx = isComplex(A);
+    auto thresh = args.getReal("SVDThreshold",1E-3);
+    auto cutoff = args.getReal("Cutoff",MIN_CUT);
+    auto maxm = args.getInt("Maxm",MAX_M);
+    auto minm = args.getInt("Minm",1);
+    auto do_truncate = args.getBool("Truncate",true);
+    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
+    auto cplx = isComplex(A);
 
     if(A.r() != 2) Error("A must be matrix-like (rank 2)");
 
-    Matrix UU,VV,
-           iUU,iVV;
-    Vector DD;
+    Mat UU,VV,
+        iUU,iVV;
+    Vec DD;
 
     if(!cplx)
         {
-        Matrix M;
-        A.toMatrix11NoScale(ui,vi,M);
-
+        auto M = toMatRefc(A,ui,vi);
         SVD(M,UU,DD,VV,thresh);
         }
     else
         {
+        Error("Complex ITensor SVD not yet implemented");
         ITensor Are = realPart(A),
                 Aim = imagPart(A);
         Are.scaleTo(A.scale());
         Aim.scaleTo(A.scale());
-        Matrix Mre,Mim;
-        Are.toMatrix11NoScale(ui,vi,Mre);
-        Aim.toMatrix11NoScale(ui,vi,Mim);
+        //Matrix Mre,Mim;
+        //Are.toMatrix11NoScale(ui,vi,Mre);
+        //Aim.toMatrix11NoScale(ui,vi,Mim);
 
-        //SVDComplex(Mre,Mim,UU,iUU,DD,VV,iVV);
-        SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh);
+        //SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh);
         }
 
     //
     // Truncate
     //
 
-    Spectrum spec;
-
-    int m = DD.Length();
-    Real terr = 0;
+    auto m = DD.size();
+    Real truncerr = 0;
     if(do_truncate)
         {
-        Vector sqrD(DD);
-        for(int j = 1; j <= sqrD.Length(); ++j)
-            sqrD(j) = sqr(DD(j));
-        terr = truncate(sqrD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
-        m = sqrD.Length();
-        DD.ReduceDimension(m);
+        Vec probs(m);
+        for(long j = 1; j <= m; ++j)
+            probs(j) = sqr(DD(j));
+        truncerr = truncate(probs,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
+        m = probs.size();
+        DD.resize(m);
+        UU.reduceColsTo(m);
+        VV.reduceColsTo(m);
         }
-
 
     if(args.getBool("ShowEigs",false))
         {
-        cout << endl;
+        println();
         printfln("minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
         printfln("truncate = %s",(do_truncate?"true":"false"));
         printfln("doRelCutoff = %s",(doRelCutoff?"true":"false"));
         printfln("absoluteCutoff = %s",(absoluteCutoff?"true":"false"));
         printfln("Kept m=%d states in svdRank2 line 169", m);
-        printfln("svdtruncerr = %.3E",spec.truncerr());
+        printfln("Truncation error = %.3E",truncerr);
 
-        int stop = min(10,DD.Length());
-        Vector Ds = DD.SubVector(1,stop);
+        auto stop = std::min(10l,DD.size());
+        auto Ds = Vec(subVector(DD,1,stop));
 
         Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
         if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
             {
             Ds *= fabs(A.scale().real0());
-            cout << "Singular values: ";
+            print("Singular values: ");
             }
         else
             {
-            cout << "Singular values (not including scale = " << A.scale() << "):";
+            println("Singular values (not including scale = ",A.scale(),")");
             }
 
         for(int j = 1; j <= stop; ++j)
@@ -239,45 +241,39 @@ svdRank2(ITensor A,
             printf(( sval > 1E-3 && sval < 1000) ? ("%.3f") : ("%.3E") , sval); 
             print((j != stop) ? ", " : "\n");
             }
-        cout << endl;
+        println();
         }
     
-    Index uL("ul",m,Link),vL("vl",m,Link);
+    Index uL("ul",m),
+          vL("vl",m);
 
-    D = ITensor(uL,vL,DD);
-    D *= A.scale();
-    U = ITensor(ui,uL,UU.Columns(1,m));
-    V = ITensor(vL,vi,VV.Rows(1,m));
+    //Fix sign to make sure D has positive elements
+    Real signfix = (A.scale().sign() == -1) ? -1 : +1;
 
-    //Fix for cases where A.scale() may be negative
-    if(A.scale().sign() == -1)
-        {
-        D *= -1;
-        U *= -1;
-        }
+    D = ITensor({uL,vL},ITDiag<Real>(move(DD.store())),A.scale()*signfix);
+    U = ITensor({ui,uL},ITReal(move(UU.store())),signfix);
+    V = ITensor({vi,vL},ITReal(move(VV.store())));
 
     if(cplx)
         {
-        ITensor iU(ui,uL,iUU.Columns(1,m)),
-                iV(vL,vi,iVV.Rows(1,m));
-        if(iU.norm() > 1E-14)
-            U = U + iU*Complex_i;
-        if(iV.norm() > 1E-14)
-            V = V + iV*Complex_i;
+        Error("Complex ITensor SVD not yet implemented (2)");
+        //ITensor iU(ui,uL,iUU.Columns(1,m)),
+        //        iV(vL,vi,iVV.Rows(1,m));
+        //if(iU.norm() > 1E-14)
+        //    U = U + iU*Complex_i;
+        //if(iV.norm() > 1E-14)
+        //    V = V + iV*Complex_i;
         }
 
     //Square all singular values
     //since convention is to report
     //density matrix eigs
-    for(int j = 1; j <= m; ++j)
-        {
-        DD(j) *= DD(j);
-        }
+    for(auto& el : DD) el = sqr(el);
 
     if(A.scale().isFiniteReal()) DD *= sqr(A.scale().real0());
     else                         println("Warning: scale not finite real");
 
-    return Spectrum(DD,Args("Truncerr",terr));
+    return Spectrum(DD,Args("Truncerr",truncerr));
 
     } // void svdRank2
 
@@ -286,6 +282,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
          IQTensor& U, IQTensor& D, IQTensor& V,
          const Args& args)
     {
+    /*
     const bool cplx = A.isComplex();
     const Real thresh = args.getReal("SVDThreshold",1E-4);
     const Real cutoff = args.getReal("Cutoff",MIN_CUT);
@@ -315,7 +312,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         iVmatrix.resize(Nblock);
         }
 
-    vector<Vector> dvector(Nblock);
+    vector<Vec> dvector(Nblock);
 
     vector<Real> alleig;
     alleig.reserve(min(uI.m(),vI.m()));
@@ -345,7 +342,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         {
         Matrix &UU = Umatrix.at(itenind);
         Matrix &VV = Vmatrix.at(itenind);
-        Vector &d =  dvector.at(itenind);
+        Vec &d =  dvector.at(itenind);
 
         const Index *ui=0,*vi=0;
         bool gotui = false;
@@ -492,7 +489,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         {
         const Matrix& UU = Umatrix.at(itenind);
         const Matrix& VV = Vmatrix.at(itenind);
-        Vector& thisD = dvector.at(itenind);
+        Vec& thisD = dvector.at(itenind);
 
         int this_m = 1;
         while(this_m <= thisD.Length() && sqr(thisD(this_m)) > docut) 
@@ -593,13 +590,17 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     //toMatrix11NoScale, so put the scale back in
     D *= refNorm;
 
-    Vector DD(L.m());
+    Vec DD(L.m());
     for(int i = 1; i <= L.m(); ++i) 
         {
         DD(i) = alleig.at(alleig.size()-i);
         }
 
     return Spectrum(DD,Args("Truncerr",svdtruncerr));
+    */
+
+    //TODO: remove this, just here to make it compile
+    return Spectrum();
 
     } //void svdRank2
 
@@ -608,6 +609,7 @@ Spectrum
 diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
                const Args& args)
     {
+    /*
     const Real cutoff = args.getReal("Cutoff",MIN_CUT);
     const int maxm = args.getInt("Maxm",MAX_M);
     const int minm = args.getInt("Minm",1);
@@ -649,7 +651,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     bool flipSign = rho.scale().sign() > 0;
 
     //Do the diagonalization
-    Vector DD;
+    Vec DD;
     Matrix UU,iUU;
     if(!cplx)
         {
@@ -756,12 +758,17 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     spec.eigsKept(DD);
 
     return spec;
+    */
+
+    //TODO: remove this, just here to make it compile
+    return Spectrum();
     }
 
 Spectrum
 diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
                const Args& args)
     {
+    /*
     const Real cutoff = args.getReal("Cutoff",MIN_CUT);
     const int maxm = args.getInt("Maxm",MAX_M);
     const int minm = args.getInt("Minm",1);
@@ -787,7 +794,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 
     vector<Matrix> mmatrix(rho.blocks().size()),
                    imatrix;
-    vector<Vector> mvector(rho.blocks().size());
+    vector<Vec> mvector(rho.blocks().size());
     vector<Real> alleig;
     alleig.reserve(rho.indices().front().m());
 
@@ -830,7 +837,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
             }
 
         Matrix &UU = mmatrix.at(itenind);
-        Vector &d =  mvector.at(itenind);
+        Vec &d =  mvector.at(itenind);
 
         //Depending on the sign of the scale, calling .toMatrix11NoScale 
         //yields a matrix proportional to either t or -t.
@@ -983,7 +990,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     itenind = 0;
     for(const ITensor& t : rho.blocks())
         {
-        Vector& thisD = mvector.at(itenind);
+        Vec& thisD = mvector.at(itenind);
         Matrix& thisU = mmatrix.at(itenind);
 
         int this_m = 1;
@@ -1069,25 +1076,18 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 
     D *= refNorm;
 
-    Vector DD(newmid.m());
+    Vec DD(newmid.m());
     const size_t aesize = alleig.size();
     for(int i = 1; i <= newmid.m(); ++i) 
         DD(i) = alleig.at(aesize-i);
 
     spec.eigsKept(DD);
 
-    //Include spec.refNorm() to get the actual eigenvalues kept
-    //as long as the leading eigenvalue is within a few orders
-    //of magnitude of 1.0. Otherwise just report the scaled eigs.
-    /*
-    Real orderMag = log(fabs(D(1))) + spec.refNorm().logNum();
-    if(fabs(orderMag) < 5 && spec.refNorm().isFiniteReal())
-        {
-        Global::lastd() *= spec.refNorm().real();
-        }
-        */
-
     return spec;
+    */
+
+    //TODO: remove this, just here to make it compile
+    return Spectrum();
 
     } //void diag_hermitian
 
@@ -1097,6 +1097,7 @@ eig_decomp(ITensor T,
            ITensor& V, ITensor& D,
            const Args& args)
     {
+    /*
     //const bool doRelCutoff = args.getBool("DoRelCutoff",false);
     bool cplx = T.isComplex();
 
@@ -1110,7 +1111,7 @@ eig_decomp(ITensor T,
 #endif
 
     //Do the diagonalization
-    Vector Dr,Di;
+    Vec Dr,Di;
     Matrix Ur,Ui;
     if(!cplx)
         {
@@ -1146,6 +1147,7 @@ eig_decomp(ITensor T,
         }
 
     D *= T.scale();
+    */
 
     }
 
@@ -1155,6 +1157,7 @@ eig_decomp(IQTensor T,
            IQTensor& V, IQTensor& D,
            const Args& args)
     {
+    /*
     const bool doRelCutoff = args.getBool("DoRelCutoff",false);
     bool cplx = T.isComplex();
 
@@ -1171,7 +1174,7 @@ eig_decomp(IQTensor T,
 
     vector<Matrix> rmatrix(nblocks),
                    imatrix(nblocks);
-    vector<Vector> reigs(nblocks),
+    vector<Vec> reigs(nblocks),
                    ieigs(nblocks);
 
     if(T.empty())
@@ -1203,7 +1206,7 @@ eig_decomp(IQTensor T,
 
         Matrix &Ur = rmatrix.at(itenind),
                &Ui = imatrix.at(itenind);
-        Vector &dr = reigs.at(itenind),
+        Vec &dr = reigs.at(itenind),
                &di = ieigs.at(itenind);
 
         //Diag ITensors within rho
@@ -1240,7 +1243,7 @@ eig_decomp(IQTensor T,
     itenind = 0;
     for(const ITensor& t : T.blocks())
         {
-        Vector &dr = reigs.at(itenind),
+        Vec &dr = reigs.at(itenind),
                &di = ieigs.at(itenind);
         Matrix &Ur = rmatrix.at(itenind),
                &Ui = imatrix.at(itenind);
@@ -1291,6 +1294,7 @@ eig_decomp(IQTensor T,
 
     D *= refNorm;
 
+    */
     }
 
 }; //namespace itensor

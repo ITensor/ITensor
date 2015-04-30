@@ -68,6 +68,14 @@ Val(const Name& name, const string& sval)
     { }
 
 Args::Val::
+Val(const Name& name, long ival)
+    :
+    name_(name),
+    type_(Numeric),
+    rval_(ival)
+    { }
+
+Args::Val::
 Val(const Name& name, int ival)
     :
     name_(name),
@@ -166,6 +174,8 @@ operator=(Args&& other)
 void Args::
 add(const Name& name, bool bval) { add({name,bval}); }
 void Args::
+add(const Name& name, long ival) { add({name,ival}); }
+void Args::
 add(const Name& name, int ival) { add({name,ival}); }
 void Args::
 add(const Name& name, const std::string& sval) { add({name,sval}); }
@@ -251,14 +261,14 @@ getString(const Name& name, const string& default_value) const
     return default_value;
     }
 
-int Args::
+long Args::
 getInt(const Name& name) const
     {
     return get(name).intVal();
     }
 
-int Args::
-getInt(const Name& name, int default_value) const
+long Args::
+getInt(const Name& name, long default_value) const
     {
     if(defined(name)) return get(name).intVal();
     return default_value;
