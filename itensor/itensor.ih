@@ -30,6 +30,20 @@ ITensor(const Index& i1,
     scale_(1.)
 	{ }
 
+template <class DataType>
+ITensor::
+ITensor(IndexSet iset,
+        DataType&& dat,
+        const LogNumber& scale)
+    :
+    is_(std::move(iset)),
+    store_(make_shared<std::decay_t<DataType>>(std::move(dat))),
+    scale_(scale)
+    {
+    static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
+                  "Error: cannot pass lvalues to ITensor(ITDataType&& dat,...) constructor");
+    }
+
 template<typename... Inds>
 ITensor
 diagtensor(Complex z, 
@@ -37,13 +51,8 @@ diagtensor(Complex z,
            Inds&&... inds)
     { 
     IndexSet is(i1,std::forward<Inds>(inds)...);
-    LogNumber scale(1.);
-    ITensor::storage_ptr store;
-    if(z.imag() == 0)
-        store = make_shared<ITDiag<Real>>(z.real());
-    else
-        store = make_shared<ITDiag<Complex>>(z);
-    return ITensor(std::move(is),std::move(store),scale);
+    if(z.imag() == 0) return ITensor(std::move(is),ITDiag<Real>(z.real()));
+    return ITensor(std::move(is),ITDiag<Complex>(z));
     }
 
 template<typename Container, typename... Inds>
@@ -56,7 +65,6 @@ diagtensor(const Container& C,
     -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
     { 
     IndexSet is(i1,std::forward<Inds>(inds)...);
-    LogNumber scale(1.);
 #ifdef DEBUG
     //Compute min of all index dimensions
     auto minm = i1.m();
@@ -70,8 +78,7 @@ diagtensor(const Container& C,
         }
 #endif
     using value_type = typename Container::value_type;
-    auto store = std::make_shared<ITDiag<value_type>>(C.begin(),C.end());
-    return ITensor(std::move(is),std::move(store),scale);
+    return ITensor(std::move(is),ITDiag<value_type>(C.begin(),C.end()));
     }
 
 

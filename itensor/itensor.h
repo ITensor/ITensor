@@ -218,10 +218,12 @@ class ITensor
     // be needed for most user code.
     //
 
-    //Construct by explicitly providing data members
-    ITensor(IndexSet&& iset,
-            storage_ptr&& data,
-            const LogNumber& scale);
+    //Construct by explicitly providing data object
+    //DataType should be a subclass of ITData
+    template <class DataType>
+    ITensor(IndexSet iset,
+            DataType&& dat,
+            const LogNumber& scale = 1);
 
     //Provide indices from IndexSet
     explicit
@@ -246,26 +248,6 @@ class ITensor
 
     void 
     scaleTo(const LogNumber& newscale);
-
-    //
-    // Deprecated methods
-    //
-
-    //Construct matrix-like rank 2 ITensor,
-    //elements given by MatrixRef M
-    //ITensor(const Index& i1,
-    //        const Index& i2,
-    //        const MatrixRef& M);
-
-    //template <typename Callable> 
-    //ITensor&
-    //mapElems(Callable&& f)
-    //    {
-    //    return apply(std::forward<Callable>(f));
-    //    }
-
-    //const IndexSet&
-    //indices() const { return inds(); }
 
     private:
     IndexSet is_;

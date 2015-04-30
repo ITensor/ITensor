@@ -17,9 +17,9 @@ SOURCES+= matrix/algs.cc
 #SOURCES+= itensor.cc 
 #SOURCES+= iqindex.cc 
 #SOURCES+= iqtensor.cc 
-
 #SOURCES+= spectrum.cc 
 #SOURCES+= svdalgs.cc 
+
 #SOURCES+= mps.cc 
 #SOURCES+= mpo.cc 
 #SOURCES+= tevol.cc

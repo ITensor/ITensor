@@ -43,6 +43,8 @@ struct ITReal : RegisterData<ITReal>
     template<typename InputIterator>
     ITReal(InputIterator b, InputIterator e) : store(b,e) { }
 
+    ITReal(storage_type&& data) : store(std::move(data)) { }
+
     //
     //std container like methods
     //
@@ -64,14 +66,19 @@ struct ITReal : RegisterData<ITReal>
     
     const_iterator
     cbegin() const { return store.cbegin(); }
+
     const_iterator
     cend() const { return store.cend(); }
+
     const_iterator
     begin() const { return store.begin(); }
+
     const_iterator
     end() const { return store.end(); }
+
     iterator
     begin() { return store.begin(); }
+
     iterator
     end() { return store.end(); }
     };

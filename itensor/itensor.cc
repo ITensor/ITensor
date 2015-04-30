@@ -56,15 +56,15 @@ ITensor(Complex val)
         store_ = std::make_shared<ITDiag<Complex>>(val);
     }
 
-ITensor::
-ITensor(IndexSet&& iset,
-        storage_ptr&& data,
-        const LogNumber& scale)
-    :
-    is_(std::move(iset)),
-    store_(std::move(data)),
-    scale_(scale)
-    { }
+//ITensor::
+//ITensor(IndexSet&& iset,
+//        storage_ptr&& data,
+//        const LogNumber& scale = 1)
+//    :
+//    is_(std::move(iset)),
+//    store_(std::move(data)),
+//    scale_(scale)
+//    { }
 
 ITensor::
 ITensor(const IndexSet& is)
@@ -1479,7 +1479,7 @@ combiner(std::vector<Index> inds)
         }
     //create combined index
     inds.front() = Index("cmb",rm);
-    return ITensor(IndexSet(std::move(inds)),make_newdata<ITCombiner>(),{1.0});
+    return ITensor(IndexSet(std::move(inds)),ITCombiner());
     }
 
 ITensor
@@ -1488,7 +1488,7 @@ delta(const Index& i1, const Index& i2)
 #ifdef DEBUG
     if(i1.m() != i2.m()) Error("delta: indices must have same dimension");
 #endif
-    return ITensor({i1,i2},make_newdata<ITCombiner>(),{1.0});
+    return ITensor({i1,i2},ITCombiner());
     }
 
 //struct Read : RegisterFunc<Read>

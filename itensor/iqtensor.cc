@@ -670,9 +670,9 @@ class ToITensor : public RegisterFunc<ToITensor>
     operator()(const IQTData<Real>& d)
         {
         auto r = is_.r();
-        auto nd = make_shared<ITReal>(area(is_),0);
+        auto nd = ITReal(area(is_),0);
         auto *pd = d.data.data();
-        auto *pn = nd->data();
+        auto *pn = nd.data();
         vector<long> block(r,0);
         detail::GCounter C(r);
         for(const auto& io : d.offsets)
