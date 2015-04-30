@@ -350,7 +350,7 @@ randomize(IQTensor T, const Args& args = Global::args());
 
 template <typename... Params>
 IQTensor
-randIQT(Params&&... params)
+randomIQT(Params&&... params)
     {
     return randomize(IQTensor(std::forward<Params>(params)...));
     }

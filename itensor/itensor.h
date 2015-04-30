@@ -383,13 +383,13 @@ randomize(ITensor T, const Args& args = Global::args());
 
 template <typename... Params>
 ITensor
-randIT(Params&&... params)
+randomIT(Params&&... params)
     {
     return randomize(ITensor(std::forward<Params>(params)...));
     }
 template <typename... Params>
 ITensor
-randITCplx(Params&&... params)
+randomITCplx(Params&&... params)
     {
     return randomize(ITensor(std::forward<Params>(params)...),"Complex");
     }

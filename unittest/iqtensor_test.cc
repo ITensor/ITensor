@@ -46,15 +46,15 @@ L2 = IQIndex("L2",Out,
              l20,QN( 0),
              l2dd,QN(-2));
 
-phi = randIQT(S1(1),S2(1),L2(3));
+phi = randomIQT(S1(1),S2(1),L2(3));
 
-A = randIQT(L1(1),S1(1),L2(4),S2(2));
+A = randomIQT(L1(1),S1(1),L2(4),S2(2));
 
-B = randIQT(L1(1),L2(3));
+B = randomIQT(L1(1),L2(3));
 
-C = randIQT(dag(L1)(5),prime(L1)(5));
+C = randomIQT(dag(L1)(5),prime(L1)(5));
 
-D = randIQT(dag(L1)(3),S1(1),prime(L1)(3),prime(L1,2)(5));
+D = randomIQT(dag(L1)(3),S1(1),prime(L1)(3),prime(L1,2)(5));
 
 SECTION("Boolean")
     {
@@ -121,8 +121,8 @@ SECTION("Addition and Subtraction")
     {
     SECTION("Case 1")
         {
-        auto T1 = randIQT(QN(0),L1,S1,L2,S2),
-             T2 = randIQT(QN(0),L1,S1,L2,S2);
+        auto T1 = randomIQT(QN(0),L1,S1,L2,S2),
+             T2 = randomIQT(QN(0),L1,S1,L2,S2);
         auto R = T1+T2;
 
         for(int j1 = 1; j1 <= L1.m(); ++j1)
@@ -137,8 +137,8 @@ SECTION("Addition and Subtraction")
 
     SECTION("Case 2")
         {
-        auto T1 = randIQT(QN(0),L1,S1,L2,S2),
-             T2 = randIQT(QN(0),S1,S2,L1,L2);
+        auto T1 = randomIQT(QN(0),L1,S1,L2,S2),
+             T2 = randomIQT(QN(0),S1,S2,L1,L2);
         auto R = T1+T2;
 
         for(int j1 = 1; j1 <= L1.m(); ++j1)
@@ -203,7 +203,7 @@ SECTION("Combiner")
     {
     SECTION("Combine / Uncombine 0 - No Permute")
         {
-        auto T = randIQT(QN(),L1,L2);
+        auto T = randomIQT(QN(),L1,L2);
         auto C = combiner(L1);
         auto R = T*C;
         auto ci = commonIndex(R,C); //get combined index
@@ -221,7 +221,7 @@ SECTION("Combiner")
         }
     SECTION("Combine / Uncombine 1 - No Permute")
         {
-        auto T = randIQT(QN(),L1,L2);
+        auto T = randomIQT(QN(),L1,L2);
         auto C = combiner(L1,L2);
         auto R = T*C;
         auto ci = commonIndex(R,C); //get combined index
@@ -240,7 +240,7 @@ SECTION("Combiner")
 
     SECTION("Combine / Uncombine 2 - No Permute")
         {
-        auto T = randIQT(QN(),L1,L2,S1);
+        auto T = randomIQT(QN(),L1,L2,S1);
         auto C = combiner(L1,L2);
         auto R = T*C;
         auto ci = commonIndex(R,C); //get combined index
@@ -267,7 +267,7 @@ SECTION("Combiner")
 
     SECTION("Combine / Uncombine 3 - No Permute")
         {
-        auto T = randIQT(QN(),L1,S1,L2,S2);
+        auto T = randomIQT(QN(),L1,S1,L2,S2);
         auto C = combiner(L1,S1);
         auto R = T*C;
         auto ci = commonIndex(R,C); //get combined index
@@ -288,7 +288,7 @@ SECTION("Combiner")
 
     SECTION("Combine / Uncombine 4 - Permute")
         {
-        auto T = randIQT(QN(),L1,L2,S1,S2);
+        auto T = randomIQT(QN(),L1,L2,S1,S2);
         auto C = combiner(L1,S1);
         auto R = T*C;
         auto ci = commonIndex(R,C); //get combined index
@@ -309,7 +309,7 @@ SECTION("Combiner")
 
     SECTION("Combine / Uncombine 5 - Permute")
         {
-        auto T = randIQT(QN(),L1,L2,S1,S2);
+        auto T = randomIQT(QN(),L1,L2,S1,S2);
         auto C = combiner(L1,S1,L2);
         auto R = T*C;
         auto ci = commonIndex(R,C); //get combined index
@@ -339,7 +339,7 @@ SECTION("Combiner")
 
     SECTION("Combine / Uncombine 6 - Permute")
         {
-        auto T = randIQT(QN(),L1,L2,S1,S2);
+        auto T = randomIQT(QN(),L1,L2,S1,S2);
         auto C = combiner(S2,S1);
         auto R = C*T;
         auto ci = commonIndex(R,C); //get combined index
@@ -366,8 +366,8 @@ SECTION("Combiner")
 
 SECTION("Scalar")
     {
-    auto T1 = randIQT(QN(),L1,L2,S1,S2);
-    auto T2 = randIQT(QN(),S1,L2,S2,L1);
+    auto T1 = randomIQT(QN(),L1,L2,S1,S2);
+    auto T2 = randomIQT(QN(),S1,L2,S2,L1);
     auto S = T1*dag(T2);
     CHECK(S.r() == 0);
 
@@ -411,8 +411,8 @@ SECTION("Scalar")
 //
 //SECTION("BraKetTest")
 //    {
-//    auto R = randIQT(L1(1),L2(1)),
-//         I = randIQT(L1(1),L2(1));
+//    auto R = randomIQT(L1(1),L2(1)),
+//         I = randomIQT(L1(1),L2(1));
 //    const Real rr = sqr(R.norm());
 //    const Real ii = sqr(I.norm());
 //
@@ -452,7 +452,7 @@ SECTION("Scalar")
 //        CHECK_DIFF(val,Dt(S1(j2),prime(L1)(j1)),1E-10);
 //        }
 //
-//    auto rho = randIQT(L1(2),prime(L1)(2));
+//    auto rho = randomIQT(L1(2),prime(L1)(2));
 //    Real tr = trace(rho);
 //    rho /= tr;
 //    tr = trace(rho);
@@ -576,8 +576,8 @@ SECTION("Scalar")
 
 //SECTION("ComplexConvert")
 //    {
-//    auto R = randIQT(S1(1),L1(3)),
-//         I = randIQT(S1(2),L1(1));
+//    auto R = randomIQT(S1(1),L1(3)),
+//         I = randomIQT(S1(2),L1(1));
 //    R *= 0.1242;
 //    I *= -2.333;
 //    IQTensor T = R+Complex_i*I;
