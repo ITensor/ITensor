@@ -36,11 +36,12 @@ Spectrum(const ITensor& D, const Args& args)
     :
     truncerr_(0)
     {
-    if(D.type() != ITensor::Diag) Error("Spectrum may only be constructed from Diag type ITensor.");
-    eigs_ = D.diag();
-    for(int n = 1; n <= eigs_.Length(); ++n)
-        eigs_(n) = sqr(eigs_(n));
-    computeTruncerr(args);
+    Error("Spectrum ITensor constructor not yet implemented");
+    //if(D.type() != ITensor::Diag) Error("Spectrum may only be constructed from Diag type ITensor.");
+    //eigs_ = D.diag();
+    //for(auto n = 1l; n <= eigs_.size(); ++n)
+    //    eigs_(n) = sqr(eigs_(n));
+    //computeTruncerr(args);
     }
 
 Spectrum::
@@ -48,34 +49,35 @@ Spectrum(const IQTensor& D, const Args& args)
     :
     truncerr_(0)
     {
-    std::vector<OrderSecond::value_type> eigs;
-    eigs.reserve(D.indices().front().m());
+    Error("Spectrum IQTensor constructor not yet implemented");
+    //std::vector<OrderSecond::value_type> eigs;
+    //eigs.reserve(D.indices().front().m());
 
-    for(const ITensor& t : D.blocks())
-        {
-    	if(t.type() != ITensor::Diag)
-    		Error("Spectrum may only be constructed from IQTensor containing only Diag type ITensor.");
-        const Vector svals = t.diag();
-        const QN q = itensor::qn(D,t.indices().front());
-        for(int n = 1; n <= svals.Length(); ++n)
-            {
-            eigs.push_back(std::make_pair(q,sqr(svals(n))));
-            }
-        }
-    std::sort(eigs.begin(),eigs.end(),OrderSecond());
+    //for(const ITensor& t : D.blocks())
+    //    {
+    //	if(t.type() != ITensor::Diag)
+    //		Error("Spectrum may only be constructed from IQTensor containing only Diag type ITensor.");
+    //    const Vec svals = t.diag();
+    //    const QN q = itensor::qn(D,t.indices().front());
+    //    for(int n = 1; n <= svals.size(); ++n)
+    //        {
+    //        eigs.push_back(std::make_pair(q,sqr(svals(n))));
+    //        }
+    //    }
+    //std::sort(eigs.begin(),eigs.end(),OrderSecond());
 
-    qns_.resize(eigs.size());
-    eigs_.ReDimension(eigs.size());
-    for(size_t j = 0; j < eigs.size(); ++j)
-        {
-        qns_.at(j) = eigs.at(j).first;
-        eigs_[j] = eigs.at(j).second;
-        }
-    computeTruncerr(args);
+    //qns_.resize(eigs.size());
+    //eigs_.ReDimension(eigs.size());
+    //for(size_t j = 0; j < eigs.size(); ++j)
+    //    {
+    //    qns_.at(j) = eigs.at(j).first;
+    //    eigs_[j] = eigs.at(j).second;
+    //    }
+    //computeTruncerr(args);
     }
 
 Spectrum::
-Spectrum(const Vector& eigs, const Args& args)
+Spectrum(const Vec& eigs, const Args& args)
     :
     eigs_(eigs)
     {
@@ -84,7 +86,7 @@ Spectrum(const Vector& eigs, const Args& args)
 
 
 Spectrum::
-Spectrum(const Vector& eigs, 
+Spectrum(const Vec& eigs, 
          const QNStorage& qns,
          const Args& args)
     :
@@ -105,28 +107,30 @@ qn(int n) const
 void Spectrum::
 read(std::istream& s)
     {
-    s.read((char*)&truncerr_,sizeof(truncerr_));
-    eigs_.read(s);
-    size_t sz = 0;
-    s.read((char*)&sz,sizeof(sz));
-    qns_.resize(sz);
-    for(size_t j = 0; j < sz; ++j)
-        {
-        s.read((char*)&qns_[j],sizeof(qns_[j]));
-        }
+    Error("Spectrum::read not currently implemented");
+    //s.read((char*)&truncerr_,sizeof(truncerr_));
+    //eigs_.read(s);
+    //size_t sz = 0;
+    //s.read((char*)&sz,sizeof(sz));
+    //qns_.resize(sz);
+    //for(size_t j = 0; j < sz; ++j)
+    //    {
+    //    s.read((char*)&qns_[j],sizeof(qns_[j]));
+    //    }
     }
 
 void Spectrum::
 write(std::ostream& s) const
     {
-    s.write((char*)&truncerr_,sizeof(truncerr_));
-    eigs_.write(s);
-    size_t sz = qns_.size();
-    s.write((char*)&sz,sizeof(sz));
-    for(size_t j = 0; j < sz; ++j)
-        {
-        s.write((char*)&qns_[j],sizeof(qns_[j]));
-        }
+    Error("Spectrum::read not currently implemented");
+    //s.write((char*)&truncerr_,sizeof(truncerr_));
+    //eigs_.write(s);
+    //size_t sz = qns_.size();
+    //s.write((char*)&sz,sizeof(sz));
+    //for(size_t j = 0; j < sz; ++j)
+    //    {
+    //    s.write((char*)&qns_[j],sizeof(qns_[j]));
+    //    }
     }
 
 void Spectrum::
@@ -138,11 +142,11 @@ computeTruncerr(const Args& args)
         }
     else
         {
-        if(eigs_.Length() > 0)
+        if(eigs_.size() > 0)
             {
         	// Note: This only makes sense if the spectrum was normalized before truncation.
         	// Otherwise this will mostly return zero.
-            truncerr_ = 1.-eigs_.sumels();
+            truncerr_ = 1.-sumels(eigs_);
             if(truncerr_ < 0) truncerr_ = 0;
             }
         }
@@ -151,14 +155,14 @@ computeTruncerr(const Args& args)
 std::ostream& 
 operator<<(std::ostream & s, const Spectrum& spec)
     {
-    const Vector& eigs = spec.eigsKept();
-    const int N = eigs.Length();
+    const Vec& eigs = spec.eigsKept();
+    auto N = eigs.size();
     if(N > 0)
         {
-        const int max_show = 20;
-        int stop = min(N,max_show);
+        long max_show = 20;
+        auto stop = std::min(N,max_show);
         s << "  Eigs kept: ";
-        for(int j = 1; j <= stop; ++j)
+        for(auto j = 1l; j <= stop; ++j)
             {
             s << format(eigs(j) > 1E-3 ? ("%.3f") : ("%.3E"), eigs(j));
             s << ((j != stop) ? ", " : "\n");
