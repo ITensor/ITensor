@@ -1104,6 +1104,21 @@ SECTION("Matrix-vector product")
         } //Rectangular case
     }
 
+SECTION("Test reduceColsTo")
+    {
+    auto Nr = 10,
+         Nc = 10;
+    auto M = randomMat(Nr,Nc);
+    auto origM = M;
+
+    M.reduceColsTo(Nc/2);
+    for(auto r : count1(Nr))
+    for(auto c : count1(Nc/2))
+        {
+        CHECK_CLOSE(M(r,c),origM(r,c));
+        }
+    }
+
 } // Test matrix
 
 

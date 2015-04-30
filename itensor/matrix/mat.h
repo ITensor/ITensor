@@ -198,7 +198,7 @@ class Matrix
     using value_type = std::remove_const_t<T>;
     using pointer = std::add_pointer<T>;
     using reference = std::add_lvalue_reference_t<T>;
-    using size_type = typename storage_type::size_type;
+    using size_type = long;
     public:
     MRange ind_;
     storage_type data_;
@@ -218,7 +218,10 @@ class Matrix
     Matrix(Matrix&& other) { moveFromMat(std::move(other)); }
 
     explicit
-    Matrix(MatRefc ref) { assignFromRef(ref); }
+    Matrix(const MatrixRef<value_type>& ref) { assignFromRef(ref); }
+
+    explicit
+    Matrix(const MatrixRef<const value_type>& ref) { assignFromRef(ref); }
 
     Matrix&
     operator=(const Matrix& other) { assignFromMat(other); return *this; }
@@ -227,7 +230,10 @@ class Matrix
     operator=(Matrix&& other) { moveFromMat(std::move(other)); return *this; }
 
     Matrix&
-    operator=(MatRefc ref) { assignFromRef(ref); return *this; }
+    operator=(const MatrixRef<value_type>& ref) { assignFromRef(ref); return *this; }
+
+    Matrix&
+    operator=(const MatrixRef<const value_type>& ref) { assignFromRef(ref); return *this; }
 
     explicit operator bool() const { return !data_.empty(); }
 
@@ -314,6 +320,12 @@ class Matrix
     const T*
     data() const { return data_.data(); }
 
+    storage_type&
+    store() { return data_; }
+
+    const storage_type&
+    store() const { return data_; }
+
     //Essentially no cost when resizing downward
     void
     resize(long nrows,
@@ -321,6 +333,18 @@ class Matrix
         {
         ind_ = MRange(nrows,ncols);
         data_.resize(ind_.area(),0);
+        }
+
+    //Reducing number of columns does not affect
+    //remaining data (column major storage)
+    void
+    reduceColsTo(long newcols)
+        {
+#ifdef DEBUG
+        if(newcols > Ncols()) throw std::runtime_error("newcols must be less than current Ncols()");
+#endif
+        ind_ = MRange(Nrows(),newcols);
+        data_.resize(ind_.area());
         }
 
     void
@@ -333,7 +357,7 @@ class Matrix
     private:
 
     void
-    assignFromRef(MatRefc other)
+    assignFromRef(const MatrixRef<const value_type>& other)
         {
         ind_ = MRange(other.Nrows(),other.Ncols());
         //Copy data from other contiguously into data_

@@ -153,7 +153,7 @@ class Vector
     using value_type = std::remove_const_t<T>;
     using pointer = std::add_pointer_t<T>;
     using reference = std::add_lvalue_reference_t<T>;
-    using size_type = typename storage_type::size_type;
+    using size_type = long;
     public:
     storage_type data_;
     public:
@@ -163,12 +163,17 @@ class Vector
     explicit
     Vector(long size) : data_(size) { }
 
+    explicit
+    Vector(storage_type&& data) : data_(std::move(data)) { }
+
     Vector(const Vector& other) { assignFromVec(other); }
 
     Vector(Vector&& other) { moveFromVec(std::move(other)); }
 
     explicit
-    Vector(VecRefc ref) { assignFromRef(ref); }
+    Vector(const VectorRef<const value_type>& ref) { assignFromRef(ref); }
+    explicit
+    Vector(const VectorRef<value_type>& ref) { assignFromRef(ref); }
 
     Vector&
     operator=(const Vector& other) { assignFromVec(other); return *this; }
@@ -177,7 +182,9 @@ class Vector
     operator=(Vector&& other) { moveFromVec(std::move(other)); return *this; }
 
     Vector&
-    operator=(VecRefc ref) { assignFromRef(ref); return *this; }
+    operator=(const VectorRef<const value_type>& ref) { assignFromRef(ref); return *this; }
+    Vector&
+    operator=(const VectorRef<value_type> ref) { assignFromRef(ref); return *this; }
 
     explicit operator bool() const { return !data_.empty(); }
 
@@ -246,6 +253,12 @@ class Vector
     const T*
     data() const { return data_.data(); }
 
+    storage_type&
+    store() { return data_; }
+
+    const storage_type&
+    store() const { return data_; }
+
     //Essentially no cost when resizing downward
     void
     resize(long size) { data_.resize(size,0); }
@@ -256,7 +269,7 @@ class Vector
     private:
 
     void
-    assignFromRef(VecRefc other)
+    assignFromRef(const VectorRef<const value_type>& other)
         {
         //Copy data from other contiguously into data_
         data_ = storage_type(other.cbegin(),other.cend());
@@ -422,14 +435,17 @@ operator-(Vec&& A, VecRefc B)
 Real
 norm(VecRefc v);
 
-Real inline
-norm(const Vec& v) { return norm(makeRef(v)); }
+//Real inline
+//norm(const Vec& v) { return norm(makeRef(v)); }
 
 void
 randomize(VecRef v);
 
 Vec
 randomVec(long size);
+
+Real
+sumels(VecRefc v);
 
 
 //

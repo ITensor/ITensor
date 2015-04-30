@@ -172,6 +172,14 @@ randomVec(long size)
     return v;
     }
 
+Real
+sumels(VecRefc v)
+    {
+    Real tot = 0;
+    for(auto& el : v) tot += el;
+    return tot;
+    }
+
 
 //bool
 //overlaps(const Real* b1, const Real* e1,
