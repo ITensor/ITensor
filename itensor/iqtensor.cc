@@ -973,6 +973,7 @@ operator<<(std::ostream& s, const IQTensor& T)
         }
     else
         {
+        if(T.inds()) s << T.inds() << "\n";
         s << "(default constructed)\n";
         }
 	s << "\\------------------------------------\n\n";

@@ -30,6 +30,14 @@ class IQTensor
     explicit 
     IQTensor(Complex val);
 
+    //Construct rank n IQTensor T but leave storage
+    //unallocated. Can create storage by setting a specific
+    //element (will automatically figure out QN sector)
+    template<typename... IQIndices>
+    explicit
+    IQTensor(const IQIndex& i1,
+             const IQIndices&... rest);
+
     //Construct rank n IQTensor T with divergence
     //div(T)==q, all elements set to zero
     template<typename... IQIndices>
