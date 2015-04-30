@@ -70,15 +70,11 @@ class Index
     rawname() const { return sname_; }
 
     // Evaluates to false if Index is default constructed.
-    explicit operator bool() const { return valid(); }
+    explicit operator bool() const { return (type_!=NullIndex); }
 
     // (Explicitly) convertible to integer types
     explicit operator int() const { return m(); }
     explicit operator long() const { return m(); }
-
-    // Returns false if Index is default constructed.
-    bool 
-    valid() const { return (type_ != NullIndex); }
 
 
     // Returns the Arrow direction of this Index
@@ -207,10 +203,7 @@ class IndexVal
     long
     m() const { return index.m(); }
 
-    explicit operator bool() const { return valid(); }
-
-    bool
-    valid() const { return index.valid(); }
+    explicit operator bool() const { return bool(index); }
 
     IndexVal& 
     prime(int inc = 1) { index.prime(inc); return *this; }

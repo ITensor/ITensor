@@ -185,7 +185,7 @@ class IQIndexVal
     bool
     operator!=(const IQIndex& iqind) const { return !operator==(iqind); }
 
-    explicit operator bool() const { return valid(); }
+    explicit operator bool() const { return bool(index); }
 
     IndexQN
     indexqn() const;
@@ -194,9 +194,6 @@ class IQIndexVal
 
     IndexVal 
     blockIndexVal() const;
-
-    bool
-    valid() const { return index.valid(); }
 
     long 
     m() const { return index.m(); }

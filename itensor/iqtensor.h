@@ -63,11 +63,7 @@ class IQTensor
     r() const { return is_.r(); }
 
     //IQTensor evaluates to false if it is default constructed
-    explicit operator bool() const { return valid(); }
-
-    //false if IQTensor is default constructed
-    bool 
-    valid() const { return bool(store_); }
+    explicit operator bool() const { return bool(store_); }
 
     const IQIndexSet& 
     inds() const { return is_; }

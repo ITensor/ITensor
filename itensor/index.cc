@@ -139,7 +139,7 @@ prime(IndexType type, int inc)
 void Index::
 write(std::ostream& s) const 
     { 
-    if(!valid()) Error("Index::write: Index is default initialized");
+    if(!bool(*this)) Error("Index::write: Index is default initialized");
 
     s.write((char*) &primelevel_,sizeof(primelevel_));
 

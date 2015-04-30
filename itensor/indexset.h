@@ -59,6 +59,8 @@ class IndexSetT
     template<size_t N>
     explicit
     IndexSetT(const std::array<IndexT,N>& ii) { init(ii); }
+    
+    explicit operator bool() const { return !index_.empty(); }
 
     //
     // Accessor Methods
