@@ -83,6 +83,19 @@ struct ITReal : RegisterData<ITReal>
     end() { return store.end(); }
     };
 
+void inline
+read(std::istream& s, ITReal& dat)
+    {
+    read(s,dat.store);
+    }
+
+void inline
+write(std::ostream& s, const ITReal& dat)
+    {
+    write(s,dat.store);
+    }
+
+
 }; //namespace itensor
 
 #endif

@@ -87,7 +87,7 @@ cplx(IQIndexVals&&... ivs) const
     std::array<IQIndexVal,size> vals{{static_cast<IQIndexVal>(ivs)...}};
     std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.i-1; });
-    Complex z = applyFunc<IQGetElt<Complex,size>>(store_,{is_,inds});
+    Complex z = applyFunc<IQGetElt<Complex,size>>(store_,is_,inds);
 	try {
 	    return z*scale_.real(); 
 	    }
@@ -163,7 +163,7 @@ set(Complex val, const IQIndexVals&... ivs)
     std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.i-1; });
     if(val.imag() == 0)
-        applyFunc<IQSetEltReal<size>>(store_,{val.real(),is_,inds});
+        applyFunc<IQSetEltReal<size>>(store_,val.real(),is_,inds);
     else
         {
         Error("Set Complex element not implemented");
@@ -199,7 +199,7 @@ IQTensor& IQTensor::
 generate(Func&& f)
     {
     scaleTo(1);
-    applyFunc<GenerateIQT<decltype(f)>>(store_,{std::forward<Func>(f)});
+    applyFunc<GenerateIQT<decltype(f)>>(store_,std::forward<Func>(f));
     return *this;
     }
 
@@ -231,7 +231,7 @@ IQTensor& IQTensor::
 apply(Func&& f)
     {
     scaleTo(1);
-    applyFunc<ApplyIQT<decltype(f)>>(store_,{std::forward<Func>(f)});
+    applyFunc<ApplyIQT<decltype(f)>>(store_,std::forward<Func>(f));
     return *this;
     }
 
@@ -258,7 +258,7 @@ template <typename Func>
 const IQTensor& IQTensor::
 visit(Func&& f) const
     {
-    applyFunc<VisitIQT<decltype(f)>>(store_,{std::forward<Func>(f),scale_.real0()});
+    applyFunc<VisitIQT<decltype(f)>>(store_,std::forward<Func>(f),scale_.real0());
     return *this;
     }
 

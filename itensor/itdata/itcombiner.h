@@ -20,6 +20,12 @@ class ITCombiner : public RegisterData<ITCombiner>
 
     };
 
+void inline
+read(std::istream& s, ITCombiner& dat) { }
+
+void inline
+write(std::ostream& s, const ITCombiner& dat) { }
+
 }; //namespace itensor
 
 #endif

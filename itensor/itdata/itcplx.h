@@ -146,6 +146,18 @@ struct ITCplx : RegisterData<ITCplx>
 
     };
 
+void inline
+read(std::istream& s, ITCplx& dat)
+    {
+    read(s,dat.store);
+    }
+
+void inline
+write(std::ostream& s, const ITCplx& dat)
+    {
+    write(s,dat.store);
+    }
+
 }; //namespace itensor
 
 #endif

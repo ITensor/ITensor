@@ -151,7 +151,7 @@ cplx(IndexVals&&... ivs) const
     std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
     std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
-    auto z = applyFunc<GetElt<size>>(store_,{is_,inds});
+    auto z = applyFunc<GetElt<size>>(store_,is_,inds);
 	try {
 	    return z*scale_.real(); 
 	    }
@@ -245,9 +245,9 @@ set(Complex val, const IndexVals&... ivs)
     std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
     if(val.imag() == 0)
-        applyFunc<SetEltReal<size>>(store_,{val.real(),is_,inds});
+        applyFunc<SetEltReal<size>>(store_,val.real(),is_,inds);
     else
-        applyFunc<SetEltComplex<size>>(store_,{val,is_,inds});
+        applyFunc<SetEltComplex<size>>(store_,val,is_,inds);
     }
 
 template <typename F>
@@ -299,7 +299,7 @@ ITensor& ITensor::
 generate(Func&& f)
     {
     scaleTo(1);
-    applyFunc<GenerateIT<decltype(f)>>(store_,{std::forward<Func>(f)});
+    applyFunc<GenerateIT<decltype(f)>>(store_,std::forward<Func>(f));
     return *this;
     }
 
@@ -346,7 +346,7 @@ ITensor& ITensor::
 apply(Func&& f)
     {
     scaleTo(1);
-    applyFunc<ApplyIT<decltype(f)>>(store_,{std::forward<Func>(f)});
+    applyFunc<ApplyIT<decltype(f)>>(store_,std::forward<Func>(f));
     return *this;
     }
 
@@ -377,7 +377,7 @@ template <typename Func>
 const ITensor& ITensor::
 visit(Func&& f) const
     {
-    applyFunc<VisitIT<decltype(f)>>(store_,{std::forward<Func>(f),scale_.real0()});
+    applyFunc<VisitIT<decltype(f)>>(store_,std::forward<Func>(f),scale_.real0());
     return *this;
     }
 

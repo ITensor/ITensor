@@ -147,7 +147,7 @@ struct RegisterFunc : FuncBase
     void
     assignPointerRtoL();
 
-    operator Return() { return ret_; }
+    operator Return() { return std::move(ret_); }
 
     private:
 
@@ -174,7 +174,7 @@ struct RegisterFunc : FuncBase
     Derived& dt_;
     Action action_ = None;
     PData nd_;
-    Return ret_;
+    return_type ret_;
 
     public:
 
@@ -443,51 +443,56 @@ using returnTypeOf = typename std::conditional<
                                    typename F::return_type
                                >::type;
 
-template<typename F>
+template<typename F, typename... CtrArgs>
 returnTypeOf<F>
 applyFunc(const ITData& arg,
-          F f = F())
+          CtrArgs&&... args)
     {
+    F f(std::forward<CtrArgs>(args)...);
     arg.plugInto(f);
     return f;
     }
 
-template<typename F>
+template<typename F, typename... CtrArgs>
 returnTypeOf<F>
 applyFunc(const CPData& arg,
-          F f = F())
+          CtrArgs&&... args)
     {
+    F f(std::forward<CtrArgs>(args)...);
     arg->plugInto(f);
     return f;
     }
 
-template<typename F>
+template<typename F, typename... CtrArgs>
 returnTypeOf<F>
 applyFunc(PData& arg,
-          F f = F())
+          CtrArgs&&... args)
     {
+    F f(std::forward<CtrArgs>(args)...);
     f.setup(&arg);
     arg->plugInto(f);
     return f;
     }
 
-template<typename F>
+template<typename F, typename... CtrArgs>
 returnTypeOf<F>
 applyFunc(const PData& arg1,
           const PData& arg2,
-          F f = F())
+          CtrArgs&&... args)
     {
+    F f(std::forward<CtrArgs>(args)...);
     f.setup(&arg1,&arg2);
     arg2->plugInto(f);
     return f;
     }
 
-template<typename F>
+template<typename F, typename... CtrArgs>
 returnTypeOf<F>
 applyFunc(PData& arg1,
           const PData& arg2,
-          F f = F())
+          CtrArgs&&... args)
     {
+    F f(std::forward<CtrArgs>(args)...);
     f.setup(&arg1,&arg2);
     arg1->plugInto(f);
     return f;

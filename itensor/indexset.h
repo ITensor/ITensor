@@ -67,9 +67,23 @@ class IndexSetT
     //
 
     long
-    dim(long i) const { return index_[i].m(); }
+    dim(long i) const 
+        { 
+#ifdef DEBUG
+        return index_.at(i).m(); 
+#else
+        return index_[i].m(); 
+#endif
+        }
     long
-    stride(long i) const { return stride_[i]; }
+    stride(long i) const 
+        { 
+#ifdef DEBUG
+        return stride_.at(i); 
+#else
+        return stride_[i]; 
+#endif
+        }
 
     int
     r() const { return index_.size(); }
@@ -396,14 +410,8 @@ template <class IndexT>
 void IndexSetT<IndexT>::
 read(std::istream& s)
     {
-    size_t size = 0;
-    s.read((char*) &size,sizeof(size));
-    index_.resize(size);
-    for(auto& J : index_)
-        {
-        J.read(s);
-        }
-
+    itensor::read(s,index_);
+    itensor::read(s,stride_);
     s.read((char*) &rn_,sizeof(rn_));
     }
 
@@ -411,13 +419,8 @@ template <class IndexT>
 void IndexSetT<IndexT>::
 write(std::ostream& s) const
     {
-    size_t size = index_.size();
-    s.write((char*) &size,sizeof(size));
-    for(auto& J : index_)
-        {
-        J.write(s);
-        }
-
+    itensor::write(s,index_);
+    itensor::write(s,stride_);
     s.write((char*) &rn_,sizeof(rn_));
     }
 

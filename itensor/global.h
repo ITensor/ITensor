@@ -76,6 +76,108 @@ fileExists(const std::string& fname)
     return file.good();
     }
 
+// Can overload read and write functions with
+// signatures below for objects such as std::vector
+// 
+// For classes having member read/write functions, can 
+// leave external read/write overloads undefined
+// and the following template overloads will 
+// be called
+//
+
+//Here we have to use a struct to implement the read(istream,T)
+//function because function templates cannot be partially specialized
+template<typename T, bool isPod = std::is_pod<T>::value>
+struct DoRead
+    {
+    DoRead(std::istream& s, T& obj)
+        {
+        obj.read(s);
+        }
+    };
+template<typename T>
+struct DoRead<T, true>
+    {
+    DoRead(std::istream& s, T& val)
+        {
+        s.read((char*) &val, sizeof(val));
+        }
+    };
+template<typename T>
+void
+read(std::istream& s, T& val)
+    {
+    DoRead<T>(s,val);
+    }
+
+template<typename T, typename... CtrArgs>
+T
+read(std::istream& s, CtrArgs&&... args)
+    {
+    T t(std::forward<CtrArgs>(args)...);
+    DoRead<T>(s,t);
+    return t;
+    }
+
+template<typename T, bool isPod = std::is_pod<T>::value>
+struct DoWrite
+    {
+    DoWrite(std::ostream& s, const T& obj)
+        {
+        obj.write(s);
+        }
+    };
+template<typename T>
+struct DoWrite<T, true>
+    {
+    DoWrite(std::ostream& s, const T& val)
+        {
+        s.write((char*) &val, sizeof(val));
+        }
+    };
+template<typename T>
+void
+write(std::ostream& s, const T& val)
+    {
+    DoWrite<T>(s,val);
+    }
+
+template<typename T>
+void
+write(std::ostream& s, const std::vector<T>& vec)
+    {
+    auto size = vec.size();
+    s.write((char*)&size,sizeof(size));
+    s.write((char*)vec.data(),sizeof(T)*size);
+    }
+
+template<typename T>
+void
+read(std::istream& s, std::vector<T>& vec)
+    {
+    auto size = vec.size(); //will overwrite
+    s.read((char*)&size,sizeof(size));
+    vec.resize(size);
+    s.read((char*)vec.data(),sizeof(T)*size);
+    }
+
+void inline
+read(std::istream& s, Cplx& z)
+    {
+    auto &r = reinterpret_cast<Real(&)[2]>(z)[0];
+    auto &i = reinterpret_cast<Real(&)[2]>(z)[1];
+    s.read((char*)&r,sizeof(r));
+    s.read((char*)&i,sizeof(i));
+    }
+
+void inline
+write(std::ostream& s, const Cplx& z)
+    {
+    auto &r = reinterpret_cast<const Real(&)[2]>(z)[0];
+    auto &i = reinterpret_cast<const Real(&)[2]>(z)[1];
+    s.write((char*)&r,sizeof(r));
+    s.write((char*)&i,sizeof(i));
+    }
 
 template<class T> 
 void
@@ -84,7 +186,7 @@ readFromFile(const std::string& fname, T& t)
     std::ifstream s(fname.c_str(),std::ios::binary);
     if(!s.good()) 
         Error("Couldn't open file \"" + fname + "\" for reading");
-    t.read(s); 
+    read(s,t); 
     s.close(); 
     }
 
@@ -97,7 +199,7 @@ readFromFile(const std::string& fname, InitArgs&&... iargs)
     if(!s.good()) 
         Error("Couldn't open file \"" + fname + "\" for reading");
     T t(std::forward<InitArgs>(iargs)...);
-    t.read(s); 
+    read(s,t); 
     s.close(); 
     return t;
     }
@@ -110,7 +212,7 @@ writeToFile(const std::string& fname, const T& t)
     std::ofstream s(fname.c_str(),std::ios::binary); 
     if(!s.good()) 
         Error("Couldn't open file \"" + fname + "\" for writing");
-    t.write(s); 
+    write(s,t); 
     s.close(); 
     }
 

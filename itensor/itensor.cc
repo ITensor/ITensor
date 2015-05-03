@@ -130,6 +130,17 @@ ITensor(const IndexSet& is,
 //        }
 //    }
 
+ITensor::
+ITensor(IndexSet iset,
+        storage_ptr&& pdat,
+        const LogNumber& scale)
+    :
+    is_(std::move(iset)),
+    store_(std::move(pdat)),
+    scale_(scale)
+    {
+    }
+
 
 vector<Index>
 computeNewInds(const IndexSet& Lis,
@@ -677,7 +688,7 @@ operator*=(const ITensor& other)
         return *this;
         }
 
-    auto C = applyFunc<Contract>(store_,other.store_,{Lis,Lind,Ris,Rind});
+    auto C = applyFunc<Contract>(store_,other.store_,Lis,Lind,Ris,Rind);
 
     is_ = C.newIndexSet();
 
@@ -727,7 +738,7 @@ ITensor& ITensor::
 operator*=(Complex z)
     {
     if(z.imag() == 0) return operator*=(z.real());
-    applyFunc<MultComplex>(store_,{z});
+    applyFunc<MultComplex>(store_,z);
     return *this;
     }
 
@@ -919,11 +930,11 @@ operator+=(const ITensor& other)
 
     if(isTrivial(P))
         {
-        applyFunc<PlusEQ>(store_,other.store_,{scalefac});
+        applyFunc<PlusEQ>(store_,other.store_,scalefac);
         }
     else
         {
-        applyFunc<PlusEQ>(store_,other.store_,{P,is_,other.is_,scalefac});
+        applyFunc<PlusEQ>(store_,other.store_,P,is_,other.is_,scalefac);
         }
 
     return *this;
@@ -996,9 +1007,9 @@ fill(Complex z)
     if(!(*this)) return *this;
     scale_ = LogNumber(1.);
     if(z.imag() == 0)
-        applyFunc<FillReal>(store_,{z.real()});
+        applyFunc<FillReal>(store_,z.real());
     else
-        applyFunc<FillCplx>(store_,{z});
+        applyFunc<FillCplx>(store_,z);
     return *this;
     }
 
@@ -1039,7 +1050,7 @@ scaleTo(const LogNumber& newscale)
     if(scale_ == newscale) return;
     if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
     scale_ /= newscale;
-    applyFunc<MultReal>(store_,{scale_.real0()});
+    applyFunc<MultReal>(store_,scale_.real0());
     scale_ = newscale;
     }
 
@@ -1081,7 +1092,7 @@ class NormNoScale : public RegisterFunc<NormNoScale,Real>
 void ITensor::
 scaleOutNorm()
     {
-    auto nrm = applyFunc<NormNoScale>(store_,{is_});
+    auto nrm = applyFunc<NormNoScale>(store_,is_);
     //If norm already 1 return so
     //we don't have to call MultReal
     if(fabs(nrm-1.) < 1E-12) return;
@@ -1090,7 +1101,7 @@ scaleOutNorm()
         scale_ = LogNumber(1.);
         return;
         }
-    applyFunc<MultReal>(store_,{1./nrm});
+    applyFunc<MultReal>(store_,1./nrm);
     scale_ *= nrm;
     }
 
@@ -1353,7 +1364,7 @@ operator<<(ostream & s, const ITensor& t)
 
     if(ff_set || Global::printdat())
         {
-        if(t) applyFunc<PrintIT>(t.data(),{s,t.scale(),t.inds()});
+        if(t) applyFunc<PrintIT>(t.data(),s,t.scale(),t.inds());
         else           s << " (default constructed)}\n";
         }
     else
@@ -1383,7 +1394,7 @@ norm(const ITensor& T)
     if(!T) Error("ITensor is default initialized");
 #endif
     return T.scale().real0() *
-           applyFunc<NormNoScale>(T.data(),{T.inds()});
+           applyFunc<NormNoScale>(T.data(),T.inds());
     }
 
 
@@ -1455,7 +1466,7 @@ class SumEls : public RegisterFunc<SumEls,Complex>
 Complex
 sumelsC(const ITensor& t)
     {
-    auto z = Complex(applyFunc<SumEls>(t.data(),{t.inds()}));
+    auto z = Complex(applyFunc<SumEls>(t.data(),t.inds()));
     return t.scale().real0()*z;
     }
 
@@ -1497,30 +1508,100 @@ delta(const Index& i1, const Index& i2)
     return ITensor({i1,i2},ITCombiner());
     }
 
-//struct Read : RegisterFunc<Read>
-//    {
-//    std::istream& s_;
-//    Read(std::istream& s) : s_(s) { }
-//    
-//    template<typename DataType>
-//    void
-//    operator()(DataType& d) const
-//        { 
-//        d.read(s_);
-//        }
-//    };
-//
-//struct Write : RegisterFunc<Write>
-//    {
-//    std::ostream& s_;
-//    Write(std::ostream& s) : s_(s) { }
-//    
-//    template<typename DataType>
-//    void
-//    operator()(const DataType& d) const
-//        { 
-//        d.write(s_);
-//        }
-//    };
+enum class ITStorage { Null=0, Real=1, Cplx=2, Combiner=3, DiagReal=4, DiagCplx=5 }; 
+
+template<typename T, typename... CtrArgs>
+ITensor::storage_ptr
+readType(std::istream& s, CtrArgs&&... args)
+    {
+    auto p = std::make_shared<T>(std::forward<CtrArgs>(args)...);
+    read(s,*p);
+    return p;
+    }
+
+void
+read(std::istream& s, ITensor& T)
+    {
+    IndexSet is;
+    read(s,is);
+    LogNumber scale;
+    read(s,scale);
+    auto type = ITStorage::Null;
+    s.read((char*)&type,sizeof(type));
+    ITensor::storage_ptr p;
+    if(type==ITStorage::Null) { /*intentionally left blank*/  }
+    else if(type==ITStorage::Real) { println("Reading ITensor of type ITReal"); p = readType<ITReal>(s); }
+    else if(type==ITStorage::Cplx) { p = readType<ITCplx>(s); }
+    else if(type==ITStorage::Combiner) { p = readType<ITCombiner>(s); }
+    else if(type==ITStorage::DiagReal) { p = readType<ITDiag<Real>>(s); }
+    else if(type==ITStorage::DiagCplx) { p = readType<ITDiag<Cplx>>(s); }
+    else
+        {
+        Error("Unrecognized type when reading ITensor from istream");
+        }
+    //println("Data before returning from read:");
+    //applyFunc<PrintIT>(p,std::cout,scale,is);
+    T = ITensor(std::move(is),std::move(p),scale);
+    }
+
+template<class T>
+void
+writeType(std::ostream& s, ITStorage type, const T& data)
+    {
+    s.write((char*)&type,sizeof(type));
+    write(s,data); 
+    }
+
+struct Write : RegisterFunc<Write>
+    {
+    std::ostream& s_;
+    Write(std::ostream& s) : s_(s) { }
+
+    void
+    operator()(const ITReal& d)
+        { 
+        writeType(s_,ITStorage::Real,d);
+        }
+
+    void
+    operator()(const ITCplx& d)
+        { 
+        writeType(s_,ITStorage::Cplx,d);
+        }
+
+    void
+    operator()(const ITCombiner& d)
+        { 
+        writeType(s_,ITStorage::Combiner,d);
+        }
+
+    void
+    operator()(const ITDiag<Real>& d)
+        { 
+        writeType(s_,ITStorage::DiagReal,d);
+        }
+
+    void
+    operator()(const ITDiag<Cplx>& d)
+        { 
+        writeType(s_,ITStorage::DiagCplx,d);
+        }
+    };
+
+void
+write(std::ostream& s, const ITensor& T)
+    {
+    write(s,T.inds());
+    write(s,T.scale());
+    if(T) 
+        {
+        applyFunc<Write>(T.data(),s);
+        }
+    else 
+        {
+        auto type = ITStorage::Null;
+        s.write((char*)&type,sizeof(type));
+        }
+    }
 
 };

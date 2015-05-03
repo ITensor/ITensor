@@ -194,11 +194,11 @@ operator+=(const IQTensor& other)
 
     if(isTrivial(P))
         {
-        applyFunc<IQPlusEQ>(store_,other.store_,{scalefac});
+        applyFunc<IQPlusEQ>(store_,other.store_,scalefac);
         }
     else
         {
-        applyFunc<IQPlusEQ>(store_,other.store_,{P,is_,other.is_,scalefac});
+        applyFunc<IQPlusEQ>(store_,other.store_,P,is_,other.is_,scalefac);
         }
 
 
@@ -597,7 +597,7 @@ operator*=(const IQTensor& other)
     computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind,checkDirs);
 
     auto qcres = 
-    applyFunc<QContract>(store_,other.store_,{Lis,Lind,Ris,Rind,div_+other.div_});
+    applyFunc<QContract>(store_,other.store_,Lis,Lind,Ris,Rind,div_+other.div_);
 
     is_ = qcres.newIndexSet();
 
@@ -645,7 +645,7 @@ scaleTo(const LogNumber& newscale)
     if(scale_ == newscale) return;
     if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
     scale_ /= newscale;
-    applyFunc<MultReal>(store_,{scale_.real0()});
+    applyFunc<MultReal>(store_,scale_.real0());
     scale_ = newscale;
     }
 
@@ -699,7 +699,7 @@ class ToITensor : public RegisterFunc<ToITensor>
 ITensor
 toITensor(const IQTensor& T)
     {
-    return ITensor(applyFunc<ToITensor>(T.data(),{T.inds(),T.scale()}));
+    return ITensor(applyFunc<ToITensor>(T.data(),T.inds(),T.scale()));
     }
 
 struct IsComplex : RegisterFunc<IsComplex>
@@ -968,7 +968,7 @@ operator<<(std::ostream& s, const IQTensor& T)
         if(ff_set || Global::printdat())
             {
             s << "\n";
-            applyFunc<PrintIQT>(T.data(),{s,T.scale(),T.inds()});
+            applyFunc<PrintIQT>(T.data(),s,T.scale(),T.inds());
             }
         }
     else

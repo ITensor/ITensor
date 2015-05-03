@@ -31,6 +31,8 @@ class ITDiag : public RegisterData<ITDiag<T>>
     // Constructors
     //
 
+    ITDiag() { }
+
     template<typename InputIterator>
     ITDiag(InputIterator b, InputIterator e)
         :
@@ -90,6 +92,22 @@ class ITDiag : public RegisterData<ITDiag<T>>
     end() { return store.end(); }
 
     };
+
+template<typename T>
+void
+read(std::istream& s, ITDiag<T>& dat)
+    {
+    read(s,dat.val);
+    read(s,dat.store);
+    }
+
+template<typename T>
+void
+write(std::ostream& s, const ITDiag<T>& dat)
+    {
+    write(s,dat.val);
+    write(s,dat.store);
+    }
 
 }; //namespace itensor
 

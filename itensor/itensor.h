@@ -201,6 +201,7 @@ class ITensor
     ITensor&
     takeImag();
 
+
     private:
 
     void
@@ -224,6 +225,11 @@ class ITensor
     ITensor(IndexSet iset,
             DataType&& dat,
             const LogNumber& scale = 1);
+
+    ITensor(IndexSet iset,
+            storage_ptr&& pdat,
+            const LogNumber& scale = 1);
+
 
     //Provide indices from IndexSet
     explicit
@@ -258,8 +264,18 @@ class ITensor
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);
 
+// Read ITensor from binary input stream.
+void
+read(std::istream& s, ITensor& t);
+
+// Write ITensor to binary output stream.
+void 
+write(std::ostream& s, const ITensor& t);
+
 ITensor inline
 operator*(ITensor A, const ITensor& B) { A *= B; return A; }
+ITensor inline
+operator*(const ITensor& A, ITensor&& B) { B *= A; return B; }
 ITensor inline
 operator*(ITensor T, Real fac) { T *= fac; return T; }
 ITensor inline
@@ -275,7 +291,11 @@ operator/(ITensor T, Complex fac) { T /= fac; return T; }
 ITensor inline
 operator+(ITensor A, const ITensor& B) { A += B; return A; }
 ITensor inline
+operator+(const ITensor& A, ITensor&& B) { B += A; return B; }
+ITensor inline
 operator-(ITensor A, const ITensor& B) { A -= B; return A; }
+ITensor inline
+operator-(const ITensor& A, ITensor&& B) { B -= A; B *= -1; return B; }
 
 ITensor inline
 operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }

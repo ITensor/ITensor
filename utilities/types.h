@@ -14,6 +14,7 @@ namespace itensor {
 
 using Real = double;
 using Complex = std::complex<Real>;
+using Cplx = std::complex<Real>;
 
 #ifndef NAN
 #define NAN (std::numeric_limits<Real>::quiet_NaN())

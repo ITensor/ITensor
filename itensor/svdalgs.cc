@@ -37,9 +37,9 @@ toMatRefc(const ITensor& T, const Index& i1, const Index& i2)
     {
     if(i1 == T.inds().front())
         {
-        return applyFunc<ToMatRefc>(T.data(),{i1.m(),i2.m()});
+        return applyFunc<ToMatRefc>(T.data(),i1.m(),i2.m());
         }
-    return applyFunc<ToMatRefc>(T.data(),{i2.m(),i1.m()});
+    return applyFunc<ToMatRefc>(T.data(),i2.m(),i1.m());
     }
 
 
