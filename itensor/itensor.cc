@@ -1386,6 +1386,14 @@ randomize(ITensor T, const Args& args)
     return T;
     }
 
+ITensor
+matrixTensor(Mat&& M, const Index& i1, const Index& i2)
+    {
+    auto res = ITensor({i1,i2},ITReal{std::move(M.store())});
+    M.clear();
+    return res;
+    }
+
 
 Real
 norm(const ITensor& T)

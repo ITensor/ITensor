@@ -29,29 +29,29 @@ enum Type {
             Combiner 
           };
 
-struct GetType : RegisterFunc<GetType,Type>
-    {
-    Type
-    operator()(const ITReal& d) { return DenseReal; }
-    Type
-    operator()(const ITCplx& d) { return DenseCplx; }
-    Type
-    operator()(const ITDiag<Real>& d)
-        {
-        return (d.allSame() ? DiagRealAllSame : DiagReal);
-        }
-    Type
-    operator()(const ITDiag<Complex>& d)
-        {
-        return (d.allSame() ? DiagCplxAllSame : DiagCplx);
-        }
-    Type
-    operator()(const ITCombiner& c) { return Combiner; }
-    };
 
 Type
 getType(const ITensor& t) 
     { 
+    struct GetType : RegisterFunc<GetType,Type>
+        {
+        Type
+        operator()(const ITReal& d) { return DenseReal; }
+        Type
+        operator()(const ITCplx& d) { return DenseCplx; }
+        Type
+        operator()(const ITDiag<Real>& d)
+            {
+            return (d.allSame() ? DiagRealAllSame : DiagReal);
+            }
+        Type
+        operator()(const ITDiag<Complex>& d)
+            {
+            return (d.allSame() ? DiagCplxAllSame : DiagCplx);
+            }
+        Type
+        operator()(const ITCombiner& c) { return Combiner; }
+        };
     return applyFunc<GetType>(t.data()); 
     }
 
@@ -255,7 +255,7 @@ SECTION("Dense Rank 1 from container")
     {
     Index linkind("linkind",10);
     auto data = randomData(linkind.m());
-    auto t10 = diagtensor(data,linkind);
+    auto t10 = diagTensor(data,linkind);
 
     CHECK_EQUAL(t10.r(),1);
     CHECK(hasindex(t10,linkind));
@@ -272,7 +272,7 @@ SECTION("Diag Rank 2 from container")
     Index i1("i1",10),
           i2("i2",10);
     auto data = randomData(i1.m());
-    auto T = diagtensor(data,i1,i2);
+    auto T = diagTensor(data,i1,i2);
     CHECK(getType(T) == DiagReal);
 
     CHECK_EQUAL(T.r(),2);
@@ -417,7 +417,7 @@ SECTION("Copy")
 {
 IndexSet indices(a2,l3,l1,a4);
 
-auto t1 = randomIT(indices);
+auto t1 = randomTensor(indices);
 auto t1nrm = norm(t1);
 auto t1sum = sumels(t1);
 
@@ -520,8 +520,8 @@ for(int n2 = 1; n2 <= s1P.m(); ++n2)
 
 SECTION("SumDifference")
 {
-auto v = randomIT(mixed_inds), 
-     w = randomIT(mixed_inds);
+auto v = randomTensor(mixed_inds), 
+     w = randomTensor(mixed_inds);
 
 Real f1 = -Global::random(), 
      f2 = 0.1*f1;
@@ -549,8 +549,8 @@ for(int j4 = 1; j4 <= 2; ++j4)
     }
 
 f1 = 1; f2 = 1;
-auto yy = randomIT(mixed_inds), 
-     zz = randomIT(mixed_inds);
+auto yy = randomTensor(mixed_inds), 
+     zz = randomTensor(mixed_inds);
 r = f1*yy + f2*zz;
 for(int j1 = 1; j1 <= 2; ++j1)
 for(int j2 = 1; j2 <= 2; ++j2)
@@ -563,7 +563,7 @@ for(int j4 = 1; j4 <= 2; ++j4)
     }
 
 IndexSet reordered(l2,l1,b3,a4,a2,l4);
-w = randomIT(reordered); 
+w = randomTensor(reordered); 
 r = f1*v + w/f2; 
 for(int j1 = 1; j1 <= 2; ++j1)
 for(int j2 = 1; j2 <= 2; ++j2)
@@ -577,8 +577,8 @@ for(int j4 = 1; j4 <= 2; ++j4)
 
 SECTION("Reordered Case 2")
     {
-    auto T1 = randomIT(b6,s1,b5,s2),
-         T2 = randomIT(s1,s2,b6,b5);
+    auto T1 = randomTensor(b6,s1,b5,s2),
+         T2 = randomTensor(s1,s2,b6,b5);
     auto R = T1+T2;
     for(int j6 = 1; j6 <= b6.m(); ++j6)
     for(int j5 = 1; j5 <= b5.m(); ++j5)
@@ -594,8 +594,8 @@ SECTION("Add diag")
     {
     auto data1 = randomData(std::min(l6.m(),b4.m())),
          data2 = randomData(std::min(l6.m(),b4.m()));
-    auto v1 = diagtensor(data1,l6,b4),
-         v2 = diagtensor(data2,b4,l6);
+    auto v1 = diagTensor(data1,l6,b4),
+         v2 = diagTensor(data2,b4,l6);
     auto r = v1+v2;
     for(int j1 = 1; j1 <= 2; ++j1)
     for(int j2 = 1; j2 <= 4; ++j2)
@@ -615,7 +615,7 @@ SECTION("Rank 0")
     {
     Real f = Global::random();
     auto rZ = ITensor(f); 
-    auto T = randomIT(b2,a1,b4);
+    auto T = randomTensor(b2,a1,b4);
 
     auto res = rZ * T;
 
@@ -630,8 +630,8 @@ SECTION("Rank 0")
         }
     }
 
-auto L = randomIT(b4,a1,b3,a2,b2), 
-     R = randomIT(b5,a1,b4,b2,b3);
+auto L = randomTensor(b4,a1,b3,a2,b2), 
+     R = randomTensor(b5,a1,b4,b2,b3);
 
 SECTION("Case 1")
     {
@@ -690,8 +690,8 @@ SECTION("Case 2")
         }
     }
 
-ITensor Q = randomIT(a1,b4,a2,b2), 
-        P = randomIT(a2,a3,a1);
+ITensor Q = randomTensor(a1,b4,a2,b2), 
+        P = randomTensor(a2,a3,a1);
 
 Real fQ = Global::random(), 
      fP = Global::random();
@@ -741,8 +741,8 @@ SECTION("Case 4")
 
 SECTION("Case 5")
     {
-    auto psi = randomIT(a1,a2,a3), 
-         mpoh = randomIT(l2,a1,prime(a1),a2,prime(a2));
+    auto psi = randomTensor(a1,a2,a3), 
+         mpoh = randomTensor(l2,a1,prime(a1),a2,prime(a2));
 
     auto Hpsi = mpoh * psi;
 
@@ -757,8 +757,8 @@ SECTION("Case 5")
 
 SECTION("Case 6")
     {
-    auto T1 = randomIT(b3,b5,l6,a1,s3),
-         T2 = randomIT(l6,s4,b3,a1);
+    auto T1 = randomTensor(b3,b5,l6,a1,s3),
+         T2 = randomTensor(l6,s4,b3,a1);
     auto R = T1*T2;
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int i3 = 1; i3 <= 2; ++i3)
@@ -776,8 +776,8 @@ SECTION("Case 6")
 
 SECTION("Scalar Result")
     {
-    auto T1 = randomIT(a1,b3,b4),
-         T2 = randomIT(b4,a1,b3);
+    auto T1 = randomTensor(a1,b3,b4),
+         T2 = randomTensor(b4,a1,b3);
     auto f = -0.2342;
     T1 *= f;
     auto R = T1*T2;
@@ -796,8 +796,8 @@ SECTION("Complex Contracting Product")
 {
 SECTION("Complex-Complex")
     {
-    auto T1 = randomITCplx(b3,b5,l6,a1,s3),
-         T2 = randomITCplx(l6,s4,b3,a1);
+    auto T1 = randomTensorC(b3,b5,l6,a1,s3),
+         T2 = randomTensorC(l6,s4,b3,a1);
     auto R = T1*T2;
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int i3 = 1; i3 <= 2; ++i3)
@@ -815,8 +815,8 @@ SECTION("Complex-Complex")
 
 SECTION("Real-Complex")
     {
-    auto T1 = randomIT(b3,b5,l6,a1,s3),
-         T2 = randomITCplx(l6,s4,b3,a1);
+    auto T1 = randomTensor(b3,b5,l6,a1,s3),
+         T2 = randomTensorC(l6,s4,b3,a1);
     CHECK(!isComplex(T1));
     CHECK(isComplex(T2));
     auto R = T1*T2;
@@ -884,10 +884,10 @@ SECTION("Diag ITensor Contraction")
 {
 SECTION("Diag All Same")
     {
-    auto op = diagtensor(1.,s1,a1); //all diag elements same
+    auto op = diagTensor(1.,s1,a1); //all diag elements same
     CHECK(getType(op) == DiagRealAllSame);
 
-    auto r1 = randomIT(s1,prime(s1,2));
+    auto r1 = randomTensor(s1,prime(s1,2));
     auto res1 = op*r1;
     CHECK(hasindex(res1,a1));
     CHECK(hasindex(res1,prime(s1,2)));
@@ -900,10 +900,10 @@ SECTION("Diag All Same")
 SECTION("Diag")
     {
     std::vector<Real> v = {{1.23234, -0.9237}};
-    auto op = diagtensor(v,s1,b2);
+    auto op = diagTensor(v,s1,b2);
     CHECK(getType(op) == DiagReal);
 
-    auto r2 = randomIT(s1,s2);
+    auto r2 = randomTensor(s1,s2);
     auto res2 = op*r2;
     CHECK(hasindex(res2,s2));
     CHECK(hasindex(res2,b2));
@@ -917,8 +917,8 @@ SECTION("Diag")
 
 SECTION("Trace")
     {
-    auto T = randomIT(s1,s2,s3);
-    auto d = diagtensor(1,s1,s2);
+    auto T = randomTensor(s1,s2,s3);
+    auto d = diagTensor(1,s1,s2);
     auto R = d*T;
     for(int i3 = 1; i3 <= s3.m(); ++i3)
         {
@@ -933,10 +933,10 @@ SECTION("Trace")
 
 SECTION("Tie Indices with Diag Tensor")
     {
-    auto T = randomIT(s1,s2,s3,s4);
+    auto T = randomTensor(s1,s2,s3,s4);
 
     auto tied1 = Index("tied1",s1.m());
-    auto tt1 = diagtensor(1,s1,s2,s3,tied1);
+    auto tt1 = diagTensor(1,s1,s2,s3,tied1);
     auto R1 = T*tt1;
     for(int t = 1; t <= tied1.m(); ++t)
     for(int j4 = 1; j4 <= s4.m(); ++j4)
@@ -945,7 +945,7 @@ SECTION("Tie Indices with Diag Tensor")
         }
 
     auto tied2 = Index("tied2",s1.m());
-    auto tt2 = diagtensor(1,s1,s3,tied2);
+    auto tt2 = diagTensor(1,s1,s3,tied2);
     auto R2 = T*tt2;
     for(int t = 1; t <= tied1.m(); ++t)
     for(int j2 = 1; j2 <= s2.m(); ++j2)
@@ -957,9 +957,9 @@ SECTION("Tie Indices with Diag Tensor")
 
 SECTION("Contract All Dense Inds; Diag Scalar result")
     {
-    auto T = randomIT(J,K);
+    auto T = randomTensor(J,K);
 
-    auto d1 = diagtensor(1,J,K);
+    auto d1 = diagTensor(1,J,K);
     auto R = d1*T;
     CHECK(getType(R) == DiagRealAllSame);
     Real val = 0;
@@ -969,7 +969,7 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     CHECK_CLOSE(R.real(),val);
 
     auto data = randomData(minjk);
-    auto d2 = diagtensor(data,J,K);
+    auto d2 = diagTensor(data,J,K);
     R = d2*T;
     CHECK(getType(R) == DiagRealAllSame);
     val = 0;
@@ -980,9 +980,9 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
 
 SECTION("Contract All Dense Inds; Diag result")
     {
-    auto T = randomIT(J,K);
+    auto T = randomTensor(J,K);
     
-    auto d = diagtensor(1,J,K,L);
+    auto d = diagTensor(1,J,K,L);
     auto R = d*T;
     CHECK(getType(R) == DiagReal);
     CHECK(hasindex(R,L));
@@ -997,7 +997,7 @@ SECTION("Kronecker Delta Tensor")
     auto d = delta(s1,s2);
     CHECK(getType(d) == Combiner);
 
-    auto T1 = randomIT(s1,s3);
+    auto T1 = randomTensor(s1,s3);
 
     auto R1a = d*T1;
     CHECK(R1a.r() == 2);
@@ -1014,7 +1014,7 @@ SECTION("Kronecker Delta Tensor")
         CHECK_CLOSE(T1.real(s1(i12),s3(i3)), R1b.real(s2(i12),s3(i3)));
         }
 
-    auto T2 = randomIT(s2,s3);
+    auto T2 = randomTensor(s2,s3);
 
     auto R2a = d*T2;
     CHECK(R2a.r() == 2);
@@ -1031,13 +1031,13 @@ SECTION("Kronecker Delta Tensor")
         CHECK_CLOSE(T2.real(s2(i12),s3(i3)), R2b.real(s1(i12),s3(i3)));
         }
 
-    auto T3 = randomIT(b8,s1,b6,a1);
+    auto T3 = randomTensor(b8,s1,b6,a1);
     auto R3a = d*T3;
     auto R3b = T3*d;
     CHECK(hasindex(R3a,s2));
     CHECK(hasindex(R3b,s2));
 
-    auto T4 = randomIT(b8,s2,b6,a1);
+    auto T4 = randomTensor(b8,s2,b6,a1);
     auto R4a = d*T4;
     auto R4b = T4*d;
     CHECK(hasindex(R4a,s1));
@@ -1051,7 +1051,7 @@ SECTION("Combiner")
         auto C = combiner(s1,s2);
         CHECK(getType(C) == Combiner);
 
-        auto T1 = randomIT(s1,s2,s3);
+        auto T1 = randomTensor(s1,s2,s3);
         auto R1 = C*T1;
         auto ci = commonIndex(C,R1);
         CHECK(ci);
@@ -1065,7 +1065,7 @@ SECTION("Combiner")
             CHECK_CLOSE(T1.real(s1(i1),s2(i2),s3(i3)), R1.real(ci(j),s3(i3)));
             }
 
-        auto T2 = randomIT(s1,s3,s2);
+        auto T2 = randomTensor(s1,s3,s2);
         auto R2 = C*T2;
         CHECK(R2.r() == 2);
         ci = commonIndex(C,R2);
@@ -1082,7 +1082,7 @@ SECTION("Combiner")
 
     SECTION("One Index")
         {
-        auto T1 = randomIT(s4,b5,s1,l2);
+        auto T1 = randomTensor(s4,b5,s1,l2);
 
         auto cs4 = combiner(s4);
         auto Rs4a = T1*cs4;
@@ -1110,12 +1110,12 @@ SECTION("Norm")
 Real nrm = 0;
 auto calcnrm = [&nrm](auto el) { nrm += std::norm(el); };
 
-auto T = randomIT(b2,b7,b8);
+auto T = randomTensor(b2,b7,b8);
 T.visit(calcnrm);
 CHECK_CLOSE(std::sqrt(nrm),norm(T));
 
 nrm = 0;
-T = randomITCplx(b2,b7,b8);
+T = randomTensorC(b2,b7,b8);
 CHECK(getType(T) == DenseCplx);
 T.visit(calcnrm);
 CHECK_CLOSE(std::sqrt(nrm),norm(T));
@@ -1123,7 +1123,7 @@ CHECK_CLOSE(std::sqrt(nrm),norm(T));
 
 SECTION("Conj")
 {
-auto T1 = randomITCplx(b2,b7);
+auto T1 = randomTensorC(b2,b7);
 CHECK(isComplex(T1));
 auto T2 = conj(T1);
 for(auto j2 = 1; j2 <= b2.m(); ++j2) 
@@ -1137,7 +1137,7 @@ for(auto j7 = 1; j7 <= b7.m(); ++j7)
 
 SECTION("SumEls")
 {
-auto T = randomIT(b2,b7);
+auto T = randomTensor(b2,b7);
 Real r = 0;
 for(auto j2 = 1; j2 <= b2.m(); ++j2) 
 for(auto j7 = 1; j7 <= b7.m(); ++j7) 
@@ -1146,7 +1146,7 @@ for(auto j7 = 1; j7 <= b7.m(); ++j7)
     }
 CHECK_CLOSE(sumels(T),r);
 
-T = randomITCplx(b2,b7);
+T = randomTensorC(b2,b7);
 Complex z = 0;
 for(auto j2 = 1; j2 <= b2.m(); ++j2) 
 for(auto j7 = 1; j7 <= b7.m(); ++j7) 
@@ -1154,6 +1154,18 @@ for(auto j7 = 1; j7 <= b7.m(); ++j7)
     z += T.cplx(b2(j2),b7(j7));
     }
 CHECK_CLOSE(sumelsC(T),z);
+}
+
+SECTION("Matrix Constructor Function")
+{
+Mat M(2,2);
+M(1,1) = 11;
+M(1,2) = 12;
+M(2,1) = 21;
+M(2,2) = 22;
+auto T = matrixTensor(move(M),l1,l2);
+printfln("T = \n%f",T);
+printfln("M = \n%f",M);
 }
 
 //SECTION("TieIndices")
@@ -1492,7 +1504,7 @@ CHECK_CLOSE(sumelsC(T),z);
 
 //SECTION("NormTest")
 //    {
-//    A = randomIT(s1,prime(s1));
+//    A = randomTensor(s1,prime(s1));
 //    CHECK_DIFF(norm(A),sqrt((A*A).real()),1E-5);
 //
 //    ITensor C = Complex_1*A+Complex_i*B;
@@ -1585,8 +1597,8 @@ CHECK_CLOSE(sumelsC(T),z);
 //            psi(s1,l1,-1),
 //            opb(s1,b2,vb);
 //
-//    auto r1 = randomIT(s1,prime(s1,2)),
-//         r2 = randomIT(s1,prime(s1,2));
+//    auto r1 = randomTensor(s1,prime(s1,2)),
+//         r2 = randomTensor(s1,prime(s1,2));
 //
 //    auto op3 = op1 + Complex_i*op2;
 //

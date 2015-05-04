@@ -352,13 +352,24 @@ norm(const IQTensor& T);
 IQTensor
 randomize(IQTensor T, const Args& args = Global::args());
 
-template <typename... Params>
+template <typename... Inds>
 IQTensor
-randomIQT(Params&&... params)
+randomTensor(const IQIndex& i1, Inds&&... inds)
     {
-    return randomize(IQTensor(std::forward<Params>(params)...));
+    return randomize(IQTensor(i1,std::forward<Inds>(inds)...));
     }
-
+template <typename... IndVals>
+IQTensor
+randomTensor(const IQIndexVal& iv1, IndVals&&... ivs)
+    {
+    return randomize(IQTensor(iv1,std::forward<IndVals>(ivs)...));
+    }
+template <typename... Inds>
+IQTensor
+randomTensor(const QN& q, const IQIndex& i1, Inds&&... inds)
+    {
+    return randomize(IQTensor(q,i1,std::forward<Inds>(inds)...));
+    }
 
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);

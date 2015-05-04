@@ -153,8 +153,11 @@ set(Complex val, const IQIndexVals&... ivs)
     scaleTo(1.);
     const std::array<IQIndexVal,size> vals{{ static_cast<IQIndexVal>(ivs)...}};
     //If this IQTensor is not allocated, compute QN flux from ivs
-    if(!(*this))
+    if(!store_)
         {
+#ifdef DEBUG
+        if(!is_) Error("Setting element of default constructed IQTensor");
+#endif
         div_ = QN();
         for(auto& iv : vals) div_ += iv.qn()*iv.index.dir();
         if(val.imag() == 0) store_ = make_shared<IQTData<Real>>(is_,div_);

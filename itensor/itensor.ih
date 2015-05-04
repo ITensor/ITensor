@@ -46,7 +46,7 @@ ITensor(IndexSet iset,
 
 template<typename... Inds>
 ITensor
-diagtensor(Complex z, 
+diagTensor(Complex z, 
            const Index& i1,
            Inds&&... inds)
     { 
@@ -57,7 +57,7 @@ diagtensor(Complex z,
 
 template<typename Container, typename... Inds>
 auto
-diagtensor(const Container& C, 
+diagTensor(const Container& C, 
            const Index& i1,
            Inds&&... inds)
     //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"

@@ -6,6 +6,7 @@
 #define __ITENSOR_ITENSOR_H
 #include "indexset.h"
 #include "itdata/itdata.h"
+#include "matrix/mat.h"
 
 namespace itensor {
 
@@ -319,24 +320,24 @@ delta(const Index& i1, const Index& i2);
 //(if z is a Real or z.imag()==0 storage will be real)
 template<typename... Inds>
 ITensor
-diagtensor(Complex z,
+diagTensor(Complex z,
            const Index& i1,
            Inds&&... inds);
 
 template<typename... Inds>
 ITensor
-diagtensor(Real r,
+diagTensor(Real r,
            const Index& i1,
            Inds&&... inds)
     {
-    return diagtensor(Complex(r),i1,std::forward<Inds>(inds)...);
+    return diagTensor(Complex(r),i1,std::forward<Inds>(inds)...);
     }
 
 //Construct diagonal ITensor,
 //diagonal elements given by container C
 template<typename Container, typename... Inds>
 auto //->return type is ITensor
-diagtensor(const Container& C,
+diagTensor(const Container& C,
            const Index& i1,
            Inds&&... inds) 
         //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"
@@ -401,18 +402,26 @@ hasindex(const Tensor& T, const typename Tensor::IndexT& I)
 ITensor
 randomize(ITensor T, const Args& args = Global::args());
 
-template <typename... Params>
+template <typename... Inds>
 ITensor
-randomIT(Params&&... params)
+randomTensor(const Index& i1, Inds&&... inds)
     {
-    return randomize(ITensor(std::forward<Params>(params)...));
+    return randomize(ITensor(i1,std::forward<Inds>(inds)...));
     }
-template <typename... Params>
+template <typename... Inds>
 ITensor
-randomITCplx(Params&&... params)
+randomTensorC(const Index& i1, Inds&&... inds)
     {
-    return randomize(ITensor(std::forward<Params>(params)...),"Complex");
+    return randomize(ITensor(i1,std::forward<Inds>(inds)...),"Complex");
     }
+ITensor inline
+randomTensor(const IndexSet& inds)
+    {
+    return randomize(ITensor(inds));
+    }
+
+ITensor
+matrixTensor(Mat&& M, const Index& i1, const Index& i2);
 
 template <typename... Indices>
 ITensor
@@ -476,6 +485,42 @@ TensorA::IndexT
 uniqueIndex(const TensorA& A, 
             const TensorB& B, 
             IndexType t);
+
+template<class Tensor>
+auto
+findtype(const Tensor& T, IndexType type)
+    {
+    using IndexT = typename Tensor::IndexT;
+    for(auto& i : T.inds())
+        if(i.type()==type) return i;
+    return IndexT();
+    }
+
+//
+// Given Tensors which represent operator matrices
+// (e.g. A(site1',site1), B(site1',site1) )
+// multiply them, automatically adjusting primeLevels
+// so that result is again an operator matrix C(site1',site1)
+//
+//              s'  t'
+//  s'  t'      |   |
+//  |   |       [-A-]
+//  [-C-]  =    |   |
+//  |   |       [-B-]
+//  s   t       |   |
+//              s   t
+//
+// (here s and t are indices of type Site)
+//
+template<class Tensor>
+Tensor
+multSiteOps(Tensor A, const Tensor& B) 
+    {
+    A.prime(Site);
+    A *= B;
+    A.mapprime(2,1,Site);
+    return A;
+    }
 
 }; //namespace itensor
 
