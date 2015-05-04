@@ -58,10 +58,10 @@ Null()
 #endif
 
 const IQIndexDat::storage& IQIndex::
-indices() const 
+inds() const 
     { 
     IQINDEX_CHECK_NULL
-    return pd->indices();
+    return pd->inds();
     }
 
 long IQIndex::
@@ -176,7 +176,7 @@ showm(const IQIndex& I)
     string res = " ";
     ostringstream oh; 
     oh << I.m() << " | ";
-    for(const IndexQN& iq : I.indices())
+    for(const IndexQN& iq : I.inds())
         {
         oh << iq.qn << ":" << iq.m() << " ";
         }
@@ -390,7 +390,7 @@ operator()(long n) const
 bool
 hasindex(const IQIndex& J, const Index& i)
     { 
-    for(const Index& j : J.indices())
+    for(const Index& j : J.inds())
         {
         if(j == i) return true;
         }
@@ -411,7 +411,7 @@ long
 offset(const IQIndex& I, const Index& i)
     {
     long os = 0;
-    for(const IndexQN& iq : I.indices())
+    for(const IndexQN& iq : I.inds())
         {
         if(iq == i) return os;
         os += iq.m();
@@ -425,7 +425,7 @@ offset(const IQIndex& I, const Index& i)
 QN
 qn(const IQIndex& I, const Index& i)
     { 
-    for(const IndexQN& jq : I.indices())
+    for(const IndexQN& jq : I.inds())
         { 
         if(jq == i) 
             return jq.qn; 
@@ -439,7 +439,7 @@ qn(const IQIndex& I, const Index& i)
 Index
 findByQN(const IQIndex& I, const QN& qn)
     { 
-    for(const IndexQN& jq : I.indices())
+    for(const IndexQN& jq : I.inds())
         { 
         if(jq.qn == qn) 
             return jq;

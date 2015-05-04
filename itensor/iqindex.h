@@ -54,7 +54,7 @@ class IQIndex : public Index
 
 
     const storage&
-    indices() const;
+    inds() const;
 
     long 
     nindex() const;
@@ -290,7 +290,7 @@ class IQIndexDat
     IQIndexDat(storage&& ind_qn) { iq_ = std::move(ind_qn); }
 
     const storage&
-    indices() const { return iq_; }
+    inds() const { return iq_; }
 
     long
     size() { return iq_.size(); }
