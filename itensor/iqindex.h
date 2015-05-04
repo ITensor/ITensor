@@ -73,8 +73,8 @@ class IQIndex : public Index
 
     Arrow 
     dir() const { return dir_; }
-    void 
-    dir(Arrow ndir) { dir_ = ndir; }
+    //void 
+    //dir(Arrow ndir) { dir_ = ndir; }
 
     int 
     primeLevel() const { return Index::primeLevel(); }
