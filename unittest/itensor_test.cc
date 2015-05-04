@@ -502,7 +502,7 @@ CHECK_CLOSE(T.cplx(s1(2),s1P(1)),z * cT.cplx(s1(2),s1P(1)));
 CHECK_CLOSE(T.cplx(s1(2),s1P(2)),z * cT.cplx(s1(2),s1P(2)));
 }
 
-SECTION("Apply")
+SECTION("Apply / Visit / Generate")
 {
 // class Functor and the function Func
 // are defined in test.h
@@ -516,6 +516,17 @@ for(int n2 = 1; n2 <= s1P.m(); ++n2)
     {
     CHECK_DIFF( f( A.real(s1(n1),s1P(n2)) ), A1.real(s1(n1),s1P(n2)) ,1E-10);
     }
+
+//apply a function that only accepts Real argument to real ITensor
+auto rfunc = [](Real r) { return 2*r; };
+auto A2 = randomTensor(b4,l2);
+A2.apply(rfunc);
+
+//apply a function that only accepts Real argument to real ITensor
+Real prod = 1;
+auto rvfunc = [&prod](Real r) { prod *= r; };
+A2.visit(rvfunc);
+
 }
 
 SECTION("SumDifference")
@@ -1164,8 +1175,10 @@ M(1,2) = 12;
 M(2,1) = 21;
 M(2,2) = 22;
 auto T = matrixTensor(move(M),l1,l2);
-printfln("T = \n%f",T);
-printfln("M = \n%f",M);
+CHECK_CLOSE(T.real(l1(1),l2(1)),11);
+CHECK_CLOSE(T.real(l1(1),l2(2)),12);
+CHECK_CLOSE(T.real(l1(2),l2(1)),21);
+CHECK_CLOSE(T.real(l1(2),l2(2)),22);
 }
 
 //SECTION("TieIndices")

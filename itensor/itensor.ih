@@ -312,7 +312,7 @@ struct ApplyIT : RegisterFunc<ApplyIT<F>>
     void
     operator()(ITReal& d)
         { 
-        for(auto& elt : d) elt = f_(elt);
+        for(auto& elt : d) elt = detail::call<Real>(f_,elt);
         }
 
     void
@@ -320,7 +320,7 @@ struct ApplyIT : RegisterFunc<ApplyIT<F>>
         { 
         for(auto j = 0ul; j < d.csize(); ++j)
             {
-            auto res = f_(d.get(j));
+            auto res = detail::call<Cplx>(f_,d.get(j));
             d.set(j,res);
             }
         }
@@ -332,11 +332,11 @@ struct ApplyIT : RegisterFunc<ApplyIT<F>>
         { 
         if(d.allSame()) 
             {
-            d.val = f_(d.val);
+            d.val = detail::call<T>(f_,d.val);
             }
         else
             {
-            for(auto& elt : d.store) elt = f_(elt);
+            for(auto& elt : d.store) elt = detail::call<T>(f_,elt);
             }
         }
     };
@@ -362,14 +362,16 @@ struct VisitIT : RegisterFunc<VisitIT<F>>
     void
     operator()(const ITReal& d)
         { 
-        for(auto& elt : d) f_(scale_fac * elt);
+        for(auto& elt : d) detail::call<void>(f_,scale_fac * elt);
         }
 
     void
     operator()(const ITCplx& d)
         { 
         for(auto j = 0ul; j < d.csize(); ++j)
-            f_(scale_fac * d.get(j));
+            {
+            detail::call<void>(f_,scale_fac * d.get(j));
+            }
         }
     };
 

@@ -194,6 +194,9 @@ class ITensor
     ITensor&
     conj();
 
+    ITensor&
+    dag() { return conj(); }
+
     //Replace data with real part
     ITensor&
     takeReal();
@@ -231,18 +234,9 @@ class ITensor
             storage_ptr&& pdat,
             const LogNumber& scale = 1);
 
-
     //Provide indices from IndexSet
     explicit
     ITensor(const IndexSet& is);
-
-    //Provide indices from an index set
-    //and elements from a VectorRef
-    //ITensor(const IndexSet& is,
-    //        const VectorRef& v);
-
-    ITensor(const IndexSet& is,
-            const ITensor& t);
 
     //Scale factor, used internally for efficient scalar ops.
     //Mostly for developer use; not necessary to explicitly involve
@@ -252,6 +246,9 @@ class ITensor
 
     const ITData&
     data() const { return *store_; }
+
+    storage_ptr&
+    pdata() { return store_; }
 
     void 
     scaleTo(const LogNumber& newscale);

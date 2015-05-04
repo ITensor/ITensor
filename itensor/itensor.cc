@@ -94,18 +94,6 @@ struct CopyElems : public RegisterFunc<CopyElems>
         }
     };
 
-ITensor::
-ITensor(const IndexSet& is,
-        const ITensor& t)
-    :
-    is_(is),
-    store_(std::make_shared<ITReal>(area(is_),0.)),
-    scale_(t.scale_)
-    {
-    Error("ITensor(IndexSet,ITensor) constructor currently broken due to automatic sorting of Indices by IndexSet");
-    applyFunc<CopyElems>(store_,t.store_);
-    }
-
 //ITensor::
 //ITensor(const Index& i1,
 //        const Index& i2,
