@@ -352,8 +352,8 @@ addindex(const IndexT& I)
         }
     else
         {
-        auto m_eq_one = [](const IndexT& ii) { return ii.m()==1; };
-        auto it = std::find(index_.begin(),index_.end(),m_eq_one);
+        auto m_eq_one = [](const IndexT& ii) { return ii.m()==1l; };
+        auto it = std::find_if(index_.begin(),index_.end(),m_eq_one);
         index_.insert(it,I);
         ++rn_;
         }
