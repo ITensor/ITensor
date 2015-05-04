@@ -108,6 +108,10 @@ class IQTensor
     IQTensor& 
     operator*=(const IQIndexVal& iv) { return operator*=(IQTensor(iv)); }
 
+    //Add ITensor into corresponding block
+    IQTensor&
+    operator+=(const ITensor& t);
+
     //Automatic conversion to ITensor
     operator ITensor() const;
 

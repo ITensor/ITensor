@@ -169,8 +169,9 @@ struct RegisterFunc : FuncBase
         AssignPointerRtoL
         };
 
-    PData* arg1_ = nullptr;
-    const PData* arg2_ = nullptr;
+    PData *parg1_ = nullptr;
+    const PData *parg2_ = nullptr;
+    const ITData *arg2_ = nullptr;
     Derived& dt_;
     Action action_ = None;
     PData nd_;
@@ -179,9 +180,11 @@ struct RegisterFunc : FuncBase
     public:
 
     void
-    setup(PData* arg1);
+    setup(PData *parg1);
     void
-    setup(PData* arg1, const PData* arg2);
+    setup(PData *parg1, const PData *parg2);
+    void
+    setup(PData *arg1, const ITData *arg2);
 
     REGISTER(void applyTo,,final { applyToImpl(d); })
     REGISTER(void applyTo,const,final { applyToImpl(d); })
@@ -296,39 +299,53 @@ template <typename Derived, typename Return>
 RegisterFunc<Derived,Return>::
 RegisterFunc() 
     :
+    parg1_(nullptr),
+    parg2_(nullptr),
     arg2_(nullptr),
-    dt_(*static_cast<Derived*>(this))
+    dt_(*static_cast<Derived*>(this)),
+    action_(None)
     { }
 
 template <typename Derived, typename Return>
 RegisterFunc<Derived,Return>::
 RegisterFunc(RegisterFunc&& other)
     :
-    arg1_(other.arg1_),
+    parg1_(other.parg1_),
+    parg2_(other.parg2_),
     arg2_(other.arg2_),
     dt_(*static_cast<Derived*>(this)),
     action_(other.action_),
     nd_(std::move(other.nd_)),
     ret_(std::move(other.ret_))
     { 
-    other.arg1_ = nullptr;
+    other.parg1_ = nullptr;
+    other.parg2_ = nullptr;
     other.arg2_ = nullptr;
     other.action_ = None;
     }
 
 template <typename Derived, typename Return>
 void RegisterFunc<Derived,Return>::
-setup(PData* arg1)
+setup(PData* parg1)
     { 
-    arg1_ = arg1;
+    parg1_ = parg1;
     }
 
 template <typename Derived, typename Return>
 void RegisterFunc<Derived,Return>::
-setup(PData* arg1, const PData* arg2)
+setup(PData* parg1, const PData* parg2)
     { 
-    arg1_ = arg1; 
-    arg2_ = arg2;
+    parg1_ = parg1; 
+    parg2_ = parg2;
+    arg2_  = parg2->get();
+    }
+
+template <typename Derived, typename Return>
+void RegisterFunc<Derived,Return>::
+setup(PData *parg1, const ITData *arg2)
+    {
+    parg1_ = parg1;
+    arg2_  = arg2;
     }
 
 template <typename Derived, typename Return>
@@ -336,7 +353,7 @@ template <typename ITDataType, typename... Args>
 ITDataType* RegisterFunc<Derived,Return>::
 makeNewData(Args&&... args)
     {
-    if(!arg1_) Error("Can't call setNewData with const-only access to first arg");
+    if(!parg1_) Error("Can't call setNewData with const-only access to first arg");
     action_ = AssignNewData;
     auto newdat = std::make_shared<ITDataType>(std::forward<Args>(args)...);
     auto* ret = newdat.get();
@@ -357,7 +374,7 @@ template <typename Derived, typename Return>
 void RegisterFunc<Derived,Return>::
 assignPointerRtoL() 
     { 
-    if(!arg2_) Error("No second pointer provided for action AssignPointerRtoL");
+    if(!parg2_) Error("No second pointer provided for action AssignPointerRtoL");
     action_ = AssignPointerRtoL; 
     }
 
@@ -369,12 +386,12 @@ updateArg1()
     if(action_ == AssignNewData)
         {
         //println("Doing AssignNewData");
-        *arg1_ = std::move(nd_);
+        *parg1_ = std::move(nd_);
         }
     else if(action_ == AssignPointerRtoL)
         {
         //println("Doing AssignPointerRtoL");
-        *arg1_ = *arg2_;
+        *parg1_ = *parg2_;
         }
     }
 
@@ -383,12 +400,12 @@ template<typename T>
 T& RegisterFunc<Derived,Return>::
 modifyData(const T& d)
     {
-    if(!arg1_) Error("Can't modify const data");
-    if(!(arg1_->unique())) 
+    if(!parg1_) Error("Can't modify const data");
+    if(!(parg1_->unique())) 
         {
-        *arg1_ = (*arg1_)->clone();
+        *parg1_ = (*parg1_)->clone();
         }
-    auto* pa1 = static_cast<T*>(arg1_->get());
+    auto* pa1 = static_cast<T*>(parg1_->get());
     return *pa1;
     }
 
@@ -401,14 +418,14 @@ applyToImpl(const T& d)
     if(arg2_)
         {
         CallWrap<Derived,const T,Return> w(dt_,d);
-        (*arg2_)->plugInto(w);
+        arg2_->plugInto(w);
         ret_ = std::move(w.getReturn());
         }
     else
         {
         ret_ = detail::call<Return>(dt_,d);
         }
-    if(arg1_) updateArg1();
+    if(parg1_) updateArg1();
     }
 
 template <typename Derived, typename Return>
@@ -417,16 +434,16 @@ void RegisterFunc<Derived,Return>::
 applyToImpl(T& d)
     {
     //println("In applyToImpl #2");
-    assert(arg1_);
+    assert(parg1_);
     if(arg2_)
         {
-        CallWrap<Derived,T,Return> w(dt_,d,*arg1_);
-        (*arg2_)->plugInto(w);
+        CallWrap<Derived,T,Return> w(dt_,d,*parg1_);
+        arg2_->plugInto(w);
         ret_ = std::move(w.getReturn());
         }
     else
         {
-        ret_ = detail::clone_modify<Return>(dt_,d,*arg1_);
+        ret_ = detail::clone_modify<Return>(dt_,d,*parg1_);
         }
     updateArg1();
     }
@@ -497,6 +514,19 @@ applyFunc(PData& arg1,
     arg1->plugInto(f);
     return f;
     }
+
+template<typename F, typename... CtrArgs>
+returnTypeOf<F>
+applyFunc(PData& arg1,
+          const ITData& arg2,
+          CtrArgs&&... args)
+    {
+    F f(std::forward<CtrArgs>(args)...);
+    f.setup(&arg1,&arg2);
+    arg1->plugInto(f);
+    return f;
+    }
+
 
 }; //namespace itensor
 

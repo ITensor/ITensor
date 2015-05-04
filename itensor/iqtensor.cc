@@ -609,6 +609,96 @@ operator*=(const IQTensor& other)
     return *this;
     }
 
+struct AddITensor : RegisterFunc<AddITensor>
+    {
+    const IQIndexSet& iqis;
+    const IndexSet& is;
+    const vector<long>& block_ind;
+    const Permutation& P;
+    Real fac = 0;
+    AddITensor(const IQIndexSet& iqis_,
+               const IndexSet& is_,
+               const vector<long>& block_ind_,
+               const Permutation& P_,
+               Real scalefac_)
+        :
+        iqis(iqis_),
+        is(is_),
+        block_ind(block_ind_),
+        P(P_),
+        fac(scalefac_)
+        { }
+
+    void
+    operator()(IQTData<Real>& d, const ITReal& t)
+        {
+        Range drange;
+        drange.init(make_indexdim(iqis,block_ind));
+        auto* dblock = d.getBlock(iqis,block_ind);
+
+        auto dref = make_tensorref(dblock,drange);
+        auto tref = make_tensorref(t.data(),is);
+        auto f = fac;
+        auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
+        permute(tref,P,dref,add);
+        }
+    };
+
+void
+calcDiv(QN& d, const IQIndexSet& is, const vector<long>& block_ind)
+    {
+    d = QN();
+    for(auto i : count(is.r())) { d += is[i].dir()*is[i].qn(1+block_ind[i]); }
+    }
+
+IQTensor& IQTensor::
+operator+=(const ITensor& t)
+    {
+    if(!t) Error("IQTensor+=ITensor: r.h.s. ITensor is default constructed");
+    if(!is_) Error("Calling IQTensor+= on default constructed ITensor");
+    auto rank = r();
+#ifdef DEBUG
+    if(t.r() != rank) Error("Mismatched number of indices in IQTensor+=ITensor");
+#endif
+
+    Permutation P(rank);
+    vector<long> block_ind(rank);
+    for(auto i : count(rank))
+    for(auto I : count(rank))
+        {
+        auto j = findindex(is_[I],t.inds()[i]);
+        if(j > 0)
+            {
+            block_ind[I] = (j-1);
+            P.setFromTo(i,I);
+            break;
+            }
+        }
+
+    if(!store_) 
+        {
+        //allocate data to add this ITensor into
+        calcDiv(div_,is_,block_ind);
+        if(!isComplex(t)) store_ = make_shared<IQTData<Real>>(is_,div_);
+        else              Error("Initializing complex IQTensor in +=ITensor not yet implemented");
+        }
+#ifdef DEBUG
+    else
+        {
+        QN q;
+        calcDiv(q,is_,block_ind);
+        if(q != div_) Error("IQTensor+=ITensor, ITensor has incompatible QN flux/divergence");
+        }
+#endif
+
+    Real scalefac = 1;
+    if(scale_.magnitudeLessThan(t.scale())) scaleTo(t.scale()); 
+    else                                    scalefac = (t.scale()/scale_).real();
+
+    applyFunc<AddITensor>(store_,t.data(),is_,t.inds(),block_ind,P,scalefac);
+    return *this;
+    }
+
 IQTensor& IQTensor::
 dag()
     {
@@ -649,9 +739,8 @@ scaleTo(const LogNumber& newscale)
     scale_ = newscale;
     }
 
-class ToITensor : public RegisterFunc<ToITensor>
+class ToITensor : public RegisterFunc<ToITensor,ITensor>
     {
-    ITensor res;
     const IQIndexSet& is_;
     const LogNumber& scale_;
     public:
@@ -663,10 +752,7 @@ class ToITensor : public RegisterFunc<ToITensor>
         scale_(scale)
         { }
 
-    explicit
-    operator ITensor() { return std::move(res); }
-
-    void
+    ITensor
     operator()(const IQTData<Real>& d)
         {
         auto r = is_.r();
@@ -692,29 +778,25 @@ class ToITensor : public RegisterFunc<ToITensor>
             }
         vector<Index> inds(r);
         for(long j = 0; j < r; ++j) inds[j] = is_[j];
-        res = ITensor(IndexSet(std::move(inds)),std::move(nd),scale_);
+        return ITensor(IndexSet(std::move(inds)),std::move(nd),scale_);
         }
     };
 
 ITensor
 toITensor(const IQTensor& T)
     {
-    return ITensor(applyFunc<ToITensor>(T.data(),T.inds(),T.scale()));
+    return applyFunc<ToITensor>(T.data(),T.inds(),T.scale());
     }
 
-struct IsComplex : RegisterFunc<IsComplex>
+struct IsComplex : RegisterFunc<IsComplex,bool>
     {
-    bool res = false;
-
-    operator bool() const { return res; }
-
-    void
-    operator()(const IQTData<Complex>& d) { res = true; }
+    bool
+    operator()(const IQTData<Complex>& d) { return true; }
 
     //Catch-all case: assume real unless specified otherwise
     template<typename T>
-    void
-    operator()(const T& d) { res = false; }
+    bool
+    operator()(const T& d) { return false; }
     };
 
 bool
@@ -822,30 +904,18 @@ dir(const IQTensor& T, const IQIndex& I)
     return Out;
 	}
 
-class IQNormNoScale : public RegisterFunc<IQNormNoScale>
+struct IQNormNoScale : RegisterFunc<IQNormNoScale,Real>
     {
-    Real nrm_;
-    public:
-
-    IQNormNoScale() : nrm_(0) { }
-
-    operator Real() { return nrm_; }
-
     template<typename T>
-    void
-    operator()(const IQTData<T>& d) { calc(d); }
-
-    private:
-
-    template<typename T>
-    void
-    calc(const T& d)
-        {
+    Real
+    operator()(const IQTData<T>& d) 
+        { 
+        Real nrm = 0;
         for(const auto& elt : d.data)
             {
-            nrm_ += std::norm(elt);
+            nrm += std::norm(elt);
             }
-        nrm_ = std::sqrt(nrm_);
+        return std::sqrt(nrm);
         }
     };
 
