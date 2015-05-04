@@ -143,18 +143,18 @@ op(const String& opname, int i,
         {
         IQIndex s = dag(si(i));
         IQIndex sP = siP(i);
-        IQTensor id_(s,sP);
+        IQTensor id_(QN(),s,sP);
         for(int j = 1; j <= s.m(); ++j)
             {
-            id_(s(j),sP(j)) = 1;
+            id_.set(1,s(j),sP(j));
             }
         return id_;
         }
     else
     if(opname == "Proj")
         {
-        const int n = args.getInt("State");
-        IQIndexVal v = si(i)(n);
+        auto n = args.getInt("State");
+        auto v = si(i)(n);
         return IQTensor(dag(v),prime(v));
         }
     else

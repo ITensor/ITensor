@@ -37,8 +37,6 @@ class LocalMPO_MPS
 
     using IndexT = typename Tensor::IndexT;
 
-    using CombinerT = typename Tensor::CombinerT;
-
     using LocalMPOType = LocalMPO<Tensor>;
 
     //
@@ -53,7 +51,7 @@ class LocalMPO_MPS
 
     Tensor
     deltaRho(const Tensor& AA, 
-             const CombinerT& comb, Direction dir) const
+             const Tensor& comb, Direction dir) const
         { return lmpo_.deltaRho(AA,comb,dir); }
 
     Tensor

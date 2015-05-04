@@ -31,7 +31,6 @@ class MPOt : private MPSt<Tensor>
     using TensorT = Tensor;
     using IndexT = typename Tensor::IndexT;
     using IndexValT = typename Tensor::IndexValT;
-    using CombinerT = typename Tensor::CombinerT;
 
     //MPOt: Constructors -----------------------------------------
 
@@ -159,7 +158,7 @@ toMPO() const
     MPO res(*sites_,logrefNorm_);
     for(int j = 0; j <= N()+1; ++j)
         {
-        res.A_.at(j) = A(j).toITensor();
+        res.A_.at(j) = toITensor(A(j));
         }
     return res;
     }

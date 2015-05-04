@@ -153,8 +153,8 @@ makeSwapGate(const Model& sites)
         {
         const Index &i1ind(sites(i1_).index(n)),
                     &i2ind(sites(i2_).index(n));
-        a += ITensor(i1ind,prime(i2ind),1);
-        b += ITensor(i2ind,prime(i1ind),1);
+        a += diagTensor(1,i1ind,prime(i2ind));
+        b += diagTensor(1,i2ind,prime(i1ind));
         }
     gate_ = a*b;
     }

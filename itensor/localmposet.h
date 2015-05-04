@@ -20,8 +20,6 @@ class LocalMPOSet
 
     using IndexT = typename Tensor::IndexT;
 
-    using CombinerT = typename Tensor::CombinerT;
-
     using LocalMPOT = LocalMPO<Tensor>;
 
     void
@@ -32,7 +30,7 @@ class LocalMPOSet
 
     Tensor
     deltaRho(const Tensor& AA, 
-             const CombinerT& comb, Direction dir) const;
+             const Tensor& comb, Direction dir) const;
 
     Tensor
     diag() const;
@@ -130,7 +128,7 @@ expect(const Tensor& phi) const
 template <class Tensor>
 Tensor inline LocalMPOSet<Tensor>::
 deltaRho(const Tensor& AA,
-         const CombinerT& comb, Direction dir) const
+         const Tensor& comb, Direction dir) const
     {
     Tensor delta = lmpo_.front().deltaRho(AA,comb,dir);
     for(size_t n = 1; n < lmpo_.size(); ++n)

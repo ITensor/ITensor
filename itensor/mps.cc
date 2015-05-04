@@ -5,6 +5,7 @@
 #include "mps.h"
 #include "localop.h"
 #include <map>
+#include "count.h"
 
 namespace itensor {
 
@@ -208,16 +209,16 @@ read(std::istream& s)
         Error("Can't read to default constructed MPS");
     for(size_t j = 0; j < A_.size(); ++j) 
         {
-    	A_.at(j).read(s);
+        itensor::read(s,A_[j]);
         }
     //Check that tensors read from disk were constructed
     //using the same sites
-    IndexT s1 = findtype(A_.at(1),Site);
+    auto s1 = findtype(A_.at(1),Site);
     s1.noprime();
     if(s1 != IndexT(sites_->si(1)))
         Error("Tensors read from disk not compatible with SiteSet passed to constructor.");
-    s.read((char*) &l_orth_lim_,sizeof(l_orth_lim_));
-    s.read((char*) &r_orth_lim_,sizeof(r_orth_lim_));
+    itensor::read(s,l_orth_lim_);
+    itensor::read(s,r_orth_lim_);
     }
 template
 void MPSt<ITensor>::read(std::istream& s);
@@ -234,10 +235,10 @@ write(std::ostream& s) const
 
     for(size_t j = 0; j < A_.size(); ++j) 
         {
-        A_.at(j).write(s);
+        itensor::write(s,A_[j]);
         }
-    s.write((char*) &l_orth_lim_,sizeof(l_orth_lim_));
-    s.write((char*) &r_orth_lim_,sizeof(r_orth_lim_));
+    itensor::write(s,l_orth_lim_);
+    itensor::write(s,r_orth_lim_);
     }
 template
 void MPSt<ITensor>::write(std::ostream& s) const;
@@ -415,7 +416,7 @@ random_tensors(std::vector<ITensor>& A_)
     { 
     new_tensors(A_); 
     for(int i = 1; i <= N_; ++i)
-        A_[i].randomize(); 
+        A_[i] = randomize(A_[i]); 
     }
 template
 void MPSt<ITensor>::random_tensors(std::vector<ITensor>& A_);
@@ -429,7 +430,7 @@ init_tensors(std::vector<ITensor>& A_, const InitState& initState)
     new_tensors(A_); 
     for(int i = 1; i <= N_; ++i) 
         {
-        A_[i](initState(i)) = 1;
+        A_[i].set(1,initState(i));
         }
 
     /*
@@ -486,14 +487,13 @@ plussers(const Index& l1, const Index& l2,
          ITensor& first, ITensor& second)
     {
     sumind = Index(sumind.rawname(),l1.m()+l2.m(),sumind.type());
-    first = ITensor(l1,sumind,1);
-    Matrix S(l2.m(),sumind.m());
-    S = 0;
+    first = diagTensor(1,l1,sumind);
+    Mat S(l2.m(),sumind.m());
     for(int i = 1; i <= l2.m(); ++i) 
         {
         S(i,l1.m()+i) = 1;
         }
-    second = ITensor(l2,sumind,S);
+    second = matrixTensor(std::move(S),l2,sumind);
     }
 
 void 
@@ -503,31 +503,31 @@ plussers(const IQIndex& l1, const IQIndex& l2,
     {
     map<Index,Index> l1map, l2map;
     vector<IndexQN> iq;
-    for(const IndexQN& x : l1.indices())
+    for(const IndexQN& x : l1.inds())
         {
         Index jj(x.rawname(),x.m(),x.type());
         l1map[x] = jj;
         iq.push_back(IndexQN(jj,x.qn));
         }
-    for(const IndexQN& x : l2.indices())
+    for(const IndexQN& x : l2.inds())
         {
         Index jj(x.rawname(),x.m(),x.type());
         l2map[x] = jj;
         iq.push_back(IndexQN(jj,x.qn));
         }
-    sumind = IQIndex(sumind.rawname(),iq,sumind.dir(),sumind.primeLevel());
+    sumind = IQIndex(sumind.rawname(),std::move(iq),sumind.dir(),sumind.primeLevel());
     first = IQTensor(dag(l1),sumind);
-    for(const Index& il1 : l1.indices())
+    for(const Index& il1 : l1.inds())
         {
-        Index s1 = l1map[il1];
-        ITensor t(il1,s1,1.0);
+        Index& s1 = l1map[il1];
+        auto t = diagTensor(1,il1,s1);
         first += t;
         }
     second = IQTensor(dag(l2),sumind);
-    for(const Index& il2 : l2.indices())
+    for(const Index& il2 : l2.inds())
         {
-        Index s2 = l2map[il2];
-        ITensor t(il2,s2,1.0);
+        Index& s2 = l2map[il2];
+        auto t = diagTensor(1,il2,s2);
         second += t;
         }
     }
@@ -779,7 +779,7 @@ orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
 
     if(args.getBool("Verbose",false))
         {
-        Print(L.indices());
+        Print(L.inds());
         }
 
     Tensor A,B(bnd);
@@ -931,7 +931,7 @@ void MPSt<IQTensor>::makeRealBasis(int j, const Args& args);
 ITensor
 makeKroneckerDelta(const Index& i, int plev)
     {
-    return ITensor(i,prime(i,plev),1);
+    return diagTensor(1,i,prime(i,plev));
     }
 IQTensor
 makeKroneckerDelta(const IQIndex& I, int plev)
@@ -1051,7 +1051,7 @@ norm() const
     { 
     if(isOrtho())
         {
-        return A(orthoCenter()).norm();
+        return itensor::norm(A(orthoCenter()));
         }
     else
         {
@@ -1067,7 +1067,7 @@ template <class Tensor>
 Real MPSt<Tensor>::
 normalize()
     {
-    Real norm_ = norm();
+    auto norm_ = norm();
     if(fabs(norm_) < 1E-20) Error("Zero norm");
     operator/=(norm_);
     return norm_;
@@ -1083,9 +1083,9 @@ template <class Tensor>
 bool MPSt<Tensor>::
 isComplex() const
     { 
-    for(int j = 1; j <= N_; ++j)
+    for(auto j : count1(N_))
         {
-        if(A_[j].isComplex()) return true;
+        if(itensor::isComplex(A_[j])) return true;
         }
     return false;
     }
@@ -1238,16 +1238,17 @@ checkRange(int i) const
     }
 
 //Auxilary method for convertToIQ
-int 
-collapseCols(const Vector& Diag, Matrix& M)
+long 
+collapseCols(const Vec& Diag, Mat& M)
     {
-    int nr = Diag.Length(), nc = int(Diag.sumels());
+    long nr = Diag.size(), 
+         nc = long(sumels(Diag));
     assert(nr != 0);
     if(nc == 0) return nc;
-    M = Matrix(nr,nc); M = 0;
-    int c = 0;
-    for(int r = 1; r <= nr; ++r)
-    if(Diag(r) == 1) { M(r,++c) = 1; }
+    M = Mat(nr,nc);
+    long c = 0;
+    for(long r = 1; r <= nr; ++r)
+        if(Diag(r) == 1) { M(r,++c) = 1; }
     return nc;
     }
 
@@ -1306,7 +1307,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
 
     vector<IQIndex> linkind(N+1);
 
-    map<QN,Vector> qD; //Diags of compressor matrices by QN
+    map<QN,Vec> qD; //Diags of compressor matrices by QN
 
     using qt_vt = map<QN,vector<ITensor> >::value_type;
     map<QN,vector<ITensor> > qt; //ITensor blocks by QN
@@ -1366,14 +1367,18 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
 
             //Initialize D Vector (D records which values of
             //the right Link Index to keep for the current QN q)
-            int count = qD.count(q);
-            Vector& D = qD[q];
-            if(count == 0) { D.ReDimension(bond.m()); D = 0; }
+            auto count = qD.count(q);
+            Vec& D = qD[q];
+            if(count == 0) 
+                { 
+                D.resize(bond.m()); 
+                for(auto& el : D) el = 0; 
+                }
 
             if(s == show_s)
                 {
                 println("For n = ",n);
-                printfln("Got a block with norm %.10f",block.norm());
+                printfln("Got a block with norm %.10f",norm(block));
                 println("bond.m() = ",bond.m());
                 PrintData(block);
                 if(s != 1) PrintData(comp);
@@ -1384,8 +1389,11 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                 { keep_block = true; }
             else
                 {
-                if(bond.m() == 1 && block.norm() != 0) 
-                    { D = 1; keep_block = true; }
+                if(bond.m() == 1 && norm(block) != 0) 
+                    { 
+                    for(auto& el : D) el = 1; 
+                    keep_block = true; 
+                    }
                 else
                     {
                     ITensor summed_block;
@@ -1396,16 +1404,16 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                         //Here we sum over the previous link index
                         //which is already ok, analyze the one to the right
                         assert(comp.r()==2);
-                        IndexSet<Index>::const_iterator ci = comp.indices().begin();
+                        auto ci = comp.inds().begin();
                         const Index& new_ind = (*ci==prev_bond ? *(ci+1) : *ci);
-                        summed_block = ITensor(new_ind,1) * block;
+                        summed_block = diagTensor(1,new_ind) * block;
                         }
                     //summed_block.print("summed_block");
 
                     Real rel_cut = -1;
                     const ITensor& sb = summed_block;
                     for(int j = 1; j <= bond.m(); ++j)
-                        { rel_cut = max(fabs(sb(bond(j))),rel_cut); }
+                        { rel_cut = std::max(fabs(sb.real(bond(j))),rel_cut); }
                     assert(rel_cut >= 0);
                     //Real rel_cut = summed_block.norm()/summed_block.vecSize();
                     rel_cut *= cut;
@@ -1414,7 +1422,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                     if(rel_cut > 0)
                     for(int j = 1; j <= bond.m(); ++j)
                         {
-                        if(fabs(sb(bond(j))) > rel_cut) 
+                        if(fabs(sb.real(bond(j))) > rel_cut) 
                             { 
                             D(j) = 1; 
                             keep_block = true; 
@@ -1427,22 +1435,25 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                 {
                 qD[q] = D;
 
-                IndexSet<Index> newinds(block.indices());
+                IndexSet newinds(block.inds());
                 if(is_mpo) 
                     {
                     newinds.addindex(dag(sites.si(s)(n).indexqn()));
                     newinds.addindex(sites.siP(s)(u).indexqn());
                     }
                 else 
-                    { newinds.addindex(sites.si(s)(n).indexqn()); }
-
-                qt[q].push_back(ITensor(newinds,block));
+                    { 
+                    newinds.addindex(sites.si(s)(n).indexqn()); 
+                    }
 
                 if(s==show_s)
                     {
                     PrintData(block);
                     cout << "D = " << D << "\n";
                     }
+
+                qt[q].push_back(ITensor(std::move(newinds),std::move(block.pdata())));
+
                 }
             }
 
@@ -1458,8 +1469,8 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                     { for(const ITensor& t : blks) nblock.push_back(t); }
                 else
                     {
-                    Matrix M; 
-                    int mm = collapseCols(qD[q],M);
+                    Mat M; 
+                    auto mm = collapseCols(qD[q],M);
                     if(s==show_s)
                         {
                         println("Adding block, mm = ",mm);
@@ -1474,7 +1485,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                         }
                     string qname = format("ql%d(%+d:%d)",s,q.sz(),q.Nf());
                     Index qbond(qname,mm);
-                    ITensor compressor(bond,qbond,M);
+                    auto compressor = matrixTensor(std::move(M),bond,qbond);
                     for(const ITensor& t : blks) nblock.push_back(t * compressor);
                     iq.push_back(IndexQN(qbond,q));
                     qC[q] = compressor;
@@ -1489,7 +1500,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                 cout << "At site " << s << "\n";
                 Error("convertToIQ: no compatible QNs to put into Link.");
                 }
-            linkind[s] = IQIndex(nameint("qL",s),iq); iq.clear(); 
+            linkind[s] = IQIndex(nameint("qL",s),std::move(iq)); 
             }
         if(S == start)
             {
@@ -1662,18 +1673,19 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
         qC.clear();
 
         Foreach(const qt_vt& x, qt)
-        {
+            {
             const vector<ITensor>& blks = x.second;
             if(blks.size() != 0)
-            {
+                {
                 q = x.first; 
                 if(s == N) 
-                { Foreach(const ITensor& t, blks) nblock.push_back(t); }
+                    { Foreach(const ITensor& t, blks) nblock.push_back(t); }
                 else
-                {
-                    Matrix M; int mm = collapseCols(qD[q],M);
-                    if(s==show_s)
                     {
+                    Mat M; 
+                    auto mm = collapseCols(qD[q],M);
+                    if(s==show_s)
+                        {
                         cout << format("Adding block, mm = %d\n")%mm;
                         q.print("q");
                         cout << "qD[q] = " << qD[q] << "\n";
@@ -1681,7 +1693,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                         int count = 0;
                         Foreach(const ITensor& t, blks) 
                         t.print((format("t%02d")%(++count)).str(),ShowData);
-                    }
+                        }
                     //string qname = (format("ql%d(%+d:%d:%s)")%s%q.sz()%q.Nf()%(q.Nfp() == 0 ? "+" : "-")).str();
                     string qname = (format("ql%d(%+d:%d)")%s%q.sz()%q.Nf()).str();
                     Index qbond(qname,mm);
@@ -1689,9 +1701,9 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
                     Foreach(const ITensor& t, blks) nblock.push_back(t * compressor);
                     iq.push_back(IndexQN(qbond,q));
                     qC[q] = compressor;
+                    }
                 }
             }
-        }
 
         if(s != N) 
         { 
@@ -1747,9 +1759,9 @@ findCenter(const IQMPS& psi)
         const IQTensor& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in MPS");
         bool allSameDir = true;
-        IndexSet<IQIndex>::const_iterator it = A.indices().begin();
+        auto it = A.inds().begin();
         Arrow dir = it->dir();
-        for(++it; it != A.indices().end(); ++it)
+        for(++it; it != A.inds().end(); ++it)
             {
             if(it->dir() != dir)
                 {
@@ -1866,7 +1878,7 @@ fitWF(const MPSt<Tensor>& psi_basis, MPSt<Tensor>& psi_to_fit)
     A = psi_to_fit.A(1) * A;
     A.noprime();
 
-    const Real nrm = A.norm();
+    auto nrm = norm(A);
     if(nrm == 0) Error("Zero overlap of psi_to_fit and psi_basis");
     A /= nrm;
 

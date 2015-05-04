@@ -3,6 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "mpo.h"
+#include "localop.h"
 
 namespace itensor {
 
@@ -168,7 +169,7 @@ findCenter(const IQMPO& psi)
         const IQTensor& A = psi.A(j);
         if(A.r() == 0) Error("Zero rank tensor in IQMPO");
         bool allOut = true;
-        for(const IQIndex& I : A.indices())
+        for(const IQIndex& I : A.inds())
             {
             //Only look at Link IQIndices
             if(I.type() != Link) continue;
@@ -402,7 +403,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
         //assert(mid.dir() == In);
         mid.dag();
         midsize[i] = mid.m();
-        maxdim = max(midsize[i],maxdim);
+        maxdim = std::max(midsize[i],maxdim);
         assert(rightLinkInd(res,i+1).dir() == Out);
         res.Anc(i+1) = Tensor(mid,prime(res.sites()(i+1)),rightLinkInd(res,i+1));
         }
@@ -431,7 +432,6 @@ exactApplyMPO(const MPSt<Tensor>& x,
               const Args& args)
     {
     using IndexT = typename Tensor::IndexT;
-    using CombinerT = typename Tensor::CombinerT;
 
     int N = x.N();
     if(K.N() != N) Error("Mismatched N in exactApplyMPO");
@@ -446,14 +446,15 @@ exactApplyMPO(const MPSt<Tensor>& x,
         //Compute product of MPS tensor and MPO tensor
         res.Anc(j+1) = x.A(j+1) * K.A(j+1); //m^2 k^2 d^2
 
-        //Add common IQIndices to IQCombiner
-        CombinerT comb; 
-        for(const IndexT& I : res.A(j).indices())
+        //Add common IQIndices to combiner
+        std::vector<IndexT> cinds;
+        cinds.reserve(res.A(j).r()); //ok to reserve a few too many
+        for(const IndexT& I : res.A(j).inds())
             {
             if(hasindex(res.A(j+1),I))
-                comb.addleft(I);
+                cinds.push_back(I);
             }
-        comb.init(nameint("a",j));
+        auto comb = combiner(std::move(cinds));
 
         //Apply combiner to product tensors
         res.Anc(j) = res.A(j) * comb; //m^3 k^3 d
@@ -556,11 +557,11 @@ fitApplyMPO(Real fac,
             wfK.noprime();
             wfK *= fac;
 
-            if(normalize) wfK /= wfK.norm();
-            //Print(K.A(b).indices());
-            //Print(K.A(b+1).indices());
-            //Print(BK.at(b-1).indices());
-            //Print(BK.at(b+2).indices());
+            if(normalize) wfK /= norm(wfK);
+            //Print(K.A(b).inds());
+            //Print(K.A(b+1).inds());
+            //Print(BK.at(b-1).inds());
+            //Print(BK.at(b+2).inds());
             //Print(wfK);
             //PAUSE
             LocalOp<Tensor> PH(K.A(b),K.A(b+1),BK.at(b-1),BK.at(b+2));
@@ -665,13 +666,13 @@ fitApplyMPO(Real mpsfac,
             }
         }
 
-    Tensor olp = B.at(3);
+    auto olp = B.at(3);
     olp *= psiA.A(2);
     olp *= dag(prime(res.A(2),Link));
     olp *= psiA.A(1);
     olp *= dag(prime(res.A(1),Link));
 
-    return olp.toComplex().real();
+    return olp.real();
     }
 template
 Real
@@ -927,7 +928,7 @@ putMPOLinks(IQMPO& W, const Args& args)
         {
         string nm = format("%s%d",pfix,b);
                
-        q += div(W.A(b),Args("Fast"));
+        q += div(W.A(b));
         links.at(b) = IQIndex(nm,Index(nm),q);
         }
 

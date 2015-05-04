@@ -500,7 +500,7 @@ toMPO<IQTensor>(const AutoMPO& am,
             }
         inqn.emplace_back(Index(format("hl%d_%d",n,count++),currm),currq);
 
-        links.at(n) = IQIndex(nameint("Hl",n),inqn);
+        links.at(n) = IQIndex(nameint("Hl",n),std::move(inqn));
 
         //if(n <= 2 or n == N)
         //    {
@@ -748,7 +748,7 @@ toExpH_ZW1(const AutoMPO& am,
             }
         inqn.emplace_back(Index(format("hl%d_%d",n,count++),currm),currq);
 
-        links.at(n) = IQIndex(nameint("Hl",n),inqn);
+        links.at(n) = IQIndex(nameint("Hl",n),std::move(inqn));
 
         //if(n <= 2 or n == N)
         //    {

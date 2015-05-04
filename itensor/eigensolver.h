@@ -4,7 +4,7 @@
 //
 #ifndef __ITENSOR_EIGENSOLVER_H
 #define __ITENSOR_EIGENSOLVER_H
-#include "iqcombiner.h"
+#include "iqtensor.h"
 
 
 namespace itensor {
@@ -141,14 +141,14 @@ powerMethod(const BigMatrixT& A,
 
 int inline
 findEig(int which,        //zero-indexed; so is return value
-        const Vector& DR, //real part of eigenvalues
-        const Vector& DI) //imag part of eigenvalues
+        const Vec& DR, //real part of eigenvalues
+        const Vec& DI) //imag part of eigenvalues
     {
     const int L = DR.Length();
 #ifdef DEBUG
     if(DI.Length() != L) Error("Vectors must have same length in findEig");
 #endif
-    Vector A2(L);
+    Vec A2(L);
     int n = -1;
 
     //Find maximum norm2 of all the eigs
@@ -243,10 +243,8 @@ arnoldi(const BigMatrixT& A,
         }
 
     //Storage for Matrix that gets diagonalized 
-    Matrix HR(actual_maxiter+2,actual_maxiter+2),
-           HI(actual_maxiter+2,actual_maxiter+2);
-    HR = 0;
-    HI = 0;
+    Mat HR(actual_maxiter+2,actual_maxiter+2),
+        HI(actual_maxiter+2,actual_maxiter+2);
 
     std::vector<Tensor> V(actual_maxiter+2);
 
@@ -257,13 +255,13 @@ arnoldi(const BigMatrixT& A,
     for(int r = 0; r <= maxrestart_; ++r)
         {
         Real err = 1000;
-        Matrix YR,YI;
+        Mat YR,YI;
         int n = 0; //which column of Y holds the w^th eigenvector
         int niter = 0;
 
         //Mref holds current projection of A into V's
-        MatrixRef HrefR(HR.SubMatrix(1,1,1,1)),
-                  HrefI(HI.SubMatrix(1,1,1,1));
+        auto HrefR = HR.SubMatrix(1,1,1,1);
+        auto HrefI = HI.SubMatrix(1,1,1,1);
 
         V.at(0) = phi.at(w);
 
@@ -284,7 +282,7 @@ arnoldi(const BigMatrixT& A,
                 {
                 for(int i = 0; i <= j; ++i)
                     {
-                    Complex h = BraKet(V.at(i),V.at(j+1));
+                    auto h = (V.at(i),V.at(j+1)).cplx();
                     if(pass == 1)
                         {
                         HR.el(i,j) = h.real();
@@ -310,7 +308,8 @@ arnoldi(const BigMatrixT& A,
             
             //Diagonalize projected form of A to
             //obtain the w^th eigenvalue and eigenvector
-            Vector D(1+j),DI(1+j);
+            Vec D(1+j),
+                DI(1+j);
             ComplexEigenvalues(HrefR,HrefI,D,DI,YR,YI);
             n = findEig(0,D,DI); //continue to target the largest eig 
                                  //since we have 'deflated' the previous ones

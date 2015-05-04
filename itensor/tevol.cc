@@ -118,14 +118,6 @@ struct SiteReverser
     operator()(int i) const { return (reverse ? (N-i+1) : i); }
     };
 
-struct SwapOneZero
-    {
-    SwapOneZero() { }
-
-    Real
-    operator()(Real r) const { return (r > 0.5 ? 0 : 1); }
-    };
-
 //
 // DerivMPS operator() method
 //
@@ -158,7 +150,7 @@ operator()(const vector<Tensor>& psi) const
     for(int j = 1; j <= N; ++j)
         {
         const Tensor& B = psi.at(s(j));
-        for(const Index& I : B.indices())
+        for(const Index& I : B.inds())
             {
             if(I.type() == Site)
                 {
@@ -220,9 +212,9 @@ operator()(const vector<Tensor>& psi) const
     //Orthogonalize
     for(int pass = 1; pass <= Npass; ++pass)
         {
-        dpsi[s(1)] += psi[s(1)]*(-Dot(psi[s(1)],dpsi[s(1)]));
+        dpsi[s(1)] += psi[s(1)]*(-(psi[s(1)],dpsi[s(1)]).real());
         const
-        Real olap = Dot(psi[s(1)],dpsi[s(1)]);
+        auto olap = (psi[s(1)],dpsi[s(1)]).real();
         if(pass > 1 && olap < 1E-10) break;
 
         if(pass == Npass)
@@ -262,10 +254,11 @@ operator()(const vector<Tensor>& psi) const
 #ifdef DEBUG
         if(r.r() != 2) Error("Expected rank of r is 2");
 #endif
-        Tensor U(r.indices().front()),V; 
+        Tensor U(r.inds().front()),V; 
         Tensor D;
         svd(r,U,D,V);
-        D.pseudoInvert(0);
+        auto pseudoInvert = [](Real el){ return (el > 0 ? 1./el : 0); };
+        D.apply(pseudoInvert);
         Tensor ri = V*D*U;
 
         //Multiply by inverse of rho
@@ -292,7 +285,8 @@ operator()(const vector<Tensor>& psi) const
             Tensor U;
             Tensor D;
             diagHermitian(olap,U,D);
-            D.mapElems(SqrtInv());
+            auto sqrtInv = [](Real r) { return (r > 0 ? 1./std::sqrt(r) : 0); };
+            D.apply(sqrtInv);
 
             //Tensor nB = (prime(U)*D*dag(U))*B;
             Tensor nB = (D*dag(U))*B;
@@ -306,7 +300,7 @@ operator()(const vector<Tensor>& psi) const
                 dB -= comp;
                 if(pass == 1) continue; //always do at least 2
 
-                const Real nrm = (dag(nB)*prime(dB,plink)).norm();
+                auto nrm = norm(dag(nB)*prime(dB,plink));
                 if(nrm < 1E-11) break;
 
                 if(pass == Npass)
@@ -333,7 +327,7 @@ operator()(const vector<Tensor>& psi) const
             const
             IndexT plink = commonIndex(B,psi[s(j-1)]);
             Tensor Bp(B);
-            for(const IndexT& I : B.indices())
+            for(const IndexT& I : B.inds())
                 {
                 if(I == plink) continue;
                 Bp.prime(I);
@@ -343,12 +337,12 @@ operator()(const vector<Tensor>& psi) const
             Tensor D;
             diagHermitian(P,U,D);
             Tensor sD(D);
-            sD.mapElems(SwapOneZero());
+            auto swapOneZero = [](Real r) { return (r > 0.5 ? 0 : 1); };
+            sD.apply(swapOneZero);
             dB = prime(U)*sD*dag(U)*dB;
             dB.noprime();
 
-            const
-            Real nrm = (dag(B)*prime(dB,plink)).norm();
+            auto nrm = norm(dag(B)*prime(dB,plink));
             printfln("psi%.02d*dpsi%.02d = %.3E",j,j,nrm);
 
             if(nrm > 1E-12)
@@ -366,7 +360,7 @@ operator()(const vector<Tensor>& psi) const
                     comp.noprime();
                     dB -= comp;
                     const
-                    Real nrm = (dag(B)*prime(dB,plink)).norm();
+                    Real nrm = norm(dag(B)*prime(dB,plink));
                     if(pass == Npass)
                         printfln("pass %d: psi%.02d*dpsi%.02d = %.3E",pass,j,j,nrm);
                     if(pass > 1 && nrm < 1E-10) break;
@@ -377,7 +371,7 @@ operator()(const vector<Tensor>& psi) const
                     }
 
                     const
-                    Real nrm = (dag(B)*prime(dB,plink)).norm();
+                    Real nrm = norm(dag(B)*prime(dB,plink));
                     printfln("psi%.02d*dpsi%.02d = %.3E",j,j,nrm);
                 }
             }
@@ -385,7 +379,7 @@ operator()(const vector<Tensor>& psi) const
         } //for loop over j
 
     //Orthogonalize
-    //dpsi[s(1)] += psi[s(1)]*(-Dot(psi[s(1)],psi[s(1)]));
+    //dpsi[s(1)] += psi[s(1)]*(-(psi[s(1)],psi[s(1)]).real());
 
     ////Orthogonalize
     //IndexT plink = commonIndex(B,psi[s(j-1)]);
@@ -443,7 +437,7 @@ ungroupMPS(vector<Tensor>& psig,
         Tensor& bond = psig.at(g);
 
         int nsite = 0;
-        for(const Index& I : bond.indices())
+        for(const Index& I : bond.inds())
             {
             if(I.type() == Site)
                 ++nsite;
@@ -538,7 +532,8 @@ class OrthVec
         Tensor U;
         Tensor D;
         diagHermitian(olap,U,D);
-        D.mapElems(SqrtInv());
+        auto sqrtInv = [](Real r) { return (r > 0 ? 1./std::sqrt(r) : 0); };
+        D.mapElems(sqrtInv);
 
         B = (prime(U)*D*dag(U))*B;
         B.noprime(Link);
@@ -913,7 +908,7 @@ expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
         const Tensor& t = psi.at(j);
 
         int nsite = 0;
-        for(const Index& I : t.indices())
+        for(const Index& I : t.inds())
             {
             if(I.type() == Site)
                 ++nsite;
@@ -932,7 +927,7 @@ expect(const vector<Tensor>& psi, const MPOt<Tensor>& H)
             L *= t;
             for(int n = 1; n <= nsite; ++n)
                 L *= H.A(s++);
-            return Dot(dag(prime(t)),L);
+            return (dag(prime(t)),L).real();
             }
         else
             {
@@ -976,7 +971,7 @@ norm(const vector<Tensor>& psi)
         if(j == N)
             {
             L *= t;
-            return std::sqrt(fabs(Dot(dag(prime(t,Link)),L)));
+            return std::sqrt(fabs((dag(prime(t,Link)),L).real()));
             }
         else
             {

@@ -19,11 +19,10 @@ SOURCES+= iqindex.cc
 SOURCES+= iqtensor.cc 
 SOURCES+= spectrum.cc 
 SOURCES+= svdalgs.cc 
-
-#SOURCES+= mps.cc 
-#SOURCES+= mpo.cc 
-#SOURCES+= tevol.cc
-#SOURCES+= autompo.cc
+SOURCES+= mps.cc 
+SOURCES+= mpo.cc 
+SOURCES+= tevol.cc
+SOURCES+= autompo.cc
 
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
         detail/gcounter.h global.h real.h permutation.h index.h \
@@ -36,7 +35,8 @@ HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterat
         itensor.h itensor.ih qn.h iqindex.h  \
         iqtensor.h iqtensor.ih \
         iterpair.h spectrum.h svdalgs.h \
-        #mps.h mpo.h core.h observer.h DMRGObserver.h \
+        mps.h \
+        mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
         hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h \

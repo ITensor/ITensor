@@ -6,7 +6,7 @@
 #define __ITENSOR_MPS_H
 #include "svdalgs.h"
 #include "siteset.h"
-#include "bondgate.h"
+//#include "bondgate.h"
 
 namespace itensor {
 
@@ -365,7 +365,7 @@ svdBond(int b, const Tensor& AA, Direction dir,
         //Normalize the ortho center if requested
         if(args.getBool("DoNormalize",false))
             {
-            D *= 1./D.norm();
+            D *= 1./itensor::norm(D);
             }
 
         //Push the singular values into the appropriate site tensor
@@ -385,8 +385,8 @@ svdBond(int b, const Tensor& AA, Direction dir,
         if(args.getBool("DoNormalize",false))
             {
             Tensor& oc = (dir == Fromleft ? A_[b+1] : A_[b]);
-            Real norm = oc.norm();
-            oc *= 1./norm;
+            auto nrm = itensor::norm(oc);
+            oc *= 1./nrm;
             }
         }
 
@@ -503,16 +503,16 @@ applyGate(const Tensor& gate,
     psi.svdBond(c,AA,Fromleft,args);
     }
 
-template <class Tensor>
-void 
-applyGate(const BondGate<Tensor>& gate, 
-          MPSt<Tensor>& psi,
-          const Args& args = Global::args())
-    {
-    Tensor AA = psi.A(gate.i1()) * psi.A(gate.i1()+1) * Tensor(gate);
-    AA.noprime();
-    psi.svdBond(gate.i1(),AA,Fromleft,args);
-    }
+//template <class Tensor>
+//void 
+//applyGate(const BondGate<Tensor>& gate, 
+//          MPSt<Tensor>& psi,
+//          const Args& args = Global::args())
+//    {
+//    Tensor AA = psi.A(gate.i1()) * psi.A(gate.i1()+1) * Tensor(gate);
+//    AA.noprime();
+//    psi.svdBond(gate.i1(),AA,Fromleft,args);
+//    }
 
 //Checks if A_[i] is left (left == true) 
 //or right (left == false) orthogonalized
@@ -531,7 +531,7 @@ checkOrtho(const MPSt<Tensor>& psi,
 
     const
     Real threshold = 1E-13;
-    if(Diff.norm() < threshold) 
+    if(norm(Diff) < threshold) 
         {
         return true;
         }
@@ -539,7 +539,7 @@ checkOrtho(const MPSt<Tensor>& psi,
     //Print any helpful debugging info here:
     println("checkOrtho: on line ",__LINE__," of mps.h,");
     println("checkOrtho: Tensor at position ",i," failed to be ",left?"left":"right"," ortho.");
-    printfln("checkOrtho: Diff.norm() = %E",Diff.norm());
+    printfln("checkOrtho: norm(Diff) = %E",norm(Diff));
     printfln("checkOrtho: Error threshold set to %E",threshold);
     //-----------------------------
 
@@ -588,37 +588,31 @@ template <class MPSType>
 Complex 
 psiphiC(const MPSType& psi, const MPSType& phi)
     {
-    using Tensor = typename MPSType::TensorT;
-    using IndexT = typename Tensor::IndexT;
-
-    const int N = psi.N();
+    auto N = psi.N();
     if(N != phi.N()) Error("psiphi: mismatched N");
 
-    IndexT l1 = linkInd(psi,1);
-    Tensor L = phi.A(1);
+    auto l1 = linkInd(psi,1);
+    auto L = phi.A(1);
     if(l1) L *= dag(prime(psi.A(1),l1)); 
     else   L *= dag(psi.A(1));
 
-    for(int i = 2; i < N; ++i) 
+    auto i = N;
+    for(i = 2; i < N; ++i) 
         { 
         L = L * phi.A(i) * dag(prime(psi.A(i),Link)); 
         }
     L = L * phi.A(N);
 
-    Complex z;
-
-    IndexT lNm = linkInd(psi,N-1);
-    if(lNm) z = BraKet(prime(psi.A(N),lNm),L);
-    else    z = BraKet(psi.A(N),L);
-
-    return z;
+    auto lNm = linkInd(psi,N-1);
+    if(lNm) return (prime(psi.A(N),lNm)*L).cplx();
+    return (psi.A(N)*L).cplx();
     }
 
 template <class MPSType>
 void 
 psiphi(const MPSType& psi, const MPSType& phi, Real& re, Real& im)
     {
-    Complex z = psiphiC(psi,phi);
+    auto z = psiphiC(psi,phi);
     re = z.real();
     im = z.imag();
     }

@@ -36,8 +36,6 @@ class LocalOp
 
     using IndexT = typename Tensor::IndexT;
 
-    using CombinerT = typename Tensor::CombinerT;
-
     //
     // Constructors
     //
@@ -63,7 +61,7 @@ class LocalOp
 
     Tensor
     deltaRho(const Tensor& rho, 
-             const CombinerT& comb, Direction dir) const;
+             const Tensor& combine, Direction dir) const;
 
     Tensor
     diag() const;
@@ -281,7 +279,7 @@ expect(const Tensor& phi) const
 
 template <class Tensor>
 Tensor inline LocalOp<Tensor>::
-deltaRho(const Tensor& AA, const CombinerT& comb, Direction dir) const
+deltaRho(const Tensor& AA, const Tensor& combine, Direction dir) const
     {
     Tensor delta(AA);
     if(dir == Fromleft)
@@ -296,9 +294,10 @@ deltaRho(const Tensor& AA, const CombinerT& comb, Direction dir) const
         }
 
     delta.noprime();
-    delta = comb * delta;
+    delta = combine * delta;
+    auto ci = commonIndex(combine,delta);
     
-    delta *= dag(prime(delta,comb.right()));
+    delta *= dag(prime(delta,ci));
 
     return delta;
     }

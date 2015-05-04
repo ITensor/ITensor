@@ -36,8 +36,6 @@ class LocalMPO
     {
     public:
 
-    using CombinerT = typename Tensor::CombinerT;
-
     //
     // Constructors
     //
@@ -89,7 +87,7 @@ class LocalMPO
 
     Tensor
     deltaRho(const Tensor& AA, 
-             const CombinerT& comb, Direction dir) const
+             const Tensor& comb, Direction dir) const
         { return lop_.deltaRho(AA,comb,dir); }
 
     Tensor

@@ -264,7 +264,6 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
     {
     /*
     using IndexT = typename Tensor::IndexT;
-    using CombinerT = typename Tensor::CombinerT;
 
     const Real noise = args.getReal("Noise",0.);
 
@@ -360,7 +359,6 @@ diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
     {
     /*
     using IndexT = typename Tensor::IndexT;
-    using CombinerT = typename Tensor::CombinerT;
 
     if(isZero(M,Args("Fast"))) 
         throw ResultIsZero("denmatDecomp: M is zero");
@@ -414,7 +412,6 @@ orthoDecomp(Tensor T, Tensor& A, Tensor& B,
     {
     /*
     using IndexT = typename Tensor::IndexT;
-    using CombinerT = typename Tensor::CombinerT;
 
     if(isZero(T,Args("Fast"))) 
         throw ResultIsZero("orthoDecomp: T is zero");
@@ -501,7 +498,6 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
     {
     /*
     using IndexT = typename Tensor::IndexT;
-    using CombinerT = typename Tensor::CombinerT;
 
     if(isZero(T,Args("Fast"))) 
         throw ResultIsZero("eigDecomp: T is zero");

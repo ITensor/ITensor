@@ -239,7 +239,7 @@ struct RampM
     int
     operator()(int sw, int nsweep) const 
         { 
-        const int actual_nwarm = (nwarm_ < 0 ? nsweep : min(nwarm_+1,nsweep));
+        const int actual_nwarm = (nwarm_ < 0 ? nsweep : std::min(nwarm_+1,nsweep));
         if(sw <= actual_nwarm)
             return (int) (start_m_ + (sw-1.)/(actual_nwarm-1.)*(end_m_-start_m_));
         else
@@ -268,7 +268,7 @@ struct ExpM
         { 
         int expm = int(start_m_*pow(exp_base_,sw-1));
         if(expm <= 0) return end_m_; //catch overflow
-        return min(expm,end_m_);
+        return std::min(expm,end_m_);
         }
 
     private:
@@ -336,9 +336,9 @@ init(int min_m, int max_m, Real cut)
 
     //Set number of Davidson iterations
     const int Max_niter = 9;
-    for(int s = 1; s <= min(4,nsweep_); ++s)
+    for(int s = 1; s <= std::min(4,nsweep_); ++s)
         {
-        niter_.at(s) = max(Max_niter-s+1,2);
+        niter_.at(s) = std::max(Max_niter-s+1,2);
         }
 
     } //Sweeps::init
