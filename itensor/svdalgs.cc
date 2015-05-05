@@ -250,10 +250,6 @@ svdRank2(ITensor A,
     //Fix sign to make sure D has positive elements
     Real signfix = (A.scale().sign() == -1) ? -1 : +1;
 
-    D = ITensor({uL,vL},ITDiag<Real>(move(DD.store())),A.scale()*signfix);
-    U = ITensor({ui,uL},ITReal(move(UU.store())),signfix);
-    V = ITensor({vi,vL},ITReal(move(VV.store())));
-
     if(cplx)
         {
         Error("Complex ITensor SVD not yet implemented (2)");
@@ -264,6 +260,13 @@ svdRank2(ITensor A,
         //if(iV.norm() > 1E-14)
         //    V = V + iV*Complex_i;
         }
+    else
+        {
+        D = ITensor({uL,vL},ITDiag<Real>(move(DD.store())),A.scale()*signfix);
+        U = ITensor({ui,uL},ITReal(move(UU.store())),signfix);
+        V = ITensor({vi,vL},ITReal(move(VV.store())));
+        }
+
 
     //Square all singular values
     //since convention is to report
@@ -606,40 +609,39 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
 
 Spectrum
-diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
+diag_hermitian(ITensor rho, 
+               ITensor& U, 
+               ITensor& D,
                const Args& args)
     {
-    /*
-    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
-    const int maxm = args.getInt("Maxm",MAX_M);
-    const int minm = args.getInt("Minm",1);
-    const bool do_truncate = args.getBool("Truncate",false);
-    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
-    const bool cplx = rho.isComplex();
+    auto cutoff = args.getReal("Cutoff",MIN_CUT);
+    auto maxm = args.getInt("Maxm",MAX_M);
+    auto minm = args.getInt("Minm",1);
+    auto do_truncate = args.getBool("Truncate",false);
+    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
+    auto cplx = isComplex(rho);
 
 #ifdef DEBUG
     if(rho.r() != 2)
         {
         Print(rho.r());
         Print(rho);
-        Error("Too many indices for density matrix");
+        Error("Rank greater than 2 in diag_hermitian");
         }
 #endif
 
     Index active;
-    for(const Index& I : rho.indices())
-        {
+    for(const Index& I : rho.inds())
         if(I.primeLevel() == 0)
             {
             active = I;
             break;
             }
-        }
 
     if(!active)
         {
-        Print(rho.indices());
+        Print(rho.inds());
         Error("Tensor must have one unprimed index");
         }
 
@@ -648,35 +650,33 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     //If rho (scale().sign() > 0) then want to temporarily reverse 
     //the sign of the matrix when calling the diagonalization routine
     //to ensure eigenvalues are ordered from largest to smallest.
-    bool flipSign = rho.scale().sign() > 0;
+    if(rho.scale().sign() < 0) rho.scaleTo(rho.scale()*(-1));
 
     //Do the diagonalization
     Vec DD;
-    Matrix UU,iUU;
+    Mat UU,iUU;
     if(!cplx)
         {
-        Matrix R;
-        rho.toMatrix11NoScale(active,prime(active),R);
-        if(flipSign) R *= -1;
-        EigenValues(R,DD,UU); 
-        if(flipSign) DD *= -1;
+        auto R = toMatRefc(rho,active,prime(active));
+        diagSymmetric(R,UU,DD);
         }
     else
         {
-        Matrix Mr,Mi;
-        ITensor rrho = realPart(rho),
-                irho = imagPart(rho);
-        rrho.scaleTo(rho.scale());
-        irho.scaleTo(rho.scale());
-        rrho.toMatrix11NoScale(prime(active),active,Mr);
-        irho.toMatrix11NoScale(prime(active),active,Mi);
-        if(flipSign)
-            {
-            Mr *= -1.0; 
-            Mi *= -1.0; 
-            }
-        HermitianEigenvalues(Mr,Mi,DD,UU,iUU); 
-        if(flipSign) DD *= -1.0;
+        Error("Complex diag_hermitian not yet implemented");
+        //Matrix Mr,Mi;
+        //ITensor rrho = realPart(rho),
+        //        irho = imagPart(rho);
+        //rrho.scaleTo(rho.scale());
+        //irho.scaleTo(rho.scale());
+        //rrho.toMatrix11NoScale(prime(active),active,Mr);
+        //irho.toMatrix11NoScale(prime(active),active,Mi);
+        //if(flipSign)
+        //    {
+        //    Mr *= -1.0; 
+        //    Mi *= -1.0; 
+        //    }
+        //HermitianEigenvalues(Mr,Mi,DD,UU,iUU); 
+        //if(flipSign) DD *= -1.0;
         }
 
 
@@ -691,19 +691,21 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
 
     if(args.getBool("ShowEigs",false)) 
         {
-        println("Before truncating, m = ",DD.Length());
+        println("Before truncating, m = ",DD.size());
         }
 
     //Truncate
     Real svdtruncerr = 0.0;
+    auto m = DD.size();
     if(do_truncate)
         {
         if(DD(1) < 0) DD *= -1; //DEBUG
         svdtruncerr = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
+        m = DD.size();
+        UU.reduceColsTo(m);
         }
     Spectrum spec;
     spec.truncerr(svdtruncerr);
-    const int m = DD.Length();
 
 #ifdef DEBUG
     if(m > maxm)
@@ -711,39 +713,40 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
         printfln("m > maxm; m = %d, maxm = %d",m,maxm);
         Error("m > maxm");
         }
-    if(m > 20000)
+    if(m > 50000)
         {
-        cout << "WARNING: very large m = " << m << " in ITensor diag_hermitian" << endl;
+        printfln("WARNING: very large m = %d in ITensor diag_hermitian");
         }
 #endif
 
     if(args.getBool("ShowEigs",false))
         {
-        cout << endl;
-        printfln("minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
+        printfln("\nminm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
         printfln("Kept %d states in diag_denmat",m);
         printfln("svdtruncerr = %.3E",svdtruncerr);
         //cout << "doRelCutoff is " << doRelCutoff << endl;
         //int stop = min(D.Length(),10);
-        int stop = DD.Length();
-        cout << "Eigs: ";
-        for(int j = 1; j <= stop; ++j)
+        auto stop = DD.size();
+        print("Eigs: ");
+        for(long j = 1; j <= stop; ++j)
             {
             printf(DD(j) > 1E-3 ? ("%.3f") : ("%.3E"),DD(j));
             print((j != stop) ? ", " : "\n");
             }
-        cout << endl;
+        println();
         }
 
     Index newmid(active.rawname(),m,active.type());
-    U = ITensor(active,newmid,UU.Columns(1,m));
-    D = ITensor(prime(newmid),newmid,DD);
-    D *= rho.scale();
 
     if(cplx)
         {
-        ITensor iU(active,newmid,iUU.Columns(1,m));
-        U = U + iU*Complex_i;
+        //ITensor iU(active,newmid,iUU.Columns(1,m));
+        //U = U + iU*Complex_i;
+        }
+    else
+        {
+        U = ITensor({active,newmid},ITReal(move(UU.store()))); 
+        D = ITensor({prime(newmid),newmid},ITDiag<Real>(move(DD.store())),rho.scale());
         }
 
     if(rho.scale().isFiniteReal())
@@ -758,10 +761,6 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     spec.eigsKept(DD);
 
     return spec;
-    */
-
-    //TODO: remove this, just here to make it compile
-    return Spectrum();
     }
 
 Spectrum

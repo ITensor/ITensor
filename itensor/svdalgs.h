@@ -71,7 +71,9 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir,
 //
 template<class Tensor>
 Spectrum 
-diagHermitian(const Tensor& M, Tensor& U, Tensor& D, 
+diagHermitian(const Tensor& M, 
+              Tensor& U, 
+              Tensor& D, 
               Args args = Global::args());
 
 
@@ -354,34 +356,24 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 
 template<class Tensor>
 Spectrum 
-diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
+diagHermitian(const Tensor& M, 
+              Tensor& U, 
+              Tensor& D,
               Args args)
     {
-    /*
     using IndexT = typename Tensor::IndexT;
 
-    if(isZero(M,Args("Fast"))) 
-        throw ResultIsZero("denmatDecomp: M is zero");
-
-    CombinerT comb;
-    for(const IndexT& I : M.indices())
+    std::vector<IndexT> inds;
+    inds.reserve(M.r()/2);
+    for(const IndexT& I : M.inds())
         { 
-        if(I.primeLevel() == 0)
-            {
-            comb.addleft(I);
-            }
+        if(I.primeLevel() == 0) inds.push_back(I);
         }
 
-    //Apply combiner
-    comb.init("d");
+    auto comb = combiner(std::move(inds));
+    auto Mc = M*comb;
 
-    Tensor Mc; 
-    comb.product(M,Mc);
-
-    CombinerT combP(comb);
-    combP.prime();
-    combP.dag();
-
+    auto combP = dag(prime(comb));
     try {
         Mc = combP * Mc;
         }
@@ -391,15 +383,11 @@ diagHermitian(const Tensor& M, Tensor& U, Tensor& D,
         throw e;
         }
 
-    Spectrum spec = diag_hermitian(Mc,U,D,args);
+    auto spec = diag_hermitian(Mc,U,D,args);
 
     U = comb * U;
 
     return spec;
-    */
-
-    //TODO remove this line:
-    return Spectrum();
 
     } //diagHermitian
 
