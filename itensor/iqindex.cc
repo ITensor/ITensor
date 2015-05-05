@@ -260,7 +260,7 @@ void
 calc_ind_ii(const IQIndexVal& iv, long& j, long& ii)
     {
     j = 1;
-    ii = iv.i;
+    ii = iv.val;
     while(ii > iv.index.index(j).m())
         {
         ii -= iv.index.index(j).m();
@@ -272,23 +272,23 @@ calc_ind_ii(const IQIndexVal& iv, long& j, long& ii)
 IQIndexVal::
 IQIndexVal()
     : 
-    i(0) 
+    val(0) 
     { }
 
 
 IQIndexVal::
-IQIndexVal(const IQIndex& iqindex, long i_) 
+IQIndexVal(const IQIndex& iqindex, long val_) 
     : 
     index(iqindex),
-    i(i_) 
+    val(val_) 
     { 
 #ifdef DEBUG
-    if(i > m() || i < 1) 
-        {
-        Print(index);
-        Print(i);
-        Error("IQIndexVal: i out of range");
-        }
+    //if(val > m() || val < 1) 
+    //    {
+    //    Print(index);
+    //    Print(val);
+    //    Error("IQIndexVal: val out of range");
+    //    }
 #endif
     }
 
@@ -313,13 +313,13 @@ qn() const
 bool IQIndexVal::
 operator==(const IQIndexVal& other) const
     {
-    return (index == other.index && i == other.i);
+    return (index == other.index && val == other.val);
     }
 
 IQIndexVal::
 operator IndexVal() const 
     { 
-    return IndexVal(Index(index),i); 
+    return IndexVal(Index(index),val); 
     }
 
 
@@ -367,7 +367,7 @@ dag() { index.dag(); return *this; }
 ITensor IQIndexVal::
 operator*(const IndexVal& iv) const 
     { 
-    return IndexVal(Index(index),i) * iv; 
+    return IndexVal(Index(index),val) * iv; 
     }
 
 /*
@@ -382,9 +382,9 @@ operator ITensor() const
 
 
 IQIndexVal IQIndex::
-operator()(long n) const 
+operator()(long val) const 
     { 
-    return IQIndexVal(*this,n); 
+    return IQIndexVal(*this,val); 
     }
 
 bool
@@ -476,7 +476,7 @@ std::ostream&
 operator<<(std::ostream& s, const IQIndexVal& iv)
     { 
     const IQIndex& I = iv.index;
-    return s << "IQIndexVal: i = " << iv.i << " for IQIndex:\n  " << I << "\n"; 
+    return s << "IQIndexVal: val = " << iv.val << " for IQIndex:\n  " << I << "\n"; 
     }
 
 }; //namespace itensor

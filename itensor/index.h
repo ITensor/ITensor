@@ -8,7 +8,7 @@
 
 namespace itensor {
 
-enum IndexType { Link, Site, All, NullIndex };
+enum IndexType { Link, Site, All, NullIndex, Xind, Yind, Zind, Wind, Vind };
 
 //Forward declarations
 class IndexVal;
@@ -28,6 +28,7 @@ class Index
     public:
     using IDGenerator = mt19937;
     using IDType = IDGenerator::result_type;
+    using IndexValT = IndexVal;
 
     //
     // Constructors
@@ -185,11 +186,11 @@ class IndexVal
     public:
 
     Index index;
-    long i;
+    long val;
 
     IndexVal();
 
-    IndexVal(const Index& index, long i_);
+    IndexVal(const Index& index, long val_);
 
     bool
     operator==(const IndexVal& other) const;
@@ -343,7 +344,7 @@ operator<(const Index& other) const
     }
 
 IndexVal inline Index::
-operator()(long i) const { return IndexVal(*this,i); }
+operator()(long val) const { return IndexVal(*this,val); }
 
 inline
 Index& Index::

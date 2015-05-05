@@ -39,7 +39,7 @@ TEST_CASE("IndexTest")
         {
         Index i("i",4);
         IndexVal iv = i(2);
-        CHECK(iv.i == 2);
+        CHECK(iv.val == 2);
         CHECK(iv.index == i);
         CHECK(iv.m() == 4);
         if(iv) CHECK(true);

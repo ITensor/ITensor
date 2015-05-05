@@ -150,7 +150,7 @@ cplx(IndexVals&&... ivs) const
 #endif
     std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
     std::array<long,size> inds;
-    detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
+    detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.val-1; });
     auto z = applyFunc<GetElt<size>>(store_,is_,inds);
 	try {
 	    return z*scale_.real(); 
@@ -243,11 +243,19 @@ set(Complex val, const IndexVals&... ivs)
     scaleTo(1.);
     const std::array<IndexVal,size> vals{{ static_cast<IndexVal>(ivs)...}};
     std::array<long,size> inds;
-    detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.i-1; });
+    detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.val-1; });
     if(val.imag() == 0)
         applyFunc<SetEltReal<size>>(store_,val.real(),is_,inds);
     else
         applyFunc<SetEltComplex<size>>(store_,val,is_,inds);
+    }
+
+template<typename... IVals>
+ITensor& ITensor::
+prime(const IndexVal& iv, IVals&&... ivals)
+    {
+    is_.prime(iv,std::forward<IVals>(ivals)...);
+    return *this;
     }
 
 template <typename F>
@@ -441,6 +449,87 @@ uniqueIndex(const TensorA& A,
     return IndexT::Null();
     }
 
+namespace detail {
+template <class Tensor, class IndexT>
+int
+primeInds(Tensor& A, 
+          const IndexT& I1, 
+          int inc = 1)
+    {
+    A.prime(I1,inc);
+    return inc;
+    }
+
+template <class Tensor, class IndexT, typename... Inds>
+int
+primeInds(Tensor& A, 
+          const IndexT& I1, 
+          const IndexT& I2, 
+          Inds&&... inds)
+    {
+    auto inc = primeInds(A,I2,std::forward<Inds>(inds)...);
+    A.prime(I1,inc);
+    return inc;
+    }
+
+template <class Tensor, class IndexT>
+void
+noprimeImpl(Tensor& A,
+            const IndexT& I)
+    { 
+    A.noprime(I);
+    }
+template <class Tensor, class IndexT, typename... Inds>
+void
+noprimeImpl(Tensor& A,
+            const IndexT& I, 
+            Inds&&... inds)
+    { 
+    A.noprime(I);
+    noprimeImpl(A,std::forward<Inds>(inds)...);
+    }
+}; //namespace detail
+
+template <class Tensor>
+Tensor
+prime(Tensor A, 
+      const typename Tensor::IndexT& I, 
+      int inc)
+    { 
+    detail::primeInds(A,I,inc);
+    return A; 
+    }
+
+template <class Tensor, typename... Inds>
+Tensor
+prime(Tensor A, 
+      const typename Tensor::IndexT& I1, 
+      const typename Tensor::IndexT& I2, 
+      Inds&&... inds)
+    { 
+    detail::primeInds(A,I1,I2,std::forward<Inds>(inds)...);
+    return A; 
+    }
+
+template <class Tensor, typename... IVals>
+Tensor
+prime(Tensor A, 
+      const typename Tensor::IndexValT& iv,
+      IVals&&... ivals)
+    {
+    A.prime(iv,std::forward<IVals>(ivals)...);
+    return A;
+    }
+
+template <class Tensor, class IndexT, typename... Inds>
+Tensor
+noprime(Tensor A,
+        const IndexT& I, 
+        Inds&&... inds)
+    { 
+    detail::noprimeImpl(A,I,std::forward<Inds>(inds)...);
+    return A; 
+    }
 
 }; //namespace itensor
 

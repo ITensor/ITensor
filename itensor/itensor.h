@@ -154,6 +154,11 @@ class ITensor
     ITensor& 
     prime(const Index& I, int inc = 1);
 
+    //Increase primeLevel of Index I by 1 (or optional amount inc)
+    template<typename... IVals>
+    ITensor& 
+    prime(const IndexVal& iv, IVals&&... ivals);
+
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
     ITensor& 
     mapprime(int plevold, int plevnew, IndexType type = All);
@@ -370,24 +375,42 @@ operator*(const IndexVal& iv1, Real val)
 ITensor inline
 operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
 
-//Return copy of ITensor with primeLevel of Index I increased by 1
-//(or optional amount inc)
-template <class Tensor, class IndexT>
+//Return copy of ITensor with primeLevel of Index I 
+//increased by 1 (or optional amount inc)
+template <class Tensor>
 Tensor
-prime(Tensor A, const IndexT& I, int inc = 1)
-    { 
-    A.prime(I,inc); 
-    return A; 
-    }
+prime(Tensor A, 
+      const typename Tensor::IndexT& I, 
+      int inc = 1);
+
+//Return copy of ITensor A with primeLevel of indices
+//I1,I2,... increased (by optional amount inc if passed
+//as last argument, e.g. prime(A,i1,i2,i3,i4,5); )
+template <class Tensor, typename... Inds>
+Tensor
+prime(Tensor A, 
+      const typename Tensor::IndexT& I1, 
+      const typename Tensor::IndexT& I2, 
+      Inds&&... inds);
+
+//Return copy of ITensor A with primeLevel of indices
+//iv1.index,iv2.index,... changed by iv1.val, iv2.val,...
+template <class Tensor, typename... IVals>
+Tensor
+prime(Tensor A, 
+      const typename Tensor::IndexValT& iv,
+      IVals&&... ivals);
 
 //Return copy of ITensor with primeLevel of Index I set to zero
-template <class Tensor, class IndexT>
+template <class Tensor, class IndexT, typename... Inds>
 Tensor
-noprime(Tensor A, const IndexT& I)
-    { 
-    A.noprime(I); 
-    return A; 
-    }
+noprime(Tensor A,
+        const IndexT& I, 
+        Inds&&... inds);
+
+template <class Tensor>
+Tensor
+noprime(Tensor A);
 
 template<class Tensor>
 bool

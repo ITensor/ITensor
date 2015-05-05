@@ -86,7 +86,7 @@ cplx(IQIndexVals&&... ivs) const
 #endif
     std::array<IQIndexVal,size> vals{{static_cast<IQIndexVal>(ivs)...}};
     std::array<long,size> inds;
-    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.i-1; });
+    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.val-1; });
     Complex z = applyFunc<IQGetElt<Complex,size>>(store_,is_,inds);
 	try {
 	    return z*scale_.real(); 
@@ -164,7 +164,7 @@ set(Complex val, const IQIndexVals&... ivs)
         else Error("Setting complex IQTensor element not implemented");
         }
     std::array<long,size> inds;
-    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.i-1; });
+    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.val-1; });
     if(val.imag() == 0)
         applyFunc<IQSetEltReal<size>>(store_,val.real(),is_,inds);
     else

@@ -138,6 +138,8 @@ class IQIndex : public Index
 class IndexQN : public Index
     {
     public:
+    
+    using IndexValT = IQIndexVal;
 
     QN qn;
 
@@ -162,12 +164,12 @@ class IQIndexVal
 
     //////////
     IQIndex index;
-    long i;
+    long val;
     //////////
 
     IQIndexVal();
 
-    IQIndexVal(const IQIndex& iqindex, long i_);
+    IQIndexVal(const IQIndex& iqindex, long val_);
 
     const QN&
     qn() const;
