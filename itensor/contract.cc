@@ -417,7 +417,7 @@ contract(ABCProps& abc,
         for(int i = 0; i < abc.ncont; ++i)
             {
             while(!contractedB(bind)) ++bind;
-            int j = findIndex(abc.ai,abc.bi[bind]);
+            auto j = findIndex(abc.ai,abc.bi[bind]);
             PA.setFromTo(j,newi++);
             ++bind;
             }
@@ -491,14 +491,14 @@ contract(ABCProps& abc,
         //appear in same order as on C
         for(int k = 0; k < rc; ++k)
             {
-            int j = findIndex(abc.bi,abc.ci[k]);
+            auto j = findIndex(abc.bi,abc.ci[k]);
             if(j != -1)
                 {
                 abc.BtoC[newi] = k;
                 PB.setFromTo(j,newi);
                 ++newi;
                 }
-            if(newi == ra) break;
+            if(newi == rb) break;
             }
         //println("Calling permute B");
         permute(B,PB,newB);
