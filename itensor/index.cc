@@ -9,19 +9,86 @@ namespace itensor {
 using std::string;
 using std::stringstream;
 
+
+struct TInfo
+    {
+    IndexType t = NullIndex;
+    const char* s = "";
+    int n = 0;
+    TInfo(IndexType t_, const char* s_) : t(t_), s(s_), n(0) { }
+    TInfo(IndexType t_, const char* s_, int n_) : t(t_), s(s_), n(n_) { }
+    };
+
+static constexpr int NIType = 13;
+
+using TInfoArray = std::array<TInfo,NIType>;
+
+#define REGISTER_ITYPE(X) TInfo(X,#X)
+
+TInfoArray&
+tinfo()
+    {
+    auto makeTInfoArr = []()
+        {
+        TInfoArray a =
+            {{
+            REGISTER_ITYPE(Link),
+            REGISTER_ITYPE(Site),
+            REGISTER_ITYPE(All),
+            REGISTER_ITYPE(NullIndex),
+            REGISTER_ITYPE(Atype),
+            REGISTER_ITYPE(Btype),
+            REGISTER_ITYPE(Ctype),
+            REGISTER_ITYPE(Dtype),
+            REGISTER_ITYPE(Xtype),
+            REGISTER_ITYPE(Ytype),
+            REGISTER_ITYPE(Ztype),
+            REGISTER_ITYPE(Wtype),
+            REGISTER_ITYPE(Vtype) 
+            }};
+        for(size_t j = 1; j <= a.size(); ++j)
+            a[j-1].n = j;
+        return a;
+        };
+    static auto a = makeTInfoArr();
+    return a;
+    }
+
+int 
+IndexTypeToInt(IndexType it)
+    {
+    for(auto& el : tinfo())
+        if(el.t == it)
+            {
+            return el.n;
+            }
+    Error("IndexTypeToInt: IndexType not recognized");
+    return -1;
+    }
+
+IndexType 
+IntToIndexType(int i)
+    {
+    for(auto& el : tinfo())
+        if(el.n == i)
+            {
+            return el.t;
+            }
+    printfln("No IndexType value defined for i=%d\n",i);
+    Error("Undefined IntToIndexType value");
+    return Link;
+    }
+
 const char*
 indexTypeName(IndexType it)
     {
-    if(it == Link)            return "Link"; 
-    else if(it == Site)       return "Site"; 
-    else if(it == All)        return "All"; 
-    else if(it == NullIndex)  return "NullIndex"; 
-    else if(it == Xind)       return "Xind"; 
-    else if(it == Yind)       return "Yind"; 
-    else if(it == Zind)       return "Zind"; 
-    else if(it == Wind)       return "Wind"; 
-    else if(it == Vind)       return "Vind"; 
-    else return "";
+    for(auto& el : tinfo())
+        if(el.t == it)
+            {
+            return el.s;
+            }
+    Error("Undefined indexTypeName");
+    return "";
     }
 
 std::ostream& 
@@ -29,29 +96,6 @@ operator<<(std::ostream& s, IndexType it)
     { 
     s << indexTypeName(it);
     return s; 
-    }
-
-int 
-IndexTypeToInt(IndexType it)
-    {
-    if(it == Link) return 1;
-    if(it == Site) return 2;
-    if(it == All)  return 3;
-    if(it == NullIndex) return 4;
-    Error("No integer value defined for IndexType.");
-    return -1;
-    }
-
-IndexType 
-IntToIndexType(int i)
-    {
-    if(i == 1) return Link;
-    if(i == 2) return Site;
-    if(i == 3) return All;
-    if(i == 4) return NullIndex;
-    printfln("No IndexType value defined for i=%d\n",i);
-    Error("Undefined IntToIndexType value");
-    return Link;
     }
 
 string 

@@ -8,7 +8,7 @@
 
 namespace itensor {
 
-enum IndexType { Link, Site, All, NullIndex, Xind, Yind, Zind, Wind, Vind };
+enum IndexType { Link, Site, All, NullIndex, Atype, Btype, Ctype, Dtype, Xtype, Ytype, Ztype, Wtype, Vtype };
 
 //Forward declarations
 class IndexVal;
