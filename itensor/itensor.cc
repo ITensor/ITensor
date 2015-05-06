@@ -747,7 +747,7 @@ operator-() const
 ITensor& ITensor::
 noprime(IndexType type) 
     { 
-    is_.noprime(type); 
+    itensor::noprime(is_,type); 
     return *this; 
     }
 
@@ -755,7 +755,7 @@ noprime(IndexType type)
 ITensor& ITensor::
 noprime(const Index& I) 
     { 
-    is_.noprime(I); 
+    itensor::noprime(is_,I); 
     return *this; 
     }
 
@@ -771,23 +771,23 @@ prime(int inc)
 ITensor& ITensor::
 prime(IndexType type, int inc) 
     { 
-    is_.prime(type,inc); 
+    itensor::prime(is_,type,inc); 
     return *this; 
     }
 
-//Increase primeLevel of Index I by 1 (or optional amount inc)
-ITensor& ITensor::
-prime(const Index& I, int inc) 
-    { 
-    is_.prime(I,inc); 
-    return *this; 
-    }
+//Superseded by variadic template version
+//ITensor& ITensor::
+//prime(const Index& I, int inc) 
+//    { 
+//    itensor::prime(is_,I,inc); 
+//    return *this; 
+//    }
 
 //Change all Indices having primeLevel plevold to have primeLevel plevnew
 ITensor& ITensor::
 mapprime(int plevold, int plevnew, IndexType type)
     { 
-    is_.mapprime(plevold,plevnew,type); 
+    itensor::mapprime(is_,plevold,plevnew,type); 
     return *this; 
     }
 

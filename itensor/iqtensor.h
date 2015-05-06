@@ -137,24 +137,24 @@ class IQTensor
     //IQTensor: prime methods
 
     IQTensor& 
-    noprime(IndexType type = All) { is_.noprime(type); return *this; }
+    noprime(IndexType type = All) { itensor::noprime(is_,type); return *this; }
 
     IQTensor& 
-    noprime(const IQIndex& I) { is_.noprime(I); return *this; }
+    noprime(const IQIndex& I) { itensor::noprime(is_,I); return *this; }
 
     IQTensor& 
     prime(int inc = 1) { prime(All,inc); return *this; }
 
     IQTensor& 
-    prime(IndexType type, int inc = 1) { is_.prime(type,inc); return *this; }
+    prime(IndexType type, int inc = 1) { itensor::prime(is_,type,inc); return *this; }
 
     IQTensor& 
-    prime(const IQIndex& I, int inc = 1) { is_.prime(I,inc); return *this; }
+    prime(const IQIndex& I, int inc = 1) { itensor::prime(is_,I,inc); return *this; }
 
     //no need to keep prime level small
     IQTensor& 
     mapprime(int plevold, int plevnew, IndexType type = All) 
-        { is_.mapprime(plevold,plevnew,type); return *this; }
+        { itensor::mapprime(is_,plevold,plevnew,type); return *this; }
 
     //----------------------------------------------------
     //IQTensor miscellaneous methods

@@ -250,11 +250,35 @@ set(Complex val, const IndexVals&... ivs)
         applyFunc<SetEltComplex<size>>(store_,val,is_,inds);
     }
 
+template<typename... Inds>
+ITensor& ITensor::
+noprime(const Index& I1, Inds&&... inds)
+    {
+    itensor::noprime(is_,I1,std::forward<Inds>(inds)...);
+    return *this;
+    }
+
+template<typename... Inds>
+ITensor& ITensor::
+prime(const Index& I1, Inds&&... inds)
+    {
+    itensor::prime(is_,I1,std::forward<Inds>(inds)...);
+    return *this;
+    }
+
 template<typename... IVals>
 ITensor& ITensor::
 prime(const IndexVal& iv, IVals&&... ivals)
     {
-    is_.prime(iv,std::forward<IVals>(ivals)...);
+    itensor::prime(is_,iv,std::forward<IVals>(ivals)...);
+    return *this;
+    }
+
+template<typename... Inds>
+ITensor& ITensor::
+primeExcept(const Index& I1, Inds&&... inds)
+    {
+    itensor::primeExcept(is_,I1,std::forward<Inds>(inds)...);
     return *this;
     }
 
@@ -449,65 +473,13 @@ uniqueIndex(const TensorA& A,
     return IndexT::Null();
     }
 
-namespace detail {
-template <class Tensor, class IndexT>
-int
-primeInds(Tensor& A, 
-          const IndexT& I1, 
-          int inc = 1)
-    {
-    A.prime(I1,inc);
-    return inc;
-    }
-
-template <class Tensor, class IndexT, typename... Inds>
-int
-primeInds(Tensor& A, 
-          const IndexT& I1, 
-          const IndexT& I2, 
-          Inds&&... inds)
-    {
-    auto inc = primeInds(A,I2,std::forward<Inds>(inds)...);
-    A.prime(I1,inc);
-    return inc;
-    }
-
-template <class Tensor, class IndexT>
-void
-noprimeImpl(Tensor& A,
-            const IndexT& I)
-    { 
-    A.noprime(I);
-    }
-template <class Tensor, class IndexT, typename... Inds>
-void
-noprimeImpl(Tensor& A,
-            const IndexT& I, 
-            Inds&&... inds)
-    { 
-    A.noprime(I);
-    noprimeImpl(A,std::forward<Inds>(inds)...);
-    }
-}; //namespace detail
-
-template <class Tensor>
-Tensor
-prime(Tensor A, 
-      const typename Tensor::IndexT& I, 
-      int inc)
-    { 
-    detail::primeInds(A,I,inc);
-    return A; 
-    }
-
 template <class Tensor, typename... Inds>
 Tensor
 prime(Tensor A, 
       const typename Tensor::IndexT& I1, 
-      const typename Tensor::IndexT& I2, 
       Inds&&... inds)
     { 
-    detail::primeInds(A,I1,I2,std::forward<Inds>(inds)...);
+    A.prime(I1,std::forward<Inds>(inds)...);
     return A; 
     }
 
@@ -521,13 +493,23 @@ prime(Tensor A,
     return A;
     }
 
+template<class Tensor, typename... Inds>
+Tensor 
+primeExcept(Tensor A,
+            const typename Tensor::IndexT& I1, 
+            Inds&&... inds)
+    {
+    A.primeExcept(I1,std::forward<Inds>(inds)...);
+    return A;
+    }
+
 template <class Tensor, class IndexT, typename... Inds>
 Tensor
 noprime(Tensor A,
         const IndexT& I, 
         Inds&&... inds)
     { 
-    detail::noprimeImpl(A,I,std::forward<Inds>(inds)...);
+    A.noprime(I,std::forward<Inds>(inds)...);
     return A; 
     }
 

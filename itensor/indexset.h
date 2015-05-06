@@ -37,6 +37,7 @@ class IndexSetT
 
     using storage = std::vector<IndexT>;
     using value_type = IndexT;
+    using iterator = typename storage::iterator;
     using const_iterator = typename storage::const_iterator;
     using IndexValT = typename IndexT::IndexValT;
 
@@ -89,6 +90,9 @@ class IndexSetT
     const IndexT&
     operator[](int j) const;
 
+    IndexT&
+    operator[](int j);
+
     // 1-indexed access
     const IndexT&
     index(int j) const;
@@ -105,32 +109,18 @@ class IndexSetT
     const_iterator
     end() const { return index_.end(); }
 
-    //
-    // Primelevel Methods
-    //
+    iterator
+    begin() { return index_.begin(); }
 
-    void 
-    prime(int inc = 1) { prime(All,inc); }
+    iterator
+    end() { return index_.end(); }
 
-    void 
-    prime(IndexType type, int inc = 1);
+    const_iterator
+    cbegin() const { return index_.cbegin(); }
 
-    void 
-    prime(const IndexT& I, int inc = 1);
+    const_iterator
+    cend() const { return index_.cend(); }
 
-    template<typename... IVals>
-    void 
-    prime(const IndexValT& iv1,
-          IVals&&... ivs);
-
-    void 
-    noprime(IndexType type = All);
-
-    void 
-    noprime(const IndexT& I);
-
-    void 
-    mapprime(int plevold, int plevnew, IndexType type = All);
 
     //
     // Other Methods
@@ -174,9 +164,59 @@ class IndexSetT
     };
 
 //
+// IndexSetT Primelevel Methods
+//
+
+template<typename IndexT>
+void 
+prime(IndexSetT<IndexT>& is, IndexType type, int inc = 1);
+
+template<typename IndexT>
+void 
+prime(IndexSetT<IndexT>& is, int inc = 1) { prime(is,All,inc); }
+
+template<typename IndexT>
+void 
+prime(IndexSetT<IndexT>& is, const IndexT& I, int inc = 1);
+
+template<typename IndexT, typename... IVals>
+void 
+prime(IndexSetT<IndexT>& is,
+      const typename IndexT::IndexValT& iv1,
+      IVals&&... ivs);
+
+//
+//Given a list of indices and an increment (an int)
+//as the optional last argument (default is inc=1)
+//increment all indices NOT listed in the arguments
+//by the amout inc.
+//
+//For example, primeExcept(is,I1,I3,I4,I7,2);
+//will increment all prime levels by 2 except for
+//those of I1,I3,I4, and I7.
+//
+template<typename IndexT, typename... Inds>
+void 
+primeExcept(IndexSetT<IndexT>& is, 
+            const IndexT& I1, 
+            Inds&&... inds);
+
+template<typename IndexT>
+void 
+noprime(IndexSetT<IndexT>& is, IndexType type = All);
+
+template<typename IndexT, typename... Inds>
+void 
+noprime(IndexSetT<IndexT>& is, 
+        const IndexT& I1, 
+        Inds&&... inds);
+
+template<typename IndexT>
+void 
+mapprime(IndexSetT<IndexT>& is, int plevold, int plevnew, IndexType type = All);
+
 //
 // IndexSetT helper methods
-//
 //
 
 
