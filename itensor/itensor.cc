@@ -698,13 +698,6 @@ operator*=(Real fac)
     return *this;
     }
 
-ITensor& ITensor::
-operator/=(Real fac) 
-    { 
-    scale_ /= fac; 
-    return *this; 
-    }
-
 struct MultComplex : RegisterFunc<MultComplex>
     {
     private:
@@ -728,67 +721,6 @@ operator*=(Complex z)
     if(z.imag() == 0) return operator*=(z.real());
     applyFunc<MultComplex>(store_,z);
     return *this;
-    }
-
-ITensor& ITensor::
-operator/=(Complex z)
-    {
-    return operator*=(1./z);
-    }
-
-ITensor ITensor::
-operator-() const 
-    { 
-    ITensor T(*this); 
-    T.scale_ *= -1; 
-    return T; 
-    }
-
-ITensor& ITensor::
-noprime(IndexType type) 
-    { 
-    itensor::noprime(is_,type); 
-    return *this; 
-    }
-
-//Set primeLevel of Index I to zero
-ITensor& ITensor::
-noprime(const Index& I) 
-    { 
-    itensor::noprime(is_,I); 
-    return *this; 
-    }
-
-//Increase primeLevel of Indices by 1 (or optional amount inc)
-ITensor& ITensor::
-prime(int inc) 
-    { 
-    prime(All,inc); 
-    return *this;
-    }
-
-//Increase primeLevel of Indices by 1 (or optional amount inc)
-ITensor& ITensor::
-prime(IndexType type, int inc) 
-    { 
-    itensor::prime(is_,type,inc); 
-    return *this; 
-    }
-
-//Superseded by variadic template version
-//ITensor& ITensor::
-//prime(const Index& I, int inc) 
-//    { 
-//    itensor::prime(is_,I,inc); 
-//    return *this; 
-//    }
-
-//Change all Indices having primeLevel plevold to have primeLevel plevnew
-ITensor& ITensor::
-mapprime(int plevold, int plevnew, IndexType type)
-    { 
-    itensor::mapprime(is_,plevold,plevnew,type); 
-    return *this; 
     }
 
 class PlusEQ : public RegisterFunc<PlusEQ>

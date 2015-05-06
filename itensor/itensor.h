@@ -104,21 +104,21 @@ class ITensor
     ITensor& 
     operator*=(const IndexVal& iv) { return operator*=(ITensor(iv)); } 
 
-    //Multiplication and division by scalar
+    //Multiplication by scalar
     ITensor& 
     operator*=(Real fac);
-
-    ITensor& 
-    operator/=(Real fac);
-
     ITensor& 
     operator*=(Complex z);
 
+    //Division by scalar
     ITensor& 
-    operator/=(Complex z);
+    operator/=(Real fac) { scale_/=fac; return *this; }
+    ITensor& 
+    operator/=(Complex z) { return operator*=(1./z); }
 
+    //Negation
     ITensor
-    operator-() const;
+    operator-() const { auto T = *this; T.scale_ *= -1; return T; }
 
 
     //Tensor addition and subtraction
