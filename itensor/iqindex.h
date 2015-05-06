@@ -32,16 +32,16 @@ class IQIndex : public Index
 
     IQIndex();
 
-    template<typename... Args>
+    template<typename... Rest>
     IQIndex(const std::string& name, 
             const Index& i1, const QN& q1, 
-            const Args&... args);
+            const Rest&... etc);
 
-    template<typename... Args>
+    template<typename... Rest>
     IQIndex(const std::string& name, 
             Arrow dir,
             const Index& i1, const QN& q1, 
-            const Args&... args);
+            const Rest&... etc);
 
     IQIndex(const std::string& name, 
             storage&& ind_qn, 
@@ -226,15 +226,24 @@ class IQIndexVal
 
     };
 
-IndexQN inline
-dag(IndexQN res) { res.dag(); return res; }
 
 IQIndex inline
 dag(IQIndex res) { res.dag(); return res; }
 
+IndexQN inline
+dag(IndexQN res) { res.dag(); return res; }
+
 IQIndexVal inline
 dag(IQIndexVal res) { res.dag(); return res; }
 
+IQIndex inline
+operator^(IQIndex I, int inc) { I.prime(inc); return I; }
+
+IndexQN inline
+operator^(IndexQN I, int inc) { I.prime(inc); return I; }
+
+IQIndexVal inline
+operator^(IQIndexVal I, int inc) { I.prime(inc); return I; }
 
 bool
 hasindex(const IQIndex& I, const Index& i);

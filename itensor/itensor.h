@@ -444,12 +444,12 @@ randomTensor(const IndexSet& inds)
 ITensor
 matrixTensor(Mat&& M, const Index& i1, const Index& i2);
 
-template <typename... Indices>
-ITensor
-tieIndex(const ITensor& T,
-         const Index& t0,
-         const Index& t1,
-         const Indices&... rest);
+//template <typename... Indices>
+//ITensor
+//tieIndex(const ITensor& T,
+//         const Index& t0,
+//         const Index& t1,
+//         const Indices&... rest);
 
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).

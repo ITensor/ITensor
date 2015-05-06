@@ -238,6 +238,11 @@ dag(Index res) { res.dag(); return res; }
 IndexVal inline
 dag(IndexVal res) { res.dag(); return res; }
 
+Index inline
+operator^(Index i, int inc) { i.prime(inc); return i; }
+
+IndexVal inline
+operator^(IndexVal i, int inc) { i.prime(inc); return i; }
 
 //Return a copy of I, increasing primelevel.
 template<class T>
