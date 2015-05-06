@@ -409,9 +409,9 @@ noprime(Tensor A,
         const IndexT& I, 
         Inds&&... inds);
 
-template <class Tensor>
-Tensor
-noprime(Tensor A);
+//template <class Tensor>
+//Tensor
+//noprime(Tensor A);
 
 template<class Tensor>
 bool
