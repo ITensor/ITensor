@@ -78,6 +78,8 @@ class Args
     void
     add(const Name& name, int ival);
     void
+    add(const Name& name, const char* sval);
+    void
     add(const Name& name, const std::string& sval);
     void
     add(const Name& name, Real rval);
