@@ -282,6 +282,14 @@ primeExcept(const Index& I1, Inds&&... inds)
     return *this;
     }
 
+template<typename... ITs>
+ITensor& ITensor::
+primeExcept(IndexType it, ITs&&... etc)
+    {
+    itensor::primeExcept(is_,it,std::forward<ITs>(etc)...);
+    return *this;
+    }
+
 template <typename F>
 struct GenerateIT : public RegisterFunc<GenerateIT<F>>
     {
@@ -462,7 +470,7 @@ uniqueIndex(const TensorA& A,
             IndexType t)
     {
     using IndexT = typename TensorA::IndexT;
-    for(const IndexT& I : A.inds())
+    for(const auto& I : A.inds())
         {
         if( (t == All || I.type() == t)
          && !hasindex(B.inds(),I) ) 
@@ -470,7 +478,7 @@ uniqueIndex(const TensorA& A,
             return I;
             }
         }
-    return IndexT::Null();
+    return IndexT();
     }
 
 template <class Tensor, typename... Inds>
@@ -500,6 +508,16 @@ primeExcept(Tensor A,
             Inds&&... inds)
     {
     A.primeExcept(I1,std::forward<Inds>(inds)...);
+    return A;
+    }
+
+template<class Tensor, typename... ITs>
+Tensor 
+primeExcept(Tensor A,
+            IndexType it,
+            ITs&&... etc)
+    {
+    A.primeExcept(it,std::forward<ITs>(etc)...);
     return A;
     }
 

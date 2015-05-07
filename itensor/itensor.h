@@ -162,6 +162,10 @@ class ITensor
     ITensor&
     primeExcept(const Index& I1, Inds&&... inds);
 
+    template<typename... ITs>
+    ITensor&
+    primeExcept(IndexType it, ITs&&... etc);
+
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
     ITensor& 
     mapprime(int plevold, int plevnew, IndexType type = All)
@@ -310,7 +314,7 @@ ITensor inline
 operator*(const IndexVal& iv, const ITensor& t) { return (ITensor(iv) *= t); }
 
 ITensor
-combiner(std::vector<Index> inds);
+combiner(std::vector<Index> inds, const Args& args = Global::args());
 
 template<typename... Inds>
 ITensor
@@ -401,6 +405,12 @@ Tensor
 primeExcept(Tensor A,
             const typename Tensor::IndexT& I1, 
             Inds&&... inds);
+
+template<class Tensor, typename... ITs>
+Tensor 
+primeExcept(Tensor A,
+            IndexType it,
+            ITs&&... etc);
 
 //Return copy of ITensor with primeLevel of Index I set to zero
 template <class Tensor, class IndexT, typename... Inds>

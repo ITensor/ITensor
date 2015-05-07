@@ -201,6 +201,12 @@ primeExcept(IndexSetT<IndexT>& is,
             const IndexT& I1, 
             Inds&&... inds);
 
+template<typename IndexT, typename... ITs>
+void 
+primeExcept(IndexSetT<IndexT>& is, 
+            IndexType it,
+            ITs&&... etc);
+
 template<typename IndexT>
 void 
 noprime(IndexSetT<IndexT>& is, IndexType type = All);
