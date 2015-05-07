@@ -168,6 +168,8 @@ add(const Name& name, bool bval) { add({name,bval}); }
 void Args::
 add(const Name& name, int ival) { add({name,ival}); }
 void Args::
+add(const Name& name, const char* sval) { add({name,std::string(sval)}); }
+void Args::
 add(const Name& name, const std::string& sval) { add({name,sval}); }
 void Args::
 add(const Name& name, Real rval) { add({name,rval}); }
