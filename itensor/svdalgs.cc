@@ -167,6 +167,9 @@ svdRank2(ITensor A,
     auto doRelCutoff = args.getBool("DoRelCutoff",false);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto cplx = isComplex(A);
+    auto lname = args.getString("LeftIndexName","ul");
+    auto rname = args.getString("RightIndexName","vl");
+    auto itype = getIndexType(args,"IndexType",Link);
 
     if(A.r() != 2) Error("A must be matrix-like (rank 2)");
 
@@ -244,8 +247,8 @@ svdRank2(ITensor A,
         println();
         }
     
-    Index uL("ul",m),
-          vL("vl",m);
+    Index uL(lname,m,itype),
+          vL(rname,m,itype);
 
     //Fix sign to make sure D has positive elements
     Real signfix = (A.scale().sign() == -1) ? -1 : +1;
@@ -692,6 +695,7 @@ diag_hermitian(ITensor rho,
     if(args.getBool("ShowEigs",false)) 
         {
         println("Before truncating, m = ",DD.size());
+        println("DD = ",DD);
         }
 
     //Truncate

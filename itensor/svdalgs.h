@@ -21,7 +21,7 @@ namespace itensor {
 template<class Tensor>
 Spectrum 
 svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
-    const Args& args = Global::args());
+    Args args = Global::args());
 
 //
 // Density Matrix Decomposition
@@ -161,7 +161,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 template<class Tensor>
 Spectrum 
 svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
-    const Args& args)
+    Args args)
     {
     using IndexT = typename Tensor::IndexT;
 
@@ -172,7 +172,6 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 
     auto noise = args.getReal("Noise",0);
     auto useOrigM = args.getBool("UseOrigM",false);
-    auto* pargs = &args;
 
     if(noise > 0)
         Error("Noise term not implemented for svd");
@@ -197,17 +196,16 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
         if(hasindex(L,I)) Linds.push_back(I);
         else              Rinds.push_back(I);
         }
-    auto Ucomb = combiner(std::move(Uinds));
-    auto Vcomb = combiner(std::move(Vinds));
+    auto Ucomb = combiner(std::move(Uinds),args);
+    auto Vcomb = combiner(std::move(Vinds),args);
 
     AA = Ucomb * AA * Vcomb;
 
-    Args newArgs(args);
     if(useOrigM)
         {
         //Try to determine current m,
         //then set minm_ and maxm_ to this.
-        newArgs.add("Cutoff",-1);
+        args.add("Cutoff",-1);
         long minm = 1,
              maxm = MAX_M;
         if(D.r() == 0)
@@ -220,15 +218,14 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
             {
             minm = maxm = D.inds().front().m();
             }
-        newArgs.add("Minm",minm);
-        newArgs.add("Maxm",maxm);
-        pargs = &newArgs;
+        args.add("Minm",minm);
+        args.add("Maxm",maxm);
         }
     
     auto ui = commonIndex(Ucomb,AA);
     auto vi = commonIndex(Vcomb,AA);
 
-    auto spec = svdRank2(AA,ui,vi,U,D,V,*pargs);
+    auto spec = svdRank2(AA,ui,vi,U,D,V,args);
 
     U = dag(Ucomb) * U;
     V = V * dag(Vcomb);
@@ -362,6 +359,7 @@ diagHermitian(const Tensor& M,
               Args args)
     {
     using IndexT = typename Tensor::IndexT;
+    if(!args.defined("IndexName")) args.add("IndexName","d");
 
     std::vector<IndexT> inds;
     inds.reserve(M.r()/2);
@@ -370,7 +368,7 @@ diagHermitian(const Tensor& M,
         if(I.primeLevel() == 0) inds.push_back(I);
         }
 
-    auto comb = combiner(std::move(inds));
+    auto comb = combiner(std::move(inds),args);
     auto Mc = M*comb;
 
     auto combP = dag(prime(comb));
