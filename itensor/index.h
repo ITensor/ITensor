@@ -365,6 +365,18 @@ prime(int inc)
     return *this;
     }
 
+void
+add(Args& args, 
+    const Args::Name& name, 
+    IndexType it);
+IndexType
+getIndexType(const Args& args, 
+             const Args::Name& name);
+IndexType
+getIndexType(const Args& args, 
+             const Args::Name& name, 
+             IndexType default_val);
+
 }; //namespace itensor
 
 #endif

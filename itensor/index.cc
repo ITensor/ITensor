@@ -15,7 +15,7 @@ struct TInfo
     IndexType t = NullIndex;
     const char* s = "";
     int n = 0;
-    TInfo(IndexType t_, const char* s_) : t(t_), s(s_), n(0) { }
+    TInfo(IndexType t_, const char* s_) : t(t_), s(s_), n(int(t_)) { }
     TInfo(IndexType t_, const char* s_, int n_) : t(t_), s(s_), n(n_) { }
     };
 
@@ -46,8 +46,6 @@ tinfo()
             REGISTER_ITYPE(Wtype),
             REGISTER_ITYPE(Vtype) 
             }};
-        for(size_t j = 1; j <= a.size(); ++j)
-            a[j-1].n = j;
         return a;
         };
     static auto a = makeTInfoArr();
@@ -282,6 +280,31 @@ operator<<(std::ostream& s, const IndexVal& iv)
     { 
     const Index& ii = iv.index;
     return s << "IndexVal: val = " << iv.val << ", ind = " << ii << "\n"; 
+    }
+
+void
+add(Args& args, 
+    const Args::Name& name, 
+    IndexType it) 
+    { 
+    args.add(name,IndexTypeToInt(it)); 
+    }
+
+IndexType
+getIndexType(const Args& args, 
+             const Args::Name& name)
+    {
+    if(!args.defined(name)) Error(format("Name %s not found in Args",name));
+    return IntToIndexType(args.getInt(name));
+    }
+
+IndexType
+getIndexType(const Args& args, 
+             const Args::Name& name, 
+             IndexType default_val)
+    {
+    if(!args.defined(name)) return default_val; 
+    return IntToIndexType(args.getInt(name));
     }
 
 }; //namespace itensor
