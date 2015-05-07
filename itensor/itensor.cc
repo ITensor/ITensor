@@ -569,7 +569,7 @@ combine(const ITReal& d,
         //dis doesn't have cind, replace
         //Cis[1], Cis[2], ... with cind
         //may need to permute
-        int J1 = findindex(dis,Cis[1]);
+        auto J1 = findindex(dis,Cis[1]);
         if(J1 < 0) 
             {
             println("IndexSet of dense tensor = \n",dis);
@@ -577,13 +577,21 @@ combine(const ITReal& d,
             Error("No contracted indices in combiner-tensor product");
             }
         //Check if Cis[1],Cis[2],... are grouped together (contiguous)
+        //and in same order as on combiner
         bool contig = true;
-        for(int j = J1+1, c = 2; c < Cis.r() && j < dis.r(); ++j,++c)
+        int c = 2;
+        for(int j = J1+1; c < Cis.r() && j < dis.r(); ++j,++c)
             if(dis[j] != Cis[c])
                 {
                 contig = false;
                 break;
                 }
+        if(c != Cis.r()) contig = false;
+
+        //printfln("%s:",contig?"Contig":"Not Contig");
+        //println("  dis = ",dis);
+        //println("  Cis = ",Cis);
+
         if(contig)
             {
             vector<Index> newind;
@@ -1160,10 +1168,18 @@ struct PrintIT : RegisterFunc<PrintIT>
 void PrintIT::
 operator()(const ITReal& d) const
     {
-    s_ << " (Dense Real)}\n";
+    s_ << " (Dense Real)";
     Real scalefac = 1.0;
-    if(!x_.isTooBigForReal()) scalefac = x_.real0();
-    else s_ << "  (omitting too large scale factor)\n";
+    auto nrmns = NormNoScale(is_)(d);
+    if(!x_.isTooBigForReal()) 
+        {
+        scalefac = x_.real0();
+        s_ << ", norm=" << fabs(scalefac)*nrmns << "}\n";
+        }
+    else 
+        {
+        s_ << ", norm=(omitting large scale)=" << nrmns << "}\n";
+        }
 
     auto rank = is_.r();
     if(rank == 0) 
@@ -1273,23 +1289,31 @@ operator()(const ITDiag<T>& d) const
 ostream& 
 operator<<(ostream & s, const ITensor& t)
     {
-    s << "ITensor r=" << t.r() << ": ";
-    s << t.inds() << "\n";
-    s << "  {log(scale)[incl in elems]=" << t.scale().logNum();
+    s << "ITensor r=" << t.r() << ": " << t.inds() << "\n";
+    s << "  {log(scale)[incl in els]=" << t.scale().logNum();
 
     //Checking whether std::ios::floatfield is set enables 
     //printing the contents of an ITensor when using the printf
     //format string %f (or another float-related format string)
-    const bool ff_set = (std::ios::floatfield & s.flags()) != 0;
+    bool ff_set = (std::ios::floatfield & s.flags()) != 0;
 
-    if(ff_set || Global::printdat())
+    if(!t) 
         {
-        if(t) applyFunc<PrintIT>(t.data(),s,t.scale(),t.inds());
-        else           s << " (default constructed)}\n";
+        s << " (default constructed)}\n";
         }
     else
         {
-        s << "}";
+        if(ff_set || Global::printdat())
+            {
+            applyFunc<PrintIT>(t.data(),s,t.scale(),t.inds());
+            }
+        else
+            {
+            if(!t.scale().isTooBigForReal()) 
+                s << ", norm=" << norm(t) << "}";
+            else 
+                s << ", norm(omitting large scale)=" << applyFunc<NormNoScale>(t.data(),t.inds()) << "}";
+            }
         }
     return s;
     }
@@ -1321,7 +1345,7 @@ norm(const ITensor& T)
 #ifdef DEBUG
     if(!T) Error("ITensor is default initialized");
 #endif
-    return T.scale().real0() *
+    return fabs(T.scale().real0()) *
            applyFunc<NormNoScale>(T.data(),T.inds());
     }
 
@@ -1407,7 +1431,7 @@ sumels(const ITensor& t)
     }
 
 ITensor
-combiner(std::vector<Index> inds)
+combiner(std::vector<Index> inds, const Args& args)
     {
     if(inds.empty()) Error("No indices passed to combiner");
     long rm = 1;
@@ -1423,7 +1447,9 @@ combiner(std::vector<Index> inds)
         inds[j] = inds[j-1];
         }
     //create combined index
-    inds.front() = Index("cmb",rm);
+    auto cname = args.getString("IndexName","cmb");
+    auto itype = getIndexType(args,"IndexType",Link);
+    inds.front() = Index(cname,rm,itype);
     return ITensor(IndexSet(std::move(inds)),ITCombiner());
     }
 

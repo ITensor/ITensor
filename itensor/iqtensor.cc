@@ -923,9 +923,9 @@ Real
 norm(const IQTensor& T)
     {
 #ifdef DEBUG
-    if(!T) Error("ITensor is default initialized");
+    if(!T) Error("IQTensor is default initialized");
 #endif
-    return T.scale().real0() *
+    return fabs(T.scale().real0()) *
            applyFunc<IQNormNoScale>(T.data());
     }
 

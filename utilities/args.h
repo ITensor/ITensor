@@ -38,8 +38,8 @@ class Args
     //
     template <typename T, typename... Rest>
     Args(const char* name1, 
-           const T& t1, 
-           const Rest&... rest);
+         const T& t1, 
+         const Rest&... rest);
 
     //
     // Construct Args from another Args and a list of
