@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "simpletensor.h"
-#include "lapack_wrap.h"
+#include "matrix/lapack_wrap.h"
 
 namespace itensor {
 

@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include "itensor.h"
-#include "lapack_wrap.h"
+#include "matrix/lapack_wrap.h"
 #include "detail/printing.h"
 #include "detail/gcounter.h"
 #include "contract.h"

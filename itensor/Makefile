@@ -26,7 +26,7 @@ SOURCES+= svdalgs.cc
 
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
         detail/gcounter.h global.h real.h permutation.h index.h \
-        lapack_wrap.h matrix/strideiter.h matrix/vec.h \
+        matrix/lapack_wrap.h matrix/strideiter.h matrix/vec.h \
         matrix/mrange.h matrix/matiter.h matrix/mat.h matrix/slicemat.h matrix/algs.h \
         range.h indexset.ih indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h \
