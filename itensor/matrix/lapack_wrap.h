@@ -330,13 +330,19 @@ dsyev_wrapper(char jobz,        //if jobz=='V', compute eigs and evecs
               LAPACK_INT& info)  //error info
     {
     static std::vector<LAPACK_REAL> work;
-    LAPACK_INT lwork = std::max(1,3*n-1);
-    work.resize(lwork+2);
     LAPACK_INT lda = n;
 
 #ifdef PLATFORM_acml
+    LAPACK_INT lwork = std::max(1,3*n-1);
+    work.resize(lwork+2);
     F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work.data(),&lwork,&info,1,1);
 #else
+    //Compute optimal workspace size (will be written to wkopt)
+    LAPACK_INT lwork = -1; //tell dsyev to compute optimal size
+    LAPACK_REAL wkopt = 0;
+    F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,&wkopt,&lwork,&info);
+    lwork = LAPACK_INT(wkopt);
+    work.resize(lwork+2);
     F77NAME(dsyev)(&jobz,&uplo,&n,A,&lda,eigs,work.data(),&lwork,&info);
 #endif
     }
