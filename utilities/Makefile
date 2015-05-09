@@ -12,15 +12,10 @@ HEADERS=tinyformat.h print.h types.h indent.h cputime.h \
         flstring.h args.h input.h error.h  cplx_literal.h \
         autovector.h optional_ptr.h count.h
 
-#HEADERS += tarray1.h
-
 OBJECTS = error.o 
 OBJECTS += cputime.o 
 OBJECTS += input.o 
 OBJECTS += args.o
-#OBJECTS += ran1.o
-#OBJECTS += tarray1.o 
-
 
 CCFLAGS= -I. $(OPTIMIZATIONS) $(ITENSOR_INCLUDEFLAGS) -DPLATFORM_$(PLATFORM)
 CCGFLAGS= -I. $(DEBUGFLAGS) $(ITENSOR_INCLUDEFLAGS) -DPLATFORM_$(PLATFORM)
