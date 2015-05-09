@@ -1004,6 +1004,9 @@ class NormNoScale : public RegisterFunc<NormNoScale,Real>
         return vec_norm(d.store);
         }
 
+    Real
+    operator()(const ITCombiner& d) { return 0; }
+
     private:
 
     template<typename Container>
@@ -1144,50 +1147,64 @@ struct PrintIT : RegisterFunc<PrintIT>
     std::ostream& s_;
     const LogNumber& x_;
     const IndexSet& is_;
+    Real scalefac_;
+    bool print_data_;
 
     PrintIT(std::ostream& s,
             const LogNumber& x,
-            const IndexSet& is)
-        : s_(s), x_(x), is_(is)
-        { }
+            const IndexSet& is,
+            bool print_data)
+        : s_(s), x_(x), is_(is), scalefac_(1.), print_data_(print_data)
+        { 
+        if(!x.isTooBigForReal()) scalefac_ = x.real0();
+        }
 
     void
-    operator()(const ITReal& d) const;
+    operator()(const ITReal& d);
 
     void
-    operator()(const ITCplx& d) const;
+    operator()(const ITCplx& d);
 
     template<typename T>
     void
-    operator()(const ITDiag<T>& d) const;
+    operator()(const ITDiag<T>& d);
 
     void
-    operator()(const ITCombiner& d) const { s_ << " Combiner}\n"; }
+    operator()(const ITCombiner& d) { printInfo(d,"Combiner",false); }
+
+    private:
+
+    template<typename T>
+    void
+    printInfo(const T& d, 
+              const std::string& type_name,
+              bool compute_norm = true)
+        {
+        s_ << "{log(scale)=" << format("%.2f",x_.logNum());
+        if(compute_norm)
+            {
+            if(!x_.isTooBigForReal()) s_ << ", norm=";
+            else  s_ << ", norm(omitting large scale)=";
+            s_ << format("%.2f",fabs(scalefac_)*NormNoScale(is_)(d));
+            }
+        s_ << " (" << type_name << ")}\n";
+        }
     };
 
 void PrintIT::
-operator()(const ITReal& d) const
+operator()(const ITReal& d)
     {
-    s_ << " (Dense Real)";
-    Real scalefac = 1.0;
-    auto nrmns = NormNoScale(is_)(d);
-    if(!x_.isTooBigForReal()) 
-        {
-        scalefac = x_.real0();
-        s_ << ", norm=" << fabs(scalefac)*nrmns << "}\n";
-        }
-    else 
-        {
-        s_ << ", norm=(omitting large scale)=" << nrmns << "}\n";
-        }
-
+    printInfo(d,"Dense Real");
+     
     auto rank = is_.r();
     if(rank == 0) 
         {
         s_ << "  ";
-        detail::printVal(s_,scalefac*d.store.front());
+        detail::printVal(s_,scalefac_*d.store.front());
         return;
         }
+
+    if(!print_data_) return;
 
     auto gc = detail::GCounter(0,rank-1,0);
     for(int i = 0; i < rank; ++i)
@@ -1195,10 +1212,10 @@ operator()(const ITReal& d) const
 
     for(; gc.notDone(); ++gc)
         {
-        auto val = scalefac*d[ind(is_,gc.i)];
+        auto val = scalefac_*d[ind(is_,gc.i)];
         if(std::norm(val) > Global::printScale())
             {
-            s_ << "  (";
+            s_ << "(";
             for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
                 {
                 s_ << (1+gc.i(ii));
@@ -1212,20 +1229,19 @@ operator()(const ITReal& d) const
     }
 
 void PrintIT::
-operator()(const ITCplx& d) const
+operator()(const ITCplx& d)
     {
-    s_ << " (Dense Cplx)}\n";
-    Real scalefac = 1.0;
-    if(!x_.isTooBigForReal()) scalefac = x_.real0();
-    else s_ << "  (omitting too large scale factor)\n";
+    printInfo(d,"Dense Cplx");
 
     auto rank = is_.r();
     if(rank == 0) 
         {
         s_ << "  ";
-        detail::printVal(s_,scalefac*d.get(0));
+        detail::printVal(s_,scalefac_*d.get(0));
         return;
         }
+
+    if(!print_data_) return;
 
     auto gc = detail::GCounter(0,rank-1,0);
     for(int i = 0; i < rank; ++i)
@@ -1233,10 +1249,10 @@ operator()(const ITCplx& d) const
 
     for(; gc.notDone(); ++gc)
         {
-        auto val = scalefac*d.get(ind(is_,gc.i));
+        auto val = scalefac_*d.get(ind(is_,gc.i));
         if(std::norm(val) > Global::printScale())
             {
-            s_ << "  (";
+            s_ << "(";
             for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
                 {
                 s_ << (1+gc.i(ii));
@@ -1251,29 +1267,27 @@ operator()(const ITCplx& d) const
 
 template<typename T>
 void PrintIT::
-operator()(const ITDiag<T>& d) const
+operator()(const ITDiag<T>& d)
     {
     constexpr auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
-    auto allsame = d.allSame();
-    s_ << " (Diag " << type << (allsame ? ",all same)" : ")") << "}\n";
-    Real scalefac = 1.0;
-    if(!x_.isTooBigForReal()) scalefac = x_.real0();
-    else s_ << "  (omitting too large scale factor)\n";
+    printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""));
 
     if(is_.r() == 0) 
         {
         s_ << "  ";
-        detail::printVal(s_,scalefac*(d.empty() ? d.val : d.store.front()));
+        detail::printVal(s_,scalefac_*(d.empty() ? d.val : d.store.front()));
         return;
         }
+
+    if(!print_data_) return;
 
     auto size = minM(is_);
     for(size_t i = 0; i < size; ++i)
         {
-        auto val = scalefac*(allsame ? d.val : d.store[i]);
+        auto val = scalefac_*(d.allSame() ? d.val : d.store[i]);
         if(std::norm(val) > Global::printScale())
             {
-            s_ << "  (";
+            s_ << "(";
             for(int j = 1; j < is_.size(); ++j)
                 {
                 s_ << (1+i) << ",";
@@ -1283,37 +1297,23 @@ operator()(const ITDiag<T>& d) const
             }
         }
     }
-//template void PrintIT::operator()(const ITDiag<Real>& d) const;
-//template void PrintIT::operator()(const ITDiag<Complex>& d) const;
 
 ostream& 
 operator<<(ostream & s, const ITensor& t)
     {
     s << "ITensor r=" << t.r() << ": " << t.inds() << "\n";
-    s << "  {log(scale)[incl in els]=" << t.scale().logNum();
-
-    //Checking whether std::ios::floatfield is set enables 
-    //printing the contents of an ITensor when using the printf
-    //format string %f (or another float-related format string)
-    bool ff_set = (std::ios::floatfield & s.flags()) != 0;
-
     if(!t) 
         {
-        s << " (default constructed)}\n";
+        s << "{Default constructed}\n";
         }
     else
         {
-        if(ff_set || Global::printdat())
-            {
-            applyFunc<PrintIT>(t.data(),s,t.scale(),t.inds());
-            }
-        else
-            {
-            if(!t.scale().isTooBigForReal()) 
-                s << ", norm=" << norm(t) << "}";
-            else 
-                s << ", norm(omitting large scale)=" << applyFunc<NormNoScale>(t.data(),t.inds()) << "}";
-            }
+        //Checking whether std::ios::floatfield is set enables 
+        //printing the contents of an ITensor when using the printf
+        //format string %f (or another float-related format string)
+        bool ff_set = (std::ios::floatfield & s.flags()) != 0;
+        bool print_data = (ff_set || Global::printdat());
+        applyFunc<PrintIT>(t.data(),s,t.scale(),t.inds(),print_data);
         }
     return s;
     }
@@ -1349,7 +1349,6 @@ norm(const ITensor& T)
            applyFunc<NormNoScale>(T.data(),T.inds());
     }
 
-
 ITensor
 conj(ITensor T)
     {
@@ -1357,14 +1356,12 @@ conj(ITensor T)
     return T;
     }
 
-
 struct CheckComplex : RegisterFunc<CheckComplex,bool>
     {
     bool
     operator()(const ITCplx& d) { return true; }
     bool
     operator()(const ITDiag<Complex>& d) { return true; }
-
     template<typename T>
     bool
     operator()(const T& d) { return false; }
@@ -1512,34 +1509,24 @@ struct Write : RegisterFunc<Write>
     Write(std::ostream& s) : s_(s) { }
 
     void
-    operator()(const ITReal& d)
-        { 
-        writeType(s_,ITStorage::Real,d);
-        }
+    operator()(const ITReal& d) 
+        { writeType(s_,ITStorage::Real,d); }
 
     void
-    operator()(const ITCplx& d)
-        { 
-        writeType(s_,ITStorage::Cplx,d);
-        }
+    operator()(const ITCplx& d) 
+        { writeType(s_,ITStorage::Cplx,d); }
 
     void
-    operator()(const ITCombiner& d)
-        { 
-        writeType(s_,ITStorage::Combiner,d);
-        }
+    operator()(const ITCombiner& d) 
+        { writeType(s_,ITStorage::Combiner,d); }
 
     void
     operator()(const ITDiag<Real>& d)
-        { 
-        writeType(s_,ITStorage::DiagReal,d);
-        }
+        { writeType(s_,ITStorage::DiagReal,d); }
 
     void
     operator()(const ITDiag<Cplx>& d)
-        { 
-        writeType(s_,ITStorage::DiagCplx,d);
-        }
+        { writeType(s_,ITStorage::DiagCplx,d); }
     };
 
 void
