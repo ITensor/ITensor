@@ -233,7 +233,8 @@ class CABqueue
         //"Package" thread tasks into std::future objects
         //which begin running once they are created
         std::vector<std::future<void>> futs(numthread);
-        for(size_t i = 0; i < numthread; ++i)
+        assert(threadtask.size()==futs.size());
+        for(size_t i = 0; i < futs.size(); ++i)
             {
             auto& tt = threadtask[i];
             //printfln("task size for thread %d is %d",i,tt.size());

@@ -143,10 +143,10 @@ template <typename... IndexVals>
 Complex ITensor::
 cplx(IndexVals&&... ivs) const
     {
-    constexpr auto size = sizeof...(ivs);
+    constexpr size_t size = sizeof...(ivs);
 #ifdef DEBUG
     if(!*this) Error("ITensor is default constructed");
-    if(size > r()) Error("Too many IndexVals passed to real/cplx");
+    if(size > size_t(r())) Error("Too many IndexVals passed to real/cplx");
 #endif
     std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
     std::array<long,size> inds;

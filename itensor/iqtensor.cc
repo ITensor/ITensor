@@ -353,7 +353,7 @@ combine(const IQTData<Real>& d,
         P = Permutation(dis.r());
         P.setFromTo(jc,0);
         long ni = 1;
-        for(auto j : index(dis))
+        for(auto j : count(dis.r()))
             if(j != jc) P.setFromTo(j,ni++);
         jc = 0;
         }
@@ -473,7 +473,7 @@ operator()(const IQTData<T>& A,
           AtoC(rA,-1),
           BtoC(rB,-1);
     Label Cind(rC,0);
-    for(size_t ic = 0; ic < rC; ++ic)
+    for(auto ic : count(rC))
         {
         auto j = findindex(Ais_,Nis_[ic]);
         if(j >= 0)
@@ -994,7 +994,7 @@ operator()(const IQTData<T>& d) const
         //this non-zero block is located)
         inverseBlockInd(io.block,is_,block);
         //Print Indices of this block
-        for(size_t i = 0; i < rank; ++i)
+        for(auto i : count(rank))
             {
             s_ << blockIndex(i) << "<" << is_[i].dir() << "> ";
             }

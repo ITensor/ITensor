@@ -221,7 +221,7 @@ getElt(const IQIndexSet& is,
     if(boff >= 0)
         {
 #ifdef DEBUG
-        if(boff+eoff >= data.size()) Error("get_elt out of range");
+        if(size_t(boff+eoff) >= data.size()) Error("get_elt out of range");
 #endif
         return data.data()+boff+eoff;
         }

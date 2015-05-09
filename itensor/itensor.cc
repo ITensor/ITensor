@@ -279,7 +279,7 @@ operator()(const ITCplx& a1,
     contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,sortInds);
     
     Label Nind(Nis_.r(),0);
-    for(size_t i = 0; i < Nis_.r(); ++i)
+    for(auto i : index(Nis_))
         {
         auto j = findindex(Lis_,Nis_[i]);
         if(j >= 0)
@@ -329,7 +329,7 @@ realCplx(const ITReal& R,
     contractIS(ris,rind,cis,cind,Nis_,sortInds);
     
     Label Nind(Nis_.r(),0);
-    for(size_t i = 0; i < Nis_.r(); ++i)
+    for(auto i : count(Nis_.r()))
         {
         auto j = findindex(ris,Nis_[i]);
         if(j >= 0)
@@ -370,7 +370,7 @@ operator()(const ITReal& a1,
     contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,sortInds);
     
     Label Nind(Nis_.r(),0);
-    for(size_t i = 0; i < Nis_.r(); ++i)
+    for(auto i : count(Nis_.r()))
         {
         auto j = findindex(Lis_,Nis_[i]);
         if(j >= 0)
@@ -410,8 +410,8 @@ diagDense(const ITDiag<Real>& d,
 
     long t_cstride = 0; //total t-stride of contracted inds of t
     size_t ntu = 0; //number uncontracted inds of t
-    assert(int(tind.size()) == tis.size());
-    for(size_t j = 0; j < tind.size(); ++j)
+    assert(tind.size() == tis.size());
+    for(auto j : index(tind))
         {
         //if index j is contracted, add its stride to t_cstride:
         if(tind[j] < 0) t_cstride += tis.stride(j);
@@ -419,7 +419,7 @@ diagDense(const ITDiag<Real>& d,
         }
 
     long d_ustride = 0; //total result-stride of uncontracted inds of d
-    for(size_t i = 0; i < Nis_.r(); ++i)
+    for(auto i : index(Nis_))
         {
         auto j = findindex(dis,Nis_[i]);
         if(j >= 0) d_ustride += Nis_.stride(i);
@@ -433,7 +433,7 @@ diagDense(const ITDiag<Real>& d,
                      rstride(ntu,0);
         detail::GCounter C(0,ntu,0);
         size_t n = 0;
-        for(size_t j = 0; j < tind.size(); ++j)
+        for(auto j : index(tind))
             {
             if(tind[j] > 0)
                 {
@@ -460,13 +460,13 @@ diagDense(const ITDiag<Real>& d,
                 {
                 size_t roffset = 0,
                        toffset = 0;
-                for(size_t i = 0; i < ntu; ++i)
+                for(auto i : count(ntu))
                     {
                     auto ii = C.i.fast(i);
                     toffset += ii*tstride[i];
                     roffset += ii*rstride[i];
                     }
-                for(long J = 0; J < dsize; ++J)
+                for(auto J : count(dsize))
                     {
                     pr[J*d_ustride+roffset] += d.val*pt[J*t_cstride+toffset];
                     }
@@ -480,13 +480,13 @@ diagDense(const ITDiag<Real>& d,
                 {
                 size_t roffset = 0,
                        toffset = 0;
-                for(size_t i = 0; i < ntu; ++i)
+                for(auto i : count(ntu))
                     {
                     auto ii = C.i.fast(i);
                     toffset += ii*tstride[i];
                     roffset += ii*rstride[i];
                     }
-                for(size_t J = 0; J < dsize; ++J)
+                for(auto J : count(dsize))
                     {
                     pr[J*d_ustride+roffset] += pd[J]*pt[J*t_cstride+toffset];
                     }
@@ -504,14 +504,14 @@ diagDense(const ITDiag<Real>& d,
             const auto *pt = t.data();
             if(d.allSame())
                 {
-                for(size_t J = 0; J < dsize; ++J)
+                for(auto J : count(dsize))
                     val += d.val*pt[J*t_cstride];
                 }
             else
                 {
                 assert(dsize == d.size());
                 auto *pd = d.data();
-                for(size_t J = 0; J < dsize; ++J)
+                for(auto J : count(dsize))
                     val += pd[J]*pt[J*t_cstride];
                 }
             makeNewData<ITDiag<Real>>(val);
@@ -524,14 +524,14 @@ diagDense(const ITDiag<Real>& d,
             const auto *pt = t.data();
             if(d.allSame())
                 {
-                for(size_t J = 0; J < dsize; ++J)
+                for(auto J : count(dsize))
                     pr[J] += d.val*pt[J*t_cstride];
                 }
             else
                 {
                 assert(dsize == d.size());
                 auto *pd = d.data();
-                for(size_t J = 0; J < dsize; ++J)
+                for(auto J : count(dsize))
                     pr[J] += pd[J]*pt[J*t_cstride];
                 }
             }
@@ -546,16 +546,16 @@ combine(const ITReal& d,
     //TODO: try to make use of Lind,Rind label vectors
     //      to simplify combine logic
     const auto& cind = Cis[0];
-    int jc = findindex(dis,cind);
+    auto jc = findindex(dis,cind);
     if(jc >= 0) //has cind
         {
         //dis has cind, replace with other inds
         vector<Index> newind;
         newind.reserve(dis.r()+Cis.r()-2);
-        for(int j = 0; j < dis.r(); ++j)
+        for(auto j : count(dis.r()))
             if(j == jc)
                 {
-                for(int k = 1; k < Cis.size(); ++k)
+                for(size_t k = 1; k < Cis.size(); ++k)
                     newind.push_back(Cis[k]);
                 }
             else
@@ -601,7 +601,7 @@ combine(const ITReal& d,
             newind.push_back(cind);
             for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
                 newind.push_back(dis[j]);
-            assert(newind.size() == dis.r()-Cis.r()+2);
+            assert(newind.size() == size_t(dis.r()-Cis.r()+2));
             Nis_ = IndexSet(move(newind));
             }
         else
@@ -1282,13 +1282,13 @@ operator()(const ITDiag<T>& d)
     if(!print_data_) return;
 
     auto size = minM(is_);
-    for(size_t i = 0; i < size; ++i)
+    for(auto i : count(size))
         {
         auto val = scalefac_*(d.allSame() ? d.val : d.store[i]);
         if(std::norm(val) > Global::printScale())
             {
             s_ << "(";
-            for(int j = 1; j < is_.size(); ++j)
+            for(size_t j = 1; j < is_.size(); ++j)
                 {
                 s_ << (1+i) << ",";
                 }

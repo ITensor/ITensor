@@ -110,7 +110,7 @@ class autovector // returns T() outside range or unassigned
             lint newmini = std::min(i,mini_);
             lint newmaxi = std::max(i,maxi_);
             lint j = i - mini_ + miniloc_;
-            if(j >= 0 && j < dat_.size()) // don't have to resize
+            if(j >= 0 && j < lint(dat_.size())) // don't have to resize
                 {
                 miniloc_ += newmini - mini_;
                 }

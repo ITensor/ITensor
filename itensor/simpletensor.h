@@ -322,7 +322,7 @@ class tensor : public tensorref<T,RangeT>
 #ifdef DEBUG
         auto len = area(inds_);
         if(len == 0) throw std::runtime_error("Zero area in tensor");
-        if(vec_.size() != len) throw std::runtime_error("Wrong size of input data");
+        if(vec_.size() != size_t(len)) throw std::runtime_error("Wrong size of input data");
 #endif
         parent::init(vec_.data(),inds_);
         }
@@ -334,7 +334,7 @@ class tensor : public tensorref<T,RangeT>
 #ifdef DEBUG
         if(len == 0) throw std::runtime_error("Zero area in tensor");
 #endif
-        if(vec_.size() != len) vec_ = storage_type(len);
+        if(vec_.size() != size_t(len)) vec_ = storage_type(len);
         parent::init(vec_.data(),inds_);
         }
 
