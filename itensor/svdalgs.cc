@@ -23,12 +23,17 @@ struct ToMatRefc : RegisterFunc<ToMatRefc,MatRefc>
     {
     long nrows=0,
          ncols=0;
-    ToMatRefc(long nr, long nc) : nrows(nr), ncols(nc) { }
+    bool transpose=false;
+    ToMatRefc(long nr, long nc, bool trans=false) 
+        : nrows(nr), ncols(nc), transpose(trans)
+        { }
 
     MatRefc
     operator()(const ITReal& d)
         {
-        return MatRefc(d.data(),nrows,ncols);
+        auto res = MatRefc(d.data(),nrows,ncols);
+        if(transpose) res.applyTrans();
+        return res;
         }
     };
 
@@ -39,7 +44,7 @@ toMatRefc(const ITensor& T, const Index& i1, const Index& i2)
         {
         return applyFunc<ToMatRefc>(T.data(),i1.m(),i2.m());
         }
-    return applyFunc<ToMatRefc>(T.data(),i2.m(),i1.m());
+    return applyFunc<ToMatRefc>(T.data(),i2.m(),i1.m(),true);
     }
 
 
@@ -244,7 +249,6 @@ svdRank2(ITensor A,
             printf(( sval > 1E-3 && sval < 1000) ? ("%.3f") : ("%.3E") , sval); 
             print((j != stop) ? ", " : "\n");
             }
-        println();
         }
     
     Index uL(lname,m,itype),
@@ -274,6 +278,7 @@ svdRank2(ITensor A,
     //Square all singular values
     //since convention is to report
     //density matrix eigs
+
     for(auto& el : DD) el = sqr(el);
 
     if(A.scale().isFiniteReal()) DD *= sqr(A.scale().real0());

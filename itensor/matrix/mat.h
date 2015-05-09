@@ -576,6 +576,9 @@ operator*(const Mat& A, const Mat& B) { return matrixMult(A,B); }
 Mat inline
 operator*(MatRefc A, MatRefc B) { return matrixMult(A,B); }
 
+inline Mat&
+operator*=(Mat& A, MatRefc B) { A = matrixMult(A,B); return A; }
+
 Vec inline
 operator*(MatRefc A,
           VecRefc v)
@@ -621,6 +624,9 @@ randomize(MatRef M);
 
 std::ostream&
 operator<<(std::ostream& s, MatRefc M);
+
+inline std::ostream&
+operator<<(std::ostream& s, const Mat& M) { return operator<<(s,makeRef(M)); }
 
 template<typename... CtrArgs>
 Mat
