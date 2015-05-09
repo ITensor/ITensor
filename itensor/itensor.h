@@ -324,7 +324,7 @@ combiner(const Index& i1, const Inds&... inds)
     }
 
 ITensor
-delta(const Index& i1, const Index& i2);
+deltaTensor(const Index& i1, const Index& i2);
 
 //Construct ITensor with diagonal elements set to z
 //(if z is a Real or z.imag()==0 storage will be real)

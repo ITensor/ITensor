@@ -1005,7 +1005,7 @@ SECTION("Contract All Dense Inds; Diag result")
 
 SECTION("Kronecker Delta Tensor")
     {
-    auto d = delta(s1,s2);
+    auto d = deltaTensor(s1,s2);
     CHECK(getType(d) == Combiner);
 
     auto T1 = randomTensor(s1,s3);

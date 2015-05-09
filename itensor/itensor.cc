@@ -1451,7 +1451,7 @@ combiner(std::vector<Index> inds, const Args& args)
     }
 
 ITensor
-delta(const Index& i1, const Index& i2)
+deltaTensor(const Index& i1, const Index& i2)
     {
 #ifdef DEBUG
     if(i1.m() != i2.m()) Error("delta: indices must have same dimension");
