@@ -70,7 +70,7 @@ diagTensor(const Container& C,
     auto minm = i1.m();
     for(const auto& ind : is)
         if(ind.m() < minm) minm = ind.m();
-    if(C.size() != minm)
+    if(C.size() != size_t(minm))
         {
         Print(minm);
         Print(C.size());

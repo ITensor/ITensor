@@ -82,7 +82,7 @@ cplx(IQIndexVals&&... ivs) const
     constexpr auto size = sizeof...(ivs);
 #ifdef DEBUG
     if(!*this) Error("IQTensor is default constructed");
-    if(size > r()) Error("Too many IQIndexVals passed to real/cplx");
+    if(size > size_t(r())) Error("Too many IQIndexVals passed to real/cplx");
 #endif
     std::array<IQIndexVal,size> vals{{static_cast<IQIndexVal>(ivs)...}};
     std::array<long,size> inds;
