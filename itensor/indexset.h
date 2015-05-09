@@ -7,6 +7,7 @@
 #include "index.h"
 #include "permutation.h"
 #include "range.h"
+#include <algorithm>
 
 namespace itensor {
 

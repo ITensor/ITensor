@@ -6,6 +6,11 @@
 #define __ITENSOR_ITENSOR_H
 #include "indexset.h"
 #include "itdata/itdata.h"
+#include "itdata/itreal.h"
+#include "itdata/itcplx.h"
+#include "itdata/itdiag.h"
+#include "itdata/itcombiner.h"
+#include "itdata/iqtdata.h"
 #include "matrix/mat.h"
 
 namespace itensor {

@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <algorithm>
+#include <ctime>
 
 namespace itensor {
 namespace detail {

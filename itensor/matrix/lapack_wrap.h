@@ -51,6 +51,9 @@ typedef struct
 
 #elif defined PLATFORM_mkl
 
+#define FORTRAN_NO_TRAILING_UNDERSCORE
+
+#include "mkl_blas.h"
 #include "mkl_lapack.h"
 namespace itensor {
 using LAPACK_INT = MKL_INT;
@@ -241,6 +244,7 @@ ddot_wrapper(LAPACK_INT N,
     auto *Ync = const_cast<LAPACK_REAL*>(Y);
     return F77NAME(ddot)(&N,Xnc,&incx,Ync,&incy);
 #endif
+    return -1;
     }
 
 //
@@ -313,7 +317,7 @@ dgemv_wrapper(bool trans,
     cblas_dgemv(CblasColMajor,Tr,m,n,alpha,A,m,x,incx,beta,y,incy);
 #else
     char Tr = trans ? 'T' : 'N';
-    F77NAME(dgemv)(&at,&m,&n,&n,&alpha,const_cast<LAPACK_REAL*>(A),&m,const_cast<LAPACK_REAL*>(x),&incx,&beta,y,&incy);
+    F77NAME(dgemv)(&Tr,&m,&n,&alpha,const_cast<LAPACK_REAL*>(A),&m,const_cast<LAPACK_REAL*>(x),&incx,&beta,y,&incy);
 #endif
     }
 

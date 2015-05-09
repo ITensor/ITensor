@@ -7,6 +7,7 @@
 
 #include "autovector.h"
 #include <iostream>
+#include <array>
 
 namespace itensor {
 
