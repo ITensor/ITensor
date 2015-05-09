@@ -246,6 +246,6 @@ operator==(const FLString<Maxlen>& s1, const char* s2)
 //    return true;
 //    }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

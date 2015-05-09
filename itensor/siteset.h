@@ -202,6 +202,6 @@ operator<<(std::ostream& s, const SiteSet& M)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

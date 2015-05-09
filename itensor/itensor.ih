@@ -525,7 +525,7 @@ noprime(Tensor A,
     return A; 
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

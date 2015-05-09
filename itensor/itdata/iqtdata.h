@@ -100,7 +100,7 @@ struct compBlock
         { return blk < bo.block; }
     };
 
-}; //namespace detail
+} //namespace detail
 
 template<typename T>
 long IQTData<T>::
@@ -237,7 +237,7 @@ offsetOf(long blkind) const
     return -1;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif
 

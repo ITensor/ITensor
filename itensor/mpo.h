@@ -503,7 +503,7 @@ template <class Tensor>
 std::ostream& 
 operator<<(std::ostream& s, const MPOt<Tensor>& M);
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

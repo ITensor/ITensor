@@ -79,6 +79,6 @@ column(Mat_&& M, long j)
     }
 
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

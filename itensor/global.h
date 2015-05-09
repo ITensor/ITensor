@@ -437,6 +437,6 @@ class ArrowError : public ITError
     };
 
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

@@ -96,7 +96,7 @@ write(std::ostream& s, const ITReal& dat)
     }
 
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif
 

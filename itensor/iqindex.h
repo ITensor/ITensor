@@ -390,7 +390,7 @@ totalM(const Index& i, const QN& q,
     return i.m()+detail::totalM(args...);
     }
 
-}; //namespace detail
+} //namespace detail
 
 
 template<typename... Args>
@@ -428,6 +428,6 @@ IQIndex(const std::string& name,
     }
 
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

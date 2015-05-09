@@ -1545,4 +1545,4 @@ write(std::ostream& s, const ITensor& T)
         }
     }
 
-};
+} //namespace itensor

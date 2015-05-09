@@ -411,7 +411,7 @@ printTensor(const char* type, std::ostream& s, const tensorref<T,RangeT>& t)
         }
     return s;
     }
-};
+}
 
 template<typename T, typename RangeT>
 std::ostream&
@@ -427,6 +427,6 @@ operator<<(std::ostream& s, const tensor<T,RangeT>& t)
     return detail::printTensor("tensor",s,t);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

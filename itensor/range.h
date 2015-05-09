@@ -194,7 +194,7 @@ struct ComputeInd
         }
     };
 
-}; //namespace detail
+} //namespace detail
 
 template<typename RangeT, typename U>
 long
@@ -243,6 +243,6 @@ area(const RangeT& r)
     }
 
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

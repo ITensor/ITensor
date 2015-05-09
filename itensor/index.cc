@@ -307,5 +307,5 @@ getIndexType(const Args& args,
     return IntToIndexType(args.getInt(name));
     }
 
-}; //namespace itensor
+} //namespace itensor
 

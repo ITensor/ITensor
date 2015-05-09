@@ -62,6 +62,6 @@ SVD(const MatRefc& A,
     Mat& V,
     Real thresh = 1E-3);
 
-};
+}
 
 #endif

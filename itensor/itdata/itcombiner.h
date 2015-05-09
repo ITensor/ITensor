@@ -26,7 +26,7 @@ read(std::istream& s, ITCombiner& dat) { }
 void inline
 write(std::ostream& s, const ITCombiner& dat) { }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif
 

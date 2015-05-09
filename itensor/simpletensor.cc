@@ -17,4 +17,4 @@ plusEqData(double fac,
     daxpy_wrapper(&size,&fac,d1,&inc,d2,&inc);
     }
 
-};
+}

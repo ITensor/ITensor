@@ -175,6 +175,6 @@ numCenter(int val)
         lmpo_[n].numCenter(val);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

@@ -98,6 +98,6 @@ class GCounter	// General Counter
     };
 
 
-}; //namespace detail
-}; //namespace itensor
+} //namespace detail
+} //namespace itensor
 #endif

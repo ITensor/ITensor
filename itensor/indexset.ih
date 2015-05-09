@@ -390,7 +390,7 @@ namespace detail {
                 throw ITError("Duplicate indices in index set following priming operation");
             }
         }
-}; //namespace detail
+} //namespace detail
 
 
 template<typename IndexT>
@@ -727,6 +727,6 @@ operator<<(std::ostream& s, const IndexSetT<Index>& is)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

@@ -191,8 +191,8 @@ call(T&& obj, V1&& v1, V2&& v2)
     }
 
 
-}; //namespace detail
-}; //namespace itensor
+} //namespace detail
+} //namespace itensor
 
 #endif
 

@@ -109,7 +109,7 @@ write(std::ostream& s, const ITDiag<T>& dat)
     write(s,dat.store);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif
 

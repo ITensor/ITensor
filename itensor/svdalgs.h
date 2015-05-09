@@ -527,7 +527,7 @@ eigDecomp(const Tensor& T, Tensor& V, Tensor& D,
     */
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

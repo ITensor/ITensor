@@ -271,6 +271,6 @@ operator ITensor() const
     return toITensor(*this); 
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

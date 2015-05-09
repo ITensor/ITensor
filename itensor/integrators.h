@@ -86,6 +86,6 @@ midpointMethod(const Deriv& D, Real tstep, std::vector<Tensor>& v,
         }
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

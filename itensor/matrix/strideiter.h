@@ -77,6 +77,6 @@ stride_iter<T>
 operator+(typename stride_iter<T>::difference_type x, const stride_iter<T>& y) 
     { assert(x.stride() == y.stride()); return y += x * x.stride(); } 
 
-};
+} //namespace itensor
 
 #endif

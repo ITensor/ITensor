@@ -128,6 +128,6 @@ class Stats
 
     };
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

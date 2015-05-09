@@ -479,4 +479,4 @@ operator<<(std::ostream& s, const IQIndexVal& iv)
     return s << "IQIndexVal: val = " << iv.val << " for IQIndex:\n  " << I << "\n"; 
     }
 
-}; //namespace itensor
+} //namespace itensor

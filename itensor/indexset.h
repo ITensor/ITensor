@@ -291,7 +291,7 @@ template <class IndexT>
 std::ostream&
 operator<<(std::ostream& s, const IndexSetT<IndexT>& is);
 
-}; //namespace itensor
+} //namespace itensor
 
 #include "indexset.ih"
 

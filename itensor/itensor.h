@@ -558,7 +558,7 @@ multSiteOps(Tensor A, const Tensor& B)
     return A;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 //See file itensor.ih for template/inline method implementations
 #include "itensor.ih"

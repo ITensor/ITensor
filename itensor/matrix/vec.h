@@ -485,6 +485,6 @@ subVector(Vec_&& v,
     return makeRef(std::forward<Vec_>(v),start-1,stop-start+1,1);
     }
 
-};
+} //namespace itensor
 
 #endif

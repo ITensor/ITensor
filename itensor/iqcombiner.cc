@@ -423,4 +423,4 @@ operator<<(ostream & s, const IQCombiner & c)
     return s << "\n\n";
     }
 
-}; //namespace itensor
+} //namespace itensor

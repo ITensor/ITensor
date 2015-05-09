@@ -92,7 +92,7 @@ checkDone(const Args& args)
     return done_;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif // __ITENSOR_TEVOLOBSERVER_H

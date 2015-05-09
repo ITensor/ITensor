@@ -36,7 +36,7 @@ printVal(std::ostream& s,
     }
 
 
-}; //namespace detail
-}; //namespace itensor
+} //namespace detail
+} //namespace itensor
 
 #endif

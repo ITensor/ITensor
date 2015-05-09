@@ -899,4 +899,4 @@ contractloop(const RTref<IndexSet>& A, const Label& ai,
              RTref<IndexSet>& C,       const Label& ci,
              const Args& args);
 
-};
+}

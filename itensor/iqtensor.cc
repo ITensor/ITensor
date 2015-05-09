@@ -1051,4 +1051,4 @@ operator<<(std::ostream& s, const IQTensor& T)
     }
 
 
-}; //namespace itensor
+} //namespace itensor

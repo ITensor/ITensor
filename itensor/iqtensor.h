@@ -374,7 +374,7 @@ randomTensor(const QN& q, const IQIndex& i1, Inds&&... inds)
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);
 
-}; //namespace itensor
+} //namespace itensor
 
 //See file iqtensor.ih for template/inline method implementations
 #include "iqtensor.ih"

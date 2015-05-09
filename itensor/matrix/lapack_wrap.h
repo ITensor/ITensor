@@ -24,7 +24,7 @@ typedef struct
 {
   double real, imag;
 } LAPACK_COMPLEX;
-};
+}
 
 #elif defined PLATFORM_macos
 
@@ -33,7 +33,7 @@ namespace itensor {
 using LAPACK_INT = __CLPK_integer;
 using LAPACK_REAL = __CLPK_doublereal;
 using LAPACK_COMPLEX = __CLPK_doublecomplex;
-};
+}
 
 #elif defined PLATFORM_acml
 
@@ -47,7 +47,7 @@ typedef struct
 {
   double real, imag;
 } LAPACK_COMPLEX;
-};
+}
 
 #elif defined PLATFORM_mkl
 
@@ -59,7 +59,7 @@ namespace itensor {
 using LAPACK_INT = MKL_INT;
 using LAPACK_REAL = double;
 using LAPACK_COMPLEX = MKL_Complex16;
-};
+}
 
 #endif
 
@@ -557,6 +557,6 @@ zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
 #endif
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

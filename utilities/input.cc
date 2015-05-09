@@ -475,5 +475,5 @@ void InputGroup::GetYesNoM(string s, int& yes,const char* c)
         error("mandatory item: " + s + ", exiting");
     }
 
-}; //namespace itensor
+} //namespace itensor
 

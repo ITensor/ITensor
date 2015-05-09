@@ -253,4 +253,4 @@ SVD(const MatRefc& M,
     SVDRef(M,U,D,V,thresh);
     }
 
-}; //namespace itensor
+} //namespace itensor

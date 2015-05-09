@@ -142,8 +142,8 @@ binaryFind(Container& c, const T& val)
     }
 
 
-}; //namespace detail
-}; //namespace itensor
+} //namespace detail
+} //namespace itensor
 
 #endif
 

@@ -444,7 +444,7 @@ sweepnext(int &b, int &ha, int N, int min_b = 1)
         }
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif //__ITENSOR_SWEEPS_HEADER_H

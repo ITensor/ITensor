@@ -143,7 +143,7 @@ dist(const RTref<R>& A, const RTref<R>& Ach)
     for(long i = 0; i < A.size(); i++)
         dif += sqr(A.v(i) - Ach.v(i));
     return std::sqrt(dif);
-    };
+    }
 
 
 
@@ -274,7 +274,7 @@ assign(T& r1, T r2) { r1 = r2; }
 template<typename T>
 void
 plusEq(T& r1, T r2) { r1 += r2; }
-};
+}
 
 template<typename R1, typename R2>
 void 
@@ -300,6 +300,6 @@ permute(const RTref<RangeT>& T,
     permute(T,P,res_ref);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

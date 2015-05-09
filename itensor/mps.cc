@@ -1909,4 +1909,4 @@ operator<<(std::ostream& s, const InitState& state)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor

@@ -174,4 +174,4 @@ operator<<(std::ostream & s, const Spectrum& spec)
 
 
 
-}; //namespace itensor
+} //namespace itensor

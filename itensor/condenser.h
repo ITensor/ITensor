@@ -94,6 +94,6 @@ struct IndexMap
     Index big;
     };
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

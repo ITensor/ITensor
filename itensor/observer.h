@@ -25,6 +25,6 @@ class Observer
 
     };
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif 

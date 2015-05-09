@@ -263,4 +263,4 @@ mult(MatRefc M,
     }
 
 
-}; //namespace itensor
+} //namespace itensor

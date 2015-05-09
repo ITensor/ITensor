@@ -425,6 +425,6 @@ size() const
     return size_;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

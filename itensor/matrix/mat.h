@@ -637,6 +637,6 @@ randomMat(CtrArgs&&... args)
     return M;
     }
 
-};
+} //namespace itensor
 
 #endif

@@ -386,6 +386,6 @@ getIndexType(const Args& args,
              const Args::Name& name, 
              IndexType default_val);
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

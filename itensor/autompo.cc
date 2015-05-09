@@ -946,4 +946,4 @@ operator<<(std::ostream& s, const AutoMPO& a)
     }
 
 
-};
+}

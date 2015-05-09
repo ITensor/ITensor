@@ -66,6 +66,6 @@ print(const T& arg1, const Args&... args)
 
 
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

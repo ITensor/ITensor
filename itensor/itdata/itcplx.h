@@ -158,7 +158,7 @@ write(std::ostream& s, const ITCplx& dat)
     write(s,dat.store);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif
 

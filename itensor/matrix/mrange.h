@@ -53,6 +53,6 @@ operator<<(std::ostream& s, const MRange& mr)
     return s;
     }
 
-};
+} //namespace itensor
 
 #endif

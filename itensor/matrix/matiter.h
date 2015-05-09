@@ -71,6 +71,6 @@ template <typename T>
 bool 
 operator!=(const MatIter<T>& x, const MatIter<T>& y) { assert(x.ind() == y.ind()); return x.data() != y.data(); } 
 
-};
+}
 
 #endif

@@ -131,7 +131,7 @@ gateTEvol(const Iterable& gatelist,
     return gateTEvol(gatelist,ttotal,tstep,psi,obs,args);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

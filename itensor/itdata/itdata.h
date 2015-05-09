@@ -284,7 +284,7 @@ clone_modify(Func& f, T1& a1, const T2& a2, PData& pdat)
     return clone_modify_impl<Ret>(f,a1,a2,pdat,0);
     }
 
-}; //namespace detail
+} //namespace detail
 
 template <typename Callable, typename T1, typename Return>
 template<typename T2>
@@ -528,7 +528,7 @@ applyFunc(PData& arg1,
     }
 
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif
 

@@ -146,6 +146,6 @@ class InputGroup
 
     };
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

@@ -80,6 +80,6 @@ count1(ST start, T end)
     return CountHelper<T>(start,1+end);
     }
 
-};
+}
 
 #endif
