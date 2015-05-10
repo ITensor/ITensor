@@ -119,6 +119,13 @@ struct GetElt : RegisterFunc<GetElt<size>,Complex>
         return d.get(ind(is_,inds_));
         }
 
+    Complex
+    operator()(const ITCombiner& c)
+        {
+        if(inds_.size()!=0) Error("GetElt not defined for non-scalar ITCombiner storage");
+        return Complex(1.,0.);
+        }
+
     template <typename V>
     Complex
     operator()(const ITDiag<V>& d)

@@ -176,7 +176,9 @@ svdRank2(ITensor A,
     auto rname = args.getString("RightIndexName","vl");
     auto itype = getIndexType(args,"IndexType",Link);
 
+#ifdef DEBUG
     if(A.r() != 2) Error("A must be matrix-like (rank 2)");
+#endif
 
     Mat UU,VV,
         iUU,iVV;
