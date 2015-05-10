@@ -5,6 +5,10 @@
 #ifndef __ITENSOR_CALL_REWRITE_H
 #define __ITENSOR_CALL_REWRITE_H
 
+#include <type_traits>
+#include <utility>
+#include <stdexcept>
+
 namespace itensor {
 namespace detail {
 

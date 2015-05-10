@@ -578,21 +578,21 @@ combine(const ITReal& d,
             }
         //Check if Cis[1],Cis[2],... are grouped together (contiguous)
         //and in same order as on combiner
-        bool contig = true;
+        bool contig_sameord = true;
         int c = 2;
         for(int j = J1+1; c < Cis.r() && j < dis.r(); ++j,++c)
             if(dis[j] != Cis[c])
                 {
-                contig = false;
+                contig_sameord = false;
                 break;
                 }
-        if(c != Cis.r()) contig = false;
+        if(c != Cis.r()) contig_sameord = false;
 
-        //printfln("%s:",contig?"Contig":"Not Contig");
+        //printfln("%s:",contig_sameord?"Contig":"Not Contig");
         //println("  dis = ",dis);
         //println("  Cis = ",Cis);
 
-        if(contig)
+        if(contig_sameord)
             {
             vector<Index> newind;
             newind.reserve(dis.r()-Cis.r()+2);
@@ -614,9 +614,9 @@ combine(const ITReal& d,
             //permute combined indices to the front, in same
             //order as in Cis:
             long ni = 0;
-            for(int c = 1; c < Cis.r(); ++c)
+            for(auto c : count(1,Cis.r()))
                 {
-                int j = findindex(dis,Cis[c]);
+                auto j = findindex(dis,Cis[c]);
                 if(j < 0) 
                     {
                     println("IndexSet of dense tensor =\n  ",dis);
@@ -627,24 +627,29 @@ combine(const ITReal& d,
                 P.setFromTo(j,ni++);
                 }
             //permute uncombined indices to back, keeping relative order:
+            Range::storage_type pdims(dis.r());
             vector<Index> newind;
-            vector<long> pdims(dis.r(),-1);
-            newind.reserve(dis.r()-Cis.r()+1);
+            newind.reserve(dis.r()-Cis.r()+2);
             newind.push_back(cind);
-            for(int j = 0; j < dis.r(); ++j)
+            for(auto j : count(dis.r()))
                 {
                 if(P.dest(j) == -1) 
                     {
                     P.setFromTo(j,ni++);
                     newind.push_back(dis[j]);
                     }
-                pdims[j] = dis[P.dest(j)].m();
+#ifdef DEBUG
+                pdims.at(P.dest(j)).dim = dis[j].m();
+#else
+                pdims[P.dest(j)].dim = dis[j].m();
+#endif
                 }
-            Range rr(pdims);
+            assert(newind.size()==size_t(dis.r()-Cis.r()+2));
+            Range rr(move(pdims));
             Nis_ = IndexSet(move(newind));
             auto nd = makeNewData<ITReal>(area(Nis_));
-            auto td = make_tensorref(d.data(),dis);
             auto tr = make_tensorref(nd->data(),rr);
+            auto td = make_tensorref(d.data(),dis);
             permute(td,P,tr);
             }
         }

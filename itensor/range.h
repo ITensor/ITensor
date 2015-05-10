@@ -24,6 +24,9 @@ class Range
         };
     using value_type = index;
     using storage_type = std::vector<index>;
+    private:
+    storage_type inds_;
+    public:
 
     Range() { }
 
@@ -44,6 +47,15 @@ class Range
     Range(const std::array<I,size>& a)
         {
         init(a);
+        }
+
+    //Most efficient way to construct range is by
+    //providing a storage_type object with dims
+    //already set - strides will be computed automatically
+    Range(storage_type&& inds)
+        : inds_(std::move(inds))
+        { 
+        computeStrides();
         }
 
     long
@@ -102,8 +114,16 @@ class Range
         }
 
     private:
-
-    storage_type inds_;
+    void 
+    computeStrides()
+        {
+        long len = 1;
+        for(auto& i : inds_)
+            {
+            i.stride = len;
+            len *= i.dim;
+            }
+        }
     };
 
 inline

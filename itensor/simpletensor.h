@@ -114,7 +114,6 @@ class tensorref
         std::swap(inds_,other.inds_);
         std::swap(data_,other.data_);
         }
-
     };
 
 template<typename T, typename RangeT>
