@@ -10,7 +10,7 @@
 #include "print.h"
 #include "permutation.h"
 #include "simpletensor.h"
-#include "detail/safe_ptr.h"
+#include "safe_ptr.h"
 
 namespace itensor {
 
@@ -255,13 +255,8 @@ permute(const RTref<R1>& T,
         for(int j = 0; j < r; ++j)
             ri[P.dest(j)] = c.i[j];
 
-#ifdef DEBUG
-        auto pr = detail::makeSafePtr(res.data(),ind(res,ri),res.size());
-        auto pt = detail::makeSafePtr(T.data(),ind(T,c.i),T.size());
-#else
-        auto* pr = res.data() + ind(res,ri);
-        auto* pt = T.data() + ind(T,c.i);
-#endif
+        auto pr = MAKE_SAFE_PTR(res.data(),ind(res,ri),res.size());
+        auto pt = MAKE_SAFE_PTR(T.data(),ind(T,c.i),T.size());
         for(int b = 0; b < bigsize; ++b)
             {
             //func defaults to (*pr = *pt) but can also 

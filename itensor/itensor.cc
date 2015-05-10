@@ -8,6 +8,7 @@
 #include "detail/gcounter.h"
 #include "contract.h"
 #include "count.h"
+#include "safe_ptr.h"
 
 using std::array;
 using std::ostream;
@@ -74,50 +75,6 @@ ITensor(const IndexSet& is)
     scale_(1.)
 	{ }
 
-struct CopyElems : public RegisterFunc<CopyElems>
-    {
-    CopyElems() { }
-
-    void
-    operator()(ITReal& d1,
-               const ITReal& d2)
-        {
-        std::copy(d2.begin(),d2.end(),d1.begin());
-        }
-
-    template<typename T>
-    void
-    operator()(ITDiag<T>& d1,
-               const ITDiag<T>& d2)
-        {
-        std::copy(d2.begin(),d2.end(),d1.begin());
-        }
-    };
-
-//ITensor::
-//ITensor(const Index& i1,
-//        const Index& i2,
-//        const MatrixRef& M)
-//    :
-//    is_(i1,i2),
-//    scale_(1.)
-//    {
-//	if(i1.m() != M.Nrows() || i2.m() != M.Ncols()) 
-//	    Error("Mismatch of Index sizes and matrix.");
-//
-//    if(i1 == is_[0])
-//        {
-//        Matrix Mt = M.t();
-//        VectorRef vref = Mt.TreatAsVector(); 
-//        store_ = make_newdata<ITReal>(vref.begin(),vref.end());
-//        }
-//    else
-//        {
-//        VectorRef vref = M.TreatAsVector(); 
-//        store_ = make_newdata<ITReal>(vref.begin(),vref.end());
-//        }
-//    }
-
 ITensor::
 ITensor(IndexSet iset,
         storage_ptr&& pdat,
@@ -161,7 +118,7 @@ struct Contract : RegisterFunc<Contract>
 
     //New IndexSet
     IndexSet Nis_;
-    Real scalefac_ = 0;
+    Real scalefac_ = NAN;
 
     public:
 
@@ -194,14 +151,14 @@ struct Contract : RegisterFunc<Contract>
     operator()(const ITReal& a1,
                const ITCplx& a2)
         {
-        realCplx(a1,Lis_,Lind_,a2,Ris_,Rind_);
+        realCplx(a1,Lis_,Lind_,a2,Ris_,Rind_,true);
         }
 
     void
     operator()(const ITCplx& a1,
                const ITReal& a2)
         {
-        realCplx(a2,Ris_,Rind_,a1,Lis_,Lind_);
+        realCplx(a2,Ris_,Rind_,a1,Lis_,Lind_,false);
         }
 
     void
@@ -219,16 +176,16 @@ struct Contract : RegisterFunc<Contract>
         }
 
     void
-    operator()(const ITDiag<Real>& d,
-               const ITReal& t)
-        {
-        diagDense(d,Lis_,Lind_,t,Ris_,Rind_);
-        }
-    void
     operator()(const ITReal& t,
                const ITDiag<Real>& d)
         { 
-        diagDense(d,Ris_,Rind_,t,Lis_,Lind_);
+        diagDense(d,Ris_,Rind_,t,Lis_,Lind_,true);
+        }
+    void
+    operator()(const ITDiag<Real>& d,
+               const ITReal& t)
+        {
+        diagDense(d,Lis_,Lind_,t,Ris_,Rind_,false);
         }
 
     private:
@@ -244,7 +201,8 @@ struct Contract : RegisterFunc<Contract>
               const Label& dind,
               const ITReal& t,
               const IndexSet& tis,
-              const Label& tind);
+              const Label& tind,
+              bool RealOnLeft);
 
     void
     realCplx(const ITReal& R,
@@ -252,7 +210,8 @@ struct Contract : RegisterFunc<Contract>
              const Label& rind,
              const ITCplx& C,
              const IndexSet& cis,
-             const Label& cind);
+             const Label& cind,
+             bool RealOnLeft);
 
     template<typename Data>
     void
@@ -264,7 +223,6 @@ struct Contract : RegisterFunc<Contract>
         if(scalefac_ == 0) return;
         for(auto& elt : dat) elt /= scalefac_;
         }
- 
     };
 
 void Contract::
@@ -277,6 +235,20 @@ operator()(const ITCplx& a1,
     //  quicker and let contractloop run in parallel more often in principle.
     const bool sortInds = false; //whether to sort indices of result
     contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,sortInds);
+
+    //Scalar tensor cases
+    //if(area(Lis_)==1)
+    //    {
+    //    auto nd = makeNewData<ITCplx>(a2);
+    //    (*nd) *= a1.get(0);
+    //    return;
+    //    }
+    //if(area(Ris_)==1)
+    //    {
+    //    auto a1ref = modifyData(a1);
+    //    a1ref *= a2.get(0);
+    //    return;
+    //    }
     
     Label Nind(Nis_.r(),0);
     for(auto i : index(Nis_))
@@ -319,7 +291,8 @@ realCplx(const ITReal& R,
          const Label& rind,
          const ITCplx& C,
          const IndexSet& cis,
-         const Label& cind)
+         const Label& cind,
+         bool RealOnLeft)
     {
     //Optimization TODO:
     //  Test different scenarios where having sortInds=true or false
@@ -327,6 +300,41 @@ realCplx(const ITReal& R,
     //  quicker and let contractloop run in parallel more often in principle.
     const bool sortInds = false; //whether to sort indices of result
     contractIS(ris,rind,cis,cind,Nis_,sortInds);
+    auto rsize = area(Nis_);
+
+    //if(area(ris)==1) //Real tensor is a scalar
+    //    {
+    //    scalefac_ = R[0];
+    //    if(RealOnLeft) assignPointerRtoL();
+    //    return;
+    //    }
+    //if(area(cis)==1) //Cplx tensor is a scalar
+    //    {
+    //    Error("Need to check in this case whether RealOnLeft or not");
+    //    auto z = C.get(0);
+    //    auto zr = z.real(),
+    //         zi = z.imag();
+    //    if(zi == 0)
+    //        {
+    //        scalefac_ = zr;
+    //        assignPointerRtoL();
+    //        }
+    //    else
+    //        {
+    //        assert(size_t(rsize)==size_t(R.size()));
+    //        auto nd = makeNewData<ITCplx>(rsize);
+    //        auto pr = MAKE_SAFE_PTR(nd->rstart(),rsize);
+    //        auto pi = MAKE_SAFE_PTR(nd->istart(),rsize);
+    //        for(auto el : R)
+    //            {
+    //            *pr = el*zr;
+    //            *pi = el*zi;
+    //            ++pr;
+    //            ++pi;
+    //            }
+    //        }
+    //    return;
+    //    }
     
     Label Nind(Nis_.r(),0);
     for(auto i : count(Nis_.r()))
@@ -343,7 +351,6 @@ realCplx(const ITReal& R,
             }
         }
 
-    auto rsize = area(Nis_);
     auto nd = makeNewData<ITCplx>(rsize,0.);
 
     auto t1 = make_tensorref(R.data(),ris),
@@ -366,8 +373,21 @@ operator()(const ITReal& a1,
     //  Test different scenarios where having sortInds=true or false
     //  can improve performance. Having sorted inds can make adding
     //  quicker and let contractloop run in parallel more often in principle.
-    const bool sortInds = false; //whether to sort indices of result
+    bool sortInds = false; //whether to sort indices of result
     contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,sortInds);
+
+    //Scalar tensor cases
+    //if(area(Lis_)==1)
+    //    {
+    //    scalefac_ = a1[0];
+    //    assignPointerRtoL();
+    //    return;
+    //    }
+    //if(area(Ris_)==1)
+    //    {
+    //    scalefac_ = a2[0];
+    //    return;
+    //    }
     
     Label Nind(Nis_.r(),0);
     for(auto i : count(Nis_.r()))
@@ -404,9 +424,22 @@ diagDense(const ITDiag<Real>& d,
           const Label& dind,
           const ITReal& t,
           const IndexSet& tis,
-          const Label& tind)
+          const Label& tind,
+          bool RealonLeft)
     {
     contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,true);
+
+    //if(area(tis)==1) //Dense tensor is a scalar
+    //    {
+    //    scalefac_ = R[0];
+    //    if(RealOnLeft) assignPointerRtoL();
+    //    return;
+    //    }
+    //if(area(dis)==1) //Diag tensor is a scalar
+    //    {
+    //    Error("Not implemented");
+    //    return;
+    //    }
 
     long t_cstride = 0; //total t-stride of contracted inds of t
     size_t ntu = 0; //number uncontracted inds of t
@@ -451,8 +484,8 @@ diagDense(const ITDiag<Real>& d,
                 }
             }
         auto nd = makeNewData<ITReal>(area(Nis_),0.);
-        auto *pr = nd->data();
-        const auto *pt = t.data();
+        auto pr = MAKE_SAFE_PTR(nd->data(),nd->size());
+        auto pt = MAKE_SAFE_PTR(t.data(),t.size());
 
         if(d.allSame())
             {
@@ -474,7 +507,7 @@ diagDense(const ITDiag<Real>& d,
             }
         else
             {
-            auto* pd = d.data();
+            auto pd = MAKE_SAFE_PTR(d.data(),d.size());
             assert(d.size() == dsize);
             for(;C.notDone();++C)
                 {
@@ -501,7 +534,7 @@ diagDense(const ITDiag<Real>& d,
             {
             // o scalar if all of d's inds contracted also
             Real val = 0;
-            const auto *pt = t.data();
+            auto pt = MAKE_SAFE_PTR(t.data(),t.size());
             if(d.allSame())
                 {
                 for(auto J : count(dsize))
@@ -510,7 +543,7 @@ diagDense(const ITDiag<Real>& d,
             else
                 {
                 assert(dsize == d.size());
-                auto *pd = d.data();
+                auto pd = MAKE_SAFE_PTR(d.data(),d.size());
                 for(auto J : count(dsize))
                     val += pd[J]*pt[J*t_cstride];
                 }
@@ -520,8 +553,8 @@ diagDense(const ITDiag<Real>& d,
             {
             // o element-wise product of d's data and t's diagonal
             auto nd = makeNewData<ITDiag<Real>>(dsize,0.);
-            auto *pr = nd->data();
-            const auto *pt = t.data();
+            auto pr = MAKE_SAFE_PTR(nd->data(),nd->size());
+            auto pt = MAKE_SAFE_PTR(t.data(),t.size());
             if(d.allSame())
                 {
                 for(auto J : count(dsize))
@@ -530,7 +563,7 @@ diagDense(const ITDiag<Real>& d,
             else
                 {
                 assert(dsize == d.size());
-                auto *pd = d.data();
+                auto pd = MAKE_SAFE_PTR(d.data(),d.size());
                 for(auto J : count(dsize))
                     pr[J] += pd[J]*pt[J*t_cstride];
                 }
@@ -671,11 +704,11 @@ operator*=(const ITensor& other)
     Label Lind,
           Rind;
     auto ncont = computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
-    auto nuniq = Lis.r()+Ris.r()-2*ncont;
 
     //Check if other is a scalar (modulo m==1 inds)
     if(Ris.rn() == 0)
         {
+        auto nuniq = Lis.r()+Ris.r()-2*ncont;
         operator*=(other.cplx());
         is_ = IndexSet(computeNewInds(Lis,Lind,Ris,Rind,nuniq));
         return *this;
@@ -683,6 +716,7 @@ operator*=(const ITensor& other)
     //Check if this is a scalar (modulo m==1 inds)
     if(Lis.rn() == 0)
         {
+        auto nuniq = Lis.r()+Ris.r()-2*ncont;
         auto newind = computeNewInds(Lis,Lind,Ris,Rind,nuniq);
         operator=(other*cplx());
         is_ = IndexSet(std::move(newind));
@@ -694,7 +728,7 @@ operator*=(const ITensor& other)
     is_ = C.newIndexSet();
 
     scale_ *= other.scale_;
-    if(C.scalefac() > 0) scale_ *= C.scalefac();
+    if(!std::isnan(C.scalefac())) scale_ *= C.scalefac();
 
     return *this;
     }
@@ -1061,9 +1095,9 @@ struct Conj : RegisterFunc<Conj>
     operator()(const ITCplx& cd) 
         { 
         auto& d = modifyData(cd);
-        auto* i = d.istart();
-        auto* ie = i+d.csize();
-        for(; i < ie; ++i) *i *= -1;
+        auto i = MAKE_SAFE_PTR(d.istart(),d.csize());
+        auto* ie = d.iend();
+        for(; i != ie; ++i) *i *= -1;
         }
     void
     operator()(const ITDiag<Complex>& cd) 
@@ -1399,9 +1433,10 @@ class SumEls : public RegisterFunc<SumEls,Complex>
         { 
         Real rsum = 0,
              isum = 0;
-        auto* p = d.rstart();
-        for(; p < d.istart(); ++p) rsum += *p;
-        for(; p < d.iend(); ++p)   isum += *p;
+        auto p = MAKE_SAFE_PTR(d.rstart(),d.csize());
+        for(; p != d.istart(); ++p) rsum += *p;
+        p = MAKE_SAFE_PTR(d.istart(),d.csize());
+        for(; p != d.iend(); ++p)   isum += *p;
         return Complex(rsum,isum);
         }
 

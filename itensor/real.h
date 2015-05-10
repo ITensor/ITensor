@@ -10,10 +10,6 @@
 #include "print.h"
 #include "types.h"
 
-//#ifndef NAN
-//#define NAN (std::numeric_limits<Real>::quiet_NaN())
-//#endif
-
 namespace itensor {
 
 static const Real Pi = M_PI;
@@ -23,46 +19,13 @@ static const Real ISqrt2 = 1.0/sqrt(2);
 template <typename T>
 T sqr(T x) { return x*x; }
 
-//static const Real ApproxReal_Accuracy = 1E-12;
-//struct ApproxReal
-//    {
-//    Real r;
-//
-//    //Default constructed to NAN 
-//    //to signal initialization errors
-//    ApproxReal() : r(NAN) {}
-//
-//    ApproxReal(Real _r) : r(_r) {}
-//
-//    bool 
-//    operator==(const ApproxReal& other) const
-//        { return fabs(r-other.r) <= ApproxReal_Accuracy; }
-//
-//    bool 
-//    operator!=(const ApproxReal& other) const
-//        { return fabs(r-other.r) > ApproxReal_Accuracy; }
-//
-//    bool
-//    operator<(const ApproxReal& other) const
-//        { return other.r-r > ApproxReal_Accuracy; }
-//
-//    ApproxReal& 
-//    operator+=(const ApproxReal &A)
-//        { r += A.r; return *this; }
-//
-//    ApproxReal& 
-//    operator+=(Real a)
-//        { r += a; return *this; }
-//
-//    };
-
 static const Real maxlogdouble = log(std::numeric_limits<double>::max());
 
 static const Real LogNumber_Accuracy = 1E-12;
 
 class TooBigForReal : public ITError
     {
-public:
+    public:
     using Parent = ITError;
 
     TooBigForReal(const std::string& message) 
@@ -72,7 +35,7 @@ public:
 
 class TooSmallForReal : public ITError
     {
-public:
+    public:
     using Parent = ITError;
 
     TooSmallForReal(const std::string& message) 

@@ -724,7 +724,7 @@ SECTION("Case 3")
     for(int j2 = 1; j2 <= b2.m(); ++j2)
     for(int j4 = 1; j4 <= b4.m(); ++j4)
         {
-        Real val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
+        auto val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
         CHECK_DIFF(res3.real(b4(j4),b2(j2)),val,1E-10);
         }
     }
@@ -744,7 +744,7 @@ SECTION("Case 4")
     for(int j2 = 1; j2 <= 2; ++j2)
     for(int j4 = 1; j4 <= 4; ++j4)
         {
-        Real val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
+        auto val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
         CHECK_DIFF(res4.real(b4(j4),b2(j2)),val,1E-10);
         }
     }
@@ -842,6 +842,74 @@ SECTION("Real-Complex")
             val += T1.cplx(b3(j3),b5(j5),l6(k6),s3(i3)) * T2.cplx(l6(k6),s4(i4),b3(j3));
             }
         CHECK_CLOSE(R.cplx(b5(j5),s3(i3),s4(i4)),val);
+        }
+    }
+
+SECTION("Real Times Scalar Complex")
+    {
+    auto T1 = randomTensor(b3,b5,a1),
+         T2 = randomTensorC(a1,a2);
+    CHECK(!isComplex(T1));
+    CHECK(isComplex(T2));
+    auto R1 = T1*T2;
+    for(int j5 = 1; j5 <= 5; ++j5)
+    for(int j3 = 1; j3 <= 3; ++j3)
+        {
+        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
+        CHECK_CLOSE(R1.cplx(b5(j5),b3(j3)),val);
+        } 
+    auto R2 = T1*T2;
+    for(int j5 = 1; j5 <= 5; ++j5)
+    for(int j3 = 1; j3 <= 3; ++j3)
+        {
+        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
+        CHECK_CLOSE(R2.cplx(b5(j5),b3(j3)),val);
+        } 
+    }
+
+SECTION("Complex Times Scalar Real")
+    {
+    auto T1 = randomTensorC(b3,b5,a1),
+         T2 = randomTensor(a1,a2);
+    CHECK(isComplex(T1));
+    CHECK(!isComplex(T2));
+    auto R1 = T1*T2;
+    for(int j5 = 1; j5 <= 5; ++j5)
+    for(int j3 = 1; j3 <= 3; ++j3)
+        {
+        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
+        CHECK_CLOSE(R1.cplx(b5(j5),b3(j3)),val);
+        }
+
+    auto R2 = T1*T2;
+    for(int j5 = 1; j5 <= 5; ++j5)
+    for(int j3 = 1; j3 <= 3; ++j3)
+        {
+        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
+        CHECK_CLOSE(R2.cplx(b5(j5),b3(j3)),val);
+        }
+    }
+
+SECTION("Complex Times Scalar Complex")
+    {
+    auto T1 = randomTensorC(b3,b5,a1),
+         T2 = randomTensorC(a1,a2);
+    CHECK(isComplex(T1));
+    CHECK(isComplex(T2));
+    auto R1 = T1*T2;
+    for(int j5 = 1; j5 <= 5; ++j5)
+    for(int j3 = 1; j3 <= 3; ++j3)
+        {
+        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
+        CHECK_CLOSE(R1.cplx(b5(j5),b3(j3)),val);
+        }
+
+    auto R2 = T2*T1;
+    for(int j5 = 1; j5 <= 5; ++j5)
+    for(int j3 = 1; j3 <= 3; ++j3)
+        {
+        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
+        CHECK_CLOSE(R2.cplx(b5(j5),b3(j3)),val);
         }
     }
 }

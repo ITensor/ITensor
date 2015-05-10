@@ -6,6 +6,7 @@
 #define __ITENSOR_ITCPLX_H
 
 #include "itreal.h"
+#include "safe_ptr.h"
 
 namespace itensor {
 
@@ -37,12 +38,14 @@ struct ITCplx : RegisterData<ITCplx>
 
     ITCplx(size_t size) : store(2*size,0) { }
 
+    //Set all elements equal to (val,0)
     ITCplx(size_t size, Real val) 
         : 
         store(2*size,0) 
         { 
         std::fill(store.begin(),store.begin()+csize(),val);
         }
+    //Set all elements equal to (val.real(),val.imag())
     ITCplx(size_t size, const Complex& val) 
         : 
         store(2*size) 
@@ -79,12 +82,12 @@ struct ITCplx : RegisterData<ITCplx>
     ITCplx&
     operator*=(const Complex& z)
         {
-        auto* r = rstart();
-        auto* re = istart(); //imag start is real end
-        auto* i = istart();
+        auto r = MAKE_SAFE_PTR(rstart(),csize());
+        auto re = istart(); //imag start is real end
+        auto i = MAKE_SAFE_PTR(istart(),csize());
         auto a = z.real(),
              b = z.imag();
-        for(; r < re; ++r, ++i)
+        for(; r != re; ++r, ++i)
             {
             auto nr = *r*a-*i*b;
             auto ni = *i*a+*r*b;
@@ -108,12 +111,13 @@ struct ITCplx : RegisterData<ITCplx>
     rstart() { return store.data(); }
     const Real*
     rstart() const { return store.data(); }
+    const Real*
+    rend() const { return store.data()+csize(); }
 
     Real*
     istart() { return store.data()+csize(); }
     const Real*
     istart() const { return store.data()+csize(); }
-
     const Real*
     iend() const { return store.data()+store.size(); }
 

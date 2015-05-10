@@ -50,9 +50,23 @@ struct ITReal : RegisterData<ITReal>
     //
 
     Real&
-    operator[](size_type i) { return store[i]; }
+    operator[](size_type i) 
+        { 
+#ifdef DEBUG
+        return store.at(i);
+#else
+        return store[i]; 
+#endif
+        }
     const Real&
-    operator[](size_type i) const { return store[i]; }
+    operator[](size_type i) const 
+        {
+#ifdef DEBUG
+        return store.at(i);
+#else
+        return store[i]; 
+#endif
+        }
 
     size_type
     size() const { return store.size(); }

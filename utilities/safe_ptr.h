@@ -8,7 +8,6 @@
 #include "print.h"
 
 namespace itensor {
-namespace detail {
 
 template<typename T>
 class SafePtr
@@ -17,6 +16,7 @@ class SafePtr
     using value_type = std::remove_const_t<T>;
     using pointer = T*;
     using reference = T&;
+    using const_pointer = const T*;
     private:
     pointer p_ = nullptr;
     size_t offset_ = 0;
@@ -33,6 +33,19 @@ class SafePtr
         : p_(pt), offset_(offset), offset_end_(offset_end)
         { 
         if(!p_) throw std::runtime_error("SafePtr: pointer is null");
+        }
+
+    size_t
+    offset() const { return offset_; }
+    size_t
+    offsetEnd() const { return offset_end_; }
+    bool
+    validOffset() const { return (offset_ < offset_end_); }
+    pointer
+    get() const 
+        { 
+        if(!p_) return nullptr;
+        return p_+offset_; 
         }
 
     explicit operator bool() const { return bool(p_); }
@@ -65,13 +78,32 @@ class SafePtr
     operator*()
         {
         if(!p_) throw std::runtime_error("SafePtr: dereferencing null pointer");
-        if(offset_ >= offset_end_) 
+        if(!validOffset())
             {
             auto error_msg = format("SafePtr: offset >= offset_end (%d >= %d)",offset_,offset_end_);
             throw std::runtime_error(error_msg);
             }
         return *(p_+offset_);
         }
+
+    reference
+    operator[](size_t ind)
+        {
+        if(!p_) throw std::runtime_error("SafePtr operator[]: dereferencing null pointer");
+        auto os = offset_+ind;
+        if(os >= offset_end_)
+            {
+            auto error_msg = format("SafePtr operator[](ind=%d): (offset+ind) >= offset_end (%d >= %d)",ind,os,offset_end_);
+            throw std::runtime_error(error_msg);
+            }
+        return *(p_+os);
+        }
+
+    bool
+    operator!=(const SafePtr& other) const { return get() != other.get(); }
+
+    bool
+    operator!=(const_pointer other) const { return get() != other; }
     };
 
 template<typename T>
@@ -88,8 +120,13 @@ makeSafePtr(T* pt, size_t offset, size_t offset_end)
     return SafePtr<T>(pt,offset,offset_end);
     }
 
+#ifdef DEBUG
+#define MAKE_SAFE_PTR(X,...) makeSafePtr(X,__VA_ARGS__)
+#else
+#define MAKE_SAFE_PTR(X,...) X
+#endif
 
-} //namespace detail
+
 } //namespace itensor
 
 #endif

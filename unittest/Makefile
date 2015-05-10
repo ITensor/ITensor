@@ -4,6 +4,9 @@ include ../options.mk
 
 HEADERS=test.h
 SOURCES=test.cc
+ifdef Test
+SOURCES+= $(Test)_test.cc
+else
 #SOURCES+= algorithm_test.cc
 SOURCES+= simplematrix_test.cc
 #SOURCES+= matrix_test.cc
@@ -26,6 +29,7 @@ SOURCES+= svdalgs_test.cc
 #SOURCES+= localmpo_test.cc
 #SOURCES+= siteset_test.cc
 #SOURCES+= bondgate_test.cc
+endif
 
 ##################################################################
 
@@ -48,6 +52,13 @@ LIBGFLAGS=-L$(ITENSOR_LIBDIR) $(ITENSOR_LIBGFLAGS)
 
 #Targets -----------------
 
+test_%: mkdebugdir .debug_objs/test.o $(ITENSOR_GLIBS) .debug_objs/%_test.o
+	$(CCCOM) $(CCGFLAGS) .debug_objs/test.o .debug_objs/%_test.o -o test-g $(LIBGFLAGS)
+	@echo 
+	@echo Running test index...
+	@echo 
+	@./test-g
+
 run: test-g
 	@echo 
 	@echo Running all tests...
@@ -58,12 +69,6 @@ growl:
 	@make run && growlnotify -m "Tests Passed" || growlnotify -m "Test Failed"
 
 debug: test-g
-
-#build: test
-
-
-#test: test.o $(ITENSOR_LIBS) $(OBJECTS)
-#	$(CCCOM) $(CCFLAGS) $(OBJECTS) -o test $(LIBFLAGS)
 
 test-g: mkdebugdir .debug_objs/test.o $(ITENSOR_GLIBS) $(GOBJECTS)
 	$(CCCOM) $(CCGFLAGS) $(GOBJECTS) -o test-g $(LIBGFLAGS)
