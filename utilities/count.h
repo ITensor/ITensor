@@ -7,18 +7,24 @@
 
 namespace itensor {
 
-template <typename T>
-struct CountHelper
+namespace detail {
+
+template <typename size_type>
+class CountHelper
     {
+    size_type curr_;
+    size_type end_;
+    public:
+
     constexpr
-    CountHelper(const T& b,
-                const T& e)
+    CountHelper(size_type b,
+                size_type e)
         : 
         curr_(b),
         end_(e)
         { }
 
-    const T& 
+    const size_type&
     operator*() const { return curr_; }
 
     CountHelper& 
@@ -28,56 +34,55 @@ struct CountHelper
         return *this;
         }
 
-    CountHelper 
-    begin() const { return CountHelper(curr_,end_); }
-    CountHelper 
-    end() const { return CountHelper(end_,end_); }
-
     bool
-    operator!=(const CountHelper& other)
+    operator!=(const CountHelper& other) const
         {
         return curr_ != other.curr_;
         }
 
-    private:
-    T curr_;
-    T end_;
+    CountHelper 
+    begin() const { return CountHelper(curr_,end_); }
+
+    CountHelper 
+    end() const { return CountHelper(end_,end_); }
     };
 
+} //namespace detail
+
 template <typename T> constexpr
-CountHelper<T>
+detail::CountHelper<T>
 count(T end)
     {
-    return CountHelper<T>(0,end);
+    return detail::CountHelper<T>(0,end);
     }
 
 template <typename ST, typename T> constexpr
-CountHelper<T>
+detail::CountHelper<T>
 count(ST start, T end)
     {
-    return CountHelper<T>(T(start),end);
+    return detail::CountHelper<T>(T(start),end);
     }
  
 template <typename C> constexpr
 auto
-index(const C& container) -> CountHelper<decltype(container.size())>
+index(const C& container) -> detail::CountHelper<decltype(container.size())>
     {
     using size_type = decltype(container.size());
-    return CountHelper<size_type>(0,container.size());
+    return detail::CountHelper<size_type>(0,container.size());
     }
 
 template <typename T> constexpr
-CountHelper<T>
+detail::CountHelper<T>
 count1(T end)
     {
-    return CountHelper<T>(1,1+end);
+    return detail::CountHelper<T>(1,1+end);
     }
 
 template <typename ST, typename T> constexpr
-CountHelper<T>
+detail::CountHelper<T>
 count1(ST start, T end)
     {
-    return CountHelper<T>(start,1+end);
+    return detail::CountHelper<T>(start,1+end);
     }
 
 }
