@@ -242,11 +242,17 @@ permute(const RTref<R1>& T,
         RTref<R2>& res,
         const Callable& func)
     {
-    auto r = P.size();
-
 #ifdef DEBUG
     if(res.size() != T.size()) Error("Mismatched storage sizes in permute");
 #endif
+
+    auto r = P.size();
+
+    if(r == 0)
+        {
+        func(*res.data(),*T.data());
+        return;
+        }
 
     //find largest index of T,
     //size "bigsize" and position "bigind"
@@ -329,6 +335,14 @@ permute(const RTref<R1>& A,
         const Label& Bi, 
         const Callable& func)
     {
+#ifdef DEBUG
+    if(Ai.size() != Bi.size()) Error("Mismatched sizes in permute");
+#endif
+    if(Ai.empty())
+        {
+        B.vref(0) = A.v(0);
+        return;
+        }
     Permutation P(Ai.size());
     detail::calc_permutation(Ai,Bi,P);
     permute(A,P,B,func);
