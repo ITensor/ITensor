@@ -387,6 +387,11 @@ std::ostream&
 printTensor(const char* type, std::ostream& s, const tensorref<T,RangeT>& t)
     {
     auto rank = t.r();
+    if(rank==0)
+        {
+        s << type << "() = " << t.v(0) << "\n";
+        return s;
+        }
     auto gc = detail::GCounter(0,rank-1,0);
     s << type << "(";
     for(int i = 0; i < rank; ++i)

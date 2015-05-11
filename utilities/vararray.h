@@ -8,21 +8,21 @@
 #include "print.h"
 
 #ifdef DEBUG
-#define BOUNDS_CHECK(X) bounds_check(X);
+#define CHECK_IND(X) check_ind(X);
 #else
-#define BOUNDS_CHECK(X)
+#define CHECK_IND(X)
 #endif
 
 #ifdef DEBUG
-#define SIZE_CHECK check_size();
+#define CHECK_SIZE check_size();
 #else
-#define SIZE_CHECK
+#define CHECK_SIZE
 #endif
 
 #ifdef DEBUG
-#define EMPTY_CHECK check_empty();
+#define CHECK_EMPTY check_empty();
 #else
-#define EMPTY_CHECK
+#define CHECK_EMPTY
 #endif
 
 namespace itensor {
@@ -60,6 +60,18 @@ class VarArray
         store_.fill(value);
         }
 
+    VarArray(std::initializer_list<T> init) 
+        : size_(init.size()) 
+        { 
+        CHECK_SIZE
+        size_t i = 0;
+        for(const auto& el : init)
+            {
+            store_[i] = el;
+            ++i;
+            }
+        }
+
     size_t
     size() const { return size_; }
 
@@ -73,48 +85,48 @@ class VarArray
     clear() { size_ = 0; }
 
     void
-    push_back(const_reference val) { store_[size_] = val; ++size_; SIZE_CHECK }
+    push_back(const_reference val) { store_[size_] = val; ++size_; CHECK_SIZE }
 
     void
-    push_back(value_type&& val) { store_[size_] = std::move(val); ++size_; SIZE_CHECK }
+    push_back(value_type&& val) { store_[size_] = std::move(val); ++size_; CHECK_SIZE }
 
     void
-    assign(size_t count, const_reference val) { size_=count; store_.fill(val); SIZE_CHECK }
+    assign(size_t count, const_reference val) { size_=count; store_.fill(val); CHECK_SIZE }
 
     explicit operator bool() const { return bool(size_); }
 
     reference
-    operator[](size_t i) { BOUNDS_CHECK(i) return store_[i]; }
+    operator[](size_t i) { CHECK_IND(i) return store_[i]; }
 
     const_reference
-    operator[](size_t i) const { BOUNDS_CHECK(i) return store_[i]; }
+    operator[](size_t i) const { CHECK_IND(i) return store_[i]; }
 
     reference
-    at(size_t i) { BOUNDS_CHECK(i) return store_[i]; }
+    at(size_t i) { CHECK_IND(i) return store_[i]; }
 
     const_reference
-    at(size_t i) const { BOUNDS_CHECK(i) return store_[i]; }
+    at(size_t i) const { CHECK_IND(i) return store_[i]; }
 
     reference
-    front() { EMPTY_CHECK return store_.front(); }
+    front() { CHECK_EMPTY return store_.front(); }
 
     const_reference
-    front() const { EMPTY_CHECK return store_.front(); }
+    front() const { CHECK_EMPTY return store_.front(); }
 
     reference
-    back() { EMPTY_CHECK return store_[size_==0 ? 0 : size_-1]; }
+    back() { CHECK_EMPTY return store_[size_==0 ? 0 : size_-1]; }
 
     const_reference
-    back() const { EMPTY_CHECK return store_[size_==0 ? 0 : size_-1]; }
+    back() const { CHECK_EMPTY return store_[size_==0 ? 0 : size_-1]; }
 
     pointer
-    data() { EMPTY_CHECK return store_[0]; }
+    data() { CHECK_EMPTY return store_[0]; }
 
     const_pointer
-    data() const { EMPTY_CHECK return store_[0]; }
+    data() const { CHECK_EMPTY return store_[0]; }
 
     bool
-    empty() const { return 0==size_; }
+    empty() const { return size_==0; }
 
     void
     fill(const_reference val) { store_.fill(val); }
@@ -142,14 +154,14 @@ class VarArray
 
     private:
     void
-    bounds_check(size_t i) const
+    check_ind(size_t i) const
         {
         if(i >= size_) throw std::out_of_range("index out of range in VarArray");
         }
     void
     check_size() const
         {
-        if(size_==MaxSize) throw std::runtime_error("VarArray overflow, increase MaxSize");
+        if(size_>=MaxSize) throw std::runtime_error("VarArray overflow, increase MaxSize");
         }
     void
     check_empty() const
@@ -158,9 +170,9 @@ class VarArray
         }
     };
 
-#undef EMPTY_CHECK
-#undef SIZE_CHECK
-#undef BOUNDS_CHECK
+#undef CHECK_EMPTY
+#undef CHECK_SIZE
+#undef CHECK_IND
 
 } //namespace itensor
 

@@ -13,11 +13,12 @@
 namespace itensor {
 
 static const Real Pi = M_PI;
-static const Real Sqrt2 = sqrt(2);
-static const Real ISqrt2 = 1.0/sqrt(2);
+static const Real Sqrt2 = std::sqrt(2.);
+static const Real ISqrt2 = 1./std::sqrt(2.);
 
 template <typename T>
-T sqr(T x) { return x*x; }
+T 
+sqr(T x) { return x*x; }
 
 static const Real maxlogdouble = log(std::numeric_limits<double>::max());
 
@@ -317,8 +318,7 @@ sqrt(LogNumber L)
     return L.pow(0.5);
     }
 
-inline 
-std::ostream& 
+inline std::ostream& 
 operator<<(std::ostream& s, const LogNumber& N)
     {
     s << "LogNumber(" << N.logNum() << ",";

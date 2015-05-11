@@ -671,19 +671,33 @@ contract(const RTref<RangeT>& A, const Label& ai,
          const RTref<RangeT>& B, const Label& bi, 
          RTref<RangeT>& C,       const Label& ci)
     {
+    if(ai.empty())
+        {
+        permute(B,bi,C,ci);
+        auto val = A.v(0);
+        for(auto& el : C) el *= val;
+        return;
+        }
+    else if(bi.empty())
+        {
+        permute(A,ai,C,ci);
+        auto val = B.v(0);
+        for(auto& el : C) el *= val;
+        return;
+        }
     ABCProps prop(ai,bi,ci);
     contract(prop,A,B,C);
     }
-template 
-void 
-contract(const RTref<Range>& A, const Label& ai, 
-         const RTref<Range>& B, const Label& bi, 
-         RTref<Range>& C,       const Label& ci);
-template 
-void 
-contract(const RTref<IndexSet>& A, const Label& ai, 
-         const RTref<IndexSet>& B, const Label& bi, 
-         RTref<IndexSet>& C,       const Label& ci);
+
+//Explicit template instantiations:
+template void 
+contract(const RTref<Range>&, const Label&, 
+         const RTref<Range>&, const Label&, 
+         RTref<Range>&,       const Label&);
+template void 
+contract(const RTref<IndexSet>&, const Label&, 
+         const RTref<IndexSet>&, const Label&, 
+         RTref<IndexSet>&,       const Label&);
 
 
 struct MultInfo
@@ -766,6 +780,11 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
              RTref<RangeT>& C,       const Label& ci,
              const Args& args)
     {
+    if(ai.empty() || bi.empty())
+        {
+        contract(A,ai,B,bi,C,ci);
+        return;
+        }
     //println();
     //println("Loop start--------------------------------");
     auto nthread = args.getInt("NThread",4);
@@ -782,6 +801,7 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
         contract(abc,A,B,C);
         return;
         }
+
 
     abc.computePerms();
 

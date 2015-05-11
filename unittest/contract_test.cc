@@ -2,6 +2,7 @@
 #include "itensor.h"
 #include "contract.h"
 #include "cputime.h"
+#include "count.h"
 
 using namespace itensor;
 
@@ -175,7 +176,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i3,i4)*B(i3,i7,i2);
                     }
-                CHECK_REQUAL(C(i4,i7),val);
+                CHECK_CLOSE(C(i4,i7),val);
                 }
             }
 
@@ -198,7 +199,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i3,i4)*B(i3,i7,i2);
                     }
-                CHECK_REQUAL(C(i7,i4),val);
+                CHECK_CLOSE(C(i7,i4),val);
                 }
             }
 
@@ -219,7 +220,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i4,i3)*B(i3,i7,i2);
                     }
-                CHECK_REQUAL(C(i7,i4),val);
+                CHECK_CLOSE(C(i7,i4),val);
                 }
             }
 
@@ -240,7 +241,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i4,i3)*B(i3,i7,i2);
                     }
-                CHECK_REQUAL(C(i4,i7),val);
+                CHECK_CLOSE(C(i4,i7),val);
                 }
             }
 
@@ -261,7 +262,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i3,i4)*B(i7,i3,i2);
                     }
-                CHECK_REQUAL(C(i4,i7),val);
+                CHECK_CLOSE(C(i4,i7),val);
                 }
             }
 
@@ -288,7 +289,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i3,i4,i5)*B(i7,i6,i3,i2);
                     }
-                CHECK_REQUAL(C(i5,i4,i6,i7),val);
+                CHECK_CLOSE(C(i5,i4,i6,i7),val);
                 }
             }
 
@@ -315,7 +316,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i3,i4,i5)*B(i7,i6,i3,i2);
                     }
-                CHECK_REQUAL(C(i5,i4,i6,i7),val);
+                CHECK_CLOSE(C(i5,i4,i6,i7),val);
                 }
             }
 
@@ -340,7 +341,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i3,i4,i5,i6,i7)*B(i8,i7,i5,i6,i9);
                     }
-                CHECK_REQUAL(C(i2,i8,i4,i3,i9),val);
+                CHECK_CLOSE(C(i2,i8,i4,i3,i9),val);
                 }
             }
 
@@ -366,7 +367,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i3,i4)*B(i7,i2,i3);
                     }
-                CHECK_REQUAL(C(i4,i7),val);
+                CHECK_CLOSE(C(i4,i7),val);
                 }
             }
 
@@ -387,7 +388,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i4,i2,i3)*B(i7,i2,i3);
                     }
-                CHECK_REQUAL(C(i4,i7),val);
+                CHECK_CLOSE(C(i4,i7),val);
                 }
             }
 
@@ -408,7 +409,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i4,i2,i3)*B(i2,i3,i7);
                     }
-                CHECK_REQUAL(C(i4,i7),val);
+                CHECK_CLOSE(C(i4,i7),val);
                 }
             }
 
@@ -429,7 +430,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i3,i4)*B(i2,i3,i7);
                     }
-                CHECK_REQUAL(C(i4,i7),val);
+                CHECK_CLOSE(C(i4,i7),val);
                 }
             }
 
@@ -451,11 +452,52 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i4,i3,i2)*B(i5,i4,i3,i2);
                     }
-                CHECK_REQUAL(C(i5),val);
+                CHECK_CLOSE(C(i5),val);
                 }
             }
 
         } // Contract Reshape Matrix
+
+    SECTION("Zero Rank Cases")
+        {
+        SECTION("Case 1")
+            {
+            RTensor A(4,3,2),
+                    C(2,4,3);
+            randomize(A);
+            auto Bval = 2.;
+            std::vector<Real> Bdat(1,Bval);
+            Range Br;
+            tensorref<Real> B(Bdat.data(),Br);
+
+            contract(A,{4,3,2},B,{},C,{2,4,3});
+            for(auto i2 : count(2))
+            for(auto i3 : count(3))
+            for(auto i4 : count(4))
+                {
+                CHECK_CLOSE(C(i2,i4,i3),Bval * A(i4,i3,i2));
+                }
+            }
+
+        SECTION("Case 2")
+            {
+            RTensor A(2,3,4),
+                    C(2,4,3);
+            randomize(A);
+            auto Bval = Global::random();
+            std::vector<Real> Bdat(1,Bval);
+            Range Br;
+            tensorref<Real> B(Bdat.data(),Br);
+
+            contract(B,{},A,{2,3,4},C,{2,4,3});
+            for(auto i2 : count(2))
+            for(auto i3 : count(3))
+            for(auto i4 : count(4))
+                {
+                CHECK_CLOSE(C(i2,i4,i3),Bval * A(i2,i3,i4));
+                }
+            }
+        }
 
     SECTION("Contract Loop")
         {
@@ -481,7 +523,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i1,i2,i4,i5)*B(i3,i1,i4,i6);
                     }
-                CHECK_REQUAL(C(i3,i2,i5,i6),val);
+                CHECK_CLOSE(C(i3,i2,i5,i6),val);
                 }
             }
 
@@ -507,7 +549,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i1,i2,i4,i5)*B(i1,i3,i4,i6);
                     }
-                CHECK_REQUAL(C(i3,i2,i5,i6),val);
+                CHECK_CLOSE(C(i3,i2,i5,i6),val);
                 }
             }
 
@@ -533,7 +575,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i1,i2,i4,i5)*B(i3,i1,i4,i6);
                     }
-                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                CHECK_CLOSE(C(i2,i3,i5,i6),val);
                 }
             }
 
@@ -559,7 +601,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i1,i2,i4,i5)*B(i1,i3,i4,i6);
                     }
-                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                CHECK_CLOSE(C(i2,i3,i5,i6),val);
                 }
             }
 
@@ -585,7 +627,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i3,i1,i4,i5)*B(i2,i1,i4,i6);
                     }
-                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                CHECK_CLOSE(C(i2,i3,i5,i6),val);
                 }
             }
 
@@ -611,7 +653,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i1,i4,i5)*B(i3,i1,i4,i6);
                     }
-                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                CHECK_CLOSE(C(i2,i3,i5,i6),val);
                 }
             }
 
@@ -637,7 +679,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i3,i1,i4,i5)*B(i1,i2,i4,i6);
                     }
-                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                CHECK_CLOSE(C(i2,i3,i5,i6),val);
                 }
 
             RTensor Ap(m2,m1,4,5),
@@ -657,7 +699,7 @@ TEST_CASE("Contract Test")
                     {
                     val += Ap(i2,i1,i4,i5)*Bp(i1,i3,i4,i6);
                     }
-                CHECK_REQUAL(Cp(i3,i2,i5,i6),val);
+                CHECK_CLOSE(Cp(i3,i2,i5,i6),val);
                 }
             }
 
@@ -683,7 +725,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i2,i1,i4,i5)*B(i1,i3,i4,i6);
                     }
-                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                CHECK_CLOSE(C(i2,i3,i5,i6),val);
                 }
             }
 
@@ -717,7 +759,7 @@ TEST_CASE("Contract Test")
                     {
                     val += A(i1,i2,i4,i5)*B(i1,i3,i4,i6);
                     }
-                CHECK_REQUAL(C(i2,i3,i5,i6),val);
+                CHECK_CLOSE(C(i2,i3,i5,i6),val);
                 }
             }
 #endif

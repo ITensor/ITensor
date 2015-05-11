@@ -10,10 +10,11 @@
 #include "permutation.h"
 #include "simpletensor.h"
 #include "safe_ptr.h"
+#include "detail/algs.h"
 
 namespace itensor {
 
-using Label = VarArray<long,63>; //sizeof(VarArray<long,63>)==512
+using Label = VarArray<long,63ul>; //sizeof(VarArray<long,63ul>)==512
 
 template<typename RangeT>
 using RTref = tensorref<Real,RangeT>;
@@ -57,6 +58,14 @@ void
 permute(const RTref<R1>& T, 
         const Permutation& P, 
         RTref<R2>& res,
+        const Callable& func);
+
+template<typename R1, typename R2, typename Callable>
+void 
+permute(const RTref<R1>& A, 
+        const Label& Ai, 
+        RTref<R2>& B,
+        const Label& Bi, 
         const Callable& func);
 
 template<typename RangeT>
@@ -310,6 +319,29 @@ permute(const RTref<RangeT>& T,
     res.resize(resdims);
     tensorref<Real,Range> res_ref(res.data(),res.inds());
     permute(T,P,res_ref);
+    }
+
+template<typename R1, typename R2, typename Callable>
+void 
+permute(const RTref<R1>& A, 
+        const Label& Ai, 
+        RTref<R2>& B,
+        const Label& Bi, 
+        const Callable& func)
+    {
+    Permutation P(Ai.size());
+    detail::calc_permutation(Ai,Bi,P);
+    permute(A,P,B,func);
+    }
+
+template<typename R1, typename R2>
+void 
+permute(const RTref<R1>& A, 
+        const Label& Ai, 
+        RTref<R2>& B,
+        const Label& Bi)
+    {
+    permute(A,Ai,B,Bi,detail::assign<Real>);
     }
 
 } //namespace itensor
