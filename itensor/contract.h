@@ -281,8 +281,8 @@ permute(const RTref<R1>& T,
         for(int j = 0; j < r; ++j)
             ri[P.dest(j)] = c.i[j];
 
-        auto pr = MAKE_SAFE_PTR(res.data(),ind(res,ri),res.size());
-        auto pt = MAKE_SAFE_PTR(T.data(),ind(T,c.i),T.size());
+        auto pr = MAKE_SAFE_PTR3(res.data(),ind(res,ri),res.size());
+        auto pt = MAKE_SAFE_PTR3(T.data(),ind(T,c.i),T.size());
         for(int b = 0; b < bigsize; ++b)
             {
             //func defaults to (*pr = *pt) but can also 
