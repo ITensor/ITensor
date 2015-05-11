@@ -714,14 +714,16 @@ operator*=(const ITensor& other)
         return *this;
         }
     //Check if this is a scalar (modulo m==1 inds)
-    if(Lis.rn() == 0)
-        {
-        auto nuniq = Lis.r()+Ris.r()-2*ncont;
-        auto newind = computeNewInds(Lis,Lind,Ris,Rind,nuniq);
-        operator=(other*cplx());
-        is_ = IndexSet(std::move(newind));
-        return *this;
-        }
+    //---> This case is problematic to implement this way.
+    //     For example, what if other has ITCombiner storage?
+    //if(Lis.rn() == 0)
+    //    {
+    //    auto nuniq = Lis.r()+Ris.r()-2*ncont;
+    //    auto newind = computeNewInds(Lis,Lind,Ris,Rind,nuniq);
+    //    operator=(other*cplx());
+    //    is_ = IndexSet(std::move(newind));
+    //    return *this;
+    //    }
 
     auto C = applyFunc<Contract>(store_,other.store_,Lis,Lind,Ris,Rind);
 
