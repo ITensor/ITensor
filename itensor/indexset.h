@@ -278,12 +278,12 @@ template <class IndexT>
 long
 maxM(const IndexSetT<IndexT>& iset);
 
-template<class IndexT>
+template<class IndexT, class ContainerT>
 void
 contractIS(const IndexSetT<IndexT>& Lis,
-          const std::vector<int>& Lind,
+          const ContainerT& Lind,
           const IndexSetT<IndexT>& Ris,
-          const std::vector<int>& Rind,
+          const ContainerT& Rind,
           IndexSetT<IndexT>& Nis,
           bool sortResult);
 

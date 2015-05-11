@@ -10,7 +10,8 @@ include ../options.mk
 
 HEADERS=tinyformat.h print.h types.h indent.h cputime.h \
         flstring.h args.h input.h error.h  cplx_literal.h \
-        autovector.h optional_ptr.h count.h safe_ptr.h
+        autovector.h optional_ptr.h count.h safe_ptr.h \
+        vararray.h
 
 OBJECTS = error.o 
 OBJECTS += cputime.o 

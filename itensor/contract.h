@@ -6,7 +6,6 @@
 #define __ITENSOR_CONTRACT_H
 
 #include <array>
-
 #include "print.h"
 #include "permutation.h"
 #include "simpletensor.h"
@@ -14,9 +13,10 @@
 
 namespace itensor {
 
+using Label = VarArray<long,63>; //sizeof(VarArray<long,63>)==512
+
 template<typename RangeT>
 using RTref = tensorref<Real,RangeT>;
-using Label = std::vector<int>;
 
 template<typename Inds, typename Func>
 long
@@ -130,6 +130,17 @@ findIndex(const std::vector<T>& v,
           const T& t)
     {
     using size_type = typename std::vector<T>::size_type;
+    for(size_type i = 0; i < v.size(); ++i)
+        if(v[i] == t) return i;
+    return -1;
+    }
+
+template<typename T, size_t MaxSize>
+long 
+findIndex(const VarArray<T,MaxSize>& v, 
+          const T& t)
+    {
+    using size_type = typename VarArray<T,MaxSize>::size_type;
     for(size_type i = 0; i < v.size(); ++i)
         if(v[i] == t) return i;
     return -1;

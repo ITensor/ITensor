@@ -1182,6 +1182,22 @@ SECTION("Combiner")
         CHECK(hasindex(Rl2b,b5));
         CHECK(hasindex(Rl2b,s1));
         }
+
+    SECTION("Scalar Case")
+        {
+        Index a("a",1),
+              b("b",1),
+              c("c",1);
+
+        auto T = randomTensor(a,b,c);
+        auto C = combiner(a,c);
+        auto R = T*C;
+        auto ci = commonIndex(C,R);
+
+        CHECK(hasindex(R,ci));
+        CHECK(hasindex(R,b));
+        CHECK_CLOSE(T.real(),R.real());
+        }
     }
 
 SECTION("Norm")

@@ -674,18 +674,18 @@ maxM(const IndexSetT<IndexT>& iset)
     return mm;
     }
 
-template<class IndexT>
+template<class IndexT, class ContainerT>
 void
 contractIS(const IndexSetT<IndexT>& Lis,
-          const std::vector<int>& Lind,
-          const IndexSetT<IndexT>& Ris,
-          const std::vector<int>& Rind,
-          IndexSetT<IndexT>& Nis,
-          bool sortResult)
+           const ContainerT& Lind,
+           const IndexSetT<IndexT>& Ris,
+           const ContainerT& Rind,
+           IndexSetT<IndexT>& Nis,
+           bool sortResult)
     {
     long ncont = 0;
     for(const auto& i : Lind) if(i < 0) ++ncont;
-    long nuniq = Lis.r()+Ris.r()-2*ncont;
+    auto nuniq = Lis.r()+Ris.r()-2*ncont;
     std::vector<IndexT> newind(nuniq);
     long nn = 0;
     for(int j = 0; j < Lis.r(); ++j)
