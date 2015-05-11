@@ -8,6 +8,7 @@
 //
 // Headers and typedefs
 //
+#include <vector>
 
 #ifdef PLATFORM_lapack
 
@@ -230,12 +231,12 @@ dsyev_wrapper(char* jobz,        //if jobz=='V', compute eigs and evecs
               LAPACK_INT* info)  //error info
     {
     LAPACK_INT lwork = max(1,3*(*n)-1);
-    LAPACK_REAL work[lwork];
+    std::vector<LAPACK_REAL> work(lwork);
 
 #ifdef PLATFORM_acml
-    F77NAME(dsyev)(jobz,uplo,n,A,lda,eigs,work,&lwork,info,1,1);
+    F77NAME(dsyev)(jobz,uplo,n,A,lda,eigs,&work[0],&lwork,info,1,1);
 #else
-    F77NAME(dsyev)(jobz,uplo,n,A,lda,eigs,work,&lwork,info);
+    F77NAME(dsyev)(jobz,uplo,n,A,lda,eigs,&work[0],&lwork,info);
 #endif
     }
 
@@ -253,14 +254,14 @@ zgesdd_wrapper(char *jobz,           //char* specifying how much of U, V to comp
     LAPACK_INT l = min(*m,*n),
                g = max(*m,*n);
     LAPACK_INT lwork = l*l+2*l+g+100;
-    LAPACK_COMPLEX work[lwork];
-    LAPACK_REAL rwork[5*l*(1+l)];
-    LAPACK_INT iwork[8*l];
+    std::vector<LAPACK_COMPLEX> work(lwork);
+    std::vector<LAPACK_REAL> rwork(5*l*(1+l));
+    std::vector<LAPACK_INT> iwork(8*l);
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
-    F77NAME(zgesdd)(jobz,m,n,A,m,s,u,m,vt,n,work,&lwork,rwork,iwork,info,jobz_len);
+    F77NAME(zgesdd)(jobz,m,n,A,m,s,u,m,vt,n,&work[0],&lwork,&rwork[0],&iwork[0],info,jobz_len);
 #else
-    F77NAME(zgesdd)(jobz,m,n,A,m,s,u,m,vt,n,work,&lwork,rwork,iwork,info);
+    F77NAME(zgesdd)(jobz,m,n,A,m,s,u,m,vt,n,&work[0],&lwork,&rwork[0],&iwork[0],info);
 #endif
     }
 
@@ -280,8 +281,8 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* info)  //error info
     {
     int lwork = max(1,4*max(*n,*m));
-    LAPACK_REAL work[lwork]; 
-    F77NAME(dgeqrf)(m,n,A,lda,tau,work,&lwork,info);
+    std::vector<LAPACK_REAL> work(lwork); 
+    F77NAME(dgeqrf)(m,n,A,lda,tau,&work[0],&lwork,info);
     }
 
 //
@@ -300,8 +301,8 @@ dorgqr_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* info)  //error info
     {
     int lwork = max(1,4*max(*n,*m));
-    LAPACK_REAL work[lwork]; 
-    F77NAME(dorgqr)(m,n,k,A,lda,tau,work,&lwork,info);
+    std::vector<LAPACK_REAL> work(lwork); 
+    F77NAME(dorgqr)(m,n,k,A,lda,tau,&work[0],&lwork,info);
     }
 
 //
@@ -351,13 +352,13 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
     {
     int itype = 1;
     LAPACK_INT lwork = max(1,3*(*n)-1);//max(1, 1+6*N+2*N*N);
-    LAPACK_REAL work[lwork];
+    std::vector<LAPACK_REAL> work(lwork);
 #ifdef PLATFORM_acml
     LAPACK_INT jobz_len = 1;
     LAPACK_INT uplo_len = 1;
-    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,work,&lwork,info,jobz_len,uplo_len);
+    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,&work[0],&lwork,info,jobz_len,uplo_len);
 #else
-    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,work,&lwork,info);
+    F77NAME(dsygv)(&itype,jobz,uplo,n,A,n,B,n,d,&work[0],&lwork,info);
 #endif
     }
 
@@ -381,13 +382,13 @@ dgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
     int nevecl = (*jobvl == 'V' ? *n : 1);
     int nevecr = (*jobvr == 'V' ? *n : 1);
     LAPACK_INT lwork = max(1,4*(*n));
-    LAPACK_REAL work[lwork];
+    std::vector<LAPACK_REAL> work(lwork);
 #ifdef PLATFORM_acml
     LAPACK_INT jobvl_len = 1;
     LAPACK_INT jobvr_len = 1;
-    F77NAME(dgeev)(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work,&lwork,info,jobvl_len,jobvr_len);
+    F77NAME(dgeev)(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,&work[0],&lwork,info,jobvl_len,jobvr_len);
 #else
-    F77NAME(dgeev)(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,work,&lwork,info);
+    F77NAME(dgeev)(jobvl,jobvr,n,A,n,dr,di,vl,&nevecl,vr,&nevecr,&work[0],&lwork,info);
 #endif
     }
 
@@ -410,13 +411,13 @@ zgeev_wrapper(char* jobvl,          //if 'V', compute left eigenvectors, else 'N
     int nevecl = (*jobvl == 'V' ? *n : 1);
     int nevecr = (*jobvr == 'V' ? *n : 1);
     LAPACK_INT lwork = max(1,4*(*n));
-    LAPACK_COMPLEX work[lwork];
+    std::vector<LAPACK_COMPLEX> work(lwork);
     LAPACK_INT lrwork = max(1,2*(*n));
-    LAPACK_REAL rwork[lrwork];
+    std::vector<LAPACK_REAL> rwork(lrwork);
 #ifdef PLATFORM_acml
-    F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info,1,1);
+    F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,&work[0],&lwork,&rwork[0],info,1,1);
 #else
-    F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,work,&lwork,rwork,info);
+    F77NAME(zgeev)(jobvl,jobvr,n,A,n,d,vl,&nevecl,vr,&nevecr,&work[0],&lwork,&rwork[0],info);
 #endif
     }
 
