@@ -26,6 +26,7 @@ class IQIndex : public Index
     public:
 
     using storage = std::vector<IndexQN>;
+    using IndexValT = IQIndexVal;
     //
     //Constructors
     //

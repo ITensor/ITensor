@@ -8,6 +8,7 @@
 #include "permutation.h"
 #include "range.h"
 #include <algorithm>
+#include "safe_ptr.h"
 
 namespace itensor {
 
@@ -168,17 +169,22 @@ class IndexSetT
 // IndexSetT Primelevel Methods
 //
 
-template<typename IndexT>
+template<typename IndexT, typename... Types>
 void 
-prime(IndexSetT<IndexT>& is, IndexType type, int inc = 1);
+prime(IndexSetT<IndexT>& is, 
+      IndexType type,
+      int inc = 1);
+
+template<typename IndexT, typename... Types>
+void 
+prime(IndexSetT<IndexT>& is, 
+      IndexType type1,
+      IndexType type2,
+      Types&&... rest);
 
 template<typename IndexT>
 void 
 prime(IndexSetT<IndexT>& is, int inc = 1) { prime(is,All,inc); }
-
-template<typename IndexT>
-void 
-prime(IndexSetT<IndexT>& is, const IndexT& I, int inc = 1);
 
 template<typename IndexT, typename... IVals>
 void 

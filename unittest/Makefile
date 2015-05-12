@@ -4,8 +4,8 @@ include ../options.mk
 
 HEADERS=test.h
 SOURCES=test.cc
-ifdef Test
-SOURCES+= $(Test)_test.cc
+ifdef test
+SOURCES+= $(test)_test.cc
 else
 #SOURCES+= algorithm_test.cc
 SOURCES+= simplematrix_test.cc

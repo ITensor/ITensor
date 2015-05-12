@@ -285,25 +285,58 @@ init(Iterable&& inds)
 //
 
 namespace detail {
-    template <class IndexT>
-    int
-    primeInds(IndexSetT<IndexT>& is,
-              const IndexT& I1, 
-              int inc = 1)
+    template<typename IndexT>
+    int 
+    primeTypes(IndexSetT<IndexT>& is, 
+               int inc = 1)
         {
-        prime(is,I1,inc);
         return inc;
         }
-
-    template <class IndexT, typename... Inds>
+    template<typename IndexT, typename... Types>
+    int 
+    primeTypes(IndexSetT<IndexT>& is, 
+               IndexType type,
+               Types&&... rest)
+        {
+        auto inc = primeTypes(is,std::forward<Types>(rest)...);
+        for(auto& J : is) J.prime(type,inc);
+        return inc;
+        }
+    template<class IndexT>
+    typename IndexT::IndexValT
+    computeReplacement(const IndexSetT<IndexT>& is,
+                       typename IndexT::IndexValT iv)
+        {
+        for(size_t i = 0; i < is.size(); ++i)
+            if(is[i]==iv.index)
+                {
+                iv.index = prime(is[i],iv.val);
+                iv.val = i;
+                return iv;
+                }
+        println("IndexSetT = ",is);
+        println("Missing index = ",iv.index);
+        Error("index not found");
+        return iv;
+        }
+    template <class IndexT, class IVPtr>
     int
-    primeInds(IndexSetT<IndexT>& is,
+    primeInds(const IndexSetT<IndexT>& is,
+              const IVPtr& pr,
+              int inc = 1)
+        {
+        return inc;
+        }
+    template <class IndexT, class IVPtr, typename... Inds>
+    int
+    primeInds(const IndexSetT<IndexT>& is,
+              IVPtr& pr,
               const IndexT& I1, 
-              const IndexT& I2, 
               Inds&&... inds)
         {
-        auto inc = primeInds(is,I2,std::forward<Inds>(inds)...);
-        prime(is,I1,inc);
+        auto r = pr;
+        auto inc = primeInds(is,++pr,std::forward<Inds>(inds)...);
+        *r = computeReplacement(is,I1(inc));
         return inc;
         }
     template<typename IndexT>
@@ -392,44 +425,39 @@ namespace detail {
         }
 } //namespace detail
 
-
-template<typename IndexT>
-void 
-prime(IndexSetT<IndexT>& is, IndexType type, int inc)
-	{
-    for(auto& J : is) J.prime(type,inc);
-	}
-
-template<typename IndexT>
+template<typename IndexT, typename... Types>
 void 
 prime(IndexSetT<IndexT>& is, 
-      const IndexT& I, 
+      IndexType type,
       int inc)
     {
-    for(auto& J : is) if(I == J)
-        {
-        J.prime(inc);
-        return;
-        }
-    Print(is);
-    Print(I);
-    Error("prime(IndexSetT,IndexT): index not found.");
-#ifdef DEBUG
-    detail::check(is);
-#endif
+    for(auto& J : is) J.prime(type,inc);
     }
 
-
+template<typename IndexT, typename... Types>
+void 
+prime(IndexSetT<IndexT>& is, 
+      IndexType type1,
+      IndexType type2,
+      Types&&... rest)
+    {
+    detail::primeTypes(is,type1,type2,std::forward<Types>(rest)...);
+    }
 
 template<typename IndexT, typename... Inds>
 void 
 prime(IndexSetT<IndexT>& is, 
       const IndexT& I1, 
-      const IndexT& I2, 
-      Inds&&... inds)
+      Inds&&... rest)
     {
-    auto inc = detail::primeInds(is,I2,std::forward<Inds>(inds)...);
-    prime(is,I1,inc);
+    std::array<typename IndexT::IndexValT,1+sizeof...(Inds)> repl;
+    auto rs = MAKE_SAFE_PTR(repl.data(),repl.size());
+    auto re = rs;
+    detail::primeInds(is,re,I1,std::forward<Inds>(rest)...);
+    for(; rs != re; ++rs)
+        {
+        is[rs->val] = rs->index;
+        }
 #ifdef DEBUG
     detail::check(is);
 #endif
@@ -439,10 +467,17 @@ template<typename IndexT, typename... IVals>
 void 
 prime(IndexSetT<IndexT>& is,
       const typename IndexT::IndexValT& iv1,
-      IVals&&... ivs)
+      IVals&&... rest)
     {
-    prime(is,iv1.index,iv1.val);
-    if(sizeof...(ivs)!=0) prime(is,std::forward<IVals>(ivs)...);
+    std::array<typename IndexT::IndexValT,1+sizeof...(IVals)> ivs{{iv1,rest...}};
+    for(size_t i = 0; i < ivs.size(); ++i)
+        {
+        ivs[i] = detail::computeReplacement(is,ivs[i]);
+        }
+    for(auto& iv : ivs) 
+        {
+        is[iv.val] = iv.index;
+        }
 #ifdef DEBUG
     detail::check(is);
 #endif
