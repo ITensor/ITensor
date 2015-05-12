@@ -41,6 +41,7 @@ class SafePtr
     offsetEnd() const { return offset_end_; }
     bool
     validOffset() const { return (offset_ < offset_end_); }
+
     pointer
     get() const 
         { 
@@ -48,13 +49,33 @@ class SafePtr
         return p_+offset_; 
         }
 
+    pointer
+    safeGet() const 
+        {
+        if(!p_) throw std::runtime_error("SafePtr: dereferencing null pointer");
+        if(!validOffset())
+            {
+            auto error_msg = format("SafePtr: offset >= offset_end (%d >= %d)",offset_,offset_end_);
+            throw std::runtime_error(error_msg);
+            }
+        return (p_+offset_);
+        }
+
     explicit operator bool() const { return bool(p_); }
 
     SafePtr&
     operator+=(size_t shift)
         {
-        if(!p_) throw std::runtime_error("SafePtr: incrementing null pointer");
+        if(!p_) throw std::runtime_error("SafePtr: incrementing (+=) null pointer");
         offset_ += shift;
+        return *this;
+        }
+
+    SafePtr&
+    operator-=(size_t shift)
+        {
+        if(!p_) throw std::runtime_error("SafePtr: decrementing (-=) null pointer");
+        offset_ -= shift;
         return *this;
         }
 
@@ -74,17 +95,27 @@ class SafePtr
         return *this;
         }
 
-    reference
-    operator*()
+    SafePtr&
+    operator--()
         {
-        if(!p_) throw std::runtime_error("SafePtr: dereferencing null pointer");
-        if(!validOffset())
-            {
-            auto error_msg = format("SafePtr: offset >= offset_end (%d >= %d)",offset_,offset_end_);
-            throw std::runtime_error(error_msg);
-            }
-        return *(p_+offset_);
+        if(!p_) throw std::runtime_error("SafePtr: decrementing null pointer");
+        --offset_;
+        return *this;
         }
+
+    SafePtr&
+    operator--(int)
+        {
+        if(!p_) throw std::runtime_error("SafePtr: decrementing null pointer");
+        --offset_;
+        return *this;
+        }
+
+    reference
+    operator*() { return *safeGet(); }
+
+    pointer
+    operator->() { return safeGet(); }
 
     reference
     operator[](size_t ind)
@@ -104,7 +135,16 @@ class SafePtr
 
     bool
     operator!=(const_pointer other) const { return get() != other; }
+
     };
+
+template<typename T>
+SafePtr<T>
+operator+(size_t inc, SafePtr<T> p) { p += inc; return p; }
+
+template<typename T>
+SafePtr<T>
+operator+(SafePtr<T> p, size_t inc) { p += inc; return p; }
 
 template<typename T>
 SafePtr<T>
