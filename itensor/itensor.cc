@@ -1523,7 +1523,7 @@ read(std::istream& s, ITensor& T)
     s.read((char*)&type,sizeof(type));
     ITensor::storage_ptr p;
     if(type==ITStorage::Null) { /*intentionally left blank*/  }
-    else if(type==ITStorage::Real) { println("Reading ITensor of type ITReal"); p = readType<ITReal>(s); }
+    else if(type==ITStorage::Real) { p = readType<ITReal>(s); }
     else if(type==ITStorage::Cplx) { p = readType<ITCplx>(s); }
     else if(type==ITStorage::Combiner) { p = readType<ITCombiner>(s); }
     else if(type==ITStorage::DiagReal) { p = readType<ITDiag<Real>>(s); }
