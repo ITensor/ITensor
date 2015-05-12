@@ -105,7 +105,28 @@ struct GetElt : RegisterFunc<GetElt<size>,Complex>
         : 
         is_(is),
         inds_(inds)
-        { }
+        { 
+#ifdef DEBUG
+        for(size_t k = 0; k < inds.size(); ++k)
+            {
+            auto i = inds[k];
+            if(i < 0)
+                {
+                print("inds = ");
+                for(auto j : inds) print(1+j," ");
+                println();
+                Error("Out of range: IndexVals are 1-indexed for getting ITensor elements");
+                }
+            if(i >= is[k].m())
+                {
+                print("inds = ");
+                for(auto j : inds) print(1+j," ");
+                println();
+                Error(format("Out of range: IndexVal at position %d has val %d > %d",1+k,1+i,is[k].m()));
+                }
+            }
+#endif
+        }
 
     Complex
     operator()(const ITReal& d)
