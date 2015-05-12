@@ -192,31 +192,46 @@ computeLabels(const Inds& Lis,
     //set corresponding entries of Lind, Rind
     //to 1,2,...,ncont
        // if(Lis[i] == Ris[j])
-    long ncont = 1;
+#ifdef DEBUG
+    if(Global::debug2()) print("Contracting: ");
+#endif
+    long ncont = 0;
     for(long i = 0; i < rL; ++i)
     for(long j = 0; j < rR; ++j)
         if(Lis[i] == Ris[j])
             {
+#ifdef DEBUG
+            if(Global::debug2())
+                {
+                print(Lis[i],", ");
+                }
+#endif
             //Negative entries in 
             //Lind, Rind indicate
             //contracted indices
-            Lind[i] = -ncont;
-            Rind[j] = -ncont;
+            Lind[i] = -(1+ncont);
+            Rind[j] = -(1+ncont);
             checkCont(Lis[i],Ris[j]);
             ++ncont;
             break;
             }
+#ifdef DEBUG
+    if(Global::debug2()) 
+        {
+        println(" p = ",Lis.r()+Ris.r()-ncont);
+        }
+#endif
 
     //Go through and assign uncontracted entries of Lind,Rind
     //the integers ncont+1,ncont+2,...
     auto uu = ncont;
     for(long j = 0; j < rL; ++j)
         {
-        if(Lind[j] == 0) Lind[j] = uu++;
+        if(Lind[j] == 0) Lind[j] = ++uu;
         }
     for(long j = 0; j < rR; ++j)
         {
-        if(Rind[j] == 0) Rind[j] = uu++;
+        if(Rind[j] == 0) Rind[j] = ++uu;
         }
     return ncont;
     }
