@@ -171,6 +171,7 @@ SECTION("PrimeLevelMethods")
         SECTION("Case 3")
             {
             IndexSet is(i2,w3,prime(i2),v4);
+            //Use multiple IndexType arguments
             prime(is,Wtype,Vtype);
             CHECK(is[0] == i2);
             CHECK(is[1] == prime(w3));
@@ -180,6 +181,8 @@ SECTION("PrimeLevelMethods")
         SECTION("Case 4")
             {
             IndexSet is(i2,w3,prime(i2),v4);
+            //Use multiple IndexType arguments
+            //and an increment
             prime(is,Wtype,Vtype,4);
             CHECK(is[0] == i2);
             CHECK(is[1] == prime(w3,4));
@@ -250,9 +253,14 @@ SECTION("PrimeLevelMethods")
             CHECK(is[2] == prime(i2,3));
             CHECK(is[3] == i4);
             }
+        SECTION("Check Error Condition")
+            {
+            IndexSet is(i5,i2,i3,i4);
+            CHECK_THROWS_AS(prime(is,prime(i2)(3)),ITError);
+            }
         }
 
-    SECTION("NoPrimeIndex")
+    SECTION("NoPrime Index")
         {
         }
 

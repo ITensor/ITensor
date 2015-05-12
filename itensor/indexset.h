@@ -179,7 +179,6 @@ template<typename IndexT, typename... Types>
 void 
 prime(IndexSetT<IndexT>& is, 
       IndexType type1,
-      IndexType type2,
       Types&&... rest);
 
 template<typename IndexT>
