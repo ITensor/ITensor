@@ -344,42 +344,6 @@ namespace detail {
         return findIndexVar(cmp,I,std::forward<Rest>(rest)...);
         }
 
-    template <class IndexT>
-    void
-    noprimeInds(IndexSetT<IndexT>& is,
-                const IndexT& I)
-        {
-        for(size_t j = 0; j < is.size(); ++j) 
-            {
-            if(is[j] == I)
-                {
-#ifdef DEBUG
-                //Check if calling noprime is ok
-                //Error if it causes duplicate indices
-                for(size_t k = 0; k < is.size(); ++k)
-                    if(k != j && is[j].noprimeEquals(is[k]))
-                        {
-                        throw ITError("Calling noprime leads to duplicate indices");
-                        }
-#endif
-                is[j].noprime();
-                return;
-                }
-            }
-        Print(is);
-        Print(I);
-        Error("noprime(IndexSetT): index not found.");
-        }
-    template <class IndexT, typename... Inds>
-    void
-    noprimeInds(IndexSetT<IndexT>& is,
-                const IndexT& I1, 
-                const IndexT& I2, 
-                Inds&&... inds)
-        {
-        noprimeInds(is,I1);
-        noprimeInds(is,I2,std::forward<Inds>(inds)...);
-        }
     template<class IndexT>
     void
     check(const IndexSetT<IndexT>& is)
@@ -429,7 +393,7 @@ prime(IndexSetT<IndexT>& is,
       IndexType type1,
       Types&&... rest)
     {
-    auto cmp = [](const Index& I, IndexType t) { return I.type()==t; };
+    auto cmp = [](const IndexT& I, IndexType t) { return I.type()==t; };
     for(auto& J : is)
         {
         auto match = detail::computeMatchInc(cmp,J,type1,std::forward<Types>(rest)...);
@@ -446,7 +410,7 @@ prime(IndexSetT<IndexT>& is,
 #ifdef DEBUG
     detail::checkHasInds(is,I1,std::forward<Inds>(rest)...);
 #endif
-    auto cmp = [](const Index& I1, const Index& I2) { return I1==I2; };
+    auto cmp = [](const IndexT& I1, const IndexT& I2) { return I1==I2; };
     for(auto& J : is)
         {
         auto match = detail::computeMatchInc(cmp,J,I1,std::forward<Inds>(rest)...);
@@ -467,7 +431,7 @@ prime(IndexSetT<IndexT>& is,
     detail::checkHasInds(is,iv1,std::forward<IVals>(rest)...);
 #endif
     int inc = 0;
-    auto cmp = [&inc](const Index& J, 
+    auto cmp = [&inc](const IndexT& J, 
                       const typename IndexT::IndexValT& iv) 
                { 
                inc = iv.val; 
@@ -492,7 +456,7 @@ primeExcept(IndexSetT<IndexT>& is,
 #ifdef DEBUG
     detail::checkHasInds(is,I1,std::forward<Inds>(inds)...);
 #endif
-    auto cmp = [](const Index& J, const IndexT& I) { return J==I; };
+    auto cmp = [](const IndexT& J, const IndexT& I) { return J==I; };
     for(auto& J : is)
         {
         auto match = detail::computeMatchInc(cmp,J,I1,std::forward<Inds>(inds)...);
@@ -509,7 +473,7 @@ primeExcept(IndexSetT<IndexT>& is,
             IndexType it1,
             ITs&&... etc)
     {
-    auto cmp = [](const Index& J, IndexType t) { return J.type()==t; };
+    auto cmp = [](const IndexT& J, IndexType t) { return J.type()==t; };
     for(auto& J : is)
         {
         auto match = detail::computeMatchInc(cmp,J,it1,std::forward<ITs>(etc)...);
@@ -536,7 +500,15 @@ noprime(IndexSetT<IndexT>& is,
         const IndexT& I1, 
         Inds&&... inds)
     {
-    detail::noprimeInds(is,I1,std::forward<Inds>(inds)...);
+#ifdef DEBUG
+    detail::checkHasInds(is,I1,std::forward<Inds>(inds)...);
+#endif
+    auto cmp = [](const IndexT& I1, const IndexT& I2) { return I1==I2; };
+    for(auto& J : is)
+        {
+        auto found = detail::findIndexVar(cmp,J,I1,std::forward<Inds>(inds)...);
+        if(found) J.noprime();
+        }
 #ifdef DEBUG
     detail::check(is);
 #endif

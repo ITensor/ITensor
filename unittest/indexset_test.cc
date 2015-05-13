@@ -222,6 +222,11 @@ SECTION("PrimeLevelMethods")
             CHECK(is[2] == prime(i2,5));
             CHECK(is[3] == i4);
             }
+        SECTION("Check Error Condition")
+            {
+            IndexSet is(i5,i2,i3,i4);
+            CHECK_THROWS_AS(prime(is,prime(i2)),ITError);
+            }
         }
 
     SECTION("Prime Using IndexVals")
@@ -262,10 +267,38 @@ SECTION("PrimeLevelMethods")
 
     SECTION("NoPrime Index")
         {
+        SECTION("Case 1")
+            {
+            IndexSet is(i5,i2,prime(i2),prime(i4));
+            noprime(is,prime(i4));
+            CHECK(is[0] == i5);
+            CHECK(is[1] == i2);
+            CHECK(is[2] == prime(i2));
+            CHECK(is[3] == i4);
+            }
+        SECTION("Case 2")
+            {
+            IndexSet is(i5,i2,prime(i2),prime(i4,4));
+            noprime(is,prime(i4,4));
+            CHECK(is[0] == i5);
+            CHECK(is[1] == i2);
+            CHECK(is[2] == prime(i2));
+            CHECK(is[3] == i4);
+            }
         }
 
     SECTION("NoPrimeType")
         {
+        SECTION("Case 1")
+            {
+            IndexSet is(i2,v3,w3,i4);
+            prime(is,2);
+            noprime(is,Vtype);
+            CHECK(is[0] == prime(i2,2));
+            CHECK(is[1] == v3);
+            CHECK(is[2] == prime(w3,2));
+            CHECK(is[3] == prime(i4,2));
+            }
         }
 
     SECTION("AddIndex")
