@@ -217,6 +217,13 @@ template<typename IndexT>
 void 
 noprime(IndexSetT<IndexT>& is, IndexType type = All);
 
+template<typename IndexT, typename... ITs>
+void 
+noprime(IndexSetT<IndexT>& is,
+        IndexType it1,
+        IndexType it2,
+        ITs&&... rest);
+
 template<typename IndexT, typename... Inds>
 void 
 noprime(IndexSetT<IndexT>& is, 

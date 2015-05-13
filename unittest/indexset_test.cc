@@ -265,6 +265,60 @@ SECTION("PrimeLevelMethods")
             }
         }
 
+    SECTION("Prime Except")
+        {
+        SECTION("Case 1")
+            {
+            IndexSet is(i5,i2,i3,i4);
+            primeExcept(is,i5);
+            CHECK(is[0] == i5);
+            CHECK(is[1] == prime(i2));
+            CHECK(is[2] == prime(i3));
+            CHECK(is[3] == prime(i4));
+            }
+        SECTION("Case 2")
+            {
+            IndexSet is(i5,i2,i3,i4);
+            primeExcept(is,i2,2);
+            CHECK(is[0] == prime(i5,2));
+            CHECK(is[1] == i2);
+            CHECK(is[2] == prime(i3,2));
+            CHECK(is[3] == prime(i4,2));
+            }
+        SECTION("Case 3")
+            {
+            IndexSet is(i5,i2,i3,i4);
+            primeExcept(is,i2,i4,2);
+            CHECK(is[0] == prime(i5,2));
+            CHECK(is[1] == i2);
+            CHECK(is[2] == prime(i3,2));
+            CHECK(is[3] == i4);
+            }
+        SECTION("Case 4")
+            {
+            IndexSet is(i5,i2,i3,i4);
+            primeExcept(is,i4,i2,2);
+            CHECK(is[0] == prime(i5,2));
+            CHECK(is[1] == i2);
+            CHECK(is[2] == prime(i3,2));
+            CHECK(is[3] == i4);
+            }
+        SECTION("Regression Test 1")
+            {
+            Index x("x",2,Xtype),
+                  z("z",2,Ztype),
+                  y("y",2,Ytype),
+                  v("v",2,Vtype);
+            IndexSet is(prime(x,3),prime(y,1),prime(z,3),y,v);
+            primeExcept(is,Vtype,Ytype,-2);
+            CHECK(is[0]==prime(x,1));
+            CHECK(is[1]==prime(y,1));
+            CHECK(is[2]==prime(z,1));
+            CHECK(is[3]==      y   );
+            CHECK(is[4]==      v   );
+            }
+        }
+
     SECTION("NoPrime Index")
         {
         SECTION("Case 1")
@@ -289,6 +343,16 @@ SECTION("PrimeLevelMethods")
 
     SECTION("NoPrimeType")
         {
+        SECTION("Case 0")
+            {
+            IndexSet is(i2,v3,w3,i4);
+            prime(is,2);
+            noprime(is);
+            CHECK(is[0] == i2);
+            CHECK(is[1] == v3);
+            CHECK(is[2] == w3);
+            CHECK(is[3] == i4);
+            }
         SECTION("Case 1")
             {
             IndexSet is(i2,v3,w3,i4);
@@ -299,10 +363,36 @@ SECTION("PrimeLevelMethods")
             CHECK(is[2] == prime(w3,2));
             CHECK(is[3] == prime(i4,2));
             }
-        }
-
-    SECTION("AddIndex")
-        {
+        SECTION("Case 2")
+            {
+            IndexSet is(i2,v3,w3,i4);
+            prime(is,2);
+            noprime(is,Wtype);
+            CHECK(is[0] == prime(i2,2));
+            CHECK(is[1] == prime(v3,2));
+            CHECK(is[2] == w3);
+            CHECK(is[3] == prime(i4,2));
+            }
+        SECTION("Case 3")
+            {
+            IndexSet is(i2,v3,w3,i4);
+            prime(is,2);
+            noprime(is,Wtype,Vtype);
+            CHECK(is[0] == prime(i2,2));
+            CHECK(is[1] == v3);
+            CHECK(is[2] == w3);
+            CHECK(is[3] == prime(i4,2));
+            }
+        SECTION("Case 4")
+            {
+            IndexSet is(i2,v3,w3,i4);
+            prime(is,2);
+            noprime(is,Vtype,Wtype);
+            CHECK(is[0] == prime(i2,2));
+            CHECK(is[1] == v3);
+            CHECK(is[2] == w3);
+            CHECK(is[3] == prime(i4,2));
+            }
         }
     }
 }
