@@ -268,7 +268,7 @@ noprime(T I, IndexType type = All) { I.noprime(type); return I; }
 //old prime level was plevold. Otherwise has no effect.
 template<class T>
 T
-mapPrime(T I, int plevold, int plevnew, IndexType type = All)
+mapprime(T I, int plevold, int plevnew, IndexType type = All)
     { I.mapprime(plevold,plevnew,type); return I; }
 
 
