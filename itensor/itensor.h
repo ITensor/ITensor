@@ -139,37 +139,17 @@ class ITensor
     // Index Prime Level Methods
     //
 
-    //Set primeLevel of Indices to zero
+    template<typename... VarArgs>
     ITensor& 
-    noprime(IndexType type = All) { itensor::noprime(is_,type); return *this; }
+    noprime(VarArgs&&...);
 
-    //Set primeLevel of Index I to zero
-    template<typename... Inds>
+    template<typename... VarArgs>
     ITensor& 
-    noprime(const Index& I1, Inds&&... inds);
+    prime(VarArgs&&...);
 
-    //Increase primeLevel of Indices by 1 (or optional amount inc)
-    ITensor& 
-    prime(int inc = 1) { prime(All,inc); return *this; }
-
-    ITensor& 
-    prime(IndexType type, int inc = 1) { itensor::prime(is_,type,inc); return *this; }
-
-    template<typename... Inds>
-    ITensor& 
-    prime(const Index& I1, Inds&&... inds);
-
-    template<typename... IVals>
-    ITensor& 
-    prime(const IndexVal& iv, IVals&&... ivals);
-
-    template<typename... Inds>
+    template<typename... VarArgs>
     ITensor&
-    primeExcept(const Index& I1, Inds&&... inds);
-
-    template<typename... ITs>
-    ITensor&
-    primeExcept(IndexType it, ITs&&... etc);
+    primeExcept(VarArgs&&...);
 
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
     ITensor& 
@@ -388,45 +368,20 @@ operator*(const IndexVal& iv1, Real val)
 ITensor inline
 operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
 
-//Return copy of ITensor A with primeLevel of indices
-//I1,I2,... increased (by optional amount inc if passed
-//as last argument, e.g. prime(A,i1,i2,i3,i4,5); )
-template <class Tensor, typename... Inds>
-Tensor
-prime(Tensor A, 
-      const typename Tensor::IndexT& I1, 
-      Inds&&... inds);
+template <typename... VarArgs>
+ITensor
+prime(ITensor A, 
+      VarArgs&&...);
 
-//Return copy of ITensor A with primeLevel of indices
-//iv1.index,iv2.index,... changed by iv1.val, iv2.val,...
-template <class Tensor, typename... IVals>
-Tensor
-prime(Tensor A, 
-      const typename Tensor::IndexValT& iv,
-      IVals&&... ivals);
+template <typename... VarArgs>
+ITensor
+primeExcept(ITensor A,
+            VarArgs&&...);
 
-template<class Tensor, typename... Inds>
-Tensor 
-primeExcept(Tensor A,
-            const typename Tensor::IndexT& I1, 
-            Inds&&... inds);
-
-template<class Tensor, typename... ITs>
-Tensor 
-primeExcept(Tensor A,
-            IndexType it,
-            ITs&&... etc);
-
-//Return copy of ITensor with primeLevel of Index I set to zero
-template <class Tensor, class IndexT, typename... Inds>
-Tensor
-noprime(Tensor A,
-        const IndexT& I, 
-        Inds&&... inds);
-
-//template <class Tensor>
-//Tensor
-//noprime(Tensor A);
+template <typename... VarArgs>
+ITensor
+noprime(ITensor A,
+        VarArgs&&...);
 
 template<class Tensor>
 bool

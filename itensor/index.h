@@ -244,31 +244,32 @@ dag(Index res) { res.dag(); return res; }
 IndexVal inline
 dag(IndexVal res) { res.dag(); return res; }
 
-//Index inline
-//operator^(Index i, int inc) { i.prime(inc); return i; }
+template<typename... VarArgs>
+Index
+prime(Index I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); return I; }
 
-//IndexVal inline
-//operator^(IndexVal i, int inc) { i.prime(inc); return i; }
-
-//Return a copy of I, increasing primelevel.
-template<class T>
-T
-prime(T I, int inc = 1) { I.prime(inc); return I; }
-
-//Return a copy of I, increasing primelevel if I.type() == type
-template<class T>
-T 
-prime(T I, IndexType type, int inc = 1) { I.prime(type,inc); return I; }
-
-template<class T>
-T
-noprime(T I, IndexType type = All) { I.noprime(type); return I; }
+template<typename... VarArgs>
+Index
+noprime(Index I, VarArgs&&... vargs) { I.noprime(std::forward<VarArgs>(vargs)...); return I; }
 
 //Return a copy of I with prime level changed to plevnew if
 //old prime level was plevold. Otherwise has no effect.
-template<class T>
-T
-mapprime(T I, int plevold, int plevnew, IndexType type = All)
+Index inline
+mapprime(Index I, int plevold, int plevnew, IndexType type = All)
+    { I.mapprime(plevold,plevnew,type); return I; }
+
+template<typename... VarArgs>
+IndexVal
+prime(IndexVal I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); return I; }
+
+template<typename... VarArgs>
+IndexVal
+noprime(IndexVal I, VarArgs&&... vargs) { I.noprime(std::forward<VarArgs>(vargs)...); return I; }
+
+//Return a copy of I with prime level changed to plevnew if
+//old prime level was plevold. Otherwise has no effect.
+IndexVal inline
+mapprime(IndexVal I, int plevold, int plevnew, IndexType type = All)
     { I.mapprime(plevold,plevnew,type); return I; }
 
 

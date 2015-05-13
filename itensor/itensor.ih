@@ -272,45 +272,17 @@ set(Complex val, const IndexVals&... ivs)
         applyFunc<SetEltComplex<size>>(store_,val,is_,inds);
     }
 
-template<typename... Inds>
+template<typename... VarArgs>
 ITensor& ITensor::
-noprime(const Index& I1, Inds&&... inds)
-    {
-    itensor::noprime(is_,I1,std::forward<Inds>(inds)...);
-    return *this;
-    }
+noprime(VarArgs&&... vargs) { itensor::noprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
-template<typename... Inds>
+template<typename... VarArgs>
 ITensor& ITensor::
-prime(const Index& I1, Inds&&... inds)
-    {
-    itensor::prime(is_,I1,std::forward<Inds>(inds)...);
-    return *this;
-    }
+prime(VarArgs&&... vargs) { itensor::prime(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
-template<typename... IVals>
+template<typename... VarArgs>
 ITensor& ITensor::
-prime(const IndexVal& iv, IVals&&... ivals)
-    {
-    itensor::prime(is_,iv,std::forward<IVals>(ivals)...);
-    return *this;
-    }
-
-template<typename... Inds>
-ITensor& ITensor::
-primeExcept(const Index& I1, Inds&&... inds)
-    {
-    itensor::primeExcept(is_,I1,std::forward<Inds>(inds)...);
-    return *this;
-    }
-
-template<typename... ITs>
-ITensor& ITensor::
-primeExcept(IndexType it, ITs&&... etc)
-    {
-    itensor::primeExcept(is_,it,std::forward<ITs>(etc)...);
-    return *this;
-    }
+primeExcept(VarArgs&&... vargs) { itensor::primeExcept(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
 template <typename F>
 struct GenerateIT : public RegisterFunc<GenerateIT<F>>
@@ -503,54 +475,31 @@ uniqueIndex(const TensorA& A,
     return IndexT();
     }
 
-template <class Tensor, typename... Inds>
-Tensor
-prime(Tensor A, 
-      const typename Tensor::IndexT& I1, 
-      Inds&&... inds)
-    { 
-    A.prime(I1,std::forward<Inds>(inds)...);
-    return A; 
-    }
-
-template <class Tensor, typename... IVals>
-Tensor
-prime(Tensor A, 
-      const typename Tensor::IndexValT& iv,
-      IVals&&... ivals)
+template <typename... VarArgs>
+ITensor
+prime(ITensor A, 
+      VarArgs&&... vargs)
     {
-    A.prime(iv,std::forward<IVals>(ivals)...);
+    A.prime(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
-template<class Tensor, typename... Inds>
-Tensor 
-primeExcept(Tensor A,
-            const typename Tensor::IndexT& I1, 
-            Inds&&... inds)
+template <typename... VarArgs>
+ITensor
+primeExcept(ITensor A,
+            VarArgs&&... vargs)
     {
-    A.primeExcept(I1,std::forward<Inds>(inds)...);
+    A.primeExcept(std::forward<VarArgs>(vargs)...);
     return A;
     }
 
-template<class Tensor, typename... ITs>
-Tensor 
-primeExcept(Tensor A,
-            IndexType it,
-            ITs&&... etc)
+template <typename... VarArgs>
+ITensor
+noprime(ITensor A,
+        VarArgs&&... vargs)
     {
-    A.primeExcept(it,std::forward<ITs>(etc)...);
+    A.noprime(std::forward<VarArgs>(vargs)...);
     return A;
-    }
-
-template <class Tensor, class IndexT, typename... Inds>
-Tensor
-noprime(Tensor A,
-        const IndexT& I, 
-        Inds&&... inds)
-    { 
-    A.noprime(I,std::forward<Inds>(inds)...);
-    return A; 
     }
 
 } //namespace itensor

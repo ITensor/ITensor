@@ -915,29 +915,71 @@ SECTION("Complex Times Scalar Complex")
 }
 
 
-SECTION("SwapPrimeTest")
+SECTION("Prime Level Functions")
 {
-CHECK_EQUAL(A.real(s1(1),prime(s1)(1)),11);
-CHECK_EQUAL(A.real(s1(2),prime(s1)(1)),21);
-CHECK_EQUAL(A.real(s1(1),prime(s1)(2)),12);
-CHECK_EQUAL(A.real(s1(2),prime(s1)(2)),22);
 
-A = swapPrime(A,0,1);
+SECTION("Prime")
+    {
+    Index x("x",2,Xtype),
+          z("z",2,Ztype),
+          v("v",2,Vtype);
+    ITensor T(x,z,v,prime(x));
+    T = prime(T);
+    CHECK(T.inds()[0] == prime(x));
+    CHECK(T.inds()[1] == prime(z));
+    CHECK(T.inds()[2] == prime(v));
+    CHECK(T.inds()[3] == prime(x,2));
+    }
 
-CHECK_EQUAL(A.real(prime(s1)(1),s1(1)),11);
-CHECK_EQUAL(A.real(prime(s1)(2),s1(1)),21);
-CHECK_EQUAL(A.real(prime(s1)(1),s1(2)),12);
-CHECK_EQUAL(A.real(prime(s1)(2),s1(2)),22);
-}
+SECTION("SwapPrimeTest")
+    {
+    CHECK_EQUAL(A.real(s1(1),prime(s1)(1)),11);
+    CHECK_EQUAL(A.real(s1(2),prime(s1)(1)),21);
+    CHECK_EQUAL(A.real(s1(1),prime(s1)(2)),12);
+    CHECK_EQUAL(A.real(s1(2),prime(s1)(2)),22);
+
+    A = swapPrime(A,0,1);
+
+    CHECK_EQUAL(A.real(prime(s1)(1),s1(1)),11);
+    CHECK_EQUAL(A.real(prime(s1)(2),s1(1)),21);
+    CHECK_EQUAL(A.real(prime(s1)(1),s1(2)),12);
+    CHECK_EQUAL(A.real(prime(s1)(2),s1(2)),22);
+    }
 
 SECTION("NoprimeTest")
-{
-ITensor T(s1,prime(s1));
+    {
+    SECTION("Case 1")
+        {
+        ITensor T(s1,s2);
+        T.prime();
+        CHECK(T.inds()[0] == prime(s1));
+        CHECK(T.inds()[1] == prime(s2));
+        T.noprime();
+        CHECK(T.inds()[0] == s1);
+        CHECK(T.inds()[1] == s2);
+        }
+    SECTION("Case 2")
+        {
+        ITensor T(s1,prime(s1));
 
-//Check that T.noprime()
-//throws an exception since it would
-//lead to duplicate indices
-CHECK_THROWS_AS(T.noprime(),ITError);
+        //Check that T.noprime()
+        //throws an exception since it would
+        //lead to duplicate indices
+        CHECK_THROWS_AS(T.noprime(),ITError);
+        }
+    }
+
+SECTION("Prime IndexTypes")
+    {
+    Index x("x",2,Xtype),
+          z("z",2,Ztype),
+          v("v",2,Vtype);
+    ITensor T(x,z,v);
+    T = prime(T,Ztype,Vtype);
+    CHECK(T.inds()[0] == x);
+    CHECK(T.inds()[1] == prime(z));
+    CHECK(T.inds()[2] == prime(v));
+    }
 }
 
 SECTION("CommonIndex")
