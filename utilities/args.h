@@ -12,23 +12,37 @@
 
 namespace itensor {
 
-class Args;
-// Type names "OptSet" and "Opt" are
-// aliases for Args for backwards compatibility.
-using OptSet = Args;
-using Opt = Args;
-
 //
-// Args
+// Args - named argument system
+//
+// o An Args object holds a collection of name-value
+//   pairs. To access an integer value for example,
+//   use args.getInt("Name1"); or call
+//   args.getInt("Name1",def); to provide a 
+//   default value def.
+// o To add a value do args.add("Name2",val);
+// o To construct an Args with a given set of values
+//   do Args args("Name1",val1,"Name2",val2,...);
+// o There is a global Args, Args::Global(). Values
+//   not present in a given args instance will be
+//   looked up in the global Args object before
+//   either the default is selected or an error
+//   thrown if no default is provided.
+// o To have a function accept Args in read-only
+//   mode, use the signature 
+//   func(T1 t1, T2 t2, ..., const Args& args = Args::Global());
+//   which will incur essentially no overhead.
+//   If you intend to add or modify the args set, take it by value.
 //
 
 class Args
     {
-    struct Val;
     public:
-
     using Name = std::string;
-    using storage_type = std::vector<Val>;
+    private:
+    class Val;
+    std::vector<Val> vals_;
+    public:
 
     Args();
 
@@ -142,10 +156,6 @@ class Args
 
     private:
 
-    ///////////////
-    storage_type vals_;
-    ///////////////
-
     void
     processString(std::string ostring);
 
@@ -186,9 +196,17 @@ class Args
     friend std::ostream& 
     operator<<(std::ostream & s, const Args& args);
 
-    struct Val
+    class Val
         {
+        public:
         enum Type { Boolean, Numeric, String, None };
+        private:
+        Name name_;
+        Type type_;
+        std::string sval_;
+        Real rval_;
+        public:
+
 
         Val();
 
@@ -235,13 +253,6 @@ class Args
 
         private:
 
-        /////////////////
-        Name name_;
-        Type type_;
-        std::string sval_;
-        Real rval_;
-        /////////////////
-
         void
         assertType(Type t) const;
 
@@ -283,22 +294,6 @@ operator+(Args args, const char* ostring);
 
 Args
 operator+(const char* ostring, Args args);
-
-
-
-
-//
-// Deprecated operator& methods. Use operator+ methods instead.
-//
-
-Args inline
-operator&(Args args, const Args& other) { return args + other; }
-
-Args inline
-operator&(Args args, const char* ostring) { return args + ostring; }
-
-Args inline
-operator&(const char* ostring, Args args) { return ostring + args; }
 
 } //namespace itensor
 

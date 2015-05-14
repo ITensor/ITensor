@@ -11,8 +11,6 @@
 namespace itensor {
 
 using std::string;
-using std::cout;
-using std::endl;
 using std::ostream;
 using std::istream;
 
@@ -187,7 +185,7 @@ add(const Name& name, Real rval) { add({name,rval}); }
 bool Args::
 defined(const Name& name) const
     {
-    for(const auto& x : vals_)
+    for(auto& x : vals_)
         {
         if(x.name() == name) return true;
         }
@@ -224,7 +222,7 @@ add(const char* ostring)
 const Args::Val& Args::
 get(const Name& name) const
     {
-    for(const auto& x : vals_)
+    for(auto& x : vals_)
         {
         if(x.name() == name) return x;
         }
@@ -353,7 +351,7 @@ addByString(string ostring)
 Args& Args::
 operator+=(const Args& args)
     {
-    for(const auto& x : args.vals_)
+    for(auto& x : args.vals_)
         {
         add(x);
         }
@@ -389,7 +387,7 @@ operator<<(ostream & s, const Args& args)
     if(args.isGlobal()) s << "Global Args:\n";
     else                s << "Args: (only showing overrides of global args)\n";
 
-    for(const auto& opt : args.vals_)
+    for(auto& opt : args.vals_)
         s << opt << "\n";
 
     return s;
