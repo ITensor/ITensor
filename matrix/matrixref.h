@@ -45,11 +45,6 @@ class VectorRef		// This class never allocates storage for itself !!
     {
     public:
 
-    typedef Real*
-    iterator;
-    typedef const Real*
-    const_iterator;
-
     inline VectorRef SubVector(int l, int u) const;
     inline VectorRef SubVector(int first, int length, int str) const;
     inline VectorRef SubVector0(int l, int u) const;
@@ -123,14 +118,6 @@ class VectorRef		// This class never allocates storage for itself !!
     inline Real* Last() const;
     inline Real* First() const;
 
-    iterator begin() { return store; }
-    iterator end() { return store+length; }
-
-    const_iterator begin() const { return store; }
-    const_iterator end() const { return store+length; }
-
-    const_iterator cbegin() const { return store; }
-    const_iterator cend() const { return store+length; }
 
 // Length = nrows * ncols
     void TreatAsMatrix(MatrixRef&,int nr, int nc) const;	

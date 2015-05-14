@@ -140,8 +140,8 @@ reshape(const Permutation& P,
         MatrixRef xref; 
         VectorRefNoLink vref(const_cast<Real*>(dat.data()),dat.size());
         vref.TreatAsMatrix(xref,c.n[2],c.n[1]);
-        auto newvref = Matrix(xref.t()).TreatAsVector();
-        std::copy(newvref.begin(),newvref.end(),res);
+        Vector newv = (xref.t()).TreatAsVector();
+        std::copy(newv.begin(),newv.end(),res);
         return; 
         }
     else if(is.rn() == 3)
@@ -3125,8 +3125,11 @@ fromMatrix12(const Index& i1, const Index& i2,
         Error("fromMatrix not implemented for ITensor type Diag");
 
     ITensor Q(i3,i1,i2);
-    auto mref = M.TreatAsVector();
-    Q.r_->v.assign(mref.begin(),mref.end());
+    auto Mvref = M.TreatAsVector();
+#ifdef DEBUG
+    if(Mvref.Stride()!=1) Error("VectorRef Stride()!=1 before copying data");
+#endif
+    Q.r_->v.assign(Mvref.Store(),Mvref.Store()+Mvref.Length());
     *this = Q;
     }
 
@@ -3167,8 +3170,11 @@ fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,
     if(i3.m()*i4.m() != M.Ncols()) Error("fromMatrix22: wrong number of cols");
     if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix22: wrong number of rows");
     ITensor Q(i3,i4,i1,i2);
-    auto mref = M.TreatAsVector();
-    Q.r_->v.assign(mref.begin(),mref.end());
+    auto Mvref = M.TreatAsVector();
+#ifdef DEBUG
+    if(Mvref.Stride()!=1) Error("VectorRef Stride()!=1 before copying data");
+#endif
+    Q.r_->v.assign(Mvref.Store(),Mvref.Store()+Mvref.Length());
     *this = Q;
     }
 
@@ -3404,10 +3410,11 @@ ITDat(size_t size,
     }
 
 ITDat::
-ITDat(const VectorRef& v_) 
-    : 
-    v(v_.begin(),v_.end())
-    { }
+ITDat(const VectorRef& vref) 
+    { 
+    if(vref.Stride()!=1) Error("Can only construct ITensor from VectorRef having Stride()==1");
+    v.assign(vref.Store(),vref.Store()+vref.Length());
+    }
 
 ITDat::
 ITDat(const ITDat& other) 

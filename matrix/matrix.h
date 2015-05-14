@@ -168,6 +168,18 @@ public:
 
     void read(std::istream& s);
 
+    using iterator = Real*;
+    using const_iterator = const Real*;
+
+    iterator begin() { assert(Stride()==1); return Store(); }
+    iterator end() { return Store()+Length(); }
+
+    const_iterator begin() const { assert(Stride()==1);return Store(); }
+    const_iterator end() const { return Store()+Length(); }
+
+    const_iterator cbegin() const { assert(Stride()==1); return Store(); }
+    const_iterator cend() const { return Store()+Length(); }
+
     friend class SparseVector;
 
     ARRAY1H_DEFS(Vector)
