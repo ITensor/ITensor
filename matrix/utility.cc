@@ -214,7 +214,7 @@ EigenValues(const MatrixRef& A, Vector& D, Matrix& Z)
     D.ReDimension(N);
     Z = A;
 
-    dsyev_wrapper(&jobz,&uplo,&N,Z.Store(),&N,D.Store(),&info);
+    dsyev_wrapper(jobz,uplo,N,Z.Store(),D.Store(),info);
 
     if(info != 0)
         {
