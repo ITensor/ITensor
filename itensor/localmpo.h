@@ -605,7 +605,7 @@ initWrite()
     writedir_ = mkTempDir("PH",global_write_dir);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

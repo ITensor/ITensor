@@ -892,5 +892,5 @@ Matrix Exp(const MatrixRef& M)
     }
 
 
-};
+}
 

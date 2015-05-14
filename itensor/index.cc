@@ -313,5 +313,5 @@ operator<<(std::ostream& s, const IndexVal& iv)
     return s << "IndexVal: i = " << iv.i << ", ind = " << ii << "\n"; 
     }
 
-}; //namespace itensor
+} //namespace itensor
 

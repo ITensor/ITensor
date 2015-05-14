@@ -993,4 +993,4 @@ template
 Real
 norm(const vector<IQTensor>& psi);
 
-}; //namespace itensor
+} //namespace itensor

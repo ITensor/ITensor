@@ -218,6 +218,6 @@ operator<<(std::ostream& s, const HTerm& t);
 std::ostream& 
 operator<<(std::ostream& s, const AutoMPO& a);
 
-};
+}
 
 #endif

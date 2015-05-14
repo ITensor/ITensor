@@ -702,7 +702,7 @@ operator<<(std::ostream& s, const MPSt<Tensor>& M);
 std::ostream& 
 operator<<(std::ostream& s, const InitState& state);
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

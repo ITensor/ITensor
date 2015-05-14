@@ -850,6 +850,6 @@ operator<<(std::ostream& s, const IndexSet<Index>& is)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

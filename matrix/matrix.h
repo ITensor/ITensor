@@ -416,7 +416,7 @@ inline MatrixVectorRes::operator Vector() const
 inline VectorVectorRes::operator Vector() const
     { Vector res(Length()); res = *this; return res;  }
 
-};
+}
 
 #include "svd.h"
 
@@ -424,6 +424,6 @@ inline VectorVectorRes::operator Vector() const
 namespace itensor {
 ARRAY1CC_DEFS(Matrix)
 ARRAY1CC_DEFS(Vector)
-};
+}
 
 #endif

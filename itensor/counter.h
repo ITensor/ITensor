@@ -164,7 +164,7 @@ operator<<(std::ostream& s, const Counter& c)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #undef Cout
 #undef Endl

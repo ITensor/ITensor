@@ -679,5 +679,5 @@ Matrix::operator=(const SparseMatrix& S)
     return *this;
     }
 
-}; //namespace itensor
+} //namespace itensor
 

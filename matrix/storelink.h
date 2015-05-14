@@ -140,7 +140,7 @@ class StoreLink
         }
     };
 
-}; //namespace itensor
+} //namespace itensor
 
 #undef STATIC_VAR
 

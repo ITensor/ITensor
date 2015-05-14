@@ -293,6 +293,6 @@ operator<<(std::ostream &s, const IndexQN& x);
 std::ostream& 
 operator<<(std::ostream& s, const IQIndexVal& iv);
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

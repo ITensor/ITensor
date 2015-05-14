@@ -1035,6 +1035,6 @@ Tensor
 deprimed(Tensor A, const IndexT& I)
     { A.noprime(I); return A; }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

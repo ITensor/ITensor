@@ -140,6 +140,6 @@ hasindex(const IQCombiner& C, const Index& i);
 std::ostream& 
 operator<<(std::ostream & s, const IQCombiner & c);
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

@@ -56,7 +56,7 @@ struct IterPair
 
     };
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif
 

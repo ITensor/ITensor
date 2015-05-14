@@ -48,5 +48,5 @@ class minxAx : public MinFunction
 Real conjugate_gradient(MinFunction& f,Matrix& evecs,Real err,
 			int maxiter=20,int debug=0);
 
-}; //namespace itensor
+} //namespace itensor
 #endif

@@ -331,7 +331,7 @@ for(i = ii; i < ilim; i += 4)
 	}
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #include "matrix.h"
 
@@ -380,4 +380,4 @@ void dgemm(const MatrixRef& a, const MatrixRef& b,
 	c *= alpha;
     }
 
-};
+}

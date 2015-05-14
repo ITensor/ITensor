@@ -171,6 +171,6 @@ operator<<(std::ostream& s, const Partition& p)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

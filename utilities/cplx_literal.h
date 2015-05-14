@@ -53,7 +53,7 @@ operator"" _i(long double x)
     return Complex(0.,x);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

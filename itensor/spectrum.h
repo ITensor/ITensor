@@ -96,7 +96,7 @@ class Spectrum
 std::ostream& 
 operator<<(std::ostream & s, const Spectrum& spec);
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

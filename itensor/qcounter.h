@@ -67,7 +67,7 @@ class QCounter : public Counter
         }
     };
 
-}; //namespace itensor
+} //namespace itensor
 
 #undef Cout
 #undef Endl

@@ -522,6 +522,6 @@ operator<<(std::ostream & s, const IQTensor &t);
 void
 checkStorage(const IQTensor& T);
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

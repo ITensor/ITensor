@@ -385,4 +385,4 @@ operator<<(ostream & s, const Args& args)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor

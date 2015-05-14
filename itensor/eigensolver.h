@@ -1257,7 +1257,7 @@ orthog(std::vector<Tensor>& T, int num, int numpass, int start)
     } // orthog(vector<Tensor> ... )
     */
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

@@ -153,6 +153,6 @@ Null()
     return Null_;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

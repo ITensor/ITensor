@@ -318,7 +318,7 @@ primed(Combiner C, int inc = 1)
     return prime(C,inc);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

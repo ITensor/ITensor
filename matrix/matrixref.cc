@@ -621,4 +621,4 @@ ostream & operator << (ostream & s, const MatrixMatrixRes & R)
 ostream & operator << (ostream & s, const MatrixVectorRes & V)
     { return s << (Vector)(V); }
 
-};
+}

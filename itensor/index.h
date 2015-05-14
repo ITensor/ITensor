@@ -315,6 +315,6 @@ operator<(const Index& other) const
 IndexVal inline Index::
 operator()(int i) const { return IndexVal(*this,i); }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

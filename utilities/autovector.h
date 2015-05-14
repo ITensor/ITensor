@@ -143,5 +143,5 @@ dot(const autovector<T>& a, const autovector<T>& b)
     return res;
     }
 
-}; //namespace itensor
+} //namespace itensor
 #endif

@@ -338,7 +338,7 @@ idmrg(MPSt<Tensor>& psi,
     return idmrg(psi,H,sweeps,obs,args);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

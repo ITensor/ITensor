@@ -184,6 +184,6 @@ position(int b, const MPSType& psi)
         lmps_[j].position(b,psi);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

@@ -372,6 +372,6 @@ operator<<(std::ostream& s, const LogNumber& N)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

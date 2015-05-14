@@ -176,6 +176,6 @@ mult_add(SimpleMatrixRef A,
     dgemm_(&transa,&transb,&m,&n,&k,&alpha,pa,&lda,pb,&ldb,&beta,pc,&ldc);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

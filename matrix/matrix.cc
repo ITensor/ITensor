@@ -264,4 +264,4 @@ read(std::istream& s)
     this->TreatAsVector() = v;
     }
 
-};
+}

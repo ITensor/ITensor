@@ -271,7 +271,7 @@ DMRGWorker(MPSt<Tensor>& psi,
     return energy;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

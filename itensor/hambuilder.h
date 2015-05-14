@@ -223,7 +223,7 @@ setident_() const
         W_.Anc(j) = sites_->op("Id",j);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #undef String
 

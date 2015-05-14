@@ -1332,4 +1332,4 @@ eig_decomp(IQTensor T,
 
     }
 
-}; //namespace itensor
+} //namespace itensor

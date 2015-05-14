@@ -394,6 +394,6 @@ class ArrowError : public ITError
 
 //void reportnew() { }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

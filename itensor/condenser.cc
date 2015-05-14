@@ -232,5 +232,5 @@ operator<<(std::ostream & s, const Condenser & c)
     return s << std::endl;
     }
 
-}; //namespace itensor
+} //namespace itensor
 

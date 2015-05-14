@@ -1094,6 +1094,6 @@ inline Real & VIter::val()
 ARRAY1CC_DEFS(MatrixRef)
 ARRAY1CC_DEFS(VectorRef)
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

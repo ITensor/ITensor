@@ -1675,4 +1675,4 @@ checkStorage(const IQTensor& T)
         }
     }
 
-}; //namespace itensor
+} //namespace itensor

@@ -297,6 +297,6 @@ operator&(Args args, const char* ostring) { return args + ostring; }
 Args inline
 operator&(const char* ostring, Args args) { return ostring + args; }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

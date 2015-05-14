@@ -159,6 +159,6 @@ makeSwapGate(const Model& sites)
     gate_ = a*b;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

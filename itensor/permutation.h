@@ -109,6 +109,6 @@ operator<<(std::ostream& s, const Permutation& P)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

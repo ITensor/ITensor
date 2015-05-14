@@ -3573,4 +3573,4 @@ isZero(const ITensor& T, const Args& args)
     return false;
     }
 
-}; //namespace itensor
+} //namespace itensor

@@ -43,6 +43,6 @@ SVDComplex(const MatrixRef& Are, const MatrixRef& Aim,
            Matrix& Vre, Matrix& Vim);
            
 
-};
+}
 
 #endif
