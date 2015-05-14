@@ -126,7 +126,9 @@ struct RegisterFunc : FuncBase
     using return_type = Return;
 
     RegisterFunc();
+
     RegisterFunc(RegisterFunc&& other);
+
     virtual ~RegisterFunc() { }
 
     template <typename T>

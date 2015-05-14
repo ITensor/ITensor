@@ -23,14 +23,14 @@ namespace itensor {
 // o To add a value do args.add("Name2",val);
 // o To construct an Args with a given set of values
 //   do Args args("Name1",val1,"Name2",val2,...);
-// o There is a global Args, Args::Global(). Values
+// o There is a global Args, Args::global(). Values
 //   not present in a given args instance will be
 //   looked up in the global Args object before
 //   either the default is selected or an error
 //   thrown if no default is provided.
 // o To have a function accept Args in read-only
 //   mode, use the signature 
-//   func(T1 t1, T2 t2, ..., const Args& args = Args::Global());
+//   func(T1 t1, T2 t2, ..., const Args& args = Args::global());
 //   which will incur essentially no overhead.
 //   If you intend to add or modify the args set, take it by value.
 //
@@ -144,11 +144,11 @@ class Args
 
     // Check if this is the global Args object
     bool
-    isGlobal() const { return (this == &Global()); }
+    isGlobal() const { return (this == &global()); }
 
     // Access the global Args object
     static Args&
-    Global()
+    global()
         {
         static Args gos_;
         return gos_;

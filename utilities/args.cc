@@ -192,8 +192,8 @@ defined(const Name& name) const
 
     if(isGlobal()) return false;
 
-    //otherwise see if GlobalArgs contains it
-    return Global().defined(name);
+    //otherwise see if global Args contains it
+    return global().defined(name);
     }
 
 
@@ -231,7 +231,7 @@ get(const Name& name) const
         {
         throw ITError("Requested option " + name + " not found");
         }
-    return Global().get(name);
+    return global().get(name);
     }
 
 bool Args::

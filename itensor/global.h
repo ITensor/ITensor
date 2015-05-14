@@ -350,27 +350,27 @@ class Global
     static Args&
     args()
         {
-        return Args::Global();
+        return Args::global();
         }
     void static
     args(const Args::Name& name, bool bval)
         {
-        Args::Global().add(name,bval);
+        Args::global().add(name,bval);
         }
     void static
     args(const Args::Name& name, int ival)
         {
-        Args::Global().add(name,ival);
+        Args::global().add(name,ival);
         }
     void static
     args(const Args::Name& name, Real rval)
         {
-        Args::Global().add(name,rval);
+        Args::global().add(name,rval);
         }
     void static
     args(const Args::Name& name, const std::string& sval)
         {
-        Args::Global().add(name,sval);
+        Args::global().add(name,sval);
         }
     static bool& 
     printdat()
