@@ -51,7 +51,8 @@ SVDRefs(const MatRefc& A,
         const MatRef&  U, 
         const VecRef&  D, 
         const MatRef&  V,
-        Real thresh = 1E-3);
+        Real thresh = 1E-3,
+        Real northpass = 2);
 
 //Compute U,D,V such that 
 //A == U*D*transpose(V), schematically
@@ -60,7 +61,8 @@ SVD(const MatRefc& A,
     Mat& U, 
     Vec& D, 
     Mat& V,
-    Real thresh = 1E-3);
+    Real thresh = 1E-3,
+    Real northpass = 2);
 
 }
 

@@ -147,14 +147,15 @@ SVDRef(const MatRefc& M,
        const MatRef& U, 
        const VecRef& D, 
        const MatRef& V,
-       Real thresh)
+       Real thresh,
+       Real northpass)
     {
     auto Mr = M.Nrows(), 
          Mc = M.Ncols();
 
     if(Mr > Mc)
         {
-        SVDRef(transpose(M),V,D,U,thresh);
+        SVDRef(transpose(M),V,D,U,thresh,northpass);
 #ifdef CHKSVD
         checksvd(M,U,D,V);
 #endif
@@ -186,7 +187,7 @@ SVDRef(const MatRefc& M,
     //Put result of Mt*U==(V*D) in V storage
     mult(transpose(M),U,V);
     //Orthogonalize cols of V*D to obtain V
-    orthog(V,Mr,2); //2 is the number of orthog passes
+    orthog(V,Mr,northpass); //2 is the number of orthog passes
 
     long start = 2;
     auto D1t = D(1)*thresh;
@@ -222,7 +223,7 @@ SVDRef(const MatRefc& M,
     auto d = subVector(D,start,Mr);
     Mat u(n,n),
         v(n,n);
-    SVDRef(b,u,d,v,thresh);
+    SVDRef(b,u,d,v,thresh,northpass);
 
     auto Uu = move(mv);
     mult(columns(U,start,Mr),u,Uu);
@@ -242,7 +243,8 @@ SVD(const MatRefc& M,
     Mat& U, 
     Vec& D, 
     Mat& V,
-    Real thresh)
+    Real thresh,
+    Real northpass)
     {
     auto Mr = M.Nrows(),
          Mc = M.Ncols();
@@ -250,7 +252,7 @@ SVD(const MatRefc& M,
     U.resize(Mr,nsv);
     V.resize(Mc,nsv);
     D.resize(nsv);
-    SVDRef(M,U,D,V,thresh);
+    SVDRef(M,U,D,V,thresh,northpass);
     }
 
 } //namespace itensor

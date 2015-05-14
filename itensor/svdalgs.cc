@@ -165,6 +165,7 @@ svdRank2(ITensor A,
          const Args& args)
     {
     auto thresh = args.getReal("SVDThreshold",1E-3);
+    auto northpass = args.getReal("SVDNOrthPass",2);
     auto cutoff = args.getReal("Cutoff",MIN_CUT);
     auto maxm = args.getInt("Maxm",MAX_M);
     auto minm = args.getInt("Minm",1);
@@ -187,7 +188,7 @@ svdRank2(ITensor A,
     if(!cplx)
         {
         auto M = toMatRefc(A,ui,vi);
-        SVD(M,UU,DD,VV,thresh);
+        SVD(M,UU,DD,VV,thresh,northpass);
         }
     else
         {
@@ -200,7 +201,7 @@ svdRank2(ITensor A,
         //Are.toMatrix11NoScale(ui,vi,Mre);
         //Aim.toMatrix11NoScale(ui,vi,Mim);
 
-        //SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh);
+        //SVD(Mre,Mim,UU,iUU,DD,VV,iVV,thresh,northpass);
         }
 
     //
