@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_VARARRAY_H
 #define __ITENSOR_VARARRAY_H
 
-#include "print.h"
+#include <array>
 
 #ifdef DEBUG
 #define CHECK_IND(X) check_ind(X);
@@ -102,10 +102,10 @@ class VarArray
     operator[](size_t i) const { CHECK_IND(i) return store_[i]; }
 
     reference
-    at(size_t i) { CHECK_IND(i) return store_[i]; }
+    at(size_t i) { return store_.at(i); }
 
     const_reference
-    at(size_t i) const { CHECK_IND(i) return store_[i]; }
+    at(size_t i) const { return store_.at(i); }
 
     reference
     front() { CHECK_EMPTY return store_.front(); }
@@ -114,10 +114,10 @@ class VarArray
     front() const { CHECK_EMPTY return store_.front(); }
 
     reference
-    back() { CHECK_EMPTY return store_[size_==0 ? 0 : size_-1]; }
+    back() { CHECK_EMPTY return store_[size_-1]; }
 
     const_reference
-    back() const { CHECK_EMPTY return store_[size_==0 ? 0 : size_-1]; }
+    back() const { CHECK_EMPTY return store_[size_-1]; }
 
     pointer
     data() { CHECK_EMPTY return store_[0]; }
