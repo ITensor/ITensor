@@ -74,8 +74,6 @@ idmrg(MPSt<Tensor>& psi,
       DMRGObserver<Tensor>& obs,
       Args args)
     {
-    using IndexT = typename Tensor::IndexT;
-
     const int olevel = args.getInt("OutputLevel",0);
     const bool quiet = args.getBool("Quiet",olevel == 0);
     const int nucsweeps = args.getInt("NUCSweeps",1);
@@ -90,8 +88,7 @@ idmrg(MPSt<Tensor>& psi,
 
     if(N0 == 2) args.add("CombineMPO",false);
 
-    Real energy = NAN,
-         lastenergy = 0;
+    Real energy = NAN;
 
     Tensor lastV,
            D;
@@ -204,7 +201,6 @@ idmrg(MPSt<Tensor>& psi,
 
         const MPSt<Tensor> initPsi(psi);
 
-        lastenergy = energy;
         LocalMPO<Tensor> PH(H,HL,HR,args);
         
         auto extra_args = Args("Quiet",olevel<3,"NoMeasure",sw%2==0,"iDMRG_Step",sw,"NSweep",ucsweeps.nsweep());
