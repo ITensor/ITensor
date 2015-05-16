@@ -10,6 +10,7 @@
 //
 // Headers and typedefs
 //
+#include <vector>
 
 #ifdef PLATFORM_lapack
 
@@ -411,7 +412,7 @@ dgeqrf_wrapper(LAPACK_INT* m,     //number of rows of A
                LAPACK_INT* info)  //error info
     {
     static std::vector<LAPACK_REAL> work;
-    int lwork = std::max(1,4*std::max(*n,*m));
+    LAPACK_INT lwork = std::max(1,4*std::max(*n,*m));
     work.resize(lwork+2); 
     F77NAME(dgeqrf)(m,n,A,lda,tau,work.data(),&lwork,info);
     }
@@ -483,7 +484,7 @@ dsygv_wrapper(char* jobz,           //if 'V', compute both eigs and evecs
               LAPACK_INT* info)  //error info
     {
     static std::vector<LAPACK_REAL> work;
-    int itype = 1;
+    LAPACK_INT itype = 1;
     LAPACK_INT lwork = std::max(1,3*(*n)-1);//std::max(1, 1+6*N+2*N*N);
     work.resize(lwork);
 #ifdef PLATFORM_acml
