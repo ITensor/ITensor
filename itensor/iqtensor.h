@@ -11,17 +11,21 @@ namespace itensor {
 
 class IQCombiner;
 
-typedef shared_ptr<IQTDat<ITensor> >
-IQTDatPtr;
+using IQTDatPtr = shared_ptr<IQTDat>;
 
 
 //
 // IQTensor
 //
 
-class IQTensor : public safe_bool<IQTensor>
+class IQTensor
     {
     public:
+
+    using IndexT = IQIndex;
+    using IndexValT = IQIndexVal;
+    using CombinerT = IQCombiner;
+    using Storage = IQTDat;
 
     //Constructors --------------------------------------------------
 
@@ -92,6 +96,9 @@ class IQTensor : public safe_bool<IQTensor>
     bool 
     empty() const;
 
+    //IQTensor evaluates to false if it is default constructed
+    explicit operator bool() const { return valid(); }
+
     //false if IQTensor is default constructed
     bool 
     valid() const;
@@ -103,11 +110,11 @@ class IQTensor : public safe_bool<IQTensor>
     //The ITensors can be iterated over using a Foreach
     //For example, given an IQTensor T,
     //Foreach(const ITensor& t, T.blocks()) { ... }
-    const IQTDat<ITensor>&
-    blocks() const { return dat(); }
+    const IQTDat&
+    blocks() const { return *d_; }
     
     const IndexSet<IQIndex>& 
-    indices() const { return *is_; }
+    indices() const { return is_; }
 
 
     //----------------------------------------------------
@@ -311,12 +318,14 @@ class IQTensor : public safe_bool<IQTensor>
 
     void 
     scaleTo(const LogNumber& newscale);
+    void 
+    scaleTo(Real newscale) { scaleTo(LogNumber(newscale)); }
 
     void 
     clean(Real min_norm = MIN_CUT);
 
     void 
-    randomize(const OptSet& opts = Global::opts());
+    randomize(const Args& args = Global::args());
 
     //Take complex conjugate, do not reverse IQIndex arrows
     IQTensor& 
@@ -332,7 +341,7 @@ class IQTensor : public safe_bool<IQTensor>
     void
     replaceIndex(const IQIndex& oind,
                  const IQIndex& nind,
-                 const OptSet& opts = Global::opts());
+                 const Args& args = Global::args());
 
     void
     swap(IQTensor& other);
@@ -343,73 +352,29 @@ class IQTensor : public safe_bool<IQTensor>
     void 
     write(std::ostream& s) const;
 
-    //Typedefs -----------------------------------------------------
-
-    typedef IQIndex 
-    IndexT;
-
-    typedef IQIndexVal 
-    IndexValT;
-
-    typedef IQCombiner 
-    CombinerT;
-
-    //Deprecated methods
-
-    //Get the jth IQIndex of this ITensor, j = 1,2,..,r()
-    //const IQIndex& 
-    //index(int j) const;
-
-    //Copy IQTensor, incrementing IQIndices of matching IndexType by 1
-    //IQTensor(IndexType type, const IQTensor& other);
-
-
     private:
 
-    //Data struct ensures const-correct access
-    //to the IQTDat, preventing unnecessary sorting of blocks
-    struct Data
-        {
-        Data();
+    /////////////
 
-        Data(const IQTDatPtr& p_);
+    IndexSet<IQIndex> is_;
 
-        //Const access
-        const IQTDat<ITensor>&
-        operator()() const { return *p; }
-
-        //Non-const access
-        IQTDat<ITensor>&
-        nc() { return *p; }
-
-        void inline
-        solo();
-
-        void
-        swap(Data& othr) { p.swap(othr.p); }
-
-        private: IQTDatPtr p;
-        };
+    IQTDatPtr d_;
 
     /////////////////
-    // 
-    // Data Members
 
-    shared_ptr<IndexSet<IQIndex> >
-    is_;
+    const ITensor&
+    getBlock(const IndexSet<Index>& inds) const;
+    ITensor&
+    getBlock(const IndexSet<Index>& inds);
 
-    Data dat;
-
-    //
-    /////////////////
-
-    void 
-    soloIndex();
+    void
+    allocate();
 
     void 
     solo();
 
     }; //class IQTensor
+
 
 IQTensor inline
 operator*(IQTensor T, Real fac) {  T *= fac; return T; }
@@ -464,7 +429,7 @@ IQTensor& IQTensor::
 mapElems(const Callable& f)
     {
     solo();
-    Foreach(ITensor& t, dat.nc()) 
+    for(ITensor& t : *d_)
         t.mapElems(f);
     return *this;
     }
@@ -481,6 +446,12 @@ conj(IQTensor res) { res.conj(); return res; }
 //and reverse IQIndex arrows
 IQTensor inline
 dag(IQTensor res) { res.dag(); return res; }
+
+Real inline
+toReal(const IQTensor& T) { return T.toReal(); }
+
+Complex inline
+toComplex(const IQTensor& T) { return T.toComplex(); }
 
 //
 // Computes the scalar/inner/dot product of two
@@ -515,7 +486,7 @@ BraKet(IQTensor x, const IQTensor& y);
 //the same divergence, throws an exception
 //(since IQTensor is not correctly constructed).
 QN 
-div(const IQTensor& T, const OptSet& opts = Global::opts());
+div(const IQTensor& T, const Args& args = Global::args());
 
 const IQIndex&
 findIQInd(const IQTensor& T, const Index& i);
@@ -536,18 +507,21 @@ usesIndex(const IQTensor& T, const Index& i);
 
 //Returns true if T is exactly zero.
 //
-//If passed the option Opt("Fast",true),
+//If passed the argument Args("Fast",true),
 //only performs fast operations such as checking
 //whether T contains any blocks, but skips computing
 //the norm of the blocks.
 //This can cause the return value to be true even
 //if T is actually zero.
 bool
-isZero(const IQTensor& T, const OptSet& opts = Global::opts());
+isZero(const IQTensor& T, const Args& args = Global::args());
 
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);
 
-}; //namespace itensor
+void
+checkStorage(const IQTensor& T);
+
+} //namespace itensor
 
 #endif

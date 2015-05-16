@@ -46,14 +46,11 @@ class IndexSet
     // Type definitions
     //
 
-    typedef array<IndexT,NMAX>
-    Storage;
+    using Storage = array<IndexT,NMAX>;
 
-    typedef typename Storage::const_iterator 
-    const_iterator;
+    using const_iterator = typename Storage::const_iterator;
 
-    typedef shared_ptr<IndexSet<IndexT> >
-    Ptr;
+    using Ptr = shared_ptr<IndexSet<IndexT>>;
 
     //
     // Accessor Methods
@@ -87,20 +84,6 @@ class IndexSet
     end() const { return (index_.begin()+r_); }
 
     operator const Storage&() const { return index_; }
-
-    Real
-    uniqueReal() const { return ur_; }
-
-    bool
-    operator==(const IndexSet& other) const
-        { return fabs(ur_ - other.ur_) <= UniqueRealAccuracy; }
-
-    bool
-    operator!=(const IndexSet& other) const
-        { return fabs(ur_ - other.ur_) > UniqueRealAccuracy; }
-
-    bool
-    operator<(const IndexSet& other) const { return ur_ < other.ur_; }
 
     //
     // Primelevel Methods
@@ -159,31 +142,22 @@ class IndexSet
     void
     write(std::ostream& s) const;
 
-    static const Ptr& Null()
-        {
-        static Ptr Null_ = make_shared<IndexSet<IndexT> >();
-        return Null_;
-        }
+    //static const Ptr& Null()
+    //    {
+    //    static Ptr Null_ = make_shared<IndexSet<IndexT> >();
+    //    return Null_;
+    //    }
 
     private:
 
     //////////
-    //
-    // Data Members
-    //
 
     Storage index_;
 
     int rn_,
         r_;
 
-    Real ur_;
-
-    //
     /////////
-
-    void
-    setUniqueReal();
 
     template <class Iterable>
     void
@@ -196,8 +170,7 @@ IndexSet<IndexT>::
 IndexSet()
     :
     rn_(0),
-    r_(0),
-    ur_(0)
+    r_(0)
     { }
 
 template<class IndexT>
@@ -205,8 +178,7 @@ IndexSet<IndexT>::
 IndexSet(const IndexT& i1)
     :
     rn_((i1.m() == 1 ? 0 : 1)),
-    r_(1),
-    ur_(i1.uniqueReal())
+    r_(1)
     { 
 #ifdef DEBUG
     if(i1 == IndexT::Null())
@@ -219,8 +191,7 @@ template<class IndexT>
 IndexSet<IndexT>::
 IndexSet(const IndexT& i1, const IndexT& i2)
     :
-    r_(2),
-    ur_(i1.uniqueReal() + i2.uniqueReal())
+    r_(2)
     { 
 #ifdef DEBUG
     if(i1 == IndexT::Null())
@@ -262,7 +233,6 @@ IndexSet(IndexT i1, IndexT i2, IndexT i3,
 	while(r_ < NMAX && ii[r_] != IndexT::Null()) ++r_;
     int alloc_size;
     sortIndices(ii,r_,alloc_size,0);
-    setUniqueReal();
     }
 
 template <class IndexT>
@@ -273,7 +243,6 @@ IndexSet(const Iterable& ii, int size, int offset)
     r_ = (size < 0 ? ii.size() : size);
     int alloc_size = -1;
     sortIndices(ii,r_,alloc_size,offset);
-    setUniqueReal();
     }
 
 template <class IndexT>
@@ -284,7 +253,6 @@ IndexSet(const Iterable& ii, int size, int& alloc_size, int offset)
     r_(size)
     { 
     sortIndices(ii,size,alloc_size,offset);
-    setUniqueReal();
     }
 
 
@@ -293,8 +261,7 @@ IndexSet<IndexT>::
 IndexSet(const IndexSet& other, const Permutation& P)
     :
     rn_(other.rn_),
-    r_(other.r_),
-    ur_(other.ur_)
+    r_(other.r_)
     {
     for(int j = 1; j <= r_; ++j)
         index_[P.dest(j)-1] = other.index_[j-1];
@@ -336,7 +303,6 @@ template <class IndexT>
 void IndexSet<IndexT>::
 noprime(IndexType type)
     {
-    ur_ = 0;
     for(int j = 0; j < r_; ++j) 
         {
         IndexT& J = index_[j];
@@ -358,7 +324,6 @@ noprime(IndexType type)
             }
 #endif
         J.noprime(type);
-        ur_ += J.uniqueReal();
         }
 	}
 
@@ -383,7 +348,6 @@ noprime(const IndexT& I)
                 }
 #endif
             index_[j].noprime();
-            setUniqueReal();
             return;
             }
         }
@@ -396,12 +360,10 @@ template <class IndexT>
 void IndexSet<IndexT>::
 prime(IndexType type, int inc)
 	{
-    ur_ = 0;
     for(int j = 0; j < r_; ++j) 
         {
         IndexT& J = index_[j];
         J.prime(type,inc);
-        ur_ += J.uniqueReal();
         }
 	}
 
@@ -419,7 +381,6 @@ prime(const IndexT& I, int inc)
         if(index_[j] == I)
         {
         index_[j].prime(inc);
-        setUniqueReal();
         return;
         }
     Print(*this);
@@ -431,12 +392,10 @@ template <class IndexT>
 void IndexSet<IndexT>::
 mapprime(int plevold, int plevnew, IndexType type)
 	{
-    ur_ = 0;
     for(int j = 0; j < r_; ++j) 
         {
         IndexT& J = index_[j];
         J.mapprime(plevold,plevnew,type);
-        ur_ += J.uniqueReal();
         }
 	}
 
@@ -561,7 +520,6 @@ addindex(const IndexT& I)
         ++rn_;
         }
     ++r_;
-    ur_ += I.uniqueReal();
     }
 
 template <class IndexT>
@@ -575,7 +533,6 @@ replaceIndex(const IndexT& oind, const IndexT& nind)
         Error("replaceIndex: new index must have same dimension as old.");
         }
     bool found = false;
-    ur_ = 0;
     for(int j = 0; j < r_; ++j) 
         {
         if(index_[j] == oind)
@@ -583,7 +540,6 @@ replaceIndex(const IndexT& oind, const IndexT& nind)
             index_[j] = nind;
             found = true;
             }
-        ur_ += index_[j].uniqueReal();
         }
     if(!found)
         Error("replaceIndex: index not found");
@@ -633,15 +589,6 @@ addindex1(const std::vector<IndexT>& indices)
 
 template <class IndexT>
 void IndexSet<IndexT>::
-setUniqueReal()
-	{
-    ur_ = 0;
-    for(int j = 0; j < r_; ++j)
-        ur_ += index_[j].uniqueReal();
-	}
-
-template <class IndexT>
-void IndexSet<IndexT>::
 swap(IndexSet& other)
     {
     index_.swap(other.index_);
@@ -653,10 +600,6 @@ swap(IndexSet& other)
     tmp = rn_;
     rn_ = other.rn_;
     other.rn_ = tmp;
-
-    Real rtmp = ur_;
-    ur_ = other.ur_;
-    other.ur_ = rtmp;
     }
 
 template <class IndexT>
@@ -665,7 +608,6 @@ clear()
     {
     rn_ = 0;
     r_ = 0;
-    ur_ = 0;
     }
 
 template <class IndexT>
@@ -682,11 +624,9 @@ read(std::istream& s)
     {
     s.read((char*) &r_,sizeof(r_));
     s.read((char*) &rn_,sizeof(rn_));
-    ur_ = 0;
     for(int j = 0; j < r_; ++j) 
         {
         index_[j].read(s);
-        ur_ += index_[j].uniqueReal();
         }
     }
 
@@ -816,7 +756,7 @@ getperm(const IndexSet<IndexT>& iset,
             {
             if(oset[j] == iset[k])
                 { 
-                P.fromTo(j+1,k+1); 
+                P.setFromTo(j+1,k+1); 
                 got_one = true; 
                 break;
                 }
@@ -826,19 +766,19 @@ getperm(const IndexSet<IndexT>& iset,
             println("j = ",j);
             println("iset =");
             for(int j = 0; j < iset.r(); ++j)
-                printfln("%d %s | %.10E",j,iset[j],iset[j].uniqueReal());
+                printfln("%d %s",j,iset[j]);
             println("\noset = ");
             for(int j = 0; j < iset.r(); ++j)
-                printfln("%d %s | %.10E",j,oset[j],oset[j].uniqueReal());
+                printfln("%d %s",j,oset[j]);
             println();
-            printfln("iset uniqueReal = %.15E",iset.uniqueReal());
-            Real our = 0;
-            for(int i = 0; i < iset.r(); ++i)
-                {
-                our += oset[i].uniqueReal();
-                }
-            printfln("oset uniqueReal = %.15E",our);
-            printfln("uniqueReal diff = %.15E",fabs(our-iset.uniqueReal()));
+            //printfln("iset uniqueReal = %.15E",iset.uniqueReal());
+            //Real our = 0;
+            //for(int i = 0; i < iset.r(); ++i)
+            //    {
+            //    our += oset[i].uniqueReal();
+            //    }
+            //printfln("oset uniqueReal = %.15E",our);
+            //printfln("uniqueReal diff = %.15E",fabs(our-iset.uniqueReal()));
             throw ITError("IndexSet::getperm: no matching index");
             }
 	    }
@@ -910,6 +850,6 @@ operator<<(std::ostream& s, const IndexSet<Index>& is)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

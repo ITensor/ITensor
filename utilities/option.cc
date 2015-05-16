@@ -1,5 +1,5 @@
 //
-// Distributed under the ITensor Library License, Version 1.0.
+// Distributed under the ITensor Library License, Version 1.1.
 //    (See accompanying LICENSE file.)
 //
 #include "option.h"
@@ -17,40 +17,40 @@ using std::ostream;
 using std::istream;
 
 
-Opt::
-Opt()
+Args::Val::
+Val()
     :
     name_("Null"),
     type_(None),
     rval_(NAN)
     { }
 
-Opt::
-Opt(const char* name)
+Args::Val::
+Val(const char* name)
     :
     name_(name),
     type_(Boolean),
     rval_(1.0)
     { }
 
-Opt::
-Opt(const Name& name)
+Args::Val::
+Val(const Name& name)
     :
     name_(name),
     type_(Boolean),
     rval_(1.0)
     { }
 
-Opt::
-Opt(const Name& name, bool bval)
+Args::Val::
+Val(const Name& name, bool bval)
     :
     name_(name),
     type_(Boolean),
     rval_((bval ? 1.0 : 0.0))
     { }
 
-Opt::
-Opt(const Name& name, const char* sval)
+Args::Val::
+Val(const Name& name, const char* sval)
     :
     name_(name),
     type_(String),
@@ -58,8 +58,8 @@ Opt(const Name& name, const char* sval)
     rval_(NAN)
     { }
 
-Opt::
-Opt(const Name& name, const string& sval)
+Args::Val::
+Val(const Name& name, const string& sval)
     :
     name_(name),
     type_(String),
@@ -67,46 +67,46 @@ Opt(const Name& name, const string& sval)
     rval_(NAN)
     { }
 
-Opt::
-Opt(const Name& name, int ival)
+Args::Val::
+Val(const Name& name, int ival)
     :
     name_(name),
     type_(Numeric),
     rval_(ival)
     { }
 
-Opt::
-Opt(const Name& name, Real rval)
+Args::Val::
+Val(const Name& name, Real rval)
     :
     name_(name),
     type_(Numeric),
     rval_(rval)
     { }
 
-void Opt::
+void Args::Val::
 assertType(Type t) const
     {
     if(t != type_)
-        throw ITError("Attempt to access Opt by wrong type");
+        throw ITError("Wrong value type for option " + name_);
     }
 
 ostream& 
-operator<<(ostream & s, const Opt& opt)
+operator<<(ostream & s, const Args::Val& v)
     {
-    s << opt.name() << "=";
-    if(opt.type() == Opt::Boolean)
+    s << v.name() << "=";
+    if(v.type() == Args::Val::Boolean)
         {
-        s << (opt.boolVal() ? "true" : "false");
+        s << (v.boolVal() ? "true" : "false");
         }
     else
-    if(opt.type() == Opt::Numeric)
+    if(v.type() == Args::Val::Numeric)
         {
-        s << opt.realVal();
+        s << v.realVal();
         }
     else
-    if(opt.type() == Opt::String)
+    if(v.type() == Args::Val::String)
         {
-        s << "\"" << opt.stringVal() << "\"";
+        s << "\"" << v.stringVal() << "\"";
         }
     else
         {
@@ -117,184 +117,174 @@ operator<<(ostream & s, const Opt& opt)
 
 
 
-OptSet::
-OptSet()
+Args::
+Args()
     { }
 
-OptSet::
-OptSet(const Opt& opt)
-    {
-    add(opt);
-    }
-
-OptSet::
-OptSet(const Opt& opt1, const Opt& opt2, 
-       const Opt& opt3, const Opt& opt4)
-    {
-    add(opt1,opt2,opt3,opt4);
-    }
-
-OptSet::
-OptSet(const char* ostring)
+Args::
+Args(const char* ostring)
     {
     processString(string(ostring));
     }
 
-OptSet::
-OptSet(const string& ostring)
+Args::
+Args(const string& ostring)
     {
     processString(ostring);
     }
 
-OptSet::
-OptSet(const OptSet& other)
+Args::
+Args(const Args& other)
     { 
     if(!other.isGlobal())
-        opts_ = other.opts_;
+        vals_ = other.vals_;
     }
 
-//bool OptSet::
-//defined(const Opt::Name& name) const
-//    {
-//    if(opts_.count(name) > 0)
-//        return true;
-//
-//    if(isGlobal()) 
-//        return false;
-//    //else see if GlobalOpts contains it
-//    return GlobalOpts().defined(name);
-//    }
+Args::
+Args(Args&& other)
+    { 
+    if(!other.isGlobal())
+        vals_ = std::move(other.vals_);
+    }
 
-bool OptSet::
-defined(const Opt& opt) const
+Args& Args::
+operator=(const Args& other)
+    { 
+    if(!other.isGlobal())
+        vals_ = other.vals_;
+    return *this;
+    }
+
+Args& Args::
+operator=(Args&& other)
+    { 
+    if(!other.isGlobal())
+        vals_ = std::move(other.vals_);
+    return *this;
+    }
+
+void Args::
+add(const Name& name, bool bval) { add({name,bval}); }
+void Args::
+add(const Name& name, int ival) { add({name,ival}); }
+void Args::
+add(const Name& name, const char* sval) { add({name,std::string(sval)}); }
+void Args::
+add(const Name& name, const std::string& sval) { add({name,sval}); }
+void Args::
+add(const Name& name, Real rval) { add({name,rval}); }
+
+bool Args::
+defined(const Name& name) const
     {
-    Foreach(const Opt& x, opts_)
+    for(const auto& x : vals_)
         {
-        if(x.name() == opt.name()) return true;
+        if(x.name() == name) return true;
         }
 
     if(isGlobal()) return false;
 
-    //otherwise see if GlobalOpts contains it
-    return GlobalOpts().defined(opt.name());
+    //otherwise see if GlobalArgs contains it
+    return Global().defined(name);
     }
 
-void OptSet::
-add(const Opt& opt)
+
+void Args::
+add(const Val& val)
     {
-    if(!opt) return;
-    Foreach(Opt& x, opts_)
-        {
+    if(!val) return;
+    for(auto& x : vals_)
         //If already defined, replace
-        if(x.name() == opt.name()) 
+        if(x.name() == val.name()) 
             {
-            x = opt;
+            x = val;
             return;
             }
-        }
     //Otherwise add to the end
-    opts_.push_back(opt);
+    vals_.push_back(val);
     }
 
-void OptSet::
-add(const Opt& opt1, const Opt& opt2,
-    const Opt& opt3, const Opt& opt4)
-    {
-    if(opt1) opts_.push_back(opt1);
-    if(opt2) opts_.push_back(opt2);
-    if(opt3) opts_.push_back(opt3);
-    if(opt4) opts_.push_back(opt4);
-    }
-
-void OptSet::
+void Args::
 add(const char* ostring)
     {
     processString(std::string(ostring));
     }
 
  
-const Opt& OptSet::
-get(const Opt::Name& name) const
+const Args::Val& Args::
+get(const Name& name) const
     {
-    Foreach(const Opt& x, opts_)
+    for(const auto& x : vals_)
         {
         if(x.name() == name) return x;
         }
-    //couldn't find the Opt in this OptSet
+    //couldn't find the Val in this Args
     if(isGlobal())
         {
-        throw ITError("Requested option " + name.toString() + " not found");
+        throw ITError("Requested option " + name + " not found");
         }
-    return GlobalOpts().get(name);
+    return Global().get(name);
     }
 
-bool OptSet::
-getBool(const Opt::Name& name) const
+bool Args::
+getBool(const Name& name) const
     {
     return get(name).boolVal();
     }
 
-bool OptSet::
-getBool(const Opt::Name& name, bool default_value) const
+bool Args::
+getBool(const Name& name, bool default_value) const
     {
-    if(defined(name))
-        return get(name).boolVal();
-    else
-        return default_value;
+    if(defined(name)) return get(name).boolVal();
+    return default_value;
     }
 
  
-const string& OptSet::
-getString(const Opt::Name& name) const
+const string& Args::
+getString(const Name& name) const
     {
     return get(name).stringVal();
     }
 
-const string& OptSet::
-getString(const Opt::Name& name, const string& default_value) const
+const string& Args::
+getString(const Name& name, const string& default_value) const
     {
-    if(defined(name))
-        return get(name).stringVal();
-    else
-        return default_value;
+    if(defined(name)) return get(name).stringVal();
+    return default_value;
     }
 
-int OptSet::
-getInt(const Opt::Name& name) const
+int Args::
+getInt(const Name& name) const
     {
     return get(name).intVal();
     }
 
-int OptSet::
-getInt(const Opt::Name& name, int default_value) const
+int Args::
+getInt(const Name& name, int default_value) const
     {
-    if(defined(name))
-        return get(name).intVal();
-    else
-        return default_value;
+    if(defined(name)) return get(name).intVal();
+    return default_value;
     }
 
-Real OptSet::
-getReal(const Opt::Name& name) const
+Real Args::
+getReal(const Name& name) const
     {
     return get(name).realVal();
     }
 
-Real OptSet::
-getReal(const Opt::Name& name, Real default_value) const
+Real Args::
+getReal(const Name& name, Real default_value) const
     {
-    if(defined(name))
-        return get(name).realVal();
-    else
-        return default_value;
+    if(defined(name)) return get(name).realVal();
+    return default_value;
     }
 
-void OptSet::
+void Args::
 processString(string ostring)
     {
     ostring.erase(std::remove(ostring.begin(), ostring.end(),' '), ostring.end());
 
-    size_t found = ostring.find_first_of(',');
+    auto found = ostring.find_first_of(',');
     while(found != std::string::npos)
         {
         addByString(ostring.substr(0,found));
@@ -305,19 +295,18 @@ processString(string ostring)
     addByString(ostring);
     }
 
-void OptSet::
+void Args::
 addByString(string ostring)
     {
     if(ostring.size() < 1) return;
 
-    const
-    size_t found = ostring.find_first_of('=');
+    auto found = ostring.find_first_of('=');
 
     if(found == std::string::npos)
         {
-        //if no '=' found, just create an Opt by name only
+        //if no '=' found, just create an Val by name only
         //which is the same as name=true
-        add(Opt(ostring));
+        add(Val(ostring));
         }
     else
         {
@@ -340,32 +329,21 @@ addByString(string ostring)
 
             if(errno == 0) //success
                 {
-                add(Opt(name,d));
+                add(Val(name,d));
                 return;
                 }
             }
         
-        if(val == "false")
-            {
-            add(Opt(name,false));
-            }
-        else
-        if(val == "true")
-            {
-            add(Opt(name,true));
-            }
-        else
-            {
-            add(Opt(name,val));
-            }
-
+        if(val == "false")     add(Val(name,false));
+        else if(val == "true") add(Val(name,true));
+        else                   add(Val(name,val));
         }
     }
 
-OptSet& OptSet::
-operator+=(const OptSet& oset)
+Args& Args::
+operator+=(const Args& args)
     {
-    Foreach(const Opt& x, oset)
+    for(const auto& x : args.vals_)
         {
         add(x);
         }
@@ -373,91 +351,38 @@ operator+=(const OptSet& oset)
     }
 
 
-OptSet
-operator+(const Opt& opt1, const Opt& opt2)
+Args
+operator+(Args args, const Args& other)
     {
-    return OptSet(opt1,opt2);
+    args += other;
+    return args;
     }
 
-OptSet 
-operator+(OptSet oset, const Opt& opt)
+
+Args 
+operator+(Args args, const char* ostring)
     {
-    oset.add(opt);
-    return oset;
+    args.add(ostring);
+    return args;
     }
 
-OptSet&
-operator+=(OptSet& oset, const Opt& opt)
+Args 
+operator+(const char* ostring, Args args)
     {
-    oset.add(opt);
-    return oset;
-    }
-
-OptSet
-operator+(OptSet oset, const OptSet& other)
-    {
-    oset &= other;
-    return oset;
-    }
-
-OptSet 
-operator+(const Opt& opt, OptSet oset)
-    {
-    oset.add(opt);
-    return oset;
-    }
-
-OptSet 
-operator+(const Opt& opt, const char* ostring)
-    {
-    OptSet res(ostring);
-    res.add(opt);
-    return res;
-    }
-
-OptSet 
-operator+(const char* ostring, const Opt& opt)
-    {
-    OptSet res(ostring);
-    res.add(opt);
-    return res;
-    }
-
-OptSet 
-operator+(OptSet oset, const char* ostring)
-    {
-    oset.add(ostring);
-    return oset;
-    }
-
-OptSet 
-operator+(const char* ostring, OptSet oset)
-    {
-    oset.add(ostring);
-    return oset;
+    args.add(ostring);
+    return args;
     }
  
 ostream& 
-operator<<(ostream & s, const OptSet& oset)
+operator<<(ostream & s, const Args& args)
     {
+    if(args.isGlobal()) s << "Global Args:\n";
+    else                s << "Args: (only showing overrides of global args)\n";
 
-    if(oset.isGlobal())
-        {
-        s << "/- Global OptSet -------\n";
-        }
-    else
-        {
-        s << "/- OptSet --------------\n";
-        s << "(only showing overrides of global opts)\n";
-        }
-
-    Foreach(const Opt& opt, oset)
-        {
+    for(const auto& opt : args.vals_)
         s << opt << "\n";
-        }
 
-    s <<    "\\-----------------------" << endl;
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor

@@ -43,7 +43,7 @@ init(const std::string& smallind_name)
     {
     static std::vector<QN> qns(10);
     qns.resize(0);
-    Foreach(const IndexQN& x, bigind_.indices()) 
+    for(const IndexQN& x : bigind_.indices()) 
         qns.push_back(x.qn);
 
     sort(qns.begin(),qns.end());
@@ -56,12 +56,12 @@ init(const std::string& smallind_name)
         const QN& q = *qi;
 
         int totm = 0;
-        Foreach(const IndexQN& x, bigind_.indices())
+        for(const IndexQN& x : bigind_.indices())
             if(x.qn == q) totm += x.m();
 
         Index small_qind(smallind_name,totm,bigind_.type(),bigind_.primeLevel());
         int start = 0;
-        Foreach(const IndexQN& x, bigind_.indices())
+        for(const IndexQN& x : bigind_.indices())
             if(x.qn == q)
                 {
                 maps_.push_back(IndexMap(small_qind,start,x));
@@ -81,7 +81,7 @@ prime(IndexType type, int inc)
     bigind_.prime(type,inc);
     smallind_.prime(type,inc);
 
-    Foreach(IndexMap& m, maps_)
+    for(IndexMap& m : maps_)
         {
         m.big.prime(type,inc);
         m.small.prime(type,inc);
@@ -92,7 +92,7 @@ static const Index&
 findBig(const Index& small, int j,
         const vector<IndexMap>& maps)
     {
-    Foreach(const IndexMap& m, maps)
+    for(const IndexMap& m : maps)
         {
         if(m.i == j && m.small == small)
             return m.big;
@@ -105,7 +105,7 @@ static const IndexMap&
 findSmall(const Index& big,
         const vector<IndexMap>& maps)
     {
-    Foreach(const IndexMap& m, maps)
+    for(const IndexMap& m : maps)
         {
         if(m.big == big)
             return m;
@@ -126,7 +126,7 @@ product(const IQTensor& t, IQTensor& res) const
     int smallind_pos = -2;
     int bigind_pos   = -2;
     int j = 0;
-    Foreach(const IQIndex& J, t.indices())
+    for(const IQIndex& J : t.indices())
         {
         iqinds.push_back(J);
 
@@ -157,10 +157,10 @@ product(const IQTensor& t, IQTensor& res) const
 
         res = IQTensor(iqinds);
 
-        Foreach(const ITensor& b, t.blocks())
+        for(const ITensor& b : t.blocks())
             {
             Index sind;
-            Foreach(const Index& I, b.indices())
+            for(const Index& I : b.indices())
                 if(hasindex(smallind_,I))
                     {
                     sind = I;
@@ -195,11 +195,11 @@ product(const IQTensor& t, IQTensor& res) const
 
         res = IQTensor(iqinds);
 
-        Foreach(ITensor tt, t.blocks())
+        for(ITensor tt : t.blocks())
             {
             bool gotit = false;
 
-            Foreach(const Index& K, tt.indices())
+            for(const Index& K : tt.indices())
                 if(hasindex(bigind_,K))
                     {
                     const IndexMap& m = findSmall(K,maps_);
@@ -225,12 +225,12 @@ operator<<(std::ostream & s, const Condenser & c)
     s << "bigind_ is " << c.bigind() << "\n";
     s << "smallind_ is " << c.smallind() << "\n";
     s << "index maps \n";
-    Foreach(const IndexMap& m, c.maps())
+    for(const IndexMap& m : c.maps())
         {
         s << "(" << m.small << "," << m.i << ") " << m.big << "\n";
         }
     return s << std::endl;
     }
 
-}; //namespace itensor
+} //namespace itensor
 

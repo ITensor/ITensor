@@ -1,28 +1,21 @@
 ### User Configurable Options
 
-## To set up, follow the steps [1], [2], [3], [4] below
+## To set up, follow the steps [1], [2], [3] below
 
-###################################
+#########
 ## [1]
-## Set equal to yes if your compiler supports C++11.
-## (Also make sure to add a flag like -std=c++11 to the CCCOM variable below.)
-USE_CPP11=no  
-###################################
+##
+## Set which compiler to use by defining CCCOM:
+##GNU GCC compiler
+CCCOM=g++ -m64 -std=c++11
+##Clang compiler (good to use on Mac OS)
+#CCCOM=clang++ -std=c++1y
+##Intel C++ compiler (good to use with Intel MKL if available)
+#CCCOM=icpc -std=c++11
+#########
 
 #########
 ## [2]
-##
-## Set which compiler to use by defining CCCOM:
-##GNU GCC compiler, consider adding flag -std=c++11 to enable newer C++11 features
-CCCOM=g++ -m64 #-std=c++11
-##Clang compiler (good to use on Mac OS), consider adding flag -std=c++1y to enable newer C++14 features
-#CCCOM=clang++ #-std=c++1y
-##Intel C++ compiler (good to use with Intel MKL if available), consider adding -std=c++11
-#CCCOM=icpc #-std=c++11
-#########
-
-#########
-## [3]
 ## 
 ## BLAS/LAPACK Related Options
 ## 
@@ -72,7 +65,7 @@ BLAS_LAPACK_LIBFLAGS=-framework Accelerate
 
 
 #########
-## [4]
+## [3]
 ##
 ## This step is optional, but if you wish to customize the flags
 ## used to compile optimized and debug code, you can do so here.
@@ -88,12 +81,6 @@ DEBUGFLAGS=-DDEBUG -DMATRIXBOUNDS -DITENSOR_USE_AT -DBOUNDS -g -Wall
 ### Other Makefile variables defined for convenience.
 ### Not necessary to modify these for most cases.
 ###
-
-
-## Use this variable to set the location of the boost 
-## headers on your machine (this folder should have another one called 'boost' inside it).
-## If USE_CPP11=yes, this variable will not be used.
-BOOST_DIR=$(THIS_DIR)/boost_minimal
 
 PREFIX=$(THIS_DIR)
 
@@ -112,28 +99,6 @@ ITENSOR_INCLUDEFLAGS=-I$(ITENSOR_INCLUDEDIR) $(BLAS_LAPACK_INCLUDEFLAGS)
 
 ifndef CCCOM
 $(error Makefile variable CCCOM not defined in options.mk; please define it.)
-endif
-
-ifndef USE_CPP11
-$(error Makefile variable USE_CPP11 not defined in options.mk; please define it.)
-endif
-
-ifeq ($(strip $(USE_CPP11)),yes)
-else
-    ifeq ($(strip $(USE_CPP11)),no)
-    else
-    $(error Please set Makefile variable USE_CPP11=yes or USE_CPP11=no in file options.mk.)
-    endif
-endif
-
-
-ifeq ($(strip $(USE_CPP11)),yes)
-CCCOM += -DUSE_CPP11
-else
-    ifdef BOOST_DIR 
-    ITENSOR_INCLUDEFLAGS += -I$(BOOST_DIR)
-    endif
-OPTIMIZATIONS += -DBOOST_DISABLE_ASSERTS
 endif
 
 CCFLAGS=-I. $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -Wno-unused-variable

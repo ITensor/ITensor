@@ -30,6 +30,6 @@ public:
 	{ }
     };
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

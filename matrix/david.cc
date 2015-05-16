@@ -254,4 +254,4 @@ void David(    // Object containing big hamiltonian
     cout.precision(oldp);
 }
 
-}; //namespace itensor
+} //namespace itensor

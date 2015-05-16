@@ -16,16 +16,13 @@ class LocalMPOSet
     LocalMPOSet();
 
     LocalMPOSet(const std::vector<MPOt<Tensor> >& Op,
-                const OptSet& opts = Global::opts());
+                const Args& args = Global::args());
 
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
-    typedef typename Tensor::CombinerT
-    CombinerT;
+    using CombinerT = typename Tensor::CombinerT;
 
-    typedef LocalMPO<Tensor>
-    LocalMPOT;
+    using LocalMPOT = LocalMPO<Tensor>;
 
     void
     product(const Tensor& phi, Tensor& phip) const;
@@ -93,7 +90,7 @@ LocalMPOSet()
 template <class Tensor>
 inline LocalMPOSet<Tensor>::
 LocalMPOSet(const std::vector<MPOt<Tensor> >& Op,
-            const OptSet& opts)
+            const Args& args)
     : 
     Op_(&Op),
     lmpo_(Op.size())
@@ -180,6 +177,6 @@ numCenter(int val)
         lmpo_[n].numCenter(val);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

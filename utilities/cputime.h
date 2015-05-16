@@ -8,32 +8,20 @@
 #include <iostream>
 #include <iomanip>
 
-double mytime();
-
-class init_time
-    {
-public:
-    double dummy;
-    init_time() { dummy = mytime(); }
-    friend class cpu_time;
-    };
+double cpu_mytime();
+double cpu_mywall();
 
 class cpu_time
     {
 public:
     double time;		// in seconds
-    friend std::ostream & operator << (std::ostream & s, const cpu_time & t);
+    double wall;
     cpu_time()
-	{ time = mytime(); }
+	{ time = cpu_mytime(); wall = cpu_mywall(); }
     void mark() 
-	{ time = mytime(); }
-    cpu_time sincemark();
-
-    static init_time& init()
-        {
-        static init_time init_;
-        return init_;
-        }
+	{ time = cpu_mytime(); wall = cpu_mywall(); }
+    cpu_time sincemark() const;
     };
 
+std::ostream & operator << (std::ostream & s, const cpu_time & t);
 #endif

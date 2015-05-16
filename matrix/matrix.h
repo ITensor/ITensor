@@ -168,6 +168,18 @@ public:
 
     void read(std::istream& s);
 
+    using iterator = Real*;
+    using const_iterator = const Real*;
+
+    iterator begin() { assert(Stride()==1); return Store(); }
+    iterator end() { return Store()+Length(); }
+
+    const_iterator begin() const { assert(Stride()==1);return Store(); }
+    const_iterator end() const { return Store()+Length(); }
+
+    const_iterator cbegin() const { assert(Stride()==1); return Store(); }
+    const_iterator cend() const { return Store()+Length(); }
+
     friend class SparseVector;
 
     ARRAY1H_DEFS(Vector)
@@ -335,10 +347,7 @@ inline Vector::Vector (const std::vector<Real>& v)
     { 
     init(); 
     makevector(v.size()); 
-    for(size_t j = 0; j < v.size(); ++j)
-        {
-        operator[](j) = v[j];
-        }
+    std::copy(v.begin(),v.end(),Store());
     }
 
 inline Vector::Vector (const VectorRef &V)
@@ -419,7 +428,7 @@ inline MatrixVectorRes::operator Vector() const
 inline VectorVectorRes::operator Vector() const
     { Vector res(Length()); res = *this; return res;  }
 
-};
+}
 
 #include "svd.h"
 
@@ -427,6 +436,6 @@ inline VectorVectorRes::operator Vector() const
 namespace itensor {
 ARRAY1CC_DEFS(Matrix)
 ARRAY1CC_DEFS(Vector)
-};
+}
 
 #endif

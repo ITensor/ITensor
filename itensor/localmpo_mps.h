@@ -21,7 +21,7 @@ class LocalMPO_MPS
 
     LocalMPO_MPS(const MPOt<Tensor>& Op, 
                  const std::vector<MPSt<Tensor> >& psis,
-                 const OptSet& opts = Global::opts());
+                 const Args& args = Global::args());
 
     LocalMPO_MPS(const MPOt<Tensor>& Op, 
                  const Tensor& LOp,
@@ -29,21 +29,17 @@ class LocalMPO_MPS
                  const std::vector<MPSt<Tensor> >& psis,
                  const std::vector<Tensor>& Lpsi,
                  const std::vector<Tensor>& Rpsi,
-                 const OptSet& opts = Global::opts());
+                 const Args& args = Global::args());
 
     //
     // Typedefs
     //
 
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
-    typedef typename Tensor::CombinerT
-    CombinerT;
+    using CombinerT = typename Tensor::CombinerT;
 
-    typedef LocalMPO<Tensor>
-    LocalMPOType;
-
+    using LocalMPOType = LocalMPO<Tensor>;
 
     //
     // Sparse matrix methods
@@ -119,7 +115,7 @@ template <class Tensor>
 inline LocalMPO_MPS<Tensor>::
 LocalMPO_MPS(const MPOt<Tensor>& Op,
              const std::vector<MPSt<Tensor> >& psis,
-             const OptSet& opts)
+             const Args& args)
     : 
     Op_(&Op),
     psis_(&psis),
@@ -131,8 +127,8 @@ LocalMPO_MPS(const MPOt<Tensor>& Op,
     for(size_t j = 0; j < lmps_.size(); ++j)
         lmps_[j] = LocalMPOType(psis[j]);
 
-    if(opts.defined("Weight"))
-        weight(opts.getReal("Weight"));
+    if(args.defined("Weight"))
+        weight(args.getReal("Weight"));
     }
 
 template <class Tensor>
@@ -143,7 +139,7 @@ LocalMPO_MPS(const MPOt<Tensor>& Op,
              const std::vector<MPSt<Tensor> >& psis,
              const std::vector<Tensor>& Lpsi,
              const std::vector<Tensor>& Rpsi,
-             const OptSet& opts)
+             const Args& args)
     : 
     Op_(&Op),
     psis_(&psis),
@@ -159,8 +155,8 @@ LocalMPO_MPS(const MPOt<Tensor>& Op,
     for(size_t j = 0; j < lmps_.size(); ++j)
         lmps_[j] = LocalMPOType(psis[j],Lpsi[j],Rpsi[j]);
 
-    if(opts.defined("Weight"))
-        weight(opts.getReal("Weight"));
+    if(args.defined("Weight"))
+        weight(args.getReal("Weight"));
     }
 
 template <class Tensor>
@@ -188,6 +184,6 @@ position(int b, const MPSType& psi)
         lmps_[j].position(b,psi);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

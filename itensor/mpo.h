@@ -5,11 +5,17 @@
 #ifndef __ITENSOR_MPO_H
 #define __ITENSOR_MPO_H
 #include "mps.h"
+#include "sweeps.h"
 
 
 namespace itensor {
 
 static const Real DefaultLogRefScale(2.0255);
+
+template<class Tensor> class MPOt;
+
+using MPO = MPOt<ITensor>;
+using IQMPO = MPOt<IQTensor>;
 
 //
 // class MPOt
@@ -17,24 +23,15 @@ static const Real DefaultLogRefScale(2.0255);
 // (defines MPO and IQMPO via typedefs)
 //
 template<class Tensor>
-class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
+class MPOt : private MPSt<Tensor>
     {
     public:
 
-    typedef MPSt<Tensor> 
-    Parent;
-
-    typedef Tensor 
-    TensorT;
-
-    typedef typename Tensor::IndexT 
-    IndexT;
-
-    typedef typename Tensor::IndexValT 
-    IndexValT;
-
-    typedef typename Tensor::CombinerT 
-    CombinerT;
+    using Parent = MPSt<Tensor>;
+    using TensorT = Tensor;
+    using IndexT = typename Tensor::IndexT;
+    using IndexValT = typename Tensor::IndexValT;
+    using CombinerT = typename Tensor::CombinerT;
 
     //MPOt: Constructors -----------------------------------------
 
@@ -49,6 +46,7 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
 
     using Parent::sites;
     using Parent::valid;
+    explicit operator bool() const { return valid(); }
 
     using Parent::rightLim;
     using Parent::leftLim;
@@ -79,7 +77,7 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
 
     MPOt&
     plusEq(const MPOt& R,
-           const OptSet& opts = Global::opts());
+           const Args& args = Global::args());
 
 
     MPOt<ITensor>
@@ -106,18 +104,18 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
         }
 
     void 
-    svdBond(int b, const Tensor& AA, Direction dir, const OptSet& opts = Global::opts())
+    svdBond(int b, const Tensor& AA, Direction dir, const Args& args = Global::args())
         { 
-        Parent::svdBond(b,AA,dir,opts & Opt("UseSVD") & Opt("LogRefNorm",logrefNorm_)); 
+        Parent::svdBond(b,AA,dir,args + Args("UseSVD",true,"LogRefNorm",logrefNorm_)); 
         }
 
     //Move the orthogonality center to site i 
     //(l_orth_lim_ = i-1, r_orth_lim_ = i+1)
     void 
-    position(int i, const OptSet& opts = Global::opts()) { Parent::position(i,opts & Opt("UseSVD")); }
+    position(int i, const Args& args = Global::args()) { Parent::position(i,args + Args("UseSVD")); }
 
     void 
-    orthogonalize(const OptSet& opts = Global::opts()) { Parent::orthogonalize(opts & Opt("UseSVD")); }
+    orthogonalize(const Args& args = Global::args()) { Parent::orthogonalize(args + Args("UseSVD")); }
 
     using Parent::isOrtho;
     using Parent::orthoCenter;
@@ -143,9 +141,9 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
     ///////////
 
     MPOt&
-    addAssumeOrth(const MPOt& oth, const OptSet& opts = Global::opts()) 
+    addAssumeOrth(const MPOt& oth, const Args& args = Global::args()) 
         { 
-        Parent::addAssumeOrth(oth,opts & Opt("UseSVD") & Opt("LogRefNorm",logrefNorm_)); 
+        Parent::addAssumeOrth(oth,args+Args("UseSVD",true,"LogRefNorm",logrefNorm_,"DoRelCutoff",true)); 
         return *this; 
         }
 
@@ -153,9 +151,6 @@ class MPOt : private MPSt<Tensor>, public safe_bool<MPOt<Tensor> >
     friend class MPOt<IQTensor>;
 
     }; //class MPOt<Tensor>
-
-typedef MPOt<ITensor> MPO;
-typedef MPOt<IQTensor> IQMPO;
 
 template <> inline
 MPO IQMPO::
@@ -212,10 +207,10 @@ template <class Tensor>
 MPOt<Tensor>
 sum(const MPOt<Tensor>& L, 
     const MPOt<Tensor>& R, 
-    const OptSet& opts = Global::opts())
+    const Args& args = Global::args())
     {
     MPOt<Tensor> res(L);
-    res.plusEq(R,opts);
+    res.plusEq(R,args+Args("UseSVD",true,"DoRelCutoff",true));
     return res;
     }
 
@@ -358,7 +353,7 @@ psiHKphiC(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPOt<Tensor>& K,
 template <class MPOType>
 void 
 nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
-         const OptSet& opts = Global::opts());
+         const Args& args = Global::args());
 
 //
 // Applies an MPO to an MPS using the zip-up method described
@@ -375,7 +370,7 @@ void
 zipUpApplyMPO(const MPSt<Tensor>& psi, 
               const MPOt<Tensor>& K, 
               MPSt<Tensor>& res, 
-              const OptSet& opts = Global::opts());
+              const Args& args = Global::args());
 
 //Applies an MPO K to an MPS x with no approximation (|res>=K|x>)
 //The bond dimension of res will be the product of bond dimensions
@@ -385,7 +380,7 @@ void
 exactApplyMPO(const MPSt<Tensor>& x, 
               const MPOt<Tensor>& K, 
               MPSt<Tensor>& res,
-              const OptSet& opts = Global::opts());
+              const Args& args = Global::args());
 
 //Applies an MPO K to an MPS psi (|res>=K|psi>) using a sweeping/DMRG-like
 //fitting approach. Warning: this method can get stuck i.e. fail to converge
@@ -400,7 +395,7 @@ void
 fitApplyMPO(const MPSt<Tensor>& psi,
             const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
 
 //Applies an MPO K to an MPS psi including an overall scalar factor (|res>=fac*K|psi>) 
 //using a sweeping/DMRG-like fitting approach. 
@@ -416,7 +411,25 @@ fitApplyMPO(Real fac,
             const MPSt<Tensor>& psi,
             const MPOt<Tensor>& K,
             MPSt<Tensor>& res,
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
+
+//Applies an MPO K to an MPS psi including an overall scalar factor (|res>=fac*K|psi>) 
+//using a sweeping/DMRG-like fitting approach. 
+//Warning: this method can get stuck i.e. fail to converge
+//if the initial value of res is too different from the product fac*K|psi>.
+//Try setting noise > 0 in the Sweeps argument to overcome this.
+//Arguments recognized:
+//   "Verbose" (default: false): print out extra information
+//   "Normalize" (default: true): normalize the result MPS "res" at every step
+//
+template<class Tensor>
+void
+fitApplyMPO(Real fac,
+            const MPSt<Tensor>& psi,
+            const MPOt<Tensor>& K,
+            MPSt<Tensor>& res,
+            const Sweeps& sweeps,
+            Args args);
 
 //Computes |res> = |psiA> + mpofac*H*|psiB>
 //using a sweeping/DMRG-like fitting approach. 
@@ -433,7 +446,7 @@ fitApplyMPO(const MPSt<Tensor>& psiA,
             const MPSt<Tensor>& psiB,
             const MPOt<Tensor>& H,
             MPSt<Tensor>& res,
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
 
 //Computes |res> = mpsfac*|psiA> + mpofac*H*|psiB>
 //using a sweeping/DMRG-like fitting approach. 
@@ -451,25 +464,25 @@ fitApplyMPO(Real mpsfac,
             const MPSt<Tensor>& psiB,
             const MPOt<Tensor>& H,
             MPSt<Tensor>& res,
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
 
 //Computes the exponential of the MPO H: K=exp(-tau*(H-Etot))
 template<class Tensor>
 void 
 expH(const MPOt<Tensor>& H, MPOt<Tensor>& K, Real tau, Real Etot,
-     Real Kcutoff, int ndoub, const OptSet& opts = Global::opts());
+     Real Kcutoff, int ndoub, const Args& args = Global::args());
 
 //
 //Approximately computes |res> = exp(-tau*H)|psi>.
 //Works by expanding the exponential to order n.
-//The default order is n=4 but can be increased via the "Order" Opt.
-//E.g. applyExpH(H,tau,psi,res,opts&Opt("Order",n));
-//List of options recognized:
-//   Order  - order of Taylor series expansion of exp(-tau*H)
-//   Cutoff - maximum truncation error allowed
-//   Maxm   - maximum number of states after truncation
-//   Minm   - minimum number of states after truncation
-//   Nsweep - number of sweeps used to apply H MPO to intermediate MPS
+//The default order is n=4 but can be increased via the "Order" argument.
+//E.g. applyExpH(H,tau,psi,res,{"Order",n});
+//List of named arguments recognized:
+//   "Order" : order of Taylor series expansion of exp(-tau*H)
+//   "Cutoff": maximum truncation error allowed
+//   "Maxm"  : maximum number of states after truncation
+//   "Minm"  : minimum number of states after truncation
+//   "Nsweep": number of sweeps used to apply H MPO to intermediate MPS
 //
 template<class Tensor>
 void
@@ -477,21 +490,21 @@ applyExpH(const MPSt<Tensor>& psi,
           const MPOt<Tensor>& H, 
           Real tau, 
           MPSt<Tensor>& res, 
-          const OptSet& opts = Global::opts());
+          const Args& args = Global::args());
 
 //Given an MPO with no Link indices between site operators,
 //put in links (of bond dimension 1).
 //In the IQMPO case ensure that links carry the proper QNs.
 void
-putMPOLinks(MPO& W, const OptSet& opts = Global::opts());
+putMPOLinks(MPO& W, const Args& args = Global::args());
 void
-putMPOLinks(IQMPO& W, const OptSet& opts = Global::opts());
+putMPOLinks(IQMPO& W, const Args& args = Global::args());
 
 template <class Tensor>
 std::ostream& 
 operator<<(std::ostream& s, const MPOt<Tensor>& M);
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

@@ -47,7 +47,7 @@ putprimes(string s, int plev)
     if(plev < 0) Error("Negative prime level");
     if(plev > 3)
         {
-        str << "[" << plev << "'s]";
+        str << "[" << plev << "']";
         }
     else
         {
@@ -80,63 +80,16 @@ nameint(const string& f, int n)
     }
 
 
-//
-// IndexDat
-// Storage for Index objects.
-//
-struct IndexDat
-    {
-    //////////////
-
-    typedef mt19937 IDGenerator;
-    typedef IDGenerator::result_type IDType;
-
-    const IDType id;
-    const int m;
-    const IndexType type;
-    const string sname;
-
-    //////////////
-
-    IndexDat(const string& ss, int mm, IndexType it, IDType id);
-
-    static const IndexDatPtr&
-    Null();
-
-    private:
-
-    //These methods are not implemented
-    //to disallow copying
-    IndexDat(const IndexDat&);
-    void operator=(const IndexDat&);
-
-    }; //class IndexDat
-
-IndexDat::
-IndexDat(const string& ss, int m_, IndexType it, IDType id_)
-    : 
-    id(id_),
-    m(m_), 
-    type(it), 
-    sname(ss)
-    { }
-
-const IndexDatPtr& IndexDat::
-Null()
-    {
-    static IndexDatPtr Null_ = itensor::make_shared<IndexDat>("Null",1,Site,0);
-    return Null_;
-    }
 
 //
 // class Index
 //
 
 
-IndexDat::IDType 
+Index::IDType 
 generateID()
     {
-    static IndexDat::IDGenerator rng(std::time(NULL) + getpid());
+    static Index::IDGenerator rng(std::time(NULL) + getpid());
     return rng();
 
     //static IDType nextid = 0;
@@ -144,47 +97,42 @@ generateID()
     //return nextid;
     }
 
+//const IndexDatPtr& IndexDat::
+//Null()
+//    {
+//    static IndexDatPtr Null_ = itensor::make_shared<IndexDat>("Null",1,Site,0);
+//    return Null_;
+//    }
 
 Index::
 Index() 
     : 
-    p(IndexDat::Null()), 
-    primelevel_(0) 
+    id_(0),
+    primelevel_(0),
+    m_(1),
+    type_(Site),
+    sname_("Null")
     { 
-    //setUniqueReal();
     }
 
 Index::
-Index(const string& name, int mm, IndexType it, int plev) 
+Index(const string& name, int m, IndexType type, int plev) 
     : 
-    p(itensor::make_shared<IndexDat>(name,mm,it,generateID())), 
-    primelevel_(plev) 
+    id_(generateID()),
+    primelevel_(plev),
+    m_(m),
+    type_(type),
+    sname_(name)
     { 
-    if(it == All) Error("Constructing Index with type All disallowed");
-    //setUniqueReal();
+    if(type_ == All) Error("Constructing Index with type All disallowed");
     }
 
-
-int Index::
-m() const { return p->m; }
-
-IndexType Index::
-type() const { return p->type; }
 
 string Index::
 name() const  { return putprimes(rawname(),primelevel_); }
 
-const string& Index::
-rawname() const 
-    { 
-    return p->sname; 
-    }
-
 bool Index::
-valid() const { return (p != IndexDat::Null()); }
-
-int Index::
-primeLevel() const { return primelevel_; }
+valid() const { return (id_ != 0); }
 
 Index& Index::
 primeLevel(int plev) 
@@ -196,34 +144,6 @@ primeLevel(int plev)
 #endif
     return *this;
     }
-
-Real Index::
-uniqueReal() const
-    {
-    static const Real rmax = IndexDat::IDGenerator::max();
-    return (p->id/rmax)*(1.0+sin(primelevel_));
-    }
-
-bool Index::
-operator==(const Index& other) const 
-    { 
-    return (p->id == other.p->id) && (primelevel_ == other.primelevel_); 
-    }
-
-bool Index::
-noprimeEquals(const Index& other) const
-    { 
-    return (p->id == other.p->id);
-    }
-
-bool Index::
-operator<(const Index& other) const 
-    { 
-    return (uniqueReal() < other.uniqueReal()); 
-    }
-
-IndexVal Index::
-operator()(int i) const { return IndexVal(*this,i); }
 
 Index& Index::
 mapprime(int plevold, int plevnew, IndexType type)
@@ -280,17 +200,17 @@ write(std::ostream& s) const
 
     s.write((char*) &primelevel_,sizeof(primelevel_));
 
-    const int t = IndexTypeToInt(p->type);
+    const int t = IndexTypeToInt(type_);
     s.write((char*) &t,sizeof(t));
 
-    s.write((char*) &(p->id),sizeof(p->id));
+    s.write((char*) &(id_),sizeof(id_));
 
-    s.write((char*) &(p->m),sizeof(p->m));
+    s.write((char*) &(m_),sizeof(m_));
 
-    const int nlength = p->sname.length();
+    const int nlength = sname_.length();
     s.write((char*) &nlength,sizeof(nlength));
 
-    s.write(p->sname.data(),nlength+1);
+    s.write(sname_.c_str(),nlength+1);
     }
 
 Index& Index::
@@ -306,22 +226,19 @@ read(std::istream& s)
 
     int t; 
     s.read((char*) &t,sizeof(t));
+    type_ = IntToIndexType(t);
 
-    IndexDat::IDType id;
-    s.read((char*) &id, sizeof(id));
+    s.read((char*) &id_, sizeof(id_));
 
-    int mm; 
-    s.read((char*) &mm,sizeof(mm));
+    s.read((char*) &m_,sizeof(m_));
 
     int nlength; 
     s.read((char*) &nlength,sizeof(nlength));
 
-    char* newname = new char[nlength+1]; 
-    s.read(newname,nlength+1);
-    string ss(newname); 
-    delete[] newname;
+    auto newname = std::unique_ptr<char[]>(new char[nlength+1]);
+    s.read(newname.get(),nlength+1);
+    sname_ = string(newname.get()); 
 
-    p = itensor::make_shared<IndexDat>(ss,mm,IntToIndexType(t),id);
     return *this;
     }
 
@@ -332,15 +249,18 @@ Null()
     return Null_;
     }
 
+std::string Index::
+id() const
+    {
+    return format("%d",id_);
+    }
+
 std::ostream& 
 operator<<(std::ostream& s, const Index& t)
     {
     if(t.name() != "" && t.name() != " ") s << t.name();
-    const int iur = (int) fabs(10000*noprime(t).uniqueReal());
     return s << "(" << nameindex(t.type(),t.primeLevel()) 
-             << "," << iur << "):" << t.m();
-    //return s << "(" << nameindex(t.type(),t.primeLevel()) 
-    //         << "," << t.p->id << "):" << t.m();
+             << "," << (t.id_ % 10000) << "):" << t.m();
     }
 
 IndexVal::
@@ -393,5 +313,5 @@ operator<<(std::ostream& s, const IndexVal& iv)
     return s << "IndexVal: i = " << iv.i << ", ind = " << ii << "\n"; 
     }
 
-}; //namespace itensor
+} //namespace itensor
 

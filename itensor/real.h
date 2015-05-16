@@ -9,6 +9,7 @@
 #include "math.h"
 #include <cmath>
 #include "print.h"
+#include "types.h"
 
 #ifndef NAN
 #define NAN (std::numeric_limits<Real>::quiet_NaN())
@@ -18,7 +19,7 @@ namespace itensor {
 
 //Real ran1();
 
-static const Real Pi = M_PI;
+static const Real Pi = 3.1415926535897932384626433832795028841971693993;
 static const Real Sqrt2 = sqrt(2);
 static const Real ISqrt2 = 1.0/sqrt(2);
 //static const Real Sqrt3 = sqrt(3);
@@ -68,8 +69,7 @@ static const Real LogNumber_Accuracy = 1E-12;
 class TooBigForReal : public ITError
     {
 public:
-    typedef ITError
-    Parent;
+    using Parent = ITError;
 
     TooBigForReal(const std::string& message) 
         : Parent(message)
@@ -79,8 +79,7 @@ public:
 class TooSmallForReal : public ITError
     {
 public:
-    typedef ITError
-    Parent;
+    using Parent = ITError;
 
     TooSmallForReal(const std::string& message) 
         : Parent(message)
@@ -373,6 +372,6 @@ operator<<(std::ostream& s, const LogNumber& N)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

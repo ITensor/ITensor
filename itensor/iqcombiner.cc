@@ -13,6 +13,19 @@ using std::endl;
 using std::vector;
 using std::string;
 
+size_t static
+indexPos(const IQCombiner& C, const Index& i)
+    {
+    size_t dim = 1;
+    for(const IQIndex& J : C.left())
+        {
+        const int f = findindex(J,i);
+        if(f != 0) return dim*(f-1);
+        dim *= J.nindex();
+        }
+    return 0;
+    }
+
 
 IQCombiner::
 IQCombiner() 
@@ -35,7 +48,7 @@ IQCombiner(
     if(l4 != IQIndex::Null()) left_.push_back(l4);
     if(l5 != IQIndex::Null()) left_.push_back(l5); 
     if(l6 != IQIndex::Null()) left_.push_back(l6);
-    Foreach(IQIndex& L, left_) L.dag();
+    for(IQIndex& L : left_) L.dag();
     }
 
 IQCombiner::
@@ -44,7 +57,7 @@ IQCombiner(const IQCombiner& other)
     other.init();
     left_ = other.left_;
     right_ = other.right_;
-    combs = other.combs;
+    combs_ = other.combs_;
     initted = other.initted;
     cond = other.cond;
     ucright_ = other.ucright_;
@@ -57,7 +70,7 @@ operator=(const IQCombiner& other)
     other.init();
     left_ = other.left_;
     right_ = other.right_;
-    combs = other.combs;
+    combs_ = other.combs_;
     initted = other.initted;
     cond = other.cond;
     ucright_ = other.ucright_;
@@ -107,7 +120,7 @@ init(string rname, IndexType type,
         {
         rdir = -left_.back().dir();
         //Prefer to derive right Arrow from Link indices
-        Foreach(const IQIndex& J, left_)
+        for(const IQIndex& J : left_)
             {
             if(J.type() == Link)
                 {
@@ -120,10 +133,17 @@ init(string rname, IndexType type,
     if(rdir == Neither)
         {
         cout << "left_ = " << endl;
-        Foreach(const IQIndex& J, left_)
+        for(const IQIndex& J : left_)
             cout << J << "\n" << endl;
         Error("Failed to determine right IQIndex direction");
         }
+
+    int storage_dim = 1;
+    for(const IQIndex& L : left_)
+        {
+        storage_dim *= L.nindex();
+        }
+    combs_.resize(storage_dim);
 
     //Construct individual Combiners
     QCounter c(left_);
@@ -132,16 +152,16 @@ init(string rname, IndexType type,
         {
         vector<Index> vind;
         QN q;
-        c.getVecInd(left_,vind, q); // updates vind and q
+        const int pos = c.getVecInd(left_,vind, q); // updates vind and q
         q *= -rdir;
 
-        combs.push_back(Combiner());
-        Combiner& co = combs.back();
+        Combiner& co = combs_[pos];
         co.addleft(vind);
         co.init(rname+q.toString(),type,rdir,primelevel);
 
         iq.push_back(IndexQN(co.right(),q));
         }
+
     if(do_condense) 
         {
         ucright_ = IQIndex(rname,iq,rdir,primelevel);
@@ -156,8 +176,8 @@ init(string rname, IndexType type,
     initted = true;
 	}
 
-IQCombiner::
-operator IQTensor() const
+IQTensor IQCombiner::
+toIQTensor() const
     {
     if(!initted) Error("IQCombiner::operator IQTensor(): IQCombiner not initialized.");
 
@@ -165,11 +185,9 @@ operator IQTensor() const
     iqinds.push_back((do_condense ? ucright_ : right_));
     IQTensor res(iqinds);
 
-    Foreach(const Combiner& co, combs)
+    for(const Combiner& co : combs_)
         {
-        //Here we are using the fact that Combiners
-        //can be converted to ITensors
-        res.insert(co);
+        res.insert(co.toITensor());
         }
 
 #ifdef DEBUG
@@ -203,9 +221,9 @@ right() const
 void  IQCombiner::
 prime(IndexType type, int inc)
     {
-    Foreach(IQIndex& ll, left_)
+    for(IQIndex& ll : left_)
         ll.prime(type,inc);
-    Foreach(Combiner& co, combs)
+    for(Combiner& co : combs_)
         co.prime(type,inc);
     if(initted)
         {
@@ -223,7 +241,7 @@ void IQCombiner::
 dag() 
     { 
     init();
-    Foreach(IQIndex& I, left_) I.dag(); 
+    for(IQIndex& I : left_) I.dag(); 
     if(do_condense) 
         {
         cond.dag();
@@ -236,7 +254,7 @@ dag()
 static const Combiner&
 findcomb(const Index& K, const vector<Combiner>& combs)
     {
-    Foreach(const Combiner& co, combs)
+    for(const Combiner& co : combs)
         {
         if(K==co.right())
             {
@@ -277,7 +295,7 @@ product(IQTensor T, IQTensor& res) const
 
         iqinds.reserve(T_.indices().r()-1+left_.size());
 
-        Foreach(const IQIndex& I, T_.indices())
+        for(const IQIndex& I : T_.indices())
             {
             if(I == r)
                 copy(left_.begin(),left_.end(),back_inserter(iqinds));
@@ -287,12 +305,12 @@ product(IQTensor T, IQTensor& res) const
 
         res = IQTensor(iqinds);
 
-        Foreach(const ITensor& tt, T_.blocks())
-        Foreach(const Index& K, tt.indices())
+        for(const ITensor& tt : T_.blocks())
+        for(const Index& K : tt.indices())
             {
             if(hasindex(r,K))
                 { 
-                res += (findcomb(K,combs) * tt); 
+                res += (findcomb(K,combs_) * tt); 
                 break;
                 }
             } //end for
@@ -307,7 +325,7 @@ product(IQTensor T, IQTensor& res) const
         iqinds.reserve(T.r()-left_.size()+1);
 
         //res will have all IQIndex's of T not in the left of c
-        Foreach(const IQIndex& I, T.indices()) 
+        for(const IQIndex& I : T.indices()) 
             { 
             if(!hasindex(*this,I)) iqinds.push_back(I); 
             }
@@ -318,7 +336,7 @@ product(IQTensor T, IQTensor& res) const
         res = IQTensor(iqinds);
 
         //Check left indices
-        Foreach(const IQIndex& I, left_)
+        for(const IQIndex& I : left_)
             {
             if(!hasindex(T,I))
                 {
@@ -348,36 +366,24 @@ product(IQTensor T, IQTensor& res) const
         //Loop over each block in T and apply appropriate
         //Combiner (determined by the uniqueReal of the 
         //combined Indices)
-        Foreach(const ITensor& t, T.blocks())
+        for(const ITensor& t : T.blocks())
             {
-            Real block_ur = 0;
-            Foreach(const Index& K, t.indices())
+            size_t pos = 0;
+            for(const Index& K : t.indices())
                 {
-                if(hasindex(*this,K)) 
-                    block_ur += K.uniqueReal();
+                pos += indexPos(*this,K);
                 }
 
-            size_t cc = 0;
-            for(; cc < combs.size(); ++cc)
+            if(pos >= combs_.size()) 
                 {
-                if(fabs(combs[cc].uniqueReal()-block_ur) < UniqueRealAccuracy)
-                    break;
-                }
-
-            if(cc == combs.size())
-                {
+                Print(*this);
+                Print(T);
                 Print(t);
-                cout << "\nleft indices \n";
-                for(size_t j = 0; j < left_.size(); ++j)
-                    { 
-                    cout << j << " " << left_[j] << "\n"; 
-                    }
-                cout << "\n" << endl;
-
-                Error("no Combiner with matching indices in IQCombiner prod");
+                printfln("pos=%d, combs_.size()=%d",pos,combs_.size());
+                Error("pos out of range");
                 }
 
-            res += (combs[cc] * t);
+            res += (combs_[pos] * t);
             }
 
         if(do_condense) 
@@ -391,7 +397,7 @@ product(IQTensor T, IQTensor& res) const
 bool
 hasindex(const IQCombiner& C, const IQIndex& I)
 	{
-    Foreach(const IQIndex& J, C.left())
+    for(const IQIndex& J : C.left())
         if(J == I) return true;
     return false;
 	}
@@ -399,10 +405,11 @@ hasindex(const IQCombiner& C, const IQIndex& I)
 bool
 hasindex(const IQCombiner& C, const Index& i)
     {
-    Foreach(const IQIndex& J, C.left())
+    for(const IQIndex& J : C.left())
         if(hasindex(J,i)) return true;
     return false;
     }
+
 
 ostream& 
 operator<<(ostream & s, const IQCombiner & c)
@@ -412,8 +419,8 @@ operator<<(ostream & s, const IQCombiner & c)
     else
         { s << endl << "Right index is not initialized\n\n"; }
     s << "Left indices: \n";
-    Foreach(const IQIndex& I, c.left()) s << I << endl;
+    for(const IQIndex& I : c.left()) s << I << endl;
     return s << "\n\n";
     }
 
-}; //namespace itensor
+} //namespace itensor

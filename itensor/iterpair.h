@@ -10,8 +10,8 @@ namespace itensor {
 template <typename _Iter>
 struct IterPair
     {
-    typedef _Iter iterator;
-    typedef _Iter const_iterator;
+    using iterator = _Iter;
+    using const_iterator = _Iter;
 
     IterPair() {}
 
@@ -30,7 +30,6 @@ struct IterPair
         end_(IP.end_)
         {}
 
-#ifdef USE_CPP11
     IterPair(_Iter&& b,
              _Iter&& e)
         : 
@@ -44,7 +43,6 @@ struct IterPair
         begin_(IP.begin_),
         end_(IP.end_)
         {}
-#endif
 
     _Iter
     begin() const { return begin_; }
@@ -58,7 +56,7 @@ struct IterPair
 
     };
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif
 

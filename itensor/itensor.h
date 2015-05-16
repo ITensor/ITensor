@@ -14,17 +14,40 @@ struct ProductProps;
 class Combiner;
 class ITDat;
 class ITensor;
+class SimpleMatrixRef;
 
 void toMatrixProd(const ITensor& L, const ITensor& R, 
+                  std::vector<Real>& newLdat,
+                  std::vector<Real>& newRdat,
                   ProductProps& pp,
-                  MatrixRefNoLink& lref, MatrixRefNoLink& rref,
+                  SimpleMatrixRef& lref, SimpleMatrixRef& rref,
                   bool& L_is_matrix, bool& R_is_matrix, bool doReshape = true);
 
 //
 // ITensor
 //
-class ITensor : public safe_bool<ITensor>
+class ITensor
     {
+    public:
+    enum Type { Null, Dense, Diag };
+
+    using IndexT = Index;
+    using IndexValT = IndexVal;
+    using CombinerT = Combiner;
+
+    private:
+    //
+    //Data members
+    //
+    Type type_;
+    //Pointer to ITDat containing tensor data
+    shared_ptr<ITDat> r_, //real part
+                      i_; //imag part
+    //Indices, maximum of 8
+    IndexSet<Index> is_;
+    //scale_ absorbs scalar factors to avoid copying ITDat
+    LogNumber scale_; 
+
     public:
 
     //
@@ -35,9 +58,12 @@ class ITensor : public safe_bool<ITensor>
     int 
     r() const { return is_.r(); }
 
+    //ITensor evaluates to false if it is default constructed
+    explicit operator bool() const { return valid(); }
+
     //false if ITensor is default constructed
     bool 
-    valid() const { return bool(r_); }
+    valid() const { return type_!=Null; }
 
     bool
     isComplex() const { return bool(i_); }
@@ -51,8 +77,8 @@ class ITensor : public safe_bool<ITensor>
     ITensor&
     takeImagPart();
 
-    //Enables looping over Indices in a Foreach
-    //e.g. Foreach(const Index& I, t.index() ) { ... }
+    //Enables looping over Indices in a range-based for loop
+    //e.g. for(const Index& I : t.index() ) { ... }
     const IndexSet<Index>&
     indices() const { return is_; }
 
@@ -60,7 +86,6 @@ class ITensor : public safe_bool<ITensor>
     const LogNumber&
     scale() const { return scale_; }
 
-    enum Type { Null, Dense, Diag };
 
     Type
     type() const { return type_; }
@@ -362,13 +387,13 @@ class ITensor : public safe_bool<ITensor>
     toMatrix11NoScale(const Index& i1, const Index& i2, 
                            Matrix& res) const;
 
-    // group i1,i2; i3,i4
-    void 
-    toMatrix22(const Index& i1, const Index& i2, 
-               const Index& i3, const Index& i4, Matrix& res) const;
-    void 
-    fromMatrix22(const Index& i1, const Index& i2, 
-                 const Index& i3, const Index& i4, const Matrix& res);
+    //// group i1,i2; i3,i4
+    //void 
+    //toMatrix22(const Index& i1, const Index& i2, 
+    //           const Index& i3, const Index& i4, Matrix& res) const;
+    //void 
+    //fromMatrix22(const Index& i1, const Index& i2, 
+    //             const Index& i3, const Index& i4, const Matrix& res);
 
     /*
     // group i1,i2; i3
@@ -379,15 +404,15 @@ class ITensor : public safe_bool<ITensor>
 
     */
 
-    // group i1; i2,i3
-    void toMatrix12NoScale(const Index& i1, const Index& i2, 
-                           const Index& i3, Matrix& res) const;
+    //// group i1; i2,i3
+    //void toMatrix12NoScale(const Index& i1, const Index& i2, 
+    //                       const Index& i3, Matrix& res) const;
 
-    void toMatrix12(const Index& i1, const Index& i2, 
-                    const Index& i3, Matrix& res) const;
+    //void toMatrix12(const Index& i1, const Index& i2, 
+    //                const Index& i3, Matrix& res) const;
 
-    void fromMatrix12(const Index& i1, const Index& i2, 
-                      const Index& i3, const Matrix& M);
+    //void fromMatrix12(const Index& i1, const Index& i2, 
+    //                  const Index& i3, const Matrix& M);
 
 
 
@@ -410,7 +435,7 @@ class ITensor : public safe_bool<ITensor>
     imagDatStart() const;
 
     void 
-    randomize(const OptSet& opts = Global::opts());
+    randomize(const Args& args = Global::args());
 
     void 
     conj();
@@ -450,19 +475,6 @@ class ITensor : public safe_bool<ITensor>
                  const Index& nind)
         { is_.replaceIndex(oind,nind); }
 
-    //
-    // Typedefs
-    //
-
-    typedef Index 
-    IndexT;
-
-    typedef IndexVal 
-    IndexValT;
-
-    typedef Combiner 
-    CombinerT;
-
     //Deprecated methods --------------------------
 
     //Use indices().dim() instead of vecSize
@@ -475,34 +487,13 @@ class ITensor : public safe_bool<ITensor>
 
     private:
 
-    //////////////
-    //
-    // Data Members
-    //
-
-    Type type_;
-
-    //Pointer to ITDat containing tensor data
-    shared_ptr<ITDat> r_, //real part
-                      i_; //imag part
-
-    //Indices, maximum of 8
-    IndexSet<Index> is_;
-
-    //scale_ absorbs scalar factors to avoid copying ITDat
-    LogNumber scale_; 
-
-    //
-    //
-    //////////////
-
     void 
-    allocate(int dim);
+    allocate(size_t dim, Real val = 0.);
     void 
     allocate();
 
     void 
-    allocateImag(int dim);
+    allocateImag(size_t dim, Real val = 0.);
     void 
     allocateImag();
 
@@ -527,8 +518,10 @@ class ITensor : public safe_bool<ITensor>
     friend struct ProductProps;
 
     friend void toMatrixProd(const ITensor& L, const ITensor& R, 
+                             std::vector<Real>& newLdat,
+                             std::vector<Real>& newRdat,
                              ProductProps& pp,
-                             MatrixRefNoLink& lref, MatrixRefNoLink& rref,
+                             SimpleMatrixRef& lref, SimpleMatrixRef& rref,
                              bool& L_is_matrix, bool& R_is_matrix, bool doReshape);
 
     int _ind2(const IndexVal& iv1, const IndexVal& iv2) const;
@@ -601,24 +594,27 @@ class ITDat
     {
     public:
 
-    Vector v;
+    std::vector<Real> v;
 
     ITDat();
 
     explicit 
-    ITDat(int size);
+    ITDat(size_t size,
+          Real val = 0);
 
     explicit 
     ITDat(const VectorRef& v_);
 
     explicit 
-    ITDat(Real r);
-
-    explicit 
     ITDat(const ITDat& other);
 
-    int
-    size() const { return v.Length(); }
+    const Real*
+    data() const { return v.data(); }
+    Real*
+    data() { return v.data(); }
+
+    size_t
+    size() const { return v.size(); }
 
     void
     read(std::istream& s);
@@ -698,8 +694,10 @@ mapElems(const Callable& f)
         throw ITError("mapElems only works for real ITensor");
     solo();
     scaleTo(1);
-    for(int j = 1; j <= r_->size(); ++j)
-        r_->v(j) = f(r_->v(j));
+    for(size_t j = 0; j < r_->size(); ++j)
+        {
+        r_->v[j] = f(r_->v[j]);
+        }
     return *this;
     }
 
@@ -767,9 +765,8 @@ template<class TensorA, class TensorB> typename
 TensorA::IndexT
 commonIndex(const TensorA& A, const TensorB& B, IndexType t = All)
     {
-    typedef typename TensorA::IndexT
-    IndexT;
-    Foreach(const IndexT& I, A.indices())
+    using IndexT = typename TensorA::IndexT;
+    for(const IndexT& I : A.indices())
         {
         if( (t == All || I.type() == t)
          && hasindex(B.indices(),I) ) 
@@ -789,9 +786,8 @@ uniqueIndex(const TensorA& A,
             const TensorB& B, 
             IndexType t)
     {
-    typedef typename TensorA::IndexT
-    IndexT;
-    Foreach(const IndexT& I, A.indices())
+    using IndexT = typename TensorA::IndexT;
+    for(const IndexT& I : A.indices())
         {
         if( (t == All || I.type() == t)
          && !hasindex(B.indices(),I) ) 
@@ -878,7 +874,7 @@ swapPrime(Tensor T, int plev1, int plev2,
     { 
     const int tempLevel = 100;
 #ifdef DEBUG
-    Foreach(const typename Tensor::IndexT& I, T.indices())
+    for(const typename Tensor::IndexT& I : T.indices())
         {
         if(I.primeLevel() == tempLevel) 
             {
@@ -948,13 +944,13 @@ imagPart(const Tensor& T)
 
 //Returns true if T is exactly zero.
 //
-//If passed the option Opt("Fast",true),
+//If passed the option Args("Fast",true),
 //only performs fast operations such as checking
 //the scale of T, but skips computing T's norm.
 //This can cause the return value to be true even
 //if T is actually zero.
 bool
-isZero(const ITensor& T, const OptSet& opts = Global::opts());
+isZero(const ITensor& T, const Args& args = Global::args());
 
 //
 // Tracing over all indices results in a Real
@@ -963,13 +959,17 @@ template <class Tensor>
 Real
 trace(Tensor T)
     {
+    using IndexT = typename Tensor::IndexT;
     if(T.isComplex())
         {
         Error("ITensor is complex, use trace(T,re,im)");
         }
     if(T.indices().rn() != 0) 
         {
-        T.trace(T.indices(),T.indices().rn());
+        const 
+        typename IndexSet<IndexT>::Storage
+        inds = T.indices();
+        T.trace(inds,T.indices().rn());
         }
     return T.toReal();
     }
@@ -1006,6 +1006,13 @@ trace(Tensor T,
     return T; 
     }
 
+Real inline
+toReal(const ITensor& T) { return T.toReal(); }
+
+Complex inline
+toComplex(const ITensor& T) { return T.toComplex(); }
+
+
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);
 
@@ -1028,6 +1035,6 @@ Tensor
 deprimed(Tensor A, const IndexT& I)
     { A.noprime(I); return A; }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

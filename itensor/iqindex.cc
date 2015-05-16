@@ -22,13 +22,10 @@ class IQIndexDat
     {
     public:
 
-    typedef vector<IndexQN>
-    StorageT;
+    using StorageT = vector<IndexQN>;
 
-    typedef StorageT::iterator
-    iterator;
-    typedef StorageT::const_iterator
-    const_iterator;
+    using iterator = StorageT::iterator;
+    using const_iterator = StorageT::const_iterator;
 
 
     IQIndexDat() { }
@@ -55,6 +52,10 @@ class IQIndexDat
 
     const Index&
     index(int i) { return iq_[i-1]; }
+
+    const Index&
+    operator[](int i) { return iq_[i]; }
+
     const QN&
     qn(int i) { return iq_[i-1].qn; }
 
@@ -141,7 +142,7 @@ write(ostream& s) const
     {
     size_t size = iq_.size();
     s.write((char*)&size,sizeof(size));
-    Foreach(const IndexQN& x, iq_)
+    for(const IndexQN& x : iq_)
         { 
         x.write(s); 
         }
@@ -152,7 +153,7 @@ read(istream& s)
     {
     size_t size; s.read((char*)&size,sizeof(size));
     iq_.resize(size);
-    Foreach(IndexQN& x, iq_)
+    for(IndexQN& x : iq_)
         { 
         x.read(s); 
         }
@@ -170,7 +171,7 @@ Null()
 //
 
 #ifdef DEBUG
-#define IQINDEX_CHECK_NULL if(pd == 0) Error("IQIndex is null");
+#define IQINDEX_CHECK_NULL if(pd == 0) throw ITError("IQIndex is null");
 #else
 #define IQINDEX_CHECK_NULL
 #endif
@@ -202,6 +203,21 @@ index(int i) const
         }
 #endif
     return pd->index(i);
+    }
+
+const Index& IQIndex::
+operator[](int i) const 
+    {
+    IQINDEX_CHECK_NULL
+#ifdef DEBUG
+    if(i > nindex()-1)
+        {
+        Print(nindex());
+        Print(i);
+        Error("IQIndex::index arg out of range");
+        }
+#endif
+    return pd->operator[](i);
     }
 
 const QN& IQIndex::
@@ -366,7 +382,7 @@ int
 totalM(const IQIndexDat::StorageT& storage)
     {
     int tm = 0;
-    Foreach(const IndexQN& iq, storage)
+    for(const IndexQN& iq : storage)
         {
         tm += iq.m();
 #ifdef DEBUG
@@ -432,7 +448,7 @@ showm(const IQIndex& I)
     string res = " ";
     ostringstream oh; 
     oh << I.m() << " | ";
-    Foreach(const IndexQN& iq, I.indices())
+    for(const IndexQN& iq : I.indices())
         {
         oh << iq.qn << ":" << iq.m() << " ";
         }
@@ -445,7 +461,7 @@ primeLevel(int val)
     {
     solo();
     Index::primeLevel(val);
-    Foreach(IndexQN& iq, *pd)
+    for(IndexQN& iq : *pd)
         {
         iq.primeLevel(val);
         }
@@ -457,7 +473,7 @@ prime(int inc)
     {
     solo();
     Index::prime(inc);
-    Foreach(IndexQN& iq, *pd)
+    for(IndexQN& iq : *pd)
         iq.prime(inc);
     return *this;
     }
@@ -467,7 +483,7 @@ prime(IndexType type, int inc)
     {
     solo();
     Index::prime(type,inc);
-    Foreach(IndexQN& iq, *pd)
+    for(IndexQN& iq : *pd)
         iq.prime(type,inc);
     return *this;
     }
@@ -477,7 +493,7 @@ mapprime(int plevold, int plevnew, IndexType type)
     {
     solo();
     Index::mapprime(plevold,plevnew,type);
-    Foreach(IndexQN& iq, *pd)
+    for(IndexQN& iq : *pd)
         iq.mapprime(plevold,plevnew,type);
     return *this;
     }
@@ -487,7 +503,7 @@ noprime(IndexType type)
     {
     solo();
     Index::noprime(type);
-    Foreach(IndexQN& iq, *pd)
+    for(IndexQN& iq : *pd)
         iq.noprime(type);
     return *this;
     }
@@ -640,7 +656,7 @@ operator()(int n) const
 bool
 hasindex(const IQIndex& J, const Index& i)
     { 
-    Foreach(const Index& j, J.indices())
+    for(const Index& j : J.indices())
         {
         if(j == i) return true;
         }
@@ -661,7 +677,7 @@ int
 offset(const IQIndex& I, const Index& i)
     {
     int os = 0;
-    Foreach(const IndexQN& iq, I.indices())
+    for(const IndexQN& iq : I.indices())
         {
         if(iq == i) return os;
         os += iq.m();
@@ -675,7 +691,7 @@ offset(const IQIndex& I, const Index& i)
 QN
 qn(const IQIndex& I, const Index& i)
     { 
-    Foreach(const IndexQN& jq, I.indices())
+    for(const IndexQN& jq : I.indices())
         { 
         if(jq == i) 
             return jq.qn; 
@@ -689,7 +705,7 @@ qn(const IQIndex& I, const Index& i)
 Index
 findByQN(const IQIndex& I, const QN& qn)
     { 
-    Foreach(const IndexQN& jq, I.indices())
+    for(const IndexQN& jq : I.indices())
         { 
         if(jq.qn == qn) 
             return jq;
@@ -729,4 +745,4 @@ operator<<(std::ostream& s, const IQIndexVal& iv)
     return s << "IQIndexVal: i = " << iv.i << " for IQIndex:\n  " << I << "\n"; 
     }
 
-}; //namespace itensor
+} //namespace itensor

@@ -7,10 +7,6 @@
 #include "../mpo.h"
 #include "../sites/hubbard.h"
 
-#define Cout std::cout
-#define Endl std::endl
-#define Format boost::format
-
 namespace itensor {
 
 class HubbardChain
@@ -127,9 +123,5 @@ init_()
     }
 
 }; //namespace itensor
-
-#undef Cout
-#undef Endl
-#undef Format
 
 #endif

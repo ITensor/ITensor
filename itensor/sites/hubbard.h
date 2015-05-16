@@ -15,7 +15,7 @@ class Hubbard : public SiteSet
     Hubbard();
 
     Hubbard(int N, 
-            const OptSet& opts = Global::opts());
+            const Args& opts = Global::opts());
 
     bool
     conserveNf() const { return conserveNf_; }
@@ -32,10 +32,10 @@ class Hubbard : public SiteSet
     getState(int i, const String& state) const;
 
     virtual IQTensor
-    getOp(int i, const String& opname, const OptSet& opts = Global::opts()) const;
+    getOp(int i, const String& opname, const Args& opts = Global::opts()) const;
 
     DefaultOpsT
-    getDefaultOps(const OptSet& opts) const;
+    getDefaultOps(const Args& opts) const;
 
     void 
     constructSites();
@@ -77,7 +77,7 @@ Hubbard()
     { }
 
 inline Hubbard::
-Hubbard(int N, const OptSet& opts)
+Hubbard(int N, const Args& opts)
     : N_(N),
       site_(N_+1)
     { 
@@ -164,7 +164,7 @@ getState(int i, const String& state) const
 
 
 inline IQTensor Hubbard::
-getOp(int i, const String& opname, const OptSet& opts) const
+getOp(int i, const String& opname, const Args& opts) const
     {
     const
     IQIndex s(si(i));
@@ -298,7 +298,7 @@ getOp(int i, const String& opname, const OptSet& opts) const
     }
 
 Hubbard::DefaultOpsT inline Hubbard::
-getDefaultOps(const OptSet& opts) const
+getDefaultOps(const Args& opts) const
     {
     static const std::vector<String> dops_(initDefaultOps());
     return dops_;

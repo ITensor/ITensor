@@ -1,17 +1,9 @@
 #include "core.h"
 #include "sites/spinhalf.h"
 #include "sites/spinone.h"
-#include "hams/Heisenberg.h"
+#include "autompo.h"
 
-using namespace std;
 using namespace itensor;
-
-//typedef SpinHalf
-//Spin;           //use S=1/2 degrees of freedom
-
-//Un-comment above typedef and comment this one to switch spin type
-typedef SpinOne
-Spin;             //use S=1 degrees of freedom
 
 int 
 main(int argc, char* argv[])
@@ -21,15 +13,23 @@ main(int argc, char* argv[])
     //
     // Initialize the site degrees of freedom.
     //
-    Spin sites(N);    // make a chain of N spins
+    //SpinHalf sites(N); //make a chain of N spin 1/2's
+    SpinOne sites(N); //make a chain of N spin 1's
 
     //
-    // Create the Hamiltonian matrix product operator (MPO)
+    // Use the AutoMPO feature to create the 
+    // next-neighbor Heisenberg model
     //
-    MPO H = Heisenberg(sites);
+    AutoMPO ampo(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
+        }
+    auto H = MPO(ampo);
 
-    //
-    // Set the initial wavefunction matrix product state (MPS)
+    // Set the initial wavefunction matrix product state
     // to be a Neel state.
     //
     InitState initState(sites);
@@ -60,18 +60,18 @@ main(int argc, char* argv[])
     sweeps.cutoff() = 1E-10;
     sweeps.niter() = 2;
     sweeps.noise() = 1E-7,1E-8,0.0;
-    cout << sweeps;
+    println(sweeps);
 
     //
     // Begin the DMRG calculation
     //
-
-    Real En = dmrg(psi,H,sweeps,"Quiet");
+    auto energy = dmrg(psi,H,sweeps,"Quiet");
 
     //
     // Print the final energy reported by DMRG
     //
-    printfln("\nGround State Energy = %.10f",En);
+    printfln("\nGround State Energy = %.10f",energy);
+    printfln("\nUsing psiHphi = %.10f", psiHphi(psi,H,psi) );
 
     return 0;
     }

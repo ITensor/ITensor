@@ -25,8 +25,7 @@ class IQCombiner
     {
     public:
 
-    typedef std::vector<IQIndex>::const_iterator 
-    left_it;
+    using left_it = std::vector<IQIndex>::const_iterator;
 
     IQCombiner();
 
@@ -61,7 +60,8 @@ class IQCombiner
          Arrow dir = Neither, 
          int primelevel = 0) const;
     
-    operator IQTensor() const;
+    IQTensor
+    toIQTensor() const;
 
     const IQIndex& 
     right() const;
@@ -108,7 +108,7 @@ class IQCombiner
 
     std::vector<IQIndex> left_;
     mutable IQIndex right_;
-    mutable std::vector<Combiner> combs;
+    mutable std::vector<Combiner> combs_;
     mutable bool initted;
 
     mutable Condenser cond;
@@ -140,6 +140,6 @@ hasindex(const IQCombiner& C, const Index& i);
 std::ostream& 
 operator<<(std::ostream & s, const IQCombiner & c);
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

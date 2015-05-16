@@ -93,7 +93,7 @@ init_()
             {
             Real eff_h = boundary_h_;
             eff_h *= ((x+y-2)%3==0 ? -1 : 0.5);
-            std::cout << boost::format("Applying a pinning field of %.2f at site %d (%d,%d)\n")%eff_h%n%x%y;
+            printfln("Applying a pinning field of %.2f at site %d (%d,%d)\n",eff_h,n,x,y);
             W += sites_.op("Sz",n) * ITensor(row(k),col(1)) * eff_h;
             }
 

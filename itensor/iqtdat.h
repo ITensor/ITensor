@@ -4,87 +4,87 @@
 //
 #ifndef __ITENSOR_IQTDAT_H
 #define __ITENSOR_IQTDAT_H
-#include "indexset.h"
-#include <algorithm>
+
+#include "detail/skip_iterator.h"
 
 namespace itensor {
 
+struct ITValidCheck;
 
 //
-// IQTDat: storage for IQTensor and IQTSparse
+// IQTDat: storage for IQTensor
 //
 
-template <class Tensor>
 class IQTDat
     {
     public:
 
+    using Storage = std::vector<ITensor>;
+
+    using const_iterator = detail::SkipIterator<Storage::const_iterator,ITValidCheck>;
+
+    using iterator = detail::SkipIterator<Storage::iterator,ITValidCheck>;
+
     IQTDat() { }
 
-    IQTDat(const IQTDat& other) { blocks_ = other.blocks_; }
+    IQTDat(size_t size) : blocks_(size) { }
 
-    typedef std::vector<Tensor>
-    StorageT;
+    ITensor&
+    at(size_t n) { return blocks_.at(n); }
 
-    typedef typename StorageT::const_iterator
-    const_iterator;
-
-    typedef typename StorageT::iterator
-    iterator;
-
-    typedef typename Tensor::IndexT
-    IndexT;
+    const ITensor&
+    at(size_t n) const { return blocks_.at(n); }
 
     const_iterator
-    begin() const { return blocks_.begin(); }
+    begin() const { return const_iterator(blocks_.begin(),blocks_.end()); }
     const_iterator
-    end() const { return blocks_.end(); }
+    end() const { return const_iterator(blocks_.end(),blocks_.end()); }
 
     iterator
-    begin() { return blocks_.begin(); }
+    begin() { return iterator(blocks_.begin(),blocks_.end()); }
     iterator
-    end() { return blocks_.end(); }
+    end() { return iterator(blocks_.end(),blocks_.end()); }
 
-    bool 
-    hasBlock(const IndexSet<IndexT>& is) const 
-        { return validBlock(findBlock(is)); }
-
-    Tensor&
-    get(const IndexSet<IndexT>& is);
-
-    const Tensor&
-    get(const IndexSet<IndexT>& is) const;
+    const_iterator
+    cbegin() const { return const_iterator(blocks_.begin(),blocks_.end()); }
+    const_iterator
+    cend() const { return const_iterator(blocks_.end(),blocks_.end()); }
 
     int
-    size() const { return blocks_.size(); }
+    maxSize() const { return blocks_.size(); }
+
+    int
+    size() const 
+        { 
+        int sz = 0;
+        for(const ITensor& t : blocks_)
+            {
+            if(t.valid()) ++sz;
+            }
+        return sz;
+        }
 
     bool
-    empty() const { return blocks_.empty(); }
+    empty() const 
+        { 
+        for(const ITensor& t : blocks_)
+            {
+            if(t.valid()) return false;
+            }
+        return true;
+        }
 
     void
-    clear() { blocks_.clear(); }
-
-    void 
-    insert(const Tensor& t);
-
-    void 
-    insert_add(const Tensor& t);
-
-    void 
-    clean(Real min_norm);
+    clear() 
+        { 
+        for(ITensor& t : blocks_)
+            {
+            if(t.valid()) t = ITensor();
+            }
+        }
 
     void
-    swap(StorageT& new_blocks) { blocks_.swap(new_blocks); }
-
-    //
-    // Other Methods
-    //
-
-    void
-    scaleTo(const LogNumber& newscale);
-
-    void
-    makeCopyOf(const IQTDat& other) { blocks_ = other.blocks_; }
+    swap(Storage& new_blocks) { blocks_.swap(new_blocks); }
 
     void 
     read(std::istream& s);
@@ -92,144 +92,67 @@ class IQTDat
     void 
     write(std::ostream& s) const;
 
-    static const shared_ptr<IQTDat>& 
+    static const shared_ptr<IQTDat>&
     Null();
 
     private:
 
     //////////////
 
-    StorageT blocks_;
+    Storage blocks_;
 
     //////////////
 
-    iterator
-    findBlock(const IndexSet<IndexT>& is)
-        {
-        return find(blocks_.begin(),blocks_.end(),is);
-        }
+    Storage&
+    store() { return blocks_; }
+    const Storage&
+    store() const { return blocks_; }
 
-    const_iterator
-    findBlock(const IndexSet<IndexT>& is) const
-        {
-        return find(blocks_.begin(),blocks_.end(),is);
-        }
-
-    bool
-    validBlock(const_iterator it) const 
-        { 
-        return it != blocks_.end(); 
-        }
-
-    //Not copyable with =
-    IQTDat& operator=(const IQTDat&);
+    friend class IQTensor;
 
     }; //class IQTDat
 
-
-
-
-template<class Tensor>
-Tensor& IQTDat<Tensor>::
-get(const IndexSet<IndexT>& is)
-    { 
-    iterator it = findBlock(is);
-    if(!validBlock(it))
+struct ITValidCheck
+    {
+    bool
+    operator()(const IQTDat::Storage::const_iterator& it)
         {
-        blocks_.push_back(ITensor(is));
-        return blocks_.back();
+        return !it->valid();
         }
-    return *it;
-   }
+    };
 
-template<class Tensor>
-const Tensor& IQTDat<Tensor>::
-get(const IndexSet<IndexT>& is) const
-    { 
-    const_iterator it = findBlock(is);
-    if(!validBlock(it))
-        {
-        Error("Block not found");
-        }
-    return *it;
-    }
-
-template<class Tensor>
-void IQTDat<Tensor>::
-insert(const Tensor& t)
-    {
-    iterator it = find(blocks_.begin(),blocks_.end(),t.indices());
-    if(it == blocks_.end())
-        blocks_.push_back(t);
-    else
-        Error("Can not insert block with identical indices twice.");
-    }
-
-template<class Tensor>
-void IQTDat<Tensor>::
-insert_add(const Tensor& t)
-    {
-    iterator it = findBlock(t.indices());
-    if(validBlock(it))
-        *it += t;
-    else
-        blocks_.push_back(t);
-    }
-
-template<class Tensor>
-void IQTDat<Tensor>::
-clean(Real min_norm)
-    {
-    StorageT nblocks;
-    Foreach(const ITensor& t, blocks_)
-        {
-        if(t.norm() >= min_norm)
-            nblocks.push_back(t);
-        }
-    swap(nblocks);
-    }
-
-template<class Tensor>
-void IQTDat<Tensor>::
-scaleTo(const LogNumber& newscale)
-    {
-    Foreach(Tensor& t, blocks_)
-        t.scaleTo(newscale);
-    }
-
-template<class Tensor>
-void IQTDat<Tensor>::
+void inline IQTDat::
 read(std::istream& s)
-    { 
-    size_t size;
-    s.read((char*) &size,sizeof(size));
-    blocks_.resize(size);
-    Foreach(Tensor& t, blocks_)
-        { 
-        t.read(s); 
+    {
+    size_t sz = 0;
+    s.read((char*) &sz,sizeof(sz));
+    blocks_.resize(sz);
+    for(ITensor& t : blocks_)
+        {
+        t.read(s);
         }
     }
 
-template<class Tensor>
-void IQTDat<Tensor>::
+void inline IQTDat::
 write(std::ostream& s) const
     {
-    size_t size = blocks_.size();
-    s.write((char*) &size,sizeof(size));
-    Foreach(const Tensor& t, blocks_)
-        { 
-        t.write(s); 
+    size_t sz = blocks_.size();
+    s.write((char*) &sz,sizeof(sz));
+    for(const ITensor& t : blocks_)
+        {
+        t.write(s);
         }
     }
 
-template<class Tensor>
-const shared_ptr<IQTDat<Tensor> >& IQTDat<Tensor>::
+
+inline
+const shared_ptr<IQTDat>& IQTDat::
 Null()
     {
     static shared_ptr<IQTDat> Null_ = make_shared<IQTDat>();
     return Null_;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

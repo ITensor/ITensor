@@ -26,10 +26,10 @@ Real
 dmrg(MPSt<Tensor>& psi, 
      const MPOt<Tensor>& H, 
      const Sweeps& sweeps,
-     const OptSet& opts = Global::opts())
+     const Args& args = Global::args())
     {
-    LocalMPO<Tensor> PH(H,opts);
-    Real energy = DMRGWorker(psi,PH,sweeps,opts);
+    LocalMPO<Tensor> PH(H,args);
+    Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
     }
 
@@ -42,10 +42,10 @@ dmrg(MPSt<Tensor>& psi,
      const MPOt<Tensor>& H, 
      const Sweeps& sweeps, 
      DMRGObserver<Tensor>& obs,
-     const OptSet& opts = Global::opts())
+     const Args& args = Global::args())
     {
-    LocalMPO<Tensor> PH(H,opts);
-    Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
+    LocalMPO<Tensor> PH(H,args);
+    Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
     }
 
@@ -60,10 +60,10 @@ dmrg(MPSt<Tensor>& psi,
      const MPOt<Tensor>& H, 
      const Tensor& LH, const Tensor& RH,
      const Sweeps& sweeps,
-     const OptSet& opts = Global::opts())
+     const Args& args = Global::args())
     {
-    LocalMPO<Tensor> PH(H,LH,RH,opts);
-    Real energy = DMRGWorker(psi,PH,sweeps,opts);
+    LocalMPO<Tensor> PH(H,LH,RH,args);
+    Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
     }
 
@@ -78,10 +78,10 @@ dmrg(MPSt<Tensor>& psi,
      const Tensor& LH, const Tensor& RH,
      const Sweeps& sweeps, 
      DMRGObserver<Tensor>& obs,
-     const OptSet& opts = Global::opts())
+     const Args& args = Global::args())
     {
-    LocalMPO<Tensor> PH(H,LH,RH,opts);
-    Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
+    LocalMPO<Tensor> PH(H,LH,RH,args);
+    Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
     }
 
@@ -94,10 +94,10 @@ Real
 dmrg(MPSt<Tensor>& psi, 
      const std::vector<MPOt<Tensor> >& Hset, 
      const Sweeps& sweeps,
-     const OptSet& opts = Global::opts())
+     const Args& args = Global::args())
     {
-    LocalMPOSet<Tensor> PH(Hset,opts);
-    Real energy = DMRGWorker(psi,PH,sweeps,opts);
+    LocalMPOSet<Tensor> PH(Hset,args);
+    Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
     }
 
@@ -111,10 +111,10 @@ dmrg(MPSt<Tensor>& psi,
      const std::vector<MPOt<Tensor> >& Hset, 
      const Sweeps& sweeps, 
      DMRGObserver<Tensor>& obs,
-     const OptSet& opts = Global::opts())
+     const Args& args = Global::args())
     {
-    LocalMPOSet<Tensor> PH(Hset,opts);
-    Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
+    LocalMPOSet<Tensor> PH(Hset,args);
+    Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
     }
 
@@ -122,8 +122,8 @@ dmrg(MPSt<Tensor>& psi,
 //DMRG with a single Hamiltonian MPO and a set of 
 //MPS to orthogonalize against
 //(psis vector is 0-indexed)
-//Options recognized:
-// Weight - real number w > 0; calling dmrg(psi,H,psis,sweeps,Opt("Weight",w))
+//Named Args recognized:
+// Weight - real number w > 0; calling dmrg(psi,H,psis,sweeps,Args("Weight",w))
 //          sets the effective Hamiltonian to be
 //          H + w * (|0><0| + |1><1| + ...) where |0> = psis[0], |1> = psis[1]
 //          etc.
@@ -134,10 +134,10 @@ dmrg(MPSt<Tensor>& psi,
      const MPOt<Tensor>& H, 
      const std::vector<MPSt<Tensor> >& psis, 
      const Sweeps& sweeps, 
-     const OptSet& opts = Global::opts())
+     const Args& args = Global::args())
     {
-    LocalMPO_MPS<Tensor> PH(H,psis,opts);
-    Real energy = DMRGWorker(psi,PH,sweeps,opts);
+    LocalMPO_MPS<Tensor> PH(H,psis,args);
+    Real energy = DMRGWorker(psi,PH,sweeps,args);
     return energy;
     }
 
@@ -146,8 +146,8 @@ dmrg(MPSt<Tensor>& psi,
 //a set of MPS to orthogonalize against, 
 //and a custom DMRGObserver.
 //(psis vector is 0-indexed)
-//Options recognized:
-// Weight - real number w > 0; calling dmrg(psi,H,psis,sweeps,Opt("Weight",w))
+//Named Args recognized:
+// Weight - real number w > 0; calling dmrg(psi,H,psis,sweeps,Args("Weight",w))
 //          sets the effective Hamiltonian to be
 //          H + w * (|0><0| + |1><1| + ...) where |0> = psis[0], |1> = psis[1]
 //          etc.
@@ -159,10 +159,10 @@ dmrg(MPSt<Tensor>& psi,
      const std::vector<MPSt<Tensor> >& psis, 
      const Sweeps& sweeps, 
      DMRGObserver<Tensor>& obs, 
-     const OptSet& opts = Global::opts())
+     const Args& args = Global::args())
     {
-    LocalMPO_MPS<Tensor> PH(H,psis,opts);
-    Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
+    LocalMPO_MPS<Tensor> PH(H,psis,args);
+    Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
     }
 
@@ -177,10 +177,10 @@ Real inline
 DMRGWorker(MPSt<Tensor>& psi,
            LocalOpT& PH,
            const Sweeps& sweeps,
-           const OptSet& opts = Global::opts())
+           const Args& args = Global::args())
     {
-    DMRGObserver<Tensor> obs(psi,opts);
-    Real energy = DMRGWorker(psi,PH,sweeps,obs,opts);
+    DMRGObserver<Tensor> obs(psi,args);
+    Real energy = DMRGWorker(psi,PH,sweeps,obs,args);
     return energy;
     }
 
@@ -190,36 +190,36 @@ DMRGWorker(MPSt<Tensor>& psi,
            LocalOpT& PH,
            const Sweeps& sweeps,
            DMRGObserver<Tensor>& obs,
-           OptSet opts = Global::opts())
+           Args args = Global::args())
     {
-    const bool quiet = opts.getBool("Quiet",false);
-    const int debug_level = opts.getInt("DebugLevel",(quiet ? 0 : 1));
+    const bool quiet = args.getBool("Quiet",false);
+    const int debug_level = args.getInt("DebugLevel",(quiet ? 0 : 1));
 
     const int N = psi.N();
     Real energy = NAN;
 
     psi.position(1);
 
-    opts.add("DebugLevel",debug_level);
-    opts.add("DoNormalize",true);
+    args.add("DebugLevel",debug_level);
+    args.add("DoNormalize",true);
     
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
         {
-        opts.add("Sweep",sw);
-        opts.add("Cutoff",sweeps.cutoff(sw));
-        opts.add("Minm",sweeps.minm(sw));
-        opts.add("Maxm",sweeps.maxm(sw));
-        opts.add("Noise",sweeps.noise(sw));
-        opts.add("MaxIter",sweeps.niter(sw));
+        args.add("Sweep",sw);
+        args.add("Cutoff",sweeps.cutoff(sw));
+        args.add("Minm",sweeps.minm(sw));
+        args.add("Maxm",sweeps.maxm(sw));
+        args.add("Noise",sweeps.noise(sw));
+        args.add("MaxIter",sweeps.niter(sw));
 
         if(!PH.doWrite()
-           && opts.defined("WriteM")
-           && sweeps.maxm(sw) >= opts.getInt("WriteM"))
+           && args.defined("WriteM")
+           && sweeps.maxm(sw) >= args.getInt("WriteM"))
             {
             if(!quiet)
                 {
                 println("\nTurning on write to disk, write_dir = ",
-                        opts.getString("WriteDir","./"));
+                        args.getString("WriteDir","./"));
                 }
 
             psi.doWrite(true);
@@ -237,9 +237,9 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             Tensor phi = psi.A(b)*psi.A(b+1);
 
-            energy = davidson(PH,phi,opts);
+            energy = davidson(PH,phi,args);
             
-            Spectrum spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,opts);
+            Spectrum spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,args);
 
             if(!quiet)
                 { 
@@ -254,15 +254,15 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             obs.lastSpectrum(spec);
 
-            opts.add("AtBond",b);
-            opts.add("HalfSweep",ha);
-            opts.add("Energy",energy); 
+            args.add("AtBond",b);
+            args.add("HalfSweep",ha);
+            args.add("Energy",energy); 
 
-            obs.measure(opts);
+            obs.measure(args);
 
             } //for loop over b
 
-        if(obs.checkDone(opts)) break;
+        if(obs.checkDone(args)) break;
     
         } //for loop over sw
     
@@ -271,7 +271,7 @@ DMRGWorker(MPSt<Tensor>& psi,
     return energy;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

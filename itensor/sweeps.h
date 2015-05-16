@@ -99,6 +99,12 @@ class Sweeps
     SweepSetter<int> 
     niter();
 
+    void
+    read(std::istream& s);
+
+    void
+    write(std::ostream& s) const;
+
     private:
 
     void 
@@ -164,13 +170,13 @@ class SweepSetter
         }
 
     SweepSetter& 
-    operator,(const Opt& opt)
+    operator,(const Args& args)
         { 
         checkStarted();
-        if(opt.name() == "Repeat")
+        if(args.defined("Repeat"))
             {
             if(j_ == 1) Error("No value to repeat");
-            for(int n = 1; n < opt.intVal(); ++n, ++j_)
+            for(int n = 1; n < args.getInt("Repeat"); ++n, ++j_)
                 {
                 if(j_ > nsweep_) return *this;
                 v_[j_] = last_val_;
@@ -179,8 +185,7 @@ class SweepSetter
         return *this;
         }
 
-    typedef function<T(int,int)> 
-    Func;
+    using Func = function<T(int,int)>;
 
     //
     //Sets the remaining values of v_ by 
@@ -224,11 +229,11 @@ class SweepSetter
 struct RampM
     {
     RampM(int start_m, int end_m,
-          const OptSet& opts = Global::opts())
+          const Args& args = Global::args())
         :
         start_m_(start_m),
         end_m_(end_m),
-        nwarm_(opts.getInt("Warmup",-1))
+        nwarm_(args.getInt("Warmup",-1))
         { }
 
     int
@@ -251,11 +256,11 @@ struct RampM
 struct ExpM
     {
     ExpM(int start_m, int end_m,
-         const OptSet& opts = Global::opts())
+         const Args& args = Global::args())
         :
         start_m_(start_m),
         end_m_(end_m),
-        exp_base_(opts.getReal("ExpBase",2.))
+        exp_base_(args.getReal("ExpBase",2.))
         { }
 
     int
@@ -358,6 +363,63 @@ tableInit(InputGroup& table)
 
     } //Sweeps::tableInit
 
+void inline Sweeps::
+write(std::ostream& s) const
+    {
+    size_t maxm_size = maxm_.size();
+    s.write((char*) &maxm_size,sizeof(maxm_size));
+    for(auto el : maxm_) s.write((char*) &el,sizeof(el));
+
+    size_t minm_size = minm_.size();
+    s.write((char*) &minm_size,sizeof(minm_size));
+    for(auto el : minm_) s.write((char*) &el,sizeof(el));
+
+    size_t niter_size = niter_.size();
+    s.write((char*) &niter_size,sizeof(niter_size));
+    for(auto el : niter_) s.write((char*) &el,sizeof(el));
+
+    size_t cutoff_size = cutoff_.size();
+    s.write((char*) &cutoff_size,sizeof(cutoff_size));
+    for(auto el : cutoff_) s.write((char*) &el,sizeof(el));
+
+    size_t noise_size = noise_.size();
+    s.write((char*) &noise_size,sizeof(noise_size));
+    for(auto el : noise_) s.write((char*) &el,sizeof(el));
+
+    s.write((char*) &nsweep_,sizeof(nsweep_));
+    }
+
+void inline Sweeps::
+read(std::istream& s)
+    {
+    size_t maxm_size = 0;
+    s.read((char*) &maxm_size,sizeof(maxm_size));
+    maxm_.resize(maxm_size);
+    for(auto& el : maxm_) s.read((char*) &el,sizeof(el));
+
+    auto minm_size = 0;
+    s.read((char*) &minm_size,sizeof(minm_size));
+    minm_.resize(minm_size);
+    for(auto& el : minm_) s.read((char*) &el,sizeof(el));
+
+    auto niter_size = 0;
+    s.read((char*) &niter_size,sizeof(niter_size));
+    niter_.resize(niter_size);
+    for(auto& el : niter_) s.read((char*) &el,sizeof(el));
+
+    auto cutoff_size = 0;
+    s.read((char*) &cutoff_size,sizeof(cutoff_size));
+    cutoff_.resize(cutoff_size);
+    for(auto& el : cutoff_) s.read((char*) &el,sizeof(el));
+
+    auto noise_size = 0;
+    s.read((char*) &noise_size,sizeof(noise_size));
+    noise_.resize(noise_size);
+    for(auto& el : noise_) s.read((char*) &el,sizeof(el));
+
+    s.read((char*) &nsweep_,sizeof(nsweep_));
+    }
+
 inline std::ostream&
 operator<<(std::ostream& s, const Sweeps& swps)
     {
@@ -382,7 +444,7 @@ sweepnext(int &b, int &ha, int N, int min_b = 1)
         }
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif //__ITENSOR_SWEEPS_HEADER_H

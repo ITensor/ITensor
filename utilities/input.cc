@@ -109,12 +109,11 @@ InputGroup::
 InputGroup(std::string filename, 
            std::string groupname,
            const char* c)
-    : infile(new InputFile(filename)), 
-      parent(0), 
+    : parent(0), 
       name_(groupname), 
-      quiet(false),
-      own_file_(true)
+      quiet(false)
     {
+    infile.set_managed(new InputFile(filename));
     std::cout << "Making input group " << name_;
     if(c) std::cout << ": " << c;
     std::cout << std::endl;
@@ -124,12 +123,11 @@ InputGroup::
 InputGroup(InputFile& inf, 
            std::string name,
            const char* c)
-    : infile(&inf), 
-      parent(0), 
+    : parent(0), 
       name_(name), 
-      quiet(false),
-      own_file_(false)
+      quiet(false)
     {
+    infile.set_external(&inf);
     std::cout << "Making input group " << name_;
     if(c) std::cout << ": " << c;
     std::cout << std::endl;
@@ -139,12 +137,11 @@ InputGroup::
 InputGroup(InputGroup& par, 
            std::string name,
            const char* c)
-    : infile(par.infile), 
-      parent(&par), 
+    : parent(&par), 
       name_(name),
-      quiet(false),
-      own_file_(false)
+      quiet(false)
     {
+    infile.set_external(&(*par.infile));
     std::cout << "Making input group " << parent->name_ << "." << name_;
     if(c) std::cout << ": " << c;
     std::cout << std::endl;
@@ -153,10 +150,6 @@ InputGroup(InputGroup& par,
 InputGroup::
 ~InputGroup()
     {
-    if(own_file_)
-        {
-        delete infile;
-        }
     }
 
 int InputGroup::GotoGroup()
@@ -269,7 +262,7 @@ int InputGroup::GetInt(string s, int& res,const char* c)
     return 1;
     }
 
-int InputGroup::GetLong(string s, lint& res,const char* c)
+int InputGroup::GetLong(string s, long& res,const char* c)
     {
     if(!GotoToken(s) || !(infile->file() >> res)) 
 	{
@@ -385,39 +378,71 @@ void InputGroup::SkipLine()
     }
 
 int InputGroup::
-getInt(std::string s, int def, const char* c)
+getInt(std::string s, int def)
     {
     int res = 0;
-    int got = GetInt(s,res,c);
+    int got = GetInt(s,res);
     if(!got) return def;
     return res;
     }
 
 Real InputGroup::
-getReal(std::string s, Real def, const char* c)
+getReal(std::string s, Real def)
     {
     Real res = 0;
-    int got = GetReal(s,res,c);
+    int got = GetReal(s,res);
     if(!got) return def;
     return res;
     }
 
 std::string  InputGroup::
-getString(std::string s, std::string def, const char* c)
+getString(std::string s, std::string def)
     {
     std::string res;
-    int got = GetString(s,res,c);
+    int got = GetString(s,res);
     if(!got) return def;
     return res;
     }
 
 bool  InputGroup::
-getYesNo(std::string s, bool def, const char* c)
+getYesNo(std::string s, bool def)
     {
     bool res = false;
-    int got = GetYesNo(s,res,c);
+    int got = GetYesNo(s,res,0);
     if(!got) return def;
     return res;
+    }
+
+int InputGroup::
+getInt(std::string s)
+    {
+    int res = 0;
+    GetIntM(s,res);
+    return res;
+    }
+
+Real InputGroup::
+getReal(std::string s)
+    {
+    Real res = 0;
+    GetRealM(s,res);
+    return res;
+    }
+
+std::string  InputGroup::
+getString(std::string s)
+    {
+    std::string res;
+    GetStringM(s,res);
+    return res;
+    }
+
+bool  InputGroup::
+getYesNo(std::string s)
+    {
+    int res = false;
+    GetYesNoM(s,res);
+    return bool(res);
     }
 
 void InputGroup::GetIntM(string s, int& res,const char* c)
@@ -426,7 +451,7 @@ void InputGroup::GetIntM(string s, int& res,const char* c)
         error("mandatory item: " + s + ", exiting");
     }
 
-void InputGroup::GetLongM(string s, lint& res,const char* c)
+void InputGroup::GetLongM(string s, long& res,const char* c)
     {
     if(!GetLong(s,res,c))
         error("mandatory item: " + s + ", exiting");
@@ -450,5 +475,5 @@ void InputGroup::GetYesNoM(string s, int& yes,const char* c)
         error("mandatory item: " + s + ", exiting");
     }
 
-}; //namespace itensor
+} //namespace itensor
 

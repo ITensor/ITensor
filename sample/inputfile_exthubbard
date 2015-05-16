@@ -1,11 +1,10 @@
 basic
     {
-
-    N = 40
-    Npart = 40
+    N = 20
+    Npart = 10
 
     t1 = 1
-    t2 = -0.2
+    t2 = 0.2
     U = 1
     V1 = 0.5
 
@@ -13,13 +12,12 @@ basic
     sweeps
         {
         maxm  minm  cutoff  niter  noise
-        50    10    1E-12   4      1E-7
-        100   20    1E-12   3      1E-8
+        50    10    1E-12   2      1E-7
+        100   20    1E-12   2      1E-8
         200   20    1E-12   2      1E-10
         400   20    1E-12   2      0
         800   20    1E-12   2      0
         }
 
-    quiet = no
-
+    quiet = yes
     }

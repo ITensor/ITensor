@@ -8,7 +8,7 @@ using namespace itensor;
 int
 main(int argc, char* argv[])
     {
-    const int N = 20;
+    int N = 20;
 
     SpinHalf sites(N);
 
@@ -18,7 +18,7 @@ main(int argc, char* argv[])
     Real tstep = 0.1;
 
     vector<Gate> gates;
-    const Gate::Type type = Gate::tImag;
+    auto type = Gate::tImag;
 
     for(int b = 1; b < N; ++b)
         {
@@ -35,7 +35,7 @@ main(int argc, char* argv[])
         gates.push_back(Gate(sites,b,b+1,type,tstep/2.,hh));
         }
 
-    const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
+    auto nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
     if(fabs(nt*tstep-ttotal) > 1E-9)
         {
         Error("Timestep not commensurate with total time");
@@ -43,11 +43,11 @@ main(int argc, char* argv[])
 
     for(int step = 1; step <= nt; ++step)
         {
-        Foreach(const Gate& G, gates)
+        for(auto& G : gates)
             {
-            const int b = G.i();
+            auto b = G.i();
             psi.position(b);
-            ITensor AA = psi.A(b)*psi.A(b+1);
+            auto AA = psi.A(b)*psi.A(b+1);
 
             //
             // Write code here that applies 
@@ -78,7 +78,7 @@ main(int argc, char* argv[])
         printfln("Step %d/%d",step,nt);
         }
 
-    MPO H = Heisenberg(sites);
+    auto H = MPO(Heisenberg(sites));
     printfln("Energy = %.20f",psiHphi(psi,H,psi));
 
 

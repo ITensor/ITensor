@@ -19,9 +19,12 @@ SOURCES+= svdalgs.cc
 SOURCES+= mps.cc 
 SOURCES+= mpo.cc 
 SOURCES+= tevol.cc
+SOURCES+= autompo.cc
 
 HEADERS=global.h real.h permutation.h index.h \
-        indexset.h counter.h itensor.h qn.h iqindex.h iqtdat.h iqtensor.h \
+        indexset.h counter.h simplematrix.h itensor.h \
+        qn.h iqindex.h iqtdat.h  \
+        detail/skip_iterator.h iqtensor.h \
         condenser.h combiner.h qcounter.h iqcombiner.h \
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\
@@ -32,20 +35,24 @@ HEADERS=global.h real.h permutation.h index.h \
         sites/tj.h sites/Z3.h\
         eigensolver.h localop.h localmpo.h localmposet.h \
         partition.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h\
-        integrators.h idmrg.h TEvolObserver.h iterpair.h
+        integrators.h idmrg.h TEvolObserver.h iterpair.h autompo.h
 
 
 
 ####################################
 
-CCFLAGS= $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS)
-CCGFLAGS= $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS)
+CCFLAGS= $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -DPLATFORM_$(PLATFORM)
+CCGFLAGS= $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS) -DPLATFORM_$(PLATFORM)
 
 OBJECTS= $(patsubst %.cc,%.o, $(SOURCES))
 GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 INCLUDE_HEADERS= $(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(HEADERS))
 
 .SUFFIXES: .cc $(SUFFIXES)
+
+$(ITENSOR_INCLUDEDIR)/detail/%.h: detail/%.h
+	mkdir -p $(ITENSOR_INCLUDEDIR)/detail
+	cp $^ $(ITENSOR_INCLUDEDIR)/detail
 
 $(ITENSOR_INCLUDEDIR)/hams/%.h: hams/%.h
 	mkdir -p $(ITENSOR_INCLUDEDIR)/hams
@@ -100,18 +107,20 @@ index.o: $(DEPHEADERS)
 DEPHEADERS+= indexset.h
 indexset.o: $(DEPHEADERS)
 .debug_objs/indexset.o: $(DEPHEADERS)
-DEPHEADERS+=  itensor.h counter.h
+DEPHEADERS+=  itensor.h counter.h simplematrix.h
 itensor.o: $(DEPHEADERS)
 .debug_objs/itensor.o: $(DEPHEADERS)
 DEPHEADERS+= qn.h iqindex.h
 iqindex.o: $(DEPHEADERS)
 .debug_objs/iqindex.o: $(DEPHEADERS)
-DEPHEADERS+= iqtdat.h iqtensor.h qcounter.h
+DEPHEADERS+= iqtdat.h iqtensor.h qcounter.h detail/skip_iterator.h
 iqtensor.o: $(DEPHEADERS)
 .debug_objs/iqtensor.o: $(DEPHEADERS)
 DEPHEADERS+= combiner.h condenser.h iqcombiner.h localmpo.h
 iqcombiner.o: $(DEPHEADERS)
 .debug_objs/iqcombiner.o: $(DEPHEADERS)
+condenser.o: $(DEPHEADERS)
+.debug_objs/condenser.o: $(DEPHEADERS)
 DEPHEADERS+= spectrum.h
 spectrum.o: $(DEPHEADERS)
 .debug_objs/spectrum.o: $(DEPHEADERS)
@@ -124,6 +133,9 @@ mps.o: $(DEPHEADERS)
 DEPHEADERS+= mpo.h
 mpo.o: $(DEPHEADERS)
 .debug_objs/mpo.o: $(DEPHEADERS)
+DEPHEADERS+= autompo.h
+autompo.o: $(DEPHEADERS)
+.debug_objs/autompo.o: $(DEPHEADERS)
 DEPHEADERS+= bondgate.h tevol.h integrators.h
 tevol.o: $(DEPHEADERS)
 .debug_objs/tevol.o: $(DEPHEADERS)

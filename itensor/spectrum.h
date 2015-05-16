@@ -21,20 +21,19 @@ class Spectrum
     {
     public:
 
-    typedef std::vector<QN>
-    QNStorage;
+    using QNStorage = std::vector<QN>;
 
-    Spectrum(const OptSet& opts = Global::opts());
+    Spectrum(const Args& args = Global::args());
 
-    Spectrum(const ITensor& D, const OptSet& opts = Global::opts());
+    Spectrum(const ITensor& D, const Args& args = Global::args());
 
-    Spectrum(const IQTensor& D, const OptSet& opts = Global::opts());
+    Spectrum(const IQTensor& D, const Args& args = Global::args());
 
-    Spectrum(const Vector& eigs, const OptSet& opts = Global::opts());
+    Spectrum(const Vector& eigs, const Args& args = Global::args());
 
     Spectrum(const Vector& eigs, 
              const QNStorage& qns,
-             const OptSet& opts = Global::opts());
+             const Args& args = Global::args());
 
     QN
     qn(int n) const;
@@ -90,14 +89,14 @@ class Spectrum
     /////////////////
 
     void
-    computeTruncerr(const OptSet& opts);
+    computeTruncerr(const Args& args);
 
     }; //class Spectrum
 
 std::ostream& 
 operator<<(std::ostream & s, const Spectrum& spec);
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

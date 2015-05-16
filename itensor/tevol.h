@@ -17,8 +17,8 @@ namespace itensor {
 // Evolves an MPS in real or imaginary time by an amount ttotal in steps
 // of tstep using the list of bond gates provided.
 //
-// Options recognized:
-//     Verbose - print useful information to stdout
+// Arguments recognized:
+//    "Verbose": if true, print useful information to stdout
 //
 template <class Iterable, class Tensor>
 Real
@@ -26,7 +26,7 @@ gateTEvol(const Iterable& gatelist,
           Real ttotal, 
           Real tstep, 
           MPSt<Tensor>& psi, 
-          const OptSet& opts = Global::opts());
+          const Args& args = Global::args());
 
 template <class Iterable, class Tensor>
 Real
@@ -35,19 +35,19 @@ gateTEvol(const Iterable& gatelist,
           Real tstep, 
           MPSt<Tensor>& psi, 
           Observer& obs,
-          OptSet opts = Global::opts());
+          Args args = Global::args());
 
 //
 // Imaginary time evolve an MPS by an amount ttotal in time
 // steps of tstep using the Hamiltonian MPO H.
 //
-// Options recognized:
-//     Verbose - print useful information to stdout
-//     Order - order at which to stop applying powers of H, 
-//             setting order to p yields error of tstep^p
-//     Maxm - Maximum states kept each step
-//     Cutoff - Maximum truncation error each step
-//     Nsweep - Number of sweeps used to apply H to MPS (see fitApplyMPO)
+// Arguments recognized:
+//     "Verbose": print useful information to stdout
+//     "Order": order at which to stop applying powers of H, 
+//              setting order to p yields error of tstep^p
+//     "Maxm": Maximum states kept each step
+//     "Cutoff": Maximum truncation error each step
+//     "Nsweep": Number of sweeps used to apply H to MPS (see fitApplyMPO)
 //
 template <class Tensor>
 void
@@ -55,7 +55,7 @@ imagTEvol(const MPOt<Tensor>& H,
           Real ttotal, 
           Real tstep, 
           MPSt<Tensor>& psi, 
-          const OptSet& opts = Global::opts());
+          const Args& args = Global::args());
 
 
 //
@@ -70,10 +70,10 @@ gateTEvol(const Iterable& gatelist,
           Real tstep, 
           MPSt<Tensor>& psi, 
           Observer& obs,
-          OptSet opts)
+          Args args)
     {
-    const bool verbose = opts.getBool("Verbose",false);
-    const bool normalize = opts.getBool("Normalize",true);
+    const bool verbose = args.getBool("Verbose",false);
+    const bool normalize = args.getBool("Normalize",true);
 
     const int nt = int(ttotal/tstep+(1e-9*(ttotal/tstep)));
     if(fabs(nt*tstep-ttotal) > 1E-9)
@@ -90,7 +90,7 @@ gateTEvol(const Iterable& gatelist,
         }
     for(int tt = 1; tt <= nt; ++tt)
         {
-        Foreach(const BondGate<Tensor>& G, gatelist)
+        for(const BondGate<Tensor>& G : gatelist)
             {
             const int lastpos = psi.orthoCenter();
             const int closest = abs(lastpos-G.i1()) < abs(lastpos-G.i2()) ? G.i1() : G.i2();
@@ -105,10 +105,10 @@ gateTEvol(const Iterable& gatelist,
 
         tsofar += tstep;
 
-        opts.add("TimeStep",tt);
-        opts.add("Time",tsofar);
-        opts.add("TotalTime",ttotal);
-        obs.measure(opts);
+        args.add("TimeStepNum",tt);
+        args.add("Time",tsofar);
+        args.add("TotalTime",ttotal);
+        obs.measure(args);
         }
     if(verbose) 
         {
@@ -125,13 +125,13 @@ gateTEvol(const Iterable& gatelist,
           Real ttotal, 
           Real tstep, 
           MPSt<Tensor>& psi, 
-          const OptSet& opts)
+          const Args& args)
     {
-    TEvolObserver obs(opts);
-    return gateTEvol(gatelist,ttotal,tstep,psi,obs,opts);
+    TEvolObserver obs(args);
+    return gateTEvol(gatelist,ttotal,tstep,psi,obs,args);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

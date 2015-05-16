@@ -94,10 +94,10 @@ main(int argc, char* argv[])
     //
     // to build up exp(x) in the for loop below.
 
-    const Real beta = 10;
-    const int max_order = 100;
+    Real beta = 10;
+    int max_order = 100;
 
-    const ITensor I = Id1*Id2;
+    ITensor I = Id1*Id2;
 
     ITensor x = H*(-beta);
 
@@ -127,7 +127,7 @@ main(int argc, char* argv[])
         //
         }
 
-    ITensor psi_beta = expH*psi;
+    auto psi_beta = expH*psi;
     psi_beta.noprime();
     psi_beta *= 1./psi_beta.norm();
 

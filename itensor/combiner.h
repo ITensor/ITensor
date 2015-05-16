@@ -29,8 +29,7 @@ class Combiner
     {
     public:
 
-    typedef array<Index,NMAX+1>::const_iterator 
-    left_it;
+    using left_it = array<Index,NMAX+1>::const_iterator;
 
     //Accessor Methods ----------------------------------------------
 
@@ -101,10 +100,8 @@ class Combiner
 
     //Other Methods -------------------------------------------------
 
-    Real
-    uniqueReal() const;
-
-    operator ITensor() const;
+    ITensor
+    toITensor() const;
 
     void 
     dag() { init(); }
@@ -240,9 +237,9 @@ prime(Combiner C, int inc)
     return C;
     }
 
-inline
+ITensor inline
 Combiner::
-operator ITensor() const
+toITensor() const
     {
     /*
     if(right_.m() > 16) 
@@ -269,7 +266,7 @@ product(const ITensor& t, ITensor& res) const
     if(hasindex(t,right_))
         {
         IndexSet<Index> nind;
-        Foreach(const Index& I, t.indices())
+        for(const Index& I : t.indices())
             {
             if(I == right_)
                 {
@@ -286,15 +283,6 @@ product(const ITensor& t, ITensor& res) const
         }
 
     t.groupIndices(left_,rl_,right_,res);
-    }
-
-Real inline Combiner::
-uniqueReal() const
-    {
-    Real ur = 0;
-    for(int j = 1; j <= rl_; ++j)
-        ur += left_[j].uniqueReal();
-    return ur;
     }
 
 //
@@ -319,7 +307,7 @@ operator<<(std::ostream & s, const Combiner & c)
     else
         s << "\nRight index not initialized" << "\n";
     s << "Left indices:\n";
-    Foreach(const Index& l, c.left()) s << " " << l << "\n";
+    for(const Index& l : c.left()) s << " " << l << "\n";
     return s;
     }
 
@@ -330,7 +318,7 @@ primed(Combiner C, int inc = 1)
     return prime(C,inc);
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif

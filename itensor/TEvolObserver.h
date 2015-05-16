@@ -19,15 +19,15 @@ class TEvolObserver : public Observer
     {
     public:
     
-    TEvolObserver(const OptSet& opts = Global::opts());
+    TEvolObserver(const Args& args = Global::args());
 
     virtual ~TEvolObserver() { }
 
     void virtual
-    measure(const OptSet& opts = Global::opts());
+    measure(const Args& args = Global::args());
     
     bool virtual
-    checkDone(const OptSet& opts = Global::opts());
+    checkDone(const Args& args = Global::args());
 
     private:
 
@@ -44,21 +44,21 @@ class TEvolObserver : public Observer
     }; // class TEvolObserver
 
 inline TEvolObserver::
-TEvolObserver(const OptSet& opts) 
+TEvolObserver(const Args& args) 
     : 
     done_(false),
-    show_percent_(opts.getBool("ShowPercent",true))
+    show_percent_(args.getBool("ShowPercent",true))
     { 
     }
 
 
 void inline TEvolObserver::
-measure(const OptSet& opts)
+measure(const Args& args)
     {
-    const Real t = opts.getReal("Time");
+    const Real t = args.getReal("Time");
     if(show_percent_)
         {
-        const Real ttotal = opts.getReal("TotalTime");
+        const Real ttotal = args.getReal("TotalTime");
         Real percentdone = (100.*t)/ttotal;
         if(percentdone < 99.5 || (fabs(t-ttotal) < 1E-10))
             {
@@ -70,9 +70,9 @@ measure(const OptSet& opts)
 
 
 bool inline TEvolObserver::
-checkDone(const OptSet& opts)
+checkDone(const Args& args)
     {
-    const Real t = opts.getReal("Time");
+    const Real t = args.getReal("Time");
     if(fileExists("STOP_TEVOL"))
         {
         println("File STOP_TEVOL found: stopping this time evolution run at time ",t);
@@ -92,7 +92,7 @@ checkDone(const OptSet& opts)
     return done_;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 
 #endif // __ITENSOR_TEVOLOBSERVER_H

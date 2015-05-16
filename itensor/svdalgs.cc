@@ -27,6 +27,22 @@ using std::sqrt;
 //    return V;
 //    }
 
+struct EigQN
+    {
+    Real eig;
+    QN qn;
+
+    EigQN(Real eg,QN q)
+        : eig(eg),qn(q) 
+        { }
+
+    bool
+    operator<(const EigQN& other) const 
+        { 
+        return eig < other.eig;
+        }
+    };
+
 
 Real static
 truncate(Vector& D,
@@ -71,7 +87,7 @@ truncate(Vector& D,
     }
 
 Real static
-truncate(vector<Real>& alleig, 
+truncate(vector<EigQN>& alleig, 
          int& m, 
          Real& docut, 
          int maxm,
@@ -83,50 +99,50 @@ truncate(vector<Real>& alleig,
     m = (int)alleig.size();
     if(m == 1)
         {
-        docut = alleig.front()/2.;
+        docut = alleig.front().eig/2.;
         return 0;
         }
-    int mdisc = 0;
+    long mdisc = 0;
 
     Real truncerr = 0;
 
     if(absoluteCutoff)
         {
-        while(m > maxm || ( (alleig.at(mdisc) < cutoff && m > minm)
-            && mdisc < (int)alleig.size() ) )
+        while(m > maxm || ( (alleig.at(mdisc).eig < cutoff && m > minm)
+            && mdisc < (long)alleig.size() ) )
             {
-            if(alleig.at(mdisc) > 0)
-                truncerr += alleig.at(mdisc);
+            if(alleig.at(mdisc).eig > 0)
+                truncerr += alleig.at(mdisc).eig;
             else
-                alleig.at(mdisc) = 0;
+                alleig.at(mdisc).eig = 0;
 
             ++mdisc;
             --m;
             }
         docut = (mdisc > 0 
-                ? (alleig.at(mdisc-1) + alleig.at(mdisc))*0.5 - 1E-5*alleig.at(mdisc-1)
+                ? (alleig.at(mdisc-1).eig + alleig.at(mdisc).eig)*0.5 - 1E-5*alleig.at(mdisc-1).eig
                 : -1);
         }
     else
         {
-        Real scale = doRelCutoff ? alleig.back() : 1.0;
+        Real scale = doRelCutoff ? alleig.back().eig : 1.0;
         while(   m > maxm 
-             || ( (mdisc < (int)alleig.size()) && (truncerr+alleig.at(mdisc) < cutoff*scale && m > minm))
+             || ( (mdisc < (int)alleig.size()) && (truncerr+alleig.at(mdisc).eig < cutoff*scale && m > minm))
              )
             {
-            if(alleig.at(mdisc) > 0)
-                truncerr += alleig.at(mdisc);
+            if(alleig.at(mdisc).eig > 0)
+                truncerr += alleig.at(mdisc).eig;
             else
-                alleig.at(mdisc) = 0;
+                alleig.at(mdisc).eig = 0;
 
             ++mdisc;
             --m;
             }
         if(mdisc >= int(alleig.size())) mdisc = alleig.size() - 1;
         docut = (mdisc > 0 
-                ? (alleig.at(mdisc-1) + alleig.at(mdisc))*0.5 - 1E-5*alleig.at(mdisc-1)
+                ? (alleig.at(mdisc-1).eig + alleig.at(mdisc).eig)*0.5 - 1E-5*alleig.at(mdisc-1).eig
                 : -1);
-        truncerr = (alleig.back() == 0 ? 0 : truncerr/scale);
+        truncerr = (alleig.back().eig == 0 ? 0 : truncerr/scale);
         }
 
 
@@ -138,15 +154,15 @@ truncate(vector<Real>& alleig,
 Spectrum 
 svdRank2(ITensor A, const Index& ui, const Index& vi,
          ITensor& U, ITensor& D, ITensor& V,
-         const OptSet& opts)
+         const Args& args)
     {
-    const Real thresh = opts.getReal("SVDThreshold",1E-4);
-    const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
-    const int maxm = opts.getInt("Maxm",MAX_M);
-    const int minm = opts.getInt("Minm",1);
-    const bool do_truncate = opts.getBool("Truncate",true);
-    const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = opts.getBool("AbsoluteCutoff",false);
+    const Real thresh = args.getReal("SVDThreshold",1E-4);
+    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
+    const int maxm = args.getInt("Maxm",MAX_M);
+    const int minm = args.getInt("Minm",1);
+    const bool do_truncate = args.getBool("Truncate",true);
+    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
+    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     const bool cplx = A.isComplex();
 
     if(A.r() != 2)
@@ -196,7 +212,7 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
         }
 
 
-    if(opts.getBool("ShowEigs",false))
+    if(args.getBool("ShowEigs",false))
         {
         cout << endl;
         printfln("minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
@@ -281,24 +297,25 @@ svdRank2(ITensor A, const Index& ui, const Index& vi,
     //    Global::lastd() *= A.scale().real();
     //    }
 
-    return Spectrum(DD,Opt("Truncerr",terr));
+    return Spectrum(DD,Args("Truncerr",terr));
 
     } // void svdRank2
+
 
 Spectrum
 svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
          IQTensor& U, IQTensor& D, IQTensor& V,
-         const OptSet& opts)
+         const Args& args)
     {
-    const bool cplx = A.isComplex();
-    const Real thresh = opts.getReal("SVDThreshold",1E-4);
-    const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
-    const int maxm = opts.getInt("Maxm",MAX_M);
-    const int minm = opts.getInt("Minm",1);
-    const bool do_truncate = opts.getBool("Truncate",true);
-    const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = opts.getBool("AbsoluteCutoff",false);
-    const Real logrefNorm = opts.getReal("LogRefNorm",0.);
+    auto cplx = A.isComplex();
+    auto thresh = args.getReal("SVDThreshold",1E-4);
+    auto cutoff = args.getReal("Cutoff",MIN_CUT);
+    auto maxm = args.getInt("Maxm",MAX_M);
+    auto minm = args.getInt("Minm",1);
+    auto do_truncate = args.getBool("Truncate",true);
+    auto doRelCutoff = args.getBool("DoRelCutoff",false);
+    auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
+    auto logrefNorm = args.getReal("LogRefNorm",0.);
 
     if(A.r() != 2)
         {
@@ -321,7 +338,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     vector<Vector> dvector(Nblock);
 
-    vector<Real> alleig;
+    vector<EigQN> alleig;
     alleig.reserve(min(uI.m(),vI.m()));
 
     if(uI.m() == 0)
@@ -334,7 +351,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         {
         Real maxLogNum = -200;
         A.scaleOutNorm();
-        Foreach(const ITensor& t, A.blocks())
+        for(const ITensor& t : A.blocks())
             {
             maxLogNum = max(maxLogNum,t.scale().logNum());
             }
@@ -345,7 +362,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     //1. SVD each ITensor within A.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
-    Foreach(const ITensor& t, A.blocks())
+    for(const ITensor& t : A.blocks())
         {
         Matrix &UU = Umatrix.at(itenind);
         Matrix &VV = Vmatrix.at(itenind);
@@ -353,7 +370,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         const Index *ui=0,*vi=0;
         bool gotui = false;
-        Foreach(const Index& I, t.indices())
+        for(const Index& I : t.indices())
             {
             if(!gotui) 
                 {
@@ -401,8 +418,11 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         //Store the squared singular values
         //(denmat eigenvalues) in alleig
+        QN q = qn(uI,*ui);
         for(int j = 1; j <= d.Length(); ++j) 
-            alleig.push_back(sqr(d(j)));
+            {
+            alleig.push_back(EigQN(sqr(d(j)),q));
+            }
 
         ++itenind;
         }
@@ -414,17 +434,17 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     Real svdtruncerr = 0;
     Real docut = -1;
 
+    //Sort all eigenvalues from smallest to largest
+    //irrespective of quantum numbers
+    sort(alleig.begin(),alleig.end());
+
     if(do_truncate)
         {
-        //Sort all eigenvalues from smallest to largest
-        //irrespective of quantum numbers
-        sort(alleig.begin(),alleig.end());
-
         svdtruncerr = truncate(alleig,m,docut,maxm,minm,cutoff,
                                absoluteCutoff,doRelCutoff);
         }
 
-    if(opts.getBool("ShowEigs",false))
+    if(args.getBool("ShowEigs",false))
         {
         cout << endl;
         println("svdRank2 (IQTensor):");
@@ -443,7 +463,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         //Include refNorm in printed eigs as long as
         //the leading eig is within a few orders of magnitude
         //of 1.0. Otherwise just print the scaled eigs.
-        Real orderMag = log(fabs(alleig.at(s-1))) + refNorm.logNum();
+        Real orderMag = log(fabs(alleig.at(s-1).eig)) + refNorm.logNum();
         Real real_fac = 1;
         if(fabs(orderMag) < 5 && refNorm.isFiniteReal())
             {
@@ -453,7 +473,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         else
             {
             cout << "    Singular values [omitting scale factor " << refNorm << "]: \n";
-            if(alleig.at(s-1) > 1.e10)
+            if(alleig.at(s-1).eig > 1.e10)
                 {
                 Error("bad alleig");
                 }
@@ -462,7 +482,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         for(int j = s-1; j >= stop; --j)
             {
-            const Real sval = sqrt(alleig.at(j))*real_fac;
+            const Real sval = sqrt(alleig.at(j).eig)*real_fac;
             printf( (sval >= 1E-3 && sval < 1E3) ? ("%.3f") : ("%.3E"), sval);
             print((j != stop) ? ", " : "\n");
             }
@@ -492,7 +512,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
     itenind = 0;
     int total_m = 0;
-    Foreach(const ITensor& t, A.blocks())
+    for(const ITensor& t : A.blocks())
         {
         const Matrix& UU = Umatrix.at(itenind);
         const Matrix& VV = Vmatrix.at(itenind);
@@ -514,7 +534,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         const Index *ui=0,*vi=0;
         bool gotui = false;
-        Foreach(const Index& I, t.indices())
+        for(const Index& I : t.indices())
             {
             if(!gotui) 
                 {
@@ -597,27 +617,31 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     //toMatrix11NoScale, so put the scale back in
     D *= refNorm;
 
-    Vector DD(L.m());
-    for(int i = 1; i <= L.m(); ++i) 
+    int aesize = int(alleig.size());
+    int neig = std::min(aesize,L.m());
+    Vector DD(neig);
+    std::vector<QN> qns(neig);
+    for(int i = 0; i < neig; ++i) 
         {
-        DD(i) = alleig.at(alleig.size()-i);
+        DD[i] = alleig.at(aesize-1-i).eig;
+        qns[i] = alleig.at(aesize-1-i).qn;
         }
 
-    return Spectrum(DD,Opt("Truncerr",svdtruncerr));
+    return Spectrum(DD,qns,Args("Truncerr",svdtruncerr));
 
     } //void svdRank2
 
 
 Spectrum
 diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
-               const OptSet& opts)
+               const Args& args)
     {
-    const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
-    const int maxm = opts.getInt("Maxm",MAX_M);
-    const int minm = opts.getInt("Minm",1);
-    const bool do_truncate = opts.getBool("Truncate",false);
-    const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = opts.getBool("AbsoluteCutoff",false);
+    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
+    const int maxm = args.getInt("Maxm",MAX_M);
+    const int minm = args.getInt("Minm",1);
+    const bool do_truncate = args.getBool("Truncate",false);
+    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
+    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     const bool cplx = rho.isComplex();
 
 #ifdef DEBUG
@@ -630,7 +654,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
 #endif
 
     Index active;
-    Foreach(const Index& I, rho.indices())
+    for(const Index& I : rho.indices())
         {
         if(I.primeLevel() == 0)
             {
@@ -691,7 +715,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     //    DD *= rho.scale().real();
     //    }
 
-    if(opts.getBool("ShowEigs",false)) 
+    if(args.getBool("ShowEigs",false)) 
         {
         println("Before truncating, m = ",DD.Length());
         }
@@ -700,6 +724,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
     Real svdtruncerr = 0.0;
     if(do_truncate)
         {
+        if(DD(1) < 0) DD *= -1; //DEBUG
         svdtruncerr = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         }
     Spectrum spec;
@@ -718,7 +743,7 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
         }
 #endif
 
-    if(opts.getBool("ShowEigs",false))
+    if(args.getBool("ShowEigs",false))
         {
         cout << endl;
         printfln("minm = %d, maxm = %d, cutoff = %.3E",minm,maxm,cutoff);
@@ -763,14 +788,14 @@ diag_hermitian(ITensor rho, ITensor& U, ITensor& D,
 
 Spectrum
 diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
-               const OptSet& opts)
+               const Args& args)
     {
-    const Real cutoff = opts.getReal("Cutoff",MIN_CUT);
-    const int maxm = opts.getInt("Maxm",MAX_M);
-    const int minm = opts.getInt("Minm",1);
-    const bool do_truncate = opts.getBool("Truncate",false);
-    const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
-    const bool absoluteCutoff = opts.getBool("AbsoluteCutoff",false);
+    const Real cutoff = args.getReal("Cutoff",MIN_CUT);
+    const int maxm = args.getInt("Maxm",MAX_M);
+    const int minm = args.getInt("Minm",1);
+    const bool do_truncate = args.getBool("Truncate",false);
+    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
+    const bool absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     const bool cplx = rho.isComplex();
 
     if(rho.r() != 2)
@@ -791,7 +816,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     vector<Matrix> mmatrix(rho.blocks().size()),
                    imatrix;
     vector<Vector> mvector(rho.blocks().size());
-    vector<Real> alleig;
+    vector<EigQN> alleig;
     alleig.reserve(rho.indices().front().m());
 
     if(cplx)
@@ -808,7 +833,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         //DO_IF_DEBUG(cout << "Doing relative cutoff\n";)
         Real maxLogNum = -200;
         rho.scaleOutNorm();
-        Foreach(const ITensor& t, rho.blocks())
+        for(const ITensor& t : rho.blocks())
             {
             maxLogNum = max(maxLogNum,t.scale().logNum());
             }
@@ -820,17 +845,23 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     //1. Diagonalize each ITensor within rho.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
-    Foreach(const ITensor& t, rho.blocks())
+    for(const ITensor& t : rho.blocks())
         {
         Index a;
-        Foreach(const Index& I, t.indices())
-            {
+        for(const Index& I : t.indices())
             if(I.primeLevel() == 0)
                 {
                 a = I;
                 break;
                 }
-            }
+
+        IQIndex A;
+        for(const IQIndex& I : rho.indices())
+            if(I.primeLevel() == 0)
+                {
+                A = I;
+                break;
+                }
 
         Matrix &UU = mmatrix.at(itenind);
         Vector &d =  mvector.at(itenind);
@@ -871,8 +902,11 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
             if(flipSign) d *= -1;
             }
 
+        QN q = qn(A,a);
         for(int j = 1; j <= n; ++j) 
-            alleig.push_back(d(j));
+            {
+            alleig.push_back(EigQN(d(j),q));
+            }
 
         ++itenind;
 
@@ -923,7 +957,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     Spectrum spec;
     spec.truncerr(svdtruncerr);
 
-    if(opts.getBool("ShowEigs",false))
+    if(args.getBool("ShowEigs",false))
         {
         cout << endl;
         printfln("Kept %d states in diag_denmat line 721", m);
@@ -939,7 +973,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         cout << "Eigs: ";
         for(int j = s-1; j >= stop; --j)
             {
-            printf(alleig.at(j) > 1E-3 ? ("%.3f") : ("%.3E"), alleig.at(j));
+            printf(alleig.at(j).eig > 1E-3 ? ("%.3f") : ("%.3E"), alleig.at(j).eig);
             cout << ((j != stop) ? ", " : "\n");
             }
         cout << endl;
@@ -958,7 +992,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 #endif
 
     IQIndex active;
-    Foreach(const IQIndex& I, rho.indices())
+    for(const IQIndex& I : rho.indices())
         {
         if(I.primeLevel() == 0)
             {
@@ -984,7 +1018,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
     iq.reserve(rho.blocks().size());
 
     itenind = 0;
-    Foreach(const ITensor& t, rho.blocks())
+    for(const ITensor& t : rho.blocks())
         {
         Vector& thisD = mvector.at(itenind);
         Matrix& thisU = mmatrix.at(itenind);
@@ -1014,7 +1048,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         Index nm("qlink",this_m);
 
         Index act;
-        Foreach(const Index& I, t.indices())
+        for(const Index& I : t.indices())
             {
             if(I.primeLevel() == 0)
                 {
@@ -1072,12 +1106,15 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 
     D *= refNorm;
 
-    Vector DD(newmid.m());
-    const size_t aesize = alleig.size();
-    for(int i = 1; i <= newmid.m(); ++i) 
-        DD(i) = alleig.at(aesize-i);
-
-    spec.eigsKept(DD);
+    int aesize = int(alleig.size());
+    int neig = std::min(aesize,newmid.m());
+    Vector DD(neig);
+    std::vector<QN> qns(neig);
+    for(int i = 0; i < neig; ++i) 
+        {
+        DD[i] = alleig.at(aesize-1-i).eig;
+        qns[i] = alleig.at(aesize-1-i).qn;
+        }
 
     //Include spec.refNorm() to get the actual eigenvalues kept
     //as long as the leading eigenvalue is within a few orders
@@ -1090,17 +1127,16 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         }
         */
 
-    return spec;
-
+    return Spectrum(DD,qns,Args("Truncerr",svdtruncerr));
     } //void diag_hermitian
 
 void 
 eig_decomp(ITensor T, 
            const Index& L, const Index& R,
            ITensor& V, ITensor& D,
-           const OptSet& opts)
+           const Args& args)
     {
-    //const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
+    //const bool doRelCutoff = args.getBool("DoRelCutoff",false);
     bool cplx = T.isComplex();
 
 #ifdef DEBUG
@@ -1156,9 +1192,9 @@ void
 eig_decomp(IQTensor T, 
            const IQIndex& L, const IQIndex& R,
            IQTensor& V, IQTensor& D,
-           const OptSet& opts)
+           const Args& args)
     {
-    const bool doRelCutoff = opts.getBool("DoRelCutoff",false);
+    const bool doRelCutoff = args.getBool("DoRelCutoff",false);
     bool cplx = T.isComplex();
 
 #ifdef DEBUG
@@ -1185,7 +1221,7 @@ eig_decomp(IQTensor T,
         {
         Real maxLogNum = -200;
         T.scaleOutNorm();
-        Foreach(const ITensor& t, T.blocks())
+        for(const ITensor& t : T.blocks())
             {
             maxLogNum = max(maxLogNum,t.scale().logNum());
             }
@@ -1196,7 +1232,7 @@ eig_decomp(IQTensor T,
     //1. Diagonalize each ITensor within rho.
     //   Store results in mmatrix and mvector.
     int itenind = 0;
-    Foreach(const ITensor& t, T.blocks())
+    for(const ITensor& t : T.blocks())
         {
         Index li = t.indices().front(),
               ri = t.indices().back();
@@ -1241,7 +1277,7 @@ eig_decomp(IQTensor T,
     iq.reserve(T.blocks().size());
 
     itenind = 0;
-    Foreach(const ITensor& t, T.blocks())
+    for(const ITensor& t : T.blocks())
         {
         Vector &dr = reigs.at(itenind),
                &di = ieigs.at(itenind);
@@ -1281,13 +1317,13 @@ eig_decomp(IQTensor T,
     IQIndex newmid("L",iq,-R.dir());
 
     V = IQTensor(dag(R),dag(newmid));
-    Foreach(const ITensor& t, Vblocks)
+    for(const ITensor& t : Vblocks)
         {
         V += t;
         }
 
     D = IQTensor(prime(newmid),dag(newmid));
-    Foreach(const ITensor& t, Dblocks)
+    for(const ITensor& t : Dblocks)
         {
         D += t;
         }
@@ -1296,4 +1332,4 @@ eig_decomp(IQTensor T,
 
     }
 
-}; //namespace itensor
+} //namespace itensor

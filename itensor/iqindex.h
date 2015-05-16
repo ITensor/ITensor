@@ -14,8 +14,7 @@ class IndexQN;
 class IQIndexDat;
 class IQIndexVal;
 
-typedef shared_ptr<IQIndexDat>
-IQIndexDatPtr;
+using IQIndexDatPtr = shared_ptr<IQIndexDat>;
 
 //
 // IQIndex
@@ -78,8 +77,7 @@ class IQIndex : public Index
     //Accessor Methods
     //
 
-    typedef std::vector<IndexQN>
-    Storage;
+    using Storage = std::vector<IndexQN>;
 
     const Storage&
     indices() const;
@@ -89,6 +87,9 @@ class IQIndex : public Index
 
     const Index& 
     index(int i) const;
+
+    const Index& 
+    operator[](int i) const;
 
     const QN& 
     qn(int i) const;
@@ -186,7 +187,7 @@ class IndexQN : public Index
 // IQIndexVal
 //
 
-class IQIndexVal : public safe_bool<IQIndexVal>
+class IQIndexVal
     {
     public:
 
@@ -209,6 +210,8 @@ class IQIndexVal : public safe_bool<IQIndexVal>
     operator==(const IQIndexVal& other) const;
     bool
     operator!=(const IQIndexVal& other) const { return !operator==(other); }
+
+    explicit operator bool() const { return valid(); }
 
     IndexQN
     indexqn() const;
@@ -290,6 +293,6 @@ operator<<(std::ostream &s, const IndexQN& x);
 std::ostream& 
 operator<<(std::ostream& s, const IQIndexVal& iv);
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

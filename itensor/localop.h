@@ -6,9 +6,6 @@
 #define __ITENSOR_LOCAL_OP
 #include "iqtensor.h"
 
-#define Cout std::cout
-#define Endl std::endl
-
 namespace itensor {
 
 //
@@ -37,24 +34,22 @@ class LocalOp
     {
     public:
 
-    typedef typename Tensor::IndexT
-    IndexT;
+    using IndexT = typename Tensor::IndexT;
 
-    typedef typename Tensor::CombinerT
-    CombinerT;
+    using CombinerT = typename Tensor::CombinerT;
 
     //
     // Constructors
     //
 
-    LocalOp(const OptSet& opts = Global::opts());
+    LocalOp(const Args& args = Global::args());
 
     LocalOp(const Tensor& Op1, const Tensor& Op2,
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
 
     LocalOp(const Tensor& Op1, const Tensor& Op2, 
             const Tensor& L, const Tensor& R,
-            const OptSet& opts = Global::opts());
+            const Args& args = Global::args());
 
     //
     // Sparse Matrix Methods
@@ -122,7 +117,7 @@ class LocalOp
         }
 
     bool
-    isNull() const { return Op1_ == 0; }
+    isNull() const { return Op1_ == nullptr; }
 
     bool
     LIsNull() const;
@@ -143,7 +138,6 @@ class LocalOp
         Op2_ = other.Op2_;
         L_ = other.L_;
         R_ = other.R_;
-        bond_ = other.bond_;
         }
 
     private:
@@ -156,7 +150,6 @@ class LocalOp
     const Tensor *Op1_, *Op2_; 
     const Tensor *L_, *R_; 
     mutable int size_;
-    mutable Tensor bond_;
 
     //
     /////////////////
@@ -168,12 +161,12 @@ class LocalOp
 
 template <class Tensor>
 inline LocalOp<Tensor>::
-LocalOp(const OptSet& opts)
+LocalOp(const Args& args)
     :
-    Op1_(0),
-    Op2_(0),
-    L_(0),
-    R_(0),
+    Op1_(nullptr),
+    Op2_(nullptr),
+    L_(nullptr),
+    R_(nullptr),
     size_(-1)
     { 
     }
@@ -181,12 +174,12 @@ LocalOp(const OptSet& opts)
 template <class Tensor>
 inline LocalOp<Tensor>::
 LocalOp(const Tensor& Op1, const Tensor& Op2,
-        const OptSet& opts)
+        const Args& args)
     : 
-    Op1_(0),
-    Op2_(0),
-    L_(0),
-    R_(0),
+    Op1_(nullptr),
+    Op2_(nullptr),
+    L_(nullptr),
+    R_(nullptr),
     size_(-1)
     {
     update(Op1,Op2);
@@ -196,12 +189,12 @@ template <class Tensor>
 inline LocalOp<Tensor>::
 LocalOp(const Tensor& Op1, const Tensor& Op2, 
         const Tensor& L, const Tensor& R,
-        const OptSet& opts)
+        const Args& args)
     : 
-    Op1_(0),
-    Op2_(0),
-    L_(0),
-    R_(0),
+    Op1_(nullptr),
+    Op2_(nullptr),
+    L_(nullptr),
+    R_(nullptr),
     size_(-1)
     {
     update(Op1,Op2,L,R);
@@ -213,10 +206,9 @@ update(const Tensor& Op1, const Tensor& Op2)
     {
     Op1_ = &Op1;
     Op2_ = &Op2;
-    L_ = 0;
-    R_ = 0;
+    L_ = nullptr;
+    R_ = nullptr;
     size_ = -1;
-    bond_ = Tensor();
     }
 
 template <class Tensor>
@@ -233,7 +225,7 @@ template <class Tensor>
 bool inline LocalOp<Tensor>::
 LIsNull() const
     {
-    if(L_ == 0) return true;
+    if(L_ == nullptr) return true;
     return !L_->valid();
     }
 
@@ -241,7 +233,7 @@ template <class Tensor>
 bool inline LocalOp<Tensor>::
 RIsNull() const
     {
-    if(R_ == 0) return true;
+    if(R_ == nullptr) return true;
     return !R_->valid();
     }
 
@@ -324,7 +316,7 @@ diag() const
     IndexT toTie;
     bool found = false;
 
-    Foreach(const IndexT& s, Op1.indices())
+    for(const IndexT& s : Op1.indices())
         {
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
@@ -339,10 +331,10 @@ diag() const
         Error("Couldn't find Index");
         }
 
-    Tensor Diag = tieIndices(Op1,toTie,prime(toTie),toTie);
+    auto Diag = tieIndices(Op1,toTie,prime(toTie),toTie);
 
     found = false;
-    Foreach(const IndexT& s, Op2.indices())
+    for(const IndexT& s : Op2.indices())
         {
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
@@ -357,7 +349,7 @@ diag() const
     if(!LIsNull())
         {
         found = false;
-        Foreach(const IndexT& ll, L().indices())
+        for(const IndexT& ll : L().indices())
             {
             if(ll.primeLevel() == 0 && hasindex(L(),prime(ll)))
                 {
@@ -375,7 +367,7 @@ diag() const
     if(!RIsNull())
         {
         found = false;
-        Foreach(const IndexT& rr, R().indices())
+        for(const IndexT& rr : R().indices())
             {
             if(rr.primeLevel() == 0 && hasindex(R(),prime(rr)))
                 {
@@ -385,9 +377,13 @@ diag() const
                 }
             }
         if(found)
+            {
             Diag *= tieIndices(R(),toTie,prime(toTie),toTie);
+            }
         else
+            {
             Diag *= R();
+            }
         }
 
     Diag.dag();
@@ -407,7 +403,7 @@ size() const
         size_ = 1;
         if(!LIsNull()) 
             {
-            Foreach(const IndexT& I, L().indices())
+            for(const IndexT& I : L().indices())
                 {
                 if(I.primeLevel() > 0)
                     {
@@ -418,7 +414,7 @@ size() const
             }
         if(!RIsNull()) 
             {
-            Foreach(const IndexT& I, R().indices())
+            for(const IndexT& I : R().indices())
                 {
                 if(I.primeLevel() > 0)
                     {
@@ -434,9 +430,6 @@ size() const
     return size_;
     }
 
-}; //namespace itensor
-
-#undef Cout
-#undef Endl
+} //namespace itensor
 
 #endif

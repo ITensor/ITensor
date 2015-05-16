@@ -5,7 +5,7 @@
 
 #ifndef _ITENSOR_STRING_H_
 #define _ITENSOR_STRING_H_
-#include "cppversion.h"
+#include "types.h"
 #include <string>
 #include "error.h"
 
@@ -246,6 +246,6 @@ operator==(const FLString<Maxlen>& s1, const char* s2)
 //    return true;
 //    }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

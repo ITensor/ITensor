@@ -13,11 +13,11 @@
 #include "assert.h"
 #include "error.h"
 #include "option.h"
-#include "cppversion.h"
-#include "print.h"
+#include "types.h"
 #include <ctime>
 #include <string.h>
 #include <cstring>
+#include "real.h"
 
 namespace itensor {
 
@@ -27,8 +27,6 @@ static const int NMAX = 8;
 static const Real MIN_CUT = 1E-15;
 static const int MAX_M = 5000;
 
-typedef std::complex<Real>
-Complex;
 
 static const Complex Complex_1 = Complex(1,0);
 static const Complex Complex_i = Complex(0,1);
@@ -88,7 +86,7 @@ fileExists(const std::string& fname)
 
 
 template<class T> 
-void inline
+void
 readFromFile(const std::string& fname, T& t) 
     { 
     std::ifstream s(fname.c_str()); 
@@ -99,8 +97,22 @@ readFromFile(const std::string& fname, T& t)
     }
 
 
+template<class T, typename... InitArgs>
+T
+readFromFile(const std::string& fname, InitArgs&&... iargs)
+    { 
+    std::ifstream s(fname.c_str()); 
+    if(!s.good()) 
+        Error("Couldn't open file \"" + fname + "\" for reading");
+    T t(std::forward<InitArgs>(iargs)...);
+    t.read(s); 
+    s.close(); 
+    return t;
+    }
+
+
 template<class T> 
-void inline
+void
 writeToFile(const std::string& fname, const T& t) 
     { 
     std::ofstream s(fname.c_str()); 
@@ -127,24 +139,16 @@ mkTempDir(const std::string& pfix,
     dirname += pfix + "_XXXXXX";
 
     //Create C string version of dirname
-    char* cstr;
-    cstr = new char[dirname.size()+1];
-    strcpy(cstr,dirname.c_str());
+    auto cstr = std::unique_ptr<char[]>(new char[dirname.size()+1]);
+    strcpy(cstr.get(),dirname.c_str());
 
     //Call mkdtemp
-    char* retval = mkdtemp(cstr);
+    char* retval = mkdtemp(cstr.get());
     //Check error condition
-    if(retval == NULL)
-        {
-        delete[] cstr;
-        throw ITError("mkTempDir failed");
-        }
+    if(retval == NULL) throw ITError("mkTempDir failed");
 
     //Prepare return value
     std::string final_dirname(retval);
-
-    //Clean up
-    delete[] cstr;
 
     return final_dirname;
     }
@@ -256,47 +260,73 @@ class Global
         static bool debug4_ = false;
         return debug4_;
         }
-    //Global option set
-    static OptSet&
-    opts()
+    //Global named arguments
+    static Args&
+    args()
         {
-        return OptSet::GlobalOpts();
+        return Args::Global();
+        }
+    //Global named args (deprecated)
+    static Args&
+    opts() //deprecated, use Global::args() instead
+        {
+        return args();
         }
     //Shortcut for adding global Opts,
     //so you don't have to write Global::opts().add(Opt("MyOption",3));
     //but just Global::opts(Opt("MyOption",3));
     //Also see name,val shortcuts below.
-    void static
-    opts(const Opt& o)
-        {
-        OptSet::GlobalOpts().add(o);
-        }
+    //void static
+    //opts(const Opt& o)
+    //    {
+    //    Args::GlobalOpts().add(o);
+    //    }
     //Get a global Opt by just providing its name
-    Opt static
-    opts(const Opt::Name& name)
-        {
-        return OptSet::GlobalOpts().get(name);
-        }
+    //Opt static
+    //opts(const Opt::Name& name)
+    //    {
+    //    return Args::GlobalOpts().get(name);
+    //    }
     //Set global opts by providing their name and value
     void static
-    opts(const Opt::Name& name, bool bval)
+    opts(const Args::Name& name, bool bval)
         {
-        OptSet::GlobalOpts().add(name,bval);
+        Args::Global().add(name,bval);
         }
     void static
-    opts(const Opt::Name& name, int ival)
+    opts(const Args::Name& name, int ival)
         {
-        OptSet::GlobalOpts().add(name,ival);
+        Args::Global().add(name,ival);
         }
     void static
-    opts(const Opt::Name& name, Real rval)
+    opts(const Args::Name& name, Real rval)
         {
-        OptSet::GlobalOpts().add(name,rval);
+        Args::Global().add(name,rval);
         }
     void static
-    opts(const Opt::Name& name, const std::string& sval)
+    opts(const Args::Name& name, const std::string& sval)
         {
-        OptSet::GlobalOpts().add(name,sval);
+        Args::Global().add(name,sval);
+        }
+    void static
+    args(const Args::Name& name, bool bval)
+        {
+        Args::Global().add(name,bval);
+        }
+    void static
+    args(const Args::Name& name, int ival)
+        {
+        Args::Global().add(name,ival);
+        }
+    void static
+    args(const Args::Name& name, Real rval)
+        {
+        Args::Global().add(name,rval);
+        }
+    void static
+    args(const Args::Name& name, const std::string& sval)
+        {
+        Args::Global().add(name,sval);
         }
     static bool& 
     printdat()
@@ -313,10 +343,8 @@ class Global
     static Real
     random(int seed = 0)
         {
-        typedef mt19937 
-        Generator;
-        typedef uniform_real_distribution<Real>
-        Distribution;
+        using Generator = mt19937;
+        using Distribution = uniform_real_distribution<Real>;
 
         static Generator rng(std::time(NULL)+getpid());
         static Distribution dist(0,1);
@@ -345,8 +373,7 @@ class ResultIsZero : public ITError
     {
     public:
 
-    typedef ITError
-    Parent;
+    using Parent = ITError;
 
     ResultIsZero(const std::string& message) 
         : Parent(message)
@@ -357,8 +384,7 @@ class ArrowError : public ITError
     {
     public:
 
-    typedef ITError
-    Parent;
+    using Parent = ITError;
 
     ArrowError(const std::string& message) 
         : Parent(message)
@@ -368,6 +394,6 @@ class ArrowError : public ITError
 
 //void reportnew() { }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

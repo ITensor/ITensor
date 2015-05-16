@@ -148,4 +148,4 @@ void minxAx::matrixA(VectorRef& x,VectorRef& Ax)
   pA->product(x,Ax);
 }
 
-}; //namespace itensor
+} //namespace itensor

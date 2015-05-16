@@ -5,18 +5,13 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include "global.h"
-#include "safebool.h"
 
 namespace itensor {
 
 enum IndexType { Link, Site, All };
 
 //Forward declarations
-struct IndexDat;
 class IndexVal;
-
-typedef shared_ptr<IndexDat>
-IndexDatPtr;
 
 //
 // Index
@@ -28,7 +23,7 @@ IndexDatPtr;
 //
 // To make an Index distinct from other copies, increase its primeLevel.
 //
-class Index : public safe_bool<Index>
+class Index
     {
     public:
     //
@@ -50,23 +45,18 @@ class Index : public safe_bool<Index>
 
     // Returns the bond dimension
     int 
-    m() const;
+    m() const { return m_; }
 
     // Returns the prime level
     int 
-    primeLevel() const;
+    primeLevel() const { return primelevel_; }
     // Sets the prime level to a specified value.
     Index& 
     primeLevel(int plev);
 
-    // Returns a unique Real number identifying this Index.
-    // Useful for efficiently checking that sets of indices match.
-    Real 
-    uniqueReal() const;
-
     // Returns the IndexType
     IndexType 
-    type() const;
+    type() const { return type_; }
 
     // Returns the name of this Index
     std::string 
@@ -74,19 +64,22 @@ class Index : public safe_bool<Index>
 
     // Returns the name of this Index with primes removed
     const std::string&
-    rawname() const;
+    rawname() const { return sname_; }
+
+    // Evaluates to false if Index is default constructed.
+    explicit operator bool() const { return valid(); }
 
     // Returns false if Index is default constructed.
-    // Allows writing "if(I)" or "if(!I)" for some Index I
-    // (implemented by parent class safe_bool<Index>).
     bool 
     valid() const;
+
 
     // Returns the Arrow direction of this Index
     Arrow 
     dir() const { return Out; }
     void 
     dir(Arrow ndir) const {  }
+
 
     //
     // Prime level methods
@@ -152,6 +145,9 @@ class Index : public safe_bool<Index>
     Index& 
     read(std::istream& s);
 
+    std::string
+    id() const;
+
     //
     // Static Index instances
     //
@@ -160,13 +156,20 @@ class Index : public safe_bool<Index>
     static const 
     Index& Null();
 
+    using IDGenerator = mt19937;
+    using IDType = IDGenerator::result_type;
+
     private:
 
     /////////////
-    IndexDatPtr p;
-
+    IDType id_;
     int primelevel_; 
+    int m_;
+    IndexType type_;
+    std::string sname_;
     /////////////
+
+    friend std::ostream& operator<<(std::ostream& s, const Index& t);
 
     }; //class Index
 
@@ -177,7 +180,7 @@ class Index : public safe_bool<Index>
 // Class pairing an Index of dimension m
 // with a specific value i where 1 <= i <= m
 //
-class IndexVal : public safe_bool<IndexVal>
+class IndexVal
     {
     public:
 
@@ -196,6 +199,8 @@ class IndexVal : public safe_bool<IndexVal>
 
     int
     m() const { return index.m(); }
+
+    explicit operator bool() const { return valid(); }
 
     bool
     valid() const { return index.valid(); }
@@ -265,9 +270,6 @@ operator<<(std::ostream& s, const IndexVal& iv);
 std::ostream& 
 operator<<(std::ostream& s, const IndexType& it);
 
-static const Real UniqueRealAccuracy = 1E-13;
-
-
 
 //
 // Deprecated older function names.
@@ -287,6 +289,32 @@ T
 deprimed(T I, IndexType type = All) { I.noprime(type); return I; }
 
 
-}; //namespace itensor
+
+//
+// Implementations
+//
+
+bool inline Index::
+operator==(const Index& other) const 
+    { 
+    return (id_ == other.id_) && (primelevel_ == other.primelevel_); 
+    }
+
+bool inline Index::
+noprimeEquals(const Index& other) const
+    { 
+    return (id_ == other.id_);
+    }
+
+bool inline Index::
+operator<(const Index& other) const 
+    { 
+    return (id_ < other.id_);
+    }
+
+IndexVal inline Index::
+operator()(int i) const { return IndexVal(*this,i); }
+
+} //namespace itensor
 
 #endif

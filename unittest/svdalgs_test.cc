@@ -233,8 +233,8 @@ SECTION("CSVDNorm")
 
 SECTION("AbsoluteCutoff")
     {
-    OptSet opts;
-    opts.add("AbsoluteCutoff",true);
+    Args args;
+    args.add("AbsoluteCutoff",true);
 
     //
     //ITensor version
@@ -244,15 +244,15 @@ SECTION("AbsoluteCutoff")
     ITensor c(Mid);
 
     Real cutoff = 1E-3;
-    Spectrum spec = csvd(phi0,a,c,b,opts & Opt("Cutoff",cutoff));
+    Spectrum spec = csvd(phi0,a,c,b,args + Args("Cutoff",cutoff));
     CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
 
     cutoff = 1E-5;
-    spec = csvd(phi0,a,c,b,opts & Opt("Cutoff",cutoff));
+    spec = csvd(phi0,a,c,b,args + Args("Cutoff",cutoff));
     CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
 
     cutoff = 1E-7;
-    spec = csvd(phi0,a,c,b,opts & Opt("Cutoff",cutoff));
+    spec = csvd(phi0,a,c,b,args + Args("Cutoff",cutoff));
     CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
 
     //
@@ -263,15 +263,15 @@ SECTION("AbsoluteCutoff")
     IQTensor C(Mid);
 
     cutoff = 1E-3;
-    spec = csvd(Phi0,A,C,B,opts & Opt("Cutoff",cutoff));
+    spec = csvd(Phi0,A,C,B,args + Args("Cutoff",cutoff));
     CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
 
     cutoff = 1E-5;
-    spec = csvd(Phi0,A,C,B,opts & Opt("Cutoff",cutoff));
+    spec = csvd(Phi0,A,C,B,args + Args("Cutoff",cutoff));
     CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
 
     cutoff = 1E-7;
-    spec = csvd(Phi0,A,C,B,opts & Opt("Cutoff",cutoff));
+    spec = csvd(Phi0,A,C,B,args + Args("Cutoff",cutoff));
     CHECK(spec.eigsKept()(spec.numEigsKept()) > cutoff);
     }
 

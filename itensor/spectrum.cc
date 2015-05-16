@@ -14,7 +14,7 @@ namespace itensor {
 
 struct OrderSecond
     {
-    typedef pair<QN,Real> value_type;
+    using value_type = pair<QN,Real>;
 
     bool
     operator()(const value_type& i, const value_type& j) const 
@@ -24,15 +24,15 @@ struct OrderSecond
     };
 
 Spectrum::
-Spectrum(const OptSet& opts) 
+Spectrum(const Args& args) 
     :
     truncerr_(NAN)
     { 
-    computeTruncerr(opts);
+    computeTruncerr(args);
     }
 
 Spectrum::
-Spectrum(const ITensor& D, const OptSet& opts)
+Spectrum(const ITensor& D, const Args& args)
     :
     truncerr_(0)
     {
@@ -40,18 +40,18 @@ Spectrum(const ITensor& D, const OptSet& opts)
     eigs_ = D.diag();
     for(int n = 1; n <= eigs_.Length(); ++n)
         eigs_(n) = sqr(eigs_(n));
-    computeTruncerr(opts);
+    computeTruncerr(args);
     }
 
 Spectrum::
-Spectrum(const IQTensor& D, const OptSet& opts)
+Spectrum(const IQTensor& D, const Args& args)
     :
     truncerr_(0)
     {
     std::vector<OrderSecond::value_type> eigs;
     eigs.reserve(D.indices().front().m());
 
-    Foreach(const ITensor& t, D.blocks())
+    for(const ITensor& t : D.blocks())
         {
     	if(t.type() != ITensor::Diag)
     		Error("Spectrum may only be constructed from IQTensor containing only Diag type ITensor.");
@@ -71,27 +71,27 @@ Spectrum(const IQTensor& D, const OptSet& opts)
         qns_.at(j) = eigs.at(j).first;
         eigs_[j] = eigs.at(j).second;
         }
-    computeTruncerr(opts);
+    computeTruncerr(args);
     }
 
 Spectrum::
-Spectrum(const Vector& eigs, const OptSet& opts)
+Spectrum(const Vector& eigs, const Args& args)
     :
     eigs_(eigs)
     {
-    computeTruncerr(opts);
+    computeTruncerr(args);
     }
 
 
 Spectrum::
 Spectrum(const Vector& eigs, 
          const QNStorage& qns,
-         const OptSet& opts)
+         const Args& args)
     :
     eigs_(eigs),
     qns_(qns)
     {
-    computeTruncerr(opts);
+    computeTruncerr(args);
     }
 
 QN Spectrum::
@@ -130,11 +130,11 @@ write(std::ostream& s) const
     }
 
 void Spectrum::
-computeTruncerr(const OptSet& opts)
+computeTruncerr(const Args& args)
     {
-    if(opts.defined("Truncerr"))
+    if(args.defined("Truncerr"))
         {
-        truncerr_ = opts.getReal("Truncerr");
+        truncerr_ = args.getReal("Truncerr");
         }
     else
         {
@@ -170,4 +170,4 @@ operator<<(std::ostream & s, const Spectrum& spec)
 
 
 
-}; //namespace itensor
+} //namespace itensor

@@ -32,17 +32,14 @@ namespace itensor {
 //
 
 class SiteSet;
-typedef SiteSet Model; //for backwards compatibility
+using Model = SiteSet; //for backwards compatibility
 
 class SiteSet
     {
     public:
 
-    typedef std::string
-    String;
-
-    typedef std::vector<String>
-    DefaultOpsT;
+    using String = std::string;
+    using DefaultOpsT = std::vector<String>;
 
     SiteSet() { }
 
@@ -86,11 +83,11 @@ class SiteSet
     //"opname" located at site i
     IQTensor
     op(const String& opname, int i,
-       const OptSet& opts = Global::opts()) const;
+       const Args& args = Global::args()) const;
 
     DefaultOpsT
-    defaultOps(const OptSet& opts = Global::opts()) const 
-        { return getDefaultOps(opts); }
+    defaultOps(const Args& args = Global::args()) const 
+        { return getDefaultOps(args); }
 
     void 
     read(std::istream& s) { doRead(s); }
@@ -115,10 +112,10 @@ class SiteSet
     getState(int i, const String& state) const = 0;
 
     virtual IQTensor
-    getOp(int i, const String& opname, const OptSet& opts) const = 0;
+    getOp(int i, const String& opname, const Args& args) const = 0;
 
     virtual DefaultOpsT
-    getDefaultOps(const OptSet& opts) const { return DefaultOpsT(); }
+    getDefaultOps(const Args& args) const { return DefaultOpsT(); }
 
     protected:
 
@@ -140,7 +137,7 @@ class SiteSet
 
 inline IQTensor SiteSet::
 op(const String& opname, int i, 
-   const OptSet& opts) const
+   const Args& args) const
     { 
     if(opname == "Id")
         {
@@ -156,7 +153,7 @@ op(const String& opname, int i,
     else
     if(opname == "Proj")
         {
-        const int n = opts.getInt("State");
+        const int n = args.getInt("State");
         IQIndexVal v = si(i)(n);
         return IQTensor(dag(v),prime(v));
         }
@@ -169,8 +166,8 @@ op(const String& opname, int i,
         if(found != std::string::npos)
             {
             try {
-            return multSiteOps(getOp(i,op1(opname,found),opts),
-                               getOp(i,op2(opname,found),opts));
+            return multSiteOps(getOp(i,op1(opname,found),args),
+                               getOp(i,op2(opname,found),args));
                 }
             catch(const ITError& e)
                 {
@@ -180,7 +177,7 @@ op(const String& opname, int i,
                 }
             }
 
-        return getOp(i,opname,opts);
+        return getOp(i,opname,args);
         }
     }
 
@@ -205,6 +202,6 @@ operator<<(std::ostream& s, const SiteSet& M)
     return s;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

@@ -223,7 +223,7 @@ operator*(Arrow dir, QN q)
     return q;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #undef DEF_NMAX
 

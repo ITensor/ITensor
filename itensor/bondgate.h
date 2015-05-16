@@ -60,10 +60,8 @@ class BondGate
 
 
     };
-typedef BondGate<ITensor>
-Gate;
-typedef BondGate<IQTensor>
-IQGate;
+using Gate = BondGate<ITensor>;
+using IQGate = BondGate<IQTensor>;
 
 template<class Tensor>
 Tensor
@@ -161,6 +159,6 @@ makeSwapGate(const Model& sites)
     gate_ = a*b;
     }
 
-}; //namespace itensor
+} //namespace itensor
 
 #endif

@@ -1,10 +1,9 @@
 #include "core.h"
 #include "sites/spinhalf.h"
 #include "sites/spinone.h"
-#include "hams/Heisenberg.h"
 #include "input.h"
+#include "autompo.h"
 
-using namespace std;
 using namespace itensor;
 
 //
@@ -18,19 +17,15 @@ using namespace itensor;
 int main(int argc, char* argv[])
     {
     //Parse the input file
-    if(argc != 2)
-        {
-        cout << "Usage: " << argv[0] << " inputfile_dmrg_table" << endl;
-        return 0;
-        }
+    if(argc < 2) { printfln("Usage: %s inputfile_dmrg_table",argv[0]); return 0; }
     InputGroup basic(argv[1],"basic");
 
     //Read in individual parameters from the input file
-    const int N = basic.getInt("N");
-    const int nsweeps = basic.getInt("nsweeps");
+    auto N = basic.getInt("N");
+    auto nsweeps = basic.getInt("nsweeps");
     //second argument to getXXX methods is a default
     //in case parameter not provided in input file
-    const bool quiet = basic.getYesNo("quiet",true);
+    auto quiet = basic.getYesNo("quiet",true);
 
     //
     // Read the sweeps parameters from a table.
@@ -41,7 +36,7 @@ int main(int argc, char* argv[])
 
     //Create the sweeps class & print
     Sweeps sweeps(nsweeps,table);
-    cout << sweeps;
+    println(sweeps);
 
     //
     // Now set up a run a DMRG simulation 
@@ -51,24 +46,33 @@ int main(int argc, char* argv[])
     //SpinHalf sites(N);
     SpinOne sites(N);
 
-    MPO H = Heisenberg(sites);
+    //
+    // Use the AutoMPO feature to create the 
+    // next-neighbor Heisenberg model
+    //
+    AutoMPO ampo(sites);
+    for(int j = 1; j < N; ++j)
+        {
+        ampo += 0.5,"S+",j,"S-",j+1;
+        ampo += 0.5,"S-",j,"S+",j+1;
+        ampo +=     "Sz",j,"Sz",j+1;
+        }
+    auto H = MPO(ampo);
 
     InitState initState(sites);
     for(int i = 1; i <= N; ++i) 
         {
-        if(i%2 == 1)
-            initState.set(i,"Up");
-        else
-            initState.set(i,"Dn");
+        if(i%2 == 1) initState.set(i,"Up");
+        else         initState.set(i,"Dn");
         }
 
     MPS psi(initState);
 
     printfln("Initial energy = %.5f",psiHphi(psi,H,psi));
 
-    Real En = dmrg(psi,H,sweeps,Opt("Quiet",quiet));
+    auto energy = dmrg(psi,H,sweeps,{"Quiet",quiet});
 
-    printfln("\nGround State Energy = %.10f",En);
+    printfln("\nGround State Energy = %.10f",energy);
 
     return 0;
     }
