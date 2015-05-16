@@ -213,9 +213,9 @@ arnoldi(const BigMatrixT& A,
 
     std::vector<Complex> eigs(nget);
 
-    const int maxsize = A.size();
+    auto maxsize = A.size();
 
-    if(phi.size() > maxsize)
+    if(phi.size() > size_t(maxsize))
         Error("arnoldi: requested more eigenvectors (phi.size()) than size of matrix (A.size())");
 
     if(maxsize == 1)
@@ -228,7 +228,7 @@ arnoldi(const BigMatrixT& A,
         return eigs;
         }
 
-    const int actual_maxiter = min(maxiter_,maxsize-1);
+    auto actual_maxiter = std::min(maxiter_,maxsize-1);
     if(debug_level_ >= 2)
         {
         printfln("maxsize-1 = %d, maxiter = %d, actual_maxiter = %d", 
