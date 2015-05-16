@@ -198,7 +198,7 @@ arnoldi(const BigMatrixT& A,
     const Real Approx0 = 1E-12;
     const int Npass = args.getInt("Npass",2); // number of Gram-Schmidt passes
 
-    const size_t nget = phi.size();
+    auto nget = phi.size();
     if(nget == 0) Error("No initial vectors passed to arnoldi.");
 
     //if(nget > 1) Error("arnoldi currently only supports nget == 1");
@@ -251,7 +251,7 @@ arnoldi(const BigMatrixT& A,
     std::vector<Tensor> V(actual_maxiter+2);
 
 
-    for(int w = 0; w < nget; ++w)
+    for(int w = 0; w < int(nget); ++w)
     {
 
     for(int r = 0; r <= maxrestart_; ++r)
