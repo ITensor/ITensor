@@ -1370,7 +1370,7 @@ expandIndex(const Index& small, const Index& big, int start)
 	if(nmax == omax)
 	    {
 #ifdef DEBUG
-        if((inc+omax) > r_->size()) 
+        if(size_t(inc+omax) > r_->size()) 
             {
             Print(inc);
             Print(omax);
