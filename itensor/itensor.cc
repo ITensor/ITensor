@@ -135,16 +135,7 @@ reshape(const Permutation& P,
 
 #define Bif6(a,b,c,d,e,g) if(ind[1] == a && ind[2] == b && ind[3] == c && ind[4]==d && ind[5] == e && ind[6] == g)
 
-    if(is.rn() == 2 && ind[1] == 2 && ind[2] == 1)
-        {
-        MatrixRef xref; 
-        VectorRefNoLink vref(const_cast<Real*>(dat.data()),dat.size());
-        vref.TreatAsMatrix(xref,c.n[2],c.n[1]);
-        Vector newv = (xref.t()).TreatAsVector();
-        std::copy(newv.begin(),newv.end(),res);
-        return; 
-        }
-    else if(is.rn() == 3)
+    if(is.rn() == 3)
         {
         //DO_IF_PS(int idx = ((ind[1])*3+ind[2])*3+ind[3]; Prodstats::stats().perms_of_3[idx] += 1; )
         //Arranged loosely in order of frequency of occurrence
@@ -3070,113 +3061,115 @@ toMatrix11(const Index& i1, const Index& i2, Matrix& res) const
     res *= scale_.real(); 
     }
 
-void ITensor::
-toMatrix12NoScale(const Index& i1, const Index& i2, 
-                  const Index& i3, Matrix& res) const
-    {
-    if(type_ == Diag)
-        Error("toMatrix not implemented for ITensor type Diag");
-
-    if(r() != 3) 
-        {
-        Print(i1);
-        Print(i2);
-        Print(i3);
-        for(auto i : this->indices()) printfln("%s: %s",i.id(),i);
-        Print(*this);
-        Error("toMatrix12: incorrect rank");
-        }
-    if(this->isComplex())
-        Error("toMatrix12 defined only for real ITensor");
-    assert(hasindex(*this,i1));
-    assert(hasindex(*this,i2));
-    assert(hasindex(*this,i3));
-
-    res.ReDimension(i1.m(),i2.m()*i3.m());
-
-    const array<Index,NMAX> reshuf 
-        = {{ i2, i3, i1,    Index::Null(), Index::Null(), 
-             Index::Null(), Index::Null(), Index::Null() }};
-
-    Permutation P(NMAX+1); 
-    getperm(is_,reshuf,P);
-
-    Vector V;
-    reshape(P,is_,r_->v,V);
-    res.TreatAsVector() = V;
-    }
-
-void ITensor::
-toMatrix12(const Index& i1, const Index& i2, 
-           const Index& i3, Matrix& res) const
-    { 
-    if(type_ == Diag)
-        Error("toMatrix not implemented for ITensor type Diag");
-
-    toMatrix12NoScale(i1,i2,i3,res); 
-    res *= scale_.real(); 
-    }
-
-void ITensor::
-fromMatrix12(const Index& i1, const Index& i2, 
-             const Index& i3, const Matrix& M)
-    {
-    if(type_ == Diag)
-        Error("fromMatrix not implemented for ITensor type Diag");
-
-    ITensor Q(i3,i1,i2);
-    auto Mvref = M.TreatAsVector();
-#ifdef DEBUG
-    if(Mvref.Stride()!=1) Error("VectorRef Stride()!=1 before copying data");
-#endif
-    Q.r_->v.assign(Mvref.Store(),Mvref.Store()+Mvref.Length());
-    *this = Q;
-    }
-
-// group i1,i2; i3,i4
-void ITensor::
-toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
-    {
-    if(type_ == Diag)
-        Error("toMatrix not implemented for ITensor type Diag");
-
-    if(r() != 4) Error("toMatrix22: incorrect rank");
-    if(this->isComplex())
-        Error("toMatrix22 defined only for real ITensor");
-    assert(hasindex(*this,i1));
-    assert(hasindex(*this,i2));
-    assert(hasindex(*this,i3));
-    assert(hasindex(*this,i4));
-    const 
-    int nrow = i1.m() * i2.m(), 
-        ncol = i3.m() * i4.m();
-    res.ReDimension(nrow,ncol);
-    const array<Index,NMAX> reshuf = {{ i3, i4, i1, i2, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
-    Permutation P(NMAX+1); 
-    getperm(is_,reshuf,P);
-    Vector V; 
-    reshape(P,is_,r_->v,V);
-    res.TreatAsVector() = V;
-    res *= scale_.real0();
-    }
-
-
-void ITensor::
-fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4, const Matrix& M)
-    {
-    if(type_ == Diag)
-        Error("fromMatrix not implemented for ITensor type Diag");
-
-    if(i3.m()*i4.m() != M.Ncols()) Error("fromMatrix22: wrong number of cols");
-    if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix22: wrong number of rows");
-    ITensor Q(i3,i4,i1,i2);
-    auto Mvref = M.TreatAsVector();
-#ifdef DEBUG
-    if(Mvref.Stride()!=1) Error("VectorRef Stride()!=1 before copying data");
-#endif
-    Q.r_->v.assign(Mvref.Store(),Mvref.Store()+Mvref.Length());
-    *this = Q;
-    }
+//void ITensor::
+//toMatrix12NoScale(const Index& i1, const Index& i2, 
+//                  const Index& i3, Matrix& res) const
+//    {
+//    if(type_ == Diag)
+//        Error("toMatrix not implemented for ITensor type Diag");
+//
+//    if(r() != 3) 
+//        {
+//        Print(i1);
+//        Print(i2);
+//        Print(i3);
+//        for(auto i : this->indices()) printfln("%s: %s",i.id(),i);
+//        Print(*this);
+//        Error("toMatrix12: incorrect rank");
+//        }
+//    if(this->isComplex())
+//        Error("toMatrix12 defined only for real ITensor");
+//    assert(hasindex(*this,i1));
+//    assert(hasindex(*this,i2));
+//    assert(hasindex(*this,i3));
+//
+//    res.ReDimension(i1.m(),i2.m()*i3.m());
+//
+//    //Bug: MatrixRef uses row-major order
+//    array<Index,NMAX> reshuf;
+//    reshuf[0] = i1;
+//    reshuf[1] = i2;
+//    reshuf[2] = i3;
+//
+//    Permutation P(NMAX+1); 
+//    getperm(is_,reshuf,P);
+//
+//    Vector V;
+//    reshape(P,is_,r_->v,V);
+//    res.TreatAsVector() = V;
+//    }
+//
+//void ITensor::
+//toMatrix12(const Index& i1, const Index& i2, 
+//           const Index& i3, Matrix& res) const
+//    { 
+//    if(type_ == Diag)
+//        Error("toMatrix not implemented for ITensor type Diag");
+//
+//    toMatrix12NoScale(i1,i2,i3,res); 
+//    res *= scale_.real(); 
+//    }
+//
+//void ITensor::
+//fromMatrix12(const Index& i1, const Index& i2, 
+//             const Index& i3, const Matrix& M)
+//    {
+//    if(type_ == Diag)
+//        Error("fromMatrix not implemented for ITensor type Diag");
+//
+//    ITensor Q(i1,i2,i3);
+//    auto Mvref = M.TreatAsVector();
+//#ifdef DEBUG
+//    if(Mvref.Stride()!=1) Error("VectorRef Stride()!=1 before copying data");
+//#endif
+//    Q.r_->v.assign(Mvref.Store(),Mvref.Store()+Mvref.Length());
+//    *this = Q;
+//    }
+//
+//// group i1,i2; i3,i4
+//void ITensor::
+//toMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4,Matrix& res) const
+//    {
+//    if(type_ == Diag)
+//        Error("toMatrix not implemented for ITensor type Diag");
+//
+//    if(r() != 4) Error("toMatrix22: incorrect rank");
+//    if(this->isComplex())
+//        Error("toMatrix22 defined only for real ITensor");
+//    assert(hasindex(*this,i1));
+//    assert(hasindex(*this,i2));
+//    assert(hasindex(*this,i3));
+//    assert(hasindex(*this,i4));
+//    const 
+//    int nrow = i1.m() * i2.m(), 
+//        ncol = i3.m() * i4.m();
+//    res.ReDimension(nrow,ncol);
+//    array<Index,NMAX> reshuf = {{ i1, i2, i3, i4, Index::Null(), Index::Null(), Index::Null(), Index::Null() }};
+//    Permutation P(NMAX+1); 
+//    getperm(is_,reshuf,P);
+//    Vector V; 
+//    reshape(P,is_,r_->v,V);
+//    res.TreatAsVector() = V;
+//    res *= scale_.real0();
+//    }
+//
+//
+//void ITensor::
+//fromMatrix22(const Index& i1, const Index& i2, const Index& i3, const Index& i4, const Matrix& M)
+//    {
+//    if(type_ == Diag)
+//        Error("fromMatrix not implemented for ITensor type Diag");
+//
+//    if(i1.m()*i2.m() != M.Nrows()) Error("fromMatrix22: wrong number of rows");
+//    if(i3.m()*i4.m() != M.Ncols()) Error("fromMatrix22: wrong number of cols");
+//    ITensor Q(i1,i2,i3,i4);
+//    auto Mvref = M.TreatAsVector();
+//#ifdef DEBUG
+//    if(Mvref.Stride()!=1) Error("VectorRef Stride()!=1 before copying data");
+//#endif
+//    Q.r_->v.assign(Mvref.Store(),Mvref.Store()+Mvref.Length());
+//    *this = Q;
+//    }
 
 
 
@@ -3483,6 +3476,10 @@ commaInit(ITensor& T,
         }
     try {
         getperm(T.is_,ii,P_);
+        if(Global::debug1())
+            {
+            Print(P_);
+            }
         }
     catch(const ITError& e)
         {

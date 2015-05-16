@@ -387,13 +387,13 @@ class ITensor
     toMatrix11NoScale(const Index& i1, const Index& i2, 
                            Matrix& res) const;
 
-    // group i1,i2; i3,i4
-    void 
-    toMatrix22(const Index& i1, const Index& i2, 
-               const Index& i3, const Index& i4, Matrix& res) const;
-    void 
-    fromMatrix22(const Index& i1, const Index& i2, 
-                 const Index& i3, const Index& i4, const Matrix& res);
+    //// group i1,i2; i3,i4
+    //void 
+    //toMatrix22(const Index& i1, const Index& i2, 
+    //           const Index& i3, const Index& i4, Matrix& res) const;
+    //void 
+    //fromMatrix22(const Index& i1, const Index& i2, 
+    //             const Index& i3, const Index& i4, const Matrix& res);
 
     /*
     // group i1,i2; i3
@@ -404,15 +404,15 @@ class ITensor
 
     */
 
-    // group i1; i2,i3
-    void toMatrix12NoScale(const Index& i1, const Index& i2, 
-                           const Index& i3, Matrix& res) const;
+    //// group i1; i2,i3
+    //void toMatrix12NoScale(const Index& i1, const Index& i2, 
+    //                       const Index& i3, Matrix& res) const;
 
-    void toMatrix12(const Index& i1, const Index& i2, 
-                    const Index& i3, Matrix& res) const;
+    //void toMatrix12(const Index& i1, const Index& i2, 
+    //                const Index& i3, Matrix& res) const;
 
-    void fromMatrix12(const Index& i1, const Index& i2, 
-                      const Index& i3, const Matrix& M);
+    //void fromMatrix12(const Index& i1, const Index& i2, 
+    //                  const Index& i3, const Matrix& M);
 
 
 

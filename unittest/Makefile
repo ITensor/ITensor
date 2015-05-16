@@ -4,6 +4,9 @@ include ../options.mk
 
 HEADERS=test.h
 SOURCES = test.cc
+ifdef test
+SOURCES += $(test)_test.cc
+else
 SOURCES+= matrix_test.cc
 SOURCES+= real_test.cc
 SOURCES+= option_test.cc
@@ -24,6 +27,7 @@ SOURCES+= localmpo_test.cc
 SOURCES+= indexset_test.cc
 SOURCES+= siteset_test.cc
 SOURCES+= bondgate_test.cc
+endif
 
 ##################################################################
 
