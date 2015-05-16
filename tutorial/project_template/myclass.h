@@ -9,6 +9,12 @@
 
 class MyClass
     {
+    //Data members: best to keep these private
+    //in most designs to ensure object remains
+    //in valid state and to separate interface
+    //from implementation details
+    int i_;
+    std::string name_;
     public:
     
     //Default constructor
@@ -21,10 +27,6 @@ class MyClass
 
     int
     value() const;
-
-    private:
-    int i_;
-    std::string name_;
     };
 
 //

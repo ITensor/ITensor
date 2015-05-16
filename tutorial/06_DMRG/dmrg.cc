@@ -9,17 +9,17 @@ using namespace itensor;
 int
 main(int argc, char* argv[])
     {
-    const int N = 100;
+    int N = 100;
 
     //Model objects represent a collection of 
     //lattice degrees of freedom of a certain type
-    SpinOne model(N);
+    SpinOne sites(N);
 
-    //Get Hamiltonian
-    MPO H = Heisenberg(model);
+    //Get Hamiltonian MPO
+    auto H = MPO(Heisenberg(sites));
 
-    //Create MPS
-    MPS psi(model); //random starting state
+    //Create random initial MPS 
+    MPS psi(sites);
 
     //Define DMRG sweeps
     Sweeps sweeps(5);
@@ -32,7 +32,7 @@ main(int argc, char* argv[])
 
     Real energy = NAN;
 
-    OptSet opts;
+    Args args;
 
     //Loop over sweeps
     for(int sw = 1; sw <= sweeps.nsweep(); ++sw)
@@ -46,20 +46,24 @@ main(int argc, char* argv[])
             psi.position(b);
             Heff.position(b,psi);
 
+            //Compute ITensor phi which is
+            //two-site "superblock" wavefunction
+            auto phi = psi.A(b)*psi.A(b+1);
             //Solve effective eigenvalue problem
-            ITensor phi = psi.A(b)*psi.A(b+1);
             energy = davidson(Heff,phi);
 
             //Update accuracy parameters
             //to pass to svd
-            opts.add("Cutoff",sweeps.cutoff(sw));
-            opts.add("Maxm",sweeps.maxm(sw));
-            opts.add("Minm",sweeps.minm(sw));
+            args.add("Cutoff",sweeps.cutoff(sw));
+            args.add("Maxm",sweeps.maxm(sw));
+            args.add("Minm",sweeps.minm(sw));
 
-            //Define tensor (references/aliases)
-            //to hold SVD results
-            ITensor& A = psi.Anc(b);   //nc means 'non-const'
-            ITensor& B = psi.Anc(b+1); //nc means 'non-const'
+            //Define aliases (references) A and B 
+            //to MPS tensors at sites b and b+1
+            auto& A = psi.Anc(b);   //nc means 'non-const'
+            auto& B = psi.Anc(b+1); //nc means 'non-const'
+            //Singular values will be put on 
+            //the diagonal of ITensor D
             ITensor D;
 
             //Add code:

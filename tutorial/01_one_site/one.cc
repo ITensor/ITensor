@@ -61,7 +61,7 @@ main(int argc, char* argv[])
     // 45* angle spin
     //
 
-    const Real theta = Pi/4;
+    Real theta = Pi/4;
 
     //Extra factors of two come from S=1/2 representation
     psi(s(1)) = cos(theta/2.);

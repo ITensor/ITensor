@@ -15,7 +15,7 @@ B(const SiteSet& sites, int b)
 int
 main(int argc, char* argv[])
     {
-    const int N = 20;
+    int N = 20;
 
     SpinHalf sites(N);
 
@@ -43,6 +43,7 @@ main(int argc, char* argv[])
 
     for(int j = 1; j < int(dimer.size()); ++j)
         {
+        //Formatting tokens %.Nf mean "print N digits of a floating point number"
         printfln("%.5f %.10f",J2s.at(j),dimer.at(j));
         }
 
