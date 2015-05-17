@@ -62,10 +62,10 @@ class VectorRef
         : VectorRef(pdata+offset,size,stride)
         { }
 
-    VectorRef(vec_type& v) { assignFromVec(v); }
+    VectorRef(vec_type& v) { pointTo(v); }
     
     VectorRef&
-    operator=(vec_type& v) { assignFromVec(v); return *this; }
+    operator=(vec_type& v) { pointTo(v); return *this; }
 
     VectorRef(vec_type&& v) = delete;
 
@@ -120,7 +120,7 @@ class VectorRef
 
     private:
     void
-    assignFromVec(vec_type& v);
+    pointTo(vec_type& v);
     };
 
 VecRef
@@ -293,7 +293,7 @@ class Vector
 
 template<typename T>
 void VectorRef<T>::
-assignFromVec(vec_type& v)
+pointTo(vec_type& v)
     {
     pdata_ = v.data();
     size_ = v.size();

@@ -76,10 +76,10 @@ class MatrixRef
         : MatrixRef(pdata+offset,ind)
         { }
 
-    MatrixRef(mat_type& M) { assignFromMat(M); }
+    MatrixRef(mat_type& M) { pointTo(M); }
 
     MatrixRef&
-    operator=(mat_type& M) { assignFromMat(M); return *this; }
+    operator=(mat_type& M) { pointTo(M); return *this; }
 
     MatrixRef(mat_type&& M) = delete;
 
@@ -141,7 +141,7 @@ class MatrixRef
 
     private:
     void
-    assignFromMat(mat_type& M);
+    pointTo(mat_type& M);
     };
 
 
@@ -383,7 +383,7 @@ class Matrix
 
 template<typename T>
 void MatrixRef<T>::
-assignFromMat(mat_type& M)
+pointTo(mat_type& M)
     {
     pdata_ = M.data();
     ind_ = M.ind();
