@@ -13,7 +13,7 @@ SECTION("TensorRef")
     auto v = std::vector<Real>{11,21,31,41,51,
                                12,22,32,42,52};
     Range ind{5,2};
-    auto t = makeTenRef(v.data(),ind);
+    auto t = makeTensorRef(v.data(),ind);
 
     CHECK(t);
     CHECK(t.r() == 2);
