@@ -184,7 +184,7 @@ class Vector
     Vector&
     operator=(const VectorRef<const value_type>& ref) { assignFromRef(ref); return *this; }
     Vector&
-    operator=(const VectorRef<value_type> ref) { assignFromRef(ref); return *this; }
+    operator=(const VectorRef<value_type>& ref) { assignFromRef(ref); return *this; }
 
     explicit operator bool() const { return !data_.empty(); }
 
