@@ -34,7 +34,7 @@ SECTION("TensorRef")
     CHECK_CLOSE(t(4,0),5.1);
 
     const auto* cv = v.data();
-    auto ct = makeTenRef(cv,ind);
+    auto ct = makeTensorRef(cv,ind);
     CHECK_CLOSE(ct(4,0),5.1);
     }
 

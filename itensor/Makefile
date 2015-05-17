@@ -11,33 +11,31 @@ include ../options.mk
 SOURCES+= matrix/vec.cc 
 SOURCES+= matrix/mat.cc 
 SOURCES+= matrix/algs.cc 
-SOURCES+= simpletensor.cc 
-SOURCES+= index.cc 
-SOURCES+= contract.cc 
-SOURCES+= itensor.cc 
-SOURCES+= iqindex.cc 
-SOURCES+= iqtensor.cc 
-SOURCES+= spectrum.cc 
-SOURCES+= svdalgs.cc 
+SOURCES+= tensor/contract.cc 
+#SOURCES+= index.cc 
+#SOURCES+= itensor.cc 
+#SOURCES+= iqindex.cc 
+#SOURCES+= iqtensor.cc 
+#SOURCES+= spectrum.cc 
+#SOURCES+= svdalgs.cc 
 #SOURCES+= mps.cc 
 #SOURCES+= mpo.cc 
 #SOURCES+= tevol.cc
 #SOURCES+= autompo.cc
 
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
-        detail/gcounter.h global.h real.h permutation.h index.h \
+        detail/gcounter.h global.h real.h \
         matrix/lapack_wrap.h matrix/strideiter.h matrix/vec.h \
         matrix/mrange.h matrix/matiter.h matrix/mat.h matrix/slicemat.h matrix/algs.h \
-        tensor/range.h tensor/ten.h \
-        indexset.ih indexset.h counter.h simpletensor.h contract.h \
+        tensor/range.h tensor/ten.h tensor/permutation.h tensor/permute.h tensor/contract.h \
+        index.h indexset.ih indexset.h \
         itdata/itdata.h \
         itdata/itreal.h itdata/itdiag.h itdata/itcombiner.h itdata/itcplx.h \
-        itdata/iqtdata.h \
-        itensor.h itensor.ih qn.h iqindex.h  \
+        itensor.h itensor.ih \
+        qn.h iqindex.h itdata/iqtdata.h \
         iqtensor.h iqtensor.ih \
         iterpair.h spectrum.h svdalgs.h \
-        mps.h \
-        mpo.h core.h observer.h DMRGObserver.h \
+        mps.h mpo.h core.h observer.h DMRGObserver.h \
         sweeps.h stats.h siteset.h\
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
         hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h \
@@ -126,11 +124,12 @@ installg: headerscopy libitensor-g.a
 mkdebugdir:
 	mkdir -p .debug_objs
 	mkdir -p .debug_objs/matrix
+	mkdir -p .debug_objs/tensor
 
 clean:	
-	rm -fr *.o .debug_objs matrix/*.o libitensor.a libitensor-g.a
+	rm -fr *.o .debug_objs matrix/*.o tensor/*.o libitensor.a libitensor-g.a
 
-GDEPHEADERS=real.h global.h index.h permutation.h
+GDEPHEADERS=real.h global.h index.h
 GDEPHEADERS+= matrix/strideiter.h matrix/vec.h
 matrix/vec.o: $(GDEPHEADERS)
 .debug_objs/matrix/vec.o: $(GDEPHEADERS)
@@ -140,10 +139,11 @@ matrix/mat.o: $(GDEPHEADERS)
 GDEPHEADERS+= matrix/slicemat.h matrix/algs.h
 matrix/algs.o: $(GDEPHEADERS)
 .debug_objs/matrix/algs.o: $(GDEPHEADERS)
-GDEPHEADERS+= contract.h tensor/range.h simpletensor.h
-contract.o: $(GDEPHEADERS)
-.debug_objs/contract.o: $(GDEPHEADERS)
-ITDEPHEADERS= index.h counter.h
+GDEPHEADERS+= tensor/range.h tensor/ten.h tensor/permutation.h \
+tensor/permute.h tensor/contract.h
+tensor/contract.o: $(GDEPHEADERS)
+.debug_objs/tensor/contract.o: $(GDEPHEADERS)
+ITDEPHEADERS= index.h
 index.o: $(ITDEPHEADERS)
 .debug_objs/index.o: $(ITDEPHEADERS)
 ITDEPHEADERS+= indexset.ih indexset.h
@@ -155,7 +155,7 @@ itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 IQDEPHEADERS= qn.h iqindex.h
 iqindex.o: $(IQDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/iqindex.o: $(IQDEPHEADERS) $(GDEPHEADERS)
-IQDEPHEADERS+= $(ITDEPHEADERS) itdata/iqtdata.h iqtensor.ih iqtensor.h qcounter.h detail/skip_iterator.h
+IQDEPHEADERS+= $(ITDEPHEADERS) itdata/iqtdata.h iqtensor.ih iqtensor.h detail/skip_iterator.h
 iqtensor.o: $(IQDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/iqtensor.o: $(IQDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= spectrum.h

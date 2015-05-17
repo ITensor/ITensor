@@ -26,6 +26,8 @@ template<typename T, typename RangeT = Range>
 class TensorRef
     { 
     public:
+    using iterator = T*;
+    using const_iterator = const T*;
     using value_type = std::remove_const_t<T>;
     using pointer = T*;
     using reference = T&;
@@ -46,17 +48,17 @@ class TensorRef
         prange_(&range)
         { }
 
-    TensorRef(tensor_type& t) { assignFromTensor(t); }
+    TensorRef(tensor_type& t) { pointTo(t); }
 
     TensorRef&
-    operator=(tensor_type& t) { assignFromTensor(t); return *this; }
+    operator=(tensor_type& t) { pointTo(t); return *this; }
 
     TensorRef(tensor_type&& t) = delete;
 
     TensorRef&
     operator=(tensor_type&& t) = delete;
 
-    operator TensorRef<const value_type,range_type>() const { return TensorRef<const T,range_type>(data(),range()); }
+    operator TensorRef<const value_type,range_type>() const { return TensorRef<const value_type,range_type>(data(),range()); }
 
     size_type
     r() const { return prange_->r(); }
@@ -85,12 +87,30 @@ class TensorRef
 
     void
     clear() { pdata_ = nullptr; prange_ = nullptr; }
+
+    //Currently assuming TensorRefs point to contiguous data:
+
+    iterator
+    begin() const { return pdata_; }
+
+    iterator
+    end() const { return pdata_+size(); }
+
+    const_iterator
+    cbegin() const { return pdata_; }
+
+    const_iterator
+    cend() const { return pdata_+size(); }
+
+    private:
+    void
+    pointTo(tensor_type& t);
     };
 
 template<typename T, typename RangeT>
 auto
-makeTenRef(T* p,
-           const RangeT& range)
+makeTensorRef(T* p,
+              const RangeT& range)
     {
     return TensorRef<T,RangeT>(p,range);
     }
@@ -103,9 +123,9 @@ class Tensor
     using iterator = typename storage_type::iterator;
     using const_iterator = typename storage_type::const_iterator;
     using value_type = std::remove_const_t<T>;
-    using pointer = std::add_pointer_t<T>;
-    using const_pointer = const pointer;
-    using reference = std::add_lvalue_reference_t<T>;
+    using pointer = std::add_pointer_t<value_type>;
+    using const_pointer = std::add_pointer_t<const value_type>;
+    using reference = std::add_lvalue_reference_t<value_type>;
     using const_reference = const reference;
     using size_type = long;
     using range_type = RangeT;
@@ -168,7 +188,7 @@ class Tensor
     //operator=(const TensorRef<const value_type>& ref) { assignFromRef(ref); return *this; }
 
     //Tensor&
-    //operator=(const TensorRef<value_type> ref) { assignFromRef(ref); return *this; }
+    //operator=(const TensorRef<value_type>& ref) { assignFromRef(ref); return *this; }
 
     explicit operator bool() const { return !data_.empty(); }
 
@@ -237,7 +257,7 @@ class Tensor
 #ifdef DEBUG
         if(len == 0) throw std::runtime_error("Zero area in tensor");
 #endif
-        data_.resize(len);
+        data_.assign(len,0.);
         }
 
     //void
@@ -264,6 +284,63 @@ class Tensor
         }
     };
 
+template<typename T, typename R>
+void TensorRef<T,R>::
+pointTo(tensor_type& t)
+    {
+    pdata_ = t.data();
+    prange_ = &t.range();
+    }
+
+
+//
+// makeRef functions
+//
+
+template<typename T, typename R>
+auto
+makeRef(TensorRef<T,R>& t) { return t; }
+
+template<typename T, typename R>
+auto
+makeRef(TensorRef<const T,R>& t) { return t; }
+
+template<typename T, typename R>
+auto
+makeRef(Tensor<T,R>& t) { return TensorRef<T,R>(t); }
+
+template<typename T, typename R>
+auto
+makeRef(const Tensor<T,R>& t) { return TensorRef<const T>(t); }
+
+//This version of makeRef intended to fail,
+//forbids explicitly making TensorRefs to temporaries
+template<typename T, typename R, typename... Rest>
+auto
+makeRef(Tensor<T,R>&& t, Rest&&... args) { return TensorRef<T,R>(std::move(t)); }
+
+template<typename T, typename R>
+auto
+makeRefc(TensorRef<T,R>& t) { return TensorRef<const T,R>(t); }
+
+template<typename T, typename R>
+auto
+makeRefc(TensorRef<const T,R>& t) { return t; }
+
+template<typename T, typename R>
+auto
+makeRefc(Tensor<T,R>& t) { return TensorRef<const T,R>(t); }
+
+template<typename T, typename R>
+auto
+makeRefc(const Tensor<T,R>& t) { return TensorRef<const T>(t); }
+
+//This version of makeRefc intended to fail,
+//forbids explicitly making TensorRefs to temporaries
+template<typename T, typename R, typename... Rest>
+auto
+makeRefc(Tensor<T,R>&& t, Rest&&... args) { return TensorRef<const T,R>(std::move(t)); }
 
 } //namespace itensor
+
 #endif

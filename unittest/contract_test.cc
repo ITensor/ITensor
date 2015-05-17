@@ -1,12 +1,9 @@
 #include "test.h"
-#include "itensor.h"
-#include "contract.h"
+#include "tensor/contract.h"
 #include "cputime.h"
 #include "count.h"
 
 using namespace itensor;
-
-using RTensor = tensor<Real>;
 
 TEST_CASE("Contract Test")
     {
@@ -17,7 +14,7 @@ TEST_CASE("Contract Test")
 
     SECTION("Contract Reshape Basic")
         {
-        RTensor A(2,2),
+        Ten A(2,2),
                 B(2,2),
                 C(2,2);
         A(0,0) = 1; A(0,1) = 2;
@@ -161,7 +158,7 @@ TEST_CASE("Contract Test")
         {
         SECTION("Case 1")
             {
-            RTensor A(2,3,4),
+            Ten A(2,3,4),
                     B(3,7,2),
                     C(4,7);
             randomize(A);
@@ -182,7 +179,7 @@ TEST_CASE("Contract Test")
 
         SECTION("Case 2")
             {
-            RTensor A(2,3,4),
+            Ten A(2,3,4),
                     B(3,7,2),
                     C(7,4);
             randomize(A);
@@ -205,7 +202,7 @@ TEST_CASE("Contract Test")
 
         SECTION("Case 3")
             {
-            RTensor A(2,4,3),
+            Ten A(2,4,3),
                     B(3,7,2),
                     C(7,4);
             randomize(A);
@@ -226,7 +223,7 @@ TEST_CASE("Contract Test")
 
         SECTION("Case 4")
             {
-            RTensor A(2,4,3),
+            Ten A(2,4,3),
                     B(3,7,2),
                     C(4,7);
             randomize(A);
@@ -247,7 +244,7 @@ TEST_CASE("Contract Test")
 
         SECTION("Case NM1")
             {
-            RTensor A(2,3,4),
+            Ten A(2,3,4),
                     B(7,3,2),
                     C(4,7);
             randomize(A);
@@ -268,16 +265,16 @@ TEST_CASE("Contract Test")
 
         SECTION("Case NM2")
             {
-            RTensor A(2,3,4,5),
+            Ten A(2,3,4,5),
                     B(7,6,3,2),
                     C(5,4,6,7);
             randomize(A);
             randomize(B);
             contract(A,{2,3,4,5},B,{7,6,3,2},C,{5,4,6,7});
-            REQUIRE(C.n(0) == 5);
-            REQUIRE(C.n(1) == 4);
-            REQUIRE(C.n(2) == 6);
-            REQUIRE(C.n(3) == 7);
+            REQUIRE(C.dim(0) == 5);
+            REQUIRE(C.dim(1) == 4);
+            REQUIRE(C.dim(2) == 6);
+            REQUIRE(C.dim(3) == 7);
             for(int i4 = 0; i4 < 4; ++i4)
             for(int i5 = 0; i5 < 5; ++i5)
             for(int i6 = 0; i6 < 6; ++i6)
@@ -295,16 +292,16 @@ TEST_CASE("Contract Test")
 
         SECTION("Case NM3")
             {
-            RTensor A(2,3,4,5),
+            Ten A(2,3,4,5),
                     B(7,6,3,2),
                     C(5,4,6,7);
             randomize(A);
             randomize(B);
             contract(B,{7,6,3,2},A,{2,3,4,5},C,{5,4,6,7});
-            REQUIRE(C.n(0) == 5);
-            REQUIRE(C.n(1) == 4);
-            REQUIRE(C.n(2) == 6);
-            REQUIRE(C.n(3) == 7);
+            REQUIRE(C.dim(0) == 5);
+            REQUIRE(C.dim(1) == 4);
+            REQUIRE(C.dim(2) == 6);
+            REQUIRE(C.dim(3) == 7);
             for(int i4 = 0; i4 < 4; ++i4)
             for(int i5 = 0; i5 < 5; ++i5)
             for(int i6 = 0; i6 < 6; ++i6)
@@ -322,7 +319,7 @@ TEST_CASE("Contract Test")
 
         SECTION("Case NM4")
             {
-            RTensor A(2,3,4,5,6,7),
+            Ten A(2,3,4,5,6,7),
                     B(8,7,5,6,9),
                     C(2,8,4,3,9);
             randomize(A);
@@ -352,7 +349,7 @@ TEST_CASE("Contract Test")
         {
         SECTION("Case M1")
             {
-            RTensor A(2,3,4),
+            Ten A(2,3,4),
                     B(7,2,3),
                     C(4,7);
             randomize(A);
@@ -373,7 +370,7 @@ TEST_CASE("Contract Test")
 
         SECTION("Case M2")
             {
-            RTensor A(4,2,3),
+            Ten A(4,2,3),
                     B(7,2,3),
                     C(4,7);
             randomize(A);
@@ -394,7 +391,7 @@ TEST_CASE("Contract Test")
 
         SECTION("Case M3")
             {
-            RTensor A(4,2,3),
+            Ten A(4,2,3),
                     B(2,3,7),
                     C(4,7);
             randomize(A);
@@ -415,7 +412,7 @@ TEST_CASE("Contract Test")
 
         SECTION("Case M4")
             {
-            RTensor A(2,3,4),
+            Ten A(2,3,4),
                     B(2,3,7),
                     C(4,7);
             randomize(A);
@@ -436,13 +433,13 @@ TEST_CASE("Contract Test")
 
         SECTION("Regression Test 1")
             {
-            RTensor A(4,3,2),
+            Ten A(4,3,2),
                     B(5,4,3,2),
                     C(5);
             randomize(A);
             randomize(B);
             contract(A,{4,3,2},B,{5,4,3,2},C,{5});
-            REQUIRE(C.n(0) == 5);
+            REQUIRE(C.dim(0) == 5);
             for(int i5 = 0; i5 < 5; ++i5)
                 {
                 Real val = 0;
@@ -462,15 +459,15 @@ TEST_CASE("Contract Test")
         {
         SECTION("Case 1")
             {
-            RTensor A(4,3,2),
-                    C(2,4,3);
+            Ten A(4,3,2),
+                C(2,4,3);
             randomize(A);
             auto Bval = 2.;
             std::vector<Real> Bdat(1,Bval);
             Range Br;
-            tensorref<Real> B(Bdat.data(),Br);
+            auto B = makeTensorRef(Bdat.data(),Br);
 
-            contract(A,{4,3,2},B,{},C,{2,4,3});
+            contract(makeRefc(A),{4,3,2},makeRefc(B),{},makeRef(C),{2,4,3});
             for(auto i2 : count(2))
             for(auto i3 : count(3))
             for(auto i4 : count(4))
@@ -481,15 +478,15 @@ TEST_CASE("Contract Test")
 
         SECTION("Case 2")
             {
-            RTensor A(2,3,4),
-                    C(2,4,3);
+            Ten A(2,3,4),
+                C(2,4,3);
             randomize(A);
             auto Bval = Global::random();
             std::vector<Real> Bdat(1,Bval);
             Range Br;
-            tensorref<Real> B(Bdat.data(),Br);
+            auto B = makeTensorRef(Bdat.data(),Br);
 
-            contract(B,{},A,{2,3,4},C,{2,4,3});
+            contract<Range>(B,{},A,{2,3,4},C,{2,4,3});
             for(auto i2 : count(2))
             for(auto i3 : count(3))
             for(auto i4 : count(4))
@@ -506,12 +503,12 @@ TEST_CASE("Contract Test")
             int m1 = 10,
                 m2 = 20,
                 m3 = 30;
-            RTensor A(m1,m2,4,5),
+            Ten A(m1,m2,4,5),
                     B(m3,m1,4,6),
                     C(m3,m2,5,6);
             randomize(A);
             randomize(B);
-            contractloop(A,{1,2,4,5},B,{3,1,4,6},C,{3,2,5,6});
+            contractloop<Range>(A,{1,2,4,5},B,{3,1,4,6},C,{3,2,5,6});
             for(int i2 = 0; i2 < m2; ++i2)
             for(int i3 = 0; i3 < m3; ++i3)
             for(int i5 = 0; i5 < 5; ++i5)
@@ -532,9 +529,9 @@ TEST_CASE("Contract Test")
             int m1 = 10,
                 m2 = 20,
                 m3 = 30;
-            RTensor A(m1,m2,4,5),
-                    B(m1,m3,4,6),
-                    C(m3,m2,5,6);
+            Ten A(m1,m2,4,5),
+                B(m1,m3,4,6),
+                C(m3,m2,5,6);
             randomize(A);
             randomize(B);
             contractloop(A,{1,2,4,5},B,{1,3,4,6},C,{3,2,5,6});
@@ -558,7 +555,7 @@ TEST_CASE("Contract Test")
             int m1 = 10,
                 m2 = 20,
                 m3 = 30;
-            RTensor A(m1,m2,4,5),
+            Ten A(m1,m2,4,5),
                     B(m3,m1,4,6),
                     C(m2,m3,5,6);
             randomize(A);
@@ -584,7 +581,7 @@ TEST_CASE("Contract Test")
             int m1 = 10,
                 m2 = 20,
                 m3 = 30;
-            RTensor A(m1,m2,4,5),
+            Ten A(m1,m2,4,5),
                     B(m1,m3,4,6),
                     C(m2,m3,5,6);
             randomize(A);
@@ -610,7 +607,7 @@ TEST_CASE("Contract Test")
             int m1 = 10,
                 m2 = 20,
                 m3 = 30;
-            RTensor A(m3,m1,4,5),
+            Ten A(m3,m1,4,5),
                     B(m2,m1,4,6),
                     C(m2,m3,5,6);
             randomize(A);
@@ -636,7 +633,7 @@ TEST_CASE("Contract Test")
             int m1 = 10,
                 m2 = 20,
                 m3 = 30;
-            RTensor A(m2,m1,4,5),
+            Ten A(m2,m1,4,5),
                     B(m3,m1,4,6),
                     C(m2,m3,5,6);
             randomize(A);
@@ -662,7 +659,7 @@ TEST_CASE("Contract Test")
             int m1 = 10,
                 m2 = 20,
                 m3 = 30;
-            RTensor A(m3,m1,4,5),
+            Ten A(m3,m1,4,5),
                     B(m1,m2,4,6),
                     C(m2,m3,5,6);
             randomize(A);
@@ -682,7 +679,7 @@ TEST_CASE("Contract Test")
                 CHECK_CLOSE(C(i2,i3,i5,i6),val);
                 }
 
-            RTensor Ap(m2,m1,4,5),
+            Ten Ap(m2,m1,4,5),
                     Bp(m1,m3,4,6),
                     Cp(m3,m2,5,6);
             randomize(A);
@@ -708,7 +705,7 @@ TEST_CASE("Contract Test")
             int m1 = 10,
                 m2 = 20,
                 m3 = 30;
-            RTensor A(m2,m1,4,5),
+            Ten A(m2,m1,4,5),
                     B(m1,m3,4,6),
                     C(m2,m3,5,6);
             randomize(A);
@@ -740,7 +737,7 @@ TEST_CASE("Contract Test")
                 m4 = 4,
                 m5 = 5,
                 m6 = 6;
-            RTensor A(m1,m2,m4,m5),
+            Ten A(m1,m2,m4,m5),
                     B(m1,m3,m4,m6),
                     C(m2,m3,m5,m6);
             randomize(A);

@@ -173,7 +173,7 @@ operator+=(const IQTensor& other)
 
     Permutation P(is_.size());
     try {
-        detail::calc_permutation(other.is_,is_,P);
+        calc_permutation(other.is_,is_,P);
         }
     catch(const ITError& e)
         {

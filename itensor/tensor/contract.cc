@@ -15,6 +15,70 @@ using std::set_intersection;
 
 namespace itensor {
 
+template<typename T>
+void
+printv(const std::vector<T>& t)
+    {
+    print("{ ");
+    for(const auto& i : t) print(i," ");
+    println("}");
+    }
+template<typename T,typename F>
+void
+printv(const std::vector<T>& t,
+       const F& f)
+    {
+    print("{ ");
+    for(const auto& i : t) 
+        {
+        f(i);
+        print(" ");
+        }
+    println("}");
+    }
+template<typename T, size_t size>
+void
+printv(const std::array<T,size>& t)
+    {
+    print("{ ");
+    for(const auto& i : t) print(i," ");
+    println("}");
+    }
+template<typename T>
+void
+printv(const autovector<T>& t)
+    {
+    print("{ ");
+    for(auto i = t.mini(); i <= t.maxi(); ++i)
+        {
+        print(t.fast(i)," ");
+        }
+    println("}");
+    }
+#define PRI(a) print(#a,": "); printv(a);
+#define PRIL(a,l) print(#a,": "); printv(a,l);
+
+template<typename T>
+long 
+findIndex(const std::vector<T>& v, 
+          const T& t)
+    {
+    using size_type = typename std::vector<T>::size_type;
+    for(size_type i = 0; i < v.size(); ++i)
+        if(v[i] == t) return i;
+    return -1;
+    }
+
+template<typename T, size_t MaxSize>
+long 
+findIndex(const VarArray<T,MaxSize>& v, 
+          const T& t)
+    {
+    using size_type = typename VarArray<T,MaxSize>::size_type;
+    for(size_type i = 0; i < v.size(); ++i)
+        if(v[i] == t) return i;
+    return -1;
+    }
 
 //
 // small_map has an interface similar to std::map
@@ -259,9 +323,9 @@ class CABqueue
 template<typename RangeT>
 void 
 contract(ABCProps& abc,
-         const RTref<RangeT>& A, 
-         const RTref<RangeT>& B, 
-               RTref<RangeT>& C)
+         TenRefc<RangeT> A, 
+         TenRefc<RangeT> B, 
+         TenRef<RangeT>  C)
     {
     //println();
     //println("------------------------------------------");
@@ -273,7 +337,7 @@ contract(ABCProps& abc,
     //
     // o If rc > ra+rb and going to permute C, permute both A and B instead
     //
-    // o If trailing n(j)==1 dimensions at end of A, B, or C indices
+    // o If trailing dim(j)==1 dimensions at end of A, B, or C indices
     //   (as often the case for ITensors with m==1 indices),
     //   have ABCProps resize ai, bi, and ci accordingly to avoid
     //   looping over these.
@@ -298,20 +362,20 @@ contract(ABCProps& abc,
         {
         if(!contractedA(i))
             {
-            dleft *= A.n(i);
+            dleft *= A.dim(i);
             PC.setFromTo(c,abc.AtoC[i]);
             ++c;
             }
         else
             {
-            dmid *= A.n(i);
+            dmid *= A.dim(i);
             }
         }
     for(int j = 0; j < rb; ++j)
         {
         if(!contractedB(j)) 
             {
-            dright *= B.n(j);
+            dright *= B.dim(j);
             PC.setFromTo(c,abc.BtoC[j]);
             ++c;
             }
@@ -391,7 +455,7 @@ contract(ABCProps& abc,
     //cpu_time cpu;
 
     MatRefc aref;
-    tensor<Real> newA;
+    Ten newA;
     Permutation PA;
     if(Aismatrix)
         {
@@ -444,7 +508,7 @@ contract(ABCProps& abc,
         }
 
     MatRefc bref;
-    tensor<Real> newB;
+    Ten newB;
     Permutation PB;
     if(Bismatrix)
         {
@@ -605,7 +669,7 @@ contract(ABCProps& abc,
 
     //printfln("ctrans = %s",ctrans);
 
-    tensor<Real> newC;
+    Ten newC;
     if(!pc_triv && !ctrans)
         {
         vector<long> cdims(rc);
@@ -615,28 +679,28 @@ contract(ABCProps& abc,
             {
             for(int i = 0; i < ra; ++i)
                 if(!contractedA(i))
-                    cdims[c++] = A.n(i);
+                    cdims[c++] = A.dim(i);
             }
         else
             {
             for(int i = 0; i < ra; ++i)
                 if(!contractedA(i))
-                    cdims[c++] = newA.n(i);
+                    cdims[c++] = newA.dim(i);
             }
         if(Bismatrix)
             {
             for(int j = 0; j < rb; ++j)
                 if(!contractedB(j)) 
-                    cdims[c++] = B.n(j);
+                    cdims[c++] = B.dim(j);
             }
         else
             {
             for(int j = 0; j < rb; ++j)
                 if(!contractedB(j)) 
-                    cdims[c++] = newB.n(j);
+                    cdims[c++] = newB.dim(j);
             }
         //Allocate newC
-        newC = tensor<Real>(cdims,0.);
+        newC = Ten(cdims);
         //Update cref to point at newC
         cref = MatRef(newC.data(),cref.Nrows(),cref.Ncols());
         }
@@ -658,7 +722,7 @@ contract(ABCProps& abc,
     if(!pc_triv && !ctrans)
         {
         //cpu_time cpuC; 
-        permute(newC,PC,C,detail::plusEq<Real>);
+        permute(makeRefc(newC),PC,C,detail::plusEq<Real>);
         //println("C permuted, took ",cpuC.sincemark());
         }
     //println("------------------------------------------");
@@ -667,21 +731,21 @@ contract(ABCProps& abc,
 
 template<typename RangeT>
 void 
-contract(const RTref<RangeT>& A, const Label& ai, 
-         const RTref<RangeT>& B, const Label& bi, 
-         RTref<RangeT>& C,       const Label& ci)
+contract(TenRefc<RangeT> A, const Label& ai, 
+         TenRefc<RangeT> B, const Label& bi, 
+         TenRef<RangeT>  C, const Label& ci)
     {
     if(ai.empty())
         {
         permute(B,bi,C,ci);
-        auto val = A.v(0);
+        auto val = *A.data();
         for(auto& el : C) el *= val;
         return;
         }
     else if(bi.empty())
         {
         permute(A,ai,C,ci);
-        auto val = B.v(0);
+        auto val = *B.data();
         for(auto& el : C) el *= val;
         return;
         }
@@ -691,13 +755,13 @@ contract(const RTref<RangeT>& A, const Label& ai,
 
 //Explicit template instantiations:
 template void 
-contract(const RTref<Range>&, const Label&, 
-         const RTref<Range>&, const Label&, 
-         RTref<Range>&,       const Label&);
+contract(TenRefc<Range>, const Label&, 
+         TenRefc<Range>, const Label&, 
+         TenRef<Range>,  const Label&);
 template void 
-contract(const RTref<IndexSet>&, const Label&, 
-         const RTref<IndexSet>&, const Label&, 
-         RTref<IndexSet>&,       const Label&);
+contract(TenRefc<IndexSet>, const Label&, 
+         TenRefc<IndexSet>, const Label&, 
+         TenRef<IndexSet>,  const Label&);
 
 
 struct MultInfo
@@ -775,9 +839,9 @@ computeMultInfo(const Label& ai,
 
 template<typename RangeT>
 void 
-contractloop(const RTref<RangeT>& A, const Label& ai, 
-             const RTref<RangeT>& B, const Label& bi, 
-             RTref<RangeT>& C,       const Label& ci,
+contractloop(TenRefc<RangeT> A, const Label& ai, 
+             TenRefc<RangeT> B, const Label& bi, 
+             TenRef<RangeT>  C, const Label& ci,
              const Args& args)
     {
     if(ai.empty() || bi.empty())
@@ -809,35 +873,35 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
     //for(int i = 0; i < ra; ++i)
     //    if(abc.AtoC[i] >= 0)
     //        {
-    //        cdims[abc.AtoC[i]] = A.n(i);
+    //        cdims[abc.AtoC[i]] = A.dim(i);
     //        }
     //for(int j = 0; j < rb; ++j)
     //    if(abc.BtoC[j] >= 0)
     //        {
-    //        cdims[abc.BtoC[j]] = B.n(j);
+    //        cdims[abc.BtoC[j]] = B.dim(j);
     //        }
-    //C = tensor<Real>(cdims,0.);
+    //C = Ten(cdims,0.);
 
     auto nfo = computeMultInfo(ai,bi,ci);
 
-    auto Arow = A.n(0), Acol = A.n(1);
-    auto Brow = B.n(0), Bcol = B.n(1);
-    auto Crow = C.n(0), Ccol = C.n(1);
+    auto Arow = A.dim(0), Acol = A.dim(1);
+    auto Brow = B.dim(0), Bcol = B.dim(1);
+    auto Crow = C.dim(0), Ccol = C.dim(1);
 
     detail::GCounter couA(0,ra-1,0), 
                      couB(0,rb-1,0);
     //Keep couA.i[0] and couA.i[1] fixed at 0
     couA.setInd(0,0,0);
     couA.setInd(1,0,0);
-    //Let couA.i[j] (j >= 2) range from 0 to A.n(j)-1
+    //Let couA.i[j] (j >= 2) range from 0 to A.dim(j)-1
     for(int j = 2; j < ra; ++j)
-        couA.setInd(j,0,A.n(j)-1);
+        couA.setInd(j,0,A.dim(j)-1);
 
     //Similarly for couB
     couB.setInd(0,0,0);
     couB.setInd(1,0,0);
     for(int j = 2; j < rb; ++j)
-        couB.setInd(j,0,B.n(j)-1);
+        couB.setInd(j,0,B.dim(j)-1);
 
     Label aind(ra,0), 
           bind(rb,0), 
@@ -855,7 +919,7 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
 
         //TODO: possible bug, shouldn't we
         //      call couB.setInd to extend
-        //      ranges to 0...B.n(j)-1
+        //      ranges to 0...B.dim(j)-1
         //      for those which aren't restricted
         //      to ival below?
         couB.reset();
@@ -908,15 +972,15 @@ contractloop(const RTref<RangeT>& A, const Label& ai,
     }
 template
 void 
-contractloop(const RTref<Range>& A, const Label& ai, 
-             const RTref<Range>& B, const Label& bi, 
-             RTref<Range>& C,       const Label& ci,
+contractloop(TenRefc<Range> A, const Label& ai, 
+             TenRefc<Range> B, const Label& bi, 
+             TenRef<Range>  C, const Label& ci,
              const Args& args);
 template
 void 
-contractloop(const RTref<IndexSet>& A, const Label& ai, 
-             const RTref<IndexSet>& B, const Label& bi, 
-             RTref<IndexSet>& C,       const Label& ci,
+contractloop(TenRefc<IndexSet> A, const Label& ai, 
+             TenRefc<IndexSet> B, const Label& bi, 
+             TenRef<IndexSet>  C, const Label& ci,
              const Args& args);
 
 }

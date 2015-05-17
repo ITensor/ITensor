@@ -13,34 +13,6 @@
 namespace itensor {
 namespace detail {
 
-template <typename Set1,
-          typename Set2,
-          typename Perm>
-void
-calc_permutation(const Set1& s1,
-                 const Set2& s2,
-                 Perm& p)
-    {
-    for(size_t i2 = 0; i2 < s2.size(); ++i2)
-        {
-        const auto& v2 = s2[i2];
-        bool found = false;
-        for(size_t i1 = 0; i1 < s1.size(); ++i1)
-            {
-            if(v2 == s1[i1])
-                {
-                p[i1] = i2;
-                found = true;
-                break;
-                }
-            }
-
-        if(!found)
-            {
-            throw std::runtime_error("sets are not permutations of each other");
-            }
-        }
-    }
 
 
 template <typename Set1,

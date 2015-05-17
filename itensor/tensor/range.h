@@ -128,8 +128,7 @@ class Range
         }
     };
 
-inline
-std::ostream&
+inline std::ostream&
 operator<<(std::ostream& s, const Range& r)
     {
     s << "dim: ";

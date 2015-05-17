@@ -874,7 +874,7 @@ operator+=(const ITensor& other)
     PlusEQ::permutation P(is_.size());
 #ifdef DEBUG
     try {
-        detail::calc_permutation(other.is_,is_,P);
+        calc_permutation(other.is_,is_,P);
         }
     catch(const std::exception& e)
         {
@@ -883,7 +883,7 @@ operator+=(const ITensor& other)
         Error("ITensor::operator+=: different Index structure");
         }
 #else
-    detail::calc_permutation(other.is_,is_,P);
+    calc_permutation(other.is_,is_,P);
 #endif
 
 
