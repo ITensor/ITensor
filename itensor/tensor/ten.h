@@ -178,17 +178,17 @@ class Tensor
     Tensor& 
     operator=(Tensor&& other) { moveFrom(std::move(other)); return *this; }
 
-    //explicit
-    //Tensor(const TensorRef<const value_type,range_type>& ref) { assignFromRef(ref); }
+    explicit
+    Tensor(const TensorRef<const value_type,range_type>& ref) { assignFromRef(ref); }
 
-    //explicit
-    //Tensor(const TensorRef<value_type,range_type>& ref) { assignFromRef(ref); }
+    explicit
+    Tensor(const TensorRef<value_type,range_type>& ref) { assignFromRef(ref); }
 
-    //Tensor&
-    //operator=(const TensorRef<const value_type>& ref) { assignFromRef(ref); return *this; }
+    Tensor&
+    operator=(const TensorRef<const value_type>& ref) { assignFromRef(ref); return *this; }
 
-    //Tensor&
-    //operator=(const TensorRef<value_type>& ref) { assignFromRef(ref); return *this; }
+    Tensor&
+    operator=(const TensorRef<value_type>& ref) { assignFromRef(ref); return *this; }
 
     explicit operator bool() const { return !data_.empty(); }
 
@@ -260,12 +260,12 @@ class Tensor
         data_.assign(len,0.);
         }
 
-    //void
-    //assignFromRef(const TensorRef<const value_type>& other)
-    //    {
-    //    //Copy data from other contiguously into data_
-    //    data_ = storage_type(other.cbegin(),other.cend());
-    //    }
+    void
+    assignFromRef(const TensorRef<const value_type>& other)
+        {
+        //Copy data from other contiguously into data_
+        data_ = storage_type(other.cbegin(),other.cend());
+        }
 
     void
     assignFrom(const Tensor& other)
