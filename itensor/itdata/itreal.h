@@ -13,7 +13,7 @@ namespace itensor {
 // Optimization TODO: 
 //  replace std::vector storage with
 //  storage type only holding data ptr
-//  and size, maybe use in simpletensor too
+//  and size
 //
 
 struct ITReal : RegisterData<ITReal>

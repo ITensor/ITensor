@@ -5,8 +5,7 @@
 #include "itensor.h"
 #include "matrix/lapack_wrap.h"
 #include "detail/printing.h"
-#include "detail/gcounter.h"
-#include "contract.h"
+#include "tensor/contract.h"
 #include "count.h"
 #include "safe_ptr.h"
 
@@ -268,12 +267,12 @@ operator()(const ITCplx& a1,
     auto rsize = area(Nis_);
     auto nd = makeNewData<ITCplx>(rsize,0.);
 
-    auto t1r = make_tensorref(a1.rstart(),Lis_),
-         t1i = make_tensorref(a1.istart(),Lis_),
-         t2r = make_tensorref(a2.rstart(),Ris_),
-         t2i = make_tensorref(a2.istart(),Ris_);
-    auto trr = make_tensorref(nd->rstart(),Nis_),
-         tri = make_tensorref(nd->istart(),Nis_);
+    auto t1r = makeTensorRef(a1.rstart(),Lis_),
+         t1i = makeTensorRef(a1.istart(),Lis_),
+         t2r = makeTensorRef(a2.rstart(),Ris_),
+         t2i = makeTensorRef(a2.istart(),Ris_);
+    auto trr = makeTensorRef(nd->rstart(),Nis_),
+         tri = makeTensorRef(nd->istart(),Nis_);
 
     contractloop(t1i,Lind_,t2i,Rind_,trr,Nind);
     for(auto p = nd->rstart(); p < nd->istart(); ++p) *p *= -1;
@@ -353,11 +352,11 @@ realCplx(const ITReal& R,
 
     auto nd = makeNewData<ITCplx>(rsize,0.);
 
-    auto t1 = make_tensorref(R.data(),ris),
-         t2r = make_tensorref(C.rstart(),cis),
-         t2i = make_tensorref(C.istart(),cis);
-    auto trr = make_tensorref(nd->rstart(),Nis_),
-         tri = make_tensorref(nd->istart(),Nis_);
+    auto t1 = makeTensorRef(R.data(),ris),
+         t2r = makeTensorRef(C.rstart(),cis),
+         t2i = makeTensorRef(C.istart(),cis);
+    auto trr = makeTensorRef(nd->rstart(),Nis_),
+         tri = makeTensorRef(nd->istart(),Nis_);
 
     contractloop(t1,rind,t2r,cind,trr,Nind);
     contractloop(t1,rind,t2i,cind,tri,Nind);
@@ -410,9 +409,9 @@ operator()(const ITReal& a1,
 
     auto rsize = area(Nis_);
     auto nd = makeNewData<ITReal>(rsize,0.);
-    auto t1 = make_tensorref(a1.data(),Lis_),
-         t2 = make_tensorref(a2.data(),Ris_);
-    auto tr = make_tensorref(nd->data(),Nis_);
+    auto t1 = makeTensorRef(a1.data(),Lis_),
+         t2 = makeTensorRef(a2.data(),Ris_);
+    auto tr = makeTensorRef(nd->data(),Nis_);
     contractloop(t1,Lind_,t2,Rind_,tr,Nind);
 
     if(rsize > 1) computeScalefac(*nd);
@@ -681,8 +680,8 @@ combine(const ITReal& d,
             Range rr(move(pdims));
             Nis_ = IndexSet(move(newind));
             auto nd = makeNewData<ITReal>(area(Nis_));
-            auto tr = make_tensorref(nd->data(),rr);
-            auto td = make_tensorref(d.data(),dis);
+            auto tr = makeTensorRef(nd->data(),rr);
+            auto td = makeTensorRef(d.data(),dis);
             permute(td,P,tr);
             }
         }
@@ -844,8 +843,8 @@ operator()(ITReal& a1,
         }
     else
         {
-        auto ref1 = tensorref<Real,IndexSet>(a1.data(),*is1_),
-             ref2 = tensorref<Real,IndexSet>(a2.data(),*is2_);
+        auto ref1 = makeTensorRef(a1.data(),*is1_);
+        auto ref2 = makeTensorRef(a2.data(),*is2_);
         auto f = fac_;
         auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
         permute(ref2,*P_,ref1,add);

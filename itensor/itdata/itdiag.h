@@ -6,7 +6,6 @@
 #define __ITENSOR_ITDIAG_H
 
 #include "itdata.h"
-#include "../simpletensor.h"
 
 namespace itensor {
 

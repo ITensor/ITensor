@@ -5,7 +5,7 @@
 #include "iqtensor.h"
 #include "detail/printing.h"
 #include "matrix/lapack_wrap.h"
-#include "contract.h"
+#include "tensor/contract.h"
 #include "count.h"
 
 namespace itensor {
@@ -154,8 +154,8 @@ operator()(IQTData<Real>& A,
             Brange.init(make_indexdim(*is2_,Bblock));
             const auto* bblock = B.getBlock(*is2_,Bblock);
 
-            auto aref = make_tensorref(A.data.data()+aio.offset,Arange),
-                 bref = make_tensorref(bblock,Brange);
+            auto aref = makeTensorRef(A.data.data()+aio.offset,Arange);
+            auto bref = makeTensorRef(bblock,Brange);
             auto f = fac_;
             auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
             permute(bref,*P_,aref,add);
@@ -271,8 +271,8 @@ permuteIQ(const Permutation& P,
         Brange.init(make_indexdim(Bis,Bblock));
 
         auto* bblock = pdB->getBlock(Bis,Bblock);
-        auto aref = make_tensorref(dA.data.data()+aio.offset,Arange),
-             bref = make_tensorref(bblock,Brange);
+        auto aref = makeTensorRef(dA.data.data()+aio.offset,Arange);
+        auto bref = makeTensorRef(bblock,Brange);
         permute(aref,P,bref);
         }
     }
@@ -541,11 +541,11 @@ operator()(const IQTData<T>& A,
             Brange.init(make_indexdim(Bis_,couB.i));
             Crange.init(make_indexdim(Nis_,Cblock));
 
-            //"Wire up" tensorref's pointing to blocks of A,B, and C
+            //"Wire up" TensorRef's pointing to blocks of A,B, and C
             //we are working with
-            auto aref = make_tensorref(A.data.data()+aio.offset,Arange),
-                 bref = make_tensorref(bblock,Brange);
-            auto cref= make_tensorref(cblock,Crange);
+            auto aref = makeTensorRef(A.data.data()+aio.offset,Arange),
+                 bref = makeTensorRef(bblock,Brange);
+            auto cref= makeTensorRef(cblock,Crange);
 
             //Compute aref*bref=cref
             contract(aref,Aind_,bref,Bind_,cref,Cind);
@@ -636,8 +636,8 @@ struct AddITensor : RegisterFunc<AddITensor>
         drange.init(make_indexdim(iqis,block_ind));
         auto* dblock = d.getBlock(iqis,block_ind);
 
-        auto dref = make_tensorref(dblock,drange);
-        auto tref = make_tensorref(t.data(),is);
+        auto dref = makeTensorRef(dblock,drange);
+        auto tref = makeTensorRef(t.data(),is);
         auto f = fac;
         auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
         permute(tref,P,dref,add);
