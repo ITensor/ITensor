@@ -28,7 +28,8 @@ HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterat
         detail/gcounter.h global.h real.h permutation.h index.h \
         matrix/lapack_wrap.h matrix/strideiter.h matrix/vec.h \
         matrix/mrange.h matrix/matiter.h matrix/mat.h matrix/slicemat.h matrix/algs.h \
-        range.h indexset.ih indexset.h counter.h simpletensor.h contract.h \
+        tensor/range.h tensor/ten.h \
+        indexset.ih indexset.h counter.h simpletensor.h contract.h \
         itdata/itdata.h \
         itdata/itreal.h itdata/itdiag.h itdata/itcombiner.h itdata/itcplx.h \
         itdata/iqtdata.h \
@@ -59,6 +60,10 @@ GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 INCLUDE_HEADERS= $(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(HEADERS))
 
 .SUFFIXES: .cc $(SUFFIXES)
+
+$(ITENSOR_INCLUDEDIR)/tensor/%.h: tensor/%.h
+	mkdir -p $(ITENSOR_INCLUDEDIR)/tensor
+	cp $^ $(ITENSOR_INCLUDEDIR)/tensor
 
 $(ITENSOR_INCLUDEDIR)/matrix/%.h: matrix/%.h
 	mkdir -p $(ITENSOR_INCLUDEDIR)/matrix
@@ -135,7 +140,7 @@ matrix/mat.o: $(GDEPHEADERS)
 GDEPHEADERS+= matrix/slicemat.h matrix/algs.h
 matrix/algs.o: $(GDEPHEADERS)
 .debug_objs/matrix/algs.o: $(GDEPHEADERS)
-GDEPHEADERS+= contract.h range.h simpletensor.h
+GDEPHEADERS+= contract.h tensor/range.h simpletensor.h
 contract.o: $(GDEPHEADERS)
 .debug_objs/contract.o: $(GDEPHEADERS)
 ITDEPHEADERS= index.h counter.h

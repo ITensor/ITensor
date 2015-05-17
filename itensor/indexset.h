@@ -6,7 +6,7 @@
 #define __ITENSOR_INDEXSET_H
 #include "index.h"
 #include "permutation.h"
-#include "range.h"
+#include "tensor/range.h"
 #include <algorithm>
 #include "safe_ptr.h"
 

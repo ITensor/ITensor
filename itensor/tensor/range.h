@@ -8,6 +8,7 @@
 #include "autovector.h"
 #include <iostream>
 #include <array>
+#include <vector>
 #include "vararray.h"
 
 namespace itensor {
@@ -140,9 +141,12 @@ operator<<(std::ostream& s, const Range& r)
 
 class RangeRef
     {
-    public:
     using index = Range::index;
     using value_type = index;
+    private:
+    value_type* inds_;
+    long rank_;
+    public:
 
     RangeRef(value_type* prange,
              long rank)
@@ -160,14 +164,9 @@ class RangeRef
 
     const index&
     operator[](long i) const { return inds_[i]; }
+
     index&
     operator[](long i) { return inds_[i]; }
-
-    private:
-    /////////
-    value_type* inds_;
-    long rank_;
-    /////////
     };
 
 namespace detail {

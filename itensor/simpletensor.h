@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_SIMPLETENSOR_H
 #define __ITENSOR_SIMPLETENSOR_H
 
-#include "range.h"
+#include "tensor/range.h"
 #include "detail/gcounter.h"
 #include <iostream>
 
