@@ -130,7 +130,7 @@ class MatrixRef
     cend() const { return const_iterator(ind_); }
 
     void
-    reset()
+    clear()
         {
         pdata_ = nullptr;
         ind_ = MRange();

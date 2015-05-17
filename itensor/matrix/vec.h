@@ -111,7 +111,7 @@ class VectorRef
     data() const { return pdata_; }
 
     void
-    reset()
+    clear()
         {
         pdata_ = nullptr;
         strd_ = 1;
