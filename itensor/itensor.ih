@@ -166,11 +166,14 @@ Complex ITensor::
 cplx(IndexVals&&... ivs) const
     {
     constexpr size_t size = sizeof...(ivs);
+    std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
 #ifdef DEBUG
     if(!*this) Error("ITensor is default constructed");
-    if(size > size_t(r())) Error("Too many IndexVals passed to real/cplx");
+    size_t nsize = 0;
+    for(auto& iv : vals) if(iv.index.m() > 1) ++nsize;
+    if(nsize != size_t(inds().rn())) 
+        Error(format("Wrong number of m>1 IndexVals passed to real/cplx (expected %d, got %d)",inds().rn(),nsize));
 #endif
-    std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
     std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.val-1; });
     auto z = applyFunc<GetElt<size>>(store_,is_,inds);
@@ -499,6 +502,15 @@ noprime(ITensor A,
         VarArgs&&... vargs)
     {
     A.noprime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template <typename... VarArgs>
+ITensor
+mapprime(ITensor A,
+         VarArgs&&... vargs)
+    {
+    A.mapprime(std::forward<VarArgs>(vargs)...);
     return A;
     }
 

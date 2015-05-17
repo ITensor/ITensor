@@ -383,6 +383,11 @@ ITensor
 noprime(ITensor A,
         VarArgs&&...);
 
+template <typename... VarArgs>
+ITensor
+mapprime(ITensor A,
+         VarArgs&&...);
+
 template<class Tensor>
 bool
 hasindex(const Tensor& T, const typename Tensor::IndexT& I)
