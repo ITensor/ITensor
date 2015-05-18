@@ -131,7 +131,7 @@ void F77NAME(dsyev)(const char* jobz, const char* uplo, const LAPACK_INT* n, dou
             const LAPACK_INT* lda, double* w, double* work, const LAPACK_INT* lwork,
             LAPACK_INT* info );
 #endif
-PA
+
 #ifdef PLATFORM_macos
 void cblas_dscal(const LAPACK_INT N, const LAPACK_REAL alpha, LAPACK_REAL* X,const LAPACK_INT incX);
 #else
