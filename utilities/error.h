@@ -7,6 +7,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <string>
 
 void error(const std::string& s);
 void error(const std::string& s, int line,const char* file);
