@@ -476,13 +476,13 @@ HermitianEigenvalues(const Matrix& re, const Matrix& im,
     char jobz = 'V';
     char uplo = 'U';
     LAPACK_INT lwork = max(1,3*N-1);//max(1, 1+6*N+2*N*N);
-    LAPACK_COMPLEX work[lwork];
-    LAPACK_REAL rwork[lwork];
+    std::vector<LAPACK_COMPLEX> work(lwork);
+    std::vector<LAPACK_REAL> rwork(lwork);
     LAPACK_INT info;
     
     evals.ReDimension(N);
 
-    zheev_wrapper(&jobz,&uplo,&N,(LAPACK_COMPLEX*)AA.Store(),&N,evals.Store(),work,&lwork,rwork,&info);
+    zheev_wrapper(&jobz,&uplo,&N,(LAPACK_COMPLEX*)AA.Store(),&N,evals.Store(),work.data(),&lwork,rwork.data(),&info);
 
     if(info != 0)
         {
