@@ -7,35 +7,87 @@
 
 namespace itensor {
 
+//
+// The SET_SCOPED macro is intended to be used as
+//
+// Real var = x; //somewhere outside the scope, possibly global
+//
+// //enter scope
+//   {
+//   SET_SCOPED(var) = y;
+//   println("var = ",var); //will print var = y
+//   }
+// //exit scope
+// println("var = ",var); //will print var = x
+//
+
+#define SET_SCOPED0(X) auto set_scoped_instance0_ = makeSetScoped(X)
+#define SET_SCOPED1(X) auto set_scoped_instance1_ = makeSetScoped(X)
+#define SET_SCOPED2(X) auto set_scoped_instance2_ = makeSetScoped(X)
+#define SET_SCOPED3(X) auto set_scoped_instance3_ = makeSetScoped(X)
+
+#define SET_SCOPED(X) SET_SCOPED0(X)
+
 template<typename T>
-class SetScoped
-    {
-    private:
-    T& var_;
-    T orig_val_;
-    public:
+auto
+makeSetScoped(T& t)
+    { 
+    class SetScoped
+        {
+        T* pi;
+        T oval = 0;
+        public:
+        explicit
+        SetScoped(T& i) : pi(&i), oval(i) { }
 
-    SetScoped(T& var, const T& new_val)
-        : var_(var), orig_val_(var)
-        { 
-        var_ = new_val;
-        }
+        SetScoped(const SetScoped& other) = delete;
 
-    ~SetScoped()
-        { 
-        var_ = orig_val_;
-        }
-    };
+        SetScoped&
+        operator=(const SetScoped& other) = delete;
 
-template<typename T>
-SetScoped<T>
-makeScoped(T& var, const T& new_val) { return SetScoped<T>(var,new_val); }
+        SetScoped(SetScoped&& other)
+            :
+            pi(other.pi),
+            oval(other.oval)
+            {
+            other.pi = nullptr;
+            other.oval = 0;
+            }
 
-#define SET_SCOPED0(X,Y) const auto set_scoped_instance0_ = makeScoped(X,Y)
-#define SET_SCOPED1(X,Y) const auto set_scoped_instance1_ = makeScoped(X,Y)
-#define SET_SCOPED2(X,Y) const auto set_scoped_instance2_ = makeScoped(X,Y)
+        SetScoped&
+        operator=(SetScoped&& other)
+            {
+            pi = other.pi;
+            oval = other.oval;
+            other.pi = nullptr;
+            other.oval = 0;
+            return *this;
+            }
 
-#define SET_SCOPED(X,Y) SET_SCOPED0(X,Y)
+        void
+        setNewVal(const T& nval)
+            {
+            *pi = nval;
+            }
+
+        ~SetScoped() { if(pi) *pi = oval; }
+        };
+    struct MakeSetScoped
+        {
+        T* pi;
+        MakeSetScoped(T& i) : pi(&i) { }
+
+        SetScoped
+        operator=(const T& nval) 
+            { 
+            SetScoped sv(*pi);
+            sv.setNewVal(nval);
+            return std::move(sv);
+            }
+        };
+    return std::move(MakeSetScoped(t));
+    }
+
 
 } //namespace itensor
 
