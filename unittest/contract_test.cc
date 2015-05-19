@@ -2,6 +2,7 @@
 #include "tensor/contract.h"
 #include "cputime.h"
 #include "count.h"
+#include "set_scoped.h"
 
 using namespace itensor;
 
@@ -159,8 +160,8 @@ TEST_CASE("Contract Test")
         SECTION("Case 1")
             {
             Ten A(2,3,4),
-                    B(3,7,2),
-                    C(4,7);
+                B(3,7,2),
+                C(4,7);
             randomize(A);
             randomize(B);
             contract(A,{2,3,4},B,{3,7,2},C,{4,7});
@@ -203,8 +204,8 @@ TEST_CASE("Contract Test")
         SECTION("Case 3")
             {
             Ten A(2,4,3),
-                    B(3,7,2),
-                    C(7,4);
+                B(3,7,2),
+                C(7,4);
             randomize(A);
             randomize(B);
             contract(A,{2,4,3},B,{3,7,2},C,{7,4});
@@ -224,8 +225,8 @@ TEST_CASE("Contract Test")
         SECTION("Case 4")
             {
             Ten A(2,4,3),
-                    B(3,7,2),
-                    C(4,7);
+                B(3,7,2),
+                C(4,7);
             randomize(A);
             randomize(B);
             contract(A,{2,4,3},B,{3,7,2},C,{4,7});
@@ -245,8 +246,8 @@ TEST_CASE("Contract Test")
         SECTION("Case NM1")
             {
             Ten A(2,3,4),
-                    B(7,3,2),
-                    C(4,7);
+                B(7,3,2),
+                C(4,7);
             randomize(A);
             randomize(B);
             contract(A,{2,3,4},B,{7,3,2},C,{4,7});
@@ -266,8 +267,8 @@ TEST_CASE("Contract Test")
         SECTION("Case NM2")
             {
             Ten A(2,3,4,5),
-                    B(7,6,3,2),
-                    C(5,4,6,7);
+                B(7,6,3,2),
+                C(5,4,6,7);
             randomize(A);
             randomize(B);
             contract(A,{2,3,4,5},B,{7,6,3,2},C,{5,4,6,7});
@@ -293,8 +294,8 @@ TEST_CASE("Contract Test")
         SECTION("Case NM3")
             {
             Ten A(2,3,4,5),
-                    B(7,6,3,2),
-                    C(5,4,6,7);
+                B(7,6,3,2),
+                C(5,4,6,7);
             randomize(A);
             randomize(B);
             contract(B,{7,6,3,2},A,{2,3,4,5},C,{5,4,6,7});
@@ -319,9 +320,10 @@ TEST_CASE("Contract Test")
 
         SECTION("Case NM4")
             {
+            SET_SCOPED(Global::debug1()) = true;
             Ten A(2,3,4,5,6,7),
-                    B(8,7,5,6,9),
-                    C(2,8,4,3,9);
+                B(8,7,5,6,9),
+                C(2,8,4,3,9);
             randomize(A);
             randomize(B);
             contract(B,{8,7,5,6,9},A,{2,3,4,5,6,7},C,{2,8,4,3,9});
@@ -350,8 +352,8 @@ TEST_CASE("Contract Test")
         SECTION("Case M1")
             {
             Ten A(2,3,4),
-                    B(7,2,3),
-                    C(4,7);
+                B(7,2,3),
+                C(4,7);
             randomize(A);
             randomize(B);
             contract(A,{2,3,4},B,{7,2,3},C,{4,7});
@@ -371,8 +373,8 @@ TEST_CASE("Contract Test")
         SECTION("Case M2")
             {
             Ten A(4,2,3),
-                    B(7,2,3),
-                    C(4,7);
+                B(7,2,3),
+                C(4,7);
             randomize(A);
             randomize(B);
             contract(A,{4,2,3},B,{7,2,3},C,{4,7});
@@ -392,8 +394,8 @@ TEST_CASE("Contract Test")
         SECTION("Case M3")
             {
             Ten A(4,2,3),
-                    B(2,3,7),
-                    C(4,7);
+                B(2,3,7),
+                C(4,7);
             randomize(A);
             randomize(B);
             contract(A,{4,2,3},B,{2,3,7},C,{4,7});
@@ -413,8 +415,8 @@ TEST_CASE("Contract Test")
         SECTION("Case M4")
             {
             Ten A(2,3,4),
-                    B(2,3,7),
-                    C(4,7);
+                B(2,3,7),
+                C(4,7);
             randomize(A);
             randomize(B);
             contract(A,{2,3,4},B,{2,3,7},C,{4,7});
@@ -434,8 +436,8 @@ TEST_CASE("Contract Test")
         SECTION("Regression Test 1")
             {
             Ten A(4,3,2),
-                    B(5,4,3,2),
-                    C(5);
+                B(5,4,3,2),
+                C(5);
             randomize(A);
             randomize(B);
             contract(A,{4,3,2},B,{5,4,3,2},C,{5});
@@ -556,8 +558,8 @@ TEST_CASE("Contract Test")
                 m2 = 20,
                 m3 = 30;
             Ten A(m1,m2,4,5),
-                    B(m3,m1,4,6),
-                    C(m2,m3,5,6);
+                B(m3,m1,4,6),
+                C(m2,m3,5,6);
             randomize(A);
             randomize(B);
             contractloop(A,{1,2,4,5},B,{3,1,4,6},C,{2,3,5,6});
@@ -582,8 +584,8 @@ TEST_CASE("Contract Test")
                 m2 = 20,
                 m3 = 30;
             Ten A(m1,m2,4,5),
-                    B(m1,m3,4,6),
-                    C(m2,m3,5,6);
+                B(m1,m3,4,6),
+                C(m2,m3,5,6);
             randomize(A);
             randomize(B);
             contractloop(A,{1,2,4,5},B,{1,3,4,6},C,{2,3,5,6});
@@ -608,8 +610,8 @@ TEST_CASE("Contract Test")
                 m2 = 20,
                 m3 = 30;
             Ten A(m3,m1,4,5),
-                    B(m2,m1,4,6),
-                    C(m2,m3,5,6);
+                B(m2,m1,4,6),
+                C(m2,m3,5,6);
             randomize(A);
             randomize(B);
             contractloop(A,{3,1,4,5},B,{2,1,4,6},C,{2,3,5,6});
@@ -634,8 +636,8 @@ TEST_CASE("Contract Test")
                 m2 = 20,
                 m3 = 30;
             Ten A(m2,m1,4,5),
-                    B(m3,m1,4,6),
-                    C(m2,m3,5,6);
+                B(m3,m1,4,6),
+                C(m2,m3,5,6);
             randomize(A);
             randomize(B);
             contractloop(A,{2,1,4,5},B,{3,1,4,6},C,{2,3,5,6});
@@ -680,8 +682,8 @@ TEST_CASE("Contract Test")
                 }
 
             Ten Ap(m2,m1,4,5),
-                    Bp(m1,m3,4,6),
-                    Cp(m3,m2,5,6);
+                Bp(m1,m3,4,6),
+                Cp(m3,m2,5,6);
             randomize(A);
             randomize(B);
             contractloop(Ap,{2,1,4,5},Bp,{1,3,4,6},Cp,{3,2,5,6});
@@ -706,8 +708,8 @@ TEST_CASE("Contract Test")
                 m2 = 20,
                 m3 = 30;
             Ten A(m2,m1,4,5),
-                    B(m1,m3,4,6),
-                    C(m2,m3,5,6);
+                B(m1,m3,4,6),
+                C(m2,m3,5,6);
             randomize(A);
             randomize(B);
             contractloop(A,{2,1,4,5},B,{1,3,4,6},C,{2,3,5,6});
@@ -738,8 +740,8 @@ TEST_CASE("Contract Test")
                 m5 = 5,
                 m6 = 6;
             Ten A(m1,m2,m4,m5),
-                    B(m1,m3,m4,m6),
-                    C(m2,m3,m5,m6);
+                B(m1,m3,m4,m6),
+                C(m2,m3,m5,m6);
             randomize(A);
             randomize(B);
             cpu_time cpu;

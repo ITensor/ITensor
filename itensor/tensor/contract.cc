@@ -168,7 +168,41 @@ struct CProps
     bool
     permuteC() const { return permuteC_; }
     bool
+    Atrans() const { return contractedA(0); }
+    bool
+    Btrans() const { return !contractedB(0); }
+    bool
     Ctrans() const { return ctrans; }
+
+    private:
+    bool
+    checkACsameord() const
+        {
+        auto aCind = AtoC(Austart);
+        using size_type = decltype(ai.size());
+        for(size_type i = 0; i < ai.size(); ++i) 
+            if(!contractedA(i))
+                {
+                if(AtoC(i) != aCind) return false;
+                ++aCind;
+                }
+        return true;
+        }
+
+    bool
+    checkBCsameord() const
+        {
+        auto bCind = BtoC(Bustart);
+        using size_type = decltype(bi.size());
+        for(size_type i = 0; i < bi.size(); ++i) 
+            if(!contractedB(i))
+                {
+                if(BtoC(i) != bCind) return false;
+                ++bCind;
+                }
+        return true;
+        }
+    public:
 
     template<typename RangeT>
     void
@@ -181,8 +215,6 @@ struct CProps
         // o Add "automatic C" mode where index order of C can be
         //   unspecified, and will be chosen so as not to require
         //   permuting C at the end.
-        //
-        // o If rc > ra+rb and going to permute C, permute both A and B instead
         //
         // o If trailing dim(j)==1 dimensions at end of A, B, or C indices
         //   (as often the case for ITensors with m==1 indices),
@@ -209,7 +241,7 @@ struct CProps
             if(!contractedA(i))
                 {
                 dleft *= A.dim(i);
-                PC.setFromTo(c,AtoC_[i]);
+                PC.setFromTo(c,AtoC(i));
                 ++c;
                 }
             else
@@ -220,12 +252,21 @@ struct CProps
             if(!contractedB(j)) 
                 {
                 dright *= B.dim(j);
-                PC.setFromTo(c,BtoC_[j]);
+                PC.setFromTo(c,BtoC(j));
                 ++c;
                 }
 
-        auto PCtriv = isTrivial(PC);
-
+        if(!isTrivial(PC)) 
+            {
+            permuteC_ = true;
+            if(checkBCsameord() && checkACsameord())
+                {
+                //Can avoid permuting C by 
+                //computing Bt*At = Ct
+                ctrans = true;
+                permuteC_ = false;
+                }
+            }
 
         //Check if A can be treated as a matrix without permuting
         permuteA_ = false;
@@ -281,22 +322,23 @@ struct CProps
                     }
             }
 
-        auto pCost = [](Real d) { return d*d; };
 
-        if(!PCtriv && !(permuteA_ && permuteB_))
+        if(permuteC_ && !(permuteA_ && permuteB_))
             {
+            auto PCost = [](Real d) { return d*d; };
             //Could avoid permuting C if
             //permute both A and B, worth it?
-            auto pCcost = pCost(dleft*dright);
+            auto pCcost = PCost(dleft*dright);
             Real extra_pABcost = 0;
-            if(!permuteA_) extra_pABcost += pCost(dleft*dmid);
-            if(!permuteB_) extra_pABcost += pCost(dmid*dright);
+            if(!permuteA_) extra_pABcost += PCost(dleft*dmid);
+            if(!permuteB_) extra_pABcost += PCost(dmid*dright);
             if(extra_pABcost < pCcost)
                 {
                 //printfln("dleft=%d, dmid=%d, dright=%d",dleft,dmid,dright);
                 //printfln("Permuting %s %s (%d) instead of permuting C (%d)",permuteA_?"":"A",permuteB_?"":"B",extra_pABcost,pCcost);
                 permuteA_ = true;
                 permuteB_ = true;
+                permuteC_ = false;
                 }
             }
 
@@ -419,43 +461,25 @@ struct CProps
                     PC.setFromTo(c,BtoC_[j]);
                     ++c;
                     }
-            PCtriv = isTrivial(PC);
+            ctrans = false;
+            if(!isTrivial(PC))
+                {
+                permuteC_ = true;
+                //Here we already know since pc_triv = false that
+                //at best indices from B precede those from A (on result C)
+                //so if both sets remain in same order on C 
+                //just need to transpose C, not permute it
+                if(checkBCsameord() && checkACsameord()) 
+                    {
+                    ctrans = true;
+                    permuteC_ = false;
+                    }
+                }
             }
 
         //PRI(AtoC_)
         //PRI(BtoC_)
         //Print(PC);
-
-        ctrans = false;
-        if(!PCtriv)
-            {
-            //Check if uncontracted A inds in same order on A as on C
-            bool ACsameorder = true;
-            auto aCind = AtoC_.at(Austart);
-            for(int i = 0; i < ra && ACsameorder; ++i) 
-                if(!contractedA(i))
-                    {
-                    if(AtoC_.at(i) == aCind) ++aCind;
-                    else                    ACsameorder = false;
-                    }
-            //Check if uncontracted B inds in same order on B as on C
-            bool BCsameorder = true;
-            auto bCind = BtoC_.at(Bustart);
-            for(int i = 0; i < rb && BCsameorder; ++i) 
-                if(!contractedB(i))
-                    {
-                    if(BtoC_.at(i) == bCind) ++bCind;
-                    else                    BCsameorder = false;
-                    }
-            //Here we already know since pc_triv = false that
-            //at best indices from B precede those from A (on result C)
-            //so if both sets remain in same order on C 
-            //just need to transpose C, not permute it
-            if(BCsameorder && ACsameorder) 
-                ctrans = true;
-            else
-                permuteC_ = true;
-            }
 
         if(permuteC_)
             {
@@ -699,15 +723,15 @@ contract(const CProps& p,
     else
         {
         //println("A is matrix already, making aref");
-        if(!p.contractedA(0)) 
-            {
-            aref = MatRefc(A.data(),p.dleft,p.dmid);
-            }
-        else
+        if(p.Atrans())
             {
             //println("  Transposing aref");
             aref = MatRefc(A.data(),p.dmid,p.dleft);
             aref.applyTrans();
+            }
+        else
+            {
+            aref = MatRefc(A.data(),p.dleft,p.dmid);
             }
         }
 
@@ -723,7 +747,7 @@ contract(const CProps& p,
     else
         {
         //println("B is matrix already, making bref");
-        if(!p.contractedB(0)) 
+        if(p.Btrans())
             {
             //println("  Transposing bref");
             bref = MatRefc(B.data(),p.dright,p.dmid);
@@ -737,11 +761,6 @@ contract(const CProps& p,
 
     //println("A and B permuted, took ",cpu.sincemark());
 
-
-    //
-    // Carry out the contraction as a matrix-matrix multiply
-    //
-
 #ifdef DEBUG
     if(C.size() != aref.Nrows()*bref.Ncols())
         {
@@ -752,23 +771,23 @@ contract(const CProps& p,
 #endif
 
     MatRef cref;
-    if(!p.Ctrans()) 
-        {
-        cref = MatRef(C.data(),aref.Nrows(),bref.Ncols());
-        }
-    else
-        {
-        cref = MatRef(C.data(),bref.Ncols(),aref.Nrows());
-        cref.applyTrans();
-        }
-
     Ten newC;
     if(p.permuteC())
         {
-        //Allocate newC
         newC = Ten(p.newCrange);
-        //Update cref to point at newC
-        cref = MatRef(newC.data(),cref.Nrows(),cref.Ncols());
+        cref = MatRef(newC.data(),aref.Nrows(),bref.Ncols());
+        }
+    else
+        {
+        if(p.Ctrans()) 
+            {
+            cref = MatRef(C.data(),bref.Ncols(),aref.Nrows());
+            cref.applyTrans();
+            }
+        else
+            {
+            cref = MatRef(C.data(),aref.Nrows(),bref.Ncols());
+            }
         }
 
     //cpu.mark();
@@ -780,10 +799,6 @@ contract(const CProps& p,
     multAdd(aref,bref,cref);
 
     //println("Matrix multiply done, took ",cpu.sincemark());
-
-    //
-    // Reshape C if necessary
-    //
 
     if(p.permuteC())
         {
