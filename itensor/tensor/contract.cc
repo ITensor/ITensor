@@ -939,6 +939,7 @@ contractloop(TenRefc<RangeT> A, const Label& ai,
     if(p.nactiveA != 2 || p.nactiveB != 2 || p.nactiveC != 2)
         {
         //println("calling contract from within contractloop");
+        p.compute(A,B,makeRefc(C));
         contract(p,A,B,C);
         return;
         }
