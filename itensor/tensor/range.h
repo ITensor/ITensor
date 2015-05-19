@@ -115,7 +115,9 @@ class Range
             }
         }
 
-    private:
+    void
+    resize(size_t nsize) { inds_.resize(nsize); }
+
     void 
     computeStrides()
         {

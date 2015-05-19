@@ -130,9 +130,9 @@ struct CProps
                 PB,
                 PC;
     bool ctrans = false;
-    vector<long> newAdims,
-                 newBdims,
-                 newCdims;
+    Range newArange,
+          newBrange,
+          newCrange;
     
     CProps(const Label& ai_, 
            const Label& bi_, 
@@ -160,11 +160,11 @@ struct CProps
     int
     BtoC(int i) const { return BtoC_[i]; }
     bool
-    permuteA() const { return !newAdims.empty(); }
+    permuteA() const { return !newArange.empty(); }
     bool
-    permuteB() const { return !newBdims.empty(); }
+    permuteB() const { return !newBrange.empty(); }
     bool
-    permuteC() const { return !newCdims.empty(); }
+    permuteC() const { return !newCrange.empty(); }
     bool
     Ctrans() const { return ctrans; }
 
@@ -196,7 +196,6 @@ struct CProps
         int ra = ai.size(),
             rb = bi.size(),
             rc = ci.size();
-
 
         PC = Permutation(rc);
 
@@ -327,11 +326,12 @@ struct CProps
                     }
                 if(newi == ra) break;
                 }
-            newAdims.assign(ra,0);
+            newArange.resize(ra);
             for(int i = 0; i < ra; ++i)
                 {
-                newAdims[PA.dest(i)] = A.dim(i);
+                newArange[PA.dest(i)].dim = A.dim(i);
                 }
+            newArange.computeStrides();
             }
 
         if(!Bismatrix)
@@ -375,11 +375,12 @@ struct CProps
                     }
                 if(newi == rb) break;
                 }
-            newBdims.assign(rb,0);
+            newBrange.resize(rb);
             for(int i = 0; i < rb; ++i)
                 {
-                newBdims[PB.dest(i)] = B.dim(i);
+                newBrange[PB.dest(i)].dim = B.dim(i);
                 }
+            newBrange.computeStrides();
             }
 
         if(!Aismatrix || !Bismatrix)
@@ -455,33 +456,34 @@ struct CProps
 
         if(!pc_triv && !ctrans)
             {
-            newCdims.resize(rc);
+            newCrange.resize(rc);
             int c = 0;
 
             if(Aismatrix)
                 {
                 for(int i = 0; i < ra; ++i)
                     if(!contractedA(i))
-                        newCdims.at(c++) = A.dim(i);
+                        newCrange.at(c++).dim = A.dim(i);
                 }
             else
                 {
                 for(int i = 0; i < ra; ++i)
                     if(!contractedA(i))
-                        newCdims.at(c++) = newAdims[i];
+                        newCrange.at(c++).dim = newArange.dim(i);
                 }
             if(Bismatrix)
                 {
                 for(int j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
-                        newCdims.at(c++) = B.dim(j);
+                        newCrange.at(c++).dim = B.dim(j);
                 }
             else
                 {
                 for(int j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
-                        newCdims.at(c++) = newBdims[j];
+                        newCrange.at(c++).dim = newBrange.dim(j);
                 }
+            newCrange.computeStrides();
             }
         }
 
@@ -686,7 +688,7 @@ contract(const CProps& p,
     if(p.permuteA())
         {
         //println("Calling permute A");
-        newA = Ten(p.newAdims);
+        newA = Ten(p.newArange);
         permute(A,p.PA,newA);
         aref = MatRefc(newA.data(),p.dmid,p.dleft);
         aref.applyTrans();
@@ -711,7 +713,7 @@ contract(const CProps& p,
     if(p.permuteB())
         {
         //println("Calling permute B");
-        newB = Ten(p.newBdims);
+        newB = Ten(p.newBrange);
         permute(B,p.PB,newB);
         bref = MatRefc(newB.data(),p.dmid,p.dright);
         }
@@ -761,7 +763,7 @@ contract(const CProps& p,
     if(p.permuteC())
         {
         //Allocate newC
-        newC = Ten(p.newCdims);
+        newC = Ten(p.newCrange);
         //Update cref to point at newC
         cref = MatRef(newC.data(),cref.Nrows(),cref.Ncols());
         }
