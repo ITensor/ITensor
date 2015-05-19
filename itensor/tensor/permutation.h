@@ -15,7 +15,7 @@ namespace itensor {
 //
 struct Permutation
     {
-    using storage = InfArray<long,8>;
+    using storage = InfArray<long,28ul>;
     using size_type = long;
     private: 
     storage store_;

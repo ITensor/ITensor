@@ -13,7 +13,7 @@
 
 namespace itensor {
 
-using Label = VarArray<long,63ul>; //sizeof(VarArray<long,63ul>)==512
+using Label = VarArray<long,31ul>; //sizeof(VarArray<long,31ul>)==256
 
 inline std::ostream& 
 operator<<(std::ostream& s, const Label& A)
@@ -34,6 +34,11 @@ void
 permute(const TenRefc<R>& from, 
         const Permutation& P, 
         Ten& to);
+
+template<typename R>
+Ten 
+permute(const TenRefc<R>& from, 
+        const Permutation& P);
 
 //Callable is any function func(Real& x, Real y)
 //default is func = [](Real& x, Real y) { x = y; };
@@ -64,12 +69,18 @@ permute(TensorRef<const T,R1> from,
         TensorRef<T,R2> to,
         const Callable& func)
     {
-#ifdef DEBUG
-    if(to.size() != from.size()) throw std::runtime_error("Mismatched storage sizes in permute");
-    if(P.size() != from.r()) throw std::runtime_error("Mismatched Permutation size in permute");
-#endif
     using size_type = decltype(P.size());
     auto r = P.size();
+#ifdef DEBUG
+    if(r != from.r()) throw std::runtime_error("Mismatched Permutation size in permute");
+    if(to.r() != from.r()) throw std::runtime_error("Mismatched tensor ranks in permute");
+    if(to.size() != from.size()) throw std::runtime_error("Mismatched storage sizes in permute");
+    for(size_type j = 0; j < r; ++j)
+        {
+        if(to.dim(P.dest(j)) != from.dim(j))
+            throw std::runtime_error("Incompatible dimensions in permute");
+        }
+#endif
 
     if(r == 0)
         {
@@ -141,13 +152,22 @@ permute(const TenRefc<R>& from,
         const Permutation& P, 
         Ten& to)
     {
+    permute(from,P,makeRef(to));
+    }
+
+template<typename R>
+Ten 
+permute(const TenRefc<R>& from, 
+        const Permutation& P)
+    {
     Range::storage_type rstore(from.r());
     for(size_t j = 0; j < rstore.size(); ++j)
         {
         rstore[P.dest(j)].dim = from.dim(j);
         }
-    to = Ten(Range(std::move(rstore)));
+    auto to = Ten(Range(std::move(rstore)));
     permute(from,P,makeRef(to));
+    return to;
     }
 
 template<typename R1, typename R2, typename Callable>

@@ -9,9 +9,6 @@
 #include "matrix/mat.h"
 
 using std::vector;
-using std::cout;
-using std::endl;
-using std::set_intersection;
 
 namespace itensor {
 
@@ -51,7 +48,7 @@ printv(const autovector<T>& t)
     print("{ ");
     for(auto i = t.mini(); i <= t.maxi(); ++i)
         {
-        print(t.fast(i)," ");
+        print(t[i]," ");
         }
     println("}");
     }
@@ -60,7 +57,7 @@ printv(const autovector<T>& t)
 
 template<typename T>
 long 
-findIndex(const std::vector<T>& v, 
+find_index(const std::vector<T>& v, 
           const T& t)
     {
     using size_type = typename std::vector<T>::size_type;
@@ -71,7 +68,7 @@ findIndex(const std::vector<T>& v,
 
 template<typename T, size_t MaxSize>
 long 
-findIndex(const VarArray<T,MaxSize>& v, 
+find_index(const VarArray<T,MaxSize>& v, 
           const T& t)
     {
     using size_type = typename VarArray<T,MaxSize>::size_type;
@@ -106,26 +103,40 @@ class small_map
     };
 
 // struct analyzing index pattern for C = A * B
-struct ABCProps
+struct CProps
     {
-    const Label &ai, 
-                &bi, 
-                &ci;
+    Label ai, 
+          bi, 
+          ci;
     int nactiveA = 0, 
         nactiveB = 0, 
         nactiveC = 0;
-    Label AtoB, 
-          AtoC, 
-          BtoC;
+    private:
+    Label AtoB_, 
+          AtoC_, 
+          BtoC_;
+    public:
+    bool Aismatrix = true,
+         Bismatrix = true;
+    long dleft = 1,
+         dmid = 1,
+         dright = 1;
     int ncont = 0,
         Acstart,
         Bcstart,
         Austart,
         Bustart;
+    Permutation PA,
+                PB,
+                PC;
+    bool ctrans = false;
+    vector<long> newAdims,
+                 newBdims,
+                 newCdims;
     
-    ABCProps(const Label& ai_, 
-             const Label& bi_, 
-             const Label& ci_) 
+    CProps(const Label& ai_, 
+           const Label& bi_, 
+           const Label& ci_) 
         : 
         ai(ai_),bi(bi_),ci(ci_),
         Acstart(ai_.size()),
@@ -134,21 +145,359 @@ struct ABCProps
         Bustart(bi_.size())
         { }
 
-    ABCProps(const ABCProps&) = delete;
+    CProps(const CProps&) = delete;
 
+    CProps& operator=(const CProps&) = delete;
+
+    bool
+    contractedA(int i) const { return AtoC_[i] < 0; }
+    bool
+    contractedB(int i) const { return BtoC_[i] < 0; }
+    int
+    AtoB(int i) const { return AtoB_[i]; }
+    int
+    AtoC(int i) const { return AtoC_[i]; }
+    int
+    BtoC(int i) const { return BtoC_[i]; }
+    bool
+    permuteA() const { return !newAdims.empty(); }
+    bool
+    permuteB() const { return !newBdims.empty(); }
+    bool
+    permuteC() const { return !newCdims.empty(); }
+    bool
+    Ctrans() const { return ctrans; }
+
+    template<typename RangeT>
+    void
+    compute(TenRefc<RangeT> A,
+            TenRefc<RangeT> B,
+            TenRefc<RangeT> C)
+        {
+        // Optimizations TODO
+        //
+        // o Add "automatic C" mode where index order of C can be
+        //   unspecified, and will be chosen so as not to require
+        //   permuting C at the end.
+        //
+        // o If rc > ra+rb and going to permute C, permute both A and B instead
+        //
+        // o If trailing dim(j)==1 dimensions at end of A, B, or C indices
+        //   (as often the case for ITensors with m==1 indices),
+        //   have CProps resize ai, bi, and ci accordingly to avoid
+        //   looping over these.
+        //
+
+        computePerms();
+        
+        //Use PC.size() as a check to see if we've already run this
+        if(PC.size() != 0) return;
+
+        int ra = ai.size(),
+            rb = bi.size(),
+            rc = ci.size();
+
+
+        PC = Permutation(rc);
+
+        dleft = 1;
+        dmid = 1;
+        dright = 1;
+        int c = 0;
+        for(int i = 0; i < ra; ++i)
+            {
+            if(!contractedA(i))
+                {
+                dleft *= A.dim(i);
+                PC.setFromTo(c,AtoC_[i]);
+                ++c;
+                }
+            else
+                {
+                dmid *= A.dim(i);
+                }
+            }
+        for(int j = 0; j < rb; ++j)
+            {
+            if(!contractedB(j)) 
+                {
+                dright *= B.dim(j);
+                PC.setFromTo(c,BtoC_[j]);
+                ++c;
+                }
+            }
+
+
+        // Check if A is matrix-like
+        Aismatrix = true;
+        if(!(contractedA(0) || contractedA(ra-1)))
+            {
+            //If contracted indices are not all at front or back, A is not matrix-like
+            Aismatrix = false;
+            }
+        else
+            {
+            for(int i = 0; i < ncont; ++i)
+                {
+                auto aind = Acstart+i;
+                if(!contractedA(aind)) 
+                    {
+                    //If contracted indices are not contiguous
+                    //A is not matrix-like
+                    Aismatrix = false;
+                    break;
+                    }
+                }
+            }
+
+        //
+        // Check if B is matrix-like
+        //
+        Bismatrix = true;
+        if(!(contractedB(0) || contractedB(rb-1)))
+            {
+            //If contracted indices are not all at front or back, B is not matrix-like
+            Bismatrix = false;
+            }
+        else
+            {
+            for(int i = 0; i < ncont; ++i)
+                {
+                auto bind = Bcstart+i;
+                if(!contractedB(bind))
+                    {
+                    //If contracted indices are not contiguous
+                    //B is not matrix-like
+                    Bismatrix = false;
+                    break;
+                    }
+                }
+            }
+
+        //printfln("A is matrix = %s",Aismatrix);
+        //PRI(props.ai)
+        //printfln("B is matrix = %s",Bismatrix);
+        //PRI(props.bi)
+        //PRI(props.ci)
+
+        if(Aismatrix && Bismatrix)
+            {
+            //Check if contracted inds. in same order
+            //if not, set ismatrix=false for the smaller one
+            for(int i = 0; i < ncont; ++i)
+                {
+                auto aind = Acstart+i,
+                     bind = Bcstart+i;
+                if(AtoB_[aind] != bind) 
+                    {
+                    if(dleft < dright) Aismatrix = false;
+                    else               Bismatrix = false;
+                    break;
+                    }
+                }
+            }
+
+        if(!Aismatrix)
+            {
+            PA = Permutation(ra);
+            //TODO: consider permuting to back instead and do timing
+            //Permute contracted indices to the front,
+            //in the same order as on B
+            int newi = 0;
+            auto bind = Bcstart;
+            for(int i = 0; i < ncont; ++i)
+                {
+                while(!contractedB(bind)) ++bind;
+                auto j = find_index(ai,bi[bind]);
+                PA.setFromTo(j,newi++);
+                ++bind;
+                }
+            //Reset p.AtoC:
+            std::fill(AtoC_.begin(),AtoC_.end(),-1);
+            //Permute uncontracted indices to
+            //appear in same order as on C
+            for(int k = 0; k < rc; ++k)
+                {
+                auto j = find_index(ai,ci[k]);
+                if(j != -1)
+                    {
+                    AtoC_[newi] = k;
+                    PA.setFromTo(j,newi);
+                    ++newi;
+                    }
+                if(newi == ra) break;
+                }
+            newAdims.assign(ra,0);
+            for(int i = 0; i < ra; ++i)
+                {
+                newAdims[PA.dest(i)] = A.dim(i);
+                }
+            }
+
+        if(!Bismatrix)
+            {
+            PB = Permutation(rb);
+            int newi = 0;
+            if(Aismatrix)
+                {
+                //Permute contracted indices to the
+                //front and in same order as on A
+                auto aind = Acstart;
+                for(int i = 0; i < ncont; ++i)
+                    {
+                    while(!contractedA(aind)) ++aind;
+                    int j = find_index(bi,ai[aind]);
+                    PB.setFromTo(j,newi++);
+                    ++aind;
+                    }
+                }
+            else
+                {
+                //Permute contracted indices to the front
+                for(int i = Bcstart; newi < ncont; ++newi)
+                    {
+                    while(!contractedB(i)) ++i;
+                    PB.setFromTo(i++,newi);
+                    }
+                }
+            //Reset p.BtoC:
+            std::fill(BtoC_.begin(),BtoC_.end(),-1);
+            //Permute uncontracted indices to
+            //appear in same order as on C
+            for(int k = 0; k < rc; ++k)
+                {
+                auto j = find_index(bi,ci[k]);
+                if(j != -1)
+                    {
+                    BtoC_[newi] = k;
+                    PB.setFromTo(j,newi);
+                    ++newi;
+                    }
+                if(newi == rb) break;
+                }
+            newBdims.assign(rb,0);
+            for(int i = 0; i < rb; ++i)
+                {
+                newBdims[PB.dest(i)] = B.dim(i);
+                }
+            }
+
+        if(!Aismatrix || !Bismatrix)
+            {
+            //Recompute PC
+            int c = 0;
+            //Also update Acstart and Austart below
+            Acstart = ra;
+            Austart = ra;
+            for(int i = 0; i < ra; ++i)
+                {
+                if(!contractedA(i))
+                    {
+                    if(i < Austart) Austart = i;
+                    PC.setFromTo(c,AtoC_[i]);
+                    ++c;
+                    }
+                else
+                    {
+                    if(i < Acstart) Acstart = i;
+                    }
+                }
+            Bcstart = rb;
+            Bustart = rb;
+            for(int j = 0; j < rb; ++j)
+                {
+                if(!contractedB(j)) 
+                    {
+                    if(j < Bustart) Bustart = j;
+                    PC.setFromTo(c,BtoC_[j]);
+                    ++c;
+                    }
+                else
+                    {
+                    if(j < Bcstart) Bcstart = j;
+                    }
+                }
+            }
+
+        //PRI(AtoC_)
+        //PRI(BtoC_)
+        //Print(PC);
+
+        auto pc_triv = isTrivial(PC);
+
+        ctrans = false;
+        if(!pc_triv)
+            {
+            //Check if uncontracted A inds in same order on A as on C
+            bool ACsameorder = true;
+            auto aCind = AtoC_.at(Austart);
+            for(int i = 0; i < ra && ACsameorder; ++i) 
+                if(!contractedA(i))
+                    {
+                    if(AtoC_.at(i) == aCind) ++aCind;
+                    else                    ACsameorder = false;
+                    }
+            //Check if uncontracted B inds in same order on B as on C
+            bool BCsameorder = true;
+            auto bCind = BtoC_.at(Bustart);
+            for(int i = 0; i < rb && BCsameorder; ++i) 
+                if(!contractedB(i))
+                    {
+                    if(BtoC_.at(i) == bCind) ++bCind;
+                    else                    BCsameorder = false;
+                    }
+            //Here we already know since pc_triv = false that
+            //at best indices from B precede those from A (on result C)
+            //so if both sets remain in same order on C 
+            //just need to transpose C, not permute it
+            if(BCsameorder && ACsameorder) ctrans = true;
+            }
+
+        if(!pc_triv && !ctrans)
+            {
+            newCdims.resize(rc);
+            int c = 0;
+
+            if(Aismatrix)
+                {
+                for(int i = 0; i < ra; ++i)
+                    if(!contractedA(i))
+                        newCdims.at(c++) = A.dim(i);
+                }
+            else
+                {
+                for(int i = 0; i < ra; ++i)
+                    if(!contractedA(i))
+                        newCdims.at(c++) = newAdims[i];
+                }
+            if(Bismatrix)
+                {
+                for(int j = 0; j < rb; ++j)
+                    if(!contractedB(j)) 
+                        newCdims.at(c++) = B.dim(j);
+                }
+            else
+                {
+                for(int j = 0; j < rb; ++j)
+                    if(!contractedB(j)) 
+                        newCdims.at(c++) = newBdims[j];
+                }
+            }
+        }
 
     void 
     computePerms()
         {
-        if(!AtoB.empty()) return;
+        //Use !AtoB.empty() as a check to see if we've already run this
+        if(!AtoB_.empty()) return;
 
         int na = ai.size(), 
             nb = bi.size(), 
             nc = ci.size();
 
-        AtoB = Label(na,-1);
-        AtoC = Label(na,-1);
-        BtoC = Label(nb,-1);
+        AtoB_ = Label(na,-1);
+        AtoC_ = Label(na,-1);
+        BtoC_ = Label(nb,-1);
         for(int i = 0; i < na; ++i)
             {
             for(int j = 0; j < nb; ++j)
@@ -157,7 +506,7 @@ struct ABCProps
                     ++ncont;
                     if(i < Acstart) Acstart = i;
                     if(j < Bcstart) Bcstart = j;
-                    AtoB[i] = j;
+                    AtoB_[i] = j;
                     break;
                     }
             }
@@ -168,7 +517,7 @@ struct ABCProps
                 if(ai[i] == ci[k]) 
                     {
                     if(i < Austart) Austart = i;
-                    AtoC[i] = k;
+                    AtoC_[i] = k;
                     break;
                     }
             }
@@ -179,13 +528,13 @@ struct ABCProps
                 if(bi[j] == ci[k]) 
                     {
                     if(j < Bustart) Bustart = j;
-                    BtoC[j] = k;
+                    BtoC_[j] = k;
                     break;
                     }
             }
-        //PRI(AtoB)
-        //PRI(AtoC)
-        //PRI(BtoC)
+        //PRI(AtoB_)
+        //PRI(AtoC_)
+        //PRI(BtoC_)
         }
 
     void
@@ -322,296 +671,67 @@ class CABqueue
 
 template<typename RangeT>
 void 
-contract(ABCProps& abc,
+contract(const CProps& p,
          TenRefc<RangeT> A, 
          TenRefc<RangeT> B, 
          TenRef<RangeT>  C)
     {
     //println();
     //println("------------------------------------------");
-    // Optimizations TODO
-    //
-    // o Add "automatic C" mode where index order of C can be
-    //   unspecified, and will be chosen so as not to require
-    //   permuting C at the end.
-    //
-    // o If rc > ra+rb and going to permute C, permute both A and B instead
-    //
-    // o If trailing dim(j)==1 dimensions at end of A, B, or C indices
-    //   (as often the case for ITensors with m==1 indices),
-    //   have ABCProps resize ai, bi, and ci accordingly to avoid
-    //   looping over these.
-    //
-
-    long ra = abc.ai.size(),
-         rb = abc.bi.size(),
-         rc = abc.ci.size();
-
-    abc.computePerms();
-
-    Permutation PC(rc);
-
-    auto contractedA = [&abc](int i) { return abc.AtoC[i] < 0; };
-    auto contractedB = [&abc](int i) { return abc.BtoC[i] < 0; };
-
-    long dleft = 1,
-         dmid = 1,
-         dright = 1;
-    int c = 0;
-    for(int i = 0; i < ra; ++i)
-        {
-        if(!contractedA(i))
-            {
-            dleft *= A.dim(i);
-            PC.setFromTo(c,abc.AtoC[i]);
-            ++c;
-            }
-        else
-            {
-            dmid *= A.dim(i);
-            }
-        }
-    for(int j = 0; j < rb; ++j)
-        {
-        if(!contractedB(j)) 
-            {
-            dright *= B.dim(j);
-            PC.setFromTo(c,abc.BtoC[j]);
-            ++c;
-            }
-        }
-
-
-    // Check if A is matrix-like
-    bool Aismatrix = true;
-    if(!(contractedA(0) || contractedA(ra-1)))
-        {
-        //If contracted indices are not all at front or back, A is not matrix-like
-        Aismatrix = false;
-        }
-    else
-        {
-        for(int i = 0; i < abc.ncont; ++i)
-            {
-            auto aind = abc.Acstart+i;
-            if(!contractedA(aind)) 
-                {
-                //If contracted indices are not contiguous
-                //A is not matrix-like
-                Aismatrix = false;
-                break;
-                }
-            }
-        }
-
-    //
-    // Check if B is matrix-like
-    //
-    bool Bismatrix = true;
-    if(!(contractedB(0) || contractedB(rb-1)))
-        {
-        //If contracted indices are not all at front or back, B is not matrix-like
-        Bismatrix = false;
-        }
-    else
-        {
-        for(int i = 0; i < abc.ncont; ++i)
-            {
-            auto bind = abc.Bcstart+i;
-            if(!contractedB(bind))
-                {
-                //If contracted indices are not contiguous
-                //B is not matrix-like
-                Bismatrix = false;
-                break;
-                }
-            }
-        }
-
-    //printfln("A is matrix = %s",Aismatrix);
-    //PRI(abc.ai)
-    //printfln("B is matrix = %s",Bismatrix);
-    //PRI(abc.bi)
-    //PRI(abc.ci)
-
-    if(Aismatrix && Bismatrix)
-        {
-        //Check if contracted inds. in same order
-        //if not, set ismatrix=false for the smaller one
-        for(int i = 0; i < abc.ncont; ++i)
-            {
-            auto aind = abc.Acstart+i,
-                 bind = abc.Bcstart+i;
-            if(abc.AtoB[aind] != bind) 
-                {
-                if(dleft < dright) Aismatrix = false;
-                else               Bismatrix = false;
-
-                break;
-                }
-            }
-        }
 
     //cpu_time cpu;
 
     MatRefc aref;
     Ten newA;
-    Permutation PA;
-    if(Aismatrix)
+    if(p.permuteA())
+        {
+        //println("Calling permute A");
+        newA = Ten(p.newAdims);
+        permute(A,p.PA,newA);
+        aref = MatRefc(newA.data(),p.dmid,p.dleft);
+        aref.applyTrans();
+        }
+    else
         {
         //println("A is matrix already, making aref");
-        if(!contractedA(0)) 
+        if(!p.contractedA(0)) 
             {
-            aref = MatRefc(A.data(),dleft,dmid);
+            aref = MatRefc(A.data(),p.dleft,p.dmid);
             }
         else
             {
             //println("  Transposing aref");
-            aref = MatRefc(A.data(),dmid,dleft);
+            aref = MatRefc(A.data(),p.dmid,p.dleft);
             aref.applyTrans();
             }
-        }
-    else
-        {
-        PA = Permutation(ra);
-        //TODO: consider permuting to back instead and do timing
-        //Permute contracted indices to the front,
-        //in the same order as on B
-        int newi = 0;
-        auto bind = abc.Bcstart;
-        for(int i = 0; i < abc.ncont; ++i)
-            {
-            while(!contractedB(bind)) ++bind;
-            auto j = findIndex(abc.ai,abc.bi[bind]);
-            PA.setFromTo(j,newi++);
-            ++bind;
-            }
-        //Reset abc.AtoC:
-        std::fill(abc.AtoC.begin(),abc.AtoC.end(),-1);
-        //Permute uncontracted indices to
-        //appear in same order as on C
-        for(int k = 0; k < rc; ++k)
-            {
-            auto j = findIndex(abc.ai,abc.ci[k]);
-            if(j != -1)
-                {
-                abc.AtoC[newi] = k;
-                PA.setFromTo(j,newi);
-                ++newi;
-                }
-            if(newi == ra) break;
-            }
-        //println("Calling permute A");
-        permute(A,PA,newA);
-        aref = MatRefc(newA.data(),dmid,dleft);
-        aref.applyTrans();
         }
 
     MatRefc bref;
     Ten newB;
-    Permutation PB;
-    if(Bismatrix)
+    if(p.permuteB())
+        {
+        //println("Calling permute B");
+        newB = Ten(p.newBdims);
+        permute(B,p.PB,newB);
+        bref = MatRefc(newB.data(),p.dmid,p.dright);
+        }
+    else
         {
         //println("B is matrix already, making bref");
-        if(!contractedB(0)) 
+        if(!p.contractedB(0)) 
             {
             //println("  Transposing bref");
-            bref = MatRefc(B.data(),dright,dmid);
+            bref = MatRefc(B.data(),p.dright,p.dmid);
             bref.applyTrans();
             }
         else
             {
-            bref = MatRefc(B.data(),dmid,dright);
+            bref = MatRefc(B.data(),p.dmid,p.dright);
             }
-        }
-    else
-        {
-        PB = Permutation(rb);
-        int newi = 0;
-        if(Aismatrix)
-            {
-            //Permute contracted indices to the
-            //front and in same order as on A
-            auto aind = abc.Acstart;
-            for(int i = 0; i < abc.ncont; ++i)
-                {
-                while(!contractedA(aind)) ++aind;
-                int j = findIndex(abc.bi,abc.ai[aind]);
-                PB.setFromTo(j,newi++);
-                ++aind;
-                }
-            }
-        else
-            {
-            //Permute contracted indices to the front
-            for(int i = abc.Bcstart; newi < abc.ncont; ++newi)
-                {
-                while(!contractedB(i)) ++i;
-                PB.setFromTo(i++,newi);
-                }
-            }
-        //Reset abc.BtoC:
-        std::fill(abc.BtoC.begin(),abc.BtoC.end(),-1);
-        //Permute uncontracted indices to
-        //appear in same order as on C
-        for(int k = 0; k < rc; ++k)
-            {
-            auto j = findIndex(abc.bi,abc.ci[k]);
-            if(j != -1)
-                {
-                abc.BtoC[newi] = k;
-                PB.setFromTo(j,newi);
-                ++newi;
-                }
-            if(newi == rb) break;
-            }
-        //println("Calling permute B");
-        permute(B,PB,newB);
-        bref = MatRefc(newB.data(),dmid,dright);
         }
 
     //println("A and B permuted, took ",cpu.sincemark());
 
-    if(!Aismatrix || !Bismatrix)
-        {
-        //Recompute PC
-        int c = 0;
-        //Also update Acstart and Austart below
-        abc.Acstart = ra;
-        abc.Austart = ra;
-        for(int i = 0; i < ra; ++i)
-            {
-            if(!contractedA(i))
-                {
-                if(i < abc.Austart) abc.Austart = i;
-                PC.setFromTo(c,abc.AtoC[i]);
-                ++c;
-                }
-            else
-                {
-                if(i < abc.Acstart) abc.Acstart = i;
-                }
-            }
-        abc.Bcstart = rb;
-        abc.Bustart = rb;
-        for(int j = 0; j < rb; ++j)
-            {
-            if(!contractedB(j)) 
-                {
-                if(j < abc.Bustart) abc.Bustart = j;
-                PC.setFromTo(c,abc.BtoC[j]);
-                ++c;
-                }
-            else
-                {
-                if(j < abc.Bcstart) abc.Bcstart = j;
-                }
-            }
-        }
-
-    //PRI(abc.AtoC)
-    //PRI(abc.BtoC)
-    //Print(PC);
 
     //
     // Carry out the contraction as a matrix-matrix multiply
@@ -626,38 +746,8 @@ contract(ABCProps& abc,
         }
 #endif
 
-    auto pc_triv = isTrivial(PC);
-
-    bool ctrans = false;
-    if(!pc_triv)
-        {
-        //Check if uncontracted A inds in same order on A as on C
-        bool ACsameorder = true;
-        auto aCind = abc.AtoC.at(abc.Austart);
-        for(int i = 0; i < ra && ACsameorder; ++i) 
-            if(!contractedA(i))
-                {
-                if(abc.AtoC.at(i) == aCind) ++aCind;
-                else                        ACsameorder = false;
-                }
-        //Check if uncontracted B inds in same order on B as on C
-        bool BCsameorder = true;
-        auto bCind = abc.BtoC.at(abc.Bustart);
-        for(int i = 0; i < rb && BCsameorder; ++i) 
-            if(!contractedB(i))
-                {
-                if(abc.BtoC.at(i) == bCind) ++bCind;
-                else                        BCsameorder = false;
-                }
-        //Here we already know since pc_triv = false that
-        //at best indices from B precede those from A (on result C)
-        //so if both sets remain in same order on C 
-        //just need to transpose C, not permute it
-        if(BCsameorder && ACsameorder) ctrans = true;
-        }
-
     MatRef cref;
-    if(!ctrans) 
+    if(!p.Ctrans()) 
         {
         cref = MatRef(C.data(),aref.Nrows(),bref.Ncols());
         }
@@ -667,40 +757,11 @@ contract(ABCProps& abc,
         cref.applyTrans();
         }
 
-    //printfln("ctrans = %s",ctrans);
-
     Ten newC;
-    if(!pc_triv && !ctrans)
+    if(p.permuteC())
         {
-        vector<long> cdims(rc);
-        int c = 0;
-
-        if(Aismatrix)
-            {
-            for(int i = 0; i < ra; ++i)
-                if(!contractedA(i))
-                    cdims[c++] = A.dim(i);
-            }
-        else
-            {
-            for(int i = 0; i < ra; ++i)
-                if(!contractedA(i))
-                    cdims[c++] = newA.dim(i);
-            }
-        if(Bismatrix)
-            {
-            for(int j = 0; j < rb; ++j)
-                if(!contractedB(j)) 
-                    cdims[c++] = B.dim(j);
-            }
-        else
-            {
-            for(int j = 0; j < rb; ++j)
-                if(!contractedB(j)) 
-                    cdims[c++] = newB.dim(j);
-            }
         //Allocate newC
-        newC = Ten(cdims);
+        newC = Ten(p.newCdims);
         //Update cref to point at newC
         cref = MatRef(newC.data(),cref.Nrows(),cref.Ncols());
         }
@@ -719,10 +780,10 @@ contract(ABCProps& abc,
     // Reshape C if necessary
     //
 
-    if(!pc_triv && !ctrans)
+    if(p.permuteC())
         {
         //cpu_time cpuC; 
-        permute(makeRefc(newC),PC,C,detail::plusEq<Real>);
+        permute(makeRefc(newC),p.PC,C,detail::plusEq<Real>);
         //println("C permuted, took ",cpuC.sincemark());
         }
     //println("------------------------------------------");
@@ -749,8 +810,9 @@ contract(TenRefc<RangeT> A, const Label& ai,
         for(auto& el : C) el *= val;
         return;
         }
-    ABCProps prop(ai,bi,ci);
-    contract(prop,A,B,C);
+    CProps props(ai,bi,ci);
+    props.compute(A,B,makeRefc(C));
+    contract(props,A,B,C);
     }
 
 //Explicit template instantiations:
@@ -851,34 +913,33 @@ contractloop(TenRefc<RangeT> A, const Label& ai,
         }
     //println();
     //println("Loop start--------------------------------");
+    CProps p(ai,bi,ci);
+    p.computeNactive();
+    //printfln("nactive A, B, C are %d %d %d",p.nactiveA,p.nactiveB,p.nactiveC);
+    if(p.nactiveA != 2 || p.nactiveB != 2 || p.nactiveC != 2)
+        {
+        //println("calling contract from within contractloop");
+        contract(p,A,B,C);
+        return;
+        }
+    p.computePerms();
+
     auto nthread = args.getInt("NThread",4);
+
     long ra = ai.size(),
          rb = bi.size(),
          rc = ci.size();
-    ABCProps abc(ai,bi,ci);
-    abc.computeNactive();
-
-    //printfln("nactive A, B, C are %d %d %d",abc.nactiveA,abc.nactiveB,abc.nactiveC);
-    if(abc.nactiveA != 2 || abc.nactiveB != 2 || abc.nactiveC != 2)
-        {
-        //println("calling contract from within contractloop");
-        contract(abc,A,B,C);
-        return;
-        }
-
-
-    abc.computePerms();
 
     //vector<long> cdims(rc);
     //for(int i = 0; i < ra; ++i)
-    //    if(abc.AtoC[i] >= 0)
+    //    if(p.AtoC[i] >= 0)
     //        {
-    //        cdims[abc.AtoC[i]] = A.dim(i);
+    //        cdims[p.AtoC[i]] = A.dim(i);
     //        }
     //for(int j = 0; j < rb; ++j)
-    //    if(abc.BtoC[j] >= 0)
+    //    if(p.BtoC[j] >= 0)
     //        {
-    //        cdims[abc.BtoC[j]] = B.dim(j);
+    //        cdims[p.BtoC[j]] = B.dim(j);
     //        }
     //C = Ten(cdims,0.);
 
@@ -913,7 +974,7 @@ contractloop(TenRefc<RangeT> A, const Label& ai,
         {
         for(int ia = 2; ia < ra; ++ia)
             {
-            aind[ia] = couA.i.fast(ia);
+            aind[ia] = couA.i[ia];
             }
         auto offA = ind(A,aind);
 
@@ -925,14 +986,14 @@ contractloop(TenRefc<RangeT> A, const Label& ai,
         couB.reset();
         for(int ia = 2; ia < ra; ++ia)
             {
-            auto ival = couA.i.fast(ia);
-            if(abc.AtoB[ia] != -1) 
+            auto ival = couA.i[ia];
+            if(p.contractedA(ia))
                 {
-                couB.setInd(abc.AtoB[ia],ival,ival);
+                couB.setInd(p.AtoB(ia),ival,ival);
                 }
-            if(abc.AtoC[ia] != -1) 
+            else
                 {
-                cind[abc.AtoC[ia]] = ival;
+                cind[p.AtoC(ia)] = ival;
                 }
             }
         
@@ -940,9 +1001,10 @@ contractloop(TenRefc<RangeT> A, const Label& ai,
             {
             for(int ib = 2; ib < rb; ++ib)
                 {
-                bind[ib] = couB.i.fast(ib);
-                if(abc.BtoC[ib] != -1) 
-                    cind[abc.BtoC[ib]] = couB.i.fast(ib);
+                bind[ib] = couB.i[ib];
+                if(p.BtoC(ib) != -1) 
+                if(!p.contractedB(ib))
+                    cind[p.BtoC(ib)] = couB.i[ib];
                 }
 
             auto offB = ind(B,bind);
@@ -983,4 +1045,4 @@ contractloop(TenRefc<IndexSet> A, const Label& ai,
              TenRef<IndexSet>  C, const Label& ci,
              const Args& args);
 
-}
+} //namespace itensor

@@ -10,26 +10,6 @@
 
 namespace itensor {
 
-template<typename Inds, typename Func>
-long
-computeLabels(const Inds& Lis,
-              long rL,
-              const Inds& Ris,
-              long rR,
-              Label& Lind,
-              Label& Rind,
-              const Func& checkCont);
-
-template<typename Inds>
-long
-computeLabels(const Inds& Lis,
-              long rL,
-              const Inds& Ris,
-              long rR,
-              Label& Lind,
-              Label& Rind);
-
-
 template<typename RangeT>
 void 
 contract(TenRefc<RangeT> A, const Label& ai, 
@@ -55,6 +35,25 @@ contractloop(const Tensor<RangeT>& A, const Label& ai,
              const Tensor<RangeT>& B, const Label& bi, 
              Tensor<RangeT>&  C, const Label& ci,
              const Args& args = Global::args());
+
+template<typename Inds, typename Func>
+long
+computeLabels(const Inds& Lis,
+              long rL,
+              const Inds& Ris,
+              long rR,
+              Label& Lind,
+              Label& Rind,
+              const Func& checkCont);
+
+template<typename Inds>
+long
+computeLabels(const Inds& Lis,
+              long rL,
+              const Inds& Ris,
+              long rR,
+              Label& Lind,
+              Label& Rind);
 
 
 ///
