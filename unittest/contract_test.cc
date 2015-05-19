@@ -15,8 +15,8 @@ TEST_CASE("Contract Test")
     SECTION("Contract Reshape Basic")
         {
         Ten A(2,2),
-                B(2,2),
-                C(2,2);
+            B(2,2),
+            C(2,2);
         A(0,0) = 1; A(0,1) = 2;
         A(1,0) = 3; A(1,1) = 4;
 
@@ -180,8 +180,8 @@ TEST_CASE("Contract Test")
         SECTION("Case 2")
             {
             Ten A(2,3,4),
-                    B(3,7,2),
-                    C(7,4);
+                B(3,7,2),
+                C(7,4);
             randomize(A);
             randomize(B);
             Global::debug3() = true;

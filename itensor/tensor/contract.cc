@@ -115,12 +115,14 @@ struct CProps
     Label AtoB_, 
           AtoC_, 
           BtoC_;
+    bool permuteA_ = false,
+         permuteB_ = false,
+         permuteC_ = false;
     public:
-    bool Aismatrix = true,
-         Bismatrix = true;
-    long dleft = 1,
-         dmid = 1,
-         dright = 1;
+    using Dimension = unsigned long long;
+    Dimension dleft = 1,
+              dmid = 1,
+              dright = 1;
     int ncont = 0,
         Acstart,
         Bcstart,
@@ -160,11 +162,11 @@ struct CProps
     int
     BtoC(int i) const { return BtoC_[i]; }
     bool
-    permuteA() const { return !newArange.empty(); }
+    permuteA() const { return permuteA_; }
     bool
-    permuteB() const { return !newBrange.empty(); }
+    permuteB() const { return permuteB_; }
     bool
-    permuteC() const { return !newCrange.empty(); }
+    permuteC() const { return permuteC_; }
     bool
     Ctrans() const { return ctrans; }
 
@@ -204,7 +206,6 @@ struct CProps
         dright = 1;
         int c = 0;
         for(int i = 0; i < ra; ++i)
-            {
             if(!contractedA(i))
                 {
                 dleft *= A.dim(i);
@@ -215,91 +216,93 @@ struct CProps
                 {
                 dmid *= A.dim(i);
                 }
-            }
         for(int j = 0; j < rb; ++j)
-            {
             if(!contractedB(j)) 
                 {
                 dright *= B.dim(j);
                 PC.setFromTo(c,BtoC_[j]);
                 ++c;
                 }
-            }
+
+        auto PCtriv = isTrivial(PC);
 
 
-        // Check if A is matrix-like
-        Aismatrix = true;
+        //Check if A can be treated as a matrix without permuting
+        permuteA_ = false;
         if(!(contractedA(0) || contractedA(ra-1)))
             {
-            //If contracted indices are not all at front or back, A is not matrix-like
-            Aismatrix = false;
+            //If contracted indices are not all at front or back, 
+            //will have to permute A 
+            permuteA_ = true;
             }
         else
             {
+            //Contracted ind start at front or back, check if contiguous
             for(int i = 0; i < ncont; ++i)
-                {
-                auto aind = Acstart+i;
-                if(!contractedA(aind)) 
+                if(!contractedA(Acstart+i)) 
                     {
-                    //If contracted indices are not contiguous
-                    //A is not matrix-like
-                    Aismatrix = false;
+                    //Contracted indices not contiguous, must permute
+                    permuteA_ = true;
                     break;
                     }
-                }
             }
 
-        //
         // Check if B is matrix-like
-        //
-        Bismatrix = true;
+        permuteB_ = false;
         if(!(contractedB(0) || contractedB(rb-1)))
             {
-            //If contracted indices are not all at front or back, B is not matrix-like
-            Bismatrix = false;
+            //If contracted indices are not all at front or back, 
+            //will have to permute B
+            permuteB_ = true;
             }
         else
             {
             for(int i = 0; i < ncont; ++i)
-                {
-                auto bind = Bcstart+i;
-                if(!contractedB(bind))
+                if(!contractedB(Bcstart+i))
                     {
-                    //If contracted indices are not contiguous
-                    //B is not matrix-like
-                    Bismatrix = false;
+                    //Contracted inds not contiguous, permute
+                    permuteB_ = true;
                     break;
                     }
-                }
             }
 
-        //printfln("A is matrix = %s",Aismatrix);
-        //PRI(props.ai)
-        //printfln("B is matrix = %s",Bismatrix);
-        //PRI(props.bi)
-        //PRI(props.ci)
-
-        if(Aismatrix && Bismatrix)
+        if(!permuteA_ && !permuteB_)
             {
             //Check if contracted inds. in same order
-            //if not, set ismatrix=false for the smaller one
             for(int i = 0; i < ncont; ++i)
-                {
-                auto aind = Acstart+i,
-                     bind = Bcstart+i;
-                if(AtoB_[aind] != bind) 
+                if(AtoB(Acstart+i) != (Bcstart+i)) 
                     {
-                    if(dleft < dright) Aismatrix = false;
-                    else               Bismatrix = false;
+                    //If not in same order, 
+                    //must permute one of A or B
+                    //so permute the smaller one
+                    if(dleft < dright) permuteA_ = true;
+                    else               permuteB_ = true;
                     break;
                     }
+            }
+
+        auto pCost = [](Real d) { return d*d; };
+
+        if(!PCtriv && !(permuteA_ && permuteB_))
+            {
+            //Could avoid permuting C if
+            //permute both A and B, worth it?
+            auto pCcost = pCost(dleft*dright);
+            Real extra_pABcost = 0;
+            if(!permuteA_) extra_pABcost += pCost(dleft*dmid);
+            if(!permuteB_) extra_pABcost += pCost(dmid*dright);
+            if(extra_pABcost < pCcost)
+                {
+                //printfln("dleft=%d, dmid=%d, dright=%d",dleft,dmid,dright);
+                //printfln("Permuting %s %s (%d) instead of permuting C (%d)",permuteA_?"":"A",permuteB_?"":"B",extra_pABcost,pCcost);
+                permuteA_ = true;
+                permuteB_ = true;
                 }
             }
 
-        if(!Aismatrix)
+        if(permuteA_)
             {
             PA = Permutation(ra);
-            //TODO: consider permuting to back instead and do timing
             //Permute contracted indices to the front,
             //in the same order as on B
             int newi = 0;
@@ -326,19 +329,39 @@ struct CProps
                     }
                 if(newi == ra) break;
                 }
+            //Compute newArange
+            //Also update Austart,Acstart
             newArange.resize(ra);
+            Acstart = ra;
+            Austart = ra;
             for(int i = 0; i < ra; ++i)
                 {
                 newArange[PA.dest(i)].dim = A.dim(i);
+                if(contractedA(i))
+                    Acstart = std::min(i,Acstart);
+                else
+                    Austart = std::min(i,Austart);
                 }
             newArange.computeStrides();
             }
 
-        if(!Bismatrix)
+        if(permuteB_)
             {
             PB = Permutation(rb);
             int newi = 0;
-            if(Aismatrix)
+            if(permuteA_)
+                {
+                //A's contracted indices already set to
+                //be in same order as B above, so just
+                //permute contracted indices to the front
+                //keeping relative order
+                for(int i = Bcstart; newi < ncont; ++newi)
+                    {
+                    while(!contractedB(i)) ++i;
+                    PB.setFromTo(i++,newi);
+                    }
+                }
+            else
                 {
                 //Permute contracted indices to the
                 //front and in same order as on A
@@ -349,15 +372,6 @@ struct CProps
                     int j = find_index(bi,ai[aind]);
                     PB.setFromTo(j,newi++);
                     ++aind;
-                    }
-                }
-            else
-                {
-                //Permute contracted indices to the front
-                for(int i = Bcstart; newi < ncont; ++newi)
-                    {
-                    while(!contractedB(i)) ++i;
-                    PB.setFromTo(i++,newi);
                     }
                 }
             //Reset p.BtoC:
@@ -376,58 +390,44 @@ struct CProps
                 if(newi == rb) break;
                 }
             newBrange.resize(rb);
+            Bcstart = rb;
+            Bustart = rb;
             for(int i = 0; i < rb; ++i)
                 {
                 newBrange[PB.dest(i)].dim = B.dim(i);
+                if(contractedB(i))
+                    Bcstart = std::min(i,Bcstart);
+                else
+                    Bustart = std::min(i,Bustart);
                 }
             newBrange.computeStrides();
             }
 
-        if(!Aismatrix || !Bismatrix)
+        if(permuteA_ || permuteB_)
             {
             //Recompute PC
             int c = 0;
-            //Also update Acstart and Austart below
-            Acstart = ra;
-            Austart = ra;
             for(int i = 0; i < ra; ++i)
-                {
                 if(!contractedA(i))
                     {
-                    if(i < Austart) Austart = i;
                     PC.setFromTo(c,AtoC_[i]);
                     ++c;
                     }
-                else
-                    {
-                    if(i < Acstart) Acstart = i;
-                    }
-                }
-            Bcstart = rb;
-            Bustart = rb;
             for(int j = 0; j < rb; ++j)
-                {
                 if(!contractedB(j)) 
                     {
-                    if(j < Bustart) Bustart = j;
                     PC.setFromTo(c,BtoC_[j]);
                     ++c;
                     }
-                else
-                    {
-                    if(j < Bcstart) Bcstart = j;
-                    }
-                }
+            PCtriv = isTrivial(PC);
             }
 
         //PRI(AtoC_)
         //PRI(BtoC_)
         //Print(PC);
 
-        auto pc_triv = isTrivial(PC);
-
         ctrans = false;
-        if(!pc_triv)
+        if(!PCtriv)
             {
             //Check if uncontracted A inds in same order on A as on C
             bool ACsameorder = true;
@@ -451,15 +451,18 @@ struct CProps
             //at best indices from B precede those from A (on result C)
             //so if both sets remain in same order on C 
             //just need to transpose C, not permute it
-            if(BCsameorder && ACsameorder) ctrans = true;
+            if(BCsameorder && ACsameorder) 
+                ctrans = true;
+            else
+                permuteC_ = true;
             }
 
-        if(!pc_triv && !ctrans)
+        if(permuteC_)
             {
             newCrange.resize(rc);
             int c = 0;
 
-            if(Aismatrix)
+            if(!permuteA_)
                 {
                 for(int i = 0; i < ra; ++i)
                     if(!contractedA(i))
@@ -471,7 +474,7 @@ struct CProps
                     if(!contractedA(i))
                         newCrange.at(c++).dim = newArange.dim(i);
                 }
-            if(Bismatrix)
+            if(!permuteB_)
                 {
                 for(int j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
