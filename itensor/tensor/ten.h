@@ -41,6 +41,8 @@ class TensorRef
     const range_type* prange_ = nullptr;
     public:
 
+    TensorRef() { }
+
     TensorRef(pointer pdat,
               const range_type& range)
         :

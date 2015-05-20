@@ -7,6 +7,7 @@
 #include "detail/gcounter.h"
 #include "indexset.h"
 #include "matrix/mat.h"
+#include "multalloc.h"
 
 using std::vector;
 
@@ -14,7 +15,7 @@ namespace itensor {
 
 template<typename T>
 void
-printv(const std::vector<T>& t)
+printv(const vector<T>& t)
     {
     print("{ ");
     for(const auto& i : t) print(i," ");
@@ -22,7 +23,7 @@ printv(const std::vector<T>& t)
     }
 template<typename T,typename F>
 void
-printv(const std::vector<T>& t,
+printv(const vector<T>& t,
        const F& f)
     {
     print("{ ");
@@ -57,10 +58,10 @@ printv(const autovector<T>& t)
 
 template<typename T>
 long 
-find_index(const std::vector<T>& v, 
+find_index(const vector<T>& v, 
           const T& t)
     {
-    using size_type = typename std::vector<T>::size_type;
+    using size_type = typename vector<T>::size_type;
     for(size_type i = 0; i < v.size(); ++i)
         if(v[i] == t) return i;
     return -1;
@@ -629,7 +630,7 @@ struct ABoffC
 
 class CABqueue
     {
-    std::unordered_map<int,std::vector<ABoffC>> subtask;
+    std::unordered_map<int,vector<ABoffC>> subtask;
     public:
 
     CABqueue() { }
@@ -662,7 +663,7 @@ class CABqueue
         //Loop over threads in a round-robin fashion.
         //Assign all tasks with the same memory 
         //destination (offC) to the same thread. 
-        std::vector<std::vector<ABoffC>> threadtask(numthread);
+        vector<vector<ABoffC>> threadtask(numthread);
         int ss = 0;
         for(auto& t : subtask)
             {
@@ -674,7 +675,7 @@ class CABqueue
 
         //"Package" thread tasks into std::future objects
         //which begin running once they are created
-        std::vector<std::future<void>> futs(numthread);
+        vector<std::future<void>> futs(numthread);
         assert(threadtask.size()==futs.size());
         for(size_t i = 0; i < futs.size(); ++i)
             {
@@ -707,17 +708,31 @@ contract(const CProps& p,
     {
     //println();
     //println("------------------------------------------");
+    //
+    // Optimizations TODO
+    //
+    // o Allocate memory for newA, newB, and newC in a single 
+    //   allocation. Use a helper object (with std::array of
+    //   ptrs and sizes) to manage.
+    //   This will also make newA-C into MatRef's, avoiding
+    //   having to allocate any Ranges.
+    // 
 
     //cpu_time cpu;
 
+    MultAlloc<Real,3> alloc;
+    alloc.add(p.permuteA() ? area(p.newArange) : 0);
+    alloc.add(p.permuteB() ? area(p.newBrange) : 0);
+    alloc.add(p.permuteC() ? area(p.newCrange) : 0);
+    alloc.allocate();
+
     MatRefc aref;
-    Ten newA;
     if(p.permuteA())
         {
         //println("Calling permute A");
-        newA = Ten(p.newArange);
-        permute(A,p.PA,newA);
-        aref = MatRefc(newA.data(),p.dmid,p.dleft);
+        auto tref = makeTensorRef(alloc[0],p.newArange);
+        permute(A,p.PA,tref);
+        aref = MatRefc(tref.data(),p.dmid,p.dleft);
         aref.applyTrans();
         }
     else
@@ -736,13 +751,12 @@ contract(const CProps& p,
         }
 
     MatRefc bref;
-    Ten newB;
     if(p.permuteB())
         {
         //println("Calling permute B");
-        newB = Ten(p.newBrange);
-        permute(B,p.PB,newB);
-        bref = MatRefc(newB.data(),p.dmid,p.dright);
+        auto tref = makeTensorRef(alloc[1],p.newBrange);
+        permute(B,p.PB,tref);
+        bref = MatRefc(tref.data(),p.dmid,p.dright);
         }
     else
         {
@@ -771,10 +785,10 @@ contract(const CProps& p,
 #endif
 
     MatRef cref;
-    Ten newC;
+    TenRef<decltype(p.newCrange)> newC;
     if(p.permuteC())
         {
-        newC = Ten(p.newCrange);
+        newC = makeTensorRef(alloc[2],p.newCrange);
         cref = MatRef(newC.data(),aref.Nrows(),bref.Ncols());
         }
     else
