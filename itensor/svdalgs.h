@@ -363,7 +363,7 @@ diagHermitian(const Tensor& M,
 
     std::vector<IndexT> inds;
     inds.reserve(M.r()/2);
-    for(const IndexT& I : M.inds())
+    for(auto& I : M.inds())
         { 
         if(I.primeLevel() == 0) inds.push_back(I);
         }

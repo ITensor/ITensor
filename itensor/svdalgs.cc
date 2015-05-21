@@ -77,7 +77,7 @@ truncate(Vec& P,
         }
     else
         {
-        const Real scale = doRelCutoff ? P(1) : 1.0;
+        Real scale = doRelCutoff ? P(1) : 1.0;
         for(;m > maxm || (truncerr+P(m) < cutoff*scale && m > minm); --m)
             {
             truncerr += P(m);
@@ -632,6 +632,7 @@ diag_hermitian(ITensor rho,
     auto doRelCutoff = args.getBool("DoRelCutoff",false);
     auto absoluteCutoff = args.getBool("AbsoluteCutoff",false);
     auto cplx = isComplex(rho);
+    auto showeigs = args.getBool("ShowEigs",false);
 
 #ifdef DEBUG
     if(rho.r() != 2)
@@ -700,10 +701,11 @@ diag_hermitian(ITensor rho,
     //    DD *= rho.scale().real();
     //    }
 
-    if(args.getBool("ShowEigs",false)) 
+    if(showeigs)
         {
         println("Before truncating, m = ",DD.size());
         println("DD = ",DD);
+        printfln("maxm=%d,minm=%d,cutoff=%.2E",maxm,minm,cutoff);
         }
 
     //Truncate
@@ -715,6 +717,10 @@ diag_hermitian(ITensor rho,
         svdtruncerr = truncate(DD,maxm,minm,cutoff,absoluteCutoff,doRelCutoff);
         m = DD.size();
         UU.reduceColsTo(m);
+        if(showeigs)
+            {
+            printfln("Truncated to m=%d, trunc. err. = %.2E",m,svdtruncerr);
+            }
         }
     Spectrum spec;
     spec.truncerr(svdtruncerr);
