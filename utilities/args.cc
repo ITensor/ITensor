@@ -196,6 +196,18 @@ defined(const Name& name) const
     return global().defined(name);
     }
 
+// Remove an arg from the set - always succeeds
+void Args::
+remove(const Name& name)
+    {
+    for(auto it = vals_.begin(); it != vals_.end(); ++it)
+        if(it->name() == name)
+            {
+            vals_.erase(it);
+            break;
+            }
+    }
+
 
 void Args::
 add(const Val& val)

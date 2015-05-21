@@ -100,11 +100,13 @@ class Args
     void
     add(const char* ostring);
 
-    //
     // Check if a specific name is defined in this Args instance
-    //
     bool
     defined(const Name& name) const;
+
+    // Remove an arg from the set - always succeeds
+    void
+    remove(const Name& name);
 
     //
     // Methods for getting values of named arguments
