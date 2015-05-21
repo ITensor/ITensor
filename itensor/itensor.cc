@@ -46,14 +46,14 @@ ITensor(Complex val)
     :
     scale_(1.)
     { 
-    //if(val.imag() == 0)
-    //    store_ = std::make_shared<ITReal>(1,val.real());
-    //else
-    //    store_ = std::make_shared<ITCplx>(1,val);
     if(val.imag() == 0)
-        store_ = std::make_shared<ITDiag<Real>>(val.real());
+        store_ = std::make_shared<ITReal>(1,val.real());
     else
-        store_ = std::make_shared<ITDiag<Complex>>(val);
+        store_ = std::make_shared<ITCplx>(1,val);
+    //if(val.imag() == 0)
+    //    store_ = std::make_shared<ITDiag<Real>>(val.real());
+    //else
+    //    store_ = std::make_shared<ITDiag<Complex>>(val);
     }
 
 //ITensor::
@@ -705,13 +705,13 @@ operator*=(const ITensor& other)
     auto ncont = computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
 
     //Check if other is a scalar (modulo m==1 inds)
-    if(Ris.rn() == 0)
-        {
-        auto nuniq = Lis.r()+Ris.r()-2*ncont;
-        operator*=(other.cplx());
-        is_ = IndexSet(computeNewInds(Lis,Lind,Ris,Rind,nuniq));
-        return *this;
-        }
+    //if(Ris.rn() == 0)
+    //    {
+    //    auto nuniq = Lis.r()+Ris.r()-2*ncont;
+    //    operator*=(other.cplx());
+    //    is_ = IndexSet(computeNewInds(Lis,Lind,Ris,Rind,nuniq));
+    //    return *this;
+    //    }
     //Check if this is a scalar (modulo m==1 inds)
     //---> This case is problematic to implement this way.
     //     For example, what if other has ITCombiner storage?
