@@ -419,17 +419,16 @@ randomTensor(const IndexSet& inds)
 ITensor
 matrixTensor(Mat&& M, const Index& i1, const Index& i2);
 
-//template <typename... Indices>
-//ITensor
-//tieIndex(const ITensor& T,
-//         const Index& t0,
-//         const Index& t1,
-//         const Indices&... rest);
+//Apply x = f(x) for each element x of T
+//and return the resulting tensor
+template<typename F>
+ITensor
+apply(ITensor T, F&& f);
 
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).
 //Result is equivalent to sqrt((T*T).real()) 
-//[and similar for complex case] but computed much more efficiently.
+//(and similar for complex case) but computed more efficiently
 Real 
 norm(const ITensor& T);
 

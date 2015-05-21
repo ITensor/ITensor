@@ -514,6 +514,14 @@ mapprime(ITensor A,
     return A;
     }
 
+template<typename F>
+ITensor
+apply(ITensor T, F&& f)
+    {
+    T.apply(std::forward<F>(f));
+    return T;
+    }
+
 } //namespace itensor
 
 

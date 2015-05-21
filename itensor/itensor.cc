@@ -1095,7 +1095,7 @@ struct Conj : RegisterFunc<Conj>
     void
     operator()(const ITCplx& cd) 
         { 
-        auto& d = modifyData(cd);
+        auto& d = modifyData(cd); //needed to "compete" with templated version
         auto i = MAKE_SAFE_PTR(d.istart(),d.csize());
         auto* ie = d.iend();
         for(; i != ie; ++i) *i *= -1;
@@ -1103,7 +1103,7 @@ struct Conj : RegisterFunc<Conj>
     void
     operator()(const ITDiag<Complex>& cd) 
         { 
-        auto& d = modifyData(cd);
+        auto& d = modifyData(cd); //needed to "compete" with templated version
         if(d.allSame()) 
             {
             d.val = std::conj(d.val);
