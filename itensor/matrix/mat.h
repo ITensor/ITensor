@@ -213,6 +213,14 @@ class Matrix
         data_(nrows*ncols,0) 
         { }
 
+    Matrix(long nrows,
+           long ncols,
+           value_type val)
+        : 
+        ind_(nrows,ncols),
+        data_(nrows*ncols,val) 
+        { }
+
     Matrix(const Matrix& other) { assignFromMat(other); }
 
     Matrix(Matrix&& other) { moveFromMat(std::move(other)); }

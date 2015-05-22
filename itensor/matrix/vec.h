@@ -163,6 +163,8 @@ class Vector
     explicit
     Vector(long size) : data_(size) { }
 
+    Vector(long size, value_type val) : data_(size,val) { }
+
     explicit
     Vector(storage_type&& data) : data_(std::move(data)) { }
 
