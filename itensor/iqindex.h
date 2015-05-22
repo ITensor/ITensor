@@ -237,15 +237,6 @@ dag(IndexQN res) { res.dag(); return res; }
 IQIndexVal inline
 dag(IQIndexVal res) { res.dag(); return res; }
 
-IQIndex inline
-operator^(IQIndex I, int inc) { I.prime(inc); return I; }
-
-IndexQN inline
-operator^(IndexQN I, int inc) { I.prime(inc); return I; }
-
-IQIndexVal inline
-operator^(IQIndexVal I, int inc) { I.prime(inc); return I; }
-
 bool
 hasindex(const IQIndex& I, const Index& i);
 
@@ -272,6 +263,35 @@ operator<<(std::ostream &s, const IndexQN& x);
 
 std::ostream& 
 operator<<(std::ostream& s, const IQIndexVal& iv);
+
+template<typename... VarArgs>
+IQIndex
+prime(IQIndex I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); return I; }
+
+template<typename... VarArgs>
+IQIndex
+noprime(IQIndex I, VarArgs&&... vargs) { I.noprime(std::forward<VarArgs>(vargs)...); return I; }
+
+//Return a copy of I with prime level changed to plevnew if
+//old prime level was plevold. Otherwise has no effect.
+IQIndex inline
+mapprime(IQIndex I, int plevold, int plevnew, IndexType type = All)
+    { I.mapprime(plevold,plevnew,type); return I; }
+
+template<typename... VarArgs>
+IQIndexVal
+prime(IQIndexVal I, VarArgs&&... vargs) { I.prime(std::forward<VarArgs>(vargs)...); return I; }
+
+template<typename... VarArgs>
+IQIndexVal
+noprime(IQIndexVal I, VarArgs&&... vargs) { I.noprime(std::forward<VarArgs>(vargs)...); return I; }
+
+//Return a copy of I with prime level changed to plevnew if
+//old prime level was plevold. Otherwise has no effect.
+IQIndexVal inline
+mapprime(IQIndexVal I, int plevold, int plevnew, IndexType type = All)
+    { I.mapprime(plevold,plevnew,type); return I; }
+
 
 //
 //
