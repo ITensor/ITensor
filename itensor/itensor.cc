@@ -702,7 +702,8 @@ operator*=(const ITensor& other)
 
     Label Lind,
           Rind;
-    auto ncont = computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
+    //auto ncont =
+    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
 
     //Check if other is a scalar (modulo m==1 inds)
     //if(Ris.rn() == 0)
