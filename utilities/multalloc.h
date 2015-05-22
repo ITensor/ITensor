@@ -98,7 +98,7 @@ class MultAlloc
     void
     add(size_type size)
         {
-        CHECK_FULL
+        CHECK_NOT_FULL
         if(p_) throw std::runtime_error("Can't add to MultAlloc after allocated");
         if(arrsize_==0)
             {
