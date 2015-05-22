@@ -806,13 +806,14 @@ isComplex(const IQTensor& T)
     }
 
 IQTensor
-combiner(std::vector<IQIndex> inds)
+combiner(std::vector<IQIndex> inds,
+         const Args& args)
     {
     using QNm = pair<QN,long>;
-
     if(inds.empty()) Error("No indices passed to combiner");
+    auto cname = args.getString("IndexName","cmb");
+    auto itype = getIndexType(args,"IndexType",inds.front().type());
     auto r = inds.size();
-    auto type = inds.front().type();
     auto dir = inds.front().dir();
 
     //create combined index
@@ -858,7 +859,7 @@ combiner(std::vector<IQIndex> inds)
         {
         if(qm.first != currqn)
             {
-            indqn[count] = IndexQN(Index(nameint("C",count),currm,type),currqn);
+            indqn[count] = IndexQN(Index(nameint("C",count),currm,itype),currqn);
             currqn = qm.first;
             ++count;
             currm = qm.second;
@@ -869,11 +870,11 @@ combiner(std::vector<IQIndex> inds)
             }
         }
     //Handle last element of indqn:
-    indqn[count] = IndexQN(Index(nameint("C",count),currm,type),currqn);
+    indqn[count] = IndexQN(Index(nameint("C",count),currm,itype),currqn);
     //Finally make new combined IQIndex and put at front of inds
     vector<IQIndex> newinds(inds.size()+1);
     auto it = newinds.begin();
-    *it = IQIndex("cmb",std::move(indqn),dir);
+    *it = IQIndex(cname,std::move(indqn),dir);
     for(const auto& I : inds)
         {
         ++it;

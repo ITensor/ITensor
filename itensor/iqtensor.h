@@ -136,24 +136,21 @@ class IQTensor
     //----------------------------------------------------
     //IQTensor: prime methods
 
+    template<typename... VarArgs>
     IQTensor& 
-    noprime(IndexType type = All) { itensor::noprime(is_,type); return *this; }
+    noprime(VarArgs&&...);
 
+    template<typename... VarArgs>
     IQTensor& 
-    noprime(const IQIndex& I) { itensor::noprime(is_,I); return *this; }
+    prime(VarArgs&&...);
 
-    IQTensor& 
-    prime(int inc = 1) { prime(All,inc); return *this; }
+    template<typename... VarArgs>
+    IQTensor&
+    primeExcept(VarArgs&&...);
 
+    //Change all Indices having primeLevel plevold to have primeLevel plevnew
     IQTensor& 
-    prime(IndexType type, int inc = 1) { itensor::prime(is_,type,inc); return *this; }
-
-    IQTensor& 
-    prime(const IQIndex& I, int inc = 1) { itensor::prime(is_,I,inc); return *this; }
-
-    //no need to keep prime level small
-    IQTensor& 
-    mapprime(int plevold, int plevnew, IndexType type = All) 
+    mapprime(int plevold, int plevnew, IndexType type = All)
         { itensor::mapprime(is_,plevold,plevnew,type); return *this; }
 
     //----------------------------------------------------
@@ -321,7 +318,7 @@ div(const IQTensor& T)
     }
 
 IQTensor
-combiner(std::vector<IQIndex> inds);
+combiner(std::vector<IQIndex> inds, const Args& args = Global::args());
 
 template<typename... Inds>
 IQTensor
@@ -370,6 +367,27 @@ randomTensor(const QN& q, const IQIndex& i1, Inds&&... inds)
     {
     return randomize(IQTensor(q,i1,std::forward<Inds>(inds)...));
     }
+
+template <typename... VarArgs>
+IQTensor
+prime(IQTensor A, 
+      VarArgs&&...);
+
+template <typename... VarArgs>
+IQTensor
+primeExcept(IQTensor A,
+            VarArgs&&...);
+
+template <typename... VarArgs>
+IQTensor
+noprime(IQTensor A,
+        VarArgs&&...);
+
+template <typename... VarArgs>
+IQTensor
+mapprime(IQTensor A,
+         VarArgs&&...);
+
 
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);
