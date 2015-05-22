@@ -18,10 +18,10 @@ SOURCES+= iqindex.cc
 SOURCES+= iqtensor.cc 
 SOURCES+= spectrum.cc 
 SOURCES+= svdalgs.cc 
-#SOURCES+= mps.cc 
-#SOURCES+= mpo.cc 
-#SOURCES+= tevol.cc
-#SOURCES+= autompo.cc
+SOURCES+= mps.cc 
+SOURCES+= mpo.cc 
+SOURCES+= tevol.cc
+SOURCES+= autompo.cc
 
 HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
         detail/gcounter.h global.h real.h \
