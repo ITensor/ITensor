@@ -66,7 +66,7 @@ class LocalOp
     Tensor
     diag() const;
 
-    int
+    long
     size() const;
 
     //
@@ -83,28 +83,28 @@ class LocalOp
     const Tensor&
     Op1() const 
         { 
-        if(isNull()) Error("LocalOp is null");
+        if(!(*this)) Error("LocalOp is default constructed");
         return *Op1_;
         }
 
     const Tensor&
     Op2() const 
         { 
-        if(isNull()) Error("LocalOp is null");
+        if(!(*this)) Error("LocalOp is default constructed");
         return *Op2_;
         }
 
     const Tensor&
     L() const 
         { 
-        if(isNull()) Error("LocalOp is null");
+        if(!(*this)) Error("LocalOp is default constructed");
         return *L_;
         }
 
     const Tensor&
     R() const 
         { 
-        if(isNull()) Error("LocalOp is null");
+        if(!(*this)) Error("LocalOp is default constructed");
         return *R_;
         }
 
@@ -114,20 +114,13 @@ class LocalOp
         return (*Op1_) * (*Op2_);
         }
 
-    bool
-    isNull() const { return Op1_ == nullptr; }
+    explicit operator bool() const { return bool(Op1_); }
 
     bool
     LIsNull() const;
 
     bool
     RIsNull() const;
-
-    static const LocalOp& Null()
-        {
-        static LocalOp Null_;
-        return Null_;
-        }
 
     void
     operator=(const LocalOp& other)
@@ -141,15 +134,9 @@ class LocalOp
     private:
 
     /////////////////
-    //
-    // Data Members
-    //
-
     const Tensor *Op1_, *Op2_; 
     const Tensor *L_, *R_; 
-    mutable int size_;
-
-    //
+    mutable long size_;
     /////////////////
 
     void
@@ -224,7 +211,7 @@ bool inline LocalOp<Tensor>::
 LIsNull() const
     {
     if(L_ == nullptr) return true;
-    return !L_->valid();
+    return !bool(*L_);
     }
 
 template <class Tensor>
@@ -232,14 +219,14 @@ bool inline LocalOp<Tensor>::
 RIsNull() const
     {
     if(R_ == nullptr) return true;
-    return !R_->valid();
+    return !bool(R_);
     }
 
 template <class Tensor>
 void inline LocalOp<Tensor>::
 product(const Tensor& phi, Tensor& phip) const
     {
-    if(this->isNull()) Error("LocalOp is null");
+    if(!(*this)) Error("LocalOp is null");
 
     const Tensor& Op1 = *Op1_;
     const Tensor& Op2 = *Op2_;
@@ -307,15 +294,14 @@ template <class Tensor>
 Tensor inline LocalOp<Tensor>::
 diag() const
     {
-    if(this->isNull()) Error("LocalOp is null");
+    if(!(*this)) Error("LocalOp is null");
 
-    const Tensor& Op1 = *Op1_;
-    const Tensor& Op2 = *Op2_;
+    auto& Op1 = *Op1_;
+    auto& Op2 = *Op2_;
 
     IndexT toTie;
     bool found = false;
-
-    for(const IndexT& s : Op1.indices())
+    for(auto& s : Op1.inds())
         {
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
@@ -329,11 +315,10 @@ diag() const
         Print(Op1);
         Error("Couldn't find Index");
         }
-
-    Tensor Diag = tieIndices(Op1,toTie,prime(toTie),toTie);
+    auto Diag = noprime(Op1 * diagTensor(1,toTie,prime(toTie)),toTie);
 
     found = false;
-    for(const IndexT& s : Op2.indices())
+    for(auto& s : Op2.inds())
         {
         if(s.primeLevel() == 0 && s.type() == Site) 
             {
@@ -343,12 +328,12 @@ diag() const
             }
         }
     if(!found) Error("Couldn't find Index");
-    Diag *= tieIndices(Op2,toTie,prime(toTie),toTie);
+    Diag *= noprime(Op2 * diagTensor(1,toTie,prime(toTie)),toTie);
 
     if(!LIsNull())
         {
         found = false;
-        for(const IndexT& ll : L().indices())
+        for(auto& ll : L().inds())
             {
             if(ll.primeLevel() == 0 && hasindex(L(),prime(ll)))
                 {
@@ -358,7 +343,7 @@ diag() const
                 }
             }
         if(found)
-            Diag *= tieIndices(L(),toTie,prime(toTie),toTie);
+            Diag *= noprime(L()*diagTensor(1,toTie,prime(toTie)),toTie);
         else
             Diag *= L();
         }
@@ -366,7 +351,7 @@ diag() const
     if(!RIsNull())
         {
         found = false;
-        for(const IndexT& rr : R().indices())
+        for(auto& rr : R().inds())
             {
             if(rr.primeLevel() == 0 && hasindex(R(),prime(rr)))
                 {
@@ -376,21 +361,21 @@ diag() const
                 }
             }
         if(found)
-            Diag *= tieIndices(R(),toTie,prime(toTie),toTie);
+            Diag *= noprime(R()*diagTensor(1,toTie,prime(toTie)),toTie);
         else
             Diag *= R();
         }
 
     Diag.dag();
-    Diag.takeRealPart(); //Diag must be real since operator assumed Hermitian
+    Diag.takeReal(); //Diag must be real since operator assumed Hermitian
     return Diag;
     }
 
 template <class Tensor>
-int inline LocalOp<Tensor>::
+long inline LocalOp<Tensor>::
 size() const
     {
-    if(this->isNull()) Error("LocalOp is null");
+    if(!(*this)) Error("LocalOp is default constructed");
     if(size_ == -1)
         {
         //Calculate linear size of this 
@@ -398,7 +383,7 @@ size() const
         size_ = 1;
         if(!LIsNull()) 
             {
-            for(const IndexT& I : L().indices())
+            for(auto& I : L().inds())
                 {
                 if(I.primeLevel() > 0)
                     {
@@ -409,7 +394,7 @@ size() const
             }
         if(!RIsNull()) 
             {
-            for(const IndexT& I : R().indices())
+            for(auto& I : R().inds())
                 {
                 if(I.primeLevel() > 0)
                     {

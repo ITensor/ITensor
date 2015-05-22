@@ -218,10 +218,10 @@ template <class Tensor>
 void 
 psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPSt<Tensor>& phi, Real& re, Real& im) //<psi|H|phi>
     {
-    const int N = H.N();
+    auto N = H.N();
     if(phi.N() != N || psi.N() != N) Error("psiHphi: mismatched N");
 
-    Tensor L = phi.A(1); 
+    auto L = phi.A(1); 
     //Some Hamiltonians may store edge tensors in H.A(0) and H.A(N+1)
     L *= (H.A(0) ? H.A(0)*H.A(1) : H.A(1));
     L *= dag(prime(psi.A(1)));
@@ -235,7 +235,7 @@ psiHphi(const MPSt<Tensor>& psi, const MPOt<Tensor>& H, const MPSt<Tensor>& phi,
     L *= H.A(N);
     if(H.A(N+1)) L *= H.A(N+1);
 
-    Complex z = BraKet(prime(psi.A(N)),L);
+    auto z = (prime(psi.A(N))*L).cplx();
     re = z.real();
     im = z.imag();
     }

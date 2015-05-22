@@ -28,10 +28,10 @@ class SpinHalf : public SiteSet
     getState(int i, const String& state) const;
 
     IQTensor
-    getOp(int i, const String& opname, const Args& opts) const;
+    getOp(int i, const String& opname, const Args& args) const;
 
     DefaultOpsT
-    getDefaultOps(const Args& opts) const;
+    getDefaultOps(const Args& args) const;
 
     virtual void
     doRead(std::istream& s);
@@ -127,7 +127,7 @@ getState(int i, const String& state) const
     }
 
 inline IQTensor SpinHalf::
-getOp(int i, const String& opname, const Args& opts) const
+getOp(int i, const String& opname, const Args& args) const
     {
     const
     IQIndex s(si(i));
@@ -143,53 +143,52 @@ getOp(int i, const String& opname, const Args& opts) const
 
     if(opname == "Sz")
         {
-        Op(Up,UpP) = +0.5;
-        Op(Dn,DnP) = -0.5;
+        Op.set(+0.5,Up,UpP);
+        Op.set(-0.5,Dn,DnP);
         }
     else
     if(opname == "Sx")
         {
-        Op(Up,DnP) = +0.5;
-        Op(Dn,UpP) = +0.5;
+        Op.set(+0.5,Up,DnP);
+        Op.set(+0.5,Dn,UpP);
         }
     else
     if(opname == "ISy")
         {
-        Op(Up,DnP) = -0.5;
-        Op(Dn,UpP) = +0.5;
+        Op.set(-0.5,Up,DnP);
+        Op.set(+0.5,Dn,UpP);
         }
     else
     if(opname == "Sy")
         {
-        Op(Up,DnP) = +0.5;
-        Op(Dn,UpP) = -0.5;
-        Op *= Complex_i;
+        Op.set(+0.5*Cplx_i,Up,DnP);
+        Op.set(-0.5*Cplx_i,Dn,UpP);
         }
     else
     if(opname == "Sp" || opname == "S+")
         {
-        Op(Dn,UpP) = 1;
+        Op.set(1,Dn,UpP);
         }
     else
     if(opname == "Sm" || opname == "S-")
         {
-        Op(Up,DnP) = 1;
+        Op.set(1,Up,DnP);
         }
     else
     if(opname == "projUp")
         {
-        Op(Up,UpP) = 1; 
+        Op.set(1,Up,UpP);
         }
     else
     if(opname == "projDn")
         {
-        Op(Dn,DnP) = 1; 
+        Op.set(1,Dn,DnP);
         }
     else
     if(opname == "S2")
         {
-        Op(Up,UpP) = 0.75; 
-        Op(Dn,DnP) = 0.75; 
+        Op.set(0.75,Up,UpP);
+        Op.set(0.75,Dn,DnP);
         }
     else
         {
@@ -200,7 +199,7 @@ getOp(int i, const String& opname, const Args& opts) const
     }
 
 SpinHalf::DefaultOpsT inline SpinHalf::
-getDefaultOps(const Args& opts) const
+getDefaultOps(const Args& args) const
     {
     static const std::vector<String> dops_(initDefaultOps());
     return dops_;

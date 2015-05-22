@@ -167,11 +167,10 @@ class LocalMPO
         nc_ = val; 
         }
 
-    int
+    long
     size() const { return lop_.size(); }
 
-    bool
-    isNull() const { return Op_ == 0 && Psi_ == 0; }
+    explicit operator bool() const { return Op_ == 0 && Psi_ == 0; }
 
     bool
     doWrite() const { return do_write_; }
@@ -340,11 +339,10 @@ product(const Tensor& phi, Tensor& phip) const
     if(Psi_ != 0)
         {
         int b = position();
-        Tensor othr = (!L() ? dag(prime(Psi_->A(b),Link)) : L()*dag(prime(Psi_->A(b),Link)));
-        Tensor othrR = (!R() ? dag(prime(Psi_->A(b+1),Link)) : R()*dag(prime(Psi_->A(b+1),Link)));
+        auto othr = (!L() ? dag(prime(Psi_->A(b),Link)) : L()*dag(prime(Psi_->A(b),Link)));
+        auto othrR = (!R() ? dag(prime(Psi_->A(b+1),Link)) : R()*dag(prime(Psi_->A(b+1),Link)));
         othr *= othrR;
-
-        Complex z = (othr*phi).toComplex();
+        auto z = (othr*phi).cplx();
 
         phip = dag(othr);
         phip *= z;
@@ -376,7 +374,7 @@ template <class MPSType>
 inline void LocalMPO<Tensor>::
 position(int b, const MPSType& psi)
     {
-    if(this->isNull()) Error("LocalMPO is null");
+    if(!(*this)) Error("LocalMPO is null");
 
     makeL(psi,b-1);
     makeR(psi,b+nc_);
@@ -412,7 +410,7 @@ template <class Tensor>
 inline void LocalMPO<Tensor>::
 shift(int j, Direction dir, const Tensor& A)
     {
-    if(this->isNull()) Error("LocalMPO is null");
+    if(!(*this)) Error("LocalMPO is null");
 
 #ifdef DEBUG
     if(nc_ != 2)
@@ -543,7 +541,7 @@ setLHlim(int val)
         std::ifstream s(fname.c_str());
         if(s.good())
             {
-            PH_.at(LHlim_).read(s);
+            read(s,PH_.at(LHlim_));
             s.close();
             }
         else
@@ -582,7 +580,7 @@ setRHlim(int val)
         std::ifstream s(fname.c_str());
         if(s.good())
             {
-            PH_.at(RHlim_).read(s);
+            read(s,PH_.at(RHlim_));
             s.close();
             }
         else

@@ -26,9 +26,10 @@ enum Direction { Fromright, Fromleft, Both, None };
 static const Real MIN_CUT = 1E-15;
 static const int MAX_M = 5000;
 
-
 static const Complex Complex_1 = Complex(1,0);
 static const Complex Complex_i = Complex(0,1);
+static const Complex Cplx_1 = Complex(1,0);
+static const Complex Cplx_i = Complex(0,1);
 
 // The PAUSE macro is useful for debugging. 
 // Prints the current line number and pauses

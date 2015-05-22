@@ -279,6 +279,19 @@ operator-(IQTensor T) { T *= -1; return T; }
 ITensor 
 toITensor(const IQTensor& T);
 
+// Read IQTensor from binary input stream.
+void inline
+read(std::istream& s, IQTensor& t)
+    {
+    Error("IQTensor read not yet implemented");
+    }
+
+// Write IQTensor to binary output stream.
+void inline
+write(std::ostream& s, const IQTensor& t)
+    {
+    Error("IQTensor read not yet implemented");
+    }
 
 //
 // Multiplication by an IndexVal

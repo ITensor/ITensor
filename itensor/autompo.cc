@@ -17,10 +17,10 @@ using std::make_pair;
 namespace itensor {
 
 bool
-isReal(const Complex& z) { return z.imag() == 0; }
+isReal(const Cplx& z) { return z.imag() == 0; }
 
 bool
-isApproxReal(const Complex& z, Real epsilon = 1E-12) { return fabs(z.imag()) < epsilon; }
+isApproxReal(const Cplx& z, Real epsilon = 1E-12) { return fabs(z.imag()) < epsilon; }
 
 SiteTerm::
 SiteTerm() : i(-1), coef(0) { }

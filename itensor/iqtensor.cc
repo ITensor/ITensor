@@ -219,6 +219,38 @@ operator/=(Real fac)
     return *this;
     }
 
+class IQMultCplx : public RegisterFunc<IQMultCplx>
+    {
+    Cplx z_;
+    public:
+    IQMultCplx(Cplx z)
+        : z_(z)
+        { }
+
+    void
+    operator()(IQTData<Real>& d) const
+        {
+        Error("IQTensor multiplication by complex scalar not implemented");
+        //auto nd = makeNewData<IQTData<Cplx>>();
+        //operator()(*nd);
+        }
+
+    void
+    operator()(IQTData<Cplx>& d) const
+        {
+        for(auto& elt : d.data)
+            elt *= z_;
+        }
+    };
+
+IQTensor& IQTensor::
+operator*=(Cplx z)
+    {
+    if(z.imag()==0) return operator*=(z.real());
+    applyFunc<IQMultCplx>(store_,z);
+    return *this;
+    }
+
 IQTensor& IQTensor::
 operator*=(const LogNumber& lgnum)
     {

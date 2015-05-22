@@ -329,7 +329,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
     vector<Vec> dvector(Nblock);
 
     vector<Real> alleig;
-    alleig.reserve(min(uI.m(),vI.m()));
+    alleig.reserve(std::min(uI.m(),vI.m()));
 
     if(uI.m() == 0)
         throw ResultIsZero("uI.m() == 0");
@@ -343,7 +343,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         A.scaleOutNorm();
         for(const ITensor& t : A.blocks())
             {
-            maxLogNum = max(maxLogNum,t.scale().logNum());
+            maxLogNum = std::max(maxLogNum,t.scale().logNum());
             }
         refNorm = LogNumber(maxLogNum,1);
         }
@@ -445,7 +445,7 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
 
         const int s = alleig.size();
         const int max_show = 20;
-        int stop = s-min(s,max_show);
+        int stop = s-std::min(s,max_show);
 
         //Include refNorm in printed eigs as long as
         //the leading eig is within a few orders of magnitude
@@ -743,7 +743,7 @@ diag_hermitian(ITensor rho,
         printfln("Kept %d states in diag_denmat",m);
         printfln("svdtruncerr = %.3E",svdtruncerr);
         //cout << "doRelCutoff is " << doRelCutoff << endl;
-        //int stop = min(D.Length(),10);
+        //int stop = std::min(D.Length(),10);
         auto stop = DD.size();
         print("Eigs: ");
         for(long j = 1; j <= stop; ++j)
@@ -831,7 +831,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         rho.scaleOutNorm();
         for(const ITensor& t : rho.blocks())
             {
-            maxLogNum = max(maxLogNum,t.scale().logNum());
+            maxLogNum = std::max(maxLogNum,t.scale().logNum());
             }
         refNorm = LogNumber(maxLogNum,1);
         }
@@ -901,7 +901,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 	Real maxM = 1.0;
         for(int r = 1; r <= n; ++r)
 	    for(int c = r+1; c <= n; ++c)
-		maxM = max(maxM,fabs(M(r,c)));
+		maxM = std::max(maxM,fabs(M(r,c)));
 	Real maxcheck = 1e-13 * maxM;
         for(int r = 1; r <= n; ++r)
 	    for(int c = r+1; c <= n; ++c)
@@ -956,7 +956,7 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
         cout << "refNorm is " << refNorm << endl;
         int s = alleig.size();
         const int max_show = 20;
-        int stop = s-min(s,max_show);
+        int stop = s-std::min(s,max_show);
         cout << "Eigs: ";
         for(int j = s-1; j >= stop; --j)
             {
@@ -1204,7 +1204,7 @@ eig_decomp(IQTensor T,
         T.scaleOutNorm();
         for(const ITensor& t : T.blocks())
             {
-            maxLogNum = max(maxLogNum,t.scale().logNum());
+            maxLogNum = std::max(maxLogNum,t.scale().logNum());
             }
         refNorm = LogNumber(maxLogNum,1);
         }

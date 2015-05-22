@@ -49,7 +49,6 @@ class DMRGObserver : public Observer
 
     const MPSt<Tensor>& psi_;
 
-    Vector center_eigs;
     Real energy_errgoal; //Stop DMRG once energy has converged to this precision
     bool printeigs;      //Print slowest decaying eigenvalues after every sweep
     int max_eigs;
@@ -84,21 +83,23 @@ template<class Tensor>
 void inline DMRGObserver<Tensor>::
 measure(const Args& args)
     {
-    const int N = psi_.N();
-    const int b = args.getInt("AtBond",1);
-    const int sw = args.getInt("Sweep",0);
-    const int ha = args.getInt("HalfSweep",0);
-    const Real energy = args.getReal("Energy",0);
+    auto N = psi_.N();
+    auto b = args.getInt("AtBond",1);
+    auto sw = args.getInt("Sweep",0);
+    auto ha = args.getInt("HalfSweep",0);
+    auto energy = args.getReal("Energy",0);
+    using IndexT = typename Tensor::IndexT;
 
     if(!args.getBool("Quiet",false) && !args.getBool("NoMeasure",false))
         {
         if(b < N && b > 0)
             {
-            const Tensor wfb = psi_.A(b)*psi_.A(b+1);
+            auto wfb = psi_.A(b)*psi_.A(b+1);
             for(const std::string& opname : default_ops_)
                 {
-                Complex z = 
-                    BraKet(prime(wfb,psi_.sites()(b)),psi_.sites().op(opname,b)*wfb);
+                auto sb = IndexT(psi_.sites()(b));
+                auto z = (prime(wfb,sb)*psi_.sites().op(opname,b)*wfb).cplx();
+                //auto z = (prime(wfb,psi_.sites()(b))*psi_.sites().op(opname,b)*wfb).cplx();
                 if(fabs(z.imag()) < 1E-14)
                     printfln("<%s>(%d) = %.10E",opname,b,z.real());
                 else
@@ -112,17 +113,18 @@ measure(const Args& args)
         if(b == N/2 && ha == 2)
             {
             println();
-            Vector center_eigs = last_spec_.eigsKept();
+            Vec center_eigs = last_spec_.eigsKept();
             Real S = 0;
-            for(int j = 1; j <= center_eigs.Length(); ++j) 
+            for(int j = 1; j <= center_eigs.size(); ++j) 
+            for(const auto& p : center_eigs)
                 {
-                S -= center_eigs(j)*log(fabs(center_eigs(j)));
+                S -= p*log(fabs(p));
                 }
             printfln("    vN Entropy at center bond b=%d = %.12f",N/2,S);
             printf("    Eigs at center bond b=%d: ",N/2);
-            for(int j = 1; j <= min(center_eigs.Length(),10); ++j) 
+            for(int j = 1; j <= std::min(center_eigs.size(),10l); ++j) 
                 {
-                const Real eig = center_eigs(j);
+                auto eig = center_eigs(j);
                 if(eig < 1E-3) break;
                 printf("%.4f ",eig);
                 }
@@ -130,8 +132,8 @@ measure(const Args& args)
             }
         }
 
-    max_eigs = max(max_eigs,last_spec_.numEigsKept());
-    max_te = max(max_te,last_spec_.truncerr());
+    max_eigs = std::max(max_eigs,last_spec_.numEigsKept());
+    max_te = std::max(max_te,last_spec_.truncerr());
     if(b == 1 && ha == 2) 
         {
         if(!printeigs) println();

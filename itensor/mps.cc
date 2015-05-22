@@ -741,7 +741,7 @@ template<class Tensor>
 Spectrum MPSt<Tensor>::
 svdBond(int b, const Tensor& AA, Direction dir, const Args& args)
     {
-    return svdBond(b,AA,dir,LocalOp<Tensor>::Null(),args);
+    return svdBond(b,AA,dir,LocalOp<Tensor>(),args);
     }
 template Spectrum MPSt<ITensor>::
 svdBond(int b, const ITensor& AA, Direction dir, const Args& args);
@@ -1634,7 +1634,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
                     Real rel_cut = -1;
                     for(int j = 1; j <= bond.m(); ++j)
-                    { rel_cut = max(fabs(summed_block.val1(j)),rel_cut); }
+                    { rel_cut = std::max(fabs(summed_block.val1(j)),rel_cut); }
                     assert(rel_cut >= 0);
                     //Real rel_cut = summed_block.norm()/summed_block.vecSize();
                     rel_cut *= cut;
