@@ -259,7 +259,7 @@ init(Iterable&& inds)
 //        {
 //        const IndexT& i = I[n];
 //#ifdef DEBUG
-//        if(i == IndexT::Null()) Error("Null Index in sortIndices");
+//        if(!i) Error("Null Index in sortIndices");
 //#endif
 //        if(i.m()==1) 
 //            { 

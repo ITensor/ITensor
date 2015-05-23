@@ -20,7 +20,7 @@ ITensor(const Index& i1,
         const Indices&... rest)
     :
     is_(i1,i2,i3,rest...),
-    store_(make_shared<ITReal>(area(is_),0.)),
+    store_(std::make_shared<ITReal>(area(is_),0.)),
     scale_(1.)
 	{ }
 
@@ -31,7 +31,7 @@ ITensor(IndexSet iset,
         const LogNumber& scale)
     :
     is_(std::move(iset)),
-    store_(make_shared<std::decay_t<DataType>>(std::move(dat))),
+    store_(std::make_shared<std::decay_t<DataType>>(std::move(dat))),
     scale_(scale)
     {
     static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
@@ -88,7 +88,7 @@ ITensor(const IndexVal& iv1,
     std::array<Index,size> inds;
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     is_ = IndexSet(inds);
-    store_ = make_shared<ITReal>(area(is_),0.);
+    store_ = std::make_shared<ITReal>(area(is_),0.);
     set(1.,iv1,rest...);
     }
 

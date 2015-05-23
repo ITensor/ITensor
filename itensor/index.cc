@@ -2,6 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
+#include <array>
 #include "index.h"
 
 namespace itensor {

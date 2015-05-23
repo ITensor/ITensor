@@ -15,7 +15,7 @@ class IndexQN;
 class IQIndexDat;
 class IQIndexVal;
 
-using IQIndexDatPtr = shared_ptr<IQIndexDat>;
+using IQIndexDatPtr = std::shared_ptr<IQIndexDat>;
 
 //
 // IQIndex
@@ -421,7 +421,7 @@ IQIndex(const std::string& name,
         const Args&... rest)
     : 
     Index(name,detail::totalM(i1,q1,rest...),i1.type(),i1.primeLevel()), 
-    pd(make_shared<IQIndexDat>(i1,q1,rest...)),
+    pd(std::make_shared<IQIndexDat>(i1,q1,rest...)),
     dir_(Out)
     { }
 
@@ -433,7 +433,7 @@ IQIndex(const std::string& name,
         const Args&... rest)
     : 
     Index(name,detail::totalM(i1,q1,rest...),i1.type(),i1.primeLevel()), 
-    pd(make_shared<IQIndexDat>(i1,q1,rest...)),
+    pd(std::make_shared<IQIndexDat>(i1,q1,rest...)),
     dir_(dir)
     { }
 
@@ -443,7 +443,7 @@ IQIndex(const std::string& name,
         Arrow dir, int plev) 
     : 
     Index(name,totalM(ind_qn),ind_qn.front().type(),plev),
-    pd(make_shared<IQIndexDat>(std::move(ind_qn))),
+    pd(std::make_shared<IQIndexDat>(std::move(ind_qn))),
     dir_(dir)
     { 
     }

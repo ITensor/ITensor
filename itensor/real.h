@@ -4,11 +4,10 @@
 //
 #ifndef __ITENSOR_REAL_H
 #define __ITENSOR_REAL_H
-#include <limits>
-#include "math.h"
 #include <cmath>
+#include "math.h"
+#include "itensor/matrix/types.h"
 #include "itensor/util/print.h"
-#include "itensor/util/types.h"
 
 namespace itensor {
 

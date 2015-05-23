@@ -5,9 +5,9 @@
 
 #ifndef _ITENSOR_STRING_H_
 #define _ITENSOR_STRING_H_
-#include "types.h"
 #include <string>
-#include "error.h"
+#include "itensor/matrix/types.h"
+#include "itensor/util/error.h"
 
 namespace itensor {
 

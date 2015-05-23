@@ -4,6 +4,7 @@
 //
 #ifndef __ITENSOR_SWEEPS_HEADER_H
 #define __ITENSOR_SWEEPS_HEADER_H
+#include <functional>
 #include "itensor/util/input.h"
 #include "itensor/global.h"
 
@@ -185,7 +186,7 @@ class SweepSetter
         return *this;
         }
 
-    using Func = function<T(int,int)>;
+    using Func = std::function<T(int,int)>;
 
     //
     //Sets the remaining values of v_ by 

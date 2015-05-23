@@ -8,17 +8,14 @@
 
 #include <cmath>
 #include <cstdlib>
-//#include <sys/types.h>
 #include <fstream>
-//#include <complex>
-//#include <ctime>
 #include <string>
 #include <cstring>
 #include <unistd.h>
-//#include "assert.h"
+#include <random>
+#include "itensor/matrix/types.h"
 #include "itensor/util/error.h"
 #include "itensor/util/args.h"
-#include "itensor/util/types.h"
 #include "itensor/real.h"
 
 
@@ -392,8 +389,8 @@ class Global
     random()//int seed = 0)
         {
         int seed = 0;
-        using Generator = mt19937;
-        using Distribution = uniform_real_distribution<Real>;
+        using Generator = std::mt19937;
+        using Distribution = std::uniform_real_distribution<Real>;
 
         static Generator rng(std::time(NULL)+getpid());
         static Distribution dist(0,1);

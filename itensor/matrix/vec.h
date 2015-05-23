@@ -10,8 +10,9 @@
 #endif
 #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
 
-#include "itensor/util/types.h"
+#include <vector>
 #include "itensor/util/print.h"
+#include "itensor/matrix/types.h"
 #include "itensor/matrix/strideiter.h"
 
 namespace itensor {

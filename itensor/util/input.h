@@ -11,15 +11,11 @@
 #include <fstream>
 #include <string>
 #include <limits>
+#include "itensor/matrix/types.h"
 #include "itensor/util/error.h"
-#include "itensor/util/types.h"
 #include "itensor/util/optional_ptr.h"
 
 namespace itensor {
-
-#ifndef NAN
-#define NAN (std::numeric_limits<Real>::quiet_NaN())
-#endif
 
 class InputFile
     {

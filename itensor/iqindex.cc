@@ -12,6 +12,7 @@ using std::ostream;
 using std::vector;
 using std::string;
 using std::ostringstream;
+using std::make_shared;
 
 //
 // IQIndexDat
@@ -43,7 +44,7 @@ read(istream& s)
 const IQIndexDatPtr& IQIndexDat::
 Null()
     {
-    static IQIndexDatPtr Null_ = make_shared<IQIndexDat>(Index(),QN());
+    static IQIndexDatPtr Null_ = std::make_shared<IQIndexDat>(Index(),QN());
     return Null_;
     }
 

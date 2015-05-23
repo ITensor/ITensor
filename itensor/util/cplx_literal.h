@@ -2,55 +2,55 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_COMPLEX_H
-#define __ITENSOR_COMPLEX_H
+#ifndef __ITENSOR_CPLX_LITERAL_H
+#define __ITENSOR_CPLX_LITERAL_H
 
-#include "types.h"
+#include "itensor/matrix/types.h"
 
 namespace itensor {
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
-Complex inline
-operator*(T i, const Complex& z) { return Real(i)*z; }
+Cplx inline
+operator*(T i, const Cplx& z) { return Real(i)*z; }
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
-Complex
-operator*(const Complex& z, T i) { return z*Real(i); }
+Cplx
+operator*(const Cplx& z, T i) { return z*Real(i); }
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
-Complex inline
-operator/(T i, const Complex& z) { return Real(i)/z; }
+Cplx inline
+operator/(T i, const Cplx& z) { return Real(i)/z; }
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
-Complex
-operator/(const Complex& z, T i) { return z/Real(i); }
+Cplx
+operator/(const Cplx& z, T i) { return z/Real(i); }
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
-Complex 
-operator+(T i, const Complex& z) { return Real(i)+z; }
+Cplx 
+operator+(T i, const Cplx& z) { return Real(i)+z; }
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
-Complex 
-operator+(const Complex& z, T i) { return z+Real(i); }
+Cplx 
+operator+(const Cplx& z, T i) { return z+Real(i); }
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
-Complex 
-operator-(T i, const Complex& z) { return Real(i)-z; }
+Cplx 
+operator-(T i, const Cplx& z) { return Real(i)-z; }
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
-Complex 
-operator-(const Complex& z, int i) { return z-Real(i); }
+Cplx 
+operator-(const Cplx& z, int i) { return z-Real(i); }
 
-Complex constexpr inline
+Cplx constexpr inline
 operator"" _i(unsigned long long int i)
     {
-    return Complex(0.,i);
+    return Cplx(0.,i);
     }
 
-Complex constexpr inline
+Cplx constexpr inline
 operator"" _i(long double x)
     {
-    return Complex(0.,x);
+    return Cplx(0.,x);
     }
 
 } //namespace itensor
