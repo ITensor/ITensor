@@ -10,10 +10,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "error.h"
 #include <limits>
-#include "types.h"
-#include "optional_ptr.h"
+#include "itensor/util/error.h"
+#include "itensor/util/types.h"
+#include "itensor/util/optional_ptr.h"
 
 namespace itensor {
 

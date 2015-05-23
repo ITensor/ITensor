@@ -2,8 +2,8 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "input.h"
 #include <algorithm>
+#include "itensor/util/input.h"
 
 using std::ostream;
 using std::istream;

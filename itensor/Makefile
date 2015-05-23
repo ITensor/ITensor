@@ -3,7 +3,7 @@
 #
 ################################
 
-include ../.this_dir.mk
+include ../this_dir.mk
 include ../options.mk
 
 ####################################
