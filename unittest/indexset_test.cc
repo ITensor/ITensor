@@ -1,6 +1,6 @@
 #include "test.h"
-#include "indexset.h"
-#include "set_scoped.h"
+#include "itensor/indexset.h"
+#include "itensor/util/set_scoped.h"
 
 using namespace itensor;
 

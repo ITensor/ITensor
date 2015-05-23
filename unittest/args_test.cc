@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "global.h"
+#include "itensor/global.h"
 
 using namespace std;
 using namespace itensor;
@@ -17,7 +17,7 @@ TEST_CASE("OptionTest")
 
 SECTION("TestArgs")
     {
-    auto& gopts = Args::Global();
+    auto& gopts = Args::global();
 
     Args o1("Quiet");
     auto o2 = Args("Pinning",0.4);

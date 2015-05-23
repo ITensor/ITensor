@@ -1,7 +1,7 @@
 #include "test.h"
-#include "itensor.h"
-#include "cplx_literal.h"
-#include "count.h"
+#include "itensor/itensor.h"
+#include "itensor/util/cplx_literal.h"
+#include "itensor/util/count.h"
 
 using namespace std;
 using namespace itensor;

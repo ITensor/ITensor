@@ -1,8 +1,6 @@
-#include "core.h"
+#include "itensor/core.h"
 #include "myclass.h"
 
-using std::cout;
-using std::endl;
 using std::string;
 using namespace itensor;
 
@@ -28,7 +26,7 @@ main(int argc, char* argv[])
           b("B",4);
 
     ITensor T(a,b);
-    T.randomize();
+    T = randomize(T);
 
     //The %f formatting flag below tells printfln to
     //show the ITensor's data.

@@ -408,6 +408,6 @@ operator<<(std::ostream & s, const IQTensor &t);
 } //namespace itensor
 
 //See file iqtensor.ih for template/inline method implementations
-#include "iqtensor.ih"
+#include "itensor/iqtensor.ih"
 
 #endif

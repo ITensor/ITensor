@@ -1,5 +1,5 @@
 #include "test.h"
-#include "iqtensor.h"
+#include "itensor/iqtensor.h"
 
 using namespace itensor;
 using namespace std;

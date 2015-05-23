@@ -1,8 +1,8 @@
 #include "test.h"
-#include "tensor/contract.h"
-#include "cputime.h"
-#include "count.h"
-#include "set_scoped.h"
+#include "itensor/util/cputime.h"
+#include "itensor/util/count.h"
+#include "itensor/tensor/contract.h"
+#include "itensor/util/set_scoped.h"
 
 using namespace itensor;
 

@@ -1,4 +1,4 @@
-#include "core.h"
+#include "itensor/core.h"
 
 using namespace itensor;
 
@@ -21,7 +21,7 @@ main(int argc, char* argv[])
     //
 
     //Set first element to 1.
-    psi(s(1)) = 1;
+    psi.set(1,s(1));
 
     PrintData(psi);
     
@@ -33,12 +33,11 @@ main(int argc, char* argv[])
 
     ITensor Sz(s,prime(s)),
             Sx(s,prime(s));
+    Sz.set(+0.5,s(1),prime(s)(1));
+    Sz.set(-0.5,s(1),prime(s)(1));
 
-    commaInit(Sz,s,prime(s)) = 0.5, 0.0,
-                               0.0,-0.5;
-
-    commaInit(Sx,s,prime(s)) = 0.0, 0.5,
-                               0.5, 0.0;
+    Sx.set(+0.5,s(1),prime(s)(2));
+    Sx.set(+0.5,s(2),prime(s)(1));
 
     PrintData(Sz);
     PrintData(Sx);
@@ -61,11 +60,11 @@ main(int argc, char* argv[])
     // 45* angle spin
     //
 
-    const Real theta = Pi/4;
+    Real theta = Pi/4;
 
     //Extra factors of two come from S=1/2 representation
-    psi(s(1)) = cos(theta/2.);
-    psi(s(2)) = sin(theta/2.);
+    psi.set(cos(theta/2),s(1));
+    psi.set(sin(theta/2),s(2));
 
     PrintData(psi);
 
@@ -77,8 +76,8 @@ main(int argc, char* argv[])
 
     ITensor cpsi = dag(prime(psi));
 
-    Real zz = (cpsi * Sz * psi).toReal();
-    Real xx = (cpsi * Sx * psi).toReal();
+    Real zz = (cpsi * Sz * psi).real();
+    Real xx = (cpsi * Sx * psi).real();
 
     println("<Sz> = ", zz);
     println("<Sx> = ", xx);

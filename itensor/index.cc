@@ -3,7 +3,7 @@
 //    (See accompanying LICENSE file.)
 //
 #include <array>
-#include "index.h"
+#include "itensor/index.h"
 
 namespace itensor {
 

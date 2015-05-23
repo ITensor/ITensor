@@ -1,5 +1,5 @@
 #include "test.h"
-#include "svdalgs.h"
+#include "itensor/svdalgs.h"
 
 using namespace itensor;
 using namespace std;

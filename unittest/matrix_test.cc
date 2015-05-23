@@ -1,9 +1,9 @@
 #include "test.h"
 
-#include "autovector.h"
-#include "global.h"
-#include "count.h"
-#include "matrix/algs.h"
+#include "itensor/util/autovector.h"
+#include "itensor/util/count.h"
+#include "itensor/matrix/algs.h"
+#include "itensor/global.h"
 
 using namespace itensor;
 using namespace std;

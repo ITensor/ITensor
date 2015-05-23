@@ -1,7 +1,6 @@
 #include "test.h"
-#include "print.h"
-#include "tensor/ten.h"
-#include "types.h"
+#include "itensor/util/print.h"
+#include "itensor/tensor/ten.h"
 
 using namespace itensor;
 

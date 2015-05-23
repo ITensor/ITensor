@@ -1,5 +1,5 @@
 #include "test.h"
-#include "index.h"
+#include "itensor/index.h"
 
 using namespace itensor;
 using namespace std;
