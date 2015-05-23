@@ -4,14 +4,14 @@
 //
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
-#include "indexset.h"
-#include "itdata/itdata.h"
-#include "itdata/itreal.h"
-#include "itdata/itcplx.h"
-#include "itdata/itdiag.h"
-#include "itdata/itcombiner.h"
-#include "itdata/iqtdata.h"
-#include "matrix/mat.h"
+#include "itensor/matrix/mat.h"
+#include "itensor/itdata/itdata.h"
+#include "itensor/itdata/itreal.h"
+#include "itensor/itdata/itcplx.h"
+#include "itensor/itdata/itdiag.h"
+#include "itensor/itdata/itcombiner.h"
+#include "itensor/itdata/iqtdata.h"
+#include "itensor/indexset.h"
 
 namespace itensor {
 
@@ -520,7 +520,7 @@ multSiteOps(Tensor A, const Tensor& B)
 } //namespace itensor
 
 //See file itensor.ih for template/inline method implementations
-#include "itensor.ih"
+#include "itensor/itensor.ih"
 
 
 #endif

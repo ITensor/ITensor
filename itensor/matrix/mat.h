@@ -5,8 +5,8 @@
 #ifndef __ITENSOR_MAT__H_
 #define __ITENSOR_MAT__H_
 
-#include "vec.h"
-#include "matiter.h"
+#include "itensor/matrix/vec.h"
+#include "itensor/matrix/matiter.h"
 
 namespace itensor {
 

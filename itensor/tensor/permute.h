@@ -6,10 +6,10 @@
 #define __ITENSOR_PERMUTE_H
 
 #include <array>
-#include "ten.h"
-#include "permutation.h"
-#include "safe_ptr.h"
-#include "detail/gcounter.h"
+#include "itensor/tensor/ten.h"
+#include "itensor/tensor/permutation.h"
+#include "itensor/util/safe_ptr.h"
+#include "itensor/detail/gcounter.h"
 
 namespace itensor {
 

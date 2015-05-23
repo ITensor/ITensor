@@ -2,11 +2,11 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "iqtensor.h"
-#include "detail/printing.h"
-#include "matrix/lapack_wrap.h"
-#include "tensor/contract.h"
-#include "count.h"
+#include "itensor/util/count.h"
+#include "itensor/matrix/lapack_wrap.h"
+#include "itensor/detail/printing.h"
+#include "itensor/tensor/contract.h"
+#include "itensor/iqtensor.h"
 
 namespace itensor {
 

@@ -2,13 +2,12 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "spectrum.h"
 #include <algorithm>
 #include <utility>
+#include "itensor/spectrum.h"
 
 using std::pair;
 using std::make_pair;
-
 
 namespace itensor {
 

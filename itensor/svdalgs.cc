@@ -2,9 +2,9 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "svdalgs.h"
 #include <algorithm>
-#include "matrix/algs.h"
+#include "itensor/matrix/algs.h"
+#include "itensor/svdalgs.h"
 
 namespace itensor {
 

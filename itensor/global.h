@@ -4,20 +4,23 @@
 //
 #ifndef __ITENSOR_GLOBAL_H
 #define __ITENSOR_GLOBAL_H
+
+
 #include <cmath>
 #include <cstdlib>
-#include <sys/types.h>
-#include <unistd.h>
+//#include <sys/types.h>
 #include <fstream>
-#include <complex>
-#include "assert.h"
-#include "error.h"
-#include "args.h"
-#include "types.h"
-#include <ctime>
-#include <string.h>
+//#include <complex>
+//#include <ctime>
+#include <string>
 #include <cstring>
-#include "real.h"
+#include <unistd.h>
+//#include "assert.h"
+#include "itensor/util/error.h"
+#include "itensor/util/args.h"
+#include "itensor/util/types.h"
+#include "itensor/real.h"
+
 
 namespace itensor {
 

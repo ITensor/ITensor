@@ -5,11 +5,11 @@
 #ifndef __ITENSOR_RANGE_H
 #define __ITENSOR_RANGE_H
 
-#include "autovector.h"
 #include <iostream>
 #include <array>
 #include <vector>
-#include "vararray.h"
+#include "itensor/util/autovector.h"
+#include "itensor/util/vararray.h"
 
 namespace itensor {
 

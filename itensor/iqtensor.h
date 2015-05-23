@@ -4,8 +4,8 @@
 //
 #ifndef __ITENSOR_IQTENSOR_H
 #define __ITENSOR_IQTENSOR_H
-#include "iqindex.h"
-#include "itensor.h"
+#include "itensor/itensor.h"
+#include "itensor/iqindex.h"
 
 namespace itensor {
 

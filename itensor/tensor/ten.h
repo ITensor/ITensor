@@ -5,8 +5,8 @@
 #ifndef __ITENSOR_TEN_H_
 #define __ITENSOR_TEN_H_
 
-#include "range.h"
-#include "types.h"
+#include "itensor/util/types.h"
+#include "itensor/tensor/range.h"
 
 namespace itensor {
 

@@ -5,8 +5,8 @@
 #ifndef __ITENSOR_ITCPLX_H
 #define __ITENSOR_ITCPLX_H
 
-#include "itreal.h"
-#include "safe_ptr.h"
+#include "itensor/itdata/itreal.h"
+#include "itensor/util/safe_ptr.h"
 
 namespace itensor {
 

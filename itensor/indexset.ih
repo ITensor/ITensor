@@ -5,7 +5,6 @@
 #ifndef __ITENSOR_INDEXSET_IH
 #define __ITENSOR_INDEXSET_IH
 
-
 namespace itensor {
 
 template<class IndexT>

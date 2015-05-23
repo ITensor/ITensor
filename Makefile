@@ -7,13 +7,7 @@
 
 include options.mk
 
-build: utilities itensor 
-
-utilities: configure
-	@echo
-	@echo Building Utilities library
-	@echo
-	cd utilities && make
+build: itensor 
 
 itensor: configure
 	@echo
@@ -27,11 +21,9 @@ configure:
 	@echo THIS_DIR=`pwd` > this_dir.mk
 
 clean:
-	cd utilities && make clean
 	cd itensor && make clean
 	cd sample && make clean
 	cd unittest && make clean
-	rm -fr include/*
 	rm -f lib/*
 	rm -f this_dir.mk
 

@@ -1,13 +1,14 @@
-#include "contract.h"
-#include "detail/algs.h"
 //TODO: replace unordered_map with a simpler container (small_map? or jump directly to location?)
 #include <unordered_map>
 #include <future>
-#include "cputime.h"
-#include "detail/gcounter.h"
-#include "indexset.h"
-#include "matrix/mat.h"
-#include "multalloc.h"
+
+#include "itensor/util/multalloc.h"
+#include "itensor/util/cputime.h"
+#include "itensor/matrix/mat.h"
+#include "itensor/tensor/contract.h"
+#include "itensor/detail/algs.h"
+#include "itensor/detail/gcounter.h"
+#include "itensor/indexset.h"
 
 using std::vector;
 

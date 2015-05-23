@@ -3,11 +3,13 @@
 #
 ################################
 
-include ../this_dir.mk
+include ../.this_dir.mk
 include ../options.mk
 
 ####################################
 
+SOURCES+= util/args.cc     
+SOURCES+= util/input.cc
 SOURCES+= matrix/vec.cc 
 SOURCES+= matrix/mat.cc 
 SOURCES+= matrix/algs.cc 
@@ -18,76 +20,20 @@ SOURCES+= iqindex.cc
 SOURCES+= iqtensor.cc 
 SOURCES+= spectrum.cc 
 SOURCES+= svdalgs.cc 
-SOURCES+= mps.cc 
-SOURCES+= mpo.cc 
-SOURCES+= tevol.cc
-SOURCES+= autompo.cc
-
-HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterator.h \
-        detail/gcounter.h global.h real.h \
-        matrix/lapack_wrap.h matrix/strideiter.h matrix/vec.h \
-        matrix/mrange.h matrix/matiter.h matrix/mat.h matrix/slicemat.h matrix/algs.h \
-        tensor/range.h tensor/ten.h tensor/permutation.h tensor/permute.h tensor/contract.h \
-        index.h indexset.ih indexset.h \
-        itdata/itdata.h \
-        itdata/itreal.h itdata/itdiag.h itdata/itcombiner.h itdata/itcplx.h \
-        itensor.h itensor.ih \
-        qn.h iqindex.h itdata/iqtdata.h \
-        iqtensor.h iqtensor.ih \
-        iterpair.h spectrum.h svdalgs.h \
-        mps.h mpo.h core.h observer.h DMRGObserver.h \
-        sweeps.h siteset.h\
-        hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
-        hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h \
-        hams/tJChain.h \
-        sites/spinhalf.h sites/spinone.h sites/hubbard.h sites/spinless.h\
-        sites/tj.h sites/Z3.h\
-        eigensolver.h localop.h localmpo.h localmposet.h \
-        partition.h hambuilder.h localmpo_mps.h tevol.h dmrg.h bondgate.h\
-        integrators.h idmrg.h TEvolObserver.h  autompo.h
-
-
+SOURCES+= mps/mps.cc 
+SOURCES+= mps/mpo.cc 
+SOURCES+= mps/tevol.cc
+SOURCES+= mps/autompo.cc
 
 ####################################
 
-CCFLAGS= $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -DPLATFORM_$(PLATFORM)
-CCGFLAGS= $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS) -DPLATFORM_$(PLATFORM)
+CCFLAGS= $(ITENSOR_INCLUDEFLAGS) $(OPTIMIZATIONS) -DPLATFORM_$(PLATFORM) -D__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES=0
+CCGFLAGS= $(ITENSOR_INCLUDEFLAGS) $(DEBUGFLAGS) -DPLATFORM_$(PLATFORM) -D__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES=0
 
 OBJECTS= $(patsubst %.cc,%.o, $(SOURCES))
 GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
-INCLUDE_HEADERS= $(patsubst %,$(ITENSOR_INCLUDEDIR)/%, $(HEADERS))
 
 .SUFFIXES: .cc $(SUFFIXES)
-
-$(ITENSOR_INCLUDEDIR)/tensor/%.h: tensor/%.h
-	mkdir -p $(ITENSOR_INCLUDEDIR)/tensor
-	cp $^ $(ITENSOR_INCLUDEDIR)/tensor
-
-$(ITENSOR_INCLUDEDIR)/matrix/%.h: matrix/%.h
-	mkdir -p $(ITENSOR_INCLUDEDIR)/matrix
-	cp $^ $(ITENSOR_INCLUDEDIR)/matrix
-
-$(ITENSOR_INCLUDEDIR)/itdata/%.h: itdata/%.h
-	mkdir -p $(ITENSOR_INCLUDEDIR)/itdata
-	cp $^ $(ITENSOR_INCLUDEDIR)/itdata
-
-$(ITENSOR_INCLUDEDIR)/detail/%.h: detail/%.h
-	mkdir -p $(ITENSOR_INCLUDEDIR)/detail
-	cp $^ $(ITENSOR_INCLUDEDIR)/detail
-
-$(ITENSOR_INCLUDEDIR)/hams/%.h: hams/%.h
-	mkdir -p $(ITENSOR_INCLUDEDIR)/hams
-	cp $^ $(ITENSOR_INCLUDEDIR)/hams
-
-$(ITENSOR_INCLUDEDIR)/sites/%.h: sites/%.h
-	mkdir -p $(ITENSOR_INCLUDEDIR)/sites
-	cp $^ $(ITENSOR_INCLUDEDIR)/sites
-
-$(ITENSOR_INCLUDEDIR)/%.h: %.h
-	cp $^ $(ITENSOR_INCLUDEDIR)
-
-$(ITENSOR_INCLUDEDIR)/%.ih: %.ih
-	cp $^ $(ITENSOR_INCLUDEDIR)
 
 %.o: %.cc
 	$(CCCOM) -c $(CCFLAGS) -o $@ $<
@@ -106,28 +52,27 @@ libitensor-g.a: mkdebugdir $(GOBJECTS)
 	ar rv libitensor-g.a $(GOBJECTS)
 	ranlib libitensor-g.a
 
-headerscopy: $(INCLUDE_HEADERS)
-	cp core.h $(ITENSOR_INCLUDEDIR)
-
 libs: libitensor.a 
 	cp libitensor.a $(ITENSOR_LIBDIR)
 
-installo: headerscopy libitensor.a
+installo: libitensor.a
 	cp libitensor.a $(ITENSOR_LIBDIR)
 	ranlib $(ITENSOR_LIBDIR)/libitensor.a
 
 debug: installg
-installg: headerscopy libitensor-g.a
+installg: libitensor-g.a
 	cp libitensor-g.a $(ITENSOR_LIBDIR)
 	ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
 mkdebugdir:
 	mkdir -p .debug_objs
+	mkdir -p .debug_objs/util
 	mkdir -p .debug_objs/matrix
 	mkdir -p .debug_objs/tensor
+	mkdir -p .debug_objs/mps
 
 clean:	
-	rm -fr *.o .debug_objs matrix/*.o tensor/*.o libitensor.a libitensor-g.a
+	rm -fr *.o .debug_objs util/*.o matrix/*.o tensor/*.o libitensor.a libitensor-g.a
 
 GDEPHEADERS=real.h global.h index.h
 GDEPHEADERS+= matrix/strideiter.h matrix/vec.h

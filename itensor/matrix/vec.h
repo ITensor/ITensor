@@ -5,9 +5,14 @@
 #ifndef __ITENSOR_VEC_H_
 #define __ITENSOR_VEC_H_
 
-#include "types.h"
-#include "print.h"
-#include "strideiter.h"
+#ifdef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES
+#undef __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES
+#endif
+#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
+
+#include "itensor/util/types.h"
+#include "itensor/util/print.h"
+#include "itensor/matrix/strideiter.h"
 
 namespace itensor {
 

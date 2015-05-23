@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_GCOUNTER_H
 #define __ITENSOR_GCOUNTER_H
 
-#include "autovector.h"
+#include "itensor/util/autovector.h"
 
 namespace itensor {
 namespace detail {

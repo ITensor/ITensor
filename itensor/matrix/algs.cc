@@ -2,11 +2,10 @@
 // Distributed under the ITensor Library License, Version 1.2.
 //    (See accompanying LICENSE file.)
 //
-#include "algs.h"
-#include "lapack_wrap.h"
 #include <limits>
-#include "count.h"
-#include "slicemat.h"
+#include "itensor/matrix/lapack_wrap.h"
+#include "itensor/matrix/algs.h"
+#include "itensor/util/count.h"
 
 using std::move;
 using std::sqrt;

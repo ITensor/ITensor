@@ -5,9 +5,8 @@
 #ifndef __ITENSOR_SPECTRUM_H
 #define __ITENSOR_SPECTRUM_H
 
-#include "iqtensor.h"
-#include "iterpair.h"
-#include "matrix/vec.h"
+#include "itensor/matrix/vec.h"
+#include "itensor/iqtensor.h"
 
 namespace itensor {
 

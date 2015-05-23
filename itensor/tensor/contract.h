@@ -5,8 +5,8 @@
 #ifndef __ITENSOR_CONTRACT_H
 #define __ITENSOR_CONTRACT_H
 
-#include "permute.h"
-#include "global.h"
+#include "itensor/tensor/permute.h"
+#include "itensor/global.h"
 
 namespace itensor {
 

@@ -2,10 +2,10 @@
 // Distributed under the ITensor Library License, Version 1.2.
 //    (See accompanying LICENSE file.)
 //
-#include "vec.h"
-#include "lapack_wrap.h"
+#include "itensor/matrix/vec.h"
+#include "itensor/matrix/lapack_wrap.h"
 #include <limits>
-#include "detail/algs.h"
+#include "itensor/detail/algs.h"
 
 namespace itensor {
 

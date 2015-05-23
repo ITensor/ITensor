@@ -5,14 +5,14 @@
 #ifndef __ITENSOR_PRINTING_H
 #define __ITENSOR_PRINTING_H
 
-#include "print.h"
+#include "itensor/util/print.h"
 
 namespace itensor {
 namespace detail {
 
 void inline
 printVal(std::ostream& s,
-         Real val)
+         double val)
     {
     if(std::fabs(val) > 1E-10)
         s << val << "\n";
@@ -22,7 +22,7 @@ printVal(std::ostream& s,
 
 void inline
 printVal(std::ostream& s,
-         const Complex& val)
+         const std::complex<double>& val)
     {
     if(std::norm(val) > 1E-10)
         {

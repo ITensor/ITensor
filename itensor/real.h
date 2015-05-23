@@ -7,8 +7,8 @@
 #include <limits>
 #include "math.h"
 #include <cmath>
-#include "print.h"
-#include "types.h"
+#include "itensor/util/print.h"
+#include "itensor/util/types.h"
 
 namespace itensor {
 
