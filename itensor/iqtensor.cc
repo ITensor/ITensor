@@ -638,6 +638,11 @@ operator*=(const IQTensor& other)
     scale_ *= other.scale_;
     if(qcres.scalefac() > 0) scale_ *= qcres.scalefac();
 
+#ifdef DEBUG
+    //Check for duplicate indices
+    detail::check(is_);
+#endif
+
     return *this;
     }
 

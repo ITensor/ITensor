@@ -729,6 +729,11 @@ operator*=(const ITensor& other)
     scale_ *= other.scale_;
     if(!std::isnan(C.scalefac())) scale_ *= C.scalefac();
 
+#ifdef DEBUG
+    //Check for duplicate indices
+    detail::check(is_);
+#endif
+
     return *this;
     }
 

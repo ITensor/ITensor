@@ -350,10 +350,10 @@ namespace detail {
         //Check if any duplicate indices
         for(size_t j = 0; j < is.size(); ++j) 
         for(size_t k = 0; k < is.size(); ++k)
-            {
             if(k != j && is[j] == is[k])
-                throw ITError("Duplicate indices in index set following priming operation");
-            }
+                {
+                throw ITError("Duplicate indices in index set");
+                }
         }
 
     template<typename IndexT, typename T>
