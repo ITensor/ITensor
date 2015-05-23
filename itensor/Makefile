@@ -72,7 +72,7 @@ mkdebugdir:
 	mkdir -p .debug_objs/mps
 
 clean:	
-	rm -fr *.o .debug_objs util/*.o matrix/*.o tensor/*.o libitensor.a libitensor-g.a
+	rm -fr *.o .debug_objs util/*.o matrix/*.o tensor/*.o mps/*.o libitensor.a libitensor-g.a
 
 GDEPHEADERS=real.h global.h index.h
 GDEPHEADERS+= matrix/strideiter.h matrix/vec.h
