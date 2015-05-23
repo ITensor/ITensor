@@ -36,7 +36,7 @@ HEADERS=detail/algs.h detail/call_rewrite.h detail/printing.h detail/skip_iterat
         iqtensor.h iqtensor.ih \
         iterpair.h spectrum.h svdalgs.h \
         mps.h mpo.h core.h observer.h DMRGObserver.h \
-        sweeps.h stats.h siteset.h\
+        sweeps.h siteset.h\
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h \
         hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h \
         hams/tJChain.h \
