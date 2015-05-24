@@ -21,36 +21,39 @@ namespace itensor {
 //
 
 
-ITensor::
-ITensor(const Index& i1) 
+template<>
+ITensorT<Index>::
+ITensorT(const Index& i1) 
     :
     is_(i1),
-    store_(std::make_shared<ITReal>(i1.m(),0.)),
+    store_(std::make_shared<ITDataType<ITReal>>(i1.m(),0.)),
     scale_(1.)
 	{ }
 
 
-ITensor::
-ITensor(const Index& i1,const Index& i2) 
+template<>
+ITensorT<Index>::
+ITensorT(const Index& i1,const Index& i2) 
     :
     is_(i1,i2),
-    store_(std::make_shared<ITReal>(i1.m()*i2.m(),0.)),
+    store_(std::make_shared<ITDataType<ITReal>>(i1.m()*i2.m(),0.)),
     scale_(1.)
 	{ }
     
-ITensor::
-ITensor(Complex val) 
+template<>
+ITensorT<Index>::
+ITensorT(Complex val) 
     :
     scale_(1.)
     { 
     if(val.imag() == 0)
-        store_ = std::make_shared<ITReal>(1,val.real());
+        store_ = std::make_shared<ITDataType<ITReal>>(1,val.real());
     else
-        store_ = std::make_shared<ITCplx>(1,val);
+        store_ = std::make_shared<ITDataType<ITCplx>>(1,val);
     //if(val.imag() == 0)
-    //    store_ = std::make_shared<ITDiag<Real>>(val.real());
+    //    store_ = std::make_shared<ITDataType<ITDiag<Real>>>(val.real());
     //else
-    //    store_ = std::make_shared<ITDiag<Complex>>(val);
+    //    store_ = std::make_shared<ITDataType<ITDiag<Complex>>>(val);
     }
 
 //ITensor::
@@ -63,16 +66,10 @@ ITensor(Complex val)
 //    scale_(scale)
 //    { }
 
-ITensor::
-ITensor(const IndexSet& is)
-    :
-    is_(is),
-    store_(std::make_shared<ITReal>(area(is_),0.)),
-    scale_(1.)
-	{ }
 
-ITensor::
-ITensor(IndexSet iset,
+template<>
+ITensorT<Index>::
+ITensorT(IndexSet iset,
         storage_ptr&& pdat,
         const LogNumber& scale)
     :
@@ -1185,83 +1182,77 @@ computeNewInds(const IndexSet& Lis,
 //    return *this;
 //    }
 
-struct PrintIT : RegisterFunc<PrintIT>
-    {
-    std::ostream& s_;
-    const LogNumber& x_;
-    const IndexSet& is_;
-    Real scalefac_;
-    bool print_data_;
 
-    PrintIT(std::ostream& s,
-            const LogNumber& x,
-            const IndexSet& is,
-            bool print_data)
-        : s_(s), x_(x), is_(is), scalefac_(1.), print_data_(print_data)
-        { 
-        if(!x.isTooBigForReal()) scalefac_ = x.real0();
+
+ostream& 
+operator<<(ostream & s, const ITensor& t)
+    {
+    s << "ITensor r=" << t.r() << ": " << t.inds() << "\n";
+    if(!t) 
+        {
+        s << "{Storage is default constructed}\n";
         }
-    };
-
-template<typename T>
-void
-printInfo(const PrintIT& P,
-          const T& d, 
-          const std::string& type_name,
-          bool compute_norm = true)
-    {
-    P.s_ << "{log(scale)=" << format("%.2f",P.x_.logNum());
-//        if(compute_norm)
-//            {
-//            if(!P.x_.isTooBigForReal()) P.s_ << ", norm=";
-//            else  P.s_ << ", norm(omitting large scale)=";
-//            P.s_ << format("%.2f",fabs(P.scalefac_)*NormNoScale(P.is_)(d));
-//            }
-    P.s_ << " (" << type_name << ")}\n";
+    else
+        {
+        //Checking whether std::ios::floatfield is set enables 
+        //printing the contents of an ITensor when using the printf
+        //format string %f (or another float-related format string)
+        bool ff_set = (std::ios::floatfield & s.flags()) != 0;
+        bool print_data = (ff_set || Global::printdat());
+        doTask(PrintIT{s,t.scale(),t.inds(),print_data},t.data());
+        }
+    return s;
     }
 
 void
-doTask(const PrintIT& P, const ITCombiner& d)
+doTask(PrintIT& P, const ITCombiner& d)
     {
-    printInfo(P,d,"Combiner",false);
+    P.printInfo(d,"Combiner",false);
     }
 
 void
-doTask(const PrintIT& P, const ITReal& d)
+doTask(PrintIT& P, const ITReal& d)
     {
-    printInfo(P,d,"Dense Real");
+    P.printInfo(d,"Dense Real");
      
-    auto rank = P.is_.r();
+    auto rank = P.is.r();
     if(rank == 0) 
         {
-        P.s_ << "  ";
-        detail::printVal(P.s_,P.scalefac_*d.store.front());
+        P.s << "  ";
+        detail::printVal(P.s,P.scalefac*d.store.front());
         return;
         }
 
-    if(!P.print_data_) return;
+    if(!P.print_data) return;
 
     auto gc = detail::GCounter(0,rank-1,0);
     for(int i = 0; i < rank; ++i)
-        gc.setInd(i,0,P.is_.dim(i)-1);
+        gc.setInd(i,0,P.is.dim(i)-1);
 
     for(; gc.notDone(); ++gc)
         {
-        auto val = P.scalefac_*d[ind(P.is_,gc.i)];
-        if(std::norm(val) > Global::printScale())
+        auto val = P.scalefac*d[ind(P.is,gc.i)];
+        //TODO: DEBUG only
+        //if(std::norm(val) > Global::printScale())
             {
-            P.s_ << "(";
+            P.s << "(";
             for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
                 {
-                P.s_ << (1+gc.i(ii));
-                if(ii < gc.i.maxi()) P.s_ << ",";
+                P.s << (1+gc.i(ii));
+                if(ii < gc.i.maxi()) P.s << ",";
                 }
-            P.s_ << ") ";
+            P.s << ") ";
 
-            detail::printVal(P.s_,val);
+            detail::printVal(P.s,val);
             }
         }
     }
+
+//void
+//doTask(PrintIT& P, const ITCplx& d)
+//    {
+//    P.printInfo(d,"Dense Cplx");
+//    }
 
 //void PrintIT::
 //operator()(const ITCplx& d)
@@ -1332,26 +1323,6 @@ doTask(const PrintIT& P, const ITReal& d)
 //            }
 //        }
 //    }
-
-ostream& 
-operator<<(ostream & s, const ITensor& t)
-    {
-    s << "ITensor r=" << t.r() << ": " << t.inds() << "\n";
-    if(!t) 
-        {
-        s << "{Default constructed}\n";
-        }
-    else
-        {
-        //Checking whether std::ios::floatfield is set enables 
-        //printing the contents of an ITensor when using the printf
-        //format string %f (or another float-related format string)
-        bool ff_set = (std::ios::floatfield & s.flags()) != 0;
-        bool print_data = (ff_set || Global::printdat());
-        applyFunc<PrintIT>(t.data(),s,t.scale(),t.inds(),print_data);
-        }
-    return s;
-    }
 
 
 Complex

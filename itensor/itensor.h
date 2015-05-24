@@ -4,269 +4,23 @@
 //
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
+#include "itensor/itensor_interface.h"
 #include "itensor/matrix/mat.h"
-#include "itensor/itdata/itdata.h"
-#include "itensor/itdata/itreal.h"
-#include "itensor/itdata/itcplx.h"
-#include "itensor/itdata/itdiag.h"
-#include "itensor/itdata/itcombiner.h"
-#include "itensor/itdata/iqtdata.h"
-#include "itensor/indexset.h"
+#include "itensor/detail/algs.h"
 
 namespace itensor {
 
 //
 // ITensor
 //
-class ITensor
-    {
-    public:
-
-    using IndexT = Index;
-    using IndexValT = IndexVal;
-    using storage_ptr = PData;
-
-    //
-    // Constructors
-    //
-
-    //Construct Null ITensor, ITensor will evaluate to false in boolean context
-    ITensor() { }
-
-    //Construct rank 1 ITensor, all elements set to zero
-    explicit
-    ITensor(const Index& i1);
-
-    //Construct rank 2 ITensor, all elements set to zero
-    ITensor(const Index& i1,
-            const Index& i2);
-
-    //Construct rank n ITensor, all elements set to zero
-    template <typename... Indices>
-    ITensor(const Index& i1, 
-            const Index& i2, 
-            const Index& i3, 
-            const Indices&... rest);
-
-    //Construct rank 0 ITensor (scalar), value set to val
-    //If val.imag()==0, only Real storage will be used
-    explicit
-    ITensor(Complex val);
-
-    //Construct rank n ITensor, all
-    //elements set to zero except the single
-    //entry specified by the IndexVal args
-    template <typename... IVals>
-    explicit
-    ITensor(const IndexVal& iv1, 
-            const IVals&... rest);
-
-    //
-    // Accessor Methods
-    //
-
-    //Rank of this ITensor (number of indices)
-    int 
-    r() const { return is_.r(); }
-
-    //Access index set
-    const IndexSet&
-    inds() const { return is_; }
-
-    //evaluate to false if ITensor is default constructed
-    explicit operator bool() const { return bool(store_); }
-
-    //template <typename... IndexVals>
-    //Real
-    //real(IndexVals&&... ivs) const;
-
-    //template <typename... IndexVals>
-    //Complex
-    //cplx(IndexVals&&... ivs) const;
-
-    ////Set element at location given by collection
-    ////of IndexVals. Will not switch storage
-    ////from Real to Complex unless val.imag()!=0 
-    //template<typename... IndexVals>
-    //void
-    //set(Complex val, const IndexVals&... ivs);
-
-    //
-    // Operators
-    //
-
-    //Contracting product
-    //All matching Index pairs automatically contracted
-    //Cji = \sum_{k,l} Akjl * Blki
-    //ITensor& 
-    //operator*=(const ITensor& other);
-
-    //// Contract with IndexVal
-    //// If iv = (J,n), Index J is fixed to it's nth
-    //// value and rank decreases by 1
-    //// (similar to summing against a Kronecker
-    //// delta tensor \delta_{J,n})
-    //ITensor& 
-    //operator*=(const IndexVal& iv) { return operator*=(ITensor(iv)); } 
-
-    ////Multiplication by scalar
-    //ITensor& 
-    //operator*=(Real fac);
-    //ITensor& 
-    //operator*=(Complex z);
-
-    ////Division by scalar
-    //ITensor& 
-    //operator/=(Real fac) { scale_/=fac; return *this; }
-    //ITensor& 
-    //operator/=(Complex z) { return operator*=(1./z); }
-
-    ////Negation
-    //ITensor
-    //operator-() const { auto T = *this; T.scale_ *= -1; return T; }
-
-
-    ////Tensor addition and subtraction
-    ////Summands must have same Indices, in any order
-    ////Cijk = Aijk + Bkij
-    //ITensor& 
-    //operator+=(const ITensor& other);
-
-    //ITensor& 
-    //operator-=(const ITensor& other);
-
-    //
-    // Index Prime Level Methods
-    //
-
-    template<typename... VarArgs>
-    ITensor& 
-    noprime(VarArgs&&...);
-
-    template<typename... VarArgs>
-    ITensor& 
-    prime(VarArgs&&...);
-
-    template<typename... VarArgs>
-    ITensor&
-    primeExcept(VarArgs&&...);
-
-    //Change all Indices having primeLevel plevold to have primeLevel plevnew
-    ITensor& 
-    mapprime(int plevold, int plevnew, IndexType type = All)
-        { itensor::mapprime(is_,plevold,plevnew,type); return *this; }
-
-    //
-    // Element Transformation Methods
-    //
-
-    //Set all elements to z. If z.imag()==0
-    //(such as if z is automatically converted from a Real)
-    //then storage will be real only.
-    //ITensor&
-    //fill(Complex z);
-
-    ////Call a function of the form f()->val once
-    ////for each element, assign result to each element.
-    //template <typename Func>
-    //ITensor&
-    //generate(Func&& f);
-
-    ////Apply a function of the form f(x)->y
-    ////to each element x, replacing it with y
-    //template <typename Func>
-    //ITensor&
-    //apply(Func&& f);
-
-    ////Apply a function of the form f(x)->void
-    ////to each element x.
-    //template <typename Func>
-    //const ITensor&
-    //visit(Func&& f) const;
-
-    //
-    // Complex number methods
-    //
-
-    //Take complex conjugate of all elements
-    //ITensor&
-    //conj();
-
-    //ITensor&
-    //dag() { return conj(); }
-
-    //Replace data with real part
-    //ITensor&
-    //takeReal();
-
-    //Replace data with imaginary part
-    //ITensor&
-    //takeImag();
-
-
-    private:
-
-    //void
-    //scaleOutNorm();
-
-    //void
-    //equalizeScales(ITensor& other);
-
-    public:
-
-    //
-    // Developer / advanced methods
-    //
-    // The following methods should not
-    // be needed for most user code.
-    //
-
-    //Construct by explicitly providing data object
-    //DataType should be a subclass of ITData
-    template <class DataType>
-    ITensor(IndexSet iset,
-            DataType&& dat,
-            const LogNumber& scale = 1);
-
-    ITensor(IndexSet iset,
-            storage_ptr&& pdat,
-            const LogNumber& scale = 1);
-
-    //Provide indices from IndexSet
-    explicit
-    ITensor(const IndexSet& is);
-
-    //Scale factor, used internally for efficient scalar ops.
-    //Mostly for developer use; not necessary to explicitly involve
-    //scale factors in user-level ITensor operations.
-    const LogNumber&
-    scale() const { return scale_; }
-
-    const ITData&
-    data() const { return *store_; }
-
-    storage_ptr&
-    pdata() { return store_; }
-
-    void 
-    scaleTo(const LogNumber& newscale);
-
-    private:
-    IndexSet is_;
-    storage_ptr store_;
-    LogNumber scale_;
-    }; // class ITensor
+// For the ITensor class interface, see
+// itensor_interface.h
+// An ITensor is defined as ITensorT<Index>
+//
+using ITensor = ITensorT<Index>;
 
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);
-
-// Read ITensor from binary input stream.
-void
-read(std::istream& s, ITensor& t);
-
-// Write ITensor to binary output stream.
-void 
-write(std::ostream& s, const ITensor& t);
 
 //ITensor inline
 //operator*(ITensor A, const ITensor& B) { A *= B; return A; }
@@ -411,11 +165,8 @@ randomTensorC(const Index& i1, Inds&&... inds)
     {
     return randomize(ITensor(i1,std::forward<Inds>(inds)...),"Complex");
     }
-ITensor inline
-randomTensor(const IndexSet& inds)
-    {
-    return randomize(ITensor(inds));
-    }
+ITensor
+randomTensor(const IndexSet& inds);
 
 ITensor
 matrixTensor(Mat&& M, const Index& i1, const Index& i2);
@@ -455,6 +206,15 @@ sumels(const ITensor& T);
 
 Complex
 sumelsC(const ITensor& T);
+
+// Read ITensor from binary input stream.
+void
+read(std::istream& s, ITensor& t);
+
+// Write ITensor to binary output stream.
+void 
+write(std::ostream& s, const ITensor& t);
+
 
 //
 //Return copy of a tensor with primeLevels plev1 and plev2 swapped
@@ -508,15 +268,17 @@ findtype(const Tensor& T, IndexType type)
 //
 // (here s and t are indices of type Site)
 //
-template<class Tensor>
-Tensor
-multSiteOps(Tensor A, const Tensor& B) 
+template<class IndexT>
+ITensorT<IndexT>
+multSiteOps(ITensorT<IndexT> A, const ITensorT<IndexT>& B) 
     {
     A.prime(Site);
     A *= B;
     A.mapprime(2,1,Site);
     return A;
     }
+
+
 
 } //namespace itensor
 

@@ -4,46 +4,15 @@
 //
 #ifndef __ITENSOR_ITDATA_H
 #define __ITENSOR_ITDATA_H
-#include "../global.h"
-#include "../detail/algs.h"
-#include "../detail/call_rewrite.h"
+#include "itensor/global.h"
+#include "itensor/detail/algs.h"
+#include "itensor/itdata/storage_types.h"
+//#include "itensor/detail/call_rewrite.h"
 
-//
-// To register a new ITData subtype:
-//
-// (1) Add a new line to the REGISTER macro below, following the same format
-//     and no trailing \ on the last line.
-// (2) Forward-declare the subtype just after "namespace itensor" below.
-//
-
-////////////////////////////////////
-// (1) Add a new line here to register a new ITData subtype:
-#define REGISTER(X,Y,Z)\
-    X(Y  ITReal             &d) Z\
-    X(Y  ITCplx             &d) Z\
-    X(Y  ITCombiner         &d) Z\
-    X(Y  ITDiag<Real>       &d) Z\
-    X(Y  ITDiag<Complex>    &d) Z\
-    X(Y  IQTData<Real>      &d) Z
-///////////////////////////////////
+#define LPAREN (
+#define RPAREN )
 
 namespace itensor {
-
-///////////////////////////////////
-// (2) Forward declarations for all ITData subtypes:
-struct ITReal;
-
-struct ITCplx;
-
-template <typename>
-class ITDiag;
-
-class ITCombiner;
-
-template <typename>
-class IQTData;
-///////////////////////////////////
-
 
 struct ITData;
 using PData = std::shared_ptr<ITData>;
@@ -57,13 +26,14 @@ make_newdata(Args&&... args)
     return std::unique_ptr<DataType>(new DataType(std::forward<Args>(args)...));
     }
 
+
 struct FuncBase
     {
     FuncBase() { }
     virtual ~FuncBase() { }
 
-    REGISTER(void virtual applyTo,,=0;)
-    REGISTER(void virtual applyTo,const,=0;)
+    REGISTER_TYPES(void virtual applyTo LPAREN, &d RPAREN =0;)
+    REGISTER_TYPES(void virtual applyTo LPAREN, const& d RPAREN =0;)
 
     template <typename T>
     void
@@ -85,51 +55,132 @@ struct ITData
     plugInto(FuncBase& f) = 0;
     };
 
-template <class Derived>
-struct RegisterData : ITData
+template <class DType>
+struct ITDataType : ITData
     {
-    RegisterData() { }
-    virtual ~RegisterData() { }
+    DType d_;
+    public:
+
+    ITDataType() { }
+
+    template<typename... VArgs>
+    ITDataType(VArgs&&... vargs)
+        : d_(std::forward<VArgs>(vargs)...)
+        { }
+
+    virtual ~ITDataType() { }
 
     private:
     
     NewData
     clone() const final 
         { 
-        auto* pdt = static_cast<const Derived*>(this);
-        return std::make_unique<Derived>(*pdt);
+        return std::make_unique<ITDataType<DType>>(d_);
         }
 
     void
     plugInto(FuncBase& f) const final
         {
-        auto& cdt = *(static_cast<const Derived*>(this));
-        f.applyTo(cdt);
+        f.applyTo(d_);
         }
         
     void
     plugInto(FuncBase& f) final
         {
-        auto& dt = *(static_cast<Derived*>(this));
-        f.applyTo(dt);
+        f.applyTo(d_);
         }
     };
 
 //////////////////
 //////////////////
 
-struct NoReturn { };
+struct Void { };
 
-template <typename Derived, typename Return = NoReturn>
-struct RegisterFunc : FuncBase
+class ManagePtr
     {
-    using return_type = Return;
+    enum Action
+        {
+        None,
+        AssignNewData,
+        AssignPointerRtoL
+        };
+    PData *parg1_ = nullptr;
+    const PData *parg2_ = nullptr;
+    const ITData *arg2_ = nullptr;
+    Action action_ = None;
+    PData nd_;
+    public:
 
-    RegisterFunc();
+    ManagePtr() { }
 
-    RegisterFunc(RegisterFunc&& other);
+    ManagePtr(PData *parg1)
+        : parg1_(parg1)
+        { }
 
-    virtual ~RegisterFunc() { }
+    ManagePtr(PData *parg1, const ITData *arg2)
+        : parg1_(parg1), arg2_(arg2)
+        { }
+
+    ManagePtr(PData *parg1, const PData *parg2)
+        : parg1_(parg1), parg2_(parg2), arg2_(parg2->get())
+        { }
+
+    ManagePtr(ManagePtr&& o)
+        :
+        parg1_(o.parg1_),
+        parg2_(o.parg2_),
+        arg2_(o.arg2_),
+        action_(o.action_),
+        nd_(std::move(o.nd_))
+        { 
+        o.parg1_ = nullptr;
+        o.parg2_ = nullptr;
+        o.arg2_ = nullptr;
+        o.action_ = None;
+        }
+
+    ~ManagePtr()
+        {
+        updateArg1();
+        }
+
+    bool
+    hasPArg1() const { return bool(parg1_); }
+
+    bool
+    hasPArg2() const { return bool(parg2_); }
+
+    bool
+    hasArg2() const { return bool(arg2_); }
+
+    PData&
+    parg1() 
+        { 
+#ifdef DEBUG
+        if(!parg1_) throw std::runtime_error("Attempt to dereference nullptr");
+#endif
+        return *parg1_; 
+        }
+
+
+    const PData&
+    parg2() 
+        { 
+#ifdef DEBUG
+        if(!parg2_) throw std::runtime_error("Attempt to dereference nullptr");
+#endif
+        return *parg2_; 
+        }
+
+    const ITData&
+    arg2() 
+        { 
+#ifdef DEBUG
+        if(!arg2_) throw std::runtime_error("Attempt to dereference nullptr");
+#endif
+        return *arg2_; 
+        }
+
 
     template <typename T>
     T&
@@ -149,241 +200,260 @@ struct RegisterFunc : FuncBase
     void
     assignPointerRtoL();
 
-    operator Return() { return std::move(ret_); }
-
     private:
 
     void
     updateArg1();
 
-    template<typename T>
-    void
-    applyToImpl(const T& d);
-
-    template<typename T>
-    void
-    applyToImpl(T& d);
-
-    enum Action
-        {
-        None,
-        AssignNewData,
-        AssignPointerRtoL
-        };
-
-    PData *parg1_ = nullptr;
-    const PData *parg2_ = nullptr;
-    const ITData *arg2_ = nullptr;
-    Derived& dt_;
-    Action action_ = None;
-    PData nd_;
-    return_type ret_;
-
-    public:
-
-    void
-    setup(PData *parg1);
-    void
-    setup(PData *parg1, const PData *parg2);
-    void
-    setup(PData *arg1, const ITData *arg2);
-
-    REGISTER(void applyTo,,final { applyToImpl(d); })
-    REGISTER(void applyTo,const,final { applyToImpl(d); })
-
     };
 
-template <typename Callable, typename T1, typename Return>
-struct CallWrap : FuncBase
+template <typename Task, typename Return = Void>
+class RegisterTask : public FuncBase
     {
-    CallWrap(Callable& c, T1& arg1) : c_(c), arg1_(arg1), parg1_(nullptr) { }
-    CallWrap(Callable& c, T1& arg1, PData& parg1) : c_(c), arg1_(arg1), parg1_(&parg1) { }
+    private:
+    Task t_;
+    ManagePtr mp_;
+    Return ret_;
+    public:
+    using return_type = Return;
 
-    REGISTER(void applyTo,,final { applyToImpl(d); })
-    REGISTER(void applyTo,const,final { applyToImpl(d); })
+    RegisterTask(Task&& t) :
+        t_(std::move(t))
+        { }
 
-    Return
-    getReturn() { return ret_; }
+    template<typename... MPArgs>
+    RegisterTask(Task&& t,
+                 MPArgs&&... mpargs) :
+        t_(std::move(t)),
+        mp_(std::forward<MPArgs>(mpargs)...)
+        { }
+
+    RegisterTask(RegisterTask&& o) :
+        t_(std::move(o.t_)), 
+        ret_(std::move(o.ret_)),
+        mp_(std::move(o.mp_))
+        { }
+
+    virtual ~RegisterTask() { }
+
+    operator Return() { return std::move(ret_); }
 
     private:
 
-    template<typename T2>
+    template<typename D>
     void
-    applyToImpl(const T2& d2);
+    applyToImpl(const D& d);
 
-    Callable& c_;
-    T1& arg1_;
-    PData* parg1_;
-    Return ret_;
+    template<typename D>
+    void
+    applyToImpl(D& d);
+
+
+    public:
+
+    REGISTER_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); } )
+    REGISTER_TYPES(void applyTo LPAREN, const&d RPAREN final { applyToImpl(d); } )
+
     };
+
+//template <typename Callable, typename T1, typename Return>
+//struct CallWrap : FuncBase
+//    {
+//    CallWrap(Callable& c, T1& arg1) : c_(c), arg1_(arg1), parg1_(nullptr) { }
+//    CallWrap(Callable& c, T1& arg1, PData& parg1) : c_(c), arg1_(arg1), parg1_(&parg1) { }
+//
+//    REGISTER(void applyTo,,final { applyToImpl(d); })
+//    REGISTER(void applyTo,const,final { applyToImpl(d); })
+//
+//    Return
+//    getReturn() { return ret_; }
+//
+//    private:
+//
+//    template<typename D2>
+//    void
+//    applyToImpl(const D2& d2)
+//        { 
+//        if(parg1_) ret_ = detail::cloneDoTask<Return>(c_,arg1_,d2,*parg1_); 
+//        else       ret_ = detail::call<Return>(c_,arg1_,d2); 
+//        }
+//    
+//    Callable& c_;
+//    T1& arg1_;
+//    PData* parg1_;
+//    Return ret_;
+//    };
+
 
 
 //
 // Implementations
 //
 
+template<typename T1, typename T2>
+void
+doTask(const T1& t1, T2& t2)
+    {
+    throw std::runtime_error("doTask not defined for specified task or data type");
+    }
+
 namespace detail {
 
-template<typename Ret, typename Func, typename T>
+//template <typename Ret, class Task, typename D>
+//auto 
+//callDoTask_Impl(Task&& t, D&& d, int) 
+//    -> decltype(doTask(std::forward<Task>(t),std::forward<D>(d)))
+//    {
+//    return doTask(std::forward<Task>(t),std::forward<D>(d));
+//    }
+//template <typename Ret, class Task, typename D>
+//Ret
+//callDoTask_Impl(Task&& t, D&& d, long) 
+//    {
+//    throw std::runtime_error("doTask not defined for specified task or data type");
+//    return Ret{};
+//    }
+
+//template <typename Ret, class Task, typename D>
+//auto 
+//callDoTask_Impl(Task&& t, D&& d, int) 
+//    //-> std::conditional_t<std::is_same<decltype(doTask(std::forward<Task>(t),std::forward<D>(d))),void>::value,Ret,Ret>
+//    -> std::conditional_t<std::is_same<decltype(doTask(t,std::forward<D>(d))),void>::value,Ret,Ret>
+//    {
+//    doTask(std::forward<Task>(t),std::forward<D>(d));
+//    return Ret{};
+//    }
+//template <typename Ret, class Task, typename D>
+//Ret
+//callDoTask_Impl(Task&& t, D&& d, long) 
+//    {
+//    throw std::runtime_error("doTask not defined for specified task or data type");
+//    return Ret{};
+//    }
+
+//template<typename Ret, typename Task, typename D, typename ActualRet>
+//struct FixRet
+//    {
+//    Ret
+//    operator()(Task&& t, D&& d) const
+//        {
+//        return callDoTask_Impl<Ret,Task,D>(std::forward<Task>(t),std::forward<D>(d),0);
+//        }
+//    };
+//template<typename Ret, typename Task, typename D>
+//struct FixRet<Ret,Task,D,void> //specialization for case ActualRet=void
+//    {
+//    Ret
+//    operator()(Task&& t, D&& d) const
+//        {
+//        callDoTask_Impl<void,Task,D>(std::forward<Task>(t),std::forward<D>(d),0);
+//        return Ret{};
+//        }
+//    };
+template <typename Ret, class Task, typename D>
+Ret
+callDoTask(Task&& t, D&& d)
+    {
+    //using ActualRet = std::result_of_t<decltype(doTask)&(Task,D)>;
+    //return FixRet<Ret,Task,D,ActualRet>()(std::forward<Task>(t),std::forward<D>(d),0);
+    //return callDoTask_Impl<Ret,Task,D>(std::forward<Task>(t),std::forward<D>(d),0);
+    doTask(std::forward<Task>(t),std::forward<D>(d));
+    return Ret{};
+    }
+
+template<typename Ret, typename Task, typename D>
 auto
-clone_modify_impl(Func& f, T& a, PData& pdat,int) //-> decltype(f(static_cast<const T&>(a)))
+cloneDoTask_Impl(Task& t, D& d, PData& pdat,int)
     //Using std::conditional here because we want the return type to be Ret regardless
     //but need to call possibly void f(const T&) to get substitution failure (SFINAE) if no such call exists.
-    -> std::conditional_t<std::is_same<decltype(f(static_cast<const T&>(a))),void>::value,Ret,Ret>
+    -> std::conditional_t<std::is_same<decltype(doTask(t,static_cast<const D&>(d))),void>::value,Ret,Ret>
     {
-    const T& ca = a;
-    return detail::call<Ret>(f,ca);
+    const auto& cd = d;
+    return callDoTask<Ret>(t,cd);
     }
-
-template<typename Ret, typename Func, typename T>
+template<typename Ret, typename Task, typename D>
 Ret
-clone_modify_impl(Func& f, T& a, PData& pdat,long)
+cloneDoTask_Impl(Task& t, D& d, PData& pdat,long)
     {
     //if(Global::debug3()) println("Calling solo (1 param)");
-    //println("--> Calling solo (1 param)");
+    println("--> Calling solo (1 param)");
     if(!pdat.unique()) pdat = pdat->clone();
-    auto* pa = static_cast<T*>(pdat.get());
-    return detail::call<Ret>(f,*pa);
+    auto* pd = static_cast<D*>(pdat.get());
+    return callDoTask<Ret>(t,*pd);
     }
-
-template<typename Ret, typename Func, typename T>
+template<typename Ret, typename Task, typename D>
 Ret
-clone_modify(Func& f, T& a, PData& pdat)
+cloneDoTask(Task& t, D& d, PData& pdat)
     {
-    return clone_modify_impl<Ret>(f,a,pdat,0);
+    return cloneDoTask_Impl<Ret>(t,d,pdat,0);
     }
 
 /////////////////////
 
-template<typename Ret, typename Func, typename T1, typename T2>
-auto
-clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) 
-    //Using std::conditional here because we want the return type to be Ret regardless
-    //but need to call possibly void f(const T1&,const T2&) to get substitution failure (SFINAE) 
-    //if no such call exists.
-    -> std::conditional_t<std::is_same<decltype(f(static_cast<const T1&>(a1),a2)),void>::value,Ret,Ret>
-    {
-    //if(Global::debug3()) println("Not calling solo (2 params)");
-    const T1& ca1 = a1;
-    return detail::call<Ret>(f,ca1,a2);
-    }
-
-template<typename Ret, typename Func, typename T1, typename T2>
-Ret
-clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,long)
-    {
-    //if(Global::debug3()) println("Calling solo (2 params)");
-    //println("--> Calling solo (2 params)");
-    if(!pdat.unique()) pdat = pdat->clone();
-    auto* pa1 = static_cast<T1*>(pdat.get());
-    return detail::call<Ret>(f,*pa1,a2);
-    }
-
-template<typename Ret, typename Func, typename T1, typename T2>
-Ret
-clone_modify(Func& f, T1& a1, const T2& a2, PData& pdat)
-    {
-    return clone_modify_impl<Ret>(f,a1,a2,pdat,0);
-    }
+//template<typename Ret, typename Func, typename T1, typename T2>
+//auto
+//clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) 
+//    //Using std::conditional here because we want the return type to be Ret regardless
+//    //but need to call possibly void f(const T1&,const T2&) to get substitution failure (SFINAE) 
+//    //if no such call exists.
+//    -> std::conditional_t<std::is_same<decltype(f(static_cast<const T1&>(a1),a2)),void>::value,Ret,Ret>
+//    {
+//    //if(Global::debug3()) println("Not calling solo (2 params)");
+//    const T1& ca1 = a1;
+//    return detail::call<Ret>(f,ca1,a2);
+//    }
+//
+//template<typename Ret, typename Func, typename T1, typename T2>
+//Ret
+//clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,long)
+//    {
+//    //if(Global::debug3()) println("Calling solo (2 params)");
+//    //println("--> Calling solo (2 params)");
+//    if(!pdat.unique()) pdat = pdat->clone();
+//    auto* pa1 = static_cast<T1*>(pdat.get());
+//    return detail::call<Ret>(f,*pa1,a2);
+//    }
+//
+//template<typename Ret, typename Func, typename T1, typename T2>
+//Ret
+//clone_modify(Func& f, T1& a1, const T2& a2, PData& pdat)
+//    {
+//    return clone_modify_impl<Ret>(f,a1,a2,pdat,0);
+//    }
 
 } //namespace detail
 
-template <typename Callable, typename T1, typename Return>
-template<typename T2>
-void CallWrap<Callable,T1,Return>::
-applyToImpl(const T2& d2) 
-    { 
-    if(parg1_) ret_ = detail::clone_modify<Return>(c_,arg1_,d2,*parg1_); 
-    else       ret_ = detail::call<Return>(c_,arg1_,d2); 
-    }
-
-template <typename Derived, typename Return>
-RegisterFunc<Derived,Return>::
-RegisterFunc() 
-    :
-    parg1_(nullptr),
-    parg2_(nullptr),
-    arg2_(nullptr),
-    dt_(*static_cast<Derived*>(this)),
-    action_(None)
-    { }
-
-template <typename Derived, typename Return>
-RegisterFunc<Derived,Return>::
-RegisterFunc(RegisterFunc&& other)
-    :
-    parg1_(other.parg1_),
-    parg2_(other.parg2_),
-    arg2_(other.arg2_),
-    dt_(*static_cast<Derived*>(this)),
-    action_(other.action_),
-    nd_(std::move(other.nd_)),
-    ret_(std::move(other.ret_))
-    { 
-    other.parg1_ = nullptr;
-    other.parg2_ = nullptr;
-    other.arg2_ = nullptr;
-    other.action_ = None;
-    }
-
-template <typename Derived, typename Return>
-void RegisterFunc<Derived,Return>::
-setup(PData* parg1)
-    { 
-    parg1_ = parg1;
-    }
-
-template <typename Derived, typename Return>
-void RegisterFunc<Derived,Return>::
-setup(PData* parg1, const PData* parg2)
-    { 
-    parg1_ = parg1; 
-    parg2_ = parg2;
-    arg2_  = parg2->get();
-    }
-
-template <typename Derived, typename Return>
-void RegisterFunc<Derived,Return>::
-setup(PData *parg1, const ITData *arg2)
+template <typename ITDataType, typename... VArgs>
+ITDataType* ManagePtr::
+makeNewData(VArgs&&... vargs)
     {
-    parg1_ = parg1;
-    arg2_  = arg2;
-    }
-
-template <typename Derived, typename Return>
-template <typename ITDataType, typename... Args>
-ITDataType* RegisterFunc<Derived,Return>::
-makeNewData(Args&&... args)
-    {
-    if(!parg1_) Error("Can't call setNewData with const-only access to first arg");
+    if(!parg1_) Error("Can't call makeNewData with const-only access to first arg");
     action_ = AssignNewData;
-    auto newdat = std::make_shared<ITDataType>(std::forward<Args>(args)...);
+    auto newdat = std::make_shared<ITDataType>(std::forward<VArgs>(vargs)...);
     auto* ret = newdat.get();
     nd_ = std::move(newdat);
     return ret;
     }
 
-template <typename Derived, typename Return>
 template <typename ITDataType>
-void RegisterFunc<Derived,Return>::
+void ManagePtr::
 setNewData(std::shared_ptr<ITDataType>&& nd)
     {
     nd_ = std::move(nd);
     action_ = AssignNewData;
     }
 
-template <typename Derived, typename Return>
-void RegisterFunc<Derived,Return>::
+void inline ManagePtr::
 assignPointerRtoL() 
     { 
     if(!parg2_) Error("No second pointer provided for action AssignPointerRtoL");
     action_ = AssignPointerRtoL; 
     }
 
-template <typename Derived, typename Return>
-void RegisterFunc<Derived,Return>::
+void inline ManagePtr::
 updateArg1()
     {
+    if(!parg1_) return;
     //println("In updateArg1, arg1_ points to ",arg1_->get());
     if(action_ == AssignNewData)
         {
@@ -397,9 +467,8 @@ updateArg1()
         }
     }
 
-template <typename Derived, typename Return>
 template<typename T>
-T& RegisterFunc<Derived,Return>::
+T& ManagePtr::
 modifyData(const T& d)
     {
     if(!parg1_) Error("Can't modify const data");
@@ -411,124 +480,164 @@ modifyData(const T& d)
     return *pa1;
     }
 
-template <typename Derived, typename Return>
-template<typename T>
-void RegisterFunc<Derived,Return>::
-applyToImpl(const T& d)
+template<typename Task, typename Ret>
+template<typename D>
+void RegisterTask<Task,Ret>::
+applyToImpl(const D& d)
     {
     //println("In applyToImpl #1");
-    if(arg2_)
+    if(mp_.hasArg2())
         {
-        CallWrap<Derived,const T,Return> w(dt_,d);
-        arg2_->plugInto(w);
-        ret_ = std::move(w.getReturn());
+        throw std::runtime_error("Two-arg doTask not yet implemented");
+        //CallWrap<Task,const D,Return> w(t_,d);
+        //mp_.arg2()->plugInto(w);
+        //ret_ = std::move(w.getReturn());
         }
     else
         {
-        ret_ = detail::call<Return>(dt_,d);
+        ret_ = detail::callDoTask<Ret>(t_,d);
         }
-    if(parg1_) updateArg1();
     }
 
-template <typename Derived, typename Return>
-template<typename T>
-void RegisterFunc<Derived,Return>::
-applyToImpl(T& d)
+template<typename Task, typename Ret>
+template<typename D>
+void RegisterTask<Task,Ret>::
+applyToImpl(D& d)
     {
     //println("In applyToImpl #2");
-    assert(parg1_);
-    if(arg2_)
+    assert(mp_.hasPArg1());
+    if(mp_.hasArg2())
         {
-        CallWrap<Derived,T,Return> w(dt_,d,*parg1_);
-        arg2_->plugInto(w);
-        ret_ = std::move(w.getReturn());
+        throw std::runtime_error("Two-arg doTask not yet implemented");
+        //CallWrap<Task,D,Return> w(t_,d,mp.parg1());
+        //mp_.arg2()->plugInto(w);
+        //ret_ = std::move(w.getReturn());
         }
     else
         {
-        ret_ = detail::clone_modify<Return>(dt_,d,*parg1_);
+        ret_ = detail::cloneDoTask<Ret>(t_,d,mp_.parg1());
         }
-    updateArg1();
     }
 
 
 //////
-////// applyFunc methods
+////// doTask methods
 //////
 
-template <typename F>
-using returnTypeOf = typename std::conditional<
-                               std::is_same<typename F::return_type,NoReturn>::value,
-                                   F,
-                                   typename F::return_type
-                               >::type;
 
-template<typename F, typename... CtrArgs>
-returnTypeOf<F>
-applyFunc(const ITData& arg,
-          CtrArgs&&... args)
+template<typename Ret, typename Task>
+Ret
+doTaskReturn(Task t,
+             const ITData& arg)
     {
-    F f(std::forward<CtrArgs>(args)...);
-    arg.plugInto(f);
-    return f;
+    RegisterTask<std::remove_reference_t<Task>,Ret> r(std::move(t));
+    arg.plugInto(r);
+    return r;
+    }
+template<typename Task>
+Task
+doTask(Task&& t,
+       const ITData& arg)
+    {
+    doTaskReturn<Void,Task>(std::forward<Task>(t),arg);
+    return t;
     }
 
-template<typename F, typename... CtrArgs>
-returnTypeOf<F>
-applyFunc(const CPData& arg,
-          CtrArgs&&... args)
-    {
-    F f(std::forward<CtrArgs>(args)...);
-    arg->plugInto(f);
-    return f;
-    }
-
-template<typename F, typename... CtrArgs>
-returnTypeOf<F>
-applyFunc(PData& arg,
-          CtrArgs&&... args)
-    {
-    F f(std::forward<CtrArgs>(args)...);
-    f.setup(&arg);
-    arg->plugInto(f);
-    return f;
-    }
-
-template<typename F, typename... CtrArgs>
-returnTypeOf<F>
-applyFunc(const PData& arg1,
-          const PData& arg2,
-          CtrArgs&&... args)
-    {
-    F f(std::forward<CtrArgs>(args)...);
-    f.setup(&arg1,&arg2);
-    arg2->plugInto(f);
-    return f;
-    }
-
-template<typename F, typename... CtrArgs>
-returnTypeOf<F>
-applyFunc(PData& arg1,
-          const PData& arg2,
-          CtrArgs&&... args)
-    {
-    F f(std::forward<CtrArgs>(args)...);
-    f.setup(&arg1,&arg2);
-    arg1->plugInto(f);
-    return f;
-    }
-
-template<typename F, typename... CtrArgs>
-returnTypeOf<F>
-applyFunc(PData& arg1,
-          const ITData& arg2,
-          CtrArgs&&... args)
-    {
-    F f(std::forward<CtrArgs>(args)...);
-    f.setup(&arg1,&arg2);
-    arg1->plugInto(f);
-    return f;
-    }
-
+//template<typename Ret, typename Task>
+//Ret
+//doTaskReturn(Task t,
+//             const CPData& arg)
+//    {
+//    RegisterTask<Task,Ret> r(std::move(t));
+//    arg->plugInto(r);
+//    return r;
+//    }
+//template<typename Task>
+//Task
+//doTask(Task&& t,
+//       const CPData& arg)
+//    {
+//    doTaskReturn<Void,Task>(t,arg);
+//    return t;
+//    }
+//
+//template<typename Ret, typename Task>
+//Ret
+//doTaskReturn(Task t,
+//             PData& arg)
+//    {
+//    RegisterTask<Task,Ret> r(std::move(t),&arg);
+//    arg->plugInto(r);
+//    return r;
+//    }
+//template<typename Task>
+//Task
+//doTask(Task&& t,
+//       PData& arg)
+//    {
+//    doTaskReturn<Void,Task>(t,arg);
+//    return t;
+//    }
+//
+//template<typename Ret, typename Task>
+//Ret
+//doTaskReturn(Task t,
+//             const PData& arg1,
+//             const PData& arg2)
+//    {
+//    RegisterTask<Task,Ret> r(std::move(t),&arg1,&arg2);
+//    arg1->plugInto(r);
+//    return r;
+//    }
+//template<typename Task>
+//Task
+//doTask(Task&& t,
+//       const PData& arg1,
+//       const PData& arg2)
+//    {
+//    doTaskReturn<Void,Task>(t,arg1,arg2);
+//    return t;
+//    }
+//
+//template<typename Ret, typename Task>
+//Ret
+//doTaskReturn(Task t,
+//             PData& arg1,
+//             const PData& arg2)
+//    {
+//    RegisterTask<Task,Ret> r(std::move(t),&arg1,&arg2);
+//    arg1->plugInto(r);
+//    return r;
+//    }
+//template<typename Task>
+//Task
+//doTask(Task&& t,
+//       PData& arg1,
+//       const PData& arg2)
+//    {
+//    doTaskReturn<Void,Task>(t,arg1,arg2);
+//    return t;
+//    }
+//
+//template<typename Ret, typename Task>
+//Ret
+//doTaskReturn(Task t,
+//             PData& arg1,
+//             const ITData& arg2)
+//    {
+//    RegisterTask<Task,Ret> r(std::move(t),&arg1,&arg2);
+//    arg1->plugInto(r);
+//    return r;
+//    }
+//template<typename Task>
+//Task
+//doTask(Task&& t,
+//       PData& arg1,
+//       const ITData& arg2)
+//    {
+//    doTaskReturn<Void,Task>(t,arg1,arg2);
+//    return t;
+//    }
 
 } //namespace itensor
 

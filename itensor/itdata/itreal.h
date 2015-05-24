@@ -16,7 +16,7 @@ namespace itensor {
 //  and size
 //
 
-struct ITReal : RegisterData<ITReal>
+struct ITReal
     {
     using storage_type = std::vector<Real>;
     using size_type = storage_type::size_type;

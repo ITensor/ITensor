@@ -42,7 +42,8 @@ class IndexSetT
     using value_type = IndexT;
     using iterator = typename storage::iterator;
     using const_iterator = typename storage::const_iterator;
-    using IndexValT = typename IndexT::IndexValT;
+    using index_type = IndexT;
+    using indexval_type = typename IndexT::indexval_type;
 
     IndexSetT();
 

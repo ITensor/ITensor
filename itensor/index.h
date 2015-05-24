@@ -28,7 +28,7 @@ class Index
     public:
     using IDGenerator = std::mt19937;
     using IDType = IDGenerator::result_type;
-    using IndexValT = IndexVal;
+    using indexval_type = IndexVal;
 
     //
     // Constructors

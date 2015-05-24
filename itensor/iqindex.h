@@ -10,7 +10,6 @@
 namespace itensor {
 
 // Forward declarations
-class ITensor;
 class IndexQN;
 class IQIndexDat;
 class IQIndexVal;

@@ -2,8 +2,11 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#ifndef __ITENSOR_ITENSOR_IH
-#define __ITENSOR_ITENSOR_IH
+#ifndef __ITENSOR_ITENSOR_IH_
+#define __ITENSOR_ITENSOR_IH_
+
+#include "itensor/task_types.h"
+#include "itensor/itdata/itdata.h"
 
 //
 // Template Method Implementations
@@ -11,75 +14,48 @@
 
 namespace itensor {
 
-
+template<>
 template <typename... Indices>
-ITensor::
-ITensor(const Index& i1, 
-        const Index& i2,
-        const Index& i3,
-        const Indices&... rest)
+inline ITensorT<Index>::
+ITensorT(const Index& i1, 
+         const Index& i2,
+         const Index& i3,
+         const Indices&... rest)
     :
     is_(i1,i2,i3,rest...),
-    store_(std::make_shared<ITReal>(area(is_),0.)),
+    store_(std::make_shared<ITDataType<ITReal>>(area(is_),0.)),
     scale_(1.)
 	{ }
 
+template<>
 template <class DataType>
-ITensor::
-ITensor(IndexSet iset,
-        DataType&& dat,
-        const LogNumber& scale)
+inline ITensorT<Index>::
+ITensorT(IndexSet iset,
+         DataType&& dat,
+         const LogNumber& scale)
     :
     is_(std::move(iset)),
-    store_(std::make_shared<std::decay_t<DataType>>(std::move(dat))),
+    store_(std::make_shared<ITDataType<std::decay_t<DataType>>>(std::move(dat))),
     scale_(scale)
     {
     static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
                   "Error: cannot pass lvalues to ITensor(ITDataType&& dat,...) constructor");
     }
 
-template<typename... Inds>
-ITensor
-diagTensor(Complex z, 
-           const Index& i1,
-           Inds&&... inds)
-    { 
-    IndexSet is(i1,std::forward<Inds>(inds)...);
-    if(z.imag() == 0) return ITensor(std::move(is),ITDiag<Real>(z.real()));
-    return ITensor(std::move(is),ITDiag<Complex>(z));
-    }
+template<>
+inline ITensorT<Index>::
+ITensorT(const IndexSet& is)
+    :
+    is_(is),
+    store_(std::make_shared<ITDataType<ITReal>>(area(is_),0.)),
+    scale_(1.)
+	{ }
 
-template<typename Container, typename... Inds>
-auto
-diagTensor(const Container& C, 
-           const Index& i1,
-           Inds&&... inds)
-    //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"
-    //types (such as Container==int) that don't have a value_type member type
-    -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
-    { 
-    IndexSet is(i1,std::forward<Inds>(inds)...);
-#ifdef DEBUG
-    //Compute min of all index dimensions
-    auto minm = i1.m();
-    for(const auto& ind : is)
-        if(ind.m() < minm) minm = ind.m();
-    if(C.size() != size_t(minm))
-        {
-        Print(minm);
-        Print(C.size());
-        Error("Wrong size of data in diagonal ITensor constructor");
-        }
-#endif
-    using value_type = typename Container::value_type;
-    return ITensor(std::move(is),ITDiag<value_type>(C.begin(),C.end()));
-    }
-
-
+template<>
 template <typename... IVals>
-ITensor::
-ITensor(const IndexVal& iv1, 
-        const IVals&... rest)
+inline ITensorT<Index>::
+ITensorT(const IndexVal& iv1, 
+         const IVals&... rest)
     :
     scale_(1.)
     {
@@ -88,7 +64,7 @@ ITensor(const IndexVal& iv1,
     std::array<Index,size> inds;
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     is_ = IndexSet(inds);
-    store_ = std::make_shared<ITReal>(area(is_),0.);
+    store_ = std::make_shared<ITDataType<ITReal>>(area(is_),0.);
     set(1.,iv1,rest...);
     }
 
@@ -275,17 +251,6 @@ ITensor(const IndexVal& iv1,
 //        applyFunc<SetEltComplex<size>>(store_,val,is_,inds);
 //    }
 
-template<typename... VarArgs>
-ITensor& ITensor::
-noprime(VarArgs&&... vargs) { itensor::noprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
-
-template<typename... VarArgs>
-ITensor& ITensor::
-prime(VarArgs&&... vargs) { itensor::prime(is_,std::forward<VarArgs>(vargs)...); return *this; }
-
-template<typename... VarArgs>
-ITensor& ITensor::
-primeExcept(VarArgs&&... vargs) { itensor::primeExcept(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
 //template <typename F>
 //struct GenerateIT : public RegisterFunc<GenerateIT<F>>
@@ -421,6 +386,43 @@ primeExcept(VarArgs&&... vargs) { itensor::primeExcept(is_,std::forward<VarArgs>
 //    }
 
 
+template<typename... Inds>
+ITensor
+diagTensor(Complex z, 
+           const Index& i1,
+           Inds&&... inds)
+    { 
+    IndexSet is(i1,std::forward<Inds>(inds)...);
+    if(z.imag() == 0) return ITensor(std::move(is),ITDiag<Real>(z.real()));
+    return ITensor(std::move(is),ITDiag<Complex>(z));
+    }
+
+template<typename Container, typename... Inds>
+auto
+diagTensor(const Container& C, 
+           const Index& i1,
+           Inds&&... inds)
+    //This is a "throwaway" test: we don't care about the results, just want to filter out "Container"
+    //types (such as Container==int) that don't have a value_type member type
+    -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type
+    { 
+    IndexSet is(i1,std::forward<Inds>(inds)...);
+#ifdef DEBUG
+    //Compute min of all index dimensions
+    auto minm = i1.m();
+    for(const auto& ind : is)
+        if(ind.m() < minm) minm = ind.m();
+    if(C.size() != size_t(minm))
+        {
+        Print(minm);
+        Print(C.size());
+        Error("Wrong size of data in diagonal ITensor constructor");
+        }
+#endif
+    using value_type = typename Container::value_type;
+    return ITensor(std::move(is),ITDiag<value_type>(C.begin(),C.end()));
+    }
+
 template <class Tensor>
 Tensor
 swapPrime(Tensor T, int plev1, int plev2,
@@ -521,6 +523,12 @@ mapprime(ITensor A,
 //    T.apply(std::forward<F>(f));
 //    return T;
 //    }
+
+ITensor inline
+randomTensor(const IndexSet& inds)
+    {
+    return randomize(ITensor(inds));
+    }
 
 } //namespace itensor
 
