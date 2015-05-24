@@ -1,7 +1,6 @@
 #
 # Makefile for ITensor library
 #
-################################
 
 include ../this_dir.mk
 include ../options.mk
@@ -16,14 +15,14 @@ SOURCES+= matrix/algs.cc
 SOURCES+= tensor/contract.cc 
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
-SOURCES+= iqindex.cc 
-SOURCES+= iqtensor.cc 
-SOURCES+= spectrum.cc 
-SOURCES+= svdalgs.cc 
-SOURCES+= mps/mps.cc 
-SOURCES+= mps/mpo.cc 
-SOURCES+= mps/tevol.cc
-SOURCES+= mps/autompo.cc
+#SOURCES+= iqindex.cc 
+#SOURCES+= iqtensor.cc 
+#SOURCES+= spectrum.cc 
+#SOURCES+= svdalgs.cc 
+#SOURCES+= mps/mps.cc 
+#SOURCES+= mps/mpo.cc 
+#SOURCES+= mps/tevol.cc
+#SOURCES+= mps/autompo.cc
 
 ####################################
 

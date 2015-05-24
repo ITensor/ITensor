@@ -76,20 +76,20 @@ class ITensor
     //evaluate to false if ITensor is default constructed
     explicit operator bool() const { return bool(store_); }
 
-    template <typename... IndexVals>
-    Real
-    real(IndexVals&&... ivs) const;
+    //template <typename... IndexVals>
+    //Real
+    //real(IndexVals&&... ivs) const;
 
-    template <typename... IndexVals>
-    Complex
-    cplx(IndexVals&&... ivs) const;
+    //template <typename... IndexVals>
+    //Complex
+    //cplx(IndexVals&&... ivs) const;
 
-    //Set element at location given by collection
-    //of IndexVals. Will not switch storage
-    //from Real to Complex unless val.imag()!=0 
-    template<typename... IndexVals>
-    void
-    set(Complex val, const IndexVals&... ivs);
+    ////Set element at location given by collection
+    ////of IndexVals. Will not switch storage
+    ////from Real to Complex unless val.imag()!=0 
+    //template<typename... IndexVals>
+    //void
+    //set(Complex val, const IndexVals&... ivs);
 
     //
     // Operators
@@ -98,42 +98,42 @@ class ITensor
     //Contracting product
     //All matching Index pairs automatically contracted
     //Cji = \sum_{k,l} Akjl * Blki
-    ITensor& 
-    operator*=(const ITensor& other);
+    //ITensor& 
+    //operator*=(const ITensor& other);
 
-    // Contract with IndexVal
-    // If iv = (J,n), Index J is fixed to it's nth
-    // value and rank decreases by 1
-    // (similar to summing against a Kronecker
-    // delta tensor \delta_{J,n})
-    ITensor& 
-    operator*=(const IndexVal& iv) { return operator*=(ITensor(iv)); } 
+    //// Contract with IndexVal
+    //// If iv = (J,n), Index J is fixed to it's nth
+    //// value and rank decreases by 1
+    //// (similar to summing against a Kronecker
+    //// delta tensor \delta_{J,n})
+    //ITensor& 
+    //operator*=(const IndexVal& iv) { return operator*=(ITensor(iv)); } 
 
-    //Multiplication by scalar
-    ITensor& 
-    operator*=(Real fac);
-    ITensor& 
-    operator*=(Complex z);
+    ////Multiplication by scalar
+    //ITensor& 
+    //operator*=(Real fac);
+    //ITensor& 
+    //operator*=(Complex z);
 
-    //Division by scalar
-    ITensor& 
-    operator/=(Real fac) { scale_/=fac; return *this; }
-    ITensor& 
-    operator/=(Complex z) { return operator*=(1./z); }
+    ////Division by scalar
+    //ITensor& 
+    //operator/=(Real fac) { scale_/=fac; return *this; }
+    //ITensor& 
+    //operator/=(Complex z) { return operator*=(1./z); }
 
-    //Negation
-    ITensor
-    operator-() const { auto T = *this; T.scale_ *= -1; return T; }
+    ////Negation
+    //ITensor
+    //operator-() const { auto T = *this; T.scale_ *= -1; return T; }
 
 
-    //Tensor addition and subtraction
-    //Summands must have same Indices, in any order
-    //Cijk = Aijk + Bkij
-    ITensor& 
-    operator+=(const ITensor& other);
+    ////Tensor addition and subtraction
+    ////Summands must have same Indices, in any order
+    ////Cijk = Aijk + Bkij
+    //ITensor& 
+    //operator+=(const ITensor& other);
 
-    ITensor& 
-    operator-=(const ITensor& other);
+    //ITensor& 
+    //operator-=(const ITensor& other);
 
     //
     // Index Prime Level Methods
@@ -163,54 +163,54 @@ class ITensor
     //Set all elements to z. If z.imag()==0
     //(such as if z is automatically converted from a Real)
     //then storage will be real only.
-    ITensor&
-    fill(Complex z);
+    //ITensor&
+    //fill(Complex z);
 
-    //Call a function of the form f()->val once
-    //for each element, assign result to each element.
-    template <typename Func>
-    ITensor&
-    generate(Func&& f);
+    ////Call a function of the form f()->val once
+    ////for each element, assign result to each element.
+    //template <typename Func>
+    //ITensor&
+    //generate(Func&& f);
 
-    //Apply a function of the form f(x)->y
-    //to each element x, replacing it with y
-    template <typename Func>
-    ITensor&
-    apply(Func&& f);
+    ////Apply a function of the form f(x)->y
+    ////to each element x, replacing it with y
+    //template <typename Func>
+    //ITensor&
+    //apply(Func&& f);
 
-    //Apply a function of the form f(x)->void
-    //to each element x.
-    template <typename Func>
-    const ITensor&
-    visit(Func&& f) const;
+    ////Apply a function of the form f(x)->void
+    ////to each element x.
+    //template <typename Func>
+    //const ITensor&
+    //visit(Func&& f) const;
 
     //
     // Complex number methods
     //
 
     //Take complex conjugate of all elements
-    ITensor&
-    conj();
+    //ITensor&
+    //conj();
 
-    ITensor&
-    dag() { return conj(); }
+    //ITensor&
+    //dag() { return conj(); }
 
     //Replace data with real part
-    ITensor&
-    takeReal();
+    //ITensor&
+    //takeReal();
 
     //Replace data with imaginary part
-    ITensor&
-    takeImag();
+    //ITensor&
+    //takeImag();
 
 
     private:
 
-    void
-    scaleOutNorm();
+    //void
+    //scaleOutNorm();
 
-    void
-    equalizeScales(ITensor& other);
+    //void
+    //equalizeScales(ITensor& other);
 
     public:
 
@@ -268,35 +268,35 @@ read(std::istream& s, ITensor& t);
 void 
 write(std::ostream& s, const ITensor& t);
 
-ITensor inline
-operator*(ITensor A, const ITensor& B) { A *= B; return A; }
-ITensor inline
-operator*(const ITensor& A, ITensor&& B) { B *= A; return B; }
-ITensor inline
-operator*(ITensor T, Real fac) { T *= fac; return T; }
-ITensor inline
-operator*(Real fac, ITensor T) { T *= fac; return T; }
-ITensor inline
-operator*(ITensor T, Complex fac) { T *= fac; return T; }
-ITensor inline
-operator*(Complex fac, ITensor T) { T *= fac; return T; }
-ITensor inline
-operator/(ITensor T, Real fac) { T /= fac; return T; }
-ITensor inline
-operator/(ITensor T, Complex fac) { T /= fac; return T; }
-ITensor inline
-operator+(ITensor A, const ITensor& B) { A += B; return A; }
-ITensor inline
-operator+(const ITensor& A, ITensor&& B) { B += A; return B; }
-ITensor inline
-operator-(ITensor A, const ITensor& B) { A -= B; return A; }
-ITensor inline
-operator-(const ITensor& A, ITensor&& B) { B -= A; B *= -1; return B; }
-
-ITensor inline
-operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }
-ITensor inline
-operator*(const IndexVal& iv, const ITensor& t) { return (ITensor(iv) *= t); }
+//ITensor inline
+//operator*(ITensor A, const ITensor& B) { A *= B; return A; }
+//ITensor inline
+//operator*(const ITensor& A, ITensor&& B) { B *= A; return B; }
+//ITensor inline
+//operator*(ITensor T, Real fac) { T *= fac; return T; }
+//ITensor inline
+//operator*(Real fac, ITensor T) { T *= fac; return T; }
+//ITensor inline
+//operator*(ITensor T, Complex fac) { T *= fac; return T; }
+//ITensor inline
+//operator*(Complex fac, ITensor T) { T *= fac; return T; }
+//ITensor inline
+//operator/(ITensor T, Real fac) { T /= fac; return T; }
+//ITensor inline
+//operator/(ITensor T, Complex fac) { T /= fac; return T; }
+//ITensor inline
+//operator+(ITensor A, const ITensor& B) { A += B; return A; }
+//ITensor inline
+//operator+(const ITensor& A, ITensor&& B) { B += A; return B; }
+//ITensor inline
+//operator-(ITensor A, const ITensor& B) { A -= B; return A; }
+//ITensor inline
+//operator-(const ITensor& A, ITensor&& B) { B -= A; B *= -1; return B; }
+//
+//ITensor inline
+//operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }
+//ITensor inline
+//operator*(const IndexVal& iv, const ITensor& t) { return (ITensor(iv) *= t); }
 
 ITensor
 combiner(std::vector<Index> inds, const Args& args = Global::args());
@@ -339,34 +339,35 @@ diagTensor(const Container& C,
         //types (such as Container==int) that don't have a value_type member type
         -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type;
 
-//
-// Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
-// (I1, I2 are Index objects; n1,n2 are type int)
-// to be an ITensor T such that T(I1(n1),I2(n2)) == 1
-//
-// Useful for creating MPOs
-//
-ITensor inline
-operator*(const IndexVal& iv1, const IndexVal& iv2) 
-    { 
-    ITensor t(iv1); 
-    return (t *= iv2); 
-    }
+////
+//// Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
+//// (I1, I2 are Index objects; n1,n2 are type int)
+//// to be an ITensor T such that T(I1(n1),I2(n2)) == 1
+////
+//// Useful for creating MPOs
+////
+//ITensor inline
+//operator*(const IndexVal& iv1, const IndexVal& iv2) 
+//    { 
+//    ITensor t(iv1); 
+//    return (t *= iv2); 
+//    }
+
 //
 // Define product of IndexVal iv1 = (I1,n1) with a Real "val"
 // to be an ITensor T such that T(I1(n1)) == val
 //
 // Useful for creating MPOs
 //
-ITensor inline
-operator*(const IndexVal& iv1, Real val) 
-    { 
-    ITensor res(iv1); 
-    res *= val; 
-    return res; 
-    }
-ITensor inline
-operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
+//ITensor inline
+//operator*(const IndexVal& iv1, Real val) 
+//    { 
+//    ITensor res(iv1); 
+//    res *= val; 
+//    return res; 
+//    }
+//ITensor inline
+//operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
 
 template <typename... VarArgs>
 ITensor
