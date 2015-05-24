@@ -142,10 +142,8 @@ getState(int i, const String& state) const
 inline IQTensor SpinOne::
 getOp(int i, const String& opname, const Args& opts) const
     {
-    const
-    IQIndex s(si(i));
-    const
-    IQIndex sP = prime(s);
+    auto s = si(i);
+    auto sP = prime(s);
 
     IQIndexVal Up(s(1)),
                UpP(sP(1)),
@@ -165,8 +163,8 @@ getOp(int i, const String& opname, const Args& opts) const
             }
         else
             {
-            Op.set(+1.,Up,UpP);
-            Op.set(-1.,Dn,DnP);
+            Op.set(+1.0,Up,UpP);
+            Op.set(-1.0,Dn,DnP);
             }
         }
     else
