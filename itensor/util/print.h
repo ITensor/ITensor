@@ -5,26 +5,25 @@
 #ifndef __ITENSOR_PRINT_H
 #define __ITENSOR_PRINT_H
 
-
 #include "tinyformat.h"
 
 namespace itensor {
 
 using tinyformat::format;
 
-template <typename... Args>
+template <typename... VArgs>
 void
-printf(const char* fmt_string, const Args&... args)
+printf(const char* fmt_string, VArgs&&... vargs)
     {
-    tinyformat::printf(fmt_string,args...);
+    tinyformat::printf(fmt_string,std::forward<VArgs>(vargs)...);
     std::cout.flush();
     }
 
-template <typename... Args>
+template <typename... VArgs>
 void
-printfln(const char* fmt_string, const Args&... args)
+printfln(const char* fmt_string, VArgs&&... vargs)
     {
-    tinyformat::printf(fmt_string,args...);
+    tinyformat::printf(fmt_string,std::forward<VArgs>(vargs)...);
     std::cout << std::endl;
     }
 
@@ -41,12 +40,12 @@ println(const T& arg)
     std::cout << arg << std::endl;
     }
 
-template <typename T, typename... Args>
+template <typename T, typename... VArgs>
 void
-println(const T& arg1, const Args&... args)
+println(const T& arg1, VArgs&&... vargs)
     {
     std::cout << arg1;
-    println(args...);
+    println(std::forward<VArgs>(vargs)...);
     }
 
 template <typename T>
@@ -57,12 +56,12 @@ print(const T& arg)
     std::cout.flush();
     }
 
-template <typename T, typename... Args>
+template <typename T, typename... VArgs>
 void
-print(const T& arg1, const Args&... args)
+print(const T& arg1, VArgs&&... vargs)
     {
     std::cout << arg1;
-    print(args...);
+    print(std::forward<VArgs>(vargs)...);
     }
 
 
