@@ -187,7 +187,7 @@ complexDavidson(const BigMatrixT& A,
     auto MrefI = subMatrix(MI,1,1,1,1);
 
     //Get diagonal of A to use later
-    auto Adiag = A.diag();
+    //auto Adiag = A.diag();
 
     auto last_lambda = Cplx(1000,0);
 
