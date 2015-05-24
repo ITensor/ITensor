@@ -150,8 +150,7 @@ void IQTensor::
 set(Complex val, const IQIndexVals&... ivs)
     {
     static constexpr auto size = sizeof...(ivs);
-    scaleTo(1.);
-    const std::array<IQIndexVal,size> vals{{ static_cast<IQIndexVal>(ivs)...}};
+    std::array<IQIndexVal,size> vals{{ static_cast<IQIndexVal>(ivs)...}};
     //If this IQTensor is not allocated, compute QN flux from ivs
     if(!store_)
         {
@@ -163,6 +162,7 @@ set(Complex val, const IQIndexVals&... ivs)
         if(val.imag() == 0) store_ = std::make_shared<IQTData<Real>>(is_,div_);
         else Error("Setting complex IQTensor element not implemented");
         }
+    scaleTo(1.);
     std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.val-1; });
     if(val.imag() == 0)
