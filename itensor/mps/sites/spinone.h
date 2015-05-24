@@ -4,10 +4,7 @@
 //
 #ifndef __ITENSOR_SPINONE_H
 #define __ITENSOR_SPINONE_H
-#include "../siteset.h"
-
-#define Cout std::cout
-#define Endl std::endl
+#include "itensor/mps/siteset.h"
 
 namespace itensor {
 
@@ -73,7 +70,7 @@ constructSites(const Args& opts)
             {
             if(opts.getBool("Verbose",false))
                 {
-                Cout << "Placing a S=1/2 at site " << j << Endl;
+                println("Placing a S=1/2 at site ",j);
                 }
 
             site_.at(j) = IQIndex(nameint("S=1/2 site=",j),
@@ -317,8 +314,5 @@ getOp(int i, const String& opname, const Args& opts) const
     }
 
 }; //namespace itensor
-
-#undef Cout
-#undef Endl
 
 #endif
