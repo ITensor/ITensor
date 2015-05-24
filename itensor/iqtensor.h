@@ -189,6 +189,9 @@ class IQTensor
     const ITData&
     data() const { return *store_; }
 
+    storage_ptr&
+    pdata() { return store_; }
+
     const LogNumber&
     scale() const { return scale_; }
     void 
