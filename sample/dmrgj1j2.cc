@@ -1,6 +1,6 @@
-#include "core.h"
-#include "sites/spinhalf.h"
-#include "autompo.h"
+#include "itensor/mps/dmrg.h"
+#include "itensor/mps/sites/spinhalf.h"
+#include "itensor/mps/autompo.h"
 
 using namespace itensor;
 
