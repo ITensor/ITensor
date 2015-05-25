@@ -187,7 +187,7 @@ class ManagePtr
     modifyData(const T& d);
 
     template <typename StorageT, typename... Args>
-    StorageT*
+    StorageT&
     makeNewData(Args&&... args);
 
     //template <typename StorageT>
@@ -292,93 +292,210 @@ class RegisterTask : public FuncBase
 
 namespace detail {
 
+////If ActualRet!=void this gets called
+//template<typename Ret, typename Task, typename D, typename ActualRet>
+//struct FixRet
+//    {
+//    Ret
+//    operator()(Task& t, D& d)
+//        {
+//        static_assert(!std::is_same<Ret,Void>::value,
+//                      "No return type specified in call to doTask");
+//        static_assert(std::is_same<Ret,ActualRet>::value,
+//                      "Mismatched return type specified in call to doTask");
+//        return doTask(t,d);
+//        }
+//    };
+////If ActualRet==void this gets called
+//template<typename Ret, typename Task, typename D>
+//struct FixRet<Ret,Task,D,void>
+//    {
+//    Ret
+//    operator()(Task& t, D& d)
+//        {
+//        doTask(t,d);
+//        return Ret{};
+//        }
+//    };
+////Less preferred version which always compiles
+//template <typename Ret, typename Task, typename D>
+//Ret
+//CallDoTask_Impl(Task& t, D& d, long) 
+//    {
+//    throw std::runtime_error("doTask not defined for specified task or data type");
+//    return Ret{};
+//    }
+////This is the preferred version since 0->int requires no cast
+////Template substitution will fail (not a compile-time error)
+////if doTask(t,d) is not defined ("SFINAE" trick)
+//template <typename Ret, typename Task, typename D>
+//auto 
+//CallDoTask_Impl(Task& t, D& d, int) 
+//    -> std::conditional_t<std::is_same<decltype(doTask(t,d)),void>::value,Ret,Ret>
+//    {
+//    using ActualRet = decltype(doTask(t,d));
+//    return FixRet<Ret,Task,D,ActualRet>()(t,d);
+//    }
+////CallDoTask attempts the following: return doTask(t,d);
+////- If doTask(t,d) not defined, throws an exception
+////  if called (this converts what would otherwise be 
+////  a compile-time error into a run-time error)
+////- If doTask(t,d) defined but returns void, 
+////  returns Ret{} instead
+//template<typename Ret, typename Task, typename D>
+//Ret
+//CallDoTask(Task& t, D& d)
+//    {
+//    return CallDoTask_Impl<Ret,Task,D>(t,d,0);
+//    }
+
 //If ActualRet!=void this gets called
-template<typename Ret, typename Task, typename D, typename ActualRet>
+template<typename Ret, typename ActualRet, typename... VArgs>
 struct FixRet
     {
     Ret
-    operator()(Task& t, D& d)
+    operator()(VArgs&&... vargs)
         {
         static_assert(!std::is_same<Ret,Void>::value,
                       "No return type specified in call to doTask");
         static_assert(std::is_same<Ret,ActualRet>::value,
                       "Mismatched return type specified in call to doTask");
-        return doTask(t,d);
+        return doTask(std::forward<VArgs>(vargs)...);
         }
     };
 //If ActualRet==void this gets called
-template<typename Ret, typename Task, typename D>
-struct FixRet<Ret,Task,D,void>
+template<typename Ret, typename... VArgs>
+struct FixRet<Ret,void,VArgs...>
     {
     Ret
-    operator()(Task& t, D& d)
+    operator()(VArgs&&... vargs)
         {
-        doTask(t,d);
+        doTask(std::forward<VArgs>(vargs)...);
         return Ret{};
         }
     };
-//Less preferred version which always compiles
-template <typename Ret, typename Task, typename D>
+
+//(4) Least preferred version which always compiles
+template <typename Ret, typename Task, typename Storage>
 Ret
-CallDoTask_Impl(Task& t, D& d, long) 
+callDoTask_Impl(long l, Task& t, Storage& s)
     {
     throw std::runtime_error("doTask not defined for specified task or data type");
     return Ret{};
     }
-//This is the preferred version since 0->int requires no cast
+//(3) This is preferred more than version (4) above
+// since 0->int requires no cast.
+// Template substitution will fail (not a compile-time error)
+// if doTask(t,d) is not defined ("SFINAE" trick)
+template <typename Ret, typename Task, typename Storage>
+auto 
+callDoTask_Impl(int i, Task& t, Storage& s)
+    -> std::conditional_t<std::is_same<decltype(doTask(t,s)),void>::value,Ret,Ret>
+    {
+    using ActualRet = decltype(doTask(t,s));
+    return FixRet<Ret,ActualRet,Task&,Storage&>()(t,s);
+    }
+//(2) Less preferred version which always compiles and passes
+//the call on to callDoTask_Impl without the ManagePtr& argument
+template <typename Ret, typename Task, typename Storage>
+Ret
+callDoTask_Impl(long l, Task& t, Storage& s, ManagePtr& mp)
+    {
+    return callDoTask_Impl<Ret>(0,t,s);
+    }
+//(1) This is the preferred version since 0->int requires no cast
 //Template substitution will fail (not a compile-time error)
 //if doTask(t,d) is not defined ("SFINAE" trick)
-template <typename Ret, typename Task, typename D>
+template <typename Ret, typename Task, typename Storage>
 auto 
-CallDoTask_Impl(Task& t, D& d, int) 
-    -> std::conditional_t<std::is_same<decltype(doTask(t,d)),void>::value,Ret,Ret>
+callDoTask_Impl(int i, Task& t, Storage& s, ManagePtr& mp)
+    -> std::conditional_t<std::is_same<decltype(doTask(t,s,mp)),void>::value,Ret,Ret>
     {
-    using ActualRet = decltype(doTask(t,d));
-    return FixRet<Ret,Task,D,ActualRet>()(t,d);
+    using ActualRet = decltype(doTask(t,s,mp));
+    return FixRet<Ret,ActualRet,Task&,Storage&,ManagePtr&>()(t,s,mp);
     }
-//CallDoTask attempts the following: return doTask(t,d);
-//- If doTask(t,d) not defined, throws an exception
+//This version of callDoTask attempts "return doTask(t,s);"
+//- If doTask(t,s) not defined, throws an exception
 //  if called (this converts what would otherwise be 
 //  a compile-time error into a run-time error)
-//- If doTask(t,d) defined but returns void, 
+//- If doTask(t,s) defined but returns void, 
 //  returns Ret{} instead
-template<typename Ret, typename Task, typename D>
+template<typename Ret, typename Task, typename Storage>
 Ret
-CallDoTask(Task& t, D& d)
+callDoTask(Task& t, Storage& s)
     {
-    return CallDoTask_Impl<Ret,Task,D>(t,d,0);
+    //Skip straight to (3) above
+    return callDoTask_Impl<Ret,Task,Storage>(0,t,s);
+    }
+//This version of callDoTask attempts "return doTask(t,s,mp);"
+//- If doTask(t,s,mp) not defined, tries calling doTask(t,s)
+//  then throws an exception if that is not defined
+//  (this converts what would otherwise be 
+//  a compile-time error into a run-time error)
+//- If doTask(t,s,mp) or doTask(t,s) defined but 
+//  either returns void, returns Ret{} instead
+template<typename Ret, typename Task, typename Storage>
+Ret
+callDoTask(Task& t, Storage& s, ManagePtr& mp)
+    {
+    //First try calling function labeled (1) above
+    return callDoTask_Impl<Ret,Task,Storage>(0,t,s,mp);
     }
 
-//Less preferred version calls doTask(Task,D&)
+/////////////////////////////////////////////////////
+
+//(4) Least preferred version calls doTask(Task,D&)
 //and makes sure pdat is unique first ("copy on write")
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask_Impl(Task& t, D& d, PData& pdat,long)
+cloneDoTask_Impl(Task& t, const D& cd, PData& pdat,long)
     {
     //if(Global::debug3()) println("Calling solo (1 param)");
-    //println("--> Calling solo (1 param)");
+    println("--> Calling solo (1 param, no ManagePtr)");
     if(!pdat.unique()) pdat = pdat->clone();
     auto* pd = static_cast<ITDataType<D>*>(pdat.get());
-    return CallDoTask<Ret>(t,pd->d);
+    return callDoTask<Ret>(t,pd->d);
     }
-//Preferred version since 0->int requires no conversion
+//(3) Preferred version since 0->int requires no conversion
 //Attempts to call doTask(Task,const D&) if defined
 template<typename Ret, typename Task, typename D>
 auto
-cloneDoTask_Impl(Task& t, D& d, PData& pdat,int)
+cloneDoTask_Impl(Task& t, const D& cd, PData& pdat,int)
     //Using std::conditional here because we want the return type to be Ret regardless
     //but need to call possibly void f(const T&) to get substitution failure (SFINAE) if no such call exists.
-    -> std::conditional_t<std::is_same<decltype(doTask(t,static_cast<const D&>(d))),void>::value,Ret,Ret>
+    -> std::conditional_t<std::is_same<decltype(doTask(t,cd)),void>::value,Ret,Ret>
     {
-    //println("--> Not calling solo (1 param)");
-    const auto& cd = d;
-    return CallDoTask<Ret>(t,cd);
+    println("--> Not calling solo (1 param, no ManagePtr)");
+    return callDoTask<Ret>(t,cd);
+    }
+//(2) Less preferred version calls one of the cloneDoTask_Impl
+//versions (which one depends on further tests - see above)
+template<typename Ret, typename Task, typename D>
+Ret
+cloneDoTask_MPImpl(Task& t, const D& cd, D& d, ManagePtr& mp,long)
+    {
+    //Give up on trying to pass ManagePtr argument here - 
+    //this assumes no need to have ManagePtr if definitely
+    //going to modify storage in-place
+    return cloneDoTask_Impl<Ret>(t,d,mp.parg1(),0);
+    }
+//(1) Preferred version since 0->int requires no conversion
+//Attempts to call doTask(Task,const D&, ManagePtr&) if defined
+template<typename Ret, typename Task, typename D>
+auto
+cloneDoTask_MPImpl(Task& t, const D& cd, D& d, ManagePtr& mp,int)
+    //Using std::conditional here because we want the return type to be Ret regardless
+    //but need to call possibly void f(const T&) to get substitution failure (SFINAE) if no such call exists.
+    -> std::conditional_t<std::is_same<decltype(doTask(t,cd,mp)),void>::value,Ret,Ret>
+    {
+    println("--> Not calling solo (1 param + optional ManagePtr)");
+    return callDoTask<Ret>(t,cd,mp);
     }
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask(Task& t, D& d, PData& pdat)
+cloneDoTask(Task& t, D& d, ManagePtr& mp)
     {
-    return cloneDoTask_Impl<Ret>(t,d,pdat,0);
+    return cloneDoTask_MPImpl<Ret>(t,d,d,mp,0);
     }
 
 /////////////////////
@@ -417,7 +534,7 @@ cloneDoTask(Task& t, D& d, PData& pdat)
 } //namespace detail
 
 template <typename StorageT, typename... VArgs>
-StorageT* ManagePtr::
+StorageT& ManagePtr::
 makeNewData(VArgs&&... vargs)
     {
     if(!parg1_) Error("Can't call makeNewData with const-only access to first arg");
@@ -425,7 +542,7 @@ makeNewData(VArgs&&... vargs)
     auto newdat = std::make_shared<ITDataType<StorageT>>(std::forward<VArgs>(vargs)...);
     auto* ret = newdat.get();
     nd_ = std::move(newdat);
-    return ret;
+    return ret->d;
     }
 
 //template <typename ITDataType>
@@ -488,7 +605,7 @@ applyToImpl(const D& d)
         }
     else
         {
-        ret_ = detail::CallDoTask<Ret>(t_,d);
+        ret_ = detail::callDoTask<Ret>(t_,d,mp_);
         }
     }
 
@@ -508,7 +625,7 @@ applyToImpl(D& d)
         }
     else
         {
-        ret_ = detail::cloneDoTask<Ret>(t_,d,mp_.parg1());
+        ret_ = detail::cloneDoTask<Ret>(t_,d,mp_);
         }
     }
 

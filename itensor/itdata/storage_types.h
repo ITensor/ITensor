@@ -8,10 +8,10 @@
 //
 // To register a new storage type:
 //
-// (1) Include the header defining the storage type below
+// (1) Include the header file defining the new storage type
 //
-// (2) Add a new line to the REGISTER macro below, following the same format
-//     and no trailing \ on the last line.
+// (2) Add a new line to the REGISTER macro below, 
+//     following the same format
 //
 
 //(1)
@@ -22,12 +22,12 @@
 #include "itensor/itdata/iqtdata.h"
 
 //(2)
-#define REGISTER_TYPES(Type_,EndType_)   \
-        Type_   ITReal           EndType_ \
-        Type_   ITCplx           EndType_ \
-        Type_   ITCombiner       EndType_ \
-        Type_   ITDiag<Real>     EndType_ \
-        Type_   ITDiag<Complex>  EndType_ \
-        Type_   IQTData<Real>    EndType_
+#define REGISTER_TYPES(NewType,EndType)    \
+        NewType   ITReal           EndType \
+        NewType   ITCplx           EndType \
+        NewType   ITCombiner       EndType \
+        NewType   ITDiag<Real>     EndType \
+        NewType   ITDiag<Complex>  EndType \
+        NewType   IQTData<Real>    EndType \
 
 #endif

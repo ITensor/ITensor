@@ -981,15 +981,6 @@ computeNewInds(const IndexSet& Lis,
 //    return *this;
 //    }
 
-struct MultReal
-    {
-    Real r;
-
-    MultReal(Real r_)
-        : r(r_)
-        { }
-
-    };
 
 void
 doTask(const MultReal& m, ITReal& d)
@@ -1004,16 +995,14 @@ doTask(const MultReal& m, ITCplx& d)
     for(auto& elt : d) elt *= m.r;
     }
 
-//template<typename T>
-//void
-//doTask(const MultReal& m, ITDiag<T>& d)
-//    {
-//    d.val *= m.r;
-//    //use BLAS algorithm?
-//    for(auto& elt : d.store) elt *= m.r;
-//    }
-//template<> void doTask(const MultReal&,ITDiag<Real>&);
-//template<> void doTask(const MultReal&,ITDiag<Cplx>&);
+template<typename T>
+void
+doTask(const MultReal& m, ITDiag<T>& d)
+    {
+    d.val *= m.r;
+    //use BLAS algorithm?
+    for(auto& elt : d.store) elt *= m.r;
+    }
 
 
 template<>

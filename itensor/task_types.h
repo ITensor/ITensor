@@ -64,6 +64,12 @@ struct SetElt
         { }
     };
 
+struct MultReal
+    {
+    Real r;
+    MultReal(Real r_) : r(r_) { }
+    };
+
 struct NormNoScale
     {
     const IndexSet& is;
