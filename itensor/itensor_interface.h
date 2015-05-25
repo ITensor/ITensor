@@ -157,25 +157,25 @@ class ITensorT
     //Set all elements to z. If z.imag()==0
     //(such as if z is automatically converted from a Real)
     //then storage will be real only.
-    //ITensor&
+    //ITensorT&
     //fill(Complex z);
 
-    ////Call a function of the form f()->val once
-    ////for each element, assign result to each element.
-    //template <typename Func>
-    //ITensor&
-    //generate(Func&& f);
+    //Call a function of the form f()->val once
+    //for each element, assign result to each element.
+    template <typename Func>
+    ITensorT&
+    generate(Func&& f);
 
     ////Apply a function of the form f(x)->y
     ////to each element x, replacing it with y
     //template <typename Func>
-    //ITensor&
+    //ITensorT&
     //apply(Func&& f);
 
     ////Apply a function of the form f(x)->void
     ////to each element x.
     //template <typename Func>
-    //const ITensor&
+    //const ITensorT&
     //visit(Func&& f) const;
 
     //
@@ -190,11 +190,11 @@ class ITensorT
     dag() { return conj(); }
 
     //Replace data with real part
-    //ITensor&
+    //ITensorT&
     //takeReal();
 
     //Replace data with imaginary part
-    //ITensor&
+    //ITensorT&
     //takeImag();
 
 
@@ -204,7 +204,7 @@ class ITensorT
     //scaleOutNorm();
 
     //void
-    //equalizeScales(ITensor& other);
+    //equalizeScales(ITensorT& other);
 
     public:
 

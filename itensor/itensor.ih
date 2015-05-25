@@ -197,59 +197,51 @@ doTask(const SetElt<Cplx,size> s, ITCplx& d)
     }
 
 
-//template <typename F>
-//struct GenerateIT : public RegisterFunc<GenerateIT<F>>
-//    {
-//    using Parent = RegisterFunc<GenerateIT<F>>;
-//    F& f_;
-//    bool complex_ = false;
-//    GenerateIT(F&& f) : f_(f) 
-//        { 
-//        complex_ = std::is_same<typename std::result_of<F()>::type,Complex>::value;
-//        }
-//
-//    void
-//    operator()(const ITReal& d)
-//        { 
-//        if(complex_)
-//            {
-//            auto nd = Parent::template makeNewData<ITCplx>(d.size());
-//            for(auto j = 0ul; j < nd->csize(); ++j)
-//                nd->set(j,f_());
-//            }
-//        else
-//            {
-//            auto& dref = Parent::modifyData(d);
-//            std::generate(dref.begin(),dref.end(),[this](){ return std::real(this->f_()); });
-//            }
-//        }
-//
-//    void
-//    operator()(const ITCplx& d)
-//        { 
-//        if(complex_)
-//            {
-//            auto& dref = Parent::modifyData(d);
-//            for(auto j = 0ul; j < dref.csize(); ++j)
-//                dref.set(j,f_());
-//            }
-//        else
-//            {
-//            auto nd = Parent::template makeNewData<ITReal>(d.csize());
-//            std::generate(nd->begin(),nd->end(),[this](){ return std::real(this->f_()); });
-//            }
-//        }
-//    };
-//
-//template <typename Func>
-//ITensor& ITensor::
-//generate(Func&& f)
-//    {
-//    scaleTo(1);
-//    applyFunc<GenerateIT<decltype(f)>>(store_,std::forward<Func>(f));
-//    return *this;
-//    }
-//
+template<typename F>
+void
+doTask(GenerateIT<F>& G, const ITReal& d, ManagePtr& mp)
+    { 
+    if(G.isComplex())
+        {
+        auto* nd = mp.makeNewData<ITCplx>(d.size());
+        for(auto j = 0ul; j < nd->csize(); ++j)
+            nd->set(j,G.f());
+        }
+    else
+        {
+        auto* pd = mp.modifyData(d);
+        std::generate(pd->begin(),pd->end(),[&G](){ return std::real(G.f()); });
+        }
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F>& G, const ITCplx& d, ManagePtr& mp)
+    { 
+    if(G.isComplex())
+        {
+        auto* pd = mp.modifyData(d);
+        for(auto j = 0ul; j < pd->csize(); ++j)
+            pd->set(j,G.f());
+        }
+    else
+        {
+        auto* nd = mp.makeNewData<ITReal>(d.csize());
+        std::generate(nd->begin(),nd->end(),[&G](){ return std::real(G.f()); });
+        }
+    }
+
+
+template<>
+template <typename Func>
+ITensor& ITensor::
+generate(Func&& f)
+    {
+    scaleTo(1);
+    doTask(GenerateIT<decltype(f)>{std::forward<Func>(f)},store_);
+    return *this;
+    }
+
 //template <typename F>
 //struct ApplyIT : RegisterFunc<ApplyIT<F>>
 //    {

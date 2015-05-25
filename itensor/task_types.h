@@ -120,6 +120,20 @@ struct SumEls
     SumEls(const IndexSet& is_) : is(is_) { }
     };
 
+template<typename F>
+struct GenerateIT
+    {
+    F& f;
+
+    GenerateIT(F&& f_) : f(f_)  { }
+
+    bool constexpr static 
+    isComplex()
+        {
+        return std::is_same<typename std::result_of<F()>::type,Cplx>::value;
+        }
+    };
+
 } //namespace itensor 
 
 #endif
