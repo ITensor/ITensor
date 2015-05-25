@@ -17,15 +17,6 @@ namespace itensor {
 struct ITData;
 using PData = std::shared_ptr<ITData>;
 using CPData = std::shared_ptr<const ITData>;
-using NewData = std::unique_ptr<ITData>;
-
-template<typename DataType, typename... Args>
-std::unique_ptr<DataType>
-make_newdata(Args&&... args)
-    {
-    return std::unique_ptr<DataType>(new DataType(std::forward<Args>(args)...));
-    }
-
 
 struct FuncBase
     {
@@ -45,7 +36,7 @@ struct ITData
     ITData() { }
     virtual ~ITData() { }
 
-    NewData virtual
+    PData virtual
     clone() const = 0;
 
     void virtual
@@ -58,7 +49,6 @@ struct ITData
 template <class DType>
 struct ITDataType : ITData
     {
-    public:
     DType d;
 
     ITDataType() { }
@@ -72,10 +62,10 @@ struct ITDataType : ITData
 
     private:
     
-    NewData
+    PData
     clone() const final 
         { 
-        return std::make_unique<ITDataType<DType>>(d);
+        return std::make_shared<ITDataType<DType>>(d);
         }
 
     void
@@ -182,12 +172,18 @@ class ManagePtr
         }
 
 
+    //This returns a pointer because otherwise
+    //it is too easy to copy the data type by writing
+    //auto nd = modifyData(...); (should be auto& if reference returned)
     template <typename T>
-    T&
+    T*
     modifyData(const T& d);
 
+    //This returns a pointer because otherwise
+    //it is too easy to copy the data type by writing
+    //auto nd = makeNewData(...); (should be auto& if reference returned)
     template <typename StorageT, typename... Args>
-    StorageT&
+    StorageT*
     makeNewData(Args&&... args);
 
     //template <typename StorageT>
@@ -207,10 +203,33 @@ class ManagePtr
 
     };
 
-template <typename Task, typename Return = Void>
+//OneArg and TwoArgs are "policy classes" 
+//for customizing implementation of RegisterTask
+struct OneArg
+    {
+    template<typename Return, typename Task, typename D>
+    Return
+    call(Task& t, const D& d, ManagePtr& mp);
+
+    template<typename Return, typename Task, typename D>
+    Return
+    call(Task& t, D& d, ManagePtr& mp);
+    };
+
+struct TwoArgs
+    {
+    template<typename Return, typename Task, typename D>
+    Return
+    call(Task& t, const D& d, ManagePtr& mp);
+
+    template<typename Return, typename Task, typename D>
+    Return
+    call(Task& t, D& d, ManagePtr& mp);
+    };
+
+template <typename NArgs, typename Task, typename Return>
 class RegisterTask : public FuncBase
     {
-    private:
     Task t_;
     ManagePtr mp_;
     Return ret_;
@@ -230,30 +249,16 @@ class RegisterTask : public FuncBase
 
     RegisterTask(RegisterTask&& o) :
         t_(std::move(o.t_)), 
-        ret_(std::move(o.ret_)),
-        mp_(std::move(o.mp_))
+        mp_(std::move(o.mp_)),
+        ret_(std::move(o.ret_))
         { }
 
     virtual ~RegisterTask() { }
 
-    operator Return() { return std::move(ret_); }
+    operator return_type() { return std::move(ret_); }
 
-    private:
-
-    template<typename D>
-    void
-    applyToImpl(const D& d);
-
-    template<typename D>
-    void
-    applyToImpl(D& d);
-
-
-    public:
-
-    REGISTER_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); } )
-    REGISTER_TYPES(void applyTo LPAREN, const&d RPAREN final { applyToImpl(d); } )
-
+    REGISTER_TYPES(void applyTo LPAREN, &d RPAREN final { ret_ = std::move(NArgs().template call<return_type>(t_,d,mp_)); } )
+    REGISTER_TYPES(void applyTo LPAREN, const&d RPAREN final { ret_ = std::move(NArgs().template call<return_type>(t_,d,mp_)); } )
     };
 
 template <typename Task, typename D1, typename Return>
@@ -544,7 +549,7 @@ cloneDoTask(Task& t, D1& d1, const D2& d2, ManagePtr& mp)
 } //namespace detail
 
 template <typename StorageT, typename... VArgs>
-StorageT& ManagePtr::
+StorageT* ManagePtr::
 makeNewData(VArgs&&... vargs)
     {
     if(!parg1_) Error("Can't call makeNewData with const-only access to first arg");
@@ -552,7 +557,7 @@ makeNewData(VArgs&&... vargs)
     auto newdat = std::make_shared<ITDataType<StorageT>>(std::forward<VArgs>(vargs)...);
     auto* ret = newdat.get();
     nd_ = std::move(newdat);
-    return ret->d;
+    return &(ret->d);
     }
 
 //template <typename ITDataType>
@@ -588,7 +593,7 @@ updateArg1()
     }
 
 template<typename T>
-T& ManagePtr::
+T* ManagePtr::
 modifyData(const T& d)
     {
     if(!parg1_) Error("Can't modify const data");
@@ -597,44 +602,42 @@ modifyData(const T& d)
         *parg1_ = (*parg1_)->clone();
         }
     auto* pa1 = static_cast<T*>(parg1_->get());
-    return *pa1;
+    return pa1;
     }
 
-template<typename Task, typename Ret>
-template<typename D>
-void RegisterTask<Task,Ret>::
-applyToImpl(const D& d)
+template<typename Ret, typename Task, typename D>
+Ret OneArg::
+call(Task& t, const D& d, ManagePtr& mp)
     {
-    //println("In applyToImpl #1");
-    if(mp_.hasArg2())
-        {
-        CallWrap<Task,const D,Ret> w(t_,d,mp_);
-        mp_.arg2().plugInto(w);
-        ret_ = std::move(w.getReturn());
-        }
-    else
-        {
-        ret_ = detail::callDoTask<Ret>(t_,d,mp_);
-        }
+    return detail::callDoTask<Ret>(t,d,mp);
     }
 
-template<typename Task, typename Ret>
-template<typename D>
-void RegisterTask<Task,Ret>::
-applyToImpl(D& d)
+template<typename Ret, typename Task, typename D>
+Ret OneArg::
+call(Task& t, D& d, ManagePtr& mp)
     {
-    //println("In applyToImpl #2");
-    assert(mp_.hasPArg1());
-    if(mp_.hasArg2())
-        {
-        CallWrap<Task,D,Ret> w(t_,d,mp_.parg1(),mp_);
-        mp_.arg2().plugInto(w);
-        ret_ = std::move(w.getReturn());
-        }
-    else
-        {
-        ret_ = detail::cloneDoTask<Ret>(t_,d,mp_);
-        }
+    return detail::cloneDoTask<Ret>(t,d,mp);
+    }
+
+template<typename Ret, typename Task, typename D>
+Ret TwoArgs::
+call(Task& t, const D& d, ManagePtr& mp)
+    {
+    assert(mp.hasArg2());
+    CallWrap<Task,const D,Ret> w(t,d,mp);
+    mp.arg2().plugInto(w);
+    return w.getReturn();
+    }
+
+template<typename Ret, typename Task, typename D>
+Ret TwoArgs::
+call(Task& t, D& d, ManagePtr& mp)
+    {
+    assert(mp.hasPArg1());
+    assert(mp.hasArg2());
+    CallWrap<Task,D,Ret> w(t,d,mp.parg1(),mp);
+    mp.arg2().plugInto(w);
+    return w.getReturn();
     }
 
 template <typename Task, typename D1, typename Return>
@@ -657,7 +660,7 @@ ReturnType
 doTask(Task t,
        const ITData& arg)
     {
-    RegisterTask<Task,ReturnType> r(std::move(t));
+    RegisterTask<OneArg,Task,ReturnType> r(std::move(t));
     arg.plugInto(r);
     return r;
     }
@@ -675,7 +678,7 @@ ReturnType
 doTask(Task t,
        const CPData& arg)
     {
-    RegisterTask<Task,ReturnType> r(std::move(t));
+    RegisterTask<OneArg,Task,ReturnType> r(std::move(t));
     arg->plugInto(r);
     return r;
     }
@@ -693,7 +696,7 @@ ReturnType
 doTask(Task t,
        PData& arg)
     {
-    RegisterTask<Task,ReturnType> r(std::move(t),&arg);
+    RegisterTask<OneArg,Task,ReturnType> r(std::move(t),&arg);
     arg->plugInto(r);
     return r;
     }
@@ -712,7 +715,7 @@ doTask(Task t,
        const PData& arg1,
        const PData& arg2)
     {
-    RegisterTask<Task,ReturnType> r(std::move(t),&arg1,&arg2);
+    RegisterTask<TwoArgs,Task,ReturnType> r(std::move(t),&arg1,&arg2);
     arg1->plugInto(r);
     return r;
     }
@@ -732,7 +735,7 @@ doTask(Task t,
        PData& arg1,
        const PData& arg2)
     {
-    RegisterTask<Task,ReturnType> r(std::move(t),&arg1,&arg2);
+    RegisterTask<TwoArgs,Task,ReturnType> r(std::move(t),&arg1,&arg2);
     arg1->plugInto(r);
     return r;
     }
@@ -752,7 +755,7 @@ doTask(Task t,
        PData& arg1,
        const ITData& arg2)
     {
-    RegisterTask<Task,ReturnType> r(std::move(t),&arg1,&arg2);
+    RegisterTask<TwoArgs,Task,ReturnType> r(std::move(t),&arg1,&arg2);
     arg1->plugInto(r);
     return r;
     }
