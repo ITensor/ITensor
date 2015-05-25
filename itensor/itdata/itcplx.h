@@ -52,6 +52,8 @@ struct ITCplx
         { 
         fill(val);
         }
+
+    explicit
     ITCplx(const ITReal& d)
         : 
         store(2*d.size(),0) 

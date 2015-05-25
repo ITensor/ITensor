@@ -68,188 +68,133 @@ ITensorT(const IndexVal& iv1,
     set(1.,iv1,rest...);
     }
 
-//template<int size>
-//struct GetElt : RegisterFunc<GetElt<size>,Complex>
-//    {
-//    using Inds = std::array<long,size>;
-//
-//    const IndexSet& is_;
-//    const Inds& inds_;
-//
-//    GetElt(const IndexSet& is,
-//           const Inds& inds)
-//        : 
-//        is_(is),
-//        inds_(inds)
-//        { 
-//#ifdef DEBUG
-//        for(size_t k = 0; k < inds.size(); ++k)
-//            {
-//            auto i = inds[k];
-//            if(i < 0)
-//                {
-//                print("inds = ");
-//                for(auto j : inds) print(1+j," ");
-//                println();
-//                Error("Out of range: IndexVals are 1-indexed for getting ITensor elements");
-//                }
-//            if(i >= is[k].m())
-//                {
-//                print("inds = ");
-//                for(auto j : inds) print(1+j," ");
-//                println();
-//                Error(format("Out of range: IndexVal at position %d has val %d > %d",1+k,1+i,is[k].m()));
-//                }
-//            }
-//#endif
-//        }
-//
-//    Complex
-//    operator()(const ITReal& d)
-//        {
-//        return d[ind(is_,inds_)];
-//        }
-//
-//    Complex
-//    operator()(const ITCplx& d)
-//        {
-//        return d.get(ind(is_,inds_));
-//        }
-//
-//    Complex
-//    operator()(const ITCombiner& c)
-//        {
-//        if(inds_.size()!=0) Error("GetElt not defined for non-scalar ITCombiner storage");
-//        return Complex(1.,0.);
-//        }
-//
-//    template <typename V>
-//    Complex
-//    operator()(const ITDiag<V>& d)
-//        {
-//        auto first_i = (inds_.empty() ? 0 : inds_.front());
-//        //Check if inds_ reference an
-//        //element on the diagonal, else zero
-//        for(auto i : inds_) if(i != first_i) return 0;
-//
-//        if(d.allSame()) return d.val;
-//        return d.store.at(first_i);
-//        }
-//    };
+template<> 
+template <typename... IndexVals>
+Cplx ITensor::
+cplx(IndexVals&&... ivs) const
+    {
+    constexpr size_t size = sizeof...(ivs);
+    std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
+#ifdef DEBUG
+    if(!*this) Error("ITensor is default constructed");
+    size_t nsize = 0;
+    for(auto& iv : vals) if(iv.index.m() > 1) ++nsize;
+    if(nsize != size_t(inds().rn())) 
+        Error(format("Wrong number of m>1 IndexVals passed to real/cplx (expected %d, got %d)",inds().rn(),nsize));
+#endif
+    std::array<long,size> inds;
+    detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.val-1; });
+    auto z = doTask<Cplx>(GetElt<size>(is_,inds),store_);
+	try {
+	    return z*scale_.real(); 
+	    }
+	catch(const TooBigForReal& e)
+	    {
+	    println("too big for real in cplx(...), scale = ",scale());
+	    throw e;
+	    }
+	catch(TooSmallForReal)
+	    {
+        println("warning: too small for real in cplx(...)");
+	    return Cplx(0.,0.);
+	    }
+    return Cplx(NAN,NAN);
+    }
 
-//template <typename... IndexVals>
-//Complex ITensor::
-//cplx(IndexVals&&... ivs) const
-//    {
-//    constexpr size_t size = sizeof...(ivs);
-//    std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
-//#ifdef DEBUG
-//    if(!*this) Error("ITensor is default constructed");
-//    size_t nsize = 0;
-//    for(auto& iv : vals) if(iv.index.m() > 1) ++nsize;
-//    if(nsize != size_t(inds().rn())) 
-//        Error(format("Wrong number of m>1 IndexVals passed to real/cplx (expected %d, got %d)",inds().rn(),nsize));
-//#endif
-//    std::array<long,size> inds;
-//    detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.val-1; });
-//    auto z = applyFunc<GetElt<size>>(store_,is_,inds);
-//	try {
-//	    return z*scale_.real(); 
-//	    }
-//	catch(const TooBigForReal& e)
-//	    {
-//	    println("too big for real in cplx(...), scale = ",scale());
-//	    throw e;
-//	    }
-//	catch(TooSmallForReal)
-//	    {
-//        println("warning: too small for real in cplx(...)");
-//	    return Complex(0.,0.);
-//	    }
-//    return Complex(NAN,NAN);
-//    }
-//
-//
-//template <typename... IndexVals>
-//Real ITensor::
-//real(IndexVals&&... ivs) const
-//    {
-//    auto z = cplx(std::forward<IndexVals>(ivs)...);
-//    if(fabs(z.imag()) != 0)
-//        {
-//        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-//        Error("ITensor is Complex valued, use .cplx(...) method");
-//        }
-//    return z.real();
-//    }
-//
-//template<long size>
-//struct SetEltReal : RegisterFunc<SetEltReal<size>>
-//    {
-//    private:
-//    Real elt_;
-//    const IndexSet& is_;
-//    const std::array<long,size>& inds_;
-//    public:
-//    SetEltReal(Real elt,
-//               const IndexSet& is,
-//               const std::array<long,size>& inds)
-//        : elt_(elt),
-//          is_(is),
-//          inds_(inds)
-//        { }
-//
-//    void
-//    operator()(ITReal& d) const
-//        {
-//        d[ind(is_,inds_)] = elt_;
-//        }
-//
-//    void
-//    operator()(ITCplx& d) const
-//        {
-//        d.set(ind(is_,inds_),elt_);
-//        }
-//    };
-//
+template<>
+template <typename... IndexVals>
+Real ITensor::
+real(IndexVals&&... ivs) const
+    {
+    auto z = cplx(std::forward<IndexVals>(ivs)...);
+    if(fabs(z.imag()) != 0)
+        {
+        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
+        Error("ITensor is Complex valued, use .cplx(...) method");
+        }
+    return z.real();
+    }
+
+template<size_t size>
+Cplx
+doTask(const GetElt<size>& g, const ITReal& d)
+    {
+    return d[ind(g.is,g.inds)];
+    }
+
+template<size_t size>
+Cplx
+doTask(const GetElt<size>& g, const ITCplx& d)
+    {
+    return d.get(ind(g.is,g.inds));
+    }
+
+template<size_t size>
+Cplx
+doTask(const GetElt<size>& g, const ITCombiner& c)
+    {
+    if(g.inds.size()!=0) Error("GetElt not defined for non-scalar ITCombiner storage");
+    return Cplx(1.,0.);
+    }
+
+template <size_t size, typename T>
+Cplx
+doTask(const GetElt<size>& g, const ITDiag<T>& d)
+    {
+    auto first_i = (g.inds.empty() ? 0 : g.inds.front());
+    //Check if inds_ reference an
+    //element on the diagonal, else zero
+    for(auto i : g.inds) if(i != first_i) return 0;
+
+    if(d.allSame()) return d.val;
+    return d.store.at(first_i);
+    }
+
+
+template<>
+template <typename... IndexVals>
+void ITensor::
+set(Complex val, const IndexVals&... ivs)
+    {
+    static constexpr auto size = sizeof...(ivs);
+    scaleTo(1.);
+    const std::array<IndexVal,size> vals{{ static_cast<IndexVal>(ivs)...}};
+    std::array<long,size> inds;
+    detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.val-1; });
+    if(val.imag() == 0)
+        doTask(SetElt<Real,size>{val.real(),is_,inds},store_);
+    else
+        doTask(SetElt<Cplx,size>{val,is_,inds},store_);
+    }
+
+template<size_t size>
+void
+doTask(const SetElt<Real,size>& s, ITReal& d)
+    {
+    d[ind(s.is,s.inds)] = s.elt;
+    }
+
+template<size_t size>
+void
+doTask(const SetElt<Real,size>& s, ITCplx& d)
+    {
+    d.set(ind(s.is,s.inds),s.elt);
+    }
+
 //template<size_t size>
-//class SetEltComplex : public RegisterFunc<SetEltComplex<size>>
+//void
+//doTask(const SetEltCplx<size> s, ITReal& d, ManagePtr& mp)
 //    {
-//    Complex elt_;
-//    const IndexSet& is_;
-//    const std::array<long,size>& inds_;
-//    public:
-//    SetEltComplex(Complex elt,
-//                  const IndexSet& is,
-//                  const std::array<long,size>& inds)
-//        : elt_(elt), is_(is), inds_(inds) { }
-//    void
-//    operator()(const ITReal& d)
-//        {
-//        auto nd = this->template makeNewData<ITCplx>(d.cbegin(),d.cend());
-//        nd->set(ind(is_,inds_),elt_);
-//        }
-//    void
-//    operator()(ITCplx& d)
-//        {
-//        d.set(ind(is_,inds_),elt_);
-//        }
-//    };
-//
-//template <typename... IndexVals>
-//void ITensor::
-//set(Complex val, const IndexVals&... ivs)
-//    {
-//    static constexpr auto size = sizeof...(ivs);
-//    scaleTo(1.);
-//    const std::array<IndexVal,size> vals{{ static_cast<IndexVal>(ivs)...}};
-//    std::array<long,size> inds;
-//    detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.val-1; });
-//    if(val.imag() == 0)
-//        applyFunc<SetEltReal<size>>(store_,val.real(),is_,inds);
-//    else
-//        applyFunc<SetEltComplex<size>>(store_,val,is_,inds);
+//    auto nd = mp.makeNewData<ITCplx>(d.cbegin(),d.cend());
+//    nd->set(ind(s.is,s.inds),s.elt);
 //    }
+
+template<size_t size>
+void
+doTask(const SetElt<Cplx,size> s, ITCplx& d)
+    {
+    d.set(ind(s.is,s.inds),s.elt);
+    }
 
 
 //template <typename F>

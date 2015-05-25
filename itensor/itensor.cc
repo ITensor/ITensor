@@ -981,85 +981,79 @@ computeNewInds(const IndexSet& Lis,
 //    return *this;
 //    }
 
-//class MultReal : public RegisterFunc<MultReal>
+struct MultReal
+    {
+    Real r;
+
+    MultReal(Real r_)
+        : r(r_)
+        { }
+
+    };
+
+void
+doTask(const MultReal& m, ITReal& d)
+    {
+    //use BLAS algorithm?
+    for(auto& elt : d) elt *= m.r;
+    }
+
+void
+doTask(const MultReal& m, ITCplx& d)
+    {
+    for(auto& elt : d) elt *= m.r;
+    }
+
+//template<typename T>
+//void
+//doTask(const MultReal& m, ITDiag<T>& d)
 //    {
-//    Real r_;
-//    public:
-//    MultReal(Real r)
-//        : r_(r)
-//        { }
-//
-//    void
-//    operator()(ITReal& d) const
-//        {
-//        //use BLAS algorithm?
-//        for(auto& elt : d) elt *= r_;
-//        }
-//
-//    void
-//    operator()(ITCplx& d) const
-//        {
-//        for(auto& elt : d) elt *= r_;
-//        }
-//
-//    template<typename T>
-//    void
-//    operator()(ITDiag<T>& d) const
-//        {
-//        d.val *= r_;
-//        //use BLAS algorithm?
-//        for(auto& elt : d.store) elt *= r_;
-//        }
-//    };
-//
-//void ITensor::
-//scaleTo(const LogNumber& newscale)
-//    {
-//    if(scale_ == newscale) return;
-//    if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
-//    scale_ /= newscale;
-//    applyFunc<MultReal>(store_,scale_.real0());
-//    scale_ = newscale;
+//    d.val *= m.r;
+//    //use BLAS algorithm?
+//    for(auto& elt : d.store) elt *= m.r;
 //    }
-//
-//
-//class NormNoScale : public RegisterFunc<NormNoScale,Real>
-//    {
-//    const IndexSet& is_;
-//    public:
-//
-//    NormNoScale(const IndexSet& is) : is_(is) { }
-//
-//    Real
-//    operator()(const ITReal& d) { return vec_norm(d); }
-//
-//    Real
-//    operator()(const ITCplx& d) { return vec_norm(d); }
-//
-//    template<typename T>
-//    Real
-//    operator()(const ITDiag<T>& d)
-//        {
-//        if(d.allSame()) return std::sqrt(std::norm(d.val))*std::sqrt(minM(is_));
-//        return vec_norm(d.store);
-//        }
-//
-//    Real
-//    operator()(const ITCombiner& d) { return 0; }
-//
-//    private:
-//
-//    template<typename Container>
-//    Real
-//    vec_norm(const Container& v)
-//        {
-//        Real nrm = 0;
-//        for(const auto& elt : v)
-//            nrm += std::norm(elt); //conj(elt)*elt
-//        return std::sqrt(nrm);
-//        }
-//    };
-//
+//template<> void doTask(const MultReal&,ITDiag<Real>&);
+//template<> void doTask(const MultReal&,ITDiag<Cplx>&);
+
+
+template<>
+void ITensor::
+scaleTo(const LogNumber& newscale)
+    {
+    if(scale_ == newscale) return;
+    if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
+    scale_ /= newscale;
+    doTask(MultReal{scale_.real0()},store_);
+    scale_ = newscale;
+    }
+
+template<typename Container>
+Real
+vec_norm(const Container& v)
+    {
+    Real nrm = 0;
+    for(const auto& elt : v)
+        nrm += std::norm(elt); //conj(elt)*elt
+    return std::sqrt(nrm);
+    }
+
+Real
+doTask(const NormNoScale& N, const ITReal& d) { return vec_norm(d); }
+
+Real
+doTask(const NormNoScale& N, const ITCplx& d) { return vec_norm(d); }
+
+template<typename T>
+Real
+doTask(const NormNoScale& N, const ITDiag<T>& d)
+    {
+    if(d.allSame()) return std::sqrt(std::norm(d.val))*std::sqrt(minM(N.is));
+    return vec_norm(d.store);
+    }
+
+Real
+doTask(const NormNoScale& N, const ITCombiner& d) { return 0; }
+
 //void ITensor::
 //scaleOutNorm()
 //    {
@@ -1090,42 +1084,45 @@ computeNewInds(const IndexSet& Lis,
 //        }
 //    }
 
-//struct Conj : RegisterFunc<Conj>
-//    {
-//    void
-//    operator()(const ITCplx& cd) 
-//        { 
-//        auto& d = modifyData(cd); //needed to "compete" with templated version
-//        auto i = MAKE_SAFE_PTR(d.istart(),d.csize());
-//        auto* ie = d.iend();
-//        for(; i != ie; ++i) *i *= -1;
-//        }
-//    void
-//    operator()(const ITDiag<Complex>& cd) 
-//        { 
-//        auto& d = modifyData(cd); //needed to "compete" with templated version
-//        if(d.allSame()) 
-//            {
-//            d.val = std::conj(d.val);
-//            }
-//        else
-//            {
-//            for(auto& el : d.store) 
-//                el = std::conj(el);
-//            }
-//        }
-//    template<typename T>
-//    void
-//    operator()(const T& d) { }
-//    };
+void
+doTask(Conj, ITCplx& d) 
+    { 
+    auto i = MAKE_SAFE_PTR(d.istart(),d.csize());
+    auto* ie = d.iend();
+    for(; i != ie; ++i) *i *= -1;
+    }
 
-//ITensor& ITensor::
-//conj()
-//    {
-//    applyFunc<Conj>(store_);
-//    return *this;
-//    }
-//
+void
+doTask(Conj, ITDiag<Complex>& d) 
+    { 
+    if(d.allSame()) 
+        {
+        d.val = std::conj(d.val);
+        }
+    else
+        {
+        for(auto& el : d.store) 
+            el = std::conj(el);
+        }
+    }
+
+void
+doTask(Conj,const ITReal& d) { }
+
+void
+doTask(Conj,const ITCombiner& d) { }
+
+void
+doTask(Conj,const ITDiag<Real>& d) { }
+
+template<>
+ITensor& ITensor::
+conj()
+    {
+    doTask(Conj{},store_);
+    return *this;
+    }
+
 //struct TakeReal : RegisterFunc<TakeReal>
 //    {
 //    void
@@ -1207,13 +1204,13 @@ operator<<(ostream & s, const ITensor& t)
 void
 doTask(PrintIT& P, const ITCombiner& d)
     {
-    P.printInfo(d,"Combiner",false);
+    P.printInfo(d,"Combiner");
     }
 
 void
 doTask(PrintIT& P, const ITReal& d)
     {
-    P.printInfo(d,"Dense Real");
+    P.printInfo(d,"Dense Real",doTask(NormNoScale(P.is),d));
      
     auto rank = P.is.r();
     if(rank == 0) 
@@ -1232,8 +1229,7 @@ doTask(PrintIT& P, const ITReal& d)
     for(; gc.notDone(); ++gc)
         {
         auto val = P.scalefac*d[ind(P.is,gc.i)];
-        //TODO: DEBUG only
-        //if(std::norm(val) > Global::printScale())
+        if(std::norm(val) > Global::printScale())
             {
             P.s << "(";
             for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
@@ -1248,82 +1244,76 @@ doTask(PrintIT& P, const ITReal& d)
         }
     }
 
-//void
-//doTask(PrintIT& P, const ITCplx& d)
-//    {
-//    P.printInfo(d,"Dense Cplx");
-//    }
+void
+doTask(PrintIT& P, const ITCplx& d)
+    {
+    P.printInfo(d,"Dense Cplx",doTask(NormNoScale(P.is),d));
 
-//void PrintIT::
-//operator()(const ITCplx& d)
-//    {
-//    printInfo(d,"Dense Cplx");
-//
-//    auto rank = is_.r();
-//    if(rank == 0) 
-//        {
-//        s_ << "  ";
-//        detail::printVal(s_,scalefac_*d.get(0));
-//        return;
-//        }
-//
-//    if(!print_data_) return;
-//
-//    auto gc = detail::GCounter(0,rank-1,0);
-//    for(int i = 0; i < rank; ++i)
-//        gc.setInd(i,0,is_.dim(i)-1);
-//
-//    for(; gc.notDone(); ++gc)
-//        {
-//        auto val = scalefac_*d.get(ind(is_,gc.i));
-//        if(std::norm(val) > Global::printScale())
-//            {
-//            s_ << "(";
-//            for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
-//                {
-//                s_ << (1+gc.i(ii));
-//                if(ii < gc.i.maxi()) s_ << ",";
-//                }
-//            s_ << ") ";
-//
-//            detail::printVal(s_,val);
-//            }
-//        }
-//    }
-//
-//template<typename T>
-//void PrintIT::
-//operator()(const ITDiag<T>& d)
-//    {
-//    constexpr auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
-//    printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""));
-//
-//    if(is_.r() == 0) 
-//        {
-//        s_ << "  ";
-//        detail::printVal(s_,scalefac_*(d.empty() ? d.val : d.store.front()));
-//        return;
-//        }
-//
-//    if(!print_data_) return;
-//
-//    auto size = minM(is_);
-//    for(auto i : count(size))
-//        {
-//        auto val = scalefac_*(d.allSame() ? d.val : d.store[i]);
-//        if(std::norm(val) > Global::printScale())
-//            {
-//            s_ << "(";
-//            for(size_t j = 1; j < is_.size(); ++j)
-//                {
-//                s_ << (1+i) << ",";
-//                }
-//            s_ << (1+i) << ") ";
-//            detail::printVal(s_,val);
-//            }
-//        }
-//    }
+    auto rank = P.is.r();
+    if(rank == 0) 
+        {
+        P.s << "  ";
+        detail::printVal(P.s,P.scalefac*d.get(0));
+        return;
+        }
 
+    if(!P.print_data) return;
+
+    auto gc = detail::GCounter(0,rank-1,0);
+    for(int i = 0; i < rank; ++i)
+        gc.setInd(i,0,P.is.dim(i)-1);
+
+    for(; gc.notDone(); ++gc)
+        {
+        auto val = P.scalefac*d.get(ind(P.is,gc.i));
+        if(std::norm(val) > Global::printScale())
+            {
+            P.s << "(";
+            for(auto ii = gc.i.mini(); ii <= gc.i.maxi(); ++ii)
+                {
+                P.s << (1+gc.i(ii));
+                if(ii < gc.i.maxi()) P.s << ",";
+                }
+            P.s << ") ";
+
+            detail::printVal(P.s,val);
+            }
+        }
+    }
+
+template<typename T>
+void
+doTask(PrintIT& P, const ITDiag<T>& d)
+    {
+    constexpr auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
+    P.printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""),
+              doTask(NormNoScale(P.is),d));
+
+    if(P.is.r() == 0) 
+        {
+        P.s << "  ";
+        detail::printVal(P.s,P.scalefac*(d.empty() ? d.val : d.store.front()));
+        return;
+        }
+
+    if(!P.print_data) return;
+
+    auto size = minM(P.is);
+    for(auto i : count(size))
+        {
+        auto val = P.scalefac*(d.allSame() ? d.val : d.store[i]);
+        if(std::norm(val) > Global::printScale())
+            {
+            P.s << "(";
+            for(size_t j = 1; j < P.is.size(); ++j)
+                {
+                P.s << (1+i) << ",";
+                }
+            P.s << (1+i) << ") ";
+            detail::printVal(P.s,val);
+            }
+        }
+    }
 
 Complex
 quickranCplx() { return Complex(detail::quickran(),detail::quickran()); }
@@ -1345,94 +1335,85 @@ matrixTensor(Mat&& M, const Index& i1, const Index& i2)
     }
 
 
-//Real
-//norm(const ITensor& T)
-//    {
-//#ifdef DEBUG
-//    if(!T) Error("ITensor is default initialized");
-//#endif
-//    return fabs(T.scale().real0()) *
-//           applyFunc<NormNoScale>(T.data(),T.inds());
-//    }
+Real
+norm(const ITensor& T)
+    {
+#ifdef DEBUG
+    if(!T) Error("ITensor is default initialized");
+#endif
+    return fabs(T.scale().real0()) *
+           doTask<Real>(NormNoScale{T.inds()},T.data());
+    }
 
-//ITensor
-//conj(ITensor T)
-//    {
-//    T.conj();
-//    return T;
-//    }
-//
-//struct CheckComplex : RegisterFunc<CheckComplex,bool>
-//    {
-//    bool
-//    operator()(const ITCplx& d) { return true; }
-//    bool
-//    operator()(const ITDiag<Complex>& d) { return true; }
-//    template<typename T>
-//    bool
-//    operator()(const T& d) { return false; }
-//    };
-//
-//bool
-//isComplex(const ITensor& t)
-//    {
-//    return applyFunc<CheckComplex>(t.data());
-//    }
-//
-//class SumEls : public RegisterFunc<SumEls,Complex>
-//    {
-//    const IndexSet& is_;
-//    public:
-//
-//    SumEls(const IndexSet& is) : is_(is) { }
-//
-//    Complex
-//    operator()(const ITReal& d) 
-//        { 
-//        Real sum = 0;
-//        for(const auto& elt : d)
-//            sum += elt;
-//        return sum;
-//        }
-//
-//    Complex
-//    operator()(const ITCplx& d) 
-//        { 
-//        Real rsum = 0,
-//             isum = 0;
-//        auto p = MAKE_SAFE_PTR(d.rstart(),d.csize());
-//        for(; p != d.istart(); ++p) rsum += *p;
-//        p = MAKE_SAFE_PTR(d.istart(),d.csize());
-//        for(; p != d.iend(); ++p)   isum += *p;
-//        return Complex(rsum,isum);
-//        }
-//
-//    template <class T>
-//    Complex
-//    operator()(const ITDiag<T>& d) 
-//        { 
-//        if(d.allSame()) return Real(minM(is_))*d.val;
-//        T sum = 0;
-//        for(const auto& elt : d.store)
-//            sum += elt;
-//        return sum;
-//        }
-//    };
-//
-//Complex
-//sumelsC(const ITensor& t)
-//    {
-//    auto z = Complex(applyFunc<SumEls>(t.data(),t.inds()));
-//    return t.scale().real0()*z;
-//    }
-//
-//Real
-//sumels(const ITensor& t)
-//    {
-//    auto z = sumelsC(t);
-//    if(z.imag() != 0) Error("ITensor has non-zero imaginary part, use sumelsC");
-//    return z.real();
-//    }
+ITensor
+conj(ITensor T)
+    {
+    T.conj();
+    return T;
+    }
+
+bool
+doTask(CheckComplex,const ITCplx& d) { return true; }
+
+bool
+doTask(CheckComplex,const ITDiag<Cplx>& d) { return true; }
+
+template<typename T>
+bool
+doTask(CheckComplex, const T& d) { return false; }
+
+bool
+isComplex(const ITensor& t)
+    {
+    return doTask<bool>(CheckComplex{},t.data());
+    }
+
+Cplx
+doTask(SumEls, const ITReal& d) 
+    { 
+    Real sum = 0;
+    for(const auto& elt : d)
+        sum += elt;
+    return sum;
+    }
+
+Cplx
+doTask(SumEls, const ITCplx& d) 
+    { 
+    Real rsum = 0,
+         isum = 0;
+    auto p = MAKE_SAFE_PTR(d.rstart(),d.csize());
+    for(; p != d.istart(); ++p) rsum += *p;
+    p = MAKE_SAFE_PTR(d.istart(),d.csize());
+    for(; p != d.iend(); ++p)   isum += *p;
+    return Cplx(rsum,isum);
+    }
+
+template <class T>
+Cplx
+doTask(SumEls S, const ITDiag<T>& d) 
+    { 
+    if(d.allSame()) return Real(minM(S.is))*d.val;
+    T sum = 0;
+    for(const auto& elt : d.store)
+        sum += elt;
+    return sum;
+    }
+
+Complex
+sumelsC(const ITensor& t)
+    {
+    auto z = doTask<Cplx>(SumEls{t.inds()},t.data());
+    return t.scale().real0()*z;
+    }
+
+Real
+sumels(const ITensor& t)
+    {
+    auto z = sumelsC(t);
+    if(z.imag() != 0) Error("ITensor has non-zero imaginary part, use sumelsC");
+    return z.real();
+    }
 
 ITensor
 combiner(std::vector<Index> inds, const Args& args)
