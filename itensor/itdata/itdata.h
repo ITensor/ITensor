@@ -256,33 +256,33 @@ class RegisterTask : public FuncBase
 
     };
 
-//template <typename Callable, typename T1, typename Return>
-//struct CallWrap : FuncBase
-//    {
-//    CallWrap(Callable& c, T1& arg1) : c_(c), arg1_(arg1), parg1_(nullptr) { }
-//    CallWrap(Callable& c, T1& arg1, PData& parg1) : c_(c), arg1_(arg1), parg1_(&parg1) { }
-//
-//    REGISTER(void applyTo,,final { applyToImpl(d); })
-//    REGISTER(void applyTo,const,final { applyToImpl(d); })
-//
-//    Return
-//    getReturn() { return ret_; }
-//
-//    private:
-//
-//    template<typename D2>
-//    void
-//    applyToImpl(const D2& d2)
-//        { 
-//        if(parg1_) ret_ = detail::cloneDoTask<Return>(c_,arg1_,d2,*parg1_); 
-//        else       ret_ = detail::call<Return>(c_,arg1_,d2); 
-//        }
-//    
-//    Callable& c_;
-//    T1& arg1_;
-//    PData* parg1_;
-//    Return ret_;
-//    };
+template <typename Task, typename D1, typename Return>
+struct CallWrap : FuncBase
+    {
+    CallWrap(Task& t, D1& arg1, ManagePtr& mp) 
+        : t_(t), arg1_(arg1), parg1_(nullptr), mp_(mp) { }
+    CallWrap(Task& t, D1& arg1, PData& parg1, ManagePtr& mp) 
+        : t_(t), arg1_(arg1), parg1_(&parg1), mp_(mp) { }
+
+    Return
+    getReturn() { return std::move(ret_); }
+
+    private:
+
+    template<typename D2>
+    void
+    applyToImpl(const D2& d2);
+    
+    Task& t_;
+    D1& arg1_;
+    PData* parg1_;
+    Return ret_;
+    ManagePtr& mp_;
+
+    public:
+    REGISTER_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); })
+    REGISTER_TYPES(void applyTo LPAREN, const&d RPAREN final { applyToImpl(d); })
+    };
 
 
 
@@ -291,63 +291,6 @@ class RegisterTask : public FuncBase
 //
 
 namespace detail {
-
-////If ActualRet!=void this gets called
-//template<typename Ret, typename Task, typename D, typename ActualRet>
-//struct FixRet
-//    {
-//    Ret
-//    operator()(Task& t, D& d)
-//        {
-//        static_assert(!std::is_same<Ret,Void>::value,
-//                      "No return type specified in call to doTask");
-//        static_assert(std::is_same<Ret,ActualRet>::value,
-//                      "Mismatched return type specified in call to doTask");
-//        return doTask(t,d);
-//        }
-//    };
-////If ActualRet==void this gets called
-//template<typename Ret, typename Task, typename D>
-//struct FixRet<Ret,Task,D,void>
-//    {
-//    Ret
-//    operator()(Task& t, D& d)
-//        {
-//        doTask(t,d);
-//        return Ret{};
-//        }
-//    };
-////Less preferred version which always compiles
-//template <typename Ret, typename Task, typename D>
-//Ret
-//CallDoTask_Impl(Task& t, D& d, long) 
-//    {
-//    throw std::runtime_error("doTask not defined for specified task or data type");
-//    return Ret{};
-//    }
-////This is the preferred version since 0->int requires no cast
-////Template substitution will fail (not a compile-time error)
-////if doTask(t,d) is not defined ("SFINAE" trick)
-//template <typename Ret, typename Task, typename D>
-//auto 
-//CallDoTask_Impl(Task& t, D& d, int) 
-//    -> std::conditional_t<std::is_same<decltype(doTask(t,d)),void>::value,Ret,Ret>
-//    {
-//    using ActualRet = decltype(doTask(t,d));
-//    return FixRet<Ret,Task,D,ActualRet>()(t,d);
-//    }
-////CallDoTask attempts the following: return doTask(t,d);
-////- If doTask(t,d) not defined, throws an exception
-////  if called (this converts what would otherwise be 
-////  a compile-time error into a run-time error)
-////- If doTask(t,d) defined but returns void, 
-////  returns Ret{} instead
-//template<typename Ret, typename Task, typename D>
-//Ret
-//CallDoTask(Task& t, D& d)
-//    {
-//    return CallDoTask_Impl<Ret,Task,D>(t,d,0);
-//    }
 
 //If ActualRet!=void this gets called
 template<typename Ret, typename ActualRet, typename... VArgs>
@@ -380,7 +323,7 @@ template <typename Ret, typename Task, typename Storage>
 Ret
 callDoTask_Impl(long l, Task& t, Storage& s)
     {
-    throw std::runtime_error("doTask not defined for specified task or data type");
+    throw std::runtime_error("1 parameter doTask not defined for specified task or data type");
     return Ret{};
     }
 //(3) This is preferred more than version (4) above
@@ -450,8 +393,7 @@ template<typename Ret, typename Task, typename D>
 Ret
 cloneDoTask_Impl(Task& t, const D& cd, PData& pdat,long)
     {
-    //if(Global::debug3()) println("Calling solo (1 param)");
-    println("--> Calling solo (1 param, no ManagePtr)");
+    //println("--> Calling solo (1 param, no ManagePtr)");
     if(!pdat.unique()) pdat = pdat->clone();
     auto* pd = static_cast<ITDataType<D>*>(pdat.get());
     return callDoTask<Ret>(t,pd->d);
@@ -465,7 +407,7 @@ cloneDoTask_Impl(Task& t, const D& cd, PData& pdat,int)
     //but need to call possibly void f(const T&) to get substitution failure (SFINAE) if no such call exists.
     -> std::conditional_t<std::is_same<decltype(doTask(t,cd)),void>::value,Ret,Ret>
     {
-    println("--> Not calling solo (1 param, no ManagePtr)");
+    //println("--> Not calling solo (1 param, no ManagePtr)");
     return callDoTask<Ret>(t,cd);
     }
 //(2) Less preferred version calls one of the cloneDoTask_Impl
@@ -488,7 +430,7 @@ cloneDoTask_MPImpl(Task& t, const D& cd, D& d, ManagePtr& mp,int)
     //but need to call possibly void f(const T&) to get substitution failure (SFINAE) if no such call exists.
     -> std::conditional_t<std::is_same<decltype(doTask(t,cd,mp)),void>::value,Ret,Ret>
     {
-    println("--> Not calling solo (1 param + optional ManagePtr)");
+    //println("--> Not calling solo (1 param + optional ManagePtr)");
     return callDoTask<Ret>(t,cd,mp);
     }
 template<typename Ret, typename Task, typename D>
@@ -500,36 +442,104 @@ cloneDoTask(Task& t, D& d, ManagePtr& mp)
 
 /////////////////////
 
-//template<typename Ret, typename Func, typename T1, typename T2>
-//auto
-//clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,int) 
-//    //Using std::conditional here because we want the return type to be Ret regardless
-//    //but need to call possibly void f(const T1&,const T2&) to get substitution failure (SFINAE) 
-//    //if no such call exists.
-//    -> std::conditional_t<std::is_same<decltype(f(static_cast<const T1&>(a1),a2)),void>::value,Ret,Ret>
-//    {
-//    //if(Global::debug3()) println("Not calling solo (2 params)");
-//    const T1& ca1 = a1;
-//    return detail::call<Ret>(f,ca1,a2);
-//    }
-//
-//template<typename Ret, typename Func, typename T1, typename T2>
-//Ret
-//clone_modify_impl(Func& f, T1& a1, const T2& a2, PData& pdat,long)
-//    {
-//    //if(Global::debug3()) println("Calling solo (2 params)");
-//    //println("--> Calling solo (2 params)");
-//    if(!pdat.unique()) pdat = pdat->clone();
-//    auto* pa1 = static_cast<T1*>(pdat.get());
-//    return detail::call<Ret>(f,*pa1,a2);
-//    }
-//
-//template<typename Ret, typename Func, typename T1, typename T2>
-//Ret
-//clone_modify(Func& f, T1& a1, const T2& a2, PData& pdat)
-//    {
-//    return clone_modify_impl<Ret>(f,a1,a2,pdat,0);
-//    }
+//(4) Least preferred version which always compiles
+template <typename Ret, typename Task, typename D1, typename D2>
+Ret
+callDoTask_Impl(long l, Task& t, D1& d1, const D2& d2)
+    {
+    throw std::runtime_error("2 parameter doTask not defined for specified task or data type");
+    return Ret{};
+    }
+//(3) This is preferred more than version (4) above
+template <typename Ret, typename Task, typename D1, typename D2>
+auto 
+callDoTask_Impl(int i, Task& t, D1& d1, const D2& d2)
+    -> std::conditional_t<std::is_same<decltype(doTask(t,d1,d2)),void>::value,Ret,Ret>
+    {
+    using ActualRet = decltype(doTask(t,d1,d2));
+    return FixRet<Ret,ActualRet,Task&,D1&,const D2&>()(t,d1,d2);
+    }
+//(2) Less preferred version which always compiles and passes
+//the call on to callDoTask_Impl (3) without the ManagePtr& argument
+template <typename Ret, typename Task, typename D1, typename D2>
+Ret
+callDoTask_Impl(long l, Task& t, D1& d1, const D2& d2, ManagePtr& mp)
+    {
+    return callDoTask_Impl<Ret>(0,t,d1,d2);
+    }
+//(1)
+template <typename Ret, typename Task, typename D1, typename D2>
+auto 
+callDoTask_Impl(int i, Task& t, D1& d1, const D2& d2, ManagePtr& mp)
+    -> std::conditional_t<std::is_same<decltype(doTask(t,d1,d2,mp)),void>::value,Ret,Ret>
+    {
+    using ActualRet = decltype(doTask(t,d1,d2,mp));
+    return FixRet<Ret,ActualRet,Task&,D1&,const D2&,ManagePtr&>()(t,d1,d2,mp);
+    }
+template<typename Ret, typename Task, typename D1, typename D2>
+Ret
+callDoTask(Task& t, D1& d1, const D2& d2)
+    {
+    //Skip straight to (3) above
+    return callDoTask_Impl<Ret,Task,D1,D2>(0,t,d1,d2);
+    }
+template<typename Ret, typename Task, typename D1, typename D2>
+Ret
+callDoTask(Task& t, D1& d1, const D2& d2, ManagePtr& mp)
+    {
+    //First try calling function labeled (1) above
+    return callDoTask_Impl<Ret,Task,D1,D2>(0,t,d1,d2,mp);
+    }
+
+/////////////////////
+
+//(4)
+template<typename Ret, typename Task, typename D1, typename D2>
+Ret
+cloneDoTask_Impl(Task& t, const D1& cd1, D1& d1, const D2& d2, PData& p1,long)
+    {
+    //println("--> Calling solo (2 params)");
+    if(!p1.unique()) p1 = p1->clone();
+    auto* pd1 = static_cast<ITDataType<D1>*>(p1.get());
+    return callDoTask<Ret>(t,pd1->d,d2);
+    }
+//(3)
+template<typename Ret, typename Task, typename D1, typename D2>
+auto
+cloneDoTask_Impl(Task& t, const D1& cd1, D1& d1, const D2& d2, PData& p1,int) 
+    //Using std::conditional here because we want the return type to be Ret regardless
+    //but need to call possibly void f(const T1&,const T2&) to get substitution failure (SFINAE) 
+    //if no such call exists.
+    -> std::conditional_t<std::is_same<decltype(doTask(t,cd1,d2)),void>::value,Ret,Ret>
+    {
+    //println("--> Not calling solo (2 param, no ManagePtr)");
+    return callDoTask<Ret>(t,cd1,d2);
+    }
+//(2)
+template<typename Ret, typename Task, typename D1, typename D2>
+Ret
+cloneDoTask_MPImpl(Task& t, const D1& cd1, D1& d1, const D2& d2, ManagePtr& mp,long)
+    {
+    return cloneDoTask_Impl<Ret,Task,D1,D2>(t,cd1,d1,d2,mp.parg1(),0);
+    }
+//(1)
+template<typename Ret, typename Task, typename D1, typename D2>
+auto
+cloneDoTask_MPImpl(Task& t, const D1& cd1, D1& d1, const D2& d2, ManagePtr& mp,int) 
+    //Using std::conditional here because we want the return type to be Ret regardless
+    //but need to call possibly void f(const T1&,const T2&) to get substitution failure (SFINAE) 
+    //if no such call exists.
+    -> std::conditional_t<std::is_same<decltype(doTask(t,cd1,d2,mp)),void>::value,Ret,Ret>
+    {
+    //println("--> Not calling solo (2 param + optional ManagePtr)");
+    return callDoTask<Ret>(t,cd1,d2,mp);
+    }
+template<typename Ret, typename Task, typename D1, typename D2>
+Ret
+cloneDoTask(Task& t, D1& d1, const D2& d2, ManagePtr& mp)
+    {
+    return cloneDoTask_MPImpl<Ret,Task,D1,D2>(t,d1,d1,d2,mp,0);
+    }
 
 } //namespace detail
 
@@ -598,10 +608,9 @@ applyToImpl(const D& d)
     //println("In applyToImpl #1");
     if(mp_.hasArg2())
         {
-        throw std::runtime_error("Two-arg doTask not yet implemented");
-        //CallWrap<Task,const D,Return> w(t_,d);
-        //mp_.arg2()->plugInto(w);
-        //ret_ = std::move(w.getReturn());
+        CallWrap<Task,const D,Ret> w(t_,d,mp_);
+        mp_.arg2().plugInto(w);
+        ret_ = std::move(w.getReturn());
         }
     else
         {
@@ -618,15 +627,23 @@ applyToImpl(D& d)
     assert(mp_.hasPArg1());
     if(mp_.hasArg2())
         {
-        throw std::runtime_error("Two-arg doTask not yet implemented");
-        //CallWrap<Task,D,Return> w(t_,d,mp.parg1());
-        //mp_.arg2()->plugInto(w);
-        //ret_ = std::move(w.getReturn());
+        CallWrap<Task,D,Ret> w(t_,d,mp_.parg1(),mp_);
+        mp_.arg2().plugInto(w);
+        ret_ = std::move(w.getReturn());
         }
     else
         {
         ret_ = detail::cloneDoTask<Ret>(t_,d,mp_);
         }
+    }
+
+template <typename Task, typename D1, typename Return>
+template<typename D2>
+void CallWrap<Task,D1,Return>::
+applyToImpl(const D2& d2)
+    { 
+    if(parg1_) ret_ = detail::cloneDoTask<Return>(t_,arg1_,d2,mp_); 
+    else       ret_ = detail::callDoTask<Return>(t_,arg1_,d2,mp_); 
     }
 
 
@@ -689,65 +706,65 @@ doTask(Task&& t,
     return t;
     }
 
-//template<typename Ret, typename Task>
-//Ret
-//doTaskReturn(Task t,
-//             const PData& arg1,
-//             const PData& arg2)
-//    {
-//    RegisterTask<Task,Ret> r(std::move(t),&arg1,&arg2);
-//    arg1->plugInto(r);
-//    return r;
-//    }
-//template<typename Task>
-//Task
-//doTask(Task&& t,
-//       const PData& arg1,
-//       const PData& arg2)
-//    {
-//    doTaskReturn<Void,Task>(t,arg1,arg2);
-//    return t;
-//    }
-//
-//template<typename Ret, typename Task>
-//Ret
-//doTaskReturn(Task t,
-//             PData& arg1,
-//             const PData& arg2)
-//    {
-//    RegisterTask<Task,Ret> r(std::move(t),&arg1,&arg2);
-//    arg1->plugInto(r);
-//    return r;
-//    }
-//template<typename Task>
-//Task
-//doTask(Task&& t,
-//       PData& arg1,
-//       const PData& arg2)
-//    {
-//    doTaskReturn<Void,Task>(t,arg1,arg2);
-//    return t;
-//    }
-//
-//template<typename Ret, typename Task>
-//Ret
-//doTaskReturn(Task t,
-//             PData& arg1,
-//             const ITData& arg2)
-//    {
-//    RegisterTask<Task,Ret> r(std::move(t),&arg1,&arg2);
-//    arg1->plugInto(r);
-//    return r;
-//    }
-//template<typename Task>
-//Task
-//doTask(Task&& t,
-//       PData& arg1,
-//       const ITData& arg2)
-//    {
-//    doTaskReturn<Void,Task>(t,arg1,arg2);
-//    return t;
-//    }
+template<typename ReturnType, typename Task>
+ReturnType
+doTask(Task t,
+       const PData& arg1,
+       const PData& arg2)
+    {
+    RegisterTask<Task,ReturnType> r(std::move(t),&arg1,&arg2);
+    arg1->plugInto(r);
+    return r;
+    }
+template<typename Task>
+Task
+doTask(Task&& t,
+       const PData& arg1,
+       const PData& arg2)
+    {
+    doTask<Void,Task>(std::forward<Task>(t),arg1,arg2);
+    return t;
+    }
+
+template<typename ReturnType, typename Task>
+ReturnType
+doTask(Task t,
+       PData& arg1,
+       const PData& arg2)
+    {
+    RegisterTask<Task,ReturnType> r(std::move(t),&arg1,&arg2);
+    arg1->plugInto(r);
+    return r;
+    }
+template<typename Task>
+Task
+doTask(Task&& t,
+       PData& arg1,
+       const PData& arg2)
+    {
+    doTask<Void,Task>(std::forward<Task>(t),arg1,arg2);
+    return t;
+    }
+
+template<typename ReturnType, typename Task>
+ReturnType
+doTask(Task t,
+       PData& arg1,
+       const ITData& arg2)
+    {
+    RegisterTask<Task,ReturnType> r(std::move(t),&arg1,&arg2);
+    arg1->plugInto(r);
+    return r;
+    }
+template<typename Task>
+Task
+doTask(Task&& t,
+       PData& arg1,
+       const ITData& arg2)
+    {
+    doTask<Void,Task>(std::forward<Task>(t),arg1,arg2);
+    return t;
+    }
 
 } //namespace itensor
 
