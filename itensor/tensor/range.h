@@ -10,6 +10,7 @@
 #include <vector>
 #include "itensor/util/autovector.h"
 #include "itensor/util/vararray.h"
+#include "itensor/util/infarray.h"
 
 namespace itensor {
 
@@ -234,6 +235,13 @@ ind(const RangeT& r, const std::array<U,size>& inds)
 template<typename RangeT, typename U, size_t size>
 long
 ind(const RangeT& r, const VarArray<U,size>& inds)
+    {
+    return detail::indIterable(r,inds);
+    }
+
+template<typename RangeT, typename U, size_t size>
+long
+ind(const RangeT& r, const InfArray<U,size>& inds)
     {
     return detail::indIterable(r,inds);
     }

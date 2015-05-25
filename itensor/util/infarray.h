@@ -7,6 +7,7 @@
 
 #include <array>
 #include <vector>
+#include <iterator> 
 
 #ifdef DEBUG
 #define CHECK_IND(X) check_ind(X);
@@ -23,6 +24,9 @@
 namespace itensor {
 
 template<typename T, size_t ArrSize>
+class infarray_iter;
+
+template<typename T, size_t ArrSize>
 class InfArray
     {
     public:
@@ -34,10 +38,8 @@ class InfArray
     using const_reference = typename storage_type::const_reference;
     using pointer = typename storage_type::pointer;
     using const_pointer = typename storage_type::const_pointer;
-    using iterator = typename storage_type::iterator;
-    using const_iterator = typename storage_type::const_iterator;
-    using reverse_iterator = typename storage_type::reverse_iterator;
-    using const_reverse_iterator = typename storage_type::const_reverse_iterator;
+    using iterator = infarray_iter<T,ArrSize>;
+    using const_iterator = infarray_iter<const T,ArrSize>;
     private:
     storage_type store_;
     size_t size_;
@@ -170,27 +172,69 @@ class InfArray
         vec_.swap(other.vec_);
         }
 
-    //
-    // Need to implement special iterator class
-    // 
+    iterator
+    begin() 
+        { 
+        if(size_==0) 
+            {
+            return end();
+            }
+        else if(size_ < ArrSize)
+            {
+            return iterator(store_.data(),
+                            store_.data()+size_,
+                            vec_.data()); 
+            }
+        else
+            {
+            return iterator(store_.data(),
+                            store_.data()+ArrSize,
+                            vec_.data()); 
+            }
+        }
 
-    //iterator
-    //begin() { return store_.data(); }
+    iterator
+    end() 
+        { 
+        return iterator(vec_.data()+vec_.size(),
+                        store_.data()+size_,
+                        vec_.data());
+        }
 
-    //iterator
-    //end() { return store_.data()+size_; }
+    const_iterator
+    begin() const
+        { 
+        if(size_==0) 
+            {
+            return end();
+            }
+        else if(size_ < ArrSize)
+            {
+            return const_iterator(store_.data(),
+                                  store_.data()+size_,
+                                  vec_.data()); 
+            }
+        else
+            {
+            return const_iterator(store_.data(),
+                                  store_.data()+ArrSize,
+                                  vec_.data()); 
+            }
+        }
 
-    //const_iterator
-    //begin() const { return store_.data(); }
+    const_iterator
+    end() const
+        { 
+        return const_iterator(vec_.data()+vec_.size(),
+                              store_.data()+size_,
+                              vec_.data());
+        }
 
-    //const_iterator
-    //end() const { return store_.data()+size_; }
+    const_iterator
+    cbegin() const { return begin(); }
 
-    //const_iterator
-    //cbegin() const { return store_.data(); }
-
-    //const_iterator
-    //cend() const { return store_.data()+size_; }
+    const_iterator
+    cend() const { return end(); }
 
     private:
     void
@@ -205,9 +249,71 @@ class InfArray
         }
     };
 
-#undef CHECK_EMPTY
-#undef CHECK_IND
+template<typename T, size_t ArrSize>
+class infarray_iter
+    {
+    using parent = typename std::iterator<std::forward_iterator_tag, T>;
+    public:
+    using value_type = typename parent::value_type;
+    using reference = typename parent::reference;
+    using pointer = T*;
+    using difference_type = typename parent::difference_type;
+    using iterator_category = typename parent::iterator_category;
+    private:
+    pointer p_; 
+    pointer array_end_;
+    pointer vec_start_;
+    public: 
+
+    infarray_iter() : 
+        p_(nullptr), 
+        array_end_(nullptr), 
+        vec_start_(nullptr) 
+        { }
+
+    infarray_iter(pointer start,
+                  pointer array_end,
+                  pointer vec_start) :
+        p_(start),
+        array_end_(array_end),
+        vec_start_(vec_start)
+        { }
+
+    infarray_iter(const infarray_iter& other) : 
+        p_(other.p_), 
+        array_end_(other.array_end_), 
+        vec_start_(other.vec_start_)
+        { } 
+
+    pointer
+    data() const { return p_; }
+
+    infarray_iter& 
+    operator++() 
+        { 
+        ++p_;
+        if(p_==array_end_) p_ = vec_start_;
+        return *this; 
+        } 
+    infarray_iter 
+    operator++(int) 
+        { 
+        auto tmp = *this; 
+        operator++();
+        return tmp; 
+        } 
+    reference 
+    operator*() { return *p_; }  
+    };
+
+template <typename T, size_t ArrSize>
+bool 
+operator!=(const infarray_iter<T,ArrSize>& x, const infarray_iter<T,ArrSize>& y) 
+    { return x.data() != y.data(); } 
 
 } //namespace itensor
+
+#undef CHECK_EMPTY
+#undef CHECK_IND
 
 #endif
