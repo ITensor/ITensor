@@ -601,8 +601,8 @@ modifyData(const T& d)
         {
         *parg1_ = (*parg1_)->clone();
         }
-    auto* pa1 = static_cast<T*>(parg1_->get());
-    return pa1;
+    auto* pa1 = static_cast<ITDataType<T>*>(parg1_->get());
+    return &(pa1->d);
     }
 
 template<typename Ret, typename Task, typename D>
