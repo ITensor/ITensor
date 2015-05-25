@@ -166,17 +166,17 @@ class ITensorT
     ITensorT&
     generate(Func&& f);
 
-    ////Apply a function of the form f(x)->y
-    ////to each element x, replacing it with y
-    //template <typename Func>
-    //ITensorT&
-    //apply(Func&& f);
+    //Apply a function of the form f(x)->y
+    //to each element x, replacing it with y
+    template <typename Func>
+    ITensorT&
+    apply(Func&& f);
 
-    ////Apply a function of the form f(x)->void
-    ////to each element x.
-    //template <typename Func>
-    //const ITensorT&
-    //visit(Func&& f) const;
+    //Apply a function of the form f(x)->void
+    //to each element x.
+    template <typename Func>
+    const ITensorT&
+    visit(Func&& f) const;
 
     //
     // Complex number methods

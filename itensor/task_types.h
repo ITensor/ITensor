@@ -121,17 +121,32 @@ struct SumEls
     };
 
 template<typename F>
+struct ApplyIT
+    {
+    F& f;
+    ApplyIT(F&& f_) : f(f_)  { }
+    };
+
+template<typename F>
 struct GenerateIT
     {
     F& f;
-
     GenerateIT(F&& f_) : f(f_)  { }
-
     bool constexpr static 
     isComplex()
         {
         return std::is_same<typename std::result_of<F()>::type,Cplx>::value;
         }
+    };
+
+template <typename F>
+struct VisitIT
+    {
+    F& f;
+    Real scale_fac;
+    VisitIT(F&& f_, const LogNumber& scale)
+        : f(f_), scale_fac(scale.real0())
+        { }
     };
 
 } //namespace itensor 
