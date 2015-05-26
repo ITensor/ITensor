@@ -392,57 +392,44 @@ callDoTask(Task& t, Storage& s, ManagePtr& mp)
 
 /////////////////////////////////////////////////////
 
-//(4) Least preferred version calls doTask(Task,D&)
-//and makes sure pdat is unique first ("copy on write")
+//(2-fail)
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask_Impl(Task& t, const D& cd, PData& pdat,long)
+cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,long)
     {
-    //println("--> Calling solo (1 param, no ManagePtr)");
-    if(!pdat.unique()) pdat = pdat->clone();
-    auto* pd = static_cast<ITDataType<D>*>(pdat.get());
-    return callDoTask<Ret>(t,pd->d);
+    if(!mp.parg1().unique()) mp.parg1() = mp.parg1()->clone();
+    auto* pd = static_cast<ITDataType<D>*>(mp.parg1().get());
+    return callDoTask<Ret>(t,pd->d,mp);
     }
-//(3) Preferred version since 0->int requires no conversion
-//Attempts to call doTask(Task,const D&) if defined
+//(2-success)
 template<typename Ret, typename Task, typename D>
 auto
-cloneDoTask_Impl(Task& t, const D& cd, PData& pdat,int)
-    //Using std::conditional here because we want the return type to be Ret regardless
-    //but need to call possibly void f(const T&) to get substitution failure (SFINAE) if no such call exists.
+cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,int)
     -> std::conditional_t<std::is_same<decltype(doTask(t,cd)),void>::value,Ret,Ret>
     {
-    //println("--> Not calling solo (1 param, no ManagePtr)");
-    return callDoTask<Ret>(t,cd);
+    return FixRet<Ret,decltype(doTask(t,cd)),Task&,const D&>()(t,cd);
     }
-//(2) Less preferred version calls one of the cloneDoTask_Impl
-//versions (which one depends on further tests - see above)
+//(1-fail)
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask_MPImpl(Task& t, const D& cd, D& d, ManagePtr& mp,long)
+cloneDoTask_Case1ConstMP(Task& t, const D& cd, ManagePtr& mp,long)
     {
-    //Give up on trying to pass ManagePtr argument here - 
-    //this assumes no need to have ManagePtr if definitely
-    //going to modify storage in-place
-    return cloneDoTask_Impl<Ret>(t,d,mp.parg1(),0);
+    return cloneDoTask_Case2ConstNoMP<Ret>(t,cd,mp,0);
     }
-//(1) Preferred version since 0->int requires no conversion
+//(1-success) Preferred version since 0->int requires no conversion
 //Attempts to call doTask(Task,const D&, ManagePtr&) if defined
 template<typename Ret, typename Task, typename D>
 auto
-cloneDoTask_MPImpl(Task& t, const D& cd, D& d, ManagePtr& mp,int)
-    //Using std::conditional here because we want the return type to be Ret regardless
-    //but need to call possibly void f(const T&) to get substitution failure (SFINAE) if no such call exists.
+cloneDoTask_Case1ConstMP(Task& t, const D& cd, ManagePtr& mp,int)
     -> std::conditional_t<std::is_same<decltype(doTask(t,cd,mp)),void>::value,Ret,Ret>
     {
-    //println("--> Not calling solo (1 param + optional ManagePtr)");
-    return callDoTask<Ret>(t,cd,mp);
+    return FixRet<Ret,decltype(doTask(t,cd,mp)),Task&,const D&,ManagePtr&>()(t,cd,mp);
     }
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask(Task& t, D& d, ManagePtr& mp)
+cloneDoTask(Task& t, const D& cd, ManagePtr& mp)
     {
-    return cloneDoTask_MPImpl<Ret>(t,d,d,mp,0);
+    return cloneDoTask_Case1ConstMP<Ret>(t,cd,mp,0);
     }
 
 /////////////////////
