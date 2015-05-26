@@ -76,27 +76,27 @@ IQTensor(Complex val)
         store_ = make_shared<ITDiag<Complex>>(val);
     }
 
-IQTensor::
-IQTensor(const QN& q, vector<IQIndex>&& iqinds) 
-	: 
-    is_(move(iqinds)),
-    store_(make_shared<IQTData<Real>>(is_,q)),
-    div_(q),
-    scale_(1.)
-	{ }
+//IQTensor::
+//IQTensor(const QN& q, vector<IQIndex>&& iqinds) 
+//	: 
+//    is_(move(iqinds)),
+//    store_(make_shared<IQTData<Real>>(is_,q)),
+//    div_(q),
+//    scale_(1.)
+//	{ }
 
-IQTensor::
-IQTensor(const QN& q,
-         IQIndexSet&& iset,
-         NewData nd,
-         LogNumber scale)
-    :
-    is_(move(iset)),
-    store_(move(nd)),
-    div_(q),
-    scale_(scale)
-    {
-    }
+//IQTensor::
+//IQTensor(const QN& q,
+//         IQIndexSet&& iset,
+//         NewData nd,
+//         LogNumber scale)
+//    :
+//    is_(move(iset)),
+//    store_(move(nd)),
+//    div_(q),
+//    scale_(scale)
+//    {
+//    }
 
 class IQPlusEQ : public RegisterFunc<IQPlusEQ>
     {
