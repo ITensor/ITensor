@@ -70,6 +70,12 @@ struct MultReal
     MultReal(Real r_) : r(r_) { }
     };
 
+struct MultCplx
+    {
+    Cplx z;
+    MultCplx(Cplx z_) : z(z_) { }
+    };
+
 struct NormNoScale
     {
     const IndexSet& is;
@@ -148,6 +154,22 @@ struct VisitIT
         : f(f_), scale_fac(scale.real0())
         { }
     };
+
+struct FillReal
+    {
+    Real r;
+    FillReal(Real r_) : r(r_) { }
+    };
+
+struct FillCplx
+    {
+    Cplx z;
+    FillCplx(Cplx z_) : z(z_) { }
+    };
+
+struct TakeReal { };
+struct TakeImag { };
+
 
 } //namespace itensor 
 

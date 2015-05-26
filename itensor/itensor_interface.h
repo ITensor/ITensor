@@ -104,20 +104,20 @@ class ITensorT
     //operator*=(const IndexVal& iv) { return operator*=(ITensor(iv)); } 
 
     ////Multiplication by scalar
-    //ITensor& 
-    //operator*=(Real fac);
-    //ITensor& 
-    //operator*=(Complex z);
+    ITensorT& 
+    operator*=(Real fac);
+    ITensorT& 
+    operator*=(Complex z);
 
     ////Division by scalar
-    //ITensor& 
-    //operator/=(Real fac) { scale_/=fac; return *this; }
-    //ITensor& 
-    //operator/=(Complex z) { return operator*=(1./z); }
+    ITensorT& 
+    operator/=(Real fac) { scale_/=fac; return *this; }
+    ITensorT& 
+    operator/=(Complex z) { return operator*=(1./z); }
 
-    ////Negation
-    //ITensor
-    //operator-() const { auto T = *this; T.scale_ *= -1; return T; }
+    //Negation
+    ITensorT
+    operator-() const { auto T = *this; T.scale_ *= -1; return T; }
 
 
     ////Tensor addition and subtraction
@@ -157,8 +157,8 @@ class ITensorT
     //Set all elements to z. If z.imag()==0
     //(such as if z is automatically converted from a Real)
     //then storage will be real only.
-    //ITensorT&
-    //fill(Complex z);
+    ITensorT&
+    fill(Complex z);
 
     //Call a function of the form f()->val once
     //for each element, assign result to each element.
@@ -190,21 +190,21 @@ class ITensorT
     dag() { return conj(); }
 
     //Replace data with real part
-    //ITensorT&
-    //takeReal();
+    ITensorT&
+    takeReal();
 
     //Replace data with imaginary part
-    //ITensorT&
-    //takeImag();
+    ITensorT&
+    takeImag();
 
 
     private:
 
-    //void
-    //scaleOutNorm();
+    void
+    scaleOutNorm();
 
-    //void
-    //equalizeScales(ITensorT& other);
+    void
+    equalizeScales(ITensorT& other);
 
     public:
 
@@ -265,6 +265,105 @@ template<typename IndexT>
 template<typename... VarArgs>
 ITensorT<IndexT>& ITensorT<IndexT>::
 primeExcept(VarArgs&&... vargs) { itensor::primeExcept(is_,std::forward<VarArgs>(vargs)...); return *this; }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+prime(ITensorT<IndexT> A, 
+      VarArgs&&... vargs)
+    {
+    A.prime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+primeExcept(ITensorT<IndexT> A, 
+            VarArgs&&... vargs)
+    {
+    A.primeExcept(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+noprime(ITensorT<IndexT> A, 
+        VarArgs&&... vargs)
+    {
+    A.noprime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+mapprime(ITensorT<IndexT> A, 
+         VarArgs&&... vargs)
+    {
+    A.mapprime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT> 
+IndexT
+commonIndex(const ITensorT<IndexT>& A, 
+            const ITensorT<IndexT>& B, 
+            IndexType t)
+    {
+    for(auto& I : A.inds())
+        if( (t == All || I.type() == t)
+         && hasindex(B.inds(),I) ) 
+            {
+            return I;
+            }
+    return IndexT{};
+    }
+
+
+template<typename IndexT> 
+IndexT
+uniqueIndex(const ITensorT<IndexT>& A, 
+            const ITensorT<IndexT>& B, 
+            IndexType t)
+    {
+    for(auto& I : A.inds())
+        if( (t == All || I.type() == t)
+         && !hasindex(B.inds(),I) ) 
+            {
+            return I;
+            }
+    return IndexT{};
+    }
+
+template <typename IndexT>
+ITensorT<IndexT>
+swapPrime(ITensorT<IndexT> T, 
+          int plev1, 
+          int plev2,
+          IndexType type)
+    { 
+    int tempLevel = 99999;
+#ifdef DEBUG
+    for(auto& I : T.inds())
+        {
+        if(I.primeLevel() == tempLevel) 
+            {
+            Print(tempLevel);
+            Error("swapPrime fails if an index has primeLevel==tempLevel");
+            }
+        }
+#endif
+    T.mapprime(plev1,tempLevel,type);
+    T.mapprime(plev2,plev1,type);
+    T.mapprime(tempLevel,plev2,type);
+    return T; 
+    }
+
+template<typename IndexT, typename F>
+ITensorT<IndexT>
+apply(ITensorT<IndexT> T, F&& f)
+    {
+    T.apply(std::forward<F>(f));
+    return T;
+    }
 
 } //namespace itensor
 

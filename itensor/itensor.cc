@@ -22,7 +22,7 @@ namespace itensor {
 
 
 template<>
-ITensorT<Index>::
+ITensor::
 ITensorT(const Index& i1) 
     :
     is_(i1),
@@ -32,7 +32,7 @@ ITensorT(const Index& i1)
 
 
 template<>
-ITensorT<Index>::
+ITensor::
 ITensorT(const Index& i1,const Index& i2) 
     :
     is_(i1,i2),
@@ -41,7 +41,7 @@ ITensorT(const Index& i1,const Index& i2)
 	{ }
     
 template<>
-ITensorT<Index>::
+ITensor::
 ITensorT(Complex val) 
     :
     scale_(1.)
@@ -56,19 +56,8 @@ ITensorT(Complex val)
     //    store_ = std::make_shared<ITDataType<ITDiag<Complex>>>(val);
     }
 
-//ITensor::
-//ITensor(IndexSet&& iset,
-//        storage_ptr&& data,
-//        const LogNumber& scale = 1)
-//    :
-//    is_(std::move(iset)),
-//    store_(std::move(data)),
-//    scale_(scale)
-//    { }
-
-
 template<>
-ITensorT<Index>::
+ITensor::
 ITensorT(IndexSet iset,
         storage_ptr&& pdat,
         const LogNumber& scale)
@@ -78,7 +67,6 @@ ITensorT(IndexSet iset,
     scale_(scale)
     {
     }
-
 
 vector<Index>
 computeNewInds(const IndexSet& Lis,
@@ -734,42 +722,88 @@ computeNewInds(const IndexSet& Lis,
 //    return *this;
 //    }
 
-//ITensor& ITensor::
-//operator*=(Real fac)
-//    {
-//    if(fac == 0)
-//        {
-//        fill(0);
-//        return *this;
-//        }
-//    scale_ *= fac;
-//    return *this;
-//    }
+void
+doTask(const FillReal& f, ITReal& d)
+    {
+    std::fill(d.begin(),d.end(),f.r);
+    }
 
-//struct MultComplex : RegisterFunc<MultComplex>
-//    {
-//    private:
-//    Complex z_;
-//    public:
-//    MultComplex(Complex z) : z_(z) { }
-//
-//    void
-//    operator()(const ITReal& d)
-//        {
-//        auto nd = makeNewData<ITCplx>(d);
-//        *nd *= z_;
-//        }
-//    void
-//    operator()(ITCplx& d) { d *= z_; }
-//    };
+void
+doTask(const FillReal& f, const ITCplx& d, ManagePtr& mp)
+    {
+    mp.makeNewData<ITReal>(d.csize(),f.r);
+    }
 
-//ITensor& ITensor::
-//operator*=(Complex z)
-//    {
-//    if(z.imag() == 0) return operator*=(z.real());
-//    applyFunc<MultComplex>(store_,z);
-//    return *this;
-//    }
+template<typename T>
+void
+doTask(const FillReal& f, const ITDiag<T>& d, ManagePtr& mp)
+    {
+    mp.makeNewData<ITDiag<Real>>(f.r);
+    }
+
+void
+doTask(const FillCplx& f, const ITReal& d, ManagePtr& mp)
+    {
+    mp.makeNewData<ITCplx>(d.size(),f.z);
+    }
+
+void
+doTask(const FillCplx& f, ITCplx& d)
+    {
+    d.fill(f.z);
+    }
+
+template<typename T>
+void
+doTask(const FillCplx& f, const ITDiag<T>& d, ManagePtr& mp)
+    {
+    mp.makeNewData<ITDiag<Complex>>(f.z);
+    }
+
+template<>
+ITensor& ITensor::
+fill(Cplx z)
+    {
+    if(!bool(*this)) return *this;
+    scale_ = LogNumber(1.);
+    if(z.imag() == 0)
+        doTask(FillReal{z.real()},store_);
+    else
+        doTask(FillCplx{z},store_);
+    return *this;
+    }
+
+template<>
+ITensor& ITensor::
+operator*=(Real fac)
+    {
+    if(fac == 0)
+        {
+        fill(0);
+        return *this;
+        }
+    scale_ *= fac;
+    return *this;
+    }
+
+void
+doTask(const MultCplx& M, const ITReal& d, ManagePtr& mp)
+    {
+    auto nd = mp.makeNewData<ITCplx>(d);
+    (*nd) *= M.z;
+    }
+
+void
+doTask(const MultCplx& M, ITCplx& d) { d *= M.z; }
+
+template<>
+ITensor& ITensor::
+operator*=(Cplx z)
+    {
+    if(z.imag() == 0) return operator*=(z.real());
+    doTask(MultCplx{z},store_);
+    return *this;
+    }
 
 //class PlusEQ : public RegisterFunc<PlusEQ>
 //    {
@@ -923,63 +957,6 @@ computeNewInds(const IndexSet& Lis,
 //    return *this; 
 //    }
 
-//class FillReal : public RegisterFunc<FillReal>
-//    {
-//    Real r_;
-//    public:
-//    FillReal(Real r) : r_(r) { }
-//    void
-//    operator()(ITReal& d) const
-//        {
-//        std::fill(d.begin(),d.end(),r_);
-//        }
-//    void
-//    operator()(const ITCplx& d)
-//        {
-//        makeNewData<ITReal>(d.csize(),r_);
-//        }
-//    template<typename T>
-//    void
-//    operator()(const ITDiag<T>& d)
-//        {
-//        makeNewData<ITDiag<Real>>(r_);
-//        }
-//    };
-//
-//class FillCplx : public RegisterFunc<FillCplx>
-//    {
-//    Complex z_;
-//    public:
-//    FillCplx(Complex z) : z_(z) { }
-//    void
-//    operator()(const ITReal& d)
-//        {
-//        makeNewData<ITCplx>(d.size(),z_);
-//        }
-//    void
-//    operator()(ITCplx& d) const
-//        {
-//        d.fill(z_);
-//        }
-//    template<typename T>
-//    void
-//    operator()(const ITDiag<T>& d)
-//        {
-//        makeNewData<ITDiag<Complex>>(z_);
-//        }
-//    };
-//
-//ITensor& ITensor::
-//fill(Complex z)
-//    {
-//    if(!(*this)) return *this;
-//    scale_ = LogNumber(1.);
-//    if(z.imag() == 0)
-//        applyFunc<FillReal>(store_,z.real());
-//    else
-//        applyFunc<FillCplx>(store_,z);
-//    return *this;
-//    }
 
 
 void
@@ -1043,35 +1020,37 @@ doTask(const NormNoScale& N, const ITDiag<T>& d)
 Real
 doTask(const NormNoScale& N, const ITCombiner& d) { return 0; }
 
-//void ITensor::
-//scaleOutNorm()
-//    {
-//    auto nrm = applyFunc<NormNoScale>(store_,is_);
-//    //If norm already 1 return so
-//    //we don't have to call MultReal
-//    if(fabs(nrm-1.) < 1E-12) return;
-//    if(nrm == 0)
-//        {
-//        scale_ = LogNumber(1.);
-//        return;
-//        }
-//    applyFunc<MultReal>(store_,1./nrm);
-//    scale_ *= nrm;
-//    }
+template<>
+void ITensor::
+scaleOutNorm()
+    {
+    auto nrm = doTask<Real>(NormNoScale{is_},store_);
+    //If norm already 1 return so
+    //we don't have to call MultReal
+    if(fabs(nrm-1.) < 1E-12) return;
+    if(nrm == 0)
+        {
+        scale_ = LogNumber(1.);
+        return;
+        }
+    doTask(MultReal{1./nrm},store_);
+    scale_ *= nrm;
+    }
 
-//void ITensor::
-//equalizeScales(ITensor& other)
-//    {
-//    if(scale_.sign() != 0)
-//        {
-//        other.scaleTo(scale_);
-//        }
-//    else //*this is equivalent to zero
-//        {
-//        fill(0);
-//        scale_ = other.scale_;
-//        }
-//    }
+template<>
+void ITensor::
+equalizeScales(ITensor& other)
+    {
+    if(scale_.sign() != 0)
+        {
+        other.scaleTo(scale_);
+        }
+    else //*this is equivalent to zero
+        {
+        fill(0);
+        scale_ = other.scale_;
+        }
+    }
 
 void
 doTask(Conj, ITCplx& d) 
@@ -1112,63 +1091,75 @@ conj()
     return *this;
     }
 
-//struct TakeReal : RegisterFunc<TakeReal>
-//    {
-//    void
-//    operator()(const ITCplx& d) 
-//        { 
-//        makeNewData<ITReal>(d.rstart(),d.istart());
-//        }
-//    void
-//    operator()(const ITDiag<Complex>& d) 
-//        { 
-//        if(d.allSame()) makeNewData<ITDiag<Real>>(d.val.real());
-//        else            
-//            {
-//            auto nd = makeNewData<ITDiag<Real>>(d.size(),0.);
-//            for(auto i : index(d.store)) nd->store[i] = d.store[i].real();
-//            }
-//        }
-//    template<typename T>
-//    void
-//    operator()(const T& d) { }
-//    };
-//ITensor& ITensor::
-//takeReal()
-//    {
-//    applyFunc<TakeReal>(store_);
-//    return *this;
-//    }
-//
-//struct TakeImag : RegisterFunc<TakeImag>
-//    {
-//    void
-//    operator()(const ITCplx& d) 
-//        { 
-//        makeNewData<ITReal>(d.istart(),d.iend());
-//        }
-//    void
-//    operator()(const ITDiag<Complex>& d) 
-//        { 
-//        if(d.allSame()) makeNewData<ITDiag<Real>>(d.val.imag());
-//        else            
-//            {
-//            auto nd = makeNewData<ITDiag<Real>>(d.size(),0.);
-//            for(auto i : index(d.store)) nd->store[i] = d.store[i].imag();
-//            }
-//        }
-//    template<typename T>
-//    void
-//    operator()(const T& d) { }
-//    };
-//ITensor& ITensor::
-//takeImag()
-//    {
-//    applyFunc<TakeImag>(store_);
-//    return *this;
-//    }
+void
+doTask(TakeReal,ITCplx& d, ManagePtr& mp)
+    { 
+    auto csize = d.csize(); //csize is half the size of d.store
+    //Take resources from ITCplx to make new ITReal
+    auto* nd = mp.makeNewData<ITReal>(std::move(d.store));
+    nd->store.resize(csize);
+    }
+
+void
+doTask(TakeReal,const ITDiag<Complex>& d, ManagePtr& mp) 
+    { 
+    if(d.allSame()) mp.makeNewData<ITDiag<Real>>(d.val.real());
+    else            
+        {
+        auto nd = mp.makeNewData<ITDiag<Real>>(d.size(),0.);
+        for(auto i : index(d.store)) nd->store[i] = d.store[i].real();
+        }
+    }
+
+void
+doTask(TakeReal, const ITReal& ) { }
+
+void
+doTask(TakeReal, const ITDiag<Real>& ) { }
 
 
+template<>
+ITensor& ITensor::
+takeReal()
+    {
+    doTask(TakeReal{},store_);
+    return *this;
+    }
+
+void
+doTask(TakeImag, const ITReal& d, ManagePtr& mp) 
+    { 
+    mp.makeNewData<ITReal>(d.size(),0);
+    }
+
+void
+doTask(TakeImag,const ITCplx& d, ManagePtr& mp) 
+    { 
+    mp.makeNewData<ITReal>(d.istart(),d.iend());
+    }
+
+void
+doTask(TakeImag,const ITDiag<Complex>& d, ManagePtr& mp) 
+    { 
+    if(d.allSame()) mp.makeNewData<ITDiag<Real>>(d.val.imag());
+    else            
+        {
+        auto nd = mp.makeNewData<ITDiag<Real>>(d.size(),0.);
+        for(auto i : index(d.store)) nd->store[i] = d.store[i].imag();
+        }
+    }
+
+template<typename T>
+void
+doTask(TakeImag,const T& d) { }
+
+template<>
+ITensor& ITensor::
+takeImag()
+    {
+    doTask(TakeImag{},store_);
+    return *this;
+    }
 
 ostream& 
 operator<<(ostream & s, const ITensor& t)
@@ -1307,13 +1298,13 @@ doTask(PrintIT& P, const ITDiag<T>& d)
 Complex
 quickranCplx() { return Complex(detail::quickran(),detail::quickran()); }
 
-//ITensor
-//randomize(ITensor T, const Args& args)
-//    {
-//    if(args.getBool("Complex",false)) T.generate(quickranCplx);
-//    else                              T.generate(detail::quickran);
-//    return T;
-//    }
+ITensor
+randomize(ITensor T, const Args& args)
+    {
+    if(args.getBool("Complex",false)) T.generate(quickranCplx);
+    else                              T.generate(detail::quickran);
+    return T;
+    }
 
 ITensor
 matrixTensor(Mat&& M, const Index& i1, const Index& i2)

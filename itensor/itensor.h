@@ -123,25 +123,6 @@ diagTensor(const Container& C,
 //ITensor inline
 //operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
 
-template <typename... VarArgs>
-ITensor
-prime(ITensor A, 
-      VarArgs&&...);
-
-template <typename... VarArgs>
-ITensor
-primeExcept(ITensor A,
-            VarArgs&&...);
-
-template <typename... VarArgs>
-ITensor
-noprime(ITensor A,
-        VarArgs&&...);
-
-template <typename... VarArgs>
-ITensor
-mapprime(ITensor A,
-         VarArgs&&...);
 
 template<class Tensor>
 bool

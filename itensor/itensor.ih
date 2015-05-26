@@ -17,7 +17,7 @@ namespace itensor {
 
 template<>
 template <typename... Indices>
-inline ITensorT<Index>::
+ITensor::
 ITensorT(const Index& i1, 
          const Index& i2,
          const Index& i3,
@@ -30,7 +30,7 @@ ITensorT(const Index& i1,
 
 template<>
 template <class DataType>
-inline ITensorT<Index>::
+ITensor::
 ITensorT(IndexSet iset,
          DataType&& dat,
          const LogNumber& scale)
@@ -44,7 +44,7 @@ ITensorT(IndexSet iset,
     }
 
 template<>
-inline ITensorT<Index>::
+inline ITensor::
 ITensorT(const IndexSet& is)
     :
     is_(is),
@@ -54,7 +54,7 @@ ITensorT(const IndexSet& is)
 
 template<>
 template <typename... IVals>
-inline ITensorT<Index>::
+ITensor::
 ITensorT(const IndexVal& iv1, 
          const IVals&... rest)
     :
@@ -182,17 +182,17 @@ doTask(const SetElt<Real,size>& s, ITCplx& d)
     d.set(ind(s.is,s.inds),s.elt);
     }
 
-//template<size_t size>
-//void
-//doTask(const SetEltCplx<size> s, ITReal& d, ManagePtr& mp)
-//    {
-//    auto nd = mp.makeNewData<ITCplx>(d.cbegin(),d.cend());
-//    nd->set(ind(s.is,s.inds),s.elt);
-//    }
+template<size_t size>
+void
+doTask(const SetElt<Cplx,size>& s, const ITReal& d, ManagePtr& mp)
+    {
+    auto nd = mp.makeNewData<ITCplx>(d);
+    nd->set(ind(s.is,s.inds),s.elt);
+    }
 
 template<size_t size>
 void
-doTask(const SetElt<Cplx,size> s, ITCplx& d)
+doTask(const SetElt<Cplx,size>& s, ITCplx& d)
     {
     d.set(ind(s.is,s.inds),s.elt);
     }
@@ -276,7 +276,6 @@ doTask(ApplyIT<F>& A, ITDiag<T>& d)
         }
     }
 
-
 template<>
 template <typename Func>
 ITensor& ITensor::
@@ -286,7 +285,6 @@ apply(Func&& f)
     doTask(ApplyIT<decltype(f)>{std::forward<Func>(f)},store_);
     return *this;
     }
-
 
 template<typename F>
 void
@@ -352,111 +350,12 @@ diagTensor(const Container& C,
     return ITensor(std::move(is),ITDiag<value_type>(C.begin(),C.end()));
     }
 
-template <class Tensor>
-Tensor
-swapPrime(Tensor T, int plev1, int plev2,
-          IndexType type)
-    { 
-    int tempLevel = 100;
-#ifdef DEBUG
-    for(const auto& I : T.inds())
-        {
-        if(I.primeLevel() == tempLevel) 
-            {
-            Print(tempLevel);
-            Error("swapPrime fails if an index has primeLevel==tempLevel");
-            }
-        }
-#endif
-    T.mapprime(plev1,tempLevel,type);
-    T.mapprime(plev2,plev1,type);
-    T.mapprime(tempLevel,plev2,type);
-    return T; 
-    }
 
-template<class TensorA, class TensorB> typename 
-TensorA::IndexT
-commonIndex(const TensorA& A, const TensorB& B, IndexType t)
+template<typename IndexT>
+ITensorT<IndexT>
+randomTensor(const IndexSetT<IndexT>& inds)
     {
-    using IndexT = typename TensorA::IndexT;
-    for(const IndexT& I : A.inds())
-        {
-        if( (t == All || I.type() == t)
-         && hasindex(B.inds(),I) ) 
-            {
-            return I;
-            }
-        }
-    return IndexT();
-    }
-
-
-template<class TensorA, class TensorB> typename 
-TensorA::IndexT
-uniqueIndex(const TensorA& A, 
-            const TensorB& B, 
-            IndexType t)
-    {
-    using IndexT = typename TensorA::IndexT;
-    for(const auto& I : A.inds())
-        {
-        if( (t == All || I.type() == t)
-         && !hasindex(B.inds(),I) ) 
-            {
-            return I;
-            }
-        }
-    return IndexT();
-    }
-
-template <typename... VarArgs>
-ITensor
-prime(ITensor A, 
-      VarArgs&&... vargs)
-    {
-    A.prime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template <typename... VarArgs>
-ITensor
-primeExcept(ITensor A,
-            VarArgs&&... vargs)
-    {
-    A.primeExcept(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template <typename... VarArgs>
-ITensor
-noprime(ITensor A,
-        VarArgs&&... vargs)
-    {
-    A.noprime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template <typename... VarArgs>
-ITensor
-mapprime(ITensor A,
-         VarArgs&&... vargs)
-    {
-    A.mapprime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template<typename F>
-ITensor
-apply(ITensor T, F&& f)
-    {
-    T.apply(std::forward<F>(f));
-    return T;
-    }
-
-ITensor inline
-randomTensor(const IndexSet& inds)
-    {
-    return randomize(ITensor(inds));
+    return randomize(ITensorT<IndexT>{inds});
     }
 
 } //namespace itensor
