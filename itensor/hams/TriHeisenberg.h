@@ -17,7 +17,7 @@ class TriangularHeisenberg
 
     operator MPO() { init_(); return H; }
 
-    operator IQMPO() { init_(); return H; }
+    operator IQMPO() { init_(); return H.toIQMPO(); }
 
     //------------------------------------------------------//
 
