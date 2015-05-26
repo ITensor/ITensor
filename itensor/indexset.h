@@ -192,7 +192,7 @@ prime(IndexSetT<IndexT>& is, int inc = 1) { prime(is,All,inc); }
 template<typename IndexT, typename... IVals>
 void 
 prime(IndexSetT<IndexT>& is,
-      const typename IndexT::IndexValT& iv1,
+      const typename IndexT::indexval_type& iv1,
       IVals&&... ivs);
 
 //

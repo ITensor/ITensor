@@ -423,7 +423,7 @@ prime(IndexSetT<IndexT>& is,
 template<typename IndexT, typename... IVals>
 void 
 prime(IndexSetT<IndexT>& is,
-      const typename IndexT::IndexValT& iv1,
+      const typename IndexT::indexval_type& iv1,
       IVals&&... rest)
     {
 #ifdef DEBUG
@@ -431,7 +431,7 @@ prime(IndexSetT<IndexT>& is,
 #endif
     int inc = 0;
     auto cmp = [&inc](const IndexT& J, 
-                      const typename IndexT::IndexValT& iv) 
+                      const typename IndexT::indexval_type& iv) 
                { 
                inc = iv.val; 
                return J==iv.index; 

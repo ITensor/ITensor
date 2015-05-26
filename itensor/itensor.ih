@@ -5,10 +5,6 @@
 #ifndef __ITENSOR_ITENSOR_IH_
 #define __ITENSOR_ITENSOR_IH_
 
-#include "itensor/task_types.h"
-#include "itensor/itdata/itdata.h"
-#include "itensor/detail/call_rewrite.h"
-
 //
 // Template Method Implementations
 //

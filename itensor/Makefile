@@ -16,6 +16,7 @@ SOURCES+= tensor/contract.cc
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
 #SOURCES+= iqindex.cc 
+#SOURCES+= itdata/iqtdata.cc
 #SOURCES+= iqtensor.cc 
 #SOURCES+= spectrum.cc 
 #SOURCES+= svdalgs.cc 
@@ -68,10 +69,11 @@ mkdebugdir:
 	mkdir -p .debug_objs/util
 	mkdir -p .debug_objs/matrix
 	mkdir -p .debug_objs/tensor
+	mkdir -p .debug_objs/itdata
 	mkdir -p .debug_objs/mps
 
 clean:	
-	rm -fr *.o .debug_objs util/*.o matrix/*.o tensor/*.o mps/*.o libitensor.a libitensor-g.a
+	rm -fr *.o .debug_objs util/*.o matrix/*.o tensor/*.o itdata/*.o mps/*.o libitensor.a libitensor-g.a
 
 GDEPHEADERS=real.h global.h index.h
 GDEPHEADERS+= matrix/strideiter.h matrix/vec.h
@@ -99,7 +101,10 @@ itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 IQDEPHEADERS= qn.h iqindex.h
 iqindex.o: $(IQDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/iqindex.o: $(IQDEPHEADERS) $(GDEPHEADERS)
-IQDEPHEADERS+= $(ITDEPHEADERS) itdata/iqtdata.h iqtensor.ih iqtensor.h detail/skip_iterator.h
+IQDEPHEADERS+= $(ITDEPHEADERS) itdata/iqtdata.h
+itdata/iqtdata.o: $(IQDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/iqtdata.o: $(IQDEPHEADERS) $(GDEPHEADERS)
+IQDEPHEADERS+= iqtensor.ih iqtensor.h detail/skip_iterator.h
 iqtensor.o: $(IQDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/iqtensor.o: $(IQDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= spectrum.h

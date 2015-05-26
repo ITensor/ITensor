@@ -28,6 +28,6 @@
         NewType   ITCombiner       EndType \
         NewType   ITDiag<Real>     EndType \
         NewType   ITDiag<Complex>  EndType \
-        NewType   IQTData<Real>    EndType \
+        NewType   IQTData          EndType \
 
 #endif

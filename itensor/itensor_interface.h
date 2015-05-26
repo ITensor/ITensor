@@ -4,21 +4,30 @@
 //
 #ifndef __ITENSOR_ITENSOR_INTERFACE_H
 #define __ITENSOR_ITENSOR_INTERFACE_H
-#include <memory>
 #include "itensor/indexset.h"
+#include "itensor/detail/algs.h"
 
 namespace itensor {
 
 struct ITData;
 
+//
+// IndexT - interface template for ITensor and IQTensor
+//
+
 template<typename IndexT>
 class ITensorT
     {
     public:
-
     using index_type = IndexT;
     using indexval_type = typename IndexT::indexval_type;
     using storage_ptr = std::shared_ptr<ITData>;
+    using const_storage_ptr = std::shared_ptr<const ITData>;
+    private:
+    IndexSetT<IndexT> is_;
+    storage_ptr store_;
+    LogNumber scale_;
+    public:
 
     //
     // Constructors
@@ -86,64 +95,23 @@ class ITensorT
     set(Cplx val, const IndexVals&... ivs);
 
     //
-    // Operators
-    //
-
-    //Contracting product
-    //All matching Index pairs automatically contracted
-    //Cji = \sum_{k,l} Akjl * Blki
-    ITensorT& 
-    operator*=(const ITensorT& other);
-
-    //// Contract with IndexVal
-    //// If iv = (J,n), Index J is fixed to it's nth
-    //// value and rank decreases by 1
-    //// (similar to summing against a Kronecker
-    //// delta tensor \delta_{J,n})
-    //ITensorT& 
-    //operator*=(const IndexVal& iv) { return operator*=(ITensor(iv)); } 
-
-    ////Multiplication by scalar
-    ITensorT& 
-    operator*=(Real fac);
-    ITensorT& 
-    operator*=(Complex z);
-
-    ////Division by scalar
-    ITensorT& 
-    operator/=(Real fac) { scale_/=fac; return *this; }
-    ITensorT& 
-    operator/=(Complex z) { return operator*=(1./z); }
-
-    //Negation
-    ITensorT
-    operator-() const { auto T = *this; T.scale_ *= -1; return T; }
-
-
-    ////Tensor addition and subtraction
-    ////Summands must have same Indices, in any order
-    ////Cijk = Aijk + Bkij
-    //ITensor& 
-    //operator+=(const ITensor& other);
-
-    //ITensor& 
-    //operator-=(const ITensor& other);
-
-    //
     // Index Prime Level Methods
     //
 
     template<typename... VarArgs>
     ITensorT& 
-    noprime(VarArgs&&...);
+    noprime(VarArgs&&... vargs)
+        { itensor::noprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
     ITensorT& 
-    prime(VarArgs&&...);
+    prime(VarArgs&&... vargs)
+        { itensor::prime(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     template<typename... VarArgs>
     ITensorT&
-    primeExcept(VarArgs&&...);
+    primeExcept(VarArgs&&... vargs)
+        { itensor::primeExcept(is_,std::forward<VarArgs>(vargs)...); return *this; }
 
     //Change all Indices having primeLevel plevold to have primeLevel plevnew
     ITensorT& 
@@ -197,7 +165,6 @@ class ITensorT
     ITensorT&
     takeImag();
 
-
     private:
 
     void
@@ -236,35 +203,48 @@ class ITensorT
     const LogNumber&
     scale() const { return scale_; }
 
-    const ITData&
-    data() const { return *store_; }
+    LogNumber&
+    scale() { return scale_; }
+
+    const_storage_ptr
+    store() const { return store_; }
 
     storage_ptr&
-    pdata() { return store_; }
+    store() { return store_; }
+
+    const ITData&
+    cstore() const { return *store_; }
 
     void 
     scaleTo(const LogNumber& newscale);
 
-    private:
-    IndexSetT<IndexT> is_;
-    storage_ptr store_;
-    LogNumber scale_;
     }; // class ITensorT
 
+//Multiplication by real scalar
 template<typename IndexT>
-template<typename... VarArgs>
-ITensorT<IndexT>& ITensorT<IndexT>::
-noprime(VarArgs&&... vargs) { itensor::noprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
+ITensorT<IndexT>& 
+operator*=(ITensorT<IndexT>& T, Real fac)
+    {
+    if(fac == 0)
+        {
+        T.fill(0);
+        return T;
+        }
+    T.scale() *= fac;
+    return T;
+    }
 
+//Division by real scalar
 template<typename IndexT>
-template<typename... VarArgs>
-ITensorT<IndexT>& ITensorT<IndexT>::
-prime(VarArgs&&... vargs) { itensor::prime(is_,std::forward<VarArgs>(vargs)...); return *this; }
+ITensorT<IndexT>& 
+operator/=(ITensorT<IndexT>& T, Real fac) { T.scale()/=fac; return T; }
 
+
+//Negation
 template<typename IndexT>
-template<typename... VarArgs>
-ITensorT<IndexT>& ITensorT<IndexT>::
-primeExcept(VarArgs&&... vargs) { itensor::primeExcept(is_,std::forward<VarArgs>(vargs)...); return *this; }
+ITensorT<IndexT>
+operator-(ITensorT<IndexT> T) { T.scale() *= -1; return T; }
+
 
 template<typename IndexT, typename... VarArgs>
 ITensorT<IndexT>
@@ -302,11 +282,29 @@ mapprime(ITensorT<IndexT> A,
     return A;
     }
 
+template<typename IndexT>
+bool
+hasindex(const ITensorT<IndexT>& T, const IndexT& I)
+    {
+    return detail::contains(T.inds(),I);
+    }
+
+template<typename IndexT>
+IndexT
+findtype(const ITensorT<IndexT>& T, IndexType type)
+    {
+    for(auto& i : T.inds())
+        if(i.type()==type) return i;
+    return IndexT{};
+    }
+
+//Find index of tensor A (of optional type t) 
+//which is shared with tensor B
 template<typename IndexT> 
 IndexT
 commonIndex(const ITensorT<IndexT>& A, 
             const ITensorT<IndexT>& B, 
-            IndexType t)
+            IndexType t = All)
     {
     for(auto& I : A.inds())
         if( (t == All || I.type() == t)
@@ -318,6 +316,8 @@ commonIndex(const ITensorT<IndexT>& A,
     }
 
 
+//Find index of tensor A (of optional type t) 
+//which is NOT shared by tensor B
 template<typename IndexT> 
 IndexT
 uniqueIndex(const ITensorT<IndexT>& A, 
@@ -333,12 +333,19 @@ uniqueIndex(const ITensorT<IndexT>& A,
     return IndexT{};
     }
 
+//
+//Return copy of a tensor with primeLevels plev1 and plev2 swapped
+//
+//For example, if T has indices i,i' (like a matrix or a site
+//operator) then swapPrime(T,0,1) will have indices i',i 
+//i.e. the transpose of T.
+//
 template <typename IndexT>
 ITensorT<IndexT>
 swapPrime(ITensorT<IndexT> T, 
           int plev1, 
           int plev2,
-          IndexType type)
+          IndexType type = All)
     { 
     int tempLevel = 99999;
 #ifdef DEBUG

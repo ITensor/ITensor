@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITCOMBINER_H
 #define __ITENSOR_ITCOMBINER_H
 
-#include "itdata.h"
+#include <iostream>
 
 namespace itensor {
 

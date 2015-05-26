@@ -95,7 +95,7 @@ class ManagePtr
         AssignPointerRtoL
         };
     PData *parg1_ = nullptr;
-    const PData *parg2_ = nullptr;
+    const CPData *parg2_ = nullptr;
     const ITData *arg2_ = nullptr;
     Action action_ = None;
     PData nd_;
@@ -111,7 +111,7 @@ class ManagePtr
         : parg1_(parg1), arg2_(arg2)
         { }
 
-    ManagePtr(PData *parg1, const PData *parg2)
+    ManagePtr(PData *parg1, const CPData *parg2)
         : parg1_(parg1), parg2_(parg2), arg2_(parg2->get())
         { }
 
@@ -153,7 +153,7 @@ class ManagePtr
         }
 
 
-    const PData&
+    const CPData&
     parg2() 
         { 
 #ifdef DEBUG
@@ -230,35 +230,57 @@ struct TwoArgs
 template <typename NArgs, typename Task, typename Return>
 class RegisterTask : public FuncBase
     {
-    Task t_;
-    ManagePtr mp_;
-    Return ret_;
     public:
-    using return_type = Return;
+    using task_type = std::remove_reference_t<Task>;
+    using return_type = std::remove_reference_t<Return>;
+    private:
+    task_type task_;
+    ManagePtr mp_;
+    return_type ret_;
+    public:
 
-    RegisterTask(Task&& t) :
-        t_(std::move(t))
+    RegisterTask(task_type&& t) :
+        task_(std::move(t))
         { }
 
     template<typename... MPArgs>
-    RegisterTask(Task&& t,
+    RegisterTask(task_type&& t,
                  MPArgs&&... mpargs) :
-        t_(std::move(t)),
+        task_(std::move(t)),
         mp_(std::forward<MPArgs>(mpargs)...)
         { }
 
     RegisterTask(RegisterTask&& o) :
-        t_(std::move(o.t_)), 
+        task_(std::move(o.task_)), 
         mp_(std::move(o.mp_)),
         ret_(std::move(o.ret_))
         { }
 
     virtual ~RegisterTask() { }
 
-    operator return_type() { return std::move(ret_); }
+    return_type&
+    getReturn() { return ret_; }
 
-    REGISTER_TYPES(void applyTo LPAREN, &d RPAREN final { ret_ = std::move(NArgs().template call<return_type>(t_,d,mp_)); } )
-    REGISTER_TYPES(void applyTo LPAREN, const&d RPAREN final { ret_ = std::move(NArgs().template call<return_type>(t_,d,mp_)); } )
+    task_type&
+    getTask() { return task_; }
+
+    private:
+
+    REGISTER_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); } )
+    REGISTER_TYPES(void applyTo LPAREN, const&d RPAREN final { applyToImpl(d); } )
+
+    template<typename D>
+    void
+    applyToImpl(const D& d)
+        {
+        ret_ = std::move(NArgs().template call<return_type>(task_,d,mp_));
+        }
+    template<typename D>
+    void
+    applyToImpl(D& d)
+        {
+        ret_ = std::move(NArgs().template call<return_type>(task_,d,mp_));
+        }
     };
 
 template <typename Task, typename D1, typename Return>
@@ -545,7 +567,7 @@ updateArg1()
     else if(action_ == AssignPointerRtoL)
         {
         //println("Doing AssignPointerRtoL");
-        *parg1_ = *parg2_;
+        *parg1_ = std::const_pointer_cast<ITData,const ITData>(*parg2_);
         }
     }
 
@@ -614,116 +636,123 @@ applyToImpl(const D2& d2)
 
 template<typename ReturnType, typename Task>
 ReturnType
-doTask(Task t,
+doTask(Task&& t,
        const ITData& arg)
     {
-    RegisterTask<OneArg,Task,ReturnType> r(std::move(t));
+    RegisterTask<OneArg,Task,ReturnType> r(std::forward<Task>(t));
     arg.plugInto(r);
-    return r;
+    return std::move(r.getReturn());
     }
+
 template<typename Task>
 Task
 doTask(Task&& t,
        const ITData& arg)
     {
-    doTask<Void,Task>(std::forward<Task>(t),arg);
-    return t;
+    RegisterTask<OneArg,Task,Void> r(std::forward<Task>(t));
+    arg.plugInto(r);
+    return std::move(r.getTask());
     }
 
 template<typename ReturnType, typename Task>
 ReturnType
-doTask(Task t,
-       const CPData& arg)
-    {
-    RegisterTask<OneArg,Task,ReturnType> r(std::move(t));
-    arg->plugInto(r);
-    return r;
-    }
-template<typename Task>
-Task
 doTask(Task&& t,
        const CPData& arg)
     {
-    doTask<Void,Task>(std::forward<Task>(t),arg);
-    return t;
-    }
-
-template<typename ReturnType, typename Task>
-ReturnType
-doTask(Task t,
-       PData& arg)
-    {
-    RegisterTask<OneArg,Task,ReturnType> r(std::move(t),&arg);
+    RegisterTask<OneArg,Task,ReturnType> r(std::forward<Task>(t));
     arg->plugInto(r);
-    return r;
+    return std::move(r.getReturn());
+    }
+template<typename Task>
+Task
+doTask(Task&& t,
+       const CPData& arg)
+    {
+    RegisterTask<OneArg,Task,Void> r(std::forward<Task>(t));
+    arg->plugInto(r);
+    return std::move(r.getTask());
+    }
+
+template<typename ReturnType, typename Task>
+ReturnType
+doTask(Task&& t,
+       PData& arg)
+    {
+    RegisterTask<OneArg,Task,ReturnType> r(std::forward<Task>(t),&arg);
+    arg->plugInto(r);
+    return std::move(r.getReturn());
     }
 template<typename Task>
 Task
 doTask(Task&& t,
        PData& arg)
     {
-    doTask<Void,Task>(std::forward<Task>(t),arg);
-    return t;
+    RegisterTask<OneArg,Task,Void> r(std::forward<Task>(t),&arg);
+    arg->plugInto(r);
+    return std::move(r.getTask());
     }
 
 template<typename ReturnType, typename Task>
 ReturnType
-doTask(Task t,
-       const PData& arg1,
-       const PData& arg2)
+doTask(Task&& t,
+       const CPData& arg1,
+       const CPData& arg2)
     {
-    RegisterTask<TwoArgs,Task,ReturnType> r(std::move(t),&arg1,&arg2);
+    RegisterTask<TwoArgs,Task,ReturnType> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
-    return r;
+    return std::move(r.getReturn());
     }
 template<typename Task>
 Task
 doTask(Task&& t,
-       const PData& arg1,
-       const PData& arg2)
+       const CPData& arg1,
+       const CPData& arg2)
     {
-    doTask<Void,Task>(std::forward<Task>(t),arg1,arg2);
-    return t;
+    RegisterTask<TwoArgs,Task,Void> r(std::forward<Task>(t),&arg1,&arg2);
+    arg1->plugInto(r);
+    return std::move(r.getTask());
     }
 
 template<typename ReturnType, typename Task>
 ReturnType
-doTask(Task t,
+doTask(Task&& t,
        PData& arg1,
-       const PData& arg2)
+       const CPData& arg2)
     {
-    RegisterTask<TwoArgs,Task,ReturnType> r(std::move(t),&arg1,&arg2);
+    RegisterTask<TwoArgs,Task,ReturnType> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
-    return r;
+    return std::move(r.getReturn());
     }
 template<typename Task>
 Task
 doTask(Task&& t,
        PData& arg1,
-       const PData& arg2)
+       const CPData& arg2)
     {
-    doTask<Void,Task>(std::forward<Task>(t),arg1,arg2);
-    return t;
+    RegisterTask<TwoArgs,Task,Void> r(std::forward<Task>(t),&arg1,&arg2);
+    arg1->plugInto(r);
+    return std::move(r.getTask());
     }
 
 template<typename ReturnType, typename Task>
 ReturnType
-doTask(Task t,
-       PData& arg1,
-       const ITData& arg2)
-    {
-    RegisterTask<TwoArgs,Task,ReturnType> r(std::move(t),&arg1,&arg2);
-    arg1->plugInto(r);
-    return r;
-    }
-template<typename Task>
-Task
 doTask(Task&& t,
        PData& arg1,
        const ITData& arg2)
     {
-    doTask<Void,Task>(std::forward<Task>(t),arg1,arg2);
-    return t;
+    RegisterTask<TwoArgs,Task,ReturnType> r(std::forward<Task>(t),&arg1,&arg2);
+    arg1->plugInto(r);
+    return std::move(r.getReturn());
+    }
+template<typename Task>
+Task
+doTask(Task&& t,
+       PData& arg1,
+       const ITData& arg2)
+    {
+    RegisterTask<TwoArgs,Task,Void> r(std::forward<Task>(t),&arg1,&arg2);
+    arg1->plugInto(r);
+    return std::move(r.getTask());
     }
 
 } //namespace itensor

@@ -171,6 +171,45 @@ struct FillCplx
 struct TakeReal { };
 struct TakeImag { };
 
+struct PlusEQ
+    {
+    using permutation = Permutation;
+    private:
+    const Permutation *perm_ = nullptr;
+    const IndexSet *is1_ = nullptr,
+                   *is2_ = nullptr;
+    public:
+
+    Real fac = NAN;
+
+    PlusEQ(Real fac_) :
+        fac(fac_)
+        { }
+
+    PlusEQ(const Permutation& P,
+           const IndexSet& is1,
+           const IndexSet& is2,
+           Real fac_) :
+        perm_(&P),
+        is1_(&is1),
+        is2_(&is2),
+        fac(fac_)
+        { }
+
+    bool
+    hasPerm() const { return bool(perm_); }
+
+    const Permutation&
+    perm() const { return *perm_; }
+
+    const IndexSet&
+    is1() const { return *is1_; }
+
+    const IndexSet&
+    is2() const { return *is2_; }
+    };
+
+
 struct Contract
     {
     const Label &Lind,
@@ -191,6 +230,24 @@ struct Contract
         Lis(Lis_),
         Ris(Ris_)
         { }
+
+    Contract(const Contract& other) = delete;
+    Contract& operator=(const Contract& other) = delete;
+
+    Contract(Contract&& other):
+        Lind(other.Lind),
+        Rind(other.Rind),
+        Lis(other.Lis),
+        Ris(other.Ris),
+        Nis(std::move(other.Nis)),
+        scalefac(other.scalefac)
+        { }
+    };
+
+struct Write
+    {
+    std::ostream& s;
+    Write(std::ostream& s_) : s(s_) { }
     };
 
 

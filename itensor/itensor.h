@@ -5,52 +5,80 @@
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
 #include "itensor/itensor_interface.h"
+#include "itensor/task_types.h"
+#include "itensor/itdata/itdata.h"
 #include "itensor/matrix/mat.h"
-#include "itensor/detail/algs.h"
+#include "itensor/detail/call_rewrite.h"
 
 namespace itensor {
 
 //
 // ITensor
 //
-// For the ITensor class interface, see
-// itensor_interface.h
-// An ITensor is defined as ITensorT<Index>
+// For the ITensor class interface, see itensor_interface.h
 //
 using ITensor = ITensorT<Index>;
 
 std::ostream& 
 operator<<(std::ostream & s, const ITensor& T);
 
-//ITensor inline
-//operator*(ITensor A, const ITensor& B) { A *= B; return A; }
-//ITensor inline
-//operator*(const ITensor& A, ITensor&& B) { B *= A; return B; }
-//ITensor inline
-//operator*(ITensor T, Real fac) { T *= fac; return T; }
-//ITensor inline
-//operator*(Real fac, ITensor T) { T *= fac; return T; }
-//ITensor inline
-//operator*(ITensor T, Complex fac) { T *= fac; return T; }
-//ITensor inline
-//operator*(Complex fac, ITensor T) { T *= fac; return T; }
-//ITensor inline
-//operator/(ITensor T, Real fac) { T /= fac; return T; }
-//ITensor inline
-//operator/(ITensor T, Complex fac) { T /= fac; return T; }
-//ITensor inline
-//operator+(ITensor A, const ITensor& B) { A += B; return A; }
-//ITensor inline
-//operator+(const ITensor& A, ITensor&& B) { B += A; return B; }
-//ITensor inline
-//operator-(ITensor A, const ITensor& B) { A -= B; return A; }
-//ITensor inline
-//operator-(const ITensor& A, ITensor&& B) { B -= A; B *= -1; return B; }
-//
-//ITensor inline
-//operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }
-//ITensor inline
-//operator*(const IndexVal& iv, const ITensor& t) { return (ITensor(iv) *= t); }
+//Contracting product
+//All matching Index pairs automatically contracted
+//Cji = \sum_{k,l} Akjl * Blki
+ITensor& 
+operator*=(ITensor& A, const ITensor& B);
+
+// Contract with IndexVal
+// If iv = (J,n), Index J is fixed to it's nth
+// value and rank decreases by 1
+// (similar to summing against a Kronecker
+// delta tensor \delta_{J,n})
+inline ITensor& 
+operator*=(ITensor& T, const IndexVal& iv) { return operator*=(T,ITensor(iv)); } 
+
+//Tensor addition and subtraction
+//Summands must have same Indices, in any order
+//Cijk = Aijk + Bkij
+ITensor& 
+operator+=(ITensor& A, const ITensor& B);
+ITensor& 
+operator-=(ITensor& A, const ITensor& B);
+
+//Multiplication and division by complex scalar
+ITensor& 
+operator*=(ITensor& T, Cplx z);
+inline ITensor& 
+operator/=(ITensor& T, Cplx z) { return operator*=(T,1./z); }
+
+ITensor inline
+operator*(ITensor A, const ITensor& B) { A *= B; return A; }
+ITensor inline
+operator*(const ITensor& A, ITensor&& B) { B *= A; return B; }
+ITensor inline
+operator*(ITensor T, Real fac) { T *= fac; return T; }
+ITensor inline
+operator*(Real fac, ITensor T) { T *= fac; return T; }
+ITensor inline
+operator*(ITensor T, Complex fac) { T *= fac; return T; }
+ITensor inline
+operator*(Complex fac, ITensor T) { T *= fac; return T; }
+ITensor inline
+operator/(ITensor T, Real fac) { T /= fac; return T; }
+ITensor inline
+operator/(ITensor T, Complex fac) { T /= fac; return T; }
+ITensor inline
+operator+(ITensor A, const ITensor& B) { A += B; return A; }
+ITensor inline
+operator+(const ITensor& A, ITensor&& B) { B += A; return B; }
+ITensor inline
+operator-(ITensor A, const ITensor& B) { A -= B; return A; }
+ITensor inline
+operator-(const ITensor& A, ITensor&& B) { B -= A; B *= -1; return B; }
+
+ITensor inline
+operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }
+ITensor inline
+operator*(const IndexVal& iv, const ITensor& B) { ITensor A(iv); A *= B; return A; }
 
 ITensor
 combiner(std::vector<Index> inds, const Args& args = Global::args());
@@ -93,19 +121,19 @@ diagTensor(const Container& C,
         //types (such as Container==int) that don't have a value_type member type
         -> typename std::conditional<std::is_same<typename Container::value_type,Real>::value,ITensor,ITensor>::type;
 
-////
-//// Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
-//// (I1, I2 are Index objects; n1,n2 are type int)
-//// to be an ITensor T such that T(I1(n1),I2(n2)) == 1
-////
-//// Useful for creating MPOs
-////
-//ITensor inline
-//operator*(const IndexVal& iv1, const IndexVal& iv2) 
-//    { 
-//    ITensor t(iv1); 
-//    return (t *= iv2); 
-//    }
+//
+// Define product of IndexVal iv1 = (I1,n1), iv2 = (I2,n2)
+// (I1, I2 are Index objects; n1,n2 are type int)
+// to be an ITensor T such that T(I1(n1),I2(n2)) == 1
+//
+// Useful for creating MPOs
+//
+ITensor inline
+operator*(const IndexVal& iv1, const IndexVal& iv2) 
+    { 
+    ITensor t(iv1); 
+    return (t *= iv2); 
+    }
 
 //
 // Define product of IndexVal iv1 = (I1,n1) with a Real "val"
@@ -113,23 +141,16 @@ diagTensor(const Container& C,
 //
 // Useful for creating MPOs
 //
-//ITensor inline
-//operator*(const IndexVal& iv1, Real val) 
-//    { 
-//    ITensor res(iv1); 
-//    res *= val; 
-//    return res; 
-//    }
-//ITensor inline
-//operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
-
-
-template<class Tensor>
-bool
-hasindex(const Tensor& T, const typename Tensor::IndexT& I)
-    {
-    return detail::contains(T.inds(),I);
+ITensor inline
+operator*(const IndexVal& iv1, Real val) 
+    { 
+    ITensor res(iv1); 
+    res *= val; 
+    return res; 
     }
+ITensor inline
+operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
+
 
 ITensor
 randomize(ITensor T, const Args& args = Global::args());
@@ -146,8 +167,10 @@ randomTensorC(const Index& i1, Inds&&... inds)
     {
     return randomize(ITensor(i1,std::forward<Inds>(inds)...),"Complex");
     }
-ITensor
-randomTensor(const IndexSet& inds);
+
+template<typename IndexT>
+ITensorT<IndexT>
+randomTensor(const IndexSetT<IndexT>& inds);
 
 ITensor
 matrixTensor(Mat&& M, const Index& i1, const Index& i2);
@@ -197,41 +220,6 @@ void
 write(std::ostream& s, const ITensor& t);
 
 
-//
-//Return copy of a tensor with primeLevels plev1 and plev2 swapped
-//
-//For example, if T has indices i,i' (like a matrix or a site
-//operator) then swapPrime(T,0,1) will have indices i',i 
-//i.e. the transpose of T.
-//
-template <class Tensor>
-Tensor
-swapPrime(Tensor T, int plev1, int plev2,
-          IndexType type = All);
-
-//Find index of tensor A (of optional type t) 
-//which is shared with tensor B
-template<class TensorA, class TensorB> typename 
-TensorA::IndexT
-commonIndex(const TensorA& A, const TensorB& B, IndexType t = All);
-
-//Find index of tensor A (of optional type t) 
-//which is NOT shared by tensor B
-template<class TensorA, class TensorB> typename 
-TensorA::IndexT
-uniqueIndex(const TensorA& A, 
-            const TensorB& B, 
-            IndexType t);
-
-template<class Tensor>
-auto
-findtype(const Tensor& T, IndexType type)
-    {
-    using IndexT = typename Tensor::IndexT;
-    for(auto& i : T.inds())
-        if(i.type()==type) return i;
-    return IndexT();
-    }
 
 //
 // Given Tensors which represent operator matrices
@@ -258,7 +246,6 @@ multSiteOps(ITensorT<IndexT> A, const ITensorT<IndexT>& B)
     A.mapprime(2,1,Site);
     return A;
     }
-
 
 
 } //namespace itensor

@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITREAL_H
 #define __ITENSOR_ITREAL_H
 
-#include "itensor/itdata/itdata.h"
+#include "itensor/matrix/types.h"
 
 namespace itensor {
 
