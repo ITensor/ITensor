@@ -22,6 +22,14 @@ else()
  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 endif()
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  if ("${CMAKE_CL_64}")
+    add_definitions(-D__x86_64=1)
+  else ()
+    add_definitions(-Di386=1)
+  endif()
+endif ()
+
 option (CXX11 OFF)
 if (CXX11) 
     # enable C++11 
