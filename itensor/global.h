@@ -7,7 +7,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <sys/types.h>
-#include <unistd.h>
 #include <fstream>
 #include <complex>
 #include "assert.h"
@@ -18,6 +17,21 @@
 #include <string.h>
 #include <cstring>
 #include "real.h"
+
+#if defined(_MSC_VER)
+#include <process.h>
+#include <io.h>
+#include <direct.h>
+inline char* 
+mkdtemp(char *templat)
+    {
+    char* retval = _mktemp(templat);
+    if (retval) { _mkdir(retval); }
+    return retval;
+    }
+#else
+#include <unistd.h>
+#endif
 
 namespace itensor {
 
@@ -121,6 +135,8 @@ writeToFile(const std::string& fname, const T& t)
     t.write(s); 
     s.close(); 
     }
+
+
 
 //Given a prefix (e.g. pfix == "mydir")
 //and an optional location (e.g. locn == "/var/tmp/")
