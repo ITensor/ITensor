@@ -928,37 +928,37 @@ doTask(const NormNoScale& N, const ITDiag<T>& d)
 Real
 doTask(const NormNoScale& N, const ITCombiner& d) { return 0; }
 
-template<>
-void ITensor::
-scaleOutNorm()
-    {
-    auto nrm = doTask<Real>(NormNoScale{is_},store_);
-    //If norm already 1 return so
-    //we don't have to call MultReal
-    if(fabs(nrm-1.) < 1E-12) return;
-    if(nrm == 0)
-        {
-        scale_ = LogNumber(1.);
-        return;
-        }
-    doTask(MultReal{1./nrm},store_);
-    scale_ *= nrm;
-    }
+//template<>
+//void ITensor::
+//scaleOutNorm()
+//    {
+//    auto nrm = doTask<Real>(NormNoScale{is_},store_);
+//    //If norm already 1 return so
+//    //we don't have to call MultReal
+//    if(fabs(nrm-1.) < 1E-12) return;
+//    if(nrm == 0)
+//        {
+//        scale_ = LogNumber(1.);
+//        return;
+//        }
+//    doTask(MultReal{1./nrm},store_);
+//    scale_ *= nrm;
+//    }
 
-template<>
-void ITensor::
-equalizeScales(ITensor& other)
-    {
-    if(scale_.sign() != 0)
-        {
-        other.scaleTo(scale_);
-        }
-    else //*this is equivalent to zero
-        {
-        fill(0);
-        scale_ = other.scale_;
-        }
-    }
+//template<>
+//void ITensor::
+//equalizeScales(ITensor& other)
+//    {
+//    if(scale_.sign() != 0)
+//        {
+//        other.scaleTo(scale_);
+//        }
+//    else //*this is equivalent to zero
+//        {
+//        fill(0);
+//        scale_ = other.scale_;
+//        }
+//    }
 
 void
 doTask(Conj, ITCplx& d) 

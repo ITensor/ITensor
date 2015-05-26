@@ -38,23 +38,23 @@ class ITensorT
 
     //Construct rank 1 tensor, all elements set to zero
     explicit
-    ITensorT(const IndexT& i1);
+    ITensorT(const IndexT& i1) { }
 
     //Construct rank 2 tensor, all elements set to zero
     ITensorT(const IndexT& i1,
-            const IndexT& i2);
+            const IndexT& i2) { }
 
     //Construct rank n tensor, all elements set to zero
     template <typename... Indices>
     ITensorT(const Index& i1, 
              const Index& i2, 
              const Index& i3, 
-             const Indices&... rest);
+             const Indices&... rest) { }
 
     //Construct rank 0 tensor (scalar), value set to val
     //If val.imag()==0, only Real storage will be used
     explicit
-    ITensorT(Cplx val);
+    ITensorT(Cplx val) { }
 
     //Construct rank n tensor, all
     //elements set to zero except the single
@@ -62,7 +62,7 @@ class ITensorT
     template <typename... IVals>
     explicit
     ITensorT(const indexval_type& iv1, 
-             const IVals&... rest);
+             const IVals&... rest) { }
 
     //
     // Accessor Methods
@@ -81,18 +81,18 @@ class ITensorT
 
     template <typename... IndexVals>
     Real
-    real(IndexVals&&... ivs) const;
+    real(IndexVals&&... ivs) const { return Real{}; }
 
     template <typename... IndexVals>
     Cplx
-    cplx(IndexVals&&... ivs) const;
+    cplx(IndexVals&&... ivs) const { return Cplx{}; }
 
     //Set element at location given by collection
     //of IndexVals. Will not switch storage
     //from Real to Complex unless val.imag()!=0 
     template<typename... IndexVals>
     void
-    set(Cplx val, const IndexVals&... ivs);
+    set(Cplx val, const IndexVals&... ivs) { }
 
     //
     // Index Prime Level Methods
@@ -126,25 +126,25 @@ class ITensorT
     //(such as if z is automatically converted from a Real)
     //then storage will be real only.
     ITensorT&
-    fill(Complex z);
+    fill(Complex z) { return *this; }
 
     //Call a function of the form f()->val once
     //for each element, assign result to each element.
     template <typename Func>
     ITensorT&
-    generate(Func&& f);
+    generate(Func&& f) { return *this; }
 
     //Apply a function of the form f(x)->y
     //to each element x, replacing it with y
     template <typename Func>
     ITensorT&
-    apply(Func&& f);
+    apply(Func&& f) { return *this; }
 
     //Apply a function of the form f(x)->void
     //to each element x.
     template <typename Func>
     const ITensorT&
-    visit(Func&& f) const;
+    visit(Func&& f) const { return *this; }
 
     //
     // Complex number methods
@@ -152,26 +152,18 @@ class ITensorT
 
     //Take complex conjugate of all elements
     ITensorT&
-    conj();
+    conj() { return *this; }
 
     ITensorT&
     dag() { return conj(); }
 
     //Replace data with real part
     ITensorT&
-    takeReal();
+    takeReal() { return *this; }
 
     //Replace data with imaginary part
     ITensorT&
-    takeImag();
-
-    private:
-
-    void
-    scaleOutNorm();
-
-    void
-    equalizeScales(ITensorT& other);
+    takeImag() { return *this; }
 
     public:
 
@@ -195,7 +187,7 @@ class ITensorT
 
     //Provide indices from IndexSet
     explicit
-    ITensorT(const IndexSetT<IndexT>& is);
+    ITensorT(const IndexSetT<IndexT>& is) { }
 
     //Scale factor, used internally for efficient scalar ops.
     //Mostly for developer use; not necessary to explicitly involve
@@ -216,7 +208,7 @@ class ITensorT
     cstore() const { return *store_; }
 
     void 
-    scaleTo(const LogNumber& newscale);
+    scaleTo(const LogNumber& newscale) { }
 
     }; // class ITensorT
 
@@ -238,7 +230,6 @@ operator*=(ITensorT<IndexT>& T, Real fac)
 template<typename IndexT>
 ITensorT<IndexT>& 
 operator/=(ITensorT<IndexT>& T, Real fac) { T.scale()/=fac; return T; }
-
 
 //Negation
 template<typename IndexT>
