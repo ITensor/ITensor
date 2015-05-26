@@ -6,6 +6,7 @@
 #define __ITENSOR_TASK_TYPES_H_
 
 #include "itensor/util/infarray.h"
+#include "itensor/tensor/permute.h"
 
 namespace itensor {
 
@@ -169,6 +170,28 @@ struct FillCplx
 
 struct TakeReal { };
 struct TakeImag { };
+
+struct Contract
+    {
+    const Label &Lind,
+                &Rind;
+
+    const IndexSet &Lis,
+                   &Ris;
+
+    IndexSet Nis; //new IndexSet
+    Real scalefac = NAN;
+
+    Contract(const IndexSet& Lis_,
+             const Label& Lind_,
+             const IndexSet& Ris_,
+             const Label& Rind_) :
+        Lind(Lind_),
+        Rind(Rind_),
+        Lis(Lis_),
+        Ris(Ris_)
+        { }
+    };
 
 
 } //namespace itensor 

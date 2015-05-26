@@ -92,15 +92,15 @@ class ITensorT
     //Contracting product
     //All matching Index pairs automatically contracted
     //Cji = \sum_{k,l} Akjl * Blki
-    //ITensor& 
-    //operator*=(const ITensor& other);
+    ITensorT& 
+    operator*=(const ITensorT& other);
 
     //// Contract with IndexVal
     //// If iv = (J,n), Index J is fixed to it's nth
     //// value and rank decreases by 1
     //// (similar to summing against a Kronecker
     //// delta tensor \delta_{J,n})
-    //ITensor& 
+    //ITensorT& 
     //operator*=(const IndexVal& iv) { return operator*=(ITensor(iv)); } 
 
     ////Multiplication by scalar

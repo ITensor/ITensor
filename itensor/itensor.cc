@@ -88,53 +88,14 @@ computeNewInds(const IndexSet& Lis,
     return newind;
     }
 
-//struct Contract : RegisterFunc<Contract>
+//void
+//doTask(Contract& C,
+//       const ITReal& a1,
+//       const ITCplx& a2)
 //    {
-//    private:
-//    const Label &Lind_,
-//                &Rind_;
-//
-//    const IndexSet &Lis_,
-//                   &Ris_;
-//
-//    //New IndexSet
-//    IndexSet Nis_;
-//    Real scalefac_ = NAN;
-//
-//    public:
-//
-//    Contract(const IndexSet& Lis,
-//             const Label& Lind,
-//             const IndexSet& Ris,
-//             const Label& Rind)
-//        :
-//        Lind_(Lind),
-//        Rind_(Rind),
-//        Lis_(Lis),
-//        Ris_(Ris)
-//        { }
-//
-//    IndexSet
-//    newIndexSet() { return std::move(Nis_); }
-//    Real
-//    scalefac() { return scalefac_; }
-//
-//    void
-//    operator()(const ITReal& a1,
-//               const ITReal& a2);
-//
-//    void
-//    operator()(const ITCplx& a1,
-//               const ITCplx& a2);
-//
-//
-//    void
-//    operator()(const ITReal& a1,
-//               const ITCplx& a2)
-//        {
-//        realCplx(a1,Lis_,Lind_,a2,Ris_,Rind_,true);
-//        }
-//
+//    realCplx(a1,Lis_,Lind_,a2,Ris_,Rind_,true);
+//    }
+
 //    void
 //    operator()(const ITCplx& a1,
 //               const ITReal& a2)
@@ -194,18 +155,18 @@ computeNewInds(const IndexSet& Lis,
 //             const Label& cind,
 //             bool RealOnLeft);
 //
-//    template<typename Data>
-//    void
-//    computeScalefac(Data& dat)
-//        {
-//        scalefac_ = 0;
-//        for(auto elt : dat) scalefac_ += elt*elt;
-//        scalefac_ = std::sqrt(scalefac_);
-//        if(scalefac_ == 0) return;
-//        for(auto& elt : dat) elt /= scalefac_;
-//        }
-//    };
-//
+template<typename Data>
+Real
+computeScalefac(Data& dat)
+    {
+    Real scalefac = 0;
+    for(auto elt : dat) scalefac += elt*elt;
+    scalefac = std::sqrt(scalefac);
+    if(scalefac == 0) return 0;
+    for(auto& elt : dat) elt /= scalefac;
+    return scalefac;
+    }
+  
 //void Contract::
 //operator()(const ITCplx& a1,
 //           const ITCplx& a2)
@@ -346,58 +307,60 @@ computeNewInds(const IndexSet& Lis,
 //    if(rsize > 1) computeScalefac(*nd);
 //    }
 //
-//void Contract::
-//operator()(const ITReal& a1,
-//           const ITReal& a2)
-//    {
-//    //Optimization TODO:
-//    //  Test different scenarios where having sortInds=true or false
-//    //  can improve performance. Having sorted inds can make adding
-//    //  quicker and let contractloop run in parallel more often in principle.
-//    bool sortInds = false; //whether to sort indices of result
-//    contractIS(Lis_,Lind_,Ris_,Rind_,Nis_,sortInds);
-//
-//    //Scalar tensor cases
-//    //if(area(Lis_)==1)
-//    //    {
-//    //    scalefac_ = a1[0];
-//    //    assignPointerRtoL();
-//    //    return;
-//    //    }
-//    //if(area(Ris_)==1)
-//    //    {
-//    //    scalefac_ = a2[0];
-//    //    return;
-//    //    }
-//    
-//    Label Nind(Nis_.r(),0);
-//    for(auto i : count(Nis_.r()))
-//        {
-//        auto j = findindex(Lis_,Nis_[i]);
-//        if(j >= 0)
-//            {
-//            Nind[i] = Lind_[j];
-//            }
-//        else
-//            {
-//            j = findindex(Ris_,Nis_[i]);
-//            Nind[i] = Rind_[j];
-//            }
-//        }
-//
-//    //PRI(Lind_);
-//    //PRI(Rind_);
-//    //PRI(Nind);
-//
-//    auto rsize = area(Nis_);
-//    auto nd = makeNewData<ITReal>(rsize,0.);
-//    auto t1 = makeTensorRef(a1.data(),Lis_),
-//         t2 = makeTensorRef(a2.data(),Ris_);
-//    auto tr = makeTensorRef(nd->data(),Nis_);
-//    contractloop(t1,Lind_,t2,Rind_,tr,Nind);
-//
-//    if(rsize > 1) computeScalefac(*nd);
-//    }
+void
+doTask(Contract& C,
+       const ITReal& a1,
+       const ITReal& a2,
+       ManagePtr& mp)
+    {
+    //Optimization TODO:
+    //  Test different scenarios where having sortInds=true or false
+    //  can improve performance. Having sorted inds can make adding
+    //  quicker and let contractloop run in parallel more often in principle.
+    bool sortInds = false; //whether to sort indices of result
+    contractIS(C.Lis,C.Lind,C.Ris,C.Rind,C.Nis,sortInds);
+
+    //Scalar tensor cases
+    //if(area(Lis_)==1)
+    //    {
+    //    scalefac_ = a1[0];
+    //    assignPointerRtoL();
+    //    return;
+    //    }
+    //if(area(Ris_)==1)
+    //    {
+    //    scalefac_ = a2[0];
+    //    return;
+    //    }
+    
+    Label Nind(C.Nis.r(),0);
+    for(auto i : count(C.Nis.r()))
+        {
+        auto j = findindex(C.Lis,C.Nis[i]);
+        if(j >= 0)
+            {
+            Nind[i] = C.Lind[j];
+            }
+        else
+            {
+            j = findindex(C.Ris,C.Nis[i]);
+            Nind[i] = C.Rind[j];
+            }
+        }
+
+    //PRI(C.Lind);
+    //PRI(C.Rind);
+    //PRI(Nind);
+
+    auto t1 = makeTensorRef(a1.data(),C.Lis),
+         t2 = makeTensorRef(a2.data(),C.Ris);
+    auto rsize = area(C.Nis);
+    auto nd = mp.makeNewData<ITReal>(rsize,0.);
+    auto tr = makeTensorRef(nd->data(),C.Nis);
+    contractloop(t1,C.Lind,t2,C.Rind,tr,Nind);
+
+    if(rsize > 1) C.scalefac = computeScalefac(*nd);
+    }
 //
 //void Contract::
 //diagDense(const ITDiag<Real>& d,
@@ -670,57 +633,58 @@ computeNewInds(const IndexSet& Lis,
 //    }
 
 
-//ITensor& ITensor::
-//operator*=(const ITensor& other)
-//    {
-//    if(!(*this) || !other)
-//        Error("Default constructed ITensor in product");
-//
-//    if(this == &other)
-//        return operator=( ITensor(sqr(norm(*this))) );
-//
-//    const auto& Lis = is_;
-//    const auto& Ris = other.is_;
-//
-//    Label Lind,
-//          Rind;
-//    //auto ncont =
-//    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
-//
-//    //Check if other is a scalar (modulo m==1 inds)
-//    //if(Ris.rn() == 0)
-//    //    {
-//    //    auto nuniq = Lis.r()+Ris.r()-2*ncont;
-//    //    operator*=(other.cplx());
-//    //    is_ = IndexSet(computeNewInds(Lis,Lind,Ris,Rind,nuniq));
-//    //    return *this;
-//    //    }
-//    //Check if this is a scalar (modulo m==1 inds)
-//    //---> This case is problematic to implement this way.
-//    //     For example, what if other has ITCombiner storage?
-//    //if(Lis.rn() == 0)
-//    //    {
-//    //    auto nuniq = Lis.r()+Ris.r()-2*ncont;
-//    //    auto newind = computeNewInds(Lis,Lind,Ris,Rind,nuniq);
-//    //    operator=(other*cplx());
-//    //    is_ = IndexSet(std::move(newind));
-//    //    return *this;
-//    //    }
-//
-//    auto C = applyFunc<Contract>(store_,other.store_,Lis,Lind,Ris,Rind);
-//
-//    is_ = C.newIndexSet();
-//
-//    scale_ *= other.scale_;
-//    if(!std::isnan(C.scalefac())) scale_ *= C.scalefac();
-//
-//#ifdef DEBUG
-//    //Check for duplicate indices
-//    detail::check(is_);
-//#endif
-//
-//    return *this;
-//    }
+template<>
+ITensor& ITensor::
+operator*=(const ITensor& other)
+    {
+    if(!(*this) || !other)
+        Error("Default constructed ITensor in product");
+
+    if(this == &other)
+        return operator=( ITensor(sqr(norm(*this))) );
+
+    const auto& Lis = is_;
+    const auto& Ris = other.is_;
+
+    Label Lind,
+          Rind;
+    //auto ncont =
+    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
+
+    //Check if other is a scalar (modulo m==1 inds)
+    //if(Ris.rn() == 0)
+    //    {
+    //    auto nuniq = Lis.r()+Ris.r()-2*ncont;
+    //    operator*=(other.cplx());
+    //    is_ = IndexSet(computeNewInds(Lis,Lind,Ris,Rind,nuniq));
+    //    return *this;
+    //    }
+    //Check if this is a scalar (modulo m==1 inds)
+    //---> This case is problematic to implement this way.
+    //     For example, what if other has ITCombiner storage?
+    //if(Lis.rn() == 0)
+    //    {
+    //    auto nuniq = Lis.r()+Ris.r()-2*ncont;
+    //    auto newind = computeNewInds(Lis,Lind,Ris,Rind,nuniq);
+    //    operator=(other*cplx());
+    //    is_ = IndexSet(std::move(newind));
+    //    return *this;
+    //    }
+
+    auto C = doTask(Contract{Lis,Lind,Ris,Rind},store_,other.store_);
+
+    is_ = std::move(C.Nis);
+
+    scale_ *= other.scale_;
+    if(!std::isnan(C.scalefac)) scale_ *= C.scalefac;
+
+#ifdef DEBUG
+    //Check for duplicate indices
+    detail::check(is_);
+#endif
+
+    return *this;
+    }
 
 void
 doTask(const FillReal& f, ITReal& d)
