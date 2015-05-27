@@ -34,7 +34,7 @@ class LocalOp
     {
     public:
 
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
     //
     // Constructors

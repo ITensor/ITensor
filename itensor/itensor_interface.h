@@ -275,7 +275,7 @@ mapprime(ITensorT<IndexT> A,
 
 template<typename IndexT>
 bool
-hasindex(const ITensorT<IndexT>& T, const IndexT& I)
+hasindex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type& I)
     {
     return detail::contains(T.inds(),I);
     }

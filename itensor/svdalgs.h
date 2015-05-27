@@ -163,7 +163,7 @@ Spectrum
 svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V, 
     Args args)
     {
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
 #ifdef DEBUG
     if(!U && !V) 
