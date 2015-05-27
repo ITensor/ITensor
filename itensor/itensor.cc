@@ -754,14 +754,6 @@ scaleTo(const LogNumber& newscale)
     }
 
 void
-plusEqData(Real fac, Real *d1, const Real *d2, LAPACK_INT size)
-    {
-    LAPACK_INT inc = 1;
-    daxpy_wrapper(&size,&fac,d2,&inc,d1,&inc);
-    }
-
-
-void
 doTask(const PlusEQ<Index>& P,
        ITReal& a1,
        const ITReal& a2)
@@ -771,7 +763,7 @@ doTask(const PlusEQ<Index>& P,
 #endif
     if(!P.hasPerm())
         {
-        plusEqData(P.fac,a1.data(),a2.data(),a1.size());
+        daxpy_wrapper(a1.size(),P.fac,a2.data(),1,a1.data(),1);
         }
     else
         {
@@ -791,7 +783,7 @@ doTask(const PlusEQ<Index>& P,
     if(a1.size() != a2.size()) Error("Mismatched sizes in plusEq");
 #endif
     if(a1.allSame() || a2.allSame()) Error("ITDiag plusEq allSame case not implemented");
-    plusEqData(P.fac,a1.data(),a2.data(),a1.size());
+    daxpy_wrapper(a1.size(),P.fac,a2.data(),1,a1.data(),1);
     }
 
 ITensor&

@@ -212,18 +212,18 @@ void F77NAME(zgeev)(char *jobvl, char *jobvr, LAPACK_INT *n, LAPACK_COMPLEX *a,
 // Y += alpha*X
 //
 void inline
-daxpy_wrapper(LAPACK_INT* n,        //number of elements of X,Y
-              LAPACK_REAL* alpha,   //scale factor
+daxpy_wrapper(LAPACK_INT n,        //number of elements of X,Y
+              LAPACK_REAL alpha,   //scale factor
               const LAPACK_REAL* X, //pointer to head of vector X
-              LAPACK_INT* incx,     //increment with which to step through X
+              LAPACK_INT incx,     //increment with which to step through X
               LAPACK_REAL* Y,       //pointer to head of vector Y
-              LAPACK_INT* incy)     //increment with which to step through Y
+              LAPACK_INT incy)     //increment with which to step through Y
     {
 #ifdef PLATFORM_macos
-    cblas_daxpy(*n,*alpha,X,*incx,Y,*incy);
+    cblas_daxpy(n,alpha,X,incx,Y,incy);
 #else
     auto Xnc = const_cast<LAPACK_REAL*>(X);
-    F77NAME(daxpy)(n,alpha,Xnc,incx,Y,incy);
+    F77NAME(daxpy)(&n,&alpha,Xnc,&incx,Y,&incy);
 #endif
     }
 
