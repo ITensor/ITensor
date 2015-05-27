@@ -102,7 +102,7 @@ computeScalefac(Data& dat)
     }
   
 void
-doTask(Contract& C,
+doTask(Contract<Index>& C,
        const ITCplx& a1,
        const ITCplx& a2,
        ManagePtr& mp)
@@ -250,7 +250,7 @@ realCplx(const ITReal& R,
 
 
 void
-doTask(Contract& C,
+doTask(Contract<Index>& C,
        const ITReal& a1,
        const ITCplx& a2,
        ManagePtr& mp)
@@ -259,7 +259,7 @@ doTask(Contract& C,
     }
 
 void
-doTask(Contract& C,
+doTask(Contract<Index>& C,
        const ITCplx& a1,
        const ITReal& a2,
        ManagePtr& mp)
@@ -269,7 +269,7 @@ doTask(Contract& C,
 
 
 void
-doTask(Contract& C,
+doTask(Contract<Index>& C,
        const ITReal& a1,
        const ITReal& a2,
        ManagePtr& mp)
@@ -477,7 +477,7 @@ diagDense(const ITDiag<Real>& d,
     }
 
 void
-doTask(Contract& C,
+doTask(Contract<Index>& C,
        const ITReal& t,
        const ITDiag<Real>& d,
        ManagePtr& mp)
@@ -486,7 +486,7 @@ doTask(Contract& C,
     diagDense(d,C.Ris,C.Rind,t,C.Lis,C.Lind,C.Nis,mp,true);
     }
 void
-doTask(Contract& C,
+doTask(Contract<Index>& C,
        const ITDiag<Real>& d,
        const ITReal& t,
        ManagePtr& mp)
@@ -615,7 +615,7 @@ combine(const ITReal& d,
     }
 
 void
-doTask(Contract& C,
+doTask(Contract<Index>& C,
        const ITReal& d,
        const ITCombiner& cmb,
        ManagePtr& mp)
@@ -623,7 +623,7 @@ doTask(Contract& C,
     combine(d,C.Lis,C.Ris,C.Nis,mp);
     }
 void
-doTask(Contract& C,
+doTask(Contract<Index>& C,
        const ITCombiner& cmb,
        const ITReal& d,
        ManagePtr& mp)
@@ -674,7 +674,7 @@ operator*=(ITensor& A, const ITensor& B)
     //    }
 
     auto nstore = A.store();
-    auto C = doTask(Contract{Lis,Lind,Ris,Rind},nstore,B.store());
+    auto C = doTask(Contract<Index>{Lis,Lind,Ris,Rind},nstore,B.store());
 
     auto nscale = A.scale() * B.scale();
     if(!std::isnan(C.scalefac)) nscale *= C.scalefac;
@@ -783,7 +783,7 @@ plusEqData(Real fac, Real *d1, const Real *d2, LAPACK_INT size)
 
 
 void
-doTask(const PlusEQ& P,
+doTask(const PlusEQ<Index>& P,
        ITReal& a1,
        const ITReal& a2)
     {
@@ -804,7 +804,7 @@ doTask(const PlusEQ& P,
     }
 
 void
-doTask(const PlusEQ& P,
+doTask(const PlusEQ<Index>& P,
        ITDiag<Real>& a1,
        const ITDiag<Real>& a2)
     {
@@ -823,7 +823,7 @@ operator+=(ITensor& A, const ITensor& B)
     if(&A == &B) return operator*=(A,2.);
     if(A.scale().isZero()) return A.operator=(B);
 
-    PlusEQ::permutation P(A.inds().size());
+    PlusEQ<Index>::permutation P(A.inds().size());
 #ifdef DEBUG
     try {
         calc_permutation(B.inds(),A.inds(),P);
@@ -850,11 +850,11 @@ operator+=(ITensor& A, const ITensor& B)
 
     if(isTrivial(P))
         {
-        doTask(PlusEQ{scalefac},A.store(),B.store());
+        doTask(PlusEQ<Index>{scalefac},A.store(),B.store());
         }
     else
         {
-        doTask(PlusEQ{P,A.inds(),B.inds(),scalefac},A.store(),B.store());
+        doTask(PlusEQ<Index>{P,A.inds(),B.inds(),scalefac},A.store(),B.store());
         }
 
     return A;

@@ -171,13 +171,16 @@ struct FillCplx
 struct TakeReal { };
 struct TakeImag { };
 
+template<typename IndexT>
 struct PlusEQ
     {
     using permutation = Permutation;
+    using index_type = IndexT;
+    using iset_type = IndexSetT<index_type>;
     private:
     const Permutation *perm_ = nullptr;
-    const IndexSet *is1_ = nullptr,
-                   *is2_ = nullptr;
+    const iset_type *is1_ = nullptr,
+                    *is2_ = nullptr;
     public:
 
     Real fac = NAN;
@@ -187,8 +190,8 @@ struct PlusEQ
         { }
 
     PlusEQ(const Permutation& P,
-           const IndexSet& is1,
-           const IndexSet& is2,
+           const iset_type& is1,
+           const iset_type& is2,
            Real fac_) :
         perm_(&P),
         is1_(&is1),
@@ -202,28 +205,31 @@ struct PlusEQ
     const Permutation&
     perm() const { return *perm_; }
 
-    const IndexSet&
+    const iset_type&
     is1() const { return *is1_; }
 
-    const IndexSet&
+    const iset_type&
     is2() const { return *is2_; }
     };
 
 
+template<typename IndexT>
 struct Contract
     {
+    using index_type = IndexT;
+    using iset_type = IndexSetT<IndexT>;
     const Label &Lind,
                 &Rind;
 
-    const IndexSet &Lis,
-                   &Ris;
+    const iset_type &Lis,
+                    &Ris;
 
-    IndexSet Nis; //new IndexSet
+    iset_type Nis; //new IndexSet
     Real scalefac = NAN;
 
-    Contract(const IndexSet& Lis_,
+    Contract(const iset_type& Lis_,
              const Label& Lind_,
-             const IndexSet& Ris_,
+             const iset_type& Ris_,
              const Label& Rind_) :
         Lind(Lind_),
         Rind(Rind_),
