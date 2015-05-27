@@ -247,7 +247,6 @@ multSiteOps(ITensorT<IndexT> A, const ITensorT<IndexT>& B)
     return A;
     }
 
-
 } //namespace itensor
 
 //See file itensor.ih for template/inline method implementations

@@ -10,6 +10,8 @@
 namespace itensor {
 
 struct ITData;
+template <class DType>
+struct ITDataType;
 
 //
 // IndexT - interface template for ITensor and IQTensor
@@ -20,11 +22,12 @@ class ITensorT
     {
     public:
     using index_type = IndexT;
-    using indexval_type = typename IndexT::indexval_type;
+    using indexval_type = typename index_type::indexval_type;
+    using indexset_type = IndexSetT<IndexT>;
     using storage_ptr = std::shared_ptr<ITData>;
     using const_storage_ptr = std::shared_ptr<const ITData>;
     private:
-    IndexSetT<IndexT> is_;
+    indexset_type is_;
     storage_ptr store_;
     LogNumber scale_;
     public:
@@ -63,6 +66,8 @@ class ITensorT
     explicit
     ITensorT(const indexval_type& iv1, 
              const IVals&... rest) { }
+
+    operator ITensorT<Index>() const { return *this; }
 
     //
     // Accessor Methods
@@ -179,7 +184,7 @@ class ITensorT
     template <class DataType>
     ITensorT(IndexSetT<IndexT> iset,
              DataType&& dat,
-             const LogNumber& scale = 1) { }
+             const LogNumber& scale = 1);
 
     ITensorT(IndexSetT<IndexT> iset,
              storage_ptr&& pdat,
@@ -211,6 +216,31 @@ class ITensorT
     scaleTo(const LogNumber& newscale) { }
 
     }; // class ITensorT
+
+template<typename IndexT>
+ITensorT<IndexT>::
+ITensorT(indexset_type iset,
+        storage_ptr&& pdat,
+        const LogNumber& scale)
+    :
+    is_(std::move(iset)),
+    store_(std::move(pdat)),
+    scale_(scale)
+    { }
+
+template<typename IndexT>
+template <class DataType>
+ITensorT<IndexT>::
+ITensorT(indexset_type iset,
+         DataType&& dat,
+         const LogNumber& scale) :
+    is_(std::move(iset)),
+    store_(std::make_shared<ITDataType<std::decay_t<DataType>>>(std::move(dat))),
+    scale_(scale)
+    {
+    static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
+                  "Error: cannot pass lvalues to ITensorT(...,ITDataType&& dat,...) constructor");
+    }
 
 //Multiplication by real scalar
 template<typename IndexT>

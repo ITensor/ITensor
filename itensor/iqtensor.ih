@@ -8,49 +8,33 @@
 namespace itensor {
 
 template<>
-IQTensor::
-ITensorT(const IQIndex& i1) :
-    is_(i1),
-    scale_(1.)
-    { }
-
-template<>
-IQTensor::
-ITensorT(const IQIndex& i1,
-         const IQIndex& i2) :
-    is_(i1,i2),
-    scale_(1.)
-    { }
-
-template<>
 template<typename... IQIndices>
 IQTensor::
 ITensorT(const IQIndex& i1,
          const IQIndex& i2,
          const IQIndex& i3,
-         const IQIndices&... rest) :
-    is_(i1,i2,i3,rest...),
+         const IQIndices&... rest)
+  : is_(i1,i2,i3,rest...),
     scale_(1.)
     { }
 
-//TODO: need to implement this
-//template<>
-//template <typename... IQIVals>
-//IQTensor::
-//ITensorT(const IQIndexVal& iv1,
-//         const IQIVals&... rest) :
-//    scale_(1.)
-//    { 
-//    const size_t size = 1+sizeof...(rest);
-//    auto ivs = std::array<IQIndexVal,size>{{iv1,rest...}};
-//    std::array<IQIndex,size> inds;
-//    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
-//    is_ = IQIndexSet(inds);
-//    QN div;
-//    for(auto& iv : ivs) div += iv.qn()*iv.index.dir();
-//    store_ = std::make_shared<ITDataType<IQTData>>(is_,div);
-//    set(1.,iv1,rest...);
-//    }
+template<> 
+template <typename... IQIVals>
+IQTensor::
+ITensorT(const IQIndexVal& iv1,
+         const IQIVals&... rest)
+  : scale_(1.)
+    { 
+    const size_t size = 1+sizeof...(rest);
+    auto ivs = std::array<IQIndexVal,size>{{iv1,rest...}};
+    std::array<IQIndex,size> inds;
+    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
+    is_ = IQIndexSet(inds);
+    QN div;
+    for(auto& iv : ivs) div += iv.qn()*iv.index.dir();
+    store_ = std::make_shared<ITDataType<IQTData>>(is_,div);
+    set(1.,iv1,rest...);
+    }
 
 template<size_t size>
 Cplx

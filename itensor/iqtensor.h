@@ -15,12 +15,16 @@ namespace itensor {
 
 using IQTensor = ITensorT<IQIndex>;
 
+
 template<>
 IQTensor& IQTensor::conj();
+
 template<>
 IQTensor& IQTensor::dag();
+
 template<>
-void IQTensor::scaleTo(const LogNumber&);
+void 
+IQTensor::scaleTo(const LogNumber&);
 
 //Contracting product
 //All matching Index pairs automatically contracted
@@ -81,8 +85,13 @@ operator-(IQTensor A, const IQTensor& B) { A -= B; return A; }
 IQTensor inline
 operator-(IQTensor T) { T *= -1; return T; }
 
+
 ITensor 
 toITensor(const IQTensor& T);
+
+template<> inline
+IQTensor::
+operator ITensor() const { return toITensor(*this); }
 
 // Read IQTensor from binary input stream.
 void inline
@@ -176,14 +185,14 @@ randomTensor(const IQIndexVal& iv1, IndVals&&... ivs)
     {
     return randomize(IQTensor(iv1,std::forward<IndVals>(ivs)...));
     }
-//template <typename... Inds>
-//IQTensor
-//randomTensor(const QN& q, const IQIndex& i1, Inds&&... inds)
-//    {
-//    return randomize(IQTensor(q,i1,std::forward<Inds>(inds)...));
-//    }
-
-
+template <typename... Inds>
+IQTensor
+randomTensor(const QN& q, const IQIndex& i1, Inds&&... inds)
+    {
+    auto is = IQIndexSet{i1,std::forward<Inds>(inds)...};
+    auto dat = IQTData{is,q};
+    return randomize(IQTensor(std::move(is),std::move(dat)));
+    }
 
 std::ostream& 
 operator<<(std::ostream & s, const IQTensor &t);

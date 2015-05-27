@@ -180,6 +180,7 @@ struct CProps
     bool
     checkACsameord() const
         {
+        if(size_t(Austart) >= ai.size()) return true;
         auto aCind = AtoC(Austart);
         using size_type = decltype(ai.size());
         for(size_type i = 0; i < ai.size(); ++i) 
@@ -194,6 +195,7 @@ struct CProps
     bool
     checkBCsameord() const
         {
+        if(size_t(Bustart) >= bi.size()) return true;
         auto bCind = BtoC(Bustart);
         using size_type = decltype(bi.size());
         for(size_type i = 0; i < bi.size(); ++i) 

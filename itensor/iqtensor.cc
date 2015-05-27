@@ -51,6 +51,20 @@ make_indexdim(const IQIndexSet& is, const Indexable& ind)
     { return IndexDim<Indexable>(is,ind); }
 
 
+template<> IQTensor::
+ITensorT(const IQIndex& i1) :
+    is_(i1),
+    scale_(1.)
+    { }
+
+template<> IQTensor::
+ITensorT(const IQIndex& i1,
+         const IQIndex& i2) :
+    is_(i1,i2),
+    scale_(1.)
+    { }
+
+
 template<>
 IQTensor::
 ITensorT(Complex val) 
@@ -606,6 +620,9 @@ operator+=(IQTensor& T, const ITensor& t)
     return T;
     }
 
+void
+doTask(Conj, const IQTData& d) { }
+
 template<>
 IQTensor& IQTensor::
 conj()
@@ -844,6 +861,9 @@ norm(const IQTensor& T)
 IQTensor
 randomize(IQTensor T, const Args& args)
     {
+#ifdef DEBUG
+    if(!T) Error("IQTensor is default initialized");
+#endif
     T.generate(detail::quickran);
     return T;
     }

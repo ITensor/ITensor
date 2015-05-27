@@ -8,11 +8,10 @@
 #include <vector>
 #include "itensor/matrix/types.h"
 #include "itensor/indexset.h"
+#include "itensor/iqindex.h"
 
 namespace itensor {
 
-class IQIndex;
-class QN;
 class IQTData;
 
 QN
@@ -94,6 +93,75 @@ class IQTData
     ~IQTData() { }
 
     };
+
+template<typename Indexable>
+const Real* IQTData::
+getBlock(const IQIndexSet& is,
+         const Indexable& block_ind) const
+    {
+    auto r = long(block_ind.size());
+    if(r == 0) return data.data();
+#ifdef DEBUG
+    if(is.r() != r) Error("Mismatched size of IQIndexSet and block_ind in get_block");
+#endif
+    long ii = 0;
+    for(auto i = r-1; i > 0; --i)
+        {
+        ii += block_ind[i];
+        ii *= is[i-1].nindex();
+        }
+    ii += block_ind[0];
+    //Do binary search to see if there
+    //is a block with block index ii
+    auto boff = offsetOf(ii);
+    if(boff >= 0)
+        {
+        return data.data()+boff;
+        }
+    return nullptr;
+    }
+
+template<typename Indexable>
+const Real* IQTData::
+getElt(const IQIndexSet& is,
+       const Indexable& ind) const
+    {
+    auto r = long(ind.size());
+    if(r == 0) return data.data();
+#ifdef DEBUG
+    if(is.r() != r) Error("Mismatched size of IQIndexSet and elt_ind in get_block");
+#endif
+    long bind = 0, //block index (total)
+         bstr = 1, //block stride so far
+         eoff = 0, //element offset within block
+         estr = 1; //element stride
+    for(auto i = 0; i < r; ++i)
+        {
+        auto& I = is[i];
+        long block_subind = 0,
+             elt_subind = ind[i];
+        while(elt_subind >= I[block_subind].m()) //elt_ind 0-indexed
+            {
+            elt_subind -= I[block_subind].m();
+            ++block_subind;
+            }
+        bind += block_subind*bstr;
+        bstr *= I.nindex();
+        eoff += elt_subind*estr;
+        estr *= I[block_subind].m();
+        }
+    //Do a binary search (equal_range) to see
+    //if there is a block with block index "bind"
+    auto boff = offsetOf(bind);
+    if(boff >= 0)
+        {
+#ifdef DEBUG
+        if(size_t(boff+eoff) >= data.size()) Error("get_elt out of range");
+#endif
+        return data.data()+boff+eoff;
+        }
+    return nullptr;
+    }
 
 } //namespace itensor
 

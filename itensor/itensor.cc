@@ -24,8 +24,7 @@ namespace itensor {
 template<>
 ITensor::
 ITensorT(const Index& i1) 
-    :
-    is_(i1),
+  : is_(i1),
     store_(std::make_shared<ITDataType<ITReal>>(i1.m(),0.)),
     scale_(1.)
 	{ }
@@ -34,8 +33,7 @@ ITensorT(const Index& i1)
 template<>
 ITensor::
 ITensorT(const Index& i1,const Index& i2) 
-    :
-    is_(i1,i2),
+  : is_(i1,i2),
     store_(std::make_shared<ITDataType<ITReal>>(i1.m()*i2.m(),0.)),
     scale_(1.)
 	{ }
@@ -43,8 +41,7 @@ ITensorT(const Index& i1,const Index& i2)
 template<>
 ITensor::
 ITensorT(Cplx val) 
-    :
-    scale_(1.)
+  : scale_(1.)
     { 
     if(val.imag() == 0)
         store_ = std::make_shared<ITDataType<ITReal>>(1,val.real());
@@ -56,17 +53,6 @@ ITensorT(Cplx val)
     //    store_ = std::make_shared<ITDataType<ITDiag<Cplx>>>(val);
     }
 
-template<>
-ITensor::
-ITensorT(IndexSet iset,
-        storage_ptr&& pdat,
-        const LogNumber& scale)
-    :
-    is_(std::move(iset)),
-    store_(std::move(pdat)),
-    scale_(scale)
-    {
-    }
 
 vector<Index>
 computeNewInds(const IndexSet& Lis,

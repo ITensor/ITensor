@@ -24,20 +24,6 @@ ITensorT(const Index& i1,
     scale_(1.)
 	{ }
 
-template<>
-template <class DataType>
-ITensor::
-ITensorT(IndexSet iset,
-         DataType&& dat,
-         const LogNumber& scale)
-    :
-    is_(std::move(iset)),
-    store_(std::make_shared<ITDataType<std::decay_t<DataType>>>(std::move(dat))),
-    scale_(scale)
-    {
-    static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
-                  "Error: cannot pass lvalues to ITensor(ITDataType&& dat,...) constructor");
-    }
 
 template<>
 inline ITensor::
@@ -354,6 +340,9 @@ randomTensor(const IndexSetT<IndexT>& inds)
     {
     return randomize(ITensorT<IndexT>{inds});
     }
+
+void
+doTask(Conj,const ITCombiner& d);
 
 } //namespace itensor
 

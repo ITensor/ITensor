@@ -28,7 +28,7 @@ struct FuncBase
 
     template <typename T>
     void
-    applyTo(T& t) { throw ITError("ITData subtype not registered."); }
+    applyTo(T& t) { Error("ITData subtype not registered."); }
     };
 
 struct ITData
@@ -147,7 +147,7 @@ class ManagePtr
     parg1() 
         { 
 #ifdef DEBUG
-        if(!parg1_) throw std::runtime_error("Attempt to dereference nullptr");
+        if(!parg1_) Error("Attempt to dereference nullptr");
 #endif
         return *parg1_; 
         }
@@ -157,7 +157,7 @@ class ManagePtr
     parg2() 
         { 
 #ifdef DEBUG
-        if(!parg2_) throw std::runtime_error("Attempt to dereference nullptr");
+        if(!parg2_) Error("Attempt to dereference nullptr");
 #endif
         return *parg2_; 
         }
@@ -166,7 +166,7 @@ class ManagePtr
     arg2() 
         { 
 #ifdef DEBUG
-        if(!arg2_) throw std::runtime_error("Attempt to dereference nullptr");
+        if(!arg2_) Error("Attempt to dereference nullptr");
 #endif
         return *arg2_; 
         }
@@ -350,7 +350,7 @@ template <typename Ret, typename Task, typename Storage>
 Ret
 callDoTask_Impl(long l, Task& t, Storage& s)
     {
-    throw std::runtime_error("1 parameter doTask not defined for specified task or data type");
+    Error("1 parameter doTask not defined for specified task or data type");
     return Ret{};
     }
 //(3) This is preferred more than version (4) above
@@ -386,7 +386,7 @@ callDoTask_Impl(int i, Task& t, Storage& s, ManagePtr& mp)
     }
 //This version of callDoTask attempts "return doTask(t,s,mp);"
 //- If doTask(t,s,mp) not defined, tries calling doTask(t,s)
-//  then throws an exception if that is not defined
+//  then aborts if that is not defined
 //  (this converts what would otherwise be 
 //  a compile-time error into a run-time error)
 //- If doTask(t,s,mp) or doTask(t,s) defined but 
@@ -447,7 +447,7 @@ template <typename Ret, typename Task, typename D1, typename D2>
 Ret
 callDoTask_Impl(long l, Task& t, D1& d1, const D2& d2)
     {
-    throw std::runtime_error("2 parameter doTask not defined for specified task or data type");
+    Error("2 parameter doTask not defined for specified task or data type");
     return Ret{};
     }
 //(3) This is preferred more than version (4) above
@@ -523,6 +523,12 @@ Ret
 cloneDoTask(Task& t, const D1& d1, const D2& d2, ManagePtr& mp)
     {
     return cloneDoTask_Case1ConstMP<Ret,Task,D1,D2>(t,d1,d2,mp,0);
+    }
+
+void inline
+check(const CPData& p)
+    {
+    if(!p) Error("doTask called on unallocated store pointer");
     }
 
 } //namespace detail
@@ -659,6 +665,9 @@ ReturnType
 doTask(Task&& t,
        const CPData& arg)
     {
+#ifdef DEBUG
+    detail::check(arg);
+#endif
     RegisterTask<OneArg,Task,ReturnType> r(std::forward<Task>(t));
     arg->plugInto(r);
     return std::move(r.getReturn());
@@ -668,6 +677,9 @@ Task
 doTask(Task&& t,
        const CPData& arg)
     {
+#ifdef DEBUG
+    detail::check(arg);
+#endif
     RegisterTask<OneArg,Task,Void> r(std::forward<Task>(t));
     arg->plugInto(r);
     return std::move(r.getTask());
@@ -678,6 +690,9 @@ ReturnType
 doTask(Task&& t,
        PData& arg)
     {
+#ifdef DEBUG
+    detail::check(arg);
+#endif
     RegisterTask<OneArg,Task,ReturnType> r(std::forward<Task>(t),&arg);
     arg->plugInto(r);
     return std::move(r.getReturn());
@@ -687,6 +702,9 @@ Task
 doTask(Task&& t,
        PData& arg)
     {
+#ifdef DEBUG
+    detail::check(arg);
+#endif
     RegisterTask<OneArg,Task,Void> r(std::forward<Task>(t),&arg);
     arg->plugInto(r);
     return std::move(r.getTask());
@@ -698,6 +716,10 @@ doTask(Task&& t,
        const CPData& arg1,
        const CPData& arg2)
     {
+#ifdef DEBUG
+    detail::check(arg1);
+    detail::check(arg2);
+#endif
     RegisterTask<TwoArgs,Task,ReturnType> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getReturn());
@@ -708,6 +730,10 @@ doTask(Task&& t,
        const CPData& arg1,
        const CPData& arg2)
     {
+#ifdef DEBUG
+    detail::check(arg1);
+    detail::check(arg2);
+#endif
     RegisterTask<TwoArgs,Task,Void> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getTask());
@@ -719,6 +745,10 @@ doTask(Task&& t,
        PData& arg1,
        const CPData& arg2)
     {
+#ifdef DEBUG
+    detail::check(arg1);
+    detail::check(arg2);
+#endif
     RegisterTask<TwoArgs,Task,ReturnType> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getReturn());
@@ -729,6 +759,10 @@ doTask(Task&& t,
        PData& arg1,
        const CPData& arg2)
     {
+#ifdef DEBUG
+    detail::check(arg1);
+    detail::check(arg2);
+#endif
     RegisterTask<TwoArgs,Task,Void> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getTask());
@@ -740,6 +774,9 @@ doTask(Task&& t,
        PData& arg1,
        const ITData& arg2)
     {
+#ifdef DEBUG
+    detail::check(arg1);
+#endif
     RegisterTask<TwoArgs,Task,ReturnType> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getReturn());
@@ -750,6 +787,9 @@ doTask(Task&& t,
        PData& arg1,
        const ITData& arg2)
     {
+#ifdef DEBUG
+    detail::check(arg1);
+#endif
     RegisterTask<TwoArgs,Task,Void> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getTask());
