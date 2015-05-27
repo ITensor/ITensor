@@ -65,23 +65,24 @@ ITensorT(const IndexVal& iv1,
     set(1.,iv1,rest...);
     }
 
-template<> 
-template <typename... IndexVals>
-Cplx ITensor::
-cplx(IndexVals&&... ivs) const
+template<IndexT> 
+template <typename... IVs>
+Cplx ITensorT<IndexT>::
+cplx(IVs&&... ivs) const
     {
+    using indexval_type = typename IndexT::indexval_type;
     constexpr size_t size = sizeof...(ivs);
-    std::array<IndexVal,size> vals{{static_cast<IndexVal>(ivs)...}};
+    auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(ivs)...}};
 #ifdef DEBUG
-    if(!*this) Error("ITensor is default constructed");
+    if(!*this) Error("tensor is default constructed");
     size_t nsize = 0;
     for(auto& iv : vals) if(iv.index.m() > 1) ++nsize;
     if(nsize != size_t(inds().rn())) 
         Error(format("Wrong number of m>1 IndexVals passed to real/cplx (expected %d, got %d)",inds().rn(),nsize));
 #endif
-    std::array<long,size> inds;
-    detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.val-1; });
-    auto z = doTask<Cplx>(GetElt<size>(is_,inds),store_);
+    GetElt<size,IndexT>::Inds inds;
+    detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
+    auto z = doTask<Cplx>(GetElt<size,IndexT>(is_,inds),store_);
 	try {
 	    return z*scale_.real(); 
 	    }
@@ -98,37 +99,37 @@ cplx(IndexVals&&... ivs) const
     return Cplx(NAN,NAN);
     }
 
-template<>
-template <typename... IndexVals>
-Real ITensor::
-real(IndexVals&&... ivs) const
+template<typename IndexT>
+template <typename... IVals>
+Real ITensorT<IndexT>::
+real(IVals&&... ivs) const
     {
-    auto z = cplx(std::forward<IndexVals>(ivs)...);
+    auto z = cplx(std::forward<IVals>(ivs)...);
     if(fabs(z.imag()) != 0)
         {
         printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-        Error("ITensor is Complex valued, use .cplx(...) method");
+        Error("tensor is Complex valued, use .cplx(...) method");
         }
     return z.real();
     }
 
 template<size_t size>
 Cplx
-doTask(const GetElt<size>& g, const ITReal& d)
+doTask(const GetElt<size,Index>& g, const ITReal& d)
     {
     return d[ind(g.is,g.inds)];
     }
 
 template<size_t size>
 Cplx
-doTask(const GetElt<size>& g, const ITCplx& d)
+doTask(const GetElt<size,Index>& g, const ITCplx& d)
     {
     return d.get(ind(g.is,g.inds));
     }
 
 template<size_t size>
 Cplx
-doTask(const GetElt<size>& g, const ITCombiner& c)
+doTask(const GetElt<size,Index>& g, const ITCombiner& c)
     {
     if(g.inds.size()!=0) Error("GetElt not defined for non-scalar ITCombiner storage");
     return Cplx(1.,0.);
@@ -136,7 +137,7 @@ doTask(const GetElt<size>& g, const ITCombiner& c)
 
 template <size_t size, typename T>
 Cplx
-doTask(const GetElt<size>& g, const ITDiag<T>& d)
+doTask(const GetElt<size,Index>& g, const ITDiag<T>& d)
     {
     auto first_i = (g.inds.empty() ? 0 : g.inds.front());
     //Check if inds_ reference an
@@ -151,7 +152,7 @@ doTask(const GetElt<size>& g, const ITDiag<T>& d)
 template<>
 template <typename... IndexVals>
 void ITensor::
-set(Complex val, const IndexVals&... ivs)
+set(Cplx val, const IndexVals&... ivs)
     {
     static constexpr auto size = sizeof...(ivs);
     scaleTo(1.);
@@ -159,28 +160,28 @@ set(Complex val, const IndexVals&... ivs)
     std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.val-1; });
     if(val.imag() == 0)
-        doTask(SetElt<Real,size>{val.real(),is_,inds},store_);
+        doTask(SetElt<Real,size,Index>{val.real(),is_,inds},store_);
     else
-        doTask(SetElt<Cplx,size>{val,is_,inds},store_);
+        doTask(SetElt<Cplx,size,Index>{val,is_,inds},store_);
     }
 
 template<size_t size>
 void
-doTask(const SetElt<Real,size>& s, ITReal& d)
+doTask(const SetElt<Real,size,Index>& s, ITReal& d)
     {
     d[ind(s.is,s.inds)] = s.elt;
     }
 
 template<size_t size>
 void
-doTask(const SetElt<Real,size>& s, ITCplx& d)
+doTask(const SetElt<Real,size,Index>& s, ITCplx& d)
     {
     d.set(ind(s.is,s.inds),s.elt);
     }
 
 template<size_t size>
 void
-doTask(const SetElt<Cplx,size>& s, const ITReal& d, ManagePtr& mp)
+doTask(const SetElt<Cplx,size,Index>& s, const ITReal& d, ManagePtr& mp)
     {
     auto nd = mp.makeNewData<ITCplx>(d);
     nd->set(ind(s.is,s.inds),s.elt);
@@ -188,7 +189,7 @@ doTask(const SetElt<Cplx,size>& s, const ITReal& d, ManagePtr& mp)
 
 template<size_t size>
 void
-doTask(const SetElt<Cplx,size>& s, ITCplx& d)
+doTask(const SetElt<Cplx,size,Index>& s, ITCplx& d)
     {
     d.set(ind(s.is,s.inds),s.elt);
     }
@@ -229,9 +230,9 @@ doTask(GenerateIT<F>& G, const ITCplx& d, ManagePtr& mp)
     }
 
 
-template<>
+template<IndexT>
 template <typename Func>
-ITensor& ITensor::
+ITensorT<IndexT>& ITensorT<IndexT>::
 generate(Func&& f)
     {
     scaleTo(1);
@@ -272,9 +273,9 @@ doTask(ApplyIT<F>& A, ITDiag<T>& d)
         }
     }
 
-template<>
+template<IndexT>
 template <typename Func>
-ITensor& ITensor::
+ITensorT<IndexT>& ITensorT<IndexT>::
 apply(Func&& f)
     {
     scaleTo(1);
@@ -299,9 +300,9 @@ doTask(VisitIT<F>& V, const ITCplx& d)
         }
     }
 
-template<>
+template<IndexT>
 template <typename Func>
-const ITensor& ITensor::
+const ITensorT<IndexT>& ITensorT<IndexT>::
 visit(Func&& f) const
     {
     doTask(VisitIT<decltype(f)>{std::forward<Func>(f),scale_.real0()},store_);

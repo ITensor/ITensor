@@ -14,15 +14,15 @@ namespace itensor {
 // Task Types
 // 
 
-template<size_t size>
+template<size_t size, typename IndexT>
 struct GetElt
     {
     using Inds = std::array<long,size>;
 
-    const IndexSet& is;
+    const IndexSetT<IndexT>& is;
     const Inds& inds;
 
-    GetElt(const IndexSet& is_,
+    GetElt(const IndexSetT<IndexT>& is_,
            const Inds& inds_)
       : is(is_),
         inds(inds_)
@@ -50,16 +50,16 @@ struct GetElt
         }
     };
 
-template<typename T, size_t size>
+template<typename T, size_t size, typename IndexT>
 struct SetElt
     {
     using Inds = std::array<long,size>;
     T elt;
-    const IndexSet& is;
+    const IndexSetT<IndexT>& is;
     const Inds& inds;
 
     SetElt(T elt_,
-           const IndexSet& is_,
+           const IndexSetT<IndexT>& is_,
            const Inds& inds_)
         : elt(elt_), is(is_), inds(inds_)
         { }
@@ -77,23 +77,25 @@ struct MultCplx
     MultCplx(Cplx z_) : z(z_) { }
     };
 
+template<typename IndexT>
 struct NormNoScale
     {
-    const IndexSet& is;
-    NormNoScale(const IndexSet& is_) : is(is_) { }
+    const IndexSetT<IndexT>& is;
+    NormNoScale(const IndexSetT<IndexT>& is_) : is(is_) { }
     };
 
+template<typename IndexT>
 struct PrintIT
     {
     std::ostream& s;
     const LogNumber& x;
-    const IndexSet& is;
+    const IndexSetT<IndexT>& is;
     Real scalefac;
     bool print_data;
 
     PrintIT(std::ostream& s_,
             const LogNumber& x_,
-            const IndexSet& is_,
+            const IndexSetT<IndexT>& is_,
             bool print_data_)
         : s(s_), x(x_), is(is_), scalefac(1.), print_data(print_data_)
         { 
@@ -121,10 +123,11 @@ struct Conj { };
 
 struct CheckComplex { };
 
+template<typename IndexT>
 struct SumEls
     {
-    const IndexSet& is;
-    SumEls(const IndexSet& is_) : is(is_) { }
+    const IndexSetT<IndexT>& is;
+    SumEls(const IndexSetT<IndexT>& is_) : is(is_) { }
     };
 
 template<typename F>
@@ -255,6 +258,8 @@ struct Write
     std::ostream& s;
     Write(std::ostream& s_) : s(s_) { }
     };
+
+struct IsComplex { };
 
 
 } //namespace itensor 

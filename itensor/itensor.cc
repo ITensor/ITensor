@@ -650,28 +650,7 @@ operator*=(ITensor& A, const ITensor& B)
 
     Label Lind,
           Rind;
-    //auto ncont =
     computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
-
-    //Check if other is a scalar (modulo m==1 inds)
-    //if(Ris.rn() == 0)
-    //    {
-    //    auto nuniq = Lis.r()+Ris.r()-2*ncont;
-    //    operator*=(other.cplx());
-    //    is_ = IndexSet(computeNewInds(Lis,Lind,Ris,Rind,nuniq));
-    //    return *this;
-    //    }
-    //Check if this is a scalar (modulo m==1 inds)
-    //---> This case is problematic to implement this way.
-    //     For example, what if other has ITCombiner storage?
-    //if(Lis.rn() == 0)
-    //    {
-    //    auto nuniq = Lis.r()+Ris.r()-2*ncont;
-    //    auto newind = computeNewInds(Lis,Lind,Ris,Rind,nuniq);
-    //    operator=(other*cplx());
-    //    is_ = IndexSet(std::move(newind));
-    //    return *this;
-    //    }
 
     auto nstore = A.store();
     auto C = doTask(Contract<Index>{Lis,Lind,Ris,Rind},nstore,B.store());
@@ -912,27 +891,27 @@ vec_norm(const Container& v)
     }
 
 Real
-doTask(const NormNoScale& N, const ITReal& d) { return vec_norm(d); }
+doTask(const NormNoScale<Index>& N, const ITReal& d) { return vec_norm(d); }
 
 Real
-doTask(const NormNoScale& N, const ITCplx& d) { return vec_norm(d); }
+doTask(const NormNoScale<Index>& N, const ITCplx& d) { return vec_norm(d); }
 
 template<typename T>
 Real
-doTask(const NormNoScale& N, const ITDiag<T>& d)
+doTask(const NormNoScale<Index>& N, const ITDiag<T>& d)
     {
     if(d.allSame()) return std::sqrt(std::norm(d.val))*std::sqrt(minM(N.is));
     return vec_norm(d.store);
     }
 
 Real
-doTask(const NormNoScale& N, const ITCombiner& d) { return 0; }
+doTask(const NormNoScale<Index>& N, const ITCombiner& d) { return 0; }
 
 //template<>
 //void ITensor::
 //scaleOutNorm()
 //    {
-//    auto nrm = doTask<Real>(NormNoScale{is_},store_);
+//    auto nrm = doTask<Real>(NormNoScale<Index>{is_},store_);
 //    //If norm already 1 return so
 //    //we don't have to call MultReal
 //    if(fabs(nrm-1.) < 1E-12) return;
@@ -1084,21 +1063,21 @@ operator<<(ostream & s, const ITensor& t)
         //format string %f (or another float-related format string)
         bool ff_set = (std::ios::floatfield & s.flags()) != 0;
         bool print_data = (ff_set || Global::printdat());
-        doTask(PrintIT{s,t.scale(),t.inds(),print_data},t.cstore());
+        doTask(PrintIT<Index>{s,t.scale(),t.inds(),print_data},t.cstore());
         }
     return s;
     }
 
 void
-doTask(PrintIT& P, const ITCombiner& d)
+doTask(PrintIT<Index>& P, const ITCombiner& d)
     {
     P.printInfo(d,"Combiner");
     }
 
 void
-doTask(PrintIT& P, const ITReal& d)
+doTask(PrintIT<Index>& P, const ITReal& d)
     {
-    P.printInfo(d,"Dense Real",doTask(NormNoScale(P.is),d));
+    P.printInfo(d,"Dense Real",doTask(NormNoScale<Index>(P.is),d));
      
     auto rank = P.is.r();
     if(rank == 0) 
@@ -1133,9 +1112,9 @@ doTask(PrintIT& P, const ITReal& d)
     }
 
 void
-doTask(PrintIT& P, const ITCplx& d)
+doTask(PrintIT<Index>& P, const ITCplx& d)
     {
-    P.printInfo(d,"Dense Cplx",doTask(NormNoScale(P.is),d));
+    P.printInfo(d,"Dense Cplx",doTask(NormNoScale<Index>(P.is),d));
 
     auto rank = P.is.r();
     if(rank == 0) 
@@ -1171,11 +1150,11 @@ doTask(PrintIT& P, const ITCplx& d)
 
 template<typename T>
 void
-doTask(PrintIT& P, const ITDiag<T>& d)
+doTask(PrintIT<Index>& P, const ITDiag<T>& d)
     {
     constexpr auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
     P.printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""),
-              doTask(NormNoScale(P.is),d));
+              doTask(NormNoScale<Index>(P.is),d));
 
     if(P.is.r() == 0) 
         {
@@ -1230,7 +1209,7 @@ norm(const ITensor& T)
     if(!T) Error("ITensor is default initialized");
 #endif
     return fabs(T.scale().real0()) *
-           doTask<Real>(NormNoScale{T.inds()},T.cstore());
+           doTask<Real>(NormNoScale<Index>{T.inds()},T.cstore());
     }
 
 ITensor
@@ -1257,7 +1236,7 @@ isComplex(const ITensor& t)
     }
 
 Cplx
-doTask(SumEls, const ITReal& d) 
+doTask(SumEls<Index>, const ITReal& d) 
     { 
     Real sum = 0;
     for(const auto& elt : d)
@@ -1266,7 +1245,7 @@ doTask(SumEls, const ITReal& d)
     }
 
 Cplx
-doTask(SumEls, const ITCplx& d) 
+doTask(SumEls<Index>, const ITCplx& d) 
     { 
     Real rsum = 0,
          isum = 0;
@@ -1279,7 +1258,7 @@ doTask(SumEls, const ITCplx& d)
 
 template <class T>
 Cplx
-doTask(SumEls S, const ITDiag<T>& d) 
+doTask(SumEls<Index> S, const ITDiag<T>& d) 
     { 
     if(d.allSame()) return Real(minM(S.is))*d.val;
     T sum = 0;
@@ -1291,7 +1270,7 @@ doTask(SumEls S, const ITDiag<T>& d)
 Cplx
 sumelsC(const ITensor& t)
     {
-    auto z = doTask<Cplx>(SumEls{t.inds()},t.cstore());
+    auto z = doTask<Cplx>(SumEls<Index>{t.inds()},t.cstore());
     return t.scale().real0()*z;
     }
 

@@ -42,7 +42,7 @@ class ITensorT
 
     //Construct rank 2 tensor, all elements set to zero
     ITensorT(const IndexT& i1,
-            const IndexT& i2) { }
+             const IndexT& i2) { }
 
     //Construct rank n tensor, all elements set to zero
     template <typename... Indices>
@@ -155,7 +155,7 @@ class ITensorT
     conj() { return *this; }
 
     ITensorT&
-    dag() { return conj(); }
+    dag() { return *this; }
 
     //Replace data with real part
     ITensorT&

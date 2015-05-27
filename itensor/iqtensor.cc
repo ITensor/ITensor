@@ -23,20 +23,6 @@ using std::make_shared;
 using std::shared_ptr;
 using std::move;
 
-void
-inverseBlockInd(long I,
-                const IQIndexSet& is,
-                vector<long>& ind)
-    {
-    auto r = int(ind.size());
-    assert(r == is.r());
-    for(int j = 0; j < r-1; ++j)
-        {
-        ind[j] = I % is[j].nindex();
-        I = (I-ind[j])/is[j].nindex();
-        }
-    ind[r-1] = I;
-    }
 
 template<typename Indexable>
 class IndexDim
@@ -80,7 +66,7 @@ IQTensor(Complex val)
 //IQTensor(const QN& q, vector<IQIndex>&& iqinds) 
 //	: 
 //    is_(move(iqinds)),
-//    store_(make_shared<IQTData<Real>>(is_,q)),
+//    store_(make_shared<IQTData>(is_,q)),
 //    div_(q),
 //    scale_(1.)
 //	{ }
@@ -98,184 +84,102 @@ IQTensor(Complex val)
 //    {
 //    }
 
-class IQPlusEQ : public RegisterFunc<IQPlusEQ>
-    {
-    Real fac_;
-    const Permutation *P_ = nullptr;
-    const IQIndexSet *is1_ = nullptr,
-                     *is2_ = nullptr;
-    public:
 
-    IQPlusEQ(Real fac) : fac_(fac) { }
-
-    IQPlusEQ(const Permutation& P,
-             const IQIndexSet& is1,
-             const IQIndexSet& is2,
-             Real fac)
-        :
-        fac_(fac),
-        P_(&P),
-        is1_(&is1),
-        is2_(&is2)
-        { }
-
-    void
-    operator()(IQTData<Real>& a1,
-               const IQTData<Real>& a2);
-
-    };
-
-void IQPlusEQ::
-operator()(IQTData<Real>& A,
-           const IQTData<Real>& B)
+void
+doTask(const PlusEQ& P,
+       IQTData& A,
+       const IQTData& B)
     {
 #ifdef DEBUG
     if(A.data.size() != B.data.size()) Error("Mismatched sizes in plusEq");
 #endif
-    if(!P_)
+    if(!P.hasPerm())
         {
         LAPACK_INT inc = 1;
         LAPACK_INT size = A.data.size();
-        daxpy_wrapper(&size,&fac_,B.data.data(),&inc,A.data.data(),&inc);
+        daxpy_wrapper(&size,&P.fac,B.data.data(),&inc,A.data.data(),&inc);
         }
     else
         {
-        auto r = is1_->r();
+        auto r = P.is1().r();
         vector<long> Ablock(r,0),
                      Bblock(r,0);
         Range Arange,
               Brange;
         for(const auto& aio : A.offsets)
             {
-            inverseBlockInd(aio.block,*is1_,Ablock);
+            inverseBlockInd(aio.block,P.is1(),Ablock);
             for(int i = 0; i < r; ++i)
-                Bblock[i] = Ablock[P_->dest(i)];
-            Arange.init(make_indexdim(*is1_,Ablock));
-            Brange.init(make_indexdim(*is2_,Bblock));
-            const auto* bblock = B.getBlock(*is2_,Bblock);
+                Bblock[i] = Ablock[P.perm().dest(i)];
+            Arange.init(make_indexdim(P.is1(),Ablock));
+            Brange.init(make_indexdim(P.is2(),Bblock));
+            auto* bblock = B.getBlock(P.is2(),Bblock);
 
             auto aref = makeTensorRef(A.data.data()+aio.offset,Arange);
             auto bref = makeTensorRef(bblock,Brange);
-            auto f = fac_;
-            auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
-            permute(bref,*P_,aref,add);
+            auto add = [f=P.fac](Real& r1, Real r2) { r1 += f*r2; };
+            permute(bref,P.perm(),aref,add);
             }
         }
     }
 
 IQTensor& IQTensor::
-operator+=(const IQTensor& other)
+operator+=(IQTensor& A, const IQTensor& B)
     {
-    if(!*this) Error("Calling += on default constructed IQTensor");
-    if(!other) Error("Right-hand-side of IQTensor += is default constructed");
-    if(this == &other) return operator*=(2.);
-    if(this->scale_.isZero()) return operator=(other);
+    if(!A) Error("Calling += on default constructed IQTensor");
+    if(!B) Error("Right-hand-side of IQTensor += is default constructed");
+    if(&A == &B) return operator*=(A,2.);
+    if(A.scale().isZero()) return A.operator=(B);
 
-    Permutation P(is_.size());
+    Permutation P(A.inds().size());
     try {
-        calc_permutation(other.is_,is_,P);
+        calc_permutation(B.inds(),A.inds(),P);
         }
     catch(const ITError& e)
         {
-        Print(*this);
-        Print(other);
+        Print(A);
+        Print(B);
         Error("IQTensor::operator+=: different IQIndex structure");
         }
 
     Real scalefac = 1;
-    if(scale_.magnitudeLessThan(other.scale_)) 
+    if(A.scale().magnitudeLessThan(B.scale())) 
         {
-        this->scaleTo(other.scale_); 
+        A.scaleTo(B.scale());
         }
     else
         {
-        scalefac = (other.scale_/scale_).real();
+        scalefac = (B.scale()/A.scale()).real();
         }
 
     if(isTrivial(P))
         {
-        applyFunc<IQPlusEQ>(store_,other.store_,scalefac);
+        doTask(PlusEQ{scalefac},store_,other.store_);
         }
     else
         {
-        applyFunc<IQPlusEQ>(store_,other.store_,P,is_,other.is_,scalefac);
+        doTask(PlusEQ{P,A.inds(),B.inds(),scalefac},store_,other.store_);
         }
 
-
-    return *this;
+    return A;
     }
 
-IQTensor& IQTensor::
-operator*=(Real fac)
-    {
-    scale_ *= fac;
-    return *this;
-    }
-
-IQTensor& IQTensor::
-operator/=(Real fac)
-    {
-    scale_ /= fac;
-    return *this;
-    }
-
-class IQMultCplx : public RegisterFunc<IQMultCplx>
-    {
-    Cplx z_;
-    public:
-    IQMultCplx(Cplx z)
-        : z_(z)
-        { }
-
-    void
-    operator()(IQTData<Real>& d) const
-        {
-        Error("IQTensor multiplication by complex scalar not implemented");
-        //auto nd = makeNewData<IQTData<Cplx>>();
-        //operator()(*nd);
-        }
-
-    void
-    operator()(IQTData<Cplx>& d) const
-        {
-        for(auto& elt : d.data)
-            elt *= z_;
-        }
-    };
-
-IQTensor& IQTensor::
-operator*=(Cplx z)
-    {
-    if(z.imag()==0) return operator*=(z.real());
-    applyFunc<IQMultCplx>(store_,z);
-    return *this;
-    }
-
-IQTensor& IQTensor::
-operator*=(const LogNumber& lgnum)
-    {
-    scale_ *= lgnum;
-    return *this;
-    }
-
-IQTensor& IQTensor::
-operator-=(const IQTensor& o)
+IQTensor&
+operator-=(IQTensor& A, const IQTensor& B)
     { 
-    if(this == &o) { operator*=(0); return *this; }
-    IQTensor oth(o);
-    oth *= -1;
-    return operator+=(oth);
+    if(&A == &B) { operator*=(A,0); return *this; }
+    A.scale().negate();
+    operator+=(A,B);
+    A.scale().negate();
+    return A;
     }
 
-template<typename T>
 void
 permuteIQ(const Permutation& P,
           const IQIndexSet& Ais,
-          const QN& div,
-          const IQTData<T>& dA,
+          const IQTData& dA,
           IQIndexSet& Bis,
-          shared_ptr<IQTData<T>>& pdB)
-
+          IQTData& dB)
     {
 #ifdef DEBUG
     if(isTrivial(P)) Error("Calling permuteIQ for trivial Permutation");
@@ -287,7 +191,7 @@ permuteIQ(const Permutation& P,
         bind.at(P.dest(i)) = Ais[i];
         }
     Bis = IQIndexSet(std::move(bind));
-    pdB = make_shared<IQTData<T>>(Bis,div);
+    dB = IQTData(Bis,calcDiv(Ais,dA));
 
     vector<long> Ablock(r,-1),
                  Bblock(r,-1);
@@ -302,76 +206,144 @@ permuteIQ(const Permutation& P,
         Arange.init(make_indexdim(Ais,Ablock));
         Brange.init(make_indexdim(Bis,Bblock));
 
-        auto* bblock = pdB->getBlock(Bis,Bblock);
+        auto* bblock = dB.getBlock(Bis,Bblock);
         auto aref = makeTensorRef(dA.data.data()+aio.offset,Arange);
         auto bref = makeTensorRef(bblock,Brange);
         permute(aref,P,bref);
         }
     }
 
-class QContract : public RegisterFunc<QContract>
+//class QContract : public RegisterFunc<QContract>
+//    {
+//    const Label &Aind_,
+//                &Bind_;
+//
+//    const IQIndexSet &Ais_,
+//                     &Bis_;
+//    QN Cdiv_;
+//    IQIndexSet Nis_;
+//    Real scalefac_ = -1;
+
+void
+doTask(Contract& Con,
+       const IQTData& A,
+       const IQTData& B,
+       ManagePtr& mp)
     {
-    const Label &Aind_,
-                &Bind_;
+    //compute new index set (Con.Nis):
+    contractIS(Con.Lis,Con.Lind,Con.Ris,Con.Rind,Con.Nis,true);
 
-    const IQIndexSet &Ais_,
-                     &Bis_;
-    QN Cdiv_;
-    IQIndexSet Nis_;
-    Real scalefac_ = -1;
-    public:
+    auto Cdiv = calcDiv(Con.Lis,A)+calcDiv(Con.Ris,B);
 
-    QContract(const IQIndexSet& Ais,
-              const Label& Aind,
-              const IQIndexSet& Bis,
-              const Label& Bind,
-              const QN& Cdiv)
-        :
-        Aind_(Aind),
-        Bind_(Bind),
-        Ais_(Ais),
-        Bis_(Bis),
-        Cdiv_(Cdiv)
-        { }
+    //Allocate storage for C
+    auto nd = mp.makeNewData<IQTData>(Con.Nis,Cdiv);
+    auto& C = *nd;
 
-    IQIndexSet
-    newIndexSet() { return move(Nis_); }
+    auto rA = Con.Lis.r(),
+         rB = Con.Ris.r(),
+         rC = Con.Nis.r();
 
-    Real
-    scalefac() const { return scalefac_; }
-
-    template<typename T>
-    void
-    operator()(const IQTData<T>& d1,
-               const IQTData<T>& d2);
-
-    void
-    operator()(const IQTData<Real>& d,
-               const ITCombiner& C)
+    Label AtoB(rA,-1),
+          AtoC(rA,-1),
+          BtoC(rB,-1);
+    Label Cind(rC,0);
+    for(auto ic : count(rC))
         {
-        combine(d,Ais_,Bis_,true);
+        auto j = findindex(Con.Lis,Con.Nis[ic]);
+        if(j >= 0)
+            {
+            Cind[ic] = Aind_[j];
+            AtoC[j] = ic;
+            }
+        else
+            {
+            j = findindex(Con.Ris,Con.Nis[ic]);
+            Cind[ic] = Bind_[j];
+            BtoC[j] = ic;
+            }
         }
-    void
-    operator()(const ITCombiner& C,
-               const IQTData<Real>& d)
-        { 
-        combine(d,Bis_,Ais_,false);
+    for(int ia = 0; ia < rA; ++ia)
+    for(int ib = 0; ib < rB; ++ib)
+        if(Aind_[ia] == Bind_[ib])
+            {
+            AtoB[ia] = ib;
+            break;
+            }
+    
+    detail::GCounter couB(rB);
+    vector<long> Ablock(rA,0),
+                 Cblock(rC,0);
+    Range Arange,
+          Brange,
+          Crange;
+    //Loop over blocks of A (labeled by elements of A.offsets)
+    for(const auto& aio : A.offsets)
+        {
+        //Reconstruct indices labeling this block of A, put into Ablock
+        inverseBlockInd(aio.block,Con.Lis,Ablock);
+        //Reset couB to run over indices of B (at first)
+        couB.reset();
+        for(int ib = 0; ib < rB; ++ib)
+            couB.setInd(ib,0,Con.Ris[ib].nindex()-1);
+        for(int iA = 0; iA < rA; ++iA)
+            {
+            auto ival = Ablock[iA];
+            //Restrict couB to be fixed for indices of B contracted with A
+            if(AtoB[iA] != -1) couB.setInd(AtoB[iA],ival,ival);
+            //Begin computing elements of Cblock(=destination of this block-block contraction)
+            if(AtoC[iA] != -1) Cblock[AtoC[iA]] = ival;
+            }
+        //Loop over blocks of B which contract with current block of A
+        for(;couB.notDone(); ++couB)
+            {
+            //Check whether B contains non-zero block for this setting of couB
+            //TODO: check whether block is present by computing its QN flux,
+            //      should be faster than calling getBlock
+            auto* bblock = B.getBlock(Con.Ris,couB.i);
+            if(!bblock) continue;
+
+            //Finish making Cblock index array
+            for(int ib = 0; ib < rB; ++ib)
+                if(BtoC[ib] != -1) Cblock[BtoC[ib]] = couB.i[ib];
+
+            auto* cblock = Con.getBlock(Con.Nis,Cblock);
+            assert(cblock != nullptr);
+
+            //Construct range objects for aref,bref,cref
+            //using IndexDim helper objects
+            Arange.init(make_indexdim(Con.Lis,Ablock));
+            Brange.init(make_indexdim(Con.Ris,couB.i));
+            Crange.init(make_indexdim(Con.Nis,Cblock));
+
+            //"Wire up" TensorRef's pointing to blocks of A,B, and C
+            //we are working with
+            auto aref = makeTensorRef(A.data.data()+aio.offset,Arange),
+                 bref = makeTensorRef(bblock,Brange);
+            auto cref= makeTensorRef(cblock,Crange);
+
+            //Compute aref*bref=cref
+            contract(aref,Aind_,bref,Bind_,cref,Cind);
+
+            } //for couB
+        } //for A.offsets
+
+    //Compute new scalefac_ from C.data
+    Con.scalefac = 0;
+    for(auto elt : C.data) Con.scalefac += elt*elt;
+    Con.scalefac = std::sqrt(Con.scalefac);
+    //Rescale C by scalefac
+    if(Con.scalefac != 0)
+        {
+        for(auto& elt : C.data) elt /= Con.scalefac;
         }
+    }
 
-    private:
-
-    void
-    combine(const IQTData<Real>& d,
-            const IQIndexSet& dis,
-            const IQIndexSet& Cis,
-            bool own_data);
-
-    }; //QContract
-
-void QContract::
-combine(const IQTData<Real>& d,
+void
+combine(const IQTData& d,
         const IQIndexSet& dis,
         const IQIndexSet& Cis,
+        IQIndexSet& Nis,
+        ManagePtr& mp,
         bool own_data)
     {
     //cind is "combined index"
@@ -431,14 +403,12 @@ combine(const IQTData<Real>& d,
             }
         }
 
-    std::shared_ptr<IQTData<Real>> pnd;
-    IQTData<Real>* nd = nullptr;
+    IQTData nd;
     if(P) 
         {
-        permuteIQ(P,dis,Cdiv_,d,Nis_,pnd);
-        nd = pnd.get();
+        permuteIQ(P,dis,d,Nis,nd);
         }
-    auto& Pis = (P ? Nis_ : dis);
+    auto& Pis = (P ? Nis : dis);
 
     if(jc == 0) //has cind at front, we are "uncombining"
         {
@@ -449,7 +419,7 @@ combine(const IQTData<Real>& d,
             newind.at(j) = Cis[1+j];
         for(auto j : count(Pis.r()-1))
             newind.at(offset+j) = Pis[1+j];
-        Nis_ = IQIndexSet(move(newind));
+        Nis = IQIndexSet(move(newind));
         }
     else //we are "combining"
         {
@@ -459,155 +429,67 @@ combine(const IQTData<Real>& d,
         newind.front() = cind;
         for(auto j : count(1,newr))
             newind.at(j) = Pis[offset+j];
-        Nis_ = IQIndexSet(move(newind));
+        Nis = IQIndexSet(move(newind));
         }
 
     //Only need to modify d if Cis.r() > 2.
     //If Cis.r()==2 just swapping one index for another
     if(Cis.r() > 2)
         {
-        if(!nd)
+        IQTData* p = nullptr;
+        if(nd)
             {
-            if(own_data) 
-                {
-                nd = &modifyData(d);
-                }
-            else
-                {
-                pnd = std::make_shared<IQTData<Real>>(d);
-                nd = pnd.get();
-                }
+            p = &nd;
             }
-        nd->updateOffsets(Nis_,Cdiv_);
-        }
-
-    if(pnd) setNewData(std::move(pnd));
-    }
-
-
-template<typename T>
-void QContract::
-operator()(const IQTData<T>& A,
-           const IQTData<T>& B)
-    {
-    //compute new index set (Nis_):
-    contractIS(Ais_,Aind_,Bis_,Bind_,Nis_,true);
-
-    //Allocate storage for C
-    auto nd = makeNewData<IQTData<Real>>(Nis_,Cdiv_);
-    auto& C = *nd;
-
-    auto rA = Ais_.r(),
-         rB = Bis_.r(),
-         rC = Nis_.r();
-
-    Label AtoB(rA,-1),
-          AtoC(rA,-1),
-          BtoC(rB,-1);
-    Label Cind(rC,0);
-    for(auto ic : count(rC))
-        {
-        auto j = findindex(Ais_,Nis_[ic]);
-        if(j >= 0)
+        else if(own_data) 
             {
-            Cind[ic] = Aind_[j];
-            AtoC[j] = ic;
+            p = mp.modifyData(d);
             }
         else
             {
-            j = findindex(Bis_,Nis_[ic]);
-            Cind[ic] = Bind_[j];
-            BtoC[j] = ic;
+            nd = d;
+            p = &nd;
             }
+        auto div = calcDiv(dis,d);
+        p->updateOffsets(Nis,div);
         }
-    for(int ia = 0; ia < rA; ++ia)
-    for(int ib = 0; ib < rB; ++ib)
-        if(Aind_[ia] == Bind_[ib])
-            {
-            AtoB[ia] = ib;
-            break;
-            }
-    
-    detail::GCounter couB(rB);
-    vector<long> Ablock(rA,0),
-                 Cblock(rC,0);
-    Range Arange,
-          Brange,
-          Crange;
-    //Loop over blocks of A (labeled by elements of A.offsets)
-    for(const auto& aio : A.offsets)
-        {
-        //Reconstruct indices labeling this block of A, put into Ablock
-        inverseBlockInd(aio.block,Ais_,Ablock);
-        //Reset couB to run over indices of B (at first)
-        couB.reset();
-        for(int ib = 0; ib < rB; ++ib)
-            couB.setInd(ib,0,Bis_[ib].nindex()-1);
-        for(int iA = 0; iA < rA; ++iA)
-            {
-            auto ival = Ablock[iA];
-            //Restrict couB to be fixed for indices of B contracted with A
-            if(AtoB[iA] != -1) couB.setInd(AtoB[iA],ival,ival);
-            //Begin computing elements of Cblock(=destination of this block-block contraction)
-            if(AtoC[iA] != -1) Cblock[AtoC[iA]] = ival;
-            }
-        //Loop over blocks of B which contract with current block of A
-        for(;couB.notDone(); ++couB)
-            {
-            //Check whether B contains non-zero block for this setting of couB
-            //TODO: check whether block is present by computing its QN flux,
-            //      should be faster than calling getBlock
-            auto* bblock = B.getBlock(Bis_,couB.i);
-            if(!bblock) continue;
 
-            //Finish making Cblock index array
-            for(int ib = 0; ib < rB; ++ib)
-                if(BtoC[ib] != -1) Cblock[BtoC[ib]] = couB.i[ib];
+    if(nd) mp.makeNewData<IQTData>(std::move(nd));
+    }
 
-            auto* cblock = C.getBlock(Nis_,Cblock);
-            assert(cblock != nullptr);
+void
+doTask(Contract& C,
+       const IQTData& d,
+       const ITCombiner& cmb,
+       ManagePtr& mp)
+    {
+    combine(d,C.Lis,C.Ris,C.Nis,mp,true);
+    }
 
-            //Construct range objects for aref,bref,cref
-            //using IndexDim helper objects
-            Arange.init(make_indexdim(Ais_,Ablock));
-            Brange.init(make_indexdim(Bis_,couB.i));
-            Crange.init(make_indexdim(Nis_,Cblock));
-
-            //"Wire up" TensorRef's pointing to blocks of A,B, and C
-            //we are working with
-            auto aref = makeTensorRef(A.data.data()+aio.offset,Arange),
-                 bref = makeTensorRef(bblock,Brange);
-            auto cref= makeTensorRef(cblock,Crange);
-
-            //Compute aref*bref=cref
-            contract(aref,Aind_,bref,Bind_,cref,Cind);
-
-            } //for couB
-        } //for A.offsets
-
-    //Compute new scalefac_ from C.data
-    scalefac_ = 0;
-    for(auto elt : C.data) scalefac_ += elt*elt;
-    scalefac_ = std::sqrt(scalefac_);
-    //Rescale C by scalefac_
-    if(scalefac_ != 0)
-        {
-        for(auto& elt : C.data) elt /= scalefac_;
-        }
+void
+doTask(Contract& C,
+       const ITCombiner& cmb,
+       const IQTData& d,
+       ManagePtr& mp)
+    { 
+    combine(d,C.Ris,C.Lis,C.Nis,mp,false);
     }
 
 
 IQTensor& IQTensor::
-operator*=(const IQTensor& other)
+operator*=(IQTensor& A, const IQTensor& B)
     {
-    if(!(*this) || !other)
+    if(!A || !B)
         Error("Default constructed IQTensor in product");
 
-    if(this == &other)
-        return operator=( IQTensor(sqr(norm(*this))) );
+    if(&A == &B)
+        {
+        A = ITensor(sqr(norm(A)));
+        return A;
+        }
 
-    const auto& Lis = is_;
-    const auto& Ris = other.is_;
+    auto& Lis = A.inds();
+    auto& Ris = B.inds();
 
     auto checkDirs = 
     [&Lis,&Ris](const IQIndex& li, const IQIndex& ri)
@@ -628,71 +510,66 @@ operator*=(const IQTensor& other)
           Rind;
     computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind,checkDirs);
 
-    auto qcres = 
-    applyFunc<QContract>(store_,other.store_,Lis,Lind,Ris,Rind,div_+other.div_);
+    auto nstore = A.store();
+    auto C = doTask(Contract{Lis,Lind,Ris,Rind},nstore,B.store());
 
-    is_ = qcres.newIndexSet();
-
-    div_ += other.div_;
-
-    scale_ *= other.scale_;
-    if(qcres.scalefac() > 0) scale_ *= qcres.scalefac();
+    auto nscale = A.scale()*B.scale();
+    if(!std::isnan(C.scalefac)) nscale *= C.scalefac;
 
 #ifdef DEBUG
     //Check for duplicate indices
-    detail::check(is_);
+    detail::check(C.Nis);
 #endif
+
+    A = IQTensor(C.Nis,std::move(nstore),nscale);
 
     return *this;
     }
 
-struct AddITensor : RegisterFunc<AddITensor>
+struct AddITensor
     {
+    const QN& tdiv;
     const IQIndexSet& iqis;
     const IndexSet& is;
     const vector<long>& block_ind;
     const Permutation& P;
     Real fac = 0;
-    AddITensor(const IQIndexSet& iqis_,
+    AddITensor(const QN& tdiv,
+               const IQIndexSet& iqis_,
                const IndexSet& is_,
                const vector<long>& block_ind_,
                const Permutation& P_,
                Real scalefac_)
         :
+        tdiv(tdiv_),
         iqis(iqis_),
         is(is_),
         block_ind(block_ind_),
         P(P_),
         fac(scalefac_)
         { }
-
-    void
-    operator()(IQTData<Real>& d, const ITReal& t)
-        {
-        Range drange;
-        drange.init(make_indexdim(iqis,block_ind));
-        auto* dblock = d.getBlock(iqis,block_ind);
-
-        auto dref = makeTensorRef(dblock,drange);
-        auto tref = makeTensorRef(t.data(),is);
-        auto f = fac;
-        auto add = [f](Real& r1, Real r2) { r1 += f*r2; };
-        permute(tref,P,dref,add);
-        }
     };
 
 void
-calcDiv(QN& d, const IQIndexSet& is, const vector<long>& block_ind)
+doTask(AddITensor& A, IQTData& d, const ITReal& t)
     {
-    d = QN();
-    for(auto i : count(is.r())) { d += is[i].dir()*is[i].qn(1+block_ind[i]); }
+    auto ddiv = calcDiv(iqis,d);
+    if(ddiv != A.tdiv) Error("IQTensor+=ITensor, ITensor has incompatible QN flux/divergence");
+    Range drange;
+    drange.init(make_indexdim(A.iqis,A.block_ind));
+    auto* dblock = d.getBlock(A.iqis,A.block_ind);
+
+    auto dref = makeTensorRef(dblock,drange);
+    auto tref = makeTensorRef(t.data(),A.is);
+    auto add = [f=A.fac](Real& r1, Real r2) { r1 += f*r2; };
+    permute(tref,A.P,dref,add);
     }
 
-IQTensor& IQTensor::
-operator+=(const ITensor& t)
+IQTensor&
+operator+=(IQTensor& T, const ITensor& t)
     {
     if(!t) Error("IQTensor+=ITensor: r.h.s. ITensor is default constructed");
-    if(!is_) Error("Calling IQTensor+= on default constructed ITensor");
+    if(!T.inds()) Error("Calling IQTensor+= on default constructed ITensor");
     auto rank = r();
 #ifdef DEBUG
     if(t.r() != rank) Error("Mismatched number of indices in IQTensor+=ITensor");
@@ -703,7 +580,7 @@ operator+=(const ITensor& t)
     for(auto i : count(rank))
     for(auto I : count(rank))
         {
-        auto j = findindex(is_[I],t.inds()[i]);
+        auto j = findindex(T.inds()[I],t.inds()[i]);
         if(j > 0)
             {
             block_ind[I] = (j-1);
@@ -712,39 +589,38 @@ operator+=(const ITensor& t)
             }
         }
 
-    if(!store_) 
+    auto tdiv = calcDiv(T.inds(),block_ind);
+
+    if(!T.store()) 
         {
         //allocate data to add this ITensor into
-        calcDiv(div_,is_,block_ind);
-        if(!isComplex(t)) store_ = make_shared<IQTData<Real>>(is_,div_);
+        if(!isComplex(t)) T.store() = make_shared<ITDataType<IQTData>>(T.inds(),tdiv);
         else              Error("Initializing complex IQTensor in +=ITensor not yet implemented");
         }
-#ifdef DEBUG
-    else
-        {
-        QN q;
-        calcDiv(q,is_,block_ind);
-        if(q != div_) Error("IQTensor+=ITensor, ITensor has incompatible QN flux/divergence");
-        }
-#endif
 
     Real scalefac = 1;
-    if(scale_.magnitudeLessThan(t.scale())) scaleTo(t.scale()); 
-    else                                    scalefac = (t.scale()/scale_).real();
+    if(T.scale().magnitudeLessThan(t.scale())) T.scaleTo(t.scale()); 
+    else                                       scalefac = (t.scale()/T.scale()).real();
 
-    applyFunc<AddITensor>(store_,t.data(),is_,t.inds(),block_ind,P,scalefac);
+    doTask(AddITensor{tdiv,T.inds(),t.inds(),block_ind,P,scalefac},T.store(),t.store());
+
+    return T;
+    }
+
+template<>
+IQTensor& IQTensor::
+conj()
+    {
+    doTask(Conj,store_);
     return *this;
     }
 
+template<>
 IQTensor& IQTensor::
 dag()
     {
-    if(isComplex(*this))
-        {
-        Error("Not implemented");
-        }
     is_.dag();
-    div_ = -div_;
+    doTask(Conj,store_);
     return *this;
     }
 
@@ -756,90 +632,103 @@ class MultReal : public RegisterFunc<MultReal>
         : r_(r)
         { }
 
-    template<typename T>
-    void
-    operator()(IQTData<T>& d) const
-        {
-        //use BLAS algorithm?
-        for(auto& elt : d.data)
-            elt *= r_;
-        }
     };
 
+void
+doTask(MultReal& M, IQTData& d)
+    {
+    //use BLAS algorithm?
+    for(auto& elt : d.data)
+        elt *= M.r;
+    }
+
+template<>
 void IQTensor::
 scaleTo(const LogNumber& newscale)
     {
     if(scale_ == newscale) return;
-    if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
+    if(newscale.sign() == 0) Error("Trying to scale an IQTensor to a 0 scale");
     scale_ /= newscale;
-    applyFunc<MultReal>(store_,scale_.real0());
+    doTask(MultReal{scale_.real0()},store_);
     scale_ = newscale;
     }
 
-class ToITensor : public RegisterFunc<ToITensor,ITensor>
+struct ToITensor
     {
-    const IQIndexSet& is_;
-    const LogNumber& scale_;
-    public:
+    const IQIndexSet& is;
+    const LogNumber& scale;
 
-    ToITensor(const IQIndexSet& is,
-              const LogNumber& scale)
+    ToITensor(const IQIndexSet& is_,
+              const LogNumber& scale_)
         :
-        is_(is),
-        scale_(scale)
+        is(is_),
+        scale(scale_)
         { }
-
-    ITensor
-    operator()(const IQTData<Real>& d)
-        {
-        auto r = is_.r();
-        auto nd = ITReal(area(is_),0);
-        auto *pd = d.data.data();
-        auto *pn = nd.data();
-        vector<long> block(r,0);
-        detail::GCounter C(r);
-        for(const auto& io : d.offsets)
-            {
-            inverseBlockInd(io.block,is_,block);
-            for(long j = 0; j < r; ++j)
-                {
-                long start = 0;
-                for(long b = 0; b < block[j]; ++b)
-                    start += is_[j][b].m();
-                C.setInd(j,start,start+is_[j][block[j]].m()-1);
-                }
-            for(; C.notDone(); ++C)
-                {
-                pn[ind(is_,C.i)] = pd[io.offset+C.ind];
-                }
-            }
-        vector<Index> inds(r);
-        for(long j = 0; j < r; ++j) inds[j] = is_[j];
-        return ITensor(IndexSet(std::move(inds)),std::move(nd),scale_);
-        }
     };
+
+ITensor
+doTask(ToITensor& T, const IQTData& d)
+    {
+    auto r = T.is.r();
+    auto nd = ITReal(area(T.is),0);
+    auto *pd = d.data.data();
+    auto *pn = nd.data();
+    vector<long> block(r,0);
+    detail::GCounter C(r);
+    for(const auto& io : d.offsets)
+        {
+        inverseBlockInd(io.block,T.is,block);
+        for(long j = 0; j < r; ++j)
+            {
+            long start = 0;
+            for(long b = 0; b < block[j]; ++b)
+                start += T.is[j][b].m();
+            C.setInd(j,start,start+T.is[j][block[j]].m()-1);
+            }
+        //TODO: need to make a Range/TensoRef iterator
+        //to rewrite the following code more efficiently
+        for(; C.notDone(); ++C)
+            {
+            pn[ind(T.is,C.i)] = pd[io.offset+C.ind];
+            }
+        }
+    vector<Index> inds(r);
+    for(long j = 0; j < r; ++j) inds[j] = T.is[j];
+    return ITensor(IndexSet(std::move(inds)),std::move(nd),scale_);
+    }
 
 ITensor
 toITensor(const IQTensor& T)
     {
-    return applyFunc<ToITensor>(T.data(),T.inds(),T.scale());
+    return doTask<ITensor>(ToITensor{T.inds(),T.scale()},T.store());
     }
 
-struct IsComplex : RegisterFunc<IsComplex,bool>
-    {
-    bool
-    operator()(const IQTData<Complex>& d) { return true; }
-
-    //Catch-all case: assume real unless specified otherwise
-    template<typename T>
-    bool
-    operator()(const T& d) { return false; }
-    };
+bool
+doTask(IsComplex,const IQTData& d) { return false; }
 
 bool
 isComplex(const IQTensor& T)
     {
-    return applyFunc<IsComplex>(T.data());
+    return doTask(IsComplex{},T.store());
+    }
+
+struct CalcDiv 
+    { 
+    const IQIndexSet& is;
+    CalcDiv(const IQIndexSet& is_) : is(is_) { }
+    };
+
+QN
+doTask(CalcDiv,const IQTData& d)
+    {
+    return calcDiv(C.is,d);
+    }
+
+QN
+div(const IQTensor& T) 
+    { 
+    if(!T) Error("div(IQTensor) not defined for unallocated IQTensor");
+    return doTask(CalcDiv{T.inds()},T.store());
     }
 
 IQTensor
@@ -918,7 +807,7 @@ combiner(std::vector<IQIndex> inds,
         *it = dag(I);
         }
 
-    return IQTensor(QN(),IQIndexSet(std::move(newinds)),make_newdata<ITCombiner>(),{1.0});
+    return IQTensor({std::move(newinds)},ITCombiner());
     }
 
 IQIndex
@@ -929,7 +818,7 @@ findIQInd(const IQTensor& T, const Index& i)
     Print(T.indices());
     Print(i);
     throw ITError("Index i not found in any of T's IQIndices");
-    return IQIndex();
+    return IQIndex{};
     }
 
 
@@ -942,20 +831,16 @@ dir(const IQTensor& T, const IQIndex& I)
     return Out;
 	}
 
-struct IQNormNoScale : RegisterFunc<IQNormNoScale,Real>
-    {
-    template<typename T>
-    Real
-    operator()(const IQTData<T>& d) 
-        { 
-        Real nrm = 0;
-        for(const auto& elt : d.data)
-            {
-            nrm += std::norm(elt);
-            }
-        return std::sqrt(nrm);
+Real
+doTask(const NormNoScale<IQIndex>& N, const IQTData& d) 
+    { 
+    Real nrm = 0;
+    for(const auto& elt : d.data)
+        {
+        nrm += std::norm(elt);
         }
-    };
+    return std::sqrt(nrm);
+    }
 
 Real
 norm(const IQTensor& T)
@@ -964,7 +849,7 @@ norm(const IQTensor& T)
     if(!T) Error("IQTensor is default initialized");
 #endif
     return fabs(T.scale().real0()) *
-           applyFunc<IQNormNoScale>(T.data());
+           doTask<Real>(NormNoScale<IQIndex>{T.inds()},T.data());
     }
 
 IQTensor
@@ -988,41 +873,24 @@ isZero(const IQTensor& T, const Args& args)
     return true;
     }
 
-struct PrintIQT : RegisterFunc<PrintIQT>
-    {
-    std::ostream& s_;
-    const LogNumber& x_;
-    const IQIndexSet& is_;
 
-    PrintIQT(std::ostream& s,
-             const LogNumber& x,
-             const IQIndexSet& is)
-        : s_(s), x_(x), is_(is)
-        { }
-
-    template<typename T>
-    void
-    operator()(const IQTData<T>& d) const;
-    };
-
-template<typename T>
-void PrintIQT::
-operator()(const IQTData<T>& d) const
+void
+doTask(PrintIT& P, const IQTData& d)
     {
     Real scalefac = 1.0;
-    if(!x_.isTooBigForReal()) scalefac = x_.real0();
-    else s_ << "(omitting too large scale factor)\n";
+    if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
+    else P.s << "(omitting too large scale factor)\n";
 
-    auto rank = is_.r();
+    auto rank = P.is.r();
     if(rank == 0) 
         {
-        s_ << "  ";
-        detail::printVal(s_,scalefac*d.data.front());
+        P.s << "  ";
+        detail::printVal(P.s,scalefac*d.data.front());
         return;
         }
         
     vector<long> block(rank,0);
-    auto blockIndex = [&block,this](long i)->const Index& { return (this->is_[i])[block[i]]; };
+    auto blockIndex = [&block,&P](long i)->const Index& { return (P.is[i])[block[i]]; };
 
     Range brange;
     detail::GCounter C(rank);
@@ -1030,13 +898,13 @@ operator()(const IQTData<T>& d) const
         {
         //Determine block indices (where in the IQIndex space
         //this non-zero block is located)
-        inverseBlockInd(io.block,is_,block);
+        inverseBlockInd(io.block,P.is,block);
         //Print Indices of this block
         for(auto i : count(rank))
             {
-            s_ << blockIndex(i) << "<" << is_[i].dir() << "> ";
+            P.s << blockIndex(i) << "<" << P.is[i].dir() << "> ";
             }
-        s_ << "\n";
+        P.s << "\n";
         //Wire up GCounter with appropriate dims
         C.reset();
         for(int i = 0; i < rank; ++i)
@@ -1046,14 +914,14 @@ operator()(const IQTData<T>& d) const
             auto val = scalefac*d.data[os];
             if(std::norm(val) > Global::printScale())
                 {
-                s_ << "  (";
+                P.s << "  (";
                 for(auto ii = C.i.mini(); ii <= C.i.maxi(); ++ii)
                     {
-                    s_ << (1+C.i(ii));
-                    if(ii < C.i.maxi()) s_ << ",";
+                    P.s << (1+C.i(ii));
+                    if(ii < C.i.maxi()) P.s << ",";
                     }
-                s_ << ") ";
-                detail::printVal(s_,val);
+                P.s << ") ";
+                detail::printVal(P.s,val);
                 }
             }
         }
@@ -1071,7 +939,7 @@ operator<<(std::ostream& s, const IQTensor& T)
         //Checking whether std::ios::floatfield is set enables 
         //printing the contents of an ITensor when using the printf
         //format string %f (or another float-related format string)
-        const bool ff_set = (std::ios::floatfield & s.flags()) != 0;
+        bool ff_set = (std::ios::floatfield & s.flags()) != 0;
 
         if(ff_set || Global::printdat())
             {
@@ -1082,7 +950,7 @@ operator<<(std::ostream& s, const IQTensor& T)
     else
         {
         if(T.inds()) s << T.inds() << "\n";
-        s << "(default constructed)\n";
+        s << "(storage not allocated)\n";
         }
 	s << "\\------------------------------------\n\n";
     return s;

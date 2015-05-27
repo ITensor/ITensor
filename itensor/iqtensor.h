@@ -37,11 +37,16 @@ operator+=(IQTensor& A, const IQTensor& B);
 IQTensor& 
 operator-=(IQTensor& A, const IQTensor& B);
 
-//Multiplication and division by complex scalar
+//Add ITensor to corresponding block of IQTensor
 IQTensor& 
-operator*=(IQTensor& T, Cplx z);
-inline IQTensor& 
-operator/=(IQTensor& T, Cplx z) { return operator*=(T,1./z); }
+operator+=(IQTensor& A, const ITensor& B);
+
+//TODO
+//Multiplication and division by complex scalar
+//IQTensor& 
+//operator*=(IQTensor& T, Cplx z);
+//inline IQTensor& 
+//operator/=(IQTensor& T, Cplx z) { return operator*=(T,1./z); }
 
 IQTensor inline
 operator*(IQTensor A, const IQTensor& B) { A *= B; return A; }
@@ -51,14 +56,13 @@ IQTensor inline
 operator*(Real fac, IQTensor T) { T *= fac; return T; }
 IQTensor inline
 operator/(IQTensor T, Real fac) {  T /= fac; return T; }
-IQTensor inline
-operator*(IQTensor T, Complex fac) {  T *= fac; return T; }
-IQTensor inline
-operator*(Complex fac, IQTensor T) { T *= fac; return T; }
-IQTensor inline
-operator*(IQTensor T, const LogNumber& fac) {  T *= fac; return T; }
-IQTensor inline
-operator*(const LogNumber& fac, IQTensor T) { T *= fac; return T; }
+
+//TODO
+//IQTensor inline
+//operator*(IQTensor T, Complex fac) {  T *= fac; return T; }
+//IQTensor inline
+//operator*(Complex fac, IQTensor T) { T *= fac; return T; }
+
 IQTensor inline
 operator*(IQTensor T, const IQIndexVal& iv) { T *= iv; return T; }
 IQTensor inline
@@ -117,12 +121,8 @@ IQTensor inline
 dag(IQTensor res) { res.dag(); return res; }
 
 //Compute divergence of IQTensor T
-QN inline
-div(const IQTensor& T) 
-    { 
-    if(!T) Error("div(IQTensor) not defined for null IQTensor");
-    return T.div_; 
-    }
+QN
+div(const IQTensor& T);
 
 IQTensor
 combiner(std::vector<IQIndex> inds, const Args& args = Global::args());
@@ -156,24 +156,24 @@ norm(const IQTensor& T);
 IQTensor
 randomize(IQTensor T, const Args& args = Global::args());
 
-template <typename... Inds>
-IQTensor
-randomTensor(const IQIndex& i1, Inds&&... inds)
-    {
-    return randomize(IQTensor(i1,std::forward<Inds>(inds)...));
-    }
+//template <typename... Inds>
+//IQTensor
+//randomTensor(const IQIndex& i1, Inds&&... inds)
+//    {
+//    return randomize(IQTensor(i1,std::forward<Inds>(inds)...));
+//    }
 template <typename... IndVals>
 IQTensor
 randomTensor(const IQIndexVal& iv1, IndVals&&... ivs)
     {
     return randomize(IQTensor(iv1,std::forward<IndVals>(ivs)...));
     }
-template <typename... Inds>
-IQTensor
-randomTensor(const QN& q, const IQIndex& i1, Inds&&... inds)
-    {
-    return randomize(IQTensor(q,i1,std::forward<Inds>(inds)...));
-    }
+//template <typename... Inds>
+//IQTensor
+//randomTensor(const QN& q, const IQIndex& i1, Inds&&... inds)
+//    {
+//    return randomize(IQTensor(q,i1,std::forward<Inds>(inds)...));
+//    }
 
 
 

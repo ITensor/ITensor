@@ -13,8 +13,11 @@ namespace itensor {
 class IndexQN;
 class IQIndexDat;
 class IQIndexVal;
+template<typename IndexT>
+class ITensorT;
 
 using IQIndexDatPtr = std::shared_ptr<IQIndexDat>;
+using ITensor = ITensorT<Index>;
 
 //
 // IQIndex

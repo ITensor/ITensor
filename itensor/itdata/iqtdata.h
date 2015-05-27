@@ -13,6 +13,18 @@ namespace itensor {
 
 class IQIndex;
 class QN;
+class IQTData;
+
+QN
+calcDiv(const IQIndexSet& is, const IQTData& D);
+
+QN
+calcDiv(const IQIndexSet& is, const std::vector<long>& block_ind);
+
+void
+inverseBlockInd(long block,
+                const IQIndexSet& is,
+                std::vector<long>& ind);
 
 class IQTData
     {
@@ -36,12 +48,20 @@ class IQTData
         //^ tensor data stored contiguously
     //////////////
 
-    IQTData(const IndexSetT<IQIndex>& is, 
-            const QN& Q);
+    IQTData(const IQIndexSet& is, 
+            const QN& div_);
+
+    IQTData(IQTData&& other) :
+        offsets(std::move(other.offsets)),
+        data(std::move(other.data))
+        { }
+
+
+    explicit operator bool() const { return !data.empty(); }
 
     template<typename Indexable>
     const Real*
-    getBlock(const IndexSetT<IQIndex>& is,
+    getBlock(const IQIndexSet& is,
              const Indexable& block_ind) const;
 
     template<typename Indexable>
@@ -71,7 +91,7 @@ class IQTData
 
     long
     updateOffsets(const IndexSetT<IQIndex>& is,
-                  const QN& Q);
+                  const QN& div);
 
     virtual
     ~IQTData() { }
