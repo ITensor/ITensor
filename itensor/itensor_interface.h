@@ -46,9 +46,9 @@ class ITensorT
 
     //Construct rank n tensor, all elements set to zero
     template <typename... Indices>
-    ITensorT(const Index& i1, 
-             const Index& i2, 
-             const Index& i3, 
+    ITensorT(const IndexT& i1,
+             const IndexT& i2, 
+             const IndexT& i3, 
              const Indices&... rest) { }
 
     //Construct rank 0 tensor (scalar), value set to val
@@ -81,11 +81,11 @@ class ITensorT
 
     template <typename... IndexVals>
     Real
-    real(IndexVals&&... ivs) const { return Real{}; }
+    real(IndexVals&&... ivs) const;
 
     template <typename... IndexVals>
     Cplx
-    cplx(IndexVals&&... ivs) const { return Cplx{}; }
+    cplx(IndexVals&&... ivs) const;
 
     //Set element at location given by collection
     //of IndexVals. Will not switch storage
@@ -132,19 +132,19 @@ class ITensorT
     //for each element, assign result to each element.
     template <typename Func>
     ITensorT&
-    generate(Func&& f) { return *this; }
+    generate(Func&& f);
 
     //Apply a function of the form f(x)->y
     //to each element x, replacing it with y
     template <typename Func>
     ITensorT&
-    apply(Func&& f) { return *this; }
+    apply(Func&& f);
 
     //Apply a function of the form f(x)->void
     //to each element x.
     template <typename Func>
     const ITensorT&
-    visit(Func&& f) const { return *this; }
+    visit(Func&& f) const;
 
     //
     // Complex number methods

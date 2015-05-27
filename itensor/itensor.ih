@@ -65,7 +65,7 @@ ITensorT(const IndexVal& iv1,
     set(1.,iv1,rest...);
     }
 
-template<IndexT> 
+template<typename IndexT> 
 template <typename... IVs>
 Cplx ITensorT<IndexT>::
 cplx(IVs&&... ivs) const
@@ -80,7 +80,7 @@ cplx(IVs&&... ivs) const
     if(nsize != size_t(inds().rn())) 
         Error(format("Wrong number of m>1 IndexVals passed to real/cplx (expected %d, got %d)",inds().rn(),nsize));
 #endif
-    GetElt<size,IndexT>::Inds inds;
+    std::array<long,size> inds;
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
     auto z = doTask<Cplx>(GetElt<size,IndexT>(is_,inds),store_);
 	try {
@@ -230,7 +230,7 @@ doTask(GenerateIT<F>& G, const ITCplx& d, ManagePtr& mp)
     }
 
 
-template<IndexT>
+template<typename IndexT>
 template <typename Func>
 ITensorT<IndexT>& ITensorT<IndexT>::
 generate(Func&& f)
@@ -273,7 +273,7 @@ doTask(ApplyIT<F>& A, ITDiag<T>& d)
         }
     }
 
-template<IndexT>
+template<typename IndexT>
 template <typename Func>
 ITensorT<IndexT>& ITensorT<IndexT>::
 apply(Func&& f)
@@ -300,7 +300,7 @@ doTask(VisitIT<F>& V, const ITCplx& d)
         }
     }
 
-template<IndexT>
+template<typename IndexT>
 template <typename Func>
 const ITensorT<IndexT>& ITensorT<IndexT>::
 visit(Func&& f) const

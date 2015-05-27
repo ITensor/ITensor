@@ -10,7 +10,7 @@ namespace itensor {
 template<>
 IQTensor::
 ITensorT(const IQIndex& i1) :
-    is_(i1)
+    is_(i1),
     scale_(1.)
     { }
 
@@ -18,7 +18,7 @@ template<>
 IQTensor::
 ITensorT(const IQIndex& i1,
          const IQIndex& i2) :
-    is_(i1,i2)
+    is_(i1,i2),
     scale_(1.)
     { }
 
@@ -33,32 +33,36 @@ ITensorT(const IQIndex& i1,
     scale_(1.)
     { }
 
-template<>
-template <typename... IQIVals>
-IQTensor::
-IQTensor(const IQIndexVal& iv1,
-         const IQIVals&... rest) :
-    scale_(1.)
-    { 
-    const size_t size = 1+sizeof...(rest);
-    auto ivs = std::array<IQIndexVal,size>{{iv1,rest...}};
-    std::array<IQIndex,size> inds;
-    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
-    is_ = IQIndexSet(inds);
-    for(auto& iv : ivs) div_ += iv.qn()*iv.index.dir();
-    store_ = std::make_shared<IQTData<Real>>(is_,div_);
-    set(1.,iv1,rest...);
-    }
+//TODO: need to implement this
+//template<>
+//template <typename... IQIVals>
+//IQTensor::
+//ITensorT(const IQIndexVal& iv1,
+//         const IQIVals&... rest) :
+//    scale_(1.)
+//    { 
+//    const size_t size = 1+sizeof...(rest);
+//    auto ivs = std::array<IQIndexVal,size>{{iv1,rest...}};
+//    std::array<IQIndex,size> inds;
+//    for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
+//    is_ = IQIndexSet(inds);
+//    QN div;
+//    for(auto& iv : ivs) div += iv.qn()*iv.index.dir();
+//    store_ = std::make_shared<ITDataType<IQTData>>(is_,div);
+//    set(1.,iv1,rest...);
+//    }
 
+template<size_t size>
 Cplx
-doTask(GetElt<T,size>& G, const IQTData<V>& d)
+doTask(GetElt<size,IQIndex>& G, const IQTData& d)
     {
-    auto* pelt = d.getElt(is_,inds_);
-    if(pelt) elt_ = *pelt;
-    else     elt_ = 0;
+    auto* pelt = d.getElt(G.is,G.inds);
+    if(pelt) return *pelt;
+    return 0;
     }
 
 
+template<size_t size>
 void
 doTask(SetElt<Real,size,IQIndex>& S, IQTData& d)
     {
@@ -67,6 +71,7 @@ doTask(SetElt<Real,size,IQIndex>& S, IQTData& d)
     else     Error("Setting IQTensor element non-zero would violate its symmetry.");
     }
 
+template<>
 template<typename... IQIndexVals>
 void IQTensor::
 set(Cplx val, const IQIndexVals&... ivs)
@@ -79,9 +84,9 @@ set(Cplx val, const IQIndexVals&... ivs)
 #ifdef DEBUG
         if(!is_) Error("Setting element of default constructed IQTensor");
 #endif
-        div_ = QN();
-        for(auto& iv : vals) div_ += iv.qn()*iv.index.dir();
-        if(val.imag() == 0) store_ = std::make_shared<IQTData<Real>>(is_,div_);
+        QN div;
+        for(auto& iv : vals) div += iv.qn()*iv.index.dir();
+        if(val.imag() == 0) store_ = std::make_shared<ITDataType<IQTData>>(is_,div);
         else Error("Setting complex IQTensor element not implemented");
         }
     scaleTo(1.);

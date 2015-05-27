@@ -15,6 +15,13 @@ namespace itensor {
 
 using IQTensor = ITensorT<IQIndex>;
 
+template<>
+IQTensor& IQTensor::conj();
+template<>
+IQTensor& IQTensor::dag();
+template<>
+void IQTensor::scaleTo(const LogNumber&);
+
 //Contracting product
 //All matching Index pairs automatically contracted
 //Cji = \sum_{k,l} Akjl * Blki
@@ -109,6 +116,7 @@ operator*(const IndexVal& iv, const IQTensor& T)
 
 bool
 isComplex(const IQTensor& T);
+
 
 //Take complex conjugate of IQTensor res,
 //but do not reverse IQIndex arrows

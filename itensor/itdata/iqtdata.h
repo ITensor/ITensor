@@ -48,13 +48,10 @@ class IQTData
         //^ tensor data stored contiguously
     //////////////
 
+    IQTData() { }
+
     IQTData(const IQIndexSet& is, 
             const QN& div_);
-
-    IQTData(IQTData&& other) :
-        offsets(std::move(other.offsets)),
-        data(std::move(other.data))
-        { }
 
 
     explicit operator bool() const { return !data.empty(); }
