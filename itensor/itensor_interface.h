@@ -14,7 +14,10 @@ template <typename DType>
 struct ITDataType;
 
 //
-// IndexT - interface template for ITensor and IQTensor
+// ITensorT - interface template for ITensor and IQTensor
+//
+// ITensor is ITensorT<Index>
+// IQTensor is ITensorT<IQIndex>
 //
 
 template<typename IndexT>

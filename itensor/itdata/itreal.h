@@ -12,13 +12,6 @@ namespace itensor {
 
 class ManagePtr;
 
-//
-// Optimization TODO: 
-//  replace std::vector storage with
-//  storage type only holding data ptr
-//  and size
-//
-
 class ITReal
     {
     public:

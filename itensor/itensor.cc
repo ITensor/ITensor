@@ -52,26 +52,6 @@ ITensorT(Cplx val)
     //    store_ = std::make_shared<ITDataType<ITDiag<Cplx>>>(val);
     }
 
-//vector<Index>
-//computeNewInds(const IndexSet& Lis,
-//               const Label& Lind,
-//               const IndexSet& Ris,
-//               const Label& Rind,
-//               size_t size_hint = 0)
-//    {
-//    vector<Index> newind;
-//    if(size_hint > 0) newind.reserve(size_hint);
-//    for(int j = 0; j < Lis.r(); ++j)
-//        {
-//        if(Lind[j] > 0) newind.push_back(Lis[j]);
-//        }
-//    for(int j = 0; j < Ris.r(); ++j)
-//        {
-//        if(Rind[j] > 0) newind.push_back(Ris[j]);
-//        }
-//    return newind;
-//    }
-
 ITensor&
 operator*=(ITensor& A, const ITensor& B)
     {
