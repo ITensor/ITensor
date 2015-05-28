@@ -339,12 +339,14 @@ struct CProps
             if(extra_pABcost < pCcost)
                 {
                 //printfln("dleft=%d, dmid=%d, dright=%d",dleft,dmid,dright);
-                //printfln("Permuting %s %s (%d) instead of permuting C (%d)",permuteA_?"":"A",permuteB_?"":"B",extra_pABcost,pCcost);
+                //if(Global::debug1()) printfln("Permuting %s %s (%d) instead of permuting C (%d)",permuteA_?"":"A",permuteB_?"":"B",extra_pABcost,pCcost);
                 permuteA_ = true;
                 permuteB_ = true;
                 permuteC_ = false;
                 }
             }
+
+        //if(Global::debug1()) printfln("At line %d: permute A,B,C = %s,%s,%s",__LINE__,permuteA_,permuteB_,permuteC_);
 
         if(permuteA_)
             {
@@ -466,7 +468,11 @@ struct CProps
                     ++c;
                     }
             ctrans = false;
-            if(!isTrivial(PC))
+            if(isTrivial(PC))
+                {
+                permuteC_ = false;
+                }
+            else
                 {
                 permuteC_ = true;
                 //Here we already know since pc_triv = false that
@@ -819,7 +825,11 @@ contract(const CProps& p,
 
     if(p.permuteC())
         {
+#ifdef DEBUG
+        if(isTrivial(p.PC)) Error("Calling permute in contract with a trivial permutation");
+#endif
         //cpu_time cpuC; 
+        //if(Global::debug1()) printfln("Permuting C, P = %s, isTrivial = %s",p.PC,isTrivial(p.PC));
         permute(makeRefc(newC),p.PC,C,detail::plusEq<Real>);
         //println("C permuted, took ",cpuC.sincemark());
         }
