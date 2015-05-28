@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_INDEXSET_H
 #define __ITENSOR_INDEXSET_H
 #include <algorithm>
+#include "itensor/util/readwrite.h"
 #include "itensor/util/safe_ptr.h"
 #include "itensor/tensor/range.h"
 #include "itensor/tensor/permutation.h"

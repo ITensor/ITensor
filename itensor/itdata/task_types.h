@@ -6,7 +6,10 @@
 #define __ITENSOR_TASK_TYPES_H_
 
 #include "itensor/util/infarray.h"
+#include "itensor/util/print.h"
 #include "itensor/tensor/permute.h"
+#include "itensor/real.h"
+#include "itensor/indexset.h"
 
 namespace itensor {
 
@@ -14,10 +17,10 @@ namespace itensor {
 // Task Types
 // 
 
-template<size_t size, typename IndexT>
+template<typename IndexT>
 struct GetElt
     {
-    using Inds = std::array<long,size>;
+    using Inds = InfArray<long,28ul>;
 
     const IndexSetT<IndexT>& is;
     const Inds& inds;
@@ -50,10 +53,10 @@ struct GetElt
         }
     };
 
-template<typename T, size_t size, typename IndexT>
+template<typename T, typename IndexT>
 struct SetElt
     {
-    using Inds = std::array<long,size>;
+    using Inds = InfArray<long,28ul>;
     T elt;
     const IndexSetT<IndexT>& is;
     const Inds& inds;
@@ -116,6 +119,29 @@ struct PrintIT
             s << format("%.2f",fabs(scalefac)*nrm_no_scale);
             }
         s << " (" << type_name << ")}\n";
+        }
+
+    void
+    printVal(double val)
+        {
+        if(std::fabs(val) > 1E-10)
+            s << val << "\n";
+        else
+            s << format("%.8E\n",val);
+        }
+
+    void
+    printVal(const Cplx& val)
+        {
+        if(std::norm(val) > 1E-10)
+            {
+            auto sgn = (val.imag() < 0 ? '-' : '+');
+            s << val.real() << sgn << std::fabs(val.imag()) << "i\n";
+            }
+        else
+            {
+            s << format("%.8E\n",val);
+            }
         }
     };
 
@@ -251,15 +277,45 @@ struct Contract
         Nis(std::move(other.Nis)),
         scalefac(other.scalefac)
         { }
+
+    template<typename Data>
+    void
+    computeScalefac(Data& dat)
+        {
+        scalefac = 0;
+        for(auto elt : dat) scalefac += elt*elt;
+        scalefac = std::sqrt(scalefac);
+        if(scalefac == 0) return;
+        for(auto& elt : dat) elt /= scalefac;
+        }
     };
+
+enum class 
+StorageType
+    { 
+    Null=0, 
+    ITReal=1, 
+    ITCplx=2, 
+    ITCombiner=3, 
+    ITDiagReal=4, 
+    ITDiagCplx=5,
+    IQTData=6
+    }; 
 
 struct Write
     {
     std::ostream& s;
-    Write(std::ostream& s_) : s(s_) { }
-    };
 
-struct IsComplex { };
+    Write(std::ostream& s_) : s(s_) { }
+
+    template<class T>
+    void
+    writeType(StorageType type, const T& data)
+        {
+        s.write((char*)&type,sizeof(type));
+        write(s,data); 
+        }
+    };
 
 
 } //namespace itensor 

@@ -8,10 +8,12 @@
 //
 // To register a new storage type:
 //
-// (1) Include the header file defining the new storage type
+// (1) Include the header file in
+//     which the new type is defined
 //
-// (2) Add a new line to the REGISTER macro below, 
-//     following the same format
+// (2) Add a line to the REGISTER macro
+//     below, following the same format
+//
 //
 
 //(1)
@@ -27,7 +29,7 @@
         NewType   ITCplx           EndType \
         NewType   ITCombiner       EndType \
         NewType   ITDiag<Real>     EndType \
-        NewType   ITDiag<Complex>  EndType \
+        NewType   ITDiag<Cplx>     EndType \
         NewType   IQTData          EndType \
 
 #endif

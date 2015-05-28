@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include "itensor/global.h"
+#include "itensor/arrow.h"
 
 namespace itensor {
 

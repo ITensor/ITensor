@@ -66,9 +66,9 @@ cplx(IVs&&... ivs) const
     if(nsize != size_t(inds().rn())) 
         Error(format("Wrong number of m>1 IndexVals passed to real/cplx (expected %d, got %d)",inds().rn(),nsize));
 #endif
-    std::array<long,size> inds;
+    typename GetElt<IndexT>::Inds inds(size);
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
-    auto z = doTask<Cplx>(GetElt<size,IndexT>(is_,inds),store_);
+    auto z = doTask<Cplx>(GetElt<IndexT>(is_,inds),store_);
 	try {
 	    return z*scale_.real(); 
 	    }
@@ -99,42 +99,6 @@ real(IVals&&... ivs) const
     return z.real();
     }
 
-template<size_t size>
-Cplx
-doTask(const GetElt<size,Index>& g, const ITReal& d)
-    {
-    return d[ind(g.is,g.inds)];
-    }
-
-template<size_t size>
-Cplx
-doTask(const GetElt<size,Index>& g, const ITCplx& d)
-    {
-    return d.get(ind(g.is,g.inds));
-    }
-
-template<size_t size>
-Cplx
-doTask(const GetElt<size,Index>& g, const ITCombiner& c)
-    {
-    if(g.inds.size()!=0) Error("GetElt not defined for non-scalar ITCombiner storage");
-    return Cplx(1.,0.);
-    }
-
-template <size_t size, typename T>
-Cplx
-doTask(const GetElt<size,Index>& g, const ITDiag<T>& d)
-    {
-    auto first_i = (g.inds.empty() ? 0 : g.inds.front());
-    //Check if inds_ reference an
-    //element on the diagonal, else zero
-    for(auto i : g.inds) if(i != first_i) return 0;
-
-    if(d.allSame()) return d.val;
-    return d.store.at(first_i);
-    }
-
-
 template<>
 template <typename... IndexVals>
 void ITensor::
@@ -143,78 +107,13 @@ set(Cplx val, const IndexVals&... ivs)
     static constexpr auto size = sizeof...(ivs);
     scaleTo(1.);
     const std::array<IndexVal,size> vals{{ static_cast<IndexVal>(ivs)...}};
-    std::array<long,size> inds;
+    SetElt<Real,Index>::Inds inds(size);
     detail::permute_map(is_,vals,inds,[](const IndexVal& iv) { return iv.val-1; });
     if(val.imag() == 0)
-        doTask(SetElt<Real,size,Index>{val.real(),is_,inds},store_);
+        doTask(SetElt<Real,Index>{val.real(),is_,inds},store_);
     else
-        doTask(SetElt<Cplx,size,Index>{val,is_,inds},store_);
+        doTask(SetElt<Cplx,Index>{val,is_,inds},store_);
     }
-
-template<size_t size>
-void
-doTask(const SetElt<Real,size,Index>& s, ITReal& d)
-    {
-    d[ind(s.is,s.inds)] = s.elt;
-    }
-
-template<size_t size>
-void
-doTask(const SetElt<Real,size,Index>& s, ITCplx& d)
-    {
-    d.set(ind(s.is,s.inds),s.elt);
-    }
-
-template<size_t size>
-void
-doTask(const SetElt<Cplx,size,Index>& s, const ITReal& d, ManagePtr& mp)
-    {
-    auto nd = mp.makeNewData<ITCplx>(d);
-    nd->set(ind(s.is,s.inds),s.elt);
-    }
-
-template<size_t size>
-void
-doTask(const SetElt<Cplx,size,Index>& s, ITCplx& d)
-    {
-    d.set(ind(s.is,s.inds),s.elt);
-    }
-
-
-template<typename F>
-void
-doTask(GenerateIT<F>& G, const ITReal& d, ManagePtr& mp)
-    { 
-    if(G.isComplex())
-        {
-        auto* nd = mp.makeNewData<ITCplx>(d.size());
-        for(auto j = 0ul; j < nd->csize(); ++j)
-            nd->set(j,G.f());
-        }
-    else
-        {
-        auto* pd = mp.modifyData(d);
-        std::generate(pd->begin(),pd->end(),[&G](){ return std::real(G.f()); });
-        }
-    }
-
-template<typename F>
-void
-doTask(GenerateIT<F>& G, const ITCplx& d, ManagePtr& mp)
-    { 
-    if(G.isComplex())
-        {
-        auto* pd = mp.modifyData(d);
-        for(auto j = 0ul; j < pd->csize(); ++j)
-            pd->set(j,G.f());
-        }
-    else
-        {
-        auto* nd = mp.makeNewData<ITReal>(d.csize());
-        std::generate(nd->begin(),nd->end(),[&G](){ return std::real(G.f()); });
-        }
-    }
-
 
 template<typename IndexT>
 template <typename Func>
@@ -226,39 +125,6 @@ generate(Func&& f)
     return *this;
     }
 
-template<typename F>
-void
-doTask(ApplyIT<F>& A, ITReal& d)
-    { 
-    for(auto& elt : d) elt = detail::call<Real>(A.f,elt);
-    }
-
-template<typename F>
-void
-doTask(ApplyIT<F>& A, ITCplx& d)
-    { 
-    for(auto j = 0ul; j < d.csize(); ++j)
-        {
-        auto res = detail::call<Cplx>(A.f,d.get(j));
-        d.set(j,res);
-        }
-    }
-    
-template <typename F, typename T,
-          typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
-void
-doTask(ApplyIT<F>& A, ITDiag<T>& d) 
-    { 
-    if(d.allSame()) 
-        {
-        d.val = detail::call<T>(A.f,d.val);
-        }
-    else
-        {
-        for(auto& elt : d.store) elt = detail::call<T>(A.f,elt);
-        }
-    }
-
 template<typename IndexT>
 template <typename Func>
 ITensorT<IndexT>& ITensorT<IndexT>::
@@ -267,23 +133,6 @@ apply(Func&& f)
     scaleTo(1);
     doTask(ApplyIT<decltype(f)>{std::forward<Func>(f)},store_);
     return *this;
-    }
-
-template<typename F>
-void
-doTask(VisitIT<F>& V, const ITReal& d)
-    { 
-    for(auto& elt : d) detail::call<void>(V.f,V.scale_fac * elt);
-    }
-
-template<typename F>
-void
-doTask(VisitIT<F>& V, const ITCplx& d)
-    { 
-    for(auto j = 0ul; j < d.csize(); ++j)
-        {
-        detail::call<void>(V.f,V.scale_fac * d.get(j));
-        }
     }
 
 template<typename IndexT>
@@ -341,8 +190,6 @@ randomTensor(const IndexSetT<IndexT>& inds)
     return randomize(ITensorT<IndexT>{inds});
     }
 
-void
-doTask(Conj,const ITCombiner& d);
 
 } //namespace itensor
 

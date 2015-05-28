@@ -6,7 +6,7 @@
 #define __ITENSOR_REAL_H
 #include <cmath>
 #include "math.h"
-#include "itensor/matrix/types.h"
+#include "itensor/types.h"
 #include "itensor/util/print.h"
 
 namespace itensor {

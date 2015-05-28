@@ -5,9 +5,12 @@
 #ifndef __ITENSOR_ITREAL_H
 #define __ITENSOR_ITREAL_H
 
-#include "itensor/matrix/types.h"
+#include "itensor/itdata/task_types.h"
+#include "itensor/util/readwrite.h"
 
 namespace itensor {
+
+class ManagePtr;
 
 //
 // Optimization TODO: 
@@ -16,8 +19,9 @@ namespace itensor {
 //  and size
 //
 
-struct ITReal
+class ITReal
     {
+    public:
     using storage_type = std::vector<Real>;
     using size_type = storage_type::size_type;
     using iterator = storage_type::iterator;
@@ -109,6 +113,62 @@ write(std::ostream& s, const ITReal& dat)
     write(s,dat.store);
     }
 
+
+Cplx 
+doTask(const GetElt<Index>& g, const ITReal& d);
+
+void
+doTask(const SetElt<Real,Index>& s, ITReal& d);
+
+void
+doTask(const SetElt<Cplx,Index>& s, const ITReal& d, ManagePtr& mp);
+
+void
+doTask(const FillReal& f, ITReal& d);
+
+void
+doTask(const FillCplx& f, const ITReal& d, ManagePtr& mp);
+
+void
+doTask(const MultCplx& M, const ITReal& d, ManagePtr& mp);
+
+void
+doTask(const MultReal& m, ITReal& d);
+
+Real
+doTask(const NormNoScale<Index>& N, const ITReal& d);
+
+void
+doTask(Conj,const ITReal& d);
+
+void
+doTask(TakeReal, const ITReal& );
+
+void
+doTask(TakeImag, const ITReal& d, ManagePtr& mp);
+
+void
+doTask(PrintIT<Index>& P, const ITReal& d);
+
+Cplx
+doTask(SumEls<Index>, const ITReal& d);
+
+void
+doTask(Write& W, const ITReal& d);
+
+void
+doTask(Contract<Index>& C,
+       const ITReal& a1,
+       const ITReal& a2,
+       ManagePtr& mp);
+
+void
+doTask(const PlusEQ<Index>& P,
+       ITReal& a1,
+       const ITReal& a2);
+
+bool inline
+doTask(CheckComplex, const ITReal& d) { return false; }
 
 } //namespace itensor
 

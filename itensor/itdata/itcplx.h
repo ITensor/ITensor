@@ -5,10 +5,11 @@
 #ifndef __ITENSOR_ITCPLX_H
 #define __ITENSOR_ITCPLX_H
 
-#include "itensor/itdata/itreal.h"
-#include "itensor/util/safe_ptr.h"
+#include "itensor/itdata/task_types.h"
 
 namespace itensor {
+
+class ITReal;
 
 //
 // Optimization TODO: 
@@ -17,8 +18,9 @@ namespace itensor {
 //  and size
 //
 
-struct ITCplx
+class ITCplx
     {
+    public:
     using storage_type = std::vector<Real>;
     using size_type = storage_type::size_type;
     using iterator = storage_type::iterator;
@@ -46,7 +48,7 @@ struct ITCplx
         std::fill(store.begin(),store.begin()+csize(),val);
         }
     //Set all elements equal to (val.real(),val.imag())
-    ITCplx(size_t size, const Complex& val) 
+    ITCplx(size_t size, const Cplx& val) 
         : 
         store(2*size) 
         { 
@@ -54,12 +56,7 @@ struct ITCplx
         }
 
     explicit
-    ITCplx(const ITReal& d)
-        : 
-        store(2*d.size(),0) 
-        { 
-        std::copy(d.begin(),d.end(),store.begin());
-        }
+    ITCplx(const ITReal& d);
 
     template<typename InputIterator>
     ITCplx(InputIterator b, InputIterator e) : store(b,e) { }
@@ -68,43 +65,24 @@ struct ITCplx
     // Accessors
     //
 
-    Complex
+    Cplx
     get(size_type i) const
         {
-        return Complex(store[i],store[csize()+i]);
+        return Cplx(store[i],store[csize()+i]);
         }
 
     void
-    set(size_type i, const Complex& z) 
+    set(size_type i, const Cplx& z) 
         {
         store[i] = z.real();
         store[csize()+i] = z.imag();
         }
 
     ITCplx&
-    operator*=(const Complex& z)
-        {
-        auto r = MAKE_SAFE_PTR(rstart(),csize());
-        auto re = istart(); //imag start is real end
-        auto i = MAKE_SAFE_PTR(istart(),csize());
-        auto a = z.real(),
-             b = z.imag();
-        for(; r != re; ++r, ++i)
-            {
-            auto nr = *r*a-*i*b;
-            auto ni = *i*a+*r*b;
-            *r = nr;
-            *i = ni;
-            }
-        return *this;
-        }
+    operator*=(const Cplx& z);
 
     void
-    fill(const Complex& z)
-        {
-        std::fill(store.begin(),store.begin()+csize(),z.real());
-        std::fill(store.begin()+csize(),store.end(),z.imag());
-        }
+    fill(const Cplx& z);
 
     size_type
     csize() const { return store.size()/2; }
@@ -163,6 +141,70 @@ write(std::ostream& s, const ITCplx& dat)
     {
     write(s,dat.store);
     }
+
+
+Cplx
+doTask(const GetElt<Index>& g, const ITCplx& d);
+
+void
+doTask(const SetElt<Real,Index>& s, ITCplx& d);
+
+void
+doTask(const SetElt<Cplx,Index>& s, ITCplx& d);
+
+void
+doTask(Contract<Index>& C,
+       const ITCplx& a1,
+       const ITCplx& a2,
+       ManagePtr& mp);
+
+void
+doTask(Contract<Index>& C,
+       const ITReal& a1,
+       const ITCplx& a2,
+       ManagePtr& mp);
+
+void
+doTask(Contract<Index>& C,
+       const ITCplx& a1,
+       const ITReal& a2,
+       ManagePtr& mp);
+
+void
+doTask(const FillReal& f, const ITCplx& d, ManagePtr& mp);
+
+void
+doTask(const FillCplx& f, ITCplx& d);
+
+void
+doTask(const MultCplx& M, ITCplx& d); 
+
+void
+doTask(const MultReal& m, ITCplx& d);
+
+Real
+doTask(const NormNoScale<Index>& N, const ITCplx& d);
+
+void
+doTask(Conj, ITCplx& d); 
+
+void
+doTask(TakeReal,ITCplx& d, ManagePtr& mp);
+
+void
+doTask(TakeImag,const ITCplx& d, ManagePtr& mp); 
+
+void
+doTask(PrintIT<Index>& P, const ITCplx& d);
+
+bool
+doTask(CheckComplex,const ITCplx& d);
+
+Cplx
+doTask(SumEls<Index>, const ITCplx& d);
+
+void
+doTask(Write& W, const ITCplx& d);
 
 } //namespace itensor
 

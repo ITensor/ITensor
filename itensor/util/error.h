@@ -22,6 +22,14 @@ struct ITError : std::runtime_error
     ~ITError() { }
     };
 
+struct ResultIsZero : ITError
+    {
+    ResultIsZero(const std::string& message) 
+        : ITError(message)
+        { }
+    };
+
+
 
 inline std::ostream&
 operator<<(std::ostream& s, const ITError& e)

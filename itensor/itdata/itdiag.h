@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_ITDIAG_H
 #define __ITENSOR_ITDIAG_H
 
-#include "itensor/matrix/types.h"
+#include "itensor/itdata/itreal.h"
 
 namespace itensor {
 
@@ -107,6 +107,77 @@ write(std::ostream& s, const ITDiag<T>& dat)
     write(s,dat.val);
     write(s,dat.store);
     }
+
+template <typename T>
+Cplx
+doTask(const GetElt<Index>& g, const ITDiag<T>& d);
+
+void
+doTask(Contract<Index>& C,
+       const ITReal& t,
+       const ITDiag<Real>& d,
+       ManagePtr& mp);
+void
+doTask(Contract<Index>& C,
+       const ITDiag<Real>& d,
+       const ITReal& t,
+       ManagePtr& mp);
+
+void
+doTask(const PlusEQ<Index>& P,
+       ITDiag<Real>& a1,
+       const ITDiag<Real>& a2);
+
+template<typename T>
+void
+doTask(const FillReal& f, const ITDiag<T>& d, ManagePtr& mp);
+
+template<typename T>
+void
+doTask(const FillCplx& f, const ITDiag<T>& d, ManagePtr& mp);
+
+template<typename T>
+void
+doTask(const MultReal& m, ITDiag<T>& d);
+
+template<typename T>
+Real
+doTask(const NormNoScale<Index>& N, const ITDiag<T>& d);
+
+void
+doTask(Conj, ITDiag<Cplx>& d);
+
+void
+doTask(Conj,const ITDiag<Real>& d);
+
+void
+doTask(TakeReal,const ITDiag<Cplx>& d, ManagePtr& mp);
+
+void
+doTask(TakeReal, const ITDiag<Real>& );
+
+void
+doTask(TakeImag,const ITDiag<Cplx>& d, ManagePtr& mp);
+
+template<typename T>
+void
+doTask(PrintIT<Index>& P, const ITDiag<T>& d);
+
+bool
+doTask(CheckComplex,const ITDiag<Real>& d);
+
+bool
+doTask(CheckComplex,const ITDiag<Cplx>& d);
+
+template <class T>
+Cplx
+doTask(SumEls<Index> S, const ITDiag<T>& d);
+
+void
+doTask(Write& W, const ITDiag<Real>& d);
+
+void
+doTask(Write& W, const ITDiag<Cplx>& d);
 
 } //namespace itensor
 

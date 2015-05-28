@@ -12,7 +12,7 @@
 
 #include <vector>
 #include "itensor/util/print.h"
-#include "itensor/matrix/types.h"
+#include "itensor/types.h"
 #include "itensor/matrix/strideiter.h"
 
 namespace itensor {

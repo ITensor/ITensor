@@ -10,7 +10,7 @@
 namespace itensor {
 
 struct ITData;
-template <class DType>
+template <typename DType>
 struct ITDataType;
 
 //
@@ -385,6 +385,8 @@ swapPrime(ITensorT<IndexT> T,
     return T; 
     }
 
+//Apply x = f(x) for each element x of T
+//and return the resulting tensor
 template<typename IndexT, typename F>
 ITensorT<IndexT>
 apply(ITensorT<IndexT> T, F&& f)

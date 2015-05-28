@@ -157,7 +157,7 @@ class VarArray
     void
     check_ind(size_t i) const
         {
-        if(i >= size_) Error(format("index (%d >= %d) out of range in VarArray",i,size_));
+        if(i >= size_) Error("index out of range in VarArray");
         }
     void
     check_size() const

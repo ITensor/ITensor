@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 #include "math.h"
-#include "itensor/matrix/types.h"
+#include "itensor/types.h"
 
 namespace itensor {
 

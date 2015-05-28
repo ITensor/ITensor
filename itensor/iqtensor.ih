@@ -36,24 +36,6 @@ ITensorT(const IQIndexVal& iv1,
     set(1.,iv1,rest...);
     }
 
-template<size_t size>
-Cplx
-doTask(GetElt<size,IQIndex>& G, const IQTData& d)
-    {
-    auto* pelt = d.getElt(G.is,G.inds);
-    if(pelt) return *pelt;
-    return 0;
-    }
-
-
-template<size_t size>
-void
-doTask(SetElt<Real,size,IQIndex>& S, IQTData& d)
-    {
-    auto* pelt = d.getElt(S.is,S.inds);
-    if(pelt) *pelt = S.elt;
-    else     Error("Setting IQTensor element non-zero would violate its symmetry.");
-    }
 
 template<>
 template<typename... IQIndexVals>
@@ -74,38 +56,13 @@ set(Cplx val, const IQIndexVals&... ivs)
         else Error("Setting complex IQTensor element not implemented");
         }
     scaleTo(1.);
-    std::array<long,size> inds;
+    typename SetElt<Real,IQIndex>::Inds inds(size);
     detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.val-1; });
     if(val.imag() == 0)
-        doTask(SetElt<Real,size,IQIndex>{val.real(),is_,inds},store_);
+        doTask(SetElt<Real,IQIndex>{val.real(),is_,inds},store_);
     else
-        doTask(SetElt<Cplx,size,IQIndex>{val,is_,inds},store_);
+        doTask(SetElt<Cplx,IQIndex>{val,is_,inds},store_);
     }
-
-template<typename F>
-void
-doTask(GenerateIT<F>& G, IQTData& d)
-    {
-    std::generate(d.data.begin(),d.data.end(),G.f);
-    }
-
-template <typename F>
-void
-doTask(ApplyIT<F>& A, IQTData& d)
-    {
-    for(auto& elt : d.data)
-        elt = A.f(elt);
-    }
-
-template <typename F>
-void
-doTask(VisitIT<F>& V, const IQTData& d)
-    {
-    for(const auto& elt : d.data)
-        V.f(elt*V.scale_fac);
-    }
-
-
 
 } //namespace itensor
 

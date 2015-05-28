@@ -173,6 +173,7 @@ norm(const IQTensor& T);
 IQTensor
 randomize(IQTensor T, const Args& args = Global::args());
 
+
 //template <typename... Inds>
 //IQTensor
 //randomTensor(const IQIndex& i1, Inds&&... inds)

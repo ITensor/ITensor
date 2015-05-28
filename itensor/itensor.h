@@ -4,9 +4,8 @@
 //
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
+#include "itensor/itdata/dotask_templates.h"
 #include "itensor/itensor_interface.h"
-#include "itensor/task_types.h"
-#include "itensor/itdata/itdata.h"
 #include "itensor/matrix/mat.h"
 #include "itensor/detail/call_rewrite.h"
 
@@ -16,6 +15,7 @@ namespace itensor {
 // ITensor
 //
 // For the ITensor class interface, see itensor_interface.h
+// For the available operators see below
 //
 using ITensor = ITensorT<Index>;
 
@@ -175,12 +175,6 @@ randomTensor(const IndexSetT<IndexT>& inds);
 ITensor
 matrixTensor(Mat&& M, const Index& i1, const Index& i2);
 
-//Apply x = f(x) for each element x of T
-//and return the resulting tensor
-template<typename F>
-ITensor
-apply(ITensor T, F&& f);
-
 //Compute the norm of an ITensor.
 //Thinking of elements as a vector, equivalent to sqrt(v*v).
 //Result is equivalent to sqrt((T*T).real()) 
@@ -246,6 +240,12 @@ multSiteOps(ITensorT<IndexT> A, const ITensorT<IndexT>& B)
     A.mapprime(2,1,Site);
     return A;
     }
+
+template<> ITensor::
+ITensorT(const Index& i1);
+
+template<> ITensor::
+ITensorT(const Index& i1,const Index& i2);
 
 } //namespace itensor
 

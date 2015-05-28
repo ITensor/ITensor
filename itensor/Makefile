@@ -13,14 +13,18 @@ SOURCES+= matrix/vec.cc
 SOURCES+= matrix/mat.cc 
 SOURCES+= matrix/algs.cc 
 SOURCES+= tensor/contract.cc 
+SOURCES+= itdata/itreal.cc 
+SOURCES+= itdata/itcplx.cc 
+SOURCES+= itdata/itcombiner.cc 
+SOURCES+= itdata/itdiag.cc 
+SOURCES+= itdata/iqtdata.cc
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
 SOURCES+= iqindex.cc 
-SOURCES+= itdata/iqtdata.cc
 SOURCES+= iqtensor.cc 
 SOURCES+= spectrum.cc 
 SOURCES+= svdalgs.cc 
-SOURCES+= mps/mps.cc 
+#SOURCES+= mps/mps.cc 
 #SOURCES+= mps/mpo.cc 
 #SOURCES+= mps/tevol.cc
 #SOURCES+= mps/autompo.cc
@@ -95,7 +99,8 @@ index.o: $(ITDEPHEADERS)
 ITDEPHEADERS+= indexset.ih indexset.h
 indexset.o: $(ITDEPHEADERS)
 .debug_objs/indexset.o: $(ITDEPHEADERS)
-ITDEPHEADERS+= task_types.h itensor.ih itensor.h itdata/itdata.h itdata/itreal.h itdata/itdiag.h itdata/itcplx.h
+ITDEPHEADERS+= itdata/task_types.h itdata/dotask_templates.h \
+itensor.ih itensor.h itdata/itdata.h itdata/itreal.h itdata/itdiag.h itdata/itcplx.h
 itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 IQDEPHEADERS= qn.h iqindex.h

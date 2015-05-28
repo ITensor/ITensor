@@ -6,12 +6,13 @@
 #define __ITENSOR_IQTDATA_H
 
 #include <vector>
-#include "itensor/matrix/types.h"
-#include "itensor/indexset.h"
+#include "itensor/itdata/task_types.h"
 #include "itensor/iqindex.h"
 
 namespace itensor {
 
+class ManagePtr;
+class ITCombiner;
 class IQTData;
 
 QN
@@ -162,6 +163,79 @@ getElt(const IQIndexSet& is,
         }
     return nullptr;
     }
+
+template<typename Indexable>
+class IndexDim
+    {
+    const IQIndexSet& is_;
+    const Indexable& ind_;
+    public:
+
+    IndexDim(const IQIndexSet& is,
+             const Indexable& ind)
+        :
+        is_(is),
+        ind_(ind)
+        { }
+
+    long
+    size() const { return is_.r(); }
+
+    long
+    operator[](long j) const { return (is_[j])[ind_[j]].m(); }
+    };
+
+template<typename Indexable>
+IndexDim<Indexable>
+make_indexdim(const IQIndexSet& is, const Indexable& ind) 
+    { return IndexDim<Indexable>(is,ind); }
+
+Cplx
+doTask(GetElt<IQIndex>& G, const IQTData& d);
+
+void
+doTask(SetElt<Real,IQIndex>& S, IQTData& d);
+
+//void
+//doTask(SetElt<Cplx,IQIndex>& S, IQTData& d);
+
+void
+doTask(MultReal& M, IQTData& d);
+
+void
+doTask(const PlusEQ<IQIndex>& P,
+       IQTData& A,
+       const IQTData& B);
+
+void
+doTask(Contract<IQIndex>& Con,
+       const IQTData& A,
+       const IQTData& B,
+       ManagePtr& mp);
+
+void
+doTask(Contract<IQIndex>& C,
+       const IQTData& d,
+       const ITCombiner& cmb,
+       ManagePtr& mp);
+
+void
+doTask(Contract<IQIndex>& C,
+       const ITCombiner& cmb,
+       const IQTData& d,
+       ManagePtr& mp);
+
+void
+doTask(Conj, const IQTData& d);
+
+bool inline
+doTask(CheckComplex,const IQTData& d) { return false; }
+
+Real
+doTask(const NormNoScale<IQIndex>& N, const IQTData& d);
+
+void
+doTask(PrintIT<IQIndex>& P, const IQTData& d);
 
 } //namespace itensor
 

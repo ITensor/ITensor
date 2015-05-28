@@ -7,7 +7,6 @@
 #include "itensor/global.h"
 #include "itensor/detail/algs.h"
 #include "itensor/itdata/storage_types.h"
-//#include "itensor/detail/call_rewrite.h"
 
 #define LPAREN (
 #define RPAREN )
@@ -82,9 +81,6 @@ struct ITDataType : ITData
     };
 
 //////////////////
-//////////////////
-
-struct Void { };
 
 class ManagePtr
     {
@@ -202,6 +198,68 @@ class ManagePtr
     updateArg1();
 
     };
+
+template <typename StorageT, typename... VArgs>
+StorageT* ManagePtr::
+makeNewData(VArgs&&... vargs)
+    {
+    if(!parg1_) Error("Can't call makeNewData with const-only access to first arg");
+    action_ = AssignNewData;
+    auto newdat = std::make_shared<ITDataType<StorageT>>(std::forward<VArgs>(vargs)...);
+    auto* ret = newdat.get();
+    nd_ = std::move(newdat);
+    return &(ret->d);
+    }
+
+//template <typename ITDataType>
+//void ManagePtr::
+//setNewData(std::shared_ptr<ITDataType>&& nd)
+//    {
+//    nd_ = std::move(nd);
+//    action_ = AssignNewData;
+//    }
+
+void inline ManagePtr::
+assignPointerRtoL() 
+    { 
+    if(!parg2_) Error("No second pointer provided for action AssignPointerRtoL");
+    action_ = AssignPointerRtoL; 
+    }
+
+void inline ManagePtr::
+updateArg1()
+    {
+    if(!parg1_) return;
+    //println("In updateArg1, arg1_ points to ",arg1_->get());
+    if(action_ == AssignNewData)
+        {
+        //println("Doing AssignNewData");
+        *parg1_ = std::move(nd_);
+        }
+    else if(action_ == AssignPointerRtoL)
+        {
+        //println("Doing AssignPointerRtoL");
+        *parg1_ = std::const_pointer_cast<ITData,const ITData>(*parg2_);
+        }
+    }
+
+template<typename T>
+T* ManagePtr::
+modifyData(const T& d)
+    {
+    if(!parg1_) Error("Can't modify const data");
+    if(!(parg1_->unique())) 
+        {
+        *parg1_ = (*parg1_)->clone();
+        }
+    auto* pa1 = static_cast<ITDataType<T>*>(parg1_->get());
+    return &(pa1->d);
+    }
+
+//////////////////
+
+struct Void { };
+
 
 //OneArg and TwoArgs are "policy classes" 
 //for customizing implementation of RegisterTask
@@ -532,63 +590,6 @@ check(const CPData& p)
     }
 
 } //namespace detail
-
-template <typename StorageT, typename... VArgs>
-StorageT* ManagePtr::
-makeNewData(VArgs&&... vargs)
-    {
-    if(!parg1_) Error("Can't call makeNewData with const-only access to first arg");
-    action_ = AssignNewData;
-    auto newdat = std::make_shared<ITDataType<StorageT>>(std::forward<VArgs>(vargs)...);
-    auto* ret = newdat.get();
-    nd_ = std::move(newdat);
-    return &(ret->d);
-    }
-
-//template <typename ITDataType>
-//void ManagePtr::
-//setNewData(std::shared_ptr<ITDataType>&& nd)
-//    {
-//    nd_ = std::move(nd);
-//    action_ = AssignNewData;
-//    }
-
-void inline ManagePtr::
-assignPointerRtoL() 
-    { 
-    if(!parg2_) Error("No second pointer provided for action AssignPointerRtoL");
-    action_ = AssignPointerRtoL; 
-    }
-
-void inline ManagePtr::
-updateArg1()
-    {
-    if(!parg1_) return;
-    //println("In updateArg1, arg1_ points to ",arg1_->get());
-    if(action_ == AssignNewData)
-        {
-        //println("Doing AssignNewData");
-        *parg1_ = std::move(nd_);
-        }
-    else if(action_ == AssignPointerRtoL)
-        {
-        //println("Doing AssignPointerRtoL");
-        *parg1_ = std::const_pointer_cast<ITData,const ITData>(*parg2_);
-        }
-    }
-
-template<typename T>
-T* ManagePtr::
-modifyData(const T& d)
-    {
-    if(!parg1_) Error("Can't modify const data");
-    if(!(parg1_->unique())) 
-        {
-        *parg1_ = (*parg1_)->clone();
-        }
-    auto* pa1 = static_cast<ITDataType<T>*>(parg1_->get());
-    return &(pa1->d);
-    }
 
 template<typename Ret, typename Task, typename D>
 Ret OneArg::
