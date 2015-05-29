@@ -99,7 +99,7 @@ index.o: $(ITDEPHEADERS)
 ITDEPHEADERS+= indexset.ih indexset.h
 indexset.o: $(ITDEPHEADERS)
 .debug_objs/indexset.o: $(ITDEPHEADERS)
-ITDEPHEADERS+= itdata/task_types.h itdata/dotask_templates.h \
+ITDEPHEADERS+= itdata/task_types.h \
 itensor.ih itensor.h itdata/itdata.h itdata/itreal.h itdata/itdiag.h itdata/itcplx.h
 itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)

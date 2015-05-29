@@ -21,8 +21,8 @@ struct FuncBase
     FuncBase() { }
     virtual ~FuncBase() { }
 
-    REGISTER_TYPES(void virtual applyTo LPAREN, &d RPAREN =0;)
-    REGISTER_TYPES(void virtual applyTo LPAREN, const& d RPAREN =0;)
+    REGISTER_ITDATA_TYPES(void virtual applyTo LPAREN, &d RPAREN =0;)
+    REGISTER_ITDATA_TYPES(void virtual applyTo LPAREN, const& d RPAREN =0;)
 
     template <typename T>
     void

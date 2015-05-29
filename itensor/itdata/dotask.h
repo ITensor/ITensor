@@ -4,29 +4,24 @@
 //
 #ifndef __ITENSOR_DOTASK_H
 #define __ITENSOR_DOTASK_H
-#include "itensor/global.h"
-#include "itensor/detail/algs.h"
-#include "itensor/itdata/itdata.h"
 
-#include "itensor/itdata/itreal.h"
-#include "itensor/itdata/itcplx.h"
-#include "itensor/itdata/itdiag.h"
-#include "itensor/itdata/itcombiner.h"
-#include "itensor/itdata/iqtdata.h"
+#include "itensor/itdata/itdata.h"
+#define REGISTER_ITDATA_HEADER_FILES
+#include "itensor/itdata/storage_types.h"
+
+//#include "itensor/itdata/itreal.h"
+//#include "itensor/itdata/itcplx.h"
+//#include "itensor/itdata/itdiag.h"
+//#include "itensor/itdata/itcombiner.h"
+//#include "itensor/itdata/iqtdata.h"
 
 #define LPAREN (
 #define RPAREN )
 
 namespace itensor {
 
-struct ITData;
-using PData = std::shared_ptr<ITData>;
-using CPData = std::shared_ptr<const ITData>;
-
-//////////////////
 
 struct Void { };
-
 
 //OneArg and TwoArgs are "policy classes" 
 //for customizing implementation of RegisterTask
@@ -91,8 +86,8 @@ class RegisterTask : public FuncBase
 
     private:
 
-    REGISTER_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); } )
-    REGISTER_TYPES(void applyTo LPAREN, const&d RPAREN final { applyToImpl(d); } )
+    REGISTER_ITDATA_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); } )
+    REGISTER_ITDATA_TYPES(void applyTo LPAREN, const&d RPAREN final { applyToImpl(d); } )
 
     template<typename D>
     void
@@ -132,8 +127,8 @@ struct CallWrap : FuncBase
     ManagePtr& mp_;
 
     public:
-    REGISTER_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); })
-    REGISTER_TYPES(void applyTo LPAREN, const&d RPAREN final { applyToImpl(d); })
+    REGISTER_ITDATA_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); })
+    REGISTER_ITDATA_TYPES(void applyTo LPAREN, const&d RPAREN final { applyToImpl(d); })
     };
 
 //
@@ -406,26 +401,6 @@ applyToImpl(const D2& d2)
 //////
 
 
-//template<typename ReturnType, typename Task>
-//ReturnType
-//doTask(Task&& t,
-//       const ITData& arg)
-//    {
-//    RegisterTask<OneArg,Task,ReturnType> r(std::forward<Task>(t));
-//    arg.plugInto(r);
-//    return std::move(r.getReturn());
-//    }
-//
-//template<typename Task>
-//Task
-//doTask(Task&& t,
-//       const ITData& arg)
-//    {
-//    RegisterTask<OneArg,Task,Void> r(std::forward<Task>(t));
-//    arg.plugInto(r);
-//    return std::move(r.getTask());
-//    }
-
 template<typename ReturnType, typename Task>
 ReturnType
 doTask(Task&& t,
@@ -533,33 +508,6 @@ doTask(Task&& t,
     arg1->plugInto(r);
     return std::move(r.getTask());
     }
-
-//template<typename ReturnType, typename Task>
-//ReturnType
-//doTask(Task&& t,
-//       PData& arg1,
-//       const ITData& arg2)
-//    {
-//#ifdef DEBUG
-//    detail::check(arg1);
-//#endif
-//    RegisterTask<TwoArgs,Task,ReturnType> r(std::forward<Task>(t),&arg1,&arg2);
-//    arg1->plugInto(r);
-//    return std::move(r.getReturn());
-//    }
-//template<typename Task>
-//Task
-//doTask(Task&& t,
-//       PData& arg1,
-//       const ITData& arg2)
-//    {
-//#ifdef DEBUG
-//    detail::check(arg1);
-//#endif
-//    RegisterTask<TwoArgs,Task,Void> r(std::forward<Task>(t),&arg1,&arg2);
-//    arg1->plugInto(r);
-//    return std::move(r.getTask());
-//    }
 
 } //namespace itensor
 
