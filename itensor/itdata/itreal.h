@@ -7,12 +7,13 @@
 
 #include "itensor/itdata/task_types.h"
 #include "itensor/util/readwrite.h"
+#include "itensor/detail/call_rewrite.h"
+#include "itensor/itdata/itdata.h"
 
 namespace itensor {
 
-class ManagePtr;
 
-class ITReal
+class ITReal : public RegisterData<ITReal>
     {
     public:
     using storage_type = std::vector<Real>;
@@ -106,6 +107,26 @@ write(std::ostream& s, const ITReal& dat)
     write(s,dat.store);
     }
 
+template<typename F>
+void
+doTask(ApplyIT<F>& A, ITReal& d)
+    { 
+    for(auto& elt : d) elt = detail::call<Real>(A.f,elt);
+    }
+
+template<typename F>
+void
+doTask(VisitIT<F>& V, const ITReal& d)
+    { 
+    for(auto& elt : d) detail::call<void>(V.f,V.scale_fac * elt);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Real>& G, ITReal& d)
+    { 
+    std::generate(d.begin(),d.end(),G.f);
+    }
 
 Cplx 
 doTask(const GetElt<Index>& g, const ITReal& d);

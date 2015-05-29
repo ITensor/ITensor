@@ -20,7 +20,7 @@ ITensorT(const Index& i1,
          const Indices&... rest)
     :
     is_(i1,i2,i3,rest...),
-    store_(std::make_shared<ITDataType<ITReal>>(area(is_),0.)),
+    store_(std::make_shared<ITReal>(area(is_),0.)),
     scale_(1.)
 	{ }
 
@@ -30,7 +30,7 @@ inline ITensor::
 ITensorT(const IndexSet& is)
     :
     is_(is),
-    store_(std::make_shared<ITDataType<ITReal>>(area(is_),0.)),
+    store_(std::make_shared<ITReal>(area(is_),0.)),
     scale_(1.)
 	{ }
 
@@ -47,7 +47,7 @@ ITensorT(const IndexVal& iv1,
     std::array<Index,size> inds;
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     is_ = IndexSet(inds);
-    store_ = std::make_shared<ITDataType<ITReal>>(area(is_),0.);
+    store_ = std::make_shared<ITReal>(area(is_),0.);
     set(1.,iv1,rest...);
     }
 

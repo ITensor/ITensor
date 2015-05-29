@@ -2,6 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
+#include "itensor/itdata/itreal.h"
 #include "itensor/itdata/itdata.h"
 #include "itensor/itdata/itcplx.h"
 #include "itensor/indexset.h"

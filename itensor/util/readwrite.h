@@ -6,7 +6,8 @@
 #define __ITENSOR_READWRITE_H_
 
 #include <fstream>
-#include <unistd.h>
+#include <vector>
+#include "unistd.h"
 #include "itensor/types.h"
 #include "itensor/util/error.h"
 

@@ -9,7 +9,7 @@
 
 namespace itensor {
 
-class ITCombiner
+class ITCombiner : public RegisterData<ITCombiner>
     {
     public:
 

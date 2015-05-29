@@ -46,9 +46,9 @@ ITensorT(Complex val)
     scale_(1.)
     { 
     if(val.imag()==0)
-        store_ = make_shared<ITDataType<ITDiag<Real>>>(val.real());
+        store_ = make_shared<ITDiag<Real>>(val.real());
     else
-        store_ = make_shared<ITDataType<ITDiag<Complex>>>(val);
+        store_ = make_shared<ITDiag<Complex>>(val);
     }
 
 //IQTensor::
@@ -246,7 +246,7 @@ operator+=(IQTensor& T, const ITensor& t)
     if(!T.store()) 
         {
         //allocate data to add this ITensor into
-        if(!isComplex(t)) T.store() = make_shared<ITDataType<IQTData>>(T.inds(),tdiv);
+        if(!isComplex(t)) T.store() = make_shared<IQTData>(T.inds(),tdiv);
         else              Error("Initializing complex IQTensor in +=ITensor not yet implemented");
         }
 

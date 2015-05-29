@@ -6,11 +6,12 @@
 #define __ITENSOR_ITDIAG_H
 
 #include "itensor/itdata/itreal.h"
+#include "itensor/detail/call_rewrite.h"
 
 namespace itensor {
 
 template<typename T>
-class ITDiag
+class ITDiag : public RegisterData<ITDiag<T>>
     {
     public:
     using storage_type = typename std::vector<T>;
@@ -106,6 +107,21 @@ write(std::ostream& s, const ITDiag<T>& dat)
     {
     write(s,dat.val);
     write(s,dat.store);
+    }
+
+template <typename F, typename T,
+          typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
+void
+doTask(ApplyIT<F>& A, ITDiag<T>& d) 
+    { 
+    if(d.allSame()) 
+        {
+        d.val = detail::call<T>(A.f,d.val);
+        }
+    else
+        {
+        for(auto& elt : d.store) elt = detail::call<T>(A.f,elt);
+        }
     }
 
 template <typename T>

@@ -168,16 +168,11 @@ struct ApplyIT
         }
     };
 
-template<typename F>
+template<typename F, typename T = typename std::result_of<F()>::type>
 struct GenerateIT
     {
     F& f;
     GenerateIT(F&& f_) : f(f_)  { }
-    bool constexpr static 
-    isComplex()
-        {
-        return std::is_same<typename std::result_of<F()>::type,Cplx>::value;
-        }
     };
 
 template <typename F>

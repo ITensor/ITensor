@@ -24,7 +24,7 @@ template<>
 ITensor::
 ITensorT(const Index& i1) 
   : is_(i1),
-    store_(std::make_shared<ITDataType<ITReal>>(i1.m(),0.)),
+    store_(std::make_shared<ITReal>(i1.m(),0.)),
     scale_(1.)
 	{ }
 
@@ -33,7 +33,7 @@ template<>
 ITensor::
 ITensorT(const Index& i1,const Index& i2) 
   : is_(i1,i2),
-    store_(std::make_shared<ITDataType<ITReal>>(i1.m()*i2.m(),0.)),
+    store_(std::make_shared<ITReal>(i1.m()*i2.m(),0.)),
     scale_(1.)
 	{ }
     
@@ -43,13 +43,13 @@ ITensorT(Cplx val)
   : scale_(1.)
     { 
     if(val.imag() == 0)
-        store_ = std::make_shared<ITDataType<ITReal>>(1,val.real());
+        store_ = std::make_shared<ITReal>(1,val.real());
     else
-        store_ = std::make_shared<ITDataType<ITCplx>>(1,val);
+        store_ = std::make_shared<ITCplx>(1,val);
     //if(val.imag() == 0)
-    //    store_ = std::make_shared<ITDataType<ITDiag<Real>>>(val.real());
+    //    store_ = std::make_shared<ITDiag<Real>>(val.real());
     //else
-    //    store_ = std::make_shared<ITDataType<ITDiag<Cplx>>>(val);
+    //    store_ = std::make_shared<ITDiag<Cplx>>(val);
     }
 
 ITensor&
@@ -251,7 +251,7 @@ operator<<(ostream & s, const ITensor& t)
         //format string %f (or another float-related format string)
         bool ff_set = (std::ios::floatfield & s.flags()) != 0;
         bool print_data = (ff_set || Global::printdat());
-        doTask(PrintIT<Index>{s,t.scale(),t.inds(),print_data},t.cstore());
+        doTask(PrintIT<Index>{s,t.scale(),t.inds(),print_data},t.store());
         }
     return s;
     }
@@ -282,7 +282,7 @@ norm(const ITensor& T)
     if(!T) Error("ITensor is default initialized");
 #endif
     return fabs(T.scale().real0()) *
-           doTask<Real>(NormNoScale<Index>{T.inds()},T.cstore());
+           doTask<Real>(NormNoScale<Index>{T.inds()},T.store());
     }
 
 ITensor
@@ -295,13 +295,13 @@ conj(ITensor T)
 bool
 isComplex(const ITensor& t)
     {
-    return doTask<bool>(CheckComplex{},t.cstore());
+    return doTask<bool>(CheckComplex{},t.store());
     }
 
 Cplx
 sumelsC(const ITensor& t)
     {
-    auto z = doTask<Cplx>(SumEls<Index>{t.inds()},t.cstore());
+    auto z = doTask<Cplx>(SumEls<Index>{t.inds()},t.store());
     return t.scale().real0()*z;
     }
 
@@ -349,8 +349,8 @@ template<typename T, typename... CtrArgs>
 ITensor::storage_ptr
 readType(std::istream& s, CtrArgs&&... args)
     {
-    auto p = std::make_shared<ITDataType<T>>(std::forward<CtrArgs>(args)...);
-    read(s,p->d);
+    auto p = std::make_shared<T>(std::forward<CtrArgs>(args)...);
+    read(s,*p);
     return p;
     }
 
@@ -383,7 +383,7 @@ write(std::ostream& s, const ITensor& T)
     write(s,T.inds());
     write(s,T.scale());
     if(T) 
-        doTask(Write{s},T.cstore());
+        doTask(Write{s},T.store());
     else 
         write(s,StorageType::Null);
     }

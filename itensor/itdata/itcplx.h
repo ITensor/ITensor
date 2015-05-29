@@ -5,11 +5,10 @@
 #ifndef __ITENSOR_ITCPLX_H
 #define __ITENSOR_ITCPLX_H
 
-#include "itensor/itdata/task_types.h"
+#include "itensor/itdata/itreal.h"
 
 namespace itensor {
 
-class ITReal;
 
 //
 // Optimization TODO: 
@@ -18,7 +17,7 @@ class ITReal;
 //  and size
 //
 
-class ITCplx
+class ITCplx : public RegisterData<ITCplx>
     {
     public:
     using storage_type = std::vector<Real>;
@@ -140,6 +139,56 @@ void inline
 write(std::ostream& s, const ITCplx& dat)
     {
     write(s,dat.store);
+    }
+
+template<typename F>
+void
+doTask(ApplyIT<F>& A, ITCplx& d)
+    { 
+    for(auto j = 0ul; j < d.csize(); ++j)
+        {
+        auto res = detail::call<Cplx>(A.f,d.get(j));
+        d.set(j,res);
+        }
+    }
+
+template<typename F>
+void
+doTask(VisitIT<F>& V, const ITCplx& d)
+    { 
+    for(auto j = 0ul; j < d.csize(); ++j)
+        {
+        detail::call<void>(V.f,V.scale_fac * d.get(j));
+        }
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Cplx>& G, ITCplx& d)
+    { 
+    for(auto j = 0ul; j < d.csize(); ++j)
+        d.set(j,G.f());
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Real>& G, const ITCplx& d, ManagePtr& mp)
+    { 
+    auto* nd = mp.makeNewData<ITReal>(d.csize());
+    std::generate(nd->begin(),nd->end(),G.f);
+    }
+
+//
+// This doTask(...ITReal...) method intentionally placed here
+// since it requires definition of class ITCplx
+//
+template<typename F>
+void
+doTask(GenerateIT<F,Cplx>& G, const ITReal& d, ManagePtr& mp)
+    { 
+    auto* nd = mp.makeNewData<ITCplx>(d.size());
+    for(auto j = 0ul; j < nd->csize(); ++j)
+        nd->set(j,G.f());
     }
 
 

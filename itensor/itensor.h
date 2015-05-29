@@ -4,10 +4,11 @@
 //
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
-#include "itensor/itdata/dotask_templates.h"
+//#include "itensor/itdata/dotask_templates.h"
 #include "itensor/itensor_interface.h"
 #include "itensor/matrix/mat.h"
-#include "itensor/detail/call_rewrite.h"
+#include "itensor/itdata/task_types.h"
+#include "itensor/itdata/dotask.h"
 
 namespace itensor {
 

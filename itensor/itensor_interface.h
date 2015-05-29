@@ -10,8 +10,6 @@
 namespace itensor {
 
 struct ITData;
-template <typename DType>
-struct ITDataType;
 
 //
 // ITensorT - interface template for ITensor and IQTensor
@@ -212,9 +210,6 @@ class ITensorT
     storage_ptr&
     store() { return store_; }
 
-    const ITData&
-    cstore() const { return *store_; }
-
     void 
     scaleTo(const LogNumber& newscale) { Error("scaleTo not implemented"); }
 
@@ -238,11 +233,11 @@ ITensorT(indexset_type iset,
          DataType&& dat,
          const LogNumber& scale) :
     is_(std::move(iset)),
-    store_(std::make_shared<ITDataType<std::decay_t<DataType>>>(std::move(dat))),
+    store_(std::make_shared<std::decay_t<DataType>>(std::move(dat))),
     scale_(scale)
     {
     static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
-                  "Error: cannot pass lvalues to ITensorT(...,ITDataType&& dat,...) constructor");
+                  "Error: cannot pass lvalues to ITensorT(...,DataType&& dat,...) constructor");
     }
 
 //Multiplication by real scalar

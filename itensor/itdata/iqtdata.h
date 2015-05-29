@@ -8,6 +8,7 @@
 #include <vector>
 #include "itensor/itdata/task_types.h"
 #include "itensor/iqindex.h"
+#include "itensor/itdata/itdata.h"
 
 namespace itensor {
 
@@ -26,7 +27,7 @@ inverseBlockInd(long block,
                 const IQIndexSet& is,
                 std::vector<long>& ind);
 
-class IQTData
+class IQTData : public RegisterData<IQTData>
     {
     public:
 
@@ -189,6 +190,38 @@ template<typename Indexable>
 IndexDim<Indexable>
 make_indexdim(const IQIndexSet& is, const Indexable& ind) 
     { return IndexDim<Indexable>(is,ind); }
+
+
+template <typename F>
+void
+doTask(ApplyIT<F>& A, IQTData& d)
+    {
+    for(auto& elt : d.data)
+        elt = A.f(elt);
+    }
+
+template <typename F>
+void
+doTask(VisitIT<F>& V, const IQTData& d)
+    {
+    for(const auto& elt : d.data)
+        V.f(elt*V.scale_fac);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Real>& G, IQTData& d)
+    {
+    std::generate(d.data.begin(),d.data.end(),G.f);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Cplx>& G, const IQTData& cd, ManagePtr& mp)
+    {
+    Error("Complex version of IQTensor generate not yet supported");
+    }
+
 
 Cplx
 doTask(GetElt<IQIndex>& G, const IQTData& d);
