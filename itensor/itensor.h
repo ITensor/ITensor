@@ -247,6 +247,33 @@ ITensorT(const Index& i1);
 template<> ITensor::
 ITensorT(const Index& i1,const Index& i2);
 
+template<> ITensor::
+ITensorT(Cplx val);
+
+template<>
+ITensor& ITensor::
+fill(Cplx z);
+
+template<>
+void ITensor::
+scaleTo(const LogNumber& newscale);
+
+template<>
+ITensor& ITensor::
+conj();
+
+template<> inline
+ITensor& ITensor::
+dag() { return conj(); }
+
+template<>
+ITensor& ITensor::
+takeReal();
+
+template<>
+ITensor& ITensor::
+takeImag();
+
 } //namespace itensor
 
 //See file itensor.ih for template/inline method implementations

@@ -44,23 +44,23 @@ class ITensorT
 
     //Construct rank 1 tensor, all elements set to zero
     explicit
-    ITensorT(const IndexT& i1) { }
+    ITensorT(const IndexT& i1) { Error("ITensorT(i1) not implemented"); }
 
     //Construct rank 2 tensor, all elements set to zero
     ITensorT(const IndexT& i1,
-             const IndexT& i2) { }
+             const IndexT& i2) { Error("ITensorT(i1,i2) not implemented"); }
 
     //Construct rank n tensor, all elements set to zero
     template <typename... Indices>
     ITensorT(const IndexT& i1,
              const IndexT& i2, 
              const IndexT& i3, 
-             const Indices&... rest) { }
+             const Indices&... rest) { Error("ITensorT(i1,i2,i3,...) not implemented"); }
 
     //Construct rank 0 tensor (scalar), value set to val
     //If val.imag()==0, only Real storage will be used
     explicit
-    ITensorT(Cplx val) { }
+    ITensorT(Cplx val) { Error("ITensorT(Cplx) not implemented"); }
 
     //Construct rank n tensor, all
     //elements set to zero except the single
@@ -68,9 +68,9 @@ class ITensorT
     template <typename... IVals>
     explicit
     ITensorT(const indexval_type& iv1, 
-             const IVals&... rest) { }
+             const IVals&... rest) { Error("ITensorT(iv1,...) not implemented"); }
 
-    operator ITensorT<Index>() const { return *this; }
+    operator ITensorT<Index>() const { Error("ITensorT->ITensor not implemented"); return *this; }
 
     //
     // Accessor Methods
@@ -100,7 +100,7 @@ class ITensorT
     //from Real to Complex unless val.imag()!=0 
     template<typename... IndexVals>
     void
-    set(Cplx val, const IndexVals&... ivs) { }
+    set(Cplx val, const IndexVals&... ivs) { Error("set not implemented"); }
 
     //
     // Index Prime Level Methods
@@ -134,7 +134,7 @@ class ITensorT
     //(such as if z is automatically converted from a Real)
     //then storage will be real only.
     ITensorT&
-    fill(Complex z) { return *this; }
+    fill(Complex z) { Error("fill not implemented"); return *this; }
 
     //Call a function of the form f()->val once
     //for each element, assign result to each element.
@@ -160,18 +160,18 @@ class ITensorT
 
     //Take complex conjugate of all elements
     ITensorT&
-    conj() { return *this; }
+    conj() { Error("conj not implemented"); return *this; }
 
     ITensorT&
-    dag() { return *this; }
+    dag() { Error("dag not implemented");  return *this; }
 
     //Replace data with real part
     ITensorT&
-    takeReal() { return *this; }
+    takeReal() { Error("takeReal not implemented"); return *this; }
 
     //Replace data with imaginary part
     ITensorT&
-    takeImag() { return *this; }
+    takeImag() { Error("takeImag not implemented"); return *this; }
 
     public:
 
@@ -195,7 +195,7 @@ class ITensorT
 
     //Provide indices from IndexSet
     explicit
-    ITensorT(const IndexSetT<IndexT>& is) { }
+    ITensorT(const IndexSetT<IndexT>& is) { Error("ITensorT(IndexSetT) not implemented"); }
 
     //Scale factor, used internally for efficient scalar ops.
     //Mostly for developer use; not necessary to explicitly involve
@@ -216,7 +216,7 @@ class ITensorT
     cstore() const { return *store_; }
 
     void 
-    scaleTo(const LogNumber& newscale) { }
+    scaleTo(const LogNumber& newscale) { Error("scaleTo not implemented"); }
 
     }; // class ITensorT
 
