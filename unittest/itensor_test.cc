@@ -55,7 +55,7 @@ doTask(GetType,const ITCombiner& d) { return Combiner; }
 Type
 getType(const ITensor& t) 
     { 
-    return doTask<Type>(GetType{},t.cstore()); 
+    return doTask<Type>(GetType{},t.store()); 
     }
 
 std::ostream&
