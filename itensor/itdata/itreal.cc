@@ -141,19 +141,6 @@ doTask(Contract<Index>& C,
     //  quicker and let contractloop run in parallel more often in principle.
     bool sortInds = false; //whether to sort indices of result
     contractIS(C.Lis,C.Lind,C.Ris,C.Rind,C.Nis,sortInds);
-
-    //Scalar tensor cases
-    //if(area(C.Lis)==1)
-    //    {
-    //    scalefac_ = a1[0];
-    //    assignPointerRtoL();
-    //    return;
-    //    }
-    //if(area(C.Ris)==1)
-    //    {
-    //    scalefac_ = a2[0];
-    //    return;
-    //    }
     
     Label Nind(C.Nis.r(),0);
     for(auto i : count(C.Nis.r()))
@@ -169,11 +156,6 @@ doTask(Contract<Index>& C,
             Nind[i] = C.Rind[j];
             }
         }
-
-    //PRI(C.Lind);
-    //PRI(C.Rind);
-    //PRI(Nind);
-
     auto t1 = makeTensorRef(a1.data(),C.Lis),
          t2 = makeTensorRef(a2.data(),C.Ris);
     auto rsize = area(C.Nis);

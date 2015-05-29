@@ -161,6 +161,11 @@ struct ApplyIT
     {
     F& f;
     ApplyIT(F&& f_) : f(f_)  { }
+    bool constexpr static 
+    realToComplex()
+        {
+        return std::is_same<typename std::result_of<F(Real)>::type,Cplx>::value;
+        }
     };
 
 template<typename F>

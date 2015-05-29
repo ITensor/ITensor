@@ -228,10 +228,6 @@ takeReal()
     return *this;
     }
 
-template<typename T>
-void
-doTask(TakeImag,const T& d) { }
-
 template<>
 ITensor& ITensor::
 takeImag()
