@@ -46,13 +46,20 @@ class InfArray
     std::vector<T> vec_;
     public:
 
-    InfArray() : size_(0) { data_ = &arr_.front(); }
+    InfArray() 
+      : size_(0) 
+        { 
+        data_ = &(arr_[0]);
+#ifdef DEBUG
+        if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+#endif
+        }
 
     InfArray(size_t size)
         {
-        if(size < ArrSize)
+        if(size <= ArrSize)
             {
-            data_ = &arr_.front();
+            data_ = &(arr_[0]);
             size_ = size;
             }
         else
@@ -61,25 +68,31 @@ class InfArray
             data_ = vec_.data();
             size_ = vec_.size();
             }
+#ifdef DEBUG
+        if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+#endif
         }
 
     InfArray(size_t size,
              const_reference value) 
       : InfArray(size)
         { 
-        std::fill(begin(),end(),value);
+        std::fill(data_,data_+size_,value);
+#ifdef DEBUG
+        if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+#endif
         }
 
-    InfArray(std::initializer_list<T> init) 
-        { 
-        resize(init.size());
-        auto p = data_;
-        for(auto& el : init)
-            {
-            *p = el;
-            ++p;
-            }
-        }
+    //InfArray(std::initializer_list<T> init) 
+    //    { 
+    //    resize(init.size());
+    //    auto p = data_;
+    //    for(auto& el : init)
+    //        {
+    //        *p = el;
+    //        ++p;
+    //        }
+    //    }
 
     size_t
     size() const { return size_; }
@@ -90,97 +103,123 @@ class InfArray
     size_t
     vec_size() const { return vec_.size(); }
 
-    void
-    resize(size_t new_size) 
-        { 
-        if(new_size > ArrSize)
-            {
-            vec_.resize(new_size);
-            if(size_ <= ArrSize)
-                {
-                auto pv = MAKE_SAFE_PTR(vec_.data(),vec_.size());
-                std::copy(arr_.begin(),arr_.begin()+size_,pv);
-                }
-            data_ = vec_.data();
-            }
-        else //new_size <= ArrSize
-            {
-            if(size_ > ArrSize)
-                {
-                auto pa = MAKE_SAFE_PTR(&arr_.front(),ArrSize);
-                std::copy(vec_.begin(),vec_.begin()+new_size,pa);
-                }
-            vec_.clear();
-            data_ = &arr_.front();
-            }
-        size_ = new_size; 
-        }
+    //void
+    //resize(size_t new_size) 
+    //    { 
+    //    if(new_size > ArrSize)
+    //        {
+    //        vec_.resize(new_size);
+    //        if(size_ <= ArrSize)
+    //            {
+    //            auto pv = MAKE_SAFE_PTR(vec_.data(),vec_.size());
+    //            std::copy(arr_.begin(),arr_.begin()+size_,pv);
+    //            }
+    //        data_ = vec_.data();
+    //        }
+    //    else //new_size <= ArrSize and not zero
+    //        {
+    //        if(size_ > ArrSize)
+    //            {
+    //            auto pa = MAKE_SAFE_PTR(&(arr_[0]),ArrSize);
+    //            std::copy(vec_.begin(),vec_.begin()+new_size,pa);
+    //            }
+    //        vec_.clear();
+    //        data_ = &(arr_[0]);
+    //        }
+    //    size_ = new_size; 
+    //    }
 
     void
     clear() 
         { 
-        data_ = &arr_.front();
+        data_ = &(arr_[0]);
         size_ = 0; 
         vec_.clear();
         }
 
-    void
-    push_back(const_reference val) 
-        { 
-        if(size_ < ArrSize) 
-            {
-            arr_[size_] = val; 
-            ++size_; 
-            }
-        else if(size_ == ArrSize)
-            {
-            resize(size_+1);
-            back() = val;
-            }
-        else                
-            {
-            vec_.push_back(val);
-            data_ = vec_.data();
-            ++size_;
-            }
-        }
+    //void
+    //push_back(const_reference val) 
+    //    { 
+    //    if(size_ < ArrSize) 
+    //        {
+    //        arr_[size_] = val; 
+    //        ++size_; 
+    //        }
+    //    else if(size_ == ArrSize)
+    //        {
+    //        resize(size_+1);
+    //        back() = val;
+    //        }
+    //    else                
+    //        {
+    //        vec_.push_back(val);
+    //        data_ = vec_.data();
+    //        ++size_;
+    //        }
+    //    }
 
-    void
-    push_back(value_type&& val) 
-        { 
-        if(size_ < ArrSize) 
-            {
-            arr_[size_] = std::move(val); 
-            ++size_; 
-            }
-        else if(size_ == ArrSize)
-            {
-            resize(size_+1);
-            back() = std::move(val);
-            }
-        else                
-            {
-            vec_.emplace_back(std::move(val));
-            data_ = vec_.data();
-            ++size_;
-            }
-        }
+    //void
+    //push_back(value_type&& val) 
+    //    { 
+    //    if(size_ < ArrSize) 
+    //        {
+    //        arr_[size_] = std::move(val); 
+    //        ++size_; 
+    //        }
+    //    else if(size_ == ArrSize)
+    //        {
+    //        resize(size_+1);
+    //        back() = std::move(val);
+    //        }
+    //    else                
+    //        {
+    //        vec_.emplace_back(std::move(val));
+    //        data_ = vec_.data();
+    //        ++size_;
+    //        }
+    //    }
 
-    void
-    assign(size_t count, 
-           const_reference val) 
-        { 
-        resize(count);
-        fill(val);
-        }
+    //void
+    //assign(size_t count, 
+    //       const_reference val) 
+    //    { 
+    //    resize(count);
+    //    fill(val);
+    //    }
 
-    explicit operator bool() const { return bool(size_); }
+    explicit operator bool() const { return size_!=0; }
 
+    //reference
+    //operator[](size_t i) { CHECK_IND(i) return *(data_+i); }
+
+    //const_reference
+    //operator[](size_t i) const { CHECK_IND(i) return *(data_+i); }
+
+    //TODO DEBUG
     reference
-    operator[](size_t i) { CHECK_IND(i) return data_[i]; }
+    operator[](size_t i) 
+        { 
+        CHECK_IND(i) 
+        //return arr_[i]; 
+        //data_ = &(arr_[0]);
+#ifdef DEBUG
+        if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+#endif
+        return data_[i];
+        }
 
+    //TODO DEBUG
     const_reference
-    operator[](size_t i) const { CHECK_IND(i) return data_[i]; }
+    operator[](size_t i) const 
+        { 
+        CHECK_IND(i) 
+        //return arr_[i]; 
+        //auto cdata_ = &(arr_[0]);
+#ifdef DEBUG
+        if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+#endif
+        return data_[i];
+        }
 
     reference
     at(size_t i) { check_ind(i); return data_[i]; }
@@ -194,11 +233,11 @@ class InfArray
     const_reference
     front() const { CHECK_EMPTY return *data_; }
 
-    reference
-    back() { CHECK_EMPTY return data_[size_-1]; }
+    //reference
+    //back() { CHECK_EMPTY return data_[size_-1]; }
 
-    const_reference
-    back() const { CHECK_EMPTY return data_[size_-1]; }
+    //const_reference
+    //back() const { CHECK_EMPTY return data_[size_-1]; }
 
     pointer
     data() { return data_; }
@@ -212,7 +251,8 @@ class InfArray
     void
     fill(const_reference val) 
         { 
-        std::fill(begin(),end(),val);
+        if(size_==0) return;
+        std::fill(data_,data_+size_,val);
         }
 
     void
@@ -222,6 +262,9 @@ class InfArray
         std::swap(size_,other.size_); 
         arr_.swap(other.arr_); 
         vec_.swap(other.vec_);
+#ifdef DEBUG
+        if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+#endif
         }
 
     iterator

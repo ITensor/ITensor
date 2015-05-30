@@ -162,7 +162,7 @@ class VarArray
     void
     check_size() const
         {
-        if(size_>=MaxSize) Error("VarArray overflow, increase MaxSize");
+        if(size_ > MaxSize) Error("VarArray overflow, increase MaxSize");
         }
     void
     check_empty() const
