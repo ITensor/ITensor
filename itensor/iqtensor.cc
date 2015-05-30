@@ -425,7 +425,7 @@ operator<<(std::ostream& s, const IQTensor& T)
     else
         {
         if(T.inds()) s << T.inds() << "\n";
-        s << "(storage not allocated)\n";
+        s << "{Zero / Not yet allocated}\n";
         }
 	s << "\\------------------------------------\n\n";
     return s;

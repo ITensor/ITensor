@@ -267,11 +267,30 @@ operator*=(Cplx z)
     return *this;
     }
 
+namespace detail {
+void inline
+allocReal(ITensor& T)
+    {
+    T.store() = std::make_shared<ITReal>(area(T.inds()),0);
+    }
+
+void inline
+allocReal(IQTensor& T)
+    {
+    Error("Can't allocate IQTensor with undefined divergence");
+    }
+}
+
+
 template<typename IndexT> 
 ITensorT<IndexT>& ITensorT<IndexT>::
 fill(Cplx z)
     {
-    if(!bool(*this)) return *this;
+    if(!store_) 
+        {
+        if(is_) detail::allocReal(*this);
+        else Error("Can't fill default-constructed tensor");
+        }
     scale_ = scale_type(1.);
     if(z.imag() == 0)
         doTask(FillReal{z.real()},store_);
@@ -539,6 +558,7 @@ template<typename I>
 ITensorT<I>
 randomize(ITensorT<I> T, const Args& args)
     {
+    if(!T.store()) detail::allocReal(T);
 #ifdef DEBUG
     if(!T) Error("default initialized tensor in randomize");
 #endif

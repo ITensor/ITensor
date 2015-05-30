@@ -19,7 +19,7 @@ ITensorT(const Index& i1,
          const Index& i3,
          const Indices&... rest)
   : is_(i1,i2,i3,rest...),
-    store_(std::make_shared<ITReal>(area(is_),0.)),
+    //store_(std::make_shared<ITReal>(area(is_),0.)),
     scale_(1.)
 	{ }
 
@@ -28,7 +28,7 @@ template<>
 inline ITensor::
 ITensorT(const IndexSet& is)
   : is_(is),
-    store_(std::make_shared<ITReal>(area(is_),0.)),
+    //store_(std::make_shared<ITReal>(area(is_),0.)),
     scale_(1.)
 	{ }
 

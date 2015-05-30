@@ -24,7 +24,7 @@ template<>
 ITensor::
 ITensorT(const Index& i1) 
   : is_(i1),
-    store_(std::make_shared<ITReal>(i1.m(),0.)),
+    //store_(std::make_shared<ITReal>(i1.m(),0.)),
     scale_(1.)
 	{ }
 
@@ -33,7 +33,7 @@ template<>
 ITensor::
 ITensorT(const Index& i1,const Index& i2) 
   : is_(i1,i2),
-    store_(std::make_shared<ITReal>(i1.m()*i2.m(),0.)),
+    //store_(std::make_shared<ITReal>(i1.m()*i2.m(),0.)),
     scale_(1.)
 	{ }
     
@@ -91,7 +91,7 @@ operator<<(ostream & s, const ITensor& t)
     s << "ITensor r=" << t.r() << ": " << t.inds() << "\n";
     if(!t) 
         {
-        s << "{Storage is default constructed}\n";
+        s << "{Zero / Not yet allocated}\n";
         }
     else
         {

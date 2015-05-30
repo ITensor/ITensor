@@ -92,8 +92,8 @@ class ITensorT
     const indexset_type&
     inds() const { return is_; }
 
-    //evaluates to false if storage not allocated
-    explicit operator bool() const { return bool(store_); }
+    //evaluates to false if default constructed
+    explicit operator bool() const { return bool(is_) || bool(store_); }
 
     template <typename... IndexVals>
     Real
