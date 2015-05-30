@@ -17,6 +17,18 @@ namespace itensor {
 // Task Types
 // 
 
+struct MultReal
+    {
+    Real r;
+    MultReal(Real r_) : r(r_) { }
+    };
+
+struct MultCplx
+    {
+    Cplx z;
+    MultCplx(Cplx z_) : z(z_) { }
+    };
+
 template<typename IndexT>
 struct GetElt
     {
@@ -26,31 +38,7 @@ struct GetElt
     const Inds& inds;
 
     GetElt(const IndexSetT<IndexT>& is_,
-           const Inds& inds_)
-      : is(is_),
-        inds(inds_)
-        { 
-#ifdef DEBUG
-        for(size_t k = 0; k < inds.size(); ++k)
-            {
-            auto i = inds[k];
-            if(i < 0)
-                {
-                print("inds = ");
-                for(auto j : inds) print(1+j," ");
-                println();
-                Error("Out of range: IndexVals are 1-indexed for getting ITensor elements");
-                }
-            if(i >= is[k].m())
-                {
-                print("inds = ");
-                for(auto j : inds) print(1+j," ");
-                println();
-                Error(format("Out of range: IndexVal at position %d has val %d > %d",1+k,1+i,is[k].m()));
-                }
-            }
-#endif
-        }
+           const Inds& inds_);
     };
 
 template<typename T, typename IndexT>
@@ -63,22 +51,9 @@ struct SetElt
 
     SetElt(T elt_,
            const IndexSetT<IndexT>& is_,
-           const Inds& inds_)
-        : elt(elt_), is(is_), inds(inds_)
-        { }
+           const Inds& inds_);
     };
 
-struct MultReal
-    {
-    Real r;
-    MultReal(Real r_) : r(r_) { }
-    };
-
-struct MultCplx
-    {
-    Cplx z;
-    MultCplx(Cplx z_) : z(z_) { }
-    };
 
 template<typename IndexT>
 struct NormNoScale
@@ -317,6 +292,59 @@ struct Write
         }
     };
 
+
+namespace detail {
+
+template<typename I>
+void
+checkEltInd(const IndexSetT<I>& is,
+            const typename GetElt<I>::Inds& inds)
+    {
+    for(size_t k = 0; k < inds.size(); ++k)
+        {
+        auto i = inds[k];
+        if(i < 0)
+            {
+            print("inds = ");
+            for(auto j : inds) print(1+j," ");
+            println();
+            Error("Out of range: IndexVals/IQIndexVals are 1-indexed for getting tensor elements");
+            }
+        if(i >= is[k].m())
+            {
+            print("inds = ");
+            for(auto j : inds) print(1+j," ");
+            println();
+            Error(format("Out of range: IndexVal/IQIndexVal at position %d has val %d > %s",1+k,1+i,Index(is[k])));
+            }
+        }
+    }
+
+} //namespace detail
+
+template<typename IndexT>
+GetElt<IndexT>::
+GetElt(const IndexSetT<IndexT>& is_,
+       const Inds& inds_)
+  : is(is_),
+    inds(inds_)
+    { 
+#ifdef DEBUG
+    detail::checkEltInd(is,inds);
+#endif
+    }
+
+template<typename T, typename IndexT>
+SetElt<T,IndexT>::
+SetElt(T elt_,
+       const IndexSetT<IndexT>& is_,
+       const Inds& inds_)
+    : elt(elt_), is(is_), inds(inds_)
+    { 
+#ifdef DEBUG
+    detail::checkEltInd(is,inds);
+#endif
+    }
 
 } //namespace itensor 
 
