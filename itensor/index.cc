@@ -4,98 +4,13 @@
 //
 #include <array>
 #include "itensor/index.h"
+#include "itensor/util/readwrite.h"
 
 namespace itensor {
 
 using std::string;
 using std::stringstream;
 
-
-struct TInfo
-    {
-    IndexType t = NullIndex;
-    const char* s = "";
-    int n = 0;
-    TInfo(IndexType t_, const char* s_) : t(t_), s(s_), n(int(t_)) { }
-    TInfo(IndexType t_, const char* s_, int n_) : t(t_), s(s_), n(n_) { }
-    };
-
-static constexpr int NIType = 13;
-
-using TInfoArray = std::array<TInfo,NIType>;
-
-#define REGISTER_ITYPE(X) TInfo(X,#X)
-
-TInfoArray&
-tinfo()
-    {
-    auto makeTInfoArr = []()
-        {
-        TInfoArray a =
-            {{
-            REGISTER_ITYPE(Link),
-            REGISTER_ITYPE(Site),
-            REGISTER_ITYPE(All),
-            REGISTER_ITYPE(NullIndex),
-            REGISTER_ITYPE(Atype),
-            REGISTER_ITYPE(Btype),
-            REGISTER_ITYPE(Ctype),
-            REGISTER_ITYPE(Dtype),
-            REGISTER_ITYPE(Xtype),
-            REGISTER_ITYPE(Ytype),
-            REGISTER_ITYPE(Ztype),
-            REGISTER_ITYPE(Wtype),
-            REGISTER_ITYPE(Vtype) 
-            }};
-        return a;
-        };
-    static auto a = makeTInfoArr();
-    return a;
-    }
-
-int 
-IndexTypeToInt(IndexType it)
-    {
-    for(auto& el : tinfo())
-        if(el.t == it)
-            {
-            return el.n;
-            }
-    Error("IndexTypeToInt: IndexType not recognized");
-    return -1;
-    }
-
-IndexType 
-IntToIndexType(int i)
-    {
-    for(auto& el : tinfo())
-        if(el.n == i)
-            {
-            return el.t;
-            }
-    printfln("No IndexType value defined for i=%d\n",i);
-    Error("Undefined IntToIndexType value");
-    return Link;
-    }
-
-const char*
-indexTypeName(IndexType it)
-    {
-    for(auto& el : tinfo())
-        if(el.t == it)
-            {
-            return el.s;
-            }
-    Error("Undefined indexTypeName");
-    return "";
-    }
-
-std::ostream& 
-operator<<(std::ostream& s, IndexType it)
-    { 
-    s << indexTypeName(it);
-    return s; 
-    }
 
 string 
 putprimes(string s, int plev)
@@ -116,9 +31,9 @@ putprimes(string s, int plev)
     }
 
 string 
-nameindex(IndexType it, int plev)
+nameindex(const IndexType& it, int plev)
     { 
-    return putprimes(indexTypeName(it),plev); 
+    return putprimes(it.c_str(),plev); 
     }
 
 string 
@@ -190,46 +105,38 @@ write(std::ostream& s) const
     { 
     if(!bool(*this)) Error("Index::write: Index is default initialized");
 
-    s.write((char*) &primelevel_,sizeof(primelevel_));
+    itensor::write(s,primelevel_);
+    itensor::write(s,type_);
+    itensor::write(s,id_);
+    itensor::write(s,m_);
 
-    const auto t = IndexTypeToInt(type_);
-    s.write((char*) &t,sizeof(t));
-
-    s.write((char*) &(id_),sizeof(id_));
-
-    s.write((char*) &(m_),sizeof(m_));
-
-    const int nlength = sname_.length();
-    s.write((char*) &nlength,sizeof(nlength));
-
-    s.write(sname_.c_str(),nlength+1);
+    //const int nlength = sname_.length();
+    //s.write((char*) &nlength,sizeof(nlength));
+    //s.write(sname_.c_str(),nlength+1);
+    s << sname_;
     }
 
 Index& Index::
 read(std::istream& s)
     {
-    s.read((char*) &primelevel_,sizeof(primelevel_));
+    itensor::read(s,primelevel_);
 #ifdef DEBUG
     if(primelevel_ < 0)
         {
         Error("Negative primeLevel");
         }
 #endif
+    itensor::read(s,type_);
+    itensor::read(s,id_);
+    itensor::read(s,m_);
 
-    int t; 
-    s.read((char*) &t,sizeof(t));
-    type_ = IntToIndexType(t);
+    s >> sname_;
 
-    s.read((char*) &id_, sizeof(id_));
-
-    s.read((char*) &m_,sizeof(m_));
-
-    int nlength; 
-    s.read((char*) &nlength,sizeof(nlength));
-
-    auto newname = std::unique_ptr<char[]>(new char[nlength+1]);
-    s.read(newname.get(),nlength+1);
-    sname_ = string(newname.get()); 
+    //int nlength; 
+    //read(s,nlength);
+    //auto newname = std::unique_ptr<char[]>(new char[nlength+1]);
+    //s.read(newname.get(),nlength+1);
+    //sname_ = string(newname.get()); 
 
     return *this;
     }
@@ -288,7 +195,7 @@ add(Args& args,
     const Args::Name& name, 
     IndexType it) 
     { 
-    args.add(name,IndexTypeToInt(it)); 
+    args.add(name,it.c_str()); 
     }
 
 IndexType
@@ -296,7 +203,7 @@ getIndexType(const Args& args,
              const Args::Name& name)
     {
     if(!args.defined(name)) Error(format("Name %s not found in Args",name));
-    return IntToIndexType(args.getInt(name));
+    return IndexType(args.getString(name).c_str());
     }
 
 IndexType
@@ -305,7 +212,7 @@ getIndexType(const Args& args,
              IndexType default_val)
     {
     if(!args.defined(name)) return default_val; 
-    return IntToIndexType(args.getInt(name));
+    return IndexType(args.getString(name).c_str());
     }
 
 } //namespace itensor

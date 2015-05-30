@@ -5,11 +5,10 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include "itensor/global.h"
+#include "itensor/indextype.h"
 #include "itensor/arrow.h"
 
 namespace itensor {
-
-enum IndexType { Link, Site, All, NullIndex, Atype, Btype, Ctype, Dtype, Xtype, Ytype, Ztype, Wtype, Vtype };
 
 //Forward declarations
 class IndexVal;
@@ -60,7 +59,7 @@ class Index
     primeLevel(int plev);
 
     // Returns the IndexType
-    IndexType 
+    IndexType
     type() const { return type_; }
 
     // Returns the name of this Index
@@ -72,7 +71,7 @@ class Index
     rawname() const { return sname_; }
 
     // Evaluates to false if Index is default constructed.
-    explicit operator bool() const { return (type_!=NullIndex); }
+    explicit operator bool() const { return (type_!=NullInd); }
 
     // (Explicitly) convertible to integer types
     explicit operator int() const { return m(); }
@@ -229,8 +228,6 @@ class IndexVal
     void
     dag() { }
 
-    //static const IndexVal& 
-    //Null();
     };
 
 bool inline
@@ -287,10 +284,6 @@ operator<<(std::ostream & s, const Index &t);
 std::ostream& 
 operator<<(std::ostream& s, const IndexVal& iv);
 
-std::ostream& 
-operator<<(std::ostream& s, IndexType it);
-
-
 
 //
 //
@@ -304,7 +297,7 @@ Index()
     id_(0),
     primelevel_(0),
     m_(1),
-    type_(NullIndex)
+    type_(NullInd)
     { }
 
 inline Index::
@@ -318,7 +311,7 @@ Index(const std::string& name, long m, IndexType type, int plev)
     { 
 #ifdef DEBUG
     if(type_ == All) Error("Constructing Index with type All disallowed");
-    if(type_ == NullIndex) Error("Constructing Index with type NullIndex disallowed");
+    if(type_ == NullInd) Error("Constructing Index with type NullInd disallowed");
 #endif
     }
 
@@ -380,9 +373,11 @@ void
 add(Args& args, 
     const Args::Name& name, 
     IndexType it);
+
 IndexType
 getIndexType(const Args& args, 
              const Args::Name& name);
+
 IndexType
 getIndexType(const Args& args, 
              const Args::Name& name, 
