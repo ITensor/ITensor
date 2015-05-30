@@ -90,8 +90,8 @@ permute(TensorRef<const T,R1> from,
             bigind = j;
             }
 
-    auto stept = from.stride(bigind);
-    auto stepr = to.stride(P.dest(bigind));
+    auto stepfrom = from.stride(bigind);
+    auto stepto = to.stride(P.dest(bigind));
 
     detail::GCounter c(0,r-1,0);
     for(size_type i = 0; i < r; ++i)
@@ -100,21 +100,21 @@ permute(TensorRef<const T,R1> from,
     //increment manually in the loop below
     c.setInd(bigind,0,0);
 
-    Label ri(r);
+    Label ti(r);
     for(; c.notDone(); ++c)
         {
         for(size_type j = 0; j < r; ++j)
-            ri[P.dest(j)] = c.i[j];
+            ti[P.dest(j)] = c.i[j];
 
-        auto pr = MAKE_SAFE_PTR3(to.data(),ind(to,ri),to.size());
-        auto pt = MAKE_SAFE_PTR3(from.data(),ind(from,c.i),from.size());
+        auto pto = MAKE_SAFE_PTR3(to.data(),ind(to,ti),to.size());
+        auto pfrom = MAKE_SAFE_PTR3(from.data(),ind(from,c.i),from.size());
         for(size_type b = 0; b < bigsize; ++b)
             {
-            //func defaults to (*pr = *pt) but can also 
-            //be operations such as (*pr += *pt)
-            func(*pr,*pt);
-            pr += stepr;
-            pt += stept;
+            //func defaults to (*pto = *pfrom) but can also 
+            //be operations such as (*pto += *pfrom)
+            func(*pto,*pfrom);
+            pto += stepto;
+            pfrom += stepfrom;
             }
         }
     }
