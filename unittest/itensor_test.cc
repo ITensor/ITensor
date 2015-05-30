@@ -2,6 +2,7 @@
 #include "itensor/itensor.h"
 #include "itensor/util/cplx_literal.h"
 #include "itensor/util/count.h"
+#include "itensor/util/set_scoped.h"
 
 using namespace std;
 using namespace itensor;

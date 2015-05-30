@@ -9,6 +9,7 @@
 #include <vector>
 #include <iterator> 
 #include "itensor/util/error.h"
+#include "itensor/util/safe_ptr.h"
 
 #ifdef DEBUG
 #define CHECK_IND(X) check_ind(X);
@@ -25,57 +26,58 @@
 namespace itensor {
 
 template<typename T, size_t ArrSize>
-class infarray_iter;
-
-template<typename T, size_t ArrSize>
 class InfArray
     {
     public:
-    using storage_type = std::array<T,ArrSize>;
-    using value_type = typename storage_type::value_type;
-    using size_type = typename storage_type::size_type;
-    using difference_type = typename storage_type::difference_type;
-    using reference = typename storage_type::reference;
-    using const_reference = typename storage_type::const_reference;
-    using pointer = typename storage_type::pointer;
-    using const_pointer = typename storage_type::const_pointer;
-    using iterator = infarray_iter<T,ArrSize>;
-    using const_iterator = infarray_iter<const T,ArrSize>;
+    using array_type = std::array<T,ArrSize>;
+    using value_type = typename array_type::value_type;
+    using size_type = typename array_type::size_type;
+    using difference_type = typename array_type::difference_type;
+    using reference = typename array_type::reference;
+    using const_reference = typename array_type::const_reference;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
+    using iterator = pointer;
+    using const_iterator = const_pointer;
     private:
-    storage_type store_;
-    size_t size_;
+    pointer data_ = nullptr;
+    size_t size_ = 0;
+    array_type arr_;
     std::vector<T> vec_;
     public:
 
-    InfArray() : size_(0) { }
+    InfArray() : size_(0) { data_ = &arr_.front(); }
 
     InfArray(size_t size)
         {
-        resize(size);
+        if(size < ArrSize)
+            {
+            data_ = &arr_.front();
+            size_ = size;
+            }
+        else
+            {
+            vec_.resize(size);
+            data_ = vec_.data();
+            size_ = vec_.size();
+            }
         }
 
     InfArray(size_t size,
              const_reference value) 
+      : InfArray(size)
         { 
-        assign(size,value);
+        std::fill(begin(),end(),value);
         }
 
     InfArray(std::initializer_list<T> init) 
         { 
         resize(init.size());
-        auto it = init.begin();
-        for(auto& el : store_)
+        auto p = data_;
+        for(auto& el : init)
             {
-            el = *it;
-            ++it;
-            }
-        if(!vec_.empty())
-            {
-            for(auto& el : vec_)
-                {
-                el = *it;
-                ++it;
-                }
+            *p = el;
+            ++p;
             }
         }
 
@@ -83,7 +85,7 @@ class InfArray
     size() const { return size_; }
 
     size_t constexpr
-    array_size() const { return ArrSize; }
+    arr_size() const { return ArrSize; }
 
     size_t
     vec_size() const { return vec_.size(); }
@@ -91,16 +93,33 @@ class InfArray
     void
     resize(size_t new_size) 
         { 
-        size_ = new_size; 
-        if(size_ <= ArrSize)
+        if(new_size > ArrSize)
+            {
+            vec_.resize(new_size);
+            if(size_ <= ArrSize)
+                {
+                auto pv = MAKE_SAFE_PTR(vec_.data(),vec_.size());
+                std::copy(arr_.begin(),arr_.begin()+size_,pv);
+                }
+            data_ = vec_.data();
+            }
+        else //new_size <= ArrSize
+            {
+            if(size_ > ArrSize)
+                {
+                auto pa = MAKE_SAFE_PTR(&arr_.front(),ArrSize);
+                std::copy(vec_.begin(),vec_.begin()+new_size,pa);
+                }
             vec_.clear();
-        else
-            vec_.resize(size_-ArrSize);
+            data_ = &arr_.front();
+            }
+        size_ = new_size; 
         }
 
     void
     clear() 
         { 
+        data_ = &arr_.front();
         size_ = 0; 
         vec_.clear();
         }
@@ -108,17 +127,43 @@ class InfArray
     void
     push_back(const_reference val) 
         { 
-        if(size_ < ArrSize) store_[size_] = val; 
-        else                vec_.push_back(val);
-        ++size_; 
+        if(size_ < ArrSize) 
+            {
+            arr_[size_] = val; 
+            ++size_; 
+            }
+        else if(size_ == ArrSize)
+            {
+            resize(size_+1);
+            back() = val;
+            }
+        else                
+            {
+            vec_.push_back(val);
+            data_ = vec_.data();
+            ++size_;
+            }
         }
 
     void
     push_back(value_type&& val) 
         { 
-        if(size_ < ArrSize) store_[size_] = std::move(val); 
-        else                vec_.emplace_back(std::move(val));
-        ++size_; 
+        if(size_ < ArrSize) 
+            {
+            arr_[size_] = std::move(val); 
+            ++size_; 
+            }
+        else if(size_ == ArrSize)
+            {
+            resize(size_+1);
+            back() = std::move(val);
+            }
+        else                
+            {
+            vec_.emplace_back(std::move(val));
+            data_ = vec_.data();
+            ++size_;
+            }
         }
 
     void
@@ -132,28 +177,34 @@ class InfArray
     explicit operator bool() const { return bool(size_); }
 
     reference
-    operator[](size_t i) { CHECK_IND(i) return i < ArrSize ? store_[i] : vec_[i-ArrSize]; }
+    operator[](size_t i) { CHECK_IND(i) return data_[i]; }
 
     const_reference
-    operator[](size_t i) const { CHECK_IND(i) return i < ArrSize ? store_[i] : vec_[i-ArrSize]; }
+    operator[](size_t i) const { CHECK_IND(i) return data_[i]; }
 
     reference
-    at(size_t i) { return i < ArrSize ? store_[i] : vec_.at(i-ArrSize); }
+    at(size_t i) { check_ind(i); return data_[i]; }
 
     const_reference
-    at(size_t i) const { return i < ArrSize ? store_[i] : vec_.at(i-ArrSize); }
+    at(size_t i) const { check_ind(i); return data_[i]; }
 
     reference
-    front() { CHECK_EMPTY return store_.front(); }
+    front() { CHECK_EMPTY return *data_; }
 
     const_reference
-    front() const { CHECK_EMPTY return store_.front(); }
+    front() const { CHECK_EMPTY return *data_; }
 
     reference
-    back() { CHECK_EMPTY return vec_.empty() ? store_[size_-1] : vec_.back(); }
+    back() { CHECK_EMPTY return data_[size_-1]; }
 
     const_reference
-    back() const { CHECK_EMPTY return vec_.empty() ? store_[size_-1] : vec_.back(); }
+    back() const { CHECK_EMPTY return data_[size_-1]; }
+
+    pointer
+    data() { return data_; }
+
+    const_pointer
+    data() const { return data_; }
 
     bool
     empty() const { return size_==0; }
@@ -161,81 +212,35 @@ class InfArray
     void
     fill(const_reference val) 
         { 
-        store_.fill(val); 
-        std::fill(vec_.begin(),vec_.end(),val);
+        std::fill(begin(),end(),val);
         }
 
     void
     swap(InfArray& other) 
         { 
+        std::swap(data_,other.data_); 
         std::swap(size_,other.size_); 
-        store_.swap(other.store_); 
+        arr_.swap(other.arr_); 
         vec_.swap(other.vec_);
         }
 
     iterator
-    begin() 
-        { 
-        if(size_==0) 
-            {
-            return end();
-            }
-        else if(size_ < ArrSize)
-            {
-            return iterator(store_.data(),
-                            store_.data()+size_,
-                            vec_.data()); 
-            }
-        else
-            {
-            return iterator(store_.data(),
-                            store_.data()+ArrSize,
-                            vec_.data()); 
-            }
-        }
+    begin() { return data_; }
 
     iterator
-    end() 
-        { 
-        return iterator(vec_.data()+vec_.size(),
-                        store_.data()+size_,
-                        vec_.data());
-        }
+    end() { return data_+size_; }
 
     const_iterator
-    begin() const
-        { 
-        if(size_==0) 
-            {
-            return end();
-            }
-        else if(size_ < ArrSize)
-            {
-            return const_iterator(store_.data(),
-                                  store_.data()+size_,
-                                  vec_.data()); 
-            }
-        else
-            {
-            return const_iterator(store_.data(),
-                                  store_.data()+ArrSize,
-                                  vec_.data()); 
-            }
-        }
+    begin() const { return data_; }
 
     const_iterator
-    end() const
-        { 
-        return const_iterator(vec_.data()+vec_.size(),
-                              store_.data()+size_,
-                              vec_.data());
-        }
+    end() const { return data_+size_; }
 
     const_iterator
-    cbegin() const { return begin(); }
+    cbegin() const { return data_; }
 
     const_iterator
-    cend() const { return end(); }
+    cend() const { return data_+size_; }
 
     private:
     void
@@ -249,68 +254,6 @@ class InfArray
         if(size_==0) Error("InfArray is empty");
         }
     };
-
-template<typename T, size_t ArrSize>
-class infarray_iter
-    {
-    using parent = typename std::iterator<std::forward_iterator_tag, T>;
-    public:
-    using value_type = typename parent::value_type;
-    using reference = typename parent::reference;
-    using pointer = T*;
-    using difference_type = typename parent::difference_type;
-    using iterator_category = typename parent::iterator_category;
-    private:
-    pointer p_; 
-    pointer array_end_;
-    pointer vec_start_;
-    public: 
-
-    infarray_iter() : 
-        p_(nullptr), 
-        array_end_(nullptr), 
-        vec_start_(nullptr) 
-        { }
-
-    infarray_iter(pointer start,
-                  pointer array_end,
-                  pointer vec_start) :
-        p_(start),
-        array_end_(array_end),
-        vec_start_(vec_start)
-        { }
-
-    infarray_iter(const infarray_iter& other) : 
-        p_(other.p_), 
-        array_end_(other.array_end_), 
-        vec_start_(other.vec_start_)
-        { } 
-
-    pointer
-    data() const { return p_; }
-
-    infarray_iter& 
-    operator++() 
-        { 
-        ++p_;
-        if(p_==array_end_) p_ = vec_start_;
-        return *this; 
-        } 
-    infarray_iter 
-    operator++(int) 
-        { 
-        auto tmp = *this; 
-        operator++();
-        return tmp; 
-        } 
-    reference 
-    operator*() { return *p_; }  
-    };
-
-template <typename T, size_t ArrSize>
-bool 
-operator!=(const infarray_iter<T,ArrSize>& x, const infarray_iter<T,ArrSize>& y) 
-    { return x.data() != y.data(); } 
 
 } //namespace itensor
 

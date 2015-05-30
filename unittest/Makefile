@@ -2,11 +2,14 @@ include ../this_dir.mk
 include ../options.mk
 ################################################################
 
+HEADR=$(ITENSOR_INCLUDEDIR)/itensor
+
 HEADERS=test.h
 SOURCES=test.cc
 ifdef test
 SOURCES+= $(test)_test.cc
 else
+SOURCES+= util_test.cc
 #SOURCES+= algorithm_test.cc
 #SOURCES+= real_test.cc
 #SOURCES+= args_test.cc
@@ -76,7 +79,12 @@ mkdebugdir:
 clean:
 	rm -fr *.o .debug_objs test test-g
 
-LIBHEADERS=$(ITENSOR_INCLUDEDIR)/itensor/matrix/matrix.h
+
+LIBHEADERS=$(HEADR)/util/infarray.h
+util_test.cc: $(LIBHEADERS)
+.debug/util_test.cc: $(LIBHEADERS)
+
+LIBHEADERS=$(HEADR)/matrix/vec.h $(HEADR)/matrix/mat.h
 matrix_test.o: $(LIBHEADERS)
 .debug/matrix_test.o: $(LIBHEADERS)
 
