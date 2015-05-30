@@ -5,15 +5,29 @@
 #ifndef __ITENSOR_IQTDATA_H
 #define __ITENSOR_IQTDATA_H
 
-#include "itdata.h"
-#include "../iqindex.h"
-#include "../indexset.h"
-#include "../detail/gcounter.h"
+#include <vector>
+#include "itensor/itdata/task_types.h"
+#include "itensor/iqindex.h"
+#include "itensor/itdata/itdata.h"
 
 namespace itensor {
 
-template<typename T>
-class IQTData : public RegisterData<IQTData<T>>
+class ManagePtr;
+class ITCombiner;
+class IQTData;
+
+QN
+calcDiv(const IQIndexSet& is, const IQTData& D);
+
+QN
+calcDiv(const IQIndexSet& is, const std::vector<long>& block_ind);
+
+void
+inverseBlockInd(long block,
+                const IQIndexSet& is,
+                std::vector<long>& ind);
+
+class IQTData : public RegisterData<IQTData>
     {
     public:
 
@@ -31,135 +45,59 @@ class IQTData : public RegisterData<IQTData<T>>
         //Assumed that block indices are
         //in increasing order.
 
-    std::vector<T> data;
+    std::vector<Real> data;
         //^ tensor data stored contiguously
     //////////////
 
+    IQTData() { }
+
     IQTData(const IQIndexSet& is, 
-            const QN& Q);
+            const QN& div_);
+
+
+    explicit operator bool() const { return !data.empty(); }
 
     template<typename Indexable>
-    const T*
+    const Real*
     getBlock(const IQIndexSet& is,
              const Indexable& block_ind) const;
 
     template<typename Indexable>
-    T*
-    getBlock(const IQIndexSet& is,
+    Real*
+    getBlock(const IndexSetT<IQIndex>& is,
              const Indexable& block_ind)
         {
         //ugly but safe, efficient, and avoids code duplication (Meyers, Effective C++)
-        return const_cast<T*>(static_cast<const IQTData&>(*this).getBlock(is,block_ind));
+        return const_cast<Real*>(static_cast<const IQTData&>(*this).getBlock(is,block_ind));
         }
 
     template<typename Indexable>
-    const T*
-    getElt(const IQIndexSet& is,
+    const Real*
+    getElt(const IndexSetT<IQIndex>& is,
            const Indexable& ind) const;
 
     template<typename Indexable>
-    T*
-    getElt(const IQIndexSet& is,
+    Real*
+    getElt(const IndexSetT<IQIndex>& is,
            const Indexable& ind)
         {
-        return const_cast<T*>(static_cast<const IQTData&>(*this).getElt(is,ind));
+        return const_cast<Real*>(static_cast<const IQTData&>(*this).getElt(is,ind));
         }
 
     long
     offsetOf(long blkind) const;
 
     long
-    updateOffsets(const IQIndexSet& is,
-                  const QN& Q);
+    updateOffsets(const IndexSetT<IQIndex>& is,
+                  const QN& div);
 
     virtual
     ~IQTData() { }
 
-    private:
-
-
     };
 
-namespace detail {
-
-//function object for calling binaryFind
-//on offset vectors below
-template<typename T>
-struct compBlock
-    {
-    using BlockOffset = typename IQTData<T>::BlockOffset;
-    bool
-    operator()(const BlockOffset& bo1,
-               const BlockOffset& bo2) const
-        { return bo1.block < bo2.block; }
-    bool
-    operator()(const BlockOffset& bo, long blk) const        
-        { return bo.block < blk; }
-    bool
-    operator()(long blk, const BlockOffset& bo) const 
-        { return blk < bo.block; }
-    };
-
-} //namespace detail
-
-template<typename T>
-long IQTData<T>::
-updateOffsets(const IQIndexSet& is,
-              const QN& Q)
-    {
-    offsets.clear();
-    if(is.r()==0)
-        {
-        offsets.emplace_back(0,0);
-        return 1;
-        }
-
-    detail::GCounter C(0,is.r()-1,0);
-    for(int j = 0; j < is.r(); ++j) 
-        C.setInd(j,0,is[j].nindex()-1);
-
-    long totalsize = 0;
-    for(; C.notDone(); ++C)
-        {
-        QN blockqn;
-        for(int j = 0; j < is.r(); ++j)
-            {
-            const auto& J = is[j];
-            auto i = C.i.fast(j);
-            blockqn += J.qn(1+i)*J.dir();
-            }
-        if(blockqn == Q)
-            {
-            long indstr = 1, //accumulate Index strides
-                 ind = 0,
-                 totm = 1;   //accumulate area of Indices
-            for(int j = 0; j < is.r(); ++j)
-                {
-                const auto& J = is[j];
-                auto i_j = C.i[j];
-                ind += i_j*indstr;
-                indstr *= J.nindex();
-                totm *= J[i_j].m();
-                }
-            offsets.emplace_back(ind,totalsize);
-            totalsize += totm;
-            }
-        }
-    return totalsize;
-    }
-
-template<typename T>
-IQTData<T>::
-IQTData(const IQIndexSet& is, 
-        const QN& Q)
-    {
-    auto totalsize = updateOffsets(is,Q);
-    data.assign(totalsize,0);
-    }
-
-template<typename T>
 template<typename Indexable>
-const T* IQTData<T>::
+const Real* IQTData::
 getBlock(const IQIndexSet& is,
          const Indexable& block_ind) const
     {
@@ -185,9 +123,8 @@ getBlock(const IQIndexSet& is,
     return nullptr;
     }
 
-template<typename T>
 template<typename Indexable>
-const T* IQTData<T>::
+const Real* IQTData::
 getElt(const IQIndexSet& is,
        const Indexable& ind) const
     {
@@ -202,7 +139,7 @@ getElt(const IQIndexSet& is,
          estr = 1; //element stride
     for(auto i = 0; i < r; ++i)
         {
-        const auto& I = is[i];
+        auto& I = is[i];
         long block_subind = 0,
              elt_subind = ind[i];
         while(elt_subind >= I[block_subind].m()) //elt_ind 0-indexed
@@ -228,14 +165,110 @@ getElt(const IQIndexSet& is,
     return nullptr;
     }
 
-template <typename T>
-long IQTData<T>::
-offsetOf(long blkind) const
+template<typename Indexable>
+class IndexDim
     {
-    auto blk = detail::binaryFind(offsets,blkind,detail::compBlock<T>());
-    if(blk) return blk->offset;
-    return -1;
+    const IQIndexSet& is_;
+    const Indexable& ind_;
+    public:
+
+    IndexDim(const IQIndexSet& is,
+             const Indexable& ind)
+        :
+        is_(is),
+        ind_(ind)
+        { }
+
+    long
+    size() const { return is_.r(); }
+
+    long
+    operator[](long j) const { return (is_[j])[ind_[j]].m(); }
+    };
+
+template<typename Indexable>
+IndexDim<Indexable>
+make_indexdim(const IQIndexSet& is, const Indexable& ind) 
+    { return IndexDim<Indexable>(is,ind); }
+
+
+template <typename F>
+void
+doTask(ApplyIT<F>& A, IQTData& d)
+    {
+    for(auto& elt : d.data)
+        elt = A.f(elt);
     }
+
+template <typename F>
+void
+doTask(VisitIT<F>& V, const IQTData& d)
+    {
+    for(const auto& elt : d.data)
+        V.f(elt*V.scale_fac);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Real>& G, IQTData& d)
+    {
+    std::generate(d.data.begin(),d.data.end(),G.f);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Cplx>& G, const IQTData& cd, ManagePtr& mp)
+    {
+    Error("Complex version of IQTensor generate not yet supported");
+    }
+
+
+Cplx
+doTask(GetElt<IQIndex>& G, const IQTData& d);
+
+void
+doTask(SetElt<Real,IQIndex>& S, IQTData& d);
+
+//void
+//doTask(SetElt<Cplx,IQIndex>& S, IQTData& d);
+
+void
+doTask(MultReal& M, IQTData& d);
+
+void
+doTask(const PlusEQ<IQIndex>& P,
+       IQTData& A,
+       const IQTData& B);
+
+void
+doTask(Contract<IQIndex>& Con,
+       const IQTData& A,
+       const IQTData& B,
+       ManagePtr& mp);
+
+void
+doTask(Contract<IQIndex>& C,
+       const IQTData& d,
+       const ITCombiner& cmb,
+       ManagePtr& mp);
+
+void
+doTask(Contract<IQIndex>& C,
+       const ITCombiner& cmb,
+       const IQTData& d,
+       ManagePtr& mp);
+
+void
+doTask(Conj, const IQTData& d);
+
+bool inline
+doTask(CheckComplex,const IQTData& d) { return false; }
+
+Real
+doTask(const NormNoScale<IQIndex>& N, const IQTData& d);
+
+void
+doTask(PrintIT<IQIndex>& P, const IQTData& d);
 
 } //namespace itensor
 

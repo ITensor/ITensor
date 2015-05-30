@@ -1,5 +1,6 @@
 #include "test.h"
 #include "itensor/iqtensor.h"
+#include "itensor/util/set_scoped.h"
 
 using namespace itensor;
 using namespace std;
@@ -89,10 +90,11 @@ SECTION("Contracting Product")
     {
     SECTION("Case 1")
         {
-        //PrintData(A);
-        //PrintData(B);
+        //Print(A.inds());
+        //Print(B.inds());
+        SET_SCOPED(Global::debug1()) = true;
         auto R = A*dag(B);
-        //PrintData(R);
+        //Print(R.inds());
 
         CHECK(hasindex(R,S1));
         CHECK(hasindex(R,S2));

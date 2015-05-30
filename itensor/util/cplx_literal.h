@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_CPLX_LITERAL_H
 #define __ITENSOR_CPLX_LITERAL_H
 
-#include "itensor/matrix/types.h"
+#include "itensor/types.h"
 
 namespace itensor {
 

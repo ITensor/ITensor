@@ -19,7 +19,7 @@ using std::string;
 using std::sqrt;
 
 
-struct ToMatRefc : RegisterFunc<ToMatRefc,MatRefc>
+struct ToMatRefc
     {
     long nrows=0,
          ncols=0;
@@ -28,23 +28,24 @@ struct ToMatRefc : RegisterFunc<ToMatRefc,MatRefc>
         : nrows(nr), ncols(nc), transpose(trans)
         { }
 
-    MatRefc
-    operator()(const ITReal& d)
-        {
-        auto res = MatRefc(d.data(),nrows,ncols);
-        if(transpose) res.applyTrans();
-        return res;
-        }
     };
+
+MatRefc
+doTask(const ToMatRefc& T, const ITReal& d)
+    {
+    auto res = MatRefc(d.data(),T.nrows,T.ncols);
+    if(T.transpose) res.applyTrans();
+    return res;
+    }
 
 MatRefc
 toMatRefc(const ITensor& T, const Index& i1, const Index& i2)
     {
     if(i1 == T.inds().front())
         {
-        return applyFunc<ToMatRefc>(T.data(),i1.m(),i2.m());
+        return doTask<MatRefc>(ToMatRefc{i1.m(),i2.m()},T.store());
         }
-    return applyFunc<ToMatRefc>(T.data(),i2.m(),i1.m(),true);
+    return doTask<MatRefc>(ToMatRefc{i2.m(),i1.m(),true},T.store());
     }
 
 

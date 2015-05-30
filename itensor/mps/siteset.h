@@ -143,7 +143,7 @@ op(const String& opname, int i,
         {
         IQIndex s = dag(si(i));
         IQIndex sP = siP(i);
-        IQTensor id_(QN(),s,sP);
+        IQTensor id_(s,sP);
         for(int j = 1; j <= s.m(); ++j)
             {
             id_.set(1,s(j),sP(j));

@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <algorithm>
 #include <ctime>
+#include <stdexcept>
+#include "itensor/types.h"
 
 namespace itensor {
 namespace detail {
@@ -84,6 +86,9 @@ quickran()
     seed = (seed*ia+ic)%im;
     return double(seed) * scale;
     }
+
+Cplx inline
+quickranCplx() { return Cplx(detail::quickran(),detail::quickran()); }
 
 template<typename Container>
 using const_correct_ptr = 

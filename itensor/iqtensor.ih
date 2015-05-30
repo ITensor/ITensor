@@ -7,317 +7,62 @@
 
 namespace itensor {
 
+template<>
 template<typename... IQIndices>
 IQTensor::
-IQTensor(const IQIndex& i1,
+ITensorT(const IQIndex& i1,
+         const IQIndex& i2,
+         const IQIndex& i3,
          const IQIndices&... rest)
-    : 
-    is_(i1,rest...),
+  : is_(i1,i2,i3,rest...),
     scale_(1.)
     { }
 
-template<typename... IQIndices>
-IQTensor::
-IQTensor(const QN& q,
-         const IQIndex& i1,
-         const IQIndices&... rest)
-    : 
-    is_(i1,rest...),
-    store_(std::make_shared<IQTData<Real>>(is_,q)),
-    div_(q),
-    scale_(1.)
-    { }
-
+template<> 
 template <typename... IQIVals>
 IQTensor::
-IQTensor(const IQIndexVal& iv1,
+ITensorT(const IQIndexVal& iv1,
          const IQIVals&... rest)
-    :
-    scale_(1.)
+  : scale_(1.)
     { 
     const size_t size = 1+sizeof...(rest);
     auto ivs = std::array<IQIndexVal,size>{{iv1,rest...}};
     std::array<IQIndex,size> inds;
     for(size_t j = 0; j < size; ++j) inds[j] = ivs[j].index;
     is_ = IQIndexSet(inds);
-    for(const auto& iv : ivs) div_ += iv.qn()*iv.index.dir();
-    store_ = std::make_shared<IQTData<Real>>(is_,div_);
+    QN div;
+    for(auto& iv : ivs) div += iv.qn()*iv.index.dir();
+    store_ = std::make_shared<IQTData>(is_,div);
     set(1.,iv1,rest...);
     }
 
-template<typename T, size_t size>
-struct IQGetElt : RegisterFunc<IQGetElt<T,size>>
-    {
-    using Inds = std::array<long,size>;
 
-    const IQIndexSet& is_;
-    const Inds& inds_;
-    T elt_;
-
-    IQGetElt(const IQIndexSet& is,
-             const Inds& inds)
-        : 
-        is_(is),
-        inds_(inds)
-        { }
-
-    operator T() const { return elt_; }
-
-    template <typename V,
-              typename std::enable_if<std::is_convertible<V,T>::value>::type* = nullptr>
-    void
-    operator()(const IQTData<V>& d)
-        {
-        auto* pelt = d.getElt(is_,inds_);
-        if(pelt) elt_ = *pelt;
-        else     elt_ = 0;
-        }
-    };
-
-
-template <typename... IQIndexVals>
-Complex IQTensor::
-cplx(IQIndexVals&&... ivs) const
-    {
-    constexpr auto size = sizeof...(ivs);
-#ifdef DEBUG
-    if(!*this) Error("IQTensor is default constructed");
-    if(size > size_t(r())) Error("Too many IQIndexVals passed to real/cplx");
-#endif
-    std::array<IQIndexVal,size> vals{{static_cast<IQIndexVal>(ivs)...}};
-    std::array<long,size> inds;
-    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.val-1; });
-    Complex z = applyFunc<IQGetElt<Complex,size>>(store_,is_,inds);
-	try {
-	    return z*scale_.real(); 
-	    }
-	catch(const TooBigForReal& e)
-	    {
-	    println("too big for real in cplx(...), scale = ",scale());
-	    throw e;
-	    }
-	catch(TooSmallForReal)
-	    {
-        println("warning: too small for real in cplx(...)");
-	    return Complex(0.,0.);
-	    }
-    return Complex(NAN,NAN);
-    }
-
-template <typename... IQIndexVals>
-Real IQTensor::
-real(IQIndexVals&&... ivs) const
-    {
-    auto z = cplx(std::forward<IQIndexVals>(ivs)...);
-    if(fabs(z.imag()) != 0)
-        {
-        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
-        Error("IQTensor is Complex-valued, use .cplx(...) method");
-        }
-    return z.real();
-    }
-
-template<size_t size>
-struct IQSetEltReal : RegisterFunc<IQSetEltReal<size>>
-    {
-    using Inds = std::array<long,size>;
-
-    const IQIndexSet& is_;
-    const Inds& inds_;
-    Real elt_;
-
-    IQSetEltReal(Real elt,
-                 const IQIndexSet& is,
-                 const Inds& inds)
-        : 
-        is_(is),
-        inds_(inds),
-        elt_(elt)
-        { }
-
-    template<typename T>
-    void
-    operator()(IQTData<T>& d)
-        {
-        auto* pelt = d.getElt(is_,inds_);
-        if(pelt) *pelt = T{elt_};
-        else     Error("Setting IQTensor element non-zero would violate its symmetry.");
-        }
-    };
-
-template<typename... IQIndexVals>
-void IQTensor::
-set(Complex val, const IQIndexVals&... ivs)
-    {
-    static constexpr auto size = sizeof...(ivs);
-    std::array<IQIndexVal,size> vals{{ static_cast<IQIndexVal>(ivs)...}};
-    //If this IQTensor is not allocated, compute QN flux from ivs
-    if(!store_)
-        {
-#ifdef DEBUG
-        if(!is_) Error("Setting element of default constructed IQTensor");
-#endif
-        div_ = QN();
-        for(auto& iv : vals) div_ += iv.qn()*iv.index.dir();
-        if(val.imag() == 0) store_ = std::make_shared<IQTData<Real>>(is_,div_);
-        else Error("Setting complex IQTensor element not implemented");
-        }
-    scaleTo(1.);
-    std::array<long,size> inds;
-    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.val-1; });
-    if(val.imag() == 0)
-        applyFunc<IQSetEltReal<size>>(store_,val.real(),is_,inds);
-    else
-        {
-        Error("Set Complex element not implemented");
-        //applyFunc<IQSetEltComplex<size>>(store_,{val,is_,bis});
-        }
-    }
-
-template<typename... VarArgs>
-IQTensor& IQTensor::
-noprime(VarArgs&&... vargs) { itensor::noprime(is_,std::forward<VarArgs>(vargs)...); return *this; }
-
-template<typename... VarArgs>
-IQTensor& IQTensor::
-prime(VarArgs&&... vargs) { itensor::prime(is_,std::forward<VarArgs>(vargs)...); return *this; }
-
-template<typename... VarArgs>
-IQTensor& IQTensor::
-primeExcept(VarArgs&&... vargs) { itensor::primeExcept(is_,std::forward<VarArgs>(vargs)...); return *this; }
-
-template <typename F>
-struct GenerateIQT : public RegisterFunc<GenerateIQT<F>>
-    {
-    F& f_;
-    public:
-    GenerateIQT(F&& f)
-        : f_(f)
-        { }
-
-    template <typename T>
-    void
-    operator()(IQTData<T>& d) const { doGen(d); }
-
-    private:
-
-    template<typename T>
-    void
-    doGen(T& d) const
-        {
-        std::generate(d.data.begin(),d.data.end(),f_);
-        }
-    };
-
-template <typename Func>
-IQTensor& IQTensor::
-generate(Func&& f)
-    {
-    scaleTo(1);
-    applyFunc<GenerateIQT<decltype(f)>>(store_,std::forward<Func>(f));
-    return *this;
-    }
-
-template <typename F>
-class ApplyIQT : public RegisterFunc<ApplyIQT<F>>
-    {
-    F& f_;
-    public:
-    ApplyIQT(F&& f) : f_(f) { }
-
-    template <typename T,
-              typename std::enable_if<std::is_same<T,std::result_of_t<F(T)>>::value>::type* = nullptr>
-    void
-    operator()(IQTData<T>& d) const { doApply(d); }
-
-    private:
-
-    template<typename T>
-    void
-    doApply(T& d) const
-        {
-        for(auto& elt : d.data)
-            elt = f_(elt);
-        }
-    };
-
-template <typename Func>
-IQTensor& IQTensor::
-apply(Func&& f)
-    {
-    scaleTo(1);
-    applyFunc<ApplyIQT<decltype(f)>>(store_,std::forward<Func>(f));
-    return *this;
-    }
-
-template <typename F>
-class VisitIQT : public RegisterFunc<VisitIQT<F>>
-    {
-    F& f_;
-    Real scale_fac;
-    public:
-    VisitIQT(F&& f, Real scale)
-        : f_(f), scale_fac(scale)
-        { }
-
-    template <typename T>
-    void
-    operator()(const T& d) const
-        {
-        for(const auto& elt : d.data)
-            f_(elt*scale_fac);
-        }
-    };
-
-template <typename Func>
-const IQTensor& IQTensor::
-visit(Func&& f) const
-    {
-    applyFunc<VisitIQT<decltype(f)>>(store_,std::forward<Func>(f),scale_.real0());
-    return *this;
-    }
-
-inline IQTensor::
-operator ITensor() const 
-    { 
-    return toITensor(*this); 
-    }
-
-template <typename... VarArgs>
-IQTensor
-prime(IQTensor A, 
-      VarArgs&&... vargs)
-    {
-    A.prime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template <typename... VarArgs>
-IQTensor
-primeExcept(IQTensor A,
-            VarArgs&&... vargs)
-    {
-    A.primeExcept(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template <typename... VarArgs>
-IQTensor
-noprime(IQTensor A,
-        VarArgs&&... vargs)
-    {
-    A.noprime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
-
-template <typename... VarArgs>
-IQTensor
-mapprime(IQTensor A,
-         VarArgs&&... vargs)
-    {
-    A.mapprime(std::forward<VarArgs>(vargs)...);
-    return A;
-    }
+//template<>
+//template<typename... IQIndexVals>
+//void IQTensor::
+//set(Cplx val, const IQIndexVals&... ivs)
+//    {
+//    static constexpr auto size = sizeof...(ivs);
+//    std::array<IQIndexVal,size> vals{{ static_cast<IQIndexVal>(ivs)...}};
+//    //If this IQTensor is not allocated, compute QN flux from ivs
+//    if(!store_)
+//        {
+//#ifdef DEBUG
+//        if(!is_) Error("Setting element of default constructed IQTensor");
+//#endif
+//        QN div;
+//        for(auto& iv : vals) div += iv.qn()*iv.index.dir();
+//        if(val.imag() == 0) store_ = std::make_shared<IQTData>(is_,div);
+//        else Error("Setting complex IQTensor element not implemented");
+//        }
+//    scaleTo(1.);
+//    typename SetElt<Real,IQIndex>::Inds inds(size);
+//    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.val-1; });
+//    if(val.imag() == 0)
+//        doTask(SetElt<Real,IQIndex>{val.real(),is_,inds},store_);
+//    else
+//        doTask(SetElt<Cplx,IQIndex>{val,is_,inds},store_);
+//    }
 
 } //namespace itensor
 

@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_INDEX_H
 #define __ITENSOR_INDEX_H
 #include "itensor/global.h"
+#include "itensor/arrow.h"
 
 namespace itensor {
 
@@ -28,7 +29,7 @@ class Index
     public:
     using IDGenerator = std::mt19937;
     using IDType = IDGenerator::result_type;
-    using IndexValT = IndexVal;
+    using indexval_type = IndexVal;
 
     //
     // Constructors

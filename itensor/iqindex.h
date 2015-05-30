@@ -10,12 +10,14 @@
 namespace itensor {
 
 // Forward declarations
-class ITensor;
 class IndexQN;
 class IQIndexDat;
 class IQIndexVal;
+template<typename IndexT>
+class ITensorT;
 
 using IQIndexDatPtr = std::shared_ptr<IQIndexDat>;
+using ITensor = ITensorT<Index>;
 
 //
 // IQIndex
@@ -26,7 +28,8 @@ class IQIndex : public Index
     public:
 
     using storage = std::vector<IndexQN>;
-    using IndexValT = IQIndexVal;
+    using indexval_type = IQIndexVal;
+
     //
     //Constructors
     //

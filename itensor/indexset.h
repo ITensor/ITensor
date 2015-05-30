@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_INDEXSET_H
 #define __ITENSOR_INDEXSET_H
 #include <algorithm>
+#include "itensor/util/readwrite.h"
 #include "itensor/util/safe_ptr.h"
 #include "itensor/tensor/range.h"
 #include "itensor/tensor/permutation.h"
@@ -42,7 +43,8 @@ class IndexSetT
     using value_type = IndexT;
     using iterator = typename storage::iterator;
     using const_iterator = typename storage::const_iterator;
-    using IndexValT = typename IndexT::IndexValT;
+    using index_type = IndexT;
+    using indexval_type = typename IndexT::indexval_type;
 
     IndexSetT();
 
@@ -191,7 +193,7 @@ prime(IndexSetT<IndexT>& is, int inc = 1) { prime(is,All,inc); }
 template<typename IndexT, typename... IVals>
 void 
 prime(IndexSetT<IndexT>& is,
-      const typename IndexT::IndexValT& iv1,
+      const typename IndexT::indexval_type& iv1,
       IVals&&... ivs);
 
 //

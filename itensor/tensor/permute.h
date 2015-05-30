@@ -7,21 +7,12 @@
 
 #include <array>
 #include "itensor/tensor/ten.h"
+#include "itensor/tensor/types.h"
 #include "itensor/tensor/permutation.h"
 #include "itensor/util/safe_ptr.h"
 #include "itensor/detail/gcounter.h"
 
 namespace itensor {
-
-using Label = VarArray<long,31ul>; //sizeof(VarArray<long,31ul>)==256
-
-inline std::ostream& 
-operator<<(std::ostream& s, const Label& A)
-    {
-    for(auto& a : A) s << a << " ";
-    s << "\n";
-    return s;
-    }
 
 template<typename R1, typename R2>
 void 

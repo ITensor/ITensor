@@ -5,19 +5,17 @@
 #ifndef __ITENSOR_ITREAL_H
 #define __ITENSOR_ITREAL_H
 
+#include "itensor/itdata/task_types.h"
+#include "itensor/util/readwrite.h"
+#include "itensor/detail/call_rewrite.h"
 #include "itensor/itdata/itdata.h"
 
 namespace itensor {
 
-//
-// Optimization TODO: 
-//  replace std::vector storage with
-//  storage type only holding data ptr
-//  and size
-//
 
-struct ITReal : RegisterData<ITReal>
+class ITReal : public RegisterData<ITReal>
     {
+    public:
     using storage_type = std::vector<Real>;
     using size_type = storage_type::size_type;
     using iterator = storage_type::iterator;
@@ -109,6 +107,82 @@ write(std::ostream& s, const ITReal& dat)
     write(s,dat.store);
     }
 
+template<typename F>
+void
+doTask(ApplyIT<F>& A, ITReal& d)
+    { 
+    for(auto& elt : d) elt = detail::call<Real>(A.f,elt);
+    }
+
+template<typename F>
+void
+doTask(VisitIT<F>& V, const ITReal& d)
+    { 
+    for(auto& elt : d) detail::call<void>(V.f,V.scale_fac * elt);
+    }
+
+template<typename F>
+void
+doTask(GenerateIT<F,Real>& G, ITReal& d)
+    { 
+    std::generate(d.begin(),d.end(),G.f);
+    }
+
+Cplx 
+doTask(const GetElt<Index>& g, const ITReal& d);
+
+void
+doTask(const SetElt<Real,Index>& s, ITReal& d);
+
+void
+doTask(const SetElt<Cplx,Index>& s, const ITReal& d, ManagePtr& mp);
+
+void
+doTask(const FillReal& f, ITReal& d);
+
+void
+doTask(const FillCplx& f, const ITReal& d, ManagePtr& mp);
+
+void
+doTask(const MultCplx& M, const ITReal& d, ManagePtr& mp);
+
+void
+doTask(const MultReal& m, ITReal& d);
+
+Real
+doTask(const NormNoScale<Index>& N, const ITReal& d);
+
+void
+doTask(Conj,const ITReal& d);
+
+void
+doTask(TakeReal, const ITReal& );
+
+void
+doTask(TakeImag, const ITReal& d, ManagePtr& mp);
+
+void
+doTask(PrintIT<Index>& P, const ITReal& d);
+
+Cplx
+doTask(SumEls<Index>, const ITReal& d);
+
+void
+doTask(Write& W, const ITReal& d);
+
+void
+doTask(Contract<Index>& C,
+       const ITReal& a1,
+       const ITReal& a2,
+       ManagePtr& mp);
+
+void
+doTask(const PlusEQ<Index>& P,
+       ITReal& a1,
+       const ITReal& a2);
+
+bool inline
+doTask(CheckComplex, const ITReal& d) { return false; }
 
 } //namespace itensor
 

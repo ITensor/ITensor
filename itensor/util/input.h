@@ -11,7 +11,7 @@
 #include <fstream>
 #include <string>
 #include <limits>
-#include "itensor/matrix/types.h"
+#include "itensor/types.h"
 #include "itensor/util/error.h"
 #include "itensor/util/optional_ptr.h"
 

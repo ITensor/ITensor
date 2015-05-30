@@ -1,0 +1,651 @@
+//
+// Distributed under the ITensor Library License, Version 1.2
+//    (See accompanying LICENSE file.)
+//
+#ifndef __ITENSOR_ITENSOR_INTERFACE_IH_
+#define __ITENSOR_ITENSOR_INTERFACE_IH_
+
+#include "itensor/itdata/task_types.h"
+#include "itensor/tensor/contract.h"
+
+//
+// Template Method Implementations
+//
+
+namespace itensor {
+
+template<typename IndexT>
+ITensorT<IndexT>::
+ITensorT(const IndexT& i1) { Error("ITensorT(i1) not implemented"); }
+
+template<typename IndexT>
+ITensorT<IndexT>::
+ITensorT(const IndexT& i1,
+         const IndexT& i2) { Error("ITensorT(i1,i2) not implemented"); }
+
+template<typename IndexT>
+template <typename... Indices>
+ITensorT<IndexT>::
+ITensorT(const IndexT& i1,
+         const IndexT& i2, 
+         const IndexT& i3, 
+         const Indices&... rest) { Error("ITensorT(i1,i2,i3,...) not implemented"); }
+
+template<typename IndexT>
+ITensorT<IndexT>::
+ITensorT(Cplx val) { Error("ITensorT(Cplx) not implemented"); }
+
+template<typename IndexT>
+template <typename... IVals>
+ITensorT<IndexT>::
+ITensorT(const indexval_type& iv1, 
+         const IVals&... rest) { Error("ITensorT(iv1,...) not implemented"); }
+
+template<typename IndexT>
+ITensorT<IndexT>::
+ITensorT(const indexset_type& is) { Error("ITensorT(IndexSetT) not implemented"); }
+
+template<typename IndexT>
+ITensorT<IndexT>::
+ITensorT(indexset_type iset,
+        storage_ptr&& pdat,
+        const LogNumber& scale)
+    :
+    is_(std::move(iset)),
+    store_(std::move(pdat)),
+    scale_(scale)
+    { }
+
+template<typename IndexT>
+template <class DataType>
+ITensorT<IndexT>::
+ITensorT(indexset_type iset,
+         DataType&& dat,
+         const LogNumber& scale) :
+    is_(std::move(iset)),
+    store_(std::make_shared<std::decay_t<DataType>>(std::move(dat))),
+    scale_(scale)
+    {
+    static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
+                  "Error: cannot pass lvalues to ITensorT(...,DataType&& dat,...) constructor");
+    }
+
+template<typename IndexT>
+ITensorT<IndexT>::
+operator ITensor() const { Error("ITensorT->ITensor not implemented"); return *this; }
+
+
+template<typename IndexT> 
+template <typename... IVs>
+Cplx ITensorT<IndexT>::
+cplx(IVs&&... ivs) const
+    {
+    using indexval_type = typename IndexT::indexval_type;
+    using Inds = typename GetElt<IndexT>::Inds;
+    constexpr size_t size = sizeof...(ivs);
+    auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(ivs)...}};
+#ifdef DEBUG
+    if(!*this) Error("tensor is default constructed");
+    size_t nsize = 0;
+    for(auto& iv : vals) if(iv.index.m() > 1) ++nsize;
+    if(nsize != size_t(inds().rn())) 
+        Error(format("Wrong number of m>1 IndexVals passed to real/cplx (expected %d, got %d)",inds().rn(),nsize));
+#endif
+    Inds inds(size);
+    detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
+    auto z = itensor::doTask<Cplx>(GetElt<IndexT>{is_,inds},store_);
+	try {
+	    return z*scale_.real(); 
+	    }
+	catch(const TooBigForReal& e)
+	    {
+	    println("too big for real in cplx(...), scale = ",scale());
+	    throw e;
+	    }
+	catch(TooSmallForReal)
+	    {
+        println("warning: too small for real in cplx(...)");
+	    return Cplx(0.,0.);
+	    }
+    return Cplx(NAN,NAN);
+    }
+
+template<typename IndexT>
+template <typename... IVals>
+Real ITensorT<IndexT>::
+real(IVals&&... ivs) const
+    {
+    auto z = cplx(std::forward<IVals>(ivs)...);
+    if(fabs(z.imag()) != 0)
+        {
+        printfln("element = (%.5E,%.5E)",z.real(),z.imag());
+        Error("tensor is Complex valued, use .cplx(...) method");
+        }
+    return z.real();
+    }
+
+template<typename IndexT>
+template <typename... IVals>
+void ITensorT<IndexT>::
+set(Cplx val, IVals&&... ivs)
+    {
+    using indexval_type = typename IndexT::indexval_type;
+    using Inds = typename SetElt<Real,IndexT>::Inds;
+    static constexpr auto size = sizeof...(ivs);
+    const std::array<indexval_type,size> vals{{ static_cast<indexval_type>(ivs)...}};
+    if(!store_)
+        {
+#ifdef DEBUG
+        if(is_)
+            {
+            for(auto& v : vals) if(!hasindex(is_,v.index))
+                Error(format("Tensor does not have index %s",v.index));
+            }
+#endif
+        *this = ITensorT(std::forward<IVals>(ivs)...);
+        operator*=(val);
+        }
+    scaleTo(1.);
+    Inds inds(size);
+    detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
+    if(val.imag() == 0)
+        doTask(SetElt<Real,IndexT>{val.real(),is_,inds},store_);
+    else
+        doTask(SetElt<Cplx,IndexT>{val,is_,inds},store_);
+    }
+
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+operator*=(const ITensorT& R)
+    {
+    auto& L = *this;
+
+    if(!L || !R)
+        Error("Default constructed ITensor in product");
+
+    if(&L == &R)
+        {
+        L = ITensorT(sqr(norm(L)));
+        return L;
+        }
+
+    auto& Lis = L.inds();
+    auto& Ris = R.inds();
+
+    Label Lind,
+          Rind;
+    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
+
+    auto C = doTask(Contract<index_type>{Lis,Lind,Ris,Rind},L.store_,R.store());
+
+    L.scale_ *= R.scale();
+    if(!std::isnan(C.scalefac)) L.scale_ *= C.scalefac;
+
+#ifdef DEBUG
+    //Check for duplicate indices
+    detail::check(C.Nis);
+#endif
+
+    L.is_.swap(C.Nis);
+
+    return L;
+    }
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+operator+=(const ITensorT& R)
+    {
+    auto& L = *this;
+    if(!L) Error("Calling += on default constructed ITensor");
+    if(!R) Error("Right-hand-side of ITensor += is default constructed");
+    if(&L == &R) return  operator*=(2.);
+    if(L.scale().isZero()) return L = R;
+
+    using permutation = typename PlusEQ<index_type>::permutation;
+
+    permutation P(L.inds().size());
+#ifdef DEBUG
+    try {
+        calc_permutation(R.inds(),L.inds(),P);
+        }
+    catch(const std::exception& e)
+        {
+        Print(L);
+        Print(R);
+        Error("ITensorT::operator+=: different index structure");
+        }
+#else
+    calc_permutation(R.inds(),L.inds(),P);
+#endif
+
+    Real scalefac = 1;
+    if(L.scale().magnitudeLessThan(R.scale())) 
+        {
+        L.scaleTo(R.scale()); 
+        }
+    else
+        {
+        scalefac = (R.scale()/L.scale()).real();
+        }
+
+    if(isTrivial(P))
+        {
+        doTask(PlusEQ<index_type>{scalefac},L.store(),R.store());
+        }
+    else
+        {
+        doTask(PlusEQ<index_type>{P,L.inds(),R.inds(),scalefac},
+               L.store(),R.store());
+        }
+
+    return L;
+    } 
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+operator-=(const ITensorT& R)
+    {
+    auto& L = *this;
+    if(&L == &R) 
+        { 
+        L.scale_ = 0; 
+        return L;
+        }
+    L.scale().negate();
+    L += R;
+    L.scale().negate();
+    return L;
+    }
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+operator*=(Cplx z)
+    {
+    if(z.imag() == 0) return operator*=(z.real());
+    doTask(MultCplx{z},store_);
+    return *this;
+    }
+
+namespace detail {
+void inline
+allocReal(ITensor& T)
+    {
+    T.store() = std::make_shared<ITReal>(area(T.inds()),0);
+    }
+
+void inline
+allocReal(IQTensor& T)
+    {
+    Error("Can't allocate IQTensor with undefined divergence");
+    }
+}
+
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+fill(Cplx z)
+    {
+    if(!store_) 
+        {
+        if(is_) detail::allocReal(*this);
+        else Error("Can't fill default-constructed tensor");
+        }
+    scale_ = scale_type(1.);
+    if(z.imag() == 0)
+        doTask(FillReal{z.real()},store_);
+    else
+        doTask(FillCplx{z},store_);
+    return *this;
+    }
+
+template<typename IndexT>
+template <typename Func>
+ITensorT<IndexT>& ITensorT<IndexT>::
+generate(Func&& f)
+    {
+    scaleTo(1);
+    doTask(GenerateIT<decltype(f)>{std::forward<Func>(f)},store_);
+    return *this;
+    }
+
+template<typename IndexT>
+template <typename Func>
+ITensorT<IndexT>& ITensorT<IndexT>::
+apply(Func&& f)
+    {
+    scaleTo(1);
+    doTask(ApplyIT<decltype(f)>{std::forward<Func>(f)},store_);
+    return *this;
+    }
+
+template<typename IndexT>
+template <typename Func>
+const ITensorT<IndexT>& ITensorT<IndexT>::
+visit(Func&& f) const
+    {
+    doTask(VisitIT<decltype(f)>{std::forward<Func>(f),scale_.real0()},store_);
+    return *this;
+    }
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+conj()
+    {
+    doTask(Conj{},store_);
+    return *this;
+    }
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+dag()
+    {
+    Error("dag not implemented");
+    return *this;
+    }
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+takeReal()
+    {
+    doTask(TakeReal{},store_);
+    return *this;
+    }
+
+template<typename IndexT> 
+ITensorT<IndexT>& ITensorT<IndexT>::
+takeImag()
+    {
+    doTask(TakeImag{},store_);
+    return *this;
+    }
+
+template<typename IndexT> 
+void ITensorT<IndexT>::
+scaleTo(const scale_type& newscale)
+    {
+    if(scale_ == newscale) return;
+    if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
+    scale_ /= newscale;
+    doTask(MultReal{scale_.real0()},store_);
+    scale_ = newscale;
+    }
+
+template<typename I>
+ITensorT<I> 
+operator*(ITensorT<I> A, const ITensorT<I>& B) { A *= B; return A; }
+template<typename I>
+ITensorT<I>
+operator*(const ITensorT<I>& A, ITensorT<I>&& B) { B *= A; return B; }
+template<typename I>
+ITensorT<I> 
+operator*(ITensorT<I> T, Real fac) { T *= fac; return T; }
+template<typename I>
+ITensorT<I> 
+operator*(Real fac, ITensorT<I> T) { T *= fac; return T; }
+template<typename I>
+ITensorT<I> 
+operator*(ITensorT<I> T, Complex fac) { T *= fac; return T; }
+template<typename I>
+ITensorT<I> 
+operator*(Complex fac, ITensorT<I> T) { T *= fac; return T; }
+template<typename I>
+ITensorT<I> 
+operator/(ITensorT<I> T, Real fac) { T /= fac; return T; }
+template<typename I>
+ITensorT<I> 
+operator/(ITensorT<I> T, Complex fac) { T /= fac; return T; }
+template<typename I>
+ITensorT<I> 
+operator+(ITensorT<I> A, const ITensorT<I>& B) { A += B; return A; }
+template<typename I>
+ITensorT<I> 
+operator+(const ITensorT<I>& A, ITensorT<I>&& B) { B += A; return B; }
+template<typename I>
+ITensorT<I> 
+operator-(ITensorT<I> A, const ITensorT<I>& B) { A -= B; return A; }
+template<typename I>
+ITensorT<I> 
+operator-(const ITensorT<I>& A, ITensorT<I>&& B) { B -= A; B *= -1; return B; }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+prime(ITensorT<IndexT> A, 
+      VarArgs&&... vargs)
+    {
+    A.prime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+primeExcept(ITensorT<IndexT> A, 
+            VarArgs&&... vargs)
+    {
+    A.primeExcept(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+noprime(ITensorT<IndexT> A, 
+        VarArgs&&... vargs)
+    {
+    A.noprime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT, typename... VarArgs>
+ITensorT<IndexT>
+mapprime(ITensorT<IndexT> A, 
+         VarArgs&&... vargs)
+    {
+    A.mapprime(std::forward<VarArgs>(vargs)...);
+    return A;
+    }
+
+template<typename IndexT>
+bool
+hasindex(const ITensorT<IndexT>& T, const typename ITensorT<IndexT>::index_type& I)
+    {
+    return detail::contains(T.inds(),I);
+    }
+
+template<typename IndexT>
+IndexT
+findtype(const ITensorT<IndexT>& T, IndexType type)
+    {
+    for(auto& i : T.inds())
+        if(i.type()==type) return i;
+    return IndexT{};
+    }
+
+//Find index of tensor A (of optional type t) 
+//which is shared with tensor B
+template<typename IndexT> 
+IndexT
+commonIndex(const ITensorT<IndexT>& A, 
+            const ITensorT<IndexT>& B, 
+            IndexType t)
+    {
+    for(auto& I : A.inds())
+        if( (t == All || I.type() == t)
+         && hasindex(B.inds(),I) ) 
+            {
+            return I;
+            }
+    return IndexT{};
+    }
+
+
+//Find index of tensor A (of optional type t) 
+//which is NOT shared by tensor B
+template<typename IndexT> 
+IndexT
+uniqueIndex(const ITensorT<IndexT>& A, 
+            const ITensorT<IndexT>& B, 
+            IndexType t)
+    {
+    for(auto& I : A.inds())
+        if( (t == All || I.type() == t)
+         && !hasindex(B.inds(),I) ) 
+            {
+            return I;
+            }
+    return IndexT{};
+    }
+
+//
+//Return copy of a tensor with primeLevels plev1 and plev2 swapped
+//
+//For example, if T has indices i,i' (like a matrix or a site
+//operator) then swapPrime(T,0,1) will have indices i',i 
+//i.e. the transpose of T.
+//
+template <typename IndexT>
+ITensorT<IndexT>
+swapPrime(ITensorT<IndexT> T, 
+          int plev1, 
+          int plev2,
+          IndexType type)
+    { 
+    int tempLevel = 99999;
+#ifdef DEBUG
+    for(auto& I : T.inds())
+        {
+        if(I.primeLevel() == tempLevel) 
+            {
+            Print(tempLevel);
+            Error("swapPrime fails if an index has primeLevel==tempLevel");
+            }
+        }
+#endif
+    T.mapprime(plev1,tempLevel,type);
+    T.mapprime(plev2,plev1,type);
+    T.mapprime(tempLevel,plev2,type);
+    return T; 
+    }
+
+//Apply x = f(x) for each element x of T
+//and return the resulting tensor
+template<typename I, typename F>
+ITensorT<I>
+apply(ITensorT<I> T, F&& f)
+    {
+    T.apply(std::forward<F>(f));
+    return T;
+    }
+
+template<typename I>
+bool
+isComplex(const ITensorT<I>& T)
+    {
+    return doTask<bool>(CheckComplex{},T.store());
+    }
+
+template<typename I>
+Real
+norm(const ITensorT<I>& T)
+    {
+#ifdef DEBUG
+    if(!T) Error("Default initialized tensor in norm(ITensorT)");
+#endif
+    return fabs(T.scale().real0()) *
+           doTask<Real>(NormNoScale<I>{T.inds()},T.store());
+    }
+
+template<typename I>
+ITensorT<I>
+randomize(ITensorT<I> T, const Args& args)
+    {
+    if(!T.store()) detail::allocReal(T);
+#ifdef DEBUG
+    if(!T) Error("default initialized tensor in randomize");
+#endif
+    if(args.getBool("Complex",false)) T.generate(detail::quickranCplx);
+    else                              T.generate(detail::quickran);
+    return T;
+    }
+
+template<typename I>
+ITensorT<I>
+conj(ITensorT<I> T)
+    {
+    T.conj();
+    return T;
+    }
+
+template<typename I>
+ITensorT<I>
+dag(ITensorT<I> T)
+    {
+    T.dag();
+    return T;
+    }
+
+template<typename I>
+Real
+sumels(const ITensorT<I>& t)
+    {
+    auto z = sumelsC(t);
+    if(z.imag() != 0) Error("ITensor has non-zero imaginary part, use sumelsC");
+    return z.real();
+    }
+
+template<typename I>
+Cplx
+sumelsC(const ITensorT<I>& t)
+    {
+    auto z = doTask<Cplx>(SumEls<I>{t.inds()},t.store());
+    return t.scale().real0()*z;
+    }
+
+template<typename T, typename... CtrArgs>
+ITensor::storage_ptr
+readType(std::istream& s, CtrArgs&&... args)
+    {
+    auto p = std::make_shared<T>(std::forward<CtrArgs>(args)...);
+    read(s,*p);
+    return p;
+    }
+
+template<typename I>
+void
+read(std::istream& s, ITensorT<I>& T)
+    {
+    IndexSetT<I> is;
+    read(s,is);
+    LogNumber scale;
+    read(s,scale);
+    auto type = StorageType::Null;
+    s.read((char*)&type,sizeof(type));
+    ITensor::storage_ptr p;
+    if(type==StorageType::Null) { /*intentionally left blank*/  }
+    else if(type==StorageType::ITReal) { p = readType<ITReal>(s); }
+    else if(type==StorageType::ITCplx) { p = readType<ITCplx>(s); }
+    else if(type==StorageType::ITCombiner) { p = readType<ITCombiner>(s); }
+    else if(type==StorageType::ITDiagReal) { p = readType<ITDiag<Real>>(s); }
+    else if(type==StorageType::ITDiagCplx) { p = readType<ITDiag<Cplx>>(s); }
+    else if(type==StorageType::IQTData) { p = readType<IQTData>(s); }
+    else
+        {
+        Error("Unrecognized type when reading tensor from istream");
+        }
+    T = ITensorT<I>(std::move(is),std::move(p),scale);
+    }
+
+template<typename I>
+void
+write(std::ostream& s, const ITensorT<I>& T)
+    {
+    write(s,T.inds());
+    write(s,T.scale());
+    if(T) 
+        doTask(Write{s},T.store());
+    else 
+        write(s,StorageType::Null);
+    }
+
+} // namespace itensor
+
+#endif

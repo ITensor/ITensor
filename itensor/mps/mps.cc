@@ -655,7 +655,7 @@ MPSt<Tensor>& MPSt<Tensor>::
 addAssumeOrth(const MPSt<Tensor>& R,
               const Args& args)
     {
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
     primelinks(0,4);
 
@@ -769,7 +769,7 @@ template<class Tensor>
 Spectrum
 orthMPS(Tensor& A1, Tensor& A2, Direction dir, const Args& args)
     {
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
     Tensor& L = (dir == Fromleft ? A1 : A2);
     Tensor& R = (dir == Fromleft ? A2 : A1);
@@ -1452,7 +1452,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                     cout << "D = " << D << "\n";
                     }
 
-                qt[q].push_back(ITensor(std::move(newinds),std::move(block.pdata())));
+                qt[q].push_back(ITensor(std::move(newinds),std::move(block.store())));
 
                 }
             }

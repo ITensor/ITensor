@@ -87,7 +87,7 @@ call_daxpy(MatT1& A, const MatT2& B, Real alpha_)
     if(A.size() > std::numeric_limits<LAPACK_INT>::max()) 
         throw std::runtime_error("overflow of size beyond LAPACK_INT range");
 #endif
-    daxpy_wrapper(&size,&alpha,B.data(),&inc,A.data(),&inc);
+    daxpy_wrapper(size,alpha,B.data(),inc,A.data(),inc);
     }
 
 void

@@ -64,8 +64,8 @@ class MPSt
     //
 
     using TensorT = Tensor;
-    using IndexT = typename Tensor::IndexT;
-    using IndexValT = typename Tensor::IndexValT;
+    using IndexT = typename Tensor::index_type;
+    using IndexValT = typename Tensor::indexval_type;
     using MPOType = MPOt<Tensor>;
 
     //
