@@ -75,107 +75,55 @@ ITensorT(Complex val)
 
 
 
-IQTensor&
-operator+=(IQTensor& A, const IQTensor& B)
-    {
-    if(!A) Error("Calling += on default constructed IQTensor");
-    if(!B) Error("Right-hand-side of IQTensor += is default constructed");
-    if(&A == &B) return operator*=(A,2.);
-    if(A.scale().isZero()) return A.operator=(B);
-
-    Permutation P(A.inds().size());
-    try {
-        calc_permutation(B.inds(),A.inds(),P);
-        }
-    catch(const ITError& e)
-        {
-        Print(A);
-        Print(B);
-        Error("IQTensor::operator+=: different IQIndex structure");
-        }
-
-    Real scalefac = 1;
-    if(A.scale().magnitudeLessThan(B.scale())) 
-        {
-        A.scaleTo(B.scale());
-        }
-    else
-        {
-        scalefac = (B.scale()/A.scale()).real();
-        }
-
-    if(isTrivial(P))
-        {
-        doTask(PlusEQ<IQIndex>{scalefac},A.store(),B.store());
-        }
-    else
-        {
-        doTask(PlusEQ<IQIndex>{P,A.inds(),B.inds(),scalefac},A.store(),B.store());
-        }
-
-    return A;
-    }
-
-IQTensor&
-operator-=(IQTensor& A, const IQTensor& B)
-    { 
-    if(&A == &B) return operator*=(A,0);
-    A.scale().negate();
-    operator+=(A,B);
-    A.scale().negate();
-    return A;
-    }
-
-
-IQTensor&
-operator*=(IQTensor& A, const IQTensor& B)
-    {
-    if(!A || !B)
-        Error("Default constructed IQTensor in product");
-
-    if(&A == &B)
-        {
-        A = IQTensor(sqr(norm(A)));
-        return A;
-        }
-
-    auto& Lis = A.inds();
-    auto& Ris = B.inds();
-
-    auto checkDirs = 
-    [&Lis,&Ris](const IQIndex& li, const IQIndex& ri)
-        {
-        if(li.dir() == ri.dir())
-            {
-            println("-------------------------");
-            println("Left indices = \n",Lis);
-            println("-------------------------");
-            println("Right indices = \n",Ris);
-            println("-------------------------");
-            println("IQIndex from left = \n",li);
-            println("IQIndex from right = \n",ri);
-            Error("Incompatible arrow directions in IQTensor contraction");
-            }
-        };
-    Label Lind,
-          Rind;
-    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind,checkDirs);
-
-    auto nstore = A.store();
-    auto C = doTask(Contract<IQIndex>{Lis,Lind,Ris,Rind},nstore,B.store());
-
-    auto nscale = A.scale()*B.scale();
-    if(!std::isnan(C.scalefac)) nscale *= C.scalefac;
-
-#ifdef DEBUG
-    //Check for duplicate indices
-    detail::check(C.Nis);
-#endif
-
-    A = IQTensor(C.Nis,std::move(nstore),nscale);
-
-    return A;
-    }
+//IQTensor&
+//operator*=(IQTensor& A, const IQTensor& B)
+//    {
+//    if(!A || !B)
+//        Error("Default constructed IQTensor in product");
+//
+//    if(&A == &B)
+//        {
+//        A = IQTensor(sqr(norm(A)));
+//        return A;
+//        }
+//
+//    auto& Lis = A.inds();
+//    auto& Ris = B.inds();
+//
+//    auto checkDirs = 
+//    [&Lis,&Ris](const IQIndex& li, const IQIndex& ri)
+//        {
+//        if(li.dir() == ri.dir())
+//            {
+//            println("-------------------------");
+//            println("Left indices = \n",Lis);
+//            println("-------------------------");
+//            println("Right indices = \n",Ris);
+//            println("-------------------------");
+//            println("IQIndex from left = \n",li);
+//            println("IQIndex from right = \n",ri);
+//            Error("Incompatible arrow directions in IQTensor contraction");
+//            }
+//        };
+//    Label Lind,
+//          Rind;
+//    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind,checkDirs);
+//
+//    auto nstore = A.store();
+//    auto C = doTask(Contract<IQIndex>{Lis,Lind,Ris,Rind},nstore,B.store());
+//
+//    auto nscale = A.scale()*B.scale();
+//    if(!std::isnan(C.scalefac)) nscale *= C.scalefac;
+//
+//#ifdef DEBUG
+//    //Check for duplicate indices
+//    detail::check(C.Nis);
+//#endif
+//
+//    A = IQTensor(C.Nis,std::move(nstore),nscale);
+//
+//    return A;
+//    }
 
 struct AddITensor
     {
@@ -259,15 +207,6 @@ operator+=(IQTensor& T, const ITensor& t)
     return T;
     }
 
-
-template<>
-IQTensor& IQTensor::
-conj()
-    {
-    doTask(Conj{},store_);
-    return *this;
-    }
-
 template<>
 IQTensor& IQTensor::
 dag()
@@ -277,16 +216,6 @@ dag()
     return *this;
     }
 
-template<>
-void IQTensor::
-scaleTo(const LogNumber& newscale)
-    {
-    if(scale_ == newscale) return;
-    if(newscale.sign() == 0) Error("Trying to scale an IQTensor to a 0 scale");
-    scale_ /= newscale;
-    doTask(MultReal{scale_.real0()},store_);
-    scale_ = newscale;
-    }
 
 struct ToITensor
     {
@@ -337,12 +266,6 @@ ITensor
 toITensor(const IQTensor& T)
     {
     return doTask<ITensor>(ToITensor{T.inds(),T.scale()},T.store());
-    }
-
-bool
-isComplex(const IQTensor& T)
-    {
-    return doTask<bool>(CheckComplex{},T.store());
     }
 
 struct CalcDiv 
@@ -463,28 +386,6 @@ dir(const IQTensor& T, const IQIndex& I)
     Error("dir: IQIndex not found");
     return Out;
 	}
-
-Real
-norm(const IQTensor& T)
-    {
-#ifdef DEBUG
-    if(!T) Error("IQTensor is default initialized");
-#endif
-    return fabs(T.scale().real0()) *
-           doTask<Real>(NormNoScale<IQIndex>{T.inds()},T.store());
-    }
-
-
-
-IQTensor
-randomize(IQTensor T, const Args& args)
-    {
-#ifdef DEBUG
-    if(!T) Error("IQTensor is default initialized");
-#endif
-    T.generate(detail::quickran);
-    return T;
-    }
 
 bool
 isZero(const IQTensor& T, const Args& args)

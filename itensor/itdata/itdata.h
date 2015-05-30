@@ -5,6 +5,8 @@
 #ifndef __ITENSOR_ITDATA_H
 #define __ITENSOR_ITDATA_H
 
+#include "itensor/types.h"
+#include "itensor/util/error.h"
 #include "itensor/itdata/storage_types.h"
 
 #define LPAREN (
@@ -91,6 +93,26 @@ class ManagePtr
     const ITData *arg2_ = nullptr;
     Action action_ = None;
     PData nd_;
+
+    class UniqueRef
+        {
+        PData* pdata_ = nullptr;
+        public:
+
+        UniqueRef(PData* pdata) : pdata_(pdata) { }
+
+        template<typename T>
+        operator T&()
+            {
+            if(!(pdata_->unique())) 
+                {
+                auto* olda1 = static_cast<T*>(pdata_->get());
+                *pdata_ = std::make_shared<T>(*olda1);
+                }
+            return *(static_cast<T*>(pdata_->get()));
+            }
+        };
+
     public:
 
     ManagePtr() { }
@@ -164,16 +186,22 @@ class ManagePtr
         }
 
 
-    //This returns a pointer because otherwise
+    //Can be used as StorageType& sref = mp.modifyData();
+    //The RefHelper return type will deduce StorageType
+    //and convert to a StorageType&
+    UniqueRef
+    modifyData();
+
+    //This returns a pointer because if it returned a reference
     //it is too easy to copy the data type by writing
-    //auto nd = modifyData(...); (should be auto& if reference returned)
-    template <typename T>
+    //auto nd = modifyData(...);
+    template<typename T>
     T*
     modifyData(const T& d);
 
-    //This returns a pointer because otherwise
+    //This returns a pointer because if it returned a reference
     //it is too easy to copy the data type by writing
-    //auto nd = makeNewData(...); (should be auto& if reference returned)
+    //auto nd = makeNewData(...);
     template <typename StorageT, typename... Args>
     StorageT*
     makeNewData(Args&&... args);
@@ -227,6 +255,13 @@ updateArg1()
         }
     }
 
+ManagePtr::UniqueRef inline ManagePtr::
+modifyData()
+    {
+    if(!parg1_) Error("Can't modify const data");
+    return UniqueRef(parg1_);
+    }
+
 template<typename T>
 T* ManagePtr::
 modifyData(const T& d)
@@ -239,6 +274,7 @@ modifyData(const T& d)
         }
     return static_cast<T*>(parg1_->get());
     }
+
 
 } // namespace itensor
 

@@ -4,11 +4,8 @@
 //
 #ifndef __ITENSOR_ITENSOR_H
 #define __ITENSOR_ITENSOR_H
-//#include "itensor/itdata/dotask_templates.h"
 #include "itensor/itensor_interface.h"
 #include "itensor/matrix/mat.h"
-#include "itensor/itdata/task_types.h"
-#include "itensor/itdata/dotask.h"
 
 namespace itensor {
 
@@ -18,16 +15,6 @@ namespace itensor {
 // For the ITensor class interface, see itensor_interface.h
 // For the available operators see below
 //
-using ITensor = ITensorT<Index>;
-
-std::ostream& 
-operator<<(std::ostream & s, const ITensor& T);
-
-//Contracting product
-//All matching Index pairs automatically contracted
-//Cji = \sum_{k,l} Akjl * Blki
-ITensor& 
-operator*=(ITensor& A, const ITensor& B);
 
 // Contract with IndexVal
 // If iv = (J,n), Index J is fixed to it's nth
@@ -35,47 +22,7 @@ operator*=(ITensor& A, const ITensor& B);
 // (similar to summing against a Kronecker
 // delta tensor \delta_{J,n})
 inline ITensor& 
-operator*=(ITensor& T, const IndexVal& iv) { return operator*=(T,ITensor(iv)); } 
-
-//Tensor addition and subtraction
-//Summands must have same Indices, in any order
-//Cijk = Aijk + Bkij
-ITensor& 
-operator+=(ITensor& A, const ITensor& B);
-ITensor& 
-operator-=(ITensor& A, const ITensor& B);
-
-//Multiplication and division by complex scalar
-ITensor& 
-operator*=(ITensor& T, Cplx z);
-inline ITensor& 
-operator/=(ITensor& T, Cplx z) { return operator*=(T,1./z); }
-
-ITensor inline
-operator*(ITensor A, const ITensor& B) { A *= B; return A; }
-ITensor inline
-operator*(const ITensor& A, ITensor&& B) { B *= A; return B; }
-ITensor inline
-operator*(ITensor T, Real fac) { T *= fac; return T; }
-ITensor inline
-operator*(Real fac, ITensor T) { T *= fac; return T; }
-ITensor inline
-operator*(ITensor T, Complex fac) { T *= fac; return T; }
-ITensor inline
-operator*(Complex fac, ITensor T) { T *= fac; return T; }
-ITensor inline
-operator/(ITensor T, Real fac) { T /= fac; return T; }
-ITensor inline
-operator/(ITensor T, Complex fac) { T /= fac; return T; }
-ITensor inline
-operator+(ITensor A, const ITensor& B) { A += B; return A; }
-ITensor inline
-operator+(const ITensor& A, ITensor&& B) { B += A; return B; }
-ITensor inline
-operator-(ITensor A, const ITensor& B) { A -= B; return A; }
-ITensor inline
-operator-(const ITensor& A, ITensor&& B) { B -= A; B *= -1; return B; }
-
+operator*=(ITensor& T, const IndexVal& iv) { return T *= ITensor(iv); } 
 ITensor inline
 operator*(ITensor T, const IndexVal& iv) { T *= iv; return T; }
 ITensor inline
@@ -137,8 +84,8 @@ operator*(const IndexVal& iv1, const IndexVal& iv2)
     }
 
 //
-// Define product of IndexVal iv1 = (I1,n1) with a Real "val"
-// to be an ITensor T such that T(I1(n1)) == val
+// Define product of IndexVal iv1 = (I1,n1) 
+// with a Real number "fac" to be an ITensor T such that T(I1(n1)) == val
 //
 // Useful for creating MPOs
 //
@@ -152,9 +99,6 @@ operator*(const IndexVal& iv1, Real val)
 ITensor inline
 operator*(Real val, const IndexVal& iv) { return operator*(iv,val); }
 
-
-ITensor
-randomize(ITensor T, const Args& args = Global::args());
 
 template <typename... Inds>
 ITensor
@@ -176,71 +120,10 @@ randomTensor(const IndexSetT<IndexT>& inds);
 ITensor
 matrixTensor(Mat&& M, const Index& i1, const Index& i2);
 
-//Compute the norm of an ITensor.
-//Thinking of elements as a vector, equivalent to sqrt(v*v).
-//Result is equivalent to sqrt((T*T).real()) 
-//(and similar for complex case) but computed more efficiently
-Real 
-norm(const ITensor& T);
-
-ITensor
-conj(ITensor T);
-
-ITensor inline
-dag(const ITensor& T) { return conj(T); }
-
-bool
-isComplex(const ITensor& T);
-
-template <class Tensor>
-Tensor
-realPart(Tensor T) { T.takeReal(); return T; }
-
-template <class Tensor>
-Tensor
-imagPart(Tensor T) { T.takeImag(); return T; }
-
-Real
-sumels(const ITensor& T);
-
-Complex
-sumelsC(const ITensor& T);
-
-// Read ITensor from binary input stream.
-void
-read(std::istream& s, ITensor& t);
-
-// Write ITensor to binary output stream.
-void 
-write(std::ostream& s, const ITensor& t);
+std::ostream& 
+operator<<(std::ostream & s, const ITensor& T);
 
 
-
-//
-// Given Tensors which represent operator matrices
-// (e.g. A(site1',site1), B(site1',site1) )
-// multiply them, automatically adjusting primeLevels
-// so that result is again an operator matrix C(site1',site1)
-//
-//              s'  t'
-//  s'  t'      |   |
-//  |   |       [-A-]
-//  [-C-]  =    |   |
-//  |   |       [-B-]
-//  s   t       |   |
-//              s   t
-//
-// (here s and t are indices of type Site)
-//
-template<class IndexT>
-ITensorT<IndexT>
-multSiteOps(ITensorT<IndexT> A, const ITensorT<IndexT>& B) 
-    {
-    A.prime(Site);
-    A *= B;
-    A.mapprime(2,1,Site);
-    return A;
-    }
 
 template<> ITensor::
 ITensorT(const Index& i1);
@@ -251,29 +134,9 @@ ITensorT(const Index& i1,const Index& i2);
 template<> ITensor::
 ITensorT(Cplx val);
 
-template<>
-ITensor& ITensor::
-fill(Cplx z);
-
-template<>
-void ITensor::
-scaleTo(const LogNumber& newscale);
-
-template<>
-ITensor& ITensor::
-conj();
-
 template<> inline
 ITensor& ITensor::
 dag() { return conj(); }
-
-template<>
-ITensor& ITensor::
-takeReal();
-
-template<>
-ITensor& ITensor::
-takeImag();
 
 } //namespace itensor
 

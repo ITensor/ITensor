@@ -166,6 +166,7 @@ void IndexSetT<IndexT>::
 swap(IndexSetT& other)
     {
     index_.swap(other.index_);
+    stride_.swap(other.stride_);
     std::swap(rn_,other.rn_);
     }
 

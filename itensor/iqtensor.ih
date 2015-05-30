@@ -37,32 +37,32 @@ ITensorT(const IQIndexVal& iv1,
     }
 
 
-template<>
-template<typename... IQIndexVals>
-void IQTensor::
-set(Cplx val, const IQIndexVals&... ivs)
-    {
-    static constexpr auto size = sizeof...(ivs);
-    std::array<IQIndexVal,size> vals{{ static_cast<IQIndexVal>(ivs)...}};
-    //If this IQTensor is not allocated, compute QN flux from ivs
-    if(!store_)
-        {
-#ifdef DEBUG
-        if(!is_) Error("Setting element of default constructed IQTensor");
-#endif
-        QN div;
-        for(auto& iv : vals) div += iv.qn()*iv.index.dir();
-        if(val.imag() == 0) store_ = std::make_shared<IQTData>(is_,div);
-        else Error("Setting complex IQTensor element not implemented");
-        }
-    scaleTo(1.);
-    typename SetElt<Real,IQIndex>::Inds inds(size);
-    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.val-1; });
-    if(val.imag() == 0)
-        doTask(SetElt<Real,IQIndex>{val.real(),is_,inds},store_);
-    else
-        doTask(SetElt<Cplx,IQIndex>{val,is_,inds},store_);
-    }
+//template<>
+//template<typename... IQIndexVals>
+//void IQTensor::
+//set(Cplx val, const IQIndexVals&... ivs)
+//    {
+//    static constexpr auto size = sizeof...(ivs);
+//    std::array<IQIndexVal,size> vals{{ static_cast<IQIndexVal>(ivs)...}};
+//    //If this IQTensor is not allocated, compute QN flux from ivs
+//    if(!store_)
+//        {
+//#ifdef DEBUG
+//        if(!is_) Error("Setting element of default constructed IQTensor");
+//#endif
+//        QN div;
+//        for(auto& iv : vals) div += iv.qn()*iv.index.dir();
+//        if(val.imag() == 0) store_ = std::make_shared<IQTData>(is_,div);
+//        else Error("Setting complex IQTensor element not implemented");
+//        }
+//    scaleTo(1.);
+//    typename SetElt<Real,IQIndex>::Inds inds(size);
+//    detail::permute_map(is_,vals,inds,[](const IQIndexVal& iv) { return iv.val-1; });
+//    if(val.imag() == 0)
+//        doTask(SetElt<Real,IQIndex>{val.real(),is_,inds},store_);
+//    else
+//        doTask(SetElt<Cplx,IQIndex>{val,is_,inds},store_);
+//    }
 
 } //namespace itensor
 

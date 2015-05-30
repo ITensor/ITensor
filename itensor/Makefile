@@ -93,28 +93,40 @@ GDEPHEADERS+= tensor/range.h tensor/ten.h tensor/permutation.h \
 tensor/permute.h tensor/contract.h
 tensor/contract.o: $(GDEPHEADERS)
 .debug_objs/tensor/contract.o: $(GDEPHEADERS)
+ITDEPHEADERS= itdata/itreal.h
+itdata/itreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/itreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/itcplx.h
+itdata/itcplx.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/itcplx.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/itdiag.h
+itdata/itdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/itdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/itcombiner.h
+itdata/itcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/itcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/iqtdata.h
+itdata/iqtdata.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/iqtdata.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS= index.h
 index.o: $(ITDEPHEADERS)
 .debug_objs/index.o: $(ITDEPHEADERS)
 ITDEPHEADERS+= indexset.ih indexset.h
 indexset.o: $(ITDEPHEADERS)
 .debug_objs/indexset.o: $(ITDEPHEADERS)
-ITDEPHEADERS+= itdata/task_types.h \
+ITDEPHEADERS+= itdata/task_types.h itensor_interface.h itensor_interface.ih \
 itensor.ih itensor.h itdata/itdata.h itdata/itreal.h itdata/itdiag.h itdata/itcplx.h
 itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-IQDEPHEADERS= qn.h iqindex.h
-iqindex.o: $(IQDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/iqindex.o: $(IQDEPHEADERS) $(GDEPHEADERS)
-IQDEPHEADERS+= $(ITDEPHEADERS) itdata/iqtdata.h
-itdata/iqtdata.o: $(IQDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itdata/iqtdata.o: $(IQDEPHEADERS) $(GDEPHEADERS)
-IQDEPHEADERS+= iqtensor.ih iqtensor.h detail/skip_iterator.h
-iqtensor.o: $(IQDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/iqtensor.o: $(IQDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= qn.h iqindex.h
+iqindex.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/iqindex.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= iqtensor.ih iqtensor.h detail/skip_iterator.h
+iqtensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/iqtensor.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= spectrum.h
-spectrum.o: $(IQDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/spectrum.o: $(IQDEPHEADERS) $(GDEPHEADERS)
+spectrum.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/spectrum.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= svdalgs.h
-svdalgs.o: $(IQDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/svdalgs.o: $(IQDEPHEADERS) $(GDEPHEADERS)
+svdalgs.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/svdalgs.o: $(ITDEPHEADERS) $(GDEPHEADERS)

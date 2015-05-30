@@ -52,133 +52,6 @@ ITensorT(Cplx val)
     //    store_ = std::make_shared<ITDiag<Cplx>>(val);
     }
 
-ITensor&
-operator*=(ITensor& A, const ITensor& B)
-    {
-    if(!A || !B)
-        Error("Default constructed ITensor in product");
-
-    if(&A == &B)
-        {
-        A = ITensor(sqr(norm(A)));
-        return A;
-        }
-
-    auto& Lis = A.inds();
-    auto& Ris = B.inds();
-
-    Label Lind,
-          Rind;
-    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
-
-    auto nstore = A.store();
-    auto C = doTask(Contract<Index>{Lis,Lind,Ris,Rind},nstore,B.store());
-
-    auto nscale = A.scale() * B.scale();
-    if(!std::isnan(C.scalefac)) nscale *= C.scalefac;
-
-#ifdef DEBUG
-    //Check for duplicate indices
-    detail::check(C.Nis);
-#endif
-
-    A = ITensor(C.Nis,std::move(nstore),nscale);
-
-    return A;
-    }
-
-
-template<>
-ITensor& ITensor::
-fill(Cplx z)
-    {
-    if(!bool(*this)) return *this;
-    scale_ = LogNumber(1.);
-    if(z.imag() == 0)
-        doTask(FillReal{z.real()},store_);
-    else
-        doTask(FillCplx{z},store_);
-    return *this;
-    }
-
-ITensor& 
-operator*=(ITensor& T, Cplx z)
-    {
-    if(z.imag() == 0) return operator*=(T,z.real());
-    doTask(MultCplx{z},T.store());
-    return T;
-    }
-
-template<>
-void ITensor::
-scaleTo(const LogNumber& newscale)
-    {
-    if(scale_ == newscale) return;
-    if(newscale.sign() == 0) Error("Trying to scale an ITensor to a 0 scale");
-    scale_ /= newscale;
-    doTask(MultReal{scale_.real0()},store_);
-    scale_ = newscale;
-    }
-
-ITensor&
-operator+=(ITensor& A, const ITensor& B)
-    {
-    if(!A) Error("Calling += on default constructed ITensor");
-    if(!B) Error("Right-hand-side of ITensor += is default constructed");
-    if(&A == &B) return operator*=(A,2.);
-    if(A.scale().isZero()) return A.operator=(B);
-
-    PlusEQ<Index>::permutation P(A.inds().size());
-#ifdef DEBUG
-    try {
-        calc_permutation(B.inds(),A.inds(),P);
-        }
-    catch(const std::exception& e)
-        {
-        Print(A);
-        Print(B);
-        Error("ITensor::operator+=: different Index structure");
-        }
-#else
-    calc_permutation(B.inds(),A.inds(),P);
-#endif
-
-    Real scalefac = 1;
-    if(A.scale().magnitudeLessThan(B.scale())) 
-        {
-        A.scaleTo(B.scale()); 
-        }
-    else
-        {
-        scalefac = (B.scale()/A.scale()).real();
-        }
-
-    if(isTrivial(P))
-        {
-        doTask(PlusEQ<Index>{scalefac},A.store(),B.store());
-        }
-    else
-        {
-        doTask(PlusEQ<Index>{P,A.inds(),B.inds(),scalefac},A.store(),B.store());
-        }
-
-    return A;
-    } 
-
-ITensor&
-operator-=(ITensor& A, const ITensor& B)
-    {
-    if(&A == &B) 
-        { 
-        A.scale() = 0; 
-        A.fill(0);
-        return A;
-        }
-    A.scale().negate();
-    operator+=(A,B); 
-    A.scale().negate();
-    return A;
-    }
 
 //template<>
 //void ITensor::
@@ -212,30 +85,6 @@ operator-=(ITensor& A, const ITensor& B)
 //        }
 //    }
 
-template<>
-ITensor& ITensor::
-conj()
-    {
-    doTask(Conj{},store_);
-    return *this;
-    }
-
-template<>
-ITensor& ITensor::
-takeReal()
-    {
-    doTask(TakeReal{},store_);
-    return *this;
-    }
-
-template<>
-ITensor& ITensor::
-takeImag()
-    {
-    doTask(TakeImag{},store_);
-    return *this;
-    }
-
 ostream& 
 operator<<(ostream & s, const ITensor& t)
     {
@@ -256,17 +105,6 @@ operator<<(ostream & s, const ITensor& t)
     return s;
     }
 
-Cplx
-quickranCplx() { return Cplx(detail::quickran(),detail::quickran()); }
-
-ITensor
-randomize(ITensor T, const Args& args)
-    {
-    if(args.getBool("Complex",false)) T.generate(quickranCplx);
-    else                              T.generate(detail::quickran);
-    return T;
-    }
-
 ITensor
 matrixTensor(Mat&& M, const Index& i1, const Index& i2)
     {
@@ -275,43 +113,6 @@ matrixTensor(Mat&& M, const Index& i1, const Index& i2)
     return res;
     }
 
-Real
-norm(const ITensor& T)
-    {
-#ifdef DEBUG
-    if(!T) Error("ITensor is default initialized");
-#endif
-    return fabs(T.scale().real0()) *
-           doTask<Real>(NormNoScale<Index>{T.inds()},T.store());
-    }
-
-ITensor
-conj(ITensor T)
-    {
-    T.conj();
-    return T;
-    }
-
-bool
-isComplex(const ITensor& t)
-    {
-    return doTask<bool>(CheckComplex{},t.store());
-    }
-
-Cplx
-sumelsC(const ITensor& t)
-    {
-    auto z = doTask<Cplx>(SumEls<Index>{t.inds()},t.store());
-    return t.scale().real0()*z;
-    }
-
-Real
-sumels(const ITensor& t)
-    {
-    auto z = sumelsC(t);
-    if(z.imag() != 0) Error("ITensor has non-zero imaginary part, use sumelsC");
-    return z.real();
-    }
 
 ITensor
 combiner(std::vector<Index> inds, const Args& args)
@@ -345,47 +146,5 @@ deltaTensor(const Index& i1, const Index& i2)
     return ITensor({i1,i2},ITCombiner());
     }
 
-template<typename T, typename... CtrArgs>
-ITensor::storage_ptr
-readType(std::istream& s, CtrArgs&&... args)
-    {
-    auto p = std::make_shared<T>(std::forward<CtrArgs>(args)...);
-    read(s,*p);
-    return p;
-    }
-
-void
-read(std::istream& s, ITensor& T)
-    {
-    IndexSet is;
-    read(s,is);
-    LogNumber scale;
-    read(s,scale);
-    auto type = StorageType::Null;
-    s.read((char*)&type,sizeof(type));
-    ITensor::storage_ptr p;
-    if(type==StorageType::Null) { /*intentionally left blank*/  }
-    else if(type==StorageType::ITReal) { p = readType<ITReal>(s); }
-    else if(type==StorageType::ITCplx) { p = readType<ITCplx>(s); }
-    else if(type==StorageType::ITCombiner) { p = readType<ITCombiner>(s); }
-    else if(type==StorageType::ITDiagReal) { p = readType<ITDiag<Real>>(s); }
-    else if(type==StorageType::ITDiagCplx) { p = readType<ITDiag<Cplx>>(s); }
-    else
-        {
-        Error("Unrecognized type when reading ITensor from istream");
-        }
-    T = ITensor(std::move(is),std::move(p),scale);
-    }
-
-void
-write(std::ostream& s, const ITensor& T)
-    {
-    write(s,T.inds());
-    write(s,T.scale());
-    if(T) 
-        doTask(Write{s},T.store());
-    else 
-        write(s,StorageType::Null);
-    }
 
 } //namespace itensor
