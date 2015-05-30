@@ -106,6 +106,23 @@ read(std::istream& s, std::vector<T>& vec)
     }
 
 void inline
+write(std::ostream& s, const std::string& str)
+    {
+    auto size = str.size();
+    s.write((char*)&size,sizeof(size));
+    s.write((char*)str.data(),sizeof(char)*size);
+    }
+
+void inline
+read(std::istream& s, std::string& str)
+    {
+    auto size = str.size(); //will overwrite
+    s.read((char*)&size,sizeof(size));
+    str.resize(size);
+    s.read((char*)str.data(),sizeof(char)*size);
+    }
+
+void inline
 read(std::istream& s, Cplx& z)
     {
     auto &r = reinterpret_cast<Real(&)[2]>(z)[0];
