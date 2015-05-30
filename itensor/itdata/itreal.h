@@ -98,13 +98,13 @@ class ITReal : public RegisterData<ITReal>
 void inline
 read(std::istream& s, ITReal& dat)
     {
-    read(s,dat.store);
+    itensor::read(s,dat.store);
     }
 
 void inline
 write(std::ostream& s, const ITReal& dat)
     {
-    write(s,dat.store);
+    itensor::write(s,dat.store);
     }
 
 template<typename F>

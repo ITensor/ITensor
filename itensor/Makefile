@@ -79,7 +79,7 @@ mkdebugdir:
 clean:	
 	rm -fr *.o .debug_objs util/*.o matrix/*.o tensor/*.o itdata/*.o mps/*.o libitensor.a libitensor-g.a
 
-GDEPHEADERS=real.h global.h index.h
+GDEPHEADERS=real.h global.h index.h util/readwrite.h
 GDEPHEADERS+= matrix/strideiter.h matrix/vec.h
 matrix/vec.o: $(GDEPHEADERS)
 .debug_objs/matrix/vec.o: $(GDEPHEADERS)

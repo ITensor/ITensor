@@ -36,6 +36,7 @@ class IQTData : public RegisterData<IQTData>
         long block = 0;
         long offset = 0;
         BlockOffset(long b, long o) : block(b), offset(o) { }
+        BlockOffset() { }
         };
 
     //////////////
@@ -163,6 +164,21 @@ getElt(const IQIndexSet& is,
         return data.data()+boff+eoff;
         }
     return nullptr;
+    }
+
+
+void inline
+write(std::ostream& s, const IQTData& dat)
+    {
+    itensor::write(s,dat.offsets);
+    itensor::write(s,dat.data);
+    }
+
+void inline
+read(std::istream& s, IQTData& dat)
+    {
+    itensor::read(s,dat.offsets);
+    itensor::read(s,dat.data);
     }
 
 template<typename Indexable>
