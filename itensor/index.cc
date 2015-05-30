@@ -104,39 +104,25 @@ void Index::
 write(std::ostream& s) const 
     { 
     if(!bool(*this)) Error("Index::write: Index is default initialized");
-
     itensor::write(s,primelevel_);
     itensor::write(s,type_);
     itensor::write(s,id_);
     itensor::write(s,m_);
-
-    //const int nlength = sname_.length();
-    //s.write((char*) &nlength,sizeof(nlength));
-    //s.write(sname_.c_str(),nlength+1);
-    s << sname_;
+    itensor::write(s,sname_);
     }
 
 Index& Index::
 read(std::istream& s)
     {
     itensor::read(s,primelevel_);
-#ifdef DEBUG
-    if(primelevel_ < 0)
-        {
-        Error("Negative primeLevel");
-        }
-#endif
     itensor::read(s,type_);
     itensor::read(s,id_);
     itensor::read(s,m_);
+    itensor::read(s,sname_);
 
-    s >> sname_;
-
-    //int nlength; 
-    //read(s,nlength);
-    //auto newname = std::unique_ptr<char[]>(new char[nlength+1]);
-    //s.read(newname.get(),nlength+1);
-    //sname_ = string(newname.get()); 
+#ifdef DEBUG
+    if(primelevel_ < 0) Error("Negative primeLevel");
+#endif
 
     return *this;
     }
