@@ -9,12 +9,6 @@
 #define REGISTER_ITDATA_HEADER_FILES
 #include "itensor/itdata/storage_types.h"
 
-//#include "itensor/itdata/itreal.h"
-//#include "itensor/itdata/itcplx.h"
-//#include "itensor/itdata/itdiag.h"
-//#include "itensor/itdata/itcombiner.h"
-//#include "itensor/itdata/iqtdata.h"
-
 #define LPAREN (
 #define RPAREN )
 
