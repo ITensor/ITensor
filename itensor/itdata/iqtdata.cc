@@ -15,20 +15,29 @@ using std::vector;
 
 namespace itensor {
 
+IQTData::BlOf
+make_blof(long b, long o)
+    {
+    IQTData::BlOf B;
+    B.block = b;
+    B.offset = o;
+    return B;
+    }
+
 //function object for calling binaryFind
 //on offset vectors below
 struct compBlock
     {
-    using BlockOffset = typename IQTData::BlockOffset;
+    using BlOf = typename IQTData::BlOf;
     bool
-    operator()(const BlockOffset& bo1,
-               const BlockOffset& bo2) const
+    operator()(const BlOf& bo1,
+               const BlOf& bo2) const
         { return bo1.block < bo2.block; }
     bool
-    operator()(const BlockOffset& bo, long blk) const        
+    operator()(const BlOf& bo, long blk) const        
         { return bo.block < blk; }
     bool
-    operator()(long blk, const BlockOffset& bo) const 
+    operator()(long blk, const BlOf& bo) const 
         { return blk < bo.block; }
     };
 
@@ -91,7 +100,7 @@ updateOffsets(const IQIndexSet& is,
 
     if(is.r()==0)
         {
-        offsets.emplace_back(0,0);
+        offsets.push_back(make_blof(0,0));
         return 1;
         }
 
@@ -121,7 +130,7 @@ updateOffsets(const IQIndexSet& is,
                 indstr *= J.nindex();
                 totm *= J[i_j].m();
                 }
-            offsets.emplace_back(ind,totalsize);
+            offsets.push_back(make_blof(ind,totalsize));
             totalsize += totm;
             }
         }
@@ -488,9 +497,9 @@ Real
 doTask(const NormNoScale<IQIndex>& N, const IQTData& d) 
     { 
     Real nrm = 0;
-    for(const auto& elt : d.data)
+    for(auto& elt : d.data)
         {
-        nrm += std::norm(elt);
+        nrm += elt*elt;
         }
     return std::sqrt(nrm);
     }
@@ -499,6 +508,7 @@ doTask(const NormNoScale<IQIndex>& N, const IQTData& d)
 void
 doTask(PrintIT<IQIndex>& P, const IQTData& d)
     {
+    P.s << "{Data size = " << d.data.size() << "}\n\n";
     Real scalefac = 1.0;
     if(!P.x.isTooBigForReal()) scalefac = P.x.real0();
     else P.s << "(omitting too large scale factor)\n";
@@ -512,7 +522,7 @@ doTask(PrintIT<IQIndex>& P, const IQTData& d)
         }
         
     vector<long> block(rank,0);
-    auto blockIndex = [&block,&P](long i)->const Index& { return (P.is[i])[block[i]]; };
+    auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
 
     Range brange;
     detail::GCounter C(rank);
@@ -549,6 +559,12 @@ doTask(PrintIT<IQIndex>& P, const IQTData& d)
             }
         }
 
+    }
+
+void
+doTask(Write& W, const IQTData& d)
+    {
+    W.writeType(StorageType::IQTData,d); 
     }
 
 } //namespace itensor

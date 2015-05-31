@@ -418,7 +418,7 @@ operator<<(std::ostream& s, const IQTensor& T)
 
         if(ff_set || Global::printdat())
             {
-            s << "\n|-- Data -------\n\n";
+            s << "\n|-- Data -------\n";
             doTask(PrintIT<IQIndex>{s,T.scale(),T.inds(),true},T.store());
             s << "\n";
             }

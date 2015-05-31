@@ -31,17 +31,17 @@ class IQTData : public RegisterData<IQTData>
     {
     public:
 
-    struct BlockOffset
+    struct BlOf
         {
-        long block = 0;
-        long offset = 0;
-        BlockOffset(long b, long o) : block(b), offset(o) { }
-        BlockOffset() { }
+        long block;
+        long offset;
+        //BlockOffset(long b, long o) : block(b), offset(o) { }
+        //BlockOffset() { }
         };
 
     //////////////
     //Data Members:
-    std::vector<BlockOffset> offsets;
+    std::vector<BlOf> offsets;
         //^ Block index / data offset pairs.
         //Assumed that block indices are
         //in increasing order.
@@ -185,6 +185,10 @@ read(std::istream& s, IQTData& dat)
     itensor::read(s,dat.data);
     }
 
+//
+// Helper object for treating
+// IQTData storage as a "tensor of tensors"
+//
 template<typename Indexable>
 class IndexDim
     {
@@ -289,6 +293,9 @@ doTask(const NormNoScale<IQIndex>& N, const IQTData& d);
 
 void
 doTask(PrintIT<IQIndex>& P, const IQTData& d);
+
+void
+doTask(Write& W, const IQTData& d);
 
 } //namespace itensor
 

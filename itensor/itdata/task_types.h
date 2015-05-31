@@ -280,9 +280,10 @@ StorageType
     IQTData=6
     }; 
 
-struct Write
+class Write
     {
     std::ostream& s;
+    public:
 
     Write(std::ostream& s_) : s(s_) { }
 
@@ -290,7 +291,7 @@ struct Write
     void
     writeType(StorageType type, const T& data)
         {
-        s.write((char*)&type,sizeof(type));
+        write(s,type);
         write(s,data); 
         }
     };

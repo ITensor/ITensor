@@ -628,7 +628,7 @@ read(std::istream& s, ITensorT<I>& T)
     LogNumber scale;
     read(s,scale);
     auto type = StorageType::Null;
-    s.read((char*)&type,sizeof(type));
+    read(s,type);
     ITensor::storage_ptr p;
     if(type==StorageType::Null) { /*intentionally left blank*/  }
     else if(type==StorageType::ITReal) { p = readType<ITReal>(s); }
@@ -650,7 +650,7 @@ write(std::ostream& s, const ITensorT<I>& T)
     {
     write(s,T.inds());
     write(s,T.scale());
-    if(T) 
+    if(T.store()) 
         doTask(Write{s},T.store());
     else 
         write(s,StorageType::Null);
