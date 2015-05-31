@@ -31,6 +31,7 @@ fileExists(const std::string& fname)
 
 //Here we have to use a struct to implement the read(istream,T)
 //function because function templates cannot be partially specialized
+//template<typename T, bool isPod = std::is_pod<T>::value>
 template<typename T, bool isPod = std::is_pod<T>::value>
 struct DoRead
     {
@@ -86,24 +87,6 @@ write(std::ostream& s, const T& val)
     DoWrite<T>(s,val);
     }
 
-template<typename T>
-void
-write(std::ostream& s, const std::vector<T>& vec)
-    {
-    auto size = vec.size();
-    s.write((char*)&size,sizeof(size));
-    s.write((char*)vec.data(),sizeof(T)*size);
-    }
-
-template<typename T>
-void
-read(std::istream& s, std::vector<T>& vec)
-    {
-    auto size = vec.size(); //will overwrite
-    s.read((char*)&size,sizeof(size));
-    vec.resize(size);
-    s.read((char*)vec.data(),sizeof(T)*size);
-    }
 
 void inline
 write(std::ostream& s, const std::string& str)
@@ -139,6 +122,62 @@ write(std::ostream& s, const Cplx& z)
     s.write((char*)&r,sizeof(r));
     s.write((char*)&i,sizeof(i));
     }
+
+template<typename T, bool isPod = std::is_pod<T>::value>
+struct ReadVecData
+    {
+    ReadVecData(size_t size, std::istream& s, std::vector<T>& vec)
+        {
+        for(auto& el : vec) itensor::read(s,el);
+        }
+    };
+template<typename T>
+struct ReadVecData<T,/*isPod==*/true>
+    {
+    ReadVecData(size_t size, std::istream& s, std::vector<T>& vec)
+        {
+        s.read((char*)vec.data(), sizeof(T)*size);
+        }
+    };
+template<typename T>
+void
+read(std::istream& s, std::vector<T>& vec)
+    {
+    decltype(vec.size()) size = 0;
+    itensor::read(s,size);
+    vec.resize(size);
+    ReadVecData<T>(size,s,vec);
+    }
+
+template<typename T, bool isPod = std::is_pod<T>::value>
+struct WriteVecData
+    {
+    WriteVecData(size_t size, std::ostream& s, const std::vector<T>& vec)
+        {
+        for(auto& el : vec) itensor::write(s,el);
+        }
+    };
+template<typename T>
+struct WriteVecData<T,/*isPod==*/true>
+    {
+    WriteVecData(size_t size, std::ostream& s, const std::vector<T>& vec)
+        {
+        s.write((char*)vec.data(), sizeof(T)*size);
+        }
+    };
+template<typename T>
+void
+write(std::ostream& s, const std::vector<T>& vec)
+    {
+    auto size = vec.size();
+    itensor::write(s,size);
+    WriteVecData<T>(size,s,vec);
+    }
+
+
+//////////////////////////////////////////////
+//////////////////////////////////////////////
+//////////////////////////////////////////////
 
 template<class T> 
 void
