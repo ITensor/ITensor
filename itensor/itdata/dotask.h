@@ -14,6 +14,89 @@
 
 namespace itensor {
 
+///////////////////
+
+namespace detail {
+
+//Some definitions to help document
+//the functions below
+constexpr const int TryFirst = 0;
+using First  = int;
+using Second = long;
+
+
+template<typename F,typename Ret>
+struct ApplyFunc
+    { 
+    using function_type = F;
+    F& f;
+    Ret r;
+    ApplyFunc(F&& f_) : f(f_) { }
+    template<typename S>
+    void
+    operator()(S& s) 
+        { 
+        r = f(s); 
+        }
+    operator Ret() const { return std::move(r); }
+    };
+
+template<typename F>
+struct ApplyFunc<F,void>
+    { 
+    using function_type = F;
+    F& f;
+    ApplyFunc(F&& f_) : f(f_) { }
+    template<typename S>
+    void
+    operator()(S& s) { f(s); }
+    };
+
+template<typename F, typename R, typename Storage>
+void
+applyFunc_ncimpl(Second, ApplyFunc<F,R>& A, Storage& s)
+    {
+    throw ITError("applyFunc: function object has no operator() method for storage type");
+    }
+
+template<typename F, typename R, typename Storage>
+auto
+applyFunc_ncimpl(First, ApplyFunc<F,R>& A, Storage& s)
+    -> decltype(A.f(s), void())
+    {
+    A(s);
+    }
+
+template<typename F, typename R, typename Storage>
+void
+applyFunc_constimpl(Second, ApplyFunc<F,R>& A, const Storage& s, ManagePtr& mp) 
+    {
+    Storage& ncs = mp.modifyData();
+    applyFunc_ncimpl(0,A,ncs);
+    }
+
+template<typename F, typename R, typename Storage>
+auto
+applyFunc_constimpl(First, ApplyFunc<F,R>& A, const Storage& s, ManagePtr& mp) 
+    -> decltype(A.f(s), void())
+    {
+    A(s);
+    }
+
+} //namespace detail
+
+template<typename F, typename R, typename Storage>
+void
+doTask(detail::ApplyFunc<F,R>& A, const Storage& s, ManagePtr& mp) 
+    { 
+    detail::applyFunc_constimpl(detail::TryFirst,A,s,mp);
+    }
+
+
+///////////////////
+
+
+
 
 struct Void { };
 
@@ -130,12 +213,6 @@ struct CallWrap : FuncBase
 //
 
 namespace detail {
-
-//Some definitions to help document
-//the functions below
-constexpr const int TryFirst = 0;
-using First  = int;
-using Second = long;
 
 //If ActualRet!=void this gets called
 template<typename Ret, typename ActualRet, typename... VArgs>
@@ -507,6 +584,37 @@ doTask(Task&& t,
     RegisterTask<TwoArgs,Task,Void> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getTask());
+    }
+
+
+template<typename F>
+F
+applyFunc(F&& f, PData& store)
+    {
+    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
+    return f;
+    }
+
+template<typename F>
+F
+applyFunc(F&& f, const CPData& store)
+    {
+    doTask(detail::ApplyFunc<F,void>{std::forward<F>(f)},store);
+    return f;
+    }
+
+template<typename Ret, typename F>
+Ret
+applyFunc(F&& f, PData& store)
+    {
+    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
+    }
+
+template<typename Ret, typename F>
+Ret
+applyFunc(F&& f, const CPData& store)
+    {
+    return doTask(detail::ApplyFunc<F,Ret>{std::forward<F>(f)},store);
     }
 
 } //namespace itensor
