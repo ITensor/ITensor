@@ -7,6 +7,17 @@
 
 namespace itensor {
 
+template<> IQTensor::
+ITensorT(const IQIndex& i1);
+
+template<> IQTensor::
+ITensorT(const IQIndex& i1,
+         const IQIndex& i2);
+
+template<>
+IQTensor::
+ITensorT(Complex val);
+
 template<>
 template<typename... IQIndices>
 IQTensor::

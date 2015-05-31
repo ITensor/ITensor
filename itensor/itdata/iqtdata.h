@@ -132,7 +132,11 @@ getElt(const IQIndexSet& is,
     auto r = long(ind.size());
     if(r == 0) return data.data();
 #ifdef DEBUG
-    if(is.r() != r) Error("Mismatched size of IQIndexSet and elt_ind in get_block");
+    if(is.r() != r) 
+        {
+        printfln("is.r() = %d, ind.size() = %d",is.r(),ind.size());
+        Error("Mismatched size of IQIndexSet and elt_ind in get_block");
+        }
 #endif
     long bind = 0, //block index (total)
          bstr = 1, //block stride so far
