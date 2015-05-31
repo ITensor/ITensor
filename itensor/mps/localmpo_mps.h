@@ -35,7 +35,7 @@ class LocalMPO_MPS
     // Typedefs
     //
 
-    using IndexT = typename Tensor::IndexT;
+    using index_type = typename Tensor::index_type;
 
     using LocalMPOType = LocalMPO<Tensor>;
 

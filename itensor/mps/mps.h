@@ -522,7 +522,7 @@ checkOrtho(const MPSt<Tensor>& psi,
            int i, 
            bool left)
     {
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
     IndexT link = (left ? rightLinkInd(psi,i) : leftLinkInd(psi,i));
     Tensor rho = psi.A(i) * dag(prime(psi.A(i),link,4));

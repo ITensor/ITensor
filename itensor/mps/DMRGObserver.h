@@ -88,7 +88,7 @@ measure(const Args& args)
     auto sw = args.getInt("Sweep",0);
     auto ha = args.getInt("HalfSweep",0);
     auto energy = args.getReal("Energy",0);
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
     if(!args.getBool("Quiet",false) && !args.getBool("NoMeasure",false))
         {

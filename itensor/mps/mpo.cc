@@ -297,7 +297,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
 
         if(i == N-1) break;
 
-        IndexT oldmid = rightLinkInd(res,i);
+        auto oldmid = rightLinkInd(res,i);
         nfork = Tensor(rightLinkInd(A,i),rightLinkInd(B,i),oldmid);
 
         /*
@@ -311,7 +311,7 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
 
         denmatDecomp(clust, res.Anc(i), nfork,Fromleft,args);
 
-        IndexT mid = commonIndex(res.A(i),nfork,Link);
+        auto mid = commonIndex(res.A(i),nfork,Link);
         mid.dag();
         midsize[i] = mid.m();
         res.Anc(i+1) = Tensor(mid,dag(res.sites()(i+1)),prime(res.sites()(i+1),2),rightLinkInd(res,i+1));
@@ -347,7 +347,7 @@ zipUpApplyMPO(const MPSt<Tensor>& psi,
               MPSt<Tensor>& res,
               const Args& args)
     {
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
     const
     bool allow_arb_position = args.getBool("AllowArbPosition",false);
@@ -431,7 +431,7 @@ exactApplyMPO(const MPSt<Tensor>& x,
               MPSt<Tensor>& res,
               const Args& args)
     {
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
     int N = x.N();
     if(K.N() != N) Error("Mismatched N in exactApplyMPO");
@@ -786,7 +786,7 @@ applyExpH(const MPSt<Tensor>& psi,
           MPSt<Tensor>& res, 
           const Args& args)
     {
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
     using MPST = MPSt<Tensor>;
 
     if(&psi == &res) Error("Must pass distinct MPS arguments to applyExpH");

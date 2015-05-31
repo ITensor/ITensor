@@ -125,7 +125,7 @@ template <class Tensor>
 vector<Tensor> DerivMPS<Tensor>::
 operator()(const vector<Tensor>& psi) const
     {
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
     //psi tensors may have 1 or 2 sites,
     //so N is number of (non-null) psi tensors 
@@ -272,8 +272,7 @@ operator()(const vector<Tensor>& psi) const
 
         if(method == 1)
             {
-            const
-            IndexT plink = commonIndex(B,psi[s(j-1)]);
+            auto plink = commonIndex(B,psi[s(j-1)]);
 
             //TODO
             //Possible optimization: only compute nB
@@ -324,10 +323,9 @@ operator()(const vector<Tensor>& psi) const
         else
         if(method == 2)
             {
-            const
-            IndexT plink = commonIndex(B,psi[s(j-1)]);
+            auto plink = commonIndex(B,psi[s(j-1)]);
             Tensor Bp(B);
-            for(const IndexT& I : B.inds())
+            for(const auto& I : B.inds())
                 {
                 if(I == plink) continue;
                 Bp.prime(I);
@@ -351,8 +349,7 @@ operator()(const vector<Tensor>& psi) const
                 cout << "Large nrm using method 2" << endl;
                 PAUSE
 
-                const
-                IndexT plink = commonIndex(B,psi[s(j-1)]);
+                auto plink = commonIndex(B,psi[s(j-1)]);
                 for(int pass = 1; pass <= Npass; ++pass)
                     {
                     //Compute component of dB along B
@@ -412,7 +409,7 @@ ungroupMPS(vector<Tensor>& psig,
            Direction dir = Fromleft,
            const Args& args = Global::args())
     {
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
     if(psig.size() == 0)
         Error("Empty psig vector");
@@ -502,7 +499,7 @@ class OrthVec
     OrthVec(Direction dir = Fromleft)
         : dir_(dir) { }
 
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
     
     void
     operator()(std::vector<Tensor>& psi) const
@@ -548,7 +545,7 @@ oldImagTEvol(const MPOt<Tensor>& H, Real ttotal, Real tstep,
           MPSt<Tensor>& psi, 
           const Args& args)
     {
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
     using MPST = MPSt<Tensor>;
 
     if(ttotal == 0) return 1.;
