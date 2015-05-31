@@ -547,7 +547,7 @@ doTask(PrintIT<IQIndex>& P, const IQTData& d)
             auto val = scalefac*d.data[os];
             if(std::norm(val) > Global::printScale())
                 {
-                P.s << "  (";
+                P.s << "(";
                 for(auto ii = C.i.mini(); ii <= C.i.maxi(); ++ii)
                     {
                     P.s << (1+C.i(ii));
