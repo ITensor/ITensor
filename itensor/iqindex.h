@@ -6,6 +6,7 @@
 #define __ITENSOR_IQINDEX_H
 #include "itensor/index.h"
 #include "itensor/qn.h"
+#include "itensor/util/readwrite.h"
 
 namespace itensor {
 
