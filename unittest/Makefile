@@ -9,7 +9,7 @@ SOURCES=test.cc
 ifdef test
 SOURCES+= $(test)_test.cc
 else
-SOURCES+= util_test.cc
+#SOURCES+= util_test.cc
 #SOURCES+= algorithm_test.cc
 #SOURCES+= real_test.cc
 #SOURCES+= args_test.cc
