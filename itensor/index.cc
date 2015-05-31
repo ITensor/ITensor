@@ -52,16 +52,6 @@ nameint(const string& f, int n)
 string Index::
 name() const  { return putprimes(sname_,primelevel_); }
 
-Index& Index::
-primeLevel(int plev) 
-    { 
-    primelevel_ = plev; 
-#ifdef DEBUG
-    if(primelevel_ < 0)
-        Error("Negative primeLevel");
-#endif
-    return *this;
-    }
 
 
 Index& Index::

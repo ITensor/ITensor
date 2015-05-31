@@ -16,7 +16,6 @@ class IQIndexVal;
 template<typename IndexT>
 class ITensorT;
 
-using IQIndexDatPtr = std::shared_ptr<IQIndexDat>;
 using ITensor = ITensorT<Index>;
 
 //
@@ -26,13 +25,14 @@ using ITensor = ITensorT<Index>;
 class IQIndex : public Index
     {
     public:
-
     using storage = std::vector<IndexQN>;
+    using storage_ptr = std::shared_ptr<IQIndexDat>;
     using indexval_type = IQIndexVal;
-
-    //
-    //Constructors
-    //
+    using const_iterator = storage::const_iterator;
+    private:
+    storage_ptr pd;
+    Arrow dir_;
+    public:
 
     IQIndex();
 
@@ -56,19 +56,15 @@ class IQIndex : public Index
     //Accessor Methods
     //
 
-
-    const storage&
-    inds() const;
-
     long 
     nindex() const;
 
     //1-indexed
-    const Index& 
+    Index 
     index(long i) const;
 
     //0-indexed
-    const Index& 
+    Index 
     operator[](long i) const;
 
     //1-indexed
@@ -77,29 +73,6 @@ class IQIndex : public Index
 
     Arrow 
     dir() const { return dir_; }
-    //void 
-    //dir(Arrow ndir) { dir_ = ndir; }
-
-    int 
-    primeLevel() const { return Index::primeLevel(); }
-    IQIndex& 
-    primeLevel(int val);
-
-    //
-    // Prime level methods
-    //
-
-    IQIndex& 
-    prime(int inc = 1);
-
-    IQIndex& 
-    prime(IndexType type, int inc = 1);
-
-    IQIndex& 
-    noprime(IndexType type = All);
-
-    IQIndex& 
-    mapprime(int plevold, int plevnew, IndexType type = All);
 
     //
     // Operators
@@ -115,23 +88,17 @@ class IQIndex : public Index
     IQIndex& 
     dag();
 
+    const_iterator
+    begin() const;
+
+    const_iterator
+    end() const;
+
     void 
     write(std::ostream& s) const;
 
     IQIndex& 
     read(std::istream& s);
-
-    private:
-
-    /////////////
-    IQIndexDatPtr pd;
-    Arrow dir_;
-    /////////////
-
-    IQIndex(const Index& index, const IQIndexDatPtr& pdat);
-
-    void 
-    solo();
 
     }; //class IQIndex
 
@@ -153,6 +120,7 @@ class IndexQN : public Index
 
     void 
     write(std::ostream& s) const { Index::write(s); qn.write(s); }
+
     void 
     read(std::istream& s) { Index::read(s); qn.read(s); }
     };
@@ -221,12 +189,6 @@ class IQIndexVal
 
     ITensor 
     operator*(const IndexVal& iv) const;
-
-    static const IQIndexVal& Null()
-        {
-        static const IQIndexVal Null_;
-        return Null_;
-        }
 
     };
 
@@ -305,10 +267,12 @@ mapprime(IQIndexVal I, int plevold, int plevnew, IndexType type = All)
 class IQIndexDat
     {
     public:
-
     using storage = std::vector<IndexQN>;
     using iterator = storage::iterator;
     using const_iterator = storage::const_iterator;
+    private:
+    storage iq_;
+    public:
 
     IQIndexDat() { }
 
@@ -322,7 +286,20 @@ class IQIndexDat
         }
 
     explicit
-    IQIndexDat(storage&& ind_qn) { iq_ = std::move(ind_qn); }
+    IQIndexDat(const storage& ind_qn) 
+      : iq_(ind_qn)
+        { }
+
+    explicit
+    IQIndexDat(storage&& ind_qn) 
+      : iq_(std::move(ind_qn))
+        { }
+
+    //Disallow copying
+    IQIndexDat(const IQIndexDat&) = delete;
+
+    void 
+    operator=(const IQIndexDat&) = delete;
 
     const storage&
     inds() const { return iq_; }
@@ -341,36 +318,24 @@ class IQIndexDat
 
     iterator
     begin() { return iq_.begin(); }
+
     iterator
     end() { return iq_.end(); }
 
     const_iterator
     begin() const { return iq_.begin(); }
+
     const_iterator
     end()   const { return iq_.end(); }
 
     void 
-    write(std::ostream& s) const;
+    write(std::ostream& s) const { itensor::write(s,iq_); }
 
     void 
-    read(std::istream& s);
+    read(std::istream& s) { itensor::read(s,iq_); }
 
-    static const IQIndexDatPtr& Null();
-
-    void
-    makeCopyOf(const IQIndexDat& other) { iq_ = other.iq_; }
-
-    private:
-
-    //////////////////
-
-    storage iq_;
-
-    /////////////////
-
-    //Disallow copying using =
-    void 
-    operator=(const IQIndexDat&);
+    //IQIndex::storage_ptr
+    //clone() { return std::make_shared<IQIndexDat>(iq_); }
 
     template<long J>
     void
@@ -386,7 +351,6 @@ class IQIndexDat
         iq_[J] = IndexQN(i,q);
         fill<J+1>(rest...);
         }
-
     };
 
 long
@@ -448,8 +412,7 @@ IQIndex(const std::string& name,
     Index(name,totalM(ind_qn),ind_qn.front().type(),plev),
     pd(std::make_shared<IQIndexDat>(std::move(ind_qn))),
     dir_(dir)
-    { 
-    }
+    { }
 
 
 } //namespace itensor

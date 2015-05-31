@@ -357,6 +357,18 @@ operator()(long plev, long nplev) const { return IndexVal(itensor::prime(*this,p
 
 inline
 Index& Index::
+primeLevel(int plev) 
+    { 
+    primelevel_ = plev; 
+#ifdef DEBUG
+    if(primelevel_ < 0)
+        Error("Negative primeLevel");
+#endif
+    return *this;
+    }
+
+inline
+Index& Index::
 prime(int inc) 
     { 
     primelevel_ += inc; 
