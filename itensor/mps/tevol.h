@@ -12,7 +12,6 @@
 namespace itensor {
 
 
-
 //
 // Evolves an MPS in real or imaginary time by an amount ttotal in steps
 // of tstep using the list of bond gates provided.
@@ -36,27 +35,6 @@ gateTEvol(const Iterable& gatelist,
           MPSt<Tensor>& psi, 
           Observer& obs,
           Args args = Global::args());
-
-//
-// Imaginary time evolve an MPS by an amount ttotal in time
-// steps of tstep using the Hamiltonian MPO H.
-//
-// Arguments recognized:
-//     "Verbose": print useful information to stdout
-//     "Order": order at which to stop applying powers of H, 
-//              setting order to p yields error of tstep^p
-//     "Maxm": Maximum states kept each step
-//     "Cutoff": Maximum truncation error each step
-//     "Nsweep": Number of sweeps used to apply H to MPS (see fitApplyMPO)
-//
-template <class Tensor>
-void
-imagTEvol(const MPOt<Tensor>& H, 
-          Real ttotal, 
-          Real tstep, 
-          MPSt<Tensor>& psi, 
-          const Args& args = Global::args());
-
 
 //
 //
