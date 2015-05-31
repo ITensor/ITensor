@@ -524,7 +524,8 @@ doTask(PrintIT<IQIndex>& P, const IQTData& d)
         //Print Indices of this block
         for(auto i : count(rank))
             {
-            P.s << blockIndex(i) << "<" << P.is[i].dir() << "> ";
+            if(i > 0) P.s << ", ";
+            P.s << blockIndex(i) << "<" << P.is[i].dir() << ">";
             }
         P.s << "\n";
         //Wire up GCounter with appropriate dims
