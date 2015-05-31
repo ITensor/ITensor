@@ -29,6 +29,7 @@ operator*(IQTensor T, const IQIndexVal& iv) { T *= iv; return T; }
 IQTensor inline
 operator*(const IQIndexVal& iv, const IQTensor& T) { return IQTensor(iv) * T; }
 
+
 //Add ITensor to corresponding block of IQTensor
 IQTensor& 
 operator+=(IQTensor& A, const ITensor& B);
@@ -39,6 +40,20 @@ toITensor(const IQTensor& T);
 template<> inline
 IQTensor::
 operator ITensor() const { return toITensor(*this); }
+
+ITensor inline
+operator*(const IQTensor& T, const ITensor& t) 
+    { 
+    auto TT = toITensor(T);
+    TT *= t; 
+    return TT; 
+    }
+ITensor inline
+operator*(const ITensor& t, const IQTensor& T) 
+    { 
+    return operator*(T,t);
+    }
+
 
 //
 // Multiplication by an IndexVal
