@@ -187,21 +187,22 @@ dag()
 
 template <class IndexT>
 void IndexSetT<IndexT>::
-read(std::istream& s)
-    {
-    itensor::read(s,index_);
-    itensor::read(s,stride_);
-    s.read((char*) &rn_,sizeof(rn_));
-    }
-
-template <class IndexT>
-void IndexSetT<IndexT>::
 write(std::ostream& s) const
     {
     itensor::write(s,index_);
     itensor::write(s,stride_);
-    s.write((char*) &rn_,sizeof(rn_));
+    itensor::write(s,rn_);
     }
+
+template <class IndexT>
+void IndexSetT<IndexT>::
+read(std::istream& s)
+    {
+    itensor::read(s,index_);
+    itensor::read(s,stride_);
+    itensor::read(s,rn_);
+    }
+
 
 
 template<class IndexT>

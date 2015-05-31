@@ -38,13 +38,17 @@ template <class IndexT>
 class IndexSetT
     {
     public:
-
     using storage = std::vector<IndexT>;
     using value_type = IndexT;
     using iterator = typename storage::iterator;
     using const_iterator = typename storage::const_iterator;
     using index_type = IndexT;
     using indexval_type = typename IndexT::indexval_type;
+    private:
+    storage index_;
+    std::vector<long> stride_;
+    int rn_;
+    public:
 
     IndexSetT();
 
@@ -156,18 +160,9 @@ class IndexSetT
 
     private:
 
-    //////////
-
-    storage index_;
-    std::vector<long> stride_;
-    int rn_;
-
-    /////////
-
     template<class Iterable>
     void
     init(Iterable&& inds);
-
     };
 
 //
