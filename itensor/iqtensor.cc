@@ -407,7 +407,7 @@ std::ostream&
 operator<<(std::ostream& s, const IQTensor& T)
     {
 	s << "/--------------IQTensor--------------\n";
-    if(T)
+    if(T.store())
         {
         s << "r=" << T.r() << " div=" << div(T) << " log(scale)=" << T.scale().logNum() << "\n";
         s << T.inds();
@@ -424,7 +424,8 @@ operator<<(std::ostream& s, const IQTensor& T)
         }
     else
         {
-        if(T.inds()) s << T.inds() << "\n";
+        s << "r=" << T.r() << " log(scale)=" << T.scale().logNum() << "\n";
+        s << T.inds();
         s << "{Zero / Not yet allocated}\n";
         }
 	s << "\\------------------------------------\n\n";
