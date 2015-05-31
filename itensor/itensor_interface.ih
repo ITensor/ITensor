@@ -14,6 +14,40 @@
 
 namespace itensor {
 
+namespace detail {
+void inline
+allocReal(ITensor& T)
+    {
+    T.store() = std::make_shared<ITReal>(area(T.inds()),0);
+    }
+
+void inline
+allocReal(IQTensor& T)
+    {
+    Error("Can't allocate IQTensor with undefined divergence");
+    }
+
+template<typename Container>
+void
+allocReal(ITensor& T, const Container& inds)
+    {
+    T.store() = std::make_shared<ITReal>(area(T.inds()),0);
+    }
+
+template<typename Container>
+void
+allocReal(IQTensor& T, const Container& inds)
+    {
+    QN div;
+    for(size_t i = 0; i < T.inds().size(); ++i)
+        {
+        auto iv = (T.inds()[i])(1+inds[i]);
+        div += iv.qn()*iv.index.dir();
+        }
+    T.store() = std::make_shared<IQTData>(T.inds(),div);
+    }
+}
+
 template<typename IndexT>
 ITensorT<IndexT>::
 ITensorT(const IndexT& i1) { Error("ITensorT(i1) not implemented"); }
@@ -133,21 +167,10 @@ set(Cplx val, IVals&&... ivs)
     using Inds = typename SetElt<Real,IndexT>::Inds;
     static constexpr auto size = sizeof...(ivs);
     const std::array<indexval_type,size> vals{{ static_cast<indexval_type>(ivs)...}};
-    if(!store_)
-        {
-#ifdef DEBUG
-        if(is_)
-            {
-            for(auto& v : vals) if(!hasindex(is_,v.index))
-                Error(format("Tensor does not have index %s",v.index));
-            }
-#endif
-        *this = ITensorT(std::forward<IVals>(ivs)...);
-        operator*=(val);
-        }
     scaleTo(1.);
     Inds inds(size);
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
+    if(!store_) detail::allocReal(*this,inds); 
     if(val.imag() == 0)
         doTask(SetElt<Real,IndexT>{val.real(),is_,inds},store_);
     else
@@ -267,19 +290,6 @@ operator*=(Cplx z)
     return *this;
     }
 
-namespace detail {
-void inline
-allocReal(ITensor& T)
-    {
-    T.store() = std::make_shared<ITReal>(area(T.inds()),0);
-    }
-
-void inline
-allocReal(IQTensor& T)
-    {
-    Error("Can't allocate IQTensor with undefined divergence");
-    }
-}
 
 
 template<typename IndexT> 
