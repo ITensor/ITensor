@@ -819,7 +819,8 @@ contract(const CProps& p,
     //         bref.Nrows(),bref.Ncols(),bref.transposed()?"(t)":"",
     //         cref.Nrows(),cref.Ncols(),cref.transposed()?"(t)":"");
 
-    multAdd(aref,bref,cref);
+    mult(aref,bref,cref);
+
 
     //println("Matrix multiply done, took ",cpu.sincemark());
 
