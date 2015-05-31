@@ -69,7 +69,7 @@ findEig(int which,        //zero-indexed; so is return value
     for(int ii = 1; ii <= L; ++ii) 
         {
         A2(ii) = sqr(DR(ii))+sqr(DI(ii));
-        //A2(ii) = fabs(DR(ii));
+        //A2(ii) = std::fabs(DR(ii));
         if(A2(ii) > maxj) 
             {
             maxj = A2(ii);
@@ -346,7 +346,7 @@ complexDavidson(const BigMatrixT& A,
             for(size_t j = 0; j < eigs.size(); ++j)
                 {
                 if(std::isnan(eigs[j].real())) break;
-                if(fabs(eigs[j].imag()) > Approx0)
+                if(std::fabs(eigs[j].imag()) > Approx0)
                     printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
                 else
                     printf(" %.10f",eigs[j].real());
@@ -437,7 +437,7 @@ complexDavidson(const BigMatrixT& A,
 
         if(debug_level_ >= 3)
             {
-            if(fabs(norm(q)-1.0) > 1E-10)
+            if(std::fabs(norm(q)-1.0) > 1E-10)
                 {
                 Print(norm(q));
                 Error("q not normalized after Gram Schmidt.");
@@ -525,7 +525,7 @@ complexDavidson(const BigMatrixT& A,
         for(size_t j = 0; j < eigs.size(); ++j)
             {
             if(std::isnan(eigs[j].real())) break;
-            if(fabs(eigs[j].imag()) > Approx0)
+            if(std::fabs(eigs[j].imag()) > Approx0)
                 printf(" (%.10f,%.10f)",eigs[j].real(),eigs[j].imag());
             else
                 printf(" %.10f",eigs[j].real());

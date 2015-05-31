@@ -213,9 +213,9 @@ idmrg(MPSt<Tensor>& psi,
             Real ovrlap, im;
             psiphi(initPsi,psi,ovrlap,im);
             print("\n    Overlap of initial and final psi = ");
-            printfln((fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E"),fabs(ovrlap));
+            printfln((std::fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E"),std::fabs(ovrlap));
             print("\n    1-Overlap of initial and final psi = ");
-            printfln((1-fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E"),1-fabs(ovrlap));
+            printfln((1-std::fabs(ovrlap) > 1E-4 ? "%.10f" : "%.10E"),1-std::fabs(ovrlap));
             }
 
         printfln("    Energy per site = %.14f",energy/N0);

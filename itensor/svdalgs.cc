@@ -236,10 +236,10 @@ svdRank2(ITensor A,
         auto stop = std::min(10l,DD.size());
         auto Ds = Vec(subVector(DD,1,stop));
 
-        Real orderMag = log(fabs(DD(1))) + A.scale().logNum();
-        if(fabs(orderMag) < 5 && A.scale().isFiniteReal())
+        Real orderMag = log(std::fabs(DD(1))) + A.scale().logNum();
+        if(std::fabs(orderMag) < 5 && A.scale().isFiniteReal())
             {
-            Ds *= fabs(A.scale().real0());
+            Ds *= std::fabs(A.scale().real0());
             print("Singular values: ");
             }
         else
@@ -451,9 +451,9 @@ svdRank2(IQTensor A, const IQIndex& uI, const IQIndex& vI,
         //Include refNorm in printed eigs as long as
         //the leading eig is within a few orders of magnitude
         //of 1.0. Otherwise just print the scaled eigs.
-        Real orderMag = log(fabs(alleig.at(s-1))) + refNorm.logNum();
+        Real orderMag = log(std::fabs(alleig.at(s-1))) + refNorm.logNum();
         Real real_fac = 1;
-        if(fabs(orderMag) < 5 && refNorm.isFiniteReal())
+        if(std::fabs(orderMag) < 5 && refNorm.isFiniteReal())
             {
             real_fac = refNorm.real();
             cout << "    Singular values: ";
@@ -696,8 +696,8 @@ diag_hermitian(ITensor rho,
     //Include rho's scale to get the actual eigenvalues kept
     //as long as the leading eigenvalue is within a few orders
     //of magnitude of 1.0. Otherwise just report the scaled eigs.
-    //Real orderMag = log(fabs(DD(1))) + rho.scale().logNum();
-    //if(fabs(orderMag) < 5 && rho.scale().isFiniteReal())
+    //Real orderMag = log(std::fabs(DD(1))) + rho.scale().logNum();
+    //if(std::fabs(orderMag) < 5 && rho.scale().isFiniteReal())
     //    {
     //    DD *= rho.scale().real();
     //    }
@@ -902,12 +902,12 @@ diag_hermitian(IQTensor rho, IQTensor& U, IQTensor& D,
 	Real maxM = 1.0;
         for(int r = 1; r <= n; ++r)
 	    for(int c = r+1; c <= n; ++c)
-		maxM = std::max(maxM,fabs(M(r,c)));
+		maxM = std::max(maxM,std::fabs(M(r,c)));
 	Real maxcheck = 1e-13 * maxM;
         for(int r = 1; r <= n; ++r)
 	    for(int c = r+1; c <= n; ++c)
             {
-            if(fabs(M(r,c)-M(c,r)) > maxcheck)
+            if(std::fabs(M(r,c)-M(c,r)) > maxcheck)
                 {
                 Print(M);
                 Error("M not symmetric in diag_denmat");

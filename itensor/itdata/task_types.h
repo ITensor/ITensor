@@ -94,7 +94,7 @@ struct PrintIT
             {
             if(!x.isTooBigForReal()) s << ", norm=";
             else  s << ", norm(omitting large scale)=";
-            s << format("%.2f",fabs(scalefac)*nrm_no_scale);
+            s << format("%.2f",std::fabs(scalefac)*nrm_no_scale);
             }
         s << " (" << type_name << ")}\n";
         }

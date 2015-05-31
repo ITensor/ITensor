@@ -623,7 +623,7 @@ psiphi(const MPSType& psi, const MPSType& phi) //Re[<psi|phi>]
     {
     Real re, im;
     psiphi(psi,phi,re,im);
-    if(fabs(im) > (1E-12 * fabs(re)) )
+    if(std::fabs(im) > (1E-12 * std::fabs(re)) )
         printfln("Real psiphi: WARNING, dropping non-zero imaginary part (=%.5E) of expectation value.",im);
     return re;
     }

@@ -755,14 +755,14 @@ struct SqrtInv
     operator()(Real val) const 
         { 
         if(val == 0) return 0;
-        return 1./std::sqrt(fabs(val)); 
+        return 1./std::sqrt(std::fabs(val)); 
         }
     };
 
 struct Sqrt
     {
     Real
-    operator()(Real val) const { return std::sqrt(fabs(val)); }
+    operator()(Real val) const { return std::sqrt(std::fabs(val)); }
     };
 
 template<class Tensor>
@@ -1068,7 +1068,7 @@ Real MPSt<Tensor>::
 normalize()
     {
     auto norm_ = norm();
-    if(fabs(norm_) < 1E-20) Error("Zero norm");
+    if(std::fabs(norm_) < 1E-20) Error("Zero norm");
     operator/=(norm_);
     return norm_;
     }
@@ -1413,7 +1413,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                     Real rel_cut = -1;
                     const ITensor& sb = summed_block;
                     for(int j = 1; j <= bond.m(); ++j)
-                        { rel_cut = std::max(fabs(sb.real(bond(j))),rel_cut); }
+                        { rel_cut = std::max(std::fabs(sb.real(bond(j))),rel_cut); }
                     assert(rel_cut >= 0);
                     //Real rel_cut = summed_block.norm()/summed_block.vecSize();
                     rel_cut *= cut;
@@ -1422,7 +1422,7 @@ convertToIQ(const SiteSet& sites, const vector<ITensor>& A,
                     if(rel_cut > 0)
                     for(int j = 1; j <= bond.m(); ++j)
                         {
-                        if(fabs(sb.real(bond(j))) > rel_cut) 
+                        if(std::fabs(sb.real(bond(j))) > rel_cut) 
                             { 
                             D(j) = 1; 
                             keep_block = true; 
@@ -1634,7 +1634,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
                     Real rel_cut = -1;
                     for(int j = 1; j <= bond.m(); ++j)
-                    { rel_cut = std::max(fabs(summed_block.val1(j)),rel_cut); }
+                    { rel_cut = std::max(std::fabs(summed_block.val1(j)),rel_cut); }
                     assert(rel_cut >= 0);
                     //Real rel_cut = summed_block.norm()/summed_block.vecSize();
                     rel_cut *= cut;
@@ -1642,7 +1642,7 @@ void MPSt<Tensor>::convertToIQ(IQMPSType& iqpsi, QN totalq, Real cut) const
 
                     if(rel_cut > 0)
                     for(int j = 1; j <= bond.m(); ++j)
-                    if(fabs(summed_block.val1(j)) > rel_cut) 
+                    if(std::fabs(summed_block.val1(j)) > rel_cut) 
                     { D(j) = 1; keep_block = true; }
                 }
             } //else (s != N)

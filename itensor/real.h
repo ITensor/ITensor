@@ -184,7 +184,7 @@ class LogNumber
 
     bool 
     approxEquals(const LogNumber& other) const
-        { return (sign_ == other.sign_) && (fabs(lognum_-other.lognum_) < LogNumber_Accuracy); }
+        { return (sign_ == other.sign_) && (std::fabs(lognum_-other.lognum_) < LogNumber_Accuracy); }
 
     void
     negate() { sign_ *= -1; }
