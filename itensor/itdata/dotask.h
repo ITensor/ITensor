@@ -131,6 +131,12 @@ struct CallWrap : FuncBase
 
 namespace detail {
 
+//Some definitions to help document
+//the functions below
+constexpr const int TryFirst = 0;
+using First  = int;
+using Second = long;
+
 //If ActualRet!=void this gets called
 template<typename Ret, typename ActualRet, typename... VArgs>
 struct FixRet
@@ -160,7 +166,7 @@ struct FixRet<Ret,void,VArgs...>
 //(4) Least preferred version which always compiles
 template <typename Ret, typename Task, typename Storage>
 Ret
-callDoTask_Impl(long l, Task& t, Storage& s)
+callDoTask_Impl(Second, Task& t, Storage& s)
     {
     Error("1 parameter doTask not defined for specified task or data type");
     return Ret{};
@@ -171,7 +177,7 @@ callDoTask_Impl(long l, Task& t, Storage& s)
 // if doTask(t,d) is not defined ("SFINAE" trick)
 template <typename Ret, typename Task, typename Storage>
 auto 
-callDoTask_Impl(int i, Task& t, Storage& s)
+callDoTask_Impl(First, Task& t, Storage& s)
     -> std::conditional_t<std::is_void<decltype(doTask(t,s))>::value,Ret,Ret>
     {
     using ActualRet = decltype(doTask(t,s));
@@ -181,20 +187,20 @@ callDoTask_Impl(int i, Task& t, Storage& s)
 //the call on to callDoTask_Impl without the ManagePtr& argument
 template <typename Ret, typename Task, typename Storage>
 Ret
-callDoTask_Impl(long l, Task& t, Storage& s, ManagePtr& mp)
+callDoTask_Impl(Second, Task& t, Storage& s, ManagePtr& mp)
     {
-    return callDoTask_Impl<Ret>(0,t,s);
+    return callDoTask_Impl<Ret>(TryFirst,t,s);
     }
 //(1) This is the preferred version since 0->int requires no cast
 //Template substitution will fail (not a compile-time error)
 //if doTask(t,d) is not defined ("SFINAE" trick)
 template <typename Ret, typename Task, typename Storage>
 auto 
-callDoTask_Impl(int i, Task& t, Storage& s, ManagePtr& mp)
+callDoTask_Impl(First, Task& t, Storage& s, ManagePtr& mp)
     -> std::conditional_t<std::is_void<decltype(doTask(t,s,mp))>::value,Ret,Ret>
     {
     using ActualRet = decltype(doTask(t,s,mp));
-    return FixRet<Ret,decltype(doTask(t,s,mp)),Task&,Storage&,ManagePtr&>()(t,s,mp);
+    return FixRet<Ret,ActualRet,Task&,Storage&,ManagePtr&>()(t,s,mp);
     }
 //This version of callDoTask attempts "return doTask(t,s,mp);"
 //- If doTask(t,s,mp) not defined, tries calling doTask(t,s)
@@ -207,7 +213,7 @@ template<typename Ret, typename Task, typename Storage>
 Ret
 callDoTask(Task& t, Storage& s, ManagePtr& mp)
     {
-    return callDoTask_Impl<Ret,Task,Storage>(0,t,s,mp);
+    return callDoTask_Impl<Ret,Task,Storage>(TryFirst,t,s,mp);
     }
 
 /////////////////////////////////////////////////////
@@ -215,7 +221,7 @@ callDoTask(Task& t, Storage& s, ManagePtr& mp)
 //(2-fail)
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,long)
+cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,Second)
     {
     if(!mp.parg1().unique()) mp.parg1() = mp.parg1()->clone();
     auto* pd = static_cast<D*>(mp.parg1().get());
@@ -224,7 +230,7 @@ cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,long)
 //(2-success)
 template<typename Ret, typename Task, typename D>
 auto
-cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,int)
+cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,First)
     -> std::conditional_t<std::is_void<decltype(doTask(t,cd))>::value,Ret,Ret>
     {
     return FixRet<Ret,decltype(doTask(t,cd)),Task&,const D&>()(t,cd);
@@ -232,15 +238,15 @@ cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,int)
 //(1-fail)
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask_Case1ConstMP(Task& t, const D& cd, ManagePtr& mp,long)
+cloneDoTask_Case1ConstMP(Task& t, const D& cd, ManagePtr& mp,Second)
     {
-    return cloneDoTask_Case2ConstNoMP<Ret>(t,cd,mp,0);
+    return cloneDoTask_Case2ConstNoMP<Ret>(t,cd,mp,TryFirst);
     }
 //(1-success) Preferred version since 0->int requires no conversion
 //Attempts to call doTask(Task,const D&, ManagePtr&) if defined
 template<typename Ret, typename Task, typename D>
 auto
-cloneDoTask_Case1ConstMP(Task& t, const D& cd, ManagePtr& mp,int)
+cloneDoTask_Case1ConstMP(Task& t, const D& cd, ManagePtr& mp,First)
     -> std::conditional_t<std::is_void<decltype(doTask(t,cd,mp))>::value,Ret,Ret>
     {
     return FixRet<Ret,decltype(doTask(t,cd,mp)),Task&,const D&,ManagePtr&>()(t,cd,mp);
@@ -249,7 +255,7 @@ template<typename Ret, typename Task, typename D>
 Ret
 cloneDoTask(Task& t, const D& cd, ManagePtr& mp)
     {
-    return cloneDoTask_Case1ConstMP<Ret>(t,cd,mp,0);
+    return cloneDoTask_Case1ConstMP<Ret>(t,cd,mp,TryFirst);
     }
 
 /////////////////////
@@ -257,7 +263,7 @@ cloneDoTask(Task& t, const D& cd, ManagePtr& mp)
 //(4) Least preferred version which always compiles
 template <typename Ret, typename Task, typename D1, typename D2>
 Ret
-callDoTask_Impl(long l, Task& t, D1& d1, const D2& d2)
+callDoTask_Impl(Second, Task& t, D1& d1, const D2& d2)
     {
     Error("2 parameter doTask not defined for specified task or data type");
     return Ret{};
@@ -265,7 +271,7 @@ callDoTask_Impl(long l, Task& t, D1& d1, const D2& d2)
 //(3) This is preferred more than version (4) above
 template <typename Ret, typename Task, typename D1, typename D2>
 auto 
-callDoTask_Impl(int i, Task& t, D1& d1, const D2& d2)
+callDoTask_Impl(First, Task& t, D1& d1, const D2& d2)
     -> std::conditional_t<std::is_same<decltype(doTask(t,d1,d2)),void>::value,Ret,Ret>
     {
     using ActualRet = decltype(doTask(t,d1,d2));
@@ -275,14 +281,14 @@ callDoTask_Impl(int i, Task& t, D1& d1, const D2& d2)
 //the call on to callDoTask_Impl (3) without the ManagePtr& argument
 template <typename Ret, typename Task, typename D1, typename D2>
 Ret
-callDoTask_Impl(long l, Task& t, D1& d1, const D2& d2, ManagePtr& mp)
+callDoTask_Impl(Second, Task& t, D1& d1, const D2& d2, ManagePtr& mp)
     {
     return callDoTask_Impl<Ret>(0,t,d1,d2);
     }
 //(1)
 template <typename Ret, typename Task, typename D1, typename D2>
 auto 
-callDoTask_Impl(int i, Task& t, D1& d1, const D2& d2, ManagePtr& mp)
+callDoTask_Impl(First, Task& t, D1& d1, const D2& d2, ManagePtr& mp)
     -> std::conditional_t<std::is_void<decltype(doTask(t,d1,d2,mp))>::value,Ret,Ret>
     {
     using ActualRet = decltype(doTask(t,d1,d2,mp));
@@ -293,7 +299,7 @@ Ret
 callDoTask(Task& t, D1& d1, const D2& d2, ManagePtr& mp)
     {
     //First try calling function labeled (1) above
-    return callDoTask_Impl<Ret,Task,D1,D2>(0,t,d1,d2,mp);
+    return callDoTask_Impl<Ret,Task,D1,D2>(TryFirst,t,d1,d2,mp);
     }
 
 /////////////////////
@@ -301,7 +307,7 @@ callDoTask(Task& t, D1& d1, const D2& d2, ManagePtr& mp)
 //(2-fail)
 template<typename Ret, typename Task, typename D1, typename D2>
 Ret
-cloneDoTask_Case2ConstNoMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,long) 
+cloneDoTask_Case2ConstNoMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,Second) 
     {
     if(!mp.parg1().unique()) mp.parg1() = mp.parg1()->clone();
     auto* pd1 = static_cast<std::remove_const_t<D1>*>(mp.parg1().get());
@@ -310,7 +316,7 @@ cloneDoTask_Case2ConstNoMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,l
 //(2-success)
 template<typename Ret, typename Task, typename D1, typename D2>
 auto
-cloneDoTask_Case2ConstNoMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,int) 
+cloneDoTask_Case2ConstNoMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,First) 
     -> std::conditional_t<std::is_same<decltype(doTask(t,cd1,d2)),void>::value,Ret,Ret>
     {
     return FixRet<Ret,decltype(doTask(t,cd1,d2)),Task&,const D1&,const D2&>()(t,cd1,d2);
@@ -318,14 +324,14 @@ cloneDoTask_Case2ConstNoMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,i
 //(1-fail)
 template<typename Ret, typename Task, typename D1, typename D2>
 Ret
-cloneDoTask_Case1ConstMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,long)
+cloneDoTask_Case1ConstMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,Second)
     {
     return cloneDoTask_Case2ConstNoMP<Ret,Task,D1,D2>(t,cd1,d2,mp,0);
     }
 //(1-success)
 template<typename Ret, typename Task, typename D1, typename D2>
 auto
-cloneDoTask_Case1ConstMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,int) 
+cloneDoTask_Case1ConstMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,First) 
     -> std::conditional_t<std::is_same<decltype(doTask(t,cd1,d2,mp)),void>::value,Ret,Ret>
     {
     return FixRet<Ret,decltype(doTask(t,cd1,d2,mp)),Task&,const D1&,const D2&,ManagePtr&>()(t,cd1,d2,mp);
@@ -334,7 +340,7 @@ template<typename Ret, typename Task, typename D1, typename D2>
 Ret
 cloneDoTask(Task& t, const D1& d1, const D2& d2, ManagePtr& mp)
     {
-    return cloneDoTask_Case1ConstMP<Ret,Task,D1,D2>(t,d1,d2,mp,0);
+    return cloneDoTask_Case1ConstMP<Ret,Task,D1,D2>(t,d1,d2,mp,TryFirst);
     }
 
 void inline
