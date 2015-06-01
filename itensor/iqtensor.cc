@@ -130,13 +130,13 @@ struct AddITensor
     const QN& tdiv;
     const IQIndexSet& iqis;
     const IndexSet& is;
-    const vector<long>& block_ind;
+    const Label& block_ind;
     const Permutation& P;
     Real fac = 0;
     AddITensor(const QN& tdiv_,
                const IQIndexSet& iqis_,
                const IndexSet& is_,
-               const vector<long>& block_ind_,
+               const Label& block_ind_,
                const Permutation& P_,
                Real scalefac_)
         :
@@ -176,7 +176,7 @@ operator+=(IQTensor& T, const ITensor& t)
 #endif
 
     Permutation P(rank);
-    vector<long> block_ind(rank);
+    Label block_ind(rank);
     for(auto i : count(rank))
     for(auto I : count(rank))
         {
