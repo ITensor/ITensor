@@ -70,9 +70,11 @@ calcDiv(const IQIndexSet& is, const IQTData& D)
 #ifdef DEBUG
     if(D.offsets.empty()) Error("Default constructed IQTData in calcDiv");
 #endif
-    auto b = D.offsets.front().block;
     QN div;
     auto r = long(is.r());
+    if(r==0) return div;
+
+    auto b = D.offsets.front().block;
     for(long j = 0; j < r-1; ++j)
         {
         auto& J = is[j];
