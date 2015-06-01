@@ -9,6 +9,7 @@
 #include "itensor/itdata/task_types.h"
 #include "itensor/iqindex.h"
 #include "itensor/itdata/itdata.h"
+#include "itensor/tensor/types.h"
 
 namespace itensor {
 
@@ -16,16 +17,28 @@ class ManagePtr;
 class ITCombiner;
 class IQTData;
 
+
 QN
 calcDiv(const IQIndexSet& is, const IQTData& D);
 
 QN
-calcDiv(const IQIndexSet& is, const std::vector<long>& block_ind);
+calcDiv(const IQIndexSet& is, const Label& block_ind);
 
+template<typename Container>
 void
 inverseBlockInd(long block,
                 const IQIndexSet& is,
-                std::vector<long>& ind);
+                Container& ind)
+    {
+    auto r = int(ind.size());
+    assert(r == is.r());
+    for(int j = 0; j < r-1; ++j)
+        {
+        ind[j] = block % is[j].nindex();
+        block = (block-ind[j])/is[j].nindex();
+        }
+    ind[r-1] = block;
+    }
 
 class IQTData : public RegisterData<IQTData>
     {

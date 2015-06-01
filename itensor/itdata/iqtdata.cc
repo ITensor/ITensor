@@ -42,27 +42,28 @@ struct compBlock
     };
 
 QN
-calcDiv(const IQIndexSet& is, const vector<long>& block_ind)
+calcDiv(const IQIndexSet& is, const Label& block_ind)
     {
     QN div;
     for(auto i : count(is.r())) { div += is[i].dir()*is[i].qn(1+block_ind[i]); }
     return div;
     }
 
-void
-inverseBlockInd(long block,
-                const IQIndexSet& is,
-                vector<long>& ind)
-    {
-    auto r = int(ind.size());
-    assert(r == is.r());
-    for(int j = 0; j < r-1; ++j)
-        {
-        ind[j] = block % is[j].nindex();
-        block = (block-ind[j])/is[j].nindex();
-        }
-    ind[r-1] = block;
-    }
+//template<typename Container>
+//void
+//inverseBlockInd(long block,
+//                const IQIndexSet& is,
+//                Container& ind)
+//    {
+//    auto r = int(ind.size());
+//    assert(r == is.r());
+//    for(int j = 0; j < r-1; ++j)
+//        {
+//        ind[j] = block % is[j].nindex();
+//        block = (block-ind[j])/is[j].nindex();
+//        }
+//    ind[r-1] = block;
+//    }
 
 QN
 calcDiv(const IQIndexSet& is, const IQTData& D)
@@ -187,8 +188,8 @@ doTask(const PlusEQ<IQIndex>& P,
     else
         {
         auto r = P.is1().r();
-        vector<long> Ablock(r,0),
-                     Bblock(r,0);
+        Label Ablock(r,0),
+              Bblock(r,0);
         Range Arange,
               Brange;
         for(const auto& aio : A.offsets)
@@ -253,10 +254,10 @@ doTask(Contract<IQIndex>& Con,
             AtoB[ia] = ib;
             break;
             }
-    
+
     detail::GCounter couB(rB);
-    vector<long> Ablock(rA,0),
-                 Cblock(rC,0);
+    Label Ablock(rA,0),
+          Cblock(rC,0);
     Range Arange,
           Brange,
           Crange;
@@ -333,8 +334,8 @@ permuteIQ(const Permutation& P,
     Bis = IQIndexSet(std::move(bind));
     dB = std::move(IQTData(Bis,calcDiv(Ais,dA)));
 
-    vector<long> Ablock(r,-1),
-                 Bblock(r,-1);
+    Label Ablock(r,-1),
+          Bblock(r,-1);
     Range Arange,
           Brange;
     for(auto aio : dA.offsets)
@@ -523,7 +524,7 @@ doTask(PrintIT<IQIndex>& P, const IQTData& d)
         return;
         }
         
-    vector<long> block(rank,0);
+    Label block(rank,0);
     auto blockIndex = [&block,&P](long i)->Index { return (P.is[i])[block[i]]; };
 
     Range brange;
