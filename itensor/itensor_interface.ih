@@ -222,8 +222,7 @@ operator+=(const ITensorT& R)
     auto& L = *this;
     if(!L) Error("Calling += on default constructed ITensor");
     if(!R) Error("Right-hand-side of ITensor += is default constructed");
-    if(&L == &R) return  operator*=(2.);
-    if(L.scale().isZero()) return L = R;
+    if(&L == &R) return operator*=(2.);
 
     using permutation = typename PlusEQ<index_type>::permutation;
 
@@ -241,6 +240,9 @@ operator+=(const ITensorT& R)
 #else
     calc_permutation(R.inds(),L.inds(),P);
 #endif
+
+    //If L store unallocated, just assign from R
+    if(!L.store() || L.scale().isZero()) return L = R;
 
     Real scalefac = 1;
     if(L.scale().magnitudeLessThan(R.scale())) 
