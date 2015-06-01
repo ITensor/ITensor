@@ -38,17 +38,17 @@ combine(const ITReal& d,
     if(jc >= 0) //has cind
         {
         //dis has cind, replace with other inds
-        vector<Index> newind;
-        newind.reserve(dis.r()+Cis.r()-2);
+        IndexSet::storage_type newind(dis.r()+Cis.r()-2);
+        long i = 0;
         for(auto j : count(dis.r()))
             if(j == jc)
                 {
                 for(size_t k = 1; k < Cis.size(); ++k)
-                    newind.push_back(Cis[k]);
+                    newind.at(i++).ext = Cis[k];
                 }
             else
                 {
-                newind.push_back(dis[j]);
+                newind.at(i++).ext = dis[j];
                 }
         Nis = IndexSet(move(newind));
         }
@@ -82,14 +82,13 @@ combine(const ITReal& d,
 
         if(contig_sameord)
             {
-            vector<Index> newind;
-            newind.reserve(dis.r()-Cis.r()+2);
+            IndexSet::storage_type newind(dis.r()+2-Cis.r());
+            long i = 0;
             for(int j = 0; j < J1; ++j) 
-                newind.push_back(dis[j]);
-            newind.push_back(cind);
+                newind.at(i++).ext = dis[j];
+            newind.at(i++).ext = cind;
             for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
-                newind.push_back(dis[j]);
-            assert(newind.size() == size_t(dis.r()-Cis.r()+2));
+                newind.at(i++).ext = dis[j];
             Nis = IndexSet(move(newind));
             }
         else
@@ -116,23 +115,19 @@ combine(const ITReal& d,
                 }
             //permute uncombined indices to back, keeping relative order:
             Range::storage_type pdims(dis.r());
-            vector<Index> newind;
-            newind.reserve(dis.r()-Cis.r()+2);
-            newind.push_back(cind);
+            IndexSet::storage_type newind(dis.r()+2-Cis.r());
+            long i = 0;
+            newind[i++].ext = cind;
             for(auto j : count(dis.r()))
                 {
                 if(P.dest(j) == -1) 
                     {
                     P.setFromTo(j,ni++);
-                    newind.push_back(dis[j]);
+                    newind.at(i++).ext = dis[j];
                     }
-#ifdef DEBUG
-                pdims.at(P.dest(j)).dim = dis[j].m();
-#else
-                pdims[P.dest(j)].dim = dis[j].m();
-#endif
+                pdims.at(P.dest(j)).ext = dis[j].m();
                 }
-            assert(newind.size()==size_t(dis.r()-Cis.r()+2));
+            assert(i==dis.r()+2-Cis.r());
             Range rr(move(pdims));
             Nis = IndexSet(move(newind));
             auto nd = mp.makeNewData<ITReal>(area(Nis));

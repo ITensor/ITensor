@@ -256,9 +256,9 @@ doTask(ToITensor& T, const IQTData& d)
             pn[ind(T.is,C.i)] = pd[io.offset+C.ind];
             }
         }
-    vector<Index> inds(r);
-    for(long j = 0; j < r; ++j) inds[j] = T.is[j];
-    return ITensor(IndexSet(std::move(inds)),std::move(nd),T.scale);
+    IndexSet::storage_type inds(r);
+    for(long j = 0; j < r; ++j) inds[j].ext = T.is[j];
+    return ITensor(IndexSet{std::move(inds)},std::move(nd),T.scale);
     }
 
 

@@ -76,6 +76,7 @@ class Index
     // (Explicitly) convertible to integer types
     explicit operator int() const { return m(); }
     explicit operator long() const { return m(); }
+    explicit operator size_t() const { return m(); }
 
 
     // Returns the Arrow direction of this Index

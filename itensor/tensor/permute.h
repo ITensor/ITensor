@@ -68,8 +68,8 @@ permute(TensorRef<const T,R1> from,
     if(to.size() != from.size()) throw std::runtime_error("Mismatched storage sizes in permute");
     for(size_type j = 0; j < r; ++j)
         {
-        if(to.dim(P.dest(j)) != from.dim(j))
-            throw std::runtime_error("Incompatible dimensions in permute");
+        if(to.extent(P.dest(j)) != from.extent(j))
+            throw std::runtime_error("Incompatible extents in permute");
         }
 #endif
 
@@ -82,11 +82,11 @@ permute(TensorRef<const T,R1> from,
     //find largest index of from,
     //size "bigsize" and position "bigind"
     size_type bigind = 0, 
-              bigsize = from.dim(0);
+              bigsize = from.extent(0);
     for(size_type j = 1; j < r; ++j)
-        if(bigsize < from.dim(j))
+        if(bigsize < from.extent(j))
             {
-            bigsize = from.dim(j); 
+            bigsize = from.extent(j); 
             bigind = j;
             }
 
@@ -95,7 +95,7 @@ permute(TensorRef<const T,R1> from,
 
     detail::GCounter c(0,r-1,0);
     for(size_type i = 0; i < r; ++i)
-        c.setInd(i,0,from.dim(i)-1);
+        c.setInd(i,0,from.extent(i)-1);
     //Leave bigind fixed to zero, will
     //increment manually in the loop below
     c.setInd(bigind,0,0);
@@ -154,7 +154,7 @@ permute(const TenRefc<R>& from,
     Range::storage_type rstore(from.r());
     for(size_t j = 0; j < rstore.size(); ++j)
         {
-        rstore[P.dest(j)].dim = from.dim(j);
+        rstore[P.dest(j)].ext = from.extent(j);
         }
     auto to = Ten(Range(std::move(rstore)));
     permute(from,P,makeRef(to));

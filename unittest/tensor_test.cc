@@ -16,8 +16,8 @@ SECTION("TensorRef")
 
     CHECK(t);
     CHECK(t.r() == 2);
-    CHECK(t.dim(0) == 5);
-    CHECK(t.dim(1) == 2);
+    CHECK(t.extent(0) == 5);
+    CHECK(t.extent(1) == 2);
     CHECK(t.size() == 10);
 
     CHECK_CLOSE(t(0,0),11);
@@ -55,7 +55,7 @@ SECTION("Tensor")
             Ten s(m0);
             CHECK(s);
             CHECK(s.r() == 1);
-            CHECK(s.dim(0) == m0);
+            CHECK(s.extent(0) == m0);
             CHECK(s.size() == m0);
             CHECK_CLOSE(s(0),0);
             CHECK_CLOSE(s(1),0);
@@ -69,8 +69,8 @@ SECTION("Tensor")
                  m1 = 7;
             Ten s(m0,m1);
             CHECK(s.r() == 2);
-            CHECK(s.dim(0) == m0);
-            CHECK(s.dim(1) == m1);
+            CHECK(s.extent(0) == m0);
+            CHECK(s.extent(1) == m1);
             CHECK(s.size() == m0*m1);
             }
 
@@ -81,9 +81,9 @@ SECTION("Tensor")
                  m2 = 2;
             Ten s(m0,m1,m2);
             CHECK(s.r() == 3);
-            CHECK(s.dim(0) == m0);
-            CHECK(s.dim(1) == m1);
-            CHECK(s.dim(2) == m2);
+            CHECK(s.extent(0) == m0);
+            CHECK(s.extent(1) == m1);
+            CHECK(s.extent(2) == m2);
             CHECK(s.size() == m0*m1*m2);
 
             Real total = 0;
@@ -106,8 +106,8 @@ SECTION("Tensor")
             CHECK(ind.empty());
             CHECK(v.empty());
 
-            CHECK(t.dim(0) == 5);
-            CHECK(t.dim(1) == 2);
+            CHECK(t.extent(0) == 5);
+            CHECK(t.extent(1) == 2);
             CHECK(t.size() == 5*2);
 
             CHECK_CLOSE(t(0,0),11);

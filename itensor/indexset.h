@@ -9,12 +9,13 @@
 #include "itensor/util/safe_ptr.h"
 #include "itensor/tensor/range.h"
 #include "itensor/tensor/permutation.h"
+#include "itensor/indexset_iter.h"
 #include "itensor/index.h"
 
 
 namespace itensor {
 
-template <class IndexT>
+template<class IndexT>
 class IndexSetT;
 
 class IQIndex;
@@ -34,135 +35,119 @@ using IQIndexSet = IndexSetT<IQIndex>;
 // keeps the indices in the order given.
 //
 
-template <class IndexT>
+template <class index_type_>
 class IndexSetT
     {
     public:
-    using storage = std::vector<IndexT>;
-    using value_type = IndexT;
-    using iterator = typename storage::iterator;
-    using const_iterator = typename storage::const_iterator;
-    using index_type = IndexT;
-    using indexval_type = typename IndexT::indexval_type;
+    using index_type = index_type_;
+    using range_type = RangeT<index_type>;
+    using size_type = typename range_type::size_type;
+    using storage_type = typename range_type::storage_type;
+    using value_type = index_type;
+    using iterator = IndexSetIter<index_type>;
+    using const_iterator = IndexSetIter<const index_type>;
+    using indexval_type = typename index_type::indexval_type;
     private:
-    storage index_;
-    std::vector<long> stride_;
-    int rn_;
+    range_type range_;
     public:
 
-    IndexSetT();
+    IndexSetT() { }
 
-    explicit
-    IndexSetT(const IndexT& i1);
-
-    // construct from 2 or more indices
+    // construct from 1 or more indices
     template <typename... Inds>
-    IndexSetT(const IndexT& i1, 
-              const IndexT& i2,
-              const Inds&... inds)
-        {
-        init(std::array<IndexT,2+sizeof...(inds)>{{i1,i2,inds...}});
-        }
+    explicit
+    IndexSetT(const index_type& i1, 
+              Inds&&... rest)
+      : range_(i1,std::forward<Inds>(rest)...)
+        { }
 
     explicit
-    IndexSetT(const std::vector<IndexT>& ii) { init(ii); }
+    IndexSetT(const std::vector<index_type>& ii) : range_(ii) { }
 
     template<size_t N>
     explicit
-    IndexSetT(const std::array<IndexT,N>& ii) { init(ii); }
+    IndexSetT(const std::array<index_type,N>& ii) : range_(ii) { }
 
-    IndexSetT(std::initializer_list<IndexT> ii) { init(ii); }
+    IndexSetT(std::initializer_list<index_type> ii) : range_(ii) { }
+
+    explicit
+    IndexSetT(storage_type&& store) : range_(std::move(store)) { }
     
-    explicit operator bool() const { return !index_.empty(); }
-
-    //
-    // Accessor Methods
-    //
+    explicit operator bool() const { return !range_.empty(); }
 
     long
-    dim(long i) const;
+    extent(size_type i) const { return range_.extent(i); }
+
+    size_type
+    stride(size_type i) const { return range_.stride(i); }
 
     long
-    stride(long i) const;
-
-    int
-    r() const { return index_.size(); }
+    r() const { return range_.r(); }
     
     size_t
-    size() const { return index_.size(); }
+    size() const { return range_.r(); }
 
     bool
-    empty() const { return index_.empty(); }
-
-    int
-    rn() const { return rn_; }
+    empty() const { return range_.empty(); }
 
     // 0-indexed access
-    const IndexT&
-    operator[](int j) const;
-
-    IndexT&
-    operator[](int j);
+    const index_type&
+    operator[](size_type i) const 
+        { 
+#ifdef DEBUG
+        if(i >= size()) Error("IndexSetT[i] arg out of range");
+#endif
+        return range_[i].ext; 
+        }
 
     // 1-indexed access
-    const IndexT&
-    index(int j) const;
+    const index_type&
+    index(size_type I) const 
+        { 
+#ifdef DEBUG
+        if(I < 1 || I > size()) Error("IndexSetT.index(i) arg out of range");
+#endif
+        return range_[I-1].ext; 
+        }
 
-    const IndexT&
-    front() const { return index_.front(); }
+    const index_type&
+    front() const { return range_.front().ext; }
 
-    const IndexT&
-    back() const { return index_.back(); }
-
-    const_iterator
-    begin() const { return index_.begin(); }
-
-    const_iterator
-    end() const { return index_.end(); }
-
-    iterator
-    begin() { return index_.begin(); }
+    const index_type&
+    back() const { return range_.back().ext; }
 
     iterator
-    end() { return index_.end(); }
+    begin() { return iterator{range_.data()}; }
+
+    iterator
+    end() { return iterator{range_.data()+range_.size()}; }
 
     const_iterator
-    cbegin() const { return index_.cbegin(); }
+    begin() const { return const_iterator{range_.data()}; }
 
     const_iterator
-    cend() const { return index_.cend(); }
+    end() const { return const_iterator{range_.data()+range_.size()}; }
 
+    const_iterator
+    cbegin() const { return begin(); }
 
-    //
-    // Other Methods
-    //
-
-    void 
-    addindex(const IndexT& I);
+    const_iterator
+    cend() const { return end(); }
 
     void
-    replaceIndex(const IndexT& oind, const IndexT& nind);
+    swap(IndexSetT& other) { range_.swap(other.range_); }
 
     void
-    swap(IndexSetT& other);
+    clear() { range_.clear(); }
 
     void
-    clear();
-
-    void
-    dag();
+    dag() { for(auto& J : *this) J.dag(); }
 
     void
     read(std::istream& s);
 
     void
     write(std::ostream& s) const;
-
-    private:
-
-    template<class Iterable>
-    void
-    init(Iterable&& inds);
     };
 
 //
@@ -254,7 +239,7 @@ finddir(const IndexSetT<IndexT>& iset, Arrow dir);
 // If not found, returns -1
 //
 template <class IndexT>
-int
+long
 findindex(const IndexSetT<IndexT>& iset, 
           const IndexT& I);
 

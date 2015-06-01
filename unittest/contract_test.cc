@@ -272,10 +272,10 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(A,{2,3,4,5},B,{7,6,3,2},C,{5,4,6,7});
-            REQUIRE(C.dim(0) == 5);
-            REQUIRE(C.dim(1) == 4);
-            REQUIRE(C.dim(2) == 6);
-            REQUIRE(C.dim(3) == 7);
+            REQUIRE(C.extent(0) == 5);
+            REQUIRE(C.extent(1) == 4);
+            REQUIRE(C.extent(2) == 6);
+            REQUIRE(C.extent(3) == 7);
             for(int i4 = 0; i4 < 4; ++i4)
             for(int i5 = 0; i5 < 5; ++i5)
             for(int i6 = 0; i6 < 6; ++i6)
@@ -299,10 +299,10 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(B,{7,6,3,2},A,{2,3,4,5},C,{5,4,6,7});
-            REQUIRE(C.dim(0) == 5);
-            REQUIRE(C.dim(1) == 4);
-            REQUIRE(C.dim(2) == 6);
-            REQUIRE(C.dim(3) == 7);
+            REQUIRE(C.extent(0) == 5);
+            REQUIRE(C.extent(1) == 4);
+            REQUIRE(C.extent(2) == 6);
+            REQUIRE(C.extent(3) == 7);
             for(int i4 = 0; i4 < 4; ++i4)
             for(int i5 = 0; i5 < 5; ++i5)
             for(int i6 = 0; i6 < 6; ++i6)
@@ -441,7 +441,7 @@ TEST_CASE("Contract Test")
             randomize(A);
             randomize(B);
             contract(A,{4,3,2},B,{5,4,3,2},C,{5});
-            REQUIRE(C.dim(0) == 5);
+            REQUIRE(C.extent(0) == 5);
             for(int i5 = 0; i5 < 5; ++i5)
                 {
                 Real val = 0;

@@ -5,212 +5,302 @@
 #ifndef __ITENSOR_RANGE_H
 #define __ITENSOR_RANGE_H
 
-#include <iostream>
 #include <array>
 #include <vector>
+#include "itensor/util/readwrite.h"
 #include "itensor/util/autovector.h"
 #include "itensor/util/vararray.h"
 #include "itensor/util/infarray.h"
 
 namespace itensor {
 
-class Range
+template<typename extent_type_>
+class RangeT;
+
+using Range = RangeT<size_t>;
+
+template<typename extent_type_>
+class RangeT
     {
     public:
-    struct index 
-        { 
-        long dim = 0, 
-             stride = 0; 
-        index() { }
-        index(long dim_, long stride_) : dim(dim_),stride(stride_) { }
-        explicit operator long() const { return dim; }
+    using size_type = size_t;
+    using extent_type = extent_type_;
+    struct ExtStr
+        {
+        extent_type ext = extent_type{}; //convertible to size_type
+        size_type   str = 0; //stride
+        ExtStr(extent_type x, size_type s) : ext(x), str(s) { }
+        ExtStr() { }
         };
-    using value_type = index;
-    using storage_type = std::vector<index>;
+    using value_type = ExtStr;
+    using storage_type = std::vector<value_type>;
     private:
-    storage_type inds_;
+    storage_type store_;
     public:
 
-    Range() { }
+    RangeT() { }
 
-    template <typename... Dims>
-    Range(long d0, Dims... rest)
+    template <typename... Inds>
+    explicit
+    RangeT(extent_type i0, 
+           Inds&&... rest)
         {
-        std::array<long,1+sizeof...(rest)> dims = {{d0,static_cast<long>(rest)...}};
-        init(dims);
+        std::array<extent_type,1+sizeof...(rest)> inds = 
+            {{i0,static_cast<extent_type>(rest)...}};
+        init(inds);
         }
 
-    template <typename I>
-    Range(const std::vector<I>& v)
+    explicit
+    RangeT(const std::vector<extent_type>& v)
         {
         init(v);
         }
 
-    template <typename I, size_t size>
-    Range(const std::array<I,size>& a)
+    template<size_t size>
+    explicit
+    RangeT(const std::array<extent_type,size>& a)
         {
         init(a);
         }
 
+    RangeT(std::initializer_list<extent_type> ii) { init(ii); }
+
     //Most efficient way to construct range is by
-    //providing a storage_type object with dims
+    //providing a storage_type object with ext's
     //already set - strides will be computed automatically
-    Range(storage_type&& inds)
-        : inds_(std::move(inds))
+    explicit
+    RangeT(storage_type&& store)
+      : store_(std::move(store))
         { 
         computeStrides();
         }
 
-    long
-    dim(long i) const { return inds_[i].dim; }
-    long
-    stride(long i) const { return inds_[i].stride; }
-    long
-    r() const { return inds_.size(); }
+    size_type
+    extent(size_type i) const { return size_type{store_[i].ext}; }
 
-    const index&
-    operator[](long i) const { return inds_[i]; }
-    index&
-    operator[](long i) { return inds_[i]; }
+    size_type
+    stride(size_type i) const { return store_[i].str; }
 
-    const index&
-    at(long i) const { return inds_.at(i); }
-    index&
-    at(long i) { return inds_.at(i); }
+    size_type
+    r() const { return store_.size(); }
 
-    size_t
-    size() const { return inds_.size(); }
+    const value_type&
+    operator[](size_type i) const { return store_[i]; }
+
+    value_type&
+    operator[](size_type i) { return store_[i]; }
+
+    const value_type&
+    at(size_type i) const { return store_.at(i); }
+
+    value_type&
+    at(size_type i) { return store_.at(i); }
+
+    size_type
+    size() const { return store_.size(); }
 
     void
-    clear() { return inds_.clear(); }
+    clear() { return store_.clear(); }
 
     bool
-    empty() const { return inds_.empty(); }
+    empty() const { return store_.empty(); }
 
-    index&
-    front() { return inds_.front(); }
-    const index&
-    front() const { return inds_.front(); }
+    extent_type&
+    front() { return store_.front().ext; }
 
-    index&
-    back() { return inds_.back(); }
-    const index&
-    back() const { return inds_.back(); }
+    const value_type&
+    front() const { return store_.front(); }
+
+    value_type&
+    back() { return store_.back(); }
+
+    const value_type&
+    back() const { return store_.back(); }
+
+    value_type*
+    data() { return store_.data(); }
+
+    const value_type*
+    data() const { return store_.data(); }
+
+    const storage_type&
+    store() const { return store_; }
 
     void
-    swap(Range& other)
+    swap(RangeT& other)
         {
-        inds_.swap(other.inds_);
+        store_.swap(other.store_);
         }
 
     template<typename Indexable>
     void 
-    init(const Indexable& v)
-        {
-        inds_.resize(v.size());
-        long len = 1;
-        for(size_t i = 0; i < size_t(v.size()); ++i)
-            {
-            inds_[i] = index(long{v[i]},len);
-            len *= long{v[i]};
-            }
-        }
+    init(const Indexable& v);
+
+    void 
+    init(std::initializer_list<extent_type> il);
 
     void
-    resize(size_t nsize) { inds_.resize(nsize); }
+    resize(size_type nsize) { store_.resize(nsize); }
 
     void 
     computeStrides()
         {
-        long len = 1;
-        for(auto& i : inds_)
+        size_type str = 1;
+        for(auto& i : store_)
             {
-            i.stride = len;
-            len *= i.dim;
+            i.str = str;
+            str *= size_type{i.ext};
             }
         }
     };
 
-inline std::ostream&
-operator<<(std::ostream& s, const Range& r)
+namespace detail {
+
+template<typename T>
+class IListAdapter
     {
-    s << "dim: ";
-    for(long i = 0; i < r.r(); ++i) s << r.dim(i) << " ";
-    s << "stride: ";
-    for(long i = 0; i < r.r(); ++i) s << r.stride(i) << " ";
+    std::initializer_list<T> ilist_;
+    public:
+
+    IListAdapter(std::initializer_list<T> il) : ilist_(il) { }
+
+    size_t
+    size() const { return ilist_.size(); }
+
+    T&
+    operator[](size_t j) { return *(ilist_.begin()+j); }
+
+    const T&
+    operator[](size_t j) const { return *(ilist_.begin()+j); }
+    };
+
+} //namespace detail
+
+template<typename extent_type>
+template<typename Indexable>
+void RangeT<extent_type>::
+init(const Indexable& v)
+    {
+    store_.resize(v.size());
+    size_type str = 1;
+    for(size_type i = 0; i < v.size(); ++i)
+        {
+        store_[i].ext = v[i];
+        store_[i].str = str;
+        str *= size_type{v[i]};
+        }
+    }
+
+template<typename extent_type>
+void RangeT<extent_type>::
+init(std::initializer_list<extent_type> il)
+    {
+    init(detail::IListAdapter<extent_type>{il});
+    }
+
+
+template<typename extent_type>
+std::ostream&
+operator<<(std::ostream& s, const RangeT<extent_type>& r)
+    {
+    s << "dims: ";
+    for(Range::size_type i = 0; i < r.r(); ++i) s << r.dim(i) << " ";
+    s << "strs: ";
+    for(Range::size_type i = 0; i < r.r(); ++i) s << r.stride(i) << " ";
     return s;
     }
 
-class RangeRef
+template<typename extent_type>
+void
+write(std::ostream& s, const RangeT<extent_type>& r)
     {
-    using index = Range::index;
-    using value_type = index;
-    private:
-    value_type* inds_;
-    long rank_;
-    public:
+    itensor::write(s,r.store());
+    }
 
-    RangeRef(value_type* prange,
-             long rank)
-        :
-        inds_(prange),
-        rank_(rank)
-        { }
+template<typename extent_type>
+void
+read(std::istream& s, RangeT<extent_type>& r)
+    {
+    using storage_type = typename RangeT<extent_type>::storage_type;
+    storage_type store;
+    itensor::read(s,store);
+    r = RangeT<extent_type>(std::move(store));
+    }
 
-    long
-    dim(long i) const { return inds_[i].dim; }
-    long
-    stride(long i) const { return inds_[i].stride; }
-    long
-    r() const { return rank_; }
-
-    const index&
-    operator[](long i) const { return inds_[i]; }
-
-    index&
-    operator[](long i) { return inds_[i]; }
-    };
+//class RangeRef
+//    {
+//    using extent_type = Range::extent_type;
+//    using value_type = index;
+//    using size_type = Range::size_type;
+//    private:
+//    value_type* inds_;
+//    size_type rank_;
+//    public:
+//
+//    RangeRef(value_type* prange,
+//             size_type rank)
+//        :
+//        inds_(prange),
+//        rank_(rank)
+//        { }
+//
+//    size_type
+//    dim(size_type i) const { return inds_[i].dim; }
+//
+//    size_type
+//    stride(size_type i) const { return inds_[i].stride; }
+//
+//    size_type
+//    r() const { return rank_; }
+//
+//    const index&
+//    operator[](size_type i) const { return inds_[i]; }
+//
+//    index&
+//    operator[](size_type i) { return inds_[i]; }
+//    };
 
 namespace detail {
 template<typename RangeT, typename Iterable>
-long
+size_t
 indIterable(const RangeT& r, const Iterable& inds)
     {
-    long ii = 0, 
-         i = 0;
-    for(auto& j : inds)
+    size_t I  = 0, 
+           ri = 0;
+    for(auto& ii : inds)
         {
-        ii += r.stride(i) * j;
-        ++i;
+        I += r.stride(ri) * ii;
+        ++ri;
         }
-    return ii;
+    return I;
     }
 
 template<typename RangeT>
 struct ComputeInd
     {
+    using size_type = typename RangeT::size_type;
+
     const RangeT& r;
     ComputeInd(const RangeT& r_) : r(r_) { }
 
     template<typename... Inds>
-    long
-    operator()(long first, Inds... rest) const 
+    size_type
+    operator()(size_type first, Inds... rest) const 
         { 
         return ind__<0>(first,rest...);
         }
 
     private:
-
-    template <long i, typename... Inds>
-    long
-    ind__(long first, Inds... rest) const
+    template <size_type i, typename... Inds>
+    size_type
+    ind__(size_type first, Inds... rest) const
         {
         return first*r.stride(i) + ind__<i+1>(rest...);
         }
 
-    template <long i>
-    long
-    ind__(long first) const
+    template <size_type i>
+    size_type
+    ind__(size_type first) const
         {
         return first*r.stride(i);
         }
@@ -219,62 +309,62 @@ struct ComputeInd
 } //namespace detail
 
 template<typename RangeT, typename U>
-long
+size_t
 ind(const RangeT& r, const std::vector<U>& inds)
     {
     return detail::indIterable(r,inds);
     }
 
 template<typename RangeT, typename U, size_t size>
-long
+size_t
 ind(const RangeT& r, const std::array<U,size>& inds)
     {
     return detail::indIterable(r,inds);
     }
 
 template<typename RangeT, typename U, size_t size>
-long
+size_t
 ind(const RangeT& r, const VarArray<U,size>& inds)
     {
     return detail::indIterable(r,inds);
     }
 
 template<typename RangeT, typename U, size_t size>
-long
+size_t
 ind(const RangeT& r, const InfArray<U,size>& inds)
     {
     return detail::indIterable(r,inds);
     }
 
 template<typename RangeT, typename U>
-long
+size_t
 ind(const RangeT& r, const autovector<U>& inds)
     {
     return detail::indIterable(r,inds);
     }
 
 template<typename RangeT>
-long
-ind(const RangeT& r, long i0)
+size_t
+ind(const RangeT& r, size_t i0)
     {
     return detail::ComputeInd<RangeT>(r)(i0);
     }
 
 template<typename RangeT, typename... Inds>
-long
-ind(const RangeT& r, long i0, long i1, Inds... inds)
+size_t
+ind(const RangeT& r, size_t i0, size_t i1, Inds... inds)
     {
     return detail::ComputeInd<RangeT>(r)(i0,i1,inds...);
     }
 
 template<typename RangeT>
-long
+size_t
 area(const RangeT& r)
     { 
-    if(r.empty()) return 1l;
+    if(r.r()==0) return 1ul;
     //TODO: this won't work if we allow Ranges to be constructed for slicing
     auto last = r.r()-1;
-    auto A = r.dim(last)*r.stride(last);
+    auto A = r.extent(last)*r.stride(last);
     return A;
     }
 

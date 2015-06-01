@@ -220,7 +220,7 @@ struct CProps
         //   unspecified, and will be chosen so as not to require
         //   permuting C at the end.
         //
-        // o If trailing dim(j)==1 dimensions at end of A, B, or C indices
+        // o If trailing extent(j)==1 dimensions at end of A, B, or C indices
         //   (as often the case for ITensors with m==1 indices),
         //   have CProps resize ai, bi, and ci accordingly to avoid
         //   looping over these.
@@ -244,18 +244,18 @@ struct CProps
         for(int i = 0; i < ra; ++i)
             if(!contractedA(i))
                 {
-                dleft *= A.dim(i);
+                dleft *= A.extent(i);
                 PC.setFromTo(c,AtoC(i));
                 ++c;
                 }
             else
                 {
-                dmid *= A.dim(i);
+                dmid *= A.extent(i);
                 }
         for(int j = 0; j < rb; ++j)
             if(!contractedB(j)) 
                 {
-                dright *= B.dim(j);
+                dright *= B.extent(j);
                 PC.setFromTo(c,BtoC(j));
                 ++c;
                 }
@@ -384,7 +384,7 @@ struct CProps
             Austart = ra;
             for(int i = 0; i < ra; ++i)
                 {
-                newArange[PA.dest(i)].dim = A.dim(i);
+                newArange[PA.dest(i)].ext = A.extent(i);
                 if(contractedA(i))
                     Acstart = std::min(i,Acstart);
                 else
@@ -442,7 +442,7 @@ struct CProps
             Bustart = rb;
             for(int i = 0; i < rb; ++i)
                 {
-                newBrange[PB.dest(i)].dim = B.dim(i);
+                newBrange[PB.dest(i)].ext = B.extent(i);
                 if(contractedB(i))
                     Bcstart = std::min(i,Bcstart);
                 else
@@ -500,25 +500,25 @@ struct CProps
                 {
                 for(int i = 0; i < ra; ++i)
                     if(!contractedA(i))
-                        newCrange.at(c++).dim = A.dim(i);
+                        newCrange.at(c++).ext = A.extent(i);
                 }
             else
                 {
                 for(int i = 0; i < ra; ++i)
                     if(!contractedA(i))
-                        newCrange.at(c++).dim = newArange.dim(i);
+                        newCrange.at(c++).ext = newArange.extent(i);
                 }
             if(!permuteB_)
                 {
                 for(int j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
-                        newCrange.at(c++).dim = B.dim(j);
+                        newCrange.at(c++).ext = B.extent(j);
                 }
             else
                 {
                 for(int j = 0; j < rb; ++j)
                     if(!contractedB(j)) 
-                        newCrange.at(c++).dim = newBrange.dim(j);
+                        newCrange.at(c++).ext = newBrange.extent(j);
                 }
             newCrange.computeStrides();
             }
@@ -986,35 +986,35 @@ contractloop(TenRefc<RangeT> A, const Label& ai,
     //for(int i = 0; i < ra; ++i)
     //    if(p.AtoC[i] >= 0)
     //        {
-    //        cdims[p.AtoC[i]] = A.dim(i);
+    //        cdims[p.AtoC[i]] = A.extent(i);
     //        }
     //for(int j = 0; j < rb; ++j)
     //    if(p.BtoC[j] >= 0)
     //        {
-    //        cdims[p.BtoC[j]] = B.dim(j);
+    //        cdims[p.BtoC[j]] = B.extent(j);
     //        }
     //C = Ten(cdims,0.);
 
     auto nfo = computeMultInfo(ai,bi,ci);
 
-    auto Arow = A.dim(0), Acol = A.dim(1);
-    auto Brow = B.dim(0), Bcol = B.dim(1);
-    auto Crow = C.dim(0), Ccol = C.dim(1);
+    auto Arow = A.extent(0), Acol = A.extent(1);
+    auto Brow = B.extent(0), Bcol = B.extent(1);
+    auto Crow = C.extent(0), Ccol = C.extent(1);
 
     detail::GCounter couA(0,ra-1,0), 
                      couB(0,rb-1,0);
     //Keep couA.i[0] and couA.i[1] fixed at 0
     couA.setInd(0,0,0);
     couA.setInd(1,0,0);
-    //Let couA.i[j] (j >= 2) range from 0 to A.dim(j)-1
+    //Let couA.i[j] (j >= 2) range from 0 to A.extent(j)-1
     for(int j = 2; j < ra; ++j)
-        couA.setInd(j,0,A.dim(j)-1);
+        couA.setInd(j,0,A.extent(j)-1);
 
     //Similarly for couB
     couB.setInd(0,0,0);
     couB.setInd(1,0,0);
     for(int j = 2; j < rb; ++j)
-        couB.setInd(j,0,B.dim(j)-1);
+        couB.setInd(j,0,B.extent(j)-1);
 
     Label aind(ra,0), 
           bind(rb,0), 
@@ -1032,7 +1032,7 @@ contractloop(TenRefc<RangeT> A, const Label& ai,
 
         //TODO: possible bug, shouldn't we
         //      call couB.setInd to extend
-        //      ranges to 0...B.dim(j)-1
+        //      ranges to 0...B.extent(j)-1
         //      for those which aren't restricted
         //      to ival below?
         couB.reset();

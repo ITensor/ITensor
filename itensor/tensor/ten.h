@@ -71,7 +71,7 @@ class TensorRef
     explicit operator bool() const { return bool(pdata_);}
 
     size_type
-    dim(size_type i) const { return prange_->dim(i); }
+    extent(size_type i) const { return prange_->extent(i); }
 
     size_type
     stride(size_type i) const { return prange_->stride(i); }
@@ -201,7 +201,7 @@ class Tensor
     size() const { return data_.size(); }
 
     size_type
-    dim(size_type i) const { return range_.dim(i); }
+    extent(size_type i) const { return range_.extent(i); }
 
     size_type
     stride(size_type i) const { return range_.stride(i); }

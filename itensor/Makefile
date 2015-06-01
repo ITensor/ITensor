@@ -22,11 +22,11 @@ SOURCES+= index.cc
 SOURCES+= itensor.cc 
 SOURCES+= iqindex.cc 
 SOURCES+= iqtensor.cc 
-SOURCES+= spectrum.cc 
-SOURCES+= svdalgs.cc 
-SOURCES+= mps/mps.cc 
-SOURCES+= mps/mpo.cc 
-SOURCES+= mps/autompo.cc
+#SOURCES+= spectrum.cc 
+#SOURCES+= svdalgs.cc 
+#SOURCES+= mps/mps.cc 
+#SOURCES+= mps/mpo.cc 
+#SOURCES+= mps/autompo.cc
 
 ####################################
 
@@ -44,7 +44,7 @@ GOBJECTS= $(patsubst %.cc,.debug_objs/%.o, $(SOURCES))
 .debug_objs/%.o: %.cc
 	$(CCCOM) -c $(CCGFLAGS) -o $@ $<
 
-install: installo installg
+install: build debug
 	@echo $(OBJECTS)
 
 libitensor.a: $(OBJECTS)
@@ -58,14 +58,15 @@ libitensor-g.a: mkdebugdir $(GOBJECTS)
 libs: libitensor.a 
 	cp libitensor.a $(ITENSOR_LIBDIR)
 
-installo: libitensor.a
+build: libitensor.a
 	cp libitensor.a $(ITENSOR_LIBDIR)
-	ranlib $(ITENSOR_LIBDIR)/libitensor.a
 
-debug: installg
-installg: libitensor-g.a
+#ranlib $(ITENSOR_LIBDIR)/libitensor.a
+
+debug: libitensor-g.a
 	cp libitensor-g.a $(ITENSOR_LIBDIR)
-	ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
+
+#ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
 mkdebugdir:
 	mkdir -p .debug_objs

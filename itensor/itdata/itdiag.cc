@@ -78,7 +78,7 @@ diagDense(const ITDiag<Real>& d,
 #ifdef DEBUG
                 if(n >= ntu) Error("n out of range");
 #endif
-                C.setInd(n,0,tis.dim(j)-1);
+                C.setInd(n,0,tis.extent(j)-1);
                 tstride.at(n) = tis.stride(j);
                 auto k = findindex(Nis,tis[j]);
 #ifdef DEBUG

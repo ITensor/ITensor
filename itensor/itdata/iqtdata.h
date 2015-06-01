@@ -211,22 +211,23 @@ class IndexDim
 
     IndexDim(const IQIndexSet& is,
              const Indexable& ind)
-        :
-        is_(is),
+      : is_(is),
         ind_(ind)
         { }
 
-    long
+    size_t
     size() const { return is_.r(); }
 
-    long
-    operator[](long j) const { return (is_[j])[ind_[j]].m(); }
+    size_t
+    operator[](size_t j) const { return (is_[j])[ind_[j]].m(); }
     };
 
 template<typename Indexable>
 IndexDim<Indexable>
 make_indexdim(const IQIndexSet& is, const Indexable& ind) 
-    { return IndexDim<Indexable>(is,ind); }
+    { 
+    return IndexDim<Indexable>(is,ind); 
+    }
 
 
 template <typename F>

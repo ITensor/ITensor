@@ -119,11 +119,9 @@ cplx(IVs&&... ivs) const
     constexpr size_t size = sizeof...(ivs);
     auto vals = std::array<indexval_type,size>{{static_cast<indexval_type>(ivs)...}};
 #ifdef DEBUG
-    if(!*this) Error("tensor is default constructed");
-    size_t nsize = 0;
-    for(auto& iv : vals) if(iv.index.m() > 1) ++nsize;
-    if(nsize != size_t(inds().rn())) 
-        Error(format("Wrong number of m>1 IndexVals passed to real/cplx (expected %d, got %d)",inds().rn(),nsize));
+    if(!store()) Error("tensor storage unallocated");
+    if(size != size_t(inds().r())) 
+        Error(format("Wrong number of IndexVals passed to real/cplx (expected %d, got %d)",inds().r(),size));
 #endif
     Inds inds(size);
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });

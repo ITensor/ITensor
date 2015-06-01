@@ -322,8 +322,8 @@ SECTION("Rank 2")
     CHECK_EQUAL(u2a.r(),2);
     CHECK(hasindex(u2a,a1));
     CHECK(hasindex(u2a,l2));
-    CHECK_DIFF(u2a.real(l2(1)),0,1E-10);
-    CHECK_DIFF(u2a.real(l2(2)),1,1E-10);
+    CHECK_DIFF(u2a.real(a1(1),l2(1)),0,1E-10);
+    CHECK_DIFF(u2a.real(a1(1),l2(2)),1,1E-10);
     CHECK_DIFF(sumels(u2a),1,1E-10);
     CHECK_DIFF(norm(u2a),1,1E-10);
 
@@ -332,8 +332,8 @@ SECTION("Rank 2")
     CHECK_EQUAL(u2b.r(),2);
     CHECK(hasindex(u2b,l1));
     CHECK(hasindex(u2b,a2));
-    CHECK_DIFF(u2b.real(l1(1)),0,1E-10);
-    CHECK_DIFF(u2b.real(l1(2)),1,1E-10);
+    CHECK_DIFF(u2b.real(l1(1),a2(1)),0,1E-10);
+    CHECK_DIFF(u2b.real(l1(2),a2(1)),1,1E-10);
     CHECK_DIFF(sumels(u2b),1,1E-10);
     CHECK_DIFF(norm(u2b),1,1E-10);
     }
@@ -362,10 +362,10 @@ SECTION("Rank 3")
     CHECK(hasindex(t4,a1));
     CHECK(hasindex(t4,l2));
     CHECK(hasindex(t4,l3));
-    CHECK_DIFF(t4.real(l3(1),l2(1)),0,1E-10);
-    CHECK_DIFF(t4.real(l3(1),l2(2)),0,1E-10);
-    CHECK_DIFF(t4.real(l3(2),l2(1)),1,1E-10);
-    CHECK_DIFF(t4.real(l3(2),l2(2)),0,1E-10);
+    CHECK_DIFF(t4.real(l3(1),l2(1),a1(1)),0,1E-10);
+    CHECK_DIFF(t4.real(l3(1),l2(2),a1(1)),0,1E-10);
+    CHECK_DIFF(t4.real(l3(2),l2(1),a1(1)),1,1E-10);
+    CHECK_DIFF(t4.real(l3(2),l2(2),a1(1)),0,1E-10);
     CHECK_DIFF(sumels(t4),1,1E-10);
     CHECK_DIFF(norm(t4),1,1E-10);
     }
@@ -547,9 +547,9 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
-                 f1*v.real(l1(j1),l2(j2),b3(k3),l4(j4))
-               + w.real(l1(j1),l2(j2),b3(k3),l4(j4))/f2);
+    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
+                 f1*v.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))
+               + w.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))/f2);
     }
 
 ITensor d(v); 
@@ -559,8 +559,8 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_CLOSE(d.real(l1(j1),l2(j2),b3(k3),l4(j4)),
-                v.real(l1(j1),l2(j2),b3(k3),l4(j4))-w.real(l1(j1),l2(j2),b3(k3),l4(j4)));
+    CHECK_CLOSE(d.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
+                v.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))-w.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)));
     }
 
 f1 = 1; f2 = 1;
@@ -572,9 +572,9 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
-                f1*yy.real(l1(j1),l2(j2),b3(k3),l4(j4))
-               +f2*zz.real(l1(j1),l2(j2),b3(k3),l4(j4)));
+    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
+                f1*yy.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))
+               +f2*zz.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)));
     }
 
 IndexSet reordered(l2,l1,b3,a4,a2,l4);
@@ -585,9 +585,9 @@ for(int j2 = 1; j2 <= 2; ++j2)
 for(int k3 = 1; k3 <= 3; ++k3)
 for(int j4 = 1; j4 <= 2; ++j4)
     { 
-    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4)),
-                 f1*v.real(l1(j1),l2(j2),b3(k3),l4(j4))
-               + w.real(l1(j1),l2(j2),b3(k3),l4(j4))/f2);
+    CHECK_CLOSE(r.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1)),
+                 f1*v.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))
+               + w.real(l1(j1),l2(j2),b3(k3),l4(j4),a2(1),a4(1))/f2);
     }
 
 SECTION("Reordered Case 2")
@@ -673,7 +673,7 @@ SECTION("Case 1")
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int j4 = 1; j4 <= 4; ++j4)
             {
-            val += L.real(b2(j2),a1(1),b3(j3),b4(j4))*fL * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4))*fR;
+            val += L.real(a2(1),b2(j2),a1(1),b3(j3),b4(j4))*fL * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4))*fR;
             }
         CHECK_DIFF(res1.real(a2(1),b5(j5)),val,1E-10);
         }
@@ -699,7 +699,7 @@ SECTION("Case 2")
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int j4 = 1; j4 <= 4; ++j4)
             {
-            val += L.real(b2(j2),a1(1),b3(j3),b4(j4)) * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4));
+            val += L.real(a2(1),b2(j2),a1(1),b3(j3),b4(j4)) * R.real(b5(j5),a1(1),b3(j3),b2(j2),b4(j4));
             }
         CHECK_DIFF(res2.real(a2(1),b5(j5)),val,1E-10);
         }
@@ -729,7 +729,7 @@ SECTION("Case 3")
     for(int j4 = 1; j4 <= b4.m(); ++j4)
         {
         auto val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
-        CHECK_DIFF(res3.real(b4(j4),b2(j2)),val,1E-10);
+        CHECK_DIFF(res3.real(a3(1),b4(j4),b2(j2)),val,1E-10);
         }
     }
 
@@ -749,7 +749,7 @@ SECTION("Case 4")
     for(int j4 = 1; j4 <= 4; ++j4)
         {
         auto val = Q.real(a1(1),b4(j4),a2(1),b2(j2))*fQ * P.real(a2(1),a3(1),a1(1))*fP;
-        CHECK_DIFF(res4.real(b4(j4),b2(j2)),val,1E-10);
+        CHECK_DIFF(res4.real(a3(1),b4(j4),b2(j2)),val,1E-10);
         }
     }
 
@@ -783,7 +783,7 @@ SECTION("Case 6")
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int k6 = 1; k6 <= 2; ++k6)
             {
-            val += T1.real(b3(j3),b5(j5),l6(k6),s3(i3)) * T2.real(l6(k6),s4(i4),b3(j3));
+            val += T1.real(a1(1),b3(j3),b5(j5),l6(k6),s3(i3)) * T2.real(a1(1),l6(k6),s4(i4),b3(j3));
             }
         CHECK_DIFF(R.real(b5(j5),s3(i3),s4(i4)),val,1E-10);
         }
@@ -822,7 +822,7 @@ SECTION("Complex-Complex")
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int k6 = 1; k6 <= 2; ++k6)
             {
-            val += T1.cplx(b3(j3),b5(j5),l6(k6),s3(i3)) * T2.cplx(l6(k6),s4(i4),b3(j3));
+            val += T1.cplx(a1(1),b3(j3),b5(j5),l6(k6),s3(i3)) * T2.cplx(a1(1),l6(k6),s4(i4),b3(j3));
             }
         CHECK_CLOSE(R.cplx(b5(j5),s3(i3),s4(i4)),val);
         }
@@ -843,7 +843,7 @@ SECTION("Real-Complex")
         for(int j3 = 1; j3 <= 3; ++j3)
         for(int k6 = 1; k6 <= 2; ++k6)
             {
-            val += T1.cplx(b3(j3),b5(j5),l6(k6),s3(i3)) * T2.cplx(l6(k6),s4(i4),b3(j3));
+            val += T1.cplx(a1(1),b3(j3),b5(j5),l6(k6),s3(i3)) * T2.cplx(a1(1),l6(k6),s4(i4),b3(j3));
             }
         CHECK_CLOSE(R.cplx(b5(j5),s3(i3),s4(i4)),val);
         }
@@ -859,15 +859,16 @@ SECTION("Real Times Scalar Complex")
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
-        CHECK_CLOSE(R1.cplx(b5(j5),b3(j3)),val);
+        auto val = T1.cplx(a1(1),b3(j3),b5(j5)) * T2.cplx(a1(1),a2(1));
+        CHECK_CLOSE(R1.cplx(a2(1),b5(j5),b3(j3)),val);
         } 
-    auto R2 = T1*T2;
+
+    auto R2 = T2*T1;
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
-        CHECK_CLOSE(R2.cplx(b5(j5),b3(j3)),val);
+        auto val = T1.cplx(a1(1),b3(j3),b5(j5)) * T2.cplx(a1(1),a2(1));
+        CHECK_CLOSE(R2.cplx(a2(1),b5(j5),b3(j3)),val);
         } 
     }
 
@@ -881,16 +882,16 @@ SECTION("Complex Times Scalar Real")
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
-        CHECK_CLOSE(R1.cplx(b5(j5),b3(j3)),val);
+        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
+        CHECK_CLOSE(R1.cplx(a2(1),b5(j5),b3(j3)),val);
         }
 
-    auto R2 = T1*T2;
+    auto R2 = T2*T1;
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
-        CHECK_CLOSE(R2.cplx(b5(j5),b3(j3)),val);
+        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
+        CHECK_CLOSE(R2.cplx(a2(1),b5(j5),b3(j3)),val);
         }
     }
 
@@ -904,16 +905,16 @@ SECTION("Complex Times Scalar Complex")
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
-        CHECK_CLOSE(R1.cplx(b5(j5),b3(j3)),val);
+        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
+        CHECK_CLOSE(R1.cplx(b5(j5),b3(j3),a2(1)),val);
         }
 
     auto R2 = T2*T1;
     for(int j5 = 1; j5 <= 5; ++j5)
     for(int j3 = 1; j3 <= 3; ++j3)
         {
-        auto val = T1.cplx(b3(j3),b5(j5)) * T2.cplx();
-        CHECK_CLOSE(R2.cplx(b5(j5),b3(j3)),val);
+        auto val = T1.cplx(b3(j3),b5(j5),a1(1)) * T2.cplx(a1(1),a2(1));
+        CHECK_CLOSE(R2.cplx(b5(j5),b3(j3),a2(1)),val);
         }
     }
 }
@@ -1242,7 +1243,7 @@ SECTION("Combiner")
 
         CHECK(hasindex(R,ci));
         CHECK(hasindex(R,b));
-        CHECK_CLOSE(T.real(),R.real());
+        CHECK_CLOSE(T.real(a(1),b(1),c(1)),R.real(ci(1),b(1)));
         }
     }
 

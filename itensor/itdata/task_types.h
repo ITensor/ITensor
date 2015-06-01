@@ -5,7 +5,7 @@
 #ifndef __ITENSOR_TASK_TYPES_H_
 #define __ITENSOR_TASK_TYPES_H_
 
-#include "itensor/util/infarray.h"
+//#include "itensor/util/infarray.h"
 #include "itensor/util/vararray.h"
 #include "itensor/util/print.h"
 #include "itensor/tensor/permute.h"

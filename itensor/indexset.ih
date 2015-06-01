@@ -7,239 +7,92 @@
 
 namespace itensor {
 
-template<class IndexT>
-IndexSetT<IndexT>::
-IndexSetT()
-    :
-    rn_(0)
-    { }
-
-template<class IndexT>
-IndexSetT<IndexT>::
-IndexSetT(const IndexT& i1)
-    :
-    index_(1,i1),
-    stride_(1,1),
-    rn_((i1.m() == 1 ? 0 : 1))
-    { 
-#ifdef DEBUG
-    if(!i1) Error("i1 is default initialized");
-#endif
-    }
-
-template<class IndexT>
-long IndexSetT<IndexT>::
-dim(long i) const 
-    { 
-#ifdef DEBUG
-    return index_.at(i).m(); 
-#else
-    return index_[i].m(); 
-#endif
-    }
-
-template<class IndexT>
-long IndexSetT<IndexT>::
-stride(long i) const 
-    { 
-#ifdef DEBUG
-    return stride_.at(i); 
-#else
-    return stride_[i]; 
-#endif
-    }
-
-// 0-indexed access
-template<class IndexT>
-const IndexT& IndexSetT<IndexT>::
-operator[](int j) const 
-    { 
-#ifdef DEBUG
-    return index_.at(j); 
-#else
-    return index_[j]; 
-#endif
-    }
-
-// 0-indexed access
-template<class IndexT>
-IndexT& IndexSetT<IndexT>::
-operator[](int j)
-    { 
-#ifdef DEBUG
-    return index_.at(j); 
-#else
-    return index_[j]; 
-#endif
-    }
-
-// 1-indexed access
-template<class IndexT>
-const IndexT& IndexSetT<IndexT>::
-index(int j) const 
-    { 
-#ifdef DEBUG
-    return index_.at(j-1); 
-#else
-    return index_[j-1]; 
-#endif
-    }
-
-
-//template <class IndexT>
-//bool IndexSetT<IndexT>::
-//operator==(const IndexSetT& other) const
-//    {
-//    if(other.r() != r()) return false;
-//
-//    //IndexSetT sorts its indices by dimension
-//    //and id number, so enough to check if exactly
-//    //the same to check if indices are the same
-//    //in an unordered sense
-//    for(size_t j = 0; j < index_.size(); ++j)
-//        {
-//        if(index_[j] != other.index_[j]) return false;
-//        }
-//    return true;
-//    }
-
-
 //
 // Methods for Manipulating IndexSetT
 //
 
-template <class IndexT>
-void IndexSetT<IndexT>::
-addindex(const IndexT& I)
-    {
-#ifdef DEBUG
-    if(!I) Error("Index is default initialized");
+//template <class IndexT>
+//void IndexSetT<IndexT>::
+//addindex(const IndexT& I)
+//    {
+//#ifdef DEBUG
+//    if(!I) Error("Index is default initialized");
+//
+//    for(const auto& J : *this)
+//        if(J == I)
+//            {
+//            Print(*this);
+//            Print(I);
+//            Error("Adding Index twice");
+//            }
+//#endif
+//    index_.push_back(I);
+//    }
 
-    for(const auto& J : index_)
-        if(J == I)
-            {
-            Print(*this);
-            Print(I);
-            Error("Adding Index twice");
-            }
-#endif
-
-    if(I.m() == 1) 
-        {
-        index_.push_back(I);
-        }
-    else
-        {
-        auto m_eq_one = [](const IndexT& ii) { return ii.m()==1l; };
-        auto it = std::find_if(index_.begin(),index_.end(),m_eq_one);
-        index_.insert(it,I);
-        ++rn_;
-        }
-    }
-
-template <class IndexT>
-void IndexSetT<IndexT>::
-replaceIndex(const IndexT& oind, const IndexT& nind)
-    {
-    if(nind.m() != oind.m())
-        {
-        Print(nind);
-        Print(oind);
-        Error("replaceIndex: new index must have same dimension as old.");
-        }
-    bool found = false;
-    for(auto& J : index_)
-        {
-        if(oind == J)
-            {
-            J = nind;
-            found = true;
-            break;
-            }
-        }
-    if(!found)
-        Error("replaceIndex: index not found");
-    }
-
-template <class IndexT>
-void IndexSetT<IndexT>::
-swap(IndexSetT& other)
-    {
-    index_.swap(other.index_);
-    stride_.swap(other.stride_);
-    std::swap(rn_,other.rn_);
-    }
-
-template <class IndexT>
-void IndexSetT<IndexT>::
-clear()
-    {
-    rn_ = 0;
-    index_.clear();
-    }
-
-template <class IndexT>
-void IndexSetT<IndexT>::
-dag()
-    {
-    for(auto& J : index_) J.dag();
-    }
+//template <class IndexT>
+//void IndexSetT<IndexT>::
+//replaceIndex(const IndexT& oind, const IndexT& nind)
+//    {
+//    if(nind.m() != oind.m())
+//        {
+//        Print(nind);
+//        Print(oind);
+//        Error("replaceIndex: new index must have same dimension as old.");
+//        }
+//    bool found = false;
+//    for(auto& J : index_)
+//        {
+//        if(oind == J)
+//            {
+//            J = nind;
+//            found = true;
+//            break;
+//            }
+//        }
+//    if(!found)
+//        Error("replaceIndex: index not found");
+//    }
 
 template <class IndexT>
 void IndexSetT<IndexT>::
 write(std::ostream& s) const
     {
-    itensor::write(s,index_);
-    itensor::write(s,stride_);
-    itensor::write(s,rn_);
+    itensor::write(s,range_);
     }
 
 template <class IndexT>
 void IndexSetT<IndexT>::
 read(std::istream& s)
     {
-    itensor::read(s,index_);
-    itensor::read(s,stride_);
-    itensor::read(s,rn_);
+    itensor::read(s,range_);
     }
 
 
 
-template<class IndexT>
-template<class Iterable>
-void IndexSetT<IndexT>::
-init(Iterable&& inds)
-    {
-#ifdef DEBUG
-    for(const auto& ii : inds)
-        if(!ii) Error("Default initialized index in IndexSetT");
-#endif
-    long r = inds.size();
-
-    index_.resize(r);
-    rn_ = 0;
-    stride_ = std::vector<long>(r,1);
-    long str = 1;
-    //Put m==1 indices at back; m>1 at front,
-    //keeping original order otherwise.
-    //rn_ should count # of m>1's when done
-    for(const auto& I : inds)
-        if(I.m() > 1)
-            {
-            index_.at(rn_) = I;
-            stride_[rn_] = str;
-            str *= I.m();
-            ++rn_;
-            }
-    long i = rn_;
-    for(const auto& I : inds)
-        if(I.m() == 1)
-            {
-            index_.at(i) = I;
-            stride_[i] = str;
-            ++i;
-            }
-    }
+//template<class IndexT>
+//template<class Iterable>
+//void IndexSetT<IndexT>::
+//init(Iterable&& inds)
+//    {
+//#ifdef DEBUG
+//    for(const auto& ii : inds)
+//        if(!ii) Error("Default initialized index in IndexSetT");
+//#endif
+//    long r = inds.size();
+//
+//    index_.resize(r);
+//    stride_ = std::vector<long>(r,1);
+//    long str = 1;
+//    //Put m==1 indices at back; m>1 at front,
+//    //keeping original order otherwise.
+//    //rn_ should count # of m>1's when done
+//    for(auto& I : inds)
+//        {
+//        index_.at(rn_) = I;
+//        stride_[rn_] = str;
+//        str *= I.m();
+//        }
+//    }
 
 //template <class IndexT>
 //template <class Iterable>
@@ -585,12 +438,11 @@ finddir(const IndexSetT<IndexT>& iset, Arrow dir)
 // If not found, returns -1
 //
 template <class IndexT>
-int
+long
 findindex(const IndexSetT<IndexT>& iset, 
           const IndexT& I)
     {
-    int j = (I.m()==1 ? iset.rn() : 0);
-    for(; j < iset.r(); ++j)
+    for(long j = 0; j < iset.r(); ++j)
         {
         if(iset[j] == I) return j;
         }
@@ -601,7 +453,7 @@ template <class IndexT>
 const IndexT&
 findtype(const IndexSetT<IndexT>& iset, IndexType t)
 	{
-    for(const auto& J : iset)
+    for(auto& J : iset)
         {
         if(J.type() == t) return J;
         }
@@ -659,8 +511,7 @@ bool
 hasindex(const IndexSetT<IndexT>& iset, 
          const IndexT& I)
 	{
-    int j = (I.m()==1 ? iset.rn() : 0);
-    for(; j < iset.r(); ++j)
+    for(long j = 0; j < iset.r(); ++j)
         {
         if(iset[j] == I) return true;
         }
@@ -683,10 +534,9 @@ template <class IndexT>
 long
 minM(const IndexSetT<IndexT>& iset)
     {
-    if(iset.rn() < iset.r() || iset.r() == 0) return 1;
-
+    if(iset.empty()) return 1l;
     auto mm = iset[0].m();
-    for(int j = 1; j < iset.rn(); ++j)
+    for(long j = 1; j < iset.r(); ++j)
         mm = std::min(mm,iset[j].m());
 
     return mm;
@@ -696,10 +546,10 @@ template <class IndexT>
 long
 maxM(const IndexSetT<IndexT>& iset)
     {
-    if(iset.rn() == 0) return 1;
+    if(iset.empty()) return 1l;
 
     auto mm = iset[0].m();
-    for(int j = 1; j < iset.rn(); ++j)
+    for(long j = 1; j < iset.r(); ++j)
         mm = std::max(mm,iset[j].m());
 
     return mm;
@@ -717,19 +567,20 @@ contractIS(const IndexSetT<IndexT>& Lis,
     long ncont = 0;
     for(const auto& i : Lind) if(i < 0) ++ncont;
     auto nuniq = Lis.r()+Ris.r()-2*ncont;
-    std::vector<IndexT> newind(nuniq);
+    typename IndexSetT<IndexT>::storage_type newind(nuniq);
     long nn = 0;
-    for(int j = 0; j < Lis.r(); ++j)
+    for(long j = 0; j < Lis.r(); ++j)
         {
-        if(Lind[j] > 0) newind[nn++] = Lis[j];
+        if(Lind[j] > 0) newind[nn++].ext = Lis[j];
         }
-    for(int j = 0; j < Ris.r(); ++j)
+    for(long j = 0; j < Ris.r(); ++j)
         {
-        if(Rind[j] > 0) newind[nn++] = Ris[j];
+        if(Rind[j] > 0) newind[nn++].ext = Ris[j];
         }
     if(sortResult)
         {
-        auto comp = [](const IndexT& i1, const IndexT& i2) { return i1 > i2; };
+        using extstr = decltype(newind.front());
+        auto comp = [](const extstr& i1, const extstr& i2) { return i1.ext > i2.ext; };
         std::sort(newind.begin(),newind.end(),comp);
         }
     Nis = IndexSetT<IndexT>(move(newind));
@@ -752,7 +603,7 @@ template <> inline
 std::ostream&
 operator<<(std::ostream& s, const IndexSetT<Index>& is)
     {
-    int i = 1; 
+    decltype(is.r()) i = 1; 
     for(; i < is.r(); ++i) { s << is.index(i) << ", "; } 
     if(is.r() != 0) { s << is.index(i); } //print last one
     return s;
