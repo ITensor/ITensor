@@ -819,7 +819,10 @@ contract(const CProps& p,
     //         bref.Nrows(),bref.Ncols(),bref.transposed()?"(t)":"",
     //         cref.Nrows(),cref.Ncols(),cref.transposed()?"(t)":"");
 
-    mult(aref,bref,cref);
+    //Important that this be multAdd for block-sparse case
+    //where multiple contractions can get added to same block
+    //(e.g. when result is a scalar)
+    multAdd(aref,bref,cref);
 
 
     //println("Matrix multiply done, took ",cpu.sincemark());
