@@ -25,8 +25,10 @@ class stride_iter
     long stride_; 
     public: 
 
-    stride_iter() : p_(nullptr), stride_(0) { }; 
+    stride_iter() : p_(nullptr), stride_(0) { }
+
     stride_iter(const stride_iter& other) : p_(other.p_), stride_(other.stride_) { } 
+
     stride_iter(pointer p, long stride) : p_(p), stride_(stride) { }  
 
     pointer
