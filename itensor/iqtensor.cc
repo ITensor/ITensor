@@ -275,9 +275,15 @@ struct CalcDiv
     };
 
 QN
-doTask(const CalcDiv& C,const IQTData& d)
+doTask(const CalcDiv& C, const IQTData& d)
     {
     return calcDiv(C.is,d);
+    }
+
+QN
+doTask(const CalcDiv& C, const ITCombiner& d)
+    {
+    return QN();
     }
 
 QN
