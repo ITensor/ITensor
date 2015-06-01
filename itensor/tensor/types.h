@@ -15,8 +15,7 @@ using Label = VarArray<long,31ul>; //sizeof(VarArray<long,31ul>)==256
 inline std::ostream& 
 operator<<(std::ostream& s, const Label& A)
     {
-    for(auto& a : A) s << a << " ";
-    s << "\n";
+    for(auto& a : A) s<<" "<<a; s<<"\n";
     return s;
     }
 

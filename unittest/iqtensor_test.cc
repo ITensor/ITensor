@@ -1,6 +1,7 @@
 #include "test.h"
 #include "itensor/iqtensor.h"
 #include "itensor/util/set_scoped.h"
+#include "itensor/util/count.h"
 
 using namespace itensor;
 using namespace std;
@@ -92,7 +93,7 @@ SECTION("Contracting Product")
         {
         //Print(A.inds());
         //Print(B.inds());
-        SET_SCOPED(Global::debug1()) = true;
+        //SET_SCOPED(Global::debug1()) = true;
         auto R = A*dag(B);
         //Print(R.inds());
 
@@ -114,6 +115,44 @@ SECTION("Contracting Product")
                 }
             //printfln("val = %f, R.real(S1(%d),S2(%d))=%f",val,k1,k2,R.real(S1(k1),S2(k2)));
             CHECK_CLOSE(R.real(S1(k1),S2(k2)),val);
+            }
+        }
+
+    SECTION("Regression Test 1")
+        {
+        auto s = IQIndex("S=1 site",
+                  Index("Up",1,Site),QN(+2,0),
+                  Index("Z0",1,Site),QN( 0,0),
+                  Index("Dn",1,Site),QN(-2,0));
+
+        auto sP = prime(s);
+
+        IQIndexVal Up(s(1)),
+                   UpP(sP(1)),
+                   Dn(s(s.m())),
+                   DnP(sP(s.m())),
+                   Z0(s(2)),
+                   Z0P(sP(2));
+
+        IQTensor Op(dag(s),sP);
+        Op.set(Sqrt2,Z0,UpP);
+        Op.set(Sqrt2,Dn,Z0P);
+
+        Op *= 0.5;
+        //Op.scaleTo(1.); //This fixes the bug
+
+        auto l0 = IQIndex("L0",Index("l0",1),QN());
+        auto l1 = IQIndex("L1",Index("l1",3),QN());
+        auto t = IQTensor(l0(1),l1(3));
+
+        auto R = Op * t;
+
+        for(auto i : count1(s.m()))
+        for(auto iP : count1(sP.m()))
+        for(auto j : count1(l1.m()))
+            {
+            auto val = Op.real(s(i),sP(iP)) * t.real(l0(1),l1(j));
+            CHECK_CLOSE(val, R.real(s(i),sP(iP),l0(1),l1(j)) );
             }
         }
 
