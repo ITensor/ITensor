@@ -503,13 +503,13 @@ plussers(const IQIndex& l1, const IQIndex& l2,
     {
     map<Index,Index> l1map, l2map;
     vector<IndexQN> iq;
-    for(const IndexQN& x : l1.inds())
+    for(const IndexQN& x : l1)
         {
         Index jj(x.rawname(),x.m(),x.type());
         l1map[x] = jj;
         iq.push_back(IndexQN(jj,x.qn));
         }
-    for(const IndexQN& x : l2.inds())
+    for(const IndexQN& x : l2)
         {
         Index jj(x.rawname(),x.m(),x.type());
         l2map[x] = jj;
@@ -517,14 +517,14 @@ plussers(const IQIndex& l1, const IQIndex& l2,
         }
     sumind = IQIndex(sumind.rawname(),std::move(iq),sumind.dir(),sumind.primeLevel());
     first = IQTensor(dag(l1),sumind);
-    for(const Index& il1 : l1.inds())
+    for(const Index& il1 : l1)
         {
         Index& s1 = l1map[il1];
         auto t = diagTensor(1,il1,s1);
         first += t;
         }
     second = IQTensor(dag(l2),sumind);
-    for(const Index& il2 : l2.inds())
+    for(const Index& il2 : l2)
         {
         Index& s2 = l2map[il2];
         auto t = diagTensor(1,il2,s2);
