@@ -531,16 +531,10 @@ doTask(PrintIT<IQIndex>& P, const IQTData& d)
     detail::GCounter C(rank);
     for(const auto& io : d.offsets)
         {
+        bool indices_printed = false;
         //Determine block indices (where in the IQIndex space
         //this non-zero block is located)
         inverseBlockInd(io.block,P.is,block);
-        //Print Indices of this block
-        for(auto i : count(rank))
-            {
-            if(i > 0) P.s << ", ";
-            P.s << blockIndex(i) << "<" << P.is[i].dir() << ">";
-            }
-        P.s << "\n";
         //Wire up GCounter with appropriate dims
         C.reset();
         for(int i = 0; i < rank; ++i)
@@ -550,6 +544,17 @@ doTask(PrintIT<IQIndex>& P, const IQTData& d)
             auto val = scalefac*d.data[os];
             if(std::norm(val) > Global::printScale())
                 {
+                if(!indices_printed)
+                    {
+                    indices_printed = true;
+                    //Print Indices of this block
+                    for(auto i : count(rank))
+                        {
+                        if(i > 0) P.s << ", ";
+                        P.s << blockIndex(i) << "<" << P.is[i].dir() << ">";
+                        }
+                    P.s << "\n";
+                    }
                 P.s << "(";
                 for(auto ii = C.i.mini(); ii <= C.i.maxi(); ++ii)
                     {
