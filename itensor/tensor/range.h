@@ -19,20 +19,39 @@ class RangeT;
 
 using Range = RangeT<size_t>;
 
+//Storage type for RangeT
+template<typename extent_type>
+struct ExtStr
+    {
+    using size_type = size_t;
+    extent_type ext = extent_type{}; //convertible to size_type
+    size_type   str = 0; //stride
+
+    ExtStr(extent_type x, size_type s) : ext(x), str(s) { }
+
+    ExtStr() { }
+
+    void
+    write(std::ostream& s) const
+        {
+        itensor::write(s,ext);
+        itensor::write(s,str);
+        }
+    void
+    read(std::istream& s)
+        {
+        itensor::read(s,ext);
+        itensor::read(s,str);
+        }
+    };
+
 template<typename extent_type_>
 class RangeT
     {
     public:
     using size_type = size_t;
     using extent_type = extent_type_;
-    struct ExtStr
-        {
-        extent_type ext = extent_type{}; //convertible to size_type
-        size_type   str = 0; //stride
-        ExtStr(extent_type x, size_type s) : ext(x), str(s) { }
-        ExtStr() { }
-        };
-    using value_type = ExtStr;
+    using value_type = ExtStr<extent_type>;
     using storage_type = std::vector<value_type>;
     private:
     storage_type store_;
@@ -217,6 +236,22 @@ operator<<(std::ostream& s, const RangeT<extent_type>& r)
     for(Range::size_type i = 0; i < r.r(); ++i) s << r.stride(i) << " ";
     return s;
     }
+
+//template<typename extent_type>
+//void
+//write(std::ostream& s, const ExtStr<extent_type>& xs)
+//    {
+//    itensor::write(s,xs.ext);
+//    itensor::write(s,xs.str);
+//    }
+//
+//template<typename extent_type>
+//void
+//read(std::istream& s, ExtStr<extent_type>& xs)
+//    {
+//    itensor::read(s,xs.ext);
+//    itensor::read(s,xs.str);
+//    }
 
 template<typename extent_type>
 void
