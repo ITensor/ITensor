@@ -167,7 +167,7 @@ complexDavidson(const BigMatrixT& A,
                  (maxsize-1), maxiter_, actual_maxiter);
         }
 
-    if(area(phi.front().inds()) != maxsize)
+    if(area(phi.front().inds()) != size_t(maxsize))
         {
         Print(area(phi.front().inds()));
         Print(A.size());
