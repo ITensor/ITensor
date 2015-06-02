@@ -75,6 +75,14 @@ class RangeT
         computeStrides();
         }
 
+    RangeT&
+    operator=(storage_type&& store)
+        {
+        store_ = std::move(store);
+        computeStrides();
+        return *this;
+        }
+
     size_type
     extent(size_type i) const { return size_type{store_[i].ext}; }
 

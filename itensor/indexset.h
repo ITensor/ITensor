@@ -72,6 +72,13 @@ class IndexSetT
 
     explicit
     IndexSetT(storage_type&& store) : range_(std::move(store)) { }
+
+    IndexSetT&
+    operator=(storage_type&& store)
+        {
+        range_ = std::move(store);
+        return *this;
+        }
     
     explicit operator bool() const { return !range_.empty(); }
 
