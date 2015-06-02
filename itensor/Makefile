@@ -48,25 +48,16 @@ install: build debug
 	@echo $(OBJECTS)
 
 libitensor.a: $(OBJECTS)
-	ar rv libitensor.a $(OBJECTS)
-	ranlib libitensor.a
+	ar rv $(ITENSOR_LIBDIR)/libitensor.a $(OBJECTS)
+	ranlib $(ITENSOR_LIBDIR)/libitensor.a
 
 libitensor-g.a: mkdebugdir $(GOBJECTS)
-	ar rv libitensor-g.a $(GOBJECTS)
-	ranlib libitensor-g.a
-
-libs: libitensor.a 
-	cp libitensor.a $(ITENSOR_LIBDIR)
+	ar rv $(ITENSOR_LIBDIR)/libitensor-g.a $(GOBJECTS)
+	ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
 build: libitensor.a
-	cp libitensor.a $(ITENSOR_LIBDIR)
-
-#ranlib $(ITENSOR_LIBDIR)/libitensor.a
 
 debug: libitensor-g.a
-	cp libitensor-g.a $(ITENSOR_LIBDIR)
-
-#ranlib $(ITENSOR_LIBDIR)/libitensor-g.a
 
 mkdebugdir:
 	mkdir -p .debug_objs
