@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.8)
 project (ITensor)
 
+option(BUILD_STATIC "Build static libraries" OFF)
+
 # Disable build in source (not to overlap with existing Makefile)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)

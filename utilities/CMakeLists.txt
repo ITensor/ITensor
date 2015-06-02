@@ -1,5 +1,5 @@
 set (HEADERS 
-    cppversion.h indent.h cputime.h tarray1.h 
+    cppversion.h indent.h cputime.h tarray1.h tinyformat.h print.h
     flstring.h option.h input.h error.h minmax.h safebool.h
     )
 
@@ -9,8 +9,8 @@ set (SOURCES error.cc ran1.cc
 #file(GLOB SOURCES "*.cc")
 
 include_directories(.)
-add_library(utility STATIC ${SOURCES})
+add_library(utility OBJECT ${SOURCES})
+set_property(TARGET utility PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-install(TARGETS utility DESTINATION lib)
 install(FILES ${HEADERS} DESTINATION include/itensor)
 
