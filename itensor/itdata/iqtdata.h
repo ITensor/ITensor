@@ -309,6 +309,9 @@ void
 doTask(PrintIT<IQIndex>& P, const IQTData& d);
 
 void
+doTask(PrintIT<IQIndex>& P, const ITCombiner& d);
+
+void
 doTask(Write& W, const IQTData& d);
 
 } //namespace itensor

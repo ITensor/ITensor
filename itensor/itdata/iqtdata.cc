@@ -12,6 +12,7 @@
 #include "itensor/util/count.h"
 
 using std::vector;
+using std::move;
 
 namespace itensor {
 
@@ -326,24 +327,35 @@ permuteIQ(const Permutation& P,
     if(isTrivial(P)) Error("Calling permuteIQ for trivial Permutation");
 #endif
     auto r = Ais.r();
-    vector<IQIndex> bind(r);
+    IQIndexSet::storage_type bind(r);
     for(auto i : count(r))
         {
-        bind.at(P.dest(i)) = Ais[i];
+        bind.at(P.dest(i)).ext = Ais[i];
         }
-    Bis = IQIndexSet(std::move(bind));
-    dB = std::move(IQTData(Bis,calcDiv(Ais,dA)));
+    Bis = IQIndexSet{move(bind)};
+    dB = IQTData(Bis,calcDiv(Ais,dA));
+    //if(Global::debug1())
+    //    {
+    //    println("Error is happening because IQIndexSet is sorting m==1 ind to the back, but Permute logic here thinks it's still in the same location.");
+    //    EXIT
+    //    }
 
     Label Ablock(r,-1),
           Bblock(r,-1);
     Range Arange,
           Brange;
+    if(Global::debug1()) println("P = ",P);
     for(auto aio : dA.offsets)
         {
         //Compute bi, new block index of blk
         inverseBlockInd(aio.block,Ais,Ablock);
         for(auto j : index(Ablock)) 
             Bblock.at(P.dest(j)) = Ablock[j];
+        if(Global::debug1())
+            {
+            println("Ablock =",Ablock);
+            println("Bblock =",Bblock);
+            }
         Arange.init(make_indexdim(Ais,Ablock));
         Brange.init(make_indexdim(Bis,Bblock));
 
@@ -354,6 +366,21 @@ permuteIQ(const Permutation& P,
         }
     }
 
+IQIndexSet::storage_type
+replaceInd(const IQIndexSet& is,
+           long loc,
+           const IQIndex& replacement)
+    {
+    IQIndexSet::storage_type newind(is.r());
+    long i = 0;
+    for(long j = 0; j < loc; ++j)
+        newind.at(i++).ext = is[j];
+    newind.at(i++).ext = replacement;
+    for(long j = loc+1; j < is.r(); ++j)
+        newind.at(i++).ext = is[j];
+    return newind;
+    }
+
 void
 combine(const IQTData& d,
         const IQIndexSet& dis,
@@ -362,13 +389,38 @@ combine(const IQTData& d,
         ManagePtr& mp,
         bool own_data)
     {
-    //cind is "combined index"
+    //cind is special "combined index"
     const auto& cind = Cis[0];
     //check if d has combined index i.e. we are "uncombining"
     auto jc = findindex(dis,cind);
 
     Permutation P;
-    if(jc > 0) //we are uncombining, but cind not at front
+
+    if(Cis.r() == 2)
+        {
+        //rank 2 combiner is special: just replaces an IQIndex
+        if(jc >= 0)
+            {
+            //Has cind, replace with Cis[1]
+            Nis = replaceInd(dis,jc,Cis[1]);
+            }
+        else //jc < 0
+            {
+            //Has Cis[1], replace with cind
+            auto ju = findindex(dis,Cis[1]);
+            if(ju < 0)
+                {
+                println("IQIndexSet of regular IQTensor =\n",dis);
+                println("IQIndexSet of combiner/delta =\n",Cis);
+                println("Missing IQIndex: ",Cis[1]);
+                Error("IQCombiner: missing IQIndex");
+                }
+            Nis = replaceInd(dis,ju,cind);
+            }
+        if(!own_data) mp.assignPointerRtoL();
+        return;
+        }
+    else if(jc > 0) //we are uncombining, but cind not at front
         {
         P = Permutation(dis.r());
         P.setFromTo(jc,0);
@@ -404,10 +456,9 @@ combine(const IQTData& d,
                 auto j = findindex(dis,Cis[c]);
                 if(j < 0) 
                     {
-                    println("IQIndexSet of dense tensor =\n  ",dis);
-                    println("IQIndexSet of combiner/delta =\n  ",Cis);
+                    println("IQIndexSet of regular IQTensor =\n",dis);
+                    println("IQIndexSet of combiner/delta =\n",Cis);
                     println("Missing IQIndex: ",Cis[c]);
-                    println("jc = ",jc);
                     Error("IQCombiner: missing IQIndex");
                     }
                 P.setFromTo(j,ni++);
@@ -424,28 +475,28 @@ combine(const IQTData& d,
         {
         permuteIQ(P,dis,d,Nis,nd);
         }
-    auto& Pis = (P ? Nis : dis);
+    auto& Pis = (P ? Nis : dis); //previous index set
 
     if(jc == 0) //has cind at front, we are "uncombining"
         {
         auto newr = Pis.r()+Cis.r()-2;
         auto offset = Cis.r()-1;
-        vector<IQIndex> newind(newr);
+        IQIndexSet::storage_type newind(newr);
         for(auto j : count(offset))
-            newind.at(j) = Cis[1+j];
+            newind.at(j).ext = Cis[1+j];
         for(auto j : count(Pis.r()-1))
-            newind.at(offset+j) = Pis[1+j];
-        Nis = IQIndexSet(move(newind));
+            newind.at(offset+j).ext = Pis[1+j];
+        Nis = move(newind);
         }
     else //we are "combining"
         {
         auto newr = Pis.r()-Cis.r()+2;
         auto offset = Cis.r()-2;
-        vector<IQIndex> newind(newr);
-        newind.front() = cind;
+        IQIndexSet::storage_type newind(newr);
+        newind.front().ext = cind;
         for(auto j : count(1,newr))
-            newind.at(j) = Pis[offset+j];
-        Nis = IQIndexSet(move(newind));
+            newind.at(j).ext = Pis[offset+j];
+        Nis = move(newind);
         }
 
     //Only need to modify d if Cis.r() > 2.
@@ -470,7 +521,7 @@ combine(const IQTData& d,
         p->updateOffsets(Nis,div);
         }
 
-    if(nd) mp.makeNewData<IQTData>(std::move(nd));
+    if(nd) mp.makeNewData<IQTData>(move(nd));
     }
 
 void
@@ -566,7 +617,12 @@ doTask(PrintIT<IQIndex>& P, const IQTData& d)
                 }
             }
         }
+    }
 
+void
+doTask(PrintIT<IQIndex>& P, const ITCombiner& d)
+    {
+    P.s << "\n {ITCombiner storage}\n";
     }
 
 void
