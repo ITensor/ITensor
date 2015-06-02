@@ -85,6 +85,9 @@ class IndexSetIter
 
     reference 
     operator*() { return p_->ext; }  
+
+    pointer 
+    operator->() { return &(p_->ext); }
     }; 
 
 template <typename T>
