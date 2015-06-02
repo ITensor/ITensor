@@ -1263,275 +1263,275 @@ periodicWrap(int j, int N)
     return j;
     }
 
-void 
-convertToIQ(const SiteSet& sites, const vector<ITensor>& A, 
-            vector<IQTensor>& qA, QN totalq, Real cut)
-    {
-    const int N = sites.N();
-    qA.resize(A.size());
-    const bool is_mpo = hasindex(A[1],sites.siP(1));
-    const int Dim = sites.si(1).m();
-    if(sites.si(2).m() != Dim)
-        Error("convertToIQ assumes uniform site dimension");
-    const int PDim = (is_mpo ? Dim : 1);
-
-    // If MPO, set all tensors to identity ops initially
-    if(is_mpo)
-        {
-        for(int j = 1; j <= N; ++j)
-            qA.at(j) = sites.op("Id",j);
-        }
-
-    const int fullrank = (is_mpo ? 4 : 3);
-    int start = 1, end = N;
-
-    for(int j = 1; j <= N; ++j)
-        if(A[j].r() == fullrank)
-            if(A.at(periodicWrap(j-1,N)).r() < fullrank) 
-                {
-                start = periodicWrap(j-1,N);
-                //cout << "Got start at " << start << "\n";
-                break;
-                }
-
-    for(int j = 1; j <= N; ++j)
-        if(A[j].r() == fullrank)
-            if(A.at(periodicWrap(j+1,N)).r() < fullrank) 
-                {
-                end = periodicWrap(j+1,N);
-                //cout << "Got end at " << end << "\n";
-                break;
-                }
-
-    //cout << "Converting to IQ with (start, end) = " << start SP end << endl;
-
-    vector<IQIndex> linkind(N+1);
-
-    map<QN,Vec> qD; //Diags of compressor matrices by QN
-
-    using qt_vt = map<QN,vector<ITensor> >::value_type;
-    map<QN,vector<ITensor> > qt; //ITensor blocks by QN
-
-    using qC_vt = map<QN,ITensor>::value_type;
-    map<QN,ITensor> qC; //Compressor ITensors by QN
-
-    ITensor block;
-    vector<ITensor> nblock;
-    vector<IndexQN> iq;
-
-    QN q;
-
-    qC[totalq] = ITensor(); //Represents Virtual index
-    //First value of prev_q below set to totalq
-
-    const int show_s = 0;
-
-    Index bond, prev_bond;
-    int Send = (end < start ? N+end : end); 
-    for(int S = start; S <= Send; ++S)
-        {
-        int s = periodicWrap(S,N);
-        int sprev = periodicWrap(S-1,N);
-        int snext = periodicWrap(S+1,N);
-
-        qD.clear(); 
-        qt.clear();
-
-        if(S > start) prev_bond = commonIndex(A[sprev],A[s],Link);
-        if(S < Send) bond = commonIndex(A[s],A[snext],Link);
-
-        if(s == show_s) { PrintData(A[s]); }
-
-        for(const qC_vt& x : qC) 
-        for(int n = 1; n <= Dim;  ++n)
-        for(int u = 1; u <= PDim; ++u)
-            {
-            //Each compressor represents a particular
-            //QN channel given by prev_q
-            const QN& prev_q = x.first; 
-            //Alias previous compressor ITensor to comp
-            const ITensor& comp = x.second; 
-
-            q = (is_mpo ? prev_q+sites.si(s).qn(n)-sites.si(s).qn(u) 
-                        : prev_q-sites.si(s).qn(n));
-
-            //For the last site, only keep blocks 
-            //compatible with specified totalq i.e. q=0 here
-            if(S == Send && q != QN()) continue;
-
-            //Set Site indices of A[s] and its previous Link Index
-            block = A[s];
-            if(S != start) block *= dag(comp);
-            block *= Index(sites.si(s))(n);
-            if(is_mpo) block *= Index(sites.siP(s))(u);
-
-            //Initialize D Vector (D records which values of
-            //the right Link Index to keep for the current QN q)
-            auto count = qD.count(q);
-            Vec& D = qD[q];
-            if(count == 0) 
-                { 
-                D.resize(bond.m()); 
-                for(auto& el : D) el = 0; 
-                }
-
-            if(s == show_s)
-                {
-                println("For n = ",n);
-                printfln("Got a block with norm %.10f",norm(block));
-                println("bond.m() = ",bond.m());
-                PrintData(block);
-                if(s != 1) PrintData(comp);
-                }
-
-            bool keep_block = false;
-            if(S == Send) 
-                { keep_block = true; }
-            else
-                {
-                if(bond.m() == 1 && norm(block) != 0) 
-                    { 
-                    for(auto& el : D) el = 1; 
-                    keep_block = true; 
-                    }
-                else
-                    {
-                    ITensor summed_block;
-                    if(S==start) 
-                        { summed_block = block; }
-                    else
-                        {
-                        //Here we sum over the previous link index
-                        //which is already ok, analyze the one to the right
-                        assert(comp.r()==2);
-                        auto ci = comp.inds().begin();
-                        const Index& new_ind = (*ci==prev_bond ? *(ci+1) : *ci);
-                        summed_block = diagTensor(1,new_ind) * block;
-                        }
-                    //summed_block.print("summed_block");
-
-                    Real rel_cut = -1;
-                    const ITensor& sb = summed_block;
-                    for(int j = 1; j <= bond.m(); ++j)
-                        { rel_cut = std::max(std::fabs(sb.real(bond(j))),rel_cut); }
-                    assert(rel_cut >= 0);
-                    //Real rel_cut = summed_block.norm()/summed_block.vecSize();
-                    rel_cut *= cut;
-                    //cout << "rel_cut == " << rel_cut << "\n";
-
-                    if(rel_cut > 0)
-                    for(int j = 1; j <= bond.m(); ++j)
-                        {
-                        if(std::fabs(sb.real(bond(j))) > rel_cut) 
-                            { 
-                            D(j) = 1; 
-                            keep_block = true; 
-                            }
-                        }
-                    }
-                } //else (S != Send)
-
-            if(keep_block)
-                {
-                qD[q] = D;
-
-                IndexSet newinds(block.inds());
-                if(is_mpo) 
-                    {
-                    newinds.addindex(dag(sites.si(s)(n).indexqn()));
-                    newinds.addindex(sites.siP(s)(u).indexqn());
-                    }
-                else 
-                    { 
-                    newinds.addindex(sites.si(s)(n).indexqn()); 
-                    }
-
-                if(s==show_s)
-                    {
-                    PrintData(block);
-                    cout << "D = " << D << "\n";
-                    }
-
-                qt[q].push_back(ITensor(std::move(newinds),std::move(block.store())));
-
-                }
-            }
-
-        qC.clear();
-
-        for(const qt_vt& x : qt)
-            {
-            const vector<ITensor>& blks = x.second;
-            if(blks.size() != 0)
-                {
-                q = x.first; 
-                if(S == Send) 
-                    { for(const ITensor& t : blks) nblock.push_back(t); }
-                else
-                    {
-                    Mat M; 
-                    auto mm = collapseCols(qD[q],M);
-                    if(s==show_s)
-                        {
-                        println("Adding block, mm = ",mm);
-                        Print(q);
-                        cout << "qD[q] = " << qD[q] << "\n";
-                        cout << "M = \n" << M << "\n";
-                        int count = 0;
-                        for(const ITensor& t : blks) 
-                            {
-                            printfln("t%02d",++count," ",t);
-                            }
-                        }
-                    string qname = format("ql%d(%+d:%d)",s,q.sz(),q.Nf());
-                    Index qbond(qname,mm);
-                    auto compressor = matrixTensor(std::move(M),bond,qbond);
-                    for(const ITensor& t : blks) nblock.push_back(t * compressor);
-                    iq.push_back(IndexQN(qbond,q));
-                    qC[q] = compressor;
-                    }
-                }
-            }
-
-        if(S != Send) 
-            { 
-            if(iq.empty()) 
-                {
-                cout << "At site " << s << "\n";
-                Error("convertToIQ: no compatible QNs to put into Link.");
-                }
-            linkind[s] = IQIndex(nameint("qL",s),std::move(iq)); 
-            }
-        if(S == start)
-            {
-            qA.at(s) = (is_mpo ? IQTensor(dag(sites.si(s)),sites.siP(s),linkind.at(s)) 
-                            : IQTensor(sites.si(s),linkind[s]));
-            }
-        else 
-        if(S == Send)
-            {
-            qA.at(s) = (is_mpo ? IQTensor(dag(linkind[sprev]),dag(sites.si(s)),sites.siP(s)) 
-                            : IQTensor(dag(linkind[sprev]),sites.si(s)));
-            }
-        else
-            {
-            qA.at(s) = (is_mpo ? IQTensor(dag(linkind[sprev]),dag(sites.si(s)),sites.siP(s),linkind[s]) 
-                            : IQTensor(dag(linkind[sprev]),sites.si(s),linkind[s]));
-            }
-
-        for(const ITensor& nb : nblock) 
-            { qA.at(s) += nb; } 
-        nblock.clear();
-
-        if(s==show_s)
-            {
-            printfln("qA[%d]",s,qA[s]);
-            Error("Stopping");
-            }
-
-        } //for loop over s
-
-    } //void convertToIQ
+//void 
+//convertToIQ(const SiteSet& sites, const vector<ITensor>& A, 
+//            vector<IQTensor>& qA, QN totalq, Real cut)
+//    {
+//    const int N = sites.N();
+//    qA.resize(A.size());
+//    const bool is_mpo = hasindex(A[1],sites.siP(1));
+//    const int Dim = sites.si(1).m();
+//    if(sites.si(2).m() != Dim)
+//        Error("convertToIQ assumes uniform site dimension");
+//    const int PDim = (is_mpo ? Dim : 1);
+//
+//    // If MPO, set all tensors to identity ops initially
+//    if(is_mpo)
+//        {
+//        for(int j = 1; j <= N; ++j)
+//            qA.at(j) = sites.op("Id",j);
+//        }
+//
+//    const int fullrank = (is_mpo ? 4 : 3);
+//    int start = 1, end = N;
+//
+//    for(int j = 1; j <= N; ++j)
+//        if(A[j].r() == fullrank)
+//            if(A.at(periodicWrap(j-1,N)).r() < fullrank) 
+//                {
+//                start = periodicWrap(j-1,N);
+//                //cout << "Got start at " << start << "\n";
+//                break;
+//                }
+//
+//    for(int j = 1; j <= N; ++j)
+//        if(A[j].r() == fullrank)
+//            if(A.at(periodicWrap(j+1,N)).r() < fullrank) 
+//                {
+//                end = periodicWrap(j+1,N);
+//                //cout << "Got end at " << end << "\n";
+//                break;
+//                }
+//
+//    //cout << "Converting to IQ with (start, end) = " << start SP end << endl;
+//
+//    vector<IQIndex> linkind(N+1);
+//
+//    map<QN,Vec> qD; //Diags of compressor matrices by QN
+//
+//    using qt_vt = map<QN,vector<ITensor> >::value_type;
+//    map<QN,vector<ITensor> > qt; //ITensor blocks by QN
+//
+//    using qC_vt = map<QN,ITensor>::value_type;
+//    map<QN,ITensor> qC; //Compressor ITensors by QN
+//
+//    ITensor block;
+//    vector<ITensor> nblock;
+//    vector<IndexQN> iq;
+//
+//    QN q;
+//
+//    qC[totalq] = ITensor(); //Represents Virtual index
+//    //First value of prev_q below set to totalq
+//
+//    const int show_s = 0;
+//
+//    Index bond, prev_bond;
+//    int Send = (end < start ? N+end : end); 
+//    for(int S = start; S <= Send; ++S)
+//        {
+//        int s = periodicWrap(S,N);
+//        int sprev = periodicWrap(S-1,N);
+//        int snext = periodicWrap(S+1,N);
+//
+//        qD.clear(); 
+//        qt.clear();
+//
+//        if(S > start) prev_bond = commonIndex(A[sprev],A[s],Link);
+//        if(S < Send) bond = commonIndex(A[s],A[snext],Link);
+//
+//        if(s == show_s) { PrintData(A[s]); }
+//
+//        for(const qC_vt& x : qC) 
+//        for(int n = 1; n <= Dim;  ++n)
+//        for(int u = 1; u <= PDim; ++u)
+//            {
+//            //Each compressor represents a particular
+//            //QN channel given by prev_q
+//            const QN& prev_q = x.first; 
+//            //Alias previous compressor ITensor to comp
+//            const ITensor& comp = x.second; 
+//
+//            q = (is_mpo ? prev_q+sites.si(s).qn(n)-sites.si(s).qn(u) 
+//                        : prev_q-sites.si(s).qn(n));
+//
+//            //For the last site, only keep blocks 
+//            //compatible with specified totalq i.e. q=0 here
+//            if(S == Send && q != QN()) continue;
+//
+//            //Set Site indices of A[s] and its previous Link Index
+//            block = A[s];
+//            if(S != start) block *= dag(comp);
+//            block *= Index(sites.si(s))(n);
+//            if(is_mpo) block *= Index(sites.siP(s))(u);
+//
+//            //Initialize D Vector (D records which values of
+//            //the right Link Index to keep for the current QN q)
+//            auto count = qD.count(q);
+//            Vec& D = qD[q];
+//            if(count == 0) 
+//                { 
+//                D.resize(bond.m()); 
+//                for(auto& el : D) el = 0; 
+//                }
+//
+//            if(s == show_s)
+//                {
+//                println("For n = ",n);
+//                printfln("Got a block with norm %.10f",norm(block));
+//                println("bond.m() = ",bond.m());
+//                PrintData(block);
+//                if(s != 1) PrintData(comp);
+//                }
+//
+//            bool keep_block = false;
+//            if(S == Send) 
+//                { keep_block = true; }
+//            else
+//                {
+//                if(bond.m() == 1 && norm(block) != 0) 
+//                    { 
+//                    for(auto& el : D) el = 1; 
+//                    keep_block = true; 
+//                    }
+//                else
+//                    {
+//                    ITensor summed_block;
+//                    if(S==start) 
+//                        { summed_block = block; }
+//                    else
+//                        {
+//                        //Here we sum over the previous link index
+//                        //which is already ok, analyze the one to the right
+//                        assert(comp.r()==2);
+//                        auto ci = comp.inds().begin();
+//                        const Index& new_ind = (*ci==prev_bond ? *(ci+1) : *ci);
+//                        summed_block = diagTensor(1,new_ind) * block;
+//                        }
+//                    //summed_block.print("summed_block");
+//
+//                    Real rel_cut = -1;
+//                    const ITensor& sb = summed_block;
+//                    for(int j = 1; j <= bond.m(); ++j)
+//                        { rel_cut = std::max(std::fabs(sb.real(bond(j))),rel_cut); }
+//                    assert(rel_cut >= 0);
+//                    //Real rel_cut = summed_block.norm()/summed_block.vecSize();
+//                    rel_cut *= cut;
+//                    //cout << "rel_cut == " << rel_cut << "\n";
+//
+//                    if(rel_cut > 0)
+//                    for(int j = 1; j <= bond.m(); ++j)
+//                        {
+//                        if(std::fabs(sb.real(bond(j))) > rel_cut) 
+//                            { 
+//                            D(j) = 1; 
+//                            keep_block = true; 
+//                            }
+//                        }
+//                    }
+//                } //else (S != Send)
+//
+//            if(keep_block)
+//                {
+//                qD[q] = D;
+//
+//                IndexSet newinds(block.inds());
+//                if(is_mpo) 
+//                    {
+//                    newinds.addindex(dag(sites.si(s)(n).indexqn()));
+//                    newinds.addindex(sites.siP(s)(u).indexqn());
+//                    }
+//                else 
+//                    { 
+//                    newinds.addindex(sites.si(s)(n).indexqn()); 
+//                    }
+//
+//                if(s==show_s)
+//                    {
+//                    PrintData(block);
+//                    cout << "D = " << D << "\n";
+//                    }
+//
+//                qt[q].push_back(ITensor(std::move(newinds),std::move(block.store())));
+//
+//                }
+//            }
+//
+//        qC.clear();
+//
+//        for(const qt_vt& x : qt)
+//            {
+//            const vector<ITensor>& blks = x.second;
+//            if(blks.size() != 0)
+//                {
+//                q = x.first; 
+//                if(S == Send) 
+//                    { for(const ITensor& t : blks) nblock.push_back(t); }
+//                else
+//                    {
+//                    Mat M; 
+//                    auto mm = collapseCols(qD[q],M);
+//                    if(s==show_s)
+//                        {
+//                        println("Adding block, mm = ",mm);
+//                        Print(q);
+//                        cout << "qD[q] = " << qD[q] << "\n";
+//                        cout << "M = \n" << M << "\n";
+//                        int count = 0;
+//                        for(const ITensor& t : blks) 
+//                            {
+//                            printfln("t%02d",++count," ",t);
+//                            }
+//                        }
+//                    string qname = format("ql%d(%+d:%d)",s,q.sz(),q.Nf());
+//                    Index qbond(qname,mm);
+//                    auto compressor = matrixTensor(std::move(M),bond,qbond);
+//                    for(const ITensor& t : blks) nblock.push_back(t * compressor);
+//                    iq.push_back(IndexQN(qbond,q));
+//                    qC[q] = compressor;
+//                    }
+//                }
+//            }
+//
+//        if(S != Send) 
+//            { 
+//            if(iq.empty()) 
+//                {
+//                cout << "At site " << s << "\n";
+//                Error("convertToIQ: no compatible QNs to put into Link.");
+//                }
+//            linkind[s] = IQIndex(nameint("qL",s),std::move(iq)); 
+//            }
+//        if(S == start)
+//            {
+//            qA.at(s) = (is_mpo ? IQTensor(dag(sites.si(s)),sites.siP(s),linkind.at(s)) 
+//                            : IQTensor(sites.si(s),linkind[s]));
+//            }
+//        else 
+//        if(S == Send)
+//            {
+//            qA.at(s) = (is_mpo ? IQTensor(dag(linkind[sprev]),dag(sites.si(s)),sites.siP(s)) 
+//                            : IQTensor(dag(linkind[sprev]),sites.si(s)));
+//            }
+//        else
+//            {
+//            qA.at(s) = (is_mpo ? IQTensor(dag(linkind[sprev]),dag(sites.si(s)),sites.siP(s),linkind[s]) 
+//                            : IQTensor(dag(linkind[sprev]),sites.si(s),linkind[s]));
+//            }
+//
+//        for(const ITensor& nb : nblock) 
+//            { qA.at(s) += nb; } 
+//        nblock.clear();
+//
+//        if(s==show_s)
+//            {
+//            printfln("qA[%d]",s,qA[s]);
+//            Error("Stopping");
+//            }
+//
+//        } //for loop over s
+//
+//    } //void convertToIQ
 
 /*
 template <class Tensor> 

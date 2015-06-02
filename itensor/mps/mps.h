@@ -15,9 +15,9 @@ class MPOt;
 
 class InitState;
 
-void 
-convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
-            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
+//void 
+//convertToIQ(const SiteSet& sites, const std::vector<ITensor>& A, 
+//            std::vector<IQTensor>& qA, QN totalq = QN(), Real cut = 1E-12);
 
 //
 // class MPSt
@@ -168,12 +168,12 @@ class MPSt
     bool 
     isComplex() const;
 
-    void 
-    toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
-        {
-        iqpsi = MPSt<IQTensor>(*sites_);
-        convertToIQ(*sites_,A_,iqpsi.A_,totalq,cut);
-        }
+    //void 
+    //toIQ(QN totalq, MPSt<IQTensor>& iqpsi, Real cut = 1E-12) const
+    //    {
+    //    iqpsi = MPSt<IQTensor>(*sites_);
+    //    convertToIQ(*sites_,A_,iqpsi.A_,totalq,cut);
+    //    }
 
     void
     swap(MPSt& other);

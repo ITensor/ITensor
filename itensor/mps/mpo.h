@@ -82,8 +82,8 @@ class MPOt : private MPSt<Tensor>
     MPOt<ITensor>
     toMPO() const;
 
-    MPOt<IQTensor>
-    toIQMPO() const;
+    //MPOt<IQTensor>
+    //toIQMPO() const;
 
     //MPOt: index methods --------------------------------------------------
 
@@ -121,12 +121,12 @@ class MPOt : private MPSt<Tensor>
 
     using Parent::isComplex;
 
-    void 
-    toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
-        {
-        res = MPOt<IQTensor>(*sites_,logrefNorm_);
-        convertToIQ(*sites_,A_,res.A_,totalq,cut);
-        }
+    //void 
+    //toIQ(QN totalq, MPOt<IQTensor>& res, Real cut = 1E-12) const
+    //    {
+    //    res = MPOt<IQTensor>(*sites_,logrefNorm_);
+    //    convertToIQ(*sites_,A_,res.A_,totalq,cut);
+    //    }
 
     private:
 
@@ -173,24 +173,24 @@ toMPO() const
     return MPO();
     }
 
-template <> inline
-IQMPO MPO::
-toIQMPO() const
-    {
-    IQMPO res(*sites_,logrefNorm_);
-    convertToIQ(*sites_,A_,res.A_);
-    return res;
-    }
+//template <> inline
+//IQMPO MPO::
+//toIQMPO() const
+//    {
+//    IQMPO res(*sites_,logrefNorm_);
+//    convertToIQ(*sites_,A_,res.A_);
+//    return res;
+//    }
 
-//toMPO method fails unless template class 
-//Tensor is set to IQTensor (object is an IQMPO)
-template<class Tensor>
-IQMPO MPOt<Tensor>::
-toIQMPO() const
-    {
-    Error("toIQMPO only implemented for class MPO");
-    return IQMPO();
-    }
+////toMPO method fails unless template class 
+////Tensor is set to IQTensor (object is an IQMPO)
+//template<class Tensor>
+//IQMPO MPOt<Tensor>::
+//toIQMPO() const
+//    {
+//    Error("toIQMPO only implemented for class MPO");
+//    return IQMPO();
+//    }
 
 
 int
