@@ -30,17 +30,15 @@ permute_map(const Set1& s1,
     {
     for(auto it = s2begin; it != s2end; ++it)
         {
-        const auto& v2 = *it;
+        auto& v2 = *it;
         bool found = false;
         for(size_t i1 = 0; i1 < s1.size(); ++i1)
-            {
             if(v2 == s1[i1])
                 {
                 r[i1] = m(v2);
                 found = true;
                 break;
                 }
-            }
 
         if(!found)
             {
