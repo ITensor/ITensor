@@ -19,11 +19,17 @@
 
 namespace itensor {
 
+size_t inline constexpr 
+ITSize() { return 7ul; }
+
+size_t inline constexpr 
+ITStoreSize() { return 1+ITSize(); }
+
 class IndexType
     {
-    static constexpr size_t Size = 7ul; //makes sizeof(IndexType)==8
-    static constexpr size_t StoreSize = 1+Size;
-    using storage_type = std::array<char,StoreSize>;
+    public:
+    using storage_type = std::array<char,ITStoreSize()>;
+    private:
     storage_type name_;
     public:
 
@@ -31,26 +37,27 @@ class IndexType
     IndexType(const char* name)
         {
         name_.fill('\0');
-        auto len = std::min(std::strlen(name),name_.size());
+        auto len = std::min(std::strlen(name),size());
 #ifdef DEBUG
-        if(std::strlen(name) > Size)
+        if(std::strlen(name) > size())
             {
-            std::cout << "Warning: IndexType name will be truncated to " << Size << " chars" << std::endl;
+            std::cout << "Warning: IndexType name will be truncated to " << size() << " chars" << std::endl;
             }
 #endif
         for(size_t j = 0; j < len; ++j)
             {
             name_[j] = name[j];
             }
+        assert(name_[size()]=='\0');
         }
 
     const char*
-    c_str() const { return &(name_[0]); }
+    c_str() const { assert(name_[size()]=='\0'); return &(name_[0]); }
 
     operator const char*() const { return c_str(); }
 
     size_t static constexpr
-    size() { return Size; }
+    size() { return ITSize(); }
 
     const char&
     operator[](size_t i) const { CHECK_IND(i) return name_[i]; }
@@ -62,7 +69,7 @@ class IndexType
     void
     check_ind(size_t j) const
         {
-        if(j >= Size) Error("IndexType: index out of range");
+        if(j >= size()) Error("IndexType: index out of range");
         }
     };
 
