@@ -50,7 +50,7 @@ nameint(const string& f, int n)
 
 
 string Index::
-name() const  { return putprimes(sname_,primelevel_); }
+name() const  { return putprimes(name_.c_str(),primelevel_); }
 
 
 
@@ -98,7 +98,7 @@ write(std::ostream& s) const
     itensor::write(s,type_);
     itensor::write(s,id_);
     itensor::write(s,m_);
-    itensor::write(s,sname_);
+    itensor::write(s,name_);
     }
 
 Index& Index::
@@ -108,7 +108,7 @@ read(std::istream& s)
     itensor::read(s,type_);
     itensor::read(s,id_);
     itensor::read(s,m_);
-    itensor::read(s,sname_);
+    itensor::read(s,name_);
 
 #ifdef DEBUG
     if(primelevel_ < 0) Error("Negative primeLevel");

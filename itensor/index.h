@@ -6,6 +6,7 @@
 #define __ITENSOR_INDEX_H
 #include "itensor/global.h"
 #include "itensor/indextype.h"
+#include "itensor/indexname.h"
 #include "itensor/arrow.h"
 
 namespace itensor {
@@ -27,8 +28,17 @@ class Index
     {
     public:
     using IDGenerator = std::mt19937;
-    using IDType = IDGenerator::result_type;
+    using id_type = IDGenerator::result_type;
     using indexval_type = IndexVal;
+    using prime_type = int;
+    using extent_type = int;
+    private:
+    id_type id_;
+    prime_type primelevel_; 
+    extent_type m_;
+    IndexType type_;
+    IndexName name_;
+    public:
 
     //
     // Constructors
@@ -67,8 +77,8 @@ class Index
     name() const;
 
     // Returns the name of this Index with primes removed
-    const std::string&
-    rawname() const { return sname_; }
+    std::string
+    rawname() const { return std::string(name_.c_str()); }
 
     // Evaluates to false if Index is default constructed.
     explicit operator bool() const { return (type_!=NullInd); }
@@ -158,21 +168,16 @@ class Index
     Index& 
     read(std::istream& s);
 
-    IDType
+    id_type
     id() const { return id_; }
 
 
     private:
 
     /////////////
-    IDType id_;
-    int primelevel_; 
-    long m_;
-    IndexType type_;
-    std::string sname_;
     /////////////
 
-    Index::IDType 
+    Index::id_type 
     generateID()
         {
         static Index::IDGenerator rng(std::time(NULL) + getpid());
@@ -308,7 +313,7 @@ Index(const std::string& name, long m, IndexType type, int plev)
     primelevel_(plev),
     m_(m),
     type_(type),
-    sname_(name)
+    name_(name.c_str())
     { 
 #ifdef DEBUG
     if(type_ == All) Error("Constructing Index with type All disallowed");
