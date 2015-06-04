@@ -429,23 +429,7 @@ init_tensors(std::vector<ITensor>& A_, const InitState& initState)
     { 
     new_tensors(A_); 
     for(int i = 1; i <= N_; ++i) 
-        {
         A_[i].set(1,initState(i));
-        }
-
-    /*
-    std::vector<Index> a(N_+1);
-    for(int i = 1; i <= N_; ++i)
-        { a[i] = Index(nameint("l",i)); }
-
-    A_[1].addindex(a[1]);
-    for(int i = 2; i < N_; ++i)
-        {
-        A_[i].addindex(a[i-1]);
-        A_[i].addindex(a[i]);
-        }
-    A_[N_].addindex(a[N_-1]);
-    */
     }
 template
 void MPSt<ITensor>::
@@ -1760,10 +1744,10 @@ findCenter(const IQMPS& psi)
         if(A.r() == 0) Error("Zero rank tensor in MPS");
         bool allSameDir = true;
         auto it = A.inds().begin();
-        Arrow dir = it->dir();
+        Arrow dir = (*it).dir();
         for(++it; it != A.inds().end(); ++it)
             {
-            if(it->dir() != dir)
+            if((*it).dir() != dir)
                 {
                 allSameDir = false;
                 break;
