@@ -272,7 +272,7 @@ StorageType
     ITCombiner=3, 
     ITDiagReal=4, 
     ITDiagCplx=5,
-    IQTData=6
+    IQTReal=6
     }; 
 
 class Write

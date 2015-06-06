@@ -55,7 +55,7 @@ ITensorT(Complex val)
 //IQTensor(const QN& q, vector<IQIndex>&& iqinds) 
 //	: 
 //    is_(move(iqinds)),
-//    store_(make_shared<IQTData>(is_,q)),
+//    store_(make_shared<IQTReal>(is_,q)),
 //    div_(q),
 //    scale_(1.)
 //	{ }
@@ -150,7 +150,7 @@ struct AddITensor
     };
 
 void
-doTask(AddITensor& A, IQTData& d, const ITReal& t)
+doTask(AddITensor& A, IQTReal& d, const ITReal& t)
     {
     auto ddiv = calcDiv(A.iqis,d);
     if(ddiv != A.tdiv) Error("IQTensor+=ITensor, ITensor has incompatible QN flux/divergence");
@@ -194,7 +194,7 @@ operator+=(IQTensor& T, const ITensor& t)
     if(!T.store()) 
         {
         //allocate data to add this ITensor into
-        if(!isComplex(t)) T.store() = make_shared<IQTData>(T.inds(),tdiv);
+        if(!isComplex(t)) T.store() = make_shared<IQTReal>(T.inds(),tdiv);
         else              Error("Initializing complex IQTensor in +=ITensor not yet implemented");
         }
 
@@ -231,7 +231,7 @@ struct ToITensor
     };
 
 ITensor
-doTask(ToITensor& T, const IQTData& d)
+doTask(ToITensor& T, const IQTReal& d)
     {
     auto r = T.is.r();
     auto nd = ITReal(area(T.is),0);
@@ -296,7 +296,7 @@ struct CalcDiv
     };
 
 QN
-doTask(const CalcDiv& C, const IQTData& d)
+doTask(const CalcDiv& C, const IQTReal& d)
     {
     return calcDiv(C.is,d);
     }

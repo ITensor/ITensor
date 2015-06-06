@@ -17,16 +17,16 @@ SOURCES+= itdata/itreal.cc
 SOURCES+= itdata/itcplx.cc 
 SOURCES+= itdata/itcombiner.cc 
 SOURCES+= itdata/itdiag.cc 
-SOURCES+= itdata/iqtdata.cc
+SOURCES+= itdata/iqtreal.cc
 SOURCES+= index.cc 
 SOURCES+= itensor.cc 
 SOURCES+= iqindex.cc 
 SOURCES+= iqtensor.cc 
-#SOURCES+= spectrum.cc 
-#SOURCES+= svdalgs.cc 
-#SOURCES+= mps/mps.cc 
-#SOURCES+= mps/mpo.cc 
-#SOURCES+= mps/autompo.cc
+SOURCES+= spectrum.cc 
+SOURCES+= svdalgs.cc 
+SOURCES+= mps/mps.cc 
+SOURCES+= mps/mpo.cc 
+SOURCES+= mps/autompo.cc
 
 ####################################
 
@@ -96,9 +96,9 @@ itdata/itdiag.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS+= itdata/itcombiner.h
 itdata/itcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/itdata/itcombiner.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-ITDEPHEADERS+= itdata/iqtdata.h
-itdata/iqtdata.o: $(ITDEPHEADERS) $(GDEPHEADERS)
-.debug_objs/itdata/iqtdata.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+ITDEPHEADERS+= itdata/iqtreal.h
+itdata/iqtreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/itdata/iqtreal.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 ITDEPHEADERS= index.h
 index.o: $(ITDEPHEADERS)
 .debug_objs/index.o: $(ITDEPHEADERS)
@@ -121,3 +121,9 @@ spectrum.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 GDEPHEADERS+= svdalgs.h
 svdalgs.o: $(ITDEPHEADERS) $(GDEPHEADERS)
 .debug_objs/svdalgs.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+GDEPHEADERS+= mps/mps.h
+mps/mps.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/mps/mps.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+GDEPHEADERS+= mps/mpo.h
+mps/mpo.o: $(ITDEPHEADERS) $(GDEPHEADERS)
+.debug_objs/mps/mpo.o: $(ITDEPHEADERS) $(GDEPHEADERS)

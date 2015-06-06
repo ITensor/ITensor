@@ -114,7 +114,7 @@ IQTensor
 randomTensor(const QN& q, const IQIndex& i1, Inds&&... inds)
     {
     auto is = IQIndexSet{i1,std::forward<Inds>(inds)...};
-    auto dat = IQTData{is,q};
+    auto dat = IQTReal{is,q};
     return randomize(IQTensor(std::move(is),std::move(dat)));
     }
 

@@ -29,7 +29,7 @@ class ITDiag;
 
 class ITCombiner;
 
-class IQTData;
+class IQTReal;
 
 }
 
@@ -41,7 +41,7 @@ class IQTData;
         NewType     ITCombiner         EndType \
         NewType     ITDiag<Real>       EndType \
         NewType     ITDiag<Cplx>       EndType \
-        NewType     IQTData            EndType \
+        NewType     IQTReal            EndType \
 
 
 //(3) Register header file names
@@ -50,5 +50,5 @@ class IQTData;
 #include "itensor/itdata/itcplx.h"
 #include "itensor/itdata/itdiag.h"
 #include "itensor/itdata/itcombiner.h"
-#include "itensor/itdata/iqtdata.h"
+#include "itensor/itdata/iqtreal.h"
 #endif
