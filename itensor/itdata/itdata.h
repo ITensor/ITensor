@@ -80,7 +80,7 @@ class RegisterData : public ITData
         }
     };
 
-class ManagePtr
+class ManageStore
     {
     enum Action
         {
@@ -115,21 +115,21 @@ class ManagePtr
 
     public:
 
-    ManagePtr() { }
+    ManageStore() { }
 
-    ManagePtr(PData *parg1)
+    ManageStore(PData *parg1)
         : parg1_(parg1)
         { }
 
-    ManagePtr(PData *parg1, const ITData *arg2)
+    ManageStore(PData *parg1, const ITData *arg2)
         : parg1_(parg1), arg2_(arg2)
         { }
 
-    ManagePtr(PData *parg1, const CPData *parg2)
+    ManageStore(PData *parg1, const CPData *parg2)
         : parg1_(parg1), parg2_(parg2), arg2_(parg2->get())
         { }
 
-    ManagePtr(ManagePtr&& o)
+    ManageStore(ManageStore&& o)
         :
         parg1_(o.parg1_),
         parg2_(o.parg2_),
@@ -143,7 +143,7 @@ class ManagePtr
         o.action_ = None;
         }
 
-    ~ManagePtr()
+    ~ManageStore()
         {
         updateArg1();
         }
@@ -220,7 +220,7 @@ class ManagePtr
     };
 
 template <typename StorageT, typename... VArgs>
-StorageT* ManagePtr::
+StorageT* ManageStore::
 makeNewData(VArgs&&... vargs)
     {
     if(!parg1_) Error("Can't call makeNewData with const-only access to first arg");
@@ -231,14 +231,14 @@ makeNewData(VArgs&&... vargs)
     return ret;
     }
 
-void inline ManagePtr::
+void inline ManageStore::
 assignPointerRtoL() 
     { 
     if(!parg2_) Error("No second pointer provided for action AssignPointerRtoL");
     action_ = AssignPointerRtoL; 
     }
 
-void inline ManagePtr::
+void inline ManageStore::
 updateArg1()
     {
     if(!parg1_) return;
@@ -255,7 +255,7 @@ updateArg1()
         }
     }
 
-ManagePtr::UniqueRef inline ManagePtr::
+ManageStore::UniqueRef inline ManageStore::
 modifyData()
     {
     if(!parg1_) Error("Can't modify const data");
@@ -263,7 +263,7 @@ modifyData()
     }
 
 template<typename T>
-T* ManagePtr::
+T* ManageStore::
 modifyData(const T& d)
     {
     if(!parg1_) Error("Can't modify const data");

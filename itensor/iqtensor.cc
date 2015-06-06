@@ -46,9 +46,9 @@ ITensorT(Complex val)
     scale_(1.)
     { 
     if(val.imag()==0)
-        store_ = make_shared<ITDiag<Real>>(val.real());
+        store_ = make_shared<ITDiag<Real>>(1,val.real());
     else
-        store_ = make_shared<ITDiag<Complex>>(val);
+        store_ = make_shared<ITDiag<Complex>>(1,val);
     }
 
 //IQTensor::
@@ -261,10 +261,31 @@ doTask(ToITensor& T, const IQTData& d)
     return ITensor(IndexSet{std::move(inds)},std::move(nd),T.scale);
     }
 
+template<typename D>
+ITensor
+doTask(ToITensor& T, const ITDiag<D>& d)
+    {
+    auto r = T.is.r();
+    IndexSet::storage_type inds(r);
+    for(long j = 0; j < r; ++j) inds[j].ext = T.is[j];
+    return ITensor(IndexSet{std::move(inds)},ITDiag<D>{d});
+    }
+template ITensor doTask(ToITensor& T, const ITDiag<Real>& d);
+template ITensor doTask(ToITensor& T, const ITDiag<Cplx>& d);
+
 
 ITensor
 toITensor(const IQTensor& T)
     {
+    //Handle unallocated IQTensors
+    if(!T.store()) 
+        {
+        if(T.r()==0) return ITensor{};
+        IndexSet::storage_type inds(T.r());
+        for(long j = 0; j < T.r(); ++j) inds[j].ext = T.inds()[j];
+        return ITensor(IndexSet{std::move(inds)});
+        }
+    //Main case for allocated IQTensors
     return doTask<ITensor>(ToITensor{T.inds(),T.scale()},T.store());
     }
 
@@ -283,8 +304,17 @@ doTask(const CalcDiv& C, const IQTData& d)
 QN
 doTask(const CalcDiv& C, const ITCombiner& d)
     {
-    return QN();
+    return QN{};
     }
+
+template<typename T>
+QN
+doTask(const CalcDiv& C, const ITDiag<T>& d)
+    {
+    return QN{};
+    }
+template QN doTask(const CalcDiv& C, const ITDiag<Real>& d);
+template QN doTask(const CalcDiv& C, const ITDiag<Cplx>& d);
 
 QN
 div(const IQTensor& T) 
@@ -407,6 +437,42 @@ isZero(const IQTensor& T, const Args& args)
     return true;
     }
 
+template<typename T>
+void
+doTask(PrintIT<IQIndex>& P, const ITDiag<T>& d)
+    {
+    constexpr auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
+    P.printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""),
+                doTask(NormNoScale{},d));
+
+    auto r = P.is.r();
+
+    if(r == 0) 
+        {
+        P.s << "  ";
+        P.printVal(P.scalefac*(d.empty() ? d.val : d.store.front()));
+        return;
+        }
+
+    if(!P.print_data) return;
+
+    for(auto i : count(d.length))
+        {
+        auto val = P.scalefac*(d.allSame() ? d.val : d.store[i]);
+        if(std::norm(val) > Global::printScale())
+            {
+            P.s << "(";
+            for(decltype(r) j = 1; j < r; ++j)
+                {
+                P.s << (1+i) << ",";
+                }
+            P.s << (1+i) << ") ";
+            P.printVal(val);
+            }
+        }
+    }
+template void doTask(PrintIT<IQIndex>& P, const ITDiag<Real>& d);
+template void doTask(PrintIT<IQIndex>& P, const ITDiag<Cplx>& d);
 
 
 std::ostream&

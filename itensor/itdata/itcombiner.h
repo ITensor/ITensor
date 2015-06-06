@@ -30,7 +30,7 @@ Cplx
 doTask(const GetElt<Index>& g, const ITCombiner& c);
 
 Real
-doTask(const NormNoScale<Index>& N, const ITCombiner& d);
+doTask(NormNoScale, const ITCombiner& d);
 
 void
 doTask(Conj,const ITCombiner& d);
@@ -39,13 +39,13 @@ void
 doTask(Contract<Index>& C,
        const ITReal& d,
        const ITCombiner& cmb,
-       ManagePtr& mp);
+       ManageStore& m);
 
 void
 doTask(Contract<Index>& C,
        const ITCombiner& cmb,
        const ITReal& d,
-       ManagePtr& mp);
+       ManageStore& m);
 
 bool
 doTask(CheckComplex, const ITCombiner& d);

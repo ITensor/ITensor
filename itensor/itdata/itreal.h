@@ -135,22 +135,22 @@ void
 doTask(const SetElt<Real,Index>& s, ITReal& d);
 
 void
-doTask(const SetElt<Cplx,Index>& s, const ITReal& d, ManagePtr& mp);
+doTask(const SetElt<Cplx,Index>& s, const ITReal& d, ManageStore& m);
 
 void
 doTask(const FillReal& f, ITReal& d);
 
 void
-doTask(const FillCplx& f, const ITReal& d, ManagePtr& mp);
+doTask(const FillCplx& f, const ITReal& d, ManageStore& m);
 
 void
-doTask(const MultCplx& M, const ITReal& d, ManagePtr& mp);
+doTask(const MultCplx& M, const ITReal& d, ManageStore& m);
 
 void
 doTask(const MultReal& m, ITReal& d);
 
 Real
-doTask(const NormNoScale<Index>& N, const ITReal& d);
+doTask(NormNoScale, const ITReal& d);
 
 void
 doTask(Conj,const ITReal& d);
@@ -159,7 +159,7 @@ void
 doTask(TakeReal, const ITReal& );
 
 void
-doTask(TakeImag, const ITReal& d, ManagePtr& mp);
+doTask(TakeImag, const ITReal& d, ManageStore& m);
 
 void
 doTask(PrintIT<Index>& P, const ITReal& d);
@@ -174,7 +174,7 @@ void
 doTask(Contract<Index>& C,
        const ITReal& a1,
        const ITReal& a2,
-       ManagePtr& mp);
+       ManageStore& m);
 
 void
 doTask(const PlusEQ<Index>& P,

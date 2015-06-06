@@ -20,93 +20,94 @@ class ITDiag : public RegisterData<ITDiag<T>>
     using const_iterator = typename storage_type::const_iterator;
     using value_type = T;
 
-    //
-    // Data members
-    //
-
-    T val = 0;
     storage_type store;
-
-    //
-    // Constructors
-    //
+    T val = 0;
+    size_type length = 0;
 
     ITDiag() { }
 
+    //Special "all same" case, no
+    //storage allocated since elements
+    //all the same (== val)
+    ITDiag(size_t length_, T val_)
+      : val(val_),
+        length(length_)
+        { }
+
+    ITDiag(size_t size)
+      : store(size,0),
+        length(size)
+        { }
+
     template<typename InputIterator>
     ITDiag(InputIterator b, InputIterator e)
-        :
-        store(b,e)
-        { }
-
-    ITDiag(size_t size, T val)
-        :
-        store(size,val)
-        { }
-
-    ITDiag(T t) 
-        : val(t) 
+      : store(b,e),
+        length(store.size())
         { }
 
     explicit
     ITDiag(storage_type&& data)
-        :
-        store(std::move(data))
+      : store(std::move(data)),
+        length(store.size())
         { }
 
     virtual
     ~ITDiag() { }
 
-    //
-    // Accessors
-    //
-
     bool
     allSame() const { return store.empty(); }
 
-    //
-    // std container like methods
-    //
-
     size_type
     size() const { return store.size(); }
+
     bool
     empty() const { return store.empty(); }
 
     Real*
     data() { return store.data(); }
+
     const Real*
     data() const { return store.data(); }
     
     const_iterator
-    cbegin() const { return store.cbegin(); }
-    const_iterator
-    cend() const { return store.cend(); }
-    const_iterator
     begin() const { return store.begin(); }
+
     const_iterator
     end() const { return store.end(); }
+
     iterator
     begin() { return store.begin(); }
+
     iterator
     end() { return store.end(); }
-
     };
+
+//template<typename T>
+//ITDiag<T>
+//makeDiagAllSame(T val, size_t length)
+//    {
+//    ITDiag<T> res;
+//    res.val = val;
+//    res.length = length;
+//    return res;
+//    }
 
 template<typename T>
 void
 read(std::istream& s, ITDiag<T>& dat)
     {
-    read(s,dat.val);
-    read(s,dat.store);
+    itensor::read(s,dat.val);
+    itensor::read(s,dat.length);
+    itensor::read(s,dat.store);
     }
 
 template<typename T>
 void
 write(std::ostream& s, const ITDiag<T>& dat)
     {
-    write(s,dat.val);
-    write(s,dat.store);
+    itensor::write(s,dat.val);
+    itensor::write(s,dat.length);
+    itensor::write(s,dat.store);
     }
 
 template <typename F, typename T,
@@ -132,12 +133,12 @@ void
 doTask(Contract<Index>& C,
        const ITReal& t,
        const ITDiag<Real>& d,
-       ManagePtr& mp);
+       ManageStore& m);
 void
 doTask(Contract<Index>& C,
        const ITDiag<Real>& d,
        const ITReal& t,
-       ManagePtr& mp);
+       ManageStore& m);
 
 void
 doTask(const PlusEQ<Index>& P,
@@ -146,11 +147,11 @@ doTask(const PlusEQ<Index>& P,
 
 template<typename T>
 void
-doTask(const FillReal& f, const ITDiag<T>& d, ManagePtr& mp);
+doTask(const FillReal& f, const ITDiag<T>& d, ManageStore& m);
 
 template<typename T>
 void
-doTask(const FillCplx& f, const ITDiag<T>& d, ManagePtr& mp);
+doTask(const FillCplx& f, const ITDiag<T>& d, ManageStore& m);
 
 template<typename T>
 void
@@ -158,7 +159,7 @@ doTask(const MultReal& m, ITDiag<T>& d);
 
 template<typename T>
 Real
-doTask(const NormNoScale<Index>& N, const ITDiag<T>& d);
+doTask(NormNoScale, const ITDiag<T>& d);
 
 void
 doTask(Conj, ITDiag<Cplx>& d);
@@ -167,13 +168,13 @@ void
 doTask(Conj,const ITDiag<Real>& d);
 
 void
-doTask(TakeReal,const ITDiag<Cplx>& d, ManagePtr& mp);
+doTask(TakeReal,const ITDiag<Cplx>& d, ManageStore& m);
 
 void
 doTask(TakeReal, const ITDiag<Real>& );
 
 void
-doTask(TakeImag,const ITDiag<Cplx>& d, ManagePtr& mp);
+doTask(TakeImag,const ITDiag<Cplx>& d, ManageStore& m);
 
 template<typename T>
 void
@@ -194,6 +195,7 @@ doTask(Write& W, const ITDiag<Real>& d);
 
 void
 doTask(Write& W, const ITDiag<Cplx>& d);
+
 
 } //namespace itensor
 

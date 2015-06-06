@@ -13,7 +13,7 @@
 
 namespace itensor {
 
-class ManagePtr;
+class ManageStore;
 class ITCombiner;
 class IQTData;
 
@@ -255,7 +255,7 @@ doTask(GenerateIT<F,Real>& G, IQTData& d)
 
 template<typename F>
 void
-doTask(GenerateIT<F,Cplx>& G, const IQTData& cd, ManagePtr& mp)
+doTask(GenerateIT<F,Cplx>& G, const IQTData& cd, ManageStore& mp)
     {
     Error("Complex version of IQTensor generate not yet supported");
     }
@@ -282,19 +282,19 @@ void
 doTask(Contract<IQIndex>& Con,
        const IQTData& A,
        const IQTData& B,
-       ManagePtr& mp);
+       ManageStore& mp);
 
 void
 doTask(Contract<IQIndex>& C,
        const IQTData& d,
        const ITCombiner& cmb,
-       ManagePtr& mp);
+       ManageStore& m);
 
 void
 doTask(Contract<IQIndex>& C,
        const ITCombiner& cmb,
        const IQTData& d,
-       ManagePtr& mp);
+       ManageStore& m);
 
 void
 doTask(Conj, const IQTData& d);
@@ -303,7 +303,7 @@ bool inline
 doTask(CheckComplex,const IQTData& d) { return false; }
 
 Real
-doTask(const NormNoScale<IQIndex>& N, const IQTData& d);
+doTask(NormNoScale, const IQTData& d);
 
 void
 doTask(PrintIT<IQIndex>& P, const IQTData& d);

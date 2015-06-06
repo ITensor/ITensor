@@ -69,15 +69,15 @@ applyFunc_ncimpl(First, ApplyFunc<F,R>& A, Storage& s)
 
 template<typename F, typename R, typename Storage>
 void
-applyFunc_constimpl(Second, ApplyFunc<F,R>& A, const Storage& s, ManagePtr& mp) 
+applyFunc_constimpl(Second, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
     {
-    Storage& ncs = mp.modifyData();
+    Storage& ncs = m.modifyData();
     applyFunc_ncimpl(0,A,ncs);
     }
 
 template<typename F, typename R, typename Storage>
 auto
-applyFunc_constimpl(First, ApplyFunc<F,R>& A, const Storage& s, ManagePtr& mp) 
+applyFunc_constimpl(First, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
     -> decltype(A.f(s), void())
     {
     A(s);
@@ -87,9 +87,9 @@ applyFunc_constimpl(First, ApplyFunc<F,R>& A, const Storage& s, ManagePtr& mp)
 
 template<typename F, typename R, typename Storage>
 void
-doTask(detail::ApplyFunc<F,R>& A, const Storage& s, ManagePtr& mp) 
+doTask(detail::ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
     { 
-    detail::applyFunc_constimpl(detail::TryFirst,A,s,mp);
+    detail::applyFunc_constimpl(detail::TryFirst,A,s,m);
     }
 
 
@@ -106,22 +106,22 @@ struct OneArg
     {
     template<typename Return, typename Task, typename D>
     Return
-    call(Task& t, const D& d, ManagePtr& mp);
+    call(Task& t, const D& d, ManageStore& m);
 
     template<typename Return, typename Task, typename D>
     Return
-    call(Task& t, D& d, ManagePtr& mp);
+    call(Task& t, D& d, ManageStore& m);
     };
 
 struct TwoArgs
     {
     template<typename Return, typename Task, typename D>
     Return
-    call(Task& t, const D& d, ManagePtr& mp);
+    call(Task& t, const D& d, ManageStore& m);
 
     template<typename Return, typename Task, typename D>
     Return
-    call(Task& t, D& d, ManagePtr& mp);
+    call(Task& t, D& d, ManageStore& m);
     };
 
 template <typename NArgs, typename Task, typename Return>
@@ -132,7 +132,7 @@ class RegisterTask : public FuncBase
     using return_type = std::remove_reference_t<Return>;
     private:
     task_type task_;
-    ManagePtr mp_;
+    ManageStore m_;
     return_type ret_;
     public:
 
@@ -140,16 +140,16 @@ class RegisterTask : public FuncBase
         task_(std::move(t))
         { }
 
-    template<typename... MPArgs>
+    template<typename... MSArgs>
     RegisterTask(task_type&& t,
-                 MPArgs&&... mpargs) :
+                 MSArgs&&... msargs) :
         task_(std::move(t)),
-        mp_(std::forward<MPArgs>(mpargs)...)
+        m_(std::forward<MSArgs>(msargs)...)
         { }
 
     RegisterTask(RegisterTask&& o) :
         task_(std::move(o.task_)), 
-        mp_(std::move(o.mp_)),
+        m_(std::move(o.m_)),
         ret_(std::move(o.ret_))
         { }
 
@@ -170,23 +170,23 @@ class RegisterTask : public FuncBase
     void
     applyToImpl(const D& d)
         {
-        ret_ = std::move(NArgs().template call<return_type>(task_,d,mp_));
+        ret_ = std::move(NArgs().template call<return_type>(task_,d,m_));
         }
     template<typename D>
     void
     applyToImpl(D& d)
         {
-        ret_ = std::move(NArgs().template call<return_type>(task_,d,mp_));
+        ret_ = std::move(NArgs().template call<return_type>(task_,d,m_));
         }
     };
 
 template <typename Task, typename D1, typename Return>
 struct CallWrap : FuncBase
     {
-    CallWrap(Task& t, D1& arg1, ManagePtr& mp) 
-        : t_(t), arg1_(arg1), parg1_(nullptr), mp_(mp) { }
-    CallWrap(Task& t, D1& arg1, PData& parg1, ManagePtr& mp) 
-        : t_(t), arg1_(arg1), parg1_(&parg1), mp_(mp) { }
+    CallWrap(Task& t, D1& arg1, ManageStore& m) 
+        : t_(t), arg1_(arg1), parg1_(nullptr), m_(m) { }
+    CallWrap(Task& t, D1& arg1, PData& parg1, ManageStore& m) 
+        : t_(t), arg1_(arg1), parg1_(&parg1), m_(m) { }
 
     Return
     getReturn() { return std::move(ret_); }
@@ -201,7 +201,7 @@ struct CallWrap : FuncBase
     D1& arg1_;
     PData* parg1_;
     Return ret_;
-    ManagePtr& mp_;
+    ManageStore& m_;
 
     public:
     REGISTER_ITDATA_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); })
@@ -261,10 +261,10 @@ callDoTask_Impl(First, Task& t, Storage& s)
     return FixRet<Ret,ActualRet,Task&,Storage&>()(t,s);
     }
 //(2) Less preferred version which always compiles and passes
-//the call on to callDoTask_Impl without the ManagePtr& argument
+//the call on to callDoTask_Impl without the ManageStore& argument
 template <typename Ret, typename Task, typename Storage>
 Ret
-callDoTask_Impl(Second, Task& t, Storage& s, ManagePtr& mp)
+callDoTask_Impl(Second, Task& t, Storage& s, ManageStore& m)
     {
     return callDoTask_Impl<Ret>(TryFirst,t,s);
     }
@@ -273,11 +273,11 @@ callDoTask_Impl(Second, Task& t, Storage& s, ManagePtr& mp)
 //if doTask(t,d) is not defined ("SFINAE" trick)
 template <typename Ret, typename Task, typename Storage>
 auto 
-callDoTask_Impl(First, Task& t, Storage& s, ManagePtr& mp)
-    -> std::conditional_t<std::is_void<decltype(doTask(t,s,mp))>::value,Ret,Ret>
+callDoTask_Impl(First, Task& t, Storage& s, ManageStore& m)
+    -> std::conditional_t<std::is_void<decltype(doTask(t,s,m))>::value,Ret,Ret>
     {
-    using ActualRet = decltype(doTask(t,s,mp));
-    return FixRet<Ret,ActualRet,Task&,Storage&,ManagePtr&>()(t,s,mp);
+    using ActualRet = decltype(doTask(t,s,m));
+    return FixRet<Ret,ActualRet,Task&,Storage&,ManageStore&>()(t,s,m);
     }
 //This version of callDoTask attempts "return doTask(t,s,mp);"
 //- If doTask(t,s,mp) not defined, tries calling doTask(t,s)
@@ -288,9 +288,9 @@ callDoTask_Impl(First, Task& t, Storage& s, ManagePtr& mp)
 //  either returns void, returns Ret{} instead
 template<typename Ret, typename Task, typename Storage>
 Ret
-callDoTask(Task& t, Storage& s, ManagePtr& mp)
+callDoTask(Task& t, Storage& s, ManageStore& m)
     {
-    return callDoTask_Impl<Ret,Task,Storage>(TryFirst,t,s,mp);
+    return callDoTask_Impl<Ret,Task,Storage>(TryFirst,t,s,m);
     }
 
 /////////////////////////////////////////////////////
@@ -298,16 +298,16 @@ callDoTask(Task& t, Storage& s, ManagePtr& mp)
 //(2-fail)
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,Second)
+cloneDoTask_Case2ConstNoMS(Task& t, const D& cd, ManageStore& m,Second)
     {
-    if(!mp.parg1().unique()) mp.parg1() = mp.parg1()->clone();
-    auto* pd = static_cast<D*>(mp.parg1().get());
-    return callDoTask<Ret>(t,*pd,mp);
+    if(!m.parg1().unique()) m.parg1() = m.parg1()->clone();
+    auto* pd = static_cast<D*>(m.parg1().get());
+    return callDoTask<Ret>(t,*pd,m);
     }
 //(2-success)
 template<typename Ret, typename Task, typename D>
 auto
-cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,First)
+cloneDoTask_Case2ConstNoMS(Task& t, const D& cd, ManageStore& m,First)
     -> std::conditional_t<std::is_void<decltype(doTask(t,cd))>::value,Ret,Ret>
     {
     return FixRet<Ret,decltype(doTask(t,cd)),Task&,const D&>()(t,cd);
@@ -315,24 +315,24 @@ cloneDoTask_Case2ConstNoMP(Task& t, const D& cd, ManagePtr& mp,First)
 //(1-fail)
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask_Case1ConstMP(Task& t, const D& cd, ManagePtr& mp,Second)
+cloneDoTask_Case1ConstMS(Task& t, const D& cd, ManageStore& m,Second)
     {
-    return cloneDoTask_Case2ConstNoMP<Ret>(t,cd,mp,TryFirst);
+    return cloneDoTask_Case2ConstNoMS<Ret>(t,cd,m,TryFirst);
     }
 //(1-success) Preferred version since 0->int requires no conversion
-//Attempts to call doTask(Task,const D&, ManagePtr&) if defined
+//Attempts to call doTask(Task,const D&, ManageStore&) if defined
 template<typename Ret, typename Task, typename D>
 auto
-cloneDoTask_Case1ConstMP(Task& t, const D& cd, ManagePtr& mp,First)
-    -> std::conditional_t<std::is_void<decltype(doTask(t,cd,mp))>::value,Ret,Ret>
+cloneDoTask_Case1ConstMS(Task& t, const D& cd, ManageStore& m,First)
+    -> std::conditional_t<std::is_void<decltype(doTask(t,cd,m))>::value,Ret,Ret>
     {
-    return FixRet<Ret,decltype(doTask(t,cd,mp)),Task&,const D&,ManagePtr&>()(t,cd,mp);
+    return FixRet<Ret,decltype(doTask(t,cd,m)),Task&,const D&,ManageStore&>()(t,cd,m);
     }
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask(Task& t, const D& cd, ManagePtr& mp)
+cloneDoTask(Task& t, const D& cd, ManageStore& m)
     {
-    return cloneDoTask_Case1ConstMP<Ret>(t,cd,mp,TryFirst);
+    return cloneDoTask_Case1ConstMS<Ret>(t,cd,m,TryFirst);
     }
 
 /////////////////////
@@ -355,28 +355,28 @@ callDoTask_Impl(First, Task& t, D1& d1, const D2& d2)
     return FixRet<Ret,ActualRet,Task&,D1&,const D2&>()(t,d1,d2);
     }
 //(2) Less preferred version which always compiles and passes
-//the call on to callDoTask_Impl (3) without the ManagePtr& argument
+//the call on to callDoTask_Impl (3) without the ManageStore& argument
 template <typename Ret, typename Task, typename D1, typename D2>
 Ret
-callDoTask_Impl(Second, Task& t, D1& d1, const D2& d2, ManagePtr& mp)
+callDoTask_Impl(Second, Task& t, D1& d1, const D2& d2, ManageStore& m)
     {
     return callDoTask_Impl<Ret>(0,t,d1,d2);
     }
 //(1)
 template <typename Ret, typename Task, typename D1, typename D2>
 auto 
-callDoTask_Impl(First, Task& t, D1& d1, const D2& d2, ManagePtr& mp)
-    -> std::conditional_t<std::is_void<decltype(doTask(t,d1,d2,mp))>::value,Ret,Ret>
+callDoTask_Impl(First, Task& t, D1& d1, const D2& d2, ManageStore& m)
+    -> std::conditional_t<std::is_void<decltype(doTask(t,d1,d2,m))>::value,Ret,Ret>
     {
-    using ActualRet = decltype(doTask(t,d1,d2,mp));
-    return FixRet<Ret,ActualRet,Task&,D1&,const D2&,ManagePtr&>()(t,d1,d2,mp);
+    using ActualRet = decltype(doTask(t,d1,d2,m));
+    return FixRet<Ret,ActualRet,Task&,D1&,const D2&,ManageStore&>()(t,d1,d2,m);
     }
 template<typename Ret, typename Task, typename D1, typename D2>
 Ret
-callDoTask(Task& t, D1& d1, const D2& d2, ManagePtr& mp)
+callDoTask(Task& t, D1& d1, const D2& d2, ManageStore& m)
     {
     //First try calling function labeled (1) above
-    return callDoTask_Impl<Ret,Task,D1,D2>(TryFirst,t,d1,d2,mp);
+    return callDoTask_Impl<Ret,Task,D1,D2>(TryFirst,t,d1,d2,m);
     }
 
 /////////////////////
@@ -384,16 +384,16 @@ callDoTask(Task& t, D1& d1, const D2& d2, ManagePtr& mp)
 //(2-fail)
 template<typename Ret, typename Task, typename D1, typename D2>
 Ret
-cloneDoTask_Case2ConstNoMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,Second) 
+cloneDoTask_Case2ConstNoMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,Second) 
     {
-    if(!mp.parg1().unique()) mp.parg1() = mp.parg1()->clone();
-    auto* pd1 = static_cast<std::remove_const_t<D1>*>(mp.parg1().get());
-    return callDoTask<Ret>(t,*pd1,d2,mp);
+    if(!m.parg1().unique()) m.parg1() = m.parg1()->clone();
+    auto* pd1 = static_cast<std::remove_const_t<D1>*>(m.parg1().get());
+    return callDoTask<Ret>(t,*pd1,d2,m);
     }
 //(2-success)
 template<typename Ret, typename Task, typename D1, typename D2>
 auto
-cloneDoTask_Case2ConstNoMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,First) 
+cloneDoTask_Case2ConstNoMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,First) 
     -> std::conditional_t<std::is_same<decltype(doTask(t,cd1,d2)),void>::value,Ret,Ret>
     {
     return FixRet<Ret,decltype(doTask(t,cd1,d2)),Task&,const D1&,const D2&>()(t,cd1,d2);
@@ -401,23 +401,23 @@ cloneDoTask_Case2ConstNoMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,F
 //(1-fail)
 template<typename Ret, typename Task, typename D1, typename D2>
 Ret
-cloneDoTask_Case1ConstMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,Second)
+cloneDoTask_Case1ConstMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,Second)
     {
-    return cloneDoTask_Case2ConstNoMP<Ret,Task,D1,D2>(t,cd1,d2,mp,0);
+    return cloneDoTask_Case2ConstNoMS<Ret,Task,D1,D2>(t,cd1,d2,m,0);
     }
 //(1-success)
 template<typename Ret, typename Task, typename D1, typename D2>
 auto
-cloneDoTask_Case1ConstMP(Task& t, const D1& cd1, const D2& d2, ManagePtr& mp,First) 
-    -> std::conditional_t<std::is_same<decltype(doTask(t,cd1,d2,mp)),void>::value,Ret,Ret>
+cloneDoTask_Case1ConstMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,First) 
+    -> std::conditional_t<std::is_same<decltype(doTask(t,cd1,d2,m)),void>::value,Ret,Ret>
     {
-    return FixRet<Ret,decltype(doTask(t,cd1,d2,mp)),Task&,const D1&,const D2&,ManagePtr&>()(t,cd1,d2,mp);
+    return FixRet<Ret,decltype(doTask(t,cd1,d2,m)),Task&,const D1&,const D2&,ManageStore&>()(t,cd1,d2,m);
     }
 template<typename Ret, typename Task, typename D1, typename D2>
 Ret
-cloneDoTask(Task& t, const D1& d1, const D2& d2, ManagePtr& mp)
+cloneDoTask(Task& t, const D1& d1, const D2& d2, ManageStore& m)
     {
-    return cloneDoTask_Case1ConstMP<Ret,Task,D1,D2>(t,d1,d2,mp,TryFirst);
+    return cloneDoTask_Case1ConstMS<Ret,Task,D1,D2>(t,d1,d2,m,TryFirst);
     }
 
 void inline
@@ -430,36 +430,36 @@ check(const CPData& p)
 
 template<typename Ret, typename Task, typename D>
 Ret OneArg::
-call(Task& t, const D& d, ManagePtr& mp)
+call(Task& t, const D& d, ManageStore& m)
     {
-    return detail::callDoTask<Ret>(t,d,mp);
+    return detail::callDoTask<Ret>(t,d,m);
     }
 
 template<typename Ret, typename Task, typename D>
 Ret OneArg::
-call(Task& t, D& d, ManagePtr& mp)
+call(Task& t, D& d, ManageStore& m)
     {
-    return detail::cloneDoTask<Ret>(t,d,mp);
+    return detail::cloneDoTask<Ret>(t,d,m);
     }
 
 template<typename Ret, typename Task, typename D>
 Ret TwoArgs::
-call(Task& t, const D& d, ManagePtr& mp)
+call(Task& t, const D& d, ManageStore& m)
     {
-    assert(mp.hasArg2());
-    CallWrap<Task,const D,Ret> w(t,d,mp);
-    mp.arg2().plugInto(w);
+    assert(m.hasArg2());
+    CallWrap<Task,const D,Ret> w(t,d,m);
+    m.arg2().plugInto(w);
     return w.getReturn();
     }
 
 template<typename Ret, typename Task, typename D>
 Ret TwoArgs::
-call(Task& t, D& d, ManagePtr& mp)
+call(Task& t, D& d, ManageStore& m)
     {
-    assert(mp.hasPArg1());
-    assert(mp.hasArg2());
-    CallWrap<Task,D,Ret> w(t,d,mp.parg1(),mp);
-    mp.arg2().plugInto(w);
+    assert(m.hasPArg1());
+    assert(m.hasArg2());
+    CallWrap<Task,D,Ret> w(t,d,m.parg1(),m);
+    m.arg2().plugInto(w);
     return w.getReturn();
     }
 
@@ -468,8 +468,8 @@ template<typename D2>
 void CallWrap<Task,D1,Return>::
 applyToImpl(const D2& d2)
     { 
-    if(parg1_) ret_ = detail::cloneDoTask<Return>(t_,arg1_,d2,mp_); 
-    else       ret_ = detail::callDoTask<Return>(t_,arg1_,d2,mp_); 
+    if(parg1_) ret_ = detail::cloneDoTask<Return>(t_,arg1_,d2,m_); 
+    else       ret_ = detail::callDoTask<Return>(t_,arg1_,d2,m_); 
     }
 
 

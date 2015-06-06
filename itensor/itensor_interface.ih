@@ -561,7 +561,7 @@ norm(const ITensorT<I>& T)
     if(!T) Error("Default initialized tensor in norm(ITensorT)");
 #endif
     return fabs(T.scale().real0()) *
-           doTask<Real>(NormNoScale<I>{T.inds()},T.store());
+           doTask<Real>(NormNoScale{},T.store());
     }
 
 template<typename I>

@@ -25,9 +25,9 @@ doTask(const SetElt<Real,Index>& s, ITReal& d)
     }
 
 void
-doTask(const SetElt<Cplx,Index>& s, const ITReal& d, ManagePtr& mp)
+doTask(const SetElt<Cplx,Index>& s, const ITReal& d, ManageStore& m)
     {
-    auto nd = mp.makeNewData<ITCplx>(d);
+    auto nd = m.makeNewData<ITCplx>(d);
     nd->set(ind(s.is,s.inds),s.elt);
     }
 
@@ -38,15 +38,15 @@ doTask(const FillReal& f, ITReal& d)
     }
 
 void
-doTask(const FillCplx& f, const ITReal& d, ManagePtr& mp)
+doTask(const FillCplx& f, const ITReal& d, ManageStore& m)
     {
-    mp.makeNewData<ITCplx>(d.size(),f.z);
+    m.makeNewData<ITCplx>(d.size(),f.z);
     }
 
 void
-doTask(const MultCplx& M, const ITReal& d, ManagePtr& mp)
+doTask(const MultCplx& M, const ITReal& d, ManageStore& m)
     {
-    auto nd = mp.makeNewData<ITCplx>(d);
+    auto nd = m.makeNewData<ITCplx>(d);
     (*nd) *= M.z;
     }
 
@@ -58,7 +58,7 @@ doTask(const MultReal& m, ITReal& d)
     }
 
 Real
-doTask(const NormNoScale<Index>& N, const ITReal& d) 
+doTask(NormNoScale, const ITReal& d) 
     { 
     Real nrm = 0;
     for(auto& elt : d) 
@@ -73,15 +73,15 @@ void
 doTask(TakeReal, const ITReal& ) { }
 
 void
-doTask(TakeImag, const ITReal& d, ManagePtr& mp) 
+doTask(TakeImag, const ITReal& d, ManageStore& m) 
     { 
-    mp.makeNewData<ITReal>(d.size(),0);
+    m.makeNewData<ITReal>(d.size(),0);
     }
 
 void
 doTask(PrintIT<Index>& P, const ITReal& d)
     {
-    P.printInfo(d,"Dense Real",doTask(NormNoScale<Index>(P.is),d));
+    P.printInfo(d,"Dense Real",doTask(NormNoScale{},d));
      
     auto rank = P.is.r();
     if(rank == 0) 
@@ -134,7 +134,7 @@ void
 doTask(Contract<Index>& C,
        const ITReal& a1,
        const ITReal& a2,
-       ManagePtr& mp)
+       ManageStore& m)
     {
     //Optimization TODO:
     //  Test different scenarios where having sortInds=true or false
@@ -160,7 +160,7 @@ doTask(Contract<Index>& C,
     auto t1 = makeTensorRef(a1.data(),C.Lis),
          t2 = makeTensorRef(a2.data(),C.Ris);
     auto rsize = area(C.Nis);
-    auto nd = mp.makeNewData<ITReal>(rsize,0.);
+    auto nd = m.makeNewData<ITReal>(rsize,0.);
     auto tr = makeTensorRef(nd->data(),C.Nis);
     contractloop(t1,C.Lind,t2,C.Rind,tr,Nind);
 

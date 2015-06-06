@@ -214,7 +214,7 @@ void
 doTask(Contract<IQIndex>& Con,
        const IQTData& A,
        const IQTData& B,
-       ManagePtr& mp)
+       ManageStore& m)
     {
     //compute new index set (Con.Nis):
     contractIS(Con.Lis,Con.Lind,Con.Ris,Con.Rind,Con.Nis,true);
@@ -222,7 +222,7 @@ doTask(Contract<IQIndex>& Con,
     auto Cdiv = calcDiv(Con.Lis,A)+calcDiv(Con.Ris,B);
 
     //Allocate storage for C
-    auto nd = mp.makeNewData<IQTData>(Con.Nis,Cdiv);
+    auto nd = m.makeNewData<IQTData>(Con.Nis,Cdiv);
     auto& C = *nd;
 
     auto rA = Con.Lis.r(),
@@ -386,7 +386,7 @@ combine(const IQTData& d,
         const IQIndexSet& dis,
         const IQIndexSet& Cis,
         IQIndexSet& Nis,
-        ManagePtr& mp,
+        ManageStore& m,
         bool own_data)
     {
     //cind is special "combined index"
@@ -417,7 +417,7 @@ combine(const IQTData& d,
                 }
             Nis = replaceInd(dis,ju,cind);
             }
-        if(!own_data) mp.assignPointerRtoL();
+        if(!own_data) m.assignPointerRtoL();
         return;
         }
     else if(jc > 0) //we are uncombining, but cind not at front
@@ -510,7 +510,7 @@ combine(const IQTData& d,
             }
         else if(own_data) 
             {
-            p = mp.modifyData(d);
+            p = m.modifyData(d);
             }
         else
             {
@@ -521,25 +521,25 @@ combine(const IQTData& d,
         p->updateOffsets(Nis,div);
         }
 
-    if(nd) mp.makeNewData<IQTData>(move(nd));
+    if(nd) m.makeNewData<IQTData>(move(nd));
     }
 
 void
 doTask(Contract<IQIndex>& C,
        const IQTData& d,
        const ITCombiner& cmb,
-       ManagePtr& mp)
+       ManageStore& m)
     {
-    combine(d,C.Lis,C.Ris,C.Nis,mp,true);
+    combine(d,C.Lis,C.Ris,C.Nis,m,true);
     }
 
 void
 doTask(Contract<IQIndex>& C,
        const ITCombiner& cmb,
        const IQTData& d,
-       ManagePtr& mp)
+       ManageStore& m)
     { 
-    combine(d,C.Ris,C.Lis,C.Nis,mp,false);
+    combine(d,C.Ris,C.Lis,C.Nis,m,false);
     }
 
 
@@ -548,7 +548,7 @@ doTask(Conj, const IQTData& d) { }
 
 
 Real
-doTask(const NormNoScale<IQIndex>& N, const IQTData& d) 
+doTask(NormNoScale, const IQTData& d) 
     { 
     Real nrm = 0;
     for(auto& elt : d.data)

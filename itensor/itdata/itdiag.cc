@@ -31,7 +31,7 @@ diagDense(const ITDiag<Real>& d,
           const IndexSet& tis,
           const Label& tind,
           IndexSet& Nis,
-          ManagePtr& mp,
+          ManageStore& m,
           bool RealonLeft)
     {
     //if(area(tis)==1) //Dense tensor is a scalar
@@ -63,7 +63,6 @@ diagDense(const ITDiag<Real>& d,
         if(j >= 0) d_ustride += Nis.stride(i);
         }
 
-    auto dsize = size_t(minM(dis));
 
     if(ntu > 0)
         {
@@ -88,7 +87,7 @@ diagDense(const ITDiag<Real>& d,
                 ++n;
                 }
             }
-        auto nd = mp.makeNewData<ITReal>(area(Nis),0.);
+        auto nd = m.makeNewData<ITReal>(area(Nis),0.);
         auto pr = MAKE_SAFE_PTR(nd->data(),nd->size());
         auto pt = MAKE_SAFE_PTR(t.data(),t.size());
 
@@ -100,11 +99,11 @@ diagDense(const ITDiag<Real>& d,
                        toffset = 0;
                 for(auto i : count(ntu))
                     {
-                    auto ii = C.i.fast(i);
+                    auto ii = C.i[i];
                     toffset += ii*tstride[i];
                     roffset += ii*rstride[i];
                     }
-                for(auto J : count(dsize))
+                for(auto J : count(d.length))
                     {
                     pr[J*d_ustride+roffset] += d.val*pt[J*t_cstride+toffset];
                     }
@@ -113,7 +112,7 @@ diagDense(const ITDiag<Real>& d,
         else
             {
             auto pd = MAKE_SAFE_PTR(d.data(),d.size());
-            assert(d.size() == dsize);
+            assert(d.size() == d.length);
             for(;C.notDone();++C)
                 {
                 size_t roffset = 0,
@@ -124,7 +123,7 @@ diagDense(const ITDiag<Real>& d,
                     toffset += ii*tstride[i];
                     roffset += ii*rstride[i];
                     }
-                for(auto J : count(dsize))
+                for(auto J : count(d.length))
                     {
                     pr[J*d_ustride+roffset] += pd[J]*pt[J*t_cstride+toffset];
                     }
@@ -142,34 +141,34 @@ diagDense(const ITDiag<Real>& d,
             auto pt = MAKE_SAFE_PTR(t.data(),t.size());
             if(d.allSame())
                 {
-                for(auto J : count(dsize))
+                for(auto J : count(d.length))
                     val += d.val*pt[J*t_cstride];
                 }
             else
                 {
-                assert(dsize == d.size());
+                assert(d.length == d.size());
                 auto pd = MAKE_SAFE_PTR(d.data(),d.size());
-                for(auto J : count(dsize))
+                for(auto J : count(d.length))
                     val += pd[J]*pt[J*t_cstride];
                 }
-            mp.makeNewData<ITDiag<Real>>(val);
+            m.makeNewData<ITDiag<Real>>(1,val);
             }
         else //some of d's inds uncontracted
             {
             // o element-wise product of d's data and t's diagonal
-            auto nd = mp.makeNewData<ITDiag<Real>>(dsize,0.);
+            auto nd = m.makeNewData<ITDiag<Real>>(d.length);
             auto pr = MAKE_SAFE_PTR(nd->data(),nd->size());
             auto pt = MAKE_SAFE_PTR(t.data(),t.size());
             if(d.allSame())
                 {
-                for(auto J : count(dsize))
+                for(auto J : count(d.length))
                     pr[J] += d.val*pt[J*t_cstride];
                 }
             else
                 {
-                assert(dsize == d.size());
+                assert(d.length == d.size());
                 auto pd = MAKE_SAFE_PTR(d.data(),d.size());
-                for(auto J : count(dsize))
+                for(auto J : count(d.length))
                     pr[J] += pd[J]*pt[J*t_cstride];
                 }
             }
@@ -180,19 +179,19 @@ void
 doTask(Contract<Index>& C,
        const ITReal& t,
        const ITDiag<Real>& d,
-       ManagePtr& mp)
+       ManageStore& m)
     { 
     contractIS(C.Lis,C.Lind,C.Ris,C.Rind,C.Nis,true);
-    diagDense(d,C.Ris,C.Rind,t,C.Lis,C.Lind,C.Nis,mp,true);
+    diagDense(d,C.Ris,C.Rind,t,C.Lis,C.Lind,C.Nis,m,true);
     }
 void
 doTask(Contract<Index>& C,
        const ITDiag<Real>& d,
        const ITReal& t,
-       ManagePtr& mp)
+       ManageStore& m)
     {
     contractIS(C.Lis,C.Lind,C.Ris,C.Rind,C.Nis,true);
-    diagDense(d,C.Lis,C.Lind,t,C.Ris,C.Rind,C.Nis,mp,false);
+    diagDense(d,C.Lis,C.Lind,t,C.Ris,C.Rind,C.Nis,m,false);
     }
 
 void
@@ -209,21 +208,21 @@ doTask(const PlusEQ<Index>& P,
 
 template<typename T>
 void
-doTask(const FillReal& f, const ITDiag<T>& d, ManagePtr& mp)
+doTask(const FillReal& f, const ITDiag<T>& d, ManageStore& m)
     {
-    mp.makeNewData<ITDiag<Real>>(f.r);
+    m.makeNewData<ITDiag<Real>>(d.length,f.r);
     }
-template void doTask(const FillReal& f, const ITDiag<Real>& d, ManagePtr& mp);
-template void doTask(const FillReal& f, const ITDiag<Cplx>& d, ManagePtr& mp);
+template void doTask(const FillReal& f, const ITDiag<Real>& d, ManageStore& m);
+template void doTask(const FillReal& f, const ITDiag<Cplx>& d, ManageStore& m);
 
 template<typename T>
 void
-doTask(const FillCplx& f, const ITDiag<T>& d, ManagePtr& mp)
+doTask(const FillCplx& f, const ITDiag<T>& d, ManageStore& m)
     {
-    mp.makeNewData<ITDiag<Cplx>>(f.z);
+    m.makeNewData<ITDiag<Cplx>>(d.length,f.z);
     }
-template void doTask(const FillCplx& f, const ITDiag<Real>& d, ManagePtr& mp);
-template void doTask(const FillCplx& f, const ITDiag<Cplx>& d, ManagePtr& mp);
+template void doTask(const FillCplx& f, const ITDiag<Real>& d, ManageStore& m);
+template void doTask(const FillCplx& f, const ITDiag<Cplx>& d, ManageStore& m);
 
 template<typename T>
 void
@@ -238,16 +237,16 @@ template void doTask(const MultReal& m, ITDiag<Cplx>& d);
 
 template<typename T>
 Real
-doTask(const NormNoScale<Index>& N, const ITDiag<T>& d)
+doTask(NormNoScale, const ITDiag<T>& d)
     {
-    if(d.allSame()) return std::sqrt(std::norm(d.val))*std::sqrt(minM(N.is));
+    if(d.allSame()) return std::sqrt(std::norm(d.val))*std::sqrt(d.length);
     Real nrm = 0;
     for(auto& elt : d.store) 
         nrm += std::norm(elt); //conj(elt)*elt
     return std::sqrt(nrm);
     }
-template Real doTask(const NormNoScale<Index>& N, const ITDiag<Real>& d);
-template Real doTask(const NormNoScale<Index>& N, const ITDiag<Cplx>& d);
+template Real doTask(NormNoScale, const ITDiag<Real>& d);
+template Real doTask(NormNoScale, const ITDiag<Cplx>& d);
 
 void
 doTask(Conj, ITDiag<Cplx>& d) 
@@ -267,12 +266,12 @@ void
 doTask(Conj,const ITDiag<Real>& d) { }
 
 void
-doTask(TakeReal,const ITDiag<Cplx>& d, ManagePtr& mp) 
+doTask(TakeReal,const ITDiag<Cplx>& d, ManageStore& m) 
     { 
-    if(d.allSame()) mp.makeNewData<ITDiag<Real>>(d.val.real());
+    if(d.allSame()) m.makeNewData<ITDiag<Real>>(d.length,d.val.real());
     else            
         {
-        auto nd = mp.makeNewData<ITDiag<Real>>(d.size(),0.);
+        auto nd = m.makeNewData<ITDiag<Real>>(d.size());
         for(auto i : index(d.store)) nd->store[i] = d.store[i].real();
         }
     }
@@ -281,12 +280,12 @@ void
 doTask(TakeReal, const ITDiag<Real>& ) { }
 
 void
-doTask(TakeImag,const ITDiag<Cplx>& d, ManagePtr& mp) 
+doTask(TakeImag,const ITDiag<Cplx>& d, ManageStore& m) 
     { 
-    if(d.allSame()) mp.makeNewData<ITDiag<Real>>(d.val.imag());
+    if(d.allSame()) m.makeNewData<ITDiag<Real>>(d.length,d.val.imag());
     else            
         {
-        auto nd = mp.makeNewData<ITDiag<Real>>(d.size(),0.);
+        auto nd = m.makeNewData<ITDiag<Real>>(d.size());
         for(auto i : index(d.store)) nd->store[i] = d.store[i].imag();
         }
     }
@@ -297,9 +296,11 @@ doTask(PrintIT<Index>& P, const ITDiag<T>& d)
     {
     constexpr auto type = std::is_same<T,Real>::value ? "Real" : "Cplx";
     P.printInfo(d,format("Diag %s%s",type,d.allSame()?", all same":""),
-              doTask(NormNoScale<Index>(P.is),d));
+              doTask(NormNoScale{},d));
 
-    if(P.is.r() == 0) 
+    auto r = P.is.r();
+
+    if(r == 0) 
         {
         P.s << "  ";
         P.printVal(P.scalefac*(d.empty() ? d.val : d.store.front()));
@@ -308,14 +309,13 @@ doTask(PrintIT<Index>& P, const ITDiag<T>& d)
 
     if(!P.print_data) return;
 
-    auto size = minM(P.is);
-    for(auto i : count(size))
+    for(auto i : count(d.length))
         {
         auto val = P.scalefac*(d.allSame() ? d.val : d.store[i]);
         if(std::norm(val) > Global::printScale())
             {
             P.s << "(";
-            for(size_t j = 1; j < P.is.size(); ++j)
+            for(decltype(r) j = 1; j < r; ++j)
                 {
                 P.s << (1+i) << ",";
                 }

@@ -55,8 +55,9 @@ diagTensor(Complex z,
            Inds&&... inds)
     { 
     IndexSet is(i1,std::forward<Inds>(inds)...);
-    if(z.imag() == 0) return ITensor(std::move(is),ITDiag<Real>(z.real()));
-    return ITensor(std::move(is),ITDiag<Complex>(z));
+    auto len = minM(is);
+    if(z.imag() == 0) return ITensor(std::move(is),ITDiag<Real>(len,z.real()));
+    return ITensor(std::move(is),ITDiag<Complex>(len,z));
     }
 
 template<typename Container, typename... Inds>

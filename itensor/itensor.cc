@@ -47,9 +47,9 @@ ITensorT(Cplx val)
     else
         store_ = std::make_shared<ITCplx>(1,val);
     //if(val.imag() == 0)
-    //    store_ = std::make_shared<ITDiag<Real>>(val.real());
+    //    store_ = std::make_shared<ITDiag<Real>>(1,val.real());
     //else
-    //    store_ = std::make_shared<ITDiag<Cplx>>(val);
+    //    store_ = std::make_shared<ITDiag<Cplx>>(1,val);
     }
 
 

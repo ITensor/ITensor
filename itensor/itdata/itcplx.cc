@@ -64,7 +64,7 @@ void
 doTask(Contract<Index>& C,
        const ITCplx& a1,
        const ITCplx& a2,
-       ManagePtr& mp)
+       ManageStore& m)
     {
     //Optimization TODO:
     //  Test different scenarios where having sortInds=true or false
@@ -103,7 +103,7 @@ doTask(Contract<Index>& C,
         }
 
     auto rsize = area(C.Nis);
-    auto nd = mp.makeNewData<ITCplx>(rsize,0.);
+    auto nd = m.makeNewData<ITCplx>(rsize,0.);
 
     auto t1r = makeTensorRef(a1.rstart(),C.Lis),
          t1i = makeTensorRef(a1.istart(),C.Lis),
@@ -130,7 +130,7 @@ realCplx(const ITReal& R,
          const IndexSet& cis,
          const Label& cind,
          IndexSet& Nis,
-         ManagePtr& mp,
+         ManageStore& m,
          Contract<Index>& Con,
          bool RealOnLeft)
     {
@@ -192,7 +192,7 @@ realCplx(const ITReal& R,
             }
         }
 
-    auto nd = mp.makeNewData<ITCplx>(rsize,0.);
+    auto nd = m.makeNewData<ITCplx>(rsize,0.);
 
     auto t1 = makeTensorRef(R.data(),ris),
          t2r = makeTensorRef(C.rstart(),cis),
@@ -211,24 +211,24 @@ void
 doTask(Contract<Index>& C,
        const ITReal& a1,
        const ITCplx& a2,
-       ManagePtr& mp)
+       ManageStore& m)
     {
-    realCplx(a1,C.Lis,C.Lind,a2,C.Ris,C.Rind,C.Nis,mp,C,true);
+    realCplx(a1,C.Lis,C.Lind,a2,C.Ris,C.Rind,C.Nis,m,C,true);
     }
 
 void
 doTask(Contract<Index>& C,
        const ITCplx& a1,
        const ITReal& a2,
-       ManagePtr& mp)
+       ManageStore& m)
     {
-    realCplx(a2,C.Ris,C.Rind,a1,C.Lis,C.Lind,C.Nis,mp,C,false);
+    realCplx(a2,C.Ris,C.Rind,a1,C.Lis,C.Lind,C.Nis,m,C,false);
     }
 
 void
-doTask(const FillReal& f, const ITCplx& d, ManagePtr& mp)
+doTask(const FillReal& f, const ITCplx& d, ManageStore& m)
     {
-    mp.makeNewData<ITReal>(d.csize(),f.r);
+    m.makeNewData<ITReal>(d.csize(),f.r);
     }
 
 void
@@ -250,7 +250,7 @@ doTask(const MultReal& m, ITCplx& d)
     }
 
 Real
-doTask(const NormNoScale<Index>& N, const ITCplx& d)
+doTask(NormNoScale, const ITCplx& d)
     { 
     Real nrm = 0;
     for(auto& elt : d)
@@ -267,24 +267,24 @@ doTask(Conj, ITCplx& d)
     }
 
 void
-doTask(TakeReal,ITCplx& d, ManagePtr& mp)
+doTask(TakeReal,ITCplx& d, ManageStore& m)
     { 
     auto csize = d.csize(); //csize is half the size of d.store
     //Take resources from ITCplx to make new ITReal
-    auto* nd = mp.makeNewData<ITReal>(std::move(d.store));
+    auto* nd = m.makeNewData<ITReal>(std::move(d.store));
     nd->store.resize(csize);
     }
 
 void
-doTask(TakeImag,const ITCplx& d, ManagePtr& mp) 
+doTask(TakeImag,const ITCplx& d, ManageStore& m) 
     { 
-    mp.makeNewData<ITReal>(d.istart(),d.iend());
+    m.makeNewData<ITReal>(d.istart(),d.iend());
     }
 
 void
 doTask(PrintIT<Index>& P, const ITCplx& d)
     {
-    P.printInfo(d,"Dense Cplx",doTask(NormNoScale<Index>(P.is),d));
+    P.printInfo(d,"Dense Cplx",doTask(NormNoScale{},d));
 
     auto rank = P.is.r();
     if(rank == 0) 

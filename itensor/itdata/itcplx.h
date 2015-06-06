@@ -172,9 +172,9 @@ doTask(GenerateIT<F,Cplx>& G, ITCplx& d)
 
 template<typename F>
 void
-doTask(GenerateIT<F,Real>& G, const ITCplx& d, ManagePtr& mp)
+doTask(GenerateIT<F,Real>& G, const ITCplx& d, ManageStore& m)
     { 
-    auto* nd = mp.makeNewData<ITReal>(d.csize());
+    auto* nd = m.makeNewData<ITReal>(d.csize());
     std::generate(nd->begin(),nd->end(),G.f);
     }
 
@@ -184,9 +184,9 @@ doTask(GenerateIT<F,Real>& G, const ITCplx& d, ManagePtr& mp)
 //
 template<typename F>
 void
-doTask(GenerateIT<F,Cplx>& G, const ITReal& d, ManagePtr& mp)
+doTask(GenerateIT<F,Cplx>& G, const ITReal& d, ManageStore& m)
     { 
-    auto* nd = mp.makeNewData<ITCplx>(d.size());
+    auto* nd = m.makeNewData<ITCplx>(d.size());
     for(auto j = 0ul; j < nd->csize(); ++j)
         nd->set(j,G.f());
     }
@@ -205,22 +205,22 @@ void
 doTask(Contract<Index>& C,
        const ITCplx& a1,
        const ITCplx& a2,
-       ManagePtr& mp);
+       ManageStore& m);
 
 void
 doTask(Contract<Index>& C,
        const ITReal& a1,
        const ITCplx& a2,
-       ManagePtr& mp);
+       ManageStore& m);
 
 void
 doTask(Contract<Index>& C,
        const ITCplx& a1,
        const ITReal& a2,
-       ManagePtr& mp);
+       ManageStore& m);
 
 void
-doTask(const FillReal& f, const ITCplx& d, ManagePtr& mp);
+doTask(const FillReal& f, const ITCplx& d, ManageStore& m);
 
 void
 doTask(const FillCplx& f, ITCplx& d);
@@ -232,16 +232,16 @@ void
 doTask(const MultReal& m, ITCplx& d);
 
 Real
-doTask(const NormNoScale<Index>& N, const ITCplx& d);
+doTask(NormNoScale, const ITCplx& d);
 
 void
 doTask(Conj, ITCplx& d); 
 
 void
-doTask(TakeReal,ITCplx& d, ManagePtr& mp);
+doTask(TakeReal,ITCplx& d, ManageStore& m);
 
 void
-doTask(TakeImag,const ITCplx& d, ManagePtr& mp); 
+doTask(TakeImag,const ITCplx& d, ManageStore& m); 
 
 void
 doTask(PrintIT<Index>& P, const ITCplx& d);

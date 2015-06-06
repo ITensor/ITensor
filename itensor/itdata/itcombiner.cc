@@ -19,7 +19,7 @@ doTask(const GetElt<Index>& g, const ITCombiner& c)
     }
 
 Real
-doTask(const NormNoScale<Index>& N, const ITCombiner& d) { return 0; }
+doTask(NormNoScale, const ITCombiner& d) { return 0; }
 
 void
 doTask(Conj,const ITCombiner& d) { }
@@ -29,7 +29,7 @@ combine(const ITReal& d,
         const IndexSet& dis,
         const IndexSet& Cis,
         IndexSet& Nis,
-        ManagePtr& mp)
+        ManageStore& m)
     {
     //TODO: try to make use of Lind,Rind label vectors
     //      to simplify combine logic
@@ -130,7 +130,7 @@ combine(const ITReal& d,
             assert(i==dis.r()+2-Cis.r());
             Range rr(move(pdims));
             Nis = IndexSet(move(newind));
-            auto nd = mp.makeNewData<ITReal>(area(Nis));
+            auto nd = m.makeNewData<ITReal>(area(Nis));
             auto tr = makeTensorRef(nd->data(),rr);
             auto td = makeTensorRef(d.data(),dis);
             permute(td,P,tr);
@@ -142,18 +142,18 @@ void
 doTask(Contract<Index>& C,
        const ITReal& d,
        const ITCombiner& cmb,
-       ManagePtr& mp)
+       ManageStore& m)
     {
-    combine(d,C.Lis,C.Ris,C.Nis,mp);
+    combine(d,C.Lis,C.Ris,C.Nis,m);
     }
 void
 doTask(Contract<Index>& C,
        const ITCombiner& cmb,
        const ITReal& d,
-       ManagePtr& mp)
+       ManageStore& m)
     { 
-    combine(d,C.Ris,C.Lis,C.Nis,mp);
-    if(!mp.newData()) mp.assignPointerRtoL();
+    combine(d,C.Ris,C.Lis,C.Nis,m);
+    if(!m.newData()) m.assignPointerRtoL();
     }
 
 bool

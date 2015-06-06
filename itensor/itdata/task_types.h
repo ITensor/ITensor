@@ -58,12 +58,7 @@ struct SetElt
     };
 
 
-template<typename IndexT>
-struct NormNoScale
-    {
-    const IndexSetT<IndexT>& is;
-    NormNoScale(const IndexSetT<IndexT>& is_) : is(is_) { }
-    };
+struct NormNoScale { };
 
 template<typename IndexT>
 struct PrintIT
