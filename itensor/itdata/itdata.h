@@ -148,6 +148,11 @@ class ManageStore
         updateArg1();
         }
 
+    ManageStore(const ManageStore&) = delete;
+
+    ManageStore&
+    operator=(const ManageStore&) = delete;
+
     bool
     hasPArg1() const { return bool(parg1_); }
 
