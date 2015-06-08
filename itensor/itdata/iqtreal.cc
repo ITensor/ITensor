@@ -2,7 +2,7 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
-#include "itensor/itdata/iqtdata.h"
+#include "itensor/itdata/iqtreal.h"
 #include "itensor/itdata/itdata.h"
 #include "itensor/iqindex.h"
 #include "itensor/detail/gcounter.h"
@@ -16,10 +16,10 @@ using std::move;
 
 namespace itensor {
 
-IQTData::BlOf
+IQTReal::BlOf
 make_blof(long b, long o)
     {
-    IQTData::BlOf B;
+    IQTReal::BlOf B;
     B.block = b;
     B.offset = o;
     return B;
@@ -29,7 +29,7 @@ make_blof(long b, long o)
 //on offset vectors below
 struct compBlock
     {
-    using BlOf = typename IQTData::BlOf;
+    using BlOf = typename IQTReal::BlOf;
     bool
     operator()(const BlOf& bo1,
                const BlOf& bo2) const
@@ -67,10 +67,10 @@ calcDiv(const IQIndexSet& is, const Label& block_ind)
 //    }
 
 QN
-calcDiv(const IQIndexSet& is, const IQTData& D)
+calcDiv(const IQIndexSet& is, const IQTReal& D)
     {
 #ifdef DEBUG
-    if(D.offsets.empty()) Error("Default constructed IQTData in calcDiv");
+    if(D.offsets.empty()) Error("Default constructed IQTReal in calcDiv");
 #endif
     QN div;
     auto r = long(is.r());
@@ -88,15 +88,15 @@ calcDiv(const IQIndexSet& is, const IQTData& D)
     return div;
     }
 
-IQTData::
-IQTData(const IQIndexSet& is, 
+IQTReal::
+IQTReal(const IQIndexSet& is, 
         const QN& div)
     {
     auto totalsize = updateOffsets(is,div);
     data.assign(totalsize,0);
     }
 
-long IQTData::
+long IQTReal::
 updateOffsets(const IQIndexSet& is,
               const QN& div)
     {
@@ -141,7 +141,7 @@ updateOffsets(const IQIndexSet& is,
     return totalsize;
     }
 
-long IQTData::
+long IQTReal::
 offsetOf(long blkind) const
     {
     auto blk = detail::binaryFind(offsets,blkind,compBlock());
@@ -150,7 +150,7 @@ offsetOf(long blkind) const
     }
 
 Cplx
-doTask(GetElt<IQIndex>& G, const IQTData& d)
+doTask(GetElt<IQIndex>& G, const IQTReal& d)
     {
     auto* pelt = d.getElt(G.is,G.inds);
     if(pelt) return *pelt;
@@ -158,7 +158,7 @@ doTask(GetElt<IQIndex>& G, const IQTData& d)
     }
 
 void
-doTask(SetElt<Real,IQIndex>& S, IQTData& d)
+doTask(SetElt<Real,IQIndex>& S, IQTReal& d)
     {
     auto* pelt = d.getElt(S.is,S.inds);
     if(pelt) *pelt = S.elt;
@@ -166,7 +166,7 @@ doTask(SetElt<Real,IQIndex>& S, IQTData& d)
     }
 
 void
-doTask(MultReal& M, IQTData& d)
+doTask(MultReal& M, IQTReal& d)
     {
     //use BLAS algorithm?
     for(auto& elt : d.data)
@@ -176,8 +176,8 @@ doTask(MultReal& M, IQTData& d)
 
 void
 doTask(const PlusEQ<IQIndex>& P,
-       IQTData& A,
-       const IQTData& B)
+       IQTReal& A,
+       const IQTReal& B)
     {
 #ifdef DEBUG
     if(A.data.size() != B.data.size()) Error("Mismatched sizes in plusEq");
@@ -212,8 +212,8 @@ doTask(const PlusEQ<IQIndex>& P,
 
 void
 doTask(Contract<IQIndex>& Con,
-       const IQTData& A,
-       const IQTData& B,
+       const IQTReal& A,
+       const IQTReal& B,
        ManageStore& m)
     {
     //compute new index set (Con.Nis):
@@ -222,7 +222,7 @@ doTask(Contract<IQIndex>& Con,
     auto Cdiv = calcDiv(Con.Lis,A)+calcDiv(Con.Ris,B);
 
     //Allocate storage for C
-    auto nd = m.makeNewData<IQTData>(Con.Nis,Cdiv);
+    auto nd = m.makeNewData<IQTReal>(Con.Nis,Cdiv);
     auto& C = *nd;
 
     auto rA = Con.Lis.r(),
@@ -319,9 +319,9 @@ doTask(Contract<IQIndex>& Con,
 void
 permuteIQ(const Permutation& P,
           const IQIndexSet& Ais,
-          const IQTData& dA,
+          const IQTReal& dA,
           IQIndexSet& Bis,
-          IQTData& dB)
+          IQTReal& dB)
     {
 #ifdef DEBUG
     if(isTrivial(P)) Error("Calling permuteIQ for trivial Permutation");
@@ -333,7 +333,7 @@ permuteIQ(const Permutation& P,
         bind.at(P.dest(i)).ext = Ais[i];
         }
     Bis = IQIndexSet{move(bind)};
-    dB = IQTData(Bis,calcDiv(Ais,dA));
+    dB = IQTReal(Bis,calcDiv(Ais,dA));
     //if(Global::debug1())
     //    {
     //    println("Error is happening because IQIndexSet is sorting m==1 ind to the back, but Permute logic here thinks it's still in the same location.");
@@ -382,7 +382,7 @@ replaceInd(const IQIndexSet& is,
     }
 
 void
-combine(const IQTData& d,
+combine(const IQTReal& d,
         const IQIndexSet& dis,
         const IQIndexSet& Cis,
         IQIndexSet& Nis,
@@ -470,7 +470,7 @@ combine(const IQTData& d,
             }
         }
 
-    IQTData nd;
+    IQTReal nd;
     if(P) 
         {
         permuteIQ(P,dis,d,Nis,nd);
@@ -503,7 +503,7 @@ combine(const IQTData& d,
     //If Cis.r()==2 just swapping one index for another
     if(Cis.r() > 2)
         {
-        IQTData* p = nullptr;
+        IQTReal* p = nullptr;
         if(nd)
             {
             p = &nd;
@@ -521,12 +521,12 @@ combine(const IQTData& d,
         p->updateOffsets(Nis,div);
         }
 
-    if(nd) m.makeNewData<IQTData>(move(nd));
+    if(nd) m.makeNewData<IQTReal>(move(nd));
     }
 
 void
 doTask(Contract<IQIndex>& C,
-       const IQTData& d,
+       const IQTReal& d,
        const ITCombiner& cmb,
        ManageStore& m)
     {
@@ -536,7 +536,7 @@ doTask(Contract<IQIndex>& C,
 void
 doTask(Contract<IQIndex>& C,
        const ITCombiner& cmb,
-       const IQTData& d,
+       const IQTReal& d,
        ManageStore& m)
     { 
     combine(d,C.Ris,C.Lis,C.Nis,m,false);
@@ -544,11 +544,11 @@ doTask(Contract<IQIndex>& C,
 
 
 void
-doTask(Conj, const IQTData& d) { }
+doTask(Conj, const IQTReal& d) { }
 
 
 Real
-doTask(NormNoScale, const IQTData& d) 
+doTask(NormNoScale, const IQTReal& d) 
     { 
     Real nrm = 0;
     for(auto& elt : d.data)
@@ -560,7 +560,7 @@ doTask(NormNoScale, const IQTData& d)
 
 
 void
-doTask(PrintIT<IQIndex>& P, const IQTData& d)
+doTask(PrintIT<IQIndex>& P, const IQTReal& d)
     {
     P.s << "{Data size = " << d.data.size() << "}\n\n";
     Real scalefac = 1.0;
@@ -626,9 +626,9 @@ doTask(PrintIT<IQIndex>& P, const ITCombiner& d)
     }
 
 void
-doTask(Write& W, const IQTData& d)
+doTask(Write& W, const IQTReal& d)
     {
-    W.writeType(StorageType::IQTData,d); 
+    W.writeType(StorageType::IQTReal,d); 
     }
 
 } //namespace itensor

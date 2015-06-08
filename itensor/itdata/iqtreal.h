@@ -15,11 +15,11 @@ namespace itensor {
 
 class ManageStore;
 class ITCombiner;
-class IQTData;
+class IQTReal;
 
 
 QN
-calcDiv(const IQIndexSet& is, const IQTData& D);
+calcDiv(const IQIndexSet& is, const IQTReal& D);
 
 QN
 calcDiv(const IQIndexSet& is, const Label& block_ind);
@@ -40,7 +40,7 @@ inverseBlockInd(long block,
     ind[r-1] = block;
     }
 
-class IQTData : public RegisterData<IQTData>
+class IQTReal : public RegisterData<IQTReal>
     {
     public:
 
@@ -63,9 +63,9 @@ class IQTData : public RegisterData<IQTData>
         //^ tensor data stored contiguously
     //////////////
 
-    IQTData() { }
+    IQTReal() { }
 
-    IQTData(const IQIndexSet& is, 
+    IQTReal(const IQIndexSet& is, 
             const QN& div_);
 
 
@@ -82,7 +82,7 @@ class IQTData : public RegisterData<IQTData>
              const Indexable& block_ind)
         {
         //ugly but safe, efficient, and avoids code duplication (Meyers, Effective C++)
-        return const_cast<Real*>(static_cast<const IQTData&>(*this).getBlock(is,block_ind));
+        return const_cast<Real*>(static_cast<const IQTReal&>(*this).getBlock(is,block_ind));
         }
 
     template<typename Indexable>
@@ -95,7 +95,7 @@ class IQTData : public RegisterData<IQTData>
     getElt(const IndexSetT<IQIndex>& is,
            const Indexable& ind)
         {
-        return const_cast<Real*>(static_cast<const IQTData&>(*this).getElt(is,ind));
+        return const_cast<Real*>(static_cast<const IQTReal&>(*this).getElt(is,ind));
         }
 
     long
@@ -106,12 +106,12 @@ class IQTData : public RegisterData<IQTData>
                   const QN& div);
 
     virtual
-    ~IQTData() { }
+    ~IQTReal() { }
 
     };
 
 template<typename Indexable>
-const Real* IQTData::
+const Real* IQTReal::
 getBlock(const IQIndexSet& is,
          const Indexable& block_ind) const
     {
@@ -138,7 +138,7 @@ getBlock(const IQIndexSet& is,
     }
 
 template<typename Indexable>
-const Real* IQTData::
+const Real* IQTReal::
 getElt(const IQIndexSet& is,
        const Indexable& ind) const
     {
@@ -185,14 +185,14 @@ getElt(const IQIndexSet& is,
 
 
 void inline
-write(std::ostream& s, const IQTData& dat)
+write(std::ostream& s, const IQTReal& dat)
     {
     itensor::write(s,dat.offsets);
     itensor::write(s,dat.data);
     }
 
 void inline
-read(std::istream& s, IQTData& dat)
+read(std::istream& s, IQTReal& dat)
     {
     itensor::read(s,dat.offsets);
     itensor::read(s,dat.data);
@@ -200,7 +200,7 @@ read(std::istream& s, IQTData& dat)
 
 //
 // Helper object for treating
-// IQTData storage as a "tensor of tensors"
+// IQTReal storage as a "tensor of tensors"
 //
 template<typename Indexable>
 class IndexDim
@@ -232,7 +232,7 @@ make_indexdim(const IQIndexSet& is, const Indexable& ind)
 
 template <typename F>
 void
-doTask(ApplyIT<F>& A, IQTData& d)
+doTask(ApplyIT<F>& A, IQTReal& d)
     {
     for(auto& elt : d.data)
         elt = A.f(elt);
@@ -240,7 +240,7 @@ doTask(ApplyIT<F>& A, IQTData& d)
 
 template <typename F>
 void
-doTask(VisitIT<F>& V, const IQTData& d)
+doTask(VisitIT<F>& V, const IQTReal& d)
     {
     for(const auto& elt : d.data)
         V.f(elt*V.scale_fac);
@@ -248,71 +248,71 @@ doTask(VisitIT<F>& V, const IQTData& d)
 
 template<typename F>
 void
-doTask(GenerateIT<F,Real>& G, IQTData& d)
+doTask(GenerateIT<F,Real>& G, IQTReal& d)
     {
     std::generate(d.data.begin(),d.data.end(),G.f);
     }
 
 template<typename F>
 void
-doTask(GenerateIT<F,Cplx>& G, const IQTData& cd, ManageStore& mp)
+doTask(GenerateIT<F,Cplx>& G, const IQTReal& cd, ManageStore& mp)
     {
     Error("Complex version of IQTensor generate not yet supported");
     }
 
 
 Cplx
-doTask(GetElt<IQIndex>& G, const IQTData& d);
+doTask(GetElt<IQIndex>& G, const IQTReal& d);
 
 void
-doTask(SetElt<Real,IQIndex>& S, IQTData& d);
+doTask(SetElt<Real,IQIndex>& S, IQTReal& d);
 
 //void
-//doTask(SetElt<Cplx,IQIndex>& S, IQTData& d);
+//doTask(SetElt<Cplx,IQIndex>& S, IQTReal& d);
 
 void
-doTask(MultReal& M, IQTData& d);
+doTask(MultReal& M, IQTReal& d);
 
 void
 doTask(const PlusEQ<IQIndex>& P,
-       IQTData& A,
-       const IQTData& B);
+       IQTReal& A,
+       const IQTReal& B);
 
 void
 doTask(Contract<IQIndex>& Con,
-       const IQTData& A,
-       const IQTData& B,
+       const IQTReal& A,
+       const IQTReal& B,
        ManageStore& mp);
 
 void
 doTask(Contract<IQIndex>& C,
-       const IQTData& d,
+       const IQTReal& d,
        const ITCombiner& cmb,
        ManageStore& m);
 
 void
 doTask(Contract<IQIndex>& C,
        const ITCombiner& cmb,
-       const IQTData& d,
+       const IQTReal& d,
        ManageStore& m);
 
 void
-doTask(Conj, const IQTData& d);
+doTask(Conj, const IQTReal& d);
 
 bool inline
-doTask(CheckComplex,const IQTData& d) { return false; }
+doTask(CheckComplex,const IQTReal& d) { return false; }
 
 Real
-doTask(NormNoScale, const IQTData& d);
+doTask(NormNoScale, const IQTReal& d);
 
 void
-doTask(PrintIT<IQIndex>& P, const IQTData& d);
+doTask(PrintIT<IQIndex>& P, const IQTReal& d);
 
 void
 doTask(PrintIT<IQIndex>& P, const ITCombiner& d);
 
 void
-doTask(Write& W, const IQTData& d);
+doTask(Write& W, const IQTReal& d);
 
 } //namespace itensor
 
