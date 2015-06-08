@@ -10,17 +10,19 @@
 
 namespace itensor {
 
-template<typename IndexT> class ITensorT;
+template<typename IndexT> 
+class ITensorT;
+
 class IQIndex;
 
 //
 // ITensorT - interface template for ITensor and IQTensor
 //
-// ITensor is ITensorT<Index>
+// ITensor  is ITensorT<Index>
 // IQTensor is ITensorT<IQIndex>
 //
 
-using ITensor = ITensorT<Index>;
+using ITensor  = ITensorT<Index>;
 using IQTensor = ITensorT<IQIndex>;
 
 
@@ -260,6 +262,19 @@ class ITensorT
 
     void 
     scaleTo(const scale_type& newscale);
+
+    //
+    // Deprecated methods for backwards compatibility
+    // 
+
+    //Real
+    //norm() const;
+
+    //const indexset_type&
+    //indices() const { return is_; }
+
+    //void
+    //randomize();
 
     }; // class ITensorT
 

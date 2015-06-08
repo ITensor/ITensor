@@ -22,7 +22,7 @@ namespace itensor {
 //   diagSymmetric(M,U,d);
 //   matrix D = matrix(M.Nrows(),M.Ncols());
 //   diagonal(D) = d;
-//   M == U*D*U.t(); //<-- pseudo code
+//   M == U*D*transpose(U); //<-- pseudo code
 //
 // (Note this is the transpose of the convention
 //  for U used in the EigenValues routine of

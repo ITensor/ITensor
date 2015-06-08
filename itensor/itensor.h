@@ -45,7 +45,7 @@ deltaTensor(const Index& i1, const Index& i2);
 //(if z is a Real or z.imag()==0 storage will be real)
 template<typename... Inds>
 ITensor
-diagTensor(Complex z,
+diagTensor(Cplx z,
            const Index& i1,
            Inds&&... inds);
 
@@ -55,7 +55,7 @@ diagTensor(Real r,
            const Index& i1,
            Inds&&... inds)
     {
-    return diagTensor(Complex(r),i1,std::forward<Inds>(inds)...);
+    return diagTensor(Cplx{r},i1,std::forward<Inds>(inds)...);
     }
 
 //Construct diagonal ITensor,
