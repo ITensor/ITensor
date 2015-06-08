@@ -158,6 +158,7 @@ toMPO() const
     MPO res(*sites_,logrefNorm_);
     for(int j = 0; j <= N()+1; ++j)
         {
+        //if(!res.A_.at(j)) continue;
         res.A_.at(j) = toITensor(A(j));
         }
     return res;
