@@ -6,7 +6,7 @@
 #define __ITENSOR_SVDALGS_H
 #include "itensor/iqtensor.h"
 #include "itensor/spectrum.h"
-//#include "itensor/mps/localop.h"
+#include "itensor/mps/localop.h"
 
 
 namespace itensor {
@@ -40,13 +40,13 @@ svd(Tensor AA, Tensor& U, Tensor& D, Tensor& V,
 // will end up on B if dir==Fromleft or on A if dir==Fromright.
 //
 
-//template<class Tensor>
-//Spectrum 
-//denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
-//             const Args& args = Global::args())
-//    {
-//    return denmatDecomp(AA,A,B,dir,LocalOp<Tensor>::Null(),args);
-//    }
+template<class Tensor>
+Spectrum 
+denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B, Direction dir, 
+             const Args& args = Global::args())
+    {
+    return denmatDecomp(AA,A,B,dir,LocalOp<Tensor>{},args);
+    }
 
 //Density matrix decomp with LocalOpT object supporting the noise term
 //The LocalOpT argument PH has to provide the deltaRho method
@@ -261,17 +261,11 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
              const LocalOpT& PH,
              Args args)
     {
-    /*
-    using IndexT = typename Tensor::IndexT;
+    using IndexT = typename Tensor::index_type;
 
-    const Real noise = args.getReal("Noise",0.);
+    auto noise = args.getReal("Noise",0.);
 
-    if(isZero(AA,Args("Fast"))) 
-        {
-        throw ResultIsZero("denmatDecomp: AA is zero");
-        }
-
-    IndexT mid = commonIndex(A,B,Link);
+    auto mid = commonIndex(A,B,Link);
 
     //If dir==None, put the O.C. on the side
     //that keeps mid's arrow the same
@@ -280,36 +274,33 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
         dir = (mid.dir() == Out ? Fromright : Fromleft);
         }
 
-    Tensor& to_orth = (dir==Fromleft ? A : B);
-    Tensor& newoc   = (dir==Fromleft ? B : A);
+    auto& to_orth = (dir==Fromleft ? A : B);
+    auto& newoc   = (dir==Fromleft ? B : A);
     
-    CombinerT comb;
+    auto& activeInds = (to_orth ? to_orth : AA).inds();
 
-    const IndexSet<IndexT>& activeInds = (to_orth ? to_orth : AA).indices();
-
-    for(const IndexT& I : activeInds)
-        { 
+    std::vector<IndexT> cinds;
+    cinds.reserve(activeInds.r());
+    for(auto& I : activeInds)
         if(!hasindex(newoc,I))
-            comb.addleft(I);
-        }
+            cinds.push_back(I);
 
     //Apply combiner
-    comb.init(mid ? mid.rawname() : "mid");
+    auto iname = args.getString("IndexName",mid ? mid.rawname() : "mid");
+    auto cmb = combiner(std::move(cinds),iname);
+    auto ci = cmb.inds().front();
 
-    Tensor AAc; 
-    comb.product(AA,AAc);
+    auto AAc = cmb * AA;
 
     //Form density matrix
-    Tensor AAcc = dag(AAc); 
-    AAcc.prime(comb.right()); 
-
-    Tensor rho = AAc*AAcc; 
+    auto rho = AAc*dag(prime(AAc,ci)); 
 
     //Add noise term if requested
-    if(noise > 0 && !PH.isNull())
+    if(noise > 0 && PH)
         {
-        rho += noise*PH.deltaRho(AA,comb,dir);
-        rho *= 1./trace(realPart(rho));
+        rho += noise*PH.deltaRho(AA,cmb,dir);
+        auto tr = (diagTensor(1,ci,prime(ci))*realPart(rho)).real();
+        rho *= 1./tr;
         }
 
     if(args.getBool("UseOrigM",false))
@@ -327,17 +318,13 @@ denmatDecomp(const Tensor& AA, Tensor& A, Tensor& B,
     Tensor U;
     Tensor D;
     args.add("Truncate",true);
-    Spectrum spec = diag_hermitian(rho,U,D,args);
+    auto spec = diag_hermitian(rho,U,D,args);
 
-    comb.dag();
-    comb.product(dag(U),to_orth);
+    cmb.dag();
+    to_orth = cmb * dag(U);
     newoc = U * AAc;
 
     return spec;
-    */
-
-    //TODO remove this line:
-    return Spectrum();
 
     } //denmatDecomp
 

@@ -17,6 +17,7 @@ using std::pair;
 using std::make_pair;
 using std::string;
 using std::sqrt;
+using std::move;
 
 
 struct ToMatRefc
@@ -209,6 +210,8 @@ svdRank2(ITensor A,
     // Truncate
     //
 
+    Spectrum spec;
+
     auto m = DD.size();
     Real truncerr = 0;
     if(do_truncate)
@@ -222,6 +225,7 @@ svdRank2(ITensor A,
         UU.reduceColsTo(m);
         VV.reduceColsTo(m);
         }
+    spec.truncerr(truncerr);
 
     if(args.getBool("ShowEigs",false))
         {
@@ -273,7 +277,7 @@ svdRank2(ITensor A,
         }
     else
         {
-        D = ITensor({uL,vL},ITDiag<Real>(move(DD.store())),A.scale()*signfix);
+        D = ITensor({uL,vL},ITDiag<Real>{DD.begin(),DD.end()},A.scale()*signfix);
         U = ITensor({ui,uL},ITReal(move(UU.store())),signfix);
         V = ITensor({vi,vL},ITReal(move(VV.store())));
         }
@@ -288,7 +292,9 @@ svdRank2(ITensor A,
     if(A.scale().isFiniteReal()) DD *= sqr(A.scale().real0());
     else                         println("Warning: scale not finite real");
 
-    return Spectrum(DD,Args("Truncerr",truncerr));
+    spec.eigsKept(move(DD));
+
+    return spec;
 
     } // void svdRank2
 
@@ -764,20 +770,16 @@ diag_hermitian(ITensor rho,
         }
     else
         {
-        U = ITensor({active,newmid},ITReal(move(UU.store()))); 
-        D = ITensor({prime(newmid),newmid},ITDiag<Real>(move(DD.store())),rho.scale());
+        U = ITensor({active,newmid},ITReal{move(UU.store())}); 
+        D = ITensor({prime(newmid),newmid},ITDiag<Real>{DD.begin(),DD.end()},rho.scale());
         }
 
     if(rho.scale().isFiniteReal())
-        {
         DD *= rho.scale().real();
-        }
     else
-        {
         println("Scale not a finite Real, omitting from returned spectrum.");
-        }
 
-    spec.eigsKept(DD);
+    spec.eigsKept(move(DD));
 
     return spec;
     }
