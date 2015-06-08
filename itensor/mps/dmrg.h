@@ -235,11 +235,12 @@ DMRGWorker(MPSt<Tensor>& psi,
 
             PH.position(b,psi);
 
-            Tensor phi = psi.A(b)*psi.A(b+1);
+            auto phi = psi.A(b)*psi.A(b+1);
 
             energy = davidson(PH,phi,args);
             
-            Spectrum spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,args);
+            auto spec = psi.svdBond(b,phi,(ha==1?Fromleft:Fromright),PH,args);
+
 
             if(!quiet)
                 { 
