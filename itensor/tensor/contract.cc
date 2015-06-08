@@ -71,9 +71,20 @@ find_index(const vector<T>& v,
 template<typename T, size_t MaxSize>
 long 
 find_index(const VarArray<T,MaxSize>& v, 
-          const T& t)
+           const T& t)
     {
     using size_type = typename VarArray<T,MaxSize>::size_type;
+    for(size_type i = 0; i < v.size(); ++i)
+        if(v[i] == t) return i;
+    return -1;
+    }
+
+template<typename T, size_t MaxSize>
+long 
+find_index(const InfArray<T,MaxSize>& v, 
+           const T& t)
+    {
+    using size_type = typename InfArray<T,MaxSize>::size_type;
     for(size_type i = 0; i < v.size(); ++i)
         if(v[i] == t) return i;
     return -1;

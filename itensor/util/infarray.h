@@ -65,6 +65,7 @@ class InfArray
             }
         else
             {
+            //println("Resizing vec_ in InfArray");
             vec_.resize(size);
             data_ = vec_.data();
             size_ = vec_.size();
@@ -140,6 +141,7 @@ class InfArray
         { 
         if(new_size > ArrSize)
             {
+            //println("Resizing vec_ in InfArray");
             vec_.resize(new_size);
             if(size_ <= ArrSize)
                 {

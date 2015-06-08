@@ -10,7 +10,9 @@
 
 namespace itensor {
 
-using Label = VarArray<long,31ul>; //sizeof(VarArray<long,31ul>)==256
+using Label = InfArray<long,11ul>; //sizeof(InfArray<long,11ul>)==128
+//using Label = VarArray<long,15ul>; //sizeof(VarArray<long,15ul>)==128
+//using Label = VarArray<long,31ul>; //sizeof(VarArray<long,31ul>)==256
 
 inline std::ostream& 
 operator<<(std::ostream& s, const Label& A)

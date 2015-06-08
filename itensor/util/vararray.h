@@ -45,8 +45,8 @@ class VarArray
     using reverse_iterator = typename storage_type::reverse_iterator;
     using const_reverse_iterator = typename storage_type::const_reverse_iterator;
     private:
-    storage_type store_;
     size_t size_;
+    storage_type store_;
     public:
 
     VarArray() : size_(0) { }
@@ -55,14 +55,13 @@ class VarArray
 
     VarArray(size_t size,
               const_reference value) 
-        : 
-        size_(size) 
+      : size_(size) 
         { 
         store_.fill(value);
         }
 
     VarArray(std::initializer_list<T> init) 
-        : size_(init.size()) 
+      : size_(init.size()) 
         { 
         CHECK_SIZE
         size_t i = 0;
@@ -121,10 +120,10 @@ class VarArray
     back() const { CHECK_EMPTY return store_[size_-1]; }
 
     pointer
-    data() { CHECK_EMPTY return store_[0]; }
+    data() { CHECK_EMPTY return &(store_[0]); }
 
     const_pointer
-    data() const { CHECK_EMPTY return store_[0]; }
+    data() const { CHECK_EMPTY return &(store_[0]); }
 
     bool
     empty() const { return size_==0; }
@@ -157,7 +156,11 @@ class VarArray
     void
     check_ind(size_t i) const
         {
-        if(i >= size_) Error("index out of range in VarArray");
+        if(i >= size_) 
+            {
+            std::cout << "index " << i << " out of range in VarArray, size=" << size_ << std::endl;
+            Error("index out of range in VarArray");
+            }
         }
     void
     check_size() const
