@@ -170,7 +170,7 @@ class LocalMPO
     long
     size() const { return lop_.size(); }
 
-    explicit operator bool() const { return Op_ == 0 && Psi_ == 0; }
+    explicit operator bool() const { return Op_ != 0 || Psi_ != 0; }
 
     bool
     doWrite() const { return do_write_; }
@@ -255,7 +255,6 @@ LocalMPO(const MPOt<Tensor>& H,
       LHlim_(0),
       RHlim_(H.N()+1),
       nc_(2),
-      lop_(args),
       do_write_(false),
       writedir_("."),
       Psi_(0)
@@ -273,7 +272,6 @@ LocalMPO(const MPSt<Tensor>& Psi,
       LHlim_(0),
       RHlim_(Psi.N()+1),
       nc_(2),
-      lop_(args),
       do_write_(false),
       writedir_("."),
       Psi_(&Psi)
@@ -292,7 +290,6 @@ LocalMPO(const MPOt<Tensor>& H,
       LHlim_(0),
       RHlim_(H.N()+1),
       nc_(2),
-      lop_(args),
       do_write_(false),
       writedir_("."),
       Psi_(0)
@@ -316,7 +313,6 @@ LocalMPO(const MPSt<Tensor>& Psi,
       LHlim_(0),
       RHlim_(Psi.N()+1),
       nc_(2),
-      lop_(args),
       do_write_(false),
       writedir_("."),
       Psi_(&Psi)
