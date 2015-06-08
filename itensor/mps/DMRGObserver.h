@@ -113,16 +113,15 @@ measure(const Args& args)
         if(b == N/2 && ha == 2)
             {
             println();
-            Vec center_eigs = last_spec_.eigsKept();
+            auto center_eigs = last_spec_.eigsKept();
             Real S = 0;
-            for(int j = 1; j <= center_eigs.size(); ++j) 
             for(const auto& p : center_eigs)
                 {
                 S -= p*log(std::fabs(p));
                 }
             printfln("    vN Entropy at center bond b=%d = %.12f",N/2,S);
             printf("    Eigs at center bond b=%d: ",N/2);
-            for(int j = 1; j <= std::min(center_eigs.size(),10l); ++j) 
+            for(long j = 1; j <= std::min(center_eigs.size(),10l); ++j) 
                 {
                 auto eig = center_eigs(j);
                 if(eig < 1E-3) break;
