@@ -74,6 +74,9 @@ class Spectrum
     eigsKept(const Vec& val) { eigs_ = val; }
 
     void 
+    eigsKept(Vec&& val) { eigs_ = std::move(val); }
+
+    void 
     read(std::istream& s);
     void 
     write(std::ostream& s) const;
