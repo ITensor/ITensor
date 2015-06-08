@@ -60,37 +60,37 @@ SECTION("Constructors")
         }
     }
 
-SECTION("push_back")
-    {
-    InfArray<int,10> ib;
-    for(int j = 0; j < int(ib.arr_size()); ++j)
-        {
-        ib.push_back(j);
-        }
-    CHECK(ib.vec_size()==0);
-
-    InfArray<int,4> ia;
-    int final_size = 80;
-    CHECK(ia.size()==0);
-    for(int j = 0; j < final_size; ++j)
-        {
-        ia.push_back(j);
-        CHECK(ia.size()==j+1);
-        }
-    CHECK(ia.vec_size()==final_size);
-    for(int j = 0; j < final_size; ++j)
-        {
-        CHECK(ia[j]==j);
-        }
-    }
+//SECTION("push_back")
+//    {
+//    InfArray<int,10> ib;
+//    for(int j = 0; j < int(ib.arr_size()); ++j)
+//        {
+//        ib.push_back(j);
+//        }
+//    CHECK(ib.vec_size()==0);
+//
+//    InfArray<int,4> ia;
+//    int final_size = 80;
+//    CHECK(ia.size()==0);
+//    for(int j = 0; j < final_size; ++j)
+//        {
+//        ia.push_back(j);
+//        CHECK(ia.size()==j+1);
+//        }
+//    CHECK(ia.vec_size()==final_size);
+//    for(int j = 0; j < final_size; ++j)
+//        {
+//        CHECK(ia[j]==j);
+//        }
+//    }
 
 SECTION("Iteration")
     {
-    InfArray<int,10> ia;
-    int final_size = 8;
-    for(int j = 0; j < final_size; ++j)
+    int size = 8;
+    InfArray<int,10> ia(size);
+    for(int j = 0; j < size; ++j)
         {
-        ia.push_back(j);
+        ia[j] = j;
         }
     int count = 0;
     for(auto& el : ia)
@@ -99,11 +99,11 @@ SECTION("Iteration")
         ++count;
         }
 
-    ia.clear();
-    final_size = 20;
-    for(int j = 0; j < final_size; ++j)
+    size = 20;
+    ia.resize(size);
+    for(int j = 0; j < size; ++j)
         {
-        ia.push_back(j);
+        ia[j] = j;
         }
     count = 0;
     for(auto& el : ia)
@@ -113,42 +113,41 @@ SECTION("Iteration")
         }
     }
 
-SECTION("Fill")
-    {
-    InfArray<int,10> ia;
-    int final_size = 8;
-    for(int j = 0; j < final_size; ++j)
-        {
-        ia.push_back(j);
-        }
-
-    ia.fill(1);
-
-    for(auto& el : ia)
-        {
-        CHECK(el == 1);
-        }
-
-    ia.clear();
-    final_size = 20;
-    for(int j = 0; j < final_size; ++j)
-        {
-        ia.push_back(j);
-        }
-    ia.fill(7);
-    for(auto& el : ia)
-        {
-        CHECK(el == 7);
-        }
-    }
+//SECTION("Fill")
+//    {
+//    int size = 8;
+//    InfArray<int,10> ia(size);
+//    for(int j = 0; j < size; ++j)
+//        {
+//        ia[j] = j;
+//        }
+//
+//    ia.fill(1);
+//    for(auto& el : ia)
+//        {
+//        CHECK(el == 1);
+//        }
+//
+//    size = 20;
+//    ia.resize(size);
+//    for(int j = 0; j < size; ++j)
+//        {
+//        ia[j] = j;
+//        }
+//    ia.fill(7);
+//    for(auto& el : ia)
+//        {
+//        CHECK(el == 7);
+//        }
+//    }
 
 SECTION("Resize")
     {
-    InfArray<int,10> ia;
-    int final_size = 8;
-    for(int j = 0; j < final_size; ++j)
+    int size = 8;
+    InfArray<int,10> ia(size);
+    for(int j = 0; j < size; ++j)
         {
-        ia.push_back(j);
+        ia[j] = j;
         }
     ia.resize(4);
     CHECK(ia.size()==4);
@@ -161,11 +160,11 @@ SECTION("Resize")
     ia.resize(10);
     CHECK(ia.size()==10);
 
-    ia.clear();
-    final_size = 20;
-    for(int j = 0; j < final_size; ++j)
+    size = 20;
+    ia.resize(size);
+    for(int j = 0; j < size; ++j)
         {
-        ia.push_back(j);
+        ia[j] = j;
         }
     ia.resize(18);
     CHECK(ia.size()==18);
