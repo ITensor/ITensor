@@ -40,7 +40,7 @@ class LocalOp
     // Constructors
     //
 
-    LocalOp(const Args& args = Global::args());
+    LocalOp();
 
     LocalOp(const Tensor& Op1, const Tensor& Op2,
             const Args& args = Global::args());
@@ -146,7 +146,7 @@ class LocalOp
 
 template <class Tensor>
 inline LocalOp<Tensor>::
-LocalOp(const Args& args)
+LocalOp()
     :
     Op1_(nullptr),
     Op2_(nullptr),
@@ -219,7 +219,7 @@ bool inline LocalOp<Tensor>::
 RIsNull() const
     {
     if(R_ == nullptr) return true;
-    return !bool(R_);
+    return !bool(*R_);
     }
 
 template <class Tensor>
@@ -228,8 +228,8 @@ product(const Tensor& phi, Tensor& phip) const
     {
     if(!(*this)) Error("LocalOp is null");
 
-    const Tensor& Op1 = *Op1_;
-    const Tensor& Op2 = *Op2_;
+    auto& Op1 = *Op1_;
+    auto& Op2 = *Op2_;
 
     if(LIsNull())
         {
@@ -261,7 +261,7 @@ expect(const Tensor& phi) const
     {
     Tensor phip;
     product(phi,phip);
-    return Dot(phip,phi);
+    return (dag(phip) * phi).real();
     }
 
 template <class Tensor>
