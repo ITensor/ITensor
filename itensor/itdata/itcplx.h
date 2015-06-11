@@ -17,7 +17,7 @@ namespace itensor {
 //  and size
 //
 
-class ITCplx : public RegisterData<ITCplx>
+class ITCplx
     {
     public:
     using storage_type = std::vector<Real>;

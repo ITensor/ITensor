@@ -97,7 +97,6 @@ doTask(detail::ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
 
 
 
-
 struct Void { };
 
 //OneArg and TwoArgs are "policy classes" 
@@ -301,8 +300,8 @@ Ret
 cloneDoTask_Case2ConstNoMS(Task& t, const D& cd, ManageStore& m,Second)
     {
     if(!m.parg1().unique()) m.parg1() = m.parg1()->clone();
-    auto* pd = static_cast<D*>(m.parg1().get());
-    return callDoTask<Ret>(t,*pd,m);
+    auto* pd = static_cast<ITWrap<D>*>(m.parg1().get());
+    return callDoTask<Ret>(t,pd->d,m);
     }
 //(2-success)
 template<typename Ret, typename Task, typename D>
@@ -387,8 +386,8 @@ Ret
 cloneDoTask_Case2ConstNoMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,Second) 
     {
     if(!m.parg1().unique()) m.parg1() = m.parg1()->clone();
-    auto* pd1 = static_cast<std::remove_const_t<D1>*>(m.parg1().get());
-    return callDoTask<Ret>(t,*pd1,d2,m);
+    auto* pd1 = static_cast<std::remove_const_t<ITWrap<D1>>*>(m.parg1().get());
+    return callDoTask<Ret>(t,pd1->d,d2,m);
     }
 //(2-success)
 template<typename Ret, typename Task, typename D1, typename D2>
@@ -477,6 +476,12 @@ applyToImpl(const D2& d2)
 ////// doTask methods
 //////
 
+template<typename T, typename... VArgs>
+std::shared_ptr<ITData>
+newITData(VArgs&&... vargs)
+    {
+    return std::make_shared<ITWrap<T>>(std::forward<VArgs>(vargs)...);
+    }
 
 template<typename ReturnType, typename Task>
 ReturnType

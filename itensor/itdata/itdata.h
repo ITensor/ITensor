@@ -46,39 +46,39 @@ struct ITData
     plugInto(FuncBase& f) = 0;
     };
 
-
-template <class Derived>
-class RegisterData : public ITData
+template<typename T>
+class ITWrap : public ITData
     {
     public:
 
-    RegisterData() { }
+    T d;
 
-    virtual ~RegisterData() { }
+    template<typename... VArgs>
+    ITWrap(VArgs&&... vargs) : d(std::forward<VArgs>(vargs)...) { }
+
+    virtual ~ITWrap() { }
 
     private:
     
     PData
     clone() const final 
         { 
-        auto* pdt = static_cast<const Derived*>(this);
-        return std::make_shared<Derived>(*pdt);
+        return std::make_shared<ITWrap<T>>(d);
         }
 
     void
     plugInto(FuncBase& f) const final
         {
-        auto& cdt = *(static_cast<const Derived*>(this));
-        f.applyTo(cdt);
+        f.applyTo(d);
         }
         
     void
     plugInto(FuncBase& f) final
         {
-        auto& dt = *(static_cast<Derived*>(this));
-        f.applyTo(dt);
+        f.applyTo(d);
         }
     };
+
 
 class ManageStore
     {
@@ -107,7 +107,8 @@ class ManageStore
             if(!(pdata_->unique())) 
                 {
                 auto* olda1 = static_cast<T*>(pdata_->get());
-                *pdata_ = std::make_shared<T>(*olda1);
+                //*pdata_ = std::make_shared<T>(*olda1);
+                *pdata_ = std::make_shared<ITWrap<T>>(*olda1);
                 }
             return *(static_cast<T*>(pdata_->get()));
             }
@@ -230,10 +231,10 @@ makeNewData(VArgs&&... vargs)
     {
     if(!parg1_) Error("Can't call makeNewData with const-only access to first arg");
     action_ = AssignNewData;
-    auto newdat = std::make_shared<StorageT>(std::forward<VArgs>(vargs)...);
+    auto newdat = std::make_shared<ITWrap<StorageT>>(std::forward<VArgs>(vargs)...);
     auto* ret = newdat.get();
     nd_ = std::move(newdat);
-    return ret;
+    return &(ret->d);
     }
 
 void inline ManageStore::
@@ -274,10 +275,11 @@ modifyData(const T& d)
     if(!parg1_) Error("Can't modify const data");
     if(!(parg1_->unique())) 
         {
-        auto* olda1 = static_cast<T*>(parg1_->get());
-        *parg1_ = std::make_shared<T>(*olda1);
+        auto* olda1 = static_cast<ITWrap<T>*>(parg1_->get());
+        *parg1_ = std::make_shared<ITWrap<T>>(olda1->d);
         }
-    return static_cast<T*>(parg1_->get());
+    auto* a1 = static_cast<ITWrap<T>*>(parg1_->get());
+    return &(a1->d);
     }
 
 

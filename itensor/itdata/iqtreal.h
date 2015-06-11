@@ -40,7 +40,7 @@ inverseBlockInd(long block,
     ind[r-1] = block;
     }
 
-class IQTReal : public RegisterData<IQTReal>
+class IQTReal
     {
     public:
 

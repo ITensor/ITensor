@@ -11,7 +11,7 @@
 namespace itensor {
 
 template<typename T>
-class ITDiag : public RegisterData<ITDiag<T>>
+class ITDiag
     {
     public:
     using storage_type = typename std::vector<T>;

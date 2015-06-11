@@ -43,7 +43,7 @@ ITensorT(const IQIndexVal& iv1,
     is_ = IQIndexSet(inds);
     QN div;
     for(auto& iv : ivs) div += iv.qn()*iv.index.dir();
-    store_ = std::make_shared<IQTReal>(is_,div);
+    store_ = newITData<IQTReal>(is_,div);
     set(1.,iv1,rest...);
     }
 
@@ -63,7 +63,7 @@ ITensorT(const IQIndexVal& iv1,
 //#endif
 //        QN div;
 //        for(auto& iv : vals) div += iv.qn()*iv.index.dir();
-//        if(val.imag() == 0) store_ = std::make_shared<IQTReal>(is_,div);
+//        if(val.imag() == 0) store_ = newITData<IQTReal>(is_,div);
 //        else Error("Setting complex IQTensor element not implemented");
 //        }
 //    scaleTo(1.);

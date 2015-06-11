@@ -13,7 +13,7 @@
 namespace itensor {
 
 
-class ITReal : public RegisterData<ITReal>
+class ITReal
     {
     public:
     using storage_type = std::vector<Real>;

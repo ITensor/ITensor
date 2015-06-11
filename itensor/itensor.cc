@@ -11,7 +11,6 @@
 using std::array;
 using std::ostream;
 using std::vector;
-using std::make_shared;
 
 namespace itensor {
 
@@ -24,7 +23,6 @@ template<>
 ITensor::
 ITensorT(const Index& i1) 
   : is_(i1),
-    //store_(std::make_shared<ITReal>(i1.m(),0.)),
     scale_(1.)
 	{ }
 
@@ -33,7 +31,6 @@ template<>
 ITensor::
 ITensorT(const Index& i1,const Index& i2) 
   : is_(i1,i2),
-    //store_(std::make_shared<ITReal>(i1.m()*i2.m(),0.)),
     scale_(1.)
 	{ }
     
@@ -43,13 +40,13 @@ ITensorT(Cplx val)
   : scale_(1.)
     { 
     if(val.imag() == 0)
-        store_ = std::make_shared<ITReal>(1,val.real());
+        store_ = newITData<ITReal>(1,val.real());
     else
-        store_ = std::make_shared<ITCplx>(1,val);
+        store_ = newITData<ITCplx>(1,val);
     //if(val.imag() == 0)
-    //    store_ = std::make_shared<ITDiag<Real>>(1,val.real());
+    //    store_ = newITData<ITDiag<Real>>(1,val.real());
     //else
-    //    store_ = std::make_shared<ITDiag<Cplx>>(1,val);
+    //    store_ = newITData<ITDiag<Cplx>>(1,val);
     }
 
 

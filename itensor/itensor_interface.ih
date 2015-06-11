@@ -18,7 +18,7 @@ namespace detail {
 void inline
 allocReal(ITensor& T)
     {
-    T.store() = std::make_shared<ITReal>(area(T.inds()),0);
+    T.store() = newITData<ITReal>(area(T.inds()),0);
     }
 
 void inline
@@ -31,7 +31,7 @@ template<typename Container>
 void
 allocReal(ITensor& T, const Container& inds)
     {
-    T.store() = std::make_shared<ITReal>(area(T.inds()),0);
+    T.store() = newITData<ITReal>(area(T.inds()),0);
     }
 
 template<typename Container>
@@ -44,7 +44,7 @@ allocReal(IQTensor& T, const Container& inds)
         auto iv = (T.inds()[i])(1+inds[i]);
         div += iv.qn()*iv.index.dir();
         }
-    T.store() = std::make_shared<IQTReal>(T.inds(),div);
+    T.store() = newITData<IQTReal>(T.inds(),div);
     }
 }
 
@@ -97,7 +97,7 @@ ITensorT(indexset_type iset,
          DataType&& dat,
          const LogNumber& scale) :
     is_(std::move(iset)),
-    store_(std::make_shared<std::decay_t<DataType>>(std::move(dat))),
+    store_(newITData<std::decay_t<DataType>>(std::move(dat))),
     scale_(scale)
     {
     static_assert(std::is_rvalue_reference<decltype(std::forward<DataType>(dat))>::value,
@@ -614,9 +614,9 @@ template<typename T, typename... CtrArgs>
 ITensor::storage_ptr
 readType(std::istream& s, CtrArgs&&... args)
     {
-    auto p = std::make_shared<T>(std::forward<CtrArgs>(args)...);
-    read(s,*p);
-    return p;
+    T t(std::forward<CtrArgs>(args)...);
+    read(s,t);
+    return newITData<T>(std::move(t));
     }
 
 template<typename I>
