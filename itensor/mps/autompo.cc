@@ -4,6 +4,7 @@
 //
 #include <algorithm>
 #include "itensor/mps/autompo.h"
+#include "itensor/util/count.h"
 
 using std::find;
 using std::cout;
@@ -20,7 +21,7 @@ bool
 isReal(const Cplx& z) { return z.imag() == 0; }
 
 bool
-isApproxReal(const Cplx& z, Real epsilon = 1E-12) { return fabs(z.imag()) < epsilon; }
+isApproxReal(const Cplx& z, Real epsilon = 1E-12) { return std::fabs(z.imag()) < epsilon; }
 
 SiteTerm::
 SiteTerm() : i(-1), coef(0) { }
@@ -420,7 +421,13 @@ toMPO<IQTensor>(const AutoMPO& am,
     const SiteSet& sites = am.sites();
     IQMPO H(sites);
     const int N = sites.N();
-    const auto checkqn = args.getBool("CheckQNs",true);
+    //CheckQNs is so that QNs can be turned off
+    //for ITensor case - necessary?
+    //TODO: may be able to do a design where
+    //      code for creating link inds is 
+    //      factored into helper function
+    //      overloaded for IQIndex and Index cases
+    //const auto checkqn = args.getBool("CheckQNs",true);
 
     for(auto& t : am.terms())
     if(t.Nops() > 2) 
@@ -446,8 +453,8 @@ toMPO<IQTensor>(const AutoMPO& am,
     //Fill up the basis array at each site with 
     //the unique operator types occurring on the site
     //and starting a string of operators (i.e. first op of an HTerm)
-    for(const auto& ht : am.terms())
-    for(int n = ht.first().i; n < ht.last().i; ++n)
+    for(auto& ht : am.terms())
+    for(auto n : count(ht.first().i,ht.last().i))
         {
         auto& bn = basis.at(n);
         auto test_has_first = [&ht](const SiteQN& sq){ return sq.st == ht.first(); };
@@ -455,30 +462,30 @@ toMPO<IQTensor>(const AutoMPO& am,
         if(!has_first) 
             {
             auto Op = sites.op(ht.first().op,ht.first().i);
-            if(checkqn)
-                bn.emplace_back(ht.first(),-div(Op));
-            else
-                bn.emplace_back(ht.first(),Zero);
+            //if(checkqn)
+            bn.emplace_back(ht.first(),-div(Op));
+            //else
+            //    bn.emplace_back(ht.first(),Zero);
             }
         }
 
-    if(checkqn)
-        {
-        auto qn_comp = [&Zero](const SiteQN& sq1,const SiteQN& sq2)
-                       {
-                       //First two if statements are to artificially make
-                       //the default-constructed Zero QN come first in the sort
-                       if(sq1.q == Zero && sq2.q != Zero) return true;
-                       else if(sq2.q == Zero && sq1.q != Zero) return false;
-                       return sq1.q < sq2.q;
-                       };
-        //Sort bond "basis" elements by quantum number sector:
-        for(auto& bn : basis) std::sort(bn.begin(),bn.end(),qn_comp);
-        }
+    //if(checkqn)
+    //    {
+    auto qn_comp = [&Zero](const SiteQN& sq1,const SiteQN& sq2)
+                   {
+                   //First two if statements are to artificially make
+                   //the default-constructed Zero QN come first in the sort
+                   if(sq1.q == Zero && sq2.q != Zero) return true;
+                   else if(sq2.q == Zero && sq1.q != Zero) return false;
+                   return sq1.q < sq2.q;
+                   };
+    //Sort bond "basis" elements by quantum number sector:
+    for(auto& bn : basis) std::sort(bn.begin(),bn.end(),qn_comp);
+    //    }
 
     vector<IQIndex> links(N+1);
     vector<IndexQN> inqn;
-    for(int n = 0; n <= N; n++)
+    for(int n = 0; n <= N; ++n)
         {
         auto& bn = basis.at(n);
         inqn.clear();
@@ -520,13 +527,13 @@ toMPO<IQTensor>(const AutoMPO& am,
     //all HTerms (operator strings) which begin on,
     //end on, or cross site "j"
     vector<vector<HTerm>> ht_by_n(N+1);
-    for(const HTerm& ht : am.terms()) 
-    for(const auto& st : ht.ops)
+    for(auto& ht : am.terms()) 
+    for(auto& st : ht.ops)
         {
         ht_by_n.at(st.i).push_back(ht);
         }
 
-    for(int n = 1; n <= N; n++)
+    for(auto n : count1(N))
         {
         auto& bn1 = basis.at(n-1);
         auto& bn  = basis.at(n);
@@ -537,11 +544,12 @@ toMPO<IQTensor>(const AutoMPO& am,
 
         W = IQTensor(dag(sites(n)),prime(sites(n)),dag(row),col);
 
-        for(int r = 0; r < row.m(); ++r)
-        for(int c = 0; c < col.m(); ++c)
+        for(auto r : count(row.m()))
+        for(auto c : count(col.m()))
             {
             auto& rst = bn1.at(r).st;
             auto& cst = bn.at(c).st;
+
 
 #ifdef SHOW_AUTOMPO
             ws[r][c] = "0";
@@ -553,6 +561,17 @@ toMPO<IQTensor>(const AutoMPO& am,
                 {
                 //Call startTerm to handle fermionic cases with Jordan-Wigner strings
                 auto op = startTerm(cst.op);
+                //if(Global::debug1())
+                //    {
+                //    println("\nAttempting to add the following");
+                //    PrintData(sites.op(op,n));
+                //    printfln("cst.coef = %f",cst.coef);
+                //    PrintData(cst.coef * sites.op(op,n));
+                //    auto tmp = cst.coef * sites.op(op,n) * rc;
+                //    PrintData(tmp);
+                //    PrintData(W);
+                //    EXIT
+                //    }
                 W += cst.coef * sites.op(op,n) * rc;
 #ifdef SHOW_AUTOMPO
                 if(isApproxReal(cst.coef))
@@ -663,8 +682,8 @@ MPO
 toMPO<ITensor>(const AutoMPO& a,
                const Args& args)
     {
-    static Args checkqn("CheckQNs",false);
-    IQMPO res = toMPO<IQTensor>(a,args+checkqn);
+    auto checkqn = Args("CheckQNs",false);
+    auto res = toMPO<IQTensor>(a,args+checkqn);
     return res.toMPO();
     }
 
@@ -684,7 +703,7 @@ toExpH_ZW1(const AutoMPO& am,
         Error("Only at most 2-operator terms allowed for AutoMPO conversion to MPO/IQMPO");
         }
 
-    bool is_complex = fabs(tau.imag()) > fabs(1E-12*tau.real());
+    bool is_complex = std::fabs(tau.imag()) > std::fabs(1E-12*tau.real());
 
     //Special SiteTerm objects indicating either
     //a string of identities coming from the first
