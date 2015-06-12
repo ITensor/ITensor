@@ -93,8 +93,7 @@ doTask(detail::ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
 ///////////////////
 
 
-
-struct Void { };
+struct NoneType { };
 
 //OneArg and TwoArgs are "policy classes" 
 //for customizing implementation of RegisterTask
@@ -228,6 +227,26 @@ struct CallWrap : public FuncT<CallWrap<Task,D1,Return>,StorageTypes>
 
 namespace detail {
 
+//template<typename Ret, typename... VArgs>
+//struct FixRet
+//    {
+//    Ret
+//    operator()(VArgs&&... vargs)
+//        {
+//        return doTask(std::forward<VArgs>(vargs)...);
+//        }
+//    };
+//template<typename... VArgs>
+//struct FixRet<NoneType,VArgs...>
+//    {
+//    NoneType
+//    operator()(VArgs&&... vargs)
+//        {
+//        doTask(std::forward<VArgs>(vargs)...);
+//        return NoneType{};
+//        }
+//    };
+
 //If ActualRet!=void this gets called
 template<typename Ret, typename ActualRet, typename... VArgs>
 struct FixRet
@@ -235,10 +254,6 @@ struct FixRet
     Ret
     operator()(VArgs&&... vargs)
         {
-        static_assert(!std::is_same<Ret,Void>::value,
-                      "No return type specified in call to doTask");
-        static_assert(std::is_same<Ret,ActualRet>::value,
-                      "Mismatched return type specified in call to doTask");
         return doTask(std::forward<VArgs>(vargs)...);
         }
     };
@@ -246,13 +261,61 @@ struct FixRet
 template<typename Ret, typename... VArgs>
 struct FixRet<Ret,void,VArgs...>
     {
-    Ret
+    NoneType
     operator()(VArgs&&... vargs)
         {
         doTask(std::forward<VArgs>(vargs)...);
-        return Ret{};
+        return NoneType{};
         }
     };
+
+template<typename Ret>
+using RetOrNone = std::conditional_t<std::is_void<Ret>::value,NoneType,Ret>;
+
+template<typename Ret, typename ActualRet>
+using RetIfExists = std::conditional_t<std::is_void<ActualRet>::value,Ret,Ret>;
+
+
+template<typename Task, typename Storage>
+struct TestRet
+    {
+    auto
+    operator()()
+        {
+        return testRetImplMS(TryFirst);
+        }
+    private:
+    Task& t;
+    Storage& s;
+    ManageStore& m;
+    auto 
+    testRetImplMS(First)
+        -> RetOrNone<decltype(doTask(t,s,m))>
+        {
+        using ActualRet = RetOrNone<decltype(doTask(t,s,m))>;
+        //return FixRet<ActualRet,Task&,Storage&,ManageStore&>()(t,s,m);
+        return std::declval<ActualRet>();
+        }
+    auto
+    testRetImplMS(Second)
+        {
+        return testRetImpl(TryFirst,t,s);
+        }
+    auto 
+    testRetImpl(First)
+        -> RetOrNone<decltype(doTask(t,s))>
+        {
+        using Ret = RetOrNone<decltype(doTask(t,s))>;
+        //return FixRet<Ret,Task&,Storage&>()(t,s);
+        return std::declval<Ret>();
+        }
+    NoneType
+    testRetImpl(Second)
+        {
+        return NoneType{};
+        }
+    };
+
 
 //(4) Least preferred version which always compiles
 template <typename Ret, typename Task, typename Storage>
@@ -266,13 +329,12 @@ callDoTask_Impl(Second, Task& t, Storage& s)
 // since 0->int requires no cast.
 // Template substitution will fail (not a compile-time error)
 // if doTask(t,d) is not defined ("SFINAE" trick)
-template <typename Ret, typename Task, typename Storage>
+template <typename Ret,typename Task, typename Storage>
 auto 
 callDoTask_Impl(First, Task& t, Storage& s)
-    -> std::conditional_t<std::is_void<decltype(doTask(t,s))>::value,Ret,Ret>
+    -> RetIfExists<Ret,decltype(doTask(t,s))>
     {
-    using ActualRet = decltype(doTask(t,s));
-    return FixRet<Ret,ActualRet,Task&,Storage&>()(t,s);
+    return FixRet<Ret,decltype(doTask(t,s)),Task&,Storage&>()(t,s);
     }
 //(2) Less preferred version which always compiles and passes
 //the call on to callDoTask_Impl without the ManageStore& argument
@@ -288,10 +350,9 @@ callDoTask_Impl(Second, Task& t, Storage& s, ManageStore& m)
 template <typename Ret, typename Task, typename Storage>
 auto 
 callDoTask_Impl(First, Task& t, Storage& s, ManageStore& m)
-    -> std::conditional_t<std::is_void<decltype(doTask(t,s,m))>::value,Ret,Ret>
+    -> RetIfExists<Ret,decltype(doTask(t,s,m))>
     {
-    using ActualRet = decltype(doTask(t,s,m));
-    return FixRet<Ret,ActualRet,Task&,Storage&,ManageStore&>()(t,s,m);
+    return FixRet<Ret,decltype(doTask(t,s,m)),Task&,Storage&,ManageStore&>()(t,s,m);
     }
 //This version of callDoTask attempts "return doTask(t,s,mp);"
 //- If doTask(t,s,mp) not defined, tries calling doTask(t,s)
@@ -299,7 +360,7 @@ callDoTask_Impl(First, Task& t, Storage& s, ManageStore& m)
 //  (this converts what would otherwise be 
 //  a compile-time error into a run-time error)
 //- If doTask(t,s,mp) or doTask(t,s) defined but 
-//  either returns void, returns Ret{} instead
+//  either returns void, returns NoneType{} instead
 template<typename Ret, typename Task, typename Storage>
 Ret
 callDoTask(Task& t, Storage& s, ManageStore& m)
@@ -322,7 +383,7 @@ cloneDoTask_Case2ConstNoMS(Task& t, const D& cd, ManageStore& m,Second)
 template<typename Ret, typename Task, typename D>
 auto
 cloneDoTask_Case2ConstNoMS(Task& t, const D& cd, ManageStore& m,First)
-    -> std::conditional_t<std::is_void<decltype(doTask(t,cd))>::value,Ret,Ret>
+    -> RetIfExists<Ret,decltype(doTask(t,cd))>
     {
     return FixRet<Ret,decltype(doTask(t,cd)),Task&,const D&>()(t,cd);
     }
@@ -338,7 +399,7 @@ cloneDoTask_Case1ConstMS(Task& t, const D& cd, ManageStore& m,Second)
 template<typename Ret, typename Task, typename D>
 auto
 cloneDoTask_Case1ConstMS(Task& t, const D& cd, ManageStore& m,First)
-    -> std::conditional_t<std::is_void<decltype(doTask(t,cd,m))>::value,Ret,Ret>
+    -> RetIfExists<Ret,decltype(doTask(t,cd,m))>
     {
     return FixRet<Ret,decltype(doTask(t,cd,m)),Task&,const D&,ManageStore&>()(t,cd,m);
     }
@@ -363,10 +424,9 @@ callDoTask_Impl(Second, Task& t, D1& d1, const D2& d2)
 template <typename Ret, typename Task, typename D1, typename D2>
 auto 
 callDoTask_Impl(First, Task& t, D1& d1, const D2& d2)
-    -> std::conditional_t<std::is_same<decltype(doTask(t,d1,d2)),void>::value,Ret,Ret>
+    -> RetIfExists<Ret,decltype(doTask(t,d1,d2))>
     {
-    using ActualRet = decltype(doTask(t,d1,d2));
-    return FixRet<Ret,ActualRet,Task&,D1&,const D2&>()(t,d1,d2);
+    return FixRet<Ret,decltype(doTask(t,d1,d2)),Task&,D1&,const D2&>()(t,d1,d2);
     }
 //(2) Less preferred version which always compiles and passes
 //the call on to callDoTask_Impl (3) without the ManageStore& argument
@@ -374,16 +434,15 @@ template <typename Ret, typename Task, typename D1, typename D2>
 Ret
 callDoTask_Impl(Second, Task& t, D1& d1, const D2& d2, ManageStore& m)
     {
-    return callDoTask_Impl<Ret>(0,t,d1,d2);
+    return callDoTask_Impl<Ret>(TryFirst,t,d1,d2);
     }
 //(1)
 template <typename Ret, typename Task, typename D1, typename D2>
 auto 
 callDoTask_Impl(First, Task& t, D1& d1, const D2& d2, ManageStore& m)
-    -> std::conditional_t<std::is_void<decltype(doTask(t,d1,d2,m))>::value,Ret,Ret>
+    -> RetIfExists<Ret,decltype(doTask(t,d1,d2,m))>
     {
-    using ActualRet = decltype(doTask(t,d1,d2,m));
-    return FixRet<Ret,ActualRet,Task&,D1&,const D2&,ManageStore&>()(t,d1,d2,m);
+    return FixRet<Ret,decltype(doTask(t,d1,d2,m)),Task&,D1&,const D2&,ManageStore&>()(t,d1,d2,m);
     }
 template<typename Ret, typename Task, typename D1, typename D2>
 Ret
@@ -408,7 +467,7 @@ cloneDoTask_Case2ConstNoMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,
 template<typename Ret, typename Task, typename D1, typename D2>
 auto
 cloneDoTask_Case2ConstNoMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,First) 
-    -> std::conditional_t<std::is_same<decltype(doTask(t,cd1,d2)),void>::value,Ret,Ret>
+    -> RetIfExists<Ret,decltype(doTask(t,cd1,d2))>
     {
     return FixRet<Ret,decltype(doTask(t,cd1,d2)),Task&,const D1&,const D2&>()(t,cd1,d2);
     }
@@ -423,7 +482,7 @@ cloneDoTask_Case1ConstMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,Se
 template<typename Ret, typename Task, typename D1, typename D2>
 auto
 cloneDoTask_Case1ConstMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,First) 
-    -> std::conditional_t<std::is_same<decltype(doTask(t,cd1,d2,m)),void>::value,Ret,Ret>
+    -> RetIfExists<Ret,decltype(doTask(t,cd1,d2,m))>
     {
     return FixRet<Ret,decltype(doTask(t,cd1,d2,m)),Task&,const D1&,const D2&,ManageStore&>()(t,cd1,d2,m);
     }
@@ -518,7 +577,7 @@ doTask(Task&& t,
 #ifdef DEBUG
     detail::check(arg);
 #endif
-    RegisterTask<OneArg,Task,Void> r(std::forward<Task>(t));
+    RegisterTask<OneArg,Task,NoneType> r(std::forward<Task>(t));
     arg->plugInto(r);
     return std::move(r.getTask());
     }
@@ -543,7 +602,7 @@ doTask(Task&& t,
 #ifdef DEBUG
     detail::check(arg);
 #endif
-    RegisterTask<OneArg,Task,Void> r(std::forward<Task>(t),&arg);
+    RegisterTask<OneArg,Task,NoneType> r(std::forward<Task>(t),&arg);
     arg->plugInto(r);
     return std::move(r.getTask());
     }
@@ -572,7 +631,7 @@ doTask(Task&& t,
     detail::check(arg1);
     detail::check(arg2);
 #endif
-    RegisterTask<TwoArgs,Task,Void> r(std::forward<Task>(t),&arg1,&arg2);
+    RegisterTask<TwoArgs,Task,NoneType> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getTask());
     }
@@ -601,7 +660,7 @@ doTask(Task&& t,
     detail::check(arg1);
     detail::check(arg2);
 #endif
-    RegisterTask<TwoArgs,Task,Void> r(std::forward<Task>(t),&arg1,&arg2);
+    RegisterTask<TwoArgs,Task,NoneType> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getTask());
     }
