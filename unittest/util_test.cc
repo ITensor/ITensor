@@ -60,29 +60,29 @@ SECTION("Constructors")
         }
     }
 
-//SECTION("push_back")
-//    {
-//    InfArray<int,10> ib;
-//    for(int j = 0; j < int(ib.arr_size()); ++j)
-//        {
-//        ib.push_back(j);
-//        }
-//    CHECK(ib.vec_size()==0);
-//
-//    InfArray<int,4> ia;
-//    int final_size = 80;
-//    CHECK(ia.size()==0);
-//    for(int j = 0; j < final_size; ++j)
-//        {
-//        ia.push_back(j);
-//        CHECK(ia.size()==j+1);
-//        }
-//    CHECK(ia.vec_size()==final_size);
-//    for(int j = 0; j < final_size; ++j)
-//        {
-//        CHECK(ia[j]==j);
-//        }
-//    }
+SECTION("push_back")
+    {
+    InfArray<int,10> ib;
+    for(int j = 0; j < int(ib.arr_size()); ++j)
+        {
+        ib.push_back(j);
+        }
+    CHECK(ib.vec_size()==0);
+
+    InfArray<int,4> ia;
+    int final_size = 80;
+    CHECK(ia.size()==0);
+    for(int j = 0; j < final_size; ++j)
+        {
+        ia.push_back(j);
+        CHECK(ia.size()==j+1);
+        }
+    CHECK(ia.vec_size()==final_size);
+    for(int j = 0; j < final_size; ++j)
+        {
+        CHECK(ia[j]==j);
+        }
+    }
 
 SECTION("Iteration")
     {
@@ -177,6 +177,43 @@ SECTION("Resize")
     ia.resize(30);
     CHECK(ia.size()==30);
     CHECK(ia.vec_size()==30);
+    }
+
+SECTION("Erase")
+    {
+    int size = 9;
+    InfArray<int,10> ia(size);
+    for(int j = 0; j < size; ++j)
+        {
+        ia[j] = j;
+        }
+    auto vals_to_erase = {5,8,1};
+    for(auto val : vals_to_erase)
+        {
+        auto it = ia.begin();
+        for(; it != ia.end(); ++it)
+            if(*it == val) break;
+        ia.erase(it);
+        }
+    CHECK(ia.size()==(size-vals_to_erase.size()));
+
+    auto erased = [&vals_to_erase](auto elt)
+                  {
+                  return std::find(vals_to_erase.begin(),
+                                   vals_to_erase.end(),
+                                   elt)!=vals_to_erase.end();
+                  };
+
+    //print("New els:");
+    int count = 0;
+    for(auto& el : ia)
+        {
+        //print(" ",el);
+        while(erased(count)) ++count;
+        CHECK(el == count);
+        ++count;
+        }
+    //println();
     }
 }
 

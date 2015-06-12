@@ -161,6 +161,10 @@ class InfArray
             data_ = &(arr_[0]);
             }
         size_ = new_size; 
+#ifdef DEBUG
+        if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+        else                 assert(data_==vec_.data());
+#endif
         }
 
     void
@@ -196,6 +200,7 @@ class InfArray
         CHECK_IND(i) 
 #ifdef DEBUG
         if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+        else                 assert(data_==vec_.data());
 #endif
         return data_[i];
         }
@@ -206,8 +211,91 @@ class InfArray
         CHECK_IND(i) 
 #ifdef DEBUG
         if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+        else                 assert(data_==vec_.data());
 #endif
         return data_[i];
+        }
+
+    void
+    push_back(const_reference val) 
+        { 
+        if(size_ < ArrSize) 
+            {
+            arr_[size_] = val; 
+            ++size_; 
+            }
+        else if(size_ == ArrSize)
+            {
+            resize(size_+1);
+            back() = val;
+            }
+        else                
+            {
+            vec_.push_back(val);
+            data_ = vec_.data();
+            ++size_;
+            }
+#ifdef DEBUG
+        if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+        else                 assert(data_==vec_.data());
+#endif
+        }
+
+    void
+    push_back(value_type&& val) 
+        { 
+        if(size_ < ArrSize) 
+            {
+            arr_[size_] = std::move(val); 
+            ++size_; 
+            }
+        else if(size_ == ArrSize)
+            {
+            resize(size_+1);
+            back() = std::move(val);
+            }
+        else                
+            {
+            vec_.emplace_back(std::move(val));
+            data_ = vec_.data();
+            ++size_;
+            }
+#ifdef DEBUG
+        if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+        else                 assert(data_==vec_.data());
+#endif
+        }
+
+    void
+    erase(const_iterator it)
+        {
+        if(size_ <= ArrSize) 
+            {
+            auto* e = &(arr_[size_]);
+            iterator p = &(arr_[0]);
+            for(; p != e; ++p)
+                if(p == it) break;
+            if(p == e) throw std::runtime_error("erase: element not found");
+            for(; (p+1) != e; ++p)
+                {
+                *p = *(p+1);
+                }
+            }
+        else
+            {
+            //TODO: if new size <= ArrSize move data?
+            auto vit = vec_.begin();
+            for(; vit != vec_.end(); ++vit)
+                if(&(*vit) == it) break;
+            if(vit == vec_.end()) throw std::runtime_error("erase: element not found");
+            vec_.erase(vit);
+            data_ = vec_.data();
+            }
+        --size_;
+#ifdef DEBUG
+        if(size_ <= ArrSize) assert(data_==&(arr_[0]));
+        else                 assert(data_==vec_.data());
+#endif
         }
 
     reference
@@ -221,6 +309,18 @@ class InfArray
 
     const_pointer
     data() const { return data_; }
+
+    reference
+    front() { CHECK_EMPTY return *data_; }
+
+    const_reference
+    front() const { CHECK_EMPTY return *data_; }
+
+    reference
+    back() { CHECK_EMPTY return *(data_+(size_-1)); }
+
+    const_reference
+    back() const { CHECK_EMPTY return *(data_+(size_-1)); }
 
     bool
     empty() const { return size_==0; }
