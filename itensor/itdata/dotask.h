@@ -9,9 +9,6 @@
 #define REGISTER_ITDATA_HEADER_FILES
 #include "itensor/itdata/storage_types.h"
 
-#define LPAREN (
-#define RPAREN )
-
 namespace itensor {
 
 ///////////////////
@@ -123,8 +120,33 @@ struct TwoArgs
     call(Task& t, D& d, ManageStore& m);
     };
 
+template<typename Derived, typename List>
+struct FuncT : FuncT<Derived,typename List::Next>
+    {
+    using T = typename List::Type;
+    using FuncT<Derived,typename List::Next>::applyTo;
+
+    void
+    applyTo(const T& t) final
+        {
+        auto* pd = static_cast<Derived*>(this);
+        pd->applyToImpl(t);
+        }
+
+    void
+    applyTo(T& t) final
+        {
+        auto* pd = static_cast<Derived*>(this);
+        pd->applyToImpl(t);
+        }
+    };
+template<typename Derived>
+struct FuncT<Derived,TypeList<>> : FuncBase
+    {
+    };
+
 template <typename NArgs, typename Task, typename Return>
-class RegisterTask : public FuncBase
+class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
     {
     public:
     using task_type = std::remove_reference_t<Task>;
@@ -160,11 +182,6 @@ class RegisterTask : public FuncBase
     task_type&
     getTask() { return task_; }
 
-    private:
-
-    REGISTER_ITDATA_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); } )
-    REGISTER_ITDATA_TYPES(void applyTo LPAREN, const&d RPAREN final { applyToImpl(d); } )
-
     template<typename D>
     void
     applyToImpl(const D& d)
@@ -180,7 +197,7 @@ class RegisterTask : public FuncBase
     };
 
 template <typename Task, typename D1, typename Return>
-struct CallWrap : FuncBase
+struct CallWrap : public FuncT<CallWrap<Task,D1,Return>,StorageTypes>
     {
     CallWrap(Task& t, D1& arg1, ManageStore& m) 
         : t_(t), arg1_(arg1), parg1_(nullptr), m_(m) { }
@@ -190,21 +207,19 @@ struct CallWrap : FuncBase
     Return
     getReturn() { return std::move(ret_); }
 
-    private:
 
     template<typename D2>
     void
     applyToImpl(const D2& d2);
     
+    private:
+
     Task& t_;
     D1& arg1_;
     PData* parg1_;
     Return ret_;
     ManageStore& m_;
 
-    public:
-    REGISTER_ITDATA_TYPES(void applyTo LPAREN, &d RPAREN final { applyToImpl(d); })
-    REGISTER_ITDATA_TYPES(void applyTo LPAREN, const&d RPAREN final { applyToImpl(d); })
     };
 
 //
@@ -624,8 +639,7 @@ applyFunc(F&& f, const CPData& store)
 
 } //namespace itensor
 
-#undef LPAREN
-#undef RPAREN
+#undef REGISTER_ITDATA_HEADER_FILES
 
 #endif
 

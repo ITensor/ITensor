@@ -9,27 +9,33 @@
 #include "itensor/util/error.h"
 #include "itensor/itdata/storage_types.h"
 
-#define LPAREN (
-#define RPAREN )
-
 namespace itensor {
 
 struct ITData;
 using PData = std::shared_ptr<ITData>;
 using CPData = std::shared_ptr<const ITData>;
 
-struct FuncBase
+template<typename List>
+struct FuncBaseT : FuncBaseT<typename List::Next>
     {
-    FuncBase() { }
-    virtual ~FuncBase() { }
+    using T = typename List::Type;
+    using FuncBaseT<typename List::Next>::applyTo;
 
-    REGISTER_ITDATA_TYPES(void virtual applyTo LPAREN, &d RPAREN =0;)
-    REGISTER_ITDATA_TYPES(void virtual applyTo LPAREN, const& d RPAREN =0;)
+    void virtual
+    applyTo(const T& t) = 0;
 
-    template <typename T>
-    void
-    applyTo(T& t) { Error("ITData subtype not registered."); }
+    void virtual
+    applyTo(T& t) = 0;
     };
+template<>
+struct FuncBaseT<TypeList<>>
+    {
+    void
+    applyTo() { }
+    };
+
+using FuncBase = FuncBaseT<StorageTypes>;
+
 
 struct ITData
     {
@@ -284,8 +290,5 @@ modifyData(const T& d)
 
 
 } // namespace itensor
-
-#undef LPAREN
-#undef RPAREN
 
 #endif

@@ -2,23 +2,24 @@
 // Distributed under the ITensor Library License, Version 1.2
 //    (See accompanying LICENSE file.)
 //
+#include "itensor/util/typelist.h"
+
+namespace itensor 
+{
 
 //
 // To register a new storage type:
 //
 // (1) Forward declare the storage type
 //
-// (2) Add a line to the REGISTER_ITDATA_TYPE
-//     macro below, following the same format
+// (2) Add a line to the definition of StorageTypes
+//     below, following the same format
 //
 // (3) Include the header file defining
 //     the new type
 //
 
-
 //(1) Forward declare storage types
-namespace itensor 
-{
 
 class ITReal;
 
@@ -31,18 +32,21 @@ class ITCombiner;
 
 class IQTReal;
 
-}
 
-
+using 
+StorageTypes = TypeList< 
+//-----------
 //(2) Register storage type names
-#define REGISTER_ITDATA_TYPES(NewType,EndType) \
-        NewType     ITReal             EndType \
-        NewType     ITCplx             EndType \
-        NewType     ITCombiner         EndType \
-        NewType     ITDiag<Real>       EndType \
-        NewType     ITDiag<Cplx>       EndType \
-        NewType     IQTReal            EndType \
+ITReal,
+ITCplx,
+ITDiag<Real>,
+ITDiag<Cplx>,
+ITCombiner,
+IQTReal
+//-----------
+>;
 
+}
 
 //(3) Register header file names
 #ifdef REGISTER_ITDATA_HEADER_FILES
