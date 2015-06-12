@@ -9,6 +9,7 @@
 #include <string>
 #include "math.h"
 #include "itensor/types.h"
+#include "itensor/util/infarray.h"
 
 namespace itensor {
 
@@ -37,12 +38,10 @@ namespace itensor {
 
 class Args
     {
+    class Val;
     public:
     using Name = std::string;
-    private:
-    class Val;
-    std::vector<Val> vals_;
-    public:
+    using storage_type = InfArray<Val,7ul>;
 
     Args();
 
@@ -260,13 +259,7 @@ class Args
 
         };
 
-    public:
-    
-    //
-    // Deprecated operator&= method. Use operator+= instead.
-    //
-    Args&
-    operator&=(const Args& other) { return operator+=(other); }
+    storage_type vals_;
 
     };
 
