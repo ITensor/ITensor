@@ -44,9 +44,9 @@ toMatRefc(const ITensor& T, const Index& i1, const Index& i2)
     {
     if(i1 == T.inds().front())
         {
-        return doTask<MatRefc>(ToMatRefc{i1.m(),i2.m()},T.store());
+        return doTask(ToMatRefc{i1.m(),i2.m()},T.store());
         }
-    return doTask<MatRefc>(ToMatRefc{i2.m(),i1.m(),true},T.store());
+    return doTask(ToMatRefc{i2.m(),i1.m(),true},T.store());
     }
 
 

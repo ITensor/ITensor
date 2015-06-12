@@ -54,7 +54,7 @@ ITensorT(Cplx val)
 //void ITensor::
 //scaleOutNorm()
 //    {
-//    auto nrm = doTask<Real>(NormNoScale<Index>{is_},store_);
+//    auto nrm = doTask(NormNoScale<Index>{is_},store_);
 //    //If norm already 1 return so
 //    //we don't have to call MultReal
 //    if(fabs(nrm-1.) < 1E-12) return;

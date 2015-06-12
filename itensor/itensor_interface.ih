@@ -125,7 +125,7 @@ cplx(IVs&&... ivs) const
 #endif
     Inds inds(size);
     detail::permute_map(is_,vals,inds,[](const indexval_type& iv) { return iv.val-1; });
-    auto z = itensor::doTask<Cplx>(GetElt<IndexT>{is_,inds},store_);
+    auto z = itensor::doTask(GetElt<IndexT>{is_,inds},store_);
 	try {
 	    return z*scale_.real(); 
 	    }
@@ -550,7 +550,7 @@ template<typename I>
 bool
 isComplex(const ITensorT<I>& T)
     {
-    return doTask<bool>(CheckComplex{},T.store());
+    return doTask(CheckComplex{},T.store());
     }
 
 template<typename I>
@@ -560,8 +560,8 @@ norm(const ITensorT<I>& T)
 #ifdef DEBUG
     if(!T) Error("Default initialized tensor in norm(ITensorT)");
 #endif
-    return fabs(T.scale().real0()) *
-           doTask<Real>(NormNoScale{},T.store());
+    auto fac = fabs(T.scale().real0());
+    return fac * doTask(NormNoScale{},T.store());
     }
 
 template<typename I>
@@ -606,7 +606,7 @@ template<typename I>
 Cplx
 sumelsC(const ITensorT<I>& t)
     {
-    auto z = doTask<Cplx>(SumEls<I>{t.inds()},t.store());
+    auto z = doTask(SumEls<I>{t.inds()},t.store());
     return t.scale().real0()*z;
     }
 

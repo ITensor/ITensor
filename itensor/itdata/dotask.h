@@ -95,6 +95,8 @@ doTask(detail::ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
 
 struct NoneType { };
 
+namespace detail {
+
 //OneArg and TwoArgs are "policy classes" 
 //for customizing implementation of RegisterTask
 struct OneArg
@@ -141,20 +143,43 @@ struct FuncT : FuncT<Derived,typename List::Next>
     };
 template<typename Derived>
 struct FuncT<Derived,TypeList<>> : FuncBase
+    { };
+
+template <typename NArgs, typename Task, typename Return>
+class RegisterTask;
+
+template<typename NArgs, typename Task, typename Return>
+Task
+getReturnHelperImpl(Second,RegisterTask<NArgs,Task,Return>& R)
     {
-    };
+    return std::move(R.task_);
+    }
+template<typename NArgs, typename Task, typename Return>
+auto
+getReturnHelperImpl(First,RegisterTask<NArgs,Task,Return>& R)
+    -> typename std::enable_if<std::is_same<typename RegisterTask<NArgs,Task,Return>::return_type,Return>::value,Return>::type
+    {
+    return std::move(R.ret_);
+    }
+template<typename NArgs, typename Task, typename Return>
+auto
+getReturnHelper(RegisterTask<NArgs,Task,Return>& R)
+    {
+    return getReturnHelperImpl(TryFirst,R);
+    }
+
 
 template <typename NArgs, typename Task, typename Return>
 class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
     {
     public:
     using task_type = std::remove_reference_t<Task>;
-    using return_type = std::remove_reference_t<Return>;
-    private:
+    using return_type = std::conditional_t<std::is_same<Return,NoneType>::value,
+                                           task_type,
+                                           Return>;
     task_type task_;
     ManageStore m_;
-    return_type ret_;
-    public:
+    Return ret_;
 
     RegisterTask(task_type&& t) :
         task_(std::move(t))
@@ -175,23 +200,20 @@ class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
 
     virtual ~RegisterTask() { }
 
-    return_type&
-    getReturn() { return ret_; }
-
-    task_type&
-    getTask() { return task_; }
+    return_type
+    getReturn() { return getReturnHelper(*this); }
 
     template<typename D>
     void
     applyToImpl(const D& d)
         {
-        ret_ = std::move(NArgs().template call<return_type>(task_,d,m_));
+        ret_ = std::move(NArgs().template call<Return>(task_,d,m_));
         }
     template<typename D>
     void
     applyToImpl(D& d)
         {
-        ret_ = std::move(NArgs().template call<return_type>(task_,d,m_));
+        ret_ = std::move(NArgs().template call<Return>(task_,d,m_));
         }
     };
 
@@ -225,28 +247,6 @@ struct CallWrap : public FuncT<CallWrap<Task,D1,Return>,StorageTypes>
 // Implementations
 //
 
-namespace detail {
-
-//template<typename Ret, typename... VArgs>
-//struct FixRet
-//    {
-//    Ret
-//    operator()(VArgs&&... vargs)
-//        {
-//        return doTask(std::forward<VArgs>(vargs)...);
-//        }
-//    };
-//template<typename... VArgs>
-//struct FixRet<NoneType,VArgs...>
-//    {
-//    NoneType
-//    operator()(VArgs&&... vargs)
-//        {
-//        doTask(std::forward<VArgs>(vargs)...);
-//        return NoneType{};
-//        }
-//    };
-
 //If ActualRet!=void this gets called
 template<typename Ret, typename ActualRet, typename... VArgs>
 struct FixRet
@@ -275,47 +275,55 @@ using RetOrNone = std::conditional_t<std::is_void<Ret>::value,NoneType,Ret>;
 template<typename Ret, typename ActualRet>
 using RetIfExists = std::conditional_t<std::is_void<ActualRet>::value,Ret,Ret>;
 
-
+//(4)
+template<typename Task, typename Storage>
+NoneType
+testRetImpl(Second, Task& t, Storage& s)
+    {
+    return NoneType{};
+    }
+//(3)
+template<typename Task, typename Storage>
+auto 
+testRetImpl(First, Task& t, Storage& s)
+    -> RetOrNone<decltype(doTask(t,s))>
+    {
+    using Ret = RetOrNone<decltype(doTask(t,s))>;
+    //return FixRet<Ret,Task&,Storage&>()(t,s);
+    return std::declval<Ret>();
+    }
+//(2)
+template<typename Task, typename Storage>
+auto
+testRetImplMS(Second, Task& t, Storage& s, ManageStore& m)
+    {
+    return testRetImpl(TryFirst,t,s);
+    }
+//(1)
+template<typename Task, typename Storage>
+auto 
+testRetImplMS(First, Task& t, Storage& s, ManageStore& m)
+    -> RetOrNone<decltype(doTask(t,s,m))>
+    {
+    using Ret = RetOrNone<decltype(doTask(t,s,m))>;
+    //return FixRet<ActualRet,Task&,Storage&,ManageStore&>()(t,s,m);
+    return std::declval<Ret>();
+    }
 template<typename Task, typename Storage>
 struct TestRet
     {
-    auto
-    operator()()
-        {
-        return testRetImplMS(TryFirst);
-        }
-    private:
     Task& t;
     Storage& s;
     ManageStore& m;
-    auto 
-    testRetImplMS(First)
-        -> RetOrNone<decltype(doTask(t,s,m))>
-        {
-        using ActualRet = RetOrNone<decltype(doTask(t,s,m))>;
-        //return FixRet<ActualRet,Task&,Storage&,ManageStore&>()(t,s,m);
-        return std::declval<ActualRet>();
-        }
+    TestRet(Task& t_, Storage& s_, ManageStore& m_)
+        : t(t_), s(s_), m(m_) 
+        { }
     auto
-    testRetImplMS(Second)
+    operator()()
         {
-        return testRetImpl(TryFirst,t,s);
-        }
-    auto 
-    testRetImpl(First)
-        -> RetOrNone<decltype(doTask(t,s))>
-        {
-        using Ret = RetOrNone<decltype(doTask(t,s))>;
-        //return FixRet<Ret,Task&,Storage&>()(t,s);
-        return std::declval<Ret>();
-        }
-    NoneType
-    testRetImpl(Second)
-        {
-        return NoneType{};
+        return testRetImplMS(TryFirst,t,s,m);
         }
     };
-
 
 //(4) Least preferred version which always compiles
 template <typename Ret, typename Task, typename Storage>
@@ -499,7 +507,6 @@ check(const CPData& p)
     if(!p) Error("doTask called on unallocated store pointer");
     }
 
-} //namespace detail
 
 template<typename Ret, typename Task, typename D>
 Ret OneArg::
@@ -545,6 +552,24 @@ applyToImpl(const D2& d2)
     else       ret_ = detail::callDoTask<Return>(t_,arg1_,d2,m_); 
     }
 
+template<typename Task, typename List>
+struct GetRType : GetRType<Task,typename List::Next>
+    {
+    using T = typename List::Type;
+    using R = std::result_of_t<TestRet<Task,T>()>;
+    using PR = typename GetRType<Task,typename List::Next>::RType;
+    using RType = std::conditional_t<std::is_same<R,NoneType>::value,PR,R>;
+    };
+template<typename Task>
+struct GetRType<Task,TypeList<>>
+    {
+    using RType = NoneType;
+    };
+
+} //namespace detail
+
+template<typename Task, typename Types>
+using ReturnType = typename detail::GetRType<std::remove_reference_t<Task>,Types>::RType;
 
 //////
 ////// doTask methods
@@ -557,58 +582,36 @@ newITData(VArgs&&... vargs)
     return std::make_shared<ITWrap<T>>(std::forward<VArgs>(vargs)...);
     }
 
-template<typename ReturnType, typename Task>
-ReturnType
+template<typename Task>
+auto
 doTask(Task&& t,
        const CPData& arg)
     {
 #ifdef DEBUG
     detail::check(arg);
 #endif
-    RegisterTask<OneArg,Task,ReturnType> r(std::forward<Task>(t));
+    using Ret = ReturnType<Task,StorageTypes>;
+    detail::RegisterTask<detail::OneArg,Task,Ret> r(std::forward<Task>(t));
     arg->plugInto(r);
     return std::move(r.getReturn());
     }
-template<typename Task>
-Task
-doTask(Task&& t,
-       const CPData& arg)
-    {
-#ifdef DEBUG
-    detail::check(arg);
-#endif
-    RegisterTask<OneArg,Task,NoneType> r(std::forward<Task>(t));
-    arg->plugInto(r);
-    return std::move(r.getTask());
-    }
 
-template<typename ReturnType, typename Task>
-ReturnType
+template<typename Task>
+auto
 doTask(Task&& t,
        PData& arg)
     {
 #ifdef DEBUG
     detail::check(arg);
 #endif
-    RegisterTask<OneArg,Task,ReturnType> r(std::forward<Task>(t),&arg);
+    using Ret = ReturnType<Task,StorageTypes>;
+    detail::RegisterTask<detail::OneArg,Task,Ret> r(std::forward<Task>(t),&arg);
     arg->plugInto(r);
     return std::move(r.getReturn());
     }
-template<typename Task>
-Task
-doTask(Task&& t,
-       PData& arg)
-    {
-#ifdef DEBUG
-    detail::check(arg);
-#endif
-    RegisterTask<OneArg,Task,NoneType> r(std::forward<Task>(t),&arg);
-    arg->plugInto(r);
-    return std::move(r.getTask());
-    }
 
-template<typename ReturnType, typename Task>
-ReturnType
+template<typename Task>
+auto
 doTask(Task&& t,
        const CPData& arg1,
        const CPData& arg2)
@@ -617,27 +620,14 @@ doTask(Task&& t,
     detail::check(arg1);
     detail::check(arg2);
 #endif
-    RegisterTask<TwoArgs,Task,ReturnType> r(std::forward<Task>(t),&arg1,&arg2);
+    using Ret = ReturnType<Task,StorageTypes>;
+    detail::RegisterTask<detail::TwoArgs,Task,Ret> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getReturn());
-    }
-template<typename Task>
-Task
-doTask(Task&& t,
-       const CPData& arg1,
-       const CPData& arg2)
-    {
-#ifdef DEBUG
-    detail::check(arg1);
-    detail::check(arg2);
-#endif
-    RegisterTask<TwoArgs,Task,NoneType> r(std::forward<Task>(t),&arg1,&arg2);
-    arg1->plugInto(r);
-    return std::move(r.getTask());
     }
 
-template<typename ReturnType, typename Task>
-ReturnType
+template<typename Task>
+auto
 doTask(Task&& t,
        PData& arg1,
        const CPData& arg2)
@@ -646,23 +636,10 @@ doTask(Task&& t,
     detail::check(arg1);
     detail::check(arg2);
 #endif
-    RegisterTask<TwoArgs,Task,ReturnType> r(std::forward<Task>(t),&arg1,&arg2);
+    using Ret = ReturnType<Task,StorageTypes>;
+    detail::RegisterTask<detail::TwoArgs,Task,Ret> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getReturn());
-    }
-template<typename Task>
-Task
-doTask(Task&& t,
-       PData& arg1,
-       const CPData& arg2)
-    {
-#ifdef DEBUG
-    detail::check(arg1);
-    detail::check(arg2);
-#endif
-    RegisterTask<TwoArgs,Task,NoneType> r(std::forward<Task>(t),&arg1,&arg2);
-    arg1->plugInto(r);
-    return std::move(r.getTask());
     }
 
 

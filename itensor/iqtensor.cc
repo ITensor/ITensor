@@ -284,7 +284,7 @@ toITensor(const IQTensor& T)
         return ITensor(IndexSet{std::move(inds)});
         }
     //Main case for allocated IQTensors
-    return doTask<ITensor>(ToITensor{T.inds(),T.scale()},T.store());
+    return doTask(ToITensor{T.inds(),T.scale()},T.store());
     }
 
 struct CalcDiv 
@@ -318,7 +318,7 @@ QN
 div(const IQTensor& T) 
     { 
     if(!T) Error("div(IQTensor) not defined for unallocated IQTensor");
-    return doTask<QN>(CalcDiv{T.inds()},T.store());
+    return doTask(CalcDiv{T.inds()},T.store());
     }
 
 IQTensor
