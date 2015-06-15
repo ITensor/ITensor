@@ -60,7 +60,10 @@ class ITWrap : public ITData
     T d;
 
     template<typename... VArgs>
-    ITWrap(VArgs&&... vargs) : d(std::forward<VArgs>(vargs)...) { }
+    ITWrap(VArgs&&... vargs) : d(std::forward<VArgs>(vargs)...) 
+        { 
+        static_assert(containsType<StorageTypes,T>{},"Data type not in list of registered storage types");
+        }
 
     virtual ~ITWrap() { }
 

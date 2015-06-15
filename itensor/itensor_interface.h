@@ -7,6 +7,8 @@
 #include "itensor/detail/algs.h"
 #include "itensor/itdata/dotask.h"
 #include "itensor/indexset.h"
+#define REGISTER_ITDATA_HEADER_FILES
+#include "itensor/itdata/storage_types.h"
 
 namespace itensor {
 

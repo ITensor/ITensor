@@ -5,9 +5,10 @@
 #ifndef __ITENSOR_DOTASK_H
 #define __ITENSOR_DOTASK_H
 
+#include <cassert>
 #include "itensor/itdata/itdata.h"
-#define REGISTER_ITDATA_HEADER_FILES
-#include "itensor/itdata/storage_types.h"
+//#define REGISTER_ITDATA_HEADER_FILES
+//#include "itensor/itdata/storage_types.h"
 
 namespace itensor {
 
@@ -92,8 +93,6 @@ doTask(detail::ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
 
 ///////////////////
 
-
-struct NoneType { };
 
 namespace detail {
 
@@ -552,13 +551,14 @@ applyToImpl(const D2& d2)
     else       ret_ = detail::callDoTask<Return>(t_,arg1_,d2,m_); 
     }
 
-template<typename Task, typename List>
-struct GetRType : GetRType<Task,typename List::Next>
+template<typename Task, typename TList>
+struct GetRType : GetRType<Task,popFront<TList>>
     {
-    using T = typename List::Type;
-    using R = std::result_of_t<TestRet<Task,T>()>;
-    using PR = typename GetRType<Task,typename List::Next>::RType;
-    using RType = std::conditional_t<std::is_same<R,NoneType>::value,PR,R>;
+    using Test = std::result_of_t<TestRet<Task,frontType<TList>>()>;
+    using Parent = GetRType<Task,popFront<TList>>;
+    using RType = std::conditional_t<not std::is_same<Test,NoneType>::value,
+                                     Test,
+                                     typename Parent::RType>;
     };
 template<typename Task>
 struct GetRType<Task,TypeList<>>
@@ -568,17 +568,18 @@ struct GetRType<Task,TypeList<>>
 
 } //namespace detail
 
-template<typename Task, typename Types>
-using ReturnType = typename detail::GetRType<std::remove_reference_t<Task>,Types>::RType;
+template<typename Task, typename TList>
+using ReturnType = typename detail::GetRType<std::remove_reference_t<Task>,TList>::RType;
 
 //////
 ////// doTask methods
 //////
 
 template<typename T, typename... VArgs>
-std::shared_ptr<ITData>
+PData
 newITData(VArgs&&... vargs)
     {
+    static_assert(containsType<StorageTypes,T>{},"Data type not in list of registered storage types");
     return std::make_shared<ITWrap<T>>(std::forward<VArgs>(vargs)...);
     }
 
