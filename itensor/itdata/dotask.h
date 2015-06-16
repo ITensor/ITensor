@@ -16,11 +16,19 @@ namespace itensor {
 
 namespace detail {
 
-//Some definitions to help document
-//the functions below
-constexpr const int TryFirst = 0;
-using First  = int;
-using Second = long;
+//Some definitions to help simplify
+//template overload selection
+//(taken from blog post by R. Martinho Fernandes)
+
+template<unsigned I>
+struct choice : choice<I+1> { };
+
+template<>
+struct choice<10> { };
+
+struct select_overload : choice<1> { };
+
+struct otherwise{ otherwise(...){} };
 
 
 template<typename F,typename Ret>
@@ -52,30 +60,23 @@ struct ApplyFunc<F,void>
 
 template<typename F, typename R, typename Storage>
 void
-applyFunc_ncimpl(Second, ApplyFunc<F,R>& A, Storage& s)
+applyFunc_impl(otherwise, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
     {
     throw ITError("applyFunc: function object has no operator() method for storage type");
     }
 
 template<typename F, typename R, typename Storage>
 auto
-applyFunc_ncimpl(First, ApplyFunc<F,R>& A, Storage& s)
+applyFunc_impl(choice<2>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
     -> decltype(A.f(s), void())
     {
-    A(s);
-    }
-
-template<typename F, typename R, typename Storage>
-void
-applyFunc_constimpl(Second, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
-    {
     Storage& ncs = m.modifyData();
-    applyFunc_ncimpl(0,A,ncs);
+    A(ncs);
     }
 
 template<typename F, typename R, typename Storage>
 auto
-applyFunc_constimpl(First, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
+applyFunc_impl(choice<1>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
     -> decltype(A.f(s), void())
     {
     A(s);
@@ -87,11 +88,8 @@ template<typename F, typename R, typename Storage>
 void
 doTask(detail::ApplyFunc<F,R>& A, const Storage& s, ManageStore& m) 
     { 
-    detail::applyFunc_constimpl(detail::TryFirst,A,s,m);
+    detail::applyFunc_impl(detail::select_overload{},A,s,m);
     }
-
-
-///////////////////
 
 
 namespace detail {
@@ -149,13 +147,13 @@ class RegisterTask;
 
 template<typename NArgs, typename Task, typename Return>
 Task
-getReturnHelperImpl(Second,RegisterTask<NArgs,Task,Return>& R)
+getReturnHelperImpl(otherwise, RegisterTask<NArgs,Task,Return>& R)
     {
     return std::move(R.task_);
     }
 template<typename NArgs, typename Task, typename Return>
 auto
-getReturnHelperImpl(First,RegisterTask<NArgs,Task,Return>& R)
+getReturnHelperImpl(choice<1>, RegisterTask<NArgs,Task,Return>& R)
     -> typename std::enable_if<std::is_same<typename RegisterTask<NArgs,Task,Return>::return_type,Return>::value,Return>::type
     {
     return std::move(R.ret_);
@@ -164,7 +162,7 @@ template<typename NArgs, typename Task, typename Return>
 auto
 getReturnHelper(RegisterTask<NArgs,Task,Return>& R)
     {
-    return getReturnHelperImpl(TryFirst,R);
+    return getReturnHelperImpl(select_overload{},R);
     }
 
 
@@ -180,19 +178,19 @@ class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
     ManageStore m_;
     Return ret_;
 
-    RegisterTask(task_type&& t) :
-        task_(std::move(t))
+    RegisterTask(task_type&& t)
+      : task_(std::move(t))
         { }
 
     template<typename... MSArgs>
     RegisterTask(task_type&& t,
-                 MSArgs&&... msargs) :
-        task_(std::move(t)),
+                 MSArgs&&... msargs)
+      : task_(std::move(t)),
         m_(std::forward<MSArgs>(msargs)...)
         { }
 
-    RegisterTask(RegisterTask&& o) :
-        task_(std::move(o.task_)), 
+    RegisterTask(RegisterTask&& o)
+      : task_(std::move(o.task_)), 
         m_(std::move(o.m_)),
         ret_(std::move(o.ret_))
         { }
@@ -274,38 +272,26 @@ using RetOrNone = std::conditional_t<std::is_void<Ret>::value,NoneType,Ret>;
 template<typename Ret, typename ActualRet>
 using RetIfExists = std::conditional_t<std::is_void<ActualRet>::value,Ret,Ret>;
 
-//(4)
 template<typename Task, typename Storage>
 NoneType
-testRetImpl(Second, Task& t, Storage& s)
+testRetImpl(choice<3>, Task& t, Storage& s, ManageStore& m)
     {
     return NoneType{};
     }
-//(3)
 template<typename Task, typename Storage>
 auto 
-testRetImpl(First, Task& t, Storage& s)
+testRetImpl(choice<2>, Task& t, Storage& s, ManageStore& m)
     -> RetOrNone<decltype(doTask(t,s))>
     {
     using Ret = RetOrNone<decltype(doTask(t,s))>;
-    //return FixRet<Ret,Task&,Storage&>()(t,s);
     return std::declval<Ret>();
     }
-//(2)
-template<typename Task, typename Storage>
-auto
-testRetImplMS(Second, Task& t, Storage& s, ManageStore& m)
-    {
-    return testRetImpl(TryFirst,t,s);
-    }
-//(1)
 template<typename Task, typename Storage>
 auto 
-testRetImplMS(First, Task& t, Storage& s, ManageStore& m)
+testRetImpl(choice<1>, Task& t, Storage& s, ManageStore& m)
     -> RetOrNone<decltype(doTask(t,s,m))>
     {
     using Ret = RetOrNone<decltype(doTask(t,s,m))>;
-    //return FixRet<ActualRet,Task&,Storage&,ManageStore&>()(t,s,m);
     return std::declval<Ret>();
     }
 template<typename Task, typename Storage>
@@ -320,43 +306,29 @@ struct TestRet
     auto
     operator()()
         {
-        return testRetImplMS(TryFirst,t,s,m);
+        return testRetImpl(select_overload{},t,s,m);
         }
     };
 
-//(4) Least preferred version which always compiles
 template <typename Ret, typename Task, typename Storage>
 Ret
-callDoTask_Impl(Second, Task& t, Storage& s)
+callDoTask_Impl(choice<3>, Task& t, Storage& s, ManageStore& m)
     {
     Error("1 parameter doTask not defined for specified task or data type");
     return Ret{};
     }
-//(3) This is preferred more than version (4) above
-// since 0->int requires no cast.
-// Template substitution will fail (not a compile-time error)
-// if doTask(t,d) is not defined ("SFINAE" trick)
 template <typename Ret,typename Task, typename Storage>
 auto 
-callDoTask_Impl(First, Task& t, Storage& s)
+callDoTask_Impl(choice<2>, Task& t, Storage& s, ManageStore& m)
     -> RetIfExists<Ret,decltype(doTask(t,s))>
     {
     return FixRet<Ret,decltype(doTask(t,s)),Task&,Storage&>()(t,s);
     }
-//(2) Less preferred version which always compiles and passes
-//the call on to callDoTask_Impl without the ManageStore& argument
-template <typename Ret, typename Task, typename Storage>
-Ret
-callDoTask_Impl(Second, Task& t, Storage& s, ManageStore& m)
-    {
-    return callDoTask_Impl<Ret>(TryFirst,t,s);
-    }
-//(1) This is the preferred version since 0->int requires no cast
 //Template substitution will fail (not a compile-time error)
 //if doTask(t,d) is not defined ("SFINAE" trick)
 template <typename Ret, typename Task, typename Storage>
 auto 
-callDoTask_Impl(First, Task& t, Storage& s, ManageStore& m)
+callDoTask_Impl(choice<1>, Task& t, Storage& s, ManageStore& m)
     -> RetIfExists<Ret,decltype(doTask(t,s,m))>
     {
     return FixRet<Ret,decltype(doTask(t,s,m)),Task&,Storage&,ManageStore&>()(t,s,m);
@@ -372,40 +344,28 @@ template<typename Ret, typename Task, typename Storage>
 Ret
 callDoTask(Task& t, Storage& s, ManageStore& m)
     {
-    return callDoTask_Impl<Ret,Task,Storage>(TryFirst,t,s,m);
+    return callDoTask_Impl<Ret,Task,Storage>(select_overload{},t,s,m);
     }
 
 /////////////////////////////////////////////////////
 
-//(2-fail)
 template<typename Ret, typename Task, typename D>
 Ret
-cloneDoTask_Case2ConstNoMS(Task& t, const D& cd, ManageStore& m,Second)
+cloneDoTask_impl(choice<3>,Task& t, const D& cd, ManageStore& m)
     {
-    if(!m.parg1().unique()) m.parg1() = m.parg1()->clone();
-    auto* pd = static_cast<ITWrap<D>*>(m.parg1().get());
-    return callDoTask<Ret>(t,pd->d,m);
+    auto* pd = m.modifyData(cd);
+    return callDoTask<Ret>(t,*pd,m);
     }
-//(2-success)
 template<typename Ret, typename Task, typename D>
 auto
-cloneDoTask_Case2ConstNoMS(Task& t, const D& cd, ManageStore& m,First)
+cloneDoTask_impl(choice<2>,Task& t, const D& cd, ManageStore& m)
     -> RetIfExists<Ret,decltype(doTask(t,cd))>
     {
     return FixRet<Ret,decltype(doTask(t,cd)),Task&,const D&>()(t,cd);
     }
-//(1-fail)
-template<typename Ret, typename Task, typename D>
-Ret
-cloneDoTask_Case1ConstMS(Task& t, const D& cd, ManageStore& m,Second)
-    {
-    return cloneDoTask_Case2ConstNoMS<Ret>(t,cd,m,TryFirst);
-    }
-//(1-success) Preferred version since 0->int requires no conversion
-//Attempts to call doTask(Task,const D&, ManageStore&) if defined
 template<typename Ret, typename Task, typename D>
 auto
-cloneDoTask_Case1ConstMS(Task& t, const D& cd, ManageStore& m,First)
+cloneDoTask_impl(choice<1>,Task& t, const D& cd, ManageStore& m)
     -> RetIfExists<Ret,decltype(doTask(t,cd,m))>
     {
     return FixRet<Ret,decltype(doTask(t,cd,m)),Task&,const D&,ManageStore&>()(t,cd,m);
@@ -414,7 +374,7 @@ template<typename Ret, typename Task, typename D>
 Ret
 cloneDoTask(Task& t, const D& cd, ManageStore& m)
     {
-    return cloneDoTask_Case1ConstMS<Ret>(t,cd,m,TryFirst);
+    return cloneDoTask_impl<Ret>(select_overload{},t,cd,m);
     }
 
 /////////////////////
@@ -422,31 +382,21 @@ cloneDoTask(Task& t, const D& cd, ManageStore& m)
 //(4) Least preferred version which always compiles
 template <typename Ret, typename Task, typename D1, typename D2>
 Ret
-callDoTask_Impl(Second, Task& t, D1& d1, const D2& d2)
+callDoTask_Impl(choice<3>, Task& t, D1& d1, const D2& d2, ManageStore& m)
     {
     Error("2 parameter doTask not defined for specified task or data type");
     return Ret{};
     }
-//(3) This is preferred more than version (4) above
 template <typename Ret, typename Task, typename D1, typename D2>
 auto 
-callDoTask_Impl(First, Task& t, D1& d1, const D2& d2)
+callDoTask_Impl(choice<2>, Task& t, D1& d1, const D2& d2, ManageStore& m)
     -> RetIfExists<Ret,decltype(doTask(t,d1,d2))>
     {
     return FixRet<Ret,decltype(doTask(t,d1,d2)),Task&,D1&,const D2&>()(t,d1,d2);
     }
-//(2) Less preferred version which always compiles and passes
-//the call on to callDoTask_Impl (3) without the ManageStore& argument
-template <typename Ret, typename Task, typename D1, typename D2>
-Ret
-callDoTask_Impl(Second, Task& t, D1& d1, const D2& d2, ManageStore& m)
-    {
-    return callDoTask_Impl<Ret>(TryFirst,t,d1,d2);
-    }
-//(1)
 template <typename Ret, typename Task, typename D1, typename D2>
 auto 
-callDoTask_Impl(First, Task& t, D1& d1, const D2& d2, ManageStore& m)
+callDoTask_Impl(choice<1>, Task& t, D1& d1, const D2& d2, ManageStore& m)
     -> RetIfExists<Ret,decltype(doTask(t,d1,d2,m))>
     {
     return FixRet<Ret,decltype(doTask(t,d1,d2,m)),Task&,D1&,const D2&,ManageStore&>()(t,d1,d2,m);
@@ -455,40 +405,28 @@ template<typename Ret, typename Task, typename D1, typename D2>
 Ret
 callDoTask(Task& t, D1& d1, const D2& d2, ManageStore& m)
     {
-    //First try calling function labeled (1) above
-    return callDoTask_Impl<Ret,Task,D1,D2>(TryFirst,t,d1,d2,m);
+    return callDoTask_Impl<Ret,Task,D1,D2>(select_overload{},t,d1,d2,m);
     }
 
 /////////////////////
 
-//(2-fail)
 template<typename Ret, typename Task, typename D1, typename D2>
 Ret
-cloneDoTask_Case2ConstNoMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,Second) 
+cloneDoTask_impl(choice<3>, Task& t, const D1& cd1, const D2& d2, ManageStore& m)
     {
-    if(!m.parg1().unique()) m.parg1() = m.parg1()->clone();
-    auto* pd1 = static_cast<std::remove_const_t<ITWrap<D1>>*>(m.parg1().get());
-    return callDoTask<Ret>(t,pd1->d,d2,m);
+    auto* pd1 = m.modifyData(cd1);
+    return callDoTask<Ret>(t,*pd1,d2,m);
     }
-//(2-success)
 template<typename Ret, typename Task, typename D1, typename D2>
 auto
-cloneDoTask_Case2ConstNoMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,First) 
+cloneDoTask_impl(choice<2>, Task& t, const D1& cd1, const D2& d2, ManageStore& m)
     -> RetIfExists<Ret,decltype(doTask(t,cd1,d2))>
     {
     return FixRet<Ret,decltype(doTask(t,cd1,d2)),Task&,const D1&,const D2&>()(t,cd1,d2);
     }
-//(1-fail)
-template<typename Ret, typename Task, typename D1, typename D2>
-Ret
-cloneDoTask_Case1ConstMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,Second)
-    {
-    return cloneDoTask_Case2ConstNoMS<Ret,Task,D1,D2>(t,cd1,d2,m,0);
-    }
-//(1-success)
 template<typename Ret, typename Task, typename D1, typename D2>
 auto
-cloneDoTask_Case1ConstMS(Task& t, const D1& cd1, const D2& d2, ManageStore& m,First) 
+cloneDoTask_impl(choice<1>, Task& t, const D1& cd1, const D2& d2, ManageStore& m)
     -> RetIfExists<Ret,decltype(doTask(t,cd1,d2,m))>
     {
     return FixRet<Ret,decltype(doTask(t,cd1,d2,m)),Task&,const D1&,const D2&,ManageStore&>()(t,cd1,d2,m);
@@ -497,7 +435,7 @@ template<typename Ret, typename Task, typename D1, typename D2>
 Ret
 cloneDoTask(Task& t, const D1& d1, const D2& d2, ManageStore& m)
     {
-    return cloneDoTask_Case1ConstMS<Ret,Task,D1,D2>(t,d1,d2,m,TryFirst);
+    return cloneDoTask_impl<Ret,Task,D1,D2>(select_overload{},t,d1,d2,m);
     }
 
 void inline
