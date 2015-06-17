@@ -145,7 +145,9 @@ class InfArray
             vec_.resize(new_size);
             if(size_ <= ArrSize)
                 {
-                auto pv = MAKE_SAFE_PTR(vec_.data(),vec_.size());
+                //auto pv = MAKE_SAFE_PTR(vec_.data(),vec_.size());
+                //std::copy(arr_.begin(),arr_.begin()+size_,pv);
+                auto pv = vec_.data();
                 std::copy(arr_.begin(),arr_.begin()+size_,pv);
                 }
             data_ = vec_.data();
@@ -154,7 +156,9 @@ class InfArray
             {
             if(size_ > ArrSize)
                 {
-                auto pa = MAKE_SAFE_PTR(&(arr_[0]),ArrSize);
+                //auto pa = MAKE_SAFE_PTR(&(arr_[0]),ArrSize);
+                //std::copy(vec_.begin(),vec_.begin()+new_size,pa);
+                auto pa = &(arr_[0]);
                 std::copy(vec_.begin(),vec_.begin()+new_size,pa);
                 }
             vec_.clear();

@@ -258,7 +258,6 @@ nmultMPO(const MPOType& Aorig, const MPOType& Borig, MPOType& res,
          const Args& args)
     {
     using Tensor = typename MPOType::TensorT;
-    using IndexT = typename MPOType::IndexT;
     if(Aorig.N() != Borig.N()) Error("nmultMPO(MPOType): Mismatched N");
     const int N = Borig.N();
 
@@ -786,7 +785,7 @@ applyExpH(const MPSt<Tensor>& psi,
           MPSt<Tensor>& res, 
           const Args& args)
     {
-    using IndexT = typename Tensor::index_type;
+    //using IndexT = typename Tensor::index_type;
     using MPST = MPSt<Tensor>;
 
     if(&psi == &res) Error("Must pass distinct MPS arguments to applyExpH");

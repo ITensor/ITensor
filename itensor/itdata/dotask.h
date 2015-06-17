@@ -284,7 +284,7 @@ testRetImpl(choice<2>, Task& t, Storage& s, ManageStore& m)
     -> RetOrNone<decltype(doTask(t,s))>
     {
     using Ret = RetOrNone<decltype(doTask(t,s))>;
-    return std::declval<Ret>();
+    return Ret{};
     }
 template<typename Task, typename Storage>
 auto 
@@ -292,7 +292,7 @@ testRetImpl(choice<1>, Task& t, Storage& s, ManageStore& m)
     -> RetOrNone<decltype(doTask(t,s,m))>
     {
     using Ret = RetOrNone<decltype(doTask(t,s,m))>;
-    return std::declval<Ret>();
+    return Ret{};
     }
 template<typename Task, typename Storage>
 struct TestRet

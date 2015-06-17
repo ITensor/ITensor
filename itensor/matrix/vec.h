@@ -10,6 +10,7 @@
 #endif
 #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
 
+#include <stdexcept>
 #include <vector>
 #include "itensor/util/print.h"
 #include "itensor/types.h"

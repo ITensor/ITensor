@@ -103,7 +103,7 @@ class RangeT
         }
 
     size_type
-    extent(size_type i) const { return size_type{store_[i].ext}; }
+    extent(size_type i) const { return static_cast<size_type>(store_[i].ext); }
 
     size_type
     stride(size_type i) const { return store_[i].str; }
@@ -176,7 +176,7 @@ class RangeT
         for(auto& i : store_)
             {
             i.str = str;
-            str *= size_type{i.ext};
+            str *= static_cast<size_type>(i.ext);
             }
         }
     };
@@ -214,7 +214,7 @@ init(const Indexable& v)
         {
         store_[i].ext = v[i];
         store_[i].str = str;
-        str *= size_type{v[i]};
+        str *= static_cast<size_type>(v[i]);
         }
     }
 

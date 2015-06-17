@@ -9,6 +9,7 @@ include ../options.mk
 
 SOURCES+= util/args.cc     
 SOURCES+= util/input.cc
+SOURCES+= util/cputime.cc
 SOURCES+= matrix/vec.cc 
 SOURCES+= matrix/mat.cc 
 SOURCES+= matrix/algs.cc 

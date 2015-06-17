@@ -5,6 +5,7 @@
 #ifndef __ITENSOR_ITDATA_H
 #define __ITENSOR_ITDATA_H
 
+#include <memory>
 #include "itensor/types.h"
 #include "itensor/util/error.h"
 #include "itensor/itdata/storage_types.h"
