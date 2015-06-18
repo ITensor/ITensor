@@ -165,7 +165,7 @@ template<typename IndexT, typename... Types>
 void 
 prime(IndexSetT<IndexT>& is, 
       IndexType type,
-      int inc = 1);
+      int inc);
 
 template<typename IndexT, typename... Types>
 void 

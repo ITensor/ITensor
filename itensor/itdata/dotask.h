@@ -28,7 +28,7 @@ struct choice<10> { };
 
 struct select_overload : choice<1> { };
 
-struct otherwise{ otherwise(...){} };
+//struct otherwise{ otherwise(...){} };
 
 
 template<typename F,typename Ret>
@@ -60,7 +60,7 @@ struct ApplyFunc<F,void>
 
 template<typename F, typename R, typename Storage>
 void
-applyFunc_impl(otherwise, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
+applyFunc_impl(choice<3>, ApplyFunc<F,R>& A, const Storage& s, ManageStore& m)
     {
     throw ITError("applyFunc: function object has no operator() method for storage type");
     }
@@ -147,7 +147,7 @@ class RegisterTask;
 
 template<typename NArgs, typename Task, typename Return>
 Task
-getReturnHelperImpl(otherwise, RegisterTask<NArgs,Task,Return>& R)
+getReturnHelperImpl(choice<2>, RegisterTask<NArgs,Task,Return>& R)
     {
     return std::move(R.task_);
     }
@@ -517,7 +517,7 @@ template<typename T, typename... VArgs>
 PData
 newITData(VArgs&&... vargs)
     {
-    static_assert(containsType<StorageTypes,T>{},"Data type not in list of registered storage types");
+    //static_assert(containsType<StorageTypes,T>{},"Data type not in list of registered storage types");
     return std::make_shared<ITWrap<T>>(std::forward<VArgs>(vargs)...);
     }
 
