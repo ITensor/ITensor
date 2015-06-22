@@ -12,6 +12,7 @@
 #include "unistd.h"
 #include "itensor/types.h"
 #include "itensor/util/error.h"
+#include "itensor/util/infarray.h"
 
 namespace itensor {
 
@@ -178,6 +179,61 @@ write(std::ostream& s, const std::vector<T>& vec)
 
 
 //////////////////////////////////////////////
+//////////////////////////////////////////////
+//////////////////////////////////////////////
+
+template<typename T, size_t N, bool isPod = std::is_pod<T>::value>
+struct ReadIAData
+    {
+    ReadIAData(size_t size, std::istream& s, InfArray<T,N>& ia)
+        {
+        for(auto& el : ia) itensor::read(s,el);
+        }
+    };
+template<typename T, size_t N>
+struct ReadIAData<T,N,/*isPod==*/true>
+    {
+    ReadIAData(size_t size, std::istream& s, InfArray<T,N>& ia)
+        {
+        s.read((char*)ia.data(), sizeof(T)*size);
+        }
+    };
+template<typename T, size_t N>
+void
+read(std::istream& s, InfArray<T,N>& ia)
+    {
+    decltype(ia.size()) size = 0;
+    itensor::read(s,size);
+    ia.resize(size);
+    ReadIAData<T,N>(size,s,ia);
+    }
+
+template<typename T, size_t N, bool isPod = std::is_pod<T>::value>
+struct WriteIAData
+    {
+    WriteIAData(size_t size, std::ostream& s, const InfArray<T,N>& ia)
+        {
+        for(auto& el : ia) itensor::write(s,el);
+        }
+    };
+template<typename T, size_t N>
+struct WriteIAData<T,N,/*isPod==*/true>
+    {
+    WriteIAData(size_t size, std::ostream& s, const InfArray<T,N>& ia)
+        {
+        s.write((char*)ia.data(), sizeof(T)*size);
+        }
+    };
+template<typename T, size_t N>
+void
+write(std::ostream& s, const InfArray<T,N>& ia)
+    {
+    auto size = ia.size();
+    itensor::write(s,size);
+    WriteIAData<T,N>(size,s,ia);
+    }
+
+
 //////////////////////////////////////////////
 //////////////////////////////////////////////
 

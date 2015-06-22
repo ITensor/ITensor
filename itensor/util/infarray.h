@@ -101,8 +101,7 @@ class InfArray
         arr_(o.arr_),
         vec_(o.vec_)
         { 
-        if(size_ <= ArrSize) data_ = &(arr_[0]);
-        else                 data_ = vec_.data();
+        setDataPtr();
         }
 
     InfArray&
@@ -111,8 +110,7 @@ class InfArray
         size_ = o.size_;
         arr_ = o.arr_;
         vec_ = o.vec_;
-        if(size_ <= ArrSize) data_ = &(arr_[0]);
-        else                 data_ = vec_.data();
+        setDataPtr();
         return *this;
         }
 
@@ -121,8 +119,9 @@ class InfArray
         arr_(std::move(o.arr_)),
         vec_(std::move(o.vec_))
         { 
-        if(size_ <= ArrSize) data_ = &(arr_[0]);
-        else                 data_ = vec_.data();
+        o.size_ = 0;
+        o.data_ = nullptr;
+        setDataPtr();
         }
 
     InfArray&
@@ -131,8 +130,9 @@ class InfArray
         size_ = o.size_;
         arr_ = std::move(o.arr_);
         vec_ = std::move(o.vec_);
-        if(size_ <= ArrSize) data_ = &(arr_[0]);
-        else                 data_ = vec_.data();
+        o.size_ = 0;
+        o.data_ = nullptr;
+        setDataPtr();
         return *this;
         }
 
@@ -194,6 +194,15 @@ class InfArray
         data_ = &(arr_[0]);
         size_ = 0; 
         vec_.clear();
+        }
+
+    void
+    swap(InfArray& other) 
+        { 
+        arr_.swap(other.arr_);
+        vec_.swap(other.vec_);
+        std::swap(size_,other.size_);
+        setDataPtr();
         }
 
     explicit operator bool() const { return size_!=0; }
@@ -348,6 +357,12 @@ class InfArray
     cend() const { return data_+size_; }
 
     private:
+    void
+    setDataPtr()
+        {
+        if(size_ <= ArrSize) data_ = &(arr_[0]);
+        else                 data_ = vec_.data();
+        }
     void
     check_ind(size_t i) const
         {

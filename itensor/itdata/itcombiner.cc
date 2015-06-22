@@ -50,7 +50,7 @@ combine(const ITReal& d,
                 {
                 newind.at(i++).ext = dis[j];
                 }
-        Nis = IndexSet(move(newind));
+        Nis = IndexSet(std::move(newind));
         }
     else
         {
@@ -89,7 +89,7 @@ combine(const ITReal& d,
             newind.at(i++).ext = cind;
             for(int j = J1+Cis.r()-1; j < dis.r(); ++j) 
                 newind.at(i++).ext = dis[j];
-            Nis = IndexSet(move(newind));
+            Nis = IndexSet(std::move(newind));
             }
         else
             {
@@ -128,8 +128,8 @@ combine(const ITReal& d,
                 pdims.at(P.dest(j)).ext = dis[j].m();
                 }
             assert(i==dis.r()+2-Cis.r());
-            Range rr(move(pdims));
-            Nis = IndexSet(move(newind));
+            Range rr(std::move(pdims));
+            Nis = IndexSet(std::move(newind));
             auto nd = m.makeNewData<ITReal>(area(Nis));
             auto tr = makeTensorRef(nd->data(),rr);
             auto td = makeTensorRef(d.data(),dis);

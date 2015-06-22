@@ -583,7 +583,7 @@ contractIS(const IndexSetT<IndexT>& Lis,
         auto comp = [](const extstr& i1, const extstr& i2) { return i1.ext > i2.ext; };
         std::sort(newind.begin(),newind.end(),comp);
         }
-    Nis = IndexSetT<IndexT>(move(newind));
+    Nis = IndexSetT<IndexT>(std::move(newind));
     }
 
 template <class IndexT>

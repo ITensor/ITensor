@@ -52,7 +52,7 @@ class RangeT
     using size_type = size_t;
     using extent_type = extent_type_;
     using value_type = ExtStr<extent_type>;
-    using storage_type = std::vector<value_type>;
+    using storage_type = InfArray<value_type,8ul>;
     private:
     storage_type store_;
     public:
