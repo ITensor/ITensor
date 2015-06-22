@@ -216,8 +216,11 @@ doTask(Contract<IQIndex>& Con,
        const IQTReal& B,
        ManageStore& m)
     {
+    Label Lind,
+          Rind;
+    computeLabels(Con.Lis,Con.Lis.r(),Con.Ris,Con.Ris.r(),Lind,Rind);
     //compute new index set (Con.Nis):
-    contractIS(Con.Lis,Con.Lind,Con.Ris,Con.Rind,Con.Nis,true);
+    contractIS(Con.Lis,Lind,Con.Ris,Rind,Con.Nis,true);
 
     auto Cdiv = calcDiv(Con.Lis,A)+calcDiv(Con.Ris,B);
 
@@ -238,19 +241,19 @@ doTask(Contract<IQIndex>& Con,
         auto j = findindex(Con.Lis,Con.Nis[ic]);
         if(j >= 0)
             {
-            Cind[ic] = Con.Lind[j];
+            Cind[ic] = Lind[j];
             AtoC[j] = ic;
             }
         else
             {
             j = findindex(Con.Ris,Con.Nis[ic]);
-            Cind[ic] = Con.Rind[j];
+            Cind[ic] = Rind[j];
             BtoC[j] = ic;
             }
         }
     for(int ia = 0; ia < rA; ++ia)
     for(int ib = 0; ib < rB; ++ib)
-        if(Con.Lind[ia] == Con.Rind[ib])
+        if(Lind[ia] == Rind[ib])
             {
             AtoB[ia] = ib;
             break;
@@ -308,7 +311,7 @@ doTask(Contract<IQIndex>& Con,
             auto cref= makeTensorRef(cblock,Crange);
 
             //Compute aref*bref=cref
-            contract(aref,Con.Lind,bref,Con.Rind,cref,Cind);
+            contract(aref,Lind,bref,Rind,cref,Cind);
 
             } //for couB
         } //for A.offsets

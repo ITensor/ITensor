@@ -136,12 +136,15 @@ doTask(Contract<Index>& C,
        const ITReal& a2,
        ManageStore& m)
     {
+    Label Lind,
+          Rind;
+    computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
     //Optimization TODO:
     //  Test different scenarios where having sortInds=true or false
     //  can improve performance. Having sorted inds can make adding
     //  quicker and let contractloop run in parallel more often in principle.
     bool sortInds = false; //whether to sort indices of result
-    contractIS(C.Lis,C.Lind,C.Ris,C.Rind,C.Nis,sortInds);
+    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,sortInds);
     
     Label Nind(C.Nis.r(),0);
     for(auto i : count(C.Nis.r()))
@@ -149,12 +152,12 @@ doTask(Contract<Index>& C,
         auto j = findindex(C.Lis,C.Nis[i]);
         if(j >= 0)
             {
-            Nind[i] = C.Lind[j];
+            Nind[i] = Lind[j];
             }
         else
             {
             j = findindex(C.Ris,C.Nis[i]);
-            Nind[i] = C.Rind[j];
+            Nind[i] = Rind[j];
             }
         }
     auto t1 = makeTensorRef(a1.data(),C.Lis),
@@ -162,7 +165,7 @@ doTask(Contract<Index>& C,
     auto rsize = area(C.Nis);
     auto nd = m.makeNewData<ITReal>(rsize,0.);
     auto tr = makeTensorRef(nd->data(),C.Nis);
-    contractloop(t1,C.Lind,t2,C.Rind,tr,Nind);
+    contractloop(t1,Lind,t2,Rind,tr,Nind);
 
     if(rsize > 1) C.computeScalefac(*nd);
     }

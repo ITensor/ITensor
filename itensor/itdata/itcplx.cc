@@ -66,12 +66,15 @@ doTask(Contract<Index>& C,
        const ITCplx& a2,
        ManageStore& m)
     {
+    Label Lind,
+          Rind;
+    computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
     //Optimization TODO:
     //  Test different scenarios where having sortInds=true or false
     //  can improve performance. Having sorted inds can make adding
     //  quicker and let contractloop run in parallel more often in principle.
     const bool sortInds = false; //whether to sort indices of result
-    contractIS(C.Lis,C.Lind,C.Ris,C.Rind,C.Nis,sortInds);
+    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,sortInds);
 
     //Scalar tensor cases
     //if(area(C.Lis)==1)
@@ -93,12 +96,12 @@ doTask(Contract<Index>& C,
         auto j = findindex(C.Lis,C.Nis[i]);
         if(j >= 0)
             {
-            Nind[i] = C.Lind[j];
+            Nind[i] = Lind[j];
             }
         else
             {
             j = findindex(C.Ris,C.Nis[i]);
-            Nind[i] = C.Rind[j];
+            Nind[i] = Rind[j];
             }
         }
 
@@ -112,12 +115,12 @@ doTask(Contract<Index>& C,
     auto trr = makeTensorRef(nd->rstart(),C.Nis),
          tri = makeTensorRef(nd->istart(),C.Nis);
 
-    contractloop(t1i,C.Lind,t2i,C.Rind,trr,Nind);
+    contractloop(t1i,Lind,t2i,Rind,trr,Nind);
     for(auto p = nd->rstart(); p < nd->istart(); ++p) *p *= -1;
-    contractloop(t1r,C.Lind,t2r,C.Rind,trr,Nind);
+    contractloop(t1r,Lind,t2r,Rind,trr,Nind);
 
-    contractloop(t1i,C.Lind,t2r,C.Rind,tri,Nind);
-    contractloop(t1r,C.Lind,t2i,C.Rind,tri,Nind);
+    contractloop(t1i,Lind,t2r,Rind,tri,Nind);
+    contractloop(t1r,Lind,t2i,Rind,tri,Nind);
 
     if(rsize > 1) C.computeScalefac(*nd);
     }
@@ -125,15 +128,16 @@ doTask(Contract<Index>& C,
 void
 realCplx(const ITReal& R,
          const IndexSet& ris,
-         const Label& rind,
          const ITCplx& C,
          const IndexSet& cis,
-         const Label& cind,
          IndexSet& Nis,
          ManageStore& m,
          Contract<Index>& Con,
          bool RealOnLeft)
     {
+    Label rind,
+          cind;
+    computeLabels(ris,ris.r(),cis,cis.r(),rind,cind);
     //Optimization TODO:
     //  Test different scenarios where having sortInds=true or false
     //  can improve performance. Having sorted inds can make adding
@@ -213,7 +217,7 @@ doTask(Contract<Index>& C,
        const ITCplx& a2,
        ManageStore& m)
     {
-    realCplx(a1,C.Lis,C.Lind,a2,C.Ris,C.Rind,C.Nis,m,C,true);
+    realCplx(a1,C.Lis,a2,C.Ris,C.Nis,m,C,true);
     }
 
 void
@@ -222,7 +226,7 @@ doTask(Contract<Index>& C,
        const ITReal& a2,
        ManageStore& m)
     {
-    realCplx(a2,C.Ris,C.Rind,a1,C.Lis,C.Lind,C.Nis,m,C,false);
+    realCplx(a2,C.Ris,a1,C.Lis,C.Nis,m,C,false);
     }
 
 void

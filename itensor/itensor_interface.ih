@@ -191,14 +191,9 @@ operator*=(const ITensorT& R)
         return L;
         }
 
-    auto& Lis = L.inds();
-    auto& Ris = R.inds();
+    //computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
 
-    Label Lind,
-          Rind;
-    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
-
-    auto C = doTask(Contract<index_type>{Lis,Lind,Ris,Rind},L.store_,R.store());
+    auto C = doTask(Contract<index_type>{L.inds(),R.inds()},L.store(),R.store());
 
     L.scale_ *= R.scale();
     if(!std::isnan(C.scalefac)) L.scale_ *= C.scalefac;

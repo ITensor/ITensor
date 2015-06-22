@@ -220,8 +220,6 @@ struct Contract
     {
     using index_type = IndexT;
     using iset_type = IndexSetT<IndexT>;
-    const Label &Lind,
-                &Rind;
 
     const iset_type &Lis,
                     &Ris;
@@ -230,12 +228,8 @@ struct Contract
     Real scalefac = NAN;
 
     Contract(const iset_type& Lis_,
-             const Label& Lind_,
-             const iset_type& Ris_,
-             const Label& Rind_) :
-        Lind(Lind_),
-        Rind(Rind_),
-        Lis(Lis_),
+             const iset_type& Ris_)
+      : Lis(Lis_),
         Ris(Ris_)
         { }
 
@@ -243,8 +237,6 @@ struct Contract
     Contract& operator=(const Contract& other) = delete;
 
     Contract(Contract&& other):
-        Lind(other.Lind),
-        Rind(other.Rind),
         Lis(other.Lis),
         Ris(other.Ris),
         Nis(std::move(other.Nis)),

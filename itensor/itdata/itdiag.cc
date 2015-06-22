@@ -181,8 +181,11 @@ doTask(Contract<Index>& C,
        const ITDiag<Real>& d,
        ManageStore& m)
     { 
-    contractIS(C.Lis,C.Lind,C.Ris,C.Rind,C.Nis,true);
-    diagDense(d,C.Ris,C.Rind,t,C.Lis,C.Lind,C.Nis,m,true);
+    Label Lind,
+          Rind;
+    computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
+    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,true);
+    diagDense(d,C.Ris,Rind,t,C.Lis,Lind,C.Nis,m,true);
     }
 void
 doTask(Contract<Index>& C,
@@ -190,8 +193,11 @@ doTask(Contract<Index>& C,
        const ITReal& t,
        ManageStore& m)
     {
-    contractIS(C.Lis,C.Lind,C.Ris,C.Rind,C.Nis,true);
-    diagDense(d,C.Lis,C.Lind,t,C.Ris,C.Rind,C.Nis,m,false);
+    Label Lind,
+          Rind;
+    computeLabels(C.Lis,C.Lis.r(),C.Ris,C.Ris.r(),Lind,Rind);
+    contractIS(C.Lis,Lind,C.Ris,Rind,C.Nis,true);
+    diagDense(d,C.Lis,Lind,t,C.Ris,Rind,C.Nis,m,false);
     }
 
 void
