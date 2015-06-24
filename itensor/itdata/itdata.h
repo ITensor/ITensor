@@ -228,6 +228,9 @@ class ManageStore
     void
     assignPointerRtoL();
 
+    void
+    pointTo(const PData& p);
+
     private:
 
     void
@@ -252,6 +255,13 @@ assignPointerRtoL()
     { 
     if(!parg2_) Error("No second pointer provided for action AssignPointerRtoL");
     action_ = AssignPointerRtoL; 
+    }
+
+void inline ManageStore::
+pointTo(const PData& p) 
+    { 
+    action_ = AssignNewData; 
+    nd_ = p;
     }
 
 void inline ManageStore::
