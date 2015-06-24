@@ -586,6 +586,19 @@ contractIS(const IndexSetT<IndexT>& Lis,
     Nis = IndexSetT<IndexT>(std::move(newind));
     }
 
+template<class IndexT>
+void
+contractIS(const IndexSetT<IndexT>& Lis,
+           const IndexSetT<IndexT>& Ris,
+           IndexSetT<IndexT>& Nis,
+           bool sortResult)
+    {
+    Label Lind,
+          Rind;
+    computeLabels(Lis,Lis.r(),Ris,Ris.r(),Lind,Rind);
+    contractIS(Lis,Lind,Ris,Rind,Nis,sortResult);
+    }
+
 template <class IndexT>
 std::ostream&
 operator<<(std::ostream& s, const IndexSetT<IndexT>& is)

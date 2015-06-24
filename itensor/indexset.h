@@ -8,6 +8,7 @@
 #include "itensor/util/readwrite.h"
 #include "itensor/util/safe_ptr.h"
 #include "itensor/tensor/range.h"
+#include "itensor/tensor/types.h"
 #include "itensor/tensor/permutation.h"
 #include "itensor/indexset_iter.h"
 #include "itensor/index.h"
@@ -282,6 +283,13 @@ template <class IndexT>
 long
 maxM(const IndexSetT<IndexT>& iset);
 
+template<class IndexT>
+void
+contractIS(const IndexSetT<IndexT>& Lis,
+          const IndexSetT<IndexT>& Ris,
+          IndexSetT<IndexT>& Nis,
+          bool sortResult = false);
+
 template<class IndexT, class ContainerT>
 void
 contractIS(const IndexSetT<IndexT>& Lis,
@@ -289,7 +297,7 @@ contractIS(const IndexSetT<IndexT>& Lis,
           const IndexSetT<IndexT>& Ris,
           const ContainerT& Rind,
           IndexSetT<IndexT>& Nis,
-          bool sortResult);
+          bool sortResult = false);
 
 template <class IndexT>
 std::ostream&
