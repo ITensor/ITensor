@@ -96,24 +96,26 @@ namespace detail {
 
 //OneArg and TwoArgs are "policy classes" 
 //for customizing implementation of RegisterTask
+template<typename Return>
 struct OneArg
     {
-    template<typename Return, typename Task, typename D>
+    template<typename Task, typename D>
     Return
     call(Task& t, const D& d, ManageStore& m);
 
-    template<typename Return, typename Task, typename D>
+    template<typename Task, typename D>
     Return
     call(Task& t, D& d, ManageStore& m);
     };
 
+template<typename Return>
 struct TwoArgs
     {
-    template<typename Return, typename Task, typename D>
+    template<typename Task, typename D>
     Return
     call(Task& t, const D& d, ManageStore& m);
 
-    template<typename Return, typename Task, typename D>
+    template<typename Task, typename D>
     Return
     call(Task& t, D& d, ManageStore& m);
     };
@@ -204,13 +206,23 @@ class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
     void
     applyToImpl(const D& d)
         {
-        ret_ = std::move(NArgs().template call<Return>(task_,d,m_));
+        //bool has_evaluate = tryEvaluate(d,m);
+        //if(has_evaluate)
+        //    {
+        //    }
+        //else
+        ret_ = std::move(NArgs{}.call(task_,d,m_));
         }
     template<typename D>
     void
     applyToImpl(D& d)
         {
-        ret_ = std::move(NArgs().template call<Return>(task_,d,m_));
+        //bool has_evaluate = tryEvaluate(d,m);
+        //if(has_evaluate)
+        //    {
+        //    }
+        //else
+        ret_ = std::move(NArgs{}.call(task_,d,m_));
         }
     };
 
@@ -445,22 +457,25 @@ check(const CPData& p)
     }
 
 
-template<typename Ret, typename Task, typename D>
-Ret OneArg::
+template<typename Ret>
+template<typename Task, typename D>
+Ret OneArg<Ret>::
 call(Task& t, const D& d, ManageStore& m)
     {
     return detail::callDoTask<Ret>(t,d,m);
     }
 
-template<typename Ret, typename Task, typename D>
-Ret OneArg::
+template<typename Ret>
+template<typename Task, typename D>
+Ret OneArg<Ret>::
 call(Task& t, D& d, ManageStore& m)
     {
     return detail::cloneDoTask<Ret>(t,d,m);
     }
 
-template<typename Ret, typename Task, typename D>
-Ret TwoArgs::
+template<typename Ret>
+template<typename Task, typename D>
+Ret TwoArgs<Ret>::
 call(Task& t, const D& d, ManageStore& m)
     {
     assert(m.hasArg2());
@@ -469,8 +484,9 @@ call(Task& t, const D& d, ManageStore& m)
     return w.getReturn();
     }
 
-template<typename Ret, typename Task, typename D>
-Ret TwoArgs::
+template<typename Ret>
+template<typename Task, typename D>
+Ret TwoArgs<Ret>::
 call(Task& t, D& d, ManageStore& m)
     {
     assert(m.hasPArg1());
@@ -530,7 +546,7 @@ doTask(Task&& t,
     detail::check(arg);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
-    detail::RegisterTask<detail::OneArg,Task,Ret> r(std::forward<Task>(t));
+    detail::RegisterTask<detail::OneArg<Ret>,Task,Ret> r(std::forward<Task>(t));
     arg->plugInto(r);
     return std::move(r.getReturn());
     }
@@ -544,7 +560,7 @@ doTask(Task&& t,
     detail::check(arg);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
-    detail::RegisterTask<detail::OneArg,Task,Ret> r(std::forward<Task>(t),&arg);
+    detail::RegisterTask<detail::OneArg<Ret>,Task,Ret> r(std::forward<Task>(t),&arg);
     arg->plugInto(r);
     return std::move(r.getReturn());
     }
@@ -560,7 +576,7 @@ doTask(Task&& t,
     detail::check(arg2);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
-    detail::RegisterTask<detail::TwoArgs,Task,Ret> r(std::forward<Task>(t),&arg1,&arg2);
+    detail::RegisterTask<detail::TwoArgs<Ret>,Task,Ret> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getReturn());
     }
@@ -576,7 +592,7 @@ doTask(Task&& t,
     detail::check(arg2);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
-    detail::RegisterTask<detail::TwoArgs,Task,Ret> r(std::forward<Task>(t),&arg1,&arg2);
+    detail::RegisterTask<detail::TwoArgs<Ret>,Task,Ret> r(std::forward<Task>(t),&arg1,&arg2);
     arg1->plugInto(r);
     return std::move(r.getReturn());
     }
