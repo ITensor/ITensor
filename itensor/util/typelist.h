@@ -7,29 +7,40 @@
 
 //
 // Ideas for improvement:
-// o Build some tools which do static_asserts
-//   on TypeLists e.g. assert that a type is
-//   or is not contained
-// o Use std::false_type (is there a std::true_type?)
-//   instead of NoneType?
-// o Write general "find_if" like class
+// o Add indexOf (returns index of type T if containsType<TList,T>==true,
+//   such that getType<TList,indexOf<TList,T>()> == T)
+// o Add pushBack
+// o Add insert
 //
 
 namespace itensor {
 
 template<typename... Ts>
-struct TypeList { };
+struct TypeList 
+    { 
+    size_t static constexpr
+    size() { return 0ul; }
+    };
 
 template<typename T, typename... Ts>
 struct TypeList<T,Ts...> : TypeList<Ts...>
     {
     using Type = T;
     using Next = TypeList<Ts...>;
+
+    size_t static constexpr
+    size() { return 1ul+Next::size(); }
     };
 
+//
+// frontType
+//
 template<typename TList>
 using frontType = typename TList::Type;
 
+//
+// popFront
+//
 template<typename TList>
 using popFront = typename TList::Next;
 
@@ -39,8 +50,6 @@ template<typename T, typename ElseType>
 using ifTypeElse = std::conditional_t<not std::is_same<T,NoneType>::value,
                                       T,
                                       ElseType>;
-
-
 
 template<typename T, typename TList>
 struct CheckContainsType : CheckContainsType<T,popFront<TList>>
@@ -55,6 +64,9 @@ struct CheckContainsType<T,TypeList<>>
     using Result = NoneType;
     };
 
+//
+// containsType
+//
 template<typename TList, typename T, typename C = typename CheckContainsType<T,TList>::Result>
 struct containsType : std::true_type 
     {
@@ -66,6 +78,57 @@ struct containsType<TList,T,NoneType> : std::false_type
     { 
     constexpr operator bool() const noexcept { return false; }
     };
+
+
+// May be nicer to use variadic template-template param
+// see: http://ow.ly/OIurr
+
+template<size_t s, typename... Ts>
+struct PushFront { };
+
+template<typename TL, typename N, typename... Ts>
+struct PushFront<0ul,TL,N,Ts...>
+    {
+    using Result = TypeList<N,Ts...>;
+    };
+
+template<size_t s, typename TL, typename... Ts>
+struct PushFront<s,TL,Ts...> : PushFront<popFront<TL>::size(),popFront<TL>,Ts...,frontType<TL>>
+    {
+    using Next = PushFront<popFront<TL>::size(),popFront<TL>,Ts...,frontType<TL>>;
+    using Result = typename Next::Result;
+    };
+
+//
+// pushFront
+//
+template<typename TList, typename... NewTypes>
+using pushFront = typename PushFront<TList::size(),TList,NewTypes...>::Result;
+
+
+template<typename TL, size_t n, bool ok>
+struct GetType : GetType<popFront<TL>,n-1,ok>
+    {
+    using Next = GetType<popFront<TL>,n-1,ok>;
+    using Result = typename Next::Result;
+    };
+template<typename TL, bool ok>
+struct GetType<TL,0ul,ok>
+    {
+    using Result = frontType<TL>;
+    };
+template<typename TL, size_t n>
+struct GetType<TL,n,false>
+    {
+    using Result = NoneType;
+    static_assert(n < TL::size(),"getType argument out of range");
+    };
+
+//
+// getType
+//
+template<typename TList, size_t n>
+using getType = typename GetType<TList,n,n < TList::size()>::Result;
 
 } //namespace itensor
 
