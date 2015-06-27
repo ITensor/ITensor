@@ -9,7 +9,6 @@
 // Ideas for improvement:
 // o Add indexOf (returns index of type T if containsType<TList,T>==true,
 //   such that getType<TList,indexOf<TList,T>()> == T)
-// o Add pushBack
 // o Add insert
 //
 
@@ -20,6 +19,12 @@ struct TypeList
     { 
     size_t static constexpr
     size() { return 0ul; }
+
+    template<typename... NewTypes>
+    using pushFront = TypeList<NewTypes...,Ts...>;
+
+    template<typename... NewTypes>
+    using pushBack = TypeList<Ts...,NewTypes...>;
     };
 
 template<typename T, typename... Ts>
@@ -30,7 +35,25 @@ struct TypeList<T,Ts...> : TypeList<Ts...>
 
     size_t static constexpr
     size() { return 1ul+Next::size(); }
+
+    template<typename... NewTypes>
+    using pushFront = TypeList<NewTypes...,T,Ts...>;
+
+    template<typename... NewTypes>
+    using pushBack = TypeList<T,Ts...,NewTypes...>;
     };
+
+//
+// pushFront
+//
+template<typename TList, typename... NewTypes>
+using pushFront = typename TList::template pushFront<NewTypes...>;
+
+//
+// pushBack
+//
+template<typename TList, typename... NewTypes>
+using pushBack = typename TList::template pushBack<NewTypes...>;
 
 //
 // frontType
@@ -83,29 +106,31 @@ struct containsType<TList,T,NoneType> : std::false_type
 // May be nicer to use variadic template-template param
 // see: http://ow.ly/OIurr
 
-template<size_t s, typename... Ts>
-struct PushFront { };
-
-template<typename TL, typename N, typename... Ts>
-struct PushFront<0ul,TL,N,Ts...>
-    {
-    using Result = TypeList<N,Ts...>;
-    };
-
-template<size_t s, typename TL, typename... Ts>
-struct PushFront<s,TL,Ts...> : PushFront<popFront<TL>::size(),popFront<TL>,Ts...,frontType<TL>>
-    {
-    using Next = PushFront<popFront<TL>::size(),popFront<TL>,Ts...,frontType<TL>>;
-    using Result = typename Next::Result;
-    };
-
+//template<size_t s, typename... Ts>
+//struct PushFront { };
 //
-// pushFront
+//template<typename TL, typename N, typename... Ts>
+//struct PushFront<0ul,TL,N,Ts...>
+//    {
+//    using Result = TypeList<N,Ts...>;
+//    };
 //
-template<typename TList, typename... NewTypes>
-using pushFront = typename PushFront<TList::size(),TList,NewTypes...>::Result;
+//template<size_t s, typename TL, typename... Ts>
+//struct PushFront<s,TL,Ts...> : PushFront<popFront<TL>::size(),popFront<TL>,Ts...,frontType<TL>>
+//    {
+//    using Next = PushFront<popFront<TL>::size(),popFront<TL>,Ts...,frontType<TL>>;
+//    using Result = typename Next::Result;
+//    };
+//
+////
+//// pushFront
+////
+//template<typename TList, typename... NewTypes>
+//using pushFront = typename PushFront<TList::size(),TList,NewTypes...>::Result;
 
 
+
+namespace detail {
 template<typename TL, size_t n, bool ok>
 struct GetType : GetType<popFront<TL>,n-1,ok>
     {
@@ -123,12 +148,13 @@ struct GetType<TL,n,false>
     using Result = NoneType;
     static_assert(n < TL::size(),"getType argument out of range");
     };
+} //namespace detail
 
 //
 // getType
 //
 template<typename TList, size_t n>
-using getType = typename GetType<TList,n,n < TList::size()>::Result;
+using getType = typename detail::GetType<TList,n,n < TList::size()>::Result;
 
 } //namespace itensor
 
