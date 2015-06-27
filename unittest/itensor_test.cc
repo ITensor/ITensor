@@ -54,7 +54,7 @@ Type
 doTask(GetType,const ITCombiner& d) { return Combiner; }
 
 Type
-getType(const ITensor& t) 
+typeOf(const ITensor& t) 
     { 
     return doTask(GetType{},t.store()); 
     }
@@ -169,7 +169,7 @@ SECTION("Constructors")
 SECTION("Rank 1")
     {
     ITensor t1(l1);
-    //CHECK(getType(t1) == DenseReal);
+    //CHECK(typeOf(t1) == DenseReal);
     CHECK_EQUAL(t1.r(),1);
     CHECK(hasindex(t1,l1));
     //CHECK_DIFF(norm(t1),0,1E-10);
@@ -178,7 +178,7 @@ SECTION("Rank 1")
 SECTION("Rank 2")
     {
     ITensor t2(l1,l2);
-    //CHECK(getType(t2) == DenseReal);
+    //CHECK(typeOf(t2) == DenseReal);
     CHECK_EQUAL(t2.r(),2);
     CHECK(hasindex(t2,l1));
     CHECK(hasindex(t2,l2));
@@ -188,7 +188,7 @@ SECTION("Rank 2")
 SECTION("Rank 3")
     {
     ITensor t3(l1,l2,l3);
-    //CHECK(getType(t3) == DenseReal);
+    //CHECK(typeOf(t3) == DenseReal);
     CHECK_EQUAL(t3.r(),3);
     CHECK(hasindex(t3,l1));
     CHECK(hasindex(t3,l2));
@@ -277,7 +277,7 @@ SECTION("Diag Rank 2 from container")
           i2("i2",10);
     auto data = randomData(i1.m());
     auto T = diagTensor(data,i1,i2);
-    CHECK(getType(T) == DiagReal);
+    CHECK(typeOf(T) == DiagReal);
 
     CHECK_EQUAL(T.r(),2);
     CHECK(hasindex(T,i1));
@@ -481,9 +481,9 @@ CHECK_DIFF(B.real(s1(2),s2(2)),220/f,1E-10);
 
 SECTION("Complex Scalar Multiply")
 {
-CHECK(getType(A) == DenseReal);
+CHECK(typeOf(A) == DenseReal);
 A *= 1_i;
-//CHECK(getType(A) == DenseCplx);
+//CHECK(typeOf(A) == DenseCplx);
 //auto s1P = prime(s1);
 //CHECK_EQUAL(A.cplx(s1(1),s1P(1)),11_i);
 //CHECK_EQUAL(A.cplx(s1(1),s1P(2)),12_i);
@@ -491,11 +491,11 @@ A *= 1_i;
 //CHECK_EQUAL(A.cplx(s1(2),s1P(2)),22_i);
 //
 //auto T = randomize(A);
-//CHECK(getType(T) == DenseReal);
-//CHECK(getType(A) == DenseCplx);
+//CHECK(typeOf(T) == DenseReal);
+//CHECK(typeOf(A) == DenseCplx);
 //
 //T = randomize(T,"Complex");
-//CHECK(getType(T) == DenseCplx);
+//CHECK(typeOf(T) == DenseCplx);
 //
 //auto z = 2.2-3.1_i;
 //auto cT = T;
@@ -1011,7 +1011,7 @@ SECTION("Diag ITensor Contraction")
 SECTION("Diag All Same")
     {
     auto op = diagTensor(1.,s1,a1); //all diag elements same
-    CHECK(getType(op) == DiagRealAllSame);
+    CHECK(typeOf(op) == DiagRealAllSame);
 
     auto r1 = randomTensor(s1,prime(s1,2));
     auto res1 = op*r1;
@@ -1027,7 +1027,7 @@ SECTION("Diag")
     {
     std::vector<Real> v = {{1.23234, -0.9237}};
     auto op = diagTensor(v,s1,b2);
-    CHECK(getType(op) == DiagReal);
+    CHECK(typeOf(op) == DiagReal);
 
     auto r2 = randomTensor(s1,s2);
     auto res2 = op*r2;
@@ -1087,7 +1087,7 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
 
     auto d1 = diagTensor(1,J,K);
     auto R = d1*T;
-    CHECK(getType(R) == DiagRealAllSame);
+    CHECK(typeOf(R) == DiagRealAllSame);
     Real val = 0;
     auto minjk = std::min(J.m(),K.m());
     for(long j = 1; j <= minjk; ++j)
@@ -1097,7 +1097,7 @@ SECTION("Contract All Dense Inds; Diag Scalar result")
     auto data = randomData(minjk);
     auto d2 = diagTensor(data,J,K);
     R = d2*T;
-    CHECK(getType(R) == DiagRealAllSame);
+    CHECK(typeOf(R) == DiagRealAllSame);
     val = 0;
     for(long j = 1; j <= minjk; ++j)
         val += data.at(j-1)*T.real(J(j),K(j));
@@ -1110,7 +1110,7 @@ SECTION("Contract All Dense Inds; Diag result")
     
     auto d = diagTensor(1,J,K,L);
     auto R = d*T;
-    CHECK(getType(R) == DiagReal);
+    CHECK(typeOf(R) == DiagReal);
     CHECK(hasindex(R,L));
     auto minjkl = std::min(std::min(J.m(),K.m()),L.m());
     for(long j = 1; j <= minjkl; ++j)
@@ -1121,7 +1121,7 @@ SECTION("Contract All Dense Inds; Diag result")
 SECTION("Kronecker Delta Tensor")
     {
     auto d = deltaTensor(s1,s2);
-    CHECK(getType(d) == Combiner);
+    CHECK(typeOf(d) == Combiner);
 
     auto T1 = randomTensor(s1,s3);
 
@@ -1175,7 +1175,7 @@ SECTION("Combiner")
     SECTION("Two Index")
         {
         auto C = combiner(s1,s2);
-        CHECK(getType(C) == Combiner);
+        CHECK(typeOf(C) == Combiner);
 
         auto T1 = randomTensor(s1,s2,s3);
         auto R1 = C*T1;
@@ -1258,7 +1258,7 @@ CHECK_CLOSE(std::sqrt(nrm),norm(T));
 
 nrm = 0;
 T = randomTensorC(b2,b7,b8);
-CHECK(getType(T) == DenseCplx);
+CHECK(typeOf(T) == DenseCplx);
 T.visit(calcnrm);
 CHECK_CLOSE(std::sqrt(nrm),norm(T));
 }
