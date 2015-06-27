@@ -178,6 +178,8 @@ svdRank2(ITensor A,
     auto lname = args.getString("LeftIndexName","ul");
     auto rname = args.getString("RightIndexName","vl");
     auto itype = getIndexType(args,"IndexType",Link);
+    auto litype = getIndexType(args,"LeftIndexType",itype);
+    auto ritype = getIndexType(args,"RightIndexType",itype);
 
 #ifdef DEBUG
     if(A.r() != 2) Error("A must be matrix-like (rank 2)");
@@ -259,8 +261,8 @@ svdRank2(ITensor A,
             }
         }
     
-    Index uL(lname,m,itype),
-          vL(rname,m,itype);
+    Index uL(lname,m,litype),
+          vL(rname,m,ritype);
 
     //Fix sign to make sure D has positive elements
     Real signfix = (A.scale().sign() == -1) ? -1 : +1;
