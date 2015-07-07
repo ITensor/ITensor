@@ -98,59 +98,37 @@ class ManageStore
         AssignNewData,
         AssignPointerRtoL
         };
+
     PData *parg1_ = nullptr;
+    const CPData *cparg1_ = nullptr;
     const CPData *parg2_ = nullptr;
-    const ITData *arg2_ = nullptr;
     Action action_ = None;
     PData nd_;
 
-    class UniqueRef
-        {
-        PData* pdata_ = nullptr;
-        public:
-
-        UniqueRef(PData* pdata) : pdata_(pdata) { }
-
-        template<typename T>
-        operator T&()
-            {
-            if(!(pdata_->unique())) 
-                {
-                auto* olda1 = static_cast<T*>(pdata_->get());
-                //*pdata_ = std::make_shared<T>(*olda1);
-                *pdata_ = std::make_shared<ITWrap<T>>(*olda1);
-                }
-            return *(static_cast<T*>(pdata_->get()));
-            }
-        };
+    class UniqueRef;
 
     public:
 
     ManageStore() { }
 
     ManageStore(PData *parg1)
-        : parg1_(parg1)
-        { }
-
-    ManageStore(PData *parg1, const ITData *arg2)
-        : parg1_(parg1), arg2_(arg2)
+      : parg1_(parg1)
         { }
 
     ManageStore(PData *parg1, const CPData *parg2)
-        : parg1_(parg1), parg2_(parg2), arg2_(parg2->get())
+      : parg1_(parg1), parg2_(parg2)
+        { }
+
+    ManageStore(const CPData *cparg1, const CPData *parg2)
+      : cparg1_(cparg1), parg2_(parg2)
         { }
 
     ManageStore(ManageStore&& o)
-        :
-        parg1_(o.parg1_),
-        parg2_(o.parg2_),
-        arg2_(o.arg2_),
+      : parg1_(std::move(o.parg1_)),
+        parg2_(std::move(o.parg2_)),
         action_(o.action_),
         nd_(std::move(o.nd_))
         { 
-        o.parg1_ = nullptr;
-        o.parg2_ = nullptr;
-        o.arg2_ = nullptr;
         o.action_ = None;
         }
 
@@ -168,10 +146,22 @@ class ManageStore
     hasPArg1() const { return bool(parg1_); }
 
     bool
-    hasPArg2() const { return bool(parg2_); }
+    hasCPArg1() const { return bool(cparg1_); }
 
     bool
-    hasArg2() const { return bool(arg2_); }
+    hasPArg2() const { return bool(parg2_); }
+
+    void
+    setparg1(PData *parg1)
+        {
+        parg1_ = parg1;
+        }
+
+    void
+    setparg2(const CPData *parg2)
+        {
+        parg2_ = parg2;
+        }
 
     PData&
     parg1() 
@@ -180,6 +170,15 @@ class ManageStore
         if(!parg1_) Error("Attempt to dereference nullptr");
 #endif
         return *parg1_; 
+        }
+
+    const CPData&
+    cparg1() 
+        { 
+#ifdef DEBUG
+        if(!cparg1_) Error("Attempt to dereference nullptr");
+#endif
+        return *cparg1_; 
         }
 
 
@@ -196,9 +195,9 @@ class ManageStore
     arg2() 
         { 
 #ifdef DEBUG
-        if(!arg2_) Error("Attempt to dereference nullptr");
+        if(!parg2_) Error("Attempt to dereference nullptr");
 #endif
-        return *arg2_; 
+        return *(parg2_->get()); 
         }
 
 
@@ -236,6 +235,24 @@ class ManageStore
     void
     updateArg1();
 
+    class UniqueRef
+        {
+        PData* pdata_ = nullptr;
+        public:
+
+        UniqueRef(PData* pdata) : pdata_(pdata) { }
+
+        template<typename T>
+        operator T&()
+            {
+            if(!(pdata_->unique())) 
+                {
+                auto* olda1 = static_cast<T*>(pdata_->get());
+                *pdata_ = std::make_shared<ITWrap<T>>(*olda1);
+                }
+            return *(static_cast<T*>(pdata_->get()));
+            }
+        };
     };
 
 template <typename StorageT, typename... VArgs>

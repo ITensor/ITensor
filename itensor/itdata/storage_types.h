@@ -32,6 +32,8 @@ class ITCombiner;
 
 class IQTReal;
 
+class ITLazy;
+
 
 using 
 StorageTypes = TypeList< 
@@ -42,7 +44,8 @@ ITCplx,
 ITDiag<Real>,
 ITDiag<Cplx>,
 ITCombiner,
-IQTReal
+IQTReal,
+ITLazy
 //-----------
 >;
 
@@ -55,4 +58,5 @@ IQTReal
 #include "itensor/itdata/itdiag.h"
 #include "itensor/itdata/itcombiner.h"
 #include "itensor/itdata/iqtreal.h"
+#include "itensor/itdata/itlazy.h"
 #endif

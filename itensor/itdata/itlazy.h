@@ -7,11 +7,9 @@
 
 #include "itensor/itdata/task_types.h"
 #include "itensor/itdata/itdata.h"
+#include "itensor/itdata/synchronized.h"
 
 namespace itensor {
-
-class ITReal;
-class ITCplx;
 
 class ITLazy
     {
@@ -19,15 +17,16 @@ class ITLazy
     struct IndSto
         {
         IndexSet i;
-        PData s;
+        CPData s;
+        IndSto() { }
         IndSto(const IndexSet& i_,
-               const PData& s_)
+               const CPData& s_)
             : i(i_), s(s_) { }
         };
     using storage_type = std::vector<IndSto>;
     private:
     storage_type todo_;
-    PData result_;
+    mutable Synchronized<PData> result_;
     public:
 
     ITLazy() { }
@@ -47,49 +46,62 @@ class ITLazy
     storage_type&
     todo() { return todo_; }
 
-    PData&
-    result() { return result_; }
-
     void
     addStore(const IndexSet& is,
-             const PData& pstore)
+             const CPData& pstore)
         {
         todo_.emplace_back(is,pstore);
         }
 
+    bool
+    hasResult() const { return static_cast<bool>(result_); }
+
+    PData
+    result() const { return result_.get(); }
+
+    void
+    setResult(PData&& p) const { result_.set(std::move(p)); }
+
     };
 
-void inline
-evaluate(ITLazy& L, ManageStore& m)
+PData inline
+evaluate(const ITLazy& L)
     {
     //0. Check if already evaluated
-    if(L.result()) 
-        {
-        m.pointTo(L.result());
-        return;
-        }
+    if(L.hasResult()) return L.result();
     //1. Reorder intermediate indices
     //2. Do chain of contractions
+    auto p = std::make_shared<ITWrap<ITReal>>(10,2);
+    L.setResult(std::move(p));
+    return L.result();
     }
 
 void inline
 doTask(Contract<Index>& C,
        ITLazy& L,
-       const ITReal& R,
+       const ITLazy& R)
+    {
+    }
+
+void inline
+doTask(Contract<Index>& C,
+       ITLazy& L,
+       const CPData& R,
        ManageStore& m)
     {
     contractIS(C.Lis,C.Ris,C.Nis);
     L.addStore(C.Nis,m.parg2());
     }
 
+
 void inline
 doTask(Contract<Index>& C,
-       const ITReal& R,
+       const CPData& R,
        const ITLazy& L,
        ManageStore& m)
     {
     //TODO: create new index set
-    auto* pn = makeNewData(L);
+    //auto* pn = m.makeNewData(L);
     Error("Need access to arg1 pointer");
     //TODO: need to be able to access pointer
     //      to arg1 here
