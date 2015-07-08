@@ -13,8 +13,29 @@
 namespace itensor {
 
 struct ITData;
+
 using PData = std::shared_ptr<ITData>;
-using CPData = std::shared_ptr<const ITData>;
+
+struct CPData  //logically const ITData smart pointer
+    {
+    PData& p;
+
+    CPData(PData& p_) : p(p_) { }
+
+    explicit operator bool() const { return static_cast<bool>(p); }
+
+    ITData&
+    operator*();
+
+    const ITData&
+    operator*() const;
+
+    ITData*
+    operator->();
+
+    const ITData*
+    operator->() const;
+    };
 
 template<typename TList>
 struct FuncBaseT : FuncBaseT<popFront<TList>>
@@ -99,9 +120,8 @@ class ManageStore
         AssignPointerRtoL
         };
 
-    PData *parg1_ = nullptr;
-    const CPData *cparg1_ = nullptr;
-    const CPData *parg2_ = nullptr;
+    PData *pparg1_ = nullptr;
+    PData *pparg2_ = nullptr;
     Action action_ = None;
     PData nd_;
 
@@ -111,24 +131,22 @@ class ManageStore
 
     ManageStore() { }
 
-    ManageStore(PData *parg1)
-      : parg1_(parg1)
+    ManageStore(PData *pparg1)
+      : pparg1_(pparg1)
         { }
 
-    ManageStore(PData *parg1, const CPData *parg2)
-      : parg1_(parg1), parg2_(parg2)
-        { }
-
-    ManageStore(const CPData *cparg1, const CPData *parg2)
-      : cparg1_(cparg1), parg2_(parg2)
+    ManageStore(PData *pparg1, PData *pparg2)
+      : pparg1_(pparg1), pparg2_(pparg2)
         { }
 
     ManageStore(ManageStore&& o)
-      : parg1_(std::move(o.parg1_)),
-        parg2_(std::move(o.parg2_)),
+      : pparg1_(o.pparg1_),
+        pparg2_(o.pparg2_),
         action_(o.action_),
         nd_(std::move(o.nd_))
         { 
+        o.pparg1_ = nullptr;
+        o.pparg2_ = nullptr;
         o.action_ = None;
         }
 
@@ -143,63 +161,40 @@ class ManageStore
     operator=(const ManageStore&) = delete;
 
     bool
-    hasPArg1() const { return bool(parg1_); }
+    hasPArg1() const { return bool(pparg1_); }
 
     bool
-    hasCPArg1() const { return bool(cparg1_); }
-
-    bool
-    hasPArg2() const { return bool(parg2_); }
+    hasPArg2() const { return bool(pparg2_); }
 
     void
-    setparg1(PData *parg1)
+    setparg1(PData *pparg1)
         {
-        parg1_ = parg1;
+        pparg1_ = pparg1;
         }
 
     void
-    setparg2(const CPData *parg2)
+    setparg2(PData *pparg2)
         {
-        parg2_ = parg2;
+        pparg2_ = pparg2;
         }
 
     PData&
     parg1() 
         { 
 #ifdef DEBUG
-        if(!parg1_) Error("Attempt to dereference nullptr");
+        if(!pparg1_) Error("Attempt to dereference nullptr");
 #endif
-        return *parg1_; 
+        return *pparg1_; 
         }
 
-    const CPData&
-    cparg1() 
-        { 
-#ifdef DEBUG
-        if(!cparg1_) Error("Attempt to dereference nullptr");
-#endif
-        return *cparg1_; 
-        }
-
-
-    const CPData&
+    PData&
     parg2() 
         { 
 #ifdef DEBUG
-        if(!parg2_) Error("Attempt to dereference nullptr");
+        if(!pparg2_) Error("Attempt to dereference nullptr");
 #endif
-        return *parg2_; 
+        return *pparg2_; 
         }
-
-    const ITData&
-    arg2() 
-        { 
-#ifdef DEBUG
-        if(!parg2_) Error("Attempt to dereference nullptr");
-#endif
-        return *(parg2_->get()); 
-        }
-
 
     //Can be used as StorageType& sref = mp.modifyData();
     //The RefHelper return type will deduce StorageType
@@ -259,7 +254,7 @@ template <typename StorageT, typename... VArgs>
 StorageT* ManageStore::
 makeNewData(VArgs&&... vargs)
     {
-    if(!parg1_) Error("Can't call makeNewData with const-only access to first arg");
+    //if(!pparg1_) Error("Can't call makeNewData with const-only access to first arg");
     action_ = AssignNewData;
     auto newdat = std::make_shared<ITWrap<StorageT>>(std::forward<VArgs>(vargs)...);
     auto* ret = newdat.get();
@@ -270,7 +265,7 @@ makeNewData(VArgs&&... vargs)
 void inline ManageStore::
 assignPointerRtoL() 
     { 
-    if(!parg2_) Error("No second pointer provided for action AssignPointerRtoL");
+    //if(!pparg2_) Error("No second pointer provided for action AssignPointerRtoL");
     action_ = AssignPointerRtoL; 
     }
 
@@ -284,40 +279,54 @@ pointTo(const PData& p)
 void inline ManageStore::
 updateArg1()
     {
-    if(!parg1_) return;
+    if(!pparg1_) return;
     //println("In updateArg1, arg1_ points to ",arg1_->get());
     if(action_ == AssignNewData)
         {
         //println("Doing AssignNewData");
-        *parg1_ = std::move(nd_);
+        *pparg1_ = std::move(nd_);
         }
     else if(action_ == AssignPointerRtoL)
         {
         //println("Doing AssignPointerRtoL");
-        *parg1_ = std::const_pointer_cast<ITData,const ITData>(*parg2_);
+        //*pparg1_ = std::const_pointer_cast<ITData,const ITData>(*pparg2_);
+        *pparg1_ = *pparg2_;
         }
     }
 
 ManageStore::UniqueRef inline ManageStore::
 modifyData()
     {
-    if(!parg1_) Error("Can't modify const data");
-    return UniqueRef(parg1_);
+    //if(!pparg1_) Error("Can't modify const data");
+    return UniqueRef(pparg1_);
     }
 
 template<typename T>
 T* ManageStore::
 modifyData(const T& d)
     {
-    if(!parg1_) Error("Can't modify const data");
-    if(!(parg1_->unique())) 
+    //if(!pparg1_) Error("Can't modify const data");
+    if(!(pparg1_->unique())) 
         {
-        auto* olda1 = static_cast<ITWrap<T>*>(parg1_->get());
-        *parg1_ = std::make_shared<ITWrap<T>>(olda1->d);
+        auto* olda1 = static_cast<ITWrap<T>*>(pparg1_->get());
+        *pparg1_ = std::make_shared<ITWrap<T>>(olda1->d);
         }
-    auto* a1 = static_cast<ITWrap<T>*>(parg1_->get());
+    auto* a1 = static_cast<ITWrap<T>*>(pparg1_->get());
     return &(a1->d);
     }
+
+
+inline ITData& CPData::
+operator*() { return *p; }
+
+inline const ITData& CPData::
+operator*() const { return *p; }
+
+inline ITData* CPData::
+operator->() { return p.get(); }
+
+inline const ITData* CPData::
+operator->() const { return p.get(); }
 
 
 } // namespace itensor

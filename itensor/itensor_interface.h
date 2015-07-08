@@ -37,12 +37,12 @@ class ITensorT
     using index_type = IndexT;
     using indexval_type = typename index_type::indexval_type;
     using indexset_type = IndexSetT<IndexT>;
-    using storage_ptr = std::shared_ptr<ITData>;
-    using const_storage_ptr = std::shared_ptr<const ITData>;
+    using storage_ptr = PData;
+    using const_storage_ptr = CPData;
     using scale_type = LogNumber;
     private:
     indexset_type is_;
-    storage_ptr store_;
+    mutable storage_ptr store_;
     scale_type scale_;
     public:
 
@@ -256,11 +256,11 @@ class ITensorT
     scale_type&
     scale() { return scale_; }
 
-    const_storage_ptr
-    store() const { return store_; }
-
     storage_ptr&
     store() { return store_; }
+
+    const_storage_ptr
+    store() const { return const_storage_ptr(store_); }
 
     void 
     scaleTo(const scale_type& newscale);

@@ -94,22 +94,29 @@ namespace detail {
 
 //OneArg and TwoArgs are "policy classes" 
 //for customizing implementation of RegisterTask
+template<class PType>
 struct OneArg
     {
-    template<typename RT, typename Task, typename D, typename Return>
-    void
-    call(RT& rt, Task& t, const D& d, ManageStore& m, Return& ret);
+    using ptype = PType;
+
+    //template<typename RT, typename Task, typename D, typename Return>
+    //void
+    //call(RT& rt, Task& t, const D& d, ManageStore& m, Return& ret);
 
     template<typename RT, typename Task, typename D, typename Return>
     void
     call(RT&, Task& t, D& d, ManageStore& m, Return& ret);
     };
 
+template<class PType1, class PType2>
 struct TwoArgs
     {
-    template<typename RT, typename Task, typename D, typename Return>
-    void
-    call(RT& rt, Task& t, const D& d, ManageStore& m, Return& ret);
+    using ptype1 = PType1;
+    using ptype2 = PType2;
+
+    //template<typename RT, typename Task, typename D, typename Return>
+    //void
+    //call(RT& rt, Task& t, const D& d, ManageStore& m, Return& ret);
 
     template<typename RT, typename Task, typename D, typename Return>
     void
@@ -180,17 +187,10 @@ class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
       : task_(std::move(t))
         { }
 
-    template<typename... MSArgs>
     RegisterTask(task_type&& t,
-                 MSArgs&&... msargs)
+                 ManageStore&& m)
       : task_(std::move(t)),
-        m_(std::forward<MSArgs>(msargs)...)
-        { }
-
-    RegisterTask(RegisterTask&& o)
-      : task_(std::move(o.task_)), 
-        m_(std::move(o.m_)),
-        ret_(std::move(o.ret_))
+        m_(std::move(m))
         { }
 
     virtual ~RegisterTask() { }
@@ -200,43 +200,29 @@ class RegisterTask : public FuncT<RegisterTask<NArgs,Task,Return>,StorageTypes>
 
     template<typename D>
     void
-    applyToImpl(D& d)
-        {
-        NArgs{}.call(*this,task_,d,m_,ret_);
-        }
+    applyToImpl(D& d);
     };
 
-template <class RT, typename Task, typename D1, typename Return>
-class CallWrap : public FuncT<CallWrap<RT,Task,D1,Return>,StorageTypes>
+template <class RT, typename Task, typename D1, typename Return, class PType1, class PType2>
+class CallWrap : public FuncT<CallWrap<RT,Task,D1,Return,PType1,PType2>,StorageTypes>
     {
     RT& rt_;
     Task& t_;
-    D1& arg1_;
-    PData* parg1_;
+    D1& d1_;
     ManageStore& m_;
     Return& ret_;
     public:
 
+    using ptype1 = PType1;
+    using ptype2 = PType2;
+
     CallWrap(RT& rt, Task& t, D1& arg1, ManageStore& m, Return& ret) 
-        : rt_(rt), t_(t), arg1_(arg1), parg1_(nullptr), m_(m), ret_(ret) { }
-
-    CallWrap(RT& rt, Task& t, D1& arg1, PData& parg1, ManageStore& m, Return& ret) 
-        : rt_(rt), t_(t), arg1_(arg1), parg1_(&parg1), m_(m), ret_(ret) { }
+        : rt_(rt), t_(t), d1_(arg1), m_(m), ret_(ret) { }
 
     template<typename D2>
     void
-    applyToImpl(const D2& d2);
+    applyToImpl(D2& d2);
     
-    private:
-
-    template<typename D2>
-    void
-    applyToImplCD1(const D2& d2);
-
-    template<typename D2>
-    void
-    applyToImplNCD1(const D2& d2);
-
     };
 
 //
@@ -327,7 +313,7 @@ template <typename Ret, typename Task, typename Storage>
 void
 callDoTask_Impl(choice<3>, Task& t, Storage& s, ManageStore& m, Ret& ret)
     {
-    throw ITError("1 parameter doTask not defined for specified task or data type");
+    throw ITError("1 parameter doTask not defined for specified task or data type [1]");
     }
 template <typename Ret,typename Task, typename Storage>
 auto 
@@ -351,6 +337,35 @@ callDoTask(Task& t, Storage& s, ManageStore& m, Return& ret)
     }
 
 /////////////////////////////////////////////////////
+
+template <typename Ret, typename Task, typename D1, typename D2>
+void
+callDoTask_Impl(choice<3>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
+    {
+    throw ITError("2 parameter doTask not defined for specified task or data type [2]");
+    }
+template <typename Ret, typename Task, typename D1, typename D2>
+auto 
+callDoTask_Impl(choice<2>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
+    -> ReturnIfExists<decltype(doTask(t,d1,d2)),void>
+    {
+    FixRet<Ret,decltype(doTask(t,d1,d2))>{ret}(t,d1,d2);
+    }
+template <typename Ret, typename Task, typename D1, typename D2>
+auto 
+callDoTask_Impl(choice<1>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
+    -> ReturnIfExists<decltype(doTask(t,d1,d2,m)),void>
+    {
+    FixRet<Ret,decltype(doTask(t,d1,d2,m))>{ret}(t,d1,d2,m);
+    }
+template<typename Ret, typename Task, typename D1, typename D2>
+void
+callDoTask(Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
+    {
+    callDoTask_Impl<Ret,Task,D1,D2>(select_overload{},t,d1,d2,m,ret);
+    }
+
+/////////////////////
 
 template<typename Task, typename D>
 std::false_type
@@ -469,13 +484,13 @@ struct HasDoTask2Arg
 
 template<typename D>
 auto 
-testEvalImpl(choice<2>, const D& d)
+testEvalImpl(choice<2>, D& d)
     {
     return std::false_type{};
     }
 template<typename D>
 auto 
-testEvalImpl(choice<1>, const D& d)
+testEvalImpl(choice<1>, D& d)
     -> ReturnIfExists<decltype(evaluate(d)),std::true_type>
     {
     return std::true_type{};
@@ -485,7 +500,7 @@ struct HasEvaluate
     {
     struct Test 
         {
-        const Storage* s;
+        Storage* s;
         auto operator()() { return testEvalImpl(select_overload{},*s); }
         };
     bool constexpr static
@@ -496,114 +511,88 @@ struct HasEvaluate
 
 template<typename D>
 PData
-callEvaluateImpl(choice<2>, const D& d)
+callEvaluateImpl(choice<2>, D& d)
     {
     throw std::runtime_error("No doTask overload found for task/storage type");
     return PData{};
     }
 template<typename D>
 auto
-callEvaluateImpl(choice<1>, const D& d)
+callEvaluateImpl(choice<1>, D& d)
     -> ReturnIfExists<decltype(evaluate(d)),PData>
     {
     return evaluate(d);
     }
 template<typename D>
 PData
-callEvaluate(const D& d)
+callEvaluate(D& d)
     {
     return callEvaluateImpl(select_overload{},d);
     }
 
 /////////////
 
-
-template <typename Ret, typename Task, typename D1, typename D2>
-void
-callDoTask_Impl(choice<3>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
+template<typename D>
+bool constexpr
+checkHasResultImpl(choice<2>, const D& d)
     {
-    throw ITError("2 parameter doTask not defined for specified task or data type");
+    return true;
     }
-template <typename Ret, typename Task, typename D1, typename D2>
-auto 
-callDoTask_Impl(choice<2>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
-    -> ReturnIfExists<decltype(doTask(t,d1,d2)),void>
+template<typename D>
+auto
+checkHasResultImpl(choice<1>, const D& d)
+    -> ReturnIfExists<decltype(hasResult(d)),bool>
     {
-    FixRet<Ret,decltype(doTask(t,d1,d2))>{ret}(t,d1,d2);
+    return hasResult(d);
     }
-template <typename Ret, typename Task, typename D1, typename D2>
-auto 
-callDoTask_Impl(choice<1>, Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
-    -> ReturnIfExists<decltype(doTask(t,d1,d2,m)),void>
+template<typename D>
+bool constexpr
+checkHasResult(const D& d)
     {
-    FixRet<Ret,decltype(doTask(t,d1,d2,m))>{ret}(t,d1,d2,m);
-    }
-template<typename Ret, typename Task, typename D1, typename D2>
-void
-callDoTask(Task& t, D1& d1, const D2& d2, ManageStore& m, Ret& ret)
-    {
-    callDoTask_Impl<Ret,Task,D1,D2>(select_overload{},t,d1,d2,m,ret);
-    }
-
-/////////////////////
-
-template<typename Ret, typename Task, typename D1, typename D2>
-void
-cloneDoTask(Task& t, const D1& d1, const D2& d2, ManageStore& m, Ret& ret)
-    {
-    constexpr bool hasCDT = HasConstDoTask2Arg<Task,D1,D2>::result();
-    constexpr bool hasNCDT = HasNonConstDoTask2Arg<Task,D1,D2>::result();
-    if(hasCDT)
-        {
-        callDoTask(t,d1,d2,m,ret);
-        }
-    else if(hasNCDT)
-        {
-        auto* pd1 = m.modifyData(d1);
-        callDoTask(t,*pd1,d2,m,ret);
-        }
-    else
-        {
-        throw ITError("2 parameter doTask not defined for task/storage types");
-        }
+    return checkHasResultImpl(select_overload{},d);
     }
 
 /////////////
 
+
+void inline
+check(const PData& p)
+    {
+    if(!p) Error("doTask called on unallocated store pointer");
+    }
 void inline
 check(const CPData& p)
     {
     if(!p) Error("doTask called on unallocated store pointer");
     }
 
+/////////////
 
-template<typename RT, typename Task, typename D, typename Return>
-void OneArg::
-call(RT& rt, Task& t, const D& d, ManageStore& m, Return& ret)
+template <typename NArgs, typename Task, typename Return>
+template<typename D>
+void RegisterTask<NArgs,Task,Return>::
+applyToImpl(D& d)
     {
-    constexpr bool hasDT = HasConstDoTask<Task,D>::result();
     constexpr bool isLazy = HasEvaluate<D>::result();
-    if(hasDT)
+    if(isLazy)
         {
-        detail::callDoTask(t,d,m,ret);
+        if(checkHasResult(d))
+            {
+            println("Lazy storage has result, swapping");
+            m_.parg1() = callEvaluate(d);
+            m_.parg1()->plugInto(*this);
+            return;
+            }
         }
-    else if(isLazy)
-        {
-        auto pnd = callEvaluate(d);
-        m.setparg1(&pnd);
-
-        pnd->plugInto(rt);
-        }
-    else
-        {
-        throw ITError("doTask not defined for task/storage type");
-        }
+    NArgs{}.call(*this,task_,d,m_,ret_);
     }
 
+template<class PType>
 template<typename RT, typename Task, typename D, typename Return>
-void OneArg::
+void OneArg<PType>::
 call(RT& rt, Task& t, D& d, ManageStore& m, Return& ret)
     {
+    constexpr bool NCData = std::is_same<PType,PData>::value;
     constexpr bool hasConstDT = HasConstDoTask<Task,D>::result();
     constexpr bool hasNCDT = HasNonConstDoTask<Task,D>::result();
     constexpr bool isLazy = HasEvaluate<D>::result();
@@ -612,7 +601,7 @@ call(RT& rt, Task& t, D& d, ManageStore& m, Return& ret)
         const auto& cd = d;
         detail::callDoTask(t,cd,m,ret);
         }
-    else if(hasNCDT)
+    else if(NCData && hasNCDT)
         {
         auto* pd = m.modifyData(d);
         detail::callDoTask(t,*pd,m,ret);
@@ -624,155 +613,93 @@ call(RT& rt, Task& t, D& d, ManageStore& m, Return& ret)
         }
     else
         {
-        throw ITError("doTask not defined for task/storage type");
+        throw ITError("doTask not defined for task/storage type [4]");
         }
     }
 
+template<class PType1, class PType2>
 template<typename RT, typename Task, typename D, typename Return>
-void TwoArgs::
-call(RT& rt, Task& t, const D& d, ManageStore& m, Return& ret)
-    {
-    assert(m.hasPArg2());
-    CallWrap<RT,Task,const D,Return> w(rt,t,d,m,ret);
-    m.arg2().plugInto(w);
-    }
-
-template<typename RT, typename Task, typename D, typename Return>
-void TwoArgs::
+void TwoArgs<PType1,PType2>::
 call(RT& rt, Task& t, D& d, ManageStore& m, Return& ret)
     {
-    assert(m.hasPArg1());
-    assert(m.hasPArg2());
-    CallWrap<RT,Task,D,Return> w(rt,t,d,m.parg1(),m,ret);
-    m.arg2().plugInto(w);
+    CallWrap<RT,Task,D,Return,PType1,PType2> w(rt,t,d,m,ret);
+    m.parg2()->plugInto(w);
     }
 
-template <class RT, typename Task, typename D1, typename Return>
+template <class RT, typename Task, typename D1, typename Return, class PType1, class PType2>
 template<typename D2>
-void CallWrap<RT,Task,D1,Return>::
-applyToImplCD1(const D2& d2)
-    {
-    constexpr bool hasCDT = HasConstDoTask2Arg<Task,D1,D2>::result();
-    constexpr bool isLazy1 = HasEvaluate<D1>::result();
+void CallWrap<RT,Task,D1,Return,PType1,PType2>::
+applyToImpl(D2& d2)
+    { 
     constexpr bool isLazy2 = HasEvaluate<D2>::result();
-    if(hasCDT)
+    if(isLazy2)
         {
-        detail::callDoTask(t_,arg1_,d2,m_,ret_);
-        }
-    else if(isLazy1 && isLazy2)
-        {
-        auto pnd1 = callEvaluate(arg1_);
-        m_.setparg1(&pnd1);
-
-        const CPData pnd2 = callEvaluate(d2);
-        m_.setparg2(&pnd2);
-
-        pnd1->plugInto(rt_);
-        }
-    else if(isLazy1)
-        {
-        constexpr bool hasPDT = HasConstDoTask2Arg<Task,D1,CPData>::result();
-        if(hasPDT)
+        if(checkHasResult(d2))
             {
-            detail::callDoTask(t_,arg1_,m_.parg2(),m_,ret_);
-            }
-        else
-            {
-            auto pnd1 = callEvaluate(arg1_);
-            m_.setparg1(&pnd1);
-
-            pnd1->plugInto(rt_);
+            println("Lazy storage has result, swapping");
+            m_.parg2() = callEvaluate(d2);
+            m_.parg2()->plugInto(*this);
+            return;
             }
         }
-    else if(isLazy2)
-        {
-        constexpr bool hasPDT = HasConstDoTask2Arg<Task,CPData,D2>::result();
-        if(hasPDT)
-            {
-            detail::callDoTask(t_,m_.cparg1(),d2,m_,ret_);
-            }
-        else
-            {
-            const CPData pnd2 = callEvaluate(d2);
-            m_.setparg2(&pnd2);
 
-            pnd2->plugInto(*this);
-            }
-        }
-    else
-        {
-        throw ITError("doTask not defined for task/storage type");
-        }
-    }
-
-template <class RT, typename Task, typename D1, typename Return>
-template<typename D2>
-void CallWrap<RT,Task,D1,Return>::
-applyToImplNCD1(const D2& d2)
-    {
+    constexpr bool NCData1 = std::is_same<PType1,PData>::value;
     constexpr bool hasCDT = HasConstDoTask2Arg<Task,D1,D2>::result();
     constexpr bool hasNCDT = HasNonConstDoTask2Arg<Task,D1,D2>::result();
-    constexpr bool hasDT = (hasCDT || hasNCDT);
     constexpr bool isLazy1 = HasEvaluate<D1>::result();
-    constexpr bool isLazy2 = HasEvaluate<D2>::result();
-    if(hasDT)
+    if(hasCDT)
         {
-        detail::cloneDoTask(t_,arg1_,d2,m_,ret_);
+        const auto& cd1 = d1_;
+        callDoTask(t_,cd1,d2,m_,ret_);
+        }
+    else if(NCData1 && hasNCDT)
+        {
+        auto* pd1 = m_.modifyData(d1_);
+        callDoTask(t_,*pd1,d2,m_,ret_);
         }
     else if(isLazy1 && isLazy2)
         {
-        m_.parg1() = callEvaluate(arg1_);
-
-        const CPData pnd2 = callEvaluate(d2);
-        m_.setparg2(&pnd2);
-
+        m_.parg1() = callEvaluate(d1_);
+        m_.parg2() = callEvaluate(d2);
         m_.parg1()->plugInto(rt_);
         }
     else if(isLazy1)
         {
-        constexpr bool hasPDT = HasDoTask2Arg<Task,D1,CPData>::result();
-        if(hasPDT)
+        constexpr bool hasCPDT = HasConstDoTask2Arg<Task,D1,const PData>::result();
+        constexpr bool hasNCPDT = HasNonConstDoTask2Arg<Task,D1,const PData>::result();
+        if(hasCPDT)
             {
-            detail::cloneDoTask(t_,arg1_,m_.parg2(),m_,ret_);
+            const auto& cd1 = d1_;
+            callDoTask(t_,cd1,m_.parg2(),m_,ret_);
+            }
+        else if(NCData1 && hasNCPDT)
+            {
+            auto* pd1 = m_.modifyData(d1_);
+            callDoTask(t_,*pd1,m_.parg2(),m_,ret_);
             }
         else
             {
-            m_.parg1() = callEvaluate(arg1_);
-
+            m_.parg1() = callEvaluate(d1_);
             m_.parg1()->plugInto(rt_);
             }
         }
     else if(isLazy2)
         {
-        constexpr bool hasPDT = HasConstDoTask2Arg<Task,CPData,D2>::result();
+        constexpr bool hasPDT = HasConstDoTask2Arg<Task,const PData,D2>::result();
         if(hasPDT)
             {
-            detail::callDoTask(t_,m_.cparg1(),d2,m_,ret_);
+            callDoTask(t_,m_.parg1(),d2,m_,ret_);
             }
         else
             {
-            const CPData pnd2 = callEvaluate(d2);
-            m_.setparg2(&pnd2);
-
-            pnd2->plugInto(*this);
+            m_.parg2() = callEvaluate(d2);
+            m_.parg2()->plugInto(*this);
             }
         }
     else
         {
-        throw ITError("doTask not defined for task/storage type");
+        throw ITError("doTask not defined for task/storage type [6]");
         }
-    }
-
-template <class RT, typename Task, typename D1, typename Return>
-template<typename D2>
-void CallWrap<RT,Task,D1,Return>::
-applyToImpl(const D2& d2)
-    { 
-    constexpr bool ConstD1 = std::is_same<D1,const D1>::value;
-    if(ConstD1)
-        applyToImplCD1(d2);
-    else
-        applyToImplNCD1(d2);
     }
 
 template<typename Task, typename TList>
@@ -784,6 +711,7 @@ struct GetRType : GetRType<Task,popFront<TList>>
                                      Test,
                                      typename Parent::RType>;
     };
+
 template<typename Task>
 struct GetRType<Task,TypeList<>>
     {
@@ -810,13 +738,14 @@ newITData(VArgs&&... vargs)
 template<typename Task>
 auto
 doTask(Task&& t,
-       const CPData& arg)
+       CPData arg)
     {
 #ifdef DEBUG
     detail::check(arg);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
-    detail::RegisterTask<detail::OneArg,Task,Ret> r(std::forward<Task>(t));
+    ManageStore m(&(arg.p));
+    detail::RegisterTask<detail::OneArg<CPData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
     arg->plugInto(r);
     return std::move(r.getReturn());
     }
@@ -830,7 +759,8 @@ doTask(Task&& t,
     detail::check(arg);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
-    detail::RegisterTask<detail::OneArg,Task,Ret> r(std::forward<Task>(t),&arg);
+    ManageStore m(&arg);
+    detail::RegisterTask<detail::OneArg<PData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
     arg->plugInto(r);
     return std::move(r.getReturn());
     }
@@ -838,15 +768,16 @@ doTask(Task&& t,
 template<typename Task>
 auto
 doTask(Task&& t,
-       const CPData& arg1,
-       const CPData& arg2)
+       CPData arg1,
+       CPData arg2)
     {
 #ifdef DEBUG
     detail::check(arg1);
     detail::check(arg2);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
-    detail::RegisterTask<detail::TwoArgs,Task,Ret> r(std::forward<Task>(t),&arg2);
+    ManageStore m(&(arg1.p),&(arg2.p));
+    detail::RegisterTask<detail::TwoArgs<CPData,CPData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
     arg1->plugInto(r);
     return std::move(r.getReturn());
     }
@@ -855,14 +786,15 @@ template<typename Task>
 auto
 doTask(Task&& t,
        PData& arg1,
-       const CPData& arg2)
+       CPData arg2)
     {
 #ifdef DEBUG
     detail::check(arg1);
     detail::check(arg2);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
-    detail::RegisterTask<detail::TwoArgs,Task,Ret> r(std::forward<Task>(t),&arg1,&arg2);
+    ManageStore m(&arg1,&(arg2.p));
+    detail::RegisterTask<detail::TwoArgs<PData,CPData>,Task,Ret> r(std::forward<Task>(t),std::move(m));
     arg1->plugInto(r);
     return std::move(r.getReturn());
     }
