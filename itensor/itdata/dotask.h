@@ -116,11 +116,11 @@ struct TwoArgs
     call(RT& rt, Task& t, D& d, ManageStore& m, Return& ret);
     };
 
-template<typename Derived, typename List>
-struct FuncT : FuncT<Derived,typename List::Next>
+template<typename Derived, typename TList>
+struct FuncT : FuncT<Derived,popFront<TList>>
     {
-    using T = typename List::Type;
-    using FuncT<Derived,typename List::Next>::applyTo;
+    using T = frontType<TList>;
+    using FuncT<Derived,popFront<TList>>::applyTo;
 
     void
     applyTo(const T& t) final
@@ -846,7 +846,7 @@ doTask(Task&& t,
     detail::check(arg2);
 #endif
     using Ret = ReturnType<Task,StorageTypes>;
-    detail::RegisterTask<detail::TwoArgs,Task,Ret> r(std::forward<Task>(t),&arg1,&arg2);
+    detail::RegisterTask<detail::TwoArgs,Task,Ret> r(std::forward<Task>(t),&arg2);
     arg1->plugInto(r);
     return std::move(r.getReturn());
     }

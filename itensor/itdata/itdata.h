@@ -16,11 +16,11 @@ struct ITData;
 using PData = std::shared_ptr<ITData>;
 using CPData = std::shared_ptr<const ITData>;
 
-template<typename List>
-struct FuncBaseT : FuncBaseT<typename List::Next>
+template<typename TList>
+struct FuncBaseT : FuncBaseT<popFront<TList>>
     {
-    using T = typename List::Type;
-    using FuncBaseT<typename List::Next>::applyTo;
+    using T = frontType<TList>;
+    using FuncBaseT<popFront<TList>>::applyTo;
 
     void virtual
     applyTo(const T& t) = 0;
