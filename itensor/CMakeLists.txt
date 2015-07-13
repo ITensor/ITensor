@@ -3,6 +3,7 @@ set (HEADERS tinyformat.h print.h global.h real.h permutation.h index.h
         condenser.h combiner.h qcounter.h iqcombiner.h 
         spectrum.h svdalgs.h mps.h mpo.h core.h observer.h DMRGObserver.h 
         sweeps.h stats.h siteset.h
+        autompo.h
         hams/HubbardChain.h hams/Heisenberg.h hams/ExtendedHubbard.h 
         hams/TriHeisenberg.h hams/Ising.h hams/J1J2Chain.h 
         hams/tJChain.h 
@@ -13,6 +14,7 @@ set (HEADERS tinyformat.h print.h global.h real.h permutation.h index.h
         integrators.h idmrg.h TEvolObserver.h iterpair.h )
 
 set (SOURCES 
+    autompo.cc
     index.cc 
     itensor.cc 
     iqindex.cc 

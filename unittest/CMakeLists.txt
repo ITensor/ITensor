@@ -20,7 +20,6 @@ set (tests
     indexset_test.cc
     siteset_test.cc
     bondgate_test.cc
-    safebool_test.cc
 )
 
 include_directories(../utilities ../matrix ../itensor)
