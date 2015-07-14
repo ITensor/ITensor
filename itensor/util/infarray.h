@@ -179,6 +179,12 @@ class InfArray
         std::fill(begin(),end(),val);
         }
 
+    void
+    fill(const_reference val)
+        {
+        std::fill(begin(),end(),val);
+        }
+
     size_t
     size() const { return size_; }
 
